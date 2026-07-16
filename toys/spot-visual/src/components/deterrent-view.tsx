@@ -98,7 +98,7 @@ function Dial({ value, onChange }: { value: number; onChange: (i: number) => voi
     const slotWidth = 160;
     let nearest = Math.round(dragOffset / slotWidth);
     nearest = Math.max(-1, Math.min(1, nearest));
-    const newIndex = value + nearest;
+    const newIndex = Math.max(0, Math.min(TIME_PERIODS.length - 1, value + nearest));
     if (newIndex !== value) {
       onChange(newIndex);
       vibrate(50);
@@ -511,7 +511,7 @@ export default function DeterrentView() {
   const [showPopup, setShowPopup] = useState<string | null>(null);
   const [timelineIdx, setTimelineIdx] = useState(0);
 
-  const period = TIME_PERIODS[timeIndex];
+  const period = TIME_PERIODS[timeIndex] || TIME_PERIODS[1];
 
   const toggleCondition = (id: string) => {
     setActiveConditions(prev => {

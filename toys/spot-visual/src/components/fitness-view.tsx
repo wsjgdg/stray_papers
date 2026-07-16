@@ -320,7 +320,7 @@ function FlipView({ front, back, flipped }: { front: React.ReactNode; back: Reac
         style={{ transformStyle: 'preserve-3d' }}
       >
         <div style={{ backfaceVisibility: 'hidden' }}>{front}</div>
-        <div className="absolute inset-0" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>{back}</div>
+        <div className="absolute inset-0 overflow-y-auto" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>{back}</div>
       </motion.div>
     </div>
   );
@@ -331,90 +331,22 @@ function FlipView({ front, back, flipped }: { front: React.ReactNode; back: Reac
    ═══════════════════════════════════════════════════ */
 function EmergencyButton() {
   const [showOptions, setShowOptions] = useState(false);
-  const [sos, setSos] = useState(false);
-  const longPressRef = useRef<ReturnType<typeof setTimeout>>();
-  const pressStart = useRef(0);
-
-  const handleTouchStart = () => {
-    pressStart.current = Date.now();
-    longPressRef.current = setTimeout(() => {
-      setSos(true);
-      vibrate([200, 100, 200, 100, 400]);
-    }, 1500);
-  };
-
-  const handleTouchEnd = () => {
-    clearTimeout(longPressRef.current);
-    if (Date.now() - pressStart.current < 1500 && !sos) {
-      setShowOptions(true);
-    }
-  };
+  const [feedback, setFeedback] = useState<string | null>(null);
 
   return (
     <>
       {/* 紧急按钮 - 底部常驻 */}
-      <motion.button
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleTouchStart}
-        onMouseUp={handleTouchEnd}
-        onClick={() => !sos && setShowOptions(true)}
-        className="w-full py-5 bg-gradient-to-r from-red-500 to-red-600 text-white text-xl font-bold rounded-2xl shadow-lg active:scale-[0.98] transition-transform flex items-center justify-center gap-3"
+      <button
+        onClick={() => setShowOptions(true)}
+        className="w-full py-5 bg-gradient-to-r from-red-500 to-red-600 text-white text-xl font-bold rounded-2xl shadow-lg active:scale-[0.98] transition-transform flex items-center justify-center"
         style={{ minHeight: '8vh' }}
-        whileTap={{ scale: 0.97 }}
       >
-        {sos ? (
-          <motion.div animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 0.5, repeat: Infinity }} className="flex items-center gap-3">
-            <Zap className="w-6 h-6" /> SOS 紧急求助中...
-          </motion.div>
-        ) : (
-          <>
-            <span className="text-2xl">🆘</span> 我现在累了
-          </>
-        )}
-      </motion.button>
-
-      {/* SOS 模式 - 脱困路径 */}
-      <AnimatePresence>
-        {sos && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-red-50/95 backdrop-blur-sm flex flex-col items-center justify-center"
-          >
-            {/* 脉冲箭头 */}
-            <motion.div
-              animate={{ y: [0, -15, 0], scale: [1, 1.1, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="mb-6"
-            >
-              <div className="w-24 h-24 rounded-full bg-green-500 flex items-center justify-center shadow-2xl">
-                <Navigation className="w-12 h-12 text-white" />
-              </div>
-            </motion.div>
-            <div className="text-2xl font-black text-gray-900 mb-2">最短脱困路径</div>
-            <div className="text-lg text-gray-600 mb-1">距最近出口 <span className="text-red-500 font-bold">480米</span></div>
-            <div className="text-sm text-gray-500 mb-8">沿途无紧急呼叫桩，建议拨打救援电话</div>
-
-            <div className="flex gap-4">
-              <a href="tel:120" className="px-6 py-3 bg-red-500 text-white rounded-xl font-bold flex items-center gap-2">
-                <Phone className="w-5 h-5" /> 拨打 120
-              </a>
-              <button
-                onClick={() => { setSos(false); vibrate(50); }}
-                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold"
-              >
-                取消 SOS
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        我现在累了
+      </button>
 
       {/* 选项弹窗 */}
       <AnimatePresence>
-        {showOptions && !sos && (
+        {showOptions && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -431,18 +363,42 @@ function EmergencyButton() {
               onClick={(e) => e.stopPropagation()}
             >
               <button
-                onClick={() => { setShowOptions(false); vibrate(30); }}
+                onClick={() => {
+                  setShowOptions(false);
+                  setFeedback('🚐 电瓶车呼叫中，请稍候…');
+                  vibrate(30);
+                  setTimeout(() => setFeedback(null), 3000);
+                }}
                 className="w-full py-8 bg-emerald-500 text-white rounded-2xl text-xl font-bold shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-transform"
               >
                 🚐 叫电瓶车
               </button>
               <button
-                onClick={() => { setShowOptions(false); vibrate(30); }}
+                onClick={() => {
+                  setShowOptions(false);
+                  setFeedback('🚶 已规划最近出口路线，请沿指示行走');
+                  vibrate(30);
+                  setTimeout(() => setFeedback(null), 3000);
+                }}
                 className="w-full py-8 bg-blue-500 text-white rounded-2xl text-xl font-bold shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-transform"
               >
                 🚶 去出口
               </button>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 操作反馈提示 */}
+      <AnimatePresence>
+        {feedback && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-28 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-sm px-5 py-3 rounded-xl shadow-xl whitespace-nowrap"
+          >
+            {feedback}
           </motion.div>
         )}
       </AnimatePresence>
