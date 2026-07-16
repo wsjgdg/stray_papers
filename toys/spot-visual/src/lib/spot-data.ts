@@ -183,16 +183,55 @@ const FALLBACK_PHOTOS = [
 // ═══ 按分类追踪已用索引，确保同分类内不重复分配 ═══
 const _usedIndices: Map<string, Set<number>> = new Map();
 
+// ═══ 图片缓存自学习：API 拉到的 URL 写入 localStorage，降级时优先复用 ═══
+const PHOTO_CACHE_KEY = 'spot-photo-cache';
+const PHOTO_CACHE_MAX_PER_CAT = 200; // 每分类缓存上限，防止 localStorage 撑爆
+
+type PhotoCache = Record<string, string[]>;
+
+/** 读取整份缓存（SSR / 解析失败时返回空对象） */
+function readPhotoCache(): PhotoCache {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem(PHOTO_CACHE_KEY);
+    return raw ? (JSON.parse(raw) as PhotoCache) : {};
+  } catch { return {}; }
+}
+
+/** 将 API 成功拉到的 URL 写入对应分类缓存（去重，自动截断到上限） */
+export function cachePhotoForCategory(category: string, url: string): void {
+  if (!url || typeof window === 'undefined') return;
+  try {
+    const cache = readPhotoCache();
+    const arr = cache[category] || [];
+    if (!arr.includes(url)) {
+      arr.push(url);
+      // 超出上限丢弃最旧的（FIFO），保留近期拉到的
+      if (arr.length > PHOTO_CACHE_MAX_PER_CAT) arr.splice(0, arr.length - PHOTO_CACHE_MAX_PER_CAT);
+      cache[category] = arr;
+      localStorage.setItem(PHOTO_CACHE_KEY, JSON.stringify(cache));
+    }
+  } catch { /* localStorage 满或禁用时静默 */ }
+}
+
 /**
- * 同步降级：从本地图片池取一张图。仅在 API 失败时使用。
- * 按分类独立追踪已用索引，同分类内不重复；池耗尽后从头轮换。
+ * 同步降级：取一张图。仅在 API 失败时使用。
+ * 优先返回 localStorage 缓存中「本次会话未用过」的 URL（自学习层）；
+ * 缓存耗尽或不存在时回退到编译期 CATEGORY_PHOTOS 池。
+ * 同分类内不重复分配；全部用过则清空重轮。
  */
 export function getCategoryImageUrl(category: string, _index?: number): string {
-  const pool = CATEGORY_PHOTOS[category] || FALLBACK_PHOTOS;
-  if (pool.length === 0) return '';
+  // 调用方指定索引：直接用编译期池（示例景点初始化走这条路径，保证稳定）
+  if (_index !== undefined) {
+    const pool = CATEGORY_PHOTOS[category] || FALLBACK_PHOTOS;
+    return pool.length > 0 ? pool[_index % pool.length] : '';
+  }
 
-  // 如果调用方指定了索引，直接用
-  if (_index !== undefined) return pool[_index % pool.length];
+  // 拼接候选池：自学习缓存（运行时积累）在前，编译期池在后
+  const cached = readPhotoCache()[category] || [];
+  const builtin = CATEGORY_PHOTOS[category] || FALLBACK_PHOTOS;
+  const pool = [...cached, ...builtin];
+  if (pool.length === 0) return '';
 
   // 按分类获取已用索引集合
   let used = _usedIndices.get(category);

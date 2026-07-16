@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Spot, sampleSpots } from './spot-data';
 
-export type ViewType = 'spots' | 'network' | 'favorites' | 'profile';
+export type ViewType = 'spots' | 'network' | 'favorites' | 'deterrent' | 'fitness' | 'profile';
 
 interface AppStore {
   spots: Spot[];
@@ -15,6 +15,7 @@ interface AppStore {
 
   setSpots: (spots: Spot[]) => void;
   appendSpots: (spots: Spot[]) => void;
+  updateSpotImages: (updates: { id: string; image: string }[]) => void;
   toggleFavorite: (id: string) => void;
   setActiveView: (view: ViewType) => void;
   setSelectedSpot: (spot: Spot | null) => void;
@@ -36,12 +37,16 @@ export const useAppStore = create<AppStore>()(
       activeCategory: '全部',
       viewMode: 'grid' as 'grid' | 'list',
 
-      setSpots: (spots) => set({ spots, activeCategory: '全部', searchQuery: '' }),
-      appendSpots: (newSpots) => set((s) => ({
-        spots: [...s.spots, ...newSpots],
-        activeCategory: '全部',
-        searchQuery: '',
-      })),
+      setSpots: (spots) => set({ spots }),
+      appendSpots: (newSpots) => set((s) => ({ spots: [...s.spots, ...newSpots] })),
+      // 按 id 精准更新图片，避免重写整个 spots 数组触发全量重渲染
+      updateSpotImages: (updates) => {
+        if (updates.length === 0) return;
+        set((s) => {
+          const map = new Map(updates.map((u) => [u.id, u.image]));
+          return { spots: s.spots.map((sp) => (map.has(sp.id) ? { ...sp, image: map.get(sp.id)! } : sp)) };
+        });
+      },
       toggleFavorite: (id) => set((s) => ({
         favorites: s.favorites.includes(id) ? s.favorites.filter((f) => f !== id) : [...s.favorites, id],
       })),

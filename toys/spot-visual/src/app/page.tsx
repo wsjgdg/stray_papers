@@ -6,6 +6,7 @@ import {
   Search, Upload, MapPin, Star, X, LayoutGrid, List, Camera,
   Heart, User, Share2, Menu, ChevronLeft, ChevronRight, Image as ImageIcon,
   TreePine, Landmark, Sparkles, Building2, Waves, Mountain, HomeIcon, Church, UtensilsCrossed, Bike,
+  AlertTriangle, Activity,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,10 +15,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useAppStore, type ViewType } from '@/lib/store';
-import { type Spot, getCategoryColor, CATEGORY_ICON_NAMES, CATEGORY_THEME, parseImportedSpots, sampleSpots, getCategoryImageUrl } from '@/lib/spot-data';
+import { type Spot, getCategoryColor, CATEGORY_ICON_NAMES, CATEGORY_THEME, parseImportedSpots, sampleSpots, getCategoryImageUrl, cachePhotoForCategory } from '@/lib/spot-data';
 import dynamic from 'next/dynamic';
 
 const NetworkView = dynamic(() => import('@/components/network-view'), { ssr: false });
+const DeterrentView = dynamic(() => import('@/components/deterrent-view'), { ssr: false });
+const FitnessView = dynamic(() => import('@/components/fitness-view'), { ssr: false });
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = { TreePine, Landmark, Sparkles, Building2, Waves, Mountain, HomeIcon, Church, UtensilsCrossed, Bike };
 const getCategoryIcon = (cat: string) => {
@@ -49,6 +52,8 @@ const NAV_ITEMS: { key: ViewType; label: string; icon: React.ReactNode }[] = [
   { key: 'spots', label: '景点览胜', icon: <MapPin className="w-4.5 h-4.5" /> },
   { key: 'network', label: '景点网络', icon: <Share2 className="w-4.5 h-4.5" /> },
   { key: 'favorites', label: '收藏景点', icon: <Heart className="w-4.5 h-4.5" /> },
+  { key: 'deterrent', label: '劝退指南', icon: <AlertTriangle className="w-4.5 h-4.5" /> },
+  { key: 'fitness', label: '体力账本', icon: <Activity className="w-4.5 h-4.5" /> },
   { key: 'profile', label: '我的信息', icon: <User className="w-4.5 h-4.5" /> },
 ];
 
@@ -394,7 +399,10 @@ function SpotsView() {
                 const results = data.results || [];
                 items.forEach((item, i) => {
                   if (results[i] && results[i].url) {
-                    updates.push({ id: item.spot.id, image: results[i].url });
+                    const url = results[i].url;
+                    updates.push({ id: item.spot.id, image: url });
+                    // 自学习：把 API 拉到的真实 URL 写入本地缓存，下次降级可优先复用
+                    cachePhotoForCategory(cat, url);
                   } else {
                     const fallback = getCategoryImageUrl(cat);
                     if (fallback) updates.push({ id: item.spot.id, image: fallback });
@@ -413,27 +421,20 @@ function SpotsView() {
             console.warn('[景点览胜] 图片 API 未配置密钥，已降级使用本地图片池');
           }
 
-          // 批量更新 store 中对应景点的图片
+          // 批量更新 store 中对应景点的图片（精准更新，无需 reload）
           if (updates.length > 0) {
-            useAppStore.getState().setSpots(
-              useAppStore.getState().spots.map(s => {
-                const u = updates.find(up => up.id === s.id);
-                return u ? { ...s, image: u.image } : s;
-              })
-            );
+            useAppStore.getState().updateSpotImages(updates);
           }
         }
 
         setImporting(false);
 
-        // ═══ 导入完成提示 + 刷新页面 ═══
+        // ═══ 导入完成提示 ═══
         let msg = `成功导入 ${unique.length} 个景点，当前共 ${useAppStore.getState().spots.length} 个`;
         if (duplicates.length > 0) {
           msg += `\n\n以下 ${duplicates.length} 个景点因名称重复已跳过：\n${duplicates.join('、')}`;
         }
         alert(msg);
-        // 刷新页面让图片和状态完全生效
-        window.location.reload();
       } catch { alert('JSON 解析失败，请检查文件格式'); setImporting(false); }
     };
     reader.readAsText(file);
@@ -571,6 +572,8 @@ export default function Home() {
                 {activeView === 'spots' && <SpotsView />}
                 {activeView === 'network' && <div className="h-[calc(100vh-10rem)] md:h-[calc(100vh-8rem)]"><NetworkView /></div>}
                 {activeView === 'favorites' && <FavoritesView />}
+                {activeView === 'deterrent' && <DeterrentView />}
+                {activeView === 'fitness' && <FitnessView />}
                 {activeView === 'profile' && <ProfileView />}
               </div>
             </div>
