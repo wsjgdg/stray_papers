@@ -5,10 +5,12 @@
 ## 功能
 
 ### 核心景点功能
-- **景点览胜** — 网格/列表双视图，支持搜索（名称/地址/设施/项目）和分类筛选
-- **景点网络** — SVG 经纬度投影网络图，按区域分组连色线，支持拖动/缩放/点击居中（二次点击进详情）
-- **收藏景点** — 收藏功能，数据持久化到 localStorage
+- **景点览胜** — 网格/列表双视图，支持搜索（名称/地址/设施/项目）和分类筛选；景点卡片展示图片、分类标签、地址、推荐项目；点击进入详情弹窗，支持多图浏览和收藏
+- **景点网络** — SVG 经纬度投影网络图，按区域分组连色线，支持拖动/缩放/点击居中（二次点击进详情），拖尾连线展示地理位置关系
+- **收藏景点** — 收藏功能，数据持久化到 localStorage；收藏数量角标实时更新
 - **我的信息** — 景点/收藏/分类数统计
+- **旅人测试** — 基于收藏景点的分类分布计算旅人人格;塔罗牌式 3D 翻牌动画逐张揭示维度;生成个性化人格卡（称号 + 描述 + 推荐），支持分享/复制
+- **预算沙盘** — 按景点展开推荐项目，逐项勾选计费;实时汇总当前预算，对比满选总价;穷游/舒适/土豪三档预算条对比;价格分层统计（免费/平价/中档/高端）;支持全选付费和全部取消快捷操作
 
 ### 数据导入
 - **JSON 导入** — 支持自定义 JSON 数据追加导入（按名称去重，不覆盖已有数据）
@@ -49,12 +51,10 @@ npm start
 ## 环境变量
 
 在 `.env`（或部署平台的 Environment Variables）中配置以下密钥，用于景点导入时的智能配图：
-
-| 变量名 | 用途 | 必填 |
-|--------|------|------|
-| `UNSPLASH_ACCESS_KEY` | Unsplash API 密钥（图片搜索首选源） | 二选一 |
-| `PEXELS_API_KEY` | Pexels API 密钥（Unsplash 失败时降级） | 二选一 |
-
+```env
+NEXT_PUBLIC_UNSPLASH_ACCESS_KEY=your_key #Unsplash API 密钥（图片搜索首选源） 
+NEXT_PUBLIC_PEXELS_API_KEY=your_key #Pexels API 密钥（Unsplash 失败时降级）
+```
 > 两个密钥都未配置时，导入功能仍可用，图片将自动降级到本地图片池或渐变占位，控制台会输出 `NO_API_KEYS` 警告。
 
 ## 项目结构
@@ -65,9 +65,11 @@ src/
 │   ├── api/search-photo/route.ts  # 图片搜索 API（Unsplash + Pexels 双源 + 服务端缓存）
 │   ├── layout.tsx                  # 根布局
 │   ├── page.tsx                    # 主页面（侧边栏/移动端顶栏/景点视图/详情弹窗/导入逻辑）
-│   └── globals.css                 # 全局样式
+│   └── globals.css                 # 全局样式 + Tailwind 主题
 ├── components/
 │   ├── network-view.tsx            # 景点网络 SVG 视图（经纬度投影 + 拖动缩放）
+│   ├── personality-view.tsx        # 旅人测试（塔罗牌 + 人格卡）
+│   ├── budget-view.tsx             # 预算沙盘（项目勾选 + 三档对比）
 │   ├── deterrent-view.tsx          # 劝退指南视图（时段拨盘 + 身体红灯 + 时间轴）
 │   ├── fitness-view.tsx            # 体力账本视图（海拔图 + 同行人 + SOS）
 │   └── ui/                         # shadcn/ui 组件（badge/button/dialog/input/scroll-area/separator）
