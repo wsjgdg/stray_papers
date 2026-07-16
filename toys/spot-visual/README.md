@@ -16,6 +16,9 @@
 # 安装依赖
 npm install
 
+# 编辑 .env 填入密钥
+cp .env.example .env
+
 # 开发模式
 npm run dev
 
