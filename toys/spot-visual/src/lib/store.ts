@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Spot, sampleSpots } from './spot-data';
 
-export type ViewType = 'spots' | 'network' | 'favorites' | 'deterrent' | 'fitness' | 'profile';
+export type ViewType = 'spots' | 'network' | 'favorites' | 'personality' | 'budget' | 'deterrent' | 'fitness' | 'profile';
 
 interface AppStore {
   spots: Spot[];

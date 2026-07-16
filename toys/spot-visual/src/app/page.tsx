@@ -3,10 +3,10 @@
 import { useState, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search, Upload, MapPin, Star, X, LayoutGrid, List, Camera,
+  Search, Upload, MapPin, Star, X, LayoutGrid, List,
   Heart, User, Share2, Menu, ChevronLeft, ChevronRight, Image as ImageIcon,
   TreePine, Landmark, Sparkles, Building2, Waves, Mountain, HomeIcon, Church, UtensilsCrossed, Bike,
-  AlertTriangle, Activity,
+  AlertTriangle, Activity, Sparkles as SparklesIcon, Calculator, // 修复：补充缺失的图标导入，移除未使用的 Camera
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,12 +15,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useAppStore, type ViewType } from '@/lib/store';
-import { type Spot, getCategoryColor, CATEGORY_ICON_NAMES, CATEGORY_THEME, parseImportedSpots, sampleSpots, getCategoryImageUrl, cachePhotoForCategory } from '@/lib/spot-data';
+import { type Spot, getCategoryColor, CATEGORY_ICON_NAMES, CATEGORY_THEME, parseImportedSpots, sampleSpots, getCategoryImageUrl, cachePhotoForCategory } from '@/lib/spot-data'; // 保留：cachePhotoForCategory 缓存机制
 import dynamic from 'next/dynamic';
 
 const NetworkView = dynamic(() => import('@/components/network-view'), { ssr: false });
 const DeterrentView = dynamic(() => import('@/components/deterrent-view'), { ssr: false });
 const FitnessView = dynamic(() => import('@/components/fitness-view'), { ssr: false });
+const PersonalityView = dynamic(() => import('@/components/personality-view'), { ssr: false });
+const BudgetView = dynamic(() => import('@/components/budget-view'), { ssr: false });
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = { TreePine, Landmark, Sparkles, Building2, Waves, Mountain, HomeIcon, Church, UtensilsCrossed, Bike };
 const getCategoryIcon = (cat: string) => {
@@ -29,6 +31,8 @@ const getCategoryIcon = (cat: string) => {
   const Comp = ICON_MAP[name];
   return <Comp className="w-3.5 h-3.5" />;
 };
+
+console.log('新代码生效了')
 
 /* ═══════ 图片组件（分类主题占位） ═══════ */
 function SpotImage({ src, alt, className = '', category = '' }: { src: string; alt: string; className?: string; category?: string }) {
@@ -52,6 +56,8 @@ const NAV_ITEMS: { key: ViewType; label: string; icon: React.ReactNode }[] = [
   { key: 'spots', label: '景点览胜', icon: <MapPin className="w-4.5 h-4.5" /> },
   { key: 'network', label: '景点网络', icon: <Share2 className="w-4.5 h-4.5" /> },
   { key: 'favorites', label: '收藏景点', icon: <Heart className="w-4.5 h-4.5" /> },
+  { key: 'personality', label: '旅人测试', icon: <SparklesIcon className="w-4.5 h-4.5" /> },
+  { key: 'budget', label: '预算沙盘', icon: <Calculator className="w-4.5 h-4.5" /> },
   { key: 'deterrent', label: '劝退指南', icon: <AlertTriangle className="w-4.5 h-4.5" /> },
   { key: 'fitness', label: '体力账本', icon: <Activity className="w-4.5 h-4.5" /> },
   { key: 'profile', label: '我的信息', icon: <User className="w-4.5 h-4.5" /> },
@@ -105,14 +111,14 @@ function MobileHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
         </div>
         <div className="w-7" />
       </div>
-      {/* Mobile nav tabs */}
-      <div className="flex border-t border-gray-100">
-        {NAV_ITEMS.map((item) => {
+      {/* Mobile nav tabs（只显示前4个，其余在汉堡菜单中） */}
+      <div className="flex border-t border-gray-100 overflow-x-auto scrollbar-hide">
+        {NAV_ITEMS.slice(0, 4).map((item) => {
           const active = activeView === item.key;
           return (
             <button key={item.key} onClick={() => setActiveView(item.key)}
-              className={`flex-1 py-2 text-[11px] font-medium text-center transition-colors ${active ? 'text-emerald-700 border-b-2 border-emerald-600' : 'text-gray-400'}`}>
-              {item.label}
+              className={`flex-1 min-w-0 py-2 text-[11px] font-medium text-center transition-colors shrink-0 ${active ? 'text-emerald-700 border-b-2 border-emerald-600' : 'text-gray-400'}`}>
+              <span className="block truncate px-0.5">{item.label}</span>
             </button>
           );
         })}
@@ -309,8 +315,6 @@ function SpotsView() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
 
-  // 图片拉取仅在导入新景点时触发（见 handleImport），页面加载不刷新已有图片
-
   const allCategories = useMemo(() => {
     const cats = new Set(spots.map((s) => s.category));
     return ['全部', ...Array.from(cats)];
@@ -401,7 +405,7 @@ function SpotsView() {
                   if (results[i] && results[i].url) {
                     const url = results[i].url;
                     updates.push({ id: item.spot.id, image: url });
-                    // 自学习：把 API 拉到的真实 URL 写入本地缓存，下次降级可优先复用
+                    // 保留：自学习缓存机制，把 API 拉到的真实 URL 写入本地缓存，下次降级可优先复用
                     cachePhotoForCategory(cat, url);
                   } else {
                     const fallback = getCategoryImageUrl(cat);
@@ -421,7 +425,7 @@ function SpotsView() {
             console.warn('[景点览胜] 图片 API 未配置密钥，已降级使用本地图片池');
           }
 
-          // 批量更新 store 中对应景点的图片（精准更新，无需 reload）
+          // 保留：精准更新 store 中对应景点的图片，避免全量替换和强制刷新页面
           if (updates.length > 0) {
             useAppStore.getState().updateSpotImages(updates);
           }
@@ -572,6 +576,9 @@ export default function Home() {
                 {activeView === 'spots' && <SpotsView />}
                 {activeView === 'network' && <div className="h-[calc(100vh-10rem)] md:h-[calc(100vh-8rem)]"><NetworkView /></div>}
                 {activeView === 'favorites' && <FavoritesView />}
+                {/* 修复：补全缺失的视图路由 */}
+                {activeView === 'personality' && <PersonalityView />}
+                {activeView === 'budget' && <BudgetView />}
                 {activeView === 'deterrent' && <DeterrentView />}
                 {activeView === 'fitness' && <FitnessView />}
                 {activeView === 'profile' && <ProfileView />}

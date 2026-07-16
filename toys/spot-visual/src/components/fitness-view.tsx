@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Mountain, MapPin, Navigation, Phone, Battery, Route, Armchair, ChevronUp, ChevronDown, X, Zap, Footprints } from 'lucide-react';
+import { Users, Mountain, MapPin, Route, Armchair, ChevronUp, ChevronDown, X, Footprints } from 'lucide-react';
 
 /* ═══ 工具函数 ═══ */
 const vibrate = (pattern: number | number[]) => {
