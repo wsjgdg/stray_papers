@@ -13,7 +13,7 @@ echo ==============================
 echo 正在启动开发服务器...
 echo ==============================
 
-cd /d "C:\Users\sibop\Desktop\spot-visual"
+cd /d "C:\Users\sibop\Desktop\ZCodeProject\spot-visual"
 
 if %errorlevel% neq 0 (
     echo 目录切换失败，请检查路径是否正确！
