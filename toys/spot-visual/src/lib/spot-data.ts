@@ -180,18 +180,37 @@ const FALLBACK_PHOTOS = [
   'https://images.unsplash.com/photo-1470071459604-3b5ec3a7b628?w=800&h=500&fit=crop&q=80',
 ];
 
-// 全局会话级计数器：每次调用递增，确保连续拉取不重复
-let _globalCounter = 0;
+// ═══ 按分类追踪已用索引，确保同分类内不重复分配 ═══
+const _usedIndices: Map<string, Set<number>> = new Map();
 
 /**
  * 同步降级：从本地图片池取一张图。仅在 API 失败时使用。
- * 池内全部为 API 验证过的真实 URL，直接返回。
+ * 按分类独立追踪已用索引，同分类内不重复；池耗尽后从头轮换。
  */
 export function getCategoryImageUrl(category: string, _index?: number): string {
   const pool = CATEGORY_PHOTOS[category] || FALLBACK_PHOTOS;
   if (pool.length === 0) return '';
-  const idx = _globalCounter % pool.length;
-  _globalCounter++;
+
+  // 如果调用方指定了索引，直接用
+  if (_index !== undefined) return pool[_index % pool.length];
+
+  // 按分类获取已用索引集合
+  let used = _usedIndices.get(category);
+  if (!used) { used = new Set(); _usedIndices.set(category, used); }
+
+  // 找一个未使用的索引
+  let idx = -1;
+  for (let i = 0; i < pool.length; i++) {
+    if (!used.has(i)) { idx = i; break; }
+  }
+
+  // 池内全部用过，清空重轮
+  if (idx === -1) {
+    used.clear();
+    idx = 0;
+  }
+
+  used.add(idx);
   return pool[idx];
 }
 

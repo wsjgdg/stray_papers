@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Upload, MapPin, Star, X, LayoutGrid, List, Camera,
@@ -303,43 +303,8 @@ function SpotsView() {
   const { spots, searchQuery, setSearchQuery, activeCategory, setActiveCategory, viewMode, setViewMode, setSelectedSpot, favorites, toggleFavorite, setSpots } = useAppStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
-  const enhancedRef = useRef(false);
 
-  // 首次加载时，为示例景点（使用本地池 URL 的）异步替换为 API 高清图
-  // ⚠️ 仅当 API 返回有效 URL 时才替换，失败则保留本地池图片（不降级为渐变）
-  useEffect(() => {
-    if (enhancedRef.current) return;
-    const allSpots = useAppStore.getState().spots;
-    const needEnhance = allSpots.filter(s => s.image && s.image.includes('unsplash.com') && !s.image.includes('utm_source='));
-    if (needEnhance.length === 0) { enhancedRef.current = true; return; }
-    enhancedRef.current = true;
-
-    // 按分类分组
-    const byCat = new Map<string, string[]>();
-    needEnhance.forEach(s => { const arr = byCat.get(s.category) || []; arr.push(s.id); byCat.set(s.category, arr); });
-
-    Promise.allSettled(
-      Array.from(byCat.entries()).map(async ([cat, ids]) => {
-        try {
-          const res = await fetch(`/api/search-photo?q=${encodeURIComponent(cat)}&n=${ids.length}`);
-          if (!res.ok) return;
-          const data = await res.json();
-          // API 返回 NO_API_KEYS 错误 → 不做任何替换，保留本地池图片
-          if (data.error === 'NO_API_KEYS') {
-            console.warn('[景点览胜] 图片 API 未配置密钥，保留本地图片池。请在环境变量中设置 UNSPLASH_ACCESS_KEY / PEXELS_API_KEY');
-            return;
-          }
-          const results = data.results || [];
-          const updates = new Map<string, string>();
-          ids.forEach((id, i) => { if (results[i]?.url) updates.set(id, results[i].url); });
-          // 仅更新确实拿到了 API 图片的景点，其余保留原图
-          if (updates.size > 0) {
-            setSpots(useAppStore.getState().spots.map(s => updates.has(s.id) ? { ...s, image: updates.get(s.id)! } : s));
-          }
-        } catch { /* keep local pool images */ }
-      })
-    );
-  }, [setSpots]);
+  // 图片拉取仅在导入新景点时触发（见 handleImport），页面加载不刷新已有图片
 
   const allCategories = useMemo(() => {
     const cats = new Set(spots.map((s) => s.category));
@@ -372,12 +337,29 @@ function SpotsView() {
         const parsed = parseImportedSpots(raw);
         if (parsed.length === 0) { alert('未在文件中找到有效的景点数据'); return; }
 
+        // ═══ 名称去重：跳过与已有景点名称完全相同的条目 ═══
+        const existingNames = new Set(useAppStore.getState().spots.map(s => s.name.trim()));
+        const duplicates: string[] = [];
+        const unique = parsed.filter(s => {
+          if (existingNames.has(s.name.trim())) {
+            duplicates.push(s.name);
+            return false;
+          }
+          existingNames.add(s.name.trim());
+          return true;
+        });
+
+        if (unique.length === 0) {
+          alert(`全部 ${duplicates.length} 个景点已存在，未导入任何新景点：\n${duplicates.join('、')}`);
+          return;
+        }
+
         // 先追加到 store（无图景点先显示渐变占位）
-        useAppStore.getState().appendSpots(parsed);
+        useAppStore.getState().appendSpots(unique);
         setImporting(true);
 
         // 找出需要拉取图片的景点（image 为空）
-        const needImages = parsed.map((s, i) => ({ spot: s, idx: i })).filter(x => !x.spot.image);
+        const needImages = unique.map((s, i) => ({ spot: s, idx: i })).filter(x => !x.spot.image);
 
         if (needImages.length > 0) {
           // 按分类分组，批量请求 API
@@ -402,7 +384,6 @@ function SpotsView() {
                 // 检测 API Key 未配置
                 if (data.error === 'NO_API_KEYS') {
                   noApiKeys = true;
-                  // 全部降级本地池
                   items.forEach(item => {
                     const fallback = getCategoryImageUrl(item.spot.category);
                     if (fallback) updates.push({ id: item.spot.id, image: fallback });
@@ -415,13 +396,11 @@ function SpotsView() {
                   if (results[i] && results[i].url) {
                     updates.push({ id: item.spot.id, image: results[i].url });
                   } else {
-                    // API 耗尽，降级本地池
                     const fallback = getCategoryImageUrl(cat);
                     if (fallback) updates.push({ id: item.spot.id, image: fallback });
                   }
                 });
               } catch {
-                // API 完全失败，全部降级本地池
                 items.forEach(item => {
                   const fallback = getCategoryImageUrl(item.spot.category);
                   if (fallback) updates.push({ id: item.spot.id, image: fallback });
@@ -446,7 +425,15 @@ function SpotsView() {
         }
 
         setImporting(false);
-        alert(`成功追加导入 ${parsed.length} 个景点，当前共 ${useAppStore.getState().spots.length} 个`);
+
+        // ═══ 导入完成提示 + 刷新页面 ═══
+        let msg = `成功导入 ${unique.length} 个景点，当前共 ${useAppStore.getState().spots.length} 个`;
+        if (duplicates.length > 0) {
+          msg += `\n\n以下 ${duplicates.length} 个景点因名称重复已跳过：\n${duplicates.join('、')}`;
+        }
+        alert(msg);
+        // 刷新页面让图片和状态完全生效
+        window.location.reload();
       } catch { alert('JSON 解析失败，请检查文件格式'); setImporting(false); }
     };
     reader.readAsText(file);
