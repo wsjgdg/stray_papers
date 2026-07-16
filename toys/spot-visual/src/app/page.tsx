@@ -306,6 +306,7 @@ function SpotsView() {
   const enhancedRef = useRef(false);
 
   // 首次加载时，为示例景点（使用本地池 URL 的）异步替换为 API 高清图
+  // ⚠️ 仅当 API 返回有效 URL 时才替换，失败则保留本地池图片（不降级为渐变）
   useEffect(() => {
     if (enhancedRef.current) return;
     const allSpots = useAppStore.getState().spots;
@@ -323,9 +324,15 @@ function SpotsView() {
           const res = await fetch(`/api/search-photo?q=${encodeURIComponent(cat)}&n=${ids.length}`);
           if (!res.ok) return;
           const data = await res.json();
+          // API 返回 NO_API_KEYS 错误 → 不做任何替换，保留本地池图片
+          if (data.error === 'NO_API_KEYS') {
+            console.warn('[景点览胜] 图片 API 未配置密钥，保留本地图片池。请在环境变量中设置 UNSPLASH_ACCESS_KEY / PEXELS_API_KEY');
+            return;
+          }
           const results = data.results || [];
           const updates = new Map<string, string>();
           ids.forEach((id, i) => { if (results[i]?.url) updates.set(id, results[i].url); });
+          // 仅更新确实拿到了 API 图片的景点，其余保留原图
           if (updates.size > 0) {
             setSpots(useAppStore.getState().spots.map(s => updates.has(s.id) ? { ...s, image: updates.get(s.id)! } : s));
           }
@@ -384,12 +391,25 @@ function SpotsView() {
 
           // 对每个分类批量请求图片
           const updates: { id: string; image: string }[] = [];
+          let noApiKeys = false;
           await Promise.allSettled(
             Array.from(byCategory.entries()).map(async ([cat, items]) => {
               try {
                 const res = await fetch(`/api/search-photo?q=${encodeURIComponent(cat)}&n=${items.length}`);
                 if (!res.ok) throw new Error(`API ${res.status}`);
                 const data = await res.json();
+
+                // 检测 API Key 未配置
+                if (data.error === 'NO_API_KEYS') {
+                  noApiKeys = true;
+                  // 全部降级本地池
+                  items.forEach(item => {
+                    const fallback = getCategoryImageUrl(item.spot.category);
+                    if (fallback) updates.push({ id: item.spot.id, image: fallback });
+                  });
+                  return;
+                }
+
                 const results = data.results || [];
                 items.forEach((item, i) => {
                   if (results[i] && results[i].url) {
@@ -398,7 +418,6 @@ function SpotsView() {
                     // API 耗尽，降级本地池
                     const fallback = getCategoryImageUrl(cat);
                     if (fallback) updates.push({ id: item.spot.id, image: fallback });
-                    // fallback 为空则保持 image='' → 渐变占位
                   }
                 });
               } catch {
@@ -410,6 +429,10 @@ function SpotsView() {
               }
             })
           );
+
+          if (noApiKeys) {
+            console.warn('[景点览胜] 图片 API 未配置密钥，已降级使用本地图片池');
+          }
 
           // 批量更新 store 中对应景点的图片
           if (updates.length > 0) {

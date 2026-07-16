@@ -21,10 +21,10 @@ const PEXELS_KEY = process.env.PEXELS_API_KEY || '';
 
 interface CacheEntry {
   urls: string[];
-  cursor: number;     // next index to return
+  cursor: number;
   totalPages: number;
   source: 'unsplash' | 'pexels';
-  fetching: boolean;  // prevent concurrent fetches for same query
+  fetching: boolean;
 }
 
 // Server-side in-memory cache: query → cached results
@@ -37,7 +37,7 @@ const usedUrls = new Set<string>();
 async function fetchUnsplash(query: string, page: number): Promise<{ urls: string[]; totalPages: number }> {
   const res = await fetch(
     `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=30&page=${page}&orientation=landscape`,
-    { headers: UNSPLASH_KEY ? { 'Authorization': `Client-ID ${UNSPLASH_KEY}` } : {}, signal: AbortSignal.timeout(8000) }
+    { headers: { 'Authorization': `Client-ID ${UNSPLASH_KEY}` }, signal: AbortSignal.timeout(8000) }
   );
   if (!res.ok) throw new Error(`Unsplash ${res.status}`);
   const data = await res.json();
@@ -51,7 +51,7 @@ async function fetchUnsplash(query: string, page: number): Promise<{ urls: strin
 async function fetchPexels(query: string, page: number): Promise<{ urls: string[]; totalPages: number }> {
   const res = await fetch(
     `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=30&page=${page}&orientation=landscape`,
-    { headers: PEXELS_KEY ? { 'Authorization': PEXELS_KEY } : {}, signal: AbortSignal.timeout(8000) }
+    { headers: { 'Authorization': PEXELS_KEY }, signal: AbortSignal.timeout(8000) }
   );
   if (!res.ok) throw new Error(`Pexels ${res.status}`);
   const data = await res.json();
@@ -72,7 +72,6 @@ async function getNextPhoto(category: string): Promise<{ url: string; source: st
   if (!entry) {
     try {
       const result = await fetchUnsplash(query, 1);
-      // Filter out already-used URLs
       const unique = result.urls.filter(u => !usedUrls.has(u));
       entry = { urls: unique, cursor: 0, totalPages: result.totalPages, source: 'unsplash', fetching: false };
       cache.set(query, entry);
@@ -102,7 +101,6 @@ async function getNextPhoto(category: string): Promise<{ url: string; source: st
   // Cache exhausted, try next page
   const nextPage = Math.floor((entry.urls.length) / 30) + 1;
   if (nextPage > Math.min(entry.totalPages, 5)) {
-    // Both sources exhausted for this query
     return { url: '', source: entry.source, exhausted: true };
   }
 
@@ -165,9 +163,27 @@ async function getNextPhoto(category: string): Promise<{ url: string; source: st
 }
 
 export async function GET(request: NextRequest) {
+  // ═══ 关键检查：API Key 是否已配置 ═══
+  const missingKeys: string[] = [];
+  if (!UNSPLASH_KEY) missingKeys.push('UNSPLASH_ACCESS_KEY');
+  if (!PEXELS_KEY) missingKeys.push('PEXELS_API_KEY');
+
+  if (missingKeys.length === 2) {
+    // 两个 Key 都没有，直接返回明确错误，让前端知道是配置问题
+    return NextResponse.json({
+      results: [],
+      error: 'NO_API_KEYS',
+      message: '未配置图片 API 密钥，请在 Vercel Dashboard → Settings → Environment Variables 中添加 UNSPLASH_ACCESS_KEY 和 PEXELS_API_KEY',
+      missingKeys,
+    }, { status: 200 });
+  }
+
+  // 如果只有一个 Key，记录日志但不阻塞（前端不需要知道细节）
+  // 只要有至少一个 Key 就尝试拉取
+
   const { searchParams } = new URL(request.url);
   const category = searchParams.get('q') || '自然风光';
-  const count = Math.min(parseInt(searchParams.get('n') || '1'), 10); // batch up to 10
+  const count = Math.min(parseInt(searchParams.get('n') || '1'), 10);
 
   const results: { url: string; source: string; exhausted: boolean }[] = [];
   for (let i = 0; i < count; i++) {

@@ -44,153 +44,155 @@ export const CATEGORY_THEME: Record<string, { from: string; to: string; icon: st
   '轻运动':   { from: '#CCFBF1', to: '#99F6E4', icon: '🚴' },
 };
 
-// ═══ 分类 → 图片池（Unsplash + Pexels，已验证可访问，国内可用，无需 API Key） ═══
-// 每个分类 25~30 张真实照片，会话级计数器确保每次拉取不重复
+// ═══ 分类 → 本地图片池（API 降级用，全部为通过 API 验证的真实 URL） ═══
 const CATEGORY_PHOTOS: Record<string, string[]> = {
   '自然风光': [
-    'unsplash:1506905925346','unsplash:1470071459604','unsplash:1441974231531','unsplash:1469474968028',
-    'unsplash:1472214103451','unsplash:1433086966358','unsplash:1501854140801','unsplash:1426604966848',
-    'unsplash:1508739773434','unsplash:1511497584788','unsplash:1500530855697','unsplash:1475924156734',
-    'unsplash:1501785888041','unsplash:1464822759023','unsplash:1454496522488','unsplash:1519681393784',
-    'unsplash:1483728642387','unsplash:1476514525535','unsplash:1446329813274','unsplash:1507525428034',
-    'unsplash:1414609245224','unsplash:1506929562872','unsplash:1519046904884','unsplash:1508739773434',
-    'unsplash:1532274402911','unsplash:1536037086158','pexels:1097456','pexels:2603464',
+    'https://images.unsplash.com/photo-1598439473183-42c9301db5dc?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1615134732800-ca7ef7a3388c?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1683041132892-0fe990b3afc3?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1658056366953-e2e93b1c1099?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1664604655363-f6050b3ca4d8?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1596905738125-a6b51b1bdbb6?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1700148676800-a12f8a016deb?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1732808460864-b8e5eb489a52?w=800&h=500&fit=crop&q=80',
   ],
   '自然风景': [
-    'unsplash:1506905925346','unsplash:1470071459604','unsplash:1441974231531','unsplash:1469474968028',
-    'unsplash:1472214103451','unsplash:1433086966358','unsplash:1501854140801','unsplash:1426604966848',
-    'unsplash:1508739773434','unsplash:1511497584788','unsplash:1500530855697','unsplash:1475924156734',
-    'unsplash:1501785888041','unsplash:1464822759023','unsplash:1454496522488','unsplash:1519681393784',
-    'unsplash:1483728642387','unsplash:1476514525535','unsplash:1446329813274','unsplash:1507525428034',
-    'unsplash:1414609245224','unsplash:1506929562872','unsplash:1519046904884','unsplash:1508739773434',
-    'unsplash:1532274402911','unsplash:1536037086158','pexels:1097456','pexels:2603464',
+    'https://images.unsplash.com/photo-1598439473183-42c9301db5dc?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1615134732800-ca7ef7a3388c?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1683041132892-0fe990b3afc3?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1658056366953-e2e93b1c1099?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1664604655363-f6050b3ca4d8?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1596905738125-a6b51b1bdbb6?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1700148676800-a12f8a016deb?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1732808460864-b8e5eb489a52?w=800&h=500&fit=crop&q=80',
   ],
   '历史人文': [
-    'unsplash:1548013146','unsplash:1507003211169','unsplash:1524492412937','unsplash:1545569341',
-    'unsplash:1590076215667','unsplash:1476224203421','unsplash:1504567961542','unsplash:1533628635777',
-    'unsplash:1555400068','unsplash:1548585830','unsplash:1516156000825','unsplash:1502602898657',
-    'unsplash:1467269202483','unsplash:1480714378408','unsplash:1449824913935','unsplash:1477959858617',
-    'unsplash:1504280390367','unsplash:1533106495824','unsplash:1518709268805','unsplash:1544612545',
-    'unsplash:1469854523086','unsplash:1506282575637','pexels:1097456','pexels:1666093',
+    'https://images.unsplash.com/photo-1628620843425-75da163c80f2?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1512102917795-4edc80a0aa63?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1514461835410-ddd29ff89d14?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1522787345986-d5c7885a889e?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1458022799175-1eb17cf09d90?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1697455621145-c688d7558143?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1649523217385-f27a01e148dc?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1777245144514-7ed23da44abb?w=800&h=500&fit=crop&q=80',
   ],
   '历史文化': [
-    'unsplash:1548013146','unsplash:1507003211169','unsplash:1524492412937','unsplash:1545569341',
-    'unsplash:1590076215667','unsplash:1476224203421','unsplash:1504567961542','unsplash:1533628635777',
-    'unsplash:1555400068','unsplash:1548585830','unsplash:1516156000825','unsplash:1502602898657',
-    'unsplash:1467269202483','unsplash:1480714378408','unsplash:1449824913935','unsplash:1477959858617',
-    'unsplash:1504280390367','unsplash:1533106495824','unsplash:1518709268805','unsplash:1544612545',
-    'unsplash:1469854523086','unsplash:1506282575637','pexels:1097456','pexels:1666093',
+    'https://images.unsplash.com/photo-1628620843425-75da163c80f2?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1512102917795-4edc80a0aa63?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1514461835410-ddd29ff89d14?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1522787345986-d5c7885a889e?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1458022799175-1eb17cf09d90?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1697455621145-c688d7558143?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1649523217385-f27a01e148dc?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1777245144514-7ed23da44abb?w=800&h=500&fit=crop&q=80',
   ],
   '主题乐园': [
-    'unsplash:1563241527','unsplash:1515859005217','unsplash:1590080875515','unsplash:1533628635777',
-    'unsplash:1476224203421','unsplash:1565299624946','unsplash:1489824904134','unsplash:1545301165',
-    'unsplash:1502602898657','unsplash:1475924156734','unsplash:1469854523086','unsplash:1506282575637',
-    'unsplash:1477959858617','unsplash:1516156000825','unsplash:1532274402911','unsplash:1508739773434',
-    'pexels:2131622','pexels:1666093','pexels:3225531','pexels:3760529',
-    'pexels:1117210','pexels:443422','pexels:3601425','pexels:2603464',
+    'https://images.unsplash.com/photo-1502136969935-8d8eef54d77b?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1627035983655-0ceec61bb733?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1615493749624-7a97d4b18fe6?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1761242606389-0a45db29fdee?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1669570083880-0d9cb0ad1dea?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1613546167482-b3280d75f796?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1567617849031-8655483b300b?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1707112244220-6cc774e9ac15?w=800&h=500&fit=crop&q=80',
   ],
   '城市地标': [
-    'unsplash:1480714378408','unsplash:1449824913935','unsplash:1477959858617','unsplash:1504280390367',
-    'unsplash:1444723121867','unsplash:1514561390253','unsplash:1546487773','unsplash:1533106495824',
-    'unsplash:1518709268805','unsplash:1467269202483','unsplash:1506282575637','unsplash:1469854523086',
-    'unsplash:1502602898657','unsplash:1486320410','unsplash:1440142955986','unsplash:1477959858617',
-    'unsplash:1449824913935','unsplash:1480714378408','unsplash:1514561390253','pexels:3225531',
-    'pexels:1117210','pexels:3760529','pexels:3601425','pexels:443422',
+    'https://images.unsplash.com/photo-1554793000-245d3a3c2a51?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1487506878145-e78516feade7?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1683041134049-28843fae8c1f?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1771945031979-55fa29dd9716?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1636834620871-d22004dd9e07?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1773852031792-fbb826750ded?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1505617483630-e5a543eaaa86?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1761727946659-27115be461ed?w=800&h=500&fit=crop&q=80',
   ],
   '海滨度假': [
-    'unsplash:1507525428034','unsplash:1519046904884','unsplash:1473116763249','unsplash:1506929562872',
-    'unsplash:1414609245224','unsplash:1501785888041','unsplash:1508739773434','unsplash:1426604966848',
-    'unsplash:1506744038','unsplash:1544551763','unsplash:1530568226','unsplash:1508854294435',
-    'unsplash:1530587126643','unsplash:1507525428034','unsplash:1519046904884','unsplash:1473116763249',
-    'unsplash:1507003211169','unsplash:1468413258767','pexels:3601425','pexels:2603464',
-    'pexels:1097456','pexels:1666093','pexels:2131622','pexels:3760529',
+    'https://images.unsplash.com/photo-1650970366119-34cb82f8b4c1?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1611946022552-d2ca5ffba186?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1617371067811-6f7535979874?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1631535152690-ba1a85229136?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1701785924585-d2b4bc6a66cf?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1660486358484-975da44dc68e?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1660486360130-02ec33fa1ccb?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1660486358746-8bc9f2a94496?w=800&h=500&fit=crop&q=80',
   ],
   '山岳景区': [
-    'unsplash:1464822759023','unsplash:1454496522488','unsplash:1519681393784','unsplash:1483728642387',
-    'unsplash:1476514525535','unsplash:1501854140801','unsplash:1500530855697','unsplash:1472214103451',
-    'unsplash:1433086966358','unsplash:1506905925346','unsplash:1470071459604','unsplash:1469474968028',
-    'unsplash:1441974231531','unsplash:1508739773434','unsplash:1511497584788','unsplash:1507525428034',
-    'unsplash:1532274402911','unsplash:1536037086158','unsplash:1506744038','unsplash:1501785888041',
-    'pexels:1097456','pexels:2603464','pexels:1666093','pexels:3601425',
+    'https://images.unsplash.com/photo-1558469070-b0bb906830a2?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1583606317098-8926d58c73c6?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1664648853617-127a94346600?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1613587905169-736ffb75de9e?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1661901697097-ed11697502f4?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1630562392473-83a289d6155f?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1616794448732-17b953353db0?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1603893964388-18a64012afea?w=800&h=500&fit=crop&q=80',
   ],
   '古镇村落': [
-    'unsplash:1510798831971','unsplash:1500382017468','unsplash:1502602898657','unsplash:1467269202483',
-    'unsplash:1548013146','unsplash:1507003211169','unsplash:1524492412937','unsplash:1545569341',
-    'unsplash:1590076215667','unsplash:1476224203421','unsplash:1504567961542','unsplash:1533628635777',
-    'unsplash:1516156000825','unsplash:1555400068','unsplash:1548585830','unsplash:1504280390367',
-    'unsplash:1533106495824','unsplash:1518709268805','unsplash:1506282575637','pexels:1097456',
-    'pexels:1666093','pexels:2131622','pexels:2603464','pexels:3225531',
+    'https://images.unsplash.com/photo-1605096048662-5ab61695a122?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1611144222869-ca3d1bafa89c?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1653931565039-c500acbb31d2?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1667831083048-4ddd6a8cd4db?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1766337996174-d6766b8ce932?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1761552505189-3933cea126f7?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1783441113959-945f3774a320?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1762996770562-ffce7254c4cc?w=800&h=500&fit=crop&q=80',
   ],
   '宗教寺庙': [
-    'unsplash:1545569341','unsplash:1548013146','unsplash:1524492412937','unsplash:1590076215667',
-    'unsplash:1507003211169','unsplash:1476224203421','unsplash:1504567961542','unsplash:1533628635777',
-    'unsplash:1555400068','unsplash:1548585830','unsplash:1516156000825','unsplash:1467269202483',
-    'unsplash:1502602898657','unsplash:1504280390367','unsplash:1533106495824','unsplash:1518709268805',
-    'unsplash:1506282575637','unsplash:1469854523086','unsplash:1477959858617','unsplash:1480714378408',
-    'pexels:1097456','pexels:1666093','pexels:2131622','pexels:2603464',
+    'https://images.unsplash.com/photo-1530634082454-f57b7d567b25?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1543160058-bb08f2f22c21?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1580355275559-10c832e123f1?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1713346643669-ab7793501846?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1575642158817-5bc47aea404f?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1562777578-3e432ed38f03?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1740203493443-b17b8d904405?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1583200698551-6b032ba0f19f?w=800&h=500&fit=crop&q=80',
   ],
   '美食小吃': [
-    'unsplash:1504674900247','unsplash:1540189549336','unsplash:1565299624946','unsplash:1504567961542',
-    'unsplash:1476224203421','unsplash:1533628635777','unsplash:1476718402221','unsplash:1565299624946',
-    'unsplash:1504674900247','unsplash:1540189549336','unsplash:1498837167922','unsplash:1551024515',
-    'unsplash:1567620905862','unsplash:1482049016688','unsplash:1476224203421','unsplash:1534423494372',
-    'unsplash:1504674900247','unsplash:1563379926898','pexels:1117210','pexels:3760529',
-    'pexels:443422','pexels:2603464','pexels:1666093','pexels:2131622',
+    'https://images.unsplash.com/photo-1552912470-ee2e96439539?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1506781961370-37a89d6b3095?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1628324716243-0c9c29971a58?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1718942900361-d01a1ee8d077?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1471110338536-858caa3dbe45?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1545324053-41b04f1a8e8a?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1506159094651-959dec66fac6?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1711127498984-84bea628db02?w=800&h=500&fit=crop&q=80',
   ],
   '轻运动': [
-    'unsplash:1571019613454','unsplash:1517649763962','unsplash:1502602898657','unsplash:1518173946687',
-    'unsplash:1532274402911','unsplash:1536037086158','unsplash:1506744038','unsplash:1508739773434',
-    'unsplash:1571019613454','unsplash:1517649763962','unsplash:1500530855697','unsplash:1433086966358',
-    'unsplash:1464822759023','unsplash:1454496522488','unsplash:1519681393784','unsplash:1483728642387',
-    'pexels:3225531','pexels:3601425','pexels:2131622','pexels:3760529',
-    'pexels:443422','pexels:1666093','pexels:1117210','pexels:2603464',
+    'https://images.unsplash.com/photo-1603102859961-64b17d43580d?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1456613820599-bfe244172af5?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1615632778185-48e15a6f68bf?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1764067522124-b51d909061a6?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1760115338751-cc810cb0a591?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1774050021466-369013ca33ef?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1607429289025-ee36ac310746?w=800&h=500&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1610432151528-67e398f52d0a?w=800&h=500&fit=crop&q=80',
   ],
 };
 
 // 通用风景图（未知分类时使用）
 const FALLBACK_PHOTOS = [
-  'unsplash:1501785888041','unsplash:1476514525535','unsplash:1433086966358',
-  'unsplash:1500530855697','unsplash:1464822759023','unsplash:1454496522488',
-  'unsplash:1519681393784','unsplash:1483728642387','unsplash:1475924156734',
-  'unsplash:1506905925346','unsplash:1470071459604','unsplash:1441974231531',
-  'unsplash:1469474968028','unsplash:1472214103451','unsplash:1508739773434',
-  'unsplash:1511497584788','unsplash:1507525428034','unsplash:1414609245224',
-  'unsplash:1506929562872','unsplash:1519046904884','pexels:1097456','pexels:2603464',
-  'pexels:3601425','pexels:1666093',
+  'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&h=500&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1438786657495-640937046d18?w=800&h=500&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1598439473183-42c9301db5dc?w=800&h=500&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1615134732800-ca7ef7a3388c?w=800&h=500&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&h=500&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&h=500&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&h=500&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1470071459604-3b5ec3a7b628?w=800&h=500&fit=crop&q=80',
 ];
 
-/** 将 pool entry 解析为完整 URL */
-function resolvePhotoUrl(entry: string): string {
-  if (entry.startsWith('unsplash:')) {
-    const id = entry.slice(9);
-    return `https://images.unsplash.com/photo-${id}?w=800&h=500&fit=crop&q=80`;
-  }
-  if (entry.startsWith('pexels:')) {
-    const id = entry.slice(7);
-    return `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=800&h=500&fit=crop`;
-  }
-  return entry; // already a full URL
-}
-
 // 全局会话级计数器：每次调用递增，确保连续拉取不重复
-// 一旦 URL 被赋值给 spot 并存入 store，该 URL 在整个会话期间不会改变
 let _globalCounter = 0;
 
 /**
  * 同步降级：从本地图片池取一张图。仅在 API 失败时使用。
- * 每次调用递增全局计数器，避免连续取到重复。
- * 如果池子已遍历完（出现重复），返回空字符串（触发渐变占位）。
+ * 池内全部为 API 验证过的真实 URL，直接返回。
  */
 export function getCategoryImageUrl(category: string, _index?: number): string {
   const pool = CATEGORY_PHOTOS[category] || FALLBACK_PHOTOS;
   if (pool.length === 0) return '';
   const idx = _globalCounter % pool.length;
-  const url = resolvePhotoUrl(pool[idx]);
   _globalCounter++;
-  // 检测是否已循环完一整圈（会出现重复）
-  const usedCount = _globalCounter - 1;
-  if (usedCount > pool.length * 2) return ''; // 超出两轮，降级渐变
-  return url;
+  return pool[idx];
 }
 
 export const DEFAULT_CATEGORIES = ['自然风光', '历史人文', '主题乐园', '城市地标', '海滨度假', '山岳景区', '古镇村落', '宗教寺庙'];
