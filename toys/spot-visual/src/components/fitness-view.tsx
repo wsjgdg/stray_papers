@@ -1,13 +1,11 @@
 'use client';
 
-import { useState, useRef, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, animate } from 'framer-motion';
 import { Users, Mountain, MapPin, Route, Armchair, ChevronUp, ChevronDown, X, Footprints } from 'lucide-react';
-
-/* ═══ 工具函数 ═══ */
-const vibrate = (pattern: number | number[]) => {
-  try { navigator.vibrate?.(pattern); } catch { /* iOS 不支持 */ }
-};
+import { useRatchetDrag, useLongPressCharge, useCountUp, useAudioClick, vibrate } from '@/lib/motion-hooks';
+import { useSharedMotionStore, HEAT_WARNING_WINDOW } from '@/lib/shared-motion-store';
+import { PressureButton } from '@/components/shared/pressure-button';
 
 /* ═══ 海拔数据（模拟全程路线） ═══ */
 const ELEVATION_DATA = [
@@ -60,16 +58,20 @@ const SEGMENTS = [
 ];
 
 /* ═══════════════════════════════════════════════════
-   同行人头像组件
+   同行人头像组件 —— 弹簧依次弹入
    ═══════════════════════════════════════════════════ */
-function CompanionAvatar({ label, mobility, onSelect }: {
-  label: string; mobility: string | null; onSelect: () => void;
+function CompanionAvatar({ label, mobility, onSelect, index = 0 }: {
+  label: string; mobility: string | null; onSelect: () => void; index?: number;
 }) {
   const option = MOBILITY_OPTIONS.find(o => o.id === mobility);
   return (
     <div className="flex flex-col items-center gap-2">
-      <button
+      <motion.button
         onClick={onSelect}
+        initial={{ scale: 0, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 500, damping: 25, delay: index * 0.08 }}
+        whileTap={{ scale: 0.92 }}
         className="relative w-20 h-20 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden hover:border-emerald-400 transition-colors"
       >
         {option ? (
@@ -87,11 +89,12 @@ function CompanionAvatar({ label, mobility, onSelect }: {
             </span>
           </>
         )}
-      </button>
+      </motion.button>
       {option && (
         <motion.span
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
+          transition={{ type: 'spring', stiffness: 500, delay: index * 0.08 + 0.15 }}
           className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${option.tagColor}`}
         >
           {option.emoji} {option.tag}
@@ -102,7 +105,7 @@ function CompanionAvatar({ label, mobility, onSelect }: {
 }
 
 /* ═══════════════════════════════════════════════════
-   底部动作栏（选择出行方式）
+   底部动作栏（选择出行方式）—— 弹簧依次弹入
    ═══════════════════════════════════════════════════ */
 function MobilitySheet({ open, onClose, onSelect, current }: {
   open: boolean; onClose: () => void; onSelect: (id: string) => void; current: string | null;
@@ -129,16 +132,20 @@ function MobilitySheet({ open, onClose, onSelect, current }: {
             <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-5" />
             <h3 className="text-base font-bold text-gray-900 mb-4">选择出行方式</h3>
             <div className="space-y-2">
-              {MOBILITY_OPTIONS.map(opt => (
-                <button
+              {MOBILITY_OPTIONS.map((opt, i) => (
+                <motion.button
                   key={opt.id}
                   onClick={() => { onSelect(opt.id); onClose(); vibrate(30); }}
+                  initial={{ y: 40, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 28, delay: i * 0.08 }}
+                  whileTap={{ scale: 0.96 }}
                   className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border-2 transition-all ${current === opt.id ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-gray-300'}`}
                 >
                   <span className="text-3xl">{opt.emoji}</span>
                   <span className="text-sm font-semibold text-gray-800">{opt.label}</span>
                   <span className={`ml-auto px-2 py-0.5 rounded-full text-[10px] font-bold ${opt.tagColor}`}>{opt.tag}</span>
-                </button>
+                </motion.button>
               ))}
             </div>
             <button
@@ -155,7 +162,15 @@ function MobilitySheet({ open, onClose, onSelect, current }: {
 }
 
 /* ═══════════════════════════════════════════════════
-   海拔折线图 + 红色游标
+   翻转数字（老虎机式累加）—— 用于 3D 翻转背面数字炸裂
+   ═══════════════════════════════════════════════════ */
+function FlipNumber({ value, active }: { value: number; active: boolean }) {
+  const display = useCountUp(value, active, 600);
+  return <span className="font-black text-blue-600">{display}</span>;
+}
+
+/* ═══════════════════════════════════════════════════
+   海拔折线图 + 红色游标 —— 磁吸探测、陡坡高频震、补给点气泡、低体力残影
    ═══════════════════════════════════════════════════ */
 function ElevationChart({
   cursorKm, onCursorChange, lineWidth, easyMode,
@@ -179,24 +194,55 @@ function ElevationChart({
 
   const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
 
-  // 当前游标位置
+  // 当前游标位置（受控）
   const cursorX = PAD + (cursorKm / totalKm) * (W - PAD * 2);
-  // 插值海拔
-  let cursorAlt = alts[0];
-  for (let i = 1; i < ELEVATION_DATA.length; i++) {
-    if (ELEVATION_DATA[i].km >= cursorKm) {
-      const prev = ELEVATION_DATA[i - 1];
-      const t = (cursorKm - prev.km) / (ELEVATION_DATA[i].km - prev.km);
-      cursorAlt = Math.round(prev.alt + t * (ELEVATION_DATA[i].alt - prev.alt));
-      break;
+
+  // ── 插值海拔：根据 km 在两个数据点之间线性插值（连续平滑，不会跳跃）──
+  const interpolateAlt = useCallback((km: number): number => {
+    if (km <= ELEVATION_DATA[0].km) return ELEVATION_DATA[0].alt;
+    if (km >= totalKm) return ELEVATION_DATA[ELEVATION_DATA.length - 1].alt;
+    for (let i = 1; i < ELEVATION_DATA.length; i++) {
+      if (ELEVATION_DATA[i].km >= km) {
+        const prev = ELEVATION_DATA[i - 1];
+        const t = (km - prev.km) / (ELEVATION_DATA[i].km - prev.km);
+        return prev.alt + t * (ELEVATION_DATA[i].alt - prev.alt);
+      }
     }
-    cursorAlt = ELEVATION_DATA[i].alt;
-  }
+    return ELEVATION_DATA[ELEVATION_DATA.length - 1].alt;
+  }, [totalKm]);
+
+  // 根据 km 求曲线上的 y 坐标（用于游标圆点贴合曲线）
+  const kmToY = useCallback((km: number): number => {
+    const alt = interpolateAlt(km);
+    return H - PAD - ((alt - minAlt) / range) * (H - PAD * 2);
+  }, [interpolateAlt, minAlt, range]);
+
+  const cursorAlt = interpolateAlt(cursorKm);
 
   // 计算体力数据
-  const climbedFloors = Math.round(((cursorAlt - 420) / 3.2)); // 1层 ≈ 3.2m
-  const totalClimb = maxAlt - 420;
-  const remaining = Math.max(0, Math.round(100 - (cursorAlt - 420) / totalClimb * 100));
+  // 已爬楼层：从起点海拔累计爬升（只计爬升，不计下降，下坡不算负数）
+  let cumulativeClimb = 0;
+  for (let i = 1; i < ELEVATION_DATA.length; i++) {
+    if (ELEVATION_DATA[i].km > cursorKm) {
+      const prev = ELEVATION_DATA[i - 1];
+      const t = (cursorKm - prev.km) / (ELEVATION_DATA[i].km - prev.km);
+      const altHere = prev.alt + t * (ELEVATION_DATA[i].alt - prev.alt);
+      const delta = altHere - ELEVATION_DATA[i - 1].alt;
+      if (delta > 0) cumulativeClimb += delta;
+      break;
+    }
+    const delta = ELEVATION_DATA[i].alt - ELEVATION_DATA[i - 1].alt;
+    if (delta > 0) cumulativeClimb += delta;
+  }
+  const climbedFloors = Math.max(0, Math.round(cumulativeClimb / 3.2)); // 1层 ≈ 3.2m，下坡不计入
+  // 总爬升（全程累计正向爬升）
+  let totalClimb = 0;
+  for (let i = 1; i < ELEVATION_DATA.length; i++) {
+    const d = ELEVATION_DATA[i].alt - ELEVATION_DATA[i - 1].alt;
+    if (d > 0) totalClimb += d;
+  }
+  // 剩余体力 = 100 - 已累计爬升占比，严格夹在 [0, 100]
+  const remaining = Math.max(0, Math.min(100, Math.round(100 - cumulativeClimb / Math.max(1, totalClimb) * 100)));
   const nextSupply = SUPPLY_POINTS.find(s => s.km > cursorKm);
   const distToSupply = nextSupply ? ((nextSupply.km - cursorKm) * 1000).toFixed(0) : '0';
 
@@ -211,32 +257,131 @@ function ElevationChart({
     }
   }
 
-  const handleInteraction = (clientX: number) => {
+  // ──────────────────────────────────────────────
+  // 平滑拖拽：用 MotionValue 直接驱动，松手 snap 回最近 km
+  // ──────────────────────────────────────────────
+  const dragX = useMotionValue(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragKm, setDragKm] = useState(cursorKm);
+
+  const pointerX = useMotionValue(0);
+
+  const handleDown = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     if (!svgRef.current) return;
+    e.preventDefault();
     const rect = svgRef.current.getBoundingClientRect();
-    const x = (clientX - rect.left) / rect.width * W;
-    const km = Math.max(0, Math.min(totalKm, ((x - PAD) / (W - PAD * 2)) * totalKm));
-    onCursorChange(Math.round(km * 10) / 10);
-  };
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    pointerX.set(clientX);
+    dragX.set((cursorKm / totalKm) * (W - PAD * 2));
+    setIsDragging(true);
+    setDragKm(cursorKm);
+  }, [cursorKm, totalKm]);
+
+  const handleMove = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDragging) return;
+    if (e.cancelable) e.preventDefault();
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const delta = clientX - pointerX.get();
+    const newDragX = dragX.get() + delta;
+    const clampedDragX = Math.max(0, Math.min(W - PAD * 2, newDragX));
+    dragX.set(clampedDragX);
+    const km = Math.round((clampedDragX / (W - PAD * 2)) * totalKm * 10) / 10;
+    setDragKm(km);
+    pointerX.set(clientX);
+  }, [isDragging, totalKm]);
+
+  const handleUp = useCallback(() => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    // 松手 snap 到最近 0.1km
+    const finalDragX = dragX.get();
+    const snappedKm = Math.round((finalDragX / (W - PAD * 2)) * totalKm * 10) / 10;
+    const clamped = Math.max(0, Math.min(totalKm, snappedKm));
+    onCursorChange(clamped);
+    // 用 spring 回弹到 snapped 位置（视觉反馈）
+    animate(dragX, (clamped / totalKm) * (W - PAD * 2), { type: 'spring', stiffness: 400, damping: 30 });
+  }, [isDragging, onCursorChange, totalKm]);
+
+  // 触摸滑动时阻止浏览器默认行为（页面滚动 + 文本选择）
+  // React 的 onTouchMove 是 passive 的，需用 addEventListener 显式 { passive: false }
+  useEffect(() => {
+    const node = svgRef.current;
+    if (!node) return;
+    const preventTouchDefault = (e: TouchEvent) => {
+      if (isDragging) e.preventDefault();
+    };
+    node.addEventListener('touchmove', preventTouchDefault, { passive: false });
+    return () => node.removeEventListener('touchmove', preventTouchDefault);
+  }, [isDragging]);
+
+  // 陡坡段高频震动（节流 50ms）——使用受控 cursorKm
+  const lastSteepVibrate = useRef(0);
+  useEffect(() => {
+    const now = performance.now();
+    if (now - lastSteepVibrate.current < 50) return;
+    const inSteep = steepSegments.some(s => cursorX >= s.x1 && cursorX <= s.x2);
+    if (inSteep) {
+      lastSteepVibrate.current = now;
+      vibrate([8, 8, 8, 8, 8]);
+    }
+  }, [cursorX, steepSegments, cursorKm]);
+
+  // 补给点检测：游标经过时放大 + 气泡
+  const [activeSupply, setActiveSupply] = useState<string | null>(null);
+  useEffect(() => {
+    const supply = SUPPLY_POINTS.find(s => Math.abs(s.km - cursorKm) < 0.08);
+    if (supply && activeSupply !== supply.name) {
+      setActiveSupply(supply.name);
+      const t = setTimeout(() => setActiveSupply(null), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [cursorKm, activeSupply]);
+
+  // 低体力残影
+  const showTrail = remaining < 30;
+
+  // 跨页联动入场：热量预警触发时，体力消耗数值跳动 + 变淡红
+  const { heatWarning, heatWarningPulseAt } = useSharedMotionStore();
+  const heatActive = heatWarning && Date.now() - heatWarningPulseAt < HEAT_WARNING_WINDOW;
+  const [heatPulseTriggered, setHeatPulseTriggered] = useState(false);
+
+  useEffect(() => {
+    if (heatActive && !heatPulseTriggered) {
+      setHeatPulseTriggered(true);
+      const t = setTimeout(() => setHeatPulseTriggered(false), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [heatActive, heatPulseTriggered]);
+
+  // 实际渲染用的游标位置：拖拽时用 dragX 对应的 km，否则用受控 cursorKm
+  const renderCursorKm = isDragging ? dragKm : cursorKm;
+  const renderCursorX = PAD + (renderCursorKm / totalKm) * (W - PAD * 2);
+  // 游标圆点 Y：始终用插值海拔计算，完全贴合曲线（不会跳跃）
+  const renderCursorY = kmToY(renderCursorKm);
 
   return (
     <div>
       <svg
         ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
-        className="w-full"
-        onMouseMove={(e) => handleInteraction(e.clientX)}
-        onTouchMove={(e) => handleInteraction(e.touches[0].clientX)}
-        onClick={(e) => handleInteraction(e.clientX)}
+        className="w-full select-none"
+        style={{ WebkitUserSelect: 'none', userSelect: 'none', touchAction: 'none' }}
+        onMouseDown={handleDown}
+        onMouseMove={handleMove}
+        onMouseUp={handleUp}
+        onMouseLeave={handleUp}
+        onTouchStart={handleDown}
+        onTouchMove={handleMove}
+        onTouchEnd={handleUp}
       >
         {/* 背景网格 */}
         {[0, 0.25, 0.5, 0.75, 1].map(t => (
           <line key={t} x1={PAD} y1={H - PAD - t * (H - PAD * 2)} x2={W - PAD} y2={H - PAD - t * (H - PAD * 2)}
             stroke="#E5E7EB" strokeWidth="0.5" />
         ))}
-        {/* Y轴标签 */}
+        {/* Y轴标签 —— pointer-events:none 不可被拖拽选中 */}
         {[0, 0.5, 1].map(t => (
-          <text key={t} x={PAD - 6} y={H - PAD - t * (H - PAD * 2) + 4} textAnchor="end" fontSize="10" fill="#9CA3AF">
+          <text key={t} x={PAD - 6} y={H - PAD - t * (H - PAD * 2) + 4} textAnchor="end" fontSize="10" fill="#9CA3AF" style={{ pointerEvents: 'none', userSelect: 'none' }}>
             {Math.round(minAlt + t * range)}m
           </text>
         ))}
@@ -245,40 +390,156 @@ function ElevationChart({
         <path d={`${pathD} L ${points[points.length - 1].x} ${H - PAD} L ${points[0].x} ${H - PAD} Z`}
           fill="url(#elevGrad)" opacity="0.3" />
 
-        {/* 陡坡标记 */}
-        {!easyMode && steepSegments.map((seg, i) => (
-          <line key={i} x1={seg.x1} y1={H - PAD - 20} x2={seg.x2} y2={H - PAD - 20}
-            stroke="#EF4444" strokeWidth="2" strokeDasharray="6 4" opacity="0.7" />
-        ))}
+        {/* 陡坡标记：直接叠在曲线段上（贴合 y，不在曲线下方留独立虚线） */}
+        {!easyMode && steepSegments.map((seg, i) => {
+          const startPt = points.find(p => Math.abs(p.x - seg.x1) < 0.5);
+          const endPt = points.find(p => Math.abs(p.x - seg.x2) < 0.5);
+          return (
+            <line
+              key={i}
+              x1={seg.x1}
+              y1={startPt ? startPt.y : 0}
+              x2={seg.x2}
+              y2={endPt ? endPt.y : 0}
+              stroke="#EF4444"
+              strokeWidth={lineWidth + 2}
+              strokeDasharray="4 3"
+              opacity="0.55"
+              strokeLinecap="round"
+            />
+          );
+        })}
 
-        {/* 路线 */}
-        <path d={pathD} fill="none"
+        {/* 路线 —— strokeWidth 为 motion 值，支持“充气管道”动画 */}
+        <motion.path
+          d={pathD}
+          fill="none"
           stroke={easyMode ? '#10B981' : '#3B82F6'}
-          strokeWidth={lineWidth}
-          strokeLinecap="round" strokeLinejoin="round"
-          strokeDasharray={lineWidth > 5 ? '12 6' : undefined}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ strokeWidth: lineWidth, strokeDasharray: lineWidth > 5 ? '12 6' : undefined }}
         />
 
-        {/* 补给点标记 */}
+        {/* 补给点标记 —— pointer-events:none 避免拖动时被选中 */}
         {SUPPLY_POINTS.map((sp) => {
           const x = PAD + (sp.km / totalKm) * (W - PAD * 2);
           const pt = points.find(p => Math.abs(p.km - sp.km) < 0.05);
           const y = pt ? pt.y : H - PAD;
+          const isActive = activeSupply === sp.name;
           return (
-            <g key={sp.name}>
-              <circle cx={x} cy={y} r="6" fill="white" stroke={sp.type === 'supply' ? '#F59E0B' : sp.type === 'entrance' ? '#22C55E' : sp.type === 'exit' ? '#EF4444' : '#6B7280'} strokeWidth="2" />
-              <text x={x} y={y + 3} textAnchor="middle" fontSize="7" fill="#374151" fontWeight="bold">
-                {sp.type === 'supply' ? '补给' : sp.type === 'toilet' ? 'WC' : ''}
+            <g key={sp.name} style={{ pointerEvents: 'none' }}>
+              <motion.circle
+                cx={x}
+                cy={y}
+                r={6}
+                fill="white"
+                stroke={sp.type === 'supply' ? '#F59E0B' : sp.type === 'entrance' ? '#22C55E' : sp.type === 'exit' ? '#EF4444' : '#6B7280'}
+                strokeWidth={2}
+                animate={{ scale: isActive ? 1.5 : 1 }}
+                transition={{ type: 'spring', stiffness: 600, damping: 20 }}
+              />
+              <text x={x} y={y + 3} textAnchor="middle" fontSize="7" fill="#374151" fontWeight="bold" style={{ pointerEvents: 'none', userSelect: 'none' }}>
+                {sp.hasToilet ? '🚻' : sp.type === 'supply' ? '补给' : ''}
               </text>
             </g>
           );
         })}
 
+        {/* 低体力残影：5 个延迟递减的圆点 */}
+        {showTrail && Array.from({ length: 5 }).map((_, i) => {
+          const trailIdx = Math.max(0, points.findIndex(p => p.x <= renderCursorX) - i * 2);
+          const trailPt = points[trailIdx] || points[0];
+          return (
+            <motion.circle
+              key={i}
+              cx={trailPt.x}
+              cy={trailPt.y}
+              r={7 - i}
+              fill="#EF4444"
+              opacity={0.5 - i * 0.08}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 - i * 0.08 }}
+              transition={{ delay: i * 0.04 }}
+            />
+          );
+        })}
+
         {/* 红色游标 */}
-        <line x1={cursorX} y1={PAD - 5} x2={cursorX} y2={H - PAD} stroke="#EF4444" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.6" />
-        <circle cx={cursorX} cy={H - PAD - ((cursorAlt - minAlt) / range) * (H - PAD * 2)} r="7" fill="#EF4444" stroke="white" strokeWidth="2.5">
-          <animate attributeName="r" values="7;9;7" dur="1.5s" repeatCount="indefinite" />
-        </circle>
+        <line x1={renderCursorX} y1={PAD - 5} x2={renderCursorX} y2={H - PAD} stroke="#EF4444" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.6" />
+        {/* 脉动游标：用两个交替的 spring 动画模拟 1→1.15→1，spring 只支持两帧 */}
+        {activeSupply ? (
+          <motion.circle
+            cx={renderCursorX}
+            cy={renderCursorY}
+            r={7}
+            fill="#EF4444"
+            stroke="white"
+            strokeWidth={2.5}
+            animate={{ scale: 1.5 }}
+            transition={{ type: 'spring', stiffness: 600, damping: 20 }}
+          />
+        ) : (
+          <>
+            <motion.circle
+              cx={renderCursorX}
+              cy={renderCursorY}
+              r={7}
+              fill="#EF4444"
+              stroke="white"
+              strokeWidth={2.5}
+              animate={{ scale: [1, 1.15] }}
+              transition={{
+                type: 'spring',
+                stiffness: 400,
+                damping: 20,
+                duration: 0.75,
+                repeat: Infinity,
+                repeatDelay: 0.75,
+              }}
+            />
+            <motion.circle
+              cx={renderCursorX}
+              cy={renderCursorY}
+              r={7}
+              fill="#EF4444"
+              stroke="white"
+              strokeWidth={2.5}
+              animate={{ scale: [1.15, 1] }}
+              transition={{
+                type: 'spring',
+                stiffness: 400,
+                damping: 20,
+                duration: 0.75,
+                delay: 0.75,
+                repeat: Infinity,
+                repeatDelay: 0.75,
+              }}
+            />
+          </>
+        )}
+
+        {/* 补给点微型气泡 */}
+        {activeSupply && (
+          <motion.g
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 600, damping: 25 }}
+          >
+            <rect
+              x={renderCursorX - 50}
+              y={PAD - 30}
+              width={100}
+              height={24}
+              rx={12}
+              fill="#1F2937"
+              opacity="0.9"
+            />
+            <text x={renderCursorX} y={PAD - 13} textAnchor="middle" fontSize="10" fill="white" fontWeight="bold" style={{ pointerEvents: 'none', userSelect: 'none' }}>
+              {activeSupply}
+            </text>
+          </motion.g>
+        )}
 
         <defs>
           <linearGradient id="elevGrad" x1="0" y1="0" x2="0" y2="1">
@@ -288,16 +549,36 @@ function ElevationChart({
         </defs>
       </svg>
 
-      {/* 底部数据卡片 */}
-      <div className="grid grid-cols-3 gap-3 mt-4">
+      {/* 底部数据卡片 —— select-none 防止拖拽时选中文字 */}
+      <div className="grid grid-cols-3 gap-3 mt-4 select-none">
         <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
-          <div className="text-[28px] font-black text-orange-500 leading-none">{climbedFloors}</div>
+          <motion.div
+            key={climbedFloors}
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 500 }}
+            className="text-[28px] font-black text-orange-500 leading-none"
+          >
+            {climbedFloors}
+          </motion.div>
           <div className="text-[11px] text-gray-500 mt-1 font-medium">已爬 (层楼)</div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
-          <div className={`text-[28px] font-black leading-none ${remaining < 30 ? 'text-red-500 animate-pulse' : 'text-emerald-500'}`}>{remaining}%</div>
-          <div className="text-[11px] text-gray-500 mt-1 font-medium">剩余体力</div>
-        </div>
+        <motion.div
+          key={`${remaining}-${heatActive}`}
+          className="bg-white rounded-xl border border-gray-200 p-3 text-center"
+        >
+          <motion.div
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 500 }}
+            className={`text-[28px] font-black leading-none ${heatActive ? 'text-red-300 animate-pulse' : remaining < 30 ? 'text-red-500 animate-pulse' : 'text-emerald-500'}`}
+          >
+            {remaining}%
+          </motion.div>
+          <div className="text-[11px] text-gray-500 mt-1 font-medium">
+            {heatActive ? '高温预警' : '剩余体力'}
+          </div>
+        </motion.div>
         <div className={`bg-white rounded-xl border p-3 text-center ${Number(distToSupply) > 500 ? 'border-red-200 animate-pulse' : 'border-gray-200'}`}>
           <div className={`text-[28px] font-black leading-none ${Number(distToSupply) > 500 ? 'text-red-500' : 'text-blue-500'}`}>{distToSupply}</div>
           <div className="text-[11px] text-gray-500 mt-1 font-medium">下个补给 (米)</div>
@@ -308,9 +589,26 @@ function ElevationChart({
 }
 
 /* ═══════════════════════════════════════════════════
-   3D 翻转容器
+   3D 翻转容器 —— rotateY + 数字炸裂 + 金属咔嗒声
    ═══════════════════════════════════════════════════ */
 function FlipView({ front, back, flipped }: { front: React.ReactNode; back: React.ReactNode; flipped: boolean }) {
+  const { playClick } = useAudioClick();
+  const flipProgress = useMotionValue(0);
+
+  // 翻转进度 0→1，背面显示时触发数字累加
+  useEffect(() => {
+    animate(flipProgress, flipped ? 1 : 0, {
+      duration: 0.8,
+      ease: [0.4, 0, 0.2, 1],
+      onUpdate: (v) => {
+        // 90° 过半时触发咔嗒声
+        if (!flipped && v > 0.5) {
+          playClick();
+        }
+      },
+    });
+  }, [flipped, flipProgress, playClick]);
+
   return (
     <div className="relative" style={{ perspective: 1200 }}>
       <motion.div
@@ -327,64 +625,157 @@ function FlipView({ front, back, flipped }: { front: React.ReactNode; back: Reac
 }
 
 /* ═══════════════════════════════════════════════════
-   紧急按钮
+   紧急按钮 —— 累了卡片弧线上甩 + SOS 长按描边生长 + 边缘红光晕
    ═══════════════════════════════════════════════════ */
 function EmergencyButton() {
   const [showOptions, setShowOptions] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [sosActive, setSosActive] = useState(false);
+  const setSosStore = useSharedMotionStore((s) => s.setSosActive);
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  // 单击"累了"：从按钮位置弧线甩出卡片
+  const handleClick = useCallback(() => {
+    if (!btnRef.current) return;
+    const rect = btnRef.current.getBoundingClientRect();
+    const originY = rect.bottom - window.innerHeight; // 相对视口底部
+    setShowOptions(true);
+    // 触发弹窗入场动画（由 motion.div initial 处理）
+  }, []);
+
+  // 长按 1.5s 触发 SOS
+  const onSosComplete = useCallback(() => {
+    setSosActive(true);
+    setSosStore(true);
+    setShowOptions(false);
+    // 触发边缘红光晕（通过 sosActive 控制）
+  }, [setSosStore]);
+
+  const { progress, holding, broken, start, cancel } = useLongPressCharge(1500, onSosComplete, () => {
+    setSosActive(false);
+    setSosStore(false);
+  });
+
+  // 监听 broken/holding 变化
+  useEffect(() => {
+    if (!holding && progress > 0 && progress < 1) {
+      // 中途松手取消
+    }
+  }, [holding, progress]);
+
+  useEffect(() => {
+    if (sosActive) {
+      // SOS 期间屏幕边缘红光晕
+      // 箭头描边生长在路线上（由父级地图渲染，这里只做全局状态）
+      const t = setTimeout(() => {
+        setSosActive(false);
+        setSosStore(false);
+      }, 10000);
+      return () => clearTimeout(t);
+    }
+  }, [sosActive, setSosStore]);
+
+  // 单击弹出卡片：用 motion.div 布局动画，从按钮位置甩出
+  const optionsContent = useMemo(() => (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20, rotate: -5 }}
+      animate={{ opacity: 1, y: 0, rotate: 0 }}
+      exit={{ opacity: 0, y: 20, rotate: 3 }}
+      transition={{ type: 'spring', damping: 15, stiffness: 200 }}
+      className="relative w-full max-w-sm space-y-3"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        onClick={() => {
+          setShowOptions(false);
+          setFeedback('🚐 电瓶车呼叫中，请稍候…');
+          vibrate(30);
+          setTimeout(() => setFeedback(null), 3000);
+        }}
+        className="w-full py-8 bg-emerald-500 text-white rounded-2xl text-xl font-bold shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-transform"
+      >
+        🚐 叫电瓶车
+      </button>
+      <button
+        onClick={() => {
+          setShowOptions(false);
+          setFeedback('🚶 已规划最近出口路线，请沿指示行走');
+          vibrate(30);
+          setTimeout(() => setFeedback(null), 3000);
+        }}
+        className="w-full py-8 bg-blue-500 text-white rounded-2xl text-xl font-bold shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-transform"
+      >
+        🚶 去出口
+      </button>
+    </motion.div>
+  ), []);
 
   return (
     <>
-      {/* 紧急按钮 - 底部常驻 */}
-      <button
-        onClick={() => setShowOptions(true)}
-        className="w-full py-5 bg-gradient-to-r from-red-500 to-red-600 text-white text-xl font-bold rounded-2xl shadow-lg active:scale-[0.98] transition-transform flex items-center justify-center"
+      {/* 屏幕边缘红光晕 */}
+      <AnimatePresence>
+        {sosActive && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 1, 0] }}
+            transition={{ duration: 0.5, repeat: Infinity }}
+            className="fixed inset-0 pointer-events-none z-40"
+            style={{ boxShadow: 'inset 0 0 100px 50px rgba(239,68,68,0.4)' }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* 紧急按钮 - 底部常驻 + PressureButton 重按压感 */}
+      <PressureButton
+        ref={btnRef}
+        maxDepth={8}
+        onClick={handleClick}
+        className="w-full py-5 bg-gradient-to-r from-red-500 to-red-600 text-white text-xl font-bold rounded-2xl shadow-lg flex items-center justify-center"
         style={{ minHeight: '8vh' }}
       >
         我现在累了
-      </button>
+      </PressureButton>
 
-      {/* 选项弹窗 */}
+      {/* SOS 充能进度环（长按时显示在按钮上方） */}
+      {holding && progress < 1 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed bottom-36 left-1/2 -translate-x-1/2 z-50"
+        >
+          <svg width={80} height={80} viewBox="0 0 80 80" className="-rotate-90">
+            <circle cx="40" cy="40" r="35" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="6" />
+            <motion.circle
+              cx="40"
+              cy="40"
+              r="35"
+              fill="none"
+              stroke="white"
+              strokeWidth="6"
+              strokeLinecap="round"
+              style={{ strokeDasharray: 220 }}
+              initial={{ strokeDashoffset: 220 }}
+              animate={{ strokeDashoffset: 220 - progress * 220 }}
+              transition={{ duration: 0.01 }}
+            />
+          </svg>
+          <p className="text-center text-white text-xs mt-1">松手取消 · 1.5s触发SOS</p>
+        </motion.div>
+      )}
+
+      {/* 选项弹窗：从按钮位置弧线甩出 */}
       <AnimatePresence>
         {showOptions && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-6"
+            className="fixed inset-0 z-50 flex items-end justify-center p-6"
             onClick={() => setShowOptions(false)}
           >
             <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="relative w-full max-w-sm space-y-3"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={() => {
-                  setShowOptions(false);
-                  setFeedback('🚐 电瓶车呼叫中，请稍候…');
-                  vibrate(30);
-                  setTimeout(() => setFeedback(null), 3000);
-                }}
-                className="w-full py-8 bg-emerald-500 text-white rounded-2xl text-xl font-bold shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-transform"
-              >
-                🚐 叫电瓶车
-              </button>
-              <button
-                onClick={() => {
-                  setShowOptions(false);
-                  setFeedback('🚶 已规划最近出口路线，请沿指示行走');
-                  vibrate(30);
-                  setTimeout(() => setFeedback(null), 3000);
-                }}
-                className="w-full py-8 bg-blue-500 text-white rounded-2xl text-xl font-bold shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-transform"
-              >
-                🚶 去出口
-              </button>
-            </motion.div>
+            {optionsContent}
           </motion.div>
         )}
       </AnimatePresence>
@@ -396,7 +787,7 @@ function EmergencyButton() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-28 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-sm px-5 py-3 rounded-xl shadow-xl whitespace-nowrap"
+            className="fixed bottom-40 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-sm px-5 py-3 rounded-xl shadow-xl whitespace-nowrap"
           >
             {feedback}
           </motion.div>
@@ -453,12 +844,13 @@ export default function FitnessView() {
             <span className="text-sm font-semibold text-gray-700">同行人</span>
           </div>
           <div className="flex justify-center gap-10">
-            {Object.entries(companions).map(([name, mobility]) => (
+            {Object.entries(companions).map(([name, mobility], idx) => (
               <CompanionAvatar
                 key={name}
                 label={name}
                 mobility={mobility}
                 onSelect={() => setSheetTarget(name)}
+                index={idx}
               />
             ))}
           </div>
@@ -551,8 +943,8 @@ export default function FitnessView() {
                         {SUPPLY_POINTS.filter(s => s.type === 'rest' || s.type === 'supply').map(sp => (
                           <div key={sp.name} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
                             <motion.div
-                              animate={{ scale: [1, 1.15, 1] }}
-                              transition={{ duration: 2, repeat: Infinity }}
+                              animate={{ scale: [1, 1.15] }}
+                              transition={{ type: 'spring', stiffness: 300, damping: 20, duration: 1, repeat: Infinity, repeatDelay: 1 }}
                               className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0"
                             >
                               <Armchair className="w-4 h-4 text-emerald-600" />
@@ -585,8 +977,8 @@ export default function FitnessView() {
                             <span className="text-xs text-gray-400">{seg.difficulty}</span>
                           </div>
                           <div className="flex gap-4 text-xs text-gray-500">
-                            <span className="flex items-center gap-1"><Route className="w-3 h-3" /> {seg.dist}km</span>
-                            <span className="flex items-center gap-1"><Mountain className="w-3 h-3" /> {seg.climb > 0 ? '+' : ''}{seg.climb}m</span>
+                            <span className="flex items-center gap-1"><Route className="w-3 h-3" /> <FlipNumber value={seg.dist} active={!easyMode} />km</span>
+                            <span className="flex items-center gap-1"><Mountain className="w-3 h-3" /> {seg.climb > 0 ? '+' : ''}<FlipNumber value={seg.climb} active={!easyMode} />m</span>
                           </div>
                           <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
                             <motion.div

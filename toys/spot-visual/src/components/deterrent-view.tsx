@@ -1,13 +1,16 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Sun, Heart, Footprints, ThermometerSun, Volume2, X, Accessibility, MapPin, Clock, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, animate } from 'framer-motion';
+import { AlertTriangle, Sun, Heart, Footprints, ThermometerSun, Volume2, X, MapPin, Clock, ChevronDown } from 'lucide-react';
+import { useRatchetDrag, useLongPressCharge, useSteadyShake, vibrate } from '@/lib/motion-hooks';
+import { useSharedMotionStore } from '@/lib/shared-motion-store';
+import { BreathRing } from '@/components/shared/breath-ring';
+import { LiquidCharge } from '@/components/shared/liquid-charge';
+import { PressureButton } from '@/components/shared/pressure-button';
 
 /* ═══ 工具函数 ═══ */
-const vibrate = (pattern: number | number[]) => {
-  try { navigator.vibrate?.(pattern); } catch { /* iOS 不支持 */ }
-};
+// vibrate 已抽到 motion-hooks，这里保留 speak
 const speak = (text: string) => {
   try {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
@@ -73,37 +76,29 @@ const TIMELINE_DATA = [
 ];
 
 /* ═══════════════════════════════════════════════════
-   拨盘组件
+   拨盘组件 —— 磁吸棘轮感 + spring 回弹
    ═══════════════════════════════════════════════════ */
-function Dial({ value, onChange }: { value: number; onChange: (i: number) => void }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const dragging = useRef(false);
-  const startX = useRef(0);
-  const [dragOffset, setDragOffset] = useState(0);
+const SLOT_WIDTH = 160;
 
-  const handleStart = (clientX: number) => {
-    dragging.current = true;
-    startX.current = clientX - dragOffset;
-  };
-  const handleMove = (clientX: number) => {
-    if (!dragging.current) return;
-    const offset = clientX - startX.current;
-    const clamped = Math.max(-160, Math.min(160, offset));
-    setDragOffset(clamped);
-  };
-  const handleEnd = () => {
-    if (!dragging.current) return;
-    dragging.current = false;
-    // 找最近的槽位
-    const slotWidth = 160;
-    let nearest = Math.round(dragOffset / slotWidth);
+function Dial({ value, onChange }: { value: number; onChange: (i: number) => void }) {
+  // 棘轮拖动：motionX 跟手，跨 slot 边界触发短震，松手 spring 回弹到刻度
+  const { motionX, handleStart, handleMove, handleEnd, snapTo } = useRatchetDrag(SLOT_WIDTH);
+
+  // 松手：定位到最近 slot 并通知上层，让 spring 弹回
+  const handleRelease = () => {
+    const raw = handleEnd() ?? 0;
+    let nearest = Math.round(raw / SLOT_WIDTH);
     nearest = Math.max(-1, Math.min(1, nearest));
     const newIndex = Math.max(0, Math.min(TIME_PERIODS.length - 1, value + nearest));
+    // 让 spring 弹到目标 slot（含过冲回弹）
+    snapTo(nearest);
     if (newIndex !== value) {
       onChange(newIndex);
       vibrate(50);
+    } else {
+      // 未切档，仍触发一次回弹震感
+      vibrate(15);
     }
-    setDragOffset(0);
   };
 
   const period = TIME_PERIODS[value];
@@ -111,14 +106,13 @@ function Dial({ value, onChange }: { value: number; onChange: (i: number) => voi
   return (
     <div
       className="relative select-none touch-none"
-      ref={containerRef}
       onMouseDown={(e) => handleStart(e.clientX)}
       onMouseMove={(e) => handleMove(e.clientX)}
-      onMouseUp={handleEnd}
-      onMouseLeave={() => { if (dragging.current) handleEnd(); }}
+      onMouseUp={handleRelease}
+      onMouseLeave={() => { /* 等同松手 */ handleRelease(); }}
       onTouchStart={(e) => handleStart(e.touches[0].clientX)}
       onTouchMove={(e) => handleMove(e.touches[0].clientX)}
-      onTouchEnd={handleEnd}
+      onTouchEnd={handleRelease}
     >
       {/* 指示三角 */}
       <div className="flex justify-center mb-1">
@@ -130,11 +124,14 @@ function Dial({ value, onChange }: { value: number; onChange: (i: number) => voi
         <div className="absolute inset-x-0 top-0 bottom-0 bg-gradient-to-r from-white via-transparent to-white z-10 pointer-events-none" />
         {TIME_PERIODS.map((t, i) => {
           const isActive = i === value;
+          // 每个时段的 x = (i-value)*SLOT + motionX（跟手偏移）
+          const baseX = (i - value) * SLOT_WIDTH;
           return (
             <motion.div
               key={t.label}
-              className={`absolute text-center transition-colors duration-300 ${isActive ? 'text-gray-900' : 'text-gray-400'}`}
-              animate={{ x: (i - value) * 160 + dragOffset, scale: isActive ? 1.15 : 0.85, opacity: isActive ? 1 : 0.4 }}
+              className={`absolute text-center ${isActive ? 'text-gray-900' : 'text-gray-400'}`}
+              style={{ x: useTransform(motionX, (mv) => baseX + mv) }}
+              animate={{ scale: isActive ? 1.15 : 0.85, opacity: isActive ? 1 : 0.4 }}
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             >
               <span className="text-2xl">{t.emoji}</span>
@@ -144,7 +141,7 @@ function Dial({ value, onChange }: { value: number; onChange: (i: number) => voi
         })}
       </div>
 
-      {/* UV & 阴影数据 */}
+      {/* UV & 阴影数据 —— 切档时阶梯跳色：清晨→正午闪白再渐入橙红 */}
       <motion.div
         className="mt-4 flex justify-center gap-10"
         key={value}
@@ -167,47 +164,85 @@ function Dial({ value, onChange }: { value: number; onChange: (i: number) => voi
   );
 }
 
+// 阶梯跳色背景：清晨→正午闪白再渐入橙红，其它档位直接渐变
+function DialBackground({ period, fromIdx, toIdx }: { period: typeof TIME_PERIODS[0]; fromIdx: number; toIdx: number }) {
+  const isNoonFlash = fromIdx === 0 && toIdx === 1; // 清晨→正午
+  if (isNoonFlash) {
+    return (
+      <motion.div
+        key={toIdx}
+        className="absolute inset-0"
+        style={{ background: `linear-gradient(180deg, ${period.bgFrom} 0%, ${period.bgTo} 30%, #F9FAFB 100%)` }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
+      >
+        <motion.div
+          className="absolute inset-0 bg-white"
+          initial={{ opacity: 1 }}
+          animate={{ opacity: [1, 0.9, 0] }}
+          transition={{ duration: 0.35, times: [0, 0.15, 1] }}
+        />
+      </motion.div>
+    );
+  }
+  return (
+    <motion.div
+      key={toIdx}
+      className="absolute inset-0"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+      style={{ background: `linear-gradient(180deg, ${period.bgFrom} 0%, ${period.bgTo} 30%, #F9FAFB 100%)` }}
+    />
+  );
+}
+
 /* ═══════════════════════════════════════════════════
-   身体条件圆钮
+   身体条件圆钮 —— Z 轴下沉 + 果冻回弹 + 呼吸波环
+   双击时记录按钮屏幕坐标，供弹窗撕裂展开
    ═══════════════════════════════════════════════════ */
 function ConditionButton({ condition, active, onToggle, onDoubleClick }: {
-  condition: typeof CONDITIONS[0]; active: boolean; onToggle: () => void; onDoubleClick: () => void;
+  condition: typeof CONDITIONS[0]; active: boolean; onToggle: () => void; onDoubleClick: (origin: { x: number; y: number }) => void;
 }) {
   const Icon = condition.icon;
-  const clickTimer = useRef<ReturnType<typeof setTimeout>>();
-  const clickCount = useRef(0);
+  const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clickCount = useRef<number>(0);
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
     clickCount.current++;
     if (clickCount.current === 1) {
+      const origin = { x: e.clientX, y: e.clientY };
       clickTimer.current = setTimeout(() => {
         if (clickCount.current === 1) onToggle();
         clickCount.current = 0;
       }, 280);
+      // 暂存 origin 供可能的二次点击
+      (handleClick as any)._lastOrigin = origin;
     } else {
-      clearTimeout(clickTimer.current);
+      if (clickTimer.current !== null) clearTimeout(clickTimer.current);
       clickCount.current = 0;
-      onDoubleClick();
+      const origin = (handleClick as any)._lastOrigin || { x: 0, y: 0 };
+      onDoubleClick(origin);
     }
   };
 
   return (
-    <motion.button
-      onClick={handleClick}
-      whileTap={{ scale: 0.85 }}
-      className={`relative w-20 h-20 rounded-full flex flex-col items-center justify-center gap-0.5 shadow-lg transition-all duration-200 ${active ? `bg-gradient-to-br ${condition.color} text-white shadow-xl ring-4 ring-white/50` : 'bg-white text-gray-500 border-2 border-gray-200'}`}
-      style={active ? { boxShadow: '0 0 20px rgba(239,68,68,0.3)' } : {}}
-    >
-      <Icon className="w-6 h-6" />
-      <span className="text-[10px] font-bold leading-tight">{condition.label}</span>
-      {active && (
-        <motion.div
-          className="absolute inset-0 rounded-full border-2 border-red-400"
-          animate={{ scale: [1, 1.2, 1], opacity: [0.6, 0, 0.6] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-        />
-      )}
-    </motion.button>
+    <div style={{ perspective: 400 }}>
+      <motion.button
+        onClick={handleClick}
+        whileTap={{ translateY: 4, scaleZ: 0.92 }}
+        whileHover={{ scale: active ? 1.04 : 1.02 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 12 }}
+        style={{ transformStyle: 'preserve-3d' }}
+        className={`relative w-20 h-20 rounded-full flex flex-col items-center justify-center gap-0.5 shadow-lg ${active ? `bg-gradient-to-br ${condition.color} text-white shadow-xl ring-4 ring-white/50` : 'bg-white text-gray-500 border-2 border-gray-200'}`}
+      >
+        <Icon className="w-6 h-6" />
+        <span className="text-[10px] font-bold leading-tight">{condition.label}</span>
+        {/* 呼吸波环：激活时 2 层错相扩散 */}
+        {active && <BreathRing color="rgba(239,68,68,0.55)" layers={2} />}
+      </motion.button>
+    </div>
   );
 }
 
@@ -240,9 +275,21 @@ function TimelineCard({ item, index, activeConditions }: { item: typeof TIMELINE
         </span>
       </div>
 
-      {/* 巨幅照片 */}
+      {/* 巨幅照片 —— 翻页挤压：旧图 scaleY 压为 0 消失，新图从 0 拉伸复原 */}
       <div className="relative flex-1 rounded-2xl overflow-hidden shadow-xl">
-        <img src={item.photo} alt={item.time} className="w-full h-full object-cover" loading="lazy" />
+        <AnimatePresence mode="popLayout">
+          <motion.img
+            key={item.photo}
+            src={item.photo}
+            alt={item.time}
+            className="w-full h-full object-cover"
+            loading="lazy"
+            initial={{ scaleY: 0, transformOrigin: 'bottom' }}
+            animate={{ scaleY: 1, transformOrigin: 'bottom' }}
+            exit={{ scaleY: 0, transformOrigin: 'bottom' }}
+            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+          />
+        </AnimatePresence>
         {/* 红色蒙层（条件激活时） */}
         {activeConditions.size > 0 && (
           <div className="absolute inset-0 bg-gradient-to-t from-red-600/40 via-red-500/20 to-transparent pointer-events-none" />
@@ -310,6 +357,81 @@ function TimelineCard({ item, index, activeConditions }: { item: typeof TIMELINE
 }
 
 /* ═══════════════════════════════════════════════════
+   重锤惯性时间轴 —— drag y + 低 elastic + 松手位移放大 1.3 倍衰减
+   ═══════════════════════════════════════════════════ */
+function HeavyTimeline({
+  count, activeConditions, onIndexChange,
+}: {
+  count: number;
+  activeConditions: Set<string>;
+  onIndexChange: (idx: number) => void;
+}) {
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const [viewH, setViewH] = useState(0);
+  const itemH = viewH; // 每张占满视口高度
+  const y = useMotionValue(0);
+  const lastIndex = useRef(0);
+
+  useEffect(() => {
+    if (!viewportRef.current) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const e of entries) setViewH(e.contentRect.height);
+    });
+    ro.observe(viewportRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  const snapBack = useCallback(
+    (from: number, targetIdx: number) => {
+      const target = -targetIdx * itemH;
+      // 松手放大 1.3 倍位移再回弹：先推到 from*1.3 处衰减
+      const overshoot = from + (from - target) * 0.3;
+      animate(y, [from, overshoot, target], {
+        times: [0, 0.35, 1],
+        duration: 0.7,
+        ease: [0.2, 0.8, 0.2, 1],
+      });
+    },
+    [itemH, y],
+  );
+
+  return (
+    <div
+      ref={viewportRef}
+      className="relative rounded-2xl overflow-hidden select-none touch-none"
+      style={{ height: 'calc(100vh - 60px)', maxHeight: '85vh' }}
+    >
+      <motion.div
+        drag="y"
+        dragConstraints={{ top: -(count - 1) * itemH, bottom: 0 }}
+        dragElastic={0.2}
+        dragMomentum
+        style={{ y }}
+        onDragEnd={() => {
+          const cur = y.get();
+          // 位移放大 1.3 倍后选最近刻度
+          const amplified = cur * 1.3;
+          let idx = Math.round(-amplified / itemH);
+          idx = Math.max(0, Math.min(count - 1, idx));
+          if (idx !== lastIndex.current) {
+            lastIndex.current = idx;
+            onIndexChange(idx);
+          }
+          snapBack(cur, idx);
+        }}
+        className="absolute inset-x-0 top-0"
+      >
+        {TIMELINE_DATA.map((item, i) => (
+          <div key={i} style={{ height: itemH || '85vh' }}>
+            <TimelineCard item={item} index={i} activeConditions={activeConditions} />
+          </div>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════
    差评原文弹窗
    ═══════════════════════════════════════════════════ */
 const BAD_REVIEWS: Record<string, { title: string; reviews: string[] }> = {
@@ -340,9 +462,10 @@ const BAD_REVIEWS: Record<string, { title: string; reviews: string[] }> = {
   },
 };
 
-function ReviewPopup({ conditionId, onClose }: { conditionId: string; onClose: () => void }) {
+function ReviewPopup({ conditionId, origin, onClose }: { conditionId: string; origin: { x: number; y: number }; onClose: () => void }) {
   const data = BAD_REVIEWS[conditionId];
   if (!data) return null;
+  // 撕裂膨胀：从按钮位置 scale 0.2 + 圆角 9999 展开
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -353,10 +476,33 @@ function ReviewPopup({ conditionId, onClose }: { conditionId: string; onClose: (
     >
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
       <motion.div
-        initial={{ y: 400 }}
-        animate={{ y: 0 }}
-        exit={{ y: 400 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        layoutId={`popup-${conditionId}`}
+        initial={{
+          position: 'fixed',
+          left: origin.x,
+          top: origin.y,
+          width: 40,
+          height: 40,
+          borderRadius: 9999,
+          scale: 0.2,
+          opacity: 0,
+        }}
+        animate={{
+          left: 0,
+          top: 'auto',
+          bottom: 0,
+          width: '100%',
+          maxWidth: '32rem',
+          height: 'auto',
+          maxHeight: '70vh',
+          borderRadius: 24,
+          scale: 1,
+          opacity: 1,
+          x: 0,
+          y: 0,
+        }}
+        exit={{ scale: 0.2, opacity: 0 }}
+        transition={{ type: 'spring', damping: 22, stiffness: 240 }}
         className="relative w-full max-w-lg bg-white/80 backdrop-blur-xl rounded-t-3xl shadow-2xl p-6 pb-10 max-h-[70vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
@@ -372,7 +518,6 @@ function ReviewPopup({ conditionId, onClose }: { conditionId: string; onClose: (
             </div>
           ))}
         </div>
-        {/* 关闭按钮 - 右下角 */}
         <button
           onClick={onClose}
           className="absolute bottom-4 right-4 w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center shadow-lg hover:bg-gray-800 transition-colors"
@@ -385,23 +530,19 @@ function ReviewPopup({ conditionId, onClose }: { conditionId: string; onClose: (
 }
 
 /* ═══════════════════════════════════════════════════
-   劝退结论悬浮球
+   劝退结论悬浮球 —— 重按压 + 水波血条充能 + 失败飞溅抖动 + 联动写入
    ═══════════════════════════════════════════════════ */
 function ConclusionButton({ timeIndex, activeConditions }: { timeIndex: number; activeConditions: Set<string> }) {
-  const [pressing, setPressing] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [result, setResult] = useState<'go' | 'nogo'>('go');
   const [reasonText, setReasonText] = useState('');
-  const timerRef = useRef<ReturnType<typeof setInterval>>();
-  const progressRef = useRef(0);
+  const setHeatWarning = useSharedMotionStore((s) => s.setHeatWarning);
 
   // ═══ 劝退评分（0-100，越高越不建议出行）═══
-  // 时段：根据 TIME_PERIODS 的 uv 值折算（正午 UV=11 最严苛）
   const evaluate = useCallback(() => {
     const uv = TIME_PERIODS[timeIndex]?.uv ?? 0;
     const uvScore = uv >= 10 ? 50 : uv >= 5 ? 30 : uv >= 3 ? 10 : 0;
-    const condScore = activeConditions.size * 20; // 每个身体红灯 +20
+    const condScore = activeConditions.size * 20;
     const total = uvScore + condScore;
 
     const reasons: string[] = [];
@@ -415,63 +556,53 @@ function ConclusionButton({ timeIndex, activeConditions }: { timeIndex: number; 
     const text = reasons.length > 0
       ? (nogo ? `劝退原因：${reasons.join('、')}` : `注意：${reasons.join('、')}`)
       : '时段良好、无身体红灯';
-    return { nogo: nogo ? 'nogo' : 'go' as const, text };
+    return { nogo: nogo ? ('nogo' as const) : ('go' as const), text };
   }, [timeIndex, activeConditions]);
 
-  const handleStart = useCallback(() => {
-    setPressing(true);
-    progressRef.current = 0;
-    setProgress(0);
-    timerRef.current = setInterval(() => {
-      progressRef.current += 100 / 30; // 3秒 = 30个100ms
-      setProgress(progressRef.current);
-      vibrate(20);
-      if (progressRef.current >= 100) {
-        clearInterval(timerRef.current);
-        setPressing(false);
-        const { nogo, text } = evaluate();
-        setResult(nogo);
-        setReasonText(text);
-        setShowResult(true);
-        vibrate([100, 50, 100, 50, 200]);
-      }
-    }, 100);
-  }, [evaluate]);
+  // 长按充能 3 秒
+  const onComplete = useCallback(() => {
+    const { nogo, text } = evaluate();
+    setResult(nogo);
+    setReasonText(text);
+    setShowResult(true);
+    // 跨页联动：正午 + 怕热中暑 时写入高温预警
+    if (nogo && timeIndex === 1 && activeConditions.has('heat')) {
+      setHeatWarning(true);
+    }
+  }, [evaluate, timeIndex, activeConditions, setHeatWarning]);
 
-  const handleEnd = useCallback(() => {
-    clearInterval(timerRef.current);
-    setPressing(false);
-    progressRef.current = 0;
-    setProgress(0);
-  }, []);
+  const { progress, holding, broken, start, cancel } = useLongPressCharge(3000, onComplete);
+  const { shakeX, trigger: triggerShake } = useSteadyShake(3, 6);
+
+  // broken 时触发抖动
+  useEffect(() => {
+    if (broken) triggerShake();
+  }, [broken, triggerShake]);
+
+  const fill = progress >= 1 ? '#22C55E' : '#EF4444';
 
   return (
     <>
-      <div className="fixed bottom-6 right-6 z-40">
-        <motion.button
+      <motion.div className="fixed bottom-6 right-6 z-40" style={{ x: shakeX }}>
+        <PressureButton
+          maxDepth={6}
+          onPointerDown={() => start()}
+          onPointerUp={() => cancel()}
+          onPointerLeave={() => cancel()}
           className="relative w-16 h-16 rounded-full shadow-2xl flex items-center justify-center text-white text-xl font-bold overflow-hidden"
           style={{
-            background: pressing
-              ? `linear-gradient(135deg, #EF4444 ${progress}%, #22C55E ${progress}%)`
+            background: holding
+              ? `linear-gradient(135deg, ${fill} ${progress}%, #22C55E ${progress}%)`
               : 'linear-gradient(135deg, #22C55E, #EF4444)',
           }}
-          onMouseDown={handleStart}
-          onMouseUp={handleEnd}
-          onMouseLeave={handleEnd}
-          onTouchStart={handleStart}
-          onTouchEnd={handleEnd}
-          whileTap={{ scale: 0.95 }}
         >
           <span className="relative z-10 text-2xl">🎯</span>
-          {pressing && (
-            <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 64 64">
-              <circle cx="32" cy="32" r="30" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="3" />
-              <circle cx="32" cy="32" r="30" fill="none" stroke="white" strokeWidth="3" strokeDasharray={`${progress * 1.88} 188`} strokeLinecap="round" />
-            </svg>
+          {holding && (
+            <LiquidCharge progress={progress} broken={broken} width={64} height={64} fill={fill} baseFill="#22C55E" />
           )}
-        </motion.button>
+        </PressureButton>
         <p className="text-center text-[10px] text-gray-400 mt-1">长按3秒</p>
-      </div>
+      </motion.div>
 
       {/* 结论全屏 */}
       <AnimatePresence>
@@ -508,8 +639,9 @@ function ConclusionButton({ timeIndex, activeConditions }: { timeIndex: number; 
 export default function DeterrentView() {
   const [timeIndex, setTimeIndex] = useState(1); // 默认正午
   const [activeConditions, setActiveConditions] = useState<Set<string>>(new Set());
-  const [showPopup, setShowPopup] = useState<string | null>(null);
+  const [showPopup, setShowPopup] = useState<{ id: string; origin: { x: number; y: number } } | null>(null);
   const [timelineIdx, setTimelineIdx] = useState(0);
+  const [prevTimeIdx, setPrevTimeIdx] = useState(1);
 
   const period = TIME_PERIODS[timeIndex] || TIME_PERIODS[1];
 
@@ -522,9 +654,16 @@ export default function DeterrentView() {
     vibrate(30);
   };
 
+  // 拨盘切档：刷新 prevTimeIdx 供背景阶梯跳色
+  const handleTimeChange = (i: number) => {
+    setPrevTimeIdx(timeIndex);
+    setTimeIndex(i);
+  };
+
   return (
-    <div className="min-h-full" style={{ background: `linear-gradient(180deg, ${period.bgFrom} 0%, ${period.bgTo} 30%, #F9FAFB 100%)` }}>
-      <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
+    <div className="relative min-h-full">
+      <DialBackground period={period} fromIdx={prevTimeIdx} toIdx={timeIndex} />
+      <div className="relative max-w-2xl mx-auto px-4 py-6 pb-24">
         {/* ═══ 顶部标题 ═══ */}
         <div className="flex items-center gap-2 mb-6">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg">
@@ -543,7 +682,7 @@ export default function DeterrentView() {
             <span className="text-sm font-semibold text-gray-700">健康预警拨盘</span>
             <span className="text-[10px] text-gray-400 ml-auto">← 左右滑动 →</span>
           </div>
-          <Dial value={timeIndex} onChange={setTimeIndex} />
+          <Dial value={timeIndex} onChange={handleTimeChange} />
         </div>
 
         {/* ═══ 身体红灯筛选器 ═══ */}
@@ -560,7 +699,7 @@ export default function DeterrentView() {
                 condition={c}
                 active={activeConditions.has(c.id)}
                 onToggle={() => toggleCondition(c.id)}
-                onDoubleClick={() => setShowPopup(c.id)}
+                onDoubleClick={(origin) => setShowPopup({ id: c.id, origin })}
               />
             ))}
           </div>
@@ -575,27 +714,22 @@ export default function DeterrentView() {
           </div>
         </div>
 
-        <div
-          className="overflow-y-auto snap-y snap-mandatory rounded-2xl"
-          style={{ height: 'calc(100vh - 60px)', maxHeight: '85vh' }}
-          onScroll={(e) => {
-            const el = e.currentTarget;
-            const idx = Math.round(el.scrollTop / el.clientHeight);
+        {/* 重锤惯性滚动容器：drag y + 低 elastic，松手位移放大 1.3 倍衰减 */}
+        <HeavyTimeline
+          count={TIMELINE_DATA.length}
+          activeConditions={activeConditions}
+          onIndexChange={(idx) => {
             if (idx !== timelineIdx) {
               setTimelineIdx(idx);
               vibrate(15);
             }
           }}
-        >
-          {TIMELINE_DATA.map((item, i) => (
-            <TimelineCard key={i} item={item} index={i} activeConditions={activeConditions} />
-          ))}
-        </div>
+        />
       </div>
 
-      {/* 差评弹窗 */}
+      {/* 差评弹窗 —— 从被双击按钮位置撕裂展开 */}
       <AnimatePresence>
-        {showPopup && <ReviewPopup conditionId={showPopup} onClose={() => setShowPopup(null)} />}
+        {showPopup && <ReviewPopup conditionId={showPopup.id} origin={showPopup.origin} onClose={() => setShowPopup(null)} />}
       </AnimatePresence>
 
       {/* 劝退结论悬浮球 */}
