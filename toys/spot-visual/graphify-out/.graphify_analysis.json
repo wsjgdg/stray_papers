@@ -1,0 +1,484 @@
+{
+  "communities": {
+    "0": [
+      "src_components_deterrent_view",
+      "src_components_deterrent_view_bad_reviews",
+      "src_components_deterrent_view_conclusionbutton",
+      "src_components_deterrent_view_conditionbutton",
+      "src_components_deterrent_view_conditions",
+      "src_components_deterrent_view_deterrentview",
+      "src_components_deterrent_view_dial",
+      "src_components_deterrent_view_dialbackground",
+      "src_components_deterrent_view_heavytimeline",
+      "src_components_deterrent_view_reason_templates",
+      "src_components_deterrent_view_reviewpopup",
+      "src_components_deterrent_view_speak",
+      "src_components_deterrent_view_time_periods",
+      "src_components_deterrent_view_timeline_data",
+      "src_components_deterrent_view_timelinecard",
+      "src_components_fitness_view",
+      "src_components_fitness_view_clock",
+      "src_components_fitness_view_companionavatar",
+      "src_components_fitness_view_elevation_data",
+      "src_components_fitness_view_elevationchart",
+      "src_components_fitness_view_emergencybutton",
+      "src_components_fitness_view_fitnessview",
+      "src_components_fitness_view_flipnumber",
+      "src_components_fitness_view_flipview",
+      "src_components_fitness_view_mobility_options",
+      "src_components_fitness_view_mobilitysheet",
+      "src_components_fitness_view_segments",
+      "src_components_fitness_view_supply_points",
+      "src_components_shared_breath_ring",
+      "src_components_shared_breath_ring_breathring",
+      "src_components_shared_liquid_charge",
+      "src_components_shared_liquid_charge_liquidcharge",
+      "src_components_shared_pressure_button",
+      "src_components_shared_pressure_button_pressurebutton",
+      "src_components_shared_pressure_button_pressurebuttonprops",
+      "src_lib_motion_hooks",
+      "src_lib_motion_hooks_binddraghandlers",
+      "src_lib_motion_hooks_useaudioclick",
+      "src_lib_motion_hooks_usecountup",
+      "src_lib_motion_hooks_uselongpresscharge",
+      "src_lib_motion_hooks_usepressurepress",
+      "src_lib_motion_hooks_useratchetdrag",
+      "src_lib_motion_hooks_usesteadyshake",
+      "src_lib_motion_hooks_vibrate",
+      "src_lib_shared_motion_store",
+      "src_lib_shared_motion_store_sharedmotionstate",
+      "src_lib_shared_motion_store_usesharedmotionstore",
+      "src_lib_stamina_calculator_calcstaminabudget"
+    ],
+    "1": [
+      "ref_dom",
+      "ref_dom_iterable",
+      "ref_esnext",
+      "ref_next_dev_types_ts",
+      "ref_next_env_d_ts",
+      "ref_next_types_ts",
+      "ref_node_modules",
+      "ref_ts",
+      "ref_tsx",
+      "tsconfig",
+      "tsconfig_compileroptions",
+      "tsconfig_compileroptions_allowjs",
+      "tsconfig_compileroptions_esmoduleinterop",
+      "tsconfig_compileroptions_incremental",
+      "tsconfig_compileroptions_isolatedmodules",
+      "tsconfig_compileroptions_jsx",
+      "tsconfig_compileroptions_lib",
+      "tsconfig_compileroptions_module",
+      "tsconfig_compileroptions_moduleresolution",
+      "tsconfig_compileroptions_noemit",
+      "tsconfig_compileroptions_noimplicitany",
+      "tsconfig_compileroptions_paths",
+      "tsconfig_compileroptions_plugins",
+      "tsconfig_compileroptions_resolvejsonmodule",
+      "tsconfig_compileroptions_skiplibcheck",
+      "tsconfig_compileroptions_strict",
+      "tsconfig_compileroptions_target",
+      "tsconfig_exclude",
+      "tsconfig_include"
+    ],
+    "2": [
+      "class_variance_authority",
+      "clsx",
+      "framer_motion",
+      "lucide_react",
+      "next",
+      "package_dependencies",
+      "package_dependencies_class_variance_authority",
+      "package_dependencies_clsx",
+      "package_dependencies_framer_motion",
+      "package_dependencies_lucide_react",
+      "package_dependencies_next",
+      "package_dependencies_radix_ui_react_dialog",
+      "package_dependencies_radix_ui_react_scroll_area",
+      "package_dependencies_radix_ui_react_separator",
+      "package_dependencies_radix_ui_react_slot",
+      "package_dependencies_react",
+      "package_dependencies_react_dom",
+      "package_dependencies_tailwind_merge",
+      "package_dependencies_zustand",
+      "radix_ui_react_dialog",
+      "radix_ui_react_scroll_area",
+      "radix_ui_react_separator",
+      "radix_ui_react_slot",
+      "react",
+      "react_dom",
+      "tailwind_merge",
+      "zustand"
+    ],
+    "3": [
+      "src_components_ui_badge",
+      "src_components_ui_badge_badge",
+      "src_components_ui_badge_badgevariants",
+      "src_components_ui_button",
+      "src_components_ui_button_button",
+      "src_components_ui_button_buttonvariants",
+      "src_components_ui_dialog",
+      "src_components_ui_dialog_dialog",
+      "src_components_ui_dialog_dialogclose",
+      "src_components_ui_dialog_dialogcontent",
+      "src_components_ui_dialog_dialogdescription",
+      "src_components_ui_dialog_dialogfooter",
+      "src_components_ui_dialog_dialogheader",
+      "src_components_ui_dialog_dialogoverlay",
+      "src_components_ui_dialog_dialogportal",
+      "src_components_ui_dialog_dialogtitle",
+      "src_components_ui_dialog_dialogtrigger",
+      "src_components_ui_input",
+      "src_components_ui_input_input",
+      "src_components_ui_scroll_area",
+      "src_components_ui_scroll_area_scrollarea",
+      "src_components_ui_scroll_area_scrollbar",
+      "src_components_ui_separator",
+      "src_components_ui_separator_separator",
+      "src_lib_utils",
+      "src_lib_utils_cn"
+    ],
+    "4": [
+      "src_app_page",
+      "src_app_page_budgetview",
+      "src_app_page_deterrentview",
+      "src_app_page_dissuasioneditor",
+      "src_app_page_dissuasionview",
+      "src_app_page_favoritesview",
+      "src_app_page_fitnessview",
+      "src_app_page_getcategoryicon",
+      "src_app_page_home",
+      "src_app_page_icon_map",
+      "src_app_page_mobileheader",
+      "src_app_page_mobilemenu",
+      "src_app_page_nav_items",
+      "src_app_page_networkview",
+      "src_app_page_personalityview",
+      "src_app_page_profileview",
+      "src_app_page_ptsiview",
+      "src_app_page_sidebar",
+      "src_app_page_spotdetaildialog",
+      "src_app_page_spotgrid",
+      "src_app_page_spotimage",
+      "src_app_page_spotlist",
+      "src_app_page_staminasandboxview",
+      "src_lib_spot_data_getcategorycolor",
+      "src_lib_store_useappstore"
+    ],
+    "5": [
+      "package",
+      "package_devdependencies",
+      "package_devdependencies_tailwindcss",
+      "package_devdependencies_tailwindcss_postcss",
+      "package_devdependencies_tw_animate_css",
+      "package_devdependencies_types_node",
+      "package_devdependencies_types_react",
+      "package_devdependencies_types_react_dom",
+      "package_devdependencies_typescript",
+      "package_name",
+      "package_private",
+      "package_scripts",
+      "package_scripts_build",
+      "package_scripts_dev",
+      "package_scripts_lint",
+      "package_scripts_start",
+      "package_version",
+      "tailwindcss",
+      "tailwindcss_postcss",
+      "tw_animate_css",
+      "types_node",
+      "types_react",
+      "types_react_dom",
+      "typescript"
+    ],
+    "6": [
+      "src_components_budget_view",
+      "src_components_budget_view_budget_tiers",
+      "src_components_budget_view_budgetbar",
+      "src_components_budget_view_budgetview",
+      "src_components_budget_view_guessprice",
+      "src_components_budget_view_keyword_prices",
+      "src_components_budget_view_project_prices",
+      "src_components_budget_view_spotbudgetcard",
+      "src_components_stamina_sandbox_view",
+      "src_components_stamina_sandbox_view_calcexperiencescore",
+      "src_components_stamina_sandbox_view_scatterchart",
+      "src_components_stamina_sandbox_view_scatterpoint",
+      "src_components_stamina_sandbox_view_staminasandboxview",
+      "src_lib_spot_data_getprojectstaminafactor",
+      "src_lib_spot_data_getstaminacost",
+      "src_lib_stamina_calculator",
+      "src_lib_stamina_calculator_calcstaminacurve",
+      "src_lib_stamina_calculator_calctotalstaminacost",
+      "src_lib_stamina_calculator_generatestaminaadvice"
+    ],
+    "7": [
+      "src_app_api_ptsi_route",
+      "src_app_api_ptsi_route_get",
+      "src_app_api_ptsi_route_post",
+      "src_components_ptsi_view",
+      "src_components_ptsi_view_conditions",
+      "src_components_ptsi_view_currentptsi",
+      "src_components_ptsi_view_getperiodlabel",
+      "src_components_ptsi_view_hourlychart",
+      "src_components_ptsi_view_period_labels",
+      "src_components_ptsi_view_ptsiview",
+      "src_components_ptsi_view_spotranking",
+      "src_components_ptsi_view_verdict_style",
+      "src_lib_ptsi_calculator",
+      "src_lib_ptsi_calculator_calcptsi",
+      "src_lib_ptsi_calculator_calcptsiforspots",
+      "src_lib_ptsi_calculator_calcptsihourly",
+      "src_lib_ptsi_calculator_getuvbyhour",
+      "src_lib_spot_data_ptsiresult"
+    ],
+    "8": [
+      "src_app_page_spotsview",
+      "src_lib_spot_data",
+      "src_lib_spot_data_cachephotoforcategory",
+      "src_lib_spot_data_category_colors",
+      "src_lib_spot_data_category_icon_names",
+      "src_lib_spot_data_category_photos",
+      "src_lib_spot_data_category_stamina_default",
+      "src_lib_spot_data_category_theme",
+      "src_lib_spot_data_default_categories",
+      "src_lib_spot_data_fallback_photos",
+      "src_lib_spot_data_getcategoryimageurl",
+      "src_lib_spot_data_parseimportedspots",
+      "src_lib_spot_data_photocache",
+      "src_lib_spot_data_project_stamina_factor",
+      "src_lib_spot_data_readphotocache",
+      "src_lib_spot_data_stamina_cost_map",
+      "src_lib_spot_data_usedindices"
+    ],
+    "9": [
+      "src_components_dissuasion_editor",
+      "src_components_dissuasion_editor_body_conditions",
+      "src_components_dissuasion_editor_dissuasioneditor",
+      "src_components_dissuasion_editor_time_periods",
+      "src_components_dissuasion_view",
+      "src_components_dissuasion_view_dissuasioncard",
+      "src_components_dissuasion_view_dissuasionview",
+      "src_components_dissuasion_view_gettagstyle",
+      "src_lib_spot_data_dissuasion_tags",
+      "src_lib_spot_data_dissuasionrecord",
+      "src_lib_spot_data_samplespots",
+      "src_lib_store",
+      "src_lib_store_appstore",
+      "src_lib_store_viewtype"
+    ],
+    "10": [
+      "src_app_api_search_photo_route",
+      "src_app_api_search_photo_route_cache",
+      "src_app_api_search_photo_route_cacheentry",
+      "src_app_api_search_photo_route_category_keywords",
+      "src_app_api_search_photo_route_fetchpexels",
+      "src_app_api_search_photo_route_fetchunsplash",
+      "src_app_api_search_photo_route_get",
+      "src_app_api_search_photo_route_getnextphoto",
+      "src_app_api_search_photo_route_usedurls"
+    ],
+    "11": [
+      "src_components_network_view",
+      "src_components_network_view_district_line_colors",
+      "src_components_network_view_getdistrictcolor",
+      "src_components_network_view_netspot",
+      "src_components_network_view_networkview",
+      "src_lib_spot_data_getdistrict",
+      "src_lib_spot_data_parsecoords",
+      "src_lib_spot_data_spot"
+    ],
+    "12": [
+      "src_components_personality_view",
+      "src_components_personality_view_card_themes",
+      "src_components_personality_view_category_personality",
+      "src_components_personality_view_persona_names",
+      "src_components_personality_view_personalitycard",
+      "src_components_personality_view_personalityview",
+      "src_components_personality_view_solo_persona",
+      "src_components_personality_view_tarotcard"
+    ],
+    "13": [
+      "src_app_layout",
+      "src_app_layout_metadata",
+      "src_app_layout_rootlayout"
+    ],
+    "14": [
+      "next_config",
+      "next_config_nextconfig"
+    ],
+    "15": [
+      "postcss_config",
+      "postcss_config_config"
+    ],
+    "16": [
+      "tailwind_config",
+      "tailwind_config_config"
+    ]
+  },
+  "cohesion": {
+    "0": 0.08067375886524823,
+    "1": 0.06896551724137931,
+    "2": 0.07407407407407407,
+    "3": 0.13846153846153847,
+    "4": 0.13333333333333333,
+    "5": 0.08333333333333333,
+    "6": 0.19298245614035087,
+    "7": 0.24836601307189543,
+    "8": 0.14705882352941177,
+    "9": 0.23076923076923078,
+    "10": 0.3055555555555556,
+    "11": 0.39285714285714285,
+    "12": 0.25,
+    "13": 0.6666666666666666,
+    "14": 1.0,
+    "15": 1.0,
+    "16": 1.0
+  },
+  "gods": [
+    {
+      "id": "src_lib_store_useappstore",
+      "label": "useAppStore",
+      "degree": 28
+    },
+    {
+      "id": "src_lib_utils_cn",
+      "label": "cn()",
+      "degree": 19
+    },
+    {
+      "id": "tsconfig_compileroptions",
+      "label": "compilerOptions",
+      "degree": 17
+    },
+    {
+      "id": "src_lib_motion_hooks_vibrate",
+      "label": "vibrate()",
+      "degree": 11
+    },
+    {
+      "id": "src_lib_ptsi_calculator_calcptsi",
+      "label": "calcPTSI()",
+      "degree": 10
+    },
+    {
+      "id": "src_lib_ptsi_calculator_getuvbyhour",
+      "label": "getUVByHour()",
+      "degree": 9
+    },
+    {
+      "id": "src_lib_spot_data_getstaminacost",
+      "label": "getStaminaCost()",
+      "degree": 9
+    },
+    {
+      "id": "src_components_deterrent_view_conclusionbutton",
+      "label": "ConclusionButton()",
+      "degree": 7
+    },
+    {
+      "id": "src_lib_spot_data_spot",
+      "label": "Spot",
+      "degree": 7
+    },
+    {
+      "id": "src_lib_stamina_calculator_calcstaminabudget",
+      "label": "calcStaminaBudget()",
+      "degree": 7
+    }
+  ],
+  "surprises": [
+    {
+      "source": "DissuasionView()",
+      "target": "useAppStore",
+      "source_files": [
+        "src/components/dissuasion-view.tsx",
+        "src/lib/store.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities; peripheral node `DissuasionView()` unexpectedly reaches hub `useAppStore`"
+    },
+    {
+      "source": "PersonalityView()",
+      "target": "useAppStore",
+      "source_files": [
+        "src/components/personality-view.tsx",
+        "src/lib/store.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities; peripheral node `PersonalityView()` unexpectedly reaches hub `useAppStore`"
+    },
+    {
+      "source": "Sidebar()",
+      "target": "useAppStore",
+      "source_files": [
+        "src/app/page.tsx",
+        "src/lib/store.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "peripheral node `Sidebar()` unexpectedly reaches hub `useAppStore`"
+    },
+    {
+      "source": "MobileMenu()",
+      "target": "useAppStore",
+      "source_files": [
+        "src/app/page.tsx",
+        "src/lib/store.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "peripheral node `MobileMenu()` unexpectedly reaches hub `useAppStore`"
+    },
+    {
+      "source": "SpotsView()",
+      "target": "useAppStore",
+      "source_files": [
+        "src/app/page.tsx",
+        "src/lib/store.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `useAppStore` connect `Community 4` to `Community 0`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 11`, `Community 12`?",
+      "why": "High betweenness centrality (0.101) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `dependencies` connect `Community 2` to `Community 5`?",
+      "why": "High betweenness centrality (0.024) - this node is a cross-community bridge."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `nextConfig`, `name`, `version` to the rest of the system?",
+      "why": "101 weakly-connected nodes found - possible documentation gaps or missing edges."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 0` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.08067375886524823 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 1` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.06896551724137931 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 2` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.07407407407407407 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 3` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.13846153846153847 - nodes in this community are weakly interconnected."
+    }
+  ]
+}

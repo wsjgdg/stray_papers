@@ -2,8 +2,9 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calculator, TrendingUp, Crown, Wallet, Sparkles, MapPin, ChevronDown } from 'lucide-react';
+import { Calculator, TrendingUp, Crown, Wallet, Sparkles, MapPin, ChevronDown, Zap, Feather } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
+import { getStaminaCost, getProjectStaminaFactor } from '@/lib/spot-data';
 
 /* ═══ 项目模拟价格（元/次） ═══ */
 const PROJECT_PRICES: Record<string, number> = {
@@ -53,6 +54,7 @@ function SpotBudgetCard({ name, category, projects, onTotalChange, index }: {
 }) {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [expanded, setExpanded] = useState(false);
+  const staminaCost = getStaminaCost({ id: '', name, image: '', address: '', facilities: [], projects, category, description: '' });
 
   const items = projects.map((p, i) => ({
     name: p,
@@ -93,7 +95,13 @@ function SpotBudgetCard({ name, category, projects, onTotalChange, index }: {
           <h4 className="text-sm font-bold text-gray-900 truncate">{name}</h4>
           <p className="text-xs text-gray-400">{category} · {projects.length} 个项目</p>
         </div>
-        <div className="text-right shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
+          {/* ═══ 体力维度 ═══ */}
+          <div className="hidden sm:flex items-center gap-1 px-2 py-1 bg-amber-50 rounded-lg">
+            <Zap className="w-3 h-3 text-amber-500" />
+            <span className="text-xs font-bold text-amber-700">{staminaCost}</span>
+          </div>
+          <div className="text-right shrink-0">
           <motion.div
             key={subtotal}
             initial={{ scale: 1.2, color: '#EF4444' }}
@@ -102,6 +110,7 @@ function SpotBudgetCard({ name, category, projects, onTotalChange, index }: {
           >
             {subtotal > 0 ? `¥${subtotal}` : '-'}
           </motion.div>
+        </div>
         </div>
         <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
           <ChevronDown className="w-4 h-4 text-gray-400" />
@@ -177,6 +186,33 @@ function SpotBudgetCard({ name, category, projects, onTotalChange, index }: {
                   className="flex-1 py-2 text-xs font-bold text-gray-500 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                 >
                   全部取消
+                </button>
+                {/* ═══ D1.3 省力快捷操作：自动剔除 factor>1.0 的高体力项目 ═══ */}
+                <button
+                  onClick={() => {
+                    const oldTotal = items.filter(it => selected.has(it.index)).reduce((s, it) => s + it.price, 0);
+                    const newSet = new Set<number>();
+                    let newTotal = 0;
+                    items.forEach(it => {
+                      const factor = getProjectStaminaFactor(it.name);
+                      // factor ≤ 1.0 的项目默认可选（含漫步、参观、观景等省力项）
+                      // factor ≤ 0.7 的缆车/索道类即使付费也保留（明显省力）
+                      if (factor <= 0.7) {
+                        newSet.add(it.index);
+                        newTotal += it.price;
+                      } else if (factor <= 1.0 && it.price === 0) {
+                        // 免费且非高体力的省力项
+                        newSet.add(it.index);
+                      }
+                    });
+                    setSelected(newSet);
+                    onTotalChange(newTotal - oldTotal);
+                  }}
+                  className="flex-1 py-2 text-xs font-bold text-sky-600 bg-sky-50 rounded-lg hover:bg-sky-100 transition-colors flex items-center justify-center gap-1"
+                  title="保留低体力/省力项目，自动剔除徒步等高体力项"
+                >
+                  <Feather className="w-3 h-3" />
+                  省力优先
                 </button>
               </div>
             </div>

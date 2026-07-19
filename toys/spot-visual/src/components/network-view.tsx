@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { MapPin, ZoomIn, ZoomOut, Maximize2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/lib/store';
 import { type Spot, parseCoords, getDistrict, getCategoryColor } from '@/lib/spot-data';
@@ -25,12 +25,13 @@ function getDistrictColor(index: number): string {
 }
 
 export default function NetworkView() {
-  const { spots, setSelectedSpot } = useAppStore();
+  const { spots, setSelectedSpot, dissuasionRecords } = useAppStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [centeredId, setCenteredId] = useState<string | null>(null);
+  const [showHeatmap, setShowHeatmap] = useState(false);
   const isDragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const dragOrigin = useRef({ x: 0, y: 0 });
@@ -38,6 +39,16 @@ export default function NetworkView() {
   const [viewW, setViewW] = useState(800);
   const [viewH, setViewH] = useState(600);
   const animFrameRef = useRef<number>(0);
+
+  // ═══ 劝退热力图：按景点ID统计劝退记录数 ═══
+  const heatCounts = useMemo(() => {
+    const m: Record<string, number> = {};
+    dissuasionRecords.forEach(r => {
+      m[r.spotId] = (m[r.spotId] || 0) + 1;
+    });
+    return m;
+  }, [dissuasionRecords]);
+  const maxHeat = useMemo(() => Math.max(1, ...Object.values(heatCounts)), [heatCounts]);
 
   // Resize observer
   useEffect(() => {
@@ -337,15 +348,30 @@ export default function NetworkView() {
               const isHovered = hoveredId === spot.id;
               const r = isCentered ? BUBBLE_R_MAJOR + 2 : isHovered ? BUBBLE_R_MAJOR : BUBBLE_R;
               const lineColor = districtColorMap[spot.district] || '#34D399';
+              const heat = heatCounts[spot.id] || 0;
+              const heatIntensity = showHeatmap && heat > 0 ? heat / maxHeat : 0;
               return (
                 <g key={spot.id} className="spot-bubble" style={{ cursor: 'pointer' }}
                   onClick={(e) => { e.stopPropagation(); handleSpotClick(spot); }}
                   onMouseEnter={() => setHoveredId(spot.id)} onMouseLeave={() => setHoveredId(null)}>
                   <circle cx={spot.sx} cy={spot.sy} r={r + 4} fill="transparent" />
+                  {/* ═══ 劝退热力图：红色光晕 ═══ */}
+                  {heatIntensity > 0 && (
+                    <circle cx={spot.sx} cy={spot.sy} r={r + 6 + heatIntensity * 8}
+                      fill="#EF4444" opacity={heatIntensity * 0.4} style={{ pointerEvents: 'none' }} />
+                  )}
                   <circle cx={spot.sx} cy={spot.sy} r={r}
-                    fill={isCentered ? '#059669' : isHovered ? lineColor : lineColor}
-                    opacity={isCentered ? 0.9 : 0.75}
-                    stroke={isCentered ? '#047857' : 'white'} strokeWidth={isCentered ? 2 : 1.5} />
+                    fill={heatIntensity > 0 ? `rgba(239,68,68,${0.3 + heatIntensity * 0.5})` : (isCentered ? '#059669' : lineColor)}
+                    opacity={heatIntensity > 0 ? 1 : (isCentered ? 0.9 : 0.75)}
+                    stroke={heatIntensity > 0 ? '#DC2626' : (isCentered ? '#047857' : 'white')}
+                    strokeWidth={isCentered ? 2 : 1.5} />
+                  {/* 劝退记录数角标 */}
+                  {heat > 0 && (
+                    <g style={{ pointerEvents: 'none' }}>
+                      <circle cx={spot.sx + r - 2} cy={spot.sy - r + 2} r={6} fill="#DC2626" stroke="white" strokeWidth={1.2} />
+                      <text x={spot.sx + r - 2} y={spot.sy - r + 5} textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">{heat}</text>
+                    </g>
+                  )}
                   {/* Label */}
                   <text x={spot.sx} y={spot.sy - r - 4} textAnchor="middle" fontSize="10"
                     fill={isCentered ? '#065F46' : '#374151'} fontWeight={isCentered ? 600 : 400}
@@ -382,6 +408,15 @@ export default function NetworkView() {
         </Button>
         <Button variant="outline" size="icon" className="w-8 h-8 rounded-lg shadow-sm" onClick={resetView}>
           <Maximize2 className="w-4 h-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className={`w-8 h-8 rounded-lg shadow-sm ${showHeatmap ? 'bg-red-50 border-red-300' : ''}`}
+          onClick={() => setShowHeatmap(v => !v)}
+          title="切换劝退热力图"
+        >
+          <AlertTriangle className={`w-4 h-4 ${showHeatmap ? 'text-red-500' : 'text-gray-400'}`} />
         </Button>
       </div>
 

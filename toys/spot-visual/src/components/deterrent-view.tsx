@@ -1,13 +1,17 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, animate } from 'framer-motion';
-import { AlertTriangle, Sun, Heart, Footprints, ThermometerSun, Volume2, X, MapPin, Clock, ChevronDown } from 'lucide-react';
+import { AlertTriangle, Sun, Heart, Footprints, ThermometerSun, Volume2, X, MapPin, Clock, ChevronDown, Share2, Zap, MapPinned } from 'lucide-react';
 import { useRatchetDrag, useLongPressCharge, useSteadyShake, vibrate } from '@/lib/motion-hooks';
 import { useSharedMotionStore } from '@/lib/shared-motion-store';
 import { BreathRing } from '@/components/shared/breath-ring';
 import { LiquidCharge } from '@/components/shared/liquid-charge';
 import { PressureButton } from '@/components/shared/pressure-button';
+import { calcStaminaBudget, generateStaminaAdvice } from '@/lib/stamina-calculator';
+import { calcPTSI, getUVByHour } from '@/lib/ptsi-calculator';
+import { type PTSIResult } from '@/lib/spot-data';
+import { useAppStore } from '@/lib/store';
 
 /* ═══ 工具函数 ═══ */
 // vibrate 已抽到 motion-hooks，这里保留 speak
@@ -532,13 +536,59 @@ function ReviewPopup({ conditionId, origin, onClose }: { conditionId: string; or
 /* ═══════════════════════════════════════════════════
    劝退结论悬浮球 —— 重按压 + 水波血条充能 + 失败飞溅抖动 + 联动写入
    ═══════════════════════════════════════════════════ */
-function ConclusionButton({ timeIndex, activeConditions }: { timeIndex: number; activeConditions: Set<string> }) {
+function ConclusionButton({ timeIndex, activeConditions, selectedSpotId, selectedSpotName }: { timeIndex: number; activeConditions: Set<string>; selectedSpotId: string | null; selectedSpotName: string | null }) {
   const [showResult, setShowResult] = useState(false);
   const [result, setResult] = useState<'go' | 'nogo'>('go');
   const [reasonText, setReasonText] = useState('');
+  const [shareVisible, setShareVisible] = useState(false);
   const setHeatWarning = useSharedMotionStore((s) => s.setHeatWarning);
+  const { spots, dissuasionRecords } = useAppStore();
 
-  // ═══ 劝退评分（0-100，越高越不建议出行）═══
+  // ═══ 使用 ptsi-calculator 计算 PTSI ═══
+  const ptsiResult = useMemo<PTSIResult>(() => {
+    const uv = TIME_PERIODS[timeIndex]?.uv ?? 0;
+    return calcPTSI(uv, Array.from(activeConditions), 0);
+  }, [timeIndex, activeConditions]);
+
+  // ═══ 体力预算评估 ═══
+  const staminaBudget = useMemo(() => calcStaminaBudget(activeConditions), [activeConditions]);
+
+  // ═══ D3.4 社交化：相似用户踩坑匹配 ═══
+  // 若已选定假想目的地，从 dissuasionRecords 中筛选：
+  //   1) spotId 匹配
+  //   2) bodyConditions 与当前激活条件有交集
+  // → 用于结论球的"N 个和你身体条件相似的人在这里踩过坑"展示
+  const selectedSpot = useMemo(
+    () => (selectedSpotId ? spots.find(s => s.id === selectedSpotId) ?? null : null),
+    [spots, selectedSpotId],
+  );
+  const similarIncidents = useMemo(() => {
+    if (!selectedSpotId) return [];
+    return dissuasionRecords.filter(r =>
+      r.spotId === selectedSpotId &&
+      r.bodyConditions.some(c => activeConditions.has(c)),
+    );
+  }, [dissuasionRecords, selectedSpotId, activeConditions]);
+
+  // 踩坑标签摘要：取前 3 条记录的所有 tag，去重后取最多 6 个
+  const incidentTagSummary = useMemo(() => {
+    const tags: string[] = [];
+    for (const r of similarIncidents.slice(0, 3)) {
+      for (const t of r.tags) {
+        if (!tags.includes(t)) tags.push(t);
+      }
+    }
+    return tags.slice(0, 6);
+  }, [similarIncidents]);
+
+  // D1.2 体力建议：若选中景点，生成额外体力劝退建议
+  const staminaAdvice = useMemo(() => {
+    if (!selectedSpot) return '';
+    const periodLabel = TIME_PERIODS[timeIndex]?.label ?? '';
+    return generateStaminaAdvice(selectedSpot, staminaBudget, periodLabel);
+  }, [selectedSpot, staminaBudget, timeIndex]);
+
+  // ═══ 综合劝退评分 ═══
   const evaluate = useCallback(() => {
     const uv = TIME_PERIODS[timeIndex]?.uv ?? 0;
     const uvScore = uv >= 10 ? 50 : uv >= 5 ? 30 : uv >= 3 ? 10 : 0;
@@ -552,12 +602,26 @@ function ConclusionButton({ timeIndex, activeConditions }: { timeIndex: number; 
     if (activeConditions.has('heart')) reasons.push('当前心脏负担大');
     if (activeConditions.has('knee')) reasons.push('当前膝盖不适');
 
+    // 加入 PTSI 信息
+    if (ptsiResult.score < 50) reasons.push(`PTSI评分偏低(${ptsiResult.score})`);
+    // 加入体力预算信息
+    if (staminaBudget < 50) reasons.push(`体力预算不足(${staminaBudget}%)`);
+    // 加入 D1.2 体力建议（若选中假想目的地）
+    if (staminaAdvice && staminaAdvice.startsWith('⚠️')) {
+      // 仅取前 18 个字做摘要，避免弹窗冗长
+      reasons.push(staminaAdvice.slice(0, 18) + '…');
+    }
+    // 加入 D3.4 社交匹配提示
+    if (similarIncidents.length > 0) {
+      reasons.push(`${similarIncidents.length}个相似用户已踩坑`);
+    }
+
     const nogo = total >= 60;
     const text = reasons.length > 0
       ? (nogo ? `劝退原因：${reasons.join('、')}` : `注意：${reasons.join('、')}`)
       : '时段良好、无身体红灯';
     return { nogo: nogo ? ('nogo' as const) : ('go' as const), text };
-  }, [timeIndex, activeConditions]);
+  }, [timeIndex, activeConditions, ptsiResult, staminaBudget, staminaAdvice, similarIncidents]);
 
   // 长按充能 3 秒
   const onComplete = useCallback(() => {
@@ -580,6 +644,31 @@ function ConclusionButton({ timeIndex, activeConditions }: { timeIndex: number; 
   }, [broken, triggerShake]);
 
   const fill = progress >= 1 ? '#22C55E' : '#EF4444';
+
+  // 分享当前结论
+  const handleShare = useCallback(() => {
+    const { nogo, text } = evaluate();
+    const lines = [
+      '🏔️ 景点劝退指南',
+      '',
+      `${nogo === 'nogo' ? '👎 建议改日再来' : '👍 今天可以冲！'}`,
+      text,
+      '',
+      `PTSI: ${ptsiResult.score}/100  ·  体力预算: ${staminaBudget}%`,
+    ];
+    if (selectedSpotName) lines.push(`假想目的地：${selectedSpotName}`);
+    if (similarIncidents.length > 0) lines.push(`⚠️ ${similarIncidents.length} 个相似身体条件的用户已在该景点踩坑`);
+    lines.push('', '—— 来自「景点览胜」');
+    const shareText = lines.join('\n');
+    if (navigator.share) {
+      navigator.share({ title: '景点劝退指南', text: shareText }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(shareText).then(() => {
+        setShareVisible(true);
+        setTimeout(() => setShareVisible(false), 2000);
+      });
+    }
+  }, [evaluate, ptsiResult, staminaBudget, selectedSpotName, similarIncidents]);
 
   return (
     <>
@@ -604,6 +693,40 @@ function ConclusionButton({ timeIndex, activeConditions }: { timeIndex: number; 
         <p className="text-center text-[10px] text-gray-400 mt-1">长按3秒</p>
       </motion.div>
 
+      {/* ═══ 悬浮 PTSI 预览（小标签） ═══ */}
+      <div className="fixed bottom-24 right-6 z-40 bg-white/90 backdrop-blur-md rounded-xl px-3 py-2 shadow-lg border border-gray-100">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">PTSI</span>
+          <span className={`text-sm font-bold ${ptsiResult.score >= 80 ? 'text-emerald-600' : ptsiResult.score >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
+            {ptsiResult.score}
+          </span>
+          <span className="text-[10px] text-gray-400">/100</span>
+        </div>
+        <div className="flex items-center gap-2 mt-0.5">
+          <Zap className="w-3 h-3 text-amber-500" />
+          <span className={`text-xs font-medium ${staminaBudget >= 75 ? 'text-emerald-600' : staminaBudget >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
+            体力 {staminaBudget}%
+          </span>
+        </div>
+        <div className={`text-[10px] mt-0.5 ${ptsiResult.verdict === 'go' ? 'text-emerald-600' : ptsiResult.verdict === 'caution' ? 'text-amber-600' : 'text-red-600'}`}>
+          {ptsiResult.verdict === 'go' ? '✅ 适宜' : ptsiResult.verdict === 'caution' ? '⚠️ 谨慎' : '🚫 不宜'}
+        </div>
+      </div>
+
+      {/* 分享反馈 */}
+      <AnimatePresence>
+        {shareVisible && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="fixed bottom-40 right-6 z-50 bg-gray-900 text-white text-xs px-4 py-2 rounded-xl shadow-lg"
+          >
+            已复制到剪贴板
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* 结论全屏 */}
       <AnimatePresence>
         {showResult && (
@@ -625,7 +748,59 @@ function ConclusionButton({ timeIndex, activeConditions }: { timeIndex: number; 
               {result === 'nogo' ? '建议改日再来' : '今天可以冲！'}
             </div>
             <div className="text-white/80 text-sm max-w-xs text-center mb-4 leading-relaxed">{reasonText}</div>
-            <div className="text-white/70 text-sm">点击任意处关闭</div>
+
+            {/* PTSI 详情 */}
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl px-6 py-4 mb-3 text-center">
+              <div className="text-white/60 text-xs mb-1">
+                PTSI 出行指数
+                {selectedSpotName && <span className="ml-2 text-white/40">· 假想目的地：{selectedSpotName}</span>}
+              </div>
+              <div className="text-white text-3xl font-black">{ptsiResult.score}</div>
+              <div className="flex gap-4 mt-2 text-[10px] text-white/60">
+                <span>UV: {ptsiResult.uvScore}</span>
+                <span>身体: {ptsiResult.bodyScore}</span>
+                <span>体力: {staminaBudget}%</span>
+              </div>
+              {staminaAdvice && (
+                <div className={`mt-2 text-[11px] px-3 py-1.5 rounded-lg ${staminaAdvice.startsWith('⚠️') ? 'bg-red-500/20 text-red-100' : 'bg-emerald-500/20 text-emerald-100'}`}>
+                  {staminaAdvice}
+                </div>
+              )}
+            </div>
+
+            {/* ═══ D3.4 社交化：相似用户踩坑展示 ═══ */}
+            {selectedSpotId && similarIncidents.length > 0 && (
+              <div className="bg-red-500/20 border border-red-300/40 rounded-2xl px-4 py-3 mb-3 max-w-xs">
+                <div className="text-red-100 font-bold text-sm text-center">
+                  ⚠️ {similarIncidents.length} 个和你身体条件相似的人在这里踩过坑
+                </div>
+                {incidentTagSummary.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1 justify-center">
+                    {incidentTagSummary.map(tag => (
+                      <span key={tag} className="px-2 py-0.5 bg-red-500/40 text-white text-xs rounded-full">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {selectedSpotId && similarIncidents.length === 0 && (
+              <div className="text-white/40 text-xs mb-3 max-w-xs text-center">
+                {selectedSpotName ? `${selectedSpotName}暂无相似身体条件的踩坑记录` : ''}
+              </div>
+            )}
+
+            {/* 社交分享按钮 */}
+            <button
+              onClick={(e) => { e.stopPropagation(); handleShare(); }}
+              className="flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full text-white text-sm font-bold transition-all"
+            >
+              <Share2 className="w-4 h-4" />
+              分享结论
+            </button>
+
+            <div className="text-white/50 text-xs mt-4">点击任意处关闭</div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -642,6 +817,15 @@ export default function DeterrentView() {
   const [showPopup, setShowPopup] = useState<{ id: string; origin: { x: number; y: number } } | null>(null);
   const [timelineIdx, setTimelineIdx] = useState(0);
   const [prevTimeIdx, setPrevTimeIdx] = useState(1);
+  // ═══ 假想目的地 selector 状态（D3.4 隐含前置） ═══
+  // 劝退指南默认无 spot 上下文，仅做时段评估；为让 D3.4 的"相似用户踩坑"
+  // 匹配能够成立，这里允许用户挑选一个假想目的地。
+  const { spots } = useAppStore();
+  const [selectedSpotId, setSelectedSpotId] = useState<string | null>(null);
+  const selectedSpotName = useMemo(
+    () => (selectedSpotId ? spots.find(s => s.id === selectedSpotId)?.name ?? null : null),
+    [spots, selectedSpotId],
+  );
 
   const period = TIME_PERIODS[timeIndex] || TIME_PERIODS[1];
 
@@ -673,6 +857,26 @@ export default function DeterrentView() {
             <h2 className="text-lg font-bold text-gray-900">劝退指南</h2>
             <p className="text-xs text-gray-500">根据时段和身体条件评估是否适合出行</p>
           </div>
+        </div>
+
+        {/* ═══ 假想目的地 selector（D3.4 隐含前置） ═══ */}
+        {/* 选定后结论球可显示"N 个和你身体条件相似的人在这里踩过坑" */}
+        <div className="bg-white/70 backdrop-blur-md rounded-2xl p-4 shadow-sm border border-white/50 mb-4">
+          <div className="flex items-center gap-1.5 mb-2">
+            <MapPinned className="w-4 h-4 text-rose-500" />
+            <span className="text-sm font-semibold text-gray-700">假想目的地</span>
+            <span className="text-[10px] text-gray-400 ml-auto">可选 · 用于结论球社交化匹配</span>
+          </div>
+          <select
+            value={selectedSpotId ?? ''}
+            onChange={(e) => setSelectedSpotId(e.target.value || null)}
+            className="w-full px-3 py-2 text-sm bg-white rounded-xl border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-rose-300"
+          >
+            <option value="">— 未指定（仅做时段评估） —</option>
+            {spots.map(s => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
         </div>
 
         {/* ═══ 健康预警拨盘 ═══ */}
@@ -733,7 +937,12 @@ export default function DeterrentView() {
       </AnimatePresence>
 
       {/* 劝退结论悬浮球 */}
-      <ConclusionButton timeIndex={timeIndex} activeConditions={activeConditions} />
+      <ConclusionButton
+        timeIndex={timeIndex}
+        activeConditions={activeConditions}
+        selectedSpotId={selectedSpotId}
+        selectedSpotName={selectedSpotName}
+      />
     </div>
   );
 }

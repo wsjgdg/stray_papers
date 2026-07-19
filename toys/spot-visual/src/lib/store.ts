@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Spot, sampleSpots } from './spot-data';
+import { Spot, sampleSpots, type DissuasionRecord } from './spot-data';
 
-export type ViewType = 'spots' | 'network' | 'favorites' | 'personality' | 'budget' | 'deterrent' | 'fitness' | 'profile';
+export type ViewType = 'spots' | 'network' | 'favorites' | 'personality' | 'budget' | 'deterrent' | 'fitness' | 'profile'
+  | 'stamina-sandbox' | 'ptsi' | 'dissuasion';  // 新增三个视图
 
 interface AppStore {
   spots: Spot[];
@@ -24,6 +25,18 @@ interface AppStore {
   setViewMode: (m: 'grid' | 'list') => void;
   resetSpots: () => void;
   clearAllSpots: () => void;
+
+  // ═══ 体力沙盘状态（不持久化，仅会话内有效） ═══
+  staminaBudget: number;                // 用户体力预算上限
+  activeSpotOrder: string[];            // 沙盘中拖拽排序后的景点 ID 序列
+  setStaminaBudget: (v: number) => void;
+  setActiveSpotOrder: (ids: string[]) => void;
+
+  // ═══ 劝退日记数据（持久化到 localStorage） ═══
+  dissuasionRecords: DissuasionRecord[];
+  addDissuasionRecord: (r: DissuasionRecord) => void;
+  removeDissuasionRecord: (id: string) => void;
+  voteDissuasionRecord: (id: string) => void;
 }
 
 export const useAppStore = create<AppStore>()(
@@ -57,7 +70,27 @@ export const useAppStore = create<AppStore>()(
       setViewMode: (m) => set({ viewMode: m }),
       resetSpots: () => set({ spots: sampleSpots, activeCategory: '全部', searchQuery: '' }),
       clearAllSpots: () => set({ spots: [], activeCategory: '全部', searchQuery: '' }),
+
+      // ═══ 体力沙盘状态 ═══
+      staminaBudget: 100,
+      activeSpotOrder: [],
+      setStaminaBudget: (v) => set({ staminaBudget: v }),
+      setActiveSpotOrder: (ids) => set({ activeSpotOrder: ids }),
+
+      // ═══ 劝退日记 ═══
+      dissuasionRecords: [],
+      addDissuasionRecord: (r) => set((s) => ({
+        dissuasionRecords: [...s.dissuasionRecords, r],
+      })),
+      removeDissuasionRecord: (id) => set((s) => ({
+        dissuasionRecords: s.dissuasionRecords.filter(r => r.id !== id),
+      })),
+      voteDissuasionRecord: (id) => set((s) => ({
+        dissuasionRecords: s.dissuasionRecords.map(r =>
+          r.id === id ? { ...r, voteCount: r.voteCount + 1 } : r
+        ),
+      })),
     }),
-    { name: 'spot-app', partialize: (s) => ({ favorites: s.favorites, spots: s.spots }) },
+    { name: 'spot-app', partialize: (s) => ({ favorites: s.favorites, spots: s.spots, dissuasionRecords: s.dissuasionRecords }) },
   ),
 );

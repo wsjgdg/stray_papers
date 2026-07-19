@@ -10,7 +10,118 @@ export interface Spot {
   category: string;
   description: string;
   location?: unknown;
+  staminaCost?: number;  // 体力消耗值 0-100（可选，JSON 导入时可携带）
 }
+
+/* ═══ 体力货币：按分类自动推断的体力消耗默认值（0-100） ═══ */
+export const CATEGORY_STAMINA_DEFAULT: Record<string, number> = {
+  '自然风光': 55, '自然风景': 55,
+  '历史人文': 30, '历史文化': 30,
+  '主题乐园': 60,
+  '城市地标': 25,
+  '海滨度假': 40,
+  '山岳景区': 85,
+  '古镇村落': 20,
+  '宗教寺庙': 35,
+  '美食小吃': 15,
+  '轻运动': 70,
+};
+
+/* ═══ 体力货币：景点精确体力消耗值映射（覆盖示例景点） ═══ */
+export const STAMINA_COST_MAP: Record<string, number> = {
+  '张家界国家森林公园': 65,   // 山岳+徒步
+  '故宫博物院': 25,           // 平地参观
+  '上海迪士尼乐园': 55,       // 全天站立+排队
+  '广州塔': 15,               // 电梯观光
+  '三亚亚龙湾': 25,           // 沙滩休闲
+  '黄山风景区': 90,           // 高海拔登山
+  '丽江古城': 20,             // 平地漫步
+  '少林寺': 40,               // 半山寺庙
+  '九寨沟风景区': 55,         // 高原栈道
+  '长城·八达岭': 80,          // 陡坡攀爬
+  '长隆海洋王国': 50,         // 主题乐园
+  '鼓浪屿': 30,               // 小岛漫步
+};
+
+/* ═══ 体力货币：项目体力系数（关键词匹配） ═══ */
+export const PROJECT_STAMINA_FACTOR: Record<string, number> = {
+  '徒步': 1.3, '登山': 1.5, '攀岩': 1.5, '栈道': 1.2,
+  '骑行': 1.4, '漂流': 1.3, '潜水': 1.1, '冲浪': 1.4,
+  '滑雪': 1.5, '骑马': 1.2, '划船': 1.1, '蹦极': 1.0,
+  '观景': 0.7, '参观': 0.5, '游览': 0.6, '漫步': 0.5,
+  '表演': 0.3, '演出': 0.3, '夜游': 0.6, '打卡': 0.4,
+  '博物馆': 0.4, '展览': 0.3, '体验': 0.8,
+  '缆车': -0.3, '索道': -0.4, '电梯': -0.3, '观光车': -0.2,
+  '过山车': 1.1, '跳楼机': 1.2, '摩天轮': 0.3,
+};
+
+/**
+ * 获取景点的体力消耗值（混合策略）
+ * 1. 优先使用 Spot 上的 staminaCost 字段（JSON 导入时携带）
+ * 2. 降级到 STAMINA_COST_MAP 精确匹配
+ * 3. 再降级到 CATEGORY_STAMINA_DEFAULT 分类推断
+ * 4. 默认 40
+ */
+export function getStaminaCost(spot: Spot): number {
+  // 检查 spot 上是否有直接字段（JSON 导入时可能携带）
+  const direct = (spot as any).staminaCost;
+  if (typeof direct === 'number' && direct >= 0 && direct <= 100) return direct;
+  // 精确名称匹配
+  if (STAMINA_COST_MAP[spot.name] !== undefined) return STAMINA_COST_MAP[spot.name];
+  // 分类推断
+  if (CATEGORY_STAMINA_DEFAULT[spot.category] !== undefined) return CATEGORY_STAMINA_DEFAULT[spot.category];
+  return 40;
+}
+
+/**
+ * 根据项目名称计算体力系数调整
+ * 返回 0.3~1.5 的乘数（缆车类可降低体力消耗，徒步类增加）
+ */
+export function getProjectStaminaFactor(projectName: string): number {
+  for (const [kw, factor] of Object.entries(PROJECT_STAMINA_FACTOR)) {
+    if (projectName.includes(kw)) return factor;
+  }
+  return 1.0; // 默认不变
+}
+
+/* ═══ PTSI 指数 ═══ */
+export interface PTSIResult {
+  score: number;          // 0-100，越高越适宜出行
+  uvScore: number;        // 紫外线分项 (0-50)
+  bodyScore: number;      // 身体条件分项 (0-60)
+  crowdScore: number;     // 拥挤分项 (0-30)
+  verdict: 'go' | 'caution' | 'nogo';
+  reasons: string[];
+}
+
+/* ═══ 反向游记 ═══ */
+export interface DissuasionRecord {
+  id: string;
+  spotId: string;
+  spotName: string;
+  timestamp: number;
+  tags: string[];           // 翻车标签数组
+  timePeriod: string;       // '清晨' | '正午' | '黄昏'
+  bodyConditions: string[]; // ['knee', 'heart', 'heat']
+  comment: string;
+  voteCount: number;
+}
+
+/* ═══ 翻车标签预设 ═══ */
+export const DISSUASION_TAGS = [
+  { id: 'queue',       label: '排队3h+',     emoji: '🧍' },
+  { id: 'closed',      label: '设施关闭',     emoji: '🚧' },
+  { id: 'fake',        label: '实际与图片不符', emoji: '🎭' },
+  { id: 'expensive',   label: '门票太贵',     emoji: '💸' },
+  { id: 'toilet',      label: '卫生间脏乱',   emoji: '🚽' },
+  { id: 'parking',     label: '停车困难',     emoji: '🅿️' },
+  { id: 'sun',         label: '暴晒无遮挡',   emoji: '☀️' },
+  { id: 'stairs',      label: '台阶太多',     emoji: '🪜' },
+  { id: 'crowded',     label: '人多拥挤',     emoji: '👥' },
+  { id: 'signal',      label: '信号差',       emoji: '📵' },
+  { id: 'food',        label: '餐饮难吃',     emoji: '🤢' },
+  { id: 'danger',      label: '安全隐患',     emoji: '⚠️' },
+];
 
 // ═══ 分类颜色映射 ═══
 export const CATEGORY_COLORS: Record<string, string> = {
@@ -341,7 +452,7 @@ export const sampleSpots: Spot[] = [
     address: '湖南省张家界市武陵源区',
     facilities: ['游客中心', '索道', '环保车', '餐厅', '医务室', '停车场'],
     projects: ['天门山玻璃栈道', '百龙天梯', '金鞭溪徒步', '袁家界观景台', '天子山云海'],
-    category: '自然风光',
+    category: '自然风光', staminaCost: 65,
     description: '张家界国家森林公园是中国第一个国家森林公园，以独特的石英砂岩峰林地貌闻名于世。公园内有三千多座形态各异的奇峰，被誉为"缩小的仙境，放大的盆景"。电影《阿凡达》中悬浮山的原型就取景于此。这里四季分明，春赏百花、夏避酷暑、秋观红叶、冬览雪景。',
     location: { lat: 29.3249, lng: 110.4343 },
   },
@@ -351,7 +462,7 @@ export const sampleSpots: Spot[] = [
     address: '北京市东城区景山前街4号',
     facilities: ['语音导览', '文创商店', '餐厅', '无障碍通道', '存包处', '母婴室'],
     projects: ['太和殿参观', '珍宝馆', '钟表馆', '御花园漫步', '数字故宫体验'],
-    category: '历史人文',
+    category: '历史人文', staminaCost: 25,
     description: '故宫博物院又称紫禁城，建于明永乐十八年（1420年），是中国明清两代的皇家宫殿，也是世界上现存规模最大、保存最完整的木质结构古建筑群。占地面积72万平方米，馆藏文物超过186万件。',
     location: { lat: 39.9163, lng: 116.3972 },
   },
@@ -361,7 +472,7 @@ export const sampleSpots: Spot[] = [
     address: '上海市浦东新区川沙镇黄赵路310号',
     facilities: ['主题酒店', '停车场', '婴儿车租赁', '轮椅租赁', '寄存柜', '急救站'],
     projects: ['创极速光轮', '翱翔·飞越地平线', '加勒比海盗', '七个小矮人矿山车', '奇幻童话城堡'],
-    category: '主题乐园',
+    category: '主题乐园', staminaCost: 55,
     description: '上海迪士尼乐园是中国内地首座迪士尼主题乐园，拥有七大主题园区，包括全球最大的迪士尼城堡——奇幻童话城堡。融合了中国传统文化元素与迪士尼经典故事。',
     location: { lat: 31.1440, lng: 121.6570 },
   },
@@ -371,7 +482,7 @@ export const sampleSpots: Spot[] = [
     address: '广东省广州市海珠区阅江西路222号',
     facilities: ['观光层', '旋转餐厅', '户外观景平台', '纪念品商店', '电梯', '地下停车场'],
     projects: ['488米户外观景台', '极速云霄跳楼机', '摩天轮', '珠江夜游'],
-    category: '城市地标',
+    category: '城市地标', staminaCost: 15,
     description: '广州塔又称"小蛮腰"，总高度600米，是中国第一高塔。塔身采用独特的扭转造型，拥有世界最高的户外观景平台、横向摩天轮和垂直速降体验项目。',
     location: { lat: 23.1066, lng: 113.3245 },
   },
@@ -381,7 +492,7 @@ export const sampleSpots: Spot[] = [
     address: '海南省三亚市吉阳区亚龙湾',
     facilities: ['更衣室', '淋浴间', '防晒用品店', '潜水中心', '餐饮区', '救生站'],
     projects: ['沙滩漫步', '潜水体验', '帆船出海', '摩托艇', '海边瑜伽'],
-    category: '海滨度假',
+    category: '海滨度假', staminaCost: 25,
     description: '亚龙湾被誉为"天下第一湾"，拥有7.5公里长的银白色海滩，沙质细腻、海水清澈见底。年均气温25.5°C，终年可游泳，是中国南方最理想的海滨度假胜地。',
     location: { lat: 18.1920, lng: 109.6387 },
   },
@@ -391,7 +502,7 @@ export const sampleSpots: Spot[] = [
     address: '安徽省黄山市黄山区汤口镇',
     facilities: ['索道', '山上酒店', '环保车', '医疗点', '餐厅', '行李托运'],
     projects: ['迎客松打卡', '光明顶日出', '西海大峡谷', '飞来石', '云谷寺徒步'],
-    category: '山岳景区',
+    category: '山岳景区', staminaCost: 90,
     description: '黄山以奇松、怪石、云海、温泉、冬雪"五绝"著称于世，被列为世界文化与自然双重遗产。主峰莲花峰海拔1864.8米。徐霞客曾赞叹："登黄山，天下无山，观止矣！"',
     location: { lat: 30.1374, lng: 118.1694 },
   },
@@ -401,7 +512,7 @@ export const sampleSpots: Spot[] = [
     address: '云南省丽江市古城区',
     facilities: ['特色客栈', '美食街', '酒吧街', '手工艺品店', '导游服务'],
     projects: ['四方街夜游', '木府参观', '纳西古乐欣赏', '黑龙潭公园', '束河古镇'],
-    category: '古镇村落',
+    category: '古镇村落', staminaCost: 20,
     description: '丽江古城始建于宋末元初，距今已有800多年历史。融合了纳西族、汉族、白族等多个民族的建筑风格与文化传统，是中国以整座古城申报世界文化遗产获得成功的两座古城之一。',
     location: { lat: 26.8721, lng: 100.2259 },
   },
@@ -411,7 +522,7 @@ export const sampleSpots: Spot[] = [
     address: '河南省郑州市登封市嵩山五乳峰下',
     facilities: ['停车场', '游客中心', '纪念品商店', '素斋餐厅', '讲解服务', '医务室'],
     projects: ['少林功夫表演', '塔林参观', '达摩洞朝拜', '武术体验课', '嵩山游览'],
-    category: '宗教寺庙',
+    category: '宗教寺庙', staminaCost: 40,
     description: '少林寺始建于北魏太和十九年（495年），是汉传佛教的禅宗祖庭，也是少林武术的发源地。少林功夫以刚柔并济、内外兼修的特点享誉世界，千佛殿内的五百罗汉壁画是不可多得的艺术珍品。',
     location: { lat: 34.5082, lng: 112.9365 },
   },
@@ -421,7 +532,7 @@ export const sampleSpots: Spot[] = [
     address: '四川省阿坝藏族羌族自治州九寨沟县',
     facilities: ['观光车', '栈道', '餐厅', '环保厕所', '氧气站', '纪念品店'],
     projects: ['五花海', '珍珠滩瀑布', '诺日朗瀑布', '长海', '镜海倒影'],
-    category: '自然风光',
+    category: '自然风光', staminaCost: 55,
     description: '九寨沟以翠海、叠瀑、彩林、雪峰、藏情"五绝"闻名。景区内共有114个海子，湖水清澈见底，色彩斑斓变幻。秋季漫山遍野的彩林倒映在碧蓝的湖水中，如同人间仙境。',
     location: { lat: 33.2600, lng: 103.9200 },
   },
@@ -431,7 +542,7 @@ export const sampleSpots: Spot[] = [
     address: '北京市延庆区G6京藏高速58号出口',
     facilities: ['缆车', '滑车', '停车场', '游客中心', '无障碍通道', '餐饮服务'],
     projects: ['北八楼登顶', '南长城徒步', '长城夜景', '好汉坡打卡', '熊乐园'],
-    category: '历史人文',
+    category: '历史人文', staminaCost: 25,
     description: '八达岭长城是万里长城中最具代表性的段落，始建于明弘治十八年（1505年），海拔高度达1015米。"不到长城非好汉"使其成为到北京的必游之地。',
     location: { lat: 40.3588, lng: 116.0198 },
   },
@@ -441,7 +552,7 @@ export const sampleSpots: Spot[] = [
     address: '广东省珠海市横琴新区富祥湾长隆海洋王国',
     facilities: ['主题酒店', '亲子设施', '轮椅租赁', '婴儿车租赁', '餐厅', '急救站'],
     projects: ['鲸鲨馆', '白鲸剧场', '海豚剧场', '鹦鹉过山车', '超级激流'],
-    category: '主题乐园',
+    category: '主题乐园', staminaCost: 50,
     description: '长隆海洋王国是全球最大的海洋主题乐园之一，拥有多项吉尼斯世界纪录：全球最大的海洋鱼类展馆、最大的亚克力玻璃观景窗等。夜间烟花无人机汇演令人叹为观止。',
     location: { lat: 22.0996, lng: 113.5338 },
   },
@@ -451,7 +562,7 @@ export const sampleSpots: Spot[] = [
     address: '福建省厦门市思明区鼓浪屿',
     facilities: ['轮渡码头', '特色民宿', '美食街', '导游服务', '公共厕所', '急救站'],
     projects: ['日光岩登顶', '菽庄花园', '皓月园', '风琴博物馆', '环岛漫步'],
-    category: '海滨度假',
+    category: '海滨度假', staminaCost: 30,
     description: '鼓浪屿面积仅1.88平方公里，完好地保留了上千幢中外风格各异的建筑物，被誉为"万国建筑博览"。还被誉为"钢琴之岛"和"音乐之岛"，被列为世界文化遗产。',
     location: { lat: 24.4488, lng: 118.0646 },
   },

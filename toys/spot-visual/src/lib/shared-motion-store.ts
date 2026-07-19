@@ -19,6 +19,10 @@ interface SharedMotionState {
   sosActive: boolean;
   setHeatWarning: (active: boolean) => void;
   setSosActive: (active: boolean) => void;
+
+  /** 跨页联动：劝退页体力预算 → 沙盘页入场读取 */
+  staminaBudget: number;
+  setStaminaBudget: (v: number) => void;
 }
 
 export const useSharedMotionStore = create<SharedMotionState>((set) => ({
@@ -34,6 +38,9 @@ export const useSharedMotionStore = create<SharedMotionState>((set) => ({
           : s,
     ),
   setSosActive: (active) => set({ sosActive: active }),
+
+  staminaBudget: 100,
+  setStaminaBudget: (v) => set({ staminaBudget: v }),
 }));
 
 /** 入场联动窗口期（ms）：超过则忽略本次 pulse。 */

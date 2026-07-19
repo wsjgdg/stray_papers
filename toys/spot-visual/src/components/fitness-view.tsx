@@ -2,10 +2,11 @@
 
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, animate } from 'framer-motion';
-import { Users, Mountain, MapPin, Route, Armchair, ChevronUp, ChevronDown, X, Footprints } from 'lucide-react';
+import { Users, Mountain, MapPin, Route, Armchair, ChevronUp, ChevronDown, X, Footprints, Activity } from 'lucide-react';
 import { useRatchetDrag, useLongPressCharge, useCountUp, useAudioClick, vibrate } from '@/lib/motion-hooks';
 import { useSharedMotionStore, HEAT_WARNING_WINDOW } from '@/lib/shared-motion-store';
 import { PressureButton } from '@/components/shared/pressure-button';
+import { calcStaminaBudget } from '@/lib/stamina-calculator';
 
 /* ═══ 海拔数据（模拟全程路线） ═══ */
 const ELEVATION_DATA = [
@@ -818,6 +819,18 @@ export default function FitnessView() {
 
   const lineConfig = MOBILITY_OPTIONS.find(o => o.id === effectiveMobility) || MOBILITY_OPTIONS[0];
 
+  // ═══ D1.5：体力预算（从同行人模式推断身体红灯） ═══
+  // 轮椅出行 = 膝盖不适；需要搀扶 = 心脏负担；两者都激活 = +怕热中暑
+  const staminaConditions = useMemo(() => {
+    const conds: string[] = [];
+    const ids = Object.values(companions).filter(Boolean) as string[];
+    if (ids.includes('wheelchair')) conds.push('knee');
+    if (ids.includes('assist')) conds.push('heart');
+    if (conds.length >= 2) conds.push('heat');
+    return conds;
+  }, [companions]);
+  const staminaBudget = useMemo(() => calcStaminaBudget(staminaConditions), [staminaConditions]);
+
   // 平路/下坡占比（轻松模式）
   const totalSegs = ELEVATION_DATA.length - 1;
   const flatSegs = ELEVATION_DATA.filter(d => d.type === 'flat').length;
@@ -997,6 +1010,46 @@ export default function FitnessView() {
             }
           />
         </div>
+
+        {/* ═══ D1.5：体力预算卡片（复用 stamina-calculator） ═══ */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`bg-white rounded-2xl border p-4 mb-4 ${staminaBudget < 50 ? 'border-red-200 bg-red-50/40' : 'border-gray-100'}`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <Activity className={`w-4 h-4 ${staminaBudget < 50 ? 'text-red-500' : 'text-emerald-500'}`} />
+              <span className="text-sm font-semibold text-gray-700">体力预算评估</span>
+              <span className="text-[10px] text-gray-400 ml-1">基于同行人状态推断</span>
+            </div>
+            <motion.span
+              key={staminaBudget}
+              initial={{ scale: 1.2 }}
+              animate={{ scale: 1 }}
+              className={`text-2xl font-black ${staminaBudget < 50 ? 'text-red-500' : 'text-emerald-600'}`}
+            >
+              {staminaBudget}<span className="text-xs text-gray-400">/100</span>
+            </motion.span>
+          </div>
+          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${staminaBudget}%` }}
+              transition={{ duration: 0.5 }}
+              className={`h-full rounded-full ${staminaBudget < 50 ? 'bg-red-400' : 'bg-emerald-400'}`}
+            />
+          </div>
+          {staminaConditions.length > 0 && (
+            <div className="flex gap-1.5 mt-2">
+              {staminaConditions.map(c => (
+                <span key={c} className="text-[10px] text-gray-500 px-1.5 py-0.5 bg-gray-100 rounded-full">
+                  {c === 'knee' ? '🦵 膝盖' : c === 'heart' ? '❤️ 心脏' : '🌡️ 中暑'}
+                </span>
+              ))}
+            </div>
+          )}
+        </motion.div>
 
         {/* ═══ 路线统计摘要 ═══ */}
         <div className="grid grid-cols-4 gap-2 mb-5">

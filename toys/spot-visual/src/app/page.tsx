@@ -7,6 +7,7 @@ import {
   Heart, User, Share2, Menu, ChevronLeft, ChevronRight, Image as ImageIcon,
   TreePine, Landmark, Sparkles, Building2, Waves, Mountain, HomeIcon, Church, UtensilsCrossed, Bike,
   AlertTriangle, Activity, Sparkles as SparklesIcon, Calculator, // 修复：补充缺失的图标导入，移除未使用的 Camera
+  Zap, Thermometer, BookX,  // 新增：体力沙盘、PTSI、劝退日记图标
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +24,10 @@ const DeterrentView = dynamic(() => import('@/components/deterrent-view'), { ssr
 const FitnessView = dynamic(() => import('@/components/fitness-view'), { ssr: false });
 const PersonalityView = dynamic(() => import('@/components/personality-view'), { ssr: false });
 const BudgetView = dynamic(() => import('@/components/budget-view'), { ssr: false });
+const StaminaSandboxView = dynamic(() => import('@/components/stamina-sandbox-view'), { ssr: false });
+const PTSIView = dynamic(() => import('@/components/ptsi-view'), { ssr: false });
+const DissuasionView = dynamic(() => import('@/components/dissuasion-view'), { ssr: false });
+const DissuasionEditor = dynamic(() => import('@/components/dissuasion-editor'), { ssr: false });
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = { TreePine, Landmark, Sparkles, Building2, Waves, Mountain, HomeIcon, Church, UtensilsCrossed, Bike };
 const getCategoryIcon = (cat: string) => {
@@ -60,6 +65,9 @@ const NAV_ITEMS: { key: ViewType; label: string; icon: React.ReactNode }[] = [
   { key: 'budget', label: '预算沙盘', icon: <Calculator className="w-4.5 h-4.5" /> },
   { key: 'deterrent', label: '劝退指南', icon: <AlertTriangle className="w-4.5 h-4.5" /> },
   { key: 'fitness', label: '体力账本', icon: <Activity className="w-4.5 h-4.5" /> },
+  { key: 'stamina-sandbox', label: '体力沙盘', icon: <Zap className="w-4.5 h-4.5" /> },
+  { key: 'ptsi',          label: 'PTSI 指数', icon: <Thermometer className="w-4.5 h-4.5" /> },
+  { key: 'dissuasion',    label: '劝退日记', icon: <BookX className="w-4.5 h-4.5" /> },
   { key: 'profile', label: '我的信息', icon: <User className="w-4.5 h-4.5" /> },
 ];
 
@@ -111,9 +119,9 @@ function MobileHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
         </div>
         <div className="w-7" />
       </div>
-      {/* Mobile nav tabs（只显示前4个，其余在汉堡菜单中） */}
+      {/* Mobile nav tabs（只显示前5个，其余在汉堡菜单中） */}
       <div className="flex border-t border-gray-100 overflow-x-auto scrollbar-hide">
-        {NAV_ITEMS.slice(0, 4).map((item) => {
+        {NAV_ITEMS.slice(0, 5).map((item) => {
           const active = activeView === item.key;
           return (
             <button key={item.key} onClick={() => setActiveView(item.key)}
@@ -240,8 +248,9 @@ function SpotList({ spots, onSelect }: { spots: Spot[]; onSelect: (s: Spot) => v
 
 /* ═══════ 详情弹窗（无重叠关闭按钮 + 多图） ═══════ */
 function SpotDetailDialog() {
-  const { selectedSpot, setSelectedSpot, favorites, toggleFavorite } = useAppStore();
+  const { selectedSpot, setSelectedSpot, favorites, toggleFavorite, addDissuasionRecord, setActiveView } = useAppStore();
   const [photoIdx, setPhotoIdx] = useState(0);
+  const [showDissuasionEditor, setShowDissuasionEditor] = useState(false);
   const spot = selectedSpot;
   const allPhotos = spot ? [spot.image, ...(spot.photos || [])] : [];
 
@@ -302,9 +311,39 @@ function SpotDetailDialog() {
             <Separator />
             {spot.facilities.length > 0 && (<div><h4 className="text-sm font-semibold text-gray-900 mb-2.5">配套设施</h4><div className="flex flex-wrap gap-2">{spot.facilities.map((f) => <span key={f} className="inline-flex items-center px-2.5 py-1 bg-gray-100 rounded-md text-xs text-gray-600">{f}</span>)}</div></div>)}
             {spot.projects.length > 0 && (<div><h4 className="text-sm font-semibold text-gray-900 mb-2.5">推荐项目</h4><div className="space-y-2">{spot.projects.map((p) => (<div key={p} className="flex items-center gap-2 text-sm text-gray-600"><Star className="w-3.5 h-3.5 text-amber-400 shrink-0" />{p}</div>))}</div></div>)}
+            {/* ═══ D3.5：劝退入口 ═══ */}
+            <Separator />
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDissuasionEditor(true)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-rose-50 text-rose-600 text-sm font-bold hover:bg-rose-100 transition-colors border border-rose-100"
+              >
+                <BookX className="w-4 h-4" />
+                举报翻车经历
+              </button>
+              <button
+                onClick={() => { setSelectedSpot(null); setActiveView('dissuasion'); }}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gray-50 text-gray-600 text-sm font-bold hover:bg-gray-100 transition-colors border border-gray-100"
+              >
+                <BookX className="w-4 h-4" />
+                查看劝退日记
+              </button>
+            </div>
           </div>
         </ScrollArea>
       </DialogContent>
+      {/* ═══ D3.5：劝退日记编辑器（从详情弹窗发起） ═══ */}
+      {showDissuasionEditor && (
+        <DissuasionEditor
+          onSave={(record) => {
+            addDissuasionRecord(record);
+            setShowDissuasionEditor(false);
+            setSelectedSpot(null);
+            setActiveView('dissuasion');
+          }}
+          onClose={() => setShowDissuasionEditor(false)}
+        />
+      )}
     </Dialog>
   );
 }
@@ -581,6 +620,9 @@ export default function Home() {
                 {activeView === 'budget' && <BudgetView />}
                 {activeView === 'deterrent' && <DeterrentView />}
                 {activeView === 'fitness' && <FitnessView />}
+                {activeView === 'stamina-sandbox' && <StaminaSandboxView />}
+                {activeView === 'ptsi' && <PTSIView />}
+                {activeView === 'dissuasion' && <DissuasionView />}
                 {activeView === 'profile' && <ProfileView />}
               </div>
             </div>
