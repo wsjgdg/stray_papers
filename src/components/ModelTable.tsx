@@ -170,6 +170,7 @@ export default function ModelTable({
   const [sort, setSort] = useState<SortState>({ key: 'created', dir: 'desc' });
   const [page, setPage] = useState(0);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [flashId, setFlashId] = useState<string | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [warn, setWarn] = useState<string | null>(null);
 
@@ -177,7 +178,7 @@ export default function ModelTable({
     setPage(0);
   }, [query, vendor, caps, onlyScored]);
 
-  // 模型深链：浮窗点来的 raw 字符串（gpt-5 / openai/gpt-5 等）→ 容忍匹配并展开对应行。
+  // 模型深链：浮窗点来的 raw 字符串（gpt-5 / openai/gpt-5 等）→ 容忍匹配并精确展开对应行。
   // 用 nonce 去重，避免 30s 轮询刷新 models 引用时重复重置筛选。
   const lastFocusNonce = useRef<number | null>(null);
   useEffect(() => {
@@ -186,11 +187,18 @@ export default function ModelTable({
     lastFocusNonce.current = focus.nonce;
     const m = models.find((x) => matchFocus(x, focus.model));
     if (!m) return;
-    setQuery(focus.model);
+    // 精确跳转：清空筛选并切默认排序，直接定位到该模型所在页（不把模型串写进搜索框污染搜索词）
+    setQuery('');
     setVendor(ALL_VENDOR);
     setCaps([]);
     setOnlyScored(false);
+    setSort({ key: 'created', dir: 'desc' });
+    const ordered = [...models].sort((a, b) => b.created - a.created || a.id.localeCompare(b.id));
+    const idx = ordered.findIndex((x) => x.id === m.id);
+    if (idx >= 0) setPage(Math.floor(idx / PAGE_SIZE));
     setExpandedId(m.id);
+    setFlashId(m.id);
+    window.setTimeout(() => setFlashId((cur) => (cur === m.id ? null : cur)), 2400);
   }, [focus, models]);
 
   const vendorOptions = useMemo(() => {
@@ -434,6 +442,7 @@ export default function ModelTable({
                       className={clsx(
                         'cursor-pointer border-b border-edge/60 transition-colors hover:bg-[#16213a]',
                         expanded && 'bg-[#16213a]',
+                        flashId === m.id && 'ring-2 ring-accent',
                       )}
                       onClick={() => setExpandedId(expanded ? null : m.id)}
                     >

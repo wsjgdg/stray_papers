@@ -70,8 +70,14 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
   const ref = useRef<HTMLDivElement>(null);
   const drag = useRef<{ ox: number; oy: number; px: number; py: number } | null>(null);
   const [minimal, setMinimal] = useState(false);
-  const cfgRef = useRef<{ budgetUsd: number }>({ budgetUsd: 0 });
+  const cfgRef = useRef<{ budgetUsd: number; refreshMs: number; defaultFocus: FocusMetric }>({
+    budgetUsd: 0,
+    refreshMs: 2000,
+    defaultFocus: 'rate',
+  });
   const notifiedRef = useRef(false);
+  const spikeNotifiedRef = useRef(false);
+  const wasAliveRef = useRef<boolean | null>(null);
   // 信息密度：今日累计成本曲线 + Top 模型（调用频次，本地累积）
   const [costSeries, setCostSeries] = useState<number[]>([]);
   const [topModels, setTopModels] = useState<{ model: string; provider: string; count: number; lastTs: number }[]>([]);
@@ -82,12 +88,17 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
   const loadedMaxTs = useRef<number>(0);
   const saveTimer = useRef<number | null>(null);
 
-  // 挂载时读取应用设置：默认极简模式 + 预算阈值（用于告警）
+  // 挂载时读取应用设置：默认极简模式 + 预算阈值（用于告警）+ 默认焦点指标 + 刷新间隔
   useEffect(() => {
     const cfg = api?.getSettings?.();
     if (cfg) {
-      cfgRef.current = { budgetUsd: Number(cfg.budgetUsd) || 0 };
+      cfgRef.current = {
+        budgetUsd: Number(cfg.budgetUsd) || 0,
+        refreshMs: Number(cfg.refreshMs) || 2000,
+        defaultFocus: (cfg.defaultFocus as FocusMetric) || 'rate',
+      };
       if (cfg.minimalDefault) setMinimal(true);
+      if (cfg.defaultFocus) setFocus(cfg.defaultFocus as FocusMetric);
     }
   }, []);
 
@@ -193,6 +204,20 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
               const next = [...prev, { in: s.inputRateTokS, out: s.outputRateTokS }];
               return next.length > 40 ? next.slice(next.length - 40) : next;
             });
+            // 速率突增通知（alert 上升沿触发，回落可再提醒）
+            const inL = spikeLevel(s.rateHistory, 'inRate');
+            const outL = spikeLevel(s.rateHistory, 'outRate');
+            if ((inL === 'alert' || outL === 'alert') && !spikeNotifiedRef.current) {
+              spikeNotifiedRef.current = true;
+              api?.notify?.('速率突增告警', '输入/输出速率相对近期基线突增，请关注');
+            } else if (inL !== 'alert' && outL !== 'alert') {
+              spikeNotifiedRef.current = false;
+            }
+            // 代理连接恢复通知（仅上升沿）
+            if (wasAliveRef.current === false) {
+              api?.notify?.('代理已恢复', '本地代理连接恢复正常');
+            }
+            wasAliveRef.current = true;
             // 今日累计成本曲线：采样 todayCostUsd（已为累计值，单调递增）
             setCostSeries((prev) => {
               const next = [...prev, s.todayCostUsd || 0];
@@ -218,11 +243,16 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
           }
         }
       } catch {
+        // 代理连接断开通知（仅上升沿，避免重复刷屏）
+        if (wasAliveRef.current === true) {
+          api?.notify?.('代理连接断开', '无法连接本地代理，统计已暂停');
+        }
+        wasAliveRef.current = false;
         /* 代理服务不可用或加锁时静默忽略 */
       }
     };
     void load();
-    const t = setInterval(load, 2000);
+    const t = setInterval(load, cfgRef.current.refreshMs || 2000);
     return () => {
       alive = false;
       clearInterval(t);
@@ -284,6 +314,31 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
   // 模型深链：点模型行 → 主窗口打开该模型详情
   const openModel = (m: string) => {
     if (m && api?.openModel) api.openModel(m);
+  };
+
+  // 日终统计导出 CSV：汇总 + 今日成本序列 + Top 模型频次
+  const exportStatsCsv = () => {
+    const lines = [
+      'section,key,value',
+      `summary,todayCostUsd,${data?.todayCostUsd ?? 0}`,
+      `summary,inputTokens,${data?.todayInputTokens ?? 0}`,
+      `summary,outputTokens,${data?.todayOutputTokens ?? 0}`,
+      `summary,cacheReadTokens,${data?.todayCacheReadTokens ?? 0}`,
+      `summary,cacheHitRate,${data?.cacheHitRateToday ?? ''}`,
+    ];
+    costSeriesRef.current.forEach((v, i) => lines.push(`costSeries,${i},${v}`));
+    [...modelFreq.current.values()]
+      .sort((a, b) => b.count - a.count || b.lastTs - a.lastTs)
+      .forEach((e) => lines.push(`topModel,${e.model},${e.count}`));
+    const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `llm-workbench-stats-${todayStr()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   };
 
   // ── 主题配色（浅/深）──
@@ -421,6 +476,7 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
       <div className="space-y-1.5 px-3 py-2.5 text-[11px]">
         <Row label="输入速率" value={data ? `${data.inputRateTokS} tok/s` : '—'} tone={inLevel} active={focus === 'rate'} />
         <Row label="输出速率" value={data ? `${data.outputRateTokS} tok/s` : '—'} tone={outLevel} active={focus === 'rate'} />
+        <Row label="请求速率" value={data ? `${data.reqRate}/s` : '—'} active={focus === 'rate'} />
         <div className="pt-0.5">
           <Sparkline samples={series} bg={chipBg} />
           <div className={'mt-1 flex items-center justify-center gap-3 text-[9px] ' + sub}>
@@ -523,6 +579,7 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
           <MenuItem label={expanded ? '收起详情' : '展开详情'} onClick={() => { setExpanded((v) => !v); setMenu(null); }} />
           <MenuItem label={minimal ? '切换完整模式' : '切换极简模式'} onClick={() => { setMinimal((m) => !m); setMenu(null); }} />
           <MenuItem label="切换焦点指标" onClick={() => { setFocus((f) => FOCUS_NEXT[f]); setMenu(null); }} />
+          <MenuItem label="导出今日统计" onClick={() => { exportStatsCsv(); setMenu(null); }} />
           {isElectron && <MenuItem label="打开主窗口" onClick={() => { api?.showMain?.(); setMenu(null); }} />}
           {isElectron && <MenuItem label="重置浮窗位置" onClick={() => { api?.resetFloat?.(); setMenu(null); }} />}
           <MenuItem label="关闭浮窗" danger onClick={() => { if (api?.closeFloat) api.closeFloat(); else docked ? window.close() : setOpen(false); setMenu(null); }} />
