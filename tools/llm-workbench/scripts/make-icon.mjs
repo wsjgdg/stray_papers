@@ -1,12 +1,13 @@
-// 生成 electron/icon.png（64x64，无第三方依赖，纯 zlib 编码 PNG）。
+// 生成 electron/icon.png（512x512，无第三方依赖，纯 zlib 编码 PNG）。
 // 仅用于开发期/打包前生成托盘与窗口图标；无需 imagemagick 等外部工具。
+// 注意：electron-builder 打包 nsis 要求图标至少 256x256，故此处用 512。
 import zlib from 'node:zlib';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const SIZE = 64;
+const SIZE = 512;
 
 // ── CRC32（PNG chunk 校验） ──
 const CRC_TABLE = (() => {
@@ -32,19 +33,24 @@ function chunk(type, data) {
   return Buffer.concat([len, t, data, crc]);
 }
 
-// ── 像素：深色底 + 蓝色描边 + 中心浅色卡，读作 App 图标 ──
+// ── 像素：深色底 + 蓝色描边 + 中心浅色卡，读作 App 图标（尺寸按比例缩放） ──
 const px = Buffer.alloc(SIZE * SIZE * 4);
 const NAVY = [0x0f, 0x16, 0x26];
 const BORDER = [0x1b, 0x2a, 0x44];
 const ACCENT = [0x5b, 0x9b, 0xff];
 const CARD = [0xe6, 0xed, 0xf3];
+const b = Math.max(2, Math.round(SIZE * 0.06));
+const a0 = Math.round(SIZE * 0.19);
+const a1 = Math.round(SIZE * 0.81);
+const c0 = Math.round(SIZE * 0.38);
+const c1 = Math.round(SIZE * 0.625);
 for (let y = 0; y < SIZE; y++) {
   for (let x = 0; x < SIZE; x++) {
     const i = (y * SIZE + x) * 4;
     let col = NAVY;
-    if (x < 4 || y < 4 || x >= SIZE - 4 || y >= SIZE - 4) col = BORDER;
-    else if (x >= 12 && x < 52 && y >= 12 && y < 52) col = ACCENT;
-    if (x >= 24 && x < 40 && y >= 24 && y < 40) col = CARD;
+    if (x < b || y < b || x >= SIZE - b || y >= SIZE - b) col = BORDER;
+    else if (x >= a0 && x < a1 && y >= a0 && y < a1) col = ACCENT;
+    if (x >= c0 && x < c1 && y >= c0 && y < c1) col = CARD;
     px[i] = col[0];
     px[i + 1] = col[1];
     px[i + 2] = col[2];
