@@ -17,6 +17,7 @@ function fmtTok(n: number): string {
 export default function FloatingStats() {
   const [open, setOpen] = useState(true);
   const [data, setData] = useState<ProxySummary | null>(null);
+  const [samples, setSamples] = useState<{ in: number; out: number }[]>([]);
   const [pos, setPos] = useState<Pos | null>(null);
   const [dragging, setDragging] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -27,7 +28,15 @@ export default function FloatingStats() {
     const load = async () => {
       try {
         const s = await fetchProxySummary();
-        if (alive) setData(s);
+        if (alive) {
+          setData(s);
+          if (s) {
+            setSamples((prev) => {
+              const next = [...prev, { in: s.inputRateTokS, out: s.outputRateTokS }];
+              return next.length > 40 ? next.slice(next.length - 40) : next;
+            });
+          }
+        }
       } catch {
         /* 代理服务不可用或加锁时静默忽略 */
       }
@@ -115,6 +124,20 @@ export default function FloatingStats() {
       <div className="space-y-1.5 px-3 py-2.5 text-[11px]">
         <Row label="输入速率" value={data ? `${data.inputRateTokS} tok/s` : '—'} />
         <Row label="输出速率" value={data ? `${data.outputRateTokS} tok/s` : '—'} />
+        <div className="pt-0.5">
+          <Sparkline samples={samples} />
+          <div className="mt-1 flex items-center justify-center gap-3 text-[9px] text-muted">
+            <span className="flex items-center gap-1">
+              <i className="inline-block h-2 w-2 rounded-full" style={{ background: '#5b9bff' }} />
+              输入
+            </span>
+            <span className="flex items-center gap-1">
+              <i className="inline-block h-2 w-2 rounded-full" style={{ background: '#5ec8a0' }} />
+              输出
+            </span>
+            <span>近 {samples.length * 2}s 趋势</span>
+          </div>
+        </div>
         <Row label="缓存命中" value={rate} accent />
         <Row
           label="当前模型"
@@ -158,5 +181,27 @@ function Mini({ label, value, accent }: { label: string; value: string; accent?:
       <div className={`text-[12px] font-semibold ${accent ? 'text-accent' : 'text-ink'}`}>{value}</div>
       <div className="text-[9px] text-muted">{label}</div>
     </div>
+  );
+}
+
+// 速率趋势迷你图：把每次轮询的输入/输出速率绘制成 sparkline。
+function Sparkline({ samples }: { samples: { in: number; out: number }[] }) {
+  const W = 236;
+  const H = 36;
+  const pad = 2;
+  if (samples.length < 2) {
+    return <div style={{ height: H }} className="rounded-md bg-[#0d1728]" />;
+  }
+  const max = Math.max(1, ...samples.map((s) => Math.max(s.in, s.out)));
+  const n = samples.length;
+  const x = (i: number) => pad + (i / (n - 1)) * (W - pad * 2);
+  const y = (v: number) => pad + (1 - v / max) * (H - pad * 2);
+  const line = (key: 'in' | 'out') =>
+    samples.map((s, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(s[key]).toFixed(1)}`).join(' ');
+  return (
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} className="rounded-md bg-[#0d1728]" preserveAspectRatio="none" style={{ height: H }}>
+      <path d={line('out')} fill="none" stroke="#5ec8a0" strokeWidth={1.5} strokeLinejoin="round" />
+      <path d={line('in')} fill="none" stroke="#5b9bff" strokeWidth={1.5} strokeLinejoin="round" />
+    </svg>
   );
 }
