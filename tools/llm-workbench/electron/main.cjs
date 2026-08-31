@@ -68,8 +68,14 @@ function attachDiag(win, name) {
 
 // 生成桌面快捷方式（.lnk）。便携版无安装程序，需在运行时创建。
 // 仅 Windows 有效；用 PowerShell + WScript.Shell COM 写 .lnk，幂等（已存在则覆盖更新）。
+// 注意：dev 模式（electron:dev）下 app.getPath('exe') 指向 Electron 运行时二进制而非打包后的
+// LLM Workbench.exe，此时生成的 .lnk 会打开裸 Electron 而非工作台 —— 故仅在打包后（app.isPackaged）才创建。
 function createDesktopShortcut() {
   if (process.platform !== 'win32') return false;
+  if (!app.isPackaged) {
+    console.log('[SHORTCUT] skip in dev mode (exe would point to electron runtime, not the app)');
+    return false;
+  }
   try {
     const exe = app.getPath('exe');
     const exeDir = path.dirname(exe);
