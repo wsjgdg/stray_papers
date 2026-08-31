@@ -245,6 +245,14 @@ ipcMain.on('float:snap', (_e, pos) => {
   applyPosition(appSettings.position);
 });
 
+// 浮窗统计持久化：加载（同步回传）/ 保存（落盘到 userData/float-stats.json）
+ipcMain.on('stats:load', (e) => {
+  e.returnValue = settings.getStats() || null;
+});
+ipcMain.on('stats:save', (_e, obj) => {
+  settings.setStats(obj || {});
+});
+
 // 模型深链：浮窗点模型 → 显示主窗口并转发给主窗口渲染进程
 ipcMain.on('float:open-model', (_e, model) => {
   if (!mainWin) return;

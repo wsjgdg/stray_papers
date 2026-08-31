@@ -41,4 +41,13 @@ contextBridge.exposeInMainWorld('electron', {
   // 模型深链：浮窗点模型 → 主进程转发给主窗口
   openModel: (model) => ipcRenderer.send('float:open-model', model),
   onOpenModel: (cb) => ipcRenderer.on('open-model', (_e, m) => cb(m)),
+  // 浮窗统计持久化（仅 Electron 内有效）：加载（同步）/ 保存
+  loadStats: () => {
+    try {
+      return ipcRenderer.sendSync('stats:load');
+    } catch {
+      return null;
+    }
+  },
+  saveStats: (obj) => ipcRenderer.send('stats:save', obj),
 });
