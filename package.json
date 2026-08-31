@@ -18,6 +18,7 @@
     "verify:models": "tsx scripts/verify-model-merge.mjs",
     "verify:config-merge": "node scripts/verify-config-merge.mjs",
     "verify:electron-build": "node scripts/verify-electron-build.mjs",
+    "verify": "node scripts/verify-all.mjs",
     "electron:dev": "npm run build && npm run build:server:electron && npm run make:icon && electron .",
     "electron:build": "npm run build && npm run build:server:electron && npm run make:icon && npm run build:electron-config && electron-builder",
     "electron:build:portable": "npm run build && npm run build:server:electron && npm run make:icon && npm run build:electron-config && electron-builder --win dir"
