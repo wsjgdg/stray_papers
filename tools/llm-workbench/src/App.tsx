@@ -116,6 +116,12 @@ export default function App() {
             className="btn"
             title="在独立窗口打开实时统计浮窗（关闭主窗口后仍可显示）"
             onClick={() => {
+              // Electron 内：直接让主进程创建原生常驻浮窗（alwaysOnTop / frameless）
+              const api = (window as unknown as { electron?: { openFloat?: () => void } }).electron;
+              if (api?.openFloat) {
+                api.openFloat();
+                return;
+              }
               // 关键：置空 opener，使弹窗成为完全独立的窗口。
               // 否则多数浏览器会把它当成「依赖主窗口的弹窗」，主窗口一关它也被连带关掉。
               const w = window.open(

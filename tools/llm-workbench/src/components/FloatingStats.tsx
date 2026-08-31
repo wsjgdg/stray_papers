@@ -36,6 +36,8 @@ function spikeLevel(
 
 export default function FloatingStats({ standalone = false }: { standalone?: boolean }) {
   const docked = standalone;
+  // 在 Electron 内运行时，浮窗是原生 frameless 窗口，需要用 -webkit-app-region 让 header 可拖拽
+  const isElectron = typeof window !== 'undefined' && !!(window as unknown as { electron?: { isElectron?: boolean } }).electron?.isElectron;
   const [open, setOpen] = useState(true);
   const [data, setData] = useState<ProxySummary | null>(null);
   const [samples, setSamples] = useState<{ in: number; out: number }[]>([]);
@@ -69,6 +71,17 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
       clearInterval(t);
     };
   }, []);
+
+  // Electron 内：浮窗是 transparent 窗口，需把页面背景置透明，露出桌面（卡片自身有底色）
+  useEffect(() => {
+    if (standalone && isElectron) {
+      const prev = document.body.style.background;
+      document.body.style.background = 'transparent';
+      return () => {
+        document.body.style.background = prev;
+      };
+    }
+  }, [standalone, isElectron]);
 
   const onPointerDown = (e: React.PointerEvent) => {
     const el = ref.current;
@@ -140,13 +153,22 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
         <div
           className={docked ? 'flex items-center gap-1.5 border-b border-edge px-3 py-2' : 'flex cursor-grab items-center gap-1.5 border-b border-edge px-3 py-2 active:cursor-grabbing'}
           onPointerDown={docked ? undefined : onPointerDown}
+          style={isElectron ? ({ WebkitAppRegion: 'drag' } as React.CSSProperties) : undefined}
         >
         <GripHorizontal size={13} className="text-muted" />
         <Activity size={13} className={alertAny ? 'text-[#ef6b6b]' : 'text-accent'} />
         <span className="text-[11px] font-medium text-ink">实时代理统计</span>
         <button
           className="ml-auto rounded p-0.5 text-muted hover:bg-[#16223a] hover:text-ink"
-          onClick={() => (docked ? window.close() : setOpen(false))}
+          style={isElectron ? ({ WebkitAppRegion: 'no-drag' } as React.CSSProperties) : undefined}
+          onClick={() => {
+            const api = (window as unknown as { electron?: { closeFloat?: () => void } }).electron;
+            if (api?.closeFloat) {
+              api.closeFloat();
+              return;
+            }
+            docked ? window.close() : setOpen(false);
+          }}
           title={docked ? '关闭窗口' : '折叠'}
         >
           <X size={13} />
