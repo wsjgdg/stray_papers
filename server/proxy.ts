@@ -113,16 +113,24 @@ export async function listProviderModels(providerId: string): Promise<string[]> 
     });
     if (!r.ok) {
       const txt = await r.text();
-      throw new Error(`上游返回 HTTP ${r.status}: ${txt.slice(0, 200)}`);
+      throw new Error(`上游返回 HTTP ${r.status} @ ${modelsUrl}: ${txt.slice(0, 200)}`);
     }
-    const body = (await r.json()) as { data?: Array<{ id?: string }>; models?: Array<{ name?: string }> };
+    const body = (await r.json().catch(() => null)) as
+      | { data?: Array<{ id?: string; name?: string }>; models?: Array<{ id?: string; name?: string }> }
+      | null;
+    if (!body || typeof body !== 'object') {
+      throw new Error(`上游响应不是合法 JSON @ ${modelsUrl}`);
+    }
+    const stripName = (s?: string) => (typeof s === 'string' ? s.replace(/^models\//, '').trim() : '');
+    const pick = (m: { id?: string; name?: string }) => stripName(m.id) || stripName(m.name);
     let ids: string[] = [];
     if (format === 'gemini' && Array.isArray(body.models)) {
-      ids = body.models
-        .map((m) => (typeof m.name === 'string' ? m.name.replace(/^models\//, '') : ''))
-        .filter(Boolean);
+      ids = body.models.map((m) => stripName(m.name)).filter(Boolean);
     } else if (Array.isArray(body.data)) {
-      ids = body.data.map((m) => (typeof m.id === 'string' ? m.id : '')).filter(Boolean);
+      // OpenAI 兼容：{ data:[{id}] }；部分网关用 name 或包在 models 字段
+      ids = body.data.map(pick).filter(Boolean);
+    } else if (Array.isArray(body.models)) {
+      ids = body.models.map(pick).filter(Boolean);
     }
     const seen = new Set<string>();
     const out: string[] = [];

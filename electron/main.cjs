@@ -456,14 +456,9 @@ if (!gotLock) {
     createWindows();
     createTray();
     applySettings(); // 应用透明度 + 全局快捷键 + 开机自启
-    // 便携版无安装程序：按设置首次生成桌面快捷方式（已存在则跳过）
-    if (appSettings?.createDesktopShortcut) {
-      try {
-        const linkPath = path.join(app.getPath('desktop'), 'LLM Workbench.lnk');
-        if (!fs.existsSync(linkPath)) createDesktopShortcut();
-      } catch {
-        /* 桌面路径不可达时静默忽略 */
-      }
+    // 便携版无安装程序：按设置生成桌面快捷方式（打包后每次启动都刷新，确保指向正确的打包 exe）
+    if (appSettings?.createDesktopShortcut && app.isPackaged) {
+      createDesktopShortcut();
     }
   });
 }
