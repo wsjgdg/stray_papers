@@ -434,7 +434,10 @@ sampleRateHistory();
 setInterval(sampleRateHistory, 2000);
 (async () => {
   if (await tryReuse(BASE_PORT)) {
-    process.exit(0);
+    // 复用已有实例：保持窗口短暂可见，明确告知是「已在浏览器打开」而非崩溃闪退
+    logStartup(`[api] 应用已在浏览器打开（http://127.0.0.1:${BASE_PORT}）。本窗口 2 秒后自动关闭。`);
+    setTimeout(() => process.exit(0), 2000);
+    return;
   }
   listenOn(BASE_PORT, BASE_PORT + 10);
 })();
