@@ -42,7 +42,8 @@ function writeJson(file, obj) {
 }
 
 function ensure(file) {
-  return path.join(app.getPath('userData'), file);
+  if (!appRef) return null;
+  return path.join(appRef.getPath('userData'), file);
 }
 // ── 构建期配置（由 scripts/build-electron-config.mjs 生成，gitignored）──
 // 允许在「构建」时通过环境变量覆盖默认值（如 LLMWB_AUTOSTART / LLMWB_DESKTOP_SHORTCUT），
