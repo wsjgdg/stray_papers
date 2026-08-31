@@ -479,7 +479,7 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
       className={
         (docked
           ? 'relative w-full select-none rounded-xl border border-edge ' + cardBase
-          : 'relative z-40 w-[260px] select-none rounded-xl border border-edge ' + cardBase) +
+          : 'fixed z-40 w-[260px] select-none rounded-xl border border-edge ' + cardBase) +
         ' ' +
         hcClass +
         ' shadow-2xl backdrop-blur'
