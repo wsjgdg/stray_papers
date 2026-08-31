@@ -39,6 +39,20 @@ async function waitForBackend(timeoutMs = 15000) {
   return false;
 }
 
+// 诊断：抓渲染进程错误/加载失败/崩溃，便于排查 Electron 黑屏（只记录 ERR/WARN 与致命事件，避免刷屏）。
+function attachDiag(win, name) {
+  const wc = win.webContents;
+  wc.on('console-message', (_e, level, message, source, line) => {
+    if (level !== 1 && level !== 2) return; // 仅 ERR(1) / WARN(2)
+    const tag = level === 1 ? 'ERR' : 'WARN';
+    console.log(`[${name} ${tag}] ${message}${source ? ' @ ' + source + ':' + line : ''}`);
+  });
+  wc.on('did-fail-load', (_e, code, desc, url) => console.log(`[${name} FAIL-LOAD] ${code} ${desc} ${url}`));
+  wc.on('render-process-gone', (_e, d) => console.log(`[${name} RENDER-GONE] ${d.reason} exit=${d.exitCode}`));
+  wc.on('crashed', () => console.log(`[${name} CRASHED]`));
+  wc.on('did-finish-load', () => console.log(`[${name} DID-FINISH-LOAD]`));
+}
+
 function positionFloat() {
   if (!floatWin) return;
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
@@ -60,6 +74,7 @@ function createWindows() {
     },
   });
   mainWin.loadURL(`http://127.0.0.1:${ELECTRON_PORT}/`);
+  attachDiag(mainWin, 'MAIN');
   mainWin.once('ready-to-show', () => mainWin && mainWin.show());
   // 关闭主窗口 → 最小化到托盘，保持浮窗存活（除非真正退出）
   mainWin.on('close', (e) => {
