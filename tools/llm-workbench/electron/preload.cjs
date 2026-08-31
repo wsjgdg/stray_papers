@@ -38,4 +38,7 @@ contextBridge.exposeInMainWorld('electron', {
   onCycleFocus: (cb) => ipcRenderer.on('float:cycle-focus', () => cb()),
   // 浮窗吸附到指定角落（位置预设）
   snapFloat: (pos) => ipcRenderer.send('float:snap', pos),
+  // 模型深链：浮窗点模型 → 主进程转发给主窗口
+  openModel: (model) => ipcRenderer.send('float:open-model', model),
+  onOpenModel: (cb) => ipcRenderer.on('open-model', (_e, m) => cb(m)),
 });

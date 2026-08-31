@@ -65,6 +65,11 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
   const [minimal, setMinimal] = useState(false);
   const cfgRef = useRef<{ budgetUsd: number }>({ budgetUsd: 0 });
   const notifiedRef = useRef(false);
+  // 信息密度：今日累计成本曲线 + Top 模型（调用频次，本地累积）
+  const [costSeries, setCostSeries] = useState<number[]>([]);
+  const [topModels, setTopModels] = useState<{ model: string; provider: string; count: number }[]>([]);
+  const modelFreq = useRef<Map<string, { model: string; provider: string; count: number; lastTs: number }>>(new Map());
+  const seenTs = useRef<Set<number>>(new Set());
 
   // 挂载时读取应用设置：默认极简模式 + 预算阈值（用于告警）
   useEffect(() => {
@@ -104,6 +109,25 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
               const next = [...prev, { in: s.inputRateTokS, out: s.outputRateTokS }];
               return next.length > 40 ? next.slice(next.length - 40) : next;
             });
+            // 今日累计成本曲线：采样 todayCostUsd（已为累计值，单调递增）
+            setCostSeries((prev) => {
+              const next = [...prev, s.todayCostUsd || 0];
+              return next.length > 60 ? next.slice(next.length - 60) : next;
+            });
+            // Top 模型（调用频次）：用 recentModels 的 ts 去重累加，避免重复轮询重复计数
+            const map = modelFreq.current;
+            for (const r of s.recentModels) {
+              if (seenTs.current.has(r.ts)) continue;
+              seenTs.current.add(r.ts);
+              const e = map.get(r.model) ?? { model: r.model, provider: r.provider, count: 0, lastTs: r.ts };
+              e.count += 1;
+              e.lastTs = r.ts;
+              e.provider = r.provider;
+              map.set(r.model, e);
+            }
+            setTopModels(
+              [...map.values()].sort((a, b) => b.count - a.count || b.lastTs - a.lastTs).slice(0, 5),
+            );
           }
         }
       } catch {
@@ -168,6 +192,11 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
     e.preventDefault();
     const r = ref.current?.getBoundingClientRect();
     setMenu({ x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0) });
+  };
+
+  // 模型深链：点模型行 → 主窗口打开该模型详情
+  const openModel = (m: string) => {
+    if (m && api?.openModel) api.openModel(m);
   };
 
   // ── 主题配色（浅/深）──
@@ -326,6 +355,7 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
           value={model ? `${model.model}` : '—'}
           sub={model?.provider}
           active={focus === 'model'}
+          onClick={model ? () => openModel(model.model) : undefined}
         />
         <div className="mt-1 border-t border-edge pt-1.5">
           <div className="mb-1 flex items-center justify-between">
@@ -348,20 +378,50 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
             <span className="tabular-nums">${data ? data.todayCostUsd.toFixed(4) : '0.0000'}</span>
           </div>
           {expanded && (
-            <div className="mt-2 space-y-1 border-t border-edge pt-2">
+            <div className="mt-2 space-y-2 border-t border-edge pt-2">
               <div className={'text-[10px] ' + sub}>速率状态：{alertAny ? '⚠ 突增' : '正常'}</div>
-              <div className={'text-[10px] ' + sub}>最近模型</div>
-              <ul className="space-y-0.5">
-                {(data?.recentModels ?? []).slice(0, 5).map((m, i) => (
-                  <li key={i} className="flex items-center justify-between text-[10px]">
-                    <span className="truncate">{m.model}</span>
-                    <span className={sub}>{m.provider}</span>
-                  </li>
-                ))}
-                {(data?.recentModels ?? []).length === 0 && (
-                  <li className={'text-[10px] ' + sub}>暂无记录</li>
-                )}
-              </ul>
+
+              {/* 今日累计成本曲线（costSeries 为 todayCostUsd 单调递增采样） */}
+              <div>
+                <div className={'mb-0.5 flex items-center justify-between text-[10px] ' + sub}>
+                  <span>今日累计成本</span>
+                  <span className="tabular-nums">
+                    ${costSeries.length ? costSeries[costSeries.length - 1].toFixed(4) : '0.0000'}
+                  </span>
+                </div>
+                <CostCurve values={costSeries} bg={chipBg} />
+              </div>
+
+              {/* 最近模型（本地累计调用频次 Top5，点击深链到主窗口） */}
+              <div>
+                <div className={'mb-0.5 text-[10px] ' + sub}>最近模型（按调用频次 · 点击打开）</div>
+                <ul className="space-y-0.5">
+                  {topModels.length === 0 && <li className={'text-[10px] ' + sub}>暂无记录</li>}
+                  {topModels.map((m) => {
+                    const max = topModels[0]?.count || 1;
+                    const pct = Math.max(6, Math.round((m.count / max) * 100));
+                    return (
+                      <li
+                        key={m.model}
+                        className="flex cursor-pointer items-center gap-1.5 rounded px-1 hover:bg-[#16223a]"
+                        onClick={() => openModel(m.model)}
+                        title={'点击在主窗口打开 ' + m.model}
+                      >
+                        <span className="w-24 shrink-0 truncate text-[10px]" title={m.model}>
+                          {m.model}
+                        </span>
+                        <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#16223a]">
+                          <span
+                            className="block h-full rounded-full bg-accent"
+                            style={{ width: pct + '%' }}
+                          />
+                        </span>
+                        <span className="w-4 text-right tabular-nums text-[10px] text-muted">{m.count}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             </div>
           )}
         </div>
@@ -406,6 +466,7 @@ function Row({
   accent,
   tone,
   active,
+  onClick,
 }: {
   label: string;
   value: string;
@@ -413,11 +474,20 @@ function Row({
   accent?: boolean;
   tone?: Tone;
   active?: boolean;
+  onClick?: () => void;
 }) {
   const colorClass =
     tone === 'alert' ? 'text-[#ef6b6b]' : tone === 'warn' ? 'text-[#e6b15e]' : accent ? 'text-accent' : 'text-ink';
   return (
-    <div className={'flex items-center justify-between gap-2 rounded px-1 ' + (active ? 'ring-1 ring-accent/60' : '')}>
+    <div
+      className={
+        'flex items-center justify-between gap-2 rounded px-1 ' +
+        (active ? 'ring-1 ring-accent/60 ' : '') +
+        (onClick ? 'cursor-pointer hover:bg-[#16223a]' : '')
+      }
+      onClick={onClick}
+      title={onClick ? '点击在主窗口打开该模型' : undefined}
+    >
       <span className="text-muted">{label}</span>
       <span className={'min-w-0 truncate ' + colorClass} title={value}>
         {value}
@@ -454,6 +524,38 @@ function Sparkline({ samples, bg }: { samples: { in: number; out: number }[]; bg
     <svg width="100%" viewBox={`0 0 ${W} ${H}`} className="rounded-md" style={{ height: H, background: bg }} preserveAspectRatio="none">
       <path d={line('out')} fill="none" stroke="#5ec8a0" strokeWidth={1.5} strokeLinejoin="round" />
       <path d={line('in')} fill="none" stroke="#5b9bff" strokeWidth={1.5} strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+// 单值序列迷你面积图（今日累计成本曲线）
+function CostCurve({ values, bg }: { values: number[]; bg: string }) {
+  const W = 236;
+  const H = 26;
+  const pad = 2;
+  if (values.length < 2) {
+    return <div style={{ height: H, background: bg }} className="rounded-md" />;
+  }
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+  const range = max - min || 1;
+  const n = values.length;
+  const x = (i: number) => pad + (i / (n - 1)) * (W - pad * 2);
+  const y = (v: number) => pad + (1 - (v - min) / range) * (H - pad * 2);
+  const linePath = values
+    .map((v, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(v).toFixed(1)}`)
+    .join(' ');
+  const areaPath = `${linePath} L${(W - pad).toFixed(1)},${(H - pad).toFixed(1)} L${pad.toFixed(1)},${(H - pad).toFixed(1)} Z`;
+  return (
+    <svg
+      width="100%"
+      viewBox={`0 0 ${W} ${H}`}
+      className="rounded-md"
+      style={{ height: H, background: bg }}
+      preserveAspectRatio="none"
+    >
+      <path d={areaPath} fill="#a78bfa" fillOpacity={0.15} />
+      <path d={linePath} fill="none" stroke="#a78bfa" strokeWidth={1.5} strokeLinejoin="round" />
     </svg>
   );
 }

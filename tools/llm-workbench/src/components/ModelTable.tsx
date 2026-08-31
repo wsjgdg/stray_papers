@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { ChevronDown, ChevronUp, Download, ExternalLink, Search, X } from 'lucide-react';
 import type { LlmModel } from '../../server/types';
@@ -54,6 +54,17 @@ function hasCap(m: LlmModel, key: CapKey): boolean {
     case 'multimodal':
       return m.inputModalities.includes('image') || m.inputModalities.includes('audio');
   }
+}
+
+/** 深链容忍匹配：raw proxy 字符串（如 gpt-5 / openai/gpt-5）对 LlmModel.id / name / 去前缀名 */
+function matchFocus(m: LlmModel, raw: string): boolean {
+  const s = raw.trim().toLowerCase();
+  if (!s) return false;
+  if (m.id.toLowerCase() === s) return true;
+  if (m.id.toLowerCase().includes(s)) return true;
+  if (m.name.toLowerCase().includes(s)) return true;
+  const stripped = stripVendorPrefix(m).toLowerCase();
+  return stripped === s || stripped.includes(s);
 }
 
 /** 厂商稳定色，用于行首色条 */
@@ -145,7 +156,13 @@ function SortTh({
   );
 }
 
-export default function ModelTable({ models }: { models: LlmModel[] }) {
+export default function ModelTable({
+  models,
+  focus,
+}: {
+  models: LlmModel[];
+  focus?: { model: string; nonce: number } | null;
+}) {
   const [query, setQuery] = useState('');
   const [vendor, setVendor] = useState<string>(ALL_VENDOR);
   const [caps, setCaps] = useState<CapKey[]>([]);
@@ -159,6 +176,22 @@ export default function ModelTable({ models }: { models: LlmModel[] }) {
   useEffect(() => {
     setPage(0);
   }, [query, vendor, caps, onlyScored]);
+
+  // 模型深链：浮窗点来的 raw 字符串（gpt-5 / openai/gpt-5 等）→ 容忍匹配并展开对应行。
+  // 用 nonce 去重，避免 30s 轮询刷新 models 引用时重复重置筛选。
+  const lastFocusNonce = useRef<number | null>(null);
+  useEffect(() => {
+    if (!focus) return;
+    if (lastFocusNonce.current === focus.nonce) return;
+    lastFocusNonce.current = focus.nonce;
+    const m = models.find((x) => matchFocus(x, focus.model));
+    if (!m) return;
+    setQuery(focus.model);
+    setVendor(ALL_VENDOR);
+    setCaps([]);
+    setOnlyScored(false);
+    setExpandedId(m.id);
+  }, [focus, models]);
 
   const vendorOptions = useMemo(() => {
     const counts = new Map<string, number>();
