@@ -6,6 +6,8 @@ const path = require('node:path');
 const BOUNDS_FILE = 'float-settings.json';
 // ── 应用设置（预算/透明度/快捷键/位置等）──
 const APP_FILE = 'app-settings.json';
+// ── 浮窗统计（Top 模型频次 / 今日成本曲线），跨重载/重启保留 ──
+const STATS_FILE = 'float-stats.json';
 
 const DEFAULTS = {
   budgetUsd: 1, // 当日成本告警阈值（USD），0 = 关闭
@@ -63,11 +65,23 @@ function setAppSettings(obj) {
   writeJson(ensure(APP_FILE), obj);
 }
 
+// ── 浮窗统计（落盘，避免浮窗重载/应用重启后统计清零）──
+function getStats() {
+  if (!appRef) return null;
+  return readJson(ensure(STATS_FILE), null);
+}
+function setStats(obj) {
+  if (!appRef) return;
+  writeJson(ensure(STATS_FILE), obj);
+}
+
 module.exports = {
   setApp,
   getBounds,
   setBounds,
   getAppSettings,
   setAppSettings,
+  getStats,
+  setStats,
   DEFAULTS,
 };
