@@ -477,7 +477,7 @@ export async function proxyRequest(
     if (r.committed) return; // 成功或流式已提交
     last = r;
     if (!r.retryable) break; // 不可重试的错误（如 400）→ 直接返回，不再切换
-    retries++; // 发生一次 key 切换
+    if (i + 1 < pool.length) retries++; // 仅当确有一个后续 key 可切换时才计一次切换
   }
 
   if (!last) {
