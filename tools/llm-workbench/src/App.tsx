@@ -249,6 +249,7 @@ type SettingsState = {
   minimalDefault: boolean;
   hotkeyToggle: string;
   hotkeyCycle: string;
+  hotkeyMinimal: string;
   position: 'topright' | 'topleft' | 'bottomleft' | 'bottomright';
   openAtLogin: boolean;
   defaultFocus: 'rate' | 'cache' | 'cost' | 'model';
@@ -264,6 +265,7 @@ const SETTINGS_DEFAULT: SettingsState = {
   minimalDefault: false,
   hotkeyToggle: 'CommandOrControl+Shift+F',
   hotkeyCycle: 'CommandOrControl+Shift+M',
+  hotkeyMinimal: 'CommandOrControl+Shift+L',
   position: 'topright',
   openAtLogin: false,
   defaultFocus: 'rate',
@@ -436,6 +438,16 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
           />
         </label>
 
+        <label className="flex flex-col gap-1 text-xs text-ink">
+          <span>快捷键：切换浮窗极简模式</span>
+          <input
+            type="text"
+            className="input"
+            value={s.hotkeyMinimal}
+            onChange={(e) => setS({ ...s, hotkeyMinimal: e.target.value })}
+          />
+        </label>
+
         <p className="text-[10px] text-muted">
           快捷键格式如 <code className="rounded bg-[#0d1728] px-1">CommandOrControl+Shift+F</code>（macOS 用 Command，Win/Linux 用 Ctrl）。
         </p>
@@ -512,7 +524,9 @@ function SearchPalette({
   onPick: (id: string) => void;
 }) {
   const [q, setQ] = useState('');
+  const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -526,6 +540,24 @@ function SearchPalette({
         )
         .slice(0, 8)
     : models.slice(0, 8);
+
+  // 检索词变化后重置高亮项；高亮项变更时滚动到可视区域
+  useEffect(() => {
+    setActive(0);
+  }, [term]);
+  useEffect(() => {
+    itemRefs.current[active]?.scrollIntoView({ block: 'nearest' });
+  }, [active]);
+
+  const move = (delta: number) => {
+    if (matches.length === 0) return;
+    setActive((cur) => {
+      const next = cur + delta;
+      if (next < 0) return matches.length - 1;
+      if (next >= matches.length) return 0;
+      return next;
+    });
+  };
 
   return (
     <div
@@ -546,17 +578,35 @@ function SearchPalette({
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Escape') onClose();
-              if (e.key === 'Enter' && matches[0]) onPick(matches[0].id);
+              else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                move(1);
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                move(-1);
+              } else if (e.key === 'Enter') {
+                const hit = matches[active];
+                if (hit) onPick(hit.id);
+              }
             }}
           />
           <span className="rounded bg-[#0d1728] px-1.5 py-0.5 text-[10px] text-muted">ESC</span>
         </div>
         <ul className="max-h-[50vh] overflow-auto overscroll-contain py-1">
           {matches.length === 0 && <li className="px-4 py-3 text-xs text-muted">无匹配模型</li>}
-          {matches.map((m) => (
-            <li key={m.id}>
+          {matches.map((m, i) => (
+            <li
+              key={m.id}
+              ref={(el) => {
+                itemRefs.current[i] = el;
+              }}
+            >
               <button
-                className="flex w-full items-center justify-between gap-2 px-4 py-2 text-left hover:bg-[#16223a]"
+                className={
+                  'flex w-full items-center justify-between gap-2 px-4 py-2 text-left ' +
+                  (i === active ? 'bg-accent/15' : 'hover:bg-[#16223a]')
+                }
+                onMouseEnter={() => setActive(i)}
                 onClick={() => onPick(m.id)}
               >
                 <span className="min-w-0 truncate text-xs text-ink">{m.name}</span>
