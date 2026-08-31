@@ -69,6 +69,8 @@ export interface MaskedProviderConfig {
   customName?: string;
   authStyle?: 'bearer' | 'x-api-key' | 'google';
   apiFormat?: ApiFormat;
+  models?: string[]; // 自动获取的模型清单
+  enabledModels?: string[]; // 手动启用的模型子集
   apiKeyMasked: string;
   hasKey: boolean;
   apiKeyCount: number; // 可用 key 数量（多 key 轮询/失败切换）
@@ -153,6 +155,8 @@ export interface ProxyConfigPatch {
   customName?: string;
   authStyle?: AuthStyle;
   apiFormat?: ApiFormat;
+  models?: string[];
+  enabledModels?: string[];
 }
 
 export async function fetchProxyConfig(): Promise<ProxyConfigResponse> {
@@ -220,6 +224,15 @@ export async function runProxyConnectivity(providers?: string[]): Promise<ProbeR
   });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return (await r.json()).results;
+}
+export async function fetchProviderModels(providerId: string): Promise<string[]> {
+  const r = await fetch(`/api/proxy/${encodeURIComponent(providerId)}/models`);
+  if (!r.ok) {
+    const j = (await r.json().catch(() => ({}))) as { error?: string };
+    throw new Error(j.error ?? `HTTP ${r.status}`);
+  }
+  const j = (await r.json()) as { models: string[] };
+  return j.models ?? [];
 }
 
 // ───────── 密钥加密 ─────────

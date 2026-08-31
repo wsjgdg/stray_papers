@@ -73,6 +73,72 @@ function joinUrl(base: string, suffix: string): string {
   return `${b}/${s}`;
 }
 
+/**
+ * 自动获取某厂商的模型清单：命中上游 /models 端点并解析。
+ * - 已知厂商用其 modelsEndpoint（完整 URL）；
+ * - OpenAI 兼容自定义厂商 → baseUrl + /v1/models；
+ * - Gemini 格式 → baseUrl + /models（响应为 { models:[{name:"models/xxx"}] }）。
+ * 返回去重、排序后的模型 id 列表。
+ */
+export async function listProviderModels(providerId: string): Promise<string[]> {
+  const cfg = loadConfig();
+  const target = resolveTarget(providerId, cfg);
+  if (!target) throw new Error(`未知厂商: ${providerId}（自定义厂商请先在配置页添加）`);
+  const { provider, authStyle } = target;
+  const entry = cfg.providers[providerId];
+  if (!entry || !entry.enabled) throw new Error('该厂商未启用，请先在「代理」页配置并启用');
+  const baseUrl = entry.baseUrl || provider.apiBase;
+  if (!baseUrl) throw new Error('该厂商无可用 baseUrl，请在配置中填写');
+  const pool = resolveKeyPool(entry);
+  if (pool.length === 0) throw new Error('该厂商未配置 API Key');
+  const apiKey = pool[0];
+
+  const format: ApiFormat =
+    (entry.apiFormat as ApiFormat) ?? (provider.id === 'google' ? 'gemini' : 'openai');
+  let modelsUrl: string;
+  if (provider.modelsEndpoint) {
+    modelsUrl = provider.modelsEndpoint;
+  } else if (format === 'gemini') {
+    modelsUrl = joinUrl(baseUrl, 'models');
+  } else {
+    modelsUrl = joinUrl(baseUrl, 'v1/models');
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 20000);
+  try {
+    const r = await fetch(modelsUrl, {
+      headers: buildAuthHeaders(authStyle, apiKey),
+      signal: controller.signal,
+    });
+    if (!r.ok) {
+      const txt = await r.text();
+      throw new Error(`上游返回 HTTP ${r.status}: ${txt.slice(0, 200)}`);
+    }
+    const body = (await r.json()) as { data?: Array<{ id?: string }>; models?: Array<{ name?: string }> };
+    let ids: string[] = [];
+    if (format === 'gemini' && Array.isArray(body.models)) {
+      ids = body.models
+        .map((m) => (typeof m.name === 'string' ? m.name.replace(/^models\//, '') : ''))
+        .filter(Boolean);
+    } else if (Array.isArray(body.data)) {
+      ids = body.data.map((m) => (typeof m.id === 'string' ? m.id : '')).filter(Boolean);
+    }
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const id of ids) {
+      if (!seen.has(id)) {
+        seen.add(id);
+        out.push(id);
+      }
+    }
+    out.sort();
+    return out;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function estimateTokens(text: string): number {
   return Math.ceil(text.length / 4);
 }

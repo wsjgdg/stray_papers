@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateA
 import clsx from 'clsx';
 import {
   Activity,
+  Download,
   Key,
   Menu,
   Play,
@@ -19,6 +20,7 @@ import {
   fetchProxyConfig,
   fetchProxyLogs,
   fetchProxyMetrics,
+  fetchProviderModels,
   importProxyConfig,
   runProxyConnectivity,
   saveProxyConfig,
@@ -148,6 +150,8 @@ function ConfigPanel({
   const [importMsg, setImportMsg] = useState<string | null>(null);
   const [connect, setConnect] = useState<ProbeResult[] | null>(null);
   const [connecting, setConnecting] = useState(false);
+  const [modelsLoading, setModelsLoading] = useState<string | null>(null);
+  const [modelsError, setModelsError] = useState<Record<string, string>>({});
 
   const isCustom = (id: string) => id !== '__new__' && !providers.some((p) => p.id === id);
   const knownIds = new Set(providers.map((p) => p.id));
@@ -233,6 +237,39 @@ function ConfigPanel({
       setImportMsg(`已导入文件: ${file.name}`);
     } catch (e) {
       setImportMsg(`文件解析失败: ${(e as Error).message}`);
+    }
+  };
+
+  // 从上游自动拉取模型清单；首次全部启用，后续重新拉取保留用户已手动启用的子集
+  const fetchModels = async (id: string) => {
+    setModelsLoading(id);
+    setModelsError((e) => ({ ...e, [id]: '' }));
+    try {
+      const fetched = await fetchProviderModels(id);
+      if (fetched.length === 0) {
+        setModelsError((e) => ({ ...e, [id]: '上游返回空列表，请确认 baseUrl / Key 是否正确，或该厂商不支持 /models' }));
+      }
+      const prev = cfg[id]?.enabledModels;
+      const enabled = prev ? fetched.filter((m) => prev.includes(m)) : fetched;
+      await saveProxyConfig(id, { models: fetched, enabledModels: enabled });
+      void onSaved();
+    } catch (e) {
+      setModelsError((er) => ({ ...er, [id]: `获取失败: ${(e as Error).message}` }));
+    } finally {
+      setModelsLoading(null);
+    }
+  };
+
+  // 手动启用 / 禁用某个模型
+  const toggleModel = async (id: string, model: string, on: boolean) => {
+    const cur = new Set(cfg[id]?.enabledModels ?? []);
+    if (on) cur.add(model);
+    else cur.delete(model);
+    try {
+      await saveProxyConfig(id, { enabledModels: [...cur] });
+      void onSaved();
+    } catch (e) {
+      setModelsError((er) => ({ ...er, [id]: `保存失败: ${(e as Error).message}` }));
     }
   };
 
@@ -449,6 +486,49 @@ function ConfigPanel({
                   )}
                   {saveState[selected] && <span className="text-[11px] text-accent">{saveState[selected]}</span>}
                 </div>
+
+                {cfg[selected]?.hasKey && (
+                  <div className="space-y-2 rounded-lg border border-edge bg-[#0d1728] p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-[11px] text-muted">
+                        模型清单 · 自动获取后手动启用（仅启用项出现在「试用」下拉）
+                      </div>
+                      <button
+                        className="btn btn-sm shrink-0"
+                        onClick={() => fetchModels(selected)}
+                        disabled={modelsLoading === selected}
+                      >
+                        <Download size={12} />
+                        {modelsLoading === selected ? '获取中…' : '自动获取模型列表'}
+                      </button>
+                    </div>
+                    {modelsError[selected] && <div className="text-[11px] text-up">{modelsError[selected]}</div>}
+                    {cfg[selected]?.models && cfg[selected].models.length > 0 ? (
+                      <div className="max-h-52 space-y-0.5 overflow-auto rounded-md border border-edge">
+                        {cfg[selected].models.map((m) => {
+                          const on = (cfg[selected]?.enabledModels ?? []).includes(m);
+                          return (
+                            <label
+                              key={m}
+                              className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-xs hover:bg-[#16223a]"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={on}
+                                onChange={(e) => toggleModel(selected, m, e.target.checked)}
+                              />
+                              <span className={on ? 'text-ink' : 'text-muted'}>{m}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-[11px] text-muted">
+                        尚未获取模型列表，点击上方按钮从上游拉取（需已填写正确 baseUrl 与 Key 并保存）。
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -507,7 +587,11 @@ function ConfigPanel({
 function Playground({ cfg }: { cfg: Record<string, MaskedProviderConfig> }) {
   const configured = Object.entries(cfg)
     .filter(([, c]) => c.hasKey && c.enabled)
-    .map(([id, c]) => ({ id, name: c.name }));
+    .map(([id, c]) => ({
+      id,
+      name: c.name,
+      models: c.enabledModels && c.enabledModels.length > 0 ? c.enabledModels : null,
+    }));
   const [provider, setProvider] = useState(configured[0]?.id ?? '');
   const [model, setModel] = useState('');
   const [message, setMessage] = useState('你好，用一句话介绍你自己。');
@@ -516,8 +600,21 @@ function Playground({ cfg }: { cfg: Record<string, MaskedProviderConfig> }) {
   const [busy, setBusy] = useState(false);
   const [stats, setStats] = useState<ProxyLog | null>(null);
 
+  // 仅在厂商真正切换时重置模型：避免每次渲染清空自由文本输入
+  const lastProviderRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!provider && configured[0]) setProvider(configured[0].id);
+    if (!provider && configured[0]) {
+      setProvider(configured[0].id);
+      return;
+    }
+    if (lastProviderRef.current === provider) return;
+    lastProviderRef.current = provider;
+    const p = configured.find((x) => x.id === provider);
+    if (p?.models && p.models.length) {
+      setModel((m) => (p.models!.includes(m) ? m : p.models![0]));
+    } else {
+      setModel(''); // 切到无清单厂商：清空，避免沿用上一个厂商的模型名
+    }
   }, [configured, provider]);
 
   const send = async () => {
@@ -599,12 +696,28 @@ function Playground({ cfg }: { cfg: Record<string, MaskedProviderConfig> }) {
                 </option>
               ))}
             </select>
-            <input
-              className="input"
-              placeholder="模型名，如 gpt-4o / claude-3-5-sonnet"
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-            />
+            {(() => {
+              const cur = configured.find((p) => p.id === provider);
+              if (cur?.models) {
+                return (
+                  <select className="input" value={model} onChange={(e) => setModel(e.target.value)}>
+                    {cur.models.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                );
+              }
+              return (
+                <input
+                  className="input"
+                  placeholder="模型名，如 gpt-4o / claude-3-5-sonnet（该厂商未配置清单，可手动输入）"
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                />
+              );
+            })()}
           </div>
           <textarea
             className="input h-40 w-full"

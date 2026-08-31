@@ -38,7 +38,7 @@ import {
   clearSession,
   isAdmin,
 } from './auth.js';
-import { proxyRouter, unifiedRouter, buildAuthHeaders } from './proxy.js';
+import { proxyRouter, unifiedRouter, buildAuthHeaders, listProviderModels } from './proxy.js';
 import { getCacheStats, clearCache } from './responseCache.js';
 import { renderMetrics } from './prometheus.js';
 import type { Snapshot, ProbeResult } from './types.js';
@@ -245,7 +245,7 @@ app.post('/api/proxy/cache/clear', requireAdmin, (_req: Request, res: Response) 
 });
 
 app.post('/api/proxy/config', requireAdmin, (req: Request, res: Response) => {
-  const { providerId, apiKey, apiKeys, baseUrl, enabled, customName, authStyle, apiFormat } = (req.body ?? {}) as {
+  const { providerId, apiKey, apiKeys, baseUrl, enabled, customName, authStyle, apiFormat, models, enabledModels } = (req.body ?? {}) as {
     providerId?: string;
     apiKey?: string;
     apiKeys?: string[];
@@ -254,6 +254,8 @@ app.post('/api/proxy/config', requireAdmin, (req: Request, res: Response) => {
     customName?: string;
     authStyle?: 'bearer' | 'x-api-key' | 'google';
     apiFormat?: 'openai' | 'anthropic' | 'gemini';
+    models?: string[];
+    enabledModels?: string[];
   };
   if (!providerId) {
     res.status(400).json({ error: 'providerId required' });
@@ -267,6 +269,8 @@ app.post('/api/proxy/config', requireAdmin, (req: Request, res: Response) => {
     customName,
     authStyle,
     apiFormat,
+    models: Array.isArray(models) ? models : undefined,
+    enabledModels: Array.isArray(enabledModels) ? enabledModels : undefined,
   });
   res.json(maskConfig(cfg));
 });
@@ -281,7 +285,9 @@ app.post('/api/proxy/config/delete', requireAdmin, (req: Request, res: Response)
 });
 
 app.post('/api/proxy/import', requireAdmin, (req: Request, res: Response) => {
-  const body = (req.body ?? {}) as { providers?: Record<string, { apiKey?: string; baseUrl?: string; enabled?: boolean }> };
+  const body = (req.body ?? {}) as {
+    providers?: Record<string, { apiKey?: string; baseUrl?: string; enabled?: boolean; models?: string[]; enabledModels?: string[] }>;
+  };
   if (!body.providers || typeof body.providers !== 'object') {
     res.status(400).json({ error: 'body.providers 必须为对象 { id: { apiKey, baseUrl, enabled } }' });
     return;
@@ -374,6 +380,17 @@ app.post('/api/proxy/connectivity', async (req: Request, res: Response) => {
     }
   }
   res.json({ checkedAt: Date.now(), results });
+});
+
+// 自动获取某厂商模型清单（须在 proxyRouter 之前注册，否则会被通配路由捕获）
+app.get('/api/proxy/:provider/models', async (req: Request, res: Response) => {
+  const providerId = req.params.provider;
+  try {
+    const models = await listProviderModels(providerId);
+    res.json({ models });
+  } catch (e) {
+    res.status(502).json({ error: String((e as Error)?.message ?? e) });
+  }
 });
 
 // 通用反向代理：/api/proxy/:provider/<path> → provider.apiBase/<path>
