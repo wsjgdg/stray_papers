@@ -14,6 +14,26 @@ function fmtTok(n: number): string {
   return String(n);
 }
 
+// 阈值告警：用服务端速率历史的「近期中位数」作基线，最新值相对基线突增则标色。
+// 避免任意常数阈值——基线随业务自然浮动，突增 1.8x 告警(琥珀) / 3x 严重(红)。
+type Tone = 'normal' | 'warn' | 'alert';
+function spikeLevel(
+  history: { inRate: number; outRate: number }[] | undefined,
+  key: 'inRate' | 'outRate',
+): Tone {
+  if (!history || history.length < 6) return 'normal';
+  const baseline = history.slice(0, -1).map((h) => h[key]).filter((v) => v > 0);
+  if (baseline.length < 3) return 'normal';
+  const sorted = [...baseline].sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)];
+  const latest = history[history.length - 1][key];
+  if (median <= 0) return 'normal';
+  const ratio = latest / median;
+  if (ratio >= 3) return 'alert';
+  if (ratio >= 1.8) return 'warn';
+  return 'normal';
+}
+
 export default function FloatingStats() {
   const [open, setOpen] = useState(true);
   const [data, setData] = useState<ProxySummary | null>(null);
@@ -100,6 +120,10 @@ export default function FloatingStats() {
     data?.rateHistory && data.rateHistory.length >= 2
       ? data.rateHistory.map((s) => ({ in: s.inRate, out: s.outRate }))
       : samples;
+  // 速率突增告警（相对近期中位数）
+  const inLevel = spikeLevel(data?.rateHistory, 'inRate');
+  const outLevel = spikeLevel(data?.rateHistory, 'outRate');
+  const alertAny = inLevel === 'alert' || outLevel === 'alert';
 
   return (
     <div
@@ -115,7 +139,7 @@ export default function FloatingStats() {
         onPointerDown={onPointerDown}
       >
         <GripHorizontal size={13} className="text-muted" />
-        <Activity size={13} className="text-accent" />
+        <Activity size={13} className={alertAny ? 'text-[#ef6b6b]' : 'text-accent'} />
         <span className="text-[11px] font-medium text-ink">实时代理统计</span>
         <button
           className="ml-auto rounded p-0.5 text-muted hover:bg-[#16223a] hover:text-ink"
@@ -127,8 +151,8 @@ export default function FloatingStats() {
       </div>
 
       <div className="space-y-1.5 px-3 py-2.5 text-[11px]">
-        <Row label="输入速率" value={data ? `${data.inputRateTokS} tok/s` : '—'} />
-        <Row label="输出速率" value={data ? `${data.outputRateTokS} tok/s` : '—'} />
+        <Row label="输入速率" value={data ? `${data.inputRateTokS} tok/s` : '—'} tone={inLevel} />
+        <Row label="输出速率" value={data ? `${data.outputRateTokS} tok/s` : '—'} tone={outLevel} />
         <div className="pt-0.5">
           <Sparkline samples={series} />
           <div className="mt-1 flex items-center justify-center gap-3 text-[9px] text-muted">
@@ -142,6 +166,7 @@ export default function FloatingStats() {
             </span>
             <span>近 {series.length * 2}s 趋势</span>
           </div>
+          {alertAny && <div className="mt-1 text-center text-[9px] text-[#ef6b6b]">⚠ 速率突增</div>}
         </div>
         <Row label="缓存命中" value={rate} accent />
         <Row
@@ -168,11 +193,25 @@ export default function FloatingStats() {
   );
 }
 
-function Row({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: boolean }) {
+function Row({
+  label,
+  value,
+  sub,
+  accent,
+  tone,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  accent?: boolean;
+  tone?: Tone;
+}) {
+  const colorClass =
+    tone === 'alert' ? 'text-[#ef6b6b]' : tone === 'warn' ? 'text-[#e6b15e]' : accent ? 'text-accent' : 'text-ink';
   return (
     <div className="flex items-center justify-between gap-2">
       <span className="text-muted">{label}</span>
-      <span className={`min-w-0 truncate text-right ${accent ? 'text-accent' : 'text-ink'}`} title={value}>
+      <span className={`min-w-0 truncate text-right ${colorClass}`} title={value}>
         {value}
         {sub && <span className="ml-1 text-[10px] text-muted">{sub}</span>}
       </span>
