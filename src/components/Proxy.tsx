@@ -248,11 +248,15 @@ function ConfigPanel({
     try {
       const fetched = await fetchProviderModels(id);
       if (fetched.length === 0) {
-        setModelsError((e) => ({ ...e, [id]: '上游返回空列表，请确认 baseUrl / Key 是否正确，或该厂商不支持 /models' }));
+        // 空列表不覆盖已有配置：保留用户手动添加的模型，避免自动获取失败时把清单清空
+        setModelsError((e) => ({ ...e, [id]: '上游返回空列表，已保留你手动添加的模型；请确认 baseUrl / Key 是否正确，或该厂商不支持 /models' }));
+        return;
       }
+      // 合并：保留手动添加的模型，避免重新拉取时覆盖用户已录入的清单
+      const merged = Array.from(new Set([...(cfg[id]?.models ?? []), ...fetched]));
       const prev = cfg[id]?.enabledModels;
-      const enabled = prev ? fetched.filter((m) => prev.includes(m)) : fetched;
-      await saveProxyConfig(id, { models: fetched, enabledModels: enabled });
+      const enabled = prev ? merged.filter((m) => prev.includes(m)) : merged;
+      await saveProxyConfig(id, { models: merged, enabledModels: enabled });
       void onSaved();
     } catch (e) {
       setModelsError((er) => ({ ...er, [id]: `获取失败: ${(e as Error).message}` }));
@@ -730,9 +734,16 @@ function Playground({
     setModelError('');
     try {
       const fetched = await fetchProviderModels(id);
+      if (fetched.length === 0) {
+        // 空列表不覆盖已有配置：保留手动添加的模型
+        setModelError('上游返回空列表，已保留你手动添加的模型；请确认 baseUrl / Key 是否正确，或该厂商不支持 /models');
+        return;
+      }
+      // 合并：保留手动添加的模型，避免重新拉取时覆盖用户已录入的清单
+      const merged = Array.from(new Set([...(cfg[id]?.models ?? []), ...fetched]));
       const prev = cfg[id]?.enabledModels;
-      const enabled = prev ? fetched.filter((m) => prev.includes(m)) : fetched;
-      await saveProxyConfig(id, { models: fetched, enabledModels: enabled });
+      const enabled = prev ? merged.filter((m) => prev.includes(m)) : merged;
+      await saveProxyConfig(id, { models: merged, enabledModels: enabled });
       void onSaved();
     } catch (e) {
       setModelError(`获取失败: ${(e as Error).message}`);
