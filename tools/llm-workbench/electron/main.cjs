@@ -68,26 +68,28 @@ function attachDiag(win, name) {
 
 // 生成桌面快捷方式（.lnk）。便携版无安装程序，需在运行时创建。
 // 仅 Windows 有效；用 PowerShell + WScript.Shell COM 写 .lnk，幂等（已存在则覆盖更新）。
-// 注意：dev 模式（electron:dev）下 app.getPath('exe') 指向 Electron 运行时二进制而非打包后的
-// LLM Workbench.exe，此时生成的 .lnk 会打开裸 Electron 而非工作台 —— 故仅在打包后（app.isPackaged）才创建。
+// dev 模式（electron:dev）下 app.getPath('exe') 指向 Electron 运行时二进制，故 .lnk 改为
+// 指向 `electron <项目根>`（即 `electron .`），双击即可以 dev 方式启动工作台；
+// 打包后则直接指向打包 exe。
 function createDesktopShortcut() {
   if (process.platform !== 'win32') return false;
-  if (!app.isPackaged) {
-    console.log('[SHORTCUT] skip in dev mode (exe would point to electron runtime, not the app)');
-    return false;
-  }
   try {
     const exe = app.getPath('exe');
-    const exeDir = path.dirname(exe);
     const desktop = app.getPath('desktop');
     const linkPath = path.join(desktop, 'LLM Workbench.lnk');
+    const root = app.isPackaged ? path.dirname(exe) : path.resolve(__dirname, '..');
+    const workingDir = app.isPackaged ? path.dirname(exe) : root;
+    const args = app.isPackaged ? '' : root; // dev：以 electron . 方式启动
+    const desc = app.isPackaged ? 'LLM Workbench' : 'LLM Workbench (dev)';
+    const icon = app.isPackaged ? `${exe},0` : path.join(root, 'electron', 'icon.png');
     const script = `$ErrorActionPreference = 'Stop'
 $shell = New-Object -ComObject WScript.Shell
 $lnk = $shell.CreateShortcut("${linkPath}")
 $lnk.TargetPath = "${exe}"
-$lnk.WorkingDirectory = "${exeDir}"
-$lnk.IconLocation = "${exe},0"
-$lnk.Description = "LLM Workbench"
+$lnk.Arguments = "${args}"
+$lnk.WorkingDirectory = "${workingDir}"
+$lnk.IconLocation = "${icon}"
+$lnk.Description = "${desc}"
 $lnk.Save()`;
     const encoded = Buffer.from(script, 'utf16le').toString('base64');
     execFileSync(
@@ -95,7 +97,7 @@ $lnk.Save()`;
       ['-NoProfile', '-NonInteractive', '-EncodedCommand', encoded],
       { windowsHide: true, stdio: 'ignore' }
     );
-    console.log(`[SHORTCUT] desktop shortcut -> ${linkPath}`);
+    console.log(`[SHORTCUT] desktop shortcut -> ${linkPath} (${app.isPackaged ? 'packaged' : 'dev'})`);
     return true;
   } catch (e) {
     console.log(`[SHORTCUT] create failed: ${e && e.message ? e.message : e}`);
@@ -456,8 +458,8 @@ if (!gotLock) {
     createWindows();
     createTray();
     applySettings(); // 应用透明度 + 全局快捷键 + 开机自启
-    // 便携版无安装程序：按设置生成桌面快捷方式（打包后每次启动都刷新，确保指向正确的打包 exe）
-    if (appSettings?.createDesktopShortcut && app.isPackaged) {
+    // 便携版无安装程序：按设置生成桌面快捷方式（每次启动都刷新；打包指向 exe，dev 指向 electron .）
+    if (appSettings?.createDesktopShortcut) {
       createDesktopShortcut();
     }
   });
