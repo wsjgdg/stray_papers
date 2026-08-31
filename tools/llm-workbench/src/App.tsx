@@ -219,7 +219,9 @@ export default function App() {
 
       {locked && <UnlockModal onUnlocked={() => window.location.reload()} />}
 
-      <FloatingStats />
+      {/* 主窗口内嵌的浮窗卡片：仅浏览器模式显示（fixed 浮层，不挤占布局）。
+          Electron 模式下统计交给独立的「独立浮窗」窗口（floatWin），主窗口不再内嵌，避免挤内容上移。 */}
+      {!isElectron && <FloatingStats />}
 
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
 
