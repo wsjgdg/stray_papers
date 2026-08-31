@@ -61,12 +61,14 @@ export function fmtTime(ts: number): string {
 
 // ───────── 本地代理 ─────────
 export type AuthStyle = 'bearer' | 'x-api-key' | 'google';
+export type ApiFormat = 'openai' | 'anthropic' | 'gemini';
 
 export interface MaskedProviderConfig {
   baseUrl?: string;
   enabled: boolean;
   customName?: string;
   authStyle?: 'bearer' | 'x-api-key' | 'google';
+  apiFormat?: ApiFormat;
   apiKeyMasked: string;
   hasKey: boolean;
   apiKeyCount: number; // 可用 key 数量（多 key 轮询/失败切换）
@@ -150,6 +152,7 @@ export interface ProxyConfigPatch {
   enabled?: boolean;
   customName?: string;
   authStyle?: AuthStyle;
+  apiFormat?: ApiFormat;
 }
 
 export async function fetchProxyConfig(): Promise<ProxyConfigResponse> {
@@ -220,6 +223,13 @@ export async function runProxyConnectivity(providers?: string[]): Promise<ProbeR
 }
 
 // ───────── 密钥加密 ─────────
+export interface CacheStats {
+  enabled: boolean;
+  ttlMs: number;
+  size: number;
+  hits: number;
+  misses: number;
+}
 export async function fetchCryptoStatus(): Promise<CryptoStatus> {
   const r = await fetch('/api/crypto/status');
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -250,13 +260,6 @@ export async function disableEncryption(): Promise<CryptoStatus> {
 }
 
 // ───────── 响应缓存 ─────────
-export interface CacheStats {
-  enabled: boolean;
-  ttlMs: number;
-  size: number;
-  hits: number;
-  misses: number;
-}
 export async function fetchCacheStats(): Promise<CacheStats> {
   const r = await fetch('/api/proxy/cache');
   if (!r.ok) throw new Error(`HTTP ${r.status}`);

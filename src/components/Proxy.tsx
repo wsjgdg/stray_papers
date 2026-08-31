@@ -34,6 +34,7 @@ import {
   type ProxyLog,
   type ProxyMetrics,
   type CryptoStatus,
+  type ApiFormat,
 } from '../api';
 import { Card, Chip, Empty, Spinner } from '../ui';
 
@@ -138,7 +139,7 @@ function ConfigPanel({
   onDelete: (id: string) => Promise<void>;
 }) {
   const [form, setForm] = useState<
-    Record<string, { key: string; extraKeys: string; baseUrl: string; enabled: boolean; customName: string; authStyle: AuthStyle; id: string }>
+    Record<string, { key: string; extraKeys: string; baseUrl: string; enabled: boolean; customName: string; authStyle: AuthStyle; apiFormat: ApiFormat; id: string }>
   >({});
   const [menuOpen, setMenuOpen] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
@@ -162,11 +163,12 @@ function ConfigPanel({
       enabled: c?.enabled ?? false,
       customName: c?.customName ?? '',
       authStyle: c?.authStyle ?? 'bearer',
+      apiFormat: c?.apiFormat ?? 'openai',
       id: id === '__new__' ? '' : id,
     };
   };
 
-  const update = (id: string, patch: Partial<{ key: string; extraKeys: string; baseUrl: string; enabled: boolean; customName: string; authStyle: AuthStyle; id: string }>) => {
+  const update = (id: string, patch: Partial<{ key: string; extraKeys: string; baseUrl: string; enabled: boolean; customName: string; authStyle: AuthStyle; apiFormat: ApiFormat; id: string }>) => {
     setForm((prev) => ({ ...prev, [id]: { ...getEntry(id), ...patch } }));
   };
 
@@ -194,6 +196,7 @@ function ConfigPanel({
     if (isCustom(realId)) {
       patch.customName = f.customName || f.baseUrl || realId;
       patch.authStyle = f.authStyle;
+      patch.apiFormat = f.apiFormat;
     }
     setSaveState((s) => ({ ...s, [realId]: 'saving' }));
     try {
@@ -399,6 +402,17 @@ function ConfigPanel({
                     <option value="bearer">Bearer (Authorization)</option>
                     <option value="x-api-key">x-api-key (+anthropic-version)</option>
                     <option value="google">x-goog-api-key</option>
+                  </select>
+                )}
+                {selCustom && (
+                  <select
+                    className="input"
+                    value={f.apiFormat}
+                    onChange={(e) => update(selected, { apiFormat: e.target.value as ApiFormat })}
+                  >
+                    <option value="openai">OpenAI 兼容 (chat/completions)</option>
+                    <option value="anthropic">Anthropic Messages API</option>
+                    <option value="gemini">Google Gemini (generateContent)</option>
                   </select>
                 )}
                 <div className="flex flex-wrap items-center gap-3">

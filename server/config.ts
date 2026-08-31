@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import os from 'node:os';
+import os from 'os';
 import crypto from 'node:crypto';
 import { PROVIDERS } from './providers.js';
 import {
@@ -19,6 +19,7 @@ import {
 // 代理服务只监听 127.0.0.1，不外泄到网络；响应中 Key 一律 mask。
 
 export type AuthStyle = 'bearer' | 'x-api-key' | 'google';
+export type ApiFormat = 'openai' | 'anthropic' | 'gemini';
 
 export interface ProviderConfig {
   apiKey: string; // 明文保存在本机文件，仅 localhost 使用；加密态下为密文
@@ -27,6 +28,7 @@ export interface ProviderConfig {
   enabled: boolean;
   customName?: string; // 自定义厂商显示名
   authStyle?: AuthStyle; // 仅自定义厂商使用；主流厂商按 id 推断
+  apiFormat?: ApiFormat; // 仅自定义厂商：上游 API 格式，代理据此改写请求/响应体
 }
 
 /**
@@ -220,6 +222,7 @@ export function maskConfig(cfg: ProxyConfig): {
       enabled: p.enabled,
       customName: p.customName,
       authStyle: p.authStyle,
+      apiFormat: p.apiFormat,
       apiKeyMasked: maskKey(p.apiKey),
       hasKey: Boolean(p.apiKey) || (p.apiKeys?.length ?? 0) > 0,
       apiKeyCount: resolveKeyPool(p).length,
@@ -243,6 +246,7 @@ export function upsertProvider(id: string, patch: Partial<ProviderConfig>): Prox
     enabled: patch.enabled !== undefined ? patch.enabled : prev.enabled,
     customName: patch.customName !== undefined ? patch.customName : prev.customName,
     authStyle: patch.authStyle !== undefined ? patch.authStyle : prev.authStyle,
+    apiFormat: patch.apiFormat !== undefined ? patch.apiFormat : prev.apiFormat,
   };
   saveConfig(cfg);
   return cfg;
@@ -273,6 +277,7 @@ export function importConfig(partial: { providers?: Record<string, Partial<Provi
       enabled: p.enabled !== undefined ? p.enabled : prev.enabled,
       customName: p.customName !== undefined ? p.customName : prev.customName,
       authStyle: p.authStyle !== undefined ? p.authStyle : prev.authStyle,
+      apiFormat: p.apiFormat !== undefined ? p.apiFormat : prev.apiFormat,
     };
   }
   saveConfig(cfg);

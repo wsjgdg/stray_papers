@@ -243,7 +243,7 @@ app.post('/api/proxy/cache/clear', requireAdmin, (_req: Request, res: Response) 
 });
 
 app.post('/api/proxy/config', requireAdmin, (req: Request, res: Response) => {
-  const { providerId, apiKey, apiKeys, baseUrl, enabled, customName, authStyle } = (req.body ?? {}) as {
+  const { providerId, apiKey, apiKeys, baseUrl, enabled, customName, authStyle, apiFormat } = (req.body ?? {}) as {
     providerId?: string;
     apiKey?: string;
     apiKeys?: string[];
@@ -251,6 +251,7 @@ app.post('/api/proxy/config', requireAdmin, (req: Request, res: Response) => {
     enabled?: boolean;
     customName?: string;
     authStyle?: 'bearer' | 'x-api-key' | 'google';
+    apiFormat?: 'openai' | 'anthropic' | 'gemini';
   };
   if (!providerId) {
     res.status(400).json({ error: 'providerId required' });
@@ -263,6 +264,7 @@ app.post('/api/proxy/config', requireAdmin, (req: Request, res: Response) => {
     enabled,
     customName,
     authStyle,
+    apiFormat,
   });
   res.json(maskConfig(cfg));
 });
