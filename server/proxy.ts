@@ -115,22 +115,33 @@ export async function listProviderModels(providerId: string): Promise<string[]> 
       const txt = await r.text();
       throw new Error(`上游返回 HTTP ${r.status} @ ${modelsUrl}: ${txt.slice(0, 200)}`);
     }
-    const body = (await r.json().catch(() => null)) as
-      | { data?: Array<{ id?: string; name?: string }>; models?: Array<{ id?: string; name?: string }> }
-      | null;
+    const body = (await r.json().catch(() => null)) as unknown;
     if (!body || typeof body !== 'object') {
       throw new Error(`上游响应不是合法 JSON @ ${modelsUrl}`);
     }
-    const stripName = (s?: string) => (typeof s === 'string' ? s.replace(/^models\//, '').trim() : '');
-    const pick = (m: { id?: string; name?: string }) => stripName(m.id) || stripName(m.name);
-    let ids: string[] = [];
-    if (format === 'gemini' && Array.isArray(body.models)) {
-      ids = body.models.map((m) => stripName(m.name)).filter(Boolean);
-    } else if (Array.isArray(body.data)) {
-      // OpenAI 兼容：{ data:[{id}] }；部分网关用 name 或包在 models 字段
-      ids = body.data.map(pick).filter(Boolean);
-    } else if (Array.isArray(body.models)) {
-      ids = body.models.map(pick).filter(Boolean);
+    const stripName = (s?: string) =>
+      typeof s === 'string' ? s.replace(/^models\//, '').trim() : '';
+    // 兼容各类 OpenAI 兼容形态：{data:[{id|name}]} / {models:[{id|name}]} / 字符串数组 / 顶层数组
+    const one = (m: unknown): string => {
+      if (typeof m === 'string') return stripName(m);
+      if (m && typeof m === 'object') {
+        const o = m as Record<string, unknown>;
+        return stripName(o.id as string) || stripName(o.name as string) || stripName(o.model as string);
+      }
+      return '';
+    };
+    let raw: unknown[] = [];
+    if (Array.isArray(body)) raw = body;
+    else {
+      const b = body as Record<string, unknown>;
+      if (Array.isArray(b.data)) raw = b.data;
+      else if (Array.isArray(b.models)) raw = b.models;
+    }
+    let ids: string[] = raw.map(one).filter(Boolean);
+    if (ids.length === 0) {
+      // 仍为空：把原始响应（截断）带回，便于定位该厂商返回的真实格式（或手动添加模型名兜底）
+      const preview = JSON.stringify(body).slice(0, 400);
+      throw new Error(`上游返回空列表 @ ${modelsUrl}。原始响应: ${preview}`);
     }
     const seen = new Set<string>();
     const out: string[] = [];
