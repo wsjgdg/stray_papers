@@ -4,4 +4,5 @@ build/
 llm-workbench.exe
 server.bundle.cjs
 *.log
+*.tsbuildinfo
 .DS_Store
