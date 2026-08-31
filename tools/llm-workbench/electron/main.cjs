@@ -14,6 +14,7 @@ const {
 } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
+const { execFileSync } = require('node:child_process');
 const settings = require('./settings.cjs');
 
 const ELECTRON_PORT = Number(process.env.ELECTRON_PORT || 8790);
@@ -63,6 +64,37 @@ function attachDiag(win, name) {
   wc.on('render-process-gone', (_e, d) => console.log(`[${name} RENDER-GONE] ${d.reason} exit=${d.exitCode}`));
   wc.on('crashed', () => console.log(`[${name} CRASHED]`));
   wc.on('did-finish-load', () => console.log(`[${name} DID-FINISH-LOAD]`));
+}
+
+// 生成桌面快捷方式（.lnk）。便携版无安装程序，需在运行时创建。
+// 仅 Windows 有效；用 PowerShell + WScript.Shell COM 写 .lnk，幂等（已存在则覆盖更新）。
+function createDesktopShortcut() {
+  if (process.platform !== 'win32') return false;
+  try {
+    const exe = app.getPath('exe');
+    const exeDir = path.dirname(exe);
+    const desktop = app.getPath('desktop');
+    const linkPath = path.join(desktop, 'LLM Workbench.lnk');
+    const script = `$ErrorActionPreference = 'Stop'
+$shell = New-Object -ComObject WScript.Shell
+$lnk = $shell.CreateShortcut("${linkPath}")
+$lnk.TargetPath = "${exe}"
+$lnk.WorkingDirectory = "${exeDir}"
+$lnk.IconLocation = "${exe},0"
+$lnk.Description = "LLM Workbench"
+$lnk.Save()`;
+    const encoded = Buffer.from(script, 'utf16le').toString('base64');
+    execFileSync(
+      'powershell.exe',
+      ['-NoProfile', '-NonInteractive', '-EncodedCommand', encoded],
+      { windowsHide: true, stdio: 'ignore' }
+    );
+    console.log(`[SHORTCUT] desktop shortcut -> ${linkPath}`);
+    return true;
+  } catch (e) {
+    console.log(`[SHORTCUT] create failed: ${e && e.message ? e.message : e}`);
+    return false;
+  }
 }
 
 // 依据位置预设计算浮窗坐标（四角 + 边距）
@@ -253,6 +285,10 @@ function createTray() {
       click: () => mainWin && mainWin.webContents.send('open-settings'),
     },
     {
+      label: '创建桌面快捷方式',
+      click: () => createDesktopShortcut(),
+    },
+    {
       label: '显示今日成本',
       click: () => {
         fetch(`http://127.0.0.1:${ELECTRON_PORT}/api/proxy/metrics/summary`)
@@ -367,6 +403,24 @@ ipcMain.on('app:notify', (_e, { title, body }) => {
   }
 });
 
+// 生成桌面快捷方式（按需手动触发，来自设置面板/托盘）
+ipcMain.on('app:create-shortcut', () => {
+  const ok = createDesktopShortcut();
+  if (ok) {
+    try {
+      new Notification({ title: '桌面快捷方式已创建', body: 'LLM Workbench.lnk 已放到桌面' });
+    } catch {
+      /* ignore */
+    }
+  } else {
+    try {
+      new Notification({ title: '快捷方式创建失败', body: '仅支持 Windows；可手动发送 exe 到桌面' });
+    } catch {
+      /* ignore */
+    }
+  }
+});
+
 // 系统主题变更 → 广播给各窗口（浮窗据此跟随系统深/浅色）
 nativeTheme.on('updated', () => {
   const t = nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
@@ -396,6 +450,15 @@ if (!gotLock) {
     createWindows();
     createTray();
     applySettings(); // 应用透明度 + 全局快捷键 + 开机自启
+    // 便携版无安装程序：按设置首次生成桌面快捷方式（已存在则跳过）
+    if (appSettings?.createDesktopShortcut) {
+      try {
+        const linkPath = path.join(app.getPath('desktop'), 'LLM Workbench.lnk');
+        if (!fs.existsSync(linkPath)) createDesktopShortcut();
+      } catch {
+        /* 桌面路径不可达时静默忽略 */
+      }
+    }
   });
 }
 

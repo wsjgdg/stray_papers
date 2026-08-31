@@ -33,6 +33,8 @@ contextBridge.exposeInMainWorld('electron', {
   saveSettings: (obj) => ipcRenderer.send('settings:save', obj),
   // 系统通知（主进程弹原生通知）
   notify: (title, body) => ipcRenderer.send('app:notify', { title, body }),
+  // 生成桌面快捷方式（主进程写 .lnk）
+  createDesktopShortcut: () => ipcRenderer.send('app:create-shortcut'),
   // 浮窗内部命令：由主进程全局快捷键转发
   onToggleMinimal: (cb) => ipcRenderer.on('float:toggle-minimal', () => cb()),
   onCycleFocus: (cb) => ipcRenderer.on('float:cycle-focus', () => cb()),
