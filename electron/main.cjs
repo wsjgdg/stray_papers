@@ -1,6 +1,6 @@
 // Electron 主进程：在本地拉起后端（复用 server/index.ts 的 startServer，零业务改动），
 // 创建主窗口 + 常驻浮窗（frameless/transparent/alwaysOnTop）+ 托盘，并桥接浮窗开关 IPC。
-const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, screen, nativeTheme } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const settings = require('./settings.cjs');
@@ -133,6 +133,19 @@ ipcMain.on('float:open', () => floatWin && floatWin.show());
 ipcMain.on('float:close', () => floatWin && floatWin.hide());
 ipcMain.on('float:toggle', () => floatWin && (floatWin.isVisible() ? floatWin.hide() : floatWin.show()));
 ipcMain.on('app:hide', () => mainWin && mainWin.hide());
+ipcMain.on('app:show', () => mainWin && mainWin.show());
+ipcMain.on('float:reset', () => {
+  if (!floatWin) return;
+  positionFloat();
+  settings.setBounds(app, floatWin.getBounds());
+});
+
+// 系统主题变更 → 广播给各窗口（浮窗据此跟随系统深/浅色）
+nativeTheme.on('updated', () => {
+  const t = nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
+  if (mainWin && mainWin.webContents) mainWin.webContents.send('theme:change', t);
+  if (floatWin && floatWin.webContents) floatWin.webContents.send('theme:change', t);
+});
 
 app.whenReady().then(async () => {
   startBackend();
