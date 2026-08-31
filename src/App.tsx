@@ -115,13 +115,16 @@ export default function App() {
           <button
             className="btn"
             title="在独立窗口打开实时统计浮窗（关闭主窗口后仍可显示）"
-            onClick={() =>
-              window.open(
+            onClick={() => {
+              // 关键：置空 opener，使弹窗成为完全独立的窗口。
+              // 否则多数浏览器会把它当成「依赖主窗口的弹窗」，主窗口一关它也被连带关掉。
+              const w = window.open(
                 '/float',
                 'lb-float',
                 'width=320,height=560,menubar=no,toolbar=no,location=no,status=no',
-              )
-            }
+              );
+              if (w) w.opener = null;
+            }}
           >
             <ExternalLink size={12} />
             独立浮窗
