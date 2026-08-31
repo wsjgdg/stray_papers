@@ -328,6 +328,14 @@ ipcMain.on('float:toggle-click-through', () => {
   appSettings.clickThrough = !appSettings.clickThrough;
   settings.setAppSettings(appSettings);
   applyClickThrough();
+  // 广播给浮窗，使其局部状态（指示器/拖拽守卫）与 OS 层保持一致，无需重载
+  if (floatWin && floatWin.webContents) {
+    try {
+      floatWin.webContents.send('settings:changed', appSettings);
+    } catch {
+      /* ignore */
+    }
+  }
 });
 
 // 双向联动：主窗口点模型 → 转发给浮窗高亮

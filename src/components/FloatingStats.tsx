@@ -675,7 +675,6 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
               label={clickThrough ? '关闭点击穿透' : '开启点击穿透'}
               onClick={() => {
                 api?.toggleClickThrough?.();
-                setClickThrough((v) => !v);
                 setMenu(null);
               }}
             />
