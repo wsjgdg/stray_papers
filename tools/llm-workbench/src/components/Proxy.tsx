@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateA
 import clsx from 'clsx';
 import {
   Activity,
+  ChevronLeft,
   Download,
   Key,
-  Menu,
   Play,
   Plus,
   ScrollText,
@@ -143,7 +143,7 @@ function ConfigPanel({
   const [form, setForm] = useState<
     Record<string, { key: string; extraKeys: string; baseUrl: string; enabled: boolean; customName: string; authStyle: AuthStyle; apiFormat: ApiFormat; id: string }>
   >({});
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuMode, setMenuMode] = useState<'list' | 'add'>('list');
   const [selected, setSelected] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [importText, setImportText] = useState('');
@@ -334,21 +334,37 @@ function ConfigPanel({
     (p) => !search || p.nameCn.includes(search) || p.name.includes(search) || p.id.includes(search),
   );
   const customList = Object.entries(cfg).filter(([id]) => cfg[id].custom);
+  // 默认仅显示「已启用」厂商（含自定义）；仅「添加」模式才展开全部主流厂商目录
+  const enabledList = Object.entries(cfg)
+    .filter(([, c]) => c.enabled)
+    .map(([id, c]) => ({ id, name: c.name }));
 
   const f = selected ? getEntry(selected) : null;
   // '__new__' 是「新建自定义厂商」哨兵，应视同自定义上下文，否则 id/名称/baseUrl/鉴权 字段会被整体隐藏
   const selCustom = selected === '__new__' || (selected != null && isCustom(selected));
+  // 模型清单区可见条件：已选中，且（已是已存配置，或是主流厂商目录中的一项）——二者皆支持自动获取/手动启用
+  const modelSectionVisible =
+    selected != null && (cfg[selected] != null || providers.some((p) => p.id === selected));
 
   return (
     <div className="mx-auto max-w-5xl space-y-4">
       <Card
         title="API Key 管理（仅本机存储）"
-        subtitle="Key 保存在本机 home/.llm-workbench/config.json，不进仓库；代理仅监听 127.0.0.1。响应中 Key 始终脱敏显示。主流厂商用 ☰ 菜单选择，也可添加任意自定义 URL 厂商。"
+        subtitle="Key 保存在本机 home/.llm-workbench/config.json，不进仓库；代理仅监听 127.0.0.1。响应中 Key 始终脱敏显示。默认只列出已启用厂商（含自定义）；点「＋ 添加厂商」才展开全部主流厂商目录。"
         right={
           <div className="flex items-center gap-2">
-            <button className="btn" onClick={() => setMenuOpen((o) => !o)}>
-              <Menu size={14} />
-              厂商
+            <button className="btn" onClick={() => setMenuMode((m) => (m === 'add' ? 'list' : 'add'))}>
+              {menuMode === 'add' ? (
+                <>
+                  <ChevronLeft size={14} />
+                  返回
+                </>
+              ) : (
+                <>
+                  <Plus size={14} />
+                  添加厂商
+                </>
+              )}
             </button>
             <button className="btn" onClick={testConn} disabled={connecting}>
               <CircleDot size={12} />
@@ -358,8 +374,8 @@ function ConfigPanel({
         }
       >
         <div className="flex gap-3">
-          {menuOpen && (
-            <div className="w-56 shrink-0 space-y-2 rounded-lg border border-edge bg-[#0d1728] p-2">
+          <div className="w-56 shrink-0 space-y-2 rounded-lg border border-edge bg-[#0d1728] p-2">
+            {menuMode === 'add' && (
               <div className="flex items-center gap-1 rounded-md border border-edge bg-[#0e1728] px-2">
                 <Search size={12} className="text-muted" />
                 <input
@@ -369,59 +385,84 @@ function ConfigPanel({
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <button
-                className="flex w-full items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-2 py-1.5 text-xs text-accent"
-                onClick={() => {
-                  setSelected('__new__');
-                  setMenuOpen(false);
-                }}
-              >
-                <Plus size={12} />
-                添加自定义厂商
-              </button>
+            )}
+            {menuMode === 'add' ? (
+              <>
+                <button
+                  className="flex w-full items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-2 py-1.5 text-xs text-accent"
+                  onClick={() => {
+                    setSelected('__new__');
+                    setMenuMode('list');
+                  }}
+                >
+                  <Plus size={12} />
+                  添加自定义厂商
+                </button>
+                <div className="max-h-72 space-y-0.5 overflow-auto">
+                  {mainList.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        setSelected(p.id);
+                        setMenuMode('list');
+                      }}
+                      className={clsx(
+                        'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs',
+                        selected === p.id ? 'bg-accent/15 text-accent' : 'text-ink hover:bg-[#16223a]',
+                      )}
+                    >
+                      <span className="truncate">{p.nameCn || p.name}</span>
+                      {cfg[p.id]?.hasKey && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />}
+                    </button>
+                  ))}
+                  {customList.length > 0 && (
+                    <div className="pt-1 text-[10px] uppercase tracking-wider text-muted">已添加自定义</div>
+                  )}
+                  {customList.map(([id, c]) => (
+                    <button
+                      key={id}
+                      onClick={() => {
+                        setSelected(id);
+                        setMenuMode('list');
+                      }}
+                      className={clsx(
+                        'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs',
+                        selected === id ? 'bg-accent/15 text-accent' : 'text-ink hover:bg-[#16223a]',
+                      )}
+                    >
+                      <span className="truncate">{c.name}</span>
+                      {c.hasKey && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />}
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
               <div className="max-h-72 space-y-0.5 overflow-auto">
-                {mainList.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => {
-                      setSelected(p.id);
-                      setMenuOpen(false);
-                    }}
-                    className={clsx(
-                      'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs',
-                      selected === p.id ? 'bg-accent/15 text-accent' : 'text-ink hover:bg-[#16223a]',
-                    )}
-                  >
-                    <span className="truncate">{p.nameCn || p.name}</span>
-                    {cfg[p.id]?.hasKey && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />}
-                  </button>
-                ))}
-                {customList.length > 0 && (
-                  <div className="pt-1 text-[10px] uppercase tracking-wider text-muted">自定义</div>
+                {enabledList.length === 0 && (
+                  <div className="px-2 py-3 text-[11px] leading-relaxed text-muted">
+                    尚未启用任何厂商。点右上「＋ 添加厂商」选择主流厂商或添加自定义 URL 厂商，保存并勾选「启用」。
+                  </div>
                 )}
-                {customList.map(([id, c]) => (
+                {enabledList.map(({ id, name }) => (
                   <button
                     key={id}
-                    onClick={() => {
-                      setSelected(id);
-                      setMenuOpen(false);
-                    }}
+                    onClick={() => setSelected(id)}
                     className={clsx(
                       'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs',
                       selected === id ? 'bg-accent/15 text-accent' : 'text-ink hover:bg-[#16223a]',
                     )}
                   >
-                    <span className="truncate">{c.name}</span>
-                    {c.hasKey && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />}
+                    <span className="truncate">{name}</span>
+                    {cfg[id]?.hasKey && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />}
                   </button>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           <div className="min-w-0 flex-1">
             {!selected || !f ? (
-              <Empty text="点击 ☰ 选择主流厂商，或「添加自定义厂商」填写任意网关 URL。" />
+              <Empty text="点右上「＋ 添加厂商」选择主流厂商，或「添加自定义厂商」填写任意网关 URL，保存并启用后会出现在左侧列表。" />
             ) : (
               <div className="max-w-xl space-y-2">
                 <div className="truncate text-sm font-medium text-ink">
@@ -508,7 +549,7 @@ function ConfigPanel({
                   <button className="btn btn-primary" onClick={() => save(selected)}>
                     保存
                   </button>
-                  {cfg[selected] && (
+                  {modelSectionVisible && (
                     <button className="btn btn-ghost" onClick={() => onDelete(selected)} title="删除配置">
                       <Trash2 size={12} />
                     </button>
@@ -516,7 +557,7 @@ function ConfigPanel({
                   {saveState[selected] && <span className="text-[11px] text-accent">{saveState[selected]}</span>}
                 </div>
 
-                {cfg[selected] && (
+                {modelSectionVisible && (
                   <div className="space-y-2 rounded-lg border border-edge bg-[#0d1728] p-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="text-[11px] text-muted">
