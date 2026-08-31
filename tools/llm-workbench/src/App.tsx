@@ -9,6 +9,7 @@ import {
   RefreshCw,
   Table2,
   Terminal,
+  ExternalLink,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { fetchSnapshot, fmtTime, fetchCryptoStatus, unlockStore, type SnapshotResponse } from './api';
@@ -110,6 +111,20 @@ export default function App() {
           <button className="btn btn-primary" onClick={() => void load(true)} disabled={refreshing}>
             <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
             {refreshing ? '强制刷新中' : '强制刷新'}
+          </button>
+          <button
+            className="btn"
+            title="在独立窗口打开实时统计浮窗（关闭主窗口后仍可显示）"
+            onClick={() =>
+              window.open(
+                '/float',
+                'lb-float',
+                'width=320,height=560,menubar=no,toolbar=no,location=no,status=no',
+              )
+            }
+          >
+            <ExternalLink size={12} />
+            独立浮窗
           </button>
         </div>
       </header>

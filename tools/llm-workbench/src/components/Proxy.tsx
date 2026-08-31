@@ -252,7 +252,8 @@ function ConfigPanel({
   const customList = Object.entries(cfg).filter(([id]) => cfg[id].custom);
 
   const f = selected ? getEntry(selected) : null;
-  const selCustom = selected ? isCustom(selected) : false;
+  // '__new__' 是「新建自定义厂商」哨兵，应视同自定义上下文，否则 id/名称/baseUrl/鉴权 字段会被整体隐藏
+  const selCustom = selected === '__new__' || (selected != null && isCustom(selected));
 
   return (
     <div className="mx-auto max-w-5xl space-y-4">

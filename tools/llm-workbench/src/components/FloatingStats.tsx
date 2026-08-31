@@ -34,7 +34,8 @@ function spikeLevel(
   return 'normal';
 }
 
-export default function FloatingStats() {
+export default function FloatingStats({ standalone = false }: { standalone?: boolean }) {
+  const docked = standalone;
   const [open, setOpen] = useState(true);
   const [data, setData] = useState<ProxySummary | null>(null);
   const [samples, setSamples] = useState<{ in: number; out: number }[]>([]);
@@ -88,13 +89,15 @@ export default function FloatingStats() {
     setDragging(false);
   };
 
-  const style: React.CSSProperties = open
-    ? pos
-      ? { left: pos.left, top: pos.top, right: 'auto', bottom: 'auto' }
-      : { right: 16, bottom: 16 }
-    : { right: 16, bottom: 16 };
+  const style: React.CSSProperties = docked
+    ? { width: '100%' }
+    : open
+      ? pos
+        ? { left: pos.left, top: pos.top, right: 'auto', bottom: 'auto' }
+        : { right: 16, bottom: 16 }
+      : { right: 16, bottom: 16 };
 
-  if (!open) {
+  if (!open && !docked) {
     return (
       <button
         onClick={() => setOpen(true)}
@@ -128,23 +131,23 @@ export default function FloatingStats() {
   return (
     <div
       ref={ref}
-      className="fixed z-40 w-[260px] select-none rounded-xl border border-edge bg-panel/95 shadow-2xl backdrop-blur"
-      style={{ ...style, cursor: dragging ? 'grabbing' : 'default' }}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerLeave={onPointerUp}
+      className={docked ? 'w-full select-none rounded-xl border border-edge bg-panel/95 shadow-2xl backdrop-blur' : 'fixed z-40 w-[260px] select-none rounded-xl border border-edge bg-panel/95 shadow-2xl backdrop-blur'}
+      style={docked ? { width: '100%' } : { ...style, cursor: dragging ? 'grabbing' : 'default' }}
+      onPointerMove={docked ? undefined : onPointerMove}
+      onPointerUp={docked ? undefined : onPointerUp}
+      onPointerLeave={docked ? undefined : onPointerUp}
     >
-      <div
-        className="flex cursor-grab items-center gap-1.5 border-b border-edge px-3 py-2 active:cursor-grabbing"
-        onPointerDown={onPointerDown}
-      >
+        <div
+          className={docked ? 'flex items-center gap-1.5 border-b border-edge px-3 py-2' : 'flex cursor-grab items-center gap-1.5 border-b border-edge px-3 py-2 active:cursor-grabbing'}
+          onPointerDown={docked ? undefined : onPointerDown}
+        >
         <GripHorizontal size={13} className="text-muted" />
         <Activity size={13} className={alertAny ? 'text-[#ef6b6b]' : 'text-accent'} />
         <span className="text-[11px] font-medium text-ink">实时代理统计</span>
         <button
           className="ml-auto rounded p-0.5 text-muted hover:bg-[#16223a] hover:text-ink"
-          onClick={() => setOpen(false)}
-          title="折叠"
+          onClick={() => (docked ? window.close() : setOpen(false))}
+          title={docked ? '关闭窗口' : '折叠'}
         >
           <X size={13} />
         </button>
