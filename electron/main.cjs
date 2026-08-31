@@ -155,6 +155,11 @@ ipcMain.on('float:reset', () => {
   settings.setBounds(app, floatWin.getBounds());
 });
 
+// 预加载上下文无法稳定拿到 nativeTheme，改由主进程（一定持有）经同步 IPC 回传当前深/浅色。
+ipcMain.on('theme:get', (e) => {
+  e.returnValue = nativeTheme && nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
+});
+
 // 系统主题变更 → 广播给各窗口（浮窗据此跟随系统深/浅色）
 nativeTheme.on('updated', () => {
   const t = nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
