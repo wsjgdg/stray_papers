@@ -242,7 +242,9 @@ export function upsertProvider(id: string, patch: Partial<ProviderConfig>): Prox
   const cfg = activeConfig;
   const prev = cfg.providers[id] ?? { apiKey: '', enabled: true };
   const apiKeys =
-    patch.apiKeys !== undefined ? patch.apiKeys.filter((k) => k && k.trim().length > 0) : prev.apiKeys;
+    patch.apiKeys !== undefined && patch.apiKeys.length > 0
+      ? patch.apiKeys.filter((k) => k && k.trim().length > 0)
+      : prev.apiKeys;
   cfg.providers[id] = {
     apiKey: patch.apiKey !== undefined ? patch.apiKey : prev.apiKey,
     apiKeys: apiKeys !== undefined ? apiKeys : prev.apiKeys,
