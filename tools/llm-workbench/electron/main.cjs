@@ -3,6 +3,7 @@
 const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, screen } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
+const settings = require('./settings.cjs');
 
 const ELECTRON_PORT = Number(process.env.ELECTRON_PORT || 8790);
 
@@ -83,7 +84,12 @@ function createWindows() {
     },
   });
   floatWin.loadURL(`http://127.0.0.1:${ELECTRON_PORT}/float`);
-  positionFloat();
+  // 恢复上次保存的位置/尺寸；无存档则落到默认右上角
+  const saved = settings.getBounds(app);
+  if (saved) floatWin.setBounds(saved);
+  else positionFloat();
+  floatWin.on('moved', () => settings.setBounds(app, floatWin.getBounds()));
+  floatWin.on('resized', () => settings.setBounds(app, floatWin.getBounds()));
   floatWin.on('close', (e) => {
     if (app.isQuiting) return;
     e.preventDefault();
@@ -101,6 +107,14 @@ function createTray() {
     {
       label: '显示 / 隐藏浮窗',
       click: () => floatWin && (floatWin.isVisible() ? floatWin.hide() : floatWin.show()),
+    },
+    {
+      label: '重置浮窗位置',
+      click: () => {
+        if (!floatWin) return;
+        positionFloat();
+        settings.setBounds(app, floatWin.getBounds());
+      },
     },
     { type: 'separator' },
     { label: '退出', click: () => { app.isQuiting = true; app.quit(); } },
