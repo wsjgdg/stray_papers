@@ -50,4 +50,14 @@ contextBridge.exposeInMainWorld('electron', {
     }
   },
   saveStats: (obj) => ipcRenderer.send('stats:save', obj),
+  // 点击穿透：浮窗忽略鼠标事件（不挡桌面）
+  toggleClickThrough: () => ipcRenderer.send('float:toggle-click-through'),
+  // 双向联动：主窗口点模型 → 通知浮窗高亮
+  highlightModel: (model) => ipcRenderer.send('model:highlight', model),
+  onHighlightModel: (cb) => ipcRenderer.on('highlight-model', (_e, m) => cb(m)),
+  // 主窗口命令：打开设置面板 / 唤起全局搜索（由托盘或全局快捷键触发）
+  onOpenSettings: (cb) => ipcRenderer.on('open-settings', () => cb()),
+  onOpenSearch: (cb) => ipcRenderer.on('app:open-search', () => cb()),
+  // 设置已保存：浮窗据此实时刷新外观/穿透状态（避免重启才生效）
+  onSettingsChanged: (cb) => ipcRenderer.on('settings:changed', (_e, c) => cb(c || {})),
 });

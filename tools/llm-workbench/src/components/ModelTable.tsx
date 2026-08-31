@@ -159,9 +159,11 @@ function SortTh({
 export default function ModelTable({
   models,
   focus,
+  onModelActivate,
 }: {
   models: LlmModel[];
   focus?: { model: string; nonce: number } | null;
+  onModelActivate?: (id: string) => void;
 }) {
   const [query, setQuery] = useState('');
   const [vendor, setVendor] = useState<string>(ALL_VENDOR);
@@ -444,7 +446,10 @@ export default function ModelTable({
                         expanded && 'bg-[#16213a]',
                         flashId === m.id && 'ring-2 ring-accent',
                       )}
-                      onClick={() => setExpandedId(expanded ? null : m.id)}
+                      onClick={() => {
+                        setExpandedId(expanded ? null : m.id);
+                        onModelActivate?.(m.id);
+                      }}
                     >
                       <td className="td" onClick={(e) => e.stopPropagation()}>
                         <input

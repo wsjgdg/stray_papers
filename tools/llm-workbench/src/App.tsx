@@ -10,6 +10,7 @@ import {
   Table2,
   Terminal,
   ExternalLink,
+  Search,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { fetchSnapshot, fmtTime, fetchCryptoStatus, unlockStore, type SnapshotResponse } from './api';
@@ -46,6 +47,8 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   // 模型深链：浮窗点模型 → 切到「模型库」并聚焦该模型行
   const [modelFocus, setModelFocus] = useState<{ model: string; nonce: number } | null>(null);
+  // 全局搜索面板（Cmd/Ctrl+K 或托盘触发）：在全部模型中模糊检索并跳转到模型库对应行
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const load = useCallback(async (force: boolean) => {
     abortRef.current?.abort();
@@ -92,6 +95,14 @@ export default function App() {
       setModelFocus((prev) => ({ model: m, nonce: (prev?.nonce ?? 0) + 1 }));
     };
     api?.onOpenModel?.(cb);
+  }, []);
+
+  // 主窗口命令：托盘「打开设置」/ 全局快捷键 Cmd+K「全局搜索」→ 唤起对应面板
+  useEffect(() => {
+    const openSettings = () => setShowSettings(true);
+    const openSearch = () => setSearchOpen(true);
+    api?.onOpenSettings?.(openSettings);
+    api?.onOpenSearch?.(openSearch);
   }, []);
 
   const healthy = snapshot?.sources.filter((s) => s.ok).length ?? 0;
@@ -191,7 +202,11 @@ export default function App() {
             {tab === 'dashboard' && <Dashboard snapshot={snapshot} />}
             {tab === 'models' && (
               <div className="h-full min-h-0 p-4">
-                <ModelTable models={snapshot.models} focus={modelFocus} />
+                <ModelTable
+                  models={snapshot.models}
+                  focus={modelFocus}
+                  onModelActivate={(id) => api?.highlightModel?.(id)}
+                />
               </div>
             )}
             {tab === 'boards' && <Leaderboards leaderboards={snapshot.leaderboards} models={snapshot.models} />}
@@ -207,6 +222,18 @@ export default function App() {
       <FloatingStats />
 
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+
+      {searchOpen && snapshot && (
+        <SearchPalette
+          models={snapshot.models}
+          onClose={() => setSearchOpen(false)}
+          onPick={(model) => {
+            setTab('models');
+            setModelFocus((prev) => ({ model, nonce: (prev?.nonce ?? 0) + 1 }));
+            setSearchOpen(false);
+          }}
+        />
+      )}
 
       <footer className="flex shrink-0 flex-wrap items-center gap-3 border-t border-edge bg-panel px-4 py-2 text-[11px] text-muted">
         <span>数据源：OpenRouter Models API · Artificial Analysis Leaderboards</span>
@@ -226,6 +253,9 @@ type SettingsState = {
   openAtLogin: boolean;
   defaultFocus: 'rate' | 'cache' | 'cost' | 'model';
   refreshMs: number;
+  clickThrough: boolean;
+  fontScale: number;
+  highContrast: boolean;
 };
 
 const SETTINGS_DEFAULT: SettingsState = {
@@ -238,6 +268,9 @@ const SETTINGS_DEFAULT: SettingsState = {
   openAtLogin: false,
   defaultFocus: 'rate',
   refreshMs: 2000,
+  clickThrough: false,
+  fontScale: 1,
+  highContrast: false,
 };
 
 // 浮窗与通知设置面板（仅 Electron 内有效）
@@ -339,6 +372,37 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
         </label>
 
         <label className="flex items-center justify-between gap-3 text-xs text-ink">
+          <span>浮窗点击穿透（不挡桌面）</span>
+          <input
+            type="checkbox"
+            checked={s.clickThrough}
+            onChange={(e) => setS({ ...s, clickThrough: e.target.checked })}
+          />
+        </label>
+
+        <label className="flex items-center justify-between gap-3 text-xs text-ink">
+          <span>浮窗字号缩放（{Math.round(s.fontScale * 100)}%）</span>
+          <input
+            type="range"
+            min={0.8}
+            max={1.4}
+            step={0.1}
+            className="w-40"
+            value={s.fontScale}
+            onChange={(e) => setS({ ...s, fontScale: Number(e.target.value) })}
+          />
+        </label>
+
+        <label className="flex items-center justify-between gap-3 text-xs text-ink">
+          <span>浮窗高对比模式</span>
+          <input
+            type="checkbox"
+            checked={s.highContrast}
+            onChange={(e) => setS({ ...s, highContrast: e.target.checked })}
+          />
+        </label>
+
+        <label className="flex items-center justify-between gap-3 text-xs text-ink">
           <span>位置预设</span>
           <select
             className="input w-40"
@@ -432,6 +496,75 @@ function UnlockModal({ onUnlocked }: { onUnlocked: () => void }) {
         <button className="btn btn-primary w-full" onClick={submit} disabled={busy || !password}>
           {busy ? '解锁中…' : '解锁'}
         </button>
+      </div>
+    </div>
+  );
+}
+
+// 全局命令面板（Cmd/Ctrl+K）：在全部模型中模糊检索，选中后跳转到「模型库」并聚焦对应行。
+function SearchPalette({
+  models,
+  onClose,
+  onPick,
+}: {
+  models: { id: string; name: string; vendorLabel: string }[];
+  onClose: () => void;
+  onPick: (id: string) => void;
+}) {
+  const [q, setQ] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const term = q.trim().toLowerCase();
+  const matches = term
+    ? models
+        .filter(
+          (m) => m.name.toLowerCase().includes(term) || m.id.toLowerCase().includes(term),
+        )
+        .slice(0, 8)
+    : models.slice(0, 8);
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] grid place-items-start justify-center bg-black/50 pt-[12vh] backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="w-[420px] overflow-hidden rounded-2xl border border-edge bg-panel shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-2 border-b border-edge px-3 py-2.5">
+          <Search size={15} className="text-muted" />
+          <input
+            ref={inputRef}
+            className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted"
+            placeholder="搜索模型名 / ID…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') onClose();
+              if (e.key === 'Enter' && matches[0]) onPick(matches[0].id);
+            }}
+          />
+          <span className="rounded bg-[#0d1728] px-1.5 py-0.5 text-[10px] text-muted">ESC</span>
+        </div>
+        <ul className="max-h-[50vh] overflow-auto overscroll-contain py-1">
+          {matches.length === 0 && <li className="px-4 py-3 text-xs text-muted">无匹配模型</li>}
+          {matches.map((m) => (
+            <li key={m.id}>
+              <button
+                className="flex w-full items-center justify-between gap-2 px-4 py-2 text-left hover:bg-[#16223a]"
+                onClick={() => onPick(m.id)}
+              >
+                <span className="min-w-0 truncate text-xs text-ink">{m.name}</span>
+                <span className="shrink-0 truncate text-[11px] text-muted">{m.vendorLabel}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

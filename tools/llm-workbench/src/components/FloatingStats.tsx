@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Activity, GripHorizontal, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Activity, GripHorizontal, X, ChevronDown, ChevronUp, Search } from 'lucide-react';
 import { fetchProxySummary, type ProxySummary } from '../api';
 
 // 浮窗：实时显示输入/输出速率、缓存命中、当前模型、当日消耗 token。
@@ -78,6 +78,12 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
   const notifiedRef = useRef(false);
   const spikeNotifiedRef = useRef(false);
   const wasAliveRef = useRef<boolean | null>(null);
+  // 外观 / 交互：点击穿透、字号缩放、高对比、代理连接状态、主窗口反向高亮
+  const [clickThrough, setClickThrough] = useState(false);
+  const [fontScale, setFontScale] = useState(1);
+  const [highContrast, setHighContrast] = useState(false);
+  const [proxyAlive, setProxyAlive] = useState<boolean | null>(null);
+  const [hlModel, setHlModel] = useState<string | null>(null);
   // 信息密度：今日累计成本曲线 + Top 模型（调用频次，本地累积）
   const [costSeries, setCostSeries] = useState<number[]>([]);
   const [topModels, setTopModels] = useState<{ model: string; provider: string; count: number; lastTs: number }[]>([]);
@@ -88,7 +94,7 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
   const loadedMaxTs = useRef<number>(0);
   const saveTimer = useRef<number | null>(null);
 
-  // 挂载时读取应用设置：默认极简模式 + 预算阈值（用于告警）+ 默认焦点指标 + 刷新间隔
+  // 挂载时读取应用设置：默认极简模式 + 预算阈值（用于告警）+ 默认焦点指标 + 刷新间隔 + 外观/穿透
   useEffect(() => {
     const cfg = api?.getSettings?.();
     if (cfg) {
@@ -99,7 +105,20 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
       };
       if (cfg.minimalDefault) setMinimal(true);
       if (cfg.defaultFocus) setFocus(cfg.defaultFocus as FocusMetric);
+      setClickThrough(!!cfg.clickThrough);
+      setFontScale(Number(cfg.fontScale) || 1);
+      setHighContrast(!!cfg.highContrast);
     }
+  }, []);
+
+  // 设置面板保存后实时刷新外观/穿透状态（无需重载浮窗）
+  useEffect(() => {
+    api?.onSettingsChanged?.((cfg: { clickThrough?: boolean; fontScale?: number; highContrast?: boolean }) => {
+      if (!cfg) return;
+      setClickThrough(!!cfg.clickThrough);
+      setFontScale(Number(cfg.fontScale) || 1);
+      setHighContrast(!!cfg.highContrast);
+    });
   }, []);
 
   // ── 浮窗统计持久化（仅 Electron 内的 standalone 浮窗落盘，避免重载/重启清零）──
@@ -181,6 +200,29 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
     api?.onToggleMinimal?.(() => setMinimal((m) => !m));
   }, []);
 
+  // 双向联动：主窗口点模型 → 浮窗高亮提示（2.4s 后消失）
+  useEffect(() => {
+    api?.onHighlightModel?.((m: string) => {
+      if (!m) return;
+      setHlModel(m);
+      window.setTimeout(() => setHlModel((cur) => (cur === m ? null : cur)), 2400);
+    });
+  }, []);
+
+  // 浮窗内搜索框：回车深链到主窗口（容忍匹配 recentModels / topModels）
+  const [q, setQ] = useState('');
+  const runFloatSearch = () => {
+    const term = q.trim().toLowerCase();
+    if (!term) return;
+    const pool = [
+      ...(data?.recentModels ?? []).map((r) => r.model),
+      ...topModels.map((t) => t.model),
+    ];
+    const hit = pool.find((m) => m.toLowerCase().includes(term)) || pool[0];
+    if (hit) openModel(hit);
+    setQ('');
+  };
+
   useEffect(() => {
     let alive = true;
     const load = async () => {
@@ -218,6 +260,7 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
               api?.notify?.('代理已恢复', '本地代理连接恢复正常');
             }
             wasAliveRef.current = true;
+            setProxyAlive(true);
             // 今日累计成本曲线：采样 todayCostUsd（已为累计值，单调递增）
             setCostSeries((prev) => {
               const next = [...prev, s.todayCostUsd || 0];
@@ -286,6 +329,7 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
   }, [menu]);
 
   const onPointerDown = (e: React.PointerEvent) => {
+    if (clickThrough) return; // 点击穿透时禁止拖拽
     const el = ref.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
@@ -346,6 +390,15 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
   const sub = theme === 'light' ? 'text-neutral-500' : 'text-muted';
   const chipBg = theme === 'light' ? 'bg-neutral-100' : 'bg-[#0d1728]';
   const hoverBg = theme === 'light' ? 'hover:bg-neutral-200' : 'hover:bg-[#16223a]';
+  // 高对比模式：强制纯黑/纯白底 + 高对比边框与文字（覆盖主题透明底）
+  const hcClass = highContrast
+    ? theme === 'light'
+      ? '!bg-white !text-black border-black/70'
+      : '!bg-black !text-white border-white/70'
+    : '';
+  const hcSub = highContrast ? (theme === 'light' ? 'text-black/70' : 'text-white/70') : sub;
+  const hcHover = highContrast ? (theme === 'light' ? 'hover:bg-neutral-300' : 'hover:bg-[#222]') : hoverBg;
+  const zoomStyle: React.CSSProperties = fontScale !== 1 ? { zoom: fontScale } : {};
 
   const rate = data?.cacheHitRateToday != null ? `${(data.cacheHitRateToday * 100).toFixed(1)}%` : '—';
   const model = data?.recentModels?.[0];
@@ -370,19 +423,26 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
     return (
       <div
         ref={ref}
-        className="relative z-40 flex w-[200px] cursor-grab items-center gap-1.5 rounded-full border border-edge bg-panel/95 px-3 py-1.5 text-[11px] text-ink shadow-2xl backdrop-blur"
-        style={isElectron ? ({ WebkitAppRegion: 'drag' } as React.CSSProperties) : undefined}
+        className={
+          'relative z-40 flex w-[200px] cursor-grab items-center gap-1.5 rounded-full border border-edge bg-panel/95 px-3 py-1.5 text-[11px] text-ink shadow-2xl backdrop-blur ' +
+          hcClass
+        }
+        style={
+          isElectron
+            ? ({ WebkitAppRegion: 'drag', ...zoomStyle } as React.CSSProperties)
+            : zoomStyle
+        }
         onPointerDown={onPointerDown}
         onContextMenu={onContextMenu}
       >
         <Activity size={12} className={alertAny ? 'text-[#ef6b6b]' : 'text-accent'} />
         <span className="tabular-nums">{data ? `${data.inputRateTokS}/${data.outputRateTokS} t/s` : '—'}</span>
-        <span className={sub}>·</span>
+        <span className={hcSub}>·</span>
         <span className="tabular-nums">${data ? (data.todayCostUsd || 0).toFixed(4) : '0.0000'}</span>
-        <span className={sub}>·</span>
+        <span className={hcSub}>·</span>
         <span>{rate}</span>
         <button
-          className={'ml-auto rounded p-0.5 ' + sub + ' ' + hoverBg}
+          className={'ml-auto rounded p-0.5 ' + hcSub + ' ' + hcHover}
           style={isElectron ? ({ WebkitAppRegion: 'no-drag' } as React.CSSProperties) : undefined}
           onPointerDown={(e) => e.stopPropagation()}
           onClick={() => setMinimal(false)}
@@ -417,11 +477,14 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
     <div
       ref={ref}
       className={
-        docked
-          ? 'relative w-full select-none rounded-xl border border-edge ' + cardBase + ' shadow-2xl backdrop-blur'
-          : 'relative z-40 w-[260px] select-none rounded-xl border border-edge ' + cardBase + ' shadow-2xl backdrop-blur'
+        (docked
+          ? 'relative w-full select-none rounded-xl border border-edge ' + cardBase
+          : 'relative z-40 w-[260px] select-none rounded-xl border border-edge ' + cardBase) +
+        ' ' +
+        hcClass +
+        ' shadow-2xl backdrop-blur'
       }
-      style={docked ? { width: '100%' } : { ...style, cursor: dragging ? 'grabbing' : 'default' }}
+      style={docked ? { width: '100%', ...zoomStyle } : { ...style, cursor: dragging ? 'grabbing' : 'default', ...zoomStyle }}
       onPointerMove={docked ? undefined : onPointerMove}
       onPointerUp={docked ? undefined : onPointerUp}
       onPointerLeave={docked ? undefined : onPointerUp}
@@ -436,9 +499,19 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
         onPointerDown={docked ? undefined : onPointerDown}
         style={standalone && isElectron ? ({ WebkitAppRegion: 'drag' } as React.CSSProperties) : undefined}
       >
-        <GripHorizontal size={13} className={sub} />
+        <GripHorizontal size={13} className={hcSub} />
         <Activity size={13} className={alertAny ? 'text-[#ef6b6b]' : 'text-accent'} />
         <span className="text-[11px] font-medium">实时代理统计</span>
+        <span
+          className="h-1.5 w-1.5 rounded-full"
+          style={{ background: proxyAlive ? '#5ec8a0' : proxyAlive === false ? '#ef6b6b' : '#6b7280' }}
+          title={proxyAlive ? '代理已连接' : proxyAlive === false ? '代理断开' : '代理状态未知'}
+        />
+        {clickThrough && (
+          <span className="rounded bg-accent/20 px-1 text-[9px] text-accent" title="点击穿透已开启：浮窗不挡桌面">
+            穿透
+          </span>
+        )}
         <button
           className={'ml-1 rounded p-0.5 ' + sub + ' ' + hoverBg}
           style={standalone && isElectron ? ({ WebkitAppRegion: 'no-drag' } as React.CSSProperties) : undefined}
@@ -474,6 +547,19 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
       </div>
 
       <div className="space-y-1.5 px-3 py-2.5 text-[11px]">
+        {/* 浮窗内搜索：回车深链到主窗口对应模型（容忍匹配 recentModels / Top 模型） */}
+        <div className={'flex items-center gap-1.5 rounded-md border border-edge px-1.5 ' + (highContrast ? 'border-white/50' : '')}>
+          <Search size={12} className={hcSub} />
+          <input
+            className={'w-full bg-transparent py-1 text-[11px] text-ink outline-none placeholder:text-muted'}
+            placeholder="搜索模型…（回车打开）"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') runFloatSearch();
+            }}
+          />
+        </div>
         <Row label="输入速率" value={data ? `${data.inputRateTokS} tok/s` : '—'} tone={inLevel} active={focus === 'rate'} />
         <Row label="输出速率" value={data ? `${data.outputRateTokS} tok/s` : '—'} tone={outLevel} active={focus === 'rate'} />
         <Row label="请求速率" value={data ? `${data.reqRate}/s` : '—'} active={focus === 'rate'} />
@@ -497,7 +583,7 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
           label="当前模型"
           value={model ? `${model.model}` : '—'}
           sub={model?.provider}
-          active={focus === 'model'}
+          active={focus === 'model' || !!(hlModel && model && model.model.toLowerCase().includes(hlModel.toLowerCase()))}
           onClick={model ? () => openModel(model.model) : undefined}
         />
         <div className="mt-1 border-t border-edge pt-1.5">
@@ -543,10 +629,15 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
                   {topModels.map((m) => {
                     const max = topModels[0]?.count || 1;
                     const pct = Math.max(6, Math.round((m.count / max) * 100));
+                    const isHl = hlModel && m.model.toLowerCase().includes(hlModel.toLowerCase());
                     return (
                       <li
                         key={m.model}
-                        className="flex cursor-pointer items-center gap-1.5 rounded px-1 hover:bg-[#16223a]"
+                        className={
+                          'flex cursor-pointer items-center gap-1.5 rounded px-1 ' +
+                          (highContrast ? hcHover : 'hover:bg-[#16223a]') +
+                          (isHl ? ' ring-1 ring-accent bg-[#1b2c4a]' : '')
+                        }
                         onClick={() => openModel(m.model)}
                         title={'点击在主窗口打开 ' + m.model}
                       >
@@ -579,6 +670,16 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
           <MenuItem label={expanded ? '收起详情' : '展开详情'} onClick={() => { setExpanded((v) => !v); setMenu(null); }} />
           <MenuItem label={minimal ? '切换完整模式' : '切换极简模式'} onClick={() => { setMinimal((m) => !m); setMenu(null); }} />
           <MenuItem label="切换焦点指标" onClick={() => { setFocus((f) => FOCUS_NEXT[f]); setMenu(null); }} />
+          {isElectron && (
+            <MenuItem
+              label={clickThrough ? '关闭点击穿透' : '开启点击穿透'}
+              onClick={() => {
+                api?.toggleClickThrough?.();
+                setClickThrough((v) => !v);
+                setMenu(null);
+              }}
+            />
+          )}
           <MenuItem label="导出今日统计" onClick={() => { exportStatsCsv(); setMenu(null); }} />
           {isElectron && <MenuItem label="打开主窗口" onClick={() => { api?.showMain?.(); setMenu(null); }} />}
           {isElectron && <MenuItem label="重置浮窗位置" onClick={() => { api?.resetFloat?.(); setMenu(null); }} />}
