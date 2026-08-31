@@ -22,4 +22,20 @@ contextBridge.exposeInMainWorld('electron', {
   resetFloat: () => ipcRenderer.send('float:reset'),
   getTheme: readTheme,
   onThemeChange: (cb) => ipcRenderer.on('theme:change', (_e, t) => cb(t)),
+  // 应用设置：读取（同步）/ 保存
+  getSettings: () => {
+    try {
+      return ipcRenderer.sendSync('settings:get');
+    } catch {
+      return null;
+    }
+  },
+  saveSettings: (obj) => ipcRenderer.send('settings:save', obj),
+  // 系统通知（主进程弹原生通知）
+  notify: (title, body) => ipcRenderer.send('app:notify', { title, body }),
+  // 浮窗内部命令：由主进程全局快捷键转发
+  onToggleMinimal: (cb) => ipcRenderer.on('float:toggle-minimal', () => cb()),
+  onCycleFocus: (cb) => ipcRenderer.on('float:cycle-focus', () => cb()),
+  // 浮窗吸附到指定角落（位置预设）
+  snapFloat: (pos) => ipcRenderer.send('float:snap', pos),
 });

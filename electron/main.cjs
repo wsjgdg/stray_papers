@@ -1,6 +1,17 @@
 // Electron 主进程：在本地拉起后端（复用 server/index.ts 的 startServer，零业务改动），
 // 创建主窗口 + 常驻浮窗（frameless/transparent/alwaysOnTop）+ 托盘，并桥接浮窗开关 IPC。
-const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, screen, nativeTheme } = require('electron');
+const {
+  app,
+  BrowserWindow,
+  Tray,
+  Menu,
+  nativeImage,
+  ipcMain,
+  screen,
+  nativeTheme,
+  globalShortcut,
+  Notification,
+} = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const settings = require('./settings.cjs');
@@ -10,6 +21,7 @@ const ELECTRON_PORT = Number(process.env.ELECTRON_PORT || 8790);
 let mainWin = null;
 let floatWin = null;
 let tray = null;
+let appSettings = null; // 应用设置（预算/透明度/快捷键/位置）
 
 // 在「当前进程」内加载后端（server.cjs 已把自动监听封装为 startServer，且直接运行才自启）。
 function startBackend() {
@@ -53,10 +65,67 @@ function attachDiag(win, name) {
   wc.on('did-finish-load', () => console.log(`[${name} DID-FINISH-LOAD]`));
 }
 
-function positionFloat() {
+// 依据位置预设计算浮窗坐标（四角 + 边距）
+function applyPosition(pos) {
   if (!floatWin) return;
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-  floatWin.setPosition(Math.max(0, width - 320), 20);
+  const { width, height } = floatWin.getBounds();
+  const { width: sw, height: sh } = screen.getPrimaryDisplay().workAreaSize;
+  const m = 12;
+  let x = sw - width - m;
+  let y = m; // topright（默认）
+  if (pos === 'topleft') {
+    x = m;
+    y = m;
+  } else if (pos === 'bottomleft') {
+    x = m;
+    y = sh - height - m;
+  } else if (pos === 'bottomright') {
+    x = sw - width - m;
+    y = sh - height - m;
+  }
+  floatWin.setPosition(x, y);
+  settings.setBounds(floatWin.getBounds());
+}
+
+function positionFloat() {
+  applyPosition('topright');
+}
+
+// 应用设置：透明度 + 全局快捷键（位置由 applyPosition / float:snap 单独处理，避免覆盖手动拖拽）
+function applySettings() {
+  if (!floatWin || !appSettings) return;
+  const op = Math.min(1, Math.max(0.4, Number(appSettings.opacity) || 1));
+  floatWin.setOpacity(op);
+  registerHotkeys();
+}
+
+function registerHotkeys() {
+  try {
+    globalShortcut.unregisterAll();
+  } catch {
+    /* ignore */
+  }
+  const toggle = appSettings?.hotkeyToggle;
+  const cycle = appSettings?.hotkeyCycle;
+  if (toggle) {
+    try {
+      globalShortcut.register(toggle, () => {
+        if (!floatWin) return;
+        floatWin.isVisible() ? floatWin.hide() : floatWin.show();
+      });
+    } catch {
+      /* 快捷键被占用或格式无效，静默忽略 */
+    }
+  }
+  if (cycle) {
+    try {
+      globalShortcut.register(cycle, () => {
+        if (floatWin && floatWin.webContents) floatWin.webContents.send('float:cycle-focus');
+      });
+    } catch {
+      /* ignore */
+    }
+  }
 }
 
 function createWindows() {
@@ -101,12 +170,12 @@ function createWindows() {
     },
   });
   floatWin.loadURL(`http://127.0.0.1:${ELECTRON_PORT}/float`);
-  // 恢复上次保存的位置/尺寸；无存档则落到默认右上角
-  const saved = settings.getBounds(app);
+  // 恢复上次保存的位置/尺寸；无存档则落到设置里的位置预设（默认右上角）
+  const saved = settings.getBounds();
   if (saved) floatWin.setBounds(saved);
-  else positionFloat();
-  floatWin.on('moved', () => settings.setBounds(app, floatWin.getBounds()));
-  floatWin.on('resized', () => settings.setBounds(app, floatWin.getBounds()));
+  else applyPosition(appSettings?.position || 'topright');
+  floatWin.on('moved', () => settings.setBounds(floatWin.getBounds()));
+  floatWin.on('resized', () => settings.setBounds(floatWin.getBounds()));
   floatWin.on('close', (e) => {
     if (app.isQuiting) return;
     e.preventDefault();
@@ -129,8 +198,7 @@ function createTray() {
       label: '重置浮窗位置',
       click: () => {
         if (!floatWin) return;
-        positionFloat();
-        settings.setBounds(app, floatWin.getBounds());
+        applyPosition(appSettings?.position || 'topright');
       },
     },
     { type: 'separator' },
@@ -151,13 +219,39 @@ ipcMain.on('app:hide', () => mainWin && mainWin.hide());
 ipcMain.on('app:show', () => mainWin && mainWin.show());
 ipcMain.on('float:reset', () => {
   if (!floatWin) return;
-  positionFloat();
-  settings.setBounds(app, floatWin.getBounds());
+  applyPosition(appSettings?.position || 'topright');
 });
 
 // 预加载上下文无法稳定拿到 nativeTheme，改由主进程（一定持有）经同步 IPC 回传当前深/浅色。
 ipcMain.on('theme:get', (e) => {
   e.returnValue = nativeTheme && nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
+});
+
+// 应用设置：读取（同步）/ 保存（保存后应用透明度+快捷键）
+ipcMain.on('settings:get', (e) => {
+  e.returnValue = appSettings || settings.DEFAULTS;
+});
+ipcMain.on('settings:save', (_e, obj) => {
+  appSettings = { ...(appSettings || settings.DEFAULTS), ...(obj || {}) };
+  settings.setAppSettings(appSettings);
+  applySettings();
+});
+
+// 浮窗吸附到指定角落（位置预设）
+ipcMain.on('float:snap', (_e, pos) => {
+  appSettings = appSettings || { ...settings.DEFAULTS };
+  appSettings.position = pos || 'topright';
+  settings.setAppSettings(appSettings);
+  applyPosition(appSettings.position);
+});
+
+// 系统通知（主进程弹原生通知；Windows 需先 setAppUserModelId）
+ipcMain.on('app:notify', (_e, { title, body }) => {
+  try {
+    new Notification({ title: title || 'LLM Workbench', body: body || '' });
+  } catch {
+    /* 通知不可用时静默 */
+  }
 });
 
 // 系统主题变更 → 广播给各窗口（浮窗据此跟随系统深/浅色）
@@ -168,12 +262,23 @@ nativeTheme.on('updated', () => {
 });
 
 app.whenReady().then(async () => {
+  settings.setApp(app);
+  appSettings = settings.getAppSettings();
+  app.setAppUserModelId('com.llmworkbench.app');
   startBackend();
   await waitForBackend();
   createWindows();
   createTray();
+  applySettings(); // 应用透明度 + 全局快捷键
 });
 
 // 托盘常驻：所有窗口关闭也不退出
 app.on('window-all-closed', () => { /* keep alive in tray */ });
-app.on('before-quit', () => { app.isQuiting = true; });
+app.on('before-quit', () => {
+  app.isQuiting = true;
+  try {
+    globalShortcut.unregisterAll();
+  } catch {
+    /* ignore */
+  }
+});

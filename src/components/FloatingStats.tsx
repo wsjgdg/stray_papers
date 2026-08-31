@@ -62,6 +62,24 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const drag = useRef<{ ox: number; oy: number; px: number; py: number } | null>(null);
+  const [minimal, setMinimal] = useState(false);
+  const cfgRef = useRef<{ budgetUsd: number }>({ budgetUsd: 0 });
+  const notifiedRef = useRef(false);
+
+  // 挂载时读取应用设置：默认极简模式 + 预算阈值（用于告警）
+  useEffect(() => {
+    const cfg = api?.getSettings?.();
+    if (cfg) {
+      cfgRef.current = { budgetUsd: Number(cfg.budgetUsd) || 0 };
+      if (cfg.minimalDefault) setMinimal(true);
+    }
+  }, []);
+
+  // 主进程全局快捷键转发：切换焦点指标 / 切换极简模式
+  useEffect(() => {
+    api?.onCycleFocus?.(() => setFocus((f) => FOCUS_NEXT[f]));
+    api?.onToggleMinimal?.(() => setMinimal((m) => !m));
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -71,6 +89,17 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
         if (alive) {
           setData(s);
           if (s) {
+            // 预算告警：超阈值弹系统通知（ref 防止重复，回落 90% 后可再提醒）
+            const budget = cfgRef.current.budgetUsd;
+            if (budget > 0) {
+              const cost = s.todayCostUsd || 0;
+              if (cost >= budget && !notifiedRef.current) {
+                notifiedRef.current = true;
+                api?.notify?.('预算告警', `今日成本 $${cost.toFixed(4)} 已达阈值 $${budget}`);
+              } else if (cost < budget * 0.9) {
+                notifiedRef.current = false;
+              }
+            }
             setSamples((prev) => {
               const next = [...prev, { in: s.inputRateTokS, out: s.outputRateTokS }];
               return next.length > 40 ? next.slice(next.length - 40) : next;
@@ -165,6 +194,35 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
         : { right: 16, bottom: 16 }
       : { right: 16, bottom: 16 };
 
+  // 极简模式（仅浮窗内）：单行展示核心数字，点展开按钮恢复完整卡片
+  if (minimal && standalone) {
+    return (
+      <div
+        ref={ref}
+        className="relative z-40 flex w-[200px] cursor-grab items-center gap-1.5 rounded-full border border-edge bg-panel/95 px-3 py-1.5 text-[11px] text-ink shadow-2xl backdrop-blur"
+        style={isElectron ? ({ WebkitAppRegion: 'drag' } as React.CSSProperties) : undefined}
+        onPointerDown={onPointerDown}
+        onContextMenu={onContextMenu}
+      >
+        <Activity size={12} className={alertAny ? 'text-[#ef6b6b]' : 'text-accent'} />
+        <span className="tabular-nums">{data ? `${data.inputRateTokS}/${data.outputRateTokS} t/s` : '—'}</span>
+        <span className={sub}>·</span>
+        <span className="tabular-nums">${data ? (data.todayCostUsd || 0).toFixed(4) : '0.0000'}</span>
+        <span className={sub}>·</span>
+        <span>{rate}</span>
+        <button
+          className={'ml-auto rounded p-0.5 ' + sub + ' ' + hoverBg}
+          style={isElectron ? ({ WebkitAppRegion: 'no-drag' } as React.CSSProperties) : undefined}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={() => setMinimal(false)}
+          title="展开完整卡片"
+        >
+          <ChevronUp size={12} />
+        </button>
+      </div>
+    );
+  }
+
   if (!open && !docked) {
     return (
       <button
@@ -218,6 +276,16 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
         >
           <span className="text-[10px] tabular-nums">{FOCUS_LABEL[focus]}</span>
         </button>
+        {standalone && (
+          <button
+            className={'rounded p-0.5 ' + sub + ' ' + hoverBg}
+            style={standalone && isElectron ? ({ WebkitAppRegion: 'no-drag' } as React.CSSProperties) : undefined}
+            onClick={() => setMinimal((m) => !m)}
+            title="切换极简模式"
+          >
+            <span className="text-[10px] tabular-nums">{minimal ? '完整' : '极简'}</span>
+          </button>
+        )}
         <button
           className={'ml-auto rounded p-0.5 ' + sub + ' ' + hoverBg}
           style={standalone && isElectron ? ({ WebkitAppRegion: 'no-drag' } as React.CSSProperties) : undefined}
@@ -306,6 +374,7 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
           onClick={(e) => e.stopPropagation()}
         >
           <MenuItem label={expanded ? '收起详情' : '展开详情'} onClick={() => { setExpanded((v) => !v); setMenu(null); }} />
+          <MenuItem label={minimal ? '切换完整模式' : '切换极简模式'} onClick={() => { setMinimal((m) => !m); setMenu(null); }} />
           <MenuItem label="切换焦点指标" onClick={() => { setFocus((f) => FOCUS_NEXT[f]); setMenu(null); }} />
           {isElectron && <MenuItem label="打开主窗口" onClick={() => { api?.showMain?.(); setMenu(null); }} />}
           {isElectron && <MenuItem label="重置浮窗位置" onClick={() => { api?.resetFloat?.(); setMenu(null); }} />}

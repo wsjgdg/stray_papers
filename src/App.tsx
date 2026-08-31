@@ -41,6 +41,9 @@ export default function App() {
   const [tab, setTab] = useState<TabId>('dashboard');
   const abortRef = useRef<AbortController | null>(null);
   const [locked, setLocked] = useState(false);
+  const api = (window as unknown as { electron?: any }).electron;
+  const isElectron = !!api?.isElectron;
+  const [showSettings, setShowSettings] = useState(false);
 
   const load = useCallback(async (force: boolean) => {
     abortRef.current?.abort();
@@ -135,6 +138,12 @@ export default function App() {
             <ExternalLink size={12} />
             独立浮窗
           </button>
+          {isElectron && (
+            <button className="btn" title="浮窗与通知设置" onClick={() => setShowSettings(true)}>
+              <Calculator size={12} />
+              设置
+            </button>
+          )}
         </div>
       </header>
 
@@ -185,10 +194,143 @@ export default function App() {
 
       <FloatingStats />
 
+      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+
       <footer className="flex shrink-0 flex-wrap items-center gap-3 border-t border-edge bg-panel px-4 py-2 text-[11px] text-muted">
         <span>数据源：OpenRouter Models API · Artificial Analysis Leaderboards</span>
         <span className="ml-auto">服务端缓存 10 分钟 · 前端每 30 秒轮询一次快照</span>
       </footer>
+    </div>
+  );
+}
+
+type SettingsState = {
+  budgetUsd: number;
+  opacity: number;
+  minimalDefault: boolean;
+  hotkeyToggle: string;
+  hotkeyCycle: string;
+  position: 'topright' | 'topleft' | 'bottomleft' | 'bottomright';
+};
+
+const SETTINGS_DEFAULT: SettingsState = {
+  budgetUsd: 1,
+  opacity: 1,
+  minimalDefault: false,
+  hotkeyToggle: 'CommandOrControl+Shift+F',
+  hotkeyCycle: 'CommandOrControl+Shift+M',
+  position: 'topright',
+};
+
+// 浮窗与通知设置面板（仅 Electron 内有效）
+function SettingsModal({ onClose }: { onClose: () => void }) {
+  const electron = (window as unknown as { electron?: any }).electron;
+  const [s, setS] = useState<SettingsState>(() => ({
+    ...SETTINGS_DEFAULT,
+    ...(electron?.getSettings?.() ?? {}),
+  }));
+
+  const save = () => {
+    electron?.saveSettings?.(s);
+    electron?.snapFloat?.(s.position); // 立即吸附到所选角落
+    onClose();
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] grid place-items-center bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="w-[380px] space-y-4 rounded-2xl border border-edge bg-panel p-5 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-2 text-ink">
+          <Calculator size={16} className="text-accent" />
+          <span className="text-sm font-semibold">浮窗与通知设置</span>
+        </div>
+
+        <label className="flex items-center justify-between gap-3 text-xs text-ink">
+          <span>预算告警阈值（USD/日，0=关闭）</span>
+          <input
+            type="number"
+            min={0}
+            step={0.1}
+            className="input w-28"
+            value={s.budgetUsd}
+            onChange={(e) => setS({ ...s, budgetUsd: Number(e.target.value) || 0 })}
+          />
+        </label>
+
+        <label className="flex items-center justify-between gap-3 text-xs text-ink">
+          <span>浮窗不透明度（{Math.round(s.opacity * 100)}%）</span>
+          <input
+            type="range"
+            min={0.4}
+            max={1}
+            step={0.05}
+            className="w-40"
+            value={s.opacity}
+            onChange={(e) => setS({ ...s, opacity: Number(e.target.value) })}
+          />
+        </label>
+
+        <label className="flex items-center justify-between gap-3 text-xs text-ink">
+          <span>浮窗默认极简模式</span>
+          <input
+            type="checkbox"
+            checked={s.minimalDefault}
+            onChange={(e) => setS({ ...s, minimalDefault: e.target.checked })}
+          />
+        </label>
+
+        <label className="flex items-center justify-between gap-3 text-xs text-ink">
+          <span>位置预设</span>
+          <select
+            className="input w-40"
+            value={s.position}
+            onChange={(e) => setS({ ...s, position: e.target.value as SettingsState['position'] })}
+          >
+            <option value="topright">右上角</option>
+            <option value="topleft">左上角</option>
+            <option value="bottomright">右下角</option>
+            <option value="bottomleft">左下角</option>
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1 text-xs text-ink">
+          <span>快捷键：开关浮窗</span>
+          <input
+            type="text"
+            className="input"
+            value={s.hotkeyToggle}
+            onChange={(e) => setS({ ...s, hotkeyToggle: e.target.value })}
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-xs text-ink">
+          <span>快捷键：切换焦点指标</span>
+          <input
+            type="text"
+            className="input"
+            value={s.hotkeyCycle}
+            onChange={(e) => setS({ ...s, hotkeyCycle: e.target.value })}
+          />
+        </label>
+
+        <p className="text-[10px] text-muted">
+          快捷键格式如 <code className="rounded bg-[#0d1728] px-1">CommandOrControl+Shift+F</code>（macOS 用 Command，Win/Linux 用 Ctrl）。
+        </p>
+
+        <div className="flex justify-end gap-2 pt-1">
+          <button className="btn" onClick={onClose}>
+            取消
+          </button>
+          <button className="btn btn-primary" onClick={save}>
+            保存
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
