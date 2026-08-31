@@ -18,6 +18,7 @@ const DEFAULTS = {
   hotkeyMinimal: 'CommandOrControl+Shift+L', // 切换极简模式
   position: 'topright', // topright|topleft|bottomleft|bottomright
   openAtLogin: false, // 开机自启（系统登录项）
+  createDesktopShortcut: true, // 首次启动时生成桌面快捷方式（便携版无安装程序，运行时创建）
   defaultFocus: 'rate', // 默认焦点指标 rate|cache|cost|model
   refreshMs: 2000, // 浮窗代理统计轮询间隔（毫秒）
   clickThrough: false, // 浮窗点击穿透（不挡桌面）
@@ -43,6 +44,17 @@ function writeJson(file, obj) {
 function ensure(file) {
   return path.join(app.getPath('userData'), file);
 }
+// ── 构建期配置（由 scripts/build-electron-config.mjs 生成，gitignored）──
+// 允许在「构建」时通过环境变量覆盖默认值（如 LLMWB_AUTOSTART / LLMWB_DESKTOP_SHORTCUT），
+// 使便携版 exe 在打包阶段即可决定桌面快捷方式与开机自启的默认行为，而不仅是运行时设置。
+let BUILD_CONFIG = {};
+try {
+  BUILD_CONFIG = JSON.parse(fs.readFileSync(path.join(__dirname, 'build-config.json'), 'utf8'));
+} catch {
+  BUILD_CONFIG = {};
+}
+const EFFECTIVE_DEFAULTS = { ...DEFAULTS, ...BUILD_CONFIG };
+
 // settings.cjs 被 main.cjs 在 app ready 后调用，此处用闭包保存 app 引用
 let appRef = null;
 function setApp(app) {
@@ -63,9 +75,9 @@ function setBounds(bounds) {
 
 // ── 应用设置 ──
 function getAppSettings() {
-  if (!appRef) return { ...DEFAULTS };
+  if (!appRef) return { ...EFFECTIVE_DEFAULTS };
   const stored = readJson(ensure(APP_FILE), {});
-  return { ...DEFAULTS, ...stored };
+  return { ...EFFECTIVE_DEFAULTS, ...stored };
 }
 function setAppSettings(obj) {
   if (!appRef) return;
@@ -90,5 +102,5 @@ module.exports = {
   setAppSettings,
   getStats,
   setStats,
-  DEFAULTS,
+  DEFAULTS: EFFECTIVE_DEFAULTS,
 };

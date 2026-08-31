@@ -252,6 +252,7 @@ type SettingsState = {
   hotkeyMinimal: string;
   position: 'topright' | 'topleft' | 'bottomleft' | 'bottomright';
   openAtLogin: boolean;
+  createDesktopShortcut: boolean;
   defaultFocus: 'rate' | 'cache' | 'cost' | 'model';
   refreshMs: number;
   clickThrough: boolean;
@@ -268,6 +269,7 @@ const SETTINGS_DEFAULT: SettingsState = {
   hotkeyMinimal: 'CommandOrControl+Shift+L',
   position: 'topright',
   openAtLogin: false,
+  createDesktopShortcut: true,
   defaultFocus: 'rate',
   refreshMs: 2000,
   clickThrough: false,
@@ -321,6 +323,15 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
             type="checkbox"
             checked={s.openAtLogin}
             onChange={(e) => setS({ ...s, openAtLogin: e.target.checked })}
+          />
+        </label>
+
+        <label className="flex items-center justify-between gap-3 text-xs text-ink">
+          <span>生成桌面快捷方式（首次启动时）</span>
+          <input
+            type="checkbox"
+            checked={s.createDesktopShortcut}
+            onChange={(e) => setS({ ...s, createDesktopShortcut: e.target.checked })}
           />
         </label>
 
