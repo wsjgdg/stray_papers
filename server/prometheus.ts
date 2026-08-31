@@ -1,7 +1,7 @@
 // Prometheus 指标导出（/metrics）。文本 exposition 格式，text/plain。
 // 数据来自内存指标聚合（getMetrics）与响应缓存统计，重启清零，不落盘。
 
-import { getMetrics } from './metrics.js';
+import { getMetrics, getSummary } from './metrics.js';
 import { getCacheStats } from './responseCache.js';
 
 /** 清洗 label 值中的非法字符（Prometheus label 仅允许 [a-zA-Z0-9_:].） */
@@ -61,6 +61,19 @@ export function renderMetrics(): string {
   blocks.push(keySwitchLines.join('\n'));
   blocks.push(latLines.join('\n'));
   blocks.push(rateLines.join('\n'));
+
+  // 全局瞬时 token 速率（gauge）：供 Prometheus/Grafana 绘制长期吞吐曲线
+  const summary = getSummary();
+  blocks.push(
+    [
+      '# HELP llmworkbench_input_rate_tok_s 全局输入速率（tok/s）',
+      '# TYPE llmworkbench_input_rate_tok_s gauge',
+      line('llmworkbench_input_rate_tok_s', summary.inputRateTokS),
+      '# HELP llmworkbench_output_rate_tok_s 全局输出速率（tok/s）',
+      '# TYPE llmworkbench_output_rate_tok_s gauge',
+      line('llmworkbench_output_rate_tok_s', summary.outputRateTokS),
+    ].join('\n'),
+  );
 
   // 缓存（全局，无 provider label）
   blocks.push(
