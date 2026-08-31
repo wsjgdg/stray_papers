@@ -76,7 +76,7 @@ function joinUrl(base: string, suffix: string): string {
 /**
  * 自动获取某厂商的模型清单：命中上游 /models 端点并解析。
  * - 已知厂商用其 modelsEndpoint（完整 URL）；
- * - OpenAI 兼容自定义厂商 → baseUrl + /v1/models；
+ * - OpenAI 兼容自定义厂商 → baseUrl + /models（与 chat 同约定：baseUrl 已含 /v1，如 https://host/v1）；
  * - Gemini 格式 → baseUrl + /models（响应为 { models:[{name:"models/xxx"}] }）。
  * 返回去重、排序后的模型 id 列表。
  */
@@ -101,7 +101,7 @@ export async function listProviderModels(providerId: string): Promise<string[]> 
   } else if (format === 'gemini') {
     modelsUrl = joinUrl(baseUrl, 'models');
   } else {
-    modelsUrl = joinUrl(baseUrl, 'v1/models');
+    modelsUrl = joinUrl(baseUrl, 'models');
   }
 
   const controller = new AbortController();
