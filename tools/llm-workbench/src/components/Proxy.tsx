@@ -39,6 +39,7 @@ import {
   type ApiFormat,
 } from '../api';
 import { Card, Chip, Empty, Spinner } from '../ui';
+import { mergeModels, computeEnabledModels } from '../lib/modelMerge';
 
 type SubTab = 'config' | 'play' | 'metrics' | 'logs';
 
@@ -253,9 +254,8 @@ function ConfigPanel({
         return;
       }
       // 合并：保留手动添加的模型，避免重新拉取时覆盖用户已录入的清单
-      const merged = Array.from(new Set([...(cfg[id]?.models ?? []), ...fetched]));
-      const prev = cfg[id]?.enabledModels;
-      const enabled = prev ? merged.filter((m) => prev.includes(m)) : merged;
+      const merged = mergeModels(cfg[id]?.models, fetched);
+      const enabled = computeEnabledModels(merged, cfg[id]?.enabledModels);
       await saveProxyConfig(id, { models: merged, enabledModels: enabled });
       void onSaved();
     } catch (e) {
@@ -740,9 +740,8 @@ function Playground({
         return;
       }
       // 合并：保留手动添加的模型，避免重新拉取时覆盖用户已录入的清单
-      const merged = Array.from(new Set([...(cfg[id]?.models ?? []), ...fetched]));
-      const prev = cfg[id]?.enabledModels;
-      const enabled = prev ? merged.filter((m) => prev.includes(m)) : merged;
+      const merged = mergeModels(cfg[id]?.models, fetched);
+      const enabled = computeEnabledModels(merged, cfg[id]?.enabledModels);
       await saveProxyConfig(id, { models: merged, enabledModels: enabled });
       void onSaved();
     } catch (e) {
