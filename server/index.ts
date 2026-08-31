@@ -1,5 +1,5 @@
 import express from 'express';
-import type { Request, Response } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -26,6 +26,18 @@ import {
   getConfigState,
 } from './config.js';
 import { getMetrics, getLogs, getSummary, sampleRateHistory } from './metrics.js';
+import {
+  loadProfiles,
+  listProfiles,
+  getAdminProfile,
+  ensureAdminProfile,
+  createProfile,
+  deleteProfile,
+  authenticate,
+  getSession,
+  clearSession,
+  isAdmin,
+} from './auth.js';
 import { proxyRouter, unifiedRouter } from './proxy.js';
 import { getCacheStats, clearCache } from './responseCache.js';
 import { renderMetrics } from './prometheus.js';
@@ -48,6 +60,19 @@ function logStartup(line: string): void {
 const app = express();
 // 代理需要转发较大的请求体（长 prompt），放宽到 20mb
 app.use(express.json({ limit: '20mb' }));
+
+// RBAC：未配置认证（无管理员档案）时放行，兼容旧行为；一旦启用则要求管理员会话
+function requireAdmin(_req: Request, res: Response, next: NextFunction): void {
+  if (!getAdminProfile()) {
+    next();
+    return;
+  }
+  if (!isAdmin()) {
+    res.status(401).json({ error: '需要管理员登录' });
+    return;
+  }
+  next();
+}
 
 app.get('/api/health', (_req: Request, res: Response) => {
   res.json({ ok: true, now: Date.now(), ttlMs: SNAPSHOT_TTL });
@@ -102,7 +127,7 @@ app.get('/api/crypto/status', (_req: Request, res: Response) => {
   res.json(getConfigState());
 });
 
-app.post('/api/crypto/unlock', (req: Request, res: Response) => {
+app.post('/api/crypto/unlock', requireAdmin, (req: Request, res: Response) => {
   const { password } = (req.body ?? {}) as { password?: string };
   if (!password) {
     res.status(400).json({ error: 'password required' });
@@ -115,7 +140,7 @@ app.post('/api/crypto/unlock', (req: Request, res: Response) => {
   res.json(getConfigState());
 });
 
-app.post('/api/crypto/init', (req: Request, res: Response) => {
+app.post('/api/crypto/init', requireAdmin, (req: Request, res: Response) => {
   const { password } = (req.body ?? {}) as { password?: string };
   if (!password) {
     res.status(400).json({ error: 'password required' });
@@ -132,7 +157,7 @@ app.post('/api/crypto/init', (req: Request, res: Response) => {
   res.json(getConfigState());
 });
 
-app.post('/api/crypto/disable', (_req: Request, res: Response) => {
+app.post('/api/crypto/disable', requireAdmin, (_req: Request, res: Response) => {
   if (!disableEncryption()) {
     res.status(500).json({ error: '关闭加密失败' });
     return;
@@ -140,15 +165,84 @@ app.post('/api/crypto/disable', (_req: Request, res: Response) => {
   res.json(getConfigState());
 });
 
+// ───────── 本地多档案 + RBAC 认证接口 ─────────
+app.get('/api/auth/session', (_req: Request, res: Response) => {
+  res.json({ session: getSession() });
+});
+
+app.get('/api/auth/profiles', (_req: Request, res: Response) => {
+  res.json({ profiles: listProfiles() });
+});
+
+app.post('/api/auth/login', (req: Request, res: Response) => {
+  const { profileId, password } = (req.body ?? {}) as { profileId?: string; password?: string };
+  if (!profileId || !password) {
+    res.status(400).json({ error: 'profileId 与 password 必填' });
+    return;
+  }
+  const role = authenticate(profileId, password);
+  if (!role) {
+    res.status(401).json({ error: '档案或密码错误' });
+    return;
+  }
+  res.json({ role, session: getSession() });
+});
+
+app.post('/api/auth/logout', (_req: Request, res: Response) => {
+  clearSession();
+  res.json({ ok: true });
+});
+
+app.post('/api/auth/setup', (req: Request, res: Response) => {
+  const { password } = (req.body ?? {}) as { password?: string };
+  if (!password) {
+    res.status(400).json({ error: 'password required' });
+    return;
+  }
+  if (getAdminProfile()) {
+    res.status(409).json({ error: '管理员已存在' });
+    return;
+  }
+  ensureAdminProfile(password);
+  res.json({ ok: true });
+});
+
+app.post('/api/auth/profile', requireAdmin, (req: Request, res: Response) => {
+  const { name, role, password } = (req.body ?? {}) as {
+    name?: string;
+    role?: 'admin' | 'viewer';
+    password?: string;
+  };
+  if (!name || !role || !password) {
+    res.status(400).json({ error: 'name / role / password 必填' });
+    return;
+  }
+  const r = createProfile(name, role, password);
+  if ('error' in r) {
+    res.status(400).json(r);
+    return;
+  }
+  res.json(r);
+});
+
+app.delete('/api/auth/profile/:id', requireAdmin, (req: Request, res: Response) => {
+  const r = deleteProfile(req.params.id);
+  if ('error' in r) {
+    res.status(400).json(r);
+    return;
+  }
+  res.json(r);
+});
+
 // 响应缓存统计 / 清空
 app.get('/api/proxy/cache', (_req: Request, res: Response) => {
   res.json(getCacheStats());
 });
-app.post('/api/proxy/cache/clear', (_req: Request, res: Response) => {
+app.post('/api/proxy/cache/clear', requireAdmin, (_req: Request, res: Response) => {
   res.json({ cleared: clearCache() });
 });
 
-app.post('/api/proxy/config', (req: Request, res: Response) => {
+app.post('/api/proxy/config', requireAdmin, (req: Request, res: Response) => {
   const { providerId, apiKey, apiKeys, baseUrl, enabled, customName, authStyle } = (req.body ?? {}) as {
     providerId?: string;
     apiKey?: string;
@@ -173,7 +267,7 @@ app.post('/api/proxy/config', (req: Request, res: Response) => {
   res.json(maskConfig(cfg));
 });
 
-app.post('/api/proxy/config/delete', (req: Request, res: Response) => {
+app.post('/api/proxy/config/delete', requireAdmin, (req: Request, res: Response) => {
   const { providerId } = (req.body ?? {}) as { providerId?: string };
   if (!providerId) {
     res.status(400).json({ error: 'providerId required' });
@@ -182,7 +276,7 @@ app.post('/api/proxy/config/delete', (req: Request, res: Response) => {
   res.json(maskConfig(deleteProvider(providerId)));
 });
 
-app.post('/api/proxy/import', (req: Request, res: Response) => {
+app.post('/api/proxy/import', requireAdmin, (req: Request, res: Response) => {
   const body = (req.body ?? {}) as { providers?: Record<string, { apiKey?: string; baseUrl?: string; enabled?: boolean }> };
   if (!body.providers || typeof body.providers !== 'object') {
     res.status(400).json({ error: 'body.providers 必须为对象 { id: { apiKey, baseUrl, enabled } }' });
@@ -332,6 +426,7 @@ function listenOn(port: number, maxPort: number): void {
 
 logStartup(`[api] 启动中… 基础端口 ${BASE_PORT}`);
 initConfigStore();
+loadProfiles();
 // 启动速率历史采样（每 2s 一次），供浮窗趋势图展示真实持久化数据
 sampleRateHistory();
 setInterval(sampleRateHistory, 2000);
