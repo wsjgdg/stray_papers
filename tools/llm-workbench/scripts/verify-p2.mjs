@@ -143,6 +143,8 @@ async function main() {
   check('/metrics 含成本计数', mText.includes('llmworkbench_cost_usd_total'));
   check('/metrics 含 key 切换计数', mText.includes('llmworkbench_key_switches_total'));
   check('/metrics 含缓存命中（含厂商 label）', mText.includes('llmworkbench_requests_total{provider="fo_prov"}') || mText.includes('llmworkbench_requests_total{provider="rr_prov"}'));
+  check('/metrics 含全局输入速率 gauge', mText.includes('llmworkbench_input_rate_tok_s'));
+  check('/metrics 含全局输出速率 gauge', mText.includes('llmworkbench_output_rate_tok_s'));
 
   // ── 浮窗汇总接口 ──
   await sleep(2200); // 等待至少一个 2s 速率历史采样周期
