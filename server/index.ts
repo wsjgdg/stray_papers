@@ -466,18 +466,38 @@ function listenOn(port: number, maxPort: number): void {
   });
 }
 
-logStartup(`[api] 启动中… 基础端口 ${BASE_PORT}`);
-initConfigStore();
-loadProfiles();
-// 启动速率历史采样（每 2s 一次），供浮窗趋势图展示真实持久化数据
-sampleRateHistory();
-setInterval(sampleRateHistory, 2000);
-(async () => {
-  if (await tryReuse(BASE_PORT)) {
-    // 复用已有实例：保持窗口短暂可见，明确告知是「已在浏览器打开」而非崩溃闪退
-    logStartup(`[api] 应用已在浏览器打开（http://127.0.0.1:${BASE_PORT}）。本窗口 2 秒后自动关闭。`);
-    setTimeout(() => process.exit(0), 2000);
-    return;
-  }
-  listenOn(BASE_PORT, BASE_PORT + 10);
-})();
+// 启动入口：封装为可导出函数，便于被 Electron 主进程直接调用复用全部后端逻辑；
+// 仅在「直接运行」时才自启（tsx server/index.ts / node server.cjs / pkg 打包的 server.bundle.cjs）。
+export function startServer(): void {
+  logStartup(`[api] 启动中… 基础端口 ${BASE_PORT}`);
+  initConfigStore();
+  loadProfiles();
+  // 启动速率历史采样（每 2s 一次），供浮窗趋势图展示真实持久化数据
+  sampleRateHistory();
+  setInterval(sampleRateHistory, 2000);
+  (async () => {
+    if (await tryReuse(BASE_PORT)) {
+      // 复用已有实例：保持窗口短暂可见，明确告知是「已在浏览器打开」而非崩溃闪退
+      logStartup(`[api] 应用已在浏览器打开（http://127.0.0.1:${BASE_PORT}）。本窗口 2 秒后自动关闭。`);
+      setTimeout(() => process.exit(0), 2000);
+      return;
+    }
+    listenOn(BASE_PORT, BASE_PORT + 10);
+  })();
+}
+
+function isRunDirectly(): boolean {
+  const entry = process.argv[1] || '';
+  return (
+    entry.endsWith('index.ts') ||
+    entry.endsWith('index.js') ||
+    entry.endsWith('index.cjs') ||
+    entry.endsWith('server.cjs') ||
+    entry.endsWith('server.js') ||
+    entry.endsWith('server.bundle.cjs')
+  );
+}
+
+if (isRunDirectly()) {
+  startServer();
+}

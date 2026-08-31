@@ -3,6 +3,9 @@ dist/
 build/
 llm-workbench.exe
 server.bundle.cjs
+electron/server.cjs
+electron/icon.png
+release/
 *.log
 *.tsbuildinfo
 .DS_Store
