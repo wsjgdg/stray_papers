@@ -1,0 +1,7 @@
+node_modules/
+dist/
+build/
+llm-workbench.exe
+server.bundle.cjs
+*.log
+.DS_Store
