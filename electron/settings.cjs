@@ -19,6 +19,9 @@ const DEFAULTS = {
   openAtLogin: false, // 开机自启（系统登录项）
   defaultFocus: 'rate', // 默认焦点指标 rate|cache|cost|model
   refreshMs: 2000, // 浮窗代理统计轮询间隔（毫秒）
+  clickThrough: false, // 浮窗点击穿透（不挡桌面）
+  fontScale: 1, // 浮窗字号缩放 0.8–1.4
+  highContrast: false, // 浮窗高对比模式
 };
 
 function readJson(file, fallback) {

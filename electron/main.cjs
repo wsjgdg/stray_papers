@@ -96,6 +96,7 @@ function applySettings() {
   if (!floatWin || !appSettings) return;
   const op = Math.min(1, Math.max(0.4, Number(appSettings.opacity) || 1));
   floatWin.setOpacity(op);
+  applyClickThrough();
   registerHotkeys();
   try {
     app.setLoginItemSettings({
@@ -105,6 +106,24 @@ function applySettings() {
     });
   } catch {
     /* 某些平台/打包形态不支持，静默忽略 */
+  }
+  // 广播设置变更给浮窗，使其实时刷新外观/穿透状态（无需重载）
+  if (floatWin && floatWin.webContents) {
+    try {
+      floatWin.webContents.send('settings:changed', appSettings);
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+// 点击穿透：开启后浮窗忽略鼠标事件（forward 让底层窗口仍可接收），不挡桌面操作
+function applyClickThrough() {
+  if (!floatWin) return;
+  try {
+    floatWin.setIgnoreMouseEvents(!!appSettings?.clickThrough, { forward: true });
+  } catch {
+    /* ignore */
   }
 }
 
@@ -134,6 +153,18 @@ function registerHotkeys() {
     } catch {
       /* ignore */
     }
+  }
+  // 全局 Cmd/Ctrl+K：聚焦主窗口并唤起搜索面板
+  try {
+    globalShortcut.register('CommandOrControl+K', () => {
+      if (!mainWin) return;
+      if (mainWin.isMinimized()) mainWin.restore();
+      mainWin.show();
+      mainWin.focus();
+      mainWin.webContents.send('app:open-search');
+    });
+  } catch {
+    /* ignore */
   }
 }
 
@@ -204,6 +235,26 @@ function createTray() {
       click: () => floatWin && (floatWin.isVisible() ? floatWin.hide() : floatWin.show()),
     },
     {
+      label: '切换浮窗点击穿透',
+      click: () => floatWin && floatWin.webContents.send('float:toggle-click-through'),
+    },
+    {
+      label: '打开设置',
+      click: () => mainWin && mainWin.webContents.send('open-settings'),
+    },
+    {
+      label: '显示今日成本',
+      click: () => {
+        fetch(`http://127.0.0.1:${ELECTRON_PORT}/api/proxy/metrics/summary`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((s) => {
+            const cost = s?.todayCostUsd != null ? `$${Number(s.todayCostUsd).toFixed(4)}` : '未知';
+            new Notification({ title: '今日成本', body: `本地代理今日成本 ${cost}` });
+          })
+          .catch(() => new Notification({ title: '今日成本', body: '无法获取代理统计' }));
+      },
+    },
+    {
       label: '重置浮窗位置',
       click: () => {
         if (!floatWin) return;
@@ -268,6 +319,25 @@ ipcMain.on('float:open-model', (_e, model) => {
   if (!mainWin.isVisible()) mainWin.show();
   mainWin.focus();
   mainWin.webContents.send('open-model', model);
+});
+
+// 点击穿透开关：翻转后应用并持久化
+ipcMain.on('float:toggle-click-through', () => {
+  if (!floatWin) return;
+  appSettings = appSettings || { ...settings.DEFAULTS };
+  appSettings.clickThrough = !appSettings.clickThrough;
+  settings.setAppSettings(appSettings);
+  applyClickThrough();
+});
+
+// 双向联动：主窗口点模型 → 转发给浮窗高亮
+ipcMain.on('model:highlight', (_e, model) => {
+  if (floatWin && floatWin.webContents) floatWin.webContents.send('highlight-model', model);
+});
+
+// 主窗口命令：打开设置面板（由托盘或全局快捷键触发）
+ipcMain.on('app:open-settings', () => {
+  if (mainWin && mainWin.webContents) mainWin.webContents.send('open-settings');
 });
 
 // 系统通知（主进程弹原生通知；Windows 需先 setAppUserModelId）
