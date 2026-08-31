@@ -223,6 +223,9 @@ type SettingsState = {
   hotkeyToggle: string;
   hotkeyCycle: string;
   position: 'topright' | 'topleft' | 'bottomleft' | 'bottomright';
+  openAtLogin: boolean;
+  defaultFocus: 'rate' | 'cache' | 'cost' | 'model';
+  refreshMs: number;
 };
 
 const SETTINGS_DEFAULT: SettingsState = {
@@ -232,6 +235,9 @@ const SETTINGS_DEFAULT: SettingsState = {
   hotkeyToggle: 'CommandOrControl+Shift+F',
   hotkeyCycle: 'CommandOrControl+Shift+M',
   position: 'topright',
+  openAtLogin: false,
+  defaultFocus: 'rate',
+  refreshMs: 2000,
 };
 
 // 浮窗与通知设置面板（仅 Electron 内有效）
@@ -271,6 +277,42 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
             className="input w-28"
             value={s.budgetUsd}
             onChange={(e) => setS({ ...s, budgetUsd: Number(e.target.value) || 0 })}
+          />
+        </label>
+
+        <label className="flex items-center justify-between gap-3 text-xs text-ink">
+          <span>开机自启（登录系统后自动运行）</span>
+          <input
+            type="checkbox"
+            checked={s.openAtLogin}
+            onChange={(e) => setS({ ...s, openAtLogin: e.target.checked })}
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-xs text-ink">
+          <span>默认焦点指标</span>
+          <select
+            className="input"
+            value={s.defaultFocus}
+            onChange={(e) => setS({ ...s, defaultFocus: e.target.value as SettingsState['defaultFocus'] })}
+          >
+            <option value="rate">速率</option>
+            <option value="cache">缓存</option>
+            <option value="cost">成本</option>
+            <option value="model">模型</option>
+          </select>
+        </label>
+
+        <label className="flex items-center justify-between gap-3 text-xs text-ink">
+          <span>刷新间隔（{s.refreshMs}ms）</span>
+          <input
+            type="range"
+            min={1000}
+            max={10000}
+            step={500}
+            className="w-40"
+            value={s.refreshMs}
+            onChange={(e) => setS({ ...s, refreshMs: Number(e.target.value) })}
           />
         </label>
 

@@ -91,12 +91,21 @@ function positionFloat() {
   applyPosition('topright');
 }
 
-// 应用设置：透明度 + 全局快捷键（位置由 applyPosition / float:snap 单独处理，避免覆盖手动拖拽）
+// 应用设置：透明度 + 全局快捷键 + 开机自启（位置由 applyPosition / float:snap 单独处理，避免覆盖手动拖拽）
 function applySettings() {
   if (!floatWin || !appSettings) return;
   const op = Math.min(1, Math.max(0.4, Number(appSettings.opacity) || 1));
   floatWin.setOpacity(op);
   registerHotkeys();
+  try {
+    app.setLoginItemSettings({
+      openAtLogin: !!appSettings.openAtLogin,
+      path: app.getPath('exe'),
+      args: [],
+    });
+  } catch {
+    /* 某些平台/打包形态不支持，静默忽略 */
+  }
 }
 
 function registerHotkeys() {
@@ -277,16 +286,30 @@ nativeTheme.on('updated', () => {
   if (floatWin && floatWin.webContents) floatWin.webContents.send('theme:change', t);
 });
 
-app.whenReady().then(async () => {
-  settings.setApp(app);
-  appSettings = settings.getAppSettings();
-  app.setAppUserModelId('com.llmworkbench.app');
-  startBackend();
-  await waitForBackend();
-  createWindows();
-  createTray();
-  applySettings(); // 应用透明度 + 全局快捷键
-});
+// 单实例锁：防止多次双击启动多个主窗口；重复启动时聚焦已有窗口
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (mainWin) {
+      if (mainWin.isMinimized()) mainWin.restore();
+      mainWin.show();
+      mainWin.focus();
+    }
+  });
+
+  app.whenReady().then(async () => {
+    settings.setApp(app);
+    appSettings = settings.getAppSettings();
+    app.setAppUserModelId('com.llmworkbench.app');
+    startBackend();
+    await waitForBackend();
+    createWindows();
+    createTray();
+    applySettings(); // 应用透明度 + 全局快捷键 + 开机自启
+  });
+}
 
 // 托盘常驻：所有窗口关闭也不退出
 app.on('window-all-closed', () => { /* keep alive in tray */ });

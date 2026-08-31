@@ -16,6 +16,9 @@ const DEFAULTS = {
   hotkeyToggle: 'CommandOrControl+Shift+F', // 开关浮窗
   hotkeyCycle: 'CommandOrControl+Shift+M', // 切换焦点指标
   position: 'topright', // topright|topleft|bottomleft|bottomright
+  openAtLogin: false, // 开机自启（系统登录项）
+  defaultFocus: 'rate', // 默认焦点指标 rate|cache|cost|model
+  refreshMs: 2000, // 浮窗代理统计轮询间隔（毫秒）
 };
 
 function readJson(file, fallback) {
