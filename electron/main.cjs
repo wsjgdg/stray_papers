@@ -71,11 +71,13 @@ function createWindows() {
   floatWin = new BrowserWindow({
     width: 300,
     height: 400,
+    minWidth: 220,
+    minHeight: 200,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
     skipTaskbar: true,
-    resizable: false,
+    resizable: true,
     show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
