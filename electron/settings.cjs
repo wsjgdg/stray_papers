@@ -15,6 +15,7 @@ const DEFAULTS = {
   minimalDefault: false, // 浮窗默认极简模式
   hotkeyToggle: 'CommandOrControl+Shift+F', // 开关浮窗
   hotkeyCycle: 'CommandOrControl+Shift+M', // 切换焦点指标
+  hotkeyMinimal: 'CommandOrControl+Shift+L', // 切换极简模式
   position: 'topright', // topright|topleft|bottomleft|bottomright
   openAtLogin: false, // 开机自启（系统登录项）
   defaultFocus: 'rate', // 默认焦点指标 rate|cache|cost|model

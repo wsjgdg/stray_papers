@@ -135,6 +135,7 @@ function registerHotkeys() {
   }
   const toggle = appSettings?.hotkeyToggle;
   const cycle = appSettings?.hotkeyCycle;
+  const minimal = appSettings?.hotkeyMinimal;
   if (toggle) {
     try {
       globalShortcut.register(toggle, () => {
@@ -152,6 +153,15 @@ function registerHotkeys() {
       });
     } catch {
       /* ignore */
+    }
+  }
+  if (minimal) {
+    try {
+      globalShortcut.register(minimal, () => {
+        if (floatWin && floatWin.webContents) floatWin.webContents.send('float:toggle-minimal');
+      });
+    } catch {
+      /* 快捷键被占用或格式无效，静默忽略 */
     }
   }
   // 全局 Cmd/Ctrl+K：聚焦主窗口并唤起搜索面板
