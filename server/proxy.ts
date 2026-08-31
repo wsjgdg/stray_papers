@@ -130,16 +130,21 @@ export async function listProviderModels(providerId: string): Promise<string[]> 
       }
       return '';
     };
+    const b = body as Record<string, unknown>;
     let raw: unknown[] = [];
     if (Array.isArray(body)) raw = body;
-    else {
-      const b = body as Record<string, unknown>;
-      if (Array.isArray(b.data)) raw = b.data;
-      else if (Array.isArray(b.models)) raw = b.models;
-    }
+    else if (Array.isArray(b.data)) raw = b.data;
+    else if (Array.isArray(b.models)) raw = b.models;
     let ids: string[] = raw.map(one).filter(Boolean);
     if (ids.length === 0) {
-      // 仍为空：把原始响应（截断）带回，便于定位该厂商返回的真实格式（或手动添加模型名兜底）
+      // 区分两类失败，给出可执行的下一步提示：
+      // 1) 识别到 data/models 数组但为空 → 多半是该 Key 未开通模型访问权限（bankofai 等会返回 200 + 空 data）
+      // 2) 完全未识别的结构 → 把原始响应（截断）带回，便于定位格式（或手动添加模型名兜底）
+      if (Array.isArray(b.data) || Array.isArray(b.models)) {
+        throw new Error(
+          `上游返回了模型列表结构，但 data/models 为空数组 @ ${modelsUrl}。通常是该 API Key 未开通模型访问权限（或账户无可用模型）。可改用「手动添加模型名」兜底。`,
+        );
+      }
       const preview = JSON.stringify(body).slice(0, 400);
       throw new Error(`上游返回空列表 @ ${modelsUrl}。原始响应: ${preview}`);
     }
