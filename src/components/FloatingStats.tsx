@@ -205,14 +205,14 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
             : 'flex cursor-grab items-center gap-1.5 border-b border-edge px-3 py-2 active:cursor-grabbing'
         }
         onPointerDown={docked ? undefined : onPointerDown}
-        style={isElectron ? ({ WebkitAppRegion: 'drag' } as React.CSSProperties) : undefined}
+        style={standalone && isElectron ? ({ WebkitAppRegion: 'drag' } as React.CSSProperties) : undefined}
       >
         <GripHorizontal size={13} className={sub} />
         <Activity size={13} className={alertAny ? 'text-[#ef6b6b]' : 'text-accent'} />
         <span className="text-[11px] font-medium">实时代理统计</span>
         <button
           className={'ml-1 rounded p-0.5 ' + sub + ' ' + hoverBg}
-          style={isElectron ? ({ WebkitAppRegion: 'no-drag' } as React.CSSProperties) : undefined}
+          style={standalone && isElectron ? ({ WebkitAppRegion: 'no-drag' } as React.CSSProperties) : undefined}
           onClick={() => setFocus((f) => FOCUS_NEXT[f])}
           title="切换焦点指标"
         >
@@ -220,7 +220,7 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
         </button>
         <button
           className={'ml-auto rounded p-0.5 ' + sub + ' ' + hoverBg}
-          style={isElectron ? ({ WebkitAppRegion: 'no-drag' } as React.CSSProperties) : undefined}
+          style={standalone && isElectron ? ({ WebkitAppRegion: 'no-drag' } as React.CSSProperties) : undefined}
           onClick={() => {
             if (api?.closeFloat) {
               api.closeFloat();
