@@ -245,6 +245,14 @@ ipcMain.on('float:snap', (_e, pos) => {
   applyPosition(appSettings.position);
 });
 
+// 模型深链：浮窗点模型 → 显示主窗口并转发给主窗口渲染进程
+ipcMain.on('float:open-model', (_e, model) => {
+  if (!mainWin) return;
+  if (!mainWin.isVisible()) mainWin.show();
+  mainWin.focus();
+  mainWin.webContents.send('open-model', model);
+});
+
 // 系统通知（主进程弹原生通知；Windows 需先 setAppUserModelId）
 ipcMain.on('app:notify', (_e, { title, body }) => {
   try {

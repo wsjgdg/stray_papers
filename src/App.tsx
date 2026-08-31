@@ -44,6 +44,8 @@ export default function App() {
   const api = (window as unknown as { electron?: any }).electron;
   const isElectron = !!api?.isElectron;
   const [showSettings, setShowSettings] = useState(false);
+  // 模型深链：浮窗点模型 → 切到「模型库」并聚焦该模型行
+  const [modelFocus, setModelFocus] = useState<{ model: string; nonce: number } | null>(null);
 
   const load = useCallback(async (force: boolean) => {
     abortRef.current?.abort();
@@ -81,6 +83,16 @@ export default function App() {
     const timer = setInterval(() => void load(false), 30_000);
     return () => clearInterval(timer);
   }, [load]);
+
+  // 模型深链：浮窗内点模型 → 主进程转发 'open-model' → 切到模型库并聚焦对应行
+  useEffect(() => {
+    const cb = (m: string) => {
+      if (!m) return;
+      setTab('models');
+      setModelFocus((prev) => ({ model: m, nonce: (prev?.nonce ?? 0) + 1 }));
+    };
+    api?.onOpenModel?.(cb);
+  }, []);
 
   const healthy = snapshot?.sources.filter((s) => s.ok).length ?? 0;
   const totalSources = snapshot?.sources.length ?? 0;
@@ -179,7 +191,7 @@ export default function App() {
             {tab === 'dashboard' && <Dashboard snapshot={snapshot} />}
             {tab === 'models' && (
               <div className="h-full min-h-0 p-4">
-                <ModelTable models={snapshot.models} />
+                <ModelTable models={snapshot.models} focus={modelFocus} />
               </div>
             )}
             {tab === 'boards' && <Leaderboards leaderboards={snapshot.leaderboards} models={snapshot.models} />}
