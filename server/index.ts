@@ -38,7 +38,7 @@ import {
   clearSession,
   isAdmin,
 } from './auth.js';
-import { proxyRouter, unifiedRouter } from './proxy.js';
+import { proxyRouter, unifiedRouter, buildAuthHeaders } from './proxy.js';
 import { getCacheStats, clearCache } from './responseCache.js';
 import { renderMetrics } from './prometheus.js';
 import type { Snapshot, ProbeResult } from './types.js';
@@ -61,9 +61,11 @@ const app = express();
 // 代理需要转发较大的请求体（长 prompt），放宽到 20mb
 app.use(express.json({ limit: '20mb' }));
 
-// RBAC：未配置认证（无管理员档案）时放行，兼容旧行为；一旦启用则要求管理员会话
+// RBAC：仅当存在「非管理员」档案（真正多人协作）时才强制管理员会话；
+// 单机所有者（仅一个管理员档案、无其它用户）本地使用无需登录即可保存配置。
 function requireAdmin(_req: Request, res: Response, next: NextFunction): void {
-  if (!getAdminProfile()) {
+  const hasNonAdmin = listProfiles().some((p) => p.role !== 'admin');
+  if (!hasNonAdmin) {
     next();
     return;
   }
@@ -309,26 +311,64 @@ app.get('/api/proxy/logs', (req: Request, res: Response) => {
   res.json({ logs: getLogs({ provider, status, limit: Number.isFinite(limit) ? limit : 200 }) });
 });
 
-// 用已保存的 key 探测已配置厂商的连通性（自定义厂商无统一探测端点，提示手动验证）
+// 用已保存的 key 探测已配置厂商的连通性：
+// 已知厂商走统一探测端点；自定义厂商直接探测其 baseUrl 的 /models（OpenAI 兼容约定）
 app.post('/api/proxy/connectivity', async (req: Request, res: Response) => {
   const cfg = loadConfig();
   const ids = ((req.body ?? {}) as { providers?: string[] }).providers ?? Object.keys(cfg.providers);
   const results: ProbeResult[] = [];
   for (const id of ids) {
     const entry = cfg.providers[id];
-    if (!entry?.apiKey) continue;
     const known = PROVIDER_MAP.get(id);
     if (known) {
+      if (!entry?.apiKey) {
+        results.push({ providerId: id, ok: false, httpStatus: null, latencyMs: null, state: 'error', modelCount: null, message: '未配置 API Key', checkedAt: Date.now() });
+        continue;
+      }
       results.push(await probeProvider(known, entry.apiKey));
-    } else {
+      continue;
+    }
+    if (!entry) {
+      results.push({ providerId: id, ok: false, httpStatus: null, latencyMs: null, state: 'error', modelCount: null, message: '未找到该厂商配置', checkedAt: Date.now() });
+      continue;
+    }
+    // 自定义厂商：探测 baseUrl 的 /models 端点
+    const baseUrl = entry.baseUrl;
+    if (!baseUrl) {
+      results.push({ providerId: id, ok: false, httpStatus: null, latencyMs: null, state: 'error', modelCount: null, message: '未配置 baseUrl（API 地址）', checkedAt: Date.now() });
+      continue;
+    }
+    if (!entry.apiKey) {
+      results.push({ providerId: id, ok: false, httpStatus: null, latencyMs: null, state: 'error', modelCount: null, message: '未配置 API Key', checkedAt: Date.now() });
+      continue;
+    }
+    const t0 = Date.now();
+    try {
+      const modelsUrl = `${baseUrl.replace(/\/+$/, '')}/models`;
+      const r = await fetch(modelsUrl, {
+        headers: buildAuthHeaders(entry.authStyle ?? 'bearer', entry.apiKey),
+        signal: AbortSignal.timeout(15000),
+      });
+      const ms = Date.now() - t0;
+      results.push({
+        providerId: id,
+        ok: r.ok,
+        httpStatus: r.status,
+        latencyMs: ms,
+        state: r.ok ? 'ok' : r.status === 401 || r.status === 403 ? 'auth-required' : 'error',
+        modelCount: null,
+        message: r.ok ? '连接正常（baseUrl 可达，鉴权通过）' : `HTTP ${r.status}`,
+        checkedAt: Date.now(),
+      });
+    } catch (e) {
       results.push({
         providerId: id,
         ok: false,
         httpStatus: null,
-        latencyMs: null,
-        state: 'error',
+        latencyMs: Date.now() - t0,
+        state: 'unreachable',
         modelCount: null,
-        message: '自定义厂商：无统一探测端点，请在「试用」页手动验证连接',
+        message: `无法连接: ${String((e as Error)?.message ?? e).slice(0, 140)}`,
         checkedAt: Date.now(),
       });
     }
