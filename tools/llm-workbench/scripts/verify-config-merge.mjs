@@ -173,6 +173,24 @@ async function main() {
     `models=${JSON.stringify(cfg?.models)}`,
   );
 
+  // 5) 显式 apiKeys:[] 不应清空已有多 key 池（与 importConfig 的 length>0 守卫一致；防止回归静默清空）
+  const seedKeys = await fetch(`${BASE}/api/proxy/config`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ providerId: ID, apiKeys: ['KEY-A', 'KEY-B'] }),
+  });
+  check('seed apiKeys 200', seedKeys.ok, `status ${seedKeys.status}`);
+  cfg = await getCfg(ID);
+  check('apiKeyCount=2 after seed', cfg?.apiKeyCount === 2, `apiKeyCount=${cfg?.apiKeyCount}`);
+  const wipe = await fetch(`${BASE}/api/proxy/config`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ providerId: ID, apiKeys: [] }),
+  });
+  check('empty apiKeys patch 200', wipe.ok, `status ${wipe.status}`);
+  cfg = await getCfg(ID);
+  check('empty apiKeys:[] does NOT wipe pool', cfg?.apiKeyCount === 2, `apiKeyCount=${cfg?.apiKeyCount}`);
+
   srv.kill('SIGKILL');
   console.log(`\n结果: ${pass} 通过 / ${fail} 失败`);
   process.exit(fail === 0 ? 0 : 1);
