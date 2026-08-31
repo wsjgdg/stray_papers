@@ -6,6 +6,7 @@ server.bundle.cjs
 electron/server.cjs
 electron/icon.png
 release/
+out-*/
 *.log
 *.tsbuildinfo
 .DS_Store
