@@ -124,6 +124,11 @@ export interface ProxyLog {
   fromCache?: boolean;
 }
 
+export interface RateSample {
+  t: number;
+  inRate: number;
+  outRate: number;
+}
 export interface ProxySummary {
   inputRateTokS: number;
   outputRateTokS: number;
@@ -135,6 +140,8 @@ export interface ProxySummary {
   totalCostUsd: number;
   cacheHitRateToday: number | null;
   recentModels: { model: string; provider: string; ts: number }[];
+  rateHistory: RateSample[];
+  rateHistoryMax: number;
 }
 export interface ProxyConfigPatch {
   apiKey?: string;

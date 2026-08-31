@@ -55,6 +55,10 @@ let nextId = 1;
 // 当日 token 消耗分桶（key = 本地日期 YYYY-MM-DD），用于浮窗「当日消耗 token」
 const dailyBuckets = new Map<string, { input: number; output: number; cacheRead: number; cost: number }>();
 
+// 全局速率历史采样（每 2s 由 index.ts 触发），用于浮窗趋势图（服务端持久，重启清零）
+const RATE_HISTORY_MAX = 180;
+const rateHistory: { t: number; inRate: number; outRate: number }[] = [];
+
 function todayKey(d = new Date()): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -203,6 +207,12 @@ export function getMetrics(): ProviderMetrics[] {
   return out.sort((x, y) => y.lastTs ?? 0 - (x.lastTs ?? 0));
 }
 
+export interface RateSample {
+  t: number; // 采样时间戳（ms）
+  inRate: number; // 全局输入速率 tok/s
+  outRate: number; // 全局输出速率 tok/s
+}
+
 export interface ProxySummary {
   inputRateTokS: number; // 全局聚合输入速率
   outputRateTokS: number; // 全局聚合输出速率
@@ -214,6 +224,31 @@ export interface ProxySummary {
   totalCostUsd: number; // 累计估算成本（USD）
   cacheHitRateToday: number | null; // 当日缓存命中率 0..1
   recentModels: { model: string; provider: string; ts: number }[]; // 最近使用的模型
+  rateHistory: RateSample[]; // 全局速率历史采样（服务端持久，重启清零）
+  rateHistoryMax: number; // 历史采样容量（点）
+}
+
+/** 当前全局速率（供速率历史采样复用） */
+function currentGlobalRates(): { inRate: number; outRate: number } {
+  const ms = getMetrics();
+  let inRate = 0;
+  let outRate = 0;
+  for (const m of ms) {
+    inRate += m.inputRateTokS;
+    outRate += m.outputRateTokS;
+  }
+  return { inRate: Math.round(inRate * 10) / 10, outRate: Math.round(outRate * 10) / 10 };
+}
+
+/** 由 index.ts 定时触发：采样一次全局速率进历史缓冲（重启清零，不落盘） */
+export function sampleRateHistory(): void {
+  const { inRate, outRate } = currentGlobalRates();
+  rateHistory.push({ t: Date.now(), inRate, outRate });
+  if (rateHistory.length > RATE_HISTORY_MAX) rateHistory.shift();
+}
+
+export function getRateHistory(): RateSample[] {
+  return rateHistory.slice();
 }
 
 /** 浮窗汇总：聚合全局速率 + 当日分桶 + 最近模型 */
@@ -248,6 +283,8 @@ export function getSummary(): ProxySummary {
     totalCostUsd: round(totalCost),
     cacheHitRateToday,
     recentModels: recent,
+    rateHistory: getRateHistory(),
+    rateHistoryMax: RATE_HISTORY_MAX,
   };
 }
 
@@ -271,4 +308,5 @@ export function resetMetrics(): void {
   nextId = 1;
   agg.clear();
   dailyBuckets.clear();
+  rateHistory.length = 0;
 }

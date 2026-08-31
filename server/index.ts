@@ -25,7 +25,7 @@ import {
   disableEncryption,
   getConfigState,
 } from './config.js';
-import { getMetrics, getLogs, getSummary } from './metrics.js';
+import { getMetrics, getLogs, getSummary, sampleRateHistory } from './metrics.js';
 import { proxyRouter, unifiedRouter } from './proxy.js';
 import { getCacheStats, clearCache } from './responseCache.js';
 import { renderMetrics } from './prometheus.js';
@@ -332,6 +332,9 @@ function listenOn(port: number, maxPort: number): void {
 
 logStartup(`[api] 启动中… 基础端口 ${BASE_PORT}`);
 initConfigStore();
+// 启动速率历史采样（每 2s 一次），供浮窗趋势图展示真实持久化数据
+sampleRateHistory();
+setInterval(sampleRateHistory, 2000);
 (async () => {
   if (await tryReuse(BASE_PORT)) {
     process.exit(0);
