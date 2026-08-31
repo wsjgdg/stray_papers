@@ -198,7 +198,7 @@ function ConfigPanel({
       patch.authStyle = f.authStyle;
       patch.apiFormat = f.apiFormat;
     }
-    setSaveState((s) => ({ ...s, [realId]: 'saving' }));
+    setSaveState((s) => ({ ...s, [id]: 'saving' }));
     try {
       await saveProxyConfig(realId, patch);
       setForm((prev) => ({ ...prev, [id]: { ...getEntry(id), key: '' } }));
@@ -207,7 +207,7 @@ function ConfigPanel({
       if (id === '__new__') setSelected(realId);
       setTimeout(() => setSaveState((s) => ({ ...s, [realId]: '' })), 2000);
     } catch (e) {
-      setSaveState((s) => ({ ...s, [realId]: `失败: ${(e as Error).message}` }));
+      setSaveState((s) => ({ ...s, [id]: `失败: ${(e as Error).message}` }));
     }
   };
 
@@ -240,7 +240,22 @@ function ConfigPanel({
     setConnecting(true);
     setConnect(null);
     try {
-      const ids = Object.keys(cfg).filter((id) => cfg[id]?.hasKey);
+      const ids = Object.keys(cfg);
+      if (ids.length === 0) {
+        setConnect([
+          {
+            providerId: '—',
+            ok: false,
+            httpStatus: null,
+            latencyMs: null,
+            state: 'error',
+            modelCount: null,
+            message: '尚未添加任何厂商，请先在左侧「添加自定义厂商」或选择主流厂商并保存',
+            checkedAt: Date.now(),
+          },
+        ]);
+        return;
+      }
       setConnect(await runProxyConnectivity(ids));
     } finally {
       setConnecting(false);

@@ -61,7 +61,7 @@ function resolveTarget(
   return { provider: synth, authStyle: entry.authStyle ?? 'bearer' };
 }
 
-function buildAuthHeaders(style: AuthStyle, apiKey: string): Record<string, string> {
+export function buildAuthHeaders(style: AuthStyle, apiKey: string): Record<string, string> {
   if (style === 'x-api-key') return { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' };
   if (style === 'google') return { 'x-goog-api-key': apiKey };
   return { Authorization: `Bearer ${apiKey}` };
