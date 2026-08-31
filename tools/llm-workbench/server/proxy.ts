@@ -1,6 +1,15 @@
 import { Router, type Request, type Response } from 'express';
 import { Readable } from 'node:stream';
 import { PROVIDERS } from './providers.js';
+import {
+  toAnthropicRequest,
+  toGeminiRequest,
+  fromAnthropicJson,
+  fromGeminiJson,
+  buildUpstreamUrl,
+  createStreamTranslator,
+  type ApiFormat,
+} from './translate.js';
 import { loadConfig, resolveKeyPool, type AuthStyle } from './config.js';
 import { recordCall } from './metrics.js';
 import { getCached, putCached, cacheKey } from './responseCache.js';
@@ -176,16 +185,35 @@ export async function proxyRequest(
       : typeof req.body === 'object' && req.body !== null
         ? JSON.stringify(req.body)
         : '';
-  const requestBytes = Buffer.byteLength(bodyStr || '0');
+
   const reqModel = (req.body as { model?: string } | undefined)?.model ?? '';
   const streamRequested =
     (req.body as { stream?: boolean } | undefined)?.stream === true || /"stream"\s*:\s*true/i.test(bodyStr);
+
+  // API 格式转换：openai 透传；anthropic/gemini 改写请求路径与请求体
+  const format: ApiFormat = (entry.apiFormat as ApiFormat) ?? 'openai';
+  let upstreamUrl: string;
+  let sendBody: string;
+  if (format === 'openai') {
+    upstreamUrl = joinUrl(baseUrl, wildcard) + search;
+    sendBody = bodyStr;
+  } else {
+    const parsed = (typeof req.body === 'object' && req.body !== null ? req.body : {}) as Record<string, unknown>;
+    const model = typeof parsed.model === 'string' ? parsed.model : '';
+    if (format === 'anthropic') {
+      sendBody = JSON.stringify(toAnthropicRequest(parsed));
+      upstreamUrl = buildUpstreamUrl('anthropic', baseUrl, model, streamRequested);
+    } else {
+      sendBody = JSON.stringify(toGeminiRequest(parsed));
+      upstreamUrl = buildUpstreamUrl('gemini', baseUrl, model, streamRequested);
+    }
+  }
 
   const t0 = Date.now();
   let ttft: number | null = null;
 
   // 响应缓存：仅缓存非流式、可幂等请求（密钥不参与 key 计算）
-  const ck = cacheKey(req.method, '/' + wildcard + search, bodyStr);
+  const ck = cacheKey(req.method, '/' + wildcard + search, bodyStr, providerId);
   const cached = !streamRequested ? getCached(ck) : null;
   if (cached) {
     res.status(cached.status);
@@ -223,14 +251,14 @@ export async function proxyRequest(
       cacheReadTokens: cacheRead,
       cacheHitRate,
       error,
-      requestBytes,
+      requestBytes: Buffer.byteLength(bodyStr || '0'),
       responseBytes,
       fromCache,
       keySwitches,
     });
   }
 
-  const upstreamUrl = joinUrl(baseUrl, wildcard) + search;
+  const translator = createStreamTranslator(format);
 
   type TryResult = { committed: boolean; status: number | null; error: string | null; retryable: boolean };
 
@@ -242,7 +270,7 @@ export async function proxyRequest(
       const upstream = await fetch(upstreamUrl, {
         method: req.method,
         headers: { ...forwardHeaders(req), ...buildAuthHeaders(authStyle, apiKey) },
-        body: bodyStr || undefined,
+        body: sendBody || undefined,
         signal: controller.signal,
         redirect: 'manual',
       });
@@ -261,24 +289,39 @@ export async function proxyRequest(
         res.set('content-type', contentType);
         if (upstream.headers.get('cache-control')) res.set('cache-control', upstream.headers.get('cache-control')!);
         const nodeStream = Readable.fromWeb(upstream.body as Parameters<typeof Readable.fromWeb>[0]);
-        let acc = Buffer.alloc(0);
+        let acc = '';
         let firstByte = false;
         nodeStream.on('data', (chunk: Buffer) => {
           if (!firstByte) {
             firstByte = true;
             ttft = Date.now() - t0;
           }
-          acc = Buffer.concat([acc, chunk]);
-          res.write(chunk);
+          if (translator) {
+            const out = translator.push(chunk.toString('utf8'));
+            if (out) {
+              res.write(out);
+              acc += out;
+            }
+          } else {
+            res.write(chunk);
+            acc += chunk.toString('utf8');
+          }
         });
         nodeStream.on('end', () => {
+          if (translator) {
+            const out = translator.flush();
+            if (out) {
+              res.write(out);
+              acc += out;
+            }
+          }
           res.end();
-          const usage = extractUsageFromSSE(acc.toString('utf8'));
-          finalize(status, usage, acc.length, null, false, retries);
+          const usage = extractUsageFromSSE(acc);
+          finalize(status, usage, Buffer.byteLength(acc), null, false, retries);
         });
         nodeStream.on('error', (e) => {
           res.end();
-          finalize(status, {}, acc.length, classifyError(status, String(e)), false, retries);
+          finalize(status, {}, Buffer.byteLength(acc), classifyError(status, String(e)), false, retries);
         });
         return { committed: true, status, error: null, retryable: false };
       }
@@ -286,31 +329,43 @@ export async function proxyRequest(
       // 非流式：缓冲后回传并解析 usage
       const buf = Buffer.from(await upstream.arrayBuffer());
       const cacheControl = upstream.headers.get('cache-control') ?? undefined;
-      const text = buf.toString('utf8');
 
       if (status >= 400) {
-        // 错误响应：由调用方按 retryable 决定重试下一个 key 或直接返回
+        const text = buf.toString('utf8');
         return { committed: false, status, error: classifyError(status, text), retryable: isRetryable(status) };
+      }
+
+      // 非 openai 格式：把上游响应转换为 OpenAI 风格再回传（保证 usage 等字段一致）
+      let sendBodyOut = buf;
+      if (format !== 'openai' && status >= 200 && status < 300) {
+        try {
+          const parsed = JSON.parse(buf.toString('utf8'));
+          sendBodyOut = Buffer.from(
+            JSON.stringify(format === 'anthropic' ? fromAnthropicJson(parsed) : fromGeminiJson(parsed)),
+          );
+        } catch {
+          /* 转换失败则原样回传 */
+        }
       }
 
       res.status(status);
       res.set('content-type', contentType);
       if (cacheControl) res.set('cache-control', cacheControl);
-      res.send(buf);
+      res.send(sendBodyOut);
 
       let usage: Usage = {};
       try {
-        usage = extractUsageFromObject(JSON.parse(text));
+        usage = extractUsageFromObject(JSON.parse(sendBodyOut.toString('utf8')));
       } catch {
         /* 非 JSON */
       }
-      finalize(status, usage, buf.length, null, false, retries);
+      finalize(status, usage, sendBodyOut.length, null, false, retries);
 
-      // 缓存可缓存的成功响应（非流式）
+      // 缓存可缓存的成功响应（非流式）：存转换后的 OpenAI 体，保证回放一致
       if (!streamRequested && status >= 200 && status < 400) {
         const headers: Record<string, string> = { 'content-type': contentType };
         if (cacheControl) headers['cache-control'] = cacheControl;
-        putCached(ck, { status, headers, body: buf, storedAt: Date.now() });
+        putCached(ck, { status, headers, body: sendBodyOut, storedAt: Date.now() });
       }
       return { committed: true, status, error: null, retryable: false };
     } catch (err) {
