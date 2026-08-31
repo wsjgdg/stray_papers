@@ -95,6 +95,11 @@ export default function FloatingStats() {
 
   const rate = data?.cacheHitRateToday != null ? `${(data.cacheHitRateToday * 100).toFixed(1)}%` : '—';
   const model = data?.recentModels?.[0];
+  // 优先用服务端持久化的速率历史；缺失时回退到本前端轮询缓冲
+  const series =
+    data?.rateHistory && data.rateHistory.length >= 2
+      ? data.rateHistory.map((s) => ({ in: s.inRate, out: s.outRate }))
+      : samples;
 
   return (
     <div
@@ -125,7 +130,7 @@ export default function FloatingStats() {
         <Row label="输入速率" value={data ? `${data.inputRateTokS} tok/s` : '—'} />
         <Row label="输出速率" value={data ? `${data.outputRateTokS} tok/s` : '—'} />
         <div className="pt-0.5">
-          <Sparkline samples={samples} />
+          <Sparkline samples={series} />
           <div className="mt-1 flex items-center justify-center gap-3 text-[9px] text-muted">
             <span className="flex items-center gap-1">
               <i className="inline-block h-2 w-2 rounded-full" style={{ background: '#5b9bff' }} />
@@ -135,7 +140,7 @@ export default function FloatingStats() {
               <i className="inline-block h-2 w-2 rounded-full" style={{ background: '#5ec8a0' }} />
               输出
             </span>
-            <span>近 {samples.length * 2}s 趋势</span>
+            <span>近 {series.length * 2}s 趋势</span>
           </div>
         </div>
         <Row label="缓存命中" value={rate} accent />

@@ -145,12 +145,19 @@ async function main() {
   check('/metrics 含缓存命中（含厂商 label）', mText.includes('llmworkbench_requests_total{provider="fo_prov"}') || mText.includes('llmworkbench_requests_total{provider="rr_prov"}'));
 
   // ── 浮窗汇总接口 ──
+  await sleep(2200); // 等待至少一个 2s 速率历史采样周期
   const sum = await (await fetch(`${base}/api/proxy/metrics/summary`)).json();
   check('汇总接口返回当日输入 tokens > 0', sum.todayInputTokens > 0, `in=${sum.todayInputTokens}`);
   check('汇总接口返回当日输出 tokens > 0', sum.todayOutputTokens > 0, `out=${sum.todayOutputTokens}`);
   check('汇总接口含最近模型列表', Array.isArray(sum.recentModels) && sum.recentModels.length > 0, `n=${sum.recentModels?.length}`);
   check('汇总接口含聚合速率字段', typeof sum.inputRateTokS === 'number' && typeof sum.outputRateTokS === 'number');
   check('汇总接口含当日成本', typeof sum.todayCostUsd === 'number' && sum.todayCostUsd > 0);
+  check('汇总接口含速率历史 rateHistory 数组', Array.isArray(sum.rateHistory) && sum.rateHistory.length >= 2, `len=${sum.rateHistory?.length}`);
+  const rhOk =
+    Array.isArray(sum.rateHistory) &&
+    sum.rateHistory.every((s) => typeof s.t === 'number' && typeof s.inRate === 'number' && typeof s.outRate === 'number');
+  check('rateHistory 每项含数值字段 t/inRate/outRate', rhOk);
+  check('rateHistoryMax = 180', sum.rateHistoryMax === 180, `max=${sum.rateHistoryMax}`);
 
   console.log(`\n结果: ${pass} 通过 / ${fail} 失败`);
   srv.kill('SIGKILL');
