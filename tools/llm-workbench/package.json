@@ -15,7 +15,8 @@
     "make:icon": "node scripts/make-icon.mjs",
     "build:server:electron": "esbuild server/index.ts --bundle --platform=node --format=cjs --outfile=electron/server.cjs",
     "electron:dev": "npm run build && npm run build:server:electron && npm run make:icon && electron .",
-    "electron:build": "npm run build && npm run build:server:electron && npm run make:icon && electron-builder"
+    "electron:build": "npm run build && npm run build:server:electron && npm run make:icon && electron-builder",
+    "electron:build:portable": "npm run build && npm run build:server:electron && npm run make:icon && electron-builder --win dir"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -50,7 +51,8 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
-      "package.json"
+      "package.json",
+      "!node_modules/**/*"
     ],
     "directories": {
       "output": "release"
