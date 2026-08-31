@@ -152,6 +152,7 @@ function ConfigPanel({
   const [connecting, setConnecting] = useState(false);
   const [modelsLoading, setModelsLoading] = useState<string | null>(null);
   const [modelsError, setModelsError] = useState<Record<string, string>>({});
+  const [manualModel, setManualModel] = useState('');
 
   const isCustom = (id: string) => id !== '__new__' && !providers.some((p) => p.id === id);
   const knownIds = new Set(providers.map((p) => p.id));
@@ -270,6 +271,34 @@ function ConfigPanel({
       void onSaved();
     } catch (e) {
       setModelsError((er) => ({ ...er, [id]: `保存失败: ${(e as Error).message}` }));
+    }
+  };
+
+  // 手动添加模型名（自动拉取失败 / 上游无 /models 时的兜底），同时写入 models + enabledModels
+  const addManualModelCfg = async (id: string, name: string) => {
+    const name2 = name.trim();
+    if (!id || !name2) return;
+    const existing = cfg[id]?.models ?? [];
+    const models = existing.includes(name2) ? existing : [...existing, name2];
+    const enabled = new Set(cfg[id]?.enabledModels ?? []);
+    enabled.add(name2);
+    try {
+      await saveProxyConfig(id, { models, enabledModels: [...enabled] });
+      setManualModel('');
+      void onSaved();
+    } catch (e) {
+      setModelsError((er) => ({ ...er, [id]: `保存失败: ${(e as Error).message}` }));
+    }
+  };
+
+  // 「启用」开关即时落盘：避免用户勾选后忘了点保存，导致厂商不生效/不出现在试用下拉
+  const setEnabled = async (id: string, val: boolean) => {
+    update(id, { enabled: val });
+    try {
+      await saveProxyConfig(id, { enabled: val });
+      void onSaved();
+    } catch (e) {
+      setSaveState((s) => ({ ...s, [id]: `启用保存失败: ${(e as Error).message}` }));
     }
   };
 
@@ -472,14 +501,14 @@ function ConfigPanel({
                     <input
                       type="checkbox"
                       checked={f.enabled}
-                      onChange={(e) => update(selected, { enabled: e.target.checked })}
+                      onChange={(e) => setEnabled(selected, e.target.checked)}
                     />
                     启用
                   </label>
                   <button className="btn btn-primary" onClick={() => save(selected)}>
                     保存
                   </button>
-                  {cfg[selected]?.hasKey && (
+                  {cfg[selected] && (
                     <button className="btn btn-ghost" onClick={() => onDelete(selected)} title="删除配置">
                       <Trash2 size={12} />
                     </button>
@@ -487,7 +516,7 @@ function ConfigPanel({
                   {saveState[selected] && <span className="text-[11px] text-accent">{saveState[selected]}</span>}
                 </div>
 
-                {cfg[selected]?.hasKey && (
+                {cfg[selected] && (
                   <div className="space-y-2 rounded-lg border border-edge bg-[#0d1728] p-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="text-[11px] text-muted">
@@ -524,9 +553,24 @@ function ConfigPanel({
                       </div>
                     ) : (
                       <div className="text-[11px] text-muted">
-                        尚未获取模型列表，点击上方按钮从上游拉取（需已填写正确 baseUrl 与 Key 并保存）。
+                        尚未获取模型列表，点「自动获取」从上游拉取（需已填正确 baseUrl 与 Key 并保存）；拉取失败可手动添加下方模型名。
                       </div>
                     )}
+                    <div className="flex items-center gap-2 border-t border-edge pt-2">
+                      <input
+                        className="input flex-1"
+                        placeholder="手动添加模型名（如 gpt-4o，拉取失败兜底）"
+                        value={manualModel}
+                        onChange={(e) => setManualModel(e.target.value)}
+                      />
+                      <button
+                        className="btn btn-sm"
+                        onClick={() => addManualModelCfg(selected, manualModel)}
+                        disabled={!manualModel.trim()}
+                      >
+                        添加
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -599,7 +643,7 @@ function Playground({
   onSaved: () => void;
 }) {
   const configured = Object.entries(cfg)
-    .filter(([, c]) => c.hasKey && c.enabled)
+    .filter(([, c]) => c.enabled)
     .map(([id, c]) => ({
       id,
       name: c.name,
@@ -757,7 +801,7 @@ function Playground({
 
   if (configured.length === 0) {
     return (
-      <Empty text="尚未配置任何已启用的厂商 Key，请先到「配置 / 导入」页添加。" />
+      <Empty text="尚未启用任何厂商，请先到「配置 / 导入」页添加并勾选「启用」。" />
     );
   }
 
