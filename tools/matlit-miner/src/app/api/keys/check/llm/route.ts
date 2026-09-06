@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 // Validates the LLM entry the user is currently editing in Settings.
 //
 // Called by SettingsDialog.testLLM with the four legacy single-entry headers:
-//   x-llm-provider  'openai' | 'zai'
+//   x-llm-provider  'openai' (the only supported backend now)
 //   x-llm-baseurl   OpenAI-compatible base URL (must end in /v1)
 //   x-llm-apikey    bearer key
 //   x-llm-model     model id
@@ -23,21 +23,9 @@ import { NextRequest, NextResponse } from 'next/server'
 export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
-  const provider = (req.headers.get('x-llm-provider') ?? '').trim().toLowerCase()
   const baseURL = (req.headers.get('x-llm-baseurl') ?? '').trim()
   const apiKey = (req.headers.get('x-llm-apikey') ?? '').trim()
   const model = (req.headers.get('x-llm-model') ?? '').trim()
-
-  // The Z.ai SDK reads credentials from the server environment, so there is
-  // no client-supplied key to validate here. Say so rather than reporting a
-  // pass that was never actually checked.
-  if (provider === 'zai') {
-    return NextResponse.json({
-      ok: true,
-      message:
-        'Z.ai SDK · credentials come from the server environment, not from this field, so there is nothing to test here. Real calls will still work if the server is configured.',
-    })
-  }
 
   if (!baseURL) {
     return NextResponse.json({ ok: false, message: 'Base URL is empty.' })

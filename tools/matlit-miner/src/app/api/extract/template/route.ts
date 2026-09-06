@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import ZAI from 'z-ai-web-dev-sdk'
 import { db } from '@/lib/db'
 import { getOrSet } from '@/lib/cache'
 import {
@@ -9,6 +8,11 @@ import {
   coerceFieldValue,
   type ExtractionTemplate,
 } from '@/lib/extraction-templates'
+import {
+  callLLMWithFailover,
+  getLLMConfigsFromHeaders,
+  type LLMConfigEntry,
+} from '@/lib/llm'
 
 // POST /api/extract/template
 // Body: { materialId?: string, templateId: string, paperIds?: string[] }
@@ -39,48 +43,6 @@ interface ResponseShape {
   templateName: string
   results: TemplateResult[]
   cached: boolean
-}
-
-let _zai: Awaited<ReturnType<typeof ZAI.create>> | null = null
-async function getZai() {
-  if (!_zai) _zai = await ZAI.create()
-  return _zai
-}
-
-/**
- * Call the LLM with simple retry/backoff for transient errors.
- * Mirrors the helper in src/lib/llm.ts without modifying that file.
- */
-async function callLLM(
-  messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
-  retries = 3,
-): Promise<string> {
-  const zai = await getZai()
-  let lastErr: unknown = null
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      const completion = await zai.chat.completions.create({
-        messages,
-        thinking: { type: 'disabled' },
-      })
-      return completion.choices[0]?.message?.content || ''
-    } catch (e) {
-      lastErr = e
-      const msg = (e as Error).message || ''
-      const isTransient =
-        msg.includes('429') ||
-        msg.includes('Too many requests') ||
-        msg.includes('rate limit') ||
-        msg.includes('ECONNRESET') ||
-        msg.includes('ETIMEDOUT') ||
-        msg.includes('fetch failed') ||
-        msg.includes('network')
-      if (!isTransient || attempt === retries) break
-      const wait = 1500 * Math.pow(2, attempt)
-      await new Promise((r) => setTimeout(r, wait))
-    }
-  }
-  throw lastErr instanceof Error ? lastErr : new Error('LLM call failed')
 }
 
 function stripJsonFence(text: string): string {
@@ -114,18 +76,23 @@ function safeParse(text: string): Record<string, unknown> | null {
 async function extractPaper(
   template: ExtractionTemplate,
   paper: { id: string; title: string; abstract: string },
+  configs: LLMConfigEntry[],
 ): Promise<RowData> {
   const prompt = buildExtractionPrompt(template, paper.title, paper.abstract)
   const data: RowData = {}
   try {
-    const content = await callLLM([
-      {
-        role: 'assistant',
-        content:
-          'You are a precise materials-science data extraction assistant. Always output strict JSON only.',
-      },
-      { role: 'user', content: prompt },
-    ])
+    const content = await callLLMWithFailover(
+      [
+        {
+          role: 'system',
+          content:
+            'You are a precise materials-science data extraction assistant. Always output strict JSON only.',
+        },
+        { role: 'user', content: prompt },
+      ],
+      configs,
+      { retries: 3, timeoutMs: 120_000 },
+    )
     const parsed = safeParse(content)
     for (const field of template.fields) {
       data[field.key] = parsed ? coerceFieldValue(field, parsed[field.key]) : null
@@ -142,6 +109,7 @@ function hashPaperIds(ids: string[]): string {
 }
 
 export async function POST(req: NextRequest) {
+  const configs = getLLMConfigsFromHeaders(req.headers)
   const body = await req.json().catch(() => ({}))
   const { materialId, templateId, paperIds } = body as {
     materialId?: string
@@ -247,11 +215,15 @@ export async function POST(req: NextRequest) {
         while (idx < papers.length) {
           const i = idx++
           const p = papers[i]
-          const data = await extractPaper(tmpl, {
-            id: p.id,
-            title: p.title,
-            abstract: p.abstract,
-          })
+          const data = await extractPaper(
+            tmpl,
+            {
+              id: p.id,
+              title: p.title,
+              abstract: p.abstract,
+            },
+            configs,
+          )
           results[i] = {
             paperId: p.id,
             title: p.title,

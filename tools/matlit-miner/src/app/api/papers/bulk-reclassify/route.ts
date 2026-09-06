@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { classifyAbstract } from '@/lib/llm'
+import { classifyAbstract, getLLMConfigsFromHeaders } from '@/lib/llm'
 
 // POST /api/papers/bulk-reclassify
 // Body: { ids: string[] }
@@ -8,6 +8,9 @@ import { classifyAbstract } from '@/lib/llm'
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}))
   const { ids } = body as { ids?: string[] }
+
+  // Configure LLM from request headers (openai-compatible backend).
+  const configs = getLLMConfigsFromHeaders(req.headers)
   if (!Array.isArray(ids) || ids.length === 0) {
     return NextResponse.json({ error: 'ids array is required' }, { status: 400 })
   }
@@ -25,7 +28,7 @@ export async function POST(req: NextRequest) {
     const chunk = papers.slice(i, i + CHUNK)
     const results = await Promise.allSettled(
       chunk.map(async (p) => {
-        const result = await classifyAbstract(p.abstract, p.material.name)
+        const result = await classifyAbstract(p.abstract, p.material.name, undefined, configs)
         const toBool = (v: unknown) => v === true || v === 'true'
         const toStr = (v: unknown) => (typeof v === 'string' ? v : String(v ?? ''))
         if (p.classification) {

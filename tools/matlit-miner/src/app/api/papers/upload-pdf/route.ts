@@ -11,14 +11,15 @@ import { PDFParse } from 'pdf-parse'
 // pdfjs-dist/legacy/build/pdf.mjs). This is the officially-supported
 // escape hatch for server-side / non-worker contexts.
 import * as pdfjsWorker from 'pdfjs-dist/legacy/build/pdf.worker.mjs'
-import ZAI from 'z-ai-web-dev-sdk'
 import { db } from '@/lib/db'
 import {
-  setLLMConfig,
+  callLLMWithFailover,
+  getLLMConfigsFromHeaders,
   setLLMIdentifier,
   clearLLMIdentifier,
   getIdentifierFromHeaders,
   QuotaExceededError,
+  type LLMConfigEntry,
 } from '@/lib/llm'
 import { invalidate } from '@/lib/cache'
 import { rateLimit, getIdentifier, RATE_LIMITS } from '@/lib/rate-limit'
@@ -151,18 +152,18 @@ function normalizeDoi(raw: string): string {
 }
 
 /**
- * Send the PDF text to the LLM and ask for a structured JSON extraction.
- * Uses z-ai-web-dev-sdk directly (same pattern as
- * /api/vlm/phase-diagram/route.ts) so we can request a richer schema than
- * the higher-level helpers in src/lib/llm.ts expose.
+ * Send the PDF text to the configured OpenAI-compatible backend and ask for a
+ * structured JSON extraction via `callLLMWithFailover` (retry + failover
+ * included). A richer schema than the higher-level helpers in src/lib/llm.ts
+ * expose is used here.
  *
  * NOTE: quota tracking is handled by the shared identifier set on entry
- * via setLLMIdentifier(); we don't go through callLLM here, so per-call
- * token accounting is best-effort only.
+ * via setLLMIdentifier(); callLLMWithFailover records per-call token usage.
  */
-async function extractWithLLM(text: string): Promise<Partial<ExtractedData>> {
-  const zai = await ZAI.create()
-
+async function extractWithLLM(
+  text: string,
+  configs: LLMConfigEntry[],
+): Promise<Partial<ExtractedData>> {
   const truncated = text.slice(0, MAX_TEXT_CHARS)
   const prompt = `You are a materials-science literature extraction assistant. Read the following text (extracted from a PDF) and return a STRICT JSON object with the fields below. If a field is not found, use an empty string "" (or null for year). Do NOT wrap the JSON in markdown fences.
 
@@ -188,19 +189,18 @@ Only output the JSON object, nothing else.
 PDF TEXT:
 ${truncated}`
 
-  const completion = await zai.chat.completions.create({
-    messages: [
+  const content = await callLLMWithFailover(
+    [
       {
-        role: 'assistant',
+        role: 'system',
         content:
           'You are a precise materials-science data extraction assistant. Always output strict JSON only — no markdown, no commentary.',
       },
       { role: 'user', content: prompt },
     ],
-    thinking: { type: 'disabled' },
-  })
-
-  const content = completion.choices?.[0]?.message?.content || ''
+    configs,
+    { retries: 3, timeoutMs: 120_000 },
+  )
   const parsed = safeParse(content)
   if (!parsed) {
     return {
@@ -352,18 +352,9 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // ── Configure LLM (same pattern as /api/papers/translate) ──────────────
-  const llmProvider = req.headers.get('x-llm-provider')
-  if (llmProvider === 'openai') {
-    setLLMConfig({
-      provider: 'openai',
-      baseURL: req.headers.get('x-llm-baseurl') || undefined,
-      apiKey: req.headers.get('x-llm-apikey') || undefined,
-      model: req.headers.get('x-llm-model') || undefined,
-    })
-  } else {
-    setLLMConfig({ provider: 'zai' })
-  }
+  // ── Configure LLM (read per-request backend from headers, fall back to
+  //    server env OpenAI config) ──────────────────────────────────────────
+  const configs = getLLMConfigsFromHeaders(req.headers)
   setLLMIdentifier(getIdentifierFromHeaders(req.headers))
 
   const results: PerFileResult[] = []
@@ -424,7 +415,7 @@ export async function POST(req: NextRequest) {
         // ── 2) LLM extraction ────────────────────────────────────────────
         let extracted: Partial<ExtractedData>
         try {
-          extracted = await extractWithLLM(text)
+          extracted = await extractWithLLM(text, configs)
         } catch (e) {
           if (e instanceof QuotaExceededError) {
             // Surface the quota error specifically — caller can decide
@@ -499,7 +490,7 @@ export async function POST(req: NextRequest) {
             evidence: `Extracted from uploaded PDF "${filename}"`,
             confidence: typeof extracted.confidence === 'number' ? extracted.confidence : 0.5,
             status: 'extracted',
-            model: 'z-ai-web-dev-sdk',
+            model: configs[0]?.model || 'gpt-4o-mini',
           },
           update: {
             materialId: material.id,

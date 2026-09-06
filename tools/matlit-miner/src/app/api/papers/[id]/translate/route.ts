@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { setLLMConfig, translatePaperText, isLLMTimeoutError } from '@/lib/llm'
+import {
+  translatePaperText,
+  getLLMConfigsFromHeaders,
+  isLLMTimeoutError,
+} from '@/lib/llm'
 import { detectLanguage, languageLabel } from '@/lib/language-detector'
 import { apiError, apiNotFound } from '@/lib/api-error'
 
@@ -20,18 +24,8 @@ export async function POST(
 ) {
   const { id } = await params
 
-  // Configure LLM from request headers
-  const llmProvider = req.headers.get('x-llm-provider')
-  if (llmProvider === 'openai') {
-    setLLMConfig({
-      provider: 'openai',
-      baseURL: req.headers.get('x-llm-baseurl') || undefined,
-      apiKey: req.headers.get('x-llm-apikey') || undefined,
-      model: req.headers.get('x-llm-model') || undefined,
-    })
-  } else {
-    setLLMConfig({ provider: 'zai' })
-  }
+  // Configure LLM from request headers (falls back to the server env OpenAI config)
+  const configs = getLLMConfigsFromHeaders(req.headers)
 
   const paper = await db.paper.findUnique({
     where: { id },
@@ -89,6 +83,8 @@ export async function POST(
       paper.title,
       paper.abstract,
       detected,
+      undefined,
+      configs,
     )
     await db.paper.update({
       where: { id },

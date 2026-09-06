@@ -148,7 +148,8 @@ function buildFallbackReview(data: ReviewData): string {
  *
  * `configs` is the failover list (typically from `getLLMConfigsFromHeaders`).
  * When omitted, `callLLMWithFailover` would throw — so callers MUST supply
- * at least one entry (the route handler always does, defaulting to Z.ai).
+ * at least one entry (the route handler always does, defaulting to the
+ * server env OpenAI config).
  */
 async function generateLLMReview(
   data: ReviewData,

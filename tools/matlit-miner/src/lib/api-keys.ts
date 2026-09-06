@@ -25,12 +25,19 @@ export function getApiKeysFromHeaders(req: Request): ApiKeysConfig {
 
 /**
  * Default API keys (used when user hasn't configured their own).
+ *
+ * The contact email used for polite-pool APIs (Crossref / OpenAlex /
+ * Unpaywall) can be overridden via the `CONTACT_EMAIL` server env var; it
+ * otherwise falls back to a generic placeholder. Set it to a real, monitored
+ * address in production so API providers can reach you about rate limits.
  */
+const CONTACT_EMAIL = process.env.CONTACT_EMAIL || 'research@example.com'
+
 export const DEFAULT_API_KEYS: ApiKeysConfig = {
   semanticScholarKey: '',
-  crossrefEmail: 'research@example.com',
-  openalexEmail: 'research@matlit.dev',
-  unpaywallEmail: 'research@matlit.dev',
+  crossrefEmail: CONTACT_EMAIL,
+  openalexEmail: CONTACT_EMAIL,
+  unpaywallEmail: CONTACT_EMAIL,
 }
 
 /**

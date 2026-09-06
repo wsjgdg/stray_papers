@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { setLLMConfig, translatePaperText } from '@/lib/llm'
+import { translatePaperText, getLLMConfigsFromHeaders } from '@/lib/llm'
 import { detectLanguage } from '@/lib/language-detector'
 import { invalidate } from '@/lib/cache'
 
@@ -50,19 +50,9 @@ export async function POST(req: NextRequest) {
   // in a single request.
   const uniqueIds = Array.from(new Set(paperIds.map(String))).slice(0, MAX_PER_CALL)
 
-  // Configure LLM from request headers (same pattern as the per-paper
-  // translate route and the search-cn route).
-  const llmProvider = req.headers.get('x-llm-provider')
-  if (llmProvider === 'openai') {
-    setLLMConfig({
-      provider: 'openai',
-      baseURL: req.headers.get('x-llm-baseurl') || undefined,
-      apiKey: req.headers.get('x-llm-apikey') || undefined,
-      model: req.headers.get('x-llm-model') || undefined,
-    })
-  } else {
-    setLLMConfig({ provider: 'zai' })
-  }
+  // Configure LLM from request headers (falls back to the server env OpenAI
+  // config when none supplied).
+  const configs = getLLMConfigsFromHeaders(req.headers)
 
   // Fetch all candidate papers in one query.
   const papers = await db.paper.findMany({
@@ -127,7 +117,7 @@ export async function POST(req: NextRequest) {
 
     // (3) Non-English paper — call the LLM.
     try {
-      const translation = await translatePaperText(p.title, p.abstract, detected)
+      const translation = await translatePaperText(p.title, p.abstract, detected, undefined, configs)
       await db.paper.update({
         where: { id },
         data: {

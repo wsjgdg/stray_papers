@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { extractData } from '@/lib/llm'
-import { setLLMConfig } from '@/lib/llm'
+import { extractData, getLLMConfigsFromHeaders } from '@/lib/llm'
 
 // POST /api/papers/[id]/reextract
 // Force re-run LLM extraction on a single paper (creates classification if missing).
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params
+
+  // Configure LLM from request headers (openai-compatible backend).
+  const configs = getLLMConfigsFromHeaders(req.headers)
   const paper = await db.paper.findUnique({
     where: { id },
     include: { material: true, classification: true },
@@ -19,7 +21,7 @@ export async function POST(
   }
 
   const text = paper.abstract || paper.title
-  const result = await extractData(text, paper.material.name)
+  const result = await extractData(text, paper.material.name, undefined, configs)
 
   // First ensure a classification row exists (so we can attach extraction data)
   let classification = paper.classification

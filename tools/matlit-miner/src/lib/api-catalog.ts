@@ -152,9 +152,9 @@ export const API_HEADERS: ApiHeaderDoc[] = [
     name: 'x-llm-provider',
     service: 'LLM',
     description:
-      'LLM provider override: "zai" (default, in-process) or "openai" (use the OpenAI-compatible endpoint below).',
+      'LLM provider override: only "openai" (OpenAI-compatible endpoint) is supported now.',
     descriptionZh:
-      'LLM 服务提供方：默认 "zai"（内置）；设为 "openai" 时使用下方 OpenAI 兼容端点。',
+      'LLM 服务提供方：仅支持 "openai"（OpenAI 兼容端点）。',
     secret: false,
     obtainUrl: 'https://platform.openai.com/docs/api-reference',
     obtainLabel: 'OpenAI API reference →',
@@ -210,7 +210,7 @@ export const API_CATALOG: ApiEndpoint[] = [
       { name: 'x-crossref-email', type: 'string', required: false, in: 'header', description: 'Contact email for the CrossRef polite pool (~50 req/sec).' },
       { name: 'x-openalex-email', type: 'string', required: false, in: 'header', description: 'Contact email for the OpenAlex polite pool.' },
       { name: 'x-unpaywall-email', type: 'string', required: false, in: 'header', description: 'Contact email for Unpaywall OA lookups (defaults to the CrossRef email).' },
-      { name: 'x-llm-provider', type: 'string', required: false, in: 'header', description: 'Override the LLM provider ("zai" default, or "openai").' },
+      { name: 'x-llm-provider', type: 'string', required: false, in: 'header', description: 'LLM provider — only "openai" is supported now.' },
       { name: 'x-llm-baseurl', type: 'string', required: false, in: 'header', description: 'OpenAI-compatible base URL (when provider=openai).' },
       { name: 'x-llm-apikey', type: 'string', required: false, in: 'header', description: 'OpenAI-compatible API key (when provider=openai).' },
       { name: 'x-llm-model', type: 'string', required: false, in: 'header', description: 'Model id (when provider=openai).' },
@@ -271,7 +271,7 @@ export const API_CATALOG: ApiEndpoint[] = [
       { name: 'semanticScholar', type: 'string', required: false, in: 'body', description: 'Semantic Scholar API key.' },
       { name: 'crossref', type: 'string', required: false, in: 'body', description: 'CrossRef polite-pool email.' },
       { name: 'openalex', type: 'string', required: false, in: 'body', description: 'OpenAlex polite-pool email.' },
-      { name: 'llmProvider', type: 'string', required: false, in: 'body', description: '"zai" (default) or "openai".' },
+      { name: 'llmProvider', type: 'string', required: false, in: 'body', description: '"openai" (OpenAI-compatible).' },
       { name: 'llmBaseURL', type: 'string', required: false, in: 'body', description: 'OpenAI-compatible base URL.' },
       { name: 'llmApiKey', type: 'string', required: false, in: 'body', description: 'OpenAI-compatible API key.' },
       { name: 'llmModel', type: 'string', required: false, in: 'body', description: 'Model id (e.g. gpt-4o-mini).' },
@@ -514,7 +514,7 @@ export const API_CATALOG: ApiEndpoint[] = [
     path: '/api/classify',
     category: 'Classification',
     anchor: 'classify-run',
-    description: 'Batch-classify unclassified papers for one (or all) materials using the LLM. Optional OpenAI-compatible headers override the default z-ai provider.',
+    description: 'Batch-classify unclassified papers for one (or all) materials using the LLM. Provide OpenAI-compatible headers to select the backend.',
     descriptionZh: '使用大模型批量分类未分类论文（可指定 materialId），支持 OpenAI 兼容请求头。',
     params: [
       { name: 'materialId', type: 'string', required: false, in: 'body', description: 'Restrict to one material (omit = all).' },

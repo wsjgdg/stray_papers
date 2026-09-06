@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import ZAI from 'z-ai-web-dev-sdk'
 import { db } from '@/lib/db'
 import { getCached, setCached } from '@/lib/cache'
+import {
+  callLLMWithFailover,
+  getLLMConfigsFromHeaders,
+  type LLMConfigEntry,
+} from '@/lib/llm'
 
 // POST /api/classify/context
 //
@@ -48,14 +52,6 @@ const VALID_CONTEXTS: ReadonlySet<CitationContext> = new Set([
   'neutral',
 ])
 
-// Lazily-instantiated ZAI client shared across requests in the same Node
-// process (the Next.js dev server is single-instance, so this is safe).
-let _zai: Awaited<ReturnType<typeof ZAI.create>> | null = null
-async function getZai() {
-  if (!_zai) _zai = await ZAI.create()
-  return _zai
-}
-
 function cacheKey(paperId: string) {
   return `citation-context:${paperId}`
 }
@@ -74,15 +70,16 @@ function stripJsonFence(text: string): string {
 }
 
 /**
- * Call ZAI chat to classify a single paper's citation context toward the
- * given material. Returns a neutral fallback (with the error message in the
- * reason field) on failure so the API never throws 500 on transient LLM
- * errors.
+ * Call the OpenAI-compatible backend to classify a single paper's citation
+ * context toward the given material. Throws on failure (after failover/retry
+ * in `callLLMWithFailover`); the caller's worker() catches it and records a
+ * neutral fallback so the API never crashes on transient LLM errors.
  */
 async function classifyContext(
   abstract: string,
   materialName: string,
   paperTitle: string,
+  configs: LLMConfigEntry[],
 ): Promise<{ context: CitationContext; reason: string }> {
   const prompt = `You are a materials-science citation-context analyst (in the spirit of Scite.ai).
 Given the paper below, classify its stance toward the material "${materialName}":
@@ -100,58 +97,35 @@ ${abstract || '(no abstract)'}
 Return ONLY JSON in this exact shape, no commentary:
 {"context":"supporting|disputing|mentioning|neutral","reason":"one short sentence (<= 200 chars) explaining the stance"}`
 
-  const zai = await getZai()
-  let lastErr: unknown = null
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const completion = await zai.chat.completions.create({
-        messages: [
-          {
-            role: 'system',
-            content:
-              'You are a precise citation-context analysis assistant. Always output strict JSON only — no prose, no fences.',
-          },
-          { role: 'user', content: prompt },
-        ],
-        thinking: { type: 'disabled' },
-      })
-      const content = completion.choices[0]?.message?.content || ''
-      let parsed: { context?: unknown; reason?: unknown } | null = null
-      try {
-        parsed = JSON.parse(stripJsonFence(content)) as {
-          context?: unknown
-          reason?: unknown
-        }
-      } catch {
-        parsed = null
-      }
-      const ctxRaw = String(parsed?.context ?? '').toLowerCase().trim()
-      const context: CitationContext = VALID_CONTEXTS.has(ctxRaw as CitationContext)
-        ? (ctxRaw as CitationContext)
-        : 'neutral'
-      const reason =
-        (typeof parsed?.reason === 'string' ? parsed.reason : '').trim().slice(0, 300) ||
-        (locale => (locale === 'zh' ? '未提供理由' : 'No reason provided'))('en')
-      return { context, reason }
-    } catch (e) {
-      lastErr = e
-      const msg = (e as Error).message || ''
-      const isTransient =
-        msg.includes('429') ||
-        msg.includes('Too many requests') ||
-        msg.includes('rate limit') ||
-        msg.includes('ECONNRESET') ||
-        msg.includes('ETIMEDOUT') ||
-        msg.includes('fetch failed') ||
-        msg.includes('network')
-      if (!isTransient || attempt === 2) break
-      await new Promise((r) => setTimeout(r, 1500 * Math.pow(2, attempt)))
+  const content = await callLLMWithFailover(
+    [
+      {
+        role: 'system',
+        content:
+          'You are a precise citation-context analysis assistant. Always output strict JSON only — no prose, no fences.',
+      },
+      { role: 'user', content: prompt },
+    ],
+    configs,
+    { retries: 3, timeoutMs: 60_000 },
+  )
+  let parsed: { context?: unknown; reason?: unknown } | null = null
+  try {
+    parsed = JSON.parse(stripJsonFence(content)) as {
+      context?: unknown
+      reason?: unknown
     }
+  } catch {
+    parsed = null
   }
-  return {
-    context: 'neutral',
-    reason: `Analysis failed: ${(lastErr as Error)?.message ?? 'unknown error'}`.slice(0, 300),
-  }
+  const ctxRaw = String(parsed?.context ?? '').toLowerCase().trim()
+  const context: CitationContext = VALID_CONTEXTS.has(ctxRaw as CitationContext)
+    ? (ctxRaw as CitationContext)
+    : 'neutral'
+  const reason =
+    (typeof parsed?.reason === 'string' ? parsed.reason : '').trim().slice(0, 300) ||
+    'No reason provided'
+  return { context, reason }
 }
 
 /**
@@ -164,6 +138,7 @@ Return ONLY JSON in this exact shape, no commentary:
  * is malformed (no paperIds array, or empty).
  */
 export async function POST(req: NextRequest): Promise<Response> {
+  const configs = getLLMConfigsFromHeaders(req.headers)
   const body = await req.json().catch(() => ({}))
   const { paperIds } = body as { paperIds?: unknown }
 
@@ -242,6 +217,7 @@ export async function POST(req: NextRequest): Promise<Response> {
           item.abstract,
           item.materialName,
           item.title,
+          configs,
         )
         setCached(cacheKey(item.paperId), result, CACHE_TTL_MS)
         results.push({ paperId: item.paperId, ...result })

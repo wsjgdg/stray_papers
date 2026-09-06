@@ -4,8 +4,7 @@
 //
 // A self-contained "Fetch models" button + dropdown that calls
 // POST /api/llm/models and lets the user pick a chat model from the
-// provider's `/v1/models` response (OpenAI-compatible) or from the
-// hardcoded Z.ai list.
+// provider's `/v1/models` response (OpenAI-compatible).
 //
 // Created as a SEPARATE component (rather than inlined into settings-dialog.tsx)
 // so it can be developed independently of the P1 agent that is also editing

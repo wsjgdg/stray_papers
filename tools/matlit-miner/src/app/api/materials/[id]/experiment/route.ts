@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getOrSet } from '@/lib/cache'
-import { getLLMConfig, type LLMConfig } from '@/lib/llm'
+import {
+  callLLMWithFailover,
+  getLLMConfigsFromHeaders,
+  type LLMConfigEntry,
+} from '@/lib/llm'
 import { estimateCost } from '@/lib/cost-estimator'
 
 // GET /api/materials/[id]/experiment
@@ -91,70 +95,13 @@ async function fetchExperimentData(materialId: string): Promise<ExperimentData |
 }
 
 /**
- * Tiny retry helper for transient errors (mirrors src/lib/llm.ts).
+ * Build the LLM prompt and call the configured OpenAI-compatible backend via
+ * `callLLMWithFailover` (which handles retry + multi-config failover).
  */
-function isTransient(msg: string): boolean {
-  return (
-    msg.includes('429') ||
-    msg.includes('Too many requests') ||
-    msg.includes('rate limit') ||
-    msg.includes('ECONNRESET') ||
-    msg.includes('ETIMEDOUT') ||
-    msg.includes('fetch failed') ||
-    msg.includes('network')
-  )
-}
-
-/**
- * Speak to an OpenAI-compatible endpoint (mirrors src/lib/llm.ts:callOpenAI).
- */
-async function callOpenAICompat(
-  messages: Array<{ role: string; content: string }>,
-  config: LLMConfig,
-  retries = 3,
+async function generateLLMPlan(
+  data: ExperimentData,
+  configs: LLMConfigEntry[],
 ): Promise<string> {
-  const url = `${config.baseURL}/chat/completions`
-  let lastErr: unknown = null
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      const resp = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${config.apiKey}`,
-        },
-        body: JSON.stringify({
-          model: config.model || 'gpt-4o-mini',
-          messages: messages.map((m) => ({
-            role: m.role === 'assistant' ? 'system' : m.role,
-            content: m.content,
-          })),
-          temperature: 0,
-        }),
-      })
-      if (!resp.ok) {
-        const errText = await resp.text()
-        throw new Error(
-          `OpenAI API error ${resp.status}: ${errText.slice(0, 200)}`,
-        )
-      }
-      const data = await resp.json()
-      return data.choices?.[0]?.message?.content || ''
-    } catch (e) {
-      lastErr = e
-      const msg = (e as Error).message || ''
-      if (!isTransient(msg) || attempt === retries) break
-      await new Promise((r) => setTimeout(r, 1500 * Math.pow(2, attempt)))
-    }
-  }
-  throw lastErr instanceof Error ? lastErr : new Error('OpenAI call failed')
-}
-
-/**
- * Build the LLM prompt and call the LLM via z-ai-web-dev-sdk (default) or the
- * configured OpenAI-compatible backend.
- */
-async function generateLLMPlan(data: ExperimentData): Promise<string> {
   const paperLines = data.papers
     .slice(0, 5)
     .map((p, i) => {
@@ -193,25 +140,8 @@ Use the formula to compute stoichiometric precursor ratios. Use the method to dr
 
 Keep the whole plan under 800 words.`
 
-  const cfg = getLLMConfig()
-  if (cfg.provider === 'openai' && cfg.baseURL && cfg.apiKey) {
-    return callOpenAICompat(
-      [
-        {
-          role: 'system',
-          content:
-            'You are a meticulous materials-science synthesis planner. Always answer in Markdown with the exact section headings requested.',
-        },
-        { role: 'user', content: prompt },
-      ],
-      cfg,
-    )
-  }
-
-  const ZAI = (await import('z-ai-web-dev-sdk')).default
-  const zai = await ZAI.create()
-  const completion = await zai.chat.completions.create({
-    messages: [
+  return callLLMWithFailover(
+    [
       {
         role: 'system',
         content:
@@ -219,9 +149,9 @@ Keep the whole plan under 800 words.`
       },
       { role: 'user', content: prompt },
     ],
-    thinking: { type: 'disabled' },
-  })
-  return completion.choices[0]?.message?.content || ''
+    configs,
+    { retries: 3, timeoutMs: 120_000 },
+  )
 }
 
 /**
@@ -400,6 +330,7 @@ export async function GET(
 ) {
   const { id } = await params
 
+  const configs = getLLMConfigsFromHeaders(req.headers)
   const refresh = new URL(req.url).searchParams.get('refresh') === '1'
   const cacheKey = `experiment:${id}`
 
@@ -415,7 +346,7 @@ export async function GET(
       let plan = ''
       let source: 'llm' | 'fallback' = 'fallback'
       try {
-        const text = await generateLLMPlan(data)
+        const text = await generateLLMPlan(data, configs)
         if (text && /##\s*\d/.test(text)) {
           plan = text.trim()
           source = 'llm'

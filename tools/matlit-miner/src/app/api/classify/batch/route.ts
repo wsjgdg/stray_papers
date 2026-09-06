@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { classifyAbstract } from '@/lib/llm'
-import { setLLMConfig } from '@/lib/llm'
+import { classifyAbstract, getLLMConfigsFromHeaders } from '@/lib/llm'
 import { reportJobStart, reportProgress, reportJobComplete } from '@/lib/progress-reporter'
 import { trackJob, updateJob, completeJob } from '@/lib/server-job-progress'
 import { isJobCancelled, clearCancelFlag } from '@/app/api/jobs/[id]/cancel/route'
@@ -42,6 +41,9 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}))
   const { limit = 200, jobId } = body
 
+  // Configure LLM from request headers (openai-compatible backend).
+  const configs = getLLMConfigsFromHeaders(req.headers)
+
   const papers = await db.paper.findMany({
     where: { classification: null },
     take: Math.min(limit, 500),
@@ -75,7 +77,7 @@ export async function POST(req: NextRequest) {
     const chunk = items.slice(i, i + CHUNK)
     const results = await Promise.allSettled(
       chunk.map(async (item) => {
-        const result = await classifyAbstract(item.abstract, item.material)
+        const result = await classifyAbstract(item.abstract, item.material, undefined, configs)
         const paper = papers.find(p => p.id === item.id)
         if (!paper) return
         const toBool = (v: unknown) => v === true || v === 'true'

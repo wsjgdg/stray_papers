@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { extractData } from '@/lib/llm'
-import { setLLMConfig } from '@/lib/llm'
+import { extractData, getLLMConfigsFromHeaders } from '@/lib/llm'
 import { reportJobStart, reportProgress, reportJobComplete } from '@/lib/progress-reporter'
 import { trackJob, updateJob, completeJob } from '@/lib/server-job-progress'
 import { isJobCancelled, clearCancelFlag } from '@/app/api/jobs/[id]/cancel/route'
@@ -42,6 +41,9 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}))
   const { limit = 200, onlySynthesized = true, jobId } = body
 
+  // Configure LLM from request headers (openai-compatible backend).
+  const configs = getLLMConfigsFromHeaders(req.headers)
+
   const where: Record<string, unknown> = { status: 'classified' }
   if (onlySynthesized) where.synthesized = 'yes'
 
@@ -75,7 +77,7 @@ export async function POST(req: NextRequest) {
     const chunk = classifications.slice(i, i + CHUNK)
     const results = await Promise.allSettled(
       chunk.map(async (c) => {
-        const result = await extractData(c.paper.abstract || c.paper.title, c.paper.material.name)
+        const result = await extractData(c.paper.abstract || c.paper.title, c.paper.material.name, undefined, configs)
         await db.classification.update({
           where: { id: c.id },
           data: {

@@ -1,22 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
-import ZAI from 'z-ai-web-dev-sdk'
 import { apiError, apiBadRequest } from '@/lib/api-error'
+import {
+  callLLMWithFailover,
+  getLLMConfigsFromHeaders,
+  type LLMMessageContent,
+} from '@/lib/llm'
 
 // POST /api/vlm/phase-diagram
 // Body: { imageUrl: string, materialName?: string }
-// Uses VLM to analyze an image and determine if it's a phase diagram,
-// and if so, extract key information (phases, temperature ranges, etc.)
+// Uses a Vision-capable LLM (OpenAI-compatible, e.g. gpt-4o / gpt-4o-mini)
+// to analyze an image and determine if it's a phase diagram, and if so,
+// extract key information (phases, temperature ranges, etc.).
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}))
-  const { imageUrl, materialName } = body as { imageUrl?: string; materialName?: string }
+  const { imageUrl, materialName } = body as {
+    imageUrl?: string
+    materialName?: string
+  }
 
   if (!imageUrl) {
     return apiBadRequest('imageUrl is required')
   }
 
-  const zai = await ZAI.create()
+  const configs = getLLMConfigsFromHeaders(req.headers)
 
-  const prompt = `You are a materials science expert. Analyze this image from a scientific paper${materialName ? ` about ${materialName}` : ''}.
+  const prompt = `You are a materials science expert. Analyze this image from a scientific paper${
+    materialName ? ` about ${materialName}` : ''
+  }.
 
 Determine if this image is a phase diagram (showing phase boundaries, temperature vs composition, Gibbs phase rule, etc.).
 
@@ -34,28 +44,26 @@ Respond in JSON format only:
 
 If the image is NOT a phase diagram, set isPhaseDiagram to false and diagramType to "not_a_diagram".`
 
-  try {
-    const response = await zai.chat.completions.createVision({
-      model: 'glm-4v',
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: prompt },
-            { type: 'image_url', image_url: { url: imageUrl } },
-          ],
-        },
-      ],
-      thinking: { type: 'disabled' },
-    })
+  const content: LLMMessageContent = [
+    { type: 'text', text: prompt },
+    { type: 'image_url', image_url: { url: imageUrl } },
+  ]
 
-    const content = response.choices[0]?.message?.content || ''
+  try {
+    const response = await callLLMWithFailover(
+      [{ role: 'user', content }],
+      configs,
+      { retries: 3, timeoutMs: 120_000 },
+    )
 
     // Extract JSON from response
-    let jsonStr = content.trim()
+    let jsonStr = response.trim()
     // Remove markdown code fences
     if (jsonStr.startsWith('```')) {
-      jsonStr = jsonStr.replace(/^```(?:json)?\s*/i, '').replace(/```$/i, '').trim()
+      jsonStr = jsonStr
+        .replace(/^```(?:json)?\s*/i, '')
+        .replace(/```$/i, '')
+        .trim()
     }
     const first = jsonStr.indexOf('{')
     const last = jsonStr.lastIndexOf('}')
@@ -73,7 +81,7 @@ If the image is NOT a phase diagram, set isPhaseDiagram to false and diagramType
         diagramType: 'not_a_diagram',
         phases: [],
         summary: 'Could not parse VLM response',
-        rawResponse: content.slice(0, 500),
+        rawResponse: response.slice(0, 500),
       }
     }
 

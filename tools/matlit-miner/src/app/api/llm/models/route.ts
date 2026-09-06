@@ -9,18 +9,16 @@ import { NextRequest, NextResponse } from 'next/server'
 // browser history, and referrer headers. POST keeps them in the body.
 //
 // Body:
-//   { provider: 'zai' | 'openai', baseURL?: string, apiKey?: string }
+//   { provider: 'openai', baseURL?: string, apiKey?: string }
 //
 // Response (always 200 with the payload — error info is in `error`):
 //   { models: Array<{ id: string, label?: string }>, error?: string }
 //
 // Notes:
-//   - For `provider: 'openai'` we hit `${baseURL}/models` with
-//     `Authorization: Bearer ${apiKey}` (OpenAI-compatible /v1/models).
-//     The trailing `/v1` is part of `baseURL` per OpenAI convention
-//     (e.g. https://api.openai.com/v1), so we just append `/models`.
-//   - For `provider: 'zai'` the SDK has no models endpoint — return a
-//     hardcoded list of known Z.ai chat models.
+//   - We hit `${baseURL}/models` with `Authorization: Bearer ${apiKey}`
+//     (OpenAI-compatible /v1/models). The trailing `/v1` is part of
+//     `baseURL` per OpenAI convention (e.g. https://api.openai.com/v1),
+//     so we just append `/models`.
 //   - We filter the OpenAI response to chat models only (exclude embedding
 //     / tts / whisper / dall-e / moderation). A model is kept if its id
 //     contains one of the known chat-family substrings (gpt, claude, glm,
@@ -36,14 +34,6 @@ export const runtime = 'nodejs'
 // at the route level. The client caches the result in component state.
 
 const FETCH_TIMEOUT_MS = 5_000
-
-/** Known Z.ai chat models (z-ai-web-dev-sdk has no /models endpoint). */
-const ZAI_MODELS: Array<{ id: string; label?: string }> = [
-  { id: 'glm-4', label: 'GLM-4 (flagship)' },
-  { id: 'glm-4v', label: 'GLM-4V (vision)' },
-  { id: 'glm-4-flash', label: 'GLM-4 Flash (fast, free)' },
-  { id: 'glm-4-long', label: 'GLM-4 Long (long context)' },
-]
 
 /**
  * Substrings that identify a chat-completion model in an OpenAI-compatible
@@ -230,14 +220,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const provider = body.provider === 'openai' ? 'openai' : 'zai'
-
-  if (provider === 'zai') {
-    // Z.ai SDK has no /models endpoint — return the hardcoded list.
-    return NextResponse.json({ models: ZAI_MODELS })
-  }
-
-  // provider === 'openai'
+  // Only OpenAI-compatible providers are supported.
   const baseURL = (body.baseURL ?? '').trim()
   const apiKey = (body.apiKey ?? '').trim()
 

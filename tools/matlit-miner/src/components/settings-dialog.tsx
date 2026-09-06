@@ -116,12 +116,51 @@ export function SettingsDialog({
 
   useEffect(() => {
     if (open) {
-      setConfig(loadConfig())
+      const local = loadConfig()
+      setConfig(local)
       setTestState({})
       setShowPwd({})
       setExpandedLLM({})
+      // Seed from the server-stored user config when the local store is empty,
+      // so a previously-saved OpenAI backend is restored across devices.
+      if (local.llm.length === 0) {
+        void hydrateFromServerConfig(local)
+      }
     }
   }, [open])
+
+  // Pull the persisted OpenAI backend from /api/user/config (written by a
+  // prior save) and seed a single LLM entry if the local config is empty.
+  async function hydrateFromServerConfig(local: MultiConfig): Promise<void> {
+    try {
+      const res = await api<{ config: { llmProvider?: string; llmBaseURL?: string; llmApiKey?: string; llmModel?: string } }>(
+        '/api/user/config',
+      )
+      const c = res.config
+      if (c && (c.llmBaseURL || c.llmApiKey)) {
+        setConfig((prev) =>
+          prev.llm.length > 0
+            ? prev
+            : {
+                ...local,
+                llm: [
+                  newLLMConfigEntry({
+                    label: 'OpenAI (synced)',
+                    provider: 'openai',
+                    baseURL: c.llmBaseURL || DEFAULT_OPENAI_BASE_URL,
+                    apiKey: c.llmApiKey || '',
+                    model: c.llmModel || 'gpt-4o-mini',
+                    enabled: true,
+                    priority: 0,
+                  }),
+                ],
+              },
+        )
+      }
+    } catch {
+      /* best-effort — localStorage is the source of truth */
+    }
+  }
 
   // Cache stats — only fetched when the dialog is open
   const { data: cacheStats, refetch: refetchCache } = useQuery<CacheStats>({
@@ -205,11 +244,28 @@ export function SettingsDialog({
   }
 
   // ── Save / Clear ────────────────────────────────────────────────────────
+  // Mirror the primary OpenAI-compatible LLM entry to the server user-config
+  // store so the backend persists across devices / restarts (the server falls
+  // back to it when a request carries no per-request LLM headers). Best-effort:
+  // localStorage is the source of truth, so a sync failure is non-fatal.
+  async function syncUserConfig(): Promise<void> {
+    const primary = config.llm.find((e) => e.enabled && e.provider === 'openai')
+    const payload = primary
+      ? { llmProvider: 'openai', llmBaseURL: primary.baseURL, llmApiKey: primary.apiKey, llmModel: primary.model }
+      : { llmProvider: '', llmBaseURL: '', llmApiKey: '', llmModel: '' }
+    try {
+      await api('/api/user/config', { method: 'POST', body: JSON.stringify(payload) })
+    } catch {
+      /* non-fatal */
+    }
+  }
+
   const handleSave = () => {
     try {
       saveConfig(config)
       toast.success(t('settings.saved'))
       setOpen(false)
+      void syncUserConfig()
     } catch {
       toast.error('Failed to save settings')
     }
@@ -354,10 +410,10 @@ export function SettingsDialog({
           typeof p.llmApiKey === 'string' ||
           typeof p.llmModel === 'string'
         ) {
-          const provider: LLMProvider = p.llmProvider === 'openai' ? 'openai' : 'zai'
+          const provider: LLMProvider = 'openai'
           additions.llm.push(
             newLLMConfigEntry({
-              label: provider === 'openai' ? 'OpenAI (imported)' : 'Z.ai (imported)',
+              label: 'OpenAI (imported)',
               provider,
               baseURL: typeof p.llmBaseURL === 'string' ? p.llmBaseURL : '',
               apiKey: typeof p.llmApiKey === 'string' ? p.llmApiKey : '',
@@ -604,8 +660,8 @@ export function SettingsDialog({
             {sortedLLM.length === 0 ? (
               <p className="text-[11px] text-slate-400 italic px-1 py-2">
                 {L(
-                  'No LLM backends configured. The default Z.ai free tier will be used.',
-                  '尚未配置 LLM 后端。将使用默认的 Z.ai 免费层。',
+                  'No LLM backends configured. The server-level OpenAI config (OPENAI_* env) will be used as a fallback.',
+                  '尚未配置 LLM 后端。将回退到服务端 OpenAI 配置（OPENAI_* 环境变量）。',
                 )}
               </p>
             ) : (
@@ -670,7 +726,6 @@ export function SettingsDialog({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="zai">Z.ai (free)</SelectItem>
                             <SelectItem value="openai">OpenAI-compatible</SelectItem>
                           </SelectContent>
                         </Select>
@@ -770,14 +825,6 @@ export function SettingsDialog({
                                 )}
                               </div>
                             </>
-                          )}
-                          {entry.provider === 'zai' && (
-                            <p className="text-[10px] text-slate-400 italic">
-                              {L(
-                                'Z.ai free tier — no configuration needed. The backend uses z-ai-web-dev-sdk directly.',
-                                'Z.ai 免费层 — 无需配置。后端直接使用 z-ai-web-dev-sdk。',
-                              )}
-                            </p>
                           )}
                           <TestButton field={field} onClick={() => testLLM(entry)} compact />
                         </div>
@@ -1052,7 +1099,7 @@ function coerceLLMEntry(
   fallbackId: string,
   fallbackPriority: number,
 ): LLMConfigEntry {
-  const provider: LLMProvider = e.provider === 'openai' ? 'openai' : 'zai'
+  const provider: LLMProvider = 'openai'
   return {
     id: typeof e.id === 'string' && e.id ? e.id : fallbackId,
     label: typeof e.label === 'string' ? e.label : '',

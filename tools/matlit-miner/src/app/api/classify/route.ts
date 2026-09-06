@@ -43,8 +43,8 @@ export async function POST(req: NextRequest) {
   }
 
   // Read multi-config failover list from headers. Falls back to legacy
-  // single-config headers when x-llm-configs is absent (P1 hasn't shipped
-  // yet), and ultimately to default Z.ai.
+  // single-config headers when x-llm-configs is absent, and ultimately to
+  // the server env OpenAI config (OPENAI_*).
   const configs = getLLMConfigsFromHeaders(req.headers)
 
   const body = await req.json().catch(() => ({}))

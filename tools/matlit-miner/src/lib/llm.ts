@@ -1,6 +1,11 @@
-// LLM service using z-ai-web-dev-sdk for paper classification & data extraction
-// Supports custom OpenAI-compatible API backends (OpenAI, Ollama, LM Studio, etc.)
-import ZAI from 'z-ai-web-dev-sdk'
+// LLM service for paper classification & data extraction.
+// Uses a configurable OpenAI-compatible backend (OpenAI, Ollama, LM Studio, etc.).
+// The backend is configured per-request (via x-llm-configs headers) or falls
+// back to the server env vars OPENAI_BASE_URL / OPENAI_API_KEY / OPENAI_MODEL,
+// then to the persisted user config file (Settings → /api/user/config), and
+// finally to a built-in default.
+import { readFileSync } from 'fs'
+import path from 'path'
 import {
   checkQuota,
   recordUsage,
@@ -39,7 +44,7 @@ export function getLLMIdentifier(): string {
 export { getIdentifierFromHeaders, QuotaExceededError }
 
 export interface LLMConfig {
-  provider: 'zai' | 'openai'
+  provider: 'openai'
   baseURL?: string
   apiKey?: string
   model?: string
@@ -54,9 +59,8 @@ export interface LLMConfig {
  * `enabled: false` are skipped. The `id` is used only for failover logging
  * (so you can see "config A failed, trying config B").
  *
- * For `provider: 'zai'`, `baseURL`/`apiKey`/`model` are unused (the SDK
- * reads its credentials from env). For `provider: 'openai'`, `baseURL`
- * and `apiKey` are required at call time.
+ * For `provider: 'openai'`, `baseURL` and `apiKey` are required at call time
+ * (or fall back to the server env vars). `model` selects the chat/Vision model.
  */
 export interface LLMConfigEntry extends LLMConfig {
   id: string
@@ -184,11 +188,9 @@ function clampTimeout(timeoutMs: number | undefined): number {
  * - Rejects with `LLMTimeoutError` if the timer fires first.
  * - The timer is always cleared on settlement so it doesn't leak.
  *
- * Used for the `z-ai-web-dev-sdk` path because the SDK's
- * `chat.completions.create` does NOT accept an `AbortSignal` (its signature
- * is `(body: CreateChatCompletionBody) => Promise<any>` with no signal
- * option). A timed-out SDK call will still complete in the background — we
- * can't cancel it — but we stop awaiting it and move on to the next retry.
+ * Generic helper: races any promise against a timeout so slow providers
+ * (or any call that does not honor an `AbortSignal`) cannot hang the request
+ * indefinitely.
  */
 export function raceWithTimeout<T>(
   p: Promise<T>,
@@ -218,17 +220,77 @@ export function raceWithTimeout<T>(
   })
 }
 
-let _zai: Awaited<ReturnType<typeof ZAI.create>> | null = null
+/** Default OpenAI-compatible base URL (mirrors config-store DEFAULT_OPENAI_BASE_URL). */
+export const DEFAULT_OPENAI_BASE_URL = 'https://api.openai.com/v1'
 
-async function getZai() {
-  if (!_zai) {
-    _zai = await ZAI.create()
+/**
+ * Server-side default LLM config resolution order (first match wins):
+ *   1. OPENAI_* environment variables,
+ *   2. persisted user config file (`data/user-config.json`, written by the
+ *      Settings dialog via /api/user/config),
+ *   3. built-in default (api.openai.com, gpt-4o-mini).
+ *
+ * Used when a request does not supply its own `x-llm-configs` / legacy
+ * headers, so the backend works without the browser localStorage config
+ * (and survives restarts / is shared across clients).
+ */
+const USER_CONFIG_FILE = path.join(process.cwd(), 'data', 'user-config.json')
+
+function readUserConfigSync(): Record<string, Record<string, unknown>> {
+  try {
+    const raw = readFileSync(USER_CONFIG_FILE, 'utf8')
+    const parsed = JSON.parse(raw)
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return parsed as Record<string, Record<string, unknown>>
+    }
+  } catch {
+    /* missing or invalid — treat as empty */
   }
-  return _zai
+  return {}
 }
 
-// Current LLM config (can be overridden via API request headers)
-let _llmConfig: LLMConfig = { provider: 'zai' }
+function serverDefaultConfig(): LLMConfig {
+  const envBase = process.env.OPENAI_BASE_URL || ''
+  const envKey = process.env.OPENAI_API_KEY || ''
+  const envModel = process.env.OPENAI_MODEL || ''
+  // Fast path: env vars present → use them directly (no file IO).
+  if (envBase || envKey) {
+    return {
+      provider: 'openai',
+      baseURL: envBase || DEFAULT_OPENAI_BASE_URL,
+      apiKey: envKey,
+      model: envModel || 'gpt-4o-mini',
+    }
+  }
+  // Fall back to the persisted user config (Settings → /api/user/config).
+  // Prefer a named-user entry over the anonymous one, but accept either.
+  const store = readUserConfigSync()
+  const named = Object.entries(store).find(([k]) => k !== '_anonymous')?.[1]
+  const entry = (named ?? store['_anonymous']) as Record<string, unknown> | undefined
+  if (entry) {
+    const uBase = typeof entry.llmBaseURL === 'string' ? entry.llmBaseURL : ''
+    const uKey = typeof entry.llmApiKey === 'string' ? entry.llmApiKey : ''
+    const uModel = typeof entry.llmModel === 'string' ? entry.llmModel : ''
+    if (uBase || uKey) {
+      return {
+        provider: 'openai',
+        baseURL: uBase || DEFAULT_OPENAI_BASE_URL,
+        apiKey: uKey,
+        model: uModel || 'gpt-4o-mini',
+      }
+    }
+  }
+  // Built-in default.
+  return {
+    provider: 'openai',
+    baseURL: DEFAULT_OPENAI_BASE_URL,
+    apiKey: '',
+    model: 'gpt-4o-mini',
+  }
+}
+
+// Current LLM config (legacy global; prefer passing configs from headers).
+let _llmConfig: LLMConfig = serverDefaultConfig()
 
 export function setLLMConfig(config: LLMConfig) {
   _llmConfig = config
@@ -239,36 +301,29 @@ export function getLLMConfig(): LLMConfig {
 }
 
 type ChatRole = 'system' | 'user' | 'assistant'
-type ChatMessageLike = Array<{ role: ChatRole; content: string }>
+
+/**
+ * A single chat message. `content` may be a plain string, or a multimodal
+ * array (text + image_url parts) for Vision-capable endpoints. The OpenAI
+ * chat completions API accepts both shapes directly.
+ */
+export type LLMMessageContent =
+  | string
+  | Array<
+      | { type: 'text'; text: string }
+      | { type: 'image_url'; image_url: { url: string } }
+    >
+
+type ChatMessageLike = Array<{ role: ChatRole; content: LLMMessageContent }>
 
 // ─── Single-shot LLM calls (no retry) ─────────────────────────────────────
 //
-// `callZaiOnce` and `callOpenAIOnce` perform ONE LLM call with a per-call
-// timeout. The retry loop + exponential backoff + multi-config failover
-// logic lives in `callLLMWithFailover`, which calls these single-shot
-// helpers. Splitting them out keeps the retry code in one place and makes
-// the per-attempt timeout semantics explicit (each attempt = one fresh
-// timer, so worst case = attempts × timeoutMs).
-
-/** One-shot call to z-ai-web-dev-sdk with per-call timeout (no retry). */
-async function callZaiOnce(
-  messages: ChatMessageLike,
-  timeoutMs: number,
-): Promise<string> {
-  const zai = await getZai()
-  // The SDK's `chat.completions.create` does NOT accept an AbortSignal, so
-  // we race the call against a timeout promise. A timed-out call still
-  // completes in the background (we can't cancel it) — we just stop
-  // awaiting it and let the retry loop decide what to do next.
-  const completion = await raceWithTimeout(
-    zai.chat.completions.create({
-      messages,
-      thinking: { type: 'disabled' },
-    }),
-    timeoutMs,
-  )
-  return completion.choices[0]?.message?.content || ''
-}
+// `callOpenAIOnce` performs ONE LLM call with a per-call timeout. The retry
+// loop + exponential backoff + multi-config failover logic lives in
+// `callLLMWithFailover`, which calls this single-shot helper. Splitting it
+// out keeps the retry code in one place and makes the per-attempt timeout
+// semantics explicit (each attempt = one fresh timer, so worst case =
+// attempts × timeoutMs).
 
 /**
  * One-shot call to an OpenAI-compatible endpoint (OpenAI, Ollama, LM
@@ -283,6 +338,11 @@ async function callOpenAIOnce(
   config: LLMConfig,
   timeoutMs: number,
 ): Promise<string> {
+  if (!config.baseURL || !config.apiKey) {
+    throw new Error(
+      'OpenAI backend not configured: set OPENAI_BASE_URL and OPENAI_API_KEY (server env) or add an LLM backend with a Base URL + API key in Settings.',
+    )
+  }
   const url = `${config.baseURL}/chat/completions`
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
@@ -296,7 +356,7 @@ async function callOpenAIOnce(
       body: JSON.stringify({
         model: config.model || 'gpt-4o-mini',
         messages: messages.map(m => ({
-          role: m.role === 'assistant' ? 'system' : m.role,
+          role: m.role,
           content: m.content,
         })),
         temperature: 0,
@@ -358,10 +418,10 @@ function parseRetryAfter(resp: Response): number | null {
 }
 
 /**
- * Extract a `Retry-After` value (in seconds) from a thrown error. Currently
- * only `callOpenAIOnce` attaches `retryAfterSec` to its errors (because the
- * z-ai SDK does not expose the underlying response); for the z-ai path this
- * returns null and the retry loop falls back to exponential backoff.
+ * Extract a `Retry-After` value (in seconds) from a thrown error. Only
+ * `callOpenAIOnce` attaches `retryAfterSec` to its errors (parsed from the
+ * upstream `Retry-After` header); when absent the retry loop falls back to
+ * exponential backoff.
  */
 function extractRetryAfter(e: unknown): number | null {
   if (e && typeof e === 'object' && 'retryAfterSec' in e) {
@@ -500,15 +560,15 @@ export async function callLLMWithFailover(
       attemptsUsed++
 
       try {
-        // Dispatch to the right single-shot helper based on provider. If
-        // provider is 'openai' but baseURL/apiKey are missing, fall through
-        // to the z-ai path (mirrors the legacy callLLM behaviour and avoids
-        // a confusing fetch error). Production callers should validate
-        // their configs before passing them in.
-        const content =
-          config.provider === 'openai' && config.baseURL && config.apiKey
-            ? await callOpenAIOnce(messages, config, effectiveTimeout)
-            : await callZaiOnce(messages, effectiveTimeout)
+        // Only the OpenAI-compatible provider is supported. `callOpenAIOnce`
+        // validates that baseURL + apiKey are present and throws a clear error
+        // otherwise (so callers get a useful message instead of a confusing
+        // fetch failure).
+        const content = await callOpenAIOnce(
+          messages,
+          config,
+          effectiveTimeout,
+        )
         // ── quota record (after, only on success) ─────────────────────
         recordUsage(identifier, 1, estimateTokens(messages, content))
         return content
@@ -564,9 +624,12 @@ export async function callLLMWithFailover(
  *  2. Legacy single-config headers (`x-llm-provider`, `x-llm-baseurl`,
  *     `x-llm-apikey`, `x-llm-model`) — wrapped into a single-entry list
  *     so the existing api-client (which still sends these) keeps working
- *     until P1 ships the new multi-config UI.
- *  3. Default Z.ai:
- *     `[{ id: 'default', provider: 'zai', enabled: true, priority: 0 }]`.
+ *     until P1 ships the new multi-config UI. Only the `openai` provider
+ *     is recognised.
+ *  3. Default OpenAI (server env):
+ *     `[{ id: 'default', provider: 'openai', ...envConfig }]`. Kicks in
+ *     when no header is present — the backend falls back to OPENAI_BASE_URL
+ *     / OPENAI_API_KEY / OPENAI_MODEL from the environment.
  */
 export function getLLMConfigsFromHeaders(headers: Headers): LLMConfigEntry[] {
   // ── 1. New multi-config header ────────────────────────────────────────
@@ -579,13 +642,13 @@ export function getLLMConfigsFromHeaders(headers: Headers): LLMConfigEntry[] {
         for (const entry of parsed) {
           if (!entry || typeof entry !== 'object') continue
           const e = entry as Record<string, unknown>
-          const provider = e.provider === 'openai' ? 'openai' : 'zai'
+          // Only the 'openai' provider is supported; anything else is ignored.
+          if (e.provider !== 'openai') continue
+          const provider: 'openai' = 'openai'
           const id =
             typeof e.id === 'string' && e.id
               ? e.id
-              : provider === 'openai'
-                ? `openai:${typeof e.baseURL === 'string' ? e.baseURL : ''}`
-                : 'zai'
+              : `openai:${typeof e.baseURL === 'string' ? e.baseURL : ''}`
           configs.push({
             id,
             provider,
@@ -618,12 +681,20 @@ export function getLLMConfigsFromHeaders(headers: Headers): LLMConfigEntry[] {
       },
     ]
   }
-  if (legacyProvider === 'zai') {
-    return [{ id: 'legacy-zai', provider: 'zai', enabled: true, priority: 0 }]
-  }
 
-  // ── 3. Default Z.ai ──────────────────────────────────────────────────
-  return [{ id: 'default', provider: 'zai', enabled: true, priority: 0 }]
+  // ── 3. Default: server env OpenAI config ─────────────────────────────
+  const def = serverDefaultConfig()
+  return [
+    {
+      id: 'default',
+      provider: 'openai',
+      baseURL: def.baseURL,
+      apiKey: def.apiKey,
+      model: def.model,
+      enabled: true,
+      priority: 0,
+    },
+  ]
 }
 
 // ─── Backward-compat single-config entry point ────────────────────────────

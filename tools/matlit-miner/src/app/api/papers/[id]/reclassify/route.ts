@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { classifyAbstract } from '@/lib/llm'
-import { setLLMConfig } from '@/lib/llm'
+import { classifyAbstract, getLLMConfigsFromHeaders } from '@/lib/llm'
 
 // POST /api/papers/[id]/reclassify
 // Force re-run LLM classification on a single paper.
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params
+
+  // Configure LLM from request headers (openai-compatible backend).
+  const configs = getLLMConfigsFromHeaders(req.headers)
   const paper = await db.paper.findUnique({
     where: { id },
     include: { material: true, classification: true },
@@ -18,7 +20,7 @@ export async function POST(
     return NextResponse.json({ error: 'Paper not found' }, { status: 404 })
   }
 
-  const result = await classifyAbstract(paper.abstract, paper.material.name)
+  const result = await classifyAbstract(paper.abstract, paper.material.name, undefined, configs)
 
   const toBool = (v: unknown) => v === true || v === 'true'
   const toStr = (v: unknown) => (typeof v === 'string' ? v : String(v ?? ''))

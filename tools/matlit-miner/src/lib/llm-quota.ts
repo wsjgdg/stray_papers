@@ -296,7 +296,13 @@ export function formatResetIn(resetAt: number, locale: 'en' | 'zh' = 'en'): stri
  * Rough token estimate: ~4 chars per token for English/mixed text.
  * Used by `callLLM` when the SDK doesn't return usage stats.
  */
-export function estimateTokens(messages: Array<{ content: string }>, completion = ''): number {
-  const promptChars = messages.reduce((s, m) => s + (m.content?.length ?? 0), 0)
+export function estimateTokens(
+  messages: Array<{ content: string | unknown }>,
+  completion = '',
+): number {
+  const promptChars = messages.reduce((s, m) => {
+    const c = m.content
+    return s + (typeof c === 'string' ? c.length : 0)
+  }, 0)
   return Math.ceil(promptChars / 4) + Math.ceil(completion.length / 4)
 }

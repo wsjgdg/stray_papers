@@ -1,8 +1,9 @@
 // Multi-config storage for LLM and Search API providers.
 //
 // Replaces the old single-config `matlit-api-keys` format with a richer
-// multi-config model: users can register multiple LLM providers (e.g. Z.ai +
-// OpenAI + custom) and multiple S2 / Crossref / OpenAlex / Unpaywall keys,
+// multi-config model: users can register multiple OpenAI-compatible LLM
+// backends (e.g. OpenAI, Ollama, LM Studio, vLLM) and multiple S2 /
+// Crossref / OpenAlex / Unpaywall keys,
 // enable/disable each individually, and assign a priority so the system
 // knows which to try first (P3 will implement failover across priorities).
 //
@@ -20,7 +21,7 @@
 
 'use client'
 
-export type LLMProvider = 'zai' | 'openai'
+export type LLMProvider = 'openai'
 export type SearchConfigType = 's2' | 'crossref' | 'openalex' | 'unpaywall'
 
 export interface LLMConfigEntry {
@@ -180,10 +181,10 @@ export function migrateFromOldFormat(): MultiConfig | null {
       old.llmApiKey ||
       old.llmModel
     ) {
-      const provider: LLMProvider = old.llmProvider === 'openai' ? 'openai' : 'zai'
+      const provider: LLMProvider = 'openai'
       config.llm.push({
         id: uuid(),
-        label: provider === 'openai' ? 'OpenAI' : 'Z.ai',
+        label: 'OpenAI',
         provider,
         baseURL: old.llmBaseURL || '',
         apiKey: old.llmApiKey || '',
@@ -235,10 +236,10 @@ export function newLLMConfigEntry(
   return {
     id: uuid(),
     label: '',
-    provider: 'zai',
-    baseURL: '',
+    provider: 'openai',
+    baseURL: DEFAULT_OPENAI_BASE_URL,
     apiKey: '',
-    model: '',
+    model: 'gpt-4o-mini',
     enabled: true,
     priority: Date.now(),
     ...partial,
@@ -271,7 +272,7 @@ function normalizeLLMEntry(e: Partial<LLMConfigEntry>): LLMConfigEntry {
   return {
     id: typeof e.id === 'string' && e.id ? e.id : uuid(),
     label: typeof e.label === 'string' ? e.label : '',
-    provider: e.provider === 'openai' ? 'openai' : 'zai',
+    provider: 'openai',
     baseURL: typeof e.baseURL === 'string' ? e.baseURL : '',
     apiKey: typeof e.apiKey === 'string' ? e.apiKey : '',
     model: typeof e.model === 'string' ? e.model : '',

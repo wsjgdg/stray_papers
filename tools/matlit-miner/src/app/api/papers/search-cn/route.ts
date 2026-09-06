@@ -4,7 +4,7 @@ import { searchCrossref, normalizeCrossrefWork } from '@/lib/crossref'
 import { mergeApiKeys } from '@/lib/api-keys'
 import { invalidate } from '@/lib/cache'
 import { deduplicatePapers, titleSimilarity } from '@/lib/dedup'
-import { setLLMConfig, translatePaperText } from '@/lib/llm'
+import { translatePaperText, getLLMConfigsFromHeaders, type LLMConfigEntry } from '@/lib/llm'
 import { sanitizePaperText } from '@/lib/text-sanitizer'
 
 // POST /api/papers/search-cn
@@ -105,7 +105,10 @@ function containsCJK(s: string): boolean {
 // Translate an arbitrary (likely English) query string into Chinese.
 // Tries: (1) dictionary, (2) LLM (translatePaperText with empty abstract),
 // (3) returns the original string as a last-resort fallback.
-async function translateQueryToChinese(query: string): Promise<string> {
+async function translateQueryToChinese(
+  query: string,
+  configs: LLMConfigEntry[],
+): Promise<string> {
   const q = query.trim()
   if (!q) return ''
   // (1) Direct dictionary hit (case-insensitive).
@@ -124,7 +127,7 @@ async function translateQueryToChinese(query: string): Promise<string> {
   }
   // (2) LLM fallback.
   try {
-    const result = await translatePaperText(q, '', 'en')
+    const result = await translatePaperText(q, '', 'en', undefined, configs)
     // translatePaperText is designed for title+abstract; the title field
     // will hold the translated query. Sanity-check the result has CJK.
     if (result.title && containsCJK(result.title)) {
@@ -169,17 +172,8 @@ export async function POST(req: NextRequest) {
   const perQuery = Math.min(Math.max(1, Number(limit) || 15), 30)
 
   // Configure LLM from request headers (used by translateQueryToChinese).
-  const llmProvider = req.headers.get('x-llm-provider')
-  if (llmProvider === 'openai') {
-    setLLMConfig({
-      provider: 'openai',
-      baseURL: req.headers.get('x-llm-baseurl') || undefined,
-      apiKey: req.headers.get('x-llm-apikey') || undefined,
-      model: req.headers.get('x-llm-model') || undefined,
-    })
-  } else {
-    setLLMConfig({ provider: 'zai' })
-  }
+  // Falls back to the server env OpenAI config when none supplied.
+  const configs = getLLMConfigsFromHeaders(req.headers)
 
   // API keys (for CrossRef polite pool)
   const keys = mergeApiKeys({
@@ -222,7 +216,7 @@ export async function POST(req: NextRequest) {
   // We always try the LLM/dictionary translation of the English query,
   // and additionally include any Chinese aliases already on the material.
   const chineseQueries: string[] = []
-  const primaryZh = await translateQueryToChinese(englishQuery)
+  const primaryZh = await translateQueryToChinese(englishQuery, configs)
   if (primaryZh && !chineseQueries.includes(primaryZh)) {
     chineseQueries.push(primaryZh)
   }

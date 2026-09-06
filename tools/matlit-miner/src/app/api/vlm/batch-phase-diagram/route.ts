@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import ZAI from 'z-ai-web-dev-sdk'
+import {
+  callLLMWithFailover,
+  getLLMConfigsFromHeaders,
+  type LLMMessageContent,
+} from '@/lib/llm'
 
 // POST /api/vlm/batch-phase-diagram
 // Body: { materialId?: string, limit?: number }
@@ -8,6 +12,7 @@ import ZAI from 'z-ai-web-dev-sdk'
 // and runs VLM phase-diagram recognition on each.
 // Returns results array.
 export async function POST(req: NextRequest) {
+  const configs = getLLMConfigsFromHeaders(req.headers)
   const body = await req.json().catch(() => ({}))
   const { materialId, limit = 10 } = body
 
@@ -35,7 +40,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'No papers with OA URLs found', results: [] })
   }
 
-  const zai = await ZAI.create()
   const results: Array<{
     paperId: string
     title: string
@@ -53,33 +57,42 @@ export async function POST(req: NextRequest) {
     try {
       const prompt = `You are a materials science expert. Analyze this image from a paper about ${paper.material.name}. Is this a phase diagram? Respond in JSON: {"isPhaseDiagram": true/false, "confidence": 0.0-1.0, "diagramType": "binary|ternary|P-T|T-x|other|not_a_diagram", "summary": "one sentence"}`
 
-      const response = await zai.chat.completions.createVision({
-        model: 'glm-4v',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: prompt },
-              { type: 'image_url', image_url: { url: imageUrl } },
-            ],
-          },
-        ],
-        thinking: { type: 'disabled' },
-      })
+      const content: LLMMessageContent = [
+        { type: 'text', text: prompt },
+        { type: 'image_url', image_url: { url: imageUrl } },
+      ]
 
-      const content = response.choices[0]?.message?.content || ''
-      let parsed: { isPhaseDiagram?: boolean; confidence?: number; diagramType?: string; summary?: string } = {}
+      const response = await callLLMWithFailover(
+        [{ role: 'user', content }],
+        configs,
+        { retries: 2, timeoutMs: 120_000 },
+      )
+
+      let parsed: {
+        isPhaseDiagram?: boolean
+        confidence?: number
+        diagramType?: string
+        summary?: string
+      } = {}
       try {
-        let jsonStr = content.trim()
+        let jsonStr = response.trim()
         if (jsonStr.startsWith('```')) {
-          jsonStr = jsonStr.replace(/^```(?:json)?\s*/i, '').replace(/```$/i, '').trim()
+          jsonStr = jsonStr
+            .replace(/^```(?:json)?\s*/i, '')
+            .replace(/```$/i, '')
+            .trim()
         }
         const first = jsonStr.indexOf('{')
         const last = jsonStr.lastIndexOf('}')
         if (first !== -1 && last !== -1) jsonStr = jsonStr.slice(first, last + 1)
         parsed = JSON.parse(jsonStr)
       } catch {
-        parsed = { isPhaseDiagram: false, confidence: 0, diagramType: 'not_a_diagram', summary: 'Parse failed' }
+        parsed = {
+          isPhaseDiagram: false,
+          confidence: 0,
+          diagramType: 'not_a_diagram',
+          summary: 'Parse failed',
+        }
       }
 
       results.push({

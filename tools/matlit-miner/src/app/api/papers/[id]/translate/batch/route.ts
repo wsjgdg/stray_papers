@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { setLLMConfig, translatePaperText } from '@/lib/llm'
+import { translatePaperText, getLLMConfigsFromHeaders } from '@/lib/llm'
 import { detectLanguage } from '@/lib/language-detector'
 
 // POST /api/papers/[id]/translate/batch
@@ -19,18 +19,8 @@ export async function POST(req: NextRequest) {
   const limit = Math.min(parseInt(url.searchParams.get('limit') || '20', 10), 50)
   const materialId = url.searchParams.get('materialId') || undefined
 
-  // Configure LLM from request headers
-  const llmProvider = req.headers.get('x-llm-provider')
-  if (llmProvider === 'openai') {
-    setLLMConfig({
-      provider: 'openai',
-      baseURL: req.headers.get('x-llm-baseurl') || undefined,
-      apiKey: req.headers.get('x-llm-apikey') || undefined,
-      model: req.headers.get('x-llm-model') || undefined,
-    })
-  } else {
-    setLLMConfig({ provider: 'zai' })
-  }
+  // Configure LLM from request headers (openai-compatible backend).
+  const configs = getLLMConfigsFromHeaders(req.headers)
 
   // Find candidate papers: non-empty title, no existing translation
   const where: Record<string, unknown> = {
@@ -76,7 +66,7 @@ export async function POST(req: NextRequest) {
 
     // Non-English: translate via LLM (sequential — 1 at a time)
     try {
-      const translation = await translatePaperText(p.title, p.abstract, lang)
+      const translation = await translatePaperText(p.title, p.abstract, lang, undefined, configs)
       await db.paper.update({
         where: { id: p.id },
         data: {
