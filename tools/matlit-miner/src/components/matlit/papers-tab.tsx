@@ -1400,7 +1400,7 @@ export default function PapersTab({ focusMaterialId, onConsumeFocus }: { focusMa
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 20, opacity: 0 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="fixed bottom-0 left-0 right-0 z-40 px-3 sm:px-6 lg:px-8 pb-3 pointer-events-none"
+            className="fixed bottom-0 left-0 right-0 z-40 px-4 sm:px-6 lg:px-8 pb-3 pointer-events-none"
           >
             <div className="max-w-none mx-auto pointer-events-auto">
               <div
