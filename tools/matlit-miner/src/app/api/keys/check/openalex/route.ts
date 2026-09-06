@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// GET /api/test/openalex
+// GET /api/keys/check/openalex
 //
 // Validates the OpenAlex entry in Settings. Same honest framing as CrossRef:
 // OpenAlex has no key authentication, the email is a courtesy requirement.

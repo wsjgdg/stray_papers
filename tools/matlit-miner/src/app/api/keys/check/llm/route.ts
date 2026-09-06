@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// POST /api/test/llm
+// POST /api/keys/check/llm
 //
 // Validates the LLM entry the user is currently editing in Settings.
 //

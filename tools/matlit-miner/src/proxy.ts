@@ -1,7 +1,11 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 /**
- * Global proxy (formerly "middleware" in Next.js <16).
+ * Global proxy — the Next.js 16 replacement for the `middleware` convention.
+ *
+ * Next.js 16.1 deprecated `src/middleware.ts` in favour of `src/proxy.ts`
+ * exporting a `proxy()` function; the old filename still works but emits a
+ * deprecation warning on every boot and will break in a future major.
  *
  * T9 — API versioning:
  *   Adds `X-API-Version: 1` to every `/api/*` response so clients can pin /
@@ -16,7 +20,7 @@ import { NextResponse, type NextRequest } from 'next/server'
  */
 export const API_VERSION = '1'
 
-export function middleware(_req: NextRequest) {
+export function proxy(_req: NextRequest) {
   const res = NextResponse.next()
   res.headers.set('X-API-Version', API_VERSION)
   return res

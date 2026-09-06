@@ -1,6 +1,6 @@
 // Shared helper for the Settings "Test" buttons.
 //
-// Every /api/test/* route returns HTTP 200 with { ok, message } -- never a
+// Every /api/keys/check/* route returns HTTP 200 with { ok, message } -- never a
 // non-2xx response. That is load-bearing: src/lib/api-client.ts throws when
 // `!resp.ok`, and the settings dialog renders the thrown message verbatim.
 // Returning 200 + ok:false lets the dialog show a friendly per-entry error

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// GET /api/test/crossref
+// GET /api/keys/check/crossref
 //
 // Validates the CrossRef entry in Settings.
 //

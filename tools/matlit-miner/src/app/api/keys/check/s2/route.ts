@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// GET /api/test/s2
+// GET /api/keys/check/s2
 //
 // Validates the Semantic Scholar entry in Settings. The key is optional --
 // unauthenticated requests are rate-limited hard, so a missing key usually
@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 //
 // Reads the legacy single-entry header `x-s2-key` and deliberately ignores
 // the auto-injected `x-search-configs` for the same reason
-// src/app/api/test/llm/route.ts does: this button must validate the draft
+// src/app/api/keys/check/llm/route.ts does: this button must validate the draft
 // entry, not the saved one.
 
 export const runtime = 'nodejs'

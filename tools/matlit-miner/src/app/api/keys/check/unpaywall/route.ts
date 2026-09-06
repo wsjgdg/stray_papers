@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// GET /api/test/unpaywall
+// GET /api/keys/check/unpaywall
 //
 // Validates the Unpaywall entry in Settings. Unlike CrossRef and OpenAlex,
 // Unpaywall genuinely REQUIRES the email: it is a mandatory query parameter

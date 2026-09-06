@@ -19,7 +19,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Absolute base URL used to resolve the relative Open Graph / Twitter image
+// paths below. Without `metadataBase` Next.js falls back to
+// http://localhost:3000 and warns on every boot.
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "MatLit Miner · AI Literature Mining for Materials Science",
   description:
     "AI-assisted workflow for batch retrieval, LLM classification, and deep extraction of material science literature with DOI-linked evidence.",

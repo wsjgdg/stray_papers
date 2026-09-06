@@ -401,7 +401,12 @@ matlit-miner/
 │       └── unpaywall.ts            # Unpaywall OA client
 ├── examples/websocket/             # Standalone Socket.io examples
 ├── graphify-out/                   # Code knowledge graph (graph.html / graph.json)
-├── tests/                          # Build/runtime smoke scripts (no test runner)
+├── scripts/                        # Dev launcher + runtime smoke scripts
+│   ├── dev-server.mjs             # `bun run dev` tee into dev.log (Windows-safe)
+│   └── runtime/                   # Build/runtime smoke scripts (no test runner)
+│       ├── database-runtime-build.sh
+│       ├── python-runtime-build.sh
+│       └── python-runtime-container.sh
 ├── Dockerfile                      # Multi-stage build (node:20-slim + bun)
 ├── docker-compose.yml              # app + progress-service + realtime-service
 ├── .github/workflows/ci.yml        # lint + build
