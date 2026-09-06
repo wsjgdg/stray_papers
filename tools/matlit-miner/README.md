@@ -143,6 +143,24 @@ bun run dev
 
 Open **http://localhost:3000** in your browser. 🎉
 
+#### Windows
+
+Double-click **`start.bat`** to run steps 1–4 for you in one console window: it
+detects `bun` (falling back to `npm`), installs dependencies on first run,
+creates `db/custom.db` from the schema if absent, and starts the dev server.
+
+Two things it pins for you that are easy to get wrong:
+
+- `DATABASE_URL=file:../db/custom.db`. Prisma resolves the relative SQLite path
+  from `prisma/`, not the project root, so the schema's `file:./db/custom.db`
+  would otherwise put the DB in `prisma/db/`.
+- All package-manager calls are prefixed with `call`. A bare `bun run <script>`
+  in a batch file exits and takes `cmd.exe` down with it, so the launcher would
+  appear to work and then quietly stop after step 4.
+
+The optional progress service (port 3003) is **not** started — the app falls
+back to REST polling when it's absent.
+
 ### First run walkthrough
 
 1. Open the app → **Materials** tab → click **Seed defaults** to load 60 default materials
@@ -191,7 +209,7 @@ cp .env.example .env
 
 | Variable | Default | Notes |
 |----------|---------|-------|
-| `DATABASE_URL` | `file:./db/custom.db` | SQLite path, or `postgresql://...` for Postgres |
+| `DATABASE_URL` | `file:../db/custom.db` | SQLite path, or `postgresql://...` for Postgres. Prisma resolves relative paths from `prisma/`, not the project root — `file:./db/custom.db` silently creates the DB in `prisma/db/` instead |
 | `NODE_ENV` | `development` | Set `production` for Docker |
 | `PORT` | `3000` | Next.js dev/prod port |
 | `PROGRESS_SERVICE_PORT` | `3003` | WebSocket service port |
