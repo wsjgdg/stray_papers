@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
+import { Suspense, useState, type FormEvent } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,7 +11,7 @@ import { Loader2 } from 'lucide-react'
 
 type Mode = 'signin' | 'signup'
 
-export default function SignInPage() {
+function SignInForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/'
@@ -164,5 +164,15 @@ export default function SignInPage() {
         </form>
       </Card>
     </div>
+  )
+}
+
+// useSearchParams() must sit inside a Suspense boundary, otherwise Next.js
+// refuses to statically prerender this page and the production build fails.
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen" />}>
+      <SignInForm />
+    </Suspense>
   )
 }
