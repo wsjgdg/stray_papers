@@ -253,7 +253,7 @@ export function SettingsDialog({
   const testLLM = (entry: LLMConfigEntry) =>
     runTest(
       `llm-${entry.id}`,
-      '/api/test/llm',
+      '/api/keys/check/llm',
       'POST',
       {
         'x-llm-provider': entry.provider,
@@ -272,10 +272,10 @@ export function SettingsDialog({
       unpaywall: 'x-unpaywall-email',
     }
     const path: Record<SearchConfigType, string> = {
-      s2: '/api/test/s2',
-      crossref: '/api/test/crossref',
-      openalex: '/api/test/openalex',
-      unpaywall: '/api/test/unpaywall',
+      s2: '/api/keys/check/s2',
+      crossref: '/api/keys/check/crossref',
+      openalex: '/api/keys/check/openalex',
+      unpaywall: '/api/keys/check/unpaywall',
     }
     return runTest(field, path[entry.type], 'GET', { [headerKey[entry.type]]: entry.key })
   }
