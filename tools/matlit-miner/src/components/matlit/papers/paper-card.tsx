@@ -88,22 +88,20 @@ export function PaperCard({ paper, selected, onToggleSelect, onOpenDrawer, onDel
       }`}
     >
       <div className="flex items-start gap-2">
-        {/* Selection checkbox — wrapped in a 44×44 tap target (mobile a11y). */}
-        <button
-          type="button"
-          onClick={onToggleSelect}
-          className="shrink-0 -ml-1 p-1 min-w-[44px] min-h-[44px] flex items-start justify-center"
-          aria-label={t('papers.paperCard.selectAria')}
-          aria-pressed={selected}
-        >
+        {/* Selection checkbox. The <label> is the 44x44 tap target (mobile a11y)
+            and the Checkbox is the real accessible control, so toggling,
+            keyboard handling and the focus ring all come from Radix. The wrapper
+            used to be a <button> wrapping a <Checkbox> -- but Checkbox renders
+            its own <button role="checkbox">, so this was a button inside a
+            button: invalid HTML, a hydration error, and no keyboard access. */}
+        <label className="shrink-0 -ml-1 p-1 min-w-[44px] min-h-[44px] flex items-start justify-center cursor-pointer">
           <Checkbox
             checked={selected}
             onCheckedChange={onToggleSelect}
-            className="mt-1.5 pointer-events-none"
-            aria-hidden="true"
-            tabIndex={-1}
+            className="mt-1.5"
+            aria-label={t('papers.paperCard.selectAria')}
           />
-        </button>
+        </label>
         {/* Card body — tap (or Enter/Space) to open the detail drawer. */}
         <div
           className="flex-1 min-w-0 cursor-pointer"
