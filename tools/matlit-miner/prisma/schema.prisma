@@ -1,0 +1,185 @@
+// MatLit Miner - Material Literature Mining Database Schema
+// Supports SQLite (default) and PostgreSQL (for multi-user/production).
+// To switch to PostgreSQL:
+//   1. Set DATABASE_URL=postgresql://... in .env
+//   2. Change provider below to "postgresql"
+//   3. Run: bun run db:push
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // Change to "postgresql" for production/multi-user deployments
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 用户账户 - NextAuth credentials-based authentication
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  passwordHash  String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  accounts      Account[]
+}
+
+// OAuth/Credentials linkage (NextAuth adapter compatibility)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  provider          String
+  providerAccountId String
+  refreshToken      String?
+  accessToken       String?
+  expiresAt         Int?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+// 材料列表 - the 60 materials to investigate
+model Material {
+  id          String   @id @default(cuid())
+  name        String   @unique // 化学式 / canonical name e.g. CH3NH3PbI3
+  aliases     String   @default("") // semicolon-separated aliases
+  category    String   @default("perovskite") // perovskite | oxide | chalcogenide | other
+  tags        String   @default("") // semicolon-separated tags (#14 - flexible grouping)
+  notes       String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  papers       Paper[]
+  classifications Classification[]
+  efficiencies Efficiency[]
+  verifications Verification[]
+  extractions  ExtractionJob[]
+
+  @@index([category])
+}
+
+// 论文 - retrieved from multiple scholarly sources
+model Paper {
+  id           String   @id @default(cuid())
+  materialId   String
+  material     Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  title        String
+  year         Int?
+  doi          String   @default("")
+  abstract     String   @default("")
+  authors      String   @default("") // semicolon-separated
+  venue        String   @default("")
+  url          String   @default("")
+  // provenance: which repository contributed this record
+  source       String   @default("semantic_scholar") // semantic_scholar | crossref | openalex | arxiv | europepmc | manual
+  // additional sources that returned the same paper (semicolon-separated) - RRI-style multi-source provenance
+  altSources   String   @default("")
+  citationCount Int     @default(0)
+  // open-access enrichment (from OpenAlex / Unpaywall)
+  oaUrl        String   @default("")
+  oaStatus     String   @default("") // gold | green | hybrid | bronze | closed | oa
+  // user notes / annotations (#13)
+  notes        String   @default("")
+  // multilingual support (#18)
+  originalLanguage String @default("") // detected ISO 639-1 code, e.g. en/zh/ja/de
+  translatedTitle  String @default("") // LLM-translated English title (if non-English)
+  translatedAbstract String @default("") // LLM-translated English abstract
+  createdAt    DateTime @default(now())
+
+  classification Classification?
+
+  @@index([materialId])
+  @@index([doi])
+  @@index([year])
+  @@index([source])
+}
+
+// 分类结果 - LLM classification of an abstract
+model Classification {
+  id            String   @id @default(cuid())
+  paperId       String   @unique
+  paper         Paper    @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  materialId    String
+  material      Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  // LLM judgment flags
+  synthesized   String   @default("uncertain") // yes | no | uncertain
+  hasBandgap    Boolean  @default(false)
+  hasMethod     Boolean  @default(false)
+  hasEfficiency Boolean  @default(false)
+  hasPhaseDiagram Boolean @default(false)
+  // Extracted details (filled by extraction job)
+  bandgapValue  String   @default("")
+  synthesisMethod String @default("")
+  conditions    String   @default("")
+  phaseDiagramInfo String @default("")
+  efficiencyValue String @default("")
+  evidence      String   @default("") // supporting quotes from abstract
+  confidence    Float    @default(0)
+  // processing metadata
+  status        String   @default("classified") // classified | extracted | verified | rejected
+  model         String   @default("")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([materialId])
+  @@index([synthesized])
+  @@index([status])
+}
+
+// 太阳能电池效率记录 - from NREL / Perovskite Database / literature
+model Efficiency {
+  id            String   @id @default(cuid())
+  materialId    String
+  material      Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  efficiencyValue Float  @default(0) // %
+  certified     Boolean  @default(false)
+  source        String   @default("") // NREL | Perovskite Database | Emerging PV | literature
+  sourceType    String   @default("database") // database | literature
+  testConditions String  @default("")
+  doi           String   @default("")
+  year          Int?
+  notes         String   @default("")
+  createdAt     DateTime @default(now())
+
+  @@index([materialId])
+}
+
+// 人工核验记录
+model Verification {
+  id           String   @id @default(cuid())
+  materialId   String
+  material     Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  status       String   @default("pending") // pending | verified | flagged | rejected
+  reviewer     String   @default("anonymous")
+  notes        String   @default("")
+  checkedFields String  @default("") // semicolon-separated e.g. bandgap;method;efficiency
+  doiChecked   String   @default("")
+  project      String   @default("default") // project name for collaboration isolation
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([materialId])
+  @@index([status])
+  @@index([project])
+}
+
+// 数据提取任务 - track LLM extraction jobs (full-text or deep abstract extraction)
+model ExtractionJob {
+  id           String   @id @default(cuid())
+  materialId   String
+  material     Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  jobType      String   @default("extract") // extract | classify | phase_diagram
+  status       String   @default("pending") // pending | running | completed | failed
+  papersProcessed Int    @default(0)
+  result       String   @default("") // JSON summary
+  error        String   @default("")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([materialId])
+  @@index([status])
+}
