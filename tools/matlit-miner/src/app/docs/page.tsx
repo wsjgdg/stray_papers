@@ -495,7 +495,7 @@ export default function DocsPage() {
     <div className="min-h-screen flex flex-col bg-background text-foreground">
       {/* Top bar */}
       <header className="sticky top-0 z-30 border-b border-slate-200 dark:border-slate-800 bg-white/85 dark:bg-slate-950/85 backdrop-blur">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-3">
+        <div className="max-w-none mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-3">
           <Atom className="w-5 h-5 text-emerald-500 shrink-0" />
           <div className="min-w-0">
             <h1 className="text-sm sm:text-base font-semibold leading-tight inline-flex items-center gap-2">
@@ -543,7 +543,7 @@ export default function DocsPage() {
       </header>
 
       {/* Body: sidebar + main */}
-      <div className="flex-1 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="flex-1 w-full max-w-none mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex gap-6">
           {/* Sidebar — desktop only */}
           <aside className="hidden lg:block w-60 shrink-0">

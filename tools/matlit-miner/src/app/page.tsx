@@ -1519,7 +1519,7 @@ export default function Home() {
       <a href="#main-content" className="skip-link">Skip to main content</a>
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl" role="banner">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-2 sm:gap-4 flex-wrap">
+        <div className="max-w-none mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-2 sm:gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
@@ -2229,7 +2229,7 @@ export default function Home() {
             role="alert"
             aria-live="assertive"
           >
-            <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center gap-2 text-xs sm:text-sm font-medium">
+            <div className="max-w-none mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center gap-2 text-xs sm:text-sm font-medium">
               <WifiOff className="w-3.5 h-3.5 shrink-0" aria-hidden />
               <span>
                 {locale === 'zh'
@@ -2242,7 +2242,7 @@ export default function Home() {
       </AnimatePresence>
 
       {/* Main content */}
-      <main id="main-content" role="main" className="flex-1 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main id="main-content" role="main" className="flex-1 w-full max-w-none mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <ThemeFirstVisit />
         <Tabs value={tab} onValueChange={(v) => setTab(v as TabValue)} className="w-full">
           {/* Desktop tablist: full grid, drag-to-reorder, hover shortcut hints */}
@@ -3076,7 +3076,7 @@ export default function Home() {
 
       {/* Sticky footer */}
       <footer role="contentinfo" className="mt-auto border-t border-slate-200/80 dark:border-slate-800/80 bg-white/60 dark:bg-slate-950/60 backdrop-blur">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+        <div className="max-w-none mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
           <p className="flex items-center gap-1.5">
             <Atom className="w-3.5 h-3.5 text-emerald-500" />
             {t('app.footer.note')}
