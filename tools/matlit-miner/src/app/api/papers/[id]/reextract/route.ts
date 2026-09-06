@@ -32,7 +32,7 @@ export async function POST(
         materialId: paper.materialId,
         synthesized: 'yes', // user-triggered reextract implies they believe it's synthesized
         status: 'classified',
-        model: 'glm-4-flash',
+        model: configs[0]?.model || 'gpt-4o-mini',
       },
     })
   }

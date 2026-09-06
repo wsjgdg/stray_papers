@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
               evidence: toStr(result.evidence).slice(0, 500),
               confidence: result.confidence,
               status: 'classified',
-              model: 'glm-4-flash',
+              model: configs[0]?.model || 'gpt-4o-mini',
             },
           })
         }

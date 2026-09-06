@@ -141,7 +141,7 @@ export async function POST(req: NextRequest) {
           evidence: result.evidence,
           confidence: result.confidence,
           status: 'classified',
-          model: 'glm-4-flash',
+          model: configs[0]?.model || 'gpt-4o-mini',
         },
         update: {
           synthesized: result.synthesized,
