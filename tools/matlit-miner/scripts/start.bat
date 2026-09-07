@@ -98,9 +98,19 @@ echo.
 rem ---------------------------------------------------------------------------
 rem 4. Prisma client, then the SQLite database
 rem ---------------------------------------------------------------------------
-echo [4/5] Generating Prisma Client
-call %RUN% run db:generate
-if errorlevel 1 goto :fail
+rem Skip `prisma generate` when the client is already present. Running it while
+rem the dev server holds the query-engine binary open makes the rename step
+rem fail with EPERM and aborts the whole launcher; the existing client works
+rem fine, so only regenerate from scratch when it is missing. To force a
+rem regenerate after editing the schema, stop the server and run
+rem `bun run db:generate` by hand.
+if exist "node_modules\.prisma\client\index.js" (
+    echo [4/5] Prisma Client already present - skipping generate
+) else (
+    echo [4/5] Generating Prisma Client
+    call %RUN% run db:generate
+    if errorlevel 1 goto :fail
+)
 
 if exist "db\custom.db" (
     echo [4/5] Database present at db\custom.db - leaving your data untouched
