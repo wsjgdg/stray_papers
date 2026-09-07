@@ -263,10 +263,12 @@ function serverDefaultConfig(): LLMConfig {
     }
   }
   // Fall back to the persisted user config (Settings → /api/user/config).
-  // Prefer a named-user entry over the anonymous one, but accept either.
+  // `_anonymous` is the explicit primary default; only fall back to another
+  // stored entry (e.g. a vision backend) when no `_anonymous` key exists, so
+  // adding a secondary backend never silently overrides the chosen default.
   const store = readUserConfigSync()
-  const named = Object.entries(store).find(([k]) => k !== '_anonymous')?.[1]
-  const entry = (named ?? store['_anonymous']) as Record<string, unknown> | undefined
+  const entry = (store['_anonymous'] ??
+    Object.values(store)[0]) as Record<string, unknown> | undefined
   if (entry) {
     const uBase = typeof entry.llmBaseURL === 'string' ? entry.llmBaseURL : ''
     const uKey = typeof entry.llmApiKey === 'string' ? entry.llmApiKey : ''
@@ -287,6 +289,73 @@ function serverDefaultConfig(): LLMConfig {
     apiKey: '',
     model: 'gpt-4o-mini',
   }
+}
+
+/**
+ * Return the persisted user config(s) as a failover list of `LLMConfigEntry`.
+ *
+ * Used by `getLLMConfigsFromHeaders` when no `x-llm-*` headers are present,
+ * so the backend works without the browser localStorage config and survives
+ * restarts. `_anonymous` (the primary default) is always tried first; any
+ * additional stored entries (e.g. a vision-capable backend for the VLM /
+ * phase-diagram step) act as failover — so a text-only default can chain to
+ * a vision model automatically when an image is sent.
+ */
+function serverDefaultConfigList(): LLMConfigEntry[] {
+  // Env-var fast path: a single env-supplied config (no failover).
+  if (process.env.OPENAI_BASE_URL || process.env.OPENAI_API_KEY) {
+    return [
+      {
+        id: 'env-openai',
+        provider: 'openai',
+        baseURL: process.env.OPENAI_BASE_URL || DEFAULT_OPENAI_BASE_URL,
+        apiKey: process.env.OPENAI_API_KEY || '',
+        model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+        enabled: true,
+        priority: 0,
+      },
+    ]
+  }
+
+  const store = readUserConfigSync()
+  // Order: `_anonymous` first, then any other stored entries.
+  const keys = Object.keys(store).sort((a, b) =>
+    a === '_anonymous' ? -1 : b === '_anonymous' ? 1 : 0,
+  )
+
+  const entries: LLMConfigEntry[] = []
+  keys.forEach((k, i) => {
+    const e = store[k] as Record<string, unknown> | undefined
+    if (!e) return
+    const base = typeof e.llmBaseURL === 'string' ? e.llmBaseURL : ''
+    const key = typeof e.llmApiKey === 'string' ? e.llmApiKey : ''
+    const model = typeof e.llmModel === 'string' ? e.llmModel : ''
+    if (!base && !key) return
+    entries.push({
+      id: k,
+      provider: 'openai',
+      baseURL: base || DEFAULT_OPENAI_BASE_URL,
+      apiKey: key,
+      model: model || 'gpt-4o-mini',
+      enabled: true,
+      priority: i,
+    })
+  })
+
+  if (entries.length > 0) return entries
+
+  // Built-in default.
+  return [
+    {
+      id: 'default',
+      provider: 'openai',
+      baseURL: DEFAULT_OPENAI_BASE_URL,
+      apiKey: '',
+      model: 'gpt-4o-mini',
+      enabled: true,
+      priority: 0,
+    },
+  ]
 }
 
 // Current LLM config (legacy global; prefer passing configs from headers).
@@ -682,19 +751,8 @@ export function getLLMConfigsFromHeaders(headers: Headers): LLMConfigEntry[] {
     ]
   }
 
-  // ── 3. Default: server env OpenAI config ─────────────────────────────
-  const def = serverDefaultConfig()
-  return [
-    {
-      id: 'default',
-      provider: 'openai',
-      baseURL: def.baseURL,
-      apiKey: def.apiKey,
-      model: def.model,
-      enabled: true,
-      priority: 0,
-    },
-  ]
+  // ── 3. Default: server-persisted config(s) as a failover list ──────────
+  return serverDefaultConfigList()
 }
 
 // ─── Backward-compat single-config entry point ────────────────────────────
