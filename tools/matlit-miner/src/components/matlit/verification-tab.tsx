@@ -413,9 +413,9 @@ function VerifyForm({
   isPending: boolean
 }) {
   const { t } = useI18n()
-  const existing = material.verifications[0]
-  const cls = material.classifications[0]
-  const eff = material.efficiencies[0]
+  const existing = material.verifications?.[0]
+  const cls = material.classifications?.[0]
+  const eff = material.efficiencies?.[0]
   const primaryDoi = material.papers.find((p) => p.doi)?.doi || eff?.doi || ''
 
   const [status, setStatus] = useState(existing?.status ?? 'verified')
