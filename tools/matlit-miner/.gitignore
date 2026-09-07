@@ -47,7 +47,7 @@ local-*
 .claude
 .z-ai-config
 *.log
-dev.log
+/logs/
 dev.out.log
 test
 prompt
