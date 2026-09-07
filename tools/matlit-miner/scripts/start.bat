@@ -24,7 +24,7 @@ rem    step 4. "call %RUN% run <script>" survives and the batch continues.
 rem    Do not "clean up" the call keywords.
 rem ===========================================================================
 
-cd /d "%~dp0"
+cd /d "%~dp0.."
 if errorlevel 1 goto :fail
 
 echo.

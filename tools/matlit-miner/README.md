@@ -400,19 +400,23 @@ matlit-miner/
 │       ├── europe-pmc.ts           # Europe PMC client
 │       └── unpaywall.ts            # Unpaywall OA client
 ├── examples/websocket/             # Standalone Socket.io examples
-├── graphify-out/                   # Code knowledge graph (graph.html / graph.json)
-├── scripts/                        # Dev launcher + runtime smoke scripts
-│   ├── dev-server.mjs             # `bun run dev` tee into dev.log (Windows-safe)
+├── docs/                           # Documentation (moved out of repo root)
+│   ├── CONTRIBUTING.md             # Dev setup, code style, PR process
+│   └── worklog.md                  # Development session log
+├── scripts/                        # Launchers + runtime smoke scripts
+│   ├── start.bat                   # Windows one-click dev launcher (double-click)
+│   ├── dev-server.mjs             # `bun run dev` tee into logs/dev.log (Windows-safe)
 │   └── runtime/                   # Build/runtime smoke scripts (no test runner)
 │       ├── database-runtime-build.sh
 │       ├── python-runtime-build.sh
 │       └── python-runtime-container.sh
+├── tools/graphify-out/             # Code knowledge graph (graph.html / graph.json) — generated
+├── logs/                           # Runtime logs (logs/dev.log), gitignored
 ├── Dockerfile                      # Multi-stage build (node:20-slim + bun)
 ├── docker-compose.yml              # app + progress-service + realtime-service
 ├── .github/workflows/ci.yml        # lint + build
 ├── .nvmrc                          # Node 20 LTS
 ├── .env.example                    # Environment variable template
-├── worklog.md                      # Development session log
 └── package.json
 ```
 
@@ -422,7 +426,7 @@ matlit-miner/
 
 | Command | Description |
 |---------|-------------|
-| `bun run dev` | Start Next.js dev server on port 3000 (logs to `dev.log`) |
+| `bun run dev` | Start Next.js dev server on port 3000 (logs to `logs/dev.log`) |
 | `bun run build` | Production build (standalone output) |
 | `bun run start` | Start production server from standalone build |
 | `bun run lint` | Run ESLint (Next.js + custom rules) |

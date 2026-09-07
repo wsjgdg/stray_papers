@@ -60,9 +60,9 @@ server.log
 /db/*.db-journal
 
 # graphify local state (machine-specific interpreter path)
-/graphify-out/.graphify_python
-/graphify-out/.graphify_root
-/graphify-out/cost.json
+**/graphify-out/.graphify_python
+**/graphify-out/.graphify_root
+**/graphify-out/cost.json
 
 # persisted LLM backend credentials (contains API keys — never commit)
 /data/user-config.json

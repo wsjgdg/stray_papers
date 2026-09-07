@@ -1,4 +1,4 @@
-// Dev-server launcher: runs `next dev` and tees its output into dev.log.
+// Dev-server launcher: runs `next dev` and tees its output into logs/dev.log.
 //
 // Why this file exists instead of a plain `| tee dev.log` in package.json.
 //
@@ -27,9 +27,14 @@
 // the sink, so keeping the file real matters.
 
 import { spawn } from 'node:child_process'
-import { createWriteStream } from 'node:fs'
+import { createWriteStream, mkdirSync, existsSync } from 'node:fs'
 
-const log = createWriteStream('dev.log', { flags: 'w' })
+// Keep the dev log out of the project root — write it under logs/ so the
+// repo root stays clean (see "Project Structure" in README).
+const LOG_DIR = 'logs'
+if (!existsSync(LOG_DIR)) mkdirSync(LOG_DIR, { recursive: true })
+
+const log = createWriteStream(`${LOG_DIR}/dev.log`, { flags: 'w' })
 
 const child = spawn('next dev -p 3000', {
   shell: true,
