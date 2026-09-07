@@ -124,13 +124,16 @@ echo      to load the 60 default materials.
 :have_db
 echo.
 rem ---------------------------------------------------------------------------
-rem 5. Port check, then the dev server
+rem 5. Dev server - if port 3000 is already taken by another instance, keep
+rem    that server and skip starting a second one instead of failing the
+rem    launcher with a bind error.
 rem ---------------------------------------------------------------------------
 netstat -ano | findstr "LISTENING" | findstr ":3000 " >nul 2>nul
 if %errorlevel% equ 0 (
     echo [WARN] Port 3000 is already in use. Stop the other server first, or
     echo        just open http://localhost:3000 and use that one.
     echo.
+    goto :skip_dev
 )
 echo [5/5] Starting dev server at http://localhost:3000
 echo.
@@ -168,6 +171,7 @@ echo.
 
 call %RUN% run dev
 if errorlevel 1 goto :fail
+:skip_dev
 
 echo.
 echo Dev server stopped.
