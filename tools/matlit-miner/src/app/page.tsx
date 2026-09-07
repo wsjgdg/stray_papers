@@ -14,8 +14,8 @@ import {
   Microscope,
   Zap,
   Table2,
-  Gauge,
-  RotateCcw,
+  // Gauge,      // P3-12 LLM quota widget only (widget disabled — see comment below)
+  // RotateCcw,  // P3-12 LLM quota widget only (widget disabled)
   ShieldCheck,
   Atom,
   BookOpen,
@@ -258,30 +258,30 @@ const UNDO_CATEGORY_COLORS: Record<UndoCategory, string> = {
 // (reset window / set custom limit). Detects HTTP 429 from any LLM route
 // via the global sonner toast on fetch errors containing "quota exceeded".
 
-interface QuotaApiResponse {
-  used: number
-  limit: number
-  remaining: number
-  resetAt: number
-  percentUsed: number
-  tokensEstimate: number
-  history: Array<{ date: string; calls: number; tokens: number }>
-  identifier: string
-  defaultLimit: number
-}
-
-function formatResetInLocal(resetAt: number, locale: 'en' | 'zh'): string {
-  const ms = Math.max(0, resetAt - Date.now())
-  const totalMin = Math.ceil(ms / 60000)
-  const h = Math.floor(totalMin / 60)
-  const m = totalMin % 60
-  if (locale === 'zh') {
-    if (h > 0) return `${h}小时${m}分钟后重置`
-    return `${m}分钟后重置`
-  }
-  if (h > 0) return `Resets in ${h}h ${m}m`
-  return `Resets in ${m}m`
-}
+// interface QuotaApiResponse {
+//   used: number
+//   limit: number
+//   remaining: number
+//   resetAt: number
+//   percentUsed: number
+//   tokensEstimate: number
+//   history: Array<{ date: string; calls: number; tokens: number }>
+//   identifier: string
+//   defaultLimit: number
+// }
+// 
+// function formatResetInLocal(resetAt: number, locale: 'en' | 'zh'): string {
+//   const ms = Math.max(0, resetAt - Date.now())
+//   const totalMin = Math.ceil(ms / 60000)
+//   const h = Math.floor(totalMin / 60)
+//   const m = totalMin % 60
+//   if (locale === 'zh') {
+//     if (h > 0) return `${h}小时${m}分钟后重置`
+//     return `${m}分钟后重置`
+//   }
+//   if (h > 0) return `Resets in ${h}h ${m}m`
+//   return `Resets in ${m}m`
+// }
 
 // ─── G14: AI review freshness tracking ────────────────────────────────────
 // Reviews are generated server-side and cached 1h in memory by
@@ -407,256 +407,256 @@ function formatReviewAge(
   }
 }
 
-function QuotaWidget({ locale }: { locale: 'en' | 'zh' }) {
-  const [open, setOpen] = useState(false)
-  const [limitInput, setLimitInput] = useState('')
-
-  const { data, refetch, isFetching } = useQuery<QuotaApiResponse>({
-    queryKey: ['llm-quota'],
-    queryFn: () => api('/api/quota'),
-    refetchInterval: 30_000,
-    refetchOnWindowFocus: true,
-    staleTime: 10_000,
-  })
-
-  // Detect quota-exceeded errors bubbling up through react-query mutations
-  // anywhere in the app (LLM API routes that catch QuotaExceededError and
-  // return 429 / a message containing "quota exceeded"). Show a toast once.
-  useEffect(() => {
-    function onQuotaExceeded(e: Event) {
-      const detail = (e as CustomEvent<{ message?: string; resetAt?: number }>).detail
-      const msg = detail?.message || ''
-      if (/quota/i.test(msg)) {
-        toast.error(
-          locale === 'zh'
-            ? '今日 LLM 配额已用完，请稍后重试或调整限额'
-            : 'Daily LLM quota exceeded — please retry later or raise the limit',
-          { duration: 6000 },
-        )
-      }
-    }
-    window.addEventListener('matlit:quota-exceeded', onQuotaExceeded as EventListener)
-    return () => window.removeEventListener('matlit:quota-exceeded', onQuotaExceeded as EventListener)
-  }, [locale])
-
-  const used = data?.used ?? 0
-  const limit = data?.limit ?? 100
-  const pct = data?.percentUsed ?? 0
-  const resetAt = data?.resetAt ?? Date.now() + 24 * 60 * 60 * 1000
-  const tokens = data?.tokensEstimate ?? 0
-  const history = data?.history ?? []
-  const identifier = data?.identifier ?? 'default'
-
-  // ring colour by threshold
-  const ringColor =
-    pct >= 100
-      ? '#ef4444' // red-500
-      : pct >= 80
-        ? '#f59e0b' // amber-500
-        : '#10b981' // emerald-500
-
-  // SVG ring geometry — 28 px circle
-  const R = 11
-  const C = 2 * Math.PI * R
-  const dash = (Math.min(100, pct) / 100) * C
-
-  const maxHistoryCalls = Math.max(1, ...history.map((h) => h.calls))
-
-  async function handleReset() {
-    try {
-      await api('/api/quota', {
-        method: 'POST',
-        body: JSON.stringify({ reset: true }),
-      })
-      toast.success(locale === 'zh' ? '配额已重置' : 'Quota window reset')
-      void refetch()
-    } catch {
-      toast.error(locale === 'zh' ? '重置失败' : 'Reset failed')
-    }
-  }
-
-  async function handleSetLimit() {
-    const n = parseInt(limitInput, 10)
-    if (!Number.isFinite(n) || n <= 0) {
-      toast.error(locale === 'zh' ? '请输入正整数' : 'Enter a positive integer')
-      return
-    }
-    try {
-      await api('/api/quota', {
-        method: 'POST',
-        body: JSON.stringify({ limit: n }),
-      })
-      toast.success(
-        locale === 'zh' ? `每日限额已设为 ${n}` : `Daily limit set to ${n}`,
-      )
-      setLimitInput('')
-      void refetch()
-    } catch {
-      toast.error(locale === 'zh' ? '设置失败' : 'Failed to set limit')
-    }
-  }
-
-  const titleText =
-    pct >= 100
-      ? locale === 'zh'
-        ? 'LLM 配额已用完'
-        : 'LLM quota exceeded'
-      : locale === 'zh'
-        ? `LLM 配额：${used}/${limit}`
-        : `LLM quota: ${used}/${limit}`
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label={titleText}
-          title={titleText}
-          className="relative inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-        >
-          <svg width="28" height="28" viewBox="0 0 28 28" className="-rotate-90">
-            <circle
-              cx="14"
-              cy="14"
-              r={R}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              className="text-slate-200 dark:text-slate-700"
-            />
-            <circle
-              cx="14"
-              cy="14"
-              r={R}
-              fill="none"
-              stroke={ringColor}
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeDasharray={`${dash} ${C}`}
-            />
-          </svg>
-          <span
-            className="absolute text-[8px] font-bold tabular-nums pointer-events-none"
-            style={{ color: ringColor }}
-          >
-            {pct >= 100 ? '!' : `${pct}`}
-          </span>
-        </button>
-      </PopoverTrigger>
-      <PopoverContent
-        align="end"
-        className="w-72 p-3 text-xs space-y-3"
-        sideOffset={6}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-200">
-            <Gauge className="w-3.5 h-3.5" style={{ color: ringColor }} />
-            {locale === 'zh' ? 'LLM 用量配额' : 'LLM Usage Quota'}
-          </div>
-          <Badge
-            variant="outline"
-            className="text-[10px] sm:text-[9px] font-mono px-1.5 py-0 max-w-[110px] truncate"
-            title={identifier}
-          >
-            {identifier}
-          </Badge>
-        </div>
-
-        {/* big number row */}
-        <div className="flex items-end justify-between">
-          <div>
-            <div className="text-2xl font-bold tabular-nums" style={{ color: ringColor }}>
-              {used}
-              <span className="text-sm text-slate-400">/{limit}</span>
-            </div>
-            <div className="text-[11px] sm:text-[10px] text-slate-500 dark:text-slate-400">
-              {locale === 'zh' ? '今日调用次数' : 'calls today'}
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-sm font-semibold tabular-nums text-slate-600 dark:text-slate-300">
-              ~{tokens.toLocaleString()}
-            </div>
-            <div className="text-[11px] sm:text-[10px] text-slate-500 dark:text-slate-400">
-              {locale === 'zh' ? '估算 tokens' : 'est. tokens'}
-            </div>
-          </div>
-        </div>
-
-        {/* linear progress */}
-        <div className="h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all"
-            style={{ width: `${Math.min(100, pct)}%`, backgroundColor: ringColor }}
-          />
-        </div>
-        <div className="flex items-center justify-between text-[11px] sm:text-[10px] text-slate-500 dark:text-slate-400">
-          <span>{pct}% {locale === 'zh' ? '已用' : 'used'}</span>
-          <span>{formatResetInLocal(resetAt, locale)}</span>
-        </div>
-
-        {/* 7-day history mini chart */}
-        {history.length > 0 && (
-          <div className="space-y-1">
-            <div className="text-[11px] sm:text-[10px] text-slate-500 dark:text-slate-400">
-              {locale === 'zh' ? '近 7 天' : 'Last 7 days'}
-            </div>
-            <div className="flex items-end gap-1 h-10">
-              {history.slice(-7).map((b) => {
-                const h = Math.max(2, (b.calls / maxHistoryCalls) * 100)
-                return (
-                  <div key={b.date} className="flex-1 flex flex-col items-center gap-0.5">
-                    <div
-                      className="w-full rounded-sm bg-emerald-400/80 dark:bg-emerald-500/70"
-                      style={{ height: `${h}%` }}
-                      title={`${b.date}: ${b.calls} calls`}
-                    />
-                    <span className="text-[7px] text-slate-400 tabular-nums">
-                      {b.date.slice(5)}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* admin controls */}
-        <div className="border-t border-slate-200 dark:border-slate-700 pt-2 space-y-2">
-          <div className="flex gap-1">
-            <Input
-              type="number"
-              min="1"
-              value={limitInput}
-              onChange={(e) => setLimitInput(e.target.value)}
-              placeholder={locale === 'zh' ? '自定义每日限额' : 'Custom daily limit'}
-              className="h-7 text-xs"
-            />
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs shrink-0"
-              onClick={handleSetLimit}
-              disabled={!limitInput}
-            >
-              {locale === 'zh' ? '设置' : 'Set'}
-            </Button>
-          </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 text-xs w-full"
-            onClick={handleReset}
-            disabled={isFetching}
-          >
-            <RotateCcw className="w-3 h-3 mr-1.5" />
-            {locale === 'zh' ? '重置当前窗口' : 'Reset window'}
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
-  )
-}
+// function QuotaWidget({ locale }: { locale: 'en' | 'zh' }) {
+//   const [open, setOpen] = useState(false)
+//   const [limitInput, setLimitInput] = useState('')
+// 
+//   const { data, refetch, isFetching } = useQuery<QuotaApiResponse>({
+//     queryKey: ['llm-quota'],
+//     queryFn: () => api('/api/quota'),
+//     refetchInterval: 30_000,
+//     refetchOnWindowFocus: true,
+//     staleTime: 10_000,
+//   })
+// 
+//   // Detect quota-exceeded errors bubbling up through react-query mutations
+//   // anywhere in the app (LLM API routes that catch QuotaExceededError and
+//   // return 429 / a message containing "quota exceeded"). Show a toast once.
+//   useEffect(() => {
+//     function onQuotaExceeded(e: Event) {
+//       const detail = (e as CustomEvent<{ message?: string; resetAt?: number }>).detail
+//       const msg = detail?.message || ''
+//       if (/quota/i.test(msg)) {
+//         toast.error(
+//           locale === 'zh'
+//             ? '今日 LLM 配额已用完，请稍后重试或调整限额'
+//             : 'Daily LLM quota exceeded — please retry later or raise the limit',
+//           { duration: 6000 },
+//         )
+//       }
+//     }
+//     window.addEventListener('matlit:quota-exceeded', onQuotaExceeded as EventListener)
+//     return () => window.removeEventListener('matlit:quota-exceeded', onQuotaExceeded as EventListener)
+//   }, [locale])
+// 
+//   const used = data?.used ?? 0
+//   const limit = data?.limit ?? 100
+//   const pct = data?.percentUsed ?? 0
+//   const resetAt = data?.resetAt ?? Date.now() + 24 * 60 * 60 * 1000
+//   const tokens = data?.tokensEstimate ?? 0
+//   const history = data?.history ?? []
+//   const identifier = data?.identifier ?? 'default'
+// 
+//   // ring colour by threshold
+//   const ringColor =
+//     pct >= 100
+//       ? '#ef4444' // red-500
+//       : pct >= 80
+//         ? '#f59e0b' // amber-500
+//         : '#10b981' // emerald-500
+// 
+//   // SVG ring geometry — 28 px circle
+//   const R = 11
+//   const C = 2 * Math.PI * R
+//   const dash = (Math.min(100, pct) / 100) * C
+// 
+//   const maxHistoryCalls = Math.max(1, ...history.map((h) => h.calls))
+// 
+//   async function handleReset() {
+//     try {
+//       await api('/api/quota', {
+//         method: 'POST',
+//         body: JSON.stringify({ reset: true }),
+//       })
+//       toast.success(locale === 'zh' ? '配额已重置' : 'Quota window reset')
+//       void refetch()
+//     } catch {
+//       toast.error(locale === 'zh' ? '重置失败' : 'Reset failed')
+//     }
+//   }
+// 
+//   async function handleSetLimit() {
+//     const n = parseInt(limitInput, 10)
+//     if (!Number.isFinite(n) || n <= 0) {
+//       toast.error(locale === 'zh' ? '请输入正整数' : 'Enter a positive integer')
+//       return
+//     }
+//     try {
+//       await api('/api/quota', {
+//         method: 'POST',
+//         body: JSON.stringify({ limit: n }),
+//       })
+//       toast.success(
+//         locale === 'zh' ? `每日限额已设为 ${n}` : `Daily limit set to ${n}`,
+//       )
+//       setLimitInput('')
+//       void refetch()
+//     } catch {
+//       toast.error(locale === 'zh' ? '设置失败' : 'Failed to set limit')
+//     }
+//   }
+// 
+//   const titleText =
+//     pct >= 100
+//       ? locale === 'zh'
+//         ? 'LLM 配额已用完'
+//         : 'LLM quota exceeded'
+//       : locale === 'zh'
+//         ? `LLM 配额：${used}/${limit}`
+//         : `LLM quota: ${used}/${limit}`
+// 
+//   return (
+//     <Popover open={open} onOpenChange={setOpen}>
+//       <PopoverTrigger asChild>
+//         <button
+//           type="button"
+//           aria-label={titleText}
+//           title={titleText}
+//           className="relative inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+//         >
+//           <svg width="28" height="28" viewBox="0 0 28 28" className="-rotate-90">
+//             <circle
+//               cx="14"
+//               cy="14"
+//               r={R}
+//               fill="none"
+//               stroke="currentColor"
+//               strokeWidth="2.5"
+//               className="text-slate-200 dark:text-slate-700"
+//             />
+//             <circle
+//               cx="14"
+//               cy="14"
+//               r={R}
+//               fill="none"
+//               stroke={ringColor}
+//               strokeWidth="2.5"
+//               strokeLinecap="round"
+//               strokeDasharray={`${dash} ${C}`}
+//             />
+//           </svg>
+//           <span
+//             className="absolute text-[8px] font-bold tabular-nums pointer-events-none"
+//             style={{ color: ringColor }}
+//           >
+//             {pct >= 100 ? '!' : `${pct}`}
+//           </span>
+//         </button>
+//       </PopoverTrigger>
+//       <PopoverContent
+//         align="end"
+//         className="w-72 p-3 text-xs space-y-3"
+//         sideOffset={6}
+//       >
+//         <div className="flex items-center justify-between">
+//           <div className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-200">
+//             <Gauge className="w-3.5 h-3.5" style={{ color: ringColor }} />
+//             {locale === 'zh' ? 'LLM 用量配额' : 'LLM Usage Quota'}
+//           </div>
+//           <Badge
+//             variant="outline"
+//             className="text-[10px] sm:text-[9px] font-mono px-1.5 py-0 max-w-[110px] truncate"
+//             title={identifier}
+//           >
+//             {identifier}
+//           </Badge>
+//         </div>
+// 
+//         {/* big number row */}
+//         <div className="flex items-end justify-between">
+//           <div>
+//             <div className="text-2xl font-bold tabular-nums" style={{ color: ringColor }}>
+//               {used}
+//               <span className="text-sm text-slate-400">/{limit}</span>
+//             </div>
+//             <div className="text-[11px] sm:text-[10px] text-slate-500 dark:text-slate-400">
+//               {locale === 'zh' ? '今日调用次数' : 'calls today'}
+//             </div>
+//           </div>
+//           <div className="text-right">
+//             <div className="text-sm font-semibold tabular-nums text-slate-600 dark:text-slate-300">
+//               ~{tokens.toLocaleString()}
+//             </div>
+//             <div className="text-[11px] sm:text-[10px] text-slate-500 dark:text-slate-400">
+//               {locale === 'zh' ? '估算 tokens' : 'est. tokens'}
+//             </div>
+//           </div>
+//         </div>
+// 
+//         {/* linear progress */}
+//         <div className="h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+//           <div
+//             className="h-full rounded-full transition-all"
+//             style={{ width: `${Math.min(100, pct)}%`, backgroundColor: ringColor }}
+//           />
+//         </div>
+//         <div className="flex items-center justify-between text-[11px] sm:text-[10px] text-slate-500 dark:text-slate-400">
+//           <span>{pct}% {locale === 'zh' ? '已用' : 'used'}</span>
+//           <span>{formatResetInLocal(resetAt, locale)}</span>
+//         </div>
+// 
+//         {/* 7-day history mini chart */}
+//         {history.length > 0 && (
+//           <div className="space-y-1">
+//             <div className="text-[11px] sm:text-[10px] text-slate-500 dark:text-slate-400">
+//               {locale === 'zh' ? '近 7 天' : 'Last 7 days'}
+//             </div>
+//             <div className="flex items-end gap-1 h-10">
+//               {history.slice(-7).map((b) => {
+//                 const h = Math.max(2, (b.calls / maxHistoryCalls) * 100)
+//                 return (
+//                   <div key={b.date} className="flex-1 flex flex-col items-center gap-0.5">
+//                     <div
+//                       className="w-full rounded-sm bg-emerald-400/80 dark:bg-emerald-500/70"
+//                       style={{ height: `${h}%` }}
+//                       title={`${b.date}: ${b.calls} calls`}
+//                     />
+//                     <span className="text-[7px] text-slate-400 tabular-nums">
+//                       {b.date.slice(5)}
+//                     </span>
+//                   </div>
+//                 )
+//               })}
+//             </div>
+//           </div>
+//         )}
+// 
+//         {/* admin controls */}
+//         <div className="border-t border-slate-200 dark:border-slate-700 pt-2 space-y-2">
+//           <div className="flex gap-1">
+//             <Input
+//               type="number"
+//               min="1"
+//               value={limitInput}
+//               onChange={(e) => setLimitInput(e.target.value)}
+//               placeholder={locale === 'zh' ? '自定义每日限额' : 'Custom daily limit'}
+//               className="h-7 text-xs"
+//             />
+//             <Button
+//               size="sm"
+//               variant="outline"
+//               className="h-7 text-xs shrink-0"
+//               onClick={handleSetLimit}
+//               disabled={!limitInput}
+//             >
+//               {locale === 'zh' ? '设置' : 'Set'}
+//             </Button>
+//           </div>
+//           <Button
+//             size="sm"
+//             variant="ghost"
+//             className="h-7 text-xs w-full"
+//             onClick={handleReset}
+//             disabled={isFetching}
+//           >
+//             <RotateCcw className="w-3 h-3 mr-1.5" />
+//             {locale === 'zh' ? '重置当前窗口' : 'Reset window'}
+//           </Button>
+//         </div>
+//       </PopoverContent>
+//     </Popover>
+//   )
+// }
 
 export default function Home() {
   const [tab, setTab] = useState<TabValue>('dashboard')
@@ -2126,8 +2126,11 @@ export default function Home() {
             </button>
             {/* Global job progress indicator (LLM batch operations) */}
             <HeaderJobIndicator />
-            {/* P3-12: LLM usage quota indicator (circular ring + popover) */}
-            <QuotaWidget locale={locale} />
+            {/* P3-12: LLM usage quota indicator (circular ring + popover) — DISABLED
+                per user request: the in-app quota soft-limit had no adjustable default UI,
+                and the real "额度" 403 came from the LLM proxy balance, not this widget.
+                Module kept (route /api/quota + lib/llm-quota.ts) for re-enabling later. */}
+            {/* <QuotaWidget locale={locale} /> */}
             {/* Project switcher */}
             <ProjectSwitcher />
             {/* Help */}
