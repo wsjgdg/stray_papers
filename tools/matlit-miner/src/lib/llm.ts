@@ -7,10 +7,9 @@
 import { readFileSync } from 'fs'
 import path from 'path'
 import {
-  checkQuota,
   recordUsage,
   estimateTokens,
-  QuotaExceededError,
+  QuotaExceededError, // kept: re-exported below for API routes' instanceof checks (gate disabled 2026-09-07)
   getIdentifierFromHeaders,
 } from './llm-quota'
 
@@ -582,10 +581,13 @@ export async function callLLMWithFailover(
 ): Promise<string> {
   // ── quota check (before) ──────────────────────────────────────────────
   const identifier = getLLMIdentifier()
-  const q = checkQuota(identifier)
-  if (!q.allowed) {
-    throw new QuotaExceededError(identifier, q.resetAt, q.limit, q.used)
-  }
+  // Quota enforcement disabled 2026-09-07 per user request: free models
+  // (glm4.7 / AngesAI) should not be subject to app-side quota gating.
+  // The provider-side balance (AgnesAI 预扣费) is independent of this gate.
+  // const q = checkQuota(identifier)
+  // if (!q.allowed) {
+  //   throw new QuotaExceededError(identifier, q.resetAt, q.limit, q.used)
+  // }
 
   const retries = options.retries ?? DEFAULT_RETRIES
   const effectiveTimeout = clampTimeout(options.timeoutMs)
