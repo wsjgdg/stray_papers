@@ -428,7 +428,9 @@ function VerifyForm({
   // model doesn't store them, but they let the reviewer cross-check against
   // the source paper and tweak values before saving the verification).
   const [bandgap, setBandgap] = useState(cls?.bandgapValue ?? '')
-  const [efficiency, setEfficiency] = useState(cls?.efficiencyValue ?? eff ? String(eff.efficiencyValue) : '')
+  const [efficiency, setEfficiency] = useState(
+    cls?.efficiencyValue ?? (eff ? String(eff.efficiencyValue) : '')
+  )
   const [method, setMethod] = useState(cls?.synthesisMethod ?? '')
   const [conditions, setConditions] = useState(cls?.conditions ?? '')
 
