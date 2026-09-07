@@ -124,10 +124,33 @@ if %errorlevel% equ 0 (
 )
 echo [5/5] Starting dev server at http://localhost:3000
 echo.
+
+rem ---------------------------------------------------------------------------
+rem 5a. Optional realtime relay services (progress :3003, realtime :3004/:3005)
+rem     Launched as detached windows so the app gains live progress + broadcast.
+rem     If a port is already taken (another instance running) the service just
+rem     exits and that channel falls back to REST polling.
+rem ---------------------------------------------------------------------------
+if "%RUN%"=="bun" (
+    for %%S in (progress-service realtime-service) do (
+        if exist "mini-services\%%S\index.ts" (
+            if not exist "mini-services\%%S\node_modules" (
+                echo [5a] Installing %%S dependencies ...
+                pushd "mini-services\%%S"
+                call bun install
+                popd
+            )
+            echo [5a] Starting %%S relay ...
+            start "" /d "%~dp0mini-services\%%S" bun --hot index.ts
+        )
+    )
+)
+echo.
 echo ==========================================================================
 echo  Keep this window open while you use the app. Ctrl+C stops the server.
-echo  The optional progress service on port 3003 is not started here - the
-echo  app falls back to REST polling when it is absent.
+echo  Realtime relays (progress :3003, realtime :3004/:3005) start in their
+echo  own windows above. Close them when you are done; without them the app
+echo  automatically falls back to REST polling.
 echo ==========================================================================
 echo.
 
