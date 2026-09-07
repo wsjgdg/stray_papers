@@ -140,7 +140,7 @@ if "%RUN%"=="bun" (
                 call bun install
                 popd
             )
-            echo [5a] Starting %%S relay (same window, background) ...
+            echo [5a] Starting %%S relay in same window
             pushd "mini-services\%%S"
             start /b bun --hot index.ts
             popd
