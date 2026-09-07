@@ -86,7 +86,7 @@ export default function ExtractionTab({ focusMaterialId, onConsumeFocus, onNavig
   const { t } = useI18n()
   const qc = useQueryClient()
   const [scope, setScope] = useState<string>('')
-  const [onlySynth, setOnlySynth] = useState(true)
+  const [onlySynth, setOnlySynth] = useState(false)
   const [minConfidence, setMinConfidence] = useState(0)
   const [featBandgap, setFeatBandgap] = useState(false)
   const [featMethod, setFeatMethod] = useState(false)
@@ -221,7 +221,18 @@ export default function ExtractionTab({ focusMaterialId, onConsumeFocus, onNavig
 
   const extractedCount = statsData?.counts.extracted ?? 0
   const synthCount = statsData?.counts.synthesized ?? 0
-  const pendingExtraction = Math.max(0, synthCount - extractedCount)
+  // True pending-extraction count: classifications not yet extracted,
+  // narrowed by the onlySynthesized toggle (which /api/extract applies too).
+  // Replaces the old `synthCount - extractedCount` diff, which was wrong:
+  // it counted ALL synthesized='yes' vs ALL extracted (any synthesis state)
+  // and could read 0 even when dozens of 'classified' rows awaited
+  // extraction — leaving the Run button permanently disabled.
+  const pendingExtraction = allPapers.filter(
+    (p) =>
+      p.classification &&
+      p.classification.status !== 'extracted' &&
+      (!onlySynth || p.classification.synthesized === 'yes'),
+  ).length
 
   // U8: compute per-scope pending counts for the unified Run dialog
   const isPendingForExtract = (p: typeof allPapers[number]) => {

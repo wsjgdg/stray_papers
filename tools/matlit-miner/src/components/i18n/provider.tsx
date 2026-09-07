@@ -2655,7 +2655,7 @@ const dictZh: Record<string, string> = {
   'extract.metric.extracted': '已深度提取',
   'extract.metric.pending': '待提取',
   'extract.scope': '范围',
-  'extract.onlySynth': '仅 synthesized=yes',
+  'extract.onlySynth': '仅已合成材料',
   'extract.run': '运行提取 (最多 30 篇)',
   'extract.runHint': '将处理 {n} 篇 · 并发 2',
   'extract.results.title': '提取记录',
