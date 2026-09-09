@@ -30,11 +30,17 @@ export async function buildSnapshot(): Promise<Snapshot> {
     latencyMs: orSettled.status === 'fulfilled' ? orSettled.value.latencyMs : null,
     fetchedAt: Date.now(),
     count: orSettled.status === 'fulfilled' ? models.length : null,
-    error: orSettled.status === 'rejected' ? String(orSettled.reason?.message ?? orSettled.reason) : null,
+    error:
+      orSettled.status === 'rejected'
+        ? String(orSettled.reason?.message ?? orSettled.reason)
+        : null,
   });
 
   let leaderboards: Leaderboard[] = [];
-  let aaPricing = new Map<string, { input: number | null; output: number | null; cacheHit: number | null }>();
+  let aaPricing = new Map<
+    string,
+    { input: number | null; output: number | null; cacheHit: number | null }
+  >();
   if (aaSettled.status === 'fulfilled') {
     leaderboards = aaSettled.value.data.leaderboards;
     aaPricing = aaSettled.value.data.pricing;
@@ -47,14 +53,20 @@ export async function buildSnapshot(): Promise<Snapshot> {
     latencyMs: aaSettled.status === 'fulfilled' ? aaSettled.value.latencyMs : null,
     fetchedAt: Date.now(),
     count: aaSettled.status === 'fulfilled' ? leaderboards.length : null,
-    error: aaSettled.status === 'rejected' ? String(aaSettled.reason?.message ?? aaSettled.reason) : null,
+    error:
+      aaSettled.status === 'rejected'
+        ? String(aaSettled.reason?.message ?? aaSettled.reason)
+        : null,
   });
 
   // 评估指标回填到模型表
   if (models.length && leaderboards.length) {
     const keys = buildIndex(models);
     const byId = new Map(models.map((m) => [m.id, m]));
-    const attach = (boardId: string, field: 'intelligence' | 'agentic' | 'omniscience' | 'speed' | 'openness') => {
+    const attach = (
+      boardId: string,
+      field: 'intelligence' | 'agentic' | 'omniscience' | 'speed' | 'openness',
+    ) => {
       const board = leaderboards.find((b) => b.id === boardId);
       if (!board) return;
       for (const entry of board.entries) {

@@ -15,8 +15,14 @@ fs.mkdirSync(path.join(HOME, '.llm-workbench'), { recursive: true });
 process.env.USERPROFILE = HOME;
 process.env.HOME = HOME;
 
-const { deriveKey, encryptWithKey, decryptWithKey, resolveScryptParams, DEFAULT_SCRYPT, LEGACY_SCRYPT } =
-  await import('../server/crypto.ts');
+const {
+  deriveKey,
+  encryptWithKey,
+  decryptWithKey,
+  resolveScryptParams,
+  DEFAULT_SCRYPT,
+  LEGACY_SCRYPT,
+} = await import('../server/crypto.ts');
 const auth = await import('../server/auth.ts');
 const cfgmod = await import('../server/config.ts');
 
@@ -55,12 +61,20 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const r = auth.createProfile('bob', 'viewer', 'bob-pw');
   assert.ok('id' in r, `createProfile 失败: ${JSON.stringify(r)}`);
   const p = auth.listProfiles().find((x) => x.name === 'bob');
-  check('新建档案 id 为 UUID', /^p_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(p.id), p.id);
+  check(
+    '新建档案 id 为 UUID',
+    /^p_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(p.id),
+    p.id,
+  );
 
   const raw = JSON.parse(fs.readFileSync(path.join(HOME, '.llm-workbench', 'auth.json'), 'utf8'));
   const bob = raw.find((x) => x.name === 'bob');
   check('新档案记录 kdfParams', bob.kdfParams?.N === DEFAULT_SCRYPT.N, `N=${bob.kdfParams?.N}`);
-  check('默认 N 已提升', DEFAULT_SCRYPT.N > LEGACY_SCRYPT.N, `${LEGACY_SCRYPT.N} → ${DEFAULT_SCRYPT.N}`);
+  check(
+    '默认 N 已提升',
+    DEFAULT_SCRYPT.N > LEGACY_SCRYPT.N,
+    `${LEGACY_SCRYPT.N} → ${DEFAULT_SCRYPT.N}`,
+  );
 
   auth.loadProfiles();
   check('新档案可登录', auth.authenticate(p.id, 'bob-pw') === 'viewer');
@@ -76,7 +90,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   // 历史 blob：用 LEGACY 参数派生，且未记录 kdfParams
   const salt = Buffer.from('legacy-blob-salt-0123');
   const legacyKey = deriveKey('pw', salt, LEGACY_SCRYPT);
-  const legacy = encryptWithKey({ providers: { a: { apiKey: 'k', enabled: true } } }, legacyKey, salt);
+  const legacy = encryptWithKey(
+    { providers: { a: { apiKey: 'k', enabled: true } } },
+    legacyKey,
+    salt,
+  );
   delete legacy.kdfParams;
   const restored = decryptWithKey(
     legacy,
@@ -125,7 +143,15 @@ const TOKEN = 'tok-abc-123';
 
 const srv = spawn(NODE, [TSX, 'server/index.ts'], {
   cwd: ROOT,
-  env: { ...process.env, API_PORT: String(API), USERPROFILE: HOME, HOME, NO_OPEN: '1', NO_REUSE: '1', PROXY_TOKEN: TOKEN },
+  env: {
+    ...process.env,
+    API_PORT: String(API),
+    USERPROFILE: HOME,
+    HOME,
+    NO_OPEN: '1',
+    NO_REUSE: '1',
+    PROXY_TOKEN: TOKEN,
+  },
   stdio: ['ignore', 'pipe', 'pipe'],
 });
 srv.stdout.on('data', () => {});
@@ -148,7 +174,9 @@ check('server healthy (PROXY_TOKEN 已启用)', healthy);
   const badTok = await fetch(`${base}/api/proxy/config`, { headers: { 'x-proxy-token': 'wrong' } });
   check('错误令牌被拒', badTok.status === 401, `status=${badTok.status}`);
 
-  const viaHeader = await fetch(`${base}/api/proxy/config`, { headers: { 'x-proxy-token': TOKEN } });
+  const viaHeader = await fetch(`${base}/api/proxy/config`, {
+    headers: { 'x-proxy-token': TOKEN },
+  });
   check('x-proxy-token 放行', viaHeader.ok, `status=${viaHeader.status}`);
 
   const viaBearer = await fetch(`${base}/api/proxy/metrics`, {

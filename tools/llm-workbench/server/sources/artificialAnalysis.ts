@@ -144,7 +144,10 @@ function toArray(data: Dataset['data']): RawEntry[] {
 }
 
 /** PropertyValue[] / 数值 → { value, extra } */
-function readMetric(raw: unknown, metricKey: string): { value: number; extra: Record<string, number> } {
+function readMetric(
+  raw: unknown,
+  metricKey: string,
+): { value: number; extra: Record<string, number> } {
   if (Array.isArray(raw)) {
     const props = raw as PropertyValue[];
     const extra: Record<string, number> = {};
@@ -235,7 +238,10 @@ export async function fetchArtificialAnalysis(): Promise<{
   }
 
   // 定价表（AA 独立测得，用于交叉校验 OpenRouter 报价）
-  const pricing = new Map<string, { input: number | null; output: number | null; cacheHit: number | null }>();
+  const pricing = new Map<
+    string,
+    { input: number | null; output: number | null; cacheHit: number | null }
+  >();
   const pricingDs = byName.get('Pricing: Cache Hit, Input, and Output');
   if (pricingDs) {
     for (const raw of toArray(pricingDs.data)) {

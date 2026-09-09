@@ -209,7 +209,9 @@ function ProviderCard({
                 <span className="text-[11px] text-muted">HTTP {fmtInt(result.httpStatus)}</span>
                 <span className="text-[11px] text-muted">{fmtInt(result.latencyMs)} ms</span>
                 <span className="text-[11px] text-muted">模型 {fmtInt(result.modelCount)}</span>
-                <span className="ml-auto text-[10px] text-muted/70">{fmtTime(result.checkedAt)}</span>
+                <span className="ml-auto text-[10px] text-muted/70">
+                  {fmtTime(result.checkedAt)}
+                </span>
               </div>
               <p className="break-words text-[11px] leading-relaxed text-muted">{result.message}</p>
             </div>
@@ -366,9 +368,7 @@ export default function ConsoleGrid({ providers }: { providers: ProviderConsole[
         </span>
       </div>
 
-      {error && (
-        <div className="shrink-0 pb-2 text-[11px] text-amber-400">探测失败：{error}</div>
-      )}
+      {error && <div className="shrink-0 pb-2 text-[11px] text-amber-400">探测失败：{error}</div>}
 
       {/* 卡片网格 */}
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
@@ -385,9 +385,7 @@ export default function ConsoleGrid({ providers }: { providers: ProviderConsole[
                 expanded={Boolean(expanded[p.id])}
                 busy={probingAll || probingId === p.id}
                 copied={copiedId === p.id}
-                onToggle={() =>
-                  setExpanded((prev) => ({ ...prev, [p.id]: !prev[p.id] }))
-                }
+                onToggle={() => setExpanded((prev) => ({ ...prev, [p.id]: !prev[p.id] }))}
                 onKeyChange={(value) => setKeys((prev) => ({ ...prev, [p.id]: value }))}
                 onProbe={() => void doProbe([p.id])}
                 onCopy={() => {

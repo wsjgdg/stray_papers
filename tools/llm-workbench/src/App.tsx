@@ -13,7 +13,13 @@ import {
   Search,
 } from 'lucide-react';
 import clsx from 'clsx';
-import { fetchSnapshot, fmtTime, fetchCryptoStatus, unlockStore, type SnapshotResponse } from './api';
+import {
+  fetchSnapshot,
+  fmtTime,
+  fetchCryptoStatus,
+  unlockStore,
+  type SnapshotResponse,
+} from './api';
 import { Chip, Spinner } from './ui';
 import Dashboard from './components/Dashboard';
 import ModelTable from './components/ModelTable';
@@ -117,7 +123,9 @@ export default function App() {
           </span>
           <div className="min-w-0">
             <h1 className="truncate text-sm font-semibold text-ink">LLM Workbench</h1>
-            <p className="truncate text-[11px] text-muted">大模型能力评估 · API 控制台导航 · 实时数据</p>
+            <p className="truncate text-[11px] text-muted">
+              大模型能力评估 · API 控制台导航 · 实时数据
+            </p>
           </div>
         </div>
 
@@ -177,7 +185,9 @@ export default function App() {
             onClick={() => setTab(id)}
             className={clsx(
               'flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs transition-colors',
-              tab === id ? 'bg-accent/15 text-accent' : 'text-muted hover:bg-[#16223a] hover:text-ink',
+              tab === id
+                ? 'bg-accent/15 text-accent'
+                : 'text-muted hover:bg-[#16223a] hover:text-ink',
             )}
           >
             <Icon size={13} />
@@ -209,7 +219,9 @@ export default function App() {
                 />
               </div>
             )}
-            {tab === 'boards' && <Leaderboards leaderboards={snapshot.leaderboards} models={snapshot.models} />}
+            {tab === 'boards' && (
+              <Leaderboards leaderboards={snapshot.leaderboards} models={snapshot.models} />
+            )}
             {tab === 'consoles' && <ConsoleGrid providers={snapshot.providers} />}
             {tab === 'proxy' && <Proxy providers={snapshot.providers} />}
             {tab === 'cost' && <CostCalculator models={snapshot.models} />}
@@ -342,7 +354,9 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
           <select
             className="input"
             value={s.defaultFocus}
-            onChange={(e) => setS({ ...s, defaultFocus: e.target.value as SettingsState['defaultFocus'] })}
+            onChange={(e) =>
+              setS({ ...s, defaultFocus: e.target.value as SettingsState['defaultFocus'] })
+            }
           >
             <option value="rate">速率</option>
             <option value="cache">缓存</option>
@@ -462,7 +476,8 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
         </label>
 
         <p className="text-[10px] text-muted">
-          快捷键格式如 <code className="rounded bg-[#0d1728] px-1">CommandOrControl+Shift+F</code>（macOS 用 Command，Win/Linux 用 Ctrl）。
+          快捷键格式如 <code className="rounded bg-[#0d1728] px-1">CommandOrControl+Shift+F</code>
+          （macOS 用 Command，Win/Linux 用 Ctrl）。
         </p>
 
         <div className="flex justify-end gap-2 pt-1">
@@ -548,9 +563,7 @@ function SearchPalette({
   const term = q.trim().toLowerCase();
   const matches = term
     ? models
-        .filter(
-          (m) => m.name.toLowerCase().includes(term) || m.id.toLowerCase().includes(term),
-        )
+        .filter((m) => m.name.toLowerCase().includes(term) || m.id.toLowerCase().includes(term))
         .slice(0, 8)
     : models.slice(0, 8);
 

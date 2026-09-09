@@ -33,7 +33,10 @@ async function main() {
   const entry = cfg.providers[CUSTOM_ID];
   assert(entry && entry.custom === true, 'custom flag true in masked config');
   assert(entry.name === '我的网关', `custom name = 我的网关 (got ${entry?.name})`);
-  assert(entry.hasKey === true && entry.apiKeyMasked.endsWith('123'), `key masked (got ${entry?.apiKeyMasked})`);
+  assert(
+    entry.hasKey === true && entry.apiKeyMasked.endsWith('123'),
+    `key masked (got ${entry?.apiKeyMasked})`,
+  );
 
   // 3. 经代理发 chat/completions（自定义厂商）
   const chatRes = await fetch(`${BASE}/api/proxy/${CUSTOM_ID}/chat/completions`, {
@@ -45,7 +48,10 @@ async function main() {
       stream: true,
     }),
   });
-  assert(chatRes.ok && chatRes.headers.get('content-type').includes('text/event-stream'), `proxy SSE ok (HTTP ${chatRes.status})`);
+  assert(
+    chatRes.ok && chatRes.headers.get('content-type').includes('text/event-stream'),
+    `proxy SSE ok (HTTP ${chatRes.status})`,
+  );
   let full = '';
   const reader = chatRes.body.getReader();
   const dec = new TextDecoder();
@@ -73,8 +79,14 @@ async function main() {
   const mRes = await fetch(`${BASE}/api/proxy/metrics`);
   const metrics = (await mRes.json()).metrics;
   const m = metrics.find((x) => x.provider === CUSTOM_ID);
-  assert(m && m.totalRequests >= 1, `metrics recorded for custom provider (total=${m?.totalRequests})`);
-  assert(m.totalInputTokens === 10 && m.totalOutputTokens === 5, `usage extracted (in=${m?.totalInputTokens}, out=${m?.totalOutputTokens})`);
+  assert(
+    m && m.totalRequests >= 1,
+    `metrics recorded for custom provider (total=${m?.totalRequests})`,
+  );
+  assert(
+    m.totalInputTokens === 10 && m.totalOutputTokens === 5,
+    `usage extracted (in=${m?.totalInputTokens}, out=${m?.totalOutputTokens})`,
+  );
   assert(m.totalCacheReadTokens === 8, `cache tokens extracted (${m?.totalCacheReadTokens})`);
 
   // 5. logs

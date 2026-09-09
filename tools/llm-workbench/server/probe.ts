@@ -3,7 +3,10 @@ import { fetchText } from './http.js';
 import { buildAuthHeaders, styleOfKnown } from './upstreamAuth.js';
 
 /** 各厂商鉴权头风格（仅在用户主动填入 key 时使用，key 不落盘）；与代理转发共用同一实现 */
-function buildHeaders(provider: ProviderConsole, apiKey?: string): Record<string, string> | undefined {
+function buildHeaders(
+  provider: ProviderConsole,
+  apiKey?: string,
+): Record<string, string> | undefined {
   if (!apiKey) return undefined;
   return buildAuthHeaders(styleOfKnown(provider.id), apiKey);
 }
@@ -20,7 +23,10 @@ function countModels(text: string): number | null {
   return null;
 }
 
-export async function probeProvider(provider: ProviderConsole, apiKey?: string): Promise<ProbeResult> {
+export async function probeProvider(
+  provider: ProviderConsole,
+  apiKey?: string,
+): Promise<ProbeResult> {
   const base: ProbeResult = {
     providerId: provider.id,
     ok: false,

@@ -10,10 +10,12 @@ export function normKey(s: string): string {
 }
 
 function tokenize(s: string): string[] {
-  return s
-    .toLowerCase()
-    .replace(/\([^)]*\)/g, ' ')
-    .match(/[a-z]+|\d+(?:\.\d+)?/g) ?? [];
+  return (
+    s
+      .toLowerCase()
+      .replace(/\([^)]*\)/g, ' ')
+      .match(/[a-z]+|\d+(?:\.\d+)?/g) ?? []
+  );
 }
 
 function jaccard(a: string[], b: string[]): number {
@@ -47,7 +49,11 @@ export function matchModel(
       score = 2;
     } else {
       const longer = Math.max(cand.bare.length, labelKey.length);
-      if (longer > 0 && labelKey.length >= 5 && (cand.bare.includes(labelKey) || labelKey.includes(cand.bare))) {
+      if (
+        longer > 0 &&
+        labelKey.length >= 5 &&
+        (cand.bare.includes(labelKey) || labelKey.includes(cand.bare))
+      ) {
         const shorter = Math.min(cand.bare.length, labelKey.length);
         score = 0.75 + 0.2 * (shorter / longer);
       } else {
@@ -57,7 +63,9 @@ export function matchModel(
     // 同分时优先标准版（id 更短），避免匹配到 -fast / -thinking 等推理档位变体
     const idLen = cand.model.id.length;
     const better =
-      !best || score > best.score + 1e-9 || (Math.abs(score - best.score) <= 1e-9 && idLen < best.idLen);
+      !best ||
+      score > best.score + 1e-9 ||
+      (Math.abs(score - best.score) <= 1e-9 && idLen < best.idLen);
     if (score >= 0.6 && better) best = { model: cand.model, score, idLen };
   }
   return best?.model ?? null;

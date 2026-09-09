@@ -6,7 +6,10 @@ import assert from 'node:assert/strict';
 import { mergeModels, computeEnabledModels } from '../src/lib/modelMerge.ts';
 
 let pass = 0;
-const ok = (name) => { pass++; console.log(`  ✓ ${name}`); };
+const ok = (name) => {
+  pass++;
+  console.log(`  ✓ ${name}`);
+};
 
 // 1) 合并保留手动项（核心回归：重新拉取不清空手动模型）
 {

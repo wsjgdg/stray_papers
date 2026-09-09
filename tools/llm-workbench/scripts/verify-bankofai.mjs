@@ -81,16 +81,18 @@ async function main() {
   console.log(`mock-upstream bad@${BAD_PORT} good@${GOOD_PORT} empty@${EMPTY_PORT}`);
 
   // 启动真实 server（隔离端口，不打开浏览器）
-  const srv = spawn(
-    'npx',
-    ['tsx', 'server/index.ts'],
-    {
-      cwd: process.cwd(),
-      env: { ...process.env, API_PORT: String(API_PORT), NO_OPEN: '1', NO_REUSE: '1', WEB_DIR: 'dist' },
-      stdio: 'ignore',
-      shell: true,
+  const srv = spawn('npx', ['tsx', 'server/index.ts'], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      API_PORT: String(API_PORT),
+      NO_OPEN: '1',
+      NO_REUSE: '1',
+      WEB_DIR: 'dist',
     },
-  );
+    stdio: 'ignore',
+    shell: true,
+  });
 
   const ok = await waitHealth();
   if (!ok) {
@@ -127,7 +129,10 @@ async function main() {
   // 1) 完整 bankofai 文档结构：应正常返回去重排序后的模型
   const goodRes = await fetch(`${BASE}/api/proxy/${GOOD_ID}/models`);
   const goodJson = await goodRes.json();
-  assert(goodRes.ok && Array.isArray(goodJson.models), `good models 200 + array (got ${goodRes.status})`);
+  assert(
+    goodRes.ok && Array.isArray(goodJson.models),
+    `good models 200 + array (got ${goodRes.status})`,
+  );
   assert(
     JSON.stringify(goodJson.models) === JSON.stringify(['claude-3-5', 'gpt-5.2']),
     `good models dedup+sorted = [claude-3-5,gpt-5.2] (got ${JSON.stringify(goodJson.models)})`,
@@ -142,7 +147,9 @@ async function main() {
     `bad error mentions 原始响应 (got "${badJson.error}")`,
   );
   assert(
-    typeof badJson.error === 'string' && badJson.error.includes('"status":"ok"') && badJson.error.includes('items'),
+    typeof badJson.error === 'string' &&
+      badJson.error.includes('"status":"ok"') &&
+      badJson.error.includes('items'),
     `bad error previews raw JSON so user can see real format (got "${badJson.error}")`,
   );
 
@@ -151,7 +158,9 @@ async function main() {
   const emptyJson = await emptyRes.json();
   assert(emptyRes.status === 502, `empty models -> 502 (got ${emptyRes.status})`);
   assert(
-    typeof emptyJson.error === 'string' && emptyJson.error.includes('data/models 为空数组') && emptyJson.error.includes('未开通模型访问权限'),
+    typeof emptyJson.error === 'string' &&
+      emptyJson.error.includes('data/models 为空数组') &&
+      emptyJson.error.includes('未开通模型访问权限'),
     `empty-data error hints Key has no model access (got "${emptyJson.error}")`,
   );
 

@@ -60,8 +60,12 @@ function attachDiag(win, name) {
     const tag = level === 1 ? 'ERR' : 'WARN';
     console.log(`[${name} ${tag}] ${message}${source ? ' @ ' + source + ':' + line : ''}`);
   });
-  wc.on('did-fail-load', (_e, code, desc, url) => console.log(`[${name} FAIL-LOAD] ${code} ${desc} ${url}`));
-  wc.on('render-process-gone', (_e, d) => console.log(`[${name} RENDER-GONE] ${d.reason} exit=${d.exitCode}`));
+  wc.on('did-fail-load', (_e, code, desc, url) =>
+    console.log(`[${name} FAIL-LOAD] ${code} ${desc} ${url}`),
+  );
+  wc.on('render-process-gone', (_e, d) =>
+    console.log(`[${name} RENDER-GONE] ${d.reason} exit=${d.exitCode}`),
+  );
   wc.on('crashed', () => console.log(`[${name} CRASHED]`));
   wc.on('did-finish-load', () => console.log(`[${name} DID-FINISH-LOAD]`));
 }
@@ -92,12 +96,13 @@ $lnk.IconLocation = "${icon}"
 $lnk.Description = "${desc}"
 $lnk.Save()`;
     const encoded = Buffer.from(script, 'utf16le').toString('base64');
-    execFileSync(
-      'powershell.exe',
-      ['-NoProfile', '-NonInteractive', '-EncodedCommand', encoded],
-      { windowsHide: true, stdio: 'ignore' }
+    execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-EncodedCommand', encoded], {
+      windowsHide: true,
+      stdio: 'ignore',
+    });
+    console.log(
+      `[SHORTCUT] desktop shortcut -> ${linkPath} (${app.isPackaged ? 'packaged' : 'dev'})`,
     );
-    console.log(`[SHORTCUT] desktop shortcut -> ${linkPath} (${app.isPackaged ? 'packaged' : 'dev'})`);
     return true;
   } catch (e) {
     console.log(`[SHORTCUT] create failed: ${e && e.message ? e.message : e}`);
@@ -275,7 +280,9 @@ function createWindows() {
 
 function createTray() {
   const iconPath = path.join(__dirname, 'icon.png');
-  const img = fs.existsSync(iconPath) ? nativeImage.createFromPath(iconPath) : nativeImage.createEmpty();
+  const img = fs.existsSync(iconPath)
+    ? nativeImage.createFromPath(iconPath)
+    : nativeImage.createEmpty();
   tray = new Tray(img);
   tray.setToolTip('LLM Workbench');
   const ctx = Menu.buildFromTemplate([
@@ -316,7 +323,13 @@ function createTray() {
       },
     },
     { type: 'separator' },
-    { label: '退出', click: () => { app.isQuiting = true; app.quit(); } },
+    {
+      label: '退出',
+      click: () => {
+        app.isQuiting = true;
+        app.quit();
+      },
+    },
   ]);
   tray.setContextMenu(ctx);
   tray.on('click', () => {
@@ -328,7 +341,10 @@ function createTray() {
 // ── IPC：渲染进程（浮窗按钮 / App 按钮）控制窗口 ──
 ipcMain.on('float:open', () => floatWin && floatWin.show());
 ipcMain.on('float:close', () => floatWin && floatWin.hide());
-ipcMain.on('float:toggle', () => floatWin && (floatWin.isVisible() ? floatWin.hide() : floatWin.show()));
+ipcMain.on(
+  'float:toggle',
+  () => floatWin && (floatWin.isVisible() ? floatWin.hide() : floatWin.show()),
+);
 ipcMain.on('app:hide', () => mainWin && mainWin.hide());
 ipcMain.on('app:show', () => mainWin && mainWin.show());
 ipcMain.on('float:reset', () => {
@@ -422,7 +438,10 @@ ipcMain.on('app:create-shortcut', () => {
     }
   } else {
     try {
-      new Notification({ title: '快捷方式创建失败', body: '仅支持 Windows；可手动发送 exe 到桌面' });
+      new Notification({
+        title: '快捷方式创建失败',
+        body: '仅支持 Windows；可手动发送 exe 到桌面',
+      });
     } catch {
       /* ignore */
     }
@@ -466,7 +485,9 @@ if (!gotLock) {
 }
 
 // 托盘常驻：所有窗口关闭也不退出
-app.on('window-all-closed', () => { /* keep alive in tray */ });
+app.on('window-all-closed', () => {
+  /* keep alive in tray */
+});
 app.on('before-quit', () => {
   app.isQuiting = true;
   try {

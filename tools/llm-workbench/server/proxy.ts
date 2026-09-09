@@ -117,7 +117,9 @@ export async function listProviderModels(providerId: string): Promise<string[]> 
       if (typeof m === 'string') return stripName(m);
       if (m && typeof m === 'object') {
         const o = m as Record<string, unknown>;
-        return stripName(o.id as string) || stripName(o.name as string) || stripName(o.model as string);
+        return (
+          stripName(o.id as string) || stripName(o.name as string) || stripName(o.model as string)
+        );
       }
       return '';
     };
@@ -269,7 +271,8 @@ export async function proxyRequest(
 
   const reqModel = (req.body as { model?: string } | undefined)?.model ?? '';
   const streamRequested =
-    (req.body as { stream?: boolean } | undefined)?.stream === true || /"stream"\s*:\s*true/i.test(bodyStr);
+    (req.body as { stream?: boolean } | undefined)?.stream === true ||
+    /"stream"\s*:\s*true/i.test(bodyStr);
 
   // API 格式转换：openai 透传；anthropic/gemini 改写请求路径与请求体
   const format: ApiFormat = (entry.apiFormat as ApiFormat) ?? 'openai';
@@ -279,7 +282,10 @@ export async function proxyRequest(
     upstreamUrl = joinUrl(baseUrl, wildcard) + search;
     sendBody = bodyStr;
   } else {
-    const parsed = (typeof req.body === 'object' && req.body !== null ? req.body : {}) as Record<string, unknown>;
+    const parsed = (typeof req.body === 'object' && req.body !== null ? req.body : {}) as Record<
+      string,
+      unknown
+    >;
     const model = typeof parsed.model === 'string' ? parsed.model : '';
     if (format === 'anthropic') {
       sendBody = JSON.stringify(toAnthropicRequest(parsed));
@@ -341,7 +347,12 @@ export async function proxyRequest(
 
   const translator = createStreamTranslator(format);
 
-  type TryResult = { committed: boolean; status: number | null; error: string | null; retryable: boolean };
+  type TryResult = {
+    committed: boolean;
+    status: number | null;
+    error: string | null;
+    retryable: boolean;
+  };
 
   // 用单个 key 发起一次上游请求。committed=true 表示已向客户端写出响应（成功或流已开启），调用方无需再处理。
   async function tryKey(apiKey: string): Promise<TryResult> {
@@ -377,13 +388,22 @@ export async function proxyRequest(
         if (status >= 400) {
           const text = await upstream.text();
           cleanup();
-          return { committed: false, status, error: classifyError(status, text), retryable: isRetryable(status) };
+          return {
+            committed: false,
+            status,
+            error: classifyError(status, text),
+            retryable: isRetryable(status),
+          };
         }
-        if (upstream.headers.get('location')) res.set('location', upstream.headers.get('location')!);
+        if (upstream.headers.get('location'))
+          res.set('location', upstream.headers.get('location')!);
         res.status(status);
         res.set('content-type', contentType);
-        if (upstream.headers.get('cache-control')) res.set('cache-control', upstream.headers.get('cache-control')!);
-        const nodeStream = Readable.fromWeb(upstream.body as Parameters<typeof Readable.fromWeb>[0]);
+        if (upstream.headers.get('cache-control'))
+          res.set('cache-control', upstream.headers.get('cache-control')!);
+        const nodeStream = Readable.fromWeb(
+          upstream.body as Parameters<typeof Readable.fromWeb>[0],
+        );
         let acc = '';
         let firstByte = false;
         nodeStream.on('data', (chunk: Buffer) => {
@@ -439,7 +459,12 @@ export async function proxyRequest(
       if (status >= 400) {
         const text = buf.toString('utf8');
         cleanup();
-        return { committed: false, status, error: classifyError(status, text), retryable: isRetryable(status) };
+        return {
+          committed: false,
+          status,
+          error: classifyError(status, text),
+          retryable: isRetryable(status),
+        };
       }
 
       // 非 openai 格式：把上游响应转换为 OpenAI 风格再回传（保证 usage 等字段一致）
@@ -448,7 +473,9 @@ export async function proxyRequest(
         try {
           const parsed = JSON.parse(buf.toString('utf8'));
           sendBodyOut = Buffer.from(
-            JSON.stringify(format === 'anthropic' ? fromAnthropicJson(parsed) : fromGeminiJson(parsed)),
+            JSON.stringify(
+              format === 'anthropic' ? fromAnthropicJson(parsed) : fromGeminiJson(parsed),
+            ),
           );
         } catch {
           /* 转换失败则原样回传 */
@@ -532,10 +559,13 @@ unifiedRouter.all('/*', async (req: Request, res: Response) => {
   const search = new URL(req.url, 'http://localhost').search;
 
   let providerId =
-    (req.headers['x-lb-provider'] as string) ||
-    (req.headers['x-provider'] as string) ||
-    '';
-  if (!providerId && typeof req.body === 'object' && req.body && typeof (req.body as { model?: unknown }).model === 'string') {
+    (req.headers['x-lb-provider'] as string) || (req.headers['x-provider'] as string) || '';
+  if (
+    !providerId &&
+    typeof req.body === 'object' &&
+    req.body &&
+    typeof (req.body as { model?: unknown }).model === 'string'
+  ) {
     const model = (req.body as { model: string }).model;
     if (model.includes('/')) providerId = model.split('/')[0];
   }
@@ -549,7 +579,8 @@ unifiedRouter.all('/*', async (req: Request, res: Response) => {
   }
   if (!providerId) {
     res.status(400).json({
-      error: '未指定厂商：请设置请求头 x-lb-provider，或在模型名中使用 vendor/model 前缀（如 openai/gpt-4o）',
+      error:
+        '未指定厂商：请设置请求头 x-lb-provider，或在模型名中使用 vendor/model 前缀（如 openai/gpt-4o）',
     });
     return;
   }

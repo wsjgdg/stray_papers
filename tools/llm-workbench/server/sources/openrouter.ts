@@ -111,8 +111,7 @@ export async function fetchOpenRouterModels(): Promise<LlmModel[]> {
       outputModalities: m.architecture?.output_modalities ?? ['text'],
       reasoning: Boolean(m.reasoning?.supported) || params.includes('reasoning'),
       tools: params.includes('tools'),
-      structuredOutput:
-        params.includes('structured_outputs') || params.includes('response_format'),
+      structuredOutput: params.includes('structured_outputs') || params.includes('response_format'),
       supportedParams: params,
       openrouterUrl: `https://openrouter.ai/${m.id.replace(/^.*?\//, '')}`,
       description: (m.description ?? '').slice(0, 600),

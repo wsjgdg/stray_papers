@@ -5,10 +5,16 @@ const UA =
 // Node18+ 把 undici 暴露为 global（globalThis.ProxyAgent / setGlobalDispatcher），无需 require
 (function setupProxy() {
   const proxy =
-    process.env.HTTPS_PROXY || process.env.https_proxy || process.env.HTTP_PROXY || process.env.http_proxy;
+    process.env.HTTPS_PROXY ||
+    process.env.https_proxy ||
+    process.env.HTTP_PROXY ||
+    process.env.http_proxy;
   if (!proxy) return;
   try {
-    const GA = (globalThis as { ProxyAgent?: new (p: string) => unknown; setGlobalDispatcher?: (d: unknown) => void });
+    const GA = globalThis as {
+      ProxyAgent?: new (p: string) => unknown;
+      setGlobalDispatcher?: (d: unknown) => void;
+    };
     if (GA.ProxyAgent && GA.setGlobalDispatcher) {
       GA.setGlobalDispatcher(new GA.ProxyAgent(proxy));
     }
@@ -50,7 +56,10 @@ export async function fetchText(
   }
 }
 
-export async function fetchJson<T>(url: string, init?: RequestInit & { timeoutMs?: number }): Promise<T> {
+export async function fetchJson<T>(
+  url: string,
+  init?: RequestInit & { timeoutMs?: number },
+): Promise<T> {
   const { text } = await fetchText(url, init);
   return JSON.parse(text) as T;
 }

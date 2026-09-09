@@ -58,7 +58,8 @@ function requireProxyToken(req: Request, res: Response, next: NextFunction): voi
   }
   const auth = req.headers.authorization ?? '';
   const provided =
-    (auth.startsWith('Bearer ') ? auth.slice(7) : '') || ((req.headers['x-proxy-token'] as string) ?? '');
+    (auth.startsWith('Bearer ') ? auth.slice(7) : '') ||
+    ((req.headers['x-proxy-token'] as string) ?? '');
   if (!timingSafeEqualStr(provided, PROXY_TOKEN)) {
     res.status(401).json({ error: '缺少或错误的代理令牌（Authorization: Bearer <PROXY_TOKEN>）' });
     return;
@@ -104,15 +105,22 @@ app.get('/api/snapshot', async (req: Request, res: Response) => {
   const force = req.query.refresh === '1' || req.query.refresh === 'true';
   if (force) invalidate('snapshot');
   try {
-    const { value, cached: hit, fetchedAt, stale } = await cached<Snapshot>(
-      'snapshot',
-      SNAPSHOT_TTL,
-      buildSnapshot,
-    );
+    const {
+      value,
+      cached: hit,
+      fetchedAt,
+      stale,
+    } = await cached<Snapshot>('snapshot', SNAPSHOT_TTL, buildSnapshot);
     res.set('Cache-Control', 'no-store');
     res.json({
       ...value,
-      meta: { cached: hit, fetchedAt, stale, ttlMs: SNAPSHOT_TTL, nextAutoRefreshIn: Math.max(0, SNAPSHOT_TTL - (Date.now() - fetchedAt)) },
+      meta: {
+        cached: hit,
+        fetchedAt,
+        stale,
+        ttlMs: SNAPSHOT_TTL,
+        nextAutoRefreshIn: Math.max(0, SNAPSHOT_TTL - (Date.now() - fetchedAt)),
+      },
     });
   } catch (err) {
     res.status(502).json({ error: String((err as Error)?.message ?? err) });
@@ -130,7 +138,9 @@ app.post('/api/probe', async (req: Request, res: Response) => {
   const targets = PROVIDERS.filter((p) => ids.includes(p.id));
   const keys = body.apiKeys ?? {};
 
-  const results = await Promise.all(targets.map((p) => probeProvider(p, keys[p.id]?.trim() || undefined)));
+  const results = await Promise.all(
+    targets.map((p) => probeProvider(p, keys[p.id]?.trim() || undefined)),
+  );
   res.set('Cache-Control', 'no-store');
   res.json({ checkedAt: Date.now(), results });
 });
@@ -145,7 +155,12 @@ app.use('/api/v1', requireProxyToken);
 
 // ───────── 本地代理：配置 / 指标 / 日志 / 连通性（必须在 proxyRouter 挂载之前） ─────────
 app.get('/api/proxy/config', (_req: Request, res: Response) => {
-  res.json({ ...maskConfig(loadConfig()), locked: isLocked(), encrypted: isEncrypted(), hasConfig: hasConfigFile() });
+  res.json({
+    ...maskConfig(loadConfig()),
+    locked: isLocked(),
+    encrypted: isEncrypted(),
+    hasConfig: hasConfigFile(),
+  });
 });
 
 // 密钥加密状态与解锁
@@ -269,7 +284,18 @@ app.post('/api/proxy/cache/clear', requireAdmin, (_req: Request, res: Response) 
 });
 
 app.post('/api/proxy/config', requireAdmin, (req: Request, res: Response) => {
-  const { providerId, apiKey, apiKeys, baseUrl, enabled, customName, authStyle, apiFormat, models, enabledModels } = (req.body ?? {}) as {
+  const {
+    providerId,
+    apiKey,
+    apiKeys,
+    baseUrl,
+    enabled,
+    customName,
+    authStyle,
+    apiFormat,
+    models,
+    enabledModels,
+  } = (req.body ?? {}) as {
     providerId?: string;
     apiKey?: string;
     apiKeys?: string[];
@@ -310,10 +336,21 @@ app.post('/api/proxy/config/delete', requireAdmin, (req: Request, res: Response)
 
 app.post('/api/proxy/import', requireAdmin, (req: Request, res: Response) => {
   const body = (req.body ?? {}) as {
-    providers?: Record<string, { apiKey?: string; baseUrl?: string; enabled?: boolean; models?: string[]; enabledModels?: string[] }>;
+    providers?: Record<
+      string,
+      {
+        apiKey?: string;
+        baseUrl?: string;
+        enabled?: boolean;
+        models?: string[];
+        enabledModels?: string[];
+      }
+    >;
   };
   if (!body.providers || typeof body.providers !== 'object') {
-    res.status(400).json({ error: 'body.providers 必须为对象 { id: { apiKey, baseUrl, enabled } }' });
+    res
+      .status(400)
+      .json({ error: 'body.providers 必须为对象 { id: { apiKey, baseUrl, enabled } }' });
     return;
   }
   res.json(maskConfig(importConfig(body)));
@@ -345,31 +382,68 @@ app.get('/api/proxy/logs', (req: Request, res: Response) => {
 // 已知厂商走统一探测端点；自定义厂商直接探测其 baseUrl 的 /models（OpenAI 兼容约定）
 app.post('/api/proxy/connectivity', async (req: Request, res: Response) => {
   const cfg = loadConfig();
-  const ids = ((req.body ?? {}) as { providers?: string[] }).providers ?? Object.keys(cfg.providers);
+  const ids =
+    ((req.body ?? {}) as { providers?: string[] }).providers ?? Object.keys(cfg.providers);
   const results: ProbeResult[] = [];
   for (const id of ids) {
     const entry = cfg.providers[id];
     const known = PROVIDER_MAP.get(id);
     if (known) {
       if (!entry?.apiKey) {
-        results.push({ providerId: id, ok: false, httpStatus: null, latencyMs: null, state: 'error', modelCount: null, message: '未配置 API Key', checkedAt: Date.now() });
+        results.push({
+          providerId: id,
+          ok: false,
+          httpStatus: null,
+          latencyMs: null,
+          state: 'error',
+          modelCount: null,
+          message: '未配置 API Key',
+          checkedAt: Date.now(),
+        });
         continue;
       }
       results.push(await probeProvider(known, entry.apiKey));
       continue;
     }
     if (!entry) {
-      results.push({ providerId: id, ok: false, httpStatus: null, latencyMs: null, state: 'error', modelCount: null, message: '未找到该厂商配置', checkedAt: Date.now() });
+      results.push({
+        providerId: id,
+        ok: false,
+        httpStatus: null,
+        latencyMs: null,
+        state: 'error',
+        modelCount: null,
+        message: '未找到该厂商配置',
+        checkedAt: Date.now(),
+      });
       continue;
     }
     // 自定义厂商：探测 baseUrl 的 /models 端点
     const baseUrl = entry.baseUrl;
     if (!baseUrl) {
-      results.push({ providerId: id, ok: false, httpStatus: null, latencyMs: null, state: 'error', modelCount: null, message: '未配置 baseUrl（API 地址）', checkedAt: Date.now() });
+      results.push({
+        providerId: id,
+        ok: false,
+        httpStatus: null,
+        latencyMs: null,
+        state: 'error',
+        modelCount: null,
+        message: '未配置 baseUrl（API 地址）',
+        checkedAt: Date.now(),
+      });
       continue;
     }
     if (!entry.apiKey) {
-      results.push({ providerId: id, ok: false, httpStatus: null, latencyMs: null, state: 'error', modelCount: null, message: '未配置 API Key', checkedAt: Date.now() });
+      results.push({
+        providerId: id,
+        ok: false,
+        httpStatus: null,
+        latencyMs: null,
+        state: 'error',
+        modelCount: null,
+        message: '未配置 API Key',
+        checkedAt: Date.now(),
+      });
       continue;
     }
     const t0 = Date.now();
@@ -524,7 +598,9 @@ export function startServer(): void {
   (async () => {
     if (await tryReuse(BASE_PORT)) {
       // 复用已有实例：保持窗口短暂可见，明确告知是「已在浏览器打开」而非崩溃闪退
-      logStartup(`[api] 应用已在浏览器打开（http://127.0.0.1:${BASE_PORT}）。本窗口 2 秒后自动关闭。`);
+      logStartup(
+        `[api] 应用已在浏览器打开（http://127.0.0.1:${BASE_PORT}）。本窗口 2 秒后自动关闭。`,
+      );
       setTimeout(() => process.exit(0), 2000);
       return;
     }
