@@ -7,10 +7,7 @@
  * - 顺序：保留 existing 在前，新 fetched 追加在后（保持用户已添加项的相对顺序）。
  * - 空/undefined 的 existing 安全处理为 []。
  */
-export function mergeModels(
-  existing: string[] | undefined | null,
-  fetched: string[],
-): string[] {
+export function mergeModels(existing: string[] | undefined | null, fetched: string[]): string[] {
   return Array.from(new Set([...(existing ?? []), ...fetched]));
 }
 

@@ -35,10 +35,17 @@ const anthropicUp = http.createServer((req, res) => {
       try {
         parsed = JSON.parse(body);
       } catch {}
-      console.log('  [anthropic upstream] messages:', JSON.stringify(parsed.messages), '| system:', parsed.system);
+      console.log(
+        '  [anthropic upstream] messages:',
+        JSON.stringify(parsed.messages),
+        '| system:',
+        parsed.system,
+      );
       ok(parsed.system === 'Be concise.', '[anthropic] 上游收到抽离后的 system 字段');
       ok(
-        Array.isArray(parsed.messages) && parsed.messages.length === 1 && parsed.messages[0].role === 'user',
+        Array.isArray(parsed.messages) &&
+          parsed.messages.length === 1 &&
+          parsed.messages[0].role === 'user',
         '[anthropic] 上游 messages 已剔除 system',
       );
       if (parsed.stream !== true) {
@@ -61,8 +68,14 @@ const anthropicUp = http.createServer((req, res) => {
         res.write(`data: ${JSON.stringify(d)}\n\n`);
       };
       ev('message_start', { type: 'message_start', message: { usage: { input_tokens: 10 } } });
-      ev('content_block_delta', { type: 'content_block_delta', delta: { type: 'text_delta', text: 'Hel' } });
-      ev('content_block_delta', { type: 'content_block_delta', delta: { type: 'text_delta', text: 'lo from anthropic' } });
+      ev('content_block_delta', {
+        type: 'content_block_delta',
+        delta: { type: 'text_delta', text: 'Hel' },
+      });
+      ev('content_block_delta', {
+        type: 'content_block_delta',
+        delta: { type: 'text_delta', text: 'lo from anthropic' },
+      });
       ev('message_delta', { type: 'message_delta', usage: { output_tokens: 5 } });
       ev('message_stop', { type: 'message_stop' });
       res.end();
@@ -89,10 +102,20 @@ const geminiUp = http.createServer((req, res) => {
       try {
         parsed = JSON.parse(body);
       } catch {}
-      console.log('  [gemini upstream] contents:', JSON.stringify(parsed.contents), '| system:', parsed.systemInstruction?.parts?.[0]?.text);
-      ok(parsed.systemInstruction?.parts?.[0]?.text === 'Be concise.', '[gemini] 上游收到 systemInstruction');
+      console.log(
+        '  [gemini upstream] contents:',
+        JSON.stringify(parsed.contents),
+        '| system:',
+        parsed.systemInstruction?.parts?.[0]?.text,
+      );
       ok(
-        Array.isArray(parsed.contents) && parsed.contents.length === 1 && parsed.contents[0].role === 'user',
+        parsed.systemInstruction?.parts?.[0]?.text === 'Be concise.',
+        '[gemini] 上游收到 systemInstruction',
+      );
+      ok(
+        Array.isArray(parsed.contents) &&
+          parsed.contents.length === 1 &&
+          parsed.contents[0].role === 'user',
         '[gemini] 上游 contents 仅含 user turn',
       );
       if (parsed.stream === false || !u.includes('streamgeneratecontent')) {
@@ -100,7 +123,10 @@ const geminiUp = http.createServer((req, res) => {
         res.end(
           JSON.stringify({
             candidates: [
-              { content: { parts: [{ text: 'NONSTREAM gemini' }], role: 'model' }, finishReason: 'STOP' },
+              {
+                content: { parts: [{ text: 'NONSTREAM gemini' }], role: 'model' },
+                finishReason: 'STOP',
+              },
             ],
             usageMetadata: { promptTokenCount: 12, candidatesTokenCount: 4, totalTokenCount: 16 },
           }),
@@ -111,7 +137,10 @@ const geminiUp = http.createServer((req, res) => {
       const sd = (obj) => res.write(`data: ${JSON.stringify(obj)}\n\n`);
       sd({ candidates: [{ content: { parts: [{ text: 'Hel' }] } }] });
       sd({ candidates: [{ content: { parts: [{ text: 'lo from gemini' }] } }] });
-      sd({ candidates: [{ finishReason: 'STOP' }], usageMetadata: { promptTokenCount: 12, candidatesTokenCount: 6, totalTokenCount: 18 } });
+      sd({
+        candidates: [{ finishReason: 'STOP' }],
+        usageMetadata: { promptTokenCount: 12, candidatesTokenCount: 6, totalTokenCount: 18 },
+      });
       res.end();
     } else {
       res.writeHead(404);
@@ -122,18 +151,21 @@ const geminiUp = http.createServer((req, res) => {
 
 function verifyFlow(providerId, expectedContent) {
   return (async () => {
-    const chatRes = await fetch(`http://127.0.0.1:${PORT}/api/proxy/${providerId}/chat/completions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'test-model',
-        messages: [
-          { role: 'system', content: 'Be concise.' },
-          { role: 'user', content: 'Hi' },
-        ],
-        stream: true,
-      }),
-    });
+    const chatRes = await fetch(
+      `http://127.0.0.1:${PORT}/api/proxy/${providerId}/chat/completions`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'test-model',
+          messages: [
+            { role: 'system', content: 'Be concise.' },
+            { role: 'user', content: 'Hi' },
+          ],
+          stream: true,
+        }),
+      },
+    );
     ok(
       chatRes.ok && (chatRes.headers.get('content-type') || '').includes('text/event-stream'),
       `[${providerId}] proxy SSE ok (HTTP ${chatRes.status})`,
@@ -169,31 +201,43 @@ function verifyFlow(providerId, expectedContent) {
     }
     ok(full === expectedContent, `[${providerId}] OpenAI SSE 内容正确拼回 (got "${full}")`);
     ok(finishReason === 'stop', `[${providerId}] finish_reason 映射为 stop (got ${finishReason})`);
-    ok(!!lastUsage && lastUsage.prompt_tokens > 0 && lastUsage.completion_tokens > 0, `[${providerId}] usage 已映射 (got ${JSON.stringify(lastUsage)})`);
+    ok(
+      !!lastUsage && lastUsage.prompt_tokens > 0 && lastUsage.completion_tokens > 0,
+      `[${providerId}] usage 已映射 (got ${JSON.stringify(lastUsage)})`,
+    );
     ok(sawDone, `[${providerId}] 收到 [DONE] 终止符`);
   })();
 }
 
 function verifyNonStream(providerId, expectedContent) {
   return (async () => {
-    const chatRes = await fetch(`http://127.0.0.1:${PORT}/api/proxy/${providerId}/chat/completions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'test-model',
-        messages: [
-          { role: 'system', content: 'Be concise.' },
-          { role: 'user', content: 'Hi' },
-        ],
-        stream: false,
-      }),
-    });
+    const chatRes = await fetch(
+      `http://127.0.0.1:${PORT}/api/proxy/${providerId}/chat/completions`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'test-model',
+          messages: [
+            { role: 'system', content: 'Be concise.' },
+            { role: 'user', content: 'Hi' },
+          ],
+          stream: false,
+        }),
+      },
+    );
     ok(chatRes.ok, `[${providerId}] 非流式 proxy ok (HTTP ${chatRes.status})`);
     const j = await chatRes.json();
     ok(j.object === 'chat.completion', `[${providerId}] 非流式响应 object=chat.completion`);
-    ok(j.choices?.[0]?.message?.content === expectedContent, `[${providerId}] 非流式内容正确 (got "${j.choices?.[0]?.message?.content}")`);
+    ok(
+      j.choices?.[0]?.message?.content === expectedContent,
+      `[${providerId}] 非流式内容正确 (got "${j.choices?.[0]?.message?.content}")`,
+    );
     ok(j.choices?.[0]?.finish_reason === 'stop', `[${providerId}] 非流式 finish_reason=stop`);
-    ok(j.usage && j.usage.prompt_tokens > 0 && j.usage.completion_tokens > 0, `[${providerId}] 非流式 usage 映射 (got ${JSON.stringify(j.usage)})`);
+    ok(
+      j.usage && j.usage.prompt_tokens > 0 && j.usage.completion_tokens > 0,
+      `[${providerId}] 非流式 usage 映射 (got ${JSON.stringify(j.usage)})`,
+    );
   })();
 }
 

@@ -36,7 +36,10 @@ export function getCacheConfig(): { enabled: boolean; ttlMs: number } {
 }
 
 export function cacheKey(method: string, path: string, body: string, provider?: string): string {
-  return crypto.createHash('sha256').update(`${provider ?? '*'}\n${method}\n${path}\n${body}`).digest('hex');
+  return crypto
+    .createHash('sha256')
+    .update(`${provider ?? '*'}\n${method}\n${path}\n${body}`)
+    .digest('hex');
 }
 
 function drop(key: string): void {

@@ -285,7 +285,9 @@ export function deleteProvider(id: string): ProxyConfig {
 }
 
 /** 批量导入：与现有配置做浅合并（不传的字段保留原值；传空字符串的 key 视为不修改） */
-export function importConfig(partial: { providers?: Record<string, Partial<ProviderConfig>> }): ProxyConfig {
+export function importConfig(partial: {
+  providers?: Record<string, Partial<ProviderConfig>>;
+}): ProxyConfig {
   if (locked) return activeConfig;
   const cfg = activeConfig;
   for (const [id, p] of Object.entries(partial.providers ?? {})) {

@@ -41,7 +41,8 @@ export function fmtPrice(v: number | null | undefined): string {
 
 export function fmtCtx(tokens: number): string {
   if (!tokens) return '—';
-  if (tokens >= 1_000_000) return `${(tokens / 1_000_000).toFixed(tokens % 1_000_000 === 0 ? 0 : 1)}M`;
+  if (tokens >= 1_000_000)
+    return `${(tokens / 1_000_000).toFixed(tokens % 1_000_000 === 0 ? 0 : 1)}M`;
   if (tokens >= 1000) return `${Math.round(tokens / 1000)}K`;
   return String(tokens);
 }
@@ -164,7 +165,10 @@ export async function fetchProxyConfig(): Promise<ProxyConfigResponse> {
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return r.json();
 }
-export async function saveProxyConfig(providerId: string, patch: ProxyConfigPatch): Promise<ProxyConfigResponse> {
+export async function saveProxyConfig(
+  providerId: string,
+  patch: ProxyConfigPatch,
+): Promise<ProxyConfigResponse> {
   const r = await fetch('/api/proxy/config', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

@@ -40,7 +40,9 @@ export default function Dashboard({ snapshot }: Props) {
     const withIntel = models.filter((m) => m.intelligence !== null);
     const withSpeed = models.filter((m) => m.speed !== null);
     return {
-      intelligence: [...withIntel].sort((a, b) => (b.intelligence ?? 0) - (a.intelligence ?? 0)).slice(0, 12),
+      intelligence: [...withIntel]
+        .sort((a, b) => (b.intelligence ?? 0) - (a.intelligence ?? 0))
+        .slice(0, 12),
       value: [...withIntel].sort((a, b) => valueScore(b) - valueScore(a)).slice(0, 12),
       speed: [...withSpeed].sort((a, b) => (b.speed ?? 0) - (a.speed ?? 0)).slice(0, 12),
       context: [...models].sort((a, b) => b.context - a.context).slice(0, 12),
@@ -77,7 +79,12 @@ export default function Dashboard({ snapshot }: Props) {
     <div className="h-full min-h-0 space-y-4 overflow-y-auto overscroll-contain p-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <Stat label="模型总数" value={models.length} hint={`${stats.vendors} 家厂商`} />
-        <Stat label="评估榜单" value={leaderboards.length} hint="Artificial Analysis" tone="accent" />
+        <Stat
+          label="评估榜单"
+          value={leaderboards.length}
+          hint="Artificial Analysis"
+          tone="accent"
+        />
         <Stat
           label="最长上下文"
           value={fmtCtx(stats.maxCtx?.context ?? 0)}
@@ -136,9 +143,9 @@ export default function Dashboard({ snapshot }: Props) {
               {rows.map((m, i) => {
                 const value =
                   tab === 'intelligence'
-                    ? m.intelligence ?? 0
+                    ? (m.intelligence ?? 0)
                     : tab === 'speed'
-                      ? m.speed ?? 0
+                      ? (m.speed ?? 0)
                       : tab === 'context'
                         ? m.context
                         : valueScore(m);
@@ -150,11 +157,17 @@ export default function Dashboard({ snapshot }: Props) {
                         <span className="truncate text-xs text-ink">{m.name}</span>
                         <Chip>{m.vendorLabel}</Chip>
                         {m.intelligence !== null && tab !== 'intelligence' && (
-                          <span className="text-[11px] text-muted">智能 {m.intelligence.toFixed(1)}</span>
+                          <span className="text-[11px] text-muted">
+                            智能 {m.intelligence.toFixed(1)}
+                          </span>
                         )}
                       </div>
                       <div className="mt-1">
-                        <Bar value={value} max={rowMax} color={tab === 'value' ? '#f59e0b' : '#4da3ff'} />
+                        <Bar
+                          value={value}
+                          max={rowMax}
+                          color={tab === 'value' ? '#f59e0b' : '#4da3ff'}
+                        />
                       </div>
                     </div>
                     <div className="w-28 shrink-0 text-right text-xs tabular-nums text-ink">
@@ -180,9 +193,16 @@ export default function Dashboard({ snapshot }: Props) {
                 <li key={v.label} className="flex items-center gap-2">
                   <span className="w-28 shrink-0 truncate text-xs text-ink">{v.label}</span>
                   <div className="min-w-0 flex-1">
-                    <Bar value={v.count} max={vendorRank[0]?.count ?? 1} color="#22d3ee" height={5} />
+                    <Bar
+                      value={v.count}
+                      max={vendorRank[0]?.count ?? 1}
+                      color="#22d3ee"
+                      height={5}
+                    />
                   </div>
-                  <span className="w-8 shrink-0 text-right text-[11px] tabular-nums text-muted">{v.count}</span>
+                  <span className="w-8 shrink-0 text-right text-[11px] tabular-nums text-muted">
+                    {v.count}
+                  </span>
                   <span className="w-12 shrink-0 text-right text-[11px] tabular-nums text-muted">
                     {fmtCtx(v.ctx)}
                   </span>
@@ -191,7 +211,10 @@ export default function Dashboard({ snapshot }: Props) {
             </ul>
           </Card>
 
-          <Card title="数据源状态" subtitle={`快照生成于 ${fmtTime(generatedAt)} · 缓存 ${Math.round(meta.ttlMs / 60000)} 分钟`}>
+          <Card
+            title="数据源状态"
+            subtitle={`快照生成于 ${fmtTime(generatedAt)} · 缓存 ${Math.round(meta.ttlMs / 60000)} 分钟`}
+          >
             <SourceList sources={sources} />
           </Card>
         </div>

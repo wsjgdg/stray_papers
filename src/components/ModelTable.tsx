@@ -6,13 +6,7 @@ import { fmtCtx, fmtDate, fmtPrice } from '../api';
 import { Chip, Empty, Stat } from '../ui';
 
 type SortKey =
-  | 'created'
-  | 'context'
-  | 'promptPrice'
-  | 'completionPrice'
-  | 'intelligence'
-  | 'speed'
-  | 'agentic';
+  'created' | 'context' | 'promptPrice' | 'completionPrice' | 'intelligence' | 'speed' | 'agentic';
 
 type CapKey = 'reasoning' | 'tools' | 'structuredOutput' | 'multimodal';
 
@@ -38,7 +32,12 @@ function stripVendorPrefix(m: LlmModel): string {
   if (colon > 0) return m.name.slice(colon + 1).trim();
   const label = m.vendorLabel;
   if (label && m.name.toLowerCase().startsWith(label.toLowerCase())) {
-    return m.name.slice(label.length).replace(/^[\s:\-—]+/, '').trim() || m.name;
+    return (
+      m.name
+        .slice(label.length)
+        .replace(/^[\s:\-—]+/, '')
+        .trim() || m.name
+    );
   }
   return m.name;
 }
@@ -206,7 +205,9 @@ export default function ModelTable({
   const vendorOptions = useMemo(() => {
     const counts = new Map<string, number>();
     for (const m of models) counts.set(m.vendorLabel, (counts.get(m.vendorLabel) ?? 0) + 1);
-    return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([label, count]) => ({ label, count }));
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([label, count]) => ({ label, count }));
   }, [models]);
 
   const filtered = useMemo(() => {
@@ -424,13 +425,49 @@ export default function ModelTable({
                 <th className="th w-8" />
                 <th className="th">模型</th>
                 <th className="th w-28">厂商</th>
-                <SortTh label="上下文" sortKey="context" sort={sort} onSort={toggleSort} className="w-20 text-right" />
-                <SortTh label="输入价" sortKey="promptPrice" sort={sort} onSort={toggleSort} className="w-20 text-right" />
-                <SortTh label="输出价" sortKey="completionPrice" sort={sort} onSort={toggleSort} className="w-20 text-right" />
+                <SortTh
+                  label="上下文"
+                  sortKey="context"
+                  sort={sort}
+                  onSort={toggleSort}
+                  className="w-20 text-right"
+                />
+                <SortTh
+                  label="输入价"
+                  sortKey="promptPrice"
+                  sort={sort}
+                  onSort={toggleSort}
+                  className="w-20 text-right"
+                />
+                <SortTh
+                  label="输出价"
+                  sortKey="completionPrice"
+                  sort={sort}
+                  onSort={toggleSort}
+                  className="w-20 text-right"
+                />
                 <th className="th w-24 text-right">缓存读取价</th>
-                <SortTh label="智能指数" sortKey="intelligence" sort={sort} onSort={toggleSort} className="w-20 text-right" />
-                <SortTh label="速度" sortKey="speed" sort={sort} onSort={toggleSort} className="w-20 text-right" />
-                <SortTh label="发布日" sortKey="created" sort={sort} onSort={toggleSort} className="w-24" />
+                <SortTh
+                  label="智能指数"
+                  sortKey="intelligence"
+                  sort={sort}
+                  onSort={toggleSort}
+                  className="w-20 text-right"
+                />
+                <SortTh
+                  label="速度"
+                  sortKey="speed"
+                  sort={sort}
+                  onSort={toggleSort}
+                  className="w-20 text-right"
+                />
+                <SortTh
+                  label="发布日"
+                  sortKey="created"
+                  sort={sort}
+                  onSort={toggleSort}
+                  className="w-24"
+                />
                 <th className="th">能力</th>
               </tr>
             </thead>

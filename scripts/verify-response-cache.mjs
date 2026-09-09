@@ -20,7 +20,9 @@ const ok = (name, extra = '') => {
 
 const entry = (body = 'x', storedAt = Date.now(), cc = '') => ({
   status: 200,
-  headers: cc ? { 'content-type': 'application/json', 'cache-control': cc } : { 'content-type': 'application/json' },
+  headers: cc
+    ? { 'content-type': 'application/json', 'cache-control': cc }
+    : { 'content-type': 'application/json' },
   body: Buffer.from(body),
   storedAt,
 });
@@ -54,7 +56,10 @@ clearCache();
   for (let i = 0; i < 100; i++) putCached(`big-${i}`, entry(big));
   const s = getCacheStats();
   assert.ok(s.bytes <= s.maxBytes, `bytes=${s.bytes} > max=${s.maxBytes}`);
-  ok('字节数超限时淘汰最旧', `bytes=${(s.bytes / 1e6).toFixed(1)}MB/${(s.maxBytes / 1e6).toFixed(0)}MB`);
+  ok(
+    '字节数超限时淘汰最旧',
+    `bytes=${(s.bytes / 1e6).toFixed(1)}MB/${(s.maxBytes / 1e6).toFixed(0)}MB`,
+  );
 }
 
 // 4) 过期条目被主动清理（不依赖再次被请求）

@@ -27,7 +27,9 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { err
       return (
         <div className="fixed inset-0 z-[9999] overflow-auto bg-[#1a0d0d] p-4 text-[12px] text-[#ff9b9b]">
           <div className="mb-2 font-semibold">渲染出错（已捕获，未黑屏）</div>
-          <pre className="whitespace-pre-wrap break-words">{String(this.state.err?.stack || this.state.err)}</pre>
+          <pre className="whitespace-pre-wrap break-words">
+            {String(this.state.err?.stack || this.state.err)}
+          </pre>
         </div>
       );
     }

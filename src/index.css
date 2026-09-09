@@ -16,7 +16,13 @@ body {
   margin: 0;
   background: #0b1220;
   color: #e6edf3;
-  font-family: 'Inter', 'Microsoft YaHei', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family:
+    'Inter',
+    'Microsoft YaHei',
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 

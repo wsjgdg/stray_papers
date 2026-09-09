@@ -35,7 +35,12 @@ const mock = http.createServer((req, res) => {
   let body = '';
   req.on('data', (c) => (body += c));
   req.on('end', () => {
-    const auth = (req.headers['authorization'] || req.headers['x-api-key'] || req.headers['x-goog-api-key'] || '').toString();
+    const auth = (
+      req.headers['authorization'] ||
+      req.headers['x-api-key'] ||
+      req.headers['x-goog-api-key'] ||
+      ''
+    ).toString();
     seen.push(auth);
     if (auth.includes('fo-bad')) {
       res.writeHead(401, { 'content-type': 'application/json' });
@@ -47,13 +52,30 @@ const mock = http.createServer((req, res) => {
     else if (auth.includes('rr-B')) keyLabel = 'B';
     else if (auth.includes('fo-good')) keyLabel = 'GOOD';
     res.writeHead(200, { 'content-type': 'application/json' });
-    res.end(JSON.stringify({ key: keyLabel, choices: [{ message: { content: 'ok-' + keyLabel } }], usage: { prompt_tokens: 10, completion_tokens: 5 } }));
+    res.end(
+      JSON.stringify({
+        key: keyLabel,
+        choices: [{ message: { content: 'ok-' + keyLabel } }],
+        usage: { prompt_tokens: 10, completion_tokens: 5 },
+      }),
+    );
   });
 });
 
 function startServer() {
-  const env = { ...process.env, API_PORT: String(API), USERPROFILE: HOME, HOME, NO_OPEN: '1', NO_REUSE: '1' };
-  const p = spawn(NODE, [TSX, 'server/index.ts'], { cwd: ROOT, env, stdio: ['ignore', 'pipe', 'pipe'] });
+  const env = {
+    ...process.env,
+    API_PORT: String(API),
+    USERPROFILE: HOME,
+    HOME,
+    NO_OPEN: '1',
+    NO_REUSE: '1',
+  };
+  const p = spawn(NODE, [TSX, 'server/index.ts'], {
+    cwd: ROOT,
+    env,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
   p.stdout.on('data', () => {});
   p.stderr.on('data', (d) => process.stderr.write(`[srv] ${d}`));
   return p;
@@ -92,17 +114,39 @@ async function main() {
   await fetch(`${base}/api/proxy/config`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ providerId: RR, apiKey: 'sk-rr-A', apiKeys: ['sk-rr-A', 'sk-rr-B'], baseUrl: MOCK_URL, enabled: true, authStyle: 'bearer' }),
+    body: JSON.stringify({
+      providerId: RR,
+      apiKey: 'sk-rr-A',
+      apiKeys: ['sk-rr-A', 'sk-rr-B'],
+      baseUrl: MOCK_URL,
+      enabled: true,
+      authStyle: 'bearer',
+    }),
   });
   // 配置多 key 厂商（失败切换：第一个无效，第二个有效）
   await fetch(`${base}/api/proxy/config`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ providerId: FO, apiKey: 'sk-fo-bad', apiKeys: ['sk-fo-bad', 'sk-fo-good'], baseUrl: MOCK_URL, enabled: true, authStyle: 'bearer' }),
+    body: JSON.stringify({
+      providerId: FO,
+      apiKey: 'sk-fo-bad',
+      apiKeys: ['sk-fo-bad', 'sk-fo-good'],
+      baseUrl: MOCK_URL,
+      enabled: true,
+      authStyle: 'bearer',
+    }),
   });
   const cfgResp = await (await fetch(`${base}/api/proxy/config`)).json();
-  check('轮询厂商 apiKeyCount = 2', cfgResp.providers[RR]?.apiKeyCount === 2, `count=${cfgResp.providers[RR]?.apiKeyCount}`);
-  check('兜底厂商 apiKeyCount = 2', cfgResp.providers[FO]?.apiKeyCount === 2, `count=${cfgResp.providers[FO]?.apiKeyCount}`);
+  check(
+    '轮询厂商 apiKeyCount = 2',
+    cfgResp.providers[RR]?.apiKeyCount === 2,
+    `count=${cfgResp.providers[RR]?.apiKeyCount}`,
+  );
+  check(
+    '兜底厂商 apiKeyCount = 2',
+    cfgResp.providers[FO]?.apiKeyCount === 2,
+    `count=${cfgResp.providers[FO]?.apiKeyCount}`,
+  );
 
   // ── P2-a(1) 轮询：4 次不同请求，应分布在 A/B 两个 key ──
   seen.length = 0;
@@ -115,7 +159,11 @@ async function main() {
   }
   const rrKeys = seen.map((a) => (a.includes('rr-A') ? 'A' : a.includes('rr-B') ? 'B' : '?'));
   const distinct = [...new Set(rrKeys)];
-  check('轮询覆盖多个 key (A 与 B 都出现)', distinct.includes('A') && distinct.includes('B'), `seen=${rrKeys.join(',')}`);
+  check(
+    '轮询覆盖多个 key (A 与 B 都出现)',
+    distinct.includes('A') && distinct.includes('B'),
+    `seen=${rrKeys.join(',')}`,
+  );
 
   // ── P2-a(2) 失败切换：第一个 key 401 → 自动切到第二个 key 成功 ──
   seen.length = 0;
@@ -125,13 +173,25 @@ async function main() {
     body: JSON.stringify({ model: 'm', messages: [{ role: 'user', content: 'fo' }] }),
   });
   const foJson = await foResp.json();
-  check('失败切换后最终成功', foResp.ok && foJson.choices?.[0]?.message?.content === 'ok-GOOD', `body=${JSON.stringify(foJson).slice(0, 80)}`);
-  check('上游收到的是兜底 key (GOOD 而非 BAD)', seen.some((a) => a.includes('fo-good')) && !seen[0]?.includes('fo-good'), `seen=${seen.join(',')}`);
+  check(
+    '失败切换后最终成功',
+    foResp.ok && foJson.choices?.[0]?.message?.content === 'ok-GOOD',
+    `body=${JSON.stringify(foJson).slice(0, 80)}`,
+  );
+  check(
+    '上游收到的是兜底 key (GOOD 而非 BAD)',
+    seen.some((a) => a.includes('fo-good')) && !seen[0]?.includes('fo-good'),
+    `seen=${seen.join(',')}`,
+  );
 
   // 指标应记录 1 次 key 切换
   const metrics = (await (await fetch(`${base}/api/proxy/metrics`)).json()).metrics;
   const foMetric = metrics.find((m) => m.provider === FO);
-  check('指标记录 key 切换次数 >= 1', foMetric && foMetric.totalKeySwitches >= 1, `switches=${foMetric?.totalKeySwitches}`);
+  check(
+    '指标记录 key 切换次数 >= 1',
+    foMetric && foMetric.totalKeySwitches >= 1,
+    `switches=${foMetric?.totalKeySwitches}`,
+  );
 
   // ── P2-b Prometheus /metrics ──
   const mResp = await fetch(`${base}/metrics`);
@@ -142,7 +202,11 @@ async function main() {
   check('/metrics 含请求计数', mText.includes('llmworkbench_requests_total'));
   check('/metrics 含成本计数', mText.includes('llmworkbench_cost_usd_total'));
   check('/metrics 含 key 切换计数', mText.includes('llmworkbench_key_switches_total'));
-  check('/metrics 含缓存命中（含厂商 label）', mText.includes('llmworkbench_requests_total{provider="fo_prov"}') || mText.includes('llmworkbench_requests_total{provider="rr_prov"}'));
+  check(
+    '/metrics 含缓存命中（含厂商 label）',
+    mText.includes('llmworkbench_requests_total{provider="fo_prov"}') ||
+      mText.includes('llmworkbench_requests_total{provider="rr_prov"}'),
+  );
   check('/metrics 含全局输入速率 gauge', mText.includes('llmworkbench_input_rate_tok_s'));
   check('/metrics 含全局输出速率 gauge', mText.includes('llmworkbench_output_rate_tok_s'));
 
@@ -150,14 +214,32 @@ async function main() {
   await sleep(2200); // 等待至少一个 2s 速率历史采样周期
   const sum = await (await fetch(`${base}/api/proxy/metrics/summary`)).json();
   check('汇总接口返回当日输入 tokens > 0', sum.todayInputTokens > 0, `in=${sum.todayInputTokens}`);
-  check('汇总接口返回当日输出 tokens > 0', sum.todayOutputTokens > 0, `out=${sum.todayOutputTokens}`);
-  check('汇总接口含最近模型列表', Array.isArray(sum.recentModels) && sum.recentModels.length > 0, `n=${sum.recentModels?.length}`);
-  check('汇总接口含聚合速率字段', typeof sum.inputRateTokS === 'number' && typeof sum.outputRateTokS === 'number');
+  check(
+    '汇总接口返回当日输出 tokens > 0',
+    sum.todayOutputTokens > 0,
+    `out=${sum.todayOutputTokens}`,
+  );
+  check(
+    '汇总接口含最近模型列表',
+    Array.isArray(sum.recentModels) && sum.recentModels.length > 0,
+    `n=${sum.recentModels?.length}`,
+  );
+  check(
+    '汇总接口含聚合速率字段',
+    typeof sum.inputRateTokS === 'number' && typeof sum.outputRateTokS === 'number',
+  );
   check('汇总接口含当日成本', typeof sum.todayCostUsd === 'number' && sum.todayCostUsd > 0);
-  check('汇总接口含速率历史 rateHistory 数组', Array.isArray(sum.rateHistory) && sum.rateHistory.length >= 2, `len=${sum.rateHistory?.length}`);
+  check(
+    '汇总接口含速率历史 rateHistory 数组',
+    Array.isArray(sum.rateHistory) && sum.rateHistory.length >= 2,
+    `len=${sum.rateHistory?.length}`,
+  );
   const rhOk =
     Array.isArray(sum.rateHistory) &&
-    sum.rateHistory.every((s) => typeof s.t === 'number' && typeof s.inRate === 'number' && typeof s.outRate === 'number');
+    sum.rateHistory.every(
+      (s) =>
+        typeof s.t === 'number' && typeof s.inRate === 'number' && typeof s.outRate === 'number',
+    );
   check('rateHistory 每项含数值字段 t/inRate/outRate', rhOk);
   check('rateHistoryMax = 180', sum.rateHistoryMax === 180, `max=${sum.rateHistoryMax}`);
 

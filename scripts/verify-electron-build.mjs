@@ -33,7 +33,11 @@ const code1 = run('build:server:electron');
 check('build:server:electron exit 0', code1 === 0, `exit=${code1}`);
 const serverCjs = path.join(ROOT, 'electron', 'server.cjs');
 const serverOk = fs.existsSync(serverCjs) && fs.statSync(serverCjs).size > 1_000_000;
-check('electron/server.cjs exists & >1MB (bundled)', serverOk, serverOk ? `${fs.statSync(serverCjs).size} bytes` : 'missing');
+check(
+  'electron/server.cjs exists & >1MB (bundled)',
+  serverOk,
+  serverOk ? `${fs.statSync(serverCjs).size} bytes` : 'missing',
+);
 
 // 2) 图标
 const code2 = run('make:icon');

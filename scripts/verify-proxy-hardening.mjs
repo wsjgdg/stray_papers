@@ -75,13 +75,26 @@ const mock = http.createServer((req, res) => {
     }
 
     res.writeHead(200, { 'content-type': 'application/json' });
-    res.end(JSON.stringify({ choices: [{ message: { content: 'hi' } }], usage: { prompt_tokens: 1 } }));
+    res.end(
+      JSON.stringify({ choices: [{ message: { content: 'hi' } }], usage: { prompt_tokens: 1 } }),
+    );
   });
 });
 
 function startServer() {
-  const env = { ...process.env, API_PORT: String(API), USERPROFILE: HOME, HOME, NO_OPEN: '1', NO_REUSE: '1' };
-  const p = spawn(NODE, [TSX, 'server/index.ts'], { cwd: ROOT, env, stdio: ['ignore', 'pipe', 'pipe'] });
+  const env = {
+    ...process.env,
+    API_PORT: String(API),
+    USERPROFILE: HOME,
+    HOME,
+    NO_OPEN: '1',
+    NO_REUSE: '1',
+  };
+  const p = spawn(NODE, [TSX, 'server/index.ts'], {
+    cwd: ROOT,
+    env,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
   p.stdout.on('data', () => {});
   p.stderr.on('data', (d) => process.stderr.write(`[srv] ${d}`));
   return p;
@@ -130,7 +143,11 @@ async function main() {
       redirect: 'manual',
     });
     const loc = r.headers.get('location');
-    check('3xx 转发 Location 头', loc === 'https://example.com/moved', `status=${r.status}, location=${loc}`);
+    check(
+      '3xx 转发 Location 头',
+      loc === 'https://example.com/moved',
+      `status=${r.status}, location=${loc}`,
+    );
   }
 
   // ── 2) 3xx：不进响应缓存 ──
@@ -150,7 +167,11 @@ async function main() {
       redirect: 'manual',
     });
     const after = await (await fetch(`${base}/api/proxy/cache`)).json();
-    check('3xx 未被缓存（mock 每次都收到请求）', mockHits === hitsBefore + 2, `+${mockHits - hitsBefore}`);
+    check(
+      '3xx 未被缓存（mock 每次都收到请求）',
+      mockHits === hitsBefore + 2,
+      `+${mockHits - hitsBefore}`,
+    );
     check('缓存条目数未增长', after.size === before.size, `${before.size} → ${after.size}`);
   }
 
@@ -158,9 +179,21 @@ async function main() {
   {
     const payload = JSON.stringify({ model: 'plain', prompt: 'cache-me' });
     const hitsBefore = mockHits;
-    await fetch(proxyUrl, { method: 'POST', headers: { 'content-type': 'application/json' }, body: payload });
-    await fetch(proxyUrl, { method: 'POST', headers: { 'content-type': 'application/json' }, body: payload });
-    check('2xx 仍命中缓存（第二次不打上游）', mockHits === hitsBefore + 1, `+${mockHits - hitsBefore}`);
+    await fetch(proxyUrl, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: payload,
+    });
+    await fetch(proxyUrl, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: payload,
+    });
+    check(
+      '2xx 仍命中缓存（第二次不打上游）',
+      mockHits === hitsBefore + 1,
+      `+${mockHits - hitsBefore}`,
+    );
   }
 
   // ── 4) 流式：客户端断开后上游立即中止 ──

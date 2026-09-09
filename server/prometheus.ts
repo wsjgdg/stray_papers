@@ -25,30 +25,98 @@ export function renderMetrics(): string {
   const blocks: string[] = [];
 
   // 存活
-  blocks.push(['# HELP llmworkbench_up 服务存活状态', '# TYPE llmworkbench_up gauge', 'llmworkbench_up 1'].join('\n'));
+  blocks.push(
+    [
+      '# HELP llmworkbench_up 服务存活状态',
+      '# TYPE llmworkbench_up gauge',
+      'llmworkbench_up 1',
+    ].join('\n'),
+  );
 
-  const reqLines: string[] = ['# HELP llmworkbench_requests_total 累计请求数', '# TYPE llmworkbench_requests_total counter'];
-  const succLines: string[] = ['# HELP llmworkbench_requests_success_total 成功请求数', '# TYPE llmworkbench_requests_success_total counter'];
-  const errLines: string[] = ['# HELP llmworkbench_requests_error_total 失败请求数', '# TYPE llmworkbench_requests_error_total counter'];
-  const inLines: string[] = ['# HELP llmworkbench_input_tokens_total 累计输入 tokens', '# TYPE llmworkbench_input_tokens_total counter'];
-  const outLines: string[] = ['# HELP llmworkbench_output_tokens_total 累计输出 tokens', '# TYPE llmworkbench_output_tokens_total counter'];
-  const cacheReadLines: string[] = ['# HELP llmworkbench_cache_read_tokens_total 累计缓存命中 tokens', '# TYPE llmworkbench_cache_read_tokens_total counter'];
-  const costLines: string[] = ['# HELP llmworkbench_cost_usd_total 累计估算成本（USD）', '# TYPE llmworkbench_cost_usd_total counter'];
-  const keySwitchLines: string[] = ['# HELP llmworkbench_key_switches_total 累计 key 切换次数（多 key 轮询/失败切换）', '# TYPE llmworkbench_key_switches_total counter'];
-  const latLines: string[] = ['# HELP llmworkbench_avg_latency_ms 近 50 次平均延迟', '# TYPE llmworkbench_avg_latency_ms gauge'];
-  const rateLines: string[] = ['# HELP llmworkbench_req_rate 近 10s 请求速率（req/s）', '# TYPE llmworkbench_req_rate gauge'];
+  const reqLines: string[] = [
+    '# HELP llmworkbench_requests_total 累计请求数',
+    '# TYPE llmworkbench_requests_total counter',
+  ];
+  const succLines: string[] = [
+    '# HELP llmworkbench_requests_success_total 成功请求数',
+    '# TYPE llmworkbench_requests_success_total counter',
+  ];
+  const errLines: string[] = [
+    '# HELP llmworkbench_requests_error_total 失败请求数',
+    '# TYPE llmworkbench_requests_error_total counter',
+  ];
+  const inLines: string[] = [
+    '# HELP llmworkbench_input_tokens_total 累计输入 tokens',
+    '# TYPE llmworkbench_input_tokens_total counter',
+  ];
+  const outLines: string[] = [
+    '# HELP llmworkbench_output_tokens_total 累计输出 tokens',
+    '# TYPE llmworkbench_output_tokens_total counter',
+  ];
+  const cacheReadLines: string[] = [
+    '# HELP llmworkbench_cache_read_tokens_total 累计缓存命中 tokens',
+    '# TYPE llmworkbench_cache_read_tokens_total counter',
+  ];
+  const costLines: string[] = [
+    '# HELP llmworkbench_cost_usd_total 累计估算成本（USD）',
+    '# TYPE llmworkbench_cost_usd_total counter',
+  ];
+  const keySwitchLines: string[] = [
+    '# HELP llmworkbench_key_switches_total 累计 key 切换次数（多 key 轮询/失败切换）',
+    '# TYPE llmworkbench_key_switches_total counter',
+  ];
+  const latLines: string[] = [
+    '# HELP llmworkbench_avg_latency_ms 近 50 次平均延迟',
+    '# TYPE llmworkbench_avg_latency_ms gauge',
+  ];
+  const rateLines: string[] = [
+    '# HELP llmworkbench_req_rate 近 10s 请求速率（req/s）',
+    '# TYPE llmworkbench_req_rate gauge',
+  ];
 
   for (const m of metrics) {
-    reqLines.push(line('llmworkbench_requests_total', m.totalRequests, { provider: sanitizeLabel(m.provider) }));
-    succLines.push(line('llmworkbench_requests_success_total', m.successRequests, { provider: sanitizeLabel(m.provider) }));
-    errLines.push(line('llmworkbench_requests_error_total', m.errorRequests, { provider: sanitizeLabel(m.provider) }));
-    inLines.push(line('llmworkbench_input_tokens_total', m.totalInputTokens, { provider: sanitizeLabel(m.provider) }));
-    outLines.push(line('llmworkbench_output_tokens_total', m.totalOutputTokens, { provider: sanitizeLabel(m.provider) }));
-    cacheReadLines.push(line('llmworkbench_cache_read_tokens_total', m.totalCacheReadTokens, { provider: sanitizeLabel(m.provider) }));
-    costLines.push(line('llmworkbench_cost_usd_total', m.totalCostUsd, { provider: sanitizeLabel(m.provider) }));
-    keySwitchLines.push(line('llmworkbench_key_switches_total', m.totalKeySwitches, { provider: sanitizeLabel(m.provider) }));
-    latLines.push(line('llmworkbench_avg_latency_ms', m.avgLatencyMs, { provider: sanitizeLabel(m.provider) }));
-    rateLines.push(line('llmworkbench_req_rate', m.reqRate, { provider: sanitizeLabel(m.provider) }));
+    reqLines.push(
+      line('llmworkbench_requests_total', m.totalRequests, { provider: sanitizeLabel(m.provider) }),
+    );
+    succLines.push(
+      line('llmworkbench_requests_success_total', m.successRequests, {
+        provider: sanitizeLabel(m.provider),
+      }),
+    );
+    errLines.push(
+      line('llmworkbench_requests_error_total', m.errorRequests, {
+        provider: sanitizeLabel(m.provider),
+      }),
+    );
+    inLines.push(
+      line('llmworkbench_input_tokens_total', m.totalInputTokens, {
+        provider: sanitizeLabel(m.provider),
+      }),
+    );
+    outLines.push(
+      line('llmworkbench_output_tokens_total', m.totalOutputTokens, {
+        provider: sanitizeLabel(m.provider),
+      }),
+    );
+    cacheReadLines.push(
+      line('llmworkbench_cache_read_tokens_total', m.totalCacheReadTokens, {
+        provider: sanitizeLabel(m.provider),
+      }),
+    );
+    costLines.push(
+      line('llmworkbench_cost_usd_total', m.totalCostUsd, { provider: sanitizeLabel(m.provider) }),
+    );
+    keySwitchLines.push(
+      line('llmworkbench_key_switches_total', m.totalKeySwitches, {
+        provider: sanitizeLabel(m.provider),
+      }),
+    );
+    latLines.push(
+      line('llmworkbench_avg_latency_ms', m.avgLatencyMs, { provider: sanitizeLabel(m.provider) }),
+    );
+    rateLines.push(
+      line('llmworkbench_req_rate', m.reqRate, { provider: sanitizeLabel(m.provider) }),
+    );
   }
 
   blocks.push(reqLines.join('\n'));

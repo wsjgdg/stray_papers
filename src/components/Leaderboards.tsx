@@ -307,7 +307,12 @@ export default function Leaderboards({
                       content={<ScatterTooltip />}
                       cursor={{ stroke: GRID, strokeDasharray: '3 3' }}
                     />
-                    <Scatter data={points} fill="#4da3ff" fillOpacity={0.7} isAnimationActive={false} />
+                    <Scatter
+                      data={points}
+                      fill="#4da3ff"
+                      fillOpacity={0.7}
+                      isAnimationActive={false}
+                    />
                   </ScatterChart>
                 </ResponsiveContainer>
               </div>

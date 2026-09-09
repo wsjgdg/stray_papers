@@ -15,7 +15,9 @@ function contentToString(content: unknown): string {
   if (typeof content === 'string') return content;
   if (Array.isArray(content)) {
     return content
-      .map((p) => (p && typeof p === 'object' && typeof (p as Json).text === 'string' ? (p as Json).text : ''))
+      .map((p) =>
+        p && typeof p === 'object' && typeof (p as Json).text === 'string' ? (p as Json).text : '',
+      )
       .join('');
   }
   return '';
@@ -80,7 +82,8 @@ export function toGeminiRequest(body: Json): Json {
   if (typeof body.temperature === 'number') genConfig.temperature = body.temperature;
   if (typeof body.top_p === 'number') genConfig.topP = body.top_p;
   if (typeof body.max_tokens === 'number') genConfig.maxOutputTokens = body.max_tokens;
-  if (body.stop != null) genConfig.stopSequences = Array.isArray(body.stop) ? body.stop : [body.stop];
+  if (body.stop != null)
+    genConfig.stopSequences = Array.isArray(body.stop) ? body.stop : [body.stop];
   const out: Json = { contents };
   if (system) out.systemInstruction = { parts: [{ text: system }] };
   if (Object.keys(genConfig).length > 0) out.generationConfig = genConfig;
@@ -88,7 +91,12 @@ export function toGeminiRequest(body: Json): Json {
 }
 
 // 上游 URL（baseUrl 已规范化为无尾斜杠）
-export function buildUpstreamUrl(format: ApiFormat, baseUrl: string, model: string, stream: boolean): string {
+export function buildUpstreamUrl(
+  format: ApiFormat,
+  baseUrl: string,
+  model: string,
+  stream: boolean,
+): string {
   const b = baseUrl.replace(/\/+$/, '');
   if (format === 'anthropic') return `${b}/messages`;
   if (format === 'gemini') {
@@ -166,7 +174,10 @@ function openaiDone(finish: string, inT: number, outT: number): string {
 }
 
 // 解析 SSE 文本缓冲区，按双换行切分出完整事件，逐个交给 handler
-function drainEvents(buf: string, handler: (event: string, data: string) => string): { out: string; rest: string } {
+function drainEvents(
+  buf: string,
+  handler: (event: string, data: string) => string,
+): { out: string; rest: string } {
   let out = '';
   let rest = buf;
   let idx: number;
@@ -199,7 +210,9 @@ export class AnthropicStreamTranslator implements StreamTranslator {
         return '';
       }
       if (event === 'message_start') {
-        this.inputTokens = Number((j as Record<string, any>)?.message?.usage?.input_tokens ?? this.inputTokens);
+        this.inputTokens = Number(
+          (j as Record<string, any>)?.message?.usage?.input_tokens ?? this.inputTokens,
+        );
         return '';
       }
       if (event === 'content_block_delta') {
@@ -208,7 +221,9 @@ export class AnthropicStreamTranslator implements StreamTranslator {
         return '';
       }
       if (event === 'message_delta') {
-        this.outputTokens = Number((j as Record<string, any>)?.usage?.output_tokens ?? this.outputTokens);
+        this.outputTokens = Number(
+          (j as Record<string, any>)?.usage?.output_tokens ?? this.outputTokens,
+        );
         return '';
       }
       if (event === 'message_stop') {

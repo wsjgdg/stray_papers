@@ -39,7 +39,11 @@ export function randomSalt(): Buffer {
 // 内存占用约 128*N*r；N=32768/r=8 需要 ~32MB，超过 Node 默认 32MB maxmem 上限，故显式放宽
 const SCRYPT_MAXMEM = 128 * 1024 * 1024;
 
-export function deriveKey(password: string, salt: Buffer, params: ScryptParams = DEFAULT_SCRYPT): Buffer {
+export function deriveKey(
+  password: string,
+  salt: Buffer,
+  params: ScryptParams = DEFAULT_SCRYPT,
+): Buffer {
   return crypto.scryptSync(password, salt, KEYLEN, {
     N: params.N,
     r: params.r,
@@ -79,7 +83,11 @@ export function resolveScryptParams(recorded?: Partial<ScryptParams> | null): Sc
  * 会得到不同的 key，导致永久无法解密（历史上这里曾各自随机生成 salt → 启用加密即锁死配置）。
  * 调用方若不传 salt，则由本函数随机生成一个并作为返回值的一部分返回。
  */
-export function encryptWithKey(value: unknown, key: Buffer, salt: Buffer = randomSalt()): EncryptedBlob {
+export function encryptWithKey(
+  value: unknown,
+  key: Buffer,
+  salt: Buffer = randomSalt(),
+): EncryptedBlob {
   const nonce = crypto.randomBytes(12);
   const cipher = crypto.createCipheriv(ALGO, key, nonce);
   const json = JSON.stringify(value);

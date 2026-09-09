@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from 'react';
 import clsx from 'clsx';
 import {
   Activity,
@@ -92,7 +99,9 @@ export default function Proxy({ providers }: { providers: ProviderConsole[] }) {
             onClick={() => setSub(id)}
             className={clsx(
               'flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs transition-colors',
-              sub === id ? 'bg-accent/15 text-accent' : 'text-muted hover:bg-[#16223a] hover:text-ink',
+              sub === id
+                ? 'bg-accent/15 text-accent'
+                : 'text-muted hover:bg-[#16223a] hover:text-ink',
             )}
           >
             <Icon size={13} />
@@ -142,7 +151,19 @@ function ConfigPanel({
   onDelete: (id: string) => Promise<void>;
 }) {
   const [form, setForm] = useState<
-    Record<string, { key: string; extraKeys: string; baseUrl: string; enabled: boolean; customName: string; authStyle: AuthStyle; apiFormat: ApiFormat; id: string }>
+    Record<
+      string,
+      {
+        key: string;
+        extraKeys: string;
+        baseUrl: string;
+        enabled: boolean;
+        customName: string;
+        authStyle: AuthStyle;
+        apiFormat: ApiFormat;
+        id: string;
+      }
+    >
   >({});
   const [menuMode, setMenuMode] = useState<'list' | 'add'>('list');
   const [selected, setSelected] = useState<string | null>(null);
@@ -174,7 +195,19 @@ function ConfigPanel({
     };
   };
 
-  const update = (id: string, patch: Partial<{ key: string; extraKeys: string; baseUrl: string; enabled: boolean; customName: string; authStyle: AuthStyle; apiFormat: ApiFormat; id: string }>) => {
+  const update = (
+    id: string,
+    patch: Partial<{
+      key: string;
+      extraKeys: string;
+      baseUrl: string;
+      enabled: boolean;
+      customName: string;
+      authStyle: AuthStyle;
+      apiFormat: ApiFormat;
+      id: string;
+    }>,
+  ) => {
     setForm((prev) => ({ ...prev, [id]: { ...getEntry(id), ...patch } }));
   };
 
@@ -250,7 +283,10 @@ function ConfigPanel({
       const fetched = await fetchProviderModels(id);
       if (fetched.length === 0) {
         // 空列表不覆盖已有配置：保留用户手动添加的模型，避免自动获取失败时把清单清空
-        setModelsError((e) => ({ ...e, [id]: '上游返回空列表，已保留你手动添加的模型；请确认 baseUrl / Key 是否正确，或该厂商不支持 /models' }));
+        setModelsError((e) => ({
+          ...e,
+          [id]: '上游返回空列表，已保留你手动添加的模型；请确认 baseUrl / Key 是否正确，或该厂商不支持 /models',
+        }));
         return;
       }
       // 合并：保留手动添加的模型，避免重新拉取时覆盖用户已录入的清单
@@ -357,7 +393,10 @@ function ConfigPanel({
         subtitle="Key 保存在本机 home/.llm-workbench/config.json，不进仓库；代理仅监听 127.0.0.1。响应中 Key 始终脱敏显示。默认只列出已启用厂商（含自定义）；点「＋ 添加厂商」才展开全部主流厂商目录。"
         right={
           <div className="flex items-center gap-2">
-            <button className="btn" onClick={() => setMenuMode((m) => (m === 'add' ? 'list' : 'add'))}>
+            <button
+              className="btn"
+              onClick={() => setMenuMode((m) => (m === 'add' ? 'list' : 'add'))}
+            >
               {menuMode === 'add' ? (
                 <>
                   <ChevronLeft size={14} />
@@ -412,15 +451,21 @@ function ConfigPanel({
                       }}
                       className={clsx(
                         'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs',
-                        selected === p.id ? 'bg-accent/15 text-accent' : 'text-ink hover:bg-[#16223a]',
+                        selected === p.id
+                          ? 'bg-accent/15 text-accent'
+                          : 'text-ink hover:bg-[#16223a]',
                       )}
                     >
                       <span className="truncate">{p.nameCn || p.name}</span>
-                      {cfg[p.id]?.hasKey && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />}
+                      {cfg[p.id]?.hasKey && (
+                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                      )}
                     </button>
                   ))}
                   {customList.length > 0 && (
-                    <div className="pt-1 text-[10px] uppercase tracking-wider text-muted">已添加自定义</div>
+                    <div className="pt-1 text-[10px] uppercase tracking-wider text-muted">
+                      已添加自定义
+                    </div>
                   )}
                   {customList.map(([id, c]) => (
                     <button
@@ -431,11 +476,15 @@ function ConfigPanel({
                       }}
                       className={clsx(
                         'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs',
-                        selected === id ? 'bg-accent/15 text-accent' : 'text-ink hover:bg-[#16223a]',
+                        selected === id
+                          ? 'bg-accent/15 text-accent'
+                          : 'text-ink hover:bg-[#16223a]',
                       )}
                     >
                       <span className="truncate">{c.name}</span>
-                      {c.hasKey && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />}
+                      {c.hasKey && (
+                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                      )}
                     </button>
                   ))}
                 </div>
@@ -444,7 +493,8 @@ function ConfigPanel({
               <div className="max-h-72 space-y-0.5 overflow-auto">
                 {enabledList.length === 0 && (
                   <div className="px-2 py-3 text-[11px] leading-relaxed text-muted">
-                    尚未启用任何厂商。点右上「＋ 添加厂商」选择主流厂商或添加自定义 URL 厂商，保存并勾选「启用」。
+                    尚未启用任何厂商。点右上「＋ 添加厂商」选择主流厂商或添加自定义 URL
+                    厂商，保存并勾选「启用」。
                   </div>
                 )}
                 {enabledList.map(({ id, name }) => (
@@ -457,7 +507,9 @@ function ConfigPanel({
                     )}
                   >
                     <span className="truncate">{name}</span>
-                    {cfg[id]?.hasKey && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />}
+                    {cfg[id]?.hasKey && (
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                    )}
                   </button>
                 ))}
               </div>
@@ -470,7 +522,9 @@ function ConfigPanel({
             ) : (
               <div className="max-w-xl space-y-2">
                 <div className="truncate text-sm font-medium text-ink">
-                  {selCustom ? f.customName || f.id || '新自定义厂商' : providers.find((p) => p.id === selected)?.nameCn}
+                  {selCustom
+                    ? f.customName || f.id || '新自定义厂商'
+                    : providers.find((p) => p.id === selected)?.nameCn}
                 </div>
                 {selCustom && selected === '__new__' && (
                   <input
@@ -494,19 +548,24 @@ function ConfigPanel({
                 <input
                   type="password"
                   className="input"
-                  placeholder={cfg[selected]?.hasKey ? `已存: ${cfg[selected].apiKeyMasked}` : '粘贴 API Key'}
+                  placeholder={
+                    cfg[selected]?.hasKey ? `已存: ${cfg[selected].apiKeyMasked}` : '粘贴 API Key'
+                  }
                   value={f.key}
                   onChange={(e) => update(selected, { key: e.target.value })}
                 />
                 <textarea
                   className="input h-20 w-full font-mono text-[11px]"
-                  placeholder={'额外 API Key（每行一个，启用负载均衡/失败切换）\n例如多 key 轮询绕过限流'}
+                  placeholder={
+                    '额外 API Key（每行一个，启用负载均衡/失败切换）\n例如多 key 轮询绕过限流'
+                  }
                   value={f.extraKeys}
                   onChange={(e) => update(selected, { extraKeys: e.target.value })}
                 />
                 {cfg[selected]?.apiKeyCount > 1 && (
                   <div className="rounded-md border border-accent/30 bg-accent/10 px-2 py-1 text-[11px] text-accent">
-                    已配置 {cfg[selected].apiKeyCount} 个 Key · 请求将在它们之间轮询，遇 401/403/429 自动切换下一个
+                    已配置 {cfg[selected].apiKeyCount} 个 Key · 请求将在它们之间轮询，遇 401/403/429
+                    自动切换下一个
                   </div>
                 )}
                 <input
@@ -514,7 +573,8 @@ function ConfigPanel({
                   placeholder={
                     selCustom
                       ? 'API Base URL（必填，如 https://my.gateway/v1）'
-                      : providers.find((p) => p.id === selected)?.apiBase ?? 'base URL（可选覆盖）'
+                      : (providers.find((p) => p.id === selected)?.apiBase ??
+                        'base URL（可选覆盖）')
                   }
                   value={f.baseUrl}
                   onChange={(e) => update(selected, { baseUrl: e.target.value })}
@@ -554,11 +614,17 @@ function ConfigPanel({
                     保存
                   </button>
                   {modelSectionVisible && (
-                    <button className="btn btn-ghost" onClick={() => onDelete(selected)} title="删除配置">
+                    <button
+                      className="btn btn-ghost"
+                      onClick={() => onDelete(selected)}
+                      title="删除配置"
+                    >
                       <Trash2 size={12} />
                     </button>
                   )}
-                  {saveState[selected] && <span className="text-[11px] text-accent">{saveState[selected]}</span>}
+                  {saveState[selected] && (
+                    <span className="text-[11px] text-accent">{saveState[selected]}</span>
+                  )}
                 </div>
 
                 {modelSectionVisible && (
@@ -576,7 +642,9 @@ function ConfigPanel({
                         {modelsLoading === selected ? '获取中…' : '自动获取模型列表'}
                       </button>
                     </div>
-                    {modelsError[selected] && <div className="text-[11px] text-up">{modelsError[selected]}</div>}
+                    {modelsError[selected] && (
+                      <div className="text-[11px] text-up">{modelsError[selected]}</div>
+                    )}
                     {cfg[selected]?.models && cfg[selected].models.length > 0 ? (
                       <div className="max-h-52 space-y-0.5 overflow-auto rounded-md border border-edge">
                         {cfg[selected].models.map((m) => {
@@ -598,7 +666,8 @@ function ConfigPanel({
                       </div>
                     ) : (
                       <div className="text-[11px] text-muted">
-                        尚未获取模型列表，点「自动获取」从上游拉取（需已填正确 baseUrl 与 Key 并保存）；拉取失败可手动添加下方模型名。
+                        尚未获取模型列表，点「自动获取」从上游拉取（需已填正确 baseUrl 与 Key
+                        并保存）；拉取失败可手动添加下方模型名。
                       </div>
                     )}
                     <div className="flex items-center gap-2 border-t border-edge pt-2">
@@ -632,7 +701,9 @@ function ConfigPanel({
           <div className="space-y-1">
             {connect.map((c) => (
               <div key={c.providerId} className="flex items-center gap-2 text-xs">
-                <Chip tone={c.ok ? 'down' : c.state === 'auth-required' ? 'warn' : 'up'}>{c.state}</Chip>
+                <Chip tone={c.ok ? 'down' : c.state === 'auth-required' ? 'warn' : 'up'}>
+                  {c.state}
+                </Chip>
                 <span className="text-ink">{c.providerId}</span>
                 <span className="text-muted">{c.message}</span>
                 {c.latencyMs != null && <span className="ml-auto text-muted">{c.latencyMs}ms</span>}
@@ -654,7 +725,8 @@ function ConfigPanel({
             onChange={(e) => setImportText(e.target.value)}
           />
           <div className="text-[11px] text-muted">
-            可选字段 <code className="text-accent">models</code> / <code className="text-accent">enabledModels</code>
+            可选字段 <code className="text-accent">models</code> /{' '}
+            <code className="text-accent">enabledModels</code>
             （模型清单 / 启用子集；不填则运行时由「自动获取模型列表」按钮拉取后手动勾选）。
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -736,7 +808,9 @@ function Playground({
       const fetched = await fetchProviderModels(id);
       if (fetched.length === 0) {
         // 空列表不覆盖已有配置：保留手动添加的模型
-        setModelError('上游返回空列表，已保留你手动添加的模型；请确认 baseUrl / Key 是否正确，或该厂商不支持 /models');
+        setModelError(
+          '上游返回空列表，已保留你手动添加的模型；请确认 baseUrl / Key 是否正确，或该厂商不支持 /models',
+        );
         return;
       }
       // 合并：保留手动添加的模型，避免重新拉取时覆盖用户已录入的清单
@@ -851,9 +925,7 @@ function Playground({
   };
 
   if (configured.length === 0) {
-    return (
-      <Empty text="尚未启用任何厂商，请先到「配置 / 导入」页添加并勾选「启用」。" />
-    );
+    return <Empty text="尚未启用任何厂商，请先到「配置 / 导入」页添加并勾选「启用」。" />;
   }
 
   const cur = configured.find((p) => p.id === provider);
@@ -865,7 +937,11 @@ function Playground({
       <Card title="请求" subtitle="经本地代理转发，多轮对话自动带上历史">
         <div className="space-y-2">
           <div className="grid grid-cols-2 gap-2">
-            <select className="input" value={provider} onChange={(e) => setProvider(e.target.value)}>
+            <select
+              className="input"
+              value={provider}
+              onChange={(e) => setProvider(e.target.value)}
+            >
               {configured.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -976,7 +1052,11 @@ function Playground({
 
           <div className="flex flex-wrap items-center gap-3">
             <label className="flex items-center gap-1 text-[11px] text-muted">
-              <input type="checkbox" checked={stream} onChange={(e) => setStream(e.target.checked)} />
+              <input
+                type="checkbox"
+                checked={stream}
+                onChange={(e) => setStream(e.target.checked)}
+              />
               SSE 流式
             </label>
             <button className="btn btn-primary" onClick={send} disabled={busy || !model}>
@@ -1018,7 +1098,9 @@ function Playground({
           ))}
           {busy && reply && (
             <div className="rounded-lg bg-[#0d1728] px-3 py-2 text-xs text-ink">
-              <div className="mb-0.5 text-[10px] uppercase tracking-wide text-muted">助手（生成中…）</div>
+              <div className="mb-0.5 text-[10px] uppercase tracking-wide text-muted">
+                助手（生成中…）
+              </div>
               <div className="whitespace-pre-wrap break-words">{reply}</div>
             </div>
           )}
@@ -1030,7 +1112,10 @@ function Playground({
             <Stat label="首字延迟" value={stats.ttftMs != null ? `${stats.ttftMs}ms` : '—'} />
             <Stat label="输入 tokens" value={stats.inputTokens ?? '—'} />
             <Stat label="输出 tokens" value={stats.outputTokens ?? '—'} />
-            <Stat label="缓存命中" value={stats.cacheHitRate != null ? `${(stats.cacheHitRate * 100).toFixed(1)}%` : '—'} />
+            <Stat
+              label="缓存命中"
+              value={stats.cacheHitRate != null ? `${(stats.cacheHitRate * 100).toFixed(1)}%` : '—'}
+            />
             {stats.error && <div className="col-span-2 text-up">错误: {stats.error}</div>}
           </div>
         )}
@@ -1131,7 +1216,13 @@ function MetricsPanel() {
 
 // 响应缓存统计：命中 / 未命中 / 条目数 + 清空
 function CachePanel() {
-  const [stats, setStats] = useState<{ enabled: boolean; ttlMs: number; size: number; hits: number; misses: number } | null>(null);
+  const [stats, setStats] = useState<{
+    enabled: boolean;
+    ttlMs: number;
+    size: number;
+    hits: number;
+    misses: number;
+  } | null>(null);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -1236,7 +1327,11 @@ function LogsPanel({
     <div className="mx-auto max-w-6xl space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <Key size={13} className="text-muted" />
-        <select className="input w-auto" value={filterProvider} onChange={(e) => setFilterProvider(e.target.value)}>
+        <select
+          className="input w-auto"
+          value={filterProvider}
+          onChange={(e) => setFilterProvider(e.target.value)}
+        >
           <option value="">全部厂商</option>
           {providerOptions.map((p) => (
             <option key={p.id} value={p.id}>
@@ -1244,7 +1339,11 @@ function LogsPanel({
             </option>
           ))}
         </select>
-        <select className="input w-auto" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as 'ok' | 'error' | '')}>
+        <select
+          className="input w-auto"
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value as 'ok' | 'error' | '')}
+        >
           <option value="">全部状态</option>
           <option value="ok">成功</option>
           <option value="error">错误</option>
@@ -1277,14 +1376,20 @@ function LogsPanel({
                     <span className="flex items-center gap-1">
                       {l.provider}
                       {l.fromCache && (
-                        <span className="rounded bg-accent/15 px-1 text-[9px] text-accent">CACHE</span>
+                        <span className="rounded bg-accent/15 px-1 text-[9px] text-accent">
+                          CACHE
+                        </span>
                       )}
                     </span>
                   </td>
                   <td className="px-2 py-1 text-ink">{l.model}</td>
-                  <td className="px-2 py-1 text-muted">{l.method} {l.path}</td>
+                  <td className="px-2 py-1 text-muted">
+                    {l.method} {l.path}
+                  </td>
                   <td className="px-2 py-1">
-                    <Chip tone={l.status != null && l.status < 400 ? 'down' : 'up'}>{l.status ?? 'ERR'}</Chip>
+                    <Chip tone={l.status != null && l.status < 400 ? 'down' : 'up'}>
+                      {l.status ?? 'ERR'}
+                    </Chip>
                   </td>
                   <td className="px-2 py-1 text-right text-ink">
                     {l.latencyMs}ms{l.ttftMs != null ? ` · TT ${l.ttftMs}` : ''}
@@ -1295,7 +1400,9 @@ function LogsPanel({
                   <td className="px-2 py-1 text-right text-accent">
                     {l.cacheHitRate != null ? `${(l.cacheHitRate * 100).toFixed(0)}%` : '—'}
                   </td>
-                  <td className="px-2 py-1 text-right tabular-nums text-ink">${l.costUsd.toFixed(4)}</td>
+                  <td className="px-2 py-1 text-right tabular-nums text-ink">
+                    ${l.costUsd.toFixed(4)}
+                  </td>
                   <td className="max-w-[200px] truncate px-2 py-1 text-up" title={l.error ?? ''}>
                     {l.error ?? ''}
                   </td>
@@ -1361,7 +1468,9 @@ function EncryptionCard() {
       subtitle="API Key 以 AES-256-GCM 加密存储于本机，主密码仅在本地用于加解密，不会上传"
     >
       <div className="flex flex-wrap items-center gap-3">
-        <Chip tone={status.encrypted ? 'down' : 'warn'}>{status.encrypted ? '已加密' : '明文存储'}</Chip>
+        <Chip tone={status.encrypted ? 'down' : 'warn'}>
+          {status.encrypted ? '已加密' : '明文存储'}
+        </Chip>
         {!status.encrypted ? (
           <>
             <input
@@ -1422,7 +1531,8 @@ function UnifiedEndpointCard() {
           </li>
           <li>省略时默认使用第一个已启用且有 Key 的厂商</li>
           <li>
-            若某厂商配置了多个 Key，请求会在它们之间<b className="text-ink">轮询</b>，遇 401/403/429 自动<b className="text-ink">切换下一个</b>兜底
+            若某厂商配置了多个 Key，请求会在它们之间<b className="text-ink">轮询</b>，遇 401/403/429
+            自动<b className="text-ink">切换下一个</b>兜底
           </li>
           <li>
             Prometheus 指标：<code>{`${window.location.origin}/metrics`}</code>（对接 Grafana）

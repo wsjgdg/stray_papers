@@ -16,7 +16,16 @@ interface Row {
   monthly: number;
 }
 
-const PALETTE = ['#4da3ff', '#22d3ee', '#f59e0b', '#a78bfa', '#34d399', '#fb7185', '#e879f9', '#facc15'];
+const PALETTE = [
+  '#4da3ff',
+  '#22d3ee',
+  '#f59e0b',
+  '#a78bfa',
+  '#34d399',
+  '#fb7185',
+  '#e879f9',
+  '#facc15',
+];
 
 export default function CostCalculator({ models }: Props) {
   const [requests, setRequests] = useState(100_000);
@@ -40,7 +49,8 @@ export default function CostCalculator({ models }: Props) {
   }, [models, query]);
 
   const selected = useMemo(
-    () => picked.map((id) => models.find((m) => m.id === id)).filter((m): m is LlmModel => Boolean(m)),
+    () =>
+      picked.map((id) => models.find((m) => m.id === id)).filter((m): m is LlmModel => Boolean(m)),
     [picked, models],
   );
 
@@ -74,7 +84,13 @@ export default function CostCalculator({ models }: Props) {
         <Field label="月请求次数" value={requests} onChange={setRequests} step={1000} />
         <Field label="平均输入 tokens" value={inTok} onChange={setInTok} step={100} />
         <Field label="平均输出 tokens" value={outTok} onChange={setOutTok} step={100} />
-        <Field label="缓存命中率 (%)" value={cacheRate} onChange={setCacheRate} step={5} max={100} />
+        <Field
+          label="缓存命中率 (%)"
+          value={cacheRate}
+          onChange={setCacheRate}
+          step={5}
+          max={100}
+        />
       </div>
 
       <Card
@@ -134,7 +150,12 @@ export default function CostCalculator({ models }: Props) {
       {rows.length > 0 && (
         <>
           <div className="grid gap-3 md:grid-cols-4">
-            <Stat label="最低月成本" value={`$${best.toFixed(2)}`} hint={rows[0].model.name} tone="down" />
+            <Stat
+              label="最低月成本"
+              value={`$${best.toFixed(2)}`}
+              hint={rows[0].model.name}
+              tone="down"
+            />
             <Stat
               label="最高月成本"
               value={`$${rows[rows.length - 1].monthly.toFixed(2)}`}
@@ -154,7 +175,10 @@ export default function CostCalculator({ models }: Props) {
             />
           </div>
 
-          <Card title="月度成本对比" subtitle={`${requests.toLocaleString()} 次请求 · ${inTok} in / ${outTok} out · 缓存命中 ${cacheRate}%`}>
+          <Card
+            title="月度成本对比"
+            subtitle={`${requests.toLocaleString()} 次请求 · ${inTok} in / ${outTok} out · 缓存命中 ${cacheRate}%`}
+          >
             <div style={{ height: 260 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 8, right: 8, bottom: 48, left: 8 }}>
@@ -167,7 +191,11 @@ export default function CostCalculator({ models }: Props) {
                   />
                   <YAxis tick={{ fill: '#9aa7bd', fontSize: 10 }} />
                   <Tooltip
-                    contentStyle={{ background: '#111a2b', border: '1px solid #1f2d44', borderRadius: 8 }}
+                    contentStyle={{
+                      background: '#111a2b',
+                      border: '1px solid #1f2d44',
+                      borderRadius: 8,
+                    }}
                     labelStyle={{ color: '#e6edf3' }}
                     formatter={(v: number) => [`$${v.toFixed(2)}`, '月成本']}
                   />
@@ -186,18 +214,29 @@ export default function CostCalculator({ models }: Props) {
               <table className="w-full min-w-[720px]">
                 <thead>
                   <tr className="border-b border-edge">
-                    {['模型', '输入价', '输出价', '缓存价', '输入成本', '输出成本', '月成本', '年成本', '倍数'].map(
-                      (h) => (
-                        <th key={h} className="th">
-                          {h}
-                        </th>
-                      ),
-                    )}
+                    {[
+                      '模型',
+                      '输入价',
+                      '输出价',
+                      '缓存价',
+                      '输入成本',
+                      '输出成本',
+                      '月成本',
+                      '年成本',
+                      '倍数',
+                    ].map((h) => (
+                      <th key={h} className="th">
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((r, i) => (
-                    <tr key={r.model.id} className="border-b border-edge/60 last:border-0 hover:bg-[#132038]">
+                    <tr
+                      key={r.model.id}
+                      className="border-b border-edge/60 last:border-0 hover:bg-[#132038]"
+                    >
                       <td className="td">
                         <div className="flex items-center gap-2">
                           <span
@@ -212,7 +251,9 @@ export default function CostCalculator({ models }: Props) {
                       <td className="td tabular-nums">{fmtPrice(r.model.cacheReadPrice)}</td>
                       <td className="td tabular-nums">${r.inputCost.toFixed(2)}</td>
                       <td className="td tabular-nums">${r.outputCost.toFixed(2)}</td>
-                      <td className="td tabular-nums font-medium text-ink">${r.monthly.toFixed(2)}</td>
+                      <td className="td tabular-nums font-medium text-ink">
+                        ${r.monthly.toFixed(2)}
+                      </td>
                       <td className="td tabular-nums">${(r.monthly * 12).toFixed(0)}</td>
                       <td className="td">
                         <Chip tone={i === 0 ? 'down' : 'default'}>

@@ -76,7 +76,14 @@ async function main() {
 
   const srv = spawn('npx', ['tsx', 'server/index.ts'], {
     cwd: process.cwd(),
-    env: { ...process.env, HOME, API_PORT: String(API), NO_OPEN: '1', NO_REUSE: '1', WEB_DIR: 'dist' },
+    env: {
+      ...process.env,
+      HOME,
+      API_PORT: String(API),
+      NO_OPEN: '1',
+      NO_REUSE: '1',
+      WEB_DIR: 'dist',
+    },
     stdio: 'ignore',
     shell: true,
   });
@@ -110,7 +117,13 @@ async function main() {
   let cfg = await getCfg(ID);
   const keyMaskedBefore = cfg?.apiKeyMasked;
   // GET 端点返回的是脱敏字段 apiKeyMasked（仅末4位），不返回明文 apiKey（设计如此）
-  check('created apiKey present (masked)', cfg?.hasKey === true && typeof keyMaskedBefore === 'string' && keyMaskedBefore.startsWith('****'), `masked=${keyMaskedBefore}`);
+  check(
+    'created apiKey present (masked)',
+    cfg?.hasKey === true &&
+      typeof keyMaskedBefore === 'string' &&
+      keyMaskedBefore.startsWith('****'),
+    `masked=${keyMaskedBefore}`,
+  );
   check('created baseUrl preserved', cfg?.baseUrl === 'https://example.com/v1');
   check('created models preserved', JSON.stringify(cfg?.models) === JSON.stringify(['a', 'b']));
 
@@ -122,13 +135,24 @@ async function main() {
   });
   check('patch models 200', patch1.ok, `status ${patch1.status}`);
   cfg = await getCfg(ID);
-  check('apiKey NOT wiped by models patch', cfg?.apiKeyMasked === keyMaskedBefore && cfg?.hasKey === true, `masked=${cfg?.apiKeyMasked}`);
+  check(
+    'apiKey NOT wiped by models patch',
+    cfg?.apiKeyMasked === keyMaskedBefore && cfg?.hasKey === true,
+    `masked=${cfg?.apiKeyMasked}`,
+  );
   check('baseUrl NOT wiped by models patch', cfg?.baseUrl === 'https://example.com/v1');
   check('authStyle NOT wiped by models patch', cfg?.authStyle === 'bearer');
   check('enabled NOT wiped by models patch', cfg?.enabled === true);
   check('customName NOT wiped by models patch', cfg?.customName === 'My Provider');
-  check('models replaced by patch', JSON.stringify(cfg?.models) === JSON.stringify(['b', 'c', 'd']), `models=${JSON.stringify(cfg?.models)}`);
-  check('enabledModels replaced by patch', JSON.stringify(cfg?.enabledModels) === JSON.stringify(['b', 'c']));
+  check(
+    'models replaced by patch',
+    JSON.stringify(cfg?.models) === JSON.stringify(['b', 'c', 'd']),
+    `models=${JSON.stringify(cfg?.models)}`,
+  );
+  check(
+    'enabledModels replaced by patch',
+    JSON.stringify(cfg?.enabledModels) === JSON.stringify(['b', 'c']),
+  );
 
   // 3) PATCH 仅 {enabledModels}（前端 toggleModel 真实载荷）→ 不得清掉 models/apiKey
   const patch2 = await fetch(`${BASE}/api/proxy/config`, {
@@ -138,8 +162,16 @@ async function main() {
   });
   check('patch enabledModels 200', patch2.ok, `status ${patch2.status}`);
   cfg = await getCfg(ID);
-  check('apiKey NOT wiped by enabledModels patch', cfg?.apiKeyMasked === keyMaskedBefore && cfg?.hasKey === true, `masked=${cfg?.apiKeyMasked}`);
-  check('models NOT wiped by enabledModels patch', JSON.stringify(cfg?.models) === JSON.stringify(['b', 'c', 'd']), `models=${JSON.stringify(cfg?.models)}`);
+  check(
+    'apiKey NOT wiped by enabledModels patch',
+    cfg?.apiKeyMasked === keyMaskedBefore && cfg?.hasKey === true,
+    `masked=${cfg?.apiKeyMasked}`,
+  );
+  check(
+    'models NOT wiped by enabledModels patch',
+    JSON.stringify(cfg?.models) === JSON.stringify(['b', 'c', 'd']),
+    `models=${JSON.stringify(cfg?.models)}`,
+  );
 
   // 4) 端到端：指向 bankofai 形状 mock，真实解析 /models，再保存，确认 key 仍保留
   const point = await fetch(`${BASE}/api/proxy/config`, {
@@ -166,7 +198,11 @@ async function main() {
   });
   check('fetchModels-style save 200', save.ok, `status ${save.status}`);
   cfg = await getCfg(ID);
-  check('apiKey SURVIVES real fetchModels save', cfg?.apiKeyMasked === keyMaskedBefore && cfg?.hasKey === true, `masked=${cfg?.apiKeyMasked}`);
+  check(
+    'apiKey SURVIVES real fetchModels save',
+    cfg?.apiKeyMasked === keyMaskedBefore && cfg?.hasKey === true,
+    `masked=${cfg?.apiKeyMasked}`,
+  );
   check(
     'merged models include both manual + fetched',
     JSON.stringify(cfg?.models) === JSON.stringify(['b', 'c', 'd', 'claude-3-5', 'gpt-5.2']),
@@ -189,7 +225,11 @@ async function main() {
   });
   check('empty apiKeys patch 200', wipe.ok, `status ${wipe.status}`);
   cfg = await getCfg(ID);
-  check('empty apiKeys:[] does NOT wipe pool', cfg?.apiKeyCount === 2, `apiKeyCount=${cfg?.apiKeyCount}`);
+  check(
+    'empty apiKeys:[] does NOT wipe pool',
+    cfg?.apiKeyCount === 2,
+    `apiKeyCount=${cfg?.apiKeyCount}`,
+  );
 
   srv.kill('SIGKILL');
   console.log(`\n结果: ${pass} 通过 / ${fail} 失败`);

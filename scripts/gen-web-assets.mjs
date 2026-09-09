@@ -29,11 +29,15 @@ function emit(assets) {
 
 if (!existsSync(join(distDir, 'index.html'))) {
   emit({});
-  console.log('[gen-web-assets] dist/ 未构建 → 写出空占位（运行 npm run build 后自动内联真实产物）');
+  console.log(
+    '[gen-web-assets] dist/ 未构建 → 写出空占位（运行 npm run build 后自动内联真实产物）',
+  );
   process.exit(0);
 }
 
 const assets = {};
 walk(distDir, '', assets);
 emit(assets);
-console.log(`[gen-web-assets] ${Object.keys(assets).length} 个文件已内嵌 → server/generated/webAssets.ts`);
+console.log(
+  `[gen-web-assets] ${Object.keys(assets).length} 个文件已内嵌 → server/generated/webAssets.ts`,
+);

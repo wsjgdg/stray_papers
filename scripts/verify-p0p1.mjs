@@ -56,16 +56,29 @@ const mock = http.createServer((req, res) => {
       return;
     }
     res.writeHead(200, { 'content-type': 'application/json' });
-    res.end(JSON.stringify({
-      choices: [{ message: { content: 'hi' } }],
-      usage: { prompt_tokens: 10, completion_tokens: 5 },
-    }));
+    res.end(
+      JSON.stringify({
+        choices: [{ message: { content: 'hi' } }],
+        usage: { prompt_tokens: 10, completion_tokens: 5 },
+      }),
+    );
   });
 });
 
 function startServer() {
-  const env = { ...process.env, API_PORT: String(API), USERPROFILE: HOME, HOME, NO_OPEN: '1', NO_REUSE: '1' };
-  const p = spawn(NODE, [TSX, 'server/index.ts'], { cwd: ROOT, env, stdio: ['ignore', 'pipe', 'pipe'] });
+  const env = {
+    ...process.env,
+    API_PORT: String(API),
+    USERPROFILE: HOME,
+    HOME,
+    NO_OPEN: '1',
+    NO_REUSE: '1',
+  };
+  const p = spawn(NODE, [TSX, 'server/index.ts'], {
+    cwd: ROOT,
+    env,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
   p.stdout.on('data', () => {});
   p.stderr.on('data', (d) => process.stderr.write(`[srv] ${d}`));
   return p;
@@ -125,17 +138,36 @@ async function main() {
   const metricsResp = await fetch(`${base}/api/proxy/metrics`);
   const metrics = (await metricsResp.json()).metrics;
   const m = metrics.find((x) => x.provider === PROV);
-  check('成本估算聚合 totalCostUsd > 0', m && m.totalCostUsd > 0, m ? `$${m.totalCostUsd.toFixed(6)}` : 'no metric');
+  check(
+    '成本估算聚合 totalCostUsd > 0',
+    m && m.totalCostUsd > 0,
+    m ? `$${m.totalCostUsd.toFixed(6)}` : 'no metric',
+  );
 
   // ── P1-1 响应缓存 ──
   const beforeHits = mockHits;
-  const body1 = JSON.stringify({ model: 'mock-model', messages: [{ role: 'user', content: 'cache me' }] });
-  await fetch(`${base}/api/proxy/${PROV}/chat/completions`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: body1 });
-  await fetch(`${base}/api/proxy/${PROV}/chat/completions`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: body1 });
+  const body1 = JSON.stringify({
+    model: 'mock-model',
+    messages: [{ role: 'user', content: 'cache me' }],
+  });
+  await fetch(`${base}/api/proxy/${PROV}/chat/completions`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: body1,
+  });
+  await fetch(`${base}/api/proxy/${PROV}/chat/completions`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: body1,
+  });
   const cacheResp = await fetch(`${base}/api/proxy/cache`);
   const cache = await cacheResp.json();
   // 第二次相同请求应命中缓存（mock 只收到 1 次新请求）
-  check('响应缓存命中 (mock 仅收到 1 次新请求)', mockHits - beforeHits === 1, `mockHitsΔ=${mockHits - beforeHits}`);
+  check(
+    '响应缓存命中 (mock 仅收到 1 次新请求)',
+    mockHits - beforeHits === 1,
+    `mockHitsΔ=${mockHits - beforeHits}`,
+  );
   check('缓存统计 hits >= 1', cache.hits >= 1, `hits=${cache.hits}`);
 
   // ── P1-2 统一 /api/v1 端点 ──
@@ -151,7 +183,10 @@ async function main() {
   const uniResp2 = await fetch(`${base}/api/v1/chat/completions`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ model: `${PROV}/mock-model`, messages: [{ role: 'user', content: 'uni2' }] }),
+    body: JSON.stringify({
+      model: `${PROV}/mock-model`,
+      messages: [{ role: 'user', content: 'uni2' }],
+    }),
   });
   check('模型名 vendor/model 前缀路由', uniResp2.ok);
 
@@ -159,7 +194,11 @@ async function main() {
   const sResp = await fetch(`${base}/api/proxy/${PROV}/chat/completions`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ model: 'mock-model', stream: true, messages: [{ role: 'user', content: 'hi' }] }),
+    body: JSON.stringify({
+      model: 'mock-model',
+      stream: true,
+      messages: [{ role: 'user', content: 'hi' }],
+    }),
   });
   const sText = await sResp.text();
   check('流式代理正常 (含 usage)', sText.includes('你好') && sText.includes('"usage"'));
@@ -184,7 +223,10 @@ async function main() {
 
   // 配置仍在内存可用（同一会话已解锁）
   const cfgAfterEnc = await (await fetch(`${base}/api/proxy/config`)).json();
-  check('加密后仍可读取配置 (已解锁)', cfgAfterEnc.providers[PROV]?.hasKey === true && cfgAfterEnc.locked === false);
+  check(
+    '加密后仍可读取配置 (已解锁)',
+    cfgAfterEnc.providers[PROV]?.hasKey === true && cfgAfterEnc.locked === false,
+  );
 
   // 错误密码解锁失败
   const badUnlock = await fetch(`${base}/api/crypto/unlock`, {

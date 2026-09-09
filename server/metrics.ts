@@ -53,7 +53,10 @@ let logs: CallLog[] = [];
 let nextId = 1;
 
 // 当日 token 消耗分桶（key = 本地日期 YYYY-MM-DD），用于浮窗「当日消耗 token」
-const dailyBuckets = new Map<string, { input: number; output: number; cacheRead: number; cost: number }>();
+const dailyBuckets = new Map<
+  string,
+  { input: number; output: number; cacheRead: number; cost: number }
+>();
 
 // 全局速率历史采样（每 2s 由 index.ts 触发），用于浮窗趋势图（服务端持久，重启清零）
 const RATE_HISTORY_MAX = 180;
@@ -298,8 +301,10 @@ export interface LogFilter {
 export function getLogs(filter: LogFilter = {}): CallLog[] {
   let result = logs.slice().reverse();
   if (filter.provider) result = result.filter((l) => l.provider === filter.provider);
-  if (filter.status === 'ok') result = result.filter((l) => l.status !== null && l.status >= 200 && l.status < 400);
-  if (filter.status === 'error') result = result.filter((l) => l.status === null || l.status >= 400);
+  if (filter.status === 'ok')
+    result = result.filter((l) => l.status !== null && l.status >= 200 && l.status < 400);
+  if (filter.status === 'error')
+    result = result.filter((l) => l.status === null || l.status >= 400);
   if (filter.limit) result = result.slice(0, filter.limit);
   return result;
 }

@@ -42,7 +42,10 @@ function spikeLevel(
   key: 'inRate' | 'outRate',
 ): Tone {
   if (!history || history.length < 6) return 'normal';
-  const baseline = history.slice(0, -1).map((h) => h[key]).filter((v) => v > 0);
+  const baseline = history
+    .slice(0, -1)
+    .map((h) => h[key])
+    .filter((v) => v > 0);
   if (baseline.length < 3) return 'normal';
   const sorted = [...baseline].sort((a, b) => a - b);
   const median = sorted[Math.floor(sorted.length / 2)];
@@ -86,8 +89,12 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
   const [hlModel, setHlModel] = useState<string | null>(null);
   // 信息密度：今日累计成本曲线 + Top 模型（调用频次，本地累积）
   const [costSeries, setCostSeries] = useState<number[]>([]);
-  const [topModels, setTopModels] = useState<{ model: string; provider: string; count: number; lastTs: number }[]>([]);
-  const modelFreq = useRef<Map<string, { model: string; provider: string; count: number; lastTs: number }>>(new Map());
+  const [topModels, setTopModels] = useState<
+    { model: string; provider: string; count: number; lastTs: number }[]
+  >([]);
+  const modelFreq = useRef<
+    Map<string, { model: string; provider: string; count: number; lastTs: number }>
+  >(new Map());
   const seenTs = useRef<Set<number>>(new Set());
   // 持久化（仅 Electron standalone 浮窗）：成本序列镜像 + 跨会话去重水位 + 保存节流
   const costSeriesRef = useRef<number[]>([]);
@@ -113,12 +120,14 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
 
   // 设置面板保存后实时刷新外观/穿透状态（无需重载浮窗）
   useEffect(() => {
-    api?.onSettingsChanged?.((cfg: { clickThrough?: boolean; fontScale?: number; highContrast?: boolean }) => {
-      if (!cfg) return;
-      setClickThrough(!!cfg.clickThrough);
-      setFontScale(Number(cfg.fontScale) || 1);
-      setHighContrast(!!cfg.highContrast);
-    });
+    api?.onSettingsChanged?.(
+      (cfg: { clickThrough?: boolean; fontScale?: number; highContrast?: boolean }) => {
+        if (!cfg) return;
+        setClickThrough(!!cfg.clickThrough);
+        setFontScale(Number(cfg.fontScale) || 1);
+        setHighContrast(!!cfg.highContrast);
+      },
+    );
   }, []);
 
   // ── 浮窗统计持久化（仅 Electron 内的 standalone 浮窗落盘，避免重载/重启清零）──
@@ -163,7 +172,12 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
           const map = modelFreq.current;
           let maxTs = 0;
           for (const e of saved.topModels) {
-            map.set(e.model, { model: e.model, provider: e.provider, count: e.count, lastTs: e.lastTs });
+            map.set(e.model, {
+              model: e.model,
+              provider: e.provider,
+              count: e.count,
+              lastTs: e.lastTs,
+            });
             if (e.lastTs > maxTs) maxTs = e.lastTs;
           }
           loadedMaxTs.current = maxTs;
@@ -274,14 +288,21 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
             for (const r of s.recentModels) {
               if (seenTs.current.has(r.ts) || r.ts <= loadedMaxTs.current) continue;
               seenTs.current.add(r.ts);
-              const e = map.get(r.model) ?? { model: r.model, provider: r.provider, count: 0, lastTs: r.ts };
+              const e = map.get(r.model) ?? {
+                model: r.model,
+                provider: r.provider,
+                count: 0,
+                lastTs: r.ts,
+              };
               e.count += 1;
               e.lastTs = r.ts;
               e.provider = r.provider;
               map.set(r.model, e);
             }
             setTopModels(
-              [...map.values()].sort((a, b) => b.count - a.count || b.lastTs - a.lastTs).slice(0, 5),
+              [...map.values()]
+                .sort((a, b) => b.count - a.count || b.lastTs - a.lastTs)
+                .slice(0, 5),
             );
           }
         }
@@ -397,10 +418,15 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
       : '!bg-black !text-white border-white/70'
     : '';
   const hcSub = highContrast ? (theme === 'light' ? 'text-black/70' : 'text-white/70') : sub;
-  const hcHover = highContrast ? (theme === 'light' ? 'hover:bg-neutral-300' : 'hover:bg-[#222]') : hoverBg;
+  const hcHover = highContrast
+    ? theme === 'light'
+      ? 'hover:bg-neutral-300'
+      : 'hover:bg-[#222]'
+    : hoverBg;
   const zoomStyle: React.CSSProperties = fontScale !== 1 ? { zoom: fontScale } : {};
 
-  const rate = data?.cacheHitRateToday != null ? `${(data.cacheHitRateToday * 100).toFixed(1)}%` : '—';
+  const rate =
+    data?.cacheHitRateToday != null ? `${(data.cacheHitRateToday * 100).toFixed(1)}%` : '—';
   const model = data?.recentModels?.[0];
   const series =
     data?.rateHistory && data.rateHistory.length >= 2
@@ -436,9 +462,13 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
         onContextMenu={onContextMenu}
       >
         <Activity size={12} className={alertAny ? 'text-[#ef6b6b]' : 'text-accent'} />
-        <span className="tabular-nums">{data ? `${data.inputRateTokS}/${data.outputRateTokS} t/s` : '—'}</span>
+        <span className="tabular-nums">
+          {data ? `${data.inputRateTokS}/${data.outputRateTokS} t/s` : '—'}
+        </span>
         <span className={hcSub}>·</span>
-        <span className="tabular-nums">${data ? (data.todayCostUsd || 0).toFixed(4) : '0.0000'}</span>
+        <span className="tabular-nums">
+          ${data ? (data.todayCostUsd || 0).toFixed(4) : '0.0000'}
+        </span>
         <span className={hcSub}>·</span>
         <span>{rate}</span>
         <button
@@ -484,7 +514,11 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
         hcClass +
         ' shadow-2xl backdrop-blur'
       }
-      style={docked ? { width: '100%', ...zoomStyle } : { ...style, cursor: dragging ? 'grabbing' : 'default', ...zoomStyle }}
+      style={
+        docked
+          ? { width: '100%', ...zoomStyle }
+          : { ...style, cursor: dragging ? 'grabbing' : 'default', ...zoomStyle }
+      }
       onPointerMove={docked ? undefined : onPointerMove}
       onPointerUp={docked ? undefined : onPointerUp}
       onPointerLeave={docked ? undefined : onPointerUp}
@@ -497,24 +531,37 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
             : 'flex cursor-grab items-center gap-1.5 border-b border-edge px-3 py-2 active:cursor-grabbing'
         }
         onPointerDown={docked ? undefined : onPointerDown}
-        style={standalone && isElectron ? ({ WebkitAppRegion: 'drag' } as React.CSSProperties) : undefined}
+        style={
+          standalone && isElectron
+            ? ({ WebkitAppRegion: 'drag' } as React.CSSProperties)
+            : undefined
+        }
       >
         <GripHorizontal size={13} className={hcSub} />
         <Activity size={13} className={alertAny ? 'text-[#ef6b6b]' : 'text-accent'} />
         <span className="text-[11px] font-medium">实时代理统计</span>
         <span
           className="h-1.5 w-1.5 rounded-full"
-          style={{ background: proxyAlive ? '#5ec8a0' : proxyAlive === false ? '#ef6b6b' : '#6b7280' }}
+          style={{
+            background: proxyAlive ? '#5ec8a0' : proxyAlive === false ? '#ef6b6b' : '#6b7280',
+          }}
           title={proxyAlive ? '代理已连接' : proxyAlive === false ? '代理断开' : '代理状态未知'}
         />
         {clickThrough && (
-          <span className="rounded bg-accent/20 px-1 text-[9px] text-accent" title="点击穿透已开启：浮窗不挡桌面">
+          <span
+            className="rounded bg-accent/20 px-1 text-[9px] text-accent"
+            title="点击穿透已开启：浮窗不挡桌面"
+          >
             穿透
           </span>
         )}
         <button
           className={'ml-1 rounded p-0.5 ' + sub + ' ' + hoverBg}
-          style={standalone && isElectron ? ({ WebkitAppRegion: 'no-drag' } as React.CSSProperties) : undefined}
+          style={
+            standalone && isElectron
+              ? ({ WebkitAppRegion: 'no-drag' } as React.CSSProperties)
+              : undefined
+          }
           onClick={() => setFocus((f) => FOCUS_NEXT[f])}
           title="切换焦点指标"
         >
@@ -523,7 +570,11 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
         {standalone && (
           <button
             className={'rounded p-0.5 ' + sub + ' ' + hoverBg}
-            style={standalone && isElectron ? ({ WebkitAppRegion: 'no-drag' } as React.CSSProperties) : undefined}
+            style={
+              standalone && isElectron
+                ? ({ WebkitAppRegion: 'no-drag' } as React.CSSProperties)
+                : undefined
+            }
             onClick={() => setMinimal((m) => !m)}
             title="切换极简模式"
           >
@@ -532,7 +583,11 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
         )}
         <button
           className={'ml-auto rounded p-0.5 ' + sub + ' ' + hoverBg}
-          style={standalone && isElectron ? ({ WebkitAppRegion: 'no-drag' } as React.CSSProperties) : undefined}
+          style={
+            standalone && isElectron
+              ? ({ WebkitAppRegion: 'no-drag' } as React.CSSProperties)
+              : undefined
+          }
           onClick={() => {
             if (api?.closeFloat) {
               api.closeFloat();
@@ -548,10 +603,17 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
 
       <div className="space-y-1.5 px-3 py-2.5 text-[11px]">
         {/* 浮窗内搜索：回车深链到主窗口对应模型（容忍匹配 recentModels / Top 模型） */}
-        <div className={'flex items-center gap-1.5 rounded-md border border-edge px-1.5 ' + (highContrast ? 'border-white/50' : '')}>
+        <div
+          className={
+            'flex items-center gap-1.5 rounded-md border border-edge px-1.5 ' +
+            (highContrast ? 'border-white/50' : '')
+          }
+        >
           <Search size={12} className={hcSub} />
           <input
-            className={'w-full bg-transparent py-1 text-[11px] text-ink outline-none placeholder:text-muted'}
+            className={
+              'w-full bg-transparent py-1 text-[11px] text-ink outline-none placeholder:text-muted'
+            }
             placeholder="搜索模型…（回车打开）"
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -560,8 +622,18 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
             }}
           />
         </div>
-        <Row label="输入速率" value={data ? `${data.inputRateTokS} tok/s` : '—'} tone={inLevel} active={focus === 'rate'} />
-        <Row label="输出速率" value={data ? `${data.outputRateTokS} tok/s` : '—'} tone={outLevel} active={focus === 'rate'} />
+        <Row
+          label="输入速率"
+          value={data ? `${data.inputRateTokS} tok/s` : '—'}
+          tone={inLevel}
+          active={focus === 'rate'}
+        />
+        <Row
+          label="输出速率"
+          value={data ? `${data.outputRateTokS} tok/s` : '—'}
+          tone={outLevel}
+          active={focus === 'rate'}
+        />
         <Row label="请求速率" value={data ? `${data.reqRate}/s` : '—'} active={focus === 'rate'} />
         <div className="pt-0.5">
           <Sparkline samples={series} bg={chipBg} />
@@ -583,7 +655,10 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
           label="当前模型"
           value={model ? `${model.model}` : '—'}
           sub={model?.provider}
-          active={focus === 'model' || !!(hlModel && model && model.model.toLowerCase().includes(hlModel.toLowerCase()))}
+          active={
+            focus === 'model' ||
+            !!(hlModel && model && model.model.toLowerCase().includes(hlModel.toLowerCase()))
+          }
           onClick={model ? () => openModel(model.model) : undefined}
         />
         <div className="mt-1 border-t border-edge pt-1.5">
@@ -598,9 +673,24 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
             </button>
           </div>
           <div className="grid grid-cols-3 gap-1 text-center">
-            <Mini label="输入" value={data ? fmtTok(data.todayInputTokens) : '0'} accent={focus === 'cost'} bg={chipBg} />
-            <Mini label="输出" value={data ? fmtTok(data.todayOutputTokens) : '0'} accent={focus === 'cost'} bg={chipBg} />
-            <Mini label="缓存" value={data ? fmtTok(data.todayCacheReadTokens) : '0'} accent bg={chipBg} />
+            <Mini
+              label="输入"
+              value={data ? fmtTok(data.todayInputTokens) : '0'}
+              accent={focus === 'cost'}
+              bg={chipBg}
+            />
+            <Mini
+              label="输出"
+              value={data ? fmtTok(data.todayOutputTokens) : '0'}
+              accent={focus === 'cost'}
+              bg={chipBg}
+            />
+            <Mini
+              label="缓存"
+              value={data ? fmtTok(data.todayCacheReadTokens) : '0'}
+              accent
+              bg={chipBg}
+            />
           </div>
           <div className="mt-1.5 flex items-center justify-between">
             <span className={'text-[10px] ' + sub}>当日成本</span>
@@ -650,7 +740,9 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
                             style={{ width: pct + '%' }}
                           />
                         </span>
-                        <span className="w-4 text-right tabular-nums text-[10px] text-muted">{m.count}</span>
+                        <span className="w-4 text-right tabular-nums text-[10px] text-muted">
+                          {m.count}
+                        </span>
                       </li>
                     );
                   })}
@@ -667,9 +759,27 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
           style={{ left: menu.x, top: menu.y }}
           onClick={(e) => e.stopPropagation()}
         >
-          <MenuItem label={expanded ? '收起详情' : '展开详情'} onClick={() => { setExpanded((v) => !v); setMenu(null); }} />
-          <MenuItem label={minimal ? '切换完整模式' : '切换极简模式'} onClick={() => { setMinimal((m) => !m); setMenu(null); }} />
-          <MenuItem label="切换焦点指标" onClick={() => { setFocus((f) => FOCUS_NEXT[f]); setMenu(null); }} />
+          <MenuItem
+            label={expanded ? '收起详情' : '展开详情'}
+            onClick={() => {
+              setExpanded((v) => !v);
+              setMenu(null);
+            }}
+          />
+          <MenuItem
+            label={minimal ? '切换完整模式' : '切换极简模式'}
+            onClick={() => {
+              setMinimal((m) => !m);
+              setMenu(null);
+            }}
+          />
+          <MenuItem
+            label="切换焦点指标"
+            onClick={() => {
+              setFocus((f) => FOCUS_NEXT[f]);
+              setMenu(null);
+            }}
+          />
           {isElectron && (
             <MenuItem
               label={clickThrough ? '关闭点击穿透' : '开启点击穿透'}
@@ -679,17 +789,55 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
               }}
             />
           )}
-          <MenuItem label="导出今日统计" onClick={() => { exportStatsCsv(); setMenu(null); }} />
-          {isElectron && <MenuItem label="打开主窗口" onClick={() => { api?.showMain?.(); setMenu(null); }} />}
-          {isElectron && <MenuItem label="重置浮窗位置" onClick={() => { api?.resetFloat?.(); setMenu(null); }} />}
-          <MenuItem label="关闭浮窗" danger onClick={() => { if (api?.closeFloat) api.closeFloat(); else docked ? window.close() : setOpen(false); setMenu(null); }} />
+          <MenuItem
+            label="导出今日统计"
+            onClick={() => {
+              exportStatsCsv();
+              setMenu(null);
+            }}
+          />
+          {isElectron && (
+            <MenuItem
+              label="打开主窗口"
+              onClick={() => {
+                api?.showMain?.();
+                setMenu(null);
+              }}
+            />
+          )}
+          {isElectron && (
+            <MenuItem
+              label="重置浮窗位置"
+              onClick={() => {
+                api?.resetFloat?.();
+                setMenu(null);
+              }}
+            />
+          )}
+          <MenuItem
+            label="关闭浮窗"
+            danger
+            onClick={() => {
+              if (api?.closeFloat) api.closeFloat();
+              else docked ? window.close() : setOpen(false);
+              setMenu(null);
+            }}
+          />
         </div>
       )}
     </div>
   );
 }
 
-function MenuItem({ label, onClick, danger }: { label: string; onClick: () => void; danger?: boolean }) {
+function MenuItem({
+  label,
+  onClick,
+  danger,
+}: {
+  label: string;
+  onClick: () => void;
+  danger?: boolean;
+}) {
   return (
     <button
       className={
@@ -721,7 +869,13 @@ function Row({
   onClick?: () => void;
 }) {
   const colorClass =
-    tone === 'alert' ? 'text-[#ef6b6b]' : tone === 'warn' ? 'text-[#e6b15e]' : accent ? 'text-accent' : 'text-ink';
+    tone === 'alert'
+      ? 'text-[#ef6b6b]'
+      : tone === 'warn'
+        ? 'text-[#e6b15e]'
+        : accent
+          ? 'text-accent'
+          : 'text-ink';
   return (
     <div
       className={
@@ -741,10 +895,22 @@ function Row({
   );
 }
 
-function Mini({ label, value, accent, bg = 'bg-[#0d1728]' }: { label: string; value: string; accent?: boolean; bg?: string }) {
+function Mini({
+  label,
+  value,
+  accent,
+  bg = 'bg-[#0d1728]',
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+  bg?: string;
+}) {
   return (
     <div className={'rounded-md py-1 ' + bg}>
-      <div className={'text-[12px] font-semibold ' + (accent ? 'text-accent' : 'text-ink')}>{value}</div>
+      <div className={'text-[12px] font-semibold ' + (accent ? 'text-accent' : 'text-ink')}>
+        {value}
+      </div>
       <div className="text-[9px] text-muted">{label}</div>
     </div>
   );
@@ -763,9 +929,17 @@ function Sparkline({ samples, bg }: { samples: { in: number; out: number }[]; bg
   const x = (i: number) => pad + (i / (n - 1)) * (W - pad * 2);
   const y = (v: number) => pad + (1 - v / max) * (H - pad * 2);
   const line = (key: 'in' | 'out') =>
-    samples.map((s, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(s[key]).toFixed(1)}`).join(' ');
+    samples
+      .map((s, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(s[key]).toFixed(1)}`)
+      .join(' ');
   return (
-    <svg width="100%" viewBox={`0 0 ${W} ${H}`} className="rounded-md" style={{ height: H, background: bg }} preserveAspectRatio="none">
+    <svg
+      width="100%"
+      viewBox={`0 0 ${W} ${H}`}
+      className="rounded-md"
+      style={{ height: H, background: bg }}
+      preserveAspectRatio="none"
+    >
       <path d={line('out')} fill="none" stroke="#5ec8a0" strokeWidth={1.5} strokeLinejoin="round" />
       <path d={line('in')} fill="none" stroke="#5b9bff" strokeWidth={1.5} strokeLinejoin="round" />
     </svg>
