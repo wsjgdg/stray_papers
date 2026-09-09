@@ -8,6 +8,9 @@ const SUITES = [
   { name: 'bankofai', cmd: 'node', args: ['scripts/verify-bankofai.mjs'] },
   { name: 'p0p1', cmd: 'node', args: ['scripts/verify-p0p1.mjs'] },
   { name: 'p2', cmd: 'node', args: ['scripts/verify-p2.mjs'] },
+  { name: 'metrics-sort', cmd: 'npx', args: ['tsx', 'scripts/verify-metrics-sort.mjs'] },
+  { name: 'response-cache', cmd: 'npx', args: ['tsx', 'scripts/verify-response-cache.mjs'] },
+  { name: 'proxy-hardening', cmd: 'node', args: ['scripts/verify-proxy-hardening.mjs'] },
   { name: 'electron-build', cmd: 'node', args: ['scripts/verify-electron-build.mjs'] },
 ];
 
