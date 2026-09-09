@@ -1,65 +1,28 @@
 import { useEffect, useRef, useState } from 'react';
 import { Activity, GripHorizontal, X, ChevronDown, ChevronUp, Search } from 'lucide-react';
-import { fetchProxySummary, type ProxySummary } from '../api';
+import { fetchProxySummary, type ProxySummary } from '../../api';
+import {
+  type Pos,
+  type Theme,
+  type FocusMetric,
+  FOCUS_LABEL,
+  FOCUS_NEXT,
+  fmtTok,
+  todayStr,
+  spikeLevel,
+} from './format';
+import { Sparkline } from './Sparkline';
+import { CostCurve } from './CostCurve';
+import { MenuItem } from './MenuItem';
+import { Row } from './Row';
+import { Mini } from './Mini';
 
 // 浮窗：实时显示输入/输出速率、缓存命中、当前模型、当日消耗 token。
 // 固定在视口右下角，可拖拽；默认展开，可折叠为小按钮。
 
-type Pos = { left: number; top: number };
-type Theme = 'dark' | 'light';
-type FocusMetric = 'rate' | 'cache' | 'cost' | 'model';
-const FOCUS_LABEL: Record<FocusMetric, string> = {
-  rate: '速率',
-  cache: '缓存',
-  cost: '成本',
-  model: '模型',
-};
-const FOCUS_NEXT: Record<FocusMetric, FocusMetric> = {
-  rate: 'cache',
-  cache: 'cost',
-  cost: 'model',
-  model: 'rate',
-};
-
-function fmtTok(n: number): string {
-  if (!n) return '0';
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
-  return String(n);
-}
-
-// 本地日期（YYYY-MM-DD），用于判断统计是否同一天（跨日则重置）
-function todayStr(): string {
-  const d = new Date();
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-}
-
-// 阈值告警：用服务端速率历史的「近期中位数」作基线，最新值相对基线突增则标色。
-type Tone = 'normal' | 'warn' | 'alert';
-function spikeLevel(
-  history: { inRate: number; outRate: number }[] | undefined,
-  key: 'inRate' | 'outRate',
-): Tone {
-  if (!history || history.length < 6) return 'normal';
-  const baseline = history
-    .slice(0, -1)
-    .map((h) => h[key])
-    .filter((v) => v > 0);
-  if (baseline.length < 3) return 'normal';
-  const sorted = [...baseline].sort((a, b) => a - b);
-  const median = sorted[Math.floor(sorted.length / 2)];
-  const latest = history[history.length - 1][key];
-  if (median <= 0) return 'normal';
-  const ratio = latest / median;
-  if (ratio >= 3) return 'alert';
-  if (ratio >= 1.8) return 'warn';
-  return 'normal';
-}
-
 export default function FloatingStats({ standalone = false }: { standalone?: boolean }) {
   const docked = standalone;
-  const api = (window as unknown as { electron?: any }).electron;
+  const api = window.electron;
   const isElectron = !!api?.isElectron;
   const [open, setOpen] = useState(true);
   const [data, setData] = useState<ProxySummary | null>(null);
@@ -120,14 +83,12 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
 
   // 设置面板保存后实时刷新外观/穿透状态（无需重载浮窗）
   useEffect(() => {
-    api?.onSettingsChanged?.(
-      (cfg: { clickThrough?: boolean; fontScale?: number; highContrast?: boolean }) => {
-        if (!cfg) return;
-        setClickThrough(!!cfg.clickThrough);
-        setFontScale(Number(cfg.fontScale) || 1);
-        setHighContrast(!!cfg.highContrast);
-      },
-    );
+    api?.onSettingsChanged?.((cfg) => {
+      if (!cfg) return;
+      setClickThrough(!!cfg.clickThrough);
+      setFontScale(Number(cfg.fontScale) || 1);
+      setHighContrast(!!cfg.highContrast);
+    });
   }, []);
 
   // ── 浮窗统计持久化（仅 Electron 内的 standalone 浮窗落盘，避免重载/重启清零）──
@@ -337,7 +298,7 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
   // 跟随系统主题（仅 Electron 内有效）
   useEffect(() => {
     if (!isElectron || !api?.getTheme) return;
-    setTheme(api.getTheme());
+    setTheme(api.getTheme() as Theme);
     api.onThemeChange?.((t: string) => setTheme(t as Theme));
   }, [isElectron]);
 
@@ -826,154 +787,5 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
         </div>
       )}
     </div>
-  );
-}
-
-function MenuItem({
-  label,
-  onClick,
-  danger,
-}: {
-  label: string;
-  onClick: () => void;
-  danger?: boolean;
-}) {
-  return (
-    <button
-      className={
-        'block w-full px-3 py-1 text-left hover:bg-[#16223a] ' +
-        (danger ? 'text-[#ef6b6b]' : 'text-ink')
-      }
-      onClick={onClick}
-    >
-      {label}
-    </button>
-  );
-}
-
-function Row({
-  label,
-  value,
-  sub,
-  accent,
-  tone,
-  active,
-  onClick,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  accent?: boolean;
-  tone?: Tone;
-  active?: boolean;
-  onClick?: () => void;
-}) {
-  const colorClass =
-    tone === 'alert'
-      ? 'text-[#ef6b6b]'
-      : tone === 'warn'
-        ? 'text-[#e6b15e]'
-        : accent
-          ? 'text-accent'
-          : 'text-ink';
-  return (
-    <div
-      className={
-        'flex items-center justify-between gap-2 rounded px-1 ' +
-        (active ? 'ring-1 ring-accent/60 ' : '') +
-        (onClick ? 'cursor-pointer hover:bg-[#16223a]' : '')
-      }
-      onClick={onClick}
-      title={onClick ? '点击在主窗口打开该模型' : undefined}
-    >
-      <span className="text-muted">{label}</span>
-      <span className={'min-w-0 truncate ' + colorClass} title={value}>
-        {value}
-        {sub && <span className="ml-1 text-[10px] text-muted">{sub}</span>}
-      </span>
-    </div>
-  );
-}
-
-function Mini({
-  label,
-  value,
-  accent,
-  bg = 'bg-[#0d1728]',
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-  bg?: string;
-}) {
-  return (
-    <div className={'rounded-md py-1 ' + bg}>
-      <div className={'text-[12px] font-semibold ' + (accent ? 'text-accent' : 'text-ink')}>
-        {value}
-      </div>
-      <div className="text-[9px] text-muted">{label}</div>
-    </div>
-  );
-}
-
-// 速率趋势迷你图
-function Sparkline({ samples, bg }: { samples: { in: number; out: number }[]; bg: string }) {
-  const W = 236;
-  const H = 36;
-  const pad = 2;
-  if (samples.length < 2) {
-    return <div style={{ height: H, background: bg }} className="rounded-md" />;
-  }
-  const max = Math.max(1, ...samples.map((s) => Math.max(s.in, s.out)));
-  const n = samples.length;
-  const x = (i: number) => pad + (i / (n - 1)) * (W - pad * 2);
-  const y = (v: number) => pad + (1 - v / max) * (H - pad * 2);
-  const line = (key: 'in' | 'out') =>
-    samples
-      .map((s, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(s[key]).toFixed(1)}`)
-      .join(' ');
-  return (
-    <svg
-      width="100%"
-      viewBox={`0 0 ${W} ${H}`}
-      className="rounded-md"
-      style={{ height: H, background: bg }}
-      preserveAspectRatio="none"
-    >
-      <path d={line('out')} fill="none" stroke="#5ec8a0" strokeWidth={1.5} strokeLinejoin="round" />
-      <path d={line('in')} fill="none" stroke="#5b9bff" strokeWidth={1.5} strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-// 单值序列迷你面积图（今日累计成本曲线）
-function CostCurve({ values, bg }: { values: number[]; bg: string }) {
-  const W = 236;
-  const H = 26;
-  const pad = 2;
-  if (values.length < 2) {
-    return <div style={{ height: H, background: bg }} className="rounded-md" />;
-  }
-  const max = Math.max(...values);
-  const min = Math.min(...values);
-  const range = max - min || 1;
-  const n = values.length;
-  const x = (i: number) => pad + (i / (n - 1)) * (W - pad * 2);
-  const y = (v: number) => pad + (1 - (v - min) / range) * (H - pad * 2);
-  const linePath = values
-    .map((v, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(v).toFixed(1)}`)
-    .join(' ');
-  const areaPath = `${linePath} L${(W - pad).toFixed(1)},${(H - pad).toFixed(1)} L${pad.toFixed(1)},${(H - pad).toFixed(1)} Z`;
-  return (
-    <svg
-      width="100%"
-      viewBox={`0 0 ${W} ${H}`}
-      className="rounded-md"
-      style={{ height: H, background: bg }}
-      preserveAspectRatio="none"
-    >
-      <path d={areaPath} fill="#a78bfa" fillOpacity={0.15} />
-      <path d={linePath} fill="none" stroke="#a78bfa" strokeWidth={1.5} strokeLinejoin="round" />
-    </svg>
   );
 }

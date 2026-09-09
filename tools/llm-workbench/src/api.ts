@@ -287,3 +287,32 @@ export async function clearResponseCache(): Promise<{ cleared: number }> {
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return r.json();
 }
+
+
+// ───────── 统一请求封装（超时 / 中止 / 错误体解析 / 401） ─────────
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const ctrl = new AbortController();
+  const timeout = setTimeout(() => ctrl.abort(), 10_000);
+  try {
+    const r = await fetch(path, { ...init, signal: ctrl.signal });
+    if (r.status === 401) throw new Error('未授权（401）：请检查本地代理鉴权配置');
+    if (!r.ok) {
+      const j = (await r.json().catch(() => ({}))) as { error?: string };
+      throw new Error(j.error ?? `HTTP ${r.status}`);
+    }
+    return (await r.json()) as T;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+export interface ProxyOverviewResponse {
+  metrics: ProxyMetrics[];
+  cache: CacheStats;
+  summary: ProxySummary;
+}
+
+// 聚合端点：metrics + cache + summary 一次返回，前端单一定时器轮询。
+export async function fetchProxyOverview(): Promise<ProxyOverviewResponse> {
+  return request<ProxyOverviewResponse>('/api/proxy/overview');
+}
