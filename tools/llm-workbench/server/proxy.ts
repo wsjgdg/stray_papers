@@ -11,6 +11,10 @@ import {
   type ApiFormat,
 } from './translate.js';
 import { loadConfig, resolveKeyPool, type AuthStyle } from './config.js';
+import { buildAuthHeaders, styleOfKnown } from './upstreamAuth.js';
+
+// 兼容旧引用：鉴权头构造已抽到 upstreamAuth.ts，与 probe 共用同一实现
+export { buildAuthHeaders };
 import { recordCall } from './metrics.js';
 import { getCached, putCached, cacheKey } from './responseCache.js';
 import type { ProviderConsole } from './types.js';
@@ -26,13 +30,6 @@ const keyCursor = new Map<string, number>();
 function isRetryable(status: number | null): boolean {
   if (status === null) return true;
   return status === 401 || status === 403 || status === 429;
-}
-
-// 已知厂商的鉴权头风格（与 probe.ts 保持一致）
-function styleOfKnown(id: string): AuthStyle {
-  if (id === 'anthropic') return 'x-api-key';
-  if (id === 'google') return 'google';
-  return 'bearer';
 }
 
 // 解析目标厂商：已知厂商走默认；未知 id 且配置中存在 → 视为自定义厂商（用其 baseUrl + 自定义鉴权方式）
@@ -59,12 +56,6 @@ function resolveTarget(
     note: '自定义厂商',
   };
   return { provider: synth, authStyle: entry.authStyle ?? 'bearer' };
-}
-
-export function buildAuthHeaders(style: AuthStyle, apiKey: string): Record<string, string> {
-  if (style === 'x-api-key') return { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' };
-  if (style === 'google') return { 'x-goog-api-key': apiKey };
-  return { Authorization: `Bearer ${apiKey}` };
 }
 
 function joinUrl(base: string, suffix: string): string {

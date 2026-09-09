@@ -1,18 +1,11 @@
 import type { ProbeResult, ProviderConsole } from './types.js';
 import { fetchText } from './http.js';
+import { buildAuthHeaders, styleOfKnown } from './upstreamAuth.js';
 
-/** 各厂商鉴权头风格（仅在用户主动填入 key 时使用，key 不落盘） */
-const AUTH_STYLE: Record<string, 'bearer' | 'x-api-key' | 'google'> = {
-  anthropic: 'x-api-key',
-  google: 'google',
-};
-
+/** 各厂商鉴权头风格（仅在用户主动填入 key 时使用，key 不落盘）；与代理转发共用同一实现 */
 function buildHeaders(provider: ProviderConsole, apiKey?: string): Record<string, string> | undefined {
   if (!apiKey) return undefined;
-  const style = AUTH_STYLE[provider.id] ?? 'bearer';
-  if (style === 'x-api-key') return { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' };
-  if (style === 'google') return { 'x-goog-api-key': apiKey };
-  return { Authorization: `Bearer ${apiKey}` };
+  return buildAuthHeaders(styleOfKnown(provider.id), apiKey);
 }
 
 function countModels(text: string): number | null {
@@ -43,10 +36,8 @@ export async function probeProvider(provider: ProviderConsole, apiKey?: string):
     return { ...base, state: 'error', message: '该平台使用 IAM / 区域化域名，无法统一探测' };
   }
 
-  const url =
-    provider.id === 'google' && apiKey
-      ? `${provider.modelsEndpoint}?key=${encodeURIComponent(apiKey)}`
-      : provider.modelsEndpoint;
+  // Google 用 x-goog-api-key 头而非 URL 查询串：避免 key 进入上游访问日志 / 代理日志
+  const url = provider.modelsEndpoint;
 
   try {
     const res = await fetchText(url, { timeoutMs: 12000, headers: buildHeaders(provider, apiKey) });
