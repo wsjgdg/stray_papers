@@ -41,10 +41,30 @@ import {
 import { proxyRouter, unifiedRouter, buildAuthHeaders, listProviderModels } from './proxy.js';
 import { getCacheStats, clearCache } from './responseCache.js';
 import { renderMetrics } from './prometheus.js';
+import { timingSafeEqualStr } from './crypto.js';
 import type { Snapshot, ProbeResult } from './types.js';
 
 const BASE_PORT = Number(process.env.API_PORT || 8787);
 const SNAPSHOT_TTL = 10 * 60 * 1000;
+
+// 可选代理令牌：默认不启用（保持单机零配置体验）。
+// 设置 PROXY_TOKEN 后，/api/v1 与 /api/proxy/* 必须携带该令牌，防止本机其它进程白嫖已配置的 key。
+const PROXY_TOKEN = (process.env.PROXY_TOKEN ?? '').trim();
+
+function requireProxyToken(req: Request, res: Response, next: NextFunction): void {
+  if (!PROXY_TOKEN) {
+    next();
+    return;
+  }
+  const auth = req.headers.authorization ?? '';
+  const provided =
+    (auth.startsWith('Bearer ') ? auth.slice(7) : '') || ((req.headers['x-proxy-token'] as string) ?? '');
+  if (!timingSafeEqualStr(provided, PROXY_TOKEN)) {
+    res.status(401).json({ error: '缺少或错误的代理令牌（Authorization: Bearer <PROXY_TOKEN>）' });
+    return;
+  }
+  next();
+}
 
 // 启动日志同时写入 %TEMP%/llm-workbench.log，便于双击闪退时排查（窗口一闪即逝看不到错误）
 function logStartup(line: string): void {
@@ -118,6 +138,10 @@ app.post('/api/probe', async (req: Request, res: Response) => {
 app.get('/api/providers', (_req: Request, res: Response) => {
   res.json({ providers: PROVIDERS });
 });
+
+// 令牌校验必须挂在 /api/proxy 的所有子路由之前（含 config / models / 转发）
+app.use('/api/proxy', requireProxyToken);
+app.use('/api/v1', requireProxyToken);
 
 // ───────── 本地代理：配置 / 指标 / 日志 / 连通性（必须在 proxyRouter 挂载之前） ─────────
 app.get('/api/proxy/config', (_req: Request, res: Response) => {
@@ -464,12 +488,14 @@ function openBrowser(port: number): void {
 }
 
 // 自动选端口：从 BASE_PORT 起，被占用则顺延（最多 +10），彻底避免 EADDRINUSE 闪退
+let httpServer: ReturnType<typeof app.listen> | null = null;
 function listenOn(port: number, maxPort: number): void {
   const s = app.listen(port, '127.0.0.1', () => {
     const url = `http://127.0.0.1:${port}`;
     logStartup(`[api] LLM Workbench API on ${url}`);
     openBrowser(port);
   });
+  httpServer = s;
   s.on('error', (err: NodeJS.ErrnoException) => {
     if (err.code === 'EADDRINUSE' && port < maxPort) {
       logStartup(`[api] 端口 ${port} 被占用，尝试 ${port + 1}`);
@@ -483,6 +509,8 @@ function listenOn(port: number, maxPort: number): void {
   });
 }
 
+let rateTimer: ReturnType<typeof setInterval> | null = null;
+
 // 启动入口：封装为可导出函数，便于被 Electron 主进程直接调用复用全部后端逻辑；
 // 仅在「直接运行」时才自启（tsx server/index.ts / node server.cjs / pkg 打包的 server.bundle.cjs）。
 export function startServer(): void {
@@ -491,7 +519,8 @@ export function startServer(): void {
   loadProfiles();
   // 启动速率历史采样（每 2s 一次），供浮窗趋势图展示真实持久化数据
   sampleRateHistory();
-  setInterval(sampleRateHistory, 2000);
+  rateTimer = setInterval(sampleRateHistory, 2000);
+  installShutdownHandlers();
   (async () => {
     if (await tryReuse(BASE_PORT)) {
       // 复用已有实例：保持窗口短暂可见，明确告知是「已在浏览器打开」而非崩溃闪退
@@ -501,6 +530,32 @@ export function startServer(): void {
     }
     listenOn(BASE_PORT, BASE_PORT + 10);
   })();
+}
+
+/** 优雅退出：停掉采样定时器并关闭监听；Electron 可在 will-quit 中调用 */
+export function stopServer(): void {
+  if (rateTimer) {
+    clearInterval(rateTimer);
+    rateTimer = null;
+  }
+  if (httpServer) {
+    httpServer.close();
+    httpServer = null;
+  }
+}
+
+let shutdownInstalled = false;
+function installShutdownHandlers(): void {
+  if (shutdownInstalled) return;
+  shutdownInstalled = true;
+  const onSignal = (sig: string) => {
+    logStartup(`[api] 收到 ${sig}，正在退出…`);
+    stopServer();
+    setTimeout(() => process.exit(0), 200).unref();
+  };
+  process.on('SIGINT', () => onSignal('SIGINT'));
+  process.on('SIGTERM', () => onSignal('SIGTERM'));
+  process.on('SIGHUP', () => onSignal('SIGHUP'));
 }
 
 function isRunDirectly(): boolean {

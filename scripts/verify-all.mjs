@@ -11,6 +11,7 @@ const SUITES = [
   { name: 'metrics-sort', cmd: 'npx', args: ['tsx', 'scripts/verify-metrics-sort.mjs'] },
   { name: 'response-cache', cmd: 'npx', args: ['tsx', 'scripts/verify-response-cache.mjs'] },
   { name: 'proxy-hardening', cmd: 'node', args: ['scripts/verify-proxy-hardening.mjs'] },
+  { name: 'security', cmd: 'npx', args: ['tsx', 'scripts/verify-security.mjs'] },
   { name: 'electron-build', cmd: 'node', args: ['scripts/verify-electron-build.mjs'] },
 ];
 

@@ -5,7 +5,15 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { deriveKey, randomSalt } from './crypto.js';
+import crypto from 'node:crypto';
+import {
+  deriveKey,
+  randomSalt,
+  resolveScryptParams,
+  timingSafeEqualStr,
+  DEFAULT_SCRYPT,
+  type ScryptParams,
+} from './crypto.js';
 import { configDir } from './config.js';
 
 export type Role = 'admin' | 'viewer';
@@ -16,6 +24,7 @@ export interface Profile {
   role: Role;
   salt: string; // base64
   verifier: string; // base64（scrypt 派生的 key，用于校验密码）
+  kdfParams?: ScryptParams; // 缺失时按历史参数派生（见 crypto.resolveScryptParams）
 }
 
 export interface Session {
@@ -46,15 +55,17 @@ export function listProfiles(): { id: string; name: string; role: Role }[] {
   return profiles.map((p) => ({ id: p.id, name: p.name, role: p.role }));
 }
 
-function hashPassword(pw: string): { salt: string; verifier: string } {
+function hashPassword(pw: string): { salt: string; verifier: string; kdfParams: ScryptParams } {
   const salt = randomSalt();
-  const key = deriveKey(pw, salt);
-  return { salt: salt.toString('base64'), verifier: key.toString('base64') };
+  const params = { ...DEFAULT_SCRYPT };
+  const key = deriveKey(pw, salt, params);
+  return { salt: salt.toString('base64'), verifier: key.toString('base64'), kdfParams: params };
 }
 
 function verifyPassword(p: Profile, pw: string): boolean {
-  const key = deriveKey(pw, Buffer.from(p.salt, 'base64'));
-  return key.toString('base64') === p.verifier;
+  // 用档案记录的 KDF 参数派生，保证提高默认强度不会让旧档案失效
+  const key = deriveKey(pw, Buffer.from(p.salt, 'base64'), resolveScryptParams(p.kdfParams));
+  return timingSafeEqualStr(key.toString('base64'), p.verifier);
 }
 
 export function getAdminProfile(): Profile | undefined {
@@ -64,8 +75,8 @@ export function getAdminProfile(): Profile | undefined {
 /** 确保存在 admin 档案（首次启用加密 / 首次解锁时调用，用该密码创建） */
 export function ensureAdminProfile(password: string): void {
   if (getAdminProfile()) return;
-  const { salt, verifier } = hashPassword(password);
-  profiles.push({ id: 'admin', name: '管理员', role: 'admin', salt, verifier });
+  const { salt, verifier, kdfParams } = hashPassword(password);
+  profiles.push({ id: 'admin', name: '管理员', role: 'admin', salt, verifier, kdfParams });
   saveProfiles();
 }
 
@@ -76,9 +87,9 @@ export function createProfile(
 ): { id: string } | { error: string } {
   if (!name || !password) return { error: 'name 与 password 必填' };
   if (profiles.some((p) => p.name === name)) return { error: '同名档案已存在' };
-  const id = 'p_' + Math.random().toString(36).slice(2, 10);
-  const { salt, verifier } = hashPassword(password);
-  profiles.push({ id, name, role, salt, verifier });
+  const id = 'p_' + crypto.randomUUID();
+  const { salt, verifier, kdfParams } = hashPassword(password);
+  profiles.push({ id, name, role, salt, verifier, kdfParams });
   saveProfiles();
   return { id };
 }

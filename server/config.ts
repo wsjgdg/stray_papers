@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'os';
-import crypto from 'node:crypto';
 import { PROVIDERS } from './providers.js';
 import {
   deriveKey,
@@ -11,6 +10,8 @@ import {
   hasMasterKey,
   setMasterKey,
   getMasterKey,
+  randomSalt,
+  resolveScryptParams,
   type EncryptedBlob,
 } from './crypto.js';
 
@@ -74,6 +75,8 @@ export function configPath(): string {
 let activeConfig: ProxyConfig = { providers: {} };
 let encrypted = false;
 let locked = false;
+// 加密所用 salt：必须与写入 blob 的 salt 一致，否则解锁时无法重新派生出同一个 key
+let cryptoSalt: Buffer | null = null;
 
 export function isEncrypted(): boolean {
   return encrypted;
@@ -130,7 +133,9 @@ export function saveConfig(cfg: ProxyConfig): void {
   activeConfig = cfg;
   fs.mkdirSync(CONFIG_DIR, { recursive: true });
   if (encrypted && hasMasterKey()) {
-    const blob = encryptWithKey(cfg, getMasterKeySafe());
+    const salt = cryptoSalt ?? randomSalt();
+    cryptoSalt = salt;
+    const blob = encryptWithKey(cfg, getMasterKeySafe(), salt);
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(blob, null, 2), 'utf8');
   } else {
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(cfg, null, 2), 'utf8');
@@ -147,10 +152,13 @@ export function unlock(password: string): boolean {
     return false;
   }
   try {
-    const key = deriveKey(password, Buffer.from(parsed.salt, 'base64'));
+    const salt = Buffer.from(parsed.salt, 'base64');
+    // KDF 参数随 blob 持久化：旧配置用旧参数派生，新配置用新参数，互不失效
+    const key = deriveKey(password, salt, resolveScryptParams(parsed.kdfParams));
     const cfg = decryptWithKey(parsed, key) as ProxyConfig;
     if (!cfg || typeof cfg !== 'object' || !('providers' in cfg)) throw new Error('格式错误');
     activeConfig = { providers: cfg.providers ?? {} };
+    cryptoSalt = salt;
     setMasterKey(key);
     locked = false;
     return true;
@@ -159,9 +167,14 @@ export function unlock(password: string): boolean {
   }
 }
 
-/** 启用加密：用主密码派生 key，把当前（明文）配置重新以密文落盘 */
+/** 启用加密：用主密码派生 key，把当前（明文）配置重新以密文落盘。
+ *  真正的 salt 由 encryptWithKey 生成并随 blob 持久化，这里只需派生出主密钥本身。 */
 export function enableEncryption(password: string): boolean {
-  const key = deriveKey(password, crypto.randomBytes(16));
+  const salt = randomSalt();
+  const key = deriveKey(password, salt);
+  const prevSalt = cryptoSalt;
+  const prevEncrypted = encrypted;
+  cryptoSalt = salt;
   setMasterKey(key);
   encrypted = true;
   locked = false;
@@ -169,7 +182,8 @@ export function enableEncryption(password: string): boolean {
     saveConfig(activeConfig);
     return true;
   } catch {
-    encrypted = false;
+    encrypted = prevEncrypted;
+    cryptoSalt = prevSalt;
     return false;
   }
 }
@@ -181,6 +195,7 @@ export function disableEncryption(): boolean {
   try {
     saveConfig(activeConfig); // 此时 encrypted=false → 明文写出
     setMasterKey(null);
+    cryptoSalt = null;
     return true;
   } catch {
     encrypted = true;
@@ -227,7 +242,8 @@ export function maskConfig(cfg: ProxyConfig): {
       apiFormat: p.apiFormat,
       models: p.models,
       enabledModels: p.enabledModels,
-      apiKeyMasked: maskKey(p.apiKey),
+      // 只配了多 key 池（apiKey 为空）时也要给出掩码，避免 UI 显示「未配置」
+      apiKeyMasked: maskKey(p.apiKey || resolveKeyPool(p)[0] || ''),
       hasKey: Boolean(p.apiKey) || (p.apiKeys?.length ?? 0) > 0,
       apiKeyCount: resolveKeyPool(p).length,
       custom: !KNOWN_IDS.has(id),
