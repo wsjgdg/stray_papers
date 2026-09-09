@@ -1,0 +1,10 @@
+# 统一换行：仓库内一律 LF，避免跨平台 diff 噪声
+* text=auto eol=lf
+
+# 二进制不参与换行转换与 diff
+*.png binary
+*.ico binary
+*.icns binary
+*.exe binary
+*.dll binary
+*.node binary
