@@ -65,11 +65,16 @@ describe('buildUpstreamUrl', () => {
   });
   it('gemini stream -> streamGenerateContent?alt=sse', () => {
     assert.ok(
-      buildUpstreamUrl('gemini', 'https://x/v1', 'm', true).includes('streamGenerateContent?alt=sse'),
+      buildUpstreamUrl('gemini', 'https://x/v1', 'm', true).includes(
+        'streamGenerateContent?alt=sse',
+      ),
     );
   });
   it('openai -> base url unchanged (caller appends wildcard)', () => {
-    assert.equal(buildUpstreamUrl('openai', 'https://api.openai.com/v1', 'gpt', false), 'https://api.openai.com/v1');
+    assert.equal(
+      buildUpstreamUrl('openai', 'https://api.openai.com/v1', 'gpt', false),
+      'https://api.openai.com/v1',
+    );
   });
 });
 
@@ -104,7 +109,10 @@ describe('fromGeminiJson', () => {
     assert.equal(r.usage.total_tokens, 6);
   });
   it('MAX_TOKENS -> length', () => {
-    const r = fromGeminiJson({ candidates: [{ finishReason: 'MAX_TOKENS' }] }) as Record<string, any>;
+    const r = fromGeminiJson({ candidates: [{ finishReason: 'MAX_TOKENS' }] }) as Record<
+      string,
+      any
+    >;
     assert.equal(r.choices[0].finish_reason, 'length');
   });
 });
@@ -113,8 +121,12 @@ describe('AnthropicStreamTranslator', () => {
   it('streams text deltas and emits [DONE] with usage', () => {
     const t = new AnthropicStreamTranslator();
     const a = t.push('event: message_start\ndata: {"message":{"usage":{"input_tokens":4}}}\n\n');
-    const b = t.push('event: content_block_delta\ndata: {"delta":{"type":"text_delta","text":"Hel"}}\n\n');
-    const c = t.push('event: content_block_delta\ndata: {"delta":{"type":"text_delta","text":"lo"}}\n\n');
+    const b = t.push(
+      'event: content_block_delta\ndata: {"delta":{"type":"text_delta","text":"Hel"}}\n\n',
+    );
+    const c = t.push(
+      'event: content_block_delta\ndata: {"delta":{"type":"text_delta","text":"lo"}}\n\n',
+    );
     const d = t.push('event: message_delta\ndata: {"usage":{"output_tokens":2}}\n\n');
     const e = t.push('event: message_stop\ndata: {}\n\n');
     assert.equal(a, '');
