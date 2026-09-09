@@ -1,0 +1,10 @@
+dist
+release
+out-*
+server/generated
+node_modules
+electron/server.cjs
+electron/icon.png
+coverage
+*.md
+package-lock.json
