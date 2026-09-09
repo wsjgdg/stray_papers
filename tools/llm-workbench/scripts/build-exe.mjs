@@ -29,12 +29,7 @@ console.log('[1/4] vite build (前端)…');
 execSync('npx vite build', { stdio: 'inherit' });
 
 console.log('[2/4] 内嵌前端资源 → server/generated/webAssets.ts');
-const assets = {};
-walk(distDir, '', assets);
-const ts = `// 自动生成，勿手改。由 scripts/build-exe.mjs 从 dist/ 收集。\nexport const WEB_ASSETS: Record<string, string> = ${JSON.stringify(assets)};\nexport const WEB_ENTRY = 'index.html';\n`;
-mkdirSync(genDir, { recursive: true });
-writeFileSync(join(genDir, 'webAssets.ts'), ts);
-console.log(`       ${Object.keys(assets).length} 个文件已内嵌`);
+execSync('node scripts/gen-web-assets.mjs', { stdio: 'inherit' });
 
 // 注意：bundle 必须落在项目根目录（pkg 对子目录入口的 snapshot 路径解析有 bug）
 console.log('[3/4] esbuild 打包后端 → server.bundle.cjs');

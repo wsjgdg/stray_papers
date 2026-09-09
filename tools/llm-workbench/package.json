@@ -5,6 +5,10 @@
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
+    "gen:web-assets": "node scripts/gen-web-assets.mjs",
+    "predev": "npm run gen:web-assets",
+    "prebuild": "npm run gen:web-assets",
+    "pretypecheck": "npm run gen:web-assets",
     "dev": "concurrently -k -n API,WEB -c cyan,magenta \"npm:dev:api\" \"npm:dev:web\"",
     "dev:api": "tsx watch server/index.ts",
     "dev:web": "vite",

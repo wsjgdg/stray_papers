@@ -8,6 +8,8 @@ electron/icon.png
 release/
 out-*/
 electron/build-config.json
+# 构建期由 scripts/gen-web-assets.mjs 从 dist/ 生成（~880KB），不入库
+server/generated/
 *.log
 *.tsbuildinfo
 .DS_Store

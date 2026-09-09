@@ -204,7 +204,8 @@ export function getMetrics(): ProviderMetrics[] {
       lastTs: a.lastTs,
     });
   }
-  return out.sort((x, y) => y.lastTs ?? 0 - (x.lastTs ?? 0));
+  // 注意括号：`??` 优先级低于 `-`，必须显式分组，否则会解析成 `y.lastTs ?? (0 - (...))`
+  return out.sort((x, y) => (y.lastTs ?? 0) - (x.lastTs ?? 0));
 }
 
 export interface RateSample {

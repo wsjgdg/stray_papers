@@ -354,9 +354,21 @@ export async function proxyRequest(
 
   // 用单个 key 发起一次上游请求。committed=true 表示已向客户端写出响应（成功或流已开启），调用方无需再处理。
   async function tryKey(apiKey: string): Promise<TryResult> {
+    // 客户端断开（取消 / 刷新 / 关闭浮窗）时立即中止上游，避免连接与内存拖到 180s 超时才释放。
+    // controller / cleanup 声明在 try 之外，保证异常分支也能解绑监听。
+    const controller = new AbortController();
+    const onClientClose = () => {
+      if (!res.writableFinished) controller.abort();
+    };
+    res.on('close', onClientClose);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const cleanup = () => {
+      if (timer) clearTimeout(timer);
+      timer = undefined;
+      res.off('close', onClientClose);
+    };
     try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 180_000);
+      timer = setTimeout(() => controller.abort(), 180_000);
       const upstream = await fetch(upstreamUrl, {
         method: req.method,
         headers: { ...forwardHeaders(req), ...buildAuthHeaders(authStyle, apiKey) },
@@ -373,8 +385,10 @@ export async function proxyRequest(
         // 流式：error 态（尚未向客户端写任何字节）才允许换 key 重试；否则开启管道并 commit
         if (status >= 400) {
           const text = await upstream.text();
+          cleanup();
           return { committed: false, status, error: classifyError(status, text), retryable: isRetryable(status) };
         }
+        if (upstream.headers.get('location')) res.set('location', upstream.headers.get('location')!);
         res.status(status);
         res.set('content-type', contentType);
         if (upstream.headers.get('cache-control')) res.set('cache-control', upstream.headers.get('cache-control')!);
@@ -398,6 +412,7 @@ export async function proxyRequest(
           }
         });
         nodeStream.on('end', () => {
+          cleanup();
           if (translator) {
             const out = translator.flush();
             if (out) {
@@ -410,8 +425,18 @@ export async function proxyRequest(
           finalize(status, usage, Buffer.byteLength(acc), null, false, retries);
         });
         nodeStream.on('error', (e) => {
+          cleanup();
           res.end();
-          finalize(status, {}, Buffer.byteLength(acc), classifyError(status, String(e)), false, retries);
+          // 客户端主动断开导致的 abort 不算上游故障，单独归类便于排查
+          const abortedByClient = controller.signal.aborted && res.writableEnded;
+          finalize(
+            status,
+            {},
+            Buffer.byteLength(acc),
+            abortedByClient ? '客户端断开连接' : classifyError(status, String(e)),
+            false,
+            retries,
+          );
         });
         return { committed: true, status, error: null, retryable: false };
       }
@@ -422,6 +447,7 @@ export async function proxyRequest(
 
       if (status >= 400) {
         const text = buf.toString('utf8');
+        cleanup();
         return { committed: false, status, error: classifyError(status, text), retryable: isRetryable(status) };
       }
 
@@ -441,6 +467,7 @@ export async function proxyRequest(
       res.status(status);
       res.set('content-type', contentType);
       if (cacheControl) res.set('cache-control', cacheControl);
+      if (upstream.headers.get('location')) res.set('location', upstream.headers.get('location')!);
       res.send(sendBodyOut);
 
       let usage: Usage = {};
@@ -451,16 +478,24 @@ export async function proxyRequest(
       }
       finalize(status, usage, sendBodyOut.length, null, false, retries);
 
-      // 缓存可缓存的成功响应（非流式）：存转换后的 OpenAI 体，保证回放一致
-      if (!streamRequested && status >= 200 && status < 400) {
+      // 缓存可缓存的成功响应（非流式）：存转换后的 OpenAI 体，保证回放一致。
+      // 只缓存 2xx：3xx 重定向依赖上游 Location 与实时状态，缓存会给出失效跳转。
+      if (!streamRequested && status >= 200 && status < 300) {
         const headers: Record<string, string> = { 'content-type': contentType };
         if (cacheControl) headers['cache-control'] = cacheControl;
         putCached(ck, { status, headers, body: sendBodyOut, storedAt: Date.now() });
       }
+      cleanup();
       return { committed: true, status, error: null, retryable: false };
     } catch (err) {
+      cleanup();
       const msg = String((err as Error)?.message ?? err);
-      const reason = msg.includes('abort') ? '请求超时（>180s）' : classifyError(null, msg);
+      // abort 有两种来源：180s 超时、客户端提前断开 → 分开归类，便于从日志/指标定位
+      const reason = msg.includes('abort')
+        ? res.destroyed || res.writableEnded
+          ? '客户端断开连接'
+          : '请求超时（>180s）'
+        : classifyError(null, msg);
       return { committed: false, status: null, error: reason, retryable: true };
     }
   }
