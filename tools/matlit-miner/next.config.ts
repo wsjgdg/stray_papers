@@ -14,6 +14,23 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: projectRoot,
   turbopack: {
     root: projectRoot,
+    rules: {
+      // vgpu WGSL loader — resolves .wgsl import graphs at build time.
+      "*.wgsl": {
+        loaders: ["@vgpu/wgsl/loader-webpack"],
+        as: "*.js",
+      },
+    },
+  },
+  // Mirror for the webpack bundler path (next dev/build without --turbopack).
+  webpack(config: { module?: { rules?: unknown[] } } & Record<string, unknown>) {
+    config.module ??= { rules: [] };
+    config.module.rules ??= [];
+    (config.module.rules as unknown[]).push({
+      test: /\.wgsl$/,
+      loader: "@vgpu/wgsl/loader-webpack",
+    });
+    return config as never;
   },
   /* config options here */
   typescript: {
