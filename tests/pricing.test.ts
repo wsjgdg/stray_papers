@@ -1,11 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it, beforeEach } from 'vitest';
-import {
-  updateModelPrices,
-  priceFor,
-  estimateCost,
-  PROVIDER_PRICING,
-} from '../server/pricing.ts';
+import { updateModelPrices, priceFor, estimateCost, PROVIDER_PRICING } from '../server/pricing.ts';
 
 describe('pricing', () => {
   beforeEach(() => updateModelPrices([]));

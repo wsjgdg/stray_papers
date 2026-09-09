@@ -39,10 +39,7 @@ describe('matchModel', () => {
   });
 
   it('prefers shorter id on a score tie (standard over -fast variant)', () => {
-    const keys2 = [
-      keyOf(mk('x/gpt-4o-fast', 'GPT-4o Fast')),
-      keyOf(mk('x/gpt-4o', 'GPT-4o')),
-    ];
+    const keys2 = [keyOf(mk('x/gpt-4o-fast', 'GPT-4o Fast')), keyOf(mk('x/gpt-4o', 'GPT-4o'))];
     assert.equal(matchModel('GPT-4o', null, keys2)?.id, 'x/gpt-4o');
   });
 
