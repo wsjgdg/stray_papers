@@ -365,6 +365,11 @@ app.get('/api/proxy/metrics/summary', (_req: Request, res: Response) => {
   res.json(getSummary());
 });
 
+// 聚合端点：metrics + cache + summary 一次返回，前端单一定时器轮询
+app.get('/api/proxy/overview', (_req: Request, res: Response) => {
+  res.json({ metrics: getMetrics(), cache: getCacheStats(), summary: getSummary() });
+});
+
 // Prometheus 指标导出（Grafana / scrape 用）
 app.get('/metrics', (_req: Request, res: Response) => {
   res.set('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');

@@ -26,8 +26,9 @@ import ModelTable from './components/ModelTable';
 import Leaderboards from './components/Leaderboards';
 import ConsoleGrid from './components/ConsoleGrid';
 import CostCalculator from './components/CostCalculator';
-import Proxy from './components/Proxy';
-import FloatingStats from './components/FloatingStats';
+import Proxy from './components/proxy/Proxy';
+import FloatingStats from './components/floating/FloatingStats';
+import { useVisibilityPolling } from './hooks/useVisibilityPolling';
 
 type TabId = 'dashboard' | 'models' | 'boards' | 'consoles' | 'cost' | 'proxy';
 
@@ -48,7 +49,7 @@ export default function App() {
   const [tab, setTab] = useState<TabId>('dashboard');
   const abortRef = useRef<AbortController | null>(null);
   const [locked, setLocked] = useState(false);
-  const api = (window as unknown as { electron?: any }).electron;
+  const api = window.electron;
   const isElectron = !!api?.isElectron;
   const [showSettings, setShowSettings] = useState(false);
   // 模型深链：浮窗点模型 → 切到「模型库」并聚焦该模型行
@@ -87,11 +88,8 @@ export default function App() {
       .catch(() => setLocked(false));
   }, []);
 
-  // 轻量轮询：服务端带缓存，命中缓存不会重复抓取上游
-  useEffect(() => {
-    const timer = setInterval(() => void load(false), 30_000);
-    return () => clearInterval(timer);
-  }, [load]);
+  // 轻量轮询：服务端带缓存，命中缓存不会重复抓取上游；页面隐藏时暂停
+  useVisibilityPolling(30_000, () => void load(false), [load]);
 
   // 模型深链：浮窗内点模型 → 主进程转发 'open-model' → 切到模型库并聚焦对应行
   useEffect(() => {
@@ -151,7 +149,7 @@ export default function App() {
             title="在独立窗口打开实时统计浮窗（关闭主窗口后仍可显示）"
             onClick={() => {
               // Electron 内：直接让主进程创建原生常驻浮窗（alwaysOnTop / frameless）
-              const api = (window as unknown as { electron?: { openFloat?: () => void } }).electron;
+              const api = window.electron;
               if (api?.openFloat) {
                 api.openFloat();
                 return;
@@ -293,7 +291,7 @@ const SETTINGS_DEFAULT: SettingsState = {
 
 // 浮窗与通知设置面板（仅 Electron 内有效）
 function SettingsModal({ onClose }: { onClose: () => void }) {
-  const electron = (window as unknown as { electron?: any }).electron;
+  const electron = window.electron;
   const [s, setS] = useState<SettingsState>(() => ({
     ...SETTINGS_DEFAULT,
     ...(electron?.getSettings?.() ?? {}),
