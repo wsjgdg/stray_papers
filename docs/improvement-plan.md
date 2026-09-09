@@ -2,7 +2,21 @@
 
 > 基于 2026-09-09 全量代码审查（src+server ≈ 8.8k LOC，electron/scripts ≈ 29k LOC）
 > 目标：先止血（P0 缺陷 + 安全），再治理仓库与构建，最后做工程化与前端重构。
-> 全部改动在 `feat/hardening` 分支推进，每个 Phase 一个独立 commit。
+> 全部改动在 `hardening` 分支推进（注意：本机 git 无法创建带斜杠的分支名），每个 Phase 一个独立 commit。
+
+## 执行状态
+
+| Phase | 状态 | commit |
+|---|---|---|
+| 0 基线 | ✅ | — （typecheck EXIT 0 / verify 6/6 / 配置已备份 `~/.llm-workbench.bak-20260909`） |
+| 1 P0 缺陷修复 | ✅ | `149267f` |
+| 2 安全与健壮性 | ✅ | `f0920b2` |
+| 3 仓库与构建卫生 | ⏸ 待执行（3.1 删除 ~9.5GB 需确认） | — |
+| 4 质量基建 | ⏸ | — |
+| 5 前端重构 | ⏸ | — |
+| 6 Backlog | ⏸ | — |
+
+门禁实测（Phase 2 结束）：`typecheck` EXIT 0 · `verify` 10/10 套件 · `build` EXIT 0 · `push origin hardening` EXIT 0。
 
 ## 0. 基线准备（Phase 0，必须先做）
 
@@ -202,6 +216,13 @@ Phase 0 基线
 4. `npm run build` → EXIT 0
 5. 浏览器/Electron 手工冒烟（typecheck ≠ runtime-safe）
 6. commit（英文祈使句）→ `git push` → `git ls-remote` 确认
+
+## 执行中发现并已修复的额外缺陷
+
+| # | 位置 | 问题 | 处置 |
+|---|---|---|---|
+| X1 | `server/config.ts` `enableEncryption` + `server/crypto.ts` `encryptWithKey` | 派生 key 用 A 盐、写入 blob 的是 B 盐，`unlock` 按 blob.salt 重新派生 → **启用加密后必然解锁失败，配置永久锁死**（数据丢失级） | `encryptWithKey(value, key, salt?)` 接受调用方 salt；config 持有 `cryptoSalt` 并在 unlock 时回填。已加 `verify-security` 的「启用 → 重启 → 解锁 → 再保存 → 关闭」闭环用例 |
+| X2 | `server/crypto.ts` `deriveKey` | N=32768/r=8 需 ~32MB，超过 Node 默认 scrypt maxmem → `ERR_CRYPTO_INVALID_SCRYPT_PARAMS` | 显式 `maxmem: 128MB` |
 
 ## 风险登记
 
