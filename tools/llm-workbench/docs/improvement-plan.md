@@ -11,7 +11,7 @@
 | 0 基线 | ✅ | — （typecheck EXIT 0 / verify 6/6 / 配置已备份 `~/.llm-workbench.bak-20260909`） |
 | 1 P0 缺陷修复 | ✅ | `149267f` |
 | 2 安全与健壮性 | ✅ | `f0920b2` |
-| 3 仓库与构建卫生 | 🟡 3.2/3.3/3.4 完成；3.1 删除 ~9.5GB 待确认 | `d7cc3e5` |
+| 3 仓库与构建卫生 | ✅ 3.1/3.2/3.3/3.4 全部完成（3.1 真实磁盘无残留，无需删除） | `d7cc3e5` |
 | 4 质量基建 | ⏸ | — |
 | 5 前端重构 | ⏸ | — |
 | 6 Backlog | ⏸ | — |
@@ -111,7 +111,7 @@
 
 | # | 动作 | 说明 |
 |---|---|---|
-| 3.1 | 清理构建残留 | ⏸ 待你确认后执行（全部 gitignored）：`out-p-1788173814130`(1.1G)、`out-p-1788173876477`(2.3G)、`out-p-1788174003771`(5.1G)、`out-final-1788174382594`(271M)、`out-portable-2`(507M)、`out-portable`(247M)、`out-electron`(124M)、`out-final`(39M) ≈ 9.5GB；根目录 `llm-workbench.exe`(44M)、`server.bundle.cjs`(2.1M)、`run.log`。走资源回收站，不用 `rm -rf`。 |
+| 3.1 | 清理构建残留 | ✅ 实测真实磁盘（`C:\Users\sibop\WorkBuddy\2026-08-29-22-52-01\llm-workbench`）**不存在**任何 `out-*` 目录、`llm-workbench.exe`、`server.bundle.cjs`、`run.log`；此前量得的 ~9.6GB 仅存在于沙箱 overlay（历史 in-sandbox 构建产物，未落盘）。真实仓库已无残留，无需删除。保留 `.gitignore` 对 `out-*`/`release`/`dist`/`*.exe`/`*.cjs`/`run.log` 的忽略规则以防复发。 |
 | 3.2 | 统一 out 目录 | ✅ `package.json` 的 `build.directories.output` 已为固定 `release`（原配置即如此，时间戳 `out-*` 目录不再生成） |
 | 3.3 | 砍掉 pkg 链路 | ✅ 已移除 `pkg`、`@yao-pkg/pkg` 依赖与 `build:exe` 脚本、`scripts/build-exe.mjs`；保留 `scripts/gen-web-assets.mjs` |
 | 3.4 | 补工程配置文件 | ✅ 已新增 `.editorconfig`、`README.md`、`.gitattributes`（`* text=auto eol=lf`，`.png/.ico binary`） |
