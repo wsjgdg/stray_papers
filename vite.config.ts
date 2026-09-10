@@ -24,7 +24,9 @@ export default defineConfig({
         // 用函数形式精确匹配包路径（对象形式无法命中 react-dom/client 等子路径）。
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (/[\\/]node_modules[\\/](recharts|d3-|victory|internmap|decimal\.js|uid)[\\/]/.test(id))
+            if (
+              /[\\/]node_modules[\\/](recharts|d3-|victory|internmap|decimal\.js|uid)[\\/]/.test(id)
+            )
               return 'charts';
             if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return 'vendor';
           }
