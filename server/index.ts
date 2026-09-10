@@ -50,7 +50,8 @@ import {
   clearSession,
   isAdmin,
 } from './auth.js';
-import { proxyRouter, unifiedRouter, buildAuthHeaders, listProviderModels } from './proxy.js';
+import { proxyRouter, unifiedRouter, buildAuthHeaders } from './proxy.js';
+import { listProviderModels } from './forwarding.js';
 import { getCacheStats, clearCache } from './responseCache.js';
 import { renderMetrics } from './prometheus.js';
 import { timingSafeEqualStr } from './crypto.js';
