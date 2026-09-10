@@ -17,6 +17,59 @@ const fs = require('node:fs');
 const { execFileSync } = require('node:child_process');
 const settings = require('./settings.cjs');
 
+// ── 主进程日志落盘 ──
+// 打包态应用 stdout 不可见，一旦主窗口黑屏/渲染崩溃，排查全无抓手。
+// 这里把关键诊断事件（fail-load / render-gone / ERR-WARN / 后端起停）追加写进
+// userData/logs/main-YYYY-MM-DD.log（保留 7 天轮转），托盘「打开日志文件夹」可直达。
+function userDataLogsDir() {
+  try {
+    return path.join(app.getPath('userData'), 'logs');
+  } catch {
+    return null;
+  }
+}
+function ensureLogsDir() {
+  const d = userDataLogsDir();
+  if (!d) return null;
+  try {
+    fs.mkdirSync(d, { recursive: true });
+    return d;
+  } catch {
+    return null;
+  }
+}
+function rotateLogs() {
+  const d = userDataLogsDir();
+  if (!d) return;
+  try {
+    const cutoff = Date.now() - 7 * 24 * 3600 * 1000;
+    for (const f of fs.readdirSync(d)) {
+      if (!f.startsWith('main-') || !f.endsWith('.log')) continue;
+      const fp = path.join(d, f);
+      try {
+        if (fs.statSync(fp).mtimeMs < cutoff) fs.unlinkSync(fp);
+      } catch {
+        /* ignore */
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+}
+function writeLog(tag, msg) {
+  const d = ensureLogsDir();
+  if (!d) return;
+  const day = new Date().toISOString().slice(0, 10);
+  const fp = path.join(d, `main-${day}.log`);
+  const line = `${new Date().toISOString()} [${tag}] ${msg}\n`;
+  try {
+    fs.appendFileSync(fp, line);
+  } catch {
+    /* ignore */
+  }
+}
+const LOG_DIR_FOR_TRAY = userDataLogsDir; // 托盘菜单「打开日志文件夹」复用
+
 const ELECTRON_PORT = Number(process.env.ELECTRON_PORT || 8790);
 
 let mainWin = null;
@@ -58,14 +111,20 @@ function attachDiag(win, name) {
   wc.on('console-message', (_e, level, message, source, line) => {
     if (level !== 1 && level !== 2) return; // 仅 ERR(1) / WARN(2)
     const tag = level === 1 ? 'ERR' : 'WARN';
-    console.log(`[${name} ${tag}] ${message}${source ? ' @ ' + source + ':' + line : ''}`);
+    const full = `[${name} ${tag}] ${message}${source ? ' @ ' + source + ':' + line : ''}`;
+    console.log(full);
+    writeLog(`${name}-${tag}`, `${message}${source ? ' @ ' + source + ':' + line : ''}`);
   });
-  wc.on('did-fail-load', (_e, code, desc, url) =>
-    console.log(`[${name} FAIL-LOAD] ${code} ${desc} ${url}`),
-  );
-  wc.on('render-process-gone', (_e, d) =>
-    console.log(`[${name} RENDER-GONE] ${d.reason} exit=${d.exitCode}`),
-  );
+  wc.on('did-fail-load', (_e, code, desc, url) => {
+    const m = `[${name} FAIL-LOAD] ${code} ${desc} ${url}`;
+    console.log(m);
+    writeLog(`${name}-FAIL-LOAD`, `${code} ${desc} ${url}`);
+  });
+  wc.on('render-process-gone', (_e, d) => {
+    const m = `[${name} RENDER-GONE] ${d.reason} exit=${d.exitCode}`;
+    console.log(m);
+    writeLog(`${name}-RENDER-GONE`, `${d.reason} exit=${d.exitCode}`);
+  });
   wc.on('crashed', () => console.log(`[${name} CRASHED]`));
   wc.on('did-finish-load', () => console.log(`[${name} DID-FINISH-LOAD]`));
 }
@@ -322,6 +381,20 @@ function createTray() {
         applyPosition(appSettings?.position || 'topright');
       },
     },
+    {
+      label: '打开日志文件夹',
+      click: () => {
+        const d = LOG_DIR_FOR_TRAY();
+        if (!d) return;
+        try {
+          require('child_process').exec(
+            process.platform === 'win32' ? `explorer "${d}"` : `open "${d}"`,
+          );
+        } catch {
+          /* ignore */
+        }
+      },
+    },
     { type: 'separator' },
     {
       label: '退出',
@@ -470,10 +543,14 @@ if (!gotLock) {
 
   app.whenReady().then(async () => {
     settings.setApp(app);
+    rotateLogs();
+    writeLog('APP', `ready (packaged=${app.isPackaged}, electron=${process.versions.electron})`);
     appSettings = settings.getAppSettings();
     app.setAppUserModelId('com.llmworkbench.app');
     startBackend();
-    await waitForBackend();
+    writeLog('BACKEND', `starting on port ${ELECTRON_PORT}`);
+    const ok = await waitForBackend();
+    writeLog('BACKEND', ok ? 'health ok' : `health NOT ready within 15s (port ${ELECTRON_PORT})`);
     createWindows();
     createTray();
     applySettings(); // 应用透明度 + 全局快捷键 + 开机自启
@@ -490,6 +567,7 @@ app.on('window-all-closed', () => {
 });
 app.on('before-quit', () => {
   app.isQuiting = true;
+  writeLog('APP', 'before-quit');
   // 优雅关停 in-process 后端：清 2s 采样定时器 + 关 httpServer，释放 8790 端口。
   // 不这么做时进程退出也能释放端口，但 Electron 退出流程里服务进程不会立即死，
   // 可能留下半死的后端占用端口，影响下一次启动。
