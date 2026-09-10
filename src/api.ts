@@ -1,4 +1,4 @@
-import type { ProbeResult, Snapshot } from '../server/types';
+import type { ProbeResult, Snapshot, KeyHealth, ProviderKeyHealth } from '../server/types';
 
 export interface SnapshotMeta {
   cached: boolean;
@@ -288,7 +288,6 @@ export async function clearResponseCache(): Promise<{ cleared: number }> {
   return r.json();
 }
 
-
 // ───────── 统一请求封装（超时 / 中止 / 错误体解析 / 401） ─────────
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const ctrl = new AbortController();
@@ -316,3 +315,36 @@ export interface ProxyOverviewResponse {
 export async function fetchProxyOverview(): Promise<ProxyOverviewResponse> {
   return request<ProxyOverviewResponse>('/api/proxy/overview');
 }
+
+// ───────── Key 健康度（B3：冷却 / 坏 Key 追踪） ─────────
+export interface KeyHealthResponse {
+  now: number;
+  providers: ProviderKeyHealth[];
+}
+
+export async function fetchKeyHealth(): Promise<KeyHealthResponse> {
+  return request<KeyHealthResponse>('/api/proxy/key-health');
+}
+
+/** 手动触发坏 Key 复活探测 */
+export async function probeKeyHealth(): Promise<{ ok: boolean; revivedAt: number }> {
+  return request<{ ok: boolean; revivedAt: number }>('/api/proxy/key-health/probe', {
+    method: 'POST',
+  });
+}
+
+// 剩余毫秒 → 人类可读（如 "4分12秒"）
+export function fmtCooldown(ms: number): string {
+  if (ms <= 0) return '—';
+  const totalSec = Math.ceil(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  if (m > 0) return `${m}分${s.toString().padStart(2, '0')}秒`;
+  return `${s}秒`;
+}
+
+export const KEY_STATUS_LABEL: Record<KeyHealth['status'], string> = {
+  ok: '正常',
+  cooling: '冷却中',
+  dead: '坏 Key',
+};

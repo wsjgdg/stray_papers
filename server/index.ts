@@ -24,6 +24,7 @@ import {
   enableEncryption,
   disableEncryption,
   getConfigState,
+  resolveKeyPool,
 } from './config.js';
 import { getMetrics, getLogs, getSummary, sampleRateHistory } from './metrics.js';
 import {
@@ -42,7 +43,8 @@ import { proxyRouter, unifiedRouter, buildAuthHeaders, listProviderModels } from
 import { getCacheStats, clearCache } from './responseCache.js';
 import { renderMetrics } from './prometheus.js';
 import { timingSafeEqualStr } from './crypto.js';
-import type { Snapshot, ProbeResult } from './types.js';
+import { getKeyHealth, listDeadKeys, recordSuccess, clearExpired } from './keyHealth.js';
+import type { Snapshot, ProbeResult, ProviderKeyHealth } from './types.js';
 
 const BASE_PORT = Number(process.env.API_PORT || 8787);
 const SNAPSHOT_TTL = 10 * 60 * 1000;
@@ -485,6 +487,44 @@ app.post('/api/proxy/connectivity', async (req: Request, res: Response) => {
   res.json({ checkedAt: Date.now(), results });
 });
 
+// ───────── Key 健康度（B3：冷却 / 坏 Key 追踪） ─────────
+// 只读：返回各厂商所有 Key 的冷却 / 坏 Key 状态
+app.get('/api/proxy/key-health', (_req: Request, res: Response) => {
+  const cfg = loadConfig();
+  const providers: ProviderKeyHealth[] = [];
+  for (const [providerId, entry] of Object.entries(cfg.providers)) {
+    const pool = resolveKeyPool(entry);
+    if (pool.length === 0) continue;
+    providers.push({ providerId, keys: getKeyHealth(providerId, pool) });
+  }
+  res.json({ now: Date.now(), providers });
+});
+
+// 手动触发坏 Key 复活探测（需管理员；默认单机所有者免登录）
+app.post('/api/proxy/key-health/probe', requireAdmin, async (_req: Request, res: Response) => {
+  try {
+    await reviveDeadKeys();
+    res.json({ ok: true, revivedAt: Date.now() });
+  } catch (e) {
+    res.status(500).json({ error: String((e as Error)?.message ?? e) });
+  }
+});
+
+// 周期性对坏 Key 做探测，探测通过（state==='ok'）即复活；随后清理过期健康条目
+async function reviveDeadKeys(): Promise<void> {
+  const dead = listDeadKeys();
+  for (const { providerId, key } of dead) {
+    const provider = PROVIDER_MAP.get(providerId);
+    if (!provider) continue;
+    try {
+      const r = await probeProvider(provider, key);
+      if (r.state === 'ok') recordSuccess(providerId, key);
+    } catch {
+      /* 探测失败则保持坏 Key 状态 */
+    }
+  }
+}
+
 // 自动获取某厂商模型清单（须在 proxyRouter 之前注册，否则会被通配路由捕获）
 app.get('/api/proxy/:provider/models', async (req: Request, res: Response) => {
   const providerId = req.params.provider;
@@ -601,6 +641,7 @@ function listenOn(port: number, maxPort: number): void {
 }
 
 let rateTimer: ReturnType<typeof setInterval> | null = null;
+let reviveTimer: ReturnType<typeof setInterval> | null = null;
 
 // 启动入口：封装为可导出函数，便于被 Electron 主进程直接调用复用全部后端逻辑；
 // 仅在「直接运行」时才自启（tsx server/index.ts / node server.cjs / pkg 打包的 server.bundle.cjs）。
@@ -611,6 +652,11 @@ export function startServer(): void {
   // 启动速率历史采样（每 2s 一次），供浮窗趋势图展示真实持久化数据
   sampleRateHistory();
   rateTimer = setInterval(sampleRateHistory, 2000);
+  // B3：坏 Key 复活巡检（启动先探一次，之后每 60s 探一次并清理过期健康条目）
+  void reviveDeadKeys().finally(clearExpired);
+  reviveTimer = setInterval(() => {
+    void reviveDeadKeys().finally(clearExpired);
+  }, 60_000);
   installShutdownHandlers();
   (async () => {
     if (await tryReuse(BASE_PORT)) {
@@ -635,6 +681,10 @@ export function stopServer(): void {
   if (rateTimer) {
     clearInterval(rateTimer);
     rateTimer = null;
+  }
+  if (reviveTimer) {
+    clearInterval(reviveTimer);
+    reviveTimer = null;
   }
   if (httpServer) {
     httpServer.close();

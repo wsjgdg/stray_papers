@@ -87,6 +87,22 @@ export interface SourceStatus {
   error: string | null;
 }
 
+export type KeyStatus = 'ok' | 'cooling' | 'dead';
+
+/** 单把 Key 的健康度（B3：冷却 / 坏 Key 追踪），前端面板与只读接口共用 */
+export interface KeyHealth {
+  keyMasked: string;
+  status: KeyStatus;
+  cooldownRemainingMs: number;
+  consecutiveFails: number;
+  dead: boolean;
+}
+
+export interface ProviderKeyHealth {
+  providerId: string;
+  keys: KeyHealth[];
+}
+
 export interface Snapshot {
   generatedAt: number;
   models: LlmModel[];

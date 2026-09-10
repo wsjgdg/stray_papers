@@ -24,6 +24,7 @@ import {
 export { buildAuthHeaders };
 import { recordCall } from './metrics.js';
 import { getCached, putCached, cacheKey } from './responseCache.js';
+import { recordSuccess, recordFailure, isUsable } from './keyHealth.js';
 import type { ProviderConsole } from './types.js';
 
 const PROVIDER_MAP = new Map<string, ProviderConsole>(PROVIDERS.map((p) => [p.id, p]));
@@ -534,10 +535,21 @@ export async function proxyRequest(
 
   let retries = 0;
   let last: TryResult | null = null;
+  let triedAny = false;
   for (let i = 0; i < pool.length; i++) {
     const idx = (start + i) % pool.length;
-    const r = await tryKey(pool[idx]);
-    if (r.committed) return; // 成功或流式已提交
+    const key = pool[idx];
+    // B3：跳过处于冷却 / 被标记为坏 Key 的条目，避免对失效 Key 反复轮询
+    if (!isUsable(providerId, key)) continue;
+    triedAny = true;
+    const r = await tryKey(key);
+    if (r.committed) {
+      // B3：成功（含流式已开启）复位该 Key 健康度
+      recordSuccess(providerId, key);
+      return;
+    }
+    // B3：失败计入健康度（仅 401/403/429 生效；冷却 / 坏 Key 由此产生）
+    recordFailure(providerId, key, r.status);
     last = r;
     if (!r.retryable) break; // 不可重试的错误（如 400）→ 直接返回，不再切换
     // 指数退避后再切下一个 key：避免多个 key 连打上游；尊重上游 Retry-After
@@ -548,6 +560,14 @@ export async function proxyRequest(
     }
   }
 
+  // B3：所有 Key 都在冷却 / 坏 Key 状态 → 明确提示而非泛泛「无可用 Key」
+  if (!triedAny) {
+    res.status(503).json({
+      error: '所有 Key 当前处于冷却或被标记为不可用，请稍后再试，或在「配置」页查看 Key 健康',
+    });
+    finalize(null, {}, 0, 'all-keys-cooling', false, 0);
+    return;
+  }
   if (!last) {
     res.status(502).json({ error: '无可用 Key' });
     finalize(null, {}, 0, '无可用 Key', false, 0);

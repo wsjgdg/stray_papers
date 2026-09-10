@@ -1,5 +1,15 @@
 import { useEffect, useState } from 'react';
-import { fetchCryptoStatus, initEncryption, disableEncryption, type CryptoStatus } from '../../api';
+import {
+  fetchCryptoStatus,
+  initEncryption,
+  disableEncryption,
+  type CryptoStatus,
+  fetchKeyHealth,
+  probeKeyHealth,
+  fmtCooldown,
+  KEY_STATUS_LABEL,
+  type KeyHealthResponse,
+} from '../../api';
 import { Card, Chip } from '../../ui';
 
 // ───────── 配置加密状态 ─────────
@@ -124,6 +134,76 @@ export function UnifiedEndpointCard() {
             Prometheus 指标：<code>{`${window.location.origin}/metrics`}</code>（对接 Grafana）
           </li>
         </ul>
+      </div>
+    </Card>
+  );
+}
+
+// ───────── Key 健康度（B3：冷却 / 坏 Key 追踪） ─────────
+export function KeyHealthCard() {
+  const [data, setData] = useState<KeyHealthResponse | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const load = () => {
+    fetchKeyHealth()
+      .then(setData)
+      .catch((e) => setErr((e as Error).message));
+  };
+
+  useEffect(() => {
+    load();
+    const t = setInterval(load, 3000); // 每 3s 刷新冷却剩余
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const revive = async () => {
+    setBusy(true);
+    setErr(null);
+    try {
+      await probeKeyHealth();
+      load();
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!data) return null;
+  const hasAny = data.providers.some((p) => p.keys.length > 0);
+  if (!hasAny) return null; // 未配置任何 Key 时不显示本卡片
+
+  return (
+    <Card
+      title="Key 健康度"
+      subtitle="多 Key 轮询时：限流(429)临时冷却、鉴权失效(401/403)视为坏 Key 并退出轮询；坏 Key 由后台探针周期性复活（每 60s）"
+      right={
+        <button className="btn btn-ghost" onClick={revive} disabled={busy}>
+          {busy ? '探测中…' : '立即复活探测'}
+        </button>
+      }
+    >
+      <div className="space-y-3">
+        {data.providers.map((p) => (
+          <div key={p.providerId}>
+            <div className="mb-1 text-[11px] text-muted">{p.providerId}</div>
+            <div className="flex flex-wrap gap-2">
+              {p.keys.map((k) => (
+                <Chip
+                  key={k.keyMasked}
+                  tone={k.status === 'ok' ? 'down' : k.status === 'dead' ? 'up' : 'warn'}
+                  title={`连续失败 ${k.consecutiveFails} 次${k.dead ? ' · 坏 Key（已退出轮询）' : ''}`}
+                >
+                  {k.keyMasked} · {KEY_STATUS_LABEL[k.status]}
+                  {k.status !== 'ok' && ` · ${fmtCooldown(k.cooldownRemainingMs)}`}
+                </Chip>
+              ))}
+            </div>
+          </div>
+        ))}
+        {err && <div className="text-[11px] text-up">{err}</div>}
       </div>
     </Card>
   );
