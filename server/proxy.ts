@@ -12,6 +12,13 @@ import {
 } from './translate.js';
 import { loadConfig, resolveKeyPool, type AuthStyle } from './config.js';
 import { buildAuthHeaders, styleOfKnown } from './upstreamAuth.js';
+import {
+  DEFAULT_RETRY_ON,
+  isRetryable,
+  parseRetryAfter,
+  computeBackoff,
+  sleep,
+} from './retryPolicy.js';
 
 // 兼容旧引用：鉴权头构造已抽到 upstreamAuth.ts，与 probe 共用同一实现
 export { buildAuthHeaders };
@@ -23,14 +30,6 @@ const PROVIDER_MAP = new Map<string, ProviderConsole>(PROVIDERS.map((p) => [p.id
 
 // 每个厂商一个 key 轮询游标（多线程无锁足够：单进程、请求串行推进游标）
 const keyCursor = new Map<string, number>();
-
-// 失败切换判定：仅密钥相关 / 传输层错误才值得换 key 重试
-// 401/403 = 该 key 失效 → 换 key；429 = 限流（不同 key 可能独立配额）→ 换 key；网络错误 → 换 key
-// 5xx / 4xx(非鉴权) = 上游/请求问题，换 key 无意义，不重试
-function isRetryable(status: number | null): boolean {
-  if (status === null) return true;
-  return status === 401 || status === 403 || status === 429;
-}
 
 // 解析目标厂商：已知厂商走默认；未知 id 且配置中存在 → 视为自定义厂商（用其 baseUrl + 自定义鉴权方式）
 function resolveTarget(
@@ -244,6 +243,11 @@ export async function proxyRequest(
   }
   const { provider, authStyle } = target;
   const entry = cfg.providers[providerId];
+  // 重试状态码：per-provider 覆盖，缺省 [401,403,429]
+  const retryOn =
+    entry?.retryOn && Array.isArray(entry.retryOn) && entry.retryOn.length > 0
+      ? entry.retryOn
+      : DEFAULT_RETRY_ON;
 
   if (!entry || !entry.enabled) {
     res.status(400).json({ error: '该厂商未启用，请先在「代理」页配置并启用' });
@@ -352,6 +356,7 @@ export async function proxyRequest(
     status: number | null;
     error: string | null;
     retryable: boolean;
+    retryAfterMs?: number | null;
   };
 
   // 用单个 key 发起一次上游请求。committed=true 表示已向客户端写出响应（成功或流已开启），调用方无需再处理。
@@ -392,7 +397,8 @@ export async function proxyRequest(
             committed: false,
             status,
             error: classifyError(status, text),
-            retryable: isRetryable(status),
+            retryable: isRetryable(status, retryOn),
+            retryAfterMs: parseRetryAfter(upstream.headers.get('retry-after')),
           };
         }
         if (upstream.headers.get('location'))
@@ -463,7 +469,8 @@ export async function proxyRequest(
           committed: false,
           status,
           error: classifyError(status, text),
-          retryable: isRetryable(status),
+          retryable: isRetryable(status, retryOn),
+          retryAfterMs: parseRetryAfter(upstream.headers.get('retry-after')),
         };
       }
 
@@ -530,7 +537,12 @@ export async function proxyRequest(
     if (r.committed) return; // 成功或流式已提交
     last = r;
     if (!r.retryable) break; // 不可重试的错误（如 400）→ 直接返回，不再切换
-    if (i + 1 < pool.length) retries++; // 仅当确有一个后续 key 可切换时才计一次切换
+    // 指数退避后再切下一个 key：避免多个 key 连打上游；尊重上游 Retry-After
+    if (i + 1 < pool.length) {
+      const delay = computeBackoff(retries, r.retryAfterMs ?? null);
+      if (delay > 0) await sleep(delay);
+      retries++; // 仅当确有一个后续 key 可切换时才计一次切换
+    }
   }
 
   if (!last) {
