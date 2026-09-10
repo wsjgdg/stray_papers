@@ -106,6 +106,37 @@ async function waitForBackend(timeoutMs = 15000) {
 }
 
 // 诊断：抓渲染进程错误/加载失败/崩溃，便于排查 Electron 黑屏（只记录 ERR/WARN 与致命事件，避免刷屏）。
+
+// 加载失败兜底页：替代「黑屏 + 深色背景」。用 data:URL 内联，含失败原因 + 重试按钮
+// （点击/15s 后自动重试真实后端 URL）。后端未就绪或前端资源缺失时不再是一片黑。
+function errorPageHtml(reason, url) {
+  const esc = (s) =>
+    String(s)
+      .replace(/\\/g, '\\\\')
+      .replace(/'/g, "\\'")
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  const safeReason = esc(reason || '未知错误');
+  const safeUrl = esc(url || '');
+  const html = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><style>
+    html,body{margin:0;height:100%}
+    body{font-family:system-ui,'Microsoft YaHei',sans-serif;background:#0f1626;color:#e6edf3;display:flex;align-items:center;justify-content:center}
+    .c{text-align:center;max-width:520px;padding:24px}
+    h1{font-size:20px;margin:0 0 12px;font-weight:600}
+    p{color:#9aa7bd;line-height:1.7;font-size:14px;margin:8px 0}
+    button{margin-top:16px;background:#1b2a44;color:#e6edf3;border:1px solid #2a3c5c;border-radius:8px;padding:10px 22px;font-size:14px;cursor:pointer}
+    button:hover{background:#24385c}
+    code{background:#0b1320;padding:2px 6px;border-radius:4px;font-size:12px;color:#5b9bff}
+  </style></head><body><div class="c">
+    <h1>⚠️ 页面加载失败</h1>
+    <p>${safeReason}</p>
+    <p>应用后端未就绪或前端资源缺失。可稍后重试，或退出后从右下角托盘重新打开。</p>
+    <p>排查：查看 <code>userData/logs/main-*.log</code>（托盘 → 打开日志文件夹）。</p>
+    <button onclick="location.href='${safeUrl}'">重试</button>
+  </div><script>setTimeout(function(){location.href='${safeUrl}'},15000)</script></body></html>`;
+  return 'data:text/html,' + encodeURIComponent(html);
+}
+
 function attachDiag(win, name) {
   const wc = win.webContents;
   wc.on('console-message', (_e, level, message, source, line) => {
@@ -119,6 +150,13 @@ function attachDiag(win, name) {
     const m = `[${name} FAIL-LOAD] ${code} ${desc} ${url}`;
     console.log(m);
     writeLog(`${name}-FAIL-LOAD`, `${code} ${desc} ${url}`);
+    // 用内联兜底页替代黑屏；失败原因 + 重试按钮（手动/15s 自动）。
+    try {
+      win.loadURL(errorPageHtml(`${desc || '页面加载失败'}（错误码 ${code}）`, url));
+      if (!win.isVisible()) win.show();
+    } catch {
+      /* ignore */
+    }
   });
   wc.on('render-process-gone', (_e, d) => {
     const m = `[${name} RENDER-GONE] ${d.reason} exit=${d.exitCode}`;
