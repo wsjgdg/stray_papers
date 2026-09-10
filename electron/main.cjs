@@ -71,6 +71,8 @@ function writeLog(tag, msg) {
 const LOG_DIR_FOR_TRAY = userDataLogsDir; // 托盘菜单「打开日志文件夹」复用
 
 const ELECTRON_PORT = Number(process.env.ELECTRON_PORT || 8790);
+// 后端（server.cjs）在进程内加载；模块级持有以便 before-quit / 建窗访问 stopServer / 实际端口
+let serverApi = null;
 
 let mainWin = null;
 let floatWin = null;
@@ -87,8 +89,8 @@ function startBackend() {
   process.env.NO_REUSE = '1'; // 不让后端走「复用已有实例并退出」分支
   process.env.WEB_DIR = path.join(root, 'dist'); // 由我们托管前端，而非内嵌 base64
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { startServer, stopServer } = require('./server.cjs');
-  startServer();
+  serverApi = require('./server.cjs'); // 进程内后端；暴露 startServer / stopServer / getServerPort
+  serverApi.startServer();
 }
 
 async function waitForBackend(timeoutMs = 15000) {
@@ -321,6 +323,12 @@ function registerHotkeys() {
 }
 
 function createWindows() {
+  // 后端端口可能被顺延（+1 等），必须用实际监听端口建窗，否则会打到别的实例上。
+  const port =
+    serverApi && typeof serverApi.getServerPort === 'function' && serverApi.getServerPort()
+      ? serverApi.getServerPort()
+      : ELECTRON_PORT;
+  const backendUrl = `http://127.0.0.1:${port}`;
   mainWin = new BrowserWindow({
     width: 1280,
     height: 820,
@@ -334,7 +342,7 @@ function createWindows() {
       nodeIntegration: false,
     },
   });
-  mainWin.loadURL(`http://127.0.0.1:${ELECTRON_PORT}/`);
+  mainWin.loadURL(`${backendUrl}/`);
   attachDiag(mainWin, 'MAIN');
   mainWin.once('ready-to-show', () => mainWin && mainWin.show());
   // 关闭主窗口 → 最小化到托盘，保持浮窗存活（除非真正退出）
@@ -361,7 +369,7 @@ function createWindows() {
       nodeIntegration: false,
     },
   });
-  floatWin.loadURL(`http://127.0.0.1:${ELECTRON_PORT}/float`);
+  floatWin.loadURL(`${backendUrl}/float`);
   // 恢复上次保存的位置/尺寸；无存档则落到设置里的位置预设（默认右上角）
   const saved = settings.getBounds();
   if (saved) floatWin.setBounds(saved);
@@ -403,7 +411,13 @@ function createTray() {
     {
       label: '显示今日成本',
       click: () => {
-        fetch(`http://127.0.0.1:${ELECTRON_PORT}/api/proxy/metrics/summary`)
+        fetch(
+          `http://127.0.0.1:${
+            serverApi && typeof serverApi.getServerPort === 'function' && serverApi.getServerPort()
+              ? serverApi.getServerPort()
+              : ELECTRON_PORT
+          }/api/proxy/metrics/summary`,
+        )
           .then((r) => (r.ok ? r.json() : null))
           .then((s) => {
             const cost = s?.todayCostUsd != null ? `$${Number(s.todayCostUsd).toFixed(4)}` : '未知';
@@ -610,7 +624,7 @@ app.on('before-quit', () => {
   // 不这么做时进程退出也能释放端口，但 Electron 退出流程里服务进程不会立即死，
   // 可能留下半死的后端占用端口，影响下一次启动。
   try {
-    if (typeof stopServer === 'function') stopServer();
+    if (serverApi && typeof serverApi.stopServer === 'function') serverApi.stopServer();
   } catch {
     /* ignore */
   }
