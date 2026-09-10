@@ -7,7 +7,7 @@ import { useProxyOverview } from '../../hooks/useProxyOverview';
 
 // ───────── 实时指标 ─────────
 export function MetricsPanel() {
-  const { metrics, cache, loading, refetch } = useProxyOverview(3000);
+  const { metrics, cache, loading, refetch } = useProxyOverview();
   const [currency, setCurrency] = useState<Currency>('USD');
 
   const totalCost = metrics.reduce((s, m) => s + (m.totalCostUsd ?? 0), 0);

@@ -85,10 +85,12 @@ function requireProxyToken(req: Request, res: Response, next: NextFunction): voi
   const auth = req.headers.authorization ?? '';
   const provided =
     (auth.startsWith('Bearer ') ? auth.slice(7).trim() : '') ||
-    ((req.headers['x-proxy-token'] as string) ?? '');
+    ((req.headers['x-proxy-token'] as string) ?? '') ||
+    // EventSource 无法设置自定义请求头，SSE 端点经 ?token= 透传（B8）
+    ((req.query.token as string) ?? '');
   if (!timingSafeEqualStr(provided, token)) {
     res.status(401).json({
-      error: '缺少或错误的代理令牌（Authorization: Bearer <token> 或 x-proxy-token 头）',
+      error: '缺少或错误的代理令牌（Authorization: Bearer <token> / x-proxy-token 头 / ?token=）',
     });
     return;
   }
@@ -438,6 +440,50 @@ app.get('/api/proxy/metrics/summary', (_req: Request, res: Response) => {
 // 聚合端点：metrics + cache + summary 一次返回，前端单一定时器轮询
 app.get('/api/proxy/overview', (_req: Request, res: Response) => {
   res.json({ metrics: getMetrics(), cache: getCacheStats(), summary: getSummary() });
+});
+
+// B8：SSE 推送替代前端 3s 轮询。连接即推首帧快照，之后每 2s（复用 sampleRateHistory 节拍）推全量聚合；
+// 断线/心跳保活，连接关闭即清理定时器。鉴权同 /api/proxy（支持 ?token= 供 EventSource）。
+app.get('/api/proxy/stream', (req: Request, res: Response) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+  const send = () => {
+    try {
+      res.write(
+        `data: ${JSON.stringify({
+          metrics: getMetrics(),
+          cache: getCacheStats(),
+          summary: getSummary(),
+        })}\n\n`,
+      );
+    } catch {
+      /* 连接已断开时忽略 */
+    }
+  };
+  send(); // 首帧立即填充 UI
+  const tick = setInterval(send, 2000);
+  const heartbeat = setInterval(() => {
+    try {
+      res.write(': ping\n\n');
+    } catch {
+      /* ignore */
+    }
+  }, 15000);
+  const cleanup = () => {
+    clearInterval(tick);
+    clearInterval(heartbeat);
+    try {
+      res.end();
+    } catch {
+      /* ignore */
+    }
+  };
+  req.on('close', cleanup);
+  res.on('close', cleanup);
 });
 
 // Prometheus 指标导出（Grafana / scrape 用）
