@@ -14,7 +14,7 @@ import {
 } from '../../api';
 import { Card, Chip, Empty, Spinner } from '../../ui';
 import { mergeModels, computeEnabledModels } from '../../lib/modelMerge';
-import { EncryptionCard, UnifiedEndpointCard } from './SecurityCards';
+import { EncryptionCard, UnifiedEndpointCard, KeyHealthCard } from './SecurityCards';
 
 // ───────── 配置 / 导入 ─────────
 export function ConfigPanel({
@@ -579,6 +579,7 @@ export function ConfigPanel({
 
       <EncryptionCard />
       <UnifiedEndpointCard />
+      <KeyHealthCard />
 
       {connect && (
         <Card title="连通性检测结果">

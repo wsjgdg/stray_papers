@@ -67,10 +67,12 @@ export function Stat({
 export function Chip({
   children,
   tone = 'default',
+  title,
   className,
 }: {
   children: ReactNode;
   tone?: 'default' | 'accent' | 'up' | 'down' | 'warn' | 'ok';
+  title?: string;
   className?: string;
 }) {
   const tones: Record<string, string> = {
@@ -83,6 +85,7 @@ export function Chip({
   };
   return (
     <span
+      title={title}
       className={clsx(
         'inline-flex items-center gap-1 whitespace-nowrap rounded-md border px-1.5 py-0.5 text-[11px]',
         tones[tone],
