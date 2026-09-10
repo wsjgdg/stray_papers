@@ -43,6 +43,7 @@ export interface ProviderMetrics {
   totalCostUsd: number; // 累计估算成本（USD）
   totalKeySwitches: number; // 累计 key 切换次数
   avgLatencyMs: number; // 近 50 次滚动平均
+  cacheHitRate: number; // 平均缓存命中率（0..1，按有值样本平均）
   inputRateTokS: number; // 近 10s 输入速率
   outputRateTokS: number; // 近 10s 输出速率
   reqRate: number; // 近 10s 请求速率 (req/s)
@@ -87,6 +88,8 @@ const agg: Map<
     cacheRead: number;
     cost: number;
     keySwitches: number;
+    cacheHitRateSum: number;
+    cacheHitRateCount: number;
     latencies: number[];
     recent: { ts: number; input: number; output: number }[];
     lastStatus: number | null;
@@ -171,6 +174,8 @@ function ensure(provider: string) {
       cacheRead: 0,
       cost: 0,
       keySwitches: 0,
+      cacheHitRateSum: 0,
+      cacheHitRateCount: 0,
       latencies: [],
       recent: [],
       lastStatus: null,
@@ -204,6 +209,10 @@ export function recordCall(log: Omit<CallLog, 'id' | 'costUsd'>): CallLog {
   if (log.outputTokens) a.output += log.outputTokens;
   if (log.cacheReadTokens) a.cacheRead += log.cacheReadTokens;
   if (log.keySwitches) a.keySwitches += log.keySwitches;
+  if (log.cacheHitRate != null) {
+    a.cacheHitRateSum += log.cacheHitRate;
+    a.cacheHitRateCount += 1;
+  }
   a.cost += cost.total;
 
   // 当日分桶：按本地日期累计 token / 成本
@@ -254,6 +263,24 @@ function windowed(provider: string) {
   };
 }
 
+/** 延迟直方图分桶边界（ms）：用于 Prometheus histogram 与 Grafana 延迟分布 */
+export const LATENCY_BUCKETS = [50, 100, 200, 500, 1000, 2000, 5000, 10000];
+
+/** 每厂商延迟直方图：基于保留的近 50 次原始延迟样本统计分桶计数/总和/样本数 */
+export function getLatencyHistogram(): {
+  provider: string;
+  buckets: number[];
+  counts: number[];
+  sum: number;
+  count: number;
+}[] {
+  return [...agg.entries()].map(([provider, a]) => {
+    const counts = LATENCY_BUCKETS.map((b) => a.latencies.filter((l) => l <= b).length);
+    const sum = a.latencies.reduce((s, x) => s + x, 0);
+    return { provider, buckets: LATENCY_BUCKETS, counts, sum, count: a.latencies.length };
+  });
+}
+
 export function getMetrics(): ProviderMetrics[] {
   const out: ProviderMetrics[] = [];
   for (const [provider, a] of agg.entries()) {
@@ -272,6 +299,9 @@ export function getMetrics(): ProviderMetrics[] {
       totalCostUsd: Math.round(a.cost * 1e6) / 1e6,
       totalKeySwitches: a.keySwitches,
       avgLatencyMs: avgLatency,
+      cacheHitRate: a.cacheHitRateCount
+        ? Math.round((a.cacheHitRateSum / a.cacheHitRateCount) * 1000) / 1000
+        : 0,
       inputRateTokS: w.inputRate,
       outputRateTokS: w.outputRate,
       reqRate: w.reqRate,
