@@ -34,7 +34,7 @@ function startBackend() {
   process.env.NO_REUSE = '1'; // 不让后端走「复用已有实例并退出」分支
   process.env.WEB_DIR = path.join(root, 'dist'); // 由我们托管前端，而非内嵌 base64
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { startServer } = require('./server.cjs');
+  const { startServer, stopServer } = require('./server.cjs');
   startServer();
 }
 
@@ -490,6 +490,14 @@ app.on('window-all-closed', () => {
 });
 app.on('before-quit', () => {
   app.isQuiting = true;
+  // 优雅关停 in-process 后端：清 2s 采样定时器 + 关 httpServer，释放 8790 端口。
+  // 不这么做时进程退出也能释放端口，但 Electron 退出流程里服务进程不会立即死，
+  // 可能留下半死的后端占用端口，影响下一次启动。
+  try {
+    if (typeof stopServer === 'function') stopServer();
+  } catch {
+    /* ignore */
+  }
   try {
     globalShortcut.unregisterAll();
   } catch {
