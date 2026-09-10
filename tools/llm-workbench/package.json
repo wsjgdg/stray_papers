@@ -1,7 +1,7 @@
 {
   "name": "llm-workbench",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -32,8 +32,8 @@
     "verify": "vitest run",
     "verify:legacy": "node scripts/verify-all.mjs",
     "electron:dev": "npm run build && npm run build:server:electron && npm run make:icon && electron .",
-    "electron:build": "npm run build && npm run build:server:electron && npm run make:icon && npm run build:electron-config && electron-builder",
-    "electron:build:portable": "npm run build && npm run build:server:electron && npm run make:icon && npm run build:electron-config && electron-builder --win dir"
+    "electron:build": "npm run build && npm run gen:web-assets && npm run build:server:electron && npm run make:icon && npm run build:electron-config && electron-builder",
+    "electron:build:portable": "npm run build && npm run gen:web-assets && npm run build:server:electron && npm run make:icon && npm run build:electron-config && electron-builder --win dir"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -72,6 +72,7 @@
   "build": {
     "appId": "com.llmworkbench.app",
     "productName": "LLM Workbench",
+    "asar": false,
     "files": [
       "dist/**/*",
       "electron/**/*",

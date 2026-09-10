@@ -503,10 +503,20 @@ app.use('/api/proxy', proxyRouter);
 app.use('/api/v1', unifiedRouter);
 
 // 生产模式：托管前端构建产物
-// 优先级：WEB_DIR 环境变量 > 内嵌资源（打包 exe，写入临时目录） > 开发态 dist/
+// 优先级：WEB_DIR 环境变量（须真实存在 index.html）> 内嵌资源（pkg / 打包 Electron，写入临时目录）> 开发态 dist/
 function resolveWebDir(): string {
-  if (process.env.WEB_DIR) return path.resolve(process.env.WEB_DIR);
-  const embedded = Boolean((process as { pkg?: unknown }).pkg) || process.env.USE_EMBED === '1';
+  const envDir = process.env.WEB_DIR ? path.resolve(process.env.WEB_DIR) : '';
+  if (envDir) {
+    // WEB_DIR 指向的目录必须真实含有 index.html；否则视为无效（如打包态指向不存在的
+    // resources/app/dist），回退到内嵌/开发态资源，避免主窗口加载 404 黑屏。
+    if (fs.existsSync(path.join(envDir, 'index.html'))) return envDir;
+    console.warn(`[web] WEB_DIR 无 index.html，回退内嵌/开发态资源: ${envDir}`);
+  }
+  const versions = process.versions as Record<string, string | undefined>;
+  const embedded =
+    Boolean((process as { pkg?: unknown }).pkg) ||
+    process.env.USE_EMBED === '1' ||
+    Boolean(versions.electron); // Electron 主进程内运行的 server.cjs
   if (embedded && Object.keys(WEB_ASSETS).length > 0) {
     const dir = path.join(os.tmpdir(), 'llm-workbench-web');
     fs.mkdirSync(dir, { recursive: true });
