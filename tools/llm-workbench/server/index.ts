@@ -578,8 +578,10 @@ function openBrowser(port: number): void {
 
 // 自动选端口：从 BASE_PORT 起，被占用则顺延（最多 +10），彻底避免 EADDRINUSE 闪退
 let httpServer: ReturnType<typeof app.listen> | null = null;
+let actualPort: number | null = null;
 function listenOn(port: number, maxPort: number): void {
   const s = app.listen(port, '127.0.0.1', () => {
+    actualPort = port;
     const url = `http://127.0.0.1:${port}`;
     logStartup(`[api] LLM Workbench API on ${url}`);
     openBrowser(port);
@@ -621,6 +623,11 @@ export function startServer(): void {
     }
     listenOn(BASE_PORT, BASE_PORT + 10);
   })();
+}
+
+/** 返回实际监听端口（被占用顺延后得到）；Electron 主进程据此建窗，避免打到别的实例 */
+export function getServerPort(): number | null {
+  return actualPort;
 }
 
 /** 优雅退出：停掉采样定时器并关闭监听；Electron 可在 will-quit 中调用 */
