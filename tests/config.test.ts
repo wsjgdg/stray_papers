@@ -37,6 +37,23 @@ describe('config: pure helpers', () => {
   });
 });
 
+describe('config: resolveTimeoutMs', () => {
+  it('default non-streaming is 180s', () => {
+    assert.equal(cfg.resolveTimeoutMs(undefined, false), 180_000);
+  });
+  it('default streaming is 600s (long generation headroom)', () => {
+    assert.equal(cfg.resolveTimeoutMs(undefined, true), 600_000);
+  });
+  it('per-provider timeoutMs overrides both stream and non-stream', () => {
+    assert.equal(cfg.resolveTimeoutMs({ timeoutMs: 30_000 } as any, false), 30_000);
+    assert.equal(cfg.resolveTimeoutMs({ timeoutMs: 30_000 } as any, true), 30_000);
+  });
+  it('non-positive timeoutMs falls back to default', () => {
+    assert.equal(cfg.resolveTimeoutMs({ timeoutMs: 0 } as any, false), 180_000);
+    assert.equal(cfg.resolveTimeoutMs({ timeoutMs: -5 } as any, true), 600_000);
+  });
+});
+
 describe('config: store round-trip (plaintext)', () => {
   beforeEach(() => {
     fs.rmSync(cfg.configPath(), { force: true });

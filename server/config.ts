@@ -33,6 +33,19 @@ export interface ProviderConfig {
   models?: string[]; // 自动获取的模型清单（上游返回的模型 id）
   enabledModels?: string[]; // 用户在清单中手动启用的子集；为空数组表示全部禁用
   retryOn?: number[]; // 触发换 key 重试的 HTTP 状态码集合；缺省 [401,403,429]
+  timeoutMs?: number; // 上游请求超时（毫秒）；缺省非流式 180s、流式 600s
+}
+
+// 上游请求超时（毫秒）：per-provider 可覆盖；流式长生成默认放宽到 600s，非流式 180s。
+const DEFAULT_TIMEOUT_MS = 180_000;
+const STREAM_TIMEOUT_MS = 600_000;
+
+export function resolveTimeoutMs(
+  entry: { timeoutMs?: number } | undefined,
+  isStreaming: boolean,
+): number {
+  if (entry?.timeoutMs && entry.timeoutMs > 0) return entry.timeoutMs;
+  return isStreaming ? STREAM_TIMEOUT_MS : DEFAULT_TIMEOUT_MS;
 }
 
 /**
@@ -284,6 +297,7 @@ export function upsertProvider(id: string, patch: Partial<ProviderConfig>): Prox
     models: patch.models !== undefined ? patch.models : prev.models,
     enabledModels: patch.enabledModels !== undefined ? patch.enabledModels : prev.enabledModels,
     retryOn: patch.retryOn !== undefined ? patch.retryOn : prev.retryOn,
+    timeoutMs: patch.timeoutMs !== undefined ? patch.timeoutMs : prev.timeoutMs,
   };
   saveConfig(cfg);
   return cfg;
@@ -320,6 +334,7 @@ export function importConfig(partial: {
       models: p.models !== undefined ? p.models : prev.models,
       enabledModels: p.enabledModels !== undefined ? p.enabledModels : prev.enabledModels,
       retryOn: p.retryOn !== undefined ? p.retryOn : prev.retryOn,
+      timeoutMs: p.timeoutMs !== undefined ? p.timeoutMs : prev.timeoutMs,
     };
   }
   saveConfig(cfg);
