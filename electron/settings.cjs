@@ -33,9 +33,14 @@ function readJson(file, fallback) {
     return fallback;
   }
 }
+// 原子写：先落同目录临时文件再 rename 替换，避免写入中途（崩溃/并发/磁盘满）
+// 导致 JSON 半截损坏。rename 在同一文件系统内是原子操作。
 function writeJson(file, obj) {
   try {
-    fs.writeFileSync(file, JSON.stringify(obj, null, 2));
+    const dir = path.dirname(file);
+    const tmp = path.join(dir, `.${path.basename(file)}.${process.pid}.tmp`);
+    fs.writeFileSync(tmp, JSON.stringify(obj, null, 2), 'utf8');
+    fs.renameSync(tmp, file);
   } catch {
     /* 写入失败静默忽略 */
   }
