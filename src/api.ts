@@ -161,7 +161,7 @@ export interface ProxyConfigPatch {
 }
 
 export async function fetchProxyConfig(): Promise<ProxyConfigResponse> {
-  const r = await fetch('/api/proxy/config');
+  const r = await fetch('/api/proxy/config', authInit());
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return r.json();
 }
@@ -169,36 +169,45 @@ export async function saveProxyConfig(
   providerId: string,
   patch: ProxyConfigPatch,
 ): Promise<ProxyConfigResponse> {
-  const r = await fetch('/api/proxy/config', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ providerId, ...patch }),
-  });
+  const r = await fetch(
+    '/api/proxy/config',
+    authInit({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ providerId, ...patch }),
+    }),
+  );
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return r.json();
 }
 export async function deleteProxyConfig(providerId: string): Promise<ProxyConfigResponse> {
-  const r = await fetch('/api/proxy/config/delete', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ providerId }),
-  });
+  const r = await fetch(
+    '/api/proxy/config/delete',
+    authInit({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ providerId }),
+    }),
+  );
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return r.json();
 }
 export async function importProxyConfig(payload: {
   providers: Record<string, ProxyConfigPatch>;
 }): Promise<ProxyConfigResponse> {
-  const r = await fetch('/api/proxy/import', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
+  const r = await fetch(
+    '/api/proxy/import',
+    authInit({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }),
+  );
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return r.json();
 }
 export async function fetchProxyMetrics(): Promise<ProxyMetrics[]> {
-  const r = await fetch('/api/proxy/metrics');
+  const r = await fetch('/api/proxy/metrics', authInit());
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return (await r.json()).metrics;
 }
@@ -211,26 +220,29 @@ export async function fetchProxyLogs(filter?: {
   if (filter?.provider) params.set('provider', filter.provider);
   if (filter?.status) params.set('status', filter.status);
   if (filter?.limit) params.set('limit', String(filter.limit));
-  const r = await fetch(`/api/proxy/logs?${params.toString()}`);
+  const r = await fetch(`/api/proxy/logs?${params.toString()}`, authInit());
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return (await r.json()).logs;
 }
 export async function fetchProxySummary(): Promise<ProxySummary> {
-  const r = await fetch('/api/proxy/metrics/summary');
+  const r = await fetch('/api/proxy/metrics/summary', authInit());
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return r.json();
 }
 export async function runProxyConnectivity(providers?: string[]): Promise<ProbeResult[]> {
-  const r = await fetch('/api/proxy/connectivity', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ providers }),
-  });
+  const r = await fetch(
+    '/api/proxy/connectivity',
+    authInit({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ providers }),
+    }),
+  );
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return (await r.json()).results;
 }
 export async function fetchProviderModels(providerId: string): Promise<string[]> {
-  const r = await fetch(`/api/proxy/${encodeURIComponent(providerId)}/models`);
+  const r = await fetch(`/api/proxy/${encodeURIComponent(providerId)}/models`, authInit());
   if (!r.ok) {
     const j = (await r.json().catch(() => ({}))) as { error?: string };
     throw new Error(j.error ?? `HTTP ${r.status}`);
@@ -278,22 +290,53 @@ export async function disableEncryption(): Promise<CryptoStatus> {
 
 // ───────── 响应缓存 ─────────
 export async function fetchCacheStats(): Promise<CacheStats> {
-  const r = await fetch('/api/proxy/cache');
+  const r = await fetch('/api/proxy/cache', authInit());
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return r.json();
 }
 export async function clearResponseCache(): Promise<{ cleared: number }> {
-  const r = await fetch('/api/proxy/cache/clear', { method: 'POST' });
+  const r = await fetch('/api/proxy/cache/clear', authInit({ method: 'POST' }));
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return r.json();
 }
 
-// ───────── 统一请求封装（超时 / 中止 / 错误体解析 / 401） ─────────
+// ───────── 代理访问令牌（B4）：前端持有，所有 /api/proxy 与 /api/v1 请求自动携带 ─────────
+const PROXY_TOKEN_STORAGE_KEY = 'llm-workbench:proxy-token';
+let proxyToken = '';
+try {
+  proxyToken = localStorage.getItem(PROXY_TOKEN_STORAGE_KEY) ?? '';
+} catch {
+  /* localStorage 不可用时忽略 */
+}
+
+/** 保存代理令牌到内存 + localStorage（启用/重置时由后端回显明文） */
+export function setProxyToken(t: string): void {
+  proxyToken = t;
+  try {
+    if (t) localStorage.setItem(PROXY_TOKEN_STORAGE_KEY, t);
+    else localStorage.removeItem(PROXY_TOKEN_STORAGE_KEY);
+  } catch {
+    /* 忽略持久化失败 */
+  }
+}
+
+export function getProxyToken(): string {
+  return proxyToken;
+}
+
+// 为请求注入代理令牌头（仅在已持有令牌时）；不影响非令牌端点
+function authInit(init?: RequestInit): RequestInit {
+  const headers = new Headers(init?.headers);
+  if (proxyToken) headers.set('Authorization', `Bearer ${proxyToken}`);
+  return { ...init, headers };
+}
+
+// ───────── 统一请求封装（超时 / 中止 / 错误体解析 / 401 / 自动携带令牌） ─────────
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const ctrl = new AbortController();
   const timeout = setTimeout(() => ctrl.abort(), 10_000);
   try {
-    const r = await fetch(path, { ...init, signal: ctrl.signal });
+    const r = await fetch(path, { ...authInit(init), signal: ctrl.signal });
     if (r.status === 401) throw new Error('未授权（401）：请检查本地代理鉴权配置');
     if (!r.ok) {
       const j = (await r.json().catch(() => ({}))) as { error?: string };
@@ -348,3 +391,30 @@ export const KEY_STATUS_LABEL: Record<KeyHealth['status'], string> = {
   cooling: '冷却中',
   dead: '坏 Key',
 };
+
+// ───────── 代理访问令牌（B4） ─────────
+export interface ProxyTokenStatus {
+  enabled: boolean;
+  required: boolean;
+  tokenMasked: string;
+  envOverridden: boolean;
+}
+
+/** 公开状态（不要求令牌本身），用于前端判断是否显示提示并自动注入 */
+export async function fetchProxyTokenStatus(): Promise<ProxyTokenStatus> {
+  return request<ProxyTokenStatus>('/api/proxy/token');
+}
+
+/** 启用 / 禁用 / 重置令牌；启用或重置时后端回显明文，本地存储后由 authInit 自动携带 */
+export async function setProxyTokenAction(
+  action: 'enable' | 'disable' | 'reset',
+): Promise<ProxyTokenStatus & { token: string }> {
+  const r = await request<ProxyTokenStatus & { token: string }>('/api/proxy/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action }),
+  });
+  if (r.token) setProxyToken(r.token);
+  else if (action === 'disable') setProxyToken('');
+  return r;
+}

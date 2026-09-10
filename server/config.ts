@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'os';
+import { randomBytes } from 'node:crypto';
 import { PROVIDERS } from './providers.js';
 import {
   deriveKey,
@@ -73,6 +74,10 @@ const PROVIDER_BY_ID = new Map(PROVIDERS.map((p) => [p.id, p]));
 
 export interface ProxyConfig {
   providers: Record<string, ProviderConfig>;
+  // 代理访问令牌（B4）：启用后 /api/v1 与 /api/proxy 必须携带，防止本机其它进程白嫖已存 key。
+  // 明文落地本机；localhost 单用户场景由前端存 localStorage 透明携带，外部客户端复制使用。
+  proxyToken?: string | null;
+  proxyTokenEnabled?: boolean;
 }
 
 const CONFIG_DIR = path.join(os.homedir(), '.llm-workbench');
@@ -127,7 +132,12 @@ export function initConfigStore(): void {
     return;
   }
   // 明文（兼容旧版 & 未启用加密）
-  activeConfig = { providers: (parsed as Partial<ProxyConfig>).providers ?? {} };
+  const parsedObj = parsed as Partial<ProxyConfig>;
+  activeConfig = {
+    providers: parsedObj.providers ?? {},
+    proxyToken: parsedObj.proxyToken ?? null,
+    proxyTokenEnabled: parsedObj.proxyTokenEnabled ?? false,
+  };
   encrypted = false;
   locked = false;
 }
@@ -182,7 +192,11 @@ export function unlock(password: string): boolean {
     const key = deriveKey(password, salt, resolveScryptParams(parsed.kdfParams));
     const cfg = decryptWithKey(parsed, key) as ProxyConfig;
     if (!cfg || typeof cfg !== 'object' || !('providers' in cfg)) throw new Error('格式错误');
-    activeConfig = { providers: cfg.providers ?? {} };
+    activeConfig = {
+      providers: cfg.providers ?? {},
+      proxyToken: cfg.proxyToken ?? null,
+      proxyTokenEnabled: cfg.proxyTokenEnabled ?? false,
+    };
     cryptoSalt = salt;
     setMasterKey(key);
     locked = false;
@@ -233,6 +247,36 @@ export function maskKey(key: string): string {
   if (!key) return '';
   if (key.length <= 4) return '****';
   return '****' + key.slice(-4);
+}
+
+// ───────── 代理访问令牌（B4）：默认关闭，设置页开关启用 ─────────
+/** 生成 url-safe 代理令牌（32 字节随机，base64url 无填充） */
+export function generateProxyToken(): string {
+  return randomBytes(24).toString('base64url');
+}
+
+/** 读取内存态令牌状态（启用开关 + 明文令牌） */
+export function getProxyTokenState(): { enabled: boolean; token: string | null } {
+  return {
+    enabled: Boolean(activeConfig.proxyTokenEnabled),
+    token: activeConfig.proxyToken ?? null,
+  };
+}
+
+/** 写入令牌明文并原子落盘；锁定态禁止写入（避免覆盖密文） */
+export function setProxyToken(token: string | null): ProxyConfig {
+  if (locked) return activeConfig;
+  activeConfig.proxyToken = token ?? null;
+  saveConfig(activeConfig);
+  return activeConfig;
+}
+
+/** 切换令牌启用开关并原子落盘；锁定态禁止写入 */
+export function setProxyTokenEnabled(enabled: boolean): ProxyConfig {
+  if (locked) return activeConfig;
+  activeConfig.proxyTokenEnabled = enabled;
+  saveConfig(activeConfig);
+  return activeConfig;
 }
 
 /** 用于 API 响应的脱敏配置 */

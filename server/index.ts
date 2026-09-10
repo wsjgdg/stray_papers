@@ -25,6 +25,10 @@ import {
   disableEncryption,
   getConfigState,
   resolveKeyPool,
+  getProxyTokenState,
+  setProxyToken,
+  setProxyTokenEnabled,
+  generateProxyToken,
 } from './config.js';
 import { getMetrics, getLogs, getSummary, sampleRateHistory } from './metrics.js';
 import {
@@ -49,21 +53,36 @@ import type { Snapshot, ProbeResult, ProviderKeyHealth } from './types.js';
 const BASE_PORT = Number(process.env.API_PORT || 8787);
 const SNAPSHOT_TTL = 10 * 60 * 1000;
 
-// 可选代理令牌：默认不启用（保持单机零配置体验）。
-// 设置 PROXY_TOKEN 后，/api/v1 与 /api/proxy/* 必须携带该令牌，防止本机其它进程白嫖已配置的 key。
-const PROXY_TOKEN = (process.env.PROXY_TOKEN ?? '').trim();
+// 代理访问令牌（B4）：默认关闭，保持单机零配置体验；设置页开关启用。
+// 环境变量优先级最高：PROXY_TOKEN=off 强制关闭（逃生开关），PROXY_TOKEN=<值> 强制启用该值。
+const ENV_PROXY_TOKEN = (process.env.PROXY_TOKEN ?? '').trim();
+
+// 解析生效的令牌要求（每次请求实时解析，支持运行时开关/重置）：
+// 1) 显式 PROXY_TOKEN=off → 关闭（覆盖一切配置）
+// 2) 环境变量 PROXY_TOKEN=非空 → 使用该值作为令牌（强制开启）
+// 3) 否则回退配置：proxyTokenEnabled && proxyToken 时要求令牌
+function resolveProxyTokenRequirement(): { required: boolean; token: string } {
+  if (ENV_PROXY_TOKEN === 'off') return { required: false, token: '' };
+  if (ENV_PROXY_TOKEN) return { required: true, token: ENV_PROXY_TOKEN };
+  const st = getProxyTokenState();
+  if (st.enabled && st.token) return { required: true, token: st.token };
+  return { required: false, token: '' };
+}
 
 function requireProxyToken(req: Request, res: Response, next: NextFunction): void {
-  if (!PROXY_TOKEN) {
+  const { required, token } = resolveProxyTokenRequirement();
+  if (!required) {
     next();
     return;
   }
   const auth = req.headers.authorization ?? '';
   const provided =
-    (auth.startsWith('Bearer ') ? auth.slice(7) : '') ||
+    (auth.startsWith('Bearer ') ? auth.slice(7).trim() : '') ||
     ((req.headers['x-proxy-token'] as string) ?? '');
-  if (!timingSafeEqualStr(provided, PROXY_TOKEN)) {
-    res.status(401).json({ error: '缺少或错误的代理令牌（Authorization: Bearer <PROXY_TOKEN>）' });
+  if (!timingSafeEqualStr(provided, token)) {
+    res.status(401).json({
+      error: '缺少或错误的代理令牌（Authorization: Bearer <token> 或 x-proxy-token 头）',
+    });
     return;
   }
   next();
@@ -149,6 +168,48 @@ app.post('/api/probe', async (req: Request, res: Response) => {
 
 app.get('/api/providers', (_req: Request, res: Response) => {
   res.json({ providers: PROVIDERS });
+});
+
+// ───────── 代理访问令牌（B4）：公开管理面，注册在 requireProxyToken 之前以免自锁 ─────────
+// 返回状态（不要求令牌本身），供前端判断是否显示提示并自动注入
+app.get('/api/proxy/token', (_req: Request, res: Response) => {
+  const { required } = resolveProxyTokenRequirement();
+  const st = getProxyTokenState();
+  res.json({
+    enabled: st.enabled,
+    required,
+    tokenMasked: st.token ? `****${st.token.slice(-4)}` : '',
+    envOverridden: ENV_PROXY_TOKEN !== '',
+  });
+});
+
+// 启用 / 禁用 / 重置令牌（默认单机所有者免登录；多用户时需管理员会话）
+app.post('/api/proxy/token', requireAdmin, (req: Request, res: Response) => {
+  const { action } = (req.body ?? {}) as { action?: string };
+  const st = getProxyTokenState();
+  let token = st.token ?? '';
+  let enabled = st.enabled;
+  if (action === 'enable') {
+    enabled = true;
+    if (!token) token = generateProxyToken();
+  } else if (action === 'disable') {
+    enabled = false;
+  } else if (action === 'reset' || action === 'generate') {
+    token = generateProxyToken();
+    enabled = true;
+  } else {
+    res.status(400).json({ error: 'action 必须为 enable | disable | reset 之一' });
+    return;
+  }
+  setProxyToken(token);
+  setProxyTokenEnabled(enabled);
+  res.json({
+    enabled,
+    required: enabled && !!token,
+    token: enabled ? token : '', // 仅在启用/重置时回显明文，供前端存储与用户复制
+    tokenMasked: enabled ? `****${token.slice(-4)}` : '',
+    envOverridden: ENV_PROXY_TOKEN !== '',
+  });
 });
 
 // 令牌校验必须挂在 /api/proxy 的所有子路由之前（含 config / models / 转发）
