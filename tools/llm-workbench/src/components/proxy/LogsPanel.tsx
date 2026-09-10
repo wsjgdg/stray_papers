@@ -17,6 +17,9 @@ export function LogsPanel({
   const [filterProvider, setFilterProvider] = useState('');
   const [filterStatus, setFilterStatus] = useState<'ok' | 'error' | ''>('');
   const [loading, setLoading] = useState(true);
+  // B5：历史日志（落盘 ndjson）加载开关 + 是否可用
+  const [historyMode, setHistoryMode] = useState(false);
+  const [historyAvailable, setHistoryAvailable] = useState(false);
 
   // 合并主流厂商 + 自定义厂商（来自 cfg）作为筛选下拉项
   const providerOptions = [
@@ -28,19 +31,20 @@ export function LogsPanel({
 
   const load = useCallback(async () => {
     try {
-      setLogs(
-        await fetchProxyLogs({
-          provider: filterProvider || undefined,
-          status: (filterStatus || undefined) as 'ok' | 'error' | undefined,
-          limit: 200,
-        }),
-      );
+      const r = await fetchProxyLogs({
+        provider: filterProvider || undefined,
+        status: (filterStatus || undefined) as 'ok' | 'error' | undefined,
+        limit: historyMode ? 500 : 200,
+        history: historyMode,
+      });
+      setLogs(r.logs);
+      setHistoryAvailable(r.historyAvailable);
     } finally {
       setLoading(false);
     }
-  }, [filterProvider, filterStatus]);
+  }, [filterProvider, filterStatus, historyMode]);
 
-  useVisibilityPolling(3000, load, [filterProvider, filterStatus]);
+  useVisibilityPolling(3000, load, [filterProvider, filterStatus, historyMode]);
 
   if (loading) return <Spinner label="加载日志…" />;
 
@@ -69,7 +73,22 @@ export function LogsPanel({
           <option value="ok">成功</option>
           <option value="error">错误</option>
         </select>
+        {historyAvailable && (
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => setHistoryMode((v) => !v)}
+            title="加载重启前落盘的结构化日志（LOG_PERSIST=1 时记录）"
+          >
+            {historyMode ? '返回实时' : '加载历史'}
+          </button>
+        )}
       </div>
+      {historyMode && (
+        <div className="rounded-md border border-edge bg-[#0e1728] px-3 py-1.5 text-[11px] text-muted">
+          历史模式：展示落盘的结构化日志（重启前记录），按时间倒序，最多 500 条。
+        </div>
+      )}
       {logs.length === 0 ? (
         <Empty text="暂无日志" />
       ) : (
@@ -78,6 +97,7 @@ export function LogsPanel({
             <thead className="bg-[#0e1728] text-muted">
               <tr>
                 <th className="px-2 py-1.5 text-left">时间</th>
+                <th className="px-2 py-1.5 text-left">ReqID</th>
                 <th className="px-2 py-1.5 text-left">厂商</th>
                 <th className="px-2 py-1.5 text-left">模型</th>
                 <th className="px-2 py-1.5 text-left">路径</th>
@@ -93,6 +113,12 @@ export function LogsPanel({
               {logs.map((l) => (
                 <tr key={l.id} className="border-t border-edge">
                   <td className="px-2 py-1 text-muted">{fmtTime(l.ts)}</td>
+                  <td
+                    className="px-2 py-1 font-mono text-[10px] text-muted"
+                    title={l.requestId ?? ''}
+                  >
+                    {l.requestId ? l.requestId.slice(0, 8) : '—'}
+                  </td>
                   <td className="px-2 py-1 text-ink">
                     <span className="flex items-center gap-1">
                       {l.provider}

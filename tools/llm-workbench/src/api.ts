@@ -126,6 +126,8 @@ export interface ProxyLog {
   requestBytes: number;
   responseBytes: number;
   costUsd: number;
+  requestId?: string | null;
+  keyMask?: string | null;
   fromCache?: boolean;
 }
 
@@ -215,14 +217,17 @@ export async function fetchProxyLogs(filter?: {
   provider?: string;
   status?: 'ok' | 'error';
   limit?: number;
-}): Promise<ProxyLog[]> {
+  history?: boolean;
+}): Promise<{ logs: ProxyLog[]; historyAvailable: boolean }> {
   const params = new URLSearchParams();
   if (filter?.provider) params.set('provider', filter.provider);
   if (filter?.status) params.set('status', filter.status);
   if (filter?.limit) params.set('limit', String(filter.limit));
+  if (filter?.history) params.set('history', '1');
   const r = await fetch(`/api/proxy/logs?${params.toString()}`, authInit());
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  return (await r.json()).logs;
+  const data = (await r.json()) as { logs: ProxyLog[]; historyAvailable?: boolean };
+  return { logs: data.logs, historyAvailable: Boolean(data.historyAvailable) };
 }
 export async function fetchProxySummary(): Promise<ProxySummary> {
   const r = await fetch('/api/proxy/metrics/summary', authInit());

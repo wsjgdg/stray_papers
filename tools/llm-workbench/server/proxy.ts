@@ -1,5 +1,6 @@
 import { Router, type Request, type Response } from 'express';
 import { Readable } from 'node:stream';
+import { randomUUID } from 'node:crypto';
 import { PROVIDERS } from './providers.js';
 import {
   toAnthropicRequest,
@@ -22,7 +23,7 @@ import {
 
 // 兼容旧引用：鉴权头构造已抽到 upstreamAuth.ts，与 probe 共用同一实现
 export { buildAuthHeaders };
-import { recordCall } from './metrics.js';
+import { recordCall, maskKey } from './metrics.js';
 import { getCached, putCached, cacheKey } from './responseCache.js';
 import { recordSuccess, recordFailure, isUsable } from './keyHealth.js';
 import type { ProviderConsole } from './types.js';
@@ -235,6 +236,11 @@ export async function proxyRequest(
   wildcard: string,
   search: string,
 ): Promise<void> {
+  // B5：每请求生成全局唯一 requestId，贯穿响应头与日志，便于关联排查
+  const requestId = randomUUID();
+  let keyMask: string | null = null;
+  res.set('x-request-id', requestId);
+
   const cfg = loadConfig();
   const target = resolveTarget(providerId, cfg);
 
@@ -348,6 +354,8 @@ export async function proxyRequest(
       error,
       requestBytes: Buffer.byteLength(bodyStr || '0'),
       responseBytes,
+      requestId,
+      keyMask,
       fromCache,
       keySwitches,
     });
@@ -368,6 +376,8 @@ export async function proxyRequest(
     // 客户端断开（取消 / 刷新 / 关闭浮窗）时立即中止上游，避免连接与内存拖到 180s 超时才释放。
     // controller / cleanup 声明在 try 之外，保证异常分支也能解绑监听。
     const controller = new AbortController();
+    // B5：记录本次所用 Key 的脱敏掩码（不留存明文）
+    keyMask = maskKey(apiKey);
     const onClientClose = () => {
       if (!res.writableFinished) controller.abort();
     };
@@ -590,6 +600,8 @@ proxyRouter.all('/:provider/*', async (req: Request, res: Response) => {
 // 统一 OpenAI 兼容端点：/api/v1/<path>，厂商由请求头或模型名前缀决定
 export const unifiedRouter = Router();
 unifiedRouter.all('/*', async (req: Request, res: Response) => {
+  // B5：统一端点也在入口注入 x-request-id，覆盖「未指定厂商」等早于 proxyRequest 的提前返回
+  res.set('x-request-id', randomUUID());
   const wildcard = (req.params[0] as string) ?? '';
   const search = new URL(req.url, 'http://localhost').search;
 

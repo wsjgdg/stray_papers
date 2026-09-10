@@ -177,7 +177,7 @@ export function Playground({
       setReply('');
       // 取最近一条该 provider 日志作为本次统计
       try {
-        const logs = await fetchProxyLogs({ provider, limit: 1 });
+        const { logs } = await fetchProxyLogs({ provider, limit: 1 });
         if (logs[0]) setStats(logs[0]);
       } catch {
         /* ignore */

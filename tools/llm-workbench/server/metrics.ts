@@ -1,6 +1,11 @@
 // 内存指标存储：每厂商聚合计数 + 滑动窗口速率 + 环形日志缓冲。
 // 重启即清零（不落盘，避免留存敏感调用痕迹）。
+// B5：可选持久化 —— 设 LOG_PERSIST=1 时，每请求的结构化日志（脱敏）追加到
+//     ~/.llm-workbench/logs.ndjson，重启后仍可经「加载历史」回看；平时全内存。
 
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as os from 'node:os';
 import { estimateCost } from './pricing.js';
 
 export interface CallLog {
@@ -21,6 +26,8 @@ export interface CallLog {
   requestBytes: number;
   responseBytes: number;
   costUsd: number; // 本次调用估算成本（USD），由 recordCall 计算
+  requestId?: string | null; // B5：每请求全局唯一 ID，贯穿响应头与日志，便于关联排查
+  keyMask?: string | null; // B5：本次调用所用 Key 的脱敏掩码（如 ****abcd），不留存明文
   fromCache?: boolean; // 是否由响应缓存直接回放（未真正调用上游）
   keySwitches?: number; // 本次调用发生的关键切换次数（多 key 轮询/失败切换）
 }
@@ -88,6 +95,70 @@ const agg: Map<
   }
 > = new Map();
 
+// ───────── B5：结构化日志持久化（LOG_PERSIST=1 时启用）─────────
+const LOG_FILE = path.join(os.homedir(), '.llm-workbench', 'logs.ndjson');
+
+/** 脱敏 Key：仅保留末 4 位，前缀 ****，避免明文落入磁盘 */
+export function maskKey(k: string | undefined | null): string | null {
+  if (!k) return null;
+  const s = String(k);
+  if (s.length <= 4) return '****';
+  return `****${s.slice(-4)}`;
+}
+
+function persistEnabled(): boolean {
+  return process.env.LOG_PERSIST === '1';
+}
+
+/** 是否已有可加载的历史日志文件（前端据此决定是否显示「加载历史」） */
+export function persistedLogsAvailable(): boolean {
+  try {
+    return fs.existsSync(LOG_FILE);
+  } catch {
+    return false;
+  }
+}
+
+/** 把一条结构化日志追加写入 ndjson（一行一条 JSON）。失败静默，不影响主流程 */
+function appendPersisted(entry: CallLog): void {
+  if (!persistEnabled()) return;
+  try {
+    const dir = path.dirname(LOG_FILE);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.appendFileSync(LOG_FILE, JSON.stringify(entry) + '\n', 'utf8');
+  } catch {
+    /* 落盘失败不应影响主流程 */
+  }
+}
+
+/** 读取历史结构化日志（ndjson），最新在前，支持与实时相同的过滤 */
+export function loadPersistedLogs(filter: LogFilter = {}): CallLog[] {
+  let raw: string;
+  try {
+    raw = fs.readFileSync(LOG_FILE, 'utf8');
+  } catch {
+    return [];
+  }
+  const all: CallLog[] = [];
+  for (const line of raw.split('\n')) {
+    const t = line.trim();
+    if (!t) continue;
+    try {
+      all.push(JSON.parse(t) as CallLog);
+    } catch {
+      /* 跳过损坏行 */
+    }
+  }
+  let result = all.slice().reverse();
+  if (filter.provider) result = result.filter((l) => l.provider === filter.provider);
+  if (filter.status === 'ok')
+    result = result.filter((l) => l.status !== null && l.status >= 200 && l.status < 400);
+  if (filter.status === 'error')
+    result = result.filter((l) => l.status === null || l.status >= 400);
+  if (filter.limit) result = result.slice(0, filter.limit);
+  return result;
+}
+
 function ensure(provider: string) {
   let a = agg.get(provider);
   if (!a) {
@@ -122,6 +193,8 @@ export function recordCall(log: Omit<CallLog, 'id' | 'costUsd'>): CallLog {
   const entry: CallLog = { ...log, costUsd: cost.total, id: nextId++ };
   logs.push(entry);
   if (logs.length > MAX_LOGS) logs = logs.slice(logs.length - MAX_LOGS);
+  // B5：可选落盘（脱敏结构化日志）
+  appendPersisted(entry);
 
   const a = ensure(log.provider);
   a.total += 1;
