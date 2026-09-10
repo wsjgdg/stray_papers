@@ -88,6 +88,8 @@ function startBackend() {
   process.env.NO_OPEN = '1'; // 不让后端自己打开系统浏览器
   process.env.NO_REUSE = '1'; // 不让后端走「复用已有实例并退出」分支
   process.env.WEB_DIR = path.join(root, 'dist'); // 由我们托管前端，而非内嵌 base64
+  // B12：统一数据目录 —— 让 server 的 config/logs 与 Electron userData（float-stats/app-settings）落同一处
+  process.env.LLM_WORKBENCH_HOME = app.getPath('userData');
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   serverApi = require('./server.cjs'); // 进程内后端；暴露 startServer / stopServer / getServerPort
   serverApi.startServer();

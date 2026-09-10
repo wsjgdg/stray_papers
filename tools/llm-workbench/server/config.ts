@@ -80,14 +80,94 @@ export interface ProxyConfig {
   proxyTokenEnabled?: boolean;
 }
 
-const CONFIG_DIR = path.join(os.homedir(), '.llm-workbench');
+// 数据目录统一（B12）：Electron 主进程经 LLM_WORKBENCH_HOME 注入 app.getPath('userData')，
+// server 据此与 float-stats/app-settings 落入同一目录；独立运行（dev:api / CLI）回退旧目录。
+const LEGACY_CONFIG_DIR = path.join(os.homedir(), '.llm-workbench');
+
+function resolveConfigDir(): string {
+  const home = process.env.LLM_WORKBENCH_HOME;
+  if (home && home.trim()) return path.resolve(home);
+  return LEGACY_CONFIG_DIR;
+}
+
+const CONFIG_DIR = resolveConfigDir();
 const CONFIG_PATH = path.join(CONFIG_DIR, 'config.json');
+const MIGRATION_MARKER = path.join(CONFIG_DIR, '.migrated-from-legacy');
 
 export function configDir(): string {
   return CONFIG_DIR;
 }
 export function configPath(): string {
   return CONFIG_PATH;
+}
+
+/**
+ * 一次性迁移：Electron 首次启动（CONFIG_DIR 指向 userData）时，把旧 ~/.llm-workbench
+ * 的配置/日志拷入新目录。幂等（靠 MIGRATION_MARKER 防重）+ 非破坏（旧目录保留）。
+ * 目标目录已存在 config.json 时跳过拷贝（userData 内既有配置优先）。
+ */
+export interface MigrationResult {
+  migrated: boolean;
+  from: string | null;
+  to: string;
+  notice: string | null;
+}
+
+let lastMigration: MigrationResult | null = null;
+
+export function getMigrationNotice(): string | null {
+  return lastMigration?.notice ?? null;
+}
+
+export function migrateLegacyDataDir(): MigrationResult {
+  const to = CONFIG_DIR;
+  const from = LEGACY_CONFIG_DIR;
+  const noop = (): MigrationResult => ({ migrated: false, from: null, to, notice: null });
+  if (to === from) return noop();
+  if (fs.existsSync(MIGRATION_MARKER)) return noop();
+  try {
+    fs.mkdirSync(to, { recursive: true });
+    if (!fs.existsSync(from)) {
+      fs.writeFileSync(MIGRATION_MARKER, from); // 无旧目录也写标记，避免每次启动都判
+      return noop();
+    }
+    let copied = false;
+    const legacyConfig = path.join(from, 'config.json');
+    if (fs.existsSync(legacyConfig) && !fs.existsSync(CONFIG_PATH)) {
+      fs.copyFileSync(legacyConfig, CONFIG_PATH);
+      copied = true;
+    }
+    const legacyLog = path.join(from, 'logs.ndjson');
+    if (fs.existsSync(legacyLog) && !fs.existsSync(path.join(to, 'logs.ndjson'))) {
+      fs.copyFileSync(legacyLog, path.join(to, 'logs.ndjson'));
+      copied = true;
+    }
+    const legacyLogsDir = path.join(from, 'logs');
+    if (fs.existsSync(legacyLogsDir) && !fs.existsSync(path.join(to, 'logs'))) {
+      fs.cpSync(legacyLogsDir, path.join(to, 'logs'), { recursive: true });
+      copied = true;
+    }
+    fs.writeFileSync(MIGRATION_MARKER, from);
+    const notice = copied
+      ? `已将旧配置从 ${from} 迁移至 ${to}（旧目录保留，可手动删除）`
+      : `检测到旧目录 ${from}，但新目录 ${to} 已有配置，跳过迁移`;
+    console.log('[config] ' + notice);
+    const res: MigrationResult = { migrated: copied, from, to, notice };
+    lastMigration = res;
+    return res;
+  } catch (e) {
+    const notice = `旧目录迁移失败（${String(e)}），配置将在新目录新建`;
+    console.warn('[config] ' + notice);
+    try {
+      fs.mkdirSync(to, { recursive: true });
+      fs.writeFileSync(MIGRATION_MARKER, from);
+    } catch {
+      /* noop */
+    }
+    const res: MigrationResult = { migrated: false, from, to, notice };
+    lastMigration = res;
+    return res;
+  }
 }
 
 // ── 内存态：活跃配置 + 锁定/加密状态 ──
@@ -116,6 +196,7 @@ export function getConfigState(): { encrypted: boolean; locked: boolean; hasConf
 
 // 启动时调用：读取磁盘，决定锁定/加密态（加密文件 → 锁定待解锁；明文 → 直接载入）
 export function initConfigStore(): void {
+  migrateLegacyDataDir();
   let parsed: unknown;
   try {
     parsed = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));

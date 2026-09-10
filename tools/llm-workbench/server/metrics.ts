@@ -5,8 +5,8 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import * as os from 'node:os';
 import { estimateCost } from './pricing.js';
+import { configDir } from './config.js';
 
 export interface CallLog {
   id: number;
@@ -99,7 +99,7 @@ const agg: Map<
 > = new Map();
 
 // ───────── B5：结构化日志持久化（LOG_PERSIST=1 时启用）─────────
-const LOG_FILE = path.join(os.homedir(), '.llm-workbench', 'logs.ndjson');
+const LOG_FILE = path.join(configDir(), 'logs.ndjson');
 
 /** 脱敏 Key：仅保留末 4 位，前缀 ****，避免明文落入磁盘 */
 export function maskKey(k: string | undefined | null): string | null {
