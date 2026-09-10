@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { Readable } from 'node:stream';
 import { randomUUID } from 'node:crypto';
+import { fetch as upstreamFetch } from 'undici';
 import { PROVIDERS } from './providers.js';
 import {
   toAnthropicRequest,
@@ -24,6 +25,7 @@ import {
 // 兼容旧引用：鉴权头构造已抽到 upstreamAuth.ts，与 probe 共用同一实现
 export { buildAuthHeaders };
 import { recordCall, maskKey } from './metrics.js';
+import { getDispatcher } from './httpAgent.js';
 import { getCached, putCached, cacheKey } from './responseCache.js';
 import { recordSuccess, recordFailure, isUsable } from './keyHealth.js';
 import type { ProviderConsole } from './types.js';
@@ -99,9 +101,10 @@ export async function listProviderModels(providerId: string): Promise<string[]> 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 20000);
   try {
-    const r = await fetch(modelsUrl, {
+    const r = await upstreamFetch(modelsUrl, {
       headers: buildAuthHeaders(authStyle, apiKey),
       signal: controller.signal,
+      dispatcher: getDispatcher(providerId),
     });
     if (!r.ok) {
       const txt = await r.text();
@@ -390,12 +393,13 @@ export async function proxyRequest(
     };
     try {
       timer = setTimeout(() => controller.abort(), timeoutMs);
-      const upstream = await fetch(upstreamUrl, {
+      const upstream = await upstreamFetch(upstreamUrl, {
         method: req.method,
         headers: { ...forwardHeaders(req), ...buildAuthHeaders(authStyle, apiKey) },
         body: sendBody || undefined,
         signal: controller.signal,
         redirect: 'manual',
+        dispatcher: getDispatcher(providerId),
       });
       clearTimeout(timer);
 
