@@ -130,6 +130,17 @@ function getMasterKeySafe(): Buffer {
   return k;
 }
 
+// 原子写：先落同目录临时文件，再 rename 替换目标。
+// rename 在同一文件系统内是原子操作，可避免写入中途（崩溃 / 并发保存 / 磁盘满）
+// 导致 config.json 半截损坏、进而丢失全部厂商 Key 配置。临时文件名带 pid，
+// 多进程并发时各自写不同 tmp，最终 rename 先后决定胜者，且不会出现半截文件。
+function atomicWriteJson(filePath: string, data: string): void {
+  const dir = path.dirname(filePath);
+  const tmp = path.join(dir, `.${path.basename(filePath)}.${process.pid}.tmp`);
+  fs.writeFileSync(tmp, data, 'utf8');
+  fs.renameSync(tmp, filePath);
+}
+
 export function saveConfig(cfg: ProxyConfig): void {
   activeConfig = cfg;
   fs.mkdirSync(CONFIG_DIR, { recursive: true });
@@ -137,9 +148,9 @@ export function saveConfig(cfg: ProxyConfig): void {
     const salt = cryptoSalt ?? randomSalt();
     cryptoSalt = salt;
     const blob = encryptWithKey(cfg, getMasterKeySafe(), salt);
-    fs.writeFileSync(CONFIG_PATH, JSON.stringify(blob, null, 2), 'utf8');
+    atomicWriteJson(CONFIG_PATH, JSON.stringify(blob, null, 2));
   } else {
-    fs.writeFileSync(CONFIG_PATH, JSON.stringify(cfg, null, 2), 'utf8');
+    atomicWriteJson(CONFIG_PATH, JSON.stringify(cfg, null, 2));
   }
 }
 

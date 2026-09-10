@@ -67,4 +67,15 @@ describe('config: store round-trip (plaintext)', () => {
     const loaded = cfg.loadConfig();
     assert.equal(loaded.providers.anthropic.authStyle, 'Bearer');
   });
+
+  it('saveConfig writes atomically: content intact and no leftover tmp', () => {
+    cfg.upsertProvider('openai', { apiKey: 'sk-x', enabled: true });
+    const dir = path.dirname(cfg.configPath());
+    const leftovers = fs
+      .readdirSync(dir)
+      .filter((f) => f.startsWith('.config.json.') && f.endsWith('.tmp'));
+    assert.equal(leftovers.length, 0, `leftover tmp files: ${leftovers.join(',')}`);
+    const parsed = JSON.parse(fs.readFileSync(cfg.configPath(), 'utf8'));
+    assert.equal(parsed.providers.openai.apiKey, 'sk-x');
+  });
 });
