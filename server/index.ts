@@ -29,6 +29,8 @@ import {
   setProxyToken,
   setProxyTokenEnabled,
   generateProxyToken,
+  getMigrationNotice,
+  configDir,
 } from './config.js';
 import {
   getMetrics,
@@ -129,7 +131,14 @@ function requireAdmin(_req: Request, res: Response, next: NextFunction): void {
 }
 
 app.get('/api/health', (_req: Request, res: Response) => {
-  res.json({ ok: true, now: Date.now(), ttlMs: SNAPSHOT_TTL });
+  const notice = getMigrationNotice();
+  res.json({
+    ok: true,
+    now: Date.now(),
+    ttlMs: SNAPSHOT_TTL,
+    configDir: configDir(),
+    migrationNotice: notice,
+  });
 });
 
 app.get('/api/snapshot', async (req: Request, res: Response) => {
