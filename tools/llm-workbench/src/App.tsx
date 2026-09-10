@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import {
   AlertTriangle,
   BarChart3,
@@ -21,14 +21,17 @@ import {
   type SnapshotResponse,
 } from './api';
 import { Chip, Spinner } from './ui';
-import Dashboard from './components/Dashboard';
-import ModelTable from './components/ModelTable';
-import Leaderboards from './components/Leaderboards';
-import ConsoleGrid from './components/ConsoleGrid';
-import CostCalculator from './components/CostCalculator';
-import Proxy from './components/proxy/Proxy';
 import FloatingStats from './components/floating/FloatingStats';
 import { useVisibilityPolling } from './hooks/useVisibilityPolling';
+
+// 路由级代码分割：各 tab 组件按需加载，首屏只拉取入口 + 概览页。
+// 同名默认导出组件（Dashboard/ModelTable/...）均支持 React.lazy。
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const ModelTable = lazy(() => import('./components/ModelTable'));
+const Leaderboards = lazy(() => import('./components/Leaderboards'));
+const ConsoleGrid = lazy(() => import('./components/ConsoleGrid'));
+const CostCalculator = lazy(() => import('./components/CostCalculator'));
+const ProxyPanel = lazy(() => import('./components/proxy/Proxy'));
 
 type TabId = 'dashboard' | 'models' | 'boards' | 'consoles' | 'cost' | 'proxy';
 
@@ -206,7 +209,7 @@ export default function App() {
           </div>
         )}
         {snapshot && (
-          <>
+          <Suspense fallback={<Spinner label="加载视图…" />}>
             {tab === 'dashboard' && <Dashboard snapshot={snapshot} />}
             {tab === 'models' && (
               <div className="h-full min-h-0 p-4">
@@ -221,9 +224,9 @@ export default function App() {
               <Leaderboards leaderboards={snapshot.leaderboards} models={snapshot.models} />
             )}
             {tab === 'consoles' && <ConsoleGrid providers={snapshot.providers} />}
-            {tab === 'proxy' && <Proxy providers={snapshot.providers} />}
+            {tab === 'proxy' && <ProxyPanel providers={snapshot.providers} />}
             {tab === 'cost' && <CostCalculator models={snapshot.models} />}
-          </>
+          </Suspense>
         )}
       </main>
 
