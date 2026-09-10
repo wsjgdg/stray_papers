@@ -30,7 +30,14 @@ import {
   setProxyTokenEnabled,
   generateProxyToken,
 } from './config.js';
-import { getMetrics, getLogs, getSummary, sampleRateHistory } from './metrics.js';
+import {
+  getMetrics,
+  getLogs,
+  getSummary,
+  sampleRateHistory,
+  loadPersistedLogs,
+  persistedLogsAvailable,
+} from './metrics.js';
 import {
   loadProfiles,
   listProfiles,
@@ -443,7 +450,11 @@ app.get('/api/proxy/logs', (req: Request, res: Response) => {
   const provider = req.query.provider as string | undefined;
   const status = req.query.status as 'ok' | 'error' | undefined;
   const limit = Number(req.query.limit ?? 200);
-  res.json({ logs: getLogs({ provider, status, limit: Number.isFinite(limit) ? limit : 200 }) });
+  const history = req.query.history === '1' || req.query.history === 'true';
+  const logs = history
+    ? loadPersistedLogs({ provider, status, limit: Number.isFinite(limit) ? limit : 200 })
+    : getLogs({ provider, status, limit: Number.isFinite(limit) ? limit : 200 });
+  res.json({ logs, historyAvailable: persistedLogsAvailable() });
 });
 
 // 用已保存的 key 探测已配置厂商的连通性：
