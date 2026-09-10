@@ -10,7 +10,7 @@ import {
   createStreamTranslator,
   type ApiFormat,
 } from './translate.js';
-import { loadConfig, resolveKeyPool, type AuthStyle } from './config.js';
+import { loadConfig, resolveKeyPool, resolveTimeoutMs, type AuthStyle } from './config.js';
 import { buildAuthHeaders, styleOfKnown } from './upstreamAuth.js';
 import {
   DEFAULT_RETRY_ON,
@@ -278,6 +278,9 @@ export async function proxyRequest(
     (req.body as { stream?: boolean } | undefined)?.stream === true ||
     /"stream"\s*:\s*true/i.test(bodyStr);
 
+  // 上游请求超时：per-provider 可覆盖；流式长生成默认放宽到 600s，非流式 180s
+  const timeoutMs = resolveTimeoutMs(entry, streamRequested);
+
   // API 格式转换：openai 透传；anthropic/gemini 改写请求路径与请求体
   const format: ApiFormat = (entry.apiFormat as ApiFormat) ?? 'openai';
   let upstreamUrl: string;
@@ -375,7 +378,7 @@ export async function proxyRequest(
       res.off('close', onClientClose);
     };
     try {
-      timer = setTimeout(() => controller.abort(), 180_000);
+      timer = setTimeout(() => controller.abort(), timeoutMs);
       const upstream = await fetch(upstreamUrl, {
         method: req.method,
         headers: { ...forwardHeaders(req), ...buildAuthHeaders(authStyle, apiKey) },
