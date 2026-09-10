@@ -9,6 +9,10 @@ import {
   fmtCooldown,
   KEY_STATUS_LABEL,
   type KeyHealthResponse,
+  fetchProxyTokenStatus,
+  setProxyTokenAction,
+  getProxyToken,
+  type ProxyTokenStatus,
 } from '../../api';
 import { Card, Chip } from '../../ui';
 
@@ -204,6 +208,108 @@ export function KeyHealthCard() {
           </div>
         ))}
         {err && <div className="text-[11px] text-up">{err}</div>}
+      </div>
+    </Card>
+  );
+}
+
+// ───────── 代理访问令牌（B4：默认关闭 + 设置页开关启用） ─────────
+export function ProxyTokenCard() {
+  const [status, setStatus] = useState<ProxyTokenStatus | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const refresh = () => {
+    fetchProxyTokenStatus()
+      .then(setStatus)
+      .catch((e) => setErr((e as Error).message));
+  };
+
+  useEffect(() => {
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const copy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* 剪贴板不可用时忽略 */
+    }
+  };
+
+  const act = async (action: 'enable' | 'disable' | 'reset') => {
+    setBusy(true);
+    setErr(null);
+    setMsg(null);
+    try {
+      const r = await setProxyTokenAction(action);
+      setStatus(r);
+      if (action === 'reset' && r.token) {
+        await copy(r.token);
+        setMsg('已生成新令牌并复制到剪贴板；外部客户端须改用新令牌');
+      } else if (action === 'enable') {
+        setMsg('已启用代理令牌，本应用已自动复用');
+      } else {
+        setMsg('已关闭代理令牌，恢复零配置');
+      }
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!status) return null;
+
+  return (
+    <Card
+      title="代理访问令牌"
+      subtitle="启用后，本机其它进程访问 /api/v1 与 /api/proxy 必须携带令牌，防止已配置 Key 被白嫖。默认关闭（零配置）。外部 OpenAI 兼容客户端须带 Authorization: Bearer <token> 或 x-proxy-token 头。"
+    >
+      <div className="flex flex-wrap items-center gap-3">
+        <Chip tone={status.enabled ? 'down' : 'warn'}>{status.enabled ? '已启用' : '已关闭'}</Chip>
+        {status.envOverridden && (
+          <span className="text-[11px] text-muted">
+            已通过环境变量 PROXY_TOKEN 覆盖，设置页操作不生效
+          </span>
+        )}
+        {status.enabled && (
+          <code className="rounded bg-[#0d1728] px-2 py-1 text-accent">
+            {status.tokenMasked || '****'}
+          </code>
+        )}
+        {status.enabled ? (
+          <>
+            <button
+              className="btn btn-ghost"
+              onClick={() => {
+                const t = getProxyToken();
+                if (t) void copy(t);
+                else setErr('本地未缓存令牌，请点「重置并复制新令牌」');
+              }}
+              disabled={busy}
+            >
+              {copied ? '已复制' : '复制当前令牌'}
+            </button>
+            <button className="btn btn-ghost" onClick={() => act('reset')} disabled={busy}>
+              {busy ? '处理中…' : '重置并复制新令牌'}
+            </button>
+            <button className="btn btn-ghost" onClick={() => act('disable')} disabled={busy}>
+              关闭令牌
+            </button>
+          </>
+        ) : (
+          <button className="btn btn-primary" onClick={() => act('enable')} disabled={busy}>
+            {busy ? '处理中…' : '启用代理令牌'}
+          </button>
+        )}
+        {msg && <span className="text-[11px] text-accent">{msg}</span>}
+        {err && <span className="text-[11px] text-up">{err}</span>}
       </div>
     </Card>
   );
