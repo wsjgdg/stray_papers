@@ -32,6 +32,7 @@ export interface ProviderConfig {
   apiFormat?: ApiFormat; // 仅自定义厂商：上游 API 格式，代理据此改写请求/响应体
   models?: string[]; // 自动获取的模型清单（上游返回的模型 id）
   enabledModels?: string[]; // 用户在清单中手动启用的子集；为空数组表示全部禁用
+  retryOn?: number[]; // 触发换 key 重试的 HTTP 状态码集合；缺省 [401,403,429]
 }
 
 /**
@@ -271,6 +272,7 @@ export function upsertProvider(id: string, patch: Partial<ProviderConfig>): Prox
     apiFormat: patch.apiFormat !== undefined ? patch.apiFormat : prev.apiFormat,
     models: patch.models !== undefined ? patch.models : prev.models,
     enabledModels: patch.enabledModels !== undefined ? patch.enabledModels : prev.enabledModels,
+    retryOn: patch.retryOn !== undefined ? patch.retryOn : prev.retryOn,
   };
   saveConfig(cfg);
   return cfg;
@@ -306,6 +308,7 @@ export function importConfig(partial: {
       apiFormat: p.apiFormat !== undefined ? p.apiFormat : prev.apiFormat,
       models: p.models !== undefined ? p.models : prev.models,
       enabledModels: p.enabledModels !== undefined ? p.enabledModels : prev.enabledModels,
+      retryOn: p.retryOn !== undefined ? p.retryOn : prev.retryOn,
     };
   }
   saveConfig(cfg);
