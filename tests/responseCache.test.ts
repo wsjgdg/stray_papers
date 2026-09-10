@@ -6,6 +6,9 @@ import {
   cacheKey,
   putCached,
   getCached,
+  getReplay,
+  setCacheRefreshHandler,
+  triggerRefresh,
   getCacheStats,
   clearCache,
   sweepExpired,
@@ -20,9 +23,21 @@ const entry = (body = 'x', storedAt = Date.now(), cc = '') => ({
   storedAt,
 });
 
+const replay = (
+  over: Partial<{ method: string; url: string; body: string; providerId: string }> = {},
+) => ({
+  method: 'POST',
+  url: 'https://upstream.example/v1/chat/completions',
+  headers: { authorization: 'Bearer sk-test', 'content-type': 'application/json' },
+  body: '{"model":"gpt-4"}',
+  providerId: 'openai',
+  ...over,
+});
+
 describe('responseCache capacity + expiry governance', () => {
+  // 关闭 SWR 以保留原有 FIFO/LRU + 过期语义
   beforeEach(() => {
-    setCacheConfig({ enabled: true, ttlMs: 60_000 });
+    setCacheConfig({ enabled: true, ttlMs: 60_000, swrMs: 0 });
     clearCache();
   });
 
@@ -30,7 +45,8 @@ describe('responseCache capacity + expiry governance', () => {
     const k = cacheKey('POST', '/chat/completions', '{"a":1}', 'openai');
     putCached(k, entry('hello'));
     const hit = getCached(k);
-    assert.equal(hit?.body.toString(), 'hello');
+    assert.equal(hit.state, 'fresh');
+    assert.equal(hit.entry?.body.toString(), 'hello');
   });
 
   it('evicts oldest when entry count exceeds max', () => {
@@ -65,7 +81,9 @@ describe('responseCache capacity + expiry governance', () => {
   it('counts misses while disabled', () => {
     setCacheConfig({ enabled: false });
     const before = getCacheStats().misses;
-    assert.equal(getCached('whatever'), null);
+    const hit = getCached('whatever');
+    assert.equal(hit.state, 'miss');
+    assert.equal(hit.entry, null);
     assert.equal(getCacheStats().misses, before + 1);
     setCacheConfig({ enabled: true });
   });
@@ -76,5 +94,88 @@ describe('responseCache capacity + expiry governance', () => {
     const s = getCacheStats();
     assert.equal(s.size, 0);
     assert.equal(s.bytes, 0);
+  });
+});
+
+describe('responseCache stale-while-revalidate (B7)', () => {
+  beforeEach(() => {
+    setCacheConfig({ enabled: true, ttlMs: 60_000, swrMs: 30_000 });
+    clearCache();
+    setCacheRefreshHandler(null);
+  });
+
+  it('serves stale within SWR window only when replay is available', () => {
+    const k = cacheKey('POST', '/c', '{"a":1}', 'openai');
+    // TTL 已过的条目
+    const old = Date.now() - getCacheConfig().ttlMs - 5_000;
+
+    // 无 replay → 不可 SWR，按 miss 淘汰
+    putCached(k, entry('stale1', old));
+    assert.equal(getCached(k).state, 'miss');
+
+    // 有 replay → 在 TTL+swr 窗口内回放旧值（state=stale）
+    putCached(k, entry('stale2', old), replay());
+    const look = getCached(k);
+    assert.equal(look.state, 'stale');
+    assert.equal(look.entry?.body.toString(), 'stale2');
+  });
+
+  it('returns miss once beyond TTL + SWR window', () => {
+    const k = cacheKey('POST', '/c', '{"a":1}', 'openai');
+    const wayOld = Date.now() - getCacheConfig().ttlMs - getCacheConfig().swrMs - 5_000;
+    putCached(k, entry('stale3', wayOld), replay());
+    assert.equal(getCached(k).state, 'miss');
+  });
+
+  it('getReplay returns the stored refresh recipe', () => {
+    const k = cacheKey('POST', '/c', '{"a":1}', 'openai');
+    const r = replay({ providerId: 'anthropic', url: 'https://a.example/v1' });
+    putCached(k, entry('x'), r);
+    const got = getReplay(k);
+    assert.ok(got);
+    assert.equal(got?.providerId, 'anthropic');
+    assert.equal(got?.url, 'https://a.example/v1');
+  });
+
+  it('triggerRefresh invokes registered handler and refreshes the entry', () => {
+    const k = cacheKey('POST', '/c', '{"a":1}', 'openai');
+    const old = Date.now() - getCacheConfig().ttlMs - 5_000;
+    const r = replay();
+    putCached(k, entry('OLD', old), r);
+
+    let triggered = false;
+    setCacheRefreshHandler((key) => {
+      triggered = true;
+      const rr = getReplay(key);
+      assert.ok(rr);
+      putCached(
+        key,
+        {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+          body: Buffer.from('FRESH'),
+          storedAt: Date.now(),
+        },
+        rr ?? undefined,
+      );
+    });
+
+    const look = getCached(k);
+    assert.equal(look.state, 'stale');
+    triggerRefresh(k);
+    assert.equal(triggered, true);
+
+    // 刷新后续读应为 fresh 且为新鲜值
+    const after = getCached(k);
+    assert.equal(after.state, 'fresh');
+    assert.equal(after.entry?.body.toString(), 'FRESH');
+  });
+
+  it('triggerRefresh is a no-op without a registered handler', () => {
+    const k = cacheKey('POST', '/c', '{"a":1}', 'openai');
+    const old = Date.now() - getCacheConfig().ttlMs - 5_000;
+    putCached(k, entry('OLD', old), replay());
+    assert.doesNotThrow(() => triggerRefresh(k));
+    assert.equal(getCached(k).state, 'stale');
   });
 });

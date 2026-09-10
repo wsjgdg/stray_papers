@@ -26,8 +26,46 @@ import {
 export { buildAuthHeaders };
 import { recordCall, maskKey } from './metrics.js';
 import { getDispatcher } from './httpAgent.js';
-import { getCached, putCached, cacheKey } from './responseCache.js';
+import {
+  getCached,
+  putCached,
+  cacheKey,
+  getReplay,
+  setCacheRefreshHandler,
+  triggerRefresh,
+  type CacheReplay,
+} from './responseCache.js';
 import { recordSuccess, recordFailure, isUsable } from './keyHealth.js';
+
+// B7：SWR 后台刷新回调 —— 用缓存条目携带的下游配方重新请求上游，成功则回填新鲜值。
+// 由 proxyRequest 在命中 stale 时通过 triggerRefresh 触发，fire-and-forget，失败非致命。
+async function refreshCacheEntry(key: string): Promise<void> {
+  const r = getReplay(key);
+  if (!r) return;
+  try {
+    const resp = await upstreamFetch(r.url, {
+      method: r.method,
+      headers: r.headers,
+      body: r.body || undefined,
+      redirect: 'manual',
+      dispatcher: getDispatcher(r.providerId),
+    });
+    if (resp.status >= 200 && resp.status < 300) {
+      const buf = Buffer.from(await resp.arrayBuffer());
+      const headers: Record<string, string> = {};
+      const ct = resp.headers.get('content-type');
+      if (ct) headers['content-type'] = ct;
+      const cc = resp.headers.get('cache-control');
+      if (cc) headers['cache-control'] = cc;
+      putCached(key, { status: resp.status, headers, body: buf, storedAt: Date.now() }, r);
+    }
+  } catch {
+    /* 后台刷新失败非致命：条目保持 stale，下次请求再触发 */
+  }
+}
+setCacheRefreshHandler((key) => {
+  void refreshCacheEntry(key);
+});
 import type { ProviderConsole } from './types.js';
 
 const PROVIDER_MAP = new Map<string, ProviderConsole>(PROVIDERS.map((p) => [p.id, p]));
@@ -317,13 +355,19 @@ export async function proxyRequest(
   let ttft: number | null = null;
 
   // 响应缓存：仅缓存非流式、可幂等请求（密钥不参与 key 计算）
+  // B7：SWR 后台刷新所需的下游配方，在成功响应后由 tryKey 填充
+  let upstreamReplay: CacheReplay | undefined;
   const ck = cacheKey(req.method, '/' + wildcard + search, bodyStr, providerId);
-  const cached = !streamRequested ? getCached(ck) : null;
-  if (cached) {
+  const lookup = !streamRequested ? getCached(ck) : { state: 'miss' as const, entry: null };
+  if (lookup.state === 'fresh' || lookup.state === 'stale') {
+    const cached = lookup.entry!;
     res.status(cached.status);
     for (const [k, v] of Object.entries(cached.headers)) res.set(k, v);
+    // B7：SWR —— TTL 过期窗口内回放旧值并标记，前台立即可用、后台静默刷新
+    res.set('x-cache', lookup.state === 'stale' ? 'STALE' : 'HIT');
     res.send(cached.body);
     finalize(cached.status, {}, cached.body.length, null, true, 0);
+    if (lookup.state === 'stale') triggerRefresh(ck);
     return;
   }
 
@@ -393,9 +437,13 @@ export async function proxyRequest(
     };
     try {
       timer = setTimeout(() => controller.abort(), timeoutMs);
+      const fwdHeaders: Record<string, string> = {
+        ...forwardHeaders(req),
+        ...buildAuthHeaders(authStyle, apiKey),
+      };
       const upstream = await upstreamFetch(upstreamUrl, {
         method: req.method,
-        headers: { ...forwardHeaders(req), ...buildAuthHeaders(authStyle, apiKey) },
+        headers: fwdHeaders,
         body: sendBody || undefined,
         signal: controller.signal,
         redirect: 'manual',
@@ -526,7 +574,15 @@ export async function proxyRequest(
       if (!streamRequested && status >= 200 && status < 300) {
         const headers: Record<string, string> = { 'content-type': contentType };
         if (cacheControl) headers['cache-control'] = cacheControl;
-        putCached(ck, { status, headers, body: sendBodyOut, storedAt: Date.now() });
+        // B7：记录下游配方，供 SWR 后台刷新复用（含鉴权头，常驻内存不落盘）
+        upstreamReplay = {
+          method: req.method,
+          url: upstreamUrl,
+          headers: fwdHeaders,
+          body: sendBody ?? '',
+          providerId,
+        };
+        putCached(ck, { status, headers, body: sendBodyOut, storedAt: Date.now() }, upstreamReplay);
       }
       cleanup();
       return { committed: true, status, error: null, retryable: false };
