@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { ChevronDown, ChevronUp, Download, ExternalLink, Search, X } from 'lucide-react';
 import type { LlmModel } from '../../server/types';
@@ -13,6 +13,33 @@ type CapKey = 'reasoning' | 'tools' | 'structuredOutput' | 'multimodal';
 interface SortState {
   key: SortKey;
   dir: 'asc' | 'desc';
+}
+
+// C10：排序设置持久化到 localStorage，刷新/重启后保留
+const SORT_STORAGE_KEY = 'modeltable.sort';
+const SORT_KEYS: readonly SortKey[] = [
+  'created',
+  'context',
+  'promptPrice',
+  'completionPrice',
+  'intelligence',
+  'speed',
+  'agentic',
+];
+const DEFAULT_SORT: SortState = { key: 'created', dir: 'desc' };
+
+function readStoredSort(): SortState {
+  try {
+    const raw = localStorage.getItem(SORT_STORAGE_KEY);
+    if (!raw) return DEFAULT_SORT;
+    const s = JSON.parse(raw) as SortState;
+    if (SORT_KEYS.includes(s.key) && (s.dir === 'asc' || s.dir === 'desc')) {
+      return { key: s.key, dir: s.dir };
+    }
+  } catch {
+    /* 存档损坏或隐私模式不可用时静默回默认 */
+  }
+  return DEFAULT_SORT;
 }
 
 const PAGE_SIZE = 50;
@@ -168,7 +195,19 @@ export default function ModelTable({
   const [vendor, setVendor] = useState<string>(ALL_VENDOR);
   const [caps, setCaps] = useState<CapKey[]>([]);
   const [onlyScored, setOnlyScored] = useState(false);
-  const [sort, setSort] = useState<SortState>({ key: 'created', dir: 'desc' });
+  const [sort, setSortRaw] = useState<SortState>(readStoredSort);
+  // 包装 setter：任何排序变化同步写入 localStorage（兼容值与 updater 两种调用形态）
+  const setSort = useCallback((update: SortState | ((prev: SortState) => SortState)) => {
+    setSortRaw((prev) => {
+      const next = typeof update === 'function' ? update(prev) : update;
+      try {
+        localStorage.setItem(SORT_STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        /* 持久化失败不影响交互 */
+      }
+      return next;
+    });
+  }, []);
   const [page, setPage] = useState(0);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [flashId, setFlashId] = useState<string | null>(null);
@@ -200,7 +239,7 @@ export default function ModelTable({
     setExpandedId(m.id);
     setFlashId(m.id);
     window.setTimeout(() => setFlashId((cur) => (cur === m.id ? null : cur)), 2400);
-  }, [focus, models]);
+  }, [focus, models, setSort]);
 
   const vendorOptions = useMemo(() => {
     const counts = new Map<string, number>();
