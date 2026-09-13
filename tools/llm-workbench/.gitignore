@@ -13,3 +13,4 @@ server/generated/
 *.log
 *.tsbuildinfo
 .DS_Store
+coverage/
