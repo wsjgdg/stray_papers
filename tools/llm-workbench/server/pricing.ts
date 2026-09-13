@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { atomicWriteJson, configDir } from './config.js';
 import type { LlmModel } from './types.js';
 
 // 成本估算：USD / 1M tokens。
@@ -61,15 +64,19 @@ export function updateModelPrices(models: LlmModel[]): void {
 
 export function priceFor(providerId: string, model: string): Price {
   if (model) {
-    const exact = modelIndex.get(model);
-    if (exact) return exact;
+    // 用户模型级覆盖优先于快照价格（覆盖的目的是修正过期价），
+    // 且按「精确 id → 去 vendor 前缀 tail」两级别名依次查找，避免快照的完整 id 抢先于用户的 tail 覆盖
     const slash = model.indexOf('/');
-    if (slash >= 0) {
-      const byTail = modelIndex.get(model.slice(slash + 1));
-      if (byTail) return byTail;
-    }
+    const tail = slash >= 0 ? model.slice(slash + 1) : '';
+    const hit =
+      modelOverrides.get(model) ??
+      (tail ? modelOverrides.get(tail) : undefined) ??
+      modelIndex.get(model) ??
+      (tail ? modelIndex.get(tail) : undefined);
+    if (hit) return hit;
   }
-  return PROVIDER_PRICING[providerId] ?? DEFAULT;
+  // 用户厂商级覆盖优先于内置厂商默认价
+  return providerOverrides.get(providerId) ?? PROVIDER_PRICING[providerId] ?? DEFAULT;
 }
 
 export interface CostBreakdown {
@@ -93,4 +100,108 @@ export function estimateCost(
   const input = (billableInput * p.input) / 1_000_000;
   const output = outputTokens ? (outputTokens * p.output) / 1_000_000 : 0;
   return { input, output, cache, total: input + output + cache };
+}
+
+// ───────── D1：用户定价覆盖（configDir()/pricing-overrides.json）─────────
+// 解决两类问题：模型价格过期（改代码才能修）与自定义厂商走 DEFAULT 不准。
+// 优先级：模型覆盖 > 快照模型价 > 厂商覆盖 > 内置厂商默认 > DEFAULT。
+
+export interface PricingOverrides {
+  version: number;
+  updatedAt?: string;
+  providers?: Record<string, Price>; // key = providerId（如 openai / 自定义 id）
+  models?: Record<string, Price>; // key = 模型 id 或去 vendor 前缀的纯模型名
+}
+
+let providerOverrides = new Map<string, Price>();
+let modelOverrides = new Map<string, Price>();
+let overridesSource: 'user' | 'builtin' = 'builtin';
+
+// 校验并规范化用户输入：非法结构/价格返回 null（端点据此回 400，不抛错）
+export function parsePricingOverrides(input: unknown): PricingOverrides | null {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+  const o = input as Record<string, unknown>;
+  const num = (v: unknown): number | null =>
+    typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : null;
+  const price = (v: unknown): Price | null => {
+    if (!v || typeof v !== 'object') return null;
+    const p = v as Record<string, unknown>;
+    const inP = num(p.input);
+    const outP = num(p.output);
+    if (inP === null || outP === null) return null;
+    return { input: inP, output: outP, cacheRead: num(p.cacheRead) ?? inP };
+  };
+  const mapOf = (v: unknown): Record<string, Price> | null => {
+    if (v === undefined || v === null) return {};
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return null;
+    const out: Record<string, Price> = {};
+    for (const [k, val] of Object.entries(v)) {
+      if (!k.trim()) return null;
+      const pr = price(val);
+      if (!pr) return null;
+      out[k.trim()] = pr;
+    }
+    return out;
+  };
+  const providers = mapOf(o.providers);
+  const models = mapOf(o.models);
+  if (!providers || !models) return null;
+  return { version: typeof o.version === 'number' ? o.version : 1, providers, models };
+}
+
+export function applyPricingOverrides(ov: PricingOverrides): void {
+  providerOverrides = new Map(Object.entries(ov.providers ?? {}));
+  modelOverrides = new Map(Object.entries(ov.models ?? {}));
+  overridesSource =
+    Object.keys(ov.providers ?? {}).length + Object.keys(ov.models ?? {}).length > 0
+      ? 'user'
+      : 'builtin';
+}
+
+export function resetPricingOverrides(): void {
+  providerOverrides = new Map();
+  modelOverrides = new Map();
+  overridesSource = 'builtin';
+}
+
+// 当前覆盖状态（GET 端点回显 + 前端展示）
+export function getPricingState(): { source: 'user' | 'builtin'; overrides: PricingOverrides } {
+  return {
+    source: overridesSource,
+    overrides: {
+      version: 1,
+      providers: Object.fromEntries(providerOverrides),
+      models: Object.fromEntries(modelOverrides),
+    },
+  };
+}
+
+function overridesPath(): string {
+  return path.join(configDir(), 'pricing-overrides.json');
+}
+
+// 启动时调用（initConfigStore 之后）；文件不存在或损坏时静默回退内置定价
+export function initPricingOverrides(): void {
+  try {
+    const parsed = parsePricingOverrides(JSON.parse(fs.readFileSync(overridesPath(), 'utf8')));
+    if (parsed) applyPricingOverrides(parsed);
+  } catch {
+    /* 无覆盖文件或解析失败 → 内置定价 */
+  }
+}
+
+export function savePricingOverrides(ov: PricingOverrides): void {
+  // 全新环境下目录可能尚未创建（saveConfig 同样先建目录再原子写）
+  fs.mkdirSync(configDir(), { recursive: true });
+  atomicWriteJson(overridesPath(), JSON.stringify(ov, null, 2));
+  applyPricingOverrides(ov);
+}
+
+export function deletePricingOverrides(): void {
+  try {
+    fs.rmSync(overridesPath(), { force: true });
+  } catch {
+    /* ignore */
+  }
+  resetPricingOverrides();
 }
