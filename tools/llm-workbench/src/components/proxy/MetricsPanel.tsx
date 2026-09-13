@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { Card, Empty, Spinner } from '../../ui';
 import { Stat, fmtCost, type Currency } from './shared';
 import { CachePanel } from './CachePanel';
+import { BudgetBar } from './BudgetBar';
 import { useProxyOverview } from '../../hooks/useProxyOverview';
 
 // ───────── 实时指标 ─────────
@@ -16,6 +17,7 @@ export function MetricsPanel() {
   if (metrics.length === 0)
     return (
       <div className="mx-auto max-w-6xl space-y-3">
+        <BudgetBar />
         <CachePanel stats={cache} onCleared={refetch} />
         <Empty text="暂无调用记录。去「试用」页发一条请求即可看到指标。" />
       </div>
@@ -23,6 +25,7 @@ export function MetricsPanel() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-3">
+      <BudgetBar />
       <CachePanel stats={cache} onCleared={refetch} />
 
       <div className="flex flex-wrap items-center justify-between gap-2">
