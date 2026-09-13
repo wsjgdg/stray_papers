@@ -4,6 +4,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import type { LlmModel } from '../../server/types';
 import { fmtCtx, fmtPrice } from '../api';
 import { Card, Chip, Empty, Stat } from '../ui';
+import { PricingOverridesCard } from './PricingOverrides';
 
 interface Props {
   models: LlmModel[];
@@ -268,6 +269,8 @@ export default function CostCalculator({ models }: Props) {
           </Card>
         </>
       )}
+
+      <PricingOverridesCard />
     </div>
   );
 }
