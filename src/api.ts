@@ -457,3 +457,23 @@ export async function savePricingOverrides(overrides: unknown): Promise<PricingS
 export async function resetPricingOverrides(): Promise<PricingState> {
   return request<PricingState>('/api/proxy/pricing', { method: 'DELETE' });
 }
+
+// ───────── 日预算（D3） ─────────
+export interface BudgetStatus {
+  dailyUsd: number | null;
+  todayUsd: number;
+  level: 'ok' | 'warn' | 'exceed'; // 阈值判定在服务端（ratio ≥80% warn、≥100% exceed）
+  ratio: number | null;
+}
+
+export async function fetchBudget(): Promise<BudgetStatus> {
+  return request<BudgetStatus>('/api/proxy/budget');
+}
+
+export async function setBudget(dailyUsd: number | null): Promise<BudgetStatus> {
+  return request<BudgetStatus>('/api/proxy/budget', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ dailyUsd }),
+  });
+}
