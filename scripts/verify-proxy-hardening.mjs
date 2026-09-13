@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-const NODE = 'C:/Users/sibop/.workbuddy/binaries/node/versions/22.22.2-2/node.exe';
+const NODE = process.execPath; // 用当前运行时，避免硬编码机器特定路径
 const TSX = path.resolve('node_modules/tsx/dist/cli.mjs');
 const ROOT = process.cwd();
 

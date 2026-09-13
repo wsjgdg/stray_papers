@@ -17,6 +17,8 @@ export default defineConfig({
         'server/pricing.ts',
         'server/translate.ts',
       ],
+      // F3 覆盖率门槛：npm run test:coverage 时强制；CI 用该命令防止静默回退
+      thresholds: { lines: 70 },
     },
   },
 });
