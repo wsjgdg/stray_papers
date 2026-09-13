@@ -423,3 +423,37 @@ export async function setProxyTokenAction(
   else if (action === 'disable') setProxyToken('');
   return r;
 }
+
+// ───────── 定价覆盖（D1） ─────────
+export interface PriceTriple {
+  input: number; // USD / 1M input tokens
+  output: number; // USD / 1M output tokens
+  cacheRead: number; // USD / 1M cache-read tokens
+}
+
+export interface PricingState {
+  source: 'user' | 'builtin';
+  overrides: {
+    version: number;
+    updatedAt?: string;
+    providers?: Record<string, PriceTriple>;
+    models?: Record<string, PriceTriple>;
+  };
+}
+
+export async function fetchPricingState(): Promise<PricingState> {
+  return request<PricingState>('/api/proxy/pricing');
+}
+
+// 传任意 JSON，后端校验失败回 400（request 抛出其 error 文案）
+export async function savePricingOverrides(overrides: unknown): Promise<PricingState> {
+  return request<PricingState>('/api/proxy/pricing', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(overrides),
+  });
+}
+
+export async function resetPricingOverrides(): Promise<PricingState> {
+  return request<PricingState>('/api/proxy/pricing', { method: 'DELETE' });
+}
