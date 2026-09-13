@@ -421,3 +421,18 @@ export function resetMetrics(): void {
   dailyBuckets.clear();
   rateHistory.length = 0;
 }
+
+// ───────── D3：日预算阈值 ─────────
+export interface BudgetStatus {
+  level: 'ok' | 'warn' | 'exceed';
+  ratio: number | null; // 今日成本 / 预算（3 位小数）；未设置预算为 null
+}
+
+/** 纯函数：ratio ≥80% 预警、≥100% 超限（level 与展示的 ratio 同源，避免边界显示不一致）；未设置预算（null/<=0）恒为 ok */
+export function budgetStatus(todayUsd: number, dailyUsd: number | null | undefined): BudgetStatus {
+  if (!dailyUsd || dailyUsd <= 0) return { level: 'ok', ratio: null };
+  const ratio = Math.round((todayUsd / dailyUsd) * 1000) / 1000;
+  if (ratio >= 1) return { level: 'exceed', ratio };
+  if (ratio >= 0.8) return { level: 'warn', ratio };
+  return { level: 'ok', ratio };
+}

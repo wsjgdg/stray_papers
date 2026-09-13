@@ -78,6 +78,8 @@ export interface ProxyConfig {
   // 明文落地本机；localhost 单用户场景由前端存 localStorage 透明携带，外部客户端复制使用。
   proxyToken?: string | null;
   proxyTokenEnabled?: boolean;
+  // 日预算（D3）：今日成本达到 80% 预警 / 100% 超限；阈值判定见 metrics.budgetStatus
+  budget?: { dailyUsd?: number };
 }
 
 // 数据目录统一（B12）：Electron 主进程经 LLM_WORKBENCH_HOME 注入 app.getPath('userData')，
@@ -356,6 +358,21 @@ export function setProxyToken(token: string | null): ProxyConfig {
 export function setProxyTokenEnabled(enabled: boolean): ProxyConfig {
   if (locked) return activeConfig;
   activeConfig.proxyTokenEnabled = enabled;
+  saveConfig(activeConfig);
+  return activeConfig;
+}
+
+// ───────── 日预算（D3） ─────────
+/** 读取内存态日预算（USD；未设置为 null） */
+export function getBudgetDailyUsd(): number | null {
+  return activeConfig.budget?.dailyUsd ?? null;
+}
+
+/** 写入/清除日预算并原子落盘（<=0 或 null 视为清除）；锁定态禁止写入（避免覆盖密文） */
+export function setBudgetDailyUsd(dailyUsd: number | null): ProxyConfig {
+  if (locked) return activeConfig;
+  if (dailyUsd == null || dailyUsd <= 0) delete activeConfig.budget;
+  else activeConfig.budget = { dailyUsd };
   saveConfig(activeConfig);
   return activeConfig;
 }
