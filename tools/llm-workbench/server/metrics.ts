@@ -77,6 +77,8 @@ function todayKey(d = new Date()): string {
   return `${y}-${m}-${day}`;
 }
 
+export { todayKey };
+
 const agg: Map<
   string,
   {
