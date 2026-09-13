@@ -102,7 +102,7 @@ export default function App() {
       setModelFocus((prev) => ({ model: m, nonce: (prev?.nonce ?? 0) + 1 }));
     };
     api?.onOpenModel?.(cb);
-  }, []);
+  }, [api]);
 
   // 主窗口命令：托盘「打开设置」/ 全局快捷键 Cmd+K「全局搜索」→ 唤起对应面板
   useEffect(() => {
@@ -110,7 +110,7 @@ export default function App() {
     const openSearch = () => setSearchOpen(true);
     api?.onOpenSettings?.(openSettings);
     api?.onOpenSearch?.(openSearch);
-  }, []);
+  }, [api]);
 
   const healthy = snapshot?.sources.filter((s) => s.ok).length ?? 0;
   const totalSources = snapshot?.sources.length ?? 0;
