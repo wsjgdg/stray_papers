@@ -34,7 +34,8 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       // Legacy components (Proxy.tsx / FloatingStats.tsx, Phase 5 refactor targets) trip these heavily.
       'react-hooks/set-state-in-effect': 'warn',
-      'react-hooks/exhaustive-deps': 'warn',
+      // F7：缺依赖会导致闭包过期/监听器错绑，升为 error（存量违规已清零）
+      'react-hooks/exhaustive-deps': 'error',
       'react-hooks/purity': 'warn',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       '@typescript-eslint/no-unused-vars': [

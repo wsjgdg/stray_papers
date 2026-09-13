@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Activity, GripHorizontal, X, ChevronDown, ChevronUp, Search } from 'lucide-react';
 import { fetchProxySummary, type ProxySummary } from '../../api';
 import {
@@ -79,7 +79,7 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
       setFontScale(Number(cfg.fontScale) || 1);
       setHighContrast(!!cfg.highContrast);
     }
-  }, []);
+  }, [api]);
 
   // 设置面板保存后实时刷新外观/穿透状态（无需重载浮窗）
   useEffect(() => {
@@ -89,10 +89,10 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
       setFontScale(Number(cfg.fontScale) || 1);
       setHighContrast(!!cfg.highContrast);
     });
-  }, []);
+  }, [api]);
 
   // ── 浮窗统计持久化（仅 Electron 内的 standalone 浮窗落盘，避免重载/重启清零）──
-  function buildStatsPayload() {
+  const buildStatsPayload = useCallback(() => {
     const top = [...modelFreq.current.values()].map((e) => ({
       model: e.model,
       provider: e.provider,
@@ -100,8 +100,8 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
       lastTs: e.lastTs,
     }));
     return { day: todayStr(), costSeries: costSeriesRef.current.slice(-60), topModels: top };
-  }
-  function flushStats() {
+  }, []);
+  const flushStats = useCallback(() => {
     if (standalone && isElectron && api?.saveStats) {
       try {
         api.saveStats(buildStatsPayload());
@@ -109,15 +109,15 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
         /* 存档写入失败静默忽略 */
       }
     }
-  }
-  function scheduleSave() {
+  }, [standalone, isElectron, api, buildStatsPayload]);
+  const scheduleSave = useCallback(() => {
     if (!(standalone && isElectron) || !api?.saveStats) return;
     if (saveTimer.current) return; // 已排队，等本轮触发
     saveTimer.current = window.setTimeout(() => {
       saveTimer.current = null;
       flushStats();
     }, 4000);
-  }
+  }, [standalone, isElectron, api, flushStats]);
 
   // 挂载时从磁盘恢复统计（仅同日内恢复，跨日视为新的一天清零）
   useEffect(() => {
@@ -150,12 +150,12 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
     } catch {
       /* 无存档或格式损坏时静默忽略 */
     }
-  }, []);
+  }, [standalone, isElectron, api]);
 
   // 统计变化时节流落盘（最多每 4s 一次）
   useEffect(() => {
     scheduleSave();
-  }, [costSeries, topModels]);
+  }, [costSeries, topModels, scheduleSave]);
 
   // 窗口关闭/隐藏时立即 flush 一次
   useEffect(() => {
@@ -167,13 +167,13 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
       window.removeEventListener('pagehide', onHide);
       window.removeEventListener('beforeunload', onHide);
     };
-  }, []);
+  }, [standalone, isElectron, flushStats]);
 
   // 主进程全局快捷键转发：切换焦点指标 / 切换极简模式
   useEffect(() => {
     api?.onCycleFocus?.(() => setFocus((f) => FOCUS_NEXT[f]));
     api?.onToggleMinimal?.(() => setMinimal((m) => !m));
-  }, []);
+  }, [api]);
 
   // 双向联动：主窗口点模型 → 浮窗高亮提示（2.4s 后消失）
   useEffect(() => {
@@ -182,7 +182,7 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
       setHlModel(m);
       window.setTimeout(() => setHlModel((cur) => (cur === m ? null : cur)), 2400);
     });
-  }, []);
+  }, [api]);
 
   // 浮窗内搜索框：回车深链到主窗口（容忍匹配 recentModels / topModels）
   const [q, setQ] = useState('');
@@ -282,7 +282,7 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
       alive = false;
       clearInterval(t);
     };
-  }, []);
+  }, [api]);
 
   // Electron 内：浮窗是 transparent 窗口，需把页面背景置透明，露出桌面（卡片自身有底色）
   useEffect(() => {
@@ -300,7 +300,7 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
     if (!isElectron || !api?.getTheme) return;
     setTheme(api.getTheme() as Theme);
     api.onThemeChange?.((t: string) => setTheme(t as Theme));
-  }, [isElectron]);
+  }, [isElectron, api]);
 
   // 右键菜单打开时，点击外部关闭
   useEffect(() => {

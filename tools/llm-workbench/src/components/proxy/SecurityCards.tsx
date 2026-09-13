@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   fetchCryptoStatus,
   initEncryption,
@@ -149,18 +149,17 @@ export function KeyHealthCard() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const load = () => {
+  const load = useCallback(() => {
     fetchKeyHealth()
       .then(setData)
       .catch((e) => setErr((e as Error).message));
-  };
+  }, []);
 
   useEffect(() => {
     load();
     const t = setInterval(load, 3000); // 每 3s 刷新冷却剩余
     return () => clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [load]);
 
   const revive = async () => {
     setBusy(true);
@@ -221,16 +220,15 @@ export function ProxyTokenCard() {
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  const refresh = () => {
+  const refresh = useCallback(() => {
     fetchProxyTokenStatus()
       .then(setStatus)
       .catch((e) => setErr((e as Error).message));
-  };
+  }, []);
 
   useEffect(() => {
     refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [refresh]);
 
   const copy = async (text: string) => {
     try {
