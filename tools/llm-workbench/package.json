@@ -26,11 +26,9 @@
     "make:icon": "node scripts/make-icon.mjs",
     "build:electron-config": "node scripts/build-electron-config.mjs",
     "build:server:electron": "esbuild server/index.ts --bundle --platform=node --format=cjs --outfile=electron/server.cjs",
-    "verify:models": "tsx scripts/verify-model-merge.mjs",
-    "verify:config-merge": "node scripts/verify-config-merge.mjs",
     "verify:electron-build": "node scripts/verify-electron-build.mjs",
     "verify": "vitest run",
-    "verify:legacy": "node scripts/verify-all.mjs",
+    "test:integration": "tsx scripts/verify-bankofai.mjs && tsx scripts/verify-proxy-hardening.mjs && tsx scripts/it-apiFormat.mjs && tsx scripts/smoke-translate.mjs",
     "electron:dev": "npm run build && npm run build:server:electron && npm run make:icon && electron .",
     "electron:build": "npm run build && npm run gen:web-assets && npm run build:server:electron && npm run make:icon && npm run build:electron-config && electron-builder",
     "electron:build:portable": "npm run build && npm run gen:web-assets && npm run build:server:electron && npm run make:icon && npm run build:electron-config && electron-builder --win dir"

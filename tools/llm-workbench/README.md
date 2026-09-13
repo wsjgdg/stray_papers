@@ -56,8 +56,12 @@ npm run electron:build:portable   # 免安装目录 → release/
 
 ## 自动化测试
 
-`npm run verify` 依次运行：model-merge、config-merge、bankofai、p0p1、p2、metrics-sort、response-cache、proxy-hardening、security、electron-build。
-其中 `proxy-hardening` 与 `security` 会临时隔离 `HOME` 并拉起真实服务 + mock 上游，不污染本机配置。
+- `npm run verify` / `npm run test`：vitest 单测（`tests/*.test.ts`，含 keyHealth/config/metrics/match/pricing/translate/responseCache/retryPolicy/security/modelMerge）。
+- `npm run test:coverage`：带覆盖率门槛（`vitest.config.ts` 内 `thresholds.lines`，CI 强制执行）。
+- `npm run test:integration`：端到端集成（mock 上游拉起真实服务）：bankofai 空列表、3xx 转发/断流加固、apiFormat 全链路转换、翻译冒烟。临时隔离 `HOME`，不污染本机配置。
+- `npm run verify:electron-build`：Electron 打包前置产物检查（server.cjs / icon / build-config）。
+
+`scripts/` 中保留的 `mock-upstream.mjs` / `it-apiFormat.mjs` / `smoke-translate.mjs` / `test-custom-proxy.mjs` 为集成夹具，可独立运行。
 
 ## 常见问题
 

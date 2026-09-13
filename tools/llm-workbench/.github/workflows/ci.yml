@@ -18,7 +18,8 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm run test
+      # coverage 模式运行：vitest.config 内 thresholds.lines=70 在此强制（F3 覆盖率门槛）
+      - run: npm run test:coverage
       - run: npm run build
 
   # Windows 安装包：仅在打 v* tag 时触发（手工发版流程）。
