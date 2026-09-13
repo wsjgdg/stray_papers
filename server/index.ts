@@ -40,6 +40,7 @@ import {
   loadPersistedLogs,
   persistedLogsAvailable,
 } from './metrics.js';
+import { aggregateSpend, spendToCsv } from './spendExport.js';
 import {
   loadProfiles,
   listProfiles,
@@ -445,6 +446,24 @@ app.get('/api/proxy/metrics', (_req: Request, res: Response) => {
 // 浮窗汇总：全局速率 + 当日 token/成本 + 最近模型
 app.get('/api/proxy/metrics/summary', (_req: Request, res: Response) => {
   res.json(getSummary());
+});
+
+// D2 成本导出：按「日 × 厂商 × 模型」聚合支出，format=csv（缺省，带下载头）或 json；days 限定最近 N 天
+app.get('/api/proxy/metrics/export', (req: Request, res: Response) => {
+  const days = Number(req.query.days ?? 30);
+  const rows = aggregateSpend(getLogs({}), {
+    days: Number.isFinite(days) && days > 0 ? days : 30,
+  });
+  if (req.query.format === 'json') {
+    res.json({ rows, generatedAt: new Date().toISOString() });
+    return;
+  }
+  res.set('content-type', 'text/csv; charset=utf-8');
+  res.set(
+    'content-disposition',
+    `attachment; filename="spend-${new Date().toISOString().slice(0, 10)}.csv"`,
+  );
+  res.send(spendToCsv(rows));
 });
 
 // 聚合端点：metrics + cache + summary 一次返回，前端单一定时器轮询

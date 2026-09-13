@@ -30,19 +30,33 @@ export function MetricsPanel() {
           <span>累计成本估算</span>
           <span className="text-base font-semibold text-ink">{fmtCost(totalCost, currency)}</span>
         </div>
-        <div className="flex overflow-hidden rounded-lg border border-edge">
-          {(['USD', 'CNY'] as Currency[]).map((c) => (
-            <button
-              key={c}
-              onClick={() => setCurrency(c)}
-              className={clsx(
-                'px-3 py-1 text-[11px]',
-                currency === c ? 'bg-accent/15 text-accent' : 'text-muted hover:bg-[#16223a]',
-              )}
-            >
-              {c === 'USD' ? '$ USD' : '¥ CNY'}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          {/* D2 成本导出：按「日 × 厂商 × 模型」聚合最近 30 天支出 */}
+          <a className="btn btn-sm" href="/api/proxy/metrics/export?format=csv&days=30" download>
+            导出 CSV
+          </a>
+          <a
+            className="btn btn-sm"
+            href="/api/proxy/metrics/export?format=json&days=30"
+            target="_blank"
+            rel="noreferrer"
+          >
+            JSON
+          </a>
+          <div className="flex overflow-hidden rounded-lg border border-edge">
+            {(['USD', 'CNY'] as Currency[]).map((c) => (
+              <button
+                key={c}
+                onClick={() => setCurrency(c)}
+                className={clsx(
+                  'px-3 py-1 text-[11px]',
+                  currency === c ? 'bg-accent/15 text-accent' : 'text-muted hover:bg-[#16223a]',
+                )}
+              >
+                {c === 'USD' ? '$ USD' : '¥ CNY'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
