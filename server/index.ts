@@ -42,6 +42,13 @@ import {
 } from './metrics.js';
 import { aggregateSpend, spendToCsv } from './spendExport.js';
 import {
+  deletePricingOverrides,
+  getPricingState,
+  initPricingOverrides,
+  parsePricingOverrides,
+  savePricingOverrides,
+} from './pricing.js';
+import {
   loadProfiles,
   listProfiles,
   getAdminProfile,
@@ -466,6 +473,27 @@ app.get('/api/proxy/metrics/export', (req: Request, res: Response) => {
   res.send(spendToCsv(rows));
 });
 
+// D1 定价覆盖：查看 / 更新（手动粘贴 JSON）/ 重置；写入与配置一致走 admin 鉴权 + 原子写
+app.get('/api/proxy/pricing', (_req: Request, res: Response) => {
+  res.json(getPricingState());
+});
+app.post('/api/proxy/pricing', requireAdmin, (req: Request, res: Response) => {
+  const parsed = parsePricingOverrides(req.body);
+  if (!parsed) {
+    res.status(400).json({
+      error:
+        '无效的定价覆盖：需要 { providers?: {id:{input,output,cacheRead?}}, models?: {id:{...}} }，价格为非负数字（USD / 1M tokens）',
+    });
+    return;
+  }
+  savePricingOverrides({ ...parsed, updatedAt: new Date().toISOString() });
+  res.json(getPricingState());
+});
+app.delete('/api/proxy/pricing', requireAdmin, (_req: Request, res: Response) => {
+  deletePricingOverrides();
+  res.json(getPricingState());
+});
+
 // 聚合端点：metrics + cache + summary 一次返回，前端单一定时器轮询
 app.get('/api/proxy/overview', (_req: Request, res: Response) => {
   res.json({ metrics: getMetrics(), cache: getCacheStats(), summary: getSummary() });
@@ -795,6 +823,7 @@ let reviveTimer: ReturnType<typeof setInterval> | null = null;
 export function startServer(): void {
   logStartup(`[api] 启动中… 基础端口 ${BASE_PORT}`);
   initConfigStore();
+  initPricingOverrides(); // D1：加载用户定价覆盖（无文件/损坏则回退内置定价）
   loadProfiles();
   // 启动速率历史采样（每 2s 一次），供浮窗趋势图展示真实持久化数据
   sampleRateHistory();
