@@ -31,6 +31,8 @@ import {
   generateProxyToken,
   getMigrationNotice,
   configDir,
+  getBudgetDailyUsd,
+  setBudgetDailyUsd,
 } from './config.js';
 import {
   getMetrics,
@@ -39,6 +41,7 @@ import {
   sampleRateHistory,
   loadPersistedLogs,
   persistedLogsAvailable,
+  budgetStatus,
 } from './metrics.js';
 import { aggregateSpend, spendToCsv } from './spendExport.js';
 import {
@@ -453,6 +456,27 @@ app.get('/api/proxy/metrics', (_req: Request, res: Response) => {
 // 浮窗汇总：全局速率 + 当日 token/成本 + 最近模型
 app.get('/api/proxy/metrics/summary', (_req: Request, res: Response) => {
   res.json(getSummary());
+});
+
+// D3 日预算：查询（今日成本 + 阈值状态）/ 设置（null 清除）；阈值判定见 metrics.budgetStatus
+app.get('/api/proxy/budget', (_req: Request, res: Response) => {
+  const dailyUsd = getBudgetDailyUsd();
+  const todayUsd = getSummary().todayCostUsd;
+  res.json({ dailyUsd, todayUsd, ...budgetStatus(todayUsd, dailyUsd) });
+});
+app.post('/api/proxy/budget', requireAdmin, (req: Request, res: Response) => {
+  const { dailyUsd } = (req.body ?? {}) as { dailyUsd?: unknown };
+  if (
+    dailyUsd !== null &&
+    (typeof dailyUsd !== 'number' || !Number.isFinite(dailyUsd) || dailyUsd <= 0)
+  ) {
+    res.status(400).json({ error: 'dailyUsd 必须为正数（USD），传 null 清除预算' });
+    return;
+  }
+  setBudgetDailyUsd(dailyUsd ?? null);
+  const daily = getBudgetDailyUsd();
+  const todayUsd = getSummary().todayCostUsd;
+  res.json({ dailyUsd: daily, todayUsd, ...budgetStatus(todayUsd, daily) });
 });
 
 // D2 成本导出：按「日 × 厂商 × 模型」聚合支出，format=csv（缺省，带下载头）或 json；days 限定最近 N 天
