@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import clsx from 'clsx';
-import { Settings2, Play, Activity, ScrollText, Scale } from 'lucide-react';
+import { Settings2, Play, Activity, ScrollText, Scale, FlaskConical } from 'lucide-react';
 import type { ProviderConsole } from '../../../server/types';
 import { fetchProxyConfig, deleteProxyConfig, type MaskedProviderConfig } from '../../api';
 import { ConfigPanel } from './ConfigPanel';
@@ -8,6 +8,7 @@ import { Playground } from './Playground';
 import { Compare } from './Compare';
 import { MetricsPanel } from './MetricsPanel';
 import { LogsPanel } from './LogsPanel';
+import { Evals } from './Evals';
 import type { SubTab } from './shared';
 
 export default function Proxy({ providers }: { providers: ProviderConsole[] }) {
@@ -34,6 +35,7 @@ export default function Proxy({ providers }: { providers: ProviderConsole[] }) {
     { id: 'config', label: '配置 / 导入', icon: Settings2 },
     { id: 'play', label: '试用', icon: Play },
     { id: 'compare', label: '多模型对比', icon: Scale },
+    { id: 'evals', label: '评测', icon: FlaskConical },
     { id: 'metrics', label: '实时指标', icon: Activity },
     { id: 'logs', label: '调用日志', icon: ScrollText },
   ];
@@ -74,6 +76,7 @@ export default function Proxy({ providers }: { providers: ProviderConsole[] }) {
         )}
         {sub === 'play' && <Playground cfg={cfg} onSaved={loadConfig} />}
         {sub === 'compare' && <Compare cfg={cfg} />}
+        {sub === 'evals' && <Evals providers={providers.map((p) => p.id)} />}
         {sub === 'metrics' && <MetricsPanel />}
         {sub === 'logs' && <LogsPanel providers={providers} cfg={cfg} />}
       </div>

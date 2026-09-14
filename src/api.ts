@@ -525,6 +525,154 @@ export async function replayProxyLog(requestId: string): Promise<ReplayResult> {
   });
 }
 
+// ───────── Phase C 评测（C1/C2/C3） ─────────
+export type JudgeKind = 'exact' | 'contains' | 'llm';
+
+export interface EvalCase {
+  input: string;
+  system?: string;
+  expect?: string;
+  judge?: JudgeKind;
+}
+
+export interface EvalSet {
+  name: string;
+  description?: string;
+  models: string[];
+  cases: EvalCase[];
+  temperature?: number;
+  maxTokens?: number;
+  judgeModel?: string;
+}
+
+export interface EvalSetSummary {
+  id: string;
+  name: string;
+  models: string[];
+  caseCount: number;
+  source: 'user' | 'repo';
+  description?: string;
+  judgeModel?: string;
+}
+
+export interface EvalRow {
+  caseIndex: number;
+  model: string;
+  status: number;
+  output: string;
+  error?: string;
+  latencyMs: number;
+  costUsd: number;
+  fromCache: boolean;
+  pass: boolean | null;
+  score?: number;
+  judgeNote?: string;
+  requestId?: string;
+}
+
+export interface EvalRun {
+  id: string;
+  setId: string;
+  name: string;
+  models: string[];
+  caseCount: number;
+  total: number;
+  status: 'running' | 'done' | 'error' | 'stopped';
+  startedAt: number;
+  finishedAt?: number;
+  error?: string;
+  rows: EvalRow[];
+}
+
+export interface EvalModelSummary {
+  model: string;
+  total: number;
+  graded: number;
+  passed: number;
+  passRate: number | null;
+  avgLatencyMs: number;
+  costUsd: number;
+  errorCount: number;
+  cacheHits: number;
+  avgScore: number | null;
+}
+
+export interface EvalSummary {
+  total: number;
+  graded: number;
+  passed: number;
+  passRate: number | null;
+  costUsd: number;
+  avgLatencyMs: number;
+  models: EvalModelSummary[];
+}
+
+export async function fetchEvalSets(): Promise<{
+  sets: EvalSetSummary[];
+  resultsDir: string;
+  defaultJudgeModel: string | null;
+}> {
+  return request<{ sets: EvalSetSummary[]; resultsDir: string; defaultJudgeModel: string | null }>(
+    '/api/proxy/evals',
+  );
+}
+
+export async function fetchEvalSet(id: string): Promise<EvalSet> {
+  const r = await request<{ id: string; set: EvalSet }>(
+    `/api/proxy/evals/${encodeURIComponent(id)}`,
+  );
+  return r.set;
+}
+
+export async function saveEvalSet(id: string, set: EvalSet): Promise<EvalSet> {
+  const r = await request<{ id: string; set: EvalSet }>(
+    `/api/proxy/evals/${encodeURIComponent(id)}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(set),
+    },
+  );
+  return r.set;
+}
+
+export async function deleteEvalSet(id: string): Promise<void> {
+  await request(`/api/proxy/evals/${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
+export async function runEvalSet(id: string): Promise<EvalRun> {
+  const r = await request<{ run: EvalRun }>(`/api/proxy/evals/${encodeURIComponent(id)}/run`, {
+    method: 'POST',
+  });
+  return r.run;
+}
+
+/** 历史跑批行（不含明细 rows，但带 rowCount 供进度显示） */
+export type EvalRunSummaryRow = Omit<EvalRun, 'rows'> & { rowCount: number };
+
+export async function fetchEvalRuns(limit = 50): Promise<EvalRunSummaryRow[]> {
+  const r = await request<{ runs: EvalRunSummaryRow[] }>(`/api/proxy/evals/runs?limit=${limit}`);
+  return r.runs;
+}
+
+export async function fetchEvalRun(runId: string): Promise<{ run: EvalRun; summary: EvalSummary }> {
+  return request<{ run: EvalRun; summary: EvalSummary }>(
+    `/api/proxy/evals/runs/${encodeURIComponent(runId)}`,
+  );
+}
+
+export async function stopEvalRun(runId: string): Promise<boolean> {
+  const r = await request<{ stopped: boolean }>(
+    `/api/proxy/evals/runs/${encodeURIComponent(runId)}/stop`,
+    { method: 'POST' },
+  );
+  return r.stopped;
+}
+
+export function evalRunCsvUrl(runId: string): string {
+  return `/api/proxy/evals/runs/${encodeURIComponent(runId)}/export`;
+}
+
 // ───────── 日预算（D3） ─────────
 export interface BudgetStatus {
   dailyUsd: number | null;

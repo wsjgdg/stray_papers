@@ -87,6 +87,22 @@ import {
 } from './auth.js';
 import { proxyRouter, unifiedRouter, buildAuthHeaders } from './proxy.js';
 import { replayCall } from './replay.js';
+import {
+  listEvalSets,
+  getEvalSet,
+  saveEvalSet,
+  deleteEvalSet,
+  parseEvalSet,
+  startEvalRun,
+  getEvalRun,
+  listEvalRuns,
+  stopEvalRun,
+  summarizeRun,
+  runToCsv,
+  evalResultsDir,
+  setEvalLoopback,
+  setEvalCostLookup,
+} from './evals.js';
 import { listProviderModels } from './forwarding.js';
 import { getCacheStats, clearCache } from './responseCache.js';
 import { renderMetrics } from './prometheus.js';
@@ -790,6 +806,112 @@ app.get('/api/proxy/logs/:requestId', (req: Request, res: Response) => {
   res.json(log);
 });
 
+// 评测行的成本口径与「调用日志」同源：用 x-request-id 反查记账成本
+setEvalCostLookup((requestId) => findLogByRequestId(requestId)?.costUsd ?? 0);
+
+// ───────── Phase C：自建评测集（C1）+ 结果矩阵（C2）+ LLM 判官（C3）─────────
+// 评测集：用户集 <configDir>/evals/*.json（可写），随仓库示例 <cwd>/evals/*.json（只读）。
+// 给「LLM 判官」一个默认候选：第一个启用厂商的首个启用模型（带 vendor 前缀，走统一端点）
+function suggestJudgeModel(): string | null {
+  const c = loadConfig();
+  for (const [id, p] of Object.entries(c.providers)) {
+    if (!p.enabled) continue;
+    const m = p.enabledModels?.[0] ?? p.models?.[0];
+    if (m) return `${id}/${m}`;
+  }
+  return null;
+}
+
+app.get('/api/proxy/evals', (_req: Request, res: Response) => {
+  res.json({
+    sets: listEvalSets(),
+    resultsDir: evalResultsDir(),
+    defaultJudgeModel: suggestJudgeModel(),
+  });
+});
+
+app.get('/api/proxy/evals/runs', (req: Request, res: Response) => {
+  const limit = Number(req.query.limit ?? 50);
+  res.json({ runs: listEvalRuns(Number.isFinite(limit) && limit > 0 ? limit : 50) });
+});
+
+app.get('/api/proxy/evals/runs/:runId', (req: Request, res: Response) => {
+  const run = getEvalRun(req.params.runId);
+  if (!run) {
+    res.status(404).json({ error: '未找到该跑批记录' });
+    return;
+  }
+  res.json({ run, summary: summarizeRun(run) });
+});
+
+app.get('/api/proxy/evals/runs/:runId/export', (req: Request, res: Response) => {
+  const run = getEvalRun(req.params.runId);
+  if (!run) {
+    res.status(404).json({ error: '未找到该跑批记录' });
+    return;
+  }
+  res.set('Content-Type', 'text/csv; charset=utf-8');
+  res.set('Content-Disposition', `attachment; filename="eval-${run.id}.csv"`);
+  res.send(runToCsv(run));
+});
+
+app.post('/api/proxy/evals/runs/:runId/stop', requireAdmin, (req: Request, res: Response) => {
+  const ok = stopEvalRun(req.params.runId);
+  res.json({ stopped: ok });
+});
+
+app.get('/api/proxy/evals/:id', (req: Request, res: Response) => {
+  const set = getEvalSet(req.params.id);
+  if (!set) {
+    res.status(404).json({ error: '未找到该评测集' });
+    return;
+  }
+  res.json({ id: req.params.id, set });
+});
+
+// 保存评测集（写用户目录；同名时覆盖仓库示例但不改动仓库文件）
+app.post('/api/proxy/evals/:id', requireAdmin, (req: Request, res: Response) => {
+  const parsed = parseEvalSet(req.body);
+  if (!parsed) {
+    res.status(400).json({
+      error:
+        '无效的评测集：需要 { name, models: [string], cases: [{ input, expect?, judge?: "exact"|"contains"|"llm" }] }',
+    });
+    return;
+  }
+  try {
+    saveEvalSet(req.params.id, parsed);
+  } catch (e) {
+    res.status(400).json({ error: (e as Error).message });
+    return;
+  }
+  res.json({ id: req.params.id, set: parsed });
+});
+
+app.delete('/api/proxy/evals/:id', requireAdmin, (req: Request, res: Response) => {
+  const ok = deleteEvalSet(req.params.id);
+  if (!ok) {
+    res.status(404).json({ error: '用户目录下没有该评测集（仓库示例不可删）' });
+    return;
+  }
+  res.json({ deleted: true });
+});
+
+// 跑批：后台串行执行，立即返回 run 快照；进度由 GET /runs/:runId 轮询
+app.post('/api/proxy/evals/:id/run', requireAdmin, (req: Request, res: Response) => {
+  const setId = req.params.id;
+  const set = getEvalSet(setId);
+  if (!set) {
+    res.status(404).json({ error: '未找到该评测集' });
+    return;
+  }
+  try {
+    res.json({ run: startEvalRun(setId, set) });
+  } catch (e) {
+    res.status(400).json({ error: (e as Error).message });
+  }
+});
+
 // 用已保存的 key 探测已配置厂商的连通性：
 // 已知厂商走统一探测端点；自定义厂商直接探测其 baseUrl 的 /models（OpenAI 兼容约定）
 app.post('/api/proxy/connectivity', async (req: Request, res: Response) => {
@@ -1041,6 +1163,8 @@ function listenOn(port: number, maxPort: number): void {
   const s = app.listen(port, '127.0.0.1', () => {
     actualPort = port;
     const url = `http://127.0.0.1:${port}`;
+    // Phase C：评测跑批回环到本实例的统一端点，从而复用路由/缓存/重试/记账
+    setEvalLoopback(url);
     logStartup(`[api] LLM Workbench API on ${url}`);
     openBrowser(port);
   });

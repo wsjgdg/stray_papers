@@ -60,11 +60,20 @@
 
 | # | 项 | 说明 | 量 |
 |---|---|---|---|
-| C1 | 自建评测集 | `evals/<name>.json`：`{ prompt, cases: [{ input, expect?, judge: 'exact'|'contains'|'llm' }], models: [...] }`。跑批走本地代理（自动获得缓存/重试/成本），结果落盘 `eval-results/*.json` | L |
-| C2 | 评测结果矩阵 | 复用 `Compare.tsx` 结果卡片骨架，按 case × model 展示通过率 / 延迟 / 成本，导出 CSV | M（依赖 C1） |
-| C3 | LLM-as-judge | 复用 routing 任选已配置厂商打分，主观题给 1-5 分 | M（依赖 C1） |
+| C1 | 自建评测集 ✅ 已完成 2026-09-14 | `evals/<name>.json`：`{ prompt, cases: [{ input, expect?, judge: 'exact'|'contains'|'llm' }], models: [...] }`。跑批走本地代理（自动获得缓存/重试/成本），结果落盘 `eval-results/*.json` | L |
+| C2 | 评测结果矩阵 ✅ 已完成 2026-09-14 | 复用 `Compare.tsx` 结果卡片骨架，按 case × model 展示通过率 / 延迟 / 成本，导出 CSV | M（依赖 C1） |
+| C3 | LLM-as-judge ✅ 已完成 2026-09-14 | 复用 routing 任选已配置厂商打分，主观题给 1-5 分 | M（依赖 C1） |
 
 > 这是从「观测工具」走向「决策工具」的一步。若不做，产品定位仍停留在「代理 + 看板」。
+
+### Phase C 落地记录（2026-09-14）
+
+- ✅ **C1 自建评测集**：新增 `server/evals.ts`（`parseEvalSet` / `listEvalSets` / `getEvalSet` / `saveEvalSet` / `deleteEvalSet` / `runEvalSet` / `startEvalRun` / `getEvalRun` / `listEvalRuns` / `stopEvalRun`）。集合来源：**用户集 `<configDir>/evals/*.json`（可写）优先于随仓库发布的 `<cwd>/evals/*.json`（只读示例）**；id 只允许 `[A-Za-z0-9._-]`（拒绝路径穿越）；仓库示例不可删。跑批**回环到本实例的统一端点 `/api/v1/chat/completions`**（`setEvalLoopback` 在 listen 成功后注入，避免与 index.ts 循环 import），因此自动获得路由/回退/缓存/重试/密钥轮询与**成本记账**（行的成本按 `x-request-id` 反查 `CallLog.costUsd`，与「调用日志」同口径）。**逐条串行**执行（结果可复现、不打爆上游、不被限流干扰）；`shouldStop` 在两条用例之间生效；结果每行即时落盘 `<configDir>/eval-results/<runId>.json`，重启后仍可查看/导出。随仓库示例：`evals/smoke.json`（确定性判分）、`evals/judge-demo.json`（LLM 判官）。
+- ✅ **C3 LLM-as-judge**：`judgeModel` 指定判官模型（同一回环、同样计入成本）；`buildJudgePrompt` 生成「题目/参考答案/候选回答」并要求**只输出 1-5 整数**，`parseScore` 取首个 1-5 数字，**≥3 视为通过**（`PASS_SCORE`）。判官调用失败 → 该行 `pass=null`（不计分，不误判为失败）。
+- ✅ **C2 结果矩阵**：`summarizeRun` 按模型聚合（通过率/平均延迟/平均分/成本/缓存命中/错误数，按通过率降序）；`runToCsv` 输出明细 CSV（**保留完整 output 不截断**，`⏎` 折叠换行，带公式注入防护）。前端新增「代理 → 评测」子页 `Evals.tsx`：集合选择/新建/编辑 JSON/删除，运行与停止（`useVisibilityPolling` 1.5s，页面隐藏自动暂停），**case × model 单元格矩阵**（✓/✗/ERR + 单格延迟，点击看期望 vs 输出对照），跑批历史列表 + CSV 导出。
+- 新端点：`GET /api/proxy/evals`、`GET/POST/DELETE /api/proxy/evals/:id`、`POST /api/proxy/evals/:id/run`、`GET /api/proxy/evals/runs`、`GET /api/proxy/evals/runs/:runId`、`POST .../stop`、`GET .../export`（CSV）。
+- 测试：`tests/evals.test.ts`（18 例：结构校验/判分语义/存取与路径穿越/串行顺序/成本回填/错误与中断/汇总与 CSV/未注入回环立即报错/**真实回环 e2e 跑批 + 判官打分**）；全量 **238 tests / 32 files** 通过，`tsc -b --force` EXIT 0，`vite build` EXIT 0。
+- 已知限制：判官调用的成本未单独归到行上（行的成本只含被测调用），后续可在 run 上加 `judgeCostUsd`。
 
 ---
 
@@ -112,7 +121,7 @@
 A1 A2 A3 A4 A5（安全，半天内可完） ──┐
                                     ├─> ✅ B1 B6（路由 + /v1/models）
 D1（去 recharts，无依赖可并行）─────┘        └─> ✅ B2 B3（配额 / 归因）──> ✅ B4 B5（重放 / 定价外置）
-                                                                        └─> C1 C2（评测，最大新功能，下一步）
+                                                                        └─> ✅ C1 C2 C3（评测，下一步接 D/F）
 D2 D3 D4（前端体验，任意穿插）
 F1（asar）──> F2（自动更新）──> F3 / F4
 ```
