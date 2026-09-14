@@ -11,13 +11,13 @@ import {
   createStreamTranslator,
   type ApiFormat,
 } from './translate.js';
-import { loadConfig, resolveKeyPool, resolveTimeoutMs } from './config.js';
+import { loadConfig, getBudget, resolveKeyPool, resolveTimeoutMs } from './config.js';
 import { buildAuthHeaders } from './upstreamAuth.js';
 import { DEFAULT_RETRY_ON, isRetryable, parseRetryAfter } from './retryPolicy.js';
 
 // 兼容旧引用：鉴权头构造已抽到 upstreamAuth.ts，与 probe 共用同一实现
 export { buildAuthHeaders };
-import { maskKey } from './metrics.js';
+import { maskKey, budgetStatus, getSummary } from './metrics.js';
 import { getDispatcher } from './httpAgent.js';
 import {
   getCached,
@@ -141,6 +141,20 @@ export async function proxyRequest(
     method: req.method,
     path: '/' + wildcard,
   });
+
+  // D3 fail-closed：开启 blockOnExceed 且当日预算已超限时直接拒绝（402），不再打上游。
+  // 放在缓存查找之前：超限语义 = 拒绝服务，命中缓存也不放行；仍记一条本地拦截日志供对账。
+  const budget = getBudget();
+  if (budget.blockOnExceed && budget.dailyUsd) {
+    const todayUsd = getSummary().todayCostUsd;
+    const st = budgetStatus(todayUsd, budget.dailyUsd);
+    if (st.level === 'exceed') {
+      const msg = `日预算已超限（今日 $${todayUsd.toFixed(4)} / 预算 $${budget.dailyUsd}），blockOnExceed 已拦截本次转发`;
+      res.status(402).json({ error: msg });
+      finalize(mkInput(), 402, {}, 0, '预算超限拦截（本地）', false, 0);
+      return;
+    }
+  }
 
   // 响应缓存：仅缓存非流式、可幂等请求（密钥不参与 key 计算）
   // B7：SWR 后台刷新所需的下游配方，在成功响应后由 tryKey 填充
