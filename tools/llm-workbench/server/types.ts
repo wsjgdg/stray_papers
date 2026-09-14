@@ -47,6 +47,10 @@ export interface Leaderboard {
   description: string;
   metricKey: string;
   higherBetter: boolean;
+  /** 榜单来源标识（G-R2）：数据源注册表 id、来源页 URL、来源展示名 */
+  sourceId: string;
+  sourceUrl: string;
+  sourceName: string;
   entries: LeaderboardEntry[];
 }
 
