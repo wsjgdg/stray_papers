@@ -240,7 +240,7 @@ F1（asar）──> F2（自动更新）──> F3 / F4
 
 **本地门禁必须与 `.github/workflows/ci.yml` 同源**——CI 跑什么，本地就先跑什么。2026-09-14 的事故正是这里漏了一步：
 
-1. `npm run lint`（= `eslint .`，**CI 的第 3 步；此前本地从未跑过，导致 CI 长期红灯**）EXIT 0
+1. `npm run lint`（= `eslint .`，**CI 里 `npm ci` 之后的第一个检查步骤；此前本地从未跑过，导致 CI 长期红灯**）EXIT 0
 2. `prettier --check .`
 3. `npm run typecheck` EXIT 0
 4. `npm run test`（293 全过）——**纯模块级，不含 DOM**，不能替代第 6 步
@@ -269,6 +269,6 @@ F1（asar）──> F2（自动更新）──> F3 / F4
 | E3 成本异动 | 清闲期一笔小额调用就会触发倍数告警（误报刷屏） | 基线只取 `requests > 0` 的已完成小时 + 绝对下限 `$0.01`（`below-floor`）+ 至少 3 个样本与 5 分钟窗口 ✅ 已做 |
 | E3 成本异动 | 服务端重启后小时环清空，若前端沿用旧 level 会长期显示告警 | 冷启动 `sampleHours = 0` → `insufficient-hours` 强制回 `normal`（fail-safe 而非 fail-open） ✅ 已做 |
 | E3 成本异动 | 告警重复弹系统通知 | `costSpikeNotifiedRef` 只在 **alert 上升沿**触发，持续 alert 不重复；回落到 normal/warn 才复位，可再提醒 ✅ 已做 |
-| **CI 长期红灯** | 本地门禁从未跑 `npm run lint`，而 CI 的第三步就是它 → 每次 push 必红；`react-hooks/refs` 在 recommended 里是 **error**，仓库只降级了 `set-state-in-effect` / `purity`，漏了它 | ①`useVirtualList` 尺寸缓存改「写走 ref、读走 state 快照」，消除真实的渲染期读 ref（非抑制规则）；②**统一门禁补上 `npm run lint`**（见下），本地与 CI 同源 ✅ 已做 |
+| **CI 长期红灯** | 本地门禁从未跑 `npm run lint`，而它是 CI 里 `npm ci` 之后的第一个检查步骤 → 每次 push 必红；`react-hooks/refs` 在 recommended 里是 **error**，仓库只降级了 `set-state-in-effect` / `purity`，漏了它 | ①`useVirtualList` 尺寸缓存改「写走 ref、读走 state 快照」，消除真实的渲染期读 ref（非抑制规则）；②**统一门禁补上 `npm run lint`**（见下），本地与 CI 同源 ✅ 已做 |
 | F1 asar 回归 | asar 内读取差异导致白屏 | 保留 `asar:false` 一键回退；完整冒烟清单过一遍 |
 | F2 自动更新 | 无签名时 UAC 提示体验差 | 仅通知，不自动安装 |
