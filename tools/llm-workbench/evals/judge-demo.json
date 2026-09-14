@@ -1,0 +1,20 @@
+{
+  "name": "Judge（主观题：LLM-as-judge）",
+  "description": "主观题用 LLM 判官打 1-5 分（≥3 视为通过）。judgeModel 需是已配置厂商可用模型；判分调用同样走本地代理、计入成本。",
+  "models": ["openai/gpt-4o-mini", "deepseek/deepseek-chat"],
+  "judgeModel": "openai/gpt-4o-mini",
+  "temperature": 0.2,
+  "maxTokens": 256,
+  "cases": [
+    {
+      "input": "用一句话向非技术人员解释什么是「响应缓存」，并说明它为什么能省钱。",
+      "expect": "应提到：相同请求直接复用上次结果、省去重复调用上游、因此省 token/省时间。",
+      "judge": "llm"
+    },
+    {
+      "input": "给「LLM 网关」写一条不超过 15 字的宣传语。",
+      "expect": "要求：中文、简洁、不超过 15 字、体现统一入口/多厂商路由或成本可控之一。",
+      "judge": "llm"
+    }
+  ]
+}
