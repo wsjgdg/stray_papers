@@ -13,6 +13,7 @@ export interface FinalizeInput {
   method: string;
   path: string;
   routeChain?: string[]; // B1：本次请求规划的完整回退链，便于回溯 fallback 路径
+  tag?: string | null; // B2：调用标签（x-lb-tag 头），用于按项目/团队归集成本
 }
 
 /**
@@ -56,5 +57,6 @@ export function finalize(
     fromCache,
     keySwitches,
     routeChain: input.routeChain,
+    tag: input.tag,
   });
 }

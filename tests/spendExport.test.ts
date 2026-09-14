@@ -9,6 +9,7 @@ afterEach(() => {
 function call(partial: Partial<SpendSource> & { ts: number; provider: string }): SpendSource {
   return {
     model: 'm1',
+    tag: '(untagged)',
     inputTokens: null,
     outputTokens: null,
     cacheReadTokens: null,
@@ -110,9 +111,9 @@ describe('spendToCsv', () => {
     );
     const lines = csv.trimEnd().split('\n');
     expect(lines[0]).toBe(
-      'day,provider,model,requests,inputTokens,outputTokens,cacheReadTokens,costUsd',
+      'day,provider,model,tag,requests,inputTokens,outputTokens,cacheReadTokens,costUsd',
     );
-    expect(lines[1]).toContain('2026-09-10,openai,gpt-4o,1,10,0,0,0.123457');
+    expect(lines[1]).toContain('2026-09-10,openai,gpt-4o,(untagged),1,10,0,0,0.123457');
     expect(csv.endsWith('\n')).toBe(true);
   });
 
@@ -122,6 +123,7 @@ describe('spendToCsv', () => {
         day: '2026-09-10',
         provider: 'my,gate',
         model: 'a"b',
+        tag: '(untagged)',
         requests: 1,
         inputTokens: 0,
         outputTokens: 0,
@@ -139,6 +141,7 @@ describe('spendToCsv', () => {
         day: '2026-09-10',
         provider: '=SUM(A1)',
         model: '@x',
+        tag: '(untagged)',
         requests: 1,
         inputTokens: 0,
         outputTokens: 0,
@@ -148,5 +151,30 @@ describe('spendToCsv', () => {
     ]);
     expect(csv).toContain("'=SUM(A1)");
     expect(csv).toContain("'@x");
+  });
+});
+
+describe('spendToCsv: tag 分组', () => {
+  it('同 provider/model 但不同 tag 聚合为两行，CSV 各带 tag', () => {
+    const rows = aggregateSpend([
+      call({
+        ts: tsOf(2026, 9, 10),
+        provider: 'openai',
+        model: 'gpt-4o',
+        tag: 'proj-x',
+        costUsd: 1,
+      }),
+      call({
+        ts: tsOf(2026, 9, 10),
+        provider: 'openai',
+        model: 'gpt-4o',
+        tag: 'proj-y',
+        costUsd: 2,
+      }),
+    ]);
+    expect(rows).toHaveLength(2);
+    const csv = spendToCsv(rows);
+    expect(csv).toContain(',proj-x,');
+    expect(csv).toContain(',proj-y,');
   });
 });

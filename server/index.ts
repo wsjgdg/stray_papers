@@ -56,6 +56,7 @@ import {
   initUsageStore,
   stopUsageStore,
   usageSpendSources,
+  usageByTag,
 } from './usageStore.js';
 import {
   deletePricingOverrides,
@@ -699,12 +700,24 @@ app.get('/metrics', (_req: Request, res: Response) => {
 app.get('/api/proxy/logs', (req: Request, res: Response) => {
   const provider = req.query.provider as string | undefined;
   const status = req.query.status as 'ok' | 'error' | undefined;
+  const tag = req.query.tag as string | undefined;
   const limit = Number(req.query.limit ?? 200);
   const history = req.query.history === '1' || req.query.history === 'true';
   const logs = history
-    ? loadPersistedLogs({ provider, status, limit: Number.isFinite(limit) ? limit : 200 })
-    : getLogs({ provider, status, limit: Number.isFinite(limit) ? limit : 200 });
+    ? loadPersistedLogs({ provider, status, tag, limit: Number.isFinite(limit) ? limit : 200 })
+    : getLogs({ provider, status, tag, limit: Number.isFinite(limit) ? limit : 200 });
   res.json({ logs, historyAvailable: persistedLogsAvailable() });
+});
+
+// B2：按调用标签（x-lb-tag）聚合支出，供多项目共用一套 Key 时归集成本。
+// days 限定最近 N 天；未带标签的调用归入 '(untagged)'。按成本降序。
+app.get('/api/proxy/usage/by-tag', (req: Request, res: Response) => {
+  const days = Number(req.query.days ?? 30);
+  flushUsageStore();
+  res.json({
+    rows: usageByTag({ days: Number.isFinite(days) && days > 0 ? days : 30 }),
+    generatedAt: new Date().toISOString(),
+  });
 });
 
 // 单条日志精查：响应头 x-request-id → 该次调用的用量/成本/TTFT（多模型对比用）

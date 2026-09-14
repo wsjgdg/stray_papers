@@ -35,7 +35,7 @@
 | # | 项 | 现状 | 改法 | 量 |
 |---|---|---|---|---|
 | B1 | **模型路由 + fallback 链**（核心缺口） ✅ 已完成 2026-09-14 | `server/proxy.ts:421-435`：统一端点未指定厂商时只取**第一个** `enabled && apiKey` 的厂商；没有按模型路由，也没有跨厂商容错（多 key 轮换只在单厂商内生效） | 新增 `routing` 配置：`{ "routes": { "gpt-4o": ["openai","my-gw"], "claude-*": ["anthropic"] }, "default": ["openai","my-gw"] }`。匹配：精确 → 通配 → default；链内遇「5xx / 超时 / 429 且该厂所有 key 冷却」转下一家；响应头回写 `x-route-used` / `x-route-attempts`，日志记 `routeChain` | M |
-| B2 | **按标签的成本归因** | 成本只有 provider × model 维度 | 识别请求头 `x-lb-tag` 并透传到日志与 usageStore；导出与面板支持按 tag 分组。多项目共用一套 key 时的刚需 | M |
+| B2 | **按标签的成本归因** ✅ 已完成 2026-09-14 | 成本只有 provider × model 维度 | 识别请求头 `x-lb-tag` 并透传到日志与 usageStore；导出与面板支持按 tag 分组。多项目共用一套 key 时的刚需 | M |
 | B3 | **per-provider / per-key 配额** | 只有全局日预算，无速率与单 key 上限 | `maxRps`（令牌桶，超限 429 并跳 key）、`dailyKeyBudgetUsd`（单 key 日成本上限，超限标记 cooling） | M |
 | B4 | **请求重放** | 日志只能看，排障要手工拼 body | 日志行 → 「重放」：用存档的 method/path/body（不含鉴权头）重发，结果并排展示 | S |
 | B5 | **内置定价表外置** | `server/pricing.ts:19` `PROVIDER_PRICING` 硬编码，调价只能改代码 | 下沉为 `data/pricing.json`（含 `version` + `updatedAt`），启动时加载；UI 加「导入定价 JSON」与版本显示；用户覆盖（D1）逻辑不变 | M |
@@ -48,7 +48,8 @@
 - ✅ **B1 模型路由 + fallback 链**：`server/routing.ts` 新增（`isValidRouting`/`matchRoute`/`resolveChain`）；`server/proxy.ts` 统一端点改写链模式（响应头 `x-route-used`/`x-route-attempts` + 日志 `routeChain`）；`server/config.ts` 加 `getRouting`/`setRouting`；`server/index.ts` 加 `GET/POST /api/proxy/routing`；前端 `RoutingCard`（`SecurityCards.tsx`）+ `src/api.ts` 的 `fetchRouting`/`saveRouting`。
 - ✅ **B6 统一端点模型目录**：`server/config.ts` 的 `listRoutedModels()` 聚合启用厂商模型（含 modelMapping 别名）；`server/index.ts` 加 `GET /api/v1/models`（OpenAI 兼容）。
 - 测试：`tests/routing.test.ts`（15）、`tests/config.test.ts` +2、`tests/proxyChain.test.ts`（4 集成）；全量 **182 tests / 25 files** 通过。`tsc -b --force` EXIT 0，`vite build` EXIT 0。
-- 剩余代理内核：B2（标签成本归因）、B3（配额）、B4（重放）、B5（定价外置）未做。
+- ✅ **B2 按标签的成本归因**：`server/proxy.ts` 的 `mkInput` 读取 `x-lb-tag` → `finalize`/`CallLog.tag` → `usageStore` 新增 tag 维度（`day→provider→model→tag→cell`，旧 3 层结构经 `sanitize` 自动迁移进 `(untagged)`）；新增 `usageByTag()` 聚合 + `GET /api/proxy/usage/by-tag`；`/api/proxy/logs` 支持 `tag` 过滤；导出 CSV 增加 `tag` 列。前端 `LogsPanel` 显示标签列 + `MetricsPanel` 新增「按标签归集成本」卡片。
+- 剩余代理内核：B3（配额）、B4（重放）、B5（定价外置）未做。
 
 ---
 
