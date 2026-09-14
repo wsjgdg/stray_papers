@@ -7,7 +7,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { estimateCost } from './pricing.js';
 import { configDir } from './config.js';
-import { recordUsage } from './usageStore.js';
+import { recordUsage, usageTodayTotals } from './usageStore.js';
 import { addKeySpend } from './keyBudget.js';
 
 export interface CallLog {
@@ -65,16 +65,9 @@ export interface ProviderMetrics {
 const MAX_LOGS = 500;
 const RATE_WINDOW_MS = 10_000;
 const AVG_SAMPLES = 50;
-const DAILY_TTL_DAYS = 7;
 
 let logs: CallLog[] = [];
 let nextId = 1;
-
-// 当日 token 消耗分桶（key = 本地日期 YYYY-MM-DD），用于浮窗「当日消耗 token」
-const dailyBuckets = new Map<
-  string,
-  { input: number; output: number; cacheRead: number; cost: number }
->();
 
 // 全局速率历史采样（每 2s 由 index.ts 触发），用于浮窗趋势图（服务端持久，重启清零）
 const RATE_HISTORY_MAX = 180;
@@ -225,23 +218,9 @@ export function recordCall(log: Omit<CallLog, 'id' | 'costUsd'>): CallLog {
   }
   a.cost += cost.total;
 
-  // 当日分桶：按本地日期累计 token / 成本
-  const dk = todayKey(new Date(log.ts));
-  let db = dailyBuckets.get(dk);
-  if (!db) {
-    db = { input: 0, output: 0, cacheRead: 0, cost: 0 };
-    dailyBuckets.set(dk, db);
-  }
-  if (log.inputTokens) db.input += log.inputTokens;
-  if (log.outputTokens) db.output += log.outputTokens;
-  if (log.cacheReadTokens) db.cacheRead += log.cacheReadTokens;
-  db.cost += cost.total;
-  // 仅保留最近 DAILY_TTL_DAYS 天，避免内存无限增长
-  if (dailyBuckets.size > DAILY_TTL_DAYS) {
-    const keys = [...dailyBuckets.keys()].sort();
-    while (dailyBuckets.size > DAILY_TTL_DAYS) dailyBuckets.delete(keys.shift()!);
-  }
-  // D4：日粒度用量落盘（provider×model×tag×day，保留 90 天）——跨重启的成本/导出数据源
+  // D4/E1：日粒度用量落盘（provider×model×tag×day，保留 90 天）。
+  // 「当日成本/token」的唯一口径在 usageStore（内存态同步更新 + 启动从磁盘载入，跨重启不丢），
+  // 因此这里不再另设内存日桶——避免两套数据在重启后互相矛盾。
   recordUsage(
     log.ts,
     log.provider,
@@ -379,7 +358,7 @@ export function getRateHistory(): RateSample[] {
   return rateHistory.slice();
 }
 
-/** 浮窗汇总：聚合全局速率 + 当日分桶 + 最近模型 */
+/** 浮窗汇总：聚合全局速率 + 当日用量（持久化口径，跨重启不丢）+ 最近模型 */
 export function getSummary(): ProxySummary {
   const ms = getMetrics();
   let inRate = 0;
@@ -392,8 +371,8 @@ export function getSummary(): ProxySummary {
     reqRate += m.reqRate;
     totalCost += m.totalCostUsd;
   }
-  const d = dailyBuckets.get(todayKey()) ?? { input: 0, output: 0, cacheRead: 0, cost: 0 };
-  const cacheHitRateToday = d.input > 0 ? Math.round((d.cacheRead / d.input) * 1000) / 1000 : null;
+  const t = usageTodayTotals();
+  const cacheHitRateToday = t.input > 0 ? Math.round((t.cacheRead / t.input) * 1000) / 1000 : null;
   const recent = logs
     .slice()
     .reverse()
@@ -404,10 +383,10 @@ export function getSummary(): ProxySummary {
     inputRateTokS: Math.round(inRate * 10) / 10,
     outputRateTokS: Math.round(outRate * 10) / 10,
     reqRate: Math.round(reqRate * 10) / 10,
-    todayInputTokens: d.input,
-    todayOutputTokens: d.output,
-    todayCacheReadTokens: d.cacheRead,
-    todayCostUsd: round(d.cost),
+    todayInputTokens: t.input,
+    todayOutputTokens: t.output,
+    todayCacheReadTokens: t.cacheRead,
+    todayCostUsd: round(t.cost),
     totalCostUsd: round(totalCost),
     cacheHitRateToday,
     recentModels: recent,
@@ -466,21 +445,28 @@ export function resetMetrics(): void {
   logs = [];
   nextId = 1;
   agg.clear();
-  dailyBuckets.clear();
   rateHistory.length = 0;
 }
 
-// ───────── D3：日预算阈值 ─────────
+// ───────── D3：预算阈值（E1 泛化为日/月共用） ─────────
 export interface BudgetStatus {
   level: 'ok' | 'warn' | 'exceed';
-  ratio: number | null; // 今日成本 / 预算（3 位小数）；未设置预算为 null
+  ratio: number | null; // 已用 / 上限（3 位小数）；未设置上限为 null
 }
 
-/** 纯函数：ratio ≥80% 预警、≥100% 超限（level 与展示的 ratio 同源，避免边界显示不一致）；未设置预算（null/<=0）恒为 ok */
-export function budgetStatus(todayUsd: number, dailyUsd: number | null | undefined): BudgetStatus {
-  if (!dailyUsd || dailyUsd <= 0) return { level: 'ok', ratio: null };
-  const ratio = Math.round((todayUsd / dailyUsd) * 1000) / 1000;
+/**
+ * 纯函数：通用预算阈值 —— ratio ≥80% 预警、≥100% 超限；未设置上限（null/≤0）恒为 ok。
+ * ratio 先四舍五入到 3 位再判级，保证「显示的百分比」与「判级依据」同源，不出现 80% 显示为正常。
+ */
+export function ratioLevel(usedUsd: number, limitUsd: number | null | undefined): BudgetStatus {
+  if (!limitUsd || limitUsd <= 0) return { level: 'ok', ratio: null };
+  const ratio = Math.round((usedUsd / limitUsd) * 1000) / 1000;
   if (ratio >= 1) return { level: 'exceed', ratio };
   if (ratio >= 0.8) return { level: 'warn', ratio };
   return { level: 'ok', ratio };
+}
+
+/** 日预算阈值（D3 既有语义，等价于 ratioLevel；proxy.ts fail-closed 守卫使用） */
+export function budgetStatus(todayUsd: number, dailyUsd: number | null | undefined): BudgetStatus {
+  return ratioLevel(todayUsd, dailyUsd);
 }
