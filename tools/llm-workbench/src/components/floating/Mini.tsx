@@ -2,7 +2,7 @@ export function Mini({
   label,
   value,
   accent,
-  bg = 'bg-[#0d1728]',
+  bg = 'bg-sunken',
 }: {
   label: string;
   value: string;

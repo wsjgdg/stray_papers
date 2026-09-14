@@ -1,12 +1,16 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Lock } from 'lucide-react';
 import { unlockStore } from '../api';
+import { useFocusTrap } from '../hooks/useDismissable';
 
 // 密钥加密解锁门禁：覆盖整个应用，直到输入正确主密码
+// 注意：门禁不能用 Esc 关闭，所以只上焦点陷阱（Tab 在输入框与按钮之间循环），不接 useDismissable。
 export function UnlockModal({ onUnlocked }: { onUnlocked: () => void }) {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(panelRef);
 
   const submit = async () => {
     if (!password) return;
@@ -29,7 +33,11 @@ export function UnlockModal({ onUnlocked }: { onUnlocked: () => void }) {
       aria-modal="true"
       aria-label="配置已加密，请输入主密码"
     >
-      <div className="w-[340px] space-y-4 rounded-xl border border-edge bg-panel p-6 shadow-2xl">
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        className="w-[340px] space-y-4 rounded-xl border border-edge bg-panel p-6 shadow-2xl outline-none"
+      >
         <div className="flex items-center gap-2 text-ink">
           <Lock size={16} className="text-accent" />
           <span className="text-sm font-semibold">配置已加密 · 请输入主密码</span>

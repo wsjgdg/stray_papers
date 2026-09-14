@@ -28,15 +28,15 @@ const KEY_HINT = 'Key 仅保存在内存中用于本次探测，不写入磁盘�
 function dotClass(state: ProbeState | null): string {
   switch (state) {
     case 'ok':
-      return 'bg-emerald-400 animate-pulse';
+      return 'bg-down animate-pulse';
     case 'auth-required':
-      return 'bg-amber-400';
+      return 'bg-warn';
     case 'error':
-      return 'bg-orange-400';
+      return 'bg-warn';
     case 'unreachable':
-      return 'bg-rose-400/60';
+      return 'bg-up/60';
     default:
-      return 'bg-[#3b4a63]';
+      return 'bg-line';
   }
 }
 
@@ -151,7 +151,7 @@ function ProviderCard({
       </div>
 
       {/* API Base */}
-      <div className="flex items-center gap-2 rounded-lg border border-edge bg-[#0d1728] px-2.5 py-1.5">
+      <div className="flex items-center gap-2 rounded-lg border border-edge bg-sunken px-2.5 py-1.5">
         <span className="shrink-0 text-[11px] text-muted">API Base</span>
         <code className="min-w-0 flex-1 truncate font-mono text-[11px] text-ink">
           {provider.apiBase ?? '—'}
@@ -162,8 +162,8 @@ function ProviderCard({
           disabled={!provider.apiBase}
           onClick={onCopy}
         >
-          {copied ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
-          {copied ? '已复制' : '复制'}
+          {copied ? <Check size={12} className="text-down" /> : <Copy size={12} />}
+          <span aria-live="polite">{copied ? '已复制' : '复制'}</span>
         </button>
       </div>
 
@@ -179,7 +179,7 @@ function ProviderCard({
       </button>
 
       {expanded && (
-        <div className="flex flex-col gap-2 rounded-lg border border-edge bg-[#0d1728] p-2.5">
+        <div className="flex flex-col gap-2 rounded-lg border border-edge bg-sunken p-2.5">
           <div className="flex gap-2">
             <input
               className="input py-1.5 text-xs"
@@ -307,7 +307,7 @@ export default function ConsoleGrid({ providers }: { providers: ProviderConsole[
         'rounded-md border px-2 py-1 text-[11px] transition-colors',
         region === value
           ? 'border-accent/50 bg-accent/15 text-accent'
-          : 'border-edge bg-[#0e1728] text-muted hover:text-ink',
+          : 'border-edge bg-raised text-muted hover:text-ink',
       )}
       onClick={() => setRegion(value)}
     >
@@ -368,7 +368,7 @@ export default function ConsoleGrid({ providers }: { providers: ProviderConsole[
         </span>
       </div>
 
-      {error && <div className="shrink-0 pb-2 text-[11px] text-amber-400">探测失败：{error}</div>}
+      {error && <div className="shrink-0 pb-2 text-[11px] text-warn">探测失败：{error}</div>}
 
       {/* 卡片网格 */}
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
@@ -401,11 +401,11 @@ export default function ConsoleGrid({ providers }: { providers: ProviderConsole[
       <div className="shrink-0 border-t border-edge pt-2 text-[11px] text-muted">
         <span className="tabular-nums">已探测 {stats.total} 家</span>
         <span className="mx-1.5 text-muted/40">·</span>
-        <span className="tabular-nums text-emerald-400">直连可用 {stats.ok}</span>
+        <span className="tabular-nums text-down">直连可用 {stats.ok}</span>
         <span className="mx-1.5 text-muted/40">·</span>
-        <span className="tabular-nums text-amber-400">需鉴权 {stats.auth}</span>
+        <span className="tabular-nums text-warn">需鉴权 {stats.auth}</span>
         <span className="mx-1.5 text-muted/40">·</span>
-        <span className="tabular-nums text-rose-400/80">不可达 {stats.unreach}</span>
+        <span className="tabular-nums text-up/80">不可达 {stats.unreach}</span>
       </div>
     </div>
   );

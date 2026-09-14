@@ -83,12 +83,30 @@
 
 | # | 项 | 现状 | 改法 | 量 |
 |---|---|---|---|---|
-| D1 | **去 recharts**（原 C7） | 仅 `CostCalculator` / `Leaderboards` 引用，却占 `charts` chunk **394.46kB（gzip 108kB）** | 图表改自绘 SVG（`floating/Sparkline.tsx`、`CostCurve.tsx` 已是先例）；同步移除 `manualChunks.charts` | M |
-| D2 | **ModelTable 虚拟滚动** | 664 行、数百模型全量渲染 | 行高固定，自写窗口化（约 60 行，无新依赖）；保留排序持久化 | M |
-| D3 | **亮色主题** | 57 处硬编码深色 hex（ConfigPanel 8、CostCalculator 5、FloatingStats 5、ModelTable 5…），`nativeTheme` 已桥接但组件没接 | 抽 CSS 变量 + Tailwind `dark:` 变体逐组件替换，浅色下走查 | M |
-| D4 | **日志检索增强** | 只能按 provider/status 过滤，无 requestId / 模型 / 关键词检索 | 加关键词框（匹配 model / requestId / error）+ 详情抽屉 | S |
-| D5 | 表格列显隐持久化 | 排序已持久化（`2265e9c`），列显隐未做 | localStorage 存列配置 + 「重置」 | S |
-| D6 | a11y 收尾 | Esc 已统一（`useDismissable`），但无焦点陷阱 | `useDismissable` 扩展焦点陷阱；提示加 `aria-live` | S |
+| D1 | **去 recharts**（原 C7）✅ 已完成 2026-09-14 | 仅 `CostCalculator` / `Leaderboards` 引用，却占 `charts` chunk **394.46kB（gzip 108kB）** | 图表改自绘 SVG（`floating/Sparkline.tsx`、`CostCurve.tsx` 已是先例）；同步移除 `manualChunks.charts` | M |
+| D2 | **ModelTable 虚拟滚动** ✅ 已完成 2026-09-14 | 664 行、数百模型全量渲染 | 行高固定，自写窗口化（约 60 行，无新依赖）；保留排序持久化 | M |
+| D3 | **亮色主题** ✅ 已完成 2026-09-14 | 57 处硬编码深色 hex（ConfigPanel 8、CostCalculator 5、FloatingStats 5、ModelTable 5…），`nativeTheme` 已桥接但组件没接 | 抽 CSS 变量 + Tailwind `dark:` 变体逐组件替换，浅色下走查 | M |
+| D4 | **日志检索增强** ✅ 已完成 2026-09-14 | 只能按 provider/status 过滤，无 requestId / 模型 / 关键词检索 | 加关键词框（匹配 model / requestId / error）+ 详情抽屉 | S |
+| D5 | 表格列显隐持久化 ✅ 已完成 2026-09-14 | 排序已持久化（`2265e9c`），列显隐未做 | localStorage 存列配置 + 「重置」 | S |
+| D6 | a11y 收尾 ✅ 已完成 2026-09-14 | Esc 已统一（`useDismissable`），但无焦点陷阱 | `useDismissable` 扩展焦点陷阱；提示加 `aria-live` | S |
+
+### Phase D 落地记录（2026-09-14）
+
+- ✅ **D1 去 recharts**：新增 `src/components/charts.tsx`（`ColumnChart` / `ScatterPlot` / `niceMax`，自绘 SVG，用 `ResizeObserver` 量宽后**按真实像素绘制**——若用 `preserveAspectRatio="none"` 拉伸会让文字变形）；`CostCalculator` / `Leaderboards` 切到自绘并消费主题令牌；`package.json` 移除 `recharts`、`package-lock.json` 手工做可达性剪枝（844→809 包，共享依赖保留）、`vite.config.ts` 删除 `manualChunks.charts` 分支。**实测 JS 总量 712.6KB → 334.6KB（−378KB / −53%），charts chunk 385.2KB → 4.9KB**。
+- ✅ **D2 ModelTable 虚拟滚动**：新增 `src/hooks/useVirtualList.ts`（**估算 + 实测混合**：未知行用 `estimate`，实测后按真实高度累计偏移；支持变高行与展开行；`findVisibleRange` 为可单测纯函数，二分定位首行 + overscan；`reportSize` 支持按行组回报合计高度）；`ModelTable` 删除 `PAGE_SIZE=50` 分页改为连续窗口化（**445 个模型实测只渲染 21–30 行**），筛选条件变化回到顶部，深链定位改 `scrollToIndex`；`colSpan` 由固定 11 改为动态。单测 `tests/virtualList.test.ts`（9 例）。
+- ✅ **D3 亮色主题**：`src/index.css` 建主题令牌层（`:root` 深色 / `[data-theme='light']` 浅色），Tailwind 颜色统一映射为 `rgb(var(--c-*-rgb) / <alpha-value>)`——**这是关键坑：直接把颜色映射成 `var(--c-x)` 会让 `border-accent/60` 这类 `/opacity` 类全部失效并让 postcss 构建报错**，改 RGB 通道后既保留 `var()` 内联用法又让 59 处 slash-opacity 继续可用。新增 `src/hooks/useTheme.ts`（优先级：`localStorage['wb-theme']` > Electron `nativeTheme` > 系统 `prefers-color-scheme`）+ 头部切换按钮；全库 **123 处硬编码 hex、41 个不同色值**收敛到令牌。
+  顺带修出两个真 bug：① `Sparkline` / `CostCurve` / `Mini` 把 **class 名当颜色**传给 `style.background`（浮窗曲线背景从未生效）；② 浮窗主题源只看 Electron，**浏览器/非 Electron 下不跟随系统主题**。
+- ✅ **D4 日志检索增强**：`server/metrics.ts` 抽出 `applyLogFilter()` 让内存日志与历史落盘日志**共用一套过滤语义**，并新增 `q` 关键词维度（大小写不敏感，匹配 model / requestId / error / tag / path / provider）；`GET /api/proxy/logs` 支持 `q`（**服务端过滤**，否则只能搜已加载的 200 条）。前端 `LogsPanel` 加关键词框（300ms 防抖）+ 行详情抽屉（完整字段 + 重放入口）。
+- ✅ **D5 列显隐持久化**：新增 `src/hooks/useColumnPrefs.ts` + 可复用 `src/components/ColumnPicker.tsx`（勾选 + 「重置」，至少保留一列）；`ModelTable`（11 列）与 `LogsPanel`（13 列）接入，localStorage 持久化。单测 `tests/columnPrefs.test.ts`。
+- ✅ **D6 a11y 收尾**：`useDismissable` 拆出独立的 `useFocusTrap(ref, active)`（打开时焦点移入、Tab/Shift+Tab 在弹层内循环、关闭后归还触发元素；`fallbackRef` 必须用 `useRef` 保持稳定，否则每帧重跑会反复重置焦点）；`SettingsModal` / `SearchPalette` / `LogsPanel` 抽屉接入；加密解锁门禁**只接 trap 不接 Esc**（不允许跳过）。状态提示改为**常驻 live region**（外壳常驻 + 内层条件渲染——条件渲染的元素不在 DOM 里，读屏无法播报）。
+- 测试 **254 tests / 34 files** 通过（新增 `tests/virtualList.test.ts` 9、`tests/columnPrefs.test.ts`）；`tsc -b --force` EXIT 0；`vite build` EXIT 0。
+
+**浏览器复测（真实 Chromium，11/11 步通过，零 console 异常）**：本批改了几乎全部 UI 与全库配色，故用 Edge headless + CDP（零依赖）实测 D1–D6，并**新增 WCAG 对比度审计**（令牌级 + DOM 实文本级，遍历 6 个主 tab 与本地代理 6 个子页，每主题约 2000 个元素）。审计修出**真实的浅色可读性缺陷**：
+
+- 浅色下 `accent` / `up` / `down` / `warn` 作为「文字 + 同色 10–15% 底」（Chip、primary 按钮、选中态 tab、价格 chip）实测只有 **4.04–4.12**，低于 11–12px 文字所需的 4.5；排名徽标金/银/铜/其余为 **2.87–3.32**。
+- 修法：按「文字 + 同色 12% 底」的**实际合成底色**重算两套色值——浅色 `accent 21 88 172` / `up 176 42 34` / `down 12 110 62` / `warn 146 84 0` / `rank1 #7a5406` / `rank2 #4a5461` / `rank3 #8a4515` / `rank-rest #5b6675`；深色 `up → 248 113 113`（red-400）、`rank-rest → #a8b4c6`。修后**两主题 × 11 个界面 × 约 2000 元素全部 0 失败**。
+- 复测踩坑：headless 下 `element.focus()` 不会改变 `activeElement`，验证焦点陷阱必须先开 `Emulation.setFocusEmulationEnabled`（否则 D6 必然假失败）；lazy 面板点击前必须轮询等待（固定 sleep 会 race 动态 `import()`）。
+- **复测隔离（不消耗真实额度）**：起本地 mock 上游（`127.0.0.1:9999`）+ 临时厂商 `smoke` 造日志，跑完删除临时厂商、**按 sha256 逐字节还原 `config.json`**、清掉 mock 用量。后续复测沿用此隔离方式。
 
 ---
 
@@ -123,23 +141,25 @@
 A1 A2 A3 A4 A5（安全，半天内可完） ──┐
                                     ├─> ✅ B1 B6（路由 + /v1/models）
 D1（去 recharts，无依赖可并行）─────┘        └─> ✅ B2 B3（配额 / 归因）──> ✅ B4 B5（重放 / 定价外置）
-                                                                        └─> ✅ C1 C2 C3（评测，下一步接 D/F）
-D2 D3 D4（前端体验，任意穿插）
+                                                                        └─> ✅ C1 C2 C3（评测）
+✅ D1–D6（前端性能与体验）──> 下一步 E1 E2 E3 或 F1 F2（打包与自动更新）
 F1（asar）──> F2（自动更新）──> F3 / F4
 ```
 
 - **第一批建议：A 全组 + B1/B6** ≈ 2-3 天，止血 + 补上代理最核心能力。
-- **D1 可独立并行**，纯收益。
+- **D1 可独立并行**，纯收益；D1–D6 已全部落地（JS 总量 −53%）。
 - **C 组是产品定位决策**，确认要不要往「评测」走再投入。
+- **下一步**：E 组（月度预算/用量运维/成本异动）成本低收益直接；F1→F2 是发布链路，需重打安装包 + 桌面完整冒烟。
 
 ## 统一门禁（每项 commit 前）
 
 1. `prettier --check .`
 2. `npm run typecheck` EXIT 0
-3. `npm run test`（151+ 全过）
+3. `npm run test`（254 全过）
 4. `npm run build` EXIT 0
 5. 涉及 server/proxy 必须 `node electron/server.cjs` + curl 实测；涉及打包必须重打 + 桌面双击实测
-6. commit（英文祈使句）→ `git push origin main`（SSH）→ `git ls-remote` 确认
+6. **改 UI 必须真实浏览器复测**（`tsc-pass ≠ runtime-safe`）：Edge headless + CDP，见 skill `cdp-headless-smoke`；改配色须跑对比度审计
+7. commit（英文祈使句）→ `git push origin main`（SSH）→ `git ls-remote` 确认
 
 ## 风险登记
 
@@ -147,6 +167,8 @@ F1（asar）──> F2（自动更新）──> F3 / F4
 |---|---|---|
 | A1 Origin 白名单 | 第三方客户端不带 Origin 被误杀 | 缺失 Origin 放行，仅拒绝「带了但不在白名单」 |
 | B1 路由链 | 配置错误打到错厂商 / 死循环 | 链内去重、深度上限 3、每次尝试写日志与 `x-route-*` 头 |
-| D1 去 recharts | 图表视觉回归 | 逐图截图对比后再删依赖 |
+| D1 去 recharts | 图表视觉回归 | 逐图截图对比后再删依赖 ✅ 已做：移除 `node_modules/recharts` 后构建通过即证明无残留引用，并用自绘 `charts.tsx` 重画 |
+| D3 亮色主题 | 令牌化后 `/opacity` 类静默失效（构建报错或样式丢失） | Tailwind 颜色必须映射为 `rgb(var(--c-*-rgb) / <alpha-value>)`；改完必须跑真实构建 + 对比度审计 ✅ 已做 |
+| D3 亮色主题 | 「同色文字 + 同色浅底」的 Chip/徽标对比度不足 | 按合成底色实测重算语义色，并纳入浏览器复测的自动对比度审计（阈值 4.5 / 大字 3.0）✅ 已做 |
 | F1 asar 回归 | asar 内读取差异导致白屏 | 保留 `asar:false` 一键回退；完整冒烟清单过一遍 |
 | F2 自动更新 | 无签名时 UAC 提示体验差 | 仅通知，不自动安装 |

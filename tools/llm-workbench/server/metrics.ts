@@ -167,15 +167,7 @@ export function loadPersistedLogs(filter: LogFilter = {}): CallLog[] {
       /* 跳过损坏行 */
     }
   }
-  let result = all.slice().reverse();
-  if (filter.provider) result = result.filter((l) => l.provider === filter.provider);
-  if (filter.tag) result = result.filter((l) => (l.tag ?? null) === filter.tag);
-  if (filter.status === 'ok')
-    result = result.filter((l) => l.status !== null && l.status >= 200 && l.status < 400);
-  if (filter.status === 'error')
-    result = result.filter((l) => l.status === null || l.status >= 400);
-  if (filter.limit) result = result.slice(0, filter.limit);
-  return result;
+  return applyLogFilter(all.slice().reverse(), filter);
 }
 
 function ensure(provider: string) {
@@ -428,19 +420,37 @@ export interface LogFilter {
   provider?: string;
   status?: 'ok' | 'error';
   tag?: string;
+  /** D4：关键词（大小写不敏感），匹配 model / requestId / error / tag / path / provider */
+  q?: string;
   limit?: number;
 }
 
-export function getLogs(filter: LogFilter = {}): CallLog[] {
-  let result = logs.slice().reverse();
-  if (filter.provider) result = result.filter((l) => l.provider === filter.provider);
-  if (filter.tag) result = result.filter((l) => (l.tag ?? null) === filter.tag);
+/**
+ * D4：日志关键词匹配（纯函数，窗口日志与落盘日志共用同一份语义）。
+ * 覆盖排障最常用的几个字段；空查询恒为 true。
+ */
+export function matchesLogQuery(log: CallLog, q: string | undefined): boolean {
+  const needle = (q ?? '').trim().toLowerCase();
+  if (!needle) return true;
+  const hay = [log.model, log.requestId, log.error, log.tag, log.path, log.provider];
+  return hay.some((v) => typeof v === 'string' && v.toLowerCase().includes(needle));
+}
+
+/** D4：把 provider / tag / status / 关键词 / limit 依次作用在已按时间倒序的列表上 */
+export function applyLogFilter(result: CallLog[], filter: LogFilter): CallLog[] {
+  let out = result;
+  if (filter.provider) out = out.filter((l) => l.provider === filter.provider);
+  if (filter.tag) out = out.filter((l) => (l.tag ?? null) === filter.tag);
   if (filter.status === 'ok')
-    result = result.filter((l) => l.status !== null && l.status >= 200 && l.status < 400);
-  if (filter.status === 'error')
-    result = result.filter((l) => l.status === null || l.status >= 400);
-  if (filter.limit) result = result.slice(0, filter.limit);
-  return result;
+    out = out.filter((l) => l.status !== null && l.status >= 200 && l.status < 400);
+  if (filter.status === 'error') out = out.filter((l) => l.status === null || l.status >= 400);
+  if (filter.q) out = out.filter((l) => matchesLogQuery(l, filter.q));
+  if (filter.limit) out = out.slice(0, filter.limit);
+  return out;
+}
+
+export function getLogs(filter: LogFilter = {}): CallLog[] {
+  return applyLogFilter(logs.slice().reverse(), filter);
 }
 
 /** 按 requestId 精确定位一次调用（响应头 x-request-id 回传），用于前端取用量/成本/TTFT */

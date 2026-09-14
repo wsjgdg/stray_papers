@@ -760,11 +760,12 @@ app.get('/api/proxy/logs', (req: Request, res: Response) => {
   const provider = req.query.provider as string | undefined;
   const status = req.query.status as 'ok' | 'error' | undefined;
   const tag = req.query.tag as string | undefined;
+  // D4：关键词检索（匹配 model / requestId / error / tag / path / provider）
+  const q = (req.query.q as string | undefined)?.trim() || undefined;
   const limit = Number(req.query.limit ?? 200);
   const history = req.query.history === '1' || req.query.history === 'true';
-  const logs = history
-    ? loadPersistedLogs({ provider, status, tag, limit: Number.isFinite(limit) ? limit : 200 })
-    : getLogs({ provider, status, tag, limit: Number.isFinite(limit) ? limit : 200 });
+  const filter = { provider, status, tag, q, limit: Number.isFinite(limit) ? limit : 200 };
+  const logs = history ? loadPersistedLogs(filter) : getLogs(filter);
   // B4：列表不下发请求体（可能含 prompt），仅给一个 hasReqBody 标记供「重放」按钮启用
   const safe = logs.map((l) => {
     const { reqBody, ...rest } = l;

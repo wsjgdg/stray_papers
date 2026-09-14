@@ -256,7 +256,7 @@ export function Compare({ cfg }: { cfg: Record<string, MaskedProviderConfig> }) 
               return (
                 <label
                   key={k}
-                  className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-xs hover:bg-[#16223a]"
+                  className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-xs hover:bg-hover"
                 >
                   <input type="checkbox" checked={on} onChange={() => toggle(k)} />
                   <span className={on ? 'text-ink' : 'text-muted'}>{t.provider}</span>
@@ -367,12 +367,12 @@ export function Compare({ cfg }: { cfg: Record<string, MaskedProviderConfig> }) 
                     <div className="mt-2 break-words text-[11px] text-up">{r.error}</div>
                   ) : (
                     <>
-                      <div className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-md border border-edge bg-[#0d1728] p-2 text-xs text-ink">
+                      <div className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-md border border-edge bg-sunken p-2 text-xs text-ink">
                         {r.text || '（空响应）'}
                       </div>
                       <button className="btn btn-sm mt-2" onClick={() => void copy(r.text, key(r))}>
                         {copied === key(r) ? <Check size={12} /> : <Copy size={12} />}
-                        {copied === key(r) ? '已复制' : '复制输出'}
+                        <span aria-live="polite">{copied === key(r) ? '已复制' : '复制输出'}</span>
                       </button>
                     </>
                   )}

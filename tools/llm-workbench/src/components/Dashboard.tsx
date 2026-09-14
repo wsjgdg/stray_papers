@@ -166,7 +166,7 @@ export default function Dashboard({ snapshot }: Props) {
                         <Bar
                           value={value}
                           max={rowMax}
-                          color={tab === 'value' ? '#f59e0b' : '#4da3ff'}
+                          color={tab === 'value' ? 'var(--c-s3)' : 'var(--c-accent)'}
                         />
                       </div>
                     </div>
@@ -196,7 +196,7 @@ export default function Dashboard({ snapshot }: Props) {
                     <Bar
                       value={v.count}
                       max={vendorRank[0]?.count ?? 1}
-                      color="#22d3ee"
+                      color="var(--c-s2)"
                       height={5}
                     />
                   </div>
@@ -223,7 +223,7 @@ export default function Dashboard({ snapshot }: Props) {
       <Card title="最新上架模型" subtitle="按 OpenRouter 上架时间倒序">
         <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
           {recent.map((m) => (
-            <div key={m.id} className="rounded-lg border border-edge bg-[#0e1728] px-3 py-2">
+            <div key={m.id} className="rounded-lg border border-edge bg-raised px-3 py-2">
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate text-xs text-ink">{m.name}</span>
                 <span className="shrink-0 text-[11px] text-muted">{fmtDate(m.created)}</span>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Calculator } from 'lucide-react';
 import { useDismissable } from '../hooks/useDismissable';
 
@@ -46,7 +46,9 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
     ...(electron?.getSettings?.() ?? {}),
   }));
 
-  useDismissable(onClose);
+  // D6：焦点陷阱（打开聚焦首个控件、Tab 循环、关闭归还焦点）
+  const panelRef = useRef<HTMLDivElement>(null);
+  useDismissable(onClose, true, panelRef);
 
   const save = () => {
     electron?.saveSettings?.(s);
@@ -63,7 +65,9 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
       aria-label="浮窗与通知设置"
     >
       <div
-        className="w-[380px] space-y-4 rounded-2xl border border-edge bg-panel p-5 shadow-2xl"
+        ref={panelRef}
+        tabIndex={-1}
+        className="w-[380px] space-y-4 rounded-2xl border border-edge bg-panel p-5 shadow-2xl outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 text-ink">
@@ -242,7 +246,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
         </label>
 
         <p className="text-[10px] text-muted">
-          快捷键格式如 <code className="rounded bg-[#0d1728] px-1">CommandOrControl+Shift+F</code>
+          快捷键格式如 <code className="rounded bg-sunken px-1">CommandOrControl+Shift+F</code>
           （macOS 用 Command，Win/Linux 用 Ctrl）。
         </p>
 

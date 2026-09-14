@@ -47,11 +47,7 @@ export function BudgetBar() {
   const ratio = status?.ratio ?? null;
   const pct = ratio === null ? 0 : Math.min(100, Math.round(ratio * 100));
   const barColor =
-    status?.level === 'exceed'
-      ? 'bg-red-500'
-      : status?.level === 'warn'
-        ? 'bg-amber-500'
-        : 'bg-emerald-500';
+    status?.level === 'exceed' ? 'bg-up' : status?.level === 'warn' ? 'bg-warn' : 'bg-down';
 
   return (
     <Card title="日预算" subtitle="今日成本达到预算 80% 预警、100% 超限">
@@ -66,7 +62,7 @@ export function BudgetBar() {
                 {ratio !== null && `（${pct}%）`}
               </span>
             </div>
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#0e1728]">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-raised">
               <div className={`h-full ${barColor} transition-all`} style={{ width: `${pct}%` }} />
             </div>
           </>
@@ -101,7 +97,9 @@ export function BudgetBar() {
               清除
             </button>
           )}
-          {err && <span className="text-up">{err}</span>}
+          <span className="text-up" role="alert">
+            {err ?? ''}
+          </span>
         </div>
       </div>
     </Card>

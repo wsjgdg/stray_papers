@@ -49,9 +49,7 @@ export default function Proxy({ providers }: { providers: ProviderConsole[] }) {
             onClick={() => setSub(id)}
             className={clsx(
               'flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs transition-colors',
-              sub === id
-                ? 'bg-accent/15 text-accent'
-                : 'text-muted hover:bg-[#16223a] hover:text-ink',
+              sub === id ? 'bg-accent/15 text-accent' : 'text-muted hover:bg-hover hover:text-ink',
             )}
           >
             <Icon size={13} />

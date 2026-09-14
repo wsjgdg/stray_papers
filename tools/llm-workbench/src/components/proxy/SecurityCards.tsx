@@ -93,8 +93,12 @@ export function EncryptionCard() {
             关闭加密（转明文）
           </button>
         )}
-        {msg && <span className="text-[11px] text-accent">{msg}</span>}
-        {err && <span className="text-[11px] text-up">{err}</span>}
+        <span className="text-[11px] text-accent" role="status" aria-live="polite">
+          {msg ?? ''}
+        </span>
+        <span className="text-[11px] text-up" role="alert">
+          {err ?? ''}
+        </span>
       </div>
     </Card>
   );
@@ -121,7 +125,7 @@ export function UnifiedEndpointCard() {
     >
       <div className="space-y-2 text-[11px]">
         <div className="flex flex-wrap items-center gap-2">
-          <code className="rounded bg-[#0d1728] px-2 py-1 text-accent">{endpoint}</code>
+          <code className="rounded bg-sunken px-2 py-1 text-accent">{endpoint}</code>
           <button className="btn btn-ghost" onClick={copy}>
             {copied ? '已复制' : '复制'}
           </button>
@@ -210,7 +214,9 @@ export function KeyHealthCard() {
             </div>
           </div>
         ))}
-        {err && <div className="text-[11px] text-up">{err}</div>}
+        <div className="text-[11px] text-up" role="alert">
+          {err ?? ''}
+        </div>
       </div>
     </Card>
   );
@@ -281,7 +287,7 @@ export function ProxyTokenCard() {
           </span>
         )}
         {status.enabled && (
-          <code className="rounded bg-[#0d1728] px-2 py-1 text-accent">
+          <code className="rounded bg-sunken px-2 py-1 text-accent">
             {status.tokenMasked || '****'}
           </code>
         )}
@@ -310,8 +316,12 @@ export function ProxyTokenCard() {
             {busy ? '处理中…' : '启用代理令牌'}
           </button>
         )}
-        {msg && <span className="text-[11px] text-accent">{msg}</span>}
-        {err && <span className="text-[11px] text-up">{err}</span>}
+        <span className="text-[11px] text-accent" role="status" aria-live="polite">
+          {msg ?? ''}
+        </span>
+        <span className="text-[11px] text-up" role="alert">
+          {err ?? ''}
+        </span>
       </div>
     </Card>
   );
@@ -494,8 +504,12 @@ export function RoutingCard() {
           </div>
         </div>
 
-        {msg && <div className="text-accent">{msg}</div>}
-        {err && <div className="text-up">{err}</div>}
+        <div className="text-accent" role="status" aria-live="polite">
+          {msg ?? ''}
+        </div>
+        <div className="text-up" role="alert">
+          {err ?? ''}
+        </div>
       </div>
     </Card>
   );

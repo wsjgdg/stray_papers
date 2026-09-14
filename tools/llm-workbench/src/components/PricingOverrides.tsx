@@ -136,7 +136,7 @@ export function PricingOverridesCard() {
             <span className="text-muted">
               厂商：
               {providerKeys.map((k) => (
-                <code key={k} className="mr-1 rounded bg-[#0d1728] px-1 text-accent">
+                <code key={k} className="mr-1 rounded bg-sunken px-1 text-accent">
                   {k}
                 </code>
               ))}
@@ -146,7 +146,7 @@ export function PricingOverridesCard() {
             <span className="text-muted">
               模型：
               {modelKeys.map((k) => (
-                <code key={k} className="mr-1 rounded bg-[#0d1728] px-1 text-accent">
+                <code key={k} className="mr-1 rounded bg-sunken px-1 text-accent">
                   {k}
                 </code>
               ))}
@@ -170,8 +170,13 @@ export function PricingOverridesCard() {
           >
             重置为内置定价
           </button>
-          {msg && <span className="text-accent">{msg}</span>}
-          {err && <span className="text-up">{err}</span>}
+          {/* D6：常驻 live region（内容变化时才播报） */}
+          <span className="text-accent" role="status" aria-live="polite">
+            {msg ?? ''}
+          </span>
+          <span className="text-up" role="alert">
+            {err ?? ''}
+          </span>
         </div>
         <div className="text-muted">
           格式：

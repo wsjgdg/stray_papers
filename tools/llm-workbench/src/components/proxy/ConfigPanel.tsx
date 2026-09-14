@@ -378,9 +378,9 @@ export function ConfigPanel({
         }
       >
         <div className="flex gap-3">
-          <div className="w-56 shrink-0 space-y-2 rounded-lg border border-edge bg-[#0d1728] p-2">
+          <div className="w-56 shrink-0 space-y-2 rounded-lg border border-edge bg-sunken p-2">
             {menuMode === 'add' && (
-              <div className="flex items-center gap-1 rounded-md border border-edge bg-[#0e1728] px-2">
+              <div className="flex items-center gap-1 rounded-md border border-edge bg-raised px-2">
                 <Search size={12} className="text-muted" />
                 <input
                   className="w-full bg-transparent py-1 text-xs text-ink outline-none placeholder:text-muted/60"
@@ -412,14 +412,12 @@ export function ConfigPanel({
                       }}
                       className={clsx(
                         'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs',
-                        selected === p.id
-                          ? 'bg-accent/15 text-accent'
-                          : 'text-ink hover:bg-[#16223a]',
+                        selected === p.id ? 'bg-accent/15 text-accent' : 'text-ink hover:bg-hover',
                       )}
                     >
                       <span className="truncate">{p.nameCn || p.name}</span>
                       {cfg[p.id]?.hasKey && (
-                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-down" />
                       )}
                     </button>
                   ))}
@@ -437,15 +435,11 @@ export function ConfigPanel({
                       }}
                       className={clsx(
                         'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs',
-                        selected === id
-                          ? 'bg-accent/15 text-accent'
-                          : 'text-ink hover:bg-[#16223a]',
+                        selected === id ? 'bg-accent/15 text-accent' : 'text-ink hover:bg-hover',
                       )}
                     >
                       <span className="truncate">{c.name}</span>
-                      {c.hasKey && (
-                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
-                      )}
+                      {c.hasKey && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-down" />}
                     </button>
                   ))}
                 </div>
@@ -464,12 +458,12 @@ export function ConfigPanel({
                     onClick={() => setSelected(id)}
                     className={clsx(
                       'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs',
-                      selected === id ? 'bg-accent/15 text-accent' : 'text-ink hover:bg-[#16223a]',
+                      selected === id ? 'bg-accent/15 text-accent' : 'text-ink hover:bg-hover',
                     )}
                   >
                     <span className="truncate">{name}</span>
                     {cfg[id]?.hasKey && (
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-down" />
                     )}
                   </button>
                 ))}
@@ -614,7 +608,7 @@ export function ConfigPanel({
                 </div>
 
                 {modelSectionVisible && (
-                  <div className="space-y-2 rounded-lg border border-edge bg-[#0d1728] p-3">
+                  <div className="space-y-2 rounded-lg border border-edge bg-sunken p-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="text-[11px] text-muted">
                         模型清单 · 自动获取后手动启用（仅启用项出现在「试用」下拉）
@@ -638,7 +632,7 @@ export function ConfigPanel({
                           return (
                             <label
                               key={m}
-                              className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-xs hover:bg-[#16223a]"
+                              className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-xs hover:bg-hover"
                             >
                               <input
                                 type="checkbox"
@@ -675,7 +669,7 @@ export function ConfigPanel({
                 )}
 
                 {modelSectionVisible && (
-                  <div className="space-y-2 rounded-lg border border-edge bg-[#0d1728] p-3">
+                  <div className="space-y-2 rounded-lg border border-edge bg-sunken p-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="text-[11px] text-muted">
                         模型映射 · 请求模型名 → 上游实际模型名（未命中原样透传；计量按上游模型计价）
