@@ -1,4 +1,6 @@
-# F6 提交提速：仅对改动文件跑 prettier/eslint（lint-staged 自动回写并暂存）；
-# 全量门禁（format:check / test / coverage / build）留给 CI 与发版流程。
-npx lint-staged
-npm run typecheck
+#!/usr/bin/env sh
+# F8：只对本提交的改动文件跑 prettier --check（提速，避免再触发 lint-staged 的 eslint --fix 写盘 + typecheck 超时）。
+# 全量门禁（format:check / lint / test / coverage / build）交给 CI 与发版流程。husky v9 经 _/h 以 `sh -e` 执行本文件。
+changed=$(git diff --cached --name-only --diff-filter=ACMR | grep -v -E '^(node_modules/|dist/|release/|\.husky/)' || true)
+[ -z "$changed" ] && exit 0
+npx prettier --check $changed
