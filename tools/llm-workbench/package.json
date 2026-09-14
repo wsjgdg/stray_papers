@@ -3,9 +3,13 @@
   "private": true,
   "version": "0.1.1",
   "type": "module",
+  "description": "大模型能力评估 + 本地 API 代理工作台（多厂商 Key 轮询、响应缓存、成本与用量观测）",
+  "author": "LLM Workbench contributors",
+  "license": "MIT",
   "main": "electron/main.cjs",
   "scripts": {
     "gen:web-assets": "node scripts/gen-web-assets.mjs",
+    "release:checksums": "node scripts/gen-checksums.mjs",
     "predev": "npm run gen:web-assets",
     "prebuild": "npm run gen:web-assets",
     "pretypecheck": "npm run gen:web-assets",
@@ -30,8 +34,8 @@
     "verify": "vitest run",
     "test:integration": "tsx scripts/verify-bankofai.mjs && tsx scripts/verify-proxy-hardening.mjs && tsx scripts/it-apiFormat.mjs && tsx scripts/smoke-translate.mjs",
     "electron:dev": "npm run build && npm run build:server:electron && npm run make:icon && electron .",
-    "electron:build": "npm run build && npm run gen:web-assets && npm run build:server:electron && npm run make:icon && npm run build:electron-config && electron-builder",
-    "electron:build:portable": "npm run build && npm run gen:web-assets && npm run build:server:electron && npm run make:icon && npm run build:electron-config && electron-builder --win dir"
+    "electron:build": "npm run build && npm run gen:web-assets && npm run build:server:electron && npm run make:icon && npm run build:electron-config && electron-builder && npm run release:checksums",
+    "electron:build:portable": "npm run build && npm run gen:web-assets && npm run build:server:electron && npm run make:icon && npm run build:electron-config && electron-builder --win dir --win zip && npm run release:checksums"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -91,11 +95,20 @@
       "output": "release"
     },
     "win": {
-      "target": "nsis",
-      "icon": "electron/icon.png"
+      "target": [
+        "nsis",
+        "zip"
+      ],
+      "icon": "electron/icon.ico"
     },
     "nsis": {
-      "createDesktopShortcut": "always"
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerLanguages": [
+        "zh_CN"
+      ],
+      "createDesktopShortcut": "always",
+      "deleteAppDataOnUninstall": false
     }
   }
 }
