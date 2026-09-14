@@ -216,7 +216,7 @@
 | F5 | 依赖升级 | express 4→5；recharts 随 D1 移除 | 独立 PR | M |
 | F6 | i18n 抽层 | 中文硬编码全量 | `resources/zh|en` + 语言切换；优先级最低 | M |
 | F7 | 多 profile 隔离 | 同一 exe 只能一套配置 | `LLM_WORKBENCH_HOME` 子目录 + `--profile` 启动参数 | M |
-| F8 | **提交门禁重建** | 2026-09-14 事故：husky → lint-staged 在沙箱被 SIGTERM 中断，导致 `.git/refs` 与 pack 丢失 | `.husky/pre-commit` 换成 3 行脚本（只对改动文件跑 `prettier --check`），全量门禁留给 CI | S |
+| F8 | **提交门禁重建** | 2026-09-14 事故：husky → lint-staged 在沙箱被 SIGTERM 中断，导致 `.git/refs` 与 pack 丢失 | `.husky/pre-commit` 换成 3 行脚本（只对改动文件跑 `prettier --check`），全量门禁留给 CI。**同日的 CI 长期红灯另立一条**：本地门禁缺 `npm run lint` 已补进「统一门禁」第 1 步；husky 脚本本身仍待重建 | S |
 
 ---
 
@@ -238,13 +238,19 @@ F1（asar）──> F2（自动更新）──> F3 / F4
 
 ## 统一门禁（每项 commit 前）
 
-1. `prettier --check .`
-2. `npm run typecheck` EXIT 0
-3. `npm run test`（293 全过）
-4. `npm run build` EXIT 0
-5. 涉及 server/proxy 必须 `node electron/server.cjs` + curl 实测；涉及打包必须重打 + 桌面双击实测
-6. **改 UI 必须真实浏览器复测**（`tsc-pass ≠ runtime-safe`）：Edge headless + CDP，见 skill `cdp-headless-smoke`；改配色须跑对比度审计
-7. commit（英文祈使句）→ `git push origin main`（SSH）→ `git ls-remote` 确认
+**本地门禁必须与 `.github/workflows/ci.yml` 同源**——CI 跑什么，本地就先跑什么。2026-09-14 的事故正是这里漏了一步：
+
+1. `npm run lint`（= `eslint .`，**CI 的第 3 步；此前本地从未跑过，导致 CI 长期红灯**）EXIT 0
+2. `prettier --check .`
+3. `npm run typecheck` EXIT 0
+4. `npm run test`（293 全过）——**纯模块级，不含 DOM**，不能替代第 6 步
+5. `npm run build` EXIT 0
+6. 涉及 server/proxy 必须 `node electron/server.cjs` + curl 实测；涉及打包必须重打 + 桌面双击实测
+7. **改 UI 必须真实浏览器复测**（`tsc-pass ≠ runtime-safe`）：Edge headless + CDP，见 skill `cdp-headless-smoke`；改配色须跑对比度审计
+8. commit（英文祈使句）→ `git push origin main`（SSH）→ `git ls-remote` 确认
+
+> `lint` 的告警（104 条）不阻塞，**error 才阻塞**。`react-hooks` 的 React Compiler 规则在 `recommended` 里多为 error，新增 Hook 代码前先把这条记牢：
+> 只有 `set-state-in-effect` / `purity` 被主动降级为 warn，其余（`refs` / `immutability` / `globals` / `preserve-manual-memoization` / `static-components` / `set-state-in-render` / `error-boundaries`）**都是 error**。
 
 ## 风险登记
 
@@ -263,5 +269,6 @@ F1（asar）──> F2（自动更新）──> F3 / F4
 | E3 成本异动 | 清闲期一笔小额调用就会触发倍数告警（误报刷屏） | 基线只取 `requests > 0` 的已完成小时 + 绝对下限 `$0.01`（`below-floor`）+ 至少 3 个样本与 5 分钟窗口 ✅ 已做 |
 | E3 成本异动 | 服务端重启后小时环清空，若前端沿用旧 level 会长期显示告警 | 冷启动 `sampleHours = 0` → `insufficient-hours` 强制回 `normal`（fail-safe 而非 fail-open） ✅ 已做 |
 | E3 成本异动 | 告警重复弹系统通知 | `costSpikeNotifiedRef` 只在 **alert 上升沿**触发，持续 alert 不重复；回落到 normal/warn 才复位，可再提醒 ✅ 已做 |
+| **CI 长期红灯** | 本地门禁从未跑 `npm run lint`，而 CI 的第三步就是它 → 每次 push 必红；`react-hooks/refs` 在 recommended 里是 **error**，仓库只降级了 `set-state-in-effect` / `purity`，漏了它 | ①`useVirtualList` 尺寸缓存改「写走 ref、读走 state 快照」，消除真实的渲染期读 ref（非抑制规则）；②**统一门禁补上 `npm run lint`**（见下），本地与 CI 同源 ✅ 已做 |
 | F1 asar 回归 | asar 内读取差异导致白屏 | 保留 `asar:false` 一键回退；完整冒烟清单过一遍 |
 | F2 自动更新 | 无签名时 UAC 提示体验差 | 仅通知，不自动安装 |
