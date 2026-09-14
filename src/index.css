@@ -186,6 +186,10 @@ body {
   .btn-ghost {
     @apply border-transparent bg-transparent px-2 text-muted hover:border-edge hover:text-ink;
   }
+  /* E2：破坏性操作（清理用量等）；与 btn-primary 同构，色调取语义色 up（红） */
+  .btn-danger {
+    @apply border-up/60 bg-up/15 text-up hover:bg-up/25;
+  }
   .input {
     @apply w-full rounded-lg border border-edge bg-sunken px-3 py-2 text-sm text-ink outline-none placeholder:text-muted/60 focus:border-accent;
   }
