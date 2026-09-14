@@ -47,6 +47,7 @@ import {
   loadPersistedLogs,
   persistedLogsAvailable,
   budgetStatus,
+  ratioLevel,
   findLogByRequestId,
 } from './metrics.js';
 import { aggregateSpend, spendToCsv } from './spendExport.js';
@@ -57,6 +58,7 @@ import {
   stopUsageStore,
   usageSpendSources,
   usageByTag,
+  usageMonthProjection,
 } from './usageStore.js';
 import {
   deletePricingOverrides,
@@ -587,33 +589,67 @@ app.get('/api/proxy/metrics/summary', (_req: Request, res: Response) => {
   res.json(getSummary());
 });
 
-// D3 日预算：查询（今日成本 + 阈值状态）/ 设置（null 清除）；阈值判定见 metrics.budgetStatus。
-// blockOnExceed = fail-closed：超限后代理拒绝转发（见 proxy.ts 守卫）。
-app.get('/api/proxy/budget', (_req: Request, res: Response) => {
+// D3 日预算 / E1 月度预算：查询（今日成本 + 阈值状态 + 月度进度与月终预测）。
+// 阈值判定见 metrics.ratioLevel（≥80% 预警、≥100% 超限）。
+// blockOnExceed = fail-closed：日预算超限后代理拒绝转发（见 proxy.ts 守卫）；月度只告警不拦截。
+function budgetPayload() {
   const budget = getBudget();
   const todayUsd = getSummary().todayCostUsd;
-  res.json({ ...budget, todayUsd, ...budgetStatus(todayUsd, budget.dailyUsd) });
+  const month = usageMonthProjection(budget.monthlyUsd);
+  return {
+    ...budget,
+    todayUsd,
+    ...budgetStatus(todayUsd, budget.dailyUsd),
+    month: {
+      ...month,
+      // 已达比例按「月至今 / 月预算」，与日预算同口径
+      ...ratioLevel(month.monthToDateUsd, budget.monthlyUsd),
+      // 预测比例按「预测月终 / 月预算」，用于提前发现趋势性超支
+      projectedRatio: ratioLevel(month.projectedMonthUsd, budget.monthlyUsd).ratio,
+      projectedLevel: ratioLevel(month.projectedMonthUsd, budget.monthlyUsd).level,
+    },
+  };
+}
+
+app.get('/api/proxy/budget', (_req: Request, res: Response) => {
+  res.json(budgetPayload());
 });
+// 增量语义：只提交需要改动的字段（传 null 清除该项）；至少提交一项。
+// 例：只改月度不会影响日预算与 blockOnExceed。
 app.post('/api/proxy/budget', requireAdmin, (req: Request, res: Response) => {
-  const { dailyUsd, blockOnExceed } = (req.body ?? {}) as {
+  const body = (req.body ?? {}) as {
     dailyUsd?: unknown;
+    monthlyUsd?: unknown;
     blockOnExceed?: unknown;
   };
-  if (
-    dailyUsd !== null &&
-    (typeof dailyUsd !== 'number' || !Number.isFinite(dailyUsd) || dailyUsd <= 0)
-  ) {
-    res.status(400).json({ error: 'dailyUsd 必须为正数（USD），传 null 清除预算' });
+  const patch: { dailyUsd?: number | null; monthlyUsd?: number | null; blockOnExceed?: boolean } =
+    {};
+  for (const key of ['dailyUsd', 'monthlyUsd'] as const) {
+    if (!(key in body)) continue;
+    const v = body[key];
+    if (v === null) {
+      patch[key] = null;
+      continue;
+    }
+    if (typeof v !== 'number' || !Number.isFinite(v) || v <= 0) {
+      res.status(400).json({ error: `${key} 必须为正数（USD），传 null 清除该预算` });
+      return;
+    }
+    patch[key] = v;
+  }
+  if (body.blockOnExceed !== undefined) {
+    if (typeof body.blockOnExceed !== 'boolean') {
+      res.status(400).json({ error: 'blockOnExceed 必须为布尔值' });
+      return;
+    }
+    patch.blockOnExceed = body.blockOnExceed;
+  }
+  if (Object.keys(patch).length === 0) {
+    res.status(400).json({ error: '至少提供 dailyUsd / monthlyUsd / blockOnExceed 之一' });
     return;
   }
-  if (blockOnExceed !== undefined && typeof blockOnExceed !== 'boolean') {
-    res.status(400).json({ error: 'blockOnExceed 必须为布尔值' });
-    return;
-  }
-  setBudget(dailyUsd ?? null, blockOnExceed as boolean | undefined);
-  const budget = getBudget();
-  const todayUsd = getSummary().todayCostUsd;
-  res.json({ ...budget, todayUsd, ...budgetStatus(todayUsd, budget.dailyUsd) });
+  setBudget(patch);
+  res.json(budgetPayload());
 });
 
 // D5 配置备份：导出/导入加密备份（config.json + auth.json 原文打包，passphrase 派生 GCM）。

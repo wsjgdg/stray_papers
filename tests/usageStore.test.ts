@@ -116,4 +116,62 @@ describe('usageStore', () => {
     expect(rows).toHaveLength(2);
     expect(rows[0]).toMatchObject({ provider: 'openai', model: 'gpt-4o', inputTokens: 10 });
   });
+
+  it('usageDayTotals：按日期升序聚合，跨 provider/model/tag 求和（E1）', async () => {
+    const s = await fresh();
+    s.initUsageStore();
+    const d13 = new Date(2026, 8, 13, 10).getTime();
+    const d14 = new Date(2026, 8, 14, 10).getTime();
+    s.recordUsage(d14, 'openai', 'a', null, 10, 5, 0, 0.5);
+    s.recordUsage(d14, 'anthropic', 'b', 'proj-x', 20, 10, 4, 0.25);
+    s.recordUsage(d13, 'openai', 'a', null, 1, 1, 0, 0.125);
+    const totals = s.usageDayTotals();
+    expect(totals.map((t) => t.day)).toEqual(['2026-09-13', '2026-09-14']);
+    expect(totals[1]).toMatchObject({
+      cost: 0.75,
+      requests: 2,
+      inputTokens: 30,
+      outputTokens: 15,
+    });
+  });
+
+  it('今日成本口径：跨重启仍保留，日预算守卫不再 fail-open（E1）', async () => {
+    const ts = Date.now();
+    let s = await fresh();
+    s.initUsageStore();
+    s.recordUsage(ts, 'openai', 'm', null, 100, 50, 0, 0.5);
+    expect(s.usageTodayCost(ts)).toBe(0.5);
+    s.stopUsageStore(); // 落盘并停表
+
+    // 模拟进程重启：重置模块注册表后重新加载（原先 metrics 的内存日桶在此归零）
+    vi.resetModules();
+    s = await fresh();
+    s.initUsageStore();
+    const m = await import('../server/metrics.js');
+    expect(s.usageTodayCost()).toBe(0.5);
+    const summary = m.getSummary();
+    expect(summary.todayCostUsd).toBe(0.5); // 重启前写入的成本仍参与日预算判定
+    expect(summary.todayInputTokens).toBe(100);
+  });
+
+  it('usageDayTotalsOf / usageTodayTotals：缺失日期返回零值而非抛错', async () => {
+    const s = await fresh();
+    s.initUsageStore();
+    expect(s.usageDayTotalsOf('1999-01-01')).toEqual({
+      requests: 0,
+      input: 0,
+      output: 0,
+      cacheRead: 0,
+      cost: 0,
+    });
+    expect(s.usageTodayTotals()).toEqual({
+      requests: 0,
+      input: 0,
+      output: 0,
+      cacheRead: 0,
+      cost: 0,
+    });
+    expect(s.usageTodayCost()).toBe(0);
+    expect(s.usageMonthProjection().projectedMonthUsd).toBe(0);
+  });
 });

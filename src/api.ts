@@ -682,23 +682,51 @@ export function evalRunCsvUrl(runId: string): string {
   return `/api/proxy/evals/runs/${encodeURIComponent(runId)}/export`;
 }
 
-// ───────── 日预算（D3） ─────────
-export interface BudgetStatus {
-  dailyUsd: number | null;
-  todayUsd: number;
+// ───────── 预算（D3 日预算 / E1 月度预算） ─────────
+export interface BudgetLevel {
   level: 'ok' | 'warn' | 'exceed'; // 阈值判定在服务端（ratio ≥80% warn、≥100% exceed）
   ratio: number | null;
+}
+
+/** 月终预测（服务端 usageStore.projectMonthEnd 线性外推；月度仅告警，不拦截） */
+export interface BudgetMonthStatus extends BudgetLevel {
+  month: string; // YYYY-MM
+  monthToDateUsd: number;
+  todayUsd: number;
+  elapsedDays: number; // 本月已过天数（含今日）
+  daysInMonth: number;
+  remainingDays: number; // 剩余天数（不含今日）
+  windowDays: number; // 参与日均的已完成天数（≤7）
+  recentDailyAvgUsd: number;
+  basis: 'recent' | 'today'; // 外推依据：窗口内已完成日均 / 月初仅有今日
+  projectedMonthUsd: number;
+  projectedOverageUsd: number | null; // 预计超额（未超为 0；未设月度预算为 null）
+  projectedRatio: number | null; // 预测月终 / 月预算
+  projectedLevel: 'ok' | 'warn' | 'exceed';
+}
+
+export interface BudgetStatus extends BudgetLevel {
+  dailyUsd: number | null;
+  monthlyUsd: number | null;
+  blockOnExceed: boolean;
+  todayUsd: number;
+  month: BudgetMonthStatus;
 }
 
 export async function fetchBudget(): Promise<BudgetStatus> {
   return request<BudgetStatus>('/api/proxy/budget');
 }
 
-export async function setBudget(dailyUsd: number | null): Promise<BudgetStatus> {
+/** 增量设置预算：只传需要改动的字段，传 null 清除该项（undefined 表示不改） */
+export async function setBudget(patch: {
+  dailyUsd?: number | null;
+  monthlyUsd?: number | null;
+  blockOnExceed?: boolean;
+}): Promise<BudgetStatus> {
   return request<BudgetStatus>('/api/proxy/budget', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ dailyUsd }),
+    body: JSON.stringify(patch),
   });
 }
 

@@ -82,9 +82,10 @@ export interface ProxyConfig {
   // 明文落地本机；localhost 单用户场景由前端存 localStorage 透明携带，外部客户端复制使用。
   proxyToken?: string | null;
   proxyTokenEnabled?: boolean;
-  // 日预算（D3）：今日成本达到 80% 预警 / 100% 超限；阈值判定见 metrics.budgetStatus。
-  // blockOnExceed = fail-closed：超限后代理直接拒绝转发（402），默认 false 只告警。
-  budget?: { dailyUsd?: number; blockOnExceed?: boolean };
+  // 预算（D3 日预算 / E1 月度预算）：达到 80% 预警 / 100% 超限；阈值判定见 metrics.ratioLevel。
+  // blockOnExceed = fail-closed：日预算超限后代理直接拒绝转发（402），默认 false 只告警。
+  // 月度预算只做告警与月终预测（见 usageStore.projectMonthEnd），不参与拦截。
+  budget?: { dailyUsd?: number; monthlyUsd?: number; blockOnExceed?: boolean };
   // B1：模型路由 + fallback 链；决定「一次请求按什么顺序尝试哪些厂商」。
   // 缺省（未配置）时统一端点退化为「首个启用且有 key 的厂商」。
   routing?: RoutingConfig;
@@ -372,25 +373,45 @@ export function setProxyTokenEnabled(enabled: boolean): ProxyConfig {
   return activeConfig;
 }
 
-// ───────── 日预算（D3） ─────────
-/** 读取内存态日预算（USD；未设置为 null）与 fail-closed 开关 */
-export function getBudget(): { dailyUsd: number | null; blockOnExceed: boolean } {
+// ───────── 预算（D3 日预算 / E1 月度预算） ─────────
+/** 读取内存态预算（USD；未设置为 null）与 fail-closed 开关；月度仅用于告警，不参与拦截 */
+export function getBudget(): {
+  dailyUsd: number | null;
+  monthlyUsd: number | null;
+  blockOnExceed: boolean;
+} {
   return {
     dailyUsd: activeConfig.budget?.dailyUsd ?? null,
+    monthlyUsd: activeConfig.budget?.monthlyUsd ?? null,
     blockOnExceed: Boolean(activeConfig.budget?.blockOnExceed),
   };
 }
 
-/** 写入/清除日预算并原子落盘（<=0 或 null 视为清除）；blockOnExceed 缺省保持原值；锁定态禁止写入（避免覆盖密文） */
-export function setBudget(dailyUsd: number | null, blockOnExceed?: boolean): ProxyConfig {
+/**
+ * 按字段增量写入/清除预算并原子落盘（<=0 或 null 视为清除该字段）。
+ * 只改动传入的字段：清日预算不会连带清掉月度预算（反之亦然）；两项都为空则整块删除。
+ * blockOnExceed 缺省保持原值。锁定态禁止写入（避免覆盖密文）。
+ */
+export function setBudget(patch: {
+  dailyUsd?: number | null;
+  monthlyUsd?: number | null;
+  blockOnExceed?: boolean;
+}): ProxyConfig {
   if (locked) return activeConfig;
-  if (dailyUsd == null || dailyUsd <= 0) {
-    delete activeConfig.budget;
+  const next: { dailyUsd?: number; monthlyUsd?: number; blockOnExceed?: boolean } = {
+    ...activeConfig.budget,
+  };
+  for (const key of ['dailyUsd', 'monthlyUsd'] as const) {
+    const v = patch[key];
+    if (v === undefined) continue;
+    if (v == null || v <= 0) delete next[key];
+    else next[key] = v;
+  }
+  if (patch.blockOnExceed !== undefined) next.blockOnExceed = patch.blockOnExceed;
+  if (next.dailyUsd === undefined && next.monthlyUsd === undefined) {
+    delete activeConfig.budget; // 无任何额度上限时整块移除，配置文件保持干净
   } else {
-    activeConfig.budget = {
-      dailyUsd,
-      blockOnExceed: blockOnExceed ?? activeConfig.budget?.blockOnExceed ?? false,
-    };
+    activeConfig.budget = next;
   }
   saveConfig(activeConfig);
   return activeConfig;

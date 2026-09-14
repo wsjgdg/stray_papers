@@ -150,3 +150,34 @@ describe('config: listRoutedModels (B6)', () => {
     assert.deepEqual(cfg.listRoutedModels(), []);
   });
 });
+
+describe('config: setBudget 增量语义（E1）', () => {
+  beforeEach(() => {
+    fs.rmSync(cfg.configPath(), { force: true });
+    cfg.initConfigStore();
+  });
+
+  it('只提交 dailyUsd 时不影响其它字段；月度可独立设置', () => {
+    cfg.setBudget({ dailyUsd: 5 });
+    assert.deepEqual(cfg.getBudget(), { dailyUsd: 5, monthlyUsd: null, blockOnExceed: false });
+    cfg.setBudget({ monthlyUsd: 100 });
+    assert.deepEqual(cfg.getBudget(), { dailyUsd: 5, monthlyUsd: 100, blockOnExceed: false });
+  });
+
+  it('清除日预算不会连带清掉月度预算，反之亦然', () => {
+    cfg.setBudget({ dailyUsd: 5, monthlyUsd: 100, blockOnExceed: true });
+    cfg.setBudget({ dailyUsd: null });
+    assert.deepEqual(cfg.getBudget(), { dailyUsd: null, monthlyUsd: 100, blockOnExceed: true });
+    cfg.setBudget({ monthlyUsd: null });
+    // 两项都为空 → 整块移除，配置文件保持干净
+    assert.equal(JSON.parse(fs.readFileSync(cfg.configPath(), 'utf8')).budget, undefined);
+    assert.deepEqual(cfg.getBudget(), { dailyUsd: null, monthlyUsd: null, blockOnExceed: false });
+  });
+
+  it('<=0 视为清除该项；落盘可回读', () => {
+    cfg.setBudget({ dailyUsd: 5, monthlyUsd: 100 });
+    cfg.setBudget({ dailyUsd: 0 });
+    assert.equal(cfg.getBudget().dailyUsd, null);
+    assert.equal(cfg.loadConfig().budget?.monthlyUsd, 100);
+  });
+});

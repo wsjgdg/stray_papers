@@ -239,3 +239,152 @@ export function usageByTag(opts: { days?: number } = {}): UsageByTagRow[] {
   }
   return [...map.values()].sort((a, b) => b.costUsd - a.costUsd);
 }
+
+// ───────── E1：日粒度合计 + 月终预测 ─────────
+
+export interface UsageDayTotal {
+  day: string; // YYYY-MM-DD（本地日）
+  cost: number;
+  requests: number;
+  inputTokens: number;
+  outputTokens: number;
+}
+
+export interface UsageTotals {
+  requests: number;
+  input: number;
+  output: number;
+  cacheRead: number;
+  cost: number;
+}
+
+const EMPTY_TOTALS: UsageTotals = { requests: 0, input: 0, output: 0, cacheRead: 0, cost: 0 };
+
+/** 金额统一 6 位小数收敛，避免浮点尾差泄漏到 API/UI */
+const round6 = (v: number): number => Math.round(v * 1e6) / 1e6;
+
+/**
+ * 指定日的合计。E1 起「当日成本」的唯一口径：
+ * 本模块内存态由 recordUsage 同步更新，且启动时从磁盘载入 —— 因此跨重启不丢，
+ * 而 metrics 的内存日桶重启即归零（会让日预算 fail-closed 守卫静默失效）。
+ */
+export function usageDayTotalsOf(day: string): UsageTotals {
+  const providers = data[day];
+  if (!providers) return { ...EMPTY_TOTALS };
+  const out: UsageTotals = { requests: 0, input: 0, output: 0, cacheRead: 0, cost: 0 };
+  for (const models of Object.values(providers)) {
+    for (const tags of Object.values(models)) {
+      for (const cell of Object.values(tags)) {
+        out.requests += cell.requests;
+        out.input += cell.input;
+        out.output += cell.output;
+        out.cacheRead += cell.cacheRead;
+        out.cost += cell.cost;
+      }
+    }
+  }
+  return out;
+}
+
+/** 今日合计（本地日）；now 可注入便于测试 */
+export function usageTodayTotals(now = Date.now()): UsageTotals {
+  return usageDayTotalsOf(localDayKey(new Date(now)));
+}
+
+/** 今日成本（USD，6 位小数收敛）：日预算阈值判定与展示统一使用 */
+export function usageTodayCost(now = Date.now()): number {
+  return round6(usageTodayTotals(now).cost);
+}
+
+/** 日粒度合计（按日期升序）：供月度/趋势聚合使用（复用单日实现，口径唯一） */
+export function usageDayTotals(): UsageDayTotal[] {
+  return Object.keys(data)
+    .sort()
+    .map((day) => {
+      const t = usageDayTotalsOf(day);
+      return {
+        day,
+        cost: t.cost,
+        requests: t.requests,
+        inputTokens: t.input,
+        outputTokens: t.output,
+      };
+    });
+}
+
+/** 月终预测参与均值的天数窗口（已完成日，不含今日） */
+export const MONTH_RECENT_WINDOW_DAYS = 7;
+
+export interface MonthProjection {
+  month: string; // YYYY-MM
+  monthToDateUsd: number;
+  todayUsd: number;
+  elapsedDays: number; // 本月已过天数（含今日）
+  daysInMonth: number;
+  remainingDays: number; // 本月剩余天数（不含今日）
+  windowDays: number; // 真正参与日均的已完成天数（≤7）
+  recentDailyAvgUsd: number; // 窗口内日均（缺失天按 0 计）
+  basis: 'recent' | 'today'; // 外推依据：窗口内已完成日均 / 月初仅有今日成本
+  projectedMonthUsd: number; // 线性外推的月终成本
+  projectedOverageUsd: number | null; // 相对 monthlyUsd 的预计超额（未超为 0；未设月度预算为 null）
+}
+
+/**
+ * 纯函数：按「已完成日均 × 剩余天数 + 本月至今」线性外推月终成本。
+ * - 今日为部分交易日，故不进入均值分母，避免系统性地低估；
+ * - 窗口取最近 min(7, 已过天数-1) 天，缺失的天按 0 计入（真实反映"这 7 天平均每天花多少"）；
+ * - 1 号（无已完成日）退化为 basis='today'，用今日至今成本作为日成本估计。
+ * 依赖传入的 dayTotals（usageDayTotals() 输出），不做任何 IO，便于单测。
+ */
+export function projectMonthEnd(
+  dayTotals: readonly { day: string; cost: number }[],
+  now: number,
+  monthlyUsd?: number | null,
+): MonthProjection {
+  const d = new Date(now);
+  const month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  const elapsedDays = d.getDate();
+  const todayKey = localDayKey(d);
+
+  const costOf = new Map<string, number>();
+  let monthToDateUsd = 0;
+  for (const row of dayTotals) {
+    costOf.set(row.day, row.cost);
+    if (row.day.startsWith(month)) monthToDateUsd += row.cost;
+  }
+  const todayUsd = costOf.get(todayKey) ?? 0;
+
+  const windowDays = Math.min(MONTH_RECENT_WINDOW_DAYS, Math.max(0, elapsedDays - 1));
+  let windowSum = 0;
+  for (let i = 1; i <= windowDays; i += 1) {
+    windowSum += costOf.get(localDayKey(new Date(now - i * 86_400_000))) ?? 0;
+  }
+  const basis: MonthProjection['basis'] = windowDays > 0 ? 'recent' : 'today';
+  const recentDailyAvgUsd = round6(windowDays > 0 ? windowSum / windowDays : monthToDateUsd);
+  const remainingDays = daysInMonth - elapsedDays;
+  const projectedMonthUsd = round6(monthToDateUsd + recentDailyAvgUsd * remainingDays);
+
+  return {
+    month,
+    monthToDateUsd: round6(monthToDateUsd),
+    todayUsd: round6(todayUsd),
+    elapsedDays,
+    daysInMonth,
+    remainingDays,
+    windowDays,
+    recentDailyAvgUsd,
+    basis,
+    projectedMonthUsd,
+    projectedOverageUsd:
+      monthlyUsd && monthlyUsd > 0 ? round6(Math.max(0, projectedMonthUsd - monthlyUsd)) : null,
+  };
+}
+
+/** 组合入口：读取持久化用量并做月终预测（路由层用）；now 可注入便于测试 */
+export function usageMonthProjection(
+  monthlyUsd?: number | null,
+  now = Date.now(),
+): MonthProjection {
+  return projectMonthEnd(usageDayTotals(), now, monthlyUsd);
+}

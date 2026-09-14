@@ -114,9 +114,37 @@
 
 | # | 项 | 现状 | 改法 | 量 |
 |---|---|---|---|---|
-| E1 | 月度预算 + 预测 | 只有日预算 | 加 `monthlyUsd`；近 7 日线性外推月终值显示在预算条 | S |
+| E1 | 月度预算 + 预测 | 只有日预算 | 加 `monthlyUsd`；近 7 日线性外推月终值显示在预算条 | ✅ |
 | E2 | 用量留存可运维 | `usageStore` 固定保留 90 天，无清理入口 | 设置页加「导出全部用量 / 清理 N 天前」 | S |
 | E3 | 成本异动告警 | 浮窗只在超阈值时通知 | 加「单小时成本环比 > N 倍」告警（复用 `spikeLevel`） | S |
+
+### Phase E1 落地记录（2026-09-14）
+
+**做了什么**
+- `config.budget` 加 `monthlyUsd`；`setBudget` 由「整块覆写」改为**按字段增量写入**（`null`/`≤0` 清该项，
+  清日预算不再连带清掉月度；两项皆空才整块删除，配置文件保持干净）。`getBudget()` 同步返回 `monthlyUsd`。
+- `metrics.budgetStatus` 泛化为 `ratioLevel(used, limit)`（日/月共用同一 80%·100% 口径与 3 位小数先舍后判的语义），
+  `budgetStatus` 保留为等价封装（`proxy.ts` fail-closed 守卫零改动）。
+- `usageStore` 新增 `usageDayTotalsOf` / `usageTodayTotals` / `usageTodayCost` / `usageDayTotals`（复用单日实现，口径唯一）
+  与纯函数 `projectMonthEnd(dayTotals, now, monthlyUsd)`：**已完成日均 × 剩余天数 + 本月至今**；
+  今日是部分交易日故不进均值分母；窗口 `min(7, 已过天数−1)` 天且缺失天按 0 计；1 号退化为 `basis='today'`。
+- `/api/proxy/budget` 返回 `month{...,ratio,level,projectedRatio,projectedLevel}`；POST 改为增量 + 逐字段校验（`{}`/负数/非数字均 400）。
+- `BudgetBar` 重构为「日预算 + 月度预算（仅告警）」两块：月度块显示已达比例进度条与**预测落点竖标**、
+  「预计超支 $X」/「预计月终 $X」。月度只告警，`blockOnExceed` 仍只作用于日预算。
+
+**顺带修掉的真实缺陷（根因）**
+- 原 `todayCostUsd` 只读 `metrics` 的内存日桶，**重启即归零**。E1 让「今日」与「本月」同屏展示后矛盾直接可见；
+  更严重的是 `proxy.ts` 的 fail-closed 守卫读同一值 → **重启后日预算拦截静默失效（fail-open）**。
+- 改法：`getSummary()` 的当日 token/成本统一取 `usageStore`（内存态由 `recordUsage` 同步更新 + 启动从磁盘载入，跨重启不丢），
+  并删除 `metrics` 里重复的 `dailyBuckets` + `DAILY_TTL_DAYS`（消灭第二套数据源）。
+- 复测证据：预置 `usage-daily.json` 后冷启动服务，`todayUsd = 0.5000`（而非归零）。
+
+**验证**
+- 单测 34 文件 / **267 通过**（+13：`ratioLevel` 等价回归、`projectMonthEnd` 7 例含月末/月初/跨月/2 月、
+  `usageDayTotals` 聚合、**跨重启今日成本**、`setBudget` 增量语义 3 例）。
+- 真实浏览器复测（Edge headless + CDP，隔离临时数据目录）：**8/8 步通过、0 console 错误**——
+  月度输入/清除、预测超支 chip、进度条宽度 67% 与竖标夹到 100%、日预算 exceed 条色 `bg-up`、
+  增量语义（清日不连带清月）、重载后持久化。真实数据目录 sha256 **零改动**。
 
 ---
 
@@ -142,7 +170,7 @@ A1 A2 A3 A4 A5（安全，半天内可完） ──┐
                                     ├─> ✅ B1 B6（路由 + /v1/models）
 D1（去 recharts，无依赖可并行）─────┘        └─> ✅ B2 B3（配额 / 归因）──> ✅ B4 B5（重放 / 定价外置）
                                                                         └─> ✅ C1 C2 C3（评测）
-✅ D1–D6（前端性能与体验）──> 下一步 E1 E2 E3 或 F1 F2（打包与自动更新）
+✅ D1–D6（前端性能与体验）──> ✅ E1（月度预算 + 月终预测）──> 下一步 E2 E3 或 F1 F2（打包与自动更新）
 F1（asar）──> F2（自动更新）──> F3 / F4
 ```
 
@@ -155,7 +183,7 @@ F1（asar）──> F2（自动更新）──> F3 / F4
 
 1. `prettier --check .`
 2. `npm run typecheck` EXIT 0
-3. `npm run test`（254 全过）
+3. `npm run test`（267 全过）
 4. `npm run build` EXIT 0
 5. 涉及 server/proxy 必须 `node electron/server.cjs` + curl 实测；涉及打包必须重打 + 桌面双击实测
 6. **改 UI 必须真实浏览器复测**（`tsc-pass ≠ runtime-safe`）：Edge headless + CDP，见 skill `cdp-headless-smoke`；改配色须跑对比度审计
@@ -170,5 +198,7 @@ F1（asar）──> F2（自动更新）──> F3 / F4
 | D1 去 recharts | 图表视觉回归 | 逐图截图对比后再删依赖 ✅ 已做：移除 `node_modules/recharts` 后构建通过即证明无残留引用，并用自绘 `charts.tsx` 重画 |
 | D3 亮色主题 | 令牌化后 `/opacity` 类静默失效（构建报错或样式丢失） | Tailwind 颜色必须映射为 `rgb(var(--c-*-rgb) / <alpha-value>)`；改完必须跑真实构建 + 对比度审计 ✅ 已做 |
 | D3 亮色主题 | 「同色文字 + 同色浅底」的 Chip/徽标对比度不足 | 按合成底色实测重算语义色，并纳入浏览器复测的自动对比度审计（阈值 4.5 / 大字 3.0）✅ 已做 |
+| E1 预算 | 「当日成本」曾有两套数据源（`metrics` 内存日桶 vs `usageStore` 持久化），重启后互相矛盾且日预算 fail-open | 统一以 `usageStore` 为唯一口径（内存态同步更新 + 启动载入磁盘），删除 `metrics.dailyBuckets`；单测覆盖「跨重启今日成本」✅ 已做 |
+| E1 预算 | `setBudget` 增量语义下，前端传 `{}` 会静默无操作 | 服务端对「无任何字段」返回 400，逐字段校验正数；UI 两块的设置/清除按钮各自只提交自己那一项 ✅ 已做 |
 | F1 asar 回归 | asar 内读取差异导致白屏 | 保留 `asar:false` 一键回退；完整冒烟清单过一遍 |
 | F2 自动更新 | 无签名时 UAC 提示体验差 | 仅通知，不自动安装 |
