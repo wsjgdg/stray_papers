@@ -213,10 +213,62 @@
 | F2 | 自动更新（原 A9） | `latest.yml` 已产出但无消费方 | `electron-updater` + `publish: {provider:'github'}`；后台静默检查 + 通知，不强制安装 | M |
 | F3 | Electron E2E（原 F2） | 151 单测全是模块级，无窗口级冒烟 | Playwright `_electron`：启动 win-unpacked → 断言主窗加载 / 首 tab 渲染 / `/api/health` | L |
 | F4 | 代码签名（原 E3） | 无证书 → SmartScreen 拦截 | OV 证书或 Azure Trusted Signing（成本项）；未签期维持 SHA256SUMS | M |
-| F5 | 依赖升级 | express 4→5；recharts 随 D1 移除 | 独立 PR | M |
+| F5 | 依赖升级 | **已升**：`eslint` 9→10（含 `@eslint/js`）、`lucide-react` 0.469→1.46、`@types/node`→22.20.2（对齐 Node 22 运行时，**未跟随 Dependabot 的 26.x**）、**`express` 4→5 + `@types/express` 4→5**、`ci.yml` 全部 actions（checkout/setup-node v7、cache v6、upload-artifact v7、download-artifact v8、gh-release v3）；recharts 随 D1 移除 | 独立 PR | M |
 | F6 | i18n 抽层 | 中文硬编码全量 | `resources/zh|en` + 语言切换；优先级最低 | M |
 | F7 | 多 profile 隔离 | 同一 exe 只能一套配置 | `LLM_WORKBENCH_HOME` 子目录 + `--profile` 启动参数 | M |
 | F8 | **提交门禁重建** | 2026-09-14 事故：husky → lint-staged 在沙箱被 SIGTERM 中断，导致 `.git/refs` 与 pack 丢失 | `.husky/pre-commit` 换成 3 行脚本（只对改动文件跑 `prettier --check`），全量门禁留给 CI。**同日的 CI 长期红灯另立一条**：本地门禁缺 `npm run lint` 已补进「统一门禁」第 1 步；husky 脚本本身仍待重建 | S |
+
+---
+
+### Phase F5 落地记录（2026-09-14，已落地）
+
+**背景**：CI 长期红灯的成因之一是 Dependabot 的 major PR（远端 6 个 `dependabot/**` 分支）。逐个核对后发现**这些分支的 diff 是旧的**——合并会**回退**近期成果（删掉 `description` / `license` / nsis 双语安装器、把已移除的 `recharts` 加回来）。因此采取**在当前 main 上手工升级**，不合并 Dependabot 分支。
+
+**已完成的 major 升级**（每项都过完整门禁 + 单独 commit + push）
+
+| 包 | 变更 | 验证 |
+|---|---|---|
+| `@types/node` | 22.10.5 → **22.20.2** | 门禁全绿。**刻意不对齐 Dependabot 的 26.5.1**：CI 跑 Node 22、Electron 33 内置 Node 20，用 26 的类型会把「运行时并不存在的 API」判为可用 |
+| `eslint` + `@eslint/js` | 9.39.5 → **10.10.0 / 10.0.1** | v10 新增的 `eslint:recommended` 规则（`no-unassigned-vars` / `no-useless-assignment` / `preserve-caught-error`）在本仓库**零命中**；lint **0 error / 104 warning**，与 v9 完全一致。peer 全部满足 |
+| `lucide-react` | 0.469.0 → **1.46.0** | 47 个图标全部仍在运行时导出（含 `AlertTriangle` / `BarChart3` / `Table2` 等 deprecated 别名，v1 保留并分别映射到 `TriangleAlert` / `ChartColumn`）；全仓无内部 API（`.icn` / `LucideProps` / `createLucideIcon`）引用；`tsc -b --force` EXIT 0；293 测试全过 |
+| `ci.yml` actions | checkout 4→**7**、setup-node 4→**7**、cache 4→**6**、upload-artifact 4→**7**、download-artifact 4→**8**、gh-release 2→**3** | 逐个拉 `action.yml` 核对 input 名未变（`node-version`/`cache`/`path`/`key`/`name`/`if-no-files-found`/`generate_release_notes`/`files` 全在）；YAML 解析 3 job 完整；`npm ci --dry-run` EXIT 0 |
+
+**lucide v1 的行为差异（已量化，非 API 破坏）**：v1 重构了图标数据结构（`createLucideIcon("X",[...])` → `createLucideIcon({name,size,node:[...]})`，内部 API，本项目未使用），并**精修了部分上游几何**：47 个图标中 **27 个几何逐字节一致、14 个被上游精修**（`Search` 仅 `4.3`→`4.34` 精度修订；`Cpu` 10→14 节点、`Table2` 1→3 节点属重绘）。另有两处打包侧变化：`dist/umd/*` 与 `main:umd` / `unpkg` 字段被移除（本项目不用 UMD），`module` 由 `dist/esm/lucide-react.js` 变为 `.mjs`；v1 还会为单个图标产出独立 chunk。包体净增约 +6.6 kB（+1.7%），`vendor` chunk 不变。
+
+**express 4→5 迁移（已落地）**
+
+用临时目录真装 `express@5.2.1` 与 `express@4.22.3` 跑同一套 URL 矩阵实测（`probe.cjs` / `probe2.cjs` / `matrix.cjs`，非猜测）：
+
+| 写法 | 结果 |
+|---|---|
+| `router.all('/:provider/*')` | **注册期抛错** `PathError: Missing parameter name at index 12` |
+| `router.all('/*')` | **注册期抛错** `PathError: Missing parameter name at index 2` |
+| `router.all('/:provider/{*splat}')` | OK，且与 v4 的 `/:provider/*` **8 条 URL 逐条一致** |
+| `router.all('/{*splat}')` | OK，且与 v4 的 `/*` **8 条 URL 逐条一致** |
+| `router.all('/:provider/*splat')`（无花括号） | OK，但**不匹配零段** → `/api/proxy/openai/` 会 404（v4 是能匹配的） |
+
+故必须用**带花括号**的 `{*splat}`，否则零段请求（`/api/v1`、`/api/v1/`、`/api/proxy/<p>/`）会静默变成 404。取值形态同时变：v4 `req.params[0]` 是不含拖尾斜杠的**整串**，v5 `req.params.splat` 是**分段数组**、零段时为 `undefined`——只改路径不改读取方式会**静默代理到错误路径**（`wildcard` 退化成空串）。
+
+实际改动：
+- 新增 `server/routeParams.ts`：`FlatParams` 类型 + `wildcardPath()`。后者把 `splat` 数组 `join('/')` 还原成 v4 的整串语义（零段还原为 `''`），差异集中在一处、带实测注释。
+- `server/proxy.ts`：两条通配路由改为 `/:provider/{*splat}` 与 `/{*splat}`，改用 `wildcardPath(req)`。
+- `server/index.ts`：`@types/express` v5 把 `ParamsDictionary` 的值放宽成 `string | string[]`（为具名通配让路），导致 12 处 `req.params.x` 传入要求 `string` 的函数而报 TS2345。修法是把**带参路由**的 handler 收窄为 `Request<FlatParams>`（11 个签名），而**不是**在每个调用点塞 cast；无参路由的 25 个签名不动，diff 保持最小。
+- 5 个集成测试（`evals` / `proxyChain` / `quota` / `replay` / `tag`）里的 mock upstream 用了裸 `app.all('*', …)`，同样在注册期抛错 → 改成**无路径中间件** `app.use(handler)`（语义等价，且不受 path-to-regexp 版本影响）。
+
+**已排除的破坏点**：`req.body` 在 v5 下无 parser 时是 `undefined` 而非 `{}`——本仓库**全部**写成 `(req.body ?? {})` 或 `typeof req.body === 'object' && req.body !== null`，天然兼容；路由里无 `:param?` 可选语法（唯一含特殊字符的就是上面两条通配）、无 `res.send(status)` / `res.json(obj,status)` / `req.param()` / `app.del()`；`req.query` 只按扁平标量读，且上游查询串是经 `new URL(req.url).search` 原样透传的，不受 v5 默认 query parser 变更影响。
+
+**验证**
+- `tsc -b --force` EXIT 0（express 5 + `@types/express` 5）；lint **0 error** / 104 warning；prettier 全绿；`npm run build` EXIT 0。
+- 单测 **35 文件 / 293 通过**——含 5 个走真实回环 HTTP 的代理集成测试（fallback 链、配额、重放、tag、评测）。
+- **真实服务端冒烟**（`npm run build:server:electron` 重打 `electron/server.cjs`，`LLM_WORKBENCH_HOME` 指向临时目录、`NO_OPEN=1`、`PROXY_TOKEN=smoketest`）：**8/8 路径 0 失败**——`/api/health` 200、`/api/v1` 与 `/api/v1/` 与 `/api/v1/chat/completions` 均返回业务错误（400「未指定厂商」）而非 express 404、`/api/v1/models` 200、`/api/proxy/<未知厂商>/…` 与 `/…/` 返回 404「未知厂商」（路由命中）、`/api/proxy/<未知厂商>`（无拖尾斜杠）返回 express 404 —— **与 v4 基线矩阵一致，非回归**；无令牌请求 401，门禁链完整。健康响应里的 `configDir` 指向隔离临时目录，真实数据零改动。
+- `npm ci --dry-run` EXIT 0（lock 与 manifest 同步，CI 第一步不会 EUSAGE）。
+
+**沙箱限制与绕行**：`npm install` 在本环境会在 reify 阶段挂死（`express@5` 引入 68 个包，实测 >1 分钟无输出，被 SIGTERM 后 manifest 未写入而 `node_modules` 已更新）。可用的绕行组合：
+1. 小体积升级：`npm install --package-lock-only --ignore-scripts --no-audit --no-fund <pkgs>`（5s，只写 manifest + lock，不碰 `node_modules`）。
+2. 需要真实验证的包：`npm pack <pkg>@<ver>` 下载 tarball → 校验 `integrity` 与 lock 一致 → 解包后**实体替换** `node_modules/<pkg>`（eslint / lucide / `@types/express` 均用此法，替换后门禁才真正跑在新版上）。
+   - 坑：npm 对 scoped 包的 tarball 根目录是**去 scope 的名字**（`express/`），不是 `package/`。
+   - 坑：Windows 上 GNU tar 会把参数里的 `C:` 当远程主机，`-C` 也必须用相对路径。
+3. 大依赖树（express）：reify 中途被 SIGTERM 后 `node_modules` 其实**已完整**（用递归 + `semver.satisfies` 校验全闭包：65 个可达包、0 缺失），此时只需补跑 `--package-lock-only` 写回 manifest/lock 即可。注意 `--save` 与 `--save-dev` 不要在同一条命令里混用——npm 会把两者都当 `--save-dev`，导致 `express` 被从 `dependencies` 挪走（本项目踩到并已修正）。
 
 ---
 
@@ -272,3 +324,8 @@ F1（asar）──> F2（自动更新）──> F3 / F4
 | **CI 长期红灯** | 本地门禁从未跑 `npm run lint`，而它是 CI 里 `npm ci` 之后的第一个检查步骤 → 每次 push 必红；`react-hooks/refs` 在 recommended 里是 **error**，仓库只降级了 `set-state-in-effect` / `purity`，漏了它 | ①`useVirtualList` 尺寸缓存改「写走 ref、读走 state 快照」，消除真实的渲染期读 ref（非抑制规则）；②**统一门禁补上 `npm run lint`**（见下），本地与 CI 同源 ✅ 已做 |
 | F1 asar 回归 | asar 内读取差异导致白屏 | 保留 `asar:false` 一键回退；完整冒烟清单过一遍 |
 | F2 自动更新 | 无签名时 UAC 提示体验差 | 仅通知，不自动安装 |
+| F5 express 5 | 裸 `*` 在 path-to-regexp v8 下**注册期抛错**，服务启动即崩 | 两条通配改 `{*splat}`（带花括号，匹配零段），新增 `routeParams.ts` 集中差异 ✅ 已做 |
+| F5 express 5 | 只改路径不改读取方式 → `req.params[0]` 变 `undefined` → **静默代理到错误路径**（无异常、无日志，最难查） | `wildcardPath()` 把 `splat` 数组 `join('/')` 还原成 v4 整串；**逐 URL 与 express@4.22.3 基线对齐**后才落地 ✅ 已做 |
+| F5 express 5 | `{*splat}` 若漏写花括号，零段请求（`/api/v1`、`/api/v1/`、`/api/proxy/<p>/`）静默 404 | 冒烟用例显式覆盖三条零段路径，断言**不是** express 404 ✅ 已做 |
+| F5 express 5 | `@types/express` v5 的 `params` 值是 `string \| string[]`，12 处 `req.params.x` 报 TS2345 | 带参路由收窄为 `Request<FlatParams>`（改签名而非在各调用点 cast），diff 最小 ✅ 已做 |
+| F5 npm 沙箱 | `npm install` 在 reify 阶段挂死后，`node_modules` 已更新但 manifest 未写 → 工作区不一致 | 补跑 `--package-lock-only` 写回；用递归 + `semver.satisfies` 校验依赖闭包完整（express：65 包 / 0 缺失）✅ 已做 |
