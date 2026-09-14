@@ -1,7 +1,6 @@
-import type { Snapshot, SourceStatus, Leaderboard } from './types.js';
-import { fetchOpenRouterModels } from './sources/openrouter.js';
-import { AA_PAGE, fetchArtificialAnalysis } from './sources/artificialAnalysis.js';
-import { OPENROUTER_ENDPOINT } from './sources/openrouter.js';
+import type { Snapshot, SourceStatus, Leaderboard, LlmModel } from './types.js';
+import { SOURCE_REGISTRY } from './sources/registry.js';
+import type { SourcePayload, SourcePricing } from './sources/types.js';
 import { PROVIDERS } from './providers.js';
 import { buildIndex, matchModel } from './match.js';
 import { updateModelPrices } from './pricing.js';
@@ -12,79 +11,71 @@ async function timed<T>(run: () => Promise<T>): Promise<{ data: T; latencyMs: nu
   return { data, latencyMs: Date.now() - t0 };
 }
 
+/** 数据源在主负载里的条目数（用于 SourceStatus.count 展示） */
+function payloadCount(p: SourcePayload): number {
+  return Math.max(p.models?.length ?? 0, p.leaderboards?.length ?? 0);
+}
+
+/**
+ * 评估榜单 → 模型字段回填映射。
+ * 新增一个「写回 LlmModel 标量字段」的评估维度，只需在此登记 boardId→字段，
+ * 并给 LlmModel 增加对应可空字段；通用 attach 循环即可生效（不再硬编码四处调用）。
+ */
+const METRIC_FIELDS: Record<string, 'intelligence' | 'agentic' | 'omniscience' | 'speed'> = {
+  intelligence: 'intelligence',
+  agentic: 'agentic',
+  omniscience: 'omniscience',
+  speed: 'speed',
+};
+
 /** 拉取全量数据并做跨源关联，产出前端快照 */
 export async function buildSnapshot(): Promise<Snapshot> {
-  const [orSettled, aaSettled] = await Promise.allSettled([
-    timed(fetchOpenRouterModels),
-    timed(fetchArtificialAnalysis),
-  ]);
+  const settled = await Promise.allSettled(SOURCE_REGISTRY.map((s) => timed(s.fetch)));
 
-  const sources: SourceStatus[] = [];
-
-  let models = orSettled.status === 'fulfilled' ? orSettled.value.data : [];
-  sources.push({
-    id: 'openrouter',
-    name: 'OpenRouter Models API',
-    url: OPENROUTER_ENDPOINT,
-    ok: orSettled.status === 'fulfilled',
-    latencyMs: orSettled.status === 'fulfilled' ? orSettled.value.latencyMs : null,
-    fetchedAt: Date.now(),
-    count: orSettled.status === 'fulfilled' ? models.length : null,
-    error:
-      orSettled.status === 'rejected'
-        ? String(orSettled.reason?.message ?? orSettled.reason)
-        : null,
+  const sources: SourceStatus[] = SOURCE_REGISTRY.map((def, i) => {
+    const r = settled[i];
+    return {
+      id: def.id,
+      name: def.name,
+      url: def.url,
+      ok: r.status === 'fulfilled',
+      latencyMs: r.status === 'fulfilled' ? r.value.latencyMs : null,
+      fetchedAt: Date.now(),
+      count: r.status === 'fulfilled' ? payloadCount(r.value.data) : null,
+      error: r.status === 'rejected' ? String(r.reason?.message ?? r.reason) : null,
+    };
   });
 
+  // 聚合各源产物（G-R2：榜单 sourceId/sourceUrl 将由注册表统一打标）
+  let models: LlmModel[] = [];
   let leaderboards: Leaderboard[] = [];
-  let aaPricing = new Map<
-    string,
-    { input: number | null; output: number | null; cacheHit: number | null }
-  >();
-  if (aaSettled.status === 'fulfilled') {
-    leaderboards = aaSettled.value.data.leaderboards;
-    aaPricing = aaSettled.value.data.pricing;
+  const aaPricing = new Map<string, SourcePricing>();
+  for (const r of settled) {
+    if (r.status !== 'fulfilled') continue;
+    const p = r.value.data;
+    if (p.models) models = models.concat(p.models);
+    if (p.leaderboards) leaderboards = leaderboards.concat(p.leaderboards);
+    if (p.pricing) for (const [k, v] of p.pricing) aaPricing.set(k, v);
   }
-  sources.push({
-    id: 'artificial-analysis',
-    name: 'Artificial Analysis Leaderboards',
-    url: AA_PAGE,
-    ok: aaSettled.status === 'fulfilled',
-    latencyMs: aaSettled.status === 'fulfilled' ? aaSettled.value.latencyMs : null,
-    fetchedAt: Date.now(),
-    count: aaSettled.status === 'fulfilled' ? leaderboards.length : null,
-    error:
-      aaSettled.status === 'rejected'
-        ? String(aaSettled.reason?.message ?? aaSettled.reason)
-        : null,
-  });
 
   // 评估指标回填到模型表
   if (models.length && leaderboards.length) {
     const keys = buildIndex(models);
     const byId = new Map(models.map((m) => [m.id, m]));
-    const attach = (
-      boardId: string,
-      field: 'intelligence' | 'agentic' | 'omniscience' | 'speed' | 'openness',
-    ) => {
+
+    for (const [boardId, field] of Object.entries(METRIC_FIELDS)) {
       const board = leaderboards.find((b) => b.id === boardId);
-      if (!board) return;
+      if (!board) continue;
       for (const entry of board.entries) {
         const hit = matchModel(entry.label, entry.aaSlug, keys);
         entry.modelId = hit?.id ?? null;
-        if (hit) {
-          const target = byId.get(hit.id);
-          if (target) {
-            target[field] = entry.value;
-            target.aaSlug = entry.aaSlug;
-          }
+        const target = hit ? byId.get(hit.id) : undefined;
+        if (target) {
+          target[field] = entry.value;
+          target.aaSlug = entry.aaSlug;
         }
       }
-    };
-    attach('intelligence', 'intelligence');
-    attach('agentic', 'agentic');
-    attach('omniscience', 'omniscience');
-    attach('speed', 'speed');
+    }
 
     // 开放度：多个分量求和
     const opennessBoard = leaderboards.find((b) => b.id === 'openness');
