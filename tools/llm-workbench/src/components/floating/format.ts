@@ -31,6 +31,22 @@ export function todayStr(): string {
 
 // 阈值告警：用服务端速率历史的「近期中位数」作基线，最新值相对基线突增则标色。
 export type Tone = 'normal' | 'warn' | 'alert';
+
+/** E3：成本异动文案（服务端已判级，前端只负责措辞，保证与服务端判据同源） */
+export function costSpikeText(s: {
+  costSpikeLevel: Tone;
+  costSpikeRatio: number | null;
+  costSampleHours: number;
+}): string {
+  const { costSpikeLevel, costSpikeRatio, costSampleHours } = s;
+  if (costSampleHours < 3) return '成本异动：基线积累中';
+  if (costSpikeRatio == null) return '成本异动：暂无基线';
+  const r = `${costSpikeRatio.toFixed(2)}×`;
+  if (costSpikeLevel === 'alert') return `成本异动：⚠ ${r} 基线`;
+  if (costSpikeLevel === 'warn') return `成本异动：${r} 基线`;
+  return '成本异动：正常';
+}
+
 export function spikeLevel(
   history: { inRate: number; outRate: number }[] | undefined,
   key: 'inRate' | 'outRate',

@@ -49,6 +49,7 @@ export function useFloatStats(standalone: boolean): FloatStats {
   });
   const notifiedRef = useRef(false);
   const spikeNotifiedRef = useRef(false);
+  const costSpikeNotifiedRef = useRef(false);
   const wasAliveRef = useRef<boolean | null>(null);
   const [clickThrough, setClickThrough] = useState(false);
   const [fontScale, setFontScale] = useState(1);
@@ -220,6 +221,19 @@ export function useFloatStats(standalone: boolean): FloatStats {
               api?.notify?.('速率突增告警', '输入/输出速率相对近期基线突增，请关注');
             } else if (inL !== 'alert' && outL !== 'alert') {
               spikeNotifiedRef.current = false;
+            }
+            // E3：成本异动通知（服务端判级 alert 上升沿触发；回落 normal/warn 后可再提醒）
+            if (s.costSpikeLevel === 'alert') {
+              if (!costSpikeNotifiedRef.current) {
+                costSpikeNotifiedRef.current = true;
+                const ratio = s.costSpikeRatio != null ? `${s.costSpikeRatio.toFixed(2)}×` : '—';
+                api?.notify?.(
+                  '成本异动告警',
+                  `本小时已花费 $${s.hourCostUsd.toFixed(4)}，为基线 $${s.costBaselinePerHrUsd.toFixed(4)}/时的 ${ratio}，请确认是否有异常调用`,
+                );
+              }
+            } else {
+              costSpikeNotifiedRef.current = false;
             }
             // 代理连接恢复通知（仅上升沿）
             if (wasAliveRef.current === false) {

@@ -159,6 +159,12 @@ export interface ProxySummary {
   recentModels: { model: string; provider: string; ts: number }[];
   rateHistory: RateSample[];
   rateHistoryMax: number;
+  // E3：成本异动（当前小时 vs 已完成小时基线）
+  hourCostUsd: number; // 当前小时累计成本（USD）
+  costBaselinePerHrUsd: number; // 基线（已完成小时每分钟成本中位数 × 60）
+  costSpikeRatio: number | null; // 折算每分钟成本 / 基线每分钟成本
+  costSpikeLevel: 'normal' | 'warn' | 'alert'; // ≥3× alert、≥1.8× warn
+  costSampleHours: number; // 参与基线的已完成小时数
 }
 export interface ProxyConfigPatch {
   apiKey?: string;
