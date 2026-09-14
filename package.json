@@ -33,6 +33,7 @@
     "verify:electron-build": "node scripts/verify-electron-build.mjs",
     "verify": "vitest run",
     "test:integration": "tsx scripts/verify-bankofai.mjs && tsx scripts/verify-proxy-hardening.mjs && tsx scripts/it-apiFormat.mjs && tsx scripts/smoke-translate.mjs",
+    "test:electron": "playwright test -c tests-electron/playwright.config.ts",
     "electron:dev": "npm run build && npm run build:server:electron && npm run make:icon && electron .",
     "electron:build": "npm run build && npm run gen:web-assets && npm run build:server:electron && npm run make:icon && npm run build:electron-config && electron-builder && npm run release:checksums",
     "electron:build:portable": "npm run build && npm run gen:web-assets && npm run build:server:electron && npm run make:icon && npm run build:electron-config && electron-builder --win dir --win zip && npm run release:checksums"
