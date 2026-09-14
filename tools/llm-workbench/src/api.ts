@@ -308,20 +308,22 @@ export async function clearResponseCache(): Promise<{ cleared: number }> {
 }
 
 // ───────── 代理访问令牌（B4）：前端持有，所有 /api/proxy 与 /api/v1 请求自动携带 ─────────
+// 存储选择（A3）：sessionStorage 而非 localStorage —— 令牌只在当前标签页生命周期内有效，
+// 关闭即失效，缩短泄漏窗口；代价是重开标签需重新从设置页复制一次（设置页可重置/再取）。
 const PROXY_TOKEN_STORAGE_KEY = 'llm-workbench:proxy-token';
 let proxyToken = '';
 try {
-  proxyToken = localStorage.getItem(PROXY_TOKEN_STORAGE_KEY) ?? '';
+  proxyToken = sessionStorage.getItem(PROXY_TOKEN_STORAGE_KEY) ?? '';
 } catch {
-  /* localStorage 不可用时忽略 */
+  /* 存储不可用时忽略 */
 }
 
-/** 保存代理令牌到内存 + localStorage（启用/重置时由后端回显明文） */
+/** 保存代理令牌到内存 + sessionStorage（启用/重置时由后端回显明文） */
 export function setProxyToken(t: string): void {
   proxyToken = t;
   try {
-    if (t) localStorage.setItem(PROXY_TOKEN_STORAGE_KEY, t);
-    else localStorage.removeItem(PROXY_TOKEN_STORAGE_KEY);
+    if (t) sessionStorage.setItem(PROXY_TOKEN_STORAGE_KEY, t);
+    else sessionStorage.removeItem(PROXY_TOKEN_STORAGE_KEY);
   } catch {
     /* 忽略持久化失败 */
   }

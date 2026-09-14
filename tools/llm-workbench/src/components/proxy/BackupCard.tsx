@@ -6,6 +6,18 @@ import { Card, Chip } from '../../ui';
 // D5 前端入口：后端 /api/proxy/backup/* 已实现加密打包（config.json + auth.json 原文）。
 // 口令经 scrypt 派生 AES-256-GCM key，盐/iv/tag/kdfParams 内嵌于 blob，口令错误或文件被篡改都会解密失败。
 const MIN_PASSPHRASE = 8;
+// A4：备份不可逆，口令输错即永久丢失 → 导出时要求二次输入一致，并给出强度提示
+const STRONG_PASSPHRASE = 12;
+
+/** 口令强度：仅前端提示，后端下限仍是 8 位 */
+function passphraseHint(pw: string): { tone: 'ok' | 'warn' | 'err'; text: string } | null {
+  if (!pw) return null;
+  const classes = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter((re) => re.test(pw)).length;
+  if (pw.length < MIN_PASSPHRASE) return { tone: 'err', text: `至少 ${MIN_PASSPHRASE} 位` };
+  if (pw.length < STRONG_PASSPHRASE || classes < 2)
+    return { tone: 'warn', text: `建议 ≥${STRONG_PASSPHRASE} 位且含两类字符（字母/数字/符号）` };
+  return { tone: 'ok', text: '强度良好' };
+}
 
 function stamp(): string {
   return new Date().toISOString().slice(0, 10);
@@ -22,6 +34,7 @@ function download(filename: string, text: string): void {
 
 export function BackupCard() {
   const [exportPw, setExportPw] = useState('');
+  const [exportPw2, setExportPw2] = useState('');
   const [importPw, setImportPw] = useState('');
   const [blobText, setBlobText] = useState('');
   const [busy, setBusy] = useState<'export' | 'import' | null>(null);
@@ -38,6 +51,10 @@ export function BackupCard() {
       setMsg({ tone: 'err', text: `备份口令至少 ${MIN_PASSPHRASE} 个字符` });
       return;
     }
+    if (exportPw !== exportPw2) {
+      setMsg({ tone: 'err', text: '两次输入的口令不一致' });
+      return;
+    }
     setBusy('export');
     try {
       const { blob } = await exportBackup(exportPw);
@@ -47,6 +64,8 @@ export function BackupCard() {
         tone: 'ok',
         text: `已导出备份（${blob.length} 字符）· 请妥善保存口令，丢失无法恢复`,
       });
+      setExportPw('');
+      setExportPw2('');
     } catch (e) {
       setMsg({ tone: 'err', text: `导出失败: ${(e as Error).message}` });
     } finally {
@@ -112,11 +131,35 @@ export function BackupCard() {
             value={exportPw}
             onChange={(e) => setExportPw(e.target.value)}
           />
+          <input
+            type="password"
+            className="input"
+            placeholder="再输入一次（口令不可找回）"
+            value={exportPw2}
+            onChange={(e) => setExportPw2(e.target.value)}
+          />
+          {(() => {
+            const hint = passphraseHint(exportPw);
+            if (!hint) return null;
+            return (
+              <div
+                className={
+                  hint.tone === 'ok'
+                    ? 'text-[10px] text-emerald-400'
+                    : hint.tone === 'warn'
+                      ? 'text-[10px] text-amber-400'
+                      : 'text-[10px] text-up'
+                }
+              >
+                {hint.text}
+              </div>
+            );
+          })()}
           <div className="flex flex-wrap items-center gap-2">
             <button
               className="btn btn-primary"
               onClick={() => void doExport()}
-              disabled={busy !== null}
+              disabled={busy !== null || exportPw.length < MIN_PASSPHRASE || exportPw !== exportPw2}
             >
               <Download size={12} />
               {busy === 'export' ? '导出中…' : '导出 .lwb'}

@@ -123,3 +123,42 @@ export function isAdmin(): boolean {
 export function isViewer(): boolean {
   return session?.role === 'viewer';
 }
+
+// ───────── A2：登录节流（失败指数退避 + 连续失败锁定）─────────
+// 内存态：进程重启即清零（本机单机工具，刻意不做持久化，避免把自己锁死）。
+// scrypt 只抬高单次成本，不阻止反复尝试；这里补上计数退避与临时锁定。
+const LOGIN_BACKOFF_CAP_MS = 30_000; // 单次退避上限 30s
+const LOGIN_LOCK_MS = 5 * 60_000; // 连续失败达阈值后锁 5 分钟
+const LOGIN_LOCK_THRESHOLD = 10;
+
+const loginAttempts = new Map<string, { fails: number; until: number }>();
+
+export interface LoginThrottle {
+  blocked: boolean; // 现在是否必须等待
+  retryAfterMs: number; // 还需等待毫秒
+  locked: boolean; // 是否已进入长锁定（提示用）
+}
+
+export function loginThrottle(key: string): LoginThrottle {
+  const st = loginAttempts.get(key);
+  if (!st) return { blocked: false, retryAfterMs: 0, locked: false };
+  const wait = st.until - Date.now();
+  if (wait <= 0) return { blocked: false, retryAfterMs: 0, locked: false };
+  return { blocked: true, retryAfterMs: wait, locked: st.fails >= LOGIN_LOCK_THRESHOLD };
+}
+
+/** 记录一次登录失败，返回本次需要等待的毫秒数 */
+export function recordLoginFailure(key: string): number {
+  const prev = loginAttempts.get(key);
+  const fails = (prev?.fails ?? 0) + 1;
+  const delay =
+    fails >= LOGIN_LOCK_THRESHOLD
+      ? LOGIN_LOCK_MS
+      : Math.min(LOGIN_BACKOFF_CAP_MS, 2 ** (fails - 1) * 1000);
+  loginAttempts.set(key, { fails, until: Date.now() + delay });
+  return delay;
+}
+
+export function clearLoginFailures(key: string): void {
+  loginAttempts.delete(key);
+}

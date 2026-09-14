@@ -71,6 +71,9 @@ import {
   getSession,
   clearSession,
   isAdmin,
+  loginThrottle,
+  recordLoginFailure,
+  clearLoginFailures,
 } from './auth.js';
 import { proxyRouter, unifiedRouter, buildAuthHeaders } from './proxy.js';
 import { listProviderModels } from './forwarding.js';
@@ -78,6 +81,7 @@ import { getCacheStats, clearCache } from './responseCache.js';
 import { renderMetrics } from './prometheus.js';
 import { timingSafeEqualStr } from './crypto.js';
 import { getKeyHealth, listDeadKeys, recordSuccess, clearExpired } from './keyHealth.js';
+import { guardLocalOrigin } from './localGuard.js';
 import type { Snapshot, ProbeResult, ProviderKeyHealth } from './types.js';
 
 const BASE_PORT = Number(process.env.API_PORT || 8787);
@@ -132,8 +136,22 @@ function logStartup(line: string): void {
 }
 
 const app = express();
-// 代理需要转发较大的请求体（长 prompt），放宽到 20mb
-app.use(express.json({ limit: '20mb' }));
+
+// 详见 server/localGuard.ts：拒绝「带 Origin 但非本机来源」的跨站请求，
+// 无 Origin（curl / SDK / Prometheus）与 file:// 场景放行，保持零配置体验。
+app.use(guardLocalOrigin);
+
+// ───────── A5：请求体上限分层 ─────────
+// 代理要转发长 prompt（放宽到 20mb），其余管理类接口 1mb 足够，避免大 body 打到配置/档案接口。
+const JSON_SMALL = '1mb';
+const JSON_LARGE = '20mb';
+const jsonSmall = express.json({ limit: JSON_SMALL });
+const jsonLarge = express.json({ limit: JSON_LARGE });
+// 大 body 白名单：统一端点与「指定厂商转发」；其余走小上限
+const isLargeBodyPath = (p: string) => p.startsWith('/api/v1') || /^\/api\/proxy\/[^/]+\//.test(p);
+app.use((req: Request, res: Response, next: NextFunction) => {
+  (isLargeBodyPath(req.path) ? jsonLarge : jsonSmall)(req, res, next);
+});
 
 // RBAC：仅当存在「非管理员」档案（真正多人协作）时才强制管理员会话；
 // 单机所有者（仅一个管理员档案、无其它用户）本地使用无需登录即可保存配置。
@@ -323,11 +341,26 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
     res.status(400).json({ error: 'profileId 与 password 必填' });
     return;
   }
-  const role = authenticate(profileId, password);
-  if (!role) {
-    res.status(401).json({ error: '档案或密码错误' });
+  // A2：失败退避 —— 先查是否被限流，失败后累加退避，成功清零
+  const key = `${profileId}|${req.ip ?? 'local'}`;
+  const gate = loginThrottle(key);
+  if (gate.blocked) {
+    const sec = Math.ceil(gate.retryAfterMs / 1000);
+    res.set('Retry-After', String(sec));
+    res.status(429).json({
+      error: gate.locked
+        ? `失败次数过多，已锁定 ${sec} 秒`
+        : `登录尝试过于频繁，请 ${sec} 秒后重试`,
+    });
     return;
   }
+  const role = authenticate(profileId, password);
+  if (!role) {
+    const wait = recordLoginFailure(key);
+    res.status(401).json({ error: '档案或密码错误', retryAfterMs: wait });
+    return;
+  }
+  clearLoginFailures(key);
   res.json({ role, session: getSession() });
 });
 
