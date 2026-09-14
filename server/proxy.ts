@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from 'express';
+import { wildcardPath, type FlatParams } from './routeParams.js';
 import { Readable } from 'node:stream';
 import { randomUUID } from 'node:crypto';
 import { fetch as upstreamFetch } from 'undici';
@@ -533,22 +534,28 @@ export async function proxyRequest(
   };
 }
 
+// Express 5（path-to-regexp v8）不再支持裸 `*`：`'/*'` / `'/:p/*'` 会在**注册期**抛
+// `PathError: Missing parameter name`，服务直接起不来。改用**具名通配** `*splat`，
+// 并用 `{...}` 让它可匹配零段——否则 `/api/v1`、`/api/proxy/openai/` 这类请求会 404
+// （Express 4 的裸 `*` 是能匹配零段的，已用 express@4.22.3 逐 URL 实测对齐）。
+// 取值形态见 routeParams.ts 的 `wildcardPath`（v5 的 splat 是分段数组，v4 是整串）。
+
 // 通用反向代理：/api/proxy/:provider/<path> → provider.apiBase/<path>
 export const proxyRouter = Router();
-proxyRouter.all('/:provider/*', async (req: Request, res: Response) => {
+proxyRouter.all('/:provider/{*splat}', async (req: Request<FlatParams>, res: Response) => {
   const providerId = req.params.provider;
-  const wildcard = (req.params[0] as string) ?? '';
+  const wildcard = wildcardPath(req);
   const search = new URL(req.url, 'http://localhost').search;
   await proxyRequest(req, res, providerId, wildcard, search);
 });
 
 // 统一 OpenAI 兼容端点：/api/v1/<path>，厂商由请求头 / 模型名前缀 / 路由配置决定（B1 fallback 链）
 export const unifiedRouter = Router();
-unifiedRouter.all('/*', async (req: Request, res: Response) => {
+unifiedRouter.all('/{*splat}', async (req: Request, res: Response) => {
   // B5：统一端点也在入口注入 x-request-id，覆盖「未指定厂商」等早于 proxyRequest 的提前返回
   const requestId = randomUUID();
   res.set('x-request-id', requestId);
-  const wildcard = (req.params[0] as string) ?? '';
+  const wildcard = wildcardPath(req);
   const search = new URL(req.url, 'http://localhost').search;
 
   const cfg = loadConfig();

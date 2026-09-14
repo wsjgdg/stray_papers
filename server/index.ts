@@ -1,5 +1,6 @@
 import express from 'express';
 import type { Request, Response, NextFunction } from 'express';
+import type { FlatParams } from './routeParams.js';
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -460,7 +461,7 @@ app.post('/api/auth/profile', requireAdmin, (req: Request, res: Response) => {
   res.json(r);
 });
 
-app.delete('/api/auth/profile/:id', requireAdmin, (req: Request, res: Response) => {
+app.delete('/api/auth/profile/:id', requireAdmin, (req: Request<FlatParams>, res: Response) => {
   const r = deleteProfile(req.params.id);
   if ('error' in r) {
     res.status(400).json(r);
@@ -819,14 +820,18 @@ app.get('/api/proxy/logs', (req: Request, res: Response) => {
 // B4 请求重放：用存档的 method/path/body 经代理原路重发（不含任何鉴权头，使用当前配置的 Key），
 // 结果与原始记录并排返回，便于排障对比。请求体仅内存持有，重启/落盘后不可重放。
 // 核心逻辑在 server/replay.ts（可注入 send，便于单测）。
-app.post('/api/proxy/logs/:requestId/replay', requireAdmin, async (req: Request, res: Response) => {
-  const out = await replayCall(findLogByRequestId(req.params.requestId));
-  if (!out.ok) {
-    res.status(out.status).json({ error: out.error });
-    return;
-  }
-  res.json({ original: out.original, replay: out.replay });
-});
+app.post(
+  '/api/proxy/logs/:requestId/replay',
+  requireAdmin,
+  async (req: Request<FlatParams>, res: Response) => {
+    const out = await replayCall(findLogByRequestId(req.params.requestId));
+    if (!out.ok) {
+      res.status(out.status).json({ error: out.error });
+      return;
+    }
+    res.json({ original: out.original, replay: out.replay });
+  },
+);
 
 // B2：按调用标签（x-lb-tag）聚合支出，供多项目共用一套 Key 时归集成本。
 // days 限定最近 N 天；未带标签的调用归入 '(untagged)'。按成本降序。
@@ -898,7 +903,7 @@ app.get('/api/proxy/usage/export', (_req: Request, res: Response) => {
 });
 
 // 单条日志精查：响应头 x-request-id → 该次调用的用量/成本/TTFT（多模型对比用）
-app.get('/api/proxy/logs/:requestId', (req: Request, res: Response) => {
+app.get('/api/proxy/logs/:requestId', (req: Request<FlatParams>, res: Response) => {
   const log = findLogByRequestId(req.params.requestId);
   if (!log) {
     res.status(404).json({ error: '未找到该 requestId 对应的调用日志（可能已被环形缓冲淘汰）' });
@@ -936,7 +941,7 @@ app.get('/api/proxy/evals/runs', (req: Request, res: Response) => {
   res.json({ runs: listEvalRuns(Number.isFinite(limit) && limit > 0 ? limit : 50) });
 });
 
-app.get('/api/proxy/evals/runs/:runId', (req: Request, res: Response) => {
+app.get('/api/proxy/evals/runs/:runId', (req: Request<FlatParams>, res: Response) => {
   const run = getEvalRun(req.params.runId);
   if (!run) {
     res.status(404).json({ error: '未找到该跑批记录' });
@@ -945,7 +950,7 @@ app.get('/api/proxy/evals/runs/:runId', (req: Request, res: Response) => {
   res.json({ run, summary: summarizeRun(run) });
 });
 
-app.get('/api/proxy/evals/runs/:runId/export', (req: Request, res: Response) => {
+app.get('/api/proxy/evals/runs/:runId/export', (req: Request<FlatParams>, res: Response) => {
   const run = getEvalRun(req.params.runId);
   if (!run) {
     res.status(404).json({ error: '未找到该跑批记录' });
@@ -956,12 +961,16 @@ app.get('/api/proxy/evals/runs/:runId/export', (req: Request, res: Response) => 
   res.send(runToCsv(run));
 });
 
-app.post('/api/proxy/evals/runs/:runId/stop', requireAdmin, (req: Request, res: Response) => {
-  const ok = stopEvalRun(req.params.runId);
-  res.json({ stopped: ok });
-});
+app.post(
+  '/api/proxy/evals/runs/:runId/stop',
+  requireAdmin,
+  (req: Request<FlatParams>, res: Response) => {
+    const ok = stopEvalRun(req.params.runId);
+    res.json({ stopped: ok });
+  },
+);
 
-app.get('/api/proxy/evals/:id', (req: Request, res: Response) => {
+app.get('/api/proxy/evals/:id', (req: Request<FlatParams>, res: Response) => {
   const set = getEvalSet(req.params.id);
   if (!set) {
     res.status(404).json({ error: '未找到该评测集' });
@@ -971,7 +980,7 @@ app.get('/api/proxy/evals/:id', (req: Request, res: Response) => {
 });
 
 // 保存评测集（写用户目录；同名时覆盖仓库示例但不改动仓库文件）
-app.post('/api/proxy/evals/:id', requireAdmin, (req: Request, res: Response) => {
+app.post('/api/proxy/evals/:id', requireAdmin, (req: Request<FlatParams>, res: Response) => {
   const parsed = parseEvalSet(req.body);
   if (!parsed) {
     res.status(400).json({
@@ -989,7 +998,7 @@ app.post('/api/proxy/evals/:id', requireAdmin, (req: Request, res: Response) => 
   res.json({ id: req.params.id, set: parsed });
 });
 
-app.delete('/api/proxy/evals/:id', requireAdmin, (req: Request, res: Response) => {
+app.delete('/api/proxy/evals/:id', requireAdmin, (req: Request<FlatParams>, res: Response) => {
   const ok = deleteEvalSet(req.params.id);
   if (!ok) {
     res.status(404).json({ error: '用户目录下没有该评测集（仓库示例不可删）' });
@@ -999,7 +1008,7 @@ app.delete('/api/proxy/evals/:id', requireAdmin, (req: Request, res: Response) =
 });
 
 // 跑批：后台串行执行，立即返回 run 快照；进度由 GET /runs/:runId 轮询
-app.post('/api/proxy/evals/:id/run', requireAdmin, (req: Request, res: Response) => {
+app.post('/api/proxy/evals/:id/run', requireAdmin, (req: Request<FlatParams>, res: Response) => {
   const setId = req.params.id;
   const set = getEvalSet(setId);
   if (!set) {
@@ -1154,7 +1163,7 @@ async function reviveDeadKeys(): Promise<void> {
 }
 
 // 自动获取某厂商模型清单（须在 proxyRouter 之前注册，否则会被通配路由捕获）
-app.get('/api/proxy/:provider/models', async (req: Request, res: Response) => {
+app.get('/api/proxy/:provider/models', async (req: Request<FlatParams>, res: Response) => {
   const providerId = req.params.provider;
   try {
     const models = await listProviderModels(providerId);

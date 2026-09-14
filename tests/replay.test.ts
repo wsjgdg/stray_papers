@@ -144,7 +144,7 @@ function startUpstream() {
   const app = express();
   app.use(express.json({ limit: '1mb' }));
   const hits: string[] = [];
-  app.all('*', (req: any, res: any) => {
+  app.use((req: any, res: any) => {
     hits.push(JSON.stringify(req.body));
     res.status(200).json(JSON.parse(okBody('upstream-ok')));
   });
