@@ -116,7 +116,7 @@
 |---|---|---|---|---|
 | E1 | 月度预算 + 预测 | 只有日预算 | 加 `monthlyUsd`；近 7 日线性外推月终值显示在预算条 | ✅ |
 | E2 | 用量留存可运维 | `usageStore` 固定保留 90 天，无清理入口 | 设置页加「导出全部用量 / 清理 N 天前」 | ✅ |
-| E3 | 成本异动告警 | 浮窗只在超阈值时通知 | 加「单小时成本环比 > N 倍」告警（复用 `spikeLevel`） | S |
+| E3 | 成本异动告警 | 浮窗只在超阈值时通知 | 加「单小时成本环比 > N 倍」告警 | ✅ |
 
 ### Phase E1 落地记录（2026-09-14）
 
@@ -176,6 +176,33 @@
   重载后仍为 7 天（已落盘）、导出 href 正确；**新增 `btn-danger` 的双主题对比度审计 0 失败**（浅色最低 4.84、深色最低 4.99，含该按钮本身）。
   真实数据目录 sha256 **零改动**。
 
+### Phase E3 落地记录（2026-09-14）
+
+**问题**：既有告警只有两类——日预算超阈值、请求速率突增。**成本**维度上，速率正常但单价高的模型（或重试风暴）可以悄悄把当日成本推高，用户要到预算告警时才知道，已经花掉了。
+
+**方案**：新增「当前小时成本 vs 已完成的近 24 小时」的异动判定，全链路不复用 `spikeLevel`（它是基于**前端**速率历史的中位数，而成本基线必须在**服务端**按小时成环——重启即重建，不落盘）。
+
+- `server/metrics.ts`：新增内存小时环 `hourBuckets`（key = 本地 `YYYY-MM-DDTHH`，上限 `HOUR_BUCKET_MAX = 25`，`recordCall` 里累加；`resetMetrics` 一并清空）。
+  纯函数 `costSpikeStatus(buckets, now)` + `currentCostSpike(now)`；`getSummary()` 暴露 `hourCostUsd` / `costBaselinePerHrUsd` / `costSpikeRatio` / `costSpikeLevel` / `costSampleHours`。
+- **口径关键：按已过分钟数折算当前小时**（`hourCostUsd / (分钟数+1)`），基线用**已完成小时**的每分钟成本中位数（分母固定 60）。若直接比「本小时累计 vs 整小时成本」，整点前 20 分钟必然低估、永远不告警。
+- **三道护栏**（`reason` 可诊断）：`too-early`（本小时 < 5 分钟）、`insufficient-hours`（有流量的已完成小时 < 3）、`no-baseline`（基线为 0）、外加绝对下限 `below-floor`（本小时 < $0.01，避免清闲期一笔小额就报）。
+- 基线**只取有流量（`requests > 0`）的已完成小时**：清闲小时天然为 0，纳入会拉低中位数变成噪声；`median` 对偶数样本取中间两值均值（上中位数在样本少时整体偏大）。
+- 阈值：`ratio ≥ 3` → alert，`≥ 1.8` → warn。判级全部在服务端完成，前端只负责措辞与配色，保证「显示的倍数」与「判级依据」同源。
+- 前端：`format.ts` 新增 `costSpikeText()`（`normal/warn/alert` + 「基线积累中」/「暂无基线」两态文案）；
+  `useFloatStats.ts` 新增 `costSpikeNotifiedRef`——**alert 上升沿**触发 `notify`，持续 alert 不重复刷屏，回落（含 warn）后再次升沿可再提醒；
+  `FloatingStats.tsx` 成本行按级取色（alert `text-up` + ⚠、warn `text-warn` + ·），展开详情常显一行「成本异动：…（样本 Nh）」，`title` 与 CSV 导出同步带上 E3 五字段。
+
+**验证**
+- 单测 35 文件 / **293 通过**（+19：`costSpikeStatus` 的 alert/warn/normal 三态与含等号边界、四道护栏各自短路、
+  无流量小时被排除、偶数样本取均值、未来小时不计入、空桶不除零；小时环的累加/升序/25 小时淘汰/`currentCostSpike` 读实时环/`resetMetrics` 清空/`getSummary` 冷启动不误报与直连实时环的接线断言）。
+- 真实浏览器复测（Edge headless + CDP，`LLM_WORKBENCH_HOME` 指向临时目录）：**16/16 步通过、0 console 错误**——
+  真实 `/api/proxy/metrics/summary` 五个 E3 字段类型正确且冷启动 `level=normal / hourCostUsd=0`；
+  浮窗成本行与展开详情在 alert / warn / normal / 基线积累中 / 暂无基线 五态下的措辞与配色逐一核对。
+- 通知行为独立复测（文档加载前装 `window.electron` 桥桩，`isElectron` 保持 false 以便浮窗仍渲染）：**8/8 通过**——
+  alert 上升沿恰好 1 条「成本异动告警」（正文含 `$0.9000` / `$0.6000/时` / `3.20×`）、跨 3 个轮询周期不重复、
+  回落不新增、回落后再升沿可再提醒（共 2 条）、warn 静默不弹窗。
+- 真实数据目录 sha256 **零改动**（两处路径指纹一致）。
+
 ---
 
 ## Phase F — 工程与发布（P2/P3）
@@ -200,7 +227,7 @@ A1 A2 A3 A4 A5（安全，半天内可完） ──┐
                                     ├─> ✅ B1 B6（路由 + /v1/models）
 D1（去 recharts，无依赖可并行）─────┘        └─> ✅ B2 B3（配额 / 归因）──> ✅ B4 B5（重放 / 定价外置）
                                                                         └─> ✅ C1 C2 C3（评测）
-✅ D1–D6（前端性能与体验）──> ✅ E1 E2（月度预算 + 用量留存可运维）──> 下一步 E3 或 F1 F2（打包与自动更新）
+✅ D1–D6（前端性能与体验）──> ✅ E1 E2 E3（月度预算 + 用量留存可运维 + 成本异动告警）──> 下一步 F1 F2（打包与自动更新）
 F1（asar）──> F2（自动更新）──> F3 / F4
 ```
 
@@ -213,7 +240,7 @@ F1（asar）──> F2（自动更新）──> F3 / F4
 
 1. `prettier --check .`
 2. `npm run typecheck` EXIT 0
-3. `npm run test`（274 全过）
+3. `npm run test`（293 全过）
 4. `npm run build` EXIT 0
 5. 涉及 server/proxy 必须 `node electron/server.cjs` + curl 实测；涉及打包必须重打 + 桌面双击实测
 6. **改 UI 必须真实浏览器复测**（`tsc-pass ≠ runtime-safe`）：Edge headless + CDP，见 skill `cdp-headless-smoke`；改配色须跑对比度审计
@@ -232,5 +259,9 @@ F1（asar）──> F2（自动更新）──> F3 / F4
 | E1 预算 | `setBudget` 增量语义下，前端传 `{}` 会静默无操作 | 服务端对「无任何字段」返回 400，逐字段校验正数；UI 两块的设置/清除按钮各自只提交自己那一项 ✅ 已做 |
 | E2 用量清理 | 手动清理是**不可撤销**的破坏性操作，误删会丢历史成本 | ①`purgeUsagePlan` 是纯函数，**预览与实际清理共用同一实现**（所见即所删）；②「保留天数」一变即作废旧预览，确认按钮随预览消失，杜绝按过期数字误删；③`keepDays` 下限钳到 1 天，**永远删不到今日**；④`dayCount=0` 时不渲染确认按钮（不留禁用噪音） ✅ 已做 |
 | E2 用量清理 | 清理后 UI 仍显示旧数值 | 清理响应直接回传新 `stats`，前端一次 setState 收敛；轮询只刷新概览、不覆盖用户正在确认的预览 ✅ 已做 |
+| E3 成本异动 | 整点附近「本小时累计 vs 整小时基线」必然低估 → 永远不告警（漏报） | 当前小时**按已过分钟数折算**成每分钟成本，基线取已完成小时的每分钟成本中位数，两侧同口径 ✅ 已做 |
+| E3 成本异动 | 清闲期一笔小额调用就会触发倍数告警（误报刷屏） | 基线只取 `requests > 0` 的已完成小时 + 绝对下限 `$0.01`（`below-floor`）+ 至少 3 个样本与 5 分钟窗口 ✅ 已做 |
+| E3 成本异动 | 服务端重启后小时环清空，若前端沿用旧 level 会长期显示告警 | 冷启动 `sampleHours = 0` → `insufficient-hours` 强制回 `normal`（fail-safe 而非 fail-open） ✅ 已做 |
+| E3 成本异动 | 告警重复弹系统通知 | `costSpikeNotifiedRef` 只在 **alert 上升沿**触发，持续 alert 不重复；回落到 normal/warn 才复位，可再提醒 ✅ 已做 |
 | F1 asar 回归 | asar 内读取差异导致白屏 | 保留 `asar:false` 一键回退；完整冒烟清单过一遍 |
 | F2 自动更新 | 无签名时 UAC 提示体验差 | 仅通知，不自动安装 |
