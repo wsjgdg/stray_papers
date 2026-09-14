@@ -218,7 +218,8 @@ export async function fetchArtificialAnalysis(): Promise<{
           label: String(raw.label ?? ''),
           value,
           extra: extras,
-          detailsUrl: typeof raw.detailsUrl === 'string' ? raw.detailsUrl : null,
+          detailsUrl:
+            typeof raw.detailsUrl === 'string' ? new URL(raw.detailsUrl, PAGE).href : null,
           aaSlug: slugFromDetailsUrl(raw.detailsUrl),
           modelId: null,
         };
@@ -233,6 +234,9 @@ export async function fetchArtificialAnalysis(): Promise<{
       description: (ds.description ?? '').slice(0, 400),
       metricKey: def.metricKey,
       higherBetter: def.higherBetter,
+      sourceId: 'artificial-analysis',
+      sourceUrl: PAGE,
+      sourceName: 'Artificial Analysis',
       entries,
     });
   }

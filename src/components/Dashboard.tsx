@@ -82,7 +82,11 @@ export default function Dashboard({ snapshot }: Props) {
         <Stat
           label="评估榜单"
           value={leaderboards.length}
-          hint="Artificial Analysis"
+          hint={
+            leaderboards.length
+              ? Array.from(new Set(leaderboards.map((b) => b.sourceName))).join(' · ')
+              : '—'
+          }
           tone="accent"
         />
         <Stat
@@ -113,7 +117,9 @@ export default function Dashboard({ snapshot }: Props) {
         <Card
           className="xl:col-span-2"
           title="模型排行"
-          subtitle="按不同维度实时排序，数据来自 Artificial Analysis 与 OpenRouter"
+          subtitle={`按不同维度实时排序，榜单数据来自 ${
+            Array.from(new Set(leaderboards.map((b) => b.sourceName))).join(' · ') || '—'
+          }`}
           right={
             <div className="flex flex-wrap gap-1">
               {(

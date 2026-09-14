@@ -6,7 +6,6 @@ import { fmtCtx, fmtPrice } from '../api';
 import { Bar, Chip, Empty } from '../ui';
 import { ScatterPlot } from './charts';
 
-const AA_ORIGIN = 'https://artificialanalysis.ai';
 const MIN_SCATTER_POINTS = 3;
 // D1：排名色改走主题令牌（旧的写死色号在浅色下对比度不足）
 const RANK_COLORS = ['var(--c-rank1)', 'var(--c-rank2)', 'var(--c-rank3)'];
@@ -63,7 +62,7 @@ function EntryRow({
   metricKey: string;
   model: LlmModel | undefined;
 }) {
-  const detailsHref = entry.detailsUrl ? `${AA_ORIGIN}${entry.detailsUrl}` : null;
+  const detailsHref = entry.detailsUrl ?? null;
   return (
     <div className="flex items-center gap-3 border-b border-edge/60 px-4 py-2.5 transition-colors hover:bg-hover">
       <RankBadge rank={rank} />
@@ -207,6 +206,17 @@ export default function Leaderboards({
                   {board.higherBetter ? '越高越好' : '越低越好'}
                 </Chip>
                 <Chip>{board.entries.length} 条</Chip>
+                {board.sourceUrl && (
+                  <a
+                    className="inline-flex items-center gap-1 text-[11px] text-accent hover:underline"
+                    href={board.sourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <ExternalLink size={11} />
+                    {board.sourceName}
+                  </a>
+                )}
                 <Chip tone="ok">
                   {matchedCount}/{board.entries.length} 已匹配到可用 API
                 </Chip>
