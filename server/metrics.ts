@@ -7,6 +7,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { estimateCost } from './pricing.js';
 import { configDir } from './config.js';
+import { recordUsage } from './usageStore.js';
 
 export interface CallLog {
   id: number;
@@ -233,6 +234,16 @@ export function recordCall(log: Omit<CallLog, 'id' | 'costUsd'>): CallLog {
     const keys = [...dailyBuckets.keys()].sort();
     while (dailyBuckets.size > DAILY_TTL_DAYS) dailyBuckets.delete(keys.shift()!);
   }
+  // D4：日粒度用量落盘（provider×model×day，保留 90 天）——跨重启的成本/导出数据源
+  recordUsage(
+    log.ts,
+    log.provider,
+    log.model,
+    log.inputTokens,
+    log.outputTokens,
+    log.cacheReadTokens,
+    cost.total,
+  );
   a.latencies.push(log.latencyMs);
   if (a.latencies.length > AVG_SAMPLES) a.latencies.shift();
   if (log.inputTokens || log.outputTokens) {

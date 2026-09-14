@@ -31,8 +31,8 @@ import {
   generateProxyToken,
   getMigrationNotice,
   configDir,
-  getBudgetDailyUsd,
-  setBudgetDailyUsd,
+  getBudget,
+  setBudget,
 } from './config.js';
 import {
   getMetrics,
@@ -44,6 +44,12 @@ import {
   budgetStatus,
 } from './metrics.js';
 import { aggregateSpend, spendToCsv } from './spendExport.js';
+import {
+  flush as flushUsageStore,
+  initUsageStore,
+  stopUsageStore,
+  usageSpendSources,
+} from './usageStore.js';
 import {
   deletePricingOverrides,
   getPricingState,
@@ -458,14 +464,18 @@ app.get('/api/proxy/metrics/summary', (_req: Request, res: Response) => {
   res.json(getSummary());
 });
 
-// D3 日预算：查询（今日成本 + 阈值状态）/ 设置（null 清除）；阈值判定见 metrics.budgetStatus
+// D3 日预算：查询（今日成本 + 阈值状态）/ 设置（null 清除）；阈值判定见 metrics.budgetStatus。
+// blockOnExceed = fail-closed：超限后代理拒绝转发（见 proxy.ts 守卫）。
 app.get('/api/proxy/budget', (_req: Request, res: Response) => {
-  const dailyUsd = getBudgetDailyUsd();
+  const budget = getBudget();
   const todayUsd = getSummary().todayCostUsd;
-  res.json({ dailyUsd, todayUsd, ...budgetStatus(todayUsd, dailyUsd) });
+  res.json({ ...budget, todayUsd, ...budgetStatus(todayUsd, budget.dailyUsd) });
 });
 app.post('/api/proxy/budget', requireAdmin, (req: Request, res: Response) => {
-  const { dailyUsd } = (req.body ?? {}) as { dailyUsd?: unknown };
+  const { dailyUsd, blockOnExceed } = (req.body ?? {}) as {
+    dailyUsd?: unknown;
+    blockOnExceed?: unknown;
+  };
   if (
     dailyUsd !== null &&
     (typeof dailyUsd !== 'number' || !Number.isFinite(dailyUsd) || dailyUsd <= 0)
@@ -473,16 +483,22 @@ app.post('/api/proxy/budget', requireAdmin, (req: Request, res: Response) => {
     res.status(400).json({ error: 'dailyUsd 必须为正数（USD），传 null 清除预算' });
     return;
   }
-  setBudgetDailyUsd(dailyUsd ?? null);
-  const daily = getBudgetDailyUsd();
+  if (blockOnExceed !== undefined && typeof blockOnExceed !== 'boolean') {
+    res.status(400).json({ error: 'blockOnExceed 必须为布尔值' });
+    return;
+  }
+  setBudget(dailyUsd ?? null, blockOnExceed as boolean | undefined);
+  const budget = getBudget();
   const todayUsd = getSummary().todayCostUsd;
-  res.json({ dailyUsd: daily, todayUsd, ...budgetStatus(todayUsd, daily) });
+  res.json({ ...budget, todayUsd, ...budgetStatus(todayUsd, budget.dailyUsd) });
 });
 
-// D2 成本导出：按「日 × 厂商 × 模型」聚合支出，format=csv（缺省，带下载头）或 json；days 限定最近 N 天
+// D2 成本导出：按「日 × 厂商 × 模型」聚合支出，format=csv（缺省，带下载头）或 json；days 限定最近 N 天。
+// 数据源 = D4 用量存档（跨重启完整），导出前先 flush 捕获最近几秒的调用。
 app.get('/api/proxy/metrics/export', (req: Request, res: Response) => {
   const days = Number(req.query.days ?? 30);
-  const rows = aggregateSpend(getLogs({}), {
+  flushUsageStore();
+  const rows = aggregateSpend(usageSpendSources(), {
     days: Number.isFinite(days) && days > 0 ? days : 30,
   });
   if (req.query.format === 'json') {
@@ -848,6 +864,7 @@ export function startServer(): void {
   logStartup(`[api] 启动中… 基础端口 ${BASE_PORT}`);
   initConfigStore();
   initPricingOverrides(); // D1：加载用户定价覆盖（无文件/损坏则回退内置定价）
+  initUsageStore(); // D4：加载日粒度用量存档并启动节流落盘
   loadProfiles();
   // 启动速率历史采样（每 2s 一次），供浮窗趋势图展示真实持久化数据
   sampleRateHistory();
@@ -886,6 +903,7 @@ export function stopServer(): void {
     clearInterval(reviveTimer);
     reviveTimer = null;
   }
+  stopUsageStore(); // D4：强制落盘当日用量
   if (httpServer) {
     httpServer.close();
     httpServer = null;
