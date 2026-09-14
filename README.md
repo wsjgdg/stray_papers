@@ -2,6 +2,15 @@
 
 大模型能力评估 + 本地 API 代理工作台。前端 Vite + React 18 + TypeScript，后端 Express，桌面端 Electron（主窗口 + 常驻浮窗）。
 
+主要能力：
+
+- **模型库 / 能力评估 / 成本计算**：OpenRouter 与 Artificial Analysis 数据聚合、榜单对比、按 token 计价的成本试算。
+- **本地代理**：多厂商统一 OpenAI 兼容入口（`/api/v1`、`/api/proxy/:provider/*`），多 Key 轮询、失败冷却、响应缓存（SWR）、结构化日志与指标。
+- **模型映射**：per-provider `modelMapping`，把请求里的模型名改写成上游实际模型名（中转站改名 / 别名路由场景）。
+- **多模型对比**：同一 prompt 并发打到多个「厂商 × 模型」，并排比较输出、延迟、TTFT、tokens 与成本，可导出 Markdown/JSON。
+- **配置备份恢复**：config.json + auth.json 用口令加密打包为 `.lwb`，换机或配置损坏时一键还原。
+- **桌面端**：主窗口 + 常驻浮窗（速率/成本/缓存实时）、托盘菜单、全局快捷键、开机自启。
+
 ## 快速开始
 
 ```bash
@@ -64,6 +73,7 @@ npm run electron:build:portable   # 免安装目录 → release/
 | `<数据目录>/config.json` | 厂商配置（API Key 明文或 AES-256-GCM 密文）、代理令牌、日预算 |
 | `<数据目录>/auth.json` | 本地档案与口令 verifier（scrypt 派生，不存明文） |
 | `<数据目录>/pricing-overrides.json` | 用户定价覆盖（代理页 → 成本计算器设置） |
+| 备份 `.lwb` | 代理配置页「配置备份与恢复」导出，口令加密（不落库、不上传） |
 | `<数据目录>/logs.ndjson` | 结构化调用日志（`LOG_PERSIST=1` 时启用，Key 已脱敏） |
 | `<userData>/logs/main-*.log` | Electron 主进程诊断日志（黑屏排查用） |
 | `%TEMP%/llm-workbench.log` | 启动日志（双击闪退时排查用） |
@@ -96,7 +106,7 @@ npm run electron:build            # NSIS 安装包 + blockmap + latest.yml → r
 ```
 
 - 首次运行 electron-builder 会下载 NSIS/winCodeSign 工具链，需前台且超时 >420s。
-- 未做代码签名，安装时 SmartScreen 会提示「仍要运行」；发布产物附 `SHA256SUMS.txt` 供校验。
+- 未做代码签名，安装时 SmartScreen 会提示「仍要运行」；`npm run release:checksums` 生成 `release/SHA256SUMS.txt` 供校验（electron:build / electron:build:portable 已自动调用）。
 - 打 `v*` tag 推送后，CI 自动构建安装包并创建 GitHub Release（含 SHA256SUMS），流程见 `docs/release-checklist.md`。
 
 ## 自动化测试
