@@ -83,9 +83,12 @@ export function useVirtualList<T>({
   overscan?: number;
   scrollRef: RefObject<HTMLElement | null>;
 }): UseVirtualList<T> {
-  const sizes = useRef(new Map<string, number>());
-  /** 实测尺寸变化时自增，驱动偏移表重算（rAF 合并，避免逐行 setState） */
-  const [version, setVersion] = useState(0);
+  // 尺寸缓存分两条路径（react-hooks/refs：渲染期间不得读 ref）：
+  //   写路径 sizesRef —— 只在 ref 回调 / 事件里改，改了不立刻重渲染；
+  //   读路径 sizes    —— 渲染用的不可变快照，由 rAF 合并后整表替换一次。
+  // 这样「逐行回报高度」不会逐行 setState，而渲染侧读到的是稳定的 state 值。
+  const sizesRef = useRef(new Map<string, number>());
+  const [sizes, setSizes] = useState<ReadonlyMap<string, number>>(() => new Map());
   const [viewport, setViewport] = useState<{ top: number; height: number }>({
     top: 0,
     height: 0,
@@ -96,7 +99,7 @@ export function useVirtualList<T>({
     if (rafRef.current) return;
     const run = () => {
       rafRef.current = 0;
-      setVersion((v) => v + 1);
+      setSizes(new Map(sizesRef.current));
     };
     if (typeof requestAnimationFrame === 'function') rafRef.current = requestAnimationFrame(run);
     else run();
@@ -104,8 +107,8 @@ export function useVirtualList<T>({
 
   const reportSize = useCallback(
     (key: string, height: number) => {
-      if (height > 0 && sizes.current.get(key) !== height) {
-        sizes.current.set(key, height);
+      if (height > 0 && sizesRef.current.get(key) !== height) {
+        sizesRef.current.set(key, height);
         scheduleFlush();
       }
     },
@@ -149,18 +152,17 @@ export function useVirtualList<T>({
     };
   }, [scrollRef]);
 
-  // 前缀和偏移表（读取实测尺寸，故依赖 version）
+  // 前缀和偏移表（读渲染侧快照，尺寸变化时快照换新 → 自动重算）
   const offsets = useMemo(() => {
     const out = new Array<number>(items.length + 1);
     let acc = 0;
     for (let i = 0; i < items.length; i++) {
       out[i] = acc;
-      acc += sizes.current.get(getKey(items[i], i)) ?? estimate;
+      acc += sizes.get(getKey(items[i], i)) ?? estimate;
     }
     out[items.length] = acc;
     return out;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, getKey, estimate, version]);
+  }, [items, getKey, estimate, sizes]);
 
   const totalSize = offsets[items.length] ?? 0;
 
@@ -180,7 +182,7 @@ export function useVirtualList<T>({
       const el = scrollRef.current;
       if (!el || index < 0 || index >= items.length) return;
       const top = offsets[index] ?? 0;
-      const size = sizes.current.get(getKey(items[index], index)) ?? estimate;
+      const size = sizesRef.current.get(getKey(items[index], index)) ?? estimate;
       const target = align === 'start' ? top : Math.max(0, top - (el.clientHeight - size) / 2);
       el.scrollTop = target;
       setViewport((prev) => (prev.top === target ? prev : { ...prev, top: target }));
@@ -196,6 +198,6 @@ export function useVirtualList<T>({
     scrollToIndex,
     setSize,
     reportSize,
-    measured: sizes.current.size,
+    measured: sizes.size,
   };
 }
