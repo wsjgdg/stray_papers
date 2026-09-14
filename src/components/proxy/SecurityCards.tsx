@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Plus, Trash2 } from 'lucide-react';
 import {
   fetchCryptoStatus,
   initEncryption,
@@ -13,6 +14,9 @@ import {
   setProxyTokenAction,
   getProxyToken,
   type ProxyTokenStatus,
+  fetchRouting,
+  saveRouting,
+  type RoutingConfig,
 } from '../../api';
 import { Card, Chip } from '../../ui';
 
@@ -308,6 +312,190 @@ export function ProxyTokenCard() {
         )}
         {msg && <span className="text-[11px] text-accent">{msg}</span>}
         {err && <span className="text-[11px] text-up">{err}</span>}
+      </div>
+    </Card>
+  );
+}
+
+// ───────── 模型路由 + fallback 链（B1） ─────────
+export function RoutingCard() {
+  const [routing, setRouting] = useState<RoutingConfig | null>(null);
+  const [defaultRows, setDefaultRows] = useState<string[]>(['']);
+  const [routeRows, setRouteRows] = useState<{ pattern: string; providers: string }[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchRouting()
+      .then((r) => {
+        setRouting(r.routing);
+        setDefaultRows(r.routing?.default?.length ? r.routing.default : ['']);
+        setRouteRows(
+          r.routing?.routes
+            ? Object.entries(r.routing.routes).map(([pattern, providers]) => ({
+                pattern,
+                providers: providers.join(', '),
+              }))
+            : [],
+        );
+      })
+      .catch((e) => setErr((e as Error).message))
+      .finally(() => setLoaded(true));
+  }, []);
+
+  const setDefaultRow = (i: number, v: string) =>
+    setDefaultRows((prev) => prev.map((x, idx) => (idx === i ? v : x)));
+  const addDefaultRow = () => setDefaultRows((prev) => [...prev, '']);
+  const removeDefaultRow = (i: number) =>
+    setDefaultRows((prev) => (prev.length > 1 ? prev.filter((_, idx) => idx !== i) : ['']));
+
+  const setRoute = (i: number, patch: Partial<{ pattern: string; providers: string }>) =>
+    setRouteRows((prev) => prev.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
+  const addRoute = () => setRouteRows((prev) => [...prev, { pattern: '', providers: '' }]);
+  const removeRoute = (i: number) => setRouteRows((prev) => prev.filter((_, idx) => idx !== i));
+
+  const buildConfig = (): RoutingConfig => {
+    const cfg: RoutingConfig = { default: [], routes: {} };
+    cfg.default = defaultRows.map((s) => s.trim()).filter(Boolean);
+    for (const r of routeRows) {
+      const pattern = r.pattern.trim();
+      const providers = r.providers
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (pattern && providers.length) cfg.routes[pattern] = providers;
+    }
+    return cfg;
+  };
+
+  const save = async () => {
+    setBusy(true);
+    setErr(null);
+    setMsg(null);
+    const cfg = buildConfig();
+    const empty = cfg.default.length === 0 && Object.keys(cfg.routes).length === 0;
+    try {
+      const res = await saveRouting(empty ? null : cfg);
+      setRouting(res.routing);
+      setMsg(empty ? '已清除路由配置，回退到默认（首个已启用且有 Key 的厂商）' : '路由配置已保存');
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const clear = async () => {
+    setBusy(true);
+    setErr(null);
+    setMsg(null);
+    try {
+      const res = await saveRouting(null);
+      setRouting(res.routing);
+      setDefaultRows(['']);
+      setRouteRows([]);
+      setMsg('已清除路由配置');
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!loaded) return null;
+
+  return (
+    <Card
+      title="模型路由 + 失败切换链（B1）"
+      subtitle="按模型名前缀/通配符把请求路由到指定厂商链；某厂商失败时自动切换到链中下一个。设置 x-lb-provider 头或 vendor/model 前缀可跳过路由。"
+      right={
+        <div className="flex items-center gap-2">
+          <button className="btn btn-ghost" onClick={clear} disabled={busy}>
+            清除
+          </button>
+          <button className="btn btn-primary" onClick={save} disabled={busy}>
+            {busy ? '保存中…' : '保存路由'}
+          </button>
+        </div>
+      }
+    >
+      <div className="space-y-3 text-[11px]">
+        {routing && (
+          <div className="flex items-center gap-2 text-muted">
+            <Chip tone="down">已启用路由</Chip>
+            <span>当前默认链：{routing.default.join(' → ') || '（空）'}</span>
+          </div>
+        )}
+
+        <div>
+          <div className="mb-1 text-muted">默认链（未匹配任何规则时使用，厂商按序兜底）</div>
+          <div className="space-y-1">
+            {defaultRows.map((v, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  className="input flex-1 font-mono"
+                  placeholder="厂商 ID，如 openai / anthropic"
+                  value={v}
+                  onChange={(e) => setDefaultRow(i, e.target.value)}
+                />
+                <button
+                  className="btn btn-ghost shrink-0"
+                  title="删除"
+                  onClick={() => removeDefaultRow(i)}
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            ))}
+            <button className="btn btn-sm" onClick={addDefaultRow}>
+              <Plus size={12} />
+              添加默认厂商
+            </button>
+          </div>
+        </div>
+
+        <div className="border-t border-edge pt-2">
+          <div className="mb-1 text-muted">
+            路由规则（pattern 支持通配符 *，如 gpt-* / *-mini / *；精确匹配优先于通配符；单链最多 3
+            个厂商）
+          </div>
+          <div className="space-y-1">
+            {routeRows.length === 0 && <div className="text-muted">尚未配置路由规则。</div>}
+            {routeRows.map((r, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  className="input w-40 shrink-0 font-mono"
+                  placeholder="pattern，如 gpt-*"
+                  value={r.pattern}
+                  onChange={(e) => setRoute(i, { pattern: e.target.value })}
+                />
+                <span className="shrink-0 text-muted">→</span>
+                <input
+                  className="input flex-1 font-mono"
+                  placeholder="厂商链，逗号分隔，如 openai, anthropic"
+                  value={r.providers}
+                  onChange={(e) => setRoute(i, { providers: e.target.value })}
+                />
+                <button
+                  className="btn btn-ghost shrink-0"
+                  title="删除"
+                  onClick={() => removeRoute(i)}
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            ))}
+            <button className="btn btn-sm" onClick={addRoute}>
+              <Plus size={12} />
+              添加路由规则
+            </button>
+          </div>
+        </div>
+
+        {msg && <div className="text-accent">{msg}</div>}
+        {err && <div className="text-up">{err}</div>}
       </div>
     </Card>
   );

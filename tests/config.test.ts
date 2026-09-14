@@ -116,3 +116,32 @@ describe('config: store round-trip (plaintext)', () => {
     assert.equal(parsed.providers.openai.apiKey, 'sk-x');
   });
 });
+
+describe('config: listRoutedModels (B6)', () => {
+  beforeEach(() => {
+    fs.rmSync(cfg.configPath(), { force: true });
+    cfg.initConfigStore();
+  });
+
+  it('aggregates enabled providers with keys and applies reverse mapping alias', () => {
+    cfg.upsertProvider('a', {
+      apiKey: 'k',
+      enabled: true,
+      models: ['oai/gpt-4o', 'oai/gpt-4'],
+      modelMapping: { 'gpt-4o': 'oai/gpt-4o' },
+      enabledModels: ['oai/gpt-4o'],
+    });
+    cfg.upsertProvider('b', { apiKey: 'k', enabled: true, models: ['claude-3'] });
+    const ids = cfg.listRoutedModels().map((m) => m.id);
+    assert.ok(ids.includes('gpt-4o'), '反向映射：上游 oai/gpt-4o → 别名 gpt-4o');
+    assert.ok(!ids.includes('oai/gpt-4o'), '上游名已被别名覆盖，不应再出现');
+    assert.ok(ids.includes('claude-3'));
+  });
+
+  it('excludes disabled / no-key providers and empty enabledModels', () => {
+    cfg.upsertProvider('a', { apiKey: '', enabled: true, models: ['x'] }); // 无 key
+    cfg.upsertProvider('b', { apiKey: 'k', enabled: false, models: ['y'] }); // 未启用
+    cfg.upsertProvider('c', { apiKey: 'k', enabled: true, models: ['m1', 'm2'], enabledModels: [] }); // 全部禁用
+    assert.deepEqual(cfg.listRoutedModels(), []);
+  });
+});

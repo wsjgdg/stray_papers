@@ -12,6 +12,7 @@ import {
   type ApiFormat,
 } from './translate.js';
 import { loadConfig, getBudget, resolveKeyPool, resolveTimeoutMs } from './config.js';
+import { resolveChain } from './routing.js';
 import { buildAuthHeaders } from './upstreamAuth.js';
 import { DEFAULT_RETRY_ON, isRetryable, parseRetryAfter } from './retryPolicy.js';
 
@@ -44,8 +45,33 @@ import { registerCacheRefreshHandler } from './caching.js';
 registerCacheRefreshHandler();
 
 /**
+ * 单次厂商尝试的结果（B1 fallback 链使用）。
+ * - committed：已向客户端写出最终响应（成功或已写错误）
+ * - settled：调用方应终止整条链（已写出响应，或遇到不应换厂商的错误，如预算超限 402）
+ *   注意：chain 模式下未 committed 且未 settled 即「可换下一个厂商重试」。
+ */
+export interface ProxyAttempt {
+  providerId: string;
+  committed: boolean;
+  settled: boolean;
+  status: number | null;
+  error: string | null;
+  retryable: boolean;
+}
+
+export interface ProxyOptions {
+  /** chain 模式：失败时仅返回结果而不写响应，由统一路由决定是否切换下一个厂商 */
+  chain?: boolean;
+  /** 链共用 requestId（贯穿多次尝试与日志）；缺省每次生成 */
+  requestId?: string;
+  /** 本次请求规划的完整厂商链，写入日志 routeChain 便于回溯 */
+  routeChain?: string[];
+}
+
+/**
  * 核心代理逻辑：把请求转发到指定厂商并回传，扫描 usage、记录指标、命中响应缓存时直接回放。
  * providerId/wildcard/search 由调用方（/api/proxy 路由 或 /api/v1 统一路由）提供。
+ * 返回 ProxyAttempt 以便统一路由在 chain 模式下实现 fallback。
  */
 export async function proxyRequest(
   req: Request,
@@ -53,19 +79,23 @@ export async function proxyRequest(
   providerId: string,
   wildcard: string,
   search: string,
-): Promise<void> {
+  opts: ProxyOptions = {},
+): Promise<ProxyAttempt> {
   // B5：每请求生成全局唯一 requestId，贯穿响应头与日志，便于关联排查
-  const requestId = randomUUID();
+  const requestId = opts.requestId ?? randomUUID();
   let keyMask: string | null = null;
-  res.set('x-request-id', requestId);
+  if (!res.getHeader('x-request-id')) res.set('x-request-id', requestId);
 
   const cfg = loadConfig();
   const target = resolveTarget(providerId, cfg);
 
-  if (!target) {
-    res.status(404).json({ error: `未知厂商: ${providerId}（自定义厂商请先在配置页添加）` });
-    return;
-  }
+  // chain 模式：配置类错误（厂商不存在/未启用/无 baseUrl）不写响应，交调用方换下一个厂商
+  const fail = (status: number, error: string, retryable = false): ProxyAttempt => {
+    if (!opts.chain) res.status(status).json({ error });
+    return { providerId, committed: false, settled: opts.chain ? false : true, status, error, retryable };
+  };
+
+  if (!target) return fail(404, `未知厂商: ${providerId}（自定义厂商请先在配置页添加）`);
   const { provider, authStyle } = target;
   const entry = cfg.providers[providerId];
   // 重试状态码：per-provider 覆盖，缺省 [401,403,429]
@@ -74,22 +104,13 @@ export async function proxyRequest(
       ? entry.retryOn
       : DEFAULT_RETRY_ON;
 
-  if (!entry || !entry.enabled) {
-    res.status(400).json({ error: '该厂商未启用，请先在「代理」页配置并启用' });
-    return;
-  }
+  if (!entry || !entry.enabled) return fail(400, '该厂商未启用，请先在「代理」页配置并启用');
   const baseUrl = entry.baseUrl || provider.apiBase;
-  if (!baseUrl) {
-    res.status(400).json({ error: '该厂商无可用 baseUrl，请在配置中填写' });
-    return;
-  }
+  if (!baseUrl) return fail(400, '该厂商无可用 baseUrl，请在配置中填写');
 
   // 多 key 池：轮询 + 失败切换
   const pool = resolveKeyPool(entry);
-  if (pool.length === 0) {
-    res.status(400).json({ error: '该厂商未配置 API Key' });
-    return;
-  }
+  if (pool.length === 0) return fail(400, '该厂商未配置 API Key');
 
   const bodyStr =
     req.method === 'GET' || req.method === 'HEAD'
@@ -152,6 +173,7 @@ export async function proxyRequest(
     ttft,
     method: req.method,
     path: '/' + wildcard,
+    routeChain: opts.routeChain,
   });
 
   // D3 fail-closed：开启 blockOnExceed 且当日预算已超限时直接拒绝（402），不再打上游。
@@ -164,7 +186,8 @@ export async function proxyRequest(
       const msg = `日预算已超限（今日 $${todayUsd.toFixed(4)} / 预算 $${budget.dailyUsd}），blockOnExceed 已拦截本次转发`;
       res.status(402).json({ error: msg });
       finalize(mkInput(), 402, {}, 0, '预算超限拦截（本地）', false, 0);
-      return;
+      // 预算超限：fail-closed，直接拒绝，不换厂商重试
+      return { providerId, committed: false, settled: true, status: 402, error: msg, retryable: false };
     }
   }
 
@@ -182,7 +205,7 @@ export async function proxyRequest(
     res.send(cached.body);
     finalize(mkInput(), cached.status, {}, cached.body.length, null, true, 0);
     if (lookup.state === 'stale') triggerRefresh(ck);
-    return;
+    return { providerId, committed: true, settled: true, status: cached.status, error: null, retryable: false };
   }
 
   const translator = createStreamTranslator(format);
@@ -371,23 +394,39 @@ export async function proxyRequest(
 
   // 多 key 轮询：跳过冷却/坏 Key，成功 commit，失败退避后切下一个（逻辑见 keyRotation.ts）
   const rot = await rotateKeys(providerId, pool, (key, retries) => tryKey(key, retries));
-  if (rot.committed) return; // tryKey 已写出响应
+  if (rot.committed) {
+    // tryKey 已写出响应（成功或流式已开启）
+    return { providerId, committed: true, settled: true, status: rot.last?.status ?? null, error: null, retryable: false };
+  }
   // B3：所有 Key 都在冷却 / 坏 Key 状态 → 明确提示而非泛泛「无可用 Key」
   if (!rot.triedAny) {
-    res.status(503).json({
-      error: '所有 Key 当前处于冷却或被标记为不可用，请稍后再试，或在「配置」页查看 Key 健康',
-    });
+    const msg = '所有 Key 当前处于冷却或被标记为不可用，请稍后再试，或在「配置」页查看 Key 健康';
     finalize(mkInput(), null, {}, 0, 'all-keys-cooling', false, 0);
-    return;
+    if (!opts.chain) {
+      res.status(503).json({ error: msg });
+      return { providerId, committed: false, settled: true, status: 503, error: msg, retryable: true };
+    }
+    // chain 模式：本厂商冷却，交给调用方换下一个厂商
+    return { providerId, committed: false, settled: false, status: 503, error: msg, retryable: true };
   }
   if (!rot.last) {
-    res.status(502).json({ error: '无可用 Key' });
+    const msg = '无可用 Key';
     finalize(mkInput(), null, {}, 0, '无可用 Key', false, 0);
-    return;
+    if (!opts.chain) {
+      res.status(502).json({ error: msg });
+      return { providerId, committed: false, settled: true, status: 502, error: msg, retryable: false };
+    }
+    return { providerId, committed: false, settled: false, status: 502, error: msg, retryable: false };
   }
-  // 全部 key 用尽或遇到不可重试错误：向客户端回写错误
-  res.status(rot.last.status ?? 502).json({ error: rot.last.error });
-  finalize(mkInput(), rot.last.status, {}, 0, rot.last.error, false, rot.retries);
+  // 全部 key 用尽或遇到不可重试错误：向客户端回写错误（非 chain）或交调用方汇总（chain）
+  const st = rot.last.status ?? 502;
+  const msg = rot.last.error ?? '上游请求失败';
+  finalize(mkInput(), st, {}, 0, msg, false, rot.retries);
+  if (!opts.chain) {
+    res.status(st).json({ error: msg });
+    return { providerId, committed: false, settled: true, status: st, error: msg, retryable: rot.last.retryable };
+  }
+  return { providerId, committed: false, settled: false, status: st, error: msg, retryable: rot.last.retryable };
 }
 
 // 通用反向代理：/api/proxy/:provider/<path> → provider.apiBase/<path>
@@ -399,39 +438,75 @@ proxyRouter.all('/:provider/*', async (req: Request, res: Response) => {
   await proxyRequest(req, res, providerId, wildcard, search);
 });
 
-// 统一 OpenAI 兼容端点：/api/v1/<path>，厂商由请求头或模型名前缀决定
+// 统一 OpenAI 兼容端点：/api/v1/<path>，厂商由请求头 / 模型名前缀 / 路由配置决定（B1 fallback 链）
 export const unifiedRouter = Router();
 unifiedRouter.all('/*', async (req: Request, res: Response) => {
   // B5：统一端点也在入口注入 x-request-id，覆盖「未指定厂商」等早于 proxyRequest 的提前返回
-  res.set('x-request-id', randomUUID());
+  const requestId = randomUUID();
+  res.set('x-request-id', requestId);
   const wildcard = (req.params[0] as string) ?? '';
   const search = new URL(req.url, 'http://localhost').search;
 
-  let providerId =
+  const cfg = loadConfig();
+  const routing = cfg.routing;
+
+  // 1) 显式厂商头 → 单厂商（不进入回退）
+  const explicit =
     (req.headers['x-lb-provider'] as string) || (req.headers['x-provider'] as string) || '';
-  if (
-    !providerId &&
-    typeof req.body === 'object' &&
-    req.body &&
-    typeof (req.body as { model?: unknown }).model === 'string'
-  ) {
-    const model = (req.body as { model: string }).model;
-    if (model.includes('/')) providerId = model.split('/')[0];
+  // 2) 从模型名解析 vendor/model 前缀
+  const rawModel =
+    typeof req.body === 'object' && req.body && typeof (req.body as { model?: unknown }).model === 'string'
+      ? (req.body as { model: string }).model
+      : '';
+  let modelName = rawModel;
+  let prefixProvider = '';
+  if (!explicit && rawModel.includes('/')) {
+    const idx = rawModel.indexOf('/');
+    prefixProvider = rawModel.slice(0, idx);
+    const m = rawModel.slice(idx + 1);
+    if (m) modelName = m;
   }
-  if (!providerId) {
-    const cfg = loadConfig();
-    providerId =
-      Object.keys(cfg.providers).find((id) => {
-        const e = cfg.providers[id];
-        return e.enabled && e.apiKey;
-      }) ?? '';
+
+  let chain: string[];
+  if (explicit) {
+    chain = [explicit];
+  } else if (prefixProvider) {
+    chain = [prefixProvider];
+    // 去掉 vendor 前缀后，上游只认真实模型名（如 openai/gpt-4o → gpt-4o）
+    if (typeof req.body === 'object' && req.body !== null) req.body.model = modelName;
+  } else {
+    chain = resolveChain(modelName, routing, cfg);
   }
-  if (!providerId) {
+
+  if (chain.length === 0) {
     res.status(400).json({
       error:
-        '未指定厂商：请设置请求头 x-lb-provider，或在模型名中使用 vendor/model 前缀（如 openai/gpt-4o）',
+        '未指定厂商或未匹配到可用路由：请设置请求头 x-lb-provider，或使用 vendor/model 前缀（如 openai/gpt-4o），或在配置中设置模型路由 / 默认厂商',
     });
     return;
   }
-  await proxyRequest(req, res, providerId, wildcard, search);
+
+  // B1：按链顺序尝试，上游失败（未 committed 且未 settled）则切换下一个厂商
+  const attempted: string[] = [];
+  let last: ProxyAttempt | null = null;
+  for (let i = 0; i < chain.length; i++) {
+    const pid = chain[i];
+    attempted.push(pid);
+    // 在写出响应之前设置路由头，确保成功响应携带正确 header
+    res.set('x-route-used', pid);
+    res.set('x-route-attempts', String(attempted.length));
+    const result = await proxyRequest(req, res, pid, wildcard, search, {
+      chain: true,
+      requestId,
+      routeChain: chain,
+    });
+    if (result.committed || result.settled) return;
+    last = result;
+  }
+  // 整条链失败：写最终错误（含尝试过的厂商清单，便于客户端定位）
+  const finalStatus = last?.status ?? 502;
+  const finalError = last?.error ?? '所有路由厂商均不可用';
+  res.set('x-route-used', attempted[attempted.length - 1]);
+  res.set('x-route-attempts', String(attempted.length));
+  res.status(finalStatus).json({ error: finalError, routeAttempts: attempted });
 });

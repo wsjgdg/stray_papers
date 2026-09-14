@@ -12,6 +12,7 @@ export interface FinalizeInput {
   ttft: number | null;
   method: string;
   path: string;
+  routeChain?: string[]; // B1：本次请求规划的完整回退链，便于回溯 fallback 路径
 }
 
 /**
@@ -54,5 +55,6 @@ export function finalize(
     keyMask,
     fromCache,
     keySwitches,
+    routeChain: input.routeChain,
   });
 }

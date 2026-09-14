@@ -19,6 +19,7 @@ import {
   UnifiedEndpointCard,
   KeyHealthCard,
   ProxyTokenCard,
+  RoutingCard,
 } from './SecurityCards';
 import { BackupCard } from './BackupCard';
 
@@ -695,6 +696,7 @@ export function ConfigPanel({
 
       <EncryptionCard />
       <UnifiedEndpointCard />
+      <RoutingCard />
       <ProxyTokenCard />
       <KeyHealthCard />
       <BackupCard />

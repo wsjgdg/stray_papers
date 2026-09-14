@@ -31,6 +31,7 @@ export interface CallLog {
   keyMask?: string | null; // B5：本次调用所用 Key 的脱敏掩码（如 ****abcd），不留存明文
   fromCache?: boolean; // 是否由响应缓存直接回放（未真正调用上游）
   keySwitches?: number; // 本次调用发生的关键切换次数（多 key 轮询/失败切换）
+  routeChain?: string[]; // B1：本次请求规划的完整回退链（模型路由），便于回溯 fallback 路径
 }
 
 export interface ProviderMetrics {

@@ -3,6 +3,7 @@ import path from 'node:path';
 import os from 'os';
 import { randomBytes } from 'node:crypto';
 import { PROVIDERS } from './providers.js';
+import type { RoutingConfig } from './routing.js';
 import {
   deriveKey,
   encryptWithKey,
@@ -82,6 +83,9 @@ export interface ProxyConfig {
   // 日预算（D3）：今日成本达到 80% 预警 / 100% 超限；阈值判定见 metrics.budgetStatus。
   // blockOnExceed = fail-closed：超限后代理直接拒绝转发（402），默认 false 只告警。
   budget?: { dailyUsd?: number; blockOnExceed?: boolean };
+  // B1：模型路由 + fallback 链；决定「一次请求按什么顺序尝试哪些厂商」。
+  // 缺省（未配置）时统一端点退化为「首个启用且有 key 的厂商」。
+  routing?: RoutingConfig;
 }
 
 // 数据目录统一（B12）：Electron 主进程经 LLM_WORKBENCH_HOME 注入 app.getPath('userData')，
@@ -222,6 +226,7 @@ export function initConfigStore(): void {
     providers: parsedObj.providers ?? {},
     proxyToken: parsedObj.proxyToken ?? null,
     proxyTokenEnabled: parsedObj.proxyTokenEnabled ?? false,
+    routing: parsedObj.routing,
   };
   encrypted = false;
   locked = false;
@@ -281,6 +286,7 @@ export function unlock(password: string): boolean {
       providers: cfg.providers ?? {},
       proxyToken: cfg.proxyToken ?? null,
       proxyTokenEnabled: cfg.proxyTokenEnabled ?? false,
+      routing: cfg.routing,
     };
     cryptoSalt = salt;
     setMasterKey(key);
@@ -388,6 +394,51 @@ export function setBudget(dailyUsd: number | null, blockOnExceed?: boolean): Pro
   return activeConfig;
 }
 
+// ───────── B1 模型路由 + fallback 链 ─────────
+/** 读取内存态路由配置（未设置为 undefined） */
+export function getRouting(): RoutingConfig | undefined {
+  return activeConfig.routing;
+}
+
+/** 写入/清除路由配置并原子落盘；null 视为清除；调用方需先经 isValidRouting 校验；锁定态禁止写入 */
+export function setRouting(routing: RoutingConfig | null): ProxyConfig {
+  if (locked) return activeConfig;
+  if (routing && routing.default) {
+    activeConfig.routing = routing;
+  } else {
+    delete activeConfig.routing;
+  }
+  saveConfig(activeConfig);
+  return activeConfig;
+}
+
+/**
+ * B6：聚合「已启用且有 key」厂商的模型，作为 /api/v1/models 的统一目录来源。
+ * 应用模型映射的「反向别名」（上游名 → 请求侧名），便于客户端按请求名选用；
+ * enabledModels 为空数组 = 全部禁用，undefined = 全部启用，非空 = 子集。
+ */
+export function listRoutedModels(): { id: string; owned_by: string }[] {
+  const data: { id: string; owned_by: string }[] = [];
+  const seen = new Set<string>();
+  for (const [id, p] of Object.entries(activeConfig.providers)) {
+    if (!p.enabled || resolveKeyPool(p).length === 0) continue;
+    const upstream = p.models ?? [];
+    const rev: Record<string, string> = {};
+    if (p.modelMapping) for (const [req, up] of Object.entries(p.modelMapping)) rev[up] = req;
+    const enabled = p.enabledModels; // undefined = 全部启用；[] = 全部禁用；非空 = 子集
+    for (const m of upstream) {
+      if (enabled && enabled.length === 0) continue; // 全部禁用
+      if (enabled && enabled.length > 0 && !enabled.includes(m)) continue; // 子集
+      const display = rev[m] ?? m;
+      if (seen.has(display)) continue;
+      seen.add(display);
+      data.push({ id: display, owned_by: id });
+    }
+  }
+  data.sort((a, b) => a.id.localeCompare(b.id));
+  return data;
+}
+
 /** 用于 API 响应的脱敏配置 */
 export function maskConfig(cfg: ProxyConfig): {
   providers: Record<
@@ -400,6 +451,7 @@ export function maskConfig(cfg: ProxyConfig): {
       name: string;
     }
   >;
+  routing?: RoutingConfig;
 } {
   const out: Record<
     string,
@@ -431,7 +483,7 @@ export function maskConfig(cfg: ProxyConfig): {
       name: KNOWN_IDS.has(id) ? PROVIDER_BY_ID.get(id)!.nameCn : p.customName || id,
     };
   }
-  return { providers: out };
+  return { providers: out, routing: cfg.routing };
 }
 
 export function upsertProvider(id: string, patch: Partial<ProviderConfig>): ProxyConfig {

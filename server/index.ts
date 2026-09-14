@@ -34,7 +34,11 @@ import {
   getBudget,
   setBudget,
   isValidModelMapping,
+  getRouting,
+  setRouting,
+  listRoutedModels,
 } from './config.js';
+import { isValidRouting } from './routing.js';
 import {
   getMetrics,
   getLogs,
@@ -281,6 +285,30 @@ app.get('/api/proxy/config', (_req: Request, res: Response) => {
     encrypted: isEncrypted(),
     hasConfig: hasConfigFile(),
   });
+});
+
+// B1：读取模型路由配置
+app.get('/api/proxy/routing', (_req: Request, res: Response) => {
+  res.json({ routing: getRouting() ?? null });
+});
+
+// B1：写入模型路由配置（整体覆盖；null 表示清空）
+app.post('/api/proxy/routing', requireAdmin, (req: Request, res: Response) => {
+  const body = (req.body ?? {}) as { routing?: unknown };
+  if (body.routing === null) {
+    setRouting(null);
+    res.json({ routing: null });
+    return;
+  }
+  if (!isValidRouting(body.routing)) {
+    res.status(400).json({
+      error:
+        '路由格式非法：需 { default: string[], routes?: Record<string,string[]> }，default 必填为字符串数组',
+    });
+    return;
+  }
+  setRouting(body.routing);
+  res.json({ routing: getRouting() ?? null });
 });
 
 // 密钥加密状态与解锁
@@ -842,6 +870,19 @@ app.get('/api/proxy/:provider/models', async (req: Request, res: Response) => {
 
 // 通用反向代理：/api/proxy/:provider/<path> → provider.apiBase/<path>
 app.use('/api/proxy', proxyRouter);
+
+// B6：统一端点模型目录（OpenAI 兼容 /v1/models），须在 unifiedRouter 之前注册以免被通配捕获。
+// 聚合所有「已启用且有 key」厂商的模型，并应用模型映射别名（上游名 → 请求侧名）。
+app.get('/api/v1/models', (_req: Request, res: Response) => {
+  const now = Math.floor(Date.now() / 1000);
+  const data = listRoutedModels().map((d) => ({
+    id: d.id,
+    object: 'model',
+    created: now,
+    owned_by: d.owned_by,
+  }));
+  res.json({ object: 'list', data });
+});
 
 // 统一 OpenAI 兼容端点：/api/v1/<path>，厂商由请求头或模型名前缀决定
 app.use('/api/v1', unifiedRouter);
