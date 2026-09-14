@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import clsx from 'clsx';
+import { AlertTriangle } from 'lucide-react';
 
 export function Card({
   title,
@@ -108,6 +109,46 @@ export function Spinner({ label }: { label?: string }) {
 
 export function Empty({ text }: { text: string }) {
   return <div className="py-10 text-center text-xs text-muted">{text}</div>;
+}
+
+/** 统一错误态：可选重试回调（数据拉取失败 / 面板级异常都走这一处，避免各页 ad-hoc 文案） */
+export function ErrorState({
+  error,
+  title = '加载失败',
+  onRetry,
+}: {
+  error: string;
+  title?: string;
+  onRetry?: () => void;
+}) {
+  return (
+    <div
+      className="flex flex-col items-center gap-3 py-10 text-xs text-up"
+      role="alert"
+      aria-live="polite"
+    >
+      <AlertTriangle size={18} />
+      <span>
+        {title}：{error}
+      </span>
+      {onRetry && (
+        <button className="btn" onClick={onRetry}>
+          重试
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** 统一骨架占位（行数/宽度可调，用于表格与卡片首屏） */
+export function Skeleton({ rows = 3, className }: { rows?: number; className?: string }) {
+  return (
+    <div className={clsx('space-y-2', className)} aria-hidden="true">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="h-4 animate-pulse rounded bg-[#16223a]" />
+      ))}
+    </div>
+  );
 }
 
 /** 归一化进度条：value 在 [min,max] 区间内的相对位置 */
