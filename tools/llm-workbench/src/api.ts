@@ -84,6 +84,7 @@ export interface ProxyConfigResponse {
   locked?: boolean;
   encrypted?: boolean;
   hasConfig?: boolean;
+  routing?: RoutingConfig | null;
 }
 
 export interface CryptoStatus {
@@ -484,6 +485,25 @@ export async function setBudget(dailyUsd: number | null): Promise<BudgetStatus> 
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ dailyUsd }),
+  });
+}
+
+// ───────── B1 模型路由 + fallback 链 ─────────
+export interface RoutingConfig {
+  routes: Record<string, string[]>;
+  default: string[];
+}
+
+export async function fetchRouting(): Promise<{ routing: RoutingConfig | null }> {
+  return request<{ routing: RoutingConfig | null }>('/api/proxy/routing');
+}
+
+/** 写入（整体覆盖）或清除（传 null）模型路由配置 */
+export async function saveRouting(routing: RoutingConfig | null): Promise<{ routing: RoutingConfig | null }> {
+  return request<{ routing: RoutingConfig | null }>('/api/proxy/routing', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ routing }),
   });
 }
 
