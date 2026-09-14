@@ -347,9 +347,14 @@ function createWindows() {
   mainWin.loadURL(`${backendUrl}/`);
   attachDiag(mainWin, 'MAIN');
   mainWin.once('ready-to-show', () => mainWin && mainWin.show());
-  // 关闭主窗口 → 最小化到托盘，保持浮窗存活（除非真正退出）
+  // 关闭主窗口 → 默认最小化到托盘（保持浮窗存活）；设置里选「退出应用」则直接退出
   mainWin.on('close', (e) => {
     if (app.isQuiting) return;
+    if (appSettings?.closeBehavior === 'quit') {
+      app.isQuiting = true;
+      app.quit();
+      return;
+    }
     e.preventDefault();
     mainWin.hide();
   });
@@ -433,6 +438,25 @@ function createTray() {
       click: () => {
         if (!floatWin) return;
         applyPosition(appSettings?.position || 'topright');
+      },
+    },
+    {
+      label: '打开数据目录',
+      click: () => {
+        let d = null;
+        try {
+          d = app.getPath('userData');
+        } catch {
+          d = null;
+        }
+        if (!d) return;
+        try {
+          require('child_process').exec(
+            process.platform === 'win32' ? `explorer "${d}"` : `open "${d}"`,
+          );
+        } catch {
+          /* ignore */
+        }
       },
     },
     {

@@ -24,6 +24,7 @@ const DEFAULTS = {
   clickThrough: false, // 浮窗点击穿透（不挡桌面）
   fontScale: 1, // 浮窗字号缩放 0.8–1.4
   highContrast: false, // 浮窗高对比模式
+  closeBehavior: 'tray', // 关闭主窗口：tray=最小化到托盘（默认），quit=退出应用
 };
 
 function readJson(file, fallback) {
