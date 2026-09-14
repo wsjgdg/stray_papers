@@ -93,7 +93,9 @@ function startBackend() {
   process.env.LLM_WORKBENCH_HOME = resolveDataHome(parseProfileArg());
   // B12：统一数据目录 —— 让 server 的 config/logs 与 Electron userData（float-stats/app-settings）落同一处
   // （打包态 resolveDataHome 默认即 app.getPath('userData')，行为不变）。
-  process.env.WEB_DIR = path.join(root, 'dist'); // 由我们托管前端，而非内嵌 base64
+  // F1：asar 下 dist 经 asarUnpack 抽到 app.asar.unpacked/dist；优先用解包目录，回退 asar 内 dist。
+  const unpackedDist = path.join(process.resourcesPath, 'app.asar.unpacked', 'dist');
+  process.env.WEB_DIR = fs.existsSync(unpackedDist) ? unpackedDist : path.join(root, 'dist');
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   serverApi = require('./server.cjs'); // 进程内后端；暴露 startServer / stopServer / getServerPort
   serverApi.startServer();

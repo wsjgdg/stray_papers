@@ -83,7 +83,10 @@
   "build": {
     "appId": "com.llmworkbench.app",
     "productName": "LLM Workbench",
-    "asar": false,
+    "asar": true,
+    "asarUnpack": [
+      "dist/**"
+    ],
     "files": [
       "dist/**/*",
       "electron/**/*",
