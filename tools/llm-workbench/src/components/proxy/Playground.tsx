@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { Play, Settings2, Download } from 'lucide-react';
 import {
+  authFetch,
   fetchProviderModels,
   saveProxyConfig,
   fetchProxyLogs,
@@ -127,7 +128,7 @@ export function Playground({
     setMessage('');
     let full = '';
     try {
-      const res = await fetch(`/api/proxy/${provider}/chat/completions`, {
+      const res = await authFetch(`/api/proxy/${provider}/chat/completions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model, messages, stream }),
