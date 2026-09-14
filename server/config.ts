@@ -444,7 +444,9 @@ export function listRoutedModels(): { id: string; owned_by: string }[] {
   const data: { id: string; owned_by: string }[] = [];
   const seen = new Set<string>();
   for (const [id, p] of Object.entries(activeConfig.providers)) {
-    if (!p.enabled || resolveKeyPool(p).length === 0) continue;
+    const isLocal = PROVIDER_BY_ID.get(id)?.kind === 'local';
+    if (!p.enabled) continue;
+    if (!isLocal && resolveKeyPool(p).length === 0) continue;
     const upstream = p.models ?? [];
     const rev: Record<string, string> = {};
     if (p.modelMapping) for (const [req, up] of Object.entries(p.modelMapping)) rev[up] = req;

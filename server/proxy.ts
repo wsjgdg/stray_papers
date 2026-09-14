@@ -118,8 +118,9 @@ export async function proxyRequest(
   const baseUrl = entry.baseUrl || provider.apiBase;
   if (!baseUrl) return fail(400, '该厂商无可用 baseUrl，请在配置中填写');
 
-  // 多 key 池：轮询 + 失败切换
-  const pool = resolveKeyPool(entry);
+  // 本地推理厂商无需 API Key：用空串占位复用既有转发链路（不发送鉴权头）
+  const isLocal = provider.kind === 'local';
+  const pool = isLocal ? [''] : resolveKeyPool(entry);
   if (pool.length === 0) return fail(400, '该厂商未配置 API Key');
 
   // B3：剔除已达当日成本上限的 Key（次日本地零点自动归零重投）

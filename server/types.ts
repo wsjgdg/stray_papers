@@ -55,9 +55,11 @@ export interface ProviderConsole {
   name: string;
   nameCn: string;
   region: 'intl' | 'cn';
-  console: string;
-  docs: string;
-  pricing: string;
+  /** 厂商形态：cloud 走云端鉴权；local 为本地推理（无 Key、localhost、成本记 $0） */
+  kind?: 'cloud' | 'local';
+  console: string | null;
+  docs: string | null;
+  pricing: string | null;
   playground: string | null;
   status: string | null;
   modelsEndpoint: string | null;
