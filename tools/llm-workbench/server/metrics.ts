@@ -425,6 +425,15 @@ export function getLogs(filter: LogFilter = {}): CallLog[] {
   return result;
 }
 
+/** 按 requestId 精确定位一次调用（响应头 x-request-id 回传），用于前端取用量/成本/TTFT */
+export function findLogByRequestId(requestId: string): CallLog | null {
+  if (!requestId) return null;
+  for (let i = logs.length - 1; i >= 0; i -= 1) {
+    if (logs[i].requestId === requestId) return logs[i];
+  }
+  return null;
+}
+
 export function resetMetrics(): void {
   logs = [];
   nextId = 1;

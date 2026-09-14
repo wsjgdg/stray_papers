@@ -111,6 +111,19 @@ export function joinUrl(base: string, suffix: string): string {
 }
 
 /**
+ * 模型映射（model mapping）：请求模型名 → 上游实际模型名。
+ * mapping 形如 { "gpt-4o": "oai-gpt-4o" }；未配置、未命中、value 为空串时原样透传。
+ */
+export function applyModelMapping(
+  model: string,
+  mapping: Record<string, string> | undefined,
+): string {
+  if (!model || !mapping || typeof mapping !== 'object') return model;
+  const mapped = mapping[model];
+  return typeof mapped === 'string' && mapped.trim() ? mapped : model;
+}
+
+/**
  * 自动获取某厂商的模型清单：命中上游 /models 端点并解析。
  * - 已知厂商用其 modelsEndpoint（完整 URL）；
  * - OpenAI 兼容自定义厂商 → baseUrl + /models（与 chat 同约定：baseUrl 已含 /v1，如 https://host/v1）；

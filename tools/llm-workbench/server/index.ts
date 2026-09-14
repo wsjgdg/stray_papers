@@ -33,6 +33,7 @@ import {
   configDir,
   getBudget,
   setBudget,
+  isValidModelMapping,
 } from './config.js';
 import {
   getMetrics,
@@ -42,6 +43,7 @@ import {
   loadPersistedLogs,
   persistedLogsAvailable,
   budgetStatus,
+  findLogByRequestId,
 } from './metrics.js';
 import { aggregateSpend, spendToCsv } from './spendExport.js';
 import { createBackupBlob, restoreBackupBlob } from './backup.js';
@@ -395,6 +397,7 @@ app.post('/api/proxy/config', requireAdmin, (req: Request, res: Response) => {
     apiFormat,
     models,
     enabledModels,
+    modelMapping,
   } = (req.body ?? {}) as {
     providerId?: string;
     apiKey?: string;
@@ -406,9 +409,17 @@ app.post('/api/proxy/config', requireAdmin, (req: Request, res: Response) => {
     apiFormat?: 'openai' | 'anthropic' | 'gemini';
     models?: string[];
     enabledModels?: string[];
+    modelMapping?: Record<string, string>;
   };
   if (!providerId) {
     res.status(400).json({ error: 'providerId required' });
+    return;
+  }
+  // 模型映射必须是「字符串 → 非空字符串」的平面映射；传非法结构直接 400
+  if (modelMapping !== undefined && !isValidModelMapping(modelMapping)) {
+    res
+      .status(400)
+      .json({ error: 'modelMapping 必须为 { 请求模型名: 上游模型名 } 的映射，值不能为空' });
     return;
   }
   const cfg = upsertProvider(providerId, {
@@ -421,6 +432,7 @@ app.post('/api/proxy/config', requireAdmin, (req: Request, res: Response) => {
     apiFormat,
     models: Array.isArray(models) ? models : undefined,
     enabledModels: Array.isArray(enabledModels) ? enabledModels : undefined,
+    modelMapping,
   });
   res.json(maskConfig(cfg));
 });
@@ -452,6 +464,16 @@ app.post('/api/proxy/import', requireAdmin, (req: Request, res: Response) => {
       .status(400)
       .json({ error: 'body.providers 必须为对象 { id: { apiKey, baseUrl, enabled } }' });
     return;
+  }
+  // 逐厂商校验模型映射：批量导入同样不允许留下空键/空值
+  for (const [id, p] of Object.entries(body.providers)) {
+    const mapping = (p as { modelMapping?: unknown } | undefined)?.modelMapping;
+    if (mapping !== undefined && !isValidModelMapping(mapping)) {
+      res
+        .status(400)
+        .json({ error: `providers.${id}.modelMapping 必须为 { 请求模型名: 上游模型名 }` });
+      return;
+    }
   }
   res.json(maskConfig(importConfig(body)));
 });
@@ -622,6 +644,16 @@ app.get('/api/proxy/logs', (req: Request, res: Response) => {
     ? loadPersistedLogs({ provider, status, limit: Number.isFinite(limit) ? limit : 200 })
     : getLogs({ provider, status, limit: Number.isFinite(limit) ? limit : 200 });
   res.json({ logs, historyAvailable: persistedLogsAvailable() });
+});
+
+// 单条日志精查：响应头 x-request-id → 该次调用的用量/成本/TTFT（多模型对比用）
+app.get('/api/proxy/logs/:requestId', (req: Request, res: Response) => {
+  const log = findLogByRequestId(req.params.requestId);
+  if (!log) {
+    res.status(404).json({ error: '未找到该 requestId 对应的调用日志（可能已被环形缓冲淘汰）' });
+    return;
+  }
+  res.json(log);
 });
 
 // 用已保存的 key 探测已配置厂商的连通性：

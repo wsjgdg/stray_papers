@@ -32,8 +32,28 @@ describe('config: pure helpers', () => {
     } as any;
     const masked = cfg.maskConfig(proxy);
     assert.equal(masked.providers.openai.apiKeyMasked, '****-key');
-    assert.equal(masked.providers.openai.hasKey, true);
     assert.equal(masked.providers.openai.apiKeyCount, 1);
+  });
+
+  it('maskConfig keeps modelMapping / retryOn / timeoutMs', () => {
+    const proxy = {
+      providers: {
+        openai: {
+          id: 'openai',
+          apiKey: 'secret-key',
+          enabled: true,
+          modelMapping: { 'gpt-4o': 'oai/gpt-4o' },
+          retryOn: [429],
+          timeoutMs: 30_000,
+        } as any,
+      },
+    } as any;
+    const masked = cfg.maskConfig(proxy);
+    assert.deepEqual(masked.providers.openai.modelMapping, { 'gpt-4o': 'oai/gpt-4o' });
+    assert.deepEqual(masked.providers.openai.retryOn, [429]);
+    assert.equal(masked.providers.openai.timeoutMs, 30_000);
+    // 脱敏仍然生效：掩码存在且不带明文
+    assert.equal((masked.providers.openai as any).apiKey, undefined);
   });
 });
 

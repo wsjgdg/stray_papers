@@ -8,6 +8,7 @@ import {
   sampleRateHistory,
   getRateHistory,
   getLogs,
+  findLogByRequestId,
 } from '../server/metrics.ts';
 
 function call(provider: string, ts: number) {
@@ -96,6 +97,31 @@ describe('metrics summary + logs + rate history', () => {
   it('sampleRateHistory appends and is bounded', () => {
     for (let i = 0; i < 5; i++) sampleRateHistory();
     assert.equal(getRateHistory().length, 5);
+  });
+  it('findLogByRequestId returns the matching entry', () => {
+    recordCall({
+      ts: Date.now(),
+      provider: 'rq',
+      model: 'm',
+      method: 'POST',
+      path: '/chat/completions',
+      status: 200,
+      latencyMs: 3,
+      ttftMs: 1,
+      inputTokens: 1,
+      outputTokens: 2,
+      cacheReadTokens: null,
+      cacheHitRate: null,
+      error: null,
+      requestBytes: 1,
+      responseBytes: 2,
+      requestId: 'req-abc',
+    });
+    const hit = findLogByRequestId('req-abc');
+    assert.ok(hit);
+    assert.equal(hit.provider, 'rq');
+    assert.equal(findLogByRequestId('nope'), null);
+    assert.equal(findLogByRequestId(''), null);
   });
 
   it('getLogs filters by provider / status / limit', () => {
