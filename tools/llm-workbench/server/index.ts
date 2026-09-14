@@ -44,6 +44,7 @@ import {
   budgetStatus,
 } from './metrics.js';
 import { aggregateSpend, spendToCsv } from './spendExport.js';
+import { createBackupBlob, restoreBackupBlob } from './backup.js';
 import {
   flush as flushUsageStore,
   initUsageStore,
@@ -491,6 +492,29 @@ app.post('/api/proxy/budget', requireAdmin, (req: Request, res: Response) => {
   const budget = getBudget();
   const todayUsd = getSummary().todayCostUsd;
   res.json({ ...budget, todayUsd, ...budgetStatus(todayUsd, budget.dailyUsd) });
+});
+
+// D5 配置备份：导出/导入加密备份（config.json + auth.json 原文打包，passphrase 派生 GCM）。
+// 导入后重新初始化内存态（配置/档案/快照缓存），使恢复即刻生效。
+app.post('/api/proxy/backup/export', requireAdmin, (req: Request, res: Response) => {
+  try {
+    const { passphrase } = (req.body ?? {}) as { passphrase?: unknown };
+    res.json({ blob: createBackupBlob(passphrase as string) });
+  } catch (e) {
+    res.status(400).json({ error: (e as Error).message });
+  }
+});
+app.post('/api/proxy/backup/import', requireAdmin, (req: Request, res: Response) => {
+  try {
+    const { blob, passphrase } = (req.body ?? {}) as { blob?: unknown; passphrase?: unknown };
+    const r = restoreBackupBlob(blob as string, passphrase as string);
+    initConfigStore();
+    loadProfiles();
+    invalidate();
+    res.json({ restored: true, ...r });
+  } catch (e) {
+    res.status(400).json({ error: (e as Error).message });
+  }
 });
 
 // D2 成本导出：按「日 × 厂商 × 模型」聚合支出，format=csv（缺省，带下载头）或 json；days 限定最近 N 天。
