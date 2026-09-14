@@ -44,6 +44,123 @@ export const PROVIDER_PRICING: Record<string, Price> = {
   nvidia: { input: 0.8, output: 1.6, cacheRead: 0.2 },
 };
 
+// ───────── B5：基准定价表外置（data/pricing.json / configDir()/pricing.json）─────────
+// 加载优先级：$PRICING_FILE > configDir()/pricing.json（UI 导入，可写）> 仓库 data/pricing.json。
+// 文件条目与内置表**合并**（覆盖同名 provider 项）；无可用文件时回退内置表。
+// 用户覆盖（D1）优先级不变：模型覆盖 > 快照模型价 > 厂商覆盖 > 基准表 > DEFAULT。
+
+export const BUILTIN_PRICING_VERSION = 1;
+
+export interface PricingTable {
+  version: number;
+  updatedAt?: string;
+  providers: Record<string, Price>;
+}
+
+let tablePricing: Record<string, Price> | null = null;
+let tableMeta: { source: 'file' | 'builtin'; version: number; updatedAt?: string; path?: string } =
+  {
+    source: 'builtin',
+    version: BUILTIN_PRICING_VERSION,
+  };
+
+/** 校验基准表：providers 必须是「非空 key → 合法价格」；version 缺省 1，cacheRead 缺省同 input */
+export function parsePricingTable(input: unknown): PricingTable | null {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+  const o = input as Record<string, unknown>;
+  const src = o.providers;
+  if (!src || typeof src !== 'object' || Array.isArray(src)) return null;
+  const providers: Record<string, Price> = {};
+  for (const [k, v] of Object.entries(src as Record<string, unknown>)) {
+    if (!k.trim() || !v || typeof v !== 'object') return null;
+    const p = v as Record<string, unknown>;
+    if (typeof p.input !== 'number' || typeof p.output !== 'number') return null;
+    if (!Number.isFinite(p.input) || p.input < 0) return null;
+    if (!Number.isFinite(p.output) || p.output < 0) return null;
+    const cacheRead = p.cacheRead === undefined ? p.input : p.cacheRead;
+    if (typeof cacheRead !== 'number' || !Number.isFinite(cacheRead) || cacheRead < 0) return null;
+    providers[k.trim()] = { input: p.input, output: p.output, cacheRead };
+  }
+  return {
+    version: typeof o.version === 'number' ? o.version : 1,
+    updatedAt: typeof o.updatedAt === 'string' ? o.updatedAt : undefined,
+    providers,
+  };
+}
+
+function tableCandidates(): string[] {
+  const out: string[] = [];
+  if (process.env.PRICING_FILE) out.push(process.env.PRICING_FILE);
+  out.push(pricingTablePath());
+  out.push(path.join(process.cwd(), 'data', 'pricing.json'));
+  return out;
+}
+
+/** 导出/导入用的落地路径（UI 导入写这里，始终可写） */
+export function pricingTablePath(): string {
+  return path.join(configDir(), 'pricing.json');
+}
+
+/**
+ * 启动时调用（initConfigStore 之后）：按候选顺序加载首个可用文件，否则回退内置表。
+ * candidatesOverride 仅用于单测注入候选路径。
+ */
+export function initPricingTable(candidatesOverride?: string[]): void {
+  for (const p of candidatesOverride ?? tableCandidates()) {
+    try {
+      const parsed = parsePricingTable(JSON.parse(fs.readFileSync(p, 'utf8')));
+      if (parsed) {
+        tablePricing = { ...PROVIDER_PRICING, ...parsed.providers };
+        tableMeta = {
+          source: 'file',
+          version: parsed.version,
+          updatedAt: parsed.updatedAt,
+          path: p,
+        };
+        return;
+      }
+    } catch {
+      /* 该候选不可读或不合法 → 试下一个 */
+    }
+  }
+  tablePricing = null;
+  tableMeta = { source: 'builtin', version: BUILTIN_PRICING_VERSION };
+}
+
+/** 当前基准表状态（UI 显示来源/版本 + 生效价表） */
+export function getPricingTableState(): {
+  source: 'file' | 'builtin';
+  version: number;
+  updatedAt?: string;
+  path?: string;
+  providers: Record<string, Price>;
+} {
+  return {
+    source: tableMeta.source,
+    version: tableMeta.version,
+    updatedAt: tableMeta.updatedAt,
+    path: tableMeta.path,
+    providers: tablePricing ?? PROVIDER_PRICING,
+  };
+}
+
+/** 导入基准表：原子写 configDir()/pricing.json 并立即生效 */
+export function savePricingTable(table: PricingTable): void {
+  fs.mkdirSync(configDir(), { recursive: true });
+  atomicWriteJson(pricingTablePath(), JSON.stringify(table, null, 2));
+  initPricingTable();
+}
+
+/** 移除导入的基准表，回退内置 */
+export function deletePricingTable(): void {
+  try {
+    fs.rmSync(pricingTablePath(), { force: true });
+  } catch {
+    /* ignore */
+  }
+  initPricingTable();
+}
+
 // 模型级价格索引：由快照模型库填充，key 为模型 id（及去掉 vendor 前缀的纯模型名）
 let modelIndex = new Map<string, Price>();
 
@@ -75,8 +192,9 @@ export function priceFor(providerId: string, model: string): Price {
       (tail ? modelIndex.get(tail) : undefined);
     if (hit) return hit;
   }
-  // 用户厂商级覆盖优先于内置厂商默认价
-  return providerOverrides.get(providerId) ?? PROVIDER_PRICING[providerId] ?? DEFAULT;
+  // 用户厂商级覆盖优先于基准表（外置文件优先于内置）
+  const table = tablePricing ?? PROVIDER_PRICING;
+  return providerOverrides.get(providerId) ?? table[providerId] ?? DEFAULT;
 }
 
 export interface CostBreakdown {

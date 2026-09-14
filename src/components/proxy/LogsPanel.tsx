@@ -1,7 +1,14 @@
 import { useCallback, useState } from 'react';
-import { Key } from 'lucide-react';
-import { fetchProxyLogs, fmtTime, type ProxyLog, type MaskedProviderConfig } from '../../api';
-import { Chip, Empty, Spinner } from '../../ui';
+import { Key, RotateCw } from 'lucide-react';
+import {
+  fetchProxyLogs,
+  fmtTime,
+  replayProxyLog,
+  type ProxyLog,
+  type ReplayResult,
+  type MaskedProviderConfig,
+} from '../../api';
+import { Card, Chip, Empty, Spinner } from '../../ui';
 import type { ProviderConsole } from '../../../server/types';
 import { useVisibilityPolling } from '../../hooks/useVisibilityPolling';
 
@@ -20,6 +27,23 @@ export function LogsPanel({
   // B5：历史日志（落盘 ndjson）加载开关 + 是否可用
   const [historyMode, setHistoryMode] = useState(false);
   const [historyAvailable, setHistoryAvailable] = useState(false);
+  // B4：请求重放
+  const [replay, setReplay] = useState<ReplayResult | null>(null);
+  const [replayFor, setReplayFor] = useState<string | null>(null);
+  const [replayErr, setReplayErr] = useState<string | null>(null);
+
+  const doReplay = async (requestId: string) => {
+    setReplayFor(requestId);
+    setReplayErr(null);
+    setReplay(null);
+    try {
+      setReplay(await replayProxyLog(requestId));
+    } catch (e) {
+      setReplayErr((e as Error).message);
+    } finally {
+      setReplayFor(null);
+    }
+  };
 
   // 合并主流厂商 + 自定义厂商（来自 cfg）作为筛选下拉项
   const providerOptions = [
@@ -108,6 +132,7 @@ export function LogsPanel({
                 <th className="px-2 py-1.5 text-right">缓存</th>
                 <th className="px-2 py-1.5 text-right">成本</th>
                 <th className="px-2 py-1.5 text-left">错误</th>
+                <th className="px-2 py-1.5 text-left">操作</th>
               </tr>
             </thead>
             <tbody>
@@ -163,11 +188,77 @@ export function LogsPanel({
                   <td className="max-w-[200px] truncate px-2 py-1 text-up" title={l.error ?? ''}>
                     {l.error ?? ''}
                   </td>
+                  <td className="px-2 py-1">
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      title={
+                        l.hasReqBody
+                          ? '用存档请求体重发一次（不含鉴权头，使用当前配置的 Key）'
+                          : '无请求体存档，无法重放'
+                      }
+                      disabled={!l.requestId || !l.hasReqBody || replayFor === l.requestId}
+                      onClick={() => l.requestId && doReplay(l.requestId)}
+                    >
+                      <RotateCw size={11} />
+                      {replayFor === l.requestId ? '重放中…' : '重放'}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+
+      {(replay || replayErr) && (
+        <Card
+          title="重放结果（B4）"
+          subtitle="用存档请求体经代理重发，与原始记录并排对比；重放同样计入指标与成本"
+          right={
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={() => {
+                setReplay(null);
+                setReplayErr(null);
+              }}
+            >
+              关闭
+            </button>
+          }
+        >
+          {replayErr && <div className="text-[11px] text-up">{replayErr}</div>}
+          {replay && (
+            <div className="space-y-2 text-[11px]">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-muted">原始</span>
+                <Chip
+                  tone={
+                    replay.original.status != null && replay.original.status < 400 ? 'down' : 'up'
+                  }
+                >
+                  {replay.original.status ?? 'ERR'}
+                </Chip>
+                <span className="text-ink">{replay.original.latencyMs}ms</span>
+                <span className="text-muted">${replay.original.costUsd.toFixed(4)}</span>
+                <span className="max-w-[160px] truncate text-muted">{replay.original.model}</span>
+                <span className="mx-1 text-muted">→</span>
+                <span className="text-muted">重放</span>
+                <Chip tone={replay.replay.status < 400 ? 'down' : 'up'}>
+                  {replay.replay.status}
+                </Chip>
+                <span className="text-ink">{replay.replay.latencyMs}ms</span>
+                {replay.replay.cache && (
+                  <span className="rounded bg-accent/15 px-1 text-[10px] text-accent">
+                    {replay.replay.cache}
+                  </span>
+                )}
+              </div>
+              <pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded-md border border-edge bg-[#0d1728] p-2 font-mono text-[10px] leading-relaxed text-ink">
+                {replay.replay.body}
+              </pre>
+            </div>
+          )}
+        </Card>
       )}
     </div>
   );

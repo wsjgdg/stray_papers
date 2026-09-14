@@ -3,7 +3,11 @@ import {
   fetchPricingState,
   resetPricingOverrides,
   savePricingOverrides,
+  fetchPricingTable,
+  savePricingTable,
+  resetPricingTable,
   type PricingState,
+  type PricingTableState,
 } from '../api';
 import { Card, Chip } from '../ui';
 
@@ -63,6 +67,55 @@ export function PricingOverridesCard() {
       setErr((e as Error).message);
     } finally {
       setBusy(false);
+    }
+  };
+
+  // B5：基准定价表（外置文件）——版本/来源 + 导入 JSON 文件 + 恢复内置
+  const [table, setTable] = useState<PricingTableState | null>(null);
+  const [tableBusy, setTableBusy] = useState(false);
+  const [tableMsg, setTableMsg] = useState<string | null>(null);
+  const [tableErr, setTableErr] = useState<string | null>(null);
+
+  const loadTable = useCallback(() => {
+    fetchPricingTable()
+      .then(setTable)
+      .catch(() => {
+        /* 忽略：加载失败时不显示基准表信息 */
+      });
+  }, []);
+
+  useEffect(() => {
+    loadTable();
+  }, [loadTable]);
+
+  const importTableFile = async (file: File) => {
+    setTableBusy(true);
+    setTableErr(null);
+    setTableMsg(null);
+    try {
+      const parsed: unknown = JSON.parse(await file.text());
+      const next = await savePricingTable(parsed);
+      setTable(next);
+      setTableMsg(`已导入 ${Object.keys(next.providers).length} 个厂商定价，立即生效`);
+    } catch (e) {
+      setTableErr((e as Error).message || 'JSON 解析失败');
+    } finally {
+      setTableBusy(false);
+    }
+  };
+
+  const resetTable = async () => {
+    if (!window.confirm('确定移除导入的基准定价表，恢复内置定价？')) return;
+    setTableBusy(true);
+    setTableErr(null);
+    setTableMsg(null);
+    try {
+      setTable(await resetPricingTable());
+      setTableMsg('已恢复内置基准定价表');
+    } catch (e) {
+      setTableErr((e as Error).message);
+    } finally {
+      setTableBusy(false);
     }
   };
 
@@ -128,6 +181,43 @@ export function PricingOverridesCard() {
             }
           </code>
           ；cacheRead 缺省与 input 同价；重置需在应用过覆盖后可用。
+        </div>
+
+        <div className="space-y-2 border-t border-edge pt-3">
+          <div className="font-medium text-ink">基准定价表（外置文件）</div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Chip tone={table?.source === 'file' ? 'warn' : 'down'}>
+              {table?.source === 'file' ? '文件加载' : '内置表'}
+            </Chip>
+            <span className="text-muted">
+              v{table?.version ?? '—'}
+              {table?.updatedAt ? ` · ${table.updatedAt}` : ''}
+              {table ? ` · ${Object.keys(table.providers).length} 个厂商` : ''}
+            </span>
+            <label className="btn btn-ghost btn-sm cursor-pointer">
+              导入 JSON 文件
+              <input
+                type="file"
+                accept=".json,application/json"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && void importTableFile(e.target.files[0])}
+              />
+            </label>
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={resetTable}
+              disabled={tableBusy || table?.source !== 'file'}
+            >
+              恢复内置表
+            </button>
+            {tableMsg && <span className="text-accent">{tableMsg}</span>}
+            {tableErr && <span className="text-up">{tableErr}</span>}
+          </div>
+          <div className="text-muted">
+            加载顺序：<code>$PRICING_FILE</code> &gt; 数据目录 <code>pricing.json</code>
+            （此处导入写这里） &gt; 仓库 <code>data/pricing.json</code>
+            ；都没有则用内置表。文件条目与内置表合并，同名覆盖。
+          </div>
         </div>
       </div>
     </Card>

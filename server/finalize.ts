@@ -1,5 +1,5 @@
 // B9：从 proxy.ts 拆出的「指标落盘收尾」逻辑。纯函数，依赖 recordCall。
-import { recordCall } from './metrics.js';
+import { recordCall, MAX_REQ_BODY_BYTES } from './metrics.js';
 import type { Usage } from './forwarding.js';
 
 export interface FinalizeInput {
@@ -58,5 +58,8 @@ export function finalize(
     keySwitches,
     routeChain: input.routeChain,
     tag: input.tag,
+    // B4：请求体截断存档（仅内存），供「重放」重发；不落盘、不响应给前端列表
+    reqBody: bodyStr ? bodyStr.slice(0, MAX_REQ_BODY_BYTES) : null,
+    reqBodyTruncated: Boolean(bodyStr && bodyStr.length > MAX_REQ_BODY_BYTES),
   });
 }

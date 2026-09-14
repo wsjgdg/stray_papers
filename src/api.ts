@@ -134,6 +134,7 @@ export interface ProxyLog {
   keyMask?: string | null;
   fromCache?: boolean;
   tag?: string | null;
+  hasReqBody?: boolean; // B4：是否存有请求体（可重放）；列表不下发 body 本身
 }
 
 export interface RateSample {
@@ -471,6 +472,57 @@ export async function savePricingOverrides(overrides: unknown): Promise<PricingS
 
 export async function resetPricingOverrides(): Promise<PricingState> {
   return request<PricingState>('/api/proxy/pricing', { method: 'DELETE' });
+}
+
+// ───────── B5 基准定价表（外置文件） ─────────
+export interface PricingTableState {
+  source: 'file' | 'builtin';
+  version: number;
+  updatedAt?: string;
+  path?: string;
+  providers: Record<string, PriceTriple>;
+}
+
+export async function fetchPricingTable(): Promise<PricingTableState> {
+  return request<PricingTableState>('/api/proxy/pricing-table');
+}
+
+/** 导入基准定价表（整体覆盖，写数据目录 pricing.json 并立即生效） */
+export async function savePricingTable(table: unknown): Promise<PricingTableState> {
+  return request<PricingTableState>('/api/proxy/pricing-table', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(table),
+  });
+}
+
+export async function resetPricingTable(): Promise<PricingTableState> {
+  return request<PricingTableState>('/api/proxy/pricing-table', { method: 'DELETE' });
+}
+
+// ───────── B4 请求重放 ─────────
+export interface ReplayResult {
+  original: {
+    status: number | null;
+    latencyMs: number;
+    costUsd: number;
+    model: string;
+    tag: string | null;
+  };
+  replay: {
+    status: number;
+    latencyMs: number;
+    cache: string | null;
+    body: string;
+    truncated: boolean;
+  };
+}
+
+/** 用存档的请求体经代理原路重发（不含鉴权头，使用当前配置的 Key） */
+export async function replayProxyLog(requestId: string): Promise<ReplayResult> {
+  return request<ReplayResult>(`/api/proxy/logs/${encodeURIComponent(requestId)}/replay`, {
+    method: 'POST',
+  });
 }
 
 // ───────── 日预算（D3） ─────────
