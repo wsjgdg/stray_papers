@@ -460,6 +460,8 @@ app.post('/api/proxy/config', requireAdmin, (req: Request, res: Response) => {
     models,
     enabledModels,
     modelMapping,
+    maxRps,
+    dailyKeyBudgetUsd,
   } = (req.body ?? {}) as {
     providerId?: string;
     apiKey?: string;
@@ -472,10 +474,22 @@ app.post('/api/proxy/config', requireAdmin, (req: Request, res: Response) => {
     models?: string[];
     enabledModels?: string[];
     modelMapping?: Record<string, string>;
+    maxRps?: number;
+    dailyKeyBudgetUsd?: number;
   };
   if (!providerId) {
     res.status(400).json({ error: 'providerId required' });
     return;
+  }
+  // B3：配额字段需为非负有限数（0 表示不限制）
+  for (const [name, v] of [
+    ['maxRps', maxRps],
+    ['dailyKeyBudgetUsd', dailyKeyBudgetUsd],
+  ] as const) {
+    if (v !== undefined && (typeof v !== 'number' || !Number.isFinite(v) || v < 0)) {
+      res.status(400).json({ error: `${name} 需为非负数字（0 表示不限制）` });
+      return;
+    }
   }
   // 模型映射必须是「字符串 → 非空字符串」的平面映射；传非法结构直接 400
   if (modelMapping !== undefined && !isValidModelMapping(modelMapping)) {
@@ -495,6 +509,8 @@ app.post('/api/proxy/config', requireAdmin, (req: Request, res: Response) => {
     models: Array.isArray(models) ? models : undefined,
     enabledModels: Array.isArray(enabledModels) ? enabledModels : undefined,
     modelMapping,
+    maxRps,
+    dailyKeyBudgetUsd,
   });
   res.json(maskConfig(cfg));
 });

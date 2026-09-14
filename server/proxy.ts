@@ -19,6 +19,8 @@ import { DEFAULT_RETRY_ON, isRetryable, parseRetryAfter } from './retryPolicy.js
 // 兼容旧引用：鉴权头构造已抽到 upstreamAuth.ts，与 probe 共用同一实现
 export { buildAuthHeaders };
 import { maskKey, budgetStatus, getSummary } from './metrics.js';
+import { tryConsume } from './rateLimit.js';
+import { isKeyOverBudget } from './keyBudget.js';
 import { getDispatcher } from './httpAgent.js';
 import {
   getCached,
@@ -118,6 +120,13 @@ export async function proxyRequest(
   // 多 key 池：轮询 + 失败切换
   const pool = resolveKeyPool(entry);
   if (pool.length === 0) return fail(400, '该厂商未配置 API Key');
+
+  // B3：剔除已达当日成本上限的 Key（次日本地零点自动归零重投）
+  const budgetCap = entry.dailyKeyBudgetUsd;
+  const activePool =
+    budgetCap && budgetCap > 0
+      ? pool.filter((k) => !isKeyOverBudget(providerId, maskKey(k) ?? '', budgetCap))
+      : pool;
 
   const bodyStr =
     req.method === 'GET' || req.method === 'HEAD'
@@ -418,8 +427,28 @@ export async function proxyRequest(
     }
   }
 
+  // B3：单 Key 日预算用尽 → 无 Key 可轮询（chain 模式交给下一个厂商）
+  if (activePool.length === 0) {
+    return fail(
+      429,
+      `该厂商所有 Key 均已达当日成本上限（$${budgetCap}），将于次日本地零点恢复`,
+      true,
+    );
+  }
+
+  // B3：per-provider 速率限制（令牌桶）；超限 429 + Retry-After，chain 模式下交给下一个厂商
+  const maxRps = entry.maxRps;
+  if (maxRps && maxRps > 0) {
+    const rl = tryConsume(providerId, maxRps);
+    if (!rl.allowed) {
+      const secs = Math.max(1, Math.ceil(rl.retryAfterMs / 1000));
+      if (!opts.chain) res.set('Retry-After', String(secs));
+      return fail(429, `该厂商已达速率上限（${maxRps} req/s），请在约 ${secs}s 后重试`, true);
+    }
+  }
+
   // 多 key 轮询：跳过冷却/坏 Key，成功 commit，失败退避后切下一个（逻辑见 keyRotation.ts）
-  const rot = await rotateKeys(providerId, pool, (key, retries) => tryKey(key, retries));
+  const rot = await rotateKeys(providerId, activePool, (key, retries) => tryKey(key, retries));
   if (rot.committed) {
     // tryKey 已写出响应（成功或流式已开启）
     return {
