@@ -18,7 +18,7 @@ import type { ProbeResult, ProviderConsole } from '../../server/types';
 import { fmtTime, runProbe } from '../api';
 import { Chip, Empty, Spinner } from '../ui';
 
-type RegionFilter = 'all' | 'cn' | 'intl';
+type RegionFilter = 'all' | 'cn' | 'intl' | 'local';
 
 type ProbeState = ProbeResult['state'];
 
@@ -100,6 +100,7 @@ function ProviderCard({
   onCopy,
 }: ProviderCardProps) {
   const state = result ? result.state : null;
+  const isLocal = provider.kind === 'local';
   const cn = provider.region === 'cn';
 
   return (
@@ -109,7 +110,9 @@ function ProviderCard({
         <h3 className="truncate text-sm font-semibold text-ink">{provider.nameCn}</h3>
         <span className="truncate text-[11px] text-muted">{provider.name}</span>
         <span className="ml-auto flex shrink-0 items-center gap-2">
-          <Chip tone={cn ? 'accent' : 'default'}>{cn ? '国内' : '国际'}</Chip>
+          <Chip tone={isLocal ? 'ok' : cn ? 'accent' : 'default'}>
+            {isLocal ? '本地' : cn ? '国内' : '国际'}
+          </Chip>
           <span
             className={clsx('h-2 w-2 rounded-full', dotClass(state))}
             title={dotTitle(state)}
@@ -124,18 +127,24 @@ function ProviderCard({
 
       {/* 按钮组 */}
       <div className="flex flex-wrap gap-1.5">
-        <a className="btn px-2 py-1" href={provider.console} target="_blank" rel="noreferrer">
-          <ExternalLink size={12} />
-          控制台
-        </a>
-        <a className="btn px-2 py-1" href={provider.docs} target="_blank" rel="noreferrer">
-          <BookOpen size={12} />
-          文档
-        </a>
-        <a className="btn px-2 py-1" href={provider.pricing} target="_blank" rel="noreferrer">
-          <DollarSign size={12} />
-          定价
-        </a>
+        {provider.console && (
+          <a className="btn px-2 py-1" href={provider.console} target="_blank" rel="noreferrer">
+            <ExternalLink size={12} />
+            控制台
+          </a>
+        )}
+        {provider.docs && (
+          <a className="btn px-2 py-1" href={provider.docs} target="_blank" rel="noreferrer">
+            <BookOpen size={12} />
+            文档
+          </a>
+        )}
+        {provider.pricing && (
+          <a className="btn px-2 py-1" href={provider.pricing} target="_blank" rel="noreferrer">
+            <DollarSign size={12} />
+            定价
+          </a>
+        )}
         {provider.playground && (
           <a className="btn px-2 py-1" href={provider.playground} target="_blank" rel="noreferrer">
             <Sparkles size={12} />
@@ -237,7 +246,8 @@ export default function ConsoleGrid({ providers }: { providers: ProviderConsole[
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return providers.filter((p) => {
-      if (region !== 'all' && p.region !== region) return false;
+      if (region === 'local' ? p.kind !== 'local' : region !== 'all' && p.region !== region)
+        return false;
       if (!q) return true;
       return (
         p.name.toLowerCase().includes(q) ||
@@ -341,6 +351,7 @@ export default function ConsoleGrid({ providers }: { providers: ProviderConsole[
           {regionBtn('all', '全部')}
           {regionBtn('cn', '国内')}
           {regionBtn('intl', '国际')}
+          {regionBtn('local', '本地')}
         </div>
 
         <button

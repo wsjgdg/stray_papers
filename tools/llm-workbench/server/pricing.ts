@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { atomicWriteJson, configDir } from './config.js';
 import type { LlmModel } from './types.js';
+import { PROVIDER_MAP } from './providers.js';
 
 // 成本估算：USD / 1M tokens。
 // 优先用快照里的模型级真实定价（updateModelPrices 注入），缺失时回退到厂商默认定价。
@@ -212,6 +213,10 @@ export function estimateCost(
   outputTokens: number | null,
   cacheReadTokens: number | null,
 ): CostBreakdown {
+  // 本地推理不计费：成本记 $0
+  if (PROVIDER_MAP.get(providerId)?.kind === 'local') {
+    return { input: 0, output: 0, cache: 0, total: 0 };
+  }
   const p = priceFor(providerId, model);
   const cache = cacheReadTokens ? (cacheReadTokens * p.cacheRead) / 1_000_000 : 0;
   const billableInput = Math.max(0, (inputTokens ?? 0) - (cacheReadTokens ?? 0));

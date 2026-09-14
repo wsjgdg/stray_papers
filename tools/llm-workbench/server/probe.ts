@@ -42,6 +42,8 @@ export async function probeProvider(
     return { ...base, state: 'error', message: '该平台使用 IAM / 区域化域名，无法统一探测' };
   }
 
+  const isLocal = provider.kind === 'local';
+
   // Google 用 x-goog-api-key 头而非 URL 查询串：避免 key 进入上游访问日志 / 代理日志
   const url = provider.modelsEndpoint;
 
@@ -63,6 +65,16 @@ export async function probeProvider(
       };
     }
     if (res.status === 401 || res.status === 403) {
+      if (isLocal) {
+        return {
+          ...base,
+          httpStatus: res.status,
+          latencyMs: res.latencyMs,
+          state: 'ok',
+          modelCount,
+          message: `本地服务可达 · 可见模型 ${modelCount ?? '—'} 个`,
+        };
+      }
       return {
         ...base,
         httpStatus: res.status,
