@@ -209,8 +209,13 @@ export function Evals({ providers }: { providers: string[] }) {
 
   return (
     <div className="space-y-3">
-      {err && <div className="rounded-lg bg-up/10 px-3 py-2 text-xs text-up">{err}</div>}
-      {msg && <div className="rounded-lg bg-accent/10 px-3 py-2 text-xs text-accent">{msg}</div>}
+      {/* D6：外壳常驻（live region 必须预先存在于 DOM），内层才做条件渲染 */}
+      <div role="alert">
+        {err && <div className="mb-2 rounded-lg bg-up/10 px-3 py-2 text-xs text-up">{err}</div>}
+      </div>
+      <div role="status" aria-live="polite">
+        {msg && <div className="rounded-lg bg-accent/10 px-3 py-2 text-xs text-accent">{msg}</div>}
+      </div>
 
       <Card
         title="评测集"
@@ -284,7 +289,7 @@ export function Evals({ providers }: { providers: string[] }) {
             {editing && (
               <div className="space-y-2 border-t border-edge pt-2">
                 <textarea
-                  className="h-64 w-full rounded-md border border-edge bg-[#0d1728] p-2 font-mono text-[10px] text-ink"
+                  className="h-64 w-full rounded-md border border-edge bg-sunken p-2 font-mono text-[10px] text-ink"
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   spellCheck={false}
@@ -399,7 +404,7 @@ export function Evals({ providers }: { providers: string[] }) {
                             : m.passRate >= 0.8
                               ? 'text-down'
                               : m.passRate >= 0.5
-                                ? 'text-amber-400'
+                                ? 'text-warn'
                                 : 'text-up',
                         )}
                       >
@@ -473,7 +478,7 @@ export function Evals({ providers }: { providers: string[] }) {
                                     ? 'bg-down/15 text-down hover:bg-down/25'
                                     : cell.pass === false
                                       ? 'bg-up/15 text-up hover:bg-up/25'
-                                      : 'bg-panel text-muted hover:bg-[#16223a]',
+                                      : 'bg-panel text-muted hover:bg-hover',
                               )}
                               title={`${cell.pass === null ? '未判分' : cell.pass ? '通过' : '未通过'} · ${cell.latencyMs}ms${cell.score ? ` · ${cell.score}/5` : ''}`}
                             >
@@ -543,13 +548,13 @@ export function Evals({ providers }: { providers: string[] }) {
               <div className="grid gap-2 sm:grid-cols-2">
                 <div>
                   <div className="text-muted">期望</div>
-                  <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-md border border-edge bg-[#0d1728] p-2 font-mono text-[10px] text-ink">
+                  <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-md border border-edge bg-sunken p-2 font-mono text-[10px] text-ink">
                     {set?.cases[sel!.caseIndex]?.expect ?? '（无参考答案）'}
                   </pre>
                 </div>
                 <div>
                   <div className="text-muted">模型输出</div>
-                  <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-md border border-edge bg-[#0d1728] p-2 font-mono text-[10px] text-ink">
+                  <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-md border border-edge bg-sunken p-2 font-mono text-[10px] text-ink">
                     {selRow.error ?? selRow.output}
                   </pre>
                 </div>

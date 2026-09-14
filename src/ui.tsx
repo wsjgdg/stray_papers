@@ -54,7 +54,7 @@ export function Stat({
         : tone === 'down'
           ? 'text-down'
           : tone === 'warn'
-            ? 'text-amber-400'
+            ? 'text-warn'
             : 'text-ink';
   return (
     <div className="card px-4 py-3">
@@ -77,12 +77,12 @@ export function Chip({
   className?: string;
 }) {
   const tones: Record<string, string> = {
-    default: 'border-edge bg-[#0e1728] text-muted',
+    default: 'border-edge bg-raised text-muted',
     accent: 'border-accent/40 bg-accent/10 text-accent',
-    up: 'border-red-500/40 bg-red-500/10 text-red-400',
-    down: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400',
-    warn: 'border-amber-500/40 bg-amber-500/10 text-amber-400',
-    ok: 'border-sky-500/40 bg-sky-500/10 text-sky-400',
+    up: 'border-up/40 bg-up/10 text-up',
+    down: 'border-down/40 bg-down/10 text-down',
+    warn: 'border-warn/40 bg-warn/10 text-warn',
+    ok: 'border-accent/40 bg-accent/10 text-accent',
   };
   return (
     <span
@@ -145,7 +145,7 @@ export function Skeleton({ rows = 3, className }: { rows?: number; className?: s
   return (
     <div className={clsx('space-y-2', className)} aria-hidden="true">
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="h-4 animate-pulse rounded bg-[#16223a]" />
+        <div key={i} className="h-4 animate-pulse rounded bg-hover" />
       ))}
     </div>
   );
@@ -155,7 +155,7 @@ export function Skeleton({ rows = 3, className }: { rows?: number; className?: s
 export function Bar({
   value,
   max,
-  color = '#4da3ff',
+  color = 'var(--c-accent)',
   height = 6,
 }: {
   value: number;
@@ -165,13 +165,19 @@ export function Bar({
 }) {
   const pct = max > 0 ? Math.max(2, Math.min(100, (value / max) * 100)) : 0;
   return (
-    <div className="w-full overflow-hidden rounded-full bg-[#1a2438]" style={{ height }}>
+    <div className="w-full overflow-hidden rounded-full bg-sunken" style={{ height }}>
       <div style={{ width: `${pct}%`, height, background: color }} />
     </div>
   );
 }
 
-export function Sparkline({ values, color = '#4da3ff' }: { values: number[]; color?: string }) {
+export function Sparkline({
+  values,
+  color = 'var(--c-accent)',
+}: {
+  values: number[];
+  color?: string;
+}) {
   if (values.length < 2) return null;
   const max = Math.max(...values);
   const min = Math.min(...values);

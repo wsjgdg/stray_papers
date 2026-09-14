@@ -54,7 +54,7 @@ export function MetricsPanel() {
                 onClick={() => setCurrency(c)}
                 className={clsx(
                   'px-3 py-1 text-[11px]',
-                  currency === c ? 'bg-accent/15 text-accent' : 'text-muted hover:bg-[#16223a]',
+                  currency === c ? 'bg-accent/15 text-accent' : 'text-muted hover:bg-hover',
                 )}
               >
                 {c === 'USD' ? '$ USD' : '¥ CNY'}
@@ -126,10 +126,11 @@ function TagSpendCard() {
         </a>
       }
     >
-      {err && <div className="mb-2 text-[11px] text-up">{err}</div>}
+      {/* D6：外壳常驻，内层条件渲染 */}
+      <div role="alert">{err && <div className="mb-2 text-[11px] text-up">{err}</div>}</div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[560px] text-[11px]">
-          <thead className="bg-[#0e1728] text-muted">
+          <thead className="bg-raised text-muted">
             <tr>
               <th className="px-2 py-1.5 text-left">标签</th>
               <th className="px-2 py-1.5 text-right">请求</th>

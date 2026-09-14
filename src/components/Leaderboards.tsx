@@ -1,24 +1,15 @@
 import { useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { ExternalLink } from 'lucide-react';
-import {
-  CartesianGrid,
-  ResponsiveContainer,
-  Scatter,
-  ScatterChart,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
 import type { Leaderboard, LeaderboardEntry, LlmModel } from '../../server/types';
 import { fmtCtx, fmtPrice } from '../api';
 import { Bar, Chip, Empty } from '../ui';
+import { ScatterPlot } from './charts';
 
-const AXIS = '#9aa7bd';
-const GRID = '#1f2d44';
 const AA_ORIGIN = 'https://artificialanalysis.ai';
 const MIN_SCATTER_POINTS = 3;
-const RANK_COLORS = ['#f2c14e', '#c9d1de', '#d18b4c'];
+// D1：排名色改走主题令牌（旧的写死色号在浅色下对比度不足）
+const RANK_COLORS = ['var(--c-rank1)', 'var(--c-rank2)', 'var(--c-rank3)'];
 
 interface ScatterPoint {
   name: string;
@@ -43,11 +34,16 @@ function fmtMetric(value: number, metricKey: string): string {
 }
 
 function RankBadge({ rank }: { rank: number }) {
-  const color = rank <= 3 ? RANK_COLORS[rank - 1] : '#5a6d8c';
+  const color = rank <= 3 ? RANK_COLORS[rank - 1] : 'var(--c-rank-rest)';
   return (
     <span
       className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border text-[11px] font-semibold tabular-nums"
-      style={{ color, borderColor: `${color}66`, background: `${color}1f` }}
+      // border/background 由 currentColor 派生，这样换主题不必再配一对色号
+      style={{
+        color,
+        borderColor: 'color-mix(in srgb, currentColor 40%, transparent)',
+        background: 'color-mix(in srgb, currentColor 12%, transparent)',
+      }}
     >
       {rank}
     </span>
@@ -69,7 +65,7 @@ function EntryRow({
 }) {
   const detailsHref = entry.detailsUrl ? `${AA_ORIGIN}${entry.detailsUrl}` : null;
   return (
-    <div className="flex items-center gap-3 border-b border-edge/60 px-4 py-2.5 transition-colors hover:bg-[#16213a]">
+    <div className="flex items-center gap-3 border-b border-edge/60 px-4 py-2.5 transition-colors hover:bg-hover">
       <RankBadge rank={rank} />
 
       <div className="min-w-0 flex-1">
@@ -90,7 +86,12 @@ function EntryRow({
           {model && <span className="shrink-0 text-[10px] text-muted">{model.vendorLabel}</span>}
         </div>
         <div className="mt-1.5 pr-2">
-          <Bar value={entry.value} max={max} color={rank <= 3 ? '#4da3ff' : '#3a5b8c'} height={6} />
+          <Bar
+            value={entry.value}
+            max={max}
+            color={rank <= 3 ? 'var(--c-accent)' : 'var(--c-chart-dim)'}
+            height={6}
+          />
         </div>
       </div>
 
@@ -114,29 +115,6 @@ function EntryRow({
         ) : (
           <span className="text-[11px] text-muted">未匹配到可用 API</span>
         )}
-      </div>
-    </div>
-  );
-}
-
-function ScatterTooltip({
-  active,
-  payload,
-}: {
-  active?: boolean;
-  payload?: { payload?: ScatterPoint }[];
-}) {
-  if (!active || !payload || payload.length === 0) return null;
-  const point = payload[0]?.payload;
-  if (!point) return null;
-  return (
-    <div className="rounded-lg border border-edge bg-[#0e1728] px-3 py-2 text-[11px] shadow-lg">
-      <div className="mb-1 max-w-[260px] truncate font-medium text-ink">{point.name}</div>
-      <div className="text-muted">
-        平均价 <span className="tabular-nums text-ink">{fmtPrice(point.price)}</span> / 1M tokens
-      </div>
-      <div className="text-muted">
-        智能指数 <span className="tabular-nums text-accent">{point.intelligence.toFixed(1)}</span>
       </div>
     </div>
   );
@@ -211,7 +189,7 @@ export default function Leaderboards({
                       'shrink-0 whitespace-nowrap rounded-lg border px-3 py-1.5 text-xs transition-colors',
                       b.id === board.id
                         ? 'border-accent/60 bg-accent/15 text-accent'
-                        : 'border-edge bg-[#0e1728] text-muted hover:text-ink',
+                        : 'border-edge bg-raised text-muted hover:text-ink',
                     )}
                     onClick={() => setActiveId(b.id)}
                   >
@@ -275,47 +253,22 @@ export default function Leaderboards({
                   共 {points.length} 个模型 · 横轴为输入/输出均价（USD / 1M tokens）
                 </span>
               </div>
-              <div style={{ height: 240 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <ScatterChart margin={{ top: 8, right: 16, bottom: 24, left: 0 }}>
-                    <CartesianGrid stroke={GRID} />
-                    <XAxis
-                      type="number"
-                      dataKey="x"
-                      name="平均价"
-                      stroke={GRID}
-                      tickLine={false}
-                      tick={{ fill: AXIS, fontSize: 10 }}
-                      label={{
-                        value: '平均价 USD / 1M tokens',
-                        position: 'insideBottom',
-                        offset: -14,
-                        fill: AXIS,
-                        fontSize: 10,
-                      }}
-                    />
-                    <YAxis
-                      type="number"
-                      dataKey="y"
-                      name="智能指数"
-                      stroke={GRID}
-                      tickLine={false}
-                      width={48}
-                      tick={{ fill: AXIS, fontSize: 10 }}
-                    />
-                    <Tooltip
-                      content={<ScatterTooltip />}
-                      cursor={{ stroke: GRID, strokeDasharray: '3 3' }}
-                    />
-                    <Scatter
-                      data={points}
-                      fill="#4da3ff"
-                      fillOpacity={0.7}
-                      isAnimationActive={false}
-                    />
-                  </ScatterChart>
-                </ResponsiveContainer>
-              </div>
+              <ScatterPlot
+                data={points.map((p) => ({
+                  name: p.name,
+                  x: p.x,
+                  y: p.y,
+                  meta: [
+                    { label: '平均价', value: `${fmtPrice(p.price)} / 1M` },
+                    { label: '智能指数', value: p.intelligence.toFixed(1) },
+                  ],
+                }))}
+                height={240}
+                xLabel="平均价 USD / 1M tokens"
+                yLabel="智能指数"
+                yFormat={(v) => v.toFixed(0)}
+                ariaLabel="价格与智能指数散点图"
+              />
             </section>
           )}
         </>

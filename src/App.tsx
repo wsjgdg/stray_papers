@@ -8,6 +8,8 @@ import {
   Table2,
   Terminal,
   ExternalLink,
+  Moon,
+  Sun,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { fetchSnapshot, fmtTime, fetchCryptoStatus, type SnapshotResponse } from './api';
@@ -17,6 +19,7 @@ import { UnlockModal } from './components/UnlockModal';
 import { SettingsModal } from './components/SettingsModal';
 import { SearchPalette } from './components/SearchPalette';
 import { useVisibilityPolling } from './hooks/useVisibilityPolling';
+import { useTheme } from './hooks/useTheme';
 
 // 路由级代码分割：各 tab 组件按需加载，首屏只拉取入口 + 概览页。
 // 同名默认导出组件（Dashboard/ModelTable/...）均支持 React.lazy。
@@ -53,6 +56,8 @@ export default function App() {
   const [modelFocus, setModelFocus] = useState<{ model: string; nonce: number } | null>(null);
   // 全局搜索面板（Cmd/Ctrl+K 或托盘触发）：在全部模型中模糊检索并跳转到模型库对应行
   const [searchOpen, setSearchOpen] = useState(false);
+  // D3：亮/暗主题（跟随系统 / 手动切换，持久化到 localStorage）
+  const { resolved: themeResolved, mode: themeMode, toggle: toggleTheme } = useTheme();
 
   const load = useCallback(async (force: boolean) => {
     abortRef.current?.abort();
@@ -137,6 +142,15 @@ export default function App() {
               </Chip>
             </>
           )}
+          <button
+            className="btn"
+            title={`切换主题（当前：${themeResolved === 'dark' ? '深色' : '浅色'}${themeMode === 'system' ? ' · 跟随系统' : ''}）`}
+            aria-label="切换深浅色主题"
+            onClick={toggleTheme}
+          >
+            {themeResolved === 'dark' ? <Sun size={12} /> : <Moon size={12} />}
+            {themeResolved === 'dark' ? '浅色' : '深色'}
+          </button>
           <button className="btn btn-primary" onClick={() => void load(true)} disabled={refreshing}>
             <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
             {refreshing ? '强制刷新中' : '强制刷新'}
@@ -180,9 +194,7 @@ export default function App() {
             onClick={() => setTab(id)}
             className={clsx(
               'flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs transition-colors',
-              tab === id
-                ? 'bg-accent/15 text-accent'
-                : 'text-muted hover:bg-[#16223a] hover:text-ink',
+              tab === id ? 'bg-accent/15 text-accent' : 'text-muted hover:bg-hover hover:text-ink',
             )}
           >
             <Icon size={13} />

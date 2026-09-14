@@ -16,8 +16,10 @@ export function SearchPalette({
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
+  // D6：焦点陷阱。命令面板是「输入框即入口」，所以容器本身不可聚焦，由 input 先拿到焦点
+  const panelRef = useRef<HTMLDivElement>(null);
 
-  useDismissable(onClose);
+  useDismissable(onClose, true, panelRef);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -57,6 +59,7 @@ export function SearchPalette({
       aria-label="搜索模型"
     >
       <div
+        ref={panelRef}
         className="w-[420px] overflow-hidden rounded-2xl border border-edge bg-panel shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
@@ -82,7 +85,7 @@ export function SearchPalette({
               }
             }}
           />
-          <span className="rounded bg-[#0d1728] px-1.5 py-0.5 text-[10px] text-muted">ESC</span>
+          <span className="rounded bg-sunken px-1.5 py-0.5 text-[10px] text-muted">ESC</span>
         </div>
         <ul className="max-h-[50vh] overflow-auto overscroll-contain py-1">
           {matches.length === 0 && <li className="px-4 py-3 text-xs text-muted">无匹配模型</li>}
@@ -96,7 +99,7 @@ export function SearchPalette({
               <button
                 className={
                   'flex w-full items-center justify-between gap-2 px-4 py-2 text-left ' +
-                  (i === active ? 'bg-accent/15' : 'hover:bg-[#16223a]')
+                  (i === active ? 'bg-accent/15' : 'hover:bg-hover')
                 }
                 onMouseEnter={() => setActive(i)}
                 onClick={() => onPick(m.id)}

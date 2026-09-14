@@ -1,9 +1,12 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import clsx from 'clsx';
 import { ChevronDown, ChevronUp, Download, ExternalLink, Search, X } from 'lucide-react';
 import type { LlmModel } from '../../server/types';
 import { fmtCtx, fmtDate, fmtPrice } from '../api';
 import { Chip, Empty, Stat } from '../ui';
+import { useVirtualList } from '../hooks/useVirtualList';
+import { useColumnPrefs } from '../hooks/useColumnPrefs';
+import { ColumnPicker } from './ColumnPicker';
 
 type SortKey =
   'created' | 'context' | 'promptPrice' | 'completionPrice' | 'intelligence' | 'speed' | 'agentic';
@@ -42,7 +45,9 @@ function readStoredSort(): SortState {
   return DEFAULT_SORT;
 }
 
-const PAGE_SIZE = 50;
+// D2：改为窗口化渲染（虚拟滚动），不再分页。
+// 行高不固定（展开行会变高），所以只给一个估算值，实测值由 useVirtualList 回报后重算偏移。
+const EST_ROW_H = 48;
 const MAX_COMPARE = 4;
 const ALL_VENDOR = '__all__';
 
@@ -182,6 +187,113 @@ function SortTh({
   );
 }
 
+// D5：列定义集中在这里——表头、单元格、列显隐、CSV 顺序都用同一份，避免多处不一致。
+interface ColDef {
+  key: string;
+  label: string;
+  thClass?: string;
+  sortKey?: SortKey;
+  tdClass?: string;
+  cell: (m: LlmModel) => ReactNode;
+}
+
+const MODEL_COLUMNS: ColDef[] = [
+  {
+    key: 'name',
+    label: '模型',
+    cell: (m) => (
+      <div className="flex items-center gap-2">
+        <span
+          className="h-6 w-1 shrink-0 rounded"
+          style={{ background: vendorColor(m.vendorLabel) }}
+        />
+        <div className="min-w-0">
+          <div className="truncate text-xs font-medium text-ink">{stripVendorPrefix(m)}</div>
+          <div className="truncate font-mono text-[10px] text-muted">{m.id}</div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    key: 'vendor',
+    label: '厂商',
+    thClass: 'w-28',
+    tdClass: 'truncate text-muted',
+    cell: (m) => m.vendorLabel,
+  },
+  {
+    key: 'context',
+    label: '上下文',
+    thClass: 'w-20 text-right',
+    sortKey: 'context',
+    tdClass: 'text-right tabular-nums',
+    cell: (m) => fmtCtx(m.context),
+  },
+  {
+    key: 'promptPrice',
+    label: '输入价',
+    thClass: 'w-20 text-right',
+    sortKey: 'promptPrice',
+    tdClass: 'text-right tabular-nums',
+    cell: (m) => fmtPrice(m.promptPrice),
+  },
+  {
+    key: 'completionPrice',
+    label: '输出价',
+    thClass: 'w-20 text-right',
+    sortKey: 'completionPrice',
+    tdClass: 'text-right tabular-nums',
+    cell: (m) => fmtPrice(m.completionPrice),
+  },
+  {
+    key: 'cacheReadPrice',
+    label: '缓存读取价',
+    thClass: 'w-24 text-right',
+    tdClass: 'text-right tabular-nums text-muted',
+    cell: (m) => fmtPrice(m.cacheReadPrice),
+  },
+  {
+    key: 'intelligence',
+    label: '智能指数',
+    thClass: 'w-20 text-right',
+    sortKey: 'intelligence',
+    tdClass: 'text-right tabular-nums',
+    cell: (m) => fmtScore(m.intelligence),
+  },
+  {
+    key: 'speed',
+    label: '速度',
+    thClass: 'w-20 text-right',
+    sortKey: 'speed',
+    tdClass: 'text-right tabular-nums',
+    cell: (m) => fmtSpeed(m.speed),
+  },
+  {
+    key: 'created',
+    label: '发布日',
+    thClass: 'w-24',
+    sortKey: 'created',
+    tdClass: 'tabular-nums text-muted',
+    cell: (m) => fmtDate(m.created),
+  },
+  {
+    key: 'caps',
+    label: '能力',
+    cell: (m) => (
+      <div className="flex flex-wrap gap-1">
+        {m.reasoning && <Chip tone="accent">推理</Chip>}
+        {m.tools && <Chip tone="ok">工具</Chip>}
+        {m.structuredOutput && <Chip>结构化</Chip>}
+        {m.inputModalities.includes('image') && <Chip tone="warn">视觉</Chip>}
+        {m.inputModalities.includes('audio') && <Chip tone="up">音频</Chip>}
+      </div>
+    ),
+  },
+];
+
+const MODEL_COLUMN_KEYS = MODEL_COLUMNS.map((c) => c.key);
+const MODEL_COLUMN_STORAGE_KEY = 'modeltable.columns';
+
 export default function ModelTable({
   models,
   focus,
@@ -208,38 +320,17 @@ export default function ModelTable({
       return next;
     });
   }, []);
-  const [page, setPage] = useState(0);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [flashId, setFlashId] = useState<string | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [warn, setWarn] = useState<string | null>(null);
 
+  // D2：滚动容器。筛选条件一变就回到顶部（等价于原先「重置到第 1 页」的语义）。
+  const scrollerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    setPage(0);
+    const el = scrollerRef.current;
+    if (el) el.scrollTop = 0;
   }, [query, vendor, caps, onlyScored]);
-
-  // 模型深链：浮窗点来的 raw 字符串（gpt-5 / openai/gpt-5 等）→ 容忍匹配并精确展开对应行。
-  // 用 nonce 去重，避免 30s 轮询刷新 models 引用时重复重置筛选。
-  const lastFocusNonce = useRef<number | null>(null);
-  useEffect(() => {
-    if (!focus) return;
-    if (lastFocusNonce.current === focus.nonce) return;
-    lastFocusNonce.current = focus.nonce;
-    const m = models.find((x) => matchFocus(x, focus.model));
-    if (!m) return;
-    // 精确跳转：清空筛选并切默认排序，直接定位到该模型所在页（不把模型串写进搜索框污染搜索词）
-    setQuery('');
-    setVendor(ALL_VENDOR);
-    setCaps([]);
-    setOnlyScored(false);
-    setSort({ key: 'created', dir: 'desc' });
-    const ordered = [...models].sort((a, b) => b.created - a.created || a.id.localeCompare(b.id));
-    const idx = ordered.findIndex((x) => x.id === m.id);
-    if (idx >= 0) setPage(Math.floor(idx / PAGE_SIZE));
-    setExpandedId(m.id);
-    setFlashId(m.id);
-    window.setTimeout(() => setFlashId((cur) => (cur === m.id ? null : cur)), 2400);
-  }, [focus, models, setSort]);
 
   const vendorOptions = useMemo(() => {
     const counts = new Map<string, number>();
@@ -276,12 +367,65 @@ export default function ModelTable({
   }, [filtered, sort]);
 
   const total = sorted.length;
-  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const safePage = Math.min(page, pageCount - 1);
-  const pageRows = sorted.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
+
+  // D5：列显隐（本机持久化）
+  const colPrefs = useColumnPrefs(MODEL_COLUMN_STORAGE_KEY, MODEL_COLUMN_KEYS);
+  const cols = useMemo(
+    () => MODEL_COLUMNS.filter((c) => colPrefs.visible.includes(c.key)),
+    [colPrefs.visible],
+  );
+  /** 勾选列 + 可见数据列（占位/展开行的 colSpan 要用） */
+  const colSpan = cols.length + 1;
+
+  // D2：窗口化（虚拟滚动）。行高不固定（展开行更高），所以给估算值 + 实测回报。
+  const keyOf = useCallback((m: LlmModel) => m.id, []);
+  const virt = useVirtualList({
+    items: sorted,
+    getKey: keyOf,
+    estimate: EST_ROW_H,
+    overscan: 8,
+    scrollRef: scrollerRef,
+  });
 
   const byId = useMemo(() => new Map(models.map((m) => [m.id, m])), [models]);
   const compared = selected.map((id) => byId.get(id)).filter((m): m is LlmModel => Boolean(m));
+
+  // 模型深链：浮窗点来的 raw 字符串（gpt-5 / openai/gpt-5 等）→ 容忍匹配并精确展开对应行。
+  // 用 nonce 去重，避免 30s 轮询刷新 models 引用时重复重置筛选。
+  const { scrollToIndex } = virt;
+  const lastFocusNonce = useRef<number | null>(null);
+  useEffect(() => {
+    if (!focus) return;
+    if (lastFocusNonce.current === focus.nonce) return;
+    lastFocusNonce.current = focus.nonce;
+    const m = models.find((x) => matchFocus(x, focus.model));
+    if (!m) return;
+    // 精确跳转：清空筛选并切默认排序，直接滚到该模型（不把模型串写进搜索框污染搜索词）
+    setQuery('');
+    setVendor(ALL_VENDOR);
+    setCaps([]);
+    setOnlyScored(false);
+    setSort({ key: 'created', dir: 'desc' });
+    setExpandedId(m.id);
+    setFlashId(m.id);
+    // 排序/筛选的 state 要等下一次渲染才生效，且未渲染过的行只有估算高度，
+    // 所以用两次 rAF 做两遍定位：第一遍按估算滚过去，实测回报后再校正一次。
+    const align = () => {
+      const idx = sorted.findIndex((x) => x.id === m.id);
+      if (idx >= 0) scrollToIndex(idx, 'center');
+    };
+    const r1 = requestAnimationFrame(() => {
+      align();
+      requestAnimationFrame(align);
+    });
+    const timer = window.setTimeout(() => setFlashId((cur) => (cur === m.id ? null : cur)), 2400);
+    return () => {
+      cancelAnimationFrame(r1);
+      window.clearTimeout(timer);
+    };
+    // sorted 故意不进依赖：它每次排序都会换引用，会让深链重复触发
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus, models, setSort, scrollToIndex]);
 
   function toggleSort(key: SortKey): void {
     setSort((prev) =>
@@ -355,7 +499,7 @@ export default function ModelTable({
         </div>
 
         <select
-          className="rounded-lg border border-edge bg-[#0d1728] px-2 py-1.5 text-xs text-ink outline-none focus:border-accent"
+          className="rounded-lg border border-edge bg-sunken px-2 py-1.5 text-xs text-ink outline-none focus:border-accent"
           value={vendor}
           onChange={(e) => setVendor(e.target.value)}
         >
@@ -376,7 +520,7 @@ export default function ModelTable({
                 'rounded-md border px-2 py-1 text-[11px] transition-colors',
                 caps.includes(c.key)
                   ? 'border-accent/50 bg-accent/15 text-accent'
-                  : 'border-edge bg-[#0e1728] text-muted hover:text-ink',
+                  : 'border-edge bg-raised text-muted hover:text-ink',
               )}
               onClick={() => toggleCap(c.key)}
             >
@@ -395,10 +539,13 @@ export default function ModelTable({
           仅显示有评估分
         </label>
 
-        <button type="button" className="btn ml-auto" onClick={exportCsv} disabled={total === 0}>
-          <Download size={13} />
-          导出 CSV
-        </button>
+        <div className="ml-auto flex items-center gap-2">
+          <ColumnPicker columns={MODEL_COLUMNS} prefs={colPrefs} />
+          <button type="button" className="btn" onClick={exportCsv} disabled={total === 0}>
+            <Download size={13} />
+            导出 CSV
+          </button>
+        </div>
       </div>
 
       {/* 对比栏 */}
@@ -408,7 +555,10 @@ export default function ModelTable({
             <span className="text-[11px] text-muted">
               对比 {compared.length}/{MAX_COMPARE}
             </span>
-            {warn && <span className="text-[11px] text-amber-400">{warn}</span>}
+            {/* D6：提示类信息加 aria-live，读屏用户能听到"已达上限" */}
+            <span className="text-[11px] text-warn" role="status" aria-live="polite">
+              {warn ?? ''}
+            </span>
             <button
               type="button"
               className="btn ml-auto px-2 py-1"
@@ -457,69 +607,55 @@ export default function ModelTable({
 
       {/* 表格 */}
       <div className="card flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="min-h-0 max-h-full flex-1 overflow-auto overscroll-contain">
+        <div
+          ref={scrollerRef}
+          className="min-h-0 max-h-full flex-1 overflow-auto overscroll-contain"
+        >
           <table className="w-full min-w-[1100px] border-collapse">
             <thead>
               <tr className="border-b border-edge">
                 <th className="th w-8" />
-                <th className="th">模型</th>
-                <th className="th w-28">厂商</th>
-                <SortTh
-                  label="上下文"
-                  sortKey="context"
-                  sort={sort}
-                  onSort={toggleSort}
-                  className="w-20 text-right"
-                />
-                <SortTh
-                  label="输入价"
-                  sortKey="promptPrice"
-                  sort={sort}
-                  onSort={toggleSort}
-                  className="w-20 text-right"
-                />
-                <SortTh
-                  label="输出价"
-                  sortKey="completionPrice"
-                  sort={sort}
-                  onSort={toggleSort}
-                  className="w-20 text-right"
-                />
-                <th className="th w-24 text-right">缓存读取价</th>
-                <SortTh
-                  label="智能指数"
-                  sortKey="intelligence"
-                  sort={sort}
-                  onSort={toggleSort}
-                  className="w-20 text-right"
-                />
-                <SortTh
-                  label="速度"
-                  sortKey="speed"
-                  sort={sort}
-                  onSort={toggleSort}
-                  className="w-20 text-right"
-                />
-                <SortTh
-                  label="发布日"
-                  sortKey="created"
-                  sort={sort}
-                  onSort={toggleSort}
-                  className="w-24"
-                />
-                <th className="th">能力</th>
+                {cols.map((c) =>
+                  c.sortKey ? (
+                    <SortTh
+                      key={c.key}
+                      label={c.label}
+                      sortKey={c.sortKey}
+                      sort={sort}
+                      onSort={toggleSort}
+                      className={c.thClass}
+                    />
+                  ) : (
+                    <th key={c.key} className={clsx('th', c.thClass)}>
+                      {c.label}
+                    </th>
+                  ),
+                )}
               </tr>
             </thead>
             <tbody>
-              {pageRows.map((m) => {
+              {/* 窗口上方的占位行：让首行落在正确的滚动位置 */}
+              {virt.padTop > 0 && (
+                <tr aria-hidden style={{ height: virt.padTop }}>
+                  <td colSpan={colSpan} style={{ padding: 0, border: 0 }} />
+                </tr>
+              )}
+              {virt.rows.map(({ item: m }) => {
                 const expanded = expandedId === m.id;
                 const checked = selected.includes(m.id);
                 return (
                   <Fragment key={m.id}>
                     <tr
+                      ref={(el) => {
+                        if (!el) return;
+                        // 展开时把紧随其后的详情行也算进这一项的高度
+                        const next = el.nextElementSibling as HTMLElement | null;
+                        const extra = next && next.dataset.vrow === m.id ? next.offsetHeight : 0;
+                        virt.reportSize(m.id, el.offsetHeight + extra);
+                      }}
                       className={clsx(
-                        'cursor-pointer border-b border-edge/60 transition-colors hover:bg-[#16213a]',
-                        expanded && 'bg-[#16213a]',
+                        'cursor-pointer border-b border-edge/60 transition-colors hover:bg-hover',
+                        expanded && 'bg-hover',
                         flashId === m.id && 'ring-2 ring-accent',
                       )}
                       onClick={() => {
@@ -535,43 +671,24 @@ export default function ModelTable({
                           onChange={(e) => toggleSelect(m.id, e.target.checked)}
                         />
                       </td>
-                      <td className="td">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="h-6 w-1 shrink-0 rounded"
-                            style={{ background: vendorColor(m.vendorLabel) }}
-                          />
-                          <div className="min-w-0">
-                            <div className="truncate text-xs font-medium text-ink">
-                              {stripVendorPrefix(m)}
-                            </div>
-                            <div className="truncate font-mono text-[10px] text-muted">{m.id}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="td truncate text-muted">{m.vendorLabel}</td>
-                      <td className="td text-right tabular-nums">{fmtCtx(m.context)}</td>
-                      <td className="td text-right tabular-nums">{fmtPrice(m.promptPrice)}</td>
-                      <td className="td text-right tabular-nums">{fmtPrice(m.completionPrice)}</td>
-                      <td className="td text-right tabular-nums text-muted">
-                        {fmtPrice(m.cacheReadPrice)}
-                      </td>
-                      <td className="td text-right tabular-nums">{fmtScore(m.intelligence)}</td>
-                      <td className="td text-right tabular-nums">{fmtSpeed(m.speed)}</td>
-                      <td className="td tabular-nums text-muted">{fmtDate(m.created)}</td>
-                      <td className="td">
-                        <div className="flex flex-wrap gap-1">
-                          {m.reasoning && <Chip tone="accent">推理</Chip>}
-                          {m.tools && <Chip tone="ok">工具</Chip>}
-                          {m.structuredOutput && <Chip>结构化</Chip>}
-                          {m.inputModalities.includes('image') && <Chip tone="warn">视觉</Chip>}
-                          {m.inputModalities.includes('audio') && <Chip tone="up">音频</Chip>}
-                        </div>
-                      </td>
+                      {cols.map((c) => (
+                        <td key={c.key} className={clsx('td', c.tdClass)}>
+                          {c.cell(m)}
+                        </td>
+                      ))}
                     </tr>
                     {expanded && (
-                      <tr className="border-b border-edge">
-                        <td colSpan={11} className="bg-[#0e1728] px-4 py-3">
+                      <tr
+                        data-vrow={m.id}
+                        ref={(el) => {
+                          if (!el) return;
+                          // 详情行后挂载时再报一次合计高度（此时折叠行已在 DOM 里）
+                          const prev = el.previousElementSibling as HTMLElement | null;
+                          virt.reportSize(m.id, (prev?.offsetHeight ?? 0) + el.offsetHeight);
+                        }}
+                        className="border-b border-edge"
+                      >
+                        <td colSpan={colSpan} className="bg-raised px-4 py-3">
                           <div className="mb-3 text-xs leading-relaxed text-muted">
                             {m.description || '暂无描述'}
                           </div>
@@ -625,35 +742,46 @@ export default function ModelTable({
                   </Fragment>
                 );
               })}
+              {/* 窗口下方的占位行：撑出剩余滚动高度 */}
+              {virt.padBottom > 0 && (
+                <tr aria-hidden style={{ height: virt.padBottom }}>
+                  <td colSpan={colSpan} style={{ padding: 0, border: 0 }} />
+                </tr>
+              )}
             </tbody>
           </table>
           {total === 0 && <Empty text="没有匹配的模型" />}
         </div>
 
-        {/* 分页 */}
-        <div className="flex shrink-0 items-center gap-2 border-t border-edge px-3 py-2 text-[11px] text-muted">
+        {/* 状态栏（D2 后不再分页：一次性滚动全部结果） */}
+        <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-t border-edge px-3 py-2 text-[11px] text-muted">
           <span className="tabular-nums">共 {total} 条</span>
-          <span className="tabular-nums">
-            第 {total === 0 ? 0 : safePage + 1} / {pageCount} 页
-          </span>
+          <span className="tabular-nums">当前渲染 {virt.rows.length} 行（窗口化）</span>
+          {total > 0 && (
+            <span className="tabular-nums">
+              {sorted.length > 0 && virt.rows.length > 0
+                ? `第 ${(virt.rows[0]?.index ?? 0) + 1}–${(virt.rows[virt.rows.length - 1]?.index ?? 0) + 1} 条`
+                : ''}
+            </span>
+          )}
           <div className="ml-auto flex items-center gap-2">
             <button
               type="button"
               className="btn px-2 py-1"
-              disabled={safePage <= 0}
-              onClick={() => setPage(safePage - 1)}
+              disabled={total === 0}
+              onClick={() => virt.scrollToIndex(0, 'start')}
             >
-              <ChevronDown size={12} className="rotate-90" />
-              上一页
+              <ChevronUp size={12} />
+              回到顶部
             </button>
             <button
               type="button"
               className="btn px-2 py-1"
-              disabled={safePage >= pageCount - 1}
-              onClick={() => setPage(safePage + 1)}
+              disabled={total === 0}
+              onClick={() => virt.scrollToIndex(Math.max(0, total - 1), 'center')}
             >
-              下一页
-              <ChevronDown size={12} className="-rotate-90" />
+              跳到末尾
+              <ChevronDown size={12} />
             </button>
           </div>
         </div>

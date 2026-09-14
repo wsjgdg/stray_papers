@@ -134,6 +134,10 @@ export interface ProxyLog {
   keyMask?: string | null;
   fromCache?: boolean;
   tag?: string | null;
+  /** B1：本次请求实际经过的密钥切换次数 */
+  keySwitches?: number;
+  /** B1：模型路由规划出的完整回退链（便于回溯走了哪条 fallback） */
+  routeChain?: string[];
   hasReqBody?: boolean; // B4：是否存有请求体（可重放）；列表不下发 body 本身
 }
 
@@ -225,12 +229,17 @@ export async function fetchProxyMetrics(): Promise<ProxyMetrics[]> {
 export async function fetchProxyLogs(filter?: {
   provider?: string;
   status?: 'ok' | 'error';
+  tag?: string;
+  /** D4：关键词，服务端匹配 model / requestId / error / tag / path / provider */
+  q?: string;
   limit?: number;
   history?: boolean;
 }): Promise<{ logs: ProxyLog[]; historyAvailable: boolean }> {
   const params = new URLSearchParams();
   if (filter?.provider) params.set('provider', filter.provider);
   if (filter?.status) params.set('status', filter.status);
+  if (filter?.tag) params.set('tag', filter.tag);
+  if (filter?.q) params.set('q', filter.q);
   if (filter?.limit) params.set('limit', String(filter.limit));
   if (filter?.history) params.set('history', '1');
   const r = await fetch(`/api/proxy/logs?${params.toString()}`, authInit());

@@ -235,7 +235,7 @@ export function Playground({
           </button>
 
           {modelPanelOpen && (
-            <div className="space-y-2 rounded-lg border border-edge bg-[#0d1728] p-3">
+            <div className="space-y-2 rounded-lg border border-edge bg-sunken p-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="text-[11px] text-muted">勾选 = 启用（仅启用项出现在上方下拉）</div>
                 <button
@@ -255,7 +255,7 @@ export function Playground({
                     return (
                       <label
                         key={m}
-                        className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-xs hover:bg-[#16223a]"
+                        className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-xs hover:bg-hover"
                       >
                         <input
                           type="checkbox"
@@ -349,7 +349,7 @@ export function Playground({
               key={i}
               className={clsx(
                 'rounded-lg px-3 py-2 text-xs',
-                m.role === 'user' ? 'bg-accent/10 text-ink' : 'bg-[#0d1728] text-ink',
+                m.role === 'user' ? 'bg-accent/10 text-ink' : 'bg-sunken text-ink',
               )}
             >
               <div className="mb-0.5 text-[10px] uppercase tracking-wide text-muted">
@@ -359,7 +359,7 @@ export function Playground({
             </div>
           ))}
           {busy && reply && (
-            <div className="rounded-lg bg-[#0d1728] px-3 py-2 text-xs text-ink">
+            <div className="rounded-lg bg-sunken px-3 py-2 text-xs text-ink">
               <div className="mb-0.5 text-[10px] uppercase tracking-wide text-muted">
                 助手（生成中…）
               </div>

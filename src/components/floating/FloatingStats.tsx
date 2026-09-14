@@ -121,11 +121,13 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
     setQ('');
   };
 
-  // ── 主题配色（浅/深）──
-  const cardBase = theme === 'light' ? 'bg-white/95 text-neutral-900' : 'bg-panel/95 text-ink';
-  const sub = theme === 'light' ? 'text-neutral-500' : 'text-muted';
-  const chipBg = theme === 'light' ? 'bg-neutral-100' : 'bg-[#0d1728]';
-  const hoverBg = theme === 'light' ? 'hover:bg-neutral-200' : 'hover:bg-[#16223a]';
+  // ── 主题配色 ──
+  // D3：统一走 CSS 变量令牌（见 src/index.css），不再为浅色手写一套 Tailwind 调色板
+  // （那些 -400/-500 色号在浅色下对比度不足，且与主界面主题不同源）。
+  const cardBase = 'bg-panel/95 text-ink';
+  const sub = 'text-muted';
+  const chipBg = 'bg-sunken';
+  const hoverBg = 'hover:bg-hover';
   // 高对比模式：强制纯黑/纯白底 + 高对比边框与文字（覆盖主题透明底）
   const hcClass = highContrast
     ? theme === 'light'
@@ -135,8 +137,8 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
   const hcSub = highContrast ? (theme === 'light' ? 'text-black/70' : 'text-white/70') : sub;
   const hcHover = highContrast
     ? theme === 'light'
-      ? 'hover:bg-neutral-300'
-      : 'hover:bg-[#222]'
+      ? 'hover:bg-black/10'
+      : 'hover:bg-white/10'
     : hoverBg;
   const zoomStyle: React.CSSProperties = fontScale !== 1 ? { zoom: fontScale } : {};
 
@@ -176,7 +178,7 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
         onPointerDown={onPointerDown}
         onContextMenu={onContextMenu}
       >
-        <Activity size={12} className={alertAny ? 'text-[#ef6b6b]' : 'text-accent'} />
+        <Activity size={12} className={alertAny ? 'text-up' : 'text-accent'} />
         <span className="tabular-nums">
           {data ? `${data.inputRateTokS}/${data.outputRateTokS} t/s` : '—'}
         </span>
@@ -253,12 +255,16 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
         }
       >
         <GripHorizontal size={13} className={hcSub} />
-        <Activity size={13} className={alertAny ? 'text-[#ef6b6b]' : 'text-accent'} />
+        <Activity size={13} className={alertAny ? 'text-up' : 'text-accent'} />
         <span className="text-[11px] font-medium">实时代理统计</span>
         <span
           className="h-1.5 w-1.5 rounded-full"
           style={{
-            background: proxyAlive ? '#5ec8a0' : proxyAlive === false ? '#ef6b6b' : '#6b7280',
+            background: proxyAlive
+              ? 'var(--c-down)'
+              : proxyAlive === false
+                ? 'var(--c-up)'
+                : 'var(--c-muted)',
           }}
           title={proxyAlive ? '代理已连接' : proxyAlive === false ? '代理断开' : '代理状态未知'}
         />
@@ -351,19 +357,25 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
         />
         <Row label="请求速率" value={data ? `${data.reqRate}/s` : '—'} active={focus === 'rate'} />
         <div className="pt-0.5">
-          <Sparkline samples={series} bg={chipBg} />
+          <Sparkline samples={series} bgClass={chipBg} />
           <div className={'mt-1 flex items-center justify-center gap-3 text-[9px] ' + sub}>
             <span className="flex items-center gap-1">
-              <i className="inline-block h-2 w-2 rounded-full" style={{ background: '#5b9bff' }} />
+              <i
+                className="inline-block h-2 w-2 rounded-full"
+                style={{ background: 'var(--c-accent)' }}
+              />
               输入
             </span>
             <span className="flex items-center gap-1">
-              <i className="inline-block h-2 w-2 rounded-full" style={{ background: '#5ec8a0' }} />
+              <i
+                className="inline-block h-2 w-2 rounded-full"
+                style={{ background: 'var(--c-down)' }}
+              />
               输出
             </span>
             <span>近 {series.length * 2}s 趋势</span>
           </div>
-          {alertAny && <div className="mt-1 text-center text-[9px] text-[#ef6b6b]">⚠ 速率突增</div>}
+          {alertAny && <div className="mt-1 text-center text-[9px] text-up">⚠ 速率突增</div>}
         </div>
         <Row label="缓存命中" value={rate} accent active={focus === 'cache'} />
         <Row
@@ -423,7 +435,7 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
                     ${costSeries.length ? costSeries[costSeries.length - 1].toFixed(4) : '0.0000'}
                   </span>
                 </div>
-                <CostCurve values={costSeries} bg={chipBg} />
+                <CostCurve values={costSeries} bgClass={chipBg} />
               </div>
 
               {/* 最近模型（本地累计调用频次 Top5，点击深链到主窗口） */}
@@ -440,8 +452,8 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
                         key={m.model}
                         className={
                           'flex cursor-pointer items-center gap-1.5 rounded px-1 ' +
-                          (highContrast ? hcHover : 'hover:bg-[#16223a]') +
-                          (isHl ? ' ring-1 ring-accent bg-[#1b2c4a]' : '')
+                          (highContrast ? hcHover : 'hover:bg-hover') +
+                          (isHl ? ' ring-1 ring-accent bg-accent/15' : '')
                         }
                         onClick={() => openModel(m.model)}
                         title={'点击在主窗口打开 ' + m.model}
@@ -449,7 +461,7 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
                         <span className="w-24 shrink-0 truncate text-[10px]" title={m.model}>
                           {m.model}
                         </span>
-                        <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#16223a]">
+                        <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-hover">
                           <span
                             className="block h-full rounded-full bg-accent"
                             style={{ width: pct + '%' }}

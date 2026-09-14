@@ -286,12 +286,28 @@ export function useFloatStats(standalone: boolean): FloatStats {
     }
   }, [standalone, isElectron]);
 
-  // 跟随系统主题（仅 Electron 内有效）
+  // D3：主题跟随 <html data-theme>（由 useTheme 在两种窗口里统一写入）。
+  // 之前仅在 Electron 内用 getTheme，浏览器 / dev 下浮窗永远停在深色。
   useEffect(() => {
-    if (!isElectron || !api?.getTheme) return;
-    setTheme(api.getTheme() as Theme);
-    api.onThemeChange?.((t: string) => setTheme(t as Theme));
-  }, [isElectron, api]);
+    const read = (): Theme => {
+      const d = document.documentElement.dataset.theme;
+      if (d === 'light' || d === 'dark') return d;
+      const api = window.electron;
+      const t = api?.getTheme?.();
+      if (t === 'light' || t === 'dark') return t;
+      return window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    };
+    setTheme(read());
+    const obs = new MutationObserver(() => setTheme(read()));
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    const mq = window.matchMedia?.('(prefers-color-scheme: light)');
+    const onMq = () => setTheme(read());
+    mq?.addEventListener('change', onMq);
+    return () => {
+      obs.disconnect();
+      mq?.removeEventListener('change', onMq);
+    };
+  }, []);
 
   return {
     data,

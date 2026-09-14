@@ -141,7 +141,12 @@ describe('config: listRoutedModels (B6)', () => {
   it('excludes disabled / no-key providers and empty enabledModels', () => {
     cfg.upsertProvider('a', { apiKey: '', enabled: true, models: ['x'] }); // 无 key
     cfg.upsertProvider('b', { apiKey: 'k', enabled: false, models: ['y'] }); // 未启用
-    cfg.upsertProvider('c', { apiKey: 'k', enabled: true, models: ['m1', 'm2'], enabledModels: [] }); // 全部禁用
+    cfg.upsertProvider('c', {
+      apiKey: 'k',
+      enabled: true,
+      models: ['m1', 'm2'],
+      enabledModels: [],
+    }); // 全部禁用
     assert.deepEqual(cfg.listRoutedModels(), []);
   });
 });

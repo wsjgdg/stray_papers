@@ -145,9 +145,9 @@ export function BackupCard() {
               <div
                 className={
                   hint.tone === 'ok'
-                    ? 'text-[10px] text-emerald-400'
+                    ? 'text-[10px] text-down'
                     : hint.tone === 'warn'
-                      ? 'text-[10px] text-amber-400'
+                      ? 'text-[10px] text-warn'
                       : 'text-[10px] text-up'
                 }
               >
@@ -226,11 +226,14 @@ export function BackupCard() {
         </div>
       </div>
 
-      {msg && (
-        <div className={`mt-3 text-[11px] ${msg.tone === 'ok' ? 'text-emerald-400' : 'text-up'}`}>
-          {msg.text}
-        </div>
-      )}
+      {/* D6：常驻容器；成功后走 status（礼貌播报），失败用 alert（立即播报） */}
+      <div
+        className={`text-[11px] ${msg ? 'mt-3 ' : ''}${msg?.tone === 'ok' ? 'text-down' : 'text-up'}`}
+        role={msg && msg.tone !== 'ok' ? 'alert' : 'status'}
+        aria-live={msg && msg.tone !== 'ok' ? undefined : 'polite'}
+      >
+        {msg?.text ?? ''}
+      </div>
     </Card>
   );
 }

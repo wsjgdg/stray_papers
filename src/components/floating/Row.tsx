@@ -19,9 +19,9 @@ export function Row({
 }) {
   const colorClass =
     tone === 'alert'
-      ? 'text-[#ef6b6b]'
+      ? 'text-up'
       : tone === 'warn'
-        ? 'text-[#e6b15e]'
+        ? 'text-warn'
         : accent
           ? 'text-accent'
           : 'text-ink';
@@ -30,7 +30,7 @@ export function Row({
       className={
         'flex items-center justify-between gap-2 rounded px-1 ' +
         (active ? 'ring-1 ring-accent/60 ' : '') +
-        (onClick ? 'cursor-pointer hover:bg-[#16223a]' : '')
+        (onClick ? 'cursor-pointer hover:bg-hover' : '')
       }
       onClick={onClick}
       title={onClick ? '点击在主窗口打开该模型' : undefined}

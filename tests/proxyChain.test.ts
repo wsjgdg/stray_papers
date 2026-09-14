@@ -74,7 +74,9 @@ function call(
       (res) => {
         let chunks = '';
         res.on('data', (c) => (chunks += c));
-        res.on('end', () => resolve({ status: res.statusCode ?? 0, headers: res.headers, body: chunks }));
+        res.on('end', () =>
+          resolve({ status: res.statusCode ?? 0, headers: res.headers, body: chunks }),
+        );
       },
     );
     req.on('error', reject);
@@ -116,7 +118,10 @@ describe('unifiedRouter: B1 fallback chain', () => {
     assert.equal(r.headers['x-route-attempts'], '2');
     assert.equal(JSON.parse(r.body).choices[0].message.content, 'ok');
     assert.equal(upstreamHits.filter((h) => h.includes('key-a')).length, 1, 'a 仅尝试一次');
-    assert.ok(upstreamHits.some((h) => h.includes('key-b')), 'b 被回退尝试');
+    assert.ok(
+      upstreamHits.some((h) => h.includes('key-b')),
+      'b 被回退尝试',
+    );
   });
 
   it('explicit x-lb-provider header does NOT fall back', async () => {
@@ -145,7 +150,10 @@ describe('unifiedRouter: B1 fallback chain', () => {
     });
     assert.equal(r.status, 200);
     assert.equal(r.headers['x-route-used'], 'a');
-    assert.ok(upstreamHits.some((h) => h.includes('model=gpt-4o')), '上游收到去掉前缀的模型名 gpt-4o');
+    assert.ok(
+      upstreamHits.some((h) => h.includes('model=gpt-4o')),
+      '上游收到去掉前缀的模型名 gpt-4o',
+    );
     assert.ok(!upstreamHits.some((h) => h.includes('a/gpt-4o')), '上游不应收到带前缀的模型名');
   });
 

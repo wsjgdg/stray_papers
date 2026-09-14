@@ -37,7 +37,7 @@ export function CachePanel({
       }
     >
       <div className="flex flex-wrap items-center gap-4 text-[11px]">
-        <span className={stats.enabled ? 'text-emerald-400' : 'text-muted'}>
+        <span className={stats.enabled ? 'text-down' : 'text-muted'}>
           状态: {stats.enabled ? '启用' : '关闭'}
         </span>
         <span className="text-muted">TTL: {Math.round(stats.ttlMs / 1000)}s</span>
