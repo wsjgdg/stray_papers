@@ -20,6 +20,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { SearchPalette } from './components/SearchPalette';
 import { useVisibilityPolling } from './hooks/useVisibilityPolling';
 import { useTheme } from './hooks/useTheme';
+import { useI18n, type ResourceKey } from './i18n';
 
 // 路由级代码分割：各 tab 组件按需加载，首屏只拉取入口 + 概览页。
 // 同名默认导出组件（Dashboard/ModelTable/...）均支持 React.lazy。
@@ -32,13 +33,13 @@ const ProxyPanel = lazy(() => import('./components/proxy/Proxy'));
 
 type TabId = 'dashboard' | 'models' | 'boards' | 'consoles' | 'cost' | 'proxy';
 
-const TABS: { id: TabId; label: string; icon: typeof LayoutDashboard }[] = [
-  { id: 'dashboard', label: '概览', icon: LayoutDashboard },
-  { id: 'models', label: '模型库', icon: Table2 },
-  { id: 'boards', label: '能力评估', icon: BarChart3 },
-  { id: 'consoles', label: '控制台 & 探针', icon: Terminal },
-  { id: 'proxy', label: '本地代理', icon: Network },
-  { id: 'cost', label: '成本计算', icon: Calculator },
+const TABS: { id: TabId; i18nKey: ResourceKey; icon: typeof LayoutDashboard }[] = [
+  { id: 'dashboard', i18nKey: 'tab.dashboard', icon: LayoutDashboard },
+  { id: 'models', i18nKey: 'tab.models', icon: Table2 },
+  { id: 'boards', i18nKey: 'tab.boards', icon: BarChart3 },
+  { id: 'consoles', i18nKey: 'tab.consoles', icon: Terminal },
+  { id: 'proxy', i18nKey: 'tab.proxy', icon: Network },
+  { id: 'cost', i18nKey: 'tab.cost', icon: Calculator },
 ];
 
 export default function App() {
@@ -58,6 +59,7 @@ export default function App() {
   const [searchOpen, setSearchOpen] = useState(false);
   // D3：亮/暗主题（跟随系统 / 手动切换，持久化到 localStorage）
   const { resolved: themeResolved, mode: themeMode, toggle: toggleTheme } = useTheme();
+  const { t, locale, setLocale } = useI18n();
 
   const load = useCallback(async (force: boolean) => {
     abortRef.current?.abort();
@@ -123,9 +125,7 @@ export default function App() {
           </span>
           <div className="min-w-0">
             <h1 className="truncate text-sm font-semibold text-ink">LLM Workbench</h1>
-            <p className="truncate text-[11px] text-muted">
-              大模型能力评估 · API 控制台导航 · 实时数据
-            </p>
+            <p className="truncate text-[11px] text-muted">{t('app.subtitle')}</p>
           </div>
         </div>
 
@@ -133,31 +133,35 @@ export default function App() {
           {snapshot && (
             <>
               <Chip tone={healthy === totalSources ? 'down' : 'warn'}>
-                数据源 {healthy}/{totalSources}
+                {t('app.sources', { a: healthy, b: totalSources })}
               </Chip>
-              <Chip>{snapshot.models.length} 模型</Chip>
-              <Chip>{snapshot.leaderboards.length} 榜单</Chip>
+              <Chip>{t('app.modelsCount', { n: snapshot.models.length })}</Chip>
+              <Chip>{t('app.boardsCount', { n: snapshot.leaderboards.length })}</Chip>
               <Chip tone={snapshot.meta.stale ? 'warn' : 'default'}>
-                {snapshot.meta.stale ? '陈旧缓存' : '已更新'} {fmtTime(snapshot.generatedAt)}
+                {snapshot.meta.stale ? t('app.staleCache') : t('app.updated')}{' '}
+                {fmtTime(snapshot.generatedAt)}
               </Chip>
             </>
           )}
           <button
             className="btn"
-            title={`切换主题（当前：${themeResolved === 'dark' ? '深色' : '浅色'}${themeMode === 'system' ? ' · 跟随系统' : ''}）`}
-            aria-label="切换深浅色主题"
+            title={t('app.themeTitle', {
+              mode: themeResolved === 'dark' ? t('app.dark') : t('app.light'),
+              sys: themeMode === 'system' ? t('app.followSystem') : '',
+            })}
+            aria-label={t('app.themeAria')}
             onClick={toggleTheme}
           >
             {themeResolved === 'dark' ? <Sun size={12} /> : <Moon size={12} />}
-            {themeResolved === 'dark' ? '浅色' : '深色'}
+            {themeResolved === 'dark' ? t('app.light') : t('app.dark')}
           </button>
           <button className="btn btn-primary" onClick={() => void load(true)} disabled={refreshing}>
             <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
-            {refreshing ? '强制刷新中' : '强制刷新'}
+            {refreshing ? t('app.refreshing') : t('app.refresh')}
           </button>
           <button
             className="btn"
-            title="在独立窗口打开实时统计浮窗（关闭主窗口后仍可显示）"
+            title={t('app.floatTitle')}
             onClick={() => {
               // Electron 内：直接让主进程创建原生常驻浮窗（alwaysOnTop / frameless）
               const api = window.electron;
@@ -176,19 +180,31 @@ export default function App() {
             }}
           >
             <ExternalLink size={12} />
-            独立浮窗
+            {t('app.float')}
           </button>
           {isElectron && (
-            <button className="btn" title="浮窗与通知设置" onClick={() => setShowSettings(true)}>
+            <button
+              className="btn"
+              title={t('app.settingsTitle')}
+              onClick={() => setShowSettings(true)}
+            >
               <Calculator size={12} />
-              设置
+              {t('app.settings')}
             </button>
           )}
+          <button
+            className="btn"
+            title={t('app.langTitle')}
+            aria-label={t('app.langTitle')}
+            onClick={() => setLocale(locale === 'zh' ? 'en' : 'zh')}
+          >
+            {locale === 'zh' ? 'EN' : '中'}
+          </button>
         </div>
       </header>
 
       <nav className="flex shrink-0 gap-1 overflow-x-auto border-b border-edge bg-panel px-4 py-2">
-        {TABS.map(({ id, label, icon: Icon }) => (
+        {TABS.map(({ id, i18nKey, icon: Icon }) => (
           <button
             key={id}
             onClick={() => setTab(id)}
@@ -198,18 +214,18 @@ export default function App() {
             )}
           >
             <Icon size={13} />
-            {label}
+            {t(i18nKey)}
           </button>
         ))}
       </nav>
 
       <main className="min-h-0 flex-1">
-        {loading && <Spinner label="正在拉取实时数据…" />}
+        {loading && <Spinner label={t('app.loadingData')} />}
         {!loading && error && !snapshot && (
           <ErrorState error={error} onRetry={() => void load(true)} />
         )}
         {snapshot && (
-          <Suspense fallback={<Spinner label="加载视图…" />}>
+          <Suspense fallback={<Spinner label={t('app.loadingView')} />}>
             {tab === 'dashboard' && <Dashboard snapshot={snapshot} />}
             {tab === 'models' && (
               <div className="h-full min-h-0 p-4">
@@ -251,8 +267,8 @@ export default function App() {
       )}
 
       <footer className="flex shrink-0 flex-wrap items-center gap-3 border-t border-edge bg-panel px-4 py-2 text-[11px] text-muted">
-        <span>数据源：OpenRouter Models API · Artificial Analysis Leaderboards</span>
-        <span className="ml-auto">服务端缓存 10 分钟 · 前端每 30 秒轮询一次快照</span>
+        <span>{t('app.footerSource')}</span>
+        <span className="ml-auto">{t('app.footerPoll')}</span>
       </footer>
     </div>
   );
