@@ -32,10 +32,10 @@ describe('usageStore', () => {
     const s = await fresh();
     s.initUsageStore();
     const ts = new Date(2026, 8, 14, 12).getTime(); // 本地 2026-09-14
-    s.recordUsage(ts, 'openai', 'gpt-4o', 100, 50, 10, 0.5);
-    s.recordUsage(ts, 'openai', 'gpt-4o', 30, null, null, 0.2);
-    s.recordUsage(ts, 'openai', 'gpt-4o-mini', 5, 5, null, 0.01);
-    s.recordUsage(ts + 86_400_000, 'anthropic', 'claude', 1, 1, null, 1);
+    s.recordUsage(ts, 'openai', 'gpt-4o', null, 100, 50, 10, 0.5);
+    s.recordUsage(ts, 'openai', 'gpt-4o', null, 30, null, null, 0.2);
+    s.recordUsage(ts, 'openai', 'gpt-4o-mini', null, 5, 5, null, 0.01);
+    s.recordUsage(ts + 86_400_000, 'anthropic', 'claude', null, 1, 1, null, 1);
     const rows = s.usageSpendSources();
     expect(rows).toHaveLength(3);
     const gpt = rows.find((r) => r.model === 'gpt-4o')!;
@@ -49,7 +49,7 @@ describe('usageStore', () => {
     let s = await fresh();
     s.initUsageStore();
     const ts = new Date(2026, 8, 14, 12).getTime();
-    s.recordUsage(ts, 'openai', 'gpt-4o', 100, 50, 10, 0.5);
+    s.recordUsage(ts, 'openai', 'gpt-4o', null, 100, 50, 10, 0.5);
     s.flush();
 
     // 模拟进程重启：重置模块注册表后重新加载 + init
@@ -65,7 +65,7 @@ describe('usageStore', () => {
   it('stopUsageStore 强制落盘（不需要显式 flush）', async () => {
     let s = await fresh();
     s.initUsageStore();
-    s.recordUsage(Date.now(), 'openai', 'm', 1, 1, null, 0.1);
+    s.recordUsage(Date.now(), 'openai', 'm', null, 1, 1, null, 0.1);
     const file = path.join(tmpHome, 'usage-daily.json'); // LLM_WORKBENCH_HOME 即数据目录本身（无子目录）
     expect(fs.existsSync(file)).toBe(false); // 尚未到节流周期
     s.stopUsageStore();
@@ -81,8 +81,8 @@ describe('usageStore', () => {
     const s = await fresh();
     s.initUsageStore();
     const now = Date.now();
-    s.recordUsage(now, 'openai', 'new', 1, 1, null, 1);
-    s.recordUsage(now - 91 * 86_400_000, 'openai', 'old', 1, 1, null, 1);
+    s.recordUsage(now, 'openai', 'new', null, 1, 1, null, 1);
+    s.recordUsage(now - 91 * 86_400_000, 'openai', 'old', null, 1, 1, null, 1);
     s.flush();
     const days = s.usageSpendSources().map((r) => new Date(r.ts).getDate());
     expect(days).toHaveLength(1);

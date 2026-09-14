@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { Card, Empty, Spinner } from '../../ui';
 import { Stat, fmtCost, type Currency } from './shared';
 import { CachePanel } from './CachePanel';
 import { BudgetBar } from './BudgetBar';
+import { fetchUsageByTag, type UsageByTagRow } from '../../api';
 import { useProxyOverview } from '../../hooks/useProxyOverview';
 
 // ───────── 实时指标 ─────────
@@ -84,6 +85,84 @@ export function MetricsPanel() {
           </Card>
         ))}
       </div>
+
+      <TagSpendCard />
     </div>
+  );
+}
+
+// ───────── B2：按调用标签（x-lb-tag）归集成本 ─────────
+function TagSpendCard() {
+  const [rows, setRows] = useState<UsageByTagRow[] | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchUsageByTag(30)
+      .then((r) => setRows(r.rows))
+      .catch((e) => setErr((e as Error).message));
+  }, []);
+
+  if (rows === null) return null;
+  if (rows.length === 0)
+    return (
+      <Card
+        title="按标签归集成本（B2）"
+        subtitle="客户端带 x-lb-tag 头即可按项目/团队拆分成本；未带标签的调用归入 (untagged)"
+      >
+        <div className="text-[11px] text-muted">
+          暂无带标签的用量。在请求头加入 <code className="text-accent">x-lb-tag: proj-a</code>{' '}
+          后，这里会按标签汇总请求数 / token / 成本。
+        </div>
+      </Card>
+    );
+
+  return (
+    <Card
+      title="按标签归集成本（B2）"
+      subtitle="多项目共用一套 Key 时按 x-lb-tag 拆分成本；CSV 导出已含 tag 列"
+      right={
+        <a className="btn btn-sm" href="/api/proxy/metrics/export?format=csv&days=30" download>
+          导出 CSV（含 tag）
+        </a>
+      }
+    >
+      {err && <div className="mb-2 text-[11px] text-up">{err}</div>}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[560px] text-[11px]">
+          <thead className="bg-[#0e1728] text-muted">
+            <tr>
+              <th className="px-2 py-1.5 text-left">标签</th>
+              <th className="px-2 py-1.5 text-right">请求</th>
+              <th className="px-2 py-1.5 text-right">输入 tok</th>
+              <th className="px-2 py-1.5 text-right">输出 tok</th>
+              <th className="px-2 py-1.5 text-right">缓存命中 tok</th>
+              <th className="px-2 py-1.5 text-right">成本</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.tag} className="border-t border-edge">
+                <td className="px-2 py-1 font-mono text-accent">{r.tag}</td>
+                <td className="px-2 py-1 text-right tabular-nums text-ink">
+                  {r.requests.toLocaleString()}
+                </td>
+                <td className="px-2 py-1 text-right tabular-nums text-ink">
+                  {r.inputTokens.toLocaleString()}
+                </td>
+                <td className="px-2 py-1 text-right tabular-nums text-ink">
+                  {r.outputTokens.toLocaleString()}
+                </td>
+                <td className="px-2 py-1 text-right tabular-nums text-accent">
+                  {r.cacheReadTokens.toLocaleString()}
+                </td>
+                <td className="px-2 py-1 text-right tabular-nums font-medium text-ink">
+                  ${r.costUsd.toFixed(4)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
   );
 }

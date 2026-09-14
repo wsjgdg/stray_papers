@@ -131,6 +131,7 @@ export interface ProxyLog {
   requestId?: string | null;
   keyMask?: string | null;
   fromCache?: boolean;
+  tag?: string | null;
 }
 
 export interface RateSample {
@@ -499,7 +500,9 @@ export async function fetchRouting(): Promise<{ routing: RoutingConfig | null }>
 }
 
 /** 写入（整体覆盖）或清除（传 null）模型路由配置 */
-export async function saveRouting(routing: RoutingConfig | null): Promise<{ routing: RoutingConfig | null }> {
+export async function saveRouting(
+  routing: RoutingConfig | null,
+): Promise<{ routing: RoutingConfig | null }> {
   return request<{ routing: RoutingConfig | null }>('/api/proxy/routing', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -543,4 +546,23 @@ export async function fetchLogByRequestId(requestId: string): Promise<ProxyLog |
   } catch {
     return null; // 日志可能已被环形缓冲挤出；对比页降级用响应体自带的 usage
   }
+}
+
+// ───────── B2：按调用标签聚合支出 ─────────
+export interface UsageByTagRow {
+  tag: string;
+  requests: number;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  costUsd: number;
+}
+
+export async function fetchUsageByTag(days = 30): Promise<{
+  rows: UsageByTagRow[];
+  generatedAt: string;
+}> {
+  return request<{ rows: UsageByTagRow[]; generatedAt: string }>(
+    `/api/proxy/usage/by-tag?days=${days}`,
+  );
 }

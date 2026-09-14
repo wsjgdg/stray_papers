@@ -7,6 +7,7 @@ export interface SpendRow {
   day: string; // 本地日期 YYYY-MM-DD
   provider: string;
   model: string;
+  tag: string; // B2：调用标签（未带标签为 '(untagged)'）
   requests: number;
   inputTokens: number;
   outputTokens: number;
@@ -17,7 +18,14 @@ export interface SpendRow {
 // 聚合只依赖这些字段，测试无需构造完整 CallLog
 export type SpendSource = Pick<
   CallLog,
-  'ts' | 'provider' | 'model' | 'inputTokens' | 'outputTokens' | 'cacheReadTokens' | 'costUsd'
+  | 'ts'
+  | 'provider'
+  | 'model'
+  | 'tag'
+  | 'inputTokens'
+  | 'outputTokens'
+  | 'cacheReadTokens'
+  | 'costUsd'
 >;
 
 function startOfDay(ts: number): number {
@@ -39,13 +47,15 @@ export function aggregateSpend(logs: SpendSource[], opts: { days?: number } = {}
   for (const log of logs) {
     if (floorTs !== null && log.ts < floorTs) continue;
     const day = todayKey(new Date(log.ts));
-    const key = `${day}|${log.provider}|${log.model}`;
+    const tag = log.tag ?? '(untagged)';
+    const key = `${day}|${log.provider}|${log.model}|${tag}`;
     let row = map.get(key);
     if (!row) {
       row = {
         day,
         provider: log.provider,
         model: log.model,
+        tag,
         requests: 0,
         inputTokens: 0,
         outputTokens: 0,
@@ -81,6 +91,7 @@ const CSV_HEADER = [
   'day',
   'provider',
   'model',
+  'tag',
   'requests',
   'inputTokens',
   'outputTokens',
@@ -96,6 +107,7 @@ export function spendToCsv(rows: SpendRow[]): string {
         r.day,
         r.provider,
         r.model,
+        r.tag,
         r.requests,
         r.inputTokens,
         r.outputTokens,

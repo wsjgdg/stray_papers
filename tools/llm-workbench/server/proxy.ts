@@ -92,7 +92,14 @@ export async function proxyRequest(
   // chain 模式：配置类错误（厂商不存在/未启用/无 baseUrl）不写响应，交调用方换下一个厂商
   const fail = (status: number, error: string, retryable = false): ProxyAttempt => {
     if (!opts.chain) res.status(status).json({ error });
-    return { providerId, committed: false, settled: opts.chain ? false : true, status, error, retryable };
+    return {
+      providerId,
+      committed: false,
+      settled: opts.chain ? false : true,
+      status,
+      error,
+      retryable,
+    };
   };
 
   if (!target) return fail(404, `未知厂商: ${providerId}（自定义厂商请先在配置页添加）`);
@@ -174,6 +181,11 @@ export async function proxyRequest(
     method: req.method,
     path: '/' + wildcard,
     routeChain: opts.routeChain,
+    // B2：调用标签（多项目共用一套 Key 时按 tag 归集成本）
+    tag:
+      typeof req.headers['x-lb-tag'] === 'string'
+        ? (req.headers['x-lb-tag'] as string).trim() || null
+        : null,
   });
 
   // D3 fail-closed：开启 blockOnExceed 且当日预算已超限时直接拒绝（402），不再打上游。
@@ -187,7 +199,14 @@ export async function proxyRequest(
       res.status(402).json({ error: msg });
       finalize(mkInput(), 402, {}, 0, '预算超限拦截（本地）', false, 0);
       // 预算超限：fail-closed，直接拒绝，不换厂商重试
-      return { providerId, committed: false, settled: true, status: 402, error: msg, retryable: false };
+      return {
+        providerId,
+        committed: false,
+        settled: true,
+        status: 402,
+        error: msg,
+        retryable: false,
+      };
     }
   }
 
@@ -205,7 +224,14 @@ export async function proxyRequest(
     res.send(cached.body);
     finalize(mkInput(), cached.status, {}, cached.body.length, null, true, 0);
     if (lookup.state === 'stale') triggerRefresh(ck);
-    return { providerId, committed: true, settled: true, status: cached.status, error: null, retryable: false };
+    return {
+      providerId,
+      committed: true,
+      settled: true,
+      status: cached.status,
+      error: null,
+      retryable: false,
+    };
   }
 
   const translator = createStreamTranslator(format);
@@ -396,7 +422,14 @@ export async function proxyRequest(
   const rot = await rotateKeys(providerId, pool, (key, retries) => tryKey(key, retries));
   if (rot.committed) {
     // tryKey 已写出响应（成功或流式已开启）
-    return { providerId, committed: true, settled: true, status: rot.last?.status ?? null, error: null, retryable: false };
+    return {
+      providerId,
+      committed: true,
+      settled: true,
+      status: rot.last?.status ?? null,
+      error: null,
+      retryable: false,
+    };
   }
   // B3：所有 Key 都在冷却 / 坏 Key 状态 → 明确提示而非泛泛「无可用 Key」
   if (!rot.triedAny) {
@@ -404,19 +437,47 @@ export async function proxyRequest(
     finalize(mkInput(), null, {}, 0, 'all-keys-cooling', false, 0);
     if (!opts.chain) {
       res.status(503).json({ error: msg });
-      return { providerId, committed: false, settled: true, status: 503, error: msg, retryable: true };
+      return {
+        providerId,
+        committed: false,
+        settled: true,
+        status: 503,
+        error: msg,
+        retryable: true,
+      };
     }
     // chain 模式：本厂商冷却，交给调用方换下一个厂商
-    return { providerId, committed: false, settled: false, status: 503, error: msg, retryable: true };
+    return {
+      providerId,
+      committed: false,
+      settled: false,
+      status: 503,
+      error: msg,
+      retryable: true,
+    };
   }
   if (!rot.last) {
     const msg = '无可用 Key';
     finalize(mkInput(), null, {}, 0, '无可用 Key', false, 0);
     if (!opts.chain) {
       res.status(502).json({ error: msg });
-      return { providerId, committed: false, settled: true, status: 502, error: msg, retryable: false };
+      return {
+        providerId,
+        committed: false,
+        settled: true,
+        status: 502,
+        error: msg,
+        retryable: false,
+      };
     }
-    return { providerId, committed: false, settled: false, status: 502, error: msg, retryable: false };
+    return {
+      providerId,
+      committed: false,
+      settled: false,
+      status: 502,
+      error: msg,
+      retryable: false,
+    };
   }
   // 全部 key 用尽或遇到不可重试错误：向客户端回写错误（非 chain）或交调用方汇总（chain）
   const st = rot.last.status ?? 502;
@@ -424,9 +485,23 @@ export async function proxyRequest(
   finalize(mkInput(), st, {}, 0, msg, false, rot.retries);
   if (!opts.chain) {
     res.status(st).json({ error: msg });
-    return { providerId, committed: false, settled: true, status: st, error: msg, retryable: rot.last.retryable };
+    return {
+      providerId,
+      committed: false,
+      settled: true,
+      status: st,
+      error: msg,
+      retryable: rot.last.retryable,
+    };
   }
-  return { providerId, committed: false, settled: false, status: st, error: msg, retryable: rot.last.retryable };
+  return {
+    providerId,
+    committed: false,
+    settled: false,
+    status: st,
+    error: msg,
+    retryable: rot.last.retryable,
+  };
 }
 
 // 通用反向代理：/api/proxy/:provider/<path> → provider.apiBase/<path>
@@ -455,7 +530,9 @@ unifiedRouter.all('/*', async (req: Request, res: Response) => {
     (req.headers['x-lb-provider'] as string) || (req.headers['x-provider'] as string) || '';
   // 2) 从模型名解析 vendor/model 前缀
   const rawModel =
-    typeof req.body === 'object' && req.body && typeof (req.body as { model?: unknown }).model === 'string'
+    typeof req.body === 'object' &&
+    req.body &&
+    typeof (req.body as { model?: unknown }).model === 'string'
       ? (req.body as { model: string }).model
       : '';
   let modelName = rawModel;

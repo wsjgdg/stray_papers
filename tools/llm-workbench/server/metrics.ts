@@ -32,6 +32,7 @@ export interface CallLog {
   fromCache?: boolean; // 是否由响应缓存直接回放（未真正调用上游）
   keySwitches?: number; // 本次调用发生的关键切换次数（多 key 轮询/失败切换）
   routeChain?: string[]; // B1：本次请求规划的完整回退链（模型路由），便于回溯 fallback 路径
+  tag?: string | null; // B2：调用标签（x-lb-tag 头），多项目共用 Key 时按 tag 归集成本
 }
 
 export interface ProviderMetrics {
@@ -158,6 +159,7 @@ export function loadPersistedLogs(filter: LogFilter = {}): CallLog[] {
   }
   let result = all.slice().reverse();
   if (filter.provider) result = result.filter((l) => l.provider === filter.provider);
+  if (filter.tag) result = result.filter((l) => (l.tag ?? null) === filter.tag);
   if (filter.status === 'ok')
     result = result.filter((l) => l.status !== null && l.status >= 200 && l.status < 400);
   if (filter.status === 'error')
@@ -235,11 +237,12 @@ export function recordCall(log: Omit<CallLog, 'id' | 'costUsd'>): CallLog {
     const keys = [...dailyBuckets.keys()].sort();
     while (dailyBuckets.size > DAILY_TTL_DAYS) dailyBuckets.delete(keys.shift()!);
   }
-  // D4：日粒度用量落盘（provider×model×day，保留 90 天）——跨重启的成本/导出数据源
+  // D4：日粒度用量落盘（provider×model×tag×day，保留 90 天）——跨重启的成本/导出数据源
   recordUsage(
     log.ts,
     log.provider,
     log.model,
+    log.tag ?? null,
     log.inputTokens,
     log.outputTokens,
     log.cacheReadTokens,
@@ -412,12 +415,14 @@ export function getSummary(): ProxySummary {
 export interface LogFilter {
   provider?: string;
   status?: 'ok' | 'error';
+  tag?: string;
   limit?: number;
 }
 
 export function getLogs(filter: LogFilter = {}): CallLog[] {
   let result = logs.slice().reverse();
   if (filter.provider) result = result.filter((l) => l.provider === filter.provider);
+  if (filter.tag) result = result.filter((l) => (l.tag ?? null) === filter.tag);
   if (filter.status === 'ok')
     result = result.filter((l) => l.status !== null && l.status >= 200 && l.status < 400);
   if (filter.status === 'error')

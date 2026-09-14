@@ -100,6 +100,7 @@ export function LogsPanel({
                 <th className="px-2 py-1.5 text-left">ReqID</th>
                 <th className="px-2 py-1.5 text-left">厂商</th>
                 <th className="px-2 py-1.5 text-left">模型</th>
+                <th className="px-2 py-1.5 text-left">标签</th>
                 <th className="px-2 py-1.5 text-left">路径</th>
                 <th className="px-2 py-1.5 text-left">状态</th>
                 <th className="px-2 py-1.5 text-right">延迟</th>
@@ -130,6 +131,15 @@ export function LogsPanel({
                     </span>
                   </td>
                   <td className="px-2 py-1 text-ink">{l.model}</td>
+                  <td className="px-2 py-1">
+                    {l.tag ? (
+                      <span className="rounded bg-[#1d2a44] px-1.5 py-0.5 font-mono text-[10px] text-accent">
+                        {l.tag}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-muted">—</span>
+                    )}
+                  </td>
                   <td className="px-2 py-1 text-muted">
                     {l.method} {l.path}
                   </td>

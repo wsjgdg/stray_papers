@@ -1,6 +1,7 @@
-// D4：日粒度用量持久化（provider × model × day），解决指标"重启失忆"。
+// D4：日粒度用量持久化（provider × model × tag × day），解决指标"重启失忆"。
 // 数据文件 <dataDir>/usage-daily.json；recordCall 时累加，脏标记 + 5s 节流落盘，
 // stopUsageStore 强制 flush；保留 RETENTION_DAYS 天（init/flush 时裁剪）。
+// B2：新增 tag 维度（多项目共用一套 Key 时按 tag 归集成本）；未带标签记为 UNTAGGED。
 // 注意：本模块不 import metrics（避免循环依赖），dayKey 与 metrics.todayKey 保持同口径（本地日期）。
 import fs from 'node:fs';
 import path from 'node:path';
@@ -14,8 +15,11 @@ export interface UsageCell {
   cost: number;
 }
 
-// day → provider → model → cell
-export type UsageData = Record<string, Record<string, Record<string, UsageCell>>>;
+/** 未携带 x-lb-tag 时的默认标签桶 */
+export const UNTAGGED = '(untagged)';
+
+// day → provider → model → tag → cell
+export type UsageData = Record<string, Record<string, Record<string, Record<string, UsageCell>>>>;
 
 const RETENTION_DAYS = 90;
 const FLUSH_INTERVAL_MS = 5000;
@@ -36,27 +40,37 @@ function localDayKey(d: Date): string {
 }
 
 // 校验并规范化磁盘数据：结构不对/字段非法的条目直接丢弃（宁可少算不可算错）
-function sanitize(raw: unknown): UsageData {
+export function sanitize(raw: unknown): UsageData {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
   const out: UsageData = {};
   const num = (v: unknown): number =>
     typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : 0;
+  const asCell = (cell: Record<string, unknown>): UsageCell => ({
+    requests: num(cell.requests),
+    input: num(cell.input),
+    output: num(cell.output),
+    cacheRead: num(cell.cacheRead),
+    cost: num(cell.cost),
+  });
   for (const [day, providers] of Object.entries(raw as Record<string, unknown>)) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !providers || typeof providers !== 'object') continue;
     for (const [provider, models] of Object.entries(providers as Record<string, unknown>)) {
       if (!models || typeof models !== 'object') continue;
-      for (const [model, cell] of Object.entries(models as Record<string, unknown>)) {
-        if (!cell || typeof cell !== 'object') continue;
-        const c = cell as Record<string, unknown>;
-        const bucket = (out[day] ??= {});
-        const p = (bucket[provider] ??= {});
-        p[model] = {
-          requests: num(c.requests),
-          input: num(c.input),
-          output: num(c.output),
-          cacheRead: num(c.cacheRead),
-          cost: num(c.cost),
-        };
+      const bucket = (out[day] ??= {});
+      const p = (bucket[provider] ??= {});
+      for (const [model, val] of Object.entries(models as Record<string, unknown>)) {
+        if (!val || typeof val !== 'object') continue;
+        // 兼容旧结构：day→provider→model→cell（无 tag 层）时，折叠进 UNTAGGED 桶
+        if (typeof (val as Record<string, unknown>).requests === 'number') {
+          (p[model] ??= {})[UNTAGGED] = asCell(val as Record<string, unknown>);
+          continue;
+        }
+        // 新结构：day→provider→model→tag→cell
+        const tagMap = (p[model] ??= {});
+        for (const [tag, cell] of Object.entries(val as Record<string, unknown>)) {
+          if (!cell || typeof cell !== 'object') continue;
+          tagMap[tag] = asCell(cell as Record<string, unknown>);
+        }
       }
     }
   }
@@ -96,14 +110,21 @@ export function recordUsage(
   ts: number,
   provider: string,
   model: string,
+  tag: string | null,
   input: number | null,
   output: number | null,
   cacheRead: number | null,
   costUsd: number,
 ): void {
   const day = localDayKey(new Date(ts));
-  const p = ((data[day] ??= {})[provider] ??= {});
-  const cell = (p[model] ??= { requests: 0, input: 0, output: 0, cacheRead: 0, cost: 0 });
+  const tagKey = tag && tag.trim() ? tag.trim() : UNTAGGED;
+  const cell = ((((data[day] ??= {})[provider] ??= {})[model] ??= {})[tagKey] ??= {
+    requests: 0,
+    input: 0,
+    output: 0,
+    cacheRead: 0,
+    cost: 0,
+  });
   cell.requests += 1;
   cell.input += input ?? 0;
   cell.output += output ?? 0;
@@ -133,6 +154,7 @@ export function usageSpendSources(): {
   ts: number;
   provider: string;
   model: string;
+  tag: string;
   inputTokens: number;
   outputTokens: number;
   cacheReadTokens: number;
@@ -142,6 +164,7 @@ export function usageSpendSources(): {
     ts: number;
     provider: string;
     model: string;
+    tag: string;
     inputTokens: number;
     outputTokens: number;
     cacheReadTokens: number;
@@ -150,18 +173,69 @@ export function usageSpendSources(): {
   for (const [day, providers] of Object.entries(data)) {
     const ts = new Date(`${day}T00:00:00`).getTime();
     for (const [provider, models] of Object.entries(providers)) {
-      for (const [model, cell] of Object.entries(models)) {
-        out.push({
-          ts,
-          provider,
-          model,
-          inputTokens: cell.input,
-          outputTokens: cell.output,
-          cacheReadTokens: cell.cacheRead,
-          costUsd: cell.cost,
-        });
+      for (const [model, tags] of Object.entries(models)) {
+        for (const [tag, cell] of Object.entries(tags)) {
+          out.push({
+            ts,
+            provider,
+            model,
+            tag,
+            inputTokens: cell.input,
+            outputTokens: cell.output,
+            cacheReadTokens: cell.cacheRead,
+            costUsd: cell.cost,
+          });
+        }
       }
     }
   }
   return out;
+}
+
+export interface UsageByTagRow {
+  tag: string;
+  requests: number;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  costUsd: number;
+}
+
+/**
+ * 按 tag 聚合支出（B2：多项目共用一套 Key 时归集成本）。days>0 时仅统计最近 N 天。
+ * 未携带标签的调用归入 UNTAGGED。按成本降序。
+ */
+export function usageByTag(opts: { days?: number } = {}): UsageByTagRow[] {
+  const days = opts.days && opts.days > 0 ? opts.days : null;
+  const now = Date.now();
+  const floorTs = days !== null ? now - (days - 1) * 86_400_000 : null;
+  const map = new Map<string, UsageByTagRow>();
+  for (const [day, providers] of Object.entries(data)) {
+    const ts = new Date(`${day}T00:00:00`).getTime();
+    if (floorTs !== null && ts < floorTs) continue;
+    for (const models of Object.values(providers)) {
+      for (const tags of Object.values(models)) {
+        for (const [tag, cell] of Object.entries(tags)) {
+          let row = map.get(tag);
+          if (!row) {
+            row = {
+              tag,
+              requests: 0,
+              inputTokens: 0,
+              outputTokens: 0,
+              cacheReadTokens: 0,
+              costUsd: 0,
+            };
+            map.set(tag, row);
+          }
+          row.requests += cell.requests;
+          row.inputTokens += cell.input;
+          row.outputTokens += cell.output;
+          row.cacheReadTokens += cell.cacheRead;
+          row.costUsd += cell.cost;
+        }
+      }
+    }
+  }
+  return [...map.values()].sort((a, b) => b.costUsd - a.costUsd);
 }
