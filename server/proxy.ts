@@ -35,6 +35,7 @@ import {
   forwardHeaders,
   extractUsageFromObject,
   extractUsageFromSSE,
+  applyModelMapping,
   type Usage,
 } from './forwarding.js';
 import { registerCacheRefreshHandler } from './caching.js';
@@ -98,6 +99,8 @@ export async function proxyRequest(
         : '';
 
   const reqModel = (req.body as { model?: string } | undefined)?.model ?? '';
+  // 模型映射：请求模型名 → 上游实际模型名（未命中原样透传）
+  const upstreamModel = applyModelMapping(reqModel, entry.modelMapping);
   const streamRequested =
     (req.body as { stream?: boolean } | undefined)?.stream === true ||
     /"stream"\s*:\s*true/i.test(bodyStr);
@@ -111,18 +114,26 @@ export async function proxyRequest(
   let sendBody: string;
   if (format === 'openai') {
     upstreamUrl = joinUrl(baseUrl, wildcard) + search;
-    sendBody = bodyStr;
+    // 命中模型映射时改写请求体中的 model（整体重序列化，避免字符串替换误伤其他字段）
+    if (upstreamModel !== reqModel && typeof req.body === 'object' && req.body !== null) {
+      sendBody = JSON.stringify({ ...(req.body as Record<string, unknown>), model: upstreamModel });
+    } else {
+      sendBody = bodyStr;
+    }
   } else {
     const parsed = (typeof req.body === 'object' && req.body !== null ? req.body : {}) as Record<
       string,
       unknown
     >;
-    const model = typeof parsed.model === 'string' ? parsed.model : '';
+    const model = applyModelMapping(
+      typeof parsed.model === 'string' ? parsed.model : '',
+      entry.modelMapping,
+    );
     if (format === 'anthropic') {
-      sendBody = JSON.stringify(toAnthropicRequest(parsed));
+      sendBody = JSON.stringify(toAnthropicRequest({ ...parsed, model }));
       upstreamUrl = buildUpstreamUrl('anthropic', baseUrl, model, streamRequested);
     } else {
-      sendBody = JSON.stringify(toGeminiRequest(parsed));
+      sendBody = JSON.stringify(toGeminiRequest({ ...parsed, model }));
       upstreamUrl = buildUpstreamUrl('gemini', baseUrl, model, streamRequested);
     }
   }
@@ -133,7 +144,8 @@ export async function proxyRequest(
   const mkInput = (): FinalizeInput => ({
     t0,
     bodyStr,
-    reqModel,
+    // 记录上游实际模型名：命中模型映射时成本/用量按上游模型计价
+    reqModel: upstreamModel,
     providerId,
     requestId,
     keyMask,

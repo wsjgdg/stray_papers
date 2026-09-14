@@ -35,6 +35,7 @@ export interface ProviderConfig {
   enabledModels?: string[]; // 用户在清单中手动启用的子集；为空数组表示全部禁用
   retryOn?: number[]; // 触发换 key 重试的 HTTP 状态码集合；缺省 [401,403,429]
   timeoutMs?: number; // 上游请求超时（毫秒）；缺省非流式 180s、流式 600s
+  modelMapping?: Record<string, string>; // 模型映射：请求模型名 → 上游实际模型名，如 { "gpt-4o": "oai-gpt-4o" }；未命中原样透传
 }
 
 // 上游请求超时（毫秒）：per-provider 可覆盖；流式长生成默认放宽到 600s，非流式 180s。
@@ -419,6 +420,9 @@ export function maskConfig(cfg: ProxyConfig): {
       apiFormat: p.apiFormat,
       models: p.models,
       enabledModels: p.enabledModels,
+      retryOn: p.retryOn,
+      timeoutMs: p.timeoutMs,
+      modelMapping: p.modelMapping,
       // 只配了多 key 池（apiKey 为空）时也要给出掩码，避免 UI 显示「未配置」
       apiKeyMasked: maskKey(p.apiKey || resolveKeyPool(p)[0] || ''),
       hasKey: Boolean(p.apiKey) || (p.apiKeys?.length ?? 0) > 0,
@@ -450,6 +454,7 @@ export function upsertProvider(id: string, patch: Partial<ProviderConfig>): Prox
     enabledModels: patch.enabledModels !== undefined ? patch.enabledModels : prev.enabledModels,
     retryOn: patch.retryOn !== undefined ? patch.retryOn : prev.retryOn,
     timeoutMs: patch.timeoutMs !== undefined ? patch.timeoutMs : prev.timeoutMs,
+    modelMapping: patch.modelMapping !== undefined ? patch.modelMapping : prev.modelMapping,
   };
   saveConfig(cfg);
   return cfg;
@@ -461,6 +466,18 @@ export function deleteProvider(id: string): ProxyConfig {
   delete cfg.providers[id];
   saveConfig(cfg);
   return cfg;
+}
+
+/**
+ * 模型映射合法性：必须是「非空字符串 → 非空字符串」的平面映射。
+ * 空值视为未命中（转发时原样透传），因此在入口就拒绝，避免配置里留下无效项。
+ */
+export function isValidModelMapping(v: unknown): v is Record<string, string> {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return false;
+  return Object.entries(v as Record<string, unknown>).every(
+    ([k, val]) =>
+      k.trim().length > 0 && typeof val === 'string' && (val as string).trim().length > 0,
+  );
 }
 
 /** 批量导入：与现有配置做浅合并（不传的字段保留原值；传空字符串的 key 视为不修改） */
@@ -487,6 +504,7 @@ export function importConfig(partial: {
       enabledModels: p.enabledModels !== undefined ? p.enabledModels : prev.enabledModels,
       retryOn: p.retryOn !== undefined ? p.retryOn : prev.retryOn,
       timeoutMs: p.timeoutMs !== undefined ? p.timeoutMs : prev.timeoutMs,
+      modelMapping: p.modelMapping !== undefined ? p.modelMapping : prev.modelMapping,
     };
   }
   saveConfig(cfg);
