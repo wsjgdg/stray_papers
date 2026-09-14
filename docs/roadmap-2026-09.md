@@ -75,6 +75,8 @@
 - 测试：`tests/evals.test.ts`（18 例：结构校验/判分语义/存取与路径穿越/串行顺序/成本回填/错误与中断/汇总与 CSV/未注入回环立即报错/**真实回环 e2e 跑批 + 判官打分**）；全量 **238 tests / 32 files** 通过，`tsc -b --force` EXIT 0，`vite build` EXIT 0。
 - 已知限制：判官调用的成本未单独归到行上（行的成本只含被测调用），后续可在 run 上加 `judgeCostUsd`。
 
+**浏览器复测（真实 Chromium，非仅 tsc/build）**：`tsc-pass ≠ runtime-safe`，本批新增整块 UI，故用 Edge headless + CDP 走了一遍真实交互——启动 `tsx server/index.ts`（`NO_OPEN=1`）与 `vite`，驱动浏览器点「本地代理 → 评测」，断言：子页导航出现「评测」、面板渲染出「评测集 / 跑批历史」、集合列表含 `smoke` 示例、页面提示 `eval-results` 结果目录、**零 console 异常**（9/9 步通过）。截图存临时目录。注：沙箱里 `npm run dev` 会被 wsl.exe 黑名单拦截，需直接 `node node_modules/tsx/dist/cli.mjs server/index.ts` + `node node_modules/vite/bin/vite.js`。
+
 ---
 
 ## Phase D — 前端性能与体验（P2）
