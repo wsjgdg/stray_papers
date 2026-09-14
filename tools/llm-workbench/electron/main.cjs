@@ -516,6 +516,24 @@ function createTray() {
   });
 }
 
+// F2：自动更新。打包态后台静默检查 GitHub Release（由 electron-builder 生成的 latest.yml 驱动），
+// 有更新时经 electron-updater 弹系统通知，不强制安装、不打断启动。依赖未安装（CI/未装 node_modules）
+// 时优雅跳过，不影响启动。
+function setupAutoUpdater() {
+  if (!app.isPackaged) return;
+  if (process.env.LLMWB_NO_UPDATER) return;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { autoUpdater } = require('electron-updater');
+    autoUpdater.autoDownload = false; // 仅检查并通知；下载/安装由用户触发或下次启动
+    autoUpdater.checkForUpdatesAndNotify().catch(() => {
+      /* 网络不可达 / 无更新：静默 */
+    });
+  } catch {
+    /* electron-updater 未安装：跳过 */
+  }
+}
+
 // ── IPC：渲染进程（浮窗按钮 / App 按钮）控制窗口 ──
 ipcMain.on('float:open', () => floatWin && floatWin.show());
 ipcMain.on('float:close', () => floatWin && floatWin.hide());
@@ -658,6 +676,7 @@ if (!gotLock) {
     writeLog('BACKEND', ok ? 'health ok' : `health NOT ready within 15s (port ${ELECTRON_PORT})`);
     createWindows();
     createTray();
+    setupAutoUpdater(); // F2：后台静默检查更新（不阻塞 UI）
     applySettings(); // 应用透明度 + 全局快捷键 + 开机自启
     // 便携版无安装程序：按设置生成桌面快捷方式（每次启动都刷新；打包指向 exe，dev 指向 electron .）
     if (appSettings?.createDesktopShortcut) {
