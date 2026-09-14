@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Activity, GripHorizontal, X, ChevronDown, ChevronUp, Search } from 'lucide-react';
-import { type Pos, FOCUS_LABEL, FOCUS_NEXT, fmtTok, todayStr, spikeLevel } from './format';
+import {
+  type Pos,
+  type Tone,
+  FOCUS_LABEL,
+  FOCUS_NEXT,
+  fmtTok,
+  todayStr,
+  spikeLevel,
+  costSpikeText,
+} from './format';
 import { Sparkline } from './Sparkline';
 import { CostCurve } from './CostCurve';
 import { MenuItem } from './MenuItem';
@@ -91,6 +100,10 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
       `summary,outputTokens,${data?.todayOutputTokens ?? 0}`,
       `summary,cacheReadTokens,${data?.todayCacheReadTokens ?? 0}`,
       `summary,cacheHitRate,${data?.cacheHitRateToday ?? ''}`,
+      `summary,costSpikeLevel,${data?.costSpikeLevel ?? ''}`,
+      `summary,costSpikeRatio,${data?.costSpikeRatio ?? ''}`,
+      `summary,hourCostUsd,${data?.hourCostUsd ?? 0}`,
+      `summary,costBaselinePerHrUsd,${data?.costBaselinePerHrUsd ?? 0}`,
     ];
     costSeriesRef.current.forEach((v, i) => lines.push(`costSeries,${i},${v}`));
     [...modelFreq.current.values()]
@@ -152,6 +165,16 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
   const inLevel = spikeLevel(data?.rateHistory, 'inRate');
   const outLevel = spikeLevel(data?.rateHistory, 'outRate');
   const alertAny = inLevel === 'alert' || outLevel === 'alert';
+  // E3：成本异动（服务端判级，前端仅取色/措辞）
+  const costLevel: Tone = data?.costSpikeLevel ?? 'normal';
+  const costTone = costLevel === 'alert' ? 'text-up' : costLevel === 'warn' ? 'text-warn' : '';
+  const costTip = data
+    ? costSpikeText({
+        costSpikeLevel: costLevel,
+        costSpikeRatio: data.costSpikeRatio,
+        costSampleHours: data.costSampleHours,
+      })
+    : '成本异动：—';
 
   const style: React.CSSProperties = docked
     ? { width: '100%' }
@@ -183,7 +206,7 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
           {data ? `${data.inputRateTokS}/${data.outputRateTokS} t/s` : '—'}
         </span>
         <span className={hcSub}>·</span>
-        <span className="tabular-nums">
+        <span className={'tabular-nums ' + costTone}>
           ${data ? (data.todayCostUsd || 0).toFixed(4) : '0.0000'}
         </span>
         <span className={hcSub}>·</span>
@@ -421,11 +444,18 @@ export default function FloatingStats({ standalone = false }: { standalone?: boo
           </div>
           <div className="mt-1.5 flex items-center justify-between">
             <span className={'text-[10px] ' + sub}>当日成本</span>
-            <span className="tabular-nums">${data ? data.todayCostUsd.toFixed(4) : '0.0000'}</span>
+            <span className={'tabular-nums ' + costTone} title={costTip}>
+              ${data ? data.todayCostUsd.toFixed(4) : '0.0000'}
+              {costLevel === 'alert' ? ' ⚠' : costLevel === 'warn' ? ' ·' : ''}
+            </span>
           </div>
           {expanded && (
             <div className="mt-2 space-y-2 border-t border-edge pt-2">
               <div className={'text-[10px] ' + sub}>速率状态：{alertAny ? '⚠ 突增' : '正常'}</div>
+              <div className={'text-[10px] ' + (costTone || sub)}>
+                {costTip}
+                {data && data.costSampleHours > 0 ? `（样本 ${data.costSampleHours}h）` : ''}
+              </div>
 
               {/* 今日累计成本曲线（costSeries 为 todayCostUsd 单调递增采样） */}
               <div>

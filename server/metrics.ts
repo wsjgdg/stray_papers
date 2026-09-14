@@ -73,6 +73,11 @@ let nextId = 1;
 const RATE_HISTORY_MAX = 180;
 const rateHistory: { t: number; inRate: number; outRate: number }[] = [];
 
+// E3：小时成本环（key = 本地 'YYYY-MM-DDTHH'），用于成本异动告警。
+// 只在内存保留最近 25 小时（当前小时 + 24 个已完成小时）；重启后需重新积累基线。
+const HOUR_BUCKET_MAX = 25;
+const hourBuckets = new Map<string, { cost: number; requests: number }>();
+
 function todayKey(d = new Date()): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -80,7 +85,12 @@ function todayKey(d = new Date()): string {
   return `${y}-${m}-${day}`;
 }
 
-export { todayKey };
+function hourKey(d = new Date()): string {
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}`;
+}
+
+export { todayKey, hourKey };
 
 const agg: Map<
   string,
@@ -231,6 +241,16 @@ export function recordCall(log: Omit<CallLog, 'id' | 'costUsd'>): CallLog {
     log.cacheReadTokens,
     cost.total,
   );
+  // E3：按本地小时累计成本，作为成本异动告警的基线与当前值（仅内存，保留最近 25 小时）
+  const hk = hourKey(new Date(log.ts));
+  const hb = hourBuckets.get(hk) ?? { cost: 0, requests: 0 };
+  hb.cost += cost.total;
+  hb.requests += 1;
+  hourBuckets.set(hk, hb);
+  if (hourBuckets.size > HOUR_BUCKET_MAX) {
+    const hks = [...hourBuckets.keys()].sort();
+    while (hourBuckets.size > HOUR_BUCKET_MAX) hourBuckets.delete(hks.shift()!);
+  }
   a.latencies.push(log.latencyMs);
   if (a.latencies.length > AVG_SAMPLES) a.latencies.shift();
   if (log.inputTokens || log.outputTokens) {
@@ -333,6 +353,12 @@ export interface ProxySummary {
   recentModels: { model: string; provider: string; ts: number }[]; // 最近使用的模型
   rateHistory: RateSample[]; // 全局速率历史采样（服务端持久，重启清零）
   rateHistoryMax: number; // 历史采样容量（点）
+  // E3：成本异动（当前小时 vs 已完成小时基线）
+  hourCostUsd: number; // 当前小时累计成本（USD）
+  costBaselinePerHrUsd: number; // 基线（已完成小时每分钟成本中位数 × 60）
+  costSpikeRatio: number | null; // 折算每分钟成本 / 基线每分钟成本
+  costSpikeLevel: 'normal' | 'warn' | 'alert'; // ≥3× alert、≥1.8× warn
+  costSampleHours: number; // 参与基线的已完成小时数
 }
 
 /** 当前全局速率（供速率历史采样复用） */
@@ -373,6 +399,7 @@ export function getSummary(): ProxySummary {
   }
   const t = usageTodayTotals();
   const cacheHitRateToday = t.input > 0 ? Math.round((t.cacheRead / t.input) * 1000) / 1000 : null;
+  const spike = currentCostSpike();
   const recent = logs
     .slice()
     .reverse()
@@ -392,6 +419,11 @@ export function getSummary(): ProxySummary {
     recentModels: recent,
     rateHistory: getRateHistory(),
     rateHistoryMax: RATE_HISTORY_MAX,
+    hourCostUsd: spike.hourCostUsd,
+    costBaselinePerHrUsd: spike.baselinePerHourUsd,
+    costSpikeRatio: spike.ratio,
+    costSpikeLevel: spike.level,
+    costSampleHours: spike.sampleHours,
   };
 }
 
@@ -446,6 +478,7 @@ export function resetMetrics(): void {
   nextId = 1;
   agg.clear();
   rateHistory.length = 0;
+  hourBuckets.clear(); // E3：基线与当前小时同属内存态，重置时一并清空，避免残留基线误判
 }
 
 // ───────── D3：预算阈值（E1 泛化为日/月共用） ─────────
@@ -469,4 +502,105 @@ export function ratioLevel(usedUsd: number, limitUsd: number | null | undefined)
 /** 日预算阈值（D3 既有语义，等价于 ratioLevel；proxy.ts fail-closed 守卫使用） */
 export function budgetStatus(todayUsd: number, dailyUsd: number | null | undefined): BudgetStatus {
   return ratioLevel(todayUsd, dailyUsd);
+}
+
+// ───────── E3：成本异动告警 ─────────
+
+/** 当前小时至少要走过这么多分钟才判定（否则折算值在整点附近极不稳定） */
+export const COST_SPIKE_MIN_ELAPSED_MIN = 5;
+/** 至少要有这么多「有流量的已完成小时」才建立基线 */
+export const COST_SPIKE_MIN_BASELINE_HOURS = 3;
+/** 折算每分钟成本 / 基线每分钟成本 的告警阈值 */
+export const COST_SPIKE_ALERT_RATIO = 3;
+export const COST_SPIKE_WARN_RATIO = 1.8;
+/** 绝对下限：本小时成本低于此值不告警（避免清闲期一笔小额调用就触发） */
+export const COST_SPIKE_MIN_ALERT_USD = 0.01;
+
+export type CostSpikeReason =
+  | 'ok' // 已完成判定
+  | 'too-early' // 本小时刚开头，样本不足
+  | 'insufficient-hours' // 还没有足够的已完成小时做基线
+  | 'no-baseline' // 基线为 0（历史有流量但成本记不到）
+  | 'below-floor'; // 本小时成本低于绝对下限
+
+export interface CostSpikeStatus {
+  level: 'normal' | 'warn' | 'alert';
+  reason: CostSpikeReason;
+  hourKey: string; // 当前小时的 'YYYY-MM-DDTHH'
+  hourCostUsd: number; // 当前小时原始累计成本
+  elapsedMinutes: number; // 本小时已过分钟数（保底 1，避免除零）
+  perMinuteUsd: number; // 折算每分钟成本
+  baselinePerMinUsd: number; // 基线：已完成小时每分钟成本的中位数
+  baselinePerHourUsd: number; // 基线的每小时形态（便于展示）
+  ratio: number | null; // perMinute / baselinePerMin
+  sampleHours: number; // 参与基线的已完成小时数
+}
+
+/** 中位数（入参须已升序）：偶数长度取中间两值均值，避免样本少时整体偏大 */
+const median = (sorted: readonly number[]): number => {
+  const n = sorted.length;
+  if (n === 0) return 0;
+  const mid = n >> 1;
+  return n % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+};
+
+/**
+ * 纯函数：用「本小时折算每分钟成本 / 已完成小时的每分钟成本中位数」判断成本是否异动。
+ * - **按已过分钟数折算**当前小时，否则整点前几十分钟必然低估、永远不告警；
+ * - 基线的分母固定为 60（已完成小时是整小时），与当前小时的折算口径一致；
+ * - 基线只取**有流量**的已完成小时：清闲小时天然为 0，纳入会拉低中位数导致噪声；
+ * - 三道护栏：本小时至少走 `MIN_ELAPSED` 分钟、至少 `MIN_BASELINE_HOURS` 个样本、本小时成本高于绝对下限。
+ * 依赖传入的桶数组（不碰内部状态），便于单测。
+ */
+export function costSpikeStatus(
+  buckets: readonly { hour: string; cost: number; requests: number }[],
+  now: number,
+): CostSpikeStatus {
+  const nowKey = hourKey(new Date(now));
+  const elapsedMinutes = new Date(now).getMinutes() + 1; // 至少 1，避免 0 分钟除零
+  const current = buckets.find((b) => b.hour === nowKey);
+  const hourCostUsd = Math.round((current?.cost ?? 0) * 1e6) / 1e6;
+  const perMinuteUsd = Math.round((hourCostUsd / elapsedMinutes) * 1e6) / 1e6;
+
+  const completed = buckets.filter((b) => b.hour < nowKey && b.requests > 0);
+  const sampleHours = completed.length;
+  const rates = completed.map((b) => b.cost / 60).sort((a, b) => a - b);
+  const baselinePerMinUsd = Math.round(median(rates) * 1e6) / 1e6;
+  const ratio =
+    baselinePerMinUsd > 0 ? Math.round((perMinuteUsd / baselinePerMinUsd) * 1000) / 1000 : null;
+
+  const base = {
+    hourKey: nowKey,
+    hourCostUsd,
+    elapsedMinutes,
+    perMinuteUsd,
+    baselinePerMinUsd,
+    baselinePerHourUsd: Math.round(baselinePerMinUsd * 60 * 1e6) / 1e6,
+    ratio,
+    sampleHours,
+  };
+
+  if (elapsedMinutes < COST_SPIKE_MIN_ELAPSED_MIN)
+    return { ...base, level: 'normal', reason: 'too-early' };
+  if (sampleHours < COST_SPIKE_MIN_BASELINE_HOURS)
+    return { ...base, level: 'normal', reason: 'insufficient-hours' };
+  if (baselinePerMinUsd <= 0 || ratio === null)
+    return { ...base, level: 'normal', reason: 'no-baseline' };
+  if (hourCostUsd < COST_SPIKE_MIN_ALERT_USD)
+    return { ...base, level: 'normal', reason: 'below-floor' };
+  if (ratio >= COST_SPIKE_ALERT_RATIO) return { ...base, level: 'alert', reason: 'ok' };
+  if (ratio >= COST_SPIKE_WARN_RATIO) return { ...base, level: 'warn', reason: 'ok' };
+  return { ...base, level: 'normal', reason: 'ok' };
+}
+
+/** 当前进程的小时桶快照（升序） */
+export function hourCostBuckets(): { hour: string; cost: number; requests: number }[] {
+  return [...hourBuckets.entries()]
+    .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
+    .map(([hour, v]) => ({ hour, cost: v.cost, requests: v.requests }));
+}
+
+/** 当前成本异动状态（读取内存小时环）；now 可注入便于测试 */
+export function currentCostSpike(now = Date.now()): CostSpikeStatus {
+  return costSpikeStatus(hourCostBuckets(), now);
 }
