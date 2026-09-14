@@ -64,6 +64,11 @@ import {
   initPricingOverrides,
   parsePricingOverrides,
   savePricingOverrides,
+  initPricingTable,
+  getPricingTableState,
+  parsePricingTable,
+  savePricingTable,
+  deletePricingTable,
 } from './pricing.js';
 import {
   loadProfiles,
@@ -81,6 +86,7 @@ import {
   clearLoginFailures,
 } from './auth.js';
 import { proxyRouter, unifiedRouter, buildAuthHeaders } from './proxy.js';
+import { replayCall } from './replay.js';
 import { listProviderModels } from './forwarding.js';
 import { getCacheStats, clearCache } from './responseCache.js';
 import { renderMetrics } from './prometheus.js';
@@ -658,6 +664,27 @@ app.delete('/api/proxy/pricing', requireAdmin, (_req: Request, res: Response) =>
   res.json(getPricingState());
 });
 
+// B5 基准定价表外置：查看来源/版本 + 导入（写数据目录 pricing.json）/ 恢复内置
+app.get('/api/proxy/pricing-table', (_req: Request, res: Response) => {
+  res.json(getPricingTableState());
+});
+app.post('/api/proxy/pricing-table', requireAdmin, (req: Request, res: Response) => {
+  const parsed = parsePricingTable(req.body);
+  if (!parsed) {
+    res.status(400).json({
+      error:
+        '无效的基准定价表：需要 { version?, updatedAt?, providers: { <厂商id>: { input, output, cacheRead? } } }，价格为非负数字（USD / 1M tokens）',
+    });
+    return;
+  }
+  savePricingTable({ ...parsed, updatedAt: parsed.updatedAt ?? new Date().toISOString() });
+  res.json(getPricingTableState());
+});
+app.delete('/api/proxy/pricing-table', requireAdmin, (_req: Request, res: Response) => {
+  deletePricingTable();
+  res.json(getPricingTableState());
+});
+
 // 聚合端点：metrics + cache + summary 一次返回，前端单一定时器轮询
 app.get('/api/proxy/overview', (_req: Request, res: Response) => {
   res.json({ metrics: getMetrics(), cache: getCacheStats(), summary: getSummary() });
@@ -722,7 +749,24 @@ app.get('/api/proxy/logs', (req: Request, res: Response) => {
   const logs = history
     ? loadPersistedLogs({ provider, status, tag, limit: Number.isFinite(limit) ? limit : 200 })
     : getLogs({ provider, status, tag, limit: Number.isFinite(limit) ? limit : 200 });
-  res.json({ logs, historyAvailable: persistedLogsAvailable() });
+  // B4：列表不下发请求体（可能含 prompt），仅给一个 hasReqBody 标记供「重放」按钮启用
+  const safe = logs.map((l) => {
+    const { reqBody, ...rest } = l;
+    return { ...rest, hasReqBody: Boolean(reqBody) };
+  });
+  res.json({ logs: safe, historyAvailable: persistedLogsAvailable() });
+});
+
+// B4 请求重放：用存档的 method/path/body 经代理原路重发（不含任何鉴权头，使用当前配置的 Key），
+// 结果与原始记录并排返回，便于排障对比。请求体仅内存持有，重启/落盘后不可重放。
+// 核心逻辑在 server/replay.ts（可注入 send，便于单测）。
+app.post('/api/proxy/logs/:requestId/replay', requireAdmin, async (req: Request, res: Response) => {
+  const out = await replayCall(findLogByRequestId(req.params.requestId));
+  if (!out.ok) {
+    res.status(out.status).json({ error: out.error });
+    return;
+  }
+  res.json({ original: out.original, replay: out.replay });
 });
 
 // B2：按调用标签（x-lb-tag）聚合支出，供多项目共用一套 Key 时归集成本。
@@ -1022,6 +1066,7 @@ let reviveTimer: ReturnType<typeof setInterval> | null = null;
 export function startServer(): void {
   logStartup(`[api] 启动中… 基础端口 ${BASE_PORT}`);
   initConfigStore();
+  initPricingTable(); // B5：加载基准定价表（$PRICING_FILE > 数据目录 > 仓库 data/pricing.json，否则内置）
   initPricingOverrides(); // D1：加载用户定价覆盖（无文件/损坏则回退内置定价）
   initUsageStore(); // D4：加载日粒度用量存档并启动节流落盘
   loadProfiles();

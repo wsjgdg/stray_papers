@@ -37,8 +37,8 @@
 | B1 | **模型路由 + fallback 链**（核心缺口） ✅ 已完成 2026-09-14 | `server/proxy.ts:421-435`：统一端点未指定厂商时只取**第一个** `enabled && apiKey` 的厂商；没有按模型路由，也没有跨厂商容错（多 key 轮换只在单厂商内生效） | 新增 `routing` 配置：`{ "routes": { "gpt-4o": ["openai","my-gw"], "claude-*": ["anthropic"] }, "default": ["openai","my-gw"] }`。匹配：精确 → 通配 → default；链内遇「5xx / 超时 / 429 且该厂所有 key 冷却」转下一家；响应头回写 `x-route-used` / `x-route-attempts`，日志记 `routeChain` | M |
 | B2 | **按标签的成本归因** ✅ 已完成 2026-09-14 | 成本只有 provider × model 维度 | 识别请求头 `x-lb-tag` 并透传到日志与 usageStore；导出与面板支持按 tag 分组。多项目共用一套 key 时的刚需 | M |
 | B3 | **per-provider / per-key 配额** ✅ 已完成 2026-09-14 | 只有全局日预算，无速率与单 key 上限 | `maxRps`（令牌桶，超限 429 并跳 key）、`dailyKeyBudgetUsd`（单 key 日成本上限，超限从轮询池剔除） | M |
-| B4 | **请求重放** | 日志只能看，排障要手工拼 body | 日志行 → 「重放」：用存档的 method/path/body（不含鉴权头）重发，结果并排展示 | S |
-| B5 | **内置定价表外置** | `server/pricing.ts:19` `PROVIDER_PRICING` 硬编码，调价只能改代码 | 下沉为 `data/pricing.json`（含 `version` + `updatedAt`），启动时加载；UI 加「导入定价 JSON」与版本显示；用户覆盖（D1）逻辑不变 | M |
+| B4 | **请求重放** ✅ 已完成 2026-09-14 | 日志只能看，排障要手工拼 body | 日志行 → 「重放」：用存档的 method/path/body（不含鉴权头）重发，结果并排展示 | S |
+| B5 | **内置定价表外置** ✅ 已完成 2026-09-14 | `server/pricing.ts:19` `PROVIDER_PRICING` 硬编码，调价只能改代码 | 下沉为 `data/pricing.json`（含 `version` + `updatedAt`），启动时加载；UI 加「导入定价 JSON」与版本显示；用户覆盖（D1）逻辑不变 | M |
 | B6 | **统一端点模型目录** ✅ 已完成 2026-09-14 | `/api/v1/*` 无 `/models`，第三方客户端（Cherry Studio / NextChat）接入要手填模型名 | `GET /api/v1/models`：聚合所有启用厂商的 `enabledModels`，输出 modelMapping 之后的对外名，OpenAI 兼容格式 | S |
 
 **依赖**：B1 与已完成的 modelMapping 是上下游（mapping 决定"叫什么"，routing 决定"发给谁"），建议同批落地，并在配置页合并为一个「路由」小节。
@@ -50,7 +50,9 @@
 - 测试：`tests/routing.test.ts`（15）、`tests/config.test.ts` +2、`tests/proxyChain.test.ts`（4 集成）；全量 **182 tests / 25 files** 通过。`tsc -b --force` EXIT 0，`vite build` EXIT 0。
 - ✅ **B2 按标签的成本归因**：`server/proxy.ts` 的 `mkInput` 读取 `x-lb-tag` → `finalize`/`CallLog.tag` → `usageStore` 新增 tag 维度（`day→provider→model→tag→cell`，旧 3 层结构经 `sanitize` 自动迁移进 `(untagged)`）；新增 `usageByTag()` 聚合 + `GET /api/proxy/usage/by-tag`；`/api/proxy/logs` 支持 `tag` 过滤；导出 CSV 增加 `tag` 列。前端 `LogsPanel` 显示标签列 + `MetricsPanel` 新增「按标签归集成本」卡片。
 - ✅ **B3 per-provider / per-key 配额**：新增 `server/rateLimit.ts`（令牌桶纯函数 `takeToken` + 每厂商状态 `tryConsume`，容量 `max(1,ceil(rps))`）与 `server/keyBudget.ts`（`(provider,keyMask)` 当日成本累计，跨日归零）；`ProviderConfig` 加 `maxRps` / `dailyKeyBudgetUsd`；`proxy.ts` 超速率 → 429 + `Retry-After`（chain 模式交给下一厂商），超预算的 Key 从轮询池剔除；`metrics.recordCall` 按 Key 累计成本；配置页新增两个配额输入。集成测试 `tests/quota.test.ts`（429 + Retry-After、超预算 429）。设计取舍：预算为硬配额（fail-closed，缓存命中同样拦截，与全局日预算一致）；速率限制置于缓存之后（缓存命中不打上游，不消耗令牌）。
-- 剩余代理内核：B4（重放）、B5（定价外置）未做。
+- ✅ **B4 请求重放**：`metrics.CallLog` 新增 `reqBody`/`reqBodyTruncated`（截断存档上限 `MAX_REQ_BODY_BYTES = 32KB`，**仅内存环形缓冲持有，落盘 ndjson 前剥离**，避免 prompt 落盘）；新增 `server/replay.ts`（`makeCaptureResponse()` 最小 Response 捕获器 + `replayCall(log, send?)`，`send` 可注入便于单测；强制 `stream=false`、不带任何原始鉴权头、一律使用当前配置的 Key；响应体 20KB 截断）；`POST /api/proxy/logs/:requestId/replay`（404 无日志 / 400 无存档或非法 JSON / 502 发送失败）；`/api/proxy/logs` 列表不下发请求体，只给 `hasReqBody` 标记。前端 `LogsPanel` 每行「重放」按钮 + 结果对比面板。
+- ✅ **B5 内置定价表外置**：`data/pricing.json`（`version` + `updatedAt` + `providers`）作为随仓库发布的基准表；`server/pricing.ts` 新增 `parsePricingTable()` / `initPricingTable(candidates?)` / `getPricingTableState()` / `savePricingTable()` / `deletePricingTable()`；加载优先级 `$PRICING_FILE` > `configDir()/pricing.json`（UI 导入，可写）> 仓库 `data/pricing.json`，**文件条目与内置表合并**（未覆盖厂商仍用内置价），无可用文件回退内置；`GET/POST/DELETE /api/proxy/pricing-table`；前端 `PricingOverrides` 加「基准定价表」区（显示来源/版本/更新时间 + 导入 JSON + 恢复内置）。D1 用户覆盖优先级不变（模型覆盖 > 快照模型价 > 厂商覆盖 > 基准表 > DEFAULT）。
+- 代理内核 **B1–B6 全部完成**；测试 **220 tests / 31 files** 通过（新增 `tests/pricingTable.test.ts` 7、`tests/replay.test.ts` 11）；`tsc -b --force` EXIT 0，`vite build` EXIT 0。
 
 ---
 
@@ -108,9 +110,9 @@
 
 ```
 A1 A2 A3 A4 A5（安全，半天内可完） ──┐
-                                    ├─> B1 B6（路由 + /v1/models，本阶段主线）
-D1（去 recharts，无依赖可并行）─────┘        └─> B2 B3（配额 / 归因）──> B4 B5
-                                                                        └─> C1 C2（评测，最大新功能）
+                                    ├─> ✅ B1 B6（路由 + /v1/models）
+D1（去 recharts，无依赖可并行）─────┘        └─> ✅ B2 B3（配额 / 归因）──> ✅ B4 B5（重放 / 定价外置）
+                                                                        └─> C1 C2（评测，最大新功能，下一步）
 D2 D3 D4（前端体验，任意穿插）
 F1（asar）──> F2（自动更新）──> F3 / F4
 ```

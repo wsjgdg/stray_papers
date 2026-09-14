@@ -34,7 +34,13 @@ export interface CallLog {
   keySwitches?: number; // 本次调用发生的关键切换次数（多 key 轮询/失败切换）
   routeChain?: string[]; // B1：本次请求规划的完整回退链（模型路由），便于回溯 fallback 路径
   tag?: string | null; // B2：调用标签（x-lb-tag 头），多项目共用 Key 时按 tag 归集成本
+  // B4：请求体（截断存档，仅内存环形缓冲持有，不写入 ndjson）——用于「重放」排障
+  reqBody?: string | null;
+  reqBodyTruncated?: boolean;
 }
+
+/** B4：请求体存档上限（超出截断）；仅在内存中保留，避免把 prompt 落盘 */
+export const MAX_REQ_BODY_BYTES = 32 * 1024;
 
 export interface ProviderMetrics {
   provider: string;
@@ -128,13 +134,16 @@ export function persistedLogsAvailable(): boolean {
   }
 }
 
-/** 把一条结构化日志追加写入 ndjson（一行一条 JSON）。失败静默，不影响主流程 */
+/**
+ * 把一条结构化日志追加写入 ndjson（一行一条 JSON）。失败静默，不影响主流程。
+ * B4：请求体可能含 prompt 等敏感内容 → 落盘前剥离（reqBody 置 null），重放能力仅限内存态。
+ */
 function appendPersisted(entry: CallLog): void {
   if (!persistEnabled()) return;
   try {
     const dir = path.dirname(LOG_FILE);
     fs.mkdirSync(dir, { recursive: true });
-    fs.appendFileSync(LOG_FILE, JSON.stringify(entry) + '\n', 'utf8');
+    fs.appendFileSync(LOG_FILE, JSON.stringify({ ...entry, reqBody: null }) + '\n', 'utf8');
   } catch {
     /* 落盘失败不应影响主流程 */
   }
