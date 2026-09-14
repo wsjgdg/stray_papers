@@ -53,6 +53,8 @@ export function ConfigPanel({
         authStyle: AuthStyle;
         apiFormat: ApiFormat;
         id: string;
+        maxRps: string;
+        dailyKeyBudgetUsd: string;
       }
     >
   >({});
@@ -87,6 +89,8 @@ export function ConfigPanel({
       authStyle: c?.authStyle ?? 'bearer',
       apiFormat: c?.apiFormat ?? 'openai',
       id: id === '__new__' ? '' : id,
+      maxRps: c?.maxRps ? String(c.maxRps) : '',
+      dailyKeyBudgetUsd: c?.dailyKeyBudgetUsd ? String(c.dailyKeyBudgetUsd) : '',
     };
   };
 
@@ -101,6 +105,8 @@ export function ConfigPanel({
       authStyle: AuthStyle;
       apiFormat: ApiFormat;
       id: string;
+      maxRps: string;
+      dailyKeyBudgetUsd: string;
     }>,
   ) => {
     setForm((prev) => ({ ...prev, [id]: { ...getEntry(id), ...patch } }));
@@ -118,6 +124,20 @@ export function ConfigPanel({
     }
     const f = getEntry(id);
     const patch: ProxyConfigPatch = { baseUrl: f.baseUrl || undefined, enabled: f.enabled };
+    // B3：配额字段——空/0 表示不限制；非数字或负数直接拦下
+    const maxRpsNum = f.maxRps.trim() === '' ? 0 : Number(f.maxRps);
+    const budgetNum = f.dailyKeyBudgetUsd.trim() === '' ? 0 : Number(f.dailyKeyBudgetUsd);
+    if (
+      !Number.isFinite(maxRpsNum) ||
+      maxRpsNum < 0 ||
+      !Number.isFinite(budgetNum) ||
+      budgetNum < 0
+    ) {
+      setSaveState((s) => ({ ...s, [id]: '配额需为非负数字（0 = 不限）' }));
+      return;
+    }
+    patch.maxRps = maxRpsNum;
+    patch.dailyKeyBudgetUsd = budgetNum;
     if (f.key) patch.apiKey = f.key;
     // 多 key 池：主 key + 额外 key（逐行），去重交由后端；空数组表示不修改
     const keys: string[] = [];
@@ -542,6 +562,31 @@ export function ConfigPanel({
                     <option value="gemini">Google Gemini (generateContent)</option>
                   </select>
                 )}
+                <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted">
+                  <label className="flex items-center gap-1" title="令牌桶限流，超限返回 429">
+                    速率上限
+                    <input
+                      className="input w-20"
+                      placeholder="0"
+                      value={f.maxRps}
+                      onChange={(e) => update(selected, { maxRps: e.target.value })}
+                    />
+                    req/s
+                  </label>
+                  <label
+                    className="flex items-center gap-1"
+                    title="单个 Key 当日累计成本超限后，该 Key 当日退出轮询"
+                  >
+                    单 Key 日成本上限 $
+                    <input
+                      className="input w-24"
+                      placeholder="0"
+                      value={f.dailyKeyBudgetUsd}
+                      onChange={(e) => update(selected, { dailyKeyBudgetUsd: e.target.value })}
+                    />
+                  </label>
+                  <span className="text-muted/70">（0 或留空 = 不限制）</span>
+                </div>
                 <div className="flex flex-wrap items-center gap-3">
                   <label className="flex items-center gap-1 text-[11px] text-muted">
                     <input

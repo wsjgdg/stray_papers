@@ -8,6 +8,7 @@ import * as path from 'node:path';
 import { estimateCost } from './pricing.js';
 import { configDir } from './config.js';
 import { recordUsage } from './usageStore.js';
+import { addKeySpend } from './keyBudget.js';
 
 export interface CallLog {
   id: number;
@@ -202,6 +203,8 @@ export function recordCall(log: Omit<CallLog, 'id' | 'costUsd'>): CallLog {
     log.cacheReadTokens,
   );
   const entry: CallLog = { ...log, costUsd: cost.total, id: nextId++ };
+  // B3：按 (provider, keyMask) 累计当日成本，供单 Key 日预算超限时跳过该 Key
+  if (log.keyMask) addKeySpend(log.provider, log.keyMask, cost.total);
   logs.push(entry);
   if (logs.length > MAX_LOGS) logs = logs.slice(logs.length - MAX_LOGS);
   // B5：可选落盘（脱敏结构化日志）

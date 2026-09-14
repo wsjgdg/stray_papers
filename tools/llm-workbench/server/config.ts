@@ -37,6 +37,8 @@ export interface ProviderConfig {
   retryOn?: number[]; // 触发换 key 重试的 HTTP 状态码集合；缺省 [401,403,429]
   timeoutMs?: number; // 上游请求超时（毫秒）；缺省非流式 180s、流式 600s
   modelMapping?: Record<string, string>; // 模型映射：请求模型名 → 上游实际模型名，如 { "gpt-4o": "oai-gpt-4o" }；未命中原样透传
+  maxRps?: number; // B3：该厂商请求速率上限（req/s，令牌桶）；未配置不限流。超限返回 429 + Retry-After
+  dailyKeyBudgetUsd?: number; // B3：单 Key 当日成本上限（USD）；超限的 Key 当日退出轮询，次日归零
 }
 
 // 上游请求超时（毫秒）：per-provider 可覆盖；流式长生成默认放宽到 600s，非流式 180s。
@@ -475,6 +477,8 @@ export function maskConfig(cfg: ProxyConfig): {
       retryOn: p.retryOn,
       timeoutMs: p.timeoutMs,
       modelMapping: p.modelMapping,
+      maxRps: p.maxRps,
+      dailyKeyBudgetUsd: p.dailyKeyBudgetUsd,
       // 只配了多 key 池（apiKey 为空）时也要给出掩码，避免 UI 显示「未配置」
       apiKeyMasked: maskKey(p.apiKey || resolveKeyPool(p)[0] || ''),
       hasKey: Boolean(p.apiKey) || (p.apiKeys?.length ?? 0) > 0,
@@ -507,6 +511,9 @@ export function upsertProvider(id: string, patch: Partial<ProviderConfig>): Prox
     retryOn: patch.retryOn !== undefined ? patch.retryOn : prev.retryOn,
     timeoutMs: patch.timeoutMs !== undefined ? patch.timeoutMs : prev.timeoutMs,
     modelMapping: patch.modelMapping !== undefined ? patch.modelMapping : prev.modelMapping,
+    maxRps: patch.maxRps !== undefined ? patch.maxRps : prev.maxRps,
+    dailyKeyBudgetUsd:
+      patch.dailyKeyBudgetUsd !== undefined ? patch.dailyKeyBudgetUsd : prev.dailyKeyBudgetUsd,
   };
   saveConfig(cfg);
   return cfg;
@@ -557,6 +564,9 @@ export function importConfig(partial: {
       retryOn: p.retryOn !== undefined ? p.retryOn : prev.retryOn,
       timeoutMs: p.timeoutMs !== undefined ? p.timeoutMs : prev.timeoutMs,
       modelMapping: p.modelMapping !== undefined ? p.modelMapping : prev.modelMapping,
+      maxRps: p.maxRps !== undefined ? p.maxRps : prev.maxRps,
+      dailyKeyBudgetUsd:
+        p.dailyKeyBudgetUsd !== undefined ? p.dailyKeyBudgetUsd : prev.dailyKeyBudgetUsd,
     };
   }
   saveConfig(cfg);

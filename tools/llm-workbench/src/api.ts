@@ -73,6 +73,8 @@ export interface MaskedProviderConfig {
   models?: string[]; // 自动获取的模型清单
   enabledModels?: string[]; // 手动启用的模型子集
   modelMapping?: Record<string, string>; // 模型映射：请求模型名 → 上游实际模型名
+  maxRps?: number; // B3：厂商请求速率上限（req/s）；0/未配置不限流
+  dailyKeyBudgetUsd?: number; // B3：单 Key 当日成本上限（USD）；0/未配置不限
   apiKeyMasked: string;
   hasKey: boolean;
   apiKeyCount: number; // 可用 key 数量（多 key 轮询/失败切换）
@@ -164,6 +166,8 @@ export interface ProxyConfigPatch {
   models?: string[];
   enabledModels?: string[];
   modelMapping?: Record<string, string>; // 模型映射：请求模型名 → 上游实际模型名
+  maxRps?: number; // B3：厂商请求速率上限（req/s）；0 表示不限制
+  dailyKeyBudgetUsd?: number; // B3：单 Key 当日成本上限（USD）；0 表示不限制
 }
 
 export async function fetchProxyConfig(): Promise<ProxyConfigResponse> {
