@@ -14,6 +14,7 @@ const {
 } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
+const os = require('node:os');
 const { execFileSync } = require('node:child_process');
 const settings = require('./settings.cjs');
 
@@ -87,12 +88,35 @@ function startBackend() {
   process.env.API_PORT = String(ELECTRON_PORT);
   process.env.NO_OPEN = '1'; // 不让后端自己打开系统浏览器
   process.env.NO_REUSE = '1'; // 不让后端走「复用已有实例并退出」分支
-  process.env.WEB_DIR = path.join(root, 'dist'); // 由我们托管前端，而非内嵌 base64
+  // F7：多 profile 隔离 —— 解析 --profile=<name>，把数据目录指向 profiles/<name> 子目录；
+  // 使同一 exe 可承载多套互不干扰的配置（按启动参数切换）。必须在 require server.cjs 前写入。
+  process.env.LLM_WORKBENCH_HOME = resolveDataHome(parseProfileArg());
   // B12：统一数据目录 —— 让 server 的 config/logs 与 Electron userData（float-stats/app-settings）落同一处
-  process.env.LLM_WORKBENCH_HOME = app.getPath('userData');
+  // （打包态 resolveDataHome 默认即 app.getPath('userData')，行为不变）。
+  process.env.WEB_DIR = path.join(root, 'dist'); // 由我们托管前端，而非内嵌 base64
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   serverApi = require('./server.cjs'); // 进程内后端；暴露 startServer / stopServer / getServerPort
   serverApi.startServer();
+}
+
+// F7：解析启动参数里的 --profile=<name>（或 --profile <name>）。
+function parseProfileArg() {
+  for (const a of process.argv.slice(2)) {
+    const m = a.match(/^--profile(?:=(.*))?$/);
+    if (m) return (m[1] || '').trim();
+  }
+  return '';
+}
+
+// F7：解析数据目录根。打包态基目录为 userData；非打包态基目录为 LLM_WORKBENCH_HOME（缺省 ~/.llm-workbench）。
+// 传入 profile 时落到 <基目录>/profiles/<safe> 子目录，文件名做安全化避免路径穿越。
+function resolveDataHome(profile) {
+  const base = app.isPackaged
+    ? app.getPath('userData')
+    : process.env.LLM_WORKBENCH_HOME || path.join(os.homedir(), '.llm-workbench');
+  if (!profile) return base;
+  const safe = (profile.replace(/[^A-Za-z0-9._-]/g, '_') || 'default').slice(0, 64);
+  return path.join(base, 'profiles', safe);
 }
 
 async function waitForBackend(timeoutMs = 15000) {
@@ -445,7 +469,8 @@ function createTray() {
       click: () => {
         let d = null;
         try {
-          d = app.getPath('userData');
+          // F7：跟随 --profile 解析出的实际数据目录（缺省为 userData）
+          d = process.env.LLM_WORKBENCH_HOME || app.getPath('userData');
         } catch {
           d = null;
         }
