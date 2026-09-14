@@ -1,5 +1,5 @@
 // proxy 子面板共享：类型 / 常量 / 成本格式化 / 统计小卡
-export type SubTab = 'config' | 'play' | 'metrics' | 'logs';
+export type SubTab = 'config' | 'play' | 'compare' | 'metrics' | 'logs';
 
 // USD → CNY 近似汇率（仅用于展示换算，非实时）
 export const CNY_PER_USD = 7.2;

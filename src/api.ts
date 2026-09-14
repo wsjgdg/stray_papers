@@ -72,6 +72,7 @@ export interface MaskedProviderConfig {
   apiFormat?: ApiFormat;
   models?: string[]; // 自动获取的模型清单
   enabledModels?: string[]; // 手动启用的模型子集
+  modelMapping?: Record<string, string>; // 模型映射：请求模型名 → 上游实际模型名
   apiKeyMasked: string;
   hasKey: boolean;
   apiKeyCount: number; // 可用 key 数量（多 key 轮询/失败切换）
@@ -160,6 +161,7 @@ export interface ProxyConfigPatch {
   apiFormat?: ApiFormat;
   models?: string[];
   enabledModels?: string[];
+  modelMapping?: Record<string, string>; // 模型映射：请求模型名 → 上游实际模型名
 }
 
 export async function fetchProxyConfig(): Promise<ProxyConfigResponse> {
@@ -336,6 +338,11 @@ function authInit(init?: RequestInit): RequestInit {
   return { ...init, headers };
 }
 
+/** 带代理令牌的原生 fetch：需要读取响应头 / 流（SSE、x-request-id 关联）时使用 */
+export function authFetch(path: string, init?: RequestInit): Promise<Response> {
+  return fetch(path, authInit(init));
+}
+
 // ───────── 统一请求封装（超时 / 中止 / 错误体解析 / 401 / 自动携带令牌） ─────────
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const ctrl = new AbortController();
@@ -476,4 +483,42 @@ export async function setBudget(dailyUsd: number | null): Promise<BudgetStatus> 
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ dailyUsd }),
   });
+}
+
+// ───────── 配置备份 / 恢复（D5） ─────────
+export interface BackupExportResult {
+  blob: string; // base64 文本，保存为 .lwb 即可
+}
+export interface BackupImportResult {
+  restored: boolean;
+  restoredConfig: boolean;
+  restoredAuth: boolean;
+}
+
+/** 导出加密备份（config.json + auth.json 原文打包，passphrase 派生 AES-256-GCM） */
+export async function exportBackup(passphrase: string): Promise<BackupExportResult> {
+  return request<BackupExportResult>('/api/proxy/backup/export', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ passphrase }),
+  });
+}
+
+/** 恢复备份：覆盖本机配置与档案，成功后建议刷新页面 */
+export async function importBackup(blob: string, passphrase: string): Promise<BackupImportResult> {
+  return request<BackupImportResult>('/api/proxy/backup/import', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ blob, passphrase }),
+  });
+}
+
+// ───────── 单次调用日志（按 requestId 精确定位，供多模型对比取用量/成本） ─────────
+export async function fetchLogByRequestId(requestId: string): Promise<ProxyLog | null> {
+  if (!requestId) return null;
+  try {
+    return await request<ProxyLog>(`/api/proxy/logs/${encodeURIComponent(requestId)}`);
+  } catch {
+    return null; // 日志可能已被环形缓冲挤出；对比页降级用响应体自带的 usage
+  }
 }

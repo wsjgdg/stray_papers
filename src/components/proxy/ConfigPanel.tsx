@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { ChevronLeft, Download, Plus, Search, Trash2, Upload, CircleDot } from 'lucide-react';
 import type { ProviderConsole, ProbeResult } from '../../../server/types';
@@ -20,6 +20,7 @@ import {
   KeyHealthCard,
   ProxyTokenCard,
 } from './SecurityCards';
+import { BackupCard } from './BackupCard';
 
 // ───────── 配置 / 导入 ─────────
 export function ConfigPanel({
@@ -64,6 +65,10 @@ export function ConfigPanel({
   const [modelsLoading, setModelsLoading] = useState<string | null>(null);
   const [modelsError, setModelsError] = useState<Record<string, string>>({});
   const [manualModel, setManualModel] = useState('');
+  // 模型映射草稿：{ 厂商: [{ from, to }] }。配置加载后按厂商播种一次，用户编辑后不再覆盖
+  const [mappingRows, setMappingRows] = useState<Record<string, { from: string; to: string }[]>>(
+    {},
+  );
 
   const isCustom = (id: string) => id !== '__new__' && !providers.some((p) => p.id === id);
   const knownIds = new Set(providers.map((p) => p.id));
@@ -136,6 +141,52 @@ export function ConfigPanel({
       setTimeout(() => setSaveState((s) => ({ ...s, [realId]: '' })), 2000);
     } catch (e) {
       setSaveState((s) => ({ ...s, [id]: `失败: ${(e as Error).message}` }));
+    }
+  };
+
+  // 选中厂商且配置就绪后，用已存映射播种草稿（用户已编辑过则保留其输入）
+  useEffect(() => {
+    if (!selected || !cfg[selected]) return;
+    setMappingRows((prev) =>
+      prev[selected]
+        ? prev
+        : {
+            ...prev,
+            [selected]: Object.entries(cfg[selected].modelMapping ?? {}).map(([from, to]) => ({
+              from,
+              to,
+            })),
+          },
+    );
+  }, [selected, cfg]);
+
+  const updateMappingRow = (
+    id: string,
+    index: number,
+    patch: Partial<{ from: string; to: string }>,
+  ) => {
+    setMappingRows((prev) => ({
+      ...prev,
+      [id]: (prev[id] ?? []).map((r, i) => (i === index ? { ...r, ...patch } : r)),
+    }));
+  };
+
+  // 保存映射：丢弃空键/空值的行（等价于「未配置」，转发时原样透传）
+  const saveMapping = async (id: string) => {
+    const mapping: Record<string, string> = {};
+    for (const r of mappingRows[id] ?? []) {
+      const from = r.from.trim();
+      const to = r.to.trim();
+      if (from && to) mapping[from] = to;
+    }
+    setSaveState((s) => ({ ...s, [id]: 'saving' }));
+    try {
+      await saveProxyConfig(id, { modelMapping: mapping });
+      setSaveState((s) => ({ ...s, [id]: '映射已保存' }));
+      await onSaved();
+      setTimeout(() => setSaveState((s) => ({ ...s, [id]: '' })), 2000);
+    } catch (e) {
+      setSaveState((s) => ({ ...s, [id]: `映射保存失败: ${(e as Error).message}` }));
     }
   };
 
@@ -576,6 +627,66 @@ export function ConfigPanel({
                     </div>
                   </div>
                 )}
+
+                {modelSectionVisible && (
+                  <div className="space-y-2 rounded-lg border border-edge bg-[#0d1728] p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-[11px] text-muted">
+                        模型映射 · 请求模型名 → 上游实际模型名（未命中原样透传；计量按上游模型计价）
+                      </div>
+                      <button className="btn btn-sm shrink-0" onClick={() => saveMapping(selected)}>
+                        保存映射
+                      </button>
+                    </div>
+                    {(mappingRows[selected] ?? []).length === 0 && (
+                      <div className="text-[11px] text-muted">
+                        尚未配置映射。适用于中转站改名（如 gpt-4o →
+                        oai/gpt-4o）或统一入口按别名路由的场景。
+                      </div>
+                    )}
+                    {(mappingRows[selected] ?? []).map((r, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <input
+                          className="input flex-1"
+                          placeholder="请求模型名，如 gpt-4o"
+                          value={r.from}
+                          onChange={(e) => updateMappingRow(selected, i, { from: e.target.value })}
+                        />
+                        <span className="shrink-0 text-muted">→</span>
+                        <input
+                          className="input flex-1"
+                          placeholder="上游模型名，如 oai/gpt-4o"
+                          value={r.to}
+                          onChange={(e) => updateMappingRow(selected, i, { to: e.target.value })}
+                        />
+                        <button
+                          className="btn btn-ghost shrink-0"
+                          title="删除该映射"
+                          onClick={() =>
+                            setMappingRows((prev) => ({
+                              ...prev,
+                              [selected]: (prev[selected] ?? []).filter((_, idx) => idx !== i),
+                            }))
+                          }
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      className="btn btn-sm"
+                      onClick={() =>
+                        setMappingRows((prev) => ({
+                          ...prev,
+                          [selected]: [...(prev[selected] ?? []), { from: '', to: '' }],
+                        }))
+                      }
+                    >
+                      <Plus size={12} />
+                      添加映射
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -586,6 +697,7 @@ export function ConfigPanel({
       <UnifiedEndpointCard />
       <ProxyTokenCard />
       <KeyHealthCard />
+      <BackupCard />
 
       {connect && (
         <Card title="连通性检测结果">

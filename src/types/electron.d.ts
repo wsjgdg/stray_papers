@@ -14,6 +14,7 @@ export interface ElectronSettings {
   clickThrough?: boolean;
   fontScale?: number;
   highContrast?: boolean;
+  closeBehavior?: 'tray' | 'quit'; // 关闭主窗口行为：最小化到托盘 / 退出应用
 }
 
 export interface StatsPayload {
