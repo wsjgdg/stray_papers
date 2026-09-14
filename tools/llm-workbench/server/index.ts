@@ -59,6 +59,12 @@ import {
   usageSpendSources,
   usageByTag,
   usageMonthProjection,
+  usageStats,
+  usagePurgePlan,
+  purgeUsageBefore,
+  purgeCutoffForKeepDays,
+  usageSnapshot,
+  USAGE_RETENTION_DAYS,
 } from './usageStore.js';
 import {
   deletePricingOverrides,
@@ -831,6 +837,64 @@ app.get('/api/proxy/usage/by-tag', (req: Request, res: Response) => {
     rows: usageByTag({ days: Number.isFinite(days) && days > 0 ? days : 30 }),
     generatedAt: new Date().toISOString(),
   });
+});
+
+// ───────── E2：用量留存可运维 ─────────
+
+/** keepDays 校验：1 ~ 自动保留窗口 的整数（超出窗口无意义，只会是空操作） */
+function parseKeepDays(raw: unknown): number | null {
+  const n = typeof raw === 'string' ? Number(raw) : raw;
+  if (typeof n !== 'number' || !Number.isInteger(n)) return null;
+  if (n < 1 || n > USAGE_RETENTION_DAYS) return null;
+  return n;
+}
+
+// 留存概览 + 「保留 N 天将删除什么」预览（纯读：预览与实际清理共用同一实现）
+app.get('/api/proxy/usage/ops', (req: Request, res: Response) => {
+  const keepDays = parseKeepDays(req.query.keepDays ?? 30);
+  if (keepDays === null) {
+    res.status(400).json({ error: `keepDays 必须是 1~${USAGE_RETENTION_DAYS} 的整数` });
+    return;
+  }
+  flushUsageStore();
+  const cutoffDay = purgeCutoffForKeepDays(keepDays);
+  const plan = usagePurgePlan(cutoffDay);
+  res.json({
+    stats: usageStats(),
+    purge: { keepDays, ...plan, dayCount: plan.days.length },
+    generatedAt: new Date().toISOString(),
+  });
+});
+
+// 手动清理：保留最近 keepDays 天，删除更早的数据（不可撤销）。管理员操作。
+app.post('/api/proxy/usage/purge', requireAdmin, (req: Request, res: Response) => {
+  const keepDays = parseKeepDays((req.body ?? {}).keepDays);
+  if (keepDays === null) {
+    res.status(400).json({ error: `keepDays 必须是 1~${USAGE_RETENTION_DAYS} 的整数` });
+    return;
+  }
+  const removed = purgeUsageBefore(purgeCutoffForKeepDays(keepDays));
+  res.json({ removed, stats: usageStats(), generatedAt: new Date().toISOString() });
+});
+
+// 全量原始用量导出（不限窗口，含全部维度），供离线分析/迁移
+app.get('/api/proxy/usage/export', (_req: Request, res: Response) => {
+  flushUsageStore();
+  const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="usage-export-${stamp}.json"`);
+  res.send(
+    JSON.stringify(
+      {
+        generatedAt: new Date().toISOString(),
+        retentionDays: USAGE_RETENTION_DAYS,
+        stats: usageStats(),
+        usage: usageSnapshot(),
+      },
+      null,
+      2,
+    ),
+  );
 });
 
 // 单条日志精查：响应头 x-request-id → 该次调用的用量/成本/TTFT（多模型对比用）

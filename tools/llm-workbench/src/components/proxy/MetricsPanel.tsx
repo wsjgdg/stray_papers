@@ -4,6 +4,7 @@ import { Card, Empty, Spinner } from '../../ui';
 import { Stat, fmtCost, type Currency } from './shared';
 import { CachePanel } from './CachePanel';
 import { BudgetBar } from './BudgetBar';
+import { UsageOpsCard } from './UsageOpsCard';
 import { fetchUsageByTag, type UsageByTagRow } from '../../api';
 import { useProxyOverview } from '../../hooks/useProxyOverview';
 
@@ -20,6 +21,7 @@ export function MetricsPanel() {
       <div className="mx-auto max-w-6xl space-y-3">
         <BudgetBar />
         <CachePanel stats={cache} onCleared={refetch} />
+        <UsageOpsCard />
         <Empty text="暂无调用记录。去「试用」页发一条请求即可看到指标。" />
       </div>
     );
@@ -87,6 +89,7 @@ export function MetricsPanel() {
       </div>
 
       <TagSpendCard />
+      <UsageOpsCard />
     </div>
   );
 }

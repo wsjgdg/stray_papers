@@ -807,3 +807,58 @@ export async function fetchUsageByTag(days = 30): Promise<{
     `/api/proxy/usage/by-tag?days=${days}`,
   );
 }
+
+// ───────── E2：用量留存可运维 ─────────
+export interface UsageOpsStats {
+  days: number;
+  firstDay: string | null;
+  lastDay: string | null;
+  retentionDays: number;
+  cutoffDay: string;
+  totalRequests: number;
+  totalCostUsd: number;
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  providers: number;
+  models: number;
+  tags: number;
+  fileBytes: number;
+  dirty: boolean;
+}
+
+export interface UsagePurgePlan {
+  cutoffDay: string; // 删除「严格早于」该日期的数据
+  days: string[];
+  requests: number;
+  costUsd: number;
+}
+
+export interface UsageOps {
+  stats: UsageOpsStats;
+  purge: UsagePurgePlan & { keepDays: number; dayCount: number };
+  generatedAt: string;
+}
+
+/** 留存概览 + 「保留 keepDays 天将删除什么」预览（纯读，可在确认前反复调用） */
+export async function fetchUsageOps(keepDays = 30): Promise<UsageOps> {
+  return request<UsageOps>(`/api/proxy/usage/ops?keepDays=${keepDays}`);
+}
+
+/** 删除早于「保留 keepDays 天」的数据（不可撤销） */
+export async function purgeUsage(
+  keepDays: number,
+): Promise<{ removed: UsagePurgePlan; stats: UsageOpsStats; generatedAt: string }> {
+  return request<{ removed: UsagePurgePlan; stats: UsageOpsStats; generatedAt: string }>(
+    '/api/proxy/usage/purge',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ keepDays }),
+    },
+  );
+}
+
+/** 全量原始用量导出地址（全维度、不限窗口） */
+export function usageExportUrl(): string {
+  return '/api/proxy/usage/export';
+}

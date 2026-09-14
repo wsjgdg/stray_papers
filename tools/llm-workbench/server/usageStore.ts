@@ -2,6 +2,7 @@
 // 数据文件 <dataDir>/usage-daily.json；recordCall 时累加，脏标记 + 5s 节流落盘，
 // stopUsageStore 强制 flush；保留 RETENTION_DAYS 天（init/flush 时裁剪）。
 // B2：新增 tag 维度（多项目共用一套 Key 时按 tag 归集成本）；未带标签记为 UNTAGGED。
+// E2：新增可运维能力 —— usageStats 概览、purgeUsageBefore 手动清理、usageSnapshot 原始导出。
 // 注意：本模块不 import metrics（避免循环依赖），dayKey 与 metrics.todayKey 保持同口径（本地日期）。
 import fs from 'node:fs';
 import path from 'node:path';
@@ -21,7 +22,8 @@ export const UNTAGGED = '(untagged)';
 // day → provider → model → tag → cell
 export type UsageData = Record<string, Record<string, Record<string, Record<string, UsageCell>>>>;
 
-const RETENTION_DAYS = 90;
+/** 自动保留窗口（天）：init/flush 时按此裁剪，手工清理只能比它更短 */
+export const USAGE_RETENTION_DAYS = 90;
 const FLUSH_INTERVAL_MS = 5000;
 
 let data: UsageData = {};
@@ -78,7 +80,7 @@ export function sanitize(raw: unknown): UsageData {
 }
 
 function prune(now = Date.now()): void {
-  const cutoff = localDayKey(new Date(now - RETENTION_DAYS * 86_400_000));
+  const cutoff = localDayKey(new Date(now - USAGE_RETENTION_DAYS * 86_400_000));
   for (const day of Object.keys(data)) {
     if (day < cutoff) delete data[day];
   }
@@ -387,4 +389,124 @@ export function usageMonthProjection(
   now = Date.now(),
 ): MonthProjection {
   return projectMonthEnd(usageDayTotals(), now, monthlyUsd);
+}
+
+// ───────── E2：用量留存可运维（概览 / 手动清理 / 原始导出） ─────────
+
+export interface UsageStats {
+  days: number; // 有数据的天数
+  firstDay: string | null; // 最早一天
+  lastDay: string | null; // 最新一天
+  retentionDays: number; // 自动保留窗口（天）
+  cutoffDay: string; // 自动裁剪起点：早于此日期的数据会被 prune 掉
+  totalRequests: number;
+  totalCostUsd: number;
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  providers: number; // 去重后的厂商数
+  models: number; // 去重后的模型数
+  tags: number; // 去重后的标签数
+  fileBytes: number; // 落盘文件字节数（文件不存在为 0）
+  dirty: boolean; // 是否有未落盘的改动
+}
+
+/** 概览：给「用量留存」卡片用；纯读，不做 IO 之外的动作（只 stat 文件大小） */
+export function usageStats(now = Date.now()): UsageStats {
+  const days = Object.keys(data).sort();
+  const totals: UsageTotals = { requests: 0, input: 0, output: 0, cacheRead: 0, cost: 0 };
+  const providers = new Set<string>();
+  const models = new Set<string>();
+  const tags = new Set<string>();
+  for (const day of days) {
+    const t = usageDayTotalsOf(day);
+    totals.requests += t.requests;
+    totals.input += t.input;
+    totals.output += t.output;
+    totals.cacheRead += t.cacheRead;
+    totals.cost += t.cost;
+    for (const [provider, modelMap] of Object.entries(data[day] ?? {})) {
+      providers.add(provider);
+      for (const [model, tagMap] of Object.entries(modelMap)) {
+        models.add(`${provider}/${model}`); // 同名模型跨厂商不混算
+        for (const tag of Object.keys(tagMap)) tags.add(tag);
+      }
+    }
+  }
+  let fileBytes = 0;
+  try {
+    fileBytes = fs.statSync(usagePath()).size;
+  } catch {
+    /* 尚未落盘 */
+  }
+  return {
+    days: days.length,
+    firstDay: days[0] ?? null,
+    lastDay: days[days.length - 1] ?? null,
+    retentionDays: USAGE_RETENTION_DAYS,
+    cutoffDay: localDayKey(new Date(now - USAGE_RETENTION_DAYS * 86_400_000)),
+    totalRequests: totals.requests,
+    totalCostUsd: round6(totals.cost),
+    totalInputTokens: totals.input,
+    totalOutputTokens: totals.output,
+    providers: providers.size,
+    models: models.size,
+    tags: tags.size,
+    fileBytes,
+    dirty,
+  };
+}
+
+export interface UsagePurgePlan {
+  cutoffDay: string; // 将删除「严格早于」该日期的数据
+  days: string[]; // 受影响的日期（升序）
+  requests: number;
+  costUsd: number;
+}
+
+/**
+ * 纯函数：算出「删除早于 cutoffDay 的数据」会移除什么（不修改任何状态）。
+ * 预览与实际清理走同一实现，保证「确认时看到的」就是「实际删掉的」。
+ */
+export function usagePurgePlan(cutoffDay: string): UsagePurgePlan {
+  const days: string[] = [];
+  let requests = 0;
+  let costUsd = 0;
+  for (const [day, providers] of Object.entries(data)) {
+    if (day >= cutoffDay) continue;
+    days.push(day);
+    for (const modelMap of Object.values(providers)) {
+      for (const tagMap of Object.values(modelMap)) {
+        for (const cell of Object.values(tagMap)) {
+          requests += cell.requests;
+          costUsd += cell.cost;
+        }
+      }
+    }
+  }
+  days.sort();
+  return { cutoffDay, days, requests, costUsd: round6(costUsd) };
+}
+
+/** 把「保留最近 keepDays 天（含今日）」换算成清理起点 */
+export function purgeCutoffForKeepDays(keepDays: number, now = Date.now()): string {
+  const n = Math.max(1, Math.floor(keepDays));
+  return localDayKey(new Date(now - (n - 1) * 86_400_000));
+}
+
+/**
+ * 手动清理：删除早于 cutoffDay 的数据并落盘，返回实际删除的内容。
+ * 只会比自动保留窗口更短（cutoffDay 若早于自动裁剪起点，那些天早已被 prune 掉，无可删）。
+ */
+export function purgeUsageBefore(cutoffDay: string): UsagePurgePlan {
+  const plan = usagePurgePlan(cutoffDay);
+  if (plan.days.length > 0) {
+    for (const day of plan.days) delete data[day];
+    flush();
+  }
+  return plan;
+}
+
+/** 原始快照（深拷贝）：导出全量用量用，调用方无法反向改坏内存态 */
+export function usageSnapshot(): UsageData {
+  return structuredClone(data);
 }

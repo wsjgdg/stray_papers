@@ -174,4 +174,122 @@ describe('usageStore', () => {
     expect(s.usageTodayCost()).toBe(0);
     expect(s.usageMonthProjection().projectedMonthUsd).toBe(0);
   });
+
+  it('usageStats：天数/范围/累计/维度基数/保留策略（E2）', async () => {
+    const s = await fresh();
+    s.initUsageStore();
+    const now = Date.now();
+    s.recordUsage(now, 'openai', 'gpt-4o', 'proj-a', 100, 50, 0, 0.5);
+    s.recordUsage(now, 'anthropic', 'claude', null, 10, 5, 0, 0.25);
+    s.recordUsage(now - 86_400_000, 'openai', 'gpt-4o', null, 1, 1, 0, 0.125);
+    s.flush();
+    const st = s.usageStats(now);
+    expect(st.days).toBe(2);
+    expect(st.lastDay).toBe(s.usageDayTotals()[1].day);
+    expect(st.firstDay).toBe(s.usageDayTotals()[0].day);
+    expect(st.totalRequests).toBe(3);
+    expect(st.totalCostUsd).toBeCloseTo(0.875, 6);
+    expect(st.totalInputTokens).toBe(111);
+    expect(st.totalOutputTokens).toBe(56);
+    expect(st.providers).toBe(2);
+    expect(st.models).toBe(2); // openai/gpt-4o 与 anthropic/claude
+    expect(st.tags).toBe(2); // 'proj-a' 与 '(untagged)'
+    expect(st.retentionDays).toBe(90);
+    expect(st.cutoffDay).toBe(s.purgeCutoffForKeepDays(91, now)); // 90 天窗口 = 保留 91 天（含今日）
+    expect(st.dirty).toBe(false); // flush 之后
+    expect(st.fileBytes).toBeGreaterThan(0);
+  });
+
+  it('usageStats：空存储不抛错，范围为 null', async () => {
+    const s = await fresh();
+    s.initUsageStore();
+    const st = s.usageStats();
+    expect(st).toMatchObject({
+      days: 0,
+      firstDay: null,
+      lastDay: null,
+      totalRequests: 0,
+      totalCostUsd: 0,
+      providers: 0,
+      models: 0,
+      tags: 0,
+      fileBytes: 0,
+    });
+  });
+
+  it('purgeCutoffForKeepDays：保留 N 天含今日（N=1 → 起点为今日）', async () => {
+    const s = await fresh();
+    s.initUsageStore();
+    const now = new Date(2026, 8, 14, 10).getTime();
+    expect(s.purgeCutoffForKeepDays(1, now)).toBe('2026-09-14');
+    expect(s.purgeCutoffForKeepDays(3, now)).toBe('2026-09-12');
+    expect(s.purgeCutoffForKeepDays(0, now)).toBe('2026-09-14'); // 下限钳到 1 天，永不删今日
+    expect(s.purgeCutoffForKeepDays(2.7, now)).toBe('2026-09-13'); // 取整
+  });
+
+  it('usagePurgePlan 是纯函数：只算不改，preview 与实删一致（E2）', async () => {
+    const s = await fresh();
+    s.initUsageStore();
+    const now = Date.now();
+    s.recordUsage(now, 'openai', 'm', null, 1, 1, 0, 1);
+    s.recordUsage(now - 5 * 86_400_000, 'openai', 'm', null, 2, 2, 0, 2);
+    s.recordUsage(now - 6 * 86_400_000, 'openai', 'm', null, 3, 3, 0, 3);
+
+    const cutoff = s.purgeCutoffForKeepDays(3, now);
+    const plan = s.usagePurgePlan(cutoff);
+    expect(plan.days).toHaveLength(2); // 5 天前 + 6 天前
+    expect(plan.requests).toBe(2); // requests 是调用次数（每次 recordUsage +1），不是入参
+    expect(plan.costUsd).toBeCloseTo(5, 6);
+    // 规划阶段不改内存态
+    expect(s.usageStats(now).days).toBe(3);
+
+    const removed = s.purgeUsageBefore(cutoff);
+    expect(removed).toEqual(plan); // 所见即所删
+    const after = s.usageStats(now);
+    expect(after.days).toBe(1);
+    expect(after.totalCostUsd).toBeCloseTo(1, 6);
+  });
+
+  it('purgeUsageBefore 落盘：重启后仍是清理后的数据（E2）', async () => {
+    let s = await fresh();
+    s.initUsageStore();
+    const now = new Date();
+    const dayMs = 86_400_000;
+    s.recordUsage(now.getTime(), 'openai', 'm', null, 1, 1, 0, 1);
+    s.recordUsage(now.getTime() - 10 * dayMs, 'openai', 'old', null, 1, 1, 0, 9);
+    s.purgeUsageBefore(s.purgeCutoffForKeepDays(1, now.getTime()));
+    s.stopUsageStore();
+
+    vi.resetModules();
+    s = await fresh();
+    s.initUsageStore();
+    const rows = s.usageSpendSources();
+    expect(rows).toHaveLength(1);
+    expect(rows[0].model).toBe('m');
+    expect(rows[0].costUsd).toBeCloseTo(1, 6);
+  });
+
+  it('usagePurgeBefore：无匹配数据时返回空计划且不写盘', async () => {
+    const s = await fresh();
+    s.initUsageStore();
+    const now = Date.now();
+    s.recordUsage(now, 'openai', 'm', null, 1, 1, 0, 1);
+    s.flush();
+    const sizeBefore = fs.statSync(path.join(tmpHome, 'usage-daily.json')).size;
+    const plan = s.purgeUsageBefore('1999-01-01');
+    expect(plan).toEqual({ cutoffDay: '1999-01-01', days: [], requests: 0, costUsd: 0 });
+    expect(fs.statSync(path.join(tmpHome, 'usage-daily.json')).size).toBe(sizeBefore);
+  });
+
+  it('usageSnapshot 返回深拷贝：改快照不影响内存态（E2）', async () => {
+    const s = await fresh();
+    s.initUsageStore();
+    s.recordUsage(Date.now(), 'openai', 'm', 'tag-x', 5, 5, 0, 1);
+    const snap = s.usageSnapshot();
+    const day = Object.keys(snap)[0];
+    snap[day].openai.m['tag-x'].cost = 999;
+    delete snap[day].openai.m;
+    expect(s.usageStats().totalCostUsd).toBeCloseTo(1, 6);
+    expect(s.usageSpendSources()).toHaveLength(1);
+  });
 });
