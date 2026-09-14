@@ -30,7 +30,7 @@ let failKeyA = false; // 控制 key-a 是否返回 500（fallback 场景切换�
 function startUpstream() {
   const app = (expressMod as any).default();
   app.use((expressMod as any).default.json({ limit: '1mb' }));
-  app.all('*', (req: any, res: any) => {
+  app.use((req: any, res: any) => {
     const auth = (req.headers.authorization ?? '') as string;
     upstreamHits.push(`${req.method} ${req.url} auth=${auth} model=${req.body?.model}`);
     if (failKeyA && auth.includes('key-a')) {

@@ -281,7 +281,7 @@ describe('Phase C: 端到端（真实回环 HTTP）', () => {
     // 假「上游厂商」
     const up = express();
     up.use(express.json({ limit: '1mb' }));
-    up.all('*', (req: any, res: any) => {
+    up.use((req: any, res: any) => {
       const prompt = String(req.body?.messages?.at(-1)?.content ?? '');
       const content = prompt.includes('参考答案')
         ? '4'

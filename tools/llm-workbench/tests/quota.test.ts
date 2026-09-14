@@ -31,7 +31,7 @@ function okBody() {
 function startUpstream() {
   const app = express();
   app.use(express.json({ limit: '1mb' }));
-  app.all('*', (_req: any, res: any) => res.status(200).json(JSON.parse(okBody())));
+  app.use((_req: any, res: any) => res.status(200).json(JSON.parse(okBody())));
   return app.listen(0) as http.Server;
 }
 
