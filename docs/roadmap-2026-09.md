@@ -300,6 +300,10 @@ F1（asar）──> F2（自动更新）──> F3 / F4（阻塞）
 - **C 组是产品定位决策**，确认要不要往「评测」走再投入。
 - **下一步**：E 组（月度预算/用量运维/成本异动）成本低收益直接；F1→F2 是发布链路，需重打安装包 + 桌面完整冒烟。
 
+## Phase G Delivery Notes
+
+- 2026-09-18 · G-P3 首步：新增 Cerebras 厂商目录（OpenAI 兼容 base URL、模型探针端点、控制台和官方兼容性文档），沿用现有代理通道，提示仅支持 `n=1`。目录契约测试覆盖注册、端点与 ID 唯一性。参考 [LiteLLM Cerebras](https://docs.litellm.ai/docs/providers/cerebras) 与 [官方兼容性说明](https://inference-docs.cerebras.ai/resources/openai)。本机无鉴权 GET `/v1/models` 返回 HTTP 403，未验证真实 Key 下的推理调用；不代表完整功能兼容或 G-P3 全部完成。未核实的定价/状态链接保持空值。
+
 ## 统一门禁（每项 commit 前）
 
 **本地门禁必须与 `.github/workflows/ci.yml` 同源**——CI 跑什么，本地就先跑什么。2026-09-14 的事故正是这里漏了一步：
