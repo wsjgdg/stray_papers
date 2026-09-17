@@ -302,6 +302,8 @@ F1（asar）──> F2（自动更新）──> F3 / F4（阻塞）
 
 ## Phase G Delivery Notes
 
+- 2026-09-18 · G-P3 第二步：新增 Perplexity Router 与 SambaNova 目录，沿用 OpenAI 兼容代理，不改内核。Perplexity 按官方 quickstart 使用 `/router/v1`，明确不代表 Sonar / Agent API；本机连接重置，未确认的模型探针保持空值。SambaNova 原官方文档路径 404，目录暂链接 LiteLLM 集成说明；无鉴权模型 GET 在 Windows 证书吊销服务器离线、单次探测跳过吊销检查后返回 200（未修改应用 TLS 设置）。两家均未验证真实 Key 推理，不代表全部功能兼容。新增两条目录回归测试；G-P3 其余厂商仍待办。
+
 - 2026-09-18 · G-P3 首步：新增 Cerebras 厂商目录（OpenAI 兼容 base URL、模型探针端点、控制台和官方兼容性文档），沿用现有代理通道，提示仅支持 `n=1`。目录契约测试覆盖注册、端点与 ID 唯一性。参考 [LiteLLM Cerebras](https://docs.litellm.ai/docs/providers/cerebras) 与 [官方兼容性说明](https://inference-docs.cerebras.ai/resources/openai)。本机无鉴权 GET `/v1/models` 返回 HTTP 403，未验证真实 Key 下的推理调用；不代表完整功能兼容或 G-P3 全部完成。未核实的定价/状态链接保持空值。
 
 ## 统一门禁（每项 commit 前）
