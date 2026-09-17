@@ -230,6 +230,7 @@ export function initConfigStore(): void {
     proxyToken: parsedObj.proxyToken ?? null,
     proxyTokenEnabled: parsedObj.proxyTokenEnabled ?? false,
     routing: parsedObj.routing,
+    budget: parsedObj.budget,
   };
   encrypted = false;
   locked = false;
@@ -290,6 +291,7 @@ export function unlock(password: string): boolean {
       proxyToken: cfg.proxyToken ?? null,
       proxyTokenEnabled: cfg.proxyTokenEnabled ?? false,
       routing: cfg.routing,
+      budget: cfg.budget,
     };
     cryptoSalt = salt;
     setMasterKey(key);
