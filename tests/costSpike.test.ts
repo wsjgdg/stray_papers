@@ -185,7 +185,7 @@ describe('小时成本环（内存态）', () => {
     const t = Date.now();
     call(t);
     const s = currentCostSpike(t);
-    assert.equal(s.hourKey, hour(new Date(t).getHours()));
+    assert.equal(s.hourKey, localHourKey(t));
     assert.equal(s.hourCostUsd > 0, true);
   });
 
