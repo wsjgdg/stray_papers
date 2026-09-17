@@ -178,3 +178,35 @@ describe('spendToCsv: tag 分组', () => {
     expect(csv).toContain(',proj-y,');
   });
 });
+
+describe('aggregateSpend: 预聚合 requests', () => {
+  it('带 requests 的预聚合源按真实次数计数（usage-daily 导出口径）', () => {
+    const rows = aggregateSpend([
+      call({
+        ts: tsOf(2026, 9, 10),
+        provider: 'openai',
+        model: 'gpt-4o',
+        requests: 42,
+        costUsd: 1,
+      }),
+      call({
+        ts: tsOf(2026, 9, 10, 15),
+        provider: 'openai',
+        model: 'gpt-4o',
+        requests: 8,
+        costUsd: 0.5,
+      }),
+    ]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].requests).toBe(50);
+    expect(rows[0].costUsd).toBeCloseTo(1.5);
+  });
+
+  it('不带 requests 的逐条日志源每条计 1（原行为不变）', () => {
+    const rows = aggregateSpend([
+      call({ ts: tsOf(2026, 9, 10), provider: 'openai', model: 'gpt-4o', costUsd: 1 }),
+      call({ ts: tsOf(2026, 9, 10, 15), provider: 'openai', model: 'gpt-4o', costUsd: 0.5 }),
+    ]);
+    expect(rows[0].requests).toBe(2);
+  });
+});
