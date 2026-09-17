@@ -15,7 +15,9 @@ export interface SpendRow {
   costUsd: number;
 }
 
-// 聚合只依赖这些字段，测试无需构造完整 CallLog
+// 聚合只依赖这些字段，测试无需构造完整 CallLog。
+// requests 可选：预聚合数据（如 usage-daily 导出）直接给真实调用次数；
+// 逐条调用日志不传，则每条计 1。
 export type SpendSource = Pick<
   CallLog,
   | 'ts'
@@ -26,7 +28,7 @@ export type SpendSource = Pick<
   | 'outputTokens'
   | 'cacheReadTokens'
   | 'costUsd'
->;
+> & { requests?: number };
 
 function startOfDay(ts: number): number {
   const d = new Date(ts);
@@ -64,7 +66,8 @@ export function aggregateSpend(logs: SpendSource[], opts: { days?: number } = {}
       };
       map.set(key, row);
     }
-    row.requests += 1;
+    // 预聚合源带 requests（真实次数）；逐条日志源按 1 条计
+    row.requests += log.requests ?? 1;
     row.inputTokens += log.inputTokens ?? 0;
     row.outputTokens += log.outputTokens ?? 0;
     row.cacheReadTokens += log.cacheReadTokens ?? 0;

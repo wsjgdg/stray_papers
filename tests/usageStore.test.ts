@@ -43,6 +43,8 @@ describe('usageStore', () => {
     expect(gpt.outputTokens).toBe(50);
     expect(gpt.cacheReadTokens).toBe(10);
     expect(gpt.costUsd).toBeCloseTo(0.7);
+    // 预聚合 cell 携带真实调用次数（导出 requests 不再恒为 1）
+    expect(gpt.requests).toBe(2);
   });
 
   it('flush 落盘后重新 init 可完整恢复（跨重启）', async () => {

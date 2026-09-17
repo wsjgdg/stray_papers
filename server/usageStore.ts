@@ -150,6 +150,7 @@ export function flush(): void {
 
 /**
  * 导出用：把持久化用量展平为 SpendSource 形态（每 cell 一条，ts 取当日本地零点）。
+ * requests 携带 cell 真实调用次数（aggregateSpend 优先用它，而非每条计 1）。
  * 记录口径 = recordCall 全量，因此导出以本存储为准（内存日志环只有 500 条）。
  */
 export function usageSpendSources(): {
@@ -157,6 +158,7 @@ export function usageSpendSources(): {
   provider: string;
   model: string;
   tag: string;
+  requests: number;
   inputTokens: number;
   outputTokens: number;
   cacheReadTokens: number;
@@ -167,6 +169,7 @@ export function usageSpendSources(): {
     provider: string;
     model: string;
     tag: string;
+    requests: number;
     inputTokens: number;
     outputTokens: number;
     cacheReadTokens: number;
@@ -182,6 +185,7 @@ export function usageSpendSources(): {
             provider,
             model,
             tag,
+            requests: cell.requests,
             inputTokens: cell.input,
             outputTokens: cell.output,
             cacheReadTokens: cell.cacheRead,
