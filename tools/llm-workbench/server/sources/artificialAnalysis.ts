@@ -190,7 +190,8 @@ export async function fetchArtificialAnalysis(): Promise<{
   leaderboards: Leaderboard[];
   pricing: Map<string, { input: number | null; output: number | null; cacheHit: number | null }>;
 }> {
-  const { text } = await fetchText(PAGE, { timeoutMs: 30000 });
+  const { text, status } = await fetchText(PAGE, { timeoutMs: 30000 });
+  if (status < 200 || status >= 300) throw new Error(`HTTP ${status}`);
   const datasets = parseDatasets(text);
 
   // 同名数据集可能重复出现，保留条目最多的一份

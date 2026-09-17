@@ -60,7 +60,8 @@ export async function fetchJson<T>(
   url: string,
   init?: RequestInit & { timeoutMs?: number },
 ): Promise<T> {
-  const { text } = await fetchText(url, init);
+  const { text, status } = await fetchText(url, init);
+  if (status < 200 || status >= 300) throw new Error(`HTTP ${status}`);
   return JSON.parse(text) as T;
 }
 
