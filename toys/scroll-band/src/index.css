@@ -1,0 +1,207 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  min-height: 100%;
+  /* React 挂载和父页面主题消息到达前，先按系统主题保持正确首帧。 */
+  background-color: #08090a;
+}
+
+@media (prefers-color-scheme: light) {
+  html,
+  body,
+  #root {
+    background-color: #ffffff;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* shadcn 基础层兜底: 没写显式 text-x / bg-x 的文字和表面 (textarea 输入文字、
+     placeholder、气泡正文) 从这里继承主题色, 不依赖 UA 默认色.
+     烧主题前 token 未定义时这两行按无效值优雅回退, 无副作用. */
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* 中英混排对齐:一行里英文(尤其 ds 的 display/像素字体如 Press Start 2P)和中文(系统黑体)
+   混在一起时,英文会偏小、偏上,跟中文对不齐。把纯英文/数字那一截用 <span className="cjk-latin">
+   包起来即可统一对齐:font-size-adjust 拉平字号,vertical-align 把英文下移到与中文同基线。
+   --cjk-latin-shift 由 design_picker 按 ds 烧进 :root(默认 -0.15em);极个别字体偏差大改这一个值。 */
+.cjk-latin {
+  font-size-adjust: 0.56;
+  vertical-align: var(--cjk-latin-shift, -0.15em);
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --background: 220 13% 14%;
+    --foreground: 0 0% 100%;
+    --card-foreground: 0 0% 100%;
+    --popover-foreground: 0 0% 100%;
+    --card: 218 10% 16%;
+    --popover: 218 10% 16%;
+    --secondary: 220 10% 18%;
+    --muted: 220 10% 18%;
+    --accent: 220 10% 18%;
+    --secondary-foreground: 210 2% 74%;
+    --accent-foreground: 210 2% 74%;
+    --muted-foreground: 228 2% 57%;
+    --border: 220 8% 23%;
+    --input: 220 8% 23%;
+    --primary: 0 0% 100%;
+    --ring: 0 0% 100%;
+    --primary-foreground: 220 13% 14%;
+    --destructive-foreground: 220 13% 14%;
+    --destructive: 0 72% 51%;
+    --radius: var(--radius-md);
+
+    --space-1: 4px;
+    --space-12: 48px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --radius-lg: 4px;
+    --radius-md: 0px;
+    --radius-pill: 9999px;
+    --radius-sm: 0px;
+    --elev-flat: none;
+    --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.5);
+    --elev-raised: none;
+    --elev-ring: 0 0 0 1px var(--border);
+    --text-2xl: 30px;
+    --text-3xl: 40px;
+    --text-4xl: 64px;
+    --text-base: 16px;
+    --text-lg: 20px;
+    --text-sm: 14px;
+    --text-xl: 24px;
+    --text-xs: 12px;
+    --leading-body: 1.5;
+    --leading-tight: 1.2;
+    --font-display: "GeistMono", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", ui-monospace, "SF Mono", "Roboto Mono", Menlo, Monaco, "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace;
+    --font-body: "universalSans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", "universalSans Fallback", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "GeistMono", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", ui-monospace, "SF Mono", "Roboto Mono", Menlo, Monaco, "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace;
+    --cjk-latin-shift: -0.15em;
+  }
+
+  /* 浅色主题。同一套黑白灰设计语言做明面对称——
+     primary 依旧取"反相的页面底色"（深墨），面板比页面底色更白、靠描边分层。
+     两个入口共用同一份浅色值：html[data-theme="light"] = 用户手动选浅色；
+     系统浅色且用户没手动指定（无 data-theme）= 跟随系统。手动 dark 走 :root 深色底，不写规则。 */
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --background: 220 14% 96%;
+    --foreground: 220 13% 10%;
+    --card-foreground: 220 13% 10%;
+    --popover-foreground: 220 13% 10%;
+    --card: 0 0% 100%;
+    --popover: 0 0% 100%;
+    --secondary: 220 12% 92%;
+    --muted: 220 12% 92%;
+    --accent: 220 12% 92%;
+    --secondary-foreground: 220 6% 28%;
+    --accent-foreground: 220 6% 28%;
+    --muted-foreground: 220 4% 42%;
+    --border: 220 10% 84%;
+    --input: 220 10% 84%;
+    --primary: 220 13% 10%;
+    --ring: 220 13% 10%;
+    --primary-foreground: 0 0% 100%;
+    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 72% 45%;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme]) {
+      color-scheme: light;
+      --background: 220 14% 96%;
+      --foreground: 220 13% 10%;
+      --card-foreground: 220 13% 10%;
+      --popover-foreground: 220 13% 10%;
+      --card: 0 0% 100%;
+      --popover: 0 0% 100%;
+      --secondary: 220 12% 92%;
+      --muted: 220 12% 92%;
+      --accent: 220 12% 92%;
+      --secondary-foreground: 220 6% 28%;
+      --accent-foreground: 220 6% 28%;
+      --muted-foreground: 220 4% 42%;
+      --border: 220 10% 84%;
+      --input: 220 10% 84%;
+      --primary: 220 13% 10%;
+      --ring: 220 13% 10%;
+      --primary-foreground: 0 0% 100%;
+      --destructive-foreground: 0 0% 100%;
+      --destructive: 0 72% 45%;
+    }
+  }
+
+  .dark {
+    color-scheme: dark;
+    --background: 220 13% 14%;
+    --foreground: 0 0% 100%;
+    --card-foreground: 0 0% 100%;
+    --popover-foreground: 0 0% 100%;
+    --card: 218 10% 16%;
+    --popover: 218 10% 16%;
+    --secondary: 220 10% 18%;
+    --muted: 220 10% 18%;
+    --accent: 220 10% 18%;
+    --secondary-foreground: 210 2% 74%;
+    --accent-foreground: 210 2% 74%;
+    --muted-foreground: 228 2% 57%;
+    --border: 220 8% 23%;
+    --input: 220 8% 23%;
+    --primary: 0 0% 100%;
+    --ring: 0 0% 100%;
+    --primary-foreground: 220 13% 14%;
+    --destructive-foreground: 220 13% 14%;
+    --destructive: 0 72% 51%;
+    --radius: var(--radius-md);
+
+    --space-1: 4px;
+    --space-12: 48px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --radius-lg: 4px;
+    --radius-md: 0px;
+    --radius-pill: 9999px;
+    --radius-sm: 0px;
+    --elev-flat: none;
+    --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.5);
+    --elev-raised: none;
+    --elev-ring: 0 0 0 1px var(--border);
+    --text-2xl: 30px;
+    --text-3xl: 40px;
+    --text-4xl: 64px;
+    --text-base: 16px;
+    --text-lg: 20px;
+    --text-sm: 14px;
+    --text-xl: 24px;
+    --text-xs: 12px;
+    --leading-body: 1.5;
+    --leading-tight: 1.2;
+    --font-display: "GeistMono", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", ui-monospace, "SF Mono", "Roboto Mono", Menlo, Monaco, "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace;
+    --font-body: "universalSans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", "universalSans Fallback", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "GeistMono", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", ui-monospace, "SF Mono", "Roboto Mono", Menlo, Monaco, "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace;
+    --cjk-latin-shift: -0.15em;
+  }
+
+  body { font-family: var(--font-body); }
+
+  /* 中英混排: 把英文/数字那一截用 <span class="cjk-latin"> 包起来, 字号 + 基线对齐中文 (font-size-adjust 0.56 实测最贴中文字高) */
+  .cjk-latin { font-size-adjust: 0.56; vertical-align: var(--cjk-latin-shift, -0.15em); }
+}
