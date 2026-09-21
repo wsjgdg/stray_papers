@@ -1,18 +1,16 @@
 # 滚动乐团 · ScrollOrchestra
 
-一个原本构建于 VibeX / RunningHub 托管平台的网页应用，**现已改造为完全自包含、零后端依赖**的纯前端项目。
+一个完全自包含、零后端依赖的纯前端音乐创作 / 乐理编曲网页应用。所有数据存于浏览器本地，AI 能力为可选增强。
 
 - 数据持久化：浏览器 **IndexedDB**（作品 / 成绩 / 关卡），昵称存 `localStorage`
 - AI 能力：**可选**。配置你自己的 OpenAI 兼容 Key 后启用；不配置则全部本地功能照常运行
-- 外部依赖：**无**。不连接 PocketBase、不调用 RunningHub 登录 / 计费 / 沙箱接口
-
-> 原平台专属代码（rh 源码标注插件、`allowedHosts`、RunningHub 登录、计费确认弹窗、PocketBase 后端、VibeX Source round-trip）已全部移除或降级为本地实现。
+- 外部依赖：**无**。不连接任何远端后端或登录 / 计费服务
 
 ## 技术栈
 
-- Vite 8 + React 19 + TypeScript 6
+- Vite 8 + React 19 + TypeScript
 - Tailwind CSS 3 + Radix UI + GSAP + Recharts
-- 包管理：npm（pnpm 在本仓库环境下符号链接受限，已切换为 npm 扁平安装）
+- 包管理：npm
 - 本地存储：IndexedDB（经 `src/lib/localStore.ts`）
 
 ## 快速开始
@@ -45,27 +43,29 @@ npm run preview    # 预览生产构建，http://localhost:8000
 | `AI_FALLBACK_API_KEY` | 降级供应商 Key；留空则关闭降级 | 否 |
 | `AI_FALLBACK_MODEL` | 降级模型，默认 `glm-4.7-flash` | 否 |
 
-> 变量前缀是 `AI_`（非 `VITE_`），由 `vite.config.ts` 的 `envPrefix` 暴露给前端。
+> 变量前缀是 `AI_`，由 `vite.config.ts` 的 `envPrefix` 暴露给前端。
 > 主请求失败时自动改用降级供应商；二者均未配置时，AI 指挥台 / 智能配词优雅降级（提示「未配置」），其余功能不受影响。
 
-## 目录与改造要点
+## 功能与模块
 
-| 原实现 | 现实现 | 文件 |
-| --- | --- | --- |
-| PocketBase 集合 (`pb.collection()`) | 浏览器 IndexedDB | `src/lib/localStore.ts` |
-| `/api/works`、`/api/scores`、`/api/levels` | 本地 IndexedDB 读写 | `src/lib/social.ts` |
-| `/api/llm` 异步任务轮询 | 直接调用 OpenAI 兼容 `/chat/completions` | `src/lib/aiConfig.ts`、`src/lib/llm.ts` |
-| `/api/agents` 轮询 | 单次 `chat()` 调用 | `src/lib/agent.ts` |
-| RunningHub 登录 / 计费确认 | 离线昵称 + 直通（不弹付费确认） | `src/lib/auth.ts`、`src/hooks/useCostConfirm.ts` |
-| rh 账号菜单 | 本地昵称设置 | `src/components/rh/RhAccountMenu.tsx` |
-| VibeX 源码标注 / `allowedHosts` | 已移除 | `vite.config.ts` |
+- **乐团指挥**（ConductorPanel）：向指挥提问，获取乐理 / 编曲 / 练法建议；支持把建议一键应用到画布、生成画布体检报告、导出对话记录。
+- **朗读（TTS）**：浏览器原生语音合成朗读指挥回复，可在「朗读」菜单中调节语速 / 音高、开启自动朗读。
+- **本地数据**：作品 / 成绩 / 关卡存于 IndexedDB，昵称存于 `localStorage`，跨会话保留。
+- **AI 指挥台 / 智能配词**（可选）：配置后即可使用；未配置时优雅提示「未配置」，其余功能不受影响。
 
-未改动：`src/lib/musicAi.ts`（规则引擎，本就零网络）、`src/lib/aigc.ts`（无引用，靠 `pb` stub 编译通过）。
+## 目录结构（核心）
+
+| 模块 | 文件 |
+| --- | --- |
+| 本地存储（IndexedDB 读写） | `src/lib/localStore.ts` |
+| 社交 / 分数数据 | `src/lib/social.ts` |
+| AI 调用（OpenAI 兼容） | `src/lib/aiConfig.ts`、`src/lib/llm.ts` |
+| 智能体（单次 chat 调用） | `src/lib/agent.ts` |
+| 本地昵称 / 账号 | `src/lib/auth.ts` |
+| 指挥面板 UI | `src/components/home/ConductorPanel.tsx` |
 
 ## 验证状态
 
-- [x] 移除全部平台耦合（rh 插件 / PocketBase / RunningHub 登录计费）
-- [x] 数据层迁移到 IndexedDB
-- [x] AI 层改为可选 OpenAI 兼容调用
-- [x] 依赖安装（npm）
+- [x] `npm install` 依赖安装
 - [x] `npm run build` 通过（tsc -b + vite build）
+- [x] 浏览器零后端运行（无头冒烟：0 控制台错误、0 外部请求）
