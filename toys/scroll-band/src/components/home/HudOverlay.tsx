@@ -686,7 +686,7 @@ function MidiMenu({ onExport }: { onExport: (repeats: number) => void }) {
         aria-label="导出 MIDI 文件：选择循环遍数"
         className="border border-border px-2 py-0.5 hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
       >
-        MIDI
+        MIDI导出
       </button>
       {open && (
         <div
@@ -1148,7 +1148,7 @@ export function HudOverlay(p: ReturnType<typeof useHome>) {
               type="button"
               onClick={() => void p.onToggleMidiIn()}
               aria-pressed={p.midiIn}
-              aria-label="MIDI 键盘输入：外接键盘弹琴与挑战判定共用"
+              aria-label="MIDI 输入：外接键盘弹琴与挑战判定共用"
               title={
                 p.midiIn
                   ? p.midiDevs.length > 0
@@ -1162,7 +1162,7 @@ export function HudOverlay(p: ReturnType<typeof useHome>) {
                   : "border border-border px-2 py-0.5 hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
               }
             >
-              {p.midiIn && p.midiDevs.length > 0 ? `MIDI·${p.midiDevs.length}` : "MIDI"}
+              {p.midiIn && p.midiDevs.length > 0 ? `MIDI输入·${p.midiDevs.length}` : "MIDI输入"}
             </button>
             <button
               type="button"
