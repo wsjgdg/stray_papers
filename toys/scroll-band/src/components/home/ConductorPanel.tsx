@@ -422,11 +422,6 @@ function isNeural(v: SpeechSynthesisVoice): boolean {
   return /online|natural/i.test(v.name);
 }
 
-// 仅「Chinese (Mandarin, Simplified)」的标准普通话神经语音（避开方言/粤语/台语）
-function isStdNeural(v: SpeechSynthesisVoice): boolean {
-  return isNeural(v) && /mandarin,\s*simplified/i.test(v.name);
-}
-
 function matchGender(
   voices: SpeechSynthesisVoice[],
   gender: "male" | "female",
@@ -443,25 +438,24 @@ function pickVoice(persona: Persona, voices: SpeechSynthesisVoice[]): SpeechSynt
   const zh = voices.filter((v) => v.lang.toLowerCase().startsWith("zh"));
   if (zh.length === 0) return null;
   const pref = PERSONA_VOICE[persona];
-  // 1) 名称子串命中（优先标准神经语音）
+  // 1) 名称子串命中（本地 voice 优先：神经「Online」语音在本机 Web Speech API 下不出声，仅作兜底）
   const nameHits = pref.names
     .map((n) => zh.find((v) => v.name.includes(n)))
     .filter((v): v is SpeechSynthesisVoice => !!v)
-    .sort((a, b) => Number(isStdNeural(b)) - Number(isStdNeural(a)));
+    .sort((a, b) => Number(isNeural(a)) - Number(isNeural(b)));
   if (nameHits.length) return nameHits[0];
-  // 2) 同性别标准神经语音（音色真正不同）
-  const sameGStd = zh.filter(isStdNeural).find((v) => matchGender([v], pref.gender));
-  if (sameGStd) return sameGStd;
-  // 3) 同性别任意神经语音
-  const sameGAny = zh.filter(isNeural).find((v) => matchGender([v], pref.gender));
-  if (sameGAny) return sameGAny;
-  // 4) 任意标准神经语音
-  const anyStd = zh.find(isStdNeural);
-  if (anyStd) return anyStd;
-  // 5) 同性别任意 voice（含旧 SAPI）
+  // 2) 同性别本地 voice
+  const sameGLocal = zh.filter((v) => !isNeural(v)).find((v) => matchGender([v], pref.gender));
+  if (sameGLocal) return sameGLocal;
+  // 3) 同性别任意 voice
   const sameG = matchGender(zh, pref.gender);
   if (sameG) return sameG;
-  // 6) 首个中文 voice
+  // 4) 首个本地 voice（兜底保证出声）
+  const anyLocal = zh.find((v) => !isNeural(v));
+  if (anyLocal) return anyLocal;
+  // 5) 实在没有本地 voice 才退回神经语音
+  const anyNeural = zh.find(isNeural);
+  if (anyNeural) return anyNeural;
   return zh[0];
 }
 
