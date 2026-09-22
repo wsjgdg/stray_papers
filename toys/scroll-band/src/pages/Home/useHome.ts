@@ -1988,10 +1988,16 @@ export function useHome() {
   }, [mode]);
   const openRoll = useCallback(() => {
     if (guardRo()) return;
-    const o = objectsRef.current.find((x) => x.id === selectedId);
+    // 未选中可编辑的线时，自动挑第一条可循环笔迹，免得点开没反应（演奏模式常见：没手动选过线）
+    let o = selectedId ? objectsRef.current.find((x) => x.id === selectedId) : undefined;
     if (!o || o.type !== "stroke" || o.audio.loopBeats <= 0) {
-      setAnnounce("先在画布上选中一条线，再开钢琴卷帘");
-      return;
+      const first = objectsRef.current.find((x) => x.type === "stroke" && x.audio.loopBeats > 0);
+      if (!first) {
+        setAnnounce("先在画布上选中一条线，再开钢琴卷帘");
+        return;
+      }
+      setSelectedId(first.id);
+      o = first;
     }
     if (!o.roll || o.roll.length === 0) o.roll = rollFromObject(o, bandDegs(scaleRef.current));
     pushHistory("op", "钢琴卷帘编辑"); // 整段卷帘编辑 = 一步可撤销
@@ -3070,6 +3076,11 @@ export function useHome() {
   // 经 ref 分发：开一次 MIDI 后逻辑升级不用重绑设备回调，也避免闭包拿旧引用
   const midiNoteOnRef = useRef<(midi: number) => void>(() => {});
   midiNoteOnRef.current = (midi: number) => {
+    const engine = engineRef.current;
+    if (!engine) return;
+    // 外接键盘首弹即唤醒 AudioContext：MIDI 连上时未必点过屏幕琴键，
+    // 若 ctx 仍 suspended，touchPlayKey→playPiano 全静音。此处 ensure() 顺手 resume。
+    engine.ensure();
     const pos = pianoPosOfMidi(midi);
     if (!pos) return; // 26 键之外的音直接忽略（不发声也不误判）
     // 外接 MIDI 键盘始终按钢琴键位发声，与打字玩法（鼓/钢琴）无关——
@@ -3093,6 +3104,7 @@ export function useHome() {
     }
     setMidiIn(true);
     setMidiDevs(res.devices);
+    engineRef.current?.ensure(); // 连上外接键盘即唤醒 AudioContext，避免 ctx 仍 suspended 导致静音
     setAnnounce(
       res.devices.length > 0
         ? `MIDI 键盘就绪：${res.devices[0]}${res.devices.length > 1 ? ` 等 ${res.devices.length} 台` : ""}`

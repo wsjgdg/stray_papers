@@ -929,6 +929,7 @@ export function HudOverlay(p: ReturnType<typeof useHome>) {
           </div>
         ) : (
           <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+            {/* ── 状态：循环 / 访客乐谱 / 自动演奏 ── */}
             {p.guestCanvas && (
               <span className="text-primary">
                 画布乐谱循环中 · 音阶 {p.scaleName} · 鼓 {p.drumKitName}
@@ -942,6 +943,9 @@ export function HudOverlay(p: ReturnType<typeof useHome>) {
             >
               {p.loopPlaying ? "LOOP" : ""}
             </span>
+
+            {/* ── 播放控制 ── */}
+            <span className="hidden select-none px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 sm:inline">播放</span>
             <button
               type="button"
               onClick={p.onToggleAllMuted}
@@ -952,7 +956,6 @@ export function HudOverlay(p: ReturnType<typeof useHome>) {
             >
               静音 {p.allMuted ? "开" : "关"}
             </button>
-            <ThemeChip />
             {p.objectCount > 0 && (
               <button
                 type="button"
@@ -965,11 +968,45 @@ export function HudOverlay(p: ReturnType<typeof useHome>) {
                 伴奏 {p.accompPaused ? "暂停" : "播放"}
               </button>
             )}
-            {compose && (
-              <span aria-label={`画布对象数 ${p.objectCount}，上限 ${p.maxObjects}`} className="inline-block w-[3rem] text-center">
-                {p.objectCount}/{p.maxObjects}
+            <button
+              type="button"
+              onClick={p.onToggleRecord}
+              aria-pressed={p.recActive}
+              aria-label={p.recActive ? "停止录音" : "开始录音"}
+              className={
+                p.recActive
+                  ? "border border-destructive px-2 py-0.5 text-card-foreground hover:bg-destructive/10 focus-visible:shadow-[var(--focus-ring)]"
+                  : "border border-border px-2 py-0.5 hover:border-foreground/60 hover:text-card-foreground focus-visible:shadow-[var(--focus-ring)]"
+              }
+            >
+              {p.recActive ? "■ 停止" : "● 录音"}
+            </button>
+            {p.recActive && (
+              <span className="flex items-center gap-1.5 text-card-foreground">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-destructive" />
+                REC {p.recClock}
               </span>
             )}
+            {p.replayActive && (
+              <span className="flex items-center gap-1.5 border border-primary px-2 py-0.5 text-primary">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+                重放中
+              </span>
+            )}
+            <RecHistoryMenu
+              entries={p.recHistory}
+              open={p.recHistoryOpen}
+              onOpen={p.onOpenRecHistory}
+              onClose={p.onCloseRecHistory}
+              onPlay={p.onPlayRecHistory}
+              onShare={p.onShareRecHistory}
+              onStar={p.onStarRecHistory}
+              onRemove={p.onRemoveRecHistory}
+            />
+            <span aria-hidden className="mx-1 hidden h-4 w-px self-center bg-border/60 sm:inline" />
+
+            {/* ── 调性 · 音色 · 节拍 ── */}
+            <span className="hidden select-none px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 sm:inline">调性</span>
             <BpmMenu bpm={p.bpm} onSet={p.onSetBpm} />
             <button
               type="button"
@@ -993,6 +1030,10 @@ export function HudOverlay(p: ReturnType<typeof useHome>) {
             >
               鼓·{p.drumKitName}
             </button>
+            <span aria-hidden className="mx-1 hidden h-4 w-px self-center bg-border/60 sm:inline" />
+
+            {/* ── 输入方式：怎么弹 ── */}
+            <span className="hidden select-none px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 sm:inline">输入</span>
             <button
               type="button"
               onClick={p.onCycleTyping}
@@ -1103,23 +1144,125 @@ export function HudOverlay(p: ReturnType<typeof useHome>) {
                 弱音 {p.softOn ? "踩" : "松"}
               </button>
             )}
-            {more && (
+            <button
+              type="button"
+              onClick={() => void p.onToggleMidiIn()}
+              aria-pressed={p.midiIn}
+              aria-label="MIDI 键盘输入：外接键盘弹琴与挑战判定共用"
+              title={
+                p.midiIn
+                  ? p.midiDevs.length > 0
+                    ? `已连接：${p.midiDevs.join("、")}`
+                    : "MIDI 已连接，等待设备"
+                  : "点击连接外接 MIDI 键盘"
+              }
+              className={
+                p.midiIn
+                  ? "border border-primary bg-primary/10 px-2 py-0.5 text-primary focus-visible:shadow-[var(--focus-ring)]"
+                  : "border border-border px-2 py-0.5 hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
+              }
+            >
+              {p.midiIn && p.midiDevs.length > 0 ? `MIDI·${p.midiDevs.length}` : "MIDI"}
+            </button>
+            <button
+              type="button"
+              onClick={p.onToggleTouchKeys}
+              aria-pressed={p.touchKeys}
+              aria-label="触屏键盘：屏幕底部浮出可点按的琴键"
+              className={
+                p.touchKeys
+                  ? "border border-primary bg-primary/10 px-2 py-0.5 text-primary focus-visible:shadow-[var(--focus-ring)]"
+                  : "border border-border px-2 py-0.5 hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
+              }
+            >
+              琴键
+            </button>
+            <span aria-hidden className="mx-1 hidden h-4 w-px self-center bg-border/60 sm:inline" />
+
+            {/* ── 循环 · 录制 ── */}
+            <span className="hidden select-none px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 sm:inline">循环</span>
+            <button
+              type="button"
+              onClick={p.onLsToggle}
+              aria-label={
+                p.lsState === "off"
+                  ? "循环台：开始录制第一层"
+                  : p.lsState === "rec"
+                    ? "循环台：停止录制并开始循环"
+                    : p.lsState === "play"
+                      ? "循环台：叠加新层"
+                      : "循环台：合并当前叠录层"
+              }
+              className={
+                p.lsState === "rec" || p.lsState === "dub"
+                  ? "min-w-[7rem] border border-destructive px-2 py-0.5 text-center text-card-foreground hover:bg-destructive/10 focus-visible:shadow-[var(--focus-ring)]"
+                  : p.lsState === "play"
+                    ? "min-w-[7rem] border border-primary bg-primary/10 px-2 py-0.5 text-center text-primary focus-visible:shadow-[var(--focus-ring)]"
+                    : "min-w-[7rem] border border-border px-2 py-0.5 text-center hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
+              }
+            >
+              {p.lsState === "off"
+                ? "↻ 循环台"
+                : p.lsState === "rec"
+                  ? "● 录循环"
+                  : p.lsState === "play"
+                    ? `▶ 循环·${p.lsLayerCount}层`
+                    : "● 叠录中"}
+            </button>
+            {p.lsState !== "off" && p.lsLayerCount > 0 && (
               <button
                 type="button"
-                onClick={p.onTogglePad}
-                aria-pressed={p.padOn}
-                aria-label={p.padOn ? "关闭环境垫音" : "开启环境垫音"}
-                className={
-                  p.padOn
-                    ? "border border-primary/60 px-2 py-0.5 text-primary focus-visible:shadow-[var(--focus-ring)]"
-                    : "border border-border px-2 py-0.5 focus-visible:shadow-[var(--focus-ring)]"
-                }
+                onClick={p.onLsUndoLayer}
+                aria-label="撤销循环台最上层"
+                title="撤销最上层"
+                className="border border-border px-1.5 py-0.5 text-muted-foreground hover:border-primary/70 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
               >
-                垫音 {p.padOn ? "开" : "关"}
+                －1层
               </button>
             )}
+            {p.lsState === "dub" && (
+              <button
+                type="button"
+                onClick={p.onLsUndoLayer}
+                aria-label="取消本次叠录"
+                title="取消本次叠录"
+                className="border border-border px-1.5 py-0.5 text-muted-foreground hover:border-primary/70 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
+              >
+                撤销叠录
+              </button>
+            )}
+            {p.lsState !== "off" && (
+              <button
+                type="button"
+                onClick={p.onLsClear}
+                aria-label="清空循环台全部层"
+                className="border border-border px-1.5 py-0.5 text-muted-foreground hover:border-destructive hover:text-destructive focus-visible:shadow-[var(--focus-ring)]"
+              >
+                ×
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={p.onOpenRoll}
+              aria-label="钢琴卷帘：选中一条线后逐个音符编辑"
+              title="选中一条线后打开：拖方块改音高/时间，双击删音，点空加音（演奏 / 作曲模式均可）"
+              className={`border px-2 py-0.5 focus-visible:shadow-[var(--focus-ring)] ${
+                p.rollOpen
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border hover:border-primary/60 hover:text-primary"
+              }`}
+            >
+              卷帘
+            </button>
+            <span aria-hidden className="mx-1 hidden h-4 w-px self-center bg-border/60 sm:inline" />
+
+            {/* ── 作曲工具（仅作曲模式） ── */}
+            <span className="hidden select-none px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 sm:inline">作曲</span>
             {compose && (
               <>
+                <span aria-label={`画布对象数 ${p.objectCount}，上限 ${p.maxObjects}`} className="inline-block w-[3rem] text-center">
+                  {p.objectCount}/{p.maxObjects}
+                </span>
                 <button
                   type="button"
                   onClick={p.onUndo}
@@ -1236,188 +1379,61 @@ export function HudOverlay(p: ReturnType<typeof useHome>) {
                 <ClearCanvasButton onClear={p.onClearCanvas} />
               </>
             )}
-            {more && (
-              <button
-                type="button"
-                onClick={p.onToggleGallery}
-                aria-label="打开公共画廊：发布作品与查看天梯榜"
-                className="border border-border px-2 py-0.5 hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
-              >
-                画廊
-              </button>
-            )}
-            {/* 挑战 / 帮助已移至次级控制条末尾，与「更多」相邻；指挥台在右上角常驻 */}
-            <span aria-hidden className="hidden" />
-            <button
-              type="button"
-              onClick={p.onToggleRecord}
-              aria-pressed={p.recActive}
-              aria-label={p.recActive ? "停止录音" : "开始录音"}
-              className={
-                p.recActive
-                  ? "border border-destructive px-2 py-0.5 text-card-foreground hover:bg-destructive/10 focus-visible:shadow-[var(--focus-ring)]"
-                  : "border border-border px-2 py-0.5 hover:border-foreground/60 hover:text-card-foreground focus-visible:shadow-[var(--focus-ring)]"
-              }
-            >
-              {p.recActive ? "■ 停止" : "● 录音"}
-            </button>
-            {p.recActive && (
-              <span className="flex items-center gap-1.5 text-card-foreground">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-destructive" />
-                REC {p.recClock}
-              </span>
-            )}
-            {p.replayActive && (
-              <span className="flex items-center gap-1.5 border border-primary px-2 py-0.5 text-primary">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-                重放中
-              </span>
-            )}
-            <RecHistoryMenu
-              entries={p.recHistory}
-              open={p.recHistoryOpen}
-              onOpen={p.onOpenRecHistory}
-              onClose={p.onCloseRecHistory}
-              onPlay={p.onPlayRecHistory}
-              onShare={p.onShareRecHistory}
-              onStar={p.onStarRecHistory}
-              onRemove={p.onRemoveRecHistory}
-            />
-            {/* 演奏输入 / 循环：常驻可见，覆盖演奏模式核心操作（卷帘 / 循环台 / MIDI / 触屏键盘） */}
             <span aria-hidden className="mx-1 hidden h-4 w-px self-center bg-border/60 sm:inline" />
-            <button
-              type="button"
-              onClick={p.onOpenRoll}
-              aria-label="钢琴卷帘：选中一条线后逐个音符编辑"
-              title="选中一条线后打开：拖方块改音高/时间，双击删音，点空加音（演奏 / 作曲模式均可）"
-              className={`border px-2 py-0.5 focus-visible:shadow-[var(--focus-ring)] ${
-                p.rollOpen
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border hover:border-primary/60 hover:text-primary"
-              }`}
-            >
-              卷帘
-            </button>
-            <button
-              type="button"
-              onClick={p.onLsToggle}
-              aria-label={
-                p.lsState === "off"
-                  ? "循环台：开始录制第一层"
-                  : p.lsState === "rec"
-                    ? "循环台：停止录制并开始循环"
-                    : p.lsState === "play"
-                      ? "循环台：叠加新层"
-                      : "循环台：合并当前叠录层"
-              }
-              className={
-                p.lsState === "rec" || p.lsState === "dub"
-                  ? "min-w-[7rem] border border-destructive px-2 py-0.5 text-center text-card-foreground hover:bg-destructive/10 focus-visible:shadow-[var(--focus-ring)]"
-                  : p.lsState === "play"
-                    ? "min-w-[7rem] border border-primary bg-primary/10 px-2 py-0.5 text-center text-primary focus-visible:shadow-[var(--focus-ring)]"
-                    : "min-w-[7rem] border border-border px-2 py-0.5 text-center hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
-              }
-            >
-              {p.lsState === "off"
-                ? "↻ 循环台"
-                : p.lsState === "rec"
-                  ? "● 录循环"
-                  : p.lsState === "play"
-                    ? `▶ 循环·${p.lsLayerCount}层`
-                    : "● 叠录中"}
-            </button>
-            {p.lsState !== "off" && p.lsLayerCount > 0 && (
-              <button
-                type="button"
-                onClick={p.onLsUndoLayer}
-                aria-label="撤销循环台最上层"
-                title="撤销最上层"
-                className="border border-border px-1.5 py-0.5 text-muted-foreground hover:border-primary/70 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
-              >
-                －1层
-              </button>
-            )}
-            {p.lsState === "dub" && (
-              <button
-                type="button"
-                onClick={p.onLsUndoLayer}
-                aria-label="取消本次叠录"
-                title="取消本次叠录"
-                className="border border-border px-1.5 py-0.5 text-muted-foreground hover:border-primary/70 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
-              >
-                撤销叠录
-              </button>
-            )}
-            {p.lsState !== "off" && (
-              <button
-                type="button"
-                onClick={p.onLsClear}
-                aria-label="清空循环台全部层"
-                className="border border-border px-1.5 py-0.5 text-muted-foreground hover:border-destructive hover:text-destructive focus-visible:shadow-[var(--focus-ring)]"
-              >
-                ×
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => void p.onToggleMidiIn()}
-              aria-pressed={p.midiIn}
-              aria-label="MIDI 键盘输入：外接键盘弹琴与挑战判定共用"
-              title={
-                p.midiIn
-                  ? p.midiDevs.length > 0
-                    ? `已连接：${p.midiDevs.join("、")}`
-                    : "MIDI 已连接，等待设备"
-                  : "点击连接外接 MIDI 键盘"
-              }
-              className={
-                p.midiIn
-                  ? "border border-primary bg-primary/10 px-2 py-0.5 text-primary focus-visible:shadow-[var(--focus-ring)]"
-                  : "border border-border px-2 py-0.5 hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
-              }
-            >
-              {p.midiIn && p.midiDevs.length > 0 ? `MIDI·${p.midiDevs.length}` : "MIDI"}
-            </button>
-            <button
-              type="button"
-              onClick={p.onToggleTouchKeys}
-              aria-pressed={p.touchKeys}
-              aria-label="触屏键盘：屏幕底部浮出可点按的琴键"
-              className={
-                p.touchKeys
-                  ? "border border-primary bg-primary/10 px-2 py-0.5 text-primary focus-visible:shadow-[var(--focus-ring)]"
-                  : "border border-border px-2 py-0.5 hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
-              }
-            >
-              琴键
-            </button>
-            <span aria-hidden className="mx-1 hidden h-4 w-px self-center bg-border/60 sm:inline" />
+
+            {/* ── 进阶：展开「更多」才显示 ── */}
+            <span className="hidden select-none px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 sm:inline">进阶</span>
             {more && (
               <>
-            <FxPanel fx={p.fx} onSet={p.onSetFx} />
-            <SoundPanel {...p} />
-            <PerfChip {...p} />
-            <AccessPanel {...p} />
-            <JamPanel {...p} />
-            <TimbreMenu mode={p.timbreMode} label={p.timbreLabel} onSet={p.onSetTimbre} />
-            <button
-              type="button"
-              onClick={p.onToggleMacro}
-              aria-label={
-                p.macro === "off" ? "乐句宏：关闭，点击开启琶音" : p.macro === "arp" ? "乐句宏：琶音，点击切音阶" : "乐句宏：音阶，点击关闭"
-              }
-              aria-pressed={p.macro !== "off"}
-              className={
-                p.macro === "off"
-                  ? "min-w-[4.75rem] border border-border px-2 py-0.5 text-center hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
-                  : "min-w-[4.75rem] border border-primary bg-primary/10 px-2 py-0.5 text-center text-primary focus-visible:shadow-[var(--focus-ring)]"
-              }
-            >
-              {p.macro === "off" ? "宏·关" : p.macro === "arp" ? "宏·琶音" : "宏·音阶"}
-            </button>
+                <button
+                  type="button"
+                  onClick={p.onTogglePad}
+                  aria-pressed={p.padOn}
+                  aria-label={p.padOn ? "关闭环境垫音" : "开启环境垫音"}
+                  className={
+                    p.padOn
+                      ? "border border-primary/60 px-2 py-0.5 text-primary focus-visible:shadow-[var(--focus-ring)]"
+                      : "border border-border px-2 py-0.5 focus-visible:shadow-[var(--focus-ring)]"
+                  }
+                >
+                  垫音 {p.padOn ? "开" : "关"}
+                </button>
+                <FxPanel fx={p.fx} onSet={p.onSetFx} />
+                <SoundPanel {...p} />
+                <PerfChip {...p} />
+                <AccessPanel {...p} />
+                <JamPanel {...p} />
+                <TimbreMenu mode={p.timbreMode} label={p.timbreLabel} onSet={p.onSetTimbre} />
+                <button
+                  type="button"
+                  onClick={p.onToggleMacro}
+                  aria-label={
+                    p.macro === "off" ? "乐句宏：关闭，点击开启琶音" : p.macro === "arp" ? "乐句宏：琶音，点击切音阶" : "乐句宏：音阶，点击关闭"
+                  }
+                  aria-pressed={p.macro !== "off"}
+                  className={
+                    p.macro === "off"
+                      ? "min-w-[4.75rem] border border-border px-2 py-0.5 text-center hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
+                      : "min-w-[4.75rem] border border-primary bg-primary/10 px-2 py-0.5 text-center text-primary focus-visible:shadow-[var(--focus-ring)]"
+                  }
+                >
+                  {p.macro === "off" ? "宏·关" : p.macro === "arp" ? "宏·琶音" : "宏·音阶"}
+                </button>
+                <button
+                  type="button"
+                  onClick={p.onToggleGallery}
+                  aria-label="打开公共画廊：发布作品与查看天梯榜"
+                  className="border border-border px-2 py-0.5 hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
+                >
+                  画廊
+                </button>
               </>
             )}
             <span aria-hidden className="mx-1 hidden h-4 w-px self-center bg-border/60 sm:inline" />
+
+            {/* ── 系统 · 模式 · 帮助 ── */}
+            <span className="hidden select-none px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 sm:inline">系统</span>
+            <ThemeChip />
             <button
               type="button"
               onClick={p.onEnterChallenge}
