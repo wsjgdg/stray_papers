@@ -408,12 +408,18 @@ function loadPersona(): Persona {
 
 // 每个性格对应的中文音色偏好：优先按名称子串命中（针对 Edge/Windows 常见中文 voice），
 // 再按性别回退，最后退到首个中文 voice。保证在任意装有中文语音的机器上都能给出不同音色。
+// 关键：Windows 旧 SAPI 语音（Huihui/Yaoyao/Kangkang）常为同一引擎别名，听感无差别；
+// 真正能分出音色的是神经语音（名称带 "Online"/"Natural"，如 Xiaoxiao Online / Yunxi Online），故优先选它们。
 const PERSONA_VOICE: Record<Persona, { gender: "male" | "female"; names: string[] }> = {
   default: { gender: "female", names: [] },
-  mentor: { gender: "male", names: ["Kangkang", "Zhiwei", "Yunxi"] },
-  buddy: { gender: "female", names: ["Xiaoxiao", "Yaoyao", "Huihui", "Tingting"] },
-  explorer: { gender: "male", names: ["Yunxi", "Yunyang", "Kangkang", "Zhiwei"] },
+  mentor: { gender: "male", names: ["Yunxi", "Yunyang", "Kangkang", "Zhiwei"] },
+  buddy: { gender: "female", names: ["Xiaoxiao", "Yaoyao", "Huihui", "Tingting", "Xiaoyi"] },
+  explorer: { gender: "male", names: ["Yunyang", "Yunxi", "Kangkang", "Zhiwei"] },
 };
+
+function isNeural(v: SpeechSynthesisVoice): boolean {
+  return /online|natural/i.test(v.name);
+}
 
 function matchGender(
   voices: SpeechSynthesisVoice[],
@@ -430,12 +436,22 @@ function pickVoice(persona: Persona, voices: SpeechSynthesisVoice[]): SpeechSynt
   const zh = voices.filter((v) => v.lang.toLowerCase().startsWith("zh"));
   if (zh.length === 0) return null;
   const pref = PERSONA_VOICE[persona];
-  for (const n of pref.names) {
-    const hit = zh.find((v) => v.name.includes(n));
-    if (hit) return hit;
-  }
-  const byGender = matchGender(zh, pref.gender);
-  if (byGender) return byGender;
+  // 1) 名称子串命中（优先 neural 版）
+  const nameHits = pref.names
+    .map((n) => zh.find((v) => v.name.includes(n)))
+    .filter((v): v is SpeechSynthesisVoice => !!v)
+    .sort((a, b) => Number(isNeural(b)) - Number(isNeural(a)));
+  if (nameHits.length) return nameHits[0];
+  // 2) 同性别神经语音（音色真正不同）
+  const sameGNeural = zh.filter(isNeural).find((v) => matchGender([v], pref.gender));
+  if (sameGNeural) return sameGNeural;
+  // 3) 同性别任意 voice
+  const sameG = matchGender(zh, pref.gender);
+  if (sameG) return sameG;
+  // 4) 任意神经语音
+  const anyNeural = zh.find(isNeural);
+  if (anyNeural) return anyNeural;
+  // 5) 首个中文 voice
   return zh[0];
 }
 
