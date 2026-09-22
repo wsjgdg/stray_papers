@@ -3072,8 +3072,10 @@ export function useHome() {
   midiNoteOnRef.current = (midi: number) => {
     const pos = pianoPosOfMidi(midi);
     if (!pos) return; // 26 键之外的音直接忽略（不发声也不误判）
+    // 外接 MIDI 键盘始终按钢琴键位发声，与打字玩法（鼓/钢琴）无关——
+    // 默认 typingMode 是 "drum" 也不该让它静音，故演奏/作曲两种模式都直发 touchPlayKey
     if (modeRef.current === "challenge") chHit(PIANO_KEYS[pos.key].ch, pos.black);
-    else if (modeRef.current === "perform" && typingModeRef.current === "piano")
+    else if (modeRef.current === "perform" || modeRef.current === "compose")
       touchPlayKey(pos.key, pos.black);
   };
   const toggleMidiIn = useCallback(async () => {

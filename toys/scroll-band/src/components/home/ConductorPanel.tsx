@@ -1033,7 +1033,7 @@ export function ConductorPanel(p: ReturnType<typeof useHome>) {
       >
       <div
         data-panel-card
-        className="flex h-[72vh] max-h-[34rem] w-full max-w-md flex-col overflow-hidden border border-border bg-card text-card-foreground shadow-lg"
+        className="flex h-[90vh] max-h-[64rem] w-full max-w-3xl flex-col overflow-hidden border border-border bg-card text-card-foreground shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-border px-4 py-3">

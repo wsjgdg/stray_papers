@@ -68,7 +68,7 @@ export function HomePage(p: ReturnType<typeof useHome>) {
         {p.shareOpen && <SharePanel {...p} />}
         {p.galleryOpen && <GalleryPanel {...p} />}
         {p.mixOpen && p.mode === "compose" && <MixPanel {...p} />}
-        {p.rollOpen && p.rollTarget && p.mode === "compose" && <RollPanel {...p} />}
+        {p.rollOpen && p.rollTarget && (p.mode === "compose" || p.mode === "perform") && <RollPanel {...p} />}
         {p.histOpen && p.mode === "compose" && <HistoryPanel {...p} />}
         {p.relayOpen && p.mode === "compose" && <RelayPanel {...p} />}
         {p.humOpen && p.mode === "compose" && <HumPanel {...p} />}

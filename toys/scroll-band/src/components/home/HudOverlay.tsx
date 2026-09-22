@@ -1141,19 +1141,6 @@ export function HudOverlay(p: ReturnType<typeof useHome>) {
                   ↷
                 </button>
                 <CurveMenu mode={p.autoParam} label={p.curveLabel} onSet={p.onSetCurveParam} />
-                <button
-                  type="button"
-                  onClick={p.onOpenRoll}
-                  aria-label="钢琴卷帘：选中一条线后逐个音符编辑"
-                  title="选中一条线后打开：拖方块改音高/时间，双击删音，点空加音"
-                  className={`border px-2 py-0.5 focus-visible:shadow-[var(--focus-ring)] ${
-                    p.rollOpen
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border hover:border-primary/60 hover:text-primary"
-                  }`}
-                >
-                  卷帘
-                </button>
                 <DeformMenu {...p} />
                 <button
                   type="button"
@@ -1259,31 +1246,8 @@ export function HudOverlay(p: ReturnType<typeof useHome>) {
                 画廊
               </button>
             )}
-            {more && (
-              <button
-                type="button"
-                onClick={p.onToggleConductor}
-                aria-pressed={p.conductorOpen}
-                aria-label="打开乐团指挥：聊乐理、帮你出编曲主意的常驻角色"
-                className={
-                  p.conductorOpen
-                    ? "border border-primary bg-primary px-2 py-0.5 text-primary-foreground focus-visible:shadow-[var(--focus-ring)]"
-                    : "border border-border px-2 py-0.5 hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
-                }
-              >
-                指挥
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={p.onEnterChallenge}
-              aria-label="直接进入挑战模式"
-              title="Tab 三态循环也能进：演奏 → 作曲 → 挑战"
-              className="border border-border px-2 py-0.5 hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
-            >
-              挑战
-            </button>
-            <HelpButton onToggle={p.onToggleHelp} />
+            {/* 挑战 / 帮助已移至次级控制条末尾，与「更多」相邻；指挥台在右上角常驻 */}
+            <span aria-hidden className="hidden" />
             <button
               type="button"
               onClick={p.onToggleRecord}
@@ -1319,61 +1283,20 @@ export function HudOverlay(p: ReturnType<typeof useHome>) {
               onStar={p.onStarRecHistory}
               onRemove={p.onRemoveRecHistory}
             />
-            {more && (
-              <>
-            <FxPanel fx={p.fx} onSet={p.onSetFx} />
-            <SoundPanel {...p} />
-            <PerfChip {...p} />
-            <AccessPanel {...p} />
-            <JamPanel {...p} />
+            {/* 演奏输入 / 循环：常驻可见，覆盖演奏模式核心操作（卷帘 / 循环台 / MIDI / 触屏键盘） */}
+            <span aria-hidden className="mx-1 hidden h-4 w-px self-center bg-border/60 sm:inline" />
             <button
               type="button"
-              onClick={p.onToggleTouchKeys}
-              aria-pressed={p.touchKeys}
-              aria-label="触屏键盘：屏幕底部浮出可点按的琴键"
-              className={
-                p.touchKeys
-                  ? "border border-primary bg-primary/10 px-2 py-0.5 text-primary focus-visible:shadow-[var(--focus-ring)]"
-                  : "border border-border px-2 py-0.5 hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
-              }
+              onClick={p.onOpenRoll}
+              aria-label="钢琴卷帘：选中一条线后逐个音符编辑"
+              title="选中一条线后打开：拖方块改音高/时间，双击删音，点空加音（演奏 / 作曲模式均可）"
+              className={`border px-2 py-0.5 focus-visible:shadow-[var(--focus-ring)] ${
+                p.rollOpen
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border hover:border-primary/60 hover:text-primary"
+              }`}
             >
-              琴键
-            </button>
-            <button
-              type="button"
-              onClick={() => void p.onToggleMidiIn()}
-              aria-pressed={p.midiIn}
-              aria-label="MIDI 键盘输入：外接键盘弹琴与挑战判定共用"
-              title={
-                p.midiIn
-                  ? p.midiDevs.length > 0
-                    ? `已连接：${p.midiDevs.join("、")}`
-                    : "MIDI 已连接，等待设备"
-                  : "点击连接外接 MIDI 键盘"
-              }
-              className={
-                p.midiIn
-                  ? "border border-primary bg-primary/10 px-2 py-0.5 text-primary focus-visible:shadow-[var(--focus-ring)]"
-                  : "border border-border px-2 py-0.5 hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
-              }
-            >
-              {p.midiIn && p.midiDevs.length > 0 ? `MIDI·${p.midiDevs.length}` : "MIDI"}
-            </button>
-            <TimbreMenu mode={p.timbreMode} label={p.timbreLabel} onSet={p.onSetTimbre} />
-            <button
-              type="button"
-              onClick={p.onToggleMacro}
-              aria-label={
-                p.macro === "off" ? "乐句宏：关闭，点击开启琶音" : p.macro === "arp" ? "乐句宏：琶音，点击切音阶" : "乐句宏：音阶，点击关闭"
-              }
-              aria-pressed={p.macro !== "off"}
-              className={
-                p.macro === "off"
-                  ? "min-w-[4.75rem] border border-border px-2 py-0.5 text-center hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
-                  : "min-w-[4.75rem] border border-primary bg-primary/10 px-2 py-0.5 text-center text-primary focus-visible:shadow-[var(--focus-ring)]"
-              }
-            >
-              {p.macro === "off" ? "宏·关" : p.macro === "arp" ? "宏·琶音" : "宏·音阶"}
+              卷帘
             </button>
             <button
               type="button"
@@ -1435,13 +1358,81 @@ export function HudOverlay(p: ReturnType<typeof useHome>) {
                 ×
               </button>
             )}
+            <button
+              type="button"
+              onClick={() => void p.onToggleMidiIn()}
+              aria-pressed={p.midiIn}
+              aria-label="MIDI 键盘输入：外接键盘弹琴与挑战判定共用"
+              title={
+                p.midiIn
+                  ? p.midiDevs.length > 0
+                    ? `已连接：${p.midiDevs.join("、")}`
+                    : "MIDI 已连接，等待设备"
+                  : "点击连接外接 MIDI 键盘"
+              }
+              className={
+                p.midiIn
+                  ? "border border-primary bg-primary/10 px-2 py-0.5 text-primary focus-visible:shadow-[var(--focus-ring)]"
+                  : "border border-border px-2 py-0.5 hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
+              }
+            >
+              {p.midiIn && p.midiDevs.length > 0 ? `MIDI·${p.midiDevs.length}` : "MIDI"}
+            </button>
+            <button
+              type="button"
+              onClick={p.onToggleTouchKeys}
+              aria-pressed={p.touchKeys}
+              aria-label="触屏键盘：屏幕底部浮出可点按的琴键"
+              className={
+                p.touchKeys
+                  ? "border border-primary bg-primary/10 px-2 py-0.5 text-primary focus-visible:shadow-[var(--focus-ring)]"
+                  : "border border-border px-2 py-0.5 hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
+              }
+            >
+              琴键
+            </button>
+            <span aria-hidden className="mx-1 hidden h-4 w-px self-center bg-border/60 sm:inline" />
+            {more && (
+              <>
+            <FxPanel fx={p.fx} onSet={p.onSetFx} />
+            <SoundPanel {...p} />
+            <PerfChip {...p} />
+            <AccessPanel {...p} />
+            <JamPanel {...p} />
+            <TimbreMenu mode={p.timbreMode} label={p.timbreLabel} onSet={p.onSetTimbre} />
+            <button
+              type="button"
+              onClick={p.onToggleMacro}
+              aria-label={
+                p.macro === "off" ? "乐句宏：关闭，点击开启琶音" : p.macro === "arp" ? "乐句宏：琶音，点击切音阶" : "乐句宏：音阶，点击关闭"
+              }
+              aria-pressed={p.macro !== "off"}
+              className={
+                p.macro === "off"
+                  ? "min-w-[4.75rem] border border-border px-2 py-0.5 text-center hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
+                  : "min-w-[4.75rem] border border-primary bg-primary/10 px-2 py-0.5 text-center text-primary focus-visible:shadow-[var(--focus-ring)]"
+              }
+            >
+              {p.macro === "off" ? "宏·关" : p.macro === "arp" ? "宏·琶音" : "宏·音阶"}
+            </button>
               </>
             )}
+            <span aria-hidden className="mx-1 hidden h-4 w-px self-center bg-border/60 sm:inline" />
+            <button
+              type="button"
+              onClick={p.onEnterChallenge}
+              aria-label="直接进入挑战模式"
+              title="Tab 三态循环也能进：演奏 → 作曲 → 挑战"
+              className="border border-border px-2 py-0.5 hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
+            >
+              挑战
+            </button>
+            <HelpButton onToggle={p.onToggleHelp} />
             <button
               type="button"
               onClick={() => setMore((v) => !v)}
               aria-expanded={more}
-              aria-label={more ? "收起次级控制条" : "展开次级控制（垫音/画廊/空间/琴键/动色/宏/循环台）"}
+              aria-label={more ? "收起次级控制条" : "展开次级控制（垫音/画廊/空间/动色/宏）"}
               className={
                 !more && moreActive
                   ? "border border-primary bg-primary/10 px-2 py-0.5 text-primary focus-visible:shadow-[var(--focus-ring)]"
@@ -1452,8 +1443,23 @@ export function HudOverlay(p: ReturnType<typeof useHome>) {
             </button>
           </div>
         )}
-        {/* RH 账号入口：文本生成等 AI 能力按登录态计费，顶部 chrome 常驻（未登录即「RunningHub 登录」按钮） */}
-        <span className="flex items-center">
+        {/* 指挥台：常驻右上角、独立于其它按钮，点开即弹出 AI 指挥面板（已在 ConductorPanel 放大） */}
+        <span className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={p.onToggleConductor}
+            aria-pressed={p.conductorOpen}
+            aria-label="打开乐团指挥：聊乐理、帮你出编曲主意的常驻角色"
+            title="AI 指挥台：混音 / 编曲 / 风格迁移 / 歌词（选中旋律线可配词）"
+            className={
+              p.conductorOpen
+                ? "border border-primary bg-primary px-3 py-0.5 text-sm font-semibold text-primary-foreground focus-visible:shadow-[var(--focus-ring)]"
+                : "border border-primary/70 px-3 py-0.5 text-sm font-semibold text-primary hover:bg-primary/10 focus-visible:shadow-[var(--focus-ring)]"
+            }
+          >
+            ▣ 指挥台
+          </button>
+          {/* RH 账号入口：文本生成等 AI 能力按登录态计费，顶部 chrome 常驻（未登录即「RunningHub 登录」按钮） */}
           <RhAccountMenu />
         </span>
       </div>
