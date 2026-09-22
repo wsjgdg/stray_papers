@@ -406,6 +406,39 @@ function loadPersona(): Persona {
   }
 }
 
+// 每个性格对应的中文音色偏好：优先按名称子串命中（针对 Edge/Windows 常见中文 voice），
+// 再按性别回退，最后退到首个中文 voice。保证在任意装有中文语音的机器上都能给出不同音色。
+const PERSONA_VOICE: Record<Persona, { gender: "male" | "female"; names: string[] }> = {
+  default: { gender: "female", names: [] },
+  mentor: { gender: "male", names: ["Kangkang", "Zhiwei", "Yunxi"] },
+  buddy: { gender: "female", names: ["Xiaoxiao", "Yaoyao", "Huihui", "Tingting"] },
+  explorer: { gender: "male", names: ["Yunxi", "Yunyang", "Kangkang", "Zhiwei"] },
+};
+
+function matchGender(
+  voices: SpeechSynthesisVoice[],
+  gender: "male" | "female",
+): SpeechSynthesisVoice | null {
+  const femaleTokens = ["xiaoxiao", "yaoyao", "huihui", "tingting", "xiaoyi", "xiaobei", "yueyue", "ruoxi"];
+  const maleTokens = ["yunxi", "kangkang", "zhiwei", "yunyang", "xiaoxuan"];
+  const toks = gender === "female" ? femaleTokens : maleTokens;
+  const low = (s: string) => s.toLowerCase();
+  return voices.find((v) => toks.some((t) => low(v.name).includes(t))) ?? null;
+}
+
+function pickVoice(persona: Persona, voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
+  const zh = voices.filter((v) => v.lang.toLowerCase().startsWith("zh"));
+  if (zh.length === 0) return null;
+  const pref = PERSONA_VOICE[persona];
+  for (const n of pref.names) {
+    const hit = zh.find((v) => v.name.includes(n));
+    if (hit) return hit;
+  }
+  const byGender = matchGender(zh, pref.gender);
+  if (byGender) return byGender;
+  return zh[0];
+}
+
 // ---- 朗读参数（语速/音高，本地留存）----
 type TtsPrefs = { rate: number; pitch: number; autoRead: boolean };
 const TTS_KEY = "so-conductor-tts-v1";
@@ -556,7 +589,9 @@ export function ConductorPanel(p: ReturnType<typeof useHome>) {
     }
     return [...pool, ...asked].slice(0, 8);
   }, [searchQ, msgs]);
-  const [zhVoice, setZhVoice] = useState<SpeechSynthesisVoice | null>(null);
+  // 全部中文 voice 列表；当前音色由人格解析（persona 变即重算），而非固定取第一个
+  const [zhVoices, setZhVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const zhVoice = useMemo(() => pickVoice(persona, zhVoices), [persona, zhVoices]);
   const ttsOk = typeof window !== "undefined" && "speechSynthesis" in window;
   const stopSpeak = () => {
     if (!ttsOk) return;
@@ -635,8 +670,8 @@ export function ConductorPanel(p: ReturnType<typeof useHome>) {
   useEffect(() => {
     if (!ttsOk) return;
     const load = () =>
-      setZhVoice(
-        window.speechSynthesis.getVoices().find((v) => v.lang.toLowerCase().startsWith("zh")) ?? null,
+      setZhVoices(
+        window.speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().startsWith("zh")),
       );
     load();
     window.speechSynthesis.addEventListener("voiceschanged", load);
@@ -1357,6 +1392,9 @@ export function ConductorPanel(p: ReturnType<typeof useHome>) {
                   >
                     {ttsPrefs.autoRead ? "自动朗读 ✓" : "自动朗读"}
                   </button>
+                  <div className="text-xs text-muted-foreground">
+                    当前音色：{zhVoice ? zhVoice.name : "无中文语音"}（随人格切换）
+                  </div>
                   <div className="text-xs text-muted-foreground">下一条朗读生效；调慢适合逐句跟着读</div>
                 </div>
               )}
