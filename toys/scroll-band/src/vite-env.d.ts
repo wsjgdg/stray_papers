@@ -14,13 +14,12 @@ interface ImportMetaEnv {
   /** Fallback provider model name */
   readonly AI_FALLBACK_MODEL?: string
   /**
-   * Azure Speech resource key (for the optional cloud TTS engine).
-   * Unlike the chat key, this one is read at runtime in the browser bundle — fine for a
-   * personal, zero-backend app, but do not commit a production key you care about.
+   * 讯飞开放平台（iFlytek）TTS 密钥，用于「讯飞云端」朗读引擎（每日 500 次免费）。
+   * 与聊天密钥一样出现在浏览器包里——仅适合自用，别用生产账号。
    */
-  readonly AI_SPEECH_KEY?: string
-  /** Azure Speech resource region, e.g. eastasia / westus2 */
-  readonly AI_SPEECH_REGION?: string
+  readonly AI_XFYUN_APPID?: string
+  readonly AI_XFYUN_API_KEY?: string
+  readonly AI_XFYUN_API_SECRET?: string
 }
 
 interface ImportMeta {

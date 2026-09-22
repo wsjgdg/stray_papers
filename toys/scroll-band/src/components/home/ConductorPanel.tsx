@@ -11,7 +11,7 @@ import {
   TTS_ENGINE_KEY,
   loadTtsEngine,
   isCloudEngine,
-  azureConfigured,
+  xunfeiConfigured,
   cloudVoiceLabelFor,
   speakCloud,
   type TtsEngineId,
@@ -611,10 +611,11 @@ export function ConductorPanel(p: ReturnType<typeof useHome>) {
       /* ignore */
     }
   };
-  // Azure 密钥来自 .env（AI_ 前缀已由 vite 暴露到客户端）
-  const speechKey = import.meta.env.AI_SPEECH_KEY as string | undefined;
-  const speechRegion = import.meta.env.AI_SPEECH_REGION as string | undefined;
-  // 云端播放句柄（Edge / Azure）：stop() 立即中断连接 / 音频
+  // 讯飞密钥来自 .env（AI_ 前缀已由 vite 暴露到客户端）
+  const xfyAppId = import.meta.env.AI_XFYUN_APPID as string | undefined;
+  const xfyApiKey = import.meta.env.AI_XFYUN_API_KEY as string | undefined;
+  const xfyApiSecret = import.meta.env.AI_XFYUN_API_SECRET as string | undefined;
+  // 云端播放句柄（Edge / 讯飞）：stop() 立即中断连接 / 音频
   const cloudStopRef = useRef<null | (() => void)>(null);
   // 朗读令牌：每次调用 ttsSpeak（含停止）自增，使上一次已排程的 rAF/看门狗 / 云端句柄失效
   const speakTokenRef = useRef(0);
@@ -636,7 +637,7 @@ export function ConductorPanel(p: ReturnType<typeof useHome>) {
     setSpeakIdx(-1);
   };
 
-  // 朗读一条回复：本地走 Web Speech，云端走 Edge/Azure，统一用 speakIdx 标记
+  // 朗读一条回复：本地走 Web Speech，云端走 Edge/讯飞，统一用 speakIdx 标记
   const ttsSpeak = async (text: string, i: number) => {
     if (!text) return;
     // 同一句的再次点击 = 停止
@@ -702,23 +703,34 @@ export function ConductorPanel(p: ReturnType<typeof useHome>) {
           }, 300);
         });
       } else {
-        // 云端：Edge 免费（无需密钥）或 Azure（需密钥）
+        // 云端：Edge 免费（无需密钥）或 讯飞（需密钥）
         const handle = await speakCloud({
           text,
           persona,
           rate: ttsPrefs.rate,
           pitch: ttsPrefs.pitch,
           engine: ttsEngine,
-          speechKey,
-          speechRegion,
+          xfyAppId,
+          xfyApiKey,
+          xfyApiSecret,
         });
         cloudStopRef.current = handle.stop;
-        handle.done.finally(() => {
-          if (speakTokenRef.current === myToken) {
-            cloudStopRef.current = null;
-            setSpeakIdx(-1);
-          }
-        });
+        // 成功(resolve)或出错(reject)都复位朗读按钮；reject 时把讯飞错误提示出来
+        handle.done.then(
+          () => {
+            if (speakTokenRef.current === myToken) {
+              cloudStopRef.current = null;
+              setSpeakIdx(-1);
+            }
+          },
+          (err) => {
+            if (speakTokenRef.current === myToken) {
+              cloudStopRef.current = null;
+              setSpeakIdx(-1);
+              setError(err instanceof Error ? err.message : "云端朗读失败");
+            }
+          },
+        );
       }
     } catch (e) {
       if (speakTokenRef.current === myToken) {
@@ -1443,7 +1455,7 @@ export function ConductorPanel(p: ReturnType<typeof useHome>) {
               </button>
               {ttsOpen && (
                 <div className="mt-1 w-60 space-y-2 border border-border bg-card p-2 shadow-lg">
-                  {/* 引擎选择：本地 / Edge 免费 / Azure 三选一 */}
+                  {/* 引擎选择：本地 / Edge 免费 / 讯飞 三选一 */}
                   <div>
                     <div className="font-mono text-xs text-muted-foreground">朗读引擎</div>
                     <div className="mt-1 grid grid-cols-3 gap-1">
@@ -1520,15 +1532,15 @@ export function ConductorPanel(p: ReturnType<typeof useHome>) {
                     </div>
                   ) : ttsEngine === "edge" ? (
                     <div className="text-xs text-muted-foreground">
-                      云端 · {cloudVoiceLabelFor(persona)}（Edge 免费，无需密钥）
+                      云端 · {cloudVoiceLabelFor(persona, "edge")}（Edge 免费，无需密钥）
                     </div>
-                  ) : azureConfigured(speechKey, speechRegion) ? (
+                  ) : xunfeiConfigured(xfyAppId, xfyApiKey, xfyApiSecret) ? (
                     <div className="text-xs text-muted-foreground">
-                      云端 · {cloudVoiceLabelFor(persona)}（Azure）
+                      云端 · {cloudVoiceLabelFor(persona, "xunfei")}（讯飞，每日 500 次免费）
                     </div>
                   ) : (
                     <div className="text-xs text-destructive">
-                      ⚠ 未配置 AI_SPEECH_KEY，去 .env 填后重启
+                      ⚠ 未配置讯飞密钥，去 .env 填 AI_XFYUN_* 后重启
                     </div>
                   )}
                   <div className="text-xs text-muted-foreground">下一条朗读生效；调慢适合逐句跟着读</div>

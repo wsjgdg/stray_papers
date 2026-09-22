@@ -42,12 +42,13 @@ npm run preview    # 预览生产构建，http://localhost:8000
 | `AI_FALLBACK_BASE_URL` | 降级供应商基址，默认 `https://open.bigmodel.cn/api/paas/v4` | 否 |
 | `AI_FALLBACK_API_KEY` | 降级供应商 Key；留空则关闭降级 | 否 |
 | `AI_FALLBACK_MODEL` | 降级模型，默认 `glm-4.7-flash` | 否 |
-| `AI_SPEECH_KEY` | Azure Speech 资源密钥（仅「朗读设置」里选「Azure 云端」时需要） | 否 |
-| `AI_SPEECH_REGION` | Azure Speech 资源区域，如 `eastasia` / `westus2` | 否 |
+| `AI_XFYUN_APPID` | 讯飞开放平台 APPID（仅「朗读设置」里选「讯飞云端」时需要） | 否 |
+| `AI_XFYUN_API_KEY` | 讯飞 APIKey | 否 |
+| `AI_XFYUN_API_SECRET` | 讯飞 APISecret | 否 |
 
 > 变量前缀是 `AI_`，由 `vite.config.ts` 的 `envPrefix` 暴露给前端。
 > 主请求失败时自动改用降级供应商；二者均未配置时，AI 指挥台 / 智能配词优雅降级（提示「未配置」），其余功能不受影响。
-> `AI_SPEECH_KEY` 会出现在浏览器包里（和 `AI_API_KEY` 一样是客户端可见），仅适合自用，别用生产密钥。
+> `AI_XFYUN_*` 会出现在浏览器包里（和 `AI_API_KEY` 一样是客户端可见），仅适合自用，别用生产密钥。
 
 ## 朗读引擎（TTS）
 
@@ -57,17 +58,17 @@ npm run preview    # 预览生产构建，http://localhost:8000
 | --- | --- | --- | --- |
 | 本地语音 | 否 | 本机浏览器语音（Web Speech） | 零依赖；但本机中文语音多为同一引擎别名，**不同性格听感无差别** |
 | Edge 免费云端 | 否 | 微软神经语音（晓晓 / 云希 / 晓伊 / 云扬） | 浏览器直连微软 Edge 语音服务，无需密钥；按指挥性格自动选不同神经音色 |
-| Azure 云端 | 是（`AI_SPEECH_KEY` + `AI_SPEECH_REGION`） | 同上微软神经语音 | 走官方 Speech SDK，神经语音更稳定；需自备 Azure 密钥 |
+| 讯飞云端 | 是（`AI_XFYUN_APPID` + `AI_XFYUN_API_KEY` + `AI_XFYUN_API_SECRET`） | 讯飞中文发音人（晓燕 / 究许 / 静儿 / 小萍） | WebSocket + HMAC-SHA256 鉴权，每日 500 次免费调用；按指挥性格自动选不同音色 |
 
-> 默认用本地语音。要让「默认 / 严格导师 / 轻松伙伴 / 实验先锋」四种性格各有**可分辨的不同音色**，需要切到 Edge 免费云端或 Azure 云端——二者都用微软神经语音，本机 Web Speech 播不出这些神经语音（它们云端专属）。
+> 默认用本地语音。要让「默认 / 严格导师 / 轻松伙伴 / 实验先锋」四种性格各有**可分辨的不同音色**，需要切到 Edge 免费云端或讯飞云端——二者都用云端神经/中文语音，本机 Web Speech 播不出这些音色（它们云端专属）。
 >
 > Edge 免费云端：浏览器通过 WebSocket 直连微软语音服务，鉴权令牌在前端用 `crypto.subtle` 现算，不经过任何后端。
-> Azure 云端：密钥出现在浏览器包里，仅适合个人自用。
+> 讯飞云端：浏览器通过 WebSocket 直连 `tts-api.xfyun.cn/v2/tts`，签名在前端用 `crypto.subtle` 现算（HMAC-SHA256），每日 500 次免费；密钥出现在浏览器包里，仅适合个人自用。
 
 ## 功能与模块
 
 - **乐团指挥**（ConductorPanel）：向指挥提问，获取乐理 / 编曲 / 练法建议；支持把建议一键应用到画布、生成画布体检报告、导出对话记录。
-- **朗读（TTS）**：朗读指挥回复，支持三引擎（本地 / Edge 免费云端 / Azure 云端），按指挥性格自动切换不同神经音色；可在「朗读」菜单调节语速 / 音高、开启自动朗读、选择引擎。
+- **朗读（TTS）**：朗读指挥回复，支持三引擎（本地 / Edge 免费云端 / 讯飞云端），按指挥性格自动切换不同神经音色；可在「朗读」菜单调节语速 / 音高、开启自动朗读、选择引擎。
 - **本地数据**：作品 / 成绩 / 关卡存于 IndexedDB，昵称存于 `localStorage`，跨会话保留。
 - **AI 指挥台 / 智能配词**（可选）：配置后即可使用；未配置时优雅提示「未配置」，其余功能不受影响。
 
@@ -81,7 +82,7 @@ npm run preview    # 预览生产构建，http://localhost:8000
 | 智能体（单次 chat 调用） | `src/lib/agent.ts` |
 | 本地昵称 / 账号 | `src/lib/auth.ts` |
 | 指挥面板 UI | `src/components/home/ConductorPanel.tsx` |
-| 朗读引擎（本地 / Edge 免费 / Azure） | `src/lib/tts/`（edgeClient / azureClient / voices / ssml / index） |
+| 朗读引擎（本地 / Edge 免费 / 讯飞） | `src/lib/tts/`（edgeClient / xunfeiClient / voices / ssml / index） |
 | 语音音量 | `src/lib/voiceVolume.ts` |
 
 ## 验证状态

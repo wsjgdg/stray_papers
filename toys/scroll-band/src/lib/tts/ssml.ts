@@ -1,4 +1,4 @@
-// 构造发给云端 TTS 的 SSML。Edge 免费 与 Azure 共用同一份 SSML 格式。
+// 构造发给 Edge 免费云端 TTS 的 SSML（Azure 已移除；讯飞走自有 JSON 协议，不使用本文件）。
 // rate / pitch 用百分比（相对值），与本地 Web Speech 的 rate/pitch 语义一致：
 // rate=1.05 → +5%，pitch=1 → 0%，pitch=1.05 → +5%。
 
