@@ -644,8 +644,11 @@ export function ConductorPanel(p: ReturnType<typeof useHome>) {
       ttsStop();
       return;
     }
-    const myToken = ++speakTokenRef.current;
+    // 先取消上一次朗读（ttsStop 会让在途回调的令牌失效，并清空 speakIdx），再取本次令牌——
+    // 顺序必须如此：若先取号再 ttsStop，令牌会比 myToken 大 1，导致本地 rAF 与云端 done
+    // 的 `speakTokenRef===myToken` 校验永远为假（本地无声 + 按钮卡在「停止朗读」）。
     ttsStop();
+    const myToken = ++speakTokenRef.current;
     setSpeakIdx(i);
     try {
       if (ttsEngine === "local") {

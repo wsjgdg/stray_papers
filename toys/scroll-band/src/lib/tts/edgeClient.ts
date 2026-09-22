@@ -67,6 +67,10 @@ function indexOf(haystack: Uint8Array, needle: Uint8Array): number {
 
 export async function speakEdge(opts: CloudSpeakOptions): Promise<CloudSpeakHandle> {
   const text = safeText(opts.text);
+  if (import.meta.env.DEV) {
+    // 调试用：在 DevTools Console 确认云端请求的到底是哪个音色（应随人格变化）
+    console.debug("[EdgeTTS] voice=", opts.voice, "rate=", opts.rate, "pitch=", opts.pitch);
+  }
   const reqId = uuidNoDash();
   const secMsGec = await generateSecMsGec(TRUSTED_CLIENT_TOKEN);
   const url = `${WSS_URL}?TrustedClientToken=${TRUSTED_CLIENT_TOKEN}&Sec-MS-GEC=${secMsGec}&Sec-MS-GEC-Version=${SEC_MS_GEC_VERSION}&ConnectionId=${reqId}`;
@@ -167,9 +171,12 @@ export async function speakEdge(opts: CloudSpeakOptions): Promise<CloudSpeakHand
     const needle = new TextEncoder().encode("Path:audio\r\n");
     const idx = indexOf(buf, needle);
     if (idx !== -1) {
+      // 首帧：剥掉 "Path:audio\r\n" 文本头，其后的才是音频
       chunks.push(buf.subarray(idx + needle.length));
     } else {
-      chunks.push(buf);
+      // 续帧：每帧开头有 2 字节标记(0x00 0x00)，不是音频，剥离避免混入 MP3 流
+      const start = buf.length >= 2 ? 2 : 0;
+      chunks.push(buf.subarray(start));
     }
   };
 
