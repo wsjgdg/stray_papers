@@ -22,6 +22,7 @@ import { RelayPanel } from "@/components/home/RelayPanel";
 import { SynthPanel } from "@/components/home/SynthPanel";
 import { HumPanel } from "@/components/home/HumPanel";
 import { AiPanel } from "@/components/home/AiPanel";
+import { CurvePanel } from "@/components/home/CurvePanel";
 import { LyricStrip } from "@/components/home/LyricStrip";
 import { CostConfirmDialog } from "@/components/rh/CostConfirmDialog";
 
@@ -73,6 +74,13 @@ export function HomePage(p: ReturnType<typeof useHome>) {
         {p.relayOpen && p.mode === "compose" && <RelayPanel {...p} />}
         {p.humOpen && p.mode === "compose" && <HumPanel {...p} />}
         {p.aiOpen && p.mode === "compose" && <AiPanel {...p} />}
+        {p.curvePanelOpen && (
+          <CurvePanel
+            onClose={p.onCloseCurvePanel}
+            initialLanes={p.curveInitial}
+            setCurveForParam={p.setCurveForParam}
+          />
+        )}
         {p.mode === "compose" && p.lyricStrip && <LyricStrip {...p} />}
         {p.replayTimeline && (
           <ReplayTimeline

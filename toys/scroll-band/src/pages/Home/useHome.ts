@@ -752,11 +752,18 @@ export function useHome() {
     engine.setCanvasAuto(period, autoCurves);
   }, []);
 
+  // 已启用的曲线参数集合（供 HUD 角标）；任何改动走 commitCanvas 都重算，与存档/撤销/编辑全同步
+  const [curveActive, setCurveActive] = useState<CurveParam[]>([]);
   const commitCanvas = useCallback(() => {
     setObjectsVersion((v) => v + 1);
     setObjectCount(objectsRef.current.length);
     saveCanvasObjects(objectsRef.current);
     syncCanvasLoops();
+    const active: CurveParam[] = [];
+    for (const o of objectsRef.current) {
+      if (o.type === "curve" && o.curveParam && o.points.length >= 2 && !o.muted) active.push(o.curveParam);
+    }
+    setCurveActive(active);
   }, [syncCanvasLoops]);
 
   // 撤销/重做：作曲对象数组 JSON 快照栈（≤80 层）；同类连击（方向键 nudging）700ms 内合并。
@@ -955,6 +962,43 @@ export function useHome() {
         : `曲线画笔：${CURVE_PARAM_META[p].name}——在画布上横着画一条线，上下高低就是它随时间的变化`,
     );
   }, []);
+
+  // 参数曲线编辑窗：把「在画布上画曲线」收敛到一个独立小窗，四条轨道分别绘制，
+  // 避免与笔画/锚点落笔混淆。底层仍走 type:"curve" 对象 + engine.setCanvasAuto 编译链。
+  const [curvePanelOpen, setCurvePanelOpen] = useState(false);
+  // 打开时抓取当前各参数曲线的快照（在事件回调里读 ref 合规），作为面板初始值，避免渲染期读 ref
+  const [curveInitial, setCurveInitial] = useState<Record<CurveParam, CanvasPt[] | null> | null>(null);
+  const getCurveByParam = useCallback((): Record<CurveParam, CanvasPt[] | null> => {
+    const out: Record<CurveParam, CanvasPt[] | null> = { vol: null, cutoff: null, pan: null, reverb: null };
+    for (const o of objectsRef.current) {
+      if (o.type === "curve" && o.curveParam && o.points.length >= 2) {
+        out[o.curveParam] = o.points.map((p) => ({ x: p.x, y: p.y, t: p.t }));
+      }
+    }
+    return out;
+  }, []);
+  const onOpenCurvePanel = useCallback(() => {
+    setCurveInitial(getCurveByParam());
+    setCurvePanelOpen(true);
+  }, [getCurveByParam]);
+  const onCloseCurvePanel = useCallback(() => setCurvePanelOpen(false), []);
+  const setCurveForParam = useCallback(
+    (param: CurveParam, pts: CanvasPt[] | null) => {
+      // 先移除本参数已有的曲线对象（每个参数只保留一条），再按需新增
+      objectsRef.current = objectsRef.current.filter(
+        (o) => !(o.type === "curve" && o.curveParam === param),
+      );
+      if (pts && pts.length >= 2) {
+        if (objectsRef.current.length >= MAX_CANVAS_OBJECTS) {
+          flashCap();
+          return;
+        }
+        objectsRef.current.push(compileCurve(pts, param));
+      }
+      commitCanvas();
+    },
+    [commitCanvas],
+  );
   // ---- 听感（「听感」面板）：音乐推子 + 挑战判定延迟校准 ----
   // 音乐推子串乘在 master 上（主音量仍归空间面板的 fx.vol）；语音音量在指挥朗读侧自取（so-voice-v1）
   const MUSIC_KEY = "so-music-v1";
@@ -5891,6 +5935,13 @@ export function useHome() {
     autoParam, // 曲线画笔：off = 笔迹；vol/cutoff/pan/reverb = 画该参数的曲线
     curveLabel: autoParam === "off" ? "曲线" : `曲线·${CURVE_PARAM_META[autoParam].name}`,
     onSetCurveParam,
+    curvePanelOpen,
+    onOpenCurvePanel,
+    onCloseCurvePanel,
+    curveInitial,
+    getCurveByParam,
+    setCurveForParam,
+    curveActive,
     selectedId,
     padOn,
     sustainOn,

@@ -193,75 +193,6 @@ function TimbreMenu({ mode, label, onSet }: { mode: TimbreMode; label: string; o
   );
 }
 
-// 曲线自动化画笔菜单：关 = 画笔迹；选参数后落笔画该参数随时间的变化（虚线曲线）
-type CurveMode = "off" | "vol" | "cutoff" | "pan" | "reverb";
-const CURVE_OPTIONS: { mode: CurveMode; label: string }[] = [
-  { mode: "off", label: "关（画笔迹）" },
-  { mode: "vol", label: "音量" },
-  { mode: "cutoff", label: "滤波" },
-  { mode: "pan", label: "声像" },
-  { mode: "reverb", label: "混响" },
-];
-
-function CurveMenu({ mode, label, onSet }: { mode: CurveMode; label: string; onSet: (m: CurveMode) => void }) {
-  const [open, setOpen] = useState(false);
-  const wrapRef = useRef<HTMLSpanElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e: PointerEvent) => {
-      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("pointerdown", onDown, true);
-    return () => document.removeEventListener("pointerdown", onDown, true);
-  }, [open]);
-
-  return (
-    <span ref={wrapRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        aria-label={`曲线自动化：${mode === "off" ? "关，画笔迹" : `正在画${CURVE_OPTIONS.find((o) => o.mode === mode)?.label ?? ""}曲线`}，点击选择参数`}
-        className={
-          mode === "off"
-            ? "min-w-[5.75rem] border border-border px-2 py-0.5 text-center hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
-            : "min-w-[5.75rem] border border-primary bg-primary/10 px-2 py-0.5 text-center text-primary focus-visible:shadow-[var(--focus-ring)]"
-        }
-      >
-        {label}
-      </button>
-      {open && (
-        <div
-          role="menu"
-          className="fixed inset-x-3 bottom-3 z-40 border border-border bg-card p-1 text-card-foreground shadow-md sm:absolute sm:inset-auto sm:left-0 sm:top-full sm:mt-1 sm:min-w-[7.5rem]"
-        >
-          {CURVE_OPTIONS.map((o) => (
-            <button
-              key={o.mode}
-              type="button"
-              role="menuitemradio"
-              aria-checked={o.mode === mode}
-              onClick={() => {
-                onSet(o.mode);
-                setOpen(false);
-              }}
-              className={
-                o.mode === mode
-                  ? "block w-full bg-primary/10 px-2 py-1 text-left text-primary focus-visible:shadow-[var(--focus-ring)]"
-                  : "block w-full px-2 py-1 text-left hover:bg-muted focus-visible:shadow-[var(--focus-ring)]"
-              }
-            >
-              {o.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </span>
-  );
-}
-
 // BPM 面板：画布循环速度滑杆 + ±2 步进 + 打拍定速（连点「打拍」取最近 5 次间隔均值）
 function BpmMenu({ bpm, onSet }: { bpm: number; onSet: (v: number) => void }) {
   const [open, setOpen] = useState(false);
@@ -1283,7 +1214,18 @@ export function HudOverlay(p: ReturnType<typeof useHome>) {
                 >
                   ↷
                 </button>
-                <CurveMenu mode={p.autoParam} label={p.curveLabel} onSet={p.onSetCurveParam} />
+                <button
+                  type="button"
+                  onClick={p.onOpenCurvePanel}
+                  aria-label={`参数曲线：${p.curveActive.length > 0 ? `已设置 ${p.curveActive.length} 项，点击编辑` : "点击打开曲线编辑窗口"}`}
+                  className={
+                    p.curveActive.length > 0
+                      ? "min-w-[5.75rem] border border-primary bg-primary/10 px-2 py-0.5 text-center text-primary hover:border-primary/60 focus-visible:shadow-[var(--focus-ring)]"
+                      : "min-w-[5.75rem] border border-border px-2 py-0.5 text-center hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
+                  }
+                >
+                  曲线{p.curveActive.length > 0 ? `·${p.curveActive.length}` : ""}
+                </button>
                 <DeformMenu {...p} />
                 <button
                   type="button"
