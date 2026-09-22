@@ -13,6 +13,14 @@ interface ImportMetaEnv {
   readonly AI_FALLBACK_API_KEY?: string
   /** Fallback provider model name */
   readonly AI_FALLBACK_MODEL?: string
+  /**
+   * Azure Speech resource key (for the optional cloud TTS engine).
+   * Unlike the chat key, this one is read at runtime in the browser bundle — fine for a
+   * personal, zero-backend app, but do not commit a production key you care about.
+   */
+  readonly AI_SPEECH_KEY?: string
+  /** Azure Speech resource region, e.g. eastasia / westus2 */
+  readonly AI_SPEECH_REGION?: string
 }
 
 interface ImportMeta {

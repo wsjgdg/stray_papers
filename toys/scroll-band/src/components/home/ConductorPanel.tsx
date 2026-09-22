@@ -5,6 +5,17 @@ import type { useHome } from "@/pages/Home/useHome";
 import { runAgent } from "@/lib/agent";
 import { prefersReducedMotion, usePanelEntrance } from "./usePanelMotion";
 import { loadVoiceVol } from "@/lib/voiceVolume";
+import { PERSONAS, PERSONA_KEY, type Persona } from "@/lib/persona";
+import {
+  TTS_ENGINES,
+  TTS_ENGINE_KEY,
+  loadTtsEngine,
+  isCloudEngine,
+  azureConfigured,
+  cloudVoiceLabelFor,
+  speakCloud,
+  type TtsEngineId,
+} from "@/lib/tts";
 
 type Msg = { role: "user" | "assistant"; text: string };
 
@@ -372,30 +383,7 @@ const HINT_LABELS: Record<string, string> = {
   timbre: "动色",
 };
 
-// ---- 指挥人格（本地留存）：每条消息随站方指令下发，服务端旧会话也会被持续校准 ----
-type Persona = "default" | "mentor" | "buddy" | "explorer";
-const PERSONA_KEY = "so-conductor-persona-v1";
-const PERSONAS: { id: Persona; label: string; directive: string }[] = [
-  { id: "default", label: "默认", directive: "" },
-  {
-    id: "mentor",
-    label: "严格导师",
-    directive:
-      "你现在的性格是「严格导师」：直言不讳、标准明确，先点破问题再给可执行的练习量与达标线（如“这周每天慢速两遍”），不客套不灌水，但真实的进步会明确认可。",
-  },
-  {
-    id: "buddy",
-    label: "轻松伙伴",
-    directive:
-      "你现在的性格是「轻松伙伴」：聊天松弛、先肯定再建议，多用生活化比喻（把音阶比成调色盘、BPM 比成步速），少用术语、不用理论压人，玩起来最重要。",
-  },
-  {
-    id: "explorer",
-    label: "实验先锋",
-    directive:
-      "你现在的性格是「实验先锋」：大胆给反常规建议（冷门音阶、奇怪拍速、故意破坏再重建），对用户每个想法都好奇，把“翻车”当素材聊，鼓励试错但不空喊口号。",
-  },
-];
+// ---- 指挥人格（定义见 src/lib/persona.ts，与 TTS 共用）----
 
 function loadPersona(): Persona {
   try {
@@ -613,71 +601,146 @@ export function ConductorPanel(p: ReturnType<typeof useHome>) {
   const [zhVoices, setZhVoices] = useState<SpeechSynthesisVoice[]>([]);
   const zhVoice = useMemo(() => pickVoice(persona, zhVoices), [persona, zhVoices]);
   const ttsOk = typeof window !== "undefined" && "speechSynthesis" in window;
-  const stopSpeak = () => {
-    if (!ttsOk) return;
-    window.speechSynthesis.cancel();
+  const [ttsEngine, setTtsEngine] = useState<TtsEngineId>(loadTtsEngine);
+  const pickEngine = (id: TtsEngineId) => {
+    ttsStop();
+    setTtsEngine(id);
+    try {
+      window.localStorage.setItem(TTS_ENGINE_KEY, id);
+    } catch {
+      /* ignore */
+    }
+  };
+  // Azure 密钥来自 .env（AI_ 前缀已由 vite 暴露到客户端）
+  const speechKey = import.meta.env.AI_SPEECH_KEY as string | undefined;
+  const speechRegion = import.meta.env.AI_SPEECH_REGION as string | undefined;
+  // 云端播放句柄（Edge / Azure）：stop() 立即中断连接 / 音频
+  const cloudStopRef = useRef<null | (() => void)>(null);
+  // 朗读令牌：每次调用 ttsSpeak（含停止）自增，使上一次已排程的 rAF/看门狗 / 云端句柄失效
+  const speakTokenRef = useRef(0);
+
+  // 统一停止：本地 speechSynthesis + 云端音频/连接都掐掉
+  const ttsStop = () => {
+    speakTokenRef.current++; // 让任何在途的本地排程失效
+    if (ttsOk) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch {
+        /* ignore */
+      }
+    }
+    if (cloudStopRef.current) {
+      cloudStopRef.current();
+      cloudStopRef.current = null;
+    }
     setSpeakIdx(-1);
   };
-  // 浏览器语音合成：zh-CN 发音读回复正文（stage/report 块已剥掉，不会把暗号念出来）
-  // 朗读令牌：每次调用 speakMsg（含停止）自增，使上一次已排程的 rAF/看门狗失效，避免停止后又被重新朗读
-  const speakTokenRef = useRef(0);
-  const speakMsg = (text: string, i: number) => {
-    if (!ttsOk) return;
-    const myToken = ++speakTokenRef.current; // 任何新调用都让旧排程失效
-    window.speechSynthesis.cancel();
+
+  // 朗读一条回复：本地走 Web Speech，云端走 Edge/Azure，统一用 speakIdx 标记
+  const ttsSpeak = async (text: string, i: number) => {
+    if (!text) return;
+    // 同一句的再次点击 = 停止
     if (speakIdx === i) {
-      setSpeakIdx(-1);
+      ttsStop();
       return;
     }
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = "zh-CN";
-    u.rate = ttsPrefs.rate;
-    u.pitch = ttsPrefs.pitch;
-    // 语音音量由「听感」面板统一管（下一条朗读生效）
-    u.volume = loadVoiceVol();
-    if (zhVoice) u.voice = zhVoice;
-    let started = false;
-    const done = () => setSpeakIdx((cur) => (cur === i ? -1 : cur));
-    // onstart 点亮 started 标志；Edge/Chromium 偶发不回调 onstart 但仍能播，看门狗据此区分
-    u.onstart = () => {
-      started = true;
-    };
-    u.onend = done;
-    u.onerror = done;
+    const myToken = ++speakTokenRef.current;
+    ttsStop();
     setSpeakIdx(i);
-
-    // Edge/Chromium 静音 bug 三重防御：
-    // 1) 先 resume() 解锁卡死的 paused 态；
-    // 2) 下一帧再 speak()（cancel 后同步 speak 常被静默吞掉且无 onerror）；
-    // 3) 看门狗：约 300ms 后若既没 onstart 也没在播，重试一次。
-    const fire = () => {
-      try {
-        const synth = window.speechSynthesis;
-        if (synth.paused) synth.resume();
-      } catch {
-        /* ignore */
+    try {
+      if (ttsEngine === "local") {
+        if (!ttsOk) {
+          setError("本机浏览器不支持语音合成（Web Speech），去「朗读设置」里选云端引擎");
+          setSpeakIdx(-1);
+          return;
+        }
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = "zh-CN";
+        u.rate = ttsPrefs.rate;
+        u.pitch = ttsPrefs.pitch;
+        // 语音音量由「听感」面板统一管（下一条朗读生效）
+        u.volume = loadVoiceVol();
+        if (zhVoice) u.voice = zhVoice;
+        let started = false;
+        const done = () => setSpeakIdx((cur) => (cur === i ? -1 : cur));
+        u.onstart = () => {
+          started = true;
+        };
+        u.onend = done;
+        u.onerror = done;
+        // Edge/Chromium 静音 bug 三重防御：
+        // 1) 先 resume() 解锁卡死的 paused 态；2) 下一帧再 speak()；3) 看门狗 300ms 重试
+        const fire = () => {
+          try {
+            const synth = window.speechSynthesis;
+            if (synth.paused) synth.resume();
+          } catch {
+            /* ignore */
+          }
+          try {
+            window.speechSynthesis.speak(u);
+          } catch {
+            /* ignore */
+          }
+        };
+        requestAnimationFrame(() => {
+          if (speakTokenRef.current !== myToken) return; // 已被新的朗读/停止取代
+          fire();
+          window.setTimeout(() => {
+            if (speakTokenRef.current !== myToken || started) return;
+            try {
+              const synth = window.speechSynthesis;
+              if (synth.speaking || synth.pending) return; // 已经在播，只是没回调 onstart
+              if (synth.paused) synth.resume();
+              window.speechSynthesis.speak(u);
+            } catch {
+              /* ignore */
+            }
+          }, 300);
+        });
+      } else {
+        // 云端：Edge 免费（无需密钥）或 Azure（需密钥）
+        const handle = await speakCloud({
+          text,
+          persona,
+          rate: ttsPrefs.rate,
+          pitch: ttsPrefs.pitch,
+          engine: ttsEngine,
+          speechKey,
+          speechRegion,
+        });
+        cloudStopRef.current = handle.stop;
+        handle.done.finally(() => {
+          if (speakTokenRef.current === myToken) {
+            cloudStopRef.current = null;
+            setSpeakIdx(-1);
+          }
+        });
       }
-      try {
-        window.speechSynthesis.speak(u);
-      } catch {
-        /* ignore */
+    } catch (e) {
+      if (speakTokenRef.current === myToken) {
+        cloudStopRef.current = null;
+        setSpeakIdx(-1);
       }
-    };
-    requestAnimationFrame(() => {
-      if (speakTokenRef.current !== myToken) return; // 已被新的朗读/停止取代
-      fire();
-      window.setTimeout(() => {
-        if (speakTokenRef.current !== myToken || started) return;
+      const msg = e instanceof Error ? e.message : "云端朗读失败";
+      setError(`${msg}（已退回本地语音，去设置里切换）`);
+      // 云端失败尽量退回本地（若有）
+      if (ttsOk && ttsEngine !== "local") {
         try {
-          const synth = window.speechSynthesis;
-          if (synth.speaking || synth.pending) return; // 已经在播，只是没回调 onstart
-          if (synth.paused) synth.resume();
+          const u = new SpeechSynthesisUtterance(text);
+          u.lang = "zh-CN";
+          u.rate = ttsPrefs.rate;
+          u.pitch = ttsPrefs.pitch;
+          u.volume = loadVoiceVol();
+          if (zhVoice) u.voice = zhVoice;
+          u.onend = () => setSpeakIdx((cur) => (cur === i ? -1 : cur));
+          window.speechSynthesis.cancel();
           window.speechSynthesis.speak(u);
         } catch {
           /* ignore */
         }
-      }, 300);
-    });
+      }
+    }
   };
   // 组件卸载（含关面板）时别留下语音在空播
   useEffect(() => {
@@ -789,7 +852,7 @@ export function ConductorPanel(p: ReturnType<typeof useHome>) {
   });
   // 自动朗读：开着时每条新回复逐字打完就自动念出来（开场白不念，同一条只念一次）
   useEffect(() => {
-    if (!ttsPrefs.autoRead || !ttsOk) return;
+    if (!ttsPrefs.autoRead || (!ttsOk && !isCloudEngine(ttsEngine))) return;
     const i = msgs.length - 1;
     const m = msgs[i];
     if (i < 2 || !m || m.role !== "assistant" || !m.text) return;
@@ -797,10 +860,10 @@ export function ConductorPanel(p: ReturnType<typeof useHome>) {
     if (i === typed.idx && typed.len < m.text.length) return; // 还在逐字打，打完再念
     autoSpokenRef.current = i;
     const clean = auxView(m.text).shown.trim();
-    if (clean) speakMsg(clean, i);
-    // speakMsg 是渲染内闭包，依赖按数据源给即可
+    if (clean) void ttsSpeak(clean, i);
+    // ttsSpeak 是渲染内闭包，依赖按数据源给即可
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ttsPrefs.autoRead, ttsOk, msgs, typed]);
+  }, [ttsPrefs.autoRead, ttsOk, ttsEngine, msgs, typed]);
 
   // 每次 msgs 变化回写缓存并落本地（会话 id 一并留住）
   useEffect(() => {
@@ -818,7 +881,7 @@ export function ConductorPanel(p: ReturnType<typeof useHome>) {
 
   // 重开：清空界面记录并另起会话（服务端上下文从头开始）
   const resetChat = () => {
-    stopSpeak();
+    ttsStop();
     setMsgs([greetingOf(persona)]);
     setError("");
     setHintStates({});
@@ -907,7 +970,7 @@ export function ConductorPanel(p: ReturnType<typeof useHome>) {
     setError("");
     setInput("");
     setCopiedIdx(-1);
-    stopSpeak();
+    ttsStop();
     // 手打/补全填回的也算「问过」：只要和题库原文一致就沉底
     if (QUICK_TEXTS.has(text)) markQuickSeen(text);
     setMsgs((m) => [...m, { role: "user", text }, { role: "assistant", text: "" }]);
@@ -1060,18 +1123,28 @@ export function ConductorPanel(p: ReturnType<typeof useHome>) {
                   )}
                   {m.role === "assistant" && !scanPhase && !typingThis && view.shown && (
                     <div className="mt-1.5 flex items-center gap-1.5">
-                      {ttsOk && (
+                      {(ttsOk || isCloudEngine(ttsEngine)) && (
                         <button
                           type="button"
-                          onClick={() => speakMsg(view.shown, i)}
+                          onClick={() => ttsSpeak(view.shown, i)}
                           aria-label={speakIdx === i ? "停止朗读这条回复" : "朗读这条指挥回复"}
-                          title={!zhVoice ? "本机未安装中文语音包，朗读可能无声——去系统装中文(简体)语音" : undefined}
+                          title={
+                            isCloudEngine(ttsEngine)
+                              ? "云端神经语音（按性格分音色）"
+                              : !zhVoice
+                                ? "本机未安装中文语音包，朗读可能无声——去系统装中文(简体)语音"
+                                : undefined
+                          }
                           className="border border-border px-2 py-0.5 font-mono text-xs text-muted-foreground hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
                         >
-                          {speakIdx === i ? "停止朗读 ■" : (zhVoice ? "朗读 ♪" : "朗读 ⚠")}
+                          {speakIdx === i
+                            ? "停止朗读 ■"
+                            : isCloudEngine(ttsEngine) || zhVoice
+                              ? "朗读 ♪"
+                              : "朗读 ⚠"}
                         </button>
                       )}
-                      {ttsOk && !zhVoice && (
+                      {ttsOk && !isCloudEngine(ttsEngine) && !zhVoice && (
                         <span className="text-[10px] text-destructive">本机无中文语音</span>
                       )}
                       <button
@@ -1351,14 +1424,14 @@ export function ConductorPanel(p: ReturnType<typeof useHome>) {
                 </div>
               )}
             </div>
-            {/* 朗读：汉堡菜单（默认收起，不铺开）；含语速/音高微调 + 自动朗读开关 */}
-            {ttsOk && (
+            {/* 朗读：汉堡菜单（默认收起，不铺开）；含引擎选择 + 语速/音高微调 + 自动朗读开关 */}
+            {(ttsOk || isCloudEngine(ttsEngine)) && (
             <div>
               <button
                 type="button"
                 onClick={() => { setTtsOpen((v) => !v); setPersonaOpen(false); setTypeOpen(false); }}
                 aria-expanded={ttsOpen}
-                aria-label="朗读语速、音高与自动朗读设置"
+                aria-label="朗读引擎、语速、音高与自动朗读设置"
                 className="flex items-center gap-1 border border-border px-2 py-1 font-mono text-xs text-muted-foreground hover:border-primary/60 hover:text-primary focus-visible:shadow-[var(--focus-ring)]"
               >
                 <span className="text-sm leading-none">☰</span>
@@ -1366,7 +1439,32 @@ export function ConductorPanel(p: ReturnType<typeof useHome>) {
                 <span className="text-[10px]">{ttsOpen ? "▲" : "▼"}</span>
               </button>
               {ttsOpen && (
-                <div className="mt-1 w-48 space-y-1.5 border border-border bg-card p-2 shadow-lg">
+                <div className="mt-1 w-60 space-y-2 border border-border bg-card p-2 shadow-lg">
+                  {/* 引擎选择：本地 / Edge 免费 / Azure 三选一 */}
+                  <div>
+                    <div className="font-mono text-xs text-muted-foreground">朗读引擎</div>
+                    <div className="mt-1 grid grid-cols-3 gap-1">
+                      {TTS_ENGINES.map((e) => (
+                        <button
+                          key={e.id}
+                          type="button"
+                          onClick={() => pickEngine(e.id)}
+                          aria-pressed={ttsEngine === e.id}
+                          title={e.hint}
+                          className={`border px-1 py-1 font-mono text-[11px] focus-visible:shadow-[var(--focus-ring)] ${
+                            ttsEngine === e.id
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border text-muted-foreground hover:border-primary/60 hover:text-primary"
+                          }`}
+                        >
+                          {e.label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mt-1 text-[10px] text-muted-foreground">
+                      {TTS_ENGINES.find((e) => e.id === ttsEngine)?.hint}
+                    </div>
+                  </div>
                   <label className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
                     语速
                     <input
@@ -1412,9 +1510,24 @@ export function ConductorPanel(p: ReturnType<typeof useHome>) {
                   >
                     {ttsPrefs.autoRead ? "自动朗读 ✓" : "自动朗读"}
                   </button>
-                  <div className="text-xs text-muted-foreground">
-                    当前音色：{zhVoice ? zhVoice.name : "无中文语音"}（随人格切换）
-                  </div>
+                  {/* 状态行：随引擎与性格显示当前音色 */}
+                  {ttsEngine === "local" ? (
+                    <div className="text-xs text-muted-foreground">
+                      当前音色：{zhVoice ? zhVoice.name : "无中文语音"}（随人格切换）
+                    </div>
+                  ) : ttsEngine === "edge" ? (
+                    <div className="text-xs text-muted-foreground">
+                      云端 · {cloudVoiceLabelFor(persona)}（Edge 免费，无需密钥）
+                    </div>
+                  ) : azureConfigured(speechKey, speechRegion) ? (
+                    <div className="text-xs text-muted-foreground">
+                      云端 · {cloudVoiceLabelFor(persona)}（Azure）
+                    </div>
+                  ) : (
+                    <div className="text-xs text-destructive">
+                      ⚠ 未配置 AI_SPEECH_KEY，去 .env 填后重启
+                    </div>
+                  )}
                   <div className="text-xs text-muted-foreground">下一条朗读生效；调慢适合逐句跟着读</div>
                 </div>
               )}
