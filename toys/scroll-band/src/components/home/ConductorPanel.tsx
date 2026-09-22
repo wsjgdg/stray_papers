@@ -406,27 +406,34 @@ function loadPersona(): Persona {
   }
 }
 
-// 每个性格对应的中文音色偏好：优先按名称子串命中（针对 Edge/Windows 常见中文 voice），
-// 再按性别回退，最后退到首个中文 voice。保证在任意装有中文语音的机器上都能给出不同音色。
-// 关键：Windows 旧 SAPI 语音（Huihui/Yaoyao/Kangkang）常为同一引擎别名，听感无差别；
-// 真正能分出音色的是神经语音（名称带 "Online"/"Natural"，如 Xiaoxiao Online / Yunxi Online），故优先选它们。
+// 每个性格对应的中文音色偏好：优先按名称子串命中（含中文名，因为 Edge 神经语音名字是中文，如「云希」），
+// 再按性别/神经语音回退，最后退到首个中文 voice。
+// 关键：Windows 旧 SAPI 语音（Huihui/Yaoyao/Kangkang，拼音名）是同一引擎别名，听感无差别；
+// 真正能分出音色的是神经语音（带 "Online"/"Natural"，名字是中文「晓晓/云希/云扬…」），且只取
+// 「Chinese (Mandarin, Simplified)」那 6 个标准普通话 voice（晓晓/云希/云健/晓伊/云扬/云夏），避开方言/粤语/台语。
 const PERSONA_VOICE: Record<Persona, { gender: "male" | "female"; names: string[] }> = {
-  default: { gender: "female", names: [] },
-  mentor: { gender: "male", names: ["Yunxi", "Yunyang", "Kangkang", "Zhiwei"] },
-  buddy: { gender: "female", names: ["Xiaoxiao", "Yaoyao", "Huihui", "Tingting", "Xiaoyi"] },
-  explorer: { gender: "male", names: ["Yunyang", "Yunxi", "Kangkang", "Zhiwei"] },
+  default: { gender: "female", names: ["晓晓", "Xiaoxiao", "Yaoyao", "Huihui"] },
+  mentor: { gender: "male", names: ["云希", "Yunxi", "云扬", "Yunyang", "Kangkang", "Zhiwei"] },
+  buddy: { gender: "female", names: ["晓晓", "Xiaoxiao", "晓伊", "Xiaoyi", "Yaoyao", "Huihui", "Tingting"] },
+  explorer: { gender: "female", names: ["晓伊", "Xiaoyi", "云扬", "Yunyang", "云希", "Yunxi", "Kangkang", "Zhiwei"] },
 };
 
 function isNeural(v: SpeechSynthesisVoice): boolean {
   return /online|natural/i.test(v.name);
 }
 
+// 仅「Chinese (Mandarin, Simplified)」的标准普通话神经语音（避开方言/粤语/台语）
+function isStdNeural(v: SpeechSynthesisVoice): boolean {
+  return isNeural(v) && /mandarin,\s*simplified/i.test(v.name);
+}
+
 function matchGender(
   voices: SpeechSynthesisVoice[],
   gender: "male" | "female",
 ): SpeechSynthesisVoice | null {
-  const femaleTokens = ["xiaoxiao", "yaoyao", "huihui", "tingting", "xiaoyi", "xiaobei", "yueyue", "ruoxi"];
-  const maleTokens = ["yunxi", "kangkang", "zhiwei", "yunyang", "xiaoxuan"];
+  // 同时覆盖中文名（神经语音）与拼音名（旧 SAPI）
+  const femaleTokens = ["晓晓", "晓伊", "云夏", "xiaoxiao", "yaoyao", "huihui", "tingting", "xiaoyi", "xiaobei", "yueyue", "ruoxi"];
+  const maleTokens = ["云希", "云健", "云扬", "yunxi", "kangkang", "zhiwei", "yunyang", "xiaoxuan"];
   const toks = gender === "female" ? femaleTokens : maleTokens;
   const low = (s: string) => s.toLowerCase();
   return voices.find((v) => toks.some((t) => low(v.name).includes(t))) ?? null;
@@ -436,22 +443,25 @@ function pickVoice(persona: Persona, voices: SpeechSynthesisVoice[]): SpeechSynt
   const zh = voices.filter((v) => v.lang.toLowerCase().startsWith("zh"));
   if (zh.length === 0) return null;
   const pref = PERSONA_VOICE[persona];
-  // 1) 名称子串命中（优先 neural 版）
+  // 1) 名称子串命中（优先标准神经语音）
   const nameHits = pref.names
     .map((n) => zh.find((v) => v.name.includes(n)))
     .filter((v): v is SpeechSynthesisVoice => !!v)
-    .sort((a, b) => Number(isNeural(b)) - Number(isNeural(a)));
+    .sort((a, b) => Number(isStdNeural(b)) - Number(isStdNeural(a)));
   if (nameHits.length) return nameHits[0];
-  // 2) 同性别神经语音（音色真正不同）
-  const sameGNeural = zh.filter(isNeural).find((v) => matchGender([v], pref.gender));
-  if (sameGNeural) return sameGNeural;
-  // 3) 同性别任意 voice
+  // 2) 同性别标准神经语音（音色真正不同）
+  const sameGStd = zh.filter(isStdNeural).find((v) => matchGender([v], pref.gender));
+  if (sameGStd) return sameGStd;
+  // 3) 同性别任意神经语音
+  const sameGAny = zh.filter(isNeural).find((v) => matchGender([v], pref.gender));
+  if (sameGAny) return sameGAny;
+  // 4) 任意标准神经语音
+  const anyStd = zh.find(isStdNeural);
+  if (anyStd) return anyStd;
+  // 5) 同性别任意 voice（含旧 SAPI）
   const sameG = matchGender(zh, pref.gender);
   if (sameG) return sameG;
-  // 4) 任意神经语音
-  const anyNeural = zh.find(isNeural);
-  if (anyNeural) return anyNeural;
-  // 5) 首个中文 voice
+  // 6) 首个中文 voice
   return zh[0];
 }
 
