@@ -50,6 +50,8 @@ function sprite(tex: THREE.Texture, color: number, size: number, opacity = 1): T
     depthWrite: false, transparent: true, opacity,
   }));
   s.scale.setScalar(size);
+  // Random orientation so galaxies of the same type don't all look identical.
+  s.material.rotation = Math.random() * Math.PI * 2;
   return s;
 }
 
@@ -138,7 +140,7 @@ export function buildSolarNeighborhood(): THREE.Group {
   const sunSp = sprite(dot, 0xffe9a0, 3.2, 1);
   grp.add(sunSp);
   tag(sunSp, '太阳', 'SOL', '观测者所在恒星 · G2V 主序星',
-    [['光谱型', 'G2V'], ['距离', '0 光年'], ['视星等', '−26.74']], 0xffe9a0, 3.5, specs);
+    [['光谱型', 'G2V'], ['距离', '0 光年'], ['视星等', '−26.74']], 0xffe9a0, 3.5, specs, grp, 4.5);
 
   for (const s of NEARBY_STARS) {
     const dir = new THREE.Vector3(
@@ -147,12 +149,13 @@ export function buildSolarNeighborhood(): THREE.Group {
       -Math.cos(s.dec * D2R) * Math.sin((s.ra / 24) * Math.PI * 2),
     );
     const p = dir.multiplyScalar(Math.max(0.2, s.distLy));
-    const sp = sprite(dot, s.c, Math.max(0.6, 2.6 * Math.pow(1.4, -s.mag)), 0.95);
+    const starSize = Math.max(0.6, 2.6 * Math.pow(1.4, -s.mag));
+    const sp = sprite(dot, s.c, starSize, 0.95);
     sp.position.copy(p);
     grp.add(sp);
     tag(sp, s.n, s.en, `${s.sp}型恒星 · ${s.distLy.toFixed(2)} 光年`,
       [['光谱型', s.sp], ['距离', s.distLy.toFixed(2) + ' 光年'], ['视星等', s.mag.toFixed(2)]],
-      s.c, Math.max(0.6, 2.6 * Math.pow(1.4, -s.mag)) * 0.6, specs);
+      s.c, starSize * 0.6, specs, grp, Math.max(1.6, starSize * 1.8));
 
     // Exoplanet systems: orbit ring + orbiting dot + label, attached at the star's position.
     const exos = EXOPLANETS.filter((e) => e.host === s.n);
@@ -272,7 +275,7 @@ export function buildMilkyWayGalaxy(): THREE.Group {
   grp.add(bulge);
   tag(bulge, '银心', 'Sgr A*', '银河系中心 · 超大质量黑洞',
     [['类型', '超大质量黑洞'], ['质量', '约 410 万倍太阳质量'],
-     ['距离', '26,700 光年'], ['视星等', '—']], 0xffe9bd, 4, specs, grp, 4);
+     ['距离', '26,700 光年'], ['视星等', '—']], 0xffe9bd, 4, specs, grp, 5);
 
   // Sun position marker (clickable)
   const sunP = new THREE.Vector3(MILKY_WAY_SUN_POS[0], MILKY_WAY_SUN_POS[1], MILKY_WAY_SUN_POS[2]);
@@ -281,7 +284,7 @@ export function buildMilkyWayGalaxy(): THREE.Group {
   grp.add(sunMarker);
   tag(sunMarker, '太阳', 'SUN', '猎户臂内侧 · 距银心 8.2 kpc',
     [['位置', '猎户臂内侧'], ['距银心', '8.2 kpc（≈ 26,700 光年）'],
-     ['绕银心速度', '220 km/s'], ['绕银心一周', '约 2.25 亿年']], 0xff9d61, 1.6, specs, grp, 2.5);
+     ['绕银心速度', '220 km/s'], ['绕银心一周', '约 2.25 亿年']], 0xff9d61, 1.6, specs, grp, 3.5);
 
   grp.userData.labelSpecs = specs;
   // mark for slow rotation
@@ -307,7 +310,7 @@ export function buildLocalGroup(): THREE.Group {
     tag(sp, g.n, g.en, g.note,
       [['类型', g.type], ['距离', fmtLy(g.distLy)], ['直径', fmtLy(g.diamLy)],
        ['视星等', g.mag], ['坐标', `l=${g.l.toFixed(1)}° b=${g.b.toFixed(1)}°`]],
-      hexFromRGB(g.c1), size * 0.55, specs, grp, size * 1.8);
+      hexFromRGB(g.c1), size * 0.55, specs, grp, Math.max(size * 2.4, 2.8));
   }
 
   const sphere = new THREE.LineSegments(
@@ -344,7 +347,7 @@ export function buildNearbyUniverse(): THREE.Group {
     tag(sp, g.n, g.en, g.note,
       [['类型', g.type], ['距离', fmtLy(g.distLy)], ['直径', fmtLy(g.diamLy)],
        ['视星等', g.mag], ['坐标', `l=${g.l.toFixed(1)}° b=${g.b.toFixed(1)}°`]],
-      hexFromRGB(g.c1), size * 0.55, specs, grp, size * 2);
+      hexFromRGB(g.c1), size * 0.55, specs, grp, Math.max(size * 2.4, 2.8));
   }
 
   // Virgo cluster core glow (clickable anchor)
@@ -383,7 +386,7 @@ export function buildSuperclusters(): THREE.Group {
     grp.add(sp);
     tag(sp, s.n, s.en, s.note,
       [['类型', '超星系团'], ['距离', fmtMpc(s.distMpc)], ['跨度', fmtMpc(s.spanMpc)]],
-      0xffd9a0, size * 0.6, specs, grp, size * 1.6);
+      0xffd9a0, size * 0.6, specs, grp, Math.max(size * 2.2, 3.5));
   }
 
   for (const f of COSMIC_FILAMENTS) {
@@ -483,7 +486,7 @@ export function buildObservableUniverse(): THREE.Group {
     grp.add(sp);
     tag(sp, q.n, q.en, q.note,
       [['类型', '类星体'], ['红移', 'z=' + q.z], ['距离', fmtLy(q.distLy)]],
-      0xffd9a0, 3.5, specs, grp, 5);
+      0xffd9a0, 3.5, specs, grp, 6);
   }
 
   const gTex = galaxySpriteTex('spiral', [255, 230, 200], [200, 220, 255]);

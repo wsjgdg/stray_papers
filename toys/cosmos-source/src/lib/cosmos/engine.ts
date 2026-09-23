@@ -159,6 +159,9 @@ export class CosmosEngine {
   // Picking / info
   private ray = new THREE.Raycaster();
   private ndc = new THREE.Vector2();
+  /** Pixel radius for the screen-space proximity fallback used to pick tiny/far
+   *  cosmic bodies (galaxies, stars, DSOs) that are hard to hit with a precise ray. */
+  private COSMIC_PICK_PX = 30;
   private currentKey: string | null = null;
   private distEl: HTMLElement | null = null;
   private altEl: HTMLElement | null = null;
@@ -1047,6 +1050,27 @@ export class CosmosEngine {
     for (const h of hits) {
       if (this.effectivelyVisible(h.object)) { hit = h as THREE.Intersection; break; }
     }
+
+    // Screen-space proximity fallback. Tiny/far cosmic bodies (galaxies, stars, DSOs)
+    // are very hard to hit with a precise ray; if the ray missed, select the nearest
+    // labelled body within a small pixel radius so a click *near* a body still works.
+    if (!hit) {
+      let bestD2 = this.COSMIC_PICK_PX * this.COSMIC_PICK_PX;
+      let bestObj: THREE.Object3D | null = null;
+      for (const o of this.pickables) {
+        if (!this.effectivelyVisible(o)) continue;
+        const ub = (o.userData as any)?.body;
+        if (!ub || (!ub.isCosmos && !ub.isDeep && !ub.isSky)) continue;
+        this._p.setFromMatrixPosition(o.matrixWorld);
+        this._p.project(this.camera);
+        if (this._p.z > 1) continue;
+        const sx = (this._p.x * 0.5 + 0.5) * innerWidth;
+        const sy = (-0.5 * this._p.y + 0.5) * innerHeight;
+        const d2 = (sx - e.clientX) ** 2 + (sy - e.clientY) ** 2;
+        if (d2 <= bestD2) { bestD2 = d2; bestObj = o; }
+      }
+      if (bestObj) hit = { object: bestObj } as unknown as THREE.Intersection;
+    }
     const b = hit ? (hit.object.userData.body) : null;
     if (!b || !hit) { this.cam.focus = null; return; }
     if (b.isCosmos) {
@@ -1054,8 +1078,9 @@ export class CosmosEngine {
       this.showInfo(b);
       this.cam.focus = hit.object;
       const toDist = Math.max(3, (hit.object.scale.x || 1) * 2.5);
-      // Aim camera toward the object (target = object world position)
-      const objPos = this._p.copy(hit.object.position);
+      // Aim camera toward the object (target = object world position; cosmic groups
+      // may be rotated, so use world position rather than the local .position)
+      const objPos = hit.object.getWorldPosition(this._p);
       const camToObj = this._q.copy(objPos).sub(this.camera.position);
       const toTheta = Math.atan2(camToObj.x, camToObj.z);
       const toPhi = Math.max(0.08, Math.min(Math.PI - 0.08, Math.acos(THREE.MathUtils.clamp(camToObj.y / camToObj.length(), -1, 1))));
