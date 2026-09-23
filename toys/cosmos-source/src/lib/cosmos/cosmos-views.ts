@@ -21,7 +21,7 @@ import {
   SUPERCLUSTERS, COSMIC_FILAMENTS, QUASARS, MILKY_WAY_ARMS, MILKY_WAY_BAR,
   MILKY_WAY_SUN_POS,
 } from './universe-data';
-import { galaxySpriteTex, cmbTex, glowTex, nebulaTex } from './textures';
+import { galaxySpriteTex, cmbTex, glowTex, nebulaTex, realBodyTex } from './textures';
 import { galacticDir, fmtLy, fmtMpc, D2R } from './math-utils';
 
 const _v = new THREE.Vector3();
@@ -43,16 +43,44 @@ export interface BodyData {
   rDisp?: number; isCosmos?: boolean;
 }
 
-/** Round sprite helper. */
+/** Round sprite helper — renders the texture's real shape & colour (NormalBlending, so
+ *  stars keep their temperature tint and galaxies keep their morphology instead of washing
+ *  out to a white additive blob). */
 function sprite(tex: THREE.Texture, color: number, size: number, opacity = 1): THREE.Sprite {
   const s = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: tex, color, blending: THREE.AdditiveBlending,
-    depthWrite: false, transparent: true, opacity,
+    map: tex, color, transparent: true, opacity, depthWrite: false,
   }));
   s.scale.setScalar(size);
   // Random orientation so galaxies of the same type don't all look identical.
   s.material.rotation = Math.random() * Math.PI * 2;
   return s;
+}
+
+/** Glow sprite — additive, reserved for genuine luminosity (coronas, halos, HII regions). */
+function glowSprite(tex: THREE.Texture, color: number, size: number, opacity = 1): THREE.Sprite {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: tex, color, blending: THREE.AdditiveBlending,
+    transparent: true, opacity, depthWrite: false,
+  }));
+  s.scale.setScalar(size);
+  s.material.rotation = Math.random() * Math.PI * 2;
+  return s;
+}
+
+/** Representative star-surface colours (sRGB 0..1) for field-star sprinkling. */
+const STAR_PALETTE: [number, number, number][] = [
+  [0.72, 0.78, 1.0], // A/B blue-white
+  [0.95, 0.96, 1.0], // A white
+  [1.0, 0.95, 0.88], // F/G yellow-white
+  [1.0, 0.91, 0.74], // G/K yellow
+  [1.0, 0.78, 0.52], // K orange
+  [1.0, 0.58, 0.36], // M red
+];
+
+/** Best-effort: swap a sprite's map to a real photo when one is registered. No-op if none. */
+function applyRealPhoto(sp: THREE.Sprite, name: string): void {
+  const tex = realBodyTex(name);
+  if (tex) { sp.material.map = tex; sp.material.color.set(0xffffff); sp.material.needsUpdate = true; }
 }
 
 function hexFromRGB(rgb: number[]): number {
@@ -139,6 +167,9 @@ export function buildSolarNeighborhood(): THREE.Group {
   // Sun at origin
   const sunSp = sprite(dot, 0xffe9a0, 3.2, 1);
   grp.add(sunSp);
+  // Photosphere disk + additive corona so the Sun reads as a star, not a flat white dot.
+  const sunCorona = glowSprite(glowTex([255, 233, 160]), 0xffe9a0, 7.5, 0.4);
+  grp.add(sunCorona);
   tag(sunSp, '太阳', 'SOL', '观测者所在恒星 · G2V 主序星',
     [['光谱型', 'G2V'], ['距离', '0 光年'], ['视星等', '−26.74']], 0xffe9a0, 3.5, specs, grp, 4.5);
 
@@ -234,7 +265,7 @@ export function buildMilkyWayGalaxy(): THREE.Group {
   })();
 
   // Soft luminosity floor so the galaxy reads as a body, not bare geometry.
-  const disk = sprite(glowTex([170, 195, 255]), 0xbcd2ff, diskExt * 1.5, 0.1);
+  const disk = glowSprite(glowTex([170, 195, 255]), 0xbcd2ff, diskExt * 1.5, 0.1);
   grp.add(disk);
 
   const armColors: Record<string, number> = {
@@ -264,8 +295,9 @@ export function buildMilkyWayGalaxy(): THREE.Group {
           p[1] + (Math.random() - 0.5) * 0.4,
           p[2] + (Math.random() - 0.5) * 1.4,
         );
-        const b = 0.35 + Math.random() * 0.65;
-        cl.push(col.r * b, col.g * b, col.b * b);
+        const t = STAR_PALETTE[(Math.random() * STAR_PALETTE.length) | 0];
+        const b = 0.5 + Math.random() * 0.5;
+        cl.push(t[0] * b, t[1] * b, t[2] * b);
       }
     }
     const starGeo = new THREE.BufferGeometry();
@@ -279,7 +311,7 @@ export function buildMilkyWayGalaxy(): THREE.Group {
     const nNeb = Math.max(4, (arm.points.length / 3) | 0);
     for (let k = 0; k < nNeb; k++) {
       const p = arm.points[(Math.random() * arm.points.length) | 0];
-      const neb = sprite(glowTex([255, 120, 150]), 0xff6f9a, 1.4 + Math.random() * 2.2, 0.26);
+      const neb = glowSprite(glowTex([255, 120, 150]), 0xff6f9a, 1.4 + Math.random() * 2.2, 0.26);
       neb.position.set(
         p[0] + (Math.random() - 0.5) * 1.6,
         p[1] + (Math.random() - 0.5) * 0.4,
@@ -311,7 +343,7 @@ export function buildMilkyWayGalaxy(): THREE.Group {
   );
   bulgeMesh.scale.set(5, 3.5, 3.5);
   grp.add(bulgeMesh);
-  const coreHalo = sprite(glowTex([255, 228, 180]), 0xffe9bd, 11, 0.22);
+  const coreHalo = glowSprite(glowTex([255, 228, 180]), 0xffe9bd, 11, 0.22);
   grp.add(coreHalo);
   const bulgeTex = galaxySpriteTex('elliptical', [255, 230, 180], [255, 200, 130]);
   const bulge = sprite(bulgeTex, 0xffe9bd, 5.5, 0.95);
@@ -350,6 +382,7 @@ export function buildLocalGroup(): THREE.Group {
     const sp = sprite(tex, hexFromRGB(g.c1), size, 0.9);
     sp.position.copy(p);
     grp.add(sp);
+    applyRealPhoto(sp, g.en);
     tag(sp, g.n, g.en, g.note,
       [['类型', g.type], ['距离', fmtLy(g.distLy)], ['直径', fmtLy(g.diamLy)],
        ['视星等', g.mag], ['坐标', `l=${g.l.toFixed(1)}° b=${g.b.toFixed(1)}°`]],
@@ -387,6 +420,7 @@ export function buildNearbyUniverse(): THREE.Group {
     const sp = sprite(tex, hexFromRGB(g.c1), size, g.group === 'virgo' ? 0.95 : 0.8);
     sp.position.copy(p);
     grp.add(sp);
+    applyRealPhoto(sp, g.en);
     tag(sp, g.n, g.en, g.note,
       [['类型', g.type], ['距离', fmtLy(g.distLy)], ['直径', fmtLy(g.diamLy)],
        ['视星等', g.mag], ['坐标', `l=${g.l.toFixed(1)}° b=${g.b.toFixed(1)}°`]],
@@ -396,7 +430,7 @@ export function buildNearbyUniverse(): THREE.Group {
   // Virgo cluster core glow (clickable anchor)
   const virgoCenter = galacticDir(283.8, 74.5, _v.clone()).multiplyScalar(compress(53500000));
   const glowTex = galaxySpriteTex('elliptical', [255, 230, 200], [255, 200, 150]);
-  const glow = sprite(glowTex, 0xffe9bd, 10, 0.25);
+  const glow = glowSprite(glowTex, 0xffe9bd, 10, 0.25);
   glow.position.copy(virgoCenter);
   grp.add(glow);
   tag(glow, '室女座星系团', 'VIRGO CLUSTER', '本超星系团引力中心',
@@ -428,7 +462,7 @@ export function buildSuperclusters(): THREE.Group {
     const sp = sprite(tex, 0xffd9a0, size, 0.5);
     sp.position.copy(p);
     grp.add(sp);
-    const halo = sprite(glowTex([255, 220, 180]), 0xffd9a0, size * 2.4, 0.18);
+    const halo = glowSprite(glowTex([255, 220, 180]), 0xffd9a0, size * 2.4, 0.18);
     halo.position.copy(p);
     grp.add(halo);
     // Member galaxies: a little cluster of tiny spirals/ellipticals around the node
@@ -592,6 +626,7 @@ export function buildObservableUniverse(): THREE.Group {
     const sp = sprite(gTex, hexFromRGB(g.c1), 2.2, 0.7);
     sp.position.copy(p);
     grp.add(sp);
+    applyRealPhoto(sp, g.en);
     tag(sp, g.n, g.en, g.note,
       [['类型', g.type], ['距离', fmtLy(g.distLy)]],
       hexFromRGB(g.c1), 2.2, specs, grp, 4);

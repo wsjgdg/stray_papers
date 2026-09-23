@@ -308,12 +308,22 @@ export function galaxySpriteTex(type: string, c1: number[], c2: number[]): THREE
   g.globalCompositeOperation = 'lighter';
   if (type === 'spiral') {
     g.save(); g.translate(128, 128); g.scale(1, 0.42); g.rotate(0.6);
+    // Luminous spiral arms (additive)
     for (let arm = 0; arm < 2; arm++)
       for (let i = 0; i < 30; i++) {
         const a = arm * Math.PI + i * 0.2, r = 8 + i * 3.6;
         blob(g, Math.cos(a) * r * 1.6, Math.sin(a) * r, 10 + Math.random() * 14, i % 4 ? c1 : c2, 0.06);
       }
+    // Dark dust lanes along the inner arms (carve out luminance, like M31/M51)
+    g.globalCompositeOperation = 'destination-out';
+    for (let arm = 0; arm < 2; arm++)
+      for (let i = 0; i < 20; i++) {
+        const a = arm * Math.PI + i * 0.22 + 0.18, r = 16 + i * 3.4;
+        blob(g, Math.cos(a) * r * 1.6, Math.sin(a) * r, 7 + Math.random() * 7, [0,0,0], 0.22);
+      }
+    g.globalCompositeOperation = 'lighter';
     g.restore();
+    // Bright nucleus + bulge on top
     blob(g, 128, 128, 40, [255,245,225], 0.6);
     blob(g, 128, 128, 16, [255,255,240], 0.85);
   } else if (type === 'elliptical' || type === 'lenticular') {
@@ -332,6 +342,27 @@ export function galaxySpriteTex(type: string, c1: number[], c2: number[]): THREE
     blob(g, 128, 128, 26, [255,245,225], 0.35);
   }
   return done(cv);
+}
+
+/**
+ * Real-photo channel (reserved). The cosmic-view builders are procedural by design, but
+ * for famous, well-imaged objects you can drop a face-on photo into /public/cosmos/
+ * (e.g. M31.jpg, M51.jpg) and register it here. When an entry exists the builder swaps the
+ * sprite's map to the photo (true colours) instead of the procedural blob — no network is
+ * touched while the map is empty, so the app stays fully offline by default.
+ */
+export const REAL_BODY_IMAGES: Record<string, string> = {
+  // 'M31': '/cosmos/M31.jpg',   // ← example: drop the file in /public/cosmos and uncomment
+};
+
+const _realLoader = new THREE.TextureLoader();
+/** Returns a real-photo texture for `name` if registered, else null. */
+export function realBodyTex(name: string): THREE.Texture | null {
+  const url = REAL_BODY_IMAGES[name];
+  if (!url) return null;
+  const t = _realLoader.load(url);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
 }
 
 /** Cosmic Microwave Background texture — realistic anisotropy map.
