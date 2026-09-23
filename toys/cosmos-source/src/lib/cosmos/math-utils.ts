@@ -44,8 +44,6 @@ export function rotMatrix(b: { Om: number; i: number; w: number }): THREE.Matrix
     .multiply(new THREE.Matrix4().makeRotationZ(b.w * D2R));
 }
 
-const _w = new THREE.Vector3();
-
 /** Solve Kepler's equation, return heliocentric position in AU (ecliptic frame). */
 export function posAU(
   b: any,

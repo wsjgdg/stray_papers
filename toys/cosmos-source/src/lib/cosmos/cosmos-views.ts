@@ -19,7 +19,7 @@ import * as THREE from 'three';
 import {
   NEARBY_STARS, LOCAL_GROUP, NEARBY_GALAXIES, VIRGO_CLUSTER, FAMOUS_GALAXIES,
   SUPERCLUSTERS, COSMIC_FILAMENTS, QUASARS, MILKY_WAY_ARMS, MILKY_WAY_BAR,
-  MILKY_WAY_SUN_POS, COSMIC_LANDMARKS,
+  MILKY_WAY_SUN_POS,
 } from './universe-data';
 import { galaxySpriteTex, cmbTex } from './textures';
 import { galacticDir, fmtLy, fmtMpc, D2R } from './math-utils';

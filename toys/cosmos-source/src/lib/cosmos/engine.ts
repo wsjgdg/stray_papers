@@ -7,9 +7,9 @@
  */
 import * as THREE from 'three';
 import {
-  EPOCH, K, POW, SUN, BODIES, PLUTO, DWARF, SYS, COMETS, MOONS, DEEP, CONS, STARS, SPCOL,
+  EPOCH, SUN, BODIES, SYS, COMETS, MOONS, DEEP, CONS, STARS, SPCOL,
 } from './data';
-import { D2R, R2D, unitDir, dirToRADec, dirToAltAz, rotMatrix, posAU, scalePos,
+import { D2R, unitDir, dirToAltAz, rotMatrix, posAU, scalePos,
   fmtRA, fmtDec, fmtDeg, fmtP } from './math-utils';
 import {
   makeTex, sunTex, glowTex, zodiTex, ringTex, thinRingTex, flareTex, softTex,
@@ -551,7 +551,7 @@ export class CosmosEngine {
     // Named bright stars
     const flare = flareTex();
     this.skyRoot.add(this.starGroup);
-    for (const [n, ra, dec, mag, sp] of STARS) {
+    for (const [, ra, dec, mag, sp] of STARS) {
       const s = new THREE.Sprite(new THREE.SpriteMaterial({
         map: flare, color: SPCOL[sp], blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
       s.position.copy(unitDir(ra, dec)).multiplyScalar(2450);
@@ -1110,7 +1110,6 @@ export class CosmosEngine {
 
     // Comets
     if (this.cometGroup.visible) {
-      const U = this as any;
       for (const cm of this.comets) {
         const au = posAU(cm.c, this.simT, this._p);
         const r = au.length();
@@ -1162,9 +1161,8 @@ export class CosmosEngine {
     if (this.geg.visible) this.geg.position.copy(this._ew).addScaledVector(sdir, 1600);
 
     // Horizon mode
-    let lstH = 0;
     if (this.horizonMode) {
-      lstH = this.updateHorizonFrame();
+      this.updateHorizonFrame();
       for (const m of this.marks) {
         if (m.isSun) this._p.copy(this._ew).negate();
         else { m.srcObj.getWorldPosition(this._p); this._p.sub(this._ew); }
