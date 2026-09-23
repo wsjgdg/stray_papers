@@ -21,7 +21,7 @@ import {
   SUPERCLUSTERS, COSMIC_FILAMENTS, QUASARS, MILKY_WAY_ARMS, MILKY_WAY_BAR,
   MILKY_WAY_SUN_POS,
 } from './universe-data';
-import { galaxySpriteTex, cmbTex } from './textures';
+import { galaxySpriteTex, cmbTex, glowTex } from './textures';
 import { galacticDir, fmtLy, fmtMpc, D2R } from './math-utils';
 
 const _v = new THREE.Vector3();
@@ -224,6 +224,18 @@ export function buildMilkyWayGalaxy(): THREE.Group {
   grp.name = 'cosmos-milkyway';
   const specs: LabelSpec[] = [];
 
+  // Size the soft galactic glow disk from the actual arm extent so it reads as a
+  // luminous body instead of bare wireframe arms.
+  const diskExt = (() => {
+    let m = 0;
+    for (const a of MILKY_WAY_ARMS) for (const p of a.points) {
+      m = Math.max(m, Math.hypot(p[0], p[1], p[2]));
+    }
+    return m || 18;
+  })();
+  const disk = sprite(glowTex([170, 195, 255]), 0xbcd2ff, diskExt * 1.5, 0.14);
+  grp.add(disk);
+
   const armColors: Record<string, number> = {
     '英仙臂': 0x8fb8ff, '人马臂': 0xffd9a0, '盾牌-半人马臂': 0xbfe0ff, '矩尺臂': 0xffc0d0,
     'Perseus': 0x8fb8ff, 'Sagittarius': 0xffd9a0, 'Scutum-Centaurus': 0xbfe0ff, 'Norma': 0xffc0d0,
@@ -239,7 +251,7 @@ export function buildMilkyWayGalaxy(): THREE.Group {
     const pos: number[] = [], col: number[] = [];
     const c = new THREE.Color(armColors[arm.n] ?? 0xaaccff);
     for (const p of arm.points) {
-      for (let k = 0; k < 14; k++) {
+      for (let k = 0; k < 22; k++) {
         const ox = (Math.random() - 0.5) * 0.8;
         const oy = (Math.random() - 0.5) * 0.18;
         const oz = (Math.random() - 0.5) * 0.8;
@@ -251,7 +263,7 @@ export function buildMilkyWayGalaxy(): THREE.Group {
     starGeo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
     starGeo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
     grp.add(new THREE.Points(starGeo, new THREE.PointsMaterial({
-      size: 0.18, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: 0.9, depthWrite: false,
+      size: 0.22, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: 0.95, depthWrite: false,
     })));
     // Label at the outer tip of the arm
     const tip = pts[pts.length - 1];
@@ -268,6 +280,10 @@ export function buildMilkyWayGalaxy(): THREE.Group {
     grp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
       new THREE.LineBasicMaterial({ color: 0xffe9bd, transparent: true, opacity: 0.7 })));
   }
+
+  // Core glow halo behind the bulge so the galactic center reads as luminous
+  const coreHalo = sprite(glowTex([255, 228, 180]), 0xffe9bd, 11, 0.2);
+  grp.add(coreHalo);
 
   // Galactic core bulge (clickable)
   const bulgeTex = galaxySpriteTex('elliptical', [255, 230, 180], [255, 200, 130]);
@@ -384,31 +400,52 @@ export function buildSuperclusters(): THREE.Group {
     const sp = sprite(tex, 0xffd9a0, size, 0.5);
     sp.position.copy(p);
     grp.add(sp);
+    // Faint glowing halo so each supercluster node reads as a luminous cluster
+    const halo = sprite(glowTex([255, 220, 180]), 0xffd9a0, size * 2.4, 0.18);
+    halo.position.copy(p);
+    grp.add(halo);
     tag(sp, s.n, s.en, s.note,
       [['类型', '超星系团'], ['距离', fmtMpc(s.distMpc)], ['跨度', fmtMpc(s.spanMpc)]],
       0xffd9a0, size * 0.6, specs, grp, Math.max(size * 2.2, 3.5));
   }
 
+  // Cosmic-web filaments: glowing additive tubes between supercluster nodes
+  const filaments: THREE.Vector3[] = [];
   for (const f of COSMIC_FILAMENTS) {
     const a = galacticDir(f.from[0], f.from[1], _v.clone()).multiplyScalar(compress(f.from[2]));
     const b = galacticDir(f.to[0], f.to[1], _v.clone()).multiplyScalar(compress(f.to[2]));
-    const geo = new THREE.BufferGeometry().setFromPoints([a, b]);
-    grp.add(new THREE.Line(geo, new THREE.LineBasicMaterial({
-      color: 0x5a7faa, transparent: true, opacity: 0.4,
+    filaments.push(a, b);
+    const tube = new THREE.TubeGeometry(new THREE.LineCurve3(a, b), 1, 0.3, 6, false);
+    grp.add(new THREE.Mesh(tube, new THREE.MeshBasicMaterial({
+      color: 0x6f9fd0, transparent: true, opacity: 0.16,
+      blending: THREE.AdditiveBlending, depthWrite: false,
     })));
   }
 
-  const N = 2600;
+  // Cosmic-web backdrop: ~1/3 of points hug the filaments, the rest fill a flattened
+  // volume — reads as a structured web rather than uniform noise.
+  const N = 4200;
   const pos = new Float32Array(N * 3), col = new Float32Array(N * 3);
   for (let k = 0; k < N; k++) {
-    const r = Math.pow(Math.random(), 0.4) * 60;
-    const th = Math.random() * Math.PI * 2;
-    const ph = Math.acos(Math.random() * 2 - 1);
-    pos[k * 3] = r * Math.sin(ph) * Math.cos(th);
-    pos[k * 3 + 1] = r * Math.cos(ph) * 0.4;
-    pos[k * 3 + 2] = r * Math.sin(ph) * Math.sin(th);
-    const b = 0.3 + Math.random() * 0.5;
-    col[k * 3] = 0.6 * b; col[k * 3 + 1] = 0.7 * b; col[k * 3 + 2] = 0.9 * b;
+    let x: number, y: number, z: number;
+    if (filaments.length >= 2 && k % 3 === 0) {
+      const i = ((Math.random() * filaments.length) | 0) & ~1; // pick an (a,b) pair
+      const a = filaments[i], b = filaments[i + 1];
+      const t = Math.random();
+      x = a.x + (b.x - a.x) * t + (Math.random() - 0.5) * 4;
+      y = a.y + (b.y - a.y) * t + (Math.random() - 0.5) * 4;
+      z = a.z + (b.z - a.z) * t + (Math.random() - 0.5) * 4;
+    } else {
+      const r = Math.pow(Math.random(), 0.4) * 60;
+      const th = Math.random() * Math.PI * 2;
+      const ph = Math.acos(Math.random() * 2 - 1);
+      x = r * Math.sin(ph) * Math.cos(th);
+      y = r * Math.cos(ph) * 0.4;
+      z = r * Math.sin(ph) * Math.sin(th);
+    }
+    pos[k * 3] = x; pos[k * 3 + 1] = y; pos[k * 3 + 2] = z;
+    const bv = 0.3 + Math.random() * 0.5;
+    col[k * 3] = 0.6 * bv; col[k * 3 + 1] = 0.7 * bv; col[k * 3 + 2] = 0.9 * bv;
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
