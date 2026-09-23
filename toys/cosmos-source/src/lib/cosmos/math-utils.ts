@@ -69,7 +69,7 @@ export function posAU(
   return out.set(_v.x, _v.z, -_v.y);
 }
 
-/** Compress vast AU distances into a viewable scene scale. */
+/** Compress vast AU distances into a viewable scene scale (readable mode). */
 export function scalePos(p: THREE.Vector3, out: THREE.Vector3 = new THREE.Vector3()): THREE.Vector3 {
   out = out || new THREE.Vector3();
   const r = p.length();
@@ -78,6 +78,20 @@ export function scalePos(p: THREE.Vector3, out: THREE.Vector3 = new THREE.Vector
 }
 export const K = 15;
 export const POW = 0.55;
+
+/**
+ * Real-proportion distance scaling (real-scale mode).
+ * Linear in AU: `|out| = C_REAL * r`. By default 1 scene unit = 1 AU, so
+ * planetary spacing matches reality (Earth↔Sun 1, Jupiter 5.2, Neptune 30).
+ */
+export const C_REAL = 8; // global zoom factor so the system frames nicely
+export function scalePosReal(p: THREE.Vector3, out: THREE.Vector3 = new THREE.Vector3()): THREE.Vector3 {
+  out = out || new THREE.Vector3();
+  return out.copy(p).multiplyScalar(C_REAL);
+}
+
+/** Base display radius (scene units) for a 1-Earth-radius body in real-scale mode. */
+export const REAL_BASE = 0.02;
 
 export function fmtRA(h: number): string {
   const hh = Math.floor(h);

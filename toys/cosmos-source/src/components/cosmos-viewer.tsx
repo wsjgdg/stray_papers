@@ -11,7 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import {
   Pause, Play, Rewind, Zap, CalendarClock, Compass, Snowflake, RotateCcw, Navigation, Rocket,
   Orbit, Tag, Asterisk, Disc, Sparkles, Star, Flame, Moon, Sun,
-  ChevronDown, ChevronUp, Layers,
+  ChevronDown, ChevronUp, Layers, Ruler,
 } from 'lucide-react';
 
 const EU = (
@@ -93,7 +93,7 @@ export default function CosmosViewer() {
       orb: true, lab: true, belt: true, mw: true, dso: true, con: true,
       comet: true, met: true, zodi: true, shadow: true,
     }, scaleLevel: 0, fps: 0, dprScale: 1, clock: '————–—— –——:——', focusName: '',
-    simT: 0, transit: 0, flyMode: false, flySpeed: 8, tourActive: false,
+    simT: 0, transit: 0, flyMode: false, flySpeed: 8, tourActive: false, realScale: false,
   });
   const [spdVal, setSpdVal] = useState(560);
   const [eclVal, setEclVal] = useState(234);
@@ -357,6 +357,21 @@ export default function CosmosViewer() {
             onClick={toggleTour} title="自动巡航：沿预设路径飞越太阳系到可观测宇宙">
             <Rocket className="w-3 h-3 mr-1" />巡航
           </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="sm" variant="ghost"
+                  className={`h-7 px-2.5 text-[11px] border border-[rgba(125,165,225,.18)] ${state.realScale ? '!border-[#5fd3ff] !text-[#5fd3ff] !bg-[rgba(95,211,255,.12)]' : ''}`}
+                  onClick={() => engineRef.current?.setRealScale(!state.realScale)}>
+                  <Ruler className="w-3 h-3 mr-1" />{state.realScale ? '真实比例' : '真实比例'}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                真实比例模式：行星距离按真实 AU 线性缩放（地球 1 · 木星 5.2 · 海王星 30），
+                天体尺寸按真实比例放大至可见；太阳已封顶以免遮挡水星。此模式只影响太阳系层级。
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         {/* Fly-mode control hint */}
@@ -479,6 +494,11 @@ export default function CosmosViewer() {
           <div className="text-[10px] text-[#8b97ad] leading-[1.5] mt-0.5 max-w-[60vw] mx-auto">
             {SCALE_LEVELS[state.scaleLevel].description}
           </div>
+          {state.realScale && (
+            <div className="mt-1 px-1 text-center text-[10px] text-[#5fd3ff] tracking-[.08em] leading-[1.5] max-w-[60vw] mx-auto">
+              真实比例 · 距离线性 · 天体尺寸按比例放大至可见（太阳封顶）
+            </div>
+          )}
         </div>
       </div>
 
@@ -501,6 +521,7 @@ export default function CosmosViewer() {
       {/* ───────── footer hint ───────── */}
       <div className="absolute bottom-3 right-3 z-[6] text-[10.5px] tracking-[.14em] text-[#8b97ad] tabular-nums">
         {state.fps} FPS · {(state.horizonMode ? 'PLANETARIUM' : 'ORRERY')} · ε {state.eps.toFixed(2)}°
+        {state.realScale ? ' · 真实比例' : ' · 可读性缩放'}
         {state.dprScale < 1 ? ` · DPR×${state.dprScale.toFixed(2)}` : ''}
       </div>
       <div className="absolute bottom-3 left-3 z-[6] hidden sm:block text-[10.5px] tracking-[.12em] text-[#8b97ad]">

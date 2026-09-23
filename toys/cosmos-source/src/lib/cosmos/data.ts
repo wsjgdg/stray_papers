@@ -119,7 +119,7 @@ for (const c of COMETS) { c.kind = 'comet'; c.key = c.n; c.P = Math.pow(c.a, 1.5
 export interface Moon {
   p: string; n: string; full: string; aKm: number; P: number; R: number; col: number; M0: number;
   by?: string; minDist?: number; tidal?: boolean; note: string;
-  dist?: number; tilt?: any; mesh?: any; nd?: any;
+  dist?: number; tilt?: any; mesh?: any; nd?: any; ring?: any;
 }
 export const MOONS: Moon[] = [
   { p:'火星', n:'火卫一', full:'火卫一 · 福波斯 Phobos', aKm:9376, P:0.319, R:11.3, col:0x8a7d6e, M0:0, by:'霍尔 · 1877',

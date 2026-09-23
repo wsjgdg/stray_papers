@@ -9,8 +9,8 @@ import * as THREE from 'three';
 import {
   EPOCH, SUN, BODIES, SYS, COMETS, MOONS, DEEP, CONS, STARS, SPCOL,
 } from './data';
-import { D2R, unitDir, dirToAltAz, rotMatrix, posAU, scalePos,
-  fmtRA, fmtDec, fmtDeg, fmtP } from './math-utils';
+import { D2R, unitDir, dirToAltAz, rotMatrix, posAU, scalePos, scalePosReal,
+  REAL_BASE, fmtRA, fmtDec, fmtDeg, fmtP } from './math-utils';
 import {
   makeTex, sunTex, glowTex, zodiTex, ringTex, thinRingTex, flareTex, softTex,
   nebulaTex, milkyWayTex, makePlanetMaterial, earthNightTex, makeAtmosphereMaterial,
@@ -41,6 +41,7 @@ export interface EngineState {
   flyMode: boolean;
   flySpeed: number;  // fly speed multiplier (1..200)
   tourActive: boolean;
+  realScale: boolean;   // true → honest linear distances + proportional sizes
 }
 
 export interface BodyInfo {
@@ -143,6 +144,12 @@ export class CosmosEngine {
     orb: true, lab: true, belt: true, mw: true, dso: true, con: true,
     comet: true, met: true, zodi: true, shadow: true,
   };
+
+  // Real-scale mode (honest proportions toggle)
+  private realScale = false;
+  private orbitLines: { line: THREE.LineLoop; b: any }[] = [];
+  private sunGlow1?: THREE.Sprite;
+  private sunGlow2?: THREE.Sprite;
 
   // Camera control
   private cam = { theta: 0.7, phi: 1.05, dist: 120, wantDist: 120,
@@ -247,8 +254,29 @@ export class CosmosEngine {
     ];
   }
 
+  /* ═════════ SCALE MODE (readable vs real-proportion) ═════════ */
+  /** Distance mapper: linear + honest in real mode, compressed otherwise. */
+  private sp(p: THREE.Vector3, out?: THREE.Vector3): THREE.Vector3 {
+    return this.realScale ? scalePosReal(p, out) : scalePos(p, out);
+  }
+  /** Planet display radius (scene units). */
+  private planetRDisp(b: any): number {
+    if (this.realScale) return Math.max(0.02, REAL_BASE * (b.R / 6371));
+    return 0.42 * Math.sqrt(b.R / 6371);
+  }
+  /** Moon display radius (scene units). */
+  private moonRDisp(mo: any): number {
+    if (this.realScale) return Math.max(0.02, REAL_BASE * (mo.R / 6371));
+    return 0.42 * Math.sqrt(mo.R / 6371);
+  }
+  /** Sun display radius. Capped in real mode so Mercury's orbit stays clear of the disc. */
+  private sunRDisp(): number {
+    if (!this.realScale) return 2.4;
+    return Math.min(0.30, REAL_BASE * (SUN.R / 6371));
+  }
+
   private buildSolarSystem() {
-    const sunR = 2.4;
+    const sunR = this.sunRDisp();
     this.sunMesh = new THREE.Mesh(
       new THREE.SphereGeometry(1, 64, 32),
       new THREE.MeshBasicMaterial({ map: sunTex() }),
@@ -260,15 +288,15 @@ export class CosmosEngine {
 
     const glow = new THREE.Sprite(new THREE.SpriteMaterial({
       map: glowTex(), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.95 }));
-    glow.scale.setScalar(22); this.eclFrame.add(glow);
+    glow.scale.setScalar(sunR * 9.17); this.eclFrame.add(glow); this.sunGlow1 = glow;
     const glow2 = new THREE.Sprite(new THREE.SpriteMaterial({
       map: glow.material.map, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.4 }));
-    glow2.scale.setScalar(48); this.eclFrame.add(glow2);
+    glow2.scale.setScalar(sunR * 20); this.eclFrame.add(glow2); this.sunGlow2 = glow2;
 
     this.eclFrame.add(this.orbitGroupRoot);
 
     for (const b of SYS) {
-      const rDisp = 0.42 * Math.sqrt(b.R / 6371);
+      const rDisp = this.planetRDisp(b);
       const og = new THREE.Group();
       const tg = new THREE.Group(); tg.rotation.z = b.tilt * D2R;
       // Day/night terminator shader: lit hemisphere + twilight band + (Earth) night city lights
@@ -285,6 +313,8 @@ export class CosmosEngine {
       else mesh.scale.setScalar(rDisp);
       mesh.userData.body = { ...b, rDisp, rows: this.planetRows(b) };
       mesh.userData.planetMat = mat;     // keep ref to update uSunDir each frame
+      let ndHalo: THREE.Sprite | undefined, ndAtmo: THREE.Mesh | undefined;
+      let ndRing: THREE.Mesh | undefined, ndRingShadow: THREE.Mesh | undefined, ndRingThin = false;
       tg.add(mesh); og.add(tg); this.eclFrame.add(og); this.pickables.push(mesh);
 
       // Atmospheric glow halo — color chosen per body for realism
@@ -304,7 +334,7 @@ export class CosmosEngine {
         }));
         halo.scale.setScalar(rDisp * 2.4);
         halo.renderOrder = 2;
-        tg.add(halo);
+        tg.add(halo); ndHalo = halo;
         this.atmoHalos.push({ mesh: halo, body: b.n, tintColor: haloColor });
 
         // Rayleigh-scattering rim: a slightly-larger BackSide sphere with a Fresnel shader.
@@ -320,7 +350,7 @@ export class CosmosEngine {
         const atmoMesh = new THREE.Mesh(this.sphereGeo, atmoMat);
         atmoMesh.scale.setScalar(rDisp * 1.06);
         atmoMesh.renderOrder = 3;
-        tg.add(atmoMesh);
+        tg.add(atmoMesh); ndAtmo = atmoMesh;
         mesh.userData.atmoMat = atmoMat;   // update uSunDir each frame (same as planet mat)
       }
 
@@ -339,7 +369,7 @@ export class CosmosEngine {
         const ring = new THREE.Mesh(new THREE.RingGeometry(innerR, outerR, 96), ringMat);
         ring.rotation.x = -Math.PI / 2;
         if (b.n === '天王星') ring.rotation.y = Math.PI / 2.1; // tilted ring
-        tg.add(ring);
+        tg.add(ring); ndRing = ring; ndRingThin = isThin;
 
         // Saturn ring shadow on the planet — a slightly-larger invisible sphere
         // whose shader darkens a band where the ring occludes sunlight.
@@ -386,22 +416,24 @@ export class CosmosEngine {
           });
           const shadowMesh = new THREE.Mesh(this.sphereGeo, shadowMat);
           shadowMesh.scale.setScalar(rDisp * 1.01);
-          tg.add(shadowMesh);
+          tg.add(shadowMesh); ndRingShadow = shadowMesh;
           mesh.userData.ringShadowMat = shadowMat;   // update uSunDir each frame (same as planet mat)
         }
       }
 
       const pts: THREE.Vector3[] = [];
-      for (let k = 0; k <= 240; k++) pts.push(scalePos(posAU(b, (k / 240) * b.P, this._p), new THREE.Vector3()));
-      this.orbitGroupRoot.add(new THREE.LineLoop(
+      for (let k = 0; k <= 240; k++) pts.push(this.sp(posAU(b, (k / 240) * b.P, this._p), new THREE.Vector3()));
+      const orbitLine = new THREE.LineLoop(
         new THREE.BufferGeometry().setFromPoints(pts),
-        new THREE.LineBasicMaterial({ color: b.c, transparent: true, opacity: 0.28 })));
+        new THREE.LineBasicMaterial({ color: b.c, transparent: true, opacity: 0.28 }));
+      this.orbitGroupRoot.add(orbitLine);
+      this.orbitLines.push({ line: orbitLine, b });
 
       const el = document.createElement('div');
       el.className = 'tag'; el.innerHTML = `<b>${b.n[0]}</b>${b.n.slice(1)}`;
       this.labelHost.appendChild(el);
       this.labelEls.push({ el, obj: og, up: rDisp * 1.8 + 0.4, grp: 'sys' });
-      this.nodes[b.n] = { og, tg, mesh, body: b, rDisp };
+      this.nodes[b.n] = { og, tg, mesh, body: b, rDisp, halo: ndHalo, atmo: ndAtmo, ring: ndRing, ringShadow: ndRingShadow, ringThin: ndRingThin };
     }
 
     // Earth's Moon (handled specially because it orbits in og of earth)
@@ -430,10 +462,10 @@ export class CosmosEngine {
       mo.dist = nd.rDisp * 1.8 * Math.pow(mo.aKm / 421700, 0.62);
       if (mo.minDist) mo.dist = Math.max(mo.dist, nd.rDisp * mo.minDist);
       else mo.dist = Math.max(mo.dist, nd.rDisp * 1.5);
-      const rDisp = 0.42 * Math.sqrt(mo.R / 6371);
+      const rDisp = this.moonRDisp(mo);
       const tilt = new THREE.Group(); tilt.rotation.x = 3 * D2R;
       const mesh = new THREE.Mesh(this.sphereGeo, new THREE.MeshStandardMaterial({ color: mo.col, roughness: 1 }));
-      mesh.scale.setScalar(Math.max(0.06, rDisp));
+      mesh.scale.setScalar(Math.max(0.02, rDisp));
       mesh.userData.body = {
         n: mo.full, en: mo.full.includes('·') ? mo.full.split('·')[1].trim().toUpperCase() : mo.n,
         key: mo.n, kind: 'moon', rDisp, c: mo.col,
@@ -455,7 +487,7 @@ export class CosmosEngine {
         new THREE.LineBasicMaterial({ color: mo.col, transparent: true, opacity: 0.16 }));
       tilt.add(ring); this.subOrbits.push(ring);
       nd.og.add(tilt); this.pickables.push(ball);
-      mo.tilt = tilt; mo.mesh = mesh; mo.nd = nd;
+      mo.tilt = tilt; mo.mesh = mesh; mo.nd = nd; mo.ring = ring;
       const el = document.createElement('div');
       el.className = 'tag moon'; el.innerHTML = `<b>·</b>${mo.n}`;
       this.labelHost.appendChild(el);
@@ -499,7 +531,7 @@ export class CosmosEngine {
   private updateBelt(m: THREE.InstancedMesh) {
     const list = m.userData.list, arr = m.instanceMatrix.array;
     for (let k = 0; k < list.length; k++) {
-      const p = scalePos(posAU(list[k], this.simT, this._p), this._s);
+      const p = this.sp(posAU(list[k], this.simT, this._p), this._s);
       const o = k * 16;
       arr[o + 12] = p.x; arr[o + 13] = p.y; arr[o + 14] = p.z;
     }
@@ -1048,7 +1080,7 @@ export class CosmosEngine {
     }
     if (this.horizonMode) return;
     this.cam.focus = hit.object;
-    const toDist = Math.max((b.rDisp || 0.3) * 7, b.kind === 'moon' ? 1.1 : 2.2);
+    const toDist = Math.max((b.rDisp || 0.3) * 7 + 0.25, b.kind === 'moon' ? 1.1 : 2.2);
     this.cam.wantDist = toDist;
     this.showInfo(b);
     // Launch a cinematic fly-to: aim at the body (object→origin direction from camera)
@@ -1083,7 +1115,7 @@ export class CosmosEngine {
     for (const key in this.nodes) {
       const nd = this.nodes[key], au = posAU(nd.body, this.simT, this._p);
       this.liveDist[nd.body.key] = au.length().toFixed(3) + ' AU';
-      nd.og.position.copy(scalePos(au, this._s));
+      nd.og.position.copy(this.sp(au, this._s));
       if (!nd.body.tidal) nd.mesh.rotation.y += ((2 * Math.PI / nd.body.rot) * (this.daysPerSec * dt)) / 20;
       // Update planet day/night shader: sun is at eclFrame origin, so sun-direction (planet→sun)
       // is the negation of the planet's world position, normalized.
@@ -1127,7 +1159,7 @@ export class CosmosEngine {
         const au = posAU(cm.c, this.simT, this._p);
         const r = au.length();
         this.liveDist[cm.c.key] = r.toFixed(3) + ' AU';
-        cm.g.position.copy(scalePos(au, this._s));
+        cm.g.position.copy(this.sp(au, this._s));
         this._d.copy(cm.g.position).normalize().multiplyScalar(-1);
         this._q.set(this._d.y, -this._d.x, this._d.z);
         if (this._q.lengthSq() < 1e-6) this._q.set(1, 0, 0);
@@ -1542,6 +1574,86 @@ export class CosmosEngine {
     this.cam.focus = null;
     this.cam.want.set(0, 0, 0);
     this.cam.wantDist = SCALE_LEVELS[level].sceneScale;
+  }
+
+  /** Toggle honest-proportion (real-scale) mode. Distances become linear in AU and
+   *  body sizes proportional; the scene is re-scaled in place and the camera reframed. */
+  setRealScale(v: boolean) {
+    if (v === this.realScale) return;
+    this.realScale = v;
+    this.applyScaleMode();
+    this.onStateChange?.({ realScale: v });
+  }
+
+  /** Re-apply sizing + orbit geometry for the current scale mode (called on toggle). */
+  private applyScaleMode() {
+    // Sun
+    const sunR = this.sunRDisp();
+    this.sunMesh.scale.setScalar(sunR);
+    this.sunMesh.userData.body.rDisp = sunR;
+    if (this.sunGlow1) this.sunGlow1.scale.setScalar(sunR * 9.17);
+    if (this.sunGlow2) this.sunGlow2.scale.setScalar(sunR * 20);
+
+    // Planets
+    for (const key in this.nodes) {
+      const nd: any = this.nodes[key];
+      const b = nd.body;
+      const rDisp = this.planetRDisp(b);
+      if (b.ellip) nd.mesh.scale.set(rDisp * 1.6, rDisp * 0.8, rDisp * 0.8);
+      else nd.mesh.scale.setScalar(rDisp);
+      nd.rDisp = rDisp; nd.body.rDisp = rDisp; nd.mesh.userData.body.rDisp = rDisp;
+      if (nd.halo) nd.halo.scale.setScalar(rDisp * 2.4);
+      if (nd.atmo) nd.atmo.scale.setScalar(rDisp * 1.06);
+      if (nd.ringShadow) nd.ringShadow.scale.setScalar(rDisp * 1.01);
+      if (nd.ring) {
+        const inner = nd.ringThin ? rDisp * 1.55 : rDisp * 1.42;
+        const outer = nd.ringThin ? rDisp * 2.1 : rDisp * 2.35;
+        nd.ring.geometry.dispose();
+        nd.ring.geometry = new THREE.RingGeometry(inner, outer, 96);
+      }
+      const le = this.labelEls.find((l: LabelEntry) => l.obj === nd.og);
+      if (le) le.up = rDisp * 1.8 + 0.4;
+    }
+
+    // Earth's Moon (handled specially — fixed-size mesh + hardcoded orbit radius)
+    const earthNode: any = this.nodes['地球'];
+    if (earthNode?.moon) {
+      const mr = this.realScale ? 0.02 : 0.13;
+      earthNode.moon.scale.setScalar(mr);
+      earthNode.moon.userData.body.rDisp = mr;
+    }
+
+    // Other moons
+    for (const mo of MOONS) {
+      if (!mo.nd) continue;
+      mo.dist = mo.nd.rDisp * 1.8 * Math.pow(mo.aKm / 421700, 0.62);
+      if (mo.minDist) mo.dist = Math.max(mo.dist, mo.nd.rDisp * mo.minDist);
+      else mo.dist = Math.max(mo.dist, mo.nd.rDisp * 1.5);
+      const mr = this.moonRDisp(mo);
+      mo.mesh.scale.setScalar(Math.max(0.02, mr));
+      if (mo.ring) {
+        const ringPts: THREE.Vector3[] = [];
+        for (let k = 0; k <= 72; k++) {
+          const a = (k / 72) * Math.PI * 2;
+          ringPts.push(new THREE.Vector3(Math.cos(a) * mo.dist, 0, Math.sin(a) * mo.dist));
+        }
+        mo.ring.geometry.setFromPoints(ringPts);
+      }
+      const le = this.labelEls.find((l: LabelEntry) => l.obj === mo.mesh);
+      if (le) le.up = mr * 2 + 0.12;
+    }
+
+    // Orbit lines (rebuilt with the active distance mapping)
+    for (const { line, b } of this.orbitLines) {
+      const pts: THREE.Vector3[] = [];
+      for (let k = 0; k <= 240; k++) pts.push(this.sp(posAU(b, (k / 240) * b.P, this._p), new THREE.Vector3()));
+      line.geometry.setFromPoints(pts);
+    }
+
+    // Reframe camera to encompass the (now linear) solar system
+    this.cam.focus = null;
+    this.cam.want.set(0, 0, 0);
+    this.cam.wantDist = this.realScale ? 320 : 120;
   }
   /** Apply the content swap at the warp midpoint (called from the frame loop). */
   private applyScaleContent(level: number) {
