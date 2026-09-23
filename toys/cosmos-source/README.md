@@ -65,6 +65,7 @@ bun run build        # 生产构建（含 TypeScript 类型检查 + ESLint 门�
 bun run start        # 运行生产构建
 bun run lint         # ESLint 检查（flat config：next/core-web-vitals + next/typescript）
 bun run typecheck    # 仅 TypeScript 类型检查（tsc --noEmit）
+bun run test          # 单元测试（vitest，覆盖轨道力学/坐标变换等纯逻辑）
 ```
 
 > 类型门禁：`next.config.ts` 已设 `ignoreBuildErrors: false`，构建期强制跑 `tsc`。
