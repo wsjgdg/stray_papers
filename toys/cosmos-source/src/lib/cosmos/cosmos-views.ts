@@ -21,7 +21,7 @@ import {
   SUPERCLUSTERS, COSMIC_FILAMENTS, QUASARS, MILKY_WAY_ARMS, MILKY_WAY_BAR,
   MILKY_WAY_SUN_POS,
 } from './universe-data';
-import { galaxySpriteTex, cmbTex, glowTex } from './textures';
+import { galaxySpriteTex, cmbTex, glowTex, nebulaTex } from './textures';
 import { galacticDir, fmtLy, fmtMpc, D2R } from './math-utils';
 
 const _v = new THREE.Vector3();
@@ -224,8 +224,7 @@ export function buildMilkyWayGalaxy(): THREE.Group {
   grp.name = 'cosmos-milkyway';
   const specs: LabelSpec[] = [];
 
-  // Size the soft galactic glow disk from the actual arm extent so it reads as a
-  // luminous body instead of bare wireframe arms.
+  // Size the galaxy from the actual arm extent.
   const diskExt = (() => {
     let m = 0;
     for (const a of MILKY_WAY_ARMS) for (const p of a.points) {
@@ -233,39 +232,63 @@ export function buildMilkyWayGalaxy(): THREE.Group {
     }
     return m || 18;
   })();
-  const disk = sprite(glowTex([170, 195, 255]), 0xbcd2ff, diskExt * 1.5, 0.14);
+
+  // Soft luminosity floor so the galaxy reads as a body, not bare geometry.
+  const disk = sprite(glowTex([170, 195, 255]), 0xbcd2ff, diskExt * 1.5, 0.1);
   grp.add(disk);
 
   const armColors: Record<string, number> = {
     '英仙臂': 0x8fb8ff, '人马臂': 0xffd9a0, '盾牌-半人马臂': 0xbfe0ff, '矩尺臂': 0xffc0d0,
     'Perseus': 0x8fb8ff, 'Sagittarius': 0xffd9a0, 'Scutum-Centaurus': 0xbfe0ff, 'Norma': 0xffc0d0,
   };
+  const addMat = (color: THREE.ColorRepresentation, opacity: number) =>
+    new THREE.MeshBasicMaterial({ color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false });
+
   for (const arm of MILKY_WAY_ARMS) {
     if (arm.points.length < 2) continue;
-    const pts = arm.points.map(p => new THREE.Vector3(p[0], p[1], p[2]));
-    const geo = new THREE.BufferGeometry().setFromPoints(pts);
-    grp.add(new THREE.Line(geo, new THREE.LineBasicMaterial({
-      color: armColors[arm.n] ?? 0xaaccff, transparent: true, opacity: 0.55,
-    })));
-    const starGeo = new THREE.BufferGeometry();
-    const pos: number[] = [], col: number[] = [];
-    const c = new THREE.Color(armColors[arm.n] ?? 0xaaccff);
+    const pts = arm.points.map((p) => new THREE.Vector3(p[0], p[1], p[2]));
+    const col = new THREE.Color(armColors[arm.n] ?? 0xaaccff);
+    const curve = new THREE.CatmullRomCurve3(pts);
+    const seg = Math.max(16, pts.length * 4);
+
+    // Arm as a glowing tube with real width + a brighter inner strand.
+    grp.add(new THREE.Mesh(new THREE.TubeGeometry(curve, seg, 0.55, 8, false), addMat(col, 0.4)));
+    grp.add(new THREE.Mesh(new THREE.TubeGeometry(curve, seg, 0.22, 6, false), addMat(0xffffff, 0.3)));
+
+    // Dense, brightness-varied star field hugging the arm.
+    const sp: number[] = [], cl: number[] = [];
     for (const p of arm.points) {
-      for (let k = 0; k < 22; k++) {
-        const ox = (Math.random() - 0.5) * 0.8;
-        const oy = (Math.random() - 0.5) * 0.18;
-        const oz = (Math.random() - 0.5) * 0.8;
-        pos.push(p[0] + ox, p[1] + oy, p[2] + oz);
-        const b = 0.4 + Math.random() * 0.6;
-        col.push(c.r * b, c.g * b, c.b * b);
+      for (let k = 0; k < 34; k++) {
+        sp.push(
+          p[0] + (Math.random() - 0.5) * 1.4,
+          p[1] + (Math.random() - 0.5) * 0.4,
+          p[2] + (Math.random() - 0.5) * 1.4,
+        );
+        const b = 0.35 + Math.random() * 0.65;
+        cl.push(col.r * b, col.g * b, col.b * b);
       }
     }
-    starGeo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    starGeo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    const starGeo = new THREE.BufferGeometry();
+    starGeo.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
+    starGeo.setAttribute('color', new THREE.Float32BufferAttribute(cl, 3));
     grp.add(new THREE.Points(starGeo, new THREE.PointsMaterial({
       size: 0.22, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: 0.95, depthWrite: false,
     })));
-    // Label at the outer tip of the arm
+
+    // Emission nebulae (HII regions) scattered along the arm for detail.
+    const nNeb = Math.max(4, (arm.points.length / 3) | 0);
+    for (let k = 0; k < nNeb; k++) {
+      const p = arm.points[(Math.random() * arm.points.length) | 0];
+      const neb = sprite(glowTex([255, 120, 150]), 0xff6f9a, 1.4 + Math.random() * 2.2, 0.26);
+      neb.position.set(
+        p[0] + (Math.random() - 0.5) * 1.6,
+        p[1] + (Math.random() - 0.5) * 0.4,
+        p[2] + (Math.random() - 0.5) * 1.6,
+      );
+      grp.add(neb);
+    }
+
+    // Arm tip label.
     const tip = pts[pts.length - 1];
     const anchor = new THREE.Object3D();
     anchor.position.copy(tip);
@@ -274,18 +297,22 @@ export function buildMilkyWayGalaxy(): THREE.Group {
       up: 0, kind: 'cosmos-dim', c: armColors[arm.n] ?? 0xaaccff });
   }
 
-  // Central bar
+  // Central bar as a glowing flattened tube through the bar points.
   if (MILKY_WAY_BAR.length >= 2) {
-    const pts = MILKY_WAY_BAR.map(p => new THREE.Vector3(p[0], p[1], p[2]));
-    grp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
-      new THREE.LineBasicMaterial({ color: 0xffe9bd, transparent: true, opacity: 0.7 })));
+    const bpts = MILKY_WAY_BAR.map((p) => new THREE.Vector3(p[0], p[1], p[2]));
+    const bcurve = new THREE.CatmullRomCurve3(bpts);
+    grp.add(new THREE.Mesh(new THREE.TubeGeometry(bcurve, 16, 0.7, 8, false), addMat(0xffe9bd, 0.55)));
   }
 
-  // Core glow halo behind the bulge so the galactic center reads as luminous
-  const coreHalo = sprite(glowTex([255, 228, 180]), 0xffe9bd, 11, 0.2);
+  // Bulge: a 3D ellipsoidal glow + bright nucleus halo + clickable core sprite.
+  const bulgeMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(1, 16, 12),
+    new THREE.MeshBasicMaterial({ color: 0xffe9bd, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false }),
+  );
+  bulgeMesh.scale.set(5, 3.5, 3.5);
+  grp.add(bulgeMesh);
+  const coreHalo = sprite(glowTex([255, 228, 180]), 0xffe9bd, 11, 0.22);
   grp.add(coreHalo);
-
-  // Galactic core bulge (clickable)
   const bulgeTex = galaxySpriteTex('elliptical', [255, 230, 180], [255, 200, 130]);
   const bulge = sprite(bulgeTex, 0xffe9bd, 5.5, 0.95);
   grp.add(bulge);
@@ -395,15 +422,26 @@ export function buildSuperclusters(): THREE.Group {
 
   for (const s of SUPERCLUSTERS) {
     const p = galacticDir(s.l, s.b, _v.clone()).multiplyScalar(compress(s.distMpc));
-    const tex = galaxySpriteTex('cluster', [255, 230, 200], [200, 220, 255]);
     const size = Math.max(2, Math.cbrt(s.spanMpc) * 2.2);
+    // Core node + faint glowing halo
+    const tex = galaxySpriteTex('cluster', [255, 230, 200], [200, 220, 255]);
     const sp = sprite(tex, 0xffd9a0, size, 0.5);
     sp.position.copy(p);
     grp.add(sp);
-    // Faint glowing halo so each supercluster node reads as a luminous cluster
     const halo = sprite(glowTex([255, 220, 180]), 0xffd9a0, size * 2.4, 0.18);
     halo.position.copy(p);
     grp.add(halo);
+    // Member galaxies: a little cluster of tiny spirals/ellipticals around the node
+    const members = 14 + ((Math.random() * 10) | 0);
+    for (let i = 0; i < members; i++) {
+      const off = new THREE.Vector3(
+        Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5,
+      ).multiplyScalar(size * 1.8);
+      const mt = nebulaTex(Math.random() > 0.5 ? 'galaxy' : 'cluster', [255, 230, 200], [200, 220, 255]);
+      const m = sprite(mt, 0xffd9a0, Math.max(0.8, size * 0.2), 0.6);
+      m.position.copy(p).add(off);
+      grp.add(m);
+    }
     tag(sp, s.n, s.en, s.note,
       [['类型', '超星系团'], ['距离', fmtMpc(s.distMpc)], ['跨度', fmtMpc(s.spanMpc)]],
       0xffd9a0, size * 0.6, specs, grp, Math.max(size * 2.2, 3.5));
@@ -453,6 +491,24 @@ export function buildSuperclusters(): THREE.Group {
   grp.add(new THREE.Points(geo, new THREE.PointsMaterial({
     size: 0.5, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: 0.6, depthWrite: false,
   })));
+
+  // Field galaxies scattered through the web so the backdrop reads as structure,
+  // not just a points cloud.
+  const NF = 80;
+  for (let k = 0; k < NF; k++) {
+    const r = Math.pow(Math.random(), 0.5) * 62;
+    const th = Math.random() * Math.PI * 2;
+    const ph = Math.acos(Math.random() * 2 - 1);
+    const fp = new THREE.Vector3(
+      r * Math.sin(ph) * Math.cos(th),
+      r * Math.cos(ph) * 0.4,
+      r * Math.sin(ph) * Math.sin(th),
+    );
+    const ft = nebulaTex(Math.random() > 0.5 ? 'galaxy' : 'cluster', [220, 220, 255], [200, 210, 240]);
+    const fg = sprite(ft, 0xcfe0ff, 1.2 + Math.random() * 1.4, 0.55);
+    fg.position.copy(fp);
+    grp.add(fg);
+  }
 
   grp.userData.labelSpecs = specs;
   return grp;
