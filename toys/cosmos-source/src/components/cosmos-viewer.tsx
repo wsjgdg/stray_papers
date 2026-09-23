@@ -105,6 +105,7 @@ export default function CosmosViewer() {
   const [infoMin, setInfoMin] = useState(false);
   const [revOn, setRevOn] = useState(false);
   const [paused, setPaused] = useState(false);
+  const [webglError, setWebglError] = useState(false);
 
   useEffect(() => {
     if (!sceneRef.current || !labelRef.current) return;
@@ -112,7 +113,16 @@ export default function CosmosViewer() {
       onInfoChange: setInfo,
       onStateChange: (s) => setState((p) => ({ ...p, ...s })),
     });
-    eng.init();
+    try {
+      eng.init();
+    } catch (err) {
+      console.error('[CosmosEngine] init failed:', err);
+      // One-time error signal on init failure (not a render-sync anti-pattern);
+      // intentionally set inside the effect's catch path.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setWebglError(true);
+      return;
+    }
     eng.setTourCaptionCallback((c) => setTourCaption(c));
     engineRef.current = eng;
     return () => { eng.dispose(); engineRef.current = null; };
@@ -175,6 +185,17 @@ export default function CosmosViewer() {
       {/* 3D scene + labels */}
       <div ref={sceneRef} className="absolute inset-0" />
       <div ref={labelRef} className="absolute inset-0 pointer-events-none z-[4]" />
+
+      {/* WebGL unavailable fallback */}
+      {webglError && (
+        <div className="absolute inset-0 z-[20] flex flex-col items-center justify-center gap-3 text-center px-6">
+          <div className="text-[15px] text-[#f5a623] tracking-[.2em]">无法启动 3D 渲染</div>
+          <div className="text-[12px] text-[#9aa7bd] leading-relaxed max-w-[420px]">
+            当前浏览器或设备未启用 WebGL。请更新浏览器、开启硬件加速，或在支持 WebGL 的环境
+            （如桌面版 Chrome / Edge / Firefox）中打开本页面。
+          </div>
+        </div>
+      )}
 
       {/* label tag styles injected once */}
       <style>{`
