@@ -70,7 +70,6 @@ const EU = (
 
 const LAYERS = [
   { key: 'orb', label: '轨道', icon: Orbit },
-  { key: 'lab', label: '标签', icon: Tag },
   { key: 'belt', label: '小天体', icon: Asterisk },
   { key: 'mw', label: '银河', icon: Disc },
   { key: 'dso', label: '深空', icon: Sparkles },
@@ -372,6 +371,11 @@ export default function CosmosViewer() {
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
+          <Button size="sm" variant="ghost"
+            className={`h-7 px-2.5 text-[11px] border border-[rgba(125,165,225,.18)] ${state.show.lab ? '!border-[#f5a623] !text-[#f5a623] !bg-[rgba(245,166,35,.1)]' : ''}`}
+            onClick={() => engineRef.current?.toggleLayer('lab', !state.show.lab)} title="显示 / 隐藏天体名称标签">
+            <Tag className="w-3 h-3 mr-1" />标签
+          </Button>
         </div>
 
         {/* Fly-mode control hint */}

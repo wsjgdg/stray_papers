@@ -1316,30 +1316,6 @@ export class CosmosEngine {
       else this.camera.up.set(0, 1, 0);
       this.camera.lookAt(this.cam.target);
     }
-    // Skip the orbit-camera block below when flying
-    if (this.flyMode) {
-      // Labels still need projection
-      this.renderer.render(this.scene, this.camera);
-      this.fpsN++; this.fpsT += dt;
-      if (this.fpsT >= 0.5) {
-        const fps = this.fpsN / this.fpsT;
-        if (this.ADAPTIVE_DPR) {
-          if (this.dprCool > 0) this.dprCool--;
-          else if (fps < 45 && this.dprScale > 0.55) { this.dprScale = Math.max(0.55, this.dprScale - 0.15); this.applyDpr(); this.dprCool = 6; }
-          else if (fps > 58 && this.dprScale < 1) { this.dprScale = Math.min(1, this.dprScale + 0.1); this.applyDpr(); this.dprCool = 6; }
-        }
-        this.onStateChange?.({
-          fps: Math.round(fps), dprScale: this.dprScale, clock,
-          daysPerSec: this.daysPerSec, dir: this.dir, paused: this.paused,
-          horizonMode: this.horizonMode, eps: this.EPS,
-          site: { ...this.site }, show: { ...this.show }, scaleLevel: this.scaleLevel,
-          simT: this.simT, transit: this.transit, flyMode: this.flyMode, flySpeed: this.flySpeed, tourActive: this.tour.active,
-        });
-        this.fpsN = 0; this.fpsT = 0;
-      }
-      return;
-    }
-
     // Cosmic warp transition: swap content at midpoint, decay `transit` for HUD flash
     if (this.transitTimer > 0) {
       const prev = this.transitTimer;
@@ -1370,7 +1346,7 @@ export class CosmosEngine {
           : this.showGrp[L.grp as keyof typeof this.showGrp];
         const on = grpOk && this._p.z < 1
           && Math.abs(this._p.x) < 1.05 && Math.abs(this._p.y) < 1.05
-          && (L.grp === 'cosmos' || !L.min || this.cam.dist < L.min || this.horizonMode);
+          && (L.grp === 'cosmos' || !L.min || this.cam.dist < L.min || this.horizonMode || this.flyMode);
         if (on !== L._on) { L.el.style.display = on ? '' : 'none'; L._on = on; }
         if (on) {
           const x = (this._p.x * 0.5 + 0.5) * innerWidth;
