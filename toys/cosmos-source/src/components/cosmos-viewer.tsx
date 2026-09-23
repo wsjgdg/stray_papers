@@ -99,8 +99,6 @@ export default function CosmosViewer() {
   const [eclVal, setEclVal] = useState(234);
   const [latVal, setLatVal] = useState(399);
   const [warpKey, setWarpKey] = useState(0);     // bumped on every scale change → retriggers CSS flash
-  const [flyOn, setFlyOn] = useState(false);
-  const [tourOn, setTourOn] = useState(false);
   const [tourCaption, setTourCaption] = useState('');
   const [lonVal, setLonVal] = useState(1164);
   const [europaOpen, setEuropaOpen] = useState(false);
@@ -129,12 +127,10 @@ export default function CosmosViewer() {
     }
   }, [state.scaleLevel]);
 
-  // Keep flyOn synced with engine state (engine auto-disables fly on scale change)
-  useEffect(() => { setFlyOn(state.flyMode); }, [state.flyMode]);
-  const toggleFly = () => { setFlyOn(engineRef.current?.toggleFly() ?? false); };
-  // Sync tourOn from engine state
-  useEffect(() => { setTourOn(state.tourActive); }, [state.tourActive]);
-  const toggleTour = () => { setTourOn(engineRef.current?.toggleTour() ?? false); };
+  // fly/tour UI state is derived directly from engine state (state.flyMode / state.tourActive),
+  // which the engine pushes (~2 Hz). This avoids redundant React state + setState-in-effect.
+  const toggleFly = () => { engineRef.current?.toggleFly(); };
+  const toggleTour = () => { engineRef.current?.toggleTour(); };
 
   // ---- Timeline (date scrubber) helpers ----
   const EPOCH = Date.UTC(2000, 0, 1, 12, 0, 0);
@@ -209,7 +205,7 @@ export default function CosmosViewer() {
       )}
 
       {/* Auto-tour caption overlay */}
-      {tourOn && tourCaption && (
+      {state.tourActive && tourCaption && (
         <div className="pointer-events-none absolute bottom-[110px] left-1/2 -translate-x-1/2 z-[6]
           max-w-[80vw] px-4 py-2 rounded-lg bg-[rgba(9,13,22,.78)] border border-[rgba(245,166,35,.4)]
           text-center backdrop-blur-md shadow-2xl">
@@ -222,7 +218,7 @@ export default function CosmosViewer() {
         </div>
       )}
       {/* Tour skip button (only while tour active) */}
-      {tourOn && (
+      {state.tourActive && (
         <button onClick={() => engineRef.current?.tourSkip()}
           className="absolute bottom-[60px] right-3 z-[6] px-3 py-1.5 rounded-lg border border-[rgba(245,166,35,.5)]
             bg-[rgba(245,166,35,.12)] text-[#f5a623] text-[11px] tracking-[.1em] hover:bg-[rgba(245,166,35,.22)] transition-colors">
@@ -231,7 +227,7 @@ export default function CosmosViewer() {
       )}
 
       {/* Fly-mode crosshair + HUD */}
-      {flyOn && (
+      {state.flyMode && (
         <div className="pointer-events-none absolute inset-0 z-[5]">
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10">
             <div className="w-10 h-[2px] bg-[#5fd3ff] absolute top-1/2 -translate-y-1/2" />
@@ -331,19 +327,19 @@ export default function CosmosViewer() {
             <RotateCcw className="w-3 h-3 mr-1" />重置
           </Button>
           <Button size="sm" variant="ghost"
-            className={`h-7 px-2.5 text-[11px] border border-[rgba(125,165,225,.18)] ${flyOn ? '!border-[#5fd3ff] !text-[#5fd3ff] !bg-[rgba(95,211,255,.12)]' : ''}`}
+            className={`h-7 px-2.5 text-[11px] border border-[rgba(125,165,225,.18)] ${state.flyMode ? '!border-[#5fd3ff] !text-[#5fd3ff] !bg-[rgba(95,211,255,.12)]' : ''}`}
             onClick={toggleFly} title="漫游飞行模式：WASD 移动 · Shift 加速 · 空格/E 上升 · Q 下降 · 拖拽转向">
             <Navigation className="w-3 h-3 mr-1" />漫游
           </Button>
           <Button size="sm" variant="ghost"
-            className={`h-7 px-2.5 text-[11px] border border-[rgba(125,165,225,.18)] ${tourOn ? '!border-[#f5a623] !text-[#f5a623] !bg-[rgba(245,166,35,.12)]' : ''}`}
+            className={`h-7 px-2.5 text-[11px] border border-[rgba(125,165,225,.18)] ${state.tourActive ? '!border-[#f5a623] !text-[#f5a623] !bg-[rgba(245,166,35,.12)]' : ''}`}
             onClick={toggleTour} title="自动巡航：沿预设路径飞越太阳系到可观测宇宙">
             <Rocket className="w-3 h-3 mr-1" />巡航
           </Button>
         </div>
 
         {/* Fly-mode control hint */}
-        {flyOn && (
+        {state.flyMode && (
           <div className="mt-2.5 text-[10px] leading-[1.7] text-[#5fd3ff]/85 bg-[rgba(95,211,255,.06)] border border-[rgba(95,211,255,.25)] rounded-md px-2.5 py-1.5">
             <b className="text-[#5fd3ff]">漫游模式</b> · <b>W/A/S/D</b> 前后左右 · <b>空格</b>/<b>E</b> 升 · <b>Q</b> 降 · <b>Shift</b> 加速 · <b>拖拽</b> 转向 · <b>滚轮</b> 调速
             <div className="mt-1.5 flex items-center gap-2">

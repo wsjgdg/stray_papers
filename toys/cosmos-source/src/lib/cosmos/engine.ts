@@ -111,6 +111,8 @@ export class CosmosEngine {
   private fpsT = 0;
   private fpsN = 0;
   private running = true;
+  private rafId = 0;
+  private handlers: { target: EventTarget; type: string; fn: (e: any) => void; opts?: boolean | AddEventListenerOptions }[] = [];
   private EPS = 23.44;
   private site = { lat: 39.9, lon: 116.4 };
   private daysPerSec = 5;
@@ -216,7 +218,7 @@ export class CosmosEngine {
     this.showInfo(SUN);
 
     this.last = performance.now();
-    requestAnimationFrame(this.frame);
+    this.rafId = requestAnimationFrame(this.frame);
   }
 
   private applyDpr() {
@@ -879,14 +881,20 @@ export class CosmosEngine {
   }
 
   /* ═════════ EVENTS ═════════ */
+  /** Register a listener and track it so dispose() can remove it. */
+  private on(target: EventTarget, type: string, fn: (e: any) => void, opts?: boolean | AddEventListenerOptions) {
+    target.addEventListener(type, fn as EventListener, opts);
+    this.handlers.push({ target, type, fn, opts });
+  }
+
   private bindEvents() {
     const dom = this.renderer.domElement;
-    dom.addEventListener('pointerdown', (e) => {
+    this.on(dom, 'pointerdown', (e) => {
       this.drag = { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: Date.now(),
         pan: (e.shiftKey || e.button === 2) && !this.horizonMode };
       dom.setPointerCapture(e.pointerId);
     });
-    dom.addEventListener('pointermove', (e) => {
+    this.on(dom, 'pointermove', (e) => {
       if (!this.drag) return;
       const dx = e.clientX - this.drag.x, dy = e.clientY - this.drag.y;
       this.drag.x = e.clientX; this.drag.y = e.clientY;
@@ -907,13 +915,13 @@ export class CosmosEngine {
         this.cam.phi = Math.max(0.08, Math.min(Math.PI - 0.08, this.cam.phi - dy * 0.0052));
       }
     });
-    dom.addEventListener('pointerup', (e) => {
+    this.on(dom, 'pointerup', (e) => {
       if (this.drag && Math.hypot(e.clientX - this.drag.sx, e.clientY - this.drag.sy) < 5
           && Date.now() - this.drag.t < 350) this.pick(e);
       this.drag = null;
     });
-    dom.addEventListener('contextmenu', (e) => e.preventDefault());
-    dom.addEventListener('wheel', (e) => {
+    this.on(dom, 'contextmenu', (e) => e.preventDefault());
+    this.on(dom, 'wheel', (e) => {
       e.preventDefault();
       if (this.flyMode) {
         // In fly mode, wheel = speed multiplier (1× .. 200×)
@@ -924,18 +932,18 @@ export class CosmosEngine {
       }
     }, { passive: false });
 
-    document.addEventListener('visibilitychange', () => {
+    this.on(document, 'visibilitychange', () => {
       this.running = !document.hidden;
-      if (this.running) { this.last = performance.now(); requestAnimationFrame(this.frame); }
+      if (this.running) { this.last = performance.now(); this.rafId = requestAnimationFrame(this.frame); }
     });
-    addEventListener('resize', () => {
+    this.on(window, 'resize', () => {
       this.camera.aspect = innerWidth / innerHeight;
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(innerWidth, innerHeight);
     });
 
     // Free-fly keyboard controls (active only when flyMode is on)
-    addEventListener('keydown', (e) => {
+    this.on(window, 'keydown', (e) => {
       if (!this.flyMode) return;
       const k = e.key.toLowerCase();
       if (['w','a','s','d','q','e',' ','shift','arrowup','arrowdown','arrowleft','arrowright'].includes(k)) {
@@ -943,7 +951,7 @@ export class CosmosEngine {
         this.keys[k] = true;
       }
     });
-    addEventListener('keyup', (e) => {
+    this.on(window, 'keyup', (e) => {
       this.keys[e.key.toLowerCase()] = false;
     });
     // In fly mode, pointer drag turns the camera (yaw/pitch) instead of orbiting
@@ -1050,7 +1058,7 @@ export class CosmosEngine {
   /* ═════════ RENDER LOOP ═════════ */
   private frame = (now: number) => {
     if (!this.running) return;
-    requestAnimationFrame(this.frame);
+    this.rafId = requestAnimationFrame(this.frame);
     const dt = Math.min((now - this.last) / 1000, 0.1);
     this.last = now;
     if (!this.paused) this.simT += this.daysPerSec * dt;
@@ -1535,10 +1543,48 @@ export class CosmosEngine {
     this.activateCosmosLabels(level);
     this.labelHost.style.display = this.show.lab ? '' : 'none';
   }
+  /** Dispose a material and any textures it references. */
+  private disposeMaterial(m: THREE.Material) {
+    const anyMat = m as any;
+    for (const key in anyMat) {
+      const val = anyMat[key];
+      if (val && val.isTexture) val.dispose();
+    }
+    m.dispose();
+  }
+
   dispose() {
     this.running = false;
-    this.renderer.dispose();
-    if (this.renderer.domElement.parentElement)
-      this.renderer.domElement.parentElement.removeChild(this.renderer.domElement);
+    if (this.rafId) cancelAnimationFrame(this.rafId);
+    // remove all tracked event listeners
+    for (const h of this.handlers) {
+      h.target.removeEventListener(h.type, h.fn as EventListener, h.opts);
+    }
+    this.handlers = [];
+
+    // release GPU resources (geometry / material / textures) via scene traversal
+    if (this.scene) {
+      this.scene.traverse((o) => {
+        const mesh = o as THREE.Mesh;
+        if (mesh.geometry) mesh.geometry.dispose();
+        const mat = mesh.material as THREE.Material | THREE.Material[] | undefined;
+        if (Array.isArray(mat)) mat.forEach((m) => this.disposeMaterial(m));
+        else if (mat) this.disposeMaterial(mat);
+      });
+    }
+    if (this.sphereGeo) this.sphereGeo.dispose();
+
+    // remove DOM label elements and reset pickable/label registries
+    for (const L of this.labelEls) L.el.remove();
+    this.labelEls = [];
+    this.cosmosLabelEls = [];
+    this.cosmosPickables = [];
+    this.pickables = [];
+
+    if (this.renderer) {
+      this.renderer.dispose();
+      if (this.renderer.domElement.parentElement)
+        this.renderer.domElement.parentElement.removeChild(this.renderer.domElement);
+    }
   }
 }

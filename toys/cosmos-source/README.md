@@ -53,11 +53,23 @@ src/
 
 ## 🚀 运行
 
+### 一键启动（推荐）
+- **Windows**：双击 `start.cmd` → 自动 `bun install`（若缺 `node_modules`）+ 启动开发服务器 `http://localhost:3000`
+- **PowerShell**：运行 `.\start.ps1`（等价入口）
+
+### 手动
 ```bash
 bun install          # 安装依赖
 bun run dev          # 启动开发服务器（http://localhost:3000）
-bun run lint         # 代码检查
+bun run build        # 生产构建（含 TypeScript 类型检查 + ESLint 门禁）
+bun run start        # 运行生产构建
+bun run lint         # ESLint 检查（flat config：next/core-web-vitals + next/typescript）
+bun run typecheck    # 仅 TypeScript 类型检查（tsc --noEmit）
 ```
+
+> 类型门禁：`next.config.ts` 已设 `ignoreBuildErrors: false`，构建期强制跑 `tsc`。
+> `reactStrictMode: true`（开发模式 effect 双调用已通过 `dispose()` 正确清理）。
+> ESLint 中 `@typescript-eslint/no-explicit-any` 降为 **warn**（引擎对 Three.js 动态交互大量使用 `any`），其余规则按 Next 默认严格生效。
 
 ### 依赖
 - `three@0.186.0` + `@types/three`
