@@ -932,6 +932,19 @@ export class CosmosEngine {
       }
     }, { passive: false });
 
+    // WebGL context loss/restore: keep the app alive across GPU resets (driver crash,
+    // backgrounded tabs, mobile). preventDefault on `lost` is required for `restored`
+    // to fire; Three.js re-uploads scene resources lazily, so resuming the loop suffices.
+    this.on(dom, 'webglcontextlost', (e) => {
+      e.preventDefault();
+      this.running = false;
+    });
+    this.on(dom, 'webglcontextrestored', () => {
+      this.last = performance.now();
+      this.running = true;
+      this.rafId = requestAnimationFrame(this.frame);
+    });
+
     this.on(document, 'visibilitychange', () => {
       this.running = !document.hidden;
       if (this.running) { this.last = performance.now(); this.rafId = requestAnimationFrame(this.frame); }
