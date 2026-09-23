@@ -173,6 +173,7 @@ export class CosmosEngine {
   private _s = new THREE.Vector3();
   private _d = new THREE.Vector3();
   private _q = new THREE.Vector3();
+  private _camUp = new THREE.Vector3();
   private _mw = new THREE.Vector3();
   private _ew = new THREE.Vector3();
   private _uU = new THREE.Vector3();
@@ -1361,7 +1362,12 @@ export class CosmosEngine {
       this.camera.matrixWorldInverse.copy(this.camera.matrixWorld).invert();
       for (const L of this.labelEls) {
         this._p.setFromMatrixPosition(L.obj.matrixWorld);
-        this._p.y += L.up;
+        // Offset along the camera's screen-up axis (NOT world +Y). In free-fly
+        // mode the camera rolls freely, so a fixed world-space +Y offset would
+        // project to a swinging screen position and the tag would visually
+        // detach from its body. Using the camera up-vector keeps it glued.
+        this._camUp.set(0, 1, 0).applyQuaternion(this.camera.quaternion);
+        this._p.addScaledVector(this._camUp, L.up);
         this._p.project(this.camera);
         const grpOk = !L.grp ? true
           : L.grp === 'cosmos' ? this.scaleLevel !== 0

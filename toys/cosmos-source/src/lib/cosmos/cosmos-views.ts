@@ -478,9 +478,11 @@ export function buildObservableUniverse(): THREE.Group {
   grp.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(ringPts),
     new THREE.LineBasicMaterial({ color: 0x5fd3ff, transparent: true, opacity: 0.18, depthWrite: false })));
 
-  const qTex = galaxySpriteTex('elliptical', [255, 220, 160], [255, 180, 120]);
   for (const q of QUASARS) {
     const p = galacticDir(q.l, q.b, _v.clone()).multiplyScalar(R * 0.6 * (1 - 1 / (1 + q.z) + 0.2));
+    // Build a fresh texture per quasar: galaxySpriteTex randomizes per call, so a
+    // texture created once outside the loop would make every quasar look identical.
+    const qTex = galaxySpriteTex('elliptical', [255, 220, 160], [255, 180, 120]);
     const sp = sprite(qTex, 0xffd9a0, 3.5, 0.95);
     sp.position.copy(p);
     grp.add(sp);
@@ -489,9 +491,11 @@ export function buildObservableUniverse(): THREE.Group {
       0xffd9a0, 3.5, specs, grp, 6);
   }
 
-  const gTex = galaxySpriteTex('spiral', [255, 230, 200], [200, 220, 255]);
   for (const g of FAMOUS_GALAXIES) {
     const p = galacticDir(g.l, g.b, _v.clone()).multiplyScalar(R * 0.45 * (0.5 + Math.random() * 0.4));
+    // Fresh texture per galaxy (galaxySpriteTex is non-deterministic) so the
+    // famous galaxies don't all share one identical sprite.
+    const gTex = galaxySpriteTex('spiral', [255, 230, 200], [200, 220, 255]);
     const sp = sprite(gTex, hexFromRGB(g.c1), 2.2, 0.7);
     sp.position.copy(p);
     grp.add(sp);
