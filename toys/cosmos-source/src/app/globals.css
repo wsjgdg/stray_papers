@@ -129,3 +129,16 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* 无障碍：尊重「减少动态效果」系统偏好，关闭装饰性动画（warp 闪光等）。
+   JS 驱动的 3D 相机交互（漫游/巡航）为核心操作，不受影响。 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
