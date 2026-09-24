@@ -836,6 +836,8 @@ export default function CosmosViewer() {
           eps={state.eps}
           realScale={state.realScale}
         />
+        <span className="mx-1.5 text-[#3a4456]">·</span>
+        <HudDraw />
       </div>
       <div className="absolute bottom-3 left-3 z-[6] hidden sm:block text-[10.5px] tracking-[.12em] text-[#8b97ad]">
         <b className="text-[#5fd3ff] font-medium">拖拽</b> 转视角 ·{" "}
@@ -881,6 +883,18 @@ function HudFpsDpr({
       {fps} FPS · {horizonMode ? "PLANETARIUM" : "ORRERY"} · ε {eps.toFixed(2)}°
       {realScale ? " · 真实比例" : " · 可读性缩放"}
       {dprScale < 1 ? ` · DPR×${dprScale.toFixed(2)}` : ""}
+    </>
+  );
+}
+
+// Draw-call audit (H task): shows the live per-frame GPU draw-call count pushed
+// from the render loop. Lets us confirm the quasar cloud's cost before merging.
+function HudDraw() {
+  const drawCalls = useHud((s) => s.drawCalls);
+  const triangles = useHud((s) => s.triangles);
+  return (
+    <>
+      {drawCalls} draws · {(triangles / 1000).toFixed(0)}k tris
     </>
   );
 }

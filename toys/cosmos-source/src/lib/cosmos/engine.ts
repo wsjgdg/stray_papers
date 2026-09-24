@@ -2324,12 +2324,21 @@ export class CosmosEngine {
       // High-frequency HUD values (clock / fps / dpr / simT) go through the
       // external store so only the tiny leaf components re-render (~2 Hz),
       // never the whole React tree.
+      // Draw-call audit (H task): read the per-frame GPU draw-call count from the
+      // renderer so we can confirm which scale level dominates and how much the
+      // quasar cloud costs before deciding whether to merge it into one Points.
+      const info = this.renderer.info.render;
       hudStore.set({
         clock,
         fps: Math.round(fps),
         dprScale: this.dprScale,
         simT: this.simT,
+        drawCalls: info.calls,
+        triangles: info.triangles,
       });
+      console.info(
+        `[DRAW] level=${this.scaleLevel} calls=${info.calls} tris=${info.triangles}`,
+      );
 
       // Control state is pushed to React only when it actually changes, so the
       // parent component re-renders on user actions, not every 0.5 s.

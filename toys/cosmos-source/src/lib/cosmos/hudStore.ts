@@ -8,6 +8,8 @@ export interface HudState {
   fps: number;
   dprScale: number;
   simT: number;
+  drawCalls: number;
+  triangles: number;
 }
 
 let hud: HudState = {
@@ -15,6 +17,8 @@ let hud: HudState = {
   fps: 0,
   dprScale: 1,
   simT: 0,
+  drawCalls: 0,
+  triangles: 0,
 };
 
 const listeners = new Set<() => void>();
