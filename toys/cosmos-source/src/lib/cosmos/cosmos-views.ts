@@ -575,58 +575,53 @@ export function buildSuperclusters(): THREE.Group {
     })));
   }
 
-  // Cosmic-web backdrop: ~1/3 of points hug the filaments, the rest fill a flattened
-  // volume — reads as a structured web rather than uniform noise.
-  const N = 4200;
-  const pos = new Float32Array(N * 3), col = new Float32Array(N * 3);
-  for (let k = 0; k < N; k++) {
-    let x: number, y: number, z: number;
-    if (filaments.length >= 2 && k % 3 === 0) {
-      const i = ((Math.random() * filaments.length) | 0) & ~1; // pick an (a,b) pair
-      const a = filaments[i], b = filaments[i + 1];
-      const t = Math.random();
-      x = a.x + (b.x - a.x) * t + (Math.random() - 0.5) * 4;
-      y = a.y + (b.y - a.y) * t + (Math.random() - 0.5) * 4;
-      z = a.z + (b.z - a.z) * t + (Math.random() - 0.5) * 4;
-    } else {
-      const r = Math.pow(Math.random(), 0.4) * 60;
-      const th = Math.random() * Math.PI * 2;
-      const ph = Math.acos(Math.random() * 2 - 1);
-      x = r * Math.sin(ph) * Math.cos(th);
-      y = r * Math.cos(ph) * 0.4;
-      z = r * Math.sin(ph) * Math.sin(th);
-    }
-    pos[k * 3] = x; pos[k * 3 + 1] = y; pos[k * 3 + 2] = z;
-    const bv = 0.3 + Math.random() * 0.5;
-    col[k * 3] = 0.6 * bv; col[k * 3 + 1] = 0.7 * bv; col[k * 3 + 2] = 0.9 * bv;
-  }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-  grp.add(new THREE.Points(geo, new THREE.PointsMaterial({
-    size: 0.5, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: 0.6, depthWrite: false,
-  })));
-
-  // Field galaxies scattered through the web so the backdrop reads as structure,
-  // not just a points cloud.
-  const NF = 80;
-  for (let k = 0; k < NF; k++) {
-    const r = Math.pow(Math.random(), 0.5) * 62;
-    const th = Math.random() * Math.PI * 2;
-    const ph = Math.acos(Math.random() * 2 - 1);
-    const fp = new THREE.Vector3(
-      r * Math.sin(ph) * Math.cos(th),
-      r * Math.cos(ph) * 0.4,
-      r * Math.sin(ph) * Math.sin(th),
-    );
-    const ft = nebulaTex(Math.random() > 0.5 ? 'galaxy' : 'cluster', [220, 220, 255], [200, 210, 240]);
-    const fg = sprite(ft, 0xcfe0ff, 1.2 + Math.random() * 1.4, 0.55);
-    fg.position.copy(fp);
-    grp.add(fg);
-  }
-
   grp.userData.labelSpecs = specs;
+  // Replace the procedural backdrop with a real survey point cloud (2dF+6dF via the
+  // VizieR China-VO mirror). Fetched async so this group returns immediately.
+  attachRealSurveyCloud(grp);
   return grp;
+}
+
+/**
+ * Loads the real galaxy-redshift survey (public/cosmos/cosmic-web.json) and renders it as a
+ * THREE.Points cloud inside the supercluster view. Coordinates in the JSON are in Mpc
+ * (x = d·cosδ·cosα, etc.); we radially compress them with the same `cbrt(mpc)·4` mapping the
+ * hand-authored supercluster nodes use, so the real web shares the scene's scale.
+ * Fails silently (keeps the curated filaments/nodes) if the asset can't be fetched.
+ */
+function attachRealSurveyCloud(grp: THREE.Group): void {
+  const compress = (mpc: number) => Math.cbrt(mpc) * 4;
+  fetch('/cosmos/cosmic-web.json')
+    .then((r) => r.json())
+    .then((data: { n: number; pos: number[]; col: number[] }) => {
+      const { n, pos, col } = data;
+      if (!n || !pos || pos.length < n * 3) return;
+      const positions = new Float32Array(n * 3);
+      const colors = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) {
+        const x = pos[i * 3], y = pos[i * 3 + 1], z = pos[i * 3 + 2];
+        const r = Math.sqrt(x * x + y * y + z * z) || 1;
+        const k = compress(r) / r; // radial compression: distance → cbrt(r)·4
+        positions[i * 3] = x * k;
+        positions[i * 3 + 1] = y * k;
+        positions[i * 3 + 2] = z * k;
+        colors[i * 3] = col[i * 3];
+        colors[i * 3 + 1] = col[i * 3 + 1];
+        colors[i * 3 + 2] = col[i * 3 + 2];
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      const mat = new THREE.PointsMaterial({
+        size: 0.6, sizeAttenuation: true, vertexColors: true,
+        transparent: true, opacity: 0.7, depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      });
+      const pts = new THREE.Points(geo, mat);
+      pts.renderOrder = -1;
+      grp.add(pts);
+    })
+    .catch((e) => console.warn('[cosmic-web] real survey cloud failed:', e));
 }
 
 /** ---------- Level 6: Observable Universe (CMB shell + quasars + far galaxies) ---------- */
