@@ -255,16 +255,18 @@ export function buildSolarNeighborhood(): THREE.Group {
   const specs: LabelSpec[] = [];
   const exoUpdaters: { dot: THREE.Sprite; pickBall: THREE.Mesh; host: THREE.LineLoop; P: number; orbit: number; phase: number }[] = [];
 
-  // Sun at origin
+  // Sun at origin — real full-disk solar photo (granulation, active regions, prominences)
+  // swapped onto the core sprite; the procedural flare + corona stay as additive overlays.
   const sunSp = sprite(STAR_CORE, 0xffe9a0, 3.2, 1);
   grp.add(sunSp);
+  applyRealPhoto(sunSp, 'Sun', 3.2);
   // Photosphere disk + diffraction flare + additive corona so the Sun reads as a star.
   const sunFlare = glowSprite(STAR_FLARE, 0xffe9a0, 9, 0.5);
   grp.add(sunFlare);
   const sunCorona = glowSprite(glowTex([255, 233, 160]), 0xffe9a0, 7.5, 0.4);
   grp.add(sunCorona);
-  tag(sunSp, '太阳', 'SOL', '观测者所在恒星 · G2V 主序星',
-    [['光谱型', 'G2V'], ['距离', '0 光年'], ['视星等', '−26.74']], 0xffe9a0, 3.5, specs, grp, 4.5);
+  tag(sunSp, '太阳', 'SOL', '观测者所在恒星 · G2V 主序星 · 真实全日面照片',
+    [['光谱型', 'G2V'], ['距离', '0 光年'], ['视星等', '−26.74'], ['图像', '真实全日面照片']], 0xffe9a0, 3.5, specs, grp, 4.5);
 
   for (const s of NEARBY_STARS) {
     const dir = new THREE.Vector3(
