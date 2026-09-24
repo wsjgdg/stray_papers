@@ -783,15 +783,90 @@ export function buildMilkyWayGalaxy(): THREE.Group {
   // HII regions / blue supergiant knots as cosmetic accents (not tied to a specific spiral), so the
   // photo and the model read as one disk instead of two galaxies at different angles.
   {
+    // P0-6: reweight the field-star disk so it traces the spiral arms instead of being
+    // area-uniform. ~60% of stars concentrate into thin bands along MILKY_WAY_ARMS (logarithmic
+    // spirals) with a Gaussian offset perpendicular to the local arm tangent; the remaining ~40%
+    // fill the inter-arm disk uniformly. A thin-disk vertical term (Gaussian in z) biases stars
+    // toward the galactic plane so the field reads as a disk, not a sphere. A seeded PRNG
+    // (mulberry32) keeps the sprinkling identical across reloads.
     const N = 4200;
-    const sp: number[] = [],
-      cl: number[] = [];
+    const ARM_FRAC = 0.6;
+    const armPts = MILKY_WAY_ARMS.map((a) => a.points);
+    // cumulative arc-length per arm for uniform sampling along each curve
+    const armCum = armPts.map((pts) => {
+      const cum = [0];
+      for (let i = 1; i < pts.length; i++)
+        cum.push(
+          cum[i - 1] +
+            Math.hypot(
+              pts[i][0] - pts[i - 1][0],
+              pts[i][1] - pts[i - 1][1],
+              pts[i][2] - pts[i - 1][2],
+            ),
+        );
+      return cum;
+    });
+    const totalArmLen = armCum.reduce((s, c) => s + c[c.length - 1], 0);
+    let seed = 0x9e3779b9 >>> 0;
+    const rnd = () => {
+      seed = (seed + 0x6d2b79f5) | 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    const gauss = () => {
+      const u = Math.max(1e-6, rnd());
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rnd());
+    };
+    // sample a base point + in-plane perpendicular direction on a random arm
+    const sampleArm = (): [number, number, number, number, number] => {
+      let target = rnd() * totalArmLen;
+      let ai = 0;
+      for (; ai < armCum.length; ai++) {
+        if (target <= armCum[ai][armCum[ai].length - 1]) break;
+        target -= armCum[ai][armCum[ai].length - 1];
+      }
+      ai = Math.min(ai, armCum.length - 1);
+      const cum = armCum[ai];
+      const pts = armPts[ai];
+      let si = 0;
+      for (; si < cum.length - 1; si++) if (target <= cum[si + 1]) break;
+      si = Math.min(si, cum.length - 2);
+      const p0 = pts[si];
+      const p1 = pts[si + 1];
+      const segLen = cum[si + 1] - cum[si] || 1;
+      const f = (target - cum[si]) / segLen;
+      const bx = p0[0] + (p1[0] - p0[0]) * f;
+      const by = p0[1] + (p1[1] - p0[1]) * f;
+      const bz = p0[2] + (p1[2] - p0[2]) * f;
+      let tx = p1[0] - p0[0];
+      let ty = p1[1] - p0[1];
+      const tl = Math.hypot(tx, ty) || 1;
+      tx /= tl;
+      ty /= tl;
+      return [bx, by, bz, -ty, tx]; // base point + perpendicular (px, py)
+    };
+    const sp: number[] = [];
+    const cl: number[] = [];
     for (let i = 0; i < N; i++) {
-      const r = diskExt * 1.25 * Math.sqrt(Math.random()); // area-uniform disk
-      const a = Math.random() * Math.PI * 2;
-      sp.push(Math.cos(a) * r, Math.sin(a) * r, (Math.random() - 0.5) * 1.2);
-      const t = STAR_PALETTE[(Math.random() * STAR_PALETTE.length) | 0];
-      const b = 0.45 + Math.random() * 0.55;
+      let x: number, y: number, z: number;
+      if (rnd() < ARM_FRAC) {
+        const [bx, by, bz, px, py] = sampleArm();
+        const width = 0.7 + rnd() * 0.6; // kpc band half-width
+        const off = gauss() * width;
+        x = bx + px * off;
+        y = by + py * off;
+        z = bz + gauss() * 0.22; // thin disk pinned to the arm plane
+      } else {
+        const r = diskExt * 1.25 * Math.sqrt(rnd()); // area-uniform inter-arm disk
+        const a = rnd() * Math.PI * 2;
+        x = Math.cos(a) * r;
+        y = Math.sin(a) * r;
+        z = gauss() * 0.45; // slightly thicker, still disk-like
+      }
+      sp.push(x, y, z);
+      const t = STAR_PALETTE[(rnd() * STAR_PALETTE.length) | 0];
+      const b = 0.45 + rnd() * 0.55;
       cl.push(t[0] * b, t[1] * b, t[2] * b);
     }
     const starGeo = new THREE.BufferGeometry();
