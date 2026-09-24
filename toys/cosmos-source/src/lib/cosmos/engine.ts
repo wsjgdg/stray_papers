@@ -207,7 +207,7 @@ export class CosmosEngine {
 
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.1, 20000);
-    this.scene.add(new THREE.AmbientLight(0x93a7c8, 0.16));
+    this.scene.add(new THREE.AmbientLight(0xffffff, 0.12));
     this.scene.add(new THREE.PointLight(0xfff1dd, 2.4, 0, 0));
 
     this.sphereGeo = new THREE.SphereGeometry(1, 48, 24);
@@ -1048,9 +1048,17 @@ export class CosmosEngine {
     // Pick the first hit whose object (and ancestors) is actually visible on screen.
     // This prevents clicking invisible solar-system bodies while in a cosmic-scale view.
     let hit: THREE.Intersection | null = null;
+    let focusedHit: THREE.Intersection | null = null;
     for (const h of hits) {
-      if (this.effectivelyVisible(h.object)) { hit = h as THREE.Intersection; break; }
+      if (!this.effectivelyVisible(h.object)) continue;
+      // If the nearest hit is the body we're already focused on, remember it but keep
+      // looking for a different body behind it. Otherwise the focused body's invisible
+      // pick-ball (parked ~2 units in front of the camera) traps the cursor and you can
+      // never click *through* it to another body — the dossier stays pinned.
+      if (this.cam.focus && h.object === this.cam.focus) { focusedHit = h as THREE.Intersection; continue; }
+      hit = h as THREE.Intersection; break;
     }
+    if (!hit) hit = focusedHit; // nothing else under the ray → keep the focused body selected
 
     // Screen-space proximity fallback. Tiny/far cosmic bodies (galaxies, stars, DSOs)
     // are very hard to hit with a precise ray; if the ray missed, select the nearest
@@ -1073,7 +1081,14 @@ export class CosmosEngine {
       if (bestObj) hit = { object: bestObj } as unknown as THREE.Intersection;
     }
     const b = hit ? (hit.object.userData.body) : null;
-    if (!b || !hit) { this.cam.focus = null; return; }
+    if (!b || !hit) {
+      // Clicked empty space: release focus AND clear the dossier so the info panel
+      // doesn't stay pinned to the last body.
+      this.cam.focus = null;
+      this.currentKey = null;
+      this.onInfoChange?.(null);
+      return;
+    }
     if (b.isCosmos) {
       // Clicked a galaxy / star / quasar in a cosmic-scale view → show dossier + focus it
       this.showInfo(b);
