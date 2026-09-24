@@ -21,7 +21,7 @@ import {
   SUPERCLUSTERS, COSMIC_FILAMENTS, QUASARS, MILKY_WAY_ARMS, MILKY_WAY_BAR,
   MILKY_WAY_SUN_POS,
 } from './universe-data';
-import { galaxySpriteTex, cmbTex, glowTex, nebulaTex, realBodyTex } from './textures';
+import { galaxySpriteTex, cmbTex, glowTex, nebulaTex, flareTex, starCoreTex, REAL_BODY_IMAGES } from './textures';
 import { galacticDir, fmtLy, fmtMpc, D2R } from './math-utils';
 
 const _v = new THREE.Vector3();
@@ -77,11 +77,54 @@ const STAR_PALETTE: [number, number, number][] = [
   [1.0, 0.58, 0.36], // M red
 ];
 
-/** Best-effort: swap a sprite's map to a real photo when one is registered. No-op if none. */
-function applyRealPhoto(sp: THREE.Sprite, name: string): void {
-  const tex = realBodyTex(name);
-  if (tex) { sp.material.map = tex; sp.material.color.set(0xffffff); sp.material.needsUpdate = true; }
+/** Best-effort: swap a sprite's map to a real observed photo when one is registered.
+ *  The photo is downscaled (cap 2048px long-edge) to stay safely under WebGL max-texture
+ *  limits, then run through a luminance→alpha cutout so the black space background becomes
+ *  transparent and the galaxy composites cleanly over the cosmic view with its true colours.
+ *  No-op (keeps the procedural sprite) if no photo is registered for `name`. */
+function applyRealPhoto(sp: THREE.Sprite, name: string, size: number): void {
+  const url = REAL_BODY_IMAGES[name];
+  if (!url) return;
+  const img = new Image();
+  img.onload = () => {
+    const W = img.naturalWidth, H = img.naturalHeight;
+    if (!W || !H) return;
+    const CAP = 2048;
+    const s = Math.min(1, CAP / Math.max(W, H));
+    const w = Math.max(1, Math.round(W * s));
+    const h = Math.max(1, Math.round(H * s));
+    const cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    const ctx = cv.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(img, 0, 0, w, h);
+    // Luminance → alpha: near-black space fades to transparent, the galaxy body stays opaque.
+    const id = ctx.getImageData(0, 0, w, h);
+    const d = id.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+      let a = (lum - 22) / 70;
+      a = a < 0 ? 0 : a > 1 ? 1 : a;
+      a = a * a * (3 - 2 * a); // smoothstep
+      d[i + 3] = (a * 255) | 0;
+    }
+    ctx.putImageData(id, 0, 0);
+    const tex = new THREE.CanvasTexture(cv);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 4;
+    const ar = w / h;
+    sp.material.map = tex;
+    sp.material.color.set(0xffffff);
+    sp.material.rotation = Math.random() * Math.PI * 2;
+    sp.scale.set(size * (ar > 1 ? ar : 1), size * (ar < 1 ? 1 / ar : 1), 1);
+    sp.material.needsUpdate = true;
+  };
+  img.src = url;
 }
+
+// Shared star assets, built once (textures are stateless + tinted per-sprite via material.color).
+const STAR_CORE = starCoreTex();
+const STAR_FLARE = flareTex();
 
 function hexFromRGB(rgb: number[]): number {
   return (rgb[0] << 16) | (rgb[1] << 8) | rgb[2];
@@ -165,9 +208,11 @@ export function buildSolarNeighborhood(): THREE.Group {
   const exoUpdaters: { dot: THREE.Sprite; pickBall: THREE.Mesh; host: THREE.LineLoop; P: number; orbit: number; phase: number }[] = [];
 
   // Sun at origin
-  const sunSp = sprite(dot, 0xffe9a0, 3.2, 1);
+  const sunSp = sprite(STAR_CORE, 0xffe9a0, 3.2, 1);
   grp.add(sunSp);
-  // Photosphere disk + additive corona so the Sun reads as a star, not a flat white dot.
+  // Photosphere disk + diffraction flare + additive corona so the Sun reads as a star.
+  const sunFlare = glowSprite(STAR_FLARE, 0xffe9a0, 9, 0.5);
+  grp.add(sunFlare);
   const sunCorona = glowSprite(glowTex([255, 233, 160]), 0xffe9a0, 7.5, 0.4);
   grp.add(sunCorona);
   tag(sunSp, '太阳', 'SOL', '观测者所在恒星 · G2V 主序星',
@@ -180,11 +225,18 @@ export function buildSolarNeighborhood(): THREE.Group {
       -Math.cos(s.dec * D2R) * Math.sin((s.ra / 24) * Math.PI * 2),
     );
     const p = dir.multiplyScalar(Math.max(0.2, s.distLy));
-    const starSize = Math.max(0.6, 2.6 * Math.pow(1.4, -s.mag));
-    const sp = sprite(dot, s.c, starSize, 0.95);
-    sp.position.copy(p);
-    grp.add(sp);
-    tag(sp, s.n, s.en, `${s.sp}型恒星 · ${s.distLy.toFixed(2)} 光年`,
+    const starSize = Math.max(0.5, 3.4 * Math.pow(1.5, -s.mag));
+    // Star = coloured core disk + additive diffraction-spike flare (bright stars), so it
+    // reads as a real photographed star rather than a flat dot.
+    const core = sprite(STAR_CORE, s.c, starSize, 1);
+    core.position.copy(p);
+    grp.add(core);
+    if (starSize > 0.9) {
+      const fl = glowSprite(STAR_FLARE, s.c, starSize * (2.6 + starSize * 0.5), Math.min(0.85, 0.25 + starSize * 0.12));
+      fl.position.copy(p);
+      grp.add(fl);
+    }
+    tag(core, s.n, s.en, `${s.sp}型恒星 · ${s.distLy.toFixed(2)} 光年`,
       [['光谱型', s.sp], ['距离', s.distLy.toFixed(2) + ' 光年'], ['视星等', s.mag.toFixed(2)]],
       s.c, starSize * 0.6, specs, grp, Math.max(1.6, starSize * 1.8));
 
@@ -382,7 +434,10 @@ export function buildLocalGroup(): THREE.Group {
     const sp = sprite(tex, hexFromRGB(g.c1), size, 0.9);
     sp.position.copy(p);
     grp.add(sp);
-    applyRealPhoto(sp, g.en);
+    const halo = glowSprite(glowTex(g.c1), hexFromRGB(g.c1), size * 2.4, 0.12);
+    halo.position.copy(p);
+    grp.add(halo);
+    applyRealPhoto(sp, g.en, size);
     tag(sp, g.n, g.en, g.note,
       [['类型', g.type], ['距离', fmtLy(g.distLy)], ['直径', fmtLy(g.diamLy)],
        ['视星等', g.mag], ['坐标', `l=${g.l.toFixed(1)}° b=${g.b.toFixed(1)}°`]],
@@ -420,7 +475,7 @@ export function buildNearbyUniverse(): THREE.Group {
     const sp = sprite(tex, hexFromRGB(g.c1), size, g.group === 'virgo' ? 0.95 : 0.8);
     sp.position.copy(p);
     grp.add(sp);
-    applyRealPhoto(sp, g.en);
+    applyRealPhoto(sp, g.en, size);
     tag(sp, g.n, g.en, g.note,
       [['类型', g.type], ['距离', fmtLy(g.distLy)], ['直径', fmtLy(g.diamLy)],
        ['视星等', g.mag], ['坐标', `l=${g.l.toFixed(1)}° b=${g.b.toFixed(1)}°`]],
@@ -626,7 +681,10 @@ export function buildObservableUniverse(): THREE.Group {
     const sp = sprite(gTex, hexFromRGB(g.c1), 2.2, 0.7);
     sp.position.copy(p);
     grp.add(sp);
-    applyRealPhoto(sp, g.en);
+    const halo = glowSprite(glowTex(g.c1), hexFromRGB(g.c1), 2.2 * 2.4, 0.1);
+    halo.position.copy(p);
+    grp.add(halo);
+    applyRealPhoto(sp, g.en, 2.2);
     tag(sp, g.n, g.en, g.note,
       [['类型', g.type], ['距离', fmtLy(g.distLy)]],
       hexFromRGB(g.c1), 2.2, specs, grp, 4);

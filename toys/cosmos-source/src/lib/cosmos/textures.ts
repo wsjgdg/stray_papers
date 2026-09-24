@@ -302,68 +302,129 @@ export function milkyWayTex(): THREE.CanvasTexture {
   return done(cv);
 }
 
-/** Galaxy sprite for cosmic-view (spiral/elliptical/irregular). */
+/** Galaxy sprite for cosmic-view — drawn at 512² with real morphology:
+ *  log-spiral arms, dark dust lanes, blue star-forming knots, bright bulge + halo. */
 export function galaxySpriteTex(type: string, c1: number[], c2: number[]): THREE.CanvasTexture {
-  const [cv, g] = newCanvas(256, 256);
-  g.globalCompositeOperation = 'lighter';
+  const S = 512;
+  const [cv, g] = newCanvas(S, S);
+  const C = S / 2;
+  const axial = 0.46; // disk inclination flattening
   if (type === 'spiral') {
-    g.save(); g.translate(128, 128); g.scale(1, 0.42); g.rotate(0.6);
-    // Luminous spiral arms (additive)
-    for (let arm = 0; arm < 2; arm++)
-      for (let i = 0; i < 30; i++) {
-        const a = arm * Math.PI + i * 0.2, r = 8 + i * 3.6;
-        blob(g, Math.cos(a) * r * 1.6, Math.sin(a) * r, 10 + Math.random() * 14, i % 4 ? c1 : c2, 0.06);
-      }
-    // Dark dust lanes along the inner arms (carve out luminance, like M31/M51)
-    g.globalCompositeOperation = 'destination-out';
-    for (let arm = 0; arm < 2; arm++)
-      for (let i = 0; i < 20; i++) {
-        const a = arm * Math.PI + i * 0.22 + 0.18, r = 16 + i * 3.4;
-        blob(g, Math.cos(a) * r * 1.6, Math.sin(a) * r, 7 + Math.random() * 7, [0,0,0], 0.22);
-      }
+    const arms = Math.random() < 0.35 ? 4 : 2;
+    const turns = 1.1 + Math.random() * 0.8;
+    const b = 0.22 + Math.random() * 0.12;
+    const phase = Math.random() * Math.PI * 2;
+    const rot = Math.random() * Math.PI;
     g.globalCompositeOperation = 'lighter';
-    g.restore();
-    // Bright nucleus + bulge on top
-    blob(g, 128, 128, 40, [255,245,225], 0.6);
-    blob(g, 128, 128, 16, [255,255,240], 0.85);
+    // faint outer disk halo
+    const halo = g.createRadialGradient(C, C, 10, C, C, C * 0.92);
+    halo.addColorStop(0, `rgba(${c1[0]},${c1[1]},${c1[2]},0.10)`);
+    halo.addColorStop(0.5, `rgba(${c2[0]},${c2[1]},${c2[2]},0.04)`);
+    halo.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = halo; g.beginPath(); g.ellipse(C, C, C * 0.92, C * 0.92 * axial, 0, 0, 7); g.fill();
+    // luminous spiral arms (logarithmic)
+    const STEPS = 80;
+    for (let arm = 0; arm < arms; arm++) {
+      const armPhase = phase + (arm * Math.PI * 2) / arms;
+      for (let i = 0; i < STEPS; i++) {
+        const t = i / STEPS;
+        const theta = t * turns * Math.PI * 2 + armPhase;
+        // Logarithmic spiral: `b` controls how tightly the arms wind (higher = tighter).
+        const r = 12 + (C * 0.82) * (Math.exp(b * turns * t * Math.PI * 2) - 1) / (Math.exp(b * turns * Math.PI * 2) - 1);
+        const wob = (Math.random() - 0.5) * 10;
+        const x = C + Math.cos(theta + rot) * r + Math.cos(theta + Math.PI / 2 + rot) * wob;
+        const y = C + Math.sin(theta + rot) * r * axial + Math.sin(theta + Math.PI / 2 + rot) * wob * axial;
+        const rad = 5 + (1 - t) * 16 + Math.random() * 4;
+        const col = t < 0.5 ? c1 : c2;
+        blob(g, x, y, rad, col, 0.045 + (1 - t) * 0.03);
+        if (t > 0.35 && Math.random() < 0.5) // blue HII knots along outer arms
+          blob(g, x + (Math.random() - 0.5) * 8, y + (Math.random() - 0.5) * 8, 2 + Math.random() * 3, [180, 210, 255], 0.10);
+      }
+    }
+    // dark dust lanes carved along the inner edge of each arm
+    g.globalCompositeOperation = 'destination-out';
+    for (let arm = 0; arm < arms; arm++) {
+      const armPhase = phase + (arm * Math.PI * 2) / arms + 0.32;
+      for (let i = 6; i < STEPS; i++) {
+        const t = i / STEPS;
+        const theta = t * turns * Math.PI * 2 + armPhase;
+        const r = 16 + t * (C * 0.7);
+        const x = C + Math.cos(theta + rot) * r;
+        const y = C + Math.sin(theta + rot) * r * axial;
+        blob(g, x, y, 5 + (1 - t) * 9 + Math.random() * 4, [0, 0, 0], 0.16 + (1 - t) * 0.18);
+      }
+    }
+    g.globalCompositeOperation = 'lighter';
+    // bright bulge + nucleus
+    const bulge = g.createRadialGradient(C, C, 2, C, C, 70);
+    bulge.addColorStop(0, 'rgba(255,248,225,0.9)');
+    bulge.addColorStop(0.4, 'rgba(255,235,200,0.5)');
+    bulge.addColorStop(1, 'rgba(255,225,190,0)');
+    g.fillStyle = bulge; g.beginPath(); g.arc(C, C, 70, 0, 7); g.fill();
+    blob(g, C, C, 18, [255, 255, 245], 0.9);
   } else if (type === 'elliptical' || type === 'lenticular') {
-    g.save(); g.translate(128, 128); g.scale(1, 0.7);
-    for (let i = 0; i < 26; i++) blob(g, 0, 0, 100 - i * 3.5, c1, 0.04);
-    g.restore();
-    blob(g, 128, 128, 30, [255,245,225], 0.5);
+    g.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 40; i++) blob(g, C, C, 150 - i * 3.6, c1, 0.03); // smooth isophotes
+    const halo = g.createRadialGradient(C, C, 10, C, C, 150 * 0.95);
+    halo.addColorStop(0, `rgba(${c1[0]},${c1[1]},${c1[2]},0.06)`);
+    halo.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = halo; g.beginPath(); g.ellipse(C, C, 150 * 0.95, 150 * 0.95 * 0.78, 0, 0, 7); g.fill();
+    const nuc = g.createRadialGradient(C, C, 2, C, C, 34);
+    nuc.addColorStop(0, 'rgba(255,250,235,0.9)');
+    nuc.addColorStop(1, 'rgba(255,240,210,0)');
+    g.fillStyle = nuc; g.beginPath(); g.arc(C, C, 34, 0, 7); g.fill();
   } else if (type === 'dwarf') {
-    blob(g, 128, 128, 70, c1, 0.18);
-    blob(g, 128, 128, 30, c2, 0.25);
-    for (let i = 0; i < 30; i++) blob(g, 128 + (Math.random()-0.5)*100, 128 + (Math.random()-0.5)*100, 6 + Math.random()*10, c2, 0.2);
+    g.globalCompositeOperation = 'lighter';
+    blob(g, C, C, 90, c1, 0.12);
+    blob(g, C, C, 40, c2, 0.2);
+    for (let i = 0; i < 60; i++)
+      blob(g, C + (Math.random() - 0.5) * 150, C + (Math.random() - 0.5) * 120, 4 + Math.random() * 10, c2, 0.12);
   } else {
-    // irregular
-    for (let i = 0; i < 36; i++)
-      blob(g, 128 + (Math.random()-0.5)*120, 128 + (Math.random()-0.5)*80, 16 + Math.random()*36, Math.random()>0.5?c1:c2, 0.07);
-    blob(g, 128, 128, 26, [255,245,225], 0.35);
+    // irregular (Magellanic-type)
+    g.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 50; i++) {
+      const x = C + (Math.random() - 0.5) * 200, y = C + (Math.random() - 0.5) * 150;
+      blob(g, x, y, 14 + Math.random() * 30, Math.random() > 0.5 ? c1 : c2, 0.06);
+      if (Math.random() < 0.4) blob(g, x, y, 3 + Math.random() * 4, [190, 210, 255], 0.12);
+    }
+    blob(g, C, C, 26, [255, 245, 225], 0.3);
   }
   return done(cv);
 }
 
+/** Soft star-core disk (white) — tinted per-star by spectral colour in the sprite material. */
+export function starCoreTex(): THREE.CanvasTexture {
+  const [cv, g] = newCanvas(128, 128);
+  const rg = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  rg.addColorStop(0, 'rgba(255,255,255,1)');
+  rg.addColorStop(0.18, 'rgba(255,255,255,0.95)');
+  rg.addColorStop(0.5, 'rgba(255,255,255,0.35)');
+  rg.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = rg; g.fillRect(0, 0, 128, 128);
+  return done(cv);
+}
+
 /**
- * Real-photo channel (reserved). The cosmic-view builders are procedural by design, but
- * for famous, well-imaged objects you can drop a face-on photo into /public/cosmos/
- * (e.g. M31.jpg, M51.jpg) and register it here. When an entry exists the builder swaps the
- * sprite's map to the photo (true colours) instead of the procedural blob — no network is
- * touched while the map is empty, so the app stays fully offline by default.
+ * Real-photo channel — domestic-source observed images (bjp.org.cn APOD mirror, no external
+ * network). For famous, well-imaged objects we drop a face-on photo into /public/cosmos/ and
+ * register it here keyed by the object's `en` field. When an entry exists, applyRealPhoto()
+ * swaps the sprite's map to a luminance-cutout of the photo (true colours, transparent space
+ * background) instead of the procedural blob. Keys MUST equal the `en` strings used by the
+ * data records (LOCAL_GROUP / NEARBY_GALAXIES / VIRGO_CLUSTER / FAMOUS_GALAXIES).
  */
 export const REAL_BODY_IMAGES: Record<string, string> = {
-  // 'M31': '/cosmos/M31.jpg',   // ← example: drop the file in /public/cosmos and uncomment
+  'M31 / Andromeda': '/cosmos/M31.jpg',
+  'M33 / Triangulum': '/cosmos/M33.jpg',
+  'LMC': '/cosmos/LMC.jpg',
+  'M82': '/cosmos/M82.jpg',
+  'M83': '/cosmos/M83.jpg',
+  'M94 / NGC 4736': '/cosmos/M94.jpg',
+  'M63 / Sunflower': '/cosmos/M63.jpg',
+  'M101 / Pinwheel': '/cosmos/M101.jpg',
+  'M51 / Whirlpool': '/cosmos/M51.jpg',
+  'NGC 4565 / Needle': '/cosmos/NGC4565.jpg',
+  'NGC 4038/4039 Antennae': '/cosmos/Antennae.jpg',
 };
-
-const _realLoader = new THREE.TextureLoader();
-/** Returns a real-photo texture for `name` if registered, else null. */
-export function realBodyTex(name: string): THREE.Texture | null {
-  const url = REAL_BODY_IMAGES[name];
-  if (!url) return null;
-  const t = _realLoader.load(url);
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
-}
 
 /** Cosmic Microwave Background texture — realistic anisotropy map.
  *  Combines (a) a strong dipole from Solar-system motion relative to the CMB rest frame,
