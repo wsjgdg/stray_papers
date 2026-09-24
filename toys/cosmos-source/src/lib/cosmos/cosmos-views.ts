@@ -110,6 +110,27 @@ function glowSprite(
   return s;
 }
 
+/**
+ * Tag a material as a "blue accent" so the engine's blue-light toggle can neutralize it.
+ *  - `glow`  → also swap the baked-tint texture to a neutral one when the toggle is off
+ *              (used for additive glow sprites whose map is tinted, not just `color`).
+ *  - `uColor` → shader material (e.g. Earth's Rayleigh rim) whose `uniforms.uColor` holds the
+ *              original sRGB triple and must be rewritten to neutral grey when off.
+ * The engine reads `userData.cosmicBlue` to decide which materials participate.
+ */
+export function markBlue(
+  mat: THREE.Material,
+  blue: number,
+  opts?: { glow?: boolean; uColor?: [number, number, number] },
+) {
+  mat.userData.cosmicBlue = blue;
+  if (opts?.glow && mat instanceof THREE.SpriteMaterial) {
+    mat.userData.cosmicGlow = true;
+    mat.userData.blueTex = mat.map;
+  }
+  if (opts?.uColor) mat.userData.cosmicUColor = opts.uColor;
+}
+
 /** Representative star-surface colours (sRGB 0..1) for field-star sprinkling. */
 const STAR_PALETTE: [number, number, number][] = [
   [0.72, 0.78, 1.0], // A/B blue-white
@@ -701,6 +722,7 @@ export function buildMilkyWayGalaxy(): THREE.Group {
     diskExt * 1.5,
     0.1,
   );
+  markBlue(disk.material, 0xbcd2ff, { glow: true });
   grp.add(disk);
   // Faint extended halo / thick-disk glow so the galaxy has an outer presence.
   const halo = glowSprite(
@@ -709,6 +731,7 @@ export function buildMilkyWayGalaxy(): THREE.Group {
     diskExt * 2.5,
     0.045,
   );
+  markBlue(halo.material, 0xaec6ff, { glow: true });
   grp.add(halo);
 
   // Real barred-spiral disk as the galaxy's MAIN body: M83, the closest Milky-Way analog we can
@@ -1208,18 +1231,15 @@ export function buildSuperclusters(): THREE.Group {
       6,
       false,
     );
-    grp.add(
-      new THREE.Mesh(
-        tube,
-        new THREE.MeshBasicMaterial({
-          color: 0x6f9fd0,
-          transparent: true,
-          opacity: 0.16,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false,
-        }),
-      ),
-    );
+    const filMat = new THREE.MeshBasicMaterial({
+      color: 0x6f9fd0,
+      transparent: true,
+      opacity: 0.16,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    markBlue(filMat, 0x6f9fd0);
+    grp.add(new THREE.Mesh(tube, filMat));
   }
 
   grp.userData.labelSpecs = specs;
@@ -1390,15 +1410,17 @@ export function buildObservableUniverse(): THREE.Group {
       ),
     );
   }
+  const ringMat = new THREE.LineBasicMaterial({
+    color: 0x5fd3ff,
+    transparent: true,
+    opacity: 0.18,
+    depthWrite: false,
+  });
+  markBlue(ringMat, 0x5fd3ff);
   grp.add(
     new THREE.LineLoop(
       new THREE.BufferGeometry().setFromPoints(ringPts),
-      new THREE.LineBasicMaterial({
-        color: 0x5fd3ff,
-        transparent: true,
-        opacity: 0.18,
-        depthWrite: false,
-      }),
+      ringMat,
     ),
   );
 

@@ -206,6 +206,7 @@ export default function CosmosViewer() {
     flySpeed: 8,
     tourActive: false,
     realScale: false,
+    blueLight: true,
   });
   const [spdVal, setSpdVal] = useState(560);
   const [eclVal, setEclVal] = useState(234);
@@ -259,6 +260,9 @@ export default function CosmosViewer() {
   };
   const toggleTour = () => {
     engineRef.current?.toggleTour();
+  };
+  const toggleBlueLight = () => {
+    engineRef.current?.setBlueLight(!state.blueLight);
   };
 
   // ---- Timeline (date scrubber) helpers ----
@@ -351,8 +355,9 @@ export default function CosmosViewer() {
         key={warpKey}
         className="pointer-events-none absolute inset-0 z-[5]"
         style={{
-          background:
-            "radial-gradient(circle at center, rgba(95,211,255,.35), rgba(245,166,35,.18) 40%, rgba(3,5,10,0) 70%)",
+          background: state.blueLight
+            ? "radial-gradient(circle at center, rgba(95,211,255,.35), rgba(245,166,35,.18) 40%, rgba(3,5,10,0) 70%)"
+            : "radial-gradient(circle at center, rgba(200,208,220,.28), rgba(200,208,220,.1) 40%, rgba(3,5,10,0) 70%)",
           animation: warpKey === 0 ? undefined : "cosmosWarp 0.9s ease-out",
         }}
       />
@@ -589,6 +594,16 @@ export default function CosmosViewer() {
           >
             <Rocket className="w-3 h-3 mr-1" />
             巡航
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className={`h-7 px-2.5 text-[11px] border border-[rgba(125,165,225,.18)] ${state.blueLight ? "!border-[#5fd3ff] !text-[#5fd3ff] !bg-[rgba(95,211,255,.12)]" : ""}`}
+            onClick={toggleBlueLight}
+            title="蓝光：开 → 艺术蓝着色 / 关 → 模型与贴图原始色、无补光"
+          >
+            <Sparkles className="w-3 h-3 mr-1" />
+            蓝光
           </Button>
           <TooltipProvider>
             <Tooltip>

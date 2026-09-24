@@ -57,6 +57,7 @@ import {
   SCALE_LEVELS,
   type LabelSpec,
   type BodyData,
+  markBlue,
 } from "./cosmos-views";
 
 const MONTH = [
@@ -93,6 +94,7 @@ export interface EngineState {
   flySpeed: number; // fly speed multiplier (1..200)
   tourActive: boolean;
   realScale: boolean; // true → honest linear distances + proportional sizes
+  blueLight: boolean; // true → artistic blue styling; false → neutral, no light override
 }
 
 export interface BodyInfo {
@@ -169,6 +171,13 @@ export class CosmosEngine {
   private cosmosPickables: THREE.Object3D[] = []; // pickable sprites in the active cosmic view
   private atmoHalos: { mesh: THREE.Sprite; body: string; tintColor: number }[] =
     [];
+  private blueLight = true; // artistic blue styling toggle (off → neutral, no light override)
+  private pointLight!: THREE.PointLight; // stored so the blue-light toggle can neutralize it
+  private neutralGlowTex?: THREE.Texture; // cached gray glow used when blue-light is off
+  private static readonly NEUTRAL = 0x9aa7bd; // neutral grey for recolored accents
+  private static readonly NEUTRAL_RGB: [number, number, number] = [
+    150, 160, 175,
+  ];
 
   // State
   private simT = (Date.now() - EPOCH) / 86400000;
@@ -327,7 +336,8 @@ export class CosmosEngine {
       20000,
     );
     this.scene.add(new THREE.AmbientLight(0xffffff, 0.12));
-    this.scene.add(new THREE.PointLight(0xfff1dd, 2.4, 0, 0));
+    this.pointLight = new THREE.PointLight(0xfff1dd, 2.4, 0, 0);
+    this.scene.add(this.pointLight);
 
     this.sphereGeo = new THREE.SphereGeometry(1, 48, 24);
     this.scene.add(this.sysGroup);
@@ -343,6 +353,7 @@ export class CosmosEngine {
     this.buildZodiAndShadow();
     this.buildMeteors();
     this.buildCosmosViews();
+    this.applyBlueLight(); // ensure accents match the initial blueLight state
     this.applyEps();
     this.bindEvents();
     this.showInfo(SUN);
@@ -508,6 +519,9 @@ export class CosmosEngine {
         tg.add(halo);
         ndHalo = halo;
         this.atmoHalos.push({ mesh: halo, body: b.n, tintColor: haloColor });
+        // Earth's signature blue atmosphere glow — part of the "blue light" styling.
+        if (haloColor === 0x5fd3ff)
+          markBlue(halo.material, haloColor, { glow: true });
 
         // Rayleigh-scattering rim: a slightly-larger BackSide sphere with a Fresnel shader.
         // Glows at the limb, brighter on the day side — the classic "atmosphere edge".
@@ -526,6 +540,9 @@ export class CosmosEngine {
                       ? ([150, 220, 230] as [number, number, number])
                       : ([110, 140, 230] as [number, number, number]); // Neptune
         const atmoMat = makeAtmosphereMaterial(atmoRGB);
+        // Earth's Rayleigh-scattering rim is blue; neutralize it with the blue-light toggle.
+        if (b.n === "地球")
+          markBlue(atmoMat, 0x5fd3ff, { uColor: [95, 160, 255] });
         const atmoMesh = new THREE.Mesh(this.sphereGeo, atmoMat);
         atmoMesh.scale.setScalar(rDisp * 1.06);
         atmoMesh.renderOrder = 3;
@@ -1073,15 +1090,17 @@ export class CosmosEngine {
           }),
         ),
       );
+      const conMat = new THREE.LineBasicMaterial({
+        color: 0x41628f,
+        transparent: true,
+        opacity: 0.55,
+        depthTest: false,
+      });
+      markBlue(conMat, 0x41628f);
       conGroup.add(
         new THREE.LineSegments(
           new THREE.BufferGeometry().setFromPoints(seg),
-          new THREE.LineBasicMaterial({
-            color: 0x41628f,
-            transparent: true,
-            opacity: 0.55,
-            depthTest: false,
-          }),
+          conMat,
         ),
       );
       conGroup.renderOrder = -8;
@@ -1123,7 +1142,9 @@ export class CosmosEngine {
     };
     {
       const R = 2500;
-      this.skyRoot.add(circleLine(R, 0, "xz", 0x8fa8c8, 0.3));
+      const eqRing = circleLine(R, 0, "xz", 0x8fa8c8, 0.3);
+      markBlue(eqRing.material as THREE.LineBasicMaterial, 0x8fa8c8);
+      this.skyRoot.add(eqRing);
       this.eclRingGrp = new THREE.Group();
       this.skyRoot.add(this.eclRingGrp);
       this.eclRingGrp.add(circleLine(R, 0, "xz", 0xf5a623, 0.38));
@@ -1223,27 +1244,33 @@ export class CosmosEngine {
         }),
       );
     };
-    this.horizonUI.add(circleLine(HZ, 0, "xz", 0x5fd3ff, 0.5));
-    this.horizonUI.add(
-      circleLine(
-        HZ * Math.cos(30 * D2R),
-        HZ * Math.sin(30 * D2R),
-        "xz",
-        0x3f6f9f,
-        0.2,
-      ),
+    const hzRing0 = circleLine(HZ, 0, "xz", 0x5fd3ff, 0.5);
+    markBlue(hzRing0.material as THREE.LineBasicMaterial, 0x5fd3ff);
+    this.horizonUI.add(hzRing0);
+    const hzRing30 = circleLine(
+      HZ * Math.cos(30 * D2R),
+      HZ * Math.sin(30 * D2R),
+      "xz",
+      0x3f6f9f,
+      0.2,
     );
-    this.horizonUI.add(
-      circleLine(
-        HZ * Math.cos(60 * D2R),
-        HZ * Math.sin(60 * D2R),
-        "xz",
-        0x3f6f9f,
-        0.2,
-      ),
+    markBlue(hzRing30.material as THREE.LineBasicMaterial, 0x3f6f9f);
+    this.horizonUI.add(hzRing30);
+    const hzRing60 = circleLine(
+      HZ * Math.cos(60 * D2R),
+      HZ * Math.sin(60 * D2R),
+      "xz",
+      0x3f6f9f,
+      0.2,
     );
-    this.horizonUI.add(circleLine(HZ, 0, "xy", 0x3f6f9f, 0.28));
-    this.horizonUI.add(circleLine(HZ, 0, "yz", 0x3f6f9f, 0.28));
+    markBlue(hzRing60.material as THREE.LineBasicMaterial, 0x3f6f9f);
+    this.horizonUI.add(hzRing60);
+    const hzRingXY = circleLine(HZ, 0, "xy", 0x3f6f9f, 0.28);
+    markBlue(hzRingXY.material as THREE.LineBasicMaterial, 0x3f6f9f);
+    this.horizonUI.add(hzRingXY);
+    const hzRingYZ = circleLine(HZ, 0, "yz", 0x3f6f9f, 0.28);
+    markBlue(hzRingYZ.material as THREE.LineBasicMaterial, 0x3f6f9f);
+    this.horizonUI.add(hzRingYZ);
     for (const [pos, txt] of [
       [[HZ, 0, 0], "北 N"],
       [[-HZ, 0, 0], "南 S"],
@@ -1385,6 +1412,7 @@ export class CosmosEngine {
       }),
     );
     this.geg.scale.setScalar(300);
+    markBlue(this.geg.material, 0xffffff, { glow: true });
     this.sysGroup.add(this.geg);
 
     // Earth shadow cones
@@ -1547,6 +1575,7 @@ export class CosmosEngine {
     this.cosmosRoot.add(real);
     this.cosmosViews[level] = real;
     this.cosmosViewsBuilt[level] = true;
+    this.applyBlueLight(); // recolor the freshly-built view to the current blueLight state
   }
 
   /** Build (or rebuild) DOM labels + pickables for the active cosmic view. */
@@ -2300,6 +2329,7 @@ export class CosmosEngine {
         flyMode: this.flyMode,
         flySpeed: this.flySpeed,
         tourActive: this.tour.active,
+        blueLight: this.blueLight,
       });
       this.fpsN = 0;
       this.fpsT = 0;
@@ -2348,6 +2378,63 @@ export class CosmosEngine {
     this.camera.updateProjectionMatrix();
     this.showInfo(SUN);
     return this.horizonMode;
+  }
+  /**
+   * Toggle the global "blue light" styling. When OFF, every material tagged via `markBlue`
+   * (UI rings, horizon guides, cosmic filaments/arms, atmosphere glows, Earth's Rayleigh rim)
+   * is recolored to neutral grey and the warm point light becomes pure white — so models &
+   * textures render in their original colors with no blue/light override.
+   */
+  setBlueLight(on: boolean) {
+    this.blueLight = on;
+    this.applyBlueLight();
+    this.onStateChange?.({ blueLight: on });
+  }
+  /** Recolor all `markBlue`-tagged materials to match the current `blueLight` state. */
+  private applyBlueLight() {
+    const neutral = CosmosEngine.NEUTRAL;
+    const neutralGlow = this.getNeutralGlowTex();
+    this.scene.traverse((o) => {
+      const mat = (o as THREE.Mesh).material as
+        THREE.Material | THREE.Material[] | undefined;
+      if (!mat) return;
+      const mats = Array.isArray(mat) ? mat : [mat];
+      for (const m of mats) {
+        const blue = m.userData?.cosmicBlue as number | undefined;
+        if (blue === undefined) continue;
+        if ((m as THREE.Material & { color?: THREE.Color }).color) {
+          (m as THREE.Material & { color: THREE.Color }).color.setHex(
+            this.blueLight ? blue : neutral,
+          );
+        }
+        if (m.userData.cosmicGlow && m instanceof THREE.SpriteMaterial) {
+          m.map = this.blueLight
+            ? (m.userData.blueTex as THREE.Texture)
+            : neutralGlow;
+          m.needsUpdate = true;
+        }
+        if (
+          m.userData.cosmicUColor &&
+          m instanceof THREE.ShaderMaterial &&
+          m.uniforms?.uColor
+        ) {
+          const c = this.blueLight
+            ? (m.userData.cosmicUColor as [number, number, number])
+            : CosmosEngine.NEUTRAL_RGB;
+          (m.uniforms.uColor.value as THREE.Vector3).set(
+            c[0] / 255,
+            c[1] / 255,
+            c[2] / 255,
+          );
+        }
+      }
+    });
+    if (this.pointLight)
+      this.pointLight.color.setHex(this.blueLight ? 0xfff1dd : 0xffffff);
+  }
+  private getNeutralGlowTex(): THREE.Texture {
+    if (!this.neutralGlowTex) this.neutralGlowTex = glowTex([200, 200, 208]);
+    return this.neutralGlowTex;
   }
   setObliquity(v: number) {
     this.EPS = v;
