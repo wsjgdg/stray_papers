@@ -1254,33 +1254,37 @@ export function buildSuperclusters(): THREE.Group {
 }
 
 /**
- * Loads the real galaxy-redshift survey (public/cosmos/cosmic-web.json) and renders it as a
- * THREE.Points cloud inside the supercluster view. Coordinates in the JSON are in Mpc
+ * Loads the real galaxy-redshift survey (public/cosmos/cosmic-web.bin) and renders it as a
+ * THREE.Points cloud inside the supercluster view. Coordinates in the binary are in Mpc
  * (x = d·cosδ·cosα, etc.); we radially compress them with the same `cbrt(mpc)·4` mapping the
  * hand-authored supercluster nodes use, so the real web shares the scene's scale.
+ * Binary layout (little-endian): int32 n, float32[n*3] pos, float32[n*3] col.
  * Fails silently (keeps the curated filaments/nodes) if the asset can't be fetched.
  */
 function attachRealSurveyCloud(grp: THREE.Group): void {
   const compress = (mpc: number) => Math.cbrt(mpc) * 4;
-  fetch("/cosmos/cosmic-web.json")
-    .then((r) => r.json())
-    .then((data: { n: number; pos: number[]; col: number[] }) => {
-      const { n, pos, col } = data;
-      if (!n || !pos || pos.length < n * 3) return;
+  fetch("/cosmos/cosmic-web.bin", { cache: "force-cache" })
+    .then((r) => r.arrayBuffer())
+    .then((buf) => {
+      const dv = new DataView(buf);
+      const n = dv.getInt32(0, true);
+      if (n <= 0 || buf.byteLength < 4 + n * 3 * 4 * 2) return;
+      const posSrc = new Float32Array(buf, 4, n * 3);
+      const colSrc = new Float32Array(buf, 4 + n * 3 * 4, n * 3);
       const positions = new Float32Array(n * 3);
       const colors = new Float32Array(n * 3);
       for (let i = 0; i < n; i++) {
-        const x = pos[i * 3],
-          y = pos[i * 3 + 1],
-          z = pos[i * 3 + 2];
+        const x = posSrc[i * 3],
+          y = posSrc[i * 3 + 1],
+          z = posSrc[i * 3 + 2];
         const r = Math.sqrt(x * x + y * y + z * z) || 1;
         const k = compress(r) / r; // radial compression: distance → cbrt(r)·4
         positions[i * 3] = x * k;
         positions[i * 3 + 1] = y * k;
         positions[i * 3 + 2] = z * k;
-        colors[i * 3] = col[i * 3];
-        colors[i * 3 + 1] = col[i * 3 + 1];
-        colors[i * 3 + 2] = col[i * 3 + 2];
+        colors[i * 3] = colSrc[i * 3];
+        colors[i * 3 + 1] = colSrc[i * 3 + 1];
+        colors[i * 3 + 2] = colSrc[i * 3 + 2];
       }
       const geo = new THREE.BufferGeometry();
       geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
