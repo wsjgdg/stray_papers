@@ -319,6 +319,9 @@ export function buildMilkyWayGalaxy(): THREE.Group {
   // Soft luminosity floor so the galaxy reads as a body, not bare geometry.
   const disk = glowSprite(glowTex([170, 195, 255]), 0xbcd2ff, diskExt * 1.5, 0.1);
   grp.add(disk);
+  // Faint extended halo / thick-disk glow so the galaxy has an outer presence.
+  const halo = glowSprite(glowTex([150, 175, 235]), 0xaec6ff, diskExt * 2.5, 0.045);
+  grp.add(halo);
 
   const armColors: Record<string, number> = {
     '英仙臂': 0x8fb8ff, '人马臂': 0xffd9a0, '盾牌-半人马臂': 0xbfe0ff, '矩尺臂': 0xffc0d0,
@@ -370,6 +373,29 @@ export function buildMilkyWayGalaxy(): THREE.Group {
         p[2] + (Math.random() - 0.5) * 1.6,
       );
       grp.add(neb);
+    }
+
+    // Dust lane: a dark absorbing ribbon carved down the centre of each bright arm.
+    // Reuses the arm curve, so it always overlays the additive glow; NormalBlending
+    // with a dark colour darkens the light underneath to read as obscuring dust.
+    const dustMat = new THREE.MeshBasicMaterial({
+      color: 0x140d07, transparent: true, opacity: 0.34,
+      blending: THREE.NormalBlending, depthWrite: false,
+    });
+    const dustMesh = new THREE.Mesh(new THREE.TubeGeometry(curve, seg, 0.2, 6, false), dustMat);
+    dustMesh.renderOrder = 6; // draw after the additive arm so it sits on top
+    grp.add(dustMesh);
+
+    // Blue supergiant knots — the hot, young stars that trace the arms' star-forming fronts.
+    for (let k = 0; k < 10; k++) {
+      const p = arm.points[(Math.random() * arm.points.length) | 0];
+      const sg = glowSprite(glowTex([150, 190, 255]), 0x9fc4ff, 0.7 + Math.random() * 0.7, 0.5);
+      sg.position.set(
+        p[0] + (Math.random() - 0.5) * 1.0,
+        p[1] + (Math.random() - 0.5) * 0.3,
+        p[2] + (Math.random() - 0.5) * 1.0,
+      );
+      grp.add(sg);
     }
 
     // Arm tip label.

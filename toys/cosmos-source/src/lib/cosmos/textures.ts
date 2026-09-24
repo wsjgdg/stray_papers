@@ -281,23 +281,39 @@ export function nebulaTex(kind: string, c1: number[], c2: number[]): THREE.Canva
 
 /** Full-sky Milky Way band texture. */
 export function milkyWayTex(): THREE.CanvasTexture {
-  const [cv, g] = newCanvas(2048, 1024);
+  const W = 2048, H = 1024;
+  const [cv, g] = newCanvas(W, H);
+  const mid = H / 2;
+  const wob = (x: number) => Math.sin(x * 0.004) * 20; // gentle band warp
+  // Light band (additive)
   g.globalCompositeOperation = 'lighter';
-  for (let i = 0; i < 3200; i++) {
-    const x = Math.random() * 2048;
-    const bulge = Math.exp(-Math.pow((x - 1024) / 280, 2));
-    const w = 32 + 78 * bulge + 24 * Math.pow(Math.sin(x * 0.013), 2);
-    const y = 512 + Math.sin(x * 0.004) * 24 + (Math.random() - 0.5) * w * 2.6;
-    const d = Math.abs(y - 512 - Math.sin(x * 0.004) * 24) / w;
-    if (d > 1.7) continue;
-    const a = Math.exp(-d * d * 1.5) * (0.03 + 0.06 * bulge) * (0.35 + Math.random() * 0.65);
-    blob(g, x, y, 18 + Math.random() * 74, bulge > 0.45 && Math.random() > 0.4 ? [255,232,205] : [214,214,255], a);
+  for (let i = 0; i < 4200; i++) {
+    const x = Math.random() * W;
+    const bulge = Math.exp(-Math.pow((x - W / 2) / 230, 2));
+    const w = 30 + 70 * bulge + 22 * Math.pow(Math.sin(x * 0.012), 2);
+    const y = mid + wob(x) + (Math.random() - 0.5) * w * 2.8;
+    const d = Math.abs(y - mid - wob(x)) / w;
+    if (d > 1.8) continue;
+    const a = Math.exp(-d * d * 1.6) * (0.025 + 0.07 * bulge) * (0.35 + Math.random() * 0.65);
+    const col = bulge > 0.5 ? [255, 232, 205] : (Math.random() < 0.4 ? [200, 214, 255] : [220, 220, 255]);
+    blob(g, x, y, 16 + Math.random() * 70, col, a);
   }
+  // Bluish outer haze flanking the bright core
+  for (let i = 0; i < 600; i++) {
+    const x = Math.random() * W;
+    const bulge = Math.exp(-Math.pow((x - W / 2) / 260, 2));
+    const w = 40 + 90 * bulge;
+    const y = mid + wob(x) + (Math.random() - 0.5) * w * 3.4;
+    const d = Math.abs(y - mid - wob(x)) / w;
+    if (d > 2.2) continue;
+    blob(g, x, y, 26 + Math.random() * 60, [150, 180, 255], 0.02 + Math.random() * 0.03);
+  }
+  // Dark dust lane — biased below the band centre, the Milky Way's iconic obscuration.
   g.globalCompositeOperation = 'destination-out';
-  for (let i = 0; i < 620; i++) {
-    const x = Math.random() * 2048;
-    const y = 512 + Math.sin(x * 0.004) * 24 + (Math.random() < 0.5 ? -1 : 1) * (8 + Math.random() * 26);
-    blob(g, x, y, 12 + Math.random() * 44, [0,0,0], 0.07 + Math.random() * 0.16);
+  for (let i = 0; i < 900; i++) {
+    const x = Math.random() * W;
+    const y = mid + wob(x) + 10 + (Math.random() - 0.3) * 16;
+    blob(g, x, y, 10 + Math.random() * 40, [0, 0, 0], 0.06 + Math.random() * 0.16);
   }
   return done(cv);
 }
