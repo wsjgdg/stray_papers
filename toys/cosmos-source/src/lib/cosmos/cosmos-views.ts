@@ -487,8 +487,10 @@ export const EXOPLANETS: ExoPlanet[] = [
   },
 ];
 
-/** Attach body + label-spec metadata to a sprite, and register it.
- *  Also adds an invisible pick ball (a sphere sized to the sprite) as a sibling for easy clicking. */
+/** Attach body + label-spec metadata to a sprite, and register it for picking.
+ *  The sprite itself is the pick target (userData.body.isCosmos); engine.pick()'s existing
+ *  30px screen-proximity fallback enlarges the clickable area, so no extra invisible
+ *  pick-ball mesh is needed (which would waste one draw call per body). */
 function tag(
   sp: THREE.Sprite,
   n: string,
@@ -498,8 +500,8 @@ function tag(
   c: number,
   up: number,
   specs: LabelSpec[],
-  parent?: THREE.Object3D,
-  pickR?: number,
+  _parent?: THREE.Object3D,
+  _pickR?: number,
 ): THREE.Sprite {
   const body: BodyData = {
     n,
@@ -514,22 +516,6 @@ function tag(
   sp.userData.body = body;
   sp.userData.rPick = true; // flag for engine to include in pickables
   specs.push({ obj: sp, n, en, note, up, kind: "cosmos", c, rows });
-  // Optional invisible pick ball for larger click target
-  if (parent && pickR && pickR > 0) {
-    const ball = new THREE.Mesh(
-      new THREE.SphereGeometry(1, 12, 8),
-      new THREE.MeshBasicMaterial({
-        transparent: true,
-        opacity: 0,
-        depthWrite: false,
-      }),
-    );
-    ball.position.copy(sp.position);
-    ball.scale.setScalar(pickR);
-    ball.userData.body = body;
-    ball.userData.rPick = true;
-    parent.add(ball);
-  }
   return sp;
 }
 
@@ -655,9 +641,11 @@ export function buildSolarNeighborhood(): THREE.Group {
       pdot.userData.body = bd;
       pdot.userData.rPick = true;
       host.add(pdot);
-      // Pick ball — a larger invisible sphere parented to the dot, makes clicking easy.
-      // Its `body` points to the same dossier; the engine's pick() walks visible hits
-      // and this ball is part of the host group (visible).
+      // Invisible pick ball — exoplanets are tiny dots orbiting *right next to* their
+      // (often much brighter) host star, so the 30px screen-proximity fallback would
+      // usually grab the star instead. A small 3D hit sphere keeps the planet clickable.
+      // (Standalone stars/galaxies don't need this — their sprite + fallback suffice,
+      // so the global tag() pick-ball was removed; only exoplanets keep one.)
       const ballGeo = new THREE.SphereGeometry(0.8, 12, 8);
       const ballMat = new THREE.MeshBasicMaterial({
         transparent: true,
