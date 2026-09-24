@@ -163,6 +163,8 @@ export class CosmosEngine {
   private sphereGeo!: THREE.SphereGeometry;
   private dummy = new THREE.Object3D();
   private cosmosViews: THREE.Group[] = [];
+  private cosmosViewsBuilt: boolean[] = []; // index i → L_i group has been built (lazy)
+  private cosmosBuilders: ((() => THREE.Group) | null)[] = []; // index i → builder for L_i
   private cosmosLabelEls: LabelEntry[] = []; // DOM labels for the active cosmic view
   private cosmosPickables: THREE.Object3D[] = []; // pickable sprites in the active cosmic view
   private atmoHalos: { mesh: THREE.Sprite; body: string; tintColor: number }[] =
@@ -1502,19 +1504,49 @@ export class CosmosEngine {
 
   /* ═════════ COSMIC VIEWS ═════════ */
   private buildCosmosViews() {
+    // Lazy construction: allocate empty placeholder groups only. Each level's heavy
+    // content (galaxy photos run through a luminance→alpha cutout, the 2 MB survey
+    // cloud fetch, etc.) is built on first warp into that scale level and then cached.
+    // This keeps startup to the solar-system + sky (~3 images) instead of eagerly
+    // loading all 40 photos + the survey JSON across every level at once.
     this.cosmosViews = [
-      new THREE.Group(), // level 0 placeholder (solar system itself)
-      buildSolarNeighborhood(),
-      buildMilkyWayGalaxy(),
-      buildLocalGroup(),
-      buildNearbyUniverse(),
-      buildSuperclusters(),
-      buildObservableUniverse(),
+      new THREE.Group(), // level 0 placeholder (solar system handled by sysGroup)
+      new THREE.Group(),
+      new THREE.Group(),
+      new THREE.Group(),
+      new THREE.Group(),
+      new THREE.Group(),
+      new THREE.Group(),
+    ];
+    this.cosmosViewsBuilt = this.cosmosViews.map(() => false);
+    this.cosmosViewsBuilt[0] = true; // placeholder, never rebuilt
+    this.cosmosBuilders = [
+      null,
+      buildSolarNeighborhood,
+      buildMilkyWayGalaxy,
+      buildLocalGroup,
+      buildNearbyUniverse,
+      buildSuperclusters,
+      buildObservableUniverse,
     ];
     for (let i = 1; i < this.cosmosViews.length; i++) {
       this.cosmosViews[i].visible = false;
       this.cosmosRoot.add(this.cosmosViews[i]);
     }
+  }
+
+  /** Build a cosmic-view level on first need and cache it. Idempotent. */
+  private ensureCosmosView(level: number) {
+    if (level < 1 || level >= this.cosmosViews.length) return;
+    if (this.cosmosViewsBuilt[level]) return;
+    const build = this.cosmosBuilders[level];
+    if (!build) return;
+    const real = build();
+    const old = this.cosmosViews[level];
+    if (old.parent) old.parent.remove(old);
+    this.cosmosRoot.add(real);
+    this.cosmosViews[level] = real;
+    this.cosmosViewsBuilt[level] = true;
   }
 
   /** Build (or rebuild) DOM labels + pickables for the active cosmic view. */
@@ -2552,6 +2584,9 @@ export class CosmosEngine {
   }
   setScaleLevel(level: number) {
     if (level === this.scaleLevel) return;
+    // Begin building the target level's content immediately (lazy) so its galaxy
+    // photos / survey cloud are fetched during the warp rather than at startup.
+    this.ensureCosmosView(level);
     // Fly mode doesn't compose with the warp transition; disable it.
     if (this.flyMode) this.flyMode = false;
     // Kick off a short cinematic warp: swap content at the midpoint while the
@@ -2654,6 +2689,7 @@ export class CosmosEngine {
   }
   /** Apply the content swap at the warp midpoint (called from the frame loop). */
   private applyScaleContent(level: number) {
+    this.ensureCosmosView(level); // build on first visit (lazy), then cache
     for (let i = 1; i < this.cosmosViews.length; i++)
       this.cosmosViews[i].visible = i === level;
     const showSolar = level === 0 && !this.horizonMode;
