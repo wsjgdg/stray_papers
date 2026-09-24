@@ -724,6 +724,23 @@ export const REAL_BODY_IMAGES: Record<string, string> = {
   "NGC 6822": "/cosmos/NGC6822.jpg",
   "IC 1613": "/cosmos/IC1613.jpg",
   "WLM (DDO 221)": "/cosmos/WLM.jpg",
+  // Local Group dwarf satellites — real DSS2 cutouts (NASA SkyView), centered on each galaxy
+  "Sagittarius dSph": "/cosmos/sagittarius-dsph.jpg",
+  "Canis Major Dwarf": "/cosmos/canis-major-dwarf.jpg",
+  "Leo I": "/cosmos/leo-i.jpg",
+  "Leo II": "/cosmos/leo-ii.jpg",
+  "Ursa Minor Dwarf": "/cosmos/ursa-minor-dwarf.jpg",
+  "Draco Dwarf": "/cosmos/draco-dwarf.jpg",
+  "Carina Dwarf": "/cosmos/carina-dwarf.jpg",
+  "Sextans Dwarf": "/cosmos/sextans-dwarf.jpg",
+  "Sculptor Dwarf": "/cosmos/sculptor-dwarf.jpg",
+  "Fornax Dwarf": "/cosmos/fornax-dwarf.jpg",
+  "Antlia Dwarf": "/cosmos/antlia-dwarf.jpg",
+  "IC 10": "/cosmos/ic-10.jpg",
+  "Pegasus Dwarf (DDO 216)": "/cosmos/pegasus-dwarf-ddo-216.jpg",
+  "Leo A": "/cosmos/leo-a.jpg",
+  "Aquarius Dwarf": "/cosmos/aquarius-dwarf.jpg",
+  SagDIG: "/cosmos/sagdig.jpg",
 };
 
 /** Cosmic Microwave Background texture — realistic anisotropy map.
