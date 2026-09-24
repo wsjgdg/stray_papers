@@ -32,7 +32,6 @@ import {
   galaxySpriteTex,
   cmbTex,
   glowTex,
-  nebulaTex,
   flareTex,
   starCoreTex,
   REAL_BODY_IMAGES,
@@ -1148,6 +1147,10 @@ export function buildSuperclusters(): THREE.Group {
   grp.name = "cosmos-superclusters";
   const specs: LabelSpec[] = [];
   const compress = (mpc: number) => Math.cbrt(mpc) * 4;
+  // Member-galaxy dots are collected here and drawn as ONE Points cloud (see below)
+  // instead of one sprite/draw call each — collapses ~120 draws into 1.
+  const memberPos: number[] = [];
+  const memberCol: number[] = [];
 
   const mwTex = galaxySpriteTex("spiral", [220, 220, 255], [180, 200, 255]);
   const mw = sprite(mwTex, 0xdfe8ff, 3, 1);
@@ -1185,7 +1188,8 @@ export function buildSuperclusters(): THREE.Group {
     sp.position.copy(p);
     grp.add(sp);
     // A few member galaxies scattered around the node for context (kept sparse so the core
-    // texture stays the focus).
+    // texture stays the focus). Positions are collected and rendered as a single Points cloud
+    // below — avoids one draw call per member sprite (~120 → 1). Layout is unchanged.
     const members = 8 + ((Math.random() * 6) | 0);
     for (let i = 0; i < members; i++) {
       const off = new THREE.Vector3(
@@ -1193,14 +1197,8 @@ export function buildSuperclusters(): THREE.Group {
         Math.random() - 0.5,
         Math.random() - 0.5,
       ).multiplyScalar(size * 1.6);
-      const mt = nebulaTex(
-        Math.random() > 0.5 ? "galaxy" : "cluster",
-        [255, 230, 200],
-        [200, 220, 255],
-      );
-      const m = sprite(mt, 0xffd9a0, Math.max(0.7, size * 0.18), 0.55);
-      m.position.copy(p).add(off);
-      grp.add(m);
+      memberPos.push(p.x + off.x, p.y + off.y, p.z + off.z);
+      memberCol.push(1.0, 0.85, 0.63);
     }
     tag(
       sp,
@@ -1220,6 +1218,33 @@ export function buildSuperclusters(): THREE.Group {
       grp,
       Math.max(size * 2.2, 3.5),
     );
+  }
+
+  // Collapse all member-galaxy dots into a single Points cloud (was one sprite/draw call each).
+  if (memberPos.length) {
+    const mGeo = new THREE.BufferGeometry();
+    mGeo.setAttribute(
+      "position",
+      new THREE.BufferAttribute(new Float32Array(memberPos), 3),
+    );
+    mGeo.setAttribute(
+      "color",
+      new THREE.BufferAttribute(new Float32Array(memberCol), 3),
+    );
+    const mMat = new THREE.PointsMaterial({
+      size: 1.4,
+      sizeAttenuation: true,
+      map: glowTex([255, 220, 180]),
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.6,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    markBlue(mMat);
+    const mPts = new THREE.Points(mGeo, mMat);
+    mPts.renderOrder = -2;
+    grp.add(mPts);
   }
 
   // Cosmic-web filaments: glowing additive tubes between supercluster nodes
