@@ -1,12 +1,21 @@
 """Download a real 3D galaxy redshift catalog from the VizieR China-VO mirror.
 
-Uses astroquery per the project convention: point every VizieR query at the
-domestic mirror so it works behind the GFW / offline-ish sandbox.
+Uses astroquery per the project convention: route every VizieR query at the
+domestic mirror so it works behind the GFW / offline-ish sandbox:
+    from astroquery.vizier import Conf
+    Conf.server = "vizier.china-vo.org"
 
-Outputs a compact JSON (x,y,z in Mpc) for the Three.js cosmic-web view,
-computed from RA/DEC/cz with a flat distance (d = cz / H0, H0 = 70 km/s/Mpc).
+The raw survey gives equatorial (RA, Dec, cz). We convert each point to GALACTIC
+(l, b) with the standard J2000 transform, then to a galactic Cartesian vector
+using the *same* formula as the app's `galacticDir(l,b)` in math-utils.ts. That
+makes the real cloud share the exact frame AND the cbrt(mpc)*4 radial compression
+used by the hand-authored supercluster nodes — so they align both in orientation
+and scale, not just in spirit.
+
+Output: public/cosmos/cosmic-web.json  { n, pos[flat xyz in Mpc, galactic frame], col[flat rgb] }
 """
 import json
+import os
 import sys
 import numpy as np
 from astroquery.vizier import Vizier, Conf
@@ -18,10 +27,18 @@ Vizier.TIMEOUT = (60, 300)     # (connect, read) seconds
 
 H0 = 70.0  # km/s/Mpc
 
-# Catalogs to try, in priority order. Column names per VizieR (J2000 RA/Dec + cz).
+# 2MRS (2MASS Redshift Survey, Huchra 2012, VizieR J/ApJS/199/26) — all-sky (|b| > ~5-8°),
+# ~44.6k galaxies with J2000 RA/Dec (decimal degrees) + cz. Replaces the southern-only
+# 2dF+6dF (VII/259) used earlier.
 CANDIDATES = [
-    ("VII/259", "RAJ2000", "DEJ2000", "cz"),     # 2dF + 6dF merged redshift survey (~125k)
+    ("J/ApJS/199/26", "RAJ2000", "DEJ2000", "cz"),
 ]
+
+# J2000 equatorial(J2000) -> galactic constants.
+_A_NGP = np.radians(192.85948)
+_D_NGP = np.radians(27.12825)
+_L_NCP = np.radians(122.93192)
+
 
 def _sex(s):
     """Parse a sexagesimal string '±HH MM SS.ss' to decimal degrees (or hours if caller scales)."""
@@ -43,13 +60,32 @@ def _sex(s):
     v = h + m / 60.0 + sec / 3600.0
     return -v if neg else v
 
-def parse_ra(s):
-    """RA sexagesimal is in HOURS -> convert to degrees (×15)."""
-    return _sex(s) * 15.0
 
-def parse_dec(s):
-    """Dec sexagesimal is already in DEGREES."""
-    return _sex(s)
+def parse_ra(v):
+    """RA: numeric -> already decimal degrees (2MRS); sexagesimal string -> hours*15."""
+    if isinstance(v, (int, float, np.floating)):
+        return float(v)
+    s = str(v).strip()
+    if (" " in s or ":" in s):
+        return _sex(s) * 15.0
+    try:
+        return float(s)
+    except ValueError:
+        return float("nan")
+
+
+def parse_dec(v):
+    """Dec: numeric -> decimal degrees; sexagesimal string -> degrees."""
+    if isinstance(v, (int, float, np.floating)):
+        return float(v)
+    s = str(v).strip()
+    if (" " in s or ":" in s):
+        return _sex(s)
+    try:
+        return float(s)
+    except ValueError:
+        return float("nan")
+
 
 def to_float_array(col):
     raw = col.tolist()
@@ -64,6 +100,21 @@ def to_float_array(col):
                 out.append(float("nan"))
     return np.array(out, dtype=float)
 
+
+def eq2gal(ra_deg, dec_deg):
+    """Vectorised equatorial(J2000) -> galactic (l, b) in degrees (IAU 1958 / J2000)."""
+    ra = np.radians(ra_deg)
+    dec = np.radians(dec_deg)
+    sinb = np.sin(_D_NGP) * np.sin(dec) + np.cos(_D_NGP) * np.cos(dec) * np.cos(ra - _A_NGP)
+    sinb = np.clip(sinb, -1.0, 1.0)
+    b = np.arcsin(sinb)
+    l = _L_NCP - np.arctan2(
+        np.cos(_D_NGP) * np.sin(ra - _A_NGP),
+        np.sin(_D_NGP) * np.cos(dec) - np.cos(_D_NGP) * np.sin(dec) * np.cos(ra - _A_NGP),
+    )
+    return np.degrees(l) % 360.0, np.degrees(b)
+
+
 def run():
     last_err = None
     for cat, ra_c, dec_c, cz_c in CANDIDATES:
@@ -75,34 +126,38 @@ def run():
                 continue
             t = tables[0]
             print(f"[+] got table: {len(t)} rows, columns={t.colnames}")
+
             def col(name):
                 for c in t.colnames:
                     if c.upper() == name.upper():
                         return c
                 return None
+
             ra = col(ra_c); dec = col(dec_c); cz = col(cz_c)
             if not (ra and dec and cz):
                 print(f"    missing coord columns (ra={ra} dec={dec} cz={cz}); skipping")
                 continue
-            ra = np.array([parse_ra(v) for v in t[ra].tolist()], dtype=float)
-            dec = np.array([parse_dec(v) for v in t[dec].tolist()], dtype=float)
+            ra_d = np.array([parse_ra(v) for v in t[ra].tolist()], dtype=float)
+            dec_d = np.array([parse_dec(v) for v in t[dec].tolist()], dtype=float)
             czv = to_float_array(t[cz])
-            m = np.isfinite(ra) & np.isfinite(dec) & np.isfinite(czv) & (czv > 0)
-            ra, dec, czv = ra[m], dec[m], czv[m]
-            print(f"[+] usable rows: {len(ra)}")
-            ra_r = np.radians(ra); dec_r = np.radians(dec)
-            ux = np.cos(dec_r) * np.cos(ra_r)
-            uy = np.cos(dec_r) * np.sin(ra_r)
-            uz = np.sin(dec_r)
-            d = czv / H0  # Mpc (flat: d = cz / H0)
-            X = ux * d; Y = uy * d; Z = uz * d
+            m = np.isfinite(ra_d) & np.isfinite(dec_d) & np.isfinite(czv) & (czv > 0)
+            ra_d, dec_d, czv = ra_d[m], dec_d[m], czv[m]
+            print(f"[+] usable rows: {len(ra_d)}")
 
-            # Drop cz outliers (physical 2dF/6dF < ~900 Mpc; a few catalog errors reach >16k).
-            r = np.sqrt(X*X + Y*Y + Z*Z)
+            # Equatorial -> galactic (l,b), then galactic Cartesian via galacticDir's formula.
+            l_deg, b_deg = eq2gal(ra_d, dec_d)
+            d = czv / H0  # Mpc (flat: d = cz / H0)
+            bl = np.radians(b_deg); ll = np.radians(l_deg)
+            X = d * np.cos(bl) * np.cos(ll)
+            Y = d * np.sin(bl)
+            Z = d * np.cos(bl) * np.sin(ll)
+
+            # Drop cz outliers (physical 2MRS < ~640 Mpc; catalog errors reach higher).
+            r = np.sqrt(X * X + Y * Y + Z * Z)
             keep = (r > 3.0) & (r <= 900.0)
             X, Y, Z, r = X[keep], Y[keep], Z[keep], r[keep]
             n = len(X)
-            print(f"[+] after filtering d<=900 Mpc: {n} points")
+            print(f"[+] after equatorial->galactic + d<=900 Mpc filter: {n} points")
 
             # Subsample to keep the web render snappy (~60k).
             TARGET = 60000
@@ -113,30 +168,31 @@ def run():
                 print(f"[+] subsampled to {n} points")
 
             # Colour by distance: near = warm white, far = cool blue (depth cue).
-            t = np.clip(r / 900.0, 0.0, 1.0)
+            tcol = np.clip(r / 900.0, 0.0, 1.0)
             near = np.array([1.0, 0.92, 0.78]); far = np.array([0.45, 0.62, 1.0])
-            col = near[None, :] * (1 - t)[:, None] + far[None, :] * t[:, None]
-            bright = (0.55 + 0.45 * (1 - t))[:, None]
+            col = near[None, :] * (1 - tcol)[:, None] + far[None, :] * tcol[:, None]
+            bright = (0.55 + 0.45 * (1 - tcol))[:, None]
             col = np.clip(col * bright, 0, 1)
 
             out = {
                 "catalog": cat,
+                "frame": "galactic",
                 "H0": H0,
                 "n": int(n),
                 "pos": np.round(np.stack([X, Y, Z], axis=1), 3).ravel().tolist(),
                 "col": np.round(col, 3).ravel().tolist(),
             }
-            import os
             os.makedirs("public/cosmos", exist_ok=True)
             with open("public/cosmos/cosmic-web.json", "w") as f:
                 json.dump(out, f)
-            print(f"[+] wrote public/cosmos/cosmic-web.json with {n} points")
+            print(f"[+] wrote public/cosmos/cosmic-web.json with {n} points (galactic frame)")
             return 0
         except Exception as e:
             last_err = e
             print(f"[!] {cat} failed: {type(e).__name__}: {e}", flush=True)
     print(f"[x] all candidates failed. last error: {last_err}")
     return 1
+
 
 if __name__ == "__main__":
     sys.exit(run())
