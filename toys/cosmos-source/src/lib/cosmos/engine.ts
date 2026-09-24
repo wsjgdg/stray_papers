@@ -1603,6 +1603,23 @@ export class CosmosEngine {
       const el = document.createElement("div");
       el.className = sp.kind === "cosmos-dim" ? "tag con" : "tag deep";
       el.innerHTML = sp.kind === "cosmos-dim" ? sp.n : `<b>✦</b>${sp.n}`;
+      // Clicking a cosmic label opens its dossier directly — robust alternative to the
+      // canvas raycast (thin cosmic structures sit inside the bulge's screen footprint
+      // and are easy to miss with a precise pick; the label is always on-screen).
+      el.style.cursor = "pointer";
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.showInfo({
+          n: sp.n,
+          en: sp.en,
+          key: "cosmo_" + sp.n,
+          kind: sp.kind,
+          c: sp.c,
+          rows: sp.rows || [],
+          note: sp.note,
+          isCosmos: true,
+        } as unknown as BodyData);
+      });
       this.labelHost.appendChild(el);
       const entry: LabelEntry = { el, obj: sp.obj, up: sp.up, grp: "cosmos" };
       this.labelEls.push(entry);

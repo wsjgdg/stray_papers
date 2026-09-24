@@ -26,6 +26,7 @@ import {
   COSMIC_FILAMENTS,
   QUASARS_REAL,
   MILKY_WAY_ARMS,
+  MILKY_WAY_BAR,
   MILKY_WAY_SUN_POS,
 } from "./universe-data";
 import {
@@ -899,6 +900,61 @@ export function buildMilkyWayGalaxy(): THREE.Group {
     grp,
     5,
   );
+
+  // Central bar — MILKY_WAY_BAR (~8.4 kpc long, ~60° to the Sun–GC line). The data was
+  // defined in universe-data.ts but previously unused. The M83 photo already shows a bar, so
+  // this adds a warm procedural glow that reinforces the central elongated structure rather
+  // than replacing it. Rendered as a fixed (non-billboard) plane so it stays aligned when the
+  // galaxy is rotated in free-fly.
+  {
+    const bp = MILKY_WAY_BAR;
+    const ba = bp[0];
+    const bb = bp[bp.length - 1];
+    const blen = Math.hypot(bb[0] - ba[0], bb[1] - ba[1], bb[2] - ba[2]);
+    const bang = Math.atan2(bb[1] - ba[1], bb[0] - ba[0]);
+    const barGeo = new THREE.PlaneGeometry(blen, blen * 0.24);
+    const barMat = new THREE.MeshBasicMaterial({
+      map: glowTex([255, 205, 150]),
+      color: 0xffcf8a,
+      transparent: true,
+      opacity: 0.32,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    markBlue(barMat, { glow: true });
+    const bar = new THREE.Mesh(barGeo, barMat);
+    bar.rotation.z = bang;
+    bar.position.set(0, 0, 0.03);
+    bar.renderOrder = -1;
+    bar.userData.body = {
+      n: "中央棒",
+      en: "GALACTIC BAR",
+      key: "cosmo_galactic_bar",
+      kind: "cosmos",
+      c: 0xffcf8a,
+      rows: [
+        ["类型", "棒旋结构 · 长轴 ≈ 8.4 kpc"],
+        ["主导恒星", "老年 Population II · 偏红"],
+        ["取向", "与太阳—银心连线约 60°"],
+        ["作用", "串起四条主旋臂内端与核球"],
+      ],
+      note: "银河系中央的棒状结构，长约 8.4 kpc，由老年恒星主导，把旋臂内端与核球串在一起。",
+      isCosmos: true,
+    };
+    grp.add(bar);
+    const barAnchor = new THREE.Object3D();
+    barAnchor.position.set(bb[0], bb[1], bb[2]);
+    grp.add(barAnchor);
+    specs.push({
+      obj: barAnchor,
+      n: "中央棒",
+      en: "GALACTIC BAR",
+      note: "银河系中央的棒状结构，长约 8.4 kpc，由老年恒星主导，把旋臂内端串在一起。",
+      up: 0,
+      kind: "cosmos-dim",
+      c: 0xffcf8a,
+    });
+  }
 
   // Sun position marker (clickable)
   const sunP = new THREE.Vector3(
