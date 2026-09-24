@@ -140,6 +140,8 @@ export class CosmosEngine {
   private nodes: Record<string, any> = {};
   private pickables: THREE.Object3D[] = [];
   private labelEls: LabelEntry[] = [];
+  private labelThrottleMs = 33; // cap DOM label projection to ~30Hz (was 60Hz per frame)
+  private lastLabelT = -1e9;
   private liveDist: Record<string, string> = {};
   private liveAltaz: Record<string, string> = {};
   private subOrbits: THREE.LineLoop[] = [];
@@ -2242,8 +2244,13 @@ export class CosmosEngine {
       this.transit = 0;
     }
 
-    // Labels
-    if (this.labelHost.style.display !== "none") {
+    // Labels — throttle DOM projection to ~30Hz. Per-label style writes are the
+    // dominant cost of this block; 30Hz is imperceptible and halves frame work.
+    if (
+      this.labelHost.style.display !== "none" &&
+      now - this.lastLabelT >= this.labelThrottleMs
+    ) {
+      this.lastLabelT = now;
       this.scene.updateMatrixWorld();
       this.camera.updateMatrixWorld();
       this.camera.matrixWorldInverse.copy(this.camera.matrixWorld).invert();
