@@ -911,7 +911,12 @@ function Timeline({
   const tlYear = new Date(simMillis).getUTCFullYear();
   const tlMonth = new Date(simMillis).getUTCMonth() + 1;
   const onTimeline = (v: number) => {
-    const days = (v / 1000) * TL_RANGE;
+    // v is 0..1000 along [TL_MIN, TL_MAX]; convert to an absolute date, then to
+    // days since the J2000 epoch that the engine's simT actually expects.
+    // (Previously this passed days-since-TL_MIN directly, an off-by-EPOCH offset
+    // of ~150 years between the slider position and the displayed date.)
+    const millis = TL_MIN + (v / 1000) * (TL_MAX - TL_MIN);
+    const days = (millis - TL_EPOCH) / 86400000;
     engineRef.current?.setSimTime(days);
   };
   const jumpToYear = (year: number) => {
