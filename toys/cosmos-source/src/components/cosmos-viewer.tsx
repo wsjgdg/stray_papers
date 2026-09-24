@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useSyncExternalStore,
+  type RefObject,
+} from "react";
 import {
   CosmosEngine,
   type EngineState,
   type BodyInfo,
 } from "@/lib/cosmos/engine";
+import { hudStore, type HudState } from "@/lib/cosmos/hudStore";
 import { SCALE_LEVELS } from "@/lib/cosmos/cosmos-views";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -265,33 +273,7 @@ export default function CosmosViewer() {
     engineRef.current?.setBlueLight(!state.blueLight);
   };
 
-  // ---- Timeline (date scrubber) helpers ----
-  const EPOCH = Date.UTC(2000, 0, 1, 12, 0, 0);
-  const TL_MIN = Date.UTC(1850, 0, 1);
-  const TL_MAX = Date.UTC(2200, 0, 1);
-  const tlRange = (TL_MAX - TL_MIN) / 86400000; // days
-  const simMillis = EPOCH + state.simT * 86400000;
-  const tlValue = Math.max(
-    0,
-    Math.min(1000, ((simMillis - TL_MIN) / 86400000 / tlRange) * 1000),
-  );
-  const tlYear = new Date(simMillis).getUTCFullYear();
-  const tlMonth = new Date(simMillis).getUTCMonth() + 1;
-  const onTimeline = (v: number) => {
-    const days = (v / 1000) * tlRange;
-    engineRef.current?.setSimTime(days);
-  };
-  const jumpToYear = (year: number) => {
-    const d = (Date.UTC(year, 0, 1) - EPOCH) / 86400000;
-    engineRef.current?.setSimTime(d);
-  };
-  const PRESETS = [
-    { label: "J2000", year: 2000 },
-    { label: "1986 哈雷", year: 1986 },
-    { label: "今天", year: new Date().getFullYear() },
-    { label: "2061 哈雷", year: 2061 },
-    { label: "2114", year: 2114 },
-  ];
+  // Timeline state (simT) is now owned by the <Timeline/> leaf via the HUD store.
 
   const rateFromSlider = useCallback((v: number) => {
     setSpdVal(v);
@@ -431,7 +413,7 @@ export default function CosmosViewer() {
           轨道工具 ORBIT TOOLS <span aria-hidden>↗</span>
         </a>
         <div className="mt-2 tabular-nums text-[21px] tracking-[.06em]">
-          {state.clock}
+          <HudClock />
         </div>
         <div className="text-[11px] text-[#5fd3ff] tracking-[.08em] mt-0.5 tabular-nums">
           {state.paused ? "⏸ 已暂停" : fmtRate(state.daysPerSec)}
@@ -453,39 +435,8 @@ export default function CosmosViewer() {
           className="[&_[role=slider]]:bg-[#f5a623] [&_[role=slider]]:border-[#f5a623]"
         />
 
-        {/* Time-scrub timeline — drag to any date 1850–2200 */}
-        <div className="flex items-center justify-between mt-3 mb-1">
-          <span className="text-[10px] tracking-[.22em] text-[#8b97ad]">
-            时间轴 TIMELINE
-          </span>
-          <span className="text-[10px] text-[#5fd3ff] tabular-nums tracking-wide">
-            {tlYear}–{String(tlMonth).padStart(2, "0")}
-          </span>
-        </div>
-        <Slider
-          value={[Math.round(tlValue)]}
-          min={0}
-          max={1000}
-          step={1}
-          onValueChange={(v) => onTimeline(v[0])}
-          className="[&_[role=slider]]:bg-[#5fd3ff] [&_[role=slider]]:border-[#5fd3ff]"
-        />
-        <div className="flex justify-between text-[8.5px] text-[#5f7388] tabular-nums mt-0.5">
-          <span>1850</span>
-          <span>2000</span>
-          <span>2200</span>
-        </div>
-        <div className="flex flex-wrap gap-1 mt-1.5">
-          {PRESETS.map((p) => (
-            <button
-              key={p.label}
-              onClick={() => jumpToYear(p.year)}
-              className="text-[9.5px] px-1.5 py-0.5 rounded border border-[rgba(125,165,225,.18)] text-[#8b97ad] hover:border-[#5fd3ff] hover:text-white transition-colors"
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
+        {/* Time-scrub timeline — drag to any date 1850–2200 (simT-driven, store-backed) */}
+        <Timeline engineRef={engineRef} />
 
         <div className="flex flex-wrap gap-1.5 mt-2.5">
           <Button
@@ -880,16 +831,126 @@ export default function CosmosViewer() {
 
       {/* ───────── footer hint ───────── */}
       <div className="absolute bottom-3 right-3 z-[6] text-[10.5px] tracking-[.14em] text-[#8b97ad] tabular-nums">
-        {state.fps} FPS · {state.horizonMode ? "PLANETARIUM" : "ORRERY"} · ε{" "}
-        {state.eps.toFixed(2)}°
-        {state.realScale ? " · 真实比例" : " · 可读性缩放"}
-        {state.dprScale < 1 ? ` · DPR×${state.dprScale.toFixed(2)}` : ""}
+        <HudFpsDpr
+          horizonMode={state.horizonMode}
+          eps={state.eps}
+          realScale={state.realScale}
+        />
       </div>
       <div className="absolute bottom-3 left-3 z-[6] hidden sm:block text-[10.5px] tracking-[.12em] text-[#8b97ad]">
         <b className="text-[#5fd3ff] font-medium">拖拽</b> 转视角 ·{" "}
         <b className="text-[#5fd3ff] font-medium">滚轮</b> 缩放 ·{" "}
         <b className="text-[#5fd3ff] font-medium">点击天体</b> 聚焦 ·{" "}
         <b className="text-[#5fd3ff] font-medium">Shift+拖拽</b> 平移
+      </div>
+    </div>
+  );
+}
+
+// ─── High-frequency HUD leaves ─────────────────────────────────────────────
+// clock / fps / dprScale / simT update ~2 Hz from the render loop. They live
+// in an external store (hudStore) so only these tiny leaves re-render, never
+// the whole viewer tree.
+
+function useHud<T>(sel: (s: HudState) => T): T {
+  return useSyncExternalStore(
+    hudStore.subscribe,
+    () => sel(hudStore.get()),
+    () => sel(hudStore.get()),
+  );
+}
+
+function HudClock() {
+  const clock = useHud((s) => s.clock);
+  return <>{clock}</>;
+}
+
+function HudFpsDpr({
+  horizonMode,
+  eps,
+  realScale,
+}: {
+  horizonMode: boolean;
+  eps: number;
+  realScale: boolean;
+}) {
+  const fps = useHud((s) => s.fps);
+  const dprScale = useHud((s) => s.dprScale);
+  return (
+    <>
+      {fps} FPS · {horizonMode ? "PLANETARIUM" : "ORRERY"} · ε {eps.toFixed(2)}°
+      {realScale ? " · 真实比例" : " · 可读性缩放"}
+      {dprScale < 1 ? ` · DPR×${dprScale.toFixed(2)}` : ""}
+    </>
+  );
+}
+
+const TL_EPOCH = Date.UTC(2000, 0, 1, 12, 0, 0);
+const TL_MIN = Date.UTC(1850, 0, 1);
+const TL_MAX = Date.UTC(2200, 0, 1);
+const TL_RANGE = (TL_MAX - TL_MIN) / 86400000; // days
+const TL_PRESETS = [
+  { label: "J2000", year: 2000 },
+  { label: "1986 哈雷", year: 1986 },
+  { label: "今天", year: new Date().getFullYear() },
+  { label: "2061 哈雷", year: 2061 },
+  { label: "2114", year: 2114 },
+];
+
+function Timeline({
+  engineRef,
+}: {
+  engineRef: RefObject<CosmosEngine | null>;
+}) {
+  const simT = useHud((s) => s.simT);
+  const simMillis = TL_EPOCH + simT * 86400000;
+  const tlValue = Math.max(
+    0,
+    Math.min(1000, ((simMillis - TL_MIN) / 86400000 / TL_RANGE) * 1000),
+  );
+  const tlYear = new Date(simMillis).getUTCFullYear();
+  const tlMonth = new Date(simMillis).getUTCMonth() + 1;
+  const onTimeline = (v: number) => {
+    const days = (v / 1000) * TL_RANGE;
+    engineRef.current?.setSimTime(days);
+  };
+  const jumpToYear = (year: number) => {
+    const d = (Date.UTC(year, 0, 1) - TL_EPOCH) / 86400000;
+    engineRef.current?.setSimTime(d);
+  };
+  return (
+    <div className="mt-3">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-[10px] tracking-[.22em] text-[#8b97ad]">
+          时间轴 TIMELINE
+        </span>
+        <span className="text-[10px] text-[#5fd3ff] tabular-nums tracking-wide">
+          {tlYear}–{String(tlMonth).padStart(2, "0")}
+        </span>
+      </div>
+      <Slider
+        value={[Math.round(tlValue)]}
+        min={0}
+        max={1000}
+        step={1}
+        onValueChange={(v) => onTimeline(v[0])}
+        className="[&_[role=slider]]:bg-[#5fd3ff] [&_[role=slider]]:border-[#5fd3ff]"
+      />
+      <div className="flex justify-between text-[8.5px] text-[#5f7388] tabular-nums mt-0.5">
+        <span>1850</span>
+        <span>2000</span>
+        <span>2200</span>
+      </div>
+      <div className="flex flex-wrap gap-1 mt-1.5">
+        {TL_PRESETS.map((p) => (
+          <button
+            key={p.label}
+            onClick={() => jumpToYear(p.year)}
+            className="text-[9.5px] px-1.5 py-0.5 rounded border border-[rgba(125,165,225,.18)] text-[#8b97ad] hover:border-[#5fd3ff] hover:text-white transition-colors"
+          >
+            {p.label}
+          </button>
+        ))}
       </div>
     </div>
   );

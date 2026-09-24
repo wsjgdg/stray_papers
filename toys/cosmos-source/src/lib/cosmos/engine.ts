@@ -59,6 +59,7 @@ import {
   type BodyData,
   markBlue,
 } from "./cosmos-views";
+import { hudStore } from "./hudStore";
 
 const MONTH = [
   "01",
@@ -127,6 +128,7 @@ export class CosmosEngine {
   private dprScale = 1;
   private dprCool = 0;
   private ADAPTIVE_DPR = true;
+  private _lastCtrlKey = "";
 
   // Scene graph roots
   private sysGroup = new THREE.Group();
@@ -2319,10 +2321,19 @@ export class CosmosEngine {
           this.dprCool = 6;
         }
       }
-      this.onStateChange?.({
+      // High-frequency HUD values (clock / fps / dpr / simT) go through the
+      // external store so only the tiny leaf components re-render (~2 Hz),
+      // never the whole React tree.
+      hudStore.set({
+        clock,
         fps: Math.round(fps),
         dprScale: this.dprScale,
-        clock,
+        simT: this.simT,
+      });
+
+      // Control state is pushed to React only when it actually changes, so the
+      // parent component re-renders on user actions, not every 0.5 s.
+      const ctrl: Partial<EngineState> = {
         daysPerSec: this.daysPerSec,
         dir: this.dir,
         paused: this.paused,
@@ -2331,13 +2342,17 @@ export class CosmosEngine {
         site: { ...this.site },
         show: { ...this.show },
         scaleLevel: this.scaleLevel,
-        simT: this.simT,
         transit: this.transit,
         flyMode: this.flyMode,
         flySpeed: this.flySpeed,
         tourActive: this.tour.active,
         blueLight: this.blueLight,
-      });
+      };
+      const ctrlKey = JSON.stringify(ctrl);
+      if (ctrlKey !== this._lastCtrlKey) {
+        this._lastCtrlKey = ctrlKey;
+        this.onStateChange?.(ctrl);
+      }
       this.fpsN = 0;
       this.fpsT = 0;
     }
