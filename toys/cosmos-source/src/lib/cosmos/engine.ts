@@ -298,6 +298,7 @@ export class CosmosEngine {
   private _d = new THREE.Vector3();
   private _q = new THREE.Vector3();
   private _camUp = new THREE.Vector3();
+  private _pVis = new THREE.Vector3();
   private _mw = new THREE.Vector3();
   private _ew = new THREE.Vector3();
   private _idir = new THREE.Vector3();
@@ -2318,6 +2319,14 @@ export class CosmosEngine {
       const iw = innerWidth;
       const ih = innerHeight;
       for (const L of this.labelEls) {
+        // Visibility is decided from the BODY position only — the up-offset below
+        // is purely cosmetic (it floats the tag above the body). If we tested the
+        // offset anchor instead, bodies sitting near the top edge of the screen
+        // get their tags culled even though the body itself is visible (this was
+        // hiding the Virgo-cluster core labels in the L4 nearby-universe level).
+        this._pVis
+          .setFromMatrixPosition(L.obj.matrixWorld)
+          .project(this.camera);
         this._p.setFromMatrixPosition(L.obj.matrixWorld);
         // Offset along the camera's screen-up axis (NOT world +Y). In free-fly
         // mode the camera rolls freely, so a fixed world-space +Y offset would
@@ -2339,9 +2348,9 @@ export class CosmosEngine {
                   : this.showGrp[L.grp as keyof typeof this.showGrp];
         const on =
           grpOk &&
-          this._p.z < 1 &&
-          Math.abs(this._p.x) < 1.05 &&
-          Math.abs(this._p.y) < 1.05 &&
+          this._pVis.z < 1 &&
+          Math.abs(this._pVis.x) < 1.05 &&
+          Math.abs(this._pVis.y) < 1.05 &&
           (L.grp === "cosmos" ||
             !L.min ||
             this.cam.dist < L.min ||
