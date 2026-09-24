@@ -17,6 +17,12 @@ export function newCanvas(
 export function done(cv: HTMLCanvasElement): THREE.CanvasTexture {
   const t = new THREE.CanvasTexture(cv);
   t.colorSpace = THREE.SRGBColorSpace;
+  // Uniform, GPU-friendly sampling: mipmaps kill minification shimmer and anisotropy
+  // keeps oblique galaxy/star sprites crisp. Three clamps anisotropy to the driver max.
+  t.generateMipmaps = true;
+  t.minFilter = THREE.LinearMipmapLinearFilter;
+  t.magFilter = THREE.LinearFilter;
+  t.anisotropy = 8;
   return t;
 }
 

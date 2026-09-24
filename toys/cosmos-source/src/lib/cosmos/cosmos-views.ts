@@ -205,7 +205,9 @@ function applyRealPhoto(sp: THREE.Sprite, name: string, size: number): void {
     ctx.putImageData(id, 0, 0);
     const tex = new THREE.CanvasTexture(cv);
     tex.colorSpace = THREE.SRGBColorSpace;
-    tex.anisotropy = 4;
+    tex.generateMipmaps = true;
+    tex.minFilter = THREE.LinearMipmapLinearFilter;
+    tex.anisotropy = 8;
     const ar = w / h;
     sp.material.map = tex;
     sp.material.color.set(0xffffff);
@@ -270,7 +272,9 @@ function realGalaxyPlane(
     ctx.putImageData(id, 0, 0);
     const tex = new THREE.CanvasTexture(cv);
     tex.colorSpace = THREE.SRGBColorSpace;
-    tex.anisotropy = 4;
+    tex.generateMipmaps = true;
+    tex.minFilter = THREE.LinearMipmapLinearFilter;
+    tex.anisotropy = 8;
     const ar = w / h;
     // Plane is a square (2r×2r); scale the short axis so the image keeps its aspect.
     const halfW = ar >= 1 ? radius * ar : radius;
