@@ -298,6 +298,7 @@ export class CosmosEngine {
   private _camUp = new THREE.Vector3();
   private _mw = new THREE.Vector3();
   private _ew = new THREE.Vector3();
+  private _idir = new THREE.Vector3();
   private _uU = new THREE.Vector3();
   private _uN = new THREE.Vector3();
   private _uE = new THREE.Vector3();
@@ -1963,9 +1964,6 @@ export class CosmosEngine {
     this.last = now;
     if (!this.paused) this.simT += this.daysPerSec * dt;
 
-    const dte = new Date(EPOCH + this.simT * 86400000);
-    const clock = `${dte.getUTCFullYear()}–${MONTH[dte.getUTCMonth()]}–${String(dte.getUTCDate()).padStart(2, "0")}  ${String(dte.getUTCHours()).padStart(2, "0")}:${String(dte.getUTCMinutes()).padStart(2, "0")}`;
-
     // Solar system update
     for (const key in this.nodes) {
       const nd = this.nodes[key],
@@ -2021,8 +2019,8 @@ export class CosmosEngine {
       if (mo.tidal) mo.nd.mesh.rotation.y = a;
       this.liveDist[mo.n] = this.liveDist[mo.nd.body.key];
     }
-    if (this.beltAst.visible) this.updateBelt(this.beltAst);
-    if (this.beltKbo.visible) this.updateBelt(this.beltKbo);
+    if (!this.paused && this.beltAst.visible) this.updateBelt(this.beltAst);
+    if (!this.paused && this.beltKbo.visible) this.updateBelt(this.beltKbo);
 
     // Comets
     if (this.cometGroup.visible) {
@@ -2050,7 +2048,7 @@ export class CosmosEngine {
           sp.scale.setScalar((2.4 - s * 1.7) * (0.7 + f));
           sp.material.opacity = Math.min(0.5, (0.55 - s * 0.38) * (0.3 + f));
         }
-        const idir = this._d.clone().applyAxisAngle(this._q, -0.12);
+        const idir = this._idir.copy(this._d).applyAxisAngle(this._q, -0.12);
         for (let k = 0; k < cm.ion.length; k++) {
           const s = (k + 1) / cm.ion.length,
             sp = cm.ion[k];
@@ -2252,6 +2250,8 @@ export class CosmosEngine {
       this.scene.updateMatrixWorld();
       this.camera.updateMatrixWorld();
       this.camera.matrixWorldInverse.copy(this.camera.matrixWorld).invert();
+      const iw = innerWidth;
+      const ih = innerHeight;
       for (const L of this.labelEls) {
         this._p.setFromMatrixPosition(L.obj.matrixWorld);
         // Offset along the camera's screen-up axis (NOT world +Y). In free-fly
@@ -2287,8 +2287,8 @@ export class CosmosEngine {
           L._on = on;
         }
         if (on) {
-          const x = (this._p.x * 0.5 + 0.5) * innerWidth;
-          const y = (-0.5 * this._p.y + 0.5) * innerHeight;
+          const x = (this._p.x * 0.5 + 0.5) * iw;
+          const y = (-0.5 * this._p.y + 0.5) * ih;
           if (x !== L._x || y !== L._y) {
             L.el.style.transform = `translate3d(${x}px,${y}px,0) translate(-50%,-140%)`;
             L._x = x;
@@ -2305,6 +2305,8 @@ export class CosmosEngine {
     this.fpsT += dt;
     if (this.fpsT >= 0.5) {
       const fps = this.fpsN / this.fpsT;
+      const dte = new Date(EPOCH + this.simT * 86400000);
+      const clock = `${dte.getUTCFullYear()}–${MONTH[dte.getUTCMonth()]}–${String(dte.getUTCDate()).padStart(2, "0")}  ${String(dte.getUTCHours()).padStart(2, "0")}:${String(dte.getUTCMinutes()).padStart(2, "0")}`;
       if (this.ADAPTIVE_DPR) {
         if (this.dprCool > 0) this.dprCool--;
         else if (fps < 45 && this.dprScale > 0.55) {
