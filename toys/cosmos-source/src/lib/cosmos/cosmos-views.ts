@@ -29,6 +29,7 @@ import {
   MILKY_WAY_BAR,
   MILKY_WAY_SUN_POS,
 } from "./universe-data";
+import { GLOBULAR_CLUSTERS } from "./globular-real";
 import {
   galaxySpriteTex,
   cmbTex,
@@ -1057,6 +1058,140 @@ export function buildMilkyWayGalaxy(): THREE.Group {
     grp,
     3.5,
   );
+
+  // P0-3: globular-cluster halo — ~150 real clusters (Harris catalog, VizieR VII/202) rendered as a
+  // single additive Points cloud (spherical halo, radius follows the catalog's galactocentric Rgc). A
+  // curated subset of famous clusters is also made clickable (sprite + dossier) carrying the Shapley
+  // 1918 science hook: the GC spatial distribution showed the Sun is ~8 kpc from the Galactic centre.
+  {
+    const tmp = new THREE.Vector3();
+    // full halo as one Points cloud (1 draw call)
+    const hp: number[] = [];
+    const hc: number[] = [];
+    for (const g of GLOBULAR_CLUSTERS) {
+      tmp.copy(galacticDir(g.l, g.b)).multiplyScalar(g.d);
+      hp.push(tmp.x, tmp.y, tmp.z);
+      const b = 0.7 + Math.random() * 0.3; // old Population II — warm white, slight jitter
+      hc.push(1.0 * b, 0.95 * b, 0.8 * b);
+    }
+    const haloGeo = new THREE.BufferGeometry();
+    haloGeo.setAttribute("position", new THREE.Float32BufferAttribute(hp, 3));
+    haloGeo.setAttribute("color", new THREE.Float32BufferAttribute(hc, 3));
+    grp.add(
+      new THREE.Points(
+        haloGeo,
+        new THREE.PointsMaterial({
+          size: 0.9,
+          sizeAttenuation: true,
+          map: glowTex([255, 240, 210]),
+          vertexColors: true,
+          transparent: true,
+          opacity: 0.9,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        }),
+      ),
+    );
+
+    // clickable famous clusters (matched by NGC id present in the catalog name)
+    const NOTABLE: Record<
+      string,
+      { cn: string; note: string; rows: [string, string][] }
+    > = {
+      "5139": {
+        cn: "半人马座 ω（Omega Centauri）",
+        note: "银河系最大球状星团，约 400 万颗恒星，可能是被吞并矮星系的残核。",
+        rows: [
+          ["类型", "最大球状星团"],
+          ["恒星数", "≈ 400 万"],
+          ["距银心", "≈ 5.2 kpc"],
+        ],
+      },
+      "104": {
+        cn: "杜鹃座 47（47 Tucanae）",
+        note: "南天最亮球状星团之一，核心致密。",
+        rows: [
+          ["类型", "球状星团"],
+          ["距银心", "≈ 7.4 kpc"],
+        ],
+      },
+      "6205": {
+        cn: "武仙座 M13",
+        note: "北天最著名球状星团，约 30 万颗恒星。",
+        rows: [
+          ["类型", "球状星团"],
+          ["恒星数", "≈ 30 万"],
+        ],
+      },
+      "6656": {
+        cn: "人马座 M22",
+        note: "结构复杂，含行星状星云与黑洞候选。",
+        rows: [["类型", "球状星团"]],
+      },
+      "5904": {
+        cn: "巨蛇座 M5",
+        note: "老而富金属球状星团，约 10 万颗恒星。",
+        rows: [["类型", "球状星团"]],
+      },
+      "5272": {
+        cn: "猎犬座 M3",
+        note: "北天最大球状星团之一，约 50 万颗恒星。",
+        rows: [["类型", "球状星团"]],
+      },
+      "7078": {
+        cn: "飞马座 M15",
+        note: "核心坍缩球状星团，含中等质量黑洞候选。",
+        rows: [["类型", "球状星团"]],
+      },
+      "7089": {
+        cn: "宝瓶座 M2",
+        note: "致密、富金属球状星团。",
+        rows: [["类型", "球状星团"]],
+      },
+      "6397": {
+        cn: "天坛座 NGC 6397",
+        note: "距太阳最近的球状星团之一（≈ 7.8 kpc）。",
+        rows: [
+          ["类型", "球状星团"],
+          ["距太阳", "≈ 7.8 kpc"],
+        ],
+      },
+      "6752": {
+        cn: "孔雀座 NGC 6752",
+        note: "南天明亮球状星团，含行星系白矮星。",
+        rows: [["类型", "球状星团"]],
+      },
+    };
+    for (const g of GLOBULAR_CLUSTERS) {
+      let key: string | null = null;
+      for (const k in NOTABLE)
+        if (g.n.includes(k)) {
+          key = k;
+          break;
+        }
+      if (!key) continue;
+      const info = NOTABLE[key];
+      const p = new THREE.Vector3()
+        .copy(galacticDir(g.l, g.b))
+        .multiplyScalar(g.d);
+      const sp = glowSprite(glowTex([255, 240, 210]), 0xfff0d2, 2.4, 0.95);
+      sp.position.copy(p);
+      grp.add(sp);
+      tag(
+        sp,
+        info.cn,
+        g.n,
+        info.note +
+          " 球状星团由老年恒星（Population II）组成；1918 年沙普利通过它们的空间分布首次证明太阳并不在银河系中心，而是距银心约 8.2 kpc。",
+        info.rows,
+        0xfff0d2,
+        2.4,
+        specs,
+        grp,
+        3,
+      );
+    }
+  }
 
   // Magellanic Clouds — the Milky Way's largest satellite galaxies. LMC uses a real photo; SMC is
   // rendered as a small irregular dwarf. Both sit just beyond the disk edge.
