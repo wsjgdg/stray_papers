@@ -407,12 +407,12 @@ export function galaxySpriteTex(type: string, c1: number[], c2: number[]): THREE
       const rr = Math.pow(Math.random(), 1.8) * C * 0.92; // concentration toward the core
       const x = C + Math.cos(a) * rr, y = C + Math.sin(a) * rr;
       const rad = 2 + (1 - rr / (C * 0.92)) * 7 + Math.random() * 3;
-      blob(g, x, y, rad, Math.random() < 0.5 ? c1 : c2, 0.16 + (1 - rr / C) * 0.28);
+      blob(g, x, y, rad, Math.random() < 0.5 ? c1 : c2, 0.24 + (1 - rr / C) * 0.42);
     }
     for (let i = 0; i < 6; i++) {
       const x = C + (Math.random() - 0.5) * 46, y = C + (Math.random() - 0.5) * 46;
-      blob(g, x, y, 10 + Math.random() * 9, c1, 0.5);
-      blob(g, x, y, 4, [255, 245, 225], 0.6);
+      blob(g, x, y, 10 + Math.random() * 9, c1, 0.62);
+      blob(g, x, y, 4, [255, 245, 225], 0.7);
     }
     for (let i = 0; i < 40; i++) {
       const a = Math.random() * Math.PI * 2, rr = Math.pow(Math.random(), 0.5) * C * 0.9;

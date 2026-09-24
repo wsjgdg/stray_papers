@@ -18,7 +18,7 @@
 import * as THREE from 'three';
 import {
   NEARBY_STARS, LOCAL_GROUP, NEARBY_GALAXIES, VIRGO_CLUSTER, FAMOUS_GALAXIES,
-  SUPERCLUSTERS, COSMIC_FILAMENTS, QUASARS, MILKY_WAY_ARMS, MILKY_WAY_BAR,
+  SUPERCLUSTERS, COSMIC_FILAMENTS, QUASARS, MILKY_WAY_ARMS,
   MILKY_WAY_SUN_POS,
 } from './universe-data';
 import { galaxySpriteTex, cmbTex, glowTex, nebulaTex, flareTex, starCoreTex, REAL_BODY_IMAGES } from './textures';
@@ -133,8 +133,8 @@ function realGalaxyPlane(url: string, radius: number): THREE.Mesh {
     new THREE.PlaneGeometry(radius * 2, radius * 2),
     new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide }),
   );
-  mesh.renderOrder = -3; // draw behind the procedural arms / bulge
-  mesh.rotation.z = -0.35; // gentle tilt to echo the bar orientation
+  mesh.renderOrder = -3; // draw behind the bulge / accents
+  mesh.rotation.z = 0; // face-on; the photo itself is the disk now
   const img = new Image();
   img.onload = () => {
     const W = img.naturalWidth, H = img.naturalHeight;
@@ -386,92 +386,51 @@ export function buildMilkyWayGalaxy(): THREE.Group {
     '英仙臂': 0x8fb8ff, '人马臂': 0xffd9a0, '盾牌-半人马臂': 0xbfe0ff, '矩尺臂': 0xffc0d0,
     'Perseus': 0x8fb8ff, 'Sagittarius': 0xffd9a0, 'Scutum-Centaurus': 0xbfe0ff, 'Norma': 0xffc0d0,
   };
-  const addMat = (color: THREE.ColorRepresentation, opacity: number) =>
-    new THREE.MeshBasicMaterial({ color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false });
-
-  for (const arm of MILKY_WAY_ARMS) {
-    if (arm.points.length < 2) continue;
-    const pts = arm.points.map((p) => new THREE.Vector3(p[0], p[1], p[2]));
-    const col = new THREE.Color(armColors[arm.n] ?? 0xaaccff);
-    const curve = new THREE.CatmullRomCurve3(pts);
-    const seg = Math.max(16, pts.length * 4);
-
-    // Arm as a glowing tube with real width + a brighter inner strand (kept subtle so the
-    // real M83 disk photo reads as the primary body).
-    grp.add(new THREE.Mesh(new THREE.TubeGeometry(curve, seg, 0.55, 8, false), addMat(col, 0.16)));
-    grp.add(new THREE.Mesh(new THREE.TubeGeometry(curve, seg, 0.22, 6, false), addMat(0xffffff, 0.12)));
-
-    // Dense, brightness-varied star field hugging the arm.
+  // The real M83 photo (diskPlane, above) is now the galaxy's single coherent body. We no longer
+  // draw a competing procedural spiral — instead we lay down a uniform disk star field plus a few
+  // HII regions / blue supergiant knots as cosmetic accents (not tied to a specific spiral), so the
+  // photo and the model read as one disk instead of two galaxies at different angles.
+  {
+    const N = 4200;
     const sp: number[] = [], cl: number[] = [];
-    for (const p of arm.points) {
-      for (let k = 0; k < 18; k++) {
-        sp.push(
-          p[0] + (Math.random() - 0.5) * 1.4,
-          p[1] + (Math.random() - 0.5) * 0.4,
-          p[2] + (Math.random() - 0.5) * 1.4,
-        );
-        const t = STAR_PALETTE[(Math.random() * STAR_PALETTE.length) | 0];
-        const b = 0.5 + Math.random() * 0.5;
-        cl.push(t[0] * b, t[1] * b, t[2] * b);
-      }
+    for (let i = 0; i < N; i++) {
+      const r = diskExt * 1.25 * Math.sqrt(Math.random()); // area-uniform disk
+      const a = Math.random() * Math.PI * 2;
+      sp.push(Math.cos(a) * r, Math.sin(a) * r, (Math.random() - 0.5) * 1.2);
+      const t = STAR_PALETTE[(Math.random() * STAR_PALETTE.length) | 0];
+      const b = 0.45 + Math.random() * 0.55;
+      cl.push(t[0] * b, t[1] * b, t[2] * b);
     }
     const starGeo = new THREE.BufferGeometry();
     starGeo.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
     starGeo.setAttribute('color', new THREE.Float32BufferAttribute(cl, 3));
     grp.add(new THREE.Points(starGeo, new THREE.PointsMaterial({
-      size: 0.22, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: 0.95, depthWrite: false,
+      size: 0.5, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: 0.8, depthWrite: false,
     })));
-
-    // Emission nebulae (HII regions) scattered along the arm for detail.
-    const nNeb = Math.max(4, (arm.points.length / 3) | 0);
-    for (let k = 0; k < nNeb; k++) {
-      const p = arm.points[(Math.random() * arm.points.length) | 0];
-      const neb = glowSprite(glowTex([255, 120, 150]), 0xff6f9a, 1.4 + Math.random() * 2.2, 0.26);
-      neb.position.set(
-        p[0] + (Math.random() - 0.5) * 1.6,
-        p[1] + (Math.random() - 0.5) * 0.4,
-        p[2] + (Math.random() - 0.5) * 1.6,
-      );
-      grp.add(neb);
-    }
-
-    // Dust lane: a dark absorbing ribbon carved down the centre of each bright arm.
-    // Reuses the arm curve, so it always overlays the additive glow; NormalBlending
-    // with a dark colour darkens the light underneath to read as obscuring dust.
-    const dustMat = new THREE.MeshBasicMaterial({
-      color: 0x140d07, transparent: true, opacity: 0.14,
-      blending: THREE.NormalBlending, depthWrite: false,
-    });
-    const dustMesh = new THREE.Mesh(new THREE.TubeGeometry(curve, seg, 0.2, 6, false), dustMat);
-    dustMesh.renderOrder = 6; // draw after the additive arm so it sits on top
-    grp.add(dustMesh);
-
-    // Blue supergiant knots — the hot, young stars that trace the arms' star-forming fronts.
-    for (let k = 0; k < 10; k++) {
-      const p = arm.points[(Math.random() * arm.points.length) | 0];
-      const sg = glowSprite(glowTex([150, 190, 255]), 0x9fc4ff, 0.7 + Math.random() * 0.7, 0.5);
-      sg.position.set(
-        p[0] + (Math.random() - 0.5) * 1.0,
-        p[1] + (Math.random() - 0.5) * 0.3,
-        p[2] + (Math.random() - 0.5) * 1.0,
-      );
-      grp.add(sg);
-    }
-
-    // Arm tip label.
-    const tip = pts[pts.length - 1];
+  }
+  for (let k = 0; k < 64; k++) {
+    const r = diskExt * 1.2 * Math.sqrt(Math.random());
+    const a = Math.random() * Math.PI * 2;
+    const neb = glowSprite(glowTex([255, 120, 150]), 0xff6f9a, 1.0 + Math.random() * 1.8, 0.22);
+    neb.position.set(Math.cos(a) * r, Math.sin(a) * r, (Math.random() - 0.5) * 1.0);
+    grp.add(neb);
+  }
+  for (let k = 0; k < 54; k++) {
+    const r = diskExt * 1.2 * Math.sqrt(Math.random());
+    const a = Math.random() * Math.PI * 2;
+    const sg = glowSprite(glowTex([150, 190, 255]), 0x9fc4ff, 0.6 + Math.random() * 0.7, 0.5);
+    sg.position.set(Math.cos(a) * r, Math.sin(a) * r, (Math.random() - 0.5) * 1.0);
+    grp.add(sg);
+  }
+  // Named-arm markers — keep the four spiral arms referenced as labelled regions on the real disk.
+  for (const arm of MILKY_WAY_ARMS) {
+    if (arm.points.length < 2) continue;
+    const tip = arm.points[arm.points.length - 1];
     const anchor = new THREE.Object3D();
-    anchor.position.copy(tip);
+    anchor.position.set(tip[0], tip[1], tip[2]);
     grp.add(anchor);
     specs.push({ obj: anchor, n: arm.n, en: arm.n, note: '银河系旋臂',
       up: 0, kind: 'cosmos-dim', c: armColors[arm.n] ?? 0xaaccff });
-  }
-
-  // Central bar as a glowing flattened tube through the bar points.
-  if (MILKY_WAY_BAR.length >= 2) {
-    const bpts = MILKY_WAY_BAR.map((p) => new THREE.Vector3(p[0], p[1], p[2]));
-    const bcurve = new THREE.CatmullRomCurve3(bpts);
-    grp.add(new THREE.Mesh(new THREE.TubeGeometry(bcurve, 16, 0.7, 8, false), addMat(0xffe9bd, 0.55)));
   }
 
   // Bulge: a 3D ellipsoidal glow + bright nucleus halo + clickable core sprite.
@@ -615,22 +574,24 @@ export function buildSuperclusters(): THREE.Group {
   for (const s of SUPERCLUSTERS) {
     const p = galacticDir(s.l, s.b, _v.clone()).multiplyScalar(compress(s.distMpc));
     const size = Math.max(2, Math.cbrt(s.spanMpc) * 2.2);
-    // Core node + faint glowing halo
-    const tex = galaxySpriteTex('cluster', [255, 230, 200], [200, 220, 255]);
-    const sp = sprite(tex, 0xffd9a0, size, 0.5);
-    sp.position.copy(p);
-    grp.add(sp);
-    const halo = glowSprite(glowTex([255, 220, 180]), 0xffd9a0, size * 2.4, 0.18);
+    // Core node — the textured cluster (galaxySpriteTex 'cluster') is the focal point. Draw the
+    // halo FIRST so the node sprite composites on top instead of being washed out by the glow.
+    const halo = glowSprite(glowTex([255, 220, 180]), 0xffd9a0, size * 2.4, 0.16);
     halo.position.copy(p);
     grp.add(halo);
-    // Member galaxies: a little cluster of tiny spirals/ellipticals around the node
-    const members = 14 + ((Math.random() * 10) | 0);
+    const tex = galaxySpriteTex('cluster', [255, 230, 200], [200, 220, 255]);
+    const sp = sprite(tex, 0xffd9a0, size, 0.9);
+    sp.position.copy(p);
+    grp.add(sp);
+    // A few member galaxies scattered around the node for context (kept sparse so the core
+    // texture stays the focus).
+    const members = 8 + ((Math.random() * 6) | 0);
     for (let i = 0; i < members; i++) {
       const off = new THREE.Vector3(
         Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5,
-      ).multiplyScalar(size * 1.8);
+      ).multiplyScalar(size * 1.6);
       const mt = nebulaTex(Math.random() > 0.5 ? 'galaxy' : 'cluster', [255, 230, 200], [200, 220, 255]);
-      const m = sprite(mt, 0xffd9a0, Math.max(0.8, size * 0.2), 0.6);
+      const m = sprite(mt, 0xffd9a0, Math.max(0.7, size * 0.18), 0.55);
       m.position.copy(p).add(off);
       grp.add(m);
     }
