@@ -116,19 +116,33 @@ function glowSprite(
  *              (used for additive glow sprites whose map is tinted, not just `color`).
  *  - `uColor` → shader material (e.g. Earth's Rayleigh rim) whose `uniforms.uColor` holds the
  *              original sRGB triple and must be rewritten to neutral grey when off.
- * The engine reads `userData.cosmicBlue` to decide which materials participate.
+ * The "on" (blue) baseline is captured from the material's CURRENT state at call time, so the
+ * blue value is authored only once (on the material itself) and never duplicated here. The
+ * engine reads `userData.cosmicMarked` to decide which materials participate.
  */
 export function markBlue(
   mat: THREE.Material,
-  blue: number,
-  opts?: { glow?: boolean; uColor?: [number, number, number] },
+  opts?: { glow?: boolean; uColor?: boolean },
 ) {
-  mat.userData.cosmicBlue = blue;
+  mat.userData.cosmicMarked = true;
+  const c = (mat as unknown as { color?: THREE.Color }).color;
+  if (c instanceof THREE.Color) mat.userData.cosmicBlue = c.getHex();
   if (opts?.glow && mat instanceof THREE.SpriteMaterial) {
     mat.userData.cosmicGlow = true;
     mat.userData.blueTex = mat.map;
   }
-  if (opts?.uColor) mat.userData.cosmicUColor = opts.uColor;
+  if (
+    opts?.uColor &&
+    mat instanceof THREE.ShaderMaterial &&
+    mat.uniforms?.uColor
+  ) {
+    const v = mat.uniforms.uColor.value as THREE.Vector3;
+    mat.userData.cosmicUColor = [
+      Math.round(v.x * 255),
+      Math.round(v.y * 255),
+      Math.round(v.z * 255),
+    ] as [number, number, number];
+  }
 }
 
 /** Representative star-surface colours (sRGB 0..1) for field-star sprinkling. */
@@ -726,7 +740,7 @@ export function buildMilkyWayGalaxy(): THREE.Group {
     diskExt * 1.5,
     0.1,
   );
-  markBlue(disk.material, 0xbcd2ff, { glow: true });
+  markBlue(disk.material, { glow: true });
   grp.add(disk);
   // Faint extended halo / thick-disk glow so the galaxy has an outer presence.
   const halo = glowSprite(
@@ -735,7 +749,7 @@ export function buildMilkyWayGalaxy(): THREE.Group {
     diskExt * 2.5,
     0.045,
   );
-  markBlue(halo.material, 0xaec6ff, { glow: true });
+  markBlue(halo.material, { glow: true });
   grp.add(halo);
 
   // Real barred-spiral disk as the galaxy's MAIN body: M83, the closest Milky-Way analog we can
@@ -1242,7 +1256,7 @@ export function buildSuperclusters(): THREE.Group {
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
-    markBlue(filMat, 0x6f9fd0);
+    markBlue(filMat);
     grp.add(new THREE.Mesh(tube, filMat));
   }
 
@@ -1424,7 +1438,7 @@ export function buildObservableUniverse(): THREE.Group {
     opacity: 0.18,
     depthWrite: false,
   });
-  markBlue(ringMat, 0x5fd3ff);
+  markBlue(ringMat);
   grp.add(
     new THREE.LineLoop(
       new THREE.BufferGeometry().setFromPoints(ringPts),

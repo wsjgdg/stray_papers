@@ -522,8 +522,7 @@ export class CosmosEngine {
         ndHalo = halo;
         this.atmoHalos.push({ mesh: halo, body: b.n, tintColor: haloColor });
         // Earth's signature blue atmosphere glow — part of the "blue light" styling.
-        if (haloColor === 0x5fd3ff)
-          markBlue(halo.material, haloColor, { glow: true });
+        if (haloColor === 0x5fd3ff) markBlue(halo.material, { glow: true });
 
         // Rayleigh-scattering rim: a slightly-larger BackSide sphere with a Fresnel shader.
         // Glows at the limb, brighter on the day side — the classic "atmosphere edge".
@@ -543,8 +542,7 @@ export class CosmosEngine {
                       : ([110, 140, 230] as [number, number, number]); // Neptune
         const atmoMat = makeAtmosphereMaterial(atmoRGB);
         // Earth's Rayleigh-scattering rim is blue; neutralize it with the blue-light toggle.
-        if (b.n === "地球")
-          markBlue(atmoMat, 0x5fd3ff, { uColor: [95, 160, 255] });
+        if (b.n === "地球") markBlue(atmoMat, { uColor: true });
         const atmoMesh = new THREE.Mesh(this.sphereGeo, atmoMat);
         atmoMesh.scale.setScalar(rDisp * 1.06);
         atmoMesh.renderOrder = 3;
@@ -1098,7 +1096,7 @@ export class CosmosEngine {
         opacity: 0.55,
         depthTest: false,
       });
-      markBlue(conMat, 0x41628f);
+      markBlue(conMat);
       conGroup.add(
         new THREE.LineSegments(
           new THREE.BufferGeometry().setFromPoints(seg),
@@ -1145,7 +1143,7 @@ export class CosmosEngine {
     {
       const R = 2500;
       const eqRing = circleLine(R, 0, "xz", 0x8fa8c8, 0.3);
-      markBlue(eqRing.material as THREE.LineBasicMaterial, 0x8fa8c8);
+      markBlue(eqRing.material as THREE.LineBasicMaterial);
       this.skyRoot.add(eqRing);
       this.eclRingGrp = new THREE.Group();
       this.skyRoot.add(this.eclRingGrp);
@@ -1247,7 +1245,7 @@ export class CosmosEngine {
       );
     };
     const hzRing0 = circleLine(HZ, 0, "xz", 0x5fd3ff, 0.5);
-    markBlue(hzRing0.material as THREE.LineBasicMaterial, 0x5fd3ff);
+    markBlue(hzRing0.material as THREE.LineBasicMaterial);
     this.horizonUI.add(hzRing0);
     const hzRing30 = circleLine(
       HZ * Math.cos(30 * D2R),
@@ -1256,7 +1254,7 @@ export class CosmosEngine {
       0x3f6f9f,
       0.2,
     );
-    markBlue(hzRing30.material as THREE.LineBasicMaterial, 0x3f6f9f);
+    markBlue(hzRing30.material as THREE.LineBasicMaterial);
     this.horizonUI.add(hzRing30);
     const hzRing60 = circleLine(
       HZ * Math.cos(60 * D2R),
@@ -1265,13 +1263,13 @@ export class CosmosEngine {
       0x3f6f9f,
       0.2,
     );
-    markBlue(hzRing60.material as THREE.LineBasicMaterial, 0x3f6f9f);
+    markBlue(hzRing60.material as THREE.LineBasicMaterial);
     this.horizonUI.add(hzRing60);
     const hzRingXY = circleLine(HZ, 0, "xy", 0x3f6f9f, 0.28);
-    markBlue(hzRingXY.material as THREE.LineBasicMaterial, 0x3f6f9f);
+    markBlue(hzRingXY.material as THREE.LineBasicMaterial);
     this.horizonUI.add(hzRingXY);
     const hzRingYZ = circleLine(HZ, 0, "yz", 0x3f6f9f, 0.28);
-    markBlue(hzRingYZ.material as THREE.LineBasicMaterial, 0x3f6f9f);
+    markBlue(hzRingYZ.material as THREE.LineBasicMaterial);
     this.horizonUI.add(hzRingYZ);
     for (const [pos, txt] of [
       [[HZ, 0, 0], "北 N"],
@@ -1414,7 +1412,7 @@ export class CosmosEngine {
       }),
     );
     this.geg.scale.setScalar(300);
-    markBlue(this.geg.material, 0xffffff, { glow: true });
+    markBlue(this.geg.material, { glow: true });
     this.sysGroup.add(this.geg);
 
     // Earth shadow cones
@@ -2407,10 +2405,13 @@ export class CosmosEngine {
       if (!mat) return;
       const mats = Array.isArray(mat) ? mat : [mat];
       for (const m of mats) {
-        const blue = m.userData?.cosmicBlue as number | undefined;
-        if (blue === undefined) continue;
-        if ((m as THREE.Material & { color?: THREE.Color }).color) {
-          (m as THREE.Material & { color: THREE.Color }).color.setHex(
+        if (!m.userData?.cosmicMarked) continue;
+        const blue = m.userData.cosmicBlue as number | undefined;
+        if (
+          blue !== undefined &&
+          (m as unknown as { color?: THREE.Color }).color
+        ) {
+          (m as unknown as { color: THREE.Color }).color.setHex(
             this.blueLight ? blue : neutral,
           );
         }
