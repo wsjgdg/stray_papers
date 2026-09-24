@@ -62,6 +62,8 @@ export interface BodyData {
   note: string;
   rDisp?: number;
   isCosmos?: boolean;
+  isSky?: boolean;
+  isDeep?: boolean;
 }
 
 /** Round sprite helper — renders the texture's real shape & colour (NormalBlending, so
@@ -1446,37 +1448,81 @@ export function buildObservableUniverse(): THREE.Group {
     ),
   );
 
-  for (const q of QUASARS_REAL) {
+  // Merge all 227 quasars into ONE THREE.Points instead of 227 sprites + 227 invisible
+  // pick-ball meshes (~454 draw calls → 1). Per-quasar body data + local positions are
+  // stashed on the Points for picking (raycast index / screen-proximity fallback); tiny
+  // zero-geometry dummy anchors carry the existing DOM labels (0 extra draw calls).
+  const qN = QUASARS_REAL.length;
+  const qPos = new Float32Array(qN * 3);
+  const qCol = new Float32Array(qN * 3);
+  const qBodies: BodyData[] = [];
+  const qSpecs: LabelSpec[] = [];
+  const qGroup = new THREE.Group();
+  const qColor = new THREE.Color();
+  for (let i = 0; i < qN; i++) {
+    const q = QUASARS_REAL[i];
     const p = galacticDir(q.l, q.b, _v.clone()).multiplyScalar(
       R * 0.6 * (1 - 1 / (1 + q.z) + 0.2),
     );
-    // Build a fresh texture per quasar: galaxySpriteTex randomizes per call, so a
-    // texture created once outside the loop would make every quasar look identical.
-    const qTex = galaxySpriteTex(
-      "elliptical",
-      [255, 220, 160],
-      [255, 180, 120],
-    );
-    const sp = sprite(qTex, 0xffd9a0, 3.5, 0.95);
-    sp.position.copy(p);
-    grp.add(sp);
-    tag(
-      sp,
-      q.n,
-      q.en,
-      q.note,
-      [
+    qPos[i * 3] = p.x;
+    qPos[i * 3 + 1] = p.y;
+    qPos[i * 3 + 2] = p.z;
+    // Redshift tint: higher z → redder, so the cloud reads as a redshift map.
+    qColor.setHSL(0.11 - Math.min(0.11, q.z * 0.05), 0.85, 0.6);
+    qCol[i * 3] = qColor.r;
+    qCol[i * 3 + 1] = qColor.g;
+    qCol[i * 3 + 2] = qColor.b;
+    const body: BodyData = {
+      n: q.n,
+      en: q.en,
+      key: "cosmo_" + q.n,
+      kind: "cosmos",
+      c: 0xffd9a0,
+      rows: [
         ["类型", "类星体"],
         ["红移", "z=" + q.z],
         ["距离", fmtLy(q.distLy)],
       ],
-      0xffd9a0,
-      3.5,
-      specs,
-      grp,
-      6,
-    );
+      note: q.note,
+      isCosmos: true,
+    };
+    qBodies.push(body);
+    const d = new THREE.Object3D();
+    d.position.copy(p);
+    qGroup.add(d);
+    qSpecs.push({
+      obj: d,
+      n: q.n,
+      en: q.en,
+      note: q.note,
+      up: 3.5,
+      kind: "cosmos",
+      c: 0xffd9a0,
+      rows: body.rows,
+    });
   }
+  const qGeo = new THREE.BufferGeometry();
+  qGeo.setAttribute("position", new THREE.BufferAttribute(qPos, 3));
+  qGeo.setAttribute("color", new THREE.BufferAttribute(qCol, 3));
+  const qMat = new THREE.PointsMaterial({
+    size: 3.2,
+    sizeAttenuation: false,
+    map: glowTex([255, 220, 160]),
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.95,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+  const qPoints = new THREE.Points(qGeo, qMat);
+  qPoints.userData.isQuasarCloud = true;
+  qPoints.userData.quasarBodies = qBodies;
+  qPoints.userData.quasarPositions = qPos;
+  qPoints.renderOrder = -8;
+  qGroup.add(qPoints);
+  grp.add(qGroup);
+  specs.push(...qSpecs);
+  grp.userData.quasarCloud = qPoints;
 
   for (const g of FAMOUS_GALAXIES) {
     const p = galacticDir(g.l, g.b, _v.clone()).multiplyScalar(

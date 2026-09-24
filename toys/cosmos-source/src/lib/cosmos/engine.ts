@@ -1615,6 +1615,12 @@ export class CosmosEngine {
         this.cosmosPickables.push(o);
       }
     });
+    // Quasar cloud: a single THREE.Points carrying per-vertex bodies for picking.
+    const qc = grp.userData.quasarCloud as THREE.Points | undefined;
+    if (qc) {
+      this.pickables.push(qc);
+      this.cosmosPickables.push(qc);
+    }
   }
 
   /* ═════════ EVENTS ═════════ */
@@ -1818,6 +1824,9 @@ export class CosmosEngine {
       -(e.clientY / innerHeight) * 2 + 1,
     );
     this.ray.setFromCamera(this.ndc, this.camera);
+    // Quasar cloud is a single THREE.Points in pickables; give its raycast a world-space
+    // hit radius so clicks land on the merged point cloud (screen fallback covers near-misses).
+    this.ray.params.Points.threshold = 2.5;
     const hits = this.ray.intersectObjects(this.pickables, false);
     // Pick the first hit whose object (and ancestors) is actually visible on screen.
     // This prevents clicking invisible solar-system bodies while in a cosmic-scale view.
@@ -1844,8 +1853,34 @@ export class CosmosEngine {
     if (!hit) {
       let bestD2 = this.COSMIC_PICK_PX * this.COSMIC_PICK_PX;
       let bestObj: THREE.Object3D | null = null;
+      let bestIdx = -1;
+      let bestWorld: THREE.Vector3 | null = null;
       for (const o of this.pickables) {
         if (!this.effectivelyVisible(o)) continue;
+        if (o.userData?.isQuasarCloud) {
+          // Merged quasar cloud: test each vertex against the click in screen space.
+          const arr = o.userData.quasarPositions as Float32Array | undefined;
+          const bodies = o.userData.quasarBodies as BodyData[] | undefined;
+          if (!arr || !bodies) continue;
+          const m = o.matrixWorld;
+          for (let i = 0; i < bodies.length; i++) {
+            this._q
+              .set(arr[i * 3], arr[i * 3 + 1], arr[i * 3 + 2])
+              .applyMatrix4(m);
+            this._p.copy(this._q).project(this.camera);
+            if (this._p.z > 1) continue;
+            const sx = (this._p.x * 0.5 + 0.5) * innerWidth;
+            const sy = (-0.5 * this._p.y + 0.5) * innerHeight;
+            const d2 = (sx - e.clientX) ** 2 + (sy - e.clientY) ** 2;
+            if (d2 <= bestD2) {
+              bestD2 = d2;
+              bestObj = o;
+              bestIdx = i;
+              bestWorld = this._q.clone();
+            }
+          }
+          continue;
+        }
         const ub = (o.userData as any)?.body;
         if (!ub || (!ub.isCosmos && !ub.isDeep && !ub.isSky)) continue;
         this._p.setFromMatrixPosition(o.matrixWorld);
@@ -1857,11 +1892,29 @@ export class CosmosEngine {
         if (d2 <= bestD2) {
           bestD2 = d2;
           bestObj = o;
+          bestIdx = -1;
         }
       }
-      if (bestObj) hit = { object: bestObj } as unknown as THREE.Intersection;
+      if (bestObj) {
+        hit = {
+          object: bestObj,
+          index: bestIdx >= 0 ? bestIdx : undefined,
+          point: bestWorld ?? undefined,
+        } as unknown as THREE.Intersection;
+      }
     }
-    const b = hit ? hit.object.userData.body : null;
+    // Resolve the picked body, handling the merged quasar cloud (per-vertex body via index).
+    let b: BodyData | null = null;
+    if (hit) {
+      if (hit.object.userData?.isQuasarCloud && hit.index != null) {
+        b =
+          (hit.object.userData.quasarBodies as BodyData[] | undefined)?.[
+            hit.index
+          ] ?? null;
+      } else {
+        b = (hit.object.userData?.body as BodyData | undefined) ?? null;
+      }
+    }
     if (!b || !hit) {
       // Clicked empty space: release focus AND clear the dossier so the info panel
       // doesn't stay pinned to the last body.
@@ -1874,10 +1927,20 @@ export class CosmosEngine {
       // Clicked a galaxy / star / quasar in a cosmic-scale view → show dossier + focus it
       this.showInfo(b);
       this.cam.focus = hit.object;
-      const toDist = Math.max(3, (hit.object.scale.x || 1) * 2.5);
-      // Aim camera toward the object (target = object world position; cosmic groups
-      // may be rotated, so use world position rather than the local .position)
-      const objPos = hit.object.getWorldPosition(this._p);
+      const isCloud = !!hit.object.userData?.isQuasarCloud;
+      // For the merged quasar cloud, aim at the specific quasar's world position
+      // (looked up from its per-vertex positions); otherwise aim at the object origin.
+      let objPos: THREE.Vector3;
+      if (isCloud && hit.index != null) {
+        const qp = hit.object.userData.quasarPositions as Float32Array;
+        objPos = this._q
+          .set(qp[hit.index * 3], qp[hit.index * 3 + 1], qp[hit.index * 3 + 2])
+          .applyMatrix4(hit.object.matrixWorld)
+          .clone();
+      } else {
+        objPos = hit.object.getWorldPosition(this._p);
+      }
+      const toDist = Math.max(3, isCloud ? 9 : (hit.object.scale.x || 1) * 2.5);
       const camToObj = this._q.copy(objPos).sub(this.camera.position);
       const toTheta = Math.atan2(camToObj.x, camToObj.z);
       const toPhi = Math.max(
