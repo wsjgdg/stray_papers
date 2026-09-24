@@ -127,8 +127,13 @@ function applyRealPhoto(sp: THREE.Sprite, name: string, size: number): void {
  * photo, with a luminance→alpha cutout so the space background becomes transparent and the disk
  * composites over the procedural structure. Used for the Level-2 Milky Way body (a real barred
  * spiral such as M83, since we cannot photograph our own galaxy face-on from outside).
+ *
+ * `centerFrac` (optional) = [fx, fy] of the galaxy's nucleus as a fraction of the image
+ * (0=left/top, 1=right/bottom). When given, the mesh is shifted so that nucleus lands on the
+ * group origin — i.e. on the galactic-center marker. This keeps the bright core aligned with the
+ * Sgr A* bulge instead of drifting to wherever the photo's framing put it.
  */
-function realGalaxyPlane(url: string, radius: number): THREE.Mesh {
+function realGalaxyPlane(url: string, radius: number, centerFrac?: [number, number]): THREE.Mesh {
   const mesh = new THREE.Mesh(
     new THREE.PlaneGeometry(radius * 2, radius * 2),
     new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide }),
@@ -162,7 +167,16 @@ function realGalaxyPlane(url: string, radius: number): THREE.Mesh {
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = 4;
     const ar = w / h;
+    // Plane is a square (2r×2r); scale the short axis so the image keeps its aspect.
+    const halfW = ar >= 1 ? radius * ar : radius;
+    const halfH = ar >= 1 ? radius : radius / ar;
     if (ar >= 1) mesh.scale.set(ar, 1, 1); else mesh.scale.set(1, 1 / ar, 1);
+    // Align nucleus (centerFrac) to the group origin, so it sits on the galactic-center marker.
+    if (centerFrac) {
+      const nx = halfW * (2 * centerFrac[0] - 1);
+      const ny = halfH * (1 - 2 * centerFrac[1]); // image top (fy=0) → +y
+      mesh.position.set(-nx, -ny, 0);
+    }
     mesh.material.map = tex;
     (mesh.material as THREE.MeshBasicMaterial).needsUpdate = true;
   };
@@ -376,7 +390,9 @@ export function buildMilkyWayGalaxy(): THREE.Group {
   // Real barred-spiral disk as the galaxy's MAIN body: M83, the closest Milky-Way analog we can
   // show face-on (we cannot photograph our own galaxy from outside). It lies in the X-Y plane
   // (z=0) — the same plane the procedural arms use — so it aligns with the spiral structure.
-  const diskPlane = realGalaxyPlane('/cosmos/M83.jpg', diskExt * 1.5);
+  // M83 nucleus sits at image fraction (0.4602, 0.4631) — shift the plane so the bright core
+  // lands on the group origin where the Sgr A* bulge marker is placed.
+  const diskPlane = realGalaxyPlane('/cosmos/M83.jpg', diskExt * 1.5, [0.4602, 0.4631]);
   grp.add(diskPlane);
   const diskAnchor = new THREE.Object3D();
   diskAnchor.position.set(diskExt * 1.05, diskExt * 1.05, 0);

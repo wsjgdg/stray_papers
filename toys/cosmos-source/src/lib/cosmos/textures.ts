@@ -469,6 +469,8 @@ export const REAL_BODY_IMAGES: Record<string, string> = {
   'M51 / Whirlpool': '/cosmos/M51.jpg',
   'NGC 4565 / Needle': '/cosmos/NGC4565.jpg',
   'NGC 4038/4039 Antennae': '/cosmos/Antennae.jpg',
+  'SMC': '/cosmos/SMC.jpg',
+  'NGC 6822': '/cosmos/NGC6822.jpg',
 };
 
 /** Cosmic Microwave Background texture — realistic anisotropy map.

@@ -1107,6 +1107,10 @@ export class CosmosEngine {
       const camToObj = this._q.copy(objPos).sub(this.camera.position);
       const toTheta = Math.atan2(camToObj.x, camToObj.z);
       const toPhi = Math.max(0.08, Math.min(Math.PI - 0.08, Math.acos(THREE.MathUtils.clamp(camToObj.y / camToObj.length(), -1, 1))));
+      // Persist the focus distance so the post-flyTo per-frame lerp (dist → wantDist)
+      // doesn't drag the camera back out to the stale scale-default distance. This is
+      // what caused the "zoom in then snap back" on cosmic-scale bodies (e.g. L6).
+      this.cam.wantDist = toDist;
       this.startFlyTo(toTheta, toPhi, toDist);
       return;
     }
