@@ -395,6 +395,29 @@ export function galaxySpriteTex(type: string, c1: number[], c2: number[]): THREE
     blob(g, C, C, 40, c2, 0.2);
     for (let i = 0; i < 60; i++)
       blob(g, C + (Math.random() - 0.5) * 150, C + (Math.random() - 0.5) * 120, 4 + Math.random() * 10, c2, 0.12);
+  } else if (type === 'cluster') {
+    // Rich galaxy cluster: dense cD core + many member ellipticals concentrated toward the centre.
+    g.globalCompositeOperation = 'lighter';
+    const halo = g.createRadialGradient(C, C, 8, C, C, C * 0.95);
+    halo.addColorStop(0, `rgba(${c1[0]},${c1[1]},${c1[2]},0.07)`);
+    halo.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = halo; g.beginPath(); g.arc(C, C, C * 0.95, 0, 7); g.fill();
+    for (let i = 0; i < 100; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const rr = Math.pow(Math.random(), 1.8) * C * 0.92; // concentration toward the core
+      const x = C + Math.cos(a) * rr, y = C + Math.sin(a) * rr;
+      const rad = 2 + (1 - rr / (C * 0.92)) * 7 + Math.random() * 3;
+      blob(g, x, y, rad, Math.random() < 0.5 ? c1 : c2, 0.16 + (1 - rr / C) * 0.28);
+    }
+    for (let i = 0; i < 6; i++) {
+      const x = C + (Math.random() - 0.5) * 46, y = C + (Math.random() - 0.5) * 46;
+      blob(g, x, y, 10 + Math.random() * 9, c1, 0.5);
+      blob(g, x, y, 4, [255, 245, 225], 0.6);
+    }
+    for (let i = 0; i < 40; i++) {
+      const a = Math.random() * Math.PI * 2, rr = Math.pow(Math.random(), 0.5) * C * 0.9;
+      blob(g, C + Math.cos(a) * rr, C + Math.sin(a) * rr, 1.5 + Math.random() * 2, [170, 200, 255], 0.12);
+    }
   } else {
     // irregular (Magellanic-type)
     g.globalCompositeOperation = 'lighter';

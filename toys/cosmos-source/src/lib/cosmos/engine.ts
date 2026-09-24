@@ -554,12 +554,19 @@ export class CosmosEngine {
     }
     this.skyRoot.add(this.skyGroup);
 
-    // Milky Way band
-    const mw = new THREE.Mesh(new THREE.SphereGeometry(2400, 64, 32),
-      new THREE.MeshBasicMaterial({ map: milkyWayTex(), side: THREE.BackSide,
-        transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, opacity: 0.9 }));
+    // Milky Way band — real full-sky panorama (Stellarium / Mellinger composite, public-domain).
+    // Under AdditiveBlending the black sky adds nothing, so only the real galactic band glows.
+    // Falls back to the procedural milkyWayTex() if the asset fails to load.
+    // Placed in skyRoot (equatorial frame) so the band aligns with the equatorial star field.
+    const mwMat = new THREE.MeshBasicMaterial({ map: milkyWayTex(), side: THREE.BackSide,
+      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, opacity: 0.92 });
+    const mw = new THREE.Mesh(new THREE.SphereGeometry(2400, 64, 32), mwMat);
     mw.renderOrder = -20; mw.frustumCulled = false; mw.name = 'mw';
-    this.skyGroup.add(mw);
+    new THREE.TextureLoader().load('/cosmos/milkyway-pano.png',
+      (t) => { t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; mwMat.map = t; mwMat.needsUpdate = true; },
+      undefined,
+      () => { /* keep procedural fallback */ });
+    this.skyRoot.add(mw);
 
     // Background star points
     {

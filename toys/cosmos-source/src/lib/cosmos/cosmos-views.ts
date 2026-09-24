@@ -122,6 +122,54 @@ function applyRealPhoto(sp: THREE.Sprite, name: string, size: number): void {
   img.src = url;
 }
 
+/**
+ * Builds a textured PLANE (not a billboard) lying in the X-Y plane (z=0) from a real galaxy
+ * photo, with a luminance→alpha cutout so the space background becomes transparent and the disk
+ * composites over the procedural structure. Used for the Level-2 Milky Way body (a real barred
+ * spiral such as M83, since we cannot photograph our own galaxy face-on from outside).
+ */
+function realGalaxyPlane(url: string, radius: number): THREE.Mesh {
+  const mesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(radius * 2, radius * 2),
+    new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide }),
+  );
+  mesh.renderOrder = -3; // draw behind the procedural arms / bulge
+  mesh.rotation.z = -0.35; // gentle tilt to echo the bar orientation
+  const img = new Image();
+  img.onload = () => {
+    const W = img.naturalWidth, H = img.naturalHeight;
+    if (!W || !H) return;
+    const CAP = 2048;
+    const s = Math.min(1, CAP / Math.max(W, H));
+    const w = Math.max(1, Math.round(W * s));
+    const h = Math.max(1, Math.round(H * s));
+    const cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    const ctx = cv.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(img, 0, 0, w, h);
+    const id = ctx.getImageData(0, 0, w, h);
+    const d = id.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+      let a = (lum - 18) / 80;
+      a = a < 0 ? 0 : a > 1 ? 1 : a;
+      a = a * a * (3 - 2 * a); // smoothstep
+      d[i + 3] = (a * 255) | 0;
+    }
+    ctx.putImageData(id, 0, 0);
+    const tex = new THREE.CanvasTexture(cv);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 4;
+    const ar = w / h;
+    if (ar >= 1) mesh.scale.set(ar, 1, 1); else mesh.scale.set(1, 1 / ar, 1);
+    mesh.material.map = tex;
+    (mesh.material as THREE.MeshBasicMaterial).needsUpdate = true;
+  };
+  img.src = url;
+  return mesh;
+}
+
 // Shared star assets, built once (textures are stateless + tinted per-sprite via material.color).
 const STAR_CORE = starCoreTex();
 const STAR_FLARE = flareTex();
@@ -323,6 +371,17 @@ export function buildMilkyWayGalaxy(): THREE.Group {
   const halo = glowSprite(glowTex([150, 175, 235]), 0xaec6ff, diskExt * 2.5, 0.045);
   grp.add(halo);
 
+  // Real barred-spiral disk as the galaxy's MAIN body: M83, the closest Milky-Way analog we can
+  // show face-on (we cannot photograph our own galaxy from outside). It lies in the X-Y plane
+  // (z=0) — the same plane the procedural arms use — so it aligns with the spiral structure.
+  const diskPlane = realGalaxyPlane('/cosmos/M83.jpg', diskExt * 1.5);
+  grp.add(diskPlane);
+  const diskAnchor = new THREE.Object3D();
+  diskAnchor.position.set(diskExt * 1.05, diskExt * 1.05, 0);
+  grp.add(diskAnchor);
+  specs.push({ obj: diskAnchor, n: '银河系', en: 'MILKY WAY', note: '盘面以真实棒旋星系 M83 照片为底图——人类无法从外部正面拍摄银河系本身',
+    up: 0, kind: 'cosmos-dim', c: 0xdfe8ff });
+
   const armColors: Record<string, number> = {
     '英仙臂': 0x8fb8ff, '人马臂': 0xffd9a0, '盾牌-半人马臂': 0xbfe0ff, '矩尺臂': 0xffc0d0,
     'Perseus': 0x8fb8ff, 'Sagittarius': 0xffd9a0, 'Scutum-Centaurus': 0xbfe0ff, 'Norma': 0xffc0d0,
@@ -337,14 +396,15 @@ export function buildMilkyWayGalaxy(): THREE.Group {
     const curve = new THREE.CatmullRomCurve3(pts);
     const seg = Math.max(16, pts.length * 4);
 
-    // Arm as a glowing tube with real width + a brighter inner strand.
-    grp.add(new THREE.Mesh(new THREE.TubeGeometry(curve, seg, 0.55, 8, false), addMat(col, 0.4)));
-    grp.add(new THREE.Mesh(new THREE.TubeGeometry(curve, seg, 0.22, 6, false), addMat(0xffffff, 0.3)));
+    // Arm as a glowing tube with real width + a brighter inner strand (kept subtle so the
+    // real M83 disk photo reads as the primary body).
+    grp.add(new THREE.Mesh(new THREE.TubeGeometry(curve, seg, 0.55, 8, false), addMat(col, 0.16)));
+    grp.add(new THREE.Mesh(new THREE.TubeGeometry(curve, seg, 0.22, 6, false), addMat(0xffffff, 0.12)));
 
     // Dense, brightness-varied star field hugging the arm.
     const sp: number[] = [], cl: number[] = [];
     for (const p of arm.points) {
-      for (let k = 0; k < 34; k++) {
+      for (let k = 0; k < 18; k++) {
         sp.push(
           p[0] + (Math.random() - 0.5) * 1.4,
           p[1] + (Math.random() - 0.5) * 0.4,
@@ -379,7 +439,7 @@ export function buildMilkyWayGalaxy(): THREE.Group {
     // Reuses the arm curve, so it always overlays the additive glow; NormalBlending
     // with a dark colour darkens the light underneath to read as obscuring dust.
     const dustMat = new THREE.MeshBasicMaterial({
-      color: 0x140d07, transparent: true, opacity: 0.34,
+      color: 0x140d07, transparent: true, opacity: 0.14,
       blending: THREE.NormalBlending, depthWrite: false,
     });
     const dustMesh = new THREE.Mesh(new THREE.TubeGeometry(curve, seg, 0.2, 6, false), dustMat);
@@ -438,6 +498,23 @@ export function buildMilkyWayGalaxy(): THREE.Group {
   tag(sunMarker, '太阳', 'SUN', '猎户臂内侧 · 距银心 8.2 kpc',
     [['位置', '猎户臂内侧'], ['距银心', '8.2 kpc（≈ 26,700 光年）'],
      ['绕银心速度', '220 km/s'], ['绕银心一周', '约 2.25 亿年']], 0xff9d61, 1.6, specs, grp, 3.5);
+
+  // Magellanic Clouds — the Milky Way's largest satellite galaxies. LMC uses a real photo; SMC is
+  // rendered as a small irregular dwarf. Both sit just beyond the disk edge.
+  const lmcP = new THREE.Vector3(-diskExt * 1.5, -diskExt * 1.1, -3);
+  const lmc = sprite(galaxySpriteTex('irregular', [220, 210, 255], [180, 200, 255]), 0xcdd6ff, 5, 0.95);
+  lmc.position.copy(lmcP);
+  grp.add(lmc);
+  applyRealPhoto(lmc, 'LMC', 5);
+  tag(lmc, '大麦哲伦云', 'LMC', '银河系最大卫星星系 · 约 16 万光年外',
+    [['类型', '不规则矮星系'], ['距离', '约 16 万光年'], ['直径', '约 1.4 万光年'],
+     ['标志', '剑鱼座 30（蜘蛛星云）恒星形成区']], 0xcdd6ff, 5, specs, grp, 6);
+  const smcP = lmcP.clone().add(new THREE.Vector3(-7, 5, 1.5));
+  const smc = sprite(galaxySpriteTex('irregular', [210, 205, 250], [170, 190, 240]), 0xbcc6f0, 2.6, 0.9);
+  smc.position.copy(smcP);
+  grp.add(smc);
+  tag(smc, '小麦哲伦云', 'SMC', '银河系卫星星系 · 约 20 万光年外',
+    [['类型', '不规则矮星系'], ['距离', '约 20 万光年'], ['直径', '约 7,000 光年']], 0xbcc6f0, 2.6, specs, grp, 3.5);
 
   grp.userData.labelSpecs = specs;
   // mark for slow rotation
@@ -558,7 +635,8 @@ export function buildSuperclusters(): THREE.Group {
       grp.add(m);
     }
     tag(sp, s.n, s.en, s.note,
-      [['类型', '超星系团'], ['距离', fmtMpc(s.distMpc)], ['跨度', fmtMpc(s.spanMpc)]],
+      [['类型', '超星系团'], ['距离', fmtMpc(s.distMpc)], ['跨度', fmtMpc(s.spanMpc)],
+       ['成员星系', s.members ?? '—'], ['最亮成员', s.brightest ?? '—']],
       0xffd9a0, size * 0.6, specs, grp, Math.max(size * 2.2, 3.5));
   }
 

@@ -84,6 +84,10 @@ export interface SuperclusterData {
   b: number;
   /** Approximate longest span in Mpc */
   spanMpc: number;
+  /** Approximate member-galaxy count (educational estimate) */
+  members?: string;
+  /** Brightest / most massive member galaxy, where well established */
+  brightest?: string;
   note: string;
 }
 
@@ -1189,6 +1193,8 @@ export const SUPERCLUSTERS: SuperclusterData[] = [
     l: 0,
     b: 0,
     spanMpc: 160,
+    members: '约 10 万个',
+    brightest: 'M87（室女 A / NGC 4486）',
     note: '我们所在的超星系团,跨度约5.2亿光年,包含约10万个星系。',
   },
   {
@@ -1198,6 +1204,8 @@ export const SUPERCLUSTERS: SuperclusterData[] = [
     l: 290,
     b: 75,
     spanMpc: 33,
+    members: '约 1,300 个',
+    brightest: 'M87（NGC 4486）',
     note: '传统的本超星系团,现被认为是拉尼亚凯亚的一个分支。',
   },
   {
@@ -1207,6 +1215,8 @@ export const SUPERCLUSTERS: SuperclusterData[] = [
     l: 300,
     b: 20,
     spanMpc: 30,
+    members: '数千个',
+    brightest: 'NGC 4696（半人马 A 所在团）',
     note: '拉尼亚凯亚内的主要引力中心之一,含"巨引源"。',
   },
   {
@@ -1216,6 +1226,8 @@ export const SUPERCLUSTERS: SuperclusterData[] = [
     l: 135,
     b: -15,
     spanMpc: 50,
+    members: '约 1,000+ 个',
+    brightest: 'NGC 1275（英仙 A / 3C 84）',
     note: '与拉尼亚凯亚相邻的超星系团,英仙座星系团是其核心。',
   },
   {
@@ -1225,6 +1237,8 @@ export const SUPERCLUSTERS: SuperclusterData[] = [
     l: 335,
     b: -25,
     spanMpc: 30,
+    members: '约数百个',
+    brightest: '—',
     note: '南天邻近的超星系团,与长蛇-半人马有纤维结构相连。',
   },
   {
@@ -1234,6 +1248,8 @@ export const SUPERCLUSTERS: SuperclusterData[] = [
     l: 60,
     b: 85,
     spanMpc: 50,
+    members: '约 1,000+ 个',
+    brightest: 'NGC 4889 / NGC 4874',
     note: '含著名的后发座星系团,是研究大尺度结构的经典目标。',
   },
   {
@@ -1243,6 +1259,8 @@ export const SUPERCLUSTERS: SuperclusterData[] = [
     l: 311,
     b: 29,
     spanMpc: 100,
+    members: '数千个',
+    brightest: 'NGC 4696（Abell 3558 核心）',
     note: '本超星系团可能正在被其引力牵引,是宇宙中最致密结构之一。',
   },
   {
@@ -1252,6 +1270,8 @@ export const SUPERCLUSTERS: SuperclusterData[] = [
     l: 247,
     b: -55,
     spanMpc: 500,
+    members: '约数百个',
+    brightest: '—',
     note: '已知最大的超星系团之一,横跨约17亿光年。',
   },
   {
@@ -1261,6 +1281,8 @@ export const SUPERCLUSTERS: SuperclusterData[] = [
     l: 0,
     b: 8,
     spanMpc: 50,
+    members: '约数百个',
+    brightest: '—',
     note: '其核心有蛇夫座星系团,发生过极端的星系团核爆发。',
   },
   {
@@ -1270,6 +1292,8 @@ export const SUPERCLUSTERS: SuperclusterData[] = [
     l: 20,
     b: 20,
     spanMpc: 600,
+    members: '数千个',
+    brightest: '—',
     note: '印度团队发现的巨型超星系团,跨度约6.5亿光年。',
   },
   {
@@ -1279,6 +1303,8 @@ export const SUPERCLUSTERS: SuperclusterData[] = [
     l: 180,
     b: 55,
     spanMpc: 420,
+    members: '数千星系',
+    brightest: '—',
     note: '斯隆数字巡天发现的宇宙大尺度结构,长约13.7亿光年。',
   },
   {
@@ -1288,6 +1314,8 @@ export const SUPERCLUSTERS: SuperclusterData[] = [
     l: 30,
     b: 45,
     spanMpc: 100,
+    members: '约数百个',
+    brightest: 'NGC 6041 / NGC 6051',
     note: '武仙座方向的大型超星系团,包含A2147、A2151、A2152星系团。',
   },
 ];
