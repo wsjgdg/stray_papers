@@ -2785,15 +2785,47 @@ export class CosmosEngine {
     this.horizonUI.visible = this.horizonMode && level === 0;
     this.activateCosmosLabels(level);
     this.labelHost.style.display = this.show.lab ? "" : "none";
+    // Reclaim GPU memory: keep only the active level ±1 cached, dispose the rest so
+    // long sessions don't accumulate all six levels' photos + survey cloud permanently.
+    for (let i = 1; i < this.cosmosViews.length; i++) {
+      if (i === level) continue;
+      if (this.cosmosViewsBuilt[i] && Math.abs(i - level) > 1)
+        this.disposeCosmosView(i);
+    }
   }
-  /** Dispose a material and any textures it references. */
+  /** Dispose a material and any textures it references. The engine-cached neutral
+   *  glow texture is shared across levels, so it is never disposed here. */
   private disposeMaterial(m: THREE.Material) {
     const anyMat = m as any;
     for (const key in anyMat) {
       const val = anyMat[key];
-      if (val && val.isTexture) val.dispose();
+      if (val && val.isTexture && val !== this.neutralGlowTex) val.dispose();
     }
     m.dispose();
+  }
+
+  /** Reclaim GPU resources of a built cosmic-view level and reset it to an empty
+   *  placeholder so it can be lazily rebuilt on next visit. Keeps resident memory
+   *  bounded to the active level ±1 instead of caching all six levels forever.
+   *  (DOM labels/pickables are owned by `activateCosmosLabels`, which already
+   *  rebuilds them for the active level, so we never touch them here.) */
+  private disposeCosmosView(level: number) {
+    if (level < 1 || level >= this.cosmosViews.length) return;
+    if (!this.cosmosViewsBuilt[level]) return;
+    const grp = this.cosmosViews[level];
+    grp.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (mesh.geometry) mesh.geometry.dispose();
+      const mat = mesh.material as
+        THREE.Material | THREE.Material[] | undefined;
+      if (Array.isArray(mat)) mat.forEach((m) => this.disposeMaterial(m));
+      else if (mat) this.disposeMaterial(mat);
+    });
+    if (grp.parent) grp.parent.remove(grp);
+    this.cosmosViews[level] = new THREE.Group();
+    this.cosmosViews[level].visible = false;
+    this.cosmosRoot.add(this.cosmosViews[level]);
+    this.cosmosViewsBuilt[level] = false;
   }
 
   dispose() {
