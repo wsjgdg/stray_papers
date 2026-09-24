@@ -682,7 +682,16 @@ export function buildObservableUniverse(): THREE.Group {
   cmb.renderOrder = -10;
   new THREE.TextureLoader().load(
     '/cosmos/cmb-planck.jpg',
-    (t) => { t.colorSpace = THREE.SRGBColorSpace; cmbMat.map = t; cmbMat.needsUpdate = true; },
+    (t) => {
+      t.colorSpace = THREE.SRGBColorSpace;
+      // Real Planck CMB (ESA/Planck Collaboration via NASA/IPAC Planck Data
+      // Center, public domain): equirectangular galactic-coordinates map.
+      // It is an inside-projection sky map, but SphereGeometry+BackSide mirrors
+      // textures, so flip horizontally to restore true sky orientation.
+      t.wrapS = THREE.RepeatWrapping;
+      t.repeat.x = -1;
+      cmbMat.map = t; cmbMat.needsUpdate = true;
+    },
     undefined,
     () => { /* keep procedural CMB */ },
   );
