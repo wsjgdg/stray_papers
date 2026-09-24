@@ -18,7 +18,7 @@
 import * as THREE from 'three';
 import {
   NEARBY_STARS, LOCAL_GROUP, NEARBY_GALAXIES, VIRGO_CLUSTER, FAMOUS_GALAXIES,
-  SUPERCLUSTERS, COSMIC_FILAMENTS, QUASARS, MILKY_WAY_ARMS,
+  SUPERCLUSTERS, COSMIC_FILAMENTS, QUASARS_REAL, MILKY_WAY_ARMS,
   MILKY_WAY_SUN_POS,
 } from './universe-data';
 import { galaxySpriteTex, cmbTex, glowTex, nebulaTex, flareTex, starCoreTex, REAL_BODY_IMAGES } from './textures';
@@ -672,14 +672,20 @@ export function buildObservableUniverse(): THREE.Group {
   const specs: LabelSpec[] = [];
 
   const R = 100;
-  const cmb = new THREE.Mesh(
-    new THREE.SphereGeometry(R, 64, 32),
-    new THREE.MeshBasicMaterial({
-      map: cmbTex(), side: THREE.BackSide,
-      transparent: true, opacity: 0.85, depthWrite: false,
-    }),
-  );
+  // Procedural CMB anisotropy map (dipole + acoustic peaks) as the immediate texture, then
+  // swap in the real Planck all-sky CMB photo when it loads; gracefully stays procedural if absent.
+  const cmbMat = new THREE.MeshBasicMaterial({
+    map: cmbTex(), side: THREE.BackSide,
+    transparent: true, opacity: 0.85, depthWrite: false,
+  });
+  const cmb = new THREE.Mesh(new THREE.SphereGeometry(R, 64, 32), cmbMat);
   cmb.renderOrder = -10;
+  new THREE.TextureLoader().load(
+    '/cosmos/cmb-planck.jpg',
+    (t) => { t.colorSpace = THREE.SRGBColorSpace; cmbMat.map = t; cmbMat.needsUpdate = true; },
+    undefined,
+    () => { /* keep procedural CMB */ },
+  );
   grp.add(cmb);
   // CMB label anchor
   const cmbAnchor = new THREE.Object3D();
@@ -722,7 +728,7 @@ export function buildObservableUniverse(): THREE.Group {
   grp.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(ringPts),
     new THREE.LineBasicMaterial({ color: 0x5fd3ff, transparent: true, opacity: 0.18, depthWrite: false })));
 
-  for (const q of QUASARS) {
+  for (const q of QUASARS_REAL) {
     const p = galacticDir(q.l, q.b, _v.clone()).multiplyScalar(R * 0.6 * (1 - 1 / (1 + q.z) + 0.2));
     // Build a fresh texture per quasar: galaxySpriteTex randomizes per call, so a
     // texture created once outside the loop would make every quasar look identical.

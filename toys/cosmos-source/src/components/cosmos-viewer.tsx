@@ -209,7 +209,6 @@ export default function CosmosViewer() {
         .tag.card{border:0;background:none;color:#6fb6d8;letter-spacing:.3em;font-size:11px;opacity:.85}
         .tag.con{font-size:10px;letter-spacing:.34em;color:#7f9dc4;border:0;background:none;opacity:.62}
         @keyframes cosmosWarp{0%{opacity:0}40%{opacity:.85}100%{opacity:0}}
-        @keyframes cosmosRing{0%{transform:scale(.4);opacity:0}35%{opacity:.6}100%{transform:scale(2.2);opacity:0}}
       `}</style>
 
       {/* Cosmic warp flash overlay — retriggers on every scale-level change */}
@@ -218,11 +217,6 @@ export default function CosmosViewer() {
           background: 'radial-gradient(circle at center, rgba(95,211,255,.35), rgba(245,166,35,.18) 40%, rgba(3,5,10,0) 70%)',
           animation: warpKey === 0 ? undefined : 'cosmosWarp 0.9s ease-out',
         }} />
-      {warpKey > 0 && (
-        <div key={`ring-${warpKey}`}
-          className="pointer-events-none absolute left-1/2 top-1/2 z-[5] -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full border-2 border-[#5fd3ff]"
-          style={{ animation: 'cosmosRing 0.9s ease-out' }} />
-      )}
 
       {/* Auto-tour caption overlay */}
       {state.tourActive && tourCaption && (
