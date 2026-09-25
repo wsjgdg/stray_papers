@@ -1663,11 +1663,15 @@ export function buildNearbyUniverse(): THREE.Group {
   const grp = new THREE.Group();
   grp.name = "cosmos-nearby";
   const specs: LabelSpec[] = [];
-  // Radial compression for nearby-universe distances. The original *8 factor pushed the
+  // Radial compression for nearby-universe distances. The early *8 factor pushed the
   // galaxy cloud out to radius ~70, far beyond the L4 camera distance (sceneScale=40), so the
-  // whole level rendered empty (only the central Milky Way sprite stayed in frustum). *2 keeps
-  // the cloud at radius ~6–17 — about 0.4× the view distance, matching the other cosmic levels.
-  const compress = (ly: number) => Math.cbrt(ly / 100000) * 2;
+  // whole level rendered empty (only the central Milky Way sprite stayed in frustum). A later
+  // cbrt(ly/100000)*2 kept the cloud at radius ~10–17, but because cbrt collapses the 13–63 Mly
+  // true range into only a ~1.7× radial band, every galaxy piled into one thin shell and looked
+  // crammed. We use a gentler √(ly/1e6)·4 mapping instead: it maps 13 Mly → ~14.5 and 63 Mly →
+  // ~32 (well inside the 40-unit view), so the cloud spreads across a ~2.2× radial band around
+  // the Milky Way with real depth instead of a flat shell.
+  const compress = (ly: number) => 4.0 * Math.sqrt(ly / 1_000_000);
 
   const mwTex = galaxySpriteTex("spiral", [220, 220, 255], [180, 200, 255]);
   const mw = sprite(mwTex, 0xdfe8ff, 4, 1);

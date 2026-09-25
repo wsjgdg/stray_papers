@@ -2498,9 +2498,23 @@ export class CosmosEngine {
     );
     this.cam.wantDist = toDist;
     this.showInfo(b);
-    // Launch a cinematic fly-to: aim at the body (object→origin direction from camera)
-    hit.object.getWorldPosition(this._p);
-    const camToObj = this._q.copy(this._p).sub(this.camera.position);
+    // Frame the body keeping the Sun in view. A collinear fly-on (camera placed on
+    // the origin→body axis) puts the entire inner system directly behind the camera
+    // — for far bodies like Haumea (43 AU) this read as "all bodies vanished".
+    // Instead place the camera on a vector perpendicular to the body's radial
+    // direction, so the Sun and neighbouring planets stay framed beside the focused
+    // body (a natural third-person view). `want` still tracks the body each frame,
+    // so it stays centred as it orbits.
+    const bodyPos = hit.object.getWorldPosition(this._p).clone();
+    const bodyDir = bodyPos.clone();
+    if (bodyDir.lengthSq() < 1e-9) bodyDir.set(0, 0, 1);
+    bodyDir.normalize();
+    const upRef =
+      Math.abs(bodyDir.y) > 0.9
+        ? new THREE.Vector3(1, 0, 0)
+        : new THREE.Vector3(0, 1, 0);
+    const perp = new THREE.Vector3().crossVectors(bodyDir, upRef).normalize();
+    const camToObj = this._q.copy(perp).multiplyScalar(toDist);
     const toTheta = Math.atan2(camToObj.x, camToObj.z);
     const toPhi = Math.max(
       0.08,
@@ -3344,6 +3358,20 @@ export class CosmosEngine {
     }
   }
   toggleLayer(key: string, on: boolean) {
+    // A body click can lock the camera onto that body (cam.focus), which then
+    // drags the view target onto a tiny/far object every frame (see the
+    // focus-follow block in the render loop). The user naturally reaches for the
+    // layer panel to "reset the view", but toggling a layer alone never released
+    // the lock — so the camera stayed stranded with no UI recovery. If a body is
+    // focused when a layer is toggled, release the lock and reframe to the current
+    // level overview. This directly fixes "click asteroid → everything vanishes,
+    // switching layers can't restore it".
+    if (this.cam.focus) {
+      this.cam.focus = null;
+      this.cam.want.set(0, 0, 0);
+      this.cam.wantDist = SCALE_LEVELS[this.scaleLevel].sceneScale;
+      this.flyTo.active = false;
+    }
     this.show[key as keyof typeof this.show] = on;
     if (key === "orb") {
       this.orbitGroupRoot.visible = on;
