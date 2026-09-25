@@ -332,6 +332,8 @@ export default function CosmosViewer() {
         .tag.sky{border-color:rgba(245,166,35,.35)}
         .tag.card{border:0;background:none;color:#6fb6d8;letter-spacing:.3em;font-size:11px;opacity:.85}
         .tag.con{font-size:10px;letter-spacing:.34em;color:#7f9dc4;border:0;background:none;opacity:.62}
+        .tag.chi{font-size:11px;letter-spacing:.16em;color:#ffcf6b;border-color:rgba(255,207,107,.4);background:rgba(20,14,4,.6)}
+        .tag.chi b{color:#ffcf6b}
         @keyframes cosmosWarp{0%{opacity:0}40%{opacity:.85}100%{opacity:0}}
       `}</style>
 
@@ -616,6 +618,18 @@ export default function CosmosViewer() {
           >
             <Layers className="w-3 h-3 mr-1" />
             旋臂示意
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className={`h-7 px-2.5 text-[11px] border border-[rgba(125,165,225,.18)] ${state.show.chi ? "!border-[#ffcf6b] !text-[#ffcf6b] !bg-[rgba(255,207,107,.12)]" : ""}`}
+            onClick={() =>
+              engineRef.current?.toggleLayer("chi", !state.show.chi)
+            }
+            title="显示 / 隐藏中国星官图层（三垣二十八宿 · 与西方星座并行的文化天图）"
+          >
+            <span className="mr-1 text-[13px] leading-none">星</span>
+            中国星官
           </Button>
         </div>
 

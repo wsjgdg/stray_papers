@@ -14,6 +14,7 @@ import {
   COMETS,
   MOONS,
   ASTEROIDS,
+  CHI_ASTERISMS,
   DEEP,
   CONS,
   STARS,
@@ -184,9 +185,12 @@ export class CosmosEngine {
   private nextMeteor = 2;
   private skyGroup = new THREE.Group();
   private starGroup = new THREE.Group();
+  // P2-2: Chinese asterism layer (三垣二十八宿)
+  private chiGroup = new THREE.Group();
+  private chiPickables: THREE.Object3D[] = [];
   private dsoGroup = new THREE.Group();
   private CONG!: THREE.Group;
-  private showGrp = { con: true, dso: true };
+  private showGrp = { con: true, dso: true, chi: false };
   private fermiGroup?: THREE.Object3D;
   private armsGroup?: THREE.Object3D;
   private sphereGeo!: THREE.SphereGeometry;
@@ -285,6 +289,7 @@ export class CosmosEngine {
     shadow: true,
     fermi: false,
     arms: false,
+    chi: false,
   };
 
   // Real-scale mode (honest proportions toggle)
@@ -1348,6 +1353,120 @@ export class CosmosEngine {
       conGroup.renderOrder = -8;
       this.skyRoot.add(conGroup);
       this.CONG = conGroup;
+    }
+
+    // P2-2: Chinese asterism layer (三垣二十八宿) — cultural sky map that
+    // overlays the Western constellations; same star positions, different lens.
+    {
+      const R = 2580;
+      const gp: number[] = [];
+      const seg: THREE.Vector3[] = [];
+      const CHI_COL = 0xffcf6b;
+      for (const a of CHI_ASTERISMS) {
+        const base = gp.length / 3;
+        for (const s of a.stars) {
+          const v = unitDir(s[0], s[1]).multiplyScalar(R);
+          gp.push(v.x, v.y, v.z);
+        }
+        if (a.lines) {
+          for (const [x, y] of a.lines) {
+            seg.push(
+              new THREE.Vector3(
+                gp[(base + x) * 3],
+                gp[(base + x) * 3 + 1],
+                gp[(base + x) * 3 + 2],
+              ),
+              new THREE.Vector3(
+                gp[(base + y) * 3],
+                gp[(base + y) * 3 + 1],
+                gp[(base + y) * 3 + 2],
+              ),
+            );
+          }
+        }
+        // centroid anchor (normalized → far shell) for label + pickable
+        let cx = 0,
+          cy = 0,
+          cz = 0;
+        for (const s of a.stars) {
+          const v = unitDir(s[0], s[1]);
+          cx += v.x;
+          cy += v.y;
+          cz += v.z;
+        }
+        const n = a.stars.length;
+        const anchor = new THREE.Object3D();
+        anchor.position
+          .set(cx / n, cy / n, cz / n)
+          .normalize()
+          .multiplyScalar(2720);
+        this.scene.add(anchor);
+        const el = document.createElement("div");
+        el.className = "tag chi";
+        el.textContent = a.n;
+        this.labelHost.appendChild(el);
+        this.labelEls.push({ el, obj: anchor, up: 0, min: 50, grp: "chi" });
+
+        const pick = new THREE.Mesh(
+          new THREE.SphereGeometry(0.9, 8, 6),
+          new THREE.MeshBasicMaterial({
+            transparent: true,
+            opacity: 0,
+            depthWrite: false,
+          }),
+        );
+        pick.position.copy(anchor.position);
+        pick.userData.body = {
+          n: a.n,
+          en: a.en,
+          key: "chi:" + a.n,
+          kind: "chi",
+          c: CHI_COL,
+          rows: [
+            ["类别", a.kind],
+            ["归属", a.group || "—"],
+            ["成员星", String(a.stars.length) + " 颗"],
+            [
+              "距星坐标 J2000",
+              fmtRA(a.stars[0][0]) + "  " + fmtDec(a.stars[0][1]),
+            ],
+          ] as [string, string, string?][],
+          note: a.note || "",
+        };
+        pick.userData.chiPick = true;
+        this.chiGroup.add(pick);
+        this.chiPickables.push(pick);
+      }
+      const pg = new THREE.BufferGeometry();
+      pg.setAttribute(
+        "position",
+        new THREE.BufferAttribute(new Float32Array(gp), 3),
+      );
+      const chiPts = new THREE.Points(
+        pg,
+        new THREE.PointsMaterial({
+          color: CHI_COL,
+          size: 3.2,
+          sizeAttenuation: false,
+          transparent: true,
+          opacity: 0.95,
+          depthWrite: false,
+        }),
+      );
+      const chiLineMat = new THREE.LineBasicMaterial({
+        color: CHI_COL,
+        transparent: true,
+        opacity: 0.6,
+        depthTest: false,
+      });
+      const chiLines = new THREE.LineSegments(
+        new THREE.BufferGeometry().setFromPoints(seg),
+        chiLineMat,
+      );
+      this.chiGroup.add(chiPts, chiLines);
+      this.chiGroup.renderOrder = -7;
+      this.chiGroup.visible = this.show.chi;
+      this.skyRoot.add(this.chiGroup);
     }
 
     // Celestial equator + ecliptic rings
@@ -3131,6 +3250,16 @@ export class CosmosEngine {
     }
     if (key === "fermi" && this.fermiGroup) this.fermiGroup.visible = on;
     if (key === "arms" && this.armsGroup) this.armsGroup.visible = on;
+    if (key === "chi") {
+      this.chiGroup.visible = on;
+      this.showGrp.chi = on;
+      if (on) {
+        for (const p of this.chiPickables)
+          if (!this.pickables.includes(p)) this.pickables.push(p);
+      } else {
+        this.pickables = this.pickables.filter((p) => !p.userData.chiPick);
+      }
+    }
   }
   setScaleLevel(level: number) {
     if (level === this.scaleLevel) return;
