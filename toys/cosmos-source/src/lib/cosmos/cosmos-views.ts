@@ -569,6 +569,22 @@ export function buildSolarNeighborhood(): THREE.Group {
     4.5,
   );
 
+  // Pre-compute anchor positions for the primaries of the famous multiple systems so
+  // companion / companion-of-companion lines render correctly regardless of array order
+  // (e.g. 比邻星 is listed before 南门二 A in the data yet needs 南门二 A's position).
+  const starWorldPos = (st: (typeof NEARBY_STARS)[number]): THREE.Vector3 => {
+    const d = new THREE.Vector3(
+      Math.cos(st.dec * D2R) * Math.cos((st.ra / 24) * Math.PI * 2),
+      Math.sin(st.dec * D2R),
+      -Math.cos(st.dec * D2R) * Math.sin((st.ra / 24) * Math.PI * 2),
+    );
+    return d.multiplyScalar(Math.max(0.2, st.distLy));
+  };
+  const anchorPos = new Map<string, THREE.Vector3>();
+  for (const st of NEARBY_STARS) {
+    if (st.n === "南门二 A" || st.n === "天狼星 A")
+      anchorPos.set(st.n, starWorldPos(st));
+  }
   for (const s of NEARBY_STARS) {
     const dir = new THREE.Vector3(
       Math.cos(s.dec * D2R) * Math.cos((s.ra / 24) * Math.PI * 2),
@@ -592,16 +608,106 @@ export function buildSolarNeighborhood(): THREE.Group {
       fl.position.copy(p);
       grp.add(fl);
     }
+
+    // ---- P4-2: structural annotations for a few famous nearby systems ----
+    const rows: [string, string][] = [
+      ["光谱型", s.sp],
+      ["距离", s.distLy.toFixed(2) + " 光年"],
+      ["视星等", s.mag.toFixed(2)],
+    ];
+    let note = `${s.sp}型恒星 · ${s.distLy.toFixed(2)} 光年`;
+    // Unit tangent to the celestial sphere at p (for separation / motion arrows)
+    const tang = (): THREE.Vector3 => {
+      const r = p.clone().normalize();
+      const up =
+        Math.abs(r.y) > 0.9
+          ? new THREE.Vector3(1, 0, 0)
+          : new THREE.Vector3(0, 1, 0);
+      return new THREE.Vector3().crossVectors(r, up).normalize();
+    };
+    if (s.n === "天狼星 B") {
+      // Separate the white dwarf from Sirius A so the binary reads, then connect them.
+      const off = tang().multiplyScalar(1.4);
+      const aPos = anchorPos.get("天狼星 A") ?? p.clone().sub(off);
+      p.copy(aPos).add(off);
+      core.position.copy(p);
+      if (anchorPos.get("天狼星 A")) {
+        grp.add(
+          new THREE.Line(
+            new THREE.BufferGeometry().setFromPoints([
+              anchorPos.get("天狼星 A")!,
+              p,
+            ]),
+            new THREE.LineBasicMaterial({
+              color: 0x9fb8e0,
+              transparent: true,
+              opacity: 0.5,
+            }),
+          ),
+        );
+      }
+      rows.push(["类型", "白矮星（DA2）"]);
+      rows.push(["密度", "一茶匙物质重达约 1 吨"]);
+      note = "天狼星 A 的伴星 · 地球大小的白矮星，密度极高";
+    }
+    if (s.n === "南门二 B") {
+      const off = tang().multiplyScalar(0.9);
+      const aPos = anchorPos.get("南门二 A") ?? p.clone().sub(off);
+      p.copy(aPos).add(off);
+      core.position.copy(p);
+      if (anchorPos.get("南门二 A")) {
+        grp.add(
+          new THREE.Line(
+            new THREE.BufferGeometry().setFromPoints([
+              anchorPos.get("南门二 A")!,
+              p,
+            ]),
+            new THREE.LineBasicMaterial({
+              color: 0xffcf6b,
+              transparent: true,
+              opacity: 0.5,
+            }),
+          ),
+        );
+      }
+      note = "南门二 A 的伴星（K1V）· 与 A 组成密近双星";
+    }
+    if (s.n === "比邻星") {
+      rows.push(["归属", "南门二三合星系统的 C 成员"]);
+      rows.push(["轨道", "绕南门二 AB 公转 · 周期 ≈ 50 万年"]);
+      note =
+        "距太阳最近的恒星 · 南门二三合星的远距成员（C），以约 50 万年周期绕 AB 对运行";
+      const abAnchor = anchorPos.get("南门二 A");
+      if (abAnchor) {
+        const line = new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints([abAnchor, p]),
+          new THREE.LineDashedMaterial({
+            color: 0x8b97ad,
+            transparent: true,
+            opacity: 0.4,
+            dashSize: 0.3,
+            gapSize: 0.2,
+          }),
+        );
+        line.computeLineDistances();
+        grp.add(line);
+      }
+    }
+    if (s.n === "巴纳德星") {
+      // Proper-motion arrow: Barnard's Star has the largest known proper motion (~10.3″/yr).
+      const dir = tang();
+      grp.add(new THREE.ArrowHelper(dir, p.clone(), 1.8, 0x5fd3ff, 0.5, 0.32));
+      rows.push(["自行", "10.3″/yr（全天最大）"]);
+      rows.push(["运动", "以约 110 km/s 朝我们疾驰"]);
+      note = "红矮星 · 拥有已知最大的恒星自行，正快速掠过太阳系近旁";
+    }
+
     tag(
       core,
       s.n,
       s.en,
-      `${s.sp}型恒星 · ${s.distLy.toFixed(2)} 光年`,
-      [
-        ["光谱型", s.sp],
-        ["距离", s.distLy.toFixed(2) + " 光年"],
-        ["视星等", s.mag.toFixed(2)],
-      ],
+      note,
+      rows,
       s.c,
       starSize * 0.6,
       specs,
