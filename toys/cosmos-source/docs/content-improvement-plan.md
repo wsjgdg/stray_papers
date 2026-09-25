@@ -100,9 +100,15 @@
 
 ## P2：天文馆——中国星官图层（差异化亮点）
 
-- [ ] **P2-1 西方星座补齐** ⬜（前提准确）
-  - 现状：`CONS=15` 星座、`STARS=30` 亮星（data.ts:187/220 已核实），确为 15/88 + 30。
-  - 做法：接入 STARDUMP 简化数据（许可友好）补齐 88 连线 + ~300 亮星（星等→亮度/大小）。
+- [x] **P2-1 西方星座补齐** ✅（commit 见本次；88 连线 + 288 亮星）
+  - 现状：`CONS=15` 星座、`STARS=30` 亮星（data.ts 已核实），确为 15/88 + 30。
+  - 做法：接入 d3-celestial 公开数据（MIT，许可友好）补齐。
+  - 实现：新增 `src/lib/cosmos/west-constellations.ts`（`scripts/_gen_p21.ts` 生成，源 raw.githubusercontent.com/ofrohn/d3-celestial `constellations.lines.json` + `stars.6.json`）：
+    - `WEST_CONSTELLATIONS`（89 features=88 星座，Serpens 拆 Caput/Cauda）：每座 `name`(中文，88 译名 LUT) + `stars:[ra_h,dec_deg,mag]` + `lines:[i,j]`（顶点去重、多段折线转连续线段，RA°→时，RA/Dec 与 `unitDir` 约定一致）。
+    - `WEST_BRIGHT_STARS`（288 颗，mag≤3.5）：`{hip,ra,dec,mag,bv}`，B-V 着色。
+  - engine.ts：`buildSky` 改从 `WEST_CONSTELLATIONS` 渲染 88 连线（替换 `CONS`）；新增循环渲染 `WEST_BRIGHT_STARS`（加色 Sprite，`bvToColor(bv)` 由 B-V 估算色调，大小按星等）；移除 `CONS` 导入。`STARS`(30 精选) 保留不变。
+  - 核验：bun 离线脚本（`scripts/_verify_p21.ts`）断言 89 星座/743 线段/288 亮星、线段索引有界、坐标有限、dec∈[-90,90]、mag≤3.5、中文名非 3 字母缩写 → VERIFY_PASS（验证脚本保留；`scripts/_gen_p21.ts` 为生成器，运行时从 d3-celestial 重新下载，raw JSON 不入库）。
+  - 门禁：prettier/typecheck(EXIT 0)/eslint(0 err, 27 预存 warn)/vitest(12/12)/next build(进行中) 全绿 · `next-env.d.ts` 将 `git restore`。
 
 - [x] **P2-2 三垣二十八宿图层** ✅（commit 见本次；data.ts `CHI_ASTERISMS`（3 垣 + 28 宿[四象各 7] + 北斗/夏季大三角 2 星官，真实 J2000 距星坐标）+ engine `chiGroup` 图层 + HUD「中国星官」切换按钮 + `.tag.chi` 金色样式；可点开文化 dossier；与西方星座可叠加）
   - 现状：代码无任何 `星官/三垣/二十八宿` 数据（grep 零命中）。

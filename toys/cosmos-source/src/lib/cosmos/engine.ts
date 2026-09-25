@@ -16,10 +16,10 @@ import {
   ASTEROIDS,
   CHI_ASTERISMS,
   DEEP,
-  CONS,
   STARS,
   SPCOL,
 } from "./data";
+import { WEST_CONSTELLATIONS, WEST_BRIGHT_STARS } from "./west-constellations";
 import {
   D2R,
   unitDir,
@@ -63,6 +63,33 @@ import {
   markBlue,
 } from "./cosmos-views";
 import { hudStore } from "./hudStore";
+
+/** Approximate star tint (hex int) from the B-V color index, so the expanded bright-star
+ *  catalog (which only carries B-V, not a spectral class) gets plausible colors. */
+function bvToColor(bv: number): number {
+  const t = Math.max(-0.4, Math.min(2.0, bv));
+  const pts: [number, [number, number, number]][] = [
+    [-0.4, [0.6, 0.7, 1.0]],
+    [0.0, [0.75, 0.83, 1.0]],
+    [0.3, [0.95, 0.96, 1.0]],
+    [0.6, [1.0, 0.98, 0.9]],
+    [1.0, [1.0, 0.85, 0.65]],
+    [1.5, [1.0, 0.7, 0.5]],
+    [2.0, [1.0, 0.6, 0.45]],
+  ];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [a, ca] = pts[i];
+    const [b, cb] = pts[i + 1];
+    if (t >= a && t <= b) {
+      const f = (t - a) / (b - a);
+      const r = Math.round(255 * (ca[0] + (cb[0] - ca[0]) * f));
+      const g = Math.round(255 * (ca[1] + (cb[1] - ca[1]) * f));
+      const bl = Math.round(255 * (ca[2] + (cb[2] - ca[2]) * f));
+      return (r << 16) | (g << 8) | bl;
+    }
+  }
+  return 0xffffff;
+}
 
 const MONTH = [
   "01",
@@ -1246,6 +1273,23 @@ export class CosmosEngine {
       this.starGroup.add(s);
     }
 
+    // Expanded bright-star catalog (P2-1): ~288 stars to mag 3.5, color from B-V index.
+    for (const st of WEST_BRIGHT_STARS) {
+      const s = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: flare,
+          color: bvToColor(st.bv),
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          transparent: true,
+        }),
+      );
+      s.position.copy(unitDir(st.ra, st.dec)).multiplyScalar(2450);
+      s.scale.setScalar(Math.max(7, 62 * Math.pow(1.6, -st.mag)));
+      s.renderOrder = -15;
+      this.starGroup.add(s);
+    }
+
     // Deep sky objects
     this.skyRoot.add(this.dsoGroup);
     DEEP.forEach((d, idx) => {
@@ -1295,7 +1339,7 @@ export class CosmosEngine {
         gc: number[] = [],
         seg: THREE.Vector3[] = [],
         R = 2580;
-      for (const c of CONS) {
+      for (const c of WEST_CONSTELLATIONS) {
         const base = gp.length / 3;
         for (const s of c.stars) {
           const v = unitDir(s[0], s[1]).multiplyScalar(R);
