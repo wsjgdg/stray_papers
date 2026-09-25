@@ -220,6 +220,7 @@ export default function CosmosViewer() {
     apophisAlert: false,
     planetPanel: [],
     sunAlt: 0,
+    scaleAnalogy: "",
   });
   const [spdVal, setSpdVal] = useState(560);
   const [eclVal, setEclVal] = useState(234);
@@ -350,6 +351,25 @@ export default function CosmosViewer() {
           animation: warpKey === 0 ? undefined : "cosmosWarp 0.9s ease-out",
         }}
       />
+
+      {/* Scale-analogy narration banner (during cross-level warp) */}
+      {state.scaleAnalogy && !state.tourActive && (
+        <div
+          className="pointer-events-none absolute top-[68px] left-1/2 -translate-x-1/2 z-[6]
+          max-w-[min(680px,90vw)] px-4 py-2.5 rounded-lg bg-[rgba(9,13,22,.72)] border border-[rgba(95,211,255,.3)]
+          text-center backdrop-blur-md shadow-2xl"
+        >
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <span className="w-[6px] h-[6px] rounded-full bg-[#5fd3ff] shadow-[0_0_8px_#5fd3ff]" />
+            <span className="text-[9px] tracking-[.3em] text-[#5fd3ff]/80 uppercase">
+              Scale Analogy · 尺度类比
+            </span>
+          </div>
+          <div className="text-[12.5px] text-[#d4e4f7] tracking-[.03em] leading-relaxed">
+            {state.scaleAnalogy}
+          </div>
+        </div>
+      )}
 
       {/* Auto-tour caption overlay */}
       {state.tourActive && tourCaption && (

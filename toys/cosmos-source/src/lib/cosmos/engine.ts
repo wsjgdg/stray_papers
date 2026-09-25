@@ -111,6 +111,7 @@ export interface EngineState {
     vis: boolean; // above horizon AND sun below horizon (tonight-visible)
   }[];
   sunAlt: number; // current Sun altitude (deg) in horizon/planetarium mode
+  scaleAnalogy: string; // scale-comparison narration shown during a cross-level warp
 }
 
 export interface BodyInfo {
@@ -255,6 +256,8 @@ export class CosmosEngine {
   private transit = 0; // 1.0 → 0.0 during a scale-level warp transition
   private transitFrom = 0; // level we are leaving
   private transitTimer = 0; // seconds remaining in the warp
+  private scaleAnalogy = ""; // scale-comparison narration for the current warp
+  private scaleAnalogyTimer = 0; // seconds the analogy banner stays up
   // Free-fly mode (immersive navigation)
   private flyMode = false;
   private flySpeed = 8; // speed multiplier (1×..200×), adjustable via wheel
@@ -2811,6 +2814,13 @@ export class CosmosEngine {
     } else {
       this.transit = 0;
     }
+    // Scale-analogy banner lingers ~2.6s after the jump, then clears.
+    if (this.scaleAnalogyTimer > 0) {
+      this.scaleAnalogyTimer = Math.max(0, this.scaleAnalogyTimer - dt);
+      if (this.scaleAnalogyTimer === 0 && this.scaleAnalogy) {
+        this.scaleAnalogy = "";
+      }
+    }
 
     // Labels — throttle DOM projection to ~30Hz. Per-label style writes are the
     // dominant cost of this block; 30Hz is imperceptible and halves frame work.
@@ -2973,6 +2983,7 @@ export class CosmosEngine {
         apophisAlert: this._apophisAlert,
         planetPanel: this._planetPanel,
         sunAlt: this._sunAlt,
+        scaleAnalogy: this.scaleAnalogy,
       };
       const ctrlKey = JSON.stringify(ctrl);
       if (ctrlKey !== this._lastCtrlKey) {
@@ -3340,8 +3351,31 @@ export class CosmosEngine {
       }
     }
   }
+  // Scale-comparison narrations keyed by destination level. Shown as a banner during
+  // cross-level warps so the user feels the jump in physical scale. Qualitative, not
+  // exact: each is a well-known back-of-envelope analogy, not a precise measurement.
+  SCALE_ANALOGIES: Record<number, string> = {
+    0: "太阳系内 99.86% 的质量集中在太阳。若太阳缩成一颗豌豆，地球只在其 8 厘米外掠过——空旷得超乎想象。",
+    1: "比邻星距太阳 4.24 光年。把太阳与比邻星放在北京和上海，地球到太阳仅 8 厘米——恒星间的距离才是「天文」。",
+    2: "银河系约 4000 亿颗恒星。若每颗星是一粒沙，银河系就是撒满整个足球场的沙堆。",
+    3: "本星系群仅约 80 个成员，横跨 1000 万光年——星系之间的空隙比城市之间更空。",
+    4: "室女座星系团距我们 5400 万光年，含约 1300 个星系；光从那里出发时，哺乳动物尚未登场。",
+    5: "拉尼亚凯亚超星系团由约 10 万个星系织成巨网，跨度 5.2 亿光年，银河系只是网沿一粟。",
+    6: "可观测宇宙半径约 465 亿光年。你眼中某些星光，始于地球诞生之前 46 亿年。",
+  };
+
   setScaleLevel(level: number) {
     if (level === this.scaleLevel) return;
+    // Surface a scale-analogy narration for the cross-level jump (suppressed during an
+    // auto-tour, which already shows its own captions). The banner lingers a little
+    // past the 0.9s visual warp so it's actually readable.
+    if (this.tour.active) {
+      this.scaleAnalogy = "";
+      this.scaleAnalogyTimer = 0;
+    } else {
+      this.scaleAnalogy = this.SCALE_ANALOGIES[level] ?? "";
+      this.scaleAnalogyTimer = this.scaleAnalogy ? 2.6 : 0;
+    }
     // Begin building the target level's content immediately (lazy) so its galaxy
     // photos / survey cloud are fetched during the warp rather than at startup.
     this.ensureCosmosView(level);
