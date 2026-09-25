@@ -1059,6 +1059,169 @@ export function buildMilkyWayGalaxy(): THREE.Group {
     3.5,
   );
 
+  // P0-5: Orion (local) arm spur — a short dashed arc near the Sun marking the minor arm we live in.
+  {
+    const r = 8.6; // kpc, just outside the Sun's 8.2 kpc orbital radius
+    const a0 = (-18 * Math.PI) / 180;
+    const a1 = (18 * Math.PI) / 180;
+    const pts: THREE.Vector3[] = [];
+    const N = 24;
+    for (let i = 0; i <= N; i++) {
+      const a = a0 + (a1 - a0) * (i / N);
+      pts.push(new THREE.Vector3(r * Math.cos(a), r * Math.sin(a), 0));
+    }
+    const line = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(pts),
+      new THREE.LineDashedMaterial({
+        color: 0x6fe0d0,
+        dashSize: 0.5,
+        gapSize: 0.35,
+        transparent: true,
+        opacity: 0.9,
+        depthWrite: false,
+      }),
+    );
+    line.computeLineDistances();
+    grp.add(line);
+    const anchor = new THREE.Object3D();
+    anchor.position.set(r, 1.3, 0);
+    grp.add(anchor);
+    specs.push({
+      obj: anchor,
+      n: "猎户臂（本地臂）· 我们在这里",
+      en: "ORION ARM (LOCAL SPUR)",
+      note: "太阳位于猎户臂（本地臂）内侧——一条介于人马座与人马-盾牌臂之间的次要旋臂，约 30~35 光年厚。",
+      rows: [
+        ["类型", "次要旋臂（spur）"],
+        ["距银心", "≈ 8.2 kpc（太阳）"],
+      ],
+      up: 0,
+      kind: "cosmos-dim",
+      c: 0x6fe0d0,
+    });
+  }
+
+  // P0-7a: galactic diameter scale bar — a horizontal measure line above the disk (~30 kpc span).
+  {
+    const y0 = diskExt * 0.62;
+    const x0 = -diskExt;
+    const x1 = diskExt;
+    const mat = new THREE.LineBasicMaterial({
+      color: 0x8fd0ff,
+      transparent: true,
+      opacity: 0.85,
+      depthTest: false,
+    });
+    const rl = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(x0, y0, 0),
+        new THREE.Vector3(x1, y0, 0),
+      ]),
+      mat,
+    );
+    rl.renderOrder = 12;
+    grp.add(rl);
+    const tk = new THREE.LineSegments(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(x0, y0 - 0.8, 0),
+        new THREE.Vector3(x0, y0 + 0.8, 0),
+        new THREE.Vector3(x1, y0 - 0.8, 0),
+        new THREE.Vector3(x1, y0 + 0.8, 0),
+      ]),
+      mat,
+    );
+    tk.renderOrder = 12;
+    grp.add(tk);
+    const anchor = new THREE.Object3D();
+    anchor.position.set(0, y0 + 1.4, 0);
+    grp.add(anchor);
+    specs.push({
+      obj: anchor,
+      n: "银河系直径 ≈ 10 万光年",
+      en: "GALACTIC DIAMETER ≈ 100,000 ly",
+      note: "银盘直径约 30 kpc（≈ 10 万光年）；标尺跨度对应整条银盘。太阳距银心约 2.7 万光年。",
+      rows: [
+        ["直径", "≈ 30 kpc / 10 万光年"],
+        ["厚度", "≈ 1 kpc（薄盘）"],
+      ],
+      up: 0,
+      kind: "cosmos-dim",
+      c: 0x8fd0ff,
+    });
+  }
+
+  // P0-7c: Local Bubble / Gould Belt — a dashed ring marking the Sun's <1 kpc neighbourhood.
+  {
+    const R = 0.55; // kpc; tiny vs diskExt but reads as a local annotation at the Sun
+    const cpts: THREE.Vector3[] = [];
+    const N = 64;
+    for (let i = 0; i <= N; i++) {
+      const a = (i / N) * Math.PI * 2;
+      cpts.push(
+        new THREE.Vector3(
+          MILKY_WAY_SUN_POS[0] + R * Math.cos(a),
+          MILKY_WAY_SUN_POS[1] + R * Math.sin(a),
+          0,
+        ),
+      );
+    }
+    const cl = new THREE.LineLoop(
+      new THREE.BufferGeometry().setFromPoints(cpts),
+      new THREE.LineDashedMaterial({
+        color: 0x9fe6c0,
+        dashSize: 0.18,
+        gapSize: 0.12,
+        transparent: true,
+        opacity: 0.8,
+        depthTest: false,
+      }),
+    );
+    cl.computeLineDistances();
+    cl.renderOrder = 11;
+    grp.add(cl);
+    const anchor = new THREE.Object3D();
+    anchor.position.set(MILKY_WAY_SUN_POS[0], MILKY_WAY_SUN_POS[1] + 1.1, 0);
+    grp.add(anchor);
+    specs.push({
+      obj: anchor,
+      n: "本地泡 · 古尔德带",
+      en: "LOCAL BUBBLE · GOULD BELT",
+      note: "太阳位于本地泡（约 100 pc 空腔）与古尔德带（约 30 pc 年轻恒星环）中——L1 太阳系与 L2 银河系之间的邻近结构。",
+      rows: [["尺度", "< 1 kpc"]],
+      up: 0,
+      kind: "cosmos-dim",
+      c: 0x9fe6c0,
+    });
+  }
+
+  // P0-1: spiral-arm overlay — semi-transparent log-spiral tubes highlighting the 4 main arms over
+  // the M83 photo. Off by default (the photo already shows spiral structure); toggle via show.arms.
+  {
+    const arms = new THREE.Group();
+    arms.name = "arms";
+    for (const arm of MILKY_WAY_ARMS) {
+      const curve = new THREE.CatmullRomCurve3(
+        arm.points.map(
+          (p) => new THREE.Vector3(p[0], p[1], p[2] + 0.4), // lift slightly above the photo plane
+        ),
+      );
+      const tube = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 120, 0.28, 8, false),
+        new THREE.MeshBasicMaterial({
+          color: arm.color,
+          transparent: true,
+          opacity: 0.2,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        }),
+      );
+      arms.add(tube);
+    }
+    arms.visible = false; // default off (show.arms = false)
+    grp.add(arms);
+  }
+
   // P0-3: globular-cluster halo — ~150 real clusters (Harris catalog, VizieR VII/202) rendered as a
   // single additive Points cloud (spherical halo, radius follows the catalog's galactocentric Rgc). A
   // curated subset of famous clusters is also made clickable (sprite + dossier) carrying the Shapley
@@ -1325,6 +1488,47 @@ export function buildLocalGroup(): THREE.Group {
       grp,
       Math.max(size * 2.4, 2.8),
     );
+  }
+
+  // P0-7b: M31 approach arrow — Andromeda is falling toward the Milky Way; they will merge into Milkomeda.
+  {
+    const m31 = LOCAL_GROUP.find(
+      (g) => g.en === "M31" || g.n.includes("仙女座"),
+    );
+    if (m31) {
+      const p = galacticDir(m31.l, m31.b, _v.clone()).multiplyScalar(
+        compress(m31.distLy),
+      );
+      const dir = p.clone().multiplyScalar(-1).normalize();
+      const len = p.length() * 0.38;
+      const arrow = new THREE.ArrowHelper(
+        dir,
+        p,
+        len,
+        0x6fe0ff,
+        len * 0.18,
+        len * 0.12,
+      );
+      (arrow.line as THREE.Line).renderOrder = 12;
+      (arrow.cone as THREE.Mesh).renderOrder = 12;
+      grp.add(arrow);
+      const anchor = new THREE.Object3D();
+      anchor.position.copy(p).multiplyScalar(0.7);
+      grp.add(anchor);
+      specs.push({
+        obj: anchor,
+        n: "仙女座星系正逼近银河系",
+        en: "ANDROMEDA APPROACH",
+        note: "M31 以约 110 km/s 向银河系靠近，约 30~45 亿年后两星系将合并为单一椭圆星系“Milkomeda”。",
+      rows: [
+        ["相对速度", "≈ 110 km/s（逼近）"],
+        ["合并时限", "≈ 30~45 亿年"],
+      ],
+      up: 0,
+      kind: "cosmos-dim",
+      c: 0x6fe0ff,
+    });
+    }
   }
 
   const sphere = new THREE.LineSegments(

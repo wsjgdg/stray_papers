@@ -602,6 +602,18 @@ export default function CosmosViewer() {
             <Sparkles className="w-3 h-3 mr-1" />
             费米气泡
           </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className={`h-7 px-2.5 text-[11px] border border-[rgba(125,165,225,.18)] ${state.show.arms ? "!border-[#ff9d61] !text-[#ff9d61] !bg-[rgba(255,157,97,.12)]" : ""}`}
+            onClick={() =>
+              engineRef.current?.toggleLayer("arms", !state.show.arms)
+            }
+            title="显示 / 隐藏旋臂示意叠加层"
+          >
+            <Layers className="w-3 h-3 mr-1" />
+            旋臂示意
+          </Button>
         </div>
 
         {/* Fly-mode control hint */}
