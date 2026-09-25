@@ -166,6 +166,7 @@ export class CosmosEngine {
   private dsoGroup = new THREE.Group();
   private CONG!: THREE.Group;
   private showGrp = { con: true, dso: true };
+  private fermiGroup?: THREE.Object3D;
   private sphereGeo!: THREE.SphereGeometry;
   private dummy = new THREE.Object3D();
   private cosmosViews: THREE.Group[] = [];
@@ -260,6 +261,7 @@ export class CosmosEngine {
     met: true,
     zodi: true,
     shadow: true,
+    fermi: false,
   };
 
   // Real-scale mode (honest proportions toggle)
@@ -1579,6 +1581,10 @@ export class CosmosEngine {
     this.cosmosRoot.add(real);
     this.cosmosViews[level] = real;
     this.cosmosViewsBuilt[level] = true;
+    if (level === 2) {
+      this.fermiGroup = real.getObjectByName("fermi");
+      if (this.fermiGroup) this.fermiGroup.visible = this.show.fermi;
+    }
     this.applyBlueLight(); // recolor the freshly-built view to the current blueLight state
   }
 
@@ -2791,6 +2797,7 @@ export class CosmosEngine {
       this.geg.visible = on;
     }
     if (key === "shadow") this.shadowGrp.visible = on;
+    if (key === "fermi" && this.fermiGroup) this.fermiGroup.visible = on;
   }
   setScaleLevel(level: number) {
     if (level === this.scaleLevel) return;

@@ -1193,6 +1193,38 @@ export function buildMilkyWayGalaxy(): THREE.Group {
     }
   }
 
+  // P0-4: Fermi bubbles — two gamma-ray lobes perpendicular to the Galactic plane, centred on
+  // Sgr A*. Rendered as translucent purple cones (apex at the Galactic centre, opening along ±b).
+  // Default hidden; toggled via `show.fermi` (HUD). Height ~7.7 kpc (~25,000 ly), base radius ~5 kpc.
+  {
+    const H = 7.7; // kpc, ~25,000 ly
+    const R = 5; // kpc base radius
+    const fermiMat = new THREE.MeshBasicMaterial({
+      color: 0xa374ff,
+      transparent: true,
+      opacity: 0.13,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    const fermi = new THREE.Group();
+    fermi.name = "fermi";
+    const top = new THREE.Mesh(
+      new THREE.ConeGeometry(R, H, 40, 1, true),
+      fermiMat,
+    );
+    top.rotation.x = Math.PI; // apex at centre, base upward
+    top.position.y = H / 2;
+    const bot = new THREE.Mesh(
+      new THREE.ConeGeometry(R, H, 40, 1, true),
+      fermiMat,
+    );
+    bot.position.y = -H / 2; // apex at centre, base downward
+    fermi.add(top, bot);
+    fermi.visible = false; // default off (show.fermi = false)
+    grp.add(fermi);
+  }
+
   // Magellanic Clouds — the Milky Way's largest satellite galaxies. LMC uses a real photo; SMC is
   // rendered as a small irregular dwarf. Both sit just beyond the disk edge.
   const lmcP = new THREE.Vector3(-diskExt * 1.5, -diskExt * 1.1, -3);

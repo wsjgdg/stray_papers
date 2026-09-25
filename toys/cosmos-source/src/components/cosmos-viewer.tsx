@@ -590,6 +590,18 @@ export default function CosmosViewer() {
             <Tag className="w-3 h-3 mr-1" />
             标签
           </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className={`h-7 px-2.5 text-[11px] border border-[rgba(125,165,225,.18)] ${state.show.fermi ? "!border-[#a374ff] !text-[#a374ff] !bg-[rgba(163,116,255,.12)]" : ""}`}
+            onClick={() =>
+              engineRef.current?.toggleLayer("fermi", !state.show.fermi)
+            }
+            title="显示 / 隐藏费米气泡（银心γ射线双叶）"
+          >
+            <Sparkles className="w-3 h-3 mr-1" />
+            费米气泡
+          </Button>
         </div>
 
         {/* Fly-mode control hint */}
