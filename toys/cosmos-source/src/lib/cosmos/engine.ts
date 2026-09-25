@@ -119,6 +119,7 @@ export interface BodyInfo {
   rows: [string, string, string?][];
   note: string;
   key: string;
+  gotoLevel?: number;
 }
 
 type LabelEntry = {
@@ -2464,6 +2465,7 @@ export class CosmosEngine {
       key: b.key,
       rows: b.rows || [],
       note: b.note || "",
+      gotoLevel: b.gotoLevel,
     };
     this.onInfoChange?.(info);
   }

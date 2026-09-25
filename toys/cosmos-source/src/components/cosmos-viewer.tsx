@@ -876,6 +876,17 @@ export default function CosmosViewer() {
             <p className="mt-2.5 text-[11.5px] leading-[1.75] text-[#aab6c9]">
               {info.note}
             </p>
+            {info.gotoLevel != null && (
+              <button
+                onClick={() =>
+                  engineRef.current?.setScaleLevel(info.gotoLevel!)
+                }
+                title={`跳回尺度层级 L${info.gotoLevel} · 银河系近景`}
+                className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-lg border border-[#f5a623] text-[#f5a623] bg-[rgba(245,166,35,.10)] hover:bg-[rgba(245,166,35,.18)] text-[12px] tracking-[.06em] py-2 transition-colors"
+              >
+                ↩ 回到 L{info.gotoLevel} · 银河系近景
+              </button>
+            )}
           </>
         )}
       </aside>

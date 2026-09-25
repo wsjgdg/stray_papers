@@ -65,6 +65,8 @@ export interface BodyData {
   isCosmos?: boolean;
   isSky?: boolean;
   isDeep?: boolean;
+  /** When set, clicking this body's dossier shows a "jump to scale level" button. */
+  gotoLevel?: number;
 }
 
 /** Round sprite helper — renders the texture's real shape & colour (NormalBlending, so
@@ -503,6 +505,7 @@ function tag(
   specs: LabelSpec[],
   _parent?: THREE.Object3D,
   _pickR?: number,
+  gotoLevel?: number,
 ): THREE.Sprite {
   const body: BodyData = {
     n,
@@ -513,6 +516,7 @@ function tag(
     rows,
     note,
     isCosmos: true,
+    gotoLevel,
   };
   sp.userData.body = body;
   sp.userData.rPick = true; // flag for engine to include in pickables
@@ -1520,14 +1524,14 @@ export function buildLocalGroup(): THREE.Group {
         n: "仙女座星系正逼近银河系",
         en: "ANDROMEDA APPROACH",
         note: "M31 以约 110 km/s 向银河系靠近，约 30~45 亿年后两星系将合并为单一椭圆星系“Milkomeda”。",
-      rows: [
-        ["相对速度", "≈ 110 km/s（逼近）"],
-        ["合并时限", "≈ 30~45 亿年"],
-      ],
-      up: 0,
-      kind: "cosmos-dim",
-      c: 0x6fe0ff,
-    });
+        rows: [
+          ["相对速度", "≈ 110 km/s（逼近）"],
+          ["合并时限", "≈ 30~45 亿年"],
+        ],
+        up: 0,
+        kind: "cosmos-dim",
+        c: 0x6fe0ff,
+      });
     }
   }
 
@@ -1564,7 +1568,7 @@ export function buildNearbyUniverse(): THREE.Group {
     mw,
     "银河系",
     "MILKY WAY",
-    "本星系群中心 · 棒旋星系",
+    "我们所在的银河系 · 本星系群中心 · 棒旋星系 SBbc",
     [
       ["类型", "棒旋星系 SBbc"],
       ["恒星数", "约 4,000 亿"],
@@ -1575,6 +1579,7 @@ export function buildNearbyUniverse(): THREE.Group {
     specs,
     grp,
     5,
+    1, // click dossier button → jump back to L2 (Milky Way close-up)
   );
 
   const all = [...NEARBY_GALAXIES, ...VIRGO_CLUSTER];
@@ -1665,13 +1670,14 @@ export function buildSuperclusters(): THREE.Group {
     mw,
     "银河系",
     "MILKY WAY",
-    "拉尼亚凯亚超星系团一隅",
+    "我们所在的银河系 · 拉尼亚凯亚超星系团一隅",
     [["位置", "拉尼亚凯亚超星系团边缘"]],
     0xdfe8ff,
     3,
     specs,
     grp,
     4,
+    1, // click dossier button → jump back to L2 (Milky Way close-up)
   );
 
   for (const s of SUPERCLUSTERS) {
