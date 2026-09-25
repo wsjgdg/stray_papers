@@ -117,13 +117,14 @@
 
 ## P3：跨级一致性（校准后）
 
-- [ ] **P3-1 银河系外观统一** ⚠️ 前提已变
+- [x] **P3-1 银河系外观统一** ✅（commit `5045cc8`；`gotoLevel` 数据通道 + dossier 跳回按钮）
   - 初版："L4/L5 银河系退化为通用星系贴图，L2 用 M83"。
-  - 现状：L4/L5 已接真实照片（M81/M87/M104/CenA/NGC253 via applyRealPhoto）。统一点改为：在 L4（本星系群成员）与 L5（室女超星系团节点）标注"这是我们的银河系"并可点击跳回 L2（仍有效），但"退化贴图"描述删除。
+  - 现状：L4/L5 已接真实照片（M81/M87/M104/CenA/NGC253 via applyRealPhoto），源码已无"退化贴图"措辞（grep 零命中），该删除项已自然满足。统一点已实现：① `BodyData`/`BodyInfo` 加 `gotoLevel?` 字段；② L4(`buildNearbyUniverse`) 与 L5(`buildSuperclusters`) 的 `银河系` sprite `tag()` 传 `gotoLevel:1` 并改写 note 为"我们所在的银河系 · …"；③ dossier 面板在 `info.gotoLevel!=null` 时渲染"↩ 回到 L2 · 银河系近景"按钮，调用 `setScaleLevel(1)` 跳回 L2 银河系近景。门禁全绿：prettier✅ · tsc EXIT 0 · eslint 0err · vitest 12/12 · next build EXIT 0。
 
-- [ ] **P3-2 L6 著名星系真实定位 + README 校准** ⚠️ 部分
-  - 现状：`buildObservableUniverse` 前 2600 字符 0 处 `Math.random()`（类星体已真实化，QUASARS_REAL=300）；"著名星系"随机性需进一步确认（可能在函数更深处）。
-  - 做法：若著名星系仍随机，改用真实红移/退行速度 + 天球方位散布；**README 第 25 行"8 类星体"→"300 类星体"**。
+- [x] **P3-2 L6 著名星系真实定位 + README 校准** ✅（commit 见本次；`galaxySpriteTex` 随机纹理仅影响朝向，不影响位置）
+  - 现状：`buildObservableUniverse` 的 `FAMOUS_GALAXIES` 循环 `galacticDir(g.l,g.b)` 用了**真实银道坐标**（l/b 取自数据，非随机），但半径 `R*0.45*(0.5+Math.random()*0.4)` 是**随机**的——导致 600 Mly 星系可能与 50 Mly 星系同深度，几何错误。函数更深处（N=1800 背景星雾）的 `Math.random()` 是有意统计背景雾，不在本任务范围，保留。
+  - 做法：移除半径 `Math.random()`，改为从真实 `distLy` 推导低-z Hubble 红移 `z=H0·d/c`（H0=70, 1Mpc=3.26156e6 ly, c=299792.458），半径用与类星体云**同一律** `R*0.6*(1-1/(1+z)+0.2)`，使近距(低z)著名星系落在内壳、远处类星体更外；dossier 增列「红移 z=…」「退行速度 … km/s」。离线核验：12 星系半径确定性落在 12.05–14.47（无随机），红移/速度物理合理（Hoag z=0.043/12877 km/s、Cen A z=0.0009/279 km/s），与类星体云径向律一致（著名星系在内壳，类星体 z≥0.1 在 r≥17 外壳，无重叠）。
+  - **README 校准**：第 25 行「8 类星体」→「300 类星体」（`QUASARS_REAL` 实测 300 条）。门禁全绿：prettier✅ · tsc EXIT 0 · eslint 0err · vitest 12/12 · next build EXIT 0 · 离线数值核验 VERIFY_PASS。
 
 - [ ] **P3-3 类星体信息卡升级** ⬜
   - QUASARS_REAL 已有 z/RA/Dec；加：宿主星系缩略示意、喷流轴向指示（多普勒增亮侧更亮）、"宇宙灯塔"文案、光变曲线小图（静态 SVG）。

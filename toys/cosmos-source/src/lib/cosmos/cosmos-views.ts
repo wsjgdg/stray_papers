@@ -2050,8 +2050,16 @@ export function buildObservableUniverse(): THREE.Group {
   grp.userData.quasarCloud = qPoints;
 
   for (const g of FAMOUS_GALAXIES) {
+    // Deterministic radius from the galaxy's REAL distance: derive a low-z Hubble-flow
+    // redshift z = H0·d/c, then use the SAME radial law as the quasar cloud
+    // (R*0.6*(1 - 1/(1+z) + 0.2)) so nearby (low-z) galaxies sit on the inner shell and
+    // distant quasars further out. Previously this radius was Math.random(), so a 600 Mly
+    // galaxy could render at the same depth as a 50 Mly one — geometrically wrong.
+    const distMpc = g.distLy / 3.26156e6; // 1 Mpc ≈ 3.26156e6 ly
+    const z = (70 * distMpc) / 299792.458; // v ≈ H0·d, z ≈ v/c (low-z approximation)
+    const vKmS = 70 * distMpc; // recession velocity (km/s)
     const p = galacticDir(g.l, g.b, _v.clone()).multiplyScalar(
-      R * 0.45 * (0.5 + Math.random() * 0.4),
+      R * 0.6 * (1 - 1 / (1 + z) + 0.2),
     );
     // Fresh texture per galaxy (galaxySpriteTex is non-deterministic) so the
     // famous galaxies don't all share one identical sprite.
@@ -2071,6 +2079,8 @@ export function buildObservableUniverse(): THREE.Group {
       [
         ["类型", g.type],
         ["距离", fmtLy(g.distLy)],
+        ["红移", "z = " + z.toFixed(4)],
+        ["退行速度", Math.round(vKmS).toLocaleString("en-US") + " km/s"],
       ],
       hexFromRGB(g.c1),
       2.2,
