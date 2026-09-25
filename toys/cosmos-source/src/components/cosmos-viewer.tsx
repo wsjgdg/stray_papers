@@ -215,6 +215,7 @@ export default function CosmosViewer() {
     tourActive: false,
     realScale: false,
     blueLight: true,
+    solarEclipse: false,
   });
   const [spdVal, setSpdVal] = useState(560);
   const [eclVal, setEclVal] = useState(234);
@@ -639,6 +640,15 @@ export default function CosmosViewer() {
           </div>
         )}
 
+        {/* Solar-eclipse indicator (P1-1) */}
+        {state.solarEclipse && (
+          <div className="mt-2.5 text-[10px] leading-[1.7] text-[#ffb86b]/90 bg-[rgba(255,157,97,.07)] border border-[rgba(255,157,97,.3)] rounded-md px-2.5 py-1.5">
+            <b className="text-[#ffb86b]">日食进行中</b> ·
+            月球本影/半影正落在地球上 — 缩小至地球附近可看到地表暗斑（日全食 /
+            日偏食区）。
+          </div>
+        )}
+
         <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2.5 text-[11px] text-[#8b97ad]">
           {LAYERS.map((L) => (
             <label
@@ -931,6 +941,7 @@ const TL_PRESETS = [
   { label: "J2000", year: 2000 },
   { label: "1986 哈雷", year: 1986 },
   { label: "今天", year: new Date().getFullYear() },
+  { label: "2027-08-02 日食", year: 2027, month: 7, day: 2 },
   { label: "2061 哈雷", year: 2061 },
   { label: "2114", year: 2114 },
 ];
@@ -957,8 +968,8 @@ function Timeline({
     const days = (millis - TL_EPOCH) / 86400000;
     engineRef.current?.setSimTime(days);
   };
-  const jumpToYear = (year: number) => {
-    const d = (Date.UTC(year, 0, 1) - TL_EPOCH) / 86400000;
+  const jumpToYear = (year: number, month = 0, day = 1) => {
+    const d = (Date.UTC(year, month, day) - TL_EPOCH) / 86400000;
     engineRef.current?.setSimTime(d);
   };
   return (
@@ -988,7 +999,7 @@ function Timeline({
         {TL_PRESETS.map((p) => (
           <button
             key={p.label}
-            onClick={() => jumpToYear(p.year)}
+            onClick={() => jumpToYear(p.year, p.month, p.day)}
             className="text-[9.5px] px-1.5 py-0.5 rounded border border-[rgba(125,165,225,.18)] text-[#8b97ad] hover:border-[#5fd3ff] hover:text-white transition-colors"
           >
             {p.label}

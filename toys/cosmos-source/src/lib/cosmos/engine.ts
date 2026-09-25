@@ -96,6 +96,7 @@ export interface EngineState {
   tourActive: boolean;
   realScale: boolean; // true → honest linear distances + proportional sizes
   blueLight: boolean; // true → artistic blue styling; false → neutral, no light override
+  solarEclipse: boolean; // true when the Moon's umbra/penumbra currently falls on Earth
 }
 
 export interface BodyInfo {
@@ -153,6 +154,9 @@ export class CosmosEngine {
   private zodiGroup = new THREE.Group();
   private geg!: THREE.Sprite;
   private shadowGrp = new THREE.Group();
+  private moonShadowGrp = new THREE.Group();
+  private eclipseFoot!: THREE.Mesh;
+  private _solarEclipse = false;
   private orbitGroupRoot = new THREE.Group();
   private cometGroup = new THREE.Group();
   private comets: any[] = [];
@@ -1481,6 +1485,41 @@ export class CosmosEngine {
       PLEN: PENUMBRA_LEN,
       PR1: PENUMBRA_R1,
     };
+
+    // P1-1: Moon shadow cones for solar-eclipse visualization (mirror of Earth's shadow).
+    // Umbra length ~1.6 so it reaches Earth (Moon orbits at ~1.4 scene units); small radii so the
+    // footprint on Earth is a compact spot. Penumbra wider for the partial-eclipse zone.
+    const M_U_LEN = 1.6,
+      M_U_R0 = 0.06,
+      M_U_R1 = 0.005,
+      M_P_LEN = 2.2,
+      M_P_R1 = 0.26;
+    this.moonShadowGrp.add(cone(M_U_R0, M_U_R1, M_U_LEN, 0x0a0612, 0.85));
+    this.moonShadowGrp.add(cone(0.18, M_P_R1, M_P_LEN, 0x181226, 0.28));
+    this.sysGroup.add(this.moonShadowGrp);
+    (this as any)._MUMBRA = {
+      LEN: M_U_LEN,
+      R0: M_U_R0,
+      R1: M_U_R1,
+      PLEN: M_P_LEN,
+      PR1: M_P_R1,
+    };
+
+    // Solar-eclipse footprint: a dark disk placed on Earth's surface at the sub-shadow point.
+    const footGeo = new THREE.CircleGeometry(0.05, 32);
+    footGeo.rotateX(-Math.PI / 2); // face +Y by default; re-oriented each frame
+    this.eclipseFoot = new THREE.Mesh(
+      footGeo,
+      new THREE.MeshBasicMaterial({
+        color: 0x05030a,
+        transparent: true,
+        opacity: 0.7,
+        depthWrite: false,
+      }),
+    );
+    this.eclipseFoot.visible = false;
+    this.eclipseFoot.renderOrder = 6;
+    this.sysGroup.add(this.eclipseFoot);
   }
 
   /* ═════════ METEORS ═════════ */
@@ -2175,6 +2214,41 @@ export class CosmosEngine {
     if (this.geg.visible)
       this.geg.position.copy(this._ew).addScaledVector(sdir, 1600);
 
+    // P1-1: Moon shadow + solar-eclipse detection (mirror of the lunar-eclipse test above).
+    {
+      const moon = this.nodes["地球"].moon;
+      moon.getWorldPosition(this._mw);
+      // shadow axis points anti-sunward: away from the origin (Sun), i.e. along the Moon's radial dir.
+      const axis = this._mw.clone().normalize();
+      this.moonShadowGrp.position.copy(this._mw);
+      this.moonShadowGrp.quaternion.setFromUnitVectors(this.UP, axis);
+      const U = (this as any)._MUMBRA as {
+        LEN: number;
+        R0: number;
+        R1: number;
+        PLEN: number;
+        PR1: number;
+      };
+      const rel = this._ew.clone().sub(this._mw); // Moon → Earth
+      const s = rel.dot(axis);
+      const perp = Math.sqrt(Math.max(0, rel.lengthSq() - s * s));
+      const uR = U.R0 + ((U.R1 - U.R0) * Math.max(0, s)) / U.LEN;
+      const pR = 0.18 + ((U.PR1 - 0.18) * Math.max(0, s)) / U.PLEN;
+      const eclipsing = s > 0 && perp < pR && this.moonShadowGrp.visible;
+      this._solarEclipse = eclipsing;
+      if (eclipsing) {
+        const R = this.nodes["地球"].rDisp as number;
+        const t = s - Math.sqrt(Math.max(0, R * R - perp * perp));
+        const fp = this._mw.clone().addScaledVector(axis, t);
+        const nrm = fp.clone().sub(this._ew).normalize();
+        this.eclipseFoot.position.copy(fp).addScaledVector(nrm, 0.01);
+        this.eclipseFoot.quaternion.setFromUnitVectors(this.UP, nrm);
+        this.eclipseFoot.visible = true;
+      } else {
+        this.eclipseFoot.visible = false;
+      }
+    }
+
     // Horizon mode
     if (this.horizonMode) {
       this.updateHorizonFrame();
@@ -2455,6 +2529,7 @@ export class CosmosEngine {
         flySpeed: this.flySpeed,
         tourActive: this.tour.active,
         blueLight: this.blueLight,
+        solarEclipse: this._solarEclipse,
       };
       const ctrlKey = JSON.stringify(ctrl);
       if (ctrlKey !== this._lastCtrlKey) {
@@ -2800,7 +2875,10 @@ export class CosmosEngine {
       this.zodiGroup.visible = on;
       this.geg.visible = on;
     }
-    if (key === "shadow") this.shadowGrp.visible = on;
+    if (key === "shadow") {
+      this.shadowGrp.visible = on;
+      this.moonShadowGrp.visible = on;
+    }
     if (key === "fermi" && this.fermiGroup) this.fermiGroup.visible = on;
     if (key === "arms" && this.armsGroup) this.armsGroup.visible = on;
   }
