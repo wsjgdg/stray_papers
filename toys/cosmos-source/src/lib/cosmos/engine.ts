@@ -2510,32 +2510,32 @@ export class CosmosEngine {
       return;
     }
     if (this.horizonMode) return;
-    // Solar-system body click: select it (dossier) and turn the view to face it, but
-    // NEVER fly the camera out to the body. Far bodies (Haumea 43 AU, Ceres 2.8 AU)
-    // sit many AU from the Sun; flying onto them strands the camera with the entire
-    // inner system behind it — the "all bodies vanished" bug. Keeping the overview
-    // (orbit centre = Sun, overview distance) while rotating to face the body keeps
-    // the whole system framed and the clicked body centred. We deliberately do NOT
-    // set cam.focus here, so nothing locks the camera either.
+    // Solar-system body click: select it (dossier) AND fly the camera in to the body.
+    // This was deliberately disabled in 8e1925a because flying onto a far body (Haumea
+    // 43 AU, Ceres 2.8 AU) stranded the camera — but that strand was caused by
+    // non-finite camera values (round-3 fix), not by the fly-to itself. With the
+    // per-frame NaN safety net + sanitizeCamera() in place, focusing a body is now
+    // safe: cam.focus tracks the (orbiting) body so it stays centred, and
+    // releaseFocus() / setScaleLevel() / resetView() always snap back to the overview.
     const bodyPos = hit.object.getWorldPosition(this._p).clone();
-    const bodyDir = bodyPos.clone();
-    if (bodyDir.lengthSq() < 1e-9) bodyDir.set(0, 0, 1);
-    bodyDir.normalize();
     this.showInfo(b);
-    // Aim the camera's forward axis along bodyDir (camera sits on the opposite side of
-    // the Sun), so both the body and the Sun stay centred and in frame.
-    const viewDir = this._q.copy(bodyDir).multiplyScalar(-1);
-    const toTheta = Math.atan2(viewDir.x, viewDir.z);
+    this.cam.focus = hit.object;
+    const bodyScale = hit.object.scale.x || 1;
+    const toDist = Math.max(3, bodyScale * 2.5);
+    // Direction from the current camera position to the body — fly to look at it head-on.
+    const camToObj = this._q.copy(bodyPos).sub(this.camera.position);
+    const toTheta = Math.atan2(camToObj.x, camToObj.z);
     const toPhi = Math.max(
       0.08,
       Math.min(
         Math.PI - 0.08,
-        Math.acos(THREE.MathUtils.clamp(viewDir.y, -1, 1)),
+        Math.acos(THREE.MathUtils.clamp(camToObj.y / camToObj.length(), -1, 1)),
       ),
     );
-    this.cam.want.set(0, 0, 0);
-    this.cam.wantDist = SCALE_LEVELS[this.scaleLevel].sceneScale;
-    this.startFlyTo(toTheta, toPhi, this.cam.wantDist);
+    // Persist the focus distance so the post-flyTo per-frame lerp (dist -> wantDist)
+    // doesn't drag the camera back out to the stale scale-default distance.
+    this.cam.wantDist = toDist;
+    this.startFlyTo(toTheta, toPhi, toDist);
   }
 
   private showInfo(b: any) {

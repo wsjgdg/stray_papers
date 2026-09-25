@@ -1,14 +1,15 @@
 // Offline replication of the cosmos click -> camera -> frame-loop pipeline.
-// Goal: prove whether clicking Haumea (SYS node, ellip) or Ceres (asteroid ball)
-// produces a FINITE camera + keeps the solar system on-screen after my 8e1925a fix.
-// Mirrors src/lib/cosmos/math-utils.ts and the solar branch + frame-loop camera math
-// in src/lib/cosmos/engine.ts.
+// Goal: prove that clicking Haumea (SYS node, ellip) or Ceres (asteroid ball) now
+// (a) produces a FINITE camera, (b) actually ZOOMS IN (dist < overview distance),
+// and (c) centres the clicked body on screen. Mirrors src/lib/cosmos/math-utils.ts
+// and the solar branch + frame-loop camera math in src/lib/cosmos/engine.ts AFTER the
+// focus-based fly-to restore (replaces the 8e1925a "rotate-only" behaviour).
 
 const D2R = Math.PI / 180;
 
 // --- rotMatrix / posAU (verbatim from math-utils.ts) ---
 function rotMatrix(b) {
-  return { Om: b.Om * D2R, i: b.i * D2R, w: b.w * D2R }; // we only need the composite below
+  return { Om: b.Om * D2R, i: b.i * D2R, w: b.w * D2R };
 }
 function posAU(b, t) {
   if (b._n === undefined) {
@@ -25,29 +26,24 @@ function posAU(b, t) {
   }
   const sE = Math.sin(E),
     cE = Math.cos(E);
-  // apply R = Rz(Om)Rx(i)Rz(w)  to (a(cE-e), a*q*sE, 0)
   const x0 = b.a * (cE - b.e),
     y0 = b.a * b._q * sE,
     z0 = 0;
-  // Rz(w): rotate (x0,y0) by w
   const cw = Math.cos(b.w * D2R),
     sw = Math.sin(b.w * D2R);
   const x1 = x0 * cw - y0 * sw,
     y1 = x0 * sw + y0 * cw,
     z1 = z0;
-  // Rx(i): rotate (y1,z1) by i
   const ci = Math.cos(b.i * D2R),
     si = Math.sin(b.i * D2R);
   const x2 = x1,
     y2 = y1 * ci - z1 * si,
     z2 = y1 * si + z1 * ci;
-  // Rz(Om): rotate (x2,y2) by Om
   const cO = Math.cos(b.Om * D2R),
     sO = Math.sin(b.Om * D2R);
   const x3 = x2 * cO - y2 * sO,
     y3 = x2 * sO + y2 * cO,
     z3 = z2;
-  // engine returns (x, z, -y)
   return { x: x3, y: z3, z: -y3 };
 }
 
@@ -89,27 +85,46 @@ function isFinite3(v) {
   return Number.isFinite(v.x) && Number.isFinite(v.y) && Number.isFinite(v.z);
 }
 
-// Solar branch (post 8e1925a) for a body world-position = scalePos(posAU(body, t))
-function simulateClick(body, real, simT) {
+// Overview camera pose (the state BEFORE the click) used to derive the look direction.
+function overviewCam(theta = 0.7, phi = 1.05, dist = SCENE_SCALE) {
+  const sp = Math.max(0.05, Math.min(Math.PI - 0.05, phi));
+  return {
+    x: dist * Math.sin(sp) * Math.sin(theta),
+    y: dist * Math.cos(sp),
+    z: dist * Math.sin(sp) * Math.cos(theta),
+  };
+}
+
+// Solar branch (focus-based fly-to, post restore) for a body world-position.
+// bodyScale = hit.object.scale.x (visual radius). For ellip nodes the mesh is
+// rDisp*1.6, for asteroid balls max(0.3, rDisp*2.2) — both small, so the min-clamp
+// (ellip?6:3) dominates and toDist is a tight close-up.
+function simulateClick(body, real, simT, ellip, bodyScale = 1) {
   const au = posAU(body, simT);
   if (!isFinite3(au)) return { err: "posAU NaN" };
   const bodyPos = scalePos(au, real);
   if (!isFinite3(bodyPos)) return { err: "scalePos NaN" };
-  let bodyDir = { ...bodyPos };
-  const len2 = bodyDir.x ** 2 + bodyDir.y ** 2 + bodyDir.z ** 2;
-  if (len2 < 1e-9) bodyDir = { x: 0, y: 0, z: 1 };
-  const L = Math.hypot(bodyDir.x, bodyDir.y, bodyDir.z);
-  bodyDir = { x: bodyDir.x / L, y: bodyDir.y / L, z: bodyDir.z / L };
-  // camera on opposite side of Sun: viewDir = -bodyDir
-  const viewDir = { x: -bodyDir.x, y: -bodyDir.y, z: -bodyDir.z };
-  const toTheta = Math.atan2(viewDir.x, viewDir.z);
+  const toDist = Math.max(ellip ? 6 : 3, bodyScale * 2.5);
+  // Direction from current (overview) camera position to the body.
+  const cam0 = overviewCam();
+  const camToObj = {
+    x: bodyPos.x - cam0.x,
+    y: bodyPos.y - cam0.y,
+    z: bodyPos.z - cam0.z,
+  };
+  const L = Math.hypot(camToObj.x, camToObj.y, camToObj.z) || 1;
+  const toTheta = Math.atan2(camToObj.x, camToObj.z);
   const toPhi = Math.max(
     0.08,
-    Math.min(Math.PI - 0.08, Math.acos(Math.max(-1, Math.min(1, viewDir.y)))),
+    Math.min(
+      Math.PI - 0.08,
+      Math.acos(Math.max(-1, Math.min(1, camToObj.y / L))),
+    ),
   );
-  const want = { x: 0, y: 0, z: 0 };
-  const wantDist = real ? 320 : SCENE_SCALE;
-  return { toTheta, toPhi, want, wantDist, bodyPos, bodyDir };
+  // cam.focus = body  ->  the per-frame loop drives `want` to the body world position.
+  const want = { ...bodyPos };
+  const wantDist = toDist;
+  return { toTheta, toPhi, want, wantDist, bodyPos, toDist };
 }
 
 // Frame-loop camera integration (non-flyMode branch)
@@ -138,7 +153,6 @@ function runFrames(click, frames = 200, dt = 1 / 60) {
 
 // Project a world point to NDC using a look-at from camera pos toward target, fov 52.
 function projectToNDC(world, camPos, target, fovDeg = 52, aspect = 16 / 9) {
-  // forward
   const fwd = norm(sub(target, camPos));
   const up0 = { x: 0, y: 1, z: 0 };
   const right = norm(cross(fwd, up0));
@@ -146,8 +160,8 @@ function projectToNDC(world, camPos, target, fovDeg = 52, aspect = 16 / 9) {
   const d = sub(world, camPos);
   const x = dot(d, right);
   const y = dot(d, up);
-  const z = dot(d, fwd); // depth along view (positive = in front)
-  if (z <= 0) return { z, x: NaN, y: NaN };
+  const z = dot(d, fwd);
+  if (z <= 0) return { z, ndcX: NaN, ndcY: NaN };
   const tanF = Math.tan((fovDeg * D2R) / 2);
   const ndcX = x / z / (tanF * aspect);
   const ndcY = y / z / tanF;
@@ -171,8 +185,8 @@ function norm(a) {
   return { x: a.x / L, y: a.y / L, z: a.z / L };
 }
 
-function check(name, body, real, simT) {
-  const click = simulateClick(body, real, simT);
+function check(name, body, real, simT, ellip) {
+  const click = simulateClick(body, real, simT, ellip);
   if (click.err) {
     console.log(`FAIL ${name}: ${click.err}`);
     return false;
@@ -182,23 +196,12 @@ function check(name, body, real, simT) {
     console.log(`FAIL ${name}: ${end.err}`);
     return false;
   }
+  const sp = Math.max(0.05, Math.min(Math.PI - 0.05, end.phi));
   const camPos = {
-    x:
-      end.target.x +
-      end.dist *
-        Math.sin(Math.max(0.05, Math.min(Math.PI - 0.05, end.phi))) *
-        Math.sin(end.theta),
-    y:
-      end.target.y +
-      end.dist * Math.cos(Math.max(0.05, Math.min(Math.PI - 0.05, end.phi))),
-    z:
-      end.target.z +
-      end.dist *
-        Math.sin(Math.max(0.05, Math.min(Math.PI - 0.05, end.phi))) *
-        Math.cos(end.theta),
+    x: end.target.x + end.dist * Math.sin(sp) * Math.sin(end.theta),
+    y: end.target.y + end.dist * Math.cos(sp),
+    z: end.target.z + end.dist * Math.sin(sp) * Math.cos(end.theta),
   };
-  // Project Sun (origin) and the clicked body
-  const sun = projectToNDC({ x: 0, y: 0, z: 0 }, camPos, end.target);
   const bodyW = scalePos(posAU(body, simT), real);
   const bodyP = projectToNDC(bodyW, camPos, end.target);
   const onScreen = (p) =>
@@ -207,25 +210,31 @@ function check(name, body, real, simT) {
     Math.abs(p.ndcX) < 1.1 &&
     Math.abs(p.ndcY) < 1.1 &&
     p.z > 0;
-  const ok = onScreen(sun) && onScreen(bodyP);
+  // Sun is expected to drift off-screen for far bodies (focus is on the body) — so we
+  // only assert the body itself is centred + in front, plus the camera is finite and
+  // actually closer than the overview distance (i.e. it ZOOMED IN).
+  const bodyCentred =
+    onScreen(bodyP) && Math.abs(bodyP.ndcX) < 0.1 && Math.abs(bodyP.ndcY) < 0.1;
+  const zoomedIn = end.dist < SCENE_SCALE;
+  const ok = isFinite3(camPos) && bodyCentred && zoomedIn;
   console.log(
-    `${ok ? "PASS" : "FAIL"} ${name} (real=${real}): camPos=(${camPos.x.toFixed(1)},${camPos.y.toFixed(1)},${camPos.z.toFixed(1)}) dist=${end.dist.toFixed(1)}`,
+    `${ok ? "PASS" : "FAIL"} ${name} (real=${real} ellip=${ellip}): camPos=(${camPos.x.toFixed(1)},${camPos.y.toFixed(1)},${camPos.z.toFixed(1)}) dist=${end.dist.toFixed(1)} (overview=${SCENE_SCALE})`,
   );
   console.log(
-    `     sun ndc=(${sun.ndcX?.toFixed(2)},${sun.ndcY?.toFixed(2)}) z=${sun.z.toFixed(1)}  body ndc=(${bodyP.ndcX?.toFixed(2)},${bodyP.ndcY?.toFixed(2)}) z=${bodyP.z.toFixed(1)}`,
+    `     body ndc=(${bodyP.ndcX?.toFixed(2)},${bodyP.ndcY?.toFixed(2)}) z=${bodyP.z.toFixed(1)}  | centred=${bodyCentred} zoomedIn=${zoomedIn}`,
   );
   return ok;
 }
 
-const simT = (Date.now() - Date.UTC(2000, 0, 1)) / 86400000; // ~ arbitrary current-ish sim time
+const simT = (Date.now() - Date.UTC(2000, 0, 1)) / 86400000;
 let pass = true;
-pass = check("Haumea readable", HAUMEA, false, simT) && pass;
-pass = check("Ceres  readable", CERES, false, simT) && pass;
-pass = check("Haumea real   ", HAUMEA, true, simT) && pass;
-pass = check("Ceres  real   ", CERES, true, simT) && pass;
+pass = check("Haumea readable", HAUMEA, false, simT, true) && pass;
+pass = check("Ceres  readable", CERES, false, simT, false) && pass;
+pass = check("Haumea real   ", HAUMEA, true, simT, true) && pass;
+pass = check("Ceres  real   ", CERES, true, simT, false) && pass;
 console.log(
   pass
-    ? "\nVERIFY_PASS: click pipeline finite + bodies on-screen"
+    ? "\nVERIFY_PASS: click flies in, camera finite, clicked body centred (Sun may leave frame for far bodies)"
     : "\nVERIFY_FAIL",
 );
 process.exit(pass ? 0 : 1);
