@@ -633,7 +633,28 @@ export default function CosmosViewer() {
             <span className="mr-1 text-[13px] leading-none">星</span>
             中国星官
           </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className={`h-7 px-2.5 text-[11px] border border-[rgba(125,165,225,.18)] ${state.show.darkmatter ? "!border-[#b06bff] !text-[#b06bff] !bg-[rgba(176,107,255,.12)]" : ""}`}
+            onClick={() =>
+              engineRef.current?.toggleLayer(
+                "darkmatter",
+                !state.show.darkmatter,
+              )
+            }
+            title="显示 / 隐藏暗物质纤维网（宇宙大尺度结构的发光骨架）"
+          >
+            <Sparkles className="w-3 h-3 mr-1" />
+            暗物质
+          </Button>
         </div>
+        {state.show.darkmatter && (
+          <div className="mt-1.5 text-[10px] leading-[1.6] text-[#b06bff]/90 bg-[rgba(176,107,255,.06)] border border-[rgba(176,107,255,.22)] rounded-md px-2.5 py-1.5">
+            暗物质纤维网：可见星系只是这张网上的「泡沫」——约 85%
+            的物质不发光，却撑起了宇宙的大尺度结构。
+          </div>
+        )}
 
         {/* Fly-mode control hint */}
         {state.flyMode && (

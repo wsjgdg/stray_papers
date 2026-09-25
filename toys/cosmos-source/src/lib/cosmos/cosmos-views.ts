@@ -1789,6 +1789,45 @@ export function buildSuperclusters(): THREE.Group {
     grp.add(new THREE.Mesh(tube, filMat));
   }
 
+  // Dark-matter skeleton: a brighter, violet glowing version of the SAME cosmic-web
+  // filaments, revealed only when the "暗物质" filter is on. The faint blue filaments
+  // above trace where galaxies actually lit up; the dark-matter web is the scaffolding
+  // they cling to — visible matter is just froth on the cosmic web (the "sponge").
+  const dmGroup = new THREE.Group();
+  dmGroup.name = "darkmatter";
+  dmGroup.visible = false;
+  const dmMat = new THREE.MeshBasicMaterial({
+    color: 0xb06bff,
+    transparent: true,
+    opacity: 0.5,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const dmGlow = glowTex([176, 107, 255]);
+  for (const f of COSMIC_FILAMENTS) {
+    const a = galacticDir(f.from[0], f.from[1], _v.clone()).multiplyScalar(
+      compress(f.from[2]),
+    );
+    const b = galacticDir(f.to[0], f.to[1], _v.clone()).multiplyScalar(
+      compress(f.to[2]),
+    );
+    const tube = new THREE.TubeGeometry(
+      new THREE.LineCurve3(a, b),
+      1,
+      0.55,
+      8,
+      false,
+    );
+    dmGroup.add(new THREE.Mesh(tube, dmMat));
+    // glowing node at each endpoint emphasizes the filament "joints"
+    for (const e of [a, b]) {
+      const node = glowSprite(dmGlow, 0xb06bff, 3.2, 0.5);
+      node.position.copy(e);
+      dmGroup.add(node);
+    }
+  }
+  grp.add(dmGroup);
+
   grp.userData.labelSpecs = specs;
   // Replace the procedural backdrop with a real survey point cloud (2dF+6dF via the
   // VizieR China-VO mirror). Fetched async so this group returns immediately.

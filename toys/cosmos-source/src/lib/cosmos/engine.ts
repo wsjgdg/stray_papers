@@ -214,6 +214,7 @@ export class CosmosEngine {
   private showGrp = { con: true, dso: true, chi: false };
   private fermiGroup?: THREE.Object3D;
   private armsGroup?: THREE.Object3D;
+  private darkMatterGroup?: THREE.Object3D;
   private sphereGeo!: THREE.SphereGeometry;
   private dummy = new THREE.Object3D();
   private cosmosViews: THREE.Group[] = [];
@@ -311,6 +312,7 @@ export class CosmosEngine {
     fermi: false,
     arms: false,
     chi: false,
+    darkmatter: false,
   };
 
   // Real-scale mode (honest proportions toggle)
@@ -2011,6 +2013,11 @@ export class CosmosEngine {
       this.armsGroup = real.getObjectByName("arms");
       if (this.armsGroup) this.armsGroup.visible = this.show.arms;
     }
+    if (level === 5) {
+      this.darkMatterGroup = real.getObjectByName("darkmatter");
+      if (this.darkMatterGroup)
+        this.darkMatterGroup.visible = this.show.darkmatter;
+    }
     this.applyBlueLight(); // recolor the freshly-built view to the current blueLight state
   }
 
@@ -3320,6 +3327,8 @@ export class CosmosEngine {
     }
     if (key === "fermi" && this.fermiGroup) this.fermiGroup.visible = on;
     if (key === "arms" && this.armsGroup) this.armsGroup.visible = on;
+    if (key === "darkmatter" && this.darkMatterGroup)
+      this.darkMatterGroup.visible = on;
     if (key === "chi") {
       this.chiGroup.visible = on;
       this.showGrp.chi = on;

@@ -126,12 +126,15 @@
   - 做法：移除半径 `Math.random()`，改为从真实 `distLy` 推导低-z Hubble 红移 `z=H0·d/c`（H0=70, 1Mpc=3.26156e6 ly, c=299792.458），半径用与类星体云**同一律** `R*0.6*(1-1/(1+z)+0.2)`，使近距(低z)著名星系落在内壳、远处类星体更外；dossier 增列「红移 z=…」「退行速度 … km/s」。离线核验：12 星系半径确定性落在 12.05–14.47（无随机），红移/速度物理合理（Hoag z=0.043/12877 km/s、Cen A z=0.0009/279 km/s），与类星体云径向律一致（著名星系在内壳，类星体 z≥0.1 在 r≥17 外壳，无重叠）。
   - **README 校准**：第 25 行「8 类星体」→「300 类星体」（`QUASARS_REAL` 实测 300 条）。门禁全绿：prettier✅ · tsc EXIT 0 · eslint 0err · vitest 12/12 · next build EXIT 0 · 离线数值核验 VERIFY_PASS。
 
-- [ ] **P3-3 类星体信息卡升级** ⬜
-  - QUASARS_REAL 已有 z/RA/Dec；加：宿主星系缩略示意、喷流轴向指示（多普勒增亮侧更亮）、"宇宙灯塔"文案、光变曲线小图（静态 SVG）。
+- [x] **P3-3 类星体信息卡升级** ✅（commit `ab3d244`）
+  - QUASARS_REAL 仅有真实 z/l/b/distLy（无 RA/Dec 手编字段，计划原文"RA/Dec"系误记）；新增 `QuasarExtra` 类型 + 确定性 `quasarVisual(i)` 生成器（mulberry32 种子，按索引稳定，非每帧随机）：宿主星系形态、喷流方位角、多普勒增亮侧、28 点光变曲线、宇宙灯塔文案。
+  - `BodyData`/`BodyInfo` 加 `quasar?` 字段，`showInfo` 透传；dossier 新增「宇宙灯塔」徽标 + 宿主星系/相对论喷流 SVG 缩略（近向侧喷流更亮以表多普勒增亮）+ 光变曲线 SVG 小图 + 文案；quasar rows 增「宿主星系」行。
+  - 门禁全绿：prettier✅ · tsc EXIT 0 · eslint 0err · vitest 12/12 · next build EXIT 0 · 离线核验（300 个确定性/有界/多样）VERIFY_PASS。
 
-- [ ] **P3-4 宇宙网暗物质层** ⬜（需 toggle 基建）
-  - 现状：filaments 数据已存在（L5）；无暗物质滤镜（`show` 无此 toggle）。
-  - 做法：滤镜"暗物质"模式显示纤维骨架发光版，强调"可见物质只是网上海绵"；加 `darkmatter` toggle。
+- [x] **P3-4 宇宙网暗物质层** ✅（commit 见本次）
+  - 现状：`COSMIC_FILAMENTS`（宇宙-data.ts，6 条长城/纤维，端点 [l,b,distMpc]）已在 L5 `buildSuperclusters` 以淡蓝细管（opacity 0.16）绘制；无暗物质滤镜。
+  - 做法：复用 `cosmosBuilders[5]=buildSuperclusters`，在其内新增 `name="darkmatter"` 组（默认 `visible=false`），对同 6 条纤维画**紫罗兰发光粗管**（r=0.55/opacity 0.5/Additive）+ 端点发光节点；engine 加 `private darkMatterGroup`，在 `ensureCosmosView(level===5)` 中 `getObjectByName("darkmatter")` 并按 `show.darkmatter` 同步显隐；`toggleLayer` 加 `darkmatter` 分支；`show` 对象加 `darkmatter:false`；HUD 新增紫色「暗物质」按钮（`Sparkles` 图标），激活时下方显示科普条「可见星系只是网上的泡沫——约 85% 物质不发光却撑起大尺度结构」。
+  - 门禁全绿：prettier✅ · tsc EXIT 0 · eslint 0err · vitest 12/12 · next build EXIT 0。
 
 ---
 
