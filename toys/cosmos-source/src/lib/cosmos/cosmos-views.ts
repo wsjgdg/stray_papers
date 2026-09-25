@@ -67,6 +67,8 @@ export interface BodyData {
   isDeep?: boolean;
   /** When set, clicking this body's dossier shows a "jump to scale level" button. */
   gotoLevel?: number;
+  /** When set (quasars), the dossier renders host/jet/light-curve visuals. */
+  quasar?: QuasarExtra;
 }
 
 /** Round sprite helper — renders the texture's real shape & colour (NormalBlending, so
@@ -1846,6 +1848,59 @@ function attachRealSurveyCloud(grp: THREE.Group): void {
     .catch((e) => console.warn("[cosmic-web] real survey cloud failed:", e));
 }
 
+/** Deterministic per-quasar visual extras for the dossier (host sketch, jet axis,
+ *  light curve). QUASARS_REAL carries only real z/l/b/distLy; these illustrative
+ *  fields are synthesized stably from the index so a given quasar always renders
+ *  the same (no Math.random per frame / per click). */
+export interface QuasarExtra {
+  host: string; // host-galaxy morphological type (illustrative)
+  jetDeg: number; // jet position angle on the sky (deg, 0–180)
+  brightSide: "L" | "R"; // which jet is Doppler-boosted (near-side)
+  lightCurve: number[]; // normalized flux samples 0..1 (illustrative AGN variability)
+  lighthouse: string; // cosmic-lighthouse tagline
+}
+
+function mulberry32(a: number) {
+  return function () {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function quasarVisual(i: number): QuasarExtra {
+  const rnd = mulberry32((i + 1) * 0x9e3779b1);
+  const hosts = [
+    "椭圆星系 (巨型)",
+    "椭圆星系",
+    "旋涡星系 (寄生吸积)",
+    "透镜状星系",
+  ];
+  const host = hosts[Math.floor(rnd() * hosts.length)];
+  const jetDeg = Math.floor(rnd() * 180);
+  const brightSide: "L" | "R" = rnd() < 0.5 ? "L" : "R";
+  const N = 28;
+  const phase = rnd() * Math.PI * 2;
+  const amp = 0.18 + rnd() * 0.42;
+  const lightCurve: number[] = [];
+  for (let k = 0; k < N; k++) {
+    const t = (k / N) * Math.PI * 2;
+    let v = 0.5 + amp * Math.sin(t + phase) + (rnd() - 0.5) * 0.16;
+    if (rnd() > 0.92) v += 0.25 + rnd() * 0.3; // occasional flare
+    lightCurve.push(Math.max(0.05, Math.min(1, v)));
+  }
+  return {
+    host,
+    jetDeg,
+    brightSide,
+    lightCurve,
+    lighthouse:
+      "宇宙灯塔：中心超大质量黑洞吞噬吸积盘物质时，沿自转轴喷出近光速相对论性喷流；喷流近向我们的一侧因多普勒效应增亮，使类星体成为数十亿光年外仍可被射电望远镜捕捉的「信标」。",
+  };
+}
+
 /** ---------- Level 6: Observable Universe (CMB shell + quasars + far galaxies) ---------- */
 export function buildObservableUniverse(): THREE.Group {
   const grp = new THREE.Group();
@@ -1997,6 +2052,7 @@ export function buildObservableUniverse(): THREE.Group {
     qCol[i * 3] = qColor.r;
     qCol[i * 3 + 1] = qColor.g;
     qCol[i * 3 + 2] = qColor.b;
+    const extra = quasarVisual(i);
     const body: BodyData = {
       n: q.n,
       en: q.en,
@@ -2004,12 +2060,14 @@ export function buildObservableUniverse(): THREE.Group {
       kind: "cosmos",
       c: 0xffd9a0,
       rows: [
-        ["类型", "类星体"],
+        ["类型", "类星体 (AGN)"],
+        ["宿主星系", extra.host],
         ["红移", "z=" + q.z],
         ["距离", fmtLy(q.distLy)],
       ],
       note: q.note,
       isCosmos: true,
+      quasar: extra,
     };
     qBodies.push(body);
     const d = new THREE.Object3D();

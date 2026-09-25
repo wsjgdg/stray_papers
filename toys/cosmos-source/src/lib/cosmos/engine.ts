@@ -59,6 +59,7 @@ import {
   SCALE_LEVELS,
   type LabelSpec,
   type BodyData,
+  type QuasarExtra,
   markBlue,
 } from "./cosmos-views";
 import { hudStore } from "./hudStore";
@@ -120,6 +121,7 @@ export interface BodyInfo {
   note: string;
   key: string;
   gotoLevel?: number;
+  quasar?: QuasarExtra;
 }
 
 type LabelEntry = {
@@ -2466,6 +2468,7 @@ export class CosmosEngine {
       rows: b.rows || [],
       note: b.note || "",
       gotoLevel: b.gotoLevel,
+      quasar: b.quasar,
     };
     this.onInfoChange?.(info);
   }

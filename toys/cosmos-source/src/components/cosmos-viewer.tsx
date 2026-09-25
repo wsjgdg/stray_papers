@@ -876,6 +876,107 @@ export default function CosmosViewer() {
             <p className="mt-2.5 text-[11.5px] leading-[1.75] text-[#aab6c9]">
               {info.note}
             </p>
+            {info.quasar && (
+              <div className="mt-3 border-t border-[rgba(125,165,225,.12)] pt-2.5">
+                <div className="flex items-center gap-1.5 text-[10px] tracking-[.2em] text-[#5fd3ff] mb-2">
+                  <span className="w-[6px] h-[6px] rounded-full bg-[#5fd3ff] shadow-[0_0_8px_#5fd3ff]" />
+                  宇宙灯塔 · COSMIC LIGHTHOUSE
+                </div>
+                <div className="flex gap-2.5">
+                  <svg
+                    width="74"
+                    height="58"
+                    viewBox="0 0 74 58"
+                    className="flex-none"
+                  >
+                    {(() => {
+                      const pa = (info.quasar!.jetDeg * Math.PI) / 180;
+                      const dx = Math.cos(pa) * 30;
+                      const dy = Math.sin(pa) * 18;
+                      const bright = info.quasar!.brightSide === "L";
+                      const x1 = 37 - dx;
+                      const y1 = 29 - dy;
+                      const x2 = 37 + dx;
+                      const y2 = 29 + dy;
+                      return (
+                        <>
+                          <ellipse
+                            cx="37"
+                            cy="29"
+                            rx="21"
+                            ry="12"
+                            fill="rgba(245,166,35,.14)"
+                            stroke="#f5a623"
+                            strokeWidth="1.2"
+                          />
+                          <ellipse
+                            cx="37"
+                            cy="29"
+                            rx="9"
+                            ry="5"
+                            fill="rgba(245,166,35,.3)"
+                          />
+                          <line
+                            x1={x1}
+                            y1={y1}
+                            x2="37"
+                            y2="29"
+                            stroke={bright ? "#5fd3ff" : "rgba(160,190,230,.5)"}
+                            strokeWidth={bright ? 2.6 : 1.2}
+                            strokeLinecap="round"
+                          />
+                          <line
+                            x1="37"
+                            y1="29"
+                            x2={x2}
+                            y2={y2}
+                            stroke={bright ? "rgba(160,190,230,.5)" : "#5fd3ff"}
+                            strokeWidth={bright ? 1.2 : 2.6}
+                            strokeLinecap="round"
+                          />
+                          <circle cx="37" cy="29" r="2.6" fill="#fff3d6" />
+                        </>
+                      );
+                    })()}
+                  </svg>
+                  <div className="flex-1 min-w-0 text-[10.5px] leading-[1.65] text-[#aab6c9]">
+                    <div>宿主：{info.quasar!.host}</div>
+                    <div>喷流轴向 ≈ {info.quasar!.jetDeg}°</div>
+                    <div className="text-[#5fd3ff]">
+                      {info.quasar!.brightSide === "L"
+                        ? "◀ 近向侧多普勒增亮"
+                        : "近向侧多普勒增亮 ▶"}
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-2.5 text-[9.5px] tracking-[.2em] text-[#8b97ad] mb-1">
+                  光变曲线（示意）
+                </div>
+                <svg
+                  width="100%"
+                  viewBox="0 0 220 48"
+                  preserveAspectRatio="none"
+                  className="block rounded bg-[rgba(125,165,225,.06)]"
+                >
+                  <polyline
+                    points={info
+                      .quasar!.lightCurve.map(
+                        (v, idx) =>
+                          `${
+                            (idx / (info.quasar!.lightCurve.length - 1)) * 220
+                          },${44 - v * 40}`,
+                      )
+                      .join(" ")}
+                    fill="none"
+                    stroke="#5fd3ff"
+                    strokeWidth="1.4"
+                  />
+                </svg>
+                <p className="mt-2 text-[10.5px] leading-[1.65] text-[#9aa7bd]">
+                  {info.quasar!.lighthouse}
+                </p>
+              </div>
+            )}
             {info.gotoLevel != null && (
               <button
                 onClick={() =>
