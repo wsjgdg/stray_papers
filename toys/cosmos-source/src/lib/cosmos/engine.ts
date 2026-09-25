@@ -13,6 +13,7 @@ import {
   SYS,
   COMETS,
   MOONS,
+  ASTEROIDS,
   DEEP,
   CONS,
   STARS,
@@ -97,6 +98,8 @@ export interface EngineState {
   realScale: boolean; // true → honest linear distances + proportional sizes
   blueLight: boolean; // true → artistic blue styling; false → neutral, no light override
   solarEclipse: boolean; // true when the Moon's umbra/penumbra currently falls on Earth
+  halleyCountdown: string; // human-readable days until 2061 Halley perihelion
+  apophisAlert: boolean; // true when the sim date is near Apophis's 2029-04-13 flyby
 }
 
 export interface BodyInfo {
@@ -150,6 +153,20 @@ export class CosmosEngine {
   private subOrbits: THREE.LineLoop[] = [];
   private beltAst!: THREE.InstancedMesh;
   private beltKbo!: THREE.InstancedMesh;
+  // P1-2: named main-belt asteroids + NEOs (clickable, with dossiers)
+  private asteroidGroup = new THREE.Group();
+  private asteroidNodes: { mesh: THREE.Object3D; body: any }[] = [];
+  // P1-2: Jupiter Trojan swarms (L4 leading / L5 trailing)
+  private trojanL4!: THREE.InstancedMesh;
+  private trojanL5!: THREE.InstancedMesh;
+  private trojanData: { sign: number; dl: number; fr: number; inc: number }[] =
+    [];
+  private trojanLabel = new THREE.Object3D();
+  // P1-4: pulsing feature hotspots on story moons (Europa / Enceladus)
+  private pulseSprites: { spr: THREE.Sprite; base: number }[] = [];
+  private _halleyTarget = Date.UTC(2061, 6, 28);
+  private _halleyCountdown = "";
+  private _apophisAlert = false;
   private eclRingGrp!: THREE.Group;
   private zodiGroup = new THREE.Group();
   private geg!: THREE.Sprite;
@@ -364,6 +381,7 @@ export class CosmosEngine {
     this.buildSky();
     this.buildHorizon();
     this.buildComets();
+    this.buildAsteroids();
     this.buildZodiAndShadow();
     this.buildMeteors();
     this.buildCosmosViews();
@@ -800,12 +818,159 @@ export class CosmosEngine {
         min: 30,
         grp: "sys",
       });
+
+      // P1-4: pulsing feature hotspot (Europa 冰下海洋 / Enceladus 羽流)
+      if (mo.pulse) {
+        const spr = new THREE.Sprite(
+          new THREE.SpriteMaterial({
+            map: softTex([255, 255, 255]),
+            color: mo.pulse.c,
+            blending: THREE.AdditiveBlending,
+            transparent: true,
+            depthWrite: false,
+            opacity: 0.5,
+          }),
+        );
+        const base = Math.max(0.35, rDisp * 2.4);
+        spr.scale.setScalar(base);
+        spr.userData.body = {
+          n: mo.pulse.label,
+          en: mo.full.includes("·")
+            ? mo.full.split("·")[1].trim().toUpperCase()
+            : mo.n,
+          key: mo.n + "_pulse",
+          kind: "moon",
+          rDisp: rDisp,
+          c: mo.pulse.c,
+          rows: [
+            ["所属卫星", mo.full],
+            ["类型", "特征热点"],
+            ["当前日心距", "—", "dist"],
+          ] as [string, string, string?][],
+          note: mo.pulse.note,
+        };
+        tilt.add(spr);
+        this.pickables.push(spr);
+        this.pulseSprites.push({ spr, base });
+      }
     }
 
     // Asteroid belt + Kuiper belt
     this.beltAst = this.makeBelt(620, 2.15, 3.25, 12, 0.04, 0.11, 0x8a8074, 7);
     this.beltKbo = this.makeBelt(820, 33, 56, 30, 0.05, 0.11, 0x9fb0be, 23);
     this.eclFrame.add(this.beltAst, this.beltKbo);
+  }
+
+  /* ═════════ NAMED ASTEROIDS + TROJANS (P1-2) ═════════ */
+  private asteroidRDisp(R: number): number {
+    if (this.realScale) return Math.max(0.02, REAL_BASE * (R / 6371));
+    return Math.max(0.06, 0.32 * Math.sqrt(R / 6371));
+  }
+  private buildAsteroids() {
+    this.eclFrame.add(this.asteroidGroup);
+
+    for (const a of ASTEROIDS) {
+      const rDisp = this.asteroidRDisp(a.R);
+      const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(1, 14, 10),
+        new THREE.MeshStandardMaterial({ color: a.c, roughness: 1 }),
+      );
+      mesh.scale.setScalar(rDisp);
+      const body = {
+        n: a.n,
+        en: a.en,
+        key: a.key,
+        kind: a.kind,
+        rDisp,
+        c: a.c,
+        neo: a.neo,
+        rows: [
+          ["直径", Math.round(a.R).toLocaleString("zh-CN") + " km"],
+          ["成分", a.comp],
+          ["轨道半长径", a.a.toFixed(3) + " AU"],
+          ["偏心率", a.e.toFixed(4)],
+          ["倾角", a.i.toFixed(2) + "°"],
+          ["公转周期", fmtP(a.P!)],
+          ["当前日心距", "—", "dist"],
+        ] as [string, string, string?][],
+        note: a.note,
+      };
+      mesh.userData.body = body;
+      const ball = new THREE.Mesh(
+        new THREE.SphereGeometry(1, 10, 8),
+        new THREE.MeshBasicMaterial({
+          transparent: true,
+          opacity: 0,
+          depthWrite: false,
+        }),
+      );
+      ball.scale.setScalar(Math.max(0.3, rDisp * 2.2));
+      ball.userData.body = body;
+      const g = new THREE.Group();
+      g.add(mesh, ball);
+      this.asteroidGroup.add(g);
+      this.pickables.push(ball);
+      this.asteroidNodes.push({ mesh: g, body });
+
+      const el = document.createElement("div");
+      el.className = "tag" + (a.neo ? " neo" : "");
+      el.innerHTML = `<b>${a.neo ? "☄" : "✦"}</b>${a.n}`;
+      this.labelHost.appendChild(el);
+      this.labelEls.push({
+        el,
+        obj: g,
+        up: rDisp * 2 + 0.1,
+        min: 26,
+        grp: "sys",
+      });
+    }
+
+    // ── Jupiter Trojan swarms (L4 leading / L5 trailing) ──
+    const N = 150;
+    const rnd = (
+      (s: number) => () =>
+        (s = (s * 48271) % 2147483647) / 2147483647
+    )(101);
+    this.trojanData = [];
+    for (let k = 0; k < N; k++) {
+      this.trojanData.push({
+        sign: 1,
+        dl: (rnd() - 0.5) * 70, // libration spread (deg)
+        fr: 0.97 + rnd() * 0.06, // radial spread around Jupiter
+        inc: (rnd() - 0.5) * 16, // out-of-plane spread (deg)
+      });
+      this.trojanData.push({
+        sign: -1,
+        dl: (rnd() - 0.5) * 70,
+        fr: 0.97 + rnd() * 0.06,
+        inc: (rnd() - 0.5) * 16,
+      });
+    }
+    const mkTrojan = (color: number) =>
+      new THREE.InstancedMesh(
+        new THREE.IcosahedronGeometry(1, 0),
+        new THREE.MeshBasicMaterial({ color }),
+        this.trojanData.length,
+      );
+    this.trojanL4 = mkTrojan(0xffc46b);
+    this.trojanL5 = mkTrojan(0x6fd0c0);
+    this.trojanL4.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.trojanL5.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.eclFrame.add(this.trojanL4, this.trojanL5);
+
+    this.trojanLabel.position.set(0, 0, 0);
+    this.eclFrame.add(this.trojanLabel);
+    const tl = document.createElement("div");
+    tl.className = "tag";
+    tl.innerHTML = `<b>⚑</b>木星特洛伊（L4 / L5 阵营）`;
+    this.labelHost.appendChild(tl);
+    this.labelEls.push({
+      el: tl,
+      obj: this.trojanLabel,
+      up: 0.4,
+      min: 60,
+      grp: "sys",
+    });
   }
 
   private makeBelt(
@@ -871,6 +1036,71 @@ export class CosmosEngine {
       arr[o + 14] = p.z;
     }
     m.instanceMatrix.needsUpdate = true;
+  }
+
+  /* ═════════ NAMED ASTEROIDS + TROJANS (P1-2) update ═════════ */
+  private updateAsteroids() {
+    if (this.asteroidGroup.visible) {
+      for (const an of this.asteroidNodes) {
+        const au = posAU(an.body, this.simT, this._p);
+        this.liveDist[an.body.key] = au.length().toFixed(3) + " AU";
+        an.mesh.position.copy(this.sp(au, this._s));
+      }
+    }
+    if (this.trojanL4.visible) {
+      const jup = posAU(this.nodes["木星"].body, this.simT, this._p);
+      this.sp(jup, this._s);
+      const base = Math.atan2(this._s.z, this._s.x);
+      const rJ = Math.hypot(this._s.x, this._s.z);
+      const arr4 = this.trojanL4.instanceMatrix.array;
+      const arr5 = this.trojanL5.instanceMatrix.array;
+      for (let k = 0; k < this.trojanData.length; k++) {
+        const t = this.trojanData[k];
+        const ang = base + (t.sign * Math.PI) / 3 + t.dl * D2R;
+        const r = rJ * t.fr;
+        const x = r * Math.cos(ang);
+        const z = r * Math.sin(ang);
+        const y = r * Math.sin(t.inc * D2R);
+        const o = k * 16;
+        arr4[o + 12] = x;
+        arr4[o + 13] = y;
+        arr4[o + 14] = z;
+        arr5[o + 12] = x;
+        arr5[o + 13] = y;
+        arr5[o + 14] = z;
+      }
+      this.trojanL4.instanceMatrix.needsUpdate = true;
+      this.trojanL5.instanceMatrix.needsUpdate = true;
+      // keep the label parked at the L4 centroid
+      const angL = base + Math.PI / 3;
+      this.trojanLabel.position.set(
+        rJ * Math.cos(angL),
+        rJ * Math.sin(8 * D2R),
+        rJ * Math.sin(angL),
+      );
+      // scale instance matrices (fixed small size)
+      if (!this.trojanL4.userData._inited) {
+        const sz = this.realScale ? 0.05 : 0.06;
+        const d = new THREE.Matrix4();
+        for (let k = 0; k < this.trojanData.length; k++) {
+          d.makeScale(sz, sz, sz);
+          d.toArray(arr4, k * 16);
+          d.toArray(arr5, k * 16);
+        }
+        this.trojanL4.userData._inited = true;
+      }
+    }
+
+    // P1-4: animate pulse hotspots
+    if (this.pulseSprites.length) {
+      const ph = (this.simT * 0.06) % (Math.PI * 2);
+      const s = 1 + 0.35 * Math.sin(ph);
+      for (const p of this.pulseSprites) {
+        p.spr.scale.setScalar(p.base * s);
+        (p.spr.material as THREE.SpriteMaterial).opacity =
+          0.35 + 0.35 * (0.5 + 0.5 * Math.sin(ph));
+      }
+    }
   }
 
   /* ═════════ SKY (real starfield) ═════════ */
@@ -2191,6 +2421,8 @@ export class CosmosEngine {
       }
     }
 
+    this.updateAsteroids();
+
     // Earth shadow + lunar eclipse
     this.nodes["地球"].og.getWorldPosition(this._ew);
     const sdir = this._d.copy(this._ew).normalize();
@@ -2482,6 +2714,19 @@ export class CosmosEngine {
       const fps = this.fpsN / this.fpsT;
       const dte = new Date(EPOCH + this.simT * 86400000);
       const clock = `${dte.getUTCFullYear()}–${MONTH[dte.getUTCMonth()]}–${String(dte.getUTCDate()).padStart(2, "0")}  ${String(dte.getUTCHours()).padStart(2, "0")}:${String(dte.getUTCMinutes()).padStart(2, "0")}`;
+
+      // P1-2 / P1-5: date-driven HUD cues
+      const simMillis = EPOCH + this.simT * 86400000;
+      const halleyDays = Math.round(
+        (this._halleyTarget - simMillis) / 86400000,
+      );
+      this._halleyCountdown =
+        (halleyDays >= 0 ? "约 " : "已过 ") +
+        Math.abs(halleyDays).toLocaleString("zh-CN") +
+        " 天（下一近地点 2061-07-28）";
+      const apophisTarget = Date.UTC(2029, 3, 13);
+      this._apophisAlert =
+        Math.abs((apophisTarget - simMillis) / 86400000) < 45;
       if (this.ADAPTIVE_DPR) {
         if (this.dprCool > 0) this.dprCool--;
         else if (fps < 45 && this.dprScale > 0.55) {
@@ -2530,6 +2775,8 @@ export class CosmosEngine {
         tourActive: this.tour.active,
         blueLight: this.blueLight,
         solarEclipse: this._solarEclipse,
+        halleyCountdown: this._halleyCountdown,
+        apophisAlert: this._apophisAlert,
       };
       const ctrlKey = JSON.stringify(ctrl);
       if (ctrlKey !== this._lastCtrlKey) {
@@ -2855,6 +3102,9 @@ export class CosmosEngine {
     if (key === "belt") {
       this.beltAst.visible = on;
       this.beltKbo.visible = on;
+      this.asteroidGroup.visible = on;
+      this.trojanL4.visible = on;
+      this.trojanL5.visible = on;
     }
     if (key === "mw") {
       const mw = this.skyGroup.getObjectByName("mw");

@@ -216,6 +216,8 @@ export default function CosmosViewer() {
     realScale: false,
     blueLight: true,
     solarEclipse: false,
+    halleyCountdown: "",
+    apophisAlert: false,
   });
   const [spdVal, setSpdVal] = useState(560);
   const [eclVal, setEclVal] = useState(234);
@@ -637,6 +639,22 @@ export default function CosmosViewer() {
                 ×{state.flySpeed.toFixed(0)}
               </b>
             </div>
+          </div>
+        )}
+
+        {/* Halley return countdown (P1-5) */}
+        {state.halleyCountdown && (
+          <div className="mt-2.5 text-[10px] leading-[1.7] text-[#ffd27a]/90 bg-[rgba(255,210,122,.06)] border border-[rgba(255,210,122,.28)] rounded-md px-2.5 py-1.5">
+            <b className="text-[#ffd27a]">哈雷彗星回归倒计时</b> ·{" "}
+            {state.halleyCountdown}
+          </div>
+        )}
+
+        {/* Apophis near-approach alert (P1-2) */}
+        {state.apophisAlert && (
+          <div className="mt-2.5 text-[10px] leading-[1.7] text-[#ff8a6a]/95 bg-[rgba(255,106,77,.08)] border border-[rgba(255,106,77,.35)] rounded-md px-2.5 py-1.5">
+            <b className="text-[#ff8a6a]">阿波菲斯飞掠预警</b> · 99942 Apophis
+            正于约 3.1 万公里处掠过地球（同步轨道内侧，2029-04-13）。
           </div>
         )}
 
