@@ -218,6 +218,8 @@ export default function CosmosViewer() {
     solarEclipse: false,
     halleyCountdown: "",
     apophisAlert: false,
+    planetPanel: [],
+    sunAlt: 0,
   });
   const [spdVal, setSpdVal] = useState(560);
   const [eclVal, setEclVal] = useState(234);
@@ -762,6 +764,60 @@ export default function CosmosViewer() {
                 </span>
               </div>
             </div>
+
+            {/* P2-3: tonight-visibility panel for the five naked-eye planets */}
+            {state.planetPanel.length > 0 && (
+              <div className="mt-3 border-t border-[rgba(125,165,225,.18)] pt-2.5">
+                <div className="flex items-center justify-between text-[10px] tracking-[.22em] text-[#8b97ad] mb-1.5">
+                  <span>今晚行星 PLANETS</span>
+                  <span className="normal-case tracking-[.08em] text-[#7f8aa0]">
+                    太阳 {state.sunAlt >= 0 ? "+" : ""}
+                    {state.sunAlt.toFixed(1)}°
+                  </span>
+                </div>
+                <div className="space-y-1.5">
+                  {state.planetPanel.map((p) => {
+                    const DIRS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+                    const dir =
+                      DIRS[Math.round((((p.az % 360) + 360) % 360) / 45) % 8];
+                    return (
+                      <div
+                        key={p.n}
+                        className="flex items-center justify-between text-[11px]"
+                      >
+                        <span className="flex items-center gap-1.5 text-[#dce3f0]">
+                          <i className="w-[15px] text-center not-italic text-[#f5a623]">
+                            {p.sym}
+                          </i>
+                          {p.n}
+                        </span>
+                        <span className="flex items-center gap-2 tabular-nums">
+                          <span className="text-[#9aa7bd]">
+                            高度 {p.alt >= 0 ? "+" : ""}
+                            {p.alt.toFixed(1)}° · {dir}
+                          </span>
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[9px] tracking-[.08em] ${
+                              p.vis
+                                ? "bg-[rgba(95,211,160,.16)] text-[#5fd3a0] border border-[rgba(95,211,160,.4)]"
+                                : p.up
+                                  ? "bg-[rgba(245,166,35,.12)] text-[#f5a623] border border-[rgba(245,166,35,.35)]"
+                                  : "bg-[rgba(139,151,173,.1)] text-[#8b97ad] border border-[rgba(139,151,173,.25)]"
+                            }`}
+                          >
+                            {p.vis
+                              ? "今夜可见"
+                              : p.up
+                                ? "地平线上·白昼"
+                                : "地平线下"}
+                          </span>
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </header>

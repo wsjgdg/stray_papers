@@ -101,6 +101,15 @@ export interface EngineState {
   solarEclipse: boolean; // true when the Moon's umbra/penumbra currently falls on Earth
   halleyCountdown: string; // human-readable days until 2061 Halley perihelion
   apophisAlert: boolean; // true when the sim date is near Apophis's 2029-04-13 flyby
+  planetPanel: {
+    n: string;
+    sym: string;
+    alt: number; // local altitude (deg)
+    az: number; // local azimuth (deg, 0=N)
+    up: boolean; // above horizon
+    vis: boolean; // above horizon AND sun below horizon (tonight-visible)
+  }[];
+  sunAlt: number; // current Sun altitude (deg) in horizon/planetarium mode
 }
 
 export interface BodyInfo {
@@ -168,6 +177,15 @@ export class CosmosEngine {
   private _halleyTarget = Date.UTC(2061, 6, 28);
   private _halleyCountdown = "";
   private _apophisAlert = false;
+  private _planetPanel: {
+    n: string;
+    sym: string;
+    alt: number;
+    az: number;
+    up: boolean;
+    vis: boolean;
+  }[] = [];
+  private _sunAlt = 0;
   private eclRingGrp!: THREE.Group;
   private zodiGroup = new THREE.Group();
   private geg!: THREE.Sprite;
@@ -313,6 +331,7 @@ export class CosmosEngine {
   // Picking / info
   private ray = new THREE.Raycaster();
   private ndc = new THREE.Vector2();
+  private _pw = new THREE.Vector3(); // scratch: geocentric dir in horizon/world frame
   /** Pixel radius for the screen-space proximity fallback used to pick tiny/far
    *  cosmic bodies (galaxies, stars, DSOs) that are hard to hit with a precise ray. */
   private COSMIC_PICK_PX = 30;
@@ -1653,6 +1672,18 @@ export class CosmosEngine {
     this.skyRoot.add(this.skyMarks);
   }
 
+  /** Rotate an ecliptic-frame direction (x=γ, y=ecl-Y, z=ecl-north) into the
+   *  equatorial star-frame used by skyRoot/unitDir, by the obliquity ε. */
+  private eclToEq(v: THREE.Vector3): THREE.Vector3 {
+    const e = this.EPS * D2R;
+    const se = Math.sin(e),
+      ce = Math.cos(e);
+    const x = v.x;
+    const y = ce * v.y - se * v.z;
+    const z = ce * v.z + se * v.y;
+    return v.set(x, y, z);
+  }
+
   private updateHorizonFrame(): number {
     const lstH =
       ((280.46061837 + 360.98564736629 * this.simT + this.site.lon) / 15 + 24) %
@@ -2610,8 +2641,19 @@ export class CosmosEngine {
           this._p.sub(this._ew);
         }
         this._p.normalize();
+        // The geocentric direction (from mesh positions) lives in the ecliptic
+        // frame, but the star sphere / skyRoot use the equatorial frame. Rotate
+        // by the obliquity so planets land on the correct RA/Dec relative to
+        // the stars (otherwise they'd be off by up to ~23°).
+        this.eclToEq(this._p);
         m.sp.position.copy(this._p).multiplyScalar(2520);
-        const [alt, az] = dirToAltAz(this._p);
+        // True local alt/az: transform the equatorial direction by the horizon
+        // frame (skyRoot.quaternion) before measuring.
+        this._pw.copy(this._p).applyQuaternion(this.skyRoot.quaternion);
+        const [alt, az] = dirToAltAz(this._pw);
+        m.alt = alt;
+        m.az = az;
+        if (m.isSun) this._sunAlt = alt;
         this.liveAltaz[m.body.key] =
           fmtDeg(alt) + "  高度 · " + az.toFixed(1) + "° 方位";
       }
@@ -2846,6 +2888,27 @@ export class CosmosEngine {
       const apophisTarget = Date.UTC(2029, 3, 13);
       this._apophisAlert =
         Math.abs((apophisTarget - simMillis) / 86400000) < 45;
+
+      // P2-3: tonight-visibility panel for the five classical naked-eye planets.
+      // Only meaningful in planetarium/horizon mode (marks carry live alt/az there).
+      this._planetPanel = [];
+      if (this.horizonMode) {
+        const NAKED = ["水星", "金星", "火星", "木星", "土星"];
+        const night = this._sunAlt < 0; // Sun below horizon → dark sky
+        for (const m of this.marks) {
+          if (!NAKED.includes(m.body.n)) continue;
+          const up = (m.alt ?? 0) > 0;
+          this._planetPanel.push({
+            n: m.body.n,
+            sym: m.body.sym || "·",
+            alt: m.alt ?? 0,
+            az: m.az ?? 0,
+            up,
+            vis: up && night,
+          });
+        }
+        this._planetPanel.sort((a, b) => b.alt - a.alt);
+      }
       if (this.ADAPTIVE_DPR) {
         if (this.dprCool > 0) this.dprCool--;
         else if (fps < 45 && this.dprScale > 0.55) {
@@ -2896,6 +2959,8 @@ export class CosmosEngine {
         solarEclipse: this._solarEclipse,
         halleyCountdown: this._halleyCountdown,
         apophisAlert: this._apophisAlert,
+        planetPanel: this._planetPanel,
+        sunAlt: this._sunAlt,
       };
       const ctrlKey = JSON.stringify(ctrl);
       if (ctrlKey !== this._lastCtrlKey) {
