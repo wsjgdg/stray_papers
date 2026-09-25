@@ -45,10 +45,11 @@
   - 现状：`MILKY_WAY_ARMS`（universe-data.ts:1853，4 条对数螺线 ~80 点/条）确实只用于 :846 标签锚点；但盘体已是 M83 照片（含真实旋臂视觉）。
   - 做法调整：若仍加旋臂带，用 **半透明（opacity~0.18）对数螺线 TubeGeometry**，叠在照片之上作"结构提示线"，避免喧宾夺主；优先级降为 P0 末位（照片已提供旋臂观感）。HUD 加"旋臂示意"开关（复用 `show` 模式）。
 
-- [ ] **P0-2 中心棒结构** ⬜ 前提干净（推荐首项）
-  - 现状：`MILKY_WAY_BAR`（universe-data.ts:1880，~8.4 kpc、与太阳-银心线成~60°）**已定义未使用**；当前仅核球椭球（cosmos-views.ts:874），无独立"棒"。
-  - 做法：椭球柔光贴片区（矩形 sprite 拉伸 + 模糊边），偏黄（老年恒星），标签"中央棒·长约 8.4 kpc"；方向与 `MILKY_WAY_BAR` 一致。
-  - 验收：棒内端与旋臂衔接自然。
+- [x] **P0-2 中心棒结构** ✅（已实现于 buildMilkyWayGalaxy，cosmos-views.ts:1092-1145；本回合仅补勾选，原计划清单漏标）
+  - 现状：`MILKY_WAY_BAR`（universe-data.ts:1882，~8.4 kpc、与 +Y 轴成~60°）**已定义且已使用**；核球椭球（:1053）+ 中央棒暖色发光面片（沿 `MILKY_WAY_BAR` 取向，`rotation.z=60°`，落在 X-Y 银盘平面内，与 M83 照片盘体一致）。
+  - 实现：暖色加色发光 `PlaneGeometry(blen, blen*0.24)` 补强中央棒（非取代 M83 照片固有棒），dossier "中央棒/GALACTIC BAR"（长轴≈8.4 kpc、老年 Population II、取向约 60°、串起旋臂内端与核球）+ 标签锚点。取向经核验：银盘平面为 X-Y（旋臂 `cos(a)*r, sin(a)*r` + 薄 z 厚度），`bar.rotation.z=atan2(Δy,Δx)=60°` 即在盘平面内旋转，几何正确。
+  - 验收：棒与核球、旋臂衔接自然（加色半透明，不与照片打架）。
+  - 门禁：沿用既有全绿（prettier/tsc/eslint 0err/vitest 12/12/next build 0）。
 
 - [x] **P0-3 球状星团晕** ✅（commits b85a5a5；145 个真实球团，Harris 1996/2010 VizieR VII/202，单 Points 晕 + 10 著名可点 dossier）
   - 现状：DSO 共 18 个（含 M13 武仙座球状星团，data.ts:175），无 ~150 球状星团晕。
