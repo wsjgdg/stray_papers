@@ -2291,6 +2291,24 @@ export class CosmosEngine {
   /** Launch a smooth cinematic fly-to: tween theta/phi/dist to target values over ~1.1s.
    *  Picking the shortest angular path.  Cancels if the user starts dragging. */
   private startFlyTo(toTheta: number, toPhi: number, toDist: number) {
+    // Reject non-finite targets (defensive: a NaN here would tween the camera into a
+    // permanent NaN state that no UI path could recover). If the current camera value
+    // is already non-finite, snap it to a valid overview before capturing the start.
+    if (
+      !Number.isFinite(toTheta) ||
+      !Number.isFinite(toPhi) ||
+      !Number.isFinite(toDist)
+    ) {
+      this.sanitizeCamera();
+      return;
+    }
+    if (
+      !Number.isFinite(this.cam.theta) ||
+      !Number.isFinite(this.cam.phi) ||
+      !Number.isFinite(this.cam.dist)
+    ) {
+      this.sanitizeCamera();
+    }
     // shortest angular path for theta
     let dt = toTheta - this.cam.theta;
     while (dt > Math.PI) dt -= Math.PI * 2;
@@ -2781,7 +2799,34 @@ export class CosmosEngine {
     if (this.tour.active) this.tourTick(dt);
 
     // Camera
-    if (this.cam.focus) this.cam.focus.getWorldPosition(this.cam.want);
+    if (this.cam.focus) {
+      // Guard against a stale/disposed focus target (e.g. a cosmic body whose view
+      // was swapped away) poisoning `want` with NaN — that would propagate into the
+      // camera via lerp and blank the whole scene permanently (lerp can never recover
+      // from NaN, and no UI path reset theta/phi/dist/target).
+      this.cam.focus.getWorldPosition(this._p);
+      if (
+        Number.isFinite(this._p.x) &&
+        Number.isFinite(this._p.y) &&
+        Number.isFinite(this._p.z)
+      )
+        this.cam.want.copy(this._p);
+    }
+    // Safety net: if any camera value is non-finite, snap the whole rig to a valid
+    // level overview. A single NaN (from a bad focus target, a divide-by-zero in a
+    // fly-to, etc.) is otherwise permanent because every update is `x += (y - x)*k`,
+    // which keeps NaN forever and makes the scene irrecoverable ("all bodies vanish,
+    // layer toggle can't restore"). This guarantees the view is always recoverable.
+    if (
+      !Number.isFinite(this.cam.theta) ||
+      !Number.isFinite(this.cam.phi) ||
+      !Number.isFinite(this.cam.dist) ||
+      !Number.isFinite(this.cam.target.x) ||
+      !Number.isFinite(this.cam.target.y) ||
+      !Number.isFinite(this.cam.target.z)
+    ) {
+      this.sanitizeCamera();
+    }
     const sm = 1 - Math.exp(-7 * dt);
     this.cam.target.lerp(this.cam.want, sm);
     this.cam.dist += (this.cam.wantDist - this.cam.dist) * sm;
@@ -3066,23 +3111,33 @@ export class CosmosEngine {
     this.simT = (Date.now() - EPOCH) / 86400000;
   }
   resetView() {
-    this.cam.focus = null;
-    this.cam.want.set(0, 0, 0);
-    this.cam.wantDist = this.horizonMode
-      ? 2
-      : SCALE_LEVELS[this.scaleLevel].sceneScale;
+    this.sanitizeCamera();
     this.cam.theta = 0.7;
     this.cam.phi = 1.05;
     this.showInfo(SUN);
   }
+  /** Snap the entire camera rig to a valid level overview. Resets EVERY camera field
+   *  (not just want/wantDist/focus) so a non-finite or stranded state is always
+   *  recoverable. Used by resetView, releaseFocus, empty-space clicks, layer toggles,
+   *  and the per-frame safety net. */
+  private sanitizeCamera() {
+    this.cam.focus = null;
+    this.cam.theta = 0.7;
+    this.cam.phi = 1.05;
+    this.cam.dist = SCALE_LEVELS[this.scaleLevel].sceneScale;
+    this.cam.wantDist = this.horizonMode
+      ? 2
+      : SCALE_LEVELS[this.scaleLevel].sceneScale;
+    this.cam.want.set(0, 0, 0);
+    this.cam.target.set(0, 0, 0);
+    this.flyTo.active = false;
+  }
   /** Release a body focus lock and reframe to the current level's overview. Used by
    *  empty-space clicks and layer toggles so the camera can never stay stranded on a
-   *  body (the "click asteroid → everything vanishes" bug). */
+   *  body (the "click asteroid → everything vanishes" bug). Fully resets the rig so a
+   *  previous non-finite state can never linger (layer toggle then restores the view). */
   private releaseFocus() {
-    this.cam.focus = null;
-    this.cam.want.set(0, 0, 0);
-    this.cam.wantDist = SCALE_LEVELS[this.scaleLevel].sceneScale;
-    this.flyTo.active = false;
+    this.sanitizeCamera();
   }
   toggleHorizon(): boolean {
     this.horizonMode = !this.horizonMode;
@@ -3457,10 +3512,9 @@ export class CosmosEngine {
     this.scaleLevel = level;
     this.transit = 1;
     this.transitTimer = 0.9; // seconds for the full warp
-    // Pre-stage the target camera distance so the doll happens during the warp
-    this.cam.focus = null;
-    this.cam.want.set(0, 0, 0);
-    this.cam.wantDist = SCALE_LEVELS[level].sceneScale;
+    // Fully reset the camera rig to the target level's overview so a non-finite or
+    // stranded state from the previous level never carries over through the warp.
+    this.sanitizeCamera();
   }
 
   /** Toggle honest-proportion (real-scale) mode. Distances become linear in AU and
