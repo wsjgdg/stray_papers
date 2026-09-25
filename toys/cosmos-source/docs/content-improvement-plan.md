@@ -140,13 +140,18 @@
 
 ## P4：叙事与细节
 
-- [ ] **P4-1 巡航尺度类比旁白** ⬜（需确认巡航/航点系统）
+- [x] **P4-1 巡航尺度类比旁白** ✅（commit fbfad10）
   - 现状：grep 未见现有航点/旁白系统，可能需新建轻量旁白层。
   - 做法：跨级飞行途中插入 3~4 条尺度类比（"从太阳到最近恒星≈巴黎到莫斯科间放一枚硬币"等）。
+  - 实现：engine.ts 新增 `scaleAnalogy` 状态通道 + `SCALE_ANALOGIES[0..6]` 7 级文案（豌豆太阳/北京-上海恒星距/足球场沙堆/80 成员本星系群/5400 万光年室女/10 万星系拉尼亚凯亚/465 亿光年可观测宇宙）；`setScaleLevel` 触发、`tour.active` 时抑制、2.6s 自动清除；cosmos-viewer.tsx 顶部 HUD banner。
+  - 门禁：prettier/typecheck(EXIT 0)/eslint(0 err)/vitest(12/12)/next build(EXIT 0) 全绿。
 
-- [ ] **P4-2 L1 近邻恒星细节** 🟡 部分
-  - 现状：NEARBY_STARS=36（universe-data.ts:1447），比邻星 b/c、巴纳德星 b 已建模（cosmos-views.ts:335-372）；天狼星在 STARS（data.ts:221）。
+- [x] **P4-2 L1 近邻恒星细节** ✅（commit 351e388）
+  - 现状：NEARBY_STARS=36（universe-data.ts:1450），比邻星 b/c、巴纳德星 b 已建模（cosmos-views.ts:340-378）。
   - 做法：自行矢量箭头（巴纳德星全天最快自行）；天狼星 A/B 双星分离（B=白矮星，"一茶匙物质重达吨级"）；南门二 ABC 三合星结构 + 比邻星轨道周期~50 万年标注。
+  - 实现：buildSolarNeighborhood 增强——天狼星 A/B、南门二 A/B 因数据同坐标而偏移+连线；比邻星标注三合星 C + 50 万年虚线轨道；巴纳德星 ArrowHelper 自行箭头。**修正锚点查找顺序无关的 pre-pass map**（原 `alphaABpos/siriusApos` 跟踪器依赖「A 在 B 前」；但数据里比邻星(idx0)早于南门二 A(idx1)，致比邻星→AB 虚线永不渲染，已修）。
+  - 核验：bun 离线脚本断言锚点有限/半径≈4.37/8.6 ly、比邻星虽排在南门二 A 前锚点仍可得、偏移连线有限 → VERIFY_PASS。
+  - 门禁：prettier/typecheck(EXIT 0)/eslint(0 err)/vitest(12/12)/next build(EXIT 0) 全绿。
 
 ---
 
