@@ -249,7 +249,7 @@ export function SettingsDialog({
               list="settings-model-options"
               value={model}
               onChange={(e) => onModelChange(e.target.value)}
-              placeholder="如 gpt-4o-mini、deepseek-chat、本地 llama3"
+              placeholder="如 agnes-2.5-flash（默认）、agnes-2.5-pro、agnes-2.0-flash"
               className="mt-2 w-full rounded-[var(--radius-md)] border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:border-primary focus-visible:shadow-[var(--focus-ring)]"
             />
             <datalist id="settings-model-options">
@@ -258,7 +258,7 @@ export function SettingsDialog({
               ))}
             </datalist>
             <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
-              填入你的 OpenAI 兼容接口支持的任意模型名（如 gpt-4o-mini、deepseek-chat，或本地推理服务的模型名）。生成失败时按上方降级链逐模型重试，并在纪要页告知实际使用的模型
+              填入 Agnes 支持的模型名（默认 agnes-2.5-flash，另可选 agnes-2.5-pro、agnes-2.0-flash 等）。生成失败时按上方降级链逐模型重试，并在纪要页告知实际使用的模型
             </p>
           </section>
 

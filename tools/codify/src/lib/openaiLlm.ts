@@ -21,7 +21,7 @@ import type { LlmCallResult, LlmMessage, LlmModelInfo } from "@/lib/llm"
 // 密钥只进 .env（git 忽略），不写进源码。
 const DEFAULT_BASE_URL = import.meta.env.VITE_LLM_BASE_URL ?? "https://api.agnes-ai.cn/v1"
 const DEFAULT_API_KEY = import.meta.env.VITE_LLM_API_KEY ?? ""
-const DEFAULT_MODEL = import.meta.env.VITE_LLM_MODEL ?? "gpt-4o-mini"
+const DEFAULT_MODEL = import.meta.env.VITE_LLM_MODEL ?? "agnes-2.5-flash"
 const DEFAULT_TEMPERATURE = 0.3
 // 非流式一次性取回：本地小模型很快，云端可能数十秒；留足余量避免误杀长稿。
 const CHAT_TIMEOUT_MS = 180_000
@@ -49,7 +49,7 @@ export const openaiCompatibleLlm: LlmProvider = {
     kind: "llm",
     runtime: "cloud",
     description:
-      "直接请求任意 OpenAI 兼容的 /v1/chat/completions。默认指向 Agnes（https://api.agnes-ai.cn/v1，密钥经 .env 注入）；也支持 OpenAI 官方、本地 Ollama/LM Studio、One API/LiteLLM 等网关。浏览器直连官方接口受 CORS 限制，需经自建代理或网关；本地推理服务默认允许跨域。模型名（如 gpt-4o-mini、deepseek-chat、本地 llama3）填在上方「AI 模型」里",
+      "直接请求任意 OpenAI 兼容的 /v1/chat/completions。默认指向 Agnes（https://api.agnes-ai.cn/v1，密钥经 .env 注入）；也支持 OpenAI 官方、本地 Ollama/LM Studio、One API/LiteLLM 等网关。浏览器直连官方接口受 CORS 限制，需经自建代理或网关；本地推理服务默认允许跨域。模型名填在上方「AI 模型」里（默认 agnes-2.5-flash；另可选 agnes-2.5-pro、agnes-2.0-flash 等 Agnes 模型）",
     configSchema: [
       {
         key: "baseUrl",
