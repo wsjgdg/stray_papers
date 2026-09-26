@@ -16,6 +16,7 @@
 import { type LlmCallResult, type LlmMessage, type LlmModelInfo } from "@/lib/llm"
 import { openaiCompatibleLlm } from "@/lib/openaiLlm"
 import { whisperAsr } from "@/lib/whisperAsr"
+import { senseVoiceAsr } from "@/lib/senseVoiceAsr"
 import type { TokenUsage } from "@/lib/usageLog"
 import { vaultGetItem, vaultSetItem } from "@/lib/vault"
 
@@ -488,10 +489,11 @@ const PROVIDERS_KEY = "meeting-notes-providers-v1"
 
 export const DEFAULT_PROVIDERS_CONFIG: ProvidersConfig = {
   asr: {
-    active: whisperAsr.meta.id,
+    active: senseVoiceAsr.meta.id,
     instances: {
       [webSpeechAsr.meta.id]: { lang: "zh-CN" },
       [whisperAsr.meta.id]: { baseUrl: "http://localhost:8000", model: "base", language: "zh", chunkSeconds: 4 },
+      [senseVoiceAsr.meta.id]: { language: "auto", chunkSeconds: 4 },
     },
   },
   tts: { active: browserTts.meta.id, instances: { [browserTts.meta.id]: { voiceId: "", speed: 1 } } },
@@ -608,7 +610,7 @@ export function sanitizeProvidersConfig(cfg: ProvidersConfig, includeSecrets: bo
 
 // ── 注册表：新增 Provider 时加到对应列表即可；active 指向配置里选中的实现 ──
 
-export const ASR_PROVIDERS: AsrProvider[] = [webSpeechAsr, whisperAsr]
+export const ASR_PROVIDERS: AsrProvider[] = [webSpeechAsr, whisperAsr, senseVoiceAsr]
 export const TTS_PROVIDERS: TtsProvider[] = [browserTts]
 export const LLM_PROVIDERS: LlmProvider[] = [openaiCompatibleLlm]
 export const EMBEDDING_PROVIDERS: EmbeddingProvider[] = [] // 预留：本地 wasm / 云端 embedding 实现注册处
