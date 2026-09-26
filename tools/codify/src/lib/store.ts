@@ -420,8 +420,8 @@ export function downloadMarkdown(m: Meeting): void {
 
 // ── 模型与降级链 ──
 // 首选模型失败（超时/服务异常）时按顺序降级，登录/余额类错误不降级。
-// 通用默认：OpenAI 兼容接口下，默认指向 OpenAI 官方小模型；自托管可改成自己的模型名
-export const DEFAULT_MODEL = "gpt-4o-mini"
+// 默认指向 gpt-4o-mini，可用 .env 的 VITE_LLM_MODEL 覆盖（默认 LLM 走 Agnes）。
+export const DEFAULT_MODEL = import.meta.env.VITE_LLM_MODEL ?? "gpt-4o-mini"
 export const MODEL_FALLBACK_CHAIN = ["gpt-4o", "deepseek-chat"]
 
 // ── 会议模板：摘要的「组织视角」提示语，用户可改可加可从满意的会议提取 ──

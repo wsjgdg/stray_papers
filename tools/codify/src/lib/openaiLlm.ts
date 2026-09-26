@@ -17,8 +17,11 @@ import type { LlmProvider } from "@/lib/providers"
 import { getProviderConfig } from "@/lib/providers"
 import type { LlmCallResult, LlmMessage, LlmModelInfo } from "@/lib/llm"
 
-const DEFAULT_BASE_URL = "https://api.openai.com/v1"
-const DEFAULT_MODEL = "gpt-4o-mini"
+// 默认走 Agnes（OpenAI 兼容网关）。这些值可被根目录 .env 的 VITE_LLM_* 覆盖；
+// 密钥只进 .env（git 忽略），不写进源码。
+const DEFAULT_BASE_URL = import.meta.env.VITE_LLM_BASE_URL ?? "https://api.agnes-ai.cn/v1"
+const DEFAULT_API_KEY = import.meta.env.VITE_LLM_API_KEY ?? ""
+const DEFAULT_MODEL = import.meta.env.VITE_LLM_MODEL ?? "gpt-4o-mini"
 const DEFAULT_TEMPERATURE = 0.3
 // 非流式一次性取回：本地小模型很快，云端可能数十秒；留足余量避免误杀长稿。
 const CHAT_TIMEOUT_MS = 180_000
@@ -46,23 +49,23 @@ export const openaiCompatibleLlm: LlmProvider = {
     kind: "llm",
     runtime: "cloud",
     description:
-      "直接请求任意 OpenAI 兼容的 /v1/chat/completions：OpenAI 官方、本地 Ollama/LM Studio、One API/LiteLLM 等网关都可用。浏览器直连官方接口受 CORS 限制，需经自建代理或网关；本地推理服务默认允许跨域。模型名（如 gpt-4o-mini、deepseek-chat、本地 llama3）填在上方「AI 模型」里",
+      "直接请求任意 OpenAI 兼容的 /v1/chat/completions。默认指向 Agnes（https://api.agnes-ai.cn/v1，密钥经 .env 注入）；也支持 OpenAI 官方、本地 Ollama/LM Studio、One API/LiteLLM 等网关。浏览器直连官方接口受 CORS 限制，需经自建代理或网关；本地推理服务默认允许跨域。模型名（如 gpt-4o-mini、deepseek-chat、本地 llama3）填在上方「AI 模型」里",
     configSchema: [
       {
         key: "baseUrl",
         label: "接口地址",
         type: "string",
         default: DEFAULT_BASE_URL,
-        placeholder: "https://api.openai.com/v1 或 http://127.0.0.1:8000/v1",
-        help: "必须以 /v1 结尾（或该网关的 chat/completions 前缀）。本地服务需开启 CORS",
+        placeholder: "默认 https://api.agnes-ai.cn/v1（来自 .env），也可填本地 http://127.0.0.1:8000/v1",
+        help: "必须以 /v1 结尾（或该网关的 chat/completions 前缀）。默认 Agnes，可在 .env 用 VITE_LLM_BASE_URL 覆盖；本地服务需开启 CORS",
       },
       {
         key: "apiKey",
         label: "API Key",
         type: "password",
-        default: "",
-        placeholder: "留空 = 不发 Authorization（部分本地服务不需要）",
-        help: "本地无需鉴权的服务可留空；密钥只存本机 localStorage，随备份导出时默认剔除",
+        default: DEFAULT_API_KEY,
+        placeholder: "默认取自 .env 的 VITE_LLM_API_KEY；留空 = 不发 Authorization",
+        help: "默认走 .env 注入的 Agnes 密钥；也可在此手动填。密钥只存本机 localStorage，随备份导出时默认剔除",
       },
       {
         key: "temperature",
@@ -81,7 +84,7 @@ export const openaiCompatibleLlm: LlmProvider = {
   chat(model: string, messages: LlmMessage[], _page: string): Promise<LlmCallResult> {
     const cfg = getProviderConfig("llm", "openai-compatible")
     const baseUrl = (typeof cfg.baseUrl === "string" && cfg.baseUrl.trim()) || DEFAULT_BASE_URL
-    const apiKey = typeof cfg.apiKey === "string" ? cfg.apiKey.trim() : ""
+    const apiKey = (typeof cfg.apiKey === "string" && cfg.apiKey.trim()) || DEFAULT_API_KEY
     const temperature =
       typeof cfg.temperature === "number" && cfg.temperature >= 0 && cfg.temperature <= 2
         ? cfg.temperature

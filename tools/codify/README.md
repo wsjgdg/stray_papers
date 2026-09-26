@@ -4,6 +4,18 @@
 
 技术栈：React 19 + TypeScript + Vite + Tailwind CSS 3 + shadcn/ui（Radix）+ cmdk。全部依赖锁定为精确版本（依赖治理见第十节）。
 
+## 关于本仓库（独立 fork）
+
+本仓库是从 VibeX / RunningHub 导出的「个人会议纪要工作台」的**独立分支**，已彻底脱离原平台，可直接自托管 / fork：
+
+- **LLM 通道**：走你自己的 OpenAI 兼容接口，**默认指向 Agnes**（`https://api.agnes-ai.cn/v1`）。`baseUrl` / `apiKey` / `model` 经项目根目录 `.env` 的 `VITE_LLM_BASE_URL` / `VITE_LLM_API_KEY` / `VITE_LLM_MODEL` 注入（见 `.env.example`），也可在设置页手动改。原平台计费代理（PocketBase `/api/llm/*`）已移除。
+- **数据层**：全部存于浏览器本地（localStorage + IndexedDB），离线可用；导出备份默认不含密钥。
+- **已移除的平台耦合**：`.vibex/`、`vibex-local/`、`pocketbase/`、`public/sso-popup-callback.html`、`RhAccountMenu`、`rhLogin.ts` / `pb.ts`、计费确认墙（`visitorPaysForAi=false`）。原 VibeX「导出回传」流程不再适用——本仓库即是源码本身。
+
+> 注：纯客户端应用没有后端代理，`.env` 里的 LLM 密钥会被打进前端包、由浏览器直发给 Agnes；这与「密钥不进 git 源码」的边界一致，但**不等于**服务器端保密。共享部署前请改用你自己的密钥。
+
+本地运行见文末「开发」一节；Windows 双击 `start.cmd` 即可（自动探测空闲端口、缺依赖先装、报错保活不闪退）。
+
 ---
 
 ## 一、界面架构：三栏 + 双模式
