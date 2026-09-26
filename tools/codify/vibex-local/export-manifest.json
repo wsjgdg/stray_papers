@@ -1,0 +1,19 @@
+{
+  "app_id": "app-e9300b95f556437f9990c9f9ae1299fe",
+  "name": "个人私有化版本B端那版架构基本要推翻重来个人私有化的核心",
+  "exported_at": "2026-09-26T09:41:42.982109+00:00",
+  "source": "dev-container",
+  "includes_pb_data": false,
+  "removed_sensitive_files": [],
+  "entrypoints": {
+    "macos": "vibex-local/start-macos.sh",
+    "linux": "vibex-local/start-linux.sh",
+    "windows": "vibex-local/start-windows.bat"
+  },
+  "coding_agent_guidance": {
+    "skill": ".vibex/skills/vibex-app-source-roundtrip/SKILL.md",
+    "codex": "AGENTS.md",
+    "claude_code": "CLAUDE.md",
+    "cursor": ".cursor/rules/vibex-source-roundtrip.mdc"
+  }
+}
