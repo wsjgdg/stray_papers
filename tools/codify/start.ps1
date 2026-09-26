@@ -54,11 +54,12 @@ function Start-WhisperService {
     )
     foreach ($c in $candidates) {
         if (-not (Get-Command $c.exe -ErrorAction SilentlyContinue)) { continue }
-        $log = Join-Path $root 'whisper-service.log'
+        $logOut = Join-Path $root 'whisper-service.out.log'
+        $logErr = Join-Path $root 'whisper-service.err.log'
         Write-Host "Starting local Whisper ASR service ($($c.exe)) on port $whisperPort with CORS open..."
         try {
             $p = Start-Process -FilePath $c.exe -ArgumentList $c.args `
-                -RedirectStandardOutput $log -RedirectStandardError $log `
+                -RedirectStandardOutput $logOut -RedirectStandardError $logErr `
                 -PassThru -WindowStyle Hidden
             Write-Host "  (first run may download the Whisper model - can take a minute)"
             return $p
