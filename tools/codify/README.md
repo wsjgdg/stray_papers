@@ -20,10 +20,11 @@
 
 - **默认引擎是「本地 Whisper（自托管）」**（`local-whisper`），音频只发往你自己的服务，离线可用、免费、不外泄。前提是本机跑着一个 OpenAI 兼容的 `/v1/audio/transcriptions` 服务。
 - **为什么不是浏览器自带识别**：Chrome / Edge 的 Web Speech 识别会把麦克风音频发到厂商云端（Chrome 走 Google 服务器），在中国大陆等网络下常因访问不到而报 `network` 错误——这不是麦克风权限问题。原 `webSpeechAsr` 引擎仍保留，可在「设置 → 服务商 → 语音识别」里切回（仅在你网络能直连厂商云端时可用）。
-- **本地 Whisper 怎么起**（任选其一，默认地址 `http://localhost:8000`，需在服务侧开启 CORS 允许本应用 origin）：
-  - Python：`pip install faster-whisper-server` 然后 `faster-whisper-server --host 0.0.0.0 --port 8000`（默认暴露 `/v1/audio/transcriptions`，模型用 `base`/`small` 等）。
-  - Docker：`docker run -p 8000:8000 ghcr.io/faster-whisper/faster-whisper-server:latest`（或你自托管的等价镜像）。
-  - 起好后，在「设置 → 服务商 → 语音识别 → 本地 Whisper」填服务地址 / 模型 / 语言即可。
+- **一键起服务**：双击 `start.cmd`（或 `start.ps1`）会先尝试拉起本地 Whisper 服务（端口 8000，已自动设 `ALLOW_ORIGINS=["*"]` 开 CORS），再起前端开发服务器。检测顺序：`faster-whisper-server` → `speaches`（同项目的更名版）→ `python -m faster_whisper_server` → docker `fedirz/faster-whisper-server:latest-cpu`。**首次使用前需先装一次** `pip install faster-whisper-server`；装好后脚本会自动拉起，无需手动起服务。若都找不到，脚本会打印一次性安装提示并继续（应用照常运行，仅语音识别需要该服务）。
+- **本地 Whisper 怎么手动起**（任选其一，默认地址 `http://localhost:8000`，需开 CORS 允许本应用 origin）：
+  - Python：`pip install faster-whisper-server` 然后 `ALLOW_ORIGINS=["*"] faster-whisper-server`（默认暴露 `/v1/audio/transcriptions`，监听 8000，模型用 `base`/`small` 等）。
+  - Docker：`docker run -d --rm -e ALLOW_ORIGINS='["*"]' -p 8000:8000 fedirz/faster-whisper-server:latest-cpu`。
+  - 起好后，在「设置 → 服务商 → 语音识别 → 本地 Whisper」填服务地址 / 模型 / 语言即可（默认 `http://localhost:8000`、`base`、`zh` 已预填）。
 - 实时转写是「近似实时」：按 `chunkSeconds`（默认 4 秒）分段，每段独立发给服务识别后作为一句定稿回填。长句可能被切在段边界；批量上传音频文件则整段发送、上下文完整。
 
 ---
