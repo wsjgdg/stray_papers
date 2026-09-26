@@ -16,6 +16,16 @@
 
 本地运行见文末「开发」一节；Windows 双击 `start.cmd` 即可（自动探测空闲端口、缺依赖先装、报错保活不闪退）。
 
+### 语音识别（ASR）
+
+- **默认引擎是「本地 Whisper（自托管）」**（`local-whisper`），音频只发往你自己的服务，离线可用、免费、不外泄。前提是本机跑着一个 OpenAI 兼容的 `/v1/audio/transcriptions` 服务。
+- **为什么不是浏览器自带识别**：Chrome / Edge 的 Web Speech 识别会把麦克风音频发到厂商云端（Chrome 走 Google 服务器），在中国大陆等网络下常因访问不到而报 `network` 错误——这不是麦克风权限问题。原 `webSpeechAsr` 引擎仍保留，可在「设置 → 服务商 → 语音识别」里切回（仅在你网络能直连厂商云端时可用）。
+- **本地 Whisper 怎么起**（任选其一，默认地址 `http://localhost:8000`，需在服务侧开启 CORS 允许本应用 origin）：
+  - Python：`pip install faster-whisper-server` 然后 `faster-whisper-server --host 0.0.0.0 --port 8000`（默认暴露 `/v1/audio/transcriptions`，模型用 `base`/`small` 等）。
+  - Docker：`docker run -p 8000:8000 ghcr.io/faster-whisper/faster-whisper-server:latest`（或你自托管的等价镜像）。
+  - 起好后，在「设置 → 服务商 → 语音识别 → 本地 Whisper」填服务地址 / 模型 / 语言即可。
+- 实时转写是「近似实时」：按 `chunkSeconds`（默认 4 秒）分段，每段独立发给服务识别后作为一句定稿回填。长句可能被切在段边界；批量上传音频文件则整段发送、上下文完整。
+
 ---
 
 ## 一、界面架构：三栏 + 双模式

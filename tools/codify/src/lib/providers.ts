@@ -15,6 +15,7 @@
 
 import { type LlmCallResult, type LlmMessage, type LlmModelInfo } from "@/lib/llm"
 import { openaiCompatibleLlm } from "@/lib/openaiLlm"
+import { whisperAsr } from "@/lib/whisperAsr"
 import type { TokenUsage } from "@/lib/usageLog"
 import { vaultGetItem, vaultSetItem } from "@/lib/vault"
 
@@ -126,8 +127,9 @@ export interface AsrProvider {
 
 const ASR_ERROR_MESSAGES: Record<string, string> = {
   "not-allowed": "麦克风权限被拒绝，请在浏览器地址栏的权限设置里允许麦克风后重试",
-  "service-not-allowed": "浏览器语音服务不可用，请检查网络，或改用 Chrome / Edge 浏览器",
-  network: "语音识别网络异常，请检查网络后重试",
+  "service-not-allowed": "浏览器语音服务不可用，请改用 Chrome / Edge 浏览器，或直接「粘贴转写稿」录入",
+  network:
+    "语音识别联网失败：浏览器自带识别会把音频发到厂商云端（Chrome 走 Google 服务器），你所在的网络可能访问不到。可改用「粘贴转写稿」，或在设置 → 服务商 → 语音识别 切换到本地 Whisper 引擎（自托管、离线可用）",
 }
 
 function webSpeechSupported(): boolean {
@@ -485,7 +487,13 @@ export interface ProvidersConfig {
 const PROVIDERS_KEY = "meeting-notes-providers-v1"
 
 export const DEFAULT_PROVIDERS_CONFIG: ProvidersConfig = {
-  asr: { active: webSpeechAsr.meta.id, instances: { [webSpeechAsr.meta.id]: { lang: "zh-CN" } } },
+  asr: {
+    active: whisperAsr.meta.id,
+    instances: {
+      [webSpeechAsr.meta.id]: { lang: "zh-CN" },
+      [whisperAsr.meta.id]: { baseUrl: "http://localhost:8000", model: "base", language: "zh", chunkSeconds: 4 },
+    },
+  },
   tts: { active: browserTts.meta.id, instances: { [browserTts.meta.id]: { voiceId: "", speed: 1 } } },
   llm: { active: openaiCompatibleLlm.meta.id, instances: { [openaiCompatibleLlm.meta.id]: {} } },
   embed: { active: "", instances: {} },
@@ -600,7 +608,7 @@ export function sanitizeProvidersConfig(cfg: ProvidersConfig, includeSecrets: bo
 
 // ── 注册表：新增 Provider 时加到对应列表即可；active 指向配置里选中的实现 ──
 
-export const ASR_PROVIDERS: AsrProvider[] = [webSpeechAsr]
+export const ASR_PROVIDERS: AsrProvider[] = [webSpeechAsr, whisperAsr]
 export const TTS_PROVIDERS: TtsProvider[] = [browserTts]
 export const LLM_PROVIDERS: LlmProvider[] = [openaiCompatibleLlm]
 export const EMBEDDING_PROVIDERS: EmbeddingProvider[] = [] // 预留：本地 wasm / 云端 embedding 实现注册处
