@@ -34,6 +34,16 @@ function Test-PortFree {
     } catch { return $true } finally { if ($tcp -ne $null) { try { $tcp.Close() } catch { } } }
 }
 
+function Wait-ForPortTaken {
+    param([int]$port, [int]$timeoutSec = 15)
+    $deadline = (Get-Date).AddSeconds($timeoutSec)
+    while ((Get-Date) -lt $deadline) {
+        if (-not (Test-PortFree -port $port)) { return $true }
+        Start-Sleep -Milliseconds 500
+    }
+    return $false
+}
+
 # Best-effort launch of a local OpenAI-compatible Whisper service with CORS open.
 # Returns the Process object we started (so we can stop it later), or $null.
 function Start-WhisperService {
@@ -46,14 +56,22 @@ function Start-WhisperService {
     $env:CORS_ORIGINS   = '["*"]'
 
     $candidates = @(
-        @{ exe = 'faster-whisper-server'; args = @() },
-        @{ exe = 'speaches';              args = @() },
-        @{ exe = 'python';                args = @('-m', 'faster_whisper_server') },
-        @{ exe = 'python';                args = @('-m', 'speaches') },
-        @{ exe = 'python3';               args = @('-m', 'faster_whisper_server') }
+        @{ exe = 'faster-whisper-server'; args = @();                module = $null },
+        @{ exe = 'speaches';              args = @();                module = $null },
+        @{ exe = 'python';  args = @('-m', 'faster_whisper_server'); module = 'faster_whisper_server' },
+        @{ exe = 'python';  args = @('-m', 'speaches');              module = 'speaches' },
+        @{ exe = 'python3'; args = @('-m', 'faster_whisper_server'); module = 'faster_whisper_server' }
     )
     foreach ($c in $candidates) {
         if (-not (Get-Command $c.exe -ErrorAction SilentlyContinue)) { continue }
+        # For python -m, verify the module is importable before launching a doomed process.
+        if ($c.module) {
+            try { & $c.exe -c ("import " + $c.module) 2>$null } catch { }
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "  skip $($c.exe) -m $($c.module): module not installed"
+                continue
+            }
+        }
         $logOut = Join-Path $root 'whisper-service.out.log'
         $logErr = Join-Path $root 'whisper-service.err.log'
         Write-Host "Starting local Whisper ASR service ($($c.exe)) on port $whisperPort with CORS open..."
@@ -61,11 +79,27 @@ function Start-WhisperService {
             $p = Start-Process -FilePath $c.exe -ArgumentList $c.args `
                 -RedirectStandardOutput $logOut -RedirectStandardError $logErr `
                 -PassThru -WindowStyle Hidden
-            Write-Host "  (first run may download the Whisper model - can take a minute)"
-            return $p
         } catch {
             Write-Host "Failed to launch $($c.exe): $_"
+            continue
         }
+        # Confirm it actually bound the port (uvicorn binds before loading the model).
+        $up = Wait-ForPortTaken -port $whisperPort -timeoutSec 15
+        if ($up) {
+            Write-Host "  Whisper ASR service is up on port $whisperPort."
+            Write-Host "  (first transcription may download the model - can take a minute)"
+            return $p
+        }
+        if ($p.HasExited) {
+            Write-Host "  $($c.exe) exited without binding port $whisperPort - trying next option."
+            $tail = Get-Content $logErr -Tail 5 -ErrorAction SilentlyContinue
+            if ($tail) { Write-Host "  last error log:"; $tail | ForEach-Object { Write-Host ("    " + $_) } }
+            continue
+        }
+        # Process alive but port not yet bound: likely still loading the model. Let it run.
+        Write-Host "  service process running but not yet bound to port $whisperPort (loading model?) - continuing."
+        Write-Host "  (first transcription may download the model - can take a minute)"
+        return $p
     }
     # Docker fallback (detached; survives this script's exit).
     if (Get-Command docker -ErrorAction SilentlyContinue) {
@@ -101,7 +135,8 @@ try {
     # Bring up Whisper first so it claims port 8000; Vite will then pick 8001+.
     $whisperProc = Start-WhisperService
 
-    $port = $startPort
+    # If a Whisper process is running it targets port 8000 - keep Vite off it.
+    $port = if ($whisperProc) { 8001 } else { $startPort }
     while ($port -le $maxPort) {
         if (Test-PortFree -port $port) { break }
         $port++
