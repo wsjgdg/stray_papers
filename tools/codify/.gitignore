@@ -6,3 +6,4 @@ dist/
 .workbuddy/
 .env
 .env.local
+whisper-service.*.log
