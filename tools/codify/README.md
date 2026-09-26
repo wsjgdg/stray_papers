@@ -222,11 +222,13 @@
 
 ```bash
 pnpm install
-pnpm dev        # 开发服务器（对外服务固定监听 8000）
+pnpm dev        # 开发服务器（默认 8000；端口被占用时 Vite 自动顺延）
 pnpm build      # tsc -b && vite build
 pnpm lint       # eslint
 pnpm golden     # golden set 回归（node scripts/golden-set.mjs）——升级依赖 / 改 schema 后的最低验证门槛
 ```
+
+> Windows 一键启动：双击根目录 `start.cmd`（自动探测 8000+ 空闲端口、依赖缺失时先 `pnpm install`、并打开浏览器；窗口报错时保持打开便于排查，不会闪退）。
 
 目录速览：
 

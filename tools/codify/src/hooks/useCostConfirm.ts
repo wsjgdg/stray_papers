@@ -1,8 +1,7 @@
-// Canonical billing-confirm wrapper. Any page that calls a paid RHAPI helper
-// (callAigcAndPoll / callAiApp(.../run) with a real charge / callLlmWithFallback with a
-// paid model) must route that call through `runWithCostConfirm` returned here instead
-// of calling the paid helper directly. See vibex_billing_contract.yaml for why this
-// exact shape matters: the publish audit treats a call wrapped in
+// Cost-confirm wrapper. In the standalone fork AI calls go through the user's own
+// OpenAI-compatible endpoint (no platform billing), so visitorPaysForAi is false and
+// `runWithCostConfirm` runs the action directly without a confirmation dialog.
+// The wrapper is kept so the call sites stay stable if billing is ever reintroduced.
 // `runWithCostConfirm(...)` as user-triggered by construction, so using this hook is
 // how a normally-developed page passes the audit without any extra onClick plumbing.
 //

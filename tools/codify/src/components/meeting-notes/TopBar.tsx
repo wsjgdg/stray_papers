@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Calendar, Download, FlaskConical, History, Menu, Monitor, Moon, PanelRight, Plus, Search, Settings, Star, Sun, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-// RhAccountMenu 已移除：脱离 RunningHub 平台，无登录入口
+// 原 RunningHub 平台登录入口已随脱离平台而移除；本仓库无平台登录/计费墙。
 import { cn } from "@/lib/utils"
 import { THEME_LABELS, type ThemeMode } from "@/hooks/useTheme"
 import type { Meeting, MeetingTemplate } from "@/lib/store"

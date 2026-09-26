@@ -19,7 +19,7 @@ export interface AiCallRecord {
   agent?: string // 归属 Agent（summary / extract / retrieve / annotate）——多 Agent 编排后按此聚合
   meetingId?: string
   meetingTitle?: string
-  providerId: string // 服务商 id（当前恒为 rh-llm，多服务商时按此聚合）
+  providerId: string // 服务商 id（当前为 openai-compatible，多服务商时按此聚合）
   model: string // 实际产出结果的模型
   preferredModel?: string // 用户首选模型（与 model 不同 = 发生了降级）
   fellBack: boolean

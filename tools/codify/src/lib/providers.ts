@@ -13,7 +13,7 @@
 // 外部 Provider 无法在此环境出货；LLM 绑定平台授权计费通道（runtime: cloud，按 token 计费）。
 // 注册表与 configSchema 已按通用契约预留位置——自托管部署或 fork 后按接口注册云端 Provider 即可生效。
 
-import { callLlmWithFallback, type LlmCallResult, type LlmMessage, type LlmModelInfo } from "@/lib/llm"
+import { type LlmCallResult, type LlmMessage, type LlmModelInfo } from "@/lib/llm"
 import { openaiCompatibleLlm } from "@/lib/openaiLlm"
 import type { TokenUsage } from "@/lib/usageLog"
 import { vaultGetItem, vaultSetItem } from "@/lib/vault"
@@ -402,20 +402,6 @@ export interface LlmProvider {
   listModels?: () => Promise<LlmModelInfo[]>
 }
 
-export const rhLlm: LlmProvider = {
-  meta: {
-    id: "rh-llm",
-    name: "RunningHub 大模型服务",
-    kind: "llm",
-    runtime: "cloud",
-    description:
-      "平台授权的 AI 计费通道，按实际 token 扣费；模型与降级链在「AI 模型」设置中选择，登录 / 余额错误不降级",
-    configSchema: [],
-  },
-  supported: () => true,
-  chat: (model, messages, page) => callLlmWithFallback(model, { messages, page }),
-}
-
 // ── 翻译（文字 → 文字，跨语言）──
 // 独立于 LLM 的一类能力：默认实现复用大模型通道（lib/translate.ts 注册），
 // 外部翻译引擎（DeepL / 自托管翻译 API 等）实现本契约并注册后即可在设置页切换接管。
@@ -616,7 +602,7 @@ export function sanitizeProvidersConfig(cfg: ProvidersConfig, includeSecrets: bo
 
 export const ASR_PROVIDERS: AsrProvider[] = [webSpeechAsr]
 export const TTS_PROVIDERS: TtsProvider[] = [browserTts]
-export const LLM_PROVIDERS: LlmProvider[] = [openaiCompatibleLlm, rhLlm]
+export const LLM_PROVIDERS: LlmProvider[] = [openaiCompatibleLlm]
 export const EMBEDDING_PROVIDERS: EmbeddingProvider[] = [] // 预留：本地 wasm / 云端 embedding 实现注册处
 // 翻译注册表：默认引擎（大模型翻译）在 lib/translate.ts 加载时注册进来——
 // 它要复用 ai.ts 的降级链，而 ai.ts 依赖本文件，实现放这里会成环，故走运行时注册（口径同 embedding）
@@ -658,28 +644,11 @@ export function getActiveTts(): TtsProvider | null {
 }
 
 /**
- * 当前生效的 LLM。RunningHub 计费通道只在 VibeX/RunningHub 平台内可用；
- * 脱离平台（自托管 / fork）后，即便旧配置 / localStorage 里 active 仍指向 rh-llm，
- * 也必须改走 OpenAI 兼容接口，否则所有 AI 生成会直接失败（404 / 登录墙）。
+ * 当前生效的 LLM。本仓库已彻底脱离 VibeX / RunningHub 平台，唯一的 LLM 实现是
+ * 用户自有的 OpenAI 兼容接口（openaiCompatibleLlm），不再有平台计费代理。
  */
-function isVibexHost(): boolean {
-  if (typeof window === "undefined") return false
-  const h = window.location.hostname.toLowerCase()
-  return (
-    h === "runninghub.cn" ||
-    h.endsWith(".runninghub.cn") ||
-    h === "vibex.cn" ||
-    h.endsWith(".vibex.cn")
-  )
-}
-
 export function getActiveLlm(): LlmProvider {
-  const cfg = loadProvidersConfig()
-  const chosen = LLM_PROVIDERS.find((p) => p.meta.id === cfg.llm.active)
-  // 平台外绝不用 rh-llm（会连不通）；落在 OpenAI 兼容接口
-  if (chosen && !(chosen.meta.id === "rh-llm" && !isVibexHost())) return chosen
-  const safe = LLM_PROVIDERS.find((p) => p.meta.id === "openai-compatible")
-  return safe ?? LLM_PROVIDERS[0]
+  return openaiCompatibleLlm
 }
 
 /** 当前生效的 Embedding 实现；注册表为空（本环境常态）返回 null，消费方据此回退 */

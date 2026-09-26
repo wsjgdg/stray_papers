@@ -1,6 +1,6 @@
 // AI 层：摘要 / 行动项决议抽取 / 跨会议问答。
-// 全部走 callLlmWithFallback（poll-first），模型可在设置中更换；
-// 首选模型失败时按降级链自动换备选模型重试（登录/余额类错误不降级）。
+// 走当前生效的 LLM Provider（默认 OpenAI 兼容接口，设置中可换模型）；
+// 模型失败时由 Provider 侧返回错误，消费方据此提示用户检查接口 / 模型名。
 // 抽取结果强制 source_quote 校验：无原文支撑的结论直接丢弃。
 
 import { listLlmModels, type LlmMessage } from "@/lib/llm"
