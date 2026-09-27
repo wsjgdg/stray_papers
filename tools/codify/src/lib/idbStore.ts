@@ -409,6 +409,10 @@ export async function loadStoreData(): Promise<LoadResult> {
           // 分片缺失（写入中断等）回填结果也是空串，不阻塞其余数据
           ;(m as unknown as Record<string, unknown>)[f] = ""
           pending.push({ meetingId: rec.id, field: f })
+        } else {
+          // 内联（或缺失）字段：强制收敛为字符串，避免下游读 transcript.trim() 时遇 undefined 崩溃
+          const v = (m as unknown as Record<string, unknown>)[f]
+          ;(m as unknown as Record<string, unknown>)[f] = typeof v === "string" ? v : ""
         }
       }
       // 回填增量写入的比对基线

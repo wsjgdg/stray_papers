@@ -18,7 +18,7 @@
 
 ### 语音识别（ASR）
 
-- **默认引擎是「云端 SenseVoice（SiliconFlow）」**（`cloud-sensevoice`）：走 SiliconFlow 的国内节点（`https://api.siliconflow.com/v1/audio/transcriptions`，默认模型 `FunAudioLLM/SenseVoiceSmall`，对中文及方言友好），浏览器直连、无需自托管。需要在 `.env` 配置 `VITE_SILICONFLOW_API_KEY`（或在「设置 → 服务商 → 语音识别 → 云端 SenseVoice」填写）。**这是云端服务，音频会发往 SiliconFlow，且消耗额度**——介意数据出境/离线可用就切到下面的本地 Whisper。
+- **默认引擎是「云端 SenseVoice（SiliconFlow）」**（`cloud-sensevoice`）：走 SiliconFlow 的国内节点（`https://api.siliconflow.cn/v1/audio/transcriptions`，默认模型 `FunAudioLLM/SenseVoiceSmall`，对中文及方言友好），浏览器直连、无需自托管。需要在 `.env` 配置 `VITE_SILICONFLOW_API_KEY`（或在「设置 → 服务商 → 语音识别 → 云端 SenseVoice」填写）。**该模型在 SiliconFlow 上完全免费（输入/输出均 ¥0/百万 tokens），但免费不等于无限制：仍有速率（RPM）约束，且单文件 ≤50MB、时长 ≤1 小时**——介意音频交给第三方云、或要离线可用，就切到下面的本地 Whisper。
 - **备选引擎 · 本地 Whisper（自托管）**（`local-whisper`）：音频只发往你自己的服务，离线可用、免费、不外泄。前提是本机跑着一个 OpenAI 兼容的 `/v1/audio/transcriptions` 服务（见下方「一键起服务」）。
 - **为什么不是浏览器自带识别**：Chrome / Edge 的 Web Speech 识别会把麦克风音频发到厂商云端（Chrome 走 Google 服务器），在中国大陆等网络下常因访问不到而报 `network` 错误——这不是麦克风权限问题。原 `webSpeechAsr` 引擎仍保留，可在「设置 → 服务商 → 语音识别」里切回（仅在你网络能直连厂商云端时可用）。
 - **一键起服务**：双击 `start.cmd`（或 `start.ps1`）会先尝试拉起本地 Whisper 服务（端口 8000，已自动设 `ALLOW_ORIGINS=["*"]` 开 CORS），再起前端开发服务器。检测顺序：`faster-whisper-server` → `speaches`（同项目的更名版）→ `python -m faster_whisper_server` → docker `fedirz/faster-whisper-server:latest-cpu`。**首次使用前需先装一次** `pip install faster-whisper-server`；装好后脚本会自动拉起，无需手动起服务。若都找不到，脚本会打印一次性安装提示并继续（应用照常运行，仅语音识别需要该服务）。

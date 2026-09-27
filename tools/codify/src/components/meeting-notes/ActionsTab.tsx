@@ -242,7 +242,7 @@ export function ActionsTab({
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto max-w-3xl space-y-6 py-1 pr-2">
+      <div className="space-y-6 py-1 pr-2">
         {pending.length > 0 ? (
           <section className="rounded-[var(--radius-lg)] border border-destructive/30 bg-destructive/5 px-3.5 py-3">
             <div className="flex items-start justify-between gap-2">

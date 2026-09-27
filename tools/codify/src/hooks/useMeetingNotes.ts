@@ -321,7 +321,7 @@ export function useMeetingNotes() {
     () =>
       meetings.filter((m) => {
         if (m.archived) return false
-        if (m.transcript.trim().length < 20) return false
+        if ((m.transcript ?? "").trim().length < 20) return false
         return meetingInfoProfile(m).level === "low"
       }),
     [meetings],

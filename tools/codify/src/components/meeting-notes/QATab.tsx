@@ -179,7 +179,7 @@ export function QATab({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="mx-auto w-full max-w-3xl space-y-3 py-1">
+      <div className="space-y-3 py-1">
         <div>
           <h2 className="font-[var(--font-display)] text-base font-semibold tracking-tight text-foreground">
             跨会议问答
@@ -352,7 +352,7 @@ export function QATab({
       </div>
 
       {qaHistory.length > 0 ? (
-        <div className="mx-auto mt-4 w-full max-w-3xl min-h-0 flex-1 pb-2">
+        <div className="mt-4 min-h-0 flex-1 pb-2">
           <div className="mb-2 flex items-center justify-between">
             <h3 className="text-xs font-medium text-muted-foreground">
               最近问答

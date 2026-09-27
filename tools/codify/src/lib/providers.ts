@@ -398,7 +398,7 @@ export interface LlmProvider {
    */
   estimateCost?: (inputChars: number) => string
   /**
-   * 拉取可用模型清单——可选能力位。返回如 [{ model: "gpt-4o-mini", ... }]。
+   * 拉取可用模型清单——可选能力位。返回如 [{ model: "agnes-2.5-flash", ... }]。
    * listLlmModels() 优先调它；不实现则在 settings 里回退到内置候选（DEFAULT_MODEL + 降级链）。
    * OpenAI 兼容接口不提供模型枚举接口，这里回显当前配置指向的模型名即可。
    */

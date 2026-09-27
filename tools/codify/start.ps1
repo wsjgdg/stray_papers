@@ -10,7 +10,7 @@
 #      install hint and continues (the app still runs; only ASR needs it).
 #   3. Probe ports starting at 8000; pick the first one that is free for Vite.
 #   4. Start Vite (directly via node_modules/.bin/vite) bound to that port.
-#   5. Open the browser at http://localhost:<port>.
+#   5. Open the browser ONLY after Vite is confirmed serving (avoids a black page).
 #   6. If Vite exits with an error, the window STAYS OPEN so you can read it
 #      (no more flash-close / "闪退"). On exit we stop the Whisper service too.
 #
@@ -42,6 +42,13 @@ function Wait-ForPortTaken {
         Start-Sleep -Milliseconds 500
     }
     return $false
+}
+
+# Kill a process and its whole tree (Vite is launched via vite.cmd -> node child).
+function Stop-ProcessTree {
+    param([int]$pid)
+    if ($pid -le 0) { return }
+    try { taskkill.exe /F /T /PID $pid 2>$null | Out-Null } catch { }
 }
 
 # Best-effort launch of a local OpenAI-compatible Whisper service with CORS open.
@@ -131,6 +138,7 @@ if (-not (Test-Path $viteBin)) {
 }
 
 $whisperProc = $null
+$watchProc   = $null
 try {
     # Bring up Whisper first so it claims port 8000; Vite will then pick 8001+.
     $whisperProc = Start-WhisperService
@@ -147,18 +155,33 @@ try {
         exit 1
     }
 
-    Write-Host "Starting dev server on http://localhost:$port (host 0.0.0.0)"
-    Start-Sleep -Seconds 2
-    Start-Process "http://localhost:$port"
+    Write-Host "Starting dev server on http://localhost:$port (host 0.0.0.0)..."
+    # Single-window model: Vite runs in THIS window (foreground) so there is
+    # exactly one terminal. A detached, hidden watcher opens the browser only
+    # after Vite is confirmed serving - that prevents the black page (a browser
+    # opened before Vite is ready just shows a connection error).
+    $watchScript = @"
+`$p = $port
+`$max = 180; `$i = 0
+while (`$i -lt `$max) {
+  `$i++
+  try {
+    `$r = Invoke-WebRequest -Uri "http://127.0.0.1:`$p/" -UseBasicParsing -TimeoutSec 1 -ErrorAction Stop
+    if (`$r.StatusCode -eq 200) { Start-Process "http://localhost:`$p"; break }
+  } catch {}
+  Start-Sleep -Milliseconds 500
+}
+"@
+    $watchPath = Join-Path $root '.vite-ready-watcher.ps1'
+    Set-Content -Path $watchPath -Value $watchScript -Encoding ascii
+    $watchProc = Start-Process -FilePath 'powershell.exe' -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File',$watchPath -WindowStyle Hidden -PassThru
 
     & $viteBin --port $port --host 0.0.0.0
     $code = $LASTEXITCODE
-    if ($code -ne 0) {
-        Write-Host "Dev server exited with code $code."
-        Read-Host 'Press Enter to exit'
-    }
+    if ($code -ne 0) { Write-Host "Dev server exited with code $code."; Read-Host 'Press Enter to exit' }
 } finally {
-    if ($whisperProc -and -not $whisperProc.HasExited) {
-        try { $whisperProc.Kill() } catch { }
-    }
+    if ($watchProc -and -not $watchProc.HasExited) { Stop-ProcessTree -pid $watchProc.Id }
+    if ($whisperProc -and -not $whisperProc.HasExited) { Stop-ProcessTree -pid $whisperProc.Id }
+    $watchFile = Join-Path $root '.vite-ready-watcher.ps1'
+    if (Test-Path $watchFile) { Remove-Item $watchFile -Force -ErrorAction SilentlyContinue }
 }

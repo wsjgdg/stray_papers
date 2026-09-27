@@ -265,7 +265,7 @@ export function TimelineTab({
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto max-w-3xl space-y-5 py-1 pr-2">
+      <div className="space-y-5 py-1 pr-2">
         <div>
           <h2 className="flex items-center gap-2 font-[var(--font-display)] text-base font-semibold tracking-tight text-foreground">
             <GitBranch className="h-4 w-4 text-primary" />

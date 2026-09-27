@@ -420,7 +420,7 @@ export function downloadMarkdown(m: Meeting): void {
 
 // ── 模型与降级链 ──
 // 首选模型失败（超时/服务异常）时按顺序降级，登录/余额类错误不降级。
-// 默认指向 gpt-4o-mini，可用 .env 的 VITE_LLM_MODEL 覆盖（默认 LLM 走 Agnes）。
+// 默认指向 agnes-2.5-flash，可用 .env 的 VITE_LLM_MODEL 覆盖（默认 LLM 走 Agnes）。
 export const DEFAULT_MODEL = import.meta.env.VITE_LLM_MODEL ?? "agnes-2.5-flash"
 export const MODEL_FALLBACK_CHAIN = ["agnes-2.5-pro", "agnes-2.0-flash"]
 
@@ -952,11 +952,11 @@ export function meetingInfoProfile(m: Meeting): InfoProfile {
     score += 1
     reasons.push(`${notes} 条随手记`)
   }
-  if (m.transcript.trim().length >= 2000) {
+  if ((m.transcript ?? "").trim().length >= 2000) {
     score += 1
     reasons.push("转写超 2000 字")
   }
-  const empty = m.transcript.trim().length < 20
+  const empty = (m.transcript ?? "").trim().length < 20
   const level: InfoProfile["level"] = empty || score <= 1 ? "low" : score >= 4 ? "high" : "medium"
   return { score, level, reasons: reasons.length > 0 ? reasons : ["无决议 / 行动项产出"] }
 }

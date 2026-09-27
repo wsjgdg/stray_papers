@@ -222,7 +222,7 @@ export function SummaryTab({
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto max-w-3xl space-y-5 py-1 pr-2">
+      <div className="space-y-5 py-1 pr-2">
         {/* 提示文字与操作按钮各占一行：按钮行可换行，提示独占整行，互不挤压 */}
         <div className="space-y-2.5">
           <div className="flex flex-wrap items-center justify-end gap-2">

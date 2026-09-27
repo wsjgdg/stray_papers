@@ -177,46 +177,50 @@ export function useGeneration(deps: UseGenerationDeps) {
         const persona = settings.summaryPersona ?? "neutral"
         tasks.push(
           (async () => {
-            let facts: MeetingFact[] = []
-            let factsDiscarded = 0
-            let factsModel = ""
-            let usedFallback = false
-            let res: ChainResult<SummaryResult>
-            if (frameOn) {
-              try {
-                const fRes = await extractFacts(m.title, cleaned, sumModel, {
-                  ...(sumPrompt ? { agentPrompt: sumPrompt } : {}),
-                })
-                logAiCall("facts", m, sumModel, fRes)
-                facts = fRes.data.facts
-                factsDiscarded = fRes.data.discarded
-                factsModel = fRes.usedModel
-              } catch (e) {
-                // 提取阶段失败（登录/余额错误照样上抛，其余静默回退一次成稿）
-                const msg = e instanceof Error ? e.message : "unknown"
-                if (msg === "rh_login_required" || msg === "insufficient_balance") throw e
-                facts = []
-              }
-            }
-            if (facts.length >= 3) {
-              res = await composeSummaryFromFacts(m.title, m.date, facts, sumModel, guidance, {
-                ...(userNotes ? { userNotes } : {}),
-                ...(seriesContext ? { seriesContext } : {}),
-                ...(sumPrompt ? { agentPrompt: sumPrompt } : {}),
-                persona,
-              })
-            } else {
-              usedFallback = true
-              res = await generateSummary(m.title, m.date, cleaned, sumModel, guidance, {
-                ...(userNotes ? { userNotes } : {}),
-                ...(seriesContext ? { seriesContext } : {}),
-                ...(sumPrompt ? { agentPrompt: sumPrompt } : {}),
-                persona,
-              })
-            }
-            return { res, facts, factsDiscarded, factsModel, usedFallback }
+        let facts: MeetingFact[] = []
+        let factsDiscarded = 0
+        let factsModel = ""
+        let factsFellBack = false
+        let factsCallFailed: string | null = null
+        let usedFallback = false
+        let res: ChainResult<SummaryResult>
+        if (frameOn) {
+          try {
+            const fRes = await extractFacts(m.title, cleaned, sumModel, {
+              ...(sumPrompt ? { agentPrompt: sumPrompt } : {}),
+            })
+            logAiCall("facts", m, sumModel, fRes)
+            facts = fRes.data.facts
+            factsDiscarded = fRes.data.discarded
+            factsModel = fRes.usedModel
+            factsFellBack = fRes.fellBack
+          } catch (e) {
+            // 提取阶段调用失败（登录/余额错误照样上抛，其余静默回退一次成稿）
+            const msg = e instanceof Error ? e.message : "unknown"
+            if (msg === "rh_login_required" || msg === "insufficient_balance") throw e
+            facts = []
+            factsCallFailed = msg
+          }
+        }
+        if (facts.length >= 3) {
+          res = await composeSummaryFromFacts(m.title, m.date, facts, sumModel, guidance, {
+            ...(userNotes ? { userNotes } : {}),
+            ...(seriesContext ? { seriesContext } : {}),
+            ...(sumPrompt ? { agentPrompt: sumPrompt } : {}),
+            persona,
+          })
+        } else {
+          usedFallback = true
+          res = await generateSummary(m.title, m.date, cleaned, sumModel, guidance, {
+            ...(userNotes ? { userNotes } : {}),
+            ...(seriesContext ? { seriesContext } : {}),
+            ...(sumPrompt ? { agentPrompt: sumPrompt } : {}),
+            persona,
+          })
+        }
+        return { res, facts, factsDiscarded, factsModel, factsFellBack, factsCallFailed, usedFallback }
           })()
-            .then(({ res, facts, factsDiscarded, factsModel, usedFallback }) => {
+            .then(({ res, facts, factsDiscarded, factsModel, factsFellBack, factsCallFailed, usedFallback }) => {
               summaryDone = true
               logAiCall("summary", m, sumModel, res)
               const now = Date.now()
@@ -254,16 +258,32 @@ export function useGeneration(deps: UseGenerationDeps) {
               if (m.brief?.editedByUser || m.outline?.editedByUser) {
                 notices.push("你手动改过的摘要已保留，未被覆盖")
               }
-              if (facts.length > 0) {
+              // FRAME 两步式真正走通（composeSummaryFromFacts）：事实 ≥3 条且均为模型成功产出
+              if (facts.length >= 3) {
                 notices.push(
                   `摘要按 FRAME 管线生成：提取 ${facts.length} 条带原文支撑的事实${
                     factsDiscarded > 0 ? `（另丢弃 ${factsDiscarded} 条无支撑/重复）` : ""
-                  }，议题要点均可回溯到事实清单`,
+                  }，议题要点均可回溯到事实清单${
+                    factsFellBack ? `（事实提取首选模型失败，已改用 ${factsModel}）` : ""
+                  }`,
                 )
-              } else if (frameOn && !usedFallback) {
-                notices.push("事实提取不足 3 条，摘要已按整段归纳生成")
-              } else if (usedFallback && frameOn) {
-                notices.push("事实提取未成功，摘要已回退为整段归纳生成（不影响行动项抽取）")
+              } else if (frameOn) {
+                // 回退到整段归纳：区分「调用失败 / 校验丢弃 / 内容本就无事实 / 仅 1-2 条」四种成因，避免黑盒
+                if (factsCallFailed) {
+                  notices.push(
+                    `事实提取模型调用失败（${llmErrorMessage(factsCallFailed)}），摘要已回退为整段归纳生成（不影响行动项抽取）`,
+                  )
+                } else if (factsDiscarded > 0) {
+                  notices.push(
+                    `事实提取返回的内容未通过本地校验（${factsDiscarded} 条支撑句无法在原文命中），本场无足够可引用事实，摘要已用整段归纳生成（不影响行动项抽取）`,
+                  )
+                } else if (facts.length > 0) {
+                  notices.push(`事实提取仅得 ${facts.length} 条、不足 3 条，摘要已用整段归纳生成`)
+                } else {
+                  notices.push(
+                    "本场无可提取的显著事实（寒暄/闲聊或未识别到决定/承诺/数字），摘要已按整段归纳生成（不影响行动项抽取）",
+                  )
+                }
               }
               if (res.fellBack) notices.push(`首选模型失败，摘要已改用 ${res.usedModel} 生成（重新生成会先从首选模型重试）`)
               pushActivity(

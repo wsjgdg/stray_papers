@@ -32,7 +32,7 @@ const errorMessages: Record<string, string> = {
   rh_login_required: "请先登录 RunningHub 后再生成",
   insufficient_balance: "RunningHub 账户余额不足，请充值后重试",
   network: "网络错误：无法连接你填写的 AI 接口，请检查接口地址、CORS 与网络后重试",
-  empty_response: "AI 接口返回了空内容，请确认模型名是否正确（如 gpt-4o-mini）后重试",
+  empty_response: "AI 接口返回了空内容，请确认模型名是否正确（如 agnes-2.5-flash）后重试",
 }
 
 export function llmErrorMessage(err?: string): string {

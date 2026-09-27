@@ -192,7 +192,7 @@ export function DueTab({
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto max-w-3xl space-y-5 py-1 pr-2">
+      <div className="space-y-5 py-1 pr-2">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="font-[var(--font-display)] text-base font-semibold tracking-tight text-foreground">

@@ -86,6 +86,15 @@ const PERSONAS: { value: SummaryPersona; label: string; desc: string }[] = [
   { value: "observer", label: "旁观者视角", desc: "突出决定了什么、为什么、结论与风险——适合转发给没参会的人" },
 ]
 
+type SettingsTab = "model" | "provider" | "template" | "data" | "diagnostics"
+const SETTINGS_TABS: { id: SettingsTab; label: string }[] = [
+  { id: "model", label: "模型与生成" },
+  { id: "data", label: "数据与安全" },
+  { id: "provider", label: "服务商" },
+  { id: "template", label: "模板" },
+  { id: "diagnostics", label: "诊断" },
+]
+
 function fmtTime(at: number): string {
   const d = new Date(at)
   const pad = (n: number) => String(n).padStart(2, "0")
@@ -152,6 +161,7 @@ export function SettingsDialog({
   // 档案加密状态变化的刷新信号（VaultSection 开启/关闭后重渲染本对话框的警示行）
   const [, setVaultTick] = useState(0)
   const vaultEnabled = isVaultEnabled()
+  const [tab, setTab] = useState<SettingsTab>("model")
 
   if (!open) return null
 
@@ -201,7 +211,7 @@ export function SettingsDialog({
   const exportActivity = () => {
     const lines = filteredActivity.map(
       (ev) =>
-        `${fmtTime(ev.at)}　[${ev.kind}]${ev.meetingTitle ? `　《${ev.meetingTitle}》` : ""}　${ev.detail}`,
+        `${fmtTime(ev.at)} [${ev.kind}]${ev.meetingTitle ? ` 《${ev.meetingTitle}》` : ""} ${ev.detail}`,
     )
     const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" })
     const url = URL.createObjectURL(blob)
@@ -225,10 +235,10 @@ export function SettingsDialog({
       aria-label="设置"
     >
       <div
-        className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-[var(--radius-lg)] border border-border bg-card p-5 shadow-lg"
+        className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-[var(--radius-lg)] border border-border bg-card shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
           <h2 className="flex items-center gap-2 font-[var(--font-display)] text-base font-semibold tracking-tight text-foreground">
             <Settings2 className="h-4 w-4 text-primary" />
             设置
@@ -242,7 +252,27 @@ export function SettingsDialog({
           </button>
         </div>
 
-        <div className="space-y-5">
+        <div className="flex flex-wrap gap-1 border-b border-border px-3 py-2">
+          {SETTINGS_TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={cn(
+                "rounded-[var(--radius-sm)] px-3 py-1.5 text-xs font-medium transition-colors",
+                tab === t.id
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex-1 space-y-5 overflow-y-auto px-5 py-4">
+          {tab === "model" && (
+          <>
           <section>
             <h3 className="text-xs font-semibold text-muted-foreground">AI 模型</h3>
             <input
@@ -261,9 +291,13 @@ export function SettingsDialog({
               填入 Agnes 支持的模型名（默认 agnes-2.5-flash，另可选 agnes-2.5-pro、agnes-2.0-flash 等）。生成失败时按上方降级链逐模型重试，并在纪要页告知实际使用的模型
             </p>
           </section>
+          </>
+          )}
 
-          <ProviderSettings />
+          {tab === "provider" && (<ProviderSettings />)}
 
+          {tab === "model" && (
+          <>
           <section>
             <h3 className="text-xs font-semibold text-muted-foreground">AI 分工团队</h3>
             <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
@@ -360,7 +394,11 @@ export function SettingsDialog({
               附加指令会注入该 Agent 的提示词，但不能突破「只依据原文、禁止编造」的铁律。抽取门槛越高，越多把握不足的条目会先进「待确认」队列由你拍板，而不是直接写进清单
             </p>
           </section>
+          </>
+          )}
 
+          {tab === "template" && (
+          <>
           <section>
             <h3 className="text-xs font-semibold text-muted-foreground">会议模板</h3>
             <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
@@ -407,7 +445,11 @@ export function SettingsDialog({
               ))}
             </div>
           </section>
+          </>
+          )}
 
+          {tab === "model" && (
+          <>
           <section>
             <h3 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
               <Sparkles className="h-3 w-3" />
@@ -501,7 +543,11 @@ export function SettingsDialog({
               AI 给出的每条行动项都带置信度，低于阈值的直接丢弃；保留下来的低分项会在列表里标注「请核对」。改完在下次生成时生效
             </p>
           </section>
+          </>
+          )}
 
+          {tab === "data" && (
+          <>
           <section>
             <h3 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
               <ShieldAlert className="h-3 w-3" />
@@ -509,6 +555,7 @@ export function SettingsDialog({
             </h3>
             <div className="mt-2 space-y-1.5 text-[11px] leading-relaxed">
               {(() => {
+                // eslint-disable-next-line react-hooks/purity -- 仅用于显示「距上次备份多少天」，设置弹窗打开期间随真实时间变化属预期
                 const days = lastBackupAt ? Math.floor((Date.now() - lastBackupAt) / 86_400_000) : null
                 if (meetingCount === 0) {
                   return <p className="text-muted-foreground">本地还没有会议数据</p>
@@ -758,7 +805,11 @@ export function SettingsDialog({
               </p>
             ) : null}
           </section>
+          </>
+          )}
 
+          {tab === "diagnostics" && (
+          <>
           <section>
             <h3 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
               <History className="h-3 w-3" />
@@ -830,6 +881,8 @@ export function SettingsDialog({
           <UsagePanel />
 
           <QualityPanel meetings={meetings} templates={templates} />
+          </>
+          )}
         </div>
       </div>
     </div>
