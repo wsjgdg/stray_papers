@@ -4,30 +4,6 @@
 
 技术栈：React 19 + TypeScript + Vite + Tailwind CSS 3 + shadcn/ui（Radix）+ cmdk。全部依赖锁定为精确版本（依赖治理见第十节）。
 
-## 关于本仓库（独立 fork）
-
-本仓库是从 VibeX / RunningHub 导出的「个人会议纪要工作台」的**独立分支**，已彻底脱离原平台，可直接自托管 / fork：
-
-- **LLM 通道**：走你自己的 OpenAI 兼容接口，**默认指向 Agnes**（`https://api.agnes-ai.cn/v1`）。`baseUrl` / `apiKey` / `model` 经项目根目录 `.env` 的 `VITE_LLM_BASE_URL` / `VITE_LLM_API_KEY` / `VITE_LLM_MODEL` 注入（见 `.env.example`），也可在设置页手动改。原平台计费代理（PocketBase `/api/llm/*`）已移除。
-- **数据层**：全部存于浏览器本地（localStorage + IndexedDB），离线可用；导出备份默认不含密钥。
-- **已移除的平台耦合**：`.vibex/`、`vibex-local/`、`pocketbase/`、`public/sso-popup-callback.html`、`RhAccountMenu`、`rhLogin.ts` / `pb.ts`、计费确认墙（`visitorPaysForAi=false`）。原 VibeX「导出回传」流程不再适用——本仓库即是源码本身。
-
-> 注：纯客户端应用没有后端代理，`.env` 里的 LLM 密钥会被打进前端包、由浏览器直发给 Agnes；这与「密钥不进 git 源码」的边界一致，但**不等于**服务器端保密。共享部署前请改用你自己的密钥。
-
-本地运行见文末「开发」一节；Windows 双击 `start.cmd` 即可（自动探测空闲端口、缺依赖先装、报错保活不闪退）。
-
-### 语音识别（ASR）
-
-- **默认引擎是「云端 SenseVoice（SiliconFlow）」**（`cloud-sensevoice`）：走 SiliconFlow 的国内节点（`https://api.siliconflow.cn/v1/audio/transcriptions`，默认模型 `FunAudioLLM/SenseVoiceSmall`，对中文及方言友好），浏览器直连、无需自托管。需要在 `.env` 配置 `VITE_SILICONFLOW_API_KEY`（或在「设置 → 服务商 → 语音识别 → 云端 SenseVoice」填写）。**该模型在 SiliconFlow 上完全免费（输入/输出均 ¥0/百万 tokens），但免费不等于无限制：仍有速率（RPM）约束，且单文件 ≤50MB、时长 ≤1 小时**——介意音频交给第三方云、或要离线可用，就切到下面的本地 Whisper。
-- **备选引擎 · 本地 Whisper（自托管）**（`local-whisper`）：音频只发往你自己的服务，离线可用、免费、不外泄。前提是本机跑着一个 OpenAI 兼容的 `/v1/audio/transcriptions` 服务（见下方「一键起服务」）。
-- **为什么不是浏览器自带识别**：Chrome / Edge 的 Web Speech 识别会把麦克风音频发到厂商云端（Chrome 走 Google 服务器），在中国大陆等网络下常因访问不到而报 `network` 错误——这不是麦克风权限问题。原 `webSpeechAsr` 引擎仍保留，可在「设置 → 服务商 → 语音识别」里切回（仅在你网络能直连厂商云端时可用）。
-- **一键起服务**：双击 `start.cmd`（或 `start.ps1`）会先尝试拉起本地 Whisper 服务（端口 8000，已自动设 `ALLOW_ORIGINS=["*"]` 开 CORS），再起前端开发服务器。检测顺序：`faster-whisper-server` → `speaches`（同项目的更名版）→ `python -m faster_whisper_server` → docker `fedirz/faster-whisper-server:latest-cpu`。**首次使用前需先装一次** `pip install faster-whisper-server`；装好后脚本会自动拉起，无需手动起服务。若都找不到，脚本会打印一次性安装提示并继续（应用照常运行，仅语音识别需要该服务）。
-- **本地 Whisper 怎么手动起**（任选其一，默认地址 `http://localhost:8000`，需开 CORS 允许本应用 origin）：
-  - Python：`pip install faster-whisper-server` 然后 `ALLOW_ORIGINS=["*"] faster-whisper-server`（默认暴露 `/v1/audio/transcriptions`，监听 8000，模型用 `base`/`small` 等）。
-  - Docker：`docker run -d --rm -e ALLOW_ORIGINS='["*"]' -p 8000:8000 fedirz/faster-whisper-server:latest-cpu`。
-  - 起好后，在「设置 → 服务商 → 语音识别 → 本地 Whisper」填服务地址 / 模型 / 语言即可（默认 `http://localhost:8000`、`base`、`zh` 已预填）。
-- 实时转写是「近似实时」：按 `chunkSeconds`（默认 4 秒）分段，每段独立发给服务识别后作为一句定稿回填。长句可能被切在段边界；批量上传音频文件则整段发送、上下文完整。
-
 ---
 
 ## 一、界面架构：三栏 + 双模式
@@ -212,7 +188,7 @@
 | `1` - `8` | 切换页签：转写 / 纪要 / 行动项 / 决议 / 跟进 / 时间线 / 图谱 / 问答 |
 | `E` | 跳到转写页签并聚焦编辑框（行动项页签内为编辑光标条目内容） |
 | `D` | 行动项页签内：完成 / 取消完成光标所在条目 |
-| `R` | 阅读模式（切到纪要页） |
+| `R` | 阅读模式（切到纪要） |
 | `C` | 对照模式（转写与摘要并排） |
 | `[` / `]` | 收起 / 展开左栏、右栏 |
 | `Esc` | 关闭弹层 / 清空搜索 / 退出行动项光标选择 |
@@ -300,38 +276,3 @@ docs/
 - **冻结清单**（`docs/freeze-list.md`）：三档管理——**冻结**（图谱 / 评估台 / 命令面板 / 用量面板 / 健康面板：不主动排期增强，安全与正确性修复照做）、**维护模式**（时间线 / 会议历史 / 决议 / 行动项 / 摘要 / 问答 / 转写：只修 bug，调参须评估台数据支撑）、**明确不做**（多人协作 / 云同步账号 / 移动原生 / 浏览器训练模型 / 自研存储 / 插件系统 / 神经交叉编码器）。每项带可观测的解冻触发条件；解冻必须留痕（清单登记一行「为什么」+ 涉及架构变更补 ADR）
 
 约定：领域 hook 通过参数注入依赖（meetings / setMeetings / agentModel / costConfirm…），只拥有自己域的状态；facade 只做组合与 re-export（`SupportSummary`、`DigestRow` 等类型随域迁移后从 facade re-export，消费方导入路径不变）。跨域共用的资源显式注入而非各自持有：`meetingsRef`（会议数据快照 ref）与 `askRunningRef`（问答 / 语义找会共用的检索类调用锁）由 facade 持有，注入给需要的域；`qaHistory` 归存储域（facade）持有——它随主库持久化、随备份导入导出——问答域注入读写。所有 AI 调用必须过成本确认；数据操作不可变更新（`setMeetings(prev => …)`）。
-
----
-
-## 十一、巨型 hook 拆分（已完成，诚实记录）
-
-原路线三项中，**图谱实体消解**（`lib/entityResolution.ts`，见第三节）与**评估台降门槛**（自动指标 + 对比判定 + 抽样，见第七节）已落地。hook 拆分**已完成**，采用「facade 不变、逐域迁出」策略——`useMeetingNotes` 保持公开 API 完全一致（页面与组件零改动），每迁一块都过类型检查 + 构建，全程可回退：
-
-**已迁出（3232 行 → 1297 行，十个领域 hook）**
-
-| 领域 hook | 内容 | 自有状态 |
-| --- | --- | --- |
-| `meeting-notes/useMeetingsStore.ts` | **核心存储域**：会议数据 / 问答历史 / 启动装载 / 400ms 防抖增量落盘（失败挂横幅不静默）/ 崩溃安全意图标记 + `flushPersist` 立即落盘 / 备份导出与干跑导入 / patchMeeting | meetings / selectedId / qaHistory / booting / storageError / recoveryNotice 等 |
-| `meeting-notes/useSettings.ts` | 设置域：应用设置 / 多 Agent 编排路由 / 会议模板 / 事件日志（100 条上限）/ 模型清单拉取 | settings / agents / templates / activity |
-| `meeting-notes/useGeneration.ts` | 生成主管线：清洗（Worker）→ FRAME 两步摘要 + 行动项抽取；同任务并发锁、用户改过的层永不覆盖、失败回退一次成稿 | genBusy / genError / genNotice |
-| `meeting-notes/useRetrieval.ts` | 关键词检索（Worker 倒排索引）/ 标签与归档筛选 / 语义找会 / 语义索引生命周期 / 三套索引的增删同步 | searchText / tagFilter / searchResult / semanticStatus / findResults 等 |
-| `meeting-notes/useQa.ts` | 跨会议问答（流式 + poll-first 双通道）/ 自路由（结构化查询本地直答，其余走 RAG）/ 引用核验 / 问答漂移感知 / 历史单条删除 | asking / askError / streamingBlocks |
-| `meeting-notes/useTranscriptOps.ts` | 转写编辑会话与修正事件结算 / 补标点整理 + 逐块保真校验 / 随手记 / 重复会议检测 | polishing / polishNotice / polishFidelity / duplicateWarning |
-| `meeting-notes/useEvalBench.ts` | 评估台全链路（golden set / 重跑管线 / 自动指标 / 评分） | evalBusy / evalProgress / evalError / evalRuns |
-| `meeting-notes/useQualityChecks.ts` | 双模型交叉审查 + 支撑核验 | reviewReport / supportSummary 等 |
-| `meeting-notes/useInsights.ts` | 流程洞察 / 跟进消化 / 演进脉络 / 实体抽取 | themeReport / digestReport / evolutionCache 等 |
-| `meeting-notes/useSpeakerSuggest.ts` | 说话人智能标注 | speakerSuggestions / suggestBusy |
-
-迁出方式全部是**整段搬移**而非重写：函数体逐字保留，依赖改为参数注入，类型随域迁移后从 facade re-export（`SupportSummary` / `DigestRow` / `ImportPreview` / `GenParts`）。跨域耦合收敛为显式接口：检索域暴露 `syncIndexesAfterSave()`（落盘后刷索引）与 `dropMeetingFromIndexes()`（删会议清三套索引）；存储域的落盘管线经 `indexSyncRef` 桥接调用检索域（ref 间接解 hook 声明顺序，防抖 + 装载闸门保证无竞态）。
-
-**收尾已完成：分片订阅（Context slicing）**
-
-- `MeetingNotesProvider` 调用一次 `useMeetingNotes`（唯一状态源不变），把约 150 个返回字段按**变化频率**装进 21 个 context 分片：数据类（selection / list / follow / hints…）、瞬态类（qa 流式块、gen 忙碌态、semantic 进度…）、动作类（全部回调一个分片）、原始值类（booting / hasSelection / meetingCount——React 按 `Object.is` 比较 context 值，原始值天然免重渲染）
-- 界面改为**宿主组件**结构（`Workbench.tsx`）：每个宿主是 `memo` 的无 props 组件，数据全部经分片订阅；页面入口自身无状态、渲染一次后不再更新，Provider 重渲染经 `{children}` 引用相等直接短路整棵壳树
-- 实际收益（对照旧结构「任何状态变化重渲染整页」）：问答流式回答逐块刷新只重渲染问答宿主；搜索击键只重渲染左栏列表；语义索引进度只重重渲染设置对话框宿主；转写击键不再波及弹层与页签内容以外的区域
-- 布局壳状态（三栏收展 / 双模式 / 弹层开关 / 出处定位）与全局快捷键在 `WorkbenchUiProvider`，与数据分片互不牵连
-- 页面文件从 743 行降到 18 行；宿主内的 props 接线与原页面逐一等价（含对照模式下摘要侧不显示「去行动项」入口这类细节）
-
-项目已纳入 git 版本管理（每批改动独立提交，随时可回退）。
-
-已知代价（如实记录）：eslint 存量错误 29 处（0 警告）——以 react-hooks 新规则对既有模式的报告为主（effect 内同步 setState 10 处、纯度 3 处、不可变性 2 处等，含随代码整段搬移的 `Date.now()` memo 与转写域重复检测 effect 两处历史模式），另有少量 `no-useless-escape` / 不规则空白等历史遗留；约定是**每批零新增**（`./node_modules/.bin/eslint src` 对齐基线），存量清理不在冻结清单的排期里。数据类分片按引用比较，转写击键这类**数据本身的编辑**仍会重渲染消费该数据的宿主（这是正确行为，不是浪费）；本次重构的验证手段是类型检查、构建与逐处接线比对，未做浏览器内性能剖析，收益结论来自渲染机制推导。
