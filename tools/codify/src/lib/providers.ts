@@ -890,6 +890,11 @@ export function getAsrBatchProvider(): AsrProvider | null {
   return ASR_PROVIDERS.find((p) => typeof p.transcribe === "function" && p.supported()) ?? null
 }
 
+/** 具备「音频文件批量转写」能力的全部 ASR（按注册顺序）；上传入口与重转引擎选择器共用 */
+export function getAsrBatchProviders(): AsrProvider[] {
+  return ASR_PROVIDERS.filter((p) => typeof p.transcribe === "function" && p.supported())
+}
+
 /** 具备「直接合成音频数据」能力的 TTS；没有实现时返回 null（系统合成只能直接播放） */
 export function getTtsSynthProvider(): TtsProvider | null {
   return TTS_PROVIDERS.find((p) => typeof p.synthesize === "function" && p.supported()) ?? null

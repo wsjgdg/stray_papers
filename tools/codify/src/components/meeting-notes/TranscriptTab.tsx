@@ -27,6 +27,13 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   downloadBlob,
   parseTranscriptLines,
   todayStr,
@@ -37,11 +44,14 @@ import type { FidelityIssue, FidelityReport } from "@/lib/fidelity"
 import { parseLinesTask } from "@/lib/textWorkerClient"
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition"
 import { loadRecording } from "@/lib/recordingStore"
+import { decodeToWav } from "@/lib/audioConvert"
 import {
   TRANSLATE_LANGUAGES,
   getActiveTranslate,
   getAsrBatchProvider,
+  getAsrBatchProviders,
   getProviderConfig,
+  type AsrProvider,
 } from "@/lib/providers"
 import { translateLangLabel } from "@/lib/translate"
 import { buildContextPrompt } from "@/lib/hotwords"
@@ -373,15 +383,33 @@ export function TranscriptTab({
   // ── 音频文件转写（预留能力位）：只有注册了批量转写实现的 ASR Provider 存在时，
   // 上传入口才整体出现；本环境没有可注册的实现，所以正常情况下这里不渲染任何东西 ──
   const batchAsr = useMemo(() => getAsrBatchProvider(), [])
+  const batchProviders = useMemo(() => getAsrBatchProviders(), [])
+  const [retransEngineId, setRetransEngineId] = useState<string>(batchAsr?.meta.id ?? "")
+  const selectedEngine = useMemo(
+    () => batchProviders.find((p) => p.meta.id === retransEngineId) ?? batchAsr ?? null,
+    [batchProviders, retransEngineId, batchAsr],
+  )
   const audioInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
+  const [transcribeError, setTranscribeError] = useState("")
 
-  const handleAudioFile = async (file: File | undefined) => {
-    if (!file || !batchAsr?.transcribe || uploading) return
+  const handleAudioFile = async (file: Blob | null | undefined, engine?: AsrProvider | null) => {
+    const eng = engine ?? getAsrBatchProvider()
+    if (!file || !eng?.transcribe || uploading) return
     setUploading(true)
+    setTranscribeError("")
     try {
-      const cfg = getProviderConfig("asr", batchAsr.meta.id)
-      const segs = await batchAsr.transcribe(file, {
+      let blobToSend: Blob = file
+      // 云 API（runtime: cloud，如 SenseVoice）对 opus 容器直发不稳：解码重采样成 16k 单声道 WAV 再发
+      if (eng.meta.runtime === "cloud") {
+        try {
+          blobToSend = await decodeToWav(file, 16000)
+        } catch {
+          // 解码失败：退化为原 blob 直发（部分服务端能直接吃 webm/opus）
+        }
+      }
+      const cfg = getProviderConfig("asr", eng.meta.id)
+      const segs = await eng.transcribe(blobToSend, {
         language: typeof cfg.lang === "string" && cfg.lang ? cfg.lang : "zh-CN",
         contextText: buildContextPrompt(getHotwords()),
       })
@@ -396,8 +424,9 @@ export function TranscriptTab({
         const cur = meeting.transcript.replace(/\s+$/, "")
         onTranscriptChange(cur.trim() ? `${cur}\n${lines.join("\n")}` : lines.join("\n"))
       }
-    } catch {
-      // 具体错误文案由 Provider 负责抛出 / 上报，这里只保证状态复位
+    } catch (err) {
+      // 把失败错误显示出来，避免静默失败（如本地 Whisper 未启动、云 API Key 无效、网络错误）
+      setTranscribeError(err instanceof Error ? err.message : String(err))
     } finally {
       setUploading(false)
       if (audioInputRef.current) audioInputRef.current.value = ""
@@ -966,6 +995,11 @@ export function TranscriptTab({
           {genError}
         </p>
       ) : null}
+      {transcribeError ? (
+        <p className="rounded-[var(--radius-md)] border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+          {transcribeError}
+        </p>
+      ) : null}
 
       <div className="flex items-center justify-between gap-3">
         <p className="hidden text-xs text-muted-foreground sm:block">
@@ -974,6 +1008,23 @@ export function TranscriptTab({
             : "当前浏览器不支持实时语音转写（需 Chrome / Edge）；粘贴文本、AI 纪要、补标点、问答、朗读纪要等其余功能在本浏览器完全可用"}
         </p>
         <div className="ml-auto flex shrink-0 items-center gap-2">
+          {batchProviders.length > 1 ? (
+            <Select value={retransEngineId} onValueChange={(v) => setRetransEngineId(v)}>
+              <SelectTrigger
+                className="h-8 w-auto min-w-[9rem] gap-1.5 rounded-[var(--radius-md)] px-3 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-primary"
+                title="选择整段重转 / 上传音频使用的识别引擎"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {batchProviders.map((p) => (
+                  <SelectItem key={p.meta.id} value={p.meta.id}>
+                    {p.meta.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : null}
           {batchAsr ? (
             <>
               <input
@@ -981,7 +1032,7 @@ export function TranscriptTab({
                 type="file"
                 accept="audio/*,video/*"
                 className="hidden"
-                onChange={(e) => void handleAudioFile(e.target.files?.[0])}
+                onChange={(e) => void handleAudioFile(e.target.files?.[0], selectedEngine)}
               />
               <Button
                 variant="outline"
@@ -1026,18 +1077,11 @@ export function TranscriptTab({
                     if (!r) return
                     void loadRecording(r.id).then((res) => {
                       if (!res) return
-                      const ext = res.meta.mime.includes("mp4")
-                        ? "mp4"
-                        : res.meta.mime.includes("ogg")
-                          ? "ogg"
-                          : "webm"
-                      void handleAudioFile(
-                        new File([res.blob], `recording.${ext}`, { type: res.meta.mime }),
-                      )
+                      void handleAudioFile(res.blob, selectedEngine)
                     })
                   }}
                   disabled={uploading}
-                  title="把整场原始录音直接交给本地 Whisper 重新整段转写（无需先下载再上传）"
+                  title="把整场原始录音交给所选引擎重新整段转写（云引擎会先解码成 16k 单声道 WAV）"
                   className="gap-1.5 rounded-[var(--radius-md)] px-3.5 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-primary"
                 >
                   {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
