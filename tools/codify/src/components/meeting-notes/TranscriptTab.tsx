@@ -44,7 +44,7 @@ import type { FidelityIssue, FidelityReport } from "@/lib/fidelity"
 import { parseLinesTask } from "@/lib/textWorkerClient"
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition"
 import { loadRecording } from "@/lib/recordingStore"
-import { decodeToWav } from "@/lib/audioConvert"
+import { decodeToWav, splitWavChunks, CLOUD_TRANSCRIBE_CHUNK_BYTES } from "@/lib/audioConvert"
 import {
   TRANSLATE_LANGUAGES,
   getActiveTranslate,
@@ -52,6 +52,7 @@ import {
   getAsrBatchProviders,
   getProviderConfig,
   type AsrProvider,
+  type AsrTranscriptSegment,
 } from "@/lib/providers"
 import { translateLangLabel } from "@/lib/translate"
 import { buildContextPrompt } from "@/lib/hotwords"
@@ -393,26 +394,51 @@ export function TranscriptTab({
   const [uploading, setUploading] = useState(false)
   const [transcribeError, setTranscribeError] = useState("")
 
-  const handleAudioFile = async (file: Blob | null | undefined, engine?: AsrProvider | null) => {
+  const handleAudioFile = async (
+    file: Blob | null | undefined,
+    engine?: AsrProvider | null,
+    opts?: { replace?: boolean },
+  ) => {
     const eng = engine ?? getAsrBatchProvider()
     if (!file || !eng?.transcribe || uploading) return
     setUploading(true)
     setTranscribeError("")
     try {
-      let blobToSend: Blob = file
-      // 云 API（runtime: cloud，如 SenseVoice）对 opus 容器直发不稳：解码重采样成 16k 单声道 WAV 再发
-      if (eng.meta.runtime === "cloud") {
-        try {
-          blobToSend = await decodeToWav(file, 16000)
-        } catch {
-          // 解码失败：退化为原 blob 直发（部分服务端能直接吃 webm/opus）
-        }
-      }
       const cfg = getProviderConfig("asr", eng.meta.id)
-      const segs = await eng.transcribe(blobToSend, {
-        language: typeof cfg.lang === "string" && cfg.lang ? cfg.lang : "zh-CN",
-        contextText: buildContextPrompt(getHotwords()),
-      })
+      // 仅当用户显式设置了语言才下发；否则交给引擎各自的默认（SenseVoice 默认 auto 自动检测，
+      // Whisper 默认 zh），不要在这里强制成 zh-CN 而丢失自动语言识别能力。
+      const language = typeof cfg.lang === "string" && cfg.lang.trim() ? cfg.lang.trim() : undefined
+      const contextText = buildContextPrompt(getHotwords())
+      let segs: AsrTranscriptSegment[] = []
+      if (eng.meta.runtime === "cloud") {
+        // 云接口单请求体积上限远小于整段 WAV：先解成 16k 单声道 WAV，再按体积切片逐片发送，
+        // 各片时间戳按切片偏移回加，拼回完整带时间轴的转写（3 小时录音不会再被一个巨型 POST 打爆）。
+        const wav = await decodeToWav(file, 16000).catch(() => null)
+        const source = wav ?? file
+        if (wav && source !== file) {
+          const chunks = await splitWavChunks(wav, CLOUD_TRANSCRIBE_CHUNK_BYTES)
+          let offsetMs = 0
+          const bytesPerSec = 16000 * 2
+          for (let i = 0; i < chunks.length; i++) {
+            const c = chunks[i]
+            const cSegs = await eng.transcribe(c, { language, contextText })
+            for (const s of cSegs) {
+              segs.push({
+                text: s.text,
+                speaker: s.speaker,
+                startMs: (s.startMs ?? 0) + offsetMs,
+                endMs: (s.endMs ?? 0) + offsetMs,
+              })
+            }
+            offsetMs += Math.round(((c.size - 44) / bytesPerSec) * 1000)
+          }
+        } else {
+          segs = await eng.transcribe(source, { language, contextText })
+        }
+      } else {
+        // 本地 Whisper 等服务可直接吃 webm/opus 源文件，无需解码成 WAV。
+        segs = await eng.transcribe(file, { language, contextText })
+      }
       const lines = segs
         .filter((s) => s.text.trim())
         .map((s) => {
@@ -421,11 +447,16 @@ export function TranscriptTab({
           return `${ts}${sp}${s.text.trim()}`
         })
       if (lines.length > 0) {
-        const cur = meeting.transcript.replace(/\s+$/, "")
-        onTranscriptChange(cur.trim() ? `${cur}\n${lines.join("\n")}` : lines.join("\n"))
+        if (opts?.replace) {
+          // 整段重转：本次是对整场录音重新识别，结果应整段替换旧转写稿，而非追加（否则重复）
+          onTranscriptChange(lines.join("\n"))
+        } else {
+          const cur = meeting.transcript.replace(/\s+$/, "")
+          onTranscriptChange(cur.trim() ? `${cur}\n${lines.join("\n")}` : lines.join("\n"))
+        }
       }
     } catch (err) {
-      // 把失败错误显示出来，避免静默失败（如本地 Whisper 未启动、云 API Key 无效、网络错误）
+      // 把失败错误显示出来，避免静默失败（如本地 Whisper 未启动、云 API Key 无效、网络错误、切片超限）
       setTranscribeError(err instanceof Error ? err.message : String(err))
     } finally {
       setUploading(false)
@@ -1077,7 +1108,7 @@ export function TranscriptTab({
                     if (!r) return
                     void loadRecording(r.id).then((res) => {
                       if (!res) return
-                      void handleAudioFile(res.blob, selectedEngine)
+                      void handleAudioFile(res.blob, selectedEngine, { replace: true })
                     })
                   }}
                   disabled={uploading}
