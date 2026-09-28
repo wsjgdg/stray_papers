@@ -175,20 +175,46 @@ export const webSpeechAsr: AsrProvider = {
     rec.continuous = true
     rec.interimResults = true
 
-    // 用户是否还想继续听：浏览器静音超时自动断开时据此静默续接
+    // 用户是否还想继续听：浏览器静音超时 / 会话上限自动断开时据此静默续接
     let want = true
     let stopped = false
+    // 续接排程去重：onend / onerror 都可能触发续接，避免重复排程导致「already started」雪崩
+    let restartTimer: ReturnType<typeof setTimeout> | null = null
+    // 网络错误重试计数：收到任意结果即清零；持续失败累计到上限才放弃，避免瞬时抖动误杀长会
+    let networkRetries = 0
+    const MAX_NETWORK_RETRIES = 10
     const startedAt = performance.now()
     let lastFinalMs = 0
+
     const finish = () => {
       if (stopped) return
       stopped = true
       want = false
+      if (restartTimer != null) {
+        clearTimeout(restartTimer)
+        restartTimer = null
+      }
       handlers.onStopped()
+    }
+
+    // 错峰续接：用 setTimeout 把 start() 推到 onend 之后，规避 Chrome/Edge「recognition already started」竞态
+    const scheduleRestart = (delay = 120) => {
+      if (!want || stopped || restartTimer != null) return
+      restartTimer = setTimeout(() => {
+        restartTimer = null
+        if (!want || stopped) return
+        try {
+          rec.start()
+        } catch {
+          // 极少数仍撞上「already started」：再缓一拍重试，而非直接终止
+          scheduleRestart(300)
+        }
+      }, delay)
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     rec.onresult = (e: any) => {
+      networkRetries = 0 // 收到结果即证明识别链路正常，重置网络重试计数
       let partial = ""
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const result = e.results[i]
@@ -207,21 +233,34 @@ export const webSpeechAsr: AsrProvider = {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     rec.onerror = (e: any) => {
-      const msg = ASR_ERROR_MESSAGES[String(e?.error)]
-      if (!msg) return // no-speech / aborted 属正常静默，不打扰用户
-      finish()
-      handlers.onError(msg)
+      const errName = String(e?.error)
+      // 致命错误：权限被拒 / 服务不可用 / 无法捕获音频 → 终止并提示
+      if (errName === "not-allowed" || errName === "service-not-allowed" || errName === "audio-capture") {
+        finish()
+        const msg =
+          ASR_ERROR_MESSAGES[errName] ??
+          "语音识别无法访问麦克风或语音服务不可用，请检查权限或改用本地 Whisper 引擎"
+        handlers.onError(msg)
+        return
+      }
+      // no-speech / aborted（用户主动 stop 也会触发 aborted）属正常静默，交给 onend 收尾，不打扰
+      if (errName === "no-speech" || errName === "aborted") return
+      // network 等可恢复错误：Edge/Chrome 把音频发到厂商服务器，跨境网络偶发抖动属瞬时，
+      // 续接而非直接终止；仅当持续失败累计到上限才向用户报告，避免静默空转
+      networkRetries += 1
+      if (networkRetries > MAX_NETWORK_RETRIES) {
+        finish()
+        handlers.onError("语音识别网络持续异常，已停止。可改用「本地 Whisper」引擎（自托管、离线可用）")
+        return
+      }
+      scheduleRestart(250)
     }
 
     rec.onend = () => {
       handlers.onIdle?.()
-      if (want) {
-        // Chrome 长时间静音会自动断开，用户没点停止就静默续接
-        try {
-          rec.start()
-        } catch {
-          finish()
-        }
+      if (want && !stopped) {
+        // Chrome/Edge 长静音或 ~60s 会话上限会自动断开，用户没点停止就静默续接
+        scheduleRestart(120)
       } else {
         finish()
       }
@@ -239,6 +278,10 @@ export const webSpeechAsr: AsrProvider = {
       stop: () => {
         if (stopped) return
         want = false
+        if (restartTimer != null) {
+          clearTimeout(restartTimer)
+          restartTimer = null
+        }
         try {
           rec.stop()
         } catch {
