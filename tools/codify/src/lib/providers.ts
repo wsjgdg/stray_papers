@@ -17,6 +17,11 @@ import { type LlmCallResult, type LlmMessage, type LlmModelInfo } from "@/lib/ll
 import { openaiCompatibleLlm } from "@/lib/openaiLlm"
 import { whisperAsr } from "@/lib/whisperAsr"
 import { senseVoiceAsr } from "@/lib/senseVoiceAsr"
+import {
+  appendSegment,
+  finalizeRecording,
+  type RecordingMeta,
+} from "@/lib/recordingStore"
 import type { TokenUsage } from "@/lib/usageLog"
 import { vaultGetItem, vaultSetItem } from "@/lib/vault"
 
@@ -83,9 +88,13 @@ export interface AsrStream {
  * contextText：热词/背景上下文——Whisper 系实现拿它当 initial_prompt 做热词偏置
  * （模型将其视为「刚刚听到的内容」，专有名词识别向词表靠拢）；
  * Web Speech API 没有上下文注入口，浏览器识别实现如实忽略，不假装生效。
+ * recordingId / meetingId：保底录音落盘关联——调用方生成唯一 id 与归属会议 id；
+ * 缺省则不落盘（仅内存保底），UI 不会出现下载/重转入口。
  */
 export interface AsrStartOptions {
   contextText?: string
+  recordingId?: string
+  meetingId?: string
 }
 
 export interface AsrStreamHandlers {
@@ -98,8 +107,8 @@ export interface AsrStreamHandlers {
   onIdle?: () => void
   /** 识别彻底停止（用户 stop 或致命错误之后），且不会再自动续接 */
   onStopped: () => void
-  /** 整场原始录音（保底用）：停止时回传完整音频 Blob，便于下载或事后整段重转；未采集则不触发 */
-  onRecording?: (blob: Blob, mimeType: string) => void
+  /** 整场原始录音（保底用）：停止时已分段落盘到 IndexedDB，回调回传 recordingId + mimeType；未采集则不触发 */
+  onRecordingSaved?: (recordingId: string, mimeType: string) => void
 }
 
 export interface AsrProvider {
@@ -177,7 +186,7 @@ export const webSpeechAsr: AsrProvider = {
   supported: webSpeechSupported,
   // Web Speech API 没有上下文注入口：AsrStartOptions.contextText 到这里被如实忽略
   //（浏览器识别无法做热词偏置；词表改在转写整理阶段由 AI 参照校正，见 lib/hotwords.ts）
-  startStream(handlers, config) {
+  startStream(handlers, config, opts) {
     if (!webSpeechSupported()) return null
     const w = window as unknown as Record<string, new () => unknown>
     const Ctor = w.SpeechRecognition || w.webkitSpeechRecognition
@@ -198,22 +207,101 @@ export const webSpeechAsr: AsrProvider = {
     const startedAt = performance.now()
     let lastFinalMs = 0
 
-    // 并行保底录音：Web Speech 断点 / 网络重试期间浏览器内部采音会暂停，那段声音它拿不回来；
+    // 并行保底录音 + 分段落盘：Web Speech 断点 / 网络重试期间浏览器内部采音会暂停，那段声音它拿不回来；
     // 这里另开一路 getUserMedia + MediaRecorder 持续采音，整场原始音频永不丢失（事后可下载整段重转）。
-    // 失败则静默降级——绝不影响主识别会话。
+    // 每 ~10 分钟把内存里累积的分片 flush 到 IndexedDB，停止时 finalize——既避免数小时录音全驻内存，
+    // 也防止刷新 / 崩溃 / 切走前未停止导致整场丢失。失败则静默降级——绝不影响主识别会话。
+    const recordingId = opts?.recordingId
+    const meetingIdForRec = opts?.meetingId ?? "unknown"
+    const recordingStartedAt = Date.now()
+    const recordingExpiresAt = recordingStartedAt + 24 * 60 * 60 * 1000
     let paraStream: MediaStream | null = null
     let paraRecorder: MediaRecorder | null = null
     const paraChunks: Blob[] = []
     let paraMime = ""
     let paraEmitted = false
-    const emitRecording = () => {
+    let segSeq = 0
+    let accumulatedSize = 0
+    const segMeta: { seq: number; size: number }[] = []
+    let flushTimer: ReturnType<typeof setInterval> | null = null
+    // 在途 flush 互斥：避免周期 flush 与停止 flush 并发写同一 seq 造成分片错乱
+    let flushInFlight: Promise<void> | null = null
+    const FLUSH_INTERVAL_MS = 10 * 60 * 1000
+
+    // 把当前内存分片落盘为一个 seq 分片；失败则把分片还回内存、下次再试，绝不丢数据
+    const flushSegment = async () => {
+      if (paraChunks.length === 0 || !recordingId || flushInFlight) return
+      const batch = paraChunks.splice(0, paraChunks.length)
+      const blob = new Blob(batch, { type: paraMime || "audio/webm" })
+      if (blob.size === 0) return
+      const seq = segSeq + 1
+      const task = (async () => {
+        try {
+          await appendSegment(recordingId, seq, blob)
+          segSeq = seq
+          accumulatedSize += blob.size
+          segMeta.push({ seq, size: blob.size })
+        } catch {
+          // 落盘失败（如隐私模式 IDB 不可用）：分片还回内存，下次 flush 再试
+          paraChunks.unshift(...batch)
+        }
+      })()
+      flushInFlight = task
+      await task
+      flushInFlight = null
+    }
+
+    const emitRecording = async () => {
       if (paraEmitted) return
       paraEmitted = true
-      if (paraChunks.length > 0) {
-        const blob = new Blob(paraChunks, { type: paraMime || "audio/webm" })
-        if (blob.size > 0) handlers.onRecording?.(blob, paraMime || "audio/webm")
+      if (flushTimer != null) {
+        clearInterval(flushTimer)
+        flushTimer = null
       }
-      paraChunks.length = 0
+      // 先等任何在途 flush 结束，避免分片 seq 冲突
+      if (flushInFlight) {
+        try {
+          await flushInFlight
+        } catch {
+          // 忽略在途失败
+        }
+      }
+      // 剩余内存分片落盘
+      if (paraChunks.length > 0) {
+        const batch = paraChunks.splice(0, paraChunks.length)
+        const blob = new Blob(batch, { type: paraMime || "audio/webm" })
+        if (blob.size > 0 && recordingId) {
+          const seq = segSeq + 1
+          try {
+            await appendSegment(recordingId, seq, blob)
+            segSeq = seq
+            accumulatedSize += blob.size
+            segMeta.push({ seq, size: blob.size })
+          } catch {
+            // 最终落盘也失败：放弃该分片（最坏情况丢最后一段，主识别不受影响）
+          }
+        }
+      }
+      // 整段都落盘了才写元数据并通知 UI；没有任何分片则不落盘、不通知
+      if (segSeq > 0 && recordingId) {
+        const meta: RecordingMeta = {
+          id: recordingId,
+          meetingId: meetingIdForRec,
+          kind: "temp",
+          createdAt: recordingStartedAt,
+          expiresAt: recordingExpiresAt,
+          mime: paraMime || "audio/webm",
+          segments: segMeta,
+          finalized: true,
+          size: accumulatedSize,
+        }
+        try {
+          await finalizeRecording(meta)
+          handlers.onRecordingSaved?.(recordingId, paraMime || "audio/webm")
+        } catch {
+          // 元数据落盘失败：放弃通知，UI 不显示下载按钮（主识别不受影响）
+        }
+      }
       paraStream?.getTracks().forEach((t) => t.stop())
       paraStream = null
       paraRecorder = null
@@ -223,7 +311,7 @@ export const webSpeechAsr: AsrProvider = {
         paraRecorder?.stop()
       } catch {
         // 已停止或缺省：直接收尾
-        emitRecording()
+        void emitRecording()
       }
     }
 
@@ -328,12 +416,14 @@ export const webSpeechAsr: AsrProvider = {
           paraRecorder.ondataavailable = (e: BlobEvent) => {
             if (e.data && e.data.size > 0) paraChunks.push(e.data)
           }
-          paraRecorder.onstop = () => emitRecording()
+          paraRecorder.onstop = () => void emitRecording()
           paraRecorder.onerror = () => {
             // 保底录音自身失败：放弃，不影响主识别
           }
           try {
             paraRecorder.start(1000)
+            // 每 ~10 分钟把内存累积的分片 flush 到 IndexedDB，避免数小时录音全驻内存
+            if (recordingId) flushTimer = setInterval(() => void flushSegment(), FLUSH_INTERVAL_MS)
           } catch {
             // 启动失败忽略
           }

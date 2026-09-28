@@ -10,7 +10,10 @@ import {
   Mic,
   Pencil,
   Plus,
+  RefreshCw,
+  Save,
   ShieldAlert,
+  Trash2,
   ShieldCheck,
   Sparkles,
   Square,
@@ -33,6 +36,7 @@ import {
 import type { FidelityIssue, FidelityReport } from "@/lib/fidelity"
 import { parseLinesTask } from "@/lib/textWorkerClient"
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition"
+import { loadRecording } from "@/lib/recordingStore"
 import {
   TRANSLATE_LANGUAGES,
   getActiveTranslate,
@@ -222,6 +226,8 @@ export function TranscriptTab({
     // 热词偏置：启动那一刻从历史档案现算专有名词词表，透传给支持上下文注入的识别引擎
     // （Whisper 系当 initial_prompt；浏览器识别引擎没有注入口，会如实忽略）
     getContextText: () => buildContextPrompt(getHotwords()),
+    // 保底录音关联到本会议：停止后分段落盘，刷新 / 重开会议仍可下载 / 整段重转
+    meetingId: meeting.id,
   })
   const stopSpeech = speech.stop
   const startSpeech = () => {
@@ -990,24 +996,75 @@ export function TranscriptTab({
             </>
           ) : null}
           {speech.recording ? (
-            <Button
-              variant="outline"
-              onClick={() => {
-                const r = speech.recording
-                if (!r) return
-                const ext = r.mimeType.includes("mp4")
-                  ? "mp4"
-                  : r.mimeType.includes("ogg")
-                    ? "ogg"
-                    : "webm"
-                downloadBlob(`meeting-recording-${todayStr()}.${ext}`, r.blob)
-              }}
-              title="下载整场原始录音（含 Web Speech 断点期间的声音）；可再用「上传音频」交由本地 Whisper 整段重转"
-              className="gap-1.5 rounded-[var(--radius-md)] px-3.5 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-primary"
-            >
-              <Download className="h-4 w-4" />
-              <span className="hidden md:inline">下载录音</span>
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const r = speech.recording
+                  if (!r) return
+                  void loadRecording(r.id).then((res) => {
+                    if (!res) return
+                    const ext = res.meta.mime.includes("mp4")
+                      ? "mp4"
+                      : res.meta.mime.includes("ogg")
+                        ? "ogg"
+                        : "webm"
+                    downloadBlob(`meeting-recording-${todayStr()}.${ext}`, res.blob)
+                  })
+                }}
+                title="下载整场原始录音（含 Web Speech 断点期间的声音）；默认暂存 1 天后自动清除，可点「长期保存」留存"
+                className="gap-1.5 rounded-[var(--radius-md)] px-3.5 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-primary"
+              >
+                <Download className="h-4 w-4" />
+                <span className="hidden md:inline">下载录音</span>
+              </Button>
+              {batchAsr ? (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const r = speech.recording
+                    if (!r) return
+                    void loadRecording(r.id).then((res) => {
+                      if (!res) return
+                      const ext = res.meta.mime.includes("mp4")
+                        ? "mp4"
+                        : res.meta.mime.includes("ogg")
+                          ? "ogg"
+                          : "webm"
+                      void handleAudioFile(
+                        new File([res.blob], `recording.${ext}`, { type: res.meta.mime }),
+                      )
+                    })
+                  }}
+                  disabled={uploading}
+                  title="把整场原始录音直接交给本地 Whisper 重新整段转写（无需先下载再上传）"
+                  className="gap-1.5 rounded-[var(--radius-md)] px-3.5 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-primary"
+                >
+                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                  <span className="hidden md:inline">{uploading ? "重转中…" : "整段重转"}</span>
+                </Button>
+              ) : null}
+              {speech.recording.kind === "temp" ? (
+                <Button
+                  variant="outline"
+                  onClick={() => void speech.markRecordingPermanent()}
+                  title="转为长期保存：取消 1 天自动清除，永久留在本机（仍可下载 / 重转 / 丢弃）"
+                  className="gap-1.5 rounded-[var(--radius-md)] px-3.5 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-primary"
+                >
+                  <Save className="h-4 w-4" />
+                  <span className="hidden md:inline">长期保存</span>
+                </Button>
+              ) : null}
+              <Button
+                variant="outline"
+                onClick={() => void speech.discardRecording()}
+                title="丢弃本段录音（从本机删除，不可恢复）"
+                className="gap-1.5 rounded-[var(--radius-md)] px-3.5 text-sm font-medium text-muted-foreground hover:border-destructive/40 hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span className="hidden md:inline">丢弃</span>
+              </Button>
+            </>
           ) : null}
           <Button
             variant="outline"
