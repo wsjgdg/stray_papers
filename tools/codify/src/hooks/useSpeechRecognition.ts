@@ -27,12 +27,15 @@ export function useSpeechRecognition({ onFinalText, getContextText }: UseSpeechR
   const [listening, setListening] = useState(false)
   const [interim, setInterim] = useState("")
   const [error, setError] = useState("")
+  // 整场原始录音（保底）：Web Speech 断点期间的声音由并行采集兜底，停止后回传供下载 / 事后重转
+  const [recording, setRecording] = useState<{ blob: Blob; mimeType: string; url: string } | null>(null)
 
   const sessionRef = useRef<AsrStream | null>(null)
   const onFinalRef = useRef(onFinalText)
   onFinalRef.current = onFinalText
   // 热词上下文回调存 ref：start() 是稳定回调，调用时取最新实现（在 effect 里同步，避免渲染期写 ref）
   const getContextRef = useRef(getContextText)
+  const recordingUrlRef = useRef<string | null>(null)
   useEffect(() => {
     getContextRef.current = getContextText
   })
@@ -51,12 +54,24 @@ export function useSpeechRecognition({ onFinalText, getContextText }: UseSpeechR
     if (!active || sessionRef.current) return
     setError("")
     setInterim("")
+    // 新一轮识别：释放上一场的录音对象 URL，清空保底录音
+    if (recordingUrlRef.current) {
+      URL.revokeObjectURL(recordingUrlRef.current)
+      recordingUrlRef.current = null
+    }
+    setRecording(null)
     const session = active.startStream(
       {
         onPartial: (text) => setInterim(text),
         onFinal: (seg) => onFinalRef.current(seg.text),
         onError: (message) => setError(message),
         onIdle: () => setInterim(""),
+        onRecording: (blob, mimeType) => {
+          const url = URL.createObjectURL(blob)
+          if (recordingUrlRef.current) URL.revokeObjectURL(recordingUrlRef.current)
+          recordingUrlRef.current = url
+          setRecording({ blob, mimeType, url })
+        },
         onStopped: () => {
           sessionRef.current = null
           setListening(false)
@@ -76,6 +91,10 @@ export function useSpeechRecognition({ onFinalText, getContextText }: UseSpeechR
     () => () => {
       sessionRef.current?.stop()
       sessionRef.current = null
+      if (recordingUrlRef.current) {
+        URL.revokeObjectURL(recordingUrlRef.current)
+        recordingUrlRef.current = null
+      }
     },
     [],
   )
@@ -85,6 +104,7 @@ export function useSpeechRecognition({ onFinalText, getContextText }: UseSpeechR
     listening,
     interim,
     error,
+    recording,
     start,
     stop,
     providerName: provider?.meta.name ?? "",

@@ -3,6 +3,7 @@ import {
   Bell,
   Compass,
   Copy,
+  Download,
   History,
   Languages,
   Loader2,
@@ -22,7 +23,13 @@ import {
   X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { parseTranscriptLines, type Meeting, type SourceAnchor } from "@/lib/store"
+import {
+  downloadBlob,
+  parseTranscriptLines,
+  todayStr,
+  type Meeting,
+  type SourceAnchor,
+} from "@/lib/store"
 import type { FidelityIssue, FidelityReport } from "@/lib/fidelity"
 import { parseLinesTask } from "@/lib/textWorkerClient"
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition"
@@ -523,7 +530,7 @@ export function TranscriptTab({
           </p>
           <p className="mt-1 flex items-start gap-1.5 pl-4 text-[11px] leading-relaxed text-destructive/75">
             <TriangleAlert className="mt-px h-3 w-3 shrink-0" />
-            音频正上传至浏览器厂商的服务器识别，不会留在本机；涉密或敏感会议请停止录音，改用粘贴文本录入
+            音频正上传至浏览器厂商的服务器识别；本应用另开一路本地采集作保底，停止后会保留整场原始录音供你下载（不上传），涉密会议请改用粘贴文本录入
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-1.5 pl-4">
             <span className="text-[11px] text-muted-foreground">现在谁在说：</span>
@@ -981,6 +988,26 @@ export function TranscriptTab({
                 <span className="hidden md:inline">{uploading ? "转写中…" : "上传音频"}</span>
               </Button>
             </>
+          ) : null}
+          {speech.recording ? (
+            <Button
+              variant="outline"
+              onClick={() => {
+                const r = speech.recording
+                if (!r) return
+                const ext = r.mimeType.includes("mp4")
+                  ? "mp4"
+                  : r.mimeType.includes("ogg")
+                    ? "ogg"
+                    : "webm"
+                downloadBlob(`meeting-recording-${todayStr()}.${ext}`, r.blob)
+              }}
+              title="下载整场原始录音（含 Web Speech 断点期间的声音）；可再用「上传音频」交由本地 Whisper 整段重转"
+              className="gap-1.5 rounded-[var(--radius-md)] px-3.5 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-primary"
+            >
+              <Download className="h-4 w-4" />
+              <span className="hidden md:inline">下载录音</span>
+            </Button>
           ) : null}
           <Button
             variant="outline"

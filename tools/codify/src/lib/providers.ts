@@ -98,6 +98,8 @@ export interface AsrStreamHandlers {
   onIdle?: () => void
   /** 识别彻底停止（用户 stop 或致命错误之后），且不会再自动续接 */
   onStopped: () => void
+  /** 整场原始录音（保底用）：停止时回传完整音频 Blob，便于下载或事后整段重转；未采集则不触发 */
+  onRecording?: (blob: Blob, mimeType: string) => void
 }
 
 export interface AsrProvider {
@@ -137,6 +139,16 @@ function webSpeechSupported(): boolean {
   if (typeof window === "undefined") return false
   const w = window as unknown as Record<string, unknown>
   return Boolean(w.SpeechRecognition || w.webkitSpeechRecognition)
+}
+
+// 选一个 MediaRecorder 支持的 mime（优先带 opus 的 webm，几乎被所有环境解码）
+function pickSpeechMime(): string {
+  if (typeof MediaRecorder === "undefined") return ""
+  const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4"]
+  for (const c of candidates) {
+    if (MediaRecorder.isTypeSupported(c)) return c
+  }
+  return ""
 }
 
 export const webSpeechAsr: AsrProvider = {
@@ -186,6 +198,35 @@ export const webSpeechAsr: AsrProvider = {
     const startedAt = performance.now()
     let lastFinalMs = 0
 
+    // 并行保底录音：Web Speech 断点 / 网络重试期间浏览器内部采音会暂停，那段声音它拿不回来；
+    // 这里另开一路 getUserMedia + MediaRecorder 持续采音，整场原始音频永不丢失（事后可下载整段重转）。
+    // 失败则静默降级——绝不影响主识别会话。
+    let paraStream: MediaStream | null = null
+    let paraRecorder: MediaRecorder | null = null
+    const paraChunks: Blob[] = []
+    let paraMime = ""
+    let paraEmitted = false
+    const emitRecording = () => {
+      if (paraEmitted) return
+      paraEmitted = true
+      if (paraChunks.length > 0) {
+        const blob = new Blob(paraChunks, { type: paraMime || "audio/webm" })
+        if (blob.size > 0) handlers.onRecording?.(blob, paraMime || "audio/webm")
+      }
+      paraChunks.length = 0
+      paraStream?.getTracks().forEach((t) => t.stop())
+      paraStream = null
+      paraRecorder = null
+    }
+    const stopParallel = () => {
+      try {
+        paraRecorder?.stop()
+      } catch {
+        // 已停止或缺省：直接收尾
+        emitRecording()
+      }
+    }
+
     const finish = () => {
       if (stopped) return
       stopped = true
@@ -194,6 +235,7 @@ export const webSpeechAsr: AsrProvider = {
         clearTimeout(restartTimer)
         restartTimer = null
       }
+      stopParallel()
       handlers.onStopped()
     }
 
@@ -266,6 +308,41 @@ export const webSpeechAsr: AsrProvider = {
       }
     }
 
+    // 启动并行保底录音（独立 getUserMedia，不阻塞主识别；拿不到第二路麦则静默降级）
+    if (navigator.mediaDevices?.getUserMedia) {
+      navigator.mediaDevices
+        .getUserMedia({ audio: true })
+        .then((s) => {
+          if (stopped) {
+            s.getTracks().forEach((t) => t.stop())
+            return
+          }
+          paraStream = s
+          const mime = pickSpeechMime()
+          try {
+            paraRecorder = mime ? new MediaRecorder(s, { mimeType: mime }) : new MediaRecorder(s)
+          } catch {
+            paraRecorder = new MediaRecorder(s)
+          }
+          paraMime = paraRecorder.mimeType || mime || "audio/webm"
+          paraRecorder.ondataavailable = (e: BlobEvent) => {
+            if (e.data && e.data.size > 0) paraChunks.push(e.data)
+          }
+          paraRecorder.onstop = () => emitRecording()
+          paraRecorder.onerror = () => {
+            // 保底录音自身失败：放弃，不影响主识别
+          }
+          try {
+            paraRecorder.start(1000)
+          } catch {
+            // 启动失败忽略
+          }
+        })
+        .catch(() => {
+          // 第二路麦不可用：放弃保底，主识别照常
+        })
+    }
+
     try {
       rec.start()
     } catch {
@@ -282,6 +359,7 @@ export const webSpeechAsr: AsrProvider = {
           clearTimeout(restartTimer)
           restartTimer = null
         }
+        stopParallel()
         try {
           rec.stop()
         } catch {
