@@ -385,6 +385,10 @@ export interface GameSaveData {
   playerDisplayName?: string;
   /** 具名（批次 CO）：补录/登记过姓名没有——有名字的才好被处理（更名不受理第二次） */
   playerRenamed?: boolean;
+  /** 学籍信息补全表已答复（批次 CO 修复）：留空归档也算「办过」，之后不再递表。
+   *  与 playerRenamed 分开：那个记「有没有名字」，这个记「问没问过」。
+   *  早先只有 playerRenamed，留空时它保持 false，标题页每来一次就再递一次表。 */
+  playerEnrollFixAnswered?: boolean;
   /** 销毁记录（批次 CI）：调阅记录打印后销毁的那几批——销毁也是被记录的行为（上限六批，跨学期保留） */
   shredLog?: ShredRecord[];
   /** 销毁过的档案格（批次 CK）：柜子里没有删除，只有销毁——销毁后那一格多一张空白页（跨学期保留） */
@@ -988,6 +992,7 @@ function sanitize(raw: unknown): GameSaveData {
     finishedLog: sanitizeFinishedLog(obj.finishedLog),
     leaveLog: sanitizeLeaveLog(obj.leaveLog),
     playerRenamed: obj.playerRenamed === true,
+    playerEnrollFixAnswered: obj.playerEnrollFixAnswered === true,
     shredLog: sanitizeShredLog(obj.shredLog),
     destroyedSlots: sanitizeDestroyedSlots(obj.destroyedSlots),
     recorderLog: sanitizeRecorderLog(obj.recorderLog),
@@ -1677,6 +1682,8 @@ export function resetGameSave(): GameSaveData {
     leaveLog: previous.leaveLog,
     playerDisplayName: previous.playerDisplayName,
     playerRenamed: previous.playerRenamed,
+    /* 补全表已答复也跨学期保留——「问没问过」不能因为换了学期就重新问一遍 */
+    playerEnrollFixAnswered: previous.playerEnrollFixAnswered,
     /* 调阅记录（批次 CI）：销毁过的每一批都记在册——销毁不是没发生，是换了一种在 */
     shredLog: previous.shredLog,
     /* 档案格（批次 CK）：销毁过的格子空着，但「销毁过」这件事留着 */
@@ -4152,12 +4159,20 @@ export function persistPlayerDisplayName(name: string): GameSaveData {
     ...save,
     playerDisplayName: trimmed.length > 0 ? trimmed : undefined,
     playerRenamed: trimmed.length > 0 ? true : save.playerRenamed,
+    /* 无论填没填都算「表已答复」——留空归档也是办完了，之后不再递表。
+       早先漏了这一句，留空时 playerRenamed 保持 false，标题页每次进来都再问一遍。 */
+    playerEnrollFixAnswered: true,
   });
 }
 
 /** 具名（批次 CO）：登记/补录过姓名没有 */
 export function playerRenamedOf(save: GameSaveData): boolean {
   return save.playerRenamed === true;
+}
+
+/** 学籍信息补全表是否已答复（留空也算）——答复过就不再递表 */
+export function playerEnrollFixAnsweredOf(save: GameSaveData): boolean {
+  return save.playerEnrollFixAnswered === true;
 }
 
 /** 成绩单/署名用的名字（批次 CO）：登记了用名字，没登记写「该蛙未登记姓名」——有名字的才好被处理 */

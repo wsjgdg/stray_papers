@@ -21,8 +21,13 @@ import { RichText } from "@/components/common/RichText";
 /** 《奶蛙大学》标题画面 */
 export function HomePage(p: ReturnType<typeof useHome>) {
   const [blankSlot, setBlankSlot] = useState<string | null>(null);
+  /* 入学档案条（批次 AF）**必须是 state，不能是渲染期直接算的派生值**。
+     之前写的是 `const enrollOpen = !hasEnrollSeen()`——看起来等价，实际是坏的：
+     「开始被记录」只调 saveEnrollSeen() + recordBehavior()，两者都只写 localStorage，
+     不触发任何 setState，于是没有任何重渲染，弹层永远不消失——表现为「点了没反应 / 卡死」。
+     localStorage 是外部存储，不遵守 React 的渲染模型；要让它参与渲染就得放进 state。 */
+  const [enrollOpen, setEnrollOpen] = useState(() => !hasEnrollSeen());
   /* 现实行为入档（批次 AF）：深夜打开这个游戏——记录员记下时刻；长时无操作自动归档 */
-  const enrollOpen = !hasEnrollSeen();
   const idleNotice = useIdleNotice();
   return (
     <>
@@ -30,6 +35,9 @@ export function HomePage(p: ReturnType<typeof useHome>) {
         <EnrollLedger
           onBegin={() => {
             recordBehavior({ kind: "night", at: Date.now() });
+            /* EnrollLedger 内部已调 saveEnrollSeen() 落盘；这里只负责收起弹层。
+               两者都要：localStorage 保证下次不再弹，state 保证这次真的关掉。 */
+            setEnrollOpen(false);
           }}
         />
       )}
@@ -134,10 +142,15 @@ export function HomePage(p: ReturnType<typeof useHome>) {
       )}
       {blankSlot && <BlankResumeOverlay slotId={blankSlot} onClose={() => setBlankSlot(null)} />}
       {/* 姓名（批次 CO「姓名」）：学籍信息不全——有名字的才好被处理；补录不受理第二次 */}
-      {p.enrollFixOpen && (
+      {/* 弹层互斥（2026-10-04 修复）：入学档案 / 学籍信息补全表 / 离校情况说明原本都是
+          fixed inset-0 z-[90]，首次进入时三个会同时挂载。层级相同就靠 DOM 顺序决胜，
+          而离校弹层在最后 -> 盖在最上面，把下面两层的按钮全挡住，点了没反应。
+          这里按「谁必须先办完」排队：先看入学档案（首次且只有一次），
+          再递补全表，最后才是攒够三次才出现的离校说明。 */}
+      {p.enrollFixOpen && !enrollOpen && (
         <EnrollmentFixOverlay onConfirm={p.confirmEnrollFix} onClose={p.closeEnrollFix} />
       )}
-      {p.abscondOpen && (
+      {p.abscondOpen && !enrollOpen && !p.enrollFixOpen && (
         <AbscondNoticeOverlay
           count={p.abscondCount}
           onRespond={p.ackAbscond}

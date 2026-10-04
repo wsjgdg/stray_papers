@@ -30,6 +30,7 @@ import {
   markAbscond,
   settleAbscond,
   playerRenamedOf,
+  playerEnrollFixAnsweredOf,
   getMemoSeals,
 } from "@/lib/gameSave";
 import { parseSeedCode } from "@/lib/seedCode";
@@ -79,10 +80,15 @@ export function useHome() {
     setAbscondCount(count);
     /* 攒到三次（或更多）：开学弹《离校情况说明》——每学期至多办一次（办过就不再弹） */
     if (count >= 3 && !abscondSettledOf(fresh)) setAbscondOpen(true);
-    /* 学籍信息补全（批次 CO）：入学登记时没填名的，行政楼递一张表——补录不受理第二次 */
+    /* 学籍信息补全（批次 CO）：入学登记时没填名的，行政楼递一张表——补录不受理第二次。
+       判定用 playerEnrollFixAnswered（「问过没有」），不是 playerRenamed（「有没有名字」）：
+       早先写成 `!named && !playerDisplayName`，留空归档时两者都不成立，
+       于是每次进标题页都再递一次表——与文案承诺的「不受理第二次」相反。 */
     const named = playerRenamedOf(fresh);
     setRenamed(named);
-    if (!named && !(fresh.playerDisplayName ?? "").trim()) setEnrollFixOpen(true);
+    if (!named && !playerEnrollFixAnsweredOf(fresh) && !(fresh.playerDisplayName ?? "").trim()) {
+      setEnrollFixOpen(true);
+    }
     /* pagehide：直接关掉页面/切走 —— 本会话推进过就记一次未办手续 */
     const onHide = () => markAbscond();
     window.addEventListener("pagehide", onHide);
