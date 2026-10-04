@@ -17,7 +17,28 @@ pnpm lint         # 0 error / 62 warning（存量债，见下）
 pnpm typecheck
 ```
 
-Windows 一键启动：`start.cmd`（薄壳，转调 `scripts/start.ps1`，单窗口前台运行）。
+Windows 一键启动：双击 `start.cmd`（或 `start.cmd -Preview` 跑产物）。
+
+## Windows 脚本编码铁律
+
+本项目正文是中文，脚本编码踩过两次坑，**新增脚本照此办理**：
+
+| 文件类型 | 编码 | 行尾 | 原因 |
+|---|---|---|---|
+| `.cmd` / `.bat` | **纯 ASCII** | CRLF | cmd 用控制台代码页（GBK）读批处理，非 ASCII 必乱码 |
+| `.ps1` | **UTF-8 with BOM** | CRLF | PS 5.1 靠 BOM 认 UTF-8；无 BOM 会误解码并撑破引号（报「字符串缺少终止符」）|
+| `.ts` / `.tsx` / `.mjs` | UTF-8 无 BOM | LF | 常规 |
+
+`.ps1` 里凡有中文输出，必须在**任何输出之前**设置编码，否则 banner 那几行已经按 GBK 写出去了：
+
+```powershell
+try { & chcp.com 65001 2>&1 | Out-Null } catch { }
+try { [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false) } catch { }
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+```
+
+改完 `.ps1` 记得重新落盘成 BOM+CRLF（编辑工具写出来的是无 BOM UTF-8）。
+校验语法：`[Parser]::ParseFile($path, [ref]$tokens, [ref]$errors)`，比 `node --check` 靠谱。
 
 ## 硬约束
 
@@ -55,4 +76,7 @@ Windows 一键启动：`start.cmd`（薄壳，转调 `scripts/start.ps1`，单�
 
 本项目原为 VibeX 平台应用（依赖 PocketBase + RunningHub SSO + `/api/aigc`），2026-10-04 完成
 脱平台化改造，成为纯静态 SPA。改造全记录见 `.workbuddy/memory/2026-10-04.md`。
-改造前的平台文件备份已删除，无需回退路径。
+改造前的平台文件备份已删除，根目录 `CLAUDE.md` 已并入本文件后删除，无需回退路径。
+
+远端：`git@github.com:wsjgdg/flog_university.git`（SSH，`.gitattributes` 已锁定行尾策略）。
+
