@@ -1,0 +1,28 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# 改造前 VibeX 平台文件的本地存档（pocketbase hooks / vibex-local 启动脚本 / 导出说明）。
+# 不参与构建也不需要进版本库——确认改造无回退需求后可整个删掉。
+_vibex-export-backup
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

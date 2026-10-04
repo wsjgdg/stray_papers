@@ -1,0 +1,27 @@
+# 统一行尾，避免 Windows / macOS / Linux 协作时整文件 diff。
+# 默认 core.autocrlf=true 会把 LF 的源文件在 checkout 时转成 CRLF，
+# 再提交回去就变成全文改动的假 diff。
+* text=auto eol=lf
+
+# Windows 批处理与 PowerShell 脚本必须 CRLF，否则 cmd.exe 解析异常
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# 二进制资源，禁止行尾转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.mp3 binary
+*.ogg binary
+*.wav binary
+*.ttf binary
+*.eot binary
+
+# lockfile 不做行尾转换，保持 pnpm 生成的原样
+pnpm-lock.yaml -text

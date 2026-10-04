@@ -1,0 +1,173 @@
+# 奶蛙大学 · Ren'Py 迁移包（资产映射说明）
+
+- 本目录由 `node scripts/gen-renpy.mjs` 生成；改剧本请改源（`src/data/scripts/*.ts`）再重新生成，不要手抄
+- 语句顺序、跳转、选项分岔、结局区间全部来自导出数据，语义与现有引擎一致
+- 沉默值累计：`$ silence += n`；二周目开关：`playthrough >= 2`；好感：`affinity[<角色>]`
+- 结局判定：`$ silence = max(0, silence)` 后按区间判定，未命中兜底落最后一档（与现有引擎口径一致）
+
+## 需要准备的素材（占位文件名 → 实际资产）
+
+- `images/bg_admin_window.png` — 舞台背景（bg-admin-window）
+- `images/bg_admin_office.png` — 舞台背景（bg-admin-office）
+- `images/bg_admin_night.png` — 舞台背景（bg-admin-night）
+- `images/bg_class_gate.png` — 舞台背景（bg-class-gate）
+- `images/bg_canteen_noon.png` — 舞台背景（bg-canteen-noon）
+- `images/bg_canteen_late.png` — 舞台背景（bg-canteen-late）
+- `images/bg_canteen_closing.png` — 舞台背景（bg-canteen-closing）
+- `images/bg_club_stage.png` — 舞台背景（bg-club-stage）
+- `images/bg_club_corridor.png` — 舞台背景（bg-club-corridor）
+- `images/bg_club_room.png` — 舞台背景（bg-club-room）
+- `images/bg_club_farm.png` — 舞台背景（bg-club-farm）
+- `images/bg_club_dark.png` — 舞台背景（bg-club-dark）
+- `images/bg_dorm_lobby.png` — 舞台背景（bg-dorm-lobby）
+- `images/bg_dorm_corridor.png` — 舞台背景（bg-dorm-corridor）
+- `images/bg_dorm_room.png` — 舞台背景（bg-dorm-room）
+- `images/bg_dorm_corridor_out.png` — 舞台背景（bg-dorm-corridor-out）
+- `images/bg_dorm_room_out.png` — 舞台背景（bg-dorm-room-out）
+- `images/bg_lawn_track.png` — 舞台背景（bg-lawn-track）
+- `images/bg_lawn_dusk.png` — 舞台背景（bg-lawn-dusk）
+- `images/bg_lawn_night.png` — 舞台背景（bg-lawn-night）
+- `images/bg_infirmary.png` — 舞台背景（bg-infirmary）
+- `images/bg_lake_shore.png` — 舞台背景（bg-lake-shore）
+- `images/bg_lake_mid.png` — 舞台背景（bg-lake-mid）
+- `images/bg_lake_dawn.png` — 舞台背景（bg-lake-dawn）
+- `images/bg_library_hall.png` — 舞台背景（bg-library-hall）
+- `images/bg_library_late.png` — 舞台背景（bg-library-late）
+- `images/bg_library_exit.png` — 舞台背景（bg-library-exit）
+- `images/bg_library_board.png` — 舞台背景（bg-library-board）
+- `images/bg_study_hall.png` — 舞台背景（bg-study-hall）
+- `images/bg_study_lockers.png` — 舞台背景（bg-study-lockers）
+- `images/bg_study_desk.png` — 舞台背景（bg-study-desk）
+- `images/bg_study_late.png` — 舞台背景（bg-study-late）
+- `images/bg_class_room.png` — 舞台背景（bg-class-room）
+- `images/bg_class_corridor.png` — 舞台背景（bg-class-corridor）
+
+- `images/cg_stamp_window.png` — CG 定格（cg-stamp-window）
+- `images/cg_badge_note.png` — CG 定格（cg-badge-note）
+- `images/cg_survey_stack.png` — CG 定格（cg-survey-stack）
+- `images/cg_seven_versions.png` — CG 定格（cg-seven-versions）
+- `images/cg_review_templates.png` — CG 定格（cg-review-templates）
+- `images/cg_exam_wall.png` — CG 定格（cg-exam-wall）
+- `images/cg_first_draft.png` — CG 定格（cg-first-draft）
+- `images/cg_menu_board.png` — CG 定格（cg-menu-board）
+- `images/cg_canteen_spoon.png` — CG 定格（cg-canteen-spoon）
+- `images/cg_canteen_closing.png` — CG 定格（cg-canteen-closing）
+- `images/cg_half_bowl.png` — CG 定格（cg-half-bowl）
+- `images/cg_old_pot.png` — CG 定格（cg-old-pot）
+- `images/cg_folded_apron.png` — CG 定格（cg-folded-apron）
+- `images/cg_club_stage.png` — CG 定格（cg-club-stage）
+- `images/cg_club_desk.png` — CG 定格（cg-club-desk）
+- `images/cg_club_grid.png` — CG 定格（cg-club-grid）
+- `images/cg_balloon_43.png` — CG 定格（cg-balloon-43）
+- `images/cg_eval_menu.png` — CG 定格（cg-eval-menu）
+- `images/cg_alarm_1105.png` — CG 定格（cg-alarm-1105）
+- `images/cg_sign_sheet.png` — CG 定格（cg-sign-sheet）
+- `images/cg_power_cut.png` — CG 定格（cg-power-cut）
+- `images/cg_green_lamp.png` — CG 定格（cg-green-lamp）
+- `images/cg_curtain_light.png` — CG 定格（cg-curtain-light）
+- `images/cg_score_sticker.png` — CG 定格（cg-score-sticker）
+- `images/cg_row_sixty_one.png` — CG 定格（cg-row-sixty-one）
+- `images/cg_field_dusk.png` — CG 定格（cg-field-dusk）
+- `images/cg_report_page.png` — CG 定格（cg-report-page）
+- `images/cg_lawn_lamps.png` — CG 定格（cg-lawn-lamps）
+- `images/cg_two_bottles.png` — CG 定格（cg-two-bottles）
+- `images/cg_soda_grass.png` — CG 定格（cg-soda-grass）
+- `images/cg_ten_seconds.png` — CG 定格（cg-ten-seconds）
+- `images/cg_sixty_points.png` — CG 定格（cg-sixty-points）
+- `images/cg_symptom_chart.png` — CG 定格（cg-symptom-chart）
+- `images/cg_infirmary_bed.png` — CG 定格（cg-infirmary-bed）
+- `images/cg_reason_drawer.png` — CG 定格（cg-reason-drawer）
+- `images/cg_stub_wall.png` — CG 定格（cg-stub-wall）
+- `images/cg_second_form.png` — CG 定格（cg-second-form）
+- `images/cg_last_page.png` — CG 定格（cg-last-page）
+- `images/cg_lake_moon.png` — CG 定格（cg-lake-moon）
+- `images/cg_phones_down.png` — CG 定格（cg-phones-down）
+- `images/cg_old_phone.png` — CG 定格（cg-old-phone）
+- `images/cg_lake_stones.png` — CG 定格（cg-lake-stones）
+- `images/cg_corn_pot.png` — CG 定格（cg-corn-pot）
+- `images/cg_far_light.png` — CG 定格（cg-far-light）
+- `images/cg_lake_breakfast.png` — CG 定格（cg-lake-breakfast）
+- `images/cg_library_window.png` — CG 定格（cg-library-window）
+- `images/cg_seat_cups.png` — CG 定格（cg-seat-cups）
+- `images/cg_thirty_min.png` — CG 定格（cg-thirty-min）
+- `images/cg_closing_countdown.png` — CG 定格（cg-closing-countdown）
+- `images/cg_thirty_one_grids.png` — CG 定格（cg-thirty-one-grids）
+- `images/cg_red_circles.png` — CG 定格（cg-red-circles）
+- `images/cg_locker_notes.png` — CG 定格（cg-locker-notes）
+- `images/cg_melatonin.png` — CG 定格（cg-melatonin）
+- `images/cg_schedule_paper.png` — CG 定格（cg-schedule-paper）
+- `images/cg_folded_paper.png` — CG 定格（cg-folded-paper）
+- `images/cg_402_night.png` — CG 定格（cg-402-night）
+- `images/cg_marked_present.png` — CG 定格（cg-marked-present）
+- `images/cg_flyer_half.png` — CG 定格（cg-flyer-half）
+- `images/cg_plan_sheet.png` — CG 定格（cg-plan-sheet）
+- `images/cg_timeline_flag.png` — CG 定格（cg-timeline-flag）
+- `images/cg_ceremony_hall.png` — CG 定格（cg-ceremony-hall）
+- `images/cg_countdown_board.png` — CG 定格（cg-countdown-board）
+- `images/cg_four_glows.png` — CG 定格（cg-four-glows）
+- `images/cg_two_lists.png` — CG 定格（cg-two-lists）
+
+- `audio/se_stamp_thunk.ogg` — 音效（se-stamp-thunk）
+- `audio/se_printer.ogg` — 音效（se-printer）
+- `audio/se_keys_jingle.ogg` — 音效（se-keys-jingle）
+- `audio/se_stamp_paper.ogg` — 音效（se-stamp-paper）
+- `audio/se_spoon_scoop.ogg` — 音效（se-spoon-scoop）
+- `audio/se_tray_clang.ogg` — 音效（se-tray-clang）
+- `audio/se_bolt_clang.ogg` — 音效（se-bolt-clang）
+- `audio/se_balloon_pop.ogg` — 音效（se-balloon-pop）
+- `audio/se_pointer_click.ogg` — 音效（se-pointer-click）
+- `audio/se_shutter.ogg` — 音效（se-shutter）
+- `audio/se_switch_off.ogg` — 音效（se-switch-off）
+- `audio/se_knock.ogg` — 音效（se-knock）
+- `audio/se_steps.ogg` — 音效（se-steps）
+- `audio/se_clock.ogg` — 音效（se-clock）
+- `audio/se_page.ogg` — 音效（se-page）
+- `audio/se_water_drop.ogg` — 音效（se-water-drop）
+- `audio/se_socket_click.ogg` — 音效（se-socket-click）
+- `audio/se_lamp_hum.ogg` — 音效（se-lamp-hum）
+- `audio/se_curtain.ogg` — 音效（se-curtain）
+- `audio/se_peel.ogg` — 音效（se-peel）
+- `audio/se_mug.ogg` — 音效（se-mug）
+- `audio/se_pen_scratch.ogg` — 音效（se-pen-scratch）
+- `audio/se_grass_press.ogg` — 音效（se-grass-press）
+- `audio/se_phone_buzz.ogg` — 音效（se-phone-buzz）
+- `audio/se_soda_fizz.ogg` — 音效（se-soda-fizz）
+- `audio/se_bell.ogg` — 音效（se-bell）
+- `audio/se_pen_click.ogg` — 音效（se-pen-click）
+- `audio/se_chair_scrape.ogg` — 音效（se-chair-scrape）
+- `audio/se_locker_clang.ogg` — 音效（se-locker-clang）
+- `audio/se_lap_water.ogg` — 音效（se-lap-water）
+- `audio/se_phone_stack.ogg` — 音效（se-phone-stack）
+- `audio/se_fire_dial.ogg` — 音效（se-fire-dial）
+- `audio/se_cup_twist.ogg` — 音效（se-cup-twist）
+- `audio/se_water_slow.ogg` — 音效（se-water-slow）
+- `audio/se_flyer_tear.ogg` — 音效（se-flyer-tear）
+- `audio/se_applause.ogg` — 音效（se-applause）
+
+- `audio/admin_night.ogg` — 曲目（admin-night）
+- `audio/admin_template.ogg` — 曲目（admin-template）
+- `audio/canteen_late.ogg` — 曲目（canteen-late）
+- `audio/canteen_after.ogg` — 曲目（canteen-after）
+- `audio/club_smile.ogg` — 曲目（club-smile）
+- `audio/club_blackout.ogg` — 曲目（club-blackout）
+- `audio/dorm_talk.ogg` — 曲目（dorm-talk）
+- `audio/dorm_dawn.ogg` — 曲目（dorm-dawn）
+- `audio/dorm_dark.ogg` — 曲目（dorm-dark）
+- `audio/field_debate.ogg` — 曲目（field-debate）
+- `audio/field_night.ogg` — 曲目（field-night）
+- `audio/afternoon.ogg` — 曲目（afternoon）
+- `audio/infirmary.ogg` — 曲目（infirmary）
+- `audio/corridor.ogg` — 曲目（corridor）
+- `audio/study_desk.ogg` — 曲目（study-desk）
+- `audio/lk_quiet.ogg` — 曲目（lk-quiet）
+- `audio/lk_dawn.ogg` — 曲目（lk-dawn）
+- `audio/library_late.ogg` — 曲目（library-late）
+- `audio/library_list.ogg` — 曲目（library-list）
+- `audio/study_locked.ogg` — 曲目（study-locked）
+- `audio/fc_hall.ogg` — 曲目（fc-hall）
+- `audio/fc_wait.ogg` — 曲目（fc-wait）
+
+## 未迁移项（有意保留在 Web 版）
+- 沉默等待（30 秒无操作自动走隐藏选项）：Ren'Py 需自定义 screen；本次生成以注释标注
+- 档案柜 / 约谈逐条对质：真话罐动态节点流，迁移时按循环展开
+- 好感档位（点头之交 → 真心蛙友）：阈值表在源数据里，随 characters 声明迁移

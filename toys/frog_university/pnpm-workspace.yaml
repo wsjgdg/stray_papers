@@ -1,0 +1,12 @@
+# pnpm 11 的项目级设置都写在这里（.npmrc 里的同类键会被忽略）。
+#
+# nodeLinker: hoisted —— 用扁平 node_modules（复制/硬链接）而不是 isolated 的符号链接布局。
+# 本项目在 Windows 沙箱 / 容器 / CI 里都可能跑，符号链接经常不可用（需要管理员或开发者模式），
+# hoisted 布局不依赖任何符号链接，任何机器上 `pnpm install` 都能得到可用的 node_modules。
+nodeLinker: hoisted
+
+# 需要执行安装脚本的包白名单。Vite 8 (rolldown) 的原生绑定需要 postinstall 落地，
+# 不显式批准时 pnpm 11 会跳过并打印警告，表现为 dev/build 时找不到平台二进制。
+onlyBuiltDependencies:
+  - '@rolldown/binding-win32-x64-msvc'
+  - esbuild

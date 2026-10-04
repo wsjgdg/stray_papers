@@ -1,0 +1,756 @@
+/* __DS_LOCAL_FONTS_START__ */
+/* geist-mono */
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(data:font/woff2;base64,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) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(data:font/woff2;base64,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) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* __DS_LOCAL_FONTS_END__ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  min-height: 100%;
+  /* React 挂载和父页面主题消息到达前，先按系统主题保持正确首帧。 */
+  background-color: #08090a;
+}
+
+@media (prefers-color-scheme: light) {
+  html,
+  body,
+  #root {
+    background-color: #ffffff;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* shadcn 基础层兜底: 没写显式 text-x / bg-x 的文字和表面 (textarea 输入文字、
+     placeholder、气泡正文) 从这里继承主题色, 不依赖 UA 默认色.
+     烧主题前 token 未定义时这两行按无效值优雅回退, 无副作用. */
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* 中英混排对齐:一行里英文(尤其 ds 的 display/像素字体如 Press Start 2P)和中文(系统黑体)
+   混在一起时,英文会偏小、偏上,跟中文对不齐。把纯英文/数字那一截用 <span className="cjk-latin">
+   包起来即可统一对齐:font-size-adjust 拉平字号,vertical-align 把英文下移到与中文同基线。
+   --cjk-latin-shift 由 design_picker 按 ds 烧进 :root(默认 -0.15em);极个别字体偏差大改这一个值。 */
+.cjk-latin {
+  font-size-adjust: 0.56;
+  vertical-align: var(--cjk-latin-shift, -0.15em);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --background: 260 100% 98%;
+    --foreground: 262 35% 11%;
+    --card-foreground: 262 35% 11%;
+    --popover-foreground: 262 35% 11%;
+    --card: 0 0% 100%;
+    --popover: 0 0% 100%;
+    --secondary: 260 100% 95%;
+    --muted: 260 100% 95%;
+    --accent: 260 100% 95%;
+    --secondary-foreground: 264 21% 28%;
+    --accent-foreground: 264 21% 28%;
+    --muted-foreground: 264 12% 47%;
+    --border: 261 55% 89%;
+    --input: 261 55% 89%;
+    --primary: 262 83% 58%;
+    --ring: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --radius: var(--radius-md);
+
+    --space-1: 4px;
+    --space-12: 48px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --radius-lg: 32px;
+    --radius-md: 20px;
+    --radius-pill: 9999px;
+    --radius-sm: 12px;
+    --elev-flat: none;
+    --focus-ring: 0 0 0 4px rgba(124, 58, 237, 0.26);
+    --elev-raised: 0 24px 72px rgba(124, 58, 237, 0.20);
+    --elev-ring: 0 0 0 1px var(--border);
+    --text-2xl: 40px;
+    --text-3xl: 62px;
+    --text-4xl: 86px;
+    --text-base: 16px;
+    --text-lg: 19px;
+    --text-sm: 14px;
+    --text-xl: 26px;
+    --text-xs: 12px;
+    --leading-body: 1.52;
+    --leading-tight: 1.02;
+    --font-display: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    --font-body: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    --font-mono: "Geist Mono", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", ui-monospace, Menlo, monospace;
+    --cjk-latin-shift: -0.15em;
+  }
+
+  .dark {
+    color-scheme: light;
+    --background: 260 100% 98%;
+    --foreground: 262 35% 11%;
+    --card-foreground: 262 35% 11%;
+    --popover-foreground: 262 35% 11%;
+    --card: 0 0% 100%;
+    --popover: 0 0% 100%;
+    --secondary: 260 100% 95%;
+    --muted: 260 100% 95%;
+    --accent: 260 100% 95%;
+    --secondary-foreground: 264 21% 28%;
+    --accent-foreground: 264 21% 28%;
+    --muted-foreground: 264 12% 47%;
+    --border: 261 55% 89%;
+    --input: 261 55% 89%;
+    --primary: 262 83% 58%;
+    --ring: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --radius: var(--radius-md);
+
+    --space-1: 4px;
+    --space-12: 48px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --radius-lg: 32px;
+    --radius-md: 20px;
+    --radius-pill: 9999px;
+    --radius-sm: 12px;
+    --elev-flat: none;
+    --focus-ring: 0 0 0 4px rgba(124, 58, 237, 0.26);
+    --elev-raised: 0 24px 72px rgba(124, 58, 237, 0.20);
+    --elev-ring: 0 0 0 1px var(--border);
+    --text-2xl: 40px;
+    --text-3xl: 62px;
+    --text-4xl: 86px;
+    --text-base: 16px;
+    --text-lg: 19px;
+    --text-sm: 14px;
+    --text-xl: 26px;
+    --text-xs: 12px;
+    --leading-body: 1.52;
+    --leading-tight: 1.02;
+    --font-display: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    --font-body: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    --font-mono: "Geist Mono", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", ui-monospace, Menlo, monospace;
+    --cjk-latin-shift: -0.15em;
+  }
+
+  body { font-family: var(--font-body); }
+
+  /* 中英混排: 把英文/数字那一截用 <span class="cjk-latin"> 包起来, 字号 + 基线对齐中文 (font-size-adjust 0.56 实测最贴中文字高) */
+  .cjk-latin { font-size-adjust: 0.56; vertical-align: var(--cjk-latin-shift, -0.15em); }
+}
+
+/* ===================== 奶蛙大学 · 三主题地基 ===================== */
+/* 默认主题 cream（奶油渐变）沿用上方 :root 已烧好的语义 token，不改动；
+   这里只补「矢量奶蛙 / 手绘地图」专用变量 + candy / paper 两套同语义 token 分组。 */
+
+:root {
+  /* 矢量奶蛙配色（组件里只用 var() 引用，三主题下自动协调） */
+  --frog-cream: hsl(45 100% 90%);
+  --frog-cream-deep: hsl(43 76% 82%);
+  --frog-matcha: hsl(95 40% 74%);
+  --frog-matcha-deep: hsl(95 34% 64%);
+  --frog-berry: hsl(350 100% 87%);
+  --frog-berry-deep: hsl(350 88% 79%);
+  --frog-bluegray: hsl(214 24% 76%);
+  --frog-bluegray-deep: hsl(214 22% 66%);
+  --frog-khaki: hsl(47 34% 78%);
+  --frog-khaki-deep: hsl(47 30% 68%);
+  /* v2 扩充：再再（深蓝紫低饱和，与灰灰的灰蓝拉开色相与明度）/ 格格（淡紫薰衣草） */
+  --frog-zzaizai: hsl(256 26% 68%);
+  --frog-zzaizai-deep: hsl(256 24% 58%);
+  --frog-gege: hsl(272 46% 86%);
+  --frog-gege-deep: hsl(272 40% 76%);
+  /* 第十条线扩充：棉棉（医务室老师，医用薄荷绿——白大褂里唯一的一点颜色） */
+  --frog-mianmian: hsl(158 34% 80%);
+  --frog-mianmian-deep: hsl(158 28% 68%);
+  --frog-belly: hsl(45 100% 97%);
+  --frog-eye: hsl(0 0% 100%);
+  --frog-ink: hsl(260 30% 18%);
+  --frog-mouth: hsl(352 60% 52%);
+  --frog-blush: hsl(352 95% 82%);
+  --frog-bow: hsl(350 100% 72%);
+  --frog-bow-deep: hsl(350 85% 62%);
+  --frog-apron: hsl(0 0% 100%);
+  --frog-apron-line: hsl(260 15% 72%);
+  --frog-badge: hsl(50 100% 88%);
+  --frog-bag: hsl(214 22% 46%);
+  --frog-sweat: hsl(200 85% 72%);
+  --frog-glass: hsl(0 0% 100% / 0.35);
+  --frog-shadow: hsl(260 40% 22% / 0.12);
+
+  /* 手绘校园平面图 */
+  --map-grass: hsl(110 45% 87%);
+  --map-grass-deep: hsl(110 38% 79%);
+  --map-road: hsl(45 85% 84%);
+  --map-water: hsl(198 75% 78%);
+  --map-water-deep: hsl(198 65% 68%);
+  --map-wood: hsl(28 45% 68%);
+  --map-leaf: hsl(110 42% 62%);
+  --map-cloud: hsl(0 0% 100%);
+}
+
+/* ---------- candy 糖果高饱和（token 提取自库内 colorful：暖亮画布 + 橙色行动色） ---------- */
+[data-theme="candy"] {
+  color-scheme: light;
+  /* 批次 CK：三套行政风格三种字——红头文件的标题是宋体大字 */
+  --font-display: "Noto Serif SC", "Songti SC", "SimSun", "STSong", serif;
+  --background: 50 100% 92%; /* #fff8d7 */
+  --foreground: 250 38% 15%; /* #1d1836 */
+  --card: 0 0% 100%;
+  --card-foreground: 250 38% 15%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 250 38% 15%;
+  --secondary: 50 100% 81%; /* #ffef9f */
+  --secondary-foreground: 254 24% 34%;
+  --muted: 50 100% 81%;
+  --muted-foreground: 258 13% 50%; /* #796f91 */
+  --accent: 50 100% 81%;
+  --accent-foreground: 254 24% 34%;
+  --border: 46 53% 82%; /* #eadfba */
+  --input: 46 53% 82%;
+  --primary: 25 100% 50%; /* #ff6b00 */
+  --primary-foreground: 0 0% 100%;
+  --ring: 25 100% 50%;
+  --destructive: 358 75% 59%;
+  --destructive-foreground: 0 0% 100%;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius: var(--radius-md);
+  --focus-ring: 0 0 0 4px rgba(255, 107, 0, 0.26);
+  --elev-raised: 0 18px 44px rgba(29, 24, 54, 0.14);
+
+  --frog-cream: hsl(45 100% 88%);
+  --frog-cream-deep: hsl(43 85% 80%);
+  --frog-matcha: hsl(95 55% 72%);
+  --frog-matcha-deep: hsl(95 48% 62%);
+  --frog-berry: hsl(350 100% 84%);
+  --frog-berry-deep: hsl(350 95% 76%);
+  --frog-bluegray: hsl(214 35% 76%);
+  --frog-bluegray-deep: hsl(214 32% 66%);
+  --frog-khaki: hsl(47 45% 78%);
+  --frog-khaki-deep: hsl(47 40% 68%);
+  --frog-zzaizai: hsl(256 32% 68%);
+  --frog-zzaizai-deep: hsl(256 28% 57%);
+  --frog-gege: hsl(272 62% 84%);
+  --frog-gege-deep: hsl(272 54% 74%);
+  --frog-mianmian: hsl(158 48% 78%);
+  --frog-mianmian-deep: hsl(158 40% 66%);
+  --frog-blush: hsl(352 100% 80%);
+  --frog-mouth: hsl(352 75% 50%);
+
+  --map-grass: hsl(110 65% 84%);
+  --map-grass-deep: hsl(110 55% 76%);
+  --map-road: hsl(45 100% 80%);
+  --map-water: hsl(196 90% 74%);
+  --map-water-deep: hsl(196 80% 64%);
+  --map-leaf: hsl(110 55% 56%);
+  --map-wood: hsl(28 60% 64%);
+}
+
+/* ---------- paper 暖白纸面手账（token 提取自库内 warm-editorial：纸面画布 + 赭木强调） ---------- */
+[data-theme="paper"] {
+  /* 批次 CK：深夜灯下走等宽——台账是敲出来的，不是写出来的 */
+  --font-body: "Geist Mono", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+  --background: 37 62% 96%; /* #fbf6ee */
+  --foreground: 25 23% 10%; /* #201914 */
+  --card: 43 100% 99%; /* #fffdf8 */
+  --card-foreground: 25 23% 10%;
+  --popover: 43 100% 99%;
+  --popover-foreground: 25 23% 10%;
+  --secondary: 35 55% 88%; /* #f1e3cf */
+  --secondary-foreground: 26 16% 26%;
+  --muted: 35 55% 88%;
+  --muted-foreground: 26 10% 43%; /* #7a6d63 */
+  --accent: 35 55% 88%;
+  --accent-foreground: 26 16% 26%;
+  --border: 33 29% 82%; /* #ded2c3 */
+  --input: 33 29% 82%;
+  --primary: 23 51% 40%; /* #9b5b32 */
+  --primary-foreground: 0 0% 100%;
+  --ring: 23 51% 40%;
+  --destructive: 0 51% 46%;
+  --destructive-foreground: 0 0% 100%;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius: var(--radius-md);
+  --font-display: Georgia, "Times New Roman", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", serif;
+  --focus-ring: 0 0 0 4px rgba(155, 91, 50, 0.24);
+  --elev-raised: 0 20px 52px rgba(32, 25, 20, 0.12);
+
+  --frog-cream: hsl(45 50% 88%);
+  --frog-cream-deep: hsl(43 42% 80%);
+  --frog-matcha: hsl(95 24% 70%);
+  --frog-matcha-deep: hsl(95 20% 60%);
+  --frog-berry: hsl(350 55% 82%);
+  --frog-berry-deep: hsl(350 48% 74%);
+  --frog-bluegray: hsl(214 16% 73%);
+  --frog-bluegray-deep: hsl(214 14% 63%);
+  --frog-khaki: hsl(47 22% 76%);
+  --frog-khaki-deep: hsl(47 18% 66%);
+  --frog-zzaizai: hsl(256 14% 66%);
+  --frog-zzaizai-deep: hsl(256 12% 56%);
+  --frog-gege: hsl(272 26% 83%);
+  --frog-gege-deep: hsl(272 22% 73%);
+  --frog-mianmian: hsl(158 18% 72%);
+  --frog-mianmian-deep: hsl(158 14% 60%);
+  --frog-belly: hsl(45 60% 97%);
+  --frog-ink: hsl(25 25% 16%);
+  --frog-mouth: hsl(10 45% 48%);
+  --frog-blush: hsl(18 55% 80%);
+  --frog-shadow: hsl(25 30% 20% / 0.12);
+
+  --map-grass: hsl(80 22% 85%);
+  --map-grass-deep: hsl(80 18% 77%);
+  --map-road: hsl(38 40% 84%);
+  --map-water: hsl(200 35% 82%);
+  --map-water-deep: hsl(200 30% 72%);
+  --map-leaf: hsl(90 25% 58%);
+  --map-wood: hsl(28 32% 60%);
+}
+
+/* ---------- 轻动效（纯 CSS，不引动效库） ---------- */
+@keyframes nw-fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes nw-hop {
+  0% { opacity: 0; transform: translateY(26px) scale(0.7); }
+  62% { opacity: 1; transform: translateY(-7px) scale(1.05); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes nw-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes nw-drift {
+  from { transform: translateX(-22px); }
+  to { transform: translateX(22px); }
+}
+.anim-fade-up { animation: nw-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+/* 批次 CH「行政化」：盖章与渗墨——每一个像素都在执行公务 */
+@keyframes nw-stamp {
+  0% { opacity: 0; transform: rotate(-12deg) scale(1.5); }
+  55% { opacity: 1; transform: rotate(-12deg) scale(0.94); }
+  100% { opacity: 1; transform: rotate(-12deg) scale(1); }
+}
+.anim-stamp { animation: nw-stamp 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+@keyframes nw-stamp-line {
+  0% { opacity: 0; transform: translateY(3px) scale(1.015); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.anim-stamp-line { animation: nw-stamp-line 0.24s cubic-bezier(0.16, 1, 0.3, 1) both; }
+/* 批次 CY-135「收藏动效」：翻面——收藏卡的正反切换有一口气，不闪不跳 */
+@keyframes nw-flip-in {
+  0% { opacity: 0; transform: perspective(700px) rotateX(-14deg) translateY(4px); }
+  100% { opacity: 1; transform: perspective(700px) rotateX(0deg) translateY(0); }
+}
+.anim-flip-in { animation: nw-flip-in 0.34s cubic-bezier(0.16, 1, 0.3, 1) both; }
+/* 批次 CY-138「自动翻页」：一夜读完走满一格的进度线 */
+@keyframes nw-read-progress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+.anim-read-progress { animation: nw-read-progress 12s linear both; }
+@keyframes nw-bleed {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 28%, transparent); }
+  50% { box-shadow: 0 0 10px 4px color-mix(in oklab, var(--primary) 18%, transparent); filter: blur(0.4px); }
+}
+.stamp-bleed { animation: nw-bleed 2.4s ease-in-out infinite; }
+
+.anim-frog-hop { animation: nw-hop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.anim-float { animation: nw-float 3.8s ease-in-out infinite; }
+.anim-drift { animation: nw-drift 10s ease-in-out infinite alternate; }
+
+.ds-display { font-family: var(--font-display); }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-fade-up,
+  .anim-frog-hop,
+  .anim-float,
+  .anim-drift,
+  .anim-char-in,
+  .anim-flip-in,
+  .anim-stamp,
+  .anim-read-progress,
+  .nw-steam-puff,
+  .nw-flicker-glow,
+  .nw-water-shimmer,
+  .nw-wind-line,
+  .nw-page-turn i {
+    animation: none;
+  }
+}
+
+/* ---------- 演出层推进一步（批次 W：逐字演出 + 背景微动，不加资产） ---------- */
+@keyframes nw-char-in {
+  from { opacity: 0; transform: translateY(6px) rotate(-1.2deg); }
+  to { opacity: 1; transform: none; }
+}
+.anim-char-in { display: inline-block; animation: nw-char-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* 食堂蒸汽：缓慢上浮的模糊团 */
+@keyframes nw-steam {
+  0% { transform: translateY(8%) scale(0.85); opacity: 0; }
+  25% { opacity: 0.35; }
+  100% { transform: translateY(-26%) scale(1.3); opacity: 0; }
+}
+.nw-steam-puff { animation: nw-steam 7s ease-in-out infinite; }
+
+/* 夜灯呼吸：走廊灯 / 台灯 / 应急灯的轻微明暗 */
+@keyframes nw-flicker {
+  0%, 100% { opacity: 0.05; }
+  42% { opacity: 0.14; }
+  50% { opacity: 0.08; }
+  68% { opacity: 0.18; }
+}
+.nw-flicker-glow { animation: nw-flicker 4.6s ease-in-out infinite; }
+
+/* 水面波光：湖面细纹横移 */
+@keyframes nw-water {
+  0% { transform: translateX(-5%); opacity: 0.35; }
+  50% { opacity: 0.6; }
+  100% { transform: translateX(5%); opacity: 0.35; }
+}
+.nw-water-shimmer { animation: nw-water 9s ease-in-out infinite alternate; }
+
+/* 风过：操场 / 校门前的细风线 */
+@keyframes nw-wind {
+  0% { transform: translateX(-18%) translateY(4%); opacity: 0; }
+  30% { opacity: 0.4; }
+  100% { transform: translateX(18%) translateY(-2%); opacity: 0; }
+}
+.nw-wind-line { animation: nw-wind 8s ease-in-out infinite; }
+
+/* ---------- 演出动效（批次 B2：CG 定格 / 转场 / 立绘出入场 / 震动） ---------- */
+@keyframes nw-cg-in {
+  from { opacity: 0; transform: scale(1.035); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes nw-cg-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes nw-enter-frog {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes nw-quake {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-2px, 1px); }
+  50% { transform: translate(2px, -1px); }
+  75% { transform: translate(-1px, 0); }
+  100% { transform: translate(0, 0); }
+}
+/* 眨眼（批次 AY·注视）：你点一下，它眨一下——scaleY 压一下再回来 */
+@keyframes nw-blink {
+  0% { transform: scaleY(1); }
+  45% { transform: scaleY(0.9); }
+  100% { transform: scaleY(1); }
+}
+.nw-blink {
+  animation: nw-blink 0.22s ease-in-out;
+}
+@keyframes nw-veil-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes nw-veil-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes nw-flash-white {
+  0% { opacity: 0.92; }
+  35% { opacity: 0.5; }
+  100% { opacity: 0; }
+}
+.nw-cg-in { animation: nw-cg-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.nw-cg-out { animation: nw-cg-out 0.3s ease-in forwards; }
+.nw-enter-frog { animation: nw-enter-frog 0.22s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.nw-quake { animation: nw-quake 0.12s ease-in-out; }
+.nw-veil-out { animation: nw-veil-out 0.9s ease-out both; }
+.nw-veil-act { animation: nw-veil-out 0.72s ease-out both; }
+.nw-veil-in { animation: nw-veil-in 0.3s ease-in forwards; }
+.nw-flash-white { animation: nw-flash-white 0.9s ease-out both; }
+
+/* ---------- 蛙的生物学（批次 AH）：鸣叫的水纹（零资产演出，纯 CSS） ---------- */
+@keyframes nw-croak-ring {
+  0% { opacity: 0.55; transform: scale(0.35); }
+  100% { opacity: 0; transform: scale(2.1); }
+}
+.nw-croak-ring {
+  position: absolute;
+  height: 170px;
+  width: 170px;
+  border-radius: 9999px;
+  border: 2px solid hsl(var(--primary) / 0.4);
+  animation: nw-croak-ring 1s ease-out both;
+}
+.nw-croak-ring-late { animation-delay: 0.22s; }
+
+/* ---------- 沉默的物理空间（批次 AK）：操场的风线（一档比一档多、越来越斜） ---------- */
+@keyframes nw-silence-wind {
+  0% { transform: translateX(-30px) translateY(2px); opacity: 0; }
+  25% { opacity: 1; }
+  75% { opacity: 1; }
+  100% { transform: translateX(64px) translateY(-6px); opacity: 0; }
+}
+.nw-wind-streak { animation: nw-silence-wind 6s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nw-cg-in,
+  .nw-enter-frog,
+  .nw-quake {
+    animation: none;
+  }
+  .nw-cg-in { opacity: 1; }
+  .nw-cg-out { animation: nw-cg-out 0.15s ease-in forwards; }
+  .nw-veil-out,
+  .nw-veil-act {
+    animation: nw-veil-out 0.25s ease-out both;
+  }
+  .nw-veil-in { animation: nw-veil-in 0.15s ease-in forwards; }
+  .nw-flash-white { animation: nw-flash-white 0.3s ease-out both; }
+  .nw-croak-ring { animation: none; opacity: 0; }
+  .nw-wind-streak { animation: none; opacity: 0; }
+}
+
+/* ---------- 手绘地图建筑交互 ---------- */
+.map-building {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1);
+  cursor: pointer;
+  outline: none;
+}
+.map-building:hover,
+.map-building:focus-visible {
+  transform: scale(1.07);
+}
+/* 键盘聚焦的楼：一圈主题色的柔光（XML 滤镜写法在 SVG 内元素上最稳） */
+.map-building:focus-visible {
+  filter: drop-shadow(0 0 0.5px hsl(var(--ring))) drop-shadow(0 0 7px hsl(var(--ring) / 0.55));
+}
+.map-locked {
+  cursor: not-allowed;
+}
+.map-locked:hover,
+.map-locked:focus-visible {
+  transform: none;
+}
+
+/* ---------- 校园日历：天气与深夜 ---------- */
+.night-sky {
+  background: linear-gradient(180deg, var(--frog-ink) 0%, var(--frog-bluegray-deep) 100%);
+}
+.weather-fog {
+  filter: saturate(0.72) contrast(0.97);
+}
+.weather-overcast {
+  filter: saturate(0.9);
+}
+.final-week-dim {
+  filter: brightness(0.93) saturate(0.9);
+}
+
+@keyframes nw-rain {
+  from { transform: translateY(-46px); }
+  to { transform: translateY(660px); }
+}
+.nw-rain-drop {
+  top: -46px;
+  animation: nw-rain 1.1s linear infinite;
+}
+
+@keyframes nw-wind {
+  from { transform: translateX(-140px); opacity: 0; }
+  18% { opacity: 1; }
+  82% { opacity: 1; }
+  to { transform: translateX(960px); opacity: 0; }
+}
+.nw-wind-line {
+  left: -140px;
+  animation: nw-wind 6s linear infinite;
+}
+
+/* ---------- 落叶横渡（批次 CY-100：大风天的叶子打着旋横穿整张地图） ---------- */
+@keyframes nw-leaf {
+  0% { transform: translateX(0) translateY(0) rotate(0deg); opacity: 0; }
+  8% { opacity: 1; }
+  50% { transform: translateX(480px) translateY(-26px) rotate(220deg); }
+  92% { opacity: 1; }
+  100% { transform: translateX(1020px) translateY(30px) rotate(480deg); opacity: 0; }
+}
+.nw-leaf {
+  left: -40px;
+  animation: nw-leaf 9s linear infinite;
+}
+
+@keyframes nw-glow {
+  0%, 100% { filter: drop-shadow(0 0 2px var(--primary)); }
+  50% { filter: drop-shadow(0 0 9px var(--primary)); }
+}
+.night-spot-glow {
+  animation: nw-glow 2.8s ease-in-out infinite;
+}
+
+/* 期末周暗角（批次 CY-97）：图的四角收向中心的一点亮 */
+.map-vignette {
+  background: radial-gradient(120% 100% at 50% 42%, transparent 55%, hsl(var(--foreground) / 0.35) 100%);
+}
+
+/* 落地水花（批次 CY-98）：雨滴砸地开一圈小涟漪，散掉再开 */
+@keyframes nw-splash {
+  0% { opacity: 0.6; transform: scale(0.2); }
+  80% { opacity: 0; transform: scale(1.5); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+.nw-splash {
+  animation: nw-splash 1.3s ease-out infinite;
+}
+
+/* 雨天水洼（批次 CY-93）：地面积水反着微光，慢慢明灭 */
+@keyframes nw-puddle {
+  0%, 100% { opacity: 0.3; transform: scaleX(1); }
+  50% { opacity: 0.75; transform: scaleX(1.06); }
+}
+.nw-puddle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: nw-puddle 3.4s ease-in-out infinite;
+}
+
+/* 雾天隐现（批次 CY-90）：建筑轮廓随雾呼吸，三档错拍；悬停的那栋学会无视雾 */
+@keyframes nw-fog-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.42; }
+}
+.fog-breathe-0 { animation: nw-fog-breathe 7s ease-in-out infinite; }
+.fog-breathe-1 { animation: nw-fog-breathe 7s ease-in-out infinite; animation-delay: -2.3s; }
+.fog-breathe-2 { animation: nw-fog-breathe 7s ease-in-out infinite; animation-delay: -4.6s; }
+.map-building:hover,
+.map-building:focus-visible {
+  animation: none;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nw-rain-drop,
+  .nw-wind-line,
+  .nw-leaf,
+  .night-spot-glow,
+  .nw-puddle,
+  .nw-splash,
+  .fog-breathe-0,
+  .fog-breathe-1,
+  .fog-breathe-2 {
+    animation: none;
+  }
+}
+
+/* ---------- 弹层打开期间锁背景滚动（浮层自身可滚；系统壳另有 JS 锁，这里兜住全部叙事浮层） ---------- */
+body:has([role="dialog"]) {
+  overflow: hidden;
+}
+
+/* ---------- 翻页加载（首屏瘦身批次）：路由切换的等待提示——三张纸依次翻过去 ---------- */
+.nw-page-turn {
+  position: relative;
+  display: inline-block;
+  width: 30px;
+  height: 38px;
+  perspective: 220px;
+}
+.nw-page-turn i {
+  position: absolute;
+  inset: 0;
+  display: block;
+  border: 1px solid hsl(var(--border));
+  border-radius: 3px 6px 6px 3px;
+  background: hsl(var(--card));
+  transform-origin: left center;
+  animation: nw-page-turn 1.4s ease-in-out infinite;
+}
+.nw-page-turn i:nth-child(2) { animation-delay: 0.18s; }
+.nw-page-turn i:nth-child(3) { animation-delay: 0.36s; }
+@keyframes nw-page-turn {
+  0%, 100% { transform: rotateY(0deg); }
+  45%, 55% { transform: rotateY(-160deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nw-page-turn i {
+    animation: none;
+  }
+}
+
+/* ---------- 阅读舒适度（批次 CY-27）：字号在 html 基准字号上缩放（gameSave.applyReadComfort 负责），
+   行距 / 减少动效 / 高对比是 body 上的 data 开关——与主题 token 同层，后声明者优先 ---------- */
+body[data-line-spacing="relaxed"] p {
+  line-height: 2.1;
+}
+body[data-line-spacing="snug"] p {
+  line-height: 1.45;
+}
+body[data-reduce-motion="on"] *,
+body[data-reduce-motion="on"] *::before,
+body[data-reduce-motion="on"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+body[data-high-contrast="on"] {
+  --muted-foreground: var(--foreground);
+}
+/* 夜灯模式（批次 CY-28）：整块画面蒙一层固定的暖黄柔光——中心微暖、四周渐深，
+   不挡点击、不挑主题：三套行政风格叠上去都变「熄了大灯、只留一盏」的读法。 */
+body[data-night-lamp="on"]::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  pointer-events: none;
+  background: radial-gradient(
+    130% 130% at 50% 46%,
+    rgba(255, 186, 84, 0.1) 0%,
+    rgba(176, 96, 26, 0.16) 58%,
+    rgba(70, 36, 10, 0.28) 100%
+  );
+}

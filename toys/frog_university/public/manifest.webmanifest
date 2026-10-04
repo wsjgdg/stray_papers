@@ -1,0 +1,19 @@
+{
+  "name": "奶蛙大学",
+  "short_name": "奶蛙大学",
+  "description": "陪八只奶蛙重过一学期：选项定沉默与好感，十条线 30 种结局。",
+  "lang": "zh-CN",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#fbfaff",
+  "theme_color": "#fbfaff",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
