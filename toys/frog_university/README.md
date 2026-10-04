@@ -96,7 +96,6 @@ scripts/
   verify-renpy.mjs       迁移管线验证（死行 / 环检测 / 结局区间衔接 / 兜底提示）
   gen-renpy.mjs          renpy-data.json → docs/renpy/*.rpy 工程
   verify-demo.mjs        演示档口径机检（结构链推演 + 时长估算）
-_vibex-export-backup/    改造前 VibeX 平台文件备份（pocketbase hooks / vibex-local 启动脚本 / 导出说明），不再参与构建，可删
 ```
 
 ## 剧本改动的固定管线
