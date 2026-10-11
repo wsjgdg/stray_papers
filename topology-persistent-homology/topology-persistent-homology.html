@@ -1,0 +1,2220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>拓扑学 · 持续同调与拓扑不变量</title>
+<meta name="description" content="零依赖纯 HTML/CSS 拓扑学静态教材：同胚、Betti 数、单纯复形过滤、持续同调、条形码与持久图、曲面分类与拓扑签名。">
+<meta name="theme-color" content="#060912">
+<meta property="og:type" content="article">
+<meta property="og:title" content="拓扑学 · 持续同调与拓扑不变量">
+<meta property="og:description" content="零依赖纯 HTML/CSS 拓扑学静态教材：同胚、Betti 数、Rips 过滤、条形码与持久图、曲面分类。">
+<meta property="og:locale" content="zh_CN">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b1322'/%3E%3Ctext x='16' y='21' font-size='13' font-family='monospace' fill='%2322d3ee' text-anchor='middle' font-weight='bold'%3E%CE%B2k%3C/text%3E%3C/svg%3E">
+<style>
+  /* ==================== 设计令牌 ==================== */
+  :root{
+    --bg:#060912;
+    --bg-grad: radial-gradient(1400px 760px at 78% -14%, #16263f 0%, #0b1322 46%, #060912 100%);
+    --panel:#0d1526; --panel-2:#101b30;
+    --card:#0f1a2c; --card-2:#14223b;
+    --line:rgba(255,255,255,.075); --line-2:rgba(255,255,255,.16);
+    --fg:#eef4fb; --dim:#9aabc2; --faint:#5e6f87;
+    --cyan:#22d3ee;   --cyan-d:rgba(34,211,238,.14);  --cyan-g:rgba(34,211,238,.5);
+    --magenta:#f472b6;--magenta-d:rgba(244,114,182,.14);
+    --gold:#fbbf24;   --gold-d:rgba(251,191,36,.12);
+    --violet:#a78bfa; --good:#34d399; --bad:#fb7185;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+    --shadow-md:0 10px 30px -10px rgba(0,0,0,.6);
+    --shadow-lg:0 28px 70px -22px rgba(0,0,0,.78);
+    --ease:cubic-bezier(.2,.7,.3,1);
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;scroll-padding-top:84px}
+  body{
+    margin:0;color:var(--fg);font:14.5px/1.72 var(--sans);
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+    background:
+      radial-gradient(1100px 520px at 88% -6%, rgba(34,211,238,.10), transparent 62%),
+      radial-gradient(880px 460px at 4% 22%, rgba(244,114,182,.06), transparent 60%),
+      linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px) 0 0/44px 44px,
+      linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px) 0 0/44px 44px,
+      var(--bg-grad);
+  }
+  ::selection{background:rgba(34,211,238,.3);color:#fff}
+  ::-webkit-scrollbar{width:11px;height:11px}
+  ::-webkit-scrollbar-track{background:#0a1120}
+  ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#1d3a55,#16283f);border-radius:8px;border:2px solid #0a1120}
+  ::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#25587c,#1c3854)}
+  a{color:var(--cyan);text-decoration:none;transition:color .2s}
+  a:hover{color:#7ee7f8}
+
+  /* ==================== HERO ==================== */
+  header.hero{position:relative;padding:88px 24px 46px;max-width:1180px;margin:0 auto;overflow:hidden}
+  .hero .orb{position:absolute;border-radius:50%;pointer-events:none;z-index:0}
+  .orb.o1{width:520px;height:420px;right:-120px;top:-140px;background:radial-gradient(circle,rgba(34,211,238,.20),transparent 70%);animation:floatY 11s ease-in-out infinite}
+  .orb.o2{width:420px;height:360px;left:-140px;top:110px;background:radial-gradient(circle,rgba(244,114,182,.13),transparent 70%);animation:floatY 14s ease-in-out infinite reverse}
+  .orb.o3{width:300px;height:260px;right:24%;bottom:-120px;background:radial-gradient(circle,rgba(251,191,36,.10),transparent 70%);animation:floatY 17s ease-in-out infinite}
+  .hero .hero-deco{position:absolute;inset:0;pointer-events:none;z-index:1;opacity:.6}
+  .hero-deco svg{position:absolute;right:-70px;top:-44px;width:540px;height:440px}
+  header.hero>*{position:relative;z-index:2}
+  .eyebrow{display:inline-flex;align-items:center;gap:10px;font:600 12px/1 var(--mono);letter-spacing:.26em;text-transform:uppercase;
+    color:var(--cyan);background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.25);
+    padding:8px 16px 8px 13px;border-radius:999px}
+  .eyebrow .pulse{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 12px var(--cyan);animation:pulse 2.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.8)}}
+  header.hero h1{margin:22px 0 16px;font-size:clamp(30px,4.8vw,56px);line-height:1.08;letter-spacing:-.028em;font-weight:800;
+    background:linear-gradient(92deg,#f2f7fc 0%,#9fd8ff 48%,#c9a7ff 74%,#f472b6 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 6px 34px rgba(34,211,238,.18))}
+  header.hero p.lede{margin:0;max-width:920px;color:var(--dim);font-size:16.5px;line-height:1.82}
+  header.hero p.lede b{color:var(--fg);font-weight:600}
+  .hero-stats{display:flex;gap:12px;flex-wrap:wrap;margin:26px 0 0}
+  .hero-stats .st{display:flex;align-items:baseline;gap:8px;background:rgba(13,21,38,.55);border:1px solid var(--line);
+    border-radius:11px;padding:8px 15px}
+  .hero-stats .st b{font:800 17px/1 var(--mono);color:var(--fg)}
+  .hero-stats .st span{font-size:11.5px;color:var(--faint)}
+  .def{display:flex;gap:16px;flex-wrap:wrap;margin-top:26px}
+  .def .chip{position:relative;overflow:hidden;background:linear-gradient(180deg,var(--card-2),var(--card));border:1px solid var(--line);
+    border-radius:16px;padding:18px 20px 18px 23px;min-width:214px;flex:1;transition:.3s var(--ease);box-shadow:var(--shadow-sm)}
+  .def .chip::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--cyan),var(--magenta));border-radius:3px}
+  .def .chip::after{content:"";position:absolute;inset:0;border-radius:16px;padding:1px;
+    background:linear-gradient(130deg,rgba(34,211,238,.55),transparent 40%,transparent 60%,rgba(244,114,182,.45));
+    -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;
+    opacity:0;transition:.3s}
+  .def .chip:hover{transform:translateY(-5px);box-shadow:0 18px 42px -16px rgba(34,211,238,.35)}
+  .def .chip:hover::after{opacity:1}
+  .def .chip b{display:block;color:var(--fg);font-size:14px;margin-bottom:6px;font-weight:650}
+  .def .chip span{color:var(--dim);font-size:12.5px;line-height:1.6}
+
+  /* ==================== NAV ==================== */
+  .nav-wrap{position:sticky;top:14px;z-index:40;padding:0 24px;margin:34px 0 0}
+  nav{max-width:1080px;margin:0 auto;
+      background:rgba(10,16,28,.93);border:1px solid var(--line-2);border-radius:16px;
+      padding:8px 10px;display:flex;gap:3px;flex-wrap:wrap;justify-content:center;
+      box-shadow:0 18px 44px -18px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.06)}
+  nav a{padding:8px 15px;border-radius:11px;font-size:13px;color:var(--dim);transition:.22s var(--ease);position:relative;white-space:nowrap}
+  nav a:hover{color:var(--fg);background:rgba(34,211,238,.12);transform:translateY(-1px)}
+  nav a::after{content:"";position:absolute;left:15px;right:15px;bottom:3px;height:2px;border-radius:2px;
+      background:linear-gradient(90deg,var(--cyan),var(--magenta));transform:scaleX(0);transform-origin:left;transition:.25s var(--ease)}
+  nav a:hover::after{transform:scaleX(1)}
+
+  /* ==================== SECTION 通用 ==================== */
+  section{padding:74px 24px 60px;max-width:1180px;margin:0 auto;position:relative}
+  section::after{content:"";position:absolute;left:24px;right:24px;bottom:0;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent)}
+  section:last-of-type::after{display:none}
+  .sec-head{margin-bottom:26px}
+  section h2{margin:0 0 10px;font-size:clamp(22px,2.7vw,32px);font-weight:760;letter-spacing:-.022em;display:flex;align-items:center;gap:13px}
+  section h2 .idx{font:700 12px/1 var(--mono);color:var(--cyan);background:linear-gradient(160deg,rgba(34,211,238,.18),rgba(34,211,238,.07));
+      padding:7px 12px;border-radius:10px;border:1px solid rgba(34,211,238,.32);letter-spacing:.03em;flex:none;
+      box-shadow:0 4px 18px -8px rgba(34,211,238,.5)}
+  section .sub{margin:0;color:var(--dim);max-width:1000px;font-size:15px;line-height:1.78}
+  section .sub b{color:var(--fg);font-weight:600}
+  .grid{display:grid;gap:18px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g-viz{grid-template-columns:minmax(340px,1fr) minmax(320px,440px)}
+  @media(max-width:900px){.g2,.g3,.g-viz{grid-template-columns:1fr}}
+  @media(max-width:640px){
+    nav{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
+    nav::-webkit-scrollbar{display:none}
+    .nav-wrap{padding:0 12px;top:10px}
+    header.hero{padding:64px 18px 38px}
+    section{padding:56px 18px 46px}
+  }
+
+  /* ==================== 卡片 ==================== */
+  .card{position:relative;background:linear-gradient(180deg,var(--card-2),var(--card));border:1px solid var(--line);
+      border-radius:18px;padding:20px;box-shadow:var(--shadow-md);transition:.32s var(--ease);overflow:hidden}
+  .card::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;
+      background:linear-gradient(90deg,transparent,rgba(34,211,238,.55),rgba(244,114,182,.4),transparent);opacity:.55}
+  .card:hover{border-color:var(--line-2);box-shadow:0 24px 60px -22px rgba(34,211,238,.3),var(--shadow-lg);transform:translateY(-3px)}
+  .card h3{margin:0 0 12px;font-size:14.5px;color:var(--fg);display:flex;align-items:center;gap:10px;font-weight:650}
+  .card h3 .dot{width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor;flex:none}
+  .card p{margin:8px 0 0;color:var(--dim);font-size:13px;line-height:1.75}
+
+  /* ==================== 图像框 ==================== */
+  figure{margin:0}
+  figure svg{display:block;width:100%;height:auto;background:radial-gradient(circle at 50% 36%,#0d1626,#060a12 82%);
+      border:1px solid var(--line);border-radius:15px;
+      box-shadow:inset 0 0 60px rgba(0,0,0,.55),0 1px 0 rgba(255,255,255,.03)}
+  .frame{position:relative}
+  .frame::before,.frame::after{content:"";position:absolute;width:22px;height:22px;border-color:rgba(34,211,238,.5);border-style:solid;pointer-events:none;z-index:2}
+  .frame::before{left:-5px;top:-5px;border-width:2px 0 0 2px;border-radius:6px 0 0 0}
+  .frame::after{right:-5px;bottom:-5px;border-width:0 2px 2px 0;border-radius:0 0 6px 0}
+  figcaption{color:var(--faint);font-size:12px;margin-top:10px;line-height:1.6}
+  .legend{display:flex;gap:20px;flex-wrap:wrap;margin:10px 0;font-size:12px;color:var(--dim)}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:7px;vertical-align:-2px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.15)}
+
+  /* ==================== 指标块 ==================== */
+  .metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:10px}
+  @media(max-width:560px){.metrics{grid-template-columns:1fr}}
+  .mt{position:relative;overflow:hidden;background:linear-gradient(180deg,var(--card-2),var(--card));
+      border:1px solid var(--line);border-radius:13px;padding:14px 16px;transition:.28s var(--ease)}
+  .mt:hover{border-color:var(--line-2);transform:translateY(-3px)}
+  .mt::after{content:"";position:absolute;right:-22px;top:-22px;width:66px;height:66px;border-radius:50%;filter:blur(26px);opacity:.4}
+  .mt.cyan::after{background:var(--cyan)} .mt.mag::after{background:var(--magenta)} .mt.gold::after{background:var(--gold)} .mt.vio::after{background:var(--violet)}
+  .mt .k{font-size:11.5px;color:var(--dim);font-weight:550;letter-spacing:.02em}
+  .mt .v{font:800 28px/1.05 var(--mono);color:var(--fg);margin-top:6px;letter-spacing:-.012em}
+  .mt .n{font-size:11px;color:var(--faint);margin-top:5px}
+  .mt.cyan .v{color:var(--cyan)} .mt.mag .v{color:var(--magenta)} .mt.gold .v{color:var(--gold)} .mt.vio .v{color:var(--violet)}
+
+  /* ==================== 提示条 / 公式 ==================== */
+  .note{position:relative;background:linear-gradient(90deg,rgba(167,139,250,.08),rgba(167,139,250,.02));
+    border:1px solid rgba(167,139,250,.16);border-left:3px solid var(--violet);
+    padding:15px 18px;margin:16px 0;border-radius:0 14px 14px 0;color:var(--dim);font-size:13px;line-height:1.78}
+  .note b{color:var(--fg);font-weight:600}
+  .note.cyan{border-left-color:var(--cyan);border-color:rgba(34,211,238,.16);background:linear-gradient(90deg,var(--cyan-d),transparent)}
+  .note.mag{border-left-color:var(--magenta);border-color:rgba(244,114,182,.16);background:linear-gradient(90deg,var(--magenta-d),transparent)}
+  .note.gold{border-left-color:var(--gold);border-color:rgba(251,191,36,.16);background:linear-gradient(90deg,var(--gold-d),transparent)}
+  .note code{font:600 12.5px var(--mono);color:var(--gold);background:rgba(0,0,0,.3);padding:1.5px 7px;border-radius:6px;border:1px solid rgba(251,191,36,.18)}
+  .formula{font:600 14px var(--mono);color:var(--gold);background:linear-gradient(180deg,rgba(251,191,36,.10),rgba(251,191,36,.04));
+    border:1px solid rgba(251,191,36,.25);border-radius:11px;padding:11px 15px;display:inline-block;margin:6px 0;letter-spacing:.02em;
+    box-shadow:0 6px 24px -12px rgba(251,191,36,.4)}
+
+  /* ==================== 表格 ==================== */
+  .tbl-wrap{overflow-x:auto;border-radius:15px;border:1px solid var(--line);box-shadow:var(--shadow-md)}
+  table.surf{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;min-width:640px;
+      background:linear-gradient(180deg,rgba(20,34,59,.5),rgba(15,26,44,.5))}
+  table.surf th,table.surf td{border-bottom:1px solid var(--line);padding:11px 14px;text-align:left}
+  table.surf thead th{color:var(--dim);font-weight:600;font-size:12px;letter-spacing:.03em;text-transform:none;
+      background:linear-gradient(180deg,rgba(34,211,238,.10),rgba(13,21,38,.85));position:sticky;top:0}
+  table.surf tbody tr{transition:background .2s}
+  table.surf tbody tr:hover td{background:rgba(34,211,238,.055)}
+  table.surf tr:last-child td{border-bottom:none}
+  table.surf td code{color:var(--gold);font:600 13px var(--mono);background:rgba(251,191,36,.09);padding:1.5px 7px;border-radius:6px}
+  table.surf td.num{font-family:var(--mono);font-weight:650;color:var(--fg)}
+  table.surf td.num.neg{color:var(--magenta)}
+
+  /* ==================== 图库 ==================== */
+  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:17px;margin-top:18px}
+  .gc{position:relative;overflow:hidden;background:linear-gradient(180deg,var(--card-2),var(--card));
+      border:1px solid var(--line);border-radius:17px;padding:18px;box-shadow:var(--shadow-md);transition:.32s var(--ease)}
+  .gc::before{content:"";position:absolute;left:0;top:0;width:100%;height:2.5px;
+      background:linear-gradient(90deg,var(--cyan),var(--magenta),var(--gold));opacity:0;transition:.32s;z-index:2}
+  .gc::after{content:"";position:absolute;inset:0;border-radius:17px;padding:1px;
+      background:linear-gradient(130deg,rgba(34,211,238,.5),transparent 45%,transparent 55%,rgba(244,114,182,.42));
+      -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;
+      opacity:0;transition:.32s;pointer-events:none}
+  .gc:hover{transform:translateY(-6px);box-shadow:0 30px 66px -24px rgba(34,211,238,.32),var(--shadow-lg);border-color:var(--line-2)}
+  .gc:hover::before{opacity:1}
+  .gc:hover::after{opacity:1}
+  .gc svg{display:block;width:100%;height:auto;background:radial-gradient(circle at 50% 40%,#0d1626,#080d18 84%);
+      border:1px solid var(--line);border-radius:12px}
+  .gc h4{margin:13px 0 7px;font-size:15px;font-weight:650}
+  .gc p{margin:0;color:var(--dim);font-size:12.5px;line-height:1.68}
+  .gc .sig{margin-top:13px;display:flex;gap:9px;flex-wrap:wrap}
+  .gc .sig span{font:600 11.5px var(--mono);padding:3px 10px;border-radius:999px;border:1px solid var(--line)}
+  .gc .sig .b0{color:var(--cyan);background:var(--cyan-d);border-color:rgba(34,211,238,.3)}
+  .gc .sig .b1{color:var(--magenta);background:var(--magenta-d);border-color:rgba(244,114,182,.3)}
+  .gc .sig .b2{color:var(--gold);background:var(--gold-d);border-color:rgba(251,191,36,.3)}
+
+  /* ==================== FOOTER ==================== */
+  footer{position:relative;padding:44px 24px 84px;max-width:1180px;margin:26px auto 0;
+    border-top:1px solid transparent;text-align:center;color:var(--faint);font-size:12.5px;line-height:1.85;
+    background:linear-gradient(180deg,transparent,rgba(13,21,38,.5))}
+  footer::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(34,211,238,.4),rgba(244,114,182,.35),transparent)}
+  footer .fmark{width:46px;height:46px;margin:0 auto 16px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(140deg,rgba(34,211,238,.16),rgba(244,114,182,.12));border:1px solid var(--line-2);
+    font:800 15px/1 var(--mono);color:var(--cyan);box-shadow:0 10px 30px -12px rgba(34,211,238,.4)}
+  footer b{color:var(--dim)}
+  .totop{display:inline-flex;align-items:center;gap:7px;margin-top:16px;padding:8px 18px;border-radius:999px;
+    background:rgba(34,211,238,.10);border:1px solid rgba(34,211,238,.3);color:var(--cyan);font-size:12.5px;font-weight:600;transition:.25s var(--ease)}
+  .totop:hover{background:rgba(34,211,238,.2);transform:translateY(-2px);box-shadow:0 10px 26px -12px rgba(34,211,238,.55)}
+  .kbd{font:600 11px var(--mono);background:var(--card-2);border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1.5px 8px;color:var(--fg)}
+
+  /* ==================== SVG 流动动画 ==================== */
+  .flow{stroke-dasharray:6 9;animation:dashflow 2.2s linear infinite}
+  .flow-slow{stroke-dasharray:5 10;animation:dashflow 6s linear infinite}
+  @keyframes dashflow{to{stroke-dashoffset:-30}}
+  .knotflow{stroke-dasharray:4 11;animation:dashflow2 32s linear infinite}
+  @keyframes dashflow2{to{stroke-dashoffset:-240}}
+
+  /* ==================== 入场 / 动效 ==================== */
+  @keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+  @keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-13px)}}
+  section{animation:fadeUp .8s var(--ease) both}
+  .hero-deco svg circle{animation:floatY 7s ease-in-out infinite}
+  .hero-deco svg .ring2{animation:floatY 9s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+  @media (prefers-reduced-motion: reduce){
+    section,.hero-deco,.hero-deco svg circle,.hero-deco svg .ring2,.orb,.eyebrow .pulse,.flow,.flow-slow,.knotflow{animation:none!important;opacity:1!important;transform:none!important;translate:none!important}
+    html{scroll-behavior:auto}
+  }
+
+  /* ==================== 阅读进度条（CSS 滚动驱动，无 JS） ==================== */
+  .progress{position:fixed;top:0;left:0;height:3px;width:100%;transform:scaleX(0);transform-origin:left;
+    background:linear-gradient(90deg,var(--cyan),var(--magenta),var(--gold));z-index:60;pointer-events:none;
+    box-shadow:0 0 12px rgba(34,211,238,.5)}
+  @keyframes progressGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  @supports (animation-timeline: scroll()){
+    .progress{animation:progressGrow linear both;animation-timeline:scroll(root block)}
+  }
+
+  /* ==================== 无障碍 / 焦点 ==================== */
+  .skip{position:absolute;left:-9999px;top:0;z-index:99;padding:10px 18px;border-radius:0 0 12px 0;
+    background:rgba(34,211,238,.95);color:#06222c;font-weight:700;font-size:13px}
+  .skip:focus{left:0}
+  a:focus-visible,summary:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:6px}
+
+  /* ==================== 锚点定位高亮 ==================== */
+  section:target{border-radius:22px;box-shadow:0 0 0 1px rgba(34,211,238,.28),0 24px 70px -30px rgba(34,211,238,.25)}
+
+  /* ==================== 附录：折叠卡片（原生 details） ==================== */
+  details.qa{background:linear-gradient(180deg,var(--card-2),var(--card));border:1px solid var(--line);border-radius:15px;
+    padding:0;margin:12px 0;overflow:hidden;transition:.28s var(--ease)}
+  details.qa[open]{border-color:var(--line-2);box-shadow:var(--shadow-md)}
+  details.qa summary{cursor:pointer;list-style:none;padding:15px 18px;font-size:13.5px;font-weight:650;color:var(--fg);
+    display:flex;align-items:center;gap:11px;transition:background .2s}
+  details.qa summary::-webkit-details-marker{display:none}
+  details.qa summary::before{content:"+";flex:none;width:22px;height:22px;border-radius:7px;display:flex;align-items:center;justify-content:center;
+    background:var(--cyan-d);border:1px solid rgba(34,211,238,.3);color:var(--cyan);font:700 14px/1 var(--mono);transition:.25s}
+  details.qa[open] summary::before{content:"−";transform:rotate(180deg)}
+  details.qa summary:hover{background:rgba(34,211,238,.06)}
+  details.qa .qa-body{padding:2px 18px 18px 51px;color:var(--dim);font-size:13px;line-height:1.82}
+  .gloss{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-top:6px}
+  .gloss div{background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:11px;padding:11px 13px}
+  .gloss b{color:var(--fg);font-size:12.5px;display:block;margin-bottom:3px}
+  .gloss span{color:var(--dim);font-size:12px;line-height:1.62}
+  .qa-body p{margin:12px 0}
+
+  /* ==================== 打印 / 导出 PDF ==================== */
+  @media print{
+    body{background:#fff;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .nav-wrap,.orb,.hero-deco,.progress,.totop,.eyebrow .pulse{display:none!important}
+    header.hero{padding:24px 0}
+    header.hero h1{color:#0b2233;-webkit-text-fill-color:#0b2233;filter:none}
+    header.hero p.lede,section .sub,.card p,.note,figcaption,footer{color:#333}
+    section{page-break-inside:avoid;padding:26px 0;animation:none}
+    .card,.mt,.note,.tbl-wrap{box-shadow:none;border-color:#c9d4e2}
+    table.surf{background:#fff}table.surf th{background:#eef3f9;color:#333}
+    table.surf td,table.surf th{border-color:#c9d4e2}
+    figure svg,.gc svg{border-color:#c9d4e2}
+    details.qa{border-color:#c9d4e2}details.qa summary{color:#111}
+  }
+
+  /* ==================== 时间线（历史演进） ==================== */
+  .tl{position:relative;margin:22px 0 6px;padding-left:6px}
+  .tl::before{content:"";position:absolute;left:13px;top:8px;bottom:10px;width:2px;
+    background:linear-gradient(180deg,var(--cyan),var(--magenta),var(--gold));opacity:.55}
+  .tl .ev{position:relative;padding:0 0 24px 42px}
+  .tl .ev::before{content:"";position:absolute;left:5px;top:4px;width:12px;height:12px;border-radius:50%;
+    background:var(--card);border:2.5px solid var(--cyan);box-shadow:0 0 12px rgba(34,211,238,.55)}
+  .tl .ev:nth-child(2)::before{border-color:var(--magenta);box-shadow:0 0 12px rgba(244,114,182,.55)}
+  .tl .ev:nth-child(3)::before{border-color:var(--gold);box-shadow:0 0 12px rgba(251,191,36,.55)}
+  .tl .ev:nth-child(4)::before{border-color:var(--violet);box-shadow:0 0 12px rgba(167,139,250,.55)}
+  .tl .ev:nth-child(5)::before{border-color:var(--good);box-shadow:0 0 12px rgba(52,211,153,.55)}
+  .tl .ev:nth-child(6)::before{border-color:var(--cyan)}
+  .tl .y{font:700 12px/1 var(--mono);color:var(--gold);letter-spacing:.06em}
+  .tl h4{margin:5px 0 5px;font-size:14.5px;font-weight:650;color:var(--fg)}
+  .tl p{margin:0;color:var(--dim);font-size:13px;line-height:1.75;max-width:860px}
+
+  /* ==================== 脚注 / 参考文献 ==================== */
+  sup.fn a{font:700 10px var(--mono);color:var(--gold);text-decoration:none;padding:0 2px}
+  sup.fn a:hover{color:var(--fg)}
+  .refs{margin:6px 0 0;padding:0;list-style:none;counter-reset:r}
+  .refs li{counter-increment:r;position:relative;padding:8px 0 8px 42px;color:var(--dim);font-size:12.5px;line-height:1.7;border-bottom:1px dashed var(--line)}
+  .refs li:last-child{border-bottom:none}
+  .refs li::before{content:"[" counter(r) "]";position:absolute;left:0;top:8px;font:700 12px var(--mono);color:var(--gold)}
+  .refs b{color:var(--fg);font-weight:600}
+
+  /* ==================== 讲义模式（纯 CSS 开关） ==================== */
+  #lec{position:absolute;opacity:0;width:1px;height:1px}
+  .mode-toggle{display:inline-flex;align-items:center;gap:8px;padding:8px 15px;border-radius:11px;font-size:13px;
+    color:var(--dim);cursor:pointer;border:1px dashed var(--line-2);transition:.22s var(--ease);white-space:nowrap;user-select:none}
+  .mode-toggle::before{content:"◫";font-size:14px}
+  .mode-toggle:hover{color:var(--fg);background:rgba(34,211,238,.12)}
+  #lec:focus-visible + .mode-toggle{outline:2px solid var(--cyan);outline-offset:3px}
+  body:has(#lec:checked) .mode-toggle{background:var(--cyan-d);color:var(--fg);border-style:solid;border-color:var(--cyan)}
+  body:has(#lec:checked){font-size:15.5px}
+  body:has(#lec:checked) header.hero, body:has(#lec:checked) section, body:has(#lec:checked) footer{max-width:980px}
+  body:has(#lec:checked) section .sub, body:has(#lec:checked) .qa-body{column-count:2;column-gap:38px;column-rule:1px solid var(--line);text-align:justify}
+  body:has(#lec:checked) .tl p{max-width:none}
+  @media(max-width:900px){body:has(#lec:checked) section .sub, body:has(#lec:checked) .qa-body{column-count:1}}
+
+  /* ==================== 滚动视差（scroll-driven，无 JS） ==================== */
+  /* 滚动视差已移除：大尺寸模糊层 + 滚动时间轴会拖垮渲染（顶部空白/卡死元凶之一） */
+
+  /* ==================== 性能说明 ==================== */
+  /* 注：曾用 content-visibility:auto 做长页按需渲染，但它与滚动驱动动画（animation-timeline）
+     及平滑滚动叠加时会导致白屏/渲染崩溃，已移除。静态页体积小，无需该优化。 */
+  /* #top 时走即时跳转，避免长距离平滑滚动与滚动时间轴叠加成帧风暴 */
+  html:has(body:target){scroll-behavior:auto}
+
+  /* ==================== 浅色主题（跟随系统） ==================== */
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#eef2f8;
+      --panel:#ffffff; --panel-2:#f4f8fc;
+      --card:#ffffff; --card-2:#f6f9fd;
+      --line:rgba(13,25,45,.10); --line-2:rgba(13,25,45,.22);
+      --fg:#12233a; --dim:#41546e; --faint:#6b7d94;
+      --cyan:#0e7490; --cyan-d:rgba(14,116,144,.10);
+      --magenta:#c2447f; --magenta-d:rgba(194,68,127,.10);
+      --gold:#a16207; --gold-d:rgba(161,98,7,.10);
+      --violet:#6d4fd0; --good:#0f766e; --bad:#be3448;
+      --shadow-sm:0 1px 2px rgba(13,25,45,.08);
+      --shadow-md:0 10px 30px -10px rgba(13,25,45,.16);
+      --shadow-lg:0 28px 70px -22px rgba(13,25,45,.22);
+    }
+    body{background:
+      radial-gradient(1100px 520px at 88% -6%, rgba(14,116,144,.10), transparent 62%),
+      radial-gradient(880px 460px at 4% 22%, rgba(194,68,127,.06), transparent 60%),
+      linear-gradient(rgba(13,25,45,.05) 1px, transparent 1px) 0 0/44px 44px,
+      linear-gradient(90deg, rgba(13,25,45,.05) 1px, transparent 1px) 0 0/44px 44px,
+      radial-gradient(1400px 760px at 78% -14%, #e3eaf4 0%, #e9eef6 46%, #eef2f8 100%)}
+    ::selection{background:rgba(14,116,144,.22)}
+    ::-webkit-scrollbar-track{background:#e5ebf3}
+    ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#b7c6d8,#9fb2c8);border-color:#e5ebf3}
+    header.hero h1{background:linear-gradient(92deg,#13293f 0%,#155e75 48%,#6d4fd0 74%,#c2447f 100%);
+      -webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 6px 30px rgba(14,116,144,.14))}
+    .hero-deco{opacity:.3}
+    .orb.o1{background:radial-gradient(circle,rgba(14,116,144,.16),transparent 70%)}
+    .orb.o2{background:radial-gradient(circle,rgba(194,68,127,.10),transparent 70%)}
+    .orb.o3{background:radial-gradient(circle,rgba(161,98,7,.08),transparent 70%)}
+    .eyebrow{background:rgba(14,116,144,.08);border-color:rgba(14,116,144,.28)}
+    .hero-stats .st{background:rgba(255,255,255,.72);border-color:var(--line)}
+    nav{background:rgba(255,255,255,.82);border-color:var(--line-2);
+      box-shadow:0 18px 44px -18px rgba(13,25,45,.28), inset 0 1px 0 rgba(255,255,255,.8)}
+    nav a:hover{background:rgba(14,116,144,.10)}
+    table.surf{background:linear-gradient(180deg,rgba(246,249,253,.9),rgba(255,255,255,.9))}
+    table.surf thead th{background:linear-gradient(180deg,rgba(14,116,144,.10),rgba(232,238,246,.9))}
+    table.surf tbody tr:hover td{background:rgba(14,116,144,.05)}
+    .note{background:linear-gradient(90deg,rgba(109,79,208,.07),rgba(109,79,208,.02));border-color:rgba(109,79,208,.22)}
+    .note.cyan{background:linear-gradient(90deg,var(--cyan-d),transparent);border-color:rgba(14,116,144,.22)}
+    .note.mag{background:linear-gradient(90deg,var(--magenta-d),transparent);border-color:rgba(194,68,127,.22)}
+    .note.gold{background:linear-gradient(90deg,var(--gold-d),transparent);border-color:rgba(161,98,7,.22)}
+    .note code{background:rgba(13,25,45,.06);border-color:rgba(161,98,7,.25)}
+    .formula{background:linear-gradient(180deg,rgba(161,98,7,.10),rgba(161,98,7,.04));border-color:rgba(161,98,7,.3);
+      box-shadow:0 6px 24px -12px rgba(161,98,7,.35)}
+    .gloss div{background:rgba(13,25,45,.035)}
+    details.qa summary:hover{background:rgba(14,116,144,.07)}
+    footer{background:linear-gradient(180deg,transparent,rgba(226,233,242,.7))}
+    .skip{background:rgba(14,116,144,.95);color:#fff}
+  }
+  /* ==================== 主题切换器（纯 CSS，自动/浅/深） ==================== */
+  .theme-switch{display:inline-flex;gap:3px;background:var(--panel);padding:4px;border-radius:11px;border:1px solid var(--line)}
+  .theme-switch input{position:absolute;opacity:0;width:1px;height:1px}
+  .theme-switch label{width:28px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:8px;
+    cursor:pointer;font-size:13px;color:var(--faint);transition:.2s var(--ease);user-select:none}
+  .theme-switch label:hover{color:var(--fg);background:rgba(34,211,238,.12)}
+  .theme-switch input:checked + label{background:linear-gradient(135deg,#0e7490,#155e75);color:#fff;
+    box-shadow:0 4px 12px -6px rgba(34,211,238,.6)}
+  .theme-switch input:focus-visible + label{outline:2px solid var(--cyan);outline-offset:2px}
+
+  /* ==================== 导航当前章节高亮（:target 联动） ==================== */
+  body:has(#s0:target) nav a[href="#s0"], body:has(#s1:target) nav a[href="#s1"],
+  body:has(#s2:target) nav a[href="#s2"], body:has(#s3:target) nav a[href="#s3"],
+  body:has(#s4:target) nav a[href="#s4"], body:has(#s5:target) nav a[href="#s5"],
+  body:has(#s6:target) nav a[href="#s6"], body:has(#s7:target) nav a[href="#s7"],
+  body:has(#s8:target) nav a[href="#s8"], body:has(#hist:target) nav a[href="#hist"],
+  body:has(#s9:target) nav a[href="#s9"]{color:var(--fg);background:rgba(34,211,238,.16)}
+
+  /* ==================== 表格迷你条形图 ==================== */
+  table.surf td .bar{display:block;height:4px;margin-top:5px;border-radius:3px;
+    background:linear-gradient(90deg,var(--cyan),var(--magenta));width:calc(var(--w,0) * 1%);opacity:.75}
+
+  /* ==================== 移动端表格首列固定 ==================== */
+  @media(max-width:640px){
+    table.surf td:first-child, table.surf th:first-child{position:sticky;left:0;z-index:2;background:var(--card)}
+    table.surf thead th:first-child{background:var(--card)}
+  }
+
+  /* ==================== 打印分页细节 ==================== */
+  @media print{
+    @page{margin:15mm}
+    figure, .card, .mt, .tl .ev, table.surf{break-inside:avoid}
+    h2, h3{break-after:avoid}
+  }
+  /* ==================== 手动浅色（选中 ☀ 时） ==================== */
+  html:has(#th-light:checked){
+    --bg:#eef2f8; --panel:#ffffff; --panel-2:#f4f8fc; --card:#ffffff; --card-2:#f6f9fd;
+    --line:rgba(13,25,45,.10); --line-2:rgba(13,25,45,.22);
+    --fg:#12233a; --dim:#41546e; --faint:#6b7d94;
+    --cyan:#0e7490; --cyan-d:rgba(14,116,144,.10);
+    --magenta:#c2447f; --magenta-d:rgba(194,68,127,.10);
+    --gold:#a16207; --gold-d:rgba(161,98,7,.10);
+    --violet:#6d4fd0; --good:#0f766e; --bad:#be3448;
+    --shadow-sm:0 1px 2px rgba(13,25,45,.08);
+    --shadow-md:0 10px 30px -10px rgba(13,25,45,.16);
+    --shadow-lg:0 28px 70px -22px rgba(13,25,45,.22);
+  }
+  html:has(#th-light:checked) body{background:
+    radial-gradient(1100px 520px at 88% -6%, rgba(14,116,144,.10), transparent 62%),
+    radial-gradient(880px 460px at 4% 22%, rgba(194,68,127,.06), transparent 60%),
+    linear-gradient(rgba(13,25,45,.05) 1px, transparent 1px) 0 0/44px 44px,
+    linear-gradient(90deg, rgba(13,25,45,.05) 1px, transparent 1px) 0 0/44px 44px,
+    radial-gradient(1400px 760px at 78% -14%, #e3eaf4 0%, #e9eef6 46%, #eef2f8 100%)}
+  html:has(#th-light:checked) ::selection{background:rgba(14,116,144,.22)}
+  html:has(#th-light:checked)::-webkit-scrollbar-track{background:#e5ebf3}
+  html:has(#th-light:checked)::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#b7c6d8,#9fb2c8);border-color:#e5ebf3}
+  html:has(#th-light:checked) header.hero h1{background:linear-gradient(92deg,#13293f 0%,#155e75 48%,#6d4fd0 74%,#c2447f 100%);
+    -webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 6px 30px rgba(14,116,144,.14))}
+  html:has(#th-light:checked) .hero-deco{opacity:.3}
+  html:has(#th-light:checked) .orb.o1{background:radial-gradient(circle,rgba(14,116,144,.16),transparent 70%)}
+  html:has(#th-light:checked) .orb.o2{background:radial-gradient(circle,rgba(194,68,127,.10),transparent 70%)}
+  html:has(#th-light:checked) .orb.o3{background:radial-gradient(circle,rgba(161,98,7,.08),transparent 70%)}
+  html:has(#th-light:checked) .eyebrow{background:rgba(14,116,144,.08);border-color:rgba(14,116,144,.28)}
+  html:has(#th-light:checked) .hero-stats .st{background:rgba(255,255,255,.72);border-color:var(--line)}
+  html:has(#th-light:checked) nav{background:rgba(255,255,255,.82);border-color:var(--line-2);
+    box-shadow:0 18px 44px -18px rgba(13,25,45,.28), inset 0 1px 0 rgba(255,255,255,.8)}
+  html:has(#th-light:checked) nav a:hover{background:rgba(14,116,144,.10)}
+  html:has(#th-light:checked) table.surf{background:linear-gradient(180deg,rgba(246,249,253,.9),rgba(255,255,255,.9))}
+  html:has(#th-light:checked) table.surf thead th{background:linear-gradient(180deg,rgba(14,116,144,.10),rgba(232,238,246,.9))}
+  html:has(#th-light:checked) table.surf tbody tr:hover td{background:rgba(14,116,144,.05)}
+  html:has(#th-light:checked) .note{background:linear-gradient(90deg,rgba(109,79,208,.07),rgba(109,79,208,.02));border-color:rgba(109,79,208,.22)}
+  html:has(#th-light:checked) .note.cyan{background:linear-gradient(90deg,var(--cyan-d),transparent);border-color:rgba(14,116,144,.22)}
+  html:has(#th-light:checked) .note.mag{background:linear-gradient(90deg,var(--magenta-d),transparent);border-color:rgba(194,68,127,.22)}
+  html:has(#th-light:checked) .note.gold{background:linear-gradient(90deg,var(--gold-d),transparent);border-color:rgba(161,98,7,.22)}
+  html:has(#th-light:checked) .note code{background:rgba(13,25,45,.06);border-color:rgba(161,98,7,.25)}
+  html:has(#th-light:checked) .formula{background:linear-gradient(180deg,rgba(161,98,7,.10),rgba(161,98,7,.04));border-color:rgba(161,98,7,.3);
+    box-shadow:0 6px 24px -12px rgba(161,98,7,.35)}
+  html:has(#th-light:checked) .gloss div{background:rgba(13,25,45,.035)}
+  html:has(#th-light:checked) details.qa summary:hover{background:rgba(14,116,144,.07)}
+  html:has(#th-light:checked) footer{background:linear-gradient(180deg,transparent,rgba(226,233,242,.7))}
+  html:has(#th-light:checked) .skip{background:rgba(14,116,144,.95);color:#fff}
+
+  /* ==================== 手动深色（选中 ☾ 时） ==================== */
+  html:has(#th-dark:checked){
+    --bg:#060912; --panel:#0d1526; --panel-2:#101b30; --card:#0f1a2c; --card-2:#14223b;
+    --line:rgba(255,255,255,.075); --line-2:rgba(255,255,255,.16);
+    --fg:#eef4fb; --dim:#9aabc2; --faint:#5e6f87;
+    --cyan:#22d3ee; --cyan-d:rgba(34,211,238,.14);
+    --magenta:#f472b6; --magenta-d:rgba(244,114,182,.14);
+    --gold:#fbbf24; --gold-d:rgba(251,191,36,.12);
+    --violet:#a78bfa; --good:#34d399; --bad:#fb7185;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+    --shadow-md:0 10px 30px -10px rgba(0,0,0,.6);
+    --shadow-lg:0 28px 70px -22px rgba(0,0,0,.78);
+  }
+  html:has(#th-dark:checked) body{background:
+    radial-gradient(1100px 520px at 88% -6%, rgba(34,211,238,.10), transparent 62%),
+    radial-gradient(880px 460px at 4% 22%, rgba(244,114,182,.06), transparent 60%),
+    linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px) 0 0/44px 44px,
+    linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px) 0 0/44px 44px,
+    radial-gradient(1400px 760px at 78% -14%, #16263f 0%, #0b1322 46%, #060912 100%)}
+  html:has(#th-dark:checked) ::selection{background:rgba(34,211,238,.3)}
+  html:has(#th-dark:checked)::-webkit-scrollbar-track{background:#0a1120}
+  html:has(#th-dark:checked)::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#1d3a55,#16283f);border-color:#0a1120}
+  html:has(#th-dark:checked) header.hero h1{background:linear-gradient(92deg,#f2f7fc 0%,#9fd8ff 48%,#c9a7ff 74%,#f472b6 100%);
+    -webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 6px 34px rgba(34,211,238,.18))}
+  html:has(#th-dark:checked) .hero-deco{opacity:.6}
+  html:has(#th-dark:checked) .orb.o1{background:radial-gradient(circle,rgba(34,211,238,.20),transparent 70%)}
+  html:has(#th-dark:checked) .orb.o2{background:radial-gradient(circle,rgba(244,114,182,.13),transparent 70%)}
+  html:has(#th-dark:checked) .orb.o3{background:radial-gradient(circle,rgba(251,191,36,.10),transparent 70%)}
+  html:has(#th-dark:checked) .eyebrow{background:rgba(34,211,238,.08);border-color:rgba(34,211,238,.25)}
+  html:has(#th-dark:checked) .hero-stats .st{background:rgba(13,21,38,.55);border-color:var(--line)}
+  html:has(#th-dark:checked) nav{background:rgba(10,16,28,.72);border-color:var(--line-2);
+    box-shadow:0 18px 44px -18px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.06)}
+  html:has(#th-dark:checked) nav a:hover{background:rgba(34,211,238,.12)}
+  html:has(#th-dark:checked) table.surf{background:linear-gradient(180deg,rgba(20,34,59,.5),rgba(15,26,44,.5))}
+  html:has(#th-dark:checked) table.surf thead th{background:linear-gradient(180deg,rgba(34,211,238,.10),rgba(13,21,38,.85))}
+  html:has(#th-dark:checked) table.surf tbody tr:hover td{background:rgba(34,211,238,.055)}
+  html:has(#th-dark:checked) .note{background:linear-gradient(90deg,rgba(167,139,250,.08),rgba(167,139,250,.02));border-color:rgba(167,139,250,.16)}
+  html:has(#th-dark:checked) .note.cyan{background:linear-gradient(90deg,var(--cyan-d),transparent);border-color:rgba(34,211,238,.16)}
+  html:has(#th-dark:checked) .note.mag{background:linear-gradient(90deg,var(--magenta-d),transparent);border-color:rgba(244,114,182,.16)}
+  html:has(#th-dark:checked) .note.gold{background:linear-gradient(90deg,var(--gold-d),transparent);border-color:rgba(251,191,36,.16)}
+  html:has(#th-dark:checked) .note code{background:rgba(0,0,0,.3);border-color:rgba(251,191,36,.18)}
+  html:has(#th-dark:checked) .formula{background:linear-gradient(180deg,rgba(251,191,36,.10),rgba(251,191,36,.04));border-color:rgba(251,191,36,.25);
+    box-shadow:0 6px 24px -12px rgba(251,191,36,.4)}
+  html:has(#th-dark:checked) .gloss div{background:rgba(255,255,255,.025)}
+  html:has(#th-dark:checked) details.qa summary:hover{background:rgba(34,211,238,.06)}
+  html:has(#th-dark:checked) footer{background:linear-gradient(180deg,transparent,rgba(13,21,38,.5))}
+  html:has(#th-dark:checked) .skip{background:rgba(34,211,238,.95);color:#06222c}
+  /* ==================== 自测题（纯 CSS 即时反馈） ==================== */
+  .quiz{background:linear-gradient(180deg,var(--card-2),var(--card));border:1px solid var(--line);border-radius:15px;padding:18px 20px;margin:14px 0}
+  .quiz .q{margin:0 0 12px;font-size:13.5px;font-weight:650;color:var(--fg);line-height:1.75}
+  .quiz .q .tag{font:700 11px var(--mono);color:var(--cyan);background:var(--cyan-d);border:1px solid rgba(34,211,238,.3);border-radius:7px;padding:2px 8px;margin-right:9px}
+  .quiz .opts{display:grid;gap:8px}
+  .quiz .opt{display:flex;align-items:center;gap:10px;padding:9px 13px;border:1px solid var(--line);border-radius:10px;
+    cursor:pointer;font-size:13px;color:var(--dim);transition:.2s var(--ease)}
+  .quiz .opt:hover{border-color:var(--cyan);color:var(--fg);background:rgba(34,211,238,.07)}
+  .quiz .opt input{accent-color:var(--cyan);width:15px;height:15px;flex:none}
+  .quiz .opt .key{font:700 12px var(--mono);color:var(--faint);flex:none}
+  .quiz .opt:has(input:checked){border-color:var(--cyan);color:var(--fg);background:rgba(34,211,238,.12)}
+  .quiz .fb{display:none;margin-top:12px;padding:11px 14px;border-radius:10px;font-size:12.5px;line-height:1.78}
+  .quiz .fb.ok{background:rgba(52,211,153,.10);border:1px solid rgba(52,211,153,.35);color:var(--good)}
+  .quiz .fb.no{background:rgba(251,113,133,.09);border:1px solid rgba(251,113,133,.32);color:var(--bad)}
+  .quiz:has(input[data-ok]:checked) .fb.ok{display:block}
+  .quiz:has(input:not([data-ok]):checked) .fb.no{display:block}
+  .quiz:has(input[data-ok]:checked) .fb.no{display:none}
+
+  /* ==================== 翻牌术语卡（纯 CSS） ==================== */
+  .flip-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:14px;margin:16px 0}
+  .flip{perspective:900px;height:152px;cursor:pointer;display:block}
+  .flip input{position:absolute;opacity:0;width:1px;height:1px}
+  .flip .inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .6s var(--ease)}
+  .flip input:checked ~ .inner{transform:rotateY(180deg)}
+  .flip .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    border-radius:14px;border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:8px;padding:16px 14px;text-align:center}
+  .flip .front{background:linear-gradient(180deg,var(--card-2),var(--card))}
+  .flip .back{background:linear-gradient(160deg,rgba(34,211,238,.15),rgba(244,114,182,.10));
+    transform:rotateY(180deg);border-color:rgba(34,211,238,.35)}
+  .flip .front b{font-size:14.5px;color:var(--fg)}
+  .flip .front em{font-style:normal;font:600 11px var(--mono);color:var(--faint);letter-spacing:.04em}
+  .flip .back span{font-size:12px;color:var(--fg);line-height:1.7}
+  .flip .hint{position:absolute;bottom:10px;font:600 10px var(--mono);color:var(--faint)}
+  .flip:hover .inner{transform:translateY(-3px)}
+  .flip input:checked ~ .inner:hover{transform:rotateY(180deg)}
+  .flip input:focus-visible ~ .inner{outline:2px solid var(--cyan);outline-offset:3px;border-radius:14px}
+  /* ==================== 测验全对彩蛋（纯 CSS 判定） ==================== */
+  .score{display:none;margin:18px 0 2px;padding:20px;border-radius:16px;text-align:center;
+    background:linear-gradient(135deg,rgba(251,191,36,.16),rgba(244,114,182,.10));
+    border:1px solid rgba(251,191,36,.42);box-shadow:0 18px 46px -18px rgba(251,191,36,.4)}
+  .score b{display:block;font-size:15.5px;color:var(--gold)}
+  .score span{display:block;margin-top:8px;color:var(--dim);font-size:12.5px;line-height:1.78}
+  body:has(input[name="q1"][data-ok]:checked):has(input[name="q2"][data-ok]:checked):has(input[name="q3"][data-ok]:checked):has(input[name="q4"][data-ok]:checked):has(input[name="q5"][data-ok]:checked) .score{display:block}
+  .hint-line{margin:14px 0 0;color:var(--faint);font-size:12px;text-align:center}
+
+  /* ==================== 术语索引（英中互查） ==================== */
+  .idx-list{margin:6px 0 0}
+  .idx-list .grp{display:flex;align-items:center;gap:11px;margin:14px 0 6px}
+  .idx-list .grp i{font:800 12.5px/1 var(--mono);font-style:normal;color:var(--cyan);background:var(--cyan-d);
+    border:1px solid rgba(34,211,238,.3);width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+  .idx-list .grp hr{flex:1;border:none;border-top:1px solid var(--line);margin:0}
+  .idx-list .row{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;padding:7px 2px;border-bottom:1px dashed var(--line);font-size:12.5px}
+  .idx-list .row:last-child{border-bottom:none}
+  .idx-list .row .en{min-width:168px;font:600 12.5px var(--mono);color:var(--fg)}
+  .idx-list .row .zh{min-width:88px;color:var(--magenta);font-weight:650}
+  .idx-list .row .df{flex:1;min-width:220px;color:var(--dim);line-height:1.65}
+  .idx-list .row .to{margin-left:auto;font:600 11px var(--mono);color:var(--cyan);white-space:nowrap}
+  /* ==================== 动手实验模板 ==================== */
+  .steps{margin:6px 0 0;padding-left:20px}
+  .steps li{margin:9px 0;color:var(--dim);font-size:13px;line-height:1.72}
+  .steps li b{color:var(--fg)}
+  table.surf td.blank{height:32px;background:repeating-linear-gradient(45deg,transparent,transparent 6px,rgba(255,255,255,.022) 6px,rgba(255,255,255,.022) 12px)}
+
+  /* ==================== 七桥互动谜题（纯 CSS） ==================== */
+  .p7{background:linear-gradient(180deg,var(--card-2),var(--card));border:1px solid var(--line);border-radius:18px;padding:20px}
+  .p7-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .p7-tabs input{position:absolute;opacity:0;width:1px;height:1px}
+  .p7-tabs label{padding:7px 15px;border-radius:10px;font-size:12.5px;font-weight:600;color:var(--dim);
+    border:1px solid var(--line);cursor:pointer;transition:.2s var(--ease)}
+  .p7-tabs label:hover{color:var(--fg);border-color:var(--cyan)}
+  .p7-tabs input:checked + label{background:linear-gradient(135deg,#0e7490,#155e75);color:#fff;border-color:transparent;
+    box-shadow:0 5px 16px -7px rgba(34,211,238,.7)}
+  .p7-tabs input:focus-visible + label{outline:2px solid var(--cyan);outline-offset:3px}
+  .p7-grid{display:grid;grid-template-columns:minmax(320px,1.15fr) 1fr;gap:16px}
+  @media(max-width:900px){.p7-grid{grid-template-columns:1fr}}
+  .p7-map svg{display:block;width:100%;height:auto;background:radial-gradient(circle at 50% 40%,#0d1a30,#071020 85%);
+    border:1px solid var(--line);border-radius:14px}
+  .p7-p{display:none;color:var(--dim);font-size:12.8px;line-height:1.8}
+  .p7-p b{color:var(--fg)}
+  .p7-hint{color:var(--faint);font-size:12.5px;line-height:1.75}
+  .p7:has(.p7-tabs input:checked) .p7-hint{display:none}
+  .p7:has(#p7a:checked) #pp-a, .p7:has(#p7b:checked) #pp-b,
+  .p7:has(#p7c:checked) #pp-c, .p7:has(#p7d:checked) #pp-d{display:block}
+  .p7:has(#p7a:checked) .hl-a, .p7:has(#p7b:checked) .hl-b,
+  .p7:has(#p7c:checked) .hl-c, .p7:has(#p7d:checked) .hl-d{
+    stroke:#fbbf24!important;filter:drop-shadow(0 0 7px rgba(251,191,36,.85))}
+  .p7-reveal{display:inline-flex;align-items:center;gap:9px;margin-top:16px;padding:9px 18px;border-radius:999px;cursor:pointer;
+    background:rgba(251,191,36,.10);border:1px solid rgba(251,191,36,.35);color:var(--gold);font-size:13px;font-weight:650;transition:.22s var(--ease)}
+  .p7-reveal:hover{background:rgba(251,191,36,.18);transform:translateY(-1px)}
+  .p7-reveal input{accent-color:var(--gold);width:15px;height:15px}
+  .p7-ans{display:none;margin-top:14px;padding:15px 18px;border-radius:13px;
+    background:linear-gradient(90deg,rgba(251,191,36,.10),rgba(244,114,182,.06));border:1px solid rgba(251,191,36,.3);
+    color:var(--dim);font-size:13px;line-height:1.82}
+  .p7-ans b{color:var(--fg)}
+  .p7:has(#p7ans:checked) .p7-ans{display:block}
+  /* ==================== 练习答案揭晓（纯 CSS） ==================== */
+  .revl{display:inline-flex;align-items:center;gap:9px;margin:12px 0 0;padding:8px 16px;border-radius:999px;cursor:pointer;
+    background:rgba(52,211,153,.10);border:1px solid rgba(52,211,153,.35);color:var(--good);font-size:12.5px;font-weight:650;transition:.22s var(--ease)}
+  .revl:hover{background:rgba(52,211,153,.18);transform:translateY(-1px)}
+  .revl input{accent-color:var(--good);width:15px;height:15px}
+  .revb{display:none;margin-top:12px;padding:14px 17px;border-radius:12px;font-size:12.8px;line-height:1.82;
+    background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.28);color:var(--dim)}
+  .revb b{color:var(--fg)}
+  .revl:has(input:checked) + .revb{display:block}
+  /* ==================== 通用 code 样式 ==================== */
+  code{font:600 .92em var(--mono);color:var(--gold);background:rgba(251,191,36,.08);padding:1px 6px;border-radius:5px}
+
+  /* ==================== 七桥 · 桥数改造实验室（纯 CSS） ==================== */
+  .lab2{background:linear-gradient(180deg,var(--card-2),var(--card));border:1px solid var(--line);border-radius:18px;padding:20px;margin-top:18px}
+  .knobs{display:flex;gap:18px;flex-wrap:wrap;margin:4px 0 16px}
+  .knob{flex:1;min-width:250px;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:13px 15px}
+  .knob .kt{font-size:12.5px;font-weight:650;color:var(--fg);margin-bottom:9px}
+  .knob .opts{display:flex;gap:7px}
+  .knob input{position:absolute;opacity:0;width:1px;height:1px}
+  .knob label{flex:1;text-align:center;padding:8px 0;border-radius:9px;border:1px solid var(--line);cursor:pointer;
+    font:650 13px var(--mono);color:var(--dim);transition:.2s var(--ease)}
+  .knob label:hover{border-color:var(--cyan);color:var(--fg)}
+  .knob input:checked + label{background:linear-gradient(135deg,#0e7490,#155e75);color:#fff;border-color:transparent;
+    box-shadow:0 5px 16px -7px rgba(34,211,238,.7)}
+  .knob input:focus-visible + label{outline:2px solid var(--cyan);outline-offset:2px}
+  .vv{display:none;padding:14px 17px;border-radius:13px;font-size:12.8px;line-height:1.82;color:var(--dim)}
+  .vv b{color:var(--fg)}
+  .vv.ok{background:rgba(52,211,153,.09);border:1px solid rgba(52,211,153,.32)}
+  .vv.no{background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.3)}
+  .lab2:has(#k10:checked):has(#k20:checked) .vv-00{display:block}
+  .lab2:has(#k10:checked):has(#k21:checked) .vv-01{display:block}
+  .lab2:has(#k10:checked):has(#k22:checked) .vv-02{display:block}
+  .lab2:has(#k11:checked):has(#k20:checked) .vv-10{display:block}
+  .lab2:has(#k11:checked):has(#k21:checked) .vv-11{display:block}
+  .lab2:has(#k11:checked):has(#k22:checked) .vv-12{display:block}
+  .lab2:has(#k12:checked):has(#k20:checked) .vv-20{display:block}
+  .lab2:has(#k12:checked):has(#k21:checked) .vv-21{display:block}
+  .lab2:has(#k12:checked):has(#k22:checked) .vv-22{display:block}
+</style>
+</head>
+<body id="top">
+
+<div class="progress" aria-hidden="true"></div>
+<a class="skip" href="#s1">跳到正文</a>
+
+<!-- ================= 共享 SVG 滤镜 / 渐变 / 箭头 ================= -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="glowC" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowM" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowG" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softShadow" x="-40%" y="-40%" width="180%" height="200%">
+      <feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#000" flood-opacity=".55"/>
+    </filter>
+    <linearGradient id="gCup" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="rgba(34,211,238,.26)"/><stop offset="1" stop-color="rgba(34,211,238,.05)"/>
+    </linearGradient>
+    <linearGradient id="gDonut" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="rgba(244,114,182,.30)"/><stop offset="1" stop-color="rgba(244,114,182,.06)"/>
+    </linearGradient>
+    <linearGradient id="gShade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="rgba(255,255,255,.10)"/><stop offset="55%" stop-color="rgba(255,255,255,0)"/><stop offset="100%" stop-color="rgba(0,0,0,.32)"/>
+    </linearGradient>
+    <linearGradient id="gTri" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="rgba(244,114,182,.22)"/><stop offset="1" stop-color="rgba(244,114,182,.08)"/>
+    </linearGradient>
+    <linearGradient id="gBarC" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="rgba(34,211,238,.95)"/><stop offset="1" stop-color="rgba(34,211,238,.42)"/>
+    </linearGradient>
+    <linearGradient id="gBarM" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="rgba(244,114,182,.95)"/><stop offset="1" stop-color="rgba(244,114,182,.48)"/>
+    </linearGradient>
+    <linearGradient id="gBarM2" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="rgba(244,114,182,.45)"/><stop offset="1" stop-color="rgba(244,114,182,.18)"/>
+    </linearGradient>
+    <linearGradient id="gAreaM" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="rgba(167,139,250,.30)"/><stop offset="1" stop-color="rgba(167,139,250,.02)"/>
+    </linearGradient>
+    <radialGradient id="gBallC" cx="35%" cy="30%">
+      <stop offset="0" stop-color="rgba(34,211,238,.34)"/><stop offset="72%" stop-color="rgba(34,211,238,.10)"/><stop offset="100%" stop-color="rgba(34,211,238,0)"/>
+    </radialGradient>
+    <radialGradient id="gBallM" cx="35%" cy="30%">
+      <stop offset="0" stop-color="rgba(244,114,182,.32)"/><stop offset="72%" stop-color="rgba(244,114,182,.10)"/><stop offset="100%" stop-color="rgba(244,114,182,0)"/>
+    </radialGradient>
+    <radialGradient id="gBallG" cx="35%" cy="30%">
+      <stop offset="0" stop-color="rgba(251,191,36,.32)"/><stop offset="72%" stop-color="rgba(251,191,36,.10)"/><stop offset="100%" stop-color="rgba(251,191,36,0)"/>
+    </radialGradient>
+    <radialGradient id="gSphere" cx="34%" cy="28%">
+      <stop offset="0" stop-color="rgba(251,191,36,.38)"/><stop offset="58%" stop-color="rgba(251,191,36,.12)"/><stop offset="100%" stop-color="rgba(251,191,36,.03)"/>
+    </radialGradient>
+    <marker id="arrG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#fbbf24"/>
+    </marker>
+    <marker id="arrC" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#22d3ee"/>
+    </marker>
+    <marker id="arrM" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f472b6"/>
+    </marker>
+    <marker id="arrW" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="rgba(255,255,255,.45)"/>
+    </marker>
+  </defs>
+</svg>
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <div class="orb o1" aria-hidden="true"></div>
+  <div class="orb o2" aria-hidden="true"></div>
+  <div class="orb o3" aria-hidden="true"></div>
+  <div class="hero-deco" aria-hidden="true">
+    <svg viewBox="0 0 540 440" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle class="ring1" cx="392" cy="198" r="156" stroke="rgba(34,211,238,.18)" stroke-width="1.2"/>
+      <circle class="ring2" cx="392" cy="198" r="112" stroke="rgba(244,114,182,.26)" stroke-width="1.2" stroke-dasharray="5 9"/>
+      <circle class="ring3" cx="444" cy="108" r="60" stroke="rgba(251,191,36,.22)" stroke-width="1.2"/>
+      <path class="knotflow" d="M104 372 C 214 286, 300 432, 416 326 S 540 296, 520 168" stroke="rgba(167,139,250,.3)" stroke-width="1.3"/>
+    </svg>
+  </div>
+  <div class="eyebrow"><span class="pulse"></span>Topology · Persistent Homology · Invariants</div>
+  <h1>拓扑学：从「谁吸引谁」里抽身，只看结构本身</h1>
+  <p class="lede">拓扑学（Topology）研究在<b>同胚（连续且可逆地连续变形）</b>下保持不变的性质——可以拉伸、压缩、弯曲，<b>唯独不能撕裂、不能粘连</b>。它只关心三件事：<b>连不连通、有几个洞、把手（亏格）多少</b>。这些量与坐标系、距离大小、动力学机制<b>完全无关</b>。本页是一个零依赖、纯 HTML/CSS 的静态教材，把拓扑度量讲到底。</p>
+  <div class="hero-stats">
+    <div class="st"><b>14</b><span>章节</span></div>
+    <div class="st"><b>19</b><span>幅 SVG 图解</span></div>
+    <div class="st"><b>0</b><span>行 JavaScript</span></div>
+    <div class="st"><b>0</b><span>外部依赖</span></div>
+    <div class="st"><b>≈18</b><span>分钟读完</span></div>
+    <div class="st"><b>β<sub>k</sub></b><span>持续同调输出</span></div>
+  </div>
+  <div class="def">
+    <div class="chip"><b>同胚 Homeomorphism</b><span>连续、双射、逆也连续的映射。它是拓扑学的"全等"——咖啡杯与甜甜圈互为同胚。</span></div>
+    <div class="chip"><b>β₀ · 连通分支</b><span>空间断成了几块。点云聚成 3 簇，则 β₀ = 3。</span></div>
+    <div class="chip"><b>β₁ · 洞</b><span>无法收缩为一点的闭合回路。甜甜圈的中空圆环给出 β₁ = 2。</span></div>
+    <div class="chip"><b>g · 亏格</b><span>闭曲面上"把手"的个数。球面 g=0，环面 g=1，双孔面包 g=2。</span></div>
+  </div>
+</header>
+
+<!-- ================= NAV ================= -->
+<div class="nav-wrap">
+  <nav aria-label="章节导航">
+    <a href="#s0">全景图</a>
+    <a href="#s1">橡皮膜几何</a>
+    <a href="#s2">拓扑不变量</a>
+    <a href="#s3">Betti 数</a>
+    <a href="#s4">单纯复形过滤</a>
+    <a href="#s5">持续同调</a>
+    <a href="#algo">矩阵约简</a>
+    <a href="#s6">条形码与持久图</a>
+    <a href="#lab">动手实验</a>
+    <a href="#s7">曲面分类</a>
+    <a href="#s8">应用图谱</a>
+    <a href="#hist">历史脉络</a>
+    <a href="#quiz">自测</a>
+    <a href="#s9">附录速查</a>
+    <input type="checkbox" id="lec">
+    <label for="lec" class="mode-toggle">讲义模式</label>
+    <span class="theme-switch" role="radiogroup" aria-label="主题切换">
+      <input type="radio" name="theme" id="th-auto" checked>
+      <label for="th-auto" title="跟随系统">◐</label>
+      <input type="radio" name="theme" id="th-light">
+      <label for="th-light" title="强制浅色">☀</label>
+      <input type="radio" name="theme" id="th-dark">
+      <label for="th-dark" title="强制深色">☾</label>
+    </span>
+  </nav>
+</div>
+
+<!-- ================= 00 · 全景图谱 ================= -->
+<section id="s0">
+  <div class="sec-head">
+    <h2><span class="idx">00</span>全景图谱：从点云到拓扑签名的全链路</h2>
+    <p class="sub">先给一张<b>总览图</b>：拓扑数据分析的标准流水线——离散点云经 Rips 过滤长成单纯复形，持续同调记录每个特征的生灭，条形码/持久图可视化这些履历，最终压缩成可进入机器学习的<b>拓扑签名</b>。后文逐站详解。</p>
+  </div>
+  <figure class="frame">
+    <svg viewBox="0 0 1120 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="从点云到拓扑签名的流程图">
+      <text x="36" y="34" fill="#5e6f87" font-size="11" font-family="monospace" letter-spacing="2.4">PIPELINE · 从数据到形状，从形状到特征</text>
+      <!-- ① 点云 -->
+      <rect x="36" y="64" width="182" height="110" rx="14" fill="rgba(34,211,238,.08)" stroke="rgba(34,211,238,.5)" stroke-width="1.6"/>
+      <g text-anchor="middle" font-family="monospace">
+        <text x="127" y="97" fill="#22d3ee" font-size="14" font-weight="700">① 点云数据</text>
+        <text x="127" y="122" fill="#9aabc2" font-size="11">｛pᵢ｝⊂ ℝⁿ</text>
+        <text x="127" y="144" fill="#9aabc2" font-size="11">尺度参数 ε</text>
+      </g>
+      <line x1="222" y1="119" x2="262" y2="119" stroke="rgba(255,255,255,.35)" stroke-width="2" marker-end="url(#arrW)"/>
+      <!-- ② Rips 过滤 -->
+      <rect x="272" y="64" width="196" height="110" rx="14" fill="rgba(34,211,238,.08)" stroke="rgba(34,211,238,.5)" stroke-width="1.6"/>
+      <g text-anchor="middle" font-family="monospace">
+        <text x="370" y="97" fill="#22d3ee" font-size="14" font-weight="700">② Rips 复形过滤</text>
+        <text x="370" y="122" fill="#9aabc2" font-size="11">K(ε₁) ⊆ K(ε₂) ⊆ ⋯</text>
+        <text x="370" y="144" fill="#9aabc2" font-size="11">只增不减的嵌套序列</text>
+      </g>
+      <line x1="472" y1="119" x2="512" y2="119" stroke="rgba(255,255,255,.35)" stroke-width="2" marker-end="url(#arrW)"/>
+      <!-- ③ 持续同调 -->
+      <rect x="522" y="64" width="196" height="110" rx="14" fill="rgba(244,114,182,.09)" stroke="rgba(244,114,182,.5)" stroke-width="1.6"/>
+      <g text-anchor="middle" font-family="monospace">
+        <text x="620" y="97" fill="#f472b6" font-size="14" font-weight="700">③ 持续同调</text>
+        <text x="620" y="122" fill="#9aabc2" font-size="11">矩阵约简 · 生/死配对</text>
+        <text x="620" y="144" fill="#9aabc2" font-size="11">(b, d) 每个洞的履历</text>
+      </g>
+      <!-- 分叉箭头 -->
+      <path d="M718 104 C 742 100, 748 82, 762 78" fill="none" stroke="rgba(255,255,255,.32)" stroke-width="1.8" marker-end="url(#arrW)"/>
+      <path d="M718 136 C 742 140, 748 212, 762 214" fill="none" stroke="rgba(255,255,255,.32)" stroke-width="1.8" marker-end="url(#arrW)"/>
+      <!-- ④a 条形码 -->
+      <rect x="770" y="40" width="142" height="76" rx="12" fill="rgba(244,114,182,.07)" stroke="rgba(244,114,182,.42)" stroke-width="1.4"/>
+      <text x="841" y="70" text-anchor="middle" fill="#f472b6" font-size="12.5" font-weight="700" font-family="monospace">④a 条形码</text>
+      <text x="841" y="92" text-anchor="middle" fill="#9aabc2" font-size="10.5" font-family="monospace">横条 = 持久性</text>
+      <!-- ④b 持久图 -->
+      <rect x="770" y="176" width="142" height="76" rx="12" fill="rgba(244,114,182,.07)" stroke="rgba(244,114,182,.42)" stroke-width="1.4"/>
+      <text x="841" y="206" text-anchor="middle" fill="#f472b6" font-size="12.5" font-weight="700" font-family="monospace">④b 持久图</text>
+      <text x="841" y="228" text-anchor="middle" fill="#9aabc2" font-size="10.5" font-family="monospace">距对角线 = 持久性</text>
+      <!-- 汇合箭头 -->
+      <path d="M912 78 C 930 82, 934 100, 942 106" fill="none" stroke="rgba(255,255,255,.32)" stroke-width="1.8" marker-end="url(#arrW)"/>
+      <path d="M912 214 C 930 208, 934 142, 942 132" fill="none" stroke="rgba(255,255,255,.32)" stroke-width="1.8" marker-end="url(#arrW)"/>
+      <!-- ⑤ 拓扑签名 -->
+      <rect x="950" y="64" width="134" height="110" rx="14" fill="rgba(251,191,36,.10)" stroke="rgba(251,191,36,.55)" stroke-width="1.6" filter="url(#glowG)"/>
+      <g text-anchor="middle" font-family="monospace">
+        <text x="1017" y="97" fill="#fbbf24" font-size="13.5" font-weight="700">⑤ 拓扑签名</text>
+        <text x="1017" y="122" fill="#9aabc2" font-size="11">β₀ β₁ β₂</text>
+        <text x="1017" y="144" fill="#9aabc2" font-size="11">χ · 亏格 g</text>
+      </g>
+      <!-- 下行箭头 + 下游带 -->
+      <line x1="1017" y1="178" x2="1017" y2="244" stroke="rgba(255,255,255,.32)" stroke-width="2" marker-end="url(#arrW)"/>
+      <rect x="36" y="256" width="1048" height="52" rx="13" fill="rgba(251,191,36,.07)" stroke="rgba(251,191,36,.32)" stroke-width="1.4"/>
+      <text x="560" y="287" text-anchor="middle" fill="#c9a55b" font-size="12.5" font-family="monospace">下游：向量化（Landscape · 持续熵 · Betti 曲线）→ 机器学习 / 可视化 · TDA 应用（聚类 · 材料 · 传感 · 宇宙）</text>
+    </svg>
+    <figcaption>全链路总览：①→②→③ 是拓扑计算，④ 是可视化读法，⑤ 是最终产物——一条对坐标、尺度、噪声都稳健的特征流水线。</figcaption>
+  </figure>
+</section>
+
+<!-- ================= 01 ================= -->
+<section id="s1">
+  <div class="sec-head">
+    <h2><span class="idx">01</span>橡皮膜几何学：允许与禁止的操作</h2>
+    <p class="sub">把几何体想象成用<b>理想的橡皮膜</b>做成：可以任意拉伸、压缩、弯曲、扭曲，但<b>不许撕开裂缝，也不许把两点粘在一起</b>。凡是经过这类操作仍保持不变的性质，就是拓扑性质。著名的例子是：咖啡杯 ≅ 甜甜圈——杯柄的孔洞恰好对应甜甜圈的中空圆环。</p>
+  </div>
+
+  <div class="grid g-viz">
+    <figure class="frame">
+      <svg viewBox="0 0 620 232" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="咖啡杯与甜甜圈同胚示意">
+        <!-- 咖啡杯 -->
+        <g transform="translate(56,22)">
+          <ellipse cx="92" cy="176" rx="76" ry="10" fill="rgba(0,0,0,.42)"/>
+          <!-- 蒸汽 -->
+          <g stroke="rgba(255,255,255,.22)" stroke-width="1.8" stroke-linecap="round" fill="none">
+            <path class="flow-slow" d="M66 18 C 58 6, 74 2, 66 -10"/>
+            <path class="flow-slow" d="M104 14 C 96 2, 112 -2, 104 -14"/>
+          </g>
+          <!-- 杯身 -->
+          <path d="M30 42 L152 42 L140 140 Q137 158 120 158 L62 158 Q45 158 42 140 Z" fill="url(#gCup)" stroke="#22d3ee" stroke-width="2.2" stroke-linejoin="round" filter="url(#glowC)"/>
+          <path d="M42 62 L146 62 L140 140 Q137 158 120 158 L62 158 Q45 158 42 140 Z" fill="url(#gShade)" opacity=".5"/>
+          <!-- 杯口 + 咖啡面 -->
+          <ellipse cx="91" cy="42" rx="61" ry="13" fill="rgba(34,211,238,.10)" stroke="#22d3ee" stroke-width="2.2"/>
+          <ellipse cx="91" cy="43" rx="42" ry="8" fill="rgba(251,191,36,.22)" stroke="rgba(251,191,36,.5)" stroke-width="1.2"/>
+          <ellipse cx="80" cy="41" rx="12" ry="2.6" fill="rgba(255,255,255,.18)"/>
+          <!-- 高光 -->
+          <path d="M52 60 L58 132" stroke="rgba(255,255,255,.22)" stroke-width="4" stroke-linecap="round"/>
+          <!-- 杯柄：一个洞 -->
+          <path d="M152 64 C 200 60, 206 118, 154 120" fill="none" stroke="#22d3ee" stroke-width="2.6" stroke-linecap="round" filter="url(#glowC)"/>
+          <path d="M152 78 C 186 75, 191 106, 153 107" fill="none" stroke="rgba(34,211,238,.5)" stroke-width="1.7" stroke-linecap="round"/>
+          <circle cx="169" cy="92" r="12" fill="url(#gBallM)"/>
+          <circle cx="169" cy="92" r="3.6" fill="#f472b6" filter="url(#glowM)"/>
+          <text x="182" y="88" fill="#f472b6" font-size="11" font-family="monospace">洞 = 1</text>
+        </g>
+        <!-- 同胚箭头 -->
+        <g>
+          <path class="flow" d="M268 96 C 300 78, 336 78, 366 94" fill="none" stroke="#fbbf24" stroke-width="2.4" stroke-linecap="round" marker-end="url(#arrG)"/>
+          <path class="flow" d="M366 136 C 336 152, 300 152, 268 134" fill="none" stroke="#fbbf24" stroke-width="2.4" stroke-linecap="round" marker-end="url(#arrG)"/>
+          <text x="317" y="202" fill="#5e6f87" font-size="11.5" font-family="monospace" text-anchor="middle">连续可逆变形 · 同胚 ≅</text>
+        </g>
+        <!-- 甜甜圈 -->
+        <g transform="translate(396,22)">
+          <ellipse cx="94" cy="182" rx="88" ry="11" fill="rgba(0,0,0,.42)"/>
+          <!-- 管体 -->
+          <ellipse cx="94" cy="100" rx="88" ry="54" fill="url(#gDonut)" stroke="#f472b6" stroke-width="2.4" filter="url(#glowM)"/>
+          <ellipse cx="94" cy="100" rx="88" ry="54" fill="url(#gShade)" opacity=".55"/>
+          <!-- 中洞 + 内阴影 -->
+          <ellipse cx="94" cy="100" rx="35" ry="20" fill="#080d18" stroke="#f472b6" stroke-width="2.2"/>
+          <path d="M62 94 C 74 112, 114 112, 126 94" fill="none" stroke="rgba(0,0,0,.5)" stroke-width="4" stroke-linecap="round"/>
+          <!-- 管面高光 -->
+          <path d="M26 76 C 54 56, 134 56, 162 76" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="5" stroke-linecap="round"/>
+          <path d="M30 126 C 58 144, 130 144, 158 126" fill="none" stroke="rgba(244,114,182,.35)" stroke-width="1.6" stroke-linecap="round"/>
+          <!-- 洞标记 -->
+          <circle cx="94" cy="100" r="13" fill="url(#gBallC)"/>
+          <circle cx="94" cy="100" r="3.6" fill="#22d3ee" filter="url(#glowC)"/>
+          <text x="106" y="78" fill="#22d3ee" font-size="11" font-family="monospace">洞 = 1</text>
+        </g>
+      </svg>
+      <figcaption>咖啡杯的杯柄孔洞与甜甜圈的中空圆环——两者同胚，拓扑上是"同一个"空间。</figcaption>
+    </figure>
+
+    <div>
+      <div class="card">
+        <h3><span class="dot" style="color:var(--good)"></span>允许：橡皮膜操作</h3>
+        <p>拉伸 · 压缩 · 弯曲 · 扭曲 · 倾斜投影。这些操作改变度量（距离、角度、面积），但不改变"结构"。</p>
+      </div>
+      <div class="card" style="margin-top:18px">
+        <h3><span class="dot" style="color:var(--bad)"></span>禁止：破坏连通关系</h3>
+        <p>撕裂（把一处断开）、粘连（把两处焊上）、穿刺。一旦允许这些操作，任何空间都能变成任何空间，"结构"一词就失去意义。</p>
+      </div>
+      <div class="note cyan"><b>为什么叫"橡皮膜几何"？</b>欧几里得几何关心长度与角度；微分几何关心曲率；而拓扑学把度量信息全部丢掉，只保留"连通方式"。这也是为什么拓扑量对坐标系、尺度、噪声都极其稳健。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 02 ================= -->
+<section id="s2">
+  <div class="sec-head">
+    <h2><span class="idx">02</span>拓扑不变量：同胚下不动的量</h2>
+    <p class="sub">如果一个量在同胚映射下保持不变，就称为<b>拓扑不变量</b>。它是我们区分"不同胚"空间的武器：只要某项不变量不同，两个空间就一定不同胚。下面是最常用的几个。</p>
+  </div>
+
+  <div class="tbl-wrap">
+    <table class="surf">
+      <thead>
+        <tr><th>不变量</th><th>直观含义</th><th>球面 S²</th><th>环面 T²</th><th>双孔面包</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>β₀</code> 连通分支数</td><td>空间断成几块</td><td class="num">1</td><td class="num">1</td><td class="num">1</td></tr>
+        <tr><td><code>β₁</code> 一维洞数</td><td>不可收缩的闭合回路</td><td class="num">0</td><td class="num"><span class="bar" style="--w:50"></span>2</td><td class="num"><span class="bar" style="--w:100"></span>4</td></tr>
+        <tr><td><code>β₂</code> 二维空腔数</td><td>被面包裹住的内腔</td><td class="num">1</td><td class="num">1</td><td class="num">1</td></tr>
+        <tr><td><code>χ</code> 欧拉示性数</td><td>β₀ − β₁ + β₂</td><td class="num">2</td><td class="num">0</td><td class="num neg">−2</td></tr>
+        <tr><td><code>g</code> 亏格</td><td>把手个数</td><td class="num">0</td><td class="num"><span class="bar" style="--w:50"></span>1</td><td class="num"><span class="bar" style="--w:100"></span>2</td></tr>
+        <tr><td>可定向性</td><td>能否一致地定义"外侧"</td><td class="num">是</td><td class="num">是</td><td class="num">是</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid g2" style="margin-top:18px">
+    <div class="card">
+      <h3><span class="dot" style="color:var(--gold)"></span>欧拉示性数与亏格</h3>
+      <p>对可定向闭曲面，三者被一条公式锁死：</p>
+      <div class="formula">χ = β₀ − β₁ + β₂ = 2 − 2g</div>
+      <p>球面 2 = 2−0；环面 0 = 2−2；双孔面包 −2 = 2−4。看到 χ 就知道亏格，看到亏格就知道洞的数量。</p>
+    </div>
+    <div class="card">
+      <h3><span class="dot" style="color:var(--violet)"></span>不变量的"分辨力"</h3>
+      <p>不变量是单向的：<b style="color:var(--fg)">不同 ⇒ 必不同胚</b>；但<b style="color:var(--fg)">相同 ⇏ 一定同胚</b>。例如 θ 形图（两点间三条边）与三叶结的补空间可能共享部分不变量，却不同胚。要完全分类，往往需要一整套不变量协同工作。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 03 ================= -->
+<section id="s3">
+  <div class="sec-head">
+    <h2><span class="idx">03</span>Betti 数：把"洞"数成整数</h2>
+    <p class="sub">Betti 数 <b>β₀, β₁, β₂, …</b> 是同调群的秩，逐维统计空间的"洞"。<b>β₀</b> 数连通块，<b>β₁</b> 数一维环洞，<b>β₂</b> 数二维空腔，更高维依此类推。它们是持续同调最终输出的对象<sup class="fn"><a href="#fn5" id="ref-5">[5]</a></sup>。</p>
+  </div>
+
+  <div class="grid g3">
+    <div class="card">
+      <h3><span class="dot" style="color:var(--cyan)"></span>β₀ · 连通分支</h3>
+      <figure style="margin-top:8px">
+        <svg viewBox="0 0 240 132" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="三个分离的点簇">
+          <!-- 簇光晕 -->
+          <circle cx="52" cy="62" r="34" fill="url(#gBallC)"/>
+          <circle cx="132" cy="42" r="27" fill="url(#gBallM)"/>
+          <circle cx="190" cy="90" r="30" fill="url(#gBallG)"/>
+          <!-- 簇内连边 -->
+          <g stroke="rgba(34,211,238,.35)" stroke-width="1">
+            <line x1="44" y1="54" x2="62" y2="68"/><line x1="62" y1="68" x2="44" y2="54"/>
+            <line x1="126" y1="36" x2="138" y2="48"/><line x1="182" y1="84" x2="198" y2="96"/>
+          </g>
+          <!-- 点 -->
+          <g filter="url(#glowG)">
+            <circle cx="44" cy="54" r="3.2" fill="#22d3ee"/><circle cx="62" cy="68" r="3.2" fill="#22d3ee"/>
+            <circle cx="126" cy="36" r="3.2" fill="#f472b6"/><circle cx="138" cy="48" r="3.2" fill="#f472b6"/>
+            <circle cx="182" cy="84" r="3.2" fill="#fbbf24"/><circle cx="198" cy="96" r="3.2" fill="#fbbf24"/>
+          </g>
+          <!-- 块标注 -->
+          <g fill="#9aabc2" font-size="10.5" font-family="monospace" text-anchor="middle">
+            <text x="52" y="112">块 1</text><text x="132" y="84">块 2</text><text x="190" y="128">块 3</text>
+          </g>
+          <g stroke="rgba(255,255,255,.14)" stroke-width="1" stroke-dasharray="2 3">
+            <line x1="88" y1="62" x2="106" y2="50"/><line x1="158" y1="60" x2="170" y2="74"/>
+          </g>
+        </svg>
+      </figure>
+      <div class="metrics"><div class="mt cyan"><div class="k">分离块数</div><div class="v">β₀ = 3</div><div class="n">聚类分析的拓扑版本</div></div></div>
+    </div>
+
+    <div class="card">
+      <h3><span class="dot" style="color:var(--magenta)"></span>β₁ · 一维洞</h3>
+      <figure style="margin-top:8px">
+        <svg viewBox="0 0 240 132" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="环面有两个独立的洞">
+          <!-- 环面管体 -->
+          <ellipse cx="120" cy="66" rx="88" ry="47" fill="url(#gDonut)" stroke="#f472b6" stroke-width="2"/>
+          <ellipse cx="120" cy="66" rx="88" ry="47" fill="url(#gShade)" opacity=".5"/>
+          <path d="M38 44 C 66 26, 174 26, 202 44" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="3.5" stroke-linecap="round"/>
+          <!-- 中空 -->
+          <ellipse cx="120" cy="66" rx="31" ry="15" fill="#080d18" stroke="#f472b6" stroke-width="1.8"/>
+          <!-- 纬线回路（绕中空，青） -->
+          <ellipse class="flow" cx="120" cy="66" rx="60" ry="31" fill="none" stroke="rgba(34,211,238,.85)" stroke-width="1.8" marker-end="url(#arrC)"/>
+          <!-- 经线回路（管截面，金） -->
+          <ellipse cx="196" cy="66" rx="13" ry="24" fill="none" stroke="#fbbf24" stroke-width="1.8" transform="rotate(12 196 66)" marker-end="url(#arrG)"/>
+          <!-- 标注 -->
+          <g font-family="monospace" font-size="10" text-anchor="middle">
+            <text x="120" y="18" fill="#22d3ee">纬线回路（穿中空）</text>
+            <text x="210" y="112" fill="#fbbf24">经线回路</text>
+          </g>
+          <line x1="196" y1="92" x2="204" y2="102" stroke="rgba(251,191,36,.5)" stroke-width="1"/>
+          <circle cx="120" cy="66" r="3" fill="#22d3ee" filter="url(#glowC)"/>
+        </svg>
+      </figure>
+      <div class="metrics"><div class="mt mag"><div class="k">独立回路</div><div class="v">β₁ = 2</div><div class="n">甜甜圈的两条不等价回路</div></div></div>
+    </div>
+
+    <div class="card">
+      <h3><span class="dot" style="color:var(--gold)"></span>β₂ · 二维空腔</h3>
+      <figure style="margin-top:8px">
+        <svg viewBox="0 0 240 132" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="球壳内部的空腔">
+          <!-- 球体 -->
+          <circle cx="120" cy="64" r="50" fill="url(#gSphere)" stroke="#fbbf24" stroke-width="2"/>
+          <!-- 经纬线 -->
+          <ellipse cx="120" cy="64" rx="50" ry="18" fill="none" stroke="rgba(251,191,36,.35)" stroke-width="1.1"/>
+          <ellipse cx="120" cy="64" rx="18" ry="50" fill="none" stroke="rgba(251,191,36,.22)" stroke-width="1.1"/>
+          <!-- 球面高光 -->
+          <ellipse cx="98" cy="40" rx="13" ry="7" fill="rgba(255,255,255,.16)" transform="rotate(-28 98 40)"/>
+          <!-- 壳厚截面 -->
+          <circle cx="120" cy="64" r="42" fill="none" stroke="rgba(251,191,36,.30)" stroke-width="1" stroke-dasharray="3 4"/>
+          <!-- 内腔 -->
+          <circle class="flow" cx="120" cy="64" r="17" fill="rgba(251,191,36,.12)" stroke="rgba(251,191,36,.75)" stroke-width="1.4"/>
+          <text x="120" y="68" fill="#fbbf24" font-size="10.5" font-family="monospace" text-anchor="middle">空腔</text>
+          <!-- 标注 -->
+          <line x1="120" y1="21" x2="120" y2="47" stroke="rgba(251,191,36,.5)" stroke-width="1" marker-end="url(#arrG)"/>
+          <text x="120" y="128" fill="#9aabc2" font-size="10.5" font-family="monospace" text-anchor="middle">壳（虚线）与被包住的内腔</text>
+        </svg>
+      </figure>
+      <div class="metrics"><div class="mt gold"><div class="k">封闭内腔</div><div class="v">β₂ = 1</div><div class="n">球壳包住的那一"口"空气</div></div></div>
+    </div>
+  </div>
+
+  <div class="note gold"><b>一个常见的误读：</b>环面的 β₁ = 2 不是"一个洞"吗？——从"中空圆环"看确实只有一个洞，但同调意义上有<b>两条本质不同的闭合回路</b>：绕中空管的纬线、绕管子截面的经线，二者都无法连续收缩为一点，也互不等价。Betti 数数的是独立回路的个数，不是视觉上的孔。</div>
+</section>
+
+<!-- ================= 04 ================= -->
+<section id="s4">
+  <div class="sec-head">
+    <h2><span class="idx">04</span>单纯复形与 Rips 过滤：把点云变成拓扑</h2>
+    <p class="sub">真实数据是<b>离散点云</b>，没有"洞"的定义。拓扑数据分析的做法是：引入尺度参数 <b>ε</b>，把点云逐步"长成"一个<b>单纯复形</b>（simplicial complex）——点（0-单形）、三角形（2-单形）等拼装出的组合结构。ε 从小到大的过程称为<b>过滤（filtration）</b>。</p>
+  </div>
+
+  <div class="grid g3">
+    <figure>
+      <svg viewBox="0 0 260 196" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="epsilon 较小的 Rips 复形">
+        <rect x="12" y="12" width="236" height="26" rx="8" fill="rgba(34,211,238,.10)" stroke="rgba(34,211,238,.32)"/>
+        <text x="130" y="29" fill="#22d3ee" font-size="12" font-family="monospace" text-anchor="middle">ε 小 · 只连最近邻</text>
+        <!-- ε 邻域球 -->
+        <g fill="url(#gBallC)" stroke="rgba(34,211,238,.22)" stroke-width=".8">
+          <circle cx="130" cy="42" r="13"/><circle cx="62" cy="128" r="13"/><circle cx="96" cy="148" r="13"/>
+          <circle cx="154" cy="122" r="13"/><circle cx="188" cy="106" r="13"/><circle cx="212" cy="60" r="13"/><circle cx="38" cy="64" r="13"/>
+        </g>
+        <!-- 边 -->
+        <g stroke="rgba(56,139,253,.9)" stroke-width="1.7" stroke-linecap="round">
+          <line x1="62" y1="128" x2="96" y2="148"/><line x1="154" y1="122" x2="188" y2="106"/>
+        </g>
+        <!-- 点 -->
+        <g fill="#fbbf24" filter="url(#glowG)">
+          <circle cx="130" cy="42" r="4.2"/><circle cx="62" cy="128" r="4.2"/><circle cx="96" cy="148" r="4.2"/>
+          <circle cx="154" cy="122" r="4.2"/><circle cx="188" cy="106" r="4.2"/><circle cx="212" cy="60" r="4.2"/><circle cx="38" cy="64" r="4.2"/>
+        </g>
+        <g fill="rgba(255,255,255,.28)" font-size="10.5" font-family="monospace">
+          <text x="112" y="32">p₁</text><text x="42" y="148">p₂</text><text x="88" y="168">p₃</text>
+          <text x="148" y="142">p₄</text><text x="194" y="124">p₅</text><text x="220" y="50">p₆</text><text x="18" y="84">p₇</text>
+        </g>
+      </svg>
+      <figcaption>阈值小时只有零星的边，β₀ = 5，没有洞。</figcaption>
+    </figure>
+
+    <figure>
+      <svg viewBox="0 0 260 196" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="epsilon 中等时出现环洞">
+        <rect x="12" y="12" width="236" height="26" rx="8" fill="rgba(244,114,182,.10)" stroke="rgba(244,114,182,.34)"/>
+        <text x="130" y="29" fill="#f472b6" font-size="12" font-family="monospace" text-anchor="middle">ε 中 · 闭合回路出现</text>
+        <!-- ε 邻域球（中号） -->
+        <g fill="url(#gBallC)" stroke="rgba(34,211,238,.18)" stroke-width=".8">
+          <circle cx="130" cy="42" r="20"/><circle cx="62" cy="128" r="20"/><circle cx="96" cy="148" r="20"/>
+          <circle cx="154" cy="122" r="20"/><circle cx="188" cy="106" r="20"/><circle cx="212" cy="60" r="20"/><circle cx="38" cy="64" r="20"/>
+        </g>
+        <!-- 三角 -->
+        <g fill="url(#gTri)" stroke="rgba(244,114,182,.35)" stroke-width="1">
+          <polygon points="62,128 96,148 154,122"/><polygon points="154,122 188,106 212,60"/>
+        </g>
+        <!-- 边 -->
+        <g stroke="rgba(56,139,253,.88)" stroke-width="1.8" stroke-linecap="round">
+          <line x1="130" y1="42" x2="212" y2="60"/><line x1="212" y1="60" x2="188" y2="106"/>
+          <line x1="188" y1="106" x2="154" y2="122"/><line x1="154" y1="122" x2="96" y2="148"/>
+          <line x1="96" y1="148" x2="62" y2="128"/><line x1="62" y1="128" x2="38" y2="64"/><line x1="38" y1="64" x2="130" y2="42"/>
+          <line x1="62" y1="128" x2="154" y2="122"/><line x1="130" y1="42" x2="62" y2="128"/>
+        </g>
+        <!-- 点 -->
+        <g fill="#fbbf24" filter="url(#glowG)">
+          <circle cx="130" cy="42" r="4.2"/><circle cx="62" cy="128" r="4.2"/><circle cx="96" cy="148" r="4.2"/>
+          <circle cx="154" cy="122" r="4.2"/><circle cx="188" cy="106" r="4.2"/><circle cx="212" cy="60" r="4.2"/><circle cx="38" cy="64" r="4.2"/>
+        </g>
+        <!-- 洞标记 -->
+        <circle cx="126" cy="86" r="30" fill="url(#gBallM)"/>
+        <path class="flow" d="M110 86 a 17 11 0 1 0 34 0 a 17 11 0 1 0 -34 0" fill="none" stroke="#f472b6" stroke-width="1.7"/>
+        <text x="126" y="89" fill="#f472b6" font-size="10" font-family="monospace" text-anchor="middle">洞</text>
+      </svg>
+      <figcaption>边界围成一圈但中心未被填满——一个一维洞诞生：β₁ = 1。</figcaption>
+    </figure>
+
+    <figure>
+      <svg viewBox="0 0 260 196" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="epsilon 较大时洞被三角形填满">
+        <rect x="12" y="12" width="236" height="26" rx="8" fill="rgba(251,191,36,.10)" stroke="rgba(251,191,36,.34)"/>
+        <text x="130" y="29" fill="#fbbf24" font-size="12" font-family="monospace" text-anchor="middle">ε 大 · 三角形填满中心</text>
+        <!-- ε 邻域球（大号，重叠） -->
+        <g fill="url(#gBallG)" stroke="rgba(251,191,36,.14)" stroke-width=".8">
+          <circle cx="130" cy="42" r="30"/><circle cx="62" cy="128" r="30"/><circle cx="96" cy="148" r="30"/>
+          <circle cx="154" cy="122" r="30"/><circle cx="188" cy="106" r="30"/><circle cx="212" cy="60" r="30"/><circle cx="38" cy="64" r="30"/>
+        </g>
+        <!-- 三角（填满） -->
+        <g fill="url(#gTri)" stroke="rgba(244,114,182,.32)" stroke-width="1">
+          <polygon points="130,42 212,60 188,106"/><polygon points="130,42 188,106 154,122"/><polygon points="130,42 154,122 62,128"/>
+          <polygon points="130,42 62,128 38,64"/><polygon points="62,128 96,148 154,122"/><polygon points="154,122 188,106 212,60"/>
+          <polygon points="38,64 62,128 96,148"/><polygon points="130,42 96,148 62,128"/><polygon points="130,42 188,106 212,60"/>
+        </g>
+        <!-- 边 -->
+        <g stroke="rgba(56,139,253,.9)" stroke-width="1.8" stroke-linecap="round">
+          <line x1="130" y1="42" x2="212" y2="60"/><line x1="212" y1="60" x2="188" y2="106"/>
+          <line x1="188" y1="106" x2="154" y2="122"/><line x1="154" y1="122" x2="96" y2="148"/>
+          <line x1="96" y1="148" x2="62" y2="128"/><line x1="62" y1="128" x2="38" y2="64"/><line x1="38" y1="64" x2="130" y2="42"/>
+          <line x1="62" y1="128" x2="154" y2="122"/><line x1="130" y1="42" x2="62" y2="128"/><line x1="130" y1="42" x2="154" y2="122"/>
+          <line x1="130" y1="42" x2="188" y2="106"/><line x1="130" y1="42" x2="96" y2="148"/><line x1="38" y1="64" x2="96" y2="148"/><line x1="212" y1="60" x2="154" y2="122"/>
+        </g>
+        <!-- 点 -->
+        <g fill="#fbbf24" filter="url(#glowG)">
+          <circle cx="130" cy="42" r="4.2"/><circle cx="62" cy="128" r="4.2"/><circle cx="96" cy="148" r="4.2"/>
+          <circle cx="154" cy="122" r="4.2"/><circle cx="188" cy="106" r="4.2"/><circle cx="212" cy="60" r="4.2"/><circle cx="38" cy="64" r="4.2"/>
+        </g>
+        <!-- 覆盖标记 -->
+        <path class="flow" d="M112 88 a 15 10 0 1 0 30 0 a 15 10 0 1 0 -30 0" fill="none" stroke="rgba(251,191,36,.8)" stroke-width="1.5"/>
+        <text x="127" y="91" fill="#fbbf24" font-size="9.5" font-family="monospace" text-anchor="middle">已填满</text>
+      </svg>
+      <figcaption>2-单形把洞盖住，β₁ 归零，复形整体收缩为一个点状结构。</figcaption>
+    </figure>
+  </div>
+
+  <div class="grid g2" style="margin-top:18px">
+    <div class="card">
+      <h3><span class="dot" style="color:var(--cyan)"></span>Rips 复形的构造规则</h3>
+      <p><b style="color:var(--fg)">规则一：</b>任意两点距离 ≤ ε，则连一条边（1-单形）。<br>
+      <b style="color:var(--fg)">规则二：</b>若 k+1 个点两两相连，则填入 k-单形（三点围三角、四点填四面体）。<br>
+      <b style="color:var(--fg)">规则三：</b>ε 增大时，复形只增不减——这就形成嵌套序列，即过滤。</p>
+      <div class="formula">K(ε₁) ⊆ K(ε₂) ⊆ K(ε₃) ⊆ … （ε₁ &lt; ε₂ &lt; ε₃）</div>
+    </div>
+    <div class="card">
+      <h3><span class="dot" style="color:var(--magenta)"></span>为什么要"过滤"而不是取单个 ε？</h3>
+      <p>单一阈值的结论对 ε 极度敏感：取小了洞还没长出来，取大了洞已被填平。过滤把<b style="color:var(--fg)">所有尺度的信息一次性打包</b>——每个洞从出生到死亡的完整履历都被记录下来，从中再区分"真结构"与"噪声"。</p>
+    </div>
+  </div>
+
+  <div class="grid g2" style="margin-top:18px">
+    <div class="card">
+      <h3><span class="dot" style="color:var(--good)"></span>Rips vs Čech：一对兄弟复形</h3>
+      <p><b style="color:var(--fg)">Čech 复形</b>：半径 ε 的球族若存在<b style="color:var(--fg)">公共交点</b>，则这些球心张成一个单形——它是"球并"空间的形变收缩（<b style="color:var(--fg)">Nerve 定理</b>）。<br>
+      <b style="color:var(--fg)">Rips 复形</b>：只要两两距离 ≤ ε 就连边填单形——不检查公共交点，算得快得多。</p>
+      <div class="formula">Rips<sub>ε</sub> ⊆ Čech<sub>ε</sub> ⊆ Rips<sub>2ε</sub></div>
+      <p>左包含：两两 ≤ ε 的点集，任取一点就是所有球的公共交点；右包含：公共交点存在 ⇒ 两两距离 ≤ 2ε。两者只差一个常数因子的"时间轴"，捕捉的拓扑本质相同——这就是用 Rips 不丢真的数学底气。</p>
+    </div>
+    <figure>
+      <svg viewBox="0 0 620 176" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Čech 复形与 Rips 复形对比">
+        <!-- 左：Čech -->
+        <text x="155" y="24" fill="#34d399" font-size="12" font-family="monospace" text-anchor="middle">Čech：球有公共交点</text>
+        <g fill="url(#gBallC)" stroke="rgba(52,211,153,.55)" stroke-width="1.4">
+          <circle cx="108" cy="78" r="42"/><circle cx="200" cy="78" r="42"/><circle cx="154" cy="142" r="42"/>
+        </g>
+        <path d="M108 78 L 200 78 L 154 142 Z" fill="rgba(52,211,153,.10)" stroke="rgba(52,211,153,.8)" stroke-width="1.6" stroke-dasharray="5 4"/>
+        <g fill="#fbbf24" filter="url(#glowG)">
+          <circle cx="108" cy="78" r="3.6"/><circle cx="200" cy="78" r="3.6"/><circle cx="154" cy="142" r="3.6"/>
+        </g>
+        <circle cx="154" cy="98" r="4" fill="#34d399" filter="url(#glowG)"/>
+        <text x="164" y="96" fill="#34d399" font-size="10" font-family="monospace">公共交点</text>
+        <!-- 分隔 -->
+        <line x1="310" y1="30" x2="310" y2="160" stroke="rgba(255,255,255,.10)" stroke-dasharray="3 5"/>
+        <!-- 右：Rips -->
+        <text x="465" y="24" fill="#22d3ee" font-size="12" font-family="monospace" text-anchor="middle">Rips：两两距离 ≤ ε 就连边</text>
+        <g stroke="rgba(56,139,253,.9)" stroke-width="2" stroke-linecap="round">
+          <line x1="418" y1="78" x2="510" y2="78"/><line x1="510" y1="78" x2="464" y2="142"/><line x1="464" y1="142" x2="418" y2="78"/>
+        </g>
+        <polygon points="418,78 510,78 464,142" fill="rgba(244,114,182,.12)" stroke="rgba(244,114,182,.35)" stroke-width="1"/>
+        <g fill="#fbbf24" filter="url(#glowG)">
+          <circle cx="418" cy="78" r="3.6"/><circle cx="510" cy="78" r="3.6"/><circle cx="464" cy="142" r="3.6"/>
+        </g>
+        <text x="465" y="168" fill="#5e6f87" font-size="10" font-family="monospace" text-anchor="middle">同一点云：结论一致，只差尺度因子</text>
+      </svg>
+      <figcaption>左：Čech 用"球交"判据；右：Rips 用"边距"判据。同一 ε 下 Rips 单形更多，但拓扑结论在 2 倍尺度内互推。</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= 05 ================= -->
+<section id="s5">
+  <div class="sec-head">
+    <h2><span class="idx">05</span>持续同调：给每个洞记下生与死</h2>
+    <p class="sub">在过滤过程中，每个拓扑特征都有<b>出生尺度 ε_birth</b>（首次出现）与<b>死亡尺度 ε_death</b>（被填平或合并）。二者的差</p>
+  </div>
+  <div class="formula" style="display:block;text-align:center">persistence = ε_death − ε_birth</div>
+  <p class="sub" style="margin-top:16px">称为<b>持久性</b>。真实结构会在很大一段尺度区间里存活（持久性大）；噪声造成的假洞往往旋生旋灭（持久性小）。<b>持续同调（Persistent Homology）</b>就是把每个尺度的同调群串成一个"缩略图序列"，再抽取这些生灭配对<sup class="fn"><a href="#fn1" id="ref-1">[1]</a></sup>。</p>
+
+  <div class="grid g2">
+    <div class="card">
+      <h3><span class="dot" style="color:var(--good)"></span>β₀ 的生灭：合并</h3>
+      <p>每个点在 ε = 0 时各自成一块（β₀ = n）。随着 ε 增大，点与点连通，块与块<b>合并</b>——被吸收的块"死亡"。最后只剩 1 块。所以 H₀ 的条形码永远是一组从 0 出发、先后终止的条，外加一根贯穿始终的最长条（整体连通块永生）。</p>
+    </div>
+    <div class="card">
+      <h3><span class="dot" style="color:var(--magenta)"></span>β₁ 的生灭：闭合与填平</h3>
+      <p>一维洞的<b>出生</b>是回路首次闭合的尺度，<b>死亡</b>是三角形首次把洞盖住的尺度。长寿命的 H₁ 条对应数据里真实的环状结构（如甜甜圈的两个洞、点云中央的空洞），短寿命的则是局部噪声。</p>
+    </div>
+  </div>
+
+  <div class="note mag"><b>核心思想一句话：</b>与其争论"ε 该取多少"，不如让 ε 跑遍全程，把每个特征的一生都记下来——<b>活得久的才是真的</b>。这是拓扑数据分析抗噪性强的根本原因。</div>
+</section>
+
+<!-- ================= 06 · 算法内幕 ================= -->
+<section id="algo">
+  <div class="sec-head">
+    <h2><span class="idx">06</span>算法内幕：矩阵约简与生灭配对</h2>
+    <p class="sub">持续同调不是黑盒。它的计算内核只有一件事：<b>把一张边界矩阵从左到右约简，从最下非零行里读出每个特征的生与死</b>。理解了这一步，条形码和持久图就不再是"软件输出的图"，而是可以手推的代数。</p>
+  </div>
+
+  <div class="note cyan"><b>代数地基：</b>单形的"边界"是线性算子 ∂，满足 <code>∂ ∘ ∂ = 0</code>（边界的边界是零）。第 k 个同调群定义为 <code>Hₖ = ker ∂ₖ / im ∂ₖ₊₁</code>——闭链（无边界的东西，如回路）模掉恰当链（某个高维单形的边界，如被填平的环），留下的就是"真正的洞"。持续同调只是把这套代数放到过滤序列上，并记录每个类的生死。</div>
+
+  <div class="grid g2">
+    <div class="card">
+      <h3><span class="dot" style="color:var(--cyan)"></span>四步流程：从过滤到配对</h3>
+      <p><b style="color:var(--fg)">① 排序：</b>按过滤顺序给所有单形编号 σ₁, σ₂, …, σₙ（点、边、三角形混排，维度无关紧要，出场顺序才重要）。<br>
+      <b style="color:var(--fg)">② 建矩阵：</b>第 j 列记 ∂σⱼ 的系数（如 ∂e₁₂ = v₁ + v₂），ℤ₂ 系数最常用（符号无所谓）。<br>
+      <b style="color:var(--fg)">③ 约简：</b>从左到右逐列处理——取该列最下方非零行 i；若 i 已是左侧某列的 pivot，就把那列加过来消掉它，反复直到最下方非零行落在"无人占用"的行，或整列归零。<br>
+      <b style="color:var(--fg)">④ 读配对：</b>约简后列 j 的最下非零行若为 i，则配对 <code>(i, j)</code>；从未被配对引用的索引，对应永生的拓扑特征。</p>
+    </div>
+    <div class="card">
+      <h3><span class="dot" style="color:var(--magenta)"></span>谁是"负单形"，谁是"正单形"</h3>
+      <p>每个配对 (i, j) 读作：特征在 <b style="color:var(--fg)">σᵢ 处出生</b>，在 <b style="color:var(--fg)">σⱼ 处死亡</b>。σᵢ 称负单形（创造者），σⱼ 称正单形（消灭者）。</p>
+      <p>同一个几何操作可以生也可以死：<b style="color:var(--fg)">加入一条边</b>可能让回路闭合（创造 H₁），也可能把两块连通域合并（杀死一个 H₀）；<b style="color:var(--fg)">加入一个三角形</b>通常填平一个 H₁。生与死不由单形维度决定，由它在过滤序列中的位置与上下文决定。</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3><span class="dot" style="color:var(--gold)"></span>手推一个例子：填满的三角形</h3>
+    <p>过滤顺序：<code>v₁ → v₂ → v₃ → e₁₂ → e₂₃ → e₁₃ → t₁₂₃</code>（三点 → 三边 → 填面）。列约简后得到三个配对加一个永生类：</p>
+    <div class="tbl-wrap" style="margin-top:12px">
+      <table class="surf">
+        <thead><tr><th>配对 (i, j)</th><th>同调</th><th>特征</th><th>出生</th><th>死亡</th></tr></thead>
+        <tbody>
+          <tr><td><code>(v₂, e₁₂)</code></td><td class="num">H₀</td><td>v₂ 的连通块</td><td>v₂ 出现</td><td>e₁₂ 与 v₁ 合并</td></tr>
+          <tr><td><code>(v₃, e₂₃)</code></td><td class="num">H₀</td><td>v₃ 的连通块</td><td>v₃ 出现</td><td>e₂₃ 并入大块</td></tr>
+          <tr><td><code>(e₁₃, t₁₂₃)</code></td><td class="num">H₁</td><td>三角环</td><td>e₁₃ 使回路闭合</td><td>t₁₂₃ 把洞填平</td></tr>
+          <tr><td><code>v₁</code> 无配对</td><td class="num">H₀</td><td>整体连通块</td><td>v₁ 出现</td><td class="num">∞ 永生</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>对应到条形码：三根有限长的条 + 一根贯穿全程的 H₀ 长条；对应到持久图：三个有限点 + 一个"死亡 = ∞"的点。约简算法读出的就是这份生灭履历。</p>
+    <div class="formula">low(j) = i  ⟹  persistence pair (i, j)  ⟹  interval [εᵢ, εⱼ)</div>
+  </div>
+
+  <div class="note gold"><b>复杂度与工程实践：</b>朴素矩阵约简是 O(n³)，大点云会很慢。成熟实现（<code>GUDHI</code>、<code>Ripser</code>、<code>Dionysus</code>、<code>giotto-tda</code>）用 clearing、apparent pairs、稀疏表示等技巧把常数和阶数大幅压低，百万级单形也能出图。理解本节的手推流程，调参和读结果时就不会被黑盒牵着走。</div>
+</section>
+
+<!-- ================= 07 ================= -->
+<section id="s6">
+  <div class="sec-head">
+    <h2><span class="idx">07</span>条形码与持久图：持续同调的两种读法</h2>
+    <p class="sub">同一份生灭数据有两种等价的可视化。<b>条形码（Barcode）</b>用横条长度直观展示持久性；<b>持久图（Persistence Diagram）</b>把每个特征画成 (ε_birth, ε_death) 平面上的点，离对角线越远越重要。</p>
+  </div>
+
+  <div class="grid g2">
+    <figure class="frame">
+      <svg viewBox="0 0 620 268" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="持续同调条形码">
+        <!-- 绘图区 -->
+        <rect x="46" y="14" width="550" height="198" rx="10" fill="rgba(255,255,255,.018)" stroke="rgba(255,255,255,.06)"/>
+        <!-- 纵向刻度线 -->
+        <g stroke="rgba(255,255,255,.07)" stroke-width="1">
+          <line x1="180" y1="14" x2="180" y2="212"/><line x1="315" y1="14" x2="315" y2="212"/><line x1="450" y1="14" x2="450" y2="212"/>
+        </g>
+        <!-- 坐标轴 -->
+        <line x1="46" y1="212" x2="596" y2="212" stroke="rgba(255,255,255,.26)" stroke-width="1.3" marker-end="url(#arrW)"/>
+        <g fill="#5e6f87" font-size="10.5" font-family="monospace">
+          <text x="46" y="230" text-anchor="middle">0</text>
+          <text x="180" y="230" text-anchor="middle">ε₁</text>
+          <text x="315" y="230" text-anchor="middle">ε₂</text>
+          <text x="450" y="230" text-anchor="middle">ε₃</text>
+          <text x="588" y="230" text-anchor="middle">ε</text>
+        </g>
+        <!-- H₀ 条（渐变 + 端点） -->
+        <g>
+          <rect x="46" y="26" width="550" height="12" rx="6" fill="url(#gBarC)" filter="url(#glowC)"/>
+          <circle cx="52" cy="32" r="3.4" fill="#eaf9ff"/><circle cx="596" cy="32" r="3.4" fill="#22d3ee"/>
+          <rect x="46" y="50" width="118" height="10" rx="5" fill="url(#gBarC)"/>
+          <circle cx="52" cy="55" r="2.8" fill="#eaf9ff"/><circle cx="164" cy="55" r="2.8" fill="#22d3ee"/>
+          <rect x="46" y="71" width="86" height="10" rx="5" fill="url(#gBarC)"/>
+          <circle cx="52" cy="76" r="2.8" fill="#eaf9ff"/><circle cx="132" cy="76" r="2.8" fill="#22d3ee"/>
+          <rect x="46" y="92" width="196" height="10" rx="5" fill="url(#gBarC)"/>
+          <circle cx="52" cy="97" r="2.8" fill="#eaf9ff"/><circle cx="242" cy="97" r="2.8" fill="#22d3ee"/>
+          <rect x="46" y="113" width="148" height="10" rx="5" fill="url(#gBarC)"/>
+          <circle cx="52" cy="118" r="2.8" fill="#eaf9ff"/><circle cx="194" cy="118" r="2.8" fill="#22d3ee"/>
+        </g>
+        <!-- 分界 -->
+        <line x1="46" y1="138" x2="596" y2="138" stroke="rgba(255,255,255,.10)" stroke-dasharray="3 5"/>
+        <!-- H₁ 条 -->
+        <g>
+          <rect x="150" y="152" width="300" height="12" rx="6" fill="url(#gBarM)" filter="url(#glowM)"/>
+          <circle cx="150" cy="158" r="3.4" fill="#fde7f1"/><circle cx="450" cy="158" r="3.4" fill="#f472b6"/>
+          <rect x="182" y="174" width="262" height="12" rx="6" fill="url(#gBarM)" filter="url(#glowM)"/>
+          <circle cx="182" cy="180" r="3.4" fill="#fde7f1"/><circle cx="444" cy="180" r="3.4" fill="#f472b6"/>
+          <rect x="240" y="196" width="34" height="10" rx="5" fill="url(#gBarM2)"/>
+          <rect x="330" y="196" width="22" height="10" rx="5" fill="url(#gBarM2)"/>
+        </g>
+        <!-- 标注 -->
+        <g font-family="monospace" font-size="10.5">
+          <text x="300" y="10" fill="#22d3ee">H₀：连通块的合并史</text>
+          <text x="300" y="148" fill="#f472b6">H₁：洞的生灭史</text>
+          <text x="462" y="188" fill="#fbbf24">← 长寿命：真结构</text>
+          <text x="360" y="226" fill="#5e6f87">短寿命：噪声 →</text>
+        </g>
+        <!-- 图例小注 -->
+        <g font-family="monospace" font-size="9.5" fill="rgba(255,255,255,.32)">
+          <text x="46" y="252">○ 出生 ε_birth</text><text x="150" y="252">● 死亡 ε_death</text>
+        </g>
+      </svg>
+      <figcaption>条形码：每根横条是一个拓扑特征，左端 = 出生，右端 = 死亡；条越长越可信。</figcaption>
+    </figure>
+
+    <figure class="frame">
+      <svg viewBox="0 0 300 268" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="持久图">
+        <!-- 绘图区 -->
+        <rect x="46" y="18" width="226" height="194" rx="8" fill="rgba(255,255,255,.018)" stroke="rgba(255,255,255,.06)"/>
+        <!-- 信号区（远离对角线的上方区域） -->
+        <path d="M46 212 L 46 60 L 194 212 Z" fill="rgba(34,211,238,.05)"/>
+        <!-- 噪声带（贴对角线） -->
+        <path d="M46 212 L 252 24 L 252 52 L 74 212 Z" fill="rgba(244,114,182,.07)"/>
+        <!-- 坐标轴 -->
+        <line x1="46" y1="212" x2="272" y2="212" stroke="rgba(255,255,255,.26)" stroke-width="1.3" marker-end="url(#arrW)"/>
+        <line x1="46" y1="212" x2="46" y2="22" stroke="rgba(255,255,255,.26)" stroke-width="1.3" marker-end="url(#arrW)"/>
+        <!-- 对角线 -->
+        <line x1="46" y1="212" x2="252" y2="24" stroke="rgba(255,255,255,.30)" stroke-width="1.2" stroke-dasharray="5 5"/>
+        <text x="214" y="42" fill="#5e6f87" font-size="9.5" font-family="monospace" transform="rotate(-42 214 42)">ε_death = ε_birth</text>
+        <!-- 区域标注 -->
+        <text x="66" y="82" fill="rgba(34,211,238,.6)" font-size="9.5" font-family="monospace">信号区</text>
+        <text x="176" y="120" fill="rgba(244,114,182,.55)" font-size="9.5" font-family="monospace" transform="rotate(-42 176 120)">噪声带</text>
+        <!-- 轴标 -->
+        <g fill="#5e6f87" font-size="10.5" font-family="monospace">
+          <text x="160" y="240" text-anchor="middle">ε_birth →</text>
+          <text x="18" y="118" text-anchor="middle" transform="rotate(-90 18 118)">ε_death →</text>
+        </g>
+        <!-- 噪声点 -->
+        <g fill="rgba(244,114,182,.7)">
+          <circle cx="96" cy="88" r="4.6"/><circle cx="118" cy="72" r="4.6"/><circle cx="86" cy="104" r="4.6"/>
+          <circle cx="136" cy="60" r="4.6"/><circle cx="70" cy="118" r="4.6"/><circle cx="152" cy="50" r="4.6"/>
+        </g>
+        <!-- 信号点 -->
+        <g filter="url(#glowG)">
+          <circle cx="92" cy="182" r="8" fill="rgba(34,211,238,.92)"/>
+          <circle cx="132" cy="160" r="8" fill="rgba(34,211,238,.92)"/>
+          <circle cx="180" cy="118" r="8" fill="rgba(251,191,36,.92)"/>
+        </g>
+        <!-- 投影虚线 -->
+        <g stroke="rgba(34,211,238,.32)" stroke-dasharray="3 3">
+          <line x1="92" y1="182" x2="92" y2="212"/><line x1="132" y1="160" x2="132" y2="212"/><line x1="180" y1="118" x2="180" y2="212"/>
+        </g>
+        <!-- 持久性度量：垂直于对角线 -->
+        <g>
+          <line x1="180" y1="118" x2="152" y2="143" stroke="rgba(251,191,36,.65)" stroke-width="1.3" stroke-dasharray="4 3"/>
+          <circle cx="152" cy="143" r="2.4" fill="rgba(251,191,36,.8)"/>
+          <text x="196" y="146" fill="#fbbf24" font-size="9.5" font-family="monospace">持久性</text>
+        </g>
+        <text x="236" y="168" fill="#fbbf24" font-size="9.5" font-family="monospace" text-anchor="end">离对角线越远</text>
+        <text x="236" y="181" fill="#fbbf24" font-size="9.5" font-family="monospace" text-anchor="end">持久性越高</text>
+      </svg>
+      <figcaption>持久图：横轴出生、纵轴死亡；对角线附近是噪声，远点是真结构。</figcaption>
+    </figure>
+  </div>
+
+  <div class="legend" style="margin-top:14px">
+    <span><i style="background:rgba(34,211,238,.88)"></i>H₀ 特征（连通分支）</span>
+    <span><i style="background:rgba(244,114,182,.88)"></i>H₁ 特征（一维洞）</span>
+    <span><i style="background:rgba(251,191,36,.92)"></i>高持久性信号</span>
+    <span><i style="background:rgba(244,114,182,.45)"></i>低持久性噪声</span>
+  </div>
+
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card">
+      <h3><span class="dot" style="color:var(--gold)"></span>从条形码到向量</h3>
+      <p>条形码/持久图本身还不是机器学习可用的"向量"。常用转化：</p>
+      <p><b style="color:var(--fg)">持续图景观（Landscape）</b>：把每个三角形峰折成函数再采样；<b style="color:var(--fg)">持续熵（Persistence Entropy）</b>：对条长分布取熵；<b style="color:var(--fg)">Betti 曲线</b>：逐 ε 记录 β_k(ε) 形成的曲线。转化后即可进入回归、分类、聚类流程。</p>
+    </div>
+    <div class="card">
+      <h3><span class="dot" style="color:var(--violet)"></span>稳定性定理：为什么抗噪</h3>
+      <p>持续同调满足<b style="color:var(--fg)">稳定性定理</b><sup class="fn"><a href="#fn3" id="ref-3">[3]</a></sup>：数据点轻微扰动时，持久图的变化被扰动幅度所控制（瓶颈距离不超过 Hausdorff 距离的 2 倍）。这保证了拓扑特征不会因为几个离群点而翻盘——这是它在真实噪声数据上可靠工作的数学底气。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 08 · 动手实验 ================= -->
+<section id="lab">
+  <div class="sec-head">
+    <h2><span class="idx">08</span>动手实验：四点门框的完整演算</h2>
+    <p class="sub">把 §06 的矩阵约简和 §07 的读图方法拼起来，在一个能<b>完全手算、零近似</b>的数据集上走完整条流水线。数据集：平面上 2×1 矩形的四个顶点 <code>A(0,0) B(2,0) C(0,1) D(2,1)</code>——像一扇门框：先立柱，再上梁，最后斜撑封洞。</p>
+  </div>
+
+  <div class="grid g2">
+    <div class="card">
+      <h3><span class="dot" style="color:var(--cyan)"></span>距离矩阵：只有三个不同值</h3>
+      <div class="tbl-wrap" style="margin-top:10px">
+        <table class="surf" style="min-width:380px">
+          <thead><tr><th></th><th>A (0,0)</th><th>B (2,0)</th><th>C (0,1)</th><th>D (2,1)</th></tr></thead>
+          <tbody>
+            <tr><td class="num">A</td><td class="num">0</td><td class="num">2</td><td class="num">1</td><td class="num">√5</td></tr>
+            <tr><td class="num">B</td><td class="num">2</td><td class="num">0</td><td class="num">√5</td><td class="num">1</td></tr>
+            <tr><td class="num">C</td><td class="num">1</td><td class="num">√5</td><td class="num">0</td><td class="num">2</td></tr>
+            <tr><td class="num">D</td><td class="num">√5</td><td class="num">1</td><td class="num">2</td><td class="num">0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>全部 6 个距离只有 <b style="color:var(--fg)">1、2、√5 ≈ 2.24</b> 三个不同值——过滤事件只会在这三个时刻发生，每一步都可以精确手推，不存在近似。</p>
+    </div>
+    <div class="card">
+      <h3><span class="dot" style="color:var(--magenta)"></span>过滤事件时间表</h3>
+      <div class="tbl-wrap" style="margin-top:10px">
+        <table class="surf" style="min-width:380px">
+          <thead><tr><th>ε 时刻</th><th>发生的事</th><th>β₀</th><th>β₁</th></tr></thead>
+          <tbody>
+            <tr><td><code>ε &lt; 1</code></td><td>四个孤立点</td><td class="num">4</td><td class="num">0</td></tr>
+            <tr><td><code>ε = 1</code></td><td>竖边 AC、BD 出现（<b style="color:var(--fg)">立柱</b>）</td><td class="num">4→2</td><td class="num">0</td></tr>
+            <tr><td><code>ε = 2</code></td><td>横边 AB、CD 出现（<b style="color:var(--fg)">上梁</b>），回路闭合</td><td class="num">2→1</td><td class="num">0→1</td></tr>
+            <tr><td><code>ε = √5</code></td><td>对角线 + 四个三角形（<b style="color:var(--fg)">斜撑封洞</b>）</td><td class="num">1</td><td class="num">1→0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>注意 ε = 2 这一刻的双重身份：同一批边既消灭了一个 H₀（两柱合并），又创造了一个 H₁（回路闭合）——生与死由上下文决定，不由单形类型决定。</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3><span class="dot" style="color:var(--gold)"></span>生灭履历表：每个特征的一生</h3>
+    <div class="tbl-wrap" style="margin-top:10px">
+      <table class="surf">
+        <thead><tr><th>特征</th><th>同调</th><th>区间 [birth, death)</th><th>寿命</th><th>剧情</th></tr></thead>
+        <tbody>
+          <tr><td><code>类①</code></td><td class="num">H₀</td><td class="num">[0, 1)</td><td class="num">1</td><td>ε=1 时并入左柱</td></tr>
+          <tr><td><code>类②</code></td><td class="num">H₀</td><td class="num">[0, 1)</td><td class="num">1</td><td>ε=1 时并入右柱</td></tr>
+          <tr><td><code>类③</code></td><td class="num">H₀</td><td class="num">[0, 2)</td><td class="num">2</td><td>ε=2 两柱合并时被吸收</td></tr>
+          <tr><td><code>类④</code></td><td class="num">H₀</td><td class="num">[0, ∞)</td><td class="num">∞</td><td>整体连通块，永生</td></tr>
+          <tr><td><code>门框环</code></td><td class="num">H₁</td><td class="num">[2, √5)</td><td class="num">√5−2 ≈ 0.24</td><td>回路闭合 → 斜撑封洞</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>矩阵约简读出的配对与此完全一致。哪个点"代表"幸存类取决于配对惯例，但<b style="color:var(--fg)">区间端点与寿命唯一确定</b>——这正是持续同调的稳健之处。</p>
+    <div class="formula">β₀(ε): 4 → 2 → 1 → 1    ·    β₁(ε): 0 → 0 → 1 → 0</div>
+  </div>
+
+  <figure class="frame" style="margin-top:18px">
+    <svg viewBox="0 0 620 244" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="四点门框数据集的条形码">
+      <!-- 事件竖线 -->
+      <g stroke="rgba(255,255,255,.12)" stroke-dasharray="3 5">
+        <line x1="264" y1="26" x2="264" y2="200"/><line x1="468" y1="26" x2="468" y2="200"/><line x1="516" y1="26" x2="516" y2="200"/>
+      </g>
+      <g font-family="monospace" font-size="10" text-anchor="middle">
+        <text x="264" y="20" fill="#22d3ee">ε=1 立柱</text>
+        <text x="468" y="20" fill="#f472b6">ε=2 上梁</text>
+        <text x="516" y="38" fill="#fbbf24">ε=√5 斜撑</text>
+      </g>
+      <!-- H₀ 条 -->
+      <g>
+        <rect x="60" y="52" width="204" height="11" rx="5.5" fill="url(#gBarC)"/>
+        <rect x="60" y="78" width="204" height="11" rx="5.5" fill="url(#gBarC)"/>
+        <rect x="60" y="104" width="408" height="11" rx="5.5" fill="url(#gBarC)"/>
+        <rect x="60" y="130" width="500" height="12" rx="6" fill="url(#gBarC)" filter="url(#glowC)"/>
+        <path d="M560 136 L 578 136" stroke="#22d3ee" stroke-width="2" marker-end="url(#arrC)"/>
+        <text x="582" y="140" fill="#22d3ee" font-size="11" font-family="monospace">∞</text>
+      </g>
+      <text x="60" y="46" fill="#22d3ee" font-size="10.5" font-family="monospace">H₀：四个连通块的合并史</text>
+      <!-- H₁ 条 -->
+      <text x="60" y="180" fill="#f472b6" font-size="10.5" font-family="monospace">H₁：门框环</text>
+      <rect x="468" y="188" width="48" height="11" rx="5.5" fill="url(#gBarM)" filter="url(#glowM)"/>
+      <!-- 坐标轴 -->
+      <line x1="60" y1="218" x2="590" y2="218" stroke="rgba(255,255,255,.26)" stroke-width="1.3" marker-end="url(#arrW)"/>
+      <g fill="#5e6f87" font-size="10.5" font-family="monospace" text-anchor="middle">
+        <text x="60" y="236">0</text><text x="264" y="236">1</text><text x="468" y="236">2</text><text x="516" y="236">√5</text><text x="586" y="236">ε</text>
+      </g>
+    </svg>
+    <figcaption>四点门框的条形码：三根有限 H₀ 条 + 一根永生条；H₁ 只活了 √5−2 ≈ 0.24 的尺度——若这是真实数据的采样，这根短条可能被误判为噪声，需结合采样密度综合判断。</figcaption>
+  </figure>
+
+  <div class="note gold"><b>校验与延伸：</b>当 ε ≥ √5 时四点两两相连、四个三角形全部填入，复形变成完整的 2-单形，可收缩为一点——所以 β₁ 归零、只剩一根 H₀ 长条，与表中结果自洽。换任何数据集，流程完全相同：距离矩阵 → 事件表 → 约简配对 → 条形码；难的从来不是流程，而是把结果读成结论——这就回到 §07 的"活得久的才是真的"。</div>
+
+  <h3 style="margin:28px 0 4px;font-size:15px;color:var(--fg)">📋 可替换数据集模板 · 拿自己的点走一遍</h3>
+  <div class="grid g2">
+    <div class="card">
+      <h3><span class="dot" style="color:var(--good)"></span>六步流程（对任何数据集都适用）</h3>
+      <ol class="steps">
+        <li><b>列距离矩阵</b>：n 个点两两求距，圈出所有不同的距离值 d₁ &lt; d₂ &lt; … &lt; dₘ——它们就是全部事件时刻。</li>
+        <li><b>排过滤序</b>：ε 每越过一个 dₖ 就加入一批单形（新边、新三角形）。</li>
+        <li><b>逐时刻数 β</b>：画出该 ε 的复形，数连通块 β₀ 与独立回路 β₁。</li>
+        <li><b>记生灭表</b>：每个特征在哪个 dₖ 出生、哪个 dₖ 消失，写下区间 [birth, death)。</li>
+        <li><b>画条形码</b>：一根横条一个特征，标好事件刻度。</li>
+        <li><b>校验</b>：最后 ε 足够大时复形应可收缩（只剩永生 H₀）；用 χ = V − E + F 抽查中间步骤。</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h3><span class="dot" style="color:var(--magenta)"></span>三个练习数据集</h3>
+      <p><b style="color:var(--fg)">① 正五边形 5 点</b>（单位外接圆）：距离只有两档——边长与对角线。预期 H₁ 一根条，生死时刻精确可算。<br>
+      <b style="color:var(--fg)">② 3×3 网格 9 点</b>（间距 1）：事件时刻 1、√2、2、√5…预期四个小洞依次生灭，事件明显更丰富。<br>
+      <b style="color:var(--fg)">③ 双方框 8 点</b>（两个分离的 2×1 矩形）：先看 β₀ 的两次合并，再看两个 H₁ 各自的生灭。</p>
+      <div class="formula">目标：不看答案，独立写出生灭表</div>
+      <p>做完对照 §06 的约简流程验证：手算区间应与矩阵约简输出完全一致。若不一致，多半是漏了某个距离档位的三角形。</p>
+    </div>
+  </div>
+
+  <div class="grid g3" style="margin-top:18px">
+    <figure>
+      <svg viewBox="0 0 240 172" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="正五边形五点数据集">
+        <circle cx="120" cy="88" r="62" fill="none" stroke="rgba(255,255,255,.07)" stroke-dasharray="3 5"/>
+        <!-- 对角线 d -->
+        <g stroke="rgba(251,191,36,.75)" stroke-width="1.3" stroke-dasharray="5 4">
+          <line x1="120" y1="26" x2="156" y2="138"/><line x1="120" y1="26" x2="84" y2="138"/>
+          <line x1="179" y1="69" x2="84" y2="138"/><line x1="179" y1="69" x2="61" y2="69"/>
+          <line x1="156" y1="138" x2="61" y2="69"/>
+        </g>
+        <!-- 边 s -->
+        <g stroke="rgba(34,211,238,.9)" stroke-width="2" stroke-linecap="round">
+          <line x1="120" y1="26" x2="179" y2="69"/><line x1="179" y1="69" x2="156" y2="138"/>
+          <line x1="156" y1="138" x2="84" y2="138"/><line x1="84" y1="138" x2="61" y2="69"/>
+          <line x1="61" y1="69" x2="120" y2="26"/>
+        </g>
+        <!-- 顶点 -->
+        <g fill="#fbbf24" filter="url(#glowG)">
+          <circle cx="120" cy="26" r="3.6"/><circle cx="179" cy="69" r="3.6"/><circle cx="156" cy="138" r="3.6"/>
+          <circle cx="84" cy="138" r="3.6"/><circle cx="61" cy="69" r="3.6"/>
+        </g>
+        <g fill="rgba(255,255,255,.35)" font-size="9.5" font-family="monospace">
+          <text x="120" y="17" text-anchor="middle">v₁</text><text x="190" y="66">v₂</text>
+          <text x="160" y="156">v₃</text><text x="68" y="156">v₄</text><text x="42" y="66">v₅</text>
+        </g>
+        <text x="152" y="45" fill="#22d3ee" font-size="9.5" font-family="monospace">s ≈ 1.18</text>
+        <text x="122" y="112" fill="#fbbf24" font-size="9.5" font-family="monospace">d ≈ 1.90</text>
+      </svg>
+      <figcaption>① 正五边形：实线边 = s，虚线对角 = d，两档距离，事件只有两个时刻。</figcaption>
+    </figure>
+    <figure>
+      <svg viewBox="0 0 240 172" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="3×3 网格九点数据集">
+        <!-- 4 个方格回路 -->
+        <g fill="none" stroke="rgba(244,114,182,.35)" stroke-width="1.1" stroke-dasharray="4 3">
+          <rect x="60" y="35" width="60" height="50" rx="4"/><rect x="120" y="35" width="60" height="50" rx="4"/>
+          <rect x="60" y="85" width="60" height="50" rx="4"/><rect x="120" y="85" width="60" height="50" rx="4"/>
+        </g>
+        <!-- 单位边 -->
+        <g stroke="rgba(56,139,253,.9)" stroke-width="1.9" stroke-linecap="round">
+          <line x1="60" y1="35" x2="120" y2="35"/><line x1="120" y1="35" x2="180" y2="35"/>
+          <line x1="60" y1="85" x2="120" y2="85"/><line x1="120" y1="85" x2="180" y2="85"/>
+          <line x1="60" y1="135" x2="120" y2="135"/><line x1="120" y1="135" x2="180" y2="135"/>
+          <line x1="60" y1="35" x2="60" y2="85"/><line x1="60" y1="85" x2="60" y2="135"/>
+          <line x1="120" y1="35" x2="120" y2="85"/><line x1="120" y1="85" x2="120" y2="135"/>
+          <line x1="180" y1="35" x2="180" y2="85"/><line x1="180" y1="85" x2="180" y2="135"/>
+        </g>
+        <!-- 一个方格的对角线 -->
+        <g stroke="rgba(251,191,36,.8)" stroke-width="1.3" stroke-dasharray="5 4">
+          <line x1="60" y1="85" x2="120" y2="135"/><line x1="120" y1="85" x2="60" y2="135"/>
+        </g>
+        <!-- 顶点 -->
+        <g fill="#fbbf24" filter="url(#glowG)">
+          <circle cx="60" cy="35" r="3.4"/><circle cx="120" cy="35" r="3.4"/><circle cx="180" cy="35" r="3.4"/>
+          <circle cx="60" cy="85" r="3.4"/><circle cx="120" cy="85" r="3.4"/><circle cx="180" cy="85" r="3.4"/>
+          <circle cx="60" cy="135" r="3.4"/><circle cx="120" cy="135" r="3.4"/><circle cx="180" cy="135" r="3.4"/>
+        </g>
+        <text x="120" y="166" text-anchor="middle" fill="rgba(255,255,255,.35)" font-size="9.5" font-family="monospace">虚线框 = 4 个方格回路 · 金线 = 对角线档位</text>
+      </svg>
+      <figcaption>② 3×3 网格：单位边一档、对角线一档……五个事件时刻，四个小洞。</figcaption>
+    </figure>
+    <figure>
+      <svg viewBox="0 0 240 172" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="双方框八点数据集">
+        <!-- 左框：完整事件标注 -->
+        <g stroke="rgba(251,191,36,.7)" stroke-width="1.3" stroke-dasharray="5 4">
+          <line x1="35" y1="55" x2="115" y2="100"/><line x1="115" y1="55" x2="35" y2="100"/>
+        </g>
+        <g stroke="rgba(56,139,253,.9)" stroke-width="2" stroke-linecap="round">
+          <line x1="35" y1="55" x2="115" y2="55"/><line x1="35" y1="100" x2="115" y2="100"/>
+        </g>
+        <g stroke="rgba(34,211,238,.95)" stroke-width="3.4" stroke-linecap="round">
+          <line x1="35" y1="55" x2="35" y2="100"/><line x1="115" y1="55" x2="115" y2="100"/>
+        </g>
+        <!-- 右框：仅轮廓 -->
+        <rect x="155" y="55" width="80" height="45" rx="3" fill="none" stroke="rgba(56,139,253,.55)" stroke-width="1.6"/>
+        <g stroke="rgba(34,211,238,.5)" stroke-width="2.6" stroke-linecap="round">
+          <line x1="155" y1="55" x2="155" y2="100"/><line x1="235" y1="55" x2="235" y2="100"/>
+        </g>
+        <!-- 顶点 -->
+        <g fill="#fbbf24" filter="url(#glowG)">
+          <circle cx="35" cy="55" r="3.2"/><circle cx="115" cy="55" r="3.2"/><circle cx="35" cy="100" r="3.2"/><circle cx="115" cy="100" r="3.2"/>
+          <circle cx="155" cy="55" r="3.2"/><circle cx="235" cy="55" r="3.2"/><circle cx="155" cy="100" r="3.2"/><circle cx="235" cy="100" r="3.2"/>
+        </g>
+        <!-- 间距标注 -->
+        <line x1="117" y1="78" x2="153" y2="78" stroke="rgba(255,255,255,.4)" stroke-width="1.2" marker-end="url(#arrW)" marker-start="url(#arrW)"/>
+        <text x="135" y="70" text-anchor="middle" fill="#9aabc2" font-size="9.5" font-family="monospace">D ≫ √5</text>
+        <g fill="rgba(255,255,255,.38)" font-size="9" font-family="monospace">
+          <text x="30" y="122">ε=1 立柱</text><text x="62" y="48">ε=2 上梁</text><text x="88" y="118">ε=√5 斜撑</text>
+        </g>
+      </svg>
+      <figcaption>③ 双方框：左框标注三档事件，右框复制一份；跨框事件全部在 D 之后。</figcaption>
+    </figure>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3><span class="dot" style="color:var(--good)"></span>练习参考答案 · 做完再点</h3>
+
+    <label class="revl"><input type="checkbox">① 正五边形 5 点 · 揭晓</label>
+    <div class="revb">
+      两档距离：边长 <code>s = 2sin(π/5) ≈ 1.176</code>，对角线 <code>d = 2sin(2π/5) ≈ 1.902</code>。<br>
+      <b>事件：</b>ε = s 时五条边同时出现——五边形环闭合（β₀ 5→1，β₁ 0→1）；ε = d 时五条对角线 + 全部 10 个三角形（五点两两距离 ≤ d，5-团直接填满整个骨架）——β₁ 归零。<br>
+      <b>生灭表：</b>H₀：4×[0, s)、1×[0, ∞)；H₁：1×[s, d)，寿命 d−s ≈ 0.73。<br>
+      <b>彩蛋：</b>这个数据集只有两个事件时刻，条形码一共 6 根条——适合当作"第一个手算完整例子"。
+    </div>
+
+    <label class="revl"><input type="checkbox">② 3×3 网格 9 点 · 揭晓</label>
+    <div class="revb">
+      事件时刻：1、√2、2、√5、2√2。<br>
+      <b>ε = 1：</b>12 条单位边，9 块并成 1 块（8 个 H₀ 死）；网格图恰好围出 4 个单位方格的回路（4 个 H₁ 生）。<br>
+      <b>ε = √2：</b>每个方格的两条对角线与四个角三角形出现，且四角构成 4-团→直接填出四面体——4 个洞同刻被填平（4 个 H₁ 死）。<br>
+      <b>生灭表：</b>H₀：8×[0,1)、1×[0,∞)；H₁：4×[1, √2)，寿命 ≈ 0.41。<br>
+      <b>彩蛋：</b>注意四面体那一步——Rips "有团就填"会生成任意维单形，这是高维效应的最小实例；ε 继续增大（2、√5、2√2）后补边补面、复形逐步收缩，完整推演可作进阶挑战。
+    </div>
+
+    <label class="revl"><input type="checkbox">③ 双方框 8 点 · 揭晓</label>
+    <div class="revb">
+      框内事件与本章主实验完全相同（ε=1 立柱、ε=2 上梁、ε=√5 斜撑），两个框同步各发生一遍。<br>
+      <b>生灭表：</b>H₀：4×[0,1)、2×[0,2)、1×[0,D)、1×[0,∞)，其中 D 为两框最近距离（&gt; √5）；H₁：2×[2, √5)，寿命各 ≈ 0.24——这就是"两个洞"的条形码长相。<br>
+      <b>思考点：</b>两框合并时，若只有一座"桥"相连则无新洞；若有两座不相连的桥，则会新生成一个跨框大洞——跨框事件的拓扑效果取决于桥的数量，这是设计数据集时最有趣的旋钮。
+    </div>
+  </div>
+
+  <details class="qa" style="margin-top:18px">
+    <summary>空白练习纸 · 打印或照抄（点击展开）</summary>
+    <div class="qa-body">
+      <p style="margin-top:4px"><b>第一步 · 距离矩阵</b>（对角线填 0，上三角即可）</p>
+      <div class="tbl-wrap">
+        <table class="surf" style="min-width:460px">
+          <thead><tr><th></th><th>点 1</th><th>点 2</th><th>点 3</th><th>点 4</th><th>点 5</th></tr></thead>
+          <tbody>
+            <tr><td class="num">点 1</td><td class="num">0</td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+            <tr><td class="num">点 2</td><td class="blank"></td><td class="num">0</td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+            <tr><td class="num">点 3</td><td class="blank"></td><td class="blank"></td><td class="num">0</td><td class="blank"></td><td class="blank"></td></tr>
+            <tr><td class="num">点 4</td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="num">0</td><td class="blank"></td></tr>
+            <tr><td class="num">点 5</td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="num">0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><b>第二步 · 过滤事件表</b></p>
+      <div class="tbl-wrap">
+        <table class="surf" style="min-width:460px">
+          <thead><tr><th>ε 时刻</th><th>加入的单形</th><th>β₀</th><th>β₁</th></tr></thead>
+          <tbody>
+            <tr><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+            <tr><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+            <tr><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+            <tr><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+            <tr><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><b>第三步 · 生灭表与条形码</b></p>
+      <div class="tbl-wrap">
+        <table class="surf" style="min-width:460px">
+          <thead><tr><th>特征</th><th>同调</th><th>区间 [birth, death)</th><th>寿命</th></tr></thead>
+          <tbody>
+            <tr><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+            <tr><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+            <tr><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+            <tr><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="color:var(--faint);margin-top:12px">小抄：事件时刻 = 距离矩阵里的不同取值；每次事件只改局部，β 只会 ±1 或同刻多项事件叠加；最后记得用 χ 抽查。</p>
+    </div>
+  </details>
+</section>
+
+<!-- ================= 09 ================= -->
+<section id="s7">
+  <div class="sec-head">
+    <h2><span class="idx">09</span>曲面分类：拓扑签名一览</h2>
+    <p class="sub">紧致可定向曲面被<b>亏格 g</b> 完全分类；加上可定向性，非可定向曲面由<b>交叉帽数 k</b> 分类。下表给出常见空间的拓扑签名（贝蒂数按 ℚ 系数计算）。</p>
+  </div>
+
+  <div class="tbl-wrap">
+    <table class="surf">
+      <thead>
+        <tr><th>空间</th><th>β₀</th><th>β₁</th><th>β₂</th><th>χ</th><th>亏格 g</th><th>可定向</th><th>记忆口诀</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>圆 S¹</code></td><td class="num">1</td><td class="num"><span class="bar" style="--w:25"></span>1</td><td class="num">0</td><td class="num">1</td><td class="num">—</td><td class="num">是</td><td>一圈线，一个洞</td></tr>
+        <tr><td><code>球面 S²</code></td><td class="num">1</td><td class="num">0</td><td class="num">1</td><td class="num">2</td><td class="num">0</td><td class="num">是</td><td>没有把手的封闭皮</td></tr>
+        <tr><td><code>环面 T²</code></td><td class="num">1</td><td class="num"><span class="bar" style="--w:50"></span>2</td><td class="num">1</td><td class="num">0</td><td class="num">1</td><td class="num">是</td><td>甜甜圈：经线 + 纬线</td></tr>
+        <tr><td><code>双环面</code></td><td class="num">1</td><td class="num"><span class="bar" style="--w:100"></span>4</td><td class="num">1</td><td class="num neg">−2</td><td class="num">2</td><td class="num">是</td><td>双孔面包，每孔贡献 2 条回路</td></tr>
+        <tr><td><code>g 环面</code></td><td class="num">1</td><td class="num">2g</td><td class="num">1</td><td class="num">2−2g</td><td class="num">g</td><td class="num">是</td><td>通式</td></tr>
+        <tr><td><code>莫比乌斯带</code></td><td class="num">1</td><td class="num"><span class="bar" style="--w:25"></span>1</td><td class="num">0</td><td class="num">0</td><td class="num">—</td><td class="num">否</td><td>单侧曲面，收缩到中心圆</td></tr>
+        <tr><td><code>射影平面 ℝP²</code></td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td class="num">1</td><td class="num">—</td><td class="num">否</td><td>球面粘对径点，无法在 ℝ³ 实现</td></tr>
+        <tr><td><code>克莱因瓶</code></td><td class="num">1</td><td class="num"><span class="bar" style="--w:25"></span>1</td><td class="num">0</td><td class="num">0</td><td class="num">—</td><td class="num">否</td><td>两个莫比乌斯带沿边界粘合</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid g-viz" style="margin-top:18px">
+    <div class="card">
+      <h3><span class="dot" style="color:var(--cyan)"></span>识别多边形：曲面的"身份证"</h3>
+      <p>每个闭曲面都能由一个多边形把边按方向两两粘合得到。环面是正方形按 <code>aba⁻¹b⁻¹</code> 粘合：左右边同向粘（a），上下边同向粘（b）。粘合方式一旦改变，得到的曲面就不同——识别字（如 <code>aabb</code>、<code>abab</code>）正是曲面的组合密码。</p>
+      <figure style="margin-top:13px">
+        <svg viewBox="0 0 420 216" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="环面识别多边形">
+          <!-- 正方形 -->
+          <rect x="52" y="42" width="126" height="126" rx="10" fill="rgba(34,211,238,.09)" stroke="#22d3ee" stroke-width="2" filter="url(#glowC)"/>
+          <!-- 边方向箭头（a：上下边，b：左右边） -->
+          <g stroke-linecap="round" stroke-width="1.8">
+            <line x1="70" y1="36" x2="100" y2="36" stroke="#f472b6" marker-end="url(#arrM)"/>
+            <line x1="70" y1="174" x2="100" y2="174" stroke="#f472b6" marker-end="url(#arrM)"/>
+            <line x1="46" y1="60" x2="46" y2="90" stroke="#fbbf24" marker-end="url(#arrG)"/>
+            <line x1="184" y1="60" x2="184" y2="90" stroke="#fbbf24" marker-end="url(#arrG)"/>
+          </g>
+          <!-- 边标签 -->
+          <text x="115" y="34" fill="#f472b6" font-size="11.5" font-family="monospace">b</text>
+          <text x="115" y="180" fill="#f472b6" font-size="11.5" font-family="monospace">b</text>
+          <text x="34" y="112" fill="#fbbf24" font-size="11.5" font-family="monospace">a</text>
+          <text x="192" y="112" fill="#fbbf24" font-size="11.5" font-family="monospace">a</text>
+          <!-- 粘合弧（流动） -->
+          <g fill="none" stroke-width="1.7" class="flow">
+            <path d="M48 58 C 6 100, 6 110, 48 152" stroke="rgba(251,191,36,.75)" marker-end="url(#arrG)"/>
+            <path d="M68 38 C 112 -2, 118 -2, 162 38" stroke="rgba(244,114,182,.75)" marker-end="url(#arrM)"/>
+          </g>
+          <!-- 中空标记 -->
+          <circle class="flow" cx="115" cy="105" r="26" fill="rgba(34,211,238,.05)" stroke="rgba(34,211,238,.5)" stroke-width="1.3"/>
+          <text x="115" y="109" fill="#9aabc2" font-size="10.5" font-family="monospace" text-anchor="middle">中空</text>
+          <!-- 过渡箭头 -->
+          <g stroke="#fbbf24" stroke-width="2.2" stroke-linecap="round">
+            <line x1="212" y1="106" x2="242" y2="106" marker-end="url(#arrG)"/>
+          </g>
+          <text x="227" y="96" fill="#5e6f87" font-size="10" font-family="monospace" text-anchor="middle">粘合</text>
+          <!-- 环面 -->
+          <g transform="translate(250,30)">
+            <ellipse cx="82" cy="84" rx="74" ry="44" fill="url(#gDonut)" stroke="#f472b6" stroke-width="2" filter="url(#glowM)"/>
+            <ellipse cx="82" cy="84" rx="74" ry="44" fill="url(#gShade)" opacity=".5"/>
+            <path d="M28 62 C 56 44, 108 44, 136 62" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="3.5" stroke-linecap="round"/>
+            <ellipse cx="82" cy="84" rx="28" ry="14.5" fill="#080d18" stroke="#f472b6" stroke-width="1.8"/>
+            <text x="82" y="152" fill="#5e6f87" font-size="10.5" font-family="monospace" text-anchor="middle">粘合结果：环面</text>
+          </g>
+        </svg>
+        <figcaption>识别多边形 aba⁻¹b⁻¹ → 环面。左右相接（a）、上下相接（b），方块中间长出一个洞。</figcaption>
+      </figure>
+    </div>
+
+    <div>
+      <div class="note cyan"><b>亏格与 β₁ 的关系：</b>可定向闭曲面上，每个把手贡献两条独立回路（绕把手一圈 + 穿过把手一圈），因此 <code>β₁ = 2g</code>。看到 β₁ = 4，立刻反推 g = 2。</div>
+      <div class="note"><b>非可定向曲面的 β₂：</b>射影平面、克莱因瓶无法在 ℝ³ 中无自交地实现，且不存在一致的"内外"，因此没有可定向的整体腔体，<code>β₂ = 0</code>（ℚ 系数）。它们的拓扑由交叉帽数 k 区分：ℝP² 是 k=1，克莱因瓶是 k=2。</div>
+      <div class="note gold"><b>实用判据：</b>拿一张曲面网格，用欧拉公式 <code>V − E + F = χ</code> 数顶点、边、面即可算出 χ——不需要任何几何测量，纯计数就得到拓扑指纹。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 10 ================= -->
+<section id="s8">
+  <div class="sec-head">
+    <h2><span class="idx">10</span>应用图谱：拓扑度量在哪里发光</h2>
+    <p class="sub">持续同调把"形状的定性描述"变成了"可计算的定量特征"，催生了<b>拓扑数据分析（TDA, Topological Data Analysis）</b><sup class="fn"><a href="#fn2" id="ref-2">[2]</a></sup>。以下是最有代表性的场景。</p>
+  </div>
+
+  <div class="gallery">
+    <div class="gc">
+      <svg viewBox="0 0 220 125" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="点云聚类">
+        <!-- 簇光晕 -->
+        <circle cx="54" cy="44" r="30" fill="url(#gBallC)"/>
+        <circle cx="152" cy="42" r="28" fill="url(#gBallM)"/>
+        <circle cx="106" cy="92" r="24" fill="url(#gBallG)"/>
+        <!-- 簇内边 -->
+        <g stroke="rgba(255,255,255,.12)" stroke-width="1">
+          <line x1="46" y1="36" x2="64" y2="52"/><line x1="146" y1="34" x2="162" y2="50"/><line x1="98" y1="88" x2="116" y2="98"/>
+        </g>
+        <!-- 簇点 -->
+        <g filter="url(#glowG)">
+          <g fill="rgba(34,211,238,.95)"><circle cx="46" cy="36" r="3.2"/><circle cx="64" cy="52" r="3.2"/><circle cx="44" cy="58" r="3.2"/><circle cx="62" cy="30" r="3.2"/></g>
+          <g fill="rgba(244,114,182,.95)"><circle cx="146" cy="34" r="3.2"/><circle cx="162" cy="50" r="3.2"/><circle cx="140" cy="56" r="3.2"/><circle cx="158" cy="26" r="3.2"/></g>
+          <g fill="rgba(251,191,36,.95)"><circle cx="98" cy="88" r="3.2"/><circle cx="116" cy="98" r="3.2"/><circle cx="92" cy="102" r="3.2"/></g>
+        </g>
+        <!-- 洞标记 -->
+        <path class="flow" d="M106 32 a 20 12 0 1 0 40 0 a 20 12 0 1 0 -40 0" fill="none" stroke="rgba(244,114,182,.6)" stroke-width="1.4"/>
+      </svg>
+      <h4>聚类与数据骨架</h4>
+      <p>用 β₀ 追踪簇的合并过程，得到比 K-means 更稳健的层次聚类；持久图上的长条圈出真实的簇数。</p>
+      <div class="sig"><span class="b0">β₀↑</span><span class="b1">骨架</span></div>
+    </div>
+
+    <div class="gc">
+      <svg viewBox="0 0 220 125" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="蛋白质结构">
+        <!-- 主链 -->
+        <path d="M28 96 C 56 32, 84 108, 112 50 S 164 80, 194 32" fill="none" stroke="rgba(34,211,238,.9)" stroke-width="2.6" stroke-linecap="round" filter="url(#glowC)"/>
+        <!-- 螺旋段 -->
+        <path d="M56 62 C 66 48, 78 76, 88 60 S 100 44, 106 58" fill="none" stroke="rgba(244,114,182,.75)" stroke-width="1.8" stroke-linecap="round"/>
+        <!-- 侧链点 -->
+        <g fill="#fbbf24" filter="url(#glowG)"><circle cx="52" cy="56" r="3"/><circle cx="98" cy="78" r="3"/><circle cx="150" cy="62" r="3"/></g>
+        <g stroke="rgba(251,191,36,.4)" stroke-width="1">
+          <line x1="52" y1="56" x2="58" y2="66"/><line x1="98" y1="78" x2="102" y2="88"/><line x1="150" y1="62" x2="154" y2="72"/>
+        </g>
+        <!-- 环洞 -->
+        <circle cx="112" cy="58" r="14" fill="url(#gBallM)"/>
+        <path class="flow" d="M100 58 a 13 8 0 1 0 26 0 a 13 8 0 1 0 -26 0" fill="none" stroke="rgba(244,114,182,.85)" stroke-width="1.6"/>
+      </svg>
+      <h4>生物大分子结构</h4>
+      <p>蛋白质折叠中的环、孔道、空腔决定其功能。持续同调刻画折叠中间态的拓扑演化，辅助药物设计。</p>
+      <div class="sig"><span class="b1">β₁ 环</span><span class="b2">β₂ 空腔</span></div>
+    </div>
+
+    <div class="gc">
+      <svg viewBox="0 0 220 125" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="多孔材料">
+        <!-- 材料块 -->
+        <rect x="22" y="22" width="176" height="80" rx="12" fill="rgba(251,191,36,.08)" stroke="rgba(251,191,36,.55)" stroke-width="1.6"/>
+        <rect x="22" y="22" width="176" height="80" rx="12" fill="url(#gShade)" opacity=".5"/>
+        <!-- 孔 -->
+        <g>
+          <circle cx="66" cy="50" r="17" fill="#080d18" stroke="rgba(34,211,238,.75)" stroke-width="1.7"/>
+          <circle cx="66" cy="50" r="22" fill="url(#gBallC)"/>
+          <circle cx="132" cy="66" r="13" fill="#080d18" stroke="rgba(34,211,238,.75)" stroke-width="1.7"/>
+          <circle cx="132" cy="66" r="18" fill="url(#gBallC)"/>
+          <circle cx="162" cy="38" r="8" fill="#080d18" stroke="rgba(34,211,238,.75)" stroke-width="1.7"/>
+          <circle cx="100" cy="88" r="6" fill="#080d18" stroke="rgba(34,211,238,.6)" stroke-width="1.5"/>
+        </g>
+        <!-- 孔道 -->
+        <path class="flow" d="M83 52 C 100 56, 112 60, 119 63" stroke="rgba(244,114,182,.85)" stroke-width="1.8" fill="none" marker-end="url(#arrM)"/>
+        <path class="flow" d="M145 60 C 152 52, 156 46, 158 44" stroke="rgba(244,114,182,.6)" stroke-width="1.5" fill="none" marker-end="url(#arrM)"/>
+      </svg>
+      <h4>多孔材料与催化</h4>
+      <p>材料的孔隙连通性（渗透率）由 β₁/β₂ 决定。TDA 可从显微图像直接量化孔道网络，预测渗透与吸附性能。</p>
+      <div class="sig"><span class="b1">孔道 β₁</span><span class="b2">空腔 β₂</span></div>
+    </div>
+
+    <div class="gc">
+      <svg viewBox="0 0 220 125" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="传感器网络覆盖">
+        <!-- 覆盖盘 -->
+        <g fill="url(#gBallG)">
+          <circle cx="58" cy="46" r="26"/><circle cx="112" cy="34" r="26"/><circle cx="160" cy="52" r="26"/>
+          <circle cx="132" cy="92" r="26"/><circle cx="72" cy="88" r="26"/>
+        </g>
+        <!-- 通信边 -->
+        <g stroke="rgba(34,211,238,.55)" stroke-width="1.3">
+          <line x1="58" y1="46" x2="112" y2="34"/><line x1="112" y1="34" x2="160" y2="52"/><line x1="160" y1="52" x2="132" y2="92"/>
+          <line x1="132" y1="92" x2="72" y2="88"/><line x1="72" y1="88" x2="58" y2="46"/><line x1="58" y1="46" x2="132" y2="92"/>
+        </g>
+        <!-- 节点 -->
+        <g fill="#fbbf24" filter="url(#glowG)">
+          <circle cx="58" cy="46" r="3.2"/><circle cx="112" cy="34" r="3.2"/><circle cx="160" cy="52" r="3.2"/><circle cx="132" cy="92" r="3.2"/><circle cx="72" cy="88" r="3.2"/>
+        </g>
+        <!-- 覆盖盲区 -->
+        <path class="flow" d="M102 58 a 13 8 0 1 0 26 0 a 13 8 0 1 0 -26 0" fill="none" stroke="rgba(244,114,182,.9)" stroke-width="1.6"/>
+        <text x="115" y="61" fill="#f472b6" font-size="9" font-family="monospace" text-anchor="middle">盲区</text>
+      </svg>
+      <h4>传感器网络覆盖</h4>
+      <p>通信半径即 Rips 半径 ε。β₀ &gt; 1 说明网络断开，β₁ &gt; 0 说明存在覆盖盲区——拓扑直接给出部署质量证书。</p>
+      <div class="sig"><span class="b0">β₀ 连通</span><span class="b1">β₁ 盲区</span></div>
+    </div>
+
+    <div class="gc">
+      <svg viewBox="0 0 220 125" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="神经网络损失面">
+        <!-- 坐标轴 -->
+        <line x1="18" y1="102" x2="204" y2="102" stroke="rgba(255,255,255,.2)" stroke-width="1.2" marker-end="url(#arrW)"/>
+        <!-- 曲线下方面积 -->
+        <path d="M20 82 C 52 18, 78 100, 110 44 S 170 80, 202 28 L 202 102 L 20 102 Z" fill="url(#gAreaM)"/>
+        <!-- 曲线 -->
+        <path d="M20 82 C 52 18, 78 100, 110 44 S 170 80, 202 28" fill="none" stroke="rgba(167,139,250,.95)" stroke-width="2.3" stroke-linecap="round" filter="url(#glowG)"/>
+        <!-- 极小点 + 投影 -->
+        <g stroke="rgba(251,191,36,.35)" stroke-dasharray="3 3">
+          <line x1="52" y1="62" x2="52" y2="102"/><line x1="128" y1="60" x2="128" y2="102"/><line x1="182" y1="50" x2="182" y2="102"/>
+        </g>
+        <g fill="rgba(251,191,36,.95)" filter="url(#glowG)">
+          <circle cx="52" cy="62" r="3.4"/><circle cx="128" cy="60" r="3.4"/><circle cx="182" cy="50" r="3.4"/>
+        </g>
+        <text x="110" y="118" fill="#5e6f87" font-size="9.5" font-family="monospace" text-anchor="middle">盆地 · 鞍点 · 优化路径</text>
+      </svg>
+      <h4>损失曲面与动力系统</h4>
+      <p>损失面上的鞍点、盆地、环形山谷决定优化路径。持续同调为高维损失景观提供坐标无关的结构描述。</p>
+      <div class="sig"><span class="b1">盆地 β₁</span></div>
+    </div>
+
+    <div class="gc">
+      <svg viewBox="0 0 220 125" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="宇宙大尺度结构">
+        <!-- 纤维 -->
+        <g stroke="rgba(34,211,238,.35)" stroke-width="1.1">
+          <line x1="42" y1="34" x2="74" y2="26"/><line x1="74" y1="26" x2="116" y2="28"/><line x1="116" y1="28" x2="150" y2="42"/>
+          <line x1="150" y1="42" x2="172" y2="78"/><line x1="172" y1="78" x2="122" y2="88"/><line x1="122" y1="88" x2="84" y2="100"/>
+          <line x1="84" y1="100" x2="60" y2="72"/><line x1="60" y1="72" x2="42" y2="34"/><line x1="94" y1="52" x2="60" y2="72"/><line x1="94" y1="52" x2="122" y2="88"/>
+        </g>
+        <!-- 星系节点 -->
+        <g filter="url(#glowC)" fill="rgba(34,211,238,.95)">
+          <circle cx="42" cy="34" r="2.8"/><circle cx="74" cy="26" r="2.8"/><circle cx="94" cy="52" r="2.8"/>
+          <circle cx="60" cy="72" r="2.8"/><circle cx="116" cy="28" r="2.8"/><circle cx="150" cy="42" r="2.8"/>
+          <circle cx="172" cy="78" r="2.8"/><circle cx="122" cy="88" r="2.8"/><circle cx="84" cy="100" r="2.8"/><circle cx="192" cy="32" r="2.8"/>
+        </g>
+        <!-- 背景远星 -->
+        <g fill="rgba(255,255,255,.18)">
+          <circle cx="26" cy="96" r="1.3"/><circle cx="140" cy="104" r="1.3"/><circle cx="204" cy="62" r="1.3"/><circle cx="34" cy="12" r="1.3"/>
+        </g>
+        <!-- 宇宙空洞 -->
+        <circle cx="102" cy="52" r="22" fill="rgba(244,114,182,.06)"/>
+        <path class="flow" d="M92 46 a 12 8 0 1 0 24 0 a 12 8 0 1 0 -24 0" fill="none" stroke="rgba(244,114,182,.9)" stroke-width="1.5"/>
+        <text x="102" y="49" fill="#f472b6" font-size="9" font-family="monospace" text-anchor="middle">空洞</text>
+      </svg>
+      <h4>宇宙大尺度结构</h4>
+      <p>星系分布的"宇宙网"充满纤维与空洞。持久同调量化宇宙空洞的尺度分布，检验宇宙学模型。</p>
+      <div class="sig"><span class="b1">空洞 β₁</span><span class="b0">纤维聚类</span></div>
+    </div>
+  </div>
+
+  <div class="note cyan" style="margin-top:24px"><b>选择拓扑方法的时机：</b>当你关心数据的<b>形状</b>（连通、环、腔）而非坐标数值；当特征需要<b>坐标不变、尺度稳健</b>；当传统统计被噪声/高维折磨时——就是持续同调登场的时候。它不取代传统方法，而是提供一个此前缺失的"结构维度"。</div>
+</section>
+
+<!-- ================= 11 · 历史演进 ================= -->
+<section id="hist">
+  <div class="sec-head">
+    <h2><span class="idx">11</span>历史演进：从七桥到拓扑数据分析</h2>
+    <p class="sub">拓扑学不是一夜长成的。<b>欧拉</b>从一座城的桥开始追问"连通与回路"，<b>庞加莱</b>把"洞"变成代数，<b>计算拓扑</b>在 21 世纪之交把这一切变成可运行的算法，<b>TDA</b> 则把它带进了数据科学。这条线索本身就是一部"结构意识觉醒史"。</p>
+  </div>
+  <div class="p7">
+    <div class="p7-tabs" role="radiogroup" aria-label="检查陆块">
+      <input type="radio" name="p7" id="p7a"><label for="p7a">检查陆块 A · 北岸</label>
+      <input type="radio" name="p7" id="p7b"><label for="p7b">陆块 B · 南岸</label>
+      <input type="radio" name="p7" id="p7c"><label for="p7c">陆块 C · 岛屿</label>
+      <input type="radio" name="p7" id="p7d"><label for="p7d">陆块 D · 东岸</label>
+    </div>
+    <div class="p7-grid">
+      <div class="p7-map">
+        <svg viewBox="0 0 620 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="柯尼斯堡七桥地图：四个陆块与七座桥">
+          <!-- 陆块 -->
+          <rect x="30" y="18" width="560" height="74" rx="18" fill="rgba(52,211,153,.13)" stroke="rgba(52,211,153,.5)" stroke-width="1.6"/>
+          <rect x="30" y="212" width="390" height="70" rx="18" fill="rgba(52,211,153,.13)" stroke="rgba(52,211,153,.5)" stroke-width="1.6"/>
+          <rect x="150" y="118" width="190" height="76" rx="18" fill="rgba(52,211,153,.16)" stroke="rgba(52,211,153,.55)" stroke-width="1.6"/>
+          <rect x="452" y="118" width="138" height="164" rx="18" fill="rgba(52,211,153,.13)" stroke="rgba(52,211,153,.5)" stroke-width="1.6"/>
+          <g fill="rgba(52,211,153,.85)" font-size="12.5" font-family="monospace" font-weight="700">
+            <text x="52" y="50">A · 北岸</text><text x="52" y="254">B · 南岸</text>
+            <text x="170" y="152">C · 岛屿</text><text x="472" y="152">D · 东岸</text>
+          </g>
+          <!-- 七座桥 -->
+          <g stroke="rgba(251,191,36,.72)" stroke-width="12" stroke-linecap="round">
+            <line class="br hl-a hl-c" x1="196" y1="92" x2="196" y2="118"/>
+            <line class="br hl-a hl-c" x1="282" y1="92" x2="282" y2="118"/>
+            <line class="br hl-b hl-c" x1="196" y1="194" x2="196" y2="212"/>
+            <line class="br hl-b hl-c" x1="282" y1="194" x2="282" y2="212"/>
+            <line class="br hl-c hl-d" x1="340" y1="156" x2="452" y2="156"/>
+            <line class="br hl-a hl-d" x1="520" y1="92" x2="520" y2="118"/>
+            <line class="br hl-b hl-d" x1="420" y1="247" x2="452" y2="247"/>
+          </g>
+          <!-- 桥名 -->
+          <g fill="#fbbf24" font-size="11" font-family="monospace" text-anchor="middle">
+            <text x="196" y="112">b₁</text><text x="282" y="112">b₂</text><text x="196" y="208">b₃</text><text x="282" y="208">b₄</text>
+            <text x="396" y="146">b₅</text><text x="520" y="112">b₆</text><text x="436" y="237">b₇</text>
+          </g>
+          <!-- 题目提示 -->
+          <text x="310" y="296" fill="rgba(255,255,255,.35)" font-size="11" font-family="monospace" text-anchor="middle">问题：能否从任一陆块出发，不重复地一次走遍七座桥？</text>
+        </svg>
+      </div>
+      <div>
+        <div class="p7-hint">👆 点击上方按钮逐个检查陆块，数一数每个陆块连接几座桥（就是它的<b style="color:var(--fg)">度数</b>），注意奇偶。四个都查完再揭晓答案。</div>
+        <div class="p7-p" id="pp-a"><b>陆块 A（北岸）· 度数 3</b><br>连接桥：b₁、b₂、b₆ —— <b>奇点</b>。每经过一次消耗两座桥（一进一出），奇数座桥注定"有去无回"：要么走得出却回不来，要么反过来。这样的陆块最多只能当起点或终点。</div>
+        <div class="p7-p" id="pp-b"><b>陆块 B（南岸）· 度数 3</b><br>连接桥：b₃、b₄、b₇ —— <b>奇点</b>。同理，B 也只能当起点或终点。</div>
+        <div class="p7-p" id="pp-c"><b>陆块 C（岛屿）· 度数 5</b><br>连接桥：b₁、b₂、b₃、b₄、b₅ —— <b>奇点</b>。桥最多，但 5 是奇数：每次"进+出"消耗两座，最后一座必剩——同样只能当起点或终点。</div>
+        <div class="p7-p" id="pp-d"><b>陆块 D（东岸）· 度数 3</b><br>连接桥：b₅、b₆、b₇ —— <b>奇点</b>。第四个奇点。</div>
+      </div>
+    </div>
+    <label class="p7-reveal" for="p7ans"><input type="checkbox" id="p7ans">🔍 揭晓答案与欧拉的证明</label>
+    <div class="p7-ans">
+      <b>答案：不可能。</b>把"陆块"抽象成顶点、"桥"抽象成边，问题变成：这张图能否一笔画（欧拉路径）？结论只看度数——<b>奇点个数必须是 0 或 2</b>（0 个时还能回到起点，2 个时一个当起点一个当终点）。而本图四个顶点全是奇点（3, 3, 5, 3），共 4 个奇点 &gt; 2，<b>无论从哪出发都无解</b>。
+      <div class="formula">deg(A)=3, deg(B)=3, deg(C)=5, deg(D)=3  ⟹  奇点数 = 4 &gt; 2  ⟹  不存在欧拉路径</div>
+      这就是欧拉 1736 年的洞见：不数桥、不试路线，只看<b>结构不变量（度数）</b>就能判定——图论由此诞生，也正是本页 β₀/β₁ 思想的最早雏形。往下看时间线，追踪这条线索如何长成持续同调。
+    </div>
+  </div>
+
+  <div class="lab2">
+    <h3 style="margin:0 0 4px;font-size:14.5px;color:var(--fg);display:flex;align-items:center;gap:9px"><span class="dot" style="color:var(--violet)"></span>桥数改造实验室 · 自己设计桥数</h3>
+    <p style="margin:0 0 12px;color:var(--dim);font-size:12.8px">固定 C–D、A–D、B–D 各一座桥；调节 <b style="color:var(--fg)">A–C</b> 与 <b style="color:var(--fg)">C–B</b> 之间的桥数（0/1/2），九种设计即时判定——从柯尼斯堡的绝望出发，亲手把它改造成能走遍的城。</p>
+    <div class="knobs">
+      <div class="knob">
+        <div class="kt">A–C 之间放几座桥？</div>
+        <div class="opts">
+          <input type="radio" name="k1" id="k10"><label for="k10">0</label>
+          <input type="radio" name="k1" id="k11"><label for="k11">1</label>
+          <input type="radio" name="k1" id="k12" checked><label for="k12">2</label>
+        </div>
+      </div>
+      <div class="knob">
+        <div class="kt">C–B 之间放几座桥？</div>
+        <div class="opts">
+          <input type="radio" name="k2" id="k20"><label for="k20">0</label>
+          <input type="radio" name="k2" id="k21"><label for="k21">1</label>
+          <input type="radio" name="k2" id="k22" checked><label for="k22">2</label>
+        </div>
+      </div>
+    </div>
+    <div class="vv no vv-22"><b>2 + 2 = 无解（这就是原版七桥！）</b><br>deg(A)=3, deg(B)=3, deg(C)=5, deg(D)=3 —— 4 个奇点 &gt; 2。柯尼斯堡市民的绝望是有数学根据的。</div>
+    <div class="vv ok vv-21"><b>2 + 1 = 有解！</b><br>deg(A)=3, deg(B)=2, deg(C)=4, deg(D)=3 —— 奇点恰好 2 个（A、D）：从 A 出发、D 结束（或反之），就能不重复走遍全部 6 座桥。</div>
+    <div class="vv no vv-20"><b>2 + 0 = 无解</b><br>deg(A)=3, deg(B)=1, deg(C)=3, deg(D)=3 —— 4 个奇点。拆得太少或太多都会把奇点数打回 4。</div>
+    <div class="vv ok vv-12"><b>1 + 2 = 有解！</b><br>deg(A)=2, deg(B)=3, deg(C)=4, deg(D)=3 —— 奇点 B、D：从 B 走到 D 即可。</div>
+    <div class="vv ok vv-11"><b>1 + 1 = 有解！</b><br>deg(A)=2, deg(B)=2, deg(C)=3, deg(D)=3 —— 奇点 C、D。注意只剩 5 座桥，起点可以选岛屿 C。</div>
+    <div class="vv ok vv-10"><b>1 + 0 = 有解！</b><br>deg(A)=2, deg(B)=1, deg(C)=2, deg(D)=3 —— 奇点 B、D。</div>
+    <div class="vv no vv-02"><b>0 + 2 = 无解</b><br>deg(A)=1, deg(B)=3, deg(C)=3, deg(D)=3 —— 4 个奇点。</div>
+    <div class="vv ok vv-01"><b>0 + 1 = 有解！</b><br>deg(A)=1, deg(B)=2, deg(C)=2, deg(D)=3 —— 奇点 A、D。</div>
+    <div class="vv no vv-00"><b>0 + 0 = 无解</b><br>deg(A)=1, deg(B)=1, deg(C)=1, deg(D)=3 —— 4 个奇点，全城只剩 3 座孤桥。</div>
+    <div class="note gold" style="margin:14px 0 0"><b>奇偶法则（自己推任意组合）：</b>动一座桥 = 两端陆块奇偶翻转。奇点数 0 = 完美闭环（回到起点），2 = 可走（这两个当起终点），其他 = 无解。本实验里 D 永远连 3 座桥、永远是奇点——所以只会在"可走"与"无解"之间切换；想凑出完美闭环，得把 D 的桥数也纳入设计。</div>
+  </div>
+
+  <div class="tl">
+    <div class="ev"><div class="y">1736</div><h4>欧拉 · 柯尼斯堡七桥</h4><p>解决"能否一次走遍七座桥"——图的连通与回路问题，β₀ 与 β₁ 思想的最早雏形，也催生了图论。</p></div>
+    <div class="ev"><div class="y">1895</div><h4>庞加莱 · 《位置分析》（Analysis Situs）</h4><p>建立同调群，把"洞"变成可计算的代数对象；Betti 数以意大利数学家 Enrico Betti 命名。拓扑学有了自己的"不变量语言"。</p></div>
+    <div class="ev"><div class="y">2002</div><h4>Edelsbrunner · Letscher · Zomorodian</h4><p>《Topological Persistence and Simplification》给出持续同调的严格定义与矩阵约简算法，条形码与持久图正式登上舞台。</p></div>
+    <div class="ev"><div class="y">2007</div><h4>Singh · Mémoli · Carlsson · Mapper 算法</h4><p>把拓扑骨架用于高维数据探索（含著名的"癌症基因组子类型"案例），TDA 的杀手级应用诞生。</p></div>
+    <div class="ev"><div class="y">2009</div><h4>Carlsson ·《Topology and Data》</h4><p>AMS Bulletin 综述命名并推广 TDA，宣告拓扑学进入数据科学主流：形状不再只是几何，而是可计算的特征。</p></div>
+    <div class="ev"><div class="y">2010</div><h4>Edelsbrunner &amp; Harer ·《Computational Topology》</h4><p>领域第一本标准教材问世；此后持续同调成为机器学习与科学计算的标准特征工具，应用遍及材料、生物、宇宙学。</p></div>
+  </div>
+</section>
+
+<!-- ================= 12 · 自测 ================= -->
+<section id="quiz">
+  <div class="sec-head">
+    <h2><span class="idx">12</span>自测：动手验收获</h2>
+    <p class="sub">两套纯 CSS 交互练习：<b>翻牌速记卡</b>（点击翻面看定义）与<b>即时反馈测验</b>（选择后立刻显示对错与解析）。不用刷新、不写一行 JS。</p>
+  </div>
+
+  <h3 style="margin:8px 0 4px;font-size:15px;color:var(--fg)">🃏 翻牌速记卡 · 点击卡片翻面</h3>
+  <div class="flip-grid">
+    <label class="flip"><input type="checkbox"><div class="inner">
+      <div class="face front"><b>同胚</b><em>Homeomorphism</em><span class="hint">点击翻面</span></div>
+      <div class="face back"><span>连续、双射、逆也连续的映射——拓扑学的"全等"。咖啡杯 ≅ 甜甜圈。</span></div>
+    </div></label>
+    <label class="flip"><input type="checkbox"><div class="inner">
+      <div class="face front"><b>β₁ · 一维洞</b><em>1st Betti number</em><span class="hint">点击翻面</span></div>
+      <div class="face back"><span>不能连续收缩为一点的独立闭合回路个数。环面 β₁ = 2。</span></div>
+    </div></label>
+    <label class="flip"><input type="checkbox"><div class="inner">
+      <div class="face front"><b>持久性</b><em>Persistence</em><span class="hint">点击翻面</span></div>
+      <div class="face back"><span>death − birth。条形码中横条的长度；活得越久越可信。</span></div>
+    </div></label>
+    <label class="flip"><input type="checkbox"><div class="inner">
+      <div class="face front"><b>亏格 g</b><em>Genus</em><span class="hint">点击翻面</span></div>
+      <div class="face back"><span>闭曲面的把手个数。可定向时 χ = 2 − 2g，β₁ = 2g。</span></div>
+    </div></label>
+    <label class="flip"><input type="checkbox"><div class="inner">
+      <div class="face front"><b>Nerve 定理</b><em>Nerve Theorem</em><span class="hint">点击翻面</span></div>
+      <div class="face back"><span>好覆盖下，Čech 复形与球并空间同伦等价——交叠模式就编码了形状。</span></div>
+    </div></label>
+    <label class="flip"><input type="checkbox"><div class="inner">
+      <div class="face front"><b>矩阵约简</b><em>Matrix Reduction</em><span class="hint">点击翻面</span></div>
+      <div class="face back"><span>low(j) = i ⟹ 配对 (i, j)：特征生于 σᵢ，死于 σⱼ。</span></div>
+    </div></label>
+  </div>
+
+  <h3 style="margin:22px 0 4px;font-size:15px;color:var(--fg)">📝 即时测验 · 选择后立刻判分</h3>
+
+  <div class="quiz">
+    <p class="q"><span class="tag">Q1</span>环面 T² 的 β₁ 是多少？</p>
+    <div class="opts">
+      <label class="opt"><input type="radio" name="q1"><span class="key">A</span>0</label>
+      <label class="opt"><input type="radio" name="q1"><span class="key">B</span>1</label>
+      <label class="opt"><input type="radio" name="q1" data-ok><span class="key">C</span>2</label>
+      <label class="opt"><input type="radio" name="q1"><span class="key">D</span>4</label>
+    </div>
+    <div class="fb ok"><b>✓ 正确。</b>绕中空管的纬线 + 绕管截面的经线 = 两条互不等价的闭合回路，β₁ = 2。视觉上"一个孔"与同调意义的"两个洞"不同——这正是 Betti 数的微妙之处。</div>
+    <div class="fb no"><b>✗ 再想想。</b>提示：数的是"独立闭合回路"，不是视觉上的孔。想想甜甜圈上你能画出几种"套不进彼此"的圈。</div>
+  </div>
+
+  <div class="quiz">
+    <p class="q"><span class="tag">Q2</span>持久图上紧贴对角线的点，通常意味着什么？</p>
+    <div class="opts">
+      <label class="opt"><input type="radio" name="q2"><span class="key">A</span>重要的真实结构</label>
+      <label class="opt"><input type="radio" name="q2" data-ok><span class="key">B</span>短命噪声，可丢弃</label>
+      <label class="opt"><input type="radio" name="q2"><span class="key">C</span>高亏格曲面</label>
+      <label class="opt"><input type="radio" name="q2"><span class="key">D</span>计算错误</label>
+    </div>
+    <div class="fb ok"><b>✓ 正确。</b>越贴近对角线，death − birth 越接近 0，特征旋生旋灭——多为采样噪声。稳定性定理保证真结构不会被小扰动推到对角线附近。</div>
+    <div class="fb no"><b>✗ 再想想。</b>提示：横轴是出生 ε_birth，纵轴是死亡 ε_death。两点坐标很接近，说明这个特征活了多久？</div>
+  </div>
+
+  <div class="quiz">
+    <p class="q"><span class="tag">Q3</span>某特征 ε_birth = 0.2、ε_death = 0.5，其持久性是多少？</p>
+    <div class="opts">
+      <label class="opt"><input type="radio" name="q3"><span class="key">A</span>0.2</label>
+      <label class="opt"><input type="radio" name="q3" data-ok><span class="key">B</span>0.3</label>
+      <label class="opt"><input type="radio" name="q3"><span class="key">C</span>0.7</label>
+      <label class="opt"><input type="radio" name="q3"><span class="key">D</span>1.0</label>
+    </div>
+    <div class="fb ok"><b>✓ 正确。</b>persistence = death − birth = 0.5 − 0.2 = 0.3，即条形码中该横条的长度。</div>
+    <div class="fb no"><b>✗ 再想想。</b>提示：持久性是两个尺度的<b>差</b>，不是和。</div>
+  </div>
+
+  <div class="quiz">
+    <p class="q"><span class="tag">Q4</span>同一点云、同一 ε 下，Rips_ε 与 Čech_ε 的包含关系是？</p>
+    <div class="opts">
+      <label class="opt"><input type="radio" name="q4" data-ok><span class="key">A</span>Rips_ε ⊆ Čech_ε</label>
+      <label class="opt"><input type="radio" name="q4"><span class="key">B</span>Čech_ε ⊆ Rips_ε</label>
+      <label class="opt"><input type="radio" name="q4"><span class="key">C</span>两者恒相等</label>
+      <label class="opt"><input type="radio" name="q4"><span class="key">D</span>互不包含</label>
+    </div>
+    <div class="fb ok"><b>✓ 正确。</b>两两距离 ≤ ε 的点集，任取一点就是所有半径 ε 球的公共交点，所以 Rips_ε ⊆ Čech_ε；反向不成立，但 Čech_ε ⊆ Rips_{2ε}，二者只差尺度因子。</div>
+    <div class="fb no"><b>✗ 再想想。</b>提示：Rips 只查"两两距离"，Čech 要求"公共交点"。哪个判据更容易满足？</div>
+  </div>
+
+  <div class="quiz">
+    <p class="q"><span class="tag">Q5</span>一张可定向闭曲面网格数出 V − E + F = 0，它的亏格是？</p>
+    <div class="opts">
+      <label class="opt"><input type="radio" name="q5"><span class="key">A</span>0（球面）</label>
+      <label class="opt"><input type="radio" name="q5" data-ok><span class="key">B</span>1（环面）</label>
+      <label class="opt"><input type="radio" name="q5"><span class="key">C</span>2（双环面）</label>
+      <label class="opt"><input type="radio" name="q5"><span class="key">D</span>无法确定</label>
+    </div>
+    <div class="fb ok"><b>✓ 正确。</b>χ = V − E + F = 0 = 2 − 2g ⟹ g = 1，即环面。纯计数就能读出拓扑——欧拉示性数的威力。</div>
+    <div class="fb no"><b>✗ 再想想。</b>提示：代入 χ = 2 − 2g 解方程即可。</div>
+  </div>
+
+  <div class="score">
+    <b>🏆 5/5 全对 · 拓扑签名工程师徽章已解锁</b>
+    <span>你已经掌握：Betti 数判读 · 持久性计算 · Rips/Čech 包含关系 · 欧拉公式反推亏格。带着这套手感去 §08 动手实验自己造一个数据集，或回 §00 全景图复盘整条流水线。</span>
+  </div>
+  <p class="hint-line">💡 全部答对后，这里会出现一枚彩蛋徽章。</p>
+</section>
+
+<!-- ================= 13 · 附录 ================= -->
+<section id="s9">
+  <div class="sec-head">
+    <h2><span class="idx">13</span>附录 · 术语速查与思考题</h2>
+    <p class="sub">原生折叠卡片（无需 JS），按需展开。<b>术语速查</b>覆盖全页关键词；<b>思考题</b>用于自检理解程度。</p>
+  </div>
+
+  <details class="qa" open>
+    <summary>术语索引 · 英中互查（点章节号可跳转）</summary>
+    <div class="qa-body">
+      <div class="idx-list">
+        <div class="grp"><i>B</i><hr></div>
+        <div class="row"><span class="en">Barcode</span><span class="zh">条形码</span><span class="df">持续同调的第一种读法：横条长度 = 持久性。</span><a class="to" href="#s6">→ §07</a></div>
+        <div class="row"><span class="en">Betti number</span><span class="zh">贝蒂数</span><span class="df">第 k 个同调群的秩 βₖ，统计 k 维“洞”的个数。</span><a class="to" href="#s3">→ §03</a></div>
+        <div class="grp"><i>C</i><hr></div>
+        <div class="row"><span class="en">Čech complex</span><span class="zh">Čech 复形</span><span class="df">半径 ε 的球有公共交点才填单形；Ripsε ⊆ Čechε ⊆ Rips2ε。</span><a class="to" href="#s4">→ §04</a></div>
+        <div class="grp"><i>E</i><hr></div>
+        <div class="row"><span class="en">Euler characteristic</span><span class="zh">欧拉示性数</span><span class="df">χ = β₀ − β₁ + β₂ = V − E + F；可定向闭曲面 χ = 2 − 2g。</span><a class="to" href="#s2">→ §02</a></div>
+        <div class="grp"><i>F</i><hr></div>
+        <div class="row"><span class="en">Filtration</span><span class="zh">过滤</span><span class="df">随 ε 单调增长的复形嵌套序列 K(ε₁) ⊆ K(ε₂) ⊆ ⋯。</span><a class="to" href="#s4">→ §04</a></div>
+        <div class="grp"><i>G</i><hr></div>
+        <div class="row"><span class="en">Genus</span><span class="zh">亏格</span><span class="df">闭曲面的把手数 g；可定向时 β₁ = 2g。</span><a class="to" href="#s7">→ §09</a></div>
+        <div class="grp"><i>H</i><hr></div>
+        <div class="row"><span class="en">Homeomorphism</span><span class="zh">同胚</span><span class="df">连续、双射、逆也连续的映射——拓扑学的“全等”。</span><a class="to" href="#s1">→ §01</a></div>
+        <div class="grp"><i>M</i><hr></div>
+        <div class="row"><span class="en">Matrix reduction</span><span class="zh">矩阵约简</span><span class="df">low(j) = i ⟹ 配对 (i, j)：特征生于 σᵢ、死于 σⱼ。</span><a class="to" href="#algo">→ §06</a></div>
+        <div class="grp"><i>N</i><hr></div>
+        <div class="row"><span class="en">Nerve theorem</span><span class="zh">Nerve 定理</span><span class="df">好覆盖下 Čech 复形与球并空间同伦等价。</span><a class="to" href="#s4">→ §04</a></div>
+        <div class="grp"><i>P</i><hr></div>
+        <div class="row"><span class="en">Persistence</span><span class="zh">持久性</span><span class="df">death − birth；条形码中横条的长度。</span><a class="to" href="#s5">→ §05</a></div>
+        <div class="row"><span class="en">Persistence diagram</span><span class="zh">持久图</span><span class="df">点 (ε_birth, ε_death) 的散布图；离对角线越远越重要。</span><a class="to" href="#s6">→ §07</a></div>
+        <div class="grp"><i>R</i><hr></div>
+        <div class="row"><span class="en">Rips complex</span><span class="zh">Rips 复形</span><span class="df">两两距离 ≤ ε 即连边填单形的过滤，计算中最常用。</span><a class="to" href="#s4">→ §04</a></div>
+        <div class="grp"><i>S</i><hr></div>
+        <div class="row"><span class="en">Simplex</span><span class="zh">单纯形</span><span class="df">k+1 个仿射无关点张成的 k 维构件：点、边、三角形……</span><a class="to" href="#s4">→ §04</a></div>
+        <div class="grp"><i>T</i><hr></div>
+        <div class="row"><span class="en">TDA</span><span class="zh">拓扑数据分析</span><span class="df">用持续同调等工具从数据中提取形状特征的方法论。</span><a class="to" href="#s8">→ §10</a></div>
+      </div>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary>思考题 · 点开看参考答案</summary>
+    <div class="qa-body">
+      <p><b>Q1 · 无柄马克杯和甜甜圈同胚吗？</b><br>不同胚。无柄杯可连续收缩为一点（其边界是球面 S²，β₁ = 0）；甜甜圈含两条独立回路（β₁ = 2）。不变量不同 ⇒ 必不同胚。</p>
+      <p><b>Q2 · 为什么 H₀ 条形码里永远有一根贯穿全程的长条？</b><br>因为整体连通块永不消失：它在 ε = 0 诞生，直到过滤结束仍然存活（死亡尺度为 ∞）。其余 H₀ 条都对应被合并掉的分块。</p>
+      <p><b>Q3 · 持久图上贴着对角线的点为什么可以丢弃？</b><br>它们的持久性 ≈ 0，几乎肯定来自采样噪声。稳定性定理保证真实结构只会被小扰动轻微推动，不会整体滑到对角线附近。</p>
+      <p><b>Q4 · 一张可定向曲面网格数出 V − E + F = −2，它是什么？</b><br>χ = −2 ⇒ 2 − 2g = −2 ⇒ g = 2，即双环面（双孔面包），β₁ = 2g = 4。</p>
+    </div>
+  </details>
+
+  <details class="qa">
+    <summary>参考文献 · References</summary>
+    <div class="qa-body">
+      <ol class="refs">
+        <li id="fn1"><b>Edelsbrunner, Letscher, Zomorodian.</b> Topological Persistence and Simplification. <i>Discrete &amp; Computational Geometry</i>, 2002.（持续同调的奠基论文：定义、矩阵约简与条形码）<a href="#ref-1" style="font:600 10px var(--mono)">↩</a></li>
+        <li id="fn2"><b>Carlsson.</b> Topology and Data. <i>Bulletin of the AMS</i>, 2009.（TDA 的纲领性综述）<a href="#ref-2" style="font:600 10px var(--mono)">↩</a></li>
+        <li id="fn3"><b>Edelsbrunner, Harer.</b> Computational Topology: An Introduction. <i>AMS</i>, 2010.（稳定性定理与持久图理论的标准教材）<a href="#ref-3" style="font:600 10px var(--mono)">↩</a></li>
+        <li id="fn4"><b>Ghrist.</b> Elementary Applied Topology. 2014.（面向应用的入门读物，图示极佳）</li>
+        <li id="fn5"><b>Hatcher.</b> Algebraic Topology. <i>Cambridge University Press</i>, 2002.（同调与 Betti 数的经典教材）<a href="#ref-5" style="font:600 10px var(--mono)">↩</a></li>
+      </ol>
+    </div>
+  </details>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="fmark">β<sub>k</sub></div>
+  <b>拓扑学 · 持续同调与拓扑不变量</b> — 纯 HTML/CSS 静态教材，无 JavaScript、无外部依赖、无网络请求。<br>
+  关键词：同胚 · Betti 数 · 单纯复形 · Rips 过滤 · 持续同调 · 条形码 · 持久图 · 亏格 · 欧拉示性数 · 拓扑数据分析（TDA）。<br>
+  设计说明：深色单文件排版，全部图示为内联 SVG；动效仅使用 CSS，并完整尊重 <span class="kbd">prefers-reduced-motion</span>。<br>
+  最近更新：2026-10-11 · 单文件可直接分发，无构建步骤、无外部依赖。
+  <br><a class="totop" href="#top">↑ 回到顶部</a>
+</footer>
+
+</body>
+</html>
