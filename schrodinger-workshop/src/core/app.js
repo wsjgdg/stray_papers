@@ -39,6 +39,7 @@ export class QuantumField {
     this.state = {
       grid: 256, m: 1.0, sigma: 7, substeps: 6, brush: 10, vStrength: 0.3,
       decay: 0.97, bright: 1.0, gamma: 0, tool: 'wave', paused: false, simTime: 0,
+      driveAmp: 0, driveOmega: 0.1, driveMode: 0,
       preset: null, lastWave: null, waveCount: 1,
       drag: null,
       ...this.kernel.defaults(),
@@ -159,6 +160,17 @@ export class QuantumField {
     <div class="row"><label>耗散 γ</label><input type="range" id="rGamma" min="0" max="0.2" step="0.005" value="0"><output id="oGamma">0.000</output></div>
   </div>
   <div class="sec">
+    <h3>含时外场</h3>
+    <div class="row"><label>驱动幅值 A</label><input type="range" id="rDriveAmp" min="0" max="0.5" step="0.005" value="0"><output id="oDriveAmp">0.000</output></div>
+    <div class="row"><label>驱动频率 ω</label><input type="range" id="rDriveOmega" min="0.01" max="0.5" step="0.01" value="0.1"><output id="oDriveOmega">0.10</output></div>
+    <div class="row"><label>驱动模式</label>
+      <select id="selDriveMode">
+        <option value="0" selected>均匀 AC Stark</option>
+        <option value="1">x 行波驱动</option>
+      </select>
+    </div>
+  </div>
+  <div class="sec">
     <h3>渲染与网格</h3>
     <div class="row"><label>画面亮度</label><input type="range" id="rBright" min="0.3" max="2.5" step="0.05" value="1"><output id="oBright">×1.00</output></div>
     <div class="row"><label>余晖拖尾</label><input type="range" id="rTrail" min="0" max="0.99" step="0.01" value="0.97"><output id="oTrail">0.97</output></div>
@@ -189,6 +201,7 @@ export class QuantumField {
   <div class="hrow"><span>动能 T</span><span id="hT">—</span></div>
   <div class="hrow"><span>势能 ⟨V⟩</span><span id="hV">—</span></div>
   <div class="hrow"><span>总能 E</span><span id="hE">—</span></div>
+  <div class="hrow"><span>驱动 V_d(中心)</span><span id="hDrive">—</span></div>
   <hr>
   <div class="hrow"><span>峰值 |ψ|²</span><span id="hPeak">—</span></div>
   <div class="hrow"><span>模拟时间 t</span><span id="hTime">—</span></div>
@@ -373,7 +386,7 @@ export class QuantumField {
     const k = 0.5/this.state.m;
     const gl = this.gl;
     if (!this.state.paused){
-      const eMax = k*8 + 1 + this.kernel.eMaxExtra(this.state);   /* H 特征值上界 */
+      const eMax = k*8 + 1 + this.kernel.eMaxExtra(this.state) + Math.abs(this.state.driveAmp);   /* H 特征值上界（含时外场幅值计入稳定界） */
       const sub = Math.max(this.state.substeps, Math.ceil(dt*eMax/1.5));
       const dtSub = dt/sub;
       gl.useProgram(this.progEvolve);
@@ -381,6 +394,13 @@ export class QuantumField {
       gl.uniform1f(this.u(this.progEvolve,'uDt'), dtSub);
       gl.uniform1f(this.u(this.progEvolve,'uK'), k);
       gl.uniform2f(this.u(this.progEvolve,'uTexel'), 1/this.state.grid, 1/this.state.grid);
+      /* 含时外场：相位取帧中点 φ = ω·(t+dt/2)——KDK 对时变 H 的标准中点冻结
+         （二阶精度）；此处 simTime 仍是帧初值。相位由 simTime 派生而非累加：
+         暂停即冻结、重置/序列化口径一致，无额外运行时态。 */
+      const dPhase = this.state.driveOmega * (this.state.simTime + dt*0.5);
+      gl.uniform1f(this.u(this.progEvolve,'uDriveAmp'), this.state.driveAmp);
+      gl.uniform1f(this.u(this.progEvolve,'uDrivePhase'), dPhase);
+      gl.uniform1i(this.u(this.progEvolve,'uDriveMode'), this.state.driveMode);
       gl.activeTexture(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, this.vTex);
       gl.uniform1i(this.u(this.progEvolve,'uV'), 1);
@@ -491,6 +511,11 @@ export class QuantumField {
     this.q('#hT').textContent = t.toFixed(4);
     this.q('#hV').textContent = v.toFixed(4);
     this.q('#hE').textContent = e.toFixed(4);
+    /* 含时外场瞬时值（世界中心 x=½ 处）：均匀模式 A·cos(φ)；行波模式
+       A·cos(π−φ) = −A·cos(φ)。仅作显示，物理演化以 shader 内的 V_d 为准。 */
+    const dPhi = this.state.driveOmega * (this.state.simTime + 0.6);
+    const dv = this.state.driveAmp * (this.state.driveMode === 1 ? -Math.cos(dPhi) : Math.cos(dPhi));
+    this.q('#hDrive').textContent = this.state.driveAmp === 0 ? '关' : dv.toFixed(4);
     this.q('#hPeak').textContent = peak.toFixed(4);
     this.q('#hTime').textContent = this.state.simTime.toFixed(1);
     this.q('#hGrid').textContent = this.state.grid + '² · ' + this.state.m.toFixed(2);
@@ -670,6 +695,8 @@ export class QuantumField {
       el.value = this.state[r.key];
       o.textContent = r.fmt(this.state[r.key]);
     }
+    const dm = this.q('#selDriveMode');       /* 驱动模式下拉（非滑块行，单独同步） */
+    if (dm) dm.value = String(this.state.driveMode);
   }
 
   bindUI(){
@@ -741,6 +768,8 @@ export class QuantumField {
     this.bindRange('#rBrush','#oBrush','brush', v => v.toFixed(0));
     this.bindRange('#rV','#oV','vStrength', v => v.toFixed(2));
     this.bindRange('#rGamma','#oGamma','gamma', v => v.toFixed(3));
+    this.bindRange('#rDriveAmp','#oDriveAmp','driveAmp', v => v.toFixed(3));
+    this.bindRange('#rDriveOmega','#oDriveOmega','driveOmega', v => v.toFixed(2));
     this.bindRange('#rTrail','#oTrail','decay', v => v.toFixed(2));
     this.bindRange('#rBright','#oBright','bright', v => '×'+v.toFixed(2));
     const extra = this.kernel.extraControls();       /* 内核附加滑块（如 NLS 的 g） */
@@ -750,6 +779,10 @@ export class QuantumField {
       const g = parseInt(e.target.value, 10);
       this.allocGrid(g);
       this.loadPreset(this.state.preset);
+    });
+
+    this.on(this.q('#selDriveMode'), 'change', e => {
+      this.state.driveMode = parseInt(e.target.value, 10) || 0;
     });
 
     /* 键盘 */
@@ -836,6 +869,52 @@ export class QuantumField {
         for (let i=0;i<buf.length;i+=4){ const l=0.2126*buf[i]+0.7152*buf[i+1]+0.0722*buf[i+2]; sum+=l; if(l>mx)mx=l; }
         return { max: mx, sum };
       },
+      /* 质心 (x,y) 与总概率 P：直读 psiA 纹理（行波驱动下质心围绕阱心周期性
+         振荡——含时外场空间力的直接可观测量；A=0 对称发射时质心应静止） */
+      com: () => {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
+        const g = this.state.grid;
+        const ch = this.kernel.pairs === 2 ? 4 : 2;
+        const buf = new Float32Array(g*g*ch);
+        gl.readPixels(0,0,g,g,this.fmt,gl.FLOAT,buf);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        let sx=0, sy=0, s=0;
+        for (let i=0;i<buf.length;i+=ch){
+          const p = buf[i]*buf[i] + buf[i+1]*buf[i+1];
+          const idx = i/ch;
+          sx += (idx%g)*p; sy += Math.floor(idx/g)*p; s += p;
+        }
+        return { x:(sx/s)/g, y:(sy/s)/g, p:s, simTime: this.state.simTime };
+      },
+      /* 场统计一次读回：质心 x、总概率 P、若干采样点的 (re,im,|ψ|²,arg)。
+         含时外场验证用：均匀驱动的纯整体相位、行波驱动下镜像点的密度/相位
+         不对称性，均可由单次读回批量算出（避免每点多一次 readPixels）。 */
+      fieldStats: (pts) => {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
+        const g = this.state.grid;
+        const ch = this.kernel.pairs === 2 ? 4 : 2;
+        const buf = new Float32Array(g*g*ch);
+        gl.readPixels(0,0,g,g,this.fmt,gl.FLOAT,buf);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        let sx=0, s=0;
+        for (let i=0;i<buf.length;i+=ch){
+          const p = buf[i]*buf[i] + buf[i+1]*buf[i+1];
+          sx += ((i/ch)%g)*p; s += p;
+        }
+        const at = (wx, wy) => {
+          const x = Math.min(g-1, Math.max(0, Math.round(wx*g)));
+          const y = Math.min(g-1, Math.max(0, Math.round(wy*g)));
+          const i = (y*g+x)*ch;
+          return { re: buf[i], im: buf[i+1], p: buf[i]*buf[i]+buf[i+1]*buf[i+1], arg: Math.atan2(buf[i+1], buf[i]) };
+        };
+        const out = { comX: (sx/s)/g, P: s, simTime: this.state.simTime };
+        for (const pt of (pts || [['C',0.5,0.5]])){
+          if (pt[0] === 'comX' || pt[0] === 'P' || pt[0] === 'simTime')
+            throw new Error('fieldStats: 采样点名与保留键冲突: ' + pt[0]);
+          out[pt[0]] = at(pt[1], pt[2]);
+        }
+        return out;
+      },
       /* 精确总概率：直读 psiA 纹理（HUD 的 P 有 reduce 120ms 节流 + 4 位小数滞后，
          耗散衰减后期 P→0 时测试需要无滞后读数） */
       probSum: () => {
@@ -878,8 +957,9 @@ export class QuantumField {
         }
         return { x:(bi%g)/g, y:Math.floor(bi/g)/g, p:bv, grid:g, simTime: this.state.simTime, win:[x0/g, x1/g] };
       },
-      uniInfo: () => {
-        const p = this.progDisplay, n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS), out = {};
+      uniInfo: (which) => {
+        const p = which === 'evolve' ? this.progEvolve : this.progDisplay;
+        const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS), out = {};
         for (let i=0;i<n;i++){
           const info = gl.getActiveUniform(p, i);
           const loc = gl.getUniformLocation(p, info.name);

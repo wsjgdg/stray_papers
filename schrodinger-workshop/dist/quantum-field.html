@@ -182,6 +182,18 @@ function gaussianWave(grid, { fx, fy, kx, ky, sigma }){
  * e^{-γ·dt}（γ = state.gamma，帧级 uniform）。iψ_t = Hψ + γ 损失项的解为密度
  * e^{-2γt} 衰减；γ<0 为增益。帧级标量衰减数学上精确、与子步数/网格/内核解耦
  * （早期方案把 -iγ 塞进 KDK 的 H，衰减率带 O((γ·dt_sub)²) 误差且与谱耦合，已弃用）。
+ *
+ * 含时外场约定（AC Stark / 行波驱动）：引擎在 TPL_EVOLVE 内、{{LOCAL_H}} 展开前
+ * 对 V 叠加时变项 V_d（uniform uDriveAmp/uDrivePhase/uDriveMode，每帧设置）：
+ *   mode 0（均匀 AC Stark）：V_d = A·cos(φ) —— 空间均匀，整体能级周期性移动；
+ *   mode 1（x 行波驱动）  ：V_d = A·cos(2πx − φ) —— 空间非均匀，产生周期性
+ *                           空间力 F = −∂V_d/∂x = A·2π·sin(2πx − φ)。
+ * 相位 φ = ω·(t + dt/2) 由 CPU 按帧中点推算（simTime 派生，无额外累加态，
+ * 暂停即冻结、与序列化口径一致）。V_d 为实势 → H 仍厄米 → 总概率严格守恒；
+ * 能量 E 不守恒（外场对波包做功）属预期物理，HUD 的 ⟨V⟩/E 仅计绘制势场。
+ * A=0 时 V += 0·cos(φ) 为 IEEE 精确恒等（±0.0），厄米路径零改动、回归零风险。
+ * 稳定性：E_max 上界须含 |A|（引擎 frame 内已加），否则极端小质量 m 下
+ * dt_sub·E_max 可能越过 KDK 稳定极限 2（θ→π 混叠）。
  * ========================================================================== */
 
 
@@ -195,6 +207,9 @@ uniform float uDt;
 uniform float uK;
 uniform float uUpdateV;   // 1.0 = 更新 v 分量, 0.0 = 更新 u 分量
 uniform vec2 uTexel;
+uniform float uDriveAmp;    // 含时外场幅值 A（势单位），0 = 关闭（精确恒等）
+uniform float uDrivePhase;  // 驱动相位 φ = ω·(t+dt/2)，CPU 每帧按帧中点推算
+uniform int   uDriveMode;   // 0 = 均匀 AC Stark A·cos(φ)；1 = x 行波 A·cos(2πx−φ)
 {{UNIFORMS}}
 vec4 S(vec2 uv){
   if(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0) return vec4(0.0);
@@ -205,6 +220,8 @@ void main(){
   vec4 lap = S(vUv+vec2(-uTexel.x,0.0))+S(vUv+vec2(uTexel.x,0.0))
            + S(vUv+vec2(0.0,-uTexel.y))+S(vUv+vec2(0.0,uTexel.y)) - 4.0*c;
   float V = (texture(uV,vUv).r*255.0-128.0)/127.0;
+  /* 含时外场（实势 → H 厄米 → 概率守恒；A=0 时为 IEEE 精确恒等） */
+  V += uDriveAmp * (uDriveMode == 1 ? cos(6.28318530718*vUv.x - uDrivePhase) : cos(uDrivePhase));
   vec4 Hc = -uK*lap + {{LOCAL_H}};
   if(uUpdateV > 0.5){
     o = vec4(c.x, c.y - 0.5*uDt*Hc.x, c.z, c.w - 0.5*uDt*Hc.z);   // v_half/v_new = v - dt/2*H*u
@@ -517,6 +534,7 @@ class QuantumField {
     this.state = {
       grid: 256, m: 1.0, sigma: 7, substeps: 6, brush: 10, vStrength: 0.3,
       decay: 0.97, bright: 1.0, gamma: 0, tool: 'wave', paused: false, simTime: 0,
+      driveAmp: 0, driveOmega: 0.1, driveMode: 0,
       preset: null, lastWave: null, waveCount: 1,
       drag: null,
       ...this.kernel.defaults(),
@@ -637,6 +655,17 @@ class QuantumField {
     <div class="row"><label>耗散 γ</label><input type="range" id="rGamma" min="0" max="0.2" step="0.005" value="0"><output id="oGamma">0.000</output></div>
   </div>
   <div class="sec">
+    <h3>含时外场</h3>
+    <div class="row"><label>驱动幅值 A</label><input type="range" id="rDriveAmp" min="0" max="0.5" step="0.005" value="0"><output id="oDriveAmp">0.000</output></div>
+    <div class="row"><label>驱动频率 ω</label><input type="range" id="rDriveOmega" min="0.01" max="0.5" step="0.01" value="0.1"><output id="oDriveOmega">0.10</output></div>
+    <div class="row"><label>驱动模式</label>
+      <select id="selDriveMode">
+        <option value="0" selected>均匀 AC Stark</option>
+        <option value="1">x 行波驱动</option>
+      </select>
+    </div>
+  </div>
+  <div class="sec">
     <h3>渲染与网格</h3>
     <div class="row"><label>画面亮度</label><input type="range" id="rBright" min="0.3" max="2.5" step="0.05" value="1"><output id="oBright">×1.00</output></div>
     <div class="row"><label>余晖拖尾</label><input type="range" id="rTrail" min="0" max="0.99" step="0.01" value="0.97"><output id="oTrail">0.97</output></div>
@@ -667,6 +696,7 @@ class QuantumField {
   <div class="hrow"><span>动能 T</span><span id="hT">—</span></div>
   <div class="hrow"><span>势能 ⟨V⟩</span><span id="hV">—</span></div>
   <div class="hrow"><span>总能 E</span><span id="hE">—</span></div>
+  <div class="hrow"><span>驱动 V_d(中心)</span><span id="hDrive">—</span></div>
   <hr>
   <div class="hrow"><span>峰值 |ψ|²</span><span id="hPeak">—</span></div>
   <div class="hrow"><span>模拟时间 t</span><span id="hTime">—</span></div>
@@ -851,7 +881,7 @@ class QuantumField {
     const k = 0.5/this.state.m;
     const gl = this.gl;
     if (!this.state.paused){
-      const eMax = k*8 + 1 + this.kernel.eMaxExtra(this.state);   /* H 特征值上界 */
+      const eMax = k*8 + 1 + this.kernel.eMaxExtra(this.state) + Math.abs(this.state.driveAmp);   /* H 特征值上界（含时外场幅值计入稳定界） */
       const sub = Math.max(this.state.substeps, Math.ceil(dt*eMax/1.5));
       const dtSub = dt/sub;
       gl.useProgram(this.progEvolve);
@@ -859,6 +889,13 @@ class QuantumField {
       gl.uniform1f(this.u(this.progEvolve,'uDt'), dtSub);
       gl.uniform1f(this.u(this.progEvolve,'uK'), k);
       gl.uniform2f(this.u(this.progEvolve,'uTexel'), 1/this.state.grid, 1/this.state.grid);
+      /* 含时外场：相位取帧中点 φ = ω·(t+dt/2)——KDK 对时变 H 的标准中点冻结
+         （二阶精度）；此处 simTime 仍是帧初值。相位由 simTime 派生而非累加：
+         暂停即冻结、重置/序列化口径一致，无额外运行时态。 */
+      const dPhase = this.state.driveOmega * (this.state.simTime + dt*0.5);
+      gl.uniform1f(this.u(this.progEvolve,'uDriveAmp'), this.state.driveAmp);
+      gl.uniform1f(this.u(this.progEvolve,'uDrivePhase'), dPhase);
+      gl.uniform1i(this.u(this.progEvolve,'uDriveMode'), this.state.driveMode);
       gl.activeTexture(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, this.vTex);
       gl.uniform1i(this.u(this.progEvolve,'uV'), 1);
@@ -969,6 +1006,11 @@ class QuantumField {
     this.q('#hT').textContent = t.toFixed(4);
     this.q('#hV').textContent = v.toFixed(4);
     this.q('#hE').textContent = e.toFixed(4);
+    /* 含时外场瞬时值（世界中心 x=½ 处）：均匀模式 A·cos(φ)；行波模式
+       A·cos(π−φ) = −A·cos(φ)。仅作显示，物理演化以 shader 内的 V_d 为准。 */
+    const dPhi = this.state.driveOmega * (this.state.simTime + 0.6);
+    const dv = this.state.driveAmp * (this.state.driveMode === 1 ? -Math.cos(dPhi) : Math.cos(dPhi));
+    this.q('#hDrive').textContent = this.state.driveAmp === 0 ? '关' : dv.toFixed(4);
     this.q('#hPeak').textContent = peak.toFixed(4);
     this.q('#hTime').textContent = this.state.simTime.toFixed(1);
     this.q('#hGrid').textContent = this.state.grid + '² · ' + this.state.m.toFixed(2);
@@ -1148,6 +1190,8 @@ class QuantumField {
       el.value = this.state[r.key];
       o.textContent = r.fmt(this.state[r.key]);
     }
+    const dm = this.q('#selDriveMode');       /* 驱动模式下拉（非滑块行，单独同步） */
+    if (dm) dm.value = String(this.state.driveMode);
   }
 
   bindUI(){
@@ -1219,6 +1263,8 @@ class QuantumField {
     this.bindRange('#rBrush','#oBrush','brush', v => v.toFixed(0));
     this.bindRange('#rV','#oV','vStrength', v => v.toFixed(2));
     this.bindRange('#rGamma','#oGamma','gamma', v => v.toFixed(3));
+    this.bindRange('#rDriveAmp','#oDriveAmp','driveAmp', v => v.toFixed(3));
+    this.bindRange('#rDriveOmega','#oDriveOmega','driveOmega', v => v.toFixed(2));
     this.bindRange('#rTrail','#oTrail','decay', v => v.toFixed(2));
     this.bindRange('#rBright','#oBright','bright', v => '×'+v.toFixed(2));
     const extra = this.kernel.extraControls();       /* 内核附加滑块（如 NLS 的 g） */
@@ -1228,6 +1274,10 @@ class QuantumField {
       const g = parseInt(e.target.value, 10);
       this.allocGrid(g);
       this.loadPreset(this.state.preset);
+    });
+
+    this.on(this.q('#selDriveMode'), 'change', e => {
+      this.state.driveMode = parseInt(e.target.value, 10) || 0;
     });
 
     /* 键盘 */
@@ -1314,6 +1364,52 @@ class QuantumField {
         for (let i=0;i<buf.length;i+=4){ const l=0.2126*buf[i]+0.7152*buf[i+1]+0.0722*buf[i+2]; sum+=l; if(l>mx)mx=l; }
         return { max: mx, sum };
       },
+      /* 质心 (x,y) 与总概率 P：直读 psiA 纹理（行波驱动下质心围绕阱心周期性
+         振荡——含时外场空间力的直接可观测量；A=0 对称发射时质心应静止） */
+      com: () => {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
+        const g = this.state.grid;
+        const ch = this.kernel.pairs === 2 ? 4 : 2;
+        const buf = new Float32Array(g*g*ch);
+        gl.readPixels(0,0,g,g,this.fmt,gl.FLOAT,buf);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        let sx=0, sy=0, s=0;
+        for (let i=0;i<buf.length;i+=ch){
+          const p = buf[i]*buf[i] + buf[i+1]*buf[i+1];
+          const idx = i/ch;
+          sx += (idx%g)*p; sy += Math.floor(idx/g)*p; s += p;
+        }
+        return { x:(sx/s)/g, y:(sy/s)/g, p:s, simTime: this.state.simTime };
+      },
+      /* 场统计一次读回：质心 x、总概率 P、若干采样点的 (re,im,|ψ|²,arg)。
+         含时外场验证用：均匀驱动的纯整体相位、行波驱动下镜像点的密度/相位
+         不对称性，均可由单次读回批量算出（避免每点多一次 readPixels）。 */
+      fieldStats: (pts) => {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
+        const g = this.state.grid;
+        const ch = this.kernel.pairs === 2 ? 4 : 2;
+        const buf = new Float32Array(g*g*ch);
+        gl.readPixels(0,0,g,g,this.fmt,gl.FLOAT,buf);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        let sx=0, s=0;
+        for (let i=0;i<buf.length;i+=ch){
+          const p = buf[i]*buf[i] + buf[i+1]*buf[i+1];
+          sx += ((i/ch)%g)*p; s += p;
+        }
+        const at = (wx, wy) => {
+          const x = Math.min(g-1, Math.max(0, Math.round(wx*g)));
+          const y = Math.min(g-1, Math.max(0, Math.round(wy*g)));
+          const i = (y*g+x)*ch;
+          return { re: buf[i], im: buf[i+1], p: buf[i]*buf[i]+buf[i+1]*buf[i+1], arg: Math.atan2(buf[i+1], buf[i]) };
+        };
+        const out = { comX: (sx/s)/g, P: s, simTime: this.state.simTime };
+        for (const pt of (pts || [['C',0.5,0.5]])){
+          if (pt[0] === 'comX' || pt[0] === 'P' || pt[0] === 'simTime')
+            throw new Error('fieldStats: 采样点名与保留键冲突: ' + pt[0]);
+          out[pt[0]] = at(pt[1], pt[2]);
+        }
+        return out;
+      },
       /* 精确总概率：直读 psiA 纹理（HUD 的 P 有 reduce 120ms 节流 + 4 位小数滞后，
          耗散衰减后期 P→0 时测试需要无滞后读数） */
       probSum: () => {
@@ -1356,8 +1452,9 @@ class QuantumField {
         }
         return { x:(bi%g)/g, y:Math.floor(bi/g)/g, p:bv, grid:g, simTime: this.state.simTime, win:[x0/g, x1/g] };
       },
-      uniInfo: () => {
-        const p = this.progDisplay, n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS), out = {};
+      uniInfo: (which) => {
+        const p = which === 'evolve' ? this.progEvolve : this.progDisplay;
+        const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS), out = {};
         for (let i=0;i<n;i++){
           const info = gl.getActiveUniform(p, i);
           const loc = gl.getUniformLocation(p, info.name);
@@ -1474,6 +1571,13 @@ class SchrodingerKernel extends PhysicsKernel {
                                   const v = Math.min(1, 2.2e-5*d2); const g = Math.round((v+1)/2*255); const i=(y*256+x)*4;
                                   img.data[i]=g; img.data[i+1]=g; img.data[i+2]=g; img.data[i+3]=255; }
                                 paint.vctx.putImageData(img,0,0); }, wave:[0.5,0.40,0.0,0.035] },
+      drive:    { name:'行波驱动',     text:'谐振子势阱上叠加 x 方向行波外场 V_d = A·cos(2πx−ωt)。驱动力的时间平均为零，波包却被周期性地推拉：质心围绕阱心做受迫振荡——含时外场（AC Stark 位移的行波版）的直接可视化。切到「均匀 AC Stark」模式则只整体调制能级，密度图样保持对称。',
+                  build(paint){ const img = paint.vctx.getImageData(0,0,256,256);
+                                for(let y=0;y<256;y++) for(let x=0;x<256;x++){ const d2=(x-128)*(x-128)+(y-128)*(y-128);
+                                  const v = Math.min(1, 2.2e-5*d2); const g = Math.round((v+1)/2*255); const i=(y*256+x)*4;
+                                  img.data[i]=g; img.data[i+1]=g; img.data[i+2]=g; img.data[i+3]=255; }
+                                paint.vctx.putImageData(img,0,0); }, wave:[0.5,0.5,0,0],
+                  params:{ driveAmp:0.05, driveOmega:0.05, driveMode:1, sigma:8 } },
       scatter:  { name:'圆形散射体',   text:'高速波包遭遇圆柱势垒：迎头部分全反射，边缘发生衍射，几何阴影区后方浮现衍射尾波。',
                   build(paint){ paint.vctx.fillStyle = paint.vGray(0.5); paint.vctx.beginPath(); paint.vctx.arc(128,128,24,0,7); paint.vctx.fill(); }, wave:[0.10,0.5,0.14,0] },
       box:      { name:'无限深方阱',   text:'四壁为无限高势墙（世界边界）的盒子。波包斜向入射，往复弹跳并与自身发生干涉。',
@@ -1721,7 +1825,7 @@ class GPKernel extends PhysicsKernel {
                   build(paint){ self._mode = 'vortex'; trap(paint); }, wave:[0.5,0.5,0,0], params:{ g:-10, sigma:16 } },
       tof:     { name:'时飞行膨胀',   text:'时飞行（TOF）：瞬间撤去势阱，平均场排斥能转化为动能——云自由膨胀、峰值下降、动能上升。实验 TOF 成像正是据此反推阱中密度分布。',
                   build(paint){ self._mode = 'tf'; }, wave:[0.5,0.5,0,0], params:{ g:-10, sigma:16 } },
-      breather:{ name:'集体呼吸模',   text:'强过压缩初态（R=10，峰值约为默认云 3.4×）释放后云大幅膨胀再回缩：实测峰值摆动 ×9.4–9.9（最低 ×0.15）、周期 ~107 sim-time，无耗散下长时不衰减——BEC 集体激发的大振幅演示，区别于单粒子薛定谔的量子化能级。',
+      breather:{ name:'集体呼吸模',   text:'强过压缩初态（R=10，峰值约为默认云 3.4×）释放后云大幅膨胀再回缩：实测峰值摆动 ×9.4–10（最低 ×0.15）、周期 ~107 sim-time，无耗散下长时不衰减——BEC 集体激发的大振幅演示，区别于单粒子薛定谔的量子化能级。',
                   build(paint){ self._mode = 'tf'; trap(paint); }, wave:[0.5,0.5,0,0], params:{ g:-10, sigma:10 } },
     };
   }

@@ -35,6 +35,18 @@
  * e^{-γ·dt}（γ = state.gamma，帧级 uniform）。iψ_t = Hψ + γ 损失项的解为密度
  * e^{-2γt} 衰减；γ<0 为增益。帧级标量衰减数学上精确、与子步数/网格/内核解耦
  * （早期方案把 -iγ 塞进 KDK 的 H，衰减率带 O((γ·dt_sub)²) 误差且与谱耦合，已弃用）。
+ *
+ * 含时外场约定（AC Stark / 行波驱动）：引擎在 TPL_EVOLVE 内、{{LOCAL_H}} 展开前
+ * 对 V 叠加时变项 V_d（uniform uDriveAmp/uDrivePhase/uDriveMode，每帧设置）：
+ *   mode 0（均匀 AC Stark）：V_d = A·cos(φ) —— 空间均匀，整体能级周期性移动；
+ *   mode 1（x 行波驱动）  ：V_d = A·cos(2πx − φ) —— 空间非均匀，产生周期性
+ *                           空间力 F = −∂V_d/∂x = A·2π·sin(2πx − φ)。
+ * 相位 φ = ω·(t + dt/2) 由 CPU 按帧中点推算（simTime 派生，无额外累加态，
+ * 暂停即冻结、与序列化口径一致）。V_d 为实势 → H 仍厄米 → 总概率严格守恒；
+ * 能量 E 不守恒（外场对波包做功）属预期物理，HUD 的 ⟨V⟩/E 仅计绘制势场。
+ * A=0 时 V += 0·cos(φ) 为 IEEE 精确恒等（±0.0），厄米路径零改动、回归零风险。
+ * 稳定性：E_max 上界须含 |A|（引擎 frame 内已加），否则极端小质量 m 下
+ * dt_sub·E_max 可能越过 KDK 稳定极限 2（θ→π 混叠）。
  * ========================================================================== */
 
 import { gaussianWave } from './gaussian.js';
@@ -49,6 +61,9 @@ uniform float uDt;
 uniform float uK;
 uniform float uUpdateV;   // 1.0 = 更新 v 分量, 0.0 = 更新 u 分量
 uniform vec2 uTexel;
+uniform float uDriveAmp;    // 含时外场幅值 A（势单位），0 = 关闭（精确恒等）
+uniform float uDrivePhase;  // 驱动相位 φ = ω·(t+dt/2)，CPU 每帧按帧中点推算
+uniform int   uDriveMode;   // 0 = 均匀 AC Stark A·cos(φ)；1 = x 行波 A·cos(2πx−φ)
 {{UNIFORMS}}
 vec4 S(vec2 uv){
   if(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0) return vec4(0.0);
@@ -59,6 +74,8 @@ void main(){
   vec4 lap = S(vUv+vec2(-uTexel.x,0.0))+S(vUv+vec2(uTexel.x,0.0))
            + S(vUv+vec2(0.0,-uTexel.y))+S(vUv+vec2(0.0,uTexel.y)) - 4.0*c;
   float V = (texture(uV,vUv).r*255.0-128.0)/127.0;
+  /* 含时外场（实势 → H 厄米 → 概率守恒；A=0 时为 IEEE 精确恒等） */
+  V += uDriveAmp * (uDriveMode == 1 ? cos(6.28318530718*vUv.x - uDrivePhase) : cos(uDrivePhase));
   vec4 Hc = -uK*lap + {{LOCAL_H}};
   if(uUpdateV > 0.5){
     o = vec4(c.x, c.y - 0.5*uDt*Hc.x, c.z, c.w - 0.5*uDt*Hc.z);   // v_half/v_new = v - dt/2*H*u
