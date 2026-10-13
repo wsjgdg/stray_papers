@@ -8,10 +8,15 @@
  * - Escape: clear selection / close dialogs
  * - Cmd+A: select all filtered
  * - Cmd+G: go to row
+ * - [ ]: switch files
+ * - { }: prev/next bookmark
+ * - n: next failure / f: next with image
+ * - t: next annotated / d: next bookmark
  */
 import { useEffect } from "react";
 import { useDatasetStore } from "./store";
 import { useFilteredRows } from "./hooks";
+import { toast } from "sonner";
 
 export function useKeyboardNav() {
   const filtered = useFilteredRows();
@@ -138,16 +143,23 @@ export function useKeyboardNav() {
           const { bookmarks, getFilteredRows, setSelectedRow, selectedRowId } = useDatasetStore.getState();
           const filteredRows = getFilteredRows();
           const bookmarkedRows = filteredRows.filter((r) => bookmarks[r.id]);
-          if (bookmarkedRows.length === 0) return;
+          if (bookmarkedRows.length === 0) {
+            toast.info("No bookmarks to navigate");
+            return;
+          }
           const currentIdx = selectedRowId ? bookmarkedRows.findIndex((r) => r.id === selectedRowId) : -1;
           const prevIdx = currentIdx <= 0 ? bookmarkedRows.length - 1 : currentIdx - 1;
           setSelectedRow(bookmarkedRows[prevIdx].id);
+          toast.success(`Bookmark ${prevIdx + 1}/${bookmarkedRows.length}`);
         } else {
           // [ = prev file
           const { dataset, activeFileIndex, setActiveFileIndex } = useDatasetStore.getState();
           if (dataset) {
             if (activeFileIndex === null) setActiveFileIndex(0);
-            else if (activeFileIndex > 0) setActiveFileIndex(activeFileIndex - 1);
+            else if (activeFileIndex > 0) {
+              setActiveFileIndex(activeFileIndex - 1);
+              toast.success(`File: ${dataset.files[activeFileIndex - 1].name}`);
+            }
           }
         }
         return;
@@ -158,16 +170,23 @@ export function useKeyboardNav() {
           const { bookmarks, getFilteredRows, setSelectedRow, selectedRowId } = useDatasetStore.getState();
           const filteredRows = getFilteredRows();
           const bookmarkedRows = filteredRows.filter((r) => bookmarks[r.id]);
-          if (bookmarkedRows.length === 0) return;
+          if (bookmarkedRows.length === 0) {
+            toast.info("No bookmarks to navigate");
+            return;
+          }
           const currentIdx = selectedRowId ? bookmarkedRows.findIndex((r) => r.id === selectedRowId) : -1;
           const nextIdx = currentIdx >= bookmarkedRows.length - 1 ? 0 : currentIdx + 1;
           setSelectedRow(bookmarkedRows[nextIdx].id);
+          toast.success(`Bookmark ${nextIdx + 1}/${bookmarkedRows.length}`);
         } else {
           // ] = next file
           const { dataset, activeFileIndex, setActiveFileIndex } = useDatasetStore.getState();
           if (dataset && dataset.files.length > 1) {
             if (activeFileIndex === null) setActiveFileIndex(0);
-            else if (activeFileIndex < dataset.files.length - 1) setActiveFileIndex(activeFileIndex + 1);
+            else if (activeFileIndex < dataset.files.length - 1) {
+              setActiveFileIndex(activeFileIndex + 1);
+              toast.success(`File: ${dataset.files[activeFileIndex + 1].name}`);
+            }
           }
         }
         return;
@@ -176,17 +195,21 @@ export function useKeyboardNav() {
       if (e.key === "n") {
         const state = useDatasetStore.getState();
         const failures = state.failures;
-        if (failures.length > 0) {
-          // Find the next failure after the current selected row
-          const currentIdx = selectedRowId ? filtered.findIndex((r) => r.id === selectedRowId) : -1;
-          const failureRowIds = new Set(failures.map((f) => f.rowId));
-          const nextFailure = filtered.slice(currentIdx + 1).find((r) => failureRowIds.has(r.id));
-          if (nextFailure) {
-            setSelectedRow(nextFailure.id);
-          } else {
-            // wrap around
-            const firstFailure = filtered.find((r) => failureRowIds.has(r.id));
-            if (firstFailure) setSelectedRow(firstFailure.id);
+        if (failures.length === 0) {
+          toast.info("No decode failures to navigate");
+          return;
+        }
+        const currentIdx = selectedRowId ? filtered.findIndex((r) => r.id === selectedRowId) : -1;
+        const failureRowIds = new Set(failures.map((f) => f.rowId));
+        const nextFailure = filtered.slice(currentIdx + 1).find((r) => failureRowIds.has(r.id));
+        if (nextFailure) {
+          setSelectedRow(nextFailure.id);
+          toast.success(`Jumped to failure: row #${nextFailure.index + 1}`);
+        } else {
+          const firstFailure = filtered.find((r) => failureRowIds.has(r.id));
+          if (firstFailure) {
+            setSelectedRow(firstFailure.id);
+            toast.success(`Wrapped to failure: row #${firstFailure.index + 1}`);
           }
         }
         return;
@@ -195,21 +218,23 @@ export function useKeyboardNav() {
       if (e.key === "f") {
         const state = useDatasetStore.getState();
         const imgField = state.imageField;
-        if (imgField) {
-          const currentIdx = selectedRowId ? filtered.findIndex((r) => r.id === selectedRowId) : -1;
-          const nextWithImage = filtered.slice(currentIdx + 1).find((r) => {
+        if (!imgField) return;
+        const currentIdx = selectedRowId ? filtered.findIndex((r) => r.id === selectedRowId) : -1;
+        const nextWithImage = filtered.slice(currentIdx + 1).find((r) => {
+          const v = r.data[imgField];
+          return v != null && v !== "";
+        });
+        if (nextWithImage) {
+          setSelectedRow(nextWithImage.id);
+          toast.success(`Next with image: row #${nextWithImage.index + 1}`);
+        } else {
+          const firstWithImage = filtered.find((r) => {
             const v = r.data[imgField];
             return v != null && v !== "";
           });
-          if (nextWithImage) {
-            setSelectedRow(nextWithImage.id);
-          } else {
-            // wrap around
-            const firstWithImage = filtered.find((r) => {
-              const v = r.data[imgField!];
-              return v != null && v !== "";
-            });
-            if (firstWithImage) setSelectedRow(firstWithImage.id);
+          if (firstWithImage) {
+            setSelectedRow(firstWithImage.id);
+            toast.success(`Wrapped to row #${firstWithImage.index + 1}`);
           }
         }
         return;
@@ -219,14 +244,20 @@ export function useKeyboardNav() {
         const state = useDatasetStore.getState();
         const annotations = state.annotations;
         const annotatedIds = new Set(Object.keys(annotations).filter((id) => (annotations[id]?.length ?? 0) > 0));
-        if (annotatedIds.size > 0) {
-          const currentIdx = selectedRowId ? filtered.findIndex((r) => r.id === selectedRowId) : -1;
-          const nextAnnotated = filtered.slice(currentIdx + 1).find((r) => annotatedIds.has(r.id));
-          if (nextAnnotated) {
-            setSelectedRow(nextAnnotated.id);
-          } else {
-            const firstAnnotated = filtered.find((r) => annotatedIds.has(r.id));
-            if (firstAnnotated) setSelectedRow(firstAnnotated.id);
+        if (annotatedIds.size === 0) {
+          toast.info("No annotated rows to navigate");
+          return;
+        }
+        const currentIdx = selectedRowId ? filtered.findIndex((r) => r.id === selectedRowId) : -1;
+        const nextAnnotated = filtered.slice(currentIdx + 1).find((r) => annotatedIds.has(r.id));
+        if (nextAnnotated) {
+          setSelectedRow(nextAnnotated.id);
+          toast.success(`Next annotated: row #${nextAnnotated.index + 1}`);
+        } else {
+          const firstAnnotated = filtered.find((r) => annotatedIds.has(r.id));
+          if (firstAnnotated) {
+            setSelectedRow(firstAnnotated.id);
+            toast.success(`Wrapped to annotated row #${firstAnnotated.index + 1}`);
           }
         }
         return;
@@ -236,7 +267,10 @@ export function useKeyboardNav() {
         const { bookmarks, getFilteredRows, setSelectedRow, selectedRowId } = useDatasetStore.getState();
         const filteredRows = getFilteredRows();
         const bookmarkedRows = filteredRows.filter((r) => bookmarks[r.id]);
-        if (bookmarkedRows.length === 0) return;
+        if (bookmarkedRows.length === 0) {
+          toast.info("No bookmarks to navigate");
+          return;
+        }
         const currentIdx = selectedRowId ? bookmarkedRows.findIndex((r) => r.id === selectedRowId) : -1;
         const nextIdx = currentIdx >= bookmarkedRows.length - 1 ? 0 : currentIdx + 1;
         setSelectedRow(bookmarkedRows[nextIdx].id);

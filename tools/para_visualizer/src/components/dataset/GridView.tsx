@@ -29,6 +29,7 @@ import {
 import { decodeImageField } from "@/lib/dataset/decode";
 import { Highlight } from "./Highlight";
 import { HoverPreview, HOVER_DELAY, PREVIEW_WIDTH_VALUE, PREVIEW_HEIGHT_VALUE } from "./HoverPreview";
+import { motion } from "framer-motion";
 
 // Gap between cards
 const GAP = 12;
@@ -203,9 +204,12 @@ export function GridView() {
               return (
                 <ContextMenu key={r.id}>
                   <ContextMenuTrigger asChild>
-                    <div
+                    <motion.div
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2, delay: Math.min((rowIdx % colsPerRow) * 0.03, 0.15) }}
                       className={cn(
-                        "group relative rounded-lg border bg-card overflow-hidden transition-all hover:shadow-lg hover:shadow-violet-500/10 hover:border-primary/40 hover:-translate-y-1 cursor-pointer",
+                        "group relative rounded-lg border bg-card overflow-hidden transition-[box-shadow,border-color] hover:shadow-lg hover:shadow-violet-500/10 hover:border-primary/40 cursor-pointer",
                         isSel ? "ring-2 ring-primary border-primary" : "",
                         inCompare ? "ring-2 ring-amber-400" : "",
                         inMultiSelect ? "ring-2 ring-emerald-500 border-emerald-400" : "",
@@ -214,6 +218,7 @@ export function GridView() {
                       onMouseEnter={() => handleCardMouseEnter(r)}
                       onMouseLeave={handleCardMouseLeave}
                       onMouseMove={handleCardMouseMove}
+                      whileHover={{ y: -4, transition: { duration: 0.15 } }}
                     >
                       {/* multi-select checkbox */}
                       <button
@@ -295,7 +300,7 @@ export function GridView() {
                           </p>
                         )}
                       </div>
-                    </div>
+                    </motion.div>
                   </ContextMenuTrigger>
                   <ContextMenuContent className="w-52">
                     <ContextMenuItem onClick={() => setSelectedRow(r.id)}>
