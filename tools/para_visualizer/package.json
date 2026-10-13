@@ -49,6 +49,7 @@
     "@reactuses/core": "^6.0.5",
     "@tanstack/react-query": "^5.82.0",
     "@tanstack/react-table": "^8.21.3",
+    "@tanstack/react-virtual": "^3.14.18",
     "@types/papaparse": "^5.5.2",
     "apache-arrow": "^21.2.0",
     "class-variance-authority": "^0.7.1",

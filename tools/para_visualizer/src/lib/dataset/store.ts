@@ -71,6 +71,7 @@ interface DatasetState {
   detailPanelOpen: boolean;
   showCommandPalette: boolean;
   showBookmarkPanel: boolean;
+  showRowJumpDialog: boolean;
 
   // ---- actions ----
   setDataset: (ds: LoadedDataset | null) => void;
@@ -103,6 +104,7 @@ interface DatasetState {
   setDetailPanelOpen: (v: boolean) => void;
   setShowCommandPalette: (v: boolean) => void;
   setShowBookmarkPanel: (v: boolean) => void;
+  setShowRowJumpDialog: (v: boolean) => void;
   setLoading: (v: boolean) => void;
   setLoadError: (v: string | null) => void;
   addRecent: (r: { name: string; size: number; rows: number }) => void;
@@ -161,6 +163,7 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   detailPanelOpen: true,
   showCommandPalette: false,
   showBookmarkPanel: false,
+  showRowJumpDialog: false,
 
   setDataset: (ds) =>
     set((s) => {
@@ -268,6 +271,7 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   setDetailPanelOpen: (v) => set({ detailPanelOpen: v }),
   setShowCommandPalette: (v) => set({ showCommandPalette: v }),
   setShowBookmarkPanel: (v) => set({ showBookmarkPanel: v }),
+  setShowRowJumpDialog: (v) => set({ showRowJumpDialog: v }),
   setLoading: (v) => set({ loading: v }),
   setLoadError: (v) => set({ loadError: v }),
   addRecent: (r) => set((s) => ({ recent: [r, ...s.recent].slice(0, 10) })),

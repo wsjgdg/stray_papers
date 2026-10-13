@@ -31,6 +31,7 @@ const GROUPS: ShortcutGroup[] = [
       { keys: ["4"], label: "Compare view" },
       { keys: ["5"], label: "Stats view" },
       { keys: ["⌘", "K"], label: "Command palette" },
+      { keys: ["⌘", "G"], label: "Jump to row number" },
     ],
   },
   {

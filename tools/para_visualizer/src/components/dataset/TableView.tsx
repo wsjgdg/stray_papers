@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { useDatasetStore } from "@/lib/dataset/store";
 import { useFilteredRows, useSchema } from "@/lib/dataset/hooks";
 import { Thumbnail } from "./Thumbnail";
+import { Highlight } from "./Highlight";
 import { formatValue } from "@/lib/dataset/filter";
 import { ArrowUpDown, ArrowUp, ArrowDown, Bookmark, BookmarkCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,7 @@ export function TableView() {
   const toggleBookmark = useDatasetStore((s) => s.toggleBookmark);
   const page = useDatasetStore((s) => s.page);
   const setPage = useDatasetStore((s) => s.setPage);
+  const search = useDatasetStore((s) => s.search);
 
   const visibleFields = useMemo(() => {
     return schema.filter((f) => !hiddenFields.has(f.name) && f.name !== imageField);
@@ -155,7 +157,7 @@ export function TableView() {
                   </td>
                   {cols.map((f) => (
                     <td key={f.name} className="px-2 py-1 max-w-[280px] truncate" title={formatValue(r.data[f.name])}>
-                      {formatValue(r.data[f.name])}
+                      <Highlight text={formatValue(r.data[f.name])} query={search} />
                     </td>
                   ))}
                   <td className="px-2 py-1 text-center">

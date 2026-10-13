@@ -1,8 +1,10 @@
 "use client";
 /**
- * Grid view: virtualized thumbnail grid.
+ * Grid view: virtualized thumbnail grid using @tanstack/react-virtual.
+ * Renders rows of cards (each row = N cards based on container width).
  */
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { useDatasetStore } from "@/lib/dataset/store";
 import { useFilteredRows, useSchema } from "@/lib/dataset/hooks";
 import { Thumbnail } from "./Thumbnail";
@@ -25,14 +27,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { decodeImageField } from "@/lib/dataset/decode";
+import { Highlight } from "./Highlight";
 
-const PAGE_SIZE = 60;
+// Gap between cards
+const GAP = 12;
 
 export function GridView() {
   const filtered = useFilteredRows();
   const schema = useSchema();
-  const page = useDatasetStore((s) => s.page);
-  const setPage = useDatasetStore((s) => s.setPage);
   const thumbnailSize = useDatasetStore((s) => s.thumbnailSize);
   const imageField = useDatasetStore((s) => s.imageField);
   const selectedRowId = useDatasetStore((s) => s.selectedRowId);
@@ -47,10 +49,35 @@ export function GridView() {
   const clearSelection = useDatasetStore((s) => s.clearSelection);
   const selectAllFiltered = useDatasetStore((s) => s.selectAllFiltered);
   const setShowExportDialog = useDatasetStore((s) => s.setShowExportDialog);
+  const search = useDatasetStore((s) => s.search);
   const lastShiftIndex = useRef<number | null>(null);
 
+  // Container ref + width tracking for responsive columns
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const update = () => setContainerWidth(el.clientWidth - 24); // minus padding
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Compute columns count + card height
+  const colsPerRow = Math.max(1, Math.floor((containerWidth + GAP) / (thumbnailSize + GAP)));
+  const cardHeight = Math.round((thumbnailSize * 2) / 3) + 56; // aspect 3/2 + caption
+  const rowCount = Math.ceil(filtered.length / colsPerRow);
+
+  const rowVirtualizer = useVirtualizer({
+    count: rowCount,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => cardHeight + GAP,
+    overscan: 4,
+  });
+
   const hoverLabelField = useMemo(() => {
-    // pick a representative text field for caption
     return (
       schema.find((f) => f.role === "text" && f.name !== imageField)?.name ||
       schema.find((f) => f.role === "category")?.name ||
@@ -62,13 +89,32 @@ export function GridView() {
     return schema.find((f) => f.role === "category" && f.name !== hoverLabelField)?.name || null;
   }, [schema, hoverLabelField]);
 
-  const start = page * PAGE_SIZE;
-  const pageRows = filtered.slice(start, start + PAGE_SIZE);
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const handleCardClick = (r: typeof filtered[0], e: React.MouseEvent) => {
+    if (e.shiftKey && lastShiftIndex.current !== null) {
+      const from = Math.min(lastShiftIndex.current, r.index);
+      const to = Math.max(lastShiftIndex.current, r.index);
+      const toSelect = filtered.slice(from, to + 1).map((x) => x.id);
+      useDatasetStore.setState((s) => {
+        const next = new Set(s.selectedRowIds);
+        toSelect.forEach((id) => next.add(id));
+        return { selectedRowIds: next };
+      });
+      e.preventDefault();
+      return;
+    }
+    if (e.metaKey || e.ctrlKey) {
+      toggleSelectedRow(r.id);
+      lastShiftIndex.current = r.index;
+      e.preventDefault();
+      return;
+    }
+    setSelectedRow(r.id);
+    lastShiftIndex.current = r.index;
+  };
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto custom-scroll p-3">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto custom-scroll p-3 relative">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
             <Star className="h-8 w-8 opacity-40" />
@@ -76,12 +122,32 @@ export function GridView() {
           </div>
         ) : (
           <div
-            className="grid gap-3"
             style={{
-              gridTemplateColumns: `repeat(auto-fill, minmax(${thumbnailSize}px, 1fr))`,
+              height: `${rowVirtualizer.getTotalSize()}px`,
+              width: "100%",
+              position: "relative",
             }}
           >
-            {pageRows.map((r) => {
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const rowIdx = virtualRow.index;
+              const startCard = rowIdx * colsPerRow;
+              const rowCards = filtered.slice(startCard, startCard + colsPerRow);
+              return (
+                <div
+                  key={rowIdx}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    transform: `translateY(${virtualRow.start}px)`,
+                    display: "grid",
+                    gridTemplateColumns: `repeat(${colsPerRow}, minmax(0, 1fr))`,
+                    gap: `${GAP}px`,
+                    paddingBottom: `${GAP}px`,
+                  }}
+                >
+                  {rowCards.map((r) => {
               const isSel = selectedRowId === r.id;
               const inCompare = compareRowIds.includes(r.id);
               const bookmarked = !!bookmarks[r.id];
@@ -90,33 +156,6 @@ export function GridView() {
               const bboxes = r.data["extra_input_figure_bboxes"];
               const w = r.data["image_width"];
               const h = r.data["image_height"];
-
-              const handleCardClick = (e: React.MouseEvent) => {
-                // Shift+click: multi-select range
-                if (e.shiftKey && lastShiftIndex.current !== null) {
-                  const from = Math.min(lastShiftIndex.current, r.index);
-                  const to = Math.max(lastShiftIndex.current, r.index);
-                  const toSelect = filtered.slice(from, to + 1).map((x) => x.id);
-                  // merge into selection
-                  useDatasetStore.setState((s) => {
-                    const next = new Set(s.selectedRowIds);
-                    toSelect.forEach((id) => next.add(id));
-                    return { selectedRowIds: next };
-                  });
-                  e.preventDefault();
-                  return;
-                }
-                // Cmd/Ctrl+click: toggle single in multi-select
-                if (e.metaKey || e.ctrlKey) {
-                  toggleSelectedRow(r.id);
-                  lastShiftIndex.current = r.index;
-                  e.preventDefault();
-                  return;
-                }
-                // normal click: open detail
-                setSelectedRow(r.id);
-                lastShiftIndex.current = r.index;
-              };
 
               return (
                 <ContextMenu key={r.id}>
@@ -128,7 +167,7 @@ export function GridView() {
                         inCompare ? "ring-2 ring-amber-400" : "",
                         inMultiSelect ? "ring-2 ring-emerald-500 border-emerald-400" : "",
                       )}
-                      onClick={handleCardClick}
+                      onClick={(e) => handleCardClick(r, e)}
                     >
                       {/* multi-select checkbox */}
                       <button
@@ -195,7 +234,7 @@ export function GridView() {
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <p className="text-[11px] line-clamp-2 leading-tight text-foreground/80">
-                                  {formatValue(r.data[hoverLabelField])}
+                                  <Highlight text={formatValue(r.data[hoverLabelField])} query={search} />
                                 </p>
                               </TooltipTrigger>
                               <TooltipContent side="top" className="max-w-xs">
@@ -206,7 +245,7 @@ export function GridView() {
                         )}
                         {captionField2 && (
                           <p className="text-[10px] mt-0.5 text-muted-foreground/70 line-clamp-1">
-                            {formatValue(r.data[captionField2])}
+                            <Highlight text={formatValue(r.data[captionField2])} query={search} />
                           </p>
                         )}
                       </div>
@@ -273,6 +312,9 @@ export function GridView() {
                   </ContextMenuContent>
                 </ContextMenu>
               );
+                  })}
+                </div>
+              );
             })}
           </div>
         )}
@@ -314,32 +356,11 @@ export function GridView() {
           </Button>
         </div>
       )}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-2 border-t bg-card/40 text-xs text-muted-foreground">
-          <span>
-            Showing {start + 1}–{Math.min(start + PAGE_SIZE, filtered.length)} of {filtered.length}
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              className="px-2 py-1 rounded border hover:bg-accent disabled:opacity-40"
-              onClick={() => setPage(page - 1)}
-              disabled={page === 0}
-            >
-              Prev
-            </button>
-            <span className="font-mono">
-              {page + 1} / {totalPages}
-            </span>
-            <button
-              className="px-2 py-1 rounded border hover:bg-accent disabled:opacity-40"
-              onClick={() => setPage(page + 1)}
-              disabled={page >= totalPages - 1}
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Footer with count */}
+      <div className="flex items-center justify-between px-4 py-1.5 border-t bg-card/40 text-xs text-muted-foreground">
+        <span>{filtered.length} rows · virtual scroll</span>
+        <span className="font-mono">{colsPerRow} cols · {thumbnailSize}px</span>
+      </div>
     </div>
   );
 }

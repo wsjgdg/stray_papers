@@ -23,6 +23,7 @@ import { BookmarkPanel } from "./BookmarkPanel";
 import { ThemeToggle } from "./ThemeToggle";
 import { ShortcutsCheatsheet } from "./ShortcutsCheatsheet";
 import { LoadingSkeleton } from "./LoadingSkeleton";
+import { RowJumpDialog } from "./RowJumpDialog";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -102,6 +103,7 @@ export function AppShell() {
         <CommandPalette />
         <BookmarkPanel />
         <ShortcutsCheatsheet />
+        <RowJumpDialogWithStore />
       </div>
     );
   }
@@ -169,8 +171,16 @@ export function AppShell() {
       <CommandPalette />
       <BookmarkPanel />
       <ShortcutsCheatsheet />
+      <RowJumpDialogWithStore />
     </div>
   );
+}
+
+/** Wrapper that connects RowJumpDialog to the store */
+function RowJumpDialogWithStore() {
+  const open = useDatasetStore((s) => s.showRowJumpDialog);
+  const setOpen = useDatasetStore((s) => s.setShowRowJumpDialog);
+  return <RowJumpDialog open={open} onOpenChange={setOpen} />;
 }
 
 function Header() {
