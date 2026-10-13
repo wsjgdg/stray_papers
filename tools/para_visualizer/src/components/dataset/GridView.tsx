@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/tooltip";
 import { decodeImageField } from "@/lib/dataset/decode";
 import { Highlight } from "./Highlight";
+import { HoverPreview, HOVER_DELAY, PREVIEW_WIDTH_VALUE, PREVIEW_HEIGHT_VALUE } from "./HoverPreview";
 
 // Gap between cards
 const GAP = 12;
@@ -51,6 +52,40 @@ export function GridView() {
   const setShowExportDialog = useDatasetStore((s) => s.setShowExportDialog);
   const search = useDatasetStore((s) => s.search);
   const lastShiftIndex = useRef<number | null>(null);
+  // hover preview state
+  const [hoverRowId, setHoverRowId] = useState<string | null>(null);
+  const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleCardMouseEnter = (r: typeof filtered[0]) => {
+    hoverTimer.current = setTimeout(() => {
+      setHoverRowId(r.id);
+    }, HOVER_DELAY);
+  };
+  const handleCardMouseLeave = () => {
+    if (hoverTimer.current) {
+      clearTimeout(hoverTimer.current);
+      hoverTimer.current = null;
+    }
+    setHoverRowId(null);
+  };
+  const handleCardMouseMove = (e: React.MouseEvent) => {
+    if (!hoverRowId) return;
+    const x = e.clientX;
+    const y = e.clientY;
+    const flipX = x + PREVIEW_WIDTH_VALUE + 20 > window.innerWidth;
+    const flipY = y + PREVIEW_HEIGHT_VALUE + 40 > window.innerHeight;
+    setHoverPos({
+      x: flipX ? x - PREVIEW_WIDTH_VALUE - 16 : x + 16,
+      y: flipY ? y - PREVIEW_HEIGHT_VALUE - 16 : y + 16,
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimer.current) clearTimeout(hoverTimer.current);
+    };
+  }, []);
 
   // Container ref + width tracking for responsive columns
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -168,6 +203,9 @@ export function GridView() {
                         inMultiSelect ? "ring-2 ring-emerald-500 border-emerald-400" : "",
                       )}
                       onClick={(e) => handleCardClick(r, e)}
+                      onMouseEnter={() => handleCardMouseEnter(r)}
+                      onMouseLeave={handleCardMouseLeave}
+                      onMouseMove={handleCardMouseMove}
                     >
                       {/* multi-select checkbox */}
                       <button
@@ -319,6 +357,21 @@ export function GridView() {
           </div>
         )}
       </div>
+      {/* Hover preview popup — rendered once for the hovered row */}
+      {hoverRowId && (() => {
+        const hr = filtered.find((r) => r.id === hoverRowId);
+        if (!hr) return null;
+        return (
+          <HoverPreview
+            row={hr}
+            imageField={imageField}
+            search={search}
+            labelField={hoverLabelField}
+            visible={true}
+            pos={hoverPos}
+          />
+        );
+      })()}
       {/* Bulk action bar (visible when rows are multi-selected) */}
       {selectedRowIds.size > 0 && (
         <div className="flex items-center gap-2 px-3 py-2 border-t bg-emerald-50/60 dark:bg-emerald-950/20 text-xs">

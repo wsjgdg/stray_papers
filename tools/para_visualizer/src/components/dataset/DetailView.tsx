@@ -8,6 +8,7 @@ import { useFilteredRows, useSchema, useHiddenFields } from "@/lib/dataset/hooks
 import { Thumbnail } from "./Thumbnail";
 import { AnnotationOverlay } from "./AnnotationOverlay";
 import { ZoomableImage } from "./ZoomableImage";
+import { Highlight } from "./Highlight";
 import { formatValue } from "@/lib/dataset/filter";
 import { ChevronLeft, ChevronRight, Bookmark, BookmarkCheck, Download, AlertTriangle, Copy, Check, MousePointer2, PenLine } from "lucide-react";
 import { useState } from "react";
@@ -29,6 +30,7 @@ export function DetailView() {
   const setShowBboxOverlay = useDatasetStore((s) => s.setShowBboxOverlay);
   const bookmarks = useDatasetStore((s) => s.bookmarks);
   const toggleBookmark = useDatasetStore((s) => s.toggleBookmark);
+  const search = useDatasetStore((s) => s.search);
   // Only select the specific cache entry for this row, not the whole cache map.
   // This prevents re-renders when other rows' thumbnails decode.
   const cacheKey = selectedRowId && imageField ? `${selectedRowId}:${imageField}` : null;
@@ -256,7 +258,7 @@ export function DetailView() {
                       </button>
                     </div>
                     <p className="text-xs break-words whitespace-pre-wrap text-foreground/90 leading-relaxed">
-                      {display}
+                      <Highlight text={display} query={search} />
                     </p>
                   </div>
                 );
