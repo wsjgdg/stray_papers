@@ -151,9 +151,17 @@ export function GridView() {
     <div className="flex flex-col h-full">
       <div ref={scrollRef} className="flex-1 overflow-y-auto custom-scroll p-3 relative">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
-            <Star className="h-8 w-8 opacity-40" />
-            <p>No rows match the current filters.</p>
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-3 py-20">
+            <div className="relative">
+              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 border border-dashed border-muted-foreground/30 flex items-center justify-center">
+                <Star className="h-7 w-7 opacity-40" />
+              </div>
+              <div className="absolute -inset-2 bg-gradient-to-br from-violet-500/5 to-fuchsia-500/5 rounded-3xl blur-xl" />
+            </div>
+            <div className="text-center space-y-1">
+              <p className="text-sm font-medium">No rows match the current filters</p>
+              <p className="text-xs text-muted-foreground/70">Try adjusting your filters or clearing the search.</p>
+            </div>
           </div>
         ) : (
           <div
@@ -197,7 +205,7 @@ export function GridView() {
                   <ContextMenuTrigger asChild>
                     <div
                       className={cn(
-                        "group relative rounded-lg border bg-card overflow-hidden transition-all hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 cursor-pointer",
+                        "group relative rounded-lg border bg-card overflow-hidden transition-all hover:shadow-lg hover:shadow-violet-500/10 hover:border-primary/40 hover:-translate-y-1 cursor-pointer",
                         isSel ? "ring-2 ring-primary border-primary" : "",
                         inCompare ? "ring-2 ring-amber-400" : "",
                         inMultiSelect ? "ring-2 ring-emerald-500 border-emerald-400" : "",

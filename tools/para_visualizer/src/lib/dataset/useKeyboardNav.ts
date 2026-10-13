@@ -172,6 +172,48 @@ export function useKeyboardNav() {
         }
         return;
       }
+      // n = jump to next decode failure row
+      if (e.key === "n") {
+        const state = useDatasetStore.getState();
+        const failures = state.failures;
+        if (failures.length > 0) {
+          // Find the next failure after the current selected row
+          const currentIdx = selectedRowId ? filtered.findIndex((r) => r.id === selectedRowId) : -1;
+          const failureRowIds = new Set(failures.map((f) => f.rowId));
+          const nextFailure = filtered.slice(currentIdx + 1).find((r) => failureRowIds.has(r.id));
+          if (nextFailure) {
+            setSelectedRow(nextFailure.id);
+          } else {
+            // wrap around
+            const firstFailure = filtered.find((r) => failureRowIds.has(r.id));
+            if (firstFailure) setSelectedRow(firstFailure.id);
+          }
+        }
+        return;
+      }
+      // f = jump to next row with an image
+      if (e.key === "f") {
+        const state = useDatasetStore.getState();
+        const imgField = state.imageField;
+        if (imgField) {
+          const currentIdx = selectedRowId ? filtered.findIndex((r) => r.id === selectedRowId) : -1;
+          const nextWithImage = filtered.slice(currentIdx + 1).find((r) => {
+            const v = r.data[imgField];
+            return v != null && v !== "";
+          });
+          if (nextWithImage) {
+            setSelectedRow(nextWithImage.id);
+          } else {
+            // wrap around
+            const firstWithImage = filtered.find((r) => {
+              const v = r.data[imgField!];
+              return v != null && v !== "";
+            });
+            if (firstWithImage) setSelectedRow(firstWithImage.id);
+          }
+        }
+        return;
+      }
       // x clears multi-selection
       if (e.key === "x") {
         clearSelection();

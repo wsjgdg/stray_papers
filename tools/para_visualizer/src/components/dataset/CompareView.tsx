@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import { useDatasetStore } from "@/lib/dataset/store";
 import { useFilteredRows, useSchema, useHiddenFields } from "@/lib/dataset/hooks";
 import { Thumbnail } from "./Thumbnail";
+import { Highlight } from "./Highlight";
 import { formatValue } from "@/lib/dataset/filter";
 import { X, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ export function CompareView() {
   const schema = useSchema();
   const showBboxOverlay = useDatasetStore((s) => s.showBboxOverlay);
   const setSelectedRow = useDatasetStore((s) => s.setSelectedRow);
+  const search = useDatasetStore((s) => s.search);
 
   const rows = useMemo(
     () => compareRowIds.map((id) => filtered.find((r) => r.id === id)).filter(Boolean),
@@ -98,7 +100,7 @@ export function CompareView() {
                       {f.name}
                     </div>
                     <div className="text-[11px] leading-tight text-foreground/90 break-words whitespace-pre-wrap">
-                      {formatValue(r.data[f.name])}
+                      <Highlight text={formatValue(r.data[f.name])} query={search} />
                     </div>
                   </div>
                 ))}

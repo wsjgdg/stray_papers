@@ -154,11 +154,7 @@ export function ZoomableImage({
       onDoubleClick={handleDoubleClick}
     >
       {src && (
-        <img
-          ref={imgRef}
-          src={src}
-          alt={alt}
-          className="max-w-none pointer-events-none select-none"
+        <div
           style={{
             transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px)) rotate(${rotation}deg) scale(${zoom})`,
             transformOrigin: "center center",
@@ -166,19 +162,39 @@ export function ZoomableImage({
             left: "50%",
             top: "50%",
             transition: isDragging ? "none" : "transform 0.15s ease-out",
-            imageRendering: zoom > 2 ? "pixelated" : "auto",
           }}
-          onLoad={(e) => {
-            setImgLoaded(true);
-            const t = e.currentTarget;
-            if (t.naturalWidth && t.naturalHeight) {
-              setImgNaturalSize({ w: t.naturalWidth, h: t.naturalHeight });
-            }
-          }}
-          draggable={false}
-        />
+        >
+          <img
+            ref={imgRef}
+            src={src}
+            alt={alt}
+            className="max-w-none pointer-events-none select-none"
+            style={{
+              imageRendering: zoom > 2 ? "pixelated" : "auto",
+            }}
+            onLoad={(e) => {
+              setImgLoaded(true);
+              const t = e.currentTarget;
+              if (t.naturalWidth && t.naturalHeight) {
+                setImgNaturalSize({ w: t.naturalWidth, h: t.naturalHeight });
+              }
+            }}
+            draggable={false}
+          />
+          {/* Children overlays (bbox, annotation) — they inherit the same transform.
+              The overlay container is sized to the image's natural dimensions,
+              so percentage-positioned bboxes scale correctly with zoom. */}
+          <div
+            className="absolute inset-0"
+            style={{
+              width: nw,
+              height: nh,
+            }}
+          >
+            {children}
+          </div>
+        </div>
       )}
-      {children}
 
       {/* Zoom controls */}
       {imgLoaded && (
