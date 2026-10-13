@@ -101,6 +101,7 @@ export function ExportDialog() {
       if ((type === "images" || type === "both") && imageField) {
         let ok = 0;
         let failed = 0;
+        const toastId = toast.loading(`Exporting images... 0 / ${total}`, { duration: Infinity });
         for (let i = 0; i < rows.length; i++) {
           const r = rows[i];
           const v = r.data[imageField];
@@ -124,10 +125,14 @@ export function ExportDialog() {
           }
           setProgress(((i + 1) / total) * 100);
           setDone(i + 1);
+          // Update toast every 5 items or on last item
+          if ((i + 1) % 5 === 0 || i === rows.length - 1) {
+            toast.loading(`Exporting images... ${i + 1} / ${total} (${ok} ok, ${failed} failed)`, { id: toastId, duration: Infinity });
+          }
           // throttle to avoid browser download dialog overwhelming
           await new Promise((res) => setTimeout(res, 60));
         }
-        toast.success(`Exported ${ok} images (${failed} skipped/failed)`);
+        toast.success(`Exported ${ok} images (${failed} skipped/failed)`, { id: toastId, duration: 4000 });
       }
 
       // annotations export (COCO JSON)

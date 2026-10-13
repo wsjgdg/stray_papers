@@ -5,6 +5,7 @@
 import { useDatasetStore } from "@/lib/dataset/store";
 import { useFilteredRows, useSchema, useHiddenFields } from "@/lib/dataset/hooks";
 import { formatValue, formatBytes } from "@/lib/dataset/filter";
+import { Highlight } from "./Highlight";
 import {
   Download,
   Copy,
@@ -49,6 +50,7 @@ export function RightPanel() {
   const toggleCompare = useDatasetStore((s) => s.toggleCompare);
   const compareRowIds = useDatasetStore((s) => s.compareRowIds);
   const setDetailPanelOpen = useDatasetStore((s) => s.setDetailPanelOpen);
+  const search = useDatasetStore((s) => s.search);
   const [copied, setCopied] = useState<string | null>(null);
 
   const currentIdx = useMemo(
@@ -280,7 +282,7 @@ export function RightPanel() {
                       </button>
                     </div>
                     <p className="text-[11px] leading-snug text-foreground/90 break-words whitespace-pre-wrap">
-                      {display}
+                      <Highlight text={display} query={search} />
                     </p>
                   </div>
                 );

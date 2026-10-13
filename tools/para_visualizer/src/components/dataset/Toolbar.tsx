@@ -2,6 +2,7 @@
 /**
  * Toolbar: search, filter toggle, sort, view switcher, thumbnail size.
  */
+import { useRef, useState } from "react";
 import { useDatasetStore } from "@/lib/dataset/store";
 import { useActiveRows, useFilteredRows } from "@/lib/dataset/hooks";
 import { LayoutGrid, Table2, Eye, GitCompareArrows, BarChart3, Search, SlidersHorizontal, Download, Plus, Files, Database, X } from "lucide-react";
@@ -44,6 +45,32 @@ export function Toolbar() {
   const setShowBboxOverlay = useDatasetStore((s) => s.setShowBboxOverlay);
   const filtered = useFilteredRows();
   const total = useActiveRows();
+  const [showSearchHistory, setShowSearchHistory] = useState(false);
+  const [searchHistory, setSearchHistory] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = localStorage.getItem("dib:search-history");
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Save search to history when search becomes non-empty and input loses focus or Enter pressed
+  const saveSearchToHistory = (term: string) => {
+    const q = term.trim();
+    if (!q) return;
+    setSearchHistory((prev) => {
+      const next = [q, ...prev.filter((s) => s !== q)].slice(0, 8);
+      try {
+        localStorage.setItem("dib:search-history", JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
 
   return (
     <div className="border-b bg-card/60 backdrop-blur px-3 py-2 flex flex-wrap items-center gap-2">
@@ -74,22 +101,94 @@ export function Toolbar() {
 
       <div className="h-6 w-px bg-border" />
 
-      {/* search */}
+      {/* search with history dropdown */}
       <div className="relative flex-1 min-w-[200px] max-w-md">
-        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60 z-10" />
         <Input
+          ref={searchInputRef}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          onFocus={() => setShowSearchHistory(true)}
+          onBlur={() => {
+            setShowSearchHistory(false);
+            saveSearchToHistory(search);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              saveSearchToHistory(search);
+              setShowSearchHistory(false);
+              searchInputRef.current?.blur();
+            }
+            if (e.key === "Escape") {
+              setShowSearchHistory(false);
+              searchInputRef.current?.blur();
+            }
+          }}
           placeholder="Search rows across text fields…"
           className="h-8 pl-7 pr-7 text-xs"
         />
         {search && (
           <button
             onClick={() => setSearch("")}
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-accent text-muted-foreground"
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-accent text-muted-foreground z-10"
           >
             <X className="h-3 w-3" />
           </button>
+        )}
+        {/* Search history dropdown */}
+        {showSearchHistory && searchHistory.length > 0 && !search && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-popover border rounded-md shadow-lg z-50 max-h-64 overflow-y-auto custom-scroll">
+            <div className="px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground border-b">
+              Recent searches
+            </div>
+            {searchHistory.map((term, i) => (
+              <div
+                key={i}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setSearch(term);
+                  setShowSearchHistory(false);
+                  searchInputRef.current?.blur();
+                }}
+                className="w-full flex items-center gap-2 px-2 py-1.5 text-xs hover:bg-accent text-left cursor-pointer"
+              >
+                <Search className="h-3 w-3 text-muted-foreground/60 shrink-0" />
+                <span className="truncate flex-1">{term}</span>
+                <button
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSearchHistory((prev) => {
+                      const next = prev.filter((_, j) => j !== i);
+                      try {
+                        localStorage.setItem("dib:search-history", JSON.stringify(next));
+                      } catch {
+                        // ignore
+                      }
+                      return next;
+                    });
+                  }}
+                  className="p-0.5 rounded hover:bg-muted text-muted-foreground/60 hover:text-rose-500"
+                >
+                  <X className="h-2.5 w-2.5" />
+                </button>
+              </div>
+            ))}
+            <button
+              onMouseDown={(e) => {
+                e.preventDefault();
+                setSearchHistory([]);
+                try {
+                  localStorage.removeItem("dib:search-history");
+                } catch {
+                  // ignore
+                }
+              }}
+              className="w-full px-2 py-1.5 text-[10px] text-muted-foreground hover:bg-accent hover:text-rose-500 border-t"
+            >
+              Clear all history
+            </button>
+          </div>
         )}
       </div>
 

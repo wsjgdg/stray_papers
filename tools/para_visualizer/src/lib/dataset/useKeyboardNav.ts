@@ -131,6 +131,47 @@ export function useKeyboardNav() {
         if (selectedRowId) toggleBookmark(selectedRowId);
         return;
       }
+      // [ ] switch active file, { } jump to prev/next bookmark
+      if (e.key === "[") {
+        if (e.shiftKey) {
+          // { = prev bookmark
+          const { bookmarks, getFilteredRows, setSelectedRow, selectedRowId } = useDatasetStore.getState();
+          const filteredRows = getFilteredRows();
+          const bookmarkedRows = filteredRows.filter((r) => bookmarks[r.id]);
+          if (bookmarkedRows.length === 0) return;
+          const currentIdx = selectedRowId ? bookmarkedRows.findIndex((r) => r.id === selectedRowId) : -1;
+          const prevIdx = currentIdx <= 0 ? bookmarkedRows.length - 1 : currentIdx - 1;
+          setSelectedRow(bookmarkedRows[prevIdx].id);
+        } else {
+          // [ = prev file
+          const { dataset, activeFileIndex, setActiveFileIndex } = useDatasetStore.getState();
+          if (dataset) {
+            if (activeFileIndex === null) setActiveFileIndex(0);
+            else if (activeFileIndex > 0) setActiveFileIndex(activeFileIndex - 1);
+          }
+        }
+        return;
+      }
+      if (e.key === "]") {
+        if (e.shiftKey) {
+          // } = next bookmark
+          const { bookmarks, getFilteredRows, setSelectedRow, selectedRowId } = useDatasetStore.getState();
+          const filteredRows = getFilteredRows();
+          const bookmarkedRows = filteredRows.filter((r) => bookmarks[r.id]);
+          if (bookmarkedRows.length === 0) return;
+          const currentIdx = selectedRowId ? bookmarkedRows.findIndex((r) => r.id === selectedRowId) : -1;
+          const nextIdx = currentIdx >= bookmarkedRows.length - 1 ? 0 : currentIdx + 1;
+          setSelectedRow(bookmarkedRows[nextIdx].id);
+        } else {
+          // ] = next file
+          const { dataset, activeFileIndex, setActiveFileIndex } = useDatasetStore.getState();
+          if (dataset && dataset.files.length > 1) {
+            if (activeFileIndex === null) setActiveFileIndex(0);
+            else if (activeFileIndex < dataset.files.length - 1) setActiveFileIndex(activeFileIndex + 1);
+          }
+        }
+        return;
+      }
       // x clears multi-selection
       if (e.key === "x") {
         clearSelection();
