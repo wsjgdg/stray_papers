@@ -173,10 +173,43 @@ function gaussianWave(grid, { fx, fy, kx, ky, sigma }){
  * 自旋/Dirac 用）。引擎所有 shader 按 vec4 泛型书写：RG32F 采样得 (r,g,0,1)，
  * 多余的 zw 通道在写回 RG32F 附件时被丢弃，数值与逐字等价。
  *
- * 已覆盖的物理族：二阶时间可分离 H(u)=Hv, v'=-Hu 系统（薛定谔/NLS/GP）。
- * 契约已预留但尚未落地的族：Pauli 自旋（pairs=2 双复分量）、AB 效应（矢势
- * 注入 localH）。一阶系统（Dirac）与 3D 需要引擎扩展（integrator 模式 /
+ * 已覆盖的物理族：二阶时间可分离 H(u)=Hv, v'=-Hu 系统（薛定谔/NLS/GP）、
+ * 含时外场驱动、AB 磁通（link 相位）。契约已预留但尚未落地的族：Pauli 自旋
+ * （pairs=2 双复分量）。一阶系统（Dirac）与 3D 需要引擎扩展（integrator 模式 /
  * 3D 纹理）——见 README「新增内核」。
+ *
+ * Aharonov-Bohm 约定（矢势/磁通）：AB 矢势作用在动能项（拉普拉斯）而非势项——
+ * backlog 原表述「矢势注入 localH」已按此修正。实现为最小耦合的 link 相位：
+ * 5 点拉普拉斯的每条邻格跳变乘上 U = e^{iθ}，θ = ∫A·dl 为沿该 link 的矢势线积分
+ * （引擎级 uniform uABOn/uABPos/uABPhi，每帧设置）：
+ *   对称规范 A = (Φ/2π)·(−(y−y0), (x−x0)) / r² = (Φ/2π)·dθ（角度 1-形式）。
+ *   θ 取**精确线积分**：θ = (Φ/2π)·wrapPi(β(p+Δ)−β(p))，β=atan2(Δy,Δx)
+ *   （∫A·dl 沿 link 即张角差，精确；被积分子 (d×Δ) 沿 link 恒定）。
+ *   wrapPi 的 (−π,π] 分支切割在螺线管负 x 射线，构成规范弦（纯规范）。
+ *   ∮A·dl = Φ：绕螺线管一周的相位即磁通本身——磁场 B 约束在管内（本模型不模拟
+ *   管内，只给 link 相位），管外 B=0 而 A≠0，正是 AB 效应的物理舞台。
+ * 数值性质（与驱动同等严格的零风险保证）：
+ *   Φ=0 时 uABOn=0，走 else 分支的原 5 点 stencil——逐字等价旧路径，回归零风险；
+ *   |U|=1 ⟹ link 拉普拉斯每行元素模不变，Gershgorin 谱半径仍 ≤ 8，E_max 不变
+ *   （无需像含时外场那样抬稳定界）；
+ *   正向与反向 link 共享同一对端点 ⟹ θ 精确反号 ⟹ link 拉普拉斯厄米 ⟹
+ *   总概率严格守恒（无钳制、无奇点：atan2 处处有限，格点重合由 ang() 回退兜底）；
+ *   Wilson 环 = e^{iΦ} 精确成立（绕管任意环路的相位严格量化）⟹ 算符层面
+ *   Φ→Φ+2π 严格规范等价（H(Φ+2π)=G†·H(Φ)·G，G=diag(e^{iβ_v})）——但规范等价
+ *   比较的两个演化必须同步变换初态（ψ₀→Gψ₀）；若初态固定不变，Φ 与 Φ+2π
+ *   实际比较的是两个不同物理初态（规范 0 语言下为 ψ₀ 与 G†ψ₀），密度图样
+ *   不同属预期。CDP 复测（2026-10-13 R26）：初态固定时 I(2π) vs I(0) 相对差
+ *   17%（T0=481.2 对齐），且对 substeps 不敏感（6→24 仅 17.3%→15.4%），
+ *   证实该差异源于初态未规范变换而非积分误差。早期注释「密度图样逐时刻
+ *   不变（CDP 实测到浮点级）」不实，已撤。
+ *
+ * 实现迭代纪实（诚实记录）：初版 θ 按 link 中点采样 A(mid)·Δ + r²≥4 格² 钳制，
+ * 实测两个缺陷——(1) 格心采样（非中点）时正反 link 的 θ 非精确反号，非厄米，
+ * P 漂移 3e-4@Φ=π/2；(2) 中点采样虽厄米，但钳制使管心邻近小环路的 Wilson 环
+ * 偏离 e^{iΦ}（螺线管格间位置时核心 4-cycle 全部落钳制区，残差 −0.18 rad），
+ * Φ→Φ+2π 规范等价被破坏（CDP 实测屏密度差 8.5e-5，为自漂移噪声底的 2.4 倍）。
+ * 精确线积分方案同时解决两者：端点角差天然反号（厄米），且绕管环路相位严格
+ * =Φ（无钳制残差），分支切割的规范弦对规范不变量无影响。
  *
  * 耗散约定（开放系统）：引擎每帧演化结束后跑 TPL_SCALE pass，对 (u, v) 整场乘
  * e^{-γ·dt}（γ = state.gamma，帧级 uniform）。iψ_t = Hψ + γ 损失项的解为密度
@@ -210,15 +243,52 @@ uniform vec2 uTexel;
 uniform float uDriveAmp;    // 含时外场幅值 A（势单位），0 = 关闭（精确恒等）
 uniform float uDrivePhase;  // 驱动相位 φ = ω·(t+dt/2)，CPU 每帧按帧中点推算
 uniform int   uDriveMode;   // 0 = 均匀 AC Stark A·cos(φ)；1 = x 行波 A·cos(2πx−φ)
+uniform float uABOn;        // AB 磁通开关：0 = 原 5 点 stencil（Φ=0 时精确等价）
+uniform vec2  uABPos;       // 螺线管位置（世界坐标）
+uniform float uABPhi;       // 磁通 Φ（rad，绕行一周总相位；0 = 关闭）
 {{UNIFORMS}}
 vec4 S(vec2 uv){
   if(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0) return vec4(0.0);
   return texture(uPsi,uv);
 }
+vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
+vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }   /* 两复分量同相旋转 */
+/* AB link 相位辅助：视角（螺线管格点上 |d|²≈0 回退 0，防 atan2(0,0)）与 (−π,π] wrap */
+float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
+float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
 void main(){
   vec4 c = texture(uPsi,vUv);
-  vec4 lap = S(vUv+vec2(-uTexel.x,0.0))+S(vUv+vec2(uTexel.x,0.0))
-           + S(vUv+vec2(0.0,-uTexel.y))+S(vUv+vec2(0.0,uTexel.y)) - 4.0*c;
+  vec4 lap;
+  if(uABOn > 0.5){
+    /* 最小耦合 link 相位（精确线积分）：每条邻格跳变乘 U=e^{iθ}，θ=∫A·dl。
+       对称规范 A=(Φ/2π)·(−(y−y0),(x−x0))/r² = (Φ/2π)·dθ 是角度 1-形式，
+       沿直线 link 的线积分**精确**等于端点视角差：
+         θ_link(p→p+Δ) = (Φ/2π)·wrapPi(β(p+Δ) − β(p)),  β(q)=atan2(q.y−y0, q.x−x0)
+       （被积函数 (d×Δ)/|d+sΔ|² 分子恒定，积分即张角差——比中点采样 A(mid)·Δ
+       的 O(texel²) 近似高高一阶；且 atan2 处处有限，无奇点、无需 r² 钳制。）
+       wrapPi 到 (−π,π] 处理 atan2 分支切割（螺线管负 x 射线）：切割处 link 相位
+       ≈∓π·Φ/2π 为规范弦（纯规范，密度等规范不变量不受影响；垂直跨弦 link 的
+       原始角差 ≈±2π 被 wrap 精确恢复为小值）。ang() 对 |d|²≈0 回退 0 防
+       atan2(0,0)（螺线管被工具放到格点上时），保持反向 link 精确反号。
+       正向/反向 link 共享同一对端点 ⟹ θ 精确反号 ⟹ link 拉普拉斯严格厄米；
+       围绕螺线管的 Wilson 环 = e^{iΦ} **精确**成立（无钳制残差）⟹
+       H(Φ+2π)=G†·H(Φ)·G（G=diag(e^{iβ_v})，算符层面规范等价；「密度图样
+       逐时刻不变」需初态同步变换 ψ₀→Gψ₀，初态固定时 I(2π) vs I(0) 差 17%
+       属预期——R26 CDP 复测，详见文件头约定节）。|U|=1 ⟹ 谱半径
+       仍 ≤8，E_max 不变。 */
+    float cAB = uABPhi/6.28318530718;
+    vec2 dp = vUv - uABPos;
+    float b0 = ang(dp);
+    vec2 dq;
+    dq = vUv + vec2(uTexel.x,0.0) - uABPos;  lap  = rot4(S(vUv+vec2( uTexel.x,0.0)), cAB*wrapPi(ang(dq)-b0));
+    dq = vUv - vec2(uTexel.x,0.0) - uABPos;  lap += rot4(S(vUv+vec2(-uTexel.x,0.0)), cAB*wrapPi(ang(dq)-b0));
+    dq = vUv + vec2(0.0,uTexel.y) - uABPos;  lap += rot4(S(vUv+vec2(0.0, uTexel.y)), cAB*wrapPi(ang(dq)-b0));
+    dq = vUv - vec2(0.0,uTexel.y) - uABPos;  lap += rot4(S(vUv+vec2(0.0,-uTexel.y)), cAB*wrapPi(ang(dq)-b0));
+    lap -= 4.0*c;
+  } else {
+    lap = S(vUv+vec2(-uTexel.x,0.0))+S(vUv+vec2(uTexel.x,0.0))
+         + S(vUv+vec2(0.0,-uTexel.y))+S(vUv+vec2(0.0,uTexel.y)) - 4.0*c;
+  }
   float V = (texture(uV,vUv).r*255.0-128.0)/127.0;
   /* 含时外场（实势 → H 厄米 → 概率守恒；A=0 时为 IEEE 精确恒等） */
   V += uDriveAmp * (uDriveMode == 1 ? cos(6.28318530718*vUv.x - uDrivePhase) : cos(uDrivePhase));
@@ -254,6 +324,9 @@ uniform sampler2D uV;
 uniform float uDecay;
 uniform vec2 uPsiTexel;
 uniform vec2 uAspect;
+uniform float uABOn;        // AB 螺线管标记开关（与演化一致：Φ=0 不画）
+uniform vec2  uABPos;       // 螺线管位置（世界坐标）
+uniform float uABPhi;       // 磁通 Φ（rad；标记亮度随 |Φ| 增强）
 {{UNIFORMS}}
 vec4 bilerp(sampler2D t, vec2 uv, vec2 texel){
   vec2 f = fract(uv/texel - 0.5) - 0.5;
@@ -301,6 +374,16 @@ void main(){
   img += vec3(0.07,0.11,0.16)*(1.0-smoothstep(0.47,0.5,max(g.x,g.y)))*0.30;
   vec2 q = vUv-0.5;
   img *= 1.0-0.35*dot(q,q);
+  /* AB 螺线管标记：世界坐标圆环（uAspect 修正保证屏幕正圆）+ 核芯微光，
+     Φ≠0 时显现（与演化 uABOn 同开关）。磁场约束在管内，管外只有矢势——
+     这个环就是「看不见的磁通」的位置标记。 */
+  if(uABOn > 0.5){
+    vec2 dq = (wuv - uABPos)*uAspect;
+    float rr = length(dq);
+    float wq = max(fwidth(rr), 1e-4);
+    img += vec3(0.55,0.75,1.0)*smoothstep(1.4,0.0,abs(rr-0.035)/wq)*0.9;
+    img += vec3(0.35,0.55,0.95)*smoothstep(0.035,0.012,rr)*0.55;
+  }
   o = vec4(max(img, texture(uTrail,vUv).rgb*uDecay), 1.0);
 }`;
 
@@ -535,6 +618,7 @@ class QuantumField {
       grid: 256, m: 1.0, sigma: 7, substeps: 6, brush: 10, vStrength: 0.3,
       decay: 0.97, bright: 1.0, gamma: 0, tool: 'wave', paused: false, simTime: 0,
       driveAmp: 0, driveOmega: 0.1, driveMode: 0,
+      abX: 0.5, abY: 0.5, abPhi: 0,   /* AB 螺线管（世界坐标）与磁通 Φ（rad）；Φ=0 = 关 */
       preset: null, lastWave: null, waveCount: 1,
       drag: null,
       ...this.kernel.defaults(),
@@ -637,6 +721,9 @@ class QuantumField {
       <button id="btnPause">暂停</button>
       <button id="btnStep">单步</button>
     </div>
+    <div class="grid3" style="margin-top:6px">
+      <button data-tool="flux">磁通(AB)</button>
+    </div>
   </div>
   <div class="sec">
     <h3>物理参数</h3>
@@ -664,6 +751,12 @@ class QuantumField {
         <option value="1">x 行波驱动</option>
       </select>
     </div>
+  </div>
+  <div class="sec">
+    <h3>AB 磁通</h3>
+    <div class="row"><label>磁通 Φ</label><input type="range" id="rABPhi" min="0" max="6.2832" step="0.01" value="0"><output id="oABPhi">0.00</output></div>
+    <div class="row"><label>螺线管位置</label><output id="oABPos">(0.50, 0.50)</output><button id="btnABCenter">置中</button></div>
+    <div class="row"><label>放置方式</label><span class="hint">选「磁通(AB)」工具后点击画布</span></div>
   </div>
   <div class="sec">
     <h3>渲染与网格</h3>
@@ -697,6 +790,7 @@ class QuantumField {
   <div class="hrow"><span>势能 ⟨V⟩</span><span id="hV">—</span></div>
   <div class="hrow"><span>总能 E</span><span id="hE">—</span></div>
   <div class="hrow"><span>驱动 V_d(中心)</span><span id="hDrive">—</span></div>
+  <div class="hrow"><span>AB 磁通 Φ</span><span id="hAB">关</span></div>
   <hr>
   <div class="hrow"><span>峰值 |ψ|²</span><span id="hPeak">—</span></div>
   <div class="hrow"><span>模拟时间 t</span><span id="hTime">—</span></div>
@@ -896,6 +990,11 @@ class QuantumField {
       gl.uniform1f(this.u(this.progEvolve,'uDriveAmp'), this.state.driveAmp);
       gl.uniform1f(this.u(this.progEvolve,'uDrivePhase'), dPhase);
       gl.uniform1i(this.u(this.progEvolve,'uDriveMode'), this.state.driveMode);
+      /* Aharonov-Bohm：Φ=0 → uABOn=0 走原 5 点 stencil（精确等价旧路径）；
+         link 相位算子厄米且谱半径不变（|U|=1），P 守恒、E_max 不变。 */
+      gl.uniform1f(this.u(this.progEvolve,'uABOn'), this.state.abPhi === 0 ? 0 : 1);
+      gl.uniform2f(this.u(this.progEvolve,'uABPos'), this.state.abX, this.state.abY);
+      gl.uniform1f(this.u(this.progEvolve,'uABPhi'), this.state.abPhi);
       gl.activeTexture(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, this.vTex);
       gl.uniform1i(this.u(this.progEvolve,'uV'), 1);
@@ -953,6 +1052,10 @@ class QuantumField {
     gl.uniform2f(this.u(this.progDisplay,'uAspect'),
       cw >= ch ? cw/ch : 1,
       cw >= ch ? 1 : ch/cw);
+    /* AB 螺线管标记（与演化同开关：Φ=0 不画环） */
+    gl.uniform1f(this.u(this.progDisplay,'uABOn'), this.state.abPhi === 0 ? 0 : 1);
+    gl.uniform2f(this.u(this.progDisplay,'uABPos'), this.state.abX, this.state.abY);
+    gl.uniform1f(this.u(this.progDisplay,'uABPhi'), this.state.abPhi);
     this.kernel.setUniforms(gl, this.progDisplay, this.state);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     const td = this.dispA; this.dispA = this.dispB; this.dispB = td;
@@ -1006,14 +1109,24 @@ class QuantumField {
     this.q('#hT').textContent = t.toFixed(4);
     this.q('#hV').textContent = v.toFixed(4);
     this.q('#hE').textContent = e.toFixed(4);
+    /* 含时外场瞬时值 + AB 磁通读数：参数派生、不依赖 GPU 归约——
+       暂停时拖滑块也即时刷新（抽出 refreshParamHud，滑块 after 回调共用） */
+    this.refreshParamHud();
+    this.q('#hPeak').textContent = peak.toFixed(4);
+    this.q('#hTime').textContent = this.state.simTime.toFixed(1);
+    this.q('#hGrid').textContent = this.state.grid + '² · ' + this.state.m.toFixed(2);
+  }
+
+  /* 参数派生 HUD 读数（磁通 Φ / 驱动 V_d 瞬时值）：纯 state 计算，无 GPU 成本 */
+  refreshParamHud(){
     /* 含时外场瞬时值（世界中心 x=½ 处）：均匀模式 A·cos(φ)；行波模式
        A·cos(π−φ) = −A·cos(φ)。仅作显示，物理演化以 shader 内的 V_d 为准。 */
     const dPhi = this.state.driveOmega * (this.state.simTime + 0.6);
     const dv = this.state.driveAmp * (this.state.driveMode === 1 ? -Math.cos(dPhi) : Math.cos(dPhi));
     this.q('#hDrive').textContent = this.state.driveAmp === 0 ? '关' : dv.toFixed(4);
-    this.q('#hPeak').textContent = peak.toFixed(4);
-    this.q('#hTime').textContent = this.state.simTime.toFixed(1);
-    this.q('#hGrid').textContent = this.state.grid + '² · ' + this.state.m.toFixed(2);
+    /* AB 磁通：0 = 关闭（等价无矢势）；非零显示弧度 + 2π 份额 */
+    this.q('#hAB').textContent = this.state.abPhi === 0 ? '关'
+      : this.state.abPhi.toFixed(3) + ' rad (' + (this.state.abPhi/6.2831853).toFixed(2) + '×2π)';
   }
 
   /* ---------- 交互 ---------- */
@@ -1042,7 +1155,7 @@ class QuantumField {
   }
 
   updateBrushCursor(e){
-    if (this.state.tool === 'wave'){ this.q('#brushcursor').style.display = 'none'; return; }
+    if (this.state.tool === 'wave' || this.state.tool === 'flux'){ this.q('#brushcursor').style.display = 'none'; return; }
     const r = this.canvas.getBoundingClientRect();
     const world2screen = Math.min(r.width, r.height);   // 世界正方形边长（屏幕 px）
     const rad = Math.max(5, this.state.brush/256*world2screen);
@@ -1192,6 +1305,8 @@ class QuantumField {
     }
     const dm = this.q('#selDriveMode');       /* 驱动模式下拉（非滑块行，单独同步） */
     if (dm) dm.value = String(this.state.driveMode);
+    const abp = this.q('#oABPos');            /* AB 螺线管位置读数（预设 params 可能改 abX/abY） */
+    if (abp) abp.textContent = '(' + this.state.abX.toFixed(2) + ', ' + this.state.abY.toFixed(2) + ')';
   }
 
   bindUI(){
@@ -1206,6 +1321,12 @@ class QuantumField {
         this.state.drag = { wx, wy, cx: e.clientX, cy: e.clientY, cx0: e.clientX, cy0: e.clientY };
         aim.style.display = 'block';
         aimDot.setAttribute('cx', e.clientX); aimDot.setAttribute('cy', e.clientY);
+      } else if (this.state.tool === 'flux'){
+        /* AB 螺线管放置：点击即落点（世界坐标）；磁通 Φ 由滑块控制，
+           Φ=0 时画环隐藏、演化走标准路径（点放无副作用） */
+        this.state.abX = wx; this.state.abY = wy;
+        this.q('#oABPos').textContent = '(' + wx.toFixed(2) + ', ' + wy.toFixed(2) + ')';
+        this.toast('AB 螺线管 → (' + wx.toFixed(2) + ', ' + wy.toFixed(2) + ')');
       } else {
         this.paintV(e);
       }
@@ -1221,7 +1342,7 @@ class QuantumField {
         const k = this.dragK(this.state.drag);
         aimTxt.setAttribute('x', e.clientX + 10); aimTxt.setAttribute('y', e.clientY - 8);
         aimTxt.textContent = 'k = ' + k.mag.toFixed(3);
-      } else if (e.buttons & 1 && this.state.tool !== 'wave'){
+      } else if (e.buttons & 1 && this.state.tool !== 'wave' && this.state.tool !== 'flux'){
         this.paintV(e);
       }
     });
@@ -1240,7 +1361,7 @@ class QuantumField {
     this.container.querySelectorAll('[data-tool]').forEach(b => this.on(b, 'click', () => {
       this.state.tool = b.dataset.tool;
       this.container.querySelectorAll('[data-tool]').forEach(x => x.classList.toggle('on', x === b));
-      canvas.style.cursor = this.state.tool === 'wave' ? 'crosshair' : 'cell';
+      canvas.style.cursor = (this.state.tool === 'wave' || this.state.tool === 'flux') ? 'crosshair' : 'cell';
       if (this.state.tool === 'wave') this.q('#brushcursor').style.display = 'none';
     }));
     this.on(this.q('#btnPause'), 'click', () => this.togglePause());
@@ -1263,8 +1384,14 @@ class QuantumField {
     this.bindRange('#rBrush','#oBrush','brush', v => v.toFixed(0));
     this.bindRange('#rV','#oV','vStrength', v => v.toFixed(2));
     this.bindRange('#rGamma','#oGamma','gamma', v => v.toFixed(3));
-    this.bindRange('#rDriveAmp','#oDriveAmp','driveAmp', v => v.toFixed(3));
-    this.bindRange('#rDriveOmega','#oDriveOmega','driveOmega', v => v.toFixed(2));
+    this.bindRange('#rDriveAmp','#oDriveAmp','driveAmp', v => v.toFixed(3), () => this.refreshParamHud());
+    this.bindRange('#rDriveOmega','#oDriveOmega','driveOmega', v => v.toFixed(2), () => this.refreshParamHud());
+    this.bindRange('#rABPhi','#oABPhi','abPhi', v => v.toFixed(2), () => this.refreshParamHud());
+    this.on(this.q('#btnABCenter'), 'click', () => {
+      this.state.abX = 0.5; this.state.abY = 0.5;
+      this.q('#oABPos').textContent = '(0.50, 0.50)';
+      this.toast('AB 螺线管已置中');
+    });
     this.bindRange('#rTrail','#oTrail','decay', v => v.toFixed(2));
     this.bindRange('#rBright','#oBright','bright', v => '×'+v.toFixed(2));
     const extra = this.kernel.extraControls();       /* 内核附加滑块（如 NLS 的 g） */
@@ -1278,6 +1405,7 @@ class QuantumField {
 
     this.on(this.q('#selDriveMode'), 'change', e => {
       this.state.driveMode = parseInt(e.target.value, 10) || 0;
+      this.refreshParamHud();
     });
 
     /* 键盘 */
@@ -1409,6 +1537,156 @@ class QuantumField {
           out[pt[0]] = at(pt[1], pt[2]);
         }
         return out;
+      },
+      /* AB 条纹诊断：读 psiA 在 wx（世界坐标 x）处的整列 (re,im,p,arg)。
+         屏幕干涉图样 I(y) 的一阶傅里叶分量 m1(Φ) 由此列算出——AB 签名：
+         条纹随 Φ 平移 ⟹ arg(m1) 随 Φ 近线性、m1(−Φ)=conj(m1(Φ))（奇函数）、
+         |m1| 与 Φ 近似无关（换条纹位置不换对比度）。 */
+      rowScan: (wx) => {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
+        const g = this.state.grid;
+        const ch = this.kernel.pairs === 2 ? 4 : 2;
+        const buf = new Float32Array(g*g*ch);
+        gl.readPixels(0,0,g,g,this.fmt,gl.FLOAT,buf);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        const x = Math.min(g-1, Math.max(0, Math.round(wx*g)));
+        const re = [], im = [], p = [];
+        for (let y=0;y<g;y++){
+          const i=(y*g+x)*ch;
+          re.push(buf[i]); im.push(buf[i+1]);
+          p.push(buf[i]*buf[i]+buf[i+1]*buf[i+1]);
+        }
+        return { x, re, im, p, grid: g, simTime: this.state.simTime };
+      },
+      /* AB 螺线管标记环像素统计：读 dispA 全帧，数「蓝 > 红」像素（标记环为
+         蓝色 vec3(0.55,0.75,1.0)；AB 预设势场仅暖色势垒，故 b>r 像素≈环）。
+         Φ=0 不画环 ⟹ 计数≈0；Φ≠0 计数>0。 */
+      dispBlue: () => {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.dispA.fbo);
+        const w = this.dispA.w, h = this.dispA.h;
+        const buf = new Float32Array(w*h*4);
+        gl.readPixels(0,0,w,h,gl.RGBA,gl.FLOAT,buf);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        let blue = 0, sum = 0;
+        for (let i=0;i<buf.length;i+=4){
+          sum += buf[i]+buf[i+1]+buf[i+2];
+          if (buf[i+2] > buf[i] + 0.05) blue++;
+        }
+        return { blue, sum, w, h };
+      },
+      /* GPU vs CPU 单步对比（诊断）：读当前 psiA，在 CPU 上按引擎同参数
+         （sub 子步 × 3-pass KDK、uK=0.5/m、uDt=1.2/sub、V/驱动一致）复算 1 帧，
+         回传两侧统计量。调用方随后单步 1 帧再读 com/probSum 与 cpu 预测比对。 */
+      cpuPred: () => {
+        const g = this.state.grid, ch = this.kernel.pairs === 2 ? 4 : 2;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
+        const buf = new Float32Array(g*g*ch);
+        gl.readPixels(0,0,g,g,this.fmt,gl.FLOAT,buf);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        const vd = this.vctx.getImageData(0,0,256,256).data;
+        const V = new Float32Array(g*g);
+        for (let y=0;y<g;y++) for (let x=0;x<g;x++){
+          const px = Math.min(255, Math.round(x/g*256)), py = Math.min(255, Math.round(y/g*256));
+          V[y*g+x] = (vd[(py*256+px)*4]-128)/127;
+        }
+        const re0 = new Float64Array(g*g), im0 = new Float64Array(g*g);
+        for (let i=0;i<g*g;i++){ re0[i]=buf[i*ch]; im0[i]=buf[i*ch+1]; }
+        const k = 0.5/this.state.m, dt = 1.2;
+        const eMax = k*8 + 1 + this.kernel.eMaxExtra(this.state) + Math.abs(this.state.driveAmp);
+        const sub = Math.max(this.state.substeps, Math.ceil(dt*eMax/1.5));
+        const dtSub = dt/sub;
+        const dPhase = this.state.driveOmega*(this.state.simTime + dt*0.5);
+        let re = re0, im = im0;
+        const Hc = (x,y) => {
+          const i = y*g+x;
+          if (x<=0||x>=g-1||y<=0||y>=g-1) return [0,0];
+          let v = V[i];
+          if (this.state.driveAmp !== 0) v += this.state.driveAmp*(this.state.driveMode===1 ? Math.cos(6.28318530718*(x/g)-dPhase) : Math.cos(dPhase));
+          return [-k*(re[i-1]+re[i+1]+re[i-g]+re[i+g]-4*re[i]) + v*re[i],
+                  -k*(im[i-1]+im[i+1]+im[i-g]+im[i+g]-4*im[i]) + v*im[i]];
+        };
+        for (let s=0;s<sub;s++) for (let pass=0;pass<3;pass++){
+          const nr = new Float64Array(g*g), ni = new Float64Array(g*g);
+          for (let y=0;y<g;y++) for (let x=0;x<g;x++){
+            const i=y*g+x;
+            if (x<=0||x>=g-1||y<=0||y>=g-1) continue;
+            const h = Hc(x,y);
+            if (pass===1){ nr[i]=re[i]+dtSub*h[1]; ni[i]=im[i]; }
+            else { nr[i]=re[i]; ni[i]=im[i]-0.5*dtSub*h[0]; }
+          }
+          re=nr; im=ni;
+        }
+        const stat = (r,m) => { let sx=0,s=0; for(let yy=0;yy<g;yy++) for(let xx=0;xx<g;xx++){const i=yy*g+xx;const p=r[i]*r[i]+m[i]*m[i];sx+=xx*p;s+=p;} return {comX:sx/s/g, P:s}; };
+        window.__cpuPred = { re, im, g };   /* 供 cmpPred 与 GPU 实测逐点比对 */
+        return { gpu: stat(re0,im0), cpu: stat(re,im), sub, dtSub, k };
+      },
+      /* 与 window.__cpuPred（cpuPred 留存）逐点比对当前 GPU 场 */
+      cmpPred: () => {
+        const cp = window.__cpuPred; if (!cp) throw new Error('cmpPred: 先调用 cpuPred');
+        const g = this.state.grid, ch = this.kernel.pairs === 2 ? 4 : 2;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
+        const buf = new Float32Array(g*g*ch);
+        gl.readPixels(0,0,g,g,this.fmt,gl.FLOAT,buf);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        let maxRe = 0, maxIm = 0, nBad = 0;
+        const pts = [[0.18,0.5],[0.19,0.5],[0.20,0.5],[0.18,0.45],[0.30,0.5],[0.50,0.5],[0.10,0.5],[0.18,0.3]];
+        const at = (wx,wy) => { const x=Math.round(wx*g), y=Math.round(wy*g); const i=y*g+x;
+          return { gpu:[buf[i*ch],buf[i*ch+1]], cpu:[cp.re[i],cp.im[i]] }; };
+        const detail = {};
+        for (let i=0;i<g*g;i++){
+          const dr = Math.abs(buf[i*ch]-cp.re[i]), di = Math.abs(buf[i*ch+1]-cp.im[i]);
+          if (dr>maxRe) maxRe=dr; if (di>maxIm) maxIm=di;
+          if (dr > 1e-3 || di > 1e-3) nBad++;
+        }
+        for (const [wx,wy] of pts){
+          const d = at(wx,wy);
+          detail[wx+','+wy] = { gpu: d.gpu.map(v=>+v.toFixed(5)), cpu: d.cpu.map(v=>+v.toFixed(5)) };
+        }
+        return { maxRe, maxIm, nBad, detail };
+      },
+      /* 手动跑 n 个 evolve pass（不经 frame；uUpdateV 序列与 frame 一致：kick,drift,kick）。
+         诊断 GPU vs CPU 分叉用：n=1 单 kick 后 ψ 应几乎不变。
+         texel 参数可覆盖 uTexel（诊断 uniform 是否生效）。 */
+      manualPass: (n, texel) => {
+        const g0 = this.state.grid;
+        const tx = texel === undefined ? 1/g0 : texel;
+        gl.useProgram(this.progEvolve);
+        gl.bindVertexArray(this.quad.vao);
+        gl.uniform1f(this.u(this.progEvolve,'uDt'), 1.2/6);
+        gl.uniform1f(this.u(this.progEvolve,'uK'), 0.5/this.state.m);
+        gl.uniform2f(this.u(this.progEvolve,'uTexel'), tx, tx);
+        gl.uniform1f(this.u(this.progEvolve,'uDriveAmp'), 0);
+        gl.uniform1f(this.u(this.progEvolve,'uDrivePhase'), 0);
+        gl.uniform1i(this.u(this.progEvolve,'uDriveMode'), 0);
+        gl.uniform1f(this.u(this.progEvolve,'uABOn'), 0);
+        gl.uniform2f(this.u(this.progEvolve,'uABPos'), 0.5, 0.5);
+        gl.uniform1f(this.u(this.progEvolve,'uABPhi'), 0);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.vTex);
+        gl.uniform1i(this.u(this.progEvolve,'uV'), 1);
+        for (let i=0;i<n;i++){
+          gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiB.fbo);
+          gl.viewport(0,0,g0,g0);
+          gl.activeTexture(gl.TEXTURE0);
+          gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
+          gl.uniform1i(this.u(this.progEvolve,'uPsi'), 0);
+          gl.uniform1f(this.u(this.progEvolve,'uUpdateV'), i%3===1 ? 0.0 : 1.0);
+          gl.drawArrays(gl.TRIANGLES, 0, 3);
+          const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
+        }
+        const g = this.state.grid, ch = this.kernel.pairs === 2 ? 4 : 2;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
+        const buf = new Float32Array(g*g*ch);
+        gl.readPixels(0,0,g,g,this.fmt,gl.FLOAT,buf);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        let sx=0,s=0;
+        for (let i=0;i<buf.length;i+=ch){ const p=buf[i]*buf[i]+buf[i+1]*buf[i+1]; sx+=(i/ch)%g*p; s+=p; }
+        const i18 = Math.round(0.5*g)*g + Math.round(0.18*g);   /* 索引 = y*g+x（易错：勿交换） */
+        const row = a => { /* 波包中心行的 |ψ| 轮廓（前 64 点） */
+          const y = Math.round(0.5*g); const out = [];
+          for (let x=Math.round(0.18*g)-16; x<Math.round(0.18*g)+16; x++) out.push(+Math.hypot(a[(y*g+x)*ch], a[(y*g+x)*ch+1]).toExponential(1));
+          return out; };
+        return { n, comX:(sx/s)/g, P:s, c: [buf[i18*ch], buf[i18*ch+1]], row: row(buf) };
       },
       /* 精确总概率：直读 psiA 纹理（HUD 的 P 有 reduce 120ms 节流 + 4 位小数滞后，
          耗散衰减后期 P→0 时测试需要无滞后读数） */
@@ -1556,6 +1834,18 @@ class SchrodingerKernel extends PhysicsKernel {
     };
   }
 
+  /* URL 参数扩展：AB 螺线管位置与磁通（分享可复现链接；
+     测试端用它把 Φ 在首帧前设好，避免「加载等待期间已用预设 Φ 演化」的污染）。
+     执行时序：loadPreset（预设 params 含 abX/abY/abPhi）→ initWave → 此处覆盖，
+     均在 frame() 主循环启动之前，首帧即以目标 Φ 演化。 */
+  applyParams(qp, state){
+    const ax = parseFloat(qp.get('abX')), ay = parseFloat(qp.get('abY'));
+    const ap = parseFloat(qp.get('abPhi'));
+    if (!isNaN(ax)) state.abX = Math.max(0, Math.min(1, ax));
+    if (!isNaN(ay)) state.abY = Math.max(0, Math.min(1, ay));
+    if (!isNaN(ap)) state.abPhi = ap;
+  }
+
   presets(){
     return {
       free:     { name:'自由传播',     text:'高斯波包在无势场中飞行。色相保持纯净，但波包随时间自然扩散——不确定性原理的直接可视化。',
@@ -1565,6 +1855,11 @@ class SchrodingerKernel extends PhysicsKernel {
       slits:    { name:'双缝干涉',     text:'物质波穿过双缝后自我干涉：两列概率幅叠加，远处逐渐长出明暗相间的干涉条纹。每个粒子抵达屏幕的位置由 |ψ|² 决定。',
                   build(paint){ paint.vctx.fillStyle = paint.vGray(0.05); paint.vctx.fillRect(112,0,12,256);
                                 paint.vctx.fillStyle = paint.vGray(0);   paint.vctx.fillRect(112,80,12,24); paint.vctx.fillRect(112,136,12,24); }, wave:[0.06,0.5,0.10,0] },
+      ab:       { name:'AB 效应',      text:'双缝之间放置一根无限细螺线管：磁场 B 被完全约束在管内，管外 B=0——但矢势 A≠0。从两缝出发、分别绕过螺线管两侧的两条路径包围不同磁通，获得附加相位差 Δφ=Φ，屏幕上的干涉条纹整体平移，而粒子从未进入有磁场的区域。这就是 Aharonov-Bohm 效应：相位由矢势决定，不由力决定。Φ=π 时明暗条纹互换；把 Φ 滑回 0 即回归标准双缝。',
+                  build(paint){ paint.vctx.fillStyle = paint.vGray(0.05); paint.vctx.fillRect(112,0,12,256);
+                                paint.vctx.fillStyle = paint.vGray(0);   paint.vctx.fillRect(112,80,12,24); paint.vctx.fillRect(112,136,12,24); },
+                  wave:[0.06,0.46875,0.20,0],
+                  params:{ abX:0.56, abY:0.46875, abPhi:Math.PI, sigma:30 } },
       harmonic: { name:'谐振子势',     text:'V = ½mω²r² 抛物势阱中的波包周期性呼吸、振荡，逐步逼近能量本征态。这是量子版本的小球滚碗底。',
                   build(paint){ const img = paint.vctx.getImageData(0,0,256,256);
                                 for(let y=0;y<256;y++) for(let x=0;x<256;x++){ const d2=(x-128)*(x-128)+(y-128)*(y-128);

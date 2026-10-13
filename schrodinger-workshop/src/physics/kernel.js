@@ -26,10 +26,43 @@
  * 自旋/Dirac 用）。引擎所有 shader 按 vec4 泛型书写：RG32F 采样得 (r,g,0,1)，
  * 多余的 zw 通道在写回 RG32F 附件时被丢弃，数值与逐字等价。
  *
- * 已覆盖的物理族：二阶时间可分离 H(u)=Hv, v'=-Hu 系统（薛定谔/NLS/GP）。
- * 契约已预留但尚未落地的族：Pauli 自旋（pairs=2 双复分量）、AB 效应（矢势
- * 注入 localH）。一阶系统（Dirac）与 3D 需要引擎扩展（integrator 模式 /
+ * 已覆盖的物理族：二阶时间可分离 H(u)=Hv, v'=-Hu 系统（薛定谔/NLS/GP）、
+ * 含时外场驱动、AB 磁通（link 相位）。契约已预留但尚未落地的族：Pauli 自旋
+ * （pairs=2 双复分量）。一阶系统（Dirac）与 3D 需要引擎扩展（integrator 模式 /
  * 3D 纹理）——见 README「新增内核」。
+ *
+ * Aharonov-Bohm 约定（矢势/磁通）：AB 矢势作用在动能项（拉普拉斯）而非势项——
+ * backlog 原表述「矢势注入 localH」已按此修正。实现为最小耦合的 link 相位：
+ * 5 点拉普拉斯的每条邻格跳变乘上 U = e^{iθ}，θ = ∫A·dl 为沿该 link 的矢势线积分
+ * （引擎级 uniform uABOn/uABPos/uABPhi，每帧设置）：
+ *   对称规范 A = (Φ/2π)·(−(y−y0), (x−x0)) / r² = (Φ/2π)·dθ（角度 1-形式）。
+ *   θ 取**精确线积分**：θ = (Φ/2π)·wrapPi(β(p+Δ)−β(p))，β=atan2(Δy,Δx)
+ *   （∫A·dl 沿 link 即张角差，精确；被积分子 (d×Δ) 沿 link 恒定）。
+ *   wrapPi 的 (−π,π] 分支切割在螺线管负 x 射线，构成规范弦（纯规范）。
+ *   ∮A·dl = Φ：绕螺线管一周的相位即磁通本身——磁场 B 约束在管内（本模型不模拟
+ *   管内，只给 link 相位），管外 B=0 而 A≠0，正是 AB 效应的物理舞台。
+ * 数值性质（与驱动同等严格的零风险保证）：
+ *   Φ=0 时 uABOn=0，走 else 分支的原 5 点 stencil——逐字等价旧路径，回归零风险；
+ *   |U|=1 ⟹ link 拉普拉斯每行元素模不变，Gershgorin 谱半径仍 ≤ 8，E_max 不变
+ *   （无需像含时外场那样抬稳定界）；
+ *   正向与反向 link 共享同一对端点 ⟹ θ 精确反号 ⟹ link 拉普拉斯厄米 ⟹
+ *   总概率严格守恒（无钳制、无奇点：atan2 处处有限，格点重合由 ang() 回退兜底）；
+ *   Wilson 环 = e^{iΦ} 精确成立（绕管任意环路的相位严格量化）⟹ 算符层面
+ *   Φ→Φ+2π 严格规范等价（H(Φ+2π)=G†·H(Φ)·G，G=diag(e^{iβ_v})）——但规范等价
+ *   比较的两个演化必须同步变换初态（ψ₀→Gψ₀）；若初态固定不变，Φ 与 Φ+2π
+ *   实际比较的是两个不同物理初态（规范 0 语言下为 ψ₀ 与 G†ψ₀），密度图样
+ *   不同属预期。CDP 复测（2026-10-13 R26）：初态固定时 I(2π) vs I(0) 相对差
+ *   17%（T0=481.2 对齐），且对 substeps 不敏感（6→24 仅 17.3%→15.4%），
+ *   证实该差异源于初态未规范变换而非积分误差。早期注释「密度图样逐时刻
+ *   不变（CDP 实测到浮点级）」不实，已撤。
+ *
+ * 实现迭代纪实（诚实记录）：初版 θ 按 link 中点采样 A(mid)·Δ + r²≥4 格² 钳制，
+ * 实测两个缺陷——(1) 格心采样（非中点）时正反 link 的 θ 非精确反号，非厄米，
+ * P 漂移 3e-4@Φ=π/2；(2) 中点采样虽厄米，但钳制使管心邻近小环路的 Wilson 环
+ * 偏离 e^{iΦ}（螺线管格间位置时核心 4-cycle 全部落钳制区，残差 −0.18 rad），
+ * Φ→Φ+2π 规范等价被破坏（CDP 实测屏密度差 8.5e-5，为自漂移噪声底的 2.4 倍）。
+ * 精确线积分方案同时解决两者：端点角差天然反号（厄米），且绕管环路相位严格
+ * =Φ（无钳制残差），分支切割的规范弦对规范不变量无影响。
  *
  * 耗散约定（开放系统）：引擎每帧演化结束后跑 TPL_SCALE pass，对 (u, v) 整场乘
  * e^{-γ·dt}（γ = state.gamma，帧级 uniform）。iψ_t = Hψ + γ 损失项的解为密度
@@ -64,15 +97,52 @@ uniform vec2 uTexel;
 uniform float uDriveAmp;    // 含时外场幅值 A（势单位），0 = 关闭（精确恒等）
 uniform float uDrivePhase;  // 驱动相位 φ = ω·(t+dt/2)，CPU 每帧按帧中点推算
 uniform int   uDriveMode;   // 0 = 均匀 AC Stark A·cos(φ)；1 = x 行波 A·cos(2πx−φ)
+uniform float uABOn;        // AB 磁通开关：0 = 原 5 点 stencil（Φ=0 时精确等价）
+uniform vec2  uABPos;       // 螺线管位置（世界坐标）
+uniform float uABPhi;       // 磁通 Φ（rad，绕行一周总相位；0 = 关闭）
 {{UNIFORMS}}
 vec4 S(vec2 uv){
   if(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0) return vec4(0.0);
   return texture(uPsi,uv);
 }
+vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
+vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }   /* 两复分量同相旋转 */
+/* AB link 相位辅助：视角（螺线管格点上 |d|²≈0 回退 0，防 atan2(0,0)）与 (−π,π] wrap */
+float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
+float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
 void main(){
   vec4 c = texture(uPsi,vUv);
-  vec4 lap = S(vUv+vec2(-uTexel.x,0.0))+S(vUv+vec2(uTexel.x,0.0))
-           + S(vUv+vec2(0.0,-uTexel.y))+S(vUv+vec2(0.0,uTexel.y)) - 4.0*c;
+  vec4 lap;
+  if(uABOn > 0.5){
+    /* 最小耦合 link 相位（精确线积分）：每条邻格跳变乘 U=e^{iθ}，θ=∫A·dl。
+       对称规范 A=(Φ/2π)·(−(y−y0),(x−x0))/r² = (Φ/2π)·dθ 是角度 1-形式，
+       沿直线 link 的线积分**精确**等于端点视角差：
+         θ_link(p→p+Δ) = (Φ/2π)·wrapPi(β(p+Δ) − β(p)),  β(q)=atan2(q.y−y0, q.x−x0)
+       （被积函数 (d×Δ)/|d+sΔ|² 分子恒定，积分即张角差——比中点采样 A(mid)·Δ
+       的 O(texel²) 近似高高一阶；且 atan2 处处有限，无奇点、无需 r² 钳制。）
+       wrapPi 到 (−π,π] 处理 atan2 分支切割（螺线管负 x 射线）：切割处 link 相位
+       ≈∓π·Φ/2π 为规范弦（纯规范，密度等规范不变量不受影响；垂直跨弦 link 的
+       原始角差 ≈±2π 被 wrap 精确恢复为小值）。ang() 对 |d|²≈0 回退 0 防
+       atan2(0,0)（螺线管被工具放到格点上时），保持反向 link 精确反号。
+       正向/反向 link 共享同一对端点 ⟹ θ 精确反号 ⟹ link 拉普拉斯严格厄米；
+       围绕螺线管的 Wilson 环 = e^{iΦ} **精确**成立（无钳制残差）⟹
+       H(Φ+2π)=G†·H(Φ)·G（G=diag(e^{iβ_v})，算符层面规范等价；「密度图样
+       逐时刻不变」需初态同步变换 ψ₀→Gψ₀，初态固定时 I(2π) vs I(0) 差 17%
+       属预期——R26 CDP 复测，详见文件头约定节）。|U|=1 ⟹ 谱半径
+       仍 ≤8，E_max 不变。 */
+    float cAB = uABPhi/6.28318530718;
+    vec2 dp = vUv - uABPos;
+    float b0 = ang(dp);
+    vec2 dq;
+    dq = vUv + vec2(uTexel.x,0.0) - uABPos;  lap  = rot4(S(vUv+vec2( uTexel.x,0.0)), cAB*wrapPi(ang(dq)-b0));
+    dq = vUv - vec2(uTexel.x,0.0) - uABPos;  lap += rot4(S(vUv+vec2(-uTexel.x,0.0)), cAB*wrapPi(ang(dq)-b0));
+    dq = vUv + vec2(0.0,uTexel.y) - uABPos;  lap += rot4(S(vUv+vec2(0.0, uTexel.y)), cAB*wrapPi(ang(dq)-b0));
+    dq = vUv - vec2(0.0,uTexel.y) - uABPos;  lap += rot4(S(vUv+vec2(0.0,-uTexel.y)), cAB*wrapPi(ang(dq)-b0));
+    lap -= 4.0*c;
+  } else {
+    lap = S(vUv+vec2(-uTexel.x,0.0))+S(vUv+vec2(uTexel.x,0.0))
+         + S(vUv+vec2(0.0,-uTexel.y))+S(vUv+vec2(0.0,uTexel.y)) - 4.0*c;
+  }
   float V = (texture(uV,vUv).r*255.0-128.0)/127.0;
   /* 含时外场（实势 → H 厄米 → 概率守恒；A=0 时为 IEEE 精确恒等） */
   V += uDriveAmp * (uDriveMode == 1 ? cos(6.28318530718*vUv.x - uDrivePhase) : cos(uDrivePhase));
@@ -108,6 +178,9 @@ uniform sampler2D uV;
 uniform float uDecay;
 uniform vec2 uPsiTexel;
 uniform vec2 uAspect;
+uniform float uABOn;        // AB 螺线管标记开关（与演化一致：Φ=0 不画）
+uniform vec2  uABPos;       // 螺线管位置（世界坐标）
+uniform float uABPhi;       // 磁通 Φ（rad；标记亮度随 |Φ| 增强）
 {{UNIFORMS}}
 vec4 bilerp(sampler2D t, vec2 uv, vec2 texel){
   vec2 f = fract(uv/texel - 0.5) - 0.5;
@@ -155,6 +228,16 @@ void main(){
   img += vec3(0.07,0.11,0.16)*(1.0-smoothstep(0.47,0.5,max(g.x,g.y)))*0.30;
   vec2 q = vUv-0.5;
   img *= 1.0-0.35*dot(q,q);
+  /* AB 螺线管标记：世界坐标圆环（uAspect 修正保证屏幕正圆）+ 核芯微光，
+     Φ≠0 时显现（与演化 uABOn 同开关）。磁场约束在管内，管外只有矢势——
+     这个环就是「看不见的磁通」的位置标记。 */
+  if(uABOn > 0.5){
+    vec2 dq = (wuv - uABPos)*uAspect;
+    float rr = length(dq);
+    float wq = max(fwidth(rr), 1e-4);
+    img += vec3(0.55,0.75,1.0)*smoothstep(1.4,0.0,abs(rr-0.035)/wq)*0.9;
+    img += vec3(0.35,0.55,0.95)*smoothstep(0.035,0.012,rr)*0.55;
+  }
   o = vec4(max(img, texture(uTrail,vUv).rgb*uDecay), 1.0);
 }`;
 
