@@ -1,0 +1,350 @@
+# 薛定谔工场 · Schrödinger Workshop
+
+WebGL2 **含时薛定谔方程（TDSE）实时求解器**，含可插拔物理内核（薛定谔 / 非线性薛定谔 /
+Gross-Pitaevskii）。无依赖、无构建，浏览器打开即跑——在画布上拖拽发射物质波波包，亲眼看见量子力学：
+隧穿、干涉、色散、散射、叠加自干涉、孤子与自聚焦塌缩、BEC 集体呼吸与量子化涡旋。
+
+```
+iħ ∂ψ/∂t = −ħ²/2m ∇²ψ + V(x)ψ              （薛定谔内核）
+iħ ∂ψ/∂t = −ħ²/2m ∇²ψ + V(x)ψ − g|ψ|²ψ     （NLS 内核，g>0 = 聚焦；
+                                             同一方程族即 Gross-Pitaevskii，g<0 = 排斥 BEC）
+```
+
+工程分形态：**ES 模块源码**（`index.html` + `src/`，组件化进课程站用）与
+**单文件分发版**（`dist/quantum-field.html`，file:// 双击直开）——后者由
+`scripts/build-standalone.mjs` 从前者一键生成，行为经 CDP 实测等价。
+
+## 运行
+
+```bash
+# 方式一：单文件分发版（零前提，双击即开）
+open dist/quantum-field.html
+
+# 方式二：ES 模块版（需 HTTP，file:// 受模块 CORS 限制）
+python3 -m http.server 8765          # 或 npm start
+# 访问 http://localhost:8765
+```
+
+**环境要求**：支持 WebGL2 + `EXT_color_buffer_float` 的浏览器
+（Chrome/Edge 90+、Firefox 90+、Safari 16.4+）。无 WebGL2 时页面会明确报错而非白屏。
+
+**URL 参数**：`?kernel=schrodinger|nls|gp` 物理内核 ·
+`?preset=free|barrier|slits|harmonic|scatter|box`（薛定谔）、
+`free|soliton|focus|barrier`（NLS）或 `tf|vortex|tof|breather`（GP）初始预设 ·
+`?grid=128|192|256|320` 网格精度 · `?speed=N` 积分子步 ·
+`?kx=0.1&ky=0.05` 覆盖初始波包动量
+
+## 功能
+
+### 薛定谔内核：6 个预设场景
+
+| 预设 | 物理内容 |
+|---|---|
+| 自由传播 | 高斯波包无势场飞行，自然色散——不确定性原理的可视化 |
+| 方势垒隧穿 | 波包撞上高于自身能量的墙：大部分反射成驻波，一小部分密度隧穿过去 |
+| 双缝干涉 | 物质波过双缝后自我干涉，远处长出明暗相间条纹 |
+| 谐振子势 | V=½mω²r² 抛物阱中波包周期性呼吸，逼近能量本征态 |
+| 圆形散射体 | 圆柱势垒的迎头反射 + 边缘衍射 + 阴影区尾波 |
+| 无限深方阱 | 世界四壁即无限高势墙，波包斜入射往复弹跳并与自身干涉 |
+
+### NLS 内核：4 个预设场景
+
+| 预设 | 物理内容 |
+|---|---|
+| 自由色散 | g=0，退化为线性薛定谔 |
+| 条带孤子 | focusing 非线性与色散对抗：波包自聚焦压缩后宽度稳定、整体传播（准一维条带近似）。严格的平面孤子只在 1D 立方 NLS 稳定；2D 为 L² 临界，扰动下缓慢呼吸 |
+| 自聚焦 | 非线性压过色散，波包急剧收缩、峰值飙升——2D 立方 NLS 的 L² 临界塌缩前兆，网格精度最终会截断奇性（见「物理诚实声明」） |
+| 孤子过垒 | 孤子撞势垒：线性反射/隧穿与非线性自聚焦的竞争——透射部分变形后重新自聚焦 |
+
+NLS 附加控件：**g 滑块**（−6…10，连续调节非线性强度，正=聚焦）。
+
+### Gross-Pitaevskii 内核：4 个预设场景（BEC）
+
+与 NLS 同一方程族（localH/density/kinetic/potential 片段逐字相同，引擎零改动），
+物理诠释换成玻色-爱因斯坦凝聚：谐波阱 + 排斥相互作用（g<0）。共享的 **σ 滑块**
+在本内核语义为「云半径」（世界 px，势场面布 256²）。
+
+| 预设 | 物理内容 |
+|---|---|
+| 托马斯-费米云 | 抛物密度穹顶 \|ψ\|²=(μ−V)/\|g\|；初态与基态轮廓差激发不衰减的 2ω 集体呼吸模（实测周期 ~107 sim-time、峰值摆动 ×2.7），无耗散下持续可见 |
+| 量子化涡旋 | 穹顶中植入单量子化涡旋：密度空心（愈合层 ~4px ≈ ξ）+ 相位绕核一周（色相 wheel）；心部受拓扑保护不消失（CDP 实测 argmax 持续偏中心 4–9px） |
+| 时飞行膨胀 | 瞬间撤去势阱：平均场排斥能→动能，云自由膨胀（实测 T ×1.52、峰值 ×0.38 @60 sim-time）——实验 TOF 成像的反推依据 |
+| 集体呼吸模 | 强过压缩初态（σ=10，峰值 3.4× 于默认）大幅膨胀-回缩（实测摆动 ×9.4–9.9、最低 ×0.15），2D L² 临界系统的大振幅集体激发 |
+
+GP 附加控件：**相互作用 g 滑块**（−150…300，负=排斥稳定 BEC / 正=吸引。
+吸引侧超过临界后自聚焦塌缩，与 NLS「自聚焦」同机制——网格截断奇性，
+HUD 如实显示，见「物理诚实声明」）。默认 g=−10、子步 16。
+
+### 交互
+
+| 操作 | 效果 |
+|---|---|
+| **拖拽** | 发射波包——起点=波包中心，方向与长度=动量 k（准星实时显示 k 值） |
+| **叠加发射** | 拖拽发射**不清场**：新波包与场上既有波包按量子叠加原理线性叠加、互相干涉 |
+| 势垒/势阱笔刷 | 径向渐变绘制 ±V 势场（暖色=势垒，冷色=势阱），带光标预览环 |
+| 橡皮 | 擦除势场回 V=0 |
+
+### 等份叠加（Democratic Superposition）
+
+发射前场上有 n 个波包，新包加入后 **n+1 个各占 1/(n+1)** 概率：
+
+```
+旧场 × √(n/(n+1))   +   新包 × √(1/(n+1))    →    Σ|ψ|² ≡ 1
+```
+
+任意连发次数下所有波包份额一致、旧包永不淡出。实测 6 连发 7 包列积分全相等
+`[0.0111, 0.0103, 0.0115×5]`，P=1.0000 恒定。
+（早期「新包取 1/2」规则会把旧包逐次几何减半，约 6 次连发后最旧包淡出可见性；
+更早的版本把未归一化的原始高斯 Σ≈154 直接叠进归一化旧场，统一缩放 0.080 把旧场
+碾掉 √154≈12.4 倍——一次发射即「丢包」。）
+
+### 渲染与网格
+
+| 控件 | 范围 | 说明 |
+|---|---|---|
+| 质量 m | 0.15–4 | 影响色散与动能；小质量自动加密积分子步保稳定 |
+| 波包宽度 σ | 4–18 | 变更即时重发波包 |
+| 积分子步 | 1–16 | 每帧 KDK 子步数（另设自适应兜底，见下） |
+| 笔刷半径 | 3–40 | |
+| V 值 | 0.01–1 | 笔刷势场强度 |
+| **画面亮度** | ×0.3–×2.5 | composite 末端统一曝光，不污染 trail 缓冲 |
+| 余晖拖尾 | 0–0.99 | RGBA16F 历史帧 max 混合的衰减系数 |
+| 网格精度 | 128²–320² | psi 场纹理分辨率 |
+
+**快捷键**：`1-6` 预设 · `Space` 暂停 · `T` 拖尾开关 · `R` 重置波包 · `C` 清空势场
+
+### HUD 与可视化
+
+- **实时读数**：总概率 P、守恒误差、动能 T / 势能 ⟨V⟩ / 总能 E、峰值 |ψ|²、模拟时间、帧率
+- **色相 = 相位** arg(ψ)，亮度 = 概率密度 |ψ|²，等值线 = |ψ|² 等高线
+- 势场叠加可视化（暖=势垒 / 冷=势阱 + 等值线），笔刷效果即时可见
+- 世界为正方形，信箱映射保持宽高比；resize 时历史拖尾随尺寸缩放保留
+
+## 物理与数值方法
+
+### 演化核：速度 Verlet（KDK）
+
+薛定谔方程化为一阶系统 u'=Hv, v'=−Hu 后做 KDK 三重奏，每子步三遍：
+
+```
+v_half = v − dt/2·H·u ;  u_new = u + dt·H·v_half ;  v_new = v_half − dt/2·H·u_new
+```
+
+辛积分对线性系统**严格保范**：数值上 P=1.0000、守恒误差 0.000%（边界长测 162s /
+4 次墙反弹，每次采样零漂移；NLS 的 g=0 线性极限同样 P=1.0000 精确）。
+对非线性系统为辛但非严格酉，P 有 O(dt²) 漂移（g=2.5 孤子实测 0.08%）。
+
+### 稳定性：dt·E ≤ 2
+
+每模式旋转角 θ = arccos(1−(dt_sub·E)²/2)，稳定充要条件 dt_sub·E ≤ 2。
+H 特征值上界 E_max = k·8 + 1 + 内核附加项（5 点拉普拉斯 2D 最大特征值 8，
+势幅 ±1；非线性内核另计 |g|·峰值密度——NLS 按初始峰值，GP 按呼吸收缩的
+实测动力学极值 2/σ² 取）。每帧 dt=1.2，子步数取
+`max(substeps, ceil(dt·E_max/1.5))` 自适应兜底（对稳定极限留 1.33× 裕度）
+——m=0.15 时 E_max≈27.7，自动加密至 23 子步。
+直接把 dt 提过头的教训已固化为代码注释：E_max=5 的模式半对角 1−0.36·25/2 = −3.5，
+特征值溢出单位圆，棋盘格噪声指数发散，数帧内炸穿浮点缓冲（P=NaN）。
+
+### 边界：Dirichlet 零墙
+
+`S(uv)` 在域外返回 0 = 无限高势墙，酉反射、P 严格守恒（「无限深方阱」预设即此边界）。
+
+### NLS 符号约定
+
+代码方程写作 `iψ_t = −k∇²ψ + Vψ − g|ψ|²ψ`，**g>0 = 聚焦**（自聚焦/亮孤子），
+与教科书 `iψ_t + ∇²ψ/2 + g_std|ψ|²ψ = 0` 的 g_std = g 一致。
+（历史教训：本式若写成 `+g|ψ|²ψ`，+g 实为散焦——符号曾靠 g 扫描实验纠正：
+g=+8 峰值 ×25 压缩确认聚焦方向。）
+
+### Gross-Pitaevskii 数值约定（默认参数的依据）
+
+引擎把总概率归一化到 Σ|ψ|²=1。TF 自洽条件 `|g| = πμR²/2`（μ 化学势、R 云半径）
+给出平衡半径与耦合强度的一一对应：`R_TF⁴ = 2·TRAP_R²·|g|/π`，`μ_eq/ħω = √(|g|/π)`。
+g=−10 → TF 平衡半径 ≈ 11px、平衡峰值 ≈ 5.3e-3（μ/ħω ≈ 1.8，弱 TF 区）。
+
+- **为什么默认 \|g\|=10 而不是自洽的 ≈45**：R=16 取自洽值时耦合强度约为 NLS 孤子的
+  8×，辛积分 O(dt³) 相误差使 100 sim-time 窗 P 漂移达 7%（子步 6）/2.6%（子步 16），
+  超出教学可接受度。默认弱耦合 + 子步 16，240 sim-time 窗漂移 ~1%，HUD 如实显示。
+- **呼吸幅度 vs 云半径**（CDP 实测，g=−10、子步 16、180–240 sim-time 窗峰值摆动）：
+  σ=8 ×24.8 · σ=10 ×9.9 · σ=12 ×4.9 · σ=14 ×2.9 · **σ=16 ×2.7（默认，最小点）** · σ=18 ×3.7。
+  机制：抛物穹顶初态与真实基态的轮廓差激发 2ω 集体呼吸模；周期 ≈ 105–115 sim-time
+  （半周 ~70/~40 交替的非简谐波形），与线性 2ω 模（阱周期 213 的一半）定性一致。
+- **初态几何经 Node 单测逐点验证**（不依赖浏览器）：穹顶解析形状、涡旋核密度=0、
+  孔洞剖面 (1−exp(−r²/2ξ²))² 零误差、相位绕数 arg=φ、kx 相位梯度（20/20 PASS）。
+
+### 物理诚实声明：2D L² 临界塌缩的网格截断
+
+2D 立方 NLS 是 L² 临界系统：强聚焦下波包无休止压缩，理论上形成奇性。
+256² 网格的离散拉普拉斯在 σ_eff ≲ 2 cell 时失效，**奇性被网格截断**——
+实测特征：能量瞬间倾泻到格子尺度（E 跳升 5–7×），P 从 ~0.98 崩至 0.68–0.82，
+峰值崩解为宽底噪声。归因实验（同预设 substeps=6→16）证实：
+**子步加密只推迟截断时刻、不改变机制**——这是分辨率极限，不是积分器缺陷。
+因此：HUD 守恒误差列如实显示（>1% 变琥珀色告警），「自聚焦」预设文案已声明
+「网格精度最终会截断奇性」，守恒回归断言只覆盖截断前的前塌缩相（t<80 sim-time，
+P>0.98）。不对该过程做任何「守恒美化」。
+
+### 渲染管线（每帧 4 pass）
+
+```
+Evolve (RG32F ping-pong ×sub×3) → Display (+trail max 混合 → dispA/dispB)
+  → Composite (扫描线/颗粒/亮度曝光 → 屏幕) → Reduce (32² 打包 Σp/ΣT/Σp²/ΣVp → HUD)
+```
+
+- **tone map** `lum = 1−exp(−p·1000)`：小 p 段近线性保结构，大 p 段平滑封顶不刺眼
+- **亮度曝光点在 composite 末端**：若在 display pass，亮度会经 trail 缓冲反馈双重缩放
+- **resize 不丢拖尾**：旧 dispA 经纯拷贝 shader blit 进新 dispA，LINEAR 滤波兼做分辨率缩放
+
+## 验证
+
+全部经 CDP 驱动 Chromium（SwiftShader 软渲染）实测，非静态断言：
+
+| 验证项 | 结果 |
+|---|---|
+| 叠加发射 S1–S4（并存/计数/份额/P 守恒） | 7/7 PASS |
+| 拖尾可见性 + 群速度跟踪 + P 守恒 | 13/13 PASS |
+| 笔刷坐标映射 + 波包测速 | 13/13 PASS |
+| 亮度三档（PIL 像素分析）+ resize trail 保留（91.7%） | PASS |
+| 边界 P 守恒长测（162s / 1534 sim-time / 4 次墙反弹） | P=1.0000，err=0.000% |
+| 极端参数（m=0.15、σ=4/18、m=4、substeps=1 最坏组合） | P=1.0000，零 NaN |
+| **重构行为等价**（smoke 与重构前基线逐位一致；verify/verify2/superpose/newfeat） | 5/5 脚本全过 |
+| **NLS 契约**（挂载/预设同步/自聚焦 ×4.86/孤子 ×0.999/线性 P=1.0000/g 滑块） | 14/14 PASS |
+| **单文件分发版**（file:// 直开 + `?kernel=nls` + `?kernel=gp` + HTTP 一致 + WebGL2 上下文 + 零异常） | 27/27 PASS |
+| **塌缩归因实验**（substeps 6→16：截断机制不变，仅推迟） | 确认分辨率极限 |
+| **GP 内核 CDP 套件**（契约/穹顶形状/稳定性 ×2.6–2.8 呼吸/涡旋空心核持续/TOF T×1.52/呼吸模 ×9.4–9.9/吸引侧塌缩如实记录） | 27/27 PASS |
+| **GP 初态 Node 单测**（穹顶解析形状/涡旋核密度=0/孔洞剖面零误差/相位绕数/动量梯度/归一化） | 20/20 PASS |
+| **引擎 bindRange 修复**（defaults() 不再被 DOM value 倒写覆盖；GP substeps=16 回归断言） | 已修复并回归 |
+
+## 架构
+
+### 目录结构
+
+```
+schrodinger-workshop/
+├── index.html                    入口（thin：<script type="module" src="./src/main.js">）
+├── package.json                  {"type":"module", scripts: start / build:standalone}
+├── scripts/
+│   └── build-standalone.mjs      mini-bundler → dist/ 单文件（剥 import/export、
+│                                  拓扑序拼接、node --check 自校验、md5 可重复）
+├── src/
+│   ├── main.js                   演示入口：注册内核 → 按 ?kernel= 挂载 QuantumField
+│   ├── core/                     引擎（与物理完全无关）
+│   │   ├── gl.js                 GL 引导：compile/link、Quad、makeTarget、
+│   │   │                         makeRGBA16F、makeReduce（均显式接收 gl，多实例安全）
+│   │   ├── styles.js             CSS（重构时从原版逐字提取）+ injectStyles()
+│   │   └── app.js                QuantumField：DOM 构建、管线装配、交互、主循环、
+│   │                             URL 参数、调试句柄 window.__app、unmount
+│   └── physics/                  物理内核（可插拔）
+│       ├── kernel.js             PhysicsKernel 契约 + 注册表 + 三个 shader 模板
+│       ├── gaussian.js           共享初始场（归一化高斯波包，CPU 端）
+│       ├── schrodinger.js        薛定谔内核（pairs=1，6 预设）
+│       ├── nls.js                非线性薛定谔内核（pairs=1，4 预设）
+│       └── gp.js                 Gross-Pitaevskii / BEC 内核（pairs=1，4 预设）
+└── dist/
+    └── quantum-field.html        构建产物：单文件分发版（68KB，file:// 直开）
+```
+
+### PhysicsKernel 契约
+
+引擎（`core/app.js`）负责一切与物理无关的事务：DOM、GL 资源、KDK 积分循环、
+渲染管线、交互、HUD、URL 参数、调试句柄。内核只提供：
+
+| 成员 | 类型 | 职责 |
+|---|---|---|
+| `id` / `name` / `equation` | string | 注册表键（URL `?kernel=` 用）/ 顶栏标题 / 方程 HTML |
+| `pairs` | 1 \| 2 | 复分量对数：1 → RG32F，2 → RGBA32F（自旋/Dirac 用） |
+| `shaders()` | {uniforms, localH, density, kinetic, potential, pixelColor?} | GLSL 注入点，填入模板的 `{{TOKEN}}` |
+| `makeWave(grid, p)` | → {data, sum} | CPU 端初始场形状（引擎负责归一化与等份叠加） |
+| `presets()` | {key: {name, text, build(paint), wave, params?}} | 场景势场与初始条件 |
+| `defaults()` | {...} | 内核默认 state 覆盖（如 NLS 的 g、GP 的 g/substeps） |
+| `extraControls()` | {html, rows:[{id,out,key,fmt}]} | 附加控件 HTML 及滑块绑定行（如 NLS/GP 的 g 滑块） |
+| `setUniforms(gl, prog, state)` | fn | 逐帧赋内核私有 uniform（三个 program 均调用） |
+| `applyParams(qp, state)` | fn | URL 查询参数扩展 |
+| `eMaxExtra(state)` | number | E_max 上界的附加项（非线性内核按 |g|·动力学峰值密度计） |
+
+**vec4 泛型管线**：所有 shader 按 vec4 书写；RG32F 采样得 (r,g,0,1)，
+多余 zw 通道在写回 RG32F 附件时自然丢弃，数值与逐字等价。
+内核私有 uniform（如 NLS 的 `uniform float uG;`）经 `{{UNIFORMS}}` token
+注入三个 shader 模板的 uniform 区。
+
+### 新增一个内核（5 步）
+
+```js
+// 1. src/physics/mykernel.js —— 继承契约
+import { PhysicsKernel, registerKernel } from './kernel.js';
+class MyKernel extends PhysicsKernel {
+  constructor(){
+    super();
+    this.id = 'mykernel';  this.name = '我的内核';  this.pairs = 1;
+    this.equation = '<b>MY EQUATION</b> · ...';
+  }
+  shaders(){ return {
+    localH: 'V*c',                                    // 域内 H·c 片段
+    density: 'dot(psi.xy,psi.xy)',                    // |ψ|²
+    kinetic: '0.25*(dot(dxp,dxp)+dot(dyp,dyp))',      // 动能密度
+    potential: 'V*p',                                 // 势能密度
+  }; }
+  makeWave(grid, p){ /* → {data, sum} */ }
+  presets(){ /* → {key: {name, text, build(paint), wave:[fx,fy,kx,ky], params?}} */ }
+  defaults(){ return { /* state 覆盖 */ }; }
+  eMaxExtra(){ return 0; }
+}
+// 2. 注册
+registerKernel(new MyKernel());
+```
+
+```js
+// 3. src/main.js 引入（side-effect import 即注册）
+import './physics/mykernel.js';
+// 4. 访问 ?kernel=mykernel
+// 5. 重新生成单文件版
+//    npm run build:standalone
+```
+
+### 扩展点与诚实限制
+
+| 方向 | 路径 | 状态 |
+|---|---|---|
+| Gross-Pitaevskii / BEC（TF 穹顶、涡旋、TOF、呼吸模） | 新内核，localH 复用 NLS 片段 | ✅ 已落地（`gp.js`，4 预设，CDP 27/27 + IC 单测 20/20） |
+| 其他二阶时间可分离系统（Pauli 自旋、AB 相位） | `pairs=2` + localH 写双分量耦合 | 契约已支持，shader 泛型就绪 |
+| 高阶拉普拉斯 / 谱方法 | 换 `lap` 片段需改引擎模板 | 需小改 core |
+| 一阶系统（Dirac） | 积分器模式扩展 | 需引擎扩展，契约不变 |
+| 3D | 3D 纹理 + volume 渲染 | 需引擎扩展，契约不变 |
+
+当前引擎的边界（诚实清单）：2D 均匀网格、5 点拉普拉斯、CPU 端初始场、
+势场静态（仅笔刷可改）、单实例多开需各自 mount/unmount、
+GP 的势阱形制仅在预设切换时绘制（无运行时阱频率控件）。
+
+### 课程站嵌入
+
+ES 模块版两行接入（`src/` 整体拷入课程站，或经 import map）：
+
+```js
+import { QuantumField } from './src/core/app.js';
+import './src/physics/schrodinger.js';   // 以及任何其他内核
+new QuantumField('#qf', { kernel: 'schrodinger' }).mount();
+```
+
+不需要模块系统的场景，直接用构建产物单文件：
+
+```html
+<!-- dist/quantum-field.html 内容整体内联，或 iframe 指向该文件 -->
+<iframe src="dist/quantum-field.html?kernel=nls" width="800" height="800"></iframe>
+```
+
+### 单文件分发版构建
+
+```bash
+npm run build:standalone      # = node scripts/build-standalone.mjs
+```
+
+mini-bundler 零依赖：从 `index.html` 定位模块入口 → DFS 拓扑排序（循环即报错）
+→ 剥离子句（只认列 0 的 import/export，文档注释里的缩进示例行会 WARN 提示不解析）
+→ 拼接为经典 `<script>`（`</script>` 字面量自动转义）→ `node --check` 语法自校验
+→ 输出 `dist/quantum-field.html`。构建确定性可复现（md5 稳定），
+产物经 CDP 实测：file:// 直开、`?kernel=nls` / `?kernel=gp` 切换、HTTP 访问
+三者行为一致（27/27 PASS）。
+
+## 技术栈
+
+WebGL2 · GLSL ES 3.0 · RG32F 复数场（x=Re, y=Im）· RGBA16F 拖尾 · ES 模块 +
+PhysicsKernel 可插拔契约 · 零运行时依赖 · 零构建（单文件版）/ 自包含 mini-bundler（分发版）
