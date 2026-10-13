@@ -54,6 +54,9 @@ export class QuantumField {
     this._lastFpsT = performance.now(); this._lastReduceF = 0;
     this.baseP0 = 1; this._baseCaptured = false;
     this._readBuf = new Float32Array(32*32*4);
+    this._readBuf2 = new Float32Array(32*32*4);   /* MRT 附件 1：世界坐标概率矩 */
+    this._readBuf3 = new Float32Array(32*32*4);   /* MRT 附件 2：分轴动能 + 均值动量 */
+    this._lastE = null;                            /* 最近一次归约的逐粒子总能（能级对照） */
     this._raf = 0;
     this._onError = e => {
       const d = this.q('#diag');
@@ -208,11 +211,22 @@ export class QuantumField {
   <div class="hrow"><span>总概率 P</span><span id="hP">—</span></div>
   <div class="hrow"><span>守恒误差</span><span id="hErr">—</span></div>
   <hr>
-  <div class="hrow"><span>动能 T</span><span id="hT">—</span></div>
+  <div class="hrow"><span>动能 ⟨T⟩</span><span id="hT">—</span></div>
   <div class="hrow"><span>势能 ⟨V⟩</span><span id="hV">—</span></div>
   <div class="hrow"><span>总能 E</span><span id="hE">—</span></div>
   <div class="hrow"><span>驱动 V_d(中心)</span><span id="hDrive">—</span></div>
   <div class="hrow"><span>AB 磁通 Φ</span><span id="hAB">关</span></div>
+  <hr>
+  <div class="hrow"><span>Δx, Δy</span><span id="hDxy">—</span></div>
+  <div class="hrow"><span>Δk_x, Δk_y</span><span id="hDkxy">—</span></div>
+  <div class="hrow"><span>Δx·Δk_x</span><span id="hProdX">—</span></div>
+  <div class="hrow"><span>Δy·Δk_y</span><span id="hProdY">—</span></div>
+  <div class="hrow"><span>质心 k</span><span id="hKc">—</span></div>
+  <div id="ladderSec" style="display:none">
+    <hr>
+    <div class="hrow"><span>能级阶梯</span><span id="hLadKind">—</span></div>
+    <div class="hrow"><span>E → 最近能级</span><span id="hLadNear">—</span></div>
+  </div>
   <hr>
   <div class="hrow"><span>峰值 |ψ|²</span><span id="hPeak">—</span></div>
   <div class="hrow"><span>模拟时间 t</span><span id="hTime">—</span></div>
@@ -493,12 +507,15 @@ export class QuantumField {
     gl.uniform1f(this.u(this.progComposite,'uBright'), this.state.bright);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
-    /* 概率/能量归约 */
+    /* 概率/能量/矩归约（MRT 三附件：
+       0 = (Σp, uK·ΣT, Σp², ΣVp)，1 = 世界坐标矩 (Σx·p,Σy·p,Σx²·p,Σy²·p)，
+       2 = 分轴动能 (uK·ΣT_x, uK·ΣT_y)） */
     if (!this.state.paused && now - this._lastReduceF > 120){
       this._lastReduceF = now;
       gl.useProgram(this.progReduce);
       gl.bindVertexArray(this.quad.vao);
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.reduceT.fbo);
+      gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2]);   /* MRT（FBO 级状态，不影响其他 pass） */
       gl.viewport(0,0,32,32);
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
@@ -507,14 +524,25 @@ export class QuantumField {
       gl.bindTexture(gl.TEXTURE_2D, this.vTex);
       gl.uniform1i(this.u(this.progReduce,'uV'), 1);
       gl.uniform1f(this.u(this.progReduce,'uGrid'), this.state.grid);
+      gl.uniform1f(this.u(this.progReduce,'uK'), k);                  /* 动能 ×uK → 物理 T（与 KDK 守恒能量同单位） */
       this.kernel.setUniforms(gl, this.progReduce, this.state);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
+      gl.readBuffer(gl.COLOR_ATTACHMENT0);
       gl.readPixels(0,0,32,32,gl.RGBA,gl.FLOAT,this._readBuf);
+      gl.readBuffer(gl.COLOR_ATTACHMENT1);
+      gl.readPixels(0,0,32,32,gl.RGBA,gl.FLOAT,this._readBuf2);
+      gl.readBuffer(gl.COLOR_ATTACHMENT2);
+      gl.readPixels(0,0,32,32,gl.RGBA,gl.FLOAT,this._readBuf3);
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-      let sp=0, st=0, sp2=0, sv=0;
-      for (let i=0;i<1024;i++){ sp+=this._readBuf[i*4]; st+=this._readBuf[i*4+1]; sp2+=this._readBuf[i*4+2]; sv+=this._readBuf[i*4+3]; }
+      let sp=0, st=0, sp2=0, sv=0, sx=0, sy=0, sxx=0, syy=0, stx=0, sty=0, pmx=0, pmy=0;
+      for (let i=0;i<1024;i++){
+        sp+=this._readBuf[i*4]; st+=this._readBuf[i*4+1]; sp2+=this._readBuf[i*4+2]; sv+=this._readBuf[i*4+3];
+        sx+=this._readBuf2[i*4]; sy+=this._readBuf2[i*4+1]; sxx+=this._readBuf2[i*4+2]; syy+=this._readBuf2[i*4+3];
+        stx+=this._readBuf3[i*4]; sty+=this._readBuf3[i*4+1];
+        pmx+=this._readBuf3[i*4+2]; pmy+=this._readBuf3[i*4+3];
+      }
       if (!this._baseCaptured){ this.baseP0 = sp; this._baseCaptured = true; }
-      this.hud(sp, st, sv, Math.sqrt(sp2));
+      this.hud(sp, st, sv, Math.sqrt(sp2), {sx, sy, sxx, syy, stx, sty, pmx, pmy});
     }
 
     this._frames++;
@@ -522,14 +550,21 @@ export class QuantumField {
     document.title = 'OK f=' + this.fps.toFixed(0) + ' p=' + this.q('#hP').textContent;
   }
 
-  hud(p, t, v, peak){
+  hud(p, t, v, peak, mom){
     const err = Math.abs(p - this.baseP0)/Math.max(this.baseP0,1e-9)*100;
-    const e = t + v;
+    /* 能量口径（R27 修正）：reduce 的 st 现为 uK·ΣKINETIC = T_phys·P（物理动能和，
+       与 KDK 守恒的离散能量 uK·st+sv 同单位）；HUD 显示逐粒子期望值 ⟨T⟩=st/P、
+       ⟨V⟩=sv/P——旧口径把裸 p² 二次型当「动能 T」（差 2m 倍）、E 混用两种单位，
+       标签与值不符，且无法与能级阶梯的本征值对照，已修。 */
+    const P = Math.max(p, 1e-12);
+    const T = t/P, V = v/P;
+    const e = T + V;
+    this._lastE = e;
     this.q('#hP').textContent = p.toFixed(4);
     this.q('#hErr').textContent = err.toFixed(3) + '%';
     this.q('#hErr').className = err < 1 ? 'ok' : 'warn';
-    this.q('#hT').textContent = t.toFixed(4);
-    this.q('#hV').textContent = v.toFixed(4);
+    this.q('#hT').textContent = T.toFixed(4);
+    this.q('#hV').textContent = V.toFixed(4);
     this.q('#hE').textContent = e.toFixed(4);
     /* 含时外场瞬时值 + AB 磁通读数：参数派生、不依赖 GPU 归约——
        暂停时拖滑块也即时刷新（抽出 refreshParamHud，滑块 after 回调共用） */
@@ -537,9 +572,38 @@ export class QuantumField {
     this.q('#hPeak').textContent = peak.toFixed(4);
     this.q('#hTime').textContent = this.state.simTime.toFixed(1);
     this.q('#hGrid').textContent = this.state.grid + '² · ' + this.state.m.toFixed(2);
+    /* 不确定原理（ℏ=1，per-axis 紧致界）：Δx/Δy 取世界坐标矩；k 为世界波数
+       （k=grid·p_格点），故 Δx·Δk_x ≥ ½（与 Δx_格点·Δp_x_格点 同一不等式）。
+       ⟨p_x²⟩=2m·⟨T_x⟩（4 阶 stencil）；⟨p_x⟩=Im(ψ*∂_xψ) 均值（reduce o2.z，
+       与 ⟨p_x²⟩ 同算子，全 Fourier 一致）——R28 前用质心速度差分（m·v_c），
+       实测其测的是离散群速度 ⟨sin k⟩/m 而非 ⟨k⟩（kx=0.09 时低 0.1%~1.1%，
+       与 sin(kx)·e^{−Δp²/2} 精确吻合），与 ⟨k²⟩ 混用致 Δk 虚高（σ=18 +2%），
+       已改为梯度版均值；_momPrev 差分整条移除，Δk 首帧即可读（无「—」空窗）。
+       2D 高斯波包恰好饱和 Δx·Δk_x=½——不确定原理的饱和态，直接可视化。 */
+    if (mom && p > 1e-9){
+      const g = this.state.grid, m = this.state.m;
+      const mx = mom.sx/P, my = mom.sy/P;
+      const dx = Math.sqrt(Math.max(0, mom.sxx/P - mx*mx));
+      const dy = Math.sqrt(Math.max(0, mom.syy/P - my*my));
+      this.q('#hDxy').textContent = dx.toFixed(4) + ', ' + dy.toFixed(4);
+      const px2 = 2*m*(mom.stx/P), py2 = 2*m*(mom.sty/P);   /* ⟨p_x²⟩,⟨p_y²⟩（格点） */
+      const pvx = mom.pmx/P, pvy = mom.pmy/P;               /* ⟨p_x⟩,⟨p_y⟩ = Im(ψ*∂ψ) 均值（格点） */
+      const dkx = g*Math.sqrt(Math.max(0, px2 - pvx*pvx));  /* Δk_x（世界波数） */
+      const dky = g*Math.sqrt(Math.max(0, py2 - pvy*pvy));
+      this.q('#hDkxy').textContent = dkx.toFixed(3) + ', ' + dky.toFixed(3);
+      const prodX = dx*dkx, prodY = dy*dky;
+      const setProd = (sel, prod) => {
+        const el = this.q(sel);
+        el.textContent = prod.toFixed(3) + (prod >= 0.5 ? '' : ' <½');
+        el.className = prod >= 0.5 ? 'ok' : 'warn';
+      };
+      setProd('#hProdX', prodX);
+      setProd('#hProdY', prodY);
+      this.q('#hKc').textContent = '(' + (g*pvx).toFixed(2) + ', ' + (g*pvy).toFixed(2) + ')';
+    }
   }
 
-  /* 参数派生 HUD 读数（磁通 Φ / 驱动 V_d 瞬时值）：纯 state 计算，无 GPU 成本 */
+  /* 参数派生 HUD 读数（磁通 Φ / 驱动 V_d 瞬时值 / 能级阶梯）：纯 state 计算，无 GPU 成本 */
   refreshParamHud(){
     /* 含时外场瞬时值（世界中心 x=½ 处）：均匀模式 A·cos(φ)；行波模式
        A·cos(π−φ) = −A·cos(φ)。仅作显示，物理演化以 shader 内的 V_d 为准。 */
@@ -549,6 +613,18 @@ export class QuantumField {
     /* AB 磁通：0 = 关闭（等价无矢势）；非零显示弧度 + 2π 份额 */
     this.q('#hAB').textContent = this.state.abPhi === 0 ? '关'
       : this.state.abPhi.toFixed(3) + ' rad (' + (this.state.abPhi/6.2831853).toFixed(2) + '×2π)';
+    /* 能级阶梯（内核可选）：解析谱 + 最近能级对照。最近能级用最近一次归约的
+       ⟨E⟩（_lastE）——暂停时归约停跑，该行保持上次读数而非清零。 */
+    const lad = this.kernel.energyLevels ? this.kernel.energyLevels(this.state) : null;
+    const sec = this.q('#ladderSec');
+    if (!lad){ sec.style.display = 'none'; return; }
+    sec.style.display = '';
+    this.q('#hLadKind').textContent = lad.kind + ' · ' + lad.param;
+    const e = this._lastE;
+    if (e == null || !isFinite(e)){ this.q('#hLadNear').textContent = '—'; return; }
+    const r = lad.nearest(e);
+    const fmtE = v => Math.abs(v) < 1e-3 ? v.toExponential(2) : v.toFixed(6);
+    this.q('#hLadNear').textContent = 'E' + r.label + ' = ' + fmtE(r.e);
   }
 
   /* ---------- 交互 ---------- */
@@ -930,6 +1006,39 @@ export class QuantumField {
           sx += (idx%g)*p; sy += Math.floor(idx/g)*p; s += p;
         }
         return { x:(sx/s)/g, y:(sy/s)/g, p:s, simTime: this.state.simTime };
+      },
+      /* 概率矩一次读回（CPU 直读 psiA，独立于 GPU 归约管线——不确定原理 HUD 的
+         对账基准）：世界坐标矩 ⟨x⟩/⟨y⟩/⟨x²⟩/⟨y²⟩ + ⟨p²⟩。
+         ⟨p²⟩ = −⟨ψ|lap_d|ψ⟩/P = Σ_links|Δψ|²/P（1-texel 链路含 Dirichlet
+         边界链路，外侧=0；GPU reduce 用 4 阶中心差分，光滑场极限一致、
+         边界/尖锐结构附近有小差——对账时以此为基准、HUD 读数为准）。 */
+      moments: () => {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
+        const g = this.state.grid;
+        const ch = this.kernel.pairs === 2 ? 4 : 2;
+        const buf = new Float32Array(g*g*ch);
+        gl.readPixels(0,0,g,g,this.fmt,gl.FLOAT,buf);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        let s=0, sx=0, sy=0, sxx=0, syy=0;
+        for (let y=0;y<g;y++) for (let x=0;x<g;x++){
+          const i=(y*g+x)*ch;
+          const p = buf[i]*buf[i]+buf[i+1]*buf[i+1];
+          const xw=(x+0.5)/g, yw=(y+0.5)/g;
+          s+=p; sx+=xw*p; sy+=yw*p; sxx+=xw*xw*p; syy+=yw*yw*p;
+        }
+        let link=0, lx=0, ly=0;
+        for (let y=0;y<g;y++) for (let x=0;x<g;x++){
+          const i=(y*g+x)*ch;
+          for (let c=0;c<ch;c++){
+            const u = buf[i+c];
+            const xp = x+1<g ? buf[(y*g+x+1)*ch+c] : 0;   /* Dirichlet：界外=0 */
+            const yp = y+1<g ? buf[((y+1)*g+x)*ch+c] : 0;
+            const ddx = xp-u, ddy = yp-u;
+            link += ddx*ddx + ddy*ddy;
+            lx += ddx*ddx; ly += ddy*ddy;
+          }
+        }
+        return { P:s, x:sx/s, y:sy/s, x2:sxx/s, y2:syy/s, p2:link/s, px2:lx/s, py2:ly/s, simTime:this.state.simTime };
       },
       /* 场统计一次读回：质心 x、总概率 P、若干采样点的 (re,im,|ψ|²,arg)。
          含时外场验证用：均匀驱动的纯整体相位、行波驱动下镜像点的密度/相位

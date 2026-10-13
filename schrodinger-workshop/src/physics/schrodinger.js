@@ -35,6 +35,58 @@ class SchrodingerKernel extends PhysicsKernel {
     if (!isNaN(ap)) state.abPhi = ap;
   }
 
+  /* 解析能级阶梯（HUD「E → 最近能级」对照）：仅 box/harmonic 两预设返回，
+     其余 null（HUD 隐藏该区）。单位与引擎一致：格点（texel）单位、ℏ=1、
+     m=state.m。两个势场的解析谱：
+       box（世界边界 Dirichlet，格点边长 g）：E(nx,ny)=c·(nx²+ny²)，
+         c=(0.5/m)·(π/g)²（离散本征值 2sin²(nπ/2g)/m 的小 n 极限，n≪g 时
+         与连续谱一致；预设波包 k≈0.12 ⟹ n≈10，截断误差 O((nπ/g)⁴)≈2e-6 可忽略）；
+       harmonic（V=2.2e-5·d²，d 为势场画布像素）：画布恒 256² 且按世界坐标
+         采样 ⟹ 格点坐标 V=2.2e-5·(256/g)²·r²，ℏω=√(4.4e-5/m)·256/g，
+         E(n)=(n+½)·ℏω（n=nx+ny，2D 各向同性简并）。
+     注意：波包是本征态的叠加，⟨E⟩ 与最近能级的差属正常（非守恒量偏差）；
+     用户笔刷改动势场后解析模型不再精确——该区仅作预设势场的参照。 */
+  energyLevels(state){
+    const g = state.grid, m = state.m;
+    const fmtE = v => Math.abs(v) < 1e-3 ? v.toExponential(2) : v.toFixed(6);
+    if (state.preset === 'box'){
+      const c = 0.5/m * Math.pow(Math.PI/g, 2);
+      const E = (nx, ny) => c*(nx*nx + ny*ny);
+      return {
+        kind: '无限深方阱',
+        param: 'c=' + fmtE(c),
+        nearest(e){
+          const tgt = e/c;
+          let best = null;
+          for (let nx = 1; nx <= 80 && nx*nx <= tgt + 0.25; nx++){
+            const r2 = tgt - nx*nx;
+            if (r2 < 0.25) break;
+            const ny0 = Math.max(1, Math.round(Math.sqrt(r2)));
+            for (let d = -1; d <= 1; d++){
+              const ny = ny0 + d; if (ny < 1) continue;
+              const ev = E(nx, ny), err = Math.abs(ev - e);
+              if (!best || err < best._err) best = { label: '(' + nx + ',' + ny + ')', e: ev, d: ev - e, _err: err };
+            }
+          }
+          return best;
+        },
+      };
+    }
+    if (state.preset === 'harmonic'){
+      const w = Math.sqrt(4.4e-5/m) * 256/g;      /* ℏω（格点单位） */
+      const E = n => (n + 0.5)*w;
+      return {
+        kind: '谐振子势',
+        param: 'ℏω=' + fmtE(w),
+        nearest(e){
+          const n = Math.max(0, Math.round(e/w - 0.5));
+          return { label: '' + n, e: E(n), d: E(n) - e };
+        },
+      };
+    }
+    return null;
+  }
+
   presets(){
     return {
       free:     { name:'自由传播',     text:'高斯波包在无势场中飞行。色相保持纯净，但波包随时间自然扩散——不确定性原理的直接可视化。',

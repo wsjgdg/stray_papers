@@ -83,15 +83,34 @@ export function makeRGBA16F(gl, w, h){
   return { tex, fbo, w, h };
 }
 
-/* 32^2 RGBA32F 归约目标：每 texel 打包 (Σp, ΣT, Σp², ΣVp) */
+/* 32^2 归约目标（MRT 三附件，各 RGBA32F）：
+   tex  (location 0)：(Σp, uK·ΣT, Σp², ΣVp)
+   tex2 (location 1)：(Σx·p, Σy·p, Σx²·p, Σy²·p)（世界坐标概率矩，
+      供不确定原理 HUD 的 Δx/Δy 与质心使用）。
+   tex3 (location 2)：(uK·ΣT_x, uK·ΣT_y, Σ⟨p_x⟩, Σ⟨p_y⟩)（分轴动能 + 梯度版
+      均值动量——per-axis 紧致界 Δx·Δk_x ≥ ½；若只给总 Δk，2D 高斯波包单向
+      宽度配双向展宽仅得保守界 √2·½=0.707，呈现不出「高斯是不确定原理饱和态」
+      这一关键物理；均值 ⟨p⟩ 与 ⟨p²⟩ 同用 4 阶算子，Δk 全 Fourier 一致）。
+   调用方须 gl.drawBuffers([COLOR_ATTACHMENT0,1,2]) 后绘制；
+   读取时对每个附件分别 gl.readBuffer + readPixels。 */
 export function makeReduce(gl){
-  const tex = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, tex);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, 32, 32, 0, gl.RGBA, gl.FLOAT, null);
+  const mk = () => {
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, 32, 32, 0, gl.RGBA, gl.FLOAT, null);
+    return tex;
+  };
+  const tex = mk(), tex2 = mk(), tex3 = mk();
   const fbo = gl.createFramebuffer();
   gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
-  return { fbo, tex };
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, tex2, 0);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT2, gl.TEXTURE_2D, tex3, 0);
+  if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE){
+    throw new Error('makeReduce: MRT framebuffer incomplete');
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  return { fbo, tex, tex2, tex3 };
 }

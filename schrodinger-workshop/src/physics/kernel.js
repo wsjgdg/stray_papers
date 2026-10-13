@@ -12,8 +12,11 @@
  *            NLS:     (V - uG*dot(c.xy,c.xy))*c    （uG>0 = focusing，见 nls.js 符号约定）
  *            未来 Pauli: V*c + 0.5*(uBx*c.zw - uBy*c.wz ...)（2 复分量，pairs=2）
  *        density(vec4 psi)      → float，|ψ|²（可跨分量求和）
- *        kinetic(vec4 dxp, vec4 dyp) → float，动能密度（引擎已备好中心差分）
+ *        kinetic(vec4 dxp, vec4 dyp) → float，动能密度（引擎已备好 4 阶中心差分）
  *        potential(vec4 psi, float V) → float，势能密度（含非线性平均场项）
+ *        pmeanX/pmeanY（可选）  → float，⟨p_x⟩/⟨p_y⟩ 密度（默认复标量
+ *                                     Im(ψ*∂ψ)，pairs 感知；与 kinetic 同 4 阶算子，
+ *                                     不确定原理 HUD 的 Δk 均值项来源）
  *        pixelColor(vec4 psi)   → vec3，可选，覆盖默认「色相=相位」映射
  *   2. makeWave(grid, p) → { data, sum }，CPU 端生成初始波函数（pairs*2 个 float/格）
  *   3. presets()  → { key: { name, text, build(paint), wave:[fx,fy,kx,ky], params? } }
@@ -21,6 +24,9 @@
  *        params：预设附加状态（如 NLS 的 { g:2.5, sigma:5 }），加载时并入 state
  *   4. 其余元数据：id / name / equation / pairs / defaults / extraControls /
  *      setUniforms / applyParams / eMaxExtra
+ *   5. energyLevels(state) → 可选，返回解析能级阶梯 { kind, param, nearest(E)→{label,e,d} }
+ *      （HUD「E → 最近能级」对照用）；无解析谱的内核返回 null（HUD 隐藏该区）。
+ *      单位与引擎一致：格点单位、ℏ=1、m=state.m。
  *
  * 波函数纹理格式由 pairs 决定：1 → RG32F（单复分量），2 → RGBA32F（双复分量，
  * 自旋/Dirac 用）。引擎所有 shader 按 vec4 泛型书写：RG32F 采样得 (r,g,0,1)，
@@ -241,36 +247,94 @@ void main(){
   o = vec4(max(img, texture(uTrail,vUv).rgb*uDecay), 1.0);
 }`;
 
-/* ---------- 能量/概率归约：32^2 单 RGBA32F，每 texel 打包 (Σp, ΣT, Σp², ΣVp) ---------- */
+/* ---------- 能量/概率/矩归约：32^2 MRT 三 RGBA32F ----------
+   o0：每 texel 打包 (Σp, uK·ΣT, Σp², ΣVp)
+   o1：每 texel 打包 (Σx·p, Σy·p, Σx²·p, Σy²·p)（世界坐标概率矩）。
+   o2：每 texel 打包 (uK·ΣT_x, uK·ΣT_y, Σ⟨p_x⟩密度, Σ⟨p_y⟩密度)
+      （分轴动能 + 分轴均值动量；z/w 为 R28 新增，见下）。
+   动能口径（R27 修正）：KINETIC 片段 0.25(|Δψ|²)≈−⟨ψ|lap_d|ψ⟩ 是 **p² 二次型**
+   （格点单位、ℏ=1），物理动能 T_phys = uK·ΣT（uK=1/2m，KDK 守恒的离散能量正是
+   uK·st+sv）。故 st accumulates uK·KINETIC：st = T_phys·P（物理动能和），
+   HUD 显示逐粒子 ⟨T⟩=st/P——旧口径直接累加裸片段（T 项差 2m 倍）标签为「动能」
+   不实，已修。⟨p²⟩=2m·⟨T⟩（不确定原理 HUD 的 Δp 来源）。
+   轴分解约定：KINETIC 片段须可分离为 f(dxp)+g(dyp)（现有内核均为
+   0.25*(dot(dxp,dxp)+dot(dyp,dyp)) 形式）——kinPart(dxp,vec4(0)) 与
+   kinPart(vec4(0),dyp) 给出单轴分量，恒有 stx+sty≡st（自校验；不可分离的
+   内核会使二者不符）。per-axis 展宽的不确定关系 Δx·Δk_x ≥ ½ 是紧致界：
+   2D 高斯波包恰好饱和（单向宽度 σ 配单向展宽 1/2σ），只用总 Δk 会退化成
+   保守界 √2·½。
+   均值动量口径（R28 修正）：⟨p_x⟩=Im(ψ*∂_xψ) 每 texel 密度求和（PMEANX/Y
+   片段，dxp 已是 2∂_xψ 故 ×0.5），与 ⟨p_x²⟩（4 阶 stencil）**同算子**，
+   Δk_x=grid·√(⟨p_x²⟩−⟨p_x⟩²) 全 Fourier 一致。旧口径用质心速度 v_c 差分
+   （⟨p⟩=m·v_c）测的是离散群速度 ⟨sin k⟩/m 而非 ⟨k⟩——kx=0.09 的波包
+   低 0.1%~1.1%（σ 越大差越小，与 sin(kx)·e^{−Δp²/2} 精确吻合），
+   与 ⟨k²⟩ 混用使 Δk 虚高（σ=18 时 +2%），已弃用（_momPrev 差分整条移除）。
+   矩的用途：Δx²=⟨x²⟩−⟨x⟩²（世界坐标）；k 为世界波数（k=grid·p_格点）。
+   x/y 取块内 texel 中心的世界坐标；纹理 v 轴向上，与 readPixels 索引
+   （行 0 在底部）一致，世界 y 向上。 */
 const TPL_REDUCE = `#version 300 es
 precision highp float;
 in vec2 vUv;
-out vec4 o;
+layout(location=0) out vec4 o0;
+layout(location=1) out vec4 o1;
+layout(location=2) out vec4 o2;
 uniform sampler2D uPsi;
 uniform sampler2D uV;
 uniform float uGrid;
+uniform float uK;      /* =1/2m：动能密度 ×uK → 物理动能（HUD/能级的能量单位） */
 {{UNIFORMS}}
+/* 轴分解动能（零向量代入法，契约见上）：stx+sty≡st 自校验 */
+float kinPart(vec4 dxp, vec4 dyp){ return uK*{{KINETIC}}; }
 void main(){
   vec2 base = floor(vUv*32.0)*8.0;   /* 输出 texel(0-31) -> 输入 8x8 块起点 */
   float sp=0.0, st=0.0, sp2=0.0, sv=0.0;
+  float sx=0.0, sy=0.0, sxx=0.0, syy=0.0;
+  float stx=0.0, sty=0.0;
+  float pmx=0.0, pmy=0.0;   /* Σ⟨p_x⟩/⟨p_y⟩ 密度（Im(ψ*∂ψ)，与 stx 同 4 阶算子） */
   for(int j=0;j<8;j++){
     for(int i=0;i<8;i++){
       vec2 uv = (base+vec2(float(i),float(j))+0.5)/uGrid;
       vec4 psi = texture(uPsi,uv);
       float V = (texture(uV,uv).r*255.0-128.0)/127.0;
       float p = {{DENSITY}};
-      vec4 dxp = texture(uPsi,uv+vec2(1.0/uGrid,0.0)) - texture(uPsi,uv-vec2(1.0/uGrid,0.0));
-      vec4 dyp = texture(uPsi,uv+vec2(0.0,1.0/uGrid)) - texture(uPsi,uv-vec2(0.0,1.0/uGrid));
+      /* 4 阶中心差分（2h 标度，与 0.25 因子配套：0.25·dxp² ≈ h²|ψ_x|²）：
+         [f(x−2)−8f(x−1)+8f(x+1)−f(x+2)]/6 ≈ 2h·f'，误差 O(h⁴)。
+         比 2-texel 中心差分（O(h²)）关键地更准：高斯包络的差分梯度有
+         −1/(4σ²) 相对偏差（σ=7 时 Δk 低 0.9%），初始最小不确定态的
+         Δx·Δk_x 会显示 0.496 误触 <½ 告警；4 阶后偏差 ~1e-7，饱和值
+         精确落在 ½。界外采样（±2 texel）由 CLAMP_TO_EDGE 取边界值，
+         Dirichlet 边界 ψ≈0，与「界外=0」等价。 */
+      vec4 dxp = (texture(uPsi,uv-vec2(2.0/uGrid,0.0)) - 8.0*texture(uPsi,uv-vec2(1.0/uGrid,0.0))
+                + 8.0*texture(uPsi,uv+vec2(1.0/uGrid,0.0)) - texture(uPsi,uv+vec2(2.0/uGrid,0.0)))/6.0;
+      vec4 dyp = (texture(uPsi,uv-vec2(0.0,2.0/uGrid)) - 8.0*texture(uPsi,uv-vec2(0.0,1.0/uGrid))
+                + 8.0*texture(uPsi,uv+vec2(0.0,1.0/uGrid)) - texture(uPsi,uv+vec2(0.0,2.0/uGrid)))/6.0;
+      float x = (base.x+float(i)+0.5)/uGrid;
+      float y = (base.y+float(j)+0.5)/uGrid;
       sp += p; sp2 += p*p;
-      st += {{KINETIC}};
+      st  += kinPart(dxp, dyp);
+      stx += kinPart(dxp, vec4(0.0));
+      sty += kinPart(vec4(0.0), dyp);
+      pmx += {{PMEANX}};
+      pmy += {{PMEANY}};
       sv += {{POTENTIAL}};
+      sx += x*p; sy += y*p; sxx += x*x*p; syy += y*y*p;
     }
   }
-  o = vec4(sp,st,sp2,sv);
+  o0 = vec4(sp,st,sp2,sv);
+  o1 = vec4(sx,sy,sxx,syy);
+  o2 = vec4(stx,sty,pmx,pmy);
 }`;
 
 /* 默认像素着色：色相 = 相位 arg(ψ)（取第一复分量），亮度 = 概率密度 */
 const DEFAULT_PIXEL_COLOR = 'hsv2rgb(vec3(atan(psi.y,psi.x)/6.2831853+0.5,0.80,1.0))';
+
+/* 默认均值动量片段（复标量；dxp/dyp 为 2∂ψ，故 ×0.5 得 Im(ψ*∂ψ)=|ψ|²∂_xφ）：
+   pairs=1 取唯一复分量；pairs=2 两复分量求和（总动量）。 */
+const DEFAULT_PMEAN = {
+  1: { x: '0.5*(psi.x*dxp.y-psi.y*dxp.x)', y: '0.5*(psi.x*dyp.y-psi.y*dyp.x)' },
+  2: { x: '0.5*((psi.x*dxp.y-psi.y*dxp.x)+(psi.z*dxp.w-psi.w*dxp.z))',
+       y: '0.5*((psi.x*dyp.y-psi.y*dyp.x)+(psi.z*dyp.w-psi.w*dyp.z))' },
+};
 
 /* ---------- 基类：给出全部默认值，子类按需覆盖 ---------- */
 export class PhysicsKernel {
@@ -288,6 +352,14 @@ export class PhysicsKernel {
   setUniforms(gl, prog, state){ /* 内核私有 uniform；program 无此 uniform 时 WebGL 静默 no-op */ }
   applyParams(qp, state){ /* URL 参数扩展 */ }
   eMaxExtra(state){ return 0; }     /* H 特征值上界的附加项（非线性项等） */
+  /* 解析能级阶梯（可选）：仅对有解析谱的场景返回，见契约第 5 项 */
+  energyLevels(state){ return null; }
+  /* 均值动量片段（可选覆盖）：默认复标量 Im(ψ*∂ψ)（pairs 感知，见 DEFAULT_PMEAN）。
+       不确定原理 HUD 的 ⟨p⟩ 来源；多分量/耦合内核可改（如相对论性动量）。 */
+  pmeanSnippets(){
+    const d = DEFAULT_PMEAN[this.pairs] || DEFAULT_PMEAN[1];
+    return { pmeanX: d.x, pmeanY: d.y };
+  }
   cpuDensity(buf, i){ return buf[i]*buf[i] + buf[i+1]*buf[i+1]; } /* 调试句柄用 */
 }
 
@@ -307,6 +379,7 @@ export function buildShaders(kernel){
   /* 内核私有 uniform 声明（如 NLS: 'uniform float uG;'）——注入三个模板的 uniform 区，
      由 kernel.setUniforms() 逐帧赋值；program 中未引用时被编译器优化掉，取值返回 null。 */
   const uni = s.uniforms || '';
+  const pm = kernel.pmeanSnippets();
   const fill = (tpl, map) => tpl.replace(/\{\{(\w+)\}\}/g, (m, k) => {
     if (!(k in map)) throw new Error('unknown template token: ' + k);
     return map[k];
@@ -318,7 +391,7 @@ export function buildShaders(kernel){
       PIXEL_COLOR: s.pixelColor || DEFAULT_PIXEL_COLOR,
       UNIFORMS: uni,
     }),
-    reduce: fill(TPL_REDUCE, { ...need, UNIFORMS: uni }),
+    reduce: fill(TPL_REDUCE, { ...need, UNIFORMS: uni, PMEANX: pm.pmeanX, PMEANY: pm.pmeanY }),
     scale: TPL_SCALE,
   };
 }
