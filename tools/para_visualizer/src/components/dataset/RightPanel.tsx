@@ -39,7 +39,11 @@ export function RightPanel() {
   const imageField = useDatasetStore((s) => s.imageField);
   const schema = useSchema();
   const hiddenFields = useHiddenFields();
-  const cache = useDatasetStore((s) => s.blobCache);
+  // Only select the specific cache entry for this row, not the whole cache map.
+  const cacheKey = selectedRowId && imageField ? `${selectedRowId}:${imageField}` : null;
+  const cachedEntry = useDatasetStore((s) =>
+    cacheKey ? s.blobCache[cacheKey] : undefined,
+  );
   const bookmarks = useDatasetStore((s) => s.bookmarks);
   const toggleBookmark = useDatasetStore((s) => s.toggleBookmark);
   const toggleCompare = useDatasetStore((s) => s.toggleCompare);
@@ -63,14 +67,14 @@ export function RightPanel() {
 
   const handleSaveImage = () => {
     if (!row || !imageField) return;
-    const cached = cache[`${row.id}:${imageField}`];
-    if (!cached?.url) {
+    const entry = useDatasetStore.getState().blobCache[`${row.id}:${imageField}`];
+    if (!entry?.url) {
       toast.error("No decoded image available");
       return;
     }
     const a = document.createElement("a");
-    a.href = cached.url;
-    a.download = `${row.id}.${cached.format || "png"}`;
+    a.href = entry.url;
+    a.download = `${row.id}.${entry.format || "png"}`;
     a.click();
     toast.success(`Saved ${a.download}`);
   };
@@ -102,7 +106,7 @@ export function RightPanel() {
     );
   }
 
-  const cached = cache[`${row.id}:${imageField}`];
+  const cached = cachedEntry;
   const bookmarked = !!bookmarks[row.id];
   const inCompare = compareRowIds.includes(row.id);
 

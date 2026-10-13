@@ -1,64 +1,97 @@
 ---
-Task ID: main
-Agent: Z.ai Code (main architect)
-Task: Build a graphical dataset image browser for .arrow/.parquet datasets, per the user's design document (InfoChartQA-style browsing, filtering, export).
+Task ID: cron-round-2
+Agent: Z.ai Code (cron review round 2)
+Task: QA the existing app, fix bugs, and add new features (persistence, command palette, keyboard nav, annotation, dark mode).
 
-Work Log:
-- Analyzed the user's design spec: a desktop/local-web tool for browsing, filtering, and exporting images embedded in .arrow/.parquet datasets. Adapted the Python-centric design to a 100% browser-side Next.js 16 implementation (Python not available in this sandbox).
-- Installed `apache-arrow` npm package for in-browser Arrow IPC parsing.
-- Created a sample dataset generator (`scripts/generate-demo-dataset.ts`) using `sharp` to render 96 synthetic chart SVGs (bar / line / pie / area / grouped bar) to PNG bytes, bundled with InfoChartQA-style metadata (question, answer, question_type, chart_type, year, difficulty, language, tags, extra_input_figure_bboxes, numeric stats). Output saved to `public/demo/demo-dataset.json` (~1.6 MB). ~6% of rows simulated as URL-only (no embedded bytes), ~3% as decode-error rows to exercise the failure UI.
-- Built the core data layer under `src/lib/dataset/`:
-  - `types.ts` — TypeScript types (SchemaField, DatasetFile, FilterRule, ViewMode, etc.)
-  - `decode.ts` — multi-strategy image decoder (dict-with-bytes, raw Uint8Array, base64 string, data-URL, URL string, nested list) + format sniffing (PNG/JPEG/GIF/WebP/SVG/BMP) + dimension probe.
-  - `parsers.ts` — file parsers: Arrow IPC via apache-arrow JS, JSON (3 supported shapes), and a demo-dataset fetcher. Parquet is reported as "convert to .arrow first".
-  - `filter.ts` — flattenRows, applyFilters (AND/OR combinators), applySearch, applySort, uniqueValues, numericRange, formatBytes, formatValue. Fixed a critical bug where `compareValues` had an extra `b` parameter that shifted all args and made filters no-ops.
-  - `store.ts` — Zustand store with dataset, activeFileIndex, fieldRoles, imageField, hiddenFields, viewMode, page, thumbnailSize, selectedRowId, compareRowIds, bookmarks, search, filterRules, sort, blobCache, failures, and all UI flags.
-  - `hooks.ts` — memoized selector hooks (`useActiveRows`, `useFilteredRows`, `useSchema`, `useHiddenFields`) to avoid Zustand `useSyncExternalStore` infinite loops from returning new arrays each render.
-- Built the UI under `src/components/dataset/`:
-  - `AppShell.tsx` — main 3-panel resizable layout (react-resizable-panels) + menubar (File/Edit/View/Help) + keyboard shortcuts (⌘O/⌘F/⌘E).
-  - `LandingPage.tsx` — hero landing page with "Try demo dataset" CTA, feature cards, 3-step guide, demo preview.
-  - `Toolbar.tsx` — view-mode switcher (Grid/Table/Detail/Compare/Stats), search box, filter toggle, export button, thumbnail-size slider, bbox toggle, dataset info badge.
-  - `LeftPanel.tsx` — file list (with All-files merge + per-file select), schema/fields list (role-colored icons, image-field selector, hide/show toggle), category count badges.
-  - `RightPanel.tsx` — image info card (format/size/bytes/status/source), action buttons (save/bookmark/compare), full field list with copy-to-clipboard.
-  - `GridView.tsx` — virtualized thumbnail grid with Intersection Observer, bbox overlay, bookmark/compare quick actions, pagination.
-  - `TableView.tsx` — dense table with sortable columns, thumbnail column, smart/all column modes, pagination.
-  - `DetailView.tsx` — large image + bbox toggle + full field grid + prev/next navigation + save/bookmark actions + decode-error alert.
-  - `CompareView.tsx` — side-by-side 2-4 row comparison with images + top fields.
-  - `StatsView.tsx` — KPI cards (rows/fields/files/size), image decode status progress bar, category pie/bar distributions (recharts), numeric stats table, schema table.
-  - `Thumbnail.tsx` — lazy-decode thumbnail with Intersection Observer, status derived from cache (no setState-in-effect), bbox overlay, URL-fallback link, error placeholder.
-  - `StatusBar.tsx` — bottom status bar with row counts, filter count, bookmarks, compare, decode failures, loading state.
-  - `LoadDialog.tsx` — drag-drop file upload + demo button + recent history + format help.
-  - `FilterPanel.tsx` — sheet-based filter builder with per-role operators (eq/neq/contains/gt/lt/in/is_empty…), AND/OR combinators, category value dropdowns with counts, numeric range hints.
-  - `ExportDialog.tsx` — export images (original/png/jpeg/webp) + metadata (CSV/JSON), naming pattern tokens, bookmarked-only / skip-no-image options, progress bar.
-  - `SchemaDialog.tsx` — field mapping confirmation (override role + set primary image field) with auto-detect reset.
-- Updated `src/app/page.tsx` to render AppShell + auto-open LoadDialog on first visit + pre-warm demo dataset fetch.
-- Updated `src/app/layout.tsx` metadata + added Sonner toaster alongside the shadcn toaster.
-- Added custom scrollbar styling + `[data-panel]` min-size guard to `globals.css`.
-- Ran ESLint: 0 errors, 0 warnings. Fixed several lint issues along the way: invalid lucide-react icon imports (NotEqual, Contains → EqualNot, Search), setState-in-effect in Thumbnail (refactored to derive status from cache), setState-in-effect in SchemaDialog (extracted body to a separately-mounted component with lazy useState initializer), ref-access-during-render (moved decodeStarted to a ref checked only inside the effect).
-- Verified end-to-end with agent-browser:
-  1. Landing page loads, LoadDialog auto-opens.
-  2. "Try Demo Dataset" loads 96 rows → 3-panel layout renders with files, fields, category counts.
-  3. Grid view shows thumbnail grid with decoded chart PNGs (some rows show URL-fallback / error placeholders as designed).
-  4. Clicking a thumbnail switches to Detail view with large image + bbox overlay checkbox + full field list + image info.
-  5. Stats view shows KPI cards, decode status, and category pie/bar distributions.
-  6. Filter panel: add rule → question_type is "Data Retrieval" → filtered count drops from 96 to 19. Search box also works (19 results for "Data Retrieval").
-  7. Table view renders dense rows with sortable columns.
-  8. All screenshots captured cleanly.
-- Page returns HTTP 200; dev log shows no errors after the fixes.
+## 项目当前状态描述/判断
 
-Stage Summary:
-- A complete, production-quality dataset image browser is live at `/` (port 3000).
-- All 5 view modes (Grid, Table, Detail, Compare, Stats) are functional.
-- Multi-strategy image decoding works for base64/bytes/data-URL/URL/nested-struct values with graceful failure handling and cache.
-- Filter builder + full-text search + sort all work correctly (verified 96→19 filter).
-- Export dialog supports images + CSV/JSON metadata with naming patterns and progress.
-- Bbox overlay for InfoChartQA-style `extra_input_figure_bboxes` works in grid + detail + compare views.
-- Lint is clean (0 errors, 0 warnings). Dev server runs without errors.
-- Artifacts: `public/demo/demo-dataset.json` (sample dataset), `scripts/generate-demo-dataset.ts` (regenerator), `src/lib/dataset/*` (data layer), `src/components/dataset/*` (15 UI components).
-- Unresolved / next-phase opportunities:
-  - Add real `.parquet` parsing in-browser (currently requires conversion to .arrow); could integrate a WASM parquet reader.
-  - Add annotation/labeling features (draw boxes, notes) per the design spec section 8.
-  - Add a "dataset comparison" mode (load 2 datasets side-by-side).
-  - Add an HTML overview report generator.
-  - Virtualize the grid view for >1000 rows (currently paginated at 60/page, which is fine for the 96-row demo but would benefit from `react-window` for very large datasets).
-  - Persist bookmarks/recent/files to localStorage so they survive reloads.
+应用整体稳定。前一轮已实现完整的 3 面板布局、5 种视图（Grid/Table/Detail/Compare/Stats）、多策略图片解码、筛选构建器、全文搜索、排序、bbox 叠加、导出、字段映射。本轮 QA 发现并修复了若干 bug，并新增了 6 个功能模块。
+
+### QA 发现的问题
+1. **react-resizable-panels 警告**：动态渲染的面板缺少 `id` 和 `order` props，导致 "Invalid layout total size" 和 "Panel id and order props recommended" 警告。
+2. **关键 bug：AnnotationOverlay 无限循环**：`useDatasetStore((s) => s.annotations[rowId] || [])` 每次渲染都返回新的 `[]` 引用，导致 `useSyncExternalStore` 检测到快照变化 → `forceStoreRerender` → `Maximum update depth exceeded`。点击缩略图进入 Detail 视图时直接崩溃。
+3. **性能问题**：DetailView 和 RightPanel 选择整个 `blobCache` 对象，导致任意一张缩略图解码时全部 re-render。
+
+## 当前目标/已完成的修改/验证结果
+
+### Bug 修复
+- **AnnotationOverlay 无限循环**：改为选择稳定的 `annotations` map 引用，再用 `useMemo` 派生 per-row 列表，空值用模块级 `EMPTY` 常量（稳定引用）。
+- **react-resizable-panels 警告**：给 `ResizablePanel` 添加 `id` + `order` props，并加 `autoSaveId="dib-layout"` 持久化布局。
+- **blobCache 选择器优化**：DetailView / RightPanel 从 `useDatasetStore((s) => s.blobCache)` 改为 `useDatasetStore((s) => s.blobCache[cacheKey])`，只选择当前行的缓存条目。
+- **持久化 debounced 写入**：`setupPersistence` 的 subscribe 回调用 `setTimeout` 400ms debounce，避免每次 `cacheBlob` 都触发 `JSON.stringify`。
+
+### 新增功能（6 个）
+1. **localStorage 持久化** (`src/lib/dataset/persist.ts`)
+   - 持久化：bookmarks、recent、fieldRoles、viewMode、thumbnailSize、sidebarOpen、detailPanelOpen、showBboxOverlay、hiddenFields、annotations。
+   - 应用启动时一次性 hydrate（单个 `setState` 批量更新，避免级联渲染）。
+   - 修改时 debounced 写入（400ms）。
+2. **命令面板** (`src/components/dataset/CommandPalette.tsx`)
+   - ⌘K 打开，支持模糊搜索命令。
+   - 分组：Views（Grid/Table/Detail/Compare/Stats）、Actions（Open/Filter/Export/Schema/Bookmarks）、Layout（toggle sidebar/detail）、Annotation（mode）、Theme（light/dark）、Cleanup（clear selection/compare/reset）、Jump to row（前 20 条匹配行）。
+3. **书签面板** (`src/components/dataset/BookmarkPanel.tsx`)
+   - 左侧 Sheet，列出所有书签，支持搜索、快速跳转、单条删除、全部清空。
+   - Header 显示书签计数徽章。
+4. **键盘导航** (`src/lib/dataset/useKeyboardNav.ts`)
+   - `1-5`：切换视图
+   - `j`/`k` 或 ↑/↓：在 Detail/Grid 视图中导航行
+   - `b`：切换当前行书签
+   - `/`：聚焦搜索框
+   - `x`：清除多选
+   - `Cmd+A`：全选筛选结果
+   - `Escape`：逐层关闭（命令面板 → 筛选面板 → 取消选中行）
+5. **标注/标签功能** (`src/components/dataset/AnnotationOverlay.tsx`)
+   - DetailView 工具栏新增 "Annotate" 切换按钮。
+   - 在图片上点击拖拽画框，弹出输入标签名 + 选颜色（6 色调色板）。
+   - 标注存储为归一化坐标（0-1），分辨率无关，持久化到 localStorage。
+   - 标注模式下显示浮动工具栏（颜色选择 + 计数 + 清除）。
+   - 每个标注可悬停删除。
+6. **深色模式 + 主题切换** (`src/components/dataset/ThemeToggle.tsx`)
+   - Header 新增主题切换按钮（light → dark → system 循环）。
+   - 三图标（Sun/Moon/MonitorSmartphone）平滑过渡动画。
+   - 持久化到 localStorage，system 模式监听系统主题变化。
+
+### Header 增强
+- 新增 "Search commands… ⌘K" 触发按钮（桌面端可见）。
+- 新增书签计数徽章按钮（有书签时显示）。
+- 新增主题切换按钮。
+- Menubar 的 Edit 菜单新增 Bookmarks 入口；View 菜单新增 Command palette 入口；Help 菜单新增 Keyboard shortcuts 提示。
+
+### Store 扩展
+新增字段：`selectedRowIds`（多选 Set）、`annotations`（按 rowId 分组的标注 map）、`annotationMode`、`annotationColor`、`showAnnotations`、`showCommandPalette`、`showBookmarkPanel`。
+新增 actions：`toggleSelectedRow`、`clearSelection`、`selectAllFiltered`、`addAnnotation`、`removeAnnotation`、`clearAnnotations`、`setAnnotationMode`、`setAnnotationColor`、`setShowAnnotations`、`setShowCommandPalette`、`setShowBookmarkPanel`。
+
+### 验证结果（agent-browser）
+- ✅ 页面加载 200，无 console error。
+- ✅ Demo 数据集加载 → 3 面板布局正常渲染。
+- ✅ 点击缩略图 → Detail 视图正常（不再崩溃）。
+- ✅ ⌘K 命令面板打开，搜索 "chart_005" 能跳到第 6 行。
+- ✅ 主题切换：light → dark → system，`document.documentElement.classList` 正确切换。
+- ✅ 键盘导航：`j` 键从 Row 1 跳到 Row 2；`b` 键切换书签。
+- ✅ 筛选器：question_type = "Data Retrieval" → 96 行筛选到 19 行。
+- ✅ Annotate 模式启用后显示拖拽提示和颜色工具栏。
+- ✅ react-resizable-panels 警告已消除（仅剩一条无害的 layout normalization 提示）。
+- ✅ ESLint 0 errors / 0 warnings。
+
+## 未解决问题或风险，建议下一阶段优先事项
+
+### 已知小问题
+1. **react-resizable-panels 偶发警告**："Invalid layout total size: 20%, 55%" — 当 detail panel 切换显示/隐藏时，panel 总和不是 100%。库会自动 normalize，无害但日志噪音。可通过始终渲染 3 个 panel + size=0 隐藏来彻底消除。
+2. **grid view 未虚拟化**：当前分页 60/页，96 行 demo 没问题，但 >1000 行会卡。建议集成 `react-window` 或 `@tanstack/react-virtual`。
+3. **Parquet 直接解析仍不支持**：需 WASM parquet reader（如 `parquet-wasm`）。
+
+### 建议下一阶段优先事项
+1. **虚拟滚动**：Grid 和 Table 视图集成虚拟滚动，支持万级行数。
+2. **Parquet WASM 解析**：集成 `parquet-wasm` 实现浏览器端直接读取 .parquet。
+3. **CSV 文件支持**：当前只支持 .arrow/.feather/.json，可加 .csv 解析（PapaParse）。
+4. **拖拽到落地页**：LandingPage 当前只显示静态预览，应支持直接拖拽文件到落地页加载。
+5. **批量多选 + 批量操作**：`selectedRowIds` Set 已就绪，需在 Grid/Table 添加 Shift+click 多选 UI 和批量导出/书签/比较按钮。
+6. **HTML 概览报告导出**：Stats 视图的 "导出为 HTML 报告" 功能（含样本图和统计图表）。
+7. **数据集对比模式**：同时加载两个数据集并排比较。
+8. **标注导出**：把 annotations 导出为 COCO/YOLO JSON 格式，便于 ML 训练流程。
+9. **键盘快捷键帮助浮层**：按 `?` 弹出完整快捷键 cheatsheet。
+10. **图片缩放/平移**：Detail 视图大图支持滚轮缩放和拖拽平移（当前只是 object-contain）。
+
+### 产物
+- 新增文件：`src/lib/dataset/persist.ts`、`src/lib/dataset/useKeyboardNav.ts`、`src/components/dataset/CommandPalette.tsx`、`src/components/dataset/BookmarkPanel.tsx`、`src/components/dataset/AnnotationOverlay.tsx`、`src/components/dataset/ThemeToggle.tsx`。
+- 修改文件：`src/app/page.tsx`、`src/components/dataset/AppShell.tsx`、`src/components/dataset/DetailView.tsx`、`src/components/dataset/RightPanel.tsx`、`src/lib/dataset/store.ts`。
+- Lint：0 errors / 0 warnings。Dev server：HTTP 200，无 console error。

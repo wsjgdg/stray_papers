@@ -14,6 +14,7 @@ import type {
 } from "./types";
 import { flattenRows, applyFilters, applySearch, applySort } from "./filter";
 import type { RowRef } from "./filter";
+import type { Annotation } from "./persist";
 
 interface DatasetState {
   // --- loaded dataset ---
@@ -37,6 +38,7 @@ interface DatasetState {
 
   // --- selection ---
   selectedRowId: string | null;
+  selectedRowIds: Set<string>; // multi-select for bulk actions
   compareRowIds: string[];
   bookmarks: Record<string, Bookmark>;
 
@@ -50,6 +52,12 @@ interface DatasetState {
   blobCache: Record<string, { url: string; format: string; width: number; height: number; size: number; source?: string; error?: string }>;
   failures: DecodeFailure[];
 
+  // --- annotations ---
+  // map of rowId -> annotations list (user-drawn boxes + labels)
+  annotations: Record<string, Annotation[]>;
+  annotationMode: boolean;
+  annotationColor: string;
+
   // --- ui ---
   loading: boolean;
   loadError: string | null;
@@ -58,8 +66,11 @@ interface DatasetState {
   showExportDialog: boolean;
   showSchemaDialog: boolean;
   showBboxOverlay: boolean;
+  showAnnotations: boolean;
   sidebarOpen: boolean;
   detailPanelOpen: boolean;
+  showCommandPalette: boolean;
+  showBookmarkPanel: boolean;
 
   // ---- actions ----
   setDataset: (ds: LoadedDataset | null) => void;
@@ -67,6 +78,9 @@ interface DatasetState {
   setPage: (p: number) => void;
   setThumbnailSize: (n: number) => void;
   setSelectedRow: (id: string | null) => void;
+  toggleSelectedRow: (id: string) => void;
+  clearSelection: () => void;
+  selectAllFiltered: () => void;
   toggleCompare: (id: string) => void;
   clearCompare: () => void;
   toggleBookmark: (id: string, note?: string) => void;
@@ -84,14 +98,22 @@ interface DatasetState {
   setShowExportDialog: (v: boolean) => void;
   setShowSchemaDialog: (v: boolean) => void;
   setShowBboxOverlay: (v: boolean) => void;
+  setShowAnnotations: (v: boolean) => void;
   setSidebarOpen: (v: boolean) => void;
   setDetailPanelOpen: (v: boolean) => void;
+  setShowCommandPalette: (v: boolean) => void;
+  setShowBookmarkPanel: (v: boolean) => void;
   setLoading: (v: boolean) => void;
   setLoadError: (v: string | null) => void;
   addRecent: (r: { name: string; size: number; rows: number }) => void;
   cacheBlob: (key: string, info: { url: string; format: string; width: number; height: number; size: number; source?: string; error?: string }) => void;
   addFailure: (f: DecodeFailure) => void;
   clearFailures: () => void;
+  addAnnotation: (a: Annotation) => void;
+  removeAnnotation: (rowId: string, annotationId: string) => void;
+  clearAnnotations: (rowId: string) => void;
+  setAnnotationMode: (v: boolean) => void;
+  setAnnotationColor: (c: string) => void;
   getActiveRows: () => RowRef[];
   getFilteredRows: () => RowRef[];
   getSchema: () => SchemaField[];
@@ -112,6 +134,7 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   thumbnailSize: 180,
 
   selectedRowId: null,
+  selectedRowIds: new Set<string>(),
   compareRowIds: [],
   bookmarks: {},
 
@@ -122,6 +145,10 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   blobCache: {},
   failures: [],
 
+  annotations: {},
+  annotationMode: false,
+  annotationColor: "#22d3ee",
+
   loading: false,
   loadError: null,
   showLoadDialog: false,
@@ -129,8 +156,11 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   showExportDialog: false,
   showSchemaDialog: false,
   showBboxOverlay: true,
+  showAnnotations: true,
   sidebarOpen: true,
   detailPanelOpen: true,
+  showCommandPalette: false,
+  showBookmarkPanel: false,
 
   setDataset: (ds) =>
     set((s) => {
@@ -179,6 +209,18 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   setPage: (p) => set({ page: Math.max(0, p) }),
   setThumbnailSize: (n) => set({ thumbnailSize: Math.max(80, Math.min(360, n)) }),
   setSelectedRow: (id) => set({ selectedRowId: id, viewMode: id ? "detail" : get().viewMode }),
+  toggleSelectedRow: (id) =>
+    set((s) => {
+      const next = new Set(s.selectedRowIds);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return { selectedRowIds: next };
+    }),
+  clearSelection: () => set({ selectedRowIds: new Set<string>() }),
+  selectAllFiltered: () => {
+    const filtered = get().getFilteredRows();
+    set({ selectedRowIds: new Set(filtered.map((r) => r.id)) });
+  },
   toggleCompare: (id) =>
     set((s) => {
       const exists = s.compareRowIds.includes(id);
@@ -221,8 +263,11 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   setShowExportDialog: (v) => set({ showExportDialog: v }),
   setShowSchemaDialog: (v) => set({ showSchemaDialog: v }),
   setShowBboxOverlay: (v) => set({ showBboxOverlay: v }),
+  setShowAnnotations: (v) => set({ showAnnotations: v }),
   setSidebarOpen: (v) => set({ sidebarOpen: v }),
   setDetailPanelOpen: (v) => set({ detailPanelOpen: v }),
+  setShowCommandPalette: (v) => set({ showCommandPalette: v }),
+  setShowBookmarkPanel: (v) => set({ showBookmarkPanel: v }),
   setLoading: (v) => set({ loading: v }),
   setLoadError: (v) => set({ loadError: v }),
   addRecent: (r) => set((s) => ({ recent: [r, ...s.recent].slice(0, 10) })),
@@ -240,6 +285,34 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
       return { failures: [...s.failures, f].slice(-500) };
     }),
   clearFailures: () => set({ failures: [] }),
+  addAnnotation: (a) =>
+    set((s) => {
+      const list = s.annotations[a.rowId] || [];
+      return {
+        annotations: {
+          ...s.annotations,
+          [a.rowId]: [...list, a],
+        },
+      };
+    }),
+  removeAnnotation: (rowId, annotationId) =>
+    set((s) => {
+      const list = s.annotations[rowId] || [];
+      return {
+        annotations: {
+          ...s.annotations,
+          [rowId]: list.filter((a) => a.id !== annotationId),
+        },
+      };
+    }),
+  clearAnnotations: (rowId) =>
+    set((s) => {
+      const next = { ...s.annotations };
+      delete next[rowId];
+      return { annotations: next };
+    }),
+  setAnnotationMode: (v) => set({ annotationMode: v }),
+  setAnnotationColor: (c) => set({ annotationColor: c }),
 
   getActiveRows: () => {
     const { dataset, activeFileIndex } = get();

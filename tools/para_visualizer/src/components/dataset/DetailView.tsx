@@ -6,12 +6,17 @@ import { useMemo } from "react";
 import { useDatasetStore } from "@/lib/dataset/store";
 import { useFilteredRows, useSchema, useHiddenFields } from "@/lib/dataset/hooks";
 import { Thumbnail } from "./Thumbnail";
+import { AnnotationOverlay } from "./AnnotationOverlay";
 import { formatValue } from "@/lib/dataset/filter";
-import { ChevronLeft, ChevronRight, Bookmark, BookmarkCheck, Download, AlertTriangle, Copy, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, Bookmark, BookmarkCheck, Download, AlertTriangle, Copy, Check, MousePointer2, PenLine } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import type { Annotation } from "@/lib/dataset/persist";
+
+// Stable empty array to avoid reference changes causing re-renders
+const EMPTY_ANNOTATIONS: Annotation[] = [];
 
 export function DetailView() {
   const filtered = useFilteredRows();
@@ -23,7 +28,20 @@ export function DetailView() {
   const setShowBboxOverlay = useDatasetStore((s) => s.setShowBboxOverlay);
   const bookmarks = useDatasetStore((s) => s.bookmarks);
   const toggleBookmark = useDatasetStore((s) => s.toggleBookmark);
-  const cache = useDatasetStore((s) => s.blobCache);
+  // Only select the specific cache entry for this row, not the whole cache map.
+  // This prevents re-renders when other rows' thumbnails decode.
+  const cacheKey = selectedRowId && imageField ? `${selectedRowId}:${imageField}` : null;
+  const cachedEntry = useDatasetStore((s) =>
+    cacheKey ? s.blobCache[cacheKey] : undefined,
+  );
+  const annotationMode = useDatasetStore((s) => s.annotationMode);
+  const setAnnotationMode = useDatasetStore((s) => s.setAnnotationMode);
+  // Use the stable annotations map reference; derive the per-row list via useMemo
+  const annotationsMap = useDatasetStore((s) => s.annotations);
+  const annotations = useMemo(
+    () => (selectedRowId ? annotationsMap[selectedRowId] || EMPTY_ANNOTATIONS : EMPTY_ANNOTATIONS),
+    [annotationsMap, selectedRowId],
+  );
   const [copied, setCopied] = useState<string | null>(null);
 
   const currentIdx = useMemo(() => {
@@ -53,14 +71,14 @@ export function DetailView() {
 
   const handleSaveImage = () => {
     if (!row || !imageField) return;
-    const cached = cache[`${row.id}:${imageField}`];
-    if (!cached?.url) {
+    const entry = useDatasetStore.getState().blobCache[`${row.id}:${imageField}`];
+    if (!entry?.url) {
       toast.error("No decoded image available");
       return;
     }
     const a = document.createElement("a");
-    a.href = cached.url;
-    a.download = `${row.id}.${cached.format || "png"}`;
+    a.href = entry.url;
+    a.download = `${row.id}.${entry.format || "png"}`;
     a.click();
     toast.success(`Saved ${a.download}`);
   };
@@ -74,7 +92,7 @@ export function DetailView() {
   }
 
   const imgValue = imageField ? row.data[imageField] : undefined;
-  const cached = cache[`${row.id}:${imageField}`];
+  const cached = cachedEntry;
   const bookmarked = !!bookmarks[row.id];
   const bboxes = row.data["extra_input_figure_bboxes"];
 
@@ -96,6 +114,21 @@ export function DetailView() {
           </Button>
         </div>
         <div className="flex items-center gap-1">
+          <Button
+            size="sm"
+            variant={annotationMode ? "secondary" : "ghost"}
+            onClick={() => setAnnotationMode(!annotationMode)}
+            className={cn(annotationMode && "ring-2 ring-cyan-400")}
+            title="Toggle annotation mode (draw boxes on the image)"
+          >
+            <PenLine className="h-4 w-4" />
+            <span className="hidden sm:inline">Annotate</span>
+            {annotations.length > 0 && (
+              <span className="ml-1 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-cyan-500 text-white text-[9px] font-bold">
+                {annotations.length}
+              </span>
+            )}
+          </Button>
           <Button
             size="sm"
             variant="ghost"
@@ -127,7 +160,22 @@ export function DetailView() {
                 imgHeight={typeof row.data["image_height"] === "number" ? (row.data["image_height"] as number) : undefined}
                 alt={`Detail of row ${row.index + 1}`}
               />
+              {/* Annotation overlay (only when image is decoded) */}
+              {cached?.url && (
+                <AnnotationOverlay
+                  rowId={row.id}
+                  imgWidth={cached.width || 480}
+                  imgHeight={cached.height || 320}
+                />
+              )}
             </div>
+            {/* annotation hint */}
+            {annotationMode && (
+              <div className="flex items-center gap-2 text-[11px] text-cyan-700 dark:text-cyan-300 bg-cyan-50/60 dark:bg-cyan-950/20 border border-cyan-300/40 rounded-md px-2 py-1.5">
+                <MousePointer2 className="h-3 w-3 shrink-0" />
+                <span>Click and drag on the image to draw a labeled box. Annotations persist across reloads.</span>
+              </div>
+            )}
             {/* bbox toggle */}
             {Array.isArray(bboxes) && (
               <label className="flex items-center gap-2 text-xs text-muted-foreground">
