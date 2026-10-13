@@ -38,7 +38,7 @@ export class QuantumField {
     /* 引擎级默认状态 + 内核私有参数（如 NLS 的 g）+ 调用方覆盖 */
     this.state = {
       grid: 256, m: 1.0, sigma: 7, substeps: 6, brush: 10, vStrength: 0.3,
-      decay: 0.97, bright: 1.0, tool: 'wave', paused: false, simTime: 0,
+      decay: 0.97, bright: 1.0, gamma: 0, tool: 'wave', paused: false, simTime: 0,
       preset: null, lastWave: null, waveCount: 1,
       drag: null,
       ...this.kernel.defaults(),
@@ -155,6 +155,10 @@ export class QuantumField {
     <div class="row"><label>V 值</label><input type="range" id="rV" min="0.01" max="1" step="0.01" value="0.3"><output id="oV">0.30</output></div>
   </div>
   <div class="sec">
+    <h3>开放系统</h3>
+    <div class="row"><label>耗散 γ</label><input type="range" id="rGamma" min="0" max="0.2" step="0.005" value="0"><output id="oGamma">0.000</output></div>
+  </div>
+  <div class="sec">
     <h3>渲染与网格</h3>
     <div class="row"><label>画面亮度</label><input type="range" id="rBright" min="0.3" max="2.5" step="0.05" value="1"><output id="oBright">×1.00</output></div>
     <div class="row"><label>余晖拖尾</label><input type="range" id="rTrail" min="0" max="0.99" step="0.01" value="0.97"><output id="oTrail">0.97</output></div>
@@ -217,6 +221,7 @@ export class QuantumField {
     this.progComposite = createProgram(gl, FS_COMPOSITE);
     this.progReduce = createProgram(gl, sh.reduce);
     this.progBlit = createProgram(gl, FS_BLIT);
+    this.progScale = createProgram(gl, sh.scale);   /* 耗散帧级衰减 pass */
   }
 
   initTargets(){
@@ -395,6 +400,22 @@ export class QuantumField {
         }
       }
       this.state.simTime += dt;
+      /* 耗散（开放系统）：帧级标量衰减 e^{-γ·dt}，精确且与子步/网格/内核解耦；
+         γ=0 时跳过——厄米路径零改动。u/v 两通道同乘（v 是 KDK 辅助量，同步缩放
+         保持 u/v 比例，下一步 kick 的 H·u 作用不受影响）。 */
+      if (this.state.gamma !== 0){
+        const s = Math.exp(-this.state.gamma * dt);
+        gl.useProgram(this.progScale);
+        gl.bindVertexArray(this.quad.vao);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiB.fbo);
+        gl.viewport(0,0,this.state.grid,this.state.grid);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
+        gl.uniform1i(this.u(this.progScale,'uPsi'), 0);
+        gl.uniform1f(this.u(this.progScale,'uScale'), s);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
+      }
     }
 
     /* 显示 pass（含余晖） */
@@ -719,6 +740,7 @@ export class QuantumField {
     this.bindRange('#rSpeed','#oSpeed','substeps', v => v.toFixed(0));
     this.bindRange('#rBrush','#oBrush','brush', v => v.toFixed(0));
     this.bindRange('#rV','#oV','vStrength', v => v.toFixed(2));
+    this.bindRange('#rGamma','#oGamma','gamma', v => v.toFixed(3));
     this.bindRange('#rTrail','#oTrail','decay', v => v.toFixed(2));
     this.bindRange('#rBright','#oBright','bright', v => '×'+v.toFixed(2));
     const extra = this.kernel.extraControls();       /* 内核附加滑块（如 NLS 的 g） */
@@ -813,6 +835,19 @@ export class QuantumField {
         let mx=0, sum=0;
         for (let i=0;i<buf.length;i+=4){ const l=0.2126*buf[i]+0.7152*buf[i+1]+0.0722*buf[i+2]; sum+=l; if(l>mx)mx=l; }
         return { max: mx, sum };
+      },
+      /* 精确总概率：直读 psiA 纹理（HUD 的 P 有 reduce 120ms 节流 + 4 位小数滞后，
+         耗散衰减后期 P→0 时测试需要无滞后读数） */
+      probSum: () => {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
+        const w = this.psiA.w, h = this.psiA.h;
+        const ch = this.kernel.pairs === 2 ? 4 : 2;
+        const buf = new Float32Array(w*h*ch);
+        gl.readPixels(0,0,w,h,this.fmt,gl.FLOAT,buf);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        let s = 0;
+        for (let i = 0; i < buf.length; i += ch) s += buf[i]*buf[i] + buf[i+1]*buf[i+1];
+        return s;
       },
       trailLit: (th) => {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.dispA.fbo);

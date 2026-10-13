@@ -177,6 +177,11 @@ function gaussianWave(grid, { fx, fy, kx, ky, sigma }){
  * 契约已预留但尚未落地的族：Pauli 自旋（pairs=2 双复分量）、AB 效应（矢势
  * 注入 localH）。一阶系统（Dirac）与 3D 需要引擎扩展（integrator 模式 /
  * 3D 纹理）——见 README「新增内核」。
+ *
+ * 耗散约定（开放系统）：引擎每帧演化结束后跑 TPL_SCALE pass，对 (u, v) 整场乘
+ * e^{-γ·dt}（γ = state.gamma，帧级 uniform）。iψ_t = Hψ + γ 损失项的解为密度
+ * e^{-2γt} 衰减；γ<0 为增益。帧级标量衰减数学上精确、与子步数/网格/内核解耦
+ * （早期方案把 -iγ 塞进 KDK 的 H，衰减率带 O((γ·dt_sub)²) 误差且与谱耦合，已弃用）。
  * ========================================================================== */
 
 
@@ -206,6 +211,20 @@ void main(){
   } else {
     o = vec4(c.x + uDt*Hc.y, c.y, c.z + uDt*Hc.w, c.w);           // u_new = u + dt*H*v_half
   }
+}`;
+
+/* ---------- 耗散（开放系统）：帧级标量衰减 pass ----------
+   不在 KDK 的 H 里加非厄米项（那样衰减率带 O((γ·dt_sub)²) 误差，且与谱/子步数耦合），
+   而是每帧演化结束后对整场乘 e^{-γ·dt}：数学上精确、与 substeps/m/grid/核全部解耦，
+   且 γ=0 时跳过该 pass——厄米演化路径零改动，历史回归零风险。
+   γ>0 = 粒子损失（密度 e^{-2γt}）；γ<0 = 增益（增长）。 */
+const TPL_SCALE = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uPsi;
+uniform float uScale;
+void main(){
+  o = texture(uPsi, vUv) * uScale;
 }`;
 
 /* ---------- 显示：相位->色相，概率->亮度，等值线，网格，余晖 max 混合 ---------- */
@@ -346,11 +365,12 @@ function buildShaders(kernel){
       UNIFORMS: uni,
     }),
     reduce: fill(TPL_REDUCE, { ...need, UNIFORMS: uni }),
+    scale: TPL_SCALE,
   };
 }
 
 /* 导出模板仅供测试/文档引用 */
-const TEMPLATES = { TPL_EVOLVE, TPL_DISPLAY, TPL_REDUCE, DEFAULT_PIXEL_COLOR };
+const TEMPLATES = { TPL_EVOLVE, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, DEFAULT_PIXEL_COLOR };
 
 /* ===== src/core/styles.js ===== */
 /* 组件样式：挂载时注入 <style id="qf-styles">（多实例只注入一次）。
@@ -496,7 +516,7 @@ class QuantumField {
     /* 引擎级默认状态 + 内核私有参数（如 NLS 的 g）+ 调用方覆盖 */
     this.state = {
       grid: 256, m: 1.0, sigma: 7, substeps: 6, brush: 10, vStrength: 0.3,
-      decay: 0.97, bright: 1.0, tool: 'wave', paused: false, simTime: 0,
+      decay: 0.97, bright: 1.0, gamma: 0, tool: 'wave', paused: false, simTime: 0,
       preset: null, lastWave: null, waveCount: 1,
       drag: null,
       ...this.kernel.defaults(),
@@ -613,6 +633,10 @@ class QuantumField {
     <div class="row"><label>V 值</label><input type="range" id="rV" min="0.01" max="1" step="0.01" value="0.3"><output id="oV">0.30</output></div>
   </div>
   <div class="sec">
+    <h3>开放系统</h3>
+    <div class="row"><label>耗散 γ</label><input type="range" id="rGamma" min="0" max="0.2" step="0.005" value="0"><output id="oGamma">0.000</output></div>
+  </div>
+  <div class="sec">
     <h3>渲染与网格</h3>
     <div class="row"><label>画面亮度</label><input type="range" id="rBright" min="0.3" max="2.5" step="0.05" value="1"><output id="oBright">×1.00</output></div>
     <div class="row"><label>余晖拖尾</label><input type="range" id="rTrail" min="0" max="0.99" step="0.01" value="0.97"><output id="oTrail">0.97</output></div>
@@ -675,6 +699,7 @@ class QuantumField {
     this.progComposite = createProgram(gl, FS_COMPOSITE);
     this.progReduce = createProgram(gl, sh.reduce);
     this.progBlit = createProgram(gl, FS_BLIT);
+    this.progScale = createProgram(gl, sh.scale);   /* 耗散帧级衰减 pass */
   }
 
   initTargets(){
@@ -853,6 +878,22 @@ class QuantumField {
         }
       }
       this.state.simTime += dt;
+      /* 耗散（开放系统）：帧级标量衰减 e^{-γ·dt}，精确且与子步/网格/内核解耦；
+         γ=0 时跳过——厄米路径零改动。u/v 两通道同乘（v 是 KDK 辅助量，同步缩放
+         保持 u/v 比例，下一步 kick 的 H·u 作用不受影响）。 */
+      if (this.state.gamma !== 0){
+        const s = Math.exp(-this.state.gamma * dt);
+        gl.useProgram(this.progScale);
+        gl.bindVertexArray(this.quad.vao);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiB.fbo);
+        gl.viewport(0,0,this.state.grid,this.state.grid);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
+        gl.uniform1i(this.u(this.progScale,'uPsi'), 0);
+        gl.uniform1f(this.u(this.progScale,'uScale'), s);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
+      }
     }
 
     /* 显示 pass（含余晖） */
@@ -1177,6 +1218,7 @@ class QuantumField {
     this.bindRange('#rSpeed','#oSpeed','substeps', v => v.toFixed(0));
     this.bindRange('#rBrush','#oBrush','brush', v => v.toFixed(0));
     this.bindRange('#rV','#oV','vStrength', v => v.toFixed(2));
+    this.bindRange('#rGamma','#oGamma','gamma', v => v.toFixed(3));
     this.bindRange('#rTrail','#oTrail','decay', v => v.toFixed(2));
     this.bindRange('#rBright','#oBright','bright', v => '×'+v.toFixed(2));
     const extra = this.kernel.extraControls();       /* 内核附加滑块（如 NLS 的 g） */
@@ -1271,6 +1313,19 @@ class QuantumField {
         let mx=0, sum=0;
         for (let i=0;i<buf.length;i+=4){ const l=0.2126*buf[i]+0.7152*buf[i+1]+0.0722*buf[i+2]; sum+=l; if(l>mx)mx=l; }
         return { max: mx, sum };
+      },
+      /* 精确总概率：直读 psiA 纹理（HUD 的 P 有 reduce 120ms 节流 + 4 位小数滞后，
+         耗散衰减后期 P→0 时测试需要无滞后读数） */
+      probSum: () => {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
+        const w = this.psiA.w, h = this.psiA.h;
+        const ch = this.kernel.pairs === 2 ? 4 : 2;
+        const buf = new Float32Array(w*h*ch);
+        gl.readPixels(0,0,w,h,this.fmt,gl.FLOAT,buf);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        let s = 0;
+        for (let i = 0; i < buf.length; i += ch) s += buf[i]*buf[i] + buf[i+1]*buf[i+1];
+        return s;
       },
       trailLit: (th) => {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.dispA.fbo);

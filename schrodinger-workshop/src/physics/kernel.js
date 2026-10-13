@@ -30,6 +30,11 @@
  * 契约已预留但尚未落地的族：Pauli 自旋（pairs=2 双复分量）、AB 效应（矢势
  * 注入 localH）。一阶系统（Dirac）与 3D 需要引擎扩展（integrator 模式 /
  * 3D 纹理）——见 README「新增内核」。
+ *
+ * 耗散约定（开放系统）：引擎每帧演化结束后跑 TPL_SCALE pass，对 (u, v) 整场乘
+ * e^{-γ·dt}（γ = state.gamma，帧级 uniform）。iψ_t = Hψ + γ 损失项的解为密度
+ * e^{-2γt} 衰减；γ<0 为增益。帧级标量衰减数学上精确、与子步数/网格/内核解耦
+ * （早期方案把 -iγ 塞进 KDK 的 H，衰减率带 O((γ·dt_sub)²) 误差且与谱耦合，已弃用）。
  * ========================================================================== */
 
 import { gaussianWave } from './gaussian.js';
@@ -60,6 +65,20 @@ void main(){
   } else {
     o = vec4(c.x + uDt*Hc.y, c.y, c.z + uDt*Hc.w, c.w);           // u_new = u + dt*H*v_half
   }
+}`;
+
+/* ---------- 耗散（开放系统）：帧级标量衰减 pass ----------
+   不在 KDK 的 H 里加非厄米项（那样衰减率带 O((γ·dt_sub)²) 误差，且与谱/子步数耦合），
+   而是每帧演化结束后对整场乘 e^{-γ·dt}：数学上精确、与 substeps/m/grid/核全部解耦，
+   且 γ=0 时跳过该 pass——厄米演化路径零改动，历史回归零风险。
+   γ>0 = 粒子损失（密度 e^{-2γt}）；γ<0 = 增益（增长）。 */
+const TPL_SCALE = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uPsi;
+uniform float uScale;
+void main(){
+  o = texture(uPsi, vUv) * uScale;
 }`;
 
 /* ---------- 显示：相位->色相，概率->亮度，等值线，网格，余晖 max 混合 ---------- */
@@ -200,8 +219,9 @@ export function buildShaders(kernel){
       UNIFORMS: uni,
     }),
     reduce: fill(TPL_REDUCE, { ...need, UNIFORMS: uni }),
+    scale: TPL_SCALE,
   };
 }
 
 /* 导出模板仅供测试/文档引用 */
-export const TEMPLATES = { TPL_EVOLVE, TPL_DISPLAY, TPL_REDUCE, DEFAULT_PIXEL_COLOR };
+export const TEMPLATES = { TPL_EVOLVE, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, DEFAULT_PIXEL_COLOR };

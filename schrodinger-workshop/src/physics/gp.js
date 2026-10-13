@@ -157,7 +157,7 @@ export class GPKernel extends PhysicsKernel {
                   build(paint){ self._mode = 'vortex'; trap(paint); }, wave:[0.5,0.5,0,0], params:{ g:-10, sigma:16 } },
       tof:     { name:'时飞行膨胀',   text:'时飞行（TOF）：瞬间撤去势阱，平均场排斥能转化为动能——云自由膨胀、峰值下降、动能上升。实验 TOF 成像正是据此反推阱中密度分布。',
                   build(paint){ self._mode = 'tf'; }, wave:[0.5,0.5,0,0], params:{ g:-10, sigma:16 } },
-      breather:{ name:'集体呼吸模',   text:'强过压缩初态（R=10，峰值约为默认云 3.4×）释放后云大幅膨胀再回缩：实测峰值摆动 ×9.4–9.9（最低 ×0.15）、周期 ~107 sim-time，无耗散下长时不衰减——BEC 集体激发的大振幅演示，区别于单粒子薛定谔的量子化能级。',
+      breather:{ name:'集体呼吸模',   text:'强过压缩初态（R=10，峰值约为默认云 3.4×）释放后云大幅膨胀再回缩：实测峰值摆动 ×9.4–10（最低 ×0.15）、周期 ~107 sim-time，无耗散下长时不衰减——BEC 集体激发的大振幅演示，区别于单粒子薛定谔的量子化能级。',
                   build(paint){ self._mode = 'tf'; trap(paint); }, wave:[0.5,0.5,0,0], params:{ g:-10, sigma:10 } },
     };
   }
