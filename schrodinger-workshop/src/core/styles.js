@@ -92,6 +92,13 @@ export const CSS = `
   #c3{bottom:8px;left:8px}#c3::before{bottom:0}#c3::after{left:0}
   #c4{bottom:8px;right:8px}#c4::before{bottom:0}#c4::after{right:0}
   #diag{position:fixed;left:-9999px}
+  /* ---------- 透射率扫描面板 ---------- */
+  .hint{font-size:10px;color:var(--dim);line-height:1.5;flex:1}
+  #scanCanvas{width:100%;margin-top:6px;border:1px solid var(--line);border-radius:8px;
+    background:rgba(4,8,16,.4);display:block}
+  #scanStat{font-size:10px;color:var(--cyan);font-family:var(--mono);flex:1;line-height:1.45}
+  button:disabled{opacity:.4;cursor:default}
+  button:disabled:hover{background:rgba(255,255,255,.045);border-color:var(--line)}
   @media (max-width:1100px){#legend,#desc{display:none}}
 `;
 

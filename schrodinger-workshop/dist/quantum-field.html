@@ -16,6 +16,7 @@
       src/physics/gaussian.js
       src/physics/kernel.js
       src/core/styles.js
+      src/core/scan.js
       src/core/app.js
       src/physics/schrodinger.js
       src/physics/nls.js
@@ -193,6 +194,11 @@ function gaussianWave(grid, { fx, fy, kx, ky, sigma }){
  *   5. energyLevels(state) → 可选，返回解析能级阶梯 { kind, param, nearest(E)→{label,e,d} }
  *      （HUD「E → 最近能级」对照用）；无解析谱的内核返回 null（HUD 隐藏该区）。
  *      单位与引擎一致：格点单位、ℏ=1、m=state.m。
+ *   6. transmissionModel(state) → 可选，返回矩势垒透射的解析模型
+ *      { T(E,V0,a), convolved(kx,dk,V0,a) }（「透射率扫描」工具的理论曲线与
+ *      Δk 卷积期望）；无解析模型的内核返回 null（扫描面板隐藏）。单位与引擎
+ *      一致：格点单位、ℏ=1、m=state.m。目前仅薛定谔内核落地——NLS/GP 的
+ *      非线性项使线性透射模型失效，需要时可按各自模型扩展。
  *
  * 波函数纹理格式由 pairs 决定：1 → RG32F（单复分量），2 → RGBA32F（双复分量，
  * 自旋/Dirac 用）。引擎所有 shader 按 vec4 泛型书写：RG32F 采样得 (r,g,0,1)，
@@ -519,6 +525,9 @@ class PhysicsKernel {
   eMaxExtra(state){ return 0; }     /* H 特征值上界的附加项（非线性项等） */
   /* 解析能级阶梯（可选）：仅对有解析谱的场景返回，见契约第 5 项 */
   energyLevels(state){ return null; }
+  /* 透射率扫描解析模型（可选）：{ T(E,V0,a), convolved(kx,dk,V0,a) }，
+     无模型返回 null（引擎隐藏扫描面板）。见契约第 6 项。 */
+  transmissionModel(state){ return null; }
   /* 均值动量片段（可选覆盖）：默认复标量 Im(ψ*∂ψ)（pairs 感知，见 DEFAULT_PMEAN）。
        不确定原理 HUD 的 ⟨p⟩ 来源；多分量/耦合内核可改（如相对论性动量）。 */
   pmeanSnippets(){
@@ -659,6 +668,13 @@ const CSS = `
   #c3{bottom:8px;left:8px}#c3::before{bottom:0}#c3::after{left:0}
   #c4{bottom:8px;right:8px}#c4::before{bottom:0}#c4::after{right:0}
   #diag{position:fixed;left:-9999px}
+  /* ---------- 透射率扫描面板 ---------- */
+  .hint{font-size:10px;color:var(--dim);line-height:1.5;flex:1}
+  #scanCanvas{width:100%;margin-top:6px;border:1px solid var(--line);border-radius:8px;
+    background:rgba(4,8,16,.4);display:block}
+  #scanStat{font-size:10px;color:var(--cyan);font-family:var(--mono);flex:1;line-height:1.45}
+  button:disabled{opacity:.4;cursor:default}
+  button:disabled:hover{background:rgba(255,255,255,.045);border-color:var(--line)}
   @media (max-width:1100px){#legend,#desc{display:none}}
 `;
 
@@ -668,6 +684,325 @@ function injectStyles(){
   st.id = "qf-styles";
   st.textContent = CSS;
   document.head.appendChild(st);
+}
+
+/* ===== src/core/scan.js ===== */
+/* ============================================================================
+ * 透射率扫描工具（引擎层）
+ *
+ * 矩势垒透射率 T(V0) 的实测扫描 + 解析对照：对每个 V0 重画势垒、重发波包、
+ * 跑完全相互作用后测量「势垒右侧概率 / 总概率」，与内核提供的解析模型
+ * （kernel.transmissionModel，薛定谔内核：矩势垒透射 + Δk 卷积）叠图。
+ *
+ * 与主循环的关系：扫描不新增积分路径——物理推进走 app.evolve()（从 frame()
+ * 原样抽出的同一函数），扫描只负责「何时重来、何时测量」。执行期间
+ * app.state.paused=true：frame() 跳过物理但照常渲染，用户实时看到波包反复
+ * 撞垒；扫描自身的 rAF 循环每 tick 跑 boost 帧物理（倍频，省的是等待）。
+ *
+ * 停止判据（每 measureEvery 帧一次原子快照：一次 readPixels 同时给出
+ * 总概率 P、右侧概率、相互作用区[势垒±bandPad]概率与质心）：
+ *   1. 门：帧数 ≥ 30 且相互作用区概率曾 ≥ 1%·P（波包确实撞上了垒）；
+ *   2. 清：相互作用区概率 < 0.2%·P（透射/反射两束都已离开垒区）；
+ *   3. 稳：右侧概率连续两次变化 < 0.1%·P（测量值已平台化）；
+ *   4. 兜底：帧数 ≥ framesMax。
+ * 先满足 2+3（或 4）即记录该点。Dirichlet 世界边界的反射在此窗口内回到
+ * 左侧/右侧但都在分界线同侧，不污染测量（详见 README「透射率扫描」）。
+ *
+ * 几何（格点单位，势场画布 256² = 世界坐标；扫描强制 grid=256，势垒在
+ * psi 空间是宽度恰为 bw texel 的陡沿——8 位灰度量化到 1/127，实际高度
+ * v0q=(round(V0*127+128)-128)/127，记录与理论对照都用 v0q）：
+ *   波包 x0=0.25·g、kx（默认 0.3）、σ（默认 18）；势垒 x=120、宽 16、全高。
+ * ========================================================================== */
+
+/* 默认扫描参数（opts 可覆盖；v0s 显式列表优先于 v0Lo/v0Hi/v0N） */
+const SCAN_DEFAULTS = {
+  kx: 0.3, ky: 0, sigma: 18,          /* 入射波包：每 texel 相位动量与宽度 */
+  x0: 0.25, y0: 0.5,                  /* 波包起点（世界坐标） */
+  bx: 120, bw: 16,                    /* 势垒：势场画布 px（x 起点与宽度） */
+  xSplitPad: 6,                       /* 透/反射分界线 = 势垒右缘 + 6 px */
+  bandPad: 6,                         /* 相互作用区 = 势垒 ± 6 px */
+  boost: 4,                           /* 每 rAF tick 推进的物理帧数 */
+  measureEvery: 6,                    /* 每 N 物理帧一次原子快照 */
+  framesMax: 900,                     /* 单点帧预算兜底 */
+  v0Lo: 0.25, v0Hi: 2.2, v0N: 13,     /* V0/E_c 扫描范围（E_c 为入射中心能量） */
+  v0s: null,                          /* 显式 V0 列表（绝对单位）时忽略上面范围 */
+};
+
+/* 停止判据常数（模块级只读；理由见文件头） */
+const GATE_FRAMES = 30;        /* 波包飞行 ~150 帧才到垒，30 帧内不可能完成相互作用 */
+const GATE_BAND = 0.01;        /* 相互作用区概率曾达 1%·P ⟹ 门开 */
+const CLEAR_BAND = 0.002;      /* 垒区概率 < 0.2%·P ⟹ 两束已离开 */
+const STABLE_D = 0.001;        /* 右侧概率相邻快照变化 < 0.1%·P 计一次「稳」 */
+const STABLE_N = 2;            /* 连续两次「稳」⟹ 平台化 */
+
+class TransmissionScanner {
+  constructor(app){
+    this.app = app;
+    this.busy = false;
+    this.results = [];       /* [{v0, v0q, T, frames, t, P}] */
+    this.opts = null;
+    this.summary = null;     /* {maxRatio, worst} 上次扫描的偏差汇总 */
+    this._i = 0; this._frames = 0; this._raf = 0;
+    this._bandPeak = 0; this._prevRight = -1; this._stable = 0;
+    this._savedPaused = false;
+    this._savedSigma = 18;
+  }
+
+  /* ---------- 生命周期 ---------- */
+  start(opts){
+    if (this.busy) return false;
+    const app = this.app;
+    const model = app.kernel.transmissionModel && app.kernel.transmissionModel(app.state);
+    if (!model){ app.toast('当前内核无透射率模型'); return false; }
+    this.model = model;
+    this.opts = Object.assign({}, SCAN_DEFAULTS, opts || {});
+    const o = this.opts;
+    /* 扫描定义在 256²（势垒几何与解析模型均以 256² 格点为单位）；
+       非 256 网格先切回（selGrid 同路径：allocGrid 后重载预设） */
+    if (app.state.grid !== 256){
+      app.state.grid = 256;
+      app.q('#selGrid').value = '256';
+      app.allocGrid(256);
+      app.loadPreset(app.state.preset);
+    }
+    /* 冻结 σ（initWave 每点用它重发波包） */
+    this._savedSigma = app.state.sigma;
+    app.state.sigma = o.sigma;
+    app.syncControls();
+    /* V0 列表：显式列表优先；否则按 E_c 线性布点 */
+    const m = app.state.m;
+    this.Ec = 2 * Math.sin(o.kx/2) * Math.sin(o.kx/2) / m;   /* 入射中心能量（离散色散） */
+    if (o.v0s) this.v0s = o.v0s.slice();
+    else {
+      this.v0s = [];
+      for (let i = 0; i < o.v0N; i++)
+        this.v0s.push(o.v0Lo + (o.v0Hi - o.v0Lo) * i / Math.max(1, o.v0N - 1));
+      for (let i = 0; i < this.v0s.length; i++) this.v0s[i] *= this.Ec;
+    }
+    this.results = []; this.summary = null;
+    this._i = 0;                               /* 重启必须复位点索引（上次扫描可能停在任意点） */
+    this._savedPaused = app.state.paused;
+    app.state.paused = true;                 /* frame() 只渲染不推进；物理由本扫描驱动 */
+    this.busy = true;
+    app.q('#btnScan').disabled = true;
+    app.q('#btnScanStop').disabled = false;
+    app.toast('透射率扫描开始 · 矩势垒 x=120 w=16 · kx=' + o.kx + ' σ=' + o.sigma);
+    this._beginPoint();
+    this._raf = requestAnimationFrame(() => this._tick());
+    return true;
+  }
+
+  stop(){
+    if (!this.busy) return false;
+    this.busy = false;
+    cancelAnimationFrame(this._raf);
+    this._restore();
+    this.app.toast('扫描已中止（' + this.results.length + '/' + this.v0s.length + ' 点）');
+    return true;
+  }
+
+  /* 恢复被扫描暂借的状态（paused/σ）；势场与波包保留最后一点的状态供观察 */
+  _restore(){
+    const app = this.app;
+    app.state.paused = this._savedPaused;
+    app.state.sigma = this._savedSigma;
+    app.syncControls();
+    app.q('#btnScan').disabled = false;
+    app.q('#btnScanStop').disabled = true;
+  }
+
+  /* ---------- 单点流程 ---------- */
+  _beginPoint(){
+    const o = this.opts, app = this.app;
+    this._v0 = this.v0s[this._i];
+    this._paintBarrier(this._v0);
+    app.initWave(o.x0, o.y0, o.kx, o.ky);
+    this._frames = 0; this._bandPeak = 0; this._prevRight = -1; this._stable = 0;
+    this._status();
+  }
+
+  _paintBarrier(v0){
+    const app = this.app, v = app.vctx;
+    v.globalCompositeOperation = 'source-over';
+    v.fillStyle = app.vGray(0); v.fillRect(0, 0, 256, 256);
+    v.fillStyle = app.vGray(v0); v.fillRect(this.opts.bx, 0, this.opts.bw, 256);
+    app.uploadV();
+  }
+
+  _tick(){
+    if (!this.busy) return;
+    const o = this.opts;
+    let done = false, m = null;
+    for (let b = 0; b < o.boost && !done; b++){
+      this.app.evolve();
+      this._frames++;
+      if (this._frames % o.measureEvery === 0 || this._frames >= o.framesMax){
+        m = this._measure();
+        done = this._decide(m);
+      }
+    }
+    if (done){
+      this._record(m);
+      this._i++;
+      if (this._i < this.v0s.length) this._beginPoint();
+      else this._finish();
+    }
+    if (this.busy){ this._status(); this._raf = requestAnimationFrame(() => this._tick()); }
+  }
+
+  /* 原子快照：一次 readPixels 同时测 P / 右侧概率 / 垒区概率 / 质心
+     （与 probSplit 同源；右侧 = x ≥ 分界线，分界线取势垒右缘 + xSplitPad） */
+  _measure(){
+    const app = this.app, gl = app.gl, g = app.state.grid;
+    const ch = app.kernel.pairs === 2 ? 4 : 2;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, app.psiA.fbo);
+    const buf = new Float32Array(g*g*ch);
+    gl.readPixels(0, 0, g, g, app.fmt, gl.FLOAT, buf);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    const o = this.opts;
+    const xs = Math.floor((o.bx + o.bw + o.xSplitPad) / 256 * g);
+    const b0 = Math.floor((o.bx - o.bandPad) / 256 * g);
+    const b1 = Math.ceil((o.bx + o.bw + o.bandPad) / 256 * g);
+    let P = 0, right = 0, band = 0, sx = 0;
+    for (let y = 0; y < g; y++){
+      const row = y*g;
+      for (let x = 0; x < g; x++){
+        const i = (row + x)*ch;
+        const p = buf[i]*buf[i] + buf[i+1]*buf[i+1];
+        P += p; sx += x*p;
+        if (x >= xs) right += p;
+        if (x >= b0 && x < b1) band += p;
+      }
+    }
+    return { P, right, band, comX: P > 0 ? (sx/P)/g : 0 };
+  }
+
+  _decide(m){
+    if (m.band > this._bandPeak) this._bandPeak = m.band;
+    if (this._frames < GATE_FRAMES || this._bandPeak < GATE_BAND*m.P) return false;
+    if (m.band > CLEAR_BAND*m.P){ this._stable = 0; this._prevRight = m.right; return false; }
+    if (this._prevRight >= 0 && Math.abs(m.right - this._prevRight) < STABLE_D*m.P) this._stable++;
+    else this._stable = 0;
+    this._prevRight = m.right;
+    return this._stable >= STABLE_N || this._frames >= this.opts.framesMax;
+  }
+
+  _record(m){
+    /* v0q：8 位势场量化的实际高度（g=round(V0·127+128)，V=(g−128)/127）——
+       记录与理论对照一致口径；灰度量化是引擎势场编码的固有约束 */
+    const v0q = (Math.round(Math.max(-1, Math.min(1, this._v0))*127 + 128) - 128)/127;
+    this.results.push({
+      v0: this._v0, v0q, T: m.right/m.P,
+      frames: this._frames, t: this.app.state.simTime, P: m.P,
+    });
+    this._status();
+  }
+
+  _finish(){
+    this.busy = false;
+    cancelAnimationFrame(this._raf);
+    /* 偏差汇总：实测 vs Δk 卷积理论（波包的合理对照目标），取最大倍差 */
+    let maxRatio = 0, worst = null;
+    for (const r of this.results){
+      const tc = this.model.convolved(this.opts.kx, 1/(Math.SQRT2*this.opts.sigma), r.v0q, this.opts.bw);
+      if (tc > 1e-6 && r.T > 1e-6){
+        const ratio = Math.max(r.T/tc, tc/r.T);
+        if (ratio > maxRatio){ maxRatio = ratio; worst = r; }
+      }
+    }
+    this.summary = { maxRatio, worst };
+    this._restore();
+    this._plot();
+    this._status(true);
+    this.app.toast('扫描完成 · ' + this.results.length + ' 点 · 最大偏差 ×' + maxRatio.toFixed(2));
+  }
+
+  /* ---------- 面板状态 / 绘图 ---------- */
+  _status(final){
+    const el = this.app.q('#scanStat'); if (!el) return;
+    if (this.busy){
+      const r = this.results[this.results.length - 1];
+      el.textContent = (this._i + 1) + '/' + this.v0s.length +
+        ' · V0=' + this._v0.toFixed(4) + ' (V0/E=' + (this._v0/this.Ec).toFixed(2) + ')' +
+        ' · 帧 ' + this._frames + '/' + this.opts.framesMax +
+        (r ? ' · 上点 T=' + r.T.toFixed(4) : '');
+    } else if (final && this.results.length){
+      const s = this.summary;
+      el.textContent = '完成 ' + this.results.length + ' 点 · 最大偏差 ×' + s.maxRatio.toFixed(2) +
+        (s.worst ? ' @V0/E=' + (s.worst.v0q/this.Ec).toFixed(2) : '');
+    }
+  }
+
+  _plot(){
+    const cv = this.app.q('#scanCanvas'); if (!cv) return;
+    const x = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    const L = 36, R = 8, T = 16, B = 22;
+    const pw = W - L - R, ph = H - T - B;
+    x.clearRect(0, 0, W, H);
+    x.fillStyle = 'rgba(4,8,16,.55)'; x.fillRect(0, 0, W, H);
+    if (!this.results.length) return;
+    const o = this.opts, Ec = this.Ec;
+    const xMin = 0, xMax = Math.max(...this.results.map(r => r.v0q/Ec)) * 1.08;
+    const yMin = -4, yMax = 0;                       /* log10 T ∈ [1e-4, 1] */
+    const X = v => L + (v - xMin)/(xMax - xMin)*pw;
+    const Y = t => {
+      const l = Math.log10(Math.max(1e-4, Math.min(1.02, t)));
+      return T + (yMax - l)/(yMax - yMin)*ph;
+    };
+    /* 网格与刻度 */
+    x.font = '9px ui-monospace,monospace';
+    x.strokeStyle = 'rgba(120,160,220,.14)'; x.fillStyle = '#9aa7bd'; x.lineWidth = 1;
+    for (let d = yMin; d <= yMax; d++){
+      const yy = Y(Math.pow(10, d));
+      x.beginPath(); x.moveTo(L, yy); x.lineTo(W - R, yy); x.stroke();
+      x.textAlign = 'right'; x.fillText('1e' + d, L - 3, yy + 3);
+    }
+    for (let i = 0; i <= 4; i++){
+      const v = xMin + (xMax - xMin)*i/4, xx = X(v);
+      x.beginPath(); x.moveTo(xx, T); x.lineTo(xx, T + ph); x.stroke();
+      x.textAlign = 'center'; x.fillText(v.toFixed(2), xx, H - 8);
+    }
+    /* E=V0 分界（<1 隧穿区 / >1 越障区） */
+    if (xMax > 1){
+      const x1 = X(1);
+      x.strokeStyle = 'rgba(251,191,36,.45)'; x.setLineDash([3, 3]);
+      x.beginPath(); x.moveTo(x1, T); x.lineTo(x1, T + ph); x.stroke();
+      x.setLineDash([]);
+      x.fillStyle = '#fbbf24'; x.textAlign = 'left'; x.fillText('E=V0', x1 + 3, T + 9);
+    }
+    /* 解析曲线：中心 E（灰）与 Δk 卷积（琥珀，波包的合理对照目标） */
+    const dk = 1/(Math.SQRT2*o.sigma);
+    const curve = (fn, color, width) => {
+      x.strokeStyle = color; x.lineWidth = width; x.beginPath();
+      let started = false;
+      for (let i = 0; i <= 160; i++){
+        const v = xMin + (xMax - xMin)*i/160;
+        const t = fn(v*Ec);
+        if (!(t > 0)){ started = false; continue; }
+        const px = X(v), py = Y(t);
+        if (!started){ x.moveTo(px, py); started = true; } else x.lineTo(px, py);
+      }
+      x.stroke();
+    };
+    curve(v0 => this.model.T(this.Ec, v0, o.bw), 'rgba(154,167,189,.5)', 1);
+    curve(v0 => this.model.convolved(o.kx, dk, v0, o.bw), '#fbbf24', 1.4);
+    /* 实测散点 */
+    x.fillStyle = '#67e8f9';
+    for (const r of this.results){
+      const px = X(r.v0q/Ec), py = Y(r.T);
+      x.beginPath(); x.arc(px, py, 2.6, 0, 6.2832); x.fill();
+    }
+    /* 轴标签与图例 */
+    x.fillStyle = '#9aa7bd'; x.textAlign = 'center';
+    x.fillText('V0 / E', L + pw/2, H - 1);
+    x.save(); x.translate(9, T + ph/2); x.rotate(-Math.PI/2);
+    x.fillText('透射率 T', 0, 0); x.restore();
+    x.textAlign = 'left';
+    x.fillStyle = '#67e8f9'; x.fillText('● 实测', L + 4, T + 10);
+    x.fillStyle = '#fbbf24'; x.fillText('— Δk 卷积', L + 44, T + 10);
+    x.fillStyle = 'rgba(154,167,189,.8)'; x.fillText('— 中心 E', L + 112, T + 10);
+  }
 }
 
 /* ===== src/core/app.js ===== */
@@ -728,6 +1063,7 @@ class QuantumField {
     this._readBuf3 = new Float32Array(32*32*4);   /* MRT 附件 2：分轴动能 + 均值动量 */
     this._lastE = null;                            /* 最近一次归约的逐粒子总能（能级对照） */
     this._raf = 0;
+    this.scanner = new TransmissionScanner(this);  /* 透射率扫描工具（内核无模型时面板隐藏） */
     this._onError = e => {
       const d = this.q('#diag');
       if (d) d.textContent = 'ERR ' + e.message;
@@ -823,7 +1159,7 @@ class QuantumField {
   <div class="sec">
     <h3>物理参数</h3>
     <div class="row"><label>质量 m</label><input type="range" id="rMass" min="0.15" max="4" step="0.05" value="1"><output id="oMass">1.00</output></div>
-    <div class="row"><label>波包宽度 σ</label><input type="range" id="rSigma" min="4" max="18" step="0.5" value="7"><output id="oSigma">7.0</output></div>
+    <div class="row"><label>波包宽度 σ</label><input type="range" id="rSigma" min="4" max="40" step="0.5" value="7"><output id="oSigma">7.0</output></div>
     <div class="row"><label>积分子步</label><input type="range" id="rSpeed" min="1" max="16" step="1" value="6"><output id="oSpeed">6</output></div>
     <div class="row"><label>笔刷半径</label><input type="range" id="rBrush" min="3" max="40" step="1" value="10"><output id="oBrush">10</output></div>
     ${extraHtml}
@@ -846,6 +1182,19 @@ class QuantumField {
         <option value="1">x 行波驱动</option>
       </select>
     </div>
+  </div>
+  <div class="sec" id="scanSec">
+    <h3>透射率扫描</h3>
+    <div class="row"><label>V0/E 下限</label><input type="range" id="rScanLo" min="0.05" max="2" step="0.05" value="0.25"><output id="oScanLo">0.25</output></div>
+    <div class="row"><label>V0/E 上限</label><input type="range" id="rScanHi" min="0.1" max="4" step="0.05" value="2.2"><output id="oScanHi">2.20</output></div>
+    <div class="row"><label>扫描点数</label><input type="range" id="rScanN" min="3" max="25" step="1" value="13"><output id="oScanN">13</output></div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnScan">开始扫描</button>
+      <button id="btnScanStop" disabled>中止</button>
+    </div>
+    <div class="row"><label>状态</label><span id="scanStat">就绪</span></div>
+    <canvas id="scanCanvas" width="420" height="260"></canvas>
+    <div class="hint" style="margin-top:4px">矩势垒 x=120 w=16（全高）· 波包 kx=0.3 σ=18 · 256² 网格 · 实测 vs Δk 卷积理论（E=V0 左侧为隧穿区）</div>
   </div>
   <div class="sec">
     <h3>AB 磁通</h3>
@@ -1038,6 +1387,32 @@ class QuantumField {
     this.state.simTime = 0;
   }
 
+  /* ---------- 分区域概率（透射率扫描的测量原语；调试句柄同源） ---------- */
+  /* 一次 readPixels 直读 psiA，按世界坐标 xSplit 把概率分为左/右两半，
+     同时给出质心 x 与总 P——透射/反射测量与停止判据共用同一原子快照，
+     无归约节流（120ms）的时间斜偏。xSplit 为世界坐标（0..1）。 */
+  probSplit(xSplit){
+    const gl = this.gl, g = this.state.grid;
+    const ch = this.kernel.pairs === 2 ? 4 : 2;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
+    const buf = new Float32Array(g*g*ch);
+    gl.readPixels(0,0,g,g,this.fmt,gl.FLOAT,buf);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    const xs = Math.max(0, Math.min(g, Math.floor(xSplit*g)));
+    let sL = 0, sR = 0, sx = 0;
+    for (let y=0; y<g; y++){
+      const row = y*g;
+      for (let x=0; x<g; x++){
+        const i = (row + x)*ch;
+        const p = buf[i]*buf[i] + buf[i+1]*buf[i+1];
+        if (x < xs) sL += p; else sR += p;
+        sx += x*p;
+      }
+    }
+    const P = sL + sR;
+    return { left: sL, right: sR, P, T: P > 0 ? sR/P : 0, comX: P > 0 ? (sx/P)/g : 0, simTime: this.state.simTime };
+  }
+
   /* ---------- 预设 ---------- */
   loadPreset(key){
     const p = this.kernel.presets()[key]; if (!p) return;
@@ -1062,81 +1437,76 @@ class QuantumField {
   }
 
   /* ---------- 主循环 ---------- */
-  frame(now){
-    this._raf = requestAnimationFrame(this.frame);
-    /* 时间尺度与稳定性（KDK 速度 Verlet 用于 u'=Hv, v'=-Hu）：
-       每模式旋转角 θ = arccos(1-(dt_sub·E)²/2)，E 为 H 的特征值；
-       稳定充要条件 |1-(dt_sub·E)²/2| ≤ 1，即 dt_sub·E ≤ 2（θ→π 时混叠失真）。
-       E 的上界 = k·8 + |V|max + 内核附加项 = (0.5/m)·8 + 1（5 点拉普拉斯 2D 最大
-       特征值 8，势幅 ±1；非线性内核另计 |g|·peak|ψ|²）。
-       初版 dt=0.04/子步：波包群速度 sin(κ)·0.24/帧 ≈ 0.08 cell/帧，比自身 σ=7 cell
-       慢 200 倍，max 混合拖尾数学上无法成形、隧穿/振荡效应超出观察尺度
-       （用户反馈「余晖没反应」的根因）。
-       现为 dt=1.2/帧总推进：κ=0.334 波包 0.39 cell/帧（60fps 约 10.8s 横穿全屏），拖尾条纹 ≈3σ。
-       子步长自适应兜底：sub_eff = max(substeps, ceil(dt·E_max/1.5))，保证 dt_sub·E_max ≤ 1.5
-       （对稳定极限 2.0 留 1.33× 裕度）——极端小质量 m=0.15（E_max≈27.7）时自动加密至 23 子步。
-       教训：直接把 dt 从 0.04 提到 0.6/子步会让 E_max=5 的模式半对角 1-0.36·25/2 = -3.5，
-       特征值 -7.0 溢出单位圆，棋盘格噪声每子步 ×7 指数发散，数帧内炸穿 RGBA16F（P=NaN）。 */
+  /* 单帧物理推进（KDK 速度 Verlet + 耗散帧级衰减）。
+     从 frame() 原样抽出：uniform 序列、子步自适应、ping-pong、simTime 累移
+     与 dissipation 逐字不变——frame()（每 tick 一次）与透射率扫描
+     （boost 倍频）共用同一路径，物理零差异。调用方负责暂停判定。 */
+  evolve(){
     const dt = 1.2;
     const k = 0.5/this.state.m;
     const gl = this.gl;
-    if (!this.state.paused){
-      const eMax = k*8 + 1 + this.kernel.eMaxExtra(this.state) + Math.abs(this.state.driveAmp);   /* H 特征值上界（含时外场幅值计入稳定界） */
-      const sub = Math.max(this.state.substeps, Math.ceil(dt*eMax/1.5));
-      const dtSub = dt/sub;
-      gl.useProgram(this.progEvolve);
-      gl.bindVertexArray(this.quad.vao);
-      gl.uniform1f(this.u(this.progEvolve,'uDt'), dtSub);
-      gl.uniform1f(this.u(this.progEvolve,'uK'), k);
-      gl.uniform2f(this.u(this.progEvolve,'uTexel'), 1/this.state.grid, 1/this.state.grid);
-      /* 含时外场：相位取帧中点 φ = ω·(t+dt/2)——KDK 对时变 H 的标准中点冻结
-         （二阶精度）；此处 simTime 仍是帧初值。相位由 simTime 派生而非累加：
-         暂停即冻结、重置/序列化口径一致，无额外运行时态。 */
-      const dPhase = this.state.driveOmega * (this.state.simTime + dt*0.5);
-      gl.uniform1f(this.u(this.progEvolve,'uDriveAmp'), this.state.driveAmp);
-      gl.uniform1f(this.u(this.progEvolve,'uDrivePhase'), dPhase);
-      gl.uniform1i(this.u(this.progEvolve,'uDriveMode'), this.state.driveMode);
-      /* Aharonov-Bohm：Φ=0 → uABOn=0 走原 5 点 stencil（精确等价旧路径）；
-         link 相位算子厄米且谱半径不变（|U|=1），P 守恒、E_max 不变。 */
-      gl.uniform1f(this.u(this.progEvolve,'uABOn'), this.state.abPhi === 0 ? 0 : 1);
-      gl.uniform2f(this.u(this.progEvolve,'uABPos'), this.state.abX, this.state.abY);
-      gl.uniform1f(this.u(this.progEvolve,'uABPhi'), this.state.abPhi);
-      gl.activeTexture(gl.TEXTURE1);
-      gl.bindTexture(gl.TEXTURE_2D, this.vTex);
-      gl.uniform1i(this.u(this.progEvolve,'uV'), 1);
-      this.kernel.setUniforms(gl, this.progEvolve, this.state);   /* 内核私有 uniform（如 uG） */
-      const uUV = this.u(this.progEvolve,'uUpdateV');
-      for (let s=0; s<sub; s++){
-        /* 速度 Verlet: v_half -> u_new -> v_new（3 遍，每遍后交换 ping-pong） */
-        for (let pass=0; pass<3; pass++){
-          gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiB.fbo);
-          gl.viewport(0,0,this.state.grid,this.state.grid);
-          gl.activeTexture(gl.TEXTURE0);
-          gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
-          gl.uniform1i(this.u(this.progEvolve,'uPsi'), 0);
-          gl.uniform1f(uUV, pass === 1 ? 0.0 : 1.0);
-          gl.drawArrays(gl.TRIANGLES, 0, 3);
-          const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
-        }
-      }
-      this.state.simTime += dt;
-      /* 耗散（开放系统）：帧级标量衰减 e^{-γ·dt}，精确且与子步/网格/内核解耦；
-         γ=0 时跳过——厄米路径零改动。u/v 两通道同乘（v 是 KDK 辅助量，同步缩放
-         保持 u/v 比例，下一步 kick 的 H·u 作用不受影响）。 */
-      if (this.state.gamma !== 0){
-        const s = Math.exp(-this.state.gamma * dt);
-        gl.useProgram(this.progScale);
-        gl.bindVertexArray(this.quad.vao);
+    const eMax = k*8 + 1 + this.kernel.eMaxExtra(this.state) + Math.abs(this.state.driveAmp);   /* H 特征值上界（含时外场幅值计入稳定界） */
+    const sub = Math.max(this.state.substeps, Math.ceil(dt*eMax/1.5));
+    const dtSub = dt/sub;
+    gl.useProgram(this.progEvolve);
+    gl.bindVertexArray(this.quad.vao);
+    gl.uniform1f(this.u(this.progEvolve,'uDt'), dtSub);
+    gl.uniform1f(this.u(this.progEvolve,'uK'), k);
+    gl.uniform2f(this.u(this.progEvolve,'uTexel'), 1/this.state.grid, 1/this.state.grid);
+    /* 含时外场：相位取帧中点 φ = ω·(t+dt/2)——KDK 对时变 H 的标准中点冻结
+       （二阶精度）；此处 simTime 仍是帧初值。相位由 simTime 派生而非累加：
+       暂停即冻结、重置/序列化口径一致，无额外运行时态。 */
+    const dPhase = this.state.driveOmega * (this.state.simTime + dt*0.5);
+    gl.uniform1f(this.u(this.progEvolve,'uDriveAmp'), this.state.driveAmp);
+    gl.uniform1f(this.u(this.progEvolve,'uDrivePhase'), dPhase);
+    gl.uniform1i(this.u(this.progEvolve,'uDriveMode'), this.state.driveMode);
+    /* Aharonov-Bohm：Φ=0 → uABOn=0 走原 5 点 stencil（精确等价旧路径）；
+       link 相位算子厄米且谱半径不变（|U|=1），P 守恒、E_max 不变。 */
+    gl.uniform1f(this.u(this.progEvolve,'uABOn'), this.state.abPhi === 0 ? 0 : 1);
+    gl.uniform2f(this.u(this.progEvolve,'uABPos'), this.state.abX, this.state.abY);
+    gl.uniform1f(this.u(this.progEvolve,'uABPhi'), this.state.abPhi);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this.vTex);
+    gl.uniform1i(this.u(this.progEvolve,'uV'), 1);
+    this.kernel.setUniforms(gl, this.progEvolve, this.state);   /* 内核私有 uniform（如 uG） */
+    const uUV = this.u(this.progEvolve,'uUpdateV');
+    for (let s=0; s<sub; s++){
+      /* 速度 Verlet: v_half -> u_new -> v_new（3 遍，每遍后交换 ping-pong） */
+      for (let pass=0; pass<3; pass++){
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiB.fbo);
         gl.viewport(0,0,this.state.grid,this.state.grid);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
-        gl.uniform1i(this.u(this.progScale,'uPsi'), 0);
-        gl.uniform1f(this.u(this.progScale,'uScale'), s);
+        gl.uniform1i(this.u(this.progEvolve,'uPsi'), 0);
+        gl.uniform1f(uUV, pass === 1 ? 0.0 : 1.0);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
         const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
       }
     }
+    this.state.simTime += dt;
+    /* 耗散（开放系统）：帧级标量衰减 e^{-γ·dt}，精确且与子步/网格/内核解耦；
+       γ=0 时跳过——厄米路径零改动。u/v 两通道同乘（v 是 KDK 辅助量，同步缩放
+       保持 u/v 比例，下一步 kick 的 H·u 作用不受影响）。 */
+    if (this.state.gamma !== 0){
+      const s = Math.exp(-this.state.gamma * dt);
+      gl.useProgram(this.progScale);
+      gl.bindVertexArray(this.quad.vao);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiB.fbo);
+      gl.viewport(0,0,this.state.grid,this.state.grid);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
+      gl.uniform1i(this.u(this.progScale,'uPsi'), 0);
+      gl.uniform1f(this.u(this.progScale,'uScale'), s);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
+    }
+  }
+
+  frame(now){
+    this._raf = requestAnimationFrame(this.frame);
+    const k = 0.5/this.state.m;
+    const gl = this.gl;
+    if (!this.state.paused) this.evolve();
 
     /* 显示 pass（含余晖） */
     gl.useProgram(this.progDisplay);
@@ -1576,6 +1946,27 @@ class QuantumField {
       this.refreshParamHud();
     });
 
+    /* 透射率扫描：参数为面板专用（不入 state——不污染势场序列化存档）。
+       内核无解析透射模型（契约 transmissionModel 返回 null，如 NLS/GP）时隐藏面板。 */
+    if (!(this.kernel.transmissionModel && this.kernel.transmissionModel(this.state)))
+      this.q('#scanSec').style.display = 'none';
+    const scanBind = (id, out, fmt) => {
+      const el = this.q(id), o = this.q(out);
+      const upd = () => { o.textContent = fmt(parseFloat(el.value)); };
+      el.addEventListener('input', upd); upd();
+    };
+    scanBind('#rScanLo', '#oScanLo', v => v.toFixed(2));
+    scanBind('#rScanHi', '#oScanHi', v => v.toFixed(2));
+    scanBind('#rScanN', '#oScanN', v => String(v|0));
+    this.on(this.q('#btnScan'), 'click', () => {
+      this.scanner.start({
+        v0Lo: parseFloat(this.q('#rScanLo').value),
+        v0Hi: parseFloat(this.q('#rScanHi').value),
+        v0N: parseInt(this.q('#rScanN').value, 10) || 13,
+      });
+    });
+    this.on(this.q('#btnScanStop'), 'click', () => this.scanner.stop());
+
     /* 键盘 */
     const presetKeys = Object.keys(this.kernel.presets());
     this.on(window, 'keydown', e => {
@@ -1640,6 +2031,11 @@ class QuantumField {
     return {
       state: this.state, vCanvas: this.vCanvas, canvas: this.canvas, vctx: this.vctx,
       kernelId: this.kernelId,
+      /* 分区域概率（透射率扫描的测量原语；原子快照：左/右概率 + 质心 + 总 P） */
+      probSplit: (x) => this.probSplit(x),
+      /* 透射率扫描器：start(opts)/stop()/busy/results/summary（CDP 驱动与读数） */
+      scan: this.scanner,
+      scanModel: () => (this.kernel.transmissionModel ? this.kernel.transmissionModel(this.state) : null),
       vpx: (x, y) => { const d = this.vctx.getImageData(x|0, y|0, 1, 1).data; return d[0]; },
       vscan: () => {
         const d = this.vctx.getImageData(0,0,256,256).data;
@@ -1993,6 +2389,7 @@ class QuantumField {
 
   /* ---------- 卸载（课程站 SPA 路由切换时调用） ---------- */
   unmount(){
+    if (this.scanner) this.scanner.stop();   /* 停止扫描 rAF，恢复 paused/σ */
     cancelAnimationFrame(this._raf);
     for (const [t, type, fn, opts] of this._listeners) t.removeEventListener(type, fn, opts);
     this._listeners = [];
@@ -2097,6 +2494,59 @@ class SchrodingerKernel extends PhysicsKernel {
       };
     }
     return null;
+  }
+
+  /* 透射率扫描的解析模型（契约第 6 项；引擎「透射率扫描」工具的理论曲线）。
+     单位与引擎一致：格点（texel）、ℏ=1、m=state.m。
+     离散色散（引擎 5 点拉普拉斯的精确能带，x 向本征值 −4sin²(k/2)）：
+       E(k) = 2·sin²(k/2)/m，反解 k(E) = 2·arcsin(√(mE/2))（E ≤ 2/m）。
+     矩势垒（宽 a、高 V0）平面波透射（转移矩阵法的标准结果）：
+       E>V0: T = [1 + V0²·sin²(k₂a)/(4E(E−V0))]⁻¹，k₂ = k(E−V0)
+       E<V0: T = [1 + V0²·sinh²(κa)/(4E(V0−E))]⁻¹，κ = k(V0−E)
+       E=V0: T = [1 + V0²·m·a²/(2E)]⁻¹（上下极限一致）
+     k≪1 时退化为教科书公式（k₂=√(2m(E−V0))、κ=√(2m(V0−E))）。
+     波包不是平面波：入射动量分布 p(k) 高斯（均值 kx、宽 dk=1/(√2σ)——与
+     |ψ|² 宽度 σ²/2 的傅里叶对偶一致），透射后 p_t(k)=T(E(k))·p(k)，故
+     P_trans = ∫T(E(k))p(k)dk 即 convolved——宽包实测应对照此曲线而非中心
+     E 曲线（σ=18、kx=0.3 时 dk/kx≈13%，卷积把 E=V0 附近的陡峭结构抹平）。 */
+  transmissionModel(state){
+    const m = state.m;
+    /* k(E)：能量→格点波数（离散色散反解；E≤0 为 0，E≥2/m 时为带顶 π） */
+    const kOf = E => {
+      if (!(E > 0)) return 0;
+      const s = m*E/2;
+      return s >= 1 ? Math.PI : 2*Math.asin(Math.sqrt(s));
+    };
+    const T = (E, V0, a) => {
+      if (!(V0 > 0)) return 1;          /* 无势垒：全透射 */
+      if (!(E > 0)) return 0;           /* 零能粒子对正势垒：全反射 */
+      const d = V0 - E;
+      if (Math.abs(d) < 1e-12) return 1/(1 + V0*V0*m*a*a/(2*E));
+      if (d < 0){
+        const k2 = kOf(E - V0);
+        return 1/(1 + V0*V0*Math.sin(k2*a)*Math.sin(k2*a)/(4*E*(E - V0)));
+      }
+      const ka = kOf(d);
+      return 1/(1 + V0*V0*Math.sinh(ka*a)*Math.sinh(ka*a)/(4*E*d));
+    };
+    const E = k => 2*Math.sin(k/2)*Math.sin(k/2)/m;
+    return {
+      T, E,
+      /* Δk 卷积期望（Simpson，±5dk，401 点）：宽包透射率的合理对照目标 */
+      convolved(kx, dk, V0, a){
+        if (!(V0 > 0)) return 1;
+        if (!(dk > 0)) return T(E(kx), V0, a);
+        const N = 400, span = 5*dk;
+        let sum = 0, wsum = 0;
+        for (let i = 0; i <= N; i++){
+          const k = kx - span + 2*span*i/N;
+          const w = Math.exp(-((k - kx)/dk)*((k - kx)/dk)/2);
+          const wt = (i === 0 || i === N) ? 1 : (i%2 ? 4 : 2);
+          sum += wt*w*T(E(k), V0, a); wsum += wt*w;
+        }
+        return sum/wsum;
+      },
+    };
   }
 
   presets(){

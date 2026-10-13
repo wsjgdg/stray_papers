@@ -27,6 +27,11 @@
  *   5. energyLevels(state) → 可选，返回解析能级阶梯 { kind, param, nearest(E)→{label,e,d} }
  *      （HUD「E → 最近能级」对照用）；无解析谱的内核返回 null（HUD 隐藏该区）。
  *      单位与引擎一致：格点单位、ℏ=1、m=state.m。
+ *   6. transmissionModel(state) → 可选，返回矩势垒透射的解析模型
+ *      { T(E,V0,a), convolved(kx,dk,V0,a) }（「透射率扫描」工具的理论曲线与
+ *      Δk 卷积期望）；无解析模型的内核返回 null（扫描面板隐藏）。单位与引擎
+ *      一致：格点单位、ℏ=1、m=state.m。目前仅薛定谔内核落地——NLS/GP 的
+ *      非线性项使线性透射模型失效，需要时可按各自模型扩展。
  *
  * 波函数纹理格式由 pairs 决定：1 → RG32F（单复分量），2 → RGBA32F（双复分量，
  * 自旋/Dirac 用）。引擎所有 shader 按 vec4 泛型书写：RG32F 采样得 (r,g,0,1)，
@@ -354,6 +359,9 @@ export class PhysicsKernel {
   eMaxExtra(state){ return 0; }     /* H 特征值上界的附加项（非线性项等） */
   /* 解析能级阶梯（可选）：仅对有解析谱的场景返回，见契约第 5 项 */
   energyLevels(state){ return null; }
+  /* 透射率扫描解析模型（可选）：{ T(E,V0,a), convolved(kx,dk,V0,a) }，
+     无模型返回 null（引擎隐藏扫描面板）。见契约第 6 项。 */
+  transmissionModel(state){ return null; }
   /* 均值动量片段（可选覆盖）：默认复标量 Im(ψ*∂ψ)（pairs 感知，见 DEFAULT_PMEAN）。
        不确定原理 HUD 的 ⟨p⟩ 来源；多分量/耦合内核可改（如相对论性动量）。 */
   pmeanSnippets(){

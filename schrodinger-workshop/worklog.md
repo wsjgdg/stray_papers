@@ -15,6 +15,52 @@
 | R26 | Aharonov-Bohm 效应 | AB link 相位落地：UI 10/10 + 物理 A/C 判据 PASS；B 判据（2π 周期）数值底噪超标，如实记录 |
 | R27 | 能级阶梯 / 不确定原理 HUD | MRT 三附件归约 + 能量口径修正 + 不确定原理/能级阶梯读数，CDP 23/23 + 回归全绿 |
 | R28 | 均值动量口径修正（R27 追改） | ⟨p⟩ 由质心速度改梯度版 Im(ψ*∂ψ)：Δk 偏差 2%→0.04%，质心 k 精确落理论值 |
+| R29 | 透射率扫描工具 | 矩垒 T(V₀) 实测扫描 + 离散色散/Δk 卷积解析对照，CDP 18/18 + 回归矩阵 10/10 |
+
+---
+
+## R29（2026-10-14）透射率扫描工具（#31）
+
+### 完成项
+- [x] `physics/schrodinger.js` 契约第 6 项 `transmissionModel(state)`：离散色散反解
+      k(E)=2·arcsin(√(mE/2))、矩垒三段透射公式（E>V₀ 正弦 / E<V₀ 双曲 / E=V₀ 极限）、
+      Δk 卷积 P_trans=∫T(E(k))p(k)dk（Simpson ±5Δk 401 点）；基类返回 null
+- [x] `core/scan.js`（新，~300 行）：`TransmissionScanner`——V₀ 列表按 E_c 布点、
+      逐点重发波包、原子快照测量（probSplit 同源）、三级停止判据
+      （门→清→稳 + framesMax=900 兜底）、结果记录（v0/v0q/T/frames/t/P）、
+      420×260 绘图（log-y T∈[1e-4,1]、V0/E 横轴、E=V0 虚线分界、
+      中心 E 灰线 + Δk 卷积琥珀线 + 实测青点）
+- [x] `core/app.js`：抽出 `evolve()`（frame() 的物理推进逐字搬移，frame() 改条件调用）；
+      新增 `probSplit(xSplit)` 测量原语（一次 readPixels 分左/右概率 + 质心 + P）；
+      扫描区 UI（V0/E 上下限/点数三滑块 + 开始/中止 + 状态行 + canvas + 几何提示）；
+      σ 滑块 max 18→40（修 AB 预设 σ=30 显示被钳制的既有不一致）；
+      debugHandle 增补 probSplit/scan/scanModel；unmount 开头 scanner.stop()
+- [x] `core/styles.js`：补 `.hint`（既有缺口——app.js 已在用但未定义）、
+      `#scanCanvas`、`#scanStat`、`button:disabled`
+- [x] `physics/kernel.js`：契约文档第 6 项 + 基类默认实现
+- [x] dist 重建：10 模块拓扑含 scan.js（124.6 KB，md5 1908d451…）
+
+### 测试期修复
+- 重启崩溃根因：`start()` 未复位 `this._i`——S3 完成后 _i=3，2 点重启时
+  `v0s[3]` undefined → `_status` toFixed 崩；修：start() 结果复位旁加 `this._i = 0;`
+- `_tick()` 尾部补 `this._status()`：扫描过程状态行实时刷新（原先停在「就绪」）
+
+### 物理口径
+- 离散色散：5 点拉普拉斯精确能带 E(k)=2sin²(k/2)/m；kx=0.3、m=1 ⟹
+  E_c=0.0446635（非 k²/2m=0.045）——解析对照必须同口径
+- Δk=1/(√2σ)=0.0393=13%·kx；kx±3Δk 包络内 T 从 0.02 到 0.97 剧烈变化
+  ⟹ 宽包络实测的诚实对照目标是 Δk 卷积而非中心 E 曲线（S1b 断言 lo<0.5 && hi>0.9
+  正是该非平庸结构的实证）
+- 8 位势场量化：v0q=(round(V0·127+128)−128)/127，记录与理论同口径
+
+### 验证
+- cdp_scan.js 18/18 PASS：控制 T=0.9986；越障 0.8941 vs 卷积 0.8964（0.25%）；
+  隧穿 0.2425 vs 0.2454（1.2%）；单调抑制 0.999>0.894>0.243；maxRatio=1.012；
+  帧数 408/486/432；P 守恒 1.00000/1.00001/1.00000；中止 results=1/9；
+  重启 T0=0.9986；零 console 异常
+- 回归矩阵（evolve() 重构后）10/10：moments 23/23、dist 27/27、GP 27/27、
+  NLS 速度扫描（×2.22）、serialize 17/17、dissipate 9/9、drive 28/28、
+  AB-UI 10/10、pnan EXIT=0、extreme ALL PASS
 
 ---
 

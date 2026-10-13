@@ -12,6 +12,7 @@
 import { createContext, createProgram, Quad, makeTarget, makeRGBA16F, makeReduce, FS_BLIT } from './gl.js';
 import { getKernel, buildShaders } from '../physics/kernel.js';
 import { injectStyles } from './styles.js';
+import { TransmissionScanner } from './scan.js';
 
 /* 合成到屏幕：扫描线 + 微弱噪点 + 亮度曝光（引擎级视觉，无内核注入） */
 const FS_COMPOSITE = `#version 300 es
@@ -58,6 +59,7 @@ export class QuantumField {
     this._readBuf3 = new Float32Array(32*32*4);   /* MRT 附件 2：分轴动能 + 均值动量 */
     this._lastE = null;                            /* 最近一次归约的逐粒子总能（能级对照） */
     this._raf = 0;
+    this.scanner = new TransmissionScanner(this);  /* 透射率扫描工具（内核无模型时面板隐藏） */
     this._onError = e => {
       const d = this.q('#diag');
       if (d) d.textContent = 'ERR ' + e.message;
@@ -153,7 +155,7 @@ export class QuantumField {
   <div class="sec">
     <h3>物理参数</h3>
     <div class="row"><label>质量 m</label><input type="range" id="rMass" min="0.15" max="4" step="0.05" value="1"><output id="oMass">1.00</output></div>
-    <div class="row"><label>波包宽度 σ</label><input type="range" id="rSigma" min="4" max="18" step="0.5" value="7"><output id="oSigma">7.0</output></div>
+    <div class="row"><label>波包宽度 σ</label><input type="range" id="rSigma" min="4" max="40" step="0.5" value="7"><output id="oSigma">7.0</output></div>
     <div class="row"><label>积分子步</label><input type="range" id="rSpeed" min="1" max="16" step="1" value="6"><output id="oSpeed">6</output></div>
     <div class="row"><label>笔刷半径</label><input type="range" id="rBrush" min="3" max="40" step="1" value="10"><output id="oBrush">10</output></div>
     ${extraHtml}
@@ -176,6 +178,19 @@ export class QuantumField {
         <option value="1">x 行波驱动</option>
       </select>
     </div>
+  </div>
+  <div class="sec" id="scanSec">
+    <h3>透射率扫描</h3>
+    <div class="row"><label>V0/E 下限</label><input type="range" id="rScanLo" min="0.05" max="2" step="0.05" value="0.25"><output id="oScanLo">0.25</output></div>
+    <div class="row"><label>V0/E 上限</label><input type="range" id="rScanHi" min="0.1" max="4" step="0.05" value="2.2"><output id="oScanHi">2.20</output></div>
+    <div class="row"><label>扫描点数</label><input type="range" id="rScanN" min="3" max="25" step="1" value="13"><output id="oScanN">13</output></div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnScan">开始扫描</button>
+      <button id="btnScanStop" disabled>中止</button>
+    </div>
+    <div class="row"><label>状态</label><span id="scanStat">就绪</span></div>
+    <canvas id="scanCanvas" width="420" height="260"></canvas>
+    <div class="hint" style="margin-top:4px">矩势垒 x=120 w=16（全高）· 波包 kx=0.3 σ=18 · 256² 网格 · 实测 vs Δk 卷积理论（E=V0 左侧为隧穿区）</div>
   </div>
   <div class="sec">
     <h3>AB 磁通</h3>
@@ -368,6 +383,32 @@ export class QuantumField {
     this.state.simTime = 0;
   }
 
+  /* ---------- 分区域概率（透射率扫描的测量原语；调试句柄同源） ---------- */
+  /* 一次 readPixels 直读 psiA，按世界坐标 xSplit 把概率分为左/右两半，
+     同时给出质心 x 与总 P——透射/反射测量与停止判据共用同一原子快照，
+     无归约节流（120ms）的时间斜偏。xSplit 为世界坐标（0..1）。 */
+  probSplit(xSplit){
+    const gl = this.gl, g = this.state.grid;
+    const ch = this.kernel.pairs === 2 ? 4 : 2;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
+    const buf = new Float32Array(g*g*ch);
+    gl.readPixels(0,0,g,g,this.fmt,gl.FLOAT,buf);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    const xs = Math.max(0, Math.min(g, Math.floor(xSplit*g)));
+    let sL = 0, sR = 0, sx = 0;
+    for (let y=0; y<g; y++){
+      const row = y*g;
+      for (let x=0; x<g; x++){
+        const i = (row + x)*ch;
+        const p = buf[i]*buf[i] + buf[i+1]*buf[i+1];
+        if (x < xs) sL += p; else sR += p;
+        sx += x*p;
+      }
+    }
+    const P = sL + sR;
+    return { left: sL, right: sR, P, T: P > 0 ? sR/P : 0, comX: P > 0 ? (sx/P)/g : 0, simTime: this.state.simTime };
+  }
+
   /* ---------- 预设 ---------- */
   loadPreset(key){
     const p = this.kernel.presets()[key]; if (!p) return;
@@ -392,81 +433,76 @@ export class QuantumField {
   }
 
   /* ---------- 主循环 ---------- */
-  frame(now){
-    this._raf = requestAnimationFrame(this.frame);
-    /* 时间尺度与稳定性（KDK 速度 Verlet 用于 u'=Hv, v'=-Hu）：
-       每模式旋转角 θ = arccos(1-(dt_sub·E)²/2)，E 为 H 的特征值；
-       稳定充要条件 |1-(dt_sub·E)²/2| ≤ 1，即 dt_sub·E ≤ 2（θ→π 时混叠失真）。
-       E 的上界 = k·8 + |V|max + 内核附加项 = (0.5/m)·8 + 1（5 点拉普拉斯 2D 最大
-       特征值 8，势幅 ±1；非线性内核另计 |g|·peak|ψ|²）。
-       初版 dt=0.04/子步：波包群速度 sin(κ)·0.24/帧 ≈ 0.08 cell/帧，比自身 σ=7 cell
-       慢 200 倍，max 混合拖尾数学上无法成形、隧穿/振荡效应超出观察尺度
-       （用户反馈「余晖没反应」的根因）。
-       现为 dt=1.2/帧总推进：κ=0.334 波包 0.39 cell/帧（60fps 约 10.8s 横穿全屏），拖尾条纹 ≈3σ。
-       子步长自适应兜底：sub_eff = max(substeps, ceil(dt·E_max/1.5))，保证 dt_sub·E_max ≤ 1.5
-       （对稳定极限 2.0 留 1.33× 裕度）——极端小质量 m=0.15（E_max≈27.7）时自动加密至 23 子步。
-       教训：直接把 dt 从 0.04 提到 0.6/子步会让 E_max=5 的模式半对角 1-0.36·25/2 = -3.5，
-       特征值 -7.0 溢出单位圆，棋盘格噪声每子步 ×7 指数发散，数帧内炸穿 RGBA16F（P=NaN）。 */
+  /* 单帧物理推进（KDK 速度 Verlet + 耗散帧级衰减）。
+     从 frame() 原样抽出：uniform 序列、子步自适应、ping-pong、simTime 累移
+     与 dissipation 逐字不变——frame()（每 tick 一次）与透射率扫描
+     （boost 倍频）共用同一路径，物理零差异。调用方负责暂停判定。 */
+  evolve(){
     const dt = 1.2;
     const k = 0.5/this.state.m;
     const gl = this.gl;
-    if (!this.state.paused){
-      const eMax = k*8 + 1 + this.kernel.eMaxExtra(this.state) + Math.abs(this.state.driveAmp);   /* H 特征值上界（含时外场幅值计入稳定界） */
-      const sub = Math.max(this.state.substeps, Math.ceil(dt*eMax/1.5));
-      const dtSub = dt/sub;
-      gl.useProgram(this.progEvolve);
-      gl.bindVertexArray(this.quad.vao);
-      gl.uniform1f(this.u(this.progEvolve,'uDt'), dtSub);
-      gl.uniform1f(this.u(this.progEvolve,'uK'), k);
-      gl.uniform2f(this.u(this.progEvolve,'uTexel'), 1/this.state.grid, 1/this.state.grid);
-      /* 含时外场：相位取帧中点 φ = ω·(t+dt/2)——KDK 对时变 H 的标准中点冻结
-         （二阶精度）；此处 simTime 仍是帧初值。相位由 simTime 派生而非累加：
-         暂停即冻结、重置/序列化口径一致，无额外运行时态。 */
-      const dPhase = this.state.driveOmega * (this.state.simTime + dt*0.5);
-      gl.uniform1f(this.u(this.progEvolve,'uDriveAmp'), this.state.driveAmp);
-      gl.uniform1f(this.u(this.progEvolve,'uDrivePhase'), dPhase);
-      gl.uniform1i(this.u(this.progEvolve,'uDriveMode'), this.state.driveMode);
-      /* Aharonov-Bohm：Φ=0 → uABOn=0 走原 5 点 stencil（精确等价旧路径）；
-         link 相位算子厄米且谱半径不变（|U|=1），P 守恒、E_max 不变。 */
-      gl.uniform1f(this.u(this.progEvolve,'uABOn'), this.state.abPhi === 0 ? 0 : 1);
-      gl.uniform2f(this.u(this.progEvolve,'uABPos'), this.state.abX, this.state.abY);
-      gl.uniform1f(this.u(this.progEvolve,'uABPhi'), this.state.abPhi);
-      gl.activeTexture(gl.TEXTURE1);
-      gl.bindTexture(gl.TEXTURE_2D, this.vTex);
-      gl.uniform1i(this.u(this.progEvolve,'uV'), 1);
-      this.kernel.setUniforms(gl, this.progEvolve, this.state);   /* 内核私有 uniform（如 uG） */
-      const uUV = this.u(this.progEvolve,'uUpdateV');
-      for (let s=0; s<sub; s++){
-        /* 速度 Verlet: v_half -> u_new -> v_new（3 遍，每遍后交换 ping-pong） */
-        for (let pass=0; pass<3; pass++){
-          gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiB.fbo);
-          gl.viewport(0,0,this.state.grid,this.state.grid);
-          gl.activeTexture(gl.TEXTURE0);
-          gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
-          gl.uniform1i(this.u(this.progEvolve,'uPsi'), 0);
-          gl.uniform1f(uUV, pass === 1 ? 0.0 : 1.0);
-          gl.drawArrays(gl.TRIANGLES, 0, 3);
-          const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
-        }
-      }
-      this.state.simTime += dt;
-      /* 耗散（开放系统）：帧级标量衰减 e^{-γ·dt}，精确且与子步/网格/内核解耦；
-         γ=0 时跳过——厄米路径零改动。u/v 两通道同乘（v 是 KDK 辅助量，同步缩放
-         保持 u/v 比例，下一步 kick 的 H·u 作用不受影响）。 */
-      if (this.state.gamma !== 0){
-        const s = Math.exp(-this.state.gamma * dt);
-        gl.useProgram(this.progScale);
-        gl.bindVertexArray(this.quad.vao);
+    const eMax = k*8 + 1 + this.kernel.eMaxExtra(this.state) + Math.abs(this.state.driveAmp);   /* H 特征值上界（含时外场幅值计入稳定界） */
+    const sub = Math.max(this.state.substeps, Math.ceil(dt*eMax/1.5));
+    const dtSub = dt/sub;
+    gl.useProgram(this.progEvolve);
+    gl.bindVertexArray(this.quad.vao);
+    gl.uniform1f(this.u(this.progEvolve,'uDt'), dtSub);
+    gl.uniform1f(this.u(this.progEvolve,'uK'), k);
+    gl.uniform2f(this.u(this.progEvolve,'uTexel'), 1/this.state.grid, 1/this.state.grid);
+    /* 含时外场：相位取帧中点 φ = ω·(t+dt/2)——KDK 对时变 H 的标准中点冻结
+       （二阶精度）；此处 simTime 仍是帧初值。相位由 simTime 派生而非累加：
+       暂停即冻结、重置/序列化口径一致，无额外运行时态。 */
+    const dPhase = this.state.driveOmega * (this.state.simTime + dt*0.5);
+    gl.uniform1f(this.u(this.progEvolve,'uDriveAmp'), this.state.driveAmp);
+    gl.uniform1f(this.u(this.progEvolve,'uDrivePhase'), dPhase);
+    gl.uniform1i(this.u(this.progEvolve,'uDriveMode'), this.state.driveMode);
+    /* Aharonov-Bohm：Φ=0 → uABOn=0 走原 5 点 stencil（精确等价旧路径）；
+       link 相位算子厄米且谱半径不变（|U|=1），P 守恒、E_max 不变。 */
+    gl.uniform1f(this.u(this.progEvolve,'uABOn'), this.state.abPhi === 0 ? 0 : 1);
+    gl.uniform2f(this.u(this.progEvolve,'uABPos'), this.state.abX, this.state.abY);
+    gl.uniform1f(this.u(this.progEvolve,'uABPhi'), this.state.abPhi);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this.vTex);
+    gl.uniform1i(this.u(this.progEvolve,'uV'), 1);
+    this.kernel.setUniforms(gl, this.progEvolve, this.state);   /* 内核私有 uniform（如 uG） */
+    const uUV = this.u(this.progEvolve,'uUpdateV');
+    for (let s=0; s<sub; s++){
+      /* 速度 Verlet: v_half -> u_new -> v_new（3 遍，每遍后交换 ping-pong） */
+      for (let pass=0; pass<3; pass++){
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiB.fbo);
         gl.viewport(0,0,this.state.grid,this.state.grid);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
-        gl.uniform1i(this.u(this.progScale,'uPsi'), 0);
-        gl.uniform1f(this.u(this.progScale,'uScale'), s);
+        gl.uniform1i(this.u(this.progEvolve,'uPsi'), 0);
+        gl.uniform1f(uUV, pass === 1 ? 0.0 : 1.0);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
         const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
       }
     }
+    this.state.simTime += dt;
+    /* 耗散（开放系统）：帧级标量衰减 e^{-γ·dt}，精确且与子步/网格/内核解耦；
+       γ=0 时跳过——厄米路径零改动。u/v 两通道同乘（v 是 KDK 辅助量，同步缩放
+       保持 u/v 比例，下一步 kick 的 H·u 作用不受影响）。 */
+    if (this.state.gamma !== 0){
+      const s = Math.exp(-this.state.gamma * dt);
+      gl.useProgram(this.progScale);
+      gl.bindVertexArray(this.quad.vao);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiB.fbo);
+      gl.viewport(0,0,this.state.grid,this.state.grid);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
+      gl.uniform1i(this.u(this.progScale,'uPsi'), 0);
+      gl.uniform1f(this.u(this.progScale,'uScale'), s);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
+    }
+  }
+
+  frame(now){
+    this._raf = requestAnimationFrame(this.frame);
+    const k = 0.5/this.state.m;
+    const gl = this.gl;
+    if (!this.state.paused) this.evolve();
 
     /* 显示 pass（含余晖） */
     gl.useProgram(this.progDisplay);
@@ -906,6 +942,27 @@ export class QuantumField {
       this.refreshParamHud();
     });
 
+    /* 透射率扫描：参数为面板专用（不入 state——不污染势场序列化存档）。
+       内核无解析透射模型（契约 transmissionModel 返回 null，如 NLS/GP）时隐藏面板。 */
+    if (!(this.kernel.transmissionModel && this.kernel.transmissionModel(this.state)))
+      this.q('#scanSec').style.display = 'none';
+    const scanBind = (id, out, fmt) => {
+      const el = this.q(id), o = this.q(out);
+      const upd = () => { o.textContent = fmt(parseFloat(el.value)); };
+      el.addEventListener('input', upd); upd();
+    };
+    scanBind('#rScanLo', '#oScanLo', v => v.toFixed(2));
+    scanBind('#rScanHi', '#oScanHi', v => v.toFixed(2));
+    scanBind('#rScanN', '#oScanN', v => String(v|0));
+    this.on(this.q('#btnScan'), 'click', () => {
+      this.scanner.start({
+        v0Lo: parseFloat(this.q('#rScanLo').value),
+        v0Hi: parseFloat(this.q('#rScanHi').value),
+        v0N: parseInt(this.q('#rScanN').value, 10) || 13,
+      });
+    });
+    this.on(this.q('#btnScanStop'), 'click', () => this.scanner.stop());
+
     /* 键盘 */
     const presetKeys = Object.keys(this.kernel.presets());
     this.on(window, 'keydown', e => {
@@ -970,6 +1027,11 @@ export class QuantumField {
     return {
       state: this.state, vCanvas: this.vCanvas, canvas: this.canvas, vctx: this.vctx,
       kernelId: this.kernelId,
+      /* 分区域概率（透射率扫描的测量原语；原子快照：左/右概率 + 质心 + 总 P） */
+      probSplit: (x) => this.probSplit(x),
+      /* 透射率扫描器：start(opts)/stop()/busy/results/summary（CDP 驱动与读数） */
+      scan: this.scanner,
+      scanModel: () => (this.kernel.transmissionModel ? this.kernel.transmissionModel(this.state) : null),
       vpx: (x, y) => { const d = this.vctx.getImageData(x|0, y|0, 1, 1).data; return d[0]; },
       vscan: () => {
         const d = this.vctx.getImageData(0,0,256,256).data;
@@ -1323,6 +1385,7 @@ export class QuantumField {
 
   /* ---------- 卸载（课程站 SPA 路由切换时调用） ---------- */
   unmount(){
+    if (this.scanner) this.scanner.stop();   /* 停止扫描 rAF，恢复 paused/σ */
     cancelAnimationFrame(this._raf);
     for (const [t, type, fn, opts] of this._listeners) t.removeEventListener(type, fn, opts);
     this._listeners = [];
