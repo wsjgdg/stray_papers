@@ -173,9 +173,10 @@ function gaussianWave(grid, { fx, fy, kx, ky, sigma }){
  * 自旋/Dirac 用）。引擎所有 shader 按 vec4 泛型书写：RG32F 采样得 (r,g,0,1)，
  * 多余的 zw 通道在写回 RG32F 附件时被丢弃，数值与逐字等价。
  *
- * 已覆盖的物理族：二阶时间可分离 H(u)=Hv, v'=-Hu 系统（薛定谔/NLS/Pauli/AB）。
- * 一阶系统（Dirac）与 3D 需要引擎扩展（integrator 模式 / 3D 纹理），
- * 契约不变——见 README「新增内核」。
+ * 已覆盖的物理族：二阶时间可分离 H(u)=Hv, v'=-Hu 系统（薛定谔/NLS/GP）。
+ * 契约已预留但尚未落地的族：Pauli 自旋（pairs=2 双复分量）、AB 效应（矢势
+ * 注入 localH）。一阶系统（Dirac）与 3D 需要引擎扩展（integrator 模式 /
+ * 3D 纹理）——见 README「新增内核」。
  * ========================================================================== */
 
 
@@ -627,6 +628,11 @@ class QuantumField {
       <button id="btnReset">重置波包</button>
       <button id="btnClearV">清空势场</button>
     </div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnExportV">导出势场</button>
+      <button id="btnImportV">导入势场</button>
+    </div>
+    <input type="file" id="fileImportV" accept=".json,application/json" style="display:none">
   </div>
 </aside>
 
@@ -997,6 +1003,87 @@ class QuantumField {
     this.uploadV();
   }
 
+  /* ---------- 势场序列化 / 导入导出 ---------- */
+  /* JSON 单文件存档：势场灰度（256² R 通道，V∈[-1,1] 编码 g=round(V*127+128）+
+     物理参数白名单。引擎级参数（m/σ/substeps/笔刷/V 值/拖尾/亮度）与内核私有参数
+     （如 NLS/GP 的 g）一并存档；运行时态（paused/simTime/lastWave/waveCount/
+     drag/tool）与结构键（grid）不存档。势场画布恒 256²，与模拟网格解耦。 */
+  serializeState(){
+    const d = this.vctx.getImageData(0, 0, 256, 256).data;
+    const gray = new Uint8Array(256*256);
+    for (let i = 0; i < gray.length; i++) gray[i] = d[i*4];   /* R 通道（vGray 写入时 R=G=B） */
+    let bin = '';
+    for (let i = 0; i < gray.length; i++) bin += String.fromCharCode(gray[i]);
+    const SKIP = new Set(['grid','paused','simTime','preset','lastWave','waveCount','drag','tool']);
+    const params = {};
+    for (const k of Object.keys(this.state)){
+      if (SKIP.has(k)) continue;
+      const v = this.state[k];
+      if (typeof v === 'number' && isFinite(v)) params[k] = v;
+    }
+    return {
+      format: 'schrodinger-workshop.potential',
+      version: 1,
+      kernel: this.kernelId,
+      state: params,
+      potential: { grid: 256, encoding: 'gray-v', data: btoa(bin) },
+    };
+  }
+
+  exportPotential(){
+    const obj = this.serializeState();
+    const blob = new Blob([JSON.stringify(obj)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'potential-' + this.kernelId + '-' + new Date().toISOString().slice(0,19).replace(/[:T]/g,'-') + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    this.toast('势场已导出（' + (blob.size/1024).toFixed(1) + ' KB）');
+  }
+
+  importPotentialData(obj){
+    if (!obj || obj.format !== 'schrodinger-workshop.potential' || obj.version !== 1)
+      throw new Error('不是有效的势场存档（format/version 不匹配）');
+    if (obj.kernel !== this.kernelId)
+      throw new Error('存档内核为 ' + obj.kernel + '，当前为 ' + this.kernelId);
+    const p = obj.potential;
+    if (!p || p.grid !== 256 || p.encoding !== 'gray-v' || typeof p.data !== 'string')
+      throw new Error('存档势场段无效');
+    const bin = atob(p.data);
+    if (bin.length !== 256*256) throw new Error('存档势场长度不符: ' + bin.length);
+    const gray = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) gray[i] = bin.charCodeAt(i);
+    const img = this.vctx.createImageData(256, 256);
+    for (let i = 0; i < gray.length; i++){
+      const g = gray[i];
+      img.data[i*4] = g; img.data[i*4+1] = g; img.data[i*4+2] = g; img.data[i*4+3] = 255;
+    }
+    this.vctx.globalCompositeOperation = 'source-over';
+    this.vctx.putImageData(img, 0, 0);
+    this.uploadV();
+    /* 参数恢复：仅白名单标量键（须已存在于 state）；运行时态/结构键不碰 */
+    const SKIP = new Set(['grid','paused','simTime','preset','lastWave','waveCount','drag','tool']);
+    let n = 0;
+    for (const k of Object.keys(obj.state || {})){
+      if (SKIP.has(k)) continue;
+      const v = obj.state[k];
+      if (typeof v === 'number' && isFinite(v) && k in this.state){ this.state[k] = v; n++; }
+    }
+    this.syncControls();
+    this.toast('势场已导入（恢复 ' + n + ' 项参数）');
+    return n;
+  }
+
+  importPotentialFile(file){
+    const r = new FileReader();
+    r.onload = () => {
+      try { this.importPotentialData(JSON.parse(r.result)); }
+      catch (err){ this.toast('导入失败: ' + err.message); }
+    };
+    r.onerror = () => this.toast('导入失败: 文件读取错误');
+    r.readAsText(file);
+  }
+
   /* 滑块。after：值变更后的即时生效回调（如 σ 变更立即按新宽度重发波包）。
      真源是 state（构造时已合并内核 defaults）——DOM 滑块跟随 state 初始化，
      而非把 HTML 的 value 属性倒写回 state（那会静默覆盖内核默认值，
@@ -1075,6 +1162,13 @@ class QuantumField {
     this.on(this.q('#btnStep'), 'click', () => { const p = this.state.paused; this.state.paused = false; requestAnimationFrame(() => { this.state.paused = p; }); });
     this.on(this.q('#btnReset'), 'click', () => { const w = this.state.lastWave; if (w) this.initWave(w[0],w[1],w[2],w[3]); });
     this.on(this.q('#btnClearV'), 'click', () => { this.clearV(); this.toast('势场已清空'); });
+    this.on(this.q('#btnExportV'), 'click', () => this.exportPotential());
+    this.on(this.q('#btnImportV'), 'click', () => this.q('#fileImportV').click());
+    this.on(this.q('#fileImportV'), 'change', e => {
+      const f = e.target.files && e.target.files[0];
+      if (f) this.importPotentialFile(f);
+      e.target.value = '';   /* 允许重复导入同一文件 */
+    });
 
     this.bindRange('#rMass','#oMass','m', v => v.toFixed(2));
     this.bindRange('#rSigma','#oSigma','sigma', v => v.toFixed(1), () => {
@@ -1166,6 +1260,8 @@ class QuantumField {
         return { min, max, non128 };
       },
       vrow: (y) => { const d = this.vctx.getImageData(0,y,256,1).data; const a=[]; for(let x=0;x<256;x++) a.push(d[x*4]); return a; },
+      serializeState: () => this.serializeState(),
+      importPotentialData: (o) => this.importPotentialData(o),
       trailSum: () => {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.dispA.fbo);
         const w = this.dispA.w, h = this.dispA.h;

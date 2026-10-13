@@ -113,6 +113,25 @@ HUD 如实显示，见「物理诚实声明」）。默认 g=−10、子步 16�
 
 **快捷键**：`1-6` 预设 · `Space` 暂停 · `T` 拖尾开关 · `R` 重置波包 · `C` 清空势场
 
+### 势场序列化 / 导入导出
+
+「渲染与网格」区的 **导出势场 / 导入势场** 按钮把当前完整实验状态存为单个 JSON 文件（约 90 KB）：
+
+```json
+{
+  "format": "schrodinger-workshop.potential",
+  "version": 1,
+  "kernel": "gp",
+  "state": { "m": 1, "sigma": 16, "substeps": 16, "g": -10, "…": "白名单标量参数" },
+  "potential": { "grid": 256, "encoding": "gray-v", "data": "<base64 灰度>" }
+}
+```
+
+- **势场**：256² 势场画布 R 通道（V∈[−1,1] 编码 g=round(V·127+128)），base64 无损；画布恒 256²，与模拟网格解耦
+- **参数**：引擎级（m/σ/substeps/笔刷/V 值/拖尾/亮度）+ 内核私有（NLS/GP 的 g）白名单标量键；运行时态（paused/simTime/lastWave/waveCount/drag/tool）与结构键（grid）不存档
+- **校验**：format/version/kernel 匹配 + 势场长度三项校验，任一失败抛错且**不破坏现场势场**（失败原子性）
+- **恢复**：势场 putImageData + uploadV，参数回填 state 后 syncControls 同步全部滑块
+
 ### HUD 与可视化
 
 - **实时读数**：总概率 P、守恒误差、动能 T / 势能 ⟨V⟩ / 总能 E、峰值 |ψ|²、模拟时间、帧率
@@ -213,6 +232,7 @@ Evolve (RG32F ping-pong ×sub×3) → Display (+trail max 混合 → dispA/dispB
 | **GP 内核 CDP 套件**（契约/穹顶形状/稳定性 ×2.6–2.8 呼吸/涡旋空心核持续/TOF T×1.52/呼吸模 ×9.4–9.9/吸引侧塌缩如实记录） | 27/27 PASS |
 | **GP 初态 Node 单测**（穹顶解析形状/涡旋核密度=0/孔洞剖面零误差/相位绕数/动量梯度/归一化） | 20/20 PASS |
 | **引擎 bindRange 修复**（defaults() 不再被 DOM value 倒写覆盖；GP substeps=16 回归断言） | 已修复并回归 |
+| **势场序列化/导出**（UI 挂载/JSON 结构/round-trip 逐像素一致 FNV hash/参数恢复 8 项/三类错误抛错且现场不破坏/导入后演化回归） | 17/17 PASS |
 
 ## 架构
 
