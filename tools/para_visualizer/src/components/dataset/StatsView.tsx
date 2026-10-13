@@ -20,6 +20,7 @@ import {
   Legend,
 } from "recharts";
 import { Database, Image as ImageIcon, Columns3, CheckCircle2, XCircle, AlertTriangle, Hash, X } from "lucide-react";
+import { HtmlReportExport } from "./HtmlReportExport";
 
 const PIE_COLORS = ["#ef4444", "#f97316", "#f59e0b", "#10b981", "#06b6d4", "#6366f1", "#a855f7", "#ec4899", "#14b8a6", "#84cc16"];
 
@@ -88,6 +89,10 @@ export function StatsView() {
 
   return (
     <div className="h-full overflow-y-auto custom-scroll p-4 space-y-4">
+      {/* Header with export */}
+      <div className="flex items-center justify-end">
+        <HtmlReportExport />
+      </div>
       {/* Top KPI cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard

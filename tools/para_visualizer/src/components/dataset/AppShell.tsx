@@ -22,6 +22,7 @@ import { CommandPalette } from "./CommandPalette";
 import { BookmarkPanel } from "./BookmarkPanel";
 import { ThemeToggle } from "./ThemeToggle";
 import { ShortcutsCheatsheet } from "./ShortcutsCheatsheet";
+import { LoadingSkeleton } from "./LoadingSkeleton";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -57,6 +58,7 @@ import { formatBytes } from "@/lib/dataset/filter";
 
 export function AppShell() {
   const dataset = useDatasetStore((s) => s.dataset);
+  const loading = useDatasetStore((s) => s.loading);
   const viewMode = useDatasetStore((s) => s.viewMode);
   const sidebarOpen = useDatasetStore((s) => s.sidebarOpen);
   const setSidebarOpen = useDatasetStore((s) => s.setSidebarOpen);
@@ -88,6 +90,9 @@ export function AppShell() {
   }, [setShowLoadDialog, setShowFilterPanel, setShowExportDialog]);
 
   if (!dataset) {
+    if (loading) {
+      return <LoadingSkeleton />;
+    }
     return (
       <div className="flex flex-col min-h-screen">
         <Header />

@@ -27,7 +27,7 @@ import { Download, FileJson, FileSpreadsheet, ImageDown, Loader2, CheckCircle2, 
 import { toast } from "sonner";
 import { decodeImageField } from "@/lib/dataset/decode";
 
-type ExportType = "images" | "metadata_csv" | "metadata_json" | "both";
+type ExportType = "images" | "metadata_csv" | "metadata_json" | "both" | "annotations_coco" | "annotations_yolo";
 
 export function ExportDialog() {
   const open = useDatasetStore((s) => s.showExportDialog);
@@ -36,6 +36,7 @@ export function ExportDialog() {
   const schema = useSchema();
   const imageField = useDatasetStore((s) => s.imageField);
   const hiddenFields = useDatasetStore((s) => s.hiddenFields);
+  const annotationsMap = useDatasetStore((s) => s.annotations);
 
   const [type, setType] = useState<ExportType>("both");
   const [format, setFormat] = useState<"png" | "jpeg" | "webp" | "original">("original");
@@ -129,6 +130,34 @@ export function ExportDialog() {
         toast.success(`Exported ${ok} images (${failed} skipped/failed)`);
       }
 
+      // annotations export (COCO JSON)
+      if (type === "annotations_coco") {
+        const coco = buildCocoExport(rows, annotationsMap, imageField);
+        if (coco.annotations.length === 0) {
+          toast.warning("No annotations to export");
+        } else {
+          downloadBlob(
+            new Blob([JSON.stringify(coco, null, 2)], { type: "application/json" }),
+            "annotations_coco.json",
+          );
+          toast.success(`Exported ${coco.annotations.length} annotations (COCO)`);
+        }
+      }
+
+      // annotations export (YOLO txt) — one file per image, combined into a single txt
+      if (type === "annotations_yolo") {
+        const lines = buildYoloExport(rows, annotationsMap);
+        if (lines.length === 0) {
+          toast.warning("No annotations to export");
+        } else {
+          downloadBlob(
+            new Blob([lines.join("\n")], { type: "text/plain" }),
+            "annotations_yolo.txt",
+          );
+          toast.success(`Exported ${lines.length} annotation lines (YOLO)`);
+        }
+      }
+
       toast.success("Export complete");
     } catch (e) {
       toast.error(`Export failed: ${e instanceof Error ? e.message : String(e)}`);
@@ -161,8 +190,20 @@ export function ExportDialog() {
               <ExportOption value="metadata_csv" label="Metadata CSV" icon={<FileSpreadsheet className="h-4 w-4" />} />
               <ExportOption value="metadata_json" label="Metadata JSON" icon={<FileJson className="h-4 w-4" />} />
               <ExportOption value="both" label="Images + CSV" icon={<FolderArchive className="h-4 w-4" />} />
+              <ExportOption value="annotations_coco" label="Annotations (COCO)" icon={<FileJson className="h-4 w-4" />} />
+              <ExportOption value="annotations_yolo" label="Annotations (YOLO)" icon={<FileJson className="h-4 w-4" />} />
             </RadioGroup>
           </div>
+
+          {(type === "annotations_coco" || type === "annotations_yolo") && (
+            <div className="rounded-md bg-muted/30 p-2.5 text-[11px] text-muted-foreground">
+              {type === "annotations_coco" ? (
+                <span>Exports all user-drawn annotations as a COCO-format JSON file (images + annotations + categories). Useful for object detection training pipelines.</span>
+              ) : (
+                <span>Exports all annotations as YOLO-format lines (class center_x center_y width height, all normalized 0–1). Class mapping included as header comments.</span>
+              )}
+            </div>
+          )}
 
           {(type === "images" || type === "both") && (
             <>
@@ -274,3 +315,111 @@ function sanitize(s: string): string {
 
 // Unused helper removed
 void formatValue;
+
+// --- Annotation export helpers ---
+
+interface CocoExport {
+  info: { description: string; version: string; year: number };
+  licenses: unknown[];
+  images: { id: number; file_name: string; width: number; height: number }[];
+  annotations: {
+    id: number;
+    image_id: number;
+    category_id: number;
+    bbox: [number, number, number, number]; // x, y, w, h (absolute pixels)
+    area: number;
+    iscrowd: 0;
+    segmentation: number[][];
+  }[];
+  categories: { id: number; name: string; supercategory: string }[];
+}
+
+function buildCocoExport(
+  rows: ReturnType<typeof useFilteredRows>,
+  annotationsMap: Record<string, import("@/lib/dataset/persist").Annotation[]>,
+  _imageField: string | null,
+): CocoExport {
+  // Build category list from all annotation labels
+  const labelToCat = new Map<string, number>();
+  let catId = 1;
+  for (const row of rows) {
+    const anns = annotationsMap[row.id] || [];
+    for (const a of anns) {
+      if (!labelToCat.has(a.label)) {
+        labelToCat.set(a.label, catId++);
+      }
+    }
+  }
+  const categories = Array.from(labelToCat.entries()).map(([name, id]) => ({
+    id,
+    name,
+    supercategory: "object",
+  }));
+
+  const images: CocoExport["images"] = [];
+  const annotations: CocoExport["annotations"] = [];
+  let annId = 1;
+  rows.forEach((row, i) => {
+    const anns = annotationsMap[row.id] || [];
+    if (anns.length === 0) return;
+    const imgId = i + 1;
+    const w = (row.data["image_width"] as number) || 480;
+    const h = (row.data["image_height"] as number) || 320;
+    images.push({ id: imgId, file_name: `${row.id}.png`, width: w, height: h });
+    for (const a of anns) {
+      annotations.push({
+        id: annId++,
+        image_id: imgId,
+        category_id: labelToCat.get(a.label) || 1,
+        bbox: [a.x * w, a.y * h, a.w * w, a.h * h],
+        area: a.w * w * a.h * h,
+        iscrowd: 0,
+        segmentation: [],
+      });
+    }
+  });
+
+  return {
+    info: { description: "Dataset Image Browser annotations export", version: "1.0", year: new Date().getFullYear() },
+    licenses: [],
+    images,
+    annotations,
+    categories,
+  };
+}
+
+function buildYoloExport(
+  rows: ReturnType<typeof useFilteredRows>,
+  annotationsMap: Record<string, import("@/lib/dataset/persist").Annotation[]>,
+): string[] {
+  // YOLO format: one line per annotation: class x y w h (all normalized 0-1)
+  // We prefix with image id for combined file
+  const labelToClass = new Map<string, number>();
+  let clsId = 0;
+  for (const row of rows) {
+    const anns = annotationsMap[row.id] || [];
+    for (const a of anns) {
+      if (!labelToClass.has(a.label)) {
+        labelToClass.set(a.label, clsId++);
+      }
+    }
+  }
+  const lines: string[] = [];
+  // classes file header (commented)
+  lines.push(`# YOLO annotations export — ${new Date().toISOString()}`);
+  lines.push(`# classes: ${Array.from(labelToClass.entries()).map(([n, i]) => `${i}=${n}`).join(", ")}`);
+  lines.push("");
+  for (const row of rows) {
+    const anns = annotationsMap[row.id] || [];
+    if (anns.length === 0) continue;
+    lines.push(`# ${row.id}`);
+    for (const a of anns) {
+      const cls = labelToClass.get(a.label) ?? 0;
+      // YOLO uses center x/y
+      const cx = a.x + a.w / 2;
+      const cy = a.y + a.h / 2;
+      lines.push(`${cls} ${cx.toFixed(6)} ${cy.toFixed(6)} ${a.w.toFixed(6)} ${a.h.toFixed(6)}`);
+    }
+  }
+  return lines;
+}

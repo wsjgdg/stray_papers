@@ -7,15 +7,24 @@ import { useDatasetStore } from "@/lib/dataset/store";
 import { useFilteredRows, useSchema } from "@/lib/dataset/hooks";
 import { Thumbnail } from "./Thumbnail";
 import { formatValue } from "@/lib/dataset/filter";
-import { Bookmark, BookmarkCheck, Star, Check, Download, X, ListChecks } from "lucide-react";
+import { Bookmark, BookmarkCheck, Star, Check, Download, X, ListChecks, Copy, Eye, GitCompareArrows } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { decodeImageField } from "@/lib/dataset/decode";
 
 const PAGE_SIZE = 60;
 
@@ -110,97 +119,159 @@ export function GridView() {
               };
 
               return (
-                <div
-                  key={r.id}
-                  className={cn(
-                    "group relative rounded-lg border bg-card overflow-hidden transition-all hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5",
-                    isSel ? "ring-2 ring-primary border-primary" : "",
-                    inCompare ? "ring-2 ring-amber-400" : "",
-                    inMultiSelect ? "ring-2 ring-emerald-500 border-emerald-400" : "",
-                  )}
-                  onClick={handleCardClick}
-                >
-                  {/* multi-select checkbox */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleSelectedRow(r.id);
-                      lastShiftIndex.current = r.index;
-                    }}
-                    className={cn(
-                      "absolute top-1.5 left-1.5 z-10 w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
-                      inMultiSelect
-                        ? "bg-emerald-500 border-emerald-500 text-white opacity-100"
-                        : "bg-card/80 backdrop-blur border-foreground/30 text-transparent opacity-0 group-hover:opacity-100 hover:border-primary",
-                    )}
-                    title="Toggle selection (Cmd+click for multi)"
-                  >
-                    <Check className="h-3 w-3" />
-                  </button>
-                  <Thumbnail
-                    rowId={r.id}
-                    imageValue={imgValue}
-                    fieldName={imageField || ""}
-                    className="aspect-[3/2] w-full"
-                    showBbox={showBboxOverlay}
-                    bboxes={Array.isArray(bboxes) ? bboxes as number[] : undefined}
-                    imgWidth={typeof w === "number" ? w : undefined}
-                    imgHeight={typeof h === "number" ? h : undefined}
-                    alt={`Row ${r.index + 1}: ${formatValue(r.data[hoverLabelField || ""])}`}
-                  />
-                  <div className="p-2 border-t bg-card/60">
-                    <div className="flex items-center justify-between gap-1 mb-1">
-                      <span className="text-[10px] font-mono text-muted-foreground">#{r.index + 1}</span>
-                      <div className="flex items-center gap-0.5">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleBookmark(r.id);
-                          }}
-                          className={cn(
-                            "p-1 rounded hover:bg-accent",
-                            bookmarked ? "text-amber-500" : "text-muted-foreground/50",
-                          )}
-                          title={bookmarked ? "Remove bookmark" : "Add bookmark"}
-                        >
-                          {bookmarked ? <BookmarkCheck className="h-3 w-3" /> : <Bookmark className="h-3 w-3" />}
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleCompare(r.id);
-                          }}
-                          className={cn(
-                            "p-1 rounded hover:bg-accent",
-                            inCompare ? "text-amber-500" : "text-muted-foreground/50",
-                          )}
-                          title="Toggle compare"
-                        >
-                          <Star className="h-3 w-3" />
-                        </button>
+                <ContextMenu key={r.id}>
+                  <ContextMenuTrigger asChild>
+                    <div
+                      className={cn(
+                        "group relative rounded-lg border bg-card overflow-hidden transition-all hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 cursor-pointer",
+                        isSel ? "ring-2 ring-primary border-primary" : "",
+                        inCompare ? "ring-2 ring-amber-400" : "",
+                        inMultiSelect ? "ring-2 ring-emerald-500 border-emerald-400" : "",
+                      )}
+                      onClick={handleCardClick}
+                    >
+                      {/* multi-select checkbox */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleSelectedRow(r.id);
+                          lastShiftIndex.current = r.index;
+                        }}
+                        className={cn(
+                          "absolute top-1.5 left-1.5 z-10 w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
+                          inMultiSelect
+                            ? "bg-emerald-500 border-emerald-500 text-white opacity-100"
+                            : "bg-card/80 backdrop-blur border-foreground/30 text-transparent opacity-0 group-hover:opacity-100 hover:border-primary",
+                        )}
+                        title="Toggle selection (Cmd+click for multi)"
+                      >
+                        <Check className="h-3 w-3" />
+                      </button>
+                      <Thumbnail
+                        rowId={r.id}
+                        imageValue={imgValue}
+                        fieldName={imageField || ""}
+                        className="aspect-[3/2] w-full"
+                        showBbox={showBboxOverlay}
+                        bboxes={Array.isArray(bboxes) ? bboxes as number[] : undefined}
+                        imgWidth={typeof w === "number" ? w : undefined}
+                        imgHeight={typeof h === "number" ? h : undefined}
+                        alt={`Row ${r.index + 1}: ${formatValue(r.data[hoverLabelField || ""])}`}
+                      />
+                      <div className="p-2 border-t bg-card/60">
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          <span className="text-[10px] font-mono text-muted-foreground">#{r.index + 1}</span>
+                          <div className="flex items-center gap-0.5">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleBookmark(r.id);
+                              }}
+                              className={cn(
+                                "p-1 rounded hover:bg-accent",
+                                bookmarked ? "text-amber-500" : "text-muted-foreground/50",
+                              )}
+                              title={bookmarked ? "Remove bookmark" : "Add bookmark"}
+                            >
+                              {bookmarked ? <BookmarkCheck className="h-3 w-3" /> : <Bookmark className="h-3 w-3" />}
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleCompare(r.id);
+                              }}
+                              className={cn(
+                                "p-1 rounded hover:bg-accent",
+                                inCompare ? "text-amber-500" : "text-muted-foreground/50",
+                              )}
+                              title="Toggle compare"
+                            >
+                              <Star className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
+                        {hoverLabelField && (
+                          <TooltipProvider delayDuration={200}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <p className="text-[11px] line-clamp-2 leading-tight text-foreground/80">
+                                  {formatValue(r.data[hoverLabelField])}
+                                </p>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-xs">
+                                <p className="text-xs">{formatValue(r.data[hoverLabelField])}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                        {captionField2 && (
+                          <p className="text-[10px] mt-0.5 text-muted-foreground/70 line-clamp-1">
+                            {formatValue(r.data[captionField2])}
+                          </p>
+                        )}
                       </div>
                     </div>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent className="w-52">
+                    <ContextMenuItem onClick={() => setSelectedRow(r.id)}>
+                      <Eye className="h-3.5 w-3.5 mr-2" />
+                      View detail
+                    </ContextMenuItem>
+                    <ContextMenuItem onClick={() => toggleBookmark(r.id)}>
+                      {bookmarked ? <BookmarkCheck className="h-3.5 w-3.5 mr-2 text-amber-500" /> : <Bookmark className="h-3.5 w-3.5 mr-2" />}
+                      {bookmarked ? "Remove bookmark" : "Add bookmark"}
+                    </ContextMenuItem>
+                    <ContextMenuItem onClick={() => toggleCompare(r.id)}>
+                      <GitCompareArrows className="h-3.5 w-3.5 mr-2" />
+                      {inCompare ? "Remove from compare" : "Add to compare"}
+                    </ContextMenuItem>
+                    <ContextMenuItem onClick={() => { toggleSelectedRow(r.id); lastShiftIndex.current = r.index; }}>
+                      <Check className="h-3.5 w-3.5 mr-2" />
+                      {inMultiSelect ? "Deselect" : "Select"}
+                    </ContextMenuItem>
+                    <ContextMenuSeparator />
+                    <ContextMenuItem
+                      onClick={async () => {
+                        if (!imageField) return;
+                        const v = r.data[imageField];
+                        try {
+                          const res = await decodeImageField(v, imageField);
+                          if (res.blobUrl) {
+                            const a = document.createElement("a");
+                            a.href = res.blobUrl;
+                            a.download = `${r.id}.${res.format || "png"}`;
+                            a.click();
+                            toast.success(`Saved ${a.download}`);
+                          } else {
+                            toast.error("No image to save");
+                          }
+                        } catch {
+                          toast.error("Failed to save image");
+                        }
+                      }}
+                    >
+                      <Download className="h-3.5 w-3.5 mr-2" />
+                      Save image
+                    </ContextMenuItem>
+                    <ContextMenuItem onClick={() => {
+                      navigator.clipboard.writeText(r.id);
+                      toast.success(`Copied id: ${r.id}`);
+                    }}>
+                      <Copy className="h-3.5 w-3.5 mr-2" />
+                      Copy row id
+                    </ContextMenuItem>
                     {hoverLabelField && (
-                      <TooltipProvider delayDuration={200}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <p className="text-[11px] line-clamp-2 leading-tight text-foreground/80">
-                              {formatValue(r.data[hoverLabelField])}
-                            </p>
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-xs">
-                            <p className="text-xs">{formatValue(r.data[hoverLabelField])}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <ContextMenuItem onClick={() => {
+                        const v = String(r.data[hoverLabelField!] || "");
+                        navigator.clipboard.writeText(v);
+                        toast.success("Copied value");
+                      }}>
+                        <Copy className="h-3.5 w-3.5 mr-2" />
+                        Copy {hoverLabelField}
+                      </ContextMenuItem>
                     )}
-                    {captionField2 && (
-                      <p className="text-[10px] mt-0.5 text-muted-foreground/70 line-clamp-1">
-                        {formatValue(r.data[captionField2])}
-                      </p>
-                    )}
-                  </div>
-                </div>
+                  </ContextMenuContent>
+                </ContextMenu>
               );
             })}
           </div>
