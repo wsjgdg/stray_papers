@@ -18,6 +18,9 @@ import {
   Pie,
   Cell,
   Legend,
+  ScatterChart,
+  Scatter,
+  ZAxis,
 } from "recharts";
 import { Database, Image as ImageIcon, Columns3, CheckCircle2, XCircle, AlertTriangle, Hash, X } from "lucide-react";
 import { HtmlReportExport } from "./HtmlReportExport";
@@ -227,6 +230,99 @@ export function StatsView() {
           </div>
         </div>
       )}
+
+      {/* Numeric scatter plot (first 2 numeric fields) */}
+      {stats.numericFields.length >= 2 && (() => {
+        const xField = stats.numericFields[0];
+        const yField = stats.numericFields[1];
+        const scatterData = rows
+          .map((r) => ({
+            x: Number(r.data[xField.name]),
+            y: Number(r.data[yField.name]),
+            id: r.id,
+          }))
+          .filter((d) => Number.isFinite(d.x) && Number.isFinite(d.y))
+          .slice(0, 500);
+        if (scatterData.length === 0) return null;
+        return (
+          <div className="rounded-lg border bg-card p-3">
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+              <Hash className="h-4 w-4 text-cyan-500" />
+              Numeric scatter: <span className="font-mono text-xs text-muted-foreground">{xField.name}</span> vs <span className="font-mono text-xs text-muted-foreground">{yField.name}</span>
+              <span className="ml-auto text-[10px] font-normal text-muted-foreground">{scatterData.length} points</span>
+            </h3>
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <ScatterChart margin={{ left: 20, right: 20, top: 10, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis
+                    type="number"
+                    dataKey="x"
+                    name={xField.name}
+                    tick={{ fontSize: 10 }}
+                    label={{ value: xField.name, position: "bottom", offset: 10, fontSize: 11 }}
+                  />
+                  <YAxis
+                    type="number"
+                    dataKey="y"
+                    name={yField.name}
+                    tick={{ fontSize: 10 }}
+                    label={{ value: yField.name, angle: -90, position: "insideLeft", fontSize: 11 }}
+                  />
+                  <ZAxis range={[40, 40]} />
+                  <RTooltip
+                    cursor={{ strokeDasharray: "3 3" }}
+                    contentStyle={{ fontSize: 11, borderRadius: 8 }}
+                  />
+                  <Scatter data={scatterData} fill="#6366f1" fillOpacity={0.6} />
+                </ScatterChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Histogram for first numeric field */}
+      {stats.numericFields.length >= 1 && (() => {
+        const field = stats.numericFields[0];
+        const values = rows
+          .map((r) => Number(r.data[field.name]))
+          .filter((v) => Number.isFinite(v));
+        if (values.length === 0) return null;
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const bins = 12;
+        const binSize = (max - min) / bins || 1;
+        const histogram = Array.from({ length: bins }, (_, i) => {
+          const binStart = min + i * binSize;
+          const binEnd = min + (i + 1) * binSize;
+          const count = values.filter((v) => v >= binStart && (v < binEnd || (i === bins - 1 && v <= binEnd))).length;
+          return {
+            bin: `${binStart.toFixed(0)}–${binEnd.toFixed(0)}`,
+            count,
+          };
+        });
+        return (
+          <div className="rounded-lg border bg-card p-3">
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+              <Hash className="h-4 w-4 text-amber-500" />
+              Histogram: <span className="font-mono text-xs text-muted-foreground">{field.name}</span>
+              <span className="ml-auto text-[10px] font-normal text-muted-foreground">{values.length} values · {bins} bins</span>
+            </h3>
+            <div className="h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={histogram} margin={{ left: 10, right: 10, top: 10, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                  <XAxis dataKey="bin" tick={{ fontSize: 9 }} angle={-30} textAnchor="end" height={50} />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <RTooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+                  <Bar dataKey="count" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Schema table */}
       <div className="rounded-lg border bg-card p-3">

@@ -210,15 +210,17 @@ function Header() {
   const bookmarkCount = useDatasetStore((s) => Object.keys(s.bookmarks).length);
 
   return (
-    <header className="border-b bg-card/80 backdrop-blur sticky top-0 z-30">
+    <header className="border-b bg-card/80 backdrop-blur sticky top-0 z-30 relative">
+      {/* Gradient accent line at top */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-violet-500 via-fuchsia-500 to-rose-500 opacity-60" />
       <div className="flex items-center gap-2 px-3 h-12">
         {/* logo + name */}
         <div className="flex items-center gap-2">
-          <div className="h-7 w-7 rounded-md bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white shadow-sm">
+          <div className="h-7 w-7 rounded-md bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white shadow-sm shadow-violet-500/30">
             <ImageIcon className="h-4 w-4" />
           </div>
           <div className="flex flex-col leading-tight">
-            <span className="text-sm font-semibold">Dataset Image Browser</span>
+            <span className="text-sm font-semibold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Dataset Image Browser</span>
             <span className="text-[9px] text-muted-foreground/70 -mt-0.5">Arrow · Parquet · JSON</span>
           </div>
         </div>
