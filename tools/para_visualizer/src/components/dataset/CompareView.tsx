@@ -49,6 +49,8 @@ export function CompareView() {
     );
   }
 
+  const compareFields = visibleFields.slice(0, 10);
+
   return (
     <div className="h-full overflow-y-auto custom-scroll">
       <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 border-b bg-card/60 backdrop-blur">
@@ -60,23 +62,22 @@ export function CompareView() {
           Clear
         </Button>
       </div>
+      {/* Images row */}
       <div
-        className="grid gap-3 p-3"
-        style={{
-          gridTemplateColumns: `repeat(${rows.length}, minmax(0, 1fr))`,
-        }}
+        className="grid gap-3 p-3 sticky top-[37px] z-[5] bg-background/80 backdrop-blur"
+        style={{ gridTemplateColumns: `repeat(${rows.length}, minmax(0, 1fr))` }}
       >
         {rows.map((r) => {
           if (!r) return null;
           const imgValue = imageField ? r.data[imageField] : undefined;
           const bboxes = r.data["extra_input_figure_bboxes"];
           return (
-            <div key={r.id} className="flex flex-col gap-2 rounded-lg border bg-card overflow-hidden">
-              <div className="flex items-center justify-between px-2 py-1.5 border-b bg-muted/30">
-                <span className="text-[10px] font-mono text-muted-foreground">#{r.index + 1}</span>
+            <div key={r.id} className="flex flex-col gap-1.5 rounded-lg border bg-card overflow-hidden shadow-sm">
+              <div className="flex items-center justify-between px-2 py-1 border-b bg-muted/30">
+                <span className="text-[10px] font-mono text-muted-foreground">#{r.index + 1} · {r.id}</span>
                 <button
                   onClick={() => toggleCompare(r.id)}
-                  className="p-1 rounded hover:bg-accent text-muted-foreground"
+                  className="p-0.5 rounded hover:bg-accent text-muted-foreground hover:text-rose-500"
                   title="Remove from compare"
                 >
                   <X className="h-3 w-3" />
@@ -86,33 +87,45 @@ export function CompareView() {
                 rowId={r.id}
                 imageValue={imgValue}
                 fieldName={imageField || ""}
-                className="aspect-[3/2] w-full border-b"
+                className="aspect-[3/2] w-full"
                 onClick={() => setSelectedRow(r.id)}
                 showBbox={showBboxOverlay}
                 bboxes={Array.isArray(bboxes) ? (bboxes as number[]) : undefined}
                 imgWidth={typeof r.data["image_width"] === "number" ? (r.data["image_width"] as number) : undefined}
                 imgHeight={typeof r.data["image_height"] === "number" ? (r.data["image_height"] as number) : undefined}
               />
-              <div className="divide-y">
-                {visibleFields.slice(0, 10).map((f) => (
-                  <div key={f.name} className="px-2 py-1.5">
-                    <div className="text-[9px] font-mono uppercase tracking-wide text-muted-foreground/70">
-                      {f.name}
-                    </div>
-                    <div className="text-[11px] leading-tight text-foreground/90 break-words whitespace-pre-wrap">
-                      <Highlight text={formatValue(r.data[f.name])} query={search} />
-                    </div>
-                  </div>
-                ))}
-                {visibleFields.length > 10 && (
-                  <div className="px-2 py-1 text-[10px] text-muted-foreground/60">
-                    +{visibleFields.length - 10} more fields
-                  </div>
-                )}
-              </div>
             </div>
           );
         })}
+      </div>
+      {/* Aligned fields table */}
+      <div className="p-3 pt-0">
+        <table className="w-full text-xs border-collapse">
+          <tbody>
+            {compareFields.map((f, fieldIdx) => (
+              <tr key={f.name} className={fieldIdx % 2 === 0 ? "bg-muted/20" : ""}>
+                <td className="px-2 py-1.5 border-b font-mono text-[9px] uppercase tracking-wide text-muted-foreground/70 w-32 align-top sticky left-0 bg-card/80 backdrop-blur">
+                  {f.name}
+                </td>
+                {rows.map((r) => {
+                  if (!r) return <td key="empty" />;
+                  return (
+                    <td key={r.id} className="px-2 py-1.5 border-b align-top text-[11px] leading-tight text-foreground/90 break-words whitespace-pre-wrap">
+                      <Highlight text={formatValue(r.data[f.name])} query={search} />
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+            {visibleFields.length > 10 && (
+              <tr>
+                <td colSpan={rows.length + 1} className="px-2 py-1 text-[10px] text-muted-foreground/60 text-center">
+                  +{visibleFields.length - 10} more fields (switch to Detail view to see all)
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

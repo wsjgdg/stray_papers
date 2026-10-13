@@ -56,6 +56,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatBytes } from "@/lib/dataset/filter";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function AppShell() {
   const dataset = useDatasetStore((s) => s.dataset);
@@ -138,11 +139,22 @@ export function AppShell() {
             <div className="flex flex-col h-full">
               <Toolbar />
               <div className="flex-1 min-h-0 overflow-hidden">
-                {viewMode === "grid" && <GridView />}
-                {viewMode === "table" && <TableView />}
-                {viewMode === "detail" && <DetailView />}
-                {viewMode === "compare" && <CompareView />}
-                {viewMode === "stats" && <StatsView />}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={viewMode}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                    className="h-full"
+                  >
+                    {viewMode === "grid" && <GridView />}
+                    {viewMode === "table" && <TableView />}
+                    {viewMode === "detail" && <DetailView />}
+                    {viewMode === "compare" && <CompareView />}
+                    {viewMode === "stats" && <StatsView />}
+                  </motion.div>
+                </AnimatePresence>
               </div>
             </div>
           </ResizablePanel>

@@ -214,6 +214,34 @@ export function useKeyboardNav() {
         }
         return;
       }
+      // t = jump to next annotated row
+      if (e.key === "t") {
+        const state = useDatasetStore.getState();
+        const annotations = state.annotations;
+        const annotatedIds = new Set(Object.keys(annotations).filter((id) => (annotations[id]?.length ?? 0) > 0));
+        if (annotatedIds.size > 0) {
+          const currentIdx = selectedRowId ? filtered.findIndex((r) => r.id === selectedRowId) : -1;
+          const nextAnnotated = filtered.slice(currentIdx + 1).find((r) => annotatedIds.has(r.id));
+          if (nextAnnotated) {
+            setSelectedRow(nextAnnotated.id);
+          } else {
+            const firstAnnotated = filtered.find((r) => annotatedIds.has(r.id));
+            if (firstAnnotated) setSelectedRow(firstAnnotated.id);
+          }
+        }
+        return;
+      }
+      // d = jump to next bookmarked row (alias for })
+      if (e.key === "d") {
+        const { bookmarks, getFilteredRows, setSelectedRow, selectedRowId } = useDatasetStore.getState();
+        const filteredRows = getFilteredRows();
+        const bookmarkedRows = filteredRows.filter((r) => bookmarks[r.id]);
+        if (bookmarkedRows.length === 0) return;
+        const currentIdx = selectedRowId ? bookmarkedRows.findIndex((r) => r.id === selectedRowId) : -1;
+        const nextIdx = currentIdx >= bookmarkedRows.length - 1 ? 0 : currentIdx + 1;
+        setSelectedRow(bookmarkedRows[nextIdx].id);
+        return;
+      }
       // x clears multi-selection
       if (e.key === "x") {
         clearSelection();

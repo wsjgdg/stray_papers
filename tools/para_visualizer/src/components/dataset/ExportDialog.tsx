@@ -261,11 +261,32 @@ export function ExportDialog() {
           )}
 
           {running && (
-            <div className="space-y-1.5">
-              <Progress value={progress} className="h-2" />
-              <p className="text-[10px] text-muted-foreground text-center">
-                {done} / {Math.max(1, filtered.length)} done · {progress.toFixed(0)}%
-              </p>
+            <div className="space-y-2 rounded-lg border bg-muted/20 p-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-medium flex items-center gap-1.5">
+                  <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                  Exporting images…
+                </span>
+                <span className="font-mono tabular-nums text-muted-foreground">
+                  {done} / {Math.max(1, filtered.length)}
+                </span>
+              </div>
+              <div className="relative h-2 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-300 rounded-full"
+                  style={{ width: `${progress}%` }}
+                />
+                <div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"
+                  style={{ backgroundSize: "200% 100%" }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                <span>{progress.toFixed(0)}% complete</span>
+                <span>
+                  {filtered.length - done > 0 ? `${filtered.length - done} remaining` : "finishing…"}
+                </span>
+              </div>
             </div>
           )}
         </div>

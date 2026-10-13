@@ -141,8 +141,18 @@ function ThumbnailImpl({
       title={alt}
     >
       {!isVisible || status === "idle" || status === "loading" ? (
-        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/60">
-          <Loader2 className="h-4 w-4 animate-spin" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground/60 gap-1.5">
+          {/* Shimmer background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-muted/40 via-muted/20 to-muted/40 animate-pulse" />
+          <div
+            className="absolute inset-0 opacity-50"
+            style={{
+              background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)",
+              backgroundSize: "200% 100%",
+              animation: "shimmer 1.5s infinite",
+            }}
+          />
+          <Loader2 className="h-4 w-4 animate-spin relative z-10" />
         </div>
       ) : status === "ok" && cached?.url ? (
         <img

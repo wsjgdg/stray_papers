@@ -48,6 +48,8 @@ const GROUPS: ShortcutGroup[] = [
       { keys: ["}"], label: "Next bookmark" },
       { keys: ["n"], label: "Next decode failure" },
       { keys: ["f"], label: "Next row with image" },
+      { keys: ["t"], label: "Next annotated row" },
+      { keys: ["d"], label: "Next bookmarked row" },
       { keys: ["x"], label: "Clear multi-selection" },
       { keys: ["/"], label: "Focus search box" },
     ],
