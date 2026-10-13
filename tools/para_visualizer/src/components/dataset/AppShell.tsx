@@ -21,6 +21,7 @@ import { LandingPage } from "./LandingPage";
 import { CommandPalette } from "./CommandPalette";
 import { BookmarkPanel } from "./BookmarkPanel";
 import { ThemeToggle } from "./ThemeToggle";
+import { ShortcutsCheatsheet } from "./ShortcutsCheatsheet";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -95,6 +96,7 @@ export function AppShell() {
         <LoadDialog />
         <CommandPalette />
         <BookmarkPanel />
+        <ShortcutsCheatsheet />
       </div>
     );
   }
@@ -161,6 +163,7 @@ export function AppShell() {
       <SchemaDialog />
       <CommandPalette />
       <BookmarkPanel />
+      <ShortcutsCheatsheet />
     </div>
   );
 }

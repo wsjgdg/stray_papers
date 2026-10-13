@@ -7,6 +7,7 @@ import { useDatasetStore } from "@/lib/dataset/store";
 import { useFilteredRows, useSchema, useHiddenFields } from "@/lib/dataset/hooks";
 import { Thumbnail } from "./Thumbnail";
 import { AnnotationOverlay } from "./AnnotationOverlay";
+import { ZoomableImage } from "./ZoomableImage";
 import { formatValue } from "@/lib/dataset/filter";
 import { ChevronLeft, ChevronRight, Bookmark, BookmarkCheck, Download, AlertTriangle, Copy, Check, MousePointer2, PenLine } from "lucide-react";
 import { useState } from "react";
@@ -148,24 +149,41 @@ export function DetailView() {
         <div className="grid lg:grid-cols-[1fr_360px] gap-3 p-3">
           {/* Image */}
           <div className="flex flex-col gap-2">
-            <div className="relative rounded-lg border bg-muted/20 overflow-hidden flex items-center justify-center min-h-[300px]">
-              <Thumbnail
-                rowId={row.id}
-                imageValue={imgValue}
-                fieldName={imageField || ""}
-                className="w-full aspect-[3/2]"
-                showBbox={showBboxOverlay}
-                bboxes={Array.isArray(bboxes) ? (bboxes as number[]) : undefined}
-                imgWidth={typeof row.data["image_width"] === "number" ? (row.data["image_width"] as number) : undefined}
-                imgHeight={typeof row.data["image_height"] === "number" ? (row.data["image_height"] as number) : undefined}
-                alt={`Detail of row ${row.index + 1}`}
-              />
-              {/* Annotation overlay (only when image is decoded) */}
-              {cached?.url && (
-                <AnnotationOverlay
+            <div className="relative rounded-lg border bg-muted/20 overflow-hidden flex items-center justify-center min-h-[400px]">
+              {cached?.url ? (
+                <ZoomableImage
+                  src={cached.url}
+                  alt={`Detail of row ${row.index + 1}`}
+                  className="w-full h-full min-h-[400px]"
+                  naturalWidth={cached.width || 480}
+                  naturalHeight={cached.height || 320}
+                >
+                  {/* bbox overlay (always rendered, positioned absolute) */}
+                  {showBboxOverlay && Array.isArray(bboxes) && (
+                    <BboxAbsoluteOverlay
+                      bboxes={bboxes as number[]}
+                      imgWidth={typeof row.data["image_width"] === "number" ? (row.data["image_width"] as number) : cached.width || 1}
+                      imgHeight={typeof row.data["image_height"] === "number" ? (row.data["image_height"] as number) : cached.height || 1}
+                    />
+                  )}
+                  {/* Annotation overlay (only when image is decoded) */}
+                  <AnnotationOverlay
+                    rowId={row.id}
+                    imgWidth={cached.width || 480}
+                    imgHeight={cached.height || 320}
+                  />
+                </ZoomableImage>
+              ) : (
+                <Thumbnail
                   rowId={row.id}
-                  imgWidth={cached.width || 480}
-                  imgHeight={cached.height || 320}
+                  imageValue={imgValue}
+                  fieldName={imageField || ""}
+                  className="w-full aspect-[3/2]"
+                  showBbox={showBboxOverlay}
+                  bboxes={Array.isArray(bboxes) ? (bboxes as number[]) : undefined}
+                  imgWidth={typeof row.data["image_width"] === "number" ? (row.data["image_width"] as number) : undefined}
+                  imgHeight={typeof row.data["image_height"] === "number" ? (row.data["image_height"] as number) : undefined}
+                  alt={`Detail of row ${row.index + 1}`}
                 />
               )}
             </div>
@@ -247,6 +265,46 @@ export function DetailView() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * BboxAbsoluteOverlay: renders bbox rectangles positioned absolutely over the
+ * ZoomableImage container. Uses intrinsic image dimensions to compute % positions.
+ * Note: this overlay does NOT scale with zoom — it's meant to be a child of
+ * ZoomableImage so it sits on top. For zoom-aware bbox, the bboxes would need
+ * to be transformed along with the image. For now we keep it simple.
+ */
+function BboxAbsoluteOverlay({
+  bboxes,
+  imgWidth,
+  imgHeight,
+}: {
+  bboxes: number[];
+  imgWidth: number;
+  imgHeight: number;
+}) {
+  const groups: number[][] = [];
+  for (let i = 0; i + 3 < bboxes.length; i += 4) {
+    groups.push([bboxes[i], bboxes[i + 1], bboxes[i + 2], bboxes[i + 3]]);
+  }
+  return (
+    <div className="absolute inset-0 pointer-events-none">
+      {groups.map((b, i) => {
+        const left = (b[0] / imgWidth) * 100;
+        const top = (b[1] / imgHeight) * 100;
+        const w = (b[2] / imgWidth) * 100;
+        const h = (b[3] / imgHeight) * 100;
+        return (
+          <div
+            key={i}
+            className="absolute border-2 border-rose-500 bg-rose-500/15 rounded-sm"
+            style={{ left: `${left}%`, top: `${top}%`, width: `${w}%`, height: `${h}%` }}
+            title={`bbox ${i + 1}: ${b[0].toFixed(0)},${b[1].toFixed(0)} ${b[2].toFixed(0)}x${b[3].toFixed(0)}`}
+          />
+        );
+      })}
     </div>
   );
 }

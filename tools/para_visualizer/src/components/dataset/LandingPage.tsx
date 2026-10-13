@@ -47,6 +47,7 @@ export function LandingPage() {
   const setLoading = useDatasetStore((s) => s.setLoading);
   const setLoadError = useDatasetStore((s) => s.setLoadError);
   const [busy, setBusy] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
 
   const handleDemo = async () => {
     setBusy(true);
@@ -66,8 +67,56 @@ export function LandingPage() {
     }
   };
 
+  const handleFiles = async (files: FileList | File[]) => {
+    const arr = Array.from(files);
+    if (arr.length === 0) return;
+    setBusy(true);
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const { parseFiles } = await import("@/lib/dataset/parsers");
+      const ds = await parseFiles(arr);
+      setDataset(ds);
+      toast.success(`Loaded ${ds.files.length} file(s) with ${ds.files.reduce((a, f) => a + f.rowsCount, 0)} rows`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setLoadError(msg);
+      toast.error(`Load failed: ${msg}`);
+    } finally {
+      setLoading(false);
+      setBusy(false);
+    }
+  };
+
   return (
-    <main className="flex-1 overflow-y-auto custom-scroll">
+    <main
+      className="flex-1 overflow-y-auto custom-scroll relative"
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragOver(true);
+      }}
+      onDragLeave={(e) => {
+        // only clear when leaving the main container (not entering a child)
+        if (e.currentTarget === e.target) setDragOver(false);
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDragOver(false);
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          handleFiles(e.dataTransfer.files);
+        }
+      }}
+    >
+      {/* drag overlay */}
+      {dragOver && (
+        <div className="fixed inset-0 z-50 bg-primary/10 backdrop-blur-sm flex items-center justify-center pointer-events-none">
+          <div className="border-2 border-dashed border-primary rounded-2xl px-12 py-10 bg-card/90 shadow-2xl text-center">
+            <Upload className="h-10 w-10 text-primary mx-auto mb-3 animate-bounce" />
+            <p className="text-lg font-semibold">Drop files to load</p>
+            <p className="text-xs text-muted-foreground mt-1">.arrow · .feather · .csv · .tsv · .json</p>
+          </div>
+        </div>
+      )}
       {/* hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/5 to-transparent pointer-events-none" />

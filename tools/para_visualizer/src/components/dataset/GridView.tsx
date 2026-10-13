@@ -7,8 +7,9 @@ import { useDatasetStore } from "@/lib/dataset/store";
 import { useFilteredRows, useSchema } from "@/lib/dataset/hooks";
 import { Thumbnail } from "./Thumbnail";
 import { formatValue } from "@/lib/dataset/filter";
-import { Bookmark, BookmarkCheck, Star } from "lucide-react";
+import { Bookmark, BookmarkCheck, Star, Check, Download, X, ListChecks } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
@@ -32,6 +33,12 @@ export function GridView() {
   const bookmarks = useDatasetStore((s) => s.bookmarks);
   const toggleBookmark = useDatasetStore((s) => s.toggleBookmark);
   const showBboxOverlay = useDatasetStore((s) => s.showBboxOverlay);
+  const selectedRowIds = useDatasetStore((s) => s.selectedRowIds);
+  const toggleSelectedRow = useDatasetStore((s) => s.toggleSelectedRow);
+  const clearSelection = useDatasetStore((s) => s.clearSelection);
+  const selectAllFiltered = useDatasetStore((s) => s.selectAllFiltered);
+  const setShowExportDialog = useDatasetStore((s) => s.setShowExportDialog);
+  const lastShiftIndex = useRef<number | null>(null);
 
   const hoverLabelField = useMemo(() => {
     // pick a representative text field for caption
@@ -69,25 +76,72 @@ export function GridView() {
               const isSel = selectedRowId === r.id;
               const inCompare = compareRowIds.includes(r.id);
               const bookmarked = !!bookmarks[r.id];
+              const inMultiSelect = selectedRowIds.has(r.id);
               const imgValue = imageField ? r.data[imageField] : undefined;
               const bboxes = r.data["extra_input_figure_bboxes"];
               const w = r.data["image_width"];
               const h = r.data["image_height"];
+
+              const handleCardClick = (e: React.MouseEvent) => {
+                // Shift+click: multi-select range
+                if (e.shiftKey && lastShiftIndex.current !== null) {
+                  const from = Math.min(lastShiftIndex.current, r.index);
+                  const to = Math.max(lastShiftIndex.current, r.index);
+                  const toSelect = filtered.slice(from, to + 1).map((x) => x.id);
+                  // merge into selection
+                  useDatasetStore.setState((s) => {
+                    const next = new Set(s.selectedRowIds);
+                    toSelect.forEach((id) => next.add(id));
+                    return { selectedRowIds: next };
+                  });
+                  e.preventDefault();
+                  return;
+                }
+                // Cmd/Ctrl+click: toggle single in multi-select
+                if (e.metaKey || e.ctrlKey) {
+                  toggleSelectedRow(r.id);
+                  lastShiftIndex.current = r.index;
+                  e.preventDefault();
+                  return;
+                }
+                // normal click: open detail
+                setSelectedRow(r.id);
+                lastShiftIndex.current = r.index;
+              };
+
               return (
                 <div
                   key={r.id}
                   className={cn(
-                    "group relative rounded-lg border bg-card overflow-hidden transition-all hover:shadow-md hover:border-primary/40",
+                    "group relative rounded-lg border bg-card overflow-hidden transition-all hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5",
                     isSel ? "ring-2 ring-primary border-primary" : "",
                     inCompare ? "ring-2 ring-amber-400" : "",
+                    inMultiSelect ? "ring-2 ring-emerald-500 border-emerald-400" : "",
                   )}
+                  onClick={handleCardClick}
                 >
+                  {/* multi-select checkbox */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleSelectedRow(r.id);
+                      lastShiftIndex.current = r.index;
+                    }}
+                    className={cn(
+                      "absolute top-1.5 left-1.5 z-10 w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
+                      inMultiSelect
+                        ? "bg-emerald-500 border-emerald-500 text-white opacity-100"
+                        : "bg-card/80 backdrop-blur border-foreground/30 text-transparent opacity-0 group-hover:opacity-100 hover:border-primary",
+                    )}
+                    title="Toggle selection (Cmd+click for multi)"
+                  >
+                    <Check className="h-3 w-3" />
+                  </button>
                   <Thumbnail
                     rowId={r.id}
                     imageValue={imgValue}
                     fieldName={imageField || ""}
                     className="aspect-[3/2] w-full"
-                    onClick={() => setSelectedRow(r.id)}
                     showBbox={showBboxOverlay}
                     bboxes={Array.isArray(bboxes) ? bboxes as number[] : undefined}
                     imgWidth={typeof w === "number" ? w : undefined}
@@ -152,6 +206,43 @@ export function GridView() {
           </div>
         )}
       </div>
+      {/* Bulk action bar (visible when rows are multi-selected) */}
+      {selectedRowIds.size > 0 && (
+        <div className="flex items-center gap-2 px-3 py-2 border-t bg-emerald-50/60 dark:bg-emerald-950/20 text-xs">
+          <ListChecks className="h-4 w-4 text-emerald-600" />
+          <span className="font-medium text-emerald-700 dark:text-emerald-300">
+            {selectedRowIds.size} selected
+          </span>
+          <div className="flex-1" />
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs"
+            onClick={() => selectAllFiltered()}
+            title="Select all filtered rows"
+          >
+            Select all ({filtered.length})
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs"
+            onClick={() => setShowExportDialog(true)}
+          >
+            <Download className="h-3 w-3" />
+            Export selected
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 text-xs text-muted-foreground"
+            onClick={clearSelection}
+          >
+            <X className="h-3 w-3" />
+            Clear
+          </Button>
+        </div>
+      )}
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-4 py-2 border-t bg-card/40 text-xs text-muted-foreground">
           <span>

@@ -4,9 +4,11 @@
  * Supported formats:
  *  - .json (our demo format: { name, files: [{ name, schema, rows }] })
  *  - .arrow / .feather / .ipc  (Apache Arrow IPC, parsed client-side via apache-arrow)
+ *  - .csv / .tsv  (parsed via PapaParse)
  *  - .parquet (best-effort: if apache-arrow's parquet reader supports it; otherwise warn)
  */
 import * as arrow from "apache-arrow";
+import Papa from "papaparse";
 import type { DatasetFile, LoadedDataset, SchemaField } from "./types";
 import { detectFieldRole } from "./decode";
 
@@ -144,6 +146,49 @@ async function parseJsonFile(file: File): Promise<LoadedDataset> {
   throw new Error("Unrecognized JSON structure");
 }
 
+async function parseCsvFile(file: File): Promise<DatasetFile> {
+  const text = await file.text();
+  const lower = file.name.toLowerCase();
+  const delimiter = lower.endsWith(".tsv") ? "\t" : undefined; // auto-detect for .csv
+  const result = Papa.parse<Record<string, string>>(text, {
+    header: true,
+    dynamicTyping: true,
+    skipEmptyLines: true,
+    delimiter,
+    transformHeader: (h) => h.trim(),
+  });
+
+  const headers = result.meta.fields || [];
+  const rows = (result.data || []).map((r, i) => {
+    const row: Record<string, unknown> = {};
+    for (const h of headers) {
+      row[h] = (r as Record<string, unknown>)[h];
+    }
+    if (!("id" in row)) row.id = `row_${i}`;
+    return row;
+  });
+
+  // build schema from first row sample
+  const sample = rows[0] || {};
+  const schema: SchemaField[] = headers.map((h) => {
+    const v = sample[h];
+    let type = "string";
+    if (typeof v === "number") type = Number.isInteger(v) ? "int" : "float";
+    else if (typeof v === "boolean") type = "bool";
+    const f: SchemaField = { name: h, type, nullable: true, role: "unknown" };
+    f.role = detectFieldRole(f, v);
+    return f;
+  });
+
+  return {
+    name: file.name,
+    sizeBytes: file.size,
+    rowsCount: rows.length,
+    schema,
+    rows,
+  };
+}
+
 export async function parseFiles(files: File[]): Promise<LoadedDataset> {
   const outFiles: DatasetFile[] = [];
   let datasetName = files.length === 1 ? files[0].name : `${files.length} files`;
@@ -155,6 +200,8 @@ export async function parseFiles(files: File[]): Promise<LoadedDataset> {
       const ds = await parseJsonFile(file);
       outFiles.push(...ds.files);
       if (files.length === 1) datasetName = ds.name;
+    } else if (lower.endsWith(".csv") || lower.endsWith(".tsv")) {
+      outFiles.push(await parseCsvFile(file));
     } else if (lower.endsWith(".parquet")) {
       throw new Error("Parquet direct parsing in-browser is limited. Please convert to Arrow IPC (.arrow/.feather) or JSON.");
     } else {

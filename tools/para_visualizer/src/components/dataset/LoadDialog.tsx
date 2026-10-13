@@ -110,7 +110,7 @@ export function LoadDialog() {
               id="file-input"
               type="file"
               multiple
-              accept=".arrow,.feather,.ipc,.json,.parquet"
+              accept=".arrow,.feather,.ipc,.json,.parquet,.csv,.tsv"
               className="hidden"
               onChange={(e) => {
                 if (e.target.files) handleFiles(e.target.files);
@@ -178,6 +178,7 @@ export function LoadDialog() {
             </div>
             <ul className="space-y-0.5 list-disc list-inside">
               <li><code>.arrow</code> / <code>.feather</code> / <code>.ipc</code> — Apache Arrow IPC (parsed in-browser via apache-arrow)</li>
+              <li><code>.csv</code> / <code>.tsv</code> — Comma/tab-separated values (parsed via PapaParse)</li>
               <li><code>.json</code> — Bundled demo format or {`{schema, data}`} or array of rows</li>
               <li><code>.parquet</code> — Convert to .arrow first; direct in-browser parsing is limited</li>
             </ul>
