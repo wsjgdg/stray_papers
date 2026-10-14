@@ -190,7 +190,13 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   showCommandPalette: false,
   showBookmarkPanel: false,
   showRowJumpDialog: false,
-  maxRows: 5000,
+  maxRows: (() => {
+    // Cap on rows loaded into memory at once. The grid virtualizes rendering so
+    // any number renders fine; this only bounds the in-memory data array. Raise
+    // via NEXT_PUBLIC_MAX_ROWS (e.g. 20000) when you have a large dataset.
+    const v = Number(process.env.NEXT_PUBLIC_MAX_ROWS);
+    return Number.isFinite(v) && v > 0 ? Math.floor(v) : 20000;
+  })(),
 
   setDataset: (ds) =>
     set((s) => {

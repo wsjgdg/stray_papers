@@ -54,6 +54,11 @@ export function GridView() {
   const search = useDatasetStore((s) => s.search);
   const failures = useDatasetStore((s) => s.failures);
   const bumpRetryEpoch = useDatasetStore((s) => s.bumpRetryEpoch);
+  const dataset = useDatasetStore((s) => s.datasets[s.activeDatasetIndex]);
+  const maxRows = useDatasetStore((s) => s.maxRows);
+  // Real total across all files (before the maxRows slice), so we can warn when
+  // rows are truncated instead of silently dropping them.
+  const totalRows = dataset ? dataset.files.reduce((a, f) => a + f.rowsCount, 0) : 0;
   const lastShiftIndex = useRef<number | null>(null);
   // hover preview state
   const [hoverRowId, setHoverRowId] = useState<string | null>(null);
@@ -428,7 +433,14 @@ export function GridView() {
       )}
       {/* Footer with count */}
       <div className="flex items-center justify-between px-4 py-1.5 border-t bg-card/40 text-xs text-muted-foreground">
-        <span>{filtered.length} rows · virtual scroll</span>
+        <span>
+          {filtered.length} rows · virtual scroll
+          {totalRows > maxRows && (
+            <span className="ml-1 text-amber-600 dark:text-amber-400" title={`Dataset has ${totalRows} rows; only the first ${maxRows} are loaded. Raise NEXT_PUBLIC_MAX_ROWS to load more.`}>
+              (capped: showing {maxRows} of {totalRows})
+            </span>
+          )}
+        </span>
         <div className="flex items-center gap-3">
           {failures.length > 0 && (
             <button

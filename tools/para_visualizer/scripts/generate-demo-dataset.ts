@@ -378,7 +378,7 @@ async function buildDataset() {
   const rows: any[] = [];
   const n = 96; // 96 sample rows
   for (let i = 0; i < n; i++) {
-    const g = pick(GENERATORS as any);
+    const g: any = pick(GENERATORS as any);
     const { svg, bboxes, meta } = g.fn();
     const png = await sharp(Buffer.from(svg)).png().toBuffer();
     const base64 = png.toString("base64");

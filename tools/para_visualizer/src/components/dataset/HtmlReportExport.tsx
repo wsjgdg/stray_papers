@@ -6,6 +6,7 @@
  */
 import { useDatasetStore } from "@/lib/dataset/store";
 import { useActiveRows, useSchema } from "@/lib/dataset/hooks";
+import type { LoadedDataset } from "@/lib/dataset/types";
 import { uniqueValues, numericRange, formatBytes } from "@/lib/dataset/filter";
 import { Button } from "@/components/ui/button";
 import { FileDown } from "lucide-react";
@@ -43,7 +44,7 @@ export function HtmlReportExport() {
 }
 
 function buildHtml(
-  dataset: NonNullable<ReturnType<typeof useDatasetStore.getState>["dataset"]>,
+  dataset: LoadedDataset,
   rows: ReturnType<typeof useActiveRows>,
   schema: ReturnType<typeof useSchema>,
   imageField: string | null,

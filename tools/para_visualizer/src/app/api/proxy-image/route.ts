@@ -210,6 +210,39 @@ async function writeDisk(url: string, entry: CacheEntry): Promise<void> {
   }
 }
 
+// --- upstream-fetch semaphore -------------------------------------------------
+// The browser already caps concurrent decodes (NEXT_PUBLIC_IMAGE_CONCURRENCY),
+// but every one of those hits this route and opens its own upstream socket.
+// Without a server-side cap, 7000 slow-host images would open hundreds of
+// sockets at once (FD + memory pressure, event-loop stalls). Bound it so the
+// proxy fetches upstream a few at a time and queues the rest. Tunable via
+// PROXY_MAX_CONCURRENT (default 16).
+const MAX_UPSTREAM_CONCURRENT = (() => {
+  const v = Number(process.env.PROXY_MAX_CONCURRENT);
+  return Number.isFinite(v) && v > 0 ? Math.max(1, Math.min(128, Math.floor(v))) : 16;
+})();
+let upstreamActive = 0;
+const upstreamWaiters: Array<() => void> = [];
+
+function acquireUpstream(): Promise<void> {
+  if (upstreamActive < MAX_UPSTREAM_CONCURRENT) {
+    upstreamActive++;
+    return Promise.resolve();
+  }
+  return new Promise<void>((resolve) => {
+    upstreamWaiters.push(() => {
+      upstreamActive++;
+      resolve();
+    });
+  });
+}
+
+function releaseUpstream(): void {
+  upstreamActive--;
+  const next = upstreamWaiters.shift();
+  if (next) next();
+}
+
 async function fetchUpstream(
   url: string,
   headers: Headers,
@@ -303,7 +336,14 @@ export async function GET(req: NextRequest) {
   const accept = req.headers.get("accept");
   if (accept) headers.set("accept", accept);
 
-  const p = fetchUpstream(url, headers, timeoutMs)
+  const p = (async () => {
+    await acquireUpstream();
+    try {
+      return await fetchUpstream(url, headers, timeoutMs);
+    } finally {
+      releaseUpstream();
+    }
+  })()
     .then((entry) => {
       if (entry) {
         cache.set(url, entry);

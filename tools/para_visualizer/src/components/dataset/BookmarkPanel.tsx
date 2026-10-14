@@ -61,7 +61,7 @@ export function BookmarkPanel() {
 
   const handleClearAll = () => {
     if (!confirm(`Remove all ${Object.keys(bookmarks).length} bookmarks?`)) return;
-    Object.keys(bookmarks).forEach(toggleBookmark);
+    Object.keys(bookmarks).forEach((id) => toggleBookmark(id));
     toast.success("All bookmarks cleared");
   };
 

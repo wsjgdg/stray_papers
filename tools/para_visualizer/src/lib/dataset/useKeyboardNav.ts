@@ -193,7 +193,8 @@ export function useKeyboardNav() {
           toast.success(`Bookmark ${prevIdx + 1}/${bookmarkedRows.length}`);
         } else {
           // [ = prev file
-          const { dataset, activeFileIndex, setActiveFileIndex } = useDatasetStore.getState();
+          const { datasets, activeDatasetIndex, activeFileIndex, setActiveFileIndex } = useDatasetStore.getState();
+          const dataset = datasets[activeDatasetIndex];
           if (dataset) {
             if (activeFileIndex === null) setActiveFileIndex(0);
             else if (activeFileIndex > 0) {
@@ -220,7 +221,8 @@ export function useKeyboardNav() {
           toast.success(`Bookmark ${nextIdx + 1}/${bookmarkedRows.length}`);
         } else {
           // ] = next file
-          const { dataset, activeFileIndex, setActiveFileIndex } = useDatasetStore.getState();
+          const { datasets, activeDatasetIndex, activeFileIndex, setActiveFileIndex } = useDatasetStore.getState();
+          const dataset = datasets[activeDatasetIndex];
           if (dataset && dataset.files.length > 1) {
             if (activeFileIndex === null) setActiveFileIndex(0);
             else if (activeFileIndex < dataset.files.length - 1) {

@@ -255,7 +255,7 @@ async function decodeStringBytes(s: string, fieldName: string): Promise<DecodeRe
     let format = "png";
     if (s.startsWith("data:image/")) {
       // data URL: data:image/png;base64,XXXX
-      const m = s.match(/^data:image\/([\w.+-]+);base64,(.*)$/s);
+      const m = s.match(/^data:image\/([\w.+-]+);base64,(.*)$/);
       if (!m) return fail("Malformed data URL");
       format = m[1];
       raw = base64ToBytes(m[2]);
@@ -281,7 +281,9 @@ async function decodeBinaryBytes(buf: Uint8Array, fieldName: string): Promise<De
 
 async function finalize(raw: Uint8Array, format: string, fieldName: string): Promise<DecodeResult> {
   if (raw.length === 0) return fail("Empty image bytes");
-  const blob = new Blob([raw], { type: `image/${format}` });
+  // Copy into a fresh ArrayBuffer-backed view so the BlobPart type is unambiguous.
+  const bytes = new Uint8Array(raw); // new buffer, type Uint8Array<ArrayBuffer>
+  const blob = new Blob([bytes], { type: `image/${format}` });
   const blobUrl = URL.createObjectURL(blob);
   const sizeBytes = raw.length;
   // Probe dimensions via Image
