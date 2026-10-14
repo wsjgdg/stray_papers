@@ -67,6 +67,7 @@ export function LeftPanel() {
   const setImageField = useDatasetStore((s) => s.setImageField);
   const hiddenFields = useDatasetStore((s) => s.hiddenFields);
   const toggleHiddenField = useDatasetStore((s) => s.toggleHiddenField);
+  const maxRows = useDatasetStore((s) => s.maxRows);
   const rows = useActiveRows();
 
   const categoryCounts = useMemo(() => {
@@ -181,7 +182,9 @@ export function LeftPanel() {
                     {dataset.files.reduce((a, f) => a + f.rowsCount, 0)}
                   </span>
                 </div>
-                <div className="text-[9px] text-muted-foreground mt-0.5">Merged view</div>
+                <div className="text-[9px] text-muted-foreground mt-0.5">
+                  Merged view{dataset.files.reduce((a, f) => a + f.rowsCount, 0) > maxRows ? ` · first ${maxRows} rows` : ""}
+                </div>
               </button>
               {dataset.files.map((f, i) => {
                 const active = activeFileIndex === i;

@@ -76,6 +76,8 @@ interface DatasetState {
   showCommandPalette: boolean;
   showBookmarkPanel: boolean;
   showRowJumpDialog: boolean;
+  // max rows to load at once (for large datasets)
+  maxRows: number;
 
   // ---- actions ----
   setDataset: (ds: LoadedDataset | null) => void;
@@ -114,6 +116,7 @@ interface DatasetState {
   setShowCommandPalette: (v: boolean) => void;
   setShowBookmarkPanel: (v: boolean) => void;
   setShowRowJumpDialog: (v: boolean) => void;
+  setMaxRows: (n: number) => void;
   setLoading: (v: boolean) => void;
   setLoadError: (v: string | null) => void;
   addRecent: (r: { name: string; size: number; rows: number }) => void;
@@ -176,6 +179,7 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   showCommandPalette: false,
   showBookmarkPanel: false,
   showRowJumpDialog: false,
+  maxRows: 5000,
 
   setDataset: (ds) =>
     set((s) => {
@@ -195,8 +199,9 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
       }
       const firstFile = ds.files[0];
       const schema = firstFile?.schema || [];
-      // auto-pick first image field
+      // auto-pick first image or URL field as the image field
       let imageField = schema.find((f) => f.role === "image")?.name || null;
+      if (!imageField) imageField = schema.find((f) => f.role === "url")?.name || null;
       if (!imageField && schema.length > 0) imageField = schema[0].name;
       const recent = ds
         ? [
@@ -229,6 +234,7 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
       const firstFile = ds.files[0];
       const schema = firstFile?.schema || [];
       let imageField = schema.find((f) => f.role === "image")?.name || s.imageField;
+      if (!imageField) imageField = schema.find((f) => f.role === "url")?.name || s.imageField;
       if (!imageField && schema.length > 0) imageField = schema[0].name;
       const recent = [
         ...ds.files.map((f) => ({
@@ -357,6 +363,7 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   setShowCommandPalette: (v) => set({ showCommandPalette: v }),
   setShowBookmarkPanel: (v) => set({ showBookmarkPanel: v }),
   setShowRowJumpDialog: (v) => set({ showRowJumpDialog: v }),
+  setMaxRows: (n) => set({ maxRows: n }),
   setLoading: (v) => set({ loading: v }),
   setLoadError: (v) => set({ loadError: v }),
   addRecent: (r) => set((s) => ({ recent: [r, ...s.recent].slice(0, 10) })),
@@ -404,12 +411,17 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   setAnnotationColor: (c) => set({ annotationColor: c }),
 
   getActiveRows: () => {
-    const { datasets, activeDatasetIndex, activeFileIndex } = get();
+    const { datasets, activeDatasetIndex, activeFileIndex, maxRows } = get();
     const dataset = datasets[activeDatasetIndex];
     if (!dataset) return [];
     const files =
       activeFileIndex === null ? dataset.files : dataset.files.filter((_, i) => i === activeFileIndex);
-    return flattenRows(files);
+    // Slice files' rows to maxRows to prevent loading huge datasets at once
+    const slicedFiles = files.map((f) => ({
+      ...f,
+      rows: f.rows.slice(0, maxRows),
+    }));
+    return flattenRows(slicedFiles);
   },
 
   getFilteredRows: () => {
