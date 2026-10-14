@@ -28,7 +28,7 @@ import { HtmlReportExport } from "./HtmlReportExport";
 const PIE_COLORS = ["#ef4444", "#f97316", "#f59e0b", "#10b981", "#06b6d4", "#6366f1", "#a855f7", "#ec4899", "#14b8a6", "#84cc16"];
 
 export function StatsView() {
-  const dataset = useDatasetStore((s) => s.dataset);
+  const dataset = useDatasetStore((s) => s.datasets[s.activeDatasetIndex]);
   const rows = useActiveRows();
   const schema = useSchema();
   const failures = useDatasetStore((s) => s.failures);

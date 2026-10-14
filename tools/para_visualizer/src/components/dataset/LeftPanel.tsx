@@ -19,6 +19,8 @@ import {
   Database,
   RefreshCw,
   CheckCircle2,
+  GitCompareArrows,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMemo } from "react";
@@ -51,7 +53,13 @@ const roleColor: Record<string, string> = {
 };
 
 export function LeftPanel() {
-  const dataset = useDatasetStore((s) => s.dataset);
+  const dataset = useDatasetStore((s) => s.datasets[s.activeDatasetIndex]);
+  const datasets = useDatasetStore((s) => s.datasets);
+  const activeDatasetIndex = useDatasetStore((s) => s.activeDatasetIndex);
+  const setActiveDatasetIndex = useDatasetStore((s) => s.setActiveDatasetIndex);
+  const removeDataset = useDatasetStore((s) => s.removeDataset);
+  const toggleCompareDataset = useDatasetStore((s) => s.toggleCompareDataset);
+  const compareDatasetIndices = useDatasetStore((s) => s.compareDatasetIndices);
   const activeFileIndex = useDatasetStore((s) => s.activeFileIndex);
   const setActiveFileIndex = useDatasetStore((s) => s.setActiveFileIndex);
   const schema = useSchema();
@@ -75,6 +83,77 @@ export function LeftPanel() {
     <div className="flex flex-col h-full bg-card/30 border-r">
       <ScrollArea className="flex-1">
         <div className="p-3 space-y-4">
+          {/* Datasets section (multi-dataset switcher) */}
+          {datasets.length > 1 && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-2">
+                <Database className="h-3.5 w-3.5 text-muted-foreground" />
+                <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Datasets
+                </h3>
+                <Badge variant="secondary" className="ml-auto text-[9px] h-4">
+                  {datasets.length}
+                </Badge>
+              </div>
+              <div className="space-y-1">
+                {datasets.map((ds, i) => {
+                  const isActive = activeDatasetIndex === i;
+                  const inCompare = compareDatasetIndices.includes(i);
+                  return (
+                    <div
+                      key={i}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-2 py-1.5 rounded-md border text-[11px] transition-colors cursor-pointer",
+                        isActive
+                          ? "bg-primary/10 border-primary/40 text-foreground"
+                          : "border-transparent hover:bg-accent/40",
+                      )}
+                      onClick={() => setActiveDatasetIndex(i)}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">{ds.name}</div>
+                        <div className="text-[9px] text-muted-foreground">
+                          {ds.files.reduce((a, f) => a + f.rowsCount, 0)} rows · {ds.files.length} files
+                        </div>
+                      </div>
+                      {inCompare && (
+                        <Badge variant="secondary" className="text-[8px] h-3 px-1 shrink-0">CMP</Badge>
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleCompareDataset(i);
+                        }}
+                        className={cn(
+                          "p-0.5 rounded hover:bg-accent text-[9px] shrink-0",
+                          inCompare ? "text-emerald-500" : "text-muted-foreground/50",
+                        )}
+                        title={inCompare ? "Remove from dataset comparison" : "Add to dataset comparison"}
+                      >
+                        <GitCompareArrows className="h-3 w-3" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`Remove dataset "${ds.name}"?`)) removeDataset(i);
+                        }}
+                        className="p-0.5 rounded hover:bg-accent text-muted-foreground/50 hover:text-rose-500 shrink-0"
+                        title="Remove dataset"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+              {compareDatasetIndices.length >= 2 && (
+                <div className="mt-1.5 px-2 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-300/40 text-[10px] text-emerald-700 dark:text-emerald-300">
+                  {compareDatasetIndices.length} datasets selected for comparison — use Compare view to see them side-by-side
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Files section */}
           <div>
             <div className="flex items-center gap-1.5 mb-2">

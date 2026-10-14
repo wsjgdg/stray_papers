@@ -9,7 +9,7 @@ import { useKeyboardNav } from "@/lib/dataset/useKeyboardNav";
 
 export default function Home() {
   const setShowLoadDialog = useDatasetStore((s) => s.setShowLoadDialog);
-  const dataset = useDatasetStore((s) => s.dataset);
+  const dataset = useDatasetStore((s) => s.datasets[s.activeDatasetIndex]);
 
   // hydrate persisted state on first mount
   useEffect(() => {

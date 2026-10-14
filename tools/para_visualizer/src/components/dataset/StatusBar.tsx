@@ -16,7 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export function StatusBar() {
-  const dataset = useDatasetStore((s) => s.dataset);
+  const dataset = useDatasetStore((s) => s.datasets[s.activeDatasetIndex]);
   const total = useActiveRows();
   const filtered = useFilteredRows();
   const bookmarks = useDatasetStore((s) => s.bookmarks);

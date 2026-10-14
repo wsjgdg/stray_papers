@@ -59,7 +59,7 @@ import { formatBytes } from "@/lib/dataset/filter";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function AppShell() {
-  const dataset = useDatasetStore((s) => s.dataset);
+  const dataset = useDatasetStore((s) => s.datasets[s.activeDatasetIndex]);
   const loading = useDatasetStore((s) => s.loading);
   const viewMode = useDatasetStore((s) => s.viewMode);
   const sidebarOpen = useDatasetStore((s) => s.sidebarOpen);
@@ -196,7 +196,7 @@ function RowJumpDialogWithStore() {
 }
 
 function Header() {
-  const dataset = useDatasetStore((s) => s.dataset);
+  const dataset = useDatasetStore((s) => s.datasets[s.activeDatasetIndex]);
   const setShowLoadDialog = useDatasetStore((s) => s.setShowLoadDialog);
   const setShowFilterPanel = useDatasetStore((s) => s.setShowFilterPanel);
   const setShowExportDialog = useDatasetStore((s) => s.setShowExportDialog);

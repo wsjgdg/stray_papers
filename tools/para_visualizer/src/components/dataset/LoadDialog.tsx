@@ -23,12 +23,15 @@ export function LoadDialog() {
   const open = useDatasetStore((s) => s.showLoadDialog);
   const setOpen = useDatasetStore((s) => s.setShowLoadDialog);
   const setDataset = useDatasetStore((s) => s.setDataset);
+  const addDataset = useDatasetStore((s) => s.addDataset);
+  const datasets = useDatasetStore((s) => s.datasets);
   const setLoading = useDatasetStore((s) => s.setLoading);
   const setLoadError = useDatasetStore((s) => s.setLoadError);
   const loading = useDatasetStore((s) => s.loading);
   const recent = useDatasetStore((s) => s.recent);
   const [dragging, setDragging] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [loadMode, setLoadMode] = useState<"replace" | "add">("replace");
 
   const handleFiles = useCallback(async (files: FileList | File[]) => {
     const arr = Array.from(files);
@@ -42,8 +45,13 @@ export function LoadDialog() {
     setLoadError(null);
     try {
       const ds = await parseFiles(pendingFiles);
-      setDataset(ds);
-      toast.success(`Loaded ${ds.files.length} file(s) with ${ds.files.reduce((a, f) => a + f.rowsCount, 0)} rows`);
+      if (loadMode === "add" && datasets.length > 0) {
+        addDataset(ds);
+        toast.success(`Added dataset: ${ds.name} (${ds.files.reduce((a, f) => a + f.rowsCount, 0)} rows)`);
+      } else {
+        setDataset(ds);
+        toast.success(`Loaded ${ds.files.length} file(s) with ${ds.files.reduce((a, f) => a + f.rowsCount, 0)} rows`);
+      }
       setPendingFiles([]);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -52,15 +60,20 @@ export function LoadDialog() {
     } finally {
       setLoading(false);
     }
-  }, [pendingFiles, setDataset, setLoading, setLoadError]);
+  }, [pendingFiles, loadMode, datasets.length, setDataset, addDataset, setLoading, setLoadError]);
 
   const handleDemo = useCallback(async () => {
     setLoading(true);
     setLoadError(null);
     try {
       const ds = await fetchDemoDataset();
-      setDataset(ds);
-      toast.success(`Loaded demo dataset: ${ds.name}`);
+      if (loadMode === "add" && datasets.length > 0) {
+        addDataset(ds);
+        toast.success(`Added dataset: ${ds.name}`);
+      } else {
+        setDataset(ds);
+        toast.success(`Loaded demo dataset: ${ds.name}`);
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       setLoadError(msg);
@@ -68,7 +81,7 @@ export function LoadDialog() {
     } finally {
       setLoading(false);
     }
-  }, [setDataset, setLoading, setLoadError]);
+  }, [loadMode, datasets.length, setDataset, addDataset, setLoading, setLoadError]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -186,6 +199,33 @@ export function LoadDialog() {
           </div>
         </div>
 
+        {datasets.length > 0 && (
+          <div className="flex items-center gap-2 rounded-md border bg-muted/20 p-2">
+            <input
+              type="radio"
+              id="mode-replace"
+              checked={loadMode === "replace"}
+              onChange={() => setLoadMode("replace")}
+              className="accent-primary"
+            />
+            <label htmlFor="mode-replace" className="text-xs cursor-pointer">Replace current</label>
+            <span className="text-muted-foreground/40">|</span>
+            <input
+              type="radio"
+              id="mode-add"
+              checked={loadMode === "add"}
+              onChange={() => setLoadMode("add")}
+              className="accent-primary"
+            />
+            <label htmlFor="mode-add" className="text-xs cursor-pointer">Add as new dataset (for comparison)</label>
+            {loadMode === "add" && (
+              <span className="text-[10px] text-emerald-600 ml-auto font-medium">
+                Will have {datasets.length + 1} datasets total
+              </span>
+            )}
+          </div>
+        )}
+
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => setOpen(false)}>
             Cancel
@@ -196,7 +236,7 @@ export function LoadDialog() {
           </Button>
           <Button onClick={handleLoad} disabled={pendingFiles.length === 0 || loading}>
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-            Load {pendingFiles.length > 0 && `(${pendingFiles.length})`}
+            {loadMode === "add" && datasets.length > 0 ? "Add" : "Load"} {pendingFiles.length > 0 && `(${pendingFiles.length})`}
           </Button>
         </DialogFooter>
       </DialogContent>

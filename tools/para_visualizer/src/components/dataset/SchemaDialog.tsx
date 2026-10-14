@@ -54,7 +54,7 @@ export function SchemaDialog() {
 function SchemaDialogBody({ onDone }: { onDone: () => void }) {
   const schema = useSchema();
   const imageField = useDatasetStore((s) => s.imageField);
-  const dataset = useDatasetStore((s) => s.dataset);
+  const dataset = useDatasetStore((s) => s.datasets[s.activeDatasetIndex]);
 
   // Lazy initial state: snapshot the current store values once at mount.
   const [localRoles, setLocalRoles] = useState<Record<string, FieldRole>>(() => {

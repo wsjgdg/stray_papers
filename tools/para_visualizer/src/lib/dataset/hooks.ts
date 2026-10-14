@@ -14,7 +14,7 @@ import type { SchemaField } from "./types";
 
 /** Rows from the active file(s), memoized by dataset + activeFileIndex. */
 export function useActiveRows() {
-  const dataset = useDatasetStore((s) => s.dataset);
+  const dataset = useDatasetStore((s) => s.datasets[s.activeDatasetIndex]);
   const activeFileIndex = useDatasetStore((s) => s.activeFileIndex);
   return useMemo(() => {
     if (!dataset) return [];
@@ -42,7 +42,7 @@ export function useFilteredRows() {
 
 /** Active schema (with role overrides), memoized. */
 export function useSchema(): SchemaField[] {
-  const dataset = useDatasetStore((s) => s.dataset);
+  const dataset = useDatasetStore((s) => s.datasets[s.activeDatasetIndex]);
   const activeFileIndex = useDatasetStore((s) => s.activeFileIndex);
   const fieldRoles = useDatasetStore((s) => s.fieldRoles);
   return useMemo(() => {

@@ -30,7 +30,7 @@ const VIEWS: { id: ViewMode; label: string; icon: React.ReactNode }[] = [
 ];
 
 export function Toolbar() {
-  const dataset = useDatasetStore((s) => s.dataset);
+  const dataset = useDatasetStore((s) => s.datasets[s.activeDatasetIndex]);
   const viewMode = useDatasetStore((s) => s.viewMode);
   const setViewMode = useDatasetStore((s) => s.setViewMode);
   const search = useDatasetStore((s) => s.search);

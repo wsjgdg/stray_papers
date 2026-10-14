@@ -17,8 +17,9 @@ import type { RowRef } from "./filter";
 import type { Annotation } from "./persist";
 
 interface DatasetState {
-  // --- loaded dataset ---
-  dataset: LoadedDataset | null;
+  // --- loaded datasets (multi-dataset support) ---
+  datasets: LoadedDataset[];
+  activeDatasetIndex: number;
   // which file is "active" (others hidden). null = merge all
   activeFileIndex: number | null;
   // field roles overrides by user
@@ -29,6 +30,9 @@ interface DatasetState {
   hiddenFields: Set<string>;
   // recently opened history
   recent: { name: string; size: number; rows: number; openedAt: string }[];
+
+  // --- dataset comparison ---
+  compareDatasetIndices: number[]; // indices into datasets[] for side-by-side compare
 
   // --- view ---
   viewMode: ViewMode;
@@ -75,6 +79,11 @@ interface DatasetState {
 
   // ---- actions ----
   setDataset: (ds: LoadedDataset | null) => void;
+  addDataset: (ds: LoadedDataset) => void;
+  setActiveDatasetIndex: (i: number) => void;
+  removeDataset: (i: number) => void;
+  toggleCompareDataset: (i: number) => void;
+  clearCompareDatasets: () => void;
   setViewMode: (m: ViewMode) => void;
   setPage: (p: number) => void;
   setThumbnailSize: (n: number) => void;
@@ -123,12 +132,15 @@ interface DatasetState {
 }
 
 export const useDatasetStore = create<DatasetState>((set, get) => ({
-  dataset: null,
+  datasets: [],
+  activeDatasetIndex: 0,
   activeFileIndex: null,
   fieldRoles: {},
   imageField: null,
   hiddenFields: new Set(),
   recent: [],
+
+  compareDatasetIndices: [],
 
   viewMode: "grid",
   rowsPerPage: 60,
@@ -170,13 +182,15 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
       if (!ds) {
         return {
           ...s,
-          dataset: null,
+          datasets: [],
+          activeDatasetIndex: 0,
           imageField: null,
           selectedRowId: null,
           compareRowIds: [],
           blobCache: {},
           failures: [],
           page: 0,
+          compareDatasetIndices: [],
         };
       }
       const firstFile = ds.files[0];
@@ -197,7 +211,8 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
         : s.recent;
       return {
         ...s,
-        dataset: ds,
+        datasets: [ds],
+        activeDatasetIndex: 0,
         imageField,
         selectedRowId: null,
         compareRowIds: [],
@@ -205,8 +220,78 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
         recent,
         showLoadDialog: false,
         viewMode: "grid",
+        compareDatasetIndices: [],
       };
     }),
+
+  addDataset: (ds) =>
+    set((s) => {
+      const firstFile = ds.files[0];
+      const schema = firstFile?.schema || [];
+      let imageField = schema.find((f) => f.role === "image")?.name || s.imageField;
+      if (!imageField && schema.length > 0) imageField = schema[0].name;
+      const recent = [
+        ...ds.files.map((f) => ({
+          name: f.name,
+          size: f.sizeBytes,
+          rows: f.rowsCount,
+          openedAt: new Date().toISOString(),
+        })),
+        ...s.recent,
+      ].slice(0, 10);
+      return {
+        ...s,
+        datasets: [...s.datasets, ds],
+        activeDatasetIndex: s.datasets.length, // switch to new dataset
+        imageField,
+        selectedRowId: null,
+        compareRowIds: [],
+        page: 0,
+        recent,
+        showLoadDialog: false,
+        viewMode: "grid",
+        blobCache: {},
+        failures: [],
+      };
+    }),
+
+  setActiveDatasetIndex: (i) =>
+    set((s) => ({
+      activeDatasetIndex: i,
+      activeFileIndex: null,
+      page: 0,
+      selectedRowId: null,
+      compareRowIds: [],
+      blobCache: {},
+    })),
+
+  removeDataset: (i) =>
+    set((s) => {
+      const next = s.datasets.filter((_, idx) => idx !== i);
+      const nextActive = Math.min(s.activeDatasetIndex, Math.max(0, next.length - 1));
+      const nextCompare = s.compareDatasetIndices
+        .filter((idx) => idx !== i)
+        .map((idx) => (idx > i ? idx - 1 : idx));
+      return {
+        datasets: next,
+        activeDatasetIndex: nextActive,
+        compareDatasetIndices: nextCompare,
+        selectedRowId: null,
+        compareRowIds: [],
+        blobCache: {},
+      };
+    }),
+
+  toggleCompareDataset: (i) =>
+    set((s) => {
+      const exists = s.compareDatasetIndices.includes(i);
+      const next = exists
+        ? s.compareDatasetIndices.filter((x) => x !== i)
+        : [...s.compareDatasetIndices, i].slice(-4);
+      return { compareDatasetIndices: next };
+    }),
+
+  clearCompareDatasets: () => set({ compareDatasetIndices: [] }),
 
   setViewMode: (m) => set({ viewMode: m, page: 0 }),
   setPage: (p) => set({ page: Math.max(0, p) }),
@@ -319,7 +404,8 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   setAnnotationColor: (c) => set({ annotationColor: c }),
 
   getActiveRows: () => {
-    const { dataset, activeFileIndex } = get();
+    const { datasets, activeDatasetIndex, activeFileIndex } = get();
+    const dataset = datasets[activeDatasetIndex];
     if (!dataset) return [];
     const files =
       activeFileIndex === null ? dataset.files : dataset.files.filter((_, i) => i === activeFileIndex);
@@ -336,7 +422,8 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   },
 
   getSchema: () => {
-    const { dataset, activeFileIndex, fieldRoles } = get();
+    const { datasets, activeDatasetIndex, activeFileIndex, fieldRoles } = get();
+    const dataset = datasets[activeDatasetIndex];
     if (!dataset) return [];
     const file = activeFileIndex !== null ? dataset.files[activeFileIndex] : dataset.files[0];
     if (!file) return [];
@@ -348,10 +435,12 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
 
   reset: () =>
     set({
-      dataset: null,
+      datasets: [],
+      activeDatasetIndex: 0,
       imageField: null,
       selectedRowId: null,
       compareRowIds: [],
+      compareDatasetIndices: [],
       blobCache: {},
       failures: [],
       page: 0,

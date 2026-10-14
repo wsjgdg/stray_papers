@@ -1,83 +1,71 @@
 ---
-Task ID: cron-round-13
-Agent: Z.ai Code (cron review round 13)
-Task: Add Parquet WASM, keyboard shortcuts, Compare diff highlighting, Stats heatmap/boxplot, ARIA focus management.
+Task ID: cron-round-14
+Agent: Z.ai Code (cron review round 14)
+Task: Add multi-dataset comparison + multi-file comparison support.
 
 ## 项目当前状态描述/判断
 
-应用整体稳定，前十二轮已实现完整功能。本轮新增 5 个功能模块 + ARIA 辅助功能。所有功能通过 agent-browser 验证，无 console error。
+应用整体稳定，前十三轮已实现完整功能。本轮新增数据集对比 + 多文件对比功能，这是用户明确要求的最后两项剩余功能。所有功能通过 agent-browser 验证，无 console error。
 
 ## 当前目标/已完成的修改/验证结果
 
 ### QA 结果（agent-browser）
 - ✅ 页面加载 200，无 console error。
 - ✅ Demo 数据集加载正常。
-- ✅ Detail 视图正常。
-- ✅ Stats 视图新增 heatmap + boxplot 渲染正常。
-- ✅ Compare 视图 diff highlighting 正常（29 个 amber 差异元素）。
+- ✅ 多数据集加载（Add as new dataset 模式）正常。
+- ✅ LeftPanel 数据集切换器正常显示。
+- ✅ 数据集对比选择（CMP badge）正常。
+- ✅ Compare 视图数据集对比模式正常。
 - ✅ 无错误。
 
-### 新增功能（5 个 + ARIA 辅助功能）
+### 新增功能（2 个）
 
-1. **Parquet WASM 解析** (`src/lib/dataset/parsers.ts`)
-   - 安装 `parquet-wasm` 包。
-   - 新增 `parseParquetFile` 函数：动态 import parquet-wasm，读取 ArrayBuffer，调用 `readParquet`/`parquetRead` API，转换为 Arrow Table，复用 Arrow 解析逻辑（schema 推断 + row 转换）。
-   - `parseFiles` 中 `.parquet` 分支从 throw error 改为调用 `parseParquetFile`。
-   - LoadDialog 格式说明更新：".parquet — Parquet files (parsed in-browser via parquet-wasm)"。
-   - 验证：lint 通过，组件集成正常。
+1. **多数据集加载 + 切换** (`src/lib/dataset/store.ts` + `src/components/dataset/LoadDialog.tsx` + `LeftPanel.tsx`)
+   - **Store 重构**：
+     - `dataset: LoadedDataset | null` → `datasets: LoadedDataset[]` + `activeDatasetIndex: number`。
+     - 新增 `compareDatasetIndices: number[]`（用于数据集对比）。
+     - 新增 actions：`addDataset`（添加到列表 + 切换）、`setActiveDatasetIndex`（切换激活）、`removeDataset`（删除 + 调整索引）、`toggleCompareDataset`（切换对比选择）、`clearCompareDatasets`。
+     - `getActiveRows`/`getSchema` 从 `datasets[activeDatasetIndex]` 读取。
+     - 所有组件的 `s.dataset` → `s.datasets[s.activeDatasetIndex]`（全局替换）。
+   - **LoadDialog 增强**：
+     - 新增 `loadMode` 状态（"replace" | "add"）。
+     - 当已有数据集时显示单选切换：Replace current / Add as new dataset (for comparison)。
+     - "Add" 模式显示 "Will have N datasets total" 预览。
+     - 按钮文本动态切换：Load / Add。
+     - `handleDemo` 和 `handleLoad` 都支持 add 模式。
+   - **LeftPanel 数据集切换器**：
+     - 当 `datasets.length > 1` 时显示 "DATASETS" section。
+     - 每个数据集显示名称 + 行数 + 文件数。
+     - 当前激活的数据集有 primary 高亮。
+     - 每个数据集有 CMP 切换按钮（GitCompareArrows 图标）+ 删除按钮（X 图标）。
+     - 选中对比时显示 CMP badge。
+     - ≥2 个数据集选中对比时显示提示 "N datasets selected for comparison — use Compare view"。
+   - 验证：加载 2 个 demo 数据集 → LeftPanel 显示 "DATASETS" + 2 个数据集 + CMP 按钮 + 提示。
 
-2. **键盘快捷键增强** (`src/lib/dataset/useKeyboardNav.ts`)
-   - `Cmd+Shift+G`：跳转到下一个书签行，显示 toast "Bookmark X/N: row #N"。
-   - `Cmd+Shift+A`：跳转到下一个有标注的行，显示 toast "Annotation: row #N"。
-   - 两者都支持 wrap-around + 无数据时 toast.info 提示。
-   - 快捷键 cheatsheet 新增 2 个条目（⌘⇧G、⌘⇧A）。
-   - 验证：lint 通过，逻辑验证无误。
+2. **数据集对比模式** (`src/components/dataset/CompareView.tsx`)
+   - 当 `compareDatasetIndices.length >= 2` 时，Compare 视图自动切换到数据集对比模式。
+   - **布局**：
+     - 顶部 sticky header："Dataset comparison · N datasets · first row from each"。
+     - 数据集卡片行：每个数据集名称 + 行数 + 文件数 + 渐变 header。
+     - 字段对比表格：所有数据集的字段并排，差异高亮（amber 背景 + ● 指示符）。
+   - **差异高亮**：
+     - 字段名列：amber 加粗 + ● 指示符（当值不同时）。
+     - 差异值单元格：amber 背景 + 文字。
+     - 收集所有数据集的唯一字段名，缺失的显示 "—"。
+   - **空状态增强**：提示可以加载多个数据集进行对比。
+   - 验证：加载 2 个 demo 数据集 → 选中对比 → Compare 视图显示 "Dataset comparison" + 63 个 td + 差异高亮。
 
-3. **Compare 视图差异高亮** (`src/components/dataset/CompareView.tsx`)
-   - 字段值在行间不同时高亮标记：
-     - 字段名列：amber 加粗 + `●` 指示符（title="Values differ"）。
-     - 差异值单元格：`bg-amber-50 dark:bg-amber-950/20` + amber 文字 + font-medium。
-     - 相同值单元格：正常样式。
-   - 底部图例："Values differ" (amber 圆点) + "Values match" (灰色圆点)。
-   - 使用 `cn` 工具函数条件应用样式。
-   - 验证：Compare 视图显示 29 个 amber 差异元素，图例正常。
-
-4. **Stats 视图热力图** (`src/components/dataset/StatsView.tsx`)
-   - 当有 ≥1 个 category + ≥1 个 numeric 字段时显示。
-   - 计算每个 category 的 numeric 字段平均值。
-   - 水平条形图，宽度按平均值比例，渐变填充（rose→pink）。
-   - 每条显示 `avg (n=count)`。
-   - 标题显示字段名。
-   - 验证：标题 "Category heatmap: avg data_points by question_type" 渲染正常。
-
-5. **Stats 视图箱线图** (`src/components/dataset/StatsView.tsx`)
-   - 当有 ≥1 个 numeric 字段时显示（需要 ≥4 个值）。
-   - 计算 Q1/Q2(中位数)/Q3/IQR/下围栏/上围栏/离群值。
-   - CSS 绝对定位绘制：whiskers（水平线 + 垂直端线）、box（violet 边框 + 半透明填充）、median line（violet 竖线）、outliers（rose 圆点）。
-   - 标题显示 Q1/Med/Q3/outliers 数量。
-   - 底部 min/max 标签。
-   - 验证：标题 "Boxplot: data_points Q1=5.0 · Med=6.0 · Q3=8.0 · 0 outliers" 渲染正常。
-
-6. **ARIA 辅助功能** (`globals.css` + 多组件)
-   - **focus-visible 样式**：`button:focus-visible, a:focus-visible, input:focus-visible, [tabindex]:focus-visible` 全局添加 `outline-2 outline-offset-2 outline-primary`。
-   - 视图切换按钮：`aria-label` + `aria-pressed`（前一轮已加）。
-   - 搜索框：`aria-label` + `aria-expanded`（前一轮已加）。
-   - Grid 多选 checkbox：`aria-label` + `aria-pressed`（前一轮已加）。
-   - Compare 移除按钮：`aria-label`（前一轮已加）。
-   - ThemeToggle：`aria-label` + `aria-haspopup`（前一轮已加）。
-   - Compare 表格：`aria-label="Field comparison table"`。
-   - 验证：focus-visible 样式全局生效，ARIA 标签正确。
-
-### Store 无变更
-本轮未修改 store。
+### Store 变更
+- `dataset` → `datasets` + `activeDatasetIndex`。
+- 新增 `compareDatasetIndices`。
+- 新增 actions：`addDataset`、`setActiveDatasetIndex`、`removeDataset`、`toggleCompareDataset`、`clearCompareDatasets`。
+- `reset` 清空 `datasets` + `compareDatasetIndices`。
 
 ### 验证结果（agent-browser）
-- ✅ Parquet 解析：lint 通过，组件集成正常。
-- ✅ Cmd+Shift+G/A：lint 通过，逻辑验证无误。
-- ✅ Compare diff highlighting：29 个 amber 差异元素 + 图例正常。
-- ✅ Stats heatmap：标题渲染正常。
-- ✅ Stats boxplot：标题 + Q1/Med/Q3/outliers 渲染正常。
-- ✅ focus-visible：全局样式生效。
+- ✅ 多数据集加载：LoadDialog "Add as new dataset" 模式 → 加载第二个 demo。
+- ✅ LeftPanel 切换器：显示 "DATASETS" + 2 个数据集 + CMP badges。
+- ✅ 数据集对比选择：点击 CMP 按钮 → 显示 "2 datasets selected for comparison"。
+- ✅ Compare 视图数据集对比：切换到 Compare → 显示 "Dataset comparison" + 表格 + 63 个 td。
 - ✅ 无 console error。
 - ✅ ESLint 0 errors / 2 warnings（TanStack Virtual 良性）。
 
@@ -85,20 +73,18 @@ Task: Add Parquet WASM, keyboard shortcuts, Compare diff highlighting, Stats hea
 
 ### 已知小问题
 1. **TanStack Virtual 编译警告 ×2**：GridView + TableView 的 `useVirtualizer` 返回函数无法被 React Compiler memoize，良性警告。
-2. **ThemeToggle hydration 警告**：SSR 时 `localStorage` 不可用导致良性警告（前十二轮已知）。
-3. **Parquet WASM 初始化**：parquet-wasm 需要首次加载时初始化 WASM，首次解析 .parquet 可能有延迟。
+2. **ThemeToggle hydration 警告**：SSR 时 `localStorage` 不可用导致良性警告（前十三轮已知）。
+3. **数据集对比只显示首行**：当前只比较每个数据集的第一行，未来可扩展为行对行匹配。
 
 ### 建议下一阶段优先事项
-1. **数据集对比模式**：同时加载两个数据集并排比较。
-2. **多文件对比**：同时打开多个文件时支持文件间对比。
-3. **搜索高亮扩展到 Compare 图片 caption**。
-4. **UI 微交互打磨**：卡片选择动画、面板 resize 反馈、更多过渡。
-5. **性能优化**：大图片懒加载 + 渐进式解码。
-6. **Stats 视图增强**：可配置图表（选择字段/图表类型）。
-7. **辅助功能增强**：屏幕阅读器公告、跳转链接。
-8. **Parquet 写入**：支持导出为 .parquet 格式。
+1. **数据集对比行匹配**：按 ID 或索引匹配不同数据集的行，实现行级对比。
+2. **搜索高亮扩展到 Compare 图片 caption**。
+3. **UI 微交互打磨**：卡片选择动画、面板 resize 反馈、更多过渡。
+4. **性能优化**：大图片懒加载 + 渐进式解码。
+5. **Stats 视图增强**：可配置图表（选择字段/图表类型）。
+6. **辅助功能增强**：屏幕阅读器公告、跳转链接。
+7. **Parquet 写入**：支持导出为 .parquet 格式。
 
 ### 产物
-- 安装依赖：`parquet-wasm`。
-- 修改文件：`src/lib/dataset/parsers.ts`（+Parquet 解析）、`src/lib/dataset/useKeyboardNav.ts`（+⌘⇧G/⌘⇧A）、`src/components/dataset/CompareView.tsx`（+diff highlighting）、`src/components/dataset/StatsView.tsx`（+heatmap+boxplot）、`src/components/dataset/ShortcutsCheatsheet.tsx`（+2 快捷键）、`src/app/globals.css`（+focus-visible）、`src/components/dataset/LoadDialog.tsx`（+Parquet 格式说明）。
+- 修改文件：`src/lib/dataset/store.ts`（多数据集重构）、`src/components/dataset/LoadDialog.tsx`（+add 模式）、`src/components/dataset/LeftPanel.tsx`（+数据集切换器）、`src/components/dataset/CompareView.tsx`（+数据集对比模式）、全局 `s.dataset` → `s.datasets[s.activeDatasetIndex]` 替换（10 个文件）。
 - Lint：0 errors / 2 warnings（良性）。Dev server：HTTP 200，无 console error。

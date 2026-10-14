@@ -12,7 +12,7 @@ import { FileDown } from "lucide-react";
 import { toast } from "sonner";
 
 export function HtmlReportExport() {
-  const dataset = useDatasetStore((s) => s.dataset);
+  const dataset = useDatasetStore((s) => s.datasets[s.activeDatasetIndex]);
   const rows = useActiveRows();
   const schema = useSchema();
   const imageField = useDatasetStore((s) => s.imageField);

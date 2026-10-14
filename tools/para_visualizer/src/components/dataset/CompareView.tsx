@@ -74,7 +74,12 @@ export function CompareView() {
     return schema.filter((f) => !hiddenFields.has(f.name) && f.name !== imageField);
   }, [schema, hiddenFields, imageField]);
 
-  if (rows.length < 2) {
+  // Check if multi-dataset comparison mode is active
+  const allDatasets = useDatasetStore((s) => s.datasets);
+  const compareDatasetIndices = useDatasetStore((s) => s.compareDatasetIndices);
+  const isDatasetCompareMode = compareDatasetIndices.length >= 2;
+
+  if (rows.length < 2 && !isDatasetCompareMode) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-3 p-8">
         <div className="relative">
@@ -88,12 +93,103 @@ export function CompareView() {
           <p className="text-xs text-muted-foreground/70">
             Click the ★ icon on a thumbnail in grid view, or pick rows from the table, to add them here.
           </p>
+          <p className="text-xs text-muted-foreground/70 mt-2">
+            Or load multiple datasets and select them for comparison in the sidebar.
+          </p>
         </div>
         {compareRowIds.length > 0 && (
           <Button size="sm" variant="outline" onClick={clearCompare}>
             Clear selection ({compareRowIds.length})
           </Button>
         )}
+      </div>
+    );
+  }
+
+  // Multi-dataset comparison mode: show first rows of each selected dataset side-by-side
+  if (isDatasetCompareMode) {
+    const comparedDatasets = compareDatasetIndices
+      .map((i) => allDatasets[i])
+      .filter(Boolean);
+    // Get first row from each dataset
+    const firstRows = comparedDatasets.map((ds) => {
+      const file = ds.files[0];
+      if (!file || !file.rows || file.rows.length === 0) return null;
+      return { dataset: ds, row: file.rows[0], schema: file.schema };
+    }).filter(Boolean);
+
+    // Collect all unique field names across datasets
+    const allFieldNames = new Set<string>();
+    firstRows.forEach((r) => {
+      if (r) r.schema.forEach((f) => allFieldNames.add(f.name));
+    });
+    const fieldsList = Array.from(allFieldNames);
+
+    return (
+      <div className="h-full overflow-y-auto custom-scroll">
+        <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 border-b bg-card/60 backdrop-blur">
+          <span className="text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">Dataset comparison</span> · {comparedDatasets.length} datasets · first row from each
+          </span>
+          <Button size="sm" variant="ghost" onClick={() => useDatasetStore.getState().clearCompareDatasets()}>
+            <X className="h-3 w-3" />
+            Clear
+          </Button>
+        </div>
+        {/* Dataset headers */}
+        <div
+          className="grid gap-3 p-3"
+          style={{ gridTemplateColumns: `repeat(${comparedDatasets.length}, minmax(0, 1fr))` }}
+        >
+          {comparedDatasets.map((ds, i) => (
+            <div key={i} className="rounded-lg border bg-card overflow-hidden shadow-sm">
+              <div className="px-3 py-2 border-b bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10">
+                <div className="text-sm font-semibold truncate">{ds.name}</div>
+                <div className="text-[10px] text-muted-foreground">
+                  {ds.files.reduce((a, f) => a + f.rowsCount, 0)} rows · {ds.files.length} files
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Field comparison table */}
+        <div className="px-3 pb-3">
+          <table className="w-full text-xs border-collapse" aria-label="Dataset comparison table">
+            <tbody>
+              {fieldsList.map((fieldName, fieldIdx) => {
+                const values = firstRows.map((r) => (r ? formatValue(r.row[fieldName]) : "—"));
+                const allSame = values.length > 0 && values.every((v) => v === values[0]);
+                const hasDiff = !allSame;
+                return (
+                  <tr key={fieldName} className={fieldIdx % 2 === 0 ? "bg-muted/20" : ""}>
+                    <td className={cn(
+                      "px-2 py-1.5 border-b font-mono text-[9px] uppercase tracking-wide w-32 align-top sticky left-0 bg-card/80 backdrop-blur",
+                      hasDiff ? "text-amber-600 dark:text-amber-400 font-bold" : "text-muted-foreground/70",
+                    )}>
+                      {fieldName}
+                      {hasDiff && <span className="ml-1 text-amber-500">●</span>}
+                    </td>
+                    {firstRows.map((r, rowIdx) => {
+                      if (!r) return <td key="empty" />;
+                      const val = formatValue(r.row[fieldName]);
+                      const isDiff = hasDiff && val !== values[0];
+                      return (
+                        <td key={rowIdx} className={cn(
+                          "px-2 py-1.5 border-b align-top text-[11px] leading-tight break-words whitespace-pre-wrap",
+                          isDiff
+                            ? "bg-amber-50 dark:bg-amber-950/20 text-amber-900 dark:text-amber-100 font-medium"
+                            : "text-foreground/90",
+                        )}>
+                          {val}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     );
   }

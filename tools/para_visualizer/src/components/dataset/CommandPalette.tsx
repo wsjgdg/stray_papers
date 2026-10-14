@@ -60,7 +60,7 @@ interface CommandItemDef {
 export function CommandPalette() {
   const open = useDatasetStore((s) => s.showCommandPalette);
   const setOpen = useDatasetStore((s) => s.setShowCommandPalette);
-  const dataset = useDatasetStore((s) => s.dataset);
+  const dataset = useDatasetStore((s) => s.datasets[s.activeDatasetIndex]);
   const setViewMode = useDatasetStore((s) => s.setViewMode);
   const setShowLoadDialog = useDatasetStore((s) => s.setShowLoadDialog);
   const setShowFilterPanel = useDatasetStore((s) => s.setShowFilterPanel);
