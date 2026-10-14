@@ -125,8 +125,11 @@ interface DatasetState {
   setLoadError: (v: string | null) => void;
   addRecent: (r: { name: string; size: number; rows: number }) => void;
   cacheBlob: (key: string, info: { url: string; format: string; width: number; height: number; size: number; source?: string; error?: string }) => void;
+  clearBlob: (key: string) => void;
   addFailure: (f: DecodeFailure) => void;
   clearFailures: () => void;
+  retryEpoch: number;
+  bumpRetryEpoch: () => void;
   addAnnotation: (a: Annotation) => void;
   removeAnnotation: (rowId: string, annotationId: string) => void;
   clearAnnotations: (rowId: string) => void;
@@ -370,6 +373,10 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   setShowBookmarkPanel: (v) => set({ showBookmarkPanel: v }),
   setShowRowJumpDialog: (v) => set({ showRowJumpDialog: v }),
   setMaxRows: (n) => set({ maxRows: n }),
+  sessionFiles: null,
+  // bumped to force re-decode of previously-failed thumbnails (e.g. after a
+  // flaky network recovers). Thumbnails include it in their decode key.
+  retryEpoch: 0,
   setSessionFiles: (f) => set({ sessionFiles: f }),
   setLoading: (v) => set({ loading: v }),
   setLoadError: (v) => set({ loadError: v }),
@@ -381,6 +388,13 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
         [key]: info,
       },
     })),
+  clearBlob: (key) =>
+    set((s) => {
+      if (!(key in s.blobCache)) return s;
+      const next = { ...s.blobCache };
+      delete next[key];
+      return { blobCache: next };
+    }),
   addFailure: (f) =>
     set((s) => {
       // dedupe by rowId+field
@@ -388,6 +402,7 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
       return { failures: [...s.failures, f].slice(-500) };
     }),
   clearFailures: () => set({ failures: [] }),
+  bumpRetryEpoch: () => set((s) => ({ retryEpoch: s.retryEpoch + 1, failures: [] })),
   addAnnotation: (a) =>
     set((s) => {
       const list = s.annotations[a.rowId] || [];

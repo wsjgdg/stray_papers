@@ -9,7 +9,7 @@ import { useDatasetStore } from "@/lib/dataset/store";
 import { useFilteredRows, useSchema } from "@/lib/dataset/hooks";
 import { Thumbnail } from "./Thumbnail";
 import { formatValue } from "@/lib/dataset/filter";
-import { Bookmark, BookmarkCheck, Star, Check, Download, X, ListChecks, Copy, Eye, GitCompareArrows } from "lucide-react";
+import { Bookmark, BookmarkCheck, Star, Check, Download, X, ListChecks, Copy, Eye, GitCompareArrows, RotateCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -52,6 +52,8 @@ export function GridView() {
   const selectAllFiltered = useDatasetStore((s) => s.selectAllFiltered);
   const setShowExportDialog = useDatasetStore((s) => s.setShowExportDialog);
   const search = useDatasetStore((s) => s.search);
+  const failures = useDatasetStore((s) => s.failures);
+  const bumpRetryEpoch = useDatasetStore((s) => s.bumpRetryEpoch);
   const lastShiftIndex = useRef<number | null>(null);
   // hover preview state
   const [hoverRowId, setHoverRowId] = useState<string | null>(null);
@@ -427,7 +429,19 @@ export function GridView() {
       {/* Footer with count */}
       <div className="flex items-center justify-between px-4 py-1.5 border-t bg-card/40 text-xs text-muted-foreground">
         <span>{filtered.length} rows · virtual scroll</span>
-        <span className="font-mono">{colsPerRow} cols · {thumbnailSize}px</span>
+        <div className="flex items-center gap-3">
+          {failures.length > 0 && (
+            <button
+              onClick={() => bumpRetryEpoch()}
+              className="inline-flex items-center gap-1.5 rounded border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 transition-colors"
+              title="Re-attempt all thumbnails that failed to load"
+            >
+              <RotateCw className="h-3 w-3" />
+              Retry {failures.length} failed
+            </button>
+          )}
+          <span className="font-mono">{colsPerRow} cols · {thumbnailSize}px</span>
+        </div>
       </div>
     </div>
   );

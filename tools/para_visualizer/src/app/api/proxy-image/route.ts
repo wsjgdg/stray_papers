@@ -11,6 +11,13 @@ export const dynamic = "force-dynamic";
  * content-type. This also lets the browser cache via the normal HTTP cache and
  * avoids 40+ simultaneous cross-origin requests when many thumbnails are visible.
  *
+ * Two server-side accelerators on top of that:
+ *  1. In-memory cache keyed by the upstream URL (LRU, TTL). A proxied image is
+ *     fetched once and reused for every later request — across clients, across
+ *     reloads, and across the virtualizer remounting the same row.
+ *  2. In-flight coalescing: concurrent identical requests share a single
+ *     upstream fetch instead of each opening their own.
+ *
  * SECURITY: by default we allow http(s) proxying of any host (the app's whole
  * purpose is browsing third-party dataset image URLs). To prevent this from
  * being abused as an open SSRF/proxy, set PROXY_STRICT=1 — that blocks
@@ -66,29 +73,82 @@ function proxyForbidden(urlStr: string): string | null {
   return null;
 }
 
+// --- server-side cache + in-flight coalescing ---------------------------------
+
+interface CacheEntry {
+  buffer: Buffer;
+  contentType: string;
+  ts: number;
+}
+
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1h
+const MAX_ENTRIES = 300; // ~bounded memory for a local single-user tool
+const cache = new Map<string, CacheEntry>();
+const inflight = new Map<string, Promise<CacheEntry | null>>();
+
+function evictIfNeeded() {
+  // Map keeps insertion order; drop the oldest entries when over budget.
+  while (cache.size > MAX_ENTRIES) {
+    const oldest = cache.keys().next().value as string | undefined;
+    if (oldest === undefined) break;
+    cache.delete(oldest);
+  }
+}
+
+async function fetchUpstream(
+  url: string,
+  headers: Headers,
+  timeoutMs: number,
+): Promise<CacheEntry | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const upstream = await fetch(url, {
+      headers,
+      cache: "no-store",
+      redirect: "follow",
+      signal: controller.signal,
+    });
+    if (!upstream.ok || !upstream.body) {
+      return null;
+    }
+    const ab = await upstream.arrayBuffer();
+    const contentType = upstream.headers.get("content-type") || "application/octet-stream";
+    return { buffer: Buffer.from(ab), contentType, ts: Date.now() };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function bufferedResponse(entry: CacheEntry, cacheTag: "HIT" | "MISS") {
+  const respHeaders = new Headers();
+  respHeaders.set("content-type", entry.contentType);
+  respHeaders.set("content-length", String(entry.buffer.length));
+  respHeaders.set("cache-control", "public, max-age=3600");
+  respHeaders.set("access-control-allow-origin", "*");
+  respHeaders.set("x-cache", cacheTag);
+  return new Response(entry.buffer, { status: 200, headers: respHeaders });
+}
+
+function jsonError(status: number, detail: string) {
+  return new Response(JSON.stringify({ error: detail }), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
+}
+
 export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get("url");
   if (!url) {
-    return new Response(JSON.stringify({ error: "Missing 'url' query parameter" }), {
-      status: 400,
-      headers: { "content-type": "application/json" },
-    });
+    return jsonError(400, "Missing 'url' query parameter");
   }
 
   const forbid = proxyForbidden(url);
   if (forbid) {
-    return new Response(JSON.stringify({ error: forbid }), {
-      status: 400,
-      headers: { "content-type": "application/json" },
-    });
+    return jsonError(400, forbid);
   }
-
-  // Forward a few safe headers; never forward cookies/auth from the server.
-  const headers = new Headers();
-  const ua = req.headers.get("user-agent");
-  if (ua) headers.set("user-agent", ua);
-  const accept = req.headers.get("accept");
-  if (accept) headers.set("accept", accept);
 
   // Bound the upstream fetch so a slow/unreachable host can't hang a queue slot
   // (and the user's tab) for too long. Env-tunable: PROXY_TIMEOUT_MS (default 12s).
@@ -97,48 +157,44 @@ export async function GET(req: NextRequest) {
     const v = Number(process.env.PROXY_TIMEOUT_MS);
     return Number.isFinite(v) && v > 0 ? v : 12000;
   })();
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-  let upstream: Response;
-  try {
-    upstream = await fetch(url, {
-      headers,
-      // Browsers don't revalidate cached proxied responses; allow shared cache.
-      cache: "no-store",
-      redirect: "follow",
-      signal: controller.signal,
-    });
-  } catch (e) {
-    clearTimeout(timer);
-    const msg = e instanceof Error ? e.message : "Upstream fetch failed";
-    const reason = msg.includes("aborted")
-      ? `Upstream timed out after ${Math.round(timeoutMs / 1000)}s`
-      : msg;
-    return new Response(JSON.stringify({ error: `Proxy fetch failed: ${reason}` }), {
-      status: 502,
-      headers: { "content-type": "application/json" },
-    });
-  }
-  clearTimeout(timer);
-
-  if (!upstream.ok || !upstream.body) {
-    const body = await upstream.text().catch(() => "");
-    return new Response(body || JSON.stringify({ error: `Upstream returned ${upstream.status}` }), {
-      status: upstream.status === 0 ? 502 : upstream.status,
-      headers: { "content-type": upstream.headers.get("content-type") || "text/plain" },
-    });
+  // 1) hot cache (within TTL)
+  const now = Date.now();
+  const cached = cache.get(url);
+  if (cached && now - cached.ts < CACHE_TTL_MS) {
+    return bufferedResponse(cached, "HIT");
   }
 
-  const contentType = upstream.headers.get("content-type") || "application/octet-stream";
-  const size = upstream.headers.get("content-length");
+  // 2) in-flight coalescing
+  const existing = inflight.get(url);
+  if (existing) {
+    const entry = await existing;
+    return entry ? bufferedResponse(entry, "HIT") : jsonError(502, "Proxy fetch failed (upstream unreachable)");
+  }
 
-  const respHeaders = new Headers();
-  respHeaders.set("content-type", contentType);
-  if (size) respHeaders.set("content-length", size);
-  // Cache proxied images for 1 hour; vary by upstream URL.
-  respHeaders.set("cache-control", "public, max-age=3600");
-  respHeaders.set("access-control-allow-origin", "*");
+  // 3) fetch, cache on success, never cache failures (so "retry" can refetch)
+  const headers = new Headers();
+  const ua = req.headers.get("user-agent");
+  if (ua) headers.set("user-agent", ua);
+  const accept = req.headers.get("accept");
+  if (accept) headers.set("accept", accept);
 
-  return new Response(upstream.body, { status: 200, headers: respHeaders });
+  const p = fetchUpstream(url, headers, timeoutMs)
+    .then((entry) => {
+      if (entry) {
+        cache.set(url, entry);
+        evictIfNeeded();
+      }
+      return entry;
+    })
+    .finally(() => {
+      inflight.delete(url);
+    });
+  inflight.set(url, p);
+
+  const entry = await p;
+  if (!entry) {
+    return jsonError(502, `Proxy fetch failed (timed out after ${Math.round(timeoutMs / 1000)}s or host unreachable)`);
+  }
+  return bufferedResponse(entry, "MISS");
 }

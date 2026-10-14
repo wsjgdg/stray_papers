@@ -9,7 +9,7 @@ import { useEffect, useRef, useState, memo } from "react";
 import { useDatasetStore } from "@/lib/dataset/store";
 import { decodeImageField, type DecodeResult } from "@/lib/dataset/decode";
 import { enqueueDecode, type QueueHandle } from "@/lib/dataset/imageQueue";
-import { ImageOff, Loader2, ExternalLink } from "lucide-react";
+import { ImageOff, Loader2, ExternalLink, RotateCw, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ThumbnailProps {
@@ -52,7 +52,22 @@ function ThumbnailImpl({
   const cacheKey = `${rowId}:${fieldName}`;
   const cached = useDatasetStore((s) => s.blobCache[cacheKey]);
   const cacheBlob = useDatasetStore((s) => s.cacheBlob);
+  const clearBlob = useDatasetStore((s) => s.clearBlob);
   const addFailure = useDatasetStore((s) => s.addFailure);
+  // Bumped when the user hits "retry failures"; re-keys the decode so failed
+  // thumbnails (which cached an error) re-attempt instead of staying stuck.
+  const retryEpoch = useDatasetStore((s) => s.retryEpoch);
+  const [retrying, setRetrying] = useState(false);
+
+  // Retry just this thumbnail: drop its cached error and re-decode.
+  const retryThis = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    clearBlob(cacheKey);
+    setLocalError(null);
+    setLocalSource(null);
+    decodeStartedRef.current = false;
+    setRetrying(true);
+  };
 
   // Derive status from cache + local state (no setState in effect for cache path)
   const status: Status = (() => {
@@ -92,9 +107,13 @@ function ThumbnailImpl({
   // Decode when visible (and not yet decoded). The decode is enqueued into a
   // global concurrency-limited queue so a burst of visible thumbnails loads a
   // few at a time (FIFO) instead of opening 40+ parallel requests at once.
+  // retryEpoch is part of the key: bumping it (Retry all failures) makes an
+  // errored/broken decode retry with a fresh key.
+  const retryKey = `${cacheKey}#${retryEpoch}`;
   useEffect(() => {
     if (!isVisible) return;
-    if (cached || decodeStartedRef.current) return;
+    if (cached && !cached.error) return;
+    if (decodeStartedRef.current) return;
     decodeStartedRef.current = true;
 
     let cancelled = false;
@@ -119,8 +138,9 @@ function ThumbnailImpl({
           addFailure({ rowId, field: fieldName, reason: res.error, timestamp: new Date().toISOString() });
         }
       }
+      setRetrying(false);
     },
-      cacheKey,
+      retryKey,
     );
     return () => {
       cancelled = true;
@@ -128,7 +148,7 @@ function ThumbnailImpl({
     };
     // We intentionally depend on visibility + cache presence + the decode inputs.
     // imageValue/fieldName are stable per row+field; cacheBlob/addFailure are stable store actions.
-  }, [isVisible, cached, cacheKey, imageValue, fieldName, cacheBlob, addFailure, rowId]);
+  }, [isVisible, cached, retryKey, cacheKey, imageValue, fieldName, cacheBlob, addFailure, rowId]);
 
   return (
     <div
@@ -179,6 +199,26 @@ function ThumbnailImpl({
         <div className="flex flex-col items-center justify-center gap-1.5 text-muted-foreground/50 p-3 text-center">
           <ImageOff className="h-5 w-5" />
           <span className="text-[10px] leading-tight">{errorMsg || "No image"}</span>
+          {!source && (
+            <button
+              onClick={retryThis}
+              className="mt-1 inline-flex items-center gap-1 rounded border border-border px-1.5 py-0.5 text-[10px] text-foreground/80 hover:bg-accent hover:text-accent-foreground transition-colors"
+            >
+              <RotateCw className="h-3 w-3" />
+              Retry
+            </button>
+          )}
+        </div>
+      )}
+      {/* failure badge */}
+      {!cached?.url && (errorMsg || retrying) && (
+        <div className="absolute top-1.5 right-1.5 z-10 flex items-center gap-1 rounded bg-destructive/90 px-1 py-0.5 text-[9px] font-medium text-destructive-foreground shadow">
+          {retrying ? (
+            <Loader2 className="h-3 w-3 animate-spin" />
+          ) : (
+            <AlertTriangle className="h-3 w-3" />
+          )}
+          {retrying ? "Retrying" : "Failed"}
         </div>
       )}
       {/* bbox overlay */}
