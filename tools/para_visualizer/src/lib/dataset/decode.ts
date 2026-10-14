@@ -157,9 +157,15 @@ async function fetchUrlImage(url: string, fieldName: string): Promise<DecodeResu
   try {
     const target = proxiedUrl(url);
 
-    // Set up timeout — 15 seconds (slightly longer for the proxy hop)
+    // Set up timeout. Env-tunable client side: NEXT_PUBLIC_IMAGE_TIMEOUT_MS
+    // (default 8s). Shorter than the proxy hop so a slow/dead host frees its
+    // queue slot quickly instead of hoarding it.
+    const clientTimeout = (() => {
+      const v = Number(process.env.NEXT_PUBLIC_IMAGE_TIMEOUT_MS);
+      return Number.isFinite(v) && v > 0 ? v : 8000;
+    })();
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), clientTimeout);
 
     const res = await fetch(target, { signal: controller.signal });
     clearTimeout(timeoutId);
@@ -216,7 +222,7 @@ async function fetchUrlImage(url: string, fieldName: string): Promise<DecodeResu
       return {
         blobUrl: null, blob: null, format: null, width: null, height: null,
         sizeBytes: 0, source: url,
-        error: "Image proxy timed out (15s) — remote host slow or unreachable",
+        error: "Image proxy timed out — remote host slow or unreachable",
       };
     }
     return {

@@ -134,7 +134,9 @@ scripts/               # 演示数据集生成脚本（generate-demo-dataset.ts�
 | 变量 | 作用 |
 | --- | --- |
 | `PROXY_STRICT=1` | 开启严格模式：拒绝代理私有/内网/回环/链路本地 IP 与 `localhost`，防止被当作 SSRF / 开放代理滥用（默认关闭，因为本工具用途就是浏览第三方数据集图）。 |
-| `PROXY_TIMEOUT_MS=20000` | 上游拉取超时（毫秒）。超时返回 502，避免慢/不可达的图占住并发槽位（默认 20s）。 |
+| `PROXY_TIMEOUT_MS=12000` | 代理服务端上游拉取超时（毫秒）。超时返回 502，避免慢/不可达的图占住并发槽位（默认 12s，需短于客户端超时）。 |
+| `NEXT_PUBLIC_IMAGE_TIMEOUT_MS=8000` | 浏览器侧单图拉取超时（毫秒）。超时即标记该图为失败并释放队列槽位（默认 8s）。 |
+| `NEXT_PUBLIC_IMAGE_CONCURRENCY=12` | 缩略图并发解码数（1–32，默认 12）。图片解码是网络密集型，可调高以更快填满网格；调低以减少对慢网络的压力。 |
 | `NEXT_PUBLIC_DISABLE_IMAGE_PROXY=1` | 禁用代理，浏览器直连原 URL（仅当原站允许 CORS 时才可用）。 |
 | `NEXT_PUBLIC_SESSION_AUTO_RESTORE_MAX_MB=60` | 自动恢复会话的体积上限（MB）。超过则不在启动时静默恢复，改为落地页显示 “Restore previous files” 卡片；设为 `0` 可完全关闭自动恢复（默认 60）。 |
 

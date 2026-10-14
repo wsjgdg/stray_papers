@@ -91,10 +91,11 @@ export async function GET(req: NextRequest) {
   if (accept) headers.set("accept", accept);
 
   // Bound the upstream fetch so a slow/unreachable host can't hang a queue slot
-  // (and the user's tab) for too long. Env-tunable: PROXY_TIMEOUT_MS (default 20s).
+  // (and the user's tab) for too long. Env-tunable: PROXY_TIMEOUT_MS (default 12s).
+  // Keep this shorter than the client per-image timeout so failures surface fast.
   const timeoutMs = (() => {
     const v = Number(process.env.PROXY_TIMEOUT_MS);
-    return Number.isFinite(v) && v > 0 ? v : 20000;
+    return Number.isFinite(v) && v > 0 ? v : 12000;
   })();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);

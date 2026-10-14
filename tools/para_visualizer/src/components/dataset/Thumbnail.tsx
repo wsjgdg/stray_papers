@@ -98,7 +98,8 @@ function ThumbnailImpl({
     decodeStartedRef.current = true;
 
     let cancelled = false;
-    const handle: QueueHandle = enqueueDecode(async () => {
+    const handle: QueueHandle = enqueueDecode(
+      async () => {
       if (cancelled) return;
       const res: DecodeResult = await decodeImageField(imageValue, fieldName);
       if (cancelled) return;
@@ -118,7 +119,9 @@ function ThumbnailImpl({
           addFailure({ rowId, field: fieldName, reason: res.error, timestamp: new Date().toISOString() });
         }
       }
-    });
+    },
+      cacheKey,
+    );
     return () => {
       cancelled = true;
       handle.cancel();
