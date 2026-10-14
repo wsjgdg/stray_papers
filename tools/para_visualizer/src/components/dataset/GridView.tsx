@@ -227,6 +227,8 @@ export function GridView() {
                           toggleSelectedRow(r.id);
                           lastShiftIndex.current = r.index;
                         }}
+                        aria-label={`Select row ${r.index + 1} for bulk actions`}
+                        aria-pressed={inMultiSelect}
                         className={cn(
                           "absolute top-1.5 left-1.5 z-10 w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
                           inMultiSelect

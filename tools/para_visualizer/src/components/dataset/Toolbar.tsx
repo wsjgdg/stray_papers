@@ -82,6 +82,8 @@ export function Toolbar() {
               <TooltipTrigger asChild>
                 <button
                   onClick={() => setViewMode(v.id)}
+                  aria-label={`${v.label} view`}
+                  aria-pressed={viewMode === v.id}
                   className={cn(
                     "inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors",
                     viewMode === v.id
@@ -109,6 +111,8 @@ export function Toolbar() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onFocus={() => setShowSearchHistory(true)}
+          aria-label="Search rows across text fields"
+          aria-expanded={showSearchHistory}
           onBlur={() => {
             setShowSearchHistory(false);
             saveSearchToHistory(search);

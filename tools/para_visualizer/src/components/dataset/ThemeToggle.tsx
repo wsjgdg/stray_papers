@@ -56,7 +56,8 @@ export function ThemeToggle() {
             variant="ghost"
             className="h-8 w-8 p-0"
             onClick={cycle}
-            aria-label="Toggle theme"
+            aria-label={`Toggle theme, current: ${theme}`}
+            aria-haspopup="listbox"
           >
             <div className="relative h-3.5 w-3.5">
               <Sun className={cn("h-3.5 w-3.5 absolute inset-0 transition-all", theme === "light" ? "scale-100 rotate-0" : "scale-0 rotate-90")} />
