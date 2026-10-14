@@ -191,39 +191,74 @@ async function parseCsvFile(file: File): Promise<DatasetFile> {
 
 /**
  * Parse a Parquet file using parquet-wasm (browser-side WASM).
- * parquet-wasm's readParquet returns a wasm Table; we convert to IPC stream
+ * Uses the bundler entry point which auto-initializes WASM.
+ * readParquet returns a wasm Table; we convert to IPC stream
  * then use apache-arrow's tableFromIPC to get a proper Arrow Table.
  */
 async function parseParquetFile(file: File): Promise<DatasetFile> {
-  // Dynamic import — parquet-wasm's default export is initWasm
-  const parquetWasm = await import("parquet-wasm");
-  const initWasm = parquetWasm.default as unknown as (() => Promise<void> | void) | undefined;
-  const readParquet = parquetWasm.readParquet;
-
-  if (typeof readParquet !== "function") {
-    throw new Error("parquet-wasm: readParquet function not found");
-  }
-
-  // Initialize WASM (default export is the init function)
-  if (typeof initWasm === "function") {
-    await initWasm();
-  }
-
   const buf = await file.arrayBuffer();
   const uint8 = new Uint8Array(buf);
+
+  if (uint8.length === 0) {
+    throw new Error("Parquet file is empty");
+  }
+
+  // Check for PAR1 magic bytes at the start
+  if (!(uint8[0] === 0x50 && uint8[1] === 0x41 && uint8[2] === 0x52 && uint8[3] === 0x31)) {
+    throw new Error("Not a valid Parquet file (missing PAR1 magic header)");
+  }
+
+  // Try the bundler entry point first (auto-initializes WASM)
+  let wasmTable: { intoIPCStream: () => Uint8Array; free: () => void } | null = null;
+  let parquetWasm: any = null;
+
+  try {
+    parquetWasm = await import("parquet-wasm/bundler");
+  } catch {
+    // Fallback to esm entry point with manual init
+    try {
+      parquetWasm = await import("parquet-wasm");
+      const initWasm = parquetWasm.default;
+      if (typeof initWasm === "function") {
+        // Try to init with CDN URL as fallback
+        const wasmUrl = "https://cdn.jsdelivr.net/npm/parquet-wasm@0.9.0/esm/parquet_wasm_bg.wasm";
+        try {
+          await initWasm();
+        } catch {
+          await initWasm(wasmUrl);
+        }
+      }
+    } catch (e2) {
+      throw new Error(`Failed to load parquet-wasm: ${e2 instanceof Error ? e2.message : String(e2)}`);
+    }
+  }
+
+  const readParquet = parquetWasm?.readParquet;
+  if (typeof readParquet !== "function") {
+    throw new Error("parquet-wasm: readParquet function not found after import");
+  }
 
   // readParquet returns a parquet-wasm Table (NOT an apache-arrow Table)
   // We convert it to IPC stream bytes, then use apache-arrow's tableFromIPC
   let table: arrow.Table;
   try {
-    const wasmTable = readParquet(uint8);
+    wasmTable = readParquet(uint8);
+    if (!wasmTable) throw new Error("readParquet returned null");
     // intoIPCStream returns a Uint8Array of Arrow IPC stream data
     const ipcBytes = wasmTable.intoIPCStream();
     table = arrow.tableFromIPC(ipcBytes);
-    // Free the WASM table to avoid memory leak
-    wasmTable.free();
   } catch (e) {
-    throw new Error(`Parquet parse failed: ${e instanceof Error ? e.message : String(e)}`);
+    const msg = e instanceof Error ? e.message : String(e);
+    throw new Error(`Parquet parse failed: ${msg}`);
+  } finally {
+    // Free the WASM table to avoid memory leak
+    if (wasmTable) {
+      try {
+        wasmTable.free();
+      } catch {
+        // ignore
+      }
+    }
   }
 
   // Reuse arrow parsing logic

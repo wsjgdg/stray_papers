@@ -94,23 +94,34 @@ export async function decodeImageField(value: unknown, fieldName: string): Promi
       return { blobUrl: null, blob: null, format: null, width: null, height: null, sizeBytes: 0, source: v.path, error: "Local path not resolvable in browser" };
     }
     if (typeof v.url === "string") {
-      return { blobUrl: null, blob: null, format: null, width: null, height: null, sizeBytes: 0, source: v.url, error: "URL reference (not auto-fetched)" };
+      // Try fetching the URL
+      return fetchUrlImage(v.url as string, fieldName);
     }
   }
   // Strategy 2: raw bytes
   if (value instanceof Uint8Array || value instanceof ArrayBuffer) {
     return decodeBinaryBytes(new Uint8Array(value as Uint8Array), fieldName);
   }
-  // Strategy 3: base64 string
+  // Strategy 3: string
   if (typeof value === "string") {
     if (value.startsWith("data:image/")) {
       return decodeStringBytes(value, fieldName);
     }
     if (/^https?:\/\//i.test(value)) {
-      return { blobUrl: null, blob: null, format: null, width: null, height: null, sizeBytes: 0, source: value, error: "URL reference (not auto-fetched)" };
+      // Try fetching the URL — show preview, not just link
+      return fetchUrlImage(value, fieldName);
     }
     if (value.length > 0) {
-      return decodeStringBytes(value, fieldName);
+      // Only try base64 decode if the string looks like valid base64
+      if (isValidBase64(value)) {
+        return decodeStringBytes(value, fieldName);
+      }
+      // Not base64 — check if it looks like a file path
+      if (value.includes("/") || value.includes("\\")) {
+        return { blobUrl: null, blob: null, format: null, width: null, height: null, sizeBytes: 0, source: value, error: "Local path not resolvable in browser" };
+      }
+      // Unknown string content
+      return { blobUrl: null, blob: null, format: null, width: null, height: null, sizeBytes: 0, error: "String is not valid base64, data URL, or URL" };
     }
     return { blobUrl: null, blob: null, format: null, width: null, height: null, sizeBytes: 0, error: "Empty value" };
   }
@@ -120,6 +131,91 @@ export async function decodeImageField(value: unknown, fieldName: string): Promi
     if (first !== undefined) return decodeImageField(first, fieldName);
   }
   return { blobUrl: null, blob: null, format: null, width: null, height: null, sizeBytes: 0, error: "Unknown format" };
+}
+
+/**
+ * Fetch an image from a URL and return a blob URL for display.
+ * Handles CORS, timeouts, and network errors gracefully.
+ */
+async function fetchUrlImage(url: string, fieldName: string): Promise<DecodeResult> {
+  try {
+    // Set up timeout — 10 seconds
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const res = await fetch(url, { signal: controller.signal, mode: "cors" });
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      return {
+        blobUrl: null, blob: null, format: null, width: null, height: null,
+        sizeBytes: 0, source: url,
+        error: `URL fetch failed (HTTP ${res.status})`,
+      };
+    }
+
+    const blob = await res.blob();
+    if (blob.size === 0) {
+      return {
+        blobUrl: null, blob: null, format: null, width: null, height: null,
+        sizeBytes: 0, source: url,
+        error: "URL returned empty response",
+      };
+    }
+
+    const blobUrl = URL.createObjectURL(blob);
+    // Sniff format from blob
+    const buf = new Uint8Array(await blob.slice(0, 12).arrayBuffer());
+    const format = sniffFormat(buf) || blob.type?.replace("image/", "") || "png";
+
+    // Probe dimensions
+    try {
+      const dims = await probeImage(blobUrl);
+      return {
+        blobUrl, blob, format,
+        width: dims.width, height: dims.height,
+        sizeBytes: blob.size, source: url,
+      };
+    } catch {
+      // Image loaded but probe failed — still return the blob URL
+      return {
+        blobUrl, blob, format,
+        width: null, height: null,
+        sizeBytes: blob.size, source: url,
+      };
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    // Check if it's an abort error (timeout)
+    if (msg.includes("aborted")) {
+      return {
+        blobUrl: null, blob: null, format: null, width: null, height: null,
+        sizeBytes: 0, source: url,
+        error: "URL fetch timed out (10s) — may be CORS blocked or slow",
+      };
+    }
+    return {
+      blobUrl: null, blob: null, format: null, width: null, height: null,
+      sizeBytes: 0, source: url,
+      error: `URL fetch failed: ${msg} (likely CORS blocked)`,
+    };
+  }
+}
+
+/**
+ * Check if a string is valid base64.
+ * Avoids calling atob on non-base64 strings which throws.
+ */
+function isValidBase64(s: string): boolean {
+  if (!s || s.length < 4) return false;
+  const cleaned = s.replace(/\s+/g, "");
+  // Must only contain valid base64 characters
+  if (!/^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(cleaned)) {
+    return false;
+  }
+  // Length should be reasonable for an image (at least 100 bytes encoded)
+  if (cleaned.length < 100) return false;
+  return true;
 }
 
 async function decodeStringBytes(s: string, fieldName: string): Promise<DecodeResult> {
