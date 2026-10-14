@@ -192,8 +192,6 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   showRowJumpDialog: false,
   maxRows: 5000,
 
-  sessionFiles: null,
-
   setDataset: (ds) =>
     set((s) => {
       if (!ds) {
@@ -385,7 +383,10 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   setSessionFiles: (f) => set({ sessionFiles: f }),
   setLoading: (v) => set({ loading: v }),
   setLoadError: (v) => set({ loadError: v }),
-  addRecent: (r) => set((s) => ({ recent: [r, ...s.recent].slice(0, 10) })),
+  addRecent: (r: { name: string; size: number; rows: number }) =>
+    set((s) => ({
+      recent: [{ ...r, openedAt: new Date().toISOString() }, ...s.recent].slice(0, 10),
+    })),
   cacheBlob: (key, info) =>
     set((s) => ({
       blobCache: {

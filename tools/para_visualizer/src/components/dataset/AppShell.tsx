@@ -54,6 +54,7 @@ import {
   Clock,
   Bookmark,
   Search,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatBytes } from "@/lib/dataset/filter";
@@ -226,6 +227,9 @@ function Header() {
   const setDetailPanelOpen = useDatasetStore((s) => s.setDetailPanelOpen);
   const sidebarOpen = useDatasetStore((s) => s.sidebarOpen);
   const detailPanelOpen = useDatasetStore((s) => s.detailPanelOpen);
+  const failedPanelOpen = useDatasetStore((s) => s.failedPanelOpen);
+  const setFailedPanelOpen = useDatasetStore((s) => s.setFailedPanelOpen);
+  const failureCount = useDatasetStore((s) => s.failures.length);
   const bookmarkCount = useDatasetStore((s) => Object.keys(s.bookmarks).length);
 
   return (

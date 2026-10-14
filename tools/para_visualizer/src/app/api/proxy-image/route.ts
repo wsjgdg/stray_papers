@@ -244,7 +244,9 @@ function bufferedResponse(entry: CacheEntry, cacheTag: "HIT-MEM" | "HIT-DISK" | 
   respHeaders.set("cache-control", "public, max-age=3600");
   respHeaders.set("access-control-allow-origin", "*");
   respHeaders.set("x-cache", cacheTag);
-  return new Response(entry.buffer, { status: 200, headers: respHeaders });
+  // entry.buffer is a Node Buffer (Uint8Array); pass a fresh Uint8Array view so
+  // the DOM BodyInit type accepts it regardless of the underlying ArrayBufferLike.
+  return new Response(new Uint8Array(entry.buffer), { status: 200, headers: respHeaders });
 }
 
 function jsonError(status: number, detail: string) {

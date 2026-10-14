@@ -58,13 +58,13 @@ function ThumbnailImpl({
   const retryEpoch = useDatasetStore((s) => s.retryEpoch);
   const [retrying, setRetrying] = useState(false);
 
-  // Retry just this thumbnail: drop its cached error and re-decode.
+  // Retry just this thumbnail: drop its cached error and re-decode. The decode
+  // effect re-runs because clearBlob removes the cached entry (dep `cached`).
   const retryThis = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     clearBlob(cacheKey);
     setLocalError(null);
     setLocalSource(null);
-    decodeStartedRef.current = false;
     setRetrying(true);
   };
 
