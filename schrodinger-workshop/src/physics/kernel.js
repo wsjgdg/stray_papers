@@ -10,37 +10,58 @@
  *        localH(vec4 c, float V) 域内的代码片段，返回 H·c 的局部（非导数）部分。
  *            薛定谔:  V*c                    （V 由引擎注入）
  *            NLS:     (V - uG*dot(c.xy,c.xy))*c    （uG>0 = focusing，见 nls.js 符号约定）
- *            未来 Pauli: V*c + 0.5*(uBx*c.zw - uBy*c.wz ...)（2 复分量，pairs=2）
+ *            Pauli:  V*c - uK*σ·B·c        （4 通道实线性积，含 σ_y 耦合）
+ *        注：TPL_EVOLVE 实现的是一阶系统 w' = J·M·w（w=(x₁,y₁,x₂,y₂) 交错布局，
+ *        J 为复结构）——localH 只需给出 M·c 的全通道积，对任意实线性算符成立
+ *        （Pauli 的 σ·B 含自耦合，无需引擎模板改动）。
  *        density(vec4 psi)      → float，|ψ|²（可跨分量求和）
  *        kinetic(vec4 dxp, vec4 dyp) → float，动能密度（引擎已备好 4 阶中心差分）
- *        potential(vec4 psi, float V) → float，势能密度（含非线性平均场项）
+ *        potential(vec4 psi, float V) → float，势能密度（含非线性平均场项；
+ *            Pauli 的势能密度含塞曼自旋能 −uK·⟨ψ|σ·B|ψ⟩，用 reduce 循环内世界坐标 x）
  *        pmeanX/pmeanY（可选）  → float，⟨p_x⟩/⟨p_y⟩ 密度（默认复标量
  *                                     Im(ψ*∂ψ)，pairs 感知；与 kinetic 同 4 阶算子，
  *                                     不确定原理 HUD 的 Δk 均值项来源）
  *        pixelColor(vec4 psi)   → vec3，可选，覆盖默认「色相=相位」映射
- *   2. makeWave(grid, p) → { data, sum }，CPU 端生成初始波函数（pairs*2 个 float/格）
+ *   2. makeWave(grid, p) → { data, sum }，CPU 端生成初始波函数（pairs*2 个 float/格）。
+ *      p = { fx, fy, kx, ky, sigma, spinTheta?, spinPhi? }：自旋角由引擎从 state
+ *      透传（无此概念的内核忽略；Pauli 的布洛赫分解 cos(θ/2)|↑⟩+e^{iφ}sin(θ/2)|↓⟩）。
+ *      引擎负责归一化与等份叠加（add 分支全通道求和，pairs 通用）。
  *   3. presets()  → { key: { name, text, build(paint), wave:[fx,fy,kx,ky], params? } }
  *        build(paint)：paint = { vctx, vGray }，在 256² 势场画布上作画
  *        params：预设附加状态（如 NLS 的 { g:2.5, sigma:5 }），加载时并入 state
  *   4. 其余元数据：id / name / equation / pairs / defaults / extraControls /
  *      setUniforms / applyParams / eMaxExtra
+ *      extraControls(reinit, refreshParamHud)：引擎注入两个行为回调，rows 的
+ *      after 按参数语义选用——初相类参数（Pauli 自旋角）用 reinit（按 lastWave
+ *      重发波包）；参数派生 HUD（B 场读数）用 refreshParamHud（暂停时也即时）。
  *   5. energyLevels(state) → 可选，返回解析能级阶梯 { kind, param, nearest(E)→{label,e,d} }
  *      （HUD「E → 最近能级」对照用）；无解析谱的内核返回 null（HUD 隐藏该区）。
  *      单位与引擎一致：格点单位、ℏ=1、m=state.m。
  *   6. transmissionModel(state) → 可选，返回矩势垒透射的解析模型
  *      { T(E,V0,a), convolved(kx,dk,V0,a) }（「透射率扫描」工具的理论曲线与
  *      Δk 卷积期望）；无解析模型的内核返回 null（扫描面板隐藏）。单位与引擎
- *      一致：格点单位、ℏ=1、m=state.m。目前仅薛定谔内核落地——NLS/GP 的
- *      非线性项使线性透射模型失效，需要时可按各自模型扩展。
+ *      一致：格点单位、ℏ=1、m=state.m。薛定谔内核落地；Pauli 仅 B=0 时委托
+ *      同一模型（V 自旋无关 ⟹ 透射率逐字一致），B≠0 时自旋-空间耦合无线性
+ *      公式，返回 null（诚实门控）。NLS/GP 的非线性项使线性透射模型失效。
+ *   7. spinReadout / spinRead(rawSum)（可选，多复分量内核）：spinReadout=true
+ *      时引擎显示 HUD 自旋区（⟨σx⟩/⟨σy⟩/⟨σz⟩/|⟨σ⟩| + B 场行）与调试句柄
+ *      window.__app.spin。spinRead 接收引擎 spinSum() 的原始求和
+ *      { re12=ΣRe(ψ₁*ψ₂), im12=ΣIm(ψ₁*ψ₂), n1=Σ|ψ₁|², n2=Σ|ψ₂|², P }，
+ *      返回布洛赫向量 { sx, sy, sz, len }——物理公式在内核侧，引擎只做
+ *      readPixels 求和（app.js 不含物理公式的架构洁癖）。
+ *   8. cpuDensity(buf, i)：CPU 端 |ψ|²（调试/测量句柄：probSplit/com/moments/
+ *      fieldStats/rowScan/manualPass/probSum/psiBlobs/psiArgmax 全部经此）。
+ *      基类默认只算前两通道（pairs=1）；pairs=2 内核须覆盖为四通道平方和。
  *
  * 波函数纹理格式由 pairs 决定：1 → RG32F（单复分量），2 → RGBA32F（双复分量，
  * 自旋/Dirac 用）。引擎所有 shader 按 vec4 泛型书写：RG32F 采样得 (r,g,0,1)，
  * 多余的 zw 通道在写回 RG32F 附件时被丢弃，数值与逐字等价。
  *
  * 已覆盖的物理族：二阶时间可分离 H(u)=Hv, v'=-Hu 系统（薛定谔/NLS/GP）、
- * 含时外场驱动、AB 磁通（link 相位）。契约已预留但尚未落地的族：Pauli 自旋
- * （pairs=2 双复分量）。一阶系统（Dirac）与 3D 需要引擎扩展（integrator 模式 /
- * 3D 纹理）——见 README「新增内核」。
+ * 含时外场驱动、AB 磁通（link 相位）、Pauli 自旋（pairs=2 双复分量：localH
+ * 给 σ·B 的 4 通道实线性积，引擎模板零改动；自旋读数经 spinReadout 契约）。
+ * 契约已预留但尚未落地的族：一阶系统（Dirac，需引擎 integrator 模式扩展）
+ * 与 3D（3D 纹理）——见 README「新增内核」。
  *
  * Aharonov-Bohm 约定（矢势/磁通）：AB 矢势作用在动能项（拉普拉斯）而非势项——
  * backlog 原表述「矢势注入 localH」已按此修正。实现为最小耦合的 link 相位：
@@ -348,12 +369,16 @@ export class PhysicsKernel {
     this.name = '量子';
     this.equation = '';
     this.pairs = 1;                 /* 复分量对数：1=RG32F，2=RGBA32F */
+    this.spinReadout = false;       /* 自旋读数能力（Pauli）：HUD 自旋区 + __app.spin */
   }
   makeWave(){ throw new Error('kernel.makeWave not implemented'); }
   shaders(){ throw new Error('kernel.shaders not implemented'); }
   presets(){ return {}; }
   defaults(){ return {}; }          /* 并入 state 的内核私有参数（如 NLS 的 g） */
-  extraControls(){ return null; }   /* { html, rows:[{id,out,key,fmt,after?}] } */
+  /* 面板附加控件：{ html, rows:[{id,out,key,fmt,after?}] }；
+     签名 extraControls(reinit, refreshParamHud)——引擎注入行为回调，rows 的
+     after 按参数语义选用（初相类用 reinit，参数派生 HUD 用 refreshParamHud）。 */
+  extraControls(){ return null; }
   setUniforms(gl, prog, state){ /* 内核私有 uniform；program 无此 uniform 时 WebGL 静默 no-op */ }
   applyParams(qp, state){ /* URL 参数扩展 */ }
   eMaxExtra(state){ return 0; }     /* H 特征值上界的附加项（非线性项等） */

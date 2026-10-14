@@ -52,7 +52,7 @@ export class QuantumField {
     this._listeners = [];       /* unmount 时统一移除 */
     /* 帧循环计数与归约基线（原模块级变量，改为实例字段以支持多实例） */
     this._frames = 0; this.fps = 0;
-    this._lastFpsT = performance.now(); this._lastReduceF = 0;
+    this._lastFpsT = performance.now(); this._lastReduceF = 0; this._lastSpinF = 0;
     this.baseP0 = 1; this._baseCaptured = false;
     this._readBuf = new Float32Array(32*32*4);
     this._readBuf2 = new Float32Array(32*32*4);   /* MRT 附件 1：世界坐标概率矩 */
@@ -118,7 +118,10 @@ export class QuantumField {
     const presets = k.presets();
     const presetBtns = Object.keys(presets).map(key =>
       '<button data-preset="' + key + '">' + presets[key].name + '</button>').join('');
-    const extra = k.extraControls();
+    /* 内核附加控件；引擎注入两个行为回调：
+       reinit        —— 按 lastWave 重发波包（初相类参数：Pauli 自旋角）
+       refreshParamHud —— 参数派生 HUD 刷新（B 场读数等，暂停时拖滑块也即时） */
+    const extra = k.extraControls(() => this.reinitWave(), () => this.refreshParamHud());
     const extraHtml = extra ? extra.html : '';
     this.container.innerHTML = `
 <canvas id="gl"></canvas>
@@ -242,6 +245,14 @@ export class QuantumField {
     <div class="hrow"><span>能级阶梯</span><span id="hLadKind">—</span></div>
     <div class="hrow"><span>E → 最近能级</span><span id="hLadNear">—</span></div>
   </div>
+  <div id="spinSec" style="display:none">
+    <hr>
+    <div class="hrow"><span>⟨σ_x⟩</span><span id="hSX">—</span></div>
+    <div class="hrow"><span>⟨σ_y⟩</span><span id="hSY">—</span></div>
+    <div class="hrow"><span>⟨σ_z⟩</span><span id="hSZ">—</span></div>
+    <div class="hrow"><span>|⟨σ⟩|</span><span id="hSLen">—</span></div>
+    <div class="hrow"><span>磁场 B</span><span id="hB">—</span></div>
+  </div>
   <hr>
   <div class="hrow"><span>峰值 |ψ|²</span><span id="hPeak">—</span></div>
   <div class="hrow"><span>模拟时间 t</span><span id="hTime">—</span></div>
@@ -349,7 +360,10 @@ export class QuantumField {
      任意连发次数下所有波包份额一致、旧包永不消失（实测 6 连发 7 包列积分相等）。 */
   initWave(fx, fy, kx, ky, add){
     const g = this.state.grid, gl = this.gl;
-    const { data, sum: rawSum } = this.kernel.makeWave(g, { fx, fy, kx, ky, sigma: this.state.sigma });
+    /* 内核私有初相参数（Pauli 的 spinTheta/spinPhi 等）随 state 透传给 makeWave；
+       无此概念的内核忽略多余字段（makeWave 按需读取 p.spinTheta ?? 默认）。 */
+    const { data, sum: rawSum } = this.kernel.makeWave(g, { fx, fy, kx, ky, sigma: this.state.sigma,
+                                                              spinTheta: this.state.spinTheta, spinPhi: this.state.spinPhi });
     let sum = rawSum;
     /* 新波包先归一化到 Σ|ψ|²=1，再与旧场叠加。
        纹理中的旧场恒满足 Σ|ψ|²=1（初始归一化 + 演化酉守恒，HUD P=1.0000/err=0.000%）。
@@ -370,8 +384,10 @@ export class QuantumField {
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       const sOld = Math.sqrt(n/(n+1)), sNew = Math.sqrt(1/(n+1));
       for (let i=0;i<data.length;i++) data[i] = data[i]*sNew + old[i]*sOld;
-      sum = 0;   /* 重算总概率：理论上 n/(n+1)+1/(n+1)=1，重算吸收旧场演化浮点漂移，保持 P 严格归一 */
-      for (let i=0;i<data.length;i+=2) sum += data[i]*data[i]+data[i+1]*data[i+1];
+      sum = 0;   /* 重算总概率：理论上 n/(n+1)+1/(n+1)=1，重算吸收旧场演化浮点漂移，保持 P 严格归一。
+                    全通道求和（pairs=2 时 zw 两通道也是概率，不能只加 xy——旧代码 i+=2
+                    只覆盖分量 1，Pauli 双分量下归一化系数错 √2，P 与干涉图样全错）。 */
+      for (let i=0;i<data.length;i++) sum += data[i]*data[i];
     } else {
       this.state.waveCount = 1;                /* 清场发射（预设/重置/σ 调整/URL 参数）：场回到单包 */
     }
@@ -381,6 +397,16 @@ export class QuantumField {
     gl.texImage2D(gl.TEXTURE_2D, 0, this.ifmt, g, g, 0, this.fmt, gl.FLOAT, data);
     this.state.lastWave = [fx, fy, kx, ky];
     this.state.simTime = 0;
+    /* 自旋 HUD 即时刷新：自旋角滑块/重置/预设切换都走 initWave，帧循环节流
+       （120ms）在暂停时会停摆——此处直接刷新，暂停态改自旋也立即可见。 */
+    if (this.kernel.spinReadout) this.spinHud();
+  }
+
+  /* 按 lastWave 原参数重发波包（内核 extraControls 的 after 回调用）：
+     自旋角属初相——变更后须重发才生效（演化中的场不会因初相参数改变而变）。 */
+  reinitWave(){
+    const w = this.state.lastWave;
+    if (w) this.initWave(w[0], w[1], w[2], w[3]);
   }
 
   /* ---------- 分区域概率（透射率扫描的测量原语；调试句柄同源） ---------- */
@@ -400,13 +426,48 @@ export class QuantumField {
       const row = y*g;
       for (let x=0; x<g; x++){
         const i = (row + x)*ch;
-        const p = buf[i]*buf[i] + buf[i+1]*buf[i+1];
+        const p = this.kernel.cpuDensity(buf, i);   /* 全分量 |ψ|²（pairs 感知） */
         if (x < xs) sL += p; else sR += p;
         sx += x*p;
       }
     }
     const P = sL + sR;
     return { left: sL, right: sR, P, T: P > 0 ? sR/P : 0, comX: P > 0 ? (sx/P)/g : 0, simTime: this.state.simTime };
+  }
+
+  /* ---------- 自旋测量（Pauli 内核；纯引擎层原始求和，无物理公式） ---------- */
+  /* 一次 readPixels 直读 psiA，产出布洛赫向量的原始求和：
+       re12 = ΣRe(ψ₁*ψ₂), im12 = ΣIm(ψ₁*ψ₂), n1 = Σ|ψ₁|², n2 = Σ|ψ₂|², P = n1+n2
+     物理解释（⟨σx⟩=2re12/P 等）由内核 spinRead(rawSum) 给出——引擎只求和、
+     不写公式（架构洁癖：app.js 不含物理）。仅 pairs=2 有意义；pairs=1 时
+     ψ₂≡0 ⟹ re12=im12=n2=0（不调用即可）。 */
+  spinSum(){
+    const gl = this.gl, g = this.state.grid;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
+    const buf = new Float32Array(g*g*4);
+    gl.readPixels(0,0,g,g,gl.RGBA,gl.FLOAT,buf);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    let re12=0, im12=0, n1=0, n2=0;
+    for (let i=0;i<buf.length;i+=4){
+      const a=buf[i], b=buf[i+1], c=buf[i+2], d=buf[i+3];
+      n1 += a*a + b*b; n2 += c*c + d*d;
+      re12 += a*c + b*d;      /* Re(ψ₁*ψ₂) = ac+bd */
+      im12 += a*d - b*c;      /* Im(ψ₁*ψ₂) = ad−bc（共轭在左） */
+    }
+    return { re12, im12, n1, n2, P: n1+n2 };
+  }
+
+  /* HUD 自旋区刷新：⟨σx⟩/⟨σy⟩/⟨σz⟩/|⟨σ⟩|（kernel.spinRead 物理解释）。
+     调用点：frame() 120ms 节流（与 reduce 同频）+ initWave 末尾（暂停态即时）。 */
+  spinHud(){
+    if (!this.kernel.spinReadout) return;
+    const s = this.kernel.spinRead(this.spinSum());
+    this.q('#hSX').textContent = s.sx.toFixed(4);
+    this.q('#hSY').textContent = s.sy.toFixed(4);
+    this.q('#hSZ').textContent = s.sz.toFixed(4);
+    const el = this.q('#hSLen');
+    el.textContent = s.len.toFixed(4);
+    el.className = s.len > 0.999 && s.len < 1.001 ? 'ok' : '';
   }
 
   /* ---------- 预设 ---------- */
@@ -423,6 +484,7 @@ export class QuantumField {
     this.q('#descName').textContent = p.name;
     this.q('#descText').textContent = p.text;
     this.container.querySelectorAll('[data-preset]').forEach(b => b.classList.toggle('on', b.dataset.preset === key));
+    this.refreshParamHud();   /* 参数派生 HUD（B 场行/透射面板门控）随预设参数刷新 */
     this.toast(p.name);
   }
 
@@ -581,6 +643,13 @@ export class QuantumField {
       this.hud(sp, st, sv, Math.sqrt(sp2), {sx, sy, sxx, syy, stx, sty, pmx, pmy});
     }
 
+    /* 自旋 HUD（Pauli 内核）：与 reduce 同频 120ms 节流（spinSum 也是一次
+       全纹理 readPixels，不跟 reduce 合并以避免归约路径混入自旋测量） */
+    if (this.kernel.spinReadout && !this.state.paused && now - this._lastSpinF > 120){
+      this._lastSpinF = now;
+      this.spinHud();
+    }
+
     this._frames++;
     if (now - this._lastFpsT > 500){ this.fps = this._frames*1000/(now-this._lastFpsT); this._frames = 0; this._lastFpsT = now; this.q('#hFps').textContent = this.fps.toFixed(0); }
     document.title = 'OK f=' + this.fps.toFixed(0) + ' p=' + this.q('#hP').textContent;
@@ -649,6 +718,23 @@ export class QuantumField {
     /* AB 磁通：0 = 关闭（等价无矢势）；非零显示弧度 + 2π 份额 */
     this.q('#hAB').textContent = this.state.abPhi === 0 ? '关'
       : this.state.abPhi.toFixed(3) + ' rad (' + (this.state.abPhi/6.2831853).toFixed(2) + '×2π)';
+    /* 磁场读数（Pauli 内核；参数派生，暂停时拖 B 滑块也即时刷新——滑块 after
+       回调注入 refreshParamHud）。显示三分量 + |B| + 梯度（SG 场）。 */
+    if (this.kernel.spinReadout && this.q('#hB')){
+      const b = this.state;
+      this.q('#hB').textContent = '(' + b.bX.toFixed(3) + ', ' + b.bY.toFixed(3) + ', ' + b.bZ.toFixed(3) + ')' +
+        ' |B|=' + Math.hypot(b.bX, b.bY, b.bZ).toFixed(4) +
+        (b.bGrad !== 0 ? ' g=' + b.bGrad.toFixed(4) : '');
+    }
+    /* 透射率扫描面板动态门控：模型可用性可以是参数派生的（Pauli：B=0 有模型、
+       B≠0 无模型）——预设切换/B 滑块变更后即时反映（仅在实际变化时写 style，
+       避免每 tick 无谓的布局失效）。 */
+    const scanSec = this.q('#scanSec');
+    if (scanSec){
+      const hasModel = !!(this.kernel.transmissionModel && this.kernel.transmissionModel(this.state));
+      const want = hasModel ? '' : 'none';
+      if (scanSec.style.display !== want) scanSec.style.display = want;
+    }
     /* 能级阶梯（内核可选）：解析谱 + 最近能级对照。最近能级用最近一次归约的
        ⟨E⟩（_lastE）——暂停时归约停跑，该行保持上次读数而非清零。 */
     const lad = this.kernel.energyLevels ? this.kernel.energyLevels(this.state) : null;
@@ -928,7 +1014,7 @@ export class QuantumField {
     });
     this.bindRange('#rTrail','#oTrail','decay', v => v.toFixed(2));
     this.bindRange('#rBright','#oBright','bright', v => '×'+v.toFixed(2));
-    const extra = this.kernel.extraControls();       /* 内核附加滑块（如 NLS 的 g） */
+    const extra = this.kernel.extraControls(() => this.reinitWave(), () => this.refreshParamHud());   /* 内核附加滑块（如 NLS 的 g / Pauli 自旋角） */
     if (extra) for (const r of extra.rows) this.bindRange(r.id, r.out, r.key, r.fmt, r.after);
 
     this.on(this.q('#selGrid'), 'change', e => {
@@ -946,6 +1032,8 @@ export class QuantumField {
        内核无解析透射模型（契约 transmissionModel 返回 null，如 NLS/GP）时隐藏面板。 */
     if (!(this.kernel.transmissionModel && this.kernel.transmissionModel(this.state)))
       this.q('#scanSec').style.display = 'none';
+    /* 自旋 HUD 区：内核 spinReadout 能力标志（Pauli）时显示，否则隐藏 */
+    if (this.kernel.spinReadout) this.q('#spinSec').style.display = '';
     const scanBind = (id, out, fmt) => {
       const el = this.q(id), o = this.q(out);
       const upd = () => { o.textContent = fmt(parseFloat(el.value)); };
@@ -1029,6 +1117,29 @@ export class QuantumField {
       kernelId: this.kernelId,
       /* 分区域概率（透射率扫描的测量原语；原子快照：左/右概率 + 质心 + 总 P） */
       probSplit: (x) => this.probSplit(x),
+      /* 自旋布洛赫向量读数（Pauli 内核）：引擎 spinSum 原始求和 → 内核
+         spinRead 物理解释 → {sx,sy,sz,len}。HUD 自旋区同源。 */
+      spin: () => this.kernel.spinRead(this.spinSum()),
+      /* 分量质心（Pauli 专用诊断）：直读 psiA，按 ↑/↓ 两分量分别求 x 质心
+         与概率。引擎级纯测量（无物理解释）；SG 梯度力下两质心反向分离，
+         分离量 ∝ t²（每分量半位移 ½·(uK·g/m)·t²/grid，见 pauli.js 头注）。
+         pairs≠2 的内核返回 null。 */
+      spinCom: () => {
+        if (this.kernel.pairs !== 2) return null;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
+        const g = this.state.grid;
+        const buf = new Float32Array(g*g*4);
+        gl.readPixels(0,0,g,g,this.fmt,gl.FLOAT,buf);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        let n1=0,n2=0,x1=0,x2=0;
+        for (let i=0;i<buf.length;i+=4){
+          const idx = i/4, x = idx%g;
+          const p1 = buf[i]*buf[i]+buf[i+1]*buf[i+1];
+          const p2 = buf[i+2]*buf[i+2]+buf[i+3]*buf[i+3];
+          n1+=p1; n2+=p2; x1+=x*p1; x2+=x*p2;
+        }
+        return { x1:(x1/n1)/g, x2:(x2/n2)/g, n1, n2, P:n1+n2, simTime:this.state.simTime };
+      },
       /* 透射率扫描器：start(opts)/stop()/busy/results/summary（CDP 驱动与读数） */
       scan: this.scanner,
       scanModel: () => (this.kernel.transmissionModel ? this.kernel.transmissionModel(this.state) : null),
@@ -1063,7 +1174,7 @@ export class QuantumField {
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         let sx=0, sy=0, s=0;
         for (let i=0;i<buf.length;i+=ch){
-          const p = buf[i]*buf[i] + buf[i+1]*buf[i+1];
+          const p = this.kernel.cpuDensity(buf, i);
           const idx = i/ch;
           sx += (idx%g)*p; sy += Math.floor(idx/g)*p; s += p;
         }
@@ -1084,7 +1195,7 @@ export class QuantumField {
         let s=0, sx=0, sy=0, sxx=0, syy=0;
         for (let y=0;y<g;y++) for (let x=0;x<g;x++){
           const i=(y*g+x)*ch;
-          const p = buf[i]*buf[i]+buf[i+1]*buf[i+1];
+          const p = this.kernel.cpuDensity(buf, i);
           const xw=(x+0.5)/g, yw=(y+0.5)/g;
           s+=p; sx+=xw*p; sy+=yw*p; sxx+=xw*xw*p; syy+=yw*yw*p;
         }
@@ -1114,14 +1225,18 @@ export class QuantumField {
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         let sx=0, s=0;
         for (let i=0;i<buf.length;i+=ch){
-          const p = buf[i]*buf[i] + buf[i+1]*buf[i+1];
+          const p = this.kernel.cpuDensity(buf, i);
           sx += ((i/ch)%g)*p; s += p;
         }
         const at = (wx, wy) => {
           const x = Math.min(g-1, Math.max(0, Math.round(wx*g)));
           const y = Math.min(g-1, Math.max(0, Math.round(wy*g)));
           const i = (y*g+x)*ch;
-          return { re: buf[i], im: buf[i+1], p: buf[i]*buf[i]+buf[i+1]*buf[i+1], arg: Math.atan2(buf[i+1], buf[i]) };
+          /* re/im/arg = 第一复分量（pairs=1 时即全场；pairs=2 时补 re2/im2/arg2
+             为第二分量）；p 恒为全分量密度（cpuDensity） */
+          const o = { re: buf[i], im: buf[i+1], p: this.kernel.cpuDensity(buf, i), arg: Math.atan2(buf[i+1], buf[i]) };
+          if (ch === 4){ o.re2 = buf[i+2]; o.im2 = buf[i+3]; o.arg2 = Math.atan2(buf[i+3], buf[i+2]); }
+          return o;
         };
         const out = { comX: (sx/s)/g, P: s, simTime: this.state.simTime };
         for (const pt of (pts || [['C',0.5,0.5]])){
@@ -1143,13 +1258,14 @@ export class QuantumField {
         gl.readPixels(0,0,g,g,this.fmt,gl.FLOAT,buf);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         const x = Math.min(g-1, Math.max(0, Math.round(wx*g)));
-        const re = [], im = [], p = [];
+        const re = [], im = [], re2 = [], im2 = [], p = [];
         for (let y=0;y<g;y++){
           const i=(y*g+x)*ch;
           re.push(buf[i]); im.push(buf[i+1]);
-          p.push(buf[i]*buf[i]+buf[i+1]*buf[i+1]);
+          if (ch === 4){ re2.push(buf[i+2]); im2.push(buf[i+3]); }
+          p.push(this.kernel.cpuDensity(buf, i));   /* 全分量 |ψ|² */
         }
-        return { x, re, im, p, grid: g, simTime: this.state.simTime };
+        return { x, re, im, re2, im2, p, grid: g, simTime: this.state.simTime };
       },
       /* AB 螺线管标记环像素统计：读 dispA 全帧，数「蓝 > 红」像素（标记环为
          蓝色 vec3(0.55,0.75,1.0)；AB 预设势场仅暖色势垒，故 b>r 像素≈环）。
@@ -1273,7 +1389,7 @@ export class QuantumField {
         gl.readPixels(0,0,g,g,this.fmt,gl.FLOAT,buf);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         let sx=0,s=0;
-        for (let i=0;i<buf.length;i+=ch){ const p=buf[i]*buf[i]+buf[i+1]*buf[i+1]; sx+=(i/ch)%g*p; s+=p; }
+        for (let i=0;i<buf.length;i+=ch){ const p=this.kernel.cpuDensity(buf, i); sx+=(i/ch)%g*p; s+=p; }
         const i18 = Math.round(0.5*g)*g + Math.round(0.18*g);   /* 索引 = y*g+x（易错：勿交换） */
         const row = a => { /* 波包中心行的 |ψ| 轮廓（前 64 点） */
           const y = Math.round(0.5*g); const out = [];
@@ -1291,7 +1407,7 @@ export class QuantumField {
         gl.readPixels(0,0,w,h,this.fmt,gl.FLOAT,buf);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         let s = 0;
-        for (let i = 0; i < buf.length; i += ch) s += buf[i]*buf[i] + buf[i+1]*buf[i+1];
+        for (let i = 0; i < buf.length; i += ch) s += this.kernel.cpuDensity(buf, i);
         return s;
       },
       trailLit: (th) => {
@@ -1309,8 +1425,11 @@ export class QuantumField {
       psiArgmax: (wx0, wx1) => {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
         const g = this.state.grid;
-        const buf = new Float32Array(g*g*4);
-        gl.readPixels(0,0,g,g,gl.RGBA,gl.FLOAT,buf);
+        /* 按 pairs 选格式（旧代码固定 RGBA×4 通道读 RG32F 附件——依赖驱动
+           宽容度，且 pairs=2 语义下 strid 也必须是 4） */
+        const ch = this.kernel.pairs === 2 ? 4 : 2;
+        const buf = new Float32Array(g*g*ch);
+        gl.readPixels(0,0,g,g,this.fmt,gl.FLOAT,buf);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         /* 可选 x 窗口 [wx0,wx1]（世界坐标）：叠加发射后场上有多个波包，
            全局 argmax 会在包间跳变；窗口跟踪可隔离待测包（须与其他包轨迹分离）。 */
@@ -1318,7 +1437,7 @@ export class QuantumField {
         const x1 = wx1 === undefined ? g : Math.min(g, Math.ceil(wx1*g));
         let bi=0, bv=-1;
         for (let y=0;y<g;y++) for (let x=x0;x<x1;x++){
-          const i=(y*g+x)*4; const p = this.kernel.cpuDensity(buf, i);
+          const i=(y*g+x)*ch; const p = this.kernel.cpuDensity(buf, i);
           if(p>bv){bv=p;bi=y*g+x;}
         }
         return { x:(bi%g)/g, y:Math.floor(bi/g)/g, p:bv, grid:g, simTime: this.state.simTime, win:[x0/g, x1/g] };
@@ -1348,13 +1467,16 @@ export class QuantumField {
       psiBlobs: () => {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
         const g = this.state.grid;
-        const buf = new Float32Array(g*g*2);
-        gl.readPixels(0,0,g,g,gl.RG,gl.FLOAT,buf);
+        /* 按 pairs 选格式（旧代码固定 RG×2 通道，pairs=2 时读回只有分量 1、
+           且 RGBA32F 附件上 RG/FLOAT 读取非法） */
+        const ch = this.kernel.pairs === 2 ? 4 : 2;
+        const buf = new Float32Array(g*g*ch);
+        gl.readPixels(0,0,g,g,this.fmt,gl.FLOAT,buf);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         const col = new Float64Array(g);
         let mx = 0;
         for (let y=0;y<g;y++) for (let x=0;x<g;x++){
-          const i=(y*g+x)*2; const p = this.kernel.cpuDensity(buf, i);
+          const i=(y*g+x)*ch; const p = this.kernel.cpuDensity(buf, i);
           col[x]+=p; if(p>mx)mx=p;
         }
         let mxCol = 0;

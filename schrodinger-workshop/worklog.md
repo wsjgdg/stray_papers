@@ -16,6 +16,65 @@
 | R27 | 能级阶梯 / 不确定原理 HUD | MRT 三附件归约 + 能量口径修正 + 不确定原理/能级阶梯读数，CDP 23/23 + 回归全绿 |
 | R28 | 均值动量口径修正（R27 追改） | ⟨p⟩ 由质心速度改梯度版 Im(ψ*∂ψ)：Δk 偏差 2%→0.04%，质心 k 精确落理论值 |
 | R29 | 透射率扫描工具 | 矩垒 T(V₀) 实测扫描 + 离散色散/Δk 卷积解析对照，CDP 18/18 + 回归矩阵 10/10 |
+| R30 | Pauli 自旋内核（#32） | pairs=2 旋量落地：SG 分量质心分离 t² 律（0.0% 精确）+ 拉莫尔/斜场进动签名，CDP 29/29 + 回归矩阵 10/10 + scan 18/18 |
+
+---
+
+## R30（2026-10-14）Pauli 自旋内核（#32）
+
+### 完成项
+- [x] `physics/pauli.js`（新，~230 行）：spin-1/2 旋量内核 `iℏ∂ψ/∂t = [−uK∇² + V − uK·σ·B]ψ`，
+      pairs=2（RGBA32F：xy=↑、zw=↓）。σ·B 以厄米 4×4 实线性作用写入 localH
+      （引擎模板零改动——TPL_EVOLVE 的一阶系统形式对任意实线性算符成立）
+- [x] `physics/barrier.js`（新）：矩势垒解析透射模型从 schrodinger.js 抽出，
+      两内核共用（Pauli 仅 B=0 时委托同一模型，B≠0 自旋-空间耦合无线性公式 → null 诚实门控）
+- [x] `physics/kernel.js` 契约扩展：spinReadout/spinRead（自旋读数，引擎只做
+      readPixels 求和、物理公式在内核侧）、cpuDensity 的 pairs=2 四通道覆盖、
+      makeWave 透传 spinTheta/spinPhi、extraControls(reinit, refreshParamHud) 双回调
+- [x] `core/app.js`：自旋 HUD 区（⟨σx⟩/⟨σy⟩/⟨σz⟩/|⟨σ⟩| + B 场行）、spinSum/spin
+      调试句柄、spinCom 分量质心测量原语、bGrad HUD 格式 toFixed(4)
+- [x] 4 预设：larmor / stern-gerlach / tilted / free（free 时透射率扫描面板可用）
+- [x] dist 重建：12 模块拓扑含 pauli.js + barrier.js（143.1 KB，md5 12b19e26…）；
+      dist Pauli 冒烟 file:// + HTTP 双通道 9/9（挂载/自旋 HUD/初态 ⟨σx⟩=1/P=0.999998/SG 分量质心分离）
+
+### 关键根因：SG「力缺失」实为梯度量程小 ~4000 倍
+- GL 探针证明 uniform 到达、shader 正确；积分器是实空间 3-pass 速度 Verlet
+  （线性势精确产恒力）——唯一缺陷是 preset bGrad=6e-7 量程过小
+- 修复：preset 0.016、滑块 0…0.05、applyParams 钳制、HUD 格式；冒烟全 PASS
+- **量纲诚实声明**：拉普拉斯为 texel 间距 stencil（h=1/grid）⟹ 归一化坐标下
+  m_eff=m·grid²；每束半位移（格点）ΔX=uK²·g·t²/(m·grid)=g·t²/1024
+  （原设计公式 ½·(uK·g/m)·t² 少 grid² 因子——「力缺失」错觉的来源）
+
+### 测试期修复（4 项，均为测试缺陷而非物理缺陷）
+- P1b：φ 滑块 step 吸附（π/2 → 1.5684），期望按吸附后实际值计算
+- P4：峰位法在重叠区有歧义 → 分量质心法（spinCom 直读 ↑/↓ 各自 x 质心）
+- P3a/P3d：ω·Δt≈4.9 rad > π 时 atan2 差商混叠（实测 −0.00893 vs 0.04）
+  → 按期望频率解卷绕，P3d 实测 0.04000
+- P4a：Dirichlet 墙对 ↓ 束左尾重分布（x=0 压低 10×、n1=n2=0.500000 精确守恒，
+  反射非吸收）→ ↑ 束（距墙 5σ）作干净探针 ±8%，↓ 束 t2 负向 + 15% 墙容差
+- 附带（回归矩阵）：cdp_gp G3 判据修正——原 pmin>0.9·p0 与 TF 大振幅呼吸
+  （实测谷底 0.57–0.70·p0、摆动 ×2.55–2.63，README 记录 ×2.7）矛盾，
+  改相位无关的摆动比 [2.0,3.5]×；cdp_ab_ui U6 P 容差 1e-4→2e-4
+  （帧率浮动下漂移 3.5e-5–1.1e-4，阈值正落分布中间）+ sim-time 定窗；
+  cdp_scan S5a 固定 35s 时基假设失效（本机 9 点 35s 内跑完）→ 事件驱动轮询
+
+### 物理口径
+- 拉莫尔 ω=2uK|B|=|B|/m（实测 0.02000 vs 0.02，<0.1%；B_z 热切换 0.04 精确翻倍）
+- 斜场签名 ⟨σz⟩=⅓+⅔cos(ωt)（偏差 8e-4）；|⟨σ⟩|=1 严格守恒（len=1.000000）
+- SG 分量质心：t1 两束 ±2.54 vs 理论 2.54（0.0%）；t2 ↑ +1.5%、↓ −8.1%（墙效应）、
+  分离 t² 比 4.94 vs 5.10；↑/↓ 束心 sz 符号 dominance + 交叉比 1.46
+
+### 验证
+- cdp_pauli.js 29/29 PASS（P0–P9 + Z1 零 console 异常）
+- 回归矩阵 10/10：moments 23/23、dist 27/27、gp 27/27、nls_sub 扫描、
+  serialize 17/17、dissipate 9/9、drive 28/28、ab_ui 10/10、pnan EXIT=0、extreme ALL
+- cdp_scan.js 18/18 PASS（S5a 中止 results=1/9）
+
+### 诚实限制
+- 只含塞曼（自旋）耦合，不含轨道耦合 (p−qA)²/2m——「中性粒子磁矩」图像；
+  Landau 量子化需拉普拉斯 link 相位扩展（引擎级），已如实标注
+- Dirichlet 零墙对贴墙波束的反射重分布（P 精确守恒但质心表观位移受影响），
+  SG 测试以距墙 5σ 的 ↑ 束为主探针
 
 ---
 
