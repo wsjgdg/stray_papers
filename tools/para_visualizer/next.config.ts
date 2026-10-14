@@ -4,6 +4,11 @@ import { fileURLToPath } from "node:url";
 const nextConfig: NextConfig = {
   output: "standalone",
   /* config options here */
+  // Next 16 blocks cross-origin HMR by default. A local-first tool is often
+  // opened via 127.0.0.1, localhost, or a LAN IP, so allow all of them —
+  // otherwise the dev client runtime silently fails to attach and clicks do
+  // nothing (the production build is unaffected).
+  allowedDevOrigins: ["localhost", "127.0.0.1", "0.0.0.0", ".local"],
   typescript: {
     ignoreBuildErrors: true,
   },
