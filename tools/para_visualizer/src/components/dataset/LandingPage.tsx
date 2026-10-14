@@ -4,6 +4,7 @@
  */
 import { useDatasetStore } from "@/lib/dataset/store";
 import { fetchDemoDataset } from "@/lib/dataset/parsers";
+import { saveSession, clearSession } from "@/lib/dataset/session";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -22,9 +23,12 @@ import {
   ShieldCheck,
   Clock,
   MousePointer2,
+  History,
+  Loader2,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { formatBytes } from "@/lib/dataset/filter";
 
 const FEATURES = [
   { icon: ImageIcon, title: "Multi-strategy image decode", desc: "Bytes, base64, data-URL, URL refs, nested structs — auto-detected with graceful fallbacks." },
@@ -46,8 +50,31 @@ export function LandingPage() {
   const setDataset = useDatasetStore((s) => s.setDataset);
   const setLoading = useDatasetStore((s) => s.setLoading);
   const setLoadError = useDatasetStore((s) => s.setLoadError);
+  const sessionFiles = useDatasetStore((s) => s.sessionFiles);
+  const setSessionFiles = useDatasetStore((s) => s.setSessionFiles);
   const [busy, setBusy] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+
+  const restoreSession = async () => {
+    if (!sessionFiles || sessionFiles.length === 0) return;
+    setBusy(true);
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const { parseFiles } = await import("@/lib/dataset/parsers");
+      const ds = await parseFiles(sessionFiles);
+      setDataset(ds);
+      setSessionFiles(null);
+      toast.success(`Restored ${ds.files.length} file(s) with ${ds.files.reduce((a, f) => a + f.rowsCount, 0)} rows`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setLoadError(msg);
+      toast.error(`Restore failed: ${msg}`);
+    } finally {
+      setLoading(false);
+      setBusy(false);
+    }
+  };
 
   const handleDemo = async () => {
     setBusy(true);
@@ -56,6 +83,8 @@ export function LandingPage() {
     try {
       const ds = await fetchDemoDataset();
       setDataset(ds);
+      // demo is re-fetched remotely; don't persist it as a restore-able session
+      clearSession().catch(() => {});
       toast.success(`Loaded ${ds.name}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -77,6 +106,8 @@ export function LandingPage() {
       const { parseFiles } = await import("@/lib/dataset/parsers");
       const ds = await parseFiles(arr);
       setDataset(ds);
+      // Persist uploaded files so they survive a reload (IndexedDB)
+      saveSession(arr, ds.name).catch(() => {});
       toast.success(`Loaded ${ds.files.length} file(s) with ${ds.files.reduce((a, f) => a + f.rowsCount, 0)} rows`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -165,6 +196,28 @@ export function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* restore previous session */}
+      {sessionFiles && sessionFiles.length > 0 && (
+        <section className="max-w-5xl mx-auto px-6 pb-4">
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 flex flex-wrap items-center gap-3">
+            <History className="h-5 w-5 text-primary shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium">Restore previous files</p>
+              <p className="text-[11px] text-muted-foreground truncate">
+                {sessionFiles.map((f) => f.name).slice(0, 3).join(", ")}
+                {sessionFiles.length > 3 ? ` +${sessionFiles.length - 3} more` : ""}
+                {" · "}
+                {formatBytes(sessionFiles.reduce((a, f) => a + f.size, 0))}
+              </p>
+            </div>
+            <Button size="sm" onClick={restoreSession} disabled={busy}>
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <History className="h-4 w-4" />}
+              Restore
+            </Button>
+          </div>
+        </section>
+      )}
 
       {/* steps */}
       <section className="max-w-5xl mx-auto px-6 pb-8">

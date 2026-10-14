@@ -79,6 +79,9 @@ interface DatasetState {
   // max rows to load at once (for large datasets)
   maxRows: number;
 
+  // last uploaded session's File blobs (for "restore previous files" / auto-restore)
+  sessionFiles: File[] | null;
+
   // ---- actions ----
   setDataset: (ds: LoadedDataset | null) => void;
   addDataset: (ds: LoadedDataset) => void;
@@ -117,6 +120,7 @@ interface DatasetState {
   setShowBookmarkPanel: (v: boolean) => void;
   setShowRowJumpDialog: (v: boolean) => void;
   setMaxRows: (n: number) => void;
+  setSessionFiles: (f: File[] | null) => void;
   setLoading: (v: boolean) => void;
   setLoadError: (v: string | null) => void;
   addRecent: (r: { name: string; size: number; rows: number }) => void;
@@ -180,6 +184,8 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   showBookmarkPanel: false,
   showRowJumpDialog: false,
   maxRows: 5000,
+
+  sessionFiles: null,
 
   setDataset: (ds) =>
     set((s) => {
@@ -364,6 +370,7 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   setShowBookmarkPanel: (v) => set({ showBookmarkPanel: v }),
   setShowRowJumpDialog: (v) => set({ showRowJumpDialog: v }),
   setMaxRows: (n) => set({ maxRows: n }),
+  setSessionFiles: (f) => set({ sessionFiles: f }),
   setLoading: (v) => set({ loading: v }),
   setLoadError: (v) => set({ loadError: v }),
   addRecent: (r) => set((s) => ({ recent: [r, ...s.recent].slice(0, 10) })),

@@ -5,6 +5,7 @@
 import { useState, useCallback } from "react";
 import { useDatasetStore } from "@/lib/dataset/store";
 import { parseFiles, fetchDemoDataset } from "@/lib/dataset/parsers";
+import { saveSession, clearSession } from "@/lib/dataset/session";
 import {
   Dialog,
   DialogContent,
@@ -52,6 +53,9 @@ export function LoadDialog() {
         setDataset(ds);
         toast.success(`Loaded ${ds.files.length} file(s) with ${ds.files.reduce((a, f) => a + f.rowsCount, 0)} rows`);
       }
+      // Persist uploaded files so they survive a reload (IndexedDB)
+      saveSession(pendingFiles, ds.name).catch(() => {});
+      setOpen(false);
       setPendingFiles([]);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -60,7 +64,7 @@ export function LoadDialog() {
     } finally {
       setLoading(false);
     }
-  }, [pendingFiles, loadMode, datasets.length, setDataset, addDataset, setLoading, setLoadError]);
+  }, [pendingFiles, loadMode, datasets.length, setDataset, addDataset, setLoading, setLoadError, setOpen]);
 
   const handleDemo = useCallback(async () => {
     setLoading(true);
@@ -74,6 +78,8 @@ export function LoadDialog() {
         setDataset(ds);
         toast.success(`Loaded demo dataset: ${ds.name}`);
       }
+      // demo is re-fetched remotely; don't persist it as a restore-able session
+      clearSession().catch(() => {});
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       setLoadError(msg);
