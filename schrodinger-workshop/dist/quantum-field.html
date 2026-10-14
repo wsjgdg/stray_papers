@@ -23,6 +23,7 @@
       src/physics/nls.js
       src/physics/gp.js
       src/physics/pauli.js
+      src/physics/dirac.js
       src/main.js
 */
 
@@ -192,8 +193,9 @@ function gaussianWave(grid, { fx, fy, kx, ky, sigma }){
  *                                     不确定原理 HUD 的 Δk 均值项来源）
  *        pixelColor(vec4 psi)   → vec3，可选，覆盖默认「色相=相位」映射
  *   2. makeWave(grid, p) → { data, sum }，CPU 端生成初始波函数（pairs*2 个 float/格）。
- *      p = { fx, fy, kx, ky, sigma, spinTheta?, spinPhi? }：自旋角由引擎从 state
- *      透传（无此概念的内核忽略；Pauli 的布洛赫分解 cos(θ/2)|↑⟩+e^{iφ}sin(θ/2)|↓⟩）。
+ *      p = { fx, fy, kx, ky, sigma, m, spinTheta?, spinPhi? }：m=state.m（Dirac
+ *      的正能旋量依赖裸质量）；自旋角由引擎从 state 透传（无此概念的内核忽略；
+ *      Pauli 的布洛赫分解 cos(θ/2)|↑⟩+e^{iφ}sin(θ/2)|↓⟩）。
  *      引擎负责归一化与等份叠加（add 分支全通道求和，pairs 通用）。
  *   3. presets()  → { key: { name, text, build(paint), wave:[fx,fy,kx,ky], params? } }
  *        build(paint)：paint = { vctx, vGray }，在 256² 势场画布上作画
@@ -228,9 +230,24 @@ function gaussianWave(grid, { fx, fy, kx, ky, sigma }){
  *
  * 已覆盖的物理族：二阶时间可分离 H(u)=Hv, v'=-Hu 系统（薛定谔/NLS/GP）、
  * 含时外场驱动、AB 磁通（link 相位）、Pauli 自旋（pairs=2 双复分量：localH
- * 给 σ·B 的 4 通道实线性积，引擎模板零改动；自旋读数经 spinReadout 契约）。
- * 契约已预留但尚未落地的族：一阶系统（Dirac，需引擎 integrator 模式扩展）
- * 与 3D（3D 纹理）——见 README「新增内核」。
+ * 给 σ·B 的 4 通道实线性积，引擎模板零改动；自旋读数经 spinReadout 契约）、
+ * Dirac 一阶系统（pairs=2：KINETIC_E/kinScale/helpers 三 token，见下）。
+ * 尚未落地的族：3D（3D 纹理）——见 README「新增内核」。
+ *
+ * 一阶系统 token（Dirac 内核 #33 引入；默认值对标量内核逐字等价、回归零风险）：
+ *   kineticE —— TPL_EVOLVE 的动能项表达式（默认 '-uK*lap'）。引擎 KDK 骨架
+ *              本就是一阶系统 w'=J·M·w（w=(Reψ,Imψ)），Dirac 只需把 M·w 的
+ *              导数部分注入：kineticE='diracD(vUv)' 给出 −i·α·∂ψ 的实形 4
+ *              通道积（含 AB link 相位分支）。默认路径逐字不变。
+ *   kinScale —— TPL_REDUCE 动能密度系数（默认 'uK'=1/2m）。Dirac 的 α·p 动能
+ *              无 1/2m 因子，覆写 '1.0'。
+ *   helpers  —— TPL_EVOLVE 函数定义注入点（S/rot4/ang/wrapPi 之后、main 之前，
+ *              可前向引用全部引擎 helper）。kineticE 需语句（多采样+分支）而
+ *              非单一表达式时在此定义函数；display/reduce 模板无此注入点
+ *              （其片段均为表达式）。
+ *   scanEc   —— 可选方法 scanEc(state, kx)：透射率扫描的入射中心能量口径
+ *              （默认薛定谔离散色散 2sin²(k/2)/m）。Dirac 覆写为总能量
+ *              √(sin²k+m²)（扫描面板 x 轴 V0/E 与模型 T 的 E 同口径）。
  *
  * Aharonov-Bohm 约定（矢势/磁通）：AB 矢势作用在动能项（拉普拉斯）而非势项——
  * backlog 原表述「矢势注入 localH」已按此修正。实现为最小耦合的 link 相位：
@@ -281,6 +298,30 @@ function gaussianWave(grid, { fx, fy, kx, ky, sigma }){
  * A=0 时 V += 0·cos(φ) 为 IEEE 精确恒等（±0.0），厄米路径零改动、回归零风险。
  * 稳定性：E_max 上界须含 |A|（引擎 frame 内已加），否则极端小质量 m 下
  * dt_sub·E_max 可能越过 KDK 稳定极限 2（θ→π 混叠）。
+ *
+ * CN 积分器约定（Crank-Nicolson + block-Jacobi；kernel.integrator='cn' 时启用，
+ * 当前仅 Dirac）：
+ *   KDK 速度 Verlet 要求 M 的通道可对齐分解为 kick/drift 两步（标量内核
+ *   u'=-Hv, v'=Hu 恰好满足）。一阶算符 M 若**混合通道**（Dirac 的 α·p 把 ψ₂
+ *   导数耦合进 ψ₁ 方程），KDK 映射谱半径 ρ>1（实测 1.205@dt_sub=0.2, m=1, 1D
+ *   klein），范数指数爆炸——结构性失效，非符号/边界细节（见 dirac.js 头注
+ *   【积分器】节）。CN 方案 (I−h·G)w_{n+1}=(I+h·G)w_n，h=dt_sub/2，G=−J·M
+ *   （J=复结构 (a,b)↦(−b,a)，M 为复线性厄米算符的实形：实对称且 MJ=JM）⟹ G
+ *   斜对称 ⟹ Cayley 矩阵严格正交：范数机器精度守恒、无条件稳定。
+ *   引擎侧（app.js evolveCN）每子步两个 pass：
+ *     cnRhs   ：w_n → rhs = w_n + h·G(w_n)（G=−J·M 全量作用，一遍）
+ *     cnSweep ：block-Jacobi 迭代 x ← (I−h·Gloc)⁻¹(rhs + h·Gkin(x))，
+ *               Gloc = 局部（非导数）块对角 2×2 闭式求逆（GLSL 内联），
+ *               Gkin = 导数耦合项；12 次扫掠收敛 ~1e-9（收缩比 ~0.18/迭代，
+ *               理论上界 h·‖Mkin‖——h≤dt_sub/2 时远小于 1）。
+ *   h=dt_sub/2 的因子 2 是 CN 的正确离散（(I−hG)x=(I+hG)c 两边同 h 等效
+ *   Cayley 步长 2h，动力学整体快一倍——klein_td4.py 时间域实测确认，单模
+ *   相位率 −2·arctan(hE/2) vs 错值 −2·arctan(hE)）。
+ *   纹理约定：cnRhs 读 uPsi（TEX0）；cnSweep 读 uPsi=TEX0（x_k）+ uRhs=TEX2
+ *   （rhs 固定），sweep 之间 ping-pong uPsi。uDtHalf = dt_sub/2 每子步一致。
+ *   显式路径（KDK）与 CN 路径经 kernel.integrator 分流：'cn' 时 app.js
+ *   编译 progCnRhs/progCnSweep、分配 this.rhs target，evolve()/manualPass()
+ *   走 CN 分支；其余内核零改动。
  * ========================================================================== */
 
 
@@ -310,6 +351,7 @@ vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }   /* 两复
 /* AB link 相位辅助：视角（螺线管格点上 |d|²≈0 回退 0，防 atan2(0,0)）与 (−π,π] wrap */
 float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
 float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
+{{HELPERS}}
 void main(){
   vec4 c = texture(uPsi,vUv);
   vec4 lap;
@@ -346,12 +388,104 @@ void main(){
   float V = (texture(uV,vUv).r*255.0-128.0)/127.0;
   /* 含时外场（实势 → H 厄米 → 概率守恒；A=0 时为 IEEE 精确恒等） */
   V += uDriveAmp * (uDriveMode == 1 ? cos(6.28318530718*vUv.x - uDrivePhase) : cos(uDrivePhase));
-  vec4 Hc = -uK*lap + {{LOCAL_H}};
+  vec4 Hc = {{KINETIC_E}} + {{LOCAL_H}};   /* KINETIC_E 默认 -uK*lap（标量内核逐字等价）；一阶内核（Dirac）注入 -i·α·∂ */
   if(uUpdateV > 0.5){
     o = vec4(c.x, c.y - 0.5*uDt*Hc.x, c.z, c.w - 0.5*uDt*Hc.z);   // v_half/v_new = v - dt/2*H*u
   } else {
     o = vec4(c.x + uDt*Hc.y, c.y, c.z + uDt*Hc.w, c.w);           // u_new = u + dt*H*v_half
   }
+}`;
+
+/* ---------- CN 积分器（Crank-Nicolson + block-Jacobi；kernel.integrator='cn'）----------
+   动机：KDK 速度 Verlet 要求 M 通道对齐（本征基可按 kick/drift 两通道投影分解为
+   逐模态 2×2 旋转）。Dirac 的 M=α·p+βm+V **混合通道**（α·p 把 ψ₂ 的导数耦合进
+   ψ₁ 的方程）⟹ KDK 映射谱半径 ρ>1（实测 1.205@dt_sub=0.2、1D m=1），范数指数
+   爆炸——结构性失效，非符号/边界细节（详见 dirac.js 文件头【积分器】节）。
+   CN：(I−h·G)w_{n+1}=(I+h·G)w_n，h=dt_sub/2，G=−J·M（J=复结构 (a,b)↦(−b,a)，
+   M 为复线性厄米算符的实形：实对称且 MJ=JM）⟹ G 斜对称 ⟹ Cayley 矩阵严格
+   正交：范数机器精度守恒、无条件稳定。
+   两个 pass 每子步执行（app.js evolveCN）：
+     TPL_CN_RHS   ：w_n → rhs = w_n + h·G(w_n)（G=−J·M，局部+导数全量；一遍）
+     TPL_CN_SWEEP ：block-Jacobi 迭代 x ← (I−h·Gloc)⁻¹(rhs + h·Gkin(x))，
+                    Gloc = βm+V 局部块（对角 2×2 闭式求逆），Gkin = α·p 导数耦合；
+                    12 次扫掠收敛 ~1e-9（收缩比 ~0.18/迭代，理论上界 h√2）。
+   token 与 TPL_EVOLVE 同套（KINETIC_E/LOCAL_H/HELPERS/UNIFORMS），S/rot4/ang/
+   wrapPi 与驱动/AB uniform 逐字复制。纹理约定：uPsi=TEXTURE0（sweep 加
+   uRhs=TEXTURE2）、uV=TEXTURE1。uMass 等内核私有 uniform 经 {{UNIFORMS}} 注入
+   （当前唯一 CN 内核是 Dirac：s1=uMass+V、s2=V−uMass 即 βm 局部块）。 */
+const TPL_CN_RHS = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uPsi;
+uniform sampler2D uV;
+uniform float uDtHalf;      /* h = dt_sub/2（CN 半步） */
+uniform vec2 uTexel;
+uniform float uDriveAmp;
+uniform float uDrivePhase;
+uniform int   uDriveMode;
+uniform float uABOn;
+uniform vec2  uABPos;
+uniform float uABPhi;
+{{UNIFORMS}}
+vec4 S(vec2 uv){
+  if(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0) return vec4(0.0);
+  return texture(uPsi,uv);
+}
+vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
+vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }
+float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
+float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
+{{HELPERS}}
+void main(){
+  vec4 c = texture(uPsi,vUv);
+  float V = (texture(uV,vUv).r*255.0-128.0)/127.0;
+  V += uDriveAmp * (uDriveMode == 1 ? cos(6.28318530718*vUv.x - uDrivePhase) : cos(uDrivePhase));
+  vec4 Hc = {{KINETIC_E}} + {{LOCAL_H}};      /* = M·w（实形算符全量作用） */
+  vec4 Gc = vec4(Hc.y, -Hc.x, Hc.w, -Hc.z);   /* G = −J_int·M（复结构作用） */
+  o = c + uDtHalf * Gc;                        /* rhs = w + h·G(w) */
+}`;
+
+const TPL_CN_SWEEP = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uPsi;        /* x_k（Jacobi 当前迭代值） */
+uniform sampler2D uRhs;        /* rhs = w_n + h·G(w_n)（CN_RHS pass 产物） */
+uniform sampler2D uV;
+uniform float uDtHalf;
+uniform vec2 uTexel;
+uniform float uDriveAmp;
+uniform float uDrivePhase;
+uniform int   uDriveMode;
+uniform float uABOn;
+uniform vec2  uABPos;
+uniform float uABPhi;
+{{UNIFORMS}}
+vec4 S(vec2 uv){
+  if(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0) return vec4(0.0);
+  return texture(uPsi,uv);
+}
+vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
+vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }
+float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
+float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
+{{HELPERS}}
+void main(){
+  vec4 x = texture(uPsi,vUv);
+  vec4 rhs = texture(uRhs,vUv);
+  float V = (texture(uV,vUv).r*255.0-128.0)/127.0;
+  V += uDriveAmp * (uDriveMode == 1 ? cos(6.28318530718*vUv.x - uDrivePhase) : cos(uDrivePhase));
+  vec4 Hk = {{KINETIC_E}};                     /* diracD(vUv)——内部 S() 读 uPsi=x_k */
+  vec4 Gk = vec4(Hk.y, -Hk.x, Hk.w, -Hk.z);    /* Gkin = −J_int·(α·p 部分) */
+  vec4 arg = rhs + uDtHalf * Gk;               /* 正确迭代符号: +（klein_td 数值验证） */
+  /* (I−h·Gloc)⁻¹ 对角 2×2 块闭式求逆：Gloc=(s1·y,−s1·x, s2·w,−s2·z)，
+     s1=uMass+V（βm 通道1）、s2=V−uMass（通道2）；块矩阵 [[1,−hs],[hs,1]]/det */
+  float s1 = uMass + V, s2 = V - uMass;
+  float d1 = 1.0/(1.0 + uDtHalf*uDtHalf*s1*s1);
+  float d2 = 1.0/(1.0 + uDtHalf*uDtHalf*s2*s2);
+  o = vec4((arg.x + uDtHalf*s1*arg.y)*d1,
+           (arg.y - uDtHalf*s1*arg.x)*d1,
+           (arg.z + uDtHalf*s2*arg.w)*d2,
+           (arg.w - uDtHalf*s2*arg.z)*d2);
 }`;
 
 /* ---------- 耗散（开放系统）：帧级标量衰减 pass ----------
@@ -477,8 +611,10 @@ uniform sampler2D uV;
 uniform float uGrid;
 uniform float uK;      /* =1/2m：动能密度 ×uK → 物理动能（HUD/能级的能量单位） */
 {{UNIFORMS}}
-/* 轴分解动能（零向量代入法，契约见上）：stx+sty≡st 自校验 */
-float kinPart(vec4 dxp, vec4 dyp){ return uK*{{KINETIC}}; }
+/* 轴分解动能（零向量代入法，契约见上）：stx+sty≡st 自校验。
+   psi 参数为一阶内核（Dirac）准备——其 KINETIC 片段含 ψ 本身（α·p 动能
+   密度 = ⟨ψ|α·p|ψ⟩ 的双线性型）；标量内核的片段只用 dxp/dyp，psi 不被引用。 */
+float kinPart(vec4 psi, vec4 dxp, vec4 dyp){ return {{KIN_SCALE}}*{{KINETIC}}; }
 void main(){
   vec2 base = floor(vUv*32.0)*8.0;   /* 输出 texel(0-31) -> 输入 8x8 块起点 */
   float sp=0.0, st=0.0, sp2=0.0, sv=0.0;
@@ -505,9 +641,9 @@ void main(){
       float x = (base.x+float(i)+0.5)/uGrid;
       float y = (base.y+float(j)+0.5)/uGrid;
       sp += p; sp2 += p*p;
-      st  += kinPart(dxp, dyp);
-      stx += kinPart(dxp, vec4(0.0));
-      sty += kinPart(vec4(0.0), dyp);
+      st  += kinPart(psi, dxp, dyp);
+      stx += kinPart(psi, dxp, vec4(0.0));
+      sty += kinPart(psi, vec4(0.0), dyp);
       pmx += {{PMEANX}};
       pmy += {{PMEANY}};
       sv += {{POTENTIAL}};
@@ -577,6 +713,14 @@ function buildShaders(kernel){
   for (const [k, v] of Object.entries(need)){
     if (typeof v !== 'string' || !v.trim()) throw new Error('kernel "' + kernel.id + '" missing shader snippet: ' + k);
   }
+  /* KINETIC_E / KIN_SCALE / HELPERS：可选覆盖（一阶内核 Dirac 用）。
+     KINETIC_E = 演化模板的动能项（默认 -uK*lap，即标量拉普拉斯路径逐字不变）；
+     KIN_SCALE = reduce 模板动能密度的系数（默认 uK = 1/2m；Dirac 的 α·p 动能
+     无 1/2m 因子，覆写为 1.0）；
+     HELPERS = TPL_EVOLVE 的函数定义注入点（S/rot4/ang/wrapPi 之后、main 之前，
+     可引用全部引擎 helper）——kineticE 需要语句（多采样 + 分支）而不能是单一
+     表达式时在此定义函数。默认 ''，标量内核路径零改动。 */
+  const opt = { KINETIC_E: s.kineticE || '-uK*lap', KIN_SCALE: s.kinScale || 'uK', HELPERS: s.helpers || '' };
   /* 内核私有 uniform 声明（如 NLS: 'uniform float uG;'）——注入三个模板的 uniform 区，
      由 kernel.setUniforms() 逐帧赋值；program 中未引用时被编译器优化掉，取值返回 null。 */
   const uni = s.uniforms || '';
@@ -585,20 +729,28 @@ function buildShaders(kernel){
     if (!(k in map)) throw new Error('unknown template token: ' + k);
     return map[k];
   });
-  return {
-    evolve: fill(TPL_EVOLVE, { ...need, UNIFORMS: uni }),
+  const out = {
+    evolve: fill(TPL_EVOLVE, { ...need, ...opt, UNIFORMS: uni }),
     display: fill(TPL_DISPLAY, {
       DENSITY: s.density,
       PIXEL_COLOR: s.pixelColor || DEFAULT_PIXEL_COLOR,
       UNIFORMS: uni,
     }),
-    reduce: fill(TPL_REDUCE, { ...need, UNIFORMS: uni, PMEANX: pm.pmeanX, PMEANY: pm.pmeanY }),
+    reduce: fill(TPL_REDUCE, { ...need, ...opt, UNIFORMS: uni, PMEANX: pm.pmeanX, PMEANY: pm.pmeanY }),
     scale: TPL_SCALE,
   };
+  /* CN 积分器路径（kernel.integrator==='cn'，当前仅 Dirac）：两个额外 program，
+     shaders() 返回的对象即 {evolve, display, reduce, scale, cnRhs, cnSweep}。
+     app.js 按 sh.cnRhs 是否存在决定编译与 evolveCN 分支。 */
+  if (kernel.integrator === 'cn'){
+    out.cnRhs = fill(TPL_CN_RHS, { ...need, ...opt, UNIFORMS: uni });
+    out.cnSweep = fill(TPL_CN_SWEEP, { ...need, ...opt, UNIFORMS: uni });
+  }
+  return out;
 }
 
-/* 导出模板仅供测试/文档引用 */
-const TEMPLATES = { TPL_EVOLVE, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, DEFAULT_PIXEL_COLOR };
+/* 导出模板仅供测试/文档引用（生产路径经 buildShaders 消费） */
+const TEMPLATES = { TPL_EVOLVE, TPL_CN_RHS, TPL_CN_SWEEP, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, DEFAULT_PIXEL_COLOR, DEFAULT_PMEAN };
 
 /* ===== src/core/styles.js ===== */
 /* 组件样式：挂载时注入 <style id="qf-styles">（多实例只注入一次）。
@@ -797,8 +949,10 @@ class TransmissionScanner {
     app.state.sigma = o.sigma;
     app.syncControls();
     /* V0 列表：显式列表优先；否则按 E_c 线性布点 */
-    const m = app.state.m;
-    this.Ec = 2 * Math.sin(o.kx/2) * Math.sin(o.kx/2) / m;   /* 入射中心能量（离散色散） */
+    /* 入射中心能量（离散色散）：默认薛定谔 2sin²(k/2)/m；一阶内核（Dirac）
+       经 scanEc 钩子覆写为总能量口径 √(sin²k+m²)（其 T 模型的 E 即总能量） */
+    this.Ec = app.kernel.scanEc ? app.kernel.scanEc(app.state, o.kx)
+                                : 2 * Math.sin(o.kx/2) * Math.sin(o.kx/2) / app.state.m;
     if (o.v0s) this.v0s = o.v0s.slice();
     else {
       this.v0s = [];
@@ -894,8 +1048,8 @@ class TransmissionScanner {
     for (let y = 0; y < g; y++){
       const row = y*g;
       for (let x = 0; x < g; x++){
-        const i = (row + x)*ch;
-        const p = buf[i]*buf[i] + buf[i+1]*buf[i+1];
+      const i = (row + x)*ch;
+      const p = app.kernel.cpuDensity(buf, i);   /* 全分量 |ψ|²（pairs 感知：pairs=2 时四通道，与 probSplit 同源） */
         P += p; sx += x*p;
         if (x >= xs) right += p;
         if (x >= b0 && x < b1) band += p;
@@ -1311,12 +1465,19 @@ class QuantumField {
   initPrograms(){
     const gl = this.gl;
     const sh = buildShaders(this.kernel);   /* 模板 + 内核片段装配，契约错误在此抛出 */
+    this.sh = sh;                           /* CN 路径探测：sh.cnRhs 存在 ⟺ kernel.integrator='cn' */
     this.progEvolve = createProgram(gl, sh.evolve);
     this.progDisplay = createProgram(gl, sh.display);
     this.progComposite = createProgram(gl, FS_COMPOSITE);
     this.progReduce = createProgram(gl, sh.reduce);
     this.progBlit = createProgram(gl, FS_BLIT);
     this.progScale = createProgram(gl, sh.scale);   /* 耗散帧级衰减 pass */
+    /* CN 积分器（kernel.integrator='cn'，当前仅 Dirac）：rhs pass + block-Jacobi
+       扫掠 pass 两个额外 program（契约见 kernel.js 头注【CN 积分器约定】） */
+    if (sh.cnRhs){
+      this.progCnRhs = createProgram(gl, sh.cnRhs);
+      this.progCnSweep = createProgram(gl, sh.cnSweep);
+    }
   }
 
   initTargets(){
@@ -1335,8 +1496,13 @@ class QuantumField {
       gl.deleteTexture(this.psiA.tex); gl.deleteFramebuffer(this.psiA.fbo);
       gl.deleteTexture(this.psiB.tex); gl.deleteFramebuffer(this.psiB.fbo);
     }
+    if (this.rhs){ gl.deleteTexture(this.rhs.tex); gl.deleteFramebuffer(this.rhs.fbo); this.rhs = null; }
     this.psiA = makeTarget(gl, g, g, this.ifmt, this.fmt, gl.NEAREST);
     this.psiB = makeTarget(gl, g, g, this.ifmt, this.fmt, gl.NEAREST);
+    /* CN 路径的 rhs 固定纹理（每子步由 cnRhs 重写、12 次扫掠期间只读） */
+    if (this.kernel.integrator === 'cn'){
+      this.rhs = makeTarget(gl, g, g, this.ifmt, this.fmt, gl.NEAREST);
+    }
   }
 
   allocDisplay(){
@@ -1392,8 +1558,9 @@ class QuantumField {
   initWave(fx, fy, kx, ky, add){
     const g = this.state.grid, gl = this.gl;
     /* 内核私有初相参数（Pauli 的 spinTheta/spinPhi 等）随 state 透传给 makeWave；
-       无此概念的内核忽略多余字段（makeWave 按需读取 p.spinTheta ?? 默认）。 */
-    const { data, sum: rawSum } = this.kernel.makeWave(g, { fx, fy, kx, ky, sigma: this.state.sigma,
+       无此概念的内核忽略多余字段（makeWave 按需读取 p.spinTheta ?? 默认）。
+       m=state.m 供一阶内核（Dirac）构造裸质量依赖的正能旋量；标量内核忽略。 */
+    const { data, sum: rawSum } = this.kernel.makeWave(g, { fx, fy, kx, ky, sigma: this.state.sigma, m: this.state.m,
                                                               spinTheta: this.state.spinTheta, spinPhi: this.state.spinPhi });
     let sum = rawSum;
     /* 新波包先归一化到 Σ|ψ|²=1，再与旧场叠加。
@@ -1526,12 +1693,40 @@ class QuantumField {
   }
 
   /* ---------- 主循环 ---------- */
-  /* 单帧物理推进（KDK 速度 Verlet + 耗散帧级衰减）。
+  /* 单帧物理推进（CN 或 KDK 速度 Verlet + 耗散帧级衰减）。
      从 frame() 原样抽出：uniform 序列、子步自适应、ping-pong、simTime 累移
      与 dissipation 逐字不变——frame()（每 tick 一次）与透射率扫描
-     （boost 倍频）共用同一路径，物理零差异。调用方负责暂停判定。 */
+     （boost 倍频）共用同一路径，物理零差异。调用方负责暂停判定。
+     kernel.integrator='cn'（当前仅 Dirac）走 CN 路径，其余 KDK 逐字不变。 */
   evolve(){
     const dt = 1.2;
+    if (this.kernel.integrator === 'cn'){
+      this.evolveCN(dt);
+    } else {
+      this.evolveKDK(dt);
+    }
+    /* 耗散（开放系统）：帧级标量衰减 e^{-γ·dt}，精确且与子步/网格/内核解耦；
+       γ=0 时跳过——厄米路径零改动。u/v 两通道同乘（v 是 KDK 辅助量，同步缩放
+       保持 u/v 比例，下一步 kick 的 H·u 作用不受影响）。CN 后通用：标量乘法
+       对任意态成立，与积分器无关。 */
+    if (this.state.gamma !== 0){
+      const s = Math.exp(-this.state.gamma * dt);
+      const gl = this.gl;
+      gl.useProgram(this.progScale);
+      gl.bindVertexArray(this.quad.vao);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiB.fbo);
+      gl.viewport(0,0,this.state.grid,this.state.grid);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
+      gl.uniform1i(this.u(this.progScale,'uPsi'), 0);
+      gl.uniform1f(this.u(this.progScale,'uScale'), s);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
+    }
+  }
+
+  /* KDK 速度 Verlet 一帧推进（标量/NLS/GP/Pauli 路径；从 evolve() 原样抽出） */
+  evolveKDK(dt){
     const k = 0.5/this.state.m;
     const gl = this.gl;
     const eMax = k*8 + 1 + this.kernel.eMaxExtra(this.state) + Math.abs(this.state.driveAmp);   /* H 特征值上界（含时外场幅值计入稳定界） */
@@ -1573,22 +1768,82 @@ class QuantumField {
       }
     }
     this.state.simTime += dt;
-    /* 耗散（开放系统）：帧级标量衰减 e^{-γ·dt}，精确且与子步/网格/内核解耦；
-       γ=0 时跳过——厄米路径零改动。u/v 两通道同乘（v 是 KDK 辅助量，同步缩放
-       保持 u/v 比例，下一步 kick 的 H·u 作用不受影响）。 */
-    if (this.state.gamma !== 0){
-      const s = Math.exp(-this.state.gamma * dt);
-      gl.useProgram(this.progScale);
-      gl.bindVertexArray(this.quad.vao);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiB.fbo);
-      gl.viewport(0,0,this.state.grid,this.state.grid);
+  }
+
+  /* CN 积分器一帧推进（kernel.integrator='cn'，当前仅 Dirac）——推导与数值
+     验证记录见 dirac.js 头注【积分器】节、klein_td4.py。KDK 对混合通道的
+     一阶 M（α·p 把 ψ₂ 导数耦合进 ψ₁ 方程）结构性失效（映射谱半径 1.205，
+     范数爆炸）；CN 的 Cayley 矩阵严格正交（G=−J·M 斜对称）⟹ 无条件稳定、
+     总概率机器精度守恒。
+     (I−hG)w_{n+1}=(I+hG)w_n，h=dt_sub/2：因子 2 是 CN 的正确离散（两边同用
+     全 h 等效步长 2h、动力学快一倍——时间域单模相位率实测确认）。每子步：
+     cnRhs 一遍（w_n→rhs 固定纹理）+ 12 次 block-Jacobi 扫掠（收缩 ~0.18/
+     迭代，截断 ~1e-9；收敛性记录见 kernel.js TPL_CN_SWEEP 注释）。 */
+  evolveCN(dt){
+    const k = 0.5/this.state.m;
+    const eMax = k*8 + 1 + this.kernel.eMaxExtra(this.state) + Math.abs(this.state.driveAmp);
+    const sub = Math.max(this.state.substeps, Math.ceil(dt*eMax/1.5));
+    const hh = 0.5*dt/sub;
+    /* 含时外场相位与 KDK 同口径：帧中点冻结 φ = ω·(t+dt/2) */
+    const dPhase = this.state.driveOmega * (this.state.simTime + dt*0.5);
+    this._cnSteps(sub, hh, dPhase, 1/this.state.grid, false);
+    this.state.simTime += dt;
+  }
+
+  /* CN 步进 n 个子步（rhs pass + 12 扫掠/子步）——evolveCN 与 manualPass 共用。
+     diag=true 时驱动/AB 归零（manualPass 诊断口径，与 KDK 路径一致）。
+     纹理约定：cnRhs/cnSweep 的 uPsi=TEX0、uV=TEX1；cnSweep 追加 uRhs=TEX2。 */
+  _cnSteps(n, hh, dPhase, tx, diag){
+    const gl = this.gl, g = this.state.grid;
+    this._setCNUniforms(this.progCnRhs, hh, dPhase, tx, diag);
+    this._setCNUniforms(this.progCnSweep, hh, dPhase, tx, diag);
+    for (let i=0; i<n; i++){
+      /* 1) rhs pass：w_n(psiA) → this.rhs（本子步固定，扫掠期间只读） */
+      gl.useProgram(this.progCnRhs);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.rhs.fbo);
+      gl.viewport(0,0,g,g);
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
-      gl.uniform1i(this.u(this.progScale,'uPsi'), 0);
-      gl.uniform1f(this.u(this.progScale,'uScale'), s);
+      gl.uniform1i(this.u(this.progCnRhs,'uPsi'), 0);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
-      const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
+      /* 2) 12 次 block-Jacobi 扫掠：x_0=w_n，x_{k+1}=(I−hGloc)⁻¹(rhs+h·Gkin(x_k))；
+             psiA/psiB ping-pong，末态回 psiA（与 KDK 路径同一不变式） */
+      gl.useProgram(this.progCnSweep);
+      for (let it=0; it<12; it++){
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiB.fbo);
+        gl.viewport(0,0,g,g);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
+        gl.uniform1i(this.u(this.progCnSweep,'uPsi'), 0);
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, this.rhs.tex);
+        gl.uniform1i(this.u(this.progCnSweep,'uRhs'), 2);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
+      }
     }
+  }
+
+  /* CN program 共享 uniform 序列（uDtHalf/uTexel/drive/AB/uV/内核私有）——两个
+     program 的 uniform 名逐字相同，但取值是 program 级状态，须逐 program 设置。 */
+  _setCNUniforms(prog, hh, dPhase, tx, diag){
+    const gl = this.gl, st = this.state;
+    /* uniform 设置前必须先成为当前 program（引擎全路径惯例）；否则本 GL
+       后端对非当前 program 的 uniform 写入静默失败——hh=0 ⟹ CN 退化为恒等
+       映射 ⟹ 全场冻结（2026-10-14 R31 诊断：manualPass 前后 texel 逐位不变）。 */
+    gl.useProgram(prog);
+    gl.uniform1f(this.u(prog,'uDtHalf'), hh);
+    gl.uniform2f(this.u(prog,'uTexel'), tx, tx);
+    gl.uniform1f(this.u(prog,'uDriveAmp'), diag ? 0 : st.driveAmp);
+    gl.uniform1f(this.u(prog,'uDrivePhase'), dPhase);
+    gl.uniform1i(this.u(prog,'uDriveMode'), diag ? 0 : st.driveMode);
+    gl.uniform1f(this.u(prog,'uABOn'), (diag || st.abPhi === 0) ? 0 : 1);
+    gl.uniform2f(this.u(prog,'uABPos'), st.abX, st.abY);
+    gl.uniform1f(this.u(prog,'uABPhi'), diag ? 0 : st.abPhi);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this.vTex);
+    gl.uniform1i(this.u(prog,'uV'), 1);
+    this.kernel.setUniforms(gl, prog, st);   /* 内核私有 uniform（Dirac 的 uMass 等） */
   }
 
   frame(now){
@@ -2386,12 +2641,18 @@ class QuantumField {
       },
       /* 手动跑 n 个 evolve pass（不经 frame；uUpdateV 序列与 frame 一致：kick,drift,kick）。
          诊断 GPU vs CPU 分叉用：n=1 单 kick 后 ψ 应几乎不变。
-         texel 参数可覆盖 uTexel（诊断 uniform 是否生效）。 */
+         texel 参数可覆盖 uTexel（诊断 uniform 是否生效）。
+         CN 内核（integrator='cn'）：每步 = 1 个完整 CN 子步（dt=1.2/6 的半步
+         hh=0.1，rhs + 12 扫掠），驱动/AB 归零——与 evolveCN 同路径。 */
       manualPass: (n, texel) => {
         const g0 = this.state.grid;
         const tx = texel === undefined ? 1/g0 : texel;
-        gl.useProgram(this.progEvolve);
+        const gl = this.gl;
         gl.bindVertexArray(this.quad.vao);
+        if (this.kernel.integrator === 'cn'){
+          this._cnSteps(n, 0.5*(1.2/6), 0, tx, true);
+        } else {
+        gl.useProgram(this.progEvolve);
         gl.uniform1f(this.u(this.progEvolve,'uDt'), 1.2/6);
         gl.uniform1f(this.u(this.progEvolve,'uK'), 0.5/this.state.m);
         gl.uniform2f(this.u(this.progEvolve,'uTexel'), tx, tx);
@@ -2401,6 +2662,7 @@ class QuantumField {
         gl.uniform1f(this.u(this.progEvolve,'uABOn'), 0);
         gl.uniform2f(this.u(this.progEvolve,'uABPos'), 0.5, 0.5);
         gl.uniform1f(this.u(this.progEvolve,'uABPhi'), 0);
+        this.kernel.setUniforms(gl, this.progEvolve, this.state);   /* 内核私有 uniform（Dirac 的 uMass 等）：暂停态手动步进时 evolve 帧循环可能尚未设置过 */
         gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, this.vTex);
         gl.uniform1i(this.u(this.progEvolve,'uV'), 1);
@@ -2413,6 +2675,7 @@ class QuantumField {
           gl.uniform1f(this.u(this.progEvolve,'uUpdateV'), i%3===1 ? 0.0 : 1.0);
           gl.drawArrays(gl.TRIANGLES, 0, 3);
           const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
+        }
         }
         const g = this.state.grid, ch = this.kernel.pairs === 2 ? 4 : 2;
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
@@ -3214,6 +3477,428 @@ class PauliKernel extends PhysicsKernel {
 }
 
 registerKernel(new PauliKernel());
+
+/* ===== src/physics/dirac.js ===== */
+/* ============================================================================
+ * Dirac 方程内核（2+1 维）：iℏ ∂ψ/∂t = [α_x·p_x + α_y·p_y + β·m + V]·ψ
+ *
+ * 波函数为双复分量旋量 ψ=(ψ₁,ψ₂)（pairs=2，RGBA32F：xy=ψ₁、zw=ψ₂）——
+ * 与 Pauli 同一纹理布局，但矩阵代数从 σ·B（宇称偶、二阶算符背景）升级为
+ * 完整的 Clifford 代数 {α_x,α_y,β}=0、α²=β²=1（一阶方程）。
+ *
+ * 【表象与实形化】取手征（Weyl）表象 2×2 复矩阵：
+ *   β = diag(1,−1)，α_x = σ_x = [[0,1],[1,0]]，α_y = σ_y = [[0,−i],[i,0]]
+ *   （α_x、β 实对称，α_y 纯虚对称；三者实线性、两两反对易。）
+ * 引擎按 4 实分量布局 c=(x₁,y₁,x₂,y₂)（ψ₁=x₁+iy₁, ψ₂=x₂+iy₂）工作，
+ * 实形化后三个矩阵均为 4×4 **实对称**矩阵：
+ *   α_x·C = (c.z, c.w, c.x, c.y)             （交换两复分量，即 σ_x 块）
+ *   α_y·C = (c.w, −c.z, −c.y, c.x)           （−iψ₂ = y₂−ix₂、iψ₁ = −y₁+ix₁）
+ *   β ·C = (c.x, c.y, −c.z, −c.w)
+ * ⟹ H_D = α·p + βm + V 为**实线性厄米**算符（α、β、V 实，唯一复源是常数 −i
+ * 藏在 p=−i∇ 里）⟹ 总概率严格守恒。
+ *
+ * 【积分器：CN + block-Jacobi——引擎 KDK 对本内核结构性失效（#33 最重要一条）】
+ * 一阶方程 i∂_tψ=Hψ 拆实形 ψ=u+iv 得 w'=J·M·w（引擎交错布局）。薛定谔的
+ * M=diag(H,H) 通道对齐 ⟹ KDK 的 kick/drift 两通道投影可分解为逐模态 2×2
+ * 旋转，|λ|=1 精确。**Dirac 的 M 混合通道**（α·p 把 ψ₂ 的导数耦合进 ψ₁
+ * 的方程）⟹ 本征基非通道对齐，kick/drift 的通道投影剪切不可交换——KDK
+ * 映射谱半径实测 ρ=1.205（1D、dt_sub=0.2、m=1；平面波 100 步放大 1.5e16），
+ * 与符号/边界细节无关，是结构性失效（Pauli 的常数 σ·B 混合同病：ρ 随
+ * |B|·uK·dt 高次幂超 1，幅度小但存在——engine 级潜在缺陷，留待量化）。
+ * ⟹ 本内核走引擎 CN 路径（integrator='cn'）：
+ *   (I−h·G)w_{n+1} = (I+h·G)w_n，h=dt_sub/2，G=−J·M 斜对称（M 对称）
+ *   ⟹ Cayley 矩阵严格正交：范数机器精度守恒、无条件稳定（无 dt·E_max 极限）。
+ *   GPU 求解 = block-Jacobi：对角 2×2 块（βm+V 局部）闭式求逆 + α·p 导数
+ *   耦合迭代 x ← (I−h·Gloc)⁻¹(rhs + h·Gkin·x)，12 次扫掠收敛到 ~1e-9
+ *   （收缩比 ~0.18/迭代，理论上界 h√2）。时间域验证（klein_td4.py，numpy
+ *   同算法）：300 步范数守恒 2e-9、质心=格点群速、连续性方程成立。
+ *   引擎交错布局 G=−J·M 的通道排布 ((Mw).y, −(Mw).x, (Mw).w, −(Mw).z)：
+ *   α_x p_x 对 u 的作用纯进虚槽（−i·∂_x u 再交换分量）：(Hv)₁ −= ∂_xv₂ …
+ *   逐通道展开（记 dxv=½(ψ(x+h)−ψ(x−h)) 为 4 通道 x 向中心差分）：
+ *     Hc.x =  dxv.w − dyv.z          （α_x v_x + α_y v_y 的通道 1）
+ *     Hc.y = −dxv.z − dyv.w
+ *     Hc.z =  dxv.y + dyv.x
+ *     Hc.w = −dxv.x + dyv.y          ← w 分量 +Dy(y)：曾误写 −Dy(y)（破坏 M
+ *                                   对称性，KDK/CN 双路径受累）；三重验证：
+ *                                   复形展开 / 分块对称 / 交换子（R31 记录）
+ *   即 −i·α·∂ψ = (∂_xψ₂^I − ∂_yψ₂^R, −∂_xψ₂^R − ∂_yψ₂^I,
+ *                 ∂_xψ₁^I + ∂_yψ₁^R, −∂_xψ₁^R − ∂_yψ₁^I)。
+ *   局部部分（βm+V，LOCAL_H）：
+ *     vec4((m+V)c.x, (m+V)c.y, (V−m)c.z, (V−m)c.w)   （β=diag(1,1,−1,−1)）
+ *
+ * 【离散色散】中心差分 ∂→i·sin k ⟹ 平面波本征关系
+ *   H(k)·u = ±√(sin²k_x+sin²k_y+m²)·u， E±(k)=±√(sin²k_x+sin²k_y+m²)
+ * 谱半径 ≤ √2 + m + |V|（每轴 |sin k|≤1）⟹ eMaxExtra 补足引擎基线
+ * 4/m+1（拉普拉斯路径，Dirac 不用）与 √2+m+1 的差：max(0, √2+m−4/m)
+ * ——m 大时基线反而不够（m=4 时 4/m+1=2 < √2+m+1=6.41）。
+ *
+ * 【正能旋量初态】离散精确正能平面波（E=√(sin²k+m²)）：
+ *   u(k) = N·(1, (sin k_x + i·sin k_y)/(E+m))
+ * 高斯包络 × 该旋量仍不是本征态（包络内每个 k 的本征旋量不同）⟹ 残留
+ * 负能成分引发 zitterbewegung（颤振）：分量概率以 ~2E≈2m 的频率振荡。
+ * 这正是 zitter 预设的展示对象——不是数值误差，是 Dirac 方程的物理内容
+ * （连续极限的标准结果；离散格点上频率为 2√(sin²k+m²)）。
+ *
+ * 【Klein 佯谬与矩势垒透射——格点色散口径】连续解析解（一阶方程界面
+ *   ψ 连续即可，无需导数匹配）给出 q·a=nπ 处**精确共振全透射 T=1**，但那是
+ *   k,q→0 极限；格点（|sin k|≤1、每区 4 模态含 Nyquist 别名对）的精确解
+ *   由 transmissionModel 的 latticeT 给出（界面匹配 8 方程最小二乘，
+ *   T+R=1、全场残差 1e-15）。实测对照（m=0.3、k=0.3、V0=0.95）：
+ *     a=16：T_latt=0.166（T_cont=0.337）——薄垒连续公式高估一倍
+ *     a=14：T_latt=0.995（T_cont=0.858）——格点色散把共振条件修对了
+ *           （q_latt·a=6.31≈2π，连续 q·a=6.10 偏 2.9%）
+ *   Klein 签名仍在：T 不随 a 指数衰减（同参数薛定谔 ≈e^(−2κa)≈1e-10），
+ *   宽坝 T 振荡周期 2π/q_latt≈13.9 格（格点 a 扫描的峰结构）。
+ *   时间域裁决（klein_td4.py，CN+Jacobi 同算法长跑）：T_sim=T_latt 谱平均
+ *   ±3%（分区/link 流双测量互证；入射流积分=v_g·P0；连续性方程成立）——
+ *   模拟与格点精确解一致，连续公式的偏离是色散离散的物理而非数值缺陷。
+ *
+ * 【能密度口径】动能（reduce，KIN_SCALE=1.0——α·p 动能无 1/2m 因子）：
+ *   E_x = ½(u₁∂_xv₂ − v₁∂_xu₂ + u₂∂_xv₁ − v₂∂_xu₁) = ⟨ψ|α_x p_x|ψ⟩密度
+ *   E_y = ½(−u₁∂_yu₂ − v₁∂_yv₂ + u₂∂_yu₁ + v₂∂_yv₁)
+ *   （dxp/dyp 为引擎 4 阶中心差分 = 2∂，0.25→½ 因子配套，与 Pauli 同式。）
+ * 势能密度：V·p + m·(p₁−p₂)（βm 期望 = m(|ψ₁|²−|ψ₂|²)）。
+ * 均值动量用引擎默认 Im(ψ*∂ψ) 两分量和——Dirac 的正则动量（平移生成元）
+ * 仍守恒（均匀势下），HUD 不确定原理区口径不变。
+ *
+ * 【AB link 相位】最小耦合 p→p−A 作用在 α·p 上（不是 βm）——diracD 的
+ * 四个邻点采样在 uABOn>0.5 时经 rot4 乘 link 相位（与引擎标量路径同一
+ * 精确线积分约定），给出 2+1 维旋量的 AB 效应（规范 U(1) 对旋量的作用）。
+ *
+ * 【已知限制（诚实声明）】
+ *   1. 连续近似：色散/群速公式已内入 sin k（格点精确），但 Klein 的连续 T
+ *      公式只是格点解的 k→0 极限（见上节对照）——CDP/扫描工具一律以
+ *      latticeT 格点解为对照真值。CN 无条件稳定，Jacobi 12 sweeps 截断
+ *      误差 ~1e-9/步；子步数沿用引擎 KDK 同公式只为统一时间离散精度。
+ *   2. 势场 8 位编码硬上限 ±1（引擎约束）⟹ Klein 区需 m<~0.5（2m<0.95），
+ *      预设取 m=0.3；质量滑块范围 0.15–4 内更高势垒不可画（引擎约束，非内核）。
+ *   3. 无自旋读数（spinReadout 不设）：Dirac 的 σ_z=β 期望 =(n1−n2)/P 仍
+ *      有定义但不是守恒量/进动轴，HUD 自旋区不显示（避免误导）；
+ *      CDP 用 spinCom/fieldStats 直读分量。
+ *   4. 3D：本内核为 2+1 维（α_x, α_y）；3D Dirac 属 3D 纹理 backlog。
+ * ========================================================================== */
+
+class DiracKernel extends PhysicsKernel {
+  constructor(){
+    super();
+    this.id = 'dirac';
+    this.name = 'Dirac 相对论';
+    this.equation = '<b>DIRAC (2+1 D)</b> · <i>i</i>ℏ ∂ψ/∂t = [α_x·p_x + α_y·p_y + β·m + V]·ψ';
+    this.pairs = 2;
+    /* CN 积分器：KDK 对 Dirac 结构性失效（通道混合 M，谱半径 ρ=1.205），
+       详见文件头【积分器】节；引擎 app.js 按此标志走 CN 路径。 */
+    this.integrator = 'cn';
+    /* 不设 spinReadout：见文件头「已知限制」第 3 条。 */
+  }
+
+  /* 初始旋量波包：高斯包络 × 离散正能旋量 u(k)（头注【正能旋量初态】）。
+     u(k) = (1, (sin k_x + i·sin k_y)/(E+m))，E=√(sin²k_x+sin²k_y+m²)。
+     k=0 时 u=(1,0)：纯上分量静止包（zitter 预设的初态）。
+     引擎负责归一化与等份叠加；θ/φ 自旋滑块不适用于 Dirac（忽略）。 */
+  makeWave(grid, p){
+    const m = p.m === undefined ? 1 : p.m;
+    const sk = Math.sin(p.kx), tk = Math.sin(p.ky);      /* 离散动量（格点波数→sin k） */
+    const E = Math.sqrt(sk*sk + tk*tk + m*m);
+    const w2r = sk/(E+m), w2i = tk/(E+m);                /* 下分量 (sin k_x+i·sin k_y)/(E+m) */
+    const cx = p.fx*grid, cy = p.fy*grid;
+    const data = new Float32Array(grid*grid*4);
+    let sum = 0;
+    for (let y=0; y<grid; y++){
+      for (let x=0; x<grid; x++){
+        const dx = x-cx, dy = y-cy;
+        const env = Math.exp(-(dx*dx+dy*dy)/(2*p.sigma*p.sigma));
+        const pk = p.kx*dx + p.ky*dy;                    /* 平面波相位（两分量同 k） */
+        const i = (y*grid+x)*4;
+        const c = Math.cos(pk), s = Math.sin(pk);
+        data[i]   = env*c;  data[i+1] = env*s;           /* ψ₁ = env·e^{ikr} */
+        data[i+2] = env*(w2r*c - w2i*s);                 /* ψ₂ = env·(w2r+iw2i)·e^{ikr} */
+        data[i+3] = env*(w2r*s + w2i*c);
+        sum += env*env*(1 + w2r*w2r + w2i*w2i);
+      }
+    }
+    return { data, sum };
+  }
+
+  defaults(){ return {}; }   /* 无内核私有参数：m 是引擎既有滑块 */
+
+  shaders(){
+    return {
+      uniforms: 'uniform float uMass;   /* 裸质量 m（βm 项；引擎 uK=1/2m 不适用于一阶项） */',
+      /* diracD：−i·α·∂ψ 的实形 4 通道积（推导见文件头）。±x/±y 邻点中心差分，
+         AB on 时经 rot4 乘 link 相位（最小耦合 p→p−A 作用在 α·p 上）。 */
+      helpers:
+        'vec4 diracD(vec2 uv){\n' +
+        '  vec4 sp, sm, tp, tm;\n' +
+        '  if(uABOn > 0.5){\n' +
+        '    float cAB = uABPhi/6.28318530718;\n' +
+        '    vec2 dp = uv - uABPos;\n' +
+        '    float b0 = ang(dp);\n' +
+        '    vec2 dq;\n' +
+        '    dq = uv + vec2(uTexel.x,0.0) - uABPos;  sp = rot4(S(uv+vec2( uTexel.x,0.0)), cAB*wrapPi(ang(dq)-b0));\n' +
+        '    dq = uv - vec2(uTexel.x,0.0) - uABPos;  sm = rot4(S(uv+vec2(-uTexel.x,0.0)), cAB*wrapPi(ang(dq)-b0));\n' +
+        '    dq = uv + vec2(0.0,uTexel.y) - uABPos;  tp = rot4(S(uv+vec2(0.0, uTexel.y)), cAB*wrapPi(ang(dq)-b0));\n' +
+        '    dq = uv - vec2(0.0,uTexel.y) - uABPos;  tm = rot4(S(uv+vec2(0.0,-uTexel.y)), cAB*wrapPi(ang(dq)-b0));\n' +
+        '  } else {\n' +
+        '    sp = S(uv+vec2( uTexel.x,0.0)); sm = S(uv+vec2(-uTexel.x,0.0));\n' +
+        '    tp = S(uv+vec2(0.0, uTexel.y)); tm = S(uv+vec2(0.0,-uTexel.y));\n' +
+        '  }\n' +
+        '  vec4 dxv = 0.5*(sp-sm), dyv = 0.5*(tp-tm);\n' +
+        '  return vec4(dxv.w - dyv.z, -dxv.z - dyv.w, dxv.y + dyv.x, -dxv.x + dyv.y);\n' +
+        '}',
+      kineticE: 'diracD(vUv)',
+      kinScale: '1.0',
+      /* H·c 局部部分 = (βm+V)·c（β=diag(1,1,−1,−1)） */
+      localH: 'vec4((uMass+V)*c.x, (uMass+V)*c.y, (V-uMass)*c.z, (V-uMass)*c.w)',
+      /* |ψ|² = |ψ₁|²+|ψ₂|² */
+      density: 'dot(psi.xy,psi.xy) + dot(psi.zw,psi.zw)',
+      /* 动能密度 ⟨ψ|α·p|ψ⟩（dxp/dyp=2∂，½ 因子配套；可轴分解 f(dxp)+g(dyp)） */
+      kinetic:
+        '0.5*(psi.x*dxp.w - psi.y*dxp.z + psi.z*dxp.y - psi.w*dxp.x)\n' +
+        '+ 0.5*(-psi.x*dyp.z - psi.y*dyp.w + psi.z*dyp.x + psi.w*dyp.y)',
+      /* 势能密度 = V·p + m·(p₁−p₂)（βm 期望） */
+      potential: 'V*p + uMass*(dot(psi.xy,psi.xy) - dot(psi.zw,psi.zw))',
+      /* 像素着色：优势分量相位色相 + 分量权重着色（偏 ψ₁ 蓝、偏 ψ₂ 橙，
+         55% 混合——与 Pauli 同构；正能电子主要集中在 ψ₁，ZB/散射时两分量
+         交替可见）。hsv2rgb 由 display 模板提供（定义于 main 前）。 */
+      pixelColor:
+        'mix((dot(psi.xy,psi.xy) >= dot(psi.zw,psi.zw)\n' +
+        '        ? hsv2rgb(vec3(atan(psi.y,psi.x)/6.2831853+0.5,0.80,1.0))\n' +
+        '        : hsv2rgb(vec3(atan(psi.w,psi.z)/6.2831853+0.5,0.80,1.0))),\n' +
+        '     mix(vec3(1.0,0.45,0.15), vec3(0.30,0.60,1.0),\n' +
+        '         0.5*(clamp((dot(psi.xy,psi.xy)-dot(psi.zw,psi.zw))/max(p,1e-9),-1.0,1.0)+1.0)),\n' +
+        '    0.55)',
+    };
+  }
+
+  setUniforms(gl, prog, state){
+    const loc = gl.getUniformLocation(prog, 'uMass');
+    if (loc) gl.uniform1f(loc, state.m);
+  }
+
+  /* 稳定性附加项：Dirac H 谱半径 √2+m+1（|α·p|≤√2、|βm|=m、|V|≤1）；
+     引擎基线 4/m+1+eMaxExtra+|A| 须 ≥ 之 ⟹ 补 max(0, √2+m−4/m)。 */
+  eMaxExtra(state){
+    return Math.max(0, Math.SQRT2 + state.m - 4/state.m);
+  }
+
+  /* 扫描工具的入射中心能量口径：Dirac 总能量（离散色散）ℰ=√(sin²k+m²)。
+     透射率模型 T(E,V0,a) 的 E 同为总能量口径（含静质量 m）。 */
+  scanEc(state, kx){
+    return Math.sqrt(Math.sin(kx)*Math.sin(kx) + state.m*state.m);
+  }
+
+  cpuDensity(buf, i){ return buf[i]*buf[i] + buf[i+1]*buf[i+1] + buf[i+2]*buf[i+2] + buf[i+3]*buf[i+3]; }
+
+  /* 矩势垒透射模型（正入射）——**格点色散口径**：T(E,V0,a) = latticeT 的
+     界面匹配精确解（每区 4 模态含 Nyquist 别名对、4 界面站点 8 方程最小二乘；
+     与连续公式的系统对照见文件头【Klein 佯谬】节）。E 为总能量（ℏ=1、格点
+     单位）。convolved 对高斯 k 分布（均值 kx、宽 dk）积分 T(E(k),V0,a)——
+     宽波包的合理对照目标（与薛定谔内核同口径；谱平均修正 Klein 曲线的
+     k 依赖性——时间域 klein_td4.py 证实 T_sim=T_latt 谱平均 ±3%）。 */
+  transmissionModel(state){
+    const m = state.m;
+    const Eof = k => Math.sqrt(Math.sin(k)*Math.sin(k) + m*m);   /* 离散色散：k→总能量 */
+    const T = (E, V0, a) => {
+      if (V0 === 0) return 1;                     /* 平坦段：全透射 */
+      /* q²=0 转折点（(E−V0)²=m²）：±κ 消失波模态重合、匹配矩阵秩亏——
+         取 V0±δ 两侧平均（T 对 V0 光滑，误差 O(δ²)；测度零参数点） */
+      if (Math.abs((E-V0)*(E-V0) - m*m) < 1e-9) return 0.5*(T(E, V0+1e-4, a) + T(E, V0-1e-4, a));
+      const out = latticeT(E, V0, a, m);          /* sk≥1（无外部传播波）⟹ null → 0 */
+      return out === null ? 0 : out.T;
+    };
+    return {
+      T, E: Eof,
+      /* Δk 卷积期望（Simpson，±5dk，401 点；与 barrier.js 同模式） */
+      convolved(kx, dk, V0, a){
+        if (V0 === 0) return 1;
+        if (!(dk > 0)) return T(Eof(kx), V0, a);
+        const N = 400, span = 5*dk;
+        let sum = 0, wsum = 0;
+        for (let i = 0; i <= N; i++){
+          const k = kx - span + 2*span*i/N;
+          const w = Math.exp(-((k - kx)/dk)*((k - kx)/dk)/2);
+          const wt = (i === 0 || i === N) ? 1 : (i%2 ? 4 : 2);
+          sum += wt*w*T(Eof(k), V0, a); wsum += wt*w;
+        }
+        return sum/wsum;
+      },
+    };
+  }
+
+  presets(){
+    return {
+      zitter: { name:'Zitterbewegung 颤振', text:'静止的纯上分量高斯波包（k=0，u=(1,0)）——它不是 Dirac 方程的本征态：波包内每个 k 的正能旋量 (1,(sin k)/(E+m)) 取向不同，叠加后残留负能成分，正负能干涉使两个分量的概率以 ~2m 的频率高速振荡（颤振）。这是 Dirac 方程最著名的「病态」：点粒子的位置期待值也存在这种 ~2m 频率的抖动。m=1 时振荡周期 ≈ π 模拟时间（≈2.6 帧）。蓝色=ψ₁ 主导、橙色=ψ₂ 主导，两色高速交替即是颤振；提高质量滑块可提高频率（∝m）。',
+                build(){}, wave:[0.5,0.5,0,0],
+                params:{ m:1, sigma:6 } },
+      'klein-barrier': { name:'Klein 佯谬·势垒', text:'m=0.3 的粒子（E≈0.42）撞上 V0≈0.95 的势垒——垒高超过 E+m=0.72，进入 Klein 区：势垒内不出现消失波，而是负能（空穴）态群速反向「载着」概率继续前进，透射率不随势垒宽度指数衰减。格点精确解（transmissionModel）给出 T≈0.17；同参数薛定谔方程给出 ≈10⁻¹⁰（指数抑制）——两个理论的判决性分歧。波包 k=0.3、σ=18，与透射率扫描工具几何一致。势场 8 位编码上限 ±1（引擎约束）⟹ Klein 区要求 m<0.5，故本预设取小质量。',
+                build(paint){ paint.vctx.fillStyle = paint.vGray(0.95); paint.vctx.fillRect(120,0,16,256); },
+                wave:[0.10,0.5,0.3,0],
+                params:{ m:0.3, sigma:18 } },
+      'klein-resonance': { name:'Klein 共振全透射', text:'同一势垒（V0≈0.95）但宽度调到 14 格：格点色散下 q_latt·a≈2π 近共振——实测透射率 ≈0.99，势垒几乎完全透明，像不存在一样（经典粒子 100% 反弹、薛定谔粒子 ≈100% 反射的势垒！）。物理来源：Dirac 方程一阶结构下，势垒两个界面产生的反射相干相消。格点精确解（latticeT）T=0.995，反而比连续公式的 0.86 更接近全透射——离散色散把共振条件修对了（q_latt·a=6.31 vs 2π=6.28）。共振周期 2π/q_latt≈13.9 格：轻扫质量/势场笔刷破坏共振条件，透射率随即坍塌。',
+                build(paint){ paint.vctx.fillStyle = paint.vGray(0.95); paint.vctx.fillRect(120,0,14,256); },
+                wave:[0.10,0.5,0.3,0],
+                params:{ m:0.3, sigma:18 } },
+      relativistic: { name:'相对论群速', text:'m=1、k=0.5 的波包自由飞行：格点群速 v_g=dE/dk=sin(k)·cos(k)/E=0.379（E=√(sin²k+m²)=1.109），比薛定谔的 k/m=0.5 低约 24%——质量「拖累」下相对论性色散的直接可测量（klein_td4.py 时间域实测质心 0.25% 内吻合）。注意 v_g≠⟨α_x⟩=sin(k)/E=0.432：格点速度算符是 ∂H/∂k=α_x·cos(k)，窄包 ⟨v⟩=cos k·sin k/E 才等于群速。HUD 质心漂移速度（世界坐标/模拟时间）对照理论值 0.379/256=0.00148。把质量滑块调大，群速进一步压低（v→sin k/m 的极限要 m→∞）。',
+                build(){}, wave:[0.10,0.5,0.5,0],
+                params:{ m:1, sigma:12 } },
+    };
+  }
+}
+
+/* ============================================================================
+ * 格点 Dirac 矩势垒精确透射（transmissionModel 的真值口径；klein5.py 的 JS 移植）
+ *
+ * 离散递推（引擎同约定：中心差分 ∂→i·sin k、V 能量平移）：
+ *   ψ2_{j+1} = ψ2_{j-1} + 2i(E−m−V_j)·ψ1_j
+ *   ψ1_{j+1} = ψ1_{j-1} + 2i(E−V_j+m)·ψ2_j
+ * 每区模态 e^{ikj}·(1, s(k))，s(k)=sin k/(E−V+m)，色散 sin²k=(E−V)²−m²。
+ * sin²k 有 4 解 ⟹ 每区 4 模态 ±k₁、±(π−k1)（Nyquist 别名对，旋量比跟随
+ * sin k 符号）；Klein 区（E−V0<0）别名对群速反向；消失波区（(E−V0)²<m²）
+ * 无别名（虚 q），仅 2 模态。未知量 r1,r2 | A₁..A₄ | t1,t2；方程 = 4 界面
+ * 站点（−1,0,a−1,a）递推残差（8 复数，超定时最小二乘）。
+ * T=|t1|²+|t2|²、R=|r1|²+|r2|²（严格 T+R=1；klein5.py 全场残差 1e-15）。
+ * sk≥1（外部无传播模态）⟹ null。复数对统一用 [re, im]。
+ * ========================================================================== */
+const _csub = (a,b) => [a[0]-b[0], a[1]-b[1]];
+const _cmul = (a,b) => [a[0]*b[0]-a[1]*b[1], a[0]*b[1]+a[1]*b[0]];
+const _cconj = a => [a[0], -a[1]];
+
+/* 复系数线性求解 A·x=b（高斯消元 + 部分主元；A n×n 的 [re,im] 二维数组） */
+function _cSolve(A, b){
+  const n = b.length;
+  for (let col=0; col<n; col++){
+    let piv = col, best = A[col][col][0]*A[col][col][0] + A[col][col][1]*A[col][col][1];
+    for (let r=col+1; r<n; r++){
+      const v = A[r][col][0]*A[r][col][0] + A[r][col][1]*A[r][col][1];
+      if (v > best){ best = v; piv = r; }
+    }
+    if (!(best > 0)) return null;                     /* 秩亏（物理上不出现） */
+    if (piv !== col){ const t=A[col]; A[col]=A[piv]; A[piv]=t; const tb=b[col]; b[col]=b[piv]; b[piv]=tb; }
+    const d = A[col][col];
+    for (let r=col+1; r<n; r++){
+      const f = _cmul(A[r][col], [d[0]/(d[0]*d[0]+d[1]*d[1]), -d[1]/(d[0]*d[0]+d[1]*d[1])]);
+      for (let c2=col; c2<n; c2++) A[r][c2] = _csub(A[r][c2], _cmul(f, A[col][c2]));
+      b[r] = _csub(b[r], _cmul(f, b[col]));
+    }
+  }
+  const x = new Array(n);
+  for (let r=n-1; r>=0; r--){
+    let s = b[r];
+    for (let c2=r+1; c2<n; c2++) s = _csub(s, _cmul(A[r][c2], x[c2]));
+    const d = A[r][r];
+    x[r] = _cmul(s, [d[0]/(d[0]*d[0]+d[1]*d[1]), -d[1]/(d[0]*d[0]+d[1]*d[1])]);
+  }
+  return x;
+}
+
+/* 超定最小二乘（法方程 M†M·x=M†b；行数≥列数，物理问题良态） */
+function _cLstsq(M, b){
+  const rows = b.length, n = M[0].length;
+  const A = Array.from({length:n}, () => Array.from({length:n}, () => [0,0]));
+  const c = Array.from({length:n}, () => [0,0]);
+  for (let k=0; k<rows; k++){
+    for (let i=0; i<n; i++){
+      const mi = _cconj(M[k][i]);
+      for (let j=0; j<n; j++) A[i][j] = [A[i][j][0] + _cmul(mi, M[k][j])[0], A[i][j][1] + _cmul(mi, M[k][j])[1]];
+      c[i] = [c[i][0] + _cmul(mi, b[k])[0], c[i][1] + _cmul(mi, b[k])[1]];
+    }
+  }
+  return _cSolve(A, c);
+}
+
+/* latticeT(E, V0, a, m) → { T, R } | null（sk≥1 无外部传播波）。
+   复模态 (q, s)：e^{iqj}·(1, s)；s 为 [re,im]（实 q 时纯实、消失波时纯虚）。 */
+function latticeT(E, V0, a, m){
+  const sk2 = E*E - m*m;
+  if (!(sk2 > 0)) return null;
+  const sk = Math.sqrt(sk2);
+  if (!(sk < 1)) return null;                          /* 外部无传播模态 */
+  const k1 = Math.asin(sk), k2 = Math.PI - k1, k3 = Math.PI + k1;
+  const s = sk/(E+m);                                  /* 外部旋量比（实数） */
+  const sq2 = (E-V0)*(E-V0) - m*m;
+  const modes = [];                                    /* [q, sre, sim] */
+  if (sq2 > 1e-14){
+    const sq = Math.sqrt(sq2), sp = sq/(E-V0+m);
+    const q1 = Math.asin(Math.min(sq, 1)), q2 = Math.PI - q1;
+    modes.push([q1, sp, 0], [-q1, -sp, 0], [q2, sp, 0], [-q2, -sp, 0]);
+  } else {
+    const kap = Math.sqrt(Math.max(-sq2, 0)), d = E-V0+m;
+    modes.push([kap, 0, kap/d], [-kap, 0, -kap/d]);    /* 消失波：s=i·κ/d */
+  }
+  const nA = modes.length;
+  const n = 2 + nA + 2;                                /* r1,r2 | A* | t1,t2 */
+  const sites = [-1, 0, a-1, a];
+  const Vj = j => (j >= 0 && j <= a-1) ? V0 : 0;
+  /* 站点 j 的 (ψ1, ψ2)，x=[r1,r2,A...,t1,t2]（复数对），inc=入射幅值 */
+  function psi(j, x, inc){
+    if (j <= -1){
+      const e1 = [Math.cos(k1*j), Math.sin(k1*j)];
+      const e2 = [Math.cos(-k1*j), Math.sin(-k1*j)];
+      const e3 = [Math.cos(k2*j), Math.sin(k2*j)];
+      const p1 = [inc*e1[0] + x[0][0]*e2[0] - x[0][1]*e2[1] + x[1][0]*e3[0] - x[1][1]*e3[1],
+                  inc*e1[1] + x[0][0]*e2[1] + x[0][1]*e2[0] + x[1][0]*e3[1] + x[1][1]*e3[0]];
+      const p2 = [s*(inc*e1[0] - x[0][0]*e2[0] + x[0][1]*e2[1] + x[1][0]*e3[0] - x[1][1]*e3[1]),
+                  s*(inc*e1[1] - x[0][0]*e2[1] - x[0][1]*e2[0] + x[1][0]*e3[1] + x[1][1]*e3[0])];
+      return [p1, p2];
+    }
+    if (j <= a-1){
+      let p1 = [0,0], p2 = [0,0];
+      for (let i=0; i<nA; i++){
+        const [q, sre, sim] = modes[i];
+        const e = [Math.cos(q*j), Math.sin(q*j)];
+        const A = x[2+i];
+        const Ae = _cmul(A, e);
+        p1 = [p1[0]+Ae[0], p1[1]+Ae[1]];
+        const sAe = _cmul([sre, sim], Ae);
+        p2 = [p2[0]+sAe[0], p2[1]+sAe[1]];
+      }
+      return [p1, p2];
+    }
+    const ja = j - a;
+    const e1 = [Math.cos(k1*ja), Math.sin(k1*ja)];
+    const e3 = [Math.cos(k3*ja), Math.sin(k3*ja)];
+    const t1 = x[n-2], t2 = x[n-1];
+    const p1 = _cmul(t1, e1), p1b = _cmul(t2, e3);
+    const p2 = [_cmul(t1, e1)[0] - p1b[0], _cmul(t1, e1)[1] - p1b[1]];
+    return [[p1[0]+p1b[0], p1[1]+p1b[1]], [s*p2[0], s*p2[1]]];
+  }
+  /* 站点递推残差（2 复数方程/站点）：
+     Z1 = ψ2_{j+1}−ψ2_{j−1} − 2i(E−m−V_j)·ψ1_j
+     Z2 = ψ1_{j+1}−ψ1_{j−1} − 2i(E−V_j+m)·ψ2_j
+     2i·c·(zr+izi) = (−2c·zi, 2c·zr) ⟹
+     Re Z = Re(ψ_{j+1})−Re(ψ_{j−1}) + 2c·Im(ψ_j)，
+     Im Z = Im(ψ_{j+1})−Im(ψ_{j−1}) − 2c·Re(ψ_j) */
+  function resid(j, x, inc){
+    const [pm1a, pm1b] = psi(j-1, x, inc), [p0a, p0b] = psi(j, x, inc), [pp1a, pp1b] = psi(j+1, x, inc);
+    const c1 = E - m - Vj(j), c2 = E - Vj(j) + m;
+    return [
+      [pp1b[0]-pm1b[0] + 2*c1*p0a[1], pp1b[1]-pm1b[1] - 2*c1*p0a[0]],
+      [pp1a[0]-pm1a[0] + 2*c2*p0b[1], pp1a[1]-pm1a[1] - 2*c2*p0b[0]],
+    ];
+  }
+  const M = [], b = [];
+  for (let col=0; col<n; col++){
+    const x = Array.from({length:n}, () => [0,0]);
+    x[col] = [1,0];
+    const rows = [];
+    for (const j of sites){ const r = resid(j, x, 0); rows.push(r[0], r[1]); }
+    M.push(rows);
+  }
+  {
+    const x = Array.from({length:n}, () => [0,0]);
+    for (const j of sites){ const r = resid(j, x, 1); b.push([-r[0][0], -r[0][1]], [-r[1][0], -r[1][1]]); }
+  }
+  /* M 是 n×8（列=未知量、行=方程），转置为 8×n 供 _cLstsq */
+  const MT = Array.from({length:8}, (_, r) => M.map(col => col[r]));
+  const sol = _cLstsq(MT, b);
+  if (!sol) return null;
+  const r1 = sol[0], r2 = sol[1], t1 = sol[n-2], t2 = sol[n-1];
+  const T = (t1[0]*t1[0]+t1[1]*t1[1]) + (t2[0]*t2[0]+t2[1]*t2[1]);
+  const R = (r1[0]*r1[0]+r1[1]*r1[1]) + (r2[0]*r2[0]+r2[1]*r2[1]);
+  return { T, R };
+}
+
+registerKernel(new DiracKernel());
 
 /* ===== src/main.js ===== */
 /* 演示入口：注册物理内核 → 按 URL ?kernel= 参数挂载 QuantumField。

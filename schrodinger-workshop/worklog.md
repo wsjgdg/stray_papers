@@ -17,6 +17,37 @@
 | R28 | 均值动量口径修正（R27 追改） | ⟨p⟩ 由质心速度改梯度版 Im(ψ*∂ψ)：Δk 偏差 2%→0.04%，质心 k 精确落理论值 |
 | R29 | 透射率扫描工具 | 矩垒 T(V₀) 实测扫描 + 离散色散/Δk 卷积解析对照，CDP 18/18 + 回归矩阵 10/10 |
 | R30 | Pauli 自旋内核（#32） | pairs=2 旋量落地：SG 分量质心分离 t² 律（0.0% 精确）+ 拉莫尔/斜场进动签名，CDP 29/29 + 回归矩阵 10/10 + scan 18/18 |
+| R31 | Dirac 方程内核（#33） | 一阶系统 + CN 积分器引擎扩展：KDK 结构性失效（谱半径 1.205）⟹ CN Cayley 严格正交；群速 2.2% / ZB 幅度频率 / Klein 时间域 1.064，CDP 16/16 + 回归 11 套件全绿 + dist 双通道 |
+
+---
+
+## R31（2026-10-14）Dirac 方程内核（#33）
+
+### 完成项
+- [x] `physics/dirac.js`（新，~670 行）：2+1 维 Dirac 内核，pairs=2 旋量（RGBA32F：xy=ψ₁、zw=ψ₂），Weyl 表象 α_x=σ_x、α_y=σ_y、β=diag(1,−1)；格点 ∂→i·sin k、色散 E±(k)=±√(sin²k_x+sin²k_y+m²)；正能旋量初态 u(k)=(1,(sin k_x+i·sin k_y)/(E+m))；4 预设（relativistic/zitter/klein-barrier/klein-resonance）
+- [x] `physics/kernel.js` 引擎一阶扩展：`integrator='cn'` 契约钩子 + TPL_CN_RHS/TPL_CN_SWEEP 双 pass 模板（CN + block-Jacobi，Gloc=βm+V 对角 2×2 闭式求逆）；头注【CN 积分器约定】契约文档
+- [x] `core/app.js`：initPrograms（cnRhs/cnSweep 双 program）、allocGrid（rhs 固定纹理）、evolve 分流 evolveCN/evolveKDK（KDK 原样抽出、dissipation 帧级后置分支后通用）、_cnSteps/_setCNUniforms、manualPass CN 分支、makeWave 透传 m
+- [x] `dirac.js` latticeT：格点 Dirac 矩势垒精确透射（klein5.py JS 移植：每区 4 模态含 Nyquist 别名对、4 界面站点 8 方程最小二乘、T+R=1、全场残差 1e-15）+ transmissionModel（T/E/convolved Δk Simpson 401 点）
+- [x] 数学验证链（Python，/tmp）：klein5.py（latticeT 真值）、klein_td4.py（CN 因子 2 修复 h=dt/2、link 流公式修复、T_sim=T_latt 谱平均 ±3% 分区/link 流双测量对账闭合）、zb_calib.py（复刻引擎 CN 的 2D numpy 参考实现）
+- [x] dist 重建：13 模块拓扑含 dirac.js（174.1 KB，md5 667cd992…）
+
+### 关键根因：CN 场完全冻结——uniform 对非当前 program 设置静默失败
+- 症状：manualPass(1)×3 后全部 texel 逐位不变；D2a 质心 Δx=0.00000；D1a「P 守恒」实为恒等映射的平凡结果
+- 诊断链：shader 源码 Node 重建正确（buildShaders keys 含 cnRhs/cnSweep）→ 插桩 evolveCN/_cnSteps/_setCNUniforms 全在跑（41/41/82 次、hh=0.1 正确传入、err=null）→ 但 progCnRhs 上 uDtHalf/uMass/uV 读回全 0 → dirac_uni.js 直接实验（决定性证据）：先 `gl.useProgram(prog)` 再 set+readback 立即可读 0.1（sweep/display 同样成功），getError 列出现 1282 (INVALID_OPERATION)
+- 根因：`_setCNUniforms`（app.js:644）未先 useProgram 就对非当前 program 设 uniform——引擎其余所有 pass（evolveKDK/manualPass/display/reduce/scale）均 useProgram 优先，唯独 CN 路径违反该惯例；本 GL 后端（xvfb+Vulkan SwANGLE）对非当前 program 的 uniform 写入静默失败 ⟹ hh=0 ⟹ CN 退化为恒等映射 ⟹ 全场冻结
+- 修复：`_setCNUniforms` 首行加 `gl.useProgram(prog)`（app.js:649）；复测 comX 三步 0.17125→0.17213（v=0.001467 ≈ 群速理论 0.001482）
+
+### 验证
+- **Dirac CDP 16/16**：D0 挂载（title OK 双 shader 编译）/D1 CN 长跑守恒 t=210 \|P−1\|=6.4e-6 + probSplit 自洽/D2 群速实测 1.4488e-3 vs dE/dk 理论 1.4820e-3（2.2%，低于薛定谔 k/m 24.1%）/D3 ZB m=1 幅度 0.0242 残差/幅度 0.147 直流 0.974 + m=2 频率翻倍（幅度 0.0103）/D4 Klein 模型自洽 T(0)=1、T(a=14)=0.9946≫T(a=16)=0.1659 + 时间域实测 T=0.2759 vs 格点精确解（Δk 卷积）0.2593 比值 1.064（P=1.00032）/D5 m 0.3→1 热切换 P=1.000045/D6 序列化 round-trip/Z1 零异常
+- **GLSL↔Python 逐位互证**：D3a 与 zb_calib.py（同算法复刻）幅度/残差RMS/直流电平 0.0242/0.0036/0.9742 完全一致；ω 扫描峰值 2.05/3.95（理论 2m=2/4）
+- **回归矩阵 11/11**（evolve 分流重构行为等价）：dissipate 9/9（dissipation 搬迁直测）+ moments 23/23 + drive 28/28 + serialize 17/17 + ab_ui 10/10 + extreme ALL + gp 27/27 + nls_sub PASS + pnan PASS + pauli 29/29 + scan 18/18
+- **dist**：cdp_dist 27/27（schrodinger/NLS/GP 单文件）+ Dirac 冒烟 7/7（file:// + HTTP 双通道：挂载/4 预设/群速 0.977/P=1.000005、1.000002/零异常）
+
+### 物理诚实声明
+- KDK 对 Dirac 结构性失效是混合通道的数学必然（M=α·p+βm+V 无法按 kick/drift 分解，谱半径实测 1.205@dt_sub=0.2），非符号/边界细节；CN 替代是积分器模式扩展而非打补丁
+- 格点 vs 连续 Klein 透射的系统偏离是色散离散的物理（latticeT 为真值口径；a=16：T_latt=0.166 vs T_cont=0.337）；klein_td4.py 时间域裁决 T_sim=T_latt 谱平均 ±3%
+- ZB 是 Dirac 方程物理内容不是数值误差；D3 判据「零均值」经标定**修正为「直流电平近 1」**（负能含量 ~σ_k²/(2m²)≈0.014 ⟹ n1−n2≈0.97 上叠加小涟漪），D3b 幅度阈值按 ∝1/m² 标定（0.0066）设为 >0.003
+- 势场 8 位编码上限 ±1（引擎约束）⟹ Klein 区要求 m<0.5，预设取小质量（如实写入预设文案）
 
 ---
 
@@ -235,15 +266,15 @@ CDP 23/23（cdp_moments.js）：不确定关系逐轴 ≥½、动量弥散守恒
 | 26 | 势场序列化/导出 | UI + 引擎 | 无（独立） | ✅ 17/17 |
 | 27 | 耗散/开放系统 | kernel 契约扩展（非厄米项） | 无 | ✅ 9/9 |
 | 28 | 含时外场 / AC Stark | 引擎（uV 逐帧更新） | 无 | ✅ 28/28 |
-| 29 | Aharonov-Bohm 效应 | kernel（矢势注入 localH） | 无 | 待办 |
-| 30 | 能级阶梯/不确定原理 HUD | UI 测量 | 无 | 待办 |
-| 31 | 透射率扫描工具 | UI + 测量 | 无 | 待办 |
-| 32 | Pauli 自旋内核（pairs=2） | 新内核（大） | RGBA32F 通道已预留 | 待办 |
-| 33 | Dirac 方程 | 引擎一阶 integrator 扩展 | 引擎扩展 | 待办 |
+| 29 | Aharonov-Bohm 效应 | kernel（矢势注入 localH） | 无 | ✅ R26（UI 10/10；物理 A/C） |
+| 30 | 能级阶梯/不确定原理 HUD | UI 测量 | 无 | ✅ R27–R28（23/23） |
+| 31 | 透射率扫描工具 | UI + 测量 | 无 | ✅ R29（18/18） |
+| 32 | Pauli 自旋内核（pairs=2） | 新内核（大） | RGBA32F 通道已预留 | ✅ R30（29/29） |
+| 33 | Dirac 方程 | 引擎一阶 integrator 扩展 | 引擎扩展 | ✅ R31（16/16 + 回归 11 套件 + dist 7/7） |
 | 34 | 3D 纹理 + 渲染交互 | 引擎 3D 扩展（最大） | WebGL2 3D 纹理验证 | 待办 |
 
 ### 验证基线（每项功能落地后须保持的回归）
-GP CDP 27/27 · dist CDP 27/27 · IC 单测 20/20 · NLS 14/14 · schrodinger 5 脚本 · bindRange 修复回归（GP substeps=16 断言）· 序列化 17/17 · 耗散 9/9 · 含时外场 28/28
+Dirac CDP 16/16 · Pauli CDP 29/29 · GP CDP 27/27 · scan 18/18 · moments 23/23 · drive 28/28 · ab_ui 10/10 · serialize 17/17 · dissipate 9/9 · extreme ALL · nls_sub PASS · pnan PASS · dist CDP 27/27 + Dirac dist 冒烟 7/7（file:// + HTTP）· IC 单测 20/20 · NLS 14/14 · schrodinger 5 脚本
 
 ---
 

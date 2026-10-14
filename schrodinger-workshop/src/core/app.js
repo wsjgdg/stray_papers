@@ -280,12 +280,19 @@ export class QuantumField {
   initPrograms(){
     const gl = this.gl;
     const sh = buildShaders(this.kernel);   /* 模板 + 内核片段装配，契约错误在此抛出 */
+    this.sh = sh;                           /* CN 路径探测：sh.cnRhs 存在 ⟺ kernel.integrator='cn' */
     this.progEvolve = createProgram(gl, sh.evolve);
     this.progDisplay = createProgram(gl, sh.display);
     this.progComposite = createProgram(gl, FS_COMPOSITE);
     this.progReduce = createProgram(gl, sh.reduce);
     this.progBlit = createProgram(gl, FS_BLIT);
     this.progScale = createProgram(gl, sh.scale);   /* 耗散帧级衰减 pass */
+    /* CN 积分器（kernel.integrator='cn'，当前仅 Dirac）：rhs pass + block-Jacobi
+       扫掠 pass 两个额外 program（契约见 kernel.js 头注【CN 积分器约定】） */
+    if (sh.cnRhs){
+      this.progCnRhs = createProgram(gl, sh.cnRhs);
+      this.progCnSweep = createProgram(gl, sh.cnSweep);
+    }
   }
 
   initTargets(){
@@ -304,8 +311,13 @@ export class QuantumField {
       gl.deleteTexture(this.psiA.tex); gl.deleteFramebuffer(this.psiA.fbo);
       gl.deleteTexture(this.psiB.tex); gl.deleteFramebuffer(this.psiB.fbo);
     }
+    if (this.rhs){ gl.deleteTexture(this.rhs.tex); gl.deleteFramebuffer(this.rhs.fbo); this.rhs = null; }
     this.psiA = makeTarget(gl, g, g, this.ifmt, this.fmt, gl.NEAREST);
     this.psiB = makeTarget(gl, g, g, this.ifmt, this.fmt, gl.NEAREST);
+    /* CN 路径的 rhs 固定纹理（每子步由 cnRhs 重写、12 次扫掠期间只读） */
+    if (this.kernel.integrator === 'cn'){
+      this.rhs = makeTarget(gl, g, g, this.ifmt, this.fmt, gl.NEAREST);
+    }
   }
 
   allocDisplay(){
@@ -361,8 +373,9 @@ export class QuantumField {
   initWave(fx, fy, kx, ky, add){
     const g = this.state.grid, gl = this.gl;
     /* 内核私有初相参数（Pauli 的 spinTheta/spinPhi 等）随 state 透传给 makeWave；
-       无此概念的内核忽略多余字段（makeWave 按需读取 p.spinTheta ?? 默认）。 */
-    const { data, sum: rawSum } = this.kernel.makeWave(g, { fx, fy, kx, ky, sigma: this.state.sigma,
+       无此概念的内核忽略多余字段（makeWave 按需读取 p.spinTheta ?? 默认）。
+       m=state.m 供一阶内核（Dirac）构造裸质量依赖的正能旋量；标量内核忽略。 */
+    const { data, sum: rawSum } = this.kernel.makeWave(g, { fx, fy, kx, ky, sigma: this.state.sigma, m: this.state.m,
                                                               spinTheta: this.state.spinTheta, spinPhi: this.state.spinPhi });
     let sum = rawSum;
     /* 新波包先归一化到 Σ|ψ|²=1，再与旧场叠加。
@@ -495,12 +508,40 @@ export class QuantumField {
   }
 
   /* ---------- 主循环 ---------- */
-  /* 单帧物理推进（KDK 速度 Verlet + 耗散帧级衰减）。
+  /* 单帧物理推进（CN 或 KDK 速度 Verlet + 耗散帧级衰减）。
      从 frame() 原样抽出：uniform 序列、子步自适应、ping-pong、simTime 累移
      与 dissipation 逐字不变——frame()（每 tick 一次）与透射率扫描
-     （boost 倍频）共用同一路径，物理零差异。调用方负责暂停判定。 */
+     （boost 倍频）共用同一路径，物理零差异。调用方负责暂停判定。
+     kernel.integrator='cn'（当前仅 Dirac）走 CN 路径，其余 KDK 逐字不变。 */
   evolve(){
     const dt = 1.2;
+    if (this.kernel.integrator === 'cn'){
+      this.evolveCN(dt);
+    } else {
+      this.evolveKDK(dt);
+    }
+    /* 耗散（开放系统）：帧级标量衰减 e^{-γ·dt}，精确且与子步/网格/内核解耦；
+       γ=0 时跳过——厄米路径零改动。u/v 两通道同乘（v 是 KDK 辅助量，同步缩放
+       保持 u/v 比例，下一步 kick 的 H·u 作用不受影响）。CN 后通用：标量乘法
+       对任意态成立，与积分器无关。 */
+    if (this.state.gamma !== 0){
+      const s = Math.exp(-this.state.gamma * dt);
+      const gl = this.gl;
+      gl.useProgram(this.progScale);
+      gl.bindVertexArray(this.quad.vao);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiB.fbo);
+      gl.viewport(0,0,this.state.grid,this.state.grid);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
+      gl.uniform1i(this.u(this.progScale,'uPsi'), 0);
+      gl.uniform1f(this.u(this.progScale,'uScale'), s);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
+    }
+  }
+
+  /* KDK 速度 Verlet 一帧推进（标量/NLS/GP/Pauli 路径；从 evolve() 原样抽出） */
+  evolveKDK(dt){
     const k = 0.5/this.state.m;
     const gl = this.gl;
     const eMax = k*8 + 1 + this.kernel.eMaxExtra(this.state) + Math.abs(this.state.driveAmp);   /* H 特征值上界（含时外场幅值计入稳定界） */
@@ -542,22 +583,82 @@ export class QuantumField {
       }
     }
     this.state.simTime += dt;
-    /* 耗散（开放系统）：帧级标量衰减 e^{-γ·dt}，精确且与子步/网格/内核解耦；
-       γ=0 时跳过——厄米路径零改动。u/v 两通道同乘（v 是 KDK 辅助量，同步缩放
-       保持 u/v 比例，下一步 kick 的 H·u 作用不受影响）。 */
-    if (this.state.gamma !== 0){
-      const s = Math.exp(-this.state.gamma * dt);
-      gl.useProgram(this.progScale);
-      gl.bindVertexArray(this.quad.vao);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiB.fbo);
-      gl.viewport(0,0,this.state.grid,this.state.grid);
+  }
+
+  /* CN 积分器一帧推进（kernel.integrator='cn'，当前仅 Dirac）——推导与数值
+     验证记录见 dirac.js 头注【积分器】节、klein_td4.py。KDK 对混合通道的
+     一阶 M（α·p 把 ψ₂ 导数耦合进 ψ₁ 方程）结构性失效（映射谱半径 1.205，
+     范数爆炸）；CN 的 Cayley 矩阵严格正交（G=−J·M 斜对称）⟹ 无条件稳定、
+     总概率机器精度守恒。
+     (I−hG)w_{n+1}=(I+hG)w_n，h=dt_sub/2：因子 2 是 CN 的正确离散（两边同用
+     全 h 等效步长 2h、动力学快一倍——时间域单模相位率实测确认）。每子步：
+     cnRhs 一遍（w_n→rhs 固定纹理）+ 12 次 block-Jacobi 扫掠（收缩 ~0.18/
+     迭代，截断 ~1e-9；收敛性记录见 kernel.js TPL_CN_SWEEP 注释）。 */
+  evolveCN(dt){
+    const k = 0.5/this.state.m;
+    const eMax = k*8 + 1 + this.kernel.eMaxExtra(this.state) + Math.abs(this.state.driveAmp);
+    const sub = Math.max(this.state.substeps, Math.ceil(dt*eMax/1.5));
+    const hh = 0.5*dt/sub;
+    /* 含时外场相位与 KDK 同口径：帧中点冻结 φ = ω·(t+dt/2) */
+    const dPhase = this.state.driveOmega * (this.state.simTime + dt*0.5);
+    this._cnSteps(sub, hh, dPhase, 1/this.state.grid, false);
+    this.state.simTime += dt;
+  }
+
+  /* CN 步进 n 个子步（rhs pass + 12 扫掠/子步）——evolveCN 与 manualPass 共用。
+     diag=true 时驱动/AB 归零（manualPass 诊断口径，与 KDK 路径一致）。
+     纹理约定：cnRhs/cnSweep 的 uPsi=TEX0、uV=TEX1；cnSweep 追加 uRhs=TEX2。 */
+  _cnSteps(n, hh, dPhase, tx, diag){
+    const gl = this.gl, g = this.state.grid;
+    this._setCNUniforms(this.progCnRhs, hh, dPhase, tx, diag);
+    this._setCNUniforms(this.progCnSweep, hh, dPhase, tx, diag);
+    for (let i=0; i<n; i++){
+      /* 1) rhs pass：w_n(psiA) → this.rhs（本子步固定，扫掠期间只读） */
+      gl.useProgram(this.progCnRhs);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.rhs.fbo);
+      gl.viewport(0,0,g,g);
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
-      gl.uniform1i(this.u(this.progScale,'uPsi'), 0);
-      gl.uniform1f(this.u(this.progScale,'uScale'), s);
+      gl.uniform1i(this.u(this.progCnRhs,'uPsi'), 0);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
-      const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
+      /* 2) 12 次 block-Jacobi 扫掠：x_0=w_n，x_{k+1}=(I−hGloc)⁻¹(rhs+h·Gkin(x_k))；
+             psiA/psiB ping-pong，末态回 psiA（与 KDK 路径同一不变式） */
+      gl.useProgram(this.progCnSweep);
+      for (let it=0; it<12; it++){
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiB.fbo);
+        gl.viewport(0,0,g,g);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
+        gl.uniform1i(this.u(this.progCnSweep,'uPsi'), 0);
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, this.rhs.tex);
+        gl.uniform1i(this.u(this.progCnSweep,'uRhs'), 2);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
+      }
     }
+  }
+
+  /* CN program 共享 uniform 序列（uDtHalf/uTexel/drive/AB/uV/内核私有）——两个
+     program 的 uniform 名逐字相同，但取值是 program 级状态，须逐 program 设置。 */
+  _setCNUniforms(prog, hh, dPhase, tx, diag){
+    const gl = this.gl, st = this.state;
+    /* uniform 设置前必须先成为当前 program（引擎全路径惯例）；否则本 GL
+       后端对非当前 program 的 uniform 写入静默失败——hh=0 ⟹ CN 退化为恒等
+       映射 ⟹ 全场冻结（2026-10-14 R31 诊断：manualPass 前后 texel 逐位不变）。 */
+    gl.useProgram(prog);
+    gl.uniform1f(this.u(prog,'uDtHalf'), hh);
+    gl.uniform2f(this.u(prog,'uTexel'), tx, tx);
+    gl.uniform1f(this.u(prog,'uDriveAmp'), diag ? 0 : st.driveAmp);
+    gl.uniform1f(this.u(prog,'uDrivePhase'), dPhase);
+    gl.uniform1i(this.u(prog,'uDriveMode'), diag ? 0 : st.driveMode);
+    gl.uniform1f(this.u(prog,'uABOn'), (diag || st.abPhi === 0) ? 0 : 1);
+    gl.uniform2f(this.u(prog,'uABPos'), st.abX, st.abY);
+    gl.uniform1f(this.u(prog,'uABPhi'), diag ? 0 : st.abPhi);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this.vTex);
+    gl.uniform1i(this.u(prog,'uV'), 1);
+    this.kernel.setUniforms(gl, prog, st);   /* 内核私有 uniform（Dirac 的 uMass 等） */
   }
 
   frame(now){
@@ -1355,12 +1456,18 @@ export class QuantumField {
       },
       /* 手动跑 n 个 evolve pass（不经 frame；uUpdateV 序列与 frame 一致：kick,drift,kick）。
          诊断 GPU vs CPU 分叉用：n=1 单 kick 后 ψ 应几乎不变。
-         texel 参数可覆盖 uTexel（诊断 uniform 是否生效）。 */
+         texel 参数可覆盖 uTexel（诊断 uniform 是否生效）。
+         CN 内核（integrator='cn'）：每步 = 1 个完整 CN 子步（dt=1.2/6 的半步
+         hh=0.1，rhs + 12 扫掠），驱动/AB 归零——与 evolveCN 同路径。 */
       manualPass: (n, texel) => {
         const g0 = this.state.grid;
         const tx = texel === undefined ? 1/g0 : texel;
-        gl.useProgram(this.progEvolve);
+        const gl = this.gl;
         gl.bindVertexArray(this.quad.vao);
+        if (this.kernel.integrator === 'cn'){
+          this._cnSteps(n, 0.5*(1.2/6), 0, tx, true);
+        } else {
+        gl.useProgram(this.progEvolve);
         gl.uniform1f(this.u(this.progEvolve,'uDt'), 1.2/6);
         gl.uniform1f(this.u(this.progEvolve,'uK'), 0.5/this.state.m);
         gl.uniform2f(this.u(this.progEvolve,'uTexel'), tx, tx);
@@ -1370,6 +1477,7 @@ export class QuantumField {
         gl.uniform1f(this.u(this.progEvolve,'uABOn'), 0);
         gl.uniform2f(this.u(this.progEvolve,'uABPos'), 0.5, 0.5);
         gl.uniform1f(this.u(this.progEvolve,'uABPhi'), 0);
+        this.kernel.setUniforms(gl, this.progEvolve, this.state);   /* 内核私有 uniform（Dirac 的 uMass 等）：暂停态手动步进时 evolve 帧循环可能尚未设置过 */
         gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, this.vTex);
         gl.uniform1i(this.u(this.progEvolve,'uV'), 1);
@@ -1382,6 +1490,7 @@ export class QuantumField {
           gl.uniform1f(this.u(this.progEvolve,'uUpdateV'), i%3===1 ? 0.0 : 1.0);
           gl.drawArrays(gl.TRIANGLES, 0, 3);
           const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
+        }
         }
         const g = this.state.grid, ch = this.kernel.pairs === 2 ? 4 : 2;
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);

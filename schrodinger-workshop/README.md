@@ -1,13 +1,15 @@
 # 薛定谔工场 · Schrödinger Workshop
 
 WebGL2 **含时薛定谔方程（TDSE）实时求解器**，含可插拔物理内核（薛定谔 / 非线性薛定谔 /
-Gross-Pitaevskii）。无依赖、无构建，浏览器打开即跑——在画布上拖拽发射物质波波包，亲眼看见量子力学：
-隧穿、干涉、色散、散射、叠加自干涉、孤子与自聚焦塌缩、BEC 集体呼吸与量子化涡旋。
+Gross-Pitaevskii / Pauli 自旋 / Dirac 相对论）。无依赖、无构建，浏览器打开即跑——在画布上拖拽发射物质波波包，亲眼看见量子力学：
+隧穿、干涉、色散、散射、叠加自干涉、孤子与自聚焦塌缩、BEC 集体呼吸与量子化涡旋、自旋进动与 Stern-Gerlach 分离、相对论群速与 Zitterbewegung 颤振、Klein 佯谬。
 
 ```
 iħ ∂ψ/∂t = −ħ²/2m ∇²ψ + V(x)ψ              （薛定谔内核）
 iħ ∂ψ/∂t = −ħ²/2m ∇²ψ + V(x)ψ − g|ψ|²ψ     （NLS 内核，g>0 = 聚焦；
                                              同一方程族即 Gross-Pitaevskii，g<0 = 排斥 BEC）
+iħ ∂ψ/∂t = [−ħ²/2m ∇² + V − (qℏ/2m)·σ·B]ψ  （Pauli 内核，旋量 pairs=2）
+iħ ∂ψ/∂t = (α_x p_x + α_y p_y + βm + V)ψ    （Dirac 内核，一阶系统、CN 积分器）
 ```
 
 工程分形态：**ES 模块源码**（`index.html` + `src/`，组件化进课程站用）与
@@ -28,9 +30,11 @@ python3 -m http.server 8765          # 或 npm start
 **环境要求**：支持 WebGL2 + `EXT_color_buffer_float` 的浏览器
 （Chrome/Edge 90+、Firefox 90+、Safari 16.4+）。无 WebGL2 时页面会明确报错而非白屏。
 
-**URL 参数**：`?kernel=schrodinger|nls|gp` 物理内核 ·
+**URL 参数**：`?kernel=schrodinger|nls|gp|pauli|dirac` 物理内核 ·
 `?preset=free|barrier|slits|harmonic|scatter|box`（薛定谔）、
-`free|soliton|focus|barrier`（NLS）或 `tf|vortex|tof|breather`（GP）初始预设 ·
+`free|soliton|focus|barrier`（NLS）、`tf|vortex|tof|breather`（GP）、
+`larmor|stern-gerlach|tilted|free`（Pauli）或
+`relativistic|zitter|klein-barrier|klein-resonance`（Dirac）初始预设 ·
 `?grid=128|192|256|320` 网格精度 · `?speed=N` 积分子步 ·
 `?kx=0.1&ky=0.05` 覆盖初始波包动量
 
@@ -113,6 +117,38 @@ g=0.016 时 60fps 下 ~15s 分离约 2σ，调大 g 滑块可加速。CDP 实测
 ΔX 与理论偏差 <1%（t² 律比值 5.86 vs 5.85）；进动签名 ⟨σ_x⟩=cos(ωt)、
 ⟨σ_y⟩=−sin(ωt) 逐点吻合，实测 ω 与 B_z/m 偏差 <0.1%（B_z 热切换
 0.02→0.04 频率精确翻倍）。
+
+### Dirac 相对论内核：4 个预设场景（2+1 维）
+
+第一个**一阶方程**内核（`integrator='cn'`，引擎 CN 积分器路径），旋量
+ψ=(ψ₁,ψ₂)（pairs=2，RGBA32F：xy=ψ₁、zw=ψ₂）。Weyl 表象
+*i*ℏ ∂ψ/∂t = (α_x p_x + α_y p_y + βm + V)ψ（α_x=σ_x、α_y=σ_y、β=diag(1,−1)）；
+格点口径 ∂→i·sin k（中心差分），色散 E±(k)=±√(sin²k_x+sin²k_y+m²)，
+谱半径 √2+m+1（eMaxExtra 补足引擎基线）。正能旋量初态
+u(k)=(1, (sin k_x+i·sin k_y)/(E+m))，k=0 时 u=(1,0) 纯上分量。
+
+**积分器（引擎级扩展）**：KDK 速度 Verlet 对 Dirac **结构性失效**——M=α·p+βm+V
+混合通道（α·p 把 ψ₂ 的导数耦合进 ψ₁ 方程），无法按 kick/drift 两通道投影分解，
+映射谱半径实测 1.205@dt_sub=0.2（1D m=1），范数指数爆炸。改用
+**Crank-Nicolson**：(I−hG)w_{n+1}=(I+hG)w_n，h=dt_sub/2，G=−J·M 斜对称
+（J=复结构 (a,b)↦(−b,a)）⟹ Cayley 矩阵严格正交：**无条件稳定、总概率机器精度
+守恒**（CDP 实测 t=210 时 |P−1|=6.4e-6；12 次 block-Jacobi 扫掠截断 ~1e-9/子步，
+收缩 ~0.18/迭代）。因子 2（h=dt_sub/2）是 CN 的正确离散——时间域单模相位率实测确认。
+
+| 预设 | 物理内容 |
+|---|---|
+| 相对论群速 | m=1、k=0.5 波包自由飞行：格点群速 v_g=dE/dk=sin(k)·cos(k)/E=0.379，比薛定谔 k/m=0.5 低 24%——质量拖累下相对论色散的直接可测量。CDP 实测质心漂移 1.4488e-3 vs 理论 1.4820e-3 world/sim-time（偏差 2.2%）。注意 v_g≠⟨α_x⟩=sin(k)/E=0.432：格点速度算符是 ∂H/∂k=α_x·cos k，窄包 ⟨v⟩=cos k·sin k/E 才等于群速（klein_td4.py 时间域同口径 0.25% 吻合） |
+| Zitterbewegung 颤振 | 静止的纯上分量高斯波包（k=0，u=(1,0)）——它不是 Dirac 方程的本征态：波包内每个 k 的正能旋量 (1,(sin k)/(E+m)) 取向不同，叠加后残留负能成分，正负能干涉使两分量概率以 ~2m 的频率高速振荡。这是 Dirac 方程最著名的「病态」：点粒子的位置期待值也存在这种 ~2m 频率的抖动。CDP 实测（paused+manualPass 确定性步进，固定频率最小二乘拟合）：m=1 幅度 0.0242、残差/幅度 0.147、直流电平 0.974；m=2 热切换频率精确翻倍（幅度 0.0103）。与 numpy 参考实现（同算法复刻）逐位互证；幅度 ∝σ_k²/m²（σ=6 格 ⟹ 负能含量 ~0.014），**ZB 是物理内容不是数值误差** |
+| Klein 佯谬·势垒 | m=0.3 粒子（E≈0.42）撞上 V0≈0.95 势垒——垒高超过 E+m=0.72，进入 Klein 区：势垒内不出现消失波，而是负能（空穴）态群速反向「载着」概率继续前进，透射率不随势垒宽度指数衰减。格点精确解（transmissionModel/latticeT：界面匹配 8 方程最小二乘、T+R=1、全场残差 1e-15）给出 T≈0.17；同参数薛定谔方程 ≈10⁻¹⁰（指数抑制）——两个理论的判决性分歧。CDP 时间域实测（透射率扫描工具）T=0.2759 vs 格点精确解（Δk 卷积口径）0.2593，比值 1.064 |
+| Klein 共振全透射 | 同一势垒（V0≈0.95）宽度调到 14 格：格点色散下 q_latt·a≈2π 近共振——实测透射率 ≈0.99，势垒几乎完全透明，像不存在一样（经典粒子 100% 反弹、薛定谔 ≈100% 反射的势垒！）。物理来源：Dirac 方程一阶结构下，势垒两个界面产生的反射相干相消。latticeT T=0.995 反而比连续公式的 0.86 更接近全透射——离散色散把共振条件修对了（q_latt·a=6.31 vs 2π=6.28）。共振周期 2π/q_latt≈13.9 格：轻扫质量/势场笔刷破坏共振条件，透射率随即坍塌 |
+
+附加控件：**m 质量滑块**（0.15…4，热切换——uMass 对 rhs/sweep 双 program
+每帧刷新，CDP 实测 m 0.3→1 切换后 P=1.000045 守恒、无重发）。
+
+**诚实声明**：
+- **格点 vs 连续**：连续解析解（一阶方程界面 ψ 连续即可、无需导数匹配）在 q·a=nπ 处精确共振全透射，但那是 k,q→0 极限；格点（\|sin k\|≤1、每区 4 模态含 Nyquist 别名对）的精确解由 latticeT 给出——实测与格点解一致、与连续公式的系统偏离是**色散离散的物理而非数值缺陷**（a=16：T_latt=0.166 vs T_cont=0.337；klein_td4.py 时间域裁决 T_sim=T_latt 谱平均 ±3%，分区/link 流双测量互证）
+- **势场 8 位编码上限 ±1**（引擎约束）⟹ Klein 区（E−V0<0）要求 m<0.5，预设取小质量
+- ZB 颤振是 Dirac 方程的物理内容（连续极限的标准结果），不是数值误差；格点上频率为 2√(sin²k+m²)
 
 ### 交互
 
@@ -254,6 +290,21 @@ v_half = v − dt/2·H·u ;  u_new = u + dt·H·v_half ;  v_new = v_half − dt/
 4 次墙反弹，每次采样零漂移；NLS 的 g=0 线性极限同样 P=1.0000 精确）。
 对非线性系统为辛但非严格酉，P 有 O(dt²) 漂移（g=2.5 孤子实测 0.08%）。
 
+### 积分器模式：Crank-Nicolson（一阶内核）
+
+`kernel.integrator='cn'` 时引擎分流到 CN 路径（`app.js` evolveCN/_cnSteps，
+`kernel.js` TPL_CN_RHS/TPL_CN_SWEEP 双 pass 模板）：
+(I−hG)w_{n+1}=(I+hG)w_n，h=dt_sub/2，每子步 cnRhs 一遍（w_n→rhs 固定纹理）
++ 12 次 block-Jacobi 扫掠（Gloc=βm+V 对角 2×2 块闭式求逆、Gkin=α·p 导数耦合，
+收缩 ~0.18/迭代、截断 ~1e-9）。
+
+**动机**：KDK 要求 M 通道对齐（本征基可按 kick/drift 两通道投影分解为逐模态
+2×2 旋转）；Dirac 的 M=α·p+βm+V **混合通道**（α·p 把 ψ₂ 的导数耦合进 ψ₁ 方程）
+结构性失效——映射谱半径实测 1.205@dt_sub=0.2，范数指数爆炸，非符号/边界细节。
+CN 的 Cayley 矩阵严格正交（G=−J·M，J=复结构，M 厄米 ⟹ G 斜对称）⟹ 无条件稳定、
+总概率机器精度守恒。dissipation 帧级衰减在分支之后通用（标量乘法与积分器无关）；
+KDK 路径对既有内核逐字不变（evolve 分流重构经回归矩阵验证行为等价）。
+
 ### 稳定性：dt·E ≤ 2
 
 每模式旋转角 θ = arccos(1−(dt_sub·E)²/2)，稳定充要条件 dt_sub·E ≤ 2。
@@ -340,6 +391,8 @@ Evolve (RG32F ping-pong ×sub×3) → Display (+trail max 混合 → dispA/dispB
 | **Aharonov-Bohm UI 层**（flux 工具选中+crosshair/点击落点 (0.30,0.62) 精确/势场不绘制 vscan 不变/标记环 Φ=π 显现 Φ=0 消失 blue Δ=3185/Φ 滑块→state+读数+HUD/序列化含 AB 三键/import round-trip 1e-12/置中按钮/Φ=0 幺正回归 v=0.000841+P=1.0000353/零异常） | 10/10 PASS |
 | **Aharonov-Bohm 物理层**（原子暂停对齐 simT=481.2/条纹平移线性拟合 s=−0.797 rms≈0.99°/奇函数 D(−π/2)+D(π/2)=−1.63°/P 守恒 6 档记录/P 漂移 ∝Φ²·(ωdtSub)² 且 substeps 6→24 降约 4×/I(2π) vs I(0) 差 17%——初态未规范变换的预期差异，非积分误差，判据设计修正见专节） | A/C PASS，B 判据测试设计问题如实记录 |
 | **Pauli 自旋内核 CDP 套件**（pairs=2 挂载/布洛赫初态 θ,φ 三态/双分量 P 守恒 + probSplit 原子快照/拉莫尔 ω=B_z/m 实测 0.02000 + cos/sin 签名 2e-3/B_z 热切换频率翻倍实测 0.04000/SG 分量质心半位移 t1 0.0% 精确 + t² 律 ±3%/↑↓ 束心自旋 dominance/斜场 ⟨σ_z⟩=⅓+⅔cos 偏差 8e-4/序列化 round-trip/自旋滑块重发契约/零 console 异常） | 29/29 PASS |
+| **Dirac 内核 CDP 套件**（CN 双 shader 编译+挂载/4 预设/CN 长跑概率守恒 t=210 \|P−1\|=6.4e-6/群速实测 1.4488e-3 vs dE/dk 理论 1.4820e-3（2.2%，薛定谔 k/m 低 24%）/ZB m=1 幅度 0.0242 残差 0.147 + m=2 频率翻倍（numpy 同算法参考逐位互证）/Klein 模型自洽 T(0)=1、T(a=14)=0.9946≫T(a=16)=0.1659/Klein 时间域实测 T=0.2759 vs 格点精确解 0.2593（比值 1.064）/m 热切换 P=1.000045/序列化 round-trip/零异常） | 16/16 PASS |
+| **Dirac 标定互证**（zb_calib.py：复刻引擎 CN 的 numpy 同算法参考——GLSL 与 Python 的 ZB 幅度/残差/直流电平逐位一致 0.0242/0.0036/0.9742；klein5.py latticeT 与 klein_td4.py 时间域 T_sim=T_latt ±3% 前验） | 逐位一致 |
 
 ## 架构
 
@@ -361,12 +414,14 @@ schrodinger-workshop/
 │   │   └── app.js                QuantumField：DOM 构建、管线装配、交互、主循环、
 │   │                             URL 参数、调试句柄 window.__app、unmount
 │   └── physics/                  物理内核（可插拔）
-│       ├── kernel.js             PhysicsKernel 契约 + 注册表 + 三个 shader 模板
+│       ├── kernel.js             PhysicsKernel 契约 + 注册表 + shader 模板
+│       │                         （evolve/CN rhs+sweep/display/reduce/scale）
 │       ├── gaussian.js           共享初始场（归一化高斯波包，CPU 端）
 │       ├── schrodinger.js        薛定谔内核（pairs=1，6 预设）
 │       ├── nls.js                非线性薛定谔内核（pairs=1，4 预设）
 │       ├── gp.js                 Gross-Pitaevskii / BEC 内核（pairs=1，4 预设）
 │       ├── pauli.js              Pauli 自旋内核（pairs=2，RGBA32F 旋量，4 预设）
+│       ├── dirac.js              Dirac 相对论内核（pairs=2 旋量，integrator='cn'，4 预设）
 │       └── barrier.js            矩势垒解析透射模型（透射率扫描工具 + Pauli free 预设共用）
 └── dist/
     └── quantum-field.html        构建产物：单文件分发版（143KB，file:// 直开）
@@ -436,7 +491,7 @@ import './physics/mykernel.js';
 | Gross-Pitaevskii / BEC（TF 穹顶、涡旋、TOF、呼吸模） | 新内核，localH 复用 NLS 片段 | ✅ 已落地（`gp.js`，4 预设，CDP 27/27 + IC 单测 20/20） |
 | Pauli 自旋（pairs=2 双复分量） | `pairs=2` + localH 写双分量耦合 | ✅ 已落地（`pauli.js`，4 预设，CDP 29/29；只含塞曼耦合、无轨道耦合已如实标注） |
 | 高阶拉普拉斯 / 谱方法 | 换 `lap` 片段需改引擎模板 | 需小改 core |
-| 一阶系统（Dirac） | 积分器模式扩展 | 需引擎扩展，契约不变 |
+| 一阶系统（Dirac） | 积分器模式扩展 | ✅ 已落地（`dirac.js`，4 预设，CDP 16/16；引擎新增 `integrator='cn'` 契约钩子 + CN/block-Jacobi 双 pass 模板，KDK 路径零改动） |
 | 3D | 3D 纹理 + volume 渲染 | 需引擎扩展，契约不变 |
 
 当前引擎的边界（诚实清单）：2D 均匀网格、5 点拉普拉斯、CPU 端初始场、
@@ -472,7 +527,9 @@ mini-bundler 零依赖：从 `index.html` 定位模块入口 → DFS 拓扑排�
 → 输出 `dist/quantum-field.html`。构建确定性可复现（md5 稳定），
 产物经 CDP 实测：file:// 直开、`?kernel=nls` / `?kernel=gp` 切换、HTTP 访问
 三者行为一致（27/27 PASS）；`?kernel=pauli` 单文件版冒烟（挂载/自旋 HUD/
-初态 ⟨σx⟩=1/P 守恒/SG 分量质心分离）file:// + HTTP 双通道 9/9 PASS。
+初态 ⟨σx⟩=1/P 守恒/SG 分量质心分离）file:// + HTTP 双通道 9/9 PASS；
+`?kernel=dirac` 单文件版冒烟（挂载/CN 双 shader 编译/群速 0.977/P=1.000005）
+file:// + HTTP 双通道 7/7 PASS。
 
 ## 技术栈
 

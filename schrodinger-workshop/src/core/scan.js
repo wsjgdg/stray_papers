@@ -81,8 +81,10 @@ export class TransmissionScanner {
     app.state.sigma = o.sigma;
     app.syncControls();
     /* V0 列表：显式列表优先；否则按 E_c 线性布点 */
-    const m = app.state.m;
-    this.Ec = 2 * Math.sin(o.kx/2) * Math.sin(o.kx/2) / m;   /* 入射中心能量（离散色散） */
+    /* 入射中心能量（离散色散）：默认薛定谔 2sin²(k/2)/m；一阶内核（Dirac）
+       经 scanEc 钩子覆写为总能量口径 √(sin²k+m²)（其 T 模型的 E 即总能量） */
+    this.Ec = app.kernel.scanEc ? app.kernel.scanEc(app.state, o.kx)
+                                : 2 * Math.sin(o.kx/2) * Math.sin(o.kx/2) / app.state.m;
     if (o.v0s) this.v0s = o.v0s.slice();
     else {
       this.v0s = [];
@@ -178,8 +180,8 @@ export class TransmissionScanner {
     for (let y = 0; y < g; y++){
       const row = y*g;
       for (let x = 0; x < g; x++){
-        const i = (row + x)*ch;
-        const p = buf[i]*buf[i] + buf[i+1]*buf[i+1];
+      const i = (row + x)*ch;
+      const p = app.kernel.cpuDensity(buf, i);   /* 全分量 |ψ|²（pairs 感知：pairs=2 时四通道，与 probSplit 同源） */
         P += p; sx += x*p;
         if (x >= xs) right += p;
         if (x >= b0 && x < b1) band += p;
