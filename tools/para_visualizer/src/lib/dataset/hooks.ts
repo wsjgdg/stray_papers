@@ -12,16 +12,22 @@ import { useDatasetStore } from "./store";
 import { flattenRows, applyFilters, applySearch, applySort } from "./filter";
 import type { SchemaField } from "./types";
 
-/** Rows from the active file(s), memoized by dataset + activeFileIndex. */
+/** Rows from the active file(s), memoized by dataset + activeFileIndex + maxRows. */
 export function useActiveRows() {
   const dataset = useDatasetStore((s) => s.datasets[s.activeDatasetIndex]);
   const activeFileIndex = useDatasetStore((s) => s.activeFileIndex);
+  const maxRows = useDatasetStore((s) => s.maxRows);
   return useMemo(() => {
     if (!dataset) return [];
     const files =
       activeFileIndex === null ? dataset.files : dataset.files.filter((_, i) => i === activeFileIndex);
-    return flattenRows(files);
-  }, [dataset, activeFileIndex]);
+    // Slice files' rows to maxRows to prevent loading huge datasets at once
+    const slicedFiles = files.map((f) => ({
+      ...f,
+      rows: f.rows.slice(0, maxRows),
+    }));
+    return flattenRows(slicedFiles);
+  }, [dataset, activeFileIndex, maxRows]);
 }
 
 /** Active rows after filtering + search + sort, memoized. */

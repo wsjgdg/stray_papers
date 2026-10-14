@@ -140,7 +140,7 @@ export function LandingPage() {
           </h1>
           <p className="max-w-2xl mx-auto text-base md:text-lg text-muted-foreground mb-8">
             A fast, in-browser tool for browsing, filtering, comparing, and exporting images
-            embedded in research datasets like InfoChartQA — without downloading anything to a server.
+            embedded in research datasets — without uploading anything to a server.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Button size="lg" onClick={handleDemo} disabled={busy} className="h-11">
@@ -225,7 +225,10 @@ export function LandingPage() {
               {Array.from({ length: 12 }).map((_, i) => (
                 <div
                   key={i}
-                  className="aspect-[3/2] rounded-md bg-gradient-to-br from-muted/60 to-muted/20 border flex items-center justify-center"
+                  className="aspect-[3/2] rounded-md bg-gradient-to-br from-muted/60 to-muted/20 border flex items-center justify-center hover:border-primary/30 hover:shadow-sm transition-all"
+                  style={{
+                    animationDelay: `${i * 50}ms`,
+                  }}
                 >
                   <ImageIcon className="h-4 w-4 text-muted-foreground/40" />
                 </div>
@@ -246,7 +249,7 @@ export function LandingPage() {
 
       {/* footer */}
       <footer className="border-t mt-8 py-6 text-center text-[11px] text-muted-foreground/60">
-        Built with Next.js 16 · Apache Arrow JS · shadcn/ui · Recharts
+        Built with Next.js 16 · Apache Arrow · parquet-wasm · shadcn/ui · Recharts · framer-motion
       </footer>
     </main>
   );
