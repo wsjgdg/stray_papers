@@ -90,6 +90,15 @@ export async function GET(req: NextRequest) {
   const accept = req.headers.get("accept");
   if (accept) headers.set("accept", accept);
 
+  // Bound the upstream fetch so a slow/unreachable host can't hang a queue slot
+  // (and the user's tab) for too long. Env-tunable: PROXY_TIMEOUT_MS (default 20s).
+  const timeoutMs = (() => {
+    const v = Number(process.env.PROXY_TIMEOUT_MS);
+    return Number.isFinite(v) && v > 0 ? v : 20000;
+  })();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
   let upstream: Response;
   try {
     upstream = await fetch(url, {
@@ -97,14 +106,20 @@ export async function GET(req: NextRequest) {
       // Browsers don't revalidate cached proxied responses; allow shared cache.
       cache: "no-store",
       redirect: "follow",
+      signal: controller.signal,
     });
   } catch (e) {
+    clearTimeout(timer);
     const msg = e instanceof Error ? e.message : "Upstream fetch failed";
-    return new Response(JSON.stringify({ error: `Proxy fetch failed: ${msg}` }), {
+    const reason = msg.includes("aborted")
+      ? `Upstream timed out after ${Math.round(timeoutMs / 1000)}s`
+      : msg;
+    return new Response(JSON.stringify({ error: `Proxy fetch failed: ${reason}` }), {
       status: 502,
       headers: { "content-type": "application/json" },
     });
   }
+  clearTimeout(timer);
 
   if (!upstream.ok || !upstream.body) {
     const body = await upstream.text().catch(() => "");

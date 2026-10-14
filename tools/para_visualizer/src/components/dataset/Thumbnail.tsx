@@ -195,10 +195,16 @@ function BboxOverlay({
   imgWidth: number;
   imgHeight: number;
 }) {
-  // bboxes is flat [x,y,w,h, x,y,w,h, ...] in original image coordinates
+  // bboxes is flat [x,y,w,h, x,y,w,h, ...] in original image coordinates.
+  // Coords may arrive as strings (parsed JSON / Arrow), so coerce to numbers.
   const groups: number[][] = [];
   for (let i = 0; i + 3 < bboxes.length; i += 4) {
-    groups.push([bboxes[i], bboxes[i + 1], bboxes[i + 2], bboxes[i + 3]]);
+    groups.push([
+      Number(bboxes[i]),
+      Number(bboxes[i + 1]),
+      Number(bboxes[i + 2]),
+      Number(bboxes[i + 3]),
+    ]);
   }
   // The <img> uses object-contain; using % of intrinsic dimensions works
   // when the container matches the image's aspect ratio (we use aspect-[3/2]

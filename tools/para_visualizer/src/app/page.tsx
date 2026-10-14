@@ -10,7 +10,14 @@ import { useKeyboardNav } from "@/lib/dataset/useKeyboardNav";
 
 // Above this size we don't auto-restore silently (avoids a long re-parse on load);
 // the landing page still offers a one-click "Restore previous files" button.
-const AUTO_RESTORE_MAX_BYTES = 60 * 1024 * 1024;
+// Override with NEXT_PUBLIC_SESSION_AUTO_RESTORE_MAX_MB (in MB). 0 disables auto-restore.
+function autoRestoreMaxBytes(): number {
+  const raw = process.env.NEXT_PUBLIC_SESSION_AUTO_RESTORE_MAX_MB;
+  if (raw === undefined || raw === "") return 60 * 1024 * 1024; // default 60 MB
+  const mb = Number(raw);
+  if (!Number.isFinite(mb) || mb < 0) return 60 * 1024 * 1024;
+  return mb * 1024 * 1024;
+}
 
 export default function Home() {
   const setShowLoadDialog = useDatasetStore((s) => s.setShowLoadDialog);
@@ -38,7 +45,7 @@ export default function Home() {
         if (!files || files.length === 0) return;
         const meta = await loadSessionMeta();
         const total = meta?.totalBytes ?? files.reduce((a, f) => a + f.size, 0);
-        if (total <= AUTO_RESTORE_MAX_BYTES) {
+        if (total <= autoRestoreMaxBytes()) {
           // Auto-restore
           setLoading(true);
           const ds = await parseFiles(files);

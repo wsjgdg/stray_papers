@@ -111,6 +111,7 @@ scripts/               # 演示数据集生成脚本（generate-demo-dataset.ts�
 - 下次启动：若上次会话较小（≤ 60MB）会**自动恢复**，直接进入浏览界面；若较大，落地页会出现 **“Restore previous files”** 卡片，一键恢复；
 - 点击 **Load demo** 会清空该会话（demo 走远程拉取，无需本地保存）；
 - 恢复本质是把保存的原始文件重新解析一遍，因此不会占用额外存储。
+- 自动恢复的体积上限可通过 `NEXT_PUBLIC_SESSION_AUTO_RESTORE_MAX_MB`（MB，默认 60；设为 `0` 关闭自动恢复）调整。
 
 ## 入口说明
 
@@ -133,7 +134,9 @@ scripts/               # 演示数据集生成脚本（generate-demo-dataset.ts�
 | 变量 | 作用 |
 | --- | --- |
 | `PROXY_STRICT=1` | 开启严格模式：拒绝代理私有/内网/回环/链路本地 IP 与 `localhost`，防止被当作 SSRF / 开放代理滥用（默认关闭，因为本工具用途就是浏览第三方数据集图）。 |
+| `PROXY_TIMEOUT_MS=20000` | 上游拉取超时（毫秒）。超时返回 502，避免慢/不可达的图占住并发槽位（默认 20s）。 |
 | `NEXT_PUBLIC_DISABLE_IMAGE_PROXY=1` | 禁用代理，浏览器直连原 URL（仅当原站允许 CORS 时才可用）。 |
+| `NEXT_PUBLIC_SESSION_AUTO_RESTORE_MAX_MB=60` | 自动恢复会话的体积上限（MB）。超过则不在启动时静默恢复，改为落地页显示 “Restore previous files” 卡片；设为 `0` 可完全关闭自动恢复（默认 60）。 |
 
 > 代理仅转发图片字节，不转发任何本地 cookie / 鉴权头。
 
