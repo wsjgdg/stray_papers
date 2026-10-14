@@ -78,10 +78,12 @@ function proxyForbidden(urlStr: string): string | null {
 
 // --- server-side cache + in-flight coalescing ---------------------------------
 //
-// Two layers, both survive a hot reload but only the disk layer survives a full
-// `npm start` restart:
+// Three layers; only the disk layer survives a full `npm start` restart:
 //   - in-memory LRU (fast, lost on restart)
-//   - on-disk files under .cache/proxy (persists across restarts)
+//   - on-disk generation folders under .cache/proxy/gen-<ts>-<rand>
+//     Each generation folder is capped at MAX_GEN_BYTES (~500MB). When the
+//     current folder fills up we roll a brand-new folder, so a write never
+//     gets dropped just because one folder blew past a size limit.
 // Failures are NEVER cached (in memory or on disk) so "retry" re-fetches.
 
 interface CacheEntry {
@@ -94,13 +96,67 @@ interface CacheEntry {
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1h
 const MAX_ENTRIES = 300; // ~bounded memory for a local single-user tool
 const MAX_DISK_BYTES = 8 * 1024 * 1024; // skip disk cache for very large images
+const MAX_GEN_BYTES = (() => {
+  // Env-tunable per-generation cap (default 500MB). PROXY_CACHE_GEN_MB is in MB.
+  const mb = Number(process.env.PROXY_CACHE_GEN_MB);
+  return Number.isFinite(mb) && mb > 0 ? mb * 1024 * 1024 : 500 * 1024 * 1024;
+})();
 const cache = new Map<string, CacheEntry>();
 const inflight = new Map<string, Promise<CacheEntry | null>>();
-const diskDir = path.join(process.cwd(), ".cache", "proxy");
 
-function fileFor(url: string): string {
-  const key = createHash("sha1").update(url).digest("hex");
-  return path.join(diskDir, key + ".bin");
+const DISK_BASE = path.join(process.cwd(), ".cache", "proxy");
+let genDirs: string[] = []; // known generation folders, last entry is "current"
+let currentGenBytes = 0;
+let readyPromise: Promise<void> | null = null;
+
+function hashKey(url: string): string {
+  return createHash("sha1").update(url).digest("hex");
+}
+
+async function dirBytes(dir: string): Promise<number> {
+  let total = 0;
+  try {
+    const files = await fs.readdir(dir);
+    for (const f of files) {
+      if (!f.endsWith(".bin")) continue;
+      const st = await fs.stat(path.join(dir, f));
+      total += st.size;
+    }
+  } catch {
+    /* ignore */
+  }
+  return total;
+}
+
+async function newGen(): Promise<string> {
+  const name = "gen-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+  const dir = path.join(DISK_BASE, name);
+  await fs.mkdir(dir, { recursive: true });
+  genDirs.push(dir);
+  currentGenBytes = 0;
+  return dir;
+}
+
+async function ensureGenDirs(): Promise<void> {
+  try {
+    const entries = await fs.readdir(DISK_BASE, { withFileTypes: true });
+    genDirs = entries
+      .filter((e) => e.isDirectory() && e.name.startsWith("gen-"))
+      .map((e) => path.join(DISK_BASE, e.name))
+      .sort(); // oldest first (timestamp prefix)
+  } catch {
+    genDirs = [];
+  }
+  if (genDirs.length === 0) {
+    await newGen();
+  } else {
+    currentGenBytes = await dirBytes(genDirs[genDirs.length - 1]);
+  }
+}
+
+function ensureReady(): Promise<void> {
+  if (!readyPromise) readyPromise = ensureGenDirs();
+  return readyPromise;
 }
 
 function evictIfNeeded() {
@@ -113,28 +169,42 @@ function evictIfNeeded() {
 }
 
 async function readDisk(url: string): Promise<CacheEntry | null> {
-  try {
-    const meta = JSON.parse(await fs.readFile(fileFor(url) + ".meta", "utf8")) as {
-      contentType: string;
-      ts: number;
-    };
-    if (Date.now() - meta.ts >= CACHE_TTL_MS) return null;
-    const buf = await fs.readFile(fileFor(url));
-    return { buffer: buf, contentType: meta.contentType, ts: meta.ts, fromDisk: true };
-  } catch {
-    return null;
+  await ensureReady();
+  const key = hashKey(url);
+  // Search newest generation first.
+  for (let i = genDirs.length - 1; i >= 0; i--) {
+    const dir = genDirs[i];
+    try {
+      const meta = JSON.parse(
+        await fs.readFile(path.join(dir, key + ".meta"), "utf8"),
+      ) as { contentType: string; ts: number };
+      if (Date.now() - meta.ts >= CACHE_TTL_MS) continue; // expired
+      const buf = await fs.readFile(path.join(dir, key + ".bin"));
+      return { buffer: buf, contentType: meta.contentType, ts: meta.ts, fromDisk: true };
+    } catch {
+      /* not present in this generation */
+    }
   }
+  return null;
 }
 
 async function writeDisk(url: string, entry: CacheEntry): Promise<void> {
+  if (entry.buffer.length > MAX_DISK_BYTES) return; // don't bloat the disk cache
   try {
-    if (entry.buffer.length > MAX_DISK_BYTES) return; // don't bloat the disk cache
-    await fs.mkdir(diskDir, { recursive: true });
-    await fs.writeFile(fileFor(url), entry.buffer);
+    await ensureReady();
+    // Roll a new generation folder once the current one is full, so the write
+    // always lands instead of overflowing a single folder.
+    if (currentGenBytes + entry.buffer.length > MAX_GEN_BYTES) {
+      await newGen();
+    }
+    const writeDir = genDirs[genDirs.length - 1];
+    const key = hashKey(url);
+    await fs.writeFile(path.join(writeDir, key + ".bin"), entry.buffer);
     await fs.writeFile(
-      fileFor(url) + ".meta",
+      path.join(writeDir, key + ".meta"),
       JSON.stringify({ contentType: entry.contentType, ts: entry.ts }),
     );
+    currentGenBytes += entry.buffer.length;
   } catch {
     /* disk unavailable — fall back to memory only */
   }
