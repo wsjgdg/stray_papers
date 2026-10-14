@@ -5,7 +5,7 @@
  *  - .json (our demo format: { name, files: [{ name, schema, rows }] })
  *  - .arrow / .feather / .ipc  (Apache Arrow IPC, parsed client-side via apache-arrow)
  *  - .csv / .tsv  (parsed via PapaParse)
- *  - .parquet (best-effort: if apache-arrow's parquet reader supports it; otherwise warn)
+ *  - .parquet (parsed via parquet-wasm, browser-side)
  */
 import * as arrow from "apache-arrow";
 import Papa from "papaparse";
@@ -189,6 +189,75 @@ async function parseCsvFile(file: File): Promise<DatasetFile> {
   };
 }
 
+/**
+ * Parse a Parquet file using parquet-wasm (browser-side WASM).
+ */
+async function parseParquetFile(file: File): Promise<DatasetFile> {
+  // Dynamic import to avoid loading WASM until needed
+  const parquetWasm = await import("parquet-wasm");
+  const wasm = parquetWasm.default || parquetWasm;
+
+  // Initialize WASM if needed
+  if (wasm.initWasm) {
+    await wasm.initWasm();
+  } else if (wasm.parquetRead) {
+    // newer API
+  }
+
+  const buf = await file.arrayBuffer();
+  const uint8 = new Uint8Array(buf);
+
+  // Try to read parquet → arrow table
+  let table: arrow.Table | null = null;
+  try {
+    if (wasm.readParquet) {
+      const arrowBuf = wasm.readParquet(uint8);
+      table = arrow.Table.new(arrowBuf);
+    } else if (wasm.parquetRead) {
+      const result = wasm.parquetRead(uint8);
+      table = arrow.Table.new(result);
+    } else {
+      throw new Error("parquet-wasm: no readParquet or parquetRead function found");
+    }
+  } catch (e) {
+    throw new Error(`Parquet parse failed: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
+  if (!table) throw new Error("Parquet parse returned null table");
+
+  // Reuse arrow parsing logic
+  const schema: SchemaField[] = [];
+  for (const f of table.schema.fields) {
+    schema.push({
+      name: f.name,
+      type: inferArrowType(f.type),
+      nullable: f.nullable,
+      role: "unknown",
+    });
+  }
+  const rows: Record<string, unknown>[] = [];
+  for (let i = 0; i < table.numRows; i++) {
+    const row: Record<string, unknown> = {};
+    for (let j = 0; j < table.numCols; j++) {
+      const col = table.getChildAt(j);
+      row[schema[j].name] = arrowValueToJS(col?.get(i));
+    }
+    rows.push(row);
+  }
+  for (let j = 0; j < schema.length; j++) {
+    const sample = rows[0]?.[schema[j].name];
+    schema[j].role = detectFieldRole(schema[j], sample);
+  }
+
+  return {
+    name: file.name,
+    sizeBytes: file.size,
+    rowsCount: table.numRows,
+    schema,
+    rows,
+  };
+}
+
 export async function parseFiles(files: File[]): Promise<LoadedDataset> {
   const outFiles: DatasetFile[] = [];
   let datasetName = files.length === 1 ? files[0].name : `${files.length} files`;
@@ -203,7 +272,7 @@ export async function parseFiles(files: File[]): Promise<LoadedDataset> {
     } else if (lower.endsWith(".csv") || lower.endsWith(".tsv")) {
       outFiles.push(await parseCsvFile(file));
     } else if (lower.endsWith(".parquet")) {
-      throw new Error("Parquet direct parsing in-browser is limited. Please convert to Arrow IPC (.arrow/.feather) or JSON.");
+      outFiles.push(await parseParquetFile(file));
     } else {
       throw new Error(`Unsupported file type: ${file.name}`);
     }

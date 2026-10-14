@@ -324,6 +324,136 @@ export function StatsView() {
         );
       })()}
 
+      {/* Category heatmap (category x numeric) */}
+      {stats.categoryFields.length >= 1 && stats.numericFields.length >= 1 && (() => {
+        const catField = stats.categoryFields[0];
+        const numField = stats.numericFields[0];
+        const categories = uniqueValues(rows, catField.name, 8).map((c) => c.value);
+        if (categories.length < 2) return null;
+        // Compute average numeric value per category
+        const heatmapData = categories.map((cat) => {
+          const matching = rows.filter((r) => String(r.data[catField.name]) === cat);
+          const nums = matching.map((r) => Number(r.data[numField.name])).filter((n) => Number.isFinite(n));
+          const avg = nums.length > 0 ? nums.reduce((a, b) => a + b, 0) / nums.length : 0;
+          return { category: cat, avg: Number(avg.toFixed(2)), count: nums.length };
+        });
+        const maxAvg = Math.max(...heatmapData.map((d) => d.avg));
+        const minAvg = Math.min(...heatmapData.map((d) => d.avg));
+        return (
+          <div className="rounded-lg border bg-card p-3">
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+              <Hash className="h-4 w-4 text-rose-500" />
+              Category heatmap: avg <span className="font-mono text-xs text-muted-foreground">{numField.name}</span> by <span className="font-mono text-xs text-muted-foreground">{catField.name}</span>
+            </h3>
+            <div className="flex flex-col gap-1.5">
+              {heatmapData.map((d) => {
+                const ratio = maxAvg === minAvg ? 0.5 : (d.avg - minAvg) / (maxAvg - minAvg);
+                return (
+                  <div key={d.category} className="flex items-center gap-2 text-xs">
+                    <span className="w-24 text-right truncate text-muted-foreground">{d.category}</span>
+                    <div className="flex-1 h-7 rounded relative overflow-hidden bg-muted/30">
+                      <div
+                        className="absolute inset-y-0 left-0 rounded transition-all"
+                        style={{
+                          width: `${Math.max(ratio * 100, 5)}%`,
+                          background: `linear-gradient(90deg, rgba(239,68,68,0.6), rgba(244,114,182,0.6))`,
+                        }}
+                      />
+                      <span className="absolute inset-0 flex items-center px-2 text-[10px] font-mono tabular-nums">
+                        {d.avg} (n={d.count})
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Boxplot for numeric fields */}
+      {stats.numericFields.length >= 1 && (() => {
+        const field = stats.numericFields[0];
+        const values = rows
+          .map((r) => Number(r.data[field.name]))
+          .filter((v) => Number.isFinite(v))
+          .sort((a, b) => a - b);
+        if (values.length < 4) return null;
+        const q = (p: number) => {
+          const idx = (values.length - 1) * p;
+          const lo = Math.floor(idx);
+          const hi = Math.ceil(idx);
+          return values[lo] + (values[hi] - values[lo]) * (idx - lo);
+        };
+        const q1 = q(0.25);
+        const q2 = q(0.5);
+        const q3 = q(0.75);
+        const iqr = q3 - q1;
+        const lowerFence = q1 - 1.5 * iqr;
+        const upperFence = q3 + 1.5 * iqr;
+        const outliers = values.filter((v) => v < lowerFence || v > upperFence);
+        const min = values[0];
+        const max = values[values.length - 1];
+        const range = max - min || 1;
+        const boxData = [{ min, q1, q2, q3, max, outliers }];
+        return (
+          <div className="rounded-lg border bg-card p-3">
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+              <Hash className="h-4 w-4 text-violet-500" />
+              Boxplot: <span className="font-mono text-xs text-muted-foreground">{field.name}</span>
+              <span className="ml-auto text-[10px] font-normal text-muted-foreground">
+                Q1={q1.toFixed(1)} · Med={q2.toFixed(1)} · Q3={q3.toFixed(1)} · {outliers.length} outliers
+              </span>
+            </h3>
+            <div className="relative h-32 flex items-center">
+              <div className="relative w-full h-full">
+                {boxData.map((d, i) => {
+                  const leftPct = ((d.q1 - min) / range) * 100;
+                  const widthPct = ((d.q3 - d.q1) / range) * 100;
+                  const medPct = ((d.q2 - min) / range) * 100;
+                  const minPct = ((d.min - min) / range) * 100;
+                  const maxPct = ((d.max - min) / range) * 100;
+                  return (
+                    <div key={i} className="absolute inset-0 flex items-center">
+                      {/* Whiskers */}
+                      <div className="absolute h-px bg-muted-foreground/40" style={{ left: `${minPct}%`, right: `${100 - maxPct}%` }} />
+                      <div className="absolute h-8 w-px bg-muted-foreground/40" style={{ left: `${minPct}%` }} />
+                      <div className="absolute h-8 w-px bg-muted-foreground/40" style={{ left: `${maxPct}%` }} />
+                      {/* Box */}
+                      <div
+                        className="absolute h-16 border-2 border-violet-400 bg-violet-500/20 rounded"
+                        style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
+                      />
+                      {/* Median line */}
+                      <div className="absolute h-16 w-0.5 bg-violet-600" style={{ left: `${medPct}%` }} />
+                      {/* Outliers */}
+                      {outliers.map((o, j) => {
+                        const opct = ((o - min) / range) * 100;
+                        return (
+                          <div
+                            key={j}
+                            className="absolute w-1.5 h-1.5 rounded-full bg-rose-500"
+                            style={{
+                              left: `calc(${opct}% - 3px)`,
+                              top: "50%",
+                              transform: "translateY(-50%)",
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="flex justify-between text-[9px] text-muted-foreground mt-1">
+              <span>min: {min.toFixed(1)}</span>
+              <span>max: {max.toFixed(1)}</span>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Schema table */}
       <div className="rounded-lg border bg-card p-3">
         <h3 className="text-sm font-semibold mb-2">Schema</h3>

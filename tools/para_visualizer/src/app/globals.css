@@ -119,6 +119,13 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Focus-visible styles for keyboard accessibility */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  [tabindex]:focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
 }
 
 /* Shimmer animation for loading thumbnails */

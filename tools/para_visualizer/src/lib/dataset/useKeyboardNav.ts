@@ -46,12 +46,52 @@ export function useKeyboardNav() {
       // Cmd/Ctrl+K always handled in CommandPalette; skip here
       if ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K")) return;
       // Cmd/Ctrl+O, Cmd/Ctrl+F, Cmd/Ctrl+E handled in AppShell
-      if ((e.ctrlKey || e.metaKey) && ["o", "f", "e", "a"].includes(e.key.toLowerCase())) {
-        if (e.key.toLowerCase() === "a") {
-          // Cmd+A = select all filtered
-          e.preventDefault();
-          selectAllFiltered();
+      if ((e.ctrlKey || e.metaKey) && ["o", "f", "e"].includes(e.key.toLowerCase())) {
+        return;
+      }
+      // Cmd/Ctrl+A = select all filtered
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "a" && !e.shiftKey) {
+        e.preventDefault();
+        selectAllFiltered();
+        return;
+      }
+      // Cmd+Shift+G = jump to bookmark dialog
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "g" || e.key === "G")) {
+        e.preventDefault();
+        const { bookmarks, getFilteredRows, setSelectedRow, selectedRowId } = useDatasetStore.getState();
+        const filteredRows = getFilteredRows();
+        const bookmarkedRows = filteredRows.filter((r) => bookmarks[r.id]);
+        if (bookmarkedRows.length === 0) {
+          toast.info("No bookmarks to navigate");
           return;
+        }
+        const currentIdx = selectedRowId ? bookmarkedRows.findIndex((r) => r.id === selectedRowId) : -1;
+        const nextIdx = currentIdx >= bookmarkedRows.length - 1 ? 0 : currentIdx + 1;
+        setSelectedRow(bookmarkedRows[nextIdx].id);
+        toast.success(`Bookmark ${nextIdx + 1}/${bookmarkedRows.length}: row #${bookmarkedRows[nextIdx].index + 1}`);
+        return;
+      }
+      // Cmd+Shift+A = jump to next annotated row
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "a" || e.key === "A")) {
+        e.preventDefault();
+        const state = useDatasetStore.getState();
+        const annotations = state.annotations;
+        const annotatedIds = new Set(Object.keys(annotations).filter((id) => (annotations[id]?.length ?? 0) > 0));
+        if (annotatedIds.size === 0) {
+          toast.info("No annotated rows to navigate");
+          return;
+        }
+        const currentIdx = selectedRowId ? filtered.findIndex((r) => r.id === selectedRowId) : -1;
+        const nextAnnotated = filtered.slice(currentIdx + 1).find((r) => annotatedIds.has(r.id));
+        if (nextAnnotated) {
+          setSelectedRow(nextAnnotated.id);
+          toast.success(`Annotation: row #${nextAnnotated.index + 1}`);
+        } else {
+          const firstAnnotated = filtered.find((r) => annotatedIds.has(r.id));
+          if (firstAnnotated) {
+            setSelectedRow(firstAnnotated.id);
+            toast.success(`Wrapped to annotation: row #${firstAnnotated.index + 1}`);
+          }
         }
         return;
       }

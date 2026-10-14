@@ -13,6 +13,7 @@ import { formatValue } from "@/lib/dataset/filter";
 import { decodeImageField } from "@/lib/dataset/decode";
 import { X, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useEffect } from "react";
 
 export function CompareView() {
@@ -171,25 +172,42 @@ export function CompareView() {
           );
         })}
       </div>
-      {/* Aligned fields table */}
+      {/* Aligned fields table with diff highlighting */}
       <div className="p-3 pt-0">
-        <table className="w-full text-xs border-collapse">
+        <table className="w-full text-xs border-collapse" aria-label="Field comparison table">
           <tbody>
-            {compareFields.map((f, fieldIdx) => (
-              <tr key={f.name} className={fieldIdx % 2 === 0 ? "bg-muted/20" : ""}>
-                <td className="px-2 py-1.5 border-b font-mono text-[9px] uppercase tracking-wide text-muted-foreground/70 w-32 align-top sticky left-0 bg-card/80 backdrop-blur">
-                  {f.name}
-                </td>
-                {rows.map((r) => {
-                  if (!r) return <td key="empty" />;
-                  return (
-                    <td key={r.id} className="px-2 py-1.5 border-b align-top text-[11px] leading-tight text-foreground/90 break-words whitespace-pre-wrap">
-                      <Highlight text={formatValue(r.data[f.name])} query={search} />
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
+            {compareFields.map((f, fieldIdx) => {
+              // Check if values differ across rows
+              const values = rows.map((r) => (r ? formatValue(r.data[f.name]) : ""));
+              const allSame = values.length > 0 && values.every((v) => v === values[0]);
+              const hasDiff = !allSame && values.some((v) => v !== values[0]);
+              return (
+                <tr key={f.name} className={fieldIdx % 2 === 0 ? "bg-muted/20" : ""}>
+                  <td className={cn(
+                    "px-2 py-1.5 border-b font-mono text-[9px] uppercase tracking-wide w-32 align-top sticky left-0 bg-card/80 backdrop-blur",
+                    hasDiff ? "text-amber-600 dark:text-amber-400 font-bold" : "text-muted-foreground/70",
+                  )}>
+                    {f.name}
+                    {hasDiff && <span className="ml-1 text-amber-500" title="Values differ">●</span>}
+                  </td>
+                  {rows.map((r, rowIdx) => {
+                    if (!r) return <td key="empty" />;
+                    const val = formatValue(r.data[f.name]);
+                    const isDiff = hasDiff && val !== values[0];
+                    return (
+                      <td key={r.id} className={cn(
+                        "px-2 py-1.5 border-b align-top text-[11px] leading-tight break-words whitespace-pre-wrap",
+                        isDiff
+                          ? "bg-amber-50 dark:bg-amber-950/20 text-amber-900 dark:text-amber-100 font-medium"
+                          : "text-foreground/90",
+                      )}>
+                        <Highlight text={val} query={search} />
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
             {visibleFields.length > 10 && (
               <tr>
                 <td colSpan={rows.length + 1} className="px-2 py-1 text-[10px] text-muted-foreground/60 text-center">
@@ -199,6 +217,19 @@ export function CompareView() {
             )}
           </tbody>
         </table>
+        {/* Diff legend */}
+        {rows.length >= 2 && (
+          <div className="flex items-center gap-3 mt-2 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+              Values differ
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-muted-foreground/30"></span>
+              Values match
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
