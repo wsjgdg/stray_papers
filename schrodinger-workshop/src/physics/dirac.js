@@ -21,9 +21,12 @@
  * M=diag(H,H) 通道对齐 ⟹ KDK 的 kick/drift 两通道投影可分解为逐模态 2×2
  * 旋转，|λ|=1 精确。**Dirac 的 M 混合通道**（α·p 把 ψ₂ 的导数耦合进 ψ₁
  * 的方程）⟹ 本征基非通道对齐，kick/drift 的通道投影剪切不可交换——KDK
- * 映射谱半径实测 ρ=1.205（1D、dt_sub=0.2、m=1；平面波 100 步放大 1.5e16），
- * 与符号/边界细节无关，是结构性失效（Pauli 的常数 σ·B 混合同病：ρ 随
- * |B|·uK·dt 高次幂超 1，幅度小但存在——engine 级潜在缺陷，留待量化）。
+ * 映射谱半径实测 ρ=1.0216（1D、dt_sub=0.2、m=1；平面波 400 步放大 1.97e4，
+ * dt_sub 扫描 0.05→1.0014 … 1.2→1.6922），与符号/边界细节无关，是结构性
+ * 失效（Pauli 的常数 σ·B 是同族但更轻的缺陷：σ_x/σ_z 在 (u|v) 分裂下为
+ * 偶算符 ⟹ ρ=1 精确稳定；σ_y 为奇算符（u|v 互换）⟹ kick 自耦合 ⟹
+ * ρ=√(1+φ²)（φ=dt_sub·uK·|B_y|）——R32 已量化闭环：默认 tilted 预设
+ * +0.122%/900 帧可忽略，B_y=0.05 滑块上限 +9.85%/900 帧须知晓）。
  * ⟹ 本内核走引擎 CN 路径（integrator='cn'）：
  *   (I−h·G)w_{n+1} = (I+h·G)w_n，h=dt_sub/2，G=−J·M 斜对称（M 对称）
  *   ⟹ Cayley 矩阵严格正交：范数机器精度守恒、无条件稳定（无 dt·E_max 极限）。
@@ -105,7 +108,7 @@ export class DiracKernel extends PhysicsKernel {
     this.name = 'Dirac 相对论';
     this.equation = '<b>DIRAC (2+1 D)</b> · <i>i</i>ℏ ∂ψ/∂t = [α_x·p_x + α_y·p_y + β·m + V]·ψ';
     this.pairs = 2;
-    /* CN 积分器：KDK 对 Dirac 结构性失效（通道混合 M，谱半径 ρ=1.205），
+    /* CN 积分器：KDK 对 Dirac 结构性失效（通道混合 M，谱半径 ρ=1.0216），
        详见文件头【积分器】节；引擎 app.js 按此标志走 CN 路径。 */
     this.integrator = 'cn';
     /* 不设 spinReadout：见文件头「已知限制」第 3 条。 */

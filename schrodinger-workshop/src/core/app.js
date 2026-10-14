@@ -587,7 +587,7 @@ export class QuantumField {
 
   /* CN 积分器一帧推进（kernel.integrator='cn'，当前仅 Dirac）——推导与数值
      验证记录见 dirac.js 头注【积分器】节、klein_td4.py。KDK 对混合通道的
-     一阶 M（α·p 把 ψ₂ 导数耦合进 ψ₁ 方程）结构性失效（映射谱半径 1.205，
+     一阶 M（α·p 把 ψ₂ 导数耦合进 ψ₁ 方程）结构性失效（映射谱半径 1.0216，
      范数爆炸）；CN 的 Cayley 矩阵严格正交（G=−J·M 斜对称）⟹ 无条件稳定、
      总概率机器精度守恒。
      (I−hG)w_{n+1}=(I+hG)w_n，h=dt_sub/2：因子 2 是 CN 的正确离散（两边同用
