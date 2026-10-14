@@ -4,6 +4,20 @@
  */
 import type { FieldRole, ImageInfo, SchemaField } from "./types";
 
+/**
+ * All remote image URLs are fetched through the server-side proxy
+ * (/api/proxy-image) so that CORS on the origin host can't block the browser.
+ * Set NEXT_PUBLIC_DISABLE_IMAGE_PROXY=1 to fetch directly (only works when the
+ * origin sends permissive CORS headers).
+ */
+const PROXY_BASE = "/api/proxy-image";
+
+function proxiedUrl(rawUrl: string): string {
+  if (process.env.NEXT_PUBLIC_DISABLE_IMAGE_PROXY === "1") return rawUrl;
+  // encodeURIComponent keeps query strings / hashes of the target intact
+  return `${PROXY_BASE}?url=${encodeURIComponent(rawUrl)}`;
+}
+
 const IMAGE_KEYWORDS = ["image", "img", "figure", "picture", "photo", "thumbnail", "pic", "screenshot"];
 
 const URL_KEYWORDS = ["url", "link", "src", "uri"];
@@ -135,22 +149,33 @@ export async function decodeImageField(value: unknown, fieldName: string): Promi
 
 /**
  * Fetch an image from a URL and return a blob URL for display.
- * Handles CORS, timeouts, and network errors gracefully.
+ * The request goes through the server-side proxy (/api/proxy-image) so the
+ * origin host's CORS policy can't block the browser. Timeouts and network
+ * errors are handled gracefully.
  */
 async function fetchUrlImage(url: string, fieldName: string): Promise<DecodeResult> {
   try {
-    // Set up timeout — 10 seconds
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const target = proxiedUrl(url);
 
-    const res = await fetch(url, { signal: controller.signal, mode: "cors" });
+    // Set up timeout — 15 seconds (slightly longer for the proxy hop)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+    const res = await fetch(target, { signal: controller.signal });
     clearTimeout(timeoutId);
 
     if (!res.ok) {
+      let detail = "";
+      try {
+        const j = await res.json();
+        if (j && j.error) detail = ` — ${j.error}`;
+      } catch {
+        /* ignore */
+      }
       return {
         blobUrl: null, blob: null, format: null, width: null, height: null,
         sizeBytes: 0, source: url,
-        error: `URL fetch failed (HTTP ${res.status})`,
+        error: `Image proxy failed (HTTP ${res.status})${detail}`,
       };
     }
 
@@ -159,7 +184,7 @@ async function fetchUrlImage(url: string, fieldName: string): Promise<DecodeResu
       return {
         blobUrl: null, blob: null, format: null, width: null, height: null,
         sizeBytes: 0, source: url,
-        error: "URL returned empty response",
+        error: "Image proxy returned empty response",
       };
     }
 
@@ -191,13 +216,13 @@ async function fetchUrlImage(url: string, fieldName: string): Promise<DecodeResu
       return {
         blobUrl: null, blob: null, format: null, width: null, height: null,
         sizeBytes: 0, source: url,
-        error: "URL fetch timed out (10s) — may be CORS blocked or slow",
+        error: "Image proxy timed out (15s) — remote host slow or unreachable",
       };
     }
     return {
       blobUrl: null, blob: null, format: null, width: null, height: null,
       sizeBytes: 0, source: url,
-      error: `URL fetch failed: ${msg} (likely CORS blocked)`,
+      error: `Image proxy failed: ${msg}`,
     };
   }
 }

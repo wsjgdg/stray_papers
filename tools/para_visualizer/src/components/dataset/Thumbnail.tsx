@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState, memo } from "react";
 import { useDatasetStore } from "@/lib/dataset/store";
 import { decodeImageField, type DecodeResult } from "@/lib/dataset/decode";
+import { enqueueDecode, type QueueHandle } from "@/lib/dataset/imageQueue";
 import { ImageOff, Loader2, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -88,42 +89,39 @@ function ThumbnailImpl({
     return () => obs.disconnect();
   }, []);
 
-  // Decode when visible (and not yet decoded). The setState calls here happen
-  // inside an async callback, not synchronously in the effect body.
+  // Decode when visible (and not yet decoded). The decode is enqueued into a
+  // global concurrency-limited queue so a burst of visible thumbnails loads a
+  // few at a time (FIFO) instead of opening 40+ parallel requests at once.
   useEffect(() => {
     if (!isVisible) return;
     if (cached || decodeStartedRef.current) return;
     decodeStartedRef.current = true;
 
     let cancelled = false;
-    decodeImageField(imageValue, fieldName)
-      .then((res: DecodeResult) => {
-        if (cancelled) return;
-        cacheBlob(cacheKey, {
-          url: res.blobUrl || "",
-          format: res.format || "",
-          width: res.width || 0,
-          height: res.height || 0,
-          size: res.sizeBytes,
-          source: res.source,
-          error: res.error,
-        });
-        if (res.error) {
-          setLocalError(res.error);
-          if (res.source) setLocalSource(res.source);
-          if (!res.source) {
-            addFailure({ rowId, field: fieldName, reason: res.error, timestamp: new Date().toISOString() });
-          }
-        }
-      })
-      .catch((e) => {
-        if (cancelled) return;
-        const msg = e instanceof Error ? e.message : "Decode failed";
-        setLocalError(msg);
-        addFailure({ rowId, field: fieldName, reason: msg, timestamp: new Date().toISOString() });
+    const handle: QueueHandle = enqueueDecode(async () => {
+      if (cancelled) return;
+      const res: DecodeResult = await decodeImageField(imageValue, fieldName);
+      if (cancelled) return;
+      cacheBlob(cacheKey, {
+        url: res.blobUrl || "",
+        format: res.format || "",
+        width: res.width || 0,
+        height: res.height || 0,
+        size: res.sizeBytes,
+        source: res.source,
+        error: res.error,
       });
+      if (res.error) {
+        setLocalError(res.error);
+        if (res.source) setLocalSource(res.source);
+        if (!res.source) {
+          addFailure({ rowId, field: fieldName, reason: res.error, timestamp: new Date().toISOString() });
+        }
+      }
+    });
     return () => {
       cancelled = true;
+      handle.cancel();
     };
     // We intentionally depend on visibility + cache presence + the decode inputs.
     // imageValue/fieldName are stable per row+field; cacheBlob/addFailure are stable store actions.
