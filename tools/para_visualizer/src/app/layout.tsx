@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   keywords: ["Arrow", "Parquet", "dataset", "image browser", "InfoChartQA", "Next.js"],
   authors: [{ name: "Dataset Image Browser" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/favicon.svg",
   },
   openGraph: {
     title: "Dataset Image Browser",
