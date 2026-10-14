@@ -46,7 +46,7 @@ function arrowValueToJS(v: unknown): unknown {
 
 async function parseArrowFile(file: File): Promise<DatasetFile> {
   const buf = await file.arrayBuffer();
-  const table = arrow.Table.new(buf);
+  const table = arrow.tableFromIPC(new Uint8Array(buf));
   const schema: SchemaField[] = [];
   for (const f of table.schema.fields) {
     const typeStr = inferArrowType(f.type);
@@ -191,39 +191,40 @@ async function parseCsvFile(file: File): Promise<DatasetFile> {
 
 /**
  * Parse a Parquet file using parquet-wasm (browser-side WASM).
+ * parquet-wasm's readParquet returns a wasm Table; we convert to IPC stream
+ * then use apache-arrow's tableFromIPC to get a proper Arrow Table.
  */
 async function parseParquetFile(file: File): Promise<DatasetFile> {
-  // Dynamic import to avoid loading WASM until needed
+  // Dynamic import — parquet-wasm's default export is initWasm
   const parquetWasm = await import("parquet-wasm");
-  const wasm = parquetWasm.default || parquetWasm;
+  const initWasm = parquetWasm.default as unknown as (() => Promise<void> | void) | undefined;
+  const readParquet = parquetWasm.readParquet;
 
-  // Initialize WASM if needed
-  if (wasm.initWasm) {
-    await wasm.initWasm();
-  } else if (wasm.parquetRead) {
-    // newer API
+  if (typeof readParquet !== "function") {
+    throw new Error("parquet-wasm: readParquet function not found");
+  }
+
+  // Initialize WASM (default export is the init function)
+  if (typeof initWasm === "function") {
+    await initWasm();
   }
 
   const buf = await file.arrayBuffer();
   const uint8 = new Uint8Array(buf);
 
-  // Try to read parquet → arrow table
-  let table: arrow.Table | null = null;
+  // readParquet returns a parquet-wasm Table (NOT an apache-arrow Table)
+  // We convert it to IPC stream bytes, then use apache-arrow's tableFromIPC
+  let table: arrow.Table;
   try {
-    if (wasm.readParquet) {
-      const arrowBuf = wasm.readParquet(uint8);
-      table = arrow.Table.new(arrowBuf);
-    } else if (wasm.parquetRead) {
-      const result = wasm.parquetRead(uint8);
-      table = arrow.Table.new(result);
-    } else {
-      throw new Error("parquet-wasm: no readParquet or parquetRead function found");
-    }
+    const wasmTable = readParquet(uint8);
+    // intoIPCStream returns a Uint8Array of Arrow IPC stream data
+    const ipcBytes = wasmTable.intoIPCStream();
+    table = arrow.tableFromIPC(ipcBytes);
+    // Free the WASM table to avoid memory leak
+    wasmTable.free();
   } catch (e) {
     throw new Error(`Parquet parse failed: ${e instanceof Error ? e.message : String(e)}`);
   }
-
-  if (!table) throw new Error("Parquet parse returned null table");
 
   // Reuse arrow parsing logic
   const schema: SchemaField[] = [];
