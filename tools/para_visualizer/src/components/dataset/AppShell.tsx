@@ -20,6 +20,7 @@ import { SchemaDialog } from "./SchemaDialog";
 import { LandingPage } from "./LandingPage";
 import { CommandPalette } from "./CommandPalette";
 import { BookmarkPanel } from "./BookmarkPanel";
+import { FailedImagesPanel } from "./FailedImagesPanel";
 import { ThemeToggle } from "./ThemeToggle";
 import { ShortcutsCheatsheet } from "./ShortcutsCheatsheet";
 import { LoadingSkeleton } from "./LoadingSkeleton";
@@ -66,6 +67,9 @@ export function AppShell() {
   const setSidebarOpen = useDatasetStore((s) => s.setSidebarOpen);
   const detailPanelOpen = useDatasetStore((s) => s.detailPanelOpen);
   const setDetailPanelOpen = useDatasetStore((s) => s.setDetailPanelOpen);
+  const failedPanelOpen = useDatasetStore((s) => s.failedPanelOpen);
+  const setFailedPanelOpen = useDatasetStore((s) => s.setFailedPanelOpen);
+  const failureCount = useDatasetStore((s) => s.failures.length);
   const setShowLoadDialog = useDatasetStore((s) => s.setShowLoadDialog);
   const setShowFilterPanel = useDatasetStore((s) => s.setShowFilterPanel);
   const setShowExportDialog = useDatasetStore((s) => s.setShowExportDialog);
@@ -170,6 +174,21 @@ export function AppShell() {
                 className="min-w-[260px]"
               >
                 <RightPanel />
+              </ResizablePanel>
+            </>
+          )}
+          {failedPanelOpen && (
+            <>
+              <ResizableHandle withHandle />
+              <ResizablePanel
+                id="failed"
+                order={4}
+                defaultSize={22}
+                minSize={15}
+                maxSize={38}
+                className="min-w-[240px]"
+              >
+                <FailedImagesPanel />
               </ResizablePanel>
             </>
           )}
@@ -344,6 +363,20 @@ function Header() {
               </Button>
               <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => setDetailPanelOpen(!detailPanelOpen)} title="Toggle detail panel">
                 <PanelRight className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0 relative"
+                onClick={() => setFailedPanelOpen(!failedPanelOpen)}
+                title="Toggle failed-images panel"
+              >
+                <AlertTriangle className="h-3.5 w-3.5" />
+                {failureCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center">
+                    {failureCount > 99 ? "99+" : failureCount}
+                  </span>
+                )}
               </Button>
             </>
           )}

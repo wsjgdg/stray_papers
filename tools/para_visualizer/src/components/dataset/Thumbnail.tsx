@@ -47,7 +47,6 @@ function ThumbnailImpl({
   // Local decode state — only set by the async decode callback (not synchronously in effect body)
   const [localError, setLocalError] = useState<string | null>(null);
   const [localSource, setLocalSource] = useState<string | null>(null);
-  const decodeStartedRef = useRef(false);
 
   const cacheKey = `${rowId}:${fieldName}`;
   const cached = useDatasetStore((s) => s.blobCache[cacheKey]);
@@ -107,14 +106,16 @@ function ThumbnailImpl({
   // Decode when visible (and not yet decoded). The decode is enqueued into a
   // global concurrency-limited queue so a burst of visible thumbnails loads a
   // few at a time (FIFO) instead of opening 40+ parallel requests at once.
-  // retryEpoch is part of the key: bumping it (Retry all failures) makes an
-  // errored/broken decode retry with a fresh key.
+  // retryEpoch is part of the key: bumping it (Retry all failures, or this
+  // card's own Retry) makes an errored decode re-attempt with a fresh key.
   const retryKey = `${cacheKey}#${retryEpoch}`;
+  const decodedEpochRef = useRef(-1);
   useEffect(() => {
     if (!isVisible) return;
     if (cached && !cached.error) return;
-    if (decodeStartedRef.current) return;
-    decodeStartedRef.current = true;
+    // Only start once per (cache-cleared / retry-epoch) signal.
+    if (decodedEpochRef.current === retryEpoch && cached) return;
+    decodedEpochRef.current = retryEpoch;
 
     let cancelled = false;
     const handle: QueueHandle = enqueueDecode(
@@ -148,7 +149,7 @@ function ThumbnailImpl({
     };
     // We intentionally depend on visibility + cache presence + the decode inputs.
     // imageValue/fieldName are stable per row+field; cacheBlob/addFailure are stable store actions.
-  }, [isVisible, cached, retryKey, cacheKey, imageValue, fieldName, cacheBlob, addFailure, rowId]);
+  }, [isVisible, cached, retryKey, retryEpoch, cacheKey, imageValue, fieldName, cacheBlob, addFailure, rowId]);
 
   return (
     <div

@@ -138,6 +138,11 @@ scripts/               # 演示数据集生成脚本（generate-demo-dataset.ts�
 
 服务端还会对成功代理的图片做**内存缓存（LRU，1h，最多 300 条）**并**合并并发同 URL 请求**：同一张图在滚动/重新加载时秒出，且不会重复打慢主机。
 **失败时绝不缓存**，所以"重试"能真正重新拉取。
+
+更进一步，成功代理的图还会写入**磁盘缓存** `.cache/proxy/`（按 URL 的 sha1 命名，1h TTL，>8MB 的图不入盘以免撑爆磁盘）。这一层能撑过 `npm start` 重启：重启后第一次访问同一张图返回 `x-cache: HIT-DISK`，不再去网络抓。`.cache/` 已加入 `.gitignore`。
+`x-cache` 响应头会标记来源：`MISS`（去上游）/ `HIT-MEM`（内存命中）/ `HIT-DISK`（磁盘命中）。
+
+**失败图侧栏**：右上角工具栏的 ⚠ 按钮（带失败计数角标）打开"Failed images"侧栏，逐条列出解码/加载失败的缩略图及原因，每条可单独 **Retry**，顶部可 **Retry all** 或清空列表；点行 id 可跳转到对应行（Detail 视图）。失败计数来自 store 的 `failures`（仅代理失败/解码失败计入，纯 URL 不可达不计入，因为重拉无意义）。
 | `NEXT_PUBLIC_IMAGE_TIMEOUT_MS=8000` | 浏览器侧单图拉取超时（毫秒）。超时即标记该图为失败并释放队列槽位（默认 8s）。 |
 | `NEXT_PUBLIC_IMAGE_CONCURRENCY=12` | 缩略图并发解码数（1–32，默认 12）。图片解码是网络密集型，可调高以更快填满网格；调低以减少对慢网络的压力。 |
 | `NEXT_PUBLIC_DISABLE_IMAGE_PROXY=1` | 禁用代理，浏览器直连原 URL（仅当原站允许 CORS 时才可用）。 |

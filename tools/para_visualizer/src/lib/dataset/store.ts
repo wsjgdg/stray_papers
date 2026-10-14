@@ -73,6 +73,7 @@ interface DatasetState {
   showAnnotations: boolean;
   sidebarOpen: boolean;
   detailPanelOpen: boolean;
+  failedPanelOpen: boolean;
   showCommandPalette: boolean;
   showBookmarkPanel: boolean;
   showRowJumpDialog: boolean;
@@ -116,6 +117,7 @@ interface DatasetState {
   setShowAnnotations: (v: boolean) => void;
   setSidebarOpen: (v: boolean) => void;
   setDetailPanelOpen: (v: boolean) => void;
+  setFailedPanelOpen: (v: boolean) => void;
   setShowCommandPalette: (v: boolean) => void;
   setShowBookmarkPanel: (v: boolean) => void;
   setShowRowJumpDialog: (v: boolean) => void;
@@ -130,6 +132,7 @@ interface DatasetState {
   clearFailures: () => void;
   retryEpoch: number;
   bumpRetryEpoch: () => void;
+  retryOne: (rowId: string, field: string) => void;
   addAnnotation: (a: Annotation) => void;
   removeAnnotation: (rowId: string, annotationId: string) => void;
   clearAnnotations: (rowId: string) => void;
@@ -183,6 +186,7 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   showAnnotations: true,
   sidebarOpen: true,
   detailPanelOpen: true,
+  failedPanelOpen: false,
   showCommandPalette: false,
   showBookmarkPanel: false,
   showRowJumpDialog: false,
@@ -369,6 +373,7 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
   setShowAnnotations: (v) => set({ showAnnotations: v }),
   setSidebarOpen: (v) => set({ sidebarOpen: v }),
   setDetailPanelOpen: (v) => set({ detailPanelOpen: v }),
+  setFailedPanelOpen: (v) => set({ failedPanelOpen: v }),
   setShowCommandPalette: (v) => set({ showCommandPalette: v }),
   setShowBookmarkPanel: (v) => set({ showBookmarkPanel: v }),
   setShowRowJumpDialog: (v) => set({ showRowJumpDialog: v }),
@@ -403,6 +408,17 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
     }),
   clearFailures: () => set({ failures: [] }),
   bumpRetryEpoch: () => set((s) => ({ retryEpoch: s.retryEpoch + 1, failures: [] })),
+  // Retry a single failed thumbnail: drop its cached error and re-decode it
+  // (alongside any other queued retries via the epoch bump).
+  retryOne: (rowId: string, field: string) =>
+    set((s) => {
+      const key = `${rowId}:${field}`;
+      const next = { ...s.blobCache };
+      delete next[key];
+      // keep other failures; this one will re-add itself if it fails again
+      const failures = s.failures.filter((f) => !(f.rowId === rowId && f.field === field));
+      return { blobCache: next, failures, retryEpoch: s.retryEpoch + 1 };
+    }),
   addAnnotation: (a) =>
     set((s) => {
       const list = s.annotations[a.rowId] || [];

@@ -17,6 +17,9 @@ node_modules
 /.next/
 /out/
 
+# server-side proxy image cache (disk layer, regenerated at runtime)
+/.cache/
+
 # production
 /build
 

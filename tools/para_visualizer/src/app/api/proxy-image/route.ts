@@ -1,4 +1,7 @@
 import { NextRequest } from "next/server";
+import { createHash } from "node:crypto";
+import { promises as fs } from "node:fs";
+import path from "node:path";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -74,17 +77,31 @@ function proxyForbidden(urlStr: string): string | null {
 }
 
 // --- server-side cache + in-flight coalescing ---------------------------------
+//
+// Two layers, both survive a hot reload but only the disk layer survives a full
+// `npm start` restart:
+//   - in-memory LRU (fast, lost on restart)
+//   - on-disk files under .cache/proxy (persists across restarts)
+// Failures are NEVER cached (in memory or on disk) so "retry" re-fetches.
 
 interface CacheEntry {
   buffer: Buffer;
   contentType: string;
   ts: number;
+  fromDisk?: boolean;
 }
 
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1h
 const MAX_ENTRIES = 300; // ~bounded memory for a local single-user tool
+const MAX_DISK_BYTES = 8 * 1024 * 1024; // skip disk cache for very large images
 const cache = new Map<string, CacheEntry>();
 const inflight = new Map<string, Promise<CacheEntry | null>>();
+const diskDir = path.join(process.cwd(), ".cache", "proxy");
+
+function fileFor(url: string): string {
+  const key = createHash("sha1").update(url).digest("hex");
+  return path.join(diskDir, key + ".bin");
+}
 
 function evictIfNeeded() {
   // Map keeps insertion order; drop the oldest entries when over budget.
@@ -92,6 +109,34 @@ function evictIfNeeded() {
     const oldest = cache.keys().next().value as string | undefined;
     if (oldest === undefined) break;
     cache.delete(oldest);
+  }
+}
+
+async function readDisk(url: string): Promise<CacheEntry | null> {
+  try {
+    const meta = JSON.parse(await fs.readFile(fileFor(url) + ".meta", "utf8")) as {
+      contentType: string;
+      ts: number;
+    };
+    if (Date.now() - meta.ts >= CACHE_TTL_MS) return null;
+    const buf = await fs.readFile(fileFor(url));
+    return { buffer: buf, contentType: meta.contentType, ts: meta.ts, fromDisk: true };
+  } catch {
+    return null;
+  }
+}
+
+async function writeDisk(url: string, entry: CacheEntry): Promise<void> {
+  try {
+    if (entry.buffer.length > MAX_DISK_BYTES) return; // don't bloat the disk cache
+    await fs.mkdir(diskDir, { recursive: true });
+    await fs.writeFile(fileFor(url), entry.buffer);
+    await fs.writeFile(
+      fileFor(url) + ".meta",
+      JSON.stringify({ contentType: entry.contentType, ts: entry.ts }),
+    );
+  } catch {
+    /* disk unavailable — fall back to memory only */
   }
 }
 
@@ -122,7 +167,7 @@ async function fetchUpstream(
   }
 }
 
-function bufferedResponse(entry: CacheEntry, cacheTag: "HIT" | "MISS") {
+function bufferedResponse(entry: CacheEntry, cacheTag: "HIT-MEM" | "HIT-DISK" | "MISS") {
   const respHeaders = new Headers();
   respHeaders.set("content-type", entry.contentType);
   respHeaders.set("content-length", String(entry.buffer.length));
@@ -158,21 +203,28 @@ export async function GET(req: NextRequest) {
     return Number.isFinite(v) && v > 0 ? v : 12000;
   })();
 
-  // 1) hot cache (within TTL)
+  // 1) hot memory cache (within TTL)
   const now = Date.now();
   const cached = cache.get(url);
   if (cached && now - cached.ts < CACHE_TTL_MS) {
-    return bufferedResponse(cached, "HIT");
+    return bufferedResponse(cached, "HIT-MEM");
   }
 
-  // 2) in-flight coalescing
+  // 2) cold disk cache (survives `npm start` restart)
+  const onDisk = await readDisk(url);
+  if (onDisk) {
+    cache.set(url, onDisk); // promote to hot memory
+    return bufferedResponse(onDisk, "HIT-DISK");
+  }
+
+  // 3) in-flight coalescing
   const existing = inflight.get(url);
   if (existing) {
     const entry = await existing;
-    return entry ? bufferedResponse(entry, "HIT") : jsonError(502, "Proxy fetch failed (upstream unreachable)");
+    return entry ? bufferedResponse(entry, entry.fromDisk ? "HIT-DISK" : "HIT-MEM") : jsonError(502, "Proxy fetch failed (upstream unreachable)");
   }
 
-  // 3) fetch, cache on success, never cache failures (so "retry" can refetch)
+  // 4) fetch, cache on success (memory + disk), never cache failures (so "retry" can refetch)
   const headers = new Headers();
   const ua = req.headers.get("user-agent");
   if (ua) headers.set("user-agent", ua);
@@ -184,6 +236,7 @@ export async function GET(req: NextRequest) {
       if (entry) {
         cache.set(url, entry);
         evictIfNeeded();
+        void writeDisk(url, entry);
       }
       return entry;
     })
