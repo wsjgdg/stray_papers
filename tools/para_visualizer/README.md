@@ -60,6 +60,18 @@ npm install
 npm run dev
 ```
 
+### 开发模式访问地址说明
+
+Next 16 默认**拦截跨域的 HMR 请求**（基于 `allowedDevOrigins`）。若用与开发服务器 origin 不同的地址访问（例如通过 **`http://127.0.0.1:3000`**、局域网 IP、或 `*.local` 主机名而非 `localhost`），会导致页面能渲染但客户端运行时不挂载、所有按钮点击“无效”。
+
+本项目已把以下来源加入白名单（`next.config.ts` 的 `allowedDevOrigins`），因此 `localhost`、`127.0.0.1`、局域网 IP、`*.local` 均可正常开发：
+
+```ts
+allowedDevOrigins: ["localhost", "127.0.0.1", "0.0.0.0", ".local"]
+```
+
+> 若需从其他主机名访问开发服务器，请把对应主机名加入 `allowedDevOrigins` 后重启 `npm run dev`。
+
 ### 生产构建与运行
 
 ```bash
