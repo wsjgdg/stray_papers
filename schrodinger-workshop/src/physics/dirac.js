@@ -25,8 +25,11 @@
  * dt_sub 扫描 0.05→1.0014 … 1.2→1.6922），与符号/边界细节无关，是结构性
  * 失效（Pauli 的常数 σ·B 是同族但更轻的缺陷：σ_x/σ_z 在 (u|v) 分裂下为
  * 偶算符 ⟹ ρ=1 精确稳定；σ_y 为奇算符（u|v 互换）⟹ kick 自耦合 ⟹
- * ρ=√(1+φ²)（φ=dt_sub·uK·|B_y|）——R32 已量化闭环：默认 tilted 预设
- * +0.122%/900 帧可忽略，B_y=0.05 滑块上限 +9.85%/900 帧须知晓）。
+ * ρ=√(1+φ²)（φ=dt_sub·uK·|B_y|）——R32 量化闭环：默认 tilted 预设
+ * +0.122%/900 帧、B_y=0.05 滑块上限 +9.85%/900 帧；**R33 起 Pauli 已切
+ * CN 路径**（本内核同款 CN_LOCAL_SOLVE 泛化注入，Pauli 侧注入 σ·B 的
+ * Cayley 4×4 闭式），该缺陷根治：CDP 复测 tilted+By=0.05 同跨度
+ * +9.941%→−0.0099%（详见 pauli.js 头注 R33 段）。
  * ⟹ 本内核走引擎 CN 路径（integrator='cn'）：
  *   (I−h·G)w_{n+1} = (I+h·G)w_n，h=dt_sub/2，G=−J·M 斜对称（M 对称）
  *   ⟹ Cayley 矩阵严格正交：范数机器精度守恒、无条件稳定（无 dt·E_max 极限）。
@@ -170,6 +173,20 @@ export class DiracKernel extends PhysicsKernel {
         '}',
       kineticE: 'diracD(vUv)',
       kinScale: '1.0',
+      /* CN 局部块 (I−h·Gloc)⁻¹ 闭式解（TPL_CN_SWEEP 的 {{CN_LOCAL_SOLVE}} 注入点；
+         R33 从模板内联提升为内核 snippet——表达式逐字不变，Dirac 行为零变化）。
+         Gloc = −J·(βm+V)：通道 1 特征值 s1=uMass+V、通道 2 特征值 s2=V−uMass，
+         块矩阵 [[1,−hs],[hs,1]]/det 求逆（det=1+h²s²）。 */
+      cnLocalSolve:
+        'vec4 cnLocalSolve(vec4 arg, float V){\n' +
+        '  float s1 = uMass + V, s2 = V - uMass;\n' +
+        '  float d1 = 1.0/(1.0 + uDtHalf*uDtHalf*s1*s1);\n' +
+        '  float d2 = 1.0/(1.0 + uDtHalf*uDtHalf*s2*s2);\n' +
+        '  return vec4((arg.x + uDtHalf*s1*arg.y)*d1,\n' +
+        '              (arg.y - uDtHalf*s1*arg.x)*d1,\n' +
+        '              (arg.z + uDtHalf*s2*arg.w)*d2,\n' +
+        '              (arg.w - uDtHalf*s2*arg.z)*d2);\n' +
+        '}',
       /* H·c 局部部分 = (βm+V)·c（β=diag(1,1,−1,−1)） */
       localH: 'vec4((uMass+V)*c.x, (uMass+V)*c.y, (V-uMass)*c.z, (V-uMass)*c.w)',
       /* |ψ|² = |ψ₁|²+|ψ₂|² */

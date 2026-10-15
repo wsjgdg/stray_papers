@@ -287,7 +287,7 @@ export class QuantumField {
     this.progReduce = createProgram(gl, sh.reduce);
     this.progBlit = createProgram(gl, FS_BLIT);
     this.progScale = createProgram(gl, sh.scale);   /* 耗散帧级衰减 pass */
-    /* CN 积分器（kernel.integrator='cn'，当前仅 Dirac）：rhs pass + block-Jacobi
+    /* CN 积分器（kernel.integrator='cn'，Dirac/Pauli）：rhs pass + block-Jacobi
        扫掠 pass 两个额外 program（契约见 kernel.js 头注【CN 积分器约定】） */
     if (sh.cnRhs){
       this.progCnRhs = createProgram(gl, sh.cnRhs);
@@ -512,7 +512,7 @@ export class QuantumField {
      从 frame() 原样抽出：uniform 序列、子步自适应、ping-pong、simTime 累移
      与 dissipation 逐字不变——frame()（每 tick 一次）与透射率扫描
      （boost 倍频）共用同一路径，物理零差异。调用方负责暂停判定。
-     kernel.integrator='cn'（当前仅 Dirac）走 CN 路径，其余 KDK 逐字不变。 */
+     kernel.integrator='cn'（Dirac 与 Pauli）走 CN 路径，其余 KDK 逐字不变。 */
   evolve(){
     const dt = 1.2;
     if (this.kernel.integrator === 'cn'){
@@ -585,11 +585,13 @@ export class QuantumField {
     this.state.simTime += dt;
   }
 
-  /* CN 积分器一帧推进（kernel.integrator='cn'，当前仅 Dirac）——推导与数值
+  /* CN 积分器一帧推进（kernel.integrator='cn'，Dirac/Pauli）——推导与数值
      验证记录见 dirac.js 头注【积分器】节、klein_td4.py。KDK 对混合通道的
      一阶 M（α·p 把 ψ₂ 导数耦合进 ψ₁ 方程）结构性失效（映射谱半径 1.0216，
-     范数爆炸）；CN 的 Cayley 矩阵严格正交（G=−J·M 斜对称）⟹ 无条件稳定、
-     总概率机器精度守恒。
+     范数爆炸）；CN 的 Cayley 矩阵严格正交（G=−J·M 斜对称）⟹ 算法层无条件
+     稳定、范数机器精度守恒（精确算术口径；GPU 实测残差 0.01–0.15%/长时程，
+     来源为 RGBA32F 纹理 float32 舍入积累，无系统偏向，交互时标不可见——
+     量化记录见 kernel.js CN 节头注）。
      (I−hG)w_{n+1}=(I+hG)w_n，h=dt_sub/2：因子 2 是 CN 的正确离散（两边同用
      全 h 等效步长 2h、动力学快一倍——时间域单模相位率实测确认）。每子步：
      cnRhs 一遍（w_n→rhs 固定纹理）+ 12 次 block-Jacobi 扫掠（收缩 ~0.18/
@@ -639,8 +641,10 @@ export class QuantumField {
     }
   }
 
-  /* CN program 共享 uniform 序列（uDtHalf/uTexel/drive/AB/uV/内核私有）——两个
-     program 的 uniform 名逐字相同，但取值是 program 级状态，须逐 program 设置。 */
+  /* CN program 共享 uniform 序列（uDtHalf/uTexel/uK/drive/AB/uV/内核私有）——两个
+     program 的 uniform 名逐字相同，但取值是 program 级状态，须逐 program 设置。
+     uK = 1/2m：Pauli 的 localH/cnLocalSolve 需要；Dirac 的 CN program 不引用它
+     （location 为 null，uniform1f 静默忽略——零影响）。 */
   _setCNUniforms(prog, hh, dPhase, tx, diag){
     const gl = this.gl, st = this.state;
     /* uniform 设置前必须先成为当前 program（引擎全路径惯例）；否则本 GL
@@ -649,6 +653,7 @@ export class QuantumField {
     gl.useProgram(prog);
     gl.uniform1f(this.u(prog,'uDtHalf'), hh);
     gl.uniform2f(this.u(prog,'uTexel'), tx, tx);
+    gl.uniform1f(this.u(prog,'uK'), 0.5/st.m);
     gl.uniform1f(this.u(prog,'uDriveAmp'), diag ? 0 : st.driveAmp);
     gl.uniform1f(this.u(prog,'uDrivePhase'), dPhase);
     gl.uniform1i(this.u(prog,'uDriveMode'), diag ? 0 : st.driveMode);
@@ -1216,6 +1221,8 @@ export class QuantumField {
     return {
       state: this.state, vCanvas: this.vCanvas, canvas: this.canvas, vctx: this.vctx,
       kernelId: this.kernelId,
+      /* 积分器模式（'cn' | 'kdk'）：CDP 验证直接断言路径，避免从漂移量反推 */
+      integrator: this.kernel.integrator,
       /* 分区域概率（透射率扫描的测量原语；原子快照：左/右概率 + 质心 + 总 P） */
       probSplit: (x) => this.probSplit(x),
       /* 自旋布洛赫向量读数（Pauli 内核）：引擎 spinSum 原始求和 → 内核

@@ -68,7 +68,9 @@
  *   kineticE —— TPL_EVOLVE 的动能项表达式（默认 '-uK*lap'）。引擎 KDK 骨架
  *              本就是一阶系统 w'=J·M·w（w=(Reψ,Imψ)），Dirac 只需把 M·w 的
  *              导数部分注入：kineticE='diracD(vUv)' 给出 −i·α·∂ψ 的实形 4
- *              通道积（含 AB link 相位分支）。默认路径逐字不变。
+ *              通道积（含 AB link 相位分支）。默认路径逐字不变。lap 由引擎级
+ *              {{LAP_BLOCK}} token 提供（EVOLVE/CN_RHS/CN_SWEEP 三模板共用，
+ *              R33 提取）；覆写 kineticE 为函数时 lap 成死代码被编译器消除。
  *   kinScale —— TPL_REDUCE 动能密度系数（默认 'uK'=1/2m）。Dirac 的 α·p 动能
  *              无 1/2m 因子，覆写 '1.0'。
  *   helpers  —— TPL_EVOLVE 函数定义注入点（S/rot4/ang/wrapPi 之后、main 之前，
@@ -130,7 +132,7 @@
  * dt_sub·E_max 可能越过 KDK 稳定极限 2（θ→π 混叠）。
  *
  * CN 积分器约定（Crank-Nicolson + block-Jacobi；kernel.integrator='cn' 时启用，
- * 当前仅 Dirac）：
+ * Dirac 与 Pauli 均走此路径）：
  *   KDK 速度 Verlet 要求 M 的通道可对齐分解为 kick/drift 两步（标量内核
  *   u'=-Hv, v'=Hu 恰好满足）。一阶算符 M 若**混合通道**（Dirac 的 α·p 把 ψ₂
  *   导数耦合进 ψ₁ 方程），KDK 映射谱半径 ρ>1（实测 1.0216@dt_sub=0.2, m=1,
@@ -138,15 +140,17 @@
  *   结构性失效，非符号/边界细节（见 dirac.js 头注【积分器】节）。常数 σ·B
  *   同族但更轻：σ_x/σ_z 为 (u|v) 分裂下的偶算符 ⟹ ρ=1 精确稳定；σ_y 为
  *   奇算符（u|v 互换）⟹ kick 自耦合 ⟹ ρ=√(1+φ²)（φ=dt_sub·uK·|B_y|，
- *   R32 量化：默认 tilted 预设 +0.122%/900 帧、B_y=0.05 上限 +9.85%/900 帧）。CN 方案 (I−h·G)w_{n+1}=(I+h·G)w_n，h=dt_sub/2，G=−J·M
+ *   R32 量化：默认 tilted 预设 +0.122%/900 帧、B_y=0.05 上限 +9.85%/900 帧）
+ *   ⟹ Pauli R33 起切 CN 根治。CN 方案 (I−h·G)w_{n+1}=(I+h·G)w_n，h=dt_sub/2，G=−J·M
  *   （J=复结构 (a,b)↦(−b,a)，M 为复线性厄米算符的实形：实对称且 MJ=JM）⟹ G
  *   斜对称 ⟹ Cayley 矩阵严格正交：范数机器精度守恒、无条件稳定。
  *   引擎侧（app.js evolveCN）每子步两个 pass：
  *     cnRhs   ：w_n → rhs = w_n + h·G(w_n)（G=−J·M 全量作用，一遍）
  *     cnSweep ：block-Jacobi 迭代 x ← (I−h·Gloc)⁻¹(rhs + h·Gkin(x))，
- *               Gloc = 局部（非导数）块对角 2×2 闭式求逆（GLSL 内联），
- *               Gkin = 导数耦合项；12 次扫掠收敛 ~1e-9（收缩比 ~0.18/迭代，
- *               理论上界 h·‖Mkin‖——h≤dt_sub/2 时远小于 1）。
+ *               Gloc = 局部（非导数）部分；(I−h·Gloc)⁻¹ 闭式解由内核经
+ *               {{CN_LOCAL_SOLVE}} 注入（Dirac：βm+V 对角 2×2 块；Pauli：
+ *               σ·B Cayley 全 4×4 块），Gkin = 导数耦合项；12 次扫掠收敛
+ *               ~1e-9（收缩比 ~0.18/迭代，理论上界 h·‖Mkin‖——h≤dt_sub/2 时远小于 1）。
  *   h=dt_sub/2 的因子 2 是 CN 的正确离散（(I−hG)x=(I+hG)c 两边同 h 等效
  *   Cayley 步长 2h，动力学整体快一倍——klein_td4.py 时间域实测确认，单模
  *   相位率 −2·arctan(hE/2) vs 错值 −2·arctan(hE)）。
@@ -160,35 +164,16 @@
 import { gaussianWave } from './gaussian.js';
 
 /* ---------- KDK 速度 Verlet 骨架（引擎级，{{LOCAL_H}} 由内核注入） ---------- */
-const TPL_EVOLVE = `#version 300 es
-precision highp float;
-in vec2 vUv; out vec4 o;
-uniform sampler2D uPsi;
-uniform sampler2D uV;
-uniform float uDt;
-uniform float uK;
-uniform float uUpdateV;   // 1.0 = 更新 v 分量, 0.0 = 更新 u 分量
-uniform vec2 uTexel;
-uniform float uDriveAmp;    // 含时外场幅值 A（势单位），0 = 关闭（精确恒等）
-uniform float uDrivePhase;  // 驱动相位 φ = ω·(t+dt/2)，CPU 每帧按帧中点推算
-uniform int   uDriveMode;   // 0 = 均匀 AC Stark A·cos(φ)；1 = x 行波 A·cos(2πx−φ)
-uniform float uABOn;        // AB 磁通开关：0 = 原 5 点 stencil（Φ=0 时精确等价）
-uniform vec2  uABPos;       // 螺线管位置（世界坐标）
-uniform float uABPhi;       // 磁通 Φ（rad，绕行一周总相位；0 = 关闭）
-{{UNIFORMS}}
-vec4 S(vec2 uv){
-  if(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0) return vec4(0.0);
-  return texture(uPsi,uv);
-}
-vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
-vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }   /* 两复分量同相旋转 */
-/* AB link 相位辅助：视角（螺线管格点上 |d|²≈0 回退 0，防 atan2(0,0)）与 (−π,π] wrap */
-float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
-float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
-{{HELPERS}}
-void main(){
-  vec4 c = texture(uPsi,vUv);
-  vec4 lap;
+
+/* ---------- 拉普拉斯 stencil 块（引擎级共享 token，TPL_EVOLVE/CN_RHS/CN_SWEEP 共用）----------
+   契约（展开处必须满足）：
+     - 局部变量 c = texture(uPsi,vUv)（中心 texel；CN_SWEEP 中即 Jacobi 当前迭代 x_k）
+     - helper S/rot4/ang/wrapPi 与 uniform uABOn/uABPos/uABPhi/uTexel 已声明
+   产出：vec4 lap（5 点 stencil，含 AB 最小耦合 link 相位分支）。
+   KINETIC_E 默认 -uK*lap 依赖本块；一阶内核（Dirac）覆写 kineticE 为函数（如
+   diracD(vUv)）时 lap 沦为死代码，被编译器消除——行为零变化（R33 起 CN 路径
+   的 Pauli 用默认 -uK*lap，必须共享本块而非各自复制，保证 AB 分支单源真值）。 */
+const TPL_LAP_BLOCK = `  vec4 lap;
   if(uABOn > 0.5){
     /* 最小耦合 link 相位（精确线积分）：每条邻格跳变乘 U=e^{iθ}，θ=∫A·dl。
        对称规范 A=(Φ/2π)·(−(y−y0),(x−x0))/r² = (Φ/2π)·dθ 是角度 1-形式，
@@ -218,7 +203,37 @@ void main(){
   } else {
     lap = S(vUv+vec2(-uTexel.x,0.0))+S(vUv+vec2(uTexel.x,0.0))
          + S(vUv+vec2(0.0,-uTexel.y))+S(vUv+vec2(0.0,uTexel.y)) - 4.0*c;
-  }
+  }`;
+
+const TPL_EVOLVE = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uPsi;
+uniform sampler2D uV;
+uniform float uDt;
+uniform float uK;
+uniform float uUpdateV;   // 1.0 = 更新 v 分量, 0.0 = 更新 u 分量
+uniform vec2 uTexel;
+uniform float uDriveAmp;    // 含时外场幅值 A（势单位），0 = 关闭（精确恒等）
+uniform float uDrivePhase;  // 驱动相位 φ = ω·(t+dt/2)，CPU 每帧按帧中点推算
+uniform int   uDriveMode;   // 0 = 均匀 AC Stark A·cos(φ)；1 = x 行波 A·cos(2πx−φ)
+uniform float uABOn;        // AB 磁通开关：0 = 原 5 点 stencil（Φ=0 时精确等价）
+uniform vec2  uABPos;       // 螺线管位置（世界坐标）
+uniform float uABPhi;       // 磁通 Φ（rad，绕行一周总相位；0 = 关闭）
+{{UNIFORMS}}
+vec4 S(vec2 uv){
+  if(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0) return vec4(0.0);
+  return texture(uPsi,uv);
+}
+vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
+vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }   /* 两复分量同相旋转 */
+/* AB link 相位辅助：视角（螺线管格点上 |d|²≈0 回退 0，防 atan2(0,0)）与 (−π,π] wrap */
+float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
+float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
+{{HELPERS}}
+void main(){
+  vec4 c = texture(uPsi,vUv);
+{{LAP_BLOCK}}
   float V = (texture(uV,vUv).r*255.0-128.0)/127.0;
   /* 含时外场（实势 → H 厄米 → 概率守恒；A=0 时为 IEEE 精确恒等） */
   V += uDriveAmp * (uDriveMode == 1 ? cos(6.28318530718*vUv.x - uDrivePhase) : cos(uDrivePhase));
@@ -236,19 +251,31 @@ void main(){
    ψ₁ 的方程）⟹ KDK 映射谱半径 ρ>1（实测 1.0216@dt_sub=0.2、1D m=1），范数指数
    爆炸——结构性失效，非符号/边界细节（详见 dirac.js 文件头【积分器】节）。
    常数 σ·B 同族但更轻：σ_x/σ_z 偶算符 ρ=1 精确、σ_y 奇耦合 ρ=√(1+φ²)
-   （φ=dt_sub·uK·|B_y|，R32 量化）。
-   CN：(I−h·G)w_{n+1}=(I+h·G)w_n，h=dt_sub/2，G=−J·M（J=复结构 (a,b)↦(−b,a)，
-   M 为复线性厄米算符的实形：实对称且 MJ=JM）⟹ G 斜对称 ⟹ Cayley 矩阵严格
-   正交：范数机器精度守恒、无条件稳定。
+   （φ=dt_sub·uK·|B_y|，R32 量化）⟹ Pauli 内核 R33 起切 CN（见 pauli.js）。
+   CN：(I−h·G)w_{n+1}=(I+h·G)w_n，h=dt_sub/2（注意每子步推进 2h=dt_sub——uDtHalf
+   约定），G=−J·M（J=复结构 (a,b)↦(−b,a)，M 为复线性厄米算符的实形：实对称且
+   MJ=JM）⟹ G 斜对称 ⟹ Cayley 矩阵严格正交：范数机器精度守恒、无条件稳定。
    两个 pass 每子步执行（app.js evolveCN）：
      TPL_CN_RHS   ：w_n → rhs = w_n + h·G(w_n)（G=−J·M，局部+导数全量；一遍）
      TPL_CN_SWEEP ：block-Jacobi 迭代 x ← (I−h·Gloc)⁻¹(rhs + h·Gkin(x))，
-                    Gloc = βm+V 局部块（对角 2×2 闭式求逆），Gkin = α·p 导数耦合；
-                    12 次扫掠收敛 ~1e-9（收缩比 ~0.18/迭代，理论上界 h√2）。
-   token 与 TPL_EVOLVE 同套（KINETIC_E/LOCAL_H/HELPERS/UNIFORMS），S/rot4/ang/
-   wrapPi 与驱动/AB uniform 逐字复制。纹理约定：uPsi=TEXTURE0（sweep 加
-   uRhs=TEXTURE2）、uV=TEXTURE1。uMass 等内核私有 uniform 经 {{UNIFORMS}} 注入
-   （当前唯一 CN 内核是 Dirac：s1=uMass+V、s2=V−uMass 即 βm 局部块）。 */
+                    Gloc = 局部（非导数）部分；(I−h·Gloc)⁻¹ 闭式解由内核经
+                    CN_LOCAL_SOLVE 注入位注入（函数 cnLocalSolve(arg, V)），
+                    Gkin = 导数耦合项；不动点即精确 CN 系统（收敛 ⟹ 正交），
+                     Jacobi 只是把 Gkin(x) 滞后近似的迭代求解器。
+   Jacobi 截断实测（R33，numpy float64 逐字复刻 16200 子步）：
+     - Dirac：Gkin=α·p 一阶导数，收缩 ~0.18/迭代 ⟹ 12 扫掠截断 ~1e-9/步
+     - Pauli：Gkin=−uK·lap 二阶拉普拉斯（σ·B 全进 Gloc），谱半径界
+       h·uK·8=0.4（与网格无关的格点单位）；但平滑波包的高频内容指数衰减
+       （高斯 σ=7 在 k=π/4 处幅值 e^-15）⟹ 误差注入 ≈0，实测 12 扫掠与
+       精确 CN（Fourier 逐模态 Cayley）均 +6.4e-13/16200 步——截断可忽略。
+     - GPU（RGBA32F 纹理管线，float32）另有一层舍入积累：Pauli 四案例
+       1620 sim-time 实测 +0.1492%/+0.1228%/−0.0099%/+0.0272%（无系统偏向、
+       量级 ~0.1%，60fps 交互时标下 <0.01%，不可见）；Dirac 同管线 +0.0099%。
+       要压低需更多扫掠或 float64 累加 reduce——代价/收益不成比例，如实标注。
+   token 与 TPL_EVOLVE 同套（KINETIC_E/LOCAL_H/HELPERS/UNIFORMS/LAP_BLOCK + CN_LOCAL_SOLVE），
+   S/rot4/ang/wrapPi 与驱动/AB uniform 逐字复制。纹理约定：uPsi=TEXTURE0（sweep 加
+   uRhs=TEXTURE2）、uV=TEXTURE1。uMass/uB 等内核私有 uniform 经 {{UNIFORMS}} 注入
+   （Dirac：βm+V 对角 2×2 块；Pauli：σ·B Cayley 全 4×4 块——见各自 cnLocalSolve）。 */
 const TPL_CN_RHS = `#version 300 es
 precision highp float;
 in vec2 vUv; out vec4 o;
@@ -256,6 +283,7 @@ uniform sampler2D uPsi;
 uniform sampler2D uV;
 uniform float uDtHalf;      /* h = dt_sub/2（CN 半步） */
 uniform vec2 uTexel;
+uniform float uK;           /* 1/2m（Pauli 的 localH 用；Dirac 不用，被优化掉） */
 uniform float uDriveAmp;
 uniform float uDrivePhase;
 uniform int   uDriveMode;
@@ -276,6 +304,7 @@ void main(){
   vec4 c = texture(uPsi,vUv);
   float V = (texture(uV,vUv).r*255.0-128.0)/127.0;
   V += uDriveAmp * (uDriveMode == 1 ? cos(6.28318530718*vUv.x - uDrivePhase) : cos(uDrivePhase));
+{{LAP_BLOCK}}
   vec4 Hc = {{KINETIC_E}} + {{LOCAL_H}};      /* = M·w（实形算符全量作用） */
   vec4 Gc = vec4(Hc.y, -Hc.x, Hc.w, -Hc.z);   /* G = −J_int·M（复结构作用） */
   o = c + uDtHalf * Gc;                        /* rhs = w + h·G(w) */
@@ -289,6 +318,7 @@ uniform sampler2D uRhs;        /* rhs = w_n + h·G(w_n)（CN_RHS pass 产物） 
 uniform sampler2D uV;
 uniform float uDtHalf;
 uniform vec2 uTexel;
+uniform float uK;           /* 1/2m（Pauli 的 cnLocalSolve 用；Dirac 不用，被优化掉） */
 uniform float uDriveAmp;
 uniform float uDrivePhase;
 uniform int   uDriveMode;
@@ -305,23 +335,23 @@ vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }
 float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
 float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
 {{HELPERS}}
+{{CN_LOCAL_SOLVE}}
 void main(){
-  vec4 x = texture(uPsi,vUv);
+  vec4 c = texture(uPsi,vUv);    /* x_k 中心值（lap stencil 的 −4c 项；S() 内部另读 uPsi） */
   vec4 rhs = texture(uRhs,vUv);
   float V = (texture(uV,vUv).r*255.0-128.0)/127.0;
   V += uDriveAmp * (uDriveMode == 1 ? cos(6.28318530718*vUv.x - uDrivePhase) : cos(uDrivePhase));
-  vec4 Hk = {{KINETIC_E}};                     /* diracD(vUv)——内部 S() 读 uPsi=x_k */
+{{LAP_BLOCK}}
+  vec4 Hk = {{KINETIC_E}};                     /* Dirac: diracD(vUv)（内部 S() 读 uPsi=x_k）；Pauli: -uK*lap */
   vec4 Gk = vec4(Hk.y, -Hk.x, Hk.w, -Hk.z);    /* Gkin = −J_int·(α·p 部分) */
   vec4 arg = rhs + uDtHalf * Gk;               /* 正确迭代符号: +（klein_td 数值验证） */
-  /* (I−h·Gloc)⁻¹ 对角 2×2 块闭式求逆：Gloc=(s1·y,−s1·x, s2·w,−s2·z)，
-     s1=uMass+V（βm 通道1）、s2=V−uMass（通道2）；块矩阵 [[1,−hs],[hs,1]]/det */
-  float s1 = uMass + V, s2 = V - uMass;
-  float d1 = 1.0/(1.0 + uDtHalf*uDtHalf*s1*s1);
-  float d2 = 1.0/(1.0 + uDtHalf*uDtHalf*s2*s2);
-  o = vec4((arg.x + uDtHalf*s1*arg.y)*d1,
-           (arg.y - uDtHalf*s1*arg.x)*d1,
-           (arg.z + uDtHalf*s2*arg.w)*d2,
-           (arg.w - uDtHalf*s2*arg.z)*d2);
+  o = cnLocalSolve(arg, V);   /* 局部块 (I−h·Gloc)⁻¹ 闭式解——函数定义在本 program
+                                 的 CN_LOCAL_SOLVE 注入位（HELPERS 之后，见模板头；
+                                 Dirac：βm+V 对角 2×2 块，Pauli：σ·B Cayley 全 4×4
+                                 块，R33）。教训：注释内勿写带双花括号的 token 名，
+                                 fill() 全局替换会把函数源码注入注释、其内部注释结束
+                                 符提前关闭外层注释致函数体半沉（R33 CDP 实测崩错，
+                                 现由 fill() 重复 token 守卫构建期拦截）。 */
 }`;
 
 /* ---------- 耗散（开放系统）：帧级标量衰减 pass ----------
@@ -561,12 +591,22 @@ export function buildShaders(kernel){
      由 kernel.setUniforms() 逐帧赋值；program 中未引用时被编译器优化掉，取值返回 null。 */
   const uni = s.uniforms || '';
   const pm = kernel.pmeanSnippets();
-  const fill = (tpl, map) => tpl.replace(/\{\{(\w+)\}\}/g, (m, k) => {
-    if (!(k in map)) throw new Error('unknown template token: ' + k);
-    return map[k];
-  });
+  const fill = (tpl, map) => {
+    /* 重复 token 守卫：fill() 是全局替换，模板注释里误写 {{TOKEN}} 会把片段源码
+       注入注释、片段内部的注释结束符会提前关闭外层注释，致函数体半沉成活代码
+       （R33 CDP 实测：TPL_CN_SWEEP 注释内的 {{CN_LOCAL_SOLVE}} 引发
+       'h'/'Bz' undeclared 崩错）。构建期拒绝重复注入位，杜绝该类静默损坏。 */
+    const counts = {};
+    for (const m of tpl.matchAll(/\{\{(\w+)\}\}/g)) counts[m[1]] = (counts[m[1]] || 0) + 1;
+    for (const k in counts) if (counts[k] > 1)
+      throw new Error('template token {{' + k + '}} appears ' + counts[k] + ' times (duplicate injection point)');
+    return tpl.replace(/\{\{(\w+)\}\}/g, (m, k) => {
+      if (!(k in map)) throw new Error('unknown template token: ' + k);
+      return map[k];
+    });
+  };
   const out = {
-    evolve: fill(TPL_EVOLVE, { ...need, ...opt, UNIFORMS: uni }),
+    evolve: fill(TPL_EVOLVE, { ...need, ...opt, UNIFORMS: uni, LAP_BLOCK: TPL_LAP_BLOCK }),
     display: fill(TPL_DISPLAY, {
       DENSITY: s.density,
       PIXEL_COLOR: s.pixelColor || DEFAULT_PIXEL_COLOR,
@@ -575,15 +615,21 @@ export function buildShaders(kernel){
     reduce: fill(TPL_REDUCE, { ...need, ...opt, UNIFORMS: uni, PMEANX: pm.pmeanX, PMEANY: pm.pmeanY }),
     scale: TPL_SCALE,
   };
-  /* CN 积分器路径（kernel.integrator==='cn'，当前仅 Dirac）：两个额外 program，
+  /* CN 积分器路径（kernel.integrator==='cn'，Dirac/Pauli）：两个额外 program，
      shaders() 返回的对象即 {evolve, display, reduce, scale, cnRhs, cnSweep}。
-     app.js 按 sh.cnRhs 是否存在决定编译与 evolveCN 分支。 */
+     app.js 按 sh.cnRhs 是否存在决定编译与 evolveCN 分支。
+     cnLocalSolve（必填，缺失即构建失败）：局部块 (I−h·Gloc)⁻¹ 的闭式解——
+     注入 TPL_CN_SWEEP 的函数 vec4 cnLocalSolve(vec4 arg, float V)，可引用模板
+     uniform（uDtHalf/uK/uTexel）与 {{UNIFORMS}}/{{HELPERS}} 注入的私有内容。
+     Dirac 给 βm+V 对角 2×2 块；Pauli 给 σ·B 的 Cayley 全 4×4 块（R33）。 */
   if (kernel.integrator === 'cn'){
-    out.cnRhs = fill(TPL_CN_RHS, { ...need, ...opt, UNIFORMS: uni });
-    out.cnSweep = fill(TPL_CN_SWEEP, { ...need, ...opt, UNIFORMS: uni });
+    if (typeof s.cnLocalSolve !== 'string' || !s.cnLocalSolve.trim())
+      throw new Error('kernel "' + kernel.id + '" (integrator=cn) missing shader snippet: cnLocalSolve');
+    out.cnRhs = fill(TPL_CN_RHS, { ...need, ...opt, UNIFORMS: uni, LAP_BLOCK: TPL_LAP_BLOCK });
+    out.cnSweep = fill(TPL_CN_SWEEP, { ...need, ...opt, UNIFORMS: uni, LAP_BLOCK: TPL_LAP_BLOCK, CN_LOCAL_SOLVE: s.cnLocalSolve });
   }
   return out;
 }
 
 /* 导出模板仅供测试/文档引用（生产路径经 buildShaders 消费） */
-export const TEMPLATES = { TPL_EVOLVE, TPL_CN_RHS, TPL_CN_SWEEP, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, DEFAULT_PIXEL_COLOR, DEFAULT_PMEAN };
+export const TEMPLATES = { TPL_EVOLVE, TPL_CN_RHS, TPL_CN_SWEEP, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, TPL_LAP_BLOCK, DEFAULT_PIXEL_COLOR, DEFAULT_PMEAN };

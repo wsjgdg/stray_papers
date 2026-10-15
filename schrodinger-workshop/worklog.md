@@ -83,7 +83,59 @@ numpy 复刻引擎：Hc = −uK·lap5(w) − uK·σB(w)，kick (x, y−h·Hc.x, 
 
 ---
 
-## R31（2026-10-14）Dirac 方程内核（#33）
+## R33（2026-10-15）Pauli 切 CN 积分器（#43）：KDK σ_y 缺陷根治
+
+### 缘起
+R32 量化闭环 Pauli KDK 常数 σ·B 缺陷（σ_y 奇耦合 ⟹ 谱半径 ρ=√(1+φ²)>1，B_y=0.05 滑块上限 +9.85%/900 帧），给出 A/B/C 三选项。用户拍板 A（Pauli 切 CN），本轮实施并实测验证。
+
+### 修复设计：Dirac 硬编码局部 solve 泛化为内核注入
+- **CN_LOCAL_SOLVE 模板 token**：TPL_CN_SWEEP 原内联「对角 2×2 块（βm+V）闭式求逆」提升为 `{{CN_LOCAL_SOLVE}}` 注入位（buildShaders fill map，内核 shaders() 提供 snippet）；Dirac 侧把原内联块逐字函数化（git diff 验证仅 `o=`→`return` 等价）
+- **Pauli 侧注入 σ·B Cayley 全 4×4 闭式**：常数外场下 M_loc 即 σ·B（对角化于任意方向），`(I+i·h·M_loc)⁻¹ = (A·I + i·c·nσ)/(A²+c²)`，A=1+ihV、c=h·uK·|B|；推导取 `i·c·nσ·arg = i·h·uK·(σ·B)·arg`（复用 pauliSigmaB，避免显式除法）；分母 A²+c²=(1+c²−h²V²)+i·2hV 复除
+- **TPL_LAP_BLOCK 提取**：TPL_EVOLVE 内联的 `lap` 块（vec4 声明 + AB link 相位分支 + 5 点 stencil）提取为引擎级共享 token，TPL_EVOLVE/TPL_CN_RHS/TPL_CN_SWEEP 三模板共用。动因：Pauli 的 KINETIC_E 取默认 `-uK*lap`，而 CN 两模板 main 原本没有 lap 计算块（Dirac 靠 kineticE 覆盖为 diracD 函数所以从未暴露该缺口）
+
+### 实施期两个真实 bug（均构建期/编译期暴露，非运行时）
+1. **`'lap' : undeclared identifier`**（TPL_CN_RHS/SWEEP 编译错误）：Pauli KINETIC_E 引用 lap 但 CN 模板无该块 ⟹ 上述 LAP_BLOCK 提取的直接动因
+2. **模板 token 误入注释 ⟹ 函数体半沉为活代码**：TPL_CN_SWEEP main 末尾注释里写了带 braces 的 `{{CN_LOCAL_SOLVE}}`，fill() 是全局 replace ⟹ 函数源码被注入注释、其内部 `*/` 提前关闭外层注释、后半函数体变成 main 内活代码（症状链：`'h'/'Bz' undeclared` → `void function cannot return a value` → `? syntax error` 行 99-108）。修复：注释改无 braces 纯文本 + **fill() 增加重复 token 守卫**（matchAll 计数，>1 直接抛 `template token {{X}} appears N times`，构建期失败代替半沉 bug）
+   - 守卫注释自身一度含字面 `*/` 提前关闭 JS 块注释（SyntaxError）——改写教训：写「检测逻辑」的注释时自身也不能出现 `*/`
+
+### 实测（CDP，manualPass(1800)×9 = 1620 sim-time）
+
+| 案例 | KDK（R32 基线） | CN（R33） |
+|---|---|---|
+| larmor Bz=0.02（偶算符对照） | −0.000% | +0.1492% |
+| tilted B=(0.0115)³（默认预设） | +0.122% | +0.1228% |
+| **tilted+B_y=0.05（滑块上限）** | **+9.941%** | **−0.0099%** |
+| SG bGrad=0.016（B_y=0 偶算符） | −0.0000%（补测，解析 ρ=1 获印证） | +0.0272% |
+
+- tilted+By=0.05 改善 **>1500×**（9.941%→0.0099%）；同跨度 KDK 线性外推 ~+15%，CN 残差与 float32 底噪同量级
+- |⟨σ⟩|=1.0000 全案例；进动签名 9/9 PASS（larmor t=78.6 ⟨σ_x⟩=−0.0012 vs cos(ωt) 4 位吻合；t=157 半周期 (−1,0)；tilted t=157.8 ⟨σ_z⟩=−0.3333 vs 理论 −0.3333 精确）
+- Dirac 回归 +0.0099%（与 R31 基线 6.4e-6@t=210 同量级，每 sim-time 漂移率 3.1e-8 vs 6.1e-8）；零 console 异常
+
+### Jacobi 截断 vs float32 底噪（numpy float64 复刻 + GPU 残差归因）
+- 算法层严格保范：12 扫掠 +6.4e-13/16200 子步、精确 CN（FFT 逐模态 Cayley）+6.8e-13 ⟹ Jacobi 截断可忽略。Dirac Gkin=α·p 一阶（收缩 ~0.18/迭代，截断 ~1e-9/步）；Pauli Gkin=−uK·lap 二阶（谱半径界 h·uK·8=0.4 与网格无关），且平滑波包高频内容指数衰减（高斯 σ=7 在 k=π/4 幅值 e^−15）⟹ 平滑初态下截断同样可忽略
+- GPU 残差 0.01–0.15% = RGBA32F 纹理 float32 舍入积累：**无系统偏向**（±号均现），交互时标（60fps×15s）累计 <0.01% 不可见；已在 kernel.js CN 节、README、pauli.js、app.js evolveCN 注释如实量化
+
+### 文件变更
+- src/physics/kernel.js：TPL_LAP_BLOCK 引擎级 token（含契约头注）+ 三模板注入；CN_LOCAL_SOLVE 注入位；fill() 重复 token 守卫；CN 节头注重写（2h 约定 + Jacobi 截断实测表 + float32 底噪量化）
+- src/physics/pauli.js：integrator='cn'；cnLocalSolve snippet（σ·B Cayley 闭式 + 推导注释）；头注 R32→R33 段（+9.941%→−0.0099%、>1500× 改善、残差归因 float32）
+- src/physics/dirac.js：cnLocalSolve snippet（原内联块逆逐字函数化）；头注 Pauli 缺陷描述同步 R33 已修复
+- src/core/app.js：_setCNUniforms 补 uK uniform；evolveCN 注释补 float32 caveat；debugHandle 暴露 `integrator` 字段（CDP 直接断言积分器模式）
+- README.md：Pauli 行加 CN 积分器、KDK 局限段→R33 修复版、积分器模式节重写（四案例对照表）、架构树/路线图签名 9/9
+- worklog.md：本条目
+
+### 验证
+- buildShaders 装配 harness（/tmp/r33_asm.mjs）：27 项全 PASS（三模板 LAP_BLOCK 注入、CN_LOCAL_SOLVE 两份 snippet 注入、uK uniform、KDK 回归 stencil/AB 逐字 intact）
+- 守卫触发测试（/tmp/r33_guard_test.mjs）：5 项 PASS——正对照（原版构建通过、调用位唯一）+ 副本重放 R33 bug（模板注释内重复 `{{CN_LOCAL_SOLVE}}`）⟹ 构建期抛 `duplicate injection point` + KDK 路径无误报
+- **KDK 路径 A/B（git worktree HEAD 340ea89 vs 当前树）**：schrodinger/nls/gp/barrier 的 evolve/display/reduce 装配产物**逐字一致**（10/10 PASS）⟹ LAP_BLOCK 提取对 KDK 路径零行为变更；运行时对照（CDP 同参数 manualPass(200)×3 冒烟）两次复跑收敛一致：schrodinger −0.1177%、nls −0.0488%、gp −0.4505%（首次 NOW 侧 gp −0.5294% 为冒烟 harness 的 paused 竞态——rAF 帧在 paused 生效前插入，P0 差 2e-6；复跑收敛，非代码差异）
+- dist 重建后冒烟（/tmp/r33_smoke.js）：三内核 boot + `integrator` 字段直读（pauli/dirac=**cn**、schrodinger=kdk，debugHandle 新增该字段避免从漂移反推）+ 600 步演化 P 有限 + 零 console 异常
+- CDP 完整复测（/tmp/r33_verify.js，最终 dist）：Pauli 三案例 + SG 900 帧 + Dirac 回归（数字见上表）——**5/5 与本轮早前验证精确复现**（larmor +0.1492% / tilted +0.1228% / tilted+By=0.05 −0.0099% / SG +0.0272% / Dirac +0.0099%，零 console 异常）；注：dist 重建后又有一处 GLSL 注释级修正（CN_SWEEP 的 KINETIC_E 注释补 Pauli 口径），已冒烟复跑确认
+- SG KDK 基线补测（HEAD dist 同协议）：−0.0000%（B_y=0 偶算符 ρ=1 解析预言获实测印证；R32 未测 SG，表格 KDK 列不得凭解析填实测格式值）
+- CDP 主验证（/tmp/r33_verify.js）：Pauli 三案例 900 帧 + SG + Dirac 回归 + 异常捕获，上表
+- numpy float64 双轨复刻（/tmp/r33_numpy.py）：12 扫掠 vs 精确 CN 范数守恒 6.4e-13/6.8e-13
+- 物理签名（/tmp/r33_sig2.js）：9/9 PASS（larmor/tilted 进动相位 + 半周期 + ⟨σ_z⟩=−0.3333）
+- dist/quantum-field.html 重建 + node --check 全 src
+
+---
 
 ### 完成项
 - [x] `physics/dirac.js`（新，~670 行）：2+1 维 Dirac 内核，pairs=2 旋量（RGBA32F：xy=ψ₁、zw=ψ₂），Weyl 表象 α_x=σ_x、α_y=σ_y、β=diag(1,−1)；格点 ∂→i·sin k、色散 E±(k)=±√(sin²k_x+sin²k_y+m²)；正能旋量初态 u(k)=(1,(sin k_x+i·sin k_y)/(E+m))；4 预设（relativistic/zitter/klein-barrier/klein-resonance）

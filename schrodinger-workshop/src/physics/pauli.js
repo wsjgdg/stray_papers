@@ -33,13 +33,19 @@
  *   (σ·B·ψ)₂ = (Bx+iBy)·ψ₁ − Bz·ψ₂
  *   ⟹ M 对称（厄米）⟹ 精确流严格守恒 P；KDK 分裂与标量内核同构
  *      （模板实现一阶系统 w' = J·M·w，localH 给 M·c 全通道积）。
- *      【R32 量化更正】「P 守恒数值特性与薛定谔同级」仅对 (u|v) 分裂下
- *      的**偶**算符成立：σ_x/σ_z（纯 B_x/B_z）⟹ 两个 2×2 Verlet 块、
- *      ρ=1 精确；σ_y 为**奇**算符（u|v 互换）⟹ kick 自耦合 ⟹
- *      ρ=√(1+φ²)（φ=dt_sub·uK·|B_y|）——慢指数漂移：默认 tilted 预设
- *      （|B|=0.02）实测 +0.122%/900 帧可忽略，B_y=0.05 滑块上限
- *      +9.85%/900 帧须知晓。属引擎级 KDK 对奇耦合算符的结构性局限
- *      （Dirac 同机制改用 CN 的根本原因；修复选项见 worklog R32）。
+ *      【R32 量化 → R33 修复】KDK 的数值守恒仅对 (u|v) 分裂下的**偶**
+ *      算符成立：σ_x/σ_z（纯 B_x/B_z）⟹ 两个 2×2 Verlet 块、ρ=1 精确；
+ *      σ_y 为**奇**算符（u|v 互换）⟹ kick 自耦合 ⟹ ρ=√(1+φ²)>1
+ *      （φ=dt_sub·uK·|B_y|）——慢指数漂移：默认 tilted 预设（|B|=0.02）
+ *      实测 +0.122%/900 帧、B_y=0.05 滑块上限 +9.85%/900 帧（R32，numpy
+ *      全算符与 CDP 互证）。本内核 R33 起切 CN（integrator='cn'）：Cayley
+ *      矩阵严格正交 ⟹ 无条件稳定，σ_y 漂移根治——CDP 复测（9×manualPass
+ *      (1800)=1620 sim-time）：tilted+By=0.05 从 KDK 的 +9.941% 降至
+ *      −0.0099%（同跨度下 KDK 线性外推 ~+15%，>1500× 改善）。残差 0.01–
+ *      0.15% 为 RGBA32F 纹理 float32 舍入积累（算法层 numpy float64 复刻
+ *      实测 6.4e-13/16200 子步，Jacobi 截断可忽略——平滑波包高频内容指数
+ *      衰减），无系统偏向、交互时标下不可见（详见 worklog R33 与 kernel.js
+ *      CN 约定节）。σ·B 局部块闭式解见 shaders().cnLocalSolve。
  *
  * 自旋态布洛赫球约定：|ψ⟩ = cos(θ/2)|↑⟩ + e^{iφ}·sin(θ/2)|↓⟩
  *   θ=0 → ↑（⟨σz⟩=+1）；θ=π/2,φ=0 → +x（⟨σx⟩=+1）；φ 控制赤道面方位。
@@ -69,6 +75,15 @@ export class PauliKernel extends PhysicsKernel {
        与调试句柄 spin。约定：内核提供 spinRead(rawSum) → {sx,sy,sz,len}，
        rawSum 由引擎 spinSum() 从 psiA 纹理直读（纯测量、无物理公式）。 */
     this.spinReadout = true;
+    /* R33：切 CN 积分器。KDK 对 σ_y（(u|v) 分裂下的**奇**算符）结构性失效——
+       谱半径 ρ=√(1+φ²)>1（φ=dt_sub·uK·|B_y|），慢指数漂移（R32 量化：
+       默认 tilted +0.122%/900 帧、B_y=0.05 上限 +9.85%/900 帧）。CN 的
+       Cayley 矩阵严格正交 ⟹ 无条件稳定，σ_y 漂移根治（CDP 复测：+9.941%
+       → −0.0099%@1620 sim-time；算法层 numpy 复刻 6.4e-13/16200 子步，
+       GPU 残差为 float32 纹理舍入 ~0.1% 量级，无系统偏向）；
+       σ·B 局部块经 shaders().cnLocalSolve 注入（见下）。代价 ~4.3× GPU
+       （13 pass/子步 vs KDK 3）——正确性优先。 */
+    this.integrator = 'cn';
   }
 
   /* 初始旋量波包：高斯包络 × 布洛赫自旋态（θ/φ 经引擎从 state 透传）。
@@ -131,6 +146,30 @@ export class PauliKernel extends PhysicsKernel {
          4 通道积即 M·c——KDK 模板的一阶系统 w'=J·M·w 对任意实线性 M 成立
          （含 σ_y 耦合，无需引擎模板改动）。 */
       localH: 'V*c - uK*pauliSigmaB(c, uB.z + uB.w*(vUv.x - 0.5))',
+      /* CN 局部块 (I−h·Gloc)⁻¹ 闭式解（TPL_CN_SWEEP 的 {{CN_LOCAL_SOLVE}} 注入点）。
+         M_loc = V·I − uK·σ·B（2×2 厄米）⟹ 引擎 CN 约定的局部解为 (I+i·h·M_loc)⁻¹：
+         记 A=1+ihV、c=h·uK·|B|、n=B/|B|，(n·σ)²=I ⟹
+         (A·I − i·c·nσ)⁻¹ = (A·I + i·c·nσ)/(A²+c²)，
+         其中 i·c·(nσ)·arg = i·h·uK·(σ·B)·arg（复用 pauliSigmaB——c·n=h·uK·B），
+         A·arg 为标量 (1+ihV) 逐通道相乘，分母 A²+c²=(1+c²−h²V²)+i·2hV 做复除。
+         B=0 时退化为 arg/(1+ihV)（纯势 Cayley 相位移，与 Dirac 的 V 块同构）；
+         局部部分严格保范（Cayley 酉性）⟹ σ_y 奇耦合的 KDK 慢指数漂移
+         （R32 量化的 ρ=√(1+φ²)）由此根治。Bz 含 x 向梯度，逐 texel 取值。 */
+      cnLocalSolve:
+        'vec4 cnLocalSolve(vec4 arg, float V){\n' +
+        '  float h = uDtHalf;\n' +
+        '  float Bz = uB.z + uB.w*(vUv.x - 0.5);\n' +
+        '  vec4 t = pauliSigmaB(arg, Bz);            /* (σ·B)·arg */\n' +
+        '  vec4 a = vec4(arg.x - h*V*arg.y, arg.y + h*V*arg.x,\n' +
+        '                arg.z - h*V*arg.w, arg.w + h*V*arg.z);   /* A·arg */\n' +
+        '  vec4 s = vec4(a.x - h*uK*t.y, a.y + h*uK*t.x,\n' +
+        '                a.z - h*uK*t.w, a.w + h*uK*t.z);         /* A·arg + i·h·uK·(σ·B)·arg */\n' +
+        '  float c2 = h*h*uK*uK*(uB.x*uB.x + uB.y*uB.y + Bz*Bz);\n' +
+        '  float dr = 1.0 + c2 - h*h*V*V, di = 2.0*h*V;           /* A²+c² */\n' +
+        '  float inv = 1.0/(dr*dr + di*di);\n' +
+        '  return vec4((s.x*dr + s.y*di)*inv, (s.y*dr - s.x*di)*inv,\n' +
+        '              (s.z*dr + s.w*di)*inv, (s.w*dr - s.z*di)*inv);\n' +
+        '}',
       /* |ψ|² = |ψ₁|²+|ψ₂|²（RGBA32F 四通道全参与） */
       density: 'dot(psi.xy,psi.xy) + dot(psi.zw,psi.zw)',
       /* 动能：两分量拉普拉斯之和（vec4 点积天然覆盖 xy+zw） */

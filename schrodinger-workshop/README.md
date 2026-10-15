@@ -8,7 +8,7 @@ Gross-Pitaevskii / Pauli 自旋 / Dirac 相对论）。无依赖、无构建，�
 iħ ∂ψ/∂t = −ħ²/2m ∇²ψ + V(x)ψ              （薛定谔内核）
 iħ ∂ψ/∂t = −ħ²/2m ∇²ψ + V(x)ψ − g|ψ|²ψ     （NLS 内核，g>0 = 聚焦；
                                              同一方程族即 Gross-Pitaevskii，g<0 = 排斥 BEC）
-iħ ∂ψ/∂t = [−ħ²/2m ∇² + V − (qℏ/2m)·σ·B]ψ  （Pauli 内核，旋量 pairs=2）
+iħ ∂ψ/∂t = [−ħ²/2m ∇² + V − (qℏ/2m)·σ·B]ψ  （Pauli 内核，旋量 pairs=2，CN 积分器）
 iħ ∂ψ/∂t = (α_x p_x + α_y p_y + βm + V)ψ    （Dirac 内核，一阶系统、CN 积分器）
 ```
 
@@ -86,10 +86,11 @@ HUD 如实显示，见「物理诚实声明」）。默认 g=−10、子步 16�
 第一个多复分量内核（`pairs=2`，RGBA32F：xy=↑ 分量、zw=↓ 分量），
 验证 PhysicsKernel 契约对自旋族的支持。方程
 *i*ℏ ∂ψ/∂t = [−ℏ²/2m ∇² + V − (*q*ℏ/2m)·σ·B]·ψ，
-σ·B 以厄米 4×4 实线性作用写入 localH（P 严格守恒；KDK 数值稳定性对
-σ_y 耦合有结构性局限——纯 B_x/B_z 精确稳定，B_y≠0 时 ρ=√(1+φ²)，默认
-预设漂移 +0.12%/900 帧可忽略、滑块上限 +9.85%/900 帧，详见「积分器模式」
-节与 worklog R32）。
+σ·B 以厄米 4×4 实线性作用写入 localH。**R33 起切 CN 积分器**
+（`integrator='cn'`）：KDK 速度 Verlet 对 σ_y 耦合（(u|v) 分裂下的**奇**
+算符）结构性失效——谱半径 ρ=√(1+φ²)（φ=dt_sub·uK·|B_y|），B_y=0.05 滑块
+上限 900 帧漂移 +9.85%（R32 量化）；CN 的 Cayley 矩阵严格正交，该漂移
+根治（CDP 复测 +9.941% → −0.0099%，详见「积分器模式」节与 worklog R33）。
 
 **诚实声明**：只含自旋（塞曼）耦合，**不含轨道耦合 (p−qA)²/2m**——对应
 「中性粒子（如中子）磁矩」图像：无电荷即无轨道耦合，塞曼项是全部电磁
@@ -296,21 +297,40 @@ v_half = v − dt/2·H·u ;  u_new = u + dt·H·v_half ;  v_new = v_half − dt/
 
 `kernel.integrator='cn'` 时引擎分流到 CN 路径（`app.js` evolveCN/_cnSteps，
 `kernel.js` TPL_CN_RHS/TPL_CN_SWEEP 双 pass 模板）：
-(I−hG)w_{n+1}=(I+hG)w_n，h=dt_sub/2，每子步 cnRhs 一遍（w_n→rhs 固定纹理）
-+ 12 次 block-Jacobi 扫掠（Gloc=βm+V 对角 2×2 块闭式求逆、Gkin=α·p 导数耦合，
-收缩 ~0.18/迭代、截断 ~1e-9）。
+(I−hG)w_{n+1}=(I+hG)w_n，h=dt_sub/2（每子步推进 2h=dt_sub），每子步 cnRhs 一遍
+（w_n→rhs 固定纹理）+ 12 次 block-Jacobi 扫掠。局部块 (I−h·Gloc)⁻¹ 的闭式解
+由内核经 `cnLocalSolve` snippet 注入（Dirac：βm+V 对角 2×2 块；Pauli：σ·B
+Cayley 全 4×4 块，R33），Gkin 只剩导数项（Dirac 的 α·p 一阶差分收缩 ~0.18/
+迭代、截断 ~1e-9/步；Pauli 的拉普拉斯理论上界 h·uK·8=0.4，但平滑波包高频
+内容指数衰减，numpy float64 复刻实测截断 6.4e-13/16200 子步——Jacobi 不动点
+即精确 CN 系统，收敛后严格正交）。
 
 **动机**：KDK 要求 M 通道对齐（本征基可按 kick/drift 两通道投影分解为逐模态
 2×2 旋转）；Dirac 的 M=α·p+βm+V **混合通道**（α·p 把 ψ₂ 的导数耦合进 ψ₁ 方程）
 结构性失效——映射谱半径实测 1.0216@dt_sub=0.2，范数指数爆炸，非符号/边界细节。
 Pauli 的常数 σ·B 是同族但更轻的缺陷（R32 量化）：σ_x/σ_z 在 (u|v) 分裂下为
 **偶**算符 ⟹ ρ=1 精确稳定；σ_y 为**奇**算符（u|v 互换）⟹ kick 自耦合 ⟹
-ρ=√(1+φ²)（φ=dt_sub·uK·|B_y|）——默认 tilted 预设（|B|=0.02）实测 +0.122%/900
-帧可忽略，B_y=0.05 滑块上限 +9.85%/900 帧（numpy 全算符复刻与 CDP 实测互证），
-属慢指数漂移而非爆炸；larmor/SG/free 预设 B_y=0 ⟹ 精确稳定。修复选项（Pauli
-切 CN / 局部自旋精确旋转分裂 / 维持现状+文档如实标注）待定，见 worklog R32。
+ρ=√(1+φ²)（φ=dt_sub·uK·|B_y|）——B_y=0.05 滑块上限 900 帧漂移 +9.85%（numpy
+全算符复刻 +9.850% 与 CDP 实测 +9.941% 互证），属慢指数漂移而非爆炸。
+**R33 已修复**：Pauli 内核切 CN（局部 σ·B 走 Cayley 全 4×4 块），CDP 复测
+（9×manualPass(1800)=1620 sim-time）：
+
+| 案例 | KDK（R32，1080 sim-time） | CN（R33，1620 sim-time） |
+|---|---|---|
+| larmor Bz=0.02 | −0.000% | +0.1492% |
+| tilted B=(0.0115)³ | +0.127% | +0.1228% |
+| tilted+B_y=0.05（关键） | +9.941% | **−0.0099%** |
+| SG bGrad=0.016 | −0.0000%（B_y=0 偶算符，解析 ρ=1 实测印证） | +0.0272% |
+
+σ_y 系统泄漏消除（同跨度下 KDK 线性外推 ~+15% ⟹ >1500× 改善）；残差
+0.01–0.15% 为 RGBA32F 纹理 float32 舍入积累（算法层机器精度，numpy 双轨
+复刻：12 扫掠 +6.4e-13 / 精确 CN +6.8e-13），无系统偏向、60fps 交互时标下
+<0.01% 不可见；Dirac CN 回归 +0.0099%（同 R31 基线量级）。物理签名复测
+9/9（larmor ⟨σ_x⟩=cos(ωt) 四分频 4 位吻合、tilted 锥形 ⟨σ_z⟩=−0.3333 精确、
+|⟨σ⟩|=1）。
 CN 的 Cayley 矩阵严格正交（G=−J·M，J=复结构，M 厄米 ⟹ G 斜对称）⟹ 无条件稳定、
-总概率机器精度守恒。dissipation 帧级衰减在分支之后通用（标量乘法与积分器无关）；
+总概率守恒（算法层机器精度；GPU float32 管线另有 ~0.1%/1620 sim-time 舍入底噪，
+已如实量化）。dissipation 帧级衰减在分支之后通用（标量乘法与积分器无关）；
 KDK 路径对既有内核逐字不变（evolve 分流重构经回归矩阵验证行为等价）。
 
 ### 稳定性：dt·E ≤ 2
@@ -428,7 +448,7 @@ schrodinger-workshop/
 │       ├── schrodinger.js        薛定谔内核（pairs=1，6 预设）
 │       ├── nls.js                非线性薛定谔内核（pairs=1，4 预设）
 │       ├── gp.js                 Gross-Pitaevskii / BEC 内核（pairs=1，4 预设）
-│       ├── pauli.js              Pauli 自旋内核（pairs=2，RGBA32F 旋量，4 预设）
+│       ├── pauli.js              Pauli 自旋内核（pairs=2，RGBA32F 旋量，4 预设，CN 积分器）
 │       ├── dirac.js              Dirac 相对论内核（pairs=2 旋量，integrator='cn'，4 预设）
 │       └── barrier.js            矩势垒解析透射模型（透射率扫描工具 + Pauli free 预设共用）
 └── dist/
@@ -497,7 +517,7 @@ import './physics/mykernel.js';
 | 方向 | 路径 | 状态 |
 |---|---|---|
 | Gross-Pitaevskii / BEC（TF 穹顶、涡旋、TOF、呼吸模） | 新内核，localH 复用 NLS 片段 | ✅ 已落地（`gp.js`，4 预设，CDP 27/27 + IC 单测 20/20） |
-| Pauli 自旋（pairs=2 双复分量） | `pairs=2` + localH 写双分量耦合 | ✅ 已落地（`pauli.js`，4 预设，CDP 29/29；只含塞曼耦合、无轨道耦合已如实标注） |
+| Pauli 自旋（pairs=2 双复分量） | `pairs=2` + localH 写双分量耦合 + CN 积分器（σ_y 奇耦合根治） | ✅ 已落地（`pauli.js`，4 预设，CDP 29/29 + R33 签名 9/9；只含塞曼耦合、无轨道耦合已如实标注） |
 | 高阶拉普拉斯 / 谱方法 | 换 `lap` 片段需改引擎模板 | 需小改 core |
 | 一阶系统（Dirac） | 积分器模式扩展 | ✅ 已落地（`dirac.js`，4 预设，CDP 16/16；引擎新增 `integrator='cn'` 契约钩子 + CN/block-Jacobi 双 pass 模板，KDK 路径零改动） |
 | 3D | 3D 纹理 + volume 渲染 | 需引擎扩展，契约不变 |
