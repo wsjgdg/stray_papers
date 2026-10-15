@@ -9,7 +9,7 @@
  * 多实例安全：无模块级可变状态；一页建议只挂一个实例
  * （WebGL 上下文上限约 16，且元素 ID 为全局单例设计）。
  * ========================================================================== */
-import { createContext, createProgram, Quad, makeTarget, makeRGBA16F, makeReduce, FS_BLIT } from './gl.js';
+import { createContext, createProgram, Quad, makeTarget, makeRGBA16F, makeReduce, makeTarget3D, FS_BLIT } from './gl.js';
 import { getKernel, buildShaders } from '../physics/kernel.js';
 import { injectStyles } from './styles.js';
 import { TransmissionScanner } from './scan.js';
@@ -59,6 +59,8 @@ export class QuantumField {
     this._readBuf3 = new Float32Array(32*32*4);   /* MRT 附件 2：分轴动能 + 均值动量 */
     this._lastE = null;                            /* 最近一次归约的逐粒子总能（能级对照） */
     this._raf = 0;
+    /* 3D 体积渲染轨道相机（kernel.dim3 时由 pointer/wheel 驱动；2D 内核不用） */
+    this.cam = { theta: 0.7, phi: 0.35, dist: 2.2, drag: null };
     this.scanner = new TransmissionScanner(this);  /* 透射率扫描工具（内核无模型时面板隐藏） */
     this._onError = e => {
       const d = this.q('#diag');
@@ -115,6 +117,7 @@ export class QuantumField {
   /* ---------- DOM ---------- */
   buildDOM(){
     const k = this.kernel;
+    const d3 = !!k.dim3;               /* 3D 内核：隐藏 2D 专属面板区，挂 3D 体积渲染面板 */
     const presets = k.presets();
     const presetBtns = Object.keys(presets).map(key =>
       '<button data-preset="' + key + '">' + presets[key].name + '</button>').join('');
@@ -139,7 +142,7 @@ export class QuantumField {
     <h3>预设场景</h3>
     <div class="grid2">${presetBtns}</div>
   </div>
-  <div class="sec">
+  <div class="sec" ${d3?'style="display:none"':''}>
     <h3>工具</h3>
     <div class="grid3">
       <button data-tool="wave" class="on">波包</button>
@@ -158,20 +161,20 @@ export class QuantumField {
   <div class="sec">
     <h3>物理参数</h3>
     <div class="row"><label>质量 m</label><input type="range" id="rMass" min="0.15" max="4" step="0.05" value="1"><output id="oMass">1.00</output></div>
-    <div class="row"><label>波包宽度 σ</label><input type="range" id="rSigma" min="4" max="40" step="0.5" value="7"><output id="oSigma">7.0</output></div>
+    <div class="row" ${d3?'style="display:none"':''}><label>波包宽度 σ</label><input type="range" id="rSigma" min="4" max="40" step="0.5" value="7"><output id="oSigma">7.0</output></div>
     <div class="row"><label>积分子步</label><input type="range" id="rSpeed" min="1" max="16" step="1" value="6"><output id="oSpeed">6</output></div>
-    <div class="row"><label>笔刷半径</label><input type="range" id="rBrush" min="3" max="40" step="1" value="10"><output id="oBrush">10</output></div>
+    <div class="row" ${d3?'style="display:none"':''}><label>笔刷半径</label><input type="range" id="rBrush" min="3" max="40" step="1" value="10"><output id="oBrush">10</output></div>
     ${extraHtml}
   </div>
-  <div class="sec">
+  <div class="sec" ${d3?'style="display:none"':''}>
     <h3>势场强度</h3>
     <div class="row"><label>V 值</label><input type="range" id="rV" min="0.01" max="1" step="0.01" value="0.3"><output id="oV">0.30</output></div>
   </div>
-  <div class="sec">
+  <div class="sec" ${d3?'style="display:none"':''}>
     <h3>开放系统</h3>
     <div class="row"><label>耗散 γ</label><input type="range" id="rGamma" min="0" max="0.2" step="0.005" value="0"><output id="oGamma">0.000</output></div>
   </div>
-  <div class="sec">
+  <div class="sec" ${d3?'style="display:none"':''}>
     <h3>含时外场</h3>
     <div class="row"><label>驱动幅值 A</label><input type="range" id="rDriveAmp" min="0" max="0.5" step="0.005" value="0"><output id="oDriveAmp">0.000</output></div>
     <div class="row"><label>驱动频率 ω</label><input type="range" id="rDriveOmega" min="0.01" max="0.5" step="0.01" value="0.1"><output id="oDriveOmega">0.10</output></div>
@@ -195,7 +198,7 @@ export class QuantumField {
     <canvas id="scanCanvas" width="420" height="260"></canvas>
     <div class="hint" style="margin-top:4px">矩势垒 x=120 w=16（全高）· 波包 kx=0.3 σ=18 · 256² 网格 · 实测 vs Δk 卷积理论（E=V0 左侧为隧穿区）</div>
   </div>
-  <div class="sec">
+  <div class="sec" ${d3?'style="display:none"':''}>
     <h3>AB 磁通</h3>
     <div class="row"><label>磁通 Φ</label><input type="range" id="rABPhi" min="0" max="6.2832" step="0.01" value="0"><output id="oABPhi">0.00</output></div>
     <div class="row"><label>螺线管位置</label><output id="oABPos">(0.50, 0.50)</output><button id="btnABCenter">置中</button></div>
@@ -204,8 +207,8 @@ export class QuantumField {
   <div class="sec">
     <h3>渲染与网格</h3>
     <div class="row"><label>画面亮度</label><input type="range" id="rBright" min="0.3" max="2.5" step="0.05" value="1"><output id="oBright">×1.00</output></div>
-    <div class="row"><label>余晖拖尾</label><input type="range" id="rTrail" min="0" max="0.99" step="0.01" value="0.97"><output id="oTrail">0.97</output></div>
-    <div class="row"><label>网格精度</label>
+    <div class="row" ${d3?'style="display:none"':''}><label>余晖拖尾</label><input type="range" id="rTrail" min="0" max="0.99" step="0.01" value="0.97"><output id="oTrail">0.97</output></div>
+    <div class="row" ${d3?'style="display:none"':''}><label>网格精度</label>
       <select id="selGrid">
         <option value="128">128² 流畅</option>
         <option value="192">192² 均衡</option>
@@ -215,14 +218,43 @@ export class QuantumField {
     </div>
     <div class="grid2" style="margin-top:6px">
       <button id="btnReset">重置波包</button>
-      <button id="btnClearV">清空势场</button>
+      <span ${d3?'style="display:none"':''}><button id="btnClearV">清空势场</button></span>
     </div>
-    <div class="grid2" style="margin-top:6px">
+    <div class="grid2" style="margin-top:6px" ${d3?'style="display:none"':''}>
       <button id="btnExportV">导出势场</button>
       <button id="btnImportV">导入势场</button>
     </div>
     <input type="file" id="fileImportV" accept=".json,application/json" style="display:none">
   </div>
+${d3 ? `
+  <div class="sec" id="sec3d">
+    <h3>3D 体积渲染</h3>
+    <div class="row"><label>网格精度</label>
+      <select id="selGrid3">
+        <option value="32">32³ 流畅</option>
+        <option value="48">48³ 均衡</option>
+        <option value="64" selected>64³ 精细</option>
+        <option value="96">96³ 极致</option>
+        <option value="128">128³ 离线</option>
+      </select>
+    </div>
+    <div class="row"><label>射线步数</label><input type="range" id="rSteps3" min="16" max="128" step="8" value="48"><output id="oSteps3">48</output></div>
+    <div class="row"><label>曝光</label><input type="range" id="rExp3" min="100" max="10000" step="100" value="3600"><output id="oExp3">3600</output></div>
+    <div class="row"><label>波包宽度 σ</label><input type="range" id="rSigma3" min="2" max="20" step="0.5" value="6"><output id="oSigma3">6.0</output></div>
+    <div class="row"><label>势垒 V₀</label><input type="range" id="rPotV0" min="0" max="0.1" step="0.005" value="0.02"><output id="oPotV0">0.020</output></div>
+    <div class="row"><label>势垒半径 R</label><input type="range" id="rPotR" min="4" max="20" step="1" value="10"><output id="oPotR">10</output></div>
+    <div class="row"><label>谐振子 ω</label><input type="range" id="rPotW" min="0.004" max="0.06" step="0.002" value="0.0156"><output id="oPotW">0.0156</output></div>
+    <div class="row"><label>核电荷 Z</label><input type="range" id="rPotZ" min="0.1" max="0.5" step="0.01" value="0.25"><output id="oPotZ">0.25</output></div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnPhase3" class="on">相位着色</button>
+      <button id="btnSlice3">切片模式</button>
+    </div>
+    <div class="row" id="sliceRow3" style="display:none"><label>切片层 z</label><input type="range" id="rSliceZ3" min="0" max="1" step="0.01" value="0.5"><output id="oSliceZ3">0.50</output></div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnCam3">重置相机</button>
+    </div>
+    <div class="hint" style="margin-top:4px">拖拽旋转 · 滚轮缩放。V₀/R 仅球势垒预设生效；ω/σ 决定谐振子基态（σ=1/√ω）；Z 仅氢原子预设生效（改动后波包按新 Z 重发）。</div>
+  </div>` : ''}
 </aside>
 
 <section id="hud" class="panel">
@@ -234,12 +266,14 @@ export class QuantumField {
   <div class="hrow"><span>总能 E</span><span id="hE">—</span></div>
   <div class="hrow"><span>驱动 V_d(中心)</span><span id="hDrive">—</span></div>
   <div class="hrow"><span>AB 磁通 Φ</span><span id="hAB">关</span></div>
+  <div id="uncSec" ${d3?'style="display:none"':''}>
   <hr>
   <div class="hrow"><span>Δx, Δy</span><span id="hDxy">—</span></div>
   <div class="hrow"><span>Δk_x, Δk_y</span><span id="hDkxy">—</span></div>
   <div class="hrow"><span>Δx·Δk_x</span><span id="hProdX">—</span></div>
   <div class="hrow"><span>Δy·Δk_y</span><span id="hProdY">—</span></div>
   <div class="hrow"><span>质心 k</span><span id="hKc">—</span></div>
+  </div>
   <div id="ladderSec" style="display:none">
     <hr>
     <div class="hrow"><span>能级阶梯</span><span id="hLadKind">—</span></div>
@@ -268,7 +302,9 @@ export class QuantumField {
 <div id="desc" class="panel"><b id="descName">自由传播</b><span id="descText"></span></div>
 
 <footer id="hint" class="panel">
-  <b>拖拽</b> 发射波包（方向=动量 k）· <span class="k">1-${Object.keys(presets).length}</span> 预设 · <span class="k">Space</span> 暂停 · <span class="k">T</span> 拖尾 · <span class="k">R</span> 重置 · <span class="k">C</span> 清空势场
+  ${d3
+    ? '<b>拖拽</b> 旋转视角 · <b>滚轮</b> 缩放 · <span class="k">1-'+Object.keys(presets).length+'</span> 预设 · <span class="k">Space</span> 暂停 · <span class="k">R</span> 重置波包'
+    : '<b>拖拽</b> 发射波包（方向=动量 k）· <span class="k">1-'+Object.keys(presets).length+'</span> 预设 · <span class="k">Space</span> 暂停 · <span class="k">T</span> 拖尾 · <span class="k">R</span> 重置 · <span class="k">C</span> 清空势场'}
 </footer>
 <div id="toast"></div>
 <div id="brushcursor"></div>
@@ -293,6 +329,13 @@ export class QuantumField {
       this.progCnRhs = createProgram(gl, sh.cnRhs);
       this.progCnSweep = createProgram(gl, sh.cnSweep);
     }
+    /* 3D 体积路径（kernel.dim3=true，R34）：evolve3d（7 点拉普拉斯 KDK，逐层
+       draw 全卷）+ volume（ray-march 显示）。2D program 仍编译（dim3 运行时
+       不被引用）——buildShaders 对全部内核统一装配，零分支风险。 */
+    if (sh.evolve3d){
+      this.progEvolve3d = createProgram(gl, sh.evolve3d);
+      this.progVolume = createProgram(gl, sh.display3d);
+    }
   }
 
   initTargets(){
@@ -300,8 +343,27 @@ export class QuantumField {
     /* 波函数纹理格式由内核分量数决定：1 对 → RG32F，2 对 → RGBA32F */
     this.fmt = this.kernel.pairs === 2 ? gl.RGBA : gl.RG;
     this.ifmt = this.kernel.pairs === 2 ? gl.RGBA32F : gl.RG32F;
-    this.allocGrid(this.state.grid);
+    if (this.kernel.dim3){
+      /* 3D：体积 ping-pong（RG32F n³）；2D psiA/psiB 不分配（3D 帧路径不引用，
+         2D 调试句柄对 3D 内核调用会诚实地抛错而非返回垃圾） */
+      this.allocGrid3d(this.state.grid);
+    } else {
+      this.allocGrid(this.state.grid);
+    }
     this.reduceT = makeReduce(gl);
+  }
+
+  /* 3D 体积 ping-pong 目标（n³ RG32F NEAREST；fbo 不预附着层——evolve3d/回读
+     每层 draw/read 前须 framebufferTextureLayer，契约见 gl.js makeTarget3D）。 */
+  allocGrid3d(n){
+    this.state.grid = n;
+    const gl = this.gl;
+    if (this.psiA3){
+      gl.deleteTexture(this.psiA3.tex); gl.deleteFramebuffer(this.psiA3.fbo);
+      gl.deleteTexture(this.psiB3.tex); gl.deleteFramebuffer(this.psiB3.fbo);
+    }
+    this.psiA3 = makeTarget3D(gl, n, gl.RG32F, gl.RG, gl.NEAREST);
+    this.psiB3 = makeTarget3D(gl, n, gl.RG32F, gl.RG, gl.NEAREST);
   }
 
   allocGrid(g){
@@ -418,8 +480,35 @@ export class QuantumField {
   /* 按 lastWave 原参数重发波包（内核 extraControls 的 after 回调用）：
      自旋角属初相——变更后须重发才生效（演化中的场不会因初相参数改变而变）。 */
   reinitWave(){
+    if (this.kernel.dim3){
+      const w = this.state.lastWave3;
+      if (w) this.initWave3d({ wave3: w.wave3, kind: w.kind });
+      return;
+    }
     const w = this.state.lastWave;
     if (w) this.initWave(w[0], w[1], w[2], w[3]);
+  }
+
+  /* ---------- 3D 初态（引擎层：归一化 + 上传；形状由内核 makeWave3d 生成）----------
+     p = 预设对象（wave3:[fx,fy,fz,kx,ky,kz] + kind）或 { wave3, kind } 重发参数。
+     与 2D initWave 的差别：无 add 叠加分支（3D 交互是相机轨道，无拖拽发射）、
+     无势场画布步骤（势经 pot3 解析注入）。归一化口径与 2D 一致：
+     Σ|ψ|²=1（P 基座，HUD 守恒误差以此为基准）。 */
+  initWave3d(p){
+    const n = this.state.grid, gl = this.gl;
+    const w3 = p.wave3 || [0.3, 0.5, 0.5, 0.12, 0, 0];
+    const kind = p.kind || 'gaussian';
+    const { data, sum } = this.kernel.makeWave3d(n, {
+      fx: w3[0], fy: w3[1], fz: w3[2], kx: w3[3], ky: w3[4], kz: w3[5],
+      sigma: this.state.sigma, kind, z: this.state.potZ,
+    });
+    const s0 = 1/Math.sqrt(sum);
+    for (let i=0;i<data.length;i++) data[i] *= s0;
+    gl.bindTexture(gl.TEXTURE_3D, this.psiA3.tex);
+    gl.texImage3D(gl.TEXTURE_3D, 0, gl.RG32F, n, n, n, 0, gl.RG, gl.FLOAT, data);
+    this.state.lastWave3 = { wave3: w3, kind };
+    this.state.simTime = 0;
+    this._baseCaptured = false; this.baseP0 = 1;   /* P 基座重捕（守恒误差口径） */
   }
 
   /* ---------- 分区域概率（透射率扫描的测量原语；调试句柄同源） ---------- */
@@ -487,8 +576,18 @@ export class QuantumField {
   loadPreset(key){
     const p = this.kernel.presets()[key]; if (!p) return;
     this.state.preset = key;
-    if (p.params) Object.assign(this.state, p.params);   /* 内核预设参数（σ/g 等） */
+    if (p.params) Object.assign(this.state, p.params);   /* 内核预设参数（σ/g/potKind 等） */
     this.syncControls();
+    if (this.kernel.dim3){
+      /* 3D：无势场画布（势经 pot3 解析注入），初态走 initWave3d */
+      this.initWave3d(p);
+      this.q('#descName').textContent = p.name;
+      this.q('#descText').textContent = p.text;
+      this.container.querySelectorAll('[data-preset]').forEach(b => b.classList.toggle('on', b.dataset.preset === key));
+      this.refreshParamHud();
+      this.toast(p.name);
+      return;
+    }
     this.vctx.globalCompositeOperation = 'source-over';
     this.vctx.fillStyle = this.vGray(0); this.vctx.fillRect(0,0,256,256);
     p.build({ vctx: this.vctx, vGray: v => this.vGray(v) });
@@ -515,6 +614,12 @@ export class QuantumField {
      kernel.integrator='cn'（Dirac 与 Pauli）走 CN 路径，其余 KDK 逐字不变。 */
   evolve(){
     const dt = 1.2;
+    if (this.kernel.dim3){
+      /* 3D 体积路径（R34）：7 点拉普拉斯 KDK，逐层 draw 全卷；无耗散帧级衰减
+         （γ 面板对 3D 隐藏——scale pass 是 2D 目标通路） */
+      this.evolve3d(dt);
+      return;
+    }
     if (this.kernel.integrator === 'cn'){
       this.evolveCN(dt);
     } else {
@@ -607,6 +712,51 @@ export class QuantumField {
     this.state.simTime += dt;
   }
 
+  /* 3D KDK 速度 Verlet 一帧推进（kernel.dim3；TPL_EVOLVE3D）。
+     与 evolveKDK 同构（kick/drift/kick 交叉投影逐字一致），差异全在维度：
+       · 7 点 stencil（谱半径 12）——eMax = uK·12（2D 为 uK·8）
+       · uTexel3 = (1/N)³、uLayer = (l+0.5)/N（层中点）
+       · 每 pass = N 次逐层 draw（framebufferTextureLayer 重绑 + 全屏三角形）：
+         WebGL2 无法把 3D 纹理整体当附件，只能逐层写；全卷 pass 成本 = N×
+         单层开销（R34 spike 实测：64³ 全卷 8.8ms/pass、128³ 105.6ms/pass，
+         SwiftShader；逐层重绑的固定开销在 N 大时占主导）。
+     无驱动/AB（3D 路径暂不支持，模板未预留该 uniform）；势经 kernel pot3
+     解析注入（uPotKind 分支 + 私有 uniform），每帧设置一次（不随子步变化）。
+     末态回 psiA3（与 2D 路径同一不变式：ping-pong 后 A 恒为当前场）。 */
+  evolve3d(dt){
+    const k = 0.5/this.state.m;
+    const gl = this.gl, n = this.state.grid;
+    const eMax = k*12 + 1 + this.kernel.eMaxExtra(this.state);
+    const sub = Math.max(this.state.substeps, Math.ceil(dt*eMax/1.5));
+    const dtSub = dt/sub;
+    gl.useProgram(this.progEvolve3d);
+    gl.bindVertexArray(this.quad.vao);
+    gl.uniform1f(this.u(this.progEvolve3d,'uDt'), dtSub);
+    gl.uniform1f(this.u(this.progEvolve3d,'uK'), k);
+    gl.uniform3f(this.u(this.progEvolve3d,'uTexel3'), 1/n, 1/n, 1/n);
+    gl.uniform1f(this.u(this.progEvolve3d,'uGrid3'), n);
+    this.kernel.setUniforms(gl, this.progEvolve3d, this.state);   /* 私有 uniform（势参数） */
+    const uUV = this.u(this.progEvolve3d,'uUpdateV');
+    const uLayer = this.u(this.progEvolve3d,'uLayer');
+    for (let s=0; s<sub; s++){
+      for (let pass=0; pass<3; pass++){
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiB3.fbo);
+        gl.viewport(0,0,n,n);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_3D, this.psiA3.tex);
+        gl.uniform1i(this.u(this.progEvolve3d,'uPsi'), 0);
+        gl.uniform1f(uUV, pass === 1 ? 0.0 : 1.0);
+        for (let l=0; l<n; l++){
+          gl.framebufferTextureLayer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, this.psiB3.tex, 0, l);
+          gl.uniform1f(uLayer, (l + 0.5)/n);
+          gl.drawArrays(gl.TRIANGLES, 0, 3);
+        }
+        const tmp = this.psiA3; this.psiA3 = this.psiB3; this.psiB3 = tmp;
+      }
+    }
+    this.state.simTime += dt;
+  }
+
   /* CN 步进 n 个子步（rhs pass + 12 扫掠/子步）——evolveCN 与 manualPass 共用。
      diag=true 时驱动/AB 归零（manualPass 诊断口径，与 KDK 路径一致）。
      纹理约定：cnRhs/cnSweep 的 uPsi=TEX0、uV=TEX1；cnSweep 追加 uRhs=TEX2。 */
@@ -671,6 +821,9 @@ export class QuantumField {
     const k = 0.5/this.state.m;
     const gl = this.gl;
     if (!this.state.paused) this.evolve();
+    /* 3D 体积路径（kernel.dim3）：volume ray-march → 合成 → 全卷 HUD；与 2D 路径
+       完全分离（互不共享显示 program / 归约管线），零分支风险。 */
+    if (this.kernel.dim3){ this.frame3d(now); return; }
 
     /* 显示 pass（含余晖） */
     gl.useProgram(this.progDisplay);
@@ -756,9 +909,120 @@ export class QuantumField {
       this.spinHud();
     }
 
+    this.frameTail(now);
+  }
+
+  /* 帧尾（2D/3D 共用）：帧率统计 + 标题状态（document.title 供 CDP 断言） */
+  frameTail(now){
     this._frames++;
     if (now - this._lastFpsT > 500){ this.fps = this._frames*1000/(now-this._lastFpsT); this._frames = 0; this._lastFpsT = now; this.q('#hFps').textContent = this.fps.toFixed(0); }
     document.title = 'OK f=' + this.fps.toFixed(0) + ' p=' + this.q('#hP').textContent;
+  }
+
+  /* ---------- 3D 帧路径（volume ray-march + 合成 + 全卷 HUD）----------
+     显示 program 消费 psiA3（3D 纹理）→ dispB（RGBA16F），再经 composite 上屏
+     （扫描线/噪点/亮度与 2D 同源）。HUD 的 P/T/V/E 来自 probSum3d（全卷 CPU
+     回读 + 内核 moments3d 物理分解），节流 500ms：64³ 回读 ~40ms，比 2D 的
+     GPU 归约贵一个量级（GPU 3D reduce 需层图集技巧，留作优化项）。 */
+  frame3d(now){
+    const gl = this.gl, st = this.state;
+    const cw = this.canvas.width, ch = this.canvas.height;
+    /* 体积 ray-march → dispB */
+    gl.useProgram(this.progVolume);
+    gl.bindVertexArray(this.quad.vao);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.dispB.fbo);
+    gl.viewport(0,0,cw,ch);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_3D, this.psiA3.tex);
+    gl.uniform1i(this.u(this.progVolume,'uVol'), 0);
+    gl.uniform1f(this.u(this.progVolume,'uTheta'), this.cam.theta);
+    gl.uniform1f(this.u(this.progVolume,'uPhi'), this.cam.phi);
+    gl.uniform1f(this.u(this.progVolume,'uDist'), this.cam.dist);
+    /* uAspect 是**标量**（= W/H）：射线按 right*ndc.x*uAspect*0.5 展开，取 A=W/H
+       方使世界正方体成正方像（推导：水平 px/(X/Z) = 3.2/A·W/2 与垂直 3.2·H/2 相等）。
+       注意不可照搬 2D display 的 vec2 惯例——对 float uniform 调 uniform2f 会
+       INVALID_OPERATION 且静默不写（uAspect 保持 0 ⟹ 屏幕 x 方向不参与射线 ⟹
+       成像退化为「只随 y 变化的横带」，R34 首轮实测踩中，见 worklog）。 */
+    gl.uniform1f(this.u(this.progVolume,'uAspect'), cw/ch);
+    gl.uniform1i(this.u(this.progVolume,'uSteps'), st.steps3|0);
+    gl.uniform1f(this.u(this.progVolume,'uDensity'), st.exposure3);
+    gl.uniform1f(this.u(this.progVolume,'uPhaseColor'), st.phaseColor ? 1 : 0);
+    gl.uniform1f(this.u(this.progVolume,'uSlice'), st.slice3 ? 1 : 0);
+    gl.uniform1f(this.u(this.progVolume,'uSliceZ'), st.sliceZ);
+    this.kernel.setUniforms(gl, this.progVolume, st);   /* 私有 uniform（3D 内核一般无） */
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    const td = this.dispA; this.dispA = this.dispB; this.dispB = td;
+    /* 合成到屏幕（与 2D 同源：扫描线 + 噪点 + 亮度） */
+    gl.useProgram(this.progComposite);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0,0,cw,ch);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.dispA.tex);
+    gl.uniform1i(this.u(this.progComposite,'uTex'), 0);
+    gl.uniform1f(this.u(this.progComposite,'uTime'), now*0.001);
+    gl.uniform1f(this.u(this.progComposite,'uBright'), st.bright);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    /* 全卷测量（P/T/V/E/peak/质心）——节流；调试句柄 probSum3d 无节流。
+       节流间隔随网格放大：probSum3d 的回读 + CPU 遍历成本 O(n³)（128³ 单次
+       ~0.5s），若不放大间隔，大网格下几乎每帧都触发一次，反而成为主开销。 */
+    if (now - this._lastReduceF > (st.grid <= 64 ? 500 : st.grid <= 96 ? 1500 : 3000)){
+      this._lastReduceF = now;
+      const m = this.probSum3d();
+      if (!this._baseCaptured){ this.baseP0 = m.P; this._baseCaptured = true; }
+      const err = Math.abs(m.P - this.baseP0)/Math.max(this.baseP0,1e-9)*100;
+      this.q('#hP').textContent = m.P.toFixed(4);
+      this.q('#hErr').textContent = err.toFixed(3) + '%';
+      this.q('#hErr').className = err < 1 ? 'ok' : 'warn';
+      this.q('#hT').textContent = m.T.toFixed(4);
+      this.q('#hV').textContent = m.V.toFixed(4);
+      this.q('#hE').textContent = m.E.toFixed(4);
+      this.q('#hPeak').textContent = m.peak.toFixed(4);
+      this.q('#hTime').textContent = st.simTime.toFixed(1);
+      this.q('#hGrid').textContent = st.grid + '³ · ' + st.m.toFixed(2);
+      this._lastE = m.E;                 /* 能级阶梯对照读数（refreshParamHud） */
+      this.refreshParamHud();
+    }
+    this.frameTail(now);
+  }
+
+  /* ---------- 3D 全卷回读测量（内核物理分解）----------
+     WebGL2 无法直接 readPixels 3D 纹理：逐层 framebufferTextureLayer + readPixels
+     （n² × RG32F）拼成 n³ 缓冲，交内核 moments3d 求 P/T/V/E/peak/质心。
+     成本：64³ ≈ 40ms（SwiftShader 实测口径），故帧内 500ms 节流。 */
+  probSum3d(){
+    const gl = this.gl, n = this.state.grid;
+    /* 缓冲按网格缓存（128³ = 16MB/次，逐次新建会造成可观的 GC 抖动） */
+    const need = n*n*n*2;
+    if (!this._buf3d || this._buf3d.length !== need){
+      this._buf3d = new Float32Array(need);
+      this._layer3d = new Float32Array(n*n*2);
+    }
+    const buf = this._buf3d, layer = this._layer3d;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA3.fbo);
+    for (let l=0; l<n; l++){
+      gl.framebufferTextureLayer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, this.psiA3.tex, 0, l);
+      gl.readPixels(0,0,n,n,gl.RG,gl.FLOAT,layer);
+      buf.set(layer, l*n*n*2);
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    const m = this.kernel.moments3d(buf, n, this.state);
+    m.simTime = this.state.simTime;
+    return m;
+  }
+
+  /* 3D 手动步进（诊断/验证用，不经 frame）：跑 n 个完整帧（每帧 sub 子步 ×
+     3 个全卷 pass），返回前后测量与漂移量——与 2D manualPass 同定位。
+     确定性：无时间依赖势 ⟹ 相同输入必得相同输出；simTime 保持不变
+     （诊断口径：不改变可见的模拟时钟）。 */
+  manualPass3d(n){
+    const t0 = this.state.simTime;
+    const before = this.probSum3d();
+    for (let i=0; i<n; i++) this.evolve3d(1.2);
+    const after = this.probSum3d();
+    this.state.simTime = t0;
+    return { n, before, after,
+             dP: Math.abs(after.P - before.P)/Math.max(before.P,1e-9)*100,
+             dE: after.E - before.E, simTime: t0 };
   }
 
   hud(p, t, v, peak, mom){
@@ -1031,6 +1295,8 @@ export class QuantumField {
     }
     const dm = this.q('#selDriveMode');       /* 驱动模式下拉（非滑块行，单独同步） */
     if (dm) dm.value = String(this.state.driveMode);
+    const g3 = this.q('#selGrid3');           /* 3D 体积网格下拉（?grid= / 面板切换后同步） */
+    if (g3) g3.value = String(this.state.grid);
     const abp = this.q('#oABPos');            /* AB 螺线管位置读数（预设 params 可能改 abX/abY） */
     if (abp) abp.textContent = '(' + this.state.abX.toFixed(2) + ', ' + this.state.abY.toFixed(2) + ')';
   }
@@ -1039,6 +1305,28 @@ export class QuantumField {
     const canvas = this.q('#gl');
     const aim = this.q('#aim'), aimLine = this.q('#aimline'), aimDot = this.q('#aimdot'), aimTxt = this.q('#aimtxt');
 
+    if (this.kernel.dim3){
+      /* 3D：轨道相机（拖拽旋转 + 滚轮缩放）。无拖拽发射（初态由预设/σ 滑块
+         给定）、无势场笔刷（势经 pot3 解析注入）。 */
+      this.on(canvas, 'pointerdown', e => {
+        try{ canvas.setPointerCapture(e.pointerId); }catch(_){/* 合成/无效 pointerId 时不应中断交互 */ }
+        this.cam.drag = { x: e.clientX, y: e.clientY };
+      });
+      this.on(canvas, 'pointermove', e => {
+        const d = this.cam.drag; if (!d) return;
+        this.cam.theta -= (e.clientX - d.x)*0.008;
+        /* φ 钳制 ±1.45 rad（cos φ ≥ 0.12）：相机视线与 up 接近平行时
+           shader 内 cross(fwd, up) 退化（|right|→0 ⟹ normalize 出 NaN ⟹ 画面全黑）。 */
+        this.cam.phi = Math.max(-1.45, Math.min(1.45, this.cam.phi + (e.clientY - d.y)*0.008));
+        d.x = e.clientX; d.y = e.clientY;
+      });
+      this.on(canvas, 'pointerup', () => { this.cam.drag = null; });
+      this.on(canvas, 'pointerleave', () => { this.cam.drag = null; });
+      this.on(canvas, 'wheel', e => {
+        e.preventDefault();
+        this.cam.dist = Math.max(1.1, Math.min(4.5, this.cam.dist*Math.exp(e.deltaY*0.0012)));
+      }, { passive:false });
+    } else {
     this.on(canvas, 'pointerdown', e => {
       try{ canvas.setPointerCapture(e.pointerId); }catch(_){/* 合成/无效 pointerId 时不应中断交互 */ }
       this.updateBrushCursor(e);
@@ -1080,6 +1368,7 @@ export class QuantumField {
       const k = this.dragK(d);
       this.initWave(d.wx, d.wy, k.kx, k.ky, true);   // 拖拽发射：叠加不清场（量子叠加）
     });
+    }
 
     /* 预设 / 工具按钮 */
     this.container.querySelectorAll('[data-preset]').forEach(b =>
@@ -1092,7 +1381,10 @@ export class QuantumField {
     }));
     this.on(this.q('#btnPause'), 'click', () => this.togglePause());
     this.on(this.q('#btnStep'), 'click', () => { const p = this.state.paused; this.state.paused = false; requestAnimationFrame(() => { this.state.paused = p; }); });
-    this.on(this.q('#btnReset'), 'click', () => { const w = this.state.lastWave; if (w) this.initWave(w[0],w[1],w[2],w[3]); });
+    this.on(this.q('#btnReset'), 'click', () => {
+      if (this.kernel.dim3){ this.reinitWave(); return; }        /* 3D：按 lastWave3 重发体积初态 */
+      const w = this.state.lastWave; if (w) this.initWave(w[0],w[1],w[2],w[3]);
+    });
     this.on(this.q('#btnClearV'), 'click', () => { this.clearV(); this.toast('势场已清空'); });
     this.on(this.q('#btnExportV'), 'click', () => this.exportPotential());
     this.on(this.q('#btnImportV'), 'click', () => this.q('#fileImportV').click());
@@ -1122,6 +1414,40 @@ export class QuantumField {
     this.bindRange('#rBright','#oBright','bright', v => '×'+v.toFixed(2));
     const extra = this.kernel.extraControls(() => this.reinitWave(), () => this.refreshParamHud());   /* 内核附加滑块（如 NLS 的 g / Pauli 自旋角） */
     if (extra) for (const r of extra.rows) this.bindRange(r.id, r.out, r.key, r.fmt, r.after);
+
+    /* 3D 体积面板（kernel.dim3）：网格 / 射线步数 / 曝光 / σ / 解析势参数 /
+       相位着色 / 切片模式 / 相机重置。
+       V₀、R 为纯势参数（每帧从 uniform 读入演化，即时生效，无需重发波包）；
+       ω（谐振子）与 Z（氢原子）同时决定基态形状 ⟹ 变更后须重发初态
+       （形状变了，单改势会让当前场成为非本征叠加态）。 */
+    if (this.kernel.dim3){
+      this.bindRange('#rSteps3','#oSteps3','steps3', v => String(v|0));
+      this.bindRange('#rExp3','#oExp3','exposure3', v => String(v|0));
+      this.bindRange('#rSigma3','#oSigma3','sigma', v => v.toFixed(1), () => this.reinitWave());
+      this.bindRange('#rPotV0','#oPotV0','potV0', v => v.toFixed(3));
+      this.bindRange('#rPotR','#oPotR','potR', v => String(v|0));
+      this.bindRange('#rPotW','#oPotW','potW', v => v.toFixed(4), () => this.reinitWave());
+      this.bindRange('#rPotZ','#oPotZ','potZ', v => v.toFixed(2), () => this.reinitWave());
+      this.bindRange('#rSliceZ3','#oSliceZ3','sliceZ', v => v.toFixed(2));
+      this.on(this.q('#btnPhase3'), 'click', () => {
+        this.state.phaseColor = this.state.phaseColor ? 0 : 1;
+        this.q('#btnPhase3').classList.toggle('on', !!this.state.phaseColor);
+      });
+      this.on(this.q('#btnSlice3'), 'click', () => {
+        this.state.slice3 = this.state.slice3 ? 0 : 1;
+        this.q('#btnSlice3').classList.toggle('on', !!this.state.slice3);
+        this.q('#sliceRow3').style.display = this.state.slice3 ? '' : 'none';
+      });
+      this.on(this.q('#btnCam3'), 'click', () => {
+        this.cam = { theta: 0.7, phi: 0.35, dist: 2.2, drag: null };
+        this.toast('相机已重置');
+      });
+      this.on(this.q('#selGrid3'), 'change', e => {
+        const g = parseInt(e.target.value, 10);
+        this.allocGrid3d(g);
+        this.loadPreset(this.state.preset);
+      });
+    }
 
     this.on(this.q('#selGrid'), 'change', e => {
       const g = parseInt(e.target.value, 10);
@@ -1162,8 +1488,8 @@ export class QuantumField {
     this.on(window, 'keydown', e => {
       if (e.code === 'Space'){ e.preventDefault(); this.togglePause(); }
       else if (e.key >= '1' && e.key <= '9'){ const pk = presetKeys[+e.key - 1]; if (pk) this.loadPreset(pk); }
-      else if (e.key === 'r' || e.key === 'R'){ const w = this.state.lastWave; if (w) this.initWave(w[0],w[1],w[2],w[3]); }
-      else if (e.key === 'c' || e.key === 'C'){ this.clearV(); }
+      else if (e.key === 'r' || e.key === 'R'){ this.reinitWave(); }   /* 2D: lastWave；3D: lastWave3 */
+      else if ((e.key === 'c' || e.key === 'C') && !this.kernel.dim3){ this.clearV(); }   /* 3D 无势场画布 */
       else if (e.key === 't' || e.key === 'T'){ this.state.decay = this.state.decay > 0.01 ? 0 : 0.97; this.q('#rTrail').value = this.state.decay; this.q('#oTrail').textContent = this.state.decay.toFixed(2); }
     });
 
@@ -1197,16 +1523,23 @@ export class QuantumField {
   bootstrap(){
     const qp = new URLSearchParams(location.search);
     const qg = parseInt(qp.get('grid')||'0', 10);
-    if (qg >= 64 && qg <= 512){ this.state.grid = qg; this.q('#selGrid').value = String(qg); }
+    if (this.kernel.dim3){
+      /* 3D 网格上限 128³：内存 n³ 且每 pass n 次逐层 draw（spike 实测 128³
+         105.6ms/pass，纯离线档）。initTargets 已按默认 grid 分配体积目标，
+         此处仅当 ?grid= 显式覆盖时重建。 */
+      if (qg >= 32 && qg <= 128){ this.state.grid = qg; this.allocGrid3d(qg); }
+    } else if (qg >= 64 && qg <= 512){ this.state.grid = qg; this.q('#selGrid').value = String(qg); }
     this.resize();
-    this.allocGrid(this.state.grid);
+    if (!this.kernel.dim3) this.allocGrid(this.state.grid);
     const qs = qp.get('speed');
     if (qs){ this.state.substeps = Math.max(1, Math.min(40, parseInt(qs,10)||6)); this.q('#rSpeed').value = Math.min(16,this.state.substeps); this.q('#oSpeed').textContent = this.state.substeps; }
     const presets = this.kernel.presets();
     const qpreset = qp.get('preset');
     this.loadPreset(presets[qpreset] ? qpreset : Object.keys(presets)[0]);
     const kxO = parseFloat(qp.get('kx')), kyO = parseFloat(qp.get('ky'));
-    if (!isNaN(kxO) || !isNaN(kyO)){
+    /* 2D 专属：?kx/?ky 覆盖发射方向（3D 无 lastWave——初态由 preset 的 wave3
+       给定，URL 覆盖走 ?preset= 与内核 applyParams） */
+    if (!this.kernel.dim3 && (!isNaN(kxO) || !isNaN(kyO))){
       const w = this.state.lastWave;
       this.initWave(w[0], w[1], isNaN(kxO)?w[2]:kxO, isNaN(kyO)?w[3]:kyO);
     }
@@ -1223,6 +1556,66 @@ export class QuantumField {
       kernelId: this.kernelId,
       /* 积分器模式（'cn' | 'kdk'）：CDP 验证直接断言路径，避免从漂移量反推 */
       integrator: this.kernel.integrator,
+      /* 3D 体积内核标志（dim3）与体积网格：CDP 按此分流断言 */
+      dim3: !!this.kernel.dim3,
+      grid3: () => this.state.grid,
+      /* 3D 全卷测量（内核 moments3d 物理分解）：P/T/V/E/peak/质心 + simTime。
+         无节流（HUD 用 500ms 节流版本）；64³ 约 40ms，验证脚本可直接调用。 */
+      probSum3d: () => this.probSum3d(),
+      /* 3D 确定性步进 n 帧（不经 frame）：返回前后测量 + P 百分比漂移 + ΔE。
+         验证守恒性/驻波稳定性用（KDK 的离散能量应无长期漂移）。 */
+      manualPass3d: (n) => this.manualPass3d(n),
+      /* 轨道相机读写（验证渲染路径：不同视角都应出图） */
+      setCam: (t, p, d) => {
+        if (t !== undefined) this.cam.theta = t;
+        if (p !== undefined) this.cam.phi = p;
+        if (d !== undefined) this.cam.dist = d;
+        return { theta: this.cam.theta, phi: this.cam.phi, dist: this.cam.dist };
+      },
+      getCam: () => ({ theta: this.cam.theta, phi: this.cam.phi, dist: this.cam.dist }),
+      wave3: () => this.state.lastWave3 || null,
+      /* 显示帧亮度分布剖面（列/行投影）：返回 5% 能量跨度与峰值位置。
+         用途：断言成像**不是横带/竖条**（R34 首轮 uAspect 静默失效时成像退化为
+         只随 y 变化的横带，而 trailSum>0 之类的聚合断言照样通过——需要方向分辨
+         的判据才抓得住）。紧凑体积应满足 colSpan.frac 与 rowSpan.frac 均 < 0.6。 */
+      dispProfile: () => {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.dispA.fbo);
+        const w = this.dispA.w, h = this.dispA.h;
+        const buf = new Float32Array(w*h*4);
+        gl.readPixels(0,0,w,h,gl.RGBA,gl.FLOAT,buf);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        const col = new Float64Array(w), row = new Float64Array(h);
+        let lo0 = Infinity;
+        for (let y=0;y<h;y++) for (let x=0;x<w;x++){
+          const i = (y*w+x)*4;
+          const l = 0.2126*buf[i] + 0.7152*buf[i+1] + 0.0722*buf[i+2];
+          col[x] += l; row[y] += l;
+          if (l < lo0) lo0 = l;                     /* 背景（体渲染的常色垫底） */
+        }
+        /* 扣背景：体渲染的背景是常数（未命中射线返回底色），不减掉它会让
+           5% 能量跨度退化为整个画面 ⟹ 判据失效。
+           注意方向：列投影 col[x] 是沿 y 累加（h 个像素）⟹ 扣 lo0*h；
+           行投影 row[y] 是沿 x 累加（w 个像素）⟹ 扣 lo0*w（R34 首版写反过）。 */
+        const bgc = lo0*h, bgr = lo0*w;
+        for (let x=0;x<w;x++) col[x] -= bgc;
+        for (let y=0;y<h;y++) row[y] -= bgr;
+        const span = (a, n) => {
+          let tot = 0; for (let i=0;i<n;i++) if (a[i] > 0) tot += a[i];
+          if (tot <= 0) return { tot: 0, lo: 0, hi: n-1, frac: 1 };
+          const thr = tot*0.05;
+          let lo = 0, hi = n-1, acc = 0;
+          for (let i=0;i<n;i++){ acc += Math.max(0,a[i]); if (acc >= thr){ lo = i; break; } }
+          acc = 0;
+          for (let i=n-1;i>=0;i--){ acc += Math.max(0,a[i]); if (acc >= thr){ hi = i; break; } }
+          return { tot, lo, hi, frac: (hi - lo + 1)/n };
+        };
+        const peakIdx = a => { let bi = 0; for (let i=1;i<a.length;i++) if (a[i] > a[bi]) bi = i; return bi; };
+        return { w, h, colSpan: span(col,w), rowSpan: span(row,h), colPeak: peakIdx(col)/w, rowPeak: peakIdx(row)/h };
+      },
+      /* GL 错误码（0 = 无错误）：uniform 类型不匹配这类**静默失败**（如对 float
+         uniform 调 uniform2f → INVALID_OPERATION 且 uniform 不写）不会被 JS 异常
+         捕获，只能靠显式查询。CDP 断言在若干真实帧之后调用。 */
+      glError: () => gl.getError(),
       /* 分区域概率（透射率扫描的测量原语；原子快照：左/右概率 + 质心 + 总 P） */
       probSplit: (x) => this.probSplit(x),
       /* 自旋布洛赫向量读数（Pauli 内核）：引擎 spinSum 原始求和 → 内核
@@ -1632,6 +2025,7 @@ export class QuantumField {
     if (this.gl){
       const gl = this.gl;
       for (const t of [this.psiA, this.psiB, this.dispA, this.dispB]) if (t){ gl.deleteTexture(t.tex); gl.deleteFramebuffer(t.fbo); }
+      for (const t of [this.psiA3, this.psiB3]) if (t){ gl.deleteTexture(t.tex); gl.deleteFramebuffer(t.fbo); }
       if (this.reduceT){ gl.deleteTexture(this.reduceT.tex); gl.deleteFramebuffer(this.reduceT.fbo); }
       gl.deleteTexture(this.vTex);
       const lose = gl.getExtension('WEBGL_lose_context');

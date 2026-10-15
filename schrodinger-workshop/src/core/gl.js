@@ -68,6 +68,22 @@ export function makeTarget(gl, w, h, internalFormat, format, filter){
   return { tex, fbo, w, h };
 }
 
+/* 3D 纹理目标（体积求解器 ping-pong；layer 级 FBO 附着由调用方按需重绑）。
+   注意：fbo 初始不附着任何层（WebGL2 无默认完整 3D FBO）——绘制前须
+   framebufferTextureLayer(FRAMEBUFFER, COLOR_ATTACHMENT0, tex, 0, layer)。 */
+export function makeTarget3D(gl, n, internalFormat, format, filter){
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_3D, tex);
+  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, filter);
+  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, filter);
+  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE);
+  gl.texImage3D(gl.TEXTURE_3D, 0, internalFormat, n, n, n, 0, format, gl.FLOAT, null);
+  const fbo = gl.createFramebuffer();
+  return { tex, fbo, n };
+}
+
 /* RGBA16F 显示目标（拖尾历史，LINEAR 兼做 resize 重采样） */
 export function makeRGBA16F(gl, w, h){
   const tex = gl.createTexture();

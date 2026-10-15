@@ -30,13 +30,14 @@ python3 -m http.server 8765          # 或 npm start
 **环境要求**：支持 WebGL2 + `EXT_color_buffer_float` 的浏览器
 （Chrome/Edge 90+、Firefox 90+、Safari 16.4+）。无 WebGL2 时页面会明确报错而非白屏。
 
-**URL 参数**：`?kernel=schrodinger|nls|gp|pauli|dirac` 物理内核 ·
+**URL 参数**：`?kernel=schrodinger|nls|gp|pauli|dirac|schrodinger3d` 物理内核 ·
 `?preset=free|barrier|slits|harmonic|scatter|box`（薛定谔）、
 `free|soliton|focus|barrier`（NLS）、`tf|vortex|tof|breather`（GP）、
-`larmor|stern-gerlach|tilted|free`（Pauli）或
-`relativistic|zitter|klein-barrier|klein-resonance`（Dirac）初始预设 ·
-`?grid=128|192|256|320` 网格精度 · `?speed=N` 积分子步 ·
-`?kx=0.1&ky=0.05` 覆盖初始波包动量
+`larmor|stern-gerlach|tilted|free`（Pauli）、
+`relativistic|zitter|klein-barrier|klein-resonance`（Dirac）或
+`free3d|sphere|oscillator|ground|orbital2p`（薛定谔 3D）初始预设 ·
+`?grid=128|192|256|320` 网格精度（`schrodinger3d` 为 32|48|64|96|128 的**体积**网格） ·
+`?speed=N` 积分子步 · `?kx=0.1&ky=0.05` 覆盖初始波包动量（2D 内核）
 
 ## 功能
 
@@ -153,11 +154,41 @@ u(k)=(1, (sin k_x+i·sin k_y)/(E+m))，k=0 时 u=(1,0) 纯上分量。
 - **势场 8 位编码上限 ±1**（引擎约束）⟹ Klein 区（E−V0<0）要求 m<0.5，预设取小质量
 - ZB 颤振是 Dirac 方程的物理内容（连续极限的标准结果），不是数值误差；格点上频率为 2√(sin²k+m²)
 
+### 薛定谔 3D 内核：5 个预设场景（3D 纹理 + 体积 ray-march）
+
+第一个**三维**内核（`?kernel=schrodinger3d`，`dim3=true`），也是引擎首次启用 3D 纹理管线：
+波函数存于 **RG32F n³ 3D 纹理**（默认 **64³**），演化按 **逐层 draw** 推进全卷
+（WebGL2 无法把 3D 纹理整体挂为附件，每 pass = n 次 `framebufferTextureLayer` + draw），
+显示走 **volume ray-march**（发射-吸收模型 + 轨道相机）。
+
+**与 2D 路径的差异（关键，勿混用）**
+
+| 项 | 2D | 3D |
+|---|---|---|
+| 拉普拉斯 / 谱半径 | 5 点 / 8 | 7 点 / **12**（`eMax = uK·12 + …`） |
+| 边界 | Dirichlet（越界返回 0） | **Neumann 零梯度**（`CLAMP_TO_EDGE`，触壁软反射） |
+| 势场 | 256² 势场画布（笔刷可画、可导入导出） | **解析注入**（内核 `pot3`，球垒/谐振子/库仑；无笔刷） |
+| 交互 | 拖拽发射波包 + 势场笔刷 | **轨道相机**（拖拽旋转、滚轮缩放） |
+| HUD 测量 | GPU MRT 归约（120ms） | `probSum3d` 全卷 CPU 回读（按网格节流 500/1500/3000ms） |
+| 世界坐标 | 纹素单位，原点在角 | `w = (p−0.5)·N`，**原点在域中心** |
+
+| 预设 | 物理内容 |
+|---|---|
+| 自由传播 | 高斯波包飞行 + 扩散。CDP 实测质心匀速：30 帧 Δcx=0.06685 vs 理论 `k/m·Δt/N`=0.06750 ⟹ **0.99×k/m** |
+| 球形势垒 | 波包撞 V₀=0.02、R=10 texel 的球垒：迎头反射 + 边缘衍射 + 球后散射尾波（三维版圆散射体）。E 守恒 ΔE=−5.6e-8 |
+| 3D 谐振子 | V=½ω²r²，σ=8 的中心波包**恰为基态**（σ=1/√ω）⟹ 严格驻波：P/能量/peak 全不动（peak 比 1.0038）；调宽 σ 即看到本征叠加的周期性呼吸 |
+| 氢原子 1s | ψ ∝ e^{−Zr} 球对称驻波，软化库仑 V=−Z/max(r,½)。实测 E=−0.030778 vs 解析 −Z²/2=−0.031250（1.5%，软化核 + 尖点离散）；维里 ⟨T⟩=−E、⟨V⟩=2E 均 0.1% 内 |
+| 氢原子 2p_z | ψ ∝ z·e^{−Zr/2}，赤道面 z=0 为**节面**（密度严格为零），上下瓣相位差 π——相位着色下呈**互补双色瓣**，是 arg(ψ) 可视化的最佳范例。E=−0.008177 vs −Z²/8=−0.007813（64³ 分辨率限制，256³ 时 0.2%） |
+
+**3D 面板**：网格 32³–128³（128³ 为离线档，spike 实测 105.6ms/pass）· 射线步数 16–128 · 曝光 · σ · 解析势参数（V₀/R/ω/Z）· 相位着色开关 · z 切片（调试视图）· 相机重置。
+**诚实限制**：3D 无势场笔刷与势场存档（势为解析式）、无 AB/驱动/耗散（面板隐藏）、无 GPU 3D 归约（HUD 走全卷回读）；KDK 积分器（CN 未移植到 3D）；128³ 在本环境（软件 GL）约 1–2 fps，定位为离线/确定性验证。
+
 ### 交互
 
 | 操作 | 效果 |
 |---|---|
 | **拖拽** | 发射波包——起点=波包中心，方向与长度=动量 k（准星实时显示 k 值） |
+| **拖拽（3D 内核）** | 旋转体积视角（θ/φ），滚轮缩放相机距离；无拖拽发射（初态由预设/σ 给出） |
 | **叠加发射** | 拖拽发射**不清场**：新波包与场上既有波包按量子叠加原理线性叠加、互相干涉 |
 | 势垒/势阱笔刷 | 径向渐变绘制 ±V 势场（暖色=势垒，冷色=势阱），带光标预览环 |
 | 橡皮 | 擦除势场回 V=0 |
@@ -191,6 +222,10 @@ u(k)=(1, (sin k_x+i·sin k_y)/(E+m))，k=0 时 u=(1,0) 纯上分量。
 | 网格精度 | 128²–320² | psi 场纹理分辨率 |
 
 **快捷键**：`1-6` 预设 · `Space` 暂停 · `T` 拖尾开关 · `R` 重置波包 · `C` 清空势场
+
+> **3D 内核**（`schrodinger3d`）另有独立面板「3D 体积渲染」（网格/步数/曝光/σ/解析势参数/相位着色/切片/相机），
+> 本节中的笔刷、势场存档、AB、驱动、耗散、拖尾控件对 3D 不适用并自动隐藏——
+> 3D 势场为解析注入，无 256² 势场画布。
 
 ### 势场序列化 / 导入导出
 
@@ -344,9 +379,13 @@ H 特征值上界 E_max = k·8 + 1 + 内核附加项 + |驱动幅值 A|
 直接把 dt 提过头的教训已固化为代码注释：E_max=5 的模式半对角 1−0.36·25/2 = −3.5，
 特征值溢出单位圆，棋盘格噪声指数发散，数帧内炸穿浮点缓冲（P=NaN）。
 
-### 边界：Dirichlet 零墙
+### 边界：Dirichlet 零墙（2D）／Neumann 零梯度（3D）
 
-`S(uv)` 在域外返回 0 = 无限高势墙，酉反射、P 严格守恒（「无限深方阱」预设即此边界）。
+**2D**：`S(uv)` 在域外返回 0 = 无限高势墙，酉反射、P 严格守恒（「无限深方阱」预设即此边界）。
+
+**3D**（`kernel.dim3`）：纹理 `CLAMP_TO_EDGE` ⟹ 越界取边界值 = 零梯度（Neumann），
+波包触壁为软反射而非硬墙。有界势（谐振子/氢原子）场景下更物理——这也是 3D 预设全部
+采用解析势的原因。**两者不可混用口径**，文档与代码注释均已分别标注。
 
 ### NLS 符号约定
 
@@ -394,6 +433,20 @@ Evolve (RG32F ping-pong ×sub×3) → Display (+trail max 混合 → dispA/dispB
 - **亮度曝光点在 composite 末端**：若在 display pass，亮度会经 trail 缓冲反馈双重缩放
 - **resize 不丢拖尾**：旧 dispA 经纯拷贝 shader blit 进新 dispA，LINEAR 滤波兼做分辨率缩放
 
+**3D 体积路径**（`kernel.dim3`，与 2D 完全分离——`frame()` 早返回走 `frame3d()`，
+两者不共享显示 program 与归约管线）：
+
+```
+Evolve3D (n³ RG32F ping-pong ×sub×3 × n 层逐层 draw)
+  → Volume ray-march (轨道相机 → dispA/dispB)
+  → Composite (同 2D) → probSum3d (全卷逐层回读 + 内核 moments3d → HUD)
+```
+
+- **逐层 draw**：WebGL2 无完整 3D FBO，每 pass = n 次 `framebufferTextureLayer` + draw（R34 spike 实测 64³ 8.8ms/pass、128³ 105.6ms/pass，SwiftShader）
+- **HUD 测量**为 O(n³) CPU 回读（无 GPU 3D reduce），节流随网格放大：≤64³ 500ms / ≤96³ 1500ms / 128³ 3000ms
+- **曝光逐预设标定**：体积密度峰值跨 36×（归一化到 n³ 个体素），且发射-吸收存在「外壳遮挡核心」的权衡（过高曝光下弥散态的外晕先变不透明、把亮核挡成暗壳）⟹ 曝光不是一个常数：free3d 3600 / sphere 4800 / oscillator 2400 / 1s 1200 / 2p_z 8000（CDP 实测标定，目标峰值亮度 0.7–0.9），滑块量程 100–10000
+- **相位着色与 2D 同源**：两处共用同一 `hsv2rgb(vec3(arg(ψ)/2π+0.5, 0.80, 1.0))` 映射（引擎级共享注入位 `{{HSV}}`）——相位差 π 的两瓣呈互补色（2p_z 实测青/红 + 中间节面）
+
 ## 验证
 
 全部经 CDP 驱动 Chromium（SwiftShader 软渲染）实测，非静态断言：
@@ -421,6 +474,10 @@ Evolve (RG32F ping-pong ×sub×3) → Display (+trail max 混合 → dispA/dispB
 | **Pauli 自旋内核 CDP 套件**（pairs=2 挂载/布洛赫初态 θ,φ 三态/双分量 P 守恒 + probSplit 原子快照/拉莫尔 ω=B_z/m 实测 0.02000 + cos/sin 签名 2e-3/B_z 热切换频率翻倍实测 0.04000/SG 分量质心半位移 t1 0.0% 精确 + t² 律 ±3%/↑↓ 束心自旋 dominance/斜场 ⟨σ_z⟩=⅓+⅔cos 偏差 8e-4/序列化 round-trip/自旋滑块重发契约/零 console 异常） | 29/29 PASS |
 | **Dirac 内核 CDP 套件**（CN 双 shader 编译+挂载/4 预设/CN 长跑概率守恒 t=210 \|P−1\|=6.4e-6/群速实测 1.4488e-3 vs dE/dk 理论 1.4820e-3（2.2%，薛定谔 k/m 低 24%）/ZB m=1 幅度 0.0242 残差 0.147 + m=2 频率翻倍（numpy 同算法参考逐位互证）/Klein 模型自洽 T(0)=1、T(a=14)=0.9946≫T(a=16)=0.1659/Klein 时间域实测 T=0.2759 vs 格点精确解 0.2593（比值 1.064）/m 热切换 P=1.000045/序列化 round-trip/零异常） | 16/16 PASS |
 | **Dirac 标定互证**（zb_calib.py：复刻引擎 CN 的 numpy 同算法参考——GLSL 与 Python 的 ZB 幅度/残差/直流电平逐位一致 0.0242/0.0036/0.9742；klein5.py latticeT 与 klein_td4.py 时间域 T_sim=T_latt ±3% 前验） | 逐位一致 |
+| **Pauli 切 CN 回归（R33）**（debugHandle 直读 `integrator` / KDK 路径 A/B 装配逐字一致 5 内核×全 program / tilted+B_y=0.05 由 +9.941%→−0.0099% / SG +0.027% / Dirac +0.0099%） | 5/5 CDP 复现 + A/B 10/10 |
+| **3D 体积内核装配 + CPU 物理对账（R34）**（3D 模板装配无残留 token / 2D 五内核 program 逐字节一致 / 1s E=−0.030778 vs −Z²/2 + 维里 ⟨T⟩=−E、⟨V⟩=2E / 谐振子 E=0.023415 vs 1.5ℏω / 高斯 Σ\|ψ\|²=1202.8 vs (πσ²)^{3/2} / ⟨T⟩ 0.5% / 2p_z 上下瓣严格反相+节面严格 0） | 41/41 PASS |
+| **3D 体积内核 CDP 套件（R34）**（默认 64³ / 群速 0.99×k/m / P 守恒 dP≤0.0008% / 离散能量 \|ΔE\|≤2.6e-7 / 1s E=−0.030778 / 2p_z E=−0.008177 / 驻波 peak 比 1.0038 / 球垒 E 守恒+波包前进 / 相机四分支出图含 φ=1.45 无 NaN / 网格 32/96 切换 / 2D 与 CN 内核回归 / dist 单文件版 3D 可加载） | 37/37 PASS，零控制台异常 |
+| **3D 渲染回归探针（R34）**（`glError()=0` 抓 uniform 类型静默失败 / `dispProfile()` 扣背景后列·行 5% 能量跨度两轴紧凑 ⟹ 横带·竖条判据 / 五预设 dispA 峰值亮度 0.49–0.75 / 2p_z 双瓣青·红互补 + 节面） | 通过（含人眼截图复核） |
 
 ## 架构
 
@@ -450,9 +507,11 @@ schrodinger-workshop/
 │       ├── gp.js                 Gross-Pitaevskii / BEC 内核（pairs=1，4 预设）
 │       ├── pauli.js              Pauli 自旋内核（pairs=2，RGBA32F 旋量，4 预设，CN 积分器）
 │       ├── dirac.js              Dirac 相对论内核（pairs=2 旋量，integrator='cn'，4 预设）
+│       ├── schrodinger3d.js      薛定谔 3D 内核（dim3=true，n³ RG32F 3D 纹理，
+│       │                         解析势 + 体积 ray-march + 轨道相机，5 预设）
 │       └── barrier.js            矩势垒解析透射模型（透射率扫描工具 + Pauli free 预设共用）
 └── dist/
-    └── quantum-field.html        构建产物：单文件分发版（143KB，file:// 直开）
+    └── quantum-field.html        构建产物：单文件分发版（216KB，file:// 直开）
 ```
 
 ### PhysicsKernel 契约

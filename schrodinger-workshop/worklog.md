@@ -19,6 +19,8 @@
 | R30 | Pauli 自旋内核（#32） | pairs=2 旋量落地：SG 分量质心分离 t² 律（0.0% 精确）+ 拉莫尔/斜场进动签名，CDP 29/29 + 回归矩阵 10/10 + scan 18/18 |
 | R31 | Dirac 方程内核（#33） | 一阶系统 + CN 积分器引擎扩展：KDK 结构性失效（谱半径 1.0216，R32 更正；原记录的 1.205 为脚本误转录值）⟹ CN Cayley 严格正交；群速 2.2% / ZB 幅度频率 / Klein 时间域 1.064，CDP 16/16 + 回归 11 套件全绿 + dist 双通道 |
 | R32 | Pauli KDK σ·B 缺陷量化（#42） | 上会话 ρ>1 观察溯源为脚本 picker 误转录；真相：σ_x/σ_z 偶算符 ρ=1 精确、σ_y 奇耦合 ρ=√(1+φ²)；numpy 全算符 + CDP 互证（tilted +0.122%/+0.127%、By=0.05 +9.85%/+9.941%）；文档数字全量更正 + 修复选项待用户决策 |
+| R33 | Pauli 切 CN 积分器（#43） | R32 σ_y 缺陷根治：CN_LOCAL_SOLVE 提升为内核注入位 + LAP_BLOCK 三模板共享；KDK 路径 A/B 装配逐字一致（5 内核 × 全 program）；tilted+B_y=0.05 由 KDK +9.941% → CN −0.0099% |
+| R34 | 3D 体积内核（#34） | spike 能力矩阵 + 薛定谔 3D 内核落地：7 点 stencil KDK 逐层 draw 全卷 + ray-march 体积渲染 + 轨道相机；5 预设物理对账（群速 0.99×k/m、1s E=−0.030778 vs −Z²/2、谐振子 E=0.023415 vs 1.5ℏω）；装配/物理 harness 41/41 + CDP 36/36 |
 
 ---
 
@@ -80,6 +82,118 @@ numpy 复刻引擎：Hc = −uK·lap5(w) − uK·σB(w)，kick (x, y−h·Hc.x, 
 - numpy 全算符复刻（pauli_td_norm.py 扩展）：四案例 900 帧端点 P 漂移（上表）
 - CDP 实测（上轮已完成）：larmor −0.000% / tilted +0.127% / tilted+B_y=0.05 +9.941%（manualPass(1800)×9 确定性步进）
 - 本轮为注释/文档改动（无逻辑变更），dist 重建一致性由 build-standalone 保证
+
+---
+
+## R34（2026-10-15）3D 体积内核（#34）：spike（A）→ 落地（B）→ 验证
+
+### R34-A：3D 纹理 spike（能力矩阵 + 性能实测）
+
+### 缘起
+#34（3D 纹理 + volume 渲染 + 新交互）是引擎级范式扩展，用户拍板 spike-first：先以最小探针验证 WebGL2 3D 管线在本环境（Xvfb + Chrome headless + SwiftShader 软件 GL）的可行性与成本，再设计实现。
+
+### 探针设计（/tmp/r34_spike/spike.html，CDP 驱动 /tmp/r34_spike/run.js）
+六个决策问题：Q1 分配/上传、Q2 sampler3D 渲染、Q3 GPU 层写入（framebufferTextureLayer）、Q4 回读、Q5 格式与 LINEAR 过滤、Q6 求解 sweep 成本。计时口径：**1×1 readPixels 强制管线同步**——`gl.finish()` 在 ANGLE/SwiftShader 下不保证同步（draw-only 计时虚低至 µs 级，曾误报 0.015ms/帧）。
+
+### 实测结果
+
+| 项目 | 结果 |
+|---|---|
+| CAPS | MAX_3D_TEXTURE_SIZE=2048、MAX_ARRAY_TEXTURE_LAYERS=2048、EXT_color_buffer_float=✓、OES_texture_float_linear=✓ |
+| ALLOC | RGBA32F/RGBA16F/RG32F/R32F × 32³/64³/128³/256³ **全部 OK**（256³ RGBA32F=256 MiB） |
+| UPLOAD | 128³ RGBA32F（4 MiB）×5：75.0/19.2/77.3/1.7/12.8 ms（中位 ~13ms，方差大） |
+| RAYMARCH | 400×300、32 步 synced-frame：NEAREST **24.5ms**（~41fps）/ LINEAR **30.2ms**；8 步 9.7ms ⟹ 固定帧开销 ~9ms 主导，**步数成本极低**（8→32 步仅 +15ms） |
+| SANITY | center rgb=(130,213,9) lum=164.9，NEAREST/LINEAR 可辨别 ⟹ sampler3D 数据通路成立 |
+| FBO3D | framebufferTextureLayer 写入 layer42 + 回读验证 OK（值精确匹配） |
+| READBACK | 128² RGBA32F（256 KiB）avg 2.26ms |
+| SWEEP3D | 64³ RG32F 7 点全卷 pass **8.80ms**（114 pass/s）；128³ **105.6ms**（9 pass/s）——按层 draw（每层一次 framebufferTextureLayer 重绑 + draw），单层开销 ~0.14ms 占显著比例 |
+
+### 实施期探针 bug（均修复后复测）
+1. ray-march FS：`uniform sampler3D` 缺精度限定符（GLSL ES 3.0 sampler 无默认精度）⟹ `uniform highp sampler3D`
+2. ray-march FS：`acc.rgb + trans*vec4(0.02,0.02,0.03,1.0)` 误写 vec4（vec3+vec4 类型错误）⟹ vec3
+3. sweep 基准初版只渲染**单层**（viewport(M,M) = M² 体素）⟹ 0.2ms/0.4ms 是单层开销而非全卷；改逐层 draw 循环后得真实全卷成本
+4. `gl.finish()` 计时虚低（见上）⟹ 全部改用 readPixels 同步口径
+
+### 结论与 #34 设计决策（证据基础）
+- **全链路可行**：3D float 纹理分配/上传/采样/过滤/GPU 层写入/回读全部可用，无扩展缺失
+- **网格选型**：sandbox（SwiftShader）内 64³ 可交互（求解 52.8ms/帧@6 子步 + 显示 ~10-25ms ≈ 13-16fps）；128³ 仅 1.6fps，定位为离线/确定性验证选项（真实 GPU 上两者均宽裕）。默认 **64³**，可选 32/48/96/128
+- **渲染**：ray-march volume 为主（步数廉价，可上 64-128 步提质），2D z-切片为调试/低成本模式
+- **求解器架构**：ping-pong 3D RG32F 纹理 + 逐层 draw 的 7 点拉普拉斯 KDK；CN 留待后续（引擎模式已泛化）
+- **物理预设方向**（educator 视角）：自由高斯包（群速测速）、球垒散射（3D 透射）、谐振子势（波包回归）、氢原子 1s/2p 定态密度
+
+### R34-B：落地实现（薛定谔 3D 内核 + 体积渲染 + 轨道相机）
+
+**引擎侧改动**（2D 路径零行为变更——5 个 2D 内核 × 全部 program 装配逐字一致，见验证）
+
+| 文件 | 改动 |
+|---|---|
+| `src/core/gl.js` | `makeTarget3D(gl,n,ifmt,fmt,filter)`：3D 纹理 + fbo（**初始不附着层**——WebGL2 无默认完整 3D FBO，调用方须 `framebufferTextureLayer` 逐层重绑） |
+| `src/physics/kernel.js` | `TPL_EVOLVE3D`（7 点 stencil KDK，`sampler3D` + `uLayer` + `uTexel3` + `uGrid3`）+ `TPL_DISPLAY3D`（轨道相机 ray-march + z 切片调试模式）；`buildShaders` 新增 `if(kernel.dim3)` 分支装配 `evolve3d`/`display3d`；`hsv2rgb` 提为共享注入位 `SNIP_HSV`（2D/3D 单源真值）；头注补 3D token 契约（pot3/density3/phase3/helpers/makeWave3d） |
+| `src/physics/schrodinger3d.js` | 新内核：`dim3=true`；`makeWave3d`（gaussian/ground/2p_z）；`pot3` 解析势（uPotKind 分支）；`moments3d`（CPU 全卷测量：P/T/V/E/peak/质心）；`energyLevels`（谐振子 1.5ω / 氢原子 −Z²/2n²）；5 预设（含逐预设曝光标定值） |
+| `src/core/app.js` | `allocGrid3d` / `initWave3d` / `evolve3d` / `frame3d` / `probSum3d` / `manualPass3d` + 帧尾 `frameTail` 抽取；`evolve()` 与 `frame()` 各加一条 dim3 早返回；轨道相机（pointer/wheel）+ 3D 面板；debugHandle 增 3D 句柄与两个渲染回归探针（`glError` / `dispProfile`） |
+| `src/main.js` | 注册 `./physics/schrodinger3d.js`（dist 单文件版同步内联，14 模块） |
+
+**关键设计决策**
+
+- **世界坐标口径**：`w = (p−0.5)·N`（p 为纹理坐标）⟹ 格点 (x,y,z) 的世界坐标 = `x+0.5−N/2`，解析势与初态同口径（pot3 与 pot3JS 互为镜像，写死在文件头契约里）
+- **边界**：3D 用 `CLAMP_TO_EDGE` ⟹ **Neumann 零梯度**（波包触壁软反射），与 2D `S()` 越界返 0 的 Dirichlet **不同**——有界势（谐振子/氢原子）场景更物理，已在内核文件头与 README 如实标注
+- **稳定性**：7 点 stencil 谱半径 12（2D 5 点为 8）⟹ 3D 的 `eMax = uK·12 + 1 + eMaxExtra`，各势形的 |V| 上界由内核 `eMaxExtra` 给出（球垒 V₀、谐振子 ½ω²·3(N/2)²、软化库仑 2Z）
+- **无势场画布**：笔刷/势场序列化/AB/驱动/耗散对 3D 不适用（面板对 dim3 隐藏），势经 pot3 解析注入，势参数滑块即时生效（ω/Z 因同时决定基态形状，变更后重发初态）
+- **HUD 测量**：WebGL2 不能直读 3D 纹理 ⟹ `probSum3d` 逐层 `framebufferTextureLayer` + `readPixels` 拼全卷，交内核 `moments3d` 物理分解；节流间隔随网格放大（≤64: 500ms / ≤96: 1500ms / 128: 3000ms），缓冲按网格缓存（128³ 单次 16MB）
+
+**验证（本轮全部为实测数字，无推算值）**
+
+装配 + CPU 物理对账 harness（`/tmp/r34_asm/asm.mjs`）：**41 PASS / 0 FAIL**
+
+| 项目 | 实测 | 解析预言 |
+|---|---|---|
+| 2D 内核 A/B（5 个 × 全 program） | 逐字一致 | —（零行为变更） |
+| 氢原子 1s E（64³） | −0.030778 | −Z²/2 = −0.031250（1.5%：软化核 + 尖点离散） |
+| 1s 维里 ⟨T⟩ / ⟨V⟩ | 0.030744 / −0.061522 | −E / 2E（0.1%） |
+| 谐振子基态 E（σ=1/√ω=8） | 0.023415 | 1.5ℏω = 0.023438（0.1%） |
+| 谐振子 ⟨T⟩ / ⟨V⟩ | 0.011696 / 0.011719 | E/2 各半（0.2%） |
+| 高斯包 Σ\|ψ\|² | 1202.8 | (πσ²)^{3/2} = 1202.8（0.02%） |
+| 高斯包 ⟨T⟩ | 0.027902 | (k²+3/2σ²)/2 = 0.028033（0.5%） |
+| 2p_z 上下瓣 | ±2.926760（世界坐标对称点） | 严格反相 |
+| 2p_z 节面 | 奇数 n 严格 0；偶数 n 节点层反号 ±0.448700 | — |
+
+CDP 浏览器实测（Chrome + SwiftShader，64³ 默认）：**37 PASS / 0 FAIL，零控制台异常**
+
+| 项目 | 实测 |
+|---|---|
+| 默认网格 | 64³（32/48/96/128 可切换，P 均 =1） |
+| 自由传播群速（30 帧） | Δcx=0.06684 vs 理论 0.12·36/64=0.06750 ⟹ **0.99×k/m** |
+| P 守恒（各预设 24–30 帧） | dP ≤ 0.0008% |
+| 离散能量守恒 | \|ΔE\| ≤ 2.6e-7（含势的 sphere 亦 ΔE=−5.6e-8） |
+| 氢原子 1s E（GPU 场） | −0.030778（与 CPU 侧一致） |
+| 2p_z E（64³） | −0.008177 vs −Z²/8 = −0.007813（4.7%，64³ 对 r·e^{−Zr/2} 的分辨率限制；256³ 时 −0.007827 即 0.2%） |
+| 驻波稳定性 | osc peak 比 1.0038、1s 0.9807（2% 呼吸——离散本征态非严格连续解）、质心不动 |
+| 球垒散射 | cx 0.1605→0.2230，E 守恒 |
+| 渲染分支 | 默认/旋转视角/φ=1.45 极限/切片模式均出图，无 NaN |
+| **渲染回归探针** | `glError()=0`；`dispProfile()` 扣背景后 colSpan/rowSpan = 0.106/0.193（默认机位）与 0.124/0.211（+z 机位）——两轴紧凑，横带/竖条判据通过 |
+| **逐预设视觉确认** | 五预设 dispA 峰值亮度 0.49–0.75（8bit 155–176），成像紧凑；2p_z 双瓣青/红互补 + 节面 |
+| 2D 回归 | schrodinger P=1.000000；pauli `integrator=cn` P=1.000001 |
+| dist 单文件版 | 3D 内核可加载（P=1、E=−0.030778、出图 max 0.796）、2D 未受影响 |
+
+**本轮修复的 bug（含测试侧）**
+
+1. **3D 默认网格落到 256³（真 bug，首轮验证踩中）**：3D 内核 `defaults()` 未覆盖引擎默认的 `grid:256`（2D 场纹理档位）⟹ 分配 256³（268MB/场）、每帧 4608 次 draw，交互帧率个位数，且首轮 CDP 三项假阴性皆源于此。修：`defaults()` 显式 `grid:64`，面板与 `?grid=` 限制 32…128，并写入内核注释防回归
+2. **CDP runner 导航竞态（测试侧）**：`Page.navigate` 后旧页 `document.title` 仍为 `OK` ⟹ 判定就绪、实际测的是上一页（首轮 grid=256 读数即来自上一轮残留页）。修：先 `about:blank` 过渡 + 三判据（title=OK 且 `location.search` 匹配且 kernelId/预设匹配）
+3. **harness 断言口径 4 条（测试侧）**：① `uPotKind` 计数应为 4（pot3 三元分支 ×3 + uniform 声明 ×1）；② 质心为 texel 序号口径 ⟹ 域中心 = `(n/2−0.5)/n = 0.4922` 而非 0.5；③ 偶数 n 无格点落在 w=0 ⟹ 2p_z 对称点应取 `mid+8` 与 `mid−1−8`；④ 严格节面只在奇数 n 出现
+4. **重复注入位守卫触发**：TPL_DISPLAY3D 原在切片与 ray-march 两处各注入 `DENSITY3`/`PHASE3` ⟹ 被 R33 的重复注入位守卫拦截。修：改为 `den3(c)`/`ph3(c)` 单点注入函数，两条渲染路径共用
+5. **`uAspect` 标量被 `uniform2f` 写入（真 bug，只有截图能发现）**：TPL_DISPLAY3D 声明 `uniform float uAspect`（标量），而 `frame3d` 照搬 2D 惯例写成 `gl.uniform2f(...)` ⟹ WebGL 报 `INVALID_OPERATION` 且**静默不写**（uniform 保持 0）⟹ 屏幕 x 方向对射线零贡献 ⟹ 成像退化为「只随 y 变化的横带」。而首轮 32 项 CDP 里的 3 项渲染断言（出图 / 换视角出图 / 极限 φ）**全部照常通过**——它们都是聚合量（sum/max），方向分辨不出横带。修：`uniform1f(cw/ch)`（推导：世界正方体成正方像要求 A = W/H），并新增两个机器可断言的探针防回归：
+   - `glError()`：GL 错误码（0 = 无错误）——uniform 类型不匹配这类静默失败不被 JS 异常捕获，只能显式查询
+   - `dispProfile()`：扣背景后的亮度列/行 5% 能量跨度与峰值位置——方向分辨地判横带/竖条（紧凑体积应两轴均 < 0.75）
+   - （`dispProfile` 自身还踩过一次：扣背景时把 w/h 写反 ⟹ 列扣 `lo0*w` 而非 `lo0*h`，跨度失真；已修并写入注释）
+6. **曝光默认过高会「外壳遮挡核心」**：体渲染的发射-吸收存在权衡——密度峰值跨 36×（2p_z 8.7e-5 ↔ 1s 3.1e-3），且弥散态（谐振子 σ=8）在过高曝光下外晕先变不透明、把亮核挡成暗壳（实测 4800+ ⟹ 峰值亮度掉到 0.02）。逐预设实测标定曝光（目标 dispA 峰值 0.7–0.9）：free3d 3600 / sphere 4800 / oscillator 2400 / ground 1200 / orbital2p 8000；滑块量程放宽到 100–10000
+7. **3D 相位配色与 2D 图例不同源**：首版 3D 自带 `hue2rgb`（从 spike 探针带来的近似彩虹公式）把相位 0 与相位 π **映射到几乎同一个暖白**⟹ 2p_z 双瓣看着同色，与本文档「相位差 π 呈互补双瓣」的口径不符（属「文档承诺 ≠ 实际成像」的诚实性问题）。修：把 2D 显示里的 `hsv2rgb` 提为引擎级共享注入位 `{{HSV}}`（`SNIP_HSV`，R33 提取 TPL_LAP_BLOCK 的同一手法），2D/3D 共用同一映射（`hsv2rgb(vec3(arg(ψ)/2π+0.5, 0.80, 1.0))`）。实测 2p_z 双瓣呈 **青 / 红**互补色 + 中间清晰节面；A/B 证明 2D 装配产物逐字不变
+
+> **经验（写入本条以便后续视觉类改动复用）**：「tsc-pass ≠ runtime-safe」在图形侧的同款教训是「聚合断言 ≠ 成像正确」。数值断言（P/能量/群速）与亮度聚合量（sum/max）都可以在**错图**上全绿；方向分辨的成像判据 + 人眼截图复核是必需的最后一道关。
+
+### 后续（未做，留 backlog）
+- GPU 3D reduce（层图集 + 现有 MRT 归约）：把 `probSum3d` 的 O(n³) CPU 回读从 ~40ms 降到 ~10ms，可把 HUD 节流收回 120ms
+- 3D CN 积分器（一阶内核的 3D 版）、3D 势场笔刷（3D 纹理绘制 + 序列化）
+- 双缝/干涉类 3D 预设、3D 透射率扫描（体积散射无 1D 解析模型，需另立口径）
 
 ---
 

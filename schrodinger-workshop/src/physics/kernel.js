@@ -61,8 +61,20 @@
  * 已覆盖的物理族：二阶时间可分离 H(u)=Hv, v'=-Hu 系统（薛定谔/NLS/GP）、
  * 含时外场驱动、AB 磁通（link 相位）、Pauli 自旋（pairs=2 双复分量：localH
  * 给 σ·B 的 4 通道实线性积，引擎模板零改动；自旋读数经 spinReadout 契约）、
- * Dirac 一阶系统（pairs=2：KINETIC_E/kinScale/helpers 三 token，见下）。
- * 尚未落地的族：3D（3D 纹理）——见 README「新增内核」。
+ * Dirac 一阶系统（pairs=2：KINETIC_E/kinScale/helpers 三 token，见下）、
+ * 3D 体积求解（dim3=true：TPL_EVOLVE3D/TPL_DISPLAY3D，见下）。
+ *
+ * 3D token（R34 #34 引入；kernel.dim3=true 时 buildShaders 装配 evolve3d +
+ *   display3d 两个 program，app.js 走 evolve3d 分支与 volume 显示）：
+ *   pot3     —— TPL_EVOLVE3D 的解析势表达式（float，变量 w=p−0.5 世界坐标，
+ *               居中域 [−0.5,0.5]³；默认 '0.0' 自由空间）。3D 无势纹理
+ *               （笔刷工具不适用 3D）——球垒/谐振子等由预设经此注入。
+ *   density3 —— TPL_DISPLAY3D 的体积密度（vec4 c → float；标量默认
+ *               dot(c.xy,c.xy)=|ψ|²）。
+ *   phase3   —— 体积相位着色（float，弧度；默认 atan(c.y,c.x)）。
+ *   helpers  —— 复用 2D 同名注入位（pot3 需函数时在此定义）。
+ *   makeWave3d —— 引擎 initWave 调用的 3D 初态生成（n, opts → Float32Array，
+ *                 n³·通道数）；2D makeWave 对 dim3 内核不被调用。
  *
  * 一阶系统 token（Dirac 内核 #33 引入；默认值对标量内核逐字等价、回归零风险）：
  *   kineticE —— TPL_EVOLVE 的动能项表达式（默认 '-uK*lap'）。引擎 KDK 骨架
@@ -245,6 +257,123 @@ void main(){
   }
 }`;
 
+/* 共享色彩映射：相位 arg(ψ) → RGB（h = arg/2π + 0.5）。2D 显示与 3D 体积
+   相位着色共用同一份实现（单源真值）——两处若各写一份，π 相位差是否呈互补色
+   这种约定就会漂移（R34 首版 3D 自带的 hue2rgb 把相位 0 与 π 都映射到暖白，
+   2p_z 双瓣看着同色，与「相位差 π 呈互补双瓣」的文档口径不符）。
+   调用口径（与 2D 默认像素色一致）：hsv2rgb(vec3(atan(ψ_y,ψ_x)/2π + 0.5, 0.80, 1.0))。 */
+const SNIP_HSV = `vec3 hsv2rgb(vec3 c){
+  vec3 rgb = clamp(abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),6.0)-3.0)-1.0,0.0,1.0);
+  rgb = rgb*rgb*(3.0-2.0*rgb);
+  return c.z*mix(vec3(1.0),rgb,c.y);
+}`;
+
+/* ---------- 3D KDK 速度 Verlet 骨架（引擎级，kernel.dim3=true 时启用）----------
+   与 TPL_EVOLVE 同构：一阶系统 w'=J·M·w 的 kick/drift/kick 交叉投影逐字
+   一致，仅把 2D 5 点 stencil 换成 3D 7 点、sampler2D 换 sampler3D、按层
+   draw（app.js evolve3d：每子步 3 个全卷 pass，每 pass N 次逐层绘制）。
+   边界：texture CLAMP_TO_EDGE（Neumann 零梯度）——与 2D 的 S() 越界返回 0
+   （Dirichlet）**不同**，3D 下波包触壁软反射；有界势（谐振子）场景更物理。
+   势：无 3D 势纹理（笔刷工具不适用 3D），由内核经 pot3 注入解析势
+   （表达式变量 w = p−0.5，世界坐标 ∈ [−0.5,0.5]³；无驱动/AB——3D 路径
+   暂不支持，预留 UNIFORMS 注入位）。 */
+const TPL_EVOLVE3D = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform highp sampler3D uPsi;
+uniform float uDt;
+uniform float uK;
+uniform float uUpdateV;   // 1.0 = 更新 v 分量, 0.0 = 更新 u 分量
+uniform vec3 uTexel3;     // (1/N, 1/N, 1/N)
+uniform float uLayer;     // 当前绘制层 z ∈ (0,1)（层中点）
+uniform float uGrid3;     // N（格点数；世界坐标 = (p−0.5)·N，格点单位）
+{{UNIFORMS}}
+vec4 S(vec3 p){ return texture(uPsi, clamp(p, vec3(0.0), vec3(1.0))); }
+{{HELPERS}}
+void main(){
+  vec3 p = vec3(vUv, uLayer);
+  vec4 c = S(p);
+  vec3 e = uTexel3;
+  vec4 lap = S(p+vec3(e.x,0.0,0.0)) + S(p-vec3(e.x,0.0,0.0))
+           + S(p+vec3(0.0,e.y,0.0)) + S(p-vec3(0.0,e.y,0.0))
+           + S(p+vec3(0.0,0.0,e.z)) + S(p-vec3(0.0,0.0,e.z)) - 6.0*c;
+  vec3 w = (p - 0.5)*uGrid3;                         /* 世界坐标（格点单位，居中） */
+  float V = {{POT3}};
+  vec4 Hc = -uK*lap + V*c;                           /* 标量：势逐通道同乘 */
+  if(uUpdateV > 0.5){
+    o = vec4(c.x, c.y - 0.5*uDt*Hc.x, c.z, c.w - 0.5*uDt*Hc.z);   // v_half/v_new = v - dt/2*H*u
+  } else {
+    o = vec4(c.x + uDt*Hc.y, c.y, c.z + uDt*Hc.w, c.w);           // u_new = u + dt*H*v_half
+  }
+}`;
+
+/* ---------- 3D 显示：volume ray-march（引擎级，kernel.dim3=true 时启用）----------
+   发射-吸收模型：密度由内核 density3 注入（vec4 c → float，经函数 den3 单点
+   注入——切片与 ray-march 两条路径共用；相位 phase3 同理经 ph3 注入）。
+   相机轨道（θ/φ/dist）在 shader 内计算射线，单位立方体 [-0.5,0.5]³ slab 求交，
+   固定步数（uSteps）+ 透射率提前退出。切片模式（uSlice>0.5）退化为 z=uSliceZ
+   的 2D 密度切片（调试/低成本视图）。步数成本实测极低（R34 spike：8→32 步
+   仅 +15ms@400×300 SwiftShader），默认 48。
+   注意：注释内勿写带双花括号的 token 名（fill() 重复注入位守卫会拦截，
+   R33 教训）——故本注释用 density3/phase3 裸名指代。 */
+const TPL_DISPLAY3D = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform highp sampler3D uVol;
+uniform float uTheta;      /* 相机方位角 */
+uniform float uPhi;        /* 相机极角（钳制 ±1.45 rad，防 cross 退化） */
+uniform float uDist;       /* 相机距（世界单位） */
+uniform float uAspect;     /* 画布宽高比 W/H（标量，见 app.js frame3d 的圆像推导） */
+uniform int   uSteps;
+uniform float uDensity;    /* 曝光/密度标度 */
+uniform float uPhaseColor; /* 0 = 单色热度, 1 = 相位着色 */
+uniform float uSlice;      /* 0 = ray-march, 1 = z 切片 */
+uniform float uSliceZ;     /* 切片层 z ∈ [0,1] */
+{{UNIFORMS}}
+/* 单点注入：den3/ph3 两条渲染路径（切片 / ray-march）共用同一函数体 */
+float den3(vec4 c){ return {{DENSITY3}}; }
+float ph3(vec4 c){ return {{PHASE3}}; }
+{{HSV}}
+void main(){
+  /* ---- 切片模式：z=uSliceZ 平面密度 ---- */
+  if(uSlice > 0.5){
+    vec4 c = texture(uVol, vec3(vUv, uSliceZ));
+    float d = den3(c);
+    float ph = ph3(c);
+    vec3 col = uPhaseColor > 0.5 ? hsv2rgb(vec3(ph/6.28318530718+0.5, 0.80, 1.0)) : vec3(1.0,0.75,0.35);
+    o = vec4(col*clamp(d*uDensity*2.2, 0.0, 1.0), 1.0);
+    return;
+  }
+  /* ---- ray-march：轨道相机 ---- */
+  float ct = cos(uTheta), st_ = sin(uTheta), cp = cos(uPhi), sp = sin(uPhi);
+  vec3 ro = uDist*vec3(cp*ct, sp, cp*st_);
+  vec3 fwd = normalize(-ro);
+  vec3 right = normalize(cross(fwd, vec3(0.0,1.0,0.0)));
+  vec3 up = cross(right, fwd);
+  vec2 ndc = (vUv-0.5)*2.0;
+  vec3 rd = normalize(fwd*1.6 + right*ndc.x*uAspect*0.5 + up*ndc.y*0.5);
+  vec3 t0 = (vec3(-0.5)-ro)/rd, t1 = (vec3(0.5)-ro)/rd;
+  vec3 tn = min(t0,t1), tf = max(t0,t1);
+  float tEnter = max(max(tn.x,tn.y),tn.z), tExit = min(min(tf.x,tf.y),tf.z);
+  if(tEnter > tExit){ o = vec4(0.015,0.02,0.035,1.0); return; }
+  tEnter = max(tEnter, 0.0);
+  float dt = (tExit-tEnter)/float(uSteps);
+  vec3 acc = vec3(0.0);
+  float trans = 1.0;
+  for(int i=0;i<uSteps;i++){
+    vec3 p = ro + rd*(tEnter + (float(i)+0.5)*dt);
+    vec4 c = texture(uVol, p+0.5);
+    float d = den3(c);
+    float ph = ph3(c);
+    vec3 col = uPhaseColor > 0.5 ? hsv2rgb(vec3(ph/6.28318530718+0.5, 0.80, 1.0)) : vec3(1.0,0.72,0.32);
+    float a = 1.0 - exp(-d*uDensity*dt*14.0);
+    acc += trans*a*col;
+    trans *= 1.0-a;
+    if(trans < 0.004) break;
+  }
+  o = vec4(acc + trans*vec3(0.015,0.02,0.035), 1.0);
+}`;
+
 /* ---------- CN 积分器（Crank-Nicolson + block-Jacobi；kernel.integrator='cn'）----------
    动机：KDK 速度 Verlet 要求 M 通道对齐（本征基可按 kick/drift 两通道投影分解为
    逐模态 2×2 旋转）。Dirac 的 M=α·p+βm+V **混合通道**（α·p 把 ψ₂ 的导数耦合进
@@ -391,11 +520,7 @@ vec4 bilerp(sampler2D t, vec2 uv, vec2 texel){
   vec4 d = texture(t, base+texel);
   return mix(mix(a,b,f.x+0.5), mix(c,d,f.x+0.5), f.y+0.5);
 }
-vec3 hsv2rgb(vec3 c){
-  vec3 rgb = clamp(abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),6.0)-3.0)-1.0,0.0,1.0);
-  rgb = rgb*rgb*(3.0-2.0*rgb);
-  return c.z*mix(vec3(1.0),rgb,c.y);
-}
+{{HSV}}
 void main(){
   vec2 wuv = (vUv-0.5)*uAspect + 0.5;
   if(wuv.x<0.0||wuv.x>1.0||wuv.y<0.0||wuv.y>1.0){
@@ -611,6 +736,7 @@ export function buildShaders(kernel){
       DENSITY: s.density,
       PIXEL_COLOR: s.pixelColor || DEFAULT_PIXEL_COLOR,
       UNIFORMS: uni,
+      HSV: SNIP_HSV,
     }),
     reduce: fill(TPL_REDUCE, { ...need, ...opt, UNIFORMS: uni, PMEANX: pm.pmeanX, PMEANY: pm.pmeanY }),
     scale: TPL_SCALE,
@@ -628,8 +754,23 @@ export function buildShaders(kernel){
     out.cnRhs = fill(TPL_CN_RHS, { ...need, ...opt, UNIFORMS: uni, LAP_BLOCK: TPL_LAP_BLOCK });
     out.cnSweep = fill(TPL_CN_SWEEP, { ...need, ...opt, UNIFORMS: uni, LAP_BLOCK: TPL_LAP_BLOCK, CN_LOCAL_SOLVE: s.cnLocalSolve });
   }
+  /* 3D 路径（kernel.dim3=true，R34）：evolve3d（7 点拉普拉斯 KDK）+ display3d
+     （volume ray-march）。pot3 = 解析势表达式（变量 w=p−0.5 世界坐标）；
+     density3/phase3 = 体积密度/相位（标量默认 dot(c.xy,c.xy)/atan(c.y,c.x)）。
+     app.js 按 sh.evolve3d 是否存在决定编译 3D program 与 evolve3d 分支。 */
+  if (kernel.dim3){
+    out.evolve3d = fill(TPL_EVOLVE3D, {
+      UNIFORMS: uni, POT3: s.pot3 || '0.0', HELPERS: s.helpers || '',
+    });
+    out.display3d = fill(TPL_DISPLAY3D, {
+      UNIFORMS: uni,
+      DENSITY3: s.density3 || 'dot(c.xy,c.xy)',
+      PHASE3: s.phase3 || 'atan(c.y, c.x)',
+      HSV: SNIP_HSV,
+    });
+  }
   return out;
 }
 
 /* 导出模板仅供测试/文档引用（生产路径经 buildShaders 消费） */
-export const TEMPLATES = { TPL_EVOLVE, TPL_CN_RHS, TPL_CN_SWEEP, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, TPL_LAP_BLOCK, DEFAULT_PIXEL_COLOR, DEFAULT_PMEAN };
+export const TEMPLATES = { TPL_EVOLVE, TPL_EVOLVE3D, TPL_DISPLAY3D, SNIP_HSV, TPL_CN_RHS, TPL_CN_SWEEP, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, TPL_LAP_BLOCK, DEFAULT_PIXEL_COLOR, DEFAULT_PMEAN };

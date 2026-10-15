@@ -10,6 +10,7 @@ import './physics/nls.js';
 import './physics/gp.js';
 import './physics/pauli.js';
 import './physics/dirac.js';
+import './physics/schrodinger3d.js';
 
 const kernel = new URLSearchParams(location.search).get('kernel') || 'schrodinger';
 new QuantumField(document.body, { kernel }).mount();
