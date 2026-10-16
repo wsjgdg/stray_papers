@@ -694,3 +694,339 @@ export class TransmissionScanner3 {
     x.fillStyle = 'rgba(154,167,189,.8)'; x.fillText('— s 波中心 E', L + 180, T + 10);
   }
 }
+
+/* ============================================================================
+ * 双缝图样扫描（R40；3D POT_DOUBLE_SLIT 预设的扫描版）
+ *
+ * 对每个缝距 D 重发同一入射波包（slits3d 口径：kx=1.2、σ=6、x₀=−26、墙
+ * V₀=3/wallT=4/slitW=6、屏幕 x=24），演化到波包过屏时刻测屏剖面
+ * （screenSlice3 的 z 求和 = |φ_2D|²，R39 可分离性口径），提取峰位/峰数/
+ * 间距/可见度。D=0 为单缝退化点（对照）。与 R38 透射扫描同一生命周期契约
+ * （paused + 自驱 rAF + boost + 原子快照 + 中止/状态恢复）。
+ *
+ * 停止判据（固定窗，非自适应）：R39 已验证本几何时间线确定性——入射到屏
+ * 的飞行时间只由 kx/σ 决定、与 D 无关（D 只改 y 方向结构）⟹ 每点在测量窗
+ * [32, 56] 帧内等间隔测 4 次，取峰数最多帧记录（平手取最早）；framesMax
+ * 兜底置顶。放弃「峰数增长即停」类自适应判据的缘由：峰数在窗内非单调
+ * （波前到达过程中条纹逐步成形），固定窗 + 最多峰选取对 D 引起的小时序
+ * 差异更稳。
+ *
+ * 参考模型（Fraunhofer 远场近似，仅供定性对照）：λ=2π/k、L=屏幕−墙心，
+ * 双缝峰位 y_n=n·λL/D、单缝包络零点 y_m=m·λL/W。本几何 D²/λ≫L 深 Fresnel
+ * 区 + 脉冲源时间 smear ⟹ 定量失效（R39 实测双瓣而非等间距条纹），偏差
+ * 如实记录进 summary 而非调参掩盖。
+ * ========================================================================== */
+
+export const SLITSCAN_DEFAULTS = {
+  kx: 1.2, sigma: 6,            /* 入射波包（slits3d 预设口径，rad/texel） */
+  x0: -26,                      /* 波包起点（世界坐标） */
+  screenX: 24,                  /* 屏幕世界 x（R39 口径） */
+  grid: 64,                     /* 扫描网格（R39 预设默认） */
+  v0: 3, wallT: 4, slitW: 6,    /* 固定墙参数（slits3d 口径；D 为扫描变量） */
+  dLo: 0, dHi: 32, dN: 9,       /* D 扫描范围（含 0 单缝退化点；滑块量程 0–32） */
+  ds: null,                     /* 显式 D 列表（绝对单位）时忽略上面范围 */
+  boost: 4,                     /* 每 rAF tick 推进的物理帧数 */
+  measureEvery: 8,              /* 测量间隔（帧） */
+  measureFrom: 32,              /* 测量窗起点（t=38.4，波前到达屏区；_best 只收录 frames≥此值的测量） */
+  measureTo: 56,                /* 测量窗终点（t=67.2，y 边界反射大规模混入前） */
+  framesMax: 120,               /* 单点帧预算兜底 */
+};
+
+/* 屏剖面峰提取（与 R39 cdp39 的 peaksOf 口径逐字一致：中央区 |y|<20 取
+   pmax、三点平滑、局部极大 + 阈值 0.25·pmax、只取 |y|<16）。
+   R40 增补实质密度门限：波包到达屏区前 prof 为 float32 数值残余（实测
+   ~1e-22），三点平滑后仍可越过 0.25·pmax 相对阈值形成假峰——D=0 单点诊断
+   实证 f=8 假峰 pk=[-0.5] pmax=8e-22，与单缝真实中央峰（1 峰）平手令
+   _best 永久停在最早噪声帧（记录 frames=8/vis≈1 的噪声派生值）。绝对门限
+   1e-12 与真实屏密度（~1e-4 量级）相隔 8 个量级，语义：无实质密度 ⟹ 无峰。 */
+export function slitPeaks(prof, n){
+  const half = n/2;
+  const W = prof.map((p, i) => ({ y: i + 0.5 - half, p }));
+  const central = W.filter(w => Math.abs(w.y) < 20);
+  const pmax = Math.max(...central.map(w => w.p));
+  if (!(pmax > 1e-12))
+    return { nPeaks: 0, peaks: [], spacing: NaN, vis: 0, pmax, pmin: pmax };
+  const sm = central.map((w, i) => {
+    const a = central[Math.max(0, i-1)].p, b = w.p, c = central[Math.min(central.length-1, i+1)].p;
+    return { y: w.y, p: (a + 2*b + c)/4 };
+  });
+  const pk = [];
+  for (let i = 1; i < sm.length - 1; i++)
+    if (sm[i].p >= sm[i-1].p && sm[i].p > sm[i+1].p && sm[i].p > 0.25*pmax && Math.abs(sm[i].y) < 16) pk.push(sm[i].y);
+  const smin = Math.min(...sm.map(w => w.p));
+  const vis = (pmax + smin) > 0 ? (pmax - smin)/(pmax + smin) : 0;
+  const sp = pk.slice(1).map((y, i) => y - pk[i]);
+  const spacing = sp.length ? sp.reduce((a, b) => a + b, 0)/sp.length : NaN;
+  return { nPeaks: pk.length, peaks: pk, spacing, vis, pmax, pmin: smin };
+}
+
+/* Fraunhofer 远场峰位预测（定性参考）：y_n = n·λL/D，λ=2π/k（texel）。 */
+export function fraunhoferPeaks(d, k, L, yMax){
+  if (!(d > 0)) return [];
+  const lam = 2*Math.PI/k, out = [];
+  for (let m = 1; m <= 8; m++){
+    const y = m*lam*L/d;
+    if (y > yMax) break;
+    out.push(y); out.push(-y);
+  }
+  return out.sort((a, b) => a - b);
+}
+
+export class SlitScanner {
+  constructor(app){
+    this.app = app;
+    this.busy = false;
+    this.results = [];       /* [{d, nPeaks, peaks, spacing, vis, frames, P, wx}] */
+    this.opts = null;
+    this.summary = null;     /* {maxYDev, medianYDev, nMeas} 上次扫描的 Fraunhofer 偏差汇总 */
+    this._i = 0; this._frames = 0; this._raf = 0;
+    this._best = null;       /* 当前点的最佳测量（峰数最多帧） */
+    this._savedPaused = false; this._savedSigma = 6;
+  }
+
+  /* ---------- 生命周期（与 TransmissionScanner3 同契约） ---------- */
+  start(opts){
+    if (this.busy) return false;
+    const app = this.app;
+    if (!app.kernel.dim3){ app.toast('当前内核非 3D，无双缝扫描'); return false; }
+    this.opts = Object.assign({}, SLITSCAN_DEFAULTS, opts || {});
+    const o = this.opts;
+    this._savedSigma = app.state.sigma;
+    app.state.sigma = o.sigma;
+    if (o.ds) this.ds = o.ds.slice();
+    else {
+      this.ds = [];
+      for (let i = 0; i < o.dN; i++)
+        this.ds.push(o.dLo + (o.dHi - o.dLo)*i/Math.max(1, o.dN - 1));
+    }
+    this.results = []; this.summary = null;
+    this._i = 0;
+    this._savedPaused = app.state.paused;
+    app.state.paused = true;
+    this.busy = true;
+    const b1 = app.q('#btnSlitScan'), b2 = app.q('#btnSlitScanStop');
+    if (b1) b1.disabled = true;
+    if (b2) b2.disabled = false;
+    app.toast('双缝图样扫描开始 · D ' + this.ds[0] + '→' + this.ds[this.ds.length-1] +
+              ' · ' + this.ds.length + ' 点 · ' + o.grid + '³');
+    this._beginPoint();
+    this._raf = requestAnimationFrame(() => this._tick());
+    return true;
+  }
+
+  stop(){
+    if (!this.busy) return false;
+    this.busy = false;
+    cancelAnimationFrame(this._raf);
+    this._restore();
+    this.app.toast('双缝扫描已中止（' + this.results.length + '/' + this.ds.length + ' 点）');
+    return true;
+  }
+
+  _restore(){
+    const app = this.app;
+    app.state.paused = this._savedPaused;
+    app.state.sigma = this._savedSigma;
+    app.loadPreset(app.state.preset);
+    app.syncControls();
+    const b1 = app.q('#btnSlitScan'), b2 = app.q('#btnSlitScanStop');
+    if (b1) b1.disabled = false;
+    if (b2) b2.disabled = true;
+  }
+
+  /* ---------- 单点流程 ---------- */
+  _beginPoint(){
+    const o = this.opts, app = this.app;
+    this._d = this.ds[this._i];
+    /* 势：双缝墙（参数级）——potKind=4 + 固定 V0/wallT/slitW + 本点 D */
+    app.state.potKind = 4;                    /* POT_DOUBLE_SLIT */
+    app.state.potV0 = o.v0;
+    app.state.potWallT = o.wallT;
+    app.state.potSlitW = o.slitW;
+    app.state.potSlitD = this._d;
+    /* 入射波包：slits3d 口径（+x、中心 y=z=0、起点 x₀=−26） */
+    app.initWave3d({ wave3: [0.5 + o.x0/o.grid, 0.5, 0.5, o.kx, 0, 0], kind: 'gaussian' });
+    this._frames = 0; this._best = null;
+    this._status();
+  }
+
+  _tick(){
+    if (!this.busy) return;
+    const o = this.opts;
+    let done = false, m = null;
+    for (let b = 0; b < o.boost && !done; b++){
+      this.app.evolve();
+      this._frames++;
+      if (this._frames % o.measureEvery === 0 || this._frames >= o.framesMax){
+        m = this._measure();
+        /* _best 收录：窗外早期帧（frames < measureFrom）仅作占位（保证
+           _record 非空——极端无窗内测量时如实记 0 峰）；窗内测量按峰数
+           竞争（平手取最早：严格大于才替换）。measureFrom 前实测 f24 已有
+           稳定单峰（波前过墙、屏区实质密度出现），但窗起点语义以设计口径
+           [32,56] 为准——窗外值不参与竞争。 */
+        const inWin = this._frames >= o.measureFrom;
+        if (!this._best || (inWin && m.nPeaks > this._best.nPeaks)) this._best = m;
+        if (this._frames >= o.framesMax) done = true;
+        else if (this._frames >= o.measureTo) done = true;
+      }
+    }
+    if (done){
+      this._record(this._best);
+      this._i++;
+      if (this._i < this.ds.length) this._beginPoint();
+      else this._finish();
+    }
+    if (this.busy){ this._status(); this._raf = requestAnimationFrame(() => this._tick()); }
+  }
+
+  /* 测量：屏剖面（z 求和 ⟹ |φ_2D|²，R39 可分离性）+ 峰提取 */
+  _measure(){
+    const o = this.opts, app = this.app;
+    const sl = app.screenSlice3(o.screenX);
+    const r = slitPeaks(sl.prof, sl.n);
+    return Object.assign({ frames: this._frames, wx: sl.sliceWx }, r);
+  }
+
+  _record(m){
+    if (!m) return;
+    this.results.push({
+      d: this._d, nPeaks: m.nPeaks, peaks: m.peaks.slice(), spacing: m.spacing,
+      vis: m.vis, frames: m.frames, P: this._lastP(m), wx: m.wx,
+    });
+    this._status();
+  }
+
+  /* P 单独取（screenSlice3 不含 P；probSum3d 与测量同帧会多一次全卷回读，
+     但每点只补一次、且只用于守恒记录——可接受） */
+  _lastP(m){
+    const app = this.app;
+    const b = app.probSum3d();
+    return b.P;
+  }
+
+  _finish(){
+    this.busy = false;
+    cancelAnimationFrame(this._raf);
+    /* Fraunhofer 偏差汇总（如实记录，非调参）：对每个 D>0 点，实测峰位与
+       预测峰位 y_n=n·λL/D 取最近邻匹配的 |Δy| 中位数。 */
+    const o = this.opts;
+    const L = o.screenX, lam = 2*Math.PI/o.kx;
+    const devs = [];
+    for (const r of this.results){
+      if (!(r.d > 0) || !r.nPeaks) continue;
+      for (const y of r.peaks){
+        /* r.d 为本点缝距（曾误写 o.d——opts 无 d 字段 ⟹ NaN 全表，
+           R40 第三轮 CDP 实测 nMatched=12 而 medianYDev=null 抓出） */
+        const n = Math.round(y*r.d/(lam*L));
+        if (n === 0) continue;
+        const yp = n*lam*L/r.d;
+        devs.push(Math.abs(y - yp));
+      }
+    }
+    devs.sort((a, b) => a - b);
+    const med = devs.length ? devs[Math.floor(devs.length/2)] : NaN;
+    const max = devs.length ? devs[devs.length-1] : NaN;
+    this.summary = { medianYDev: med, maxYDev: max, nMatched: devs.length };
+    this._restore();
+    this._plot();
+    this._status(true);
+    this.app.toast('双缝扫描完成 · ' + this.results.length + ' 点 · 峰位 vs Fraunhofer 中位偏差 ' +
+      (isFinite(med) ? med.toFixed(2) : '—') + ' texel（' + devs.length + ' 峰匹配，深 Fresnel 区定性参考）');
+  }
+
+  /* ---------- 面板状态 / 绘图 ---------- */
+  _status(final){
+    const el = this.app.q('#slitScanStat'); if (!el) return;
+    if (this.busy){
+      const r = this.results[this.results.length - 1];
+      el.textContent = (this._i + 1) + '/' + this.ds.length +
+        ' · D=' + this._d.toFixed(0) +
+        ' · 帧 ' + this._frames + '/' + this.opts.framesMax +
+        (r ? ' · 上点峰数 ' + r.nPeaks + (isFinite(r.spacing) ? '（间距 ' + r.spacing.toFixed(1) + '）' : '') : '');
+    } else if (final && this.results.length){
+      const s = this.summary;
+      el.textContent = '完成 ' + this.results.length + ' 点 · 峰数 ' +
+        this.results.map(r => r.nPeaks).join('/') +
+        ' · vs Fraunhofer 中位偏差 ' + (isFinite(s.medianYDev) ? s.medianYDev.toFixed(2) : '—') + ' texel';
+    }
+  }
+
+  _plot(){
+    const cv = this.app.q('#slitScanCanvas'); if (!cv) return;
+    const x = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    x.clearRect(0, 0, W, H);
+    x.fillStyle = 'rgba(4,8,16,.55)'; x.fillRect(0, 0, W, H);
+    if (!this.results.length) return;
+    const o = this.opts, L = o.screenX, lam = 2*Math.PI/o.kx;
+    const dMax = Math.max(...this.ds) * 1.06;
+    /* 上子图：峰位 |y| vs D（实测散点 + Fraunhofer 预测线） */
+    const T1 = 14, H1 = (H - T1 - 18)*0.58, B1 = 18;
+    const yMax = 16;
+    const X = d => 34 + d/dMax*(W - 42);
+    const Y = y => T1 + (yMax - y)/yMax*H1;
+    x.font = '9px ui-monospace,monospace';
+    x.strokeStyle = 'rgba(120,160,220,.14)'; x.lineWidth = 1;
+    for (let g = 0; g <= 4; g++){
+      const yy = T1 + H1*g/4;
+      x.beginPath(); x.moveTo(34, yy); x.lineTo(W - 8, yy); x.stroke();
+      x.fillStyle = '#9aa7bd'; x.textAlign = 'right'; x.fillText((yMax - g*yMax/4).toFixed(0), 31, yy + 3);
+    }
+    for (let g = 0; g <= 4; g++){
+      const d = dMax*g/4, xx = X(d);
+      x.beginPath(); x.moveTo(xx, T1); x.lineTo(xx, T1 + H1); x.stroke();
+      x.fillStyle = '#9aa7bd'; x.textAlign = 'center'; x.fillText(d.toFixed(0), xx, H1 + T1 + 11);
+    }
+    /* Fraunhofer 预测峰位线（y_n=nλL/D，n=1..3；琥珀虚线）——定性参考 */
+    x.strokeStyle = 'rgba(251,191,36,.5)'; x.setLineDash([4, 3]);
+    for (let n = 1; n <= 3; n++){
+      x.beginPath();
+      let started = false;
+      for (let i = 0; i <= 120; i++){
+        const d = 1 + (dMax - 1)*i/120;
+        const y = n*lam*L/d;
+        if (y > yMax){ started = false; continue; }
+        const px = X(d), py = Y(y);
+        if (!started){ x.moveTo(px, py); started = true; } else x.lineTo(px, py);
+      }
+      x.stroke();
+    }
+    x.setLineDash([]);
+    /* 实测峰位散点（青；D=0 单缝点也画——峰位集中 0 附近） */
+    x.fillStyle = '#67e8f9';
+    for (const r of this.results)
+      for (const y of r.peaks){
+        const px = X(r.d), py = Y(Math.abs(y));
+        x.beginPath(); x.arc(px, py, 2.2, 0, 6.2832); x.fill();
+      }
+    x.fillStyle = '#9aa7bd'; x.textAlign = 'left';
+    x.fillText('峰位 |y| vs D', 38, 10);
+    x.fillStyle = '#67e8f9'; x.fillText('● 实测', W - 116, 10);
+    x.fillStyle = '#fbbf24'; x.fillText('–– Fraunhofer nλL/D', W - 74, 10);
+    /* 下子图：峰数 vs D（阶梯） */
+    const T2 = T1 + H1 + B1, H2 = H - T2 - 16;
+    const nMax = Math.max(4, ...this.results.map(r => r.nPeaks));
+    const Y2 = v => T2 + (nMax - v)/nMax*H2;
+    x.strokeStyle = 'rgba(120,160,220,.14)';
+    for (let g = 0; g <= nMax; g += Math.max(1, Math.round(nMax/4))){
+      const yy = Y2(g);
+      x.beginPath(); x.moveTo(34, yy); x.lineTo(W - 8, yy); x.stroke();
+      x.fillStyle = '#9aa7bd'; x.textAlign = 'right'; x.fillText(String(g), 31, yy + 3);
+    }
+    x.strokeStyle = '#67e8f9'; x.lineWidth = 1.4; x.beginPath();
+    this.results.forEach((r, i) => {
+      const px = X(r.d), py = Y2(r.nPeaks);
+      if (i === 0) x.moveTo(px, py); else x.lineTo(px, py);
+    });
+    x.stroke(); x.lineWidth = 1;
+    x.fillStyle = '#67e8f9';
+    for (const r of this.results){
+      const px = X(r.d), py = Y2(r.nPeaks);
+      x.beginPath(); x.arc(px, py, 2.6, 0, 6.2832); x.fill();
+    }
+    x.fillStyle = '#9aa7bd'; x.textAlign = 'left';
+    x.fillText('峰数 vs D（0 = 单缝退化）', 38, T2 + 9);
+    x.textAlign = 'center';
+    x.fillText('缝距 D（texel）', 34 + (W - 42)/2, H - 2);
+  }
+}

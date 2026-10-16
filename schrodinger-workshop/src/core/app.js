@@ -14,6 +14,7 @@ import { getKernel, buildShaders } from '../physics/kernel.js';
 import { injectStyles } from './styles.js';
 import { TransmissionScanner } from './scan.js';
 import { TransmissionScanner3 } from './scan.js';
+import { SlitScanner } from './scan.js';
 
 /* ---------- 大数组 base64 助手（R37 3D 现场存档用）----------
    Float32Array ↔ base64（字节序 = 运行平台原生序，x86/ARM 均为小端；
@@ -87,6 +88,7 @@ export class QuantumField {
     this.cam = { theta: 0.7, phi: 0.35, dist: 2.2, drag: null };
     this.scanner = new TransmissionScanner(this);  /* 透射率扫描工具（内核无模型时面板隐藏） */
     this.scanner3 = new TransmissionScanner3(this);  /* 3D 透射扫描（R38；内核无 transmissionModel3 时面板隐藏） */
+    this.scannerSlit = new SlitScanner(this);  /* 3D 双缝图样扫描（R40；内核非 3D 时面板隐藏） */
     this._onError = e => {
       const d = this.q('#diag');
       if (d) d.textContent = 'ERR ' + e.message;
@@ -305,6 +307,19 @@ ${d3 ? `
     <div class="row"><label>状态</label><span id="scanStat3">就绪</span></div>
     <canvas id="scanCanvas3" width="420" height="260"></canvas>
     <div class="hint" style="margin-top:4px">球形势垒 R=6（世界单位）· 迎头波包 kx=0.7 σ=3 · 强制 64³（32³ 盒装不下首程测量窗：色散使相互作用持续到波包中心越盒，透射波完成前即打墙返回；软渲染 13 点约 5min，真实 GPU 秒级）· 实测 vs 射线修正模型（绿：含绕球透射的 3D 对照目标）与 s 波 Δk 卷积（琥珀）· 红虚线 = 共振预测位（q·R=nπ）· E=V0 左侧为越障共振区 · 实测值含波包绕球透射（l≥1 分波），系统性地高于 s 波曲线，详见 README「3D 透射率扫描」</div>
+  </div>
+  <div class="sec" id="slitScanSec">
+    <h3>双缝图样扫描</h3>
+    <div class="row"><label>D 下限</label><input type="range" id="rSlitScanLo" min="0" max="32" step="1" value="0"><output id="oSlitScanLo">0</output></div>
+    <div class="row"><label>D 上限</label><input type="range" id="rSlitScanHi" min="0" max="32" step="1" value="32"><output id="oSlitScanHi">32</output></div>
+    <div class="row"><label>扫描点数</label><input type="range" id="rSlitScanN" min="3" max="9" step="1" value="9"><output id="oSlitScanN">9</output></div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnSlitScan">开始扫描</button>
+      <button id="btnSlitScanStop" disabled>中止</button>
+    </div>
+    <div class="row"><label>状态</label><span id="slitScanStat">就绪</span></div>
+    <canvas id="slitScanCanvas" width="420" height="300"></canvas>
+    <div class="hint" style="margin-top:4px">双缝墙 V₀=3 T=4 W=6（slits3d 口径）· 迎头波包 kx=1.2 σ=6 · 64³ · 每点重发波包、固定测量窗 [32,56] 帧等间隔取 4 次、记峰数最多帧（时间线确定性 R39 已验证：飞行时间只由 kx/σ 决定，与 D 无关）· 屏剖面为 x=24 处 z 求和（可分离性 ⟹ 等价 2D 衍射）· 琥珀虚线 = Fraunhofer 远场预测 y_n=nλL/D——深 Fresnel 区仅定性参考，偏差如实汇报 · D=0 为单缝退化对照点 · 9 点软渲染约 4min，真实 GPU 秒级</div>
   </div>` : ''}
 </aside>
 
@@ -1153,6 +1168,30 @@ ${d3 ? `
     return m;
   }
 
+  /* 屏幕剖面（R39 双缝验证；R40 扫描器经类方法路径调用）：读 psiA3 全卷，
+     取世界 x=wx 的 x 切片，返回沿 y 的 |ψ|² 剖面 prof[]（z 向累加）与沿 z
+     的分布 zs[]（y 向累加），外加 profYZ（n×n 二维切片，索引 z*n+y）。
+     双缝墙 z 向无限且势与 z 无关 ⟹ 各 z 层 y 剖面应同构（用 profYZ 逐层
+     对比验证 z 不变性）。单缝则只有宽中央主极大。条纹间距理论值
+     Δy=λL/D（λ=2π/k、L=缝到屏距离）。 */
+  screenSlice3(wx){
+    const n = this.state.grid;
+    const buf = this.readWave3();
+    const half = n/2;
+    const xi = Math.min(n-1, Math.max(0, Math.round(wx + half - 0.5)));
+    const prof = new Array(n).fill(0), zs = new Array(n).fill(0);
+    const profYZ = new Array(n*n).fill(0);
+    for (let z=0; z<n; z++){
+      for (let y=0; y<n; y++){
+        const i = ((z*n + y)*n + xi)*2;
+        const p = buf[i]*buf[i] + buf[i+1]*buf[i+1];
+        prof[y] += p; zs[z] += p;
+        profYZ[z*n + y] = p;
+      }
+    }
+    return { n, xi, sliceWx: xi + 0.5 - half, prof, zs, profYZ, simTime: this.state.simTime };
+  }
+
   /* ---------- 3D 场数据读回 / 上传（R37 现场存档的基础件）----------
      readWave3：psiA3 全卷回读（RG32F 交错 (re,im)，与 probSum3d 同一逐层
        协议，但返回原始 Float32Array 而非物理矩）——现场序列化与调试句柄
@@ -1331,6 +1370,13 @@ ${d3 ? `
       const hasModel3 = !!(this.kernel.transmissionModel3 && this.kernel.transmissionModel3(this.state));
       const want3 = hasModel3 ? '' : 'none';
       if (scan3Sec.style.display !== want3) scan3Sec.style.display = want3;
+    }
+    /* 双缝图样扫描面板门控（R40）：3D 内核才显示（扫描器固定 64³ 体积路径，
+       2D 内核 start() 内亦有 dim3 检查兜底——双缝势参数属 3D 预设）。 */
+    const slitScanSec = this.q('#slitScanSec');
+    if (slitScanSec){
+      const wantSlit = this.kernel.dim3 ? '' : 'none';
+      if (slitScanSec.style.display !== wantSlit) slitScanSec.style.display = wantSlit;
     }
     /* 能级阶梯（内核可选）：解析谱 + 最近能级对照。最近能级用最近一次归约的
        ⟨E⟩（_lastE）——暂停时归约停跑，该行保持上次读数而非清零。 */
@@ -1822,6 +1868,23 @@ ${d3 ? `
         });
       });
       this.on(this.q('#btnScan3Stop'), 'click', () => this.scanner3.stop());
+      /* 3D 双缝图样扫描（R40）：与 scan3 同模式（D 范围/点数滑块 + 开始/中止） */
+      const slitScanBind = (id, out, fmt) => {
+        const el = this.q(id), o = this.q(out);
+        const upd = () => { o.textContent = fmt(parseFloat(el.value)); };
+        el.addEventListener('input', upd); upd();
+      };
+      slitScanBind('#rSlitScanLo', '#oSlitScanLo', v => String(v|0));
+      slitScanBind('#rSlitScanHi', '#oSlitScanHi', v => String(v|0));
+      slitScanBind('#rSlitScanN', '#oSlitScanN', v => String(v|0));
+      this.on(this.q('#btnSlitScan'), 'click', () => {
+        this.scannerSlit.start({
+          dLo: parseFloat(this.q('#rSlitScanLo').value),
+          dHi: parseFloat(this.q('#rSlitScanHi').value),
+          dN: parseInt(this.q('#rSlitScanN').value, 10) || 9,
+        });
+      });
+      this.on(this.q('#btnSlitScanStop'), 'click', () => this.scannerSlit.stop());
     }
 
     this.on(this.q('#selGrid'), 'change', e => {
@@ -1956,23 +2019,9 @@ ${d3 ? `
          外加 profYZ（n×n 二维切片，索引 z*n+y）。双缝墙 z 向无限且势与 z 无关
          ⟹ 各 z 层 y 剖面应同构（用 profYZ 逐层对比验证 z 不变性）。
          单缝则只有宽中央主极大。条纹间距理论值 Δy=λL/D（λ=2π/k、L=缝到屏距离）。 */
-      screenSlice3: (wx) => {
-        const n = this.state.grid;
-        const buf = this.readWave3();
-        const half = n/2;
-        const xi = Math.min(n-1, Math.max(0, Math.round(wx + half - 0.5)));
-        const prof = new Array(n).fill(0), zs = new Array(n).fill(0);
-        const profYZ = new Array(n*n).fill(0);
-        for (let z=0; z<n; z++){
-          for (let y=0; y<n; y++){
-            const i = ((z*n + y)*n + xi)*2;
-            const p = buf[i]*buf[i] + buf[i+1]*buf[i+1];
-            prof[y] += p; zs[z] += p;
-            profYZ[z*n + y] = p;
-          }
-        }
-        return { n, xi, sliceWx: xi + 0.5 - half, prof, zs, profYZ, simTime: this.state.simTime };
-      },
+      /* 屏幕剖面（R39）：类方法 screenSlice3 的调试句柄转发（R40 SlitScanner
+         直接走类方法路径 app.screenSlice3，不经过此对象）。 */
+      screenSlice3: (wx) => this.screenSlice3(wx),
       /* 3D 当前体积原始数据（逐层 readPixels 拼装，RG32F 交错 (re,im)）：
          供验证脚本把 GPU 场搬到 CPU 做镜像对账（R36 CN 的 GPU↔CPU 互证）。
          与现场序列化共用 readWave3——「存档的场」与「验证看到的场」同源。 */
@@ -2083,6 +2132,8 @@ ${d3 ? `
       /* 3D 透射扫描器（R38）：同契约；内核无 transmissionModel3 时 start() 拒绝 */
       scan3: this.scanner3,
       scanModel3: () => (this.kernel.transmissionModel3 ? this.kernel.transmissionModel3(this.state) : null),
+      /* 双缝图样扫描器（R40）：start(opts)/stop()/busy/results/summary（CDP 驱动与读数） */
+      scanSlit: this.scannerSlit,
       vpx: (x, y) => { const d = this.vctx.getImageData(x|0, y|0, 1, 1).data; return d[0]; },
       vscan: () => {
         const d = this.vctx.getImageData(0,0,256,256).data;
