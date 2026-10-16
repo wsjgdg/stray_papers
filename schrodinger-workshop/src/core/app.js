@@ -14,6 +14,29 @@ import { getKernel, buildShaders } from '../physics/kernel.js';
 import { injectStyles } from './styles.js';
 import { TransmissionScanner } from './scan.js';
 
+/* ---------- 大数组 base64 助手（R37 3D 现场存档用）----------
+   Float32Array ↔ base64（字节序 = 运行平台原生序，x86/ARM 均为小端；
+   WebGL readPixels 产出的就是该字节序，round-trip 逐位一致）。
+   分块 8192 走 String.fromCharCode.apply / charCodeAt——一次性 apply 整个
+   MB 级数组会超调用栈参数上限（V8 ~65535）。 */
+function f32ToB64(f32){
+  const u8 = new Uint8Array(f32.buffer, f32.byteOffset, f32.byteLength);
+  let bin = '';
+  const CH = 8192;
+  for (let i = 0; i < u8.length; i += CH) bin += String.fromCharCode.apply(null, u8.subarray(i, i + CH));
+  return btoa(bin);
+}
+function b64ToF32(b64){
+  const bin = atob(b64);
+  const u8 = new Uint8Array(bin.length);
+  const CH = 8192;
+  for (let i = 0; i < bin.length; i += CH){
+    const end = Math.min(i + CH, bin.length);
+    for (let j = i; j < end; j++) u8[j] = bin.charCodeAt(j);
+  }
+  return new Float32Array(u8.buffer);
+}
+
 /* 合成到屏幕：扫描线 + 微弱噪点 + 亮度曝光（引擎级视觉，无内核注入） */
 const FS_COMPOSITE = `#version 300 es
 precision highp float;
@@ -258,8 +281,11 @@ ${d3 ? `
     <div class="row" id="sliceRow3" style="display:none"><label>切片层 z</label><input type="range" id="rSliceZ3" min="0" max="1" step="0.01" value="0.5"><output id="oSliceZ3">0.50</output></div>
     <div class="grid2" style="margin-top:6px">
       <button id="btnCam3">重置相机</button>
+      <button id="btnExport3">导出现场</button>
+      <button id="btnImport3">导入现场</button>
     </div>
-    <div class="hint" style="margin-top:4px">拖拽旋转 · 滚轮缩放。V₀/R 仅球势垒预设生效；ω/σ 决定谐振子基态（σ=1/√ω）；Z 仅氢原子预设生效（改动后波包按新 Z 重发）。积分器：KDK 为速度 Verlet（默认，R34 已验证守恒）；CN 为 Crank-Nicolson + block-Jacobi，Cayley 矩阵严格正交、范数机器精度守恒——同预设下切换可对照二者离散误差（切换即时生效，不重发波包）。</div>
+    <input type="file" id="fileImport3" accept=".json,application/json" style="display:none">
+    <div class="hint" style="margin-top:4px">拖拽旋转 · 滚轮缩放。V₀/R 仅球势垒预设生效；ω/σ 决定谐振子基态（σ=1/√ω）；Z 仅氢原子预设生效（改动后波包按新 Z 重发）。积分器：KDK 为速度 Verlet（默认，R34 已验证守恒）；CN 为 Crank-Nicolson + block-Jacobi，Cayley 矩阵严格正交、范数机器精度守恒——同预设下切换可对照二者离散误差（切换即时生效，不重发波包）。导出现场：参数 + 场数据 + 相机 + 积分器选择的单文件 JSON 存档（网格不符时拒绝导入，不重采样）。</div>
   </div>` : ''}
 </aside>
 
@@ -1108,6 +1134,42 @@ ${d3 ? `
     return m;
   }
 
+  /* ---------- 3D 场数据读回 / 上传（R37 现场存档的基础件）----------
+     readWave3：psiA3 全卷回读（RG32F 交错 (re,im)，与 probSum3d 同一逐层
+       协议，但返回原始 Float32Array 而非物理矩）——现场序列化与调试句柄
+       wave3Data 共用，保证「存档的场」与「验证看到的场」是同一份数据。
+     uploadWave3：反向路径，逐层 texSubImage3D 写进 psiA3（ping-pong 另一侧
+       与 rhs3 由后续帧自然覆盖，无需清理；末态不变式仍在 psiA3）。 */
+  readWave3(){
+    const gl = this.gl, n = this.state.grid;
+    const need = n*n*n*2;
+    if (!this._buf3d || this._buf3d.length !== need){
+      this._buf3d = new Float32Array(need);
+      this._layer3d = new Float32Array(n*n*2);
+    }
+    const buf = this._buf3d, layer = this._layer3d;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA3.fbo);
+    for (let l=0; l<n; l++){
+      gl.framebufferTextureLayer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, this.psiA3.tex, 0, l);
+      gl.readPixels(0,0,n,n,gl.RG,gl.FLOAT,layer);
+      buf.set(layer, l*n*n*2);
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return buf.slice();   /* 拷贝：调用方长期持有（序列化）不得被下次回写污染 */
+  }
+
+  uploadWave3(f32){
+    const gl = this.gl, n = this.state.grid;
+    if (f32.length !== n*n*n*2) throw new Error('uploadWave3 长度不符: ' + f32.length);
+    const layer = this._layer3d && this._layer3d.length === n*n*2 ? this._layer3d : new Float32Array(n*n*2);
+    this._layer3d = layer;
+    gl.bindTexture(gl.TEXTURE_3D, this.psiA3.tex);
+    for (let l=0; l<n; l++){
+      layer.set(f32.subarray(l*n*n*2, (l+1)*n*n*2));
+      gl.texSubImage3D(gl.TEXTURE_3D, 0, 0, 0, l, n, n, 1, gl.RG, gl.FLOAT, layer);
+    }
+  }
+
   /* ---------- 3D 全卷 GPU 归约（R35）----------
      WebGL2 无 3D 纹理的归约链 ⟹ 用「线性索引分块」：32² 个输出 texel 各遍历
      n³/1024 个体素（TPL_REDUCE3D），三张 MRT 附件回读后 CPU 只做 1024 项求和
@@ -1408,6 +1470,110 @@ ${d3 ? `
     r.readAsText(file);
   }
 
+  /* ---------- 3D 实验现场序列化（R37 #34 backlog ③）----------
+     与 2D 势场存档平行，但 3D 的存档单元是「实验现场」而非「势场画布」：
+       · 势为解析式（potKind/V₀/R/ω/Z 参数级存档，无灰度画布）
+       · 波函数体积数据（psiA3 全卷 RG32F 交错 (re,im) float32，base64）
+       · 积分器选择 integrator3（KDK/CN 对照实验从同一现场出发）
+       · 轨道相机（theta/phi/dist——视角也是复现的一部分）
+     导入策略：**两阶段**（先全量校验无副作用，再写现场）⟹ 失败原子性；
+     网格不符**拒绝导入**（不静默重采样——重采样会改变物理，属欺骗性兼容）。
+     JSON 体积（实测 64³）：整档 2,796,723 B ≈ 2.7MiB（场数据 base64 占
+     2,796,204 B）——RG32F 全卷 float32 原样，不搞有损压缩；128³ 约 11MiB。 */
+  serializeSnapshot3(){
+    const n = this.state.grid;
+    const buf = this.readWave3();
+    const SKIP = new Set(['grid','paused','simTime','preset','lastWave','waveCount','drag','tool']);
+    const params = {};
+    for (const k of Object.keys(this.state)){
+      if (SKIP.has(k)) continue;
+      const v = this.state[k];
+      if (typeof v === 'number' && isFinite(v)) params[k] = v;
+    }
+    return {
+      format: 'schrodinger-workshop.snapshot3d',
+      version: 1,
+      kernel: this.kernelId,
+      grid: n,
+      state: params,
+      /* integrator3 是字符串选择（白名单循环只收数字）——但它是实验现场的一部分
+         （KDK/CN 对照从同一现场出发），故显式存档 + 导入时校验取值。 */
+      integrator3: this.state.integrator3 === 'cn' ? 'cn' : 'kdk',
+      camera: { theta: this.cam.theta, phi: this.cam.phi, dist: this.cam.dist },
+      wave: { encoding: 'rg32f-f32', floats: n*n*n*2, data: f32ToB64(buf) },
+    };
+  }
+
+  exportSnapshot3(){
+    const obj = this.serializeSnapshot3();
+    const blob = new Blob([JSON.stringify(obj)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'snapshot3d-' + this.kernelId + '-' + new Date().toISOString().slice(0,19).replace(/[:T]/g,'-') + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    this.toast('3D 现场已导出（' + (blob.size/1024).toFixed(1) + ' KB）');
+  }
+
+  importSnapshot3Data(obj){
+    /* 阶段 1：全量校验（不碰任何现场状态——校验失败即原子失败） */
+    if (!obj || obj.format !== 'schrodinger-workshop.snapshot3d' || obj.version !== 1)
+      throw new Error('不是有效的 3D 现场存档（format/version 不匹配）');
+    if (obj.kernel !== this.kernelId)
+      throw new Error('存档内核为 ' + obj.kernel + '，当前为 ' + this.kernelId);
+    if (obj.grid !== this.state.grid)
+      throw new Error('存档网格 ' + obj.grid + '³ ≠ 当前 ' + this.state.grid + '³（拒绝导入：不做静默重采样）');
+    let waveF32 = null;
+    if (obj.wave){
+      const w = obj.wave;
+      if (w.encoding !== 'rg32f-f32' || typeof w.data !== 'string')
+        throw new Error('存档场数据段无效（encoding 缺失或不支持）');
+      waveF32 = b64ToF32(w.data);
+      const need = this.state.grid*this.state.grid*this.state.grid*2;
+      if (waveF32.length !== need)
+        throw new Error('存档场数据长度不符: ' + waveF32.length + ' ≠ ' + need);
+      for (let i = 0; i < waveF32.length; i++){
+        if (!isFinite(waveF32[i])) throw new Error('存档场数据含非有限值 @' + i);
+      }
+    }
+    if (obj.camera !== undefined && (obj.camera === null || typeof obj.camera !== 'object'
+        || !['theta','phi','dist'].every(k => typeof obj.camera[k] === 'number' && isFinite(obj.camera[k]))))
+      throw new Error('存档相机段无效');
+    if (obj.integrator3 !== undefined && obj.integrator3 !== 'kdk' && obj.integrator3 !== 'cn')
+      throw new Error('存档积分器段无效（须 kdk/cn）: ' + obj.integrator3);
+    /* 阶段 2：写现场 */
+    const SKIP = new Set(['grid','paused','simTime','preset','lastWave','waveCount','drag','tool']);
+    let n = 0;
+    for (const k of Object.keys(obj.state || {})){
+      if (SKIP.has(k)) continue;
+      const v = obj.state[k];
+      if (typeof v === 'number' && isFinite(v) && k in this.state){ this.state[k] = v; n++; }
+    }
+    if (obj.integrator3) this.state.integrator3 = obj.integrator3;
+    if (obj.camera) { this.cam.theta = obj.camera.theta; this.cam.phi = obj.camera.phi; this.cam.dist = obj.camera.dist; }
+    if (waveF32){
+      this.uploadWave3(waveF32);
+      this._baseCaptured = false;          /* P 守恒基准按导入场重捕（HUD err% 口径） */
+      this.toast('3D 现场已导入（恢复 ' + n + ' 项参数 + 场数据 ' + (this.state.grid**3) + ' 体素）');
+    } else {
+      this.reinitWave();
+      this._baseCaptured = false;
+      this.toast('3D 存档无场数据：已恢复 ' + n + ' 项参数并按预设重发初态');
+    }
+    this.syncControls();
+    return n;
+  }
+
+  importSnapshot3File(file){
+    const r = new FileReader();
+    r.onload = () => {
+      try { this.importSnapshot3Data(JSON.parse(r.result)); }
+      catch (err){ this.toast('导入失败: ' + err.message); }
+    };
+    r.onerror = () => this.toast('导入失败: 文件读取错误');
+    r.readAsText(file);
+  }
+
   /* 滑块。after：值变更后的即时生效回调（如 σ 变更立即按新宽度重发波包）。
      真源是 state（构造时已合并内核 defaults）——DOM 滑块跟随 state 初始化，
      而非把 HTML 的 value 属性倒写回 state（那会静默覆盖内核默认值，
@@ -1598,6 +1764,15 @@ ${d3 ? `
           this.toast('积分器 → ' + (this.state.integrator3 === 'cn' ? 'CN（Cayley 严格正交）' : 'KDK 速度 Verlet'));
         });
       }
+      /* 实验现场序列化（R37）：导出 = 参数 + 场数据 + 相机 + 积分器选择；
+         导入经隐藏 file input（与 2D 势场导入同模式）。 */
+      this.on(this.q('#btnExport3'), 'click', () => this.exportSnapshot3());
+      this.on(this.q('#btnImport3'), 'click', () => this.q('#fileImport3').click());
+      this.on(this.q('#fileImport3'), 'change', e => {
+        const f = e.target.files && e.target.files[0];
+        if (f) this.importSnapshot3File(f);
+        e.target.value = '';   /* 允许重复导入同一文件 */
+      });
     }
 
     this.on(this.q('#selGrid'), 'change', e => {
@@ -1728,19 +1903,18 @@ ${d3 ? `
          无节流（HUD 用 500ms 节流版本）；64³ 约 40ms，验证脚本可直接调用。 */
       probSum3d: () => this.probSum3d(),
       /* 3D 当前体积原始数据（逐层 readPixels 拼装，RG32F 交错 (re,im)）：
-         供验证脚本把 GPU 场搬到 CPU 做镜像对账（R36 CN 的 GPU↔CPU 互证）。 */
+         供验证脚本把 GPU 场搬到 CPU 做镜像对账（R36 CN 的 GPU↔CPU 互证）。
+         与现场序列化共用 readWave3——「存档的场」与「验证看到的场」同源。 */
       wave3Data: () => {
-        const gl2 = this.gl, n = this.state.grid;
-        const buf = new Float32Array(n*n*n*2), layer = new Float32Array(n*n*2);
-        gl2.bindFramebuffer(gl2.FRAMEBUFFER, this.psiA3.fbo);
-        for (let l=0; l<n; l++){
-          gl2.framebufferTextureLayer(gl2.FRAMEBUFFER, gl2.COLOR_ATTACHMENT0, this.psiA3.tex, 0, l);
-          gl2.readPixels(0,0,n,n,gl2.RG,gl2.FLOAT,layer);
-          buf.set(layer, l*n*n*2);
-        }
-        gl2.bindFramebuffer(gl2.FRAMEBUFFER, null);
-        return { n, data: Array.from(buf) };
+        const buf = this.readWave3();
+        return { n: this.state.grid, data: Array.from(buf) };
       },
+      /* 3D 实验现场序列化（R37）：round-trip 对账（序列化 → 反序列化 →
+         逐位一致）与错误路径（format/kernel/grid/长度/非有限值）经 CDP 验证。 */
+      serializeSnapshot3: () => this.serializeSnapshot3(),
+      importSnapshot3Data: (o) => this.importSnapshot3Data(o),
+      /* P 守恒基准是否已重捕（导入场后应回落 false，下一帧按新场重捕） */
+      baseCaptured: () => this._baseCaptured,
       /* 3D 全卷 GPU 归约（R35）：与 probSum3d（CPU）互为独立实现，动能同为
          1-texel 前向链路口径 ⟹ 两条路径可逐项对账。 */
       reduce3d: () => this.reducePass3d(),

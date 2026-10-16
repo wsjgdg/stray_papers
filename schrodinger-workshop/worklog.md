@@ -23,6 +23,7 @@
 | R34 | 3D 体积内核（#34） | spike 能力矩阵 + 薛定谔 3D 内核落地：7 点 stencil KDK 逐层 draw 全卷 + ray-march 体积渲染 + 轨道相机；5 预设物理对账（群速 0.99×k/m、1s E=−0.030778 vs −Z²/2、谐振子 E=0.023415 vs 1.5ℏω）；装配/物理 harness 41/41 + CDP 37/37 |
 | R35 | 3D GPU 归约（#34 backlog ①） | 全卷测量由 CPU 回读改 GPU「线性索引分块」归约（32² 输出各遍历 n³/1024 体素）：64³ 99.9→1.3ms（**76.9×**）、96³ 107.5→3.5ms（30.7×）、128³ 124.5→6.4ms（19.5×）；HUD 节流收回 120ms；与 CPU `moments3d` 双测量逐项对账 rel ≤ 2e-7；harness 46/46 + CDP 38/38 |
 | R36 | 3D CN 积分器（#34 backlog ②） | 3D 标量薛定谔运行时切 CN（`state.integrator3`，默认 kdk 零回归）：CN(12) vs 稠密 Cayley 独立解 7.87e-8、CN(60) 5.78e-16；GPU↔CPU Float64 镜像对账 rel ≤ 5e-6；守恒对照 oscillator KDK dP 7.82e-5% vs CN 2.72e-6%；绘制量 3→13/子步（实测 ≈ 理论 4.33×）；装配 65/65 + CPU 镜像 28/28 + CDP 41/41 |
+| R37 | 3D 实验现场序列化（#34 backlog ③） | 单文件 JSON 存档「参数 + 全卷场数据 + 积分器 + 相机」：round-trip 逐位一致（FNV 哈希）；两阶段校验 9 类错误全部原子拒绝；网格不符不重采样；64³ 存档实测 2.7MiB；CDP 38/38 + dist 3/3 |
 
 ---
 
@@ -87,7 +88,60 @@ numpy 复刻引擎：Hc = −uK·lap5(w) − uK·σB(w)，kick (x, y−h·Hc.x, 
 
 ---
 
-## R36（2026-10-16）3D CN 积分器（#34 backlog ②）：KDK/CN 运行时切换
+## R37（2026-10-16）3D 实验现场序列化（#34 backlog ③）
+
+### 缘起
+R34 的诚实限制写明「3D 无势场存档（势为解析式）」。但 R36 落地 KDK/CN 运行时切换后，
+**对照实验的刚需**出现了：CN 的卖点是「与 KDK 从同一现场出发逐帧对照离散误差」——
+没有现场存档，用户只能靠「同一预设 + 同一次加载」近似复现，改一个滑块就得重来。
+且轨道相机视角、积分器选择都是实验现场的一部分。本轮把 2D #26 的序列化契约平行
+移植到 3D，并把存档单元从「势场画布」升级为「实验现场」。
+
+### 设计：与 2D 序列化的差异（3D 特性决定）
+
+| 维度 | 2D 势场存档（#26） | 3D 现场存档（R37） |
+|---|---|---|
+| 存档单元 | 256² 灰度势场画布 + 参数 | **参数 + 波函数全卷场数据 + 积分器选择 + 相机** |
+| 势 | 画布像素（可笔刷） | 解析式参数（potKind/V₀/R/ω/Z，参数级存档） |
+| 场数据 | 无（势场即全部可变输入） | psiA3 全卷 RG32F 交错 float32（64³ = 2MB → base64 2.8MB） |
+| integrator3 | — | 显式存档（白名单循环只收数字，字符串选择须单独处理——首版实现漏此项，被 CDP 断言抓住后补） |
+| 相机 | 无（2D 无相机） | theta/phi/dist（视角是复现的一部分） |
+| 网格策略 | 画布恒 256² 与网格解耦，无冲突 | **网格不符拒绝导入**（重采样改变物理，属欺骗性兼容） |
+
+**两阶段导入（失败原子性）**：阶段 1 全量校验（format/version/kernel/grid/
+encoding/长度/逐元素 isFinite/camera 三数/integrator3 取值）不碰任何现场；
+阶段 2 才写参数、`uploadWave3` 逐层 texSubImage3D 上场、恢复相机、
+`_baseCaptured=false`（P 守恒基准按导入场重捕）、syncControls。
+
+**基础件**：`readWave3`（全卷回读，probSum3d 同协议但返回原始缓冲；`slice()` 拷贝
+防调用方持有期间被下次回写污染）与 `uploadWave3`（逐层 texSubImage3D）——
+序列化与调试句柄 wave3Data 共用 readWave3，「存档的场」与「验证看到的场」同源。
+
+### 实测
+
+| 项 | 结果 |
+|---|---|
+| 64³ 存档体积 | JSON 2,796,723 B ≈ 2.7MiB（场数据 base64 占 2,796,204 B；RG32F 全卷 2MB 原始） |
+| round-trip | 序列化 → JSON 文本往返 → 导入 → FNV-1a 哈希逐位一致（h0=3008315400 破坏后 hB=204574793 → 导入后回 h0） |
+| 参数恢复 | 24 项（含 potKind/potV0/integrator3/camera） |
+| 错误路径 | 9 类（format·version·kernel·grid·integrator3·encoding·长度·NaN·camera）全部拒绝且现场哈希零变动 |
+| 无 wave 段 | 参数恢复 + reinitWave + 基准重置（base=false） |
+| P 基准重捕 | 导入后 HUD err=0.000%（120ms 节流内按新场取基准） |
+| 导入后演化 | KDK dP 1.74e-4% / CN dP < 0.1%（10 帧） |
+
+### 验证
+- R37 CDP 套件：**38/38 PASS，零控制台异常**（7 节：可用性/UI、round-trip、存档语义、
+  错误路径原子性、部分导入、P 基准、导入后演化回归）
+- dist 单文件冒烟：**3/3 PASS**（round-trip 逐位一致 + 网格不符拒绝）
+- 回归：R36 CDP 41/41、asm36 65/65、R36 dist 冒烟 9/9、cpu36 28/28（均未受影响）
+- 截图：`render_r37_panel.png`（面板三按钮 + 体积渲染目视）
+
+### 文档同步
+README：诚实限制改写（「无势场存档」⟹ 无笔刷但有现场序列化）、3D 面板加按钮项、
+新增「3D 实验现场序列化（R37）」节（JSON 结构 + 两阶段 + 网格策略 + 基准重捕）、
+验证表补 R37 行。
+
+---
 
 ### 缘起
 R34 的 3D 内核只带 KDK（速度 Verlet）。2D 侧 CN 是内核级开关（`kernel.integrator='cn'`，
@@ -626,10 +680,10 @@ CDP 23/23（cdp_moments.js）：不确定关系逐轴 ≥½、动量弥散守恒
 | 31 | 透射率扫描工具 | UI + 测量 | 无 | ✅ R29（18/18） |
 | 32 | Pauli 自旋内核（pairs=2） | 新内核（大） | RGBA32F 通道已预留 | ✅ R30（29/29） |
 | 33 | Dirac 方程 | 引擎一阶 integrator 扩展 | 引擎扩展 | ✅ R31（16/16 + 回归 11 套件 + dist 7/7） |
-| 34 | 3D 纹理 + 渲染交互 | 引擎 3D 扩展（最大） | WebGL2 3D 纹理验证 | 待办 |
+| 34 | 3D 纹理 + 渲染交互（含 backlog：GPU 3D 归约 R35 / 3D CN R36 / 现场序列化 R37；余 3D transmission scan 待办） | 引擎 3D 扩展（最大） | WebGL2 3D 纹理验证 | ✅ R34（41/41 + 37/37）+ R35（46/46 + 38/38）+ R36（65/65 + 28/28 + 41/41）+ R37（38/38 + 3/3） |
 
 ### 验证基线（每项功能落地后须保持的回归）
-Dirac CDP 16/16 · Pauli CDP 29/29 · GP CDP 27/27 · scan 18/18 · moments 23/23 · drive 28/28 · ab_ui 10/10 · serialize 17/17 · dissipate 9/9 · extreme ALL · nls_sub PASS · pnan PASS · dist CDP 27/27 + Dirac dist 冒烟 7/7（file:// + HTTP）· IC 单测 20/20 · NLS 14/14 · schrodinger 5 脚本
+Dirac CDP 16/16 · Pauli CDP 29/29 · GP CDP 27/27 · scan 18/18 · moments 23/23 · drive 28/28 · ab_ui 10/10 · serialize 17/17 · dissipate 9/9 · extreme ALL · nls_sub PASS · pnan PASS · dist CDP 27/27 + Dirac dist 冒烟 7/7（file:// + HTTP）· IC 单测 20/20 · NLS 14/14 · schrodinger 5 脚本 · 3D：asm 65/65 + CPU 镜像 28/28 + CN CDP 41/41 + 序列化 CDP 38/38 + dist 冒烟 9/9 + 3/3
 
 ---
 
