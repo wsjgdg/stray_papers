@@ -272,10 +272,14 @@ ${d3 ? `
     <div class="row"><label>射线步数</label><input type="range" id="rSteps3" min="16" max="128" step="8" value="48"><output id="oSteps3">48</output></div>
     <div class="row"><label>曝光</label><input type="range" id="rExp3" min="100" max="10000" step="100" value="3600"><output id="oExp3">3600</output></div>
     <div class="row"><label>波包宽度 σ</label><input type="range" id="rSigma3" min="2" max="20" step="0.5" value="6"><output id="oSigma3">6.0</output></div>
-    <div class="row"><label>势垒 V₀</label><input type="range" id="rPotV0" min="0" max="0.1" step="0.005" value="0.02"><output id="oPotV0">0.020</output></div>
+    <div class="row"><label>势垒 V₀</label><input type="range" id="rPotV0" min="0" max="5" step="0.005" value="0.02"><output id="oPotV0">0.020</output></div>
     <div class="row"><label>势垒半径 R</label><input type="range" id="rPotR" min="4" max="20" step="1" value="10"><output id="oPotR">10</output></div>
     <div class="row"><label>谐振子 ω</label><input type="range" id="rPotW" min="0.004" max="0.06" step="0.002" value="0.0156"><output id="oPotW">0.0156</output></div>
     <div class="row"><label>核电荷 Z</label><input type="range" id="rPotZ" min="0.1" max="0.5" step="0.01" value="0.25"><output id="oPotZ">0.25</output></div>
+    <div class="row"><label>墙心 x₀</label><input type="range" id="rPotWallX" min="-20" max="20" step="1" value="0"><output id="oPotWallX">0</output></div>
+    <div class="row"><label>墙厚 T</label><input type="range" id="rPotWallT" min="1" max="10" step="1" value="4"><output id="oPotWallT">4</output></div>
+    <div class="row"><label>缝宽 W</label><input type="range" id="rPotSlitW" min="2" max="16" step="1" value="6"><output id="oPotSlitW">6</output></div>
+    <div class="row"><label>缝距 D</label><input type="range" id="rPotSlitD" min="0" max="32" step="1" value="20"><output id="oPotSlitD">20</output></div>
     <div class="grid2" style="margin-top:6px">
       <button id="btnPhase3" class="on">相位着色</button>
       <button id="btnSlice3">切片模式</button>
@@ -287,7 +291,7 @@ ${d3 ? `
       <button id="btnImport3">导入现场</button>
     </div>
     <input type="file" id="fileImport3" accept=".json,application/json" style="display:none">
-    <div class="hint" style="margin-top:4px">拖拽旋转 · 滚轮缩放。V₀/R 仅球势垒预设生效；ω/σ 决定谐振子基态（σ=1/√ω）；Z 仅氢原子预设生效（改动后波包按新 Z 重发）。积分器：KDK 为速度 Verlet（默认，R34 已验证守恒）；CN 为 Crank-Nicolson + block-Jacobi，Cayley 矩阵严格正交、范数机器精度守恒——同预设下切换可对照二者离散误差（切换即时生效，不重发波包）。导出现场：参数 + 场数据 + 相机 + 积分器选择的单文件 JSON 存档（网格不符时拒绝导入，不重采样）。</div>
+    <div class="hint" style="margin-top:4px">拖拽旋转 · 滚轮缩放。V₀/R 仅球势垒预设生效；ω/σ 决定谐振子基态（σ=1/√ω）；Z 仅氢原子预设生效（改动后波包按新 Z 重发）；墙心 x₀/墙厚 T/缝宽 W/缝距 D 仅双缝预设生效（D=0 退化为单缝，改动即时生效）。积分器：KDK 为速度 Verlet（默认，R34 已验证守恒）；CN 为 Crank-Nicolson + block-Jacobi，Cayley 矩阵严格正交、范数机器精度守恒——同预设下切换可对照二者离散误差（切换即时生效，不重发波包）。导出现场：参数 + 场数据 + 相机 + 积分器选择的单文件 JSON 存档（网格不符时拒绝导入，不重采样）。</div>
   </div>
   <div class="sec" id="scan3Sec">
     <h3>3D 透射扫描</h3>
@@ -1757,6 +1761,11 @@ ${d3 ? `
       this.bindRange('#rPotR','#oPotR','potR', v => String(v|0));
       this.bindRange('#rPotW','#oPotW','potW', v => v.toFixed(4), () => this.reinitWave());
       this.bindRange('#rPotZ','#oPotZ','potZ', v => v.toFixed(2), () => this.reinitWave());
+      /* 双缝墙（R39；仅 potKind=4 预设生效）——势参数即时生效，无需重发波包 */
+      this.bindRange('#rPotWallX','#oPotWallX','potWallX', v => String(v|0));
+      this.bindRange('#rPotWallT','#oPotWallT','potWallT', v => String(v|0));
+      this.bindRange('#rPotSlitW','#oPotSlitW','potSlitW', v => String(v|0));
+      this.bindRange('#rPotSlitD','#oPotSlitD','potSlitD', v => String(v|0));
       this.bindRange('#rSliceZ3','#oSliceZ3','sliceZ', v => v.toFixed(2));
       this.on(this.q('#btnPhase3'), 'click', () => {
         this.state.phaseColor = this.state.phaseColor ? 0 : 1;
@@ -1942,6 +1951,28 @@ ${d3 ? `
       /* 3D 全卷测量（内核 moments3d 物理分解）：P/T/V/E/peak/质心 + simTime。
          无节流（HUD 用 500ms 节流版本）；64³ 约 40ms，验证脚本可直接调用。 */
       probSum3d: () => this.probSum3d(),
+      /* 屏幕剖面（R39 双缝验证）：读 psiA3 全卷，取世界 x=wx 的 x 切片，返回
+         沿 y 的 |ψ|² 剖面 prof[]（z 向累加）与沿 z 的分布 zs[]（y 向累加），
+         外加 profYZ（n×n 二维切片，索引 z*n+y）。双缝墙 z 向无限且势与 z 无关
+         ⟹ 各 z 层 y 剖面应同构（用 profYZ 逐层对比验证 z 不变性）。
+         单缝则只有宽中央主极大。条纹间距理论值 Δy=λL/D（λ=2π/k、L=缝到屏距离）。 */
+      screenSlice3: (wx) => {
+        const n = this.state.grid;
+        const buf = this.readWave3();
+        const half = n/2;
+        const xi = Math.min(n-1, Math.max(0, Math.round(wx + half - 0.5)));
+        const prof = new Array(n).fill(0), zs = new Array(n).fill(0);
+        const profYZ = new Array(n*n).fill(0);
+        for (let z=0; z<n; z++){
+          for (let y=0; y<n; y++){
+            const i = ((z*n + y)*n + xi)*2;
+            const p = buf[i]*buf[i] + buf[i+1]*buf[i+1];
+            prof[y] += p; zs[z] += p;
+            profYZ[z*n + y] = p;
+          }
+        }
+        return { n, xi, sliceWx: xi + 0.5 - half, prof, zs, profYZ, simTime: this.state.simTime };
+      },
       /* 3D 当前体积原始数据（逐层 readPixels 拼装，RG32F 交错 (re,im)）：
          供验证脚本把 GPU 场搬到 CPU 做镜像对账（R36 CN 的 GPU↔CPU 互证）。
          与现场序列化共用 readWave3——「存档的场」与「验证看到的场」同源。 */

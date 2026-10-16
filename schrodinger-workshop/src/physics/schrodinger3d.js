@@ -4,7 +4,7 @@
  * 与 2D 薛定谔内核（schrodinger.js）的分工：
  *   - 2D 内核的势来自 256² 势场画布纹理（笔刷可画）；3D 无势纹理（笔刷工具
  *     不适用体积），势由本文件经 kernel.shaders().pot3 注入**解析表达式**，
- *     预设（球垒 / 谐振子 / 氢原子）即不同的势形 + 初态组合。
+ *     预设（球垒 / 谐振子 / 氢原子 / 双缝墙）即不同的势形 + 初态组合。
  *   - 引擎装配（buildShaders）在 kernel.dim3=true 时生成 evolve3d /
  *     display3d 两个 program（TPL_EVOLVE3D/TPL_DISPLAY3D），引擎走 evolve3d
  *     分支（每子步 3 个全卷 pass × 逐层 draw）与 volume ray-march 显示。
@@ -25,6 +25,12 @@
  *   kind 3 氢原子   ：V = −Z/max(|w|, 0.5)（软化库仑：r<½ texel 钳位防奇点，
  *                     |V|≤2Z；1s: ψ∝e^{−Zr}, E=−Z²/2；2p_z: ψ∝z·e^{−Zr/2},
  *                     E=−Z²/8）
+ *   kind 4 双缝墙（R39）：V = V0 当且仅当 |w.x−x₀|<T/2（墙厚 T，垂直 x 轴、z 向无限）
+ *                     且在两条缝外（|w.y∓D/2|>W/2，缝宽 W、缝距 D、对称分布于
+ *                     y=±D/2）——物质波双缝干涉的体积版。D=0 退化为单缝（缝宽 W）。
+ *                     墙厚内衰减 exp(−2κT)，κ=acosh(1+m(V0−E))；默认 V0=3、
+ *                     T=4 ⟹ 漏墙 ~1e-7（不透明）。V0 远高于入射能量时注意
+ *                     eMaxExtra 抬子步（dt·E≤2 稳定界）。
  *   w = (p−0.5)·N 为世界坐标（格点单位、居中，p 为纹理坐标）——与
  *   TPL_EVOLVE3D 的 uGrid3 口径逐字一致。
  *
@@ -56,7 +62,7 @@ import { PhysicsKernel, registerKernel } from './kernel.js';
 import { sphericalBarrierModel3 } from './barrier3d.js';
 
 /* 势形编号（state.potKind；预设 params 注入，URL/面板可改） */
-const POT_FREE = 0, POT_SPHERE = 1, POT_OSC = 2, POT_COULOMB = 3;
+const POT_FREE = 0, POT_SPHERE = 1, POT_OSC = 2, POT_COULOMB = 3, POT_DOUBLE_SLIT = 4;
 
 /* CPU 端解析势（pot3 的 JS 镜像——镜像契约见文件头）：
    w 为世界坐标（格点单位、居中）；返回 V（格点单位）。
@@ -66,6 +72,14 @@ export function pot3JS(wx, wy, wz, st){
   if (st.potKind === POT_SPHERE) return r2 < st.potR*st.potR ? st.potV0 : 0;
   if (st.potKind === POT_OSC) return 0.5*st.potW*st.potW*r2;
   if (st.potKind === POT_COULOMB) return -st.potZ/Math.max(Math.sqrt(r2), 0.5);
+  /* 双缝墙（R39）：墙在 x=potWallX（厚 potWallT），两条缝 |w.y|=potSlitD/2
+     （各宽 potSlitW）——与 pot3 GLSL 分支逐字一致（镜像契约见文件头） */
+  if (st.potKind === POT_DOUBLE_SLIT){
+    if (Math.abs(wx - st.potWallX) < 0.5*st.potWallT &&
+        Math.abs(wy - 0.5*st.potSlitD) > 0.5*st.potSlitW &&
+        Math.abs(wy + 0.5*st.potSlitD) > 0.5*st.potSlitW) return st.potV0;
+    return 0;
+  }
   return 0;
 }
 
@@ -136,6 +150,9 @@ class Schrodinger3dKernel extends PhysicsKernel {
       pot3: `(uPotKind == 1 ? ((dot(w,w) < uPotR*uPotR) ? uPotV0 : 0.0)
         : uPotKind == 2 ? (0.5*uPotW*uPotW*dot(w,w))
         : uPotKind == 3 ? (-uPotZ/max(length(w), 0.5))
+        : uPotKind == 4 ? ((abs(w.x - uPotWallX) < 0.5*uPotWallT
+                            && abs(w.y - 0.5*uPotSlitD) > 0.5*uPotSlitW
+                            && abs(w.y + 0.5*uPotSlitD) > 0.5*uPotSlitW) ? uPotV0 : 0.0)
         : 0.0)`,
       /* 体积密度 / 相位（ray-march 与切片两条显示路径经 den3/ph3 共用） */
       density3: 'dot(c.xy,c.xy)',
@@ -154,11 +171,15 @@ class Schrodinger3dKernel extends PhysicsKernel {
   return vec4(arg.x + uDtHalf*V*arg.y, arg.y - uDtHalf*V*arg.x,
               arg.z + uDtHalf*V*arg.w, arg.w - uDtHalf*V*arg.w) / d;
 }`,
-      uniforms: `uniform int   uPotKind;   /* 势形编号（POT_FREE/SPHERE/OSC/COULOMB） */
-uniform float uPotV0;     /* 球势垒高度 */
+      uniforms: `uniform int   uPotKind;   /* 势形编号（POT_FREE/SPHERE/OSC/COULOMB/DOUBLE_SLIT） */
+uniform float uPotV0;     /* 球势垒高度 / 双缝墙高 */
 uniform float uPotR;     /* 球势垒半径（texel） */
 uniform float uPotW;     /* 谐振子 ω（ℏω=ω；基态 σ=1/√ω） */
-uniform float uPotZ;     /* 库仑核电荷 Z（1s: E=−Z²/2；2p_z: E=−Z²/8） */`,
+uniform float uPotZ;     /* 库仑核电荷 Z（1s: E=−Z²/2；2p_z: E=−Z²/8） */
+uniform float uPotWallX; /* 双缝墙心位置 x（世界 texel） */
+uniform float uPotWallT; /* 双缝墙厚（texel） */
+uniform float uPotSlitW; /* 双缝缝宽（texel） */
+uniform float uPotSlitD; /* 双缝缝距（texel；0 = 单缝） */`,
     };
   }
 
@@ -170,6 +191,10 @@ uniform float uPotZ;     /* 库仑核电荷 Z（1s: E=−Z²/2；2p_z: E=−Z²/
     const r = gl.getUniformLocation(prog, 'uPotR');  if (r)  gl.uniform1f(r, state.potR);
     const w = gl.getUniformLocation(prog, 'uPotW');  if (w)  gl.uniform1f(w, state.potW);
     const z = gl.getUniformLocation(prog, 'uPotZ');  if (z)  gl.uniform1f(z, state.potZ);
+    const wx = gl.getUniformLocation(prog, 'uPotWallX'); if (wx) gl.uniform1f(wx, state.potWallX);
+    const wt = gl.getUniformLocation(prog, 'uPotWallT'); if (wt) gl.uniform1f(wt, state.potWallT);
+    const sw = gl.getUniformLocation(prog, 'uPotSlitW'); if (sw) gl.uniform1f(sw, state.potSlitW);
+    const sd = gl.getUniformLocation(prog, 'uPotSlitD'); if (sd) gl.uniform1f(sd, state.potSlitD);
   }
 
   /* H 特征值上界附加项（引擎 eMax = uK·12 + 1 + 本项）：
@@ -181,6 +206,7 @@ uniform float uPotZ;     /* 库仑核电荷 Z（1s: E=−Z²/2；2p_z: E=−Z²/
       return 0.5*state.potW*state.potW*3*Math.pow(state.grid/2, 2);
     }
     if (state.potKind === POT_COULOMB) return 2*state.potZ;   /* 软化核 |V|≤Z/0.5 */
+    if (state.potKind === POT_DOUBLE_SLIT) return Math.abs(state.potV0);  /* 墙全高 V0 */
     return 0;
   }
 
@@ -302,6 +328,14 @@ uniform float uPotZ;     /* 库仑核电荷 Z（1s: E=−Z²/2；2p_z: E=−Z²/
       orbital2p: { name:'氢原子 2p_z', kind:'orbital2p', wave3:[0.5,0.5,0.5, 0,0,0],
                 params:{ potKind:POT_COULOMB, potZ:0.25, exposure3:8000 }, build(){},
                 text:'2p_z 轨道：ψ ∝ z·e^{−Zr/2}，赤道面 z=0 为节面（密度严格为零）。上下瓣相位差 π——相位着色下呈互补双色瓣，E = −Z²/8（对照 n=2）。' },
+      slits3d: { name:'双缝干涉', kind:'gaussian', wave3:[0.5-26/64,0.5,0.5, 1.2,0,0],
+                params:{ potKind:POT_DOUBLE_SLIT, potV0:3, potWallX:0, potWallT:4, potSlitW:6, potSlitD:20,
+                         sigma:6, exposure3:3600 }, build(){},
+                text:'物质波撞上带双缝的不透明墙（V₀=3、厚 4 texel，z 向无限）：每条缝成为柱面波源，两束相干叠加——墙后屏幕方向长出明暗相间、等间距的干涉条纹（缝距 D=20、k=1.2 ⟹ 条纹间距 ≈λL/D≈6.8 texel）。每个粒子抵达屏幕的位置由 |ψ|² 决定——概率幅的自我干涉。' },
+      slit1_3d: { name:'单缝衍射', kind:'gaussian', wave3:[0.5-26/64,0.5,0.5, 1.2,0,0],
+                params:{ potKind:POT_DOUBLE_SLIT, potV0:3, potWallX:0, potWallT:4, potSlitW:6, potSlitD:0,
+                         sigma:6, exposure3:3600 }, build(){},
+                text:'同一道墙只开一条缝（缝距 D=0 退化为单缝，缝宽 6 texel）：屏上得到单缝衍射的宽中央主极大与两侧次级瓣——没有第二条缝可干涉，图样是单柱面波的纯衍射。与「双缝干涉」预设对照即见干涉与衍射的分工。' },
     };
   }
 
@@ -320,6 +354,8 @@ uniform float uPotZ;     /* 库仑核电荷 Z（1s: E=−Z²/2；2p_z: E=−Z²/
          预设 params 不含该项——用户选择跨预设保留（对照实验不因切预设而重置）。 */
       integrator3: 'kdk',
       potKind: POT_FREE, potV0: 0.02, potR: 10, potW: 1/64, potZ: 0.25,
+      /* 双缝墙（R39；仅 potKind=4 生效）——墙心 x、墙厚、缝宽、缝距（世界 texel） */
+      potWallX: 0, potWallT: 4, potSlitW: 6, potSlitD: 20,
       /* 曝光默认 3600（= free3d 预设值，见预设表的实测标定）；其余预设各自覆盖 */
       steps3: 48, exposure3: 3600, phaseColor: 1, slice3: 0, sliceZ: 0.5,
       sigma: 6,
