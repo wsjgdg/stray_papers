@@ -66,20 +66,49 @@ const POT_FREE = 0, POT_SPHERE = 1, POT_OSC = 2, POT_COULOMB = 3, POT_DOUBLE_SLI
 
 /* CPU 端解析势（pot3 的 JS 镜像——镜像契约见文件头）：
    w 为世界坐标（格点单位、居中）；返回 V（格点单位）。
-   导出供测试 harness 做「GPU 演化 vs CPU 镜像」对账（R36 起）。 */
-export function pot3JS(wx, wy, wz, st){
+   导出供测试 harness 做「GPU 演化 vs CPU 镜像」对账（R36 起）。
+
+   R41 双槽叠加：pot3Slot 为单槽势（参数显式传入，不读 state），pot3JS 返回
+   主槽 + 第二槽之和（总势）。potKind2=0（默认 POT_FREE）时第二槽恒 0 ⟹
+   与 R34–R40 逐位一致（零回归）。CPU 与 GLSL pot3Slot 逐分支同构。 */
+export function pot3Slot(wx, wy, wz, kind, v0, r, om, z, wallX, wallT, slitW, slitD){
   const r2 = wx*wx + wy*wy + wz*wz;
-  if (st.potKind === POT_SPHERE) return r2 < st.potR*st.potR ? st.potV0 : 0;
-  if (st.potKind === POT_OSC) return 0.5*st.potW*st.potW*r2;
-  if (st.potKind === POT_COULOMB) return -st.potZ/Math.max(Math.sqrt(r2), 0.5);
-  /* 双缝墙（R39）：墙在 x=potWallX（厚 potWallT），两条缝 |w.y|=potSlitD/2
-     （各宽 potSlitW）——与 pot3 GLSL 分支逐字一致（镜像契约见文件头） */
-  if (st.potKind === POT_DOUBLE_SLIT){
-    if (Math.abs(wx - st.potWallX) < 0.5*st.potWallT &&
-        Math.abs(wy - 0.5*st.potSlitD) > 0.5*st.potSlitW &&
-        Math.abs(wy + 0.5*st.potSlitD) > 0.5*st.potSlitW) return st.potV0;
+  if (kind === POT_SPHERE) return r2 < r*r ? v0 : 0;
+  if (kind === POT_OSC) return 0.5*om*om*r2;
+  if (kind === POT_COULOMB) return -z/Math.max(Math.sqrt(r2), 0.5);
+  /* 双缝墙（R39）：墙在 x=wallX（厚 wallT），两条缝 |w.y|=slitD/2
+     （各宽 slitW）——与 pot3 GLSL 分支逐字一致（镜像契约见文件头） */
+  if (kind === POT_DOUBLE_SLIT){
+    if (Math.abs(wx - wallX) < 0.5*wallT &&
+        Math.abs(wy - 0.5*slitD) > 0.5*slitW &&
+        Math.abs(wy + 0.5*slitD) > 0.5*slitW) return v0;
     return 0;
   }
+  return 0;
+}
+
+export function pot3JS(wx, wy, wz, st){
+  return pot3Slot(wx, wy, wz, st.potKind, st.potV0, st.potR, st.potW, st.potZ,
+    st.potWallX, st.potWallT, st.potSlitW, st.potSlitD)
+    + pot3Slot(wx, wy, wz, st.potKind2, st.potV02, st.potR2, st.potW2, st.potZ2,
+      st.potWallX2, st.potWallT2, st.potSlitW2, st.potSlitD2);
+}
+
+/* 单槽势在域内的 |V| 上界（格点单位）——R41 拆出供两槽求和。
+   slot=2 时读第二槽参数（potV02/potR2/…）。叠加势的 |V|max ≤ 两槽上界之和
+   （保守上界：只在两槽各自极值同点位时取等；稳定界保守化 ⟹ 子步增加）。 */
+export function eMaxSlot(kind, st, slot){
+  const v0 = slot === 2 ? st.potV02 : st.potV0;
+  const r = slot === 2 ? st.potR2 : st.potR;
+  const om = slot === 2 ? st.potW2 : st.potW;
+  const z = slot === 2 ? st.potZ2 : st.potZ;
+  if (kind === POT_SPHERE) return Math.abs(v0 || 0);
+  if (kind === POT_OSC){
+    /* 域角 |w|max = √3·N/2 ⟹ Vmax = ½ω²·3·(N/2)² */
+    return 0.5*(om || 0)*(om || 0)*3*Math.pow(st.grid/2, 2);
+  }
+  if (kind === POT_COULOMB) return 2*Math.abs(z || 0);   /* 软化核 |V|≤Z/0.5 */
+  if (kind === POT_DOUBLE_SLIT) return Math.abs(v0 || 0);  /* 墙全高 V0 */
   return 0;
 }
 
@@ -145,15 +174,24 @@ class Schrodinger3dKernel extends PhysicsKernel {
       density: 'dot(psi.xy,psi.xy)',
       kinetic: '0.25*(dot(dxp,dxp)+dot(dyp,dyp))',
       potential: 'V*p',
-      /* 3D 专用：解析势表达式（变量 w = (p−0.5)·uGrid3 世界坐标；uPotKind 分支）
-         —— 与 pot3JS 逐分支一致（镜像契约见文件头） */
-      pot3: `(uPotKind == 1 ? ((dot(w,w) < uPotR*uPotR) ? uPotV0 : 0.0)
-        : uPotKind == 2 ? (0.5*uPotW*uPotW*dot(w,w))
-        : uPotKind == 3 ? (-uPotZ/max(length(w), 0.5))
-        : uPotKind == 4 ? ((abs(w.x - uPotWallX) < 0.5*uPotWallT
-                            && abs(w.y - 0.5*uPotSlitD) > 0.5*uPotSlitW
-                            && abs(w.y + 0.5*uPotSlitD) > 0.5*uPotSlitW) ? uPotV0 : 0.0)
-        : 0.0)`,
+      /* R41 双槽势组合：pot3Slot 为单槽势函数（HELPERS 注入位定义，evolve3d/
+         cnRhs3d/cnSweep3d/reduce3d 四处同源），pot3 取主槽 + 第二槽之和。
+         uPotKind2=0（默认 POT_FREE）时第二槽恒 0 ⟹ 与 R34–R40 逐位一致。
+         —— 与 pot3JS/pot3Slot（CPU）逐分支一致（镜像契约见文件头） */
+      helpers: `float pot3Slot(vec3 w, int kind, float v0, float r, float om, float z,
+                float wallX, float wallT, float slitW, float slitD){
+  if (kind == 1) return (dot(w,w) < r*r) ? v0 : 0.0;
+  if (kind == 2) return 0.5*om*om*dot(w,w);
+  if (kind == 3) return -z/max(length(w), 0.5);
+  if (kind == 4) return (abs(w.x - wallX) < 0.5*wallT
+                         && abs(w.y - 0.5*slitD) > 0.5*slitW
+                         && abs(w.y + 0.5*slitD) > 0.5*slitW) ? v0 : 0.0;
+  return 0.0;
+}`,
+      pot3: `(pot3Slot(w, uPotKind, uPotV0, uPotR, uPotW, uPotZ,
+                uPotWallX, uPotWallT, uPotSlitW, uPotSlitD)
+        + pot3Slot(w, uPotKind2, uPotV02, uPotR2, uPotW2, uPotZ2,
+                uPotWallX2, uPotWallT2, uPotSlitW2, uPotSlitD2))`,
       /* 体积密度 / 相位（ray-march 与切片两条显示路径经 den3/ph3 共用） */
       density3: 'dot(c.xy,c.xy)',
       phase3: 'atan(c.y, c.x)',
@@ -179,7 +217,17 @@ uniform float uPotZ;     /* 库仑核电荷 Z（1s: E=−Z²/2；2p_z: E=−Z²/
 uniform float uPotWallX; /* 双缝墙心位置 x（世界 texel） */
 uniform float uPotWallT; /* 双缝墙厚（texel） */
 uniform float uPotSlitW; /* 双缝缝宽（texel） */
-uniform float uPotSlitD; /* 双缝缝距（texel；0 = 单缝） */`,
+uniform float uPotSlitD; /* 双缝缝距（texel；0 = 单缝） */
+/* 第二势槽（R41 组合势）：V = pot3Slot(主) + pot3Slot(第二)；uPotKind2=0 无 */
+uniform int   uPotKind2;
+uniform float uPotV02;
+uniform float uPotR2;
+uniform float uPotW2;
+uniform float uPotZ2;
+uniform float uPotWallX2;
+uniform float uPotWallT2;
+uniform float uPotSlitW2;
+uniform float uPotSlitD2;`,
     };
   }
 
@@ -195,19 +243,22 @@ uniform float uPotSlitD; /* 双缝缝距（texel；0 = 单缝） */`,
     const wt = gl.getUniformLocation(prog, 'uPotWallT'); if (wt) gl.uniform1f(wt, state.potWallT);
     const sw = gl.getUniformLocation(prog, 'uPotSlitW'); if (sw) gl.uniform1f(sw, state.potSlitW);
     const sd = gl.getUniformLocation(prog, 'uPotSlitD'); if (sd) gl.uniform1f(sd, state.potSlitD);
+    /* 第二势槽（R41）：state 字段缺失（旧存档/未初始化）时按 0 处理 ⟹ 无叠加 */
+    const k2 = gl.getUniformLocation(prog, 'uPotKind2'); if (k2) gl.uniform1i(k2, state.potKind2|0);
+    const v02 = gl.getUniformLocation(prog, 'uPotV02'); if (v02) gl.uniform1f(v02, state.potV02 || 0);
+    const r2u = gl.getUniformLocation(prog, 'uPotR2'); if (r2u) gl.uniform1f(r2u, state.potR2 || 0);
+    const w2 = gl.getUniformLocation(prog, 'uPotW2'); if (w2) gl.uniform1f(w2, state.potW2 || 0);
+    const z2 = gl.getUniformLocation(prog, 'uPotZ2'); if (z2) gl.uniform1f(z2, state.potZ2 || 0);
+    const wx2 = gl.getUniformLocation(prog, 'uPotWallX2'); if (wx2) gl.uniform1f(wx2, state.potWallX2 || 0);
+    const wt2 = gl.getUniformLocation(prog, 'uPotWallT2'); if (wt2) gl.uniform1f(wt2, state.potWallT2 || 0);
+    const sw2 = gl.getUniformLocation(prog, 'uPotSlitW2'); if (sw2) gl.uniform1f(sw2, state.potSlitW2 || 0);
+    const sd2 = gl.getUniformLocation(prog, 'uPotSlitD2'); if (sd2) gl.uniform1f(sd2, state.potSlitD2 || 0);
   }
 
   /* H 特征值上界附加项（引擎 eMax = uK·12 + 1 + 本项）：
      各势形在域内的 |V| 最大值（格点单位）。 */
   eMaxExtra(state){
-    if (state.potKind === POT_SPHERE) return Math.abs(state.potV0);
-    if (state.potKind === POT_OSC){
-      /* 域角 |w|max = √3·N/2 ⟹ Vmax = ½ω²·3·(N/2)² */
-      return 0.5*state.potW*state.potW*3*Math.pow(state.grid/2, 2);
-    }
-    if (state.potKind === POT_COULOMB) return 2*state.potZ;   /* 软化核 |V|≤Z/0.5 */
-    if (state.potKind === POT_DOUBLE_SLIT) return Math.abs(state.potV0);  /* 墙全高 V0 */
-    return 0;
+    return eMaxSlot(state.potKind, state) + eMaxSlot(state.potKind2, state, 2);
   }
 
   /* 3D 透射率扫描的解析模型（R38）：s 波球势垒。与 2D 的 transmissionModel
@@ -332,6 +383,15 @@ uniform float uPotSlitD; /* 双缝缝距（texel；0 = 单缝） */`,
                 params:{ potKind:POT_DOUBLE_SLIT, potV0:3, potWallX:0, potWallT:4, potSlitW:6, potSlitD:20,
                          sigma:6, exposure3:3600 }, build(){},
                 text:'物质波撞上带双缝的不透明墙（V₀=3、厚 4 texel，z 向无限）：每条缝成为柱面波源，两束相干叠加——墙后屏幕方向长出明暗相间、等间距的干涉条纹（缝距 D=20、k=1.2 ⟹ 条纹间距 ≈λL/D≈6.8 texel）。每个粒子抵达屏幕的位置由 |ψ|² 决定——概率幅的自我干涉。' },
+      /* 组合势（R41）：主槽双缝墙（slits3d 口径）+ 第二槽球垒（R=6，不遮缝：
+         缝内缘 |y|=7 > R，球垒仅占据墙中央的实墙区）。波包先经球垒散射
+         （动量重分布）再入射双缝 ⟹ 屏图样被散射调制，与 slits3d 纯墙对照
+         即见散射对干涉的影响；可用 SlitScanner（R40）做峰数/峰位定量对比。 */
+      slit_sphere3d: { name:'球垒调制双缝', kind:'gaussian', wave3:[0.5-26/64,0.5,0.5, 1.2,0,0],
+                params:{ potKind:POT_DOUBLE_SLIT, potV0:3, potWallX:0, potWallT:4, potSlitW:6, potSlitD:20,
+                         potKind2:POT_SPHERE, potV02:2, potR2:6,
+                         sigma:6, exposure3:3600 }, build(){},
+                text:'同一道双缝墙，但墙中央叠了一个球形势垒（R=6、V₀=2，球半径小于缝内缘 |y|=7 故不遮缝）：波包先被球垒散射、动量重分布，再入射双缝——屏上图样是被散射调制的干涉，与「双缝干涉」预设对照即见散射如何改写干涉。势为两槽解析叠加（R41），⟨V⟩ 与稳定界按两槽之和计算。' },
       slit1_3d: { name:'单缝衍射', kind:'gaussian', wave3:[0.5-26/64,0.5,0.5, 1.2,0,0],
                 params:{ potKind:POT_DOUBLE_SLIT, potV0:3, potWallX:0, potWallT:4, potSlitW:6, potSlitD:0,
                          sigma:6, exposure3:3600 }, build(){},
@@ -356,6 +416,10 @@ uniform float uPotSlitD; /* 双缝缝距（texel；0 = 单缝） */`,
       potKind: POT_FREE, potV0: 0.02, potR: 10, potW: 1/64, potZ: 0.25,
       /* 双缝墙（R39；仅 potKind=4 生效）——墙心 x、墙厚、缝宽、缝距（世界 texel） */
       potWallX: 0, potWallT: 4, potSlitW: 6, potSlitD: 20,
+      /* 第二势槽（R41 组合势）：默认 POT_FREE ⟹ 无叠加（与 R34–R40 逐位一致）。
+         预设 params 可注入组合（如 slit_sphere3d：主槽双缝墙 + 第二槽球垒）。 */
+      potKind2: POT_FREE, potV02: 0.02, potR2: 10, potW2: 1/64, potZ2: 0.25,
+      potWallX2: 0, potWallT2: 4, potSlitW2: 6, potSlitD2: 20,
       /* 曝光默认 3600（= free3d 预设值，见预设表的实测标定）；其余预设各自覆盖 */
       steps3: 48, exposure3: 3600, phaseColor: 1, slice3: 0, sliceZ: 0.5,
       sigma: 6,

@@ -282,6 +282,23 @@ ${d3 ? `
     <div class="row"><label>墙厚 T</label><input type="range" id="rPotWallT" min="1" max="10" step="1" value="4"><output id="oPotWallT">4</output></div>
     <div class="row"><label>缝宽 W</label><input type="range" id="rPotSlitW" min="2" max="16" step="1" value="6"><output id="oPotSlitW">6</output></div>
     <div class="row"><label>缝距 D</label><input type="range" id="rPotSlitD" min="0" max="32" step="1" value="20"><output id="oPotSlitD">20</output></div>
+    <div class="row"><label>第二势</label>
+      <select id="selPotKind2">
+        <option value="0" selected>无（单势）</option>
+        <option value="1">球势垒</option>
+        <option value="2">谐振子</option>
+        <option value="3">库仑</option>
+        <option value="4">双缝墙</option>
+      </select>
+    </div>
+    <div class="row" id="rowPotV02"><label>叠加 V₀₂</label><input type="range" id="rPotV02" min="0" max="5" step="0.005" value="0.02"><output id="oPotV02">0.020</output></div>
+    <div class="row" id="rowPotR2"><label>叠加半径 R₂</label><input type="range" id="rPotR2" min="4" max="20" step="1" value="10"><output id="oPotR2">10</output></div>
+    <div class="row" id="rowPotW2"><label>叠加 ω₂</label><input type="range" id="rPotW2" min="0.004" max="0.06" step="0.002" value="0.0156"><output id="oPotW2">0.0156</output></div>
+    <div class="row" id="rowPotZ2"><label>叠加 Z₂</label><input type="range" id="rPotZ2" min="0.1" max="0.5" step="0.01" value="0.25"><output id="oPotZ2">0.25</output></div>
+    <div class="row" id="rowPotWallX2"><label>叠加墙心 x₂</label><input type="range" id="rPotWallX2" min="-20" max="20" step="1" value="0"><output id="oPotWallX2">0</output></div>
+    <div class="row" id="rowPotWallT2"><label>叠加墙厚 T₂</label><input type="range" id="rPotWallT2" min="1" max="10" step="1" value="4"><output id="oPotWallT2">4</output></div>
+    <div class="row" id="rowPotSlitW2"><label>叠加缝宽 W₂</label><input type="range" id="rPotSlitW2" min="2" max="16" step="1" value="6"><output id="oPotSlitW2">6</output></div>
+    <div class="row" id="rowPotSlitD2"><label>叠加缝距 D₂</label><input type="range" id="rPotSlitD2" min="0" max="32" step="1" value="20"><output id="oPotSlitD2">20</output></div>
     <div class="grid2" style="margin-top:6px">
       <button id="btnPhase3" class="on">相位着色</button>
       <button id="btnSlice3">切片模式</button>
@@ -1676,8 +1693,33 @@ ${d3 ? `
     if (g3) g3.value = String(this.state.grid);
     const si3 = this.q('#selInt3');           /* 3D 积分器下拉（?int3= / 预设切换后同步） */
     if (si3) si3.value = this.state.integrator3;
+    const pk2 = this.q('#selPotKind2');       /* 第二势槽下拉（R41：预设/导入可注入组合） */
+    if (pk2) pk2.value = String(this.state.potKind2 | 0);
+    this.refreshPot2Rows();
     const abp = this.q('#oABPos');            /* AB 螺线管位置读数（预设 params 可能改 abX/abY） */
     if (abp) abp.textContent = '(' + this.state.abX.toFixed(2) + ', ' + this.state.abY.toFixed(2) + ')';
+  }
+
+  /* 第二势槽参数行的动态显隐（R41 组合势）：仅当前 potKind2 所需的行显示，
+     其余隐藏——与主槽「预设决定哪些滑块生效」同一叙事，但组合势参数量大，
+     用动态显隐避免面板臃肿。仅在实际变化时写 style（避免每 tick 布局失效）。 */
+  refreshPot2Rows(){
+    const k = this.state.potKind2 | 0;
+    const show = {
+      rowPotV02: k === 1 || k === 4,
+      rowPotR2: k === 1,
+      rowPotW2: k === 2,
+      rowPotZ2: k === 3,
+      rowPotWallX2: k === 4,
+      rowPotWallT2: k === 4,
+      rowPotSlitW2: k === 4,
+      rowPotSlitD2: k === 4,
+    };
+    for (const [id, on] of Object.entries(show)){
+      const el = this.q('#' + id); if (!el) continue;
+      const want = on ? '' : 'none';
+      if (el.style.display !== want) el.style.display = want;
+    }
   }
 
   bindUI(){
@@ -1812,6 +1854,22 @@ ${d3 ? `
       this.bindRange('#rPotWallT','#oPotWallT','potWallT', v => String(v|0));
       this.bindRange('#rPotSlitW','#oPotSlitW','potSlitW', v => String(v|0));
       this.bindRange('#rPotSlitD','#oPotSlitD','potSlitD', v => String(v|0));
+      /* 第二势槽（R41 组合势）：下拉切换即时生效 + 8 个叠加参数滑块（仅当前
+         第二势类型所需的行显示，其余隐藏——与主槽「预设决定哪些滑块生效」
+         同一叙事，但组合势参数量大，故用动态显隐避免面板臃肿）。 */
+      this.on(this.q('#selPotKind2'), 'change', e => {
+        this.state.potKind2 = parseInt(e.target.value, 10) || 0;
+        this.refreshPot2Rows();
+      });
+      this.bindRange('#rPotV02','#oPotV02','potV02', v => v.toFixed(3));
+      this.bindRange('#rPotR2','#oPotR2','potR2', v => String(v|0));
+      this.bindRange('#rPotW2','#oPotW2','potW2', v => v.toFixed(4));
+      this.bindRange('#rPotZ2','#oPotZ2','potZ2', v => v.toFixed(2));
+      this.bindRange('#rPotWallX2','#oPotWallX2','potWallX2', v => String(v|0));
+      this.bindRange('#rPotWallT2','#oPotWallT2','potWallT2', v => String(v|0));
+      this.bindRange('#rPotSlitW2','#oPotSlitW2','potSlitW2', v => String(v|0));
+      this.bindRange('#rPotSlitD2','#oPotSlitD2','potSlitD2', v => String(v|0));
+      this.refreshPot2Rows();
       this.bindRange('#rSliceZ3','#oSliceZ3','sliceZ', v => v.toFixed(2));
       this.on(this.q('#btnPhase3'), 'click', () => {
         this.state.phaseColor = this.state.phaseColor ? 0 : 1;

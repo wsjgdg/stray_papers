@@ -315,6 +315,7 @@ float den3(vec4 c){ return {{DENSITY3}}; }
 /* 3D 动能密度（默认前向链路式，与 CPU moments3d 同口径；一阶内核可注入 kinetic3
    覆盖，契约见文件头 3D token 段） */
 float kin3(vec4 c, vec4 dxp, vec4 dyp, vec4 dzp){ return {{KINETIC3}}; }
+{{HELPERS}}
 void main(){
   int n = int(uGrid3 + 0.5);
   ivec2 gi = ivec2(floor(gl_FragCoord.xy));
@@ -936,6 +937,9 @@ export function buildShaders(kernel){
       DENSITY3: s.density3 || 'dot(c.xy,c.xy)',
       POT3: s.pot3 || '0.0',
       KINETIC3: s.kinetic3 || 'dot(dxp,dxp)+dot(dyp,dyp)+dot(dzp,dzp)',
+      /* HELPERS（R41）：pot3 需函数定义时在此注入——R41 把单槽势抽成
+         pot3Slot() 供两槽叠加，reduce3d 的 ⟨V⟩ 归约必须与 evolve3d 同源 */
+      HELPERS: s.helpers || '',
     });
     /* 3D CN（R36）：内核提供 cnLocalSolve3 ⟺ 挂载 CN 路径。与 2D CN 的
        kernel.integrator 内核级开关不同，3D 是运行时切换（state.integrator3，
