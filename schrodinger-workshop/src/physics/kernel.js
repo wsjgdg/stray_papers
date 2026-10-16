@@ -72,6 +72,10 @@
  *   density3 —— TPL_DISPLAY3D 的体积密度（vec4 c → float；标量默认
  *               dot(c.xy,c.xy)=|ψ|²）。
  *   phase3   —— 体积相位着色（float，弧度；默认 atan(c.y,c.x)）。
+ *   kinetic3 —— TPL_REDUCE3D 的动能密度（float，参数 (c,dxp,dyp,dzp) 为采样
+ *               点与三轴前向差分；默认 'dot(dxp,dxp)+dot(dyp,dyp)+dot(dzp,dzp)'
+ *               = Σ_axes|Δψ|²，与内核 moments3d 的 CPU 口径逐字一致——两条独立
+ *               实现用于对账互证。一阶内核（3D Dirac）可注入覆盖。
  *   helpers  —— 复用 2D 同名注入位（pot3 需函数时在此定义）。
  *   makeWave3d —— 引擎 initWave 调用的 3D 初态生成（n, opts → Float32Array，
  *                 n³·通道数）；2D makeWave 对 dim3 内核不被调用。
@@ -266,6 +270,72 @@ const SNIP_HSV = `vec3 hsv2rgb(vec3 c){
   vec3 rgb = clamp(abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),6.0)-3.0)-1.0,0.0,1.0);
   rgb = rgb*rgb*(3.0-2.0*rgb);
   return c.z*mix(vec3(1.0),rgb,c.y);
+}`;
+
+/* ---------- 3D 归约：全卷测量（引擎级，kernel.dim3=true 时启用）----------
+   WebGL2 无 3D 纹理的 mip/归约链，故采用「线性索引分块」：输出 32²=1024 个
+   texel，每个负责 n³/1024 个体素（连续切片，累加与顺序无关），遍历 3D 纹理
+   直接采样（邻居差分也精确，无需「层图集」技巧及其跨 tile 边界问题）。
+   动能默认取**前向链路** Σ_axes|Δψ|²（1-texel 前向差分，3 轴 × 全分量）——
+   与内核 moments3d 的 CPU 口径逐字一致，两条独立实现可逐项对账（2D 的
+   TPL_REDUCE 用 4 阶中心差分更准，但 3D 需要与 CPU 同口径才能互证；两者在
+   光滑场极限一致，离散差 O(h²) 已文档化）。
+   MRT 三附件布局（CPU 侧：o0/o1 前 3 通道求和、o1.w 取 max、o2 求和）：
+     o0 = (Σp, uK·ΣT, Σp², ΣVp)
+     o1 = (Σx·p, Σy·p, Σz·p, max|ψ|²)         ← 质心为 texel 序号/n 口径
+     o2 = (uK·ΣT_x, uK·ΣT_y, uK·ΣT_z, 0)      ← 分轴动能，stx+sty+stz ≡ st 自校验
+   注释内勿写带双花括号的 token 名（fill() 重复注入位守卫会拦截，R33 教训）。 */
+const TPL_REDUCE3D = `#version 300 es
+precision highp float;
+in vec2 vUv;
+layout(location=0) out vec4 o0;
+layout(location=1) out vec4 o1;
+layout(location=2) out vec4 o2;
+uniform highp sampler3D uPsi;
+uniform float uGrid3;   /* n（体素边长） */
+uniform float uK;       /* =1/2m：动能密度 ×uK → 物理动能 */
+{{UNIFORMS}}
+float den3(vec4 c){ return {{DENSITY3}}; }
+/* 3D 动能密度（默认前向链路式，与 CPU moments3d 同口径；一阶内核可注入 kinetic3
+   覆盖，契约见文件头 3D token 段） */
+float kin3(vec4 c, vec4 dxp, vec4 dyp, vec4 dzp){ return {{KINETIC3}}; }
+void main(){
+  int n = int(uGrid3 + 0.5);
+  ivec2 gi = ivec2(floor(gl_FragCoord.xy));
+  int id = gi.y*32 + gi.x;
+  int total = n*n*n;
+  int per = (total + 1023)/1024;
+  float sp=0.0, st=0.0, sp2=0.0, sv=0.0;
+  float sx=0.0, sy=0.0, sz=0.0, peak=0.0;
+  float stx=0.0, sty=0.0, stz=0.0;
+  float inv = 1.0/float(n);
+  for(int k=0;k<per;k++){
+    int idx = id*per + k;
+    if(idx >= total) break;
+    int ix = idx - (idx/n)*n;
+    int iy = (idx/n) - (idx/(n*n))*n;
+    int iz = idx/(n*n);
+    vec3 uvw = (vec3(float(ix),float(iy),float(iz))+0.5)*inv;
+    vec4 c = texture(uPsi, uvw);
+    float p = den3(c);
+    /* 前向链路（3 轴）：Neumann 边界由 CLAMP_TO_EDGE 给出 Δ=0（界外取自身） */
+    vec4 dxp = texture(uPsi, uvw+vec3(inv,0.0,0.0)) - c;
+    vec4 dyp = texture(uPsi, uvw+vec3(0.0,inv,0.0)) - c;
+    vec4 dzp = texture(uPsi, uvw+vec3(0.0,0.0,inv)) - c;
+    vec3 w = (uvw - 0.5)*float(n);
+    float V = {{POT3}};
+    sp += p; sp2 += p*p;
+    st  += kin3(c, dxp, dyp, dzp);
+    stx += kin3(c, dxp, vec4(0.0), vec4(0.0));
+    sty += kin3(c, vec4(0.0), dyp, vec4(0.0));
+    stz += kin3(c, vec4(0.0), vec4(0.0), dzp);
+    sv += V*p;
+    sx += float(ix)*inv*p; sy += float(iy)*inv*p; sz += float(iz)*inv*p;
+    peak = max(peak, p);
+  }
+  o0 = vec4(sp, uK*st, sp2, sv);
+  o1 = vec4(sx, sy, sz, peak);
+  o2 = vec4(uK*stx, uK*sty, uK*stz, 0.0);
 }`;
 
 /* ---------- 3D KDK 速度 Verlet 骨架（引擎级，kernel.dim3=true 时启用）----------
@@ -755,8 +825,10 @@ export function buildShaders(kernel){
     out.cnSweep = fill(TPL_CN_SWEEP, { ...need, ...opt, UNIFORMS: uni, LAP_BLOCK: TPL_LAP_BLOCK, CN_LOCAL_SOLVE: s.cnLocalSolve });
   }
   /* 3D 路径（kernel.dim3=true，R34）：evolve3d（7 点拉普拉斯 KDK）+ display3d
-     （volume ray-march）。pot3 = 解析势表达式（变量 w=p−0.5 世界坐标）；
-     density3/phase3 = 体积密度/相位（标量默认 dot(c.xy,c.xy)/atan(c.y,c.x)）。
+     （volume ray-march）+ reduce3d（全卷 GPU 归约）。pot3 = 解析势表达式
+     （变量 w=p−0.5 世界坐标）；density3/phase3 = 体积密度/相位（标量默认
+     dot(c.xy,c.xy)/atan(c.y,c.x)）；kinetic3 = 3D 动能密度（默认前向链路式，
+     与内核 moments3d 的 CPU 口径一致，供双测量对账）。
      app.js 按 sh.evolve3d 是否存在决定编译 3D program 与 evolve3d 分支。 */
   if (kernel.dim3){
     out.evolve3d = fill(TPL_EVOLVE3D, {
@@ -768,9 +840,15 @@ export function buildShaders(kernel){
       PHASE3: s.phase3 || 'atan(c.y, c.x)',
       HSV: SNIP_HSV,
     });
+    out.reduce3d = fill(TPL_REDUCE3D, {
+      UNIFORMS: uni,
+      DENSITY3: s.density3 || 'dot(c.xy,c.xy)',
+      POT3: s.pot3 || '0.0',
+      KINETIC3: s.kinetic3 || 'dot(dxp,dxp)+dot(dyp,dyp)+dot(dzp,dzp)',
+    });
   }
   return out;
 }
 
 /* 导出模板仅供测试/文档引用（生产路径经 buildShaders 消费） */
-export const TEMPLATES = { TPL_EVOLVE, TPL_EVOLVE3D, TPL_DISPLAY3D, SNIP_HSV, TPL_CN_RHS, TPL_CN_SWEEP, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, TPL_LAP_BLOCK, DEFAULT_PIXEL_COLOR, DEFAULT_PMEAN };
+export const TEMPLATES = { TPL_EVOLVE, TPL_EVOLVE3D, TPL_DISPLAY3D, TPL_REDUCE3D, SNIP_HSV, TPL_CN_RHS, TPL_CN_SWEEP, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, TPL_LAP_BLOCK, DEFAULT_PIXEL_COLOR, DEFAULT_PMEAN };

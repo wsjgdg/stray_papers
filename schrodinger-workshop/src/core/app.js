@@ -335,6 +335,7 @@ ${d3 ? `
     if (sh.evolve3d){
       this.progEvolve3d = createProgram(gl, sh.evolve3d);
       this.progVolume = createProgram(gl, sh.display3d);
+      this.progReduce3d = createProgram(gl, sh.reduce3d);   /* 全卷 GPU 归约（R35） */
     }
   }
 
@@ -962,12 +963,15 @@ ${d3 ? `
     gl.uniform1f(this.u(this.progComposite,'uTime'), now*0.001);
     gl.uniform1f(this.u(this.progComposite,'uBright'), st.bright);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
-    /* 全卷测量（P/T/V/E/peak/质心）——节流；调试句柄 probSum3d 无节流。
-       节流间隔随网格放大：probSum3d 的回读 + CPU 遍历成本 O(n³)（128³ 单次
-       ~0.5s），若不放大间隔，大网格下几乎每帧都触发一次，反而成为主开销。 */
-    if (now - this._lastReduceF > (st.grid <= 64 ? 500 : st.grid <= 96 ? 1500 : 3000)){
+    /* 全卷测量（P/T/V/E/peak）——走 GPU 归约（R35），节流；调试句柄无节流。
+       GPU 归约后成本从 O(n³) 的 CPU 回读（64³ ~40ms）降到「1024 体素块并行遍历
+       + 4KB 回读」，故节流可收回 120ms（与 2D 的 reduce 同频）；大网格仍放宽
+       （96³ 500ms / 128³ 1000ms）——遍历总量仍 ∝ n³，别让它成为主开销。 */
+    /* 实测成本（SwiftShader）：64³ 1.3ms / 96³ 3.5ms / 128³ 6.4ms，故无需随网格
+       放大间隔，统一 120ms（与 2D reduce 同频）；旧 CPU 回读档位为 500/1500/3000ms。 */
+    if (now - this._lastReduceF > 120){
       this._lastReduceF = now;
-      const m = this.probSum3d();
+      const m = this.reducePass3d();
       if (!this._baseCaptured){ this.baseP0 = m.P; this._baseCaptured = true; }
       const err = Math.abs(m.P - this.baseP0)/Math.max(this.baseP0,1e-9)*100;
       this.q('#hP').textContent = m.P.toFixed(4);
@@ -1008,6 +1012,45 @@ ${d3 ? `
     const m = this.kernel.moments3d(buf, n, this.state);
     m.simTime = this.state.simTime;
     return m;
+  }
+
+  /* ---------- 3D 全卷 GPU 归约（R35）----------
+     WebGL2 无 3D 纹理的归约链 ⟹ 用「线性索引分块」：32² 个输出 texel 各遍历
+     n³/1024 个体素（TPL_REDUCE3D），三张 MRT 附件回读后 CPU 只做 1024 项求和
+     ——把 O(n³) 的 CPU 遍历（64³ 还要先回读 2MB）换成 GPU 遍历 + 4KB 回读。
+     与 probSum3d（CPU 全卷回读 + 内核 moments3d）是两条独立实现：动能同为
+     1-texel 前向链路口径，故二者可逐项对账（调试句柄 timing3d 同时给出耗时）。 */
+  reducePass3d(){
+    const gl = this.gl, n = this.state.grid, k = 0.5/this.state.m;
+    gl.useProgram(this.progReduce3d);
+    gl.bindVertexArray(this.quad.vao);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.reduceT.fbo);
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2]);
+    gl.viewport(0,0,32,32);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_3D, this.psiA3.tex);
+    gl.uniform1i(this.u(this.progReduce3d,'uPsi'), 0);
+    gl.uniform1f(this.u(this.progReduce3d,'uGrid3'), n);
+    gl.uniform1f(this.u(this.progReduce3d,'uK'), k);
+    this.kernel.setUniforms(gl, this.progReduce3d, this.state);   /* 私有 uniform（势参数） */
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.readBuffer(gl.COLOR_ATTACHMENT0);
+    gl.readPixels(0,0,32,32,gl.RGBA,gl.FLOAT,this._readBuf);
+    gl.readBuffer(gl.COLOR_ATTACHMENT1);
+    gl.readPixels(0,0,32,32,gl.RGBA,gl.FLOAT,this._readBuf2);
+    gl.readBuffer(gl.COLOR_ATTACHMENT2);
+    gl.readPixels(0,0,32,32,gl.RGBA,gl.FLOAT,this._readBuf3);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    let sp=0, st=0, sp2=0, sv=0, sx=0, sy=0, sz=0, peak=0, stx=0, sty=0, stz=0;
+    for (let i=0;i<1024;i++){
+      sp+=this._readBuf[i*4]; st+=this._readBuf[i*4+1]; sp2+=this._readBuf[i*4+2]; sv+=this._readBuf[i*4+3];
+      sx+=this._readBuf2[i*4]; sy+=this._readBuf2[i*4+1]; sz+=this._readBuf2[i*4+2];
+      if (this._readBuf2[i*4+3] > peak) peak = this._readBuf2[i*4+3];   /* 局部峰值取 max（非求和） */
+      stx+=this._readBuf3[i*4]; sty+=this._readBuf3[i*4+1]; stz+=this._readBuf3[i*4+2];
+    }
+    return { P: sp, T: st, V: sv, E: st + sv, peak, sp2,
+             cx: sp > 0 ? sx/sp : 0.5, cy: sp > 0 ? sy/sp : 0.5, cz: sp > 0 ? sz/sp : 0.5,
+             Tx: stx, Ty: sty, Tz: stz, simTime: this.state.simTime };
   }
 
   /* 3D 手动步进（诊断/验证用，不经 frame）：跑 n 个完整帧（每帧 sub 子步 ×
@@ -1562,6 +1605,18 @@ ${d3 ? `
       /* 3D 全卷测量（内核 moments3d 物理分解）：P/T/V/E/peak/质心 + simTime。
          无节流（HUD 用 500ms 节流版本）；64³ 约 40ms，验证脚本可直接调用。 */
       probSum3d: () => this.probSum3d(),
+      /* 3D 全卷 GPU 归约（R35）：与 probSum3d（CPU）互为独立实现，动能同为
+         1-texel 前向链路口径 ⟹ 两条路径可逐项对账。 */
+      reduce3d: () => this.reducePass3d(),
+      /* 两条路径的耗时对照（ms）：验证 GPU 归约替代 CPU 回读的实际收益 */
+      timing3d: () => {
+        const t0 = performance.now(); const cpu = this.probSum3d(); const t1 = performance.now();
+        const gpu = this.reducePass3d(); const t2 = performance.now();
+        return { cpuMs: t1 - t0, gpuMs: t2 - t1, speedup: (t1 - t0)/Math.max(t2 - t1, 1e-6),
+                 dP: Math.abs(gpu.P - cpu.P)/Math.max(cpu.P, 1e-9),
+                 dT: Math.abs(gpu.T - cpu.T), dV: Math.abs(gpu.V - cpu.V), dPeak: Math.abs(gpu.peak - cpu.peak),
+                 dcx: Math.abs(gpu.cx - cpu.cx) };
+      },
       /* 3D 确定性步进 n 帧（不经 frame）：返回前后测量 + P 百分比漂移 + ΔE。
          验证守恒性/驻波稳定性用（KDK 的离散能量应无长期漂移）。 */
       manualPass3d: (n) => this.manualPass3d(n),

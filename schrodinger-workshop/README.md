@@ -169,7 +169,7 @@ u(k)=(1, (sin k_x+i·sin k_y)/(E+m))，k=0 时 u=(1,0) 纯上分量。
 | 边界 | Dirichlet（越界返回 0） | **Neumann 零梯度**（`CLAMP_TO_EDGE`，触壁软反射） |
 | 势场 | 256² 势场画布（笔刷可画、可导入导出） | **解析注入**（内核 `pot3`，球垒/谐振子/库仑；无笔刷） |
 | 交互 | 拖拽发射波包 + 势场笔刷 | **轨道相机**（拖拽旋转、滚轮缩放） |
-| HUD 测量 | GPU MRT 归约（120ms） | `probSum3d` 全卷 CPU 回读（按网格节流 500/1500/3000ms） |
+| HUD 测量 | GPU MRT 归约（120ms） | GPU 3D 归约（线性索引分块，120ms；`probSum3d` 的 CPU 全卷回读保留为独立对账路径，见下） |
 | 世界坐标 | 纹素单位，原点在角 | `w = (p−0.5)·N`，**原点在域中心** |
 
 | 预设 | 物理内容 |
@@ -439,7 +439,7 @@ Evolve (RG32F ping-pong ×sub×3) → Display (+trail max 混合 → dispA/dispB
 ```
 Evolve3D (n³ RG32F ping-pong ×sub×3 × n 层逐层 draw)
   → Volume ray-march (轨道相机 → dispA/dispB)
-  → Composite (同 2D) → probSum3d (全卷逐层回读 + 内核 moments3d → HUD)
+  → Composite (同 2D) → reduce3d (GPU 全卷归约 → HUD)
 ```
 
 - **逐层 draw**：WebGL2 无完整 3D FBO，每 pass = n 次 `framebufferTextureLayer` + draw（R34 spike 实测 64³ 8.8ms/pass、128³ 105.6ms/pass，SwiftShader）
