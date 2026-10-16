@@ -22,6 +22,7 @@
 | R33 | Pauli 切 CN 积分器（#43） | R32 σ_y 缺陷根治：CN_LOCAL_SOLVE 提升为内核注入位 + LAP_BLOCK 三模板共享；KDK 路径 A/B 装配逐字一致（5 内核 × 全 program）；tilted+B_y=0.05 由 KDK +9.941% → CN −0.0099% |
 | R34 | 3D 体积内核（#34） | spike 能力矩阵 + 薛定谔 3D 内核落地：7 点 stencil KDK 逐层 draw 全卷 + ray-march 体积渲染 + 轨道相机；5 预设物理对账（群速 0.99×k/m、1s E=−0.030778 vs −Z²/2、谐振子 E=0.023415 vs 1.5ℏω）；装配/物理 harness 41/41 + CDP 37/37 |
 | R35 | 3D GPU 归约（#34 backlog ①） | 全卷测量由 CPU 回读改 GPU「线性索引分块」归约（32² 输出各遍历 n³/1024 体素）：64³ 99.9→1.3ms（**76.9×**）、96³ 107.5→3.5ms（30.7×）、128³ 124.5→6.4ms（19.5×）；HUD 节流收回 120ms；与 CPU `moments3d` 双测量逐项对账 rel ≤ 2e-7；harness 46/46 + CDP 38/38 |
+| R36 | 3D CN 积分器（#34 backlog ②） | 3D 标量薛定谔运行时切 CN（`state.integrator3`，默认 kdk 零回归）：CN(12) vs 稠密 Cayley 独立解 7.87e-8、CN(60) 5.78e-16；GPU↔CPU Float64 镜像对账 rel ≤ 5e-6；守恒对照 oscillator KDK dP 7.82e-5% vs CN 2.72e-6%；绘制量 3→13/子步（实测 ≈ 理论 4.33×）；装配 65/65 + CPU 镜像 28/28 + CDP 41/41 |
 
 ---
 
@@ -86,7 +87,81 @@ numpy 复刻引擎：Hc = −uK·lap5(w) − uK·σB(w)，kick (x, y−h·Hc.x, 
 
 ---
 
-## R35（2026-10-16）3D GPU 归约（#34 backlog ①）：HUD 测量从 CPU 回读迁到 GPU
+## R36（2026-10-16）3D CN 积分器（#34 backlog ②）：KDK/CN 运行时切换
+
+### 缘起
+R34 的 3D 内核只带 KDK（速度 Verlet）。2D 侧 CN 是内核级开关（`kernel.integrator='cn'`，
+R33），但那是 Dirac/Pauli 的**结构性需求**（KDK 混合通道失效）；3D 标量薛定谔无此缺陷
+——KDK 对线性系统严格保范、范数 O(dt²) 有界振荡（非长期漂移）。故 3D CN 的定位不是
+「修缺陷」而是「给一条严格正交的对账通路」：Cayley 矩阵无条件稳定，与 KDK 互为独立验证。
+
+### 设计：运行时切换（区别于 2D 的内核级开关）
+
+| 维度 | 2D CN（R31/R33） | 3D CN（R36） |
+|---|---|---|
+| 开关层级 | 内核契约 `kernel.integrator='cn'` | 运行时 `state.integrator3='kdk'\|'cn'` |
+| 默认值 | 依内核（schrodinger 默认 kdk；Dirac/Pauli 被迫 cn） | **kdk**（预设参数不含该项，用户选择跨预设保留） |
+| 回归面 | 内核级 ⟹ 换内核即切 | 默认路径零改动（分流器 `_evolve3dFrame`，CN 通路条件 `state.integrator3==='cn' && progCnRhs3d`） |
+| 入口 | — | 面板「积分器」select（`intRow3`/`selInt3`）+ URL `?int3=cn\|kdk`（置于 loadPreset 之前） |
+
+**数值构造**（与 2D 同构、标量闭式解更简单）：
+- `TPL_CN_RHS3D`：全量 G 右端 `Hc=−uK·lap+V·c; Gc=vec4(Hc.y,−Hc.x,Hc.w,−Hc.z); o=c+uDtHalf·Gc`（7 点 stencil、sampler3D + uLayer 逐层、POT3 注入、无驱动/AB）
+- `TPL_CN_SWEEP3D`：仅动能 Gkin（`Hk=−uK·lap`）+ 局部 Cayley `arg = rhs + uDtHalf·Gk; o = cnLocalSolve3(arg, V)`
+- `cnLocalSolve3`（snippet 注入）：`(1+i·hV)⁻¹` 复平面旋转闭式解 `((arg.x+hV·arg.y)+i(arg.y−hV·arg.x))/(1+(hV)²)`
+- 每子步 1 遍 rhs（psiA3→rhs3 固定纹理）+ **12 次** Jacobi 扫掠（奇偶 ping-pong，偶数次末态回 psiA3）
+- **边界细节（踩坑点）**：Neumann clamp 到自身的邻居进**对角线**而非被跳过——界外方向贡献 +c ⟹ 对角 −uK×clamped 数。CPU 镜像初版漏此项，与稠密解系统性差 6.96e-2；修复后 CN(12) 对账 7.87e-8
+
+### 验证（三层，全部真实运行）
+
+**① 装配断言 + A/B（asm36.mjs，65/65 PASS）**：3D CN 模板 token 唯一且不在注释内；
+与 HEAD（7fe6dac clone）逐字比对 KDK 路径 5 项零漂移；bare dim3 内核（不声明
+cnLocalSolve3）不挂 CN 能力（能力协商 `sh.cnRhs3d` 假核防御）。
+
+**② CPU 镜像对账（mirror3d.mjs + cpu36.mjs，28/28 PASS）**：与 shader 逐字同构的
+Float64 JS 镜像（`stepKDK3d`/`stepCN3d(buf,n,uK,Vof,h,sweeps)`）+ 稠密高斯消元
+`denseCayley3d` 独立解：
+
+| 对账项 | 结果 |
+|---|---|
+| CN(12) vs 稠密 Cayley（32³ 光滑势） | 7.87e-8 |
+| CN(60) vs 稠密 Cayley | **5.78e-16**（Jacobi 全收敛 ⟹ 即精确 CN 系统） |
+| Jacobi 截断（光滑势） | 机器精度级 |
+| Jacobi 截断（球垒不连续势，扫掠依赖） | 12 扫 2.80e-9 / 24 扫 2.65e-12 / 60 扫 3.71e-14（边缘激发高频，非方案缺陷） |
+| 收敛阶（dt 折半） | CN 二阶（(I−hG)(I+hG)⁻¹ 展开 h² 项相消） |
+| 长时程（400 子步） | 无单调漂移 |
+| KDK 范数振荡 | 60 帧 4.49e-6 ↔ 200 帧 4.11e-6 不增长（辛格式有界振荡，与 R34 GPU CDP 0.0008% 同量级） |
+
+**③ CDP 六节套件（cdp36.js，41/41 PASS，零控制台异常）**：可用性 + URL /
+GPU↔CPU 镜像对账 / 守恒对照 / 面板交互 / 渲染 + HUD / 回归（2D 五内核 + Dirac + Pauli-CN）：
+
+| 案例 | 指标 | 结果 |
+|---|---|---|
+| GPU CN vs CPU 镜像 rel | P | oscillator 6.66e-8 / free3d 1.64e-8 / sphere 2.44e-6 |
+| | T | 1.54e-8 / 3.12e-8 / 3.58e-6 |
+| oscillator 守恒（60 帧） | KDK | dP 7.82e-5% / ΔE 3.51e-8 |
+| | CN | dP **2.72e-6%** / ΔE −4.57e-10 |
+| sphere 守恒 | KDK/CN | 均被 float32 噪声底（~2.5e-4%）掩盖（如实记录：3D 全卷累加的 float32 底噪高于 2D） |
+| 性能（manualPass3d 批量） | 32³ | 825 → 3866 ms |
+| | 64³ | 2820 → 12801 ms |
+| | 加速比 | ≈4.5× vs 理论 13/3=4.33×（余量为逐层 draw 固定开销） |
+
+截图目视：`render_free3d_cn.png`（下行波包相位结构清晰）、`render_oscillator_cn.png`（驻波正常）、
+`render_free3d_kdk.png`（对照）。
+
+**④ dist 单文件冒烟（dist_smoke.mjs，9/9 PASS，零控制台错误）**：重建后的
+`dist/quantum-field.html`（237.0KB，md5 `e50dfd69…`）经 CDP 加载 `?kernel=schrodinger3d`：
+CN3D 可用（`cn3Available=true`）、默认 kdk、切换 CN/KDK 生效、oscillator 64³ 10 帧
+CN dP=2.63e-7% vs KDK dP=1.41e-5%、`wave3Data` 模方和 ≡ `probSum3d`.P
+（0.9999984389701309 逐位一致）。
+
+### 文档同步
+- README：诚实限制改写（「CN 未移植到 3D」过时 ⟹ KDK/CN 运行时可选 + 默认 KDK + ~4.3× 代价）；
+  3D 面板加积分器项；「积分器模式」节新增「3D CN（R36）：运行时切换」小节；
+  Evolve3D 管线图加分流注记；验证表补 R35（38/38，R35 当时漏入）+ R36 两行
+- 顺手修复 R35 遗留文档缺口：架构节「HUD 测量为 O(n³) CPU 回读（无 GPU 3D reduce）」
+  一条未随 R35 代码更新（管线图与对照表已改），本次改为 GPU 归约表述
+
+---
 
 ### 缘起
 R34 的 3D 路径把 HUD 的 P/T/V/E 交给 `probSum3d`：**逐层 readPixels 拼全卷 + CPU 遍历**

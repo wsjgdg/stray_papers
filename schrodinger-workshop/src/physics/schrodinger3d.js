@@ -39,6 +39,14 @@
  *   kind 'orbital2p' ：ψ = z_w·e^{−Z·r/2}（实；z=0 节面，上下瓣相位差 π，
  *                      相位着色下呈互补双色瓣——arg(ψ) 直接可视化的范例）
  *
+ * 积分器（R36 #34 backlog ②）：本内核同时提供 KDK（TPL_EVOLVE3D，速度 Verlet）
+ * 与 CN（TPL_CN_RHS3D/TPL_CN_SWEEP3D，Crank-Nicolson + block-Jacobi）两条路径，
+ * 运行时由 state.integrator3 切换（面板「积分器」下拉 / URL ?int3=，默认 'kdk'）。
+ * 标量 3D 的 KDK 并无缺陷（R34 已验证 P/E 守恒）——CN 的价值在于 Cayley 矩阵
+ * 严格正交（范数机器精度守恒、无条件稳定），且二者可在同一预设下对照运行
+ * （教学演示：积分器离散误差的量级差异）。CN 的局部块闭式解由本文件经
+ * shaders().cnLocalSolve3 注入（(1+i·h·V)⁻¹，见下）。
+ *
  * 3D 无透射率扫描模型（线性 1D 模型不适用体积散射）——transmissionModel
  * 继承基类 null（引擎隐藏扫描面板）；无自旋读数；CPU 密度取前两通道
  * （pairs=1，基类默认即正确）。
@@ -49,8 +57,9 @@ import { PhysicsKernel, registerKernel } from './kernel.js';
 const POT_FREE = 0, POT_SPHERE = 1, POT_OSC = 2, POT_COULOMB = 3;
 
 /* CPU 端解析势（pot3 的 JS 镜像——镜像契约见文件头）：
-   w 为世界坐标（格点单位、居中）；返回 V（格点单位）。 */
-function pot3JS(wx, wy, wz, st){
+   w 为世界坐标（格点单位、居中）；返回 V（格点单位）。
+   导出供测试 harness 做「GPU 演化 vs CPU 镜像」对账（R36 起）。 */
+export function pot3JS(wx, wy, wz, st){
   const r2 = wx*wx + wy*wy + wz*wz;
   if (st.potKind === POT_SPHERE) return r2 < st.potR*st.potR ? st.potV0 : 0;
   if (st.potKind === POT_OSC) return 0.5*st.potW*st.potW*r2;
@@ -129,6 +138,20 @@ class Schrodinger3dKernel extends PhysicsKernel {
       /* 体积密度 / 相位（ray-march 与切片两条显示路径经 den3/ph3 共用） */
       density3: 'dot(c.xy,c.xy)',
       phase3: 'atan(c.y, c.x)',
+      /* 3D CN 积分器的局部块闭式解（R36）：标量薛定谔的 Gloc = −i·V（G=−i·M
+         的局部部分）⟹ (I−h·Gloc)⁻¹ = (1+i·h·V)⁻¹，即复平面上以 1/(1+(hV)²)
+         为模压缩因子的 Cayley 旋转：
+           arg/(1+ihV) = arg·(1−ihV)/(1+(hV)²)
+                       = ((arg.x+hV·arg.y) + i(arg.y−hV·arg.x))/(1+(hV)²)
+         xy/zw 两对通道同构（RG32F 下 zw 恒 0，公式保持 4 宽通用性）。
+         |1+i·hV|≥1 ⟹ 局部映射压缩模长 ≤1，Jacobi 迭代不放大；全步 Cayley
+         (I−hG)⁻¹(I+hG) 对斜对称 G 严格正交 ⟹ 范数机器精度守恒（精确算术口径；
+         GPU float32 长时程残差量级同 2D CN 路径，见 kernel.js CN 节头注）。 */
+      cnLocalSolve3: `vec4 cnLocalSolve3(vec4 arg, float V){
+  float d = 1.0 + uDtHalf*uDtHalf*V*V;
+  return vec4(arg.x + uDtHalf*V*arg.y, arg.y - uDtHalf*V*arg.x,
+              arg.z + uDtHalf*V*arg.w, arg.w - uDtHalf*V*arg.w) / d;
+}`,
       uniforms: `uniform int   uPotKind;   /* 势形编号（POT_FREE/SPHERE/OSC/COULOMB） */
 uniform float uPotV0;     /* 球势垒高度 */
 uniform float uPotR;     /* 球势垒半径（texel） */
@@ -284,6 +307,9 @@ uniform float uPotZ;     /* 库仑核电荷 Z（1s: E=−Z²/2；2p_z: E=−Z²/
          每帧 4608 次 draw），直接把交互帧率打到个位数（R34 首轮验证实测踩中）。
          面板下拉与 ?grid= 均限制在 32…128。 */
       grid: 64,
+      /* 积分器选择（R36）：'kdk'（默认，速度 Verlet）/ 'cn'（Crank-Nicolson）。
+         预设 params 不含该项——用户选择跨预设保留（对照实验不因切预设而重置）。 */
+      integrator3: 'kdk',
       potKind: POT_FREE, potV0: 0.02, potR: 10, potW: 1/64, potZ: 0.25,
       /* 曝光默认 3600（= free3d 预设值，见预设表的实测标定）；其余预设各自覆盖 */
       steps3: 48, exposure3: 3600, phaseColor: 1, slice3: 0, sliceZ: 0.5,

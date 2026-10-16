@@ -79,6 +79,11 @@
  *   helpers  —— 复用 2D 同名注入位（pot3 需函数时在此定义）。
  *   makeWave3d —— 引擎 initWave 调用的 3D 初态生成（n, opts → Float32Array，
  *                 n³·通道数）；2D makeWave 对 dim3 内核不被调用。
+ *   cnLocalSolve3 —— 3D CN 积分器的局部块闭式解（R36 #34 backlog ②；函数
+ *                 vec4 cnLocalSolve3(vec4 arg, float V)，注入 TPL_CN_SWEEP3D
+ *                 的 CN_LOCAL_SOLVE3 位）。提供该 snippet 的内核在 3D 下同时
+ *                 挂载 KDK/CN 两条积分路径，运行时由 state.integrator3 切换
+ *                 （默认 'kdk' ⟹ 无该 snippet 时行为逐字不变）。
  *
  * 一阶系统 token（Dirac 内核 #33 引入；默认值对标量内核逐字等价、回归零风险）：
  *   kineticE —— TPL_EVOLVE 的动能项表达式（默认 '-uK*lap'）。引擎 KDK 骨架
@@ -175,6 +180,17 @@
  *   显式路径（KDK）与 CN 路径经 kernel.integrator 分流：'cn' 时 app.js
  *   编译 progCnRhs/progCnSweep、分配 this.rhs target，evolve()/manualPass()
  *   走 CN 分支；其余内核零改动。
+ *
+ * 3D CN（R36 #34 backlog ②）：dim3 内核提供 cnLocalSolve3 时，buildShaders
+ *   追加装配 cnRhs3d/cnSweep3d（TPL_CN_RHS3D/TPL_CN_SWEEP3D）——与 2D CN 同一
+ *   (I−hG)w_{n+1}=(I+hG)w_n 方案、同一 block-Jacobi 12 扫掠，差异全在维度：
+ *   7 点 stencil（Gkin 谱半径界 h·uK·12）、sampler3D + 逐层 draw（每全卷 pass
+ *   = N 次 framebufferTextureLayer）、势经 {{POT3}} 解析注入（无 uV 纹理）、
+ *   无驱动/AB uniform。局部块由内核注入：标量薛定谔为 (1+i·h·V)⁻¹ 复平面
+ *   Cayley 旋转（schrodinger3d.js）。与 2D 的本质区别：2D 的 CN 是**内核级**
+ *   开关（Dirac/Pauli 因 KDK 结构性失效被迫切换），3D 的 CN 是**运行时可选**
+ *   （state.integrator3='kdk'|'cn'，面板/URL 切换）——标量 3D 的 KDK 并无缺陷
+ *   （R34 已验证守恒），CN 的价值是严格正交性（Cayley）与教学上的积分器对照。
  * ========================================================================== */
 
 import { gaussianWave } from './gaussian.js';
@@ -375,6 +391,81 @@ void main(){
   } else {
     o = vec4(c.x + uDt*Hc.y, c.y, c.z + uDt*Hc.w, c.w);           // u_new = u + dt*H*v_half
   }
+}`;
+
+/* ---------- 3D CN 积分器（R36 #34 backlog ②；kernel.dim3 且内核提供
+   cnLocalSolve3 时装配）----------
+   与 2D TPL_CN_RHS/TPL_CN_SWEEP 同一方案（(I−hG)w_{n+1}=(I+hG)w_n，
+   h=uDtHalf=dt_sub/2，G=−i·M 复结构作用，G=Gloc+Gkin 的 block-Jacobi 12 扫掠），
+   维度差异逐项对照：
+     · 5 点 stencil → 7 点（S(p±e_axis)×6 − 6c；Gkin 谱半径界 h·uK·12）
+     · sampler2D + vUv → sampler3D + vec3(vUv, uLayer)（逐层 draw，app.js 每全卷
+       pass = N 次 framebufferTextureLayer + 全屏三角形）
+     · 势纹理 uV → POT3 解析注入（3D 无势画布；无驱动/AB uniform）
+     · 局部块闭式解经 CN_LOCAL_SOLVE3 注入（标量薛定谔：(1+i·h·V)⁻¹）
+   边界：S() 的 clamp(p,0,1) = CLAMP_TO_EDGE = Neumann 零梯度（与 TPL_EVOLVE3D
+   一致；2D CN 的 S() 越界返回 0 是 Dirichlet——两边文档已各自标注）。
+   纹理约定（app.js evolveCN3d）：两个 program 的 uPsi=TEX0；cnSweep3d 追加
+   uRhs=TEX2（rhs 固定纹理，扫掠期间只读），sweep 之间 psiA3/psiB3 ping-pong。
+   注意：注释内勿写带双花括号的 token 名（fill() 重复注入位守卫会拦截，R33 教训）
+   ——故本注释用 POT3/CN_LOCAL_SOLVE3 裸名指代。 */
+const TPL_CN_RHS3D = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform highp sampler3D uPsi;
+uniform float uDtHalf;      /* h = dt_sub/2（CN 半步） */
+uniform float uK;
+uniform vec3 uTexel3;
+uniform float uGrid3;
+uniform float uLayer;       /* 当前绘制层 z ∈ (0,1)（层中点） */
+{{UNIFORMS}}
+vec4 S(vec3 p){ return texture(uPsi, clamp(p, vec3(0.0), vec3(1.0))); }
+{{HELPERS}}
+void main(){
+  vec3 p = vec3(vUv, uLayer);
+  vec4 c = S(p);
+  vec3 e = uTexel3;
+  vec4 lap = S(p+vec3(e.x,0.0,0.0)) + S(p-vec3(e.x,0.0,0.0))
+           + S(p+vec3(0.0,e.y,0.0)) + S(p-vec3(0.0,e.y,0.0))
+           + S(p+vec3(0.0,0.0,e.z)) + S(p-vec3(0.0,0.0,e.z)) - 6.0*c;
+  vec3 w = (p - 0.5)*uGrid3;
+  float V = {{POT3}};
+  vec4 Hc = -uK*lap + V*c;                           /* M·w 全量（标量：势逐通道同乘） */
+  vec4 Gc = vec4(Hc.y, -Hc.x, Hc.w, -Hc.z);          /* G = −i·M（复结构作用） */
+  o = c + uDtHalf * Gc;                              /* rhs = w + h·G(w) */
+}`;
+
+const TPL_CN_SWEEP3D = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform highp sampler3D uPsi;        /* x_k（Jacobi 当前迭代值） */
+uniform highp sampler3D uRhs;        /* rhs = w_n + h·G(w_n)（CN_RHS3D pass 产物） */
+uniform float uDtHalf;
+uniform float uK;
+uniform vec3 uTexel3;
+uniform float uGrid3;
+uniform float uLayer;
+{{UNIFORMS}}
+vec4 S(vec3 p){ return texture(uPsi, clamp(p, vec3(0.0), vec3(1.0))); }
+{{HELPERS}}
+{{CN_LOCAL_SOLVE3}}
+void main(){
+  vec3 p = vec3(vUv, uLayer);
+  vec4 c = S(p);                     /* x_k 中心值（lap stencil 的 −6c 项） */
+  vec4 rhs = texture(uRhs, p);
+  vec3 e = uTexel3;
+  vec4 lap = S(p+vec3(e.x,0.0,0.0)) + S(p-vec3(e.x,0.0,0.0))
+           + S(p+vec3(0.0,e.y,0.0)) + S(p-vec3(0.0,e.y,0.0))
+           + S(p+vec3(0.0,0.0,e.z)) + S(p-vec3(0.0,0.0,e.z)) - 6.0*c;
+  vec3 w = (p - 0.5)*uGrid3;
+  float V = {{POT3}};
+  vec4 Hk = -uK*lap;                            /* Gkin = −i·(−uK·lap)：仅导数部分 */
+  vec4 Gk = vec4(Hk.y, -Hk.x, Hk.w, -Hk.z);
+  vec4 arg = rhs + uDtHalf * Gk;                /* 正确迭代符号: +（与 2D 同，klein_td 数值验证） */
+  o = cnLocalSolve3(arg, V);   /* 局部块 (I−h·Gloc)⁻¹ 闭式解——函数定义在本 program
+                                 的 CN_LOCAL_SOLVE3 注入位（HELPERS 之后，见模板头；
+                                 标量薛定谔：(1+i·h·V)⁻¹ 复平面 Cayley 旋转，R36）。
+                                 教训同 R33：注释内勿写带双花括号的 token 名。 */
 }`;
 
 /* ---------- 3D 显示：volume ray-march（引擎级，kernel.dim3=true 时启用）----------
@@ -846,9 +937,18 @@ export function buildShaders(kernel){
       POT3: s.pot3 || '0.0',
       KINETIC3: s.kinetic3 || 'dot(dxp,dxp)+dot(dyp,dyp)+dot(dzp,dzp)',
     });
+    /* 3D CN（R36）：内核提供 cnLocalSolve3 ⟺ 挂载 CN 路径。与 2D CN 的
+       kernel.integrator 内核级开关不同，3D 是运行时切换（state.integrator3，
+       面板/URL，默认 'kdk'）——故此处按 snippet 存在性装配，app.js 按
+       sh.cnRhs3d 是否存在决定编译与 evolveCN3d 分支；无该 snippet 的 dim3
+       内核装配结果与 R34/R35 逐字一致（零回归）。 */
+    if (typeof s.cnLocalSolve3 === 'string' && s.cnLocalSolve3.trim()){
+      out.cnRhs3d = fill(TPL_CN_RHS3D, { UNIFORMS: uni, POT3: s.pot3 || '0.0', HELPERS: s.helpers || '' });
+      out.cnSweep3d = fill(TPL_CN_SWEEP3D, { UNIFORMS: uni, POT3: s.pot3 || '0.0', HELPERS: s.helpers || '', CN_LOCAL_SOLVE3: s.cnLocalSolve3 });
+    }
   }
   return out;
 }
 
 /* 导出模板仅供测试/文档引用（生产路径经 buildShaders 消费） */
-export const TEMPLATES = { TPL_EVOLVE, TPL_EVOLVE3D, TPL_DISPLAY3D, TPL_REDUCE3D, SNIP_HSV, TPL_CN_RHS, TPL_CN_SWEEP, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, TPL_LAP_BLOCK, DEFAULT_PIXEL_COLOR, DEFAULT_PMEAN };
+export const TEMPLATES = { TPL_EVOLVE, TPL_EVOLVE3D, TPL_CN_RHS3D, TPL_CN_SWEEP3D, TPL_DISPLAY3D, TPL_REDUCE3D, SNIP_HSV, TPL_CN_RHS, TPL_CN_SWEEP, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, TPL_LAP_BLOCK, DEFAULT_PIXEL_COLOR, DEFAULT_PMEAN };

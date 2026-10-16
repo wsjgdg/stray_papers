@@ -238,6 +238,12 @@ ${d3 ? `
         <option value="128">128³ 离线</option>
       </select>
     </div>
+    <div class="row" id="intRow3"><label>积分器</label>
+      <select id="selInt3">
+        <option value="kdk" selected>KDK 速度 Verlet</option>
+        <option value="cn">CN 严格正交</option>
+      </select>
+    </div>
     <div class="row"><label>射线步数</label><input type="range" id="rSteps3" min="16" max="128" step="8" value="48"><output id="oSteps3">48</output></div>
     <div class="row"><label>曝光</label><input type="range" id="rExp3" min="100" max="10000" step="100" value="3600"><output id="oExp3">3600</output></div>
     <div class="row"><label>波包宽度 σ</label><input type="range" id="rSigma3" min="2" max="20" step="0.5" value="6"><output id="oSigma3">6.0</output></div>
@@ -253,7 +259,7 @@ ${d3 ? `
     <div class="grid2" style="margin-top:6px">
       <button id="btnCam3">重置相机</button>
     </div>
-    <div class="hint" style="margin-top:4px">拖拽旋转 · 滚轮缩放。V₀/R 仅球势垒预设生效；ω/σ 决定谐振子基态（σ=1/√ω）；Z 仅氢原子预设生效（改动后波包按新 Z 重发）。</div>
+    <div class="hint" style="margin-top:4px">拖拽旋转 · 滚轮缩放。V₀/R 仅球势垒预设生效；ω/σ 决定谐振子基态（σ=1/√ω）；Z 仅氢原子预设生效（改动后波包按新 Z 重发）。积分器：KDK 为速度 Verlet（默认，R34 已验证守恒）；CN 为 Crank-Nicolson + block-Jacobi，Cayley 矩阵严格正交、范数机器精度守恒——同预设下切换可对照二者离散误差（切换即时生效，不重发波包）。</div>
   </div>` : ''}
 </aside>
 
@@ -336,6 +342,13 @@ ${d3 ? `
       this.progEvolve3d = createProgram(gl, sh.evolve3d);
       this.progVolume = createProgram(gl, sh.display3d);
       this.progReduce3d = createProgram(gl, sh.reduce3d);   /* 全卷 GPU 归约（R35） */
+      /* 3D CN（R36）：内核提供 cnLocalSolve3 ⟺ sh.cnRhs3d 存在。与 2D CN 的
+         内核级开关不同，3D 是运行时切换（state.integrator3）——故只要内核支持
+         就编译，evolve() 每帧按 state 分流；KDK 默认路径零改动。 */
+      if (sh.cnRhs3d){
+        this.progCnRhs3d = createProgram(gl, sh.cnRhs3d);
+        this.progCnSweep3d = createProgram(gl, sh.cnSweep3d);
+      }
     }
   }
 
@@ -363,8 +376,13 @@ ${d3 ? `
       gl.deleteTexture(this.psiA3.tex); gl.deleteFramebuffer(this.psiA3.fbo);
       gl.deleteTexture(this.psiB3.tex); gl.deleteFramebuffer(this.psiB3.fbo);
     }
+    if (this.rhs3){ gl.deleteTexture(this.rhs3.tex); gl.deleteFramebuffer(this.rhs3.fbo); this.rhs3 = null; }
     this.psiA3 = makeTarget3D(gl, n, gl.RG32F, gl.RG, gl.NEAREST);
     this.psiB3 = makeTarget3D(gl, n, gl.RG32F, gl.RG, gl.NEAREST);
+    /* CN3D 的 rhs 固定纹理（每子步由 cnRhs3d 重写、12 次扫掠期间只读）——仅在
+       内核支持 CN3D 时分配（progCnRhs3d 在 initTargets 前已由 initPrograms 置位）；
+       不支持时不占 n³ 显存。 */
+    if (this.progCnRhs3d) this.rhs3 = makeTarget3D(gl, n, gl.RG32F, gl.RG, gl.NEAREST);
   }
 
   allocGrid(g){
@@ -612,13 +630,16 @@ ${d3 ? `
      从 frame() 原样抽出：uniform 序列、子步自适应、ping-pong、simTime 累移
      与 dissipation 逐字不变——frame()（每 tick 一次）与透射率扫描
      （boost 倍频）共用同一路径，物理零差异。调用方负责暂停判定。
-     kernel.integrator='cn'（Dirac 与 Pauli）走 CN 路径，其余 KDK 逐字不变。 */
+     kernel.integrator='cn'（Dirac 与 Pauli）走 CN 路径，其余 KDK 逐字不变；
+     3D（dim3）由 state.integrator3 在 evolve3d/evolveCN3d 间运行时切换
+     （R36；内核不支持 CN3D 时恒为 KDK）。 */
   evolve(){
     const dt = 1.2;
     if (this.kernel.dim3){
-      /* 3D 体积路径（R34）：7 点拉普拉斯 KDK，逐层 draw 全卷；无耗散帧级衰减
-         （γ 面板对 3D 隐藏——scale pass 是 2D 目标通路） */
-      this.evolve3d(dt);
+      /* 3D 体积路径（R34/R36）：7 点拉普拉斯 KDK 或 CN（state.integrator3），
+         逐层 draw 全卷；无耗散帧级衰减（γ 面板对 3D 隐藏——scale pass 是
+         2D 目标通路） */
+      this._evolve3dFrame(dt);
       return;
     }
     if (this.kernel.integrator === 'cn'){
@@ -756,6 +777,79 @@ ${d3 ? `
       }
     }
     this.state.simTime += dt;
+  }
+
+  /* 3D 单帧物理推进的分流点（R36）：state.integrator3='cn' 且内核支持 CN3D
+     时走 evolveCN3d，否则 KDK（evolve3d）——默认 'kdk'，R34/R35 路径逐字不变。
+     evolve() 与 manualPass3d 共用（诊断步进与实时帧走同一物理，零双轨偏差）。 */
+  _evolve3dFrame(dt){
+    if (this.state.integrator3 === 'cn' && this.progCnRhs3d) this.evolveCN3d(dt);
+    else this.evolve3d(dt);
+  }
+
+  /* 3D CN 一帧推进（kernel.dim3 且 state.integrator3='cn'，R36；TPL_CN_RHS3D/
+     TPL_CN_SWEEP3D）。与 evolve3d 同构（同样的 eMax/子步自适应/逐层 draw/末态
+     回 psiA3 不变式），每子步两个全卷 pass 阶段：
+       1) cnRhs3d 一遍：w_n(psiA3) → rhs3（本子步固定，扫掠期间只读）
+       2) 12 次 block-Jacobi 扫掠：x_0=w_n，x_{k+1}=(I−hGloc)⁻¹(rhs+h·Gkin(x_k))；
+          psiA3/psiB3 ping-pong（12 为偶数 ⟹ 末态回 psiA3，与 KDK 同一不变式）
+     成本口径（R34 spike 同尺度外推 + R36 实测）：每子步 13 个全卷 pass vs KDK
+     的 3 个——CN 的代价是 ~4.3× 绘制量，换 Cayley 严格正交（见 kernel.js CN 节）。
+     无驱动/AB（3D 路径不支持）；势经 kernel.setUniforms 每帧设置一次
+     （uDtHalf/uK/uTexel3/uGrid3 子步间不变，故只在帧首统一设置）。 */
+  evolveCN3d(dt){
+    const k = 0.5/this.state.m;
+    const gl = this.gl, n = this.state.grid;
+    const eMax = k*12 + 1 + this.kernel.eMaxExtra(this.state);
+    const sub = Math.max(this.state.substeps, Math.ceil(dt*eMax/1.5));
+    const hh = 0.5*dt/sub;
+    /* 帧首统一设置两个 CN3D program 的子步无关 uniform + 内核私有 uniform（势参数）。
+       注意必须先 useProgram 再赋值（program 级状态，引擎全路径惯例，R31 教训）。 */
+    for (const prog of [this.progCnRhs3d, this.progCnSweep3d]){
+      gl.useProgram(prog);
+      gl.uniform1f(this.u(prog,'uDtHalf'), hh);
+      gl.uniform1f(this.u(prog,'uK'), k);
+      gl.uniform3f(this.u(prog,'uTexel3'), 1/n, 1/n, 1/n);
+      gl.uniform1f(this.u(prog,'uGrid3'), n);
+      this.kernel.setUniforms(gl, prog, this.state);   /* 私有 uniform（势参数） */
+    }
+    for (let s=0; s<sub; s++){
+      /* 1) rhs pass：w_n(psiA3) → rhs3 */
+      this._volumePass3(this.progCnRhs3d, this.psiA3.tex, this.rhs3, null);
+      /* 2) 12 次扫掠：偶数迭代读 psiA3 写 psiB3，奇数互换；第 12 次（it=11）写
+            回 psiA3 ⟹ 末态在 psiA3（与 KDK 的 ping-pong 不变式一致） */
+      for (let it=0; it<12; it++){
+        const src = (it % 2 === 0) ? this.psiA3 : this.psiB3;
+        const dst = (it % 2 === 0) ? this.psiB3 : this.psiA3;
+        this._volumePass3(this.progCnSweep3d, src.tex, dst, this.rhs3.tex);
+      }
+    }
+    this.state.simTime += dt;
+  }
+
+  /* 3D 全卷 pass 助手（evolveCN3d 用）：srcTex（uPsi=TEX0）逐层 draw 到 dst；
+     rhsTex 非空时绑 uRhs=TEX2（cnSweep3d）。与 evolve3d 内联逐层循环同一
+     契约：viewport n×n + framebufferTextureLayer(COLOR_ATTACHMENT0, l) + 全屏三角形。 */
+  _volumePass3(prog, srcTex, dst, rhsTex){
+    const gl = this.gl, n = this.state.grid;
+    gl.useProgram(prog);
+    gl.bindVertexArray(this.quad.vao);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, dst.fbo);
+    gl.viewport(0,0,n,n);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_3D, srcTex);
+    gl.uniform1i(this.u(prog,'uPsi'), 0);
+    if (rhsTex){
+      gl.activeTexture(gl.TEXTURE2);
+      gl.bindTexture(gl.TEXTURE_3D, rhsTex);
+      gl.uniform1i(this.u(prog,'uRhs'), 2);
+    }
+    const uLayer = this.u(prog,'uLayer');
+    for (let l=0; l<n; l++){
+      gl.framebufferTextureLayer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, dst.tex, 0, l);
+      gl.uniform1f(uLayer, (l + 0.5)/n);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
   }
 
   /* CN 步进 n 个子步（rhs pass + 12 扫掠/子步）——evolveCN 与 manualPass 共用。
@@ -1054,13 +1148,14 @@ ${d3 ? `
   }
 
   /* 3D 手动步进（诊断/验证用，不经 frame）：跑 n 个完整帧（每帧 sub 子步 ×
-     3 个全卷 pass），返回前后测量与漂移量——与 2D manualPass 同定位。
-     确定性：无时间依赖势 ⟹ 相同输入必得相同输出；simTime 保持不变
+     3 个全卷 pass；integrator3='cn' 时为 13 个），返回前后测量与漂移量——
+     与 2D manualPass 同定位。积分器路径经 _evolve3dFrame 分流（与实时帧同一
+     物理）。确定性：无时间依赖势 ⟹ 相同输入必得相同输出；simTime 保持不变
      （诊断口径：不改变可见的模拟时钟）。 */
   manualPass3d(n){
     const t0 = this.state.simTime;
     const before = this.probSum3d();
-    for (let i=0; i<n; i++) this.evolve3d(1.2);
+    for (let i=0; i<n; i++) this._evolve3dFrame(1.2);
     const after = this.probSum3d();
     this.state.simTime = t0;
     return { n, before, after,
@@ -1340,6 +1435,8 @@ ${d3 ? `
     if (dm) dm.value = String(this.state.driveMode);
     const g3 = this.q('#selGrid3');           /* 3D 体积网格下拉（?grid= / 面板切换后同步） */
     if (g3) g3.value = String(this.state.grid);
+    const si3 = this.q('#selInt3');           /* 3D 积分器下拉（?int3= / 预设切换后同步） */
+    if (si3) si3.value = this.state.integrator3;
     const abp = this.q('#oABPos');            /* AB 螺线管位置读数（预设 params 可能改 abX/abY） */
     if (abp) abp.textContent = '(' + this.state.abX.toFixed(2) + ', ' + this.state.abY.toFixed(2) + ')';
   }
@@ -1490,6 +1587,17 @@ ${d3 ? `
         this.allocGrid3d(g);
         this.loadPreset(this.state.preset);
       });
+      /* 积分器切换（R36）：内核不支持 CN3D（无 cnLocalSolve3）时隐藏该行；
+         切换即时生效——下一帧按 state.integrator3 分流，不重发波包，
+         保证 KDK/CN 对照实验从同一初态出发。 */
+      if (!this.progCnRhs3d){
+        this.q('#intRow3').style.display = 'none';
+      } else {
+        this.on(this.q('#selInt3'), 'change', e => {
+          this.state.integrator3 = e.target.value === 'cn' ? 'cn' : 'kdk';
+          this.toast('积分器 → ' + (this.state.integrator3 === 'cn' ? 'CN（Cayley 严格正交）' : 'KDK 速度 Verlet'));
+        });
+      }
     }
 
     this.on(this.q('#selGrid'), 'change', e => {
@@ -1576,6 +1684,11 @@ ${d3 ? `
     if (!this.kernel.dim3) this.allocGrid(this.state.grid);
     const qs = qp.get('speed');
     if (qs){ this.state.substeps = Math.max(1, Math.min(40, parseInt(qs,10)||6)); this.q('#rSpeed').value = Math.min(16,this.state.substeps); this.q('#oSpeed').textContent = this.state.substeps; }
+    /* 3D 积分器覆盖（?int3=kdk|cn，R36）：仅 dim3 且内核支持 CN3D 时有效
+       （不支持时 progCnRhs3d 缺失，evolve 分流自然回落 KDK）。须在 loadPreset
+       之前设置——预设 params 不含 integrator3，用户选择跨预设保留。 */
+    const qi = qp.get('int3');
+    if (this.kernel.dim3 && (qi === 'cn' || qi === 'kdk')) this.state.integrator3 = qi;
     const presets = this.kernel.presets();
     const qpreset = qp.get('preset');
     this.loadPreset(presets[qpreset] ? qpreset : Object.keys(presets)[0]);
@@ -1602,9 +1715,32 @@ ${d3 ? `
       /* 3D 体积内核标志（dim3）与体积网格：CDP 按此分流断言 */
       dim3: !!this.kernel.dim3,
       grid3: () => this.state.grid,
+      /* 3D 积分器当前模式（'kdk' | 'cn'，R36）+ CN3D 可用性：CDP 直接断言
+         路径而非从漂移量反推；setIntegrator3 供验证脚本在两种路径间切换。 */
+      integrator3: () => this.state.integrator3,
+      cn3Available: !!this.progCnRhs3d,
+      setIntegrator3: (v) => {
+        this.state.integrator3 = (v === 'cn' && this.progCnRhs3d) ? 'cn' : 'kdk';
+        const si = this.q('#selInt3'); if (si) si.value = this.state.integrator3;
+        return this.state.integrator3;
+      },
       /* 3D 全卷测量（内核 moments3d 物理分解）：P/T/V/E/peak/质心 + simTime。
          无节流（HUD 用 500ms 节流版本）；64³ 约 40ms，验证脚本可直接调用。 */
       probSum3d: () => this.probSum3d(),
+      /* 3D 当前体积原始数据（逐层 readPixels 拼装，RG32F 交错 (re,im)）：
+         供验证脚本把 GPU 场搬到 CPU 做镜像对账（R36 CN 的 GPU↔CPU 互证）。 */
+      wave3Data: () => {
+        const gl2 = this.gl, n = this.state.grid;
+        const buf = new Float32Array(n*n*n*2), layer = new Float32Array(n*n*2);
+        gl2.bindFramebuffer(gl2.FRAMEBUFFER, this.psiA3.fbo);
+        for (let l=0; l<n; l++){
+          gl2.framebufferTextureLayer(gl2.FRAMEBUFFER, gl2.COLOR_ATTACHMENT0, this.psiA3.tex, 0, l);
+          gl2.readPixels(0,0,n,n,gl2.RG,gl2.FLOAT,layer);
+          buf.set(layer, l*n*n*2);
+        }
+        gl2.bindFramebuffer(gl2.FRAMEBUFFER, null);
+        return { n, data: Array.from(buf) };
+      },
       /* 3D 全卷 GPU 归约（R35）：与 probSum3d（CPU）互为独立实现，动能同为
          1-texel 前向链路口径 ⟹ 两条路径可逐项对账。 */
       reduce3d: () => this.reducePass3d(),
