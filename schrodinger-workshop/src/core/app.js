@@ -13,6 +13,7 @@ import { createContext, createProgram, Quad, makeTarget, makeRGBA16F, makeReduce
 import { getKernel, buildShaders } from '../physics/kernel.js';
 import { injectStyles } from './styles.js';
 import { TransmissionScanner } from './scan.js';
+import { TransmissionScanner3 } from './scan.js';
 
 /* ---------- 大数组 base64 助手（R37 3D 现场存档用）----------
    Float32Array ↔ base64（字节序 = 运行平台原生序，x86/ARM 均为小端；
@@ -85,6 +86,7 @@ export class QuantumField {
     /* 3D 体积渲染轨道相机（kernel.dim3 时由 pointer/wheel 驱动；2D 内核不用） */
     this.cam = { theta: 0.7, phi: 0.35, dist: 2.2, drag: null };
     this.scanner = new TransmissionScanner(this);  /* 透射率扫描工具（内核无模型时面板隐藏） */
+    this.scanner3 = new TransmissionScanner3(this);  /* 3D 透射扫描（R38；内核无 transmissionModel3 时面板隐藏） */
     this._onError = e => {
       const d = this.q('#diag');
       if (d) d.textContent = 'ERR ' + e.message;
@@ -286,6 +288,19 @@ ${d3 ? `
     </div>
     <input type="file" id="fileImport3" accept=".json,application/json" style="display:none">
     <div class="hint" style="margin-top:4px">拖拽旋转 · 滚轮缩放。V₀/R 仅球势垒预设生效；ω/σ 决定谐振子基态（σ=1/√ω）；Z 仅氢原子预设生效（改动后波包按新 Z 重发）。积分器：KDK 为速度 Verlet（默认，R34 已验证守恒）；CN 为 Crank-Nicolson + block-Jacobi，Cayley 矩阵严格正交、范数机器精度守恒——同预设下切换可对照二者离散误差（切换即时生效，不重发波包）。导出现场：参数 + 场数据 + 相机 + 积分器选择的单文件 JSON 存档（网格不符时拒绝导入，不重采样）。</div>
+  </div>
+  <div class="sec" id="scan3Sec">
+    <h3>3D 透射扫描</h3>
+    <div class="row"><label>V0/E 下限</label><input type="range" id="rScan3Lo" min="0.05" max="2" step="0.05" value="0.1"><output id="oScan3Lo">0.10</output></div>
+    <div class="row"><label>V0/E 上限</label><input type="range" id="rScan3Hi" min="0.1" max="4" step="0.05" value="1.5"><output id="oScan3Hi">1.50</output></div>
+    <div class="row"><label>扫描点数</label><input type="range" id="rScan3N" min="3" max="25" step="1" value="13"><output id="oScan3N">13</output></div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnScan3">开始扫描</button>
+      <button id="btnScan3Stop" disabled>中止</button>
+    </div>
+    <div class="row"><label>状态</label><span id="scanStat3">就绪</span></div>
+    <canvas id="scanCanvas3" width="420" height="260"></canvas>
+    <div class="hint" style="margin-top:4px">球形势垒 R=6（世界单位）· 迎头波包 kx=0.7 σ=3 · 强制 64³（32³ 盒装不下首程测量窗：色散使相互作用持续到波包中心越盒，透射波完成前即打墙返回；软渲染 13 点约 5min，真实 GPU 秒级）· 实测 vs 射线修正模型（绿：含绕球透射的 3D 对照目标）与 s 波 Δk 卷积（琥珀）· 红虚线 = 共振预测位（q·R=nπ）· E=V0 左侧为越障共振区 · 实测值含波包绕球透射（l≥1 分波），系统性地高于 s 波曲线，详见 README「3D 透射率扫描」</div>
   </div>` : ''}
 </aside>
 
@@ -1305,6 +1320,14 @@ ${d3 ? `
       const want = hasModel ? '' : 'none';
       if (scanSec.style.display !== want) scanSec.style.display = want;
     }
+    /* 3D 透射扫描面板门控（R38）：内核提供 transmissionModel3（s 波球垒模型）
+       才显示——与 scanSec 同一动态门控模式（仅在实际变化时写 style）。 */
+    const scan3Sec = this.q('#scan3Sec');
+    if (scan3Sec){
+      const hasModel3 = !!(this.kernel.transmissionModel3 && this.kernel.transmissionModel3(this.state));
+      const want3 = hasModel3 ? '' : 'none';
+      if (scan3Sec.style.display !== want3) scan3Sec.style.display = want3;
+    }
     /* 能级阶梯（内核可选）：解析谱 + 最近能级对照。最近能级用最近一次归约的
        ⟨E⟩（_lastE）——暂停时归约停跑，该行保持上次读数而非清零。 */
     const lad = this.kernel.energyLevels ? this.kernel.energyLevels(this.state) : null;
@@ -1773,6 +1796,23 @@ ${d3 ? `
         if (f) this.importSnapshot3File(f);
         e.target.value = '';   /* 允许重复导入同一文件 */
       });
+      /* 3D 透射扫描（R38）：与 2D 扫描同模式（范围/点数滑块 + 开始/中止） */
+      const scan3Bind = (id, out, fmt) => {
+        const el = this.q(id), o = this.q(out);
+        const upd = () => { o.textContent = fmt(parseFloat(el.value)); };
+        el.addEventListener('input', upd); upd();
+      };
+      scan3Bind('#rScan3Lo', '#oScan3Lo', v => v.toFixed(2));
+      scan3Bind('#rScan3Hi', '#oScan3Hi', v => v.toFixed(2));
+      scan3Bind('#rScan3N', '#oScan3N', v => String(v|0));
+      this.on(this.q('#btnScan3'), 'click', () => {
+        this.scanner3.start({
+          v0Lo: parseFloat(this.q('#rScan3Lo').value),
+          v0Hi: parseFloat(this.q('#rScan3Hi').value),
+          v0N: parseInt(this.q('#rScan3N').value, 10) || 13,
+        });
+      });
+      this.on(this.q('#btnScan3Stop'), 'click', () => this.scanner3.stop());
     }
 
     this.on(this.q('#selGrid'), 'change', e => {
@@ -2009,6 +2049,9 @@ ${d3 ? `
       /* 透射率扫描器：start(opts)/stop()/busy/results/summary（CDP 驱动与读数） */
       scan: this.scanner,
       scanModel: () => (this.kernel.transmissionModel ? this.kernel.transmissionModel(this.state) : null),
+      /* 3D 透射扫描器（R38）：同契约；内核无 transmissionModel3 时 start() 拒绝 */
+      scan3: this.scanner3,
+      scanModel3: () => (this.kernel.transmissionModel3 ? this.kernel.transmissionModel3(this.state) : null),
       vpx: (x, y) => { const d = this.vctx.getImageData(x|0, y|0, 1, 1).data; return d[0]; },
       vscan: () => {
         const d = this.vctx.getImageData(0,0,256,256).data;

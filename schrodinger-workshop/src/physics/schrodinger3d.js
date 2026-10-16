@@ -47,11 +47,13 @@
  * （教学演示：积分器离散误差的量级差异）。CN 的局部块闭式解由本文件经
  * shaders().cnLocalSolve3 注入（(1+i·h·V)⁻¹，见下）。
  *
- * 3D 无透射率扫描模型（线性 1D 模型不适用体积散射）——transmissionModel
- * 继承基类 null（引擎隐藏扫描面板）；无自旋读数；CPU 密度取前两通道
- * （pairs=1，基类默认即正确）。
+ * 3D 透射率扫描（R38 #34 backlog ④）：s 波球势垒模型 transmissionModel3
+ * （barrier3d.js）——与 2D 矩势垒 transmissionModel 平行，引擎据此挂载
+ * 3D 扫描面板（secScan3）；共振条件 q·R=nπ 提供峰位验证判据。无自旋读数；
+ * CPU 密度取前两通道（pairs=1，基类默认即正确）。
  * ========================================================================== */
 import { PhysicsKernel, registerKernel } from './kernel.js';
+import { sphericalBarrierModel3 } from './barrier3d.js';
 
 /* 势形编号（state.potKind；预设 params 注入，URL/面板可改） */
 const POT_FREE = 0, POT_SPHERE = 1, POT_OSC = 2, POT_COULOMB = 3;
@@ -180,6 +182,13 @@ uniform float uPotZ;     /* 库仑核电荷 Z（1s: E=−Z²/2；2p_z: E=−Z²/
     }
     if (state.potKind === POT_COULOMB) return 2*state.potZ;   /* 软化核 |V|≤Z/0.5 */
     return 0;
+  }
+
+  /* 3D 透射率扫描的解析模型（R38）：s 波球势垒。与 2D 的 transmissionModel
+     平行但几何是球（势形 potKind=SPHERE 的半径 potR）而非矩垒——扫描器
+     TransmissionScanner3 据此挂载。 */
+  transmissionModel3(state){
+    return sphericalBarrierModel3(state.m);
   }
 
   /* ---------- CPU 端全卷测量（引擎 probSum3d 的回读后端；HUD P/T/V/E + 调试句柄）----------
