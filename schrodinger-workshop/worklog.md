@@ -77,8 +77,11 @@ float32 GPU（3D/GLSL/KDK）与 float64 CPU（2D）两个独立实现吻合同�
 - 截图复核：t≈53（40 手动帧）过墙后屏方向双瓣/柱面波干涉图样（相位着色互补瓣）确认
 - 修正过程如实记录：首轮 cdp39 有 4 项 FAIL——① 峰位逐帧一致判据未容差 ±1 texel 抖动（float32 平坦顶部正常）；② 热切换缝距判据设计错误（势参数即时生效指下一批演化帧，当前场不立即反映新缝几何，须重发波包）；③ 序列化断言写死 D=8（依赖节 5 遗留状态）；④ 截图保存路径结构错误。均已修正后复跑 34/34
 
+### 文档修正（backlog 串项，R39 追加）
+- R38/R39 worklog 初版「后续」误写「CircuitLab canvas editor 或面板视觉保真度评审（见 README backlog）」——**CircuitLab 属另一项目（physics-sim-agent）的 backlog，本项目无此规划，且 README 并无 backlog 节（断链）**。已更正：worklog 两处改为指向 README 新增「后续方向」节（本项目自身推导的 4 个候选方向表格，含前置依赖与风险），README 补「后续方向」节 + 3D 预设 URL 参数列表补 slits3d/slit1_3d
+
 ### 后续
-#34 backlog ⑤ 完结，#34 全部 backlog（GPU 归约/CN/序列化/透射扫描/双缝干涉）闭环。下一项：CircuitLab canvas editor 或面板视觉保真度评审（见 README backlog）。
+#34 backlog ⑤ 完结，#34 全部 backlog（GPU 归约/CN/序列化/透射扫描/双缝干涉）闭环。下一项方向见 README「后续方向」节（本项目自身推导的候选，待用户定选题）。
 
 ---
 
@@ -133,7 +136,7 @@ float32 GPU（3D/GLSL/KDK）与 float64 CPU（2D）两个独立实现吻合同�
 - 首轮 cdp38 有 1 项 FAIL 为**断言口径问题**（2D 内核下 scan3Sec 根本不存在于 DOM，`MISSING` 比 `display:none` 更强），修正断言（`none || MISSING`）后复跑 38/38
 
 ### 后续
-#34 backlog ④ 完结，#34 全部 backlog（GPU 归约/CN/序列化/透射扫描）闭环。下一项：CircuitLab canvas editor 或面板视觉保真度评审（见 README backlog）。
+#34 backlog ④ 完结，#34 全部 backlog（GPU 归约/CN/序列化/透射扫描）闭环。下一项方向见 README「后续方向」节（本项目自身推导的候选，待用户定选题）。
 
 ---
 

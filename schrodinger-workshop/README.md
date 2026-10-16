@@ -35,7 +35,7 @@ python3 -m http.server 8765          # 或 npm start
 `free|soliton|focus|barrier`（NLS）、`tf|vortex|tof|breather`（GP）、
 `larmor|stern-gerlach|tilted|free`（Pauli）、
 `relativistic|zitter|klein-barrier|klein-resonance`（Dirac）或
-`free3d|sphere|oscillator|ground|orbital2p`（薛定谔 3D）初始预设 ·
+`free3d|sphere|oscillator|ground|orbital2p|slits3d|slit1_3d`（薛定谔 3D）初始预设 ·
 `?grid=128|192|256|320` 网格精度（`schrodinger3d` 为 32|48|64|96|128 的**体积**网格） ·
 `?speed=N` 积分子步 · `?kx=0.1&ky=0.05` 覆盖初始波包动量（2D 内核）
 
@@ -701,6 +701,19 @@ mini-bundler 零依赖：从 `index.html` 定位模块入口 → DFS 拓扑排�
 初态 ⟨σx⟩=1/P 守恒/SG 分量质心分离）file:// + HTTP 双通道 9/9 PASS；
 `?kernel=dirac` 单文件版冒烟（挂载/CN 双 shader 编译/群速 0.977/P=1.000005）
 file:// + HTTP 双通道 7/7 PASS。
+
+## 后续方向
+
+#34 全部 backlog（GPU 归约 / CN 积分器 / 现场序列化 / 球垒透射扫描 / 双缝干涉）已闭环。以下为从项目自身推导的候选方向（未定选题，待用户决定；每项含前置依赖与已知风险）：
+
+| 方向 | 内容 | 前置依赖 | 风险 / 备注 |
+|---|---|---|---|
+| 双缝图样扫描（R39 延伸） | 缝距 D 或 V0 扫描 + 屏剖面峰位/峰数/可见度定量测量，与 R38 透射扫描同生命周期契约（paused + rAF + boost + 原子快照） | R39 双缝预设 + screenSlice3（已就绪） | 深 Fresnel 区无简洁解析对照（R39 已记录）；判据设计是主要工作量 |
+| 3D 势组合能力 | 解析势叠加（球垒 × 双缝墙等）或受限笔刷，补齐 README「诚实限制」记的 3D 无势场笔刷缺口 | pot3JS/GLSL pot3 分支化 | 组合势的 eMaxExtra 稳定界需重算；笔刷与解析注入的 UI 融合是设计决策点 |
+| NLS/GP 物理工具 | 2D 矩垒扫描只覆盖薛定谔；NLS（孤子碰撞）/ GP（涡旋）无参数扫描工具 | scan.js 泛化 | 非线性系统的「停止判据」无守恒量可依赖（P 不守恒），需重新设计 |
+| 面板视觉保真度评审 | 对照物理教材/仪器面板逐项找视觉差距，列清单修复 | 无 | 偏软性；建议作为其他轮次的穿插项 |
+
+> 历史注记：R38/R39 worklog 初版「后续」误写「CircuitLab canvas editor」（属另一项目 physics-sim-agent 的 backlog），已更正——本项目无此规划。
 
 ## 技术栈
 
