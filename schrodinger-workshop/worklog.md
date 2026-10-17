@@ -34,11 +34,56 @@
 | R43 | 面板视觉保真度评审（README「后续方向」①） | 客观化评审（CDP 多 viewport 几何 + getComputedStyle + PIL 对比度）抓出两个真实缺陷：**① CSS 变量全部失效**——CSS 字符串以字面 `<style>` 开头（自初版 9c397d0），注入 textContent ⟹ `:root` 被解析为 `<style> :root` 永不匹配选择器的声明块 ⟹ 所有 `color:var(--x)`/`font-family:var(--x)` 退化为黑字+Times New Roman（面板文字对比度 ≈1.0:1 不可读）；删除标签后 **12.7:1 / HUD 11.8:1**（WCAG AAA）；**② panel × desc 重叠 238×80px**（左列同 x，panel 底 100vh−44 vs desc 顶 100vh−132）⟹ max-height 改 calc(100vh−216px)，四 viewport 重叠归零。未决项（客观数据 + 三选项留用户定）：面板内容溢出 697px(2D)/1673px(3D)/980px(GP)，元凶为累积的长 hint |
 | R44 | 3D 势刷：交互式球形势丘（README「后续方向」③） | 体积视图「势刷」工具（P 键/按钮）：拖拽沿视线中点放置球形硬边势丘（`pot3Blob`，CPU+GLSL 严格镜像），与主槽/第二槽**三方独立叠加**、负 V₀=势阱；放置深度取 slab 穿透段中点（确定可复现）；`screenRay3` 为 TPL_DISPLAY3D 相机段 CPU 逐字镜像（注释互指契约）；BV0=0 默认关闭 ⟹ 零回归（6 配置 × 400 点 worst=0）；blob 跨预设/扫描保留（组合实验叙事）；eMaxExtra 加 \|BV0\|；CDP **真实 pointer 拖拽**放置 + GLSL↔CPU ⟨V⟩ 对账 rel ≤4.4e-8 + P 守恒 0.0000%；pot44 22/22 + cdp44 30/30 + smoke44 5/5 |
 | R45 | 面板 hint 可折叠（用户选定 R43 遗留项方案 a） | 运行时升级（`upgradeHints`，HTML 模板零改动）：`.hint` 文本搬进 `.hintBody` + 前置 toggle，默认折叠、localStorage 按文本摘要持久化（多 hint 独立记忆）；行内 hint 不升级。**归因修正（实测取证）**：R43「元凶为累积的长 hint」不准确——hint 折叠态总高仅 15–45px、展开态总高 ~285px(3D)/167px(GP)/10px(2D)，**溢出大头是区块结构高度**（3D sec3d 滑块区 652px + scan3Sec/slitScanSec/scanSec 三 canvas 820px 硬高）。实效：3D 1673→1403（−16%）、GP 980→813（−17%）、2D 697→687（−1%，2D 大头在 scanSec canvas 305px + 滑块区）；cdp45 抓出并修复持久化 key 串味真 bug（搬家后取 textContent ⟹ 空 key）；cdp45 26/26 + smoke44 5/5 |
+| R46 | 既有三扫描器迁入 GenericScanner 基类（README「后续方向」④，纯重构） | 2D 矩垒/3D 球垒/3D 双缝三扫描器迁入 R42 基座：生命周期（busy 守卫·paused 借还·rAF 自驱·boost·中止恢复·按钮翻转·状态行·_plot）全入基类，五扫描器差异经 SPEC 钩子注入，薄子类仅绑定 SPEC；公开 API/opts 键/results/summary 形状/按钮·状态行·canvas ID 逐位保留。**迁移修正点（对照实验取证）**：基类 `_tick` 统一传末次测量 m，slit 原口径为 `_best`（窗内峰数最多帧）——D=16 同环境对照：重构版 nPeaks=2/peaks[-1.5,1.5]/frames=56 vs 原版 3/[-9.5,0.5,9.5]/32（2D 矩垒逐位一致排除环境漂移）⟹ SLIT_SPEC.record 显式取回 `s._best`；Node 无 GL mock 26/26 + cdp40 35/35（峰数 1/1/3/5/3 复原）+ cdp38 38/38 + cdp39 34/34 + cdp42 32/32 + smoke43 16/16 + smoke44 5/5 + dist 冒烟 11/11 |
 | R42 | NLS/GP 物理工具（README「后续方向」②，用户选定两者都做） | 通用扫描框架 `GenericScanner`（生命周期与既有三扫描器同契约）+ GP/NLS 双适配器；**固定测量窗 + 全程序列**替代停止判据（非线性无耗散无终态：呼吸模永久振荡实测 8.6↔9.3）；GP 初态 σ=R_TF(g)（TF 自洽验算一致）⟹ **峰值对账 3.5%**；NLS **g=6 塌缩检出（峰值比 10.80）** + 网格截断崩坏 P→0.68；**P 诚实更正**：非线性 P 漂移 0.5–3.1%（KDK 离散耗散，随 \|g\| 增长）vs 线性对照 2.06e-6；判据修正：塌缩用序列峰值最大值（末值会因崩坏骤降误判）；既有三扫描器零改动；cdp42 32/32；环境记录：headless Chrome 无 X display 时 ANGLE Vulkan-XCB 失败 ⟹ 须 `xvfb-run` 启动 |
 | R41 | 3D 双槽势组合（README「后续方向」①，用户选定通用双槽） | 势由单枚举升级为 V=pot3Slot(主)+pot3Slot(第二)（CPU `pot3JS` 与 GLSL `helpers` 同名函数严格镜像）；**TPL_REDUCE3D 补 {{HELPERS}} 注入位**（原只有 POT3，否则势不同源、R35 对账失效）；eMaxExtra 取两槽之和（保守）⟹ 组合势 120 帧 P 守恒 1.36e-4；GPU↔CPU ⟨V⟩ 同帧对账 rel 8.8e-10/7.6e-8/6.5e-9（阈值 2e-7）；组合预设「球垒调制双缝」（球垒 R₂=6 不遮缝）；cdp41 30/30；副作用诚实记录：shader 变复杂 ⟹ 挂载预演化帧数分布 4↔5 下移到 3↔5，cdp39 PRE 断言阈值过时（判据放宽 3–6，对账走实测 PRE 故 33 项全绿） |
 | R40 | 3D 双缝图样扫描（README「后续方向」①） | SlitScanner（与 R38 同生命周期契约）：D=0,8,16,24,32 五点扫描 117s、P 守恒 1.02e-4、峰数 **1/1/3/5/3**（双缝等距条纹：D=16 距 9.5、D=24 距 7.8、D=32 ±15.5 贴提取边界）；Fraunhofer 最近邻匹配中位偏差 1.65（nMatched=8）但实测间距大于预测 1.2–1.5×（深 Fresnel 修正，与 R39 结论互证）；CDP 诊断轮抓出并修复四个真 bug：screenSlice3 类方法化（原仅 debugHandle 对象 ⟹ 类路径 TypeError）、slitPeaks 实质密度门限（float32 残余 8e-22 假峰令 _best 停噪声帧）、_finish `o.d`→`r.d` NaN 全表、measureFrom 窗门限生效；cdp40 35/35 + dist 冒烟 11/11 + cdp39 回归 34/34 |
 
 ---
+
+## R46（2026-10-18）既有三扫描器迁入 GenericScanner 基类（README「后续方向」④，纯重构）
+
+### 缘起
+README「后续方向」唯一无用户决策门禁的项：「既有三扫描器迁移到 GenericScanner 基类」——R42 的通用框架以「新增并列」落地（既有三扫描器零改动、零回归优先），迁移收益是消除重复、风险是三套已验证行为需逐位回归（cdp29/38/39/40）。本轮执行迁移。
+
+### 架构：基类承载生命周期，SPEC 钩子注入差异
+
+`src/core/scan.js` 单文件重构（唯一改动文件）：
+
+- **`GenericScanner` 基类**承载全部生命周期：`start`（busy 守卫 → gate → opts 合并 GENERIC_DEFAULTS+spec.defaults+opts → prepare → buildList → afterList → results/summary/_i 复位 → savedPaused/paused=true → busy → 按钮翻转（spec.ids）→ toast → _beginPoint → rAF）、`stop`、`_restore`（paused 归还 + SPEC.teardown + syncControls + 按钮复位）、`_beginPoint`（`_x=xs[_i]` + SPEC.beginPoint 或缺省 GP/NLS 路径 loadPreset+paramKey+initExtra）、`_tick`（boost 循环：evolve → 测量（measureEvery 或 framesMax 兜底）→ onMeasure → decide → done 时 _record → 下点或 _finish → busy 则 _status + rAF）、`_record`（SPEC.record 或缺省 `_recordSeries`）、`_finish`（summarize → _restore → _plot → _status(true) → toast）、`_status`（缺省格式与 R42 基类逐字一致）。
+- **五个 SPEC 钩子集**注入差异：`SCAN_SPEC`（2D 矩垒）/ `SCAN3_SPEC`（3D 球垒）/ `SLIT_SPEC`（3D 双缝）/ `GP_SPEC` / `NLS_SPEC`；钩子契约：`gate/prepare/teardown/buildList/afterList/beginPoint/measure/onMeasure/decide/record/statusText/summarize/startToast/stopToast/finishToast/plot/statKeys/ids/defaults/id/label`。薄子类仅绑定 SPEC。
+- **公开 API 逐位保留**（CDP 套件取证约束）：`__app.scan/scanner3/scannerSlit/scannerGp/scannerNls`、opts 键（v0s/v0Lo/v0Hi/v0N、ds/dLo/dHi/dN、lo/hi/n/xs）、`scan3.v0s`、`scan3._frames`、results/summary 字段形状、按钮/状态行/canvas ID；套件无 toast 文本断言。
+
+### 迁移修正点：slit record 的 _best 偷换（对照实验取证）
+
+基类 `_tick` 向 `_record` 统一传**末次测量 m**，而原 R40 SlitScanner 传 **`this._best`**（窗内峰数最多帧）。首轮 cdp40 34/35 FAIL「重启结果含双缝峰（≥3）nPeaks=2」——**真回归，非环境抖动**，新旧对照实验取证（同环境同探针、其余断言全绿）：
+
+| D=16 单点 | nPeaks | peaks | spacing | vis | frames | summary |
+|---|---|---|---|---|---|---|
+| 重构版（传 m） | 2 | [-1.5, 1.5] | 3 | 0.836 | 56 | nMatched=0 |
+| 原版（传 _best） | 3 | [-9.5, 0.5, 9.5] | 9.5 | 0.5977 | 32 | medianYDev=1.646, nMatched=2 |
+
+两者 P=1.000051660787111 逐位相同、2D 矩垒回归（T=0.992,0.462,0.001 / P 2.06e-6）逐位一致 ⟹ 排除环境漂移，定位为记录口径偷换。**修复**：`SLIT_SPEC.record` 忽略传入 m、显式取 `s._best`（保留 `if (!b) return` 守卫；`_best` 竞争在 onMeasure 完成，record 时已定），注释记录该迁移修正点。其余四个 SPEC 的 record 口径逐一核对与原版一致（2D/3D 传 m + 实例字段 `s._v0`/`s._fwdPeak`；GP/NLS 走基类缺省 `_recordSeries`，与 R42 原版 `_record()` 逐位一致）。
+
+另记录两个装配自查 bug（迁移中即时修复）：spec 内 `s._paintBarrier(x)` / `s._lastP(m)` 以 spec 为 this 定义却经扫描器实例调用 ⟹ 提为模块函数 `paintBarrier2d(app,o,v0)` / `lastPSlit(app)`。
+
+### 验证
+
+- **Node 无 GL 生命周期 mock（mock46.mjs）26/26**：自定义 SPEC + mock app，覆盖 start/按钮翻转/toast/xs 与 paramKey 写入/series 聚合/statKeys/summary/paused 恢复/gate 拒绝/stop 中止/busy 重入守卫。首轮 24/26 抓出两问题：①「状态行（完成）」FAIL——mock SPEC 无 statusText 而默认格式曾被误移入 GP/NLS 钩子 ⟹ 默认状态行恢复为基类缺省（与 R42 基类逐字一致）并删除 GP_SPEC/NLS_SPEC 重复 statusText；②「busy 中重复 start」FAIL——测试顺序错误（stop 后才测重入）⟹ 调整为 busy 中测试。
+- **真浏览器全量回归（xvfb + CDP，src 树）**：
+  - **cdp40 35/35**（修复后）：5 点峰数 **1/1/3/5/3** 复原、D=16 重启 3 峰、Fraunhofer 1.65/nMatched=8、P 1.02e-4、2D 矩垒冒烟 T=0.992,0.462,0.001 / P 2.06e-6
+  - **cdp38 38/38**（3D 球垒 13 点全程 + 2D 矩垒）：严格单调 0.9151→0.6820 量级、最大偏差 ×1.01
+  - **cdp39 34/34**（双缝预设 + 序列化 + 2D 矩垒）：GPU↔CPU 24 剖面 maxDiff ≤1.62e-3
+  - **cdp42 32/42→32/32**（GP/NLS + 双扫描冒烟）：GP 峰值对账 3.5%、NLS g=6 塌缩检出 10.80、回归冒烟内 3D 双缝峰数 3
+  - **smoke43 16/16**（五内核挂载 + CSS 变量 + 几何 + 扫描 1+1 点）
+  - **smoke44 5/5**（五内核挂载，xvfb；无 xvfb 时 playwright chromium 命中 R42 已记录 `ERR no webgl2`，环境问题非回归）
+- **dist 重建冒烟**：`build-standalone.mjs` OK（325.8 KB，15 模块拓扑序）；smoke44 5/5 复跑；**dist 单文件扫描冒烟 11/11**（D=16：P 5.17e-5、frames=32、峰数 3、median=1.646——与 R40 记录逐位一致）。
+
+### 收尾
+README：验证表加 R46 行；后续方向表移除迁移项（开头段标注 R46 闭环）；架构目录树补 `src/core/scan.js`（GenericScanner 基类 + 五 SPEC 说明，原目录树遗漏该文件）；R42 节 GenericScanner 描述补 R46 统一注记。
+
+### 后续
+剩余候选方向（README「后续方向」，均待用户定或设计未决）：面板结构性溢出续降（a2 sec 级折叠 / a3 canvas 缩比 / b 控件精简）、3D 体积连续笔刷、GP 初态平滑窗改进。
 
 ## R43（2026-10-18）面板视觉保真度评审（README「后续方向」①）
 
