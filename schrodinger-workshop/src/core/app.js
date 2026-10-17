@@ -565,6 +565,9 @@ ${d3 ? `
        无此概念的内核忽略多余字段（makeWave 按需读取 p.spinTheta ?? 默认）。
        m=state.m 供一阶内核（Dirac）构造裸质量依赖的正能旋量；标量内核忽略。 */
     const { data, sum: rawSum } = this.kernel.makeWave(g, { fx, fy, kx, ky, sigma: this.state.sigma, m: this.state.m,
+                                                              /* R51：g 透传（GP 基态预设的虚时间弛豫需要当前 g；
+                                                                 无此概念的内核忽略多余字段——契约允许） */
+                                                              g: this.state.g,
                                                               spinTheta: this.state.spinTheta, spinPhi: this.state.spinPhi });
     let sum = rawSum;
     /* 新波包先归一化到 Σ|ψ|²=1，再与旧场叠加。

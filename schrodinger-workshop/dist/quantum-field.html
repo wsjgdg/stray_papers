@@ -3930,6 +3930,9 @@ ${d3 ? `
        无此概念的内核忽略多余字段（makeWave 按需读取 p.spinTheta ?? 默认）。
        m=state.m 供一阶内核（Dirac）构造裸质量依赖的正能旋量；标量内核忽略。 */
     const { data, sum: rawSum } = this.kernel.makeWave(g, { fx, fy, kx, ky, sigma: this.state.sigma, m: this.state.m,
+                                                              /* R51：g 透传（GP 基态预设的虚时间弛豫需要当前 g；
+                                                                 无此概念的内核忽略多余字段——契约允许） */
+                                                              g: this.state.g,
                                                               spinTheta: this.state.spinTheta, spinPhi: this.state.spinPhi });
     let sum = rawSum;
     /* 新波包先归一化到 Σ|ψ|²=1，再与旧场叠加。
@@ -6636,6 +6639,58 @@ registerKernel(new NLSKernel());
 const TRAP_R = 48;
 const HOLE_RC = 4;
 
+/* ---------- R51：虚时间弛豫（构造离散 H 的精确基态）----------
+   背景（R50 诊断）：TF 穹顶初态与真实基态的轮廓差激发不衰减的集体呼吸模
+   （cdp42 实测半径对账偏差 46.0%，归因为主因）——虚时间流 ∂ψ/∂τ=−(H−μ)ψ
+   收敛到离散 H 的基态（Hψ=μψ），呼吸模被弛豫掉：实测 KDK 200 帧窗 Rrms
+   呼吸由 60.0% → 0.36%（g=−10，两个数量级），剩余 √3·Rrms vs R_TF 偏差
+   +15.6% 是**真实物理**（有限耦合下 TF 近似的系统误差，随 |g| 单调收敛：
+   +30.0/−10 → +5.2/−40），不是数值伪影。
+
+   数值方案（诊断期受控实验定标，见 worklog R50/R51）：
+     - Strang 分裂：exp(diag·τ/2) → ADI exp(0.5τ·Dx)exp(0.5τ·Dy) → exp(diag·τ/2)，
+       diag = μ − V + g|ψ|²（实空间对角显式）；μ = 变分能 ⟨H⟩（归一化梯度流的
+       正确拉格朗日乘子，GP 能量泛函变分得 Hψ=μψ）；每步归一化
+     - ADI 每行/列解三对角 (I − 0.25τ·D)ψ* = (I + 0.25τ·D)ψ，Thomas 算法（无条件稳定）
+     - τ=1.0：ADI 稳定但 τ 越大 Strang 分裂误差越大。实测（生产 V 量化口径）
+       τ=0.5/1/2 → 密度峰呼吸 0.457/0.541/0.916%、Rrms 呼吸 0.256/0.361/0.585%、
+       步数 400/212/113 ⟹ τ=1 在「<0.6% 呼吸」与「<250 步（~0.7s）」间取平衡
+     - V 逐字镜像生产纹理：v = min(1,(r/TRAP_R)²)（势阱封顶，与 presets 的 trap
+       绘制同式），vGray(v)=round(v*127+128)，shader 解码 (gray−128)/127 ⟹
+       V = round(v*127)/127。若弛豫用平滑 V 而生产用量化 V，阶梯量化的错配会
+       残留约 2× 的密度峰呼吸（实测 1.165% vs 0.541%）
+
+   收敛判据：Rrms 连续 5 步相对变化 < 1e-8（上限 RELAX_MAX_STEPS 步；未收敛
+   也返回当前态——仍远好于穹顶）。g≥0（吸引侧）无稳定基态（2D L² 临界塌缩），
+   直接跳过弛豫保留穹顶（与 NLS focus 同机制，如实不做数值美化）。 */
+const RELAX_TAU = 1.0;
+const RELAX_MAX_STEPS = 400;
+
+/* ADI 三对角求解（零 Dirichlet）：(I − a·D)x = rhs，D = tridiag(1,−2,1)，Thomas 算法。
+   注意 Y 方向回代读「下一行」(偏移 +n) 而非「下一列」(+1)——诊断期踩过的坑
+   （从 X 版复制未改偏移 ⟹ 回代退化、分裂方案不收敛），见 worklog R50。 */
+function tridiagSolveX(rhs, out, n, a){
+  const lo = -a, dg = 1 + 2*a, up = -a;
+  const cp = new Float64Array(n), dp = new Float64Array(n);
+  for (let y=0; y<n; y++){
+    const row = y*n;
+    cp[0] = up/dg; dp[0] = rhs[row]/dg;
+    for (let x=1; x<n; x++){ const m = dg - lo*cp[x-1]; cp[x] = up/m; dp[x] = (rhs[row+x] - lo*dp[x-1])/m; }
+    out[row + n-1] = dp[n-1];
+    for (let x=n-2; x>=0; x--) out[row+x] = dp[x] - cp[x]*out[row+x+1];
+  }
+}
+function tridiagSolveY(rhs, out, n, a){
+  const lo = -a, dg = 1 + 2*a, up = -a;
+  const cp = new Float64Array(n), dp = new Float64Array(n);
+  for (let x=0; x<n; x++){
+    cp[0] = up/dg; dp[0] = rhs[x]/dg;
+    for (let y=1; y<n; y++){ const m = dg - lo*cp[y-1]; cp[y] = up/m; dp[y] = (rhs[y*n+x] - lo*dp[y-1])/m; }
+    out[(n-1)*n + x] = dp[n-1];
+    for (let y=n-2; y>=0; y--) out[y*n+x] = dp[y] - cp[y]*out[y*n+x+n];
+  }
+}
+
 class GPKernel extends PhysicsKernel {
   constructor(){
     super();
@@ -6657,6 +6712,12 @@ class GPKernel extends PhysicsKernel {
     const R = p.sigma;                           /* 云半径（世界 px，来自 σ 滑块） */
     const mu = (R/TRAP_R)*(R/TRAP_R);            /* 与绘制阱一致的化学势 */
     const vortex = this._mode === 'vortex';
+    /* R51 基态模式：虚时间弛豫 ⟹ 离散 H 的精确基态（无呼吸模）。
+       g 由引擎透传（initWave 的 p.g；缺省/非有限时退回 −10 的保守值）。 */
+    if (this._mode === 'gs'){
+      const g = (typeof p.g === 'number' && isFinite(p.g)) ? p.g : -10;
+      return this._makeGS(grid, cx, cy, s, R, g);
+    }
     const data = new Float32Array(grid*grid*2);
     let sum = 0;
     for (let y=0; y<grid; y++){
@@ -6697,6 +6758,122 @@ class GPKernel extends PhysicsKernel {
       }
     }
     return { data, sum };
+  }
+
+  /* ---------- 基态（虚时间弛豫）---------- */
+  /* 起点穹顶 → 虚时间流 → 离散 H 的精确基态。a 为实振幅（Float64Array(grid²)），
+     就地演化；V 须为生产纹理口径（min(1,·) 封顶 + round(v·127)/127 量化）。 */
+  _relaxGS(a, n, g, V){
+    const N = n*n;
+    const t1 = new Float64Array(N), t2 = new Float64Array(N), t3 = new Float64Array(N);
+    const lapInto = (src, out) => {
+      for (let y=0; y<n; y++){
+        const y0 = y*n;
+        for (let x=0; x<n; x++){
+          const l = (x>0? src[y0+x-1] : 0) + (x<n-1? src[y0+x+1] : 0)
+                  + (y>0? src[y0-n+x] : 0) + (y<n-1? src[y0+n+x] : 0) - 4*src[y0+x];
+          out[y0+x] = l;
+        }
+      }
+    };
+    /* 变分能 μ = ⟨H⟩（GP 能量泛函变分 ⟹ Hψ=μψ，归一化梯度流的正确乘子） */
+    const energyOf = (src) => {
+      lapInto(src, t1);
+      let e = 0;
+      for (let i=0; i<N; i++) e += src[i]*(-0.5*t1[i] + (V[i] - g*src[i]*src[i])*src[i]);
+      return e;
+    };
+    let mu = energyOf(a);
+    let prev = 0, stable = 0, steps = 0;
+    for (let s=0; s<RELAX_MAX_STEPS; s++){
+      steps++;
+      const h = RELAX_TAU/2, aa = 0.25*RELAX_TAU;
+      /* 对角半步：a *= exp((μ − V + g·a²)·τ/2) */
+      for (let i=0; i<N; i++) a[i] *= Math.exp((mu - V[i] + g*a[i]*a[i])*h);
+      /* ADI 动能：exp(0.5τ·Dx) 后 exp(0.5τ·Dy)，各解 (I − 0.25τD)ψ* = (I + 0.25τD)ψ */
+      for (let y=0; y<n; y++){
+        const row = y*n;
+        for (let x=0; x<n; x++){
+          const l = (x>0? a[row+x-1] : 0) + (x<n-1? a[row+x+1] : 0) - 2*a[row+x];
+          t3[row+x] = a[row+x] + aa*l;
+        }
+      }
+      tridiagSolveX(t3, t2, n, aa);
+      for (let x=0; x<n; x++){
+        for (let y=0; y<n; y++){
+          const ym = y>0? t2[(y-1)*n+x] : 0, yp = y<n-1? t2[(y+1)*n+x] : 0;
+          t3[y*n+x] = t2[y*n+x] + aa*(ym + yp - 2*t2[y*n+x]);
+        }
+      }
+      tridiagSolveY(t3, a, n, aa);
+      /* 对角半步 + 归一化 */
+      for (let i=0; i<N; i++) a[i] *= Math.exp((mu - V[i] + g*a[i]*a[i])*h);
+      let ss = 0;
+      for (let i=0; i<N; i++) ss += a[i]*a[i];
+      if (!(ss > 0) || !isFinite(ss)) return { steps, converged: false, diverged: true };
+      const inv = 1/Math.sqrt(ss);
+      for (let i=0; i<N; i++) a[i] *= inv;
+      mu = energyOf(a);
+      if (!isFinite(mu)) return { steps, converged: false, diverged: true };
+      /* 收敛判据：Rrms（网格坐标，比例无关）连续 5 步相对变化 < 1e-8 */
+      let s0 = 0, s2 = 0;
+      for (let y=0; y<n; y++){
+        const row = y*n, dy = y - 0.5*n;
+        for (let x=0; x<n; x++){
+          const v = a[row+x], dx = x - 0.5*n;
+          s0 += v*v; s2 += v*v*(dx*dx + dy*dy);
+        }
+      }
+      const cur = s0 > 0 ? Math.sqrt(s2/s0) : 0;
+      if (Math.abs(cur - prev) < 1e-8*cur) stable++; else stable = 0;
+      prev = cur;
+      if (stable >= 5) break;
+    }
+    return { steps, converged: stable >= 5, diverged: false };
+  }
+
+  _makeGS(grid, cx, cy, s, R, g){
+    const n = grid, N = n*n;
+    /* 生产 V 纹理逐字镜像：v = min(1,(r/48)²)（势阱封顶，与 presets 的 trap
+       绘制同式），vGray(v)=round(v*127+128) + shader 解码 (gray−128)/127 */
+    const V = new Float64Array(N);
+    for (let y=0; y<n; y++){
+      const dyw0 = (y - cy)*s;
+      for (let x=0; x<n; x++){
+        const dxw = (x - cx)*s, dyw = dyw0;
+        const r = Math.hypot(dxw, dyw);
+        const v = Math.min(1, (r/TRAP_R)*(r/TRAP_R));
+        V[y*n+x] = Math.round(v*127)/127;
+      }
+    }
+    /* 起点：TF 穹顶（与 tf 模式同式，R=σ、w=max(2,R/4)）——起点任意，
+       收敛态由 g 唯一确定（R50 诊断：σ=16 与 σ=R_TF 起点结果逐位一致） */
+    const a = new Float64Array(N);
+    const mu = (R/TRAP_R)*(R/TRAP_R), w = Math.max(2, R/4);
+    for (let y=0; y<n; y++){
+      const dyw0 = (y - cy)*s;
+      for (let x=0; x<n; x++){
+        const r = Math.hypot((x - cx)*s, dyw0);
+        const dome = Math.sqrt(Math.max(0, mu - (r/TRAP_R)*(r/TRAP_R)));
+        const e = Math.max(0, Math.min(1, (R - r)/w));
+        a[y*n+x] = dome*e*e*(3 - 2*e);
+      }
+    }
+    let s0 = 0;
+    for (let i=0; i<N; i++) s0 += a[i]*a[i];
+    if (s0 > 0){ const inv = 1/Math.sqrt(s0); for (let i=0; i<N; i++) a[i] *= inv; }
+    /* 弛豫：g≥0（吸引侧）无稳定基态（2D L² 临界塌缩）⟹ 跳过，保留穹顶 */
+    const info = (g < 0)
+      ? this._relaxGS(a, n, g, V)
+      : { steps: 0, converged: false, diverged: false, skipped: true };
+    this._lastRelax = info;
+    /* 基态为实场（相位恒 0） */
+    let sum = 0;
+    for (let i=0; i<N; i++) sum += a[i]*a[i];
+    const norm = sum > 0 ? 1/Math.sqrt(sum) : 0;
+    const data = new Float32Array(N*2);
+    for (let i=0; i<N; i++) data[i*2] = a[i]*norm;
+    return { data, sum: 1 };
   }
 
   defaults(){ return { g: -10, substeps: 16 }; }
@@ -6764,6 +6941,8 @@ class GPKernel extends PhysicsKernel {
                   build(paint){ self._mode = 'tf'; }, wave:[0.5,0.5,0,0], params:{ g:-10, sigma:16 } },
       breather:{ name:'集体呼吸模',   text:'强过压缩初态（R=10，峰值约为默认云 3.4×）释放后云大幅膨胀再回缩：实测峰值摆动 ×9.4–10（最低 ×0.15）、周期 ~107 sim-time，无耗散下长时不衰减——BEC 集体激发的大振幅演示，区别于单粒子薛定谔的量子化能级。',
                   build(paint){ self._mode = 'tf'; trap(paint); }, wave:[0.5,0.5,0,0], params:{ g:-10, sigma:10 } },
+      gs:      { name:'基态（虚时间弛豫）', text:'虚时间流 ∂ψ/∂τ = −(H−μ)ψ 收敛到离散哈密顿量的精确基态（Hψ=μψ）：集体呼吸模被弛豫掉，云半径与密度峰在实时间演化中保持平稳（实测 200 帧窗 Rrms 呼吸 0.36%、密度峰呼吸 0.54%，对比 TF 穹顶初态的 60%）。基态由 g 唯一确定——σ 只作弛豫起点（任意起点收敛到同一基态：σ=16 与 σ=R_TF 起点结果逐位一致），故拖动 σ 对稳态无影响。半径对账：√3·Rrms≈12.7 比 TF 公式 R_TF≈11.0 大 15.6%——有限耦合下 TF 近似的真实系统误差（g=−10 时 R_TF/ξ≈2.5，仅中间区），随 |g| 增大收敛到 TF 渐线（g=−40 时 +5.2%）。g≥0（吸引侧）无稳定基态（2D L² 临界塌缩），此时退回穹顶初态。弛豫成本 ~0.7s（τ=1、<250 步），仅在预设切换/重置时执行一次。',
+                  build(paint){ self._mode = 'gs'; trap(paint); }, wave:[0.5,0.5,0,0], params:{ g:-10, sigma:11 } },
     };
   }
 }
