@@ -15,6 +15,7 @@ import { injectStyles } from './styles.js';
 import { TransmissionScanner } from './scan.js';
 import { TransmissionScanner3 } from './scan.js';
 import { SlitScanner } from './scan.js';
+import { GpScanner, NlsScanner } from './scan.js';
 
 /* ---------- 大数组 base64 助手（R37 3D 现场存档用）----------
    Float32Array ↔ base64（字节序 = 运行平台原生序，x86/ARM 均为小端；
@@ -89,6 +90,10 @@ export class QuantumField {
     this.scanner = new TransmissionScanner(this);  /* 透射率扫描工具（内核无模型时面板隐藏） */
     this.scanner3 = new TransmissionScanner3(this);  /* 3D 透射扫描（R38；内核无 transmissionModel3 时面板隐藏） */
     this.scannerSlit = new SlitScanner(this);  /* 3D 双缝图样扫描（R40；内核非 3D 时面板隐藏） */
+    /* 非线性内核参数扫描（R42）：GP（g<0 排斥侧，TF 云/涡旋）与 NLS（g>0
+       focusing，孤子宽度/自聚焦发散）——共享一套面板 DOM，按内核选实例。 */
+    this.scannerGp = new GpScanner(this);
+    this.scannerNls = new NlsScanner(this);
     this._onError = e => {
       const d = this.q('#diag');
       if (d) d.textContent = 'ERR ' + e.message;
@@ -224,6 +229,19 @@ export class QuantumField {
     <div class="row"><label>状态</label><span id="scanStat">就绪</span></div>
     <canvas id="scanCanvas" width="420" height="260"></canvas>
     <div class="hint" style="margin-top:4px">矩势垒 x=120 w=16（全高）· 波包 kx=0.3 σ=18 · 256² 网格 · 实测 vs Δk 卷积理论（E=V0 左侧为隧穿区）</div>
+  </div>
+  <div class="sec" id="paramScanSec">
+    <h3>非线性参数扫描</h3>
+    <div class="row"><label>g 下限</label><input type="range" id="rParamLo" min="-20" max="-4" step="0.5" value="-20"><output id="oParamLo">-20.0</output></div>
+    <div class="row"><label>g 上限</label><input type="range" id="rParamHi" min="-20" max="-4" step="0.5" value="-4"><output id="oParamHi">-4.0</output></div>
+    <div class="row"><label>扫描点数</label><input type="range" id="rParamN" min="3" max="9" step="1" value="5"><output id="oParamN">5</output></div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnParamScan">开始扫描</button>
+      <button id="btnParamScanStop" disabled>中止</button>
+    </div>
+    <div class="row"><label>状态</label><span id="paramScanStat">就绪</span></div>
+    <canvas id="paramScanCanvas" width="420" height="300"></canvas>
+    <div class="hint" style="margin-top:4px">GP：扫 g（排斥侧 g&lt;0，托马斯-费米云/涡旋）——测云半径 Rrms（⟹R_TF=√3·Rrms）、峰值 n₀、涡旋愈合层 ξ，与 TF 解析 R_TF=(2R_trap²|g|/π)^¼、n₀=μ/|g| 对照。NLS：扫 g（focusing 侧 g&gt;0，条带孤子）——测 σx/σy 与峰值末/初比（&gt;3 判自聚焦发散）。**固定测量窗 200 帧 + 全程序列**：非线性无耗散系统（呼吸模永久振荡、TOF 单调膨胀、孤子稳定传播）没有天然终点，故不用「清空/双稳」类停止判据，改由时间平均 + 摆动幅度给出结论。P 在两内核下守恒（幺正非线性），塌缩/网格截断导致的数值漂移属诚实限制。</div>
   </div>
   <div class="sec" ${d3?'style="display:none"':''}>
     <h3>AB 磁通</h3>
@@ -1960,6 +1978,19 @@ ${d3 ? `
        内核无解析透射模型（契约 transmissionModel 返回 null，如 NLS/GP）时隐藏面板。 */
     if (!(this.kernel.transmissionModel && this.kernel.transmissionModel(this.state)))
       this.q('#scanSec').style.display = 'none';
+    /* 非线性参数扫描面板门控（R42）：仅 GP / NLS 内核显示（其余内核无此工具，
+       薛定谔系已有矩垒透射扫描）。滑块量程按内核设置：GP 扫排斥侧 g<0
+       （−20…−4），NLS 扫 focusing 侧 g>0（1…8）。 */
+    const isGp = this.kernelId === 'gp', isNls = this.kernelId === 'nls';
+    if (!isGp && !isNls) this.q('#paramScanSec').style.display = 'none';
+    else {
+      const lo = this.q('#rParamLo'), hi = this.q('#rParamHi');
+      const loV = isGp ? -20 : 1, hiV = isGp ? -4 : 8;
+      lo.min = hi.min = String(loV); lo.max = hi.max = String(hiV);
+      lo.value = String(loV); hi.value = String(hiV);
+      this.q('#oParamLo').textContent = String(loV);
+      this.q('#oParamHi').textContent = String(hiV);
+    }
     /* 自旋 HUD 区：内核 spinReadout 能力标志（Pauli）时显示，否则隐藏 */
     if (this.kernel.spinReadout) this.q('#spinSec').style.display = '';
     const scanBind = (id, out, fmt) => {
@@ -1978,6 +2009,24 @@ ${d3 ? `
       });
     });
     this.on(this.q('#btnScanStop'), 'click', () => this.scanner.stop());
+    /* 非线性参数扫描（R42）：面板按内核选实例（GP/NLS 共用一套 DOM） */
+    const paramBind = (id, out, fmt) => {
+      const el = this.q(id), o = this.q(out);
+      const upd = () => { o.textContent = fmt(parseFloat(el.value)); };
+      el.addEventListener('input', upd); upd();
+    };
+    paramBind('#rParamLo', '#oParamLo', v => v.toFixed(1));
+    paramBind('#rParamHi', '#oParamHi', v => v.toFixed(1));
+    paramBind('#rParamN', '#oParamN', v => String(v|0));
+    const paramScanner = () => (this.kernelId === 'gp' ? this.scannerGp : this.scannerNls);
+    this.on(this.q('#btnParamScan'), 'click', () => {
+      paramScanner().start({
+        lo: parseFloat(this.q('#rParamLo').value),
+        hi: parseFloat(this.q('#rParamHi').value),
+        n: parseInt(this.q('#rParamN').value, 10) || 5,
+      });
+    });
+    this.on(this.q('#btnParamScanStop'), 'click', () => paramScanner().stop());
 
     /* 键盘 */
     const presetKeys = Object.keys(this.kernel.presets());
@@ -2192,6 +2241,9 @@ ${d3 ? `
       scanModel3: () => (this.kernel.transmissionModel3 ? this.kernel.transmissionModel3(this.state) : null),
       /* 双缝图样扫描器（R40）：start(opts)/stop()/busy/results/summary（CDP 驱动与读数） */
       scanSlit: this.scannerSlit,
+      /* 非线性参数扫描器（R42）：GP / NLS 各一实例，start() 内核不符时拒绝 */
+      scanGp: this.scannerGp,
+      scanNls: this.scannerNls,
       vpx: (x, y) => { const d = this.vctx.getImageData(x|0, y|0, 1, 1).data; return d[0]; },
       vscan: () => {
         const d = this.vctx.getImageData(0,0,256,256).data;

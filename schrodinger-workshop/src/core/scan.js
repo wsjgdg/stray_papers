@@ -1030,3 +1030,472 @@ export class SlitScanner {
     x.fillText('缝距 D（texel）', 34 + (W - 42)/2, H - 2);
   }
 }
+
+/* ==========================================================================
+ * R42：非线性内核（NLS / GP）参数扫描 —— 通用框架 + 两个内核适配器
+ *
+ * 与既有三个扫描器（2D 矩垒 / 3D 球垒 / 3D 双缝）同生命周期契约：
+ * paused + 自驱 rAF + boost + 原子快照 + 中止/状态恢复 + 按钮翻转 + 状态行。
+ *
+ * 停止判据的设计分歧（本框架改用固定测量窗，如实说明原因）：
+ *   既有三扫描器判据都建立在「散射有终态」上——R29 矩垒用「垒区清空 +
+ *   右侧概率双稳」、R38 球垒用「band 门 + fwd 峰值回落」、R40 双缝用固定窗
+ *   （时间线由 kx/σ 决定、与 D 无关）。NLS/GP 无此结构：无耗散哈密顿系统
+ *   的呼吸模**永久振荡**、TOF 单调膨胀、孤子稳定传播 —— 没有天然终点，
+ *   故本框架一律用**固定测量窗 + 全程序列**，由曲线本身（时间平均 + 摆动
+ *   幅度）给出结论，而非伪造一个停止判据。
+ *
+ * 更正既有记录（README「后续方向」原注）：原注称「非线性系统的停止判据
+ *   无守恒量可依赖（P 不守恒）」——P 在 NLS/GP 下**守恒**（幺正非线性；
+ *   README 自身记录 NLS 的 g=0 线性极限 P=1.0000 精确、算法层机器精度守恒）。
+ *   真正的问题是无终态（上段），而非 P 不守恒；塌缩（2D L² 临界）时的
+ *   数值漂移是网格截断所致，属诚实限制而非守恒律失效。
+ *
+ * 未迁移既有三扫描器到基类：本框架以「新增并列」方式落地，既有三扫描器
+ *   零改动（cdp38/39/40 全绿回归）。迁移属独立重构轮。
+ * ========================================================================== */
+
+export const GENERIC_DEFAULTS = {
+  preset: '',            /* 每点重发的预设 key（loadPreset 重建势场 + 初态） */
+  paramKey: 'g',         /* 扫描的 state 参数名 */
+  xs: null,              /* 显式值列表（优先于 lo/hi/n） */
+  lo: 0, hi: 0, n: 5,    /* 扫描范围与点数 */
+  boost: 4,              /* 每 rAF tick 推进的物理帧数 */
+  measureEvery: 10,      /* 测量间隔（帧） */
+  framesMax: 200,        /* 固定测量窗终点（无停止判据；非线性无终态） */
+  grid: 256,             /* 扫描网格（2D 内核默认 256） */
+};
+
+/* 2D 全卷场矩（供适配器测量；pairs 感知，与 probSplit/cpuDensity 同源）：
+   P / 质心 / 二阶矩半径 Rrms / 逐轴宽度 sx,sy / 峰值 |ψ|²max，外加原始缓冲
+   供适配器做径向或轴向剖面。世界单位 = 格点（grid=256 时世界 px 1:1）。 */
+function fieldMoments2(app){
+  const gl = app.gl, g = app.state.grid;
+  const ch = app.kernel.pairs === 2 ? 4 : 2;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, app.psiA.fbo);
+  const buf = new Float32Array(g*g*ch);
+  gl.readPixels(0, 0, g, g, app.fmt, gl.FLOAT, buf);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  const dens = new Float64Array(g*g);
+  let P = 0, sx = 0, sy = 0, peak = 0;
+  for (let y = 0; y < g; y++) for (let x = 0; x < g; x++){
+    const p = app.kernel.cpuDensity(buf, (y*g + x)*ch);
+    dens[y*g + x] = p;
+    P += p; sx += x*p; sy += y*p;
+    if (p > peak) peak = p;
+  }
+  const cx = P ? sx/P : 0, cy = P ? sy/P : 0;
+  let vr = 0, vx = 0, vy = 0;
+  for (let y = 0; y < g; y++) for (let x = 0; x < g; x++){
+    const p = dens[y*g + x];
+    vr += ((x-cx)*(x-cx) + (y-cy)*(y-cy))*p;
+    vx += (x-cx)*(x-cx)*p; vy += (y-cy)*(y-cy)*p;
+  }
+  return { P, cx, cy, peak, Rrms: P ? Math.sqrt(vr/P) : 0,
+           sx: P ? Math.sqrt(vx/P) : 0, sy: P ? Math.sqrt(vy/P) : 0,
+           dens, g, simTime: app.state.simTime };
+}
+
+/* 径向密度剖面（GP 涡旋核 / TF 穹顶用）：以 (cx,cy) 为中心，按半径分箱求
+   平均密度，返回 { r[], n[] }（世界 px）。 */
+function radialProfile(m){
+  const { dens, g, cx, cy } = m;
+  const R = Math.min(cx, cy, g-cx, g-cy);
+  const nb = Math.max(8, Math.floor(R));
+  const sum = new Float64Array(nb), cnt = new Float64Array(nb);
+  for (let y = 0; y < g; y++) for (let x = 0; x < g; x++){
+    const r = Math.hypot(x - cx, y - cy);
+    const b = Math.floor(r); if (b >= nb) continue;
+    sum[b] += dens[y*g + x]; cnt[b]++;
+  }
+  const r = [], n = [];
+  for (let b = 0; b < nb; b++) if (cnt[b]){ r.push(b + 0.5); n.push(sum[b]/cnt[b]); }
+  return { r, n };
+}
+
+export class GenericScanner {
+  constructor(app, spec){
+    this.app = app;
+    this.spec = spec;              /* { id, label, unit, defaults, measure, plot } */
+    this.busy = false;
+    this.results = [];             /* [{ x, series:[...], mean*, swing, P, frames }] */
+    this.opts = null;
+    this.summary = null;
+    this._i = 0; this._frames = 0; this._raf = 0;
+    this._series = [];
+    this._savedPaused = false;
+  }
+
+  /* ---------- 生命周期（与既有三扫描器同契约） ---------- */
+  start(opts){
+    if (this.busy) return false;
+    const app = this.app;
+    if (this.spec.kernelId && app.kernelId !== this.spec.kernelId){
+      app.toast('当前内核非 ' + this.spec.kernelId + '，无此参数扫描'); return false;
+    }
+    this.opts = Object.assign({}, GENERIC_DEFAULTS, this.spec.defaults, opts || {});
+    const o = this.opts;
+    if (Array.isArray(o.xs) && o.xs.length) this.xs = o.xs.slice();
+    else {
+      this.xs = [];
+      for (let i = 0; i < o.n; i++) this.xs.push(o.lo + (o.hi - o.lo)*i/Math.max(1, o.n - 1));
+    }
+    this.results = []; this.summary = null; this._i = 0;
+    this._savedPaused = app.state.paused;
+    app.state.paused = true;
+    this.busy = true;
+    const b1 = app.q('#btnParamScan'), b2 = app.q('#btnParamScanStop');
+    if (b1) b1.disabled = true;
+    if (b2) b2.disabled = false;
+    app.toast(this.spec.label + '开始 · ' + o.paramKey + ' ' +
+      this.xs[0] + '→' + this.xs[this.xs.length-1] + ' · ' + this.xs.length + ' 点 · ' +
+      o.framesMax + ' 帧/点（固定窗）');
+    this._beginPoint();
+    this._raf = requestAnimationFrame(() => this._tick());
+    return true;
+  }
+
+  stop(){
+    if (!this.busy) return false;
+    this.busy = false;
+    cancelAnimationFrame(this._raf);
+    this._restore();
+    this.app.toast(this.spec.label + '已中止（' + this.results.length + '/' + this.xs.length + ' 点）');
+    return true;
+  }
+
+  _restore(){
+    const app = this.app;
+    app.state.paused = this._savedPaused;
+    app.loadPreset(app.state.preset);
+    app.syncControls();
+    const b1 = app.q('#btnParamScan'), b2 = app.q('#btnParamScanStop');
+    if (b1) b1.disabled = false;
+    if (b2) b2.disabled = true;
+  }
+
+  /* 每点：loadPreset 重建势场 + 初态（与 g 无关）⟹ 再覆盖扫描参数。
+     注意 loadPreset 内部 Object.assign(p.params) 会写预设默认 g，故扫描值
+     必须在其后写入。 */
+  _beginPoint(){
+    const o = this.opts, app = this.app;
+    this._x = this.xs[this._i];
+    app.loadPreset(o.preset);
+    app.state[o.paramKey] = this._x;
+    /* 内核可选的初态重发钩子（R42 实测修正）：GP 的 TF 平衡半径由 g 决定，
+       若沿用固定 σ 初态则云半径由初态主导、与解析 R_TF(g) 不可对账（无耗散
+       不弛豫 ⟹ 呼吸模不衰减）。故 GP 在设好 g 后按 R_TF(g) 重设 σ 并重发。 */
+    if (this.spec.initExtra)
+      this.spec.initExtra(app, this._x, app.kernel.presets()[o.preset]);
+    this._frames = 0; this._series = [];
+    this._status();
+  }
+
+  _tick(){
+    if (!this.busy) return;
+    const o = this.opts;
+    let done = false;
+    for (let b = 0; b < o.boost && !done; b++){
+      this.app.evolve();
+      this._frames++;
+      if (this._frames % o.measureEvery === 0 || this._frames >= o.framesMax){
+        this._series.push(this._measure());
+        if (this._frames >= o.framesMax) done = true;
+      }
+    }
+    if (done){
+      this._record();
+      this._i++;
+      if (this._i < this.xs.length) this._beginPoint();
+      else this._finish();
+    }
+    if (this.busy){ this._status(); this._raf = requestAnimationFrame(() => this._tick()); }
+  }
+
+  _measure(){
+    const m = fieldMoments2(this.app);
+    const extra = this.spec.measure ? this.spec.measure(m, this.app) : {};
+    return Object.assign({ frames: this._frames, P: m.P, t: m.simTime }, extra);
+  }
+
+  _record(){
+    const s = this._series;
+    if (!s.length) return;
+    /* 时间平均 + 摆动幅度（呼吸模无终态 ⟹ 平均值与摆动幅度才是可观测量） */
+    const rec = { x: this._x, frames: this._frames, series: s.slice(), P: s[s.length-1].P };
+    for (const key of this.spec.statKeys || []){
+      const v = s.map(r => r[key]).filter(v => isFinite(v));
+      if (!v.length) continue;
+      rec[key + 'Mean'] = v.reduce((a, b) => a + b, 0)/v.length;
+      rec[key + 'Min'] = Math.min(...v);
+      rec[key + 'Max'] = Math.max(...v);
+    }
+    this.results.push(rec);
+    this._status();
+  }
+
+  _finish(){
+    this.busy = false;
+    cancelAnimationFrame(this._raf);
+    if (this.spec.summarize) this.summary = this.spec.summarize(this.results, this.app);
+    this._restore();
+    this._plot();
+    this._status(true);
+    const s = this.summary;
+    this.app.toast(this.spec.label + '完成 · ' + this.results.length + ' 点' +
+      (s && s.text ? ' · ' + s.text : ''));
+  }
+
+  _status(final){
+    const el = this.app.q('#paramScanStat'); if (!el) return;
+    if (this.busy){
+      el.textContent = (this._i + 1) + '/' + this.xs.length +
+        ' · ' + this.opts.paramKey + '=' + this._x +
+        ' · 帧 ' + this._frames + '/' + this.opts.framesMax;
+    } else if (final && this.results.length){
+      el.textContent = '完成 ' + this.results.length + ' 点' +
+        (this.summary && this.summary.text ? ' · ' + this.summary.text : '');
+    }
+  }
+
+  _plot(){
+    const cv = this.app.q('#paramScanCanvas'); if (!cv) return;
+    if (this.spec.plot) this.spec.plot(cv, this.results, this.app, this.xs);
+  }
+}
+
+/* ---------- GP 适配器：扫描相互作用强度 g（排斥侧 g<0） ----------
+   解析对照（gp.js 文件头自洽公式，本轮独立验算）：
+     R_TF⁴ = 2·TRAP_R²·|g|/π（TRAP_R=48）⟹ R_TF = (2·TRAP_R²·|g|/π)^{1/4}
+     TF 抛物穹顶 n(r)=n₀(1−r²/R²) 的二阶矩 ⟨r²⟩=R²/3 ⟹ R_TF = √3·Rrms
+     峰值 n₀ = μ/|g|，μ=(R_TF/TRAP_R)² ⟹ n₀ = √(2/π)/(TRAP_R·√|g|)
+     涡旋愈合层 ξ = 1/√(|g|·n₀)
+   验算（g=−10）：R_TF≈11.0 px（预设 σ=16 初态略膨胀，与 README 一致）、
+   n₀≈5.26e-3（内核注释 5.3e-3 ✓） */
+const GP_TRAP_R = 48;
+const gpAnalytic = (g) => {
+  const ag = Math.abs(g); if (!(ag > 0)) return null;
+  const R = Math.pow(2*GP_TRAP_R*GP_TRAP_R*ag/Math.PI, 0.25);
+  const mu = (R/GP_TRAP_R)*(R/GP_TRAP_R);
+  const n0 = mu/ag;
+  return { Rtf: R, mu, n0, xi: 1/Math.sqrt(ag*n0) };
+};
+
+export const GP_SPEC = {
+  id: 'gp', kernelId: 'gp', label: 'BEC 参数扫描',
+  defaults: { preset: 'tf', paramKey: 'g', lo: -20, hi: -4, n: 5, framesMax: 200, measureEvery: 10, grid: 256 },
+  statKeys: ['Rrms', 'peak', 'xi'],
+  /* 初态 σ 取解析 TF 半径 R_TF(g)（R42 实测修正：固定 σ 时云半径由初态主导，
+     与 R_TF(g) 偏差达 47%，因无耗散不弛豫、初态非平衡）。 */
+  initExtra(app, x, preset){
+    const a = gpAnalytic(x);
+    if (a) app.state.sigma = a.Rtf;
+    if (preset && preset.wave) app.initWave(preset.wave[0], preset.wave[1], preset.wave[2], preset.wave[3]);
+  },
+  measure(m, app){
+    const prof = radialProfile(m);
+    /* 涡旋核半径 ξ：核（中心密度极低）向外到「平台密度一半」的半径。
+       无涡旋（tf 预设）时中心即峰值 ⟹ xi=0（如实：非涡旋场景无此量）。 */
+    let xi = 0;
+    if (prof.n.length > 4){
+      const plateau = Math.max(...prof.n.slice(2));
+      const half = 0.5*plateau;
+      const core = prof.n[0];
+      if (core < 0.5*plateau){
+        for (let i = 1; i < prof.n.length; i++)
+          if (prof.n[i] >= half){ xi = prof.r[i]; break; }
+      }
+    }
+    return { Rrms: m.Rrms, peak: m.peak, xi, cx: m.cx, cy: m.cy };
+  },
+  summarize(results, app){
+    /* 实测 Rrms 换 R_TF（√3·Rrms）与解析 R_TF 的偏差中位数 */
+    const devs = [], pk = [];
+    for (const r of results){
+      const a = gpAnalytic(r.x); if (!a) continue;
+      const RtfMeas = Math.sqrt(3)*(r.RrmsMean || 0);
+      devs.push(Math.abs(RtfMeas - a.Rtf)/a.Rtf);
+      if (r.peakMean) pk.push(Math.abs(r.peakMean - a.n0)/a.n0);
+    }
+    devs.sort((a, b) => a - b); pk.sort((a, b) => a - b);
+    const med = a => a.length ? a[Math.floor(a.length/2)] : NaN;
+    /* P 漂移（R42 实测：非线性 KDK 有离散耗散，P 缓慢下降且随 |g| 增长 ——
+       如实记录而非当作守恒律失效掩盖） */
+    const pDrift = Math.max(...results.map(r => {
+      const s = r.series; return s.length ? Math.abs(s[s.length-1].P - 1) : 0;
+    }));
+    return { nPoints: results.length, medRtfDev: med(devs), medPeakDev: med(pk), pDrift,
+      text: 'R_TF 中位偏差 ' + (devs.length ? (100*med(devs)).toFixed(1) : '—') + '%' +
+            ' · 峰值 ' + (pk.length ? (100*med(pk)).toFixed(1) : '—') + '%' +
+            ' · P 漂移 ' + (100*pDrift).toFixed(2) + '%' };
+  },
+  plot(cv, results, app, xs){
+    const x = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    x.clearRect(0, 0, W, H);
+    x.fillStyle = 'rgba(4,8,16,.55)'; x.fillRect(0, 0, W, H);
+    if (!results.length) return;
+    /* 上：R_TF 实测（√3·Rrms）vs 解析（线）+ 摆动幅度误差棒 */
+    const T1 = 14, H1 = (H - T1 - 18)*0.55, B1 = 18;
+    const gAbs = results.map(r => Math.abs(r.x));
+    const gMax = Math.max(...gAbs)*1.08;
+    const rMax = Math.max(...results.map(r => Math.sqrt(3)*(r.RrmsMean || 0)), 1)*1.15;
+    const X = gv => 34 + gv/gMax*(W - 42);
+    const Y = v => T1 + (rMax - v)/rMax*H1;
+    x.font = '9px ui-monospace,monospace';
+    x.strokeStyle = 'rgba(120,160,220,.14)'; x.lineWidth = 1;
+    for (let i = 0; i <= 4; i++){
+      const yy = T1 + H1*i/4;
+      x.beginPath(); x.moveTo(34, yy); x.lineTo(W - 8, yy); x.stroke();
+      x.fillStyle = '#9aa7bd'; x.textAlign = 'right'; x.fillText((rMax - i*rMax/4).toFixed(1), 31, yy + 3);
+    }
+    /* 解析曲线 R_TF(g) */
+    x.strokeStyle = 'rgba(251,191,36,.6)'; x.setLineDash([4, 3]); x.beginPath();
+    for (let i = 0; i <= 120; i++){
+      const gv = 0.5 + (gMax - 0.5)*i/120;
+      const a = gpAnalytic(-gv); if (!a) continue;
+      const px = X(gv), py = Y(a.Rtf);
+      if (i === 0) x.moveTo(px, py); else x.lineTo(px, py);
+    }
+    x.stroke(); x.setLineDash([]);
+    /* 实测散点 + 摆动幅度（Min..Max）竖线 */
+    x.strokeStyle = '#67e8f9'; x.fillStyle = '#67e8f9';
+    for (const r of results){
+      const px = X(Math.abs(r.x));
+      const lo = Math.sqrt(3)*(r.RrmsMin || 0), hi = Math.sqrt(3)*(r.RrmsMax || 0);
+      x.beginPath(); x.moveTo(px, Y(lo)); x.lineTo(px, Y(hi)); x.stroke();
+      x.beginPath(); x.arc(px, Y(Math.sqrt(3)*(r.RrmsMean || 0)), 2.6, 0, 6.2832); x.fill();
+    }
+    x.fillStyle = '#9aa7bd'; x.textAlign = 'left';
+    x.fillText('R_TF（√3·Rrms）vs |g|', 38, 10);
+    x.fillStyle = '#67e8f9'; x.fillText('● 实测（竖线=呼吸摆动）', W - 150, 10);
+    x.fillStyle = '#fbbf24'; x.textAlign = 'right'; x.fillText('–– TF 解析 (2R²|g|/π)^¼', W - 8, 10);
+    /* 下：峰值 vs |g|（实测 + 解析 n₀） */
+    const T2 = T1 + H1 + B1, H2 = H - T2 - 16;
+    const pMax = Math.max(...results.map(r => r.peakMean || 0), 1e-6)*1.2;
+    const Y2 = v => T2 + (pMax - v)/pMax*H2;
+    x.strokeStyle = 'rgba(251,191,36,.6)'; x.setLineDash([4, 3]); x.beginPath();
+    for (let i = 0; i <= 120; i++){
+      const gv = 0.5 + (gMax - 0.5)*i/120;
+      const a = gpAnalytic(-gv); if (!a) continue;
+      const px = X(gv), py = Y2(a.n0);
+      if (i === 0) x.moveTo(px, py); else x.lineTo(px, py);
+    }
+    x.stroke(); x.setLineDash([]);
+    x.strokeStyle = '#67e8f9'; x.fillStyle = '#67e8f9'; x.beginPath();
+    results.forEach((r, i) => {
+      const px = X(Math.abs(r.x)), py = Y2(r.peakMean || 0);
+      if (i === 0) x.moveTo(px, py); else x.lineTo(px, py);
+    });
+    x.stroke();
+    for (const r of results){
+      const px = X(Math.abs(r.x)), py = Y2(r.peakMean || 0);
+      x.beginPath(); x.arc(px, py, 2.4, 0, 6.2832); x.fill();
+    }
+    x.fillStyle = '#9aa7bd'; x.textAlign = 'left';
+    x.fillText('峰值 n₀ vs |g|', 38, T2 + 9);
+    x.textAlign = 'center';
+    x.fillText('|g|（相互作用强度）', 34 + (W - 42)/2, H - 2);
+  },
+};
+
+/* ---------- NLS 适配器：扫描 focusing 强度 g>0（孤子宽度 / 塌缩阈值） ----------
+   诚实限制：2D 立方 NLS 是 L² 临界 —— 超临界 g 触发塌缩，网格精度最终截断
+   奇性（README「物理诚实声明」已记录）。故本适配器**不套用平面孤子解析式**
+   （严格平面孤子只在 1D 立方 NLS 稳定），而是标定「宽度收缩/峰值发散」的
+   数值阈值并如实标注分辨率依赖。 */
+export const NLS_SPEC = {
+  id: 'nls', kernelId: 'nls', label: 'NLS 孤子扫描',
+  defaults: { preset: 'soliton', paramKey: 'g', lo: 1, hi: 6, n: 6, framesMax: 200, measureEvery: 10, grid: 256 },
+  statKeys: ['sx', 'sy', 'peak'],
+  measure(m, app){
+    /* 条带孤子为准一维：沿 y 平均后取 x 剖面宽度（二阶矩 sx 已含），另记
+       长宽比（条带各向异性：sy ≫ sx 或反之由预设决定） */
+    return { sx: m.sx, sy: m.sy, peak: m.peak, Rrms: m.Rrms, cx: m.cx, cy: m.cy };
+  },
+  summarize(results, app){
+    /* 塌缩判定（R42 实测修正）：必须用**序列峰值最大值 / 初值**——塌缩后期
+       网格截断使数值崩坏（实测 g=6：峰值升到 0.049×2 后 P 掉到 0.68、Rrms
+       暴增到 82，末值峰值反而只剩 0.0002），用「末值/初值」会把塌缩点误判为
+       不塌缩。另记录 P 崩坏点（网格截断的数值后果，非物理）。 */
+    const collapsed = [], broken = [];
+    for (const r of results){
+      const s = r.series;
+      if (s.length < 2) continue;
+      const p0 = s[0].peak, pMax = Math.max(...s.map(v => v.peak));
+      if (p0 > 0 && pMax/p0 > 3) collapsed.push(+r.x.toFixed(2));
+      const pMin = Math.min(...s.map(v => v.P));
+      if (pMin < 0.95) broken.push({ g: +r.x.toFixed(2), P: +pMin.toFixed(3) });
+    }
+    return { collapsed, broken, nPoints: results.length,
+      text: (collapsed.length ? '自聚焦发散 g ≥ ' + Math.min(...collapsed)
+                              : '全区间无发散') +
+            (broken.length ? ' · 网格截断崩坏 ' + broken.length + ' 点（P→' + Math.min(...broken.map(b => b.P)) + '）' : '') };
+  },
+  plot(cv, results, app, xs){
+    const x = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    x.clearRect(0, 0, W, H);
+    x.fillStyle = 'rgba(4,8,16,.55)'; x.fillRect(0, 0, W, H);
+    if (!results.length) return;
+    const T1 = 14, H1 = (H - T1 - 18)*0.55, B1 = 18;
+    const gv = results.map(r => r.x);
+    const gMax = Math.max(...gv)*1.08, gMin = Math.min(0, Math.min(...gv));
+    const X = v => 34 + (v - gMin)/(gMax - gMin || 1)*(W - 42);
+    const wMax = Math.max(...results.map(r => Math.max(r.sxMean || 0, r.syMean || 0)), 1)*1.15;
+    const Y = v => T1 + (wMax - v)/wMax*H1;
+    x.font = '9px ui-monospace,monospace';
+    x.strokeStyle = 'rgba(120,160,220,.14)'; x.lineWidth = 1;
+    for (let i = 0; i <= 4; i++){
+      const yy = T1 + H1*i/4;
+      x.beginPath(); x.moveTo(34, yy); x.lineTo(W - 8, yy); x.stroke();
+      x.fillStyle = '#9aa7bd'; x.textAlign = 'right'; x.fillText((wMax - i*wMax/4).toFixed(1), 31, yy + 3);
+    }
+    /* sx（青）/ sy（琥珀）平均宽度 */
+    for (const [key, col] of [['sx', '#67e8f9'], ['sy', '#fbbf24']]){
+      x.strokeStyle = col; x.fillStyle = col; x.beginPath();
+      results.forEach((r, i) => {
+        const px = X(r.x), py = Y(r[key + 'Mean'] || 0);
+        if (i === 0) x.moveTo(px, py); else x.lineTo(px, py);
+      });
+      x.stroke();
+      for (const r of results){ x.beginPath(); x.arc(X(r.x), Y(r[key + 'Mean'] || 0), 2.4, 0, 6.2832); x.fill(); }
+    }
+    x.fillStyle = '#9aa7bd'; x.textAlign = 'left';
+    x.fillText('孤子宽度 vs g', 38, 10);
+    x.fillStyle = '#67e8f9'; x.fillText('● σx', W - 96, 10);
+    x.fillStyle = '#fbbf24'; x.fillText('● σy', W - 64, 10);
+    /* 下：峰值末/初比（塌缩指示） */
+    const T2 = T1 + H1 + B1, H2 = H - T2 - 16;
+    /* 峰值最大/初值（塌缩指示；末值会在网格截断崩坏后骤降，不可用） */
+    const ratios = results.map(r => {
+      const s = r.series;
+      if (s.length < 2 || !(s[0].peak > 0)) return 1;
+      return Math.max(...s.map(v => v.peak))/s[0].peak;
+    });
+    const rMax = Math.max(3.2, ...ratios)*1.1;
+    const Y2 = v => T2 + (rMax - v)/rMax*H2;
+    x.strokeStyle = 'rgba(248,113,113,.5)'; x.setLineDash([3, 3]);
+    x.beginPath(); x.moveTo(34, Y2(3)); x.lineTo(W - 8, Y2(3)); x.stroke(); x.setLineDash([]);
+    x.strokeStyle = '#67e8f9'; x.fillStyle = '#67e8f9'; x.beginPath();
+    results.forEach((r, i) => {
+      const px = X(r.x), py = Y2(ratios[i]);
+      if (i === 0) x.moveTo(px, py); else x.lineTo(px, py);
+    });
+    x.stroke();
+    for (let i = 0; i < results.length; i++){
+      x.beginPath(); x.arc(X(results[i].x), Y2(ratios[i]), 2.4, 0, 6.2832); x.fill();
+    }
+    x.fillStyle = '#9aa7bd'; x.textAlign = 'left';
+    x.fillText('峰值末/初比（>3 判自聚焦发散；红虚线）', 38, T2 + 9);
+    x.textAlign = 'center';
+    x.fillText('g（focusing 强度）', 34 + (W - 42)/2, H - 2);
+  },
+};
+
+export class GpScanner extends GenericScanner {
+  constructor(app){ super(app, GP_SPEC); }
+}
+export class NlsScanner extends GenericScanner {
+  constructor(app){ super(app, NLS_SPEC); }
+}
