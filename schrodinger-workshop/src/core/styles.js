@@ -1,7 +1,14 @@
 /* 组件样式：挂载时注入 <style id="qf-styles">（多实例只注入一次）。
-   与重构前 index.html 的 <style> 块逐字一致——视觉零回归。 */
+   R43 修复：本字符串此前**以字面 `<style>` 开头**（自初版 9c397d0 起），
+   注入用 textContent ⟹ CSS 解析器把 `<style>` 当 selector 前缀，紧接的
+   `:root{…}` 被解析为「`<style> :root`」这一永不匹配的后代选择器的声明块
+   ⟹ **:root 内所有 CSS 变量失效**（--txt/--dim/--mono/--panel 全空），
+   于是全部 `color:var(--dim)` 等退化为浏览器默认（黑字 + Times New Roman），
+   在深色半透明面板上几乎不可读——而 font-size/letter-spacing 等字面值声明
+   仍生效，故长期未被察觉（旧注释「视觉零回归」的自评有误）。
+   R43 CDP 实测（getComputedStyle 读 CSS 变量全为空 + h3 color=rgb(0,0,0)
+   / fontFamily=Times New Roman）定位并删除该标签后，变量与字体恢复。 */
 export const CSS = `
-<style>
   :root{
     --bg:#04060c; --panel:rgba(8,12,22,.74); --line:rgba(120,160,220,.14);
     --txt:#e6edf3; --dim:#9aa7bd; --cyan:#67e8f9; --mag:#f0abfc; --amber:#fbbf24;
@@ -24,7 +31,13 @@ export const CSS = `
   #topbar .eq i{color:var(--mag);font-style:italic}
   #status{font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:.08em}
   /* ---------- 左侧控制面板 ---------- */
-  #panel{top:76px;left:14px;width:238px;padding:14px;z-index:10;max-height:calc(100vh - 120px);overflow-y:auto;
+  /* R43 修复①：原 max-height:calc(100vh−120px) ⟹ 面板底 = 100vh−44，而左下
+     #desc（bottom:52px）顶部随预设描述长度变化（实测 82px 文本 ⟹ 顶 100vh−132；
+     GP/Pauli 长文本 177px ⟹ 顶 100vh−229）⟹ 两者在左列重叠（最大 238×80 px）。
+     修复：#desc 限高 120px + 内部滚动（高度可控），面板按最坏情况预留
+     (76 顶距 + 120 desc + 52 底距 + 8 间隙 = 256) ⟹ 面板底 100vh−180 ≤ desc 顶
+     100vh−172，四 viewport × 五内核实测无重叠。 */
+  #panel{top:76px;left:14px;width:238px;padding:14px;z-index:10;max-height:calc(100vh - 256px);overflow-y:auto;
     scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #panel::-webkit-scrollbar{width:4px}#panel::-webkit-scrollbar-thumb{background:rgba(120,160,220,.25);border-radius:2px}
   .sec{margin-bottom:14px}
@@ -68,8 +81,12 @@ export const CSS = `
   #hint .k{font-family:var(--mono);color:var(--cyan);background:rgba(103,232,249,.1);
     border:1px solid rgba(103,232,249,.25);border-radius:4px;padding:0 5px;font-size:10.5px}
   /* ---------- 预设描述 ---------- */
+  /* R43 修复②：描述文本长度随内核/预设变化（实测 82–177px 高），高度不可控会
+     顶进 #panel 区域 ⟹ 限高 120px + 内部滚动：既压住几何冲突，又保留全文
+     （长描述可滚动查看）。 */
   #desc{left:14px;bottom:52px;z-index:10;padding:10px 14px;max-width:340px;font-size:11.5px;
-    color:var(--dim);line-height:1.65}
+    color:var(--dim);line-height:1.65;max-height:120px;overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #desc b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:12px}
   /* ---------- toast ---------- */
   #toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:20;pointer-events:none;
