@@ -2,6 +2,11 @@
 
 > 每轮施工记录：完成项、验证结果、后续计划。commit message 用英文祈使句；本日志中文。
 > 项目定位：模块化量子场沙盒（ES 模块引擎 + PhysicsKernel 契约 + 多物理内核 + 单文件分发）。
+>
+> **协作规则（2026-10-18 用户授权）**：本项目内**每次 commit 自动推送** origin/main
+> （SSH），不再逐次等「推吧」指令；推送后以 `git ls-remote` 闭环验证。此规则作用域
+> 仅限 schrodinger-workshop —— 其他项目（spot-extract / codify / cosmos-source /
+> jayverse / physics-sim-agent 等）仍维持「推送须等用户明确授权」的原规则。
 
 ## 轮次总览
 
