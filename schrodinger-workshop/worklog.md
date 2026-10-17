@@ -33,6 +33,7 @@
 | R39 | 3D 双缝干涉预设（#34 backlog ⑤） | 双缝/单缝预设（potKind=4 解析墙 + 缝参数面板）+ **可分离性证明**（Σ_z\|ψ_3D\|²=\|φ_2D\|²）⟹ Node 2D CPU 镜像与 GPU 逐帧对账 maxDiff ≤1.62e-3（24 条屏剖面、峰位 0/24 mismatch）；诚实记录深 Fresnel 区图样为「双瓣+弱中心」而非等间距条纹（脉冲 smear + λ/W=0.87 非近轴，CPU 参考同步复现）；单缝 D=0 对照（干净时窗峰数 1 vs 双缝 ≥3）；cdp39 34/34 |
 | R43 | 面板视觉保真度评审（README「后续方向」①） | 客观化评审（CDP 多 viewport 几何 + getComputedStyle + PIL 对比度）抓出两个真实缺陷：**① CSS 变量全部失效**——CSS 字符串以字面 `<style>` 开头（自初版 9c397d0），注入 textContent ⟹ `:root` 被解析为 `<style> :root` 永不匹配选择器的声明块 ⟹ 所有 `color:var(--x)`/`font-family:var(--x)` 退化为黑字+Times New Roman（面板文字对比度 ≈1.0:1 不可读）；删除标签后 **12.7:1 / HUD 11.8:1**（WCAG AAA）；**② panel × desc 重叠 238×80px**（左列同 x，panel 底 100vh−44 vs desc 顶 100vh−132）⟹ max-height 改 calc(100vh−216px)，四 viewport 重叠归零。未决项（客观数据 + 三选项留用户定）：面板内容溢出 697px(2D)/1673px(3D)/980px(GP)，元凶为累积的长 hint |
 | R44 | 3D 势刷：交互式球形势丘（README「后续方向」③） | 体积视图「势刷」工具（P 键/按钮）：拖拽沿视线中点放置球形硬边势丘（`pot3Blob`，CPU+GLSL 严格镜像），与主槽/第二槽**三方独立叠加**、负 V₀=势阱；放置深度取 slab 穿透段中点（确定可复现）；`screenRay3` 为 TPL_DISPLAY3D 相机段 CPU 逐字镜像（注释互指契约）；BV0=0 默认关闭 ⟹ 零回归（6 配置 × 400 点 worst=0）；blob 跨预设/扫描保留（组合实验叙事）；eMaxExtra 加 \|BV0\|；CDP **真实 pointer 拖拽**放置 + GLSL↔CPU ⟨V⟩ 对账 rel ≤4.4e-8 + P 守恒 0.0000%；pot44 22/22 + cdp44 30/30 + smoke44 5/5 |
+| R45 | 面板 hint 可折叠（用户选定 R43 遗留项方案 a） | 运行时升级（`upgradeHints`，HTML 模板零改动）：`.hint` 文本搬进 `.hintBody` + 前置 toggle，默认折叠、localStorage 按文本摘要持久化（多 hint 独立记忆）；行内 hint 不升级。**归因修正（实测取证）**：R43「元凶为累积的长 hint」不准确——hint 折叠态总高仅 15–45px、展开态总高 ~285px(3D)/167px(GP)/10px(2D)，**溢出大头是区块结构高度**（3D sec3d 滑块区 652px + scan3Sec/slitScanSec/scanSec 三 canvas 820px 硬高）。实效：3D 1673→1403（−16%）、GP 980→813（−17%）、2D 697→687（−1%，2D 大头在 scanSec canvas 305px + 滑块区）；cdp45 抓出并修复持久化 key 串味真 bug（搬家后取 textContent ⟹ 空 key）；cdp45 26/26 + smoke44 5/5 |
 | R42 | NLS/GP 物理工具（README「后续方向」②，用户选定两者都做） | 通用扫描框架 `GenericScanner`（生命周期与既有三扫描器同契约）+ GP/NLS 双适配器；**固定测量窗 + 全程序列**替代停止判据（非线性无耗散无终态：呼吸模永久振荡实测 8.6↔9.3）；GP 初态 σ=R_TF(g)（TF 自洽验算一致）⟹ **峰值对账 3.5%**；NLS **g=6 塌缩检出（峰值比 10.80）** + 网格截断崩坏 P→0.68；**P 诚实更正**：非线性 P 漂移 0.5–3.1%（KDK 离散耗散，随 \|g\| 增长）vs 线性对照 2.06e-6；判据修正：塌缩用序列峰值最大值（末值会因崩坏骤降误判）；既有三扫描器零改动；cdp42 32/32；环境记录：headless Chrome 无 X display 时 ANGLE Vulkan-XCB 失败 ⟹ 须 `xvfb-run` 启动 |
 | R41 | 3D 双槽势组合（README「后续方向」①，用户选定通用双槽） | 势由单枚举升级为 V=pot3Slot(主)+pot3Slot(第二)（CPU `pot3JS` 与 GLSL `helpers` 同名函数严格镜像）；**TPL_REDUCE3D 补 {{HELPERS}} 注入位**（原只有 POT3，否则势不同源、R35 对账失效）；eMaxExtra 取两槽之和（保守）⟹ 组合势 120 帧 P 守恒 1.36e-4；GPU↔CPU ⟨V⟩ 同帧对账 rel 8.8e-10/7.6e-8/6.5e-9（阈值 2e-7）；组合预设「球垒调制双缝」（球垒 R₂=6 不遮缝）；cdp41 30/30；副作用诚实记录：shader 变复杂 ⟹ 挂载预演化帧数分布 4↔5 下移到 3↔5，cdp39 PRE 断言阈值过时（判据放宽 3–6，对账走实测 PRE 故 33 项全绿） |
 | R40 | 3D 双缝图样扫描（README「后续方向」①） | SlitScanner（与 R38 同生命周期契约）：D=0,8,16,24,32 五点扫描 117s、P 守恒 1.02e-4、峰数 **1/1/3/5/3**（双缝等距条纹：D=16 距 9.5、D=24 距 7.8、D=32 ±15.5 贴提取边界）；Fraunhofer 最近邻匹配中位偏差 1.65（nMatched=8）但实测间距大于预测 1.2–1.5×（深 Fresnel 修正，与 R39 结论互证）；CDP 诊断轮抓出并修复四个真 bug：screenSlice3 类方法化（原仅 debugHandle 对象 ⟹ 类路径 TypeError）、slitPeaks 实质密度门限（float32 残余 8e-22 假峰令 _best 停噪声帧）、_finish `o.d`→`r.d` NaN 全表、measureFrom 窗门限生效；cdp40 35/35 + dist 冒烟 11/11 + cdp39 回归 34/34 |
@@ -137,6 +138,48 @@ README「后续方向」③「3D 势交互（当前 3D 势全解析，用户抱�
 ### 后续
 - 面板内容溢出（2D 697px / 3D 1673px / GP 980px）仍未决——三选项（可折叠 hint / 精简 hint 移 detail 进 README / 保持现状）待用户定；本轮新增势刷小节使 3D 面板再增约 90px，若选「保持现状」则滚动加深，建议优先「可折叠 hint」
 - README「后续方向」余项：既有三扫描器迁移 GenericScanner 基座；GP 初态平滑窗改进（R42 记录的半径偏差 29.9% 根因）
+
+---
+
+## R45（2026-10-18）面板 hint 可折叠（R43 遗留项，用户选定方案 a）
+
+### 缘起
+R43 面板视觉保真度评审遗留「面板内容溢出」（1440×900 需滚动 2D 697px / 3D 1673px / GP 980px），当时给三选项留用户定：(a) hint 可折叠 / (b) 精简 hint 移 README / (c) 保持现状。**用户本轮选定 (a)**。
+
+### 完成项
+- [x] `styles.js`：`.hintToggle`（按钮复位为左对齐文本按钮，继承 hint 字号/色，hover/focus-visible 有反馈）+ `.hint .hintBody{display:none}` / `.hint.open .hintBody{display:block}`（CSS 驱动显隐，无内联 style 竞争）
+- [x] `app.js upgradeHints()`：**运行时升级**（buildDOM 后一次，HTML 模板零改动——未来新增 `.hint` 自动获得折叠能力）：文本节点搬家进 `.hintBody`（保留 `<b>` 等内联标签）+ 前置 toggle 按钮（`aria-expanded` 同步，无障碍）；默认全折叠；展开态经 `localStorage['qf.hints.open']` 持久化（key = hint 文本摘要前 40 字符，跨内核/面板显隐稳定；try/catch 兜底隐私模式 ⟹ 默认折叠）
+- [x] 行内 hint（`.row` 内的 `span.hint`，如 AB「放置方式」）**不升级**——它本就短且参与 flex 行布局，套按钮结构会破坏行几何
+- [x] 键盘可达：toggle 为原生 `<button>`（Tab 聚焦 + Enter/Space 触发）
+
+### 验证（cdp45，26/26 PASS + smoke44 5/5 复跑，零控制台异常）
+- 五内核 × 四 viewport（1440×900 / 1280×800 / 1024×768 / 820×700）溢出台账；默认全折叠（openCount=0）；升级计数 3D 5 个 / 2D 2 个 / GP 2 个
+- 展开/收起：`aria-expanded`、body `display`、▸/▾ 文本三态同步；文本完整（sec3d 全文 363 字符无截断，含「势刷」）
+- 持久化：**key 互异**（展开 sec3d 不影响 slitScanSec）+ reload 后精确保留（开/关各自保持）+ 收起态也保持
+- R43 重叠回归：2D 与 GP（长 desc 内核）panel 底 ≤ desc 顶
+- 溢出复测（1440×900）：3D 1673→**1403（−16%）**、GP 980→**813（−17%）**、2D 697→**687（−1%）**；hint 折叠态总高 15px(2D)/45px(3D)/15px(GP)
+- **环境记录（复跑取证）**：headless Chrome 无 X display 时仍命中 R42 记录的 `ERR no webgl2` ⟹ 全套件须 `xvfb-run` 启动（R42 记录有效）；另 smoke44 的 dirac 断言在 xvfb 软件渲染下 2s 窗口内可命中 `f=0` 时序抖动（dirac 挂载预演化帧数多于其他内核，R41 记录 3↔5）⟹ smoke44 修为轮询至 f≥2（断言不变、预算 10s）。**非代码回归**：dirac 3–5s 后 f=2/3 正常、零 pageerror
+
+### Bug summary（cdp45 首轮抓出并修复）
+| # | 现象 | 根因 | 修复 |
+|---|---|---|---|
+| 1 | localStorage 只存 `[""]`（长度 4），所有 hint 共享同一展开态 | `key` 在文本搬家**之后**取 `h.textContent`——此时 `body` 尚未挂回 `h`，textContent 只算当前子节点 ⟹ 空串 | key 移到搬家前取（注释记录） |
+| 2 | 测试侧 3 处自身错误（切片 40 字符断言含中后部文本、JS `.length` 混入 Python、溢出降幅期望 60% 脱离实测） | 测试期望值拍脑袋 | 全文 contains + Python len + 按实测定阈值（3D/GP ≥10%、2D 记录） |
+
+### 诚实记录：归因修正（R43 记录不准确）
+R43 worklog/README 记「面板溢出的元凶为累积的长 hint」——**R45 实测取证不成立**：hint 全部折叠后总高仅剩 15–45px，即使全部展开也只占 ~285px(3D)/167px(GP)/10px(2D)。**溢出绝对大头是区块结构高度**：
+
+| 内核 | 区块高度实测（1440×900） | 结构大头 |
+|---|---|---|
+| schrodinger3d | sec3d **652px** + scan3Sec 488 + slitScanSec 448 + scanSec 305 | 势参数滑块区（20+ 行）+ 三块扫描 canvas（260+300+260=820px 硬高） |
+| schrodinger (2D) | scanSec 305（含 260 canvas）+ 8 个滑块/按钮区 | scanSec canvas + 各区滑块 |
+| gp | paramScanSec 488（含 300 canvas）+ scanSec 305 | paramScanSec canvas |
+
+方案 a（用户选定）已完整落地且有可测收益（3D −16% / GP −17%），但**不足以根治**；续降选项（a2 sec 级分区折叠 / a3 扫描 canvas 缩比 / b 控件精简）已列入 README 后续方向，待用户定。如实记录：2D 降幅仅 1%——2D 的 697px 大头从来不是 hint。
+
+### 后续
+- 面板结构性溢出续降（a2/a3/b，见 README 后续方向）待用户定选题
+- README「后续方向」余项：3D 体积连续笔刷；既有三扫描器迁移 GenericScanner 基座；GP 初态平滑窗改进
 
 ---
 

@@ -122,6 +122,7 @@ export class QuantumField {
   mount(){
     injectStyles();
     this.buildDOM();
+    this.upgradeHints();   /* R45：hint 折叠升级（DOM 构建后一次；模板零改动） */
     this.canvas = this.q('#gl');
     const { gl, error } = createContext(this.canvas);
     if (!gl){ this.fail(error); return this; }
@@ -1343,6 +1344,52 @@ ${d3 ? `
     this.toast(this.state.tool3 === 'pot'
       ? '势刷：拖拽放置球形势丘（负 V₀ = 势阱，P 键切回视角）'
       : '视角旋转（P 键切到势刷）');
+  }
+
+  /* ---------- hint 可折叠（R45，用户选定方案 a）----------
+     面板各区的 .hint 长文本是内容溢出的元凶（R43 客观实测：
+     2D 697px / 3D 1673px / GP 980px）。运行时升级：hint 文本搬进
+     .hintBody、前置 .hintToggle 按钮，**默认折叠**；展开态经
+     localStorage 持久化（key = 文本摘要，跨内核/面板显隐稳定）。
+     HTML 模板零改动——未来新增 .hint 自动获得折叠能力。
+     行内 hint（.row 内的 span.hint，如 AB「放置方式」）不升级：
+     它本就短且参与 flex 行布局，套按钮结构会破坏行几何。 */
+  upgradeHints(){
+    let open = null;
+    try { open = JSON.parse(localStorage.getItem('qf.hints.open') || 'null'); } catch(_){ /* 隐私模式/坏 JSON ⟹ 默认全折叠 */ }
+    const openSet = new Set(Array.isArray(open) ? open : []);
+    this.container.querySelectorAll('.hint').forEach(h => {
+      if (h.dataset.hintUpgraded) return;
+      if (h.closest('.row')) return;            /* 行内短提示不折叠 */
+      h.dataset.hintUpgraded = '1';
+      /* key 必须在搬家前取（h.textContent 只算当前子节点；body 未挂回时
+         取到的是空串 ⟹ 所有 hint 共享同一 key、持久化串味——cdp45 抓出） */
+      const key = (h.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+      const body = document.createElement('div');
+      body.className = 'hintBody';
+      while (h.firstChild) body.appendChild(h.firstChild);   /* 节点搬家（保留 <b> 等内联标签） */
+      const isOpen = openSet.has(key);
+      h.classList.toggle('open', isOpen);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'hintToggle';
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      const sync = () => { btn.textContent = (h.classList.contains('open') ? '▾ ' : '▸ ') + '使用说明'; };
+      sync();
+      this.on(btn, 'click', () => {
+        const nowOpen = !h.classList.contains('open');
+        h.classList.toggle('open', nowOpen);
+        btn.setAttribute('aria-expanded', nowOpen ? 'true' : 'false');
+        sync();
+        /* 持久化：读-改-写（同面板多个 hint 独立记忆） */
+        let cur = null;
+        try { cur = JSON.parse(localStorage.getItem('qf.hints.open') || 'null'); } catch(_){}
+        const set = new Set(Array.isArray(cur) ? cur : []);
+        if (nowOpen) set.add(key); else set.delete(key);
+        try { localStorage.setItem('qf.hints.open', JSON.stringify([...set])); } catch(_){}
+      });
+      h.appendChild(btn); h.appendChild(body);
+    });
   }
 
   /* ---------- 3D 场数据读回 / 上传（R37 现场存档的基础件）----------

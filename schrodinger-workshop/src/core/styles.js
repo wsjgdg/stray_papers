@@ -111,6 +111,19 @@ export const CSS = `
   #diag{position:fixed;left:-9999px}
   /* ---------- 透射率扫描面板 ---------- */
   .hint{font-size:10px;color:var(--dim);line-height:1.5;flex:1}
+  /* ---------- hint 可折叠（R45，用户选定方案 a）----------
+     运行时升级（app.js upgradeHints）：原 hint 文本搬进 .hintBody，
+     前置 .hintToggle 按钮。默认折叠（长 hint 是面板溢出的元凶，R43
+     实测 2D 697px / 3D 1673px / GP 980px）；展开态经 localStorage
+     持久化（key = hint 文本摘要，跨内核/面板切换稳定）。 */
+  .hintToggle{display:block;width:100%;text-align:left;background:none;border:none;
+    color:var(--dim);font:inherit;font-size:10px;cursor:pointer;padding:0;margin:0;
+    letter-spacing:.05em}
+  .hintToggle:hover{color:var(--cyan)}
+  .hintToggle:focus-visible{outline:1px solid var(--cyan);outline-offset:2px}
+  .hint .hintBody{display:none}
+  .hint.open .hintBody{display:block}
+  .hint.open .hintToggle{color:var(--cyan);margin-bottom:3px}
   #scanCanvas{width:100%;margin-top:6px;border:1px solid var(--line);border-radius:8px;
     background:rgba(4,8,16,.4);display:block}
   #scanStat{font-size:10px;color:var(--cyan);font-family:var(--mono);flex:1;line-height:1.45}
