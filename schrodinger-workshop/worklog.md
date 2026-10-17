@@ -36,9 +36,58 @@
 | R45 | 面板 hint 可折叠（用户选定 R43 遗留项方案 a） | 运行时升级（`upgradeHints`，HTML 模板零改动）：`.hint` 文本搬进 `.hintBody` + 前置 toggle，默认折叠、localStorage 按文本摘要持久化（多 hint 独立记忆）；行内 hint 不升级。**归因修正（实测取证）**：R43「元凶为累积的长 hint」不准确——hint 折叠态总高仅 15–45px、展开态总高 ~285px(3D)/167px(GP)/10px(2D)，**溢出大头是区块结构高度**（3D sec3d 滑块区 652px + scan3Sec/slitScanSec/scanSec 三 canvas 820px 硬高）。实效：3D 1673→1403（−16%）、GP 980→813（−17%）、2D 697→687（−1%，2D 大头在 scanSec canvas 305px + 滑块区）；cdp45 抓出并修复持久化 key 串味真 bug（搬家后取 textContent ⟹ 空 key）；cdp45 26/26 + smoke44 5/5 |
 | R46 | 既有三扫描器迁入 GenericScanner 基类（README「后续方向」④，纯重构） | 2D 矩垒/3D 球垒/3D 双缝三扫描器迁入 R42 基座：生命周期（busy 守卫·paused 借还·rAF 自驱·boost·中止恢复·按钮翻转·状态行·_plot）全入基类，五扫描器差异经 SPEC 钩子注入，薄子类仅绑定 SPEC；公开 API/opts 键/results/summary 形状/按钮·状态行·canvas ID 逐位保留。**迁移修正点（对照实验取证）**：基类 `_tick` 统一传末次测量 m，slit 原口径为 `_best`（窗内峰数最多帧）——D=16 同环境对照：重构版 nPeaks=2/peaks[-1.5,1.5]/frames=56 vs 原版 3/[-9.5,0.5,9.5]/32（2D 矩垒逐位一致排除环境漂移）⟹ SLIT_SPEC.record 显式取回 `s._best`；Node 无 GL mock 26/26 + cdp40 35/35（峰数 1/1/3/5/3 复原）+ cdp38 38/38 + cdp39 34/34 + cdp42 32/32 + smoke43 16/16 + smoke44 5/5 + dist 冒烟 11/11 |
 | R47 | GP 初态平滑窗比例化（README「后续方向」⑤，物理改动） | `makeWave` 边缘平滑窗由固定 6px 改为 **w=max(2, R/4)**（R=R_TF(g)）。诊断先行（256² 全网格逐点复刻）：固定 6px 在扫描量程占半径 46–69% ⟹ √3·Rrms 拉偏 16.9–27.6%，R/4 压到 ~6.8% 全 g 一致、质量保持 0.54–0.75→0.91、峰值比 1.000。**归因修正（对照实验取证）**：R42「6px 平滑窗是半径偏差 29.9% 主因」不准确——演化层把振荡中心推宽到初态 1.4–2.2 倍（弱耦合 TF 穹顶宽于精确基态 + 无耗散呼吸模，g=−4 推宽 +118%）才是主因，6px 压窄恰是部分补偿（误差相消）⟹ 比例窗让初态诚实、演化层偏差如实暴露（29.9%→46.0%）。CDP 复测 P 漂移 3.10%→2.88%（未恶化）、峰值对账 3.5%→6.4%；G2 判据修正（裙边滚降 0.3→0.6，定标：硬边 TF r=13 密度比 0.34 vs 高斯 0.72）；gp47 21/21 + IC 20/20 + cdp_gp 27/27 + cdp42 32/32 + smoke43 16/16 + smoke44 5/5 + cdp45 26/26；**环境记录**：长寿 chrome 实例（数十 page 后）pauli/dirac 帧停滞（资源泄漏），pkill 重启即恢复——非代码回归 |
+| R48 | 面板结构性溢出续降（R45 遗留 a2+a3，用户选定「面板精简」） | sec 级分区折叠（h3 切换头 + `qf.secs.state` 持久化 + 键盘可达 + 扫描自动展开）+ 扫描 canvas 260/300→180 + range min-width:0（横向溢出根治）；overflow（1440×900，scrollH−clientH 口径）2D **687→397（−42%）**·3D **1403→505（−64%）**·GP **813→340（−58%）**；首轮抓出 CSS 特异度真 bug（`#scanCanvas{display:block}`（1,0,0）压过折叠规则（0,1,1）⟹ 加 `#panel` 前缀）与 range min-width:auto 横向溢出；cdp48 27/27 + smoke43 16/16 + smoke44 5/5 + cdp45 26/26 + cdp42 32/32 |
 | R42 | NLS/GP 物理工具（README「后续方向」②，用户选定两者都做） | 通用扫描框架 `GenericScanner`（生命周期与既有三扫描器同契约）+ GP/NLS 双适配器；**固定测量窗 + 全程序列**替代停止判据（非线性无耗散无终态：呼吸模永久振荡实测 8.6↔9.3）；GP 初态 σ=R_TF(g)（TF 自洽验算一致）⟹ **峰值对账 3.5%**；NLS **g=6 塌缩检出（峰值比 10.80）** + 网格截断崩坏 P→0.68；**P 诚实更正**：非线性 P 漂移 0.5–3.1%（KDK 离散耗散，随 \|g\| 增长）vs 线性对照 2.06e-6；判据修正：塌缩用序列峰值最大值（末值会因崩坏骤降误判）；既有三扫描器零改动；cdp42 32/32；环境记录：headless Chrome 无 X display 时 ANGLE Vulkan-XCB 失败 ⟹ 须 `xvfb-run` 启动 |
 | R41 | 3D 双槽势组合（README「后续方向」①，用户选定通用双槽） | 势由单枚举升级为 V=pot3Slot(主)+pot3Slot(第二)（CPU `pot3JS` 与 GLSL `helpers` 同名函数严格镜像）；**TPL_REDUCE3D 补 {{HELPERS}} 注入位**（原只有 POT3，否则势不同源、R35 对账失效）；eMaxExtra 取两槽之和（保守）⟹ 组合势 120 帧 P 守恒 1.36e-4；GPU↔CPU ⟨V⟩ 同帧对账 rel 8.8e-10/7.6e-8/6.5e-9（阈值 2e-7）；组合预设「球垒调制双缝」（球垒 R₂=6 不遮缝）；cdp41 30/30；副作用诚实记录：shader 变复杂 ⟹ 挂载预演化帧数分布 4↔5 下移到 3↔5，cdp39 PRE 断言阈值过时（判据放宽 3–6，对账走实测 PRE 故 33 项全绿） |
 | R40 | 3D 双缝图样扫描（README「后续方向」①） | SlitScanner（与 R38 同生命周期契约）：D=0,8,16,24,32 五点扫描 117s、P 守恒 1.02e-4、峰数 **1/1/3/5/3**（双缝等距条纹：D=16 距 9.5、D=24 距 7.8、D=32 ±15.5 贴提取边界）；Fraunhofer 最近邻匹配中位偏差 1.65（nMatched=8）但实测间距大于预测 1.2–1.5×（深 Fresnel 修正，与 R39 结论互证）；CDP 诊断轮抓出并修复四个真 bug：screenSlice3 类方法化（原仅 debugHandle 对象 ⟹ 类路径 TypeError）、slitPeaks 实质密度门限（float32 残余 8e-22 假峰令 _best 停噪声帧）、_finish `o.d`→`r.d` NaN 全表、measureFrom 窗门限生效；cdp40 35/35 + dist 冒烟 11/11 + cdp39 回归 34/34 |
+
+---
+
+## R48（2026-10-18）面板结构性溢出续降（R45 遗留项 a2+a3，用户选定「面板精简」）
+
+### 缘起
+R45 落地 hint 折叠（用户选定方案 a）后**归因修正**：溢出大头是**区块结构高度**而非 hint 文本——3D sec3d 滑块区 652px + 三块扫描 canvas（260+300+260=820px 硬高）。续降三选项（a2 sec 级分区折叠 / a3 扫描 canvas 缩比 / b 控件精简）列入 README 后续方向待用户定。用户本轮指令「完成面板精简」⟹ 落地 **a2+a3 组合**（b 让位，见设计决策 5）。
+
+### 设计决策（架构层，标出）
+1. **a2 与 R45 hint 折叠同模式**：h3 变切换头，class collapsed 驱动子元素显隐，localStorage `qf.secs.state`（{key: open} 对象）持久化；key 优先 `sec.id`（门控切换/内核切换稳定），无 id 用 h3 摘要前 40 字符
+2. **与门控正交**：syncControls 切 sec 的 style.display（整区显隐），折叠切 sec **内部子元素**——两者不竞争（display:none 的 sec 其折叠态无视觉意义，切内核后按持久化恢复）
+3. **默认折叠白名单恰为四个扫描 sec**（scanSec/scan3Sec/slitScanSec/paramScanSec）：仅在使用扫描工具时需要；且扫描开始**自动展开**（expandSecFor——GenericScanner.start 内调用：用户点了「开始扫描」就应看到 canvas 与状态行）
+4. **a3 canvas 缩比 260/300→180**：_plot 自适应 cv.height（R40 起既有契约，改动零逻辑）；宽不变（显示 208×90）；峰数判据不受影响（cdp42 回归复测）
+5. **b（控件精简）让位**：a2 折叠后控件仍在（点击即见），删除控件伤 CDP 契约（既有套件断言滑块/按钮 DOM 完整）——如实记录，优先级低
+
+### 完成项
+- [x] `styles.js`：`#panel .sec.collapsed > *:not(h3){display:none}`（**#panel 前缀**——见 Bug summary #1）+ h3 切换头样式（cursor/user-select/▸▾ 前缀/focus-visible）+ `input[type=range]{min-width:0}`（见 #2）+ 四扫描 canvas 选择器统一（width:100% + border/background）
+- [x] `app.js`：`upgradeSecs()`（运行时升级，HTML 模板零改动——未来新增 .sec 自动获得折叠能力；h3 tabindex=0 + role=button + aria-expanded + Enter/Space）+ `expandSecFor(el)`（closest('.sec') 折叠则 h3.click() 复用 toggle 路径）+ mount() 调用；模板四 canvas attribute 260/300→180
+- [x] `scan.js`：GenericScanner.start() 在 busy=true 后调 `app.expandSecFor(app.q(ids.canvas))`（spec.ids || GENERIC_IDS）
+- [x] README：交互表 + R48 验证表行 + 后续方向（a2/a3 闭环、b 让位如实记录）；worklog：本段
+
+### 验证
+- **cdp48 27/27 PASS**（1440×900，零 pageerror）：
+  - 默认折叠：四个扫描 sec 折叠（2D 实测 {scanSec, paramScanSec}——scan3Sec/slitScanSec 属 3D 模板不渲染；paramScanSec 门控隐藏但仍带折叠 class，门控管整区/折叠管子元素正交）+ 非扫描 sec 展开（2D 8 个）
+  - h3 点击展开/收起：collapsed class + aria-expanded + canvas display 三态同步
+  - 键盘可达：Enter 展开 / Space 收起（preventDefault 无滚动副作用）
+  - 持久化：`qf.secs.state` 写入 + reload 双方向精确保留（展开的保持展开、折叠的保持折叠）
+  - canvas 缩比：attribute 180 ×4 + 显示 208×90
+  - **横向溢出根治**：scrollW 236 ≤ clientW 236（修复前 267 > 236）
+  - 扫描自动展开：scanSec 初始折叠 ⟹ scan.start() 后自动展开
+  - **溢出复测（overflow=scrollH−clientH 口径 vs R45 基线）**：2D 687→**397（−42%）**·3D 1403→**505（−64%）**·GP 813→**340（−58%）**（scrollH/clientH：1039/642、1147/642、982/642）
+  - R43 重叠回归（panel 底 720 ≤ desc 顶 766）+ R45 hint 回归（toggle 仍默认折叠）
+- 回归矩阵：smoke43 16/16（含 **2D 矩垒 + 3D 双缝扫描 1 点实跑** ⟹ scan.js expandSecFor 改动无伤）+ smoke44 5/5 + cdp45 26/26 + **cdp42 32/32**（GP/NLS 3+3 点 + 中止重启 + 2D 矩垒回归 T=0.992,0.462,0.001/P 守恒 2.06e-6 + 3D 双缝冒烟峰数 3；新 chrome 实例复跑通过——首轮 3D 尾段超时系 R42 已记录的长寿 chrome 资源泄漏，非代码回归）
+
+### Bug summary（cdp48 首轮抓出并修复）
+| # | 现象 | 根因 | 修复 |
+|---|---|---|---|
+| 1 | canvas 折叠失效（scanSec 折叠后 scanCanvas 仍可见） | CSS 特异度：`#scanCanvas{display:block}`（1,0,0）压过 `.sec.collapsed > *:not(h3)`（0,1,1） | 折叠规则加 `#panel` 前缀（1,1,1）；注释记录特异度账 |
+| 2 | 面板横向溢出 31px（scrollW 267 > clientW 236） | `input[type=range]` 固有 min-width:auto（Chrome 实测 ~129px），flex row 超宽（R43 起既有缺陷，R45 台账只记纵向） | `input[type=range]{min-width:0}`；复测 236 ≤ 236 |
+| 3 | 测试自身 4 处错误（R45 基线误当 scrollH；「默认折叠恰为 scanSec」未考虑 3D sec 在 2D 不渲染；paramScanCanvas 门控隐藏 rect=0 测不到尺寸；前置态是折叠未先展开） | 测试期望值/口径问题 | 口径校正（见诚实记录）+ 集合包含断言 + gated 跳过 + 先展开再测 |
+
+### 诚实记录
+- **溢出口径校正（承接 R45 台账）**：R43/R45 文档的「2D 697→687 / 3D 1673→1403 / GP 980→813」经 R47 dist 独立复测证实是 **overflow=scrollH−clientH** 而非 scrollHeight（2D scrollH=1329，1329−642=687 精确吻合）⟹ R48 全程用 overflow 口径，scrollH/clientH 显式记录，避免口径混淆
+- **b 让位的取舍**：见设计决策 5——折叠已让控件「一键即见」，删除控件损失信息与测试契约，记录备选
+- 1440×900 仍需滚动（overflow 340–505px）——面板信息密度优先于零滚动，属可接受范围
+
+### 后续
+- README「后续方向」余项：3D 体积连续笔刷；GP 半径对账的演化层修正（三项子选项待用户定选题）
 
 ---
 

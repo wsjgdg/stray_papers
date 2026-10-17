@@ -1008,6 +1008,9 @@ export class GenericScanner {
     app.state.paused = true;                 /* frame() 只渲染不推进；物理由本扫描驱动 */
     this.busy = true;
     const ids = this.spec.ids || GENERIC_IDS;
+    /* R48：所在 sec 默认折叠（sec 级分区折叠）⟹ 扫描开始先展开——点了
+       「开始扫描」就该看到 canvas/状态行（UX 补丁，见 app.expandSecFor）。 */
+    if (app.expandSecFor) app.expandSecFor(app.q(ids.canvas));
     const b1 = app.q(ids.btn), b2 = app.q(ids.btnStop);
     if (b1) b1.disabled = true;
     if (b2) b2.disabled = false;

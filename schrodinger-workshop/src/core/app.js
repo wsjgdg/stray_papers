@@ -123,6 +123,7 @@ export class QuantumField {
     injectStyles();
     this.buildDOM();
     this.upgradeHints();   /* R45：hint 折叠升级（DOM 构建后一次；模板零改动） */
+    this.upgradeSecs();    /* R48：sec 级分区折叠（同上模式；扫描 sec 默认折） */
     this.canvas = this.q('#gl');
     const { gl, error } = createContext(this.canvas);
     if (!gl){ this.fail(error); return this; }
@@ -230,7 +231,7 @@ export class QuantumField {
       <button id="btnScanStop" disabled>中止</button>
     </div>
     <div class="row"><label>状态</label><span id="scanStat">就绪</span></div>
-    <canvas id="scanCanvas" width="420" height="260"></canvas>
+    <canvas id="scanCanvas" width="420" height="180"></canvas>
     <div class="hint" style="margin-top:4px">矩势垒 x=120 w=16（全高）· 波包 kx=0.3 σ=18 · 256² 网格 · 实测 vs Δk 卷积理论（E=V0 左侧为隧穿区）</div>
   </div>
   <div class="sec" id="paramScanSec">
@@ -243,7 +244,7 @@ export class QuantumField {
       <button id="btnParamScanStop" disabled>中止</button>
     </div>
     <div class="row"><label>状态</label><span id="paramScanStat">就绪</span></div>
-    <canvas id="paramScanCanvas" width="420" height="300"></canvas>
+    <canvas id="paramScanCanvas" width="420" height="180"></canvas>
     <div class="hint" style="margin-top:4px">GP：扫 g（排斥侧 g&lt;0，托马斯-费米云/涡旋）——测云半径 Rrms（⟹R_TF=√3·Rrms）、峰值 n₀、涡旋愈合层 ξ，与 TF 解析 R_TF=(2R_trap²|g|/π)^¼、n₀=μ/|g| 对照。NLS：扫 g（focusing 侧 g&gt;0，条带孤子）——测 σx/σy 与峰值末/初比（&gt;3 判自聚焦发散）。**固定测量窗 200 帧 + 全程序列**：非线性无耗散系统（呼吸模永久振荡、TOF 单调膨胀、孤子稳定传播）没有天然终点，故不用「清空/双稳」类停止判据，改由时间平均 + 摆动幅度给出结论。P 在两内核下守恒（幺正非线性），塌缩/网格截断导致的数值漂移属诚实限制。</div>
   </div>
   <div class="sec" ${d3?'style="display:none"':''}>
@@ -351,7 +352,7 @@ ${d3 ? `
       <button id="btnScan3Stop" disabled>中止</button>
     </div>
     <div class="row"><label>状态</label><span id="scanStat3">就绪</span></div>
-    <canvas id="scanCanvas3" width="420" height="260"></canvas>
+    <canvas id="scanCanvas3" width="420" height="180"></canvas>
     <div class="hint" style="margin-top:4px">球形势垒 R=6（世界单位）· 迎头波包 kx=0.7 σ=3 · 强制 64³（32³ 盒装不下首程测量窗：色散使相互作用持续到波包中心越盒，透射波完成前即打墙返回；软渲染 13 点约 5min，真实 GPU 秒级）· 实测 vs 射线修正模型（绿：含绕球透射的 3D 对照目标）与 s 波 Δk 卷积（琥珀）· 红虚线 = 共振预测位（q·R=nπ）· E=V0 左侧为越障共振区 · 实测值含波包绕球透射（l≥1 分波），系统性地高于 s 波曲线，详见 README「3D 透射率扫描」</div>
   </div>
   <div class="sec" id="slitScanSec">
@@ -364,7 +365,7 @@ ${d3 ? `
       <button id="btnSlitScanStop" disabled>中止</button>
     </div>
     <div class="row"><label>状态</label><span id="slitScanStat">就绪</span></div>
-    <canvas id="slitScanCanvas" width="420" height="300"></canvas>
+    <canvas id="slitScanCanvas" width="420" height="180"></canvas>
     <div class="hint" style="margin-top:4px">双缝墙 V₀=3 T=4 W=6（slits3d 口径）· 迎头波包 kx=1.2 σ=6 · 64³ · 每点重发波包、固定测量窗 [32,56] 帧等间隔取 4 次、记峰数最多帧（时间线确定性 R39 已验证：飞行时间只由 kx/σ 决定，与 D 无关）· 屏剖面为 x=24 处 z 求和（可分离性 ⟹ 等价 2D 衍射）· 琥珀虚线 = Fraunhofer 远场预测 y_n=nλL/D——深 Fresnel 区仅定性参考，偏差如实汇报 · D=0 为单缝退化对照点 · 9 点软渲染约 4min，真实 GPU 秒级</div>
   </div>` : ''}
 </aside>
@@ -1390,6 +1391,60 @@ ${d3 ? `
       });
       h.appendChild(btn); h.appendChild(body);
     });
+  }
+
+  /* ---------- sec 级分区折叠（R48，README「后续方向」a2）----------
+     hint 折叠（R45）之后仍超视口的大头是**区块结构**（R45 归因修正：
+     3D 扫描三块 1241px / GP paramScanSec 488px，canvas 硬高占 820px）。
+     本升级把每个 .sec 的 h3 变切换头：class collapsed 驱动子元素显隐
+     （CSS `.sec.collapsed > *:not(h3){display:none}`），展开态经
+     localStorage `qf.secs.state`（{key: open} 对象）持久化。
+     与门控正交：syncControls 按内核切 sec 的 style.display（整区显隐），
+     本折叠切 sec 内部子元素——两者不竞争（display:none 的 sec 其折叠
+     态无视觉意义，切换内核后按持久化恢复）。
+     默认折叠：四个扫描面板 sec（id 白名单）——仅在使用扫描工具时需要，
+     且扫描开始会自动展开（expandSecFor）；无 id sec 默认展开。
+     键盘可达：h3 tabindex=0 + Enter/Space（与 hintToggle 一致）。 */
+  upgradeSecs(){
+    let st = null;
+    try { st = JSON.parse(localStorage.getItem('qf.secs.state') || 'null'); } catch(_){}
+    if (!st || typeof st !== 'object') st = {};
+    const DEFAULT_COLLAPSED = ['scanSec','scan3Sec','slitScanSec','paramScanSec'];
+    this.container.querySelectorAll('.sec').forEach(sec => {
+      if (sec.dataset.secUpgraded) return;
+      const h3 = sec.querySelector('h3'); if (!h3) return;
+      sec.dataset.secUpgraded = '1';
+      /* key 优先 sec id（门控切换/内核切换稳定）；无 id 用 h3 摘要 */
+      const key = sec.id || (h3.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+      let isOpen = (typeof st[key] === 'boolean') ? st[key] : !DEFAULT_COLLAPSED.includes(sec.id);
+      const sync = () => {
+        sec.classList.toggle('collapsed', !isOpen);
+        h3.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      };
+      h3.setAttribute('tabindex', '0');
+      h3.setAttribute('role', 'button');
+      sync();
+      const toggle = () => {
+        isOpen = !isOpen; sync();
+        st[key] = isOpen;
+        try { localStorage.setItem('qf.secs.state', JSON.stringify(st)); } catch(_){}
+      };
+      this.on(h3, 'click', toggle);
+      this.on(h3, 'keydown', e => {
+        if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggle(); }
+      });
+    });
+  }
+
+  /* 元素所在 sec 若折叠则展开（GenericScanner.start 调用：用户点了「开始
+     扫描」就应看到 canvas 与状态行——R48 UX 补丁；CDP 测试经 start()
+     入口操作可见元素，避免 display:none 下的点击失败）。返回是否发生展开。 */
+  expandSecFor(el){
+    const sec = el && el.closest ? el.closest('.sec') : null;
+    if (!sec || !sec.classList.contains('collapsed')) return false;
+    const h3 = sec.querySelector('h3');
+    if (h3) h3.click();        /* 复用 toggle 路径（持久化/aria 一致） */
+    return true;
   }
 
   /* ---------- 3D 场数据读回 / 上传（R37 现场存档的基础件）----------
