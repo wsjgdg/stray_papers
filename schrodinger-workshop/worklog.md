@@ -37,6 +37,7 @@
 | R46 | 既有三扫描器迁入 GenericScanner 基类（README「后续方向」④，纯重构） | 2D 矩垒/3D 球垒/3D 双缝三扫描器迁入 R42 基座：生命周期（busy 守卫·paused 借还·rAF 自驱·boost·中止恢复·按钮翻转·状态行·_plot）全入基类，五扫描器差异经 SPEC 钩子注入，薄子类仅绑定 SPEC；公开 API/opts 键/results/summary 形状/按钮·状态行·canvas ID 逐位保留。**迁移修正点（对照实验取证）**：基类 `_tick` 统一传末次测量 m，slit 原口径为 `_best`（窗内峰数最多帧）——D=16 同环境对照：重构版 nPeaks=2/peaks[-1.5,1.5]/frames=56 vs 原版 3/[-9.5,0.5,9.5]/32（2D 矩垒逐位一致排除环境漂移）⟹ SLIT_SPEC.record 显式取回 `s._best`；Node 无 GL mock 26/26 + cdp40 35/35（峰数 1/1/3/5/3 复原）+ cdp38 38/38 + cdp39 34/34 + cdp42 32/32 + smoke43 16/16 + smoke44 5/5 + dist 冒烟 11/11 |
 | R47 | GP 初态平滑窗比例化（README「后续方向」⑤，物理改动） | `makeWave` 边缘平滑窗由固定 6px 改为 **w=max(2, R/4)**（R=R_TF(g)）。诊断先行（256² 全网格逐点复刻）：固定 6px 在扫描量程占半径 46–69% ⟹ √3·Rrms 拉偏 16.9–27.6%，R/4 压到 ~6.8% 全 g 一致、质量保持 0.54–0.75→0.91、峰值比 1.000。**归因修正（对照实验取证）**：R42「6px 平滑窗是半径偏差 29.9% 主因」不准确——演化层把振荡中心推宽到初态 1.4–2.2 倍（弱耦合 TF 穹顶宽于精确基态 + 无耗散呼吸模，g=−4 推宽 +118%）才是主因，6px 压窄恰是部分补偿（误差相消）⟹ 比例窗让初态诚实、演化层偏差如实暴露（29.9%→46.0%）。CDP 复测 P 漂移 3.10%→2.88%（未恶化）、峰值对账 3.5%→6.4%；G2 判据修正（裙边滚降 0.3→0.6，定标：硬边 TF r=13 密度比 0.34 vs 高斯 0.72）；gp47 21/21 + IC 20/20 + cdp_gp 27/27 + cdp42 32/32 + smoke43 16/16 + smoke44 5/5 + cdp45 26/26；**环境记录**：长寿 chrome 实例（数十 page 后）pauli/dirac 帧停滞（资源泄漏），pkill 重启即恢复——非代码回归 |
 | R48 | 面板结构性溢出续降（R45 遗留 a2+a3，用户选定「面板精简」） | sec 级分区折叠（h3 切换头 + `qf.secs.state` 持久化 + 键盘可达 + 扫描自动展开）+ 扫描 canvas 260/300→180 + range min-width:0（横向溢出根治）；overflow（1440×900，scrollH−clientH 口径）2D **687→397（−42%）**·3D **1403→505（−64%）**·GP **813→340（−58%）**；首轮抓出 CSS 特异度真 bug（`#scanCanvas{display:block}`（1,0,0）压过折叠规则（0,1,1）⟹ 加 `#panel` 前缀）与 range min-width:auto 横向溢出；cdp48 27/27 + smoke43 16/16 + smoke44 5/5 + cdp45 26/26 + cdp42 32/32 |
+| R49 | 3D 体积连续笔刷（README「后续方向」③续，用户选定「3D笔刷」） | R44 单丘五字段 ⟹ R49 丘列表 `potBlobs`（≤16，FIFO）：`pot3Blobs`（CPU）+ `blobSum`（GLSL ES 3.00 编译期常量循环 + uBlobCount 动态 break）逐字镜像，融合语义=求和；pointerdown 必落首丘、pointermove 0.6·R 距离阈值续落（球链重叠 ⟹ 视觉连续 + 天然节流）；stamp 时快照滑块规格；顶层 blobs 段序列化 + R44 旧存档迁移（potBV0≠0 ⟹ 首项 + potBR→potBlobR）；cdp49 51/51 + pot49 48/48 |
 | R42 | NLS/GP 物理工具（README「后续方向」②，用户选定两者都做） | 通用扫描框架 `GenericScanner`（生命周期与既有三扫描器同契约）+ GP/NLS 双适配器；**固定测量窗 + 全程序列**替代停止判据（非线性无耗散无终态：呼吸模永久振荡实测 8.6↔9.3）；GP 初态 σ=R_TF(g)（TF 自洽验算一致）⟹ **峰值对账 3.5%**；NLS **g=6 塌缩检出（峰值比 10.80）** + 网格截断崩坏 P→0.68；**P 诚实更正**：非线性 P 漂移 0.5–3.1%（KDK 离散耗散，随 \|g\| 增长）vs 线性对照 2.06e-6；判据修正：塌缩用序列峰值最大值（末值会因崩坏骤降误判）；既有三扫描器零改动；cdp42 32/32；环境记录：headless Chrome 无 X display 时 ANGLE Vulkan-XCB 失败 ⟹ 须 `xvfb-run` 启动 |
 | R41 | 3D 双槽势组合（README「后续方向」①，用户选定通用双槽） | 势由单枚举升级为 V=pot3Slot(主)+pot3Slot(第二)（CPU `pot3JS` 与 GLSL `helpers` 同名函数严格镜像）；**TPL_REDUCE3D 补 {{HELPERS}} 注入位**（原只有 POT3，否则势不同源、R35 对账失效）；eMaxExtra 取两槽之和（保守）⟹ 组合势 120 帧 P 守恒 1.36e-4；GPU↔CPU ⟨V⟩ 同帧对账 rel 8.8e-10/7.6e-8/6.5e-9（阈值 2e-7）；组合预设「球垒调制双缝」（球垒 R₂=6 不遮缝）；cdp41 30/30；副作用诚实记录：shader 变复杂 ⟹ 挂载预演化帧数分布 4↔5 下移到 3↔5，cdp39 PRE 断言阈值过时（判据放宽 3–6，对账走实测 PRE 故 33 项全绿） |
 | R40 | 3D 双缝图样扫描（README「后续方向」①） | SlitScanner（与 R38 同生命周期契约）：D=0,8,16,24,32 五点扫描 117s、P 守恒 1.02e-4、峰数 **1/1/3/5/3**（双缝等距条纹：D=16 距 9.5、D=24 距 7.8、D=32 ±15.5 贴提取边界）；Fraunhofer 最近邻匹配中位偏差 1.65（nMatched=8）但实测间距大于预测 1.2–1.5×（深 Fresnel 修正，与 R39 结论互证）；CDP 诊断轮抓出并修复四个真 bug：screenSlice3 类方法化（原仅 debugHandle 对象 ⟹ 类路径 TypeError）、slitPeaks 实质密度门限（float32 残余 8e-22 假峰令 _best 停噪声帧）、_finish `o.d`→`r.d` NaN 全表、measureFrom 窗门限生效；cdp40 35/35 + dist 冒烟 11/11 + cdp39 回归 34/34 |
@@ -88,6 +89,50 @@ R45 落地 hint 折叠（用户选定方案 a）后**归因修正**：溢出大�
 
 ### 后续
 - README「后续方向」余项：3D 体积连续笔刷；GP 半径对账的演化层修正（三项子选项待用户定选题）
+
+---
+
+## R49（2026-10-18）3D 体积连续笔刷（README「后续方向」③续，用户选定「3D笔刷」）
+
+### 缘起
+R44 势刷落地时如实记录了能力边界：「不是 2D 式的连续涂抹（体积笔刷需要势纹理或 blob 列表演化）」——原注「blob 列表：多丘管理/融合语义/序列化扩容」列入 README 后续方向。用户本轮指令「完成面板精简和3D笔刷」⟹ 与 R48（面板精简）同批启动，R49 落地**丘列表连续涂抹**。
+
+### 设计决策（架构层，标出）
+1. **blob 列表而非体积势纹理**：体积势纹理与 pot3 解析势双轨制、镜像契约翻倍（R44 已论证）；丘列表是第三势成分的自然扩容——主槽/第二槽/丘列表三者独立求和
+2. **MAX_BLOBS=16**：GLSL 数组上界（uniform vec4[16] + vec2[16] = 96 float/帧，上传廉价）；超出 FIFO 淘汰最旧（toast 明示）——连续涂抹场景 16 丘足够构图，且防止无界增长
+3. **GLSL 循环结构**：`for (i < MAX_BLOBS)` 编译期常量上界 + `if (i >= uBlobCount) break` 动态截断（GLSL ES 3.00 合法）⟹ 未引用的数组元素零成本，count=0 时循环首轮即 break ⟹ 零回归
+4. **融合语义 = 求和**：硬边球重叠处强度相加（正负丘可相消）——与 pot3Slot 叠加语义一致，无新概念
+5. **连续涂抹的节流阈值 0.6·R**：pointermove 仅在与最后丘心距 ≥0.6·R 时续落——球链重叠 ⟹ 视觉连续，同时天然节流（慢拖不密、快拖不断）；pointerdown force 无视阈值必落首丘
+6. **规格快照**：stamp 时把当前滑块规格（potBlobR/potBlobV0）写进丘——改滑块只影响后续丘，不追溯已落丘（与「涂抹中调笔刷大小」的直觉一致）
+7. **旧存档迁移**：R44 存档无 blobs 段 ⟹ 若 `potBV0≠0`（单丘曾放置）迁为列表首项（五字段同构）+ `potBR→potBlobR`；`potBV0=0` ⟹ 空列表（关闭态一致）
+
+### 完成项
+- [x] `schrodinger3d.js`：`MAX_BLOBS=16` 导出 + `pot3Blobs(wx,wy,wz,list)`（循环求和，`!b.v0` 跳过）；`pot3JS` 第三项改丘列表；GLSL `blobSum(vec3 w)`（helpers 注入位，R41 已建 POT3/HELPERS/UNIFORMS 四 program 同源）；uniforms `uBlobCount`(int) + `uBlobA[16]`(vec4) + `uBlobV[16]`(vec2)（替换 uPotBX/BY/BZ/BR/BV0 五件套）；`setUniforms` FlatFloatArray 填充 + uniform4fv/uniform2fv；`eMaxExtra` 改 Σ\|v0\|；defaults `potBlobs:[]/potBlobR:8/potBlobV0:0.5`（移除五字段）
+- [x] `app.js`：`stampBlob3(cx,cy,force,announce)`（替换 placeBlob3：列表/FIFO/0.6R 阈值/规格快照/toast）+ `updateBlobReadout`（×N·(x,y,z)·R·V₀）+ `syncBlobRows`（滑块同步，syncControls 改调它 ⟹ 导入后面板刷新）+ pointer 事件（down force + move 阈值）；bindRange 键 potBlobR/potBlobV0；btnBlobDel 改清空列表；debugHandle `blob()`⟹`blobs()` 列表快照 + `stampBlob3` 转发；serializeSnapshot3 顶层 blobs 段；importSnapshot3Data blobs 校验（5 类非法原子拒绝）+ R44 迁移；面板文案（清空势丘/势丘列表）+ sec3d hint 连续涂抹语义；import MAX_BLOBS（单一真源）
+- [x] README：交互表 + R44 专节更新（R49 丘列表）+ 验证表行 + 后续方向（③闭环）；worklog：本段
+
+### 验证
+- **cdp49 51/51 PASS**（dev server src，零控制台异常）：[sections as in README row]
+- **pot49（Node 单测）48/48**：丘分支语义 14 项 + 三方叠加恒等式（20×20 worst=0）+ eMaxExtra 5 项 + setUniforms mock 8 项（count/数组布局/float32 容差/缺失容错/20 丘截断）+ 零回归 6 配置 × 2400 点 worst=0 + GLSL 源码契约 12 项 + defaults 契约 4 项
+- **回归矩阵（R49 态）**：smoke43 16/16 + cdp42 32/32（R49 src 复跑：GP/NLS 3+3 点 + 中止重启 + 2D 矩垒回归 T=0.992,0.462,0.001/P 守恒 2.06e-6 + 3D 双缝冒烟峰数 3）+ dist 重建（d1983c56，334.6 KB）+ smoke44 5/5（五内核帧推进 P 守恒）+ cdp45 26/26（hint 折叠 + 四 viewport 溢出 + R43 重叠回归）+ cdp41 30/30（R41 双槽势组合回归：序列化 round-trip + 双缝扫描 1 点峰数 3）+ cdp37 38/38（R37 3D 现场序列化回归：导入后 KDK/CN 步进正常）
+
+### Bug summary（cdp49 首轮抓出并修复）
+| # | 现象 | 根因 | 修复 |
+|---|---|---|---|
+| 1 | 大位移拖拽后期望 ×2 实测 ×4 | 测试期望错：steps=6 步进每步 >0.6R ⟹ 球链多丘是**正确行为**（阈值节流按丘链生效） | 断言改「≥2 + 链上相邻心距全部 ≥0.6R」 |
+| 2 | `a.stampBlob3 is not a function` | window.__app 是 debugHandle 包装对象（非类实例）——stampBlob3 未转发 | debugHandle 增 stampBlob3 转发（与 setTool3/pickBlob3 同模式） |
+| 3 | 滑块默认断言 FAIL | 测试读 `rBlobV0.value`（"0.5"）却比 "0.50"——output 元素才是格式化值 | 断言改读 `#oBlobV0` textContent |
+| 4 | pot44 首轮 30 FAIL（同类症状） | R44 基线模块 registerKernel 副作用经 symlink 共享 registry，覆盖 R49 内核 | 基线目录改**独立副本**（cp 而非 symlink）隔离 registry |
+
+### 诚实记录
+- **⟨V⟩ 对账 5.6e-7 > R44 的 4.4e-8**：R49 多丘场景含负强度近相消（net ⟨V⟩=0.008 由 ±0.5/±0.3 项相消得出），相对差被相消放大——**绝对差仅 4.5e-9**，与 float32（GPU pot3 vs float64 CPU pot3）精度同量级，非语义分歧；单丘/非相消场景仍 ≤4.4e-8（R44 口径）
+- **pot49 测试自身三轮失败均为测试缺陷**（谐振子公式期望写错 0.5·om²·r²、registry 串味、float32 比对无容差）——生产代码零返工；如实记录以免误记为「实现 bug」
+- **16 丘上限的取舍**：连续长拖可超 16 ⟹ FIFO 淘汰最旧并 toast 明示；未做「超限拒绝落丘」（那会令长涂抹后半段静默失效，体验更差）
+- **「势刷」名实**：仍是「球链涂抹」而非真正体积笔刷（势纹理）——能力边界与 R44 一致，README 明示；体积势纹理作为更重选项留待未来
+- **dist 模块拓扑序位移（构建副效应，非回归）**：R49 前 app.js 从未直接 import schrodinger3d.js（R44 经 kernel 注册表间接访问）；R49 新增 `import { MAX_BLOBS }`（单一真源）后，build-standalone 的 DFS 拓扑序把 barrier3d/schrodinger3d 从队尾（dirac 之后）前移至 kernel 之后——新旧均为合法拓扑序（依赖先于消费者），dist 全套件在该文件上复跑通过（smoke44 5/5 + cdp45 26/26）；diff 行数虚高（11.7k 行）系两个大模块整块搬迁，非内容重写
+
+### 后续
+- README「后续方向」仅剩 GP 半径对账的演化层修正（三项子选项待用户定选题）+ 面板 b 控件精简（R48 让位项，优先级低）
 
 ---
 

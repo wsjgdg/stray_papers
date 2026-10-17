@@ -15,6 +15,8 @@
       src/core/gl.js
       src/physics/gaussian.js
       src/physics/kernel.js
+      src/physics/barrier3d.js
+      src/physics/schrodinger3d.js
       src/core/styles.js
       src/core/scan.js
       src/core/app.js
@@ -24,8 +26,6 @@
       src/physics/gp.js
       src/physics/pauli.js
       src/physics/dirac.js
-      src/physics/barrier3d.js
-      src/physics/schrodinger3d.js
       src/main.js
 */
 
@@ -1143,6 +1143,633 @@ function buildShaders(kernel){
 
 /* 导出模板仅供测试/文档引用（生产路径经 buildShaders 消费） */
 const TEMPLATES = { TPL_EVOLVE, TPL_EVOLVE3D, TPL_CN_RHS3D, TPL_CN_SWEEP3D, TPL_DISPLAY3D, TPL_REDUCE3D, SNIP_HSV, TPL_CN_RHS, TPL_CN_SWEEP, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, TPL_LAP_BLOCK, DEFAULT_PIXEL_COLOR, DEFAULT_PMEAN };
+
+/* ===== src/physics/barrier3d.js ===== */
+/* ============================================================================
+ * 球形势垒 s 波透射模型（3D 扫描的解析对照，barrier.js 的 3D 对应物）
+ *
+ * 物理：l=0（迎头）径向方程 u''+k²u=0（垒外）/ u''+q²u=0（垒内），
+ * u=r·R 且 u(0)=0（原点正则）⟹ 球垒的 s 波透射与「全宽 2R 的 1D 势垒
+ * 偶宇称 sector」严格同解：
+ *     T = 1/(1 + V0²·sin²(q·R)/(4E(E−V0)))          E > V0
+ *     T = 1/(1 + V0²·sinh²(κ·R)/(4E(V0−E)))         E < V0（κ=kOf(V0−E)）
+ * 共振（T=1）条件 q·R = nπ ⟹ V0_n = E − 2·sin²(nπ/(2R))/m。
+ *
+ * 色散口径（与引擎逐字一致，R29 既定约定）：
+ *     E(k) = 2·sin²(k/2)/m        （5 点/7 点 stencil 沿轴离散色散；
+ *                                   3D 7 点沿轴特征值 = 2uK(2−cos k)，同型）
+ *     kOf(E) = 2·asin(√(mE/2))    （反解；E≥2/m 时截到带顶 π）
+ * uK=0.5/m 由引擎 evolve 路径给出（app.js「const k = 0.5/this.state.m」）。
+ *
+ * 诚实边界（文档化，不装作精确）：
+ *   · 模型是**平面波 s 波**；实测波包有 Δk 轴向展宽（convolved 已按高斯
+ *     谱卷积）与**横向动量展宽**（耦合 l≥1 分波，未建模）⟹ 对照目标是
+ *     「包络 + 共振峰位置」，不是点值相等。
+ *   · 横向展宽使实测峰值低于平面波 T=1，峰位略有偏移——验证判据用
+ *     卷积模型的峰位（数值扫描求得），容差按扫描步宽设。
+ *   · 横向展宽的**主导效应是「绕球透射」**：碰撞参数 b>R 的波包份额根本不
+ *     撞球（经典射线全额透射），使实测 3D T 系统性**高于** s 波曲线，且
+ *     V0 越大高出越多（s 波衰减而绕球份额不变）。rayCorrected 给出这一
+ *     偏移的经典射线估计（近似，见该函数注）；扫描图叠三条参考曲线。
+ * ========================================================================== */
+function sphericalBarrierModel3(m){
+  /* k(E)：能量→格点波数（离散色散反解；E≤0 为 0，E≥2/m 为带顶 π） */
+  const kOf = E => {
+    if (!(E > 0)) return 0;
+    const s = m*E/2;
+    return s >= 1 ? Math.PI : 2*Math.asin(Math.sqrt(s));
+  };
+  const E = k => 2*Math.sin(k/2)*Math.sin(k/2)/m;
+  const T = (Ec, V0, R) => {
+    if (!(V0 > 0)) return 1;          /* 无势垒：全透射 */
+    if (!(Ec > 0)) return 0;
+    const d = V0 - Ec;
+    if (Math.abs(d) < 1e-12) return 1/(1 + V0*V0*m*R*R/(2*Ec));
+    if (d < 0){
+      const q = kOf(Ec - V0);
+      return 1/(1 + V0*V0*Math.sin(q*R)*Math.sin(q*R)/(4*Ec*(Ec - V0)));
+    }
+    const ka = kOf(d);
+    return 1/(1 + V0*V0*Math.sinh(ka*R)*Math.sinh(ka*R)/(4*Ec*d));
+  };
+  /* Δk 卷积期望（Simpson，±5dk，401 点）：轴向谱高斯权重的平均透射率。
+     注意：只卷轴向 k；横向展宽的 l≥1 效应不在内（见文件头诚实边界）。 */
+  const convolved = (kx, dk, V0, R) => {
+    if (!(V0 > 0)) return 1;
+    if (!(dk > 0)) return T(E(kx), V0, R);
+    const N = 400, span = 5*dk;
+    let sum = 0, wsum = 0;
+    for (let i = 0; i <= N; i++){
+      const k = kx - span + 2*span*i/N;
+      const w = Math.exp(-((k - kx)/dk)*((k - kx)/dk)/2);
+      const wt = (i === 0 || i === N) ? 1 : (i%2 ? 4 : 2);
+      sum += wt*w*T(E(k), V0, R); wsum += wt*w;
+    }
+    return sum/wsum;
+  };
+  /* 共振峰位（T=1 的 V0 列表）：q·R = nπ 且 q 在导带内（q ≤ π）。
+     返回 [{n, v0, ratio}]（ratio = v0/Ec）。 */
+  const resonances = (Ec, R) => {
+    const out = [];
+    const kTop = kOf(Ec);
+    for (let n = 1; n*Math.PI/R <= kTop + 1e-12; n++){
+      const q = n*Math.PI/R;
+      const v0 = Ec - 2*Math.sin(q/2)*Math.sin(q/2)/m;
+      if (v0 > 0) out.push({ n, v0, ratio: v0/Ec });
+    }
+    return out;
+  };
+  /* 卷积模型的峰位（数值扫描：在 [lo,hi] 上以 step 分辨率求局部极大）。
+     用于验证判据——实测峰应对齐卷积模型的峰（而非平面波 T=1 的理想位），
+     因为 Δk 展宽会把峰推离理想位。 */
+  const convolvedPeaks = (kx, dk, R, lo, hi, step) => {
+    const f = v => convolved(kx, dk, v, R);
+    const pts = [];
+    for (let v = lo; v <= hi + 1e-12; v += step){
+      pts.push({ v, t: f(v) });
+      if (pts.length > 2){
+        const a = pts[pts.length-3], b = pts[pts.length-2], c = pts[pts.length-1];
+        if (b.t >= a.t && b.t >= c.t && b.t > 0.05) pts[pts.length-2].peak = true;
+      }
+    }
+    return pts.filter(p => p.peak).map(p => p.v);
+  };
+  /* 经典射线修正（R38；**近似模型**，诚实边界见下）：
+       T_3d(V0) ≈ f_miss + (1 − f_miss)·T_s_conv(V0)
+     物理：入射波包有横向高斯展宽，飞到球垒时横向宽度 σ⊥(t_c)（自由色散
+     σ⊥=σ0√(1+(t_c/t_d)²)，t_d=2mσ0²）；碰撞参数 b>R 的份额「绕球」全额
+     透射（经典射线），b<R 的份额按 s 波迎头透射。碰撞时刻取波包中心抵达
+     垒远面 t_c=(|x0|+R)/v_g（v_g=sin(kx)/m 为 kx 处群速度）。
+     诚实边界：经典射线无衍射（球缘半影、grazing 射线的离心抑制不在内）；
+     t_c 的取法有 t1..t3（近面/球心/远面）的模糊带；实测还另有「色散尾未
+     过门」的小亏量（高 T 端 ~5-8%）。⟹ 用途是解释「实测 3D T 系统性高于
+     s 波曲线」的偏移量级并给出包络，不是精确点值。 */
+  const rayCorrected = (kx, sigma, V0, R, x0) => {
+    if (!(V0 > 0)) return 1;
+    const vg = Math.sin(kx) / m;            /* kx 处群速度（世界单位/时间单位） */
+    const td = 2 * m * sigma * sigma;       /* 自由色散时标 */
+    const tc = (Math.abs(x0) + R) / vg;     /* 中心抵达垒远面 */
+    const sPerp = sigma * Math.sqrt(1 + (tc / td) * (tc / td));
+    const fMiss = Math.exp(-(R * R) / (2 * sPerp * sPerp));
+    const dk = 1 / (Math.SQRT2 * sigma);
+    return fMiss + (1 - fMiss) * convolved(kx, dk, V0, R);
+  };
+  return { T, E, kOf, convolved, resonances, convolvedPeaks, rayCorrected };
+}
+
+/* ===== src/physics/schrodinger3d.js ===== */
+/* ============================================================================
+ * 薛定谔 3D 内核（R34 #34）：iħ∂ψ/∂t = −ħ²/2m ∇²ψ + V(r)ψ，体积求解 + 解析势
+ *
+ * 与 2D 薛定谔内核（schrodinger.js）的分工：
+ *   - 2D 内核的势来自 256² 势场画布纹理（笔刷可画）；3D 无势纹理（笔刷工具
+ *     不适用体积），势由本文件经 kernel.shaders().pot3 注入**解析表达式**，
+ *     预设（球垒 / 谐振子 / 氢原子 / 双缝墙）即不同的势形 + 初态组合。
+ *   - 引擎装配（buildShaders）在 kernel.dim3=true 时生成 evolve3d /
+ *     display3d 两个 program（TPL_EVOLVE3D/TPL_DISPLAY3D），引擎走 evolve3d
+ *     分支（每子步 3 个全卷 pass × 逐层 draw）与 volume ray-march 显示。
+ *   - 2D 片段（localH/density/kinetic/potential）仍须提供——buildShaders
+ *     对全部内核一律要求（2D program 也会被编译，dim3 运行时不被引用）。
+ *
+ * 单位约定（与引擎全路径一致）：格点（texel）单位、ℏ=1、m=state.m。
+ *   uK = 1/(2m)；KDK 子步 dt_sub=1.2/sub；simTime 单位为帧时间（dt=1.2/帧）。
+ *   3D 7 点拉普拉斯谱半径 12（2D 5 点为 8）⟹ 引擎 eMax = uK·12+1+eMaxExtra。
+ *
+ * pot3 ↔ pot3JS 镜像契约（重要）：GLSL 解析势 pot3（shaders().pot3）与 CPU
+ * 端 pot3JS（moments3d 的 V 期望值用）必须逐分支一致——前者是 GPU 演化用的
+ * 势，后者是 HUD/调试读数的能量分解。两者由同一组 uniform（uPotKind/uPotV0/
+ * uPotR/uPotW/uPotZ）与同一套分支结构描述；改其一必须同步另一个。势形：
+ *   kind 0 自由     ：V = 0
+ *   kind 1 球势垒   ：V = |w|<R ? V0 : 0（球心 = 域中心 w=0）
+ *   kind 2 谐振子   ：V = ½ω²|w|²（ℏω=ω；基态 σ=1/√ω，ω=1/64 ⟹ σ=8 texel）
+ *   kind 3 氢原子   ：V = −Z/max(|w|, 0.5)（软化库仑：r<½ texel 钳位防奇点，
+ *                     |V|≤2Z；1s: ψ∝e^{−Zr}, E=−Z²/2；2p_z: ψ∝z·e^{−Zr/2},
+ *                     E=−Z²/8）
+ *   kind 4 双缝墙（R39）：V = V0 当且仅当 |w.x−x₀|<T/2（墙厚 T，垂直 x 轴、z 向无限）
+ *                     且在两条缝外（|w.y∓D/2|>W/2，缝宽 W、缝距 D、对称分布于
+ *                     y=±D/2）——物质波双缝干涉的体积版。D=0 退化为单缝（缝宽 W）。
+ *                     墙厚内衰减 exp(−2κT)，κ=acosh(1+m(V0−E))；默认 V0=3、
+ *                     T=4 ⟹ 漏墙 ~1e-7（不透明）。V0 远高于入射能量时注意
+ *                     eMaxExtra 抬子步（dt·E≤2 稳定界）。
+ *   w = (p−0.5)·N 为世界坐标（格点单位、居中，p 为纹理坐标）——与
+ *   TPL_EVOLVE3D 的 uGrid3 口径逐字一致。
+ *   R44 势刷：上述解析势之外，交互放置的球形硬边势丘与主槽、第二槽
+ *   三者之和进入 pot3/pot3JS。
+ *   R49 体积连续笔刷：势丘由单丘（R44 的 potBX/BY/BZ/BR/BV0 五字段）
+ *   升级为**丘列表** state.potBlobs（≤16 个 {x,y,z,r,v0}）——拖拽连续
+ *   涂抹（相邻 stamp 中心距 ≥0.6R 时落新丘，球链重叠 ⟹ 视觉连续），
+ *   GLSL blobSum 循环求和、CPU pot3Blobs 逐字镜像。空列表恒 0 ⟹ 与
+ *   R44 单丘关闭态逐位一致；融合语义 = 求和（重叠处强度相加）。
+ *
+ * 边界（与 2D 不同，如实标注）：3D 纹理 CLAMP_TO_EDGE ⟹ Neumann 零梯度
+ * （波包触壁软反射）；2D 的 S() 越界返回 0 是 Dirichlet。有界势（谐振子/
+ * 氢原子）场景 Neumann 更物理；自由传播下波包抵达墙前应已充分衰减
+ * （默认预设的 σ/k 组合保证）。
+ *
+ * 初态（makeWave3d，CPU 端生成，引擎负责归一化）：
+ *   kind 'gaussian'  ：env·e^{i(k·d)}（d 为到波包中心的世界位移）
+ *   kind 'ground'    ：ψ = e^{−Z·r}（实；1s 近似本征态，验证驻波稳定性）
+ *   kind 'orbital2p' ：ψ = z_w·e^{−Z·r/2}（实；z=0 节面，上下瓣相位差 π，
+ *                      相位着色下呈互补双色瓣——arg(ψ) 直接可视化的范例）
+ *
+ * 积分器（R36 #34 backlog ②）：本内核同时提供 KDK（TPL_EVOLVE3D，速度 Verlet）
+ * 与 CN（TPL_CN_RHS3D/TPL_CN_SWEEP3D，Crank-Nicolson + block-Jacobi）两条路径，
+ * 运行时由 state.integrator3 切换（面板「积分器」下拉 / URL ?int3=，默认 'kdk'）。
+ * 标量 3D 的 KDK 并无缺陷（R34 已验证 P/E 守恒）——CN 的价值在于 Cayley 矩阵
+ * 严格正交（范数机器精度守恒、无条件稳定），且二者可在同一预设下对照运行
+ * （教学演示：积分器离散误差的量级差异）。CN 的局部块闭式解由本文件经
+ * shaders().cnLocalSolve3 注入（(1+i·h·V)⁻¹，见下）。
+ *
+ * 3D 透射率扫描（R38 #34 backlog ④）：s 波球势垒模型 transmissionModel3
+ * （barrier3d.js）——与 2D 矩势垒 transmissionModel 平行，引擎据此挂载
+ * 3D 扫描面板（secScan3）；共振条件 q·R=nπ 提供峰位验证判据。无自旋读数；
+ * CPU 密度取前两通道（pairs=1，基类默认即正确）。
+ * ========================================================================== */
+
+/* 势形编号（state.potKind；预设 params 注入，URL/面板可改） */
+const POT_FREE = 0, POT_SPHERE = 1, POT_OSC = 2, POT_COULOMB = 3, POT_DOUBLE_SLIT = 4;
+
+/* CPU 端解析势（pot3 的 JS 镜像——镜像契约见文件头）：
+   w 为世界坐标（格点单位、居中）；返回 V（格点单位）。
+   导出供测试 harness 做「GPU 演化 vs CPU 镜像」对账（R36 起）。
+
+   R41 双槽叠加：pot3Slot 为单槽势（参数显式传入，不读 state），pot3JS 返回
+   主槽 + 第二槽之和（总势）。potKind2=0（默认 POT_FREE）时第二槽恒 0 ⟹
+   与 R34–R40 逐位一致（零回归）。CPU 与 GLSL pot3Slot 逐分支同构。
+
+   R44/R49 势刷（笔刷势丘）：pot3Blobs 为交互放置的球形硬边势丘**列表**
+   ——丘列表由 3D 视图「势刷」工具拖拽连续涂抹写入 state.potBlobs
+   （≤16 个 {x,y,z,r,v0}；R49 由 R44 单丘五字段 potBX/BY/BZ/BR/BV0
+   升级而来，旧存档导入时迁移为列表首项）。与主槽、第二槽三者之和
+   （融合语义：硬边球重叠处强度相加）。空列表恒 0 ⟹ 与 R34–R44 单丘
+   关闭态逐位一致。强度可负（势阱）或正（势垒）；硬边球与球势垒
+   （kind 1）同构，KDK 无特殊处理。GLSL blobSum 与 CPU pot3Blobs
+   逐字一致（镜像契约见文件头）。 */
+function pot3Slot(wx, wy, wz, kind, v0, r, om, z, wallX, wallT, slitW, slitD){
+  const r2 = wx*wx + wy*wy + wz*wz;
+  if (kind === POT_SPHERE) return r2 < r*r ? v0 : 0;
+  if (kind === POT_OSC) return 0.5*om*om*r2;
+  if (kind === POT_COULOMB) return -z/Math.max(Math.sqrt(r2), 0.5);
+  /* 双缝墙（R39）：墙在 x=wallX（厚 wallT），两条缝 |w.y|=slitD/2
+     （各宽 slitW）——与 pot3 GLSL 分支逐字一致（镜像契约见文件头） */
+  if (kind === POT_DOUBLE_SLIT){
+    if (Math.abs(wx - wallX) < 0.5*wallT &&
+        Math.abs(wy - 0.5*slitD) > 0.5*slitW &&
+        Math.abs(wy + 0.5*slitD) > 0.5*slitW) return v0;
+    return 0;
+  }
+  return 0;
+}
+
+/* 笔刷势丘列表（R44 单丘 → R49 连续涂抹丘列表）：球形硬边势之和。
+   list：[{x,y,z,r,v0}]（世界 texel；v0=0 的项恒 0——导入容错）。
+   空列表恒 0。GLSL blobSum 与本函数逐字一致。 */
+const MAX_BLOBS = 16;
+function pot3Blobs(wx, wy, wz, list){
+  let s = 0;
+  if (!list) return 0;
+  for (let i = 0; i < list.length; i++){
+    const b = list[i];
+    if (!b || !b.v0) continue;
+    const dx = wx - b.x, dy = wy - b.y, dz = wz - b.z;
+    if (dx*dx + dy*dy + dz*dz < b.r*b.r) s += b.v0;
+  }
+  return s;
+}
+
+function pot3JS(wx, wy, wz, st){
+  return pot3Slot(wx, wy, wz, st.potKind, st.potV0, st.potR, st.potW, st.potZ,
+    st.potWallX, st.potWallT, st.potSlitW, st.potSlitD)
+    + pot3Slot(wx, wy, wz, st.potKind2, st.potV02, st.potR2, st.potW2, st.potZ2,
+      st.potWallX2, st.potWallT2, st.potSlitW2, st.potSlitD2)
+    + pot3Blobs(wx, wy, wz, st.potBlobs);
+}
+
+/* 单槽势在域内的 |V| 上界（格点单位）——R41 拆出供两槽求和。
+   slot=2 时读第二槽参数（potV02/potR2/…）。叠加势的 |V|max ≤ 两槽上界之和
+   （保守上界：只在两槽各自极值同点位时取等；稳定界保守化 ⟹ 子步增加）。 */
+function eMaxSlot(kind, st, slot){
+  const v0 = slot === 2 ? st.potV02 : st.potV0;
+  const r = slot === 2 ? st.potR2 : st.potR;
+  const om = slot === 2 ? st.potW2 : st.potW;
+  const z = slot === 2 ? st.potZ2 : st.potZ;
+  if (kind === POT_SPHERE) return Math.abs(v0 || 0);
+  if (kind === POT_OSC){
+    /* 域角 |w|max = √3·N/2 ⟹ Vmax = ½ω²·3·(N/2)² */
+    return 0.5*(om || 0)*(om || 0)*3*Math.pow(st.grid/2, 2);
+  }
+  if (kind === POT_COULOMB) return 2*Math.abs(z || 0);   /* 软化核 |V|≤Z/0.5 */
+  if (kind === POT_DOUBLE_SLIT) return Math.abs(v0 || 0);  /* 墙全高 V0 */
+  return 0;
+}
+
+class Schrodinger3dKernel extends PhysicsKernel {
+  constructor(){
+    super();
+    this.id = 'schrodinger3d';
+    this.name = '薛定谔 3D';
+    this.equation = '<b>SCHRÖDINGER 3D</b> · <i>i</i>ħ ∂ψ/∂t = −ħ²/2m ∇²ψ + V(<b>r</b>)ψ · 体积 ray-march';
+    this.pairs = 1;
+    this.dim3 = true;                 /* 引擎装配 evolve3d/display3d + 3D 帧路径 */
+  }
+
+  /* ---------- 初态：makeWave3d(n, opts) → { data, sum } ----------
+     data：n³×2 Float32Array（RG32F：Re/Im 交错，索引 ((z·n+y)·n+x)·2，
+     与 texImage3D 的数据布局（x 最快）一致）。
+     opts：{ fx,fy,fz（波包中心，世界分数 0..1）, kx,ky,kz（格点单位波数）,
+             sigma（gaussian 包宽，texel）, kind（'gaussian'|'ground'|'orbital2p'）,
+             z（库仑核电荷，ground/orbital2p 用） }
+     sum：原始总范数 Σ|ψ|²（引擎归一化到 1）。 */
+  makeWave3d(n, o){
+    const kind = o.kind || 'gaussian';
+    const sigma = o.sigma === undefined ? 6 : o.sigma;
+    const Z = o.z === undefined ? 0.25 : o.z;
+    const kx = o.kx || 0, ky = o.ky || 0, kz = o.kz || 0;
+    /* 世界坐标（格点单位、居中）：texel (x,y,z) 中心 = (idx+0.5−n/2) */
+    const cx = (o.fx === undefined ? 0.3 : o.fx)*n, cy = (o.fy === undefined ? 0.5 : o.fy)*n, cz = (o.fz === undefined ? 0.5 : o.fz)*n;
+    const data = new Float32Array(n*n*n*2);
+    let sum = 0;
+    for (let z=0; z<n; z++){
+      const wz0 = z + 0.5 - n/2;                 /* 相对域中心的世界 z */
+      for (let y=0; y<n; y++){
+        const wy0 = y + 0.5 - n/2;
+        for (let x=0; x<n; x++){
+          const wx0 = x + 0.5 - n/2;
+          const i = ((z*n + y)*n + x)*2;
+          let re, im;
+          if (kind === 'ground'){
+            const r = Math.sqrt(wx0*wx0 + wy0*wy0 + wz0*wz0);
+            re = Math.exp(-Z*r); im = 0;          /* 1s：实、球对称 */
+          } else if (kind === 'orbital2p'){
+            const r = Math.sqrt(wx0*wx0 + wy0*wy0 + wz0*wz0);
+            re = wz0*Math.exp(-Z*r/2); im = 0;    /* 2p_z：实、z=0 节面 */
+          } else {
+            const dx = wx0 - (cx - n/2), dy = wy0 - (cy - n/2), dz = wz0 - (cz - n/2);
+            const env = Math.exp(-(dx*dx + dy*dy + dz*dz)/(2*sigma*sigma));
+            const ph = kx*dx + ky*dy + kz*dz;
+            re = env*Math.cos(ph); im = env*Math.sin(ph);
+          }
+          data[i] = re; data[i+1] = im;
+          sum += re*re + im*im;
+        }
+      }
+    }
+    return { data, sum };
+  }
+
+  /* ---------- GLSL 注入 ---------- */
+  shaders(){
+    return {
+      /* 2D 片段（dim3 运行时不被引用；buildShaders 一律要求，故与 2D 内核同值） */
+      localH: 'V*c',
+      density: 'dot(psi.xy,psi.xy)',
+      kinetic: '0.25*(dot(dxp,dxp)+dot(dyp,dyp))',
+      potential: 'V*p',
+      /* R41 双槽势组合 + R49 笔刷势丘列表：pot3Slot 为单槽势函数（HELPERS
+         注入位定义，evolve3d/cnRhs3d/cnSweep3d/reduce3d 四处同源），pot3
+         取主槽 + 第二槽 + blobSum 三者之和。uPotKind2=0（默认 POT_FREE）
+         且 uBlobCount=0（默认无丘）时后两项恒 0 ⟹ 与 R34–R44 逐位一致。
+         —— 与 pot3JS/pot3Slot/pot3Blobs（CPU）逐分支一致（镜像契约见文件头） */
+      helpers: `#define MAX_BLOBS 16
+float pot3Slot(vec3 w, int kind, float v0, float r, float om, float z,
+                float wallX, float wallT, float slitW, float slitD){
+  if (kind == 1) return (dot(w,w) < r*r) ? v0 : 0.0;
+  if (kind == 2) return 0.5*om*om*dot(w,w);
+  if (kind == 3) return -z/max(length(w), 0.5);
+  if (kind == 4) return (abs(w.x - wallX) < 0.5*wallT
+                         && abs(w.y - 0.5*slitD) > 0.5*slitW
+                         && abs(w.y + 0.5*slitD) > 0.5*slitW) ? v0 : 0.0;
+  return 0.0;
+}
+/* R49 笔刷势丘列表：球形硬边势之和（与 CPU pot3Blobs 逐字一致）。
+   uBlobA[i] = (x,y,z,r)（世界 texel），uBlobV[i].x = 强度（0 = 跳过）。
+   循环上界 MAX_BLOBS 为编译期常量；uBlobCount 动态截断（GLSL ES 3.00
+   允许循环内 break）。空列表（count=0）恒 0 ⟹ 零回归。 */
+float blobSum(vec3 w){
+  float s = 0.0;
+  for (int i = 0; i < MAX_BLOBS; i++){
+    if (i >= uBlobCount) break;
+    vec4 a = uBlobA[i];
+    if (uBlobV[i].x == 0.0) continue;
+    vec3 d = w - a.xyz;
+    if (dot(d, d) < a.w*a.w) s += uBlobV[i].x;
+  }
+  return s;
+}`,
+      pot3: `(pot3Slot(w, uPotKind, uPotV0, uPotR, uPotW, uPotZ,
+                uPotWallX, uPotWallT, uPotSlitW, uPotSlitD)
+        + pot3Slot(w, uPotKind2, uPotV02, uPotR2, uPotW2, uPotZ2,
+                uPotWallX2, uPotWallT2, uPotSlitW2, uPotSlitD2)
+        + blobSum(w))`,
+      /* 体积密度 / 相位（ray-march 与切片两条显示路径经 den3/ph3 共用） */
+      density3: 'dot(c.xy,c.xy)',
+      phase3: 'atan(c.y, c.x)',
+      /* 3D CN 积分器的局部块闭式解（R36）：标量薛定谔的 Gloc = −i·V（G=−i·M
+         的局部部分）⟹ (I−h·Gloc)⁻¹ = (1+i·h·V)⁻¹，即复平面上以 1/(1+(hV)²)
+         为模压缩因子的 Cayley 旋转：
+           arg/(1+ihV) = arg·(1−ihV)/(1+(hV)²)
+                       = ((arg.x+hV·arg.y) + i(arg.y−hV·arg.x))/(1+(hV)²)
+         xy/zw 两对通道同构（RG32F 下 zw 恒 0，公式保持 4 宽通用性）。
+         |1+i·hV|≥1 ⟹ 局部映射压缩模长 ≤1，Jacobi 迭代不放大；全步 Cayley
+         (I−hG)⁻¹(I+hG) 对斜对称 G 严格正交 ⟹ 范数机器精度守恒（精确算术口径；
+         GPU float32 长时程残差量级同 2D CN 路径，见 kernel.js CN 节头注）。 */
+      cnLocalSolve3: `vec4 cnLocalSolve3(vec4 arg, float V){
+  float d = 1.0 + uDtHalf*uDtHalf*V*V;
+  return vec4(arg.x + uDtHalf*V*arg.y, arg.y - uDtHalf*V*arg.x,
+              arg.z + uDtHalf*V*arg.w, arg.w - uDtHalf*V*arg.w) / d;
+}`,
+      uniforms: `uniform int   uPotKind;   /* 势形编号（POT_FREE/SPHERE/OSC/COULOMB/DOUBLE_SLIT） */
+uniform float uPotV0;     /* 球势垒高度 / 双缝墙高 */
+uniform float uPotR;     /* 球势垒半径（texel） */
+uniform float uPotW;     /* 谐振子 ω（ℏω=ω；基态 σ=1/√ω） */
+uniform float uPotZ;     /* 库仑核电荷 Z（1s: E=−Z²/2；2p_z: E=−Z²/8） */
+uniform float uPotWallX; /* 双缝墙心位置 x（世界 texel） */
+uniform float uPotWallT; /* 双缝墙厚（texel） */
+uniform float uPotSlitW; /* 双缝缝宽（texel） */
+uniform float uPotSlitD; /* 双缝缝距（texel；0 = 单缝） */
+/* 第二势槽（R41 组合势）：V = pot3Slot(主) + pot3Slot(第二)；uPotKind2=0 无 */
+uniform int   uPotKind2;
+uniform float uPotV02;
+uniform float uPotR2;
+uniform float uPotW2;
+uniform float uPotZ2;
+uniform float uPotWallX2;
+uniform float uPotWallT2;
+uniform float uPotSlitW2;
+uniform float uPotSlitD2;
+/* 笔刷势丘列表（R49，由 R44 单丘升级）：uBlobA[i]=(x,y,z,r)、uBlobV[i].x=强度，
+   uBlobCount=实际丘数（0 = 无丘）。与主槽/第二槽独立叠加。 */
+uniform int   uBlobCount;
+uniform vec4  uBlobA[16];
+uniform vec2  uBlobV[16];`,
+    };
+  }
+
+  /* 内核私有 uniform 赋值（引擎每帧对 evolve3d/volume 两个 program 调用）。
+     注意 program 中未引用的 uniform 位置为 null（被编译器优化掉）——静默跳过。 */
+  setUniforms(gl, prog, state){
+    const k = gl.getUniformLocation(prog, 'uPotKind'); if (k) gl.uniform1i(k, state.potKind|0);
+    const v0 = gl.getUniformLocation(prog, 'uPotV0'); if (v0) gl.uniform1f(v0, state.potV0);
+    const r = gl.getUniformLocation(prog, 'uPotR');  if (r)  gl.uniform1f(r, state.potR);
+    const w = gl.getUniformLocation(prog, 'uPotW');  if (w)  gl.uniform1f(w, state.potW);
+    const z = gl.getUniformLocation(prog, 'uPotZ');  if (z)  gl.uniform1f(z, state.potZ);
+    const wx = gl.getUniformLocation(prog, 'uPotWallX'); if (wx) gl.uniform1f(wx, state.potWallX);
+    const wt = gl.getUniformLocation(prog, 'uPotWallT'); if (wt) gl.uniform1f(wt, state.potWallT);
+    const sw = gl.getUniformLocation(prog, 'uPotSlitW'); if (sw) gl.uniform1f(sw, state.potSlitW);
+    const sd = gl.getUniformLocation(prog, 'uPotSlitD'); if (sd) gl.uniform1f(sd, state.potSlitD);
+    /* 第二势槽（R41）：state 字段缺失（旧存档/未初始化）时按 0 处理 ⟹ 无叠加 */
+    const k2 = gl.getUniformLocation(prog, 'uPotKind2'); if (k2) gl.uniform1i(k2, state.potKind2|0);
+    const v02 = gl.getUniformLocation(prog, 'uPotV02'); if (v02) gl.uniform1f(v02, state.potV02 || 0);
+    const r2u = gl.getUniformLocation(prog, 'uPotR2'); if (r2u) gl.uniform1f(r2u, state.potR2 || 0);
+    const w2 = gl.getUniformLocation(prog, 'uPotW2'); if (w2) gl.uniform1f(w2, state.potW2 || 0);
+    const z2 = gl.getUniformLocation(prog, 'uPotZ2'); if (z2) gl.uniform1f(z2, state.potZ2 || 0);
+    const wx2 = gl.getUniformLocation(prog, 'uPotWallX2'); if (wx2) gl.uniform1f(wx2, state.potWallX2 || 0);
+    const wt2 = gl.getUniformLocation(prog, 'uPotWallT2'); if (wt2) gl.uniform1f(wt2, state.potWallT2 || 0);
+    const sw2 = gl.getUniformLocation(prog, 'uPotSlitW2'); if (sw2) gl.uniform1f(sw2, state.potSlitW2 || 0);
+    const sd2 = gl.getUniformLocation(prog, 'uPotSlitD2'); if (sd2) gl.uniform1f(sd2, state.potSlitD2 || 0);
+    /* 笔刷势丘列表（R49）：state 字段缺失（旧存档/未初始化）按空列表处理 ⟹ 无丘。
+       每帧对三个 program 各上传一次（96 float，uniform 上传廉价；未引用的
+       program location 为 null 自然跳过）。 */
+    const bc = gl.getUniformLocation(prog, 'uBlobCount');
+    const ba = gl.getUniformLocation(prog, 'uBlobA[0]');
+    const bv = gl.getUniformLocation(prog, 'uBlobV[0]');
+    if (bc) gl.uniform1i(bc, Math.min(state.potBlobs ? state.potBlobs.length : 0, MAX_BLOBS));
+    if (ba && bv){
+      const A = new Float32Array(64), V = new Float32Array(32);
+      const list = state.potBlobs || [];
+      for (let i = 0; i < Math.min(list.length, MAX_BLOBS); i++){
+        const b = list[i];
+        A[i*4] = b.x; A[i*4+1] = b.y; A[i*4+2] = b.z; A[i*4+3] = b.r;
+        V[i*2] = b.v0;
+      }
+      gl.uniform4fv(ba, A);
+      gl.uniform2fv(bv, V);
+    }
+  }
+
+  /* H 特征值上界附加项（引擎 eMax = uK·12 + 1 + 本项）：
+     各势形在域内的 |V| 最大值（格点单位）。R49 笔刷丘列表叠加 Σ|v0|
+     （保守：所有丘极值同点位时取等）。 */
+  eMaxExtra(state){
+    let blobMax = 0;
+    for (const b of (state.potBlobs || [])) blobMax += Math.abs(b.v0 || 0);
+    return eMaxSlot(state.potKind, state) + eMaxSlot(state.potKind2, state, 2)
+      + blobMax;
+  }
+
+  /* 3D 透射率扫描的解析模型（R38）：s 波球势垒。与 2D 的 transmissionModel
+     平行但几何是球（势形 potKind=SPHERE 的半径 potR）而非矩垒——扫描器
+     TransmissionScanner3 据此挂载。 */
+  transmissionModel3(state){
+    return sphericalBarrierModel3(state.m);
+  }
+
+  /* ---------- CPU 端全卷测量（引擎 probSum3d 的回读后端；HUD P/T/V/E + 调试句柄）----------
+     buf：n³×2 Float32Array（RG32F 逐层 readPixels 拼成，索引 ((z·n+y)·n+x)·2）。
+     产出（全部为全场积分，非逐粒子期望值——P 即总概率）：
+       P    = Σ|ψ|²
+       T    = uK·Σ_fwd|Δψ|²（3 前向链路/texel；= ⟨ψ|−lap_d|ψ⟩，与 2D reduce
+              的 4 阶差分为光滑极限一致；Neumann 边界由 clamp 自然给出零链路）
+       V    = Σ V(w)·|ψ|²（pot3JS 镜像势）
+       E    = T + V（KDK 守恒的离散能量；驻波/基态预设下应无长期漂移）
+       peak = max|ψ|²
+       cx/cy/cz = 概率质心（texel 序号 / n，世界分数 0..1）
+     simTime 由调用方附加。 */
+  moments3d(buf, n, state){
+    const k = 0.5/state.m;
+    const half = n/2;
+    let P = 0, link = 0, Vsum = 0, peak = 0, sx = 0, sy = 0, sz = 0;
+    /* Neumann clamp 采样（与 shader S() 的 clamp(p,0,1) 一致） */
+    const at = (x, y, z, c) => {
+      const xi = x < 0 ? 0 : (x >= n ? n-1 : x);
+      const yi = y < 0 ? 0 : (y >= n ? n-1 : y);
+      const zi = z < 0 ? 0 : (z >= n ? n-1 : z);
+      return buf[((zi*n + yi)*n + xi)*2 + c];
+    };
+    for (let z=0; z<n; z++){
+      const wz = z + 0.5 - half;
+      for (let y=0; y<n; y++){
+        const wy = y + 0.5 - half;
+        for (let x=0; x<n; x++){
+          const wx = x + 0.5 - half;
+          const i = ((z*n + y)*n + x)*2;
+          const re = buf[i], im = buf[i+1];
+          const p = re*re + im*im;
+          P += p;
+          if (p > peak) peak = p;
+          sx += x*p; sy += y*p; sz += z*p;
+          Vsum += pot3JS(wx, wy, wz, state)*p;
+          /* 3 前向链路（x/y/z 各一）× 2 通道；界外由 clamp 归边（Neumann ⟹ Δ=0） */
+          const dxRe = at(x+1,y,z,0) - re, dxIm = at(x+1,y,z,1) - im;
+          const dyRe = at(x,y+1,z,0) - re, dyIm = at(x,y+1,z,1) - im;
+          const dzRe = at(x,y,z+1,0) - re, dzIm = at(x,y,z+1,1) - im;
+          link += dxRe*dxRe + dxIm*dxIm + dyRe*dyRe + dyIm*dyIm + dzRe*dzRe + dzIm*dzIm;
+        }
+      }
+    }
+    return { P, T: k*link, V: Vsum, E: k*link + Vsum, peak,
+             cx: P > 0 ? sx/P/n : 0.5, cy: P > 0 ? sy/P/n : 0.5, cz: P > 0 ? sz/P/n : 0.5 };
+  }
+
+  /* ---------- 解析能级阶梯（HUD「E → 最近能级」对照；单位与引擎一致）----------
+     谐振子：E_n = ω·(n+3/2)（n=nx+ny+nz≥0，3D 各向同性简并）。
+     氢原子：E_n = −Z²/(2n²)（n=1,2,…；主量子数谱，1s 与 2p_z 同族）。 */
+  energyLevels(state){
+    const fmtE = v => Math.abs(v) < 1e-3 ? v.toExponential(2) : v.toFixed(6);
+    if (state.preset === 'oscillator'){
+      const w = state.potW;
+      return {
+        kind: '3D 谐振子',
+        param: 'ℏω=' + fmtE(w),
+        nearest(e){
+          const n = Math.max(0, Math.round(e/w - 1.5));
+          return { label: '' + n, e: (n + 1.5)*w, d: (n + 1.5)*w - e };
+        },
+      };
+    }
+    if (state.preset === 'ground' || state.preset === 'orbital2p'){
+      const Z = state.potZ;
+      const E = n => -Z*Z/(2*n*n);
+      return {
+        kind: '氢原子能级',
+        param: 'Z=' + Z.toFixed(3) + '（E₁=' + fmtE(E(1)) + '）',
+        nearest(e){
+          let best = null;
+          for (let n=1; n<=15; n++){
+            const ev = E(n), err = Math.abs(ev - e);
+            if (!best || err < best._err) best = { label: 'n=' + n, e: ev, d: ev - e, _err: err };
+          }
+          return best;
+        },
+      };
+    }
+    return null;
+  }
+
+  /* ---------- 预设 ----------
+     wave3 = [fx,fy,fz,kx,ky,kz]（世界分数中心 + 格点单位波数）；
+     kind 见 makeWave3d；params 并入 state（势形编号 + 势参数 + σ）。
+     build() 为空——3D 无势场画布（势经 pot3 解析注入）。
+
+     exposure3（曝光）逐预设给定：体渲染的发射-吸收存在「外壳遮挡核心」的权衡，
+     最优曝光不是一个常数——密度峰值跨 36×（2p_z 8.7e-5 ↔ 1s 3.1e-3），且弥散态
+     （谐振子 σ=8）在过高曝光下外晕先变不透明、反而把亮核挡成暗壳。下表的取值是
+     CDP 实测标定（目标 dispA 峰值亮度 0.7–0.9，Chrome+SwiftShader 65³ 默认机位）：
+       free3d 3600 → 0.77 / sphere 4800 → 0.71 / oscillator 2400 → 0.86
+       ground 1200 → 0.88 / orbital2p 8000 → 0.88
+     用户仍可用「曝光」滑块（100–10000）自由调整。 */
+  presets(){
+    return {
+      free3d: { name:'自由传播', kind:'gaussian', wave3:[0.30,0.5,0.5, 0.12,0,0],
+                params:{ exposure3:3600 }, build(){},
+                text:'高斯波包在无势场中飞行并自然扩散——不确定性原理的体积版。色相表示相位 arg(ψ)，可整束旋转视角观察包络。' },
+      sphere: { name:'球形势垒', kind:'gaussian', wave3:[0.15,0.5,0.5, 0.15,0,0],
+                params:{ potKind:POT_SPHERE, potV0:0.02, potR:10, sigma:6, exposure3:4800 }, build(){},
+                text:'高斯波包撞上高于自身能量的球形势垒（V0=0.02, R=10 texel）：迎头部分反射，边缘衍射，球后浮现散射尾波——三维版的圆散射体。' },
+      oscillator: { name:'3D 谐振子', kind:'gaussian', wave3:[0.5,0.5,0.5, 0,0,0],
+                params:{ potKind:POT_OSC, potW:1/64, sigma:8, exposure3:2400 }, build(){},
+                text:'V = ½ω²r² 抛物势阱。σ=8 的中心波包恰为基态（σ=1/√ω）——严格驻波，密度与能量都不动；调宽 σ 滑块可看到波包周期性呼吸（本征叠加）。' },
+      ground: { name:'氢原子 1s', kind:'ground', wave3:[0.5,0.5,0.5, 0,0,0],
+                params:{ potKind:POT_COULOMB, potZ:0.25, exposure3:1200 }, build(){},
+                text:'氢原子基态：ψ ∝ e^{−Zr} 球对称驻波，E = −Z²/2（HUD 能级阶梯对照 n=1）。软化库仑势 V = −Z/max(r, ½) 防原点奇点。' },
+      orbital2p: { name:'氢原子 2p_z', kind:'orbital2p', wave3:[0.5,0.5,0.5, 0,0,0],
+                params:{ potKind:POT_COULOMB, potZ:0.25, exposure3:8000 }, build(){},
+                text:'2p_z 轨道：ψ ∝ z·e^{−Zr/2}，赤道面 z=0 为节面（密度严格为零）。上下瓣相位差 π——相位着色下呈互补双色瓣，E = −Z²/8（对照 n=2）。' },
+      slits3d: { name:'双缝干涉', kind:'gaussian', wave3:[0.5-26/64,0.5,0.5, 1.2,0,0],
+                params:{ potKind:POT_DOUBLE_SLIT, potV0:3, potWallX:0, potWallT:4, potSlitW:6, potSlitD:20,
+                         sigma:6, exposure3:3600 }, build(){},
+                text:'物质波撞上带双缝的不透明墙（V₀=3、厚 4 texel，z 向无限）：每条缝成为柱面波源，两束相干叠加——墙后屏幕方向长出明暗相间、等间距的干涉条纹（缝距 D=20、k=1.2 ⟹ 条纹间距 ≈λL/D≈6.8 texel）。每个粒子抵达屏幕的位置由 |ψ|² 决定——概率幅的自我干涉。' },
+      /* 组合势（R41）：主槽双缝墙（slits3d 口径）+ 第二槽球垒（R=6，不遮缝：
+         缝内缘 |y|=7 > R，球垒仅占据墙中央的实墙区）。波包先经球垒散射
+         （动量重分布）再入射双缝 ⟹ 屏图样被散射调制，与 slits3d 纯墙对照
+         即见散射对干涉的影响；可用 SlitScanner（R40）做峰数/峰位定量对比。 */
+      slit_sphere3d: { name:'球垒调制双缝', kind:'gaussian', wave3:[0.5-26/64,0.5,0.5, 1.2,0,0],
+                params:{ potKind:POT_DOUBLE_SLIT, potV0:3, potWallX:0, potWallT:4, potSlitW:6, potSlitD:20,
+                         potKind2:POT_SPHERE, potV02:2, potR2:6,
+                         sigma:6, exposure3:3600 }, build(){},
+                text:'同一道双缝墙，但墙中央叠了一个球形势垒（R=6、V₀=2，球半径小于缝内缘 |y|=7 故不遮缝）：波包先被球垒散射、动量重分布，再入射双缝——屏上图样是被散射调制的干涉，与「双缝干涉」预设对照即见散射如何改写干涉。势为两槽解析叠加（R41），⟨V⟩ 与稳定界按两槽之和计算。' },
+      slit1_3d: { name:'单缝衍射', kind:'gaussian', wave3:[0.5-26/64,0.5,0.5, 1.2,0,0],
+                params:{ potKind:POT_DOUBLE_SLIT, potV0:3, potWallX:0, potWallT:4, potSlitW:6, potSlitD:0,
+                         sigma:6, exposure3:3600 }, build(){},
+                text:'同一道墙只开一条缝（缝距 D=0 退化为单缝，缝宽 6 texel）：屏上得到单缝衍射的宽中央主极大与两侧次级瓣——没有第二条缝可干涉，图样是单柱面波的纯衍射。与「双缝干涉」预设对照即见干涉与衍射的分工。' },
+    };
+  }
+
+  /* 面板附加控件：无（3D 渲染控件由引擎 3D 面板提供：网格/步数/曝光/σ/势参数/相机） */
+  extraControls(){ return null; }
+
+  defaults(){
+    return {
+      /* 体积网格默认 64³：内存 n³、每全卷 pass = n 次逐层 draw（R34 spike 实测
+         64³ 8.8ms/pass、128³ 105.6ms/pass，SwiftShader）。必须显式覆盖引擎默认的
+         grid:256——那个值是 2D 场纹理的档位，落到 3D 即 256³（268MB/场、
+         每帧 4608 次 draw），直接把交互帧率打到个位数（R34 首轮验证实测踩中）。
+         面板下拉与 ?grid= 均限制在 32…128。 */
+      grid: 64,
+      /* 积分器选择（R36）：'kdk'（默认，速度 Verlet）/ 'cn'（Crank-Nicolson）。
+         预设 params 不含该项——用户选择跨预设保留（对照实验不因切预设而重置）。 */
+      integrator3: 'kdk',
+      potKind: POT_FREE, potV0: 0.02, potR: 10, potW: 1/64, potZ: 0.25,
+      /* 双缝墙（R39；仅 potKind=4 生效）——墙心 x、墙厚、缝宽、缝距（世界 texel） */
+      potWallX: 0, potWallT: 4, potSlitW: 6, potSlitD: 20,
+      /* 第二势槽（R41 组合势）：默认 POT_FREE ⟹ 无叠加（与 R34–R40 逐位一致）。
+         预设 params 可注入组合（如 slit_sphere3d：主槽双缝墙 + 第二槽球垒）。 */
+      potKind2: POT_FREE, potV02: 0.02, potR2: 10, potW2: 1/64, potZ2: 0.25,
+      potWallX2: 0, potWallT2: 4, potSlitW2: 6, potSlitD2: 20,
+      /* 笔刷势丘列表（R49，由 R44 单丘升级）：默认空列表 ⟹ 无丘（与
+         R34–R44 单丘关闭态逐位一致）。potBlobR/potBlobV0 是「新丘规格」
+         （面板滑块，stamp 时快照进每个丘）；丘数上限 MAX_BLOBS=16，
+         超出 FIFO 淘汰最旧（app.js stampBlob3）。负 V0 = 势阱。 */
+      potBlobs: [],
+      potBlobR: 8, potBlobV0: 0.5,
+      /* 曝光默认 3600（= free3d 预设值，见预设表的实测标定）；其余预设各自覆盖 */
+      steps3: 48, exposure3: 3600, phaseColor: 1, slice3: 0, sliceZ: 0.5,
+      sigma: 6,
+    };
+  }
+}
+
+registerKernel(new Schrodinger3dKernel());
 
 /* ===== src/core/styles.js ===== */
 /* 组件样式：挂载时注入 <style id="qf-styles">（多实例只注入一次）。
@@ -3063,11 +3690,11 @@ ${d3 ? `
     <div class="grid2" style="margin-top:6px">
       <button data-tool3="cam" class="on">视角旋转</button>
       <button data-tool3="pot">势刷放置</button>
-      <button id="btnBlobDel">删除势丘</button>
+      <button id="btnBlobDel">清空势丘</button>
     </div>
     <div class="row"><label>势丘半径 R</label><input type="range" id="rBlobR" min="3" max="24" step="1" value="8"><output id="oBlobR">8</output></div>
     <div class="row"><label>势丘强度 V₀</label><input type="range" id="rBlobV0" min="-2" max="2" step="0.05" value="0.5"><output id="oBlobV0">0.50</output></div>
-    <div class="row"><label>势丘位置</label><output id="oBlobPos">关</output></div>
+    <div class="row"><label>势丘列表</label><output id="oBlobPos">无</output></div>
     <div class="grid2" style="margin-top:6px">
       <button id="btnPhase3" class="on">相位着色</button>
       <button id="btnSlice3">切片模式</button>
@@ -3079,7 +3706,7 @@ ${d3 ? `
       <button id="btnImport3">导入现场</button>
     </div>
     <input type="file" id="fileImport3" accept=".json,application/json" style="display:none">
-    <div class="hint" style="margin-top:4px">拖拽旋转 · 滚轮缩放。V₀/R 仅球势垒预设生效；ω/σ 决定谐振子基态（σ=1/√ω）；Z 仅氢原子预设生效（改动后波包按新 Z 重发）；墙心 x₀/墙厚 T/缝宽 W/缝距 D 仅双缝预设生效（D=0 退化为单缝，改动即时生效）。<b>势刷</b>：切到「势刷放置」后在体积上拖拽，沿视线中点放置球形硬边势丘（与主势/第二势独立叠加，负 V₀=势阱；放置后演化继续，不重发波包）。积分器：KDK 为速度 Verlet（默认，R34 已验证守恒）；CN 为 Crank-Nicolson + block-Jacobi，Cayley 矩阵严格正交、范数机器精度守恒——同预设下切换可对照二者离散误差（切换即时生效，不重发波包）。导出现场：参数 + 场数据 + 相机 + 积分器选择的单文件 JSON 存档（网格不符时拒绝导入，不重采样）。</div>
+    <div class="hint" style="margin-top:4px">拖拽旋转 · 滚轮缩放。V₀/R 仅球势垒预设生效；ω/σ 决定谐振子基态（σ=1/√ω）；Z 仅氢原子预设生效（改动后波包按新 Z 重发）；墙心 x₀/墙厚 T/缝宽 W/缝距 D 仅双缝预设生效（D=0 退化为单缝，改动即时生效）。<b>势刷</b>：切到「势刷放置」后在体积上拖拽，沿视线中点连续涂抹球形硬边势丘链（按下必落首丘，拖拽按 0.6·R 距离阈值续落——球链重叠 ⟹ 视觉连续；与主势/第二势独立叠加，负 V₀=势阱；上限 16 丘，超出淘汰最旧；放置后演化继续，不重发波包）。积分器：KDK 为速度 Verlet（默认，R34 已验证守恒）；CN 为 Crank-Nicolson + block-Jacobi，Cayley 矩阵严格正交、范数机器精度守恒——同预设下切换可对照二者离散误差（切换即时生效，不重发波包）。导出现场：参数 + 场数据 + 相机 + 积分器选择的单文件 JSON 存档（网格不符时拒绝导入，不重采样）。</div>
   </div>
   <div class="sec" id="scan3Sec">
     <h3>3D 透射扫描</h3>
@@ -4029,42 +4656,63 @@ ${d3 ? `
     return { x: (ro[0] + rd[0]*t)*n, y: (ro[1] + rd[1]*t)*n, z: (ro[2] + rd[2]*t)*n };
   }
 
-  /* 在画布客户坐标处放置/拖动势丘（势刷工具）。首次放置（potBV0=0）赋默认
-     规格 0.5——用户未表达强度意图时不静默启用强势。 */
-  placeBlob3(cx, cy, announce){
+  /* 势刷 stamp（R49 连续涂抹，由 R44 placeBlob3 单丘升级）：在画布客户
+     坐标处沿视线 slab 中点落一个球形硬边势丘（规格 = 当前滑块 potBlobR/
+     potBlobV0，stamp 时快照）。force=true（pointerdown）无视距离阈值必落；
+     force=false（pointermove 拖拽涂抹）仅在与最后一个丘中心距 ≥0.6·R 时
+     落新丘——球链重叠 ⟹ 视觉连续，同时天然节流（慢拖不密、快拖不断）。
+     丘数上限 MAX_BLOBS=16，超出 FIFO 淘汰最旧（announce 时 toast 明示）。 */
+  stampBlob3(cx, cy, force, announce){
     const r = this.canvas.getBoundingClientRect();
     const nx = (cx - r.left)/r.width, ny = 1 - (cy - r.top)/r.height;
     const p = this.pickBlob3(nx, ny);
     if (!p) return false;
-    if (this.state.potBV0 === 0){
-      this.state.potBV0 = 0.5;
-      this.syncBlobRows();
-    }
-    /* 世界 texel ∈ [−n/2, n/2]（slab 中点天然在域内）；留 2 texel 边缘余量，
-       势丘不完全贴壁（硬边球的 |V| 上界 eMaxExtra 与位置无关，无需额外处理）。 */
+    const spec = { r: this.state.potBlobR, v0: this.state.potBlobV0 };
+    /* 世界 texel ∈ [−n/2, n/2]（slab 中点天然在域内）；留 2 texel 边缘余量 */
     const lim = this.state.grid/2 - 2;
-    this.state.potBX = Math.max(-lim, Math.min(lim, p.x));
-    this.state.potBY = Math.max(-lim, Math.min(lim, p.y));
-    this.state.potBZ = Math.max(-lim, Math.min(lim, p.z));
+    const b = {
+      x: Math.max(-lim, Math.min(lim, p.x)),
+      y: Math.max(-lim, Math.min(lim, p.y)),
+      z: Math.max(-lim, Math.min(lim, p.z)),
+      r: spec.r, v0: spec.v0,
+    };
+    const list = this.state.potBlobs || (this.state.potBlobs = []);
+    if (!force && list.length){
+      const last = list[list.length - 1];
+      const dx = b.x - last.x, dy = b.y - last.y, dz = b.z - last.z;
+      if (Math.sqrt(dx*dx + dy*dy + dz*dz) < 0.6*spec.r) return false;   /* 距离阈值：过密不落 */
+    }
+    let evicted = false;
+    if (list.length >= MAX_BLOBS){ list.shift(); evicted = true; }
+    list.push(b);
     this.updateBlobReadout();
-    if (announce) this.toast('势丘 → (' + this.state.potBX.toFixed(1) + ', '
-      + this.state.potBY.toFixed(1) + ', ' + this.state.potBZ.toFixed(1) + ') texel');
+    if (announce){
+      this.toast(evicted
+        ? '势丘 ×' + list.length + '（最旧丘已淘汰，上限 ' + MAX_BLOBS + '）'
+        : '势丘 → (' + b.x.toFixed(1) + ', ' + b.y.toFixed(1) + ', ' + b.z.toFixed(1) + ') texel');
+    }
     return true;
   }
 
-  /* 势丘状态读数（面板「势丘位置」行） */
+  /* 势丘列表读数（面板「势丘」行）：丘数 · 最后位置 · 当前规格 */
   updateBlobReadout(){
     const el = this.q('#oBlobPos'); if (!el) return;
-    el.textContent = this.state.potBV0 === 0 ? '关'
-      : '(' + this.state.potBX.toFixed(1) + ', ' + this.state.potBY.toFixed(1) + ', '
-        + this.state.potBZ.toFixed(1) + ') · R=' + this.state.potBR.toFixed(0)
-        + ' · V₀=' + this.state.potBV0.toFixed(2);
+    const list = this.state.potBlobs || [];
+    if (!list.length){
+      el.textContent = '无';
+      return;
+    }
+    const b = list[list.length - 1];
+    el.textContent = '×' + list.length + ' · (' + b.x.toFixed(1) + ', ' + b.y.toFixed(1)
+      + ', ' + b.z.toFixed(1) + ') · R=' + this.state.potBlobR.toFixed(0)
+      + ' · V₀=' + this.state.potBlobV0.toFixed(2);
   }
 
-  /* 势丘滑块行同步（DOM ← state；放置默认规格 / 导入存档后调用） */
+  /* 势丘规格滑块行同步（DOM ← state；导入存档后调用）。滑块语义是「新丘
+     规格」（R49）：改滑块只影响后续 stamp，不追溯已落丘（丘各自快照）。 */
   syncBlobRows(){
-    const rs = [['#rBlobR','#oBlobR','potBR', v => String(v|0)],
-                ['#rBlobV0','#oBlobV0','potBV0', v => v.toFixed(2)]];
+    const rs = [['#rBlobR','#oBlobR','potBlobR', v => String(v|0)],
+                ['#rBlobV0','#oBlobV0','potBlobV0', v => v.toFixed(2)]];
     for (const [id, out, key, fmt] of rs){
       const el = this.q(id); if (!el) continue;
       el.value = this.state[key];
@@ -4567,6 +5215,10 @@ ${d3 ? `
          （KDK/CN 对照从同一现场出发），故显式存档 + 导入时校验取值。 */
       integrator3: this.state.integrator3 === 'cn' ? 'cn' : 'kdk',
       camera: { theta: this.cam.theta, phi: this.cam.phi, dist: this.cam.dist },
+      /* 势刷丘列表（R49，数组非数字 ⟹ 白名单循环不收，须显式存档）：
+         顶层 blobs 段 [[x,y,z,r,v0],...]（与 state.potBlobs 同构）。
+         R44 旧存档无此段——导入时按 potBV0≠0 从 state 单丘五字段迁移。 */
+      blobs: (this.state.potBlobs || []).map(b => [b.x, b.y, b.z, b.r, b.v0]),
       wave: { encoding: 'rg32f-f32', floats: n*n*n*2, data: f32ToB64(buf) },
     };
   }
@@ -4608,6 +5260,19 @@ ${d3 ? `
       throw new Error('存档相机段无效');
     if (obj.integrator3 !== undefined && obj.integrator3 !== 'kdk' && obj.integrator3 !== 'cn')
       throw new Error('存档积分器段无效（须 kdk/cn）: ' + obj.integrator3);
+    /* 势刷丘列表（R49）：blobs 段须为 ≤MAX_BLOBS 个 [x,y,z,r,v0] 全有限元组。
+       R44 旧存档无 blobs 段——合法（迁移路径见阶段 2）。 */
+    let blobList = null;
+    if (obj.blobs !== undefined){
+      if (!Array.isArray(obj.blobs) || obj.blobs.length > MAX_BLOBS)
+        throw new Error('存档势丘段无效（须数组且 ≤' + MAX_BLOBS + ' 项）');
+      for (let i = 0; i < obj.blobs.length; i++){
+        const b = obj.blobs[i];
+        if (!Array.isArray(b) || b.length !== 5 || !b.every(v => typeof v === 'number' && isFinite(v)))
+          throw new Error('存档势丘 #' + i + ' 无效（须 [x,y,z,r,v0] 全有限）');
+      }
+      blobList = obj.blobs.map(b => ({ x: b[0], y: b[1], z: b[2], r: b[3], v0: b[4] }));
+    }
     /* 阶段 2：写现场 */
     const SKIP = new Set(['grid','paused','simTime','preset','lastWave','waveCount','drag','tool']);
     let n = 0;
@@ -4616,16 +5281,32 @@ ${d3 ? `
       const v = obj.state[k];
       if (typeof v === 'number' && isFinite(v) && k in this.state){ this.state[k] = v; n++; }
     }
+    /* 势刷丘列表恢复（R49）：新存档取 blobs 段；R44 旧存档无该段 ⟹ 若
+       potBV0 为有限数且 ≠0（单丘曾放置过）迁为列表首项（五字段同构），
+       滑块规格 potBR→potBlobR 一并迁移；无段且 potBV0=0/缺失 ⟹ 空列表
+       （与 R44 关闭态一致）。 */
+    if (blobList){
+      this.state.potBlobs = blobList;
+    } else {
+      const st = obj.state || {};
+      const bv0 = st.potBV0;
+      this.state.potBlobs = (typeof bv0 === 'number' && isFinite(bv0) && bv0 !== 0)
+        ? [{ x: st.potBX || 0, y: st.potBY || 0, z: st.potBZ || 0,
+             r: st.potBR || 8, v0: bv0 }]
+        : [];
+      if (typeof st.potBR === 'number' && isFinite(st.potBR)) this.state.potBlobR = st.potBR;
+    }
     if (obj.integrator3) this.state.integrator3 = obj.integrator3;
     if (obj.camera) { this.cam.theta = obj.camera.theta; this.cam.phi = obj.camera.phi; this.cam.dist = obj.camera.dist; }
+    const blobMsg = this.state.potBlobs.length ? ' + 势丘 ' + this.state.potBlobs.length + ' 个' : '';
     if (waveF32){
       this.uploadWave3(waveF32);
       this._baseCaptured = false;          /* P 守恒基准按导入场重捕（HUD err% 口径） */
-      this.toast('3D 现场已导入（恢复 ' + n + ' 项参数 + 场数据 ' + (this.state.grid**3) + ' 体素）');
+      this.toast('3D 现场已导入（恢复 ' + n + ' 项参数' + blobMsg + ' + 场数据 ' + (this.state.grid**3) + ' 体素）');
     } else {
       this.reinitWave();
       this._baseCaptured = false;
-      this.toast('3D 存档无场数据：已恢复 ' + n + ' 项参数并按预设重发初态');
+      this.toast('3D 存档无场数据：已恢复 ' + n + ' 项参数' + blobMsg + ' 并按预设重发初态');
     }
     this.syncControls();
     return n;
@@ -4673,11 +5354,12 @@ ${d3 ? `
     const pk2 = this.q('#selPotKind2');       /* 第二势槽下拉（R41：预设/导入可注入组合） */
     if (pk2) pk2.value = String(this.state.potKind2 | 0);
     this.refreshPot2Rows();
-    /* R44：3D 工具按钮态 + 势丘读数（预设切换 / 导入存档后同步；2D 内核下
-       querySelectorAll 为空、#oBlobPos 不存在 ⟹ 同步调用天然无害） */
+    /* R49：3D 工具按钮态 + 势丘规格滑块与读数（预设切换 / 导入存档后同步；
+       滑块同步覆盖 R44 旧存档迁移（potBR→potBlobR）的面板更新；
+       2D 内核下 querySelectorAll 为空、#oBlobPos 不存在 ⟹ 同步调用天然无害） */
     this.container.querySelectorAll('[data-tool3]').forEach(x =>
       x.classList.toggle('on', x.dataset.tool3 === (this.state.tool3 || 'cam')));
-    this.updateBlobReadout();
+    this.syncBlobRows();
     const abp = this.q('#oABPos');            /* AB 螺线管位置读数（预设 params 可能改 abX/abY） */
     if (abp) abp.textContent = '(' + this.state.abX.toFixed(2) + ', ' + this.state.abY.toFixed(2) + ')';
   }
@@ -4709,20 +5391,20 @@ ${d3 ? `
     const aim = this.q('#aim'), aimLine = this.q('#aimline'), aimDot = this.q('#aimdot'), aimTxt = this.q('#aimtxt');
 
     if (this.kernel.dim3){
-      /* 3D：轨道相机（拖拽旋转 + 滚轮缩放）+ 势刷（R44：拖拽沿视线放置
-         球形势丘）。无拖拽发射（初态由预设/σ 滑块给定）；工具模式
+      /* 3D：轨道相机（拖拽旋转 + 滚轮缩放）+ 势刷（R49：拖拽连续涂抹球
+         形势丘链）。无拖拽发射（初态由预设/σ 滑块给定）；工具模式
          state.tool3='cam' | 'pot' 决定 pointer 语义（面板按钮 / P 键切换）。 */
       this.on(canvas, 'pointerdown', e => {
         try{ canvas.setPointerCapture(e.pointerId); }catch(_){/* 合成/无效 pointerId 时不应中断交互 */ }
         if (this.state.tool3 === 'pot'){
-          this.placeBlob3(e.clientX, e.clientY, true);
+          this.stampBlob3(e.clientX, e.clientY, true, true);   /* 按下必落首丘（无视距离阈值） */
         } else {
           this.cam.drag = { x: e.clientX, y: e.clientY };
         }
       });
       this.on(canvas, 'pointermove', e => {
         if (this.state.tool3 === 'pot'){
-          if (e.buttons & 1) this.placeBlob3(e.clientX, e.clientY, false);
+          if (e.buttons & 1) this.stampBlob3(e.clientX, e.clientY, false, false);  /* 拖拽涂抹（0.6R 距离阈值） */
           return;
         }
         const d = this.cam.drag; if (!d) return;
@@ -4875,16 +5557,18 @@ ${d3 ? `
         this.cam = { theta: 0.7, phi: 0.35, dist: 2.2, drag: null };
         this.toast('相机已重置');
       });
-      /* 势刷（R44）：工具切换 + 势丘规格滑块（半径/强度，负强度 = 势阱）
-         + 删除按钮（BV0=0 关闭）。放置逻辑在 pointer 事件（placeBlob3）。 */
+      /* 势刷（R49 连续涂抹）：工具切换 + 新丘规格滑块（半径/强度，负强度 = 势阱，
+         stamp 时快照进每个丘——改滑块只影响后续丘，不追溯已落丘）
+         + 清空按钮（potBlobs = []）。放置逻辑在 pointer 事件（stampBlob3）。 */
       this.container.querySelectorAll('[data-tool3]').forEach(b =>
         this.on(b, 'click', () => this.setTool3(b.dataset.tool3)));
-      this.bindRange('#rBlobR','#oBlobR','potBR', v => String(v|0), () => this.updateBlobReadout());
-      this.bindRange('#rBlobV0','#oBlobV0','potBV0', v => v.toFixed(2), () => this.updateBlobReadout());
+      this.bindRange('#rBlobR','#oBlobR','potBlobR', v => String(v|0), () => this.updateBlobReadout());
+      this.bindRange('#rBlobV0','#oBlobV0','potBlobV0', v => v.toFixed(2), () => this.updateBlobReadout());
       this.on(this.q('#btnBlobDel'), 'click', () => {
-        this.state.potBV0 = 0;
+        const n = (this.state.potBlobs || []).length;
+        this.state.potBlobs = [];
         this.syncBlobRows();
-        this.toast('势丘已删除');
+        this.toast(n ? '势丘已清空（' + n + ' 个）' : '势丘列表已为空');
       });
       this.syncBlobRows();
       this.on(this.q('#selGrid3'), 'change', e => {
@@ -5119,12 +5803,14 @@ ${d3 ? `
          验证脚本直接对账「CPU 相机镜像 vs shader 相机模型」与放置落点。 */
       screenRay3: (nx, ny) => this.screenRay3(nx, ny),
       pickBlob3: (nx, ny) => this.pickBlob3(nx, ny),
+      /* 势刷 stamp（R49）：pointer 事件同一入口的调试转发（客户坐标）——
+         验证脚本驱动连续涂抹/FIFO/规格快照断言，不合成 mouse 事件序列。 */
+      stampBlob3: (cx, cy, force, announce) => this.stampBlob3(cx, cy, force, announce),
       /* 3D 工具模式（R44）：'cam' | 'pot'，按钮 / P 键 / 验证脚本共用入口 */
       setTool3: (m) => this.setTool3(m),
       tool3: () => this.state.tool3 || 'cam',
-      /* 势丘状态（R44）：放置/删除/规格的当前值（对账 GLSL uniform 与面板读数） */
-      blob: () => ({ bx: this.state.potBX, by: this.state.potBY, bz: this.state.potBZ,
-                     br: this.state.potBR, v0: this.state.potBV0 }),
+      /* 势丘列表（R49）：当前丘列表快照 [{x,y,z,r,v0}]（对账 GLSL uniform 与面板读数） */
+      blobs: () => (this.state.potBlobs || []).map(b => ({ x: b.x, y: b.y, z: b.z, r: b.r, v0: b.v0 })),
       /* 3D 当前体积原始数据（逐层 readPixels 拼装，RG32F 交错 (re,im)）：
          供验证脚本把 GPU 场搬到 CPU 做镜像对账（R36 CN 的 GPU↔CPU 互证）。
          与现场序列化共用 readWave3——「存档的场」与「验证看到的场」同源。 */
@@ -6798,593 +7484,6 @@ function latticeT(E, V0, a, m){
 }
 
 registerKernel(new DiracKernel());
-
-/* ===== src/physics/barrier3d.js ===== */
-/* ============================================================================
- * 球形势垒 s 波透射模型（3D 扫描的解析对照，barrier.js 的 3D 对应物）
- *
- * 物理：l=0（迎头）径向方程 u''+k²u=0（垒外）/ u''+q²u=0（垒内），
- * u=r·R 且 u(0)=0（原点正则）⟹ 球垒的 s 波透射与「全宽 2R 的 1D 势垒
- * 偶宇称 sector」严格同解：
- *     T = 1/(1 + V0²·sin²(q·R)/(4E(E−V0)))          E > V0
- *     T = 1/(1 + V0²·sinh²(κ·R)/(4E(V0−E)))         E < V0（κ=kOf(V0−E)）
- * 共振（T=1）条件 q·R = nπ ⟹ V0_n = E − 2·sin²(nπ/(2R))/m。
- *
- * 色散口径（与引擎逐字一致，R29 既定约定）：
- *     E(k) = 2·sin²(k/2)/m        （5 点/7 点 stencil 沿轴离散色散；
- *                                   3D 7 点沿轴特征值 = 2uK(2−cos k)，同型）
- *     kOf(E) = 2·asin(√(mE/2))    （反解；E≥2/m 时截到带顶 π）
- * uK=0.5/m 由引擎 evolve 路径给出（app.js「const k = 0.5/this.state.m」）。
- *
- * 诚实边界（文档化，不装作精确）：
- *   · 模型是**平面波 s 波**；实测波包有 Δk 轴向展宽（convolved 已按高斯
- *     谱卷积）与**横向动量展宽**（耦合 l≥1 分波，未建模）⟹ 对照目标是
- *     「包络 + 共振峰位置」，不是点值相等。
- *   · 横向展宽使实测峰值低于平面波 T=1，峰位略有偏移——验证判据用
- *     卷积模型的峰位（数值扫描求得），容差按扫描步宽设。
- *   · 横向展宽的**主导效应是「绕球透射」**：碰撞参数 b>R 的波包份额根本不
- *     撞球（经典射线全额透射），使实测 3D T 系统性**高于** s 波曲线，且
- *     V0 越大高出越多（s 波衰减而绕球份额不变）。rayCorrected 给出这一
- *     偏移的经典射线估计（近似，见该函数注）；扫描图叠三条参考曲线。
- * ========================================================================== */
-function sphericalBarrierModel3(m){
-  /* k(E)：能量→格点波数（离散色散反解；E≤0 为 0，E≥2/m 为带顶 π） */
-  const kOf = E => {
-    if (!(E > 0)) return 0;
-    const s = m*E/2;
-    return s >= 1 ? Math.PI : 2*Math.asin(Math.sqrt(s));
-  };
-  const E = k => 2*Math.sin(k/2)*Math.sin(k/2)/m;
-  const T = (Ec, V0, R) => {
-    if (!(V0 > 0)) return 1;          /* 无势垒：全透射 */
-    if (!(Ec > 0)) return 0;
-    const d = V0 - Ec;
-    if (Math.abs(d) < 1e-12) return 1/(1 + V0*V0*m*R*R/(2*Ec));
-    if (d < 0){
-      const q = kOf(Ec - V0);
-      return 1/(1 + V0*V0*Math.sin(q*R)*Math.sin(q*R)/(4*Ec*(Ec - V0)));
-    }
-    const ka = kOf(d);
-    return 1/(1 + V0*V0*Math.sinh(ka*R)*Math.sinh(ka*R)/(4*Ec*d));
-  };
-  /* Δk 卷积期望（Simpson，±5dk，401 点）：轴向谱高斯权重的平均透射率。
-     注意：只卷轴向 k；横向展宽的 l≥1 效应不在内（见文件头诚实边界）。 */
-  const convolved = (kx, dk, V0, R) => {
-    if (!(V0 > 0)) return 1;
-    if (!(dk > 0)) return T(E(kx), V0, R);
-    const N = 400, span = 5*dk;
-    let sum = 0, wsum = 0;
-    for (let i = 0; i <= N; i++){
-      const k = kx - span + 2*span*i/N;
-      const w = Math.exp(-((k - kx)/dk)*((k - kx)/dk)/2);
-      const wt = (i === 0 || i === N) ? 1 : (i%2 ? 4 : 2);
-      sum += wt*w*T(E(k), V0, R); wsum += wt*w;
-    }
-    return sum/wsum;
-  };
-  /* 共振峰位（T=1 的 V0 列表）：q·R = nπ 且 q 在导带内（q ≤ π）。
-     返回 [{n, v0, ratio}]（ratio = v0/Ec）。 */
-  const resonances = (Ec, R) => {
-    const out = [];
-    const kTop = kOf(Ec);
-    for (let n = 1; n*Math.PI/R <= kTop + 1e-12; n++){
-      const q = n*Math.PI/R;
-      const v0 = Ec - 2*Math.sin(q/2)*Math.sin(q/2)/m;
-      if (v0 > 0) out.push({ n, v0, ratio: v0/Ec });
-    }
-    return out;
-  };
-  /* 卷积模型的峰位（数值扫描：在 [lo,hi] 上以 step 分辨率求局部极大）。
-     用于验证判据——实测峰应对齐卷积模型的峰（而非平面波 T=1 的理想位），
-     因为 Δk 展宽会把峰推离理想位。 */
-  const convolvedPeaks = (kx, dk, R, lo, hi, step) => {
-    const f = v => convolved(kx, dk, v, R);
-    const pts = [];
-    for (let v = lo; v <= hi + 1e-12; v += step){
-      pts.push({ v, t: f(v) });
-      if (pts.length > 2){
-        const a = pts[pts.length-3], b = pts[pts.length-2], c = pts[pts.length-1];
-        if (b.t >= a.t && b.t >= c.t && b.t > 0.05) pts[pts.length-2].peak = true;
-      }
-    }
-    return pts.filter(p => p.peak).map(p => p.v);
-  };
-  /* 经典射线修正（R38；**近似模型**，诚实边界见下）：
-       T_3d(V0) ≈ f_miss + (1 − f_miss)·T_s_conv(V0)
-     物理：入射波包有横向高斯展宽，飞到球垒时横向宽度 σ⊥(t_c)（自由色散
-     σ⊥=σ0√(1+(t_c/t_d)²)，t_d=2mσ0²）；碰撞参数 b>R 的份额「绕球」全额
-     透射（经典射线），b<R 的份额按 s 波迎头透射。碰撞时刻取波包中心抵达
-     垒远面 t_c=(|x0|+R)/v_g（v_g=sin(kx)/m 为 kx 处群速度）。
-     诚实边界：经典射线无衍射（球缘半影、grazing 射线的离心抑制不在内）；
-     t_c 的取法有 t1..t3（近面/球心/远面）的模糊带；实测还另有「色散尾未
-     过门」的小亏量（高 T 端 ~5-8%）。⟹ 用途是解释「实测 3D T 系统性高于
-     s 波曲线」的偏移量级并给出包络，不是精确点值。 */
-  const rayCorrected = (kx, sigma, V0, R, x0) => {
-    if (!(V0 > 0)) return 1;
-    const vg = Math.sin(kx) / m;            /* kx 处群速度（世界单位/时间单位） */
-    const td = 2 * m * sigma * sigma;       /* 自由色散时标 */
-    const tc = (Math.abs(x0) + R) / vg;     /* 中心抵达垒远面 */
-    const sPerp = sigma * Math.sqrt(1 + (tc / td) * (tc / td));
-    const fMiss = Math.exp(-(R * R) / (2 * sPerp * sPerp));
-    const dk = 1 / (Math.SQRT2 * sigma);
-    return fMiss + (1 - fMiss) * convolved(kx, dk, V0, R);
-  };
-  return { T, E, kOf, convolved, resonances, convolvedPeaks, rayCorrected };
-}
-
-/* ===== src/physics/schrodinger3d.js ===== */
-/* ============================================================================
- * 薛定谔 3D 内核（R34 #34）：iħ∂ψ/∂t = −ħ²/2m ∇²ψ + V(r)ψ，体积求解 + 解析势
- *
- * 与 2D 薛定谔内核（schrodinger.js）的分工：
- *   - 2D 内核的势来自 256² 势场画布纹理（笔刷可画）；3D 无势纹理（笔刷工具
- *     不适用体积），势由本文件经 kernel.shaders().pot3 注入**解析表达式**，
- *     预设（球垒 / 谐振子 / 氢原子 / 双缝墙）即不同的势形 + 初态组合。
- *   - 引擎装配（buildShaders）在 kernel.dim3=true 时生成 evolve3d /
- *     display3d 两个 program（TPL_EVOLVE3D/TPL_DISPLAY3D），引擎走 evolve3d
- *     分支（每子步 3 个全卷 pass × 逐层 draw）与 volume ray-march 显示。
- *   - 2D 片段（localH/density/kinetic/potential）仍须提供——buildShaders
- *     对全部内核一律要求（2D program 也会被编译，dim3 运行时不被引用）。
- *
- * 单位约定（与引擎全路径一致）：格点（texel）单位、ℏ=1、m=state.m。
- *   uK = 1/(2m)；KDK 子步 dt_sub=1.2/sub；simTime 单位为帧时间（dt=1.2/帧）。
- *   3D 7 点拉普拉斯谱半径 12（2D 5 点为 8）⟹ 引擎 eMax = uK·12+1+eMaxExtra。
- *
- * pot3 ↔ pot3JS 镜像契约（重要）：GLSL 解析势 pot3（shaders().pot3）与 CPU
- * 端 pot3JS（moments3d 的 V 期望值用）必须逐分支一致——前者是 GPU 演化用的
- * 势，后者是 HUD/调试读数的能量分解。两者由同一组 uniform（uPotKind/uPotV0/
- * uPotR/uPotW/uPotZ）与同一套分支结构描述；改其一必须同步另一个。势形：
- *   kind 0 自由     ：V = 0
- *   kind 1 球势垒   ：V = |w|<R ? V0 : 0（球心 = 域中心 w=0）
- *   kind 2 谐振子   ：V = ½ω²|w|²（ℏω=ω；基态 σ=1/√ω，ω=1/64 ⟹ σ=8 texel）
- *   kind 3 氢原子   ：V = −Z/max(|w|, 0.5)（软化库仑：r<½ texel 钳位防奇点，
- *                     |V|≤2Z；1s: ψ∝e^{−Zr}, E=−Z²/2；2p_z: ψ∝z·e^{−Zr/2},
- *                     E=−Z²/8）
- *   kind 4 双缝墙（R39）：V = V0 当且仅当 |w.x−x₀|<T/2（墙厚 T，垂直 x 轴、z 向无限）
- *                     且在两条缝外（|w.y∓D/2|>W/2，缝宽 W、缝距 D、对称分布于
- *                     y=±D/2）——物质波双缝干涉的体积版。D=0 退化为单缝（缝宽 W）。
- *                     墙厚内衰减 exp(−2κT)，κ=acosh(1+m(V0−E))；默认 V0=3、
- *                     T=4 ⟹ 漏墙 ~1e-7（不透明）。V0 远高于入射能量时注意
- *                     eMaxExtra 抬子步（dt·E≤2 稳定界）。
- *   w = (p−0.5)·N 为世界坐标（格点单位、居中，p 为纹理坐标）——与
- *   TPL_EVOLVE3D 的 uGrid3 口径逐字一致。
- *   R44 势刷：上述解析势之外，交互放置的球形硬边势丘（pot3Blob）按
- *   主槽 + 第二槽 + blob 三者之和进入 pot3/pot3JS（BV0=0 默认关闭）。
- *
- * 边界（与 2D 不同，如实标注）：3D 纹理 CLAMP_TO_EDGE ⟹ Neumann 零梯度
- * （波包触壁软反射）；2D 的 S() 越界返回 0 是 Dirichlet。有界势（谐振子/
- * 氢原子）场景 Neumann 更物理；自由传播下波包抵达墙前应已充分衰减
- * （默认预设的 σ/k 组合保证）。
- *
- * 初态（makeWave3d，CPU 端生成，引擎负责归一化）：
- *   kind 'gaussian'  ：env·e^{i(k·d)}（d 为到波包中心的世界位移）
- *   kind 'ground'    ：ψ = e^{−Z·r}（实；1s 近似本征态，验证驻波稳定性）
- *   kind 'orbital2p' ：ψ = z_w·e^{−Z·r/2}（实；z=0 节面，上下瓣相位差 π，
- *                      相位着色下呈互补双色瓣——arg(ψ) 直接可视化的范例）
- *
- * 积分器（R36 #34 backlog ②）：本内核同时提供 KDK（TPL_EVOLVE3D，速度 Verlet）
- * 与 CN（TPL_CN_RHS3D/TPL_CN_SWEEP3D，Crank-Nicolson + block-Jacobi）两条路径，
- * 运行时由 state.integrator3 切换（面板「积分器」下拉 / URL ?int3=，默认 'kdk'）。
- * 标量 3D 的 KDK 并无缺陷（R34 已验证 P/E 守恒）——CN 的价值在于 Cayley 矩阵
- * 严格正交（范数机器精度守恒、无条件稳定），且二者可在同一预设下对照运行
- * （教学演示：积分器离散误差的量级差异）。CN 的局部块闭式解由本文件经
- * shaders().cnLocalSolve3 注入（(1+i·h·V)⁻¹，见下）。
- *
- * 3D 透射率扫描（R38 #34 backlog ④）：s 波球势垒模型 transmissionModel3
- * （barrier3d.js）——与 2D 矩势垒 transmissionModel 平行，引擎据此挂载
- * 3D 扫描面板（secScan3）；共振条件 q·R=nπ 提供峰位验证判据。无自旋读数；
- * CPU 密度取前两通道（pairs=1，基类默认即正确）。
- * ========================================================================== */
-
-/* 势形编号（state.potKind；预设 params 注入，URL/面板可改） */
-const POT_FREE = 0, POT_SPHERE = 1, POT_OSC = 2, POT_COULOMB = 3, POT_DOUBLE_SLIT = 4;
-
-/* CPU 端解析势（pot3 的 JS 镜像——镜像契约见文件头）：
-   w 为世界坐标（格点单位、居中）；返回 V（格点单位）。
-   导出供测试 harness 做「GPU 演化 vs CPU 镜像」对账（R36 起）。
-
-   R41 双槽叠加：pot3Slot 为单槽势（参数显式传入，不读 state），pot3JS 返回
-   主槽 + 第二槽之和（总势）。potKind2=0（默认 POT_FREE）时第二槽恒 0 ⟹
-   与 R34–R40 逐位一致（零回归）。CPU 与 GLSL pot3Slot 逐分支同构。
-
-   R44 势刷（笔刷势丘）：pot3Blob 为交互放置的球形硬边势丘——球心
-   (bx,by,bz)、半径 r、强度 v0 由 3D 视图「势刷」工具拖拽写入
-   state.potBX/potBY/potBZ/potBR/potBV0，与主槽、第二槽三者独立叠加。
-   potBV0=0（默认）时 blob 恒 0 ⟹ 与 R34–R43 逐位一致。强度可负
-   （势阱）或正（势垒）；硬边球与球势垒（kind 1）同构，KDK 无特殊处理。
-   GLSL pot3Blob 与 CPU pot3Blob 逐字一致（镜像契约见文件头）。 */
-function pot3Slot(wx, wy, wz, kind, v0, r, om, z, wallX, wallT, slitW, slitD){
-  const r2 = wx*wx + wy*wy + wz*wz;
-  if (kind === POT_SPHERE) return r2 < r*r ? v0 : 0;
-  if (kind === POT_OSC) return 0.5*om*om*r2;
-  if (kind === POT_COULOMB) return -z/Math.max(Math.sqrt(r2), 0.5);
-  /* 双缝墙（R39）：墙在 x=wallX（厚 wallT），两条缝 |w.y|=slitD/2
-     （各宽 slitW）——与 pot3 GLSL 分支逐字一致（镜像契约见文件头） */
-  if (kind === POT_DOUBLE_SLIT){
-    if (Math.abs(wx - wallX) < 0.5*wallT &&
-        Math.abs(wy - 0.5*slitD) > 0.5*slitW &&
-        Math.abs(wy + 0.5*slitD) > 0.5*slitW) return v0;
-    return 0;
-  }
-  return 0;
-}
-
-/* 笔刷势丘（R44）：球形硬边势，中心 (bx,by,bz)（世界 texel）、半径 r、
-   强度 v0。v0=0 ⟹ 恒 0（关闭）。GLSL pot3Blob 与本函数逐字一致。 */
-function pot3Blob(wx, wy, wz, bx, by, bz, r, v0){
-  if (!v0) return 0;
-  const dx = wx - bx, dy = wy - by, dz = wz - bz;
-  return dx*dx + dy*dy + dz*dz < r*r ? v0 : 0;
-}
-
-function pot3JS(wx, wy, wz, st){
-  return pot3Slot(wx, wy, wz, st.potKind, st.potV0, st.potR, st.potW, st.potZ,
-    st.potWallX, st.potWallT, st.potSlitW, st.potSlitD)
-    + pot3Slot(wx, wy, wz, st.potKind2, st.potV02, st.potR2, st.potW2, st.potZ2,
-      st.potWallX2, st.potWallT2, st.potSlitW2, st.potSlitD2)
-    + pot3Blob(wx, wy, wz, st.potBX, st.potBY, st.potBZ, st.potBR, st.potBV0);
-}
-
-/* 单槽势在域内的 |V| 上界（格点单位）——R41 拆出供两槽求和。
-   slot=2 时读第二槽参数（potV02/potR2/…）。叠加势的 |V|max ≤ 两槽上界之和
-   （保守上界：只在两槽各自极值同点位时取等；稳定界保守化 ⟹ 子步增加）。 */
-function eMaxSlot(kind, st, slot){
-  const v0 = slot === 2 ? st.potV02 : st.potV0;
-  const r = slot === 2 ? st.potR2 : st.potR;
-  const om = slot === 2 ? st.potW2 : st.potW;
-  const z = slot === 2 ? st.potZ2 : st.potZ;
-  if (kind === POT_SPHERE) return Math.abs(v0 || 0);
-  if (kind === POT_OSC){
-    /* 域角 |w|max = √3·N/2 ⟹ Vmax = ½ω²·3·(N/2)² */
-    return 0.5*(om || 0)*(om || 0)*3*Math.pow(st.grid/2, 2);
-  }
-  if (kind === POT_COULOMB) return 2*Math.abs(z || 0);   /* 软化核 |V|≤Z/0.5 */
-  if (kind === POT_DOUBLE_SLIT) return Math.abs(v0 || 0);  /* 墙全高 V0 */
-  return 0;
-}
-
-class Schrodinger3dKernel extends PhysicsKernel {
-  constructor(){
-    super();
-    this.id = 'schrodinger3d';
-    this.name = '薛定谔 3D';
-    this.equation = '<b>SCHRÖDINGER 3D</b> · <i>i</i>ħ ∂ψ/∂t = −ħ²/2m ∇²ψ + V(<b>r</b>)ψ · 体积 ray-march';
-    this.pairs = 1;
-    this.dim3 = true;                 /* 引擎装配 evolve3d/display3d + 3D 帧路径 */
-  }
-
-  /* ---------- 初态：makeWave3d(n, opts) → { data, sum } ----------
-     data：n³×2 Float32Array（RG32F：Re/Im 交错，索引 ((z·n+y)·n+x)·2，
-     与 texImage3D 的数据布局（x 最快）一致）。
-     opts：{ fx,fy,fz（波包中心，世界分数 0..1）, kx,ky,kz（格点单位波数）,
-             sigma（gaussian 包宽，texel）, kind（'gaussian'|'ground'|'orbital2p'）,
-             z（库仑核电荷，ground/orbital2p 用） }
-     sum：原始总范数 Σ|ψ|²（引擎归一化到 1）。 */
-  makeWave3d(n, o){
-    const kind = o.kind || 'gaussian';
-    const sigma = o.sigma === undefined ? 6 : o.sigma;
-    const Z = o.z === undefined ? 0.25 : o.z;
-    const kx = o.kx || 0, ky = o.ky || 0, kz = o.kz || 0;
-    /* 世界坐标（格点单位、居中）：texel (x,y,z) 中心 = (idx+0.5−n/2) */
-    const cx = (o.fx === undefined ? 0.3 : o.fx)*n, cy = (o.fy === undefined ? 0.5 : o.fy)*n, cz = (o.fz === undefined ? 0.5 : o.fz)*n;
-    const data = new Float32Array(n*n*n*2);
-    let sum = 0;
-    for (let z=0; z<n; z++){
-      const wz0 = z + 0.5 - n/2;                 /* 相对域中心的世界 z */
-      for (let y=0; y<n; y++){
-        const wy0 = y + 0.5 - n/2;
-        for (let x=0; x<n; x++){
-          const wx0 = x + 0.5 - n/2;
-          const i = ((z*n + y)*n + x)*2;
-          let re, im;
-          if (kind === 'ground'){
-            const r = Math.sqrt(wx0*wx0 + wy0*wy0 + wz0*wz0);
-            re = Math.exp(-Z*r); im = 0;          /* 1s：实、球对称 */
-          } else if (kind === 'orbital2p'){
-            const r = Math.sqrt(wx0*wx0 + wy0*wy0 + wz0*wz0);
-            re = wz0*Math.exp(-Z*r/2); im = 0;    /* 2p_z：实、z=0 节面 */
-          } else {
-            const dx = wx0 - (cx - n/2), dy = wy0 - (cy - n/2), dz = wz0 - (cz - n/2);
-            const env = Math.exp(-(dx*dx + dy*dy + dz*dz)/(2*sigma*sigma));
-            const ph = kx*dx + ky*dy + kz*dz;
-            re = env*Math.cos(ph); im = env*Math.sin(ph);
-          }
-          data[i] = re; data[i+1] = im;
-          sum += re*re + im*im;
-        }
-      }
-    }
-    return { data, sum };
-  }
-
-  /* ---------- GLSL 注入 ---------- */
-  shaders(){
-    return {
-      /* 2D 片段（dim3 运行时不被引用；buildShaders 一律要求，故与 2D 内核同值） */
-      localH: 'V*c',
-      density: 'dot(psi.xy,psi.xy)',
-      kinetic: '0.25*(dot(dxp,dxp)+dot(dyp,dyp))',
-      potential: 'V*p',
-      /* R41 双槽势组合 + R44 笔刷势丘：pot3Slot 为单槽势函数（HELPERS 注入位
-         定义，evolve3d/cnRhs3d/cnSweep3d/reduce3d 四处同源），pot3 取主槽 +
-         第二槽 + blob 三者之和。uPotKind2=0（默认 POT_FREE）且 uPotBV0=0
-         （默认关闭）时后两项恒 0 ⟹ 与 R34–R43 逐位一致。
-         —— 与 pot3JS/pot3Slot/pot3Blob（CPU）逐分支一致（镜像契约见文件头） */
-      helpers: `float pot3Slot(vec3 w, int kind, float v0, float r, float om, float z,
-                float wallX, float wallT, float slitW, float slitD){
-  if (kind == 1) return (dot(w,w) < r*r) ? v0 : 0.0;
-  if (kind == 2) return 0.5*om*om*dot(w,w);
-  if (kind == 3) return -z/max(length(w), 0.5);
-  if (kind == 4) return (abs(w.x - wallX) < 0.5*wallT
-                         && abs(w.y - 0.5*slitD) > 0.5*slitW
-                         && abs(w.y + 0.5*slitD) > 0.5*slitW) ? v0 : 0.0;
-  return 0.0;
-}
-/* R44 笔刷势丘：球形硬边势（v0=0 关闭）——与 CPU pot3Blob 逐字一致 */
-float pot3Blob(vec3 w, vec3 c, float r, float v0){
-  if (v0 == 0.0) return 0.0;
-  vec3 d = w - c;
-  return (dot(d,d) < r*r) ? v0 : 0.0;
-}`,
-      pot3: `(pot3Slot(w, uPotKind, uPotV0, uPotR, uPotW, uPotZ,
-                uPotWallX, uPotWallT, uPotSlitW, uPotSlitD)
-        + pot3Slot(w, uPotKind2, uPotV02, uPotR2, uPotW2, uPotZ2,
-                uPotWallX2, uPotWallT2, uPotSlitW2, uPotSlitD2)
-        + pot3Blob(w, vec3(uPotBX, uPotBY, uPotBZ), uPotBR, uPotBV0))`,
-      /* 体积密度 / 相位（ray-march 与切片两条显示路径经 den3/ph3 共用） */
-      density3: 'dot(c.xy,c.xy)',
-      phase3: 'atan(c.y, c.x)',
-      /* 3D CN 积分器的局部块闭式解（R36）：标量薛定谔的 Gloc = −i·V（G=−i·M
-         的局部部分）⟹ (I−h·Gloc)⁻¹ = (1+i·h·V)⁻¹，即复平面上以 1/(1+(hV)²)
-         为模压缩因子的 Cayley 旋转：
-           arg/(1+ihV) = arg·(1−ihV)/(1+(hV)²)
-                       = ((arg.x+hV·arg.y) + i(arg.y−hV·arg.x))/(1+(hV)²)
-         xy/zw 两对通道同构（RG32F 下 zw 恒 0，公式保持 4 宽通用性）。
-         |1+i·hV|≥1 ⟹ 局部映射压缩模长 ≤1，Jacobi 迭代不放大；全步 Cayley
-         (I−hG)⁻¹(I+hG) 对斜对称 G 严格正交 ⟹ 范数机器精度守恒（精确算术口径；
-         GPU float32 长时程残差量级同 2D CN 路径，见 kernel.js CN 节头注）。 */
-      cnLocalSolve3: `vec4 cnLocalSolve3(vec4 arg, float V){
-  float d = 1.0 + uDtHalf*uDtHalf*V*V;
-  return vec4(arg.x + uDtHalf*V*arg.y, arg.y - uDtHalf*V*arg.x,
-              arg.z + uDtHalf*V*arg.w, arg.w - uDtHalf*V*arg.w) / d;
-}`,
-      uniforms: `uniform int   uPotKind;   /* 势形编号（POT_FREE/SPHERE/OSC/COULOMB/DOUBLE_SLIT） */
-uniform float uPotV0;     /* 球势垒高度 / 双缝墙高 */
-uniform float uPotR;     /* 球势垒半径（texel） */
-uniform float uPotW;     /* 谐振子 ω（ℏω=ω；基态 σ=1/√ω） */
-uniform float uPotZ;     /* 库仑核电荷 Z（1s: E=−Z²/2；2p_z: E=−Z²/8） */
-uniform float uPotWallX; /* 双缝墙心位置 x（世界 texel） */
-uniform float uPotWallT; /* 双缝墙厚（texel） */
-uniform float uPotSlitW; /* 双缝缝宽（texel） */
-uniform float uPotSlitD; /* 双缝缝距（texel；0 = 单缝） */
-/* 第二势槽（R41 组合势）：V = pot3Slot(主) + pot3Slot(第二)；uPotKind2=0 无 */
-uniform int   uPotKind2;
-uniform float uPotV02;
-uniform float uPotR2;
-uniform float uPotW2;
-uniform float uPotZ2;
-uniform float uPotWallX2;
-uniform float uPotWallT2;
-uniform float uPotSlitW2;
-uniform float uPotSlitD2;
-/* 笔刷势丘（R44 势刷）：球形硬边势，中心 (BX,BY,BZ)（世界 texel）、
-   半径 BR、强度 BV0——0 = 关闭。与主槽/第二槽独立叠加。 */
-uniform float uPotBX;
-uniform float uPotBY;
-uniform float uPotBZ;
-uniform float uPotBR;
-uniform float uPotBV0;`,
-    };
-  }
-
-  /* 内核私有 uniform 赋值（引擎每帧对 evolve3d/volume 两个 program 调用）。
-     注意 program 中未引用的 uniform 位置为 null（被编译器优化掉）——静默跳过。 */
-  setUniforms(gl, prog, state){
-    const k = gl.getUniformLocation(prog, 'uPotKind'); if (k) gl.uniform1i(k, state.potKind|0);
-    const v0 = gl.getUniformLocation(prog, 'uPotV0'); if (v0) gl.uniform1f(v0, state.potV0);
-    const r = gl.getUniformLocation(prog, 'uPotR');  if (r)  gl.uniform1f(r, state.potR);
-    const w = gl.getUniformLocation(prog, 'uPotW');  if (w)  gl.uniform1f(w, state.potW);
-    const z = gl.getUniformLocation(prog, 'uPotZ');  if (z)  gl.uniform1f(z, state.potZ);
-    const wx = gl.getUniformLocation(prog, 'uPotWallX'); if (wx) gl.uniform1f(wx, state.potWallX);
-    const wt = gl.getUniformLocation(prog, 'uPotWallT'); if (wt) gl.uniform1f(wt, state.potWallT);
-    const sw = gl.getUniformLocation(prog, 'uPotSlitW'); if (sw) gl.uniform1f(sw, state.potSlitW);
-    const sd = gl.getUniformLocation(prog, 'uPotSlitD'); if (sd) gl.uniform1f(sd, state.potSlitD);
-    /* 第二势槽（R41）：state 字段缺失（旧存档/未初始化）时按 0 处理 ⟹ 无叠加 */
-    const k2 = gl.getUniformLocation(prog, 'uPotKind2'); if (k2) gl.uniform1i(k2, state.potKind2|0);
-    const v02 = gl.getUniformLocation(prog, 'uPotV02'); if (v02) gl.uniform1f(v02, state.potV02 || 0);
-    const r2u = gl.getUniformLocation(prog, 'uPotR2'); if (r2u) gl.uniform1f(r2u, state.potR2 || 0);
-    const w2 = gl.getUniformLocation(prog, 'uPotW2'); if (w2) gl.uniform1f(w2, state.potW2 || 0);
-    const z2 = gl.getUniformLocation(prog, 'uPotZ2'); if (z2) gl.uniform1f(z2, state.potZ2 || 0);
-    const wx2 = gl.getUniformLocation(prog, 'uPotWallX2'); if (wx2) gl.uniform1f(wx2, state.potWallX2 || 0);
-    const wt2 = gl.getUniformLocation(prog, 'uPotWallT2'); if (wt2) gl.uniform1f(wt2, state.potWallT2 || 0);
-    const sw2 = gl.getUniformLocation(prog, 'uPotSlitW2'); if (sw2) gl.uniform1f(sw2, state.potSlitW2 || 0);
-    const sd2 = gl.getUniformLocation(prog, 'uPotSlitD2'); if (sd2) gl.uniform1f(sd2, state.potSlitD2 || 0);
-    /* 笔刷势丘（R44）：state 字段缺失（旧存档）时按 0 处理 ⟹ 无 blob */
-    const bx = gl.getUniformLocation(prog, 'uPotBX'); if (bx) gl.uniform1f(bx, state.potBX || 0);
-    const by = gl.getUniformLocation(prog, 'uPotBY'); if (by) gl.uniform1f(by, state.potBY || 0);
-    const bz = gl.getUniformLocation(prog, 'uPotBZ'); if (bz) gl.uniform1f(bz, state.potBZ || 0);
-    const br = gl.getUniformLocation(prog, 'uPotBR'); if (br) gl.uniform1f(br, state.potBR || 0);
-    const bv = gl.getUniformLocation(prog, 'uPotBV0'); if (bv) gl.uniform1f(bv, state.potBV0 || 0);
-  }
-
-  /* H 特征值上界附加项（引擎 eMax = uK·12 + 1 + 本项）：
-     各势形在域内的 |V| 最大值（格点单位）。R44 势刷 blob 叠加 |potBV0|。 */
-  eMaxExtra(state){
-    return eMaxSlot(state.potKind, state) + eMaxSlot(state.potKind2, state, 2)
-      + Math.abs(state.potBV0 || 0);
-  }
-
-  /* 3D 透射率扫描的解析模型（R38）：s 波球势垒。与 2D 的 transmissionModel
-     平行但几何是球（势形 potKind=SPHERE 的半径 potR）而非矩垒——扫描器
-     TransmissionScanner3 据此挂载。 */
-  transmissionModel3(state){
-    return sphericalBarrierModel3(state.m);
-  }
-
-  /* ---------- CPU 端全卷测量（引擎 probSum3d 的回读后端；HUD P/T/V/E + 调试句柄）----------
-     buf：n³×2 Float32Array（RG32F 逐层 readPixels 拼成，索引 ((z·n+y)·n+x)·2）。
-     产出（全部为全场积分，非逐粒子期望值——P 即总概率）：
-       P    = Σ|ψ|²
-       T    = uK·Σ_fwd|Δψ|²（3 前向链路/texel；= ⟨ψ|−lap_d|ψ⟩，与 2D reduce
-              的 4 阶差分为光滑极限一致；Neumann 边界由 clamp 自然给出零链路）
-       V    = Σ V(w)·|ψ|²（pot3JS 镜像势）
-       E    = T + V（KDK 守恒的离散能量；驻波/基态预设下应无长期漂移）
-       peak = max|ψ|²
-       cx/cy/cz = 概率质心（texel 序号 / n，世界分数 0..1）
-     simTime 由调用方附加。 */
-  moments3d(buf, n, state){
-    const k = 0.5/state.m;
-    const half = n/2;
-    let P = 0, link = 0, Vsum = 0, peak = 0, sx = 0, sy = 0, sz = 0;
-    /* Neumann clamp 采样（与 shader S() 的 clamp(p,0,1) 一致） */
-    const at = (x, y, z, c) => {
-      const xi = x < 0 ? 0 : (x >= n ? n-1 : x);
-      const yi = y < 0 ? 0 : (y >= n ? n-1 : y);
-      const zi = z < 0 ? 0 : (z >= n ? n-1 : z);
-      return buf[((zi*n + yi)*n + xi)*2 + c];
-    };
-    for (let z=0; z<n; z++){
-      const wz = z + 0.5 - half;
-      for (let y=0; y<n; y++){
-        const wy = y + 0.5 - half;
-        for (let x=0; x<n; x++){
-          const wx = x + 0.5 - half;
-          const i = ((z*n + y)*n + x)*2;
-          const re = buf[i], im = buf[i+1];
-          const p = re*re + im*im;
-          P += p;
-          if (p > peak) peak = p;
-          sx += x*p; sy += y*p; sz += z*p;
-          Vsum += pot3JS(wx, wy, wz, state)*p;
-          /* 3 前向链路（x/y/z 各一）× 2 通道；界外由 clamp 归边（Neumann ⟹ Δ=0） */
-          const dxRe = at(x+1,y,z,0) - re, dxIm = at(x+1,y,z,1) - im;
-          const dyRe = at(x,y+1,z,0) - re, dyIm = at(x,y+1,z,1) - im;
-          const dzRe = at(x,y,z+1,0) - re, dzIm = at(x,y,z+1,1) - im;
-          link += dxRe*dxRe + dxIm*dxIm + dyRe*dyRe + dyIm*dyIm + dzRe*dzRe + dzIm*dzIm;
-        }
-      }
-    }
-    return { P, T: k*link, V: Vsum, E: k*link + Vsum, peak,
-             cx: P > 0 ? sx/P/n : 0.5, cy: P > 0 ? sy/P/n : 0.5, cz: P > 0 ? sz/P/n : 0.5 };
-  }
-
-  /* ---------- 解析能级阶梯（HUD「E → 最近能级」对照；单位与引擎一致）----------
-     谐振子：E_n = ω·(n+3/2)（n=nx+ny+nz≥0，3D 各向同性简并）。
-     氢原子：E_n = −Z²/(2n²)（n=1,2,…；主量子数谱，1s 与 2p_z 同族）。 */
-  energyLevels(state){
-    const fmtE = v => Math.abs(v) < 1e-3 ? v.toExponential(2) : v.toFixed(6);
-    if (state.preset === 'oscillator'){
-      const w = state.potW;
-      return {
-        kind: '3D 谐振子',
-        param: 'ℏω=' + fmtE(w),
-        nearest(e){
-          const n = Math.max(0, Math.round(e/w - 1.5));
-          return { label: '' + n, e: (n + 1.5)*w, d: (n + 1.5)*w - e };
-        },
-      };
-    }
-    if (state.preset === 'ground' || state.preset === 'orbital2p'){
-      const Z = state.potZ;
-      const E = n => -Z*Z/(2*n*n);
-      return {
-        kind: '氢原子能级',
-        param: 'Z=' + Z.toFixed(3) + '（E₁=' + fmtE(E(1)) + '）',
-        nearest(e){
-          let best = null;
-          for (let n=1; n<=15; n++){
-            const ev = E(n), err = Math.abs(ev - e);
-            if (!best || err < best._err) best = { label: 'n=' + n, e: ev, d: ev - e, _err: err };
-          }
-          return best;
-        },
-      };
-    }
-    return null;
-  }
-
-  /* ---------- 预设 ----------
-     wave3 = [fx,fy,fz,kx,ky,kz]（世界分数中心 + 格点单位波数）；
-     kind 见 makeWave3d；params 并入 state（势形编号 + 势参数 + σ）。
-     build() 为空——3D 无势场画布（势经 pot3 解析注入）。
-
-     exposure3（曝光）逐预设给定：体渲染的发射-吸收存在「外壳遮挡核心」的权衡，
-     最优曝光不是一个常数——密度峰值跨 36×（2p_z 8.7e-5 ↔ 1s 3.1e-3），且弥散态
-     （谐振子 σ=8）在过高曝光下外晕先变不透明、反而把亮核挡成暗壳。下表的取值是
-     CDP 实测标定（目标 dispA 峰值亮度 0.7–0.9，Chrome+SwiftShader 65³ 默认机位）：
-       free3d 3600 → 0.77 / sphere 4800 → 0.71 / oscillator 2400 → 0.86
-       ground 1200 → 0.88 / orbital2p 8000 → 0.88
-     用户仍可用「曝光」滑块（100–10000）自由调整。 */
-  presets(){
-    return {
-      free3d: { name:'自由传播', kind:'gaussian', wave3:[0.30,0.5,0.5, 0.12,0,0],
-                params:{ exposure3:3600 }, build(){},
-                text:'高斯波包在无势场中飞行并自然扩散——不确定性原理的体积版。色相表示相位 arg(ψ)，可整束旋转视角观察包络。' },
-      sphere: { name:'球形势垒', kind:'gaussian', wave3:[0.15,0.5,0.5, 0.15,0,0],
-                params:{ potKind:POT_SPHERE, potV0:0.02, potR:10, sigma:6, exposure3:4800 }, build(){},
-                text:'高斯波包撞上高于自身能量的球形势垒（V0=0.02, R=10 texel）：迎头部分反射，边缘衍射，球后浮现散射尾波——三维版的圆散射体。' },
-      oscillator: { name:'3D 谐振子', kind:'gaussian', wave3:[0.5,0.5,0.5, 0,0,0],
-                params:{ potKind:POT_OSC, potW:1/64, sigma:8, exposure3:2400 }, build(){},
-                text:'V = ½ω²r² 抛物势阱。σ=8 的中心波包恰为基态（σ=1/√ω）——严格驻波，密度与能量都不动；调宽 σ 滑块可看到波包周期性呼吸（本征叠加）。' },
-      ground: { name:'氢原子 1s', kind:'ground', wave3:[0.5,0.5,0.5, 0,0,0],
-                params:{ potKind:POT_COULOMB, potZ:0.25, exposure3:1200 }, build(){},
-                text:'氢原子基态：ψ ∝ e^{−Zr} 球对称驻波，E = −Z²/2（HUD 能级阶梯对照 n=1）。软化库仑势 V = −Z/max(r, ½) 防原点奇点。' },
-      orbital2p: { name:'氢原子 2p_z', kind:'orbital2p', wave3:[0.5,0.5,0.5, 0,0,0],
-                params:{ potKind:POT_COULOMB, potZ:0.25, exposure3:8000 }, build(){},
-                text:'2p_z 轨道：ψ ∝ z·e^{−Zr/2}，赤道面 z=0 为节面（密度严格为零）。上下瓣相位差 π——相位着色下呈互补双色瓣，E = −Z²/8（对照 n=2）。' },
-      slits3d: { name:'双缝干涉', kind:'gaussian', wave3:[0.5-26/64,0.5,0.5, 1.2,0,0],
-                params:{ potKind:POT_DOUBLE_SLIT, potV0:3, potWallX:0, potWallT:4, potSlitW:6, potSlitD:20,
-                         sigma:6, exposure3:3600 }, build(){},
-                text:'物质波撞上带双缝的不透明墙（V₀=3、厚 4 texel，z 向无限）：每条缝成为柱面波源，两束相干叠加——墙后屏幕方向长出明暗相间、等间距的干涉条纹（缝距 D=20、k=1.2 ⟹ 条纹间距 ≈λL/D≈6.8 texel）。每个粒子抵达屏幕的位置由 |ψ|² 决定——概率幅的自我干涉。' },
-      /* 组合势（R41）：主槽双缝墙（slits3d 口径）+ 第二槽球垒（R=6，不遮缝：
-         缝内缘 |y|=7 > R，球垒仅占据墙中央的实墙区）。波包先经球垒散射
-         （动量重分布）再入射双缝 ⟹ 屏图样被散射调制，与 slits3d 纯墙对照
-         即见散射对干涉的影响；可用 SlitScanner（R40）做峰数/峰位定量对比。 */
-      slit_sphere3d: { name:'球垒调制双缝', kind:'gaussian', wave3:[0.5-26/64,0.5,0.5, 1.2,0,0],
-                params:{ potKind:POT_DOUBLE_SLIT, potV0:3, potWallX:0, potWallT:4, potSlitW:6, potSlitD:20,
-                         potKind2:POT_SPHERE, potV02:2, potR2:6,
-                         sigma:6, exposure3:3600 }, build(){},
-                text:'同一道双缝墙，但墙中央叠了一个球形势垒（R=6、V₀=2，球半径小于缝内缘 |y|=7 故不遮缝）：波包先被球垒散射、动量重分布，再入射双缝——屏上图样是被散射调制的干涉，与「双缝干涉」预设对照即见散射如何改写干涉。势为两槽解析叠加（R41），⟨V⟩ 与稳定界按两槽之和计算。' },
-      slit1_3d: { name:'单缝衍射', kind:'gaussian', wave3:[0.5-26/64,0.5,0.5, 1.2,0,0],
-                params:{ potKind:POT_DOUBLE_SLIT, potV0:3, potWallX:0, potWallT:4, potSlitW:6, potSlitD:0,
-                         sigma:6, exposure3:3600 }, build(){},
-                text:'同一道墙只开一条缝（缝距 D=0 退化为单缝，缝宽 6 texel）：屏上得到单缝衍射的宽中央主极大与两侧次级瓣——没有第二条缝可干涉，图样是单柱面波的纯衍射。与「双缝干涉」预设对照即见干涉与衍射的分工。' },
-    };
-  }
-
-  /* 面板附加控件：无（3D 渲染控件由引擎 3D 面板提供：网格/步数/曝光/σ/势参数/相机） */
-  extraControls(){ return null; }
-
-  defaults(){
-    return {
-      /* 体积网格默认 64³：内存 n³、每全卷 pass = n 次逐层 draw（R34 spike 实测
-         64³ 8.8ms/pass、128³ 105.6ms/pass，SwiftShader）。必须显式覆盖引擎默认的
-         grid:256——那个值是 2D 场纹理的档位，落到 3D 即 256³（268MB/场、
-         每帧 4608 次 draw），直接把交互帧率打到个位数（R34 首轮验证实测踩中）。
-         面板下拉与 ?grid= 均限制在 32…128。 */
-      grid: 64,
-      /* 积分器选择（R36）：'kdk'（默认，速度 Verlet）/ 'cn'（Crank-Nicolson）。
-         预设 params 不含该项——用户选择跨预设保留（对照实验不因切预设而重置）。 */
-      integrator3: 'kdk',
-      potKind: POT_FREE, potV0: 0.02, potR: 10, potW: 1/64, potZ: 0.25,
-      /* 双缝墙（R39；仅 potKind=4 生效）——墙心 x、墙厚、缝宽、缝距（世界 texel） */
-      potWallX: 0, potWallT: 4, potSlitW: 6, potSlitD: 20,
-      /* 第二势槽（R41 组合势）：默认 POT_FREE ⟹ 无叠加（与 R34–R40 逐位一致）。
-         预设 params 可注入组合（如 slit_sphere3d：主槽双缝墙 + 第二槽球垒）。 */
-      potKind2: POT_FREE, potV02: 0.02, potR2: 10, potW2: 1/64, potZ2: 0.25,
-      potWallX2: 0, potWallT2: 4, potSlitW2: 6, potSlitD2: 20,
-      /* 笔刷势丘（R44 势刷）：默认 BV0=0 ⟹ 关闭（与 R34–R43 逐位一致）。
-         首次「势刷」拖拽放置时若 BV0=0 则赋默认规格 0.5（app.js placeBlob3）；
-         BR/BV0 由面板滑块控制（负 BV0 = 势阱），删除按钮置 BV0=0。 */
-      potBX: 0, potBY: 0, potBZ: 0, potBR: 8, potBV0: 0,
-      /* 曝光默认 3600（= free3d 预设值，见预设表的实测标定）；其余预设各自覆盖 */
-      steps3: 48, exposure3: 3600, phaseColor: 1, slice3: 0, sliceZ: 0.5,
-      sigma: 6,
-    };
-  }
-}
-
-registerKernel(new Schrodinger3dKernel());
 
 /* ===== src/main.js ===== */
 /* 演示入口：注册物理内核 → 按 URL ?kernel= 参数挂载 QuantumField。

@@ -11,6 +11,7 @@
  * ========================================================================== */
 import { createContext, createProgram, Quad, makeTarget, makeRGBA16F, makeReduce, makeTarget3D, FS_BLIT } from './gl.js';
 import { getKernel, buildShaders } from '../physics/kernel.js';
+import { MAX_BLOBS } from '../physics/schrodinger3d.js';
 import { injectStyles } from './styles.js';
 import { TransmissionScanner } from './scan.js';
 import { TransmissionScanner3 } from './scan.js';
@@ -324,11 +325,11 @@ ${d3 ? `
     <div class="grid2" style="margin-top:6px">
       <button data-tool3="cam" class="on">视角旋转</button>
       <button data-tool3="pot">势刷放置</button>
-      <button id="btnBlobDel">删除势丘</button>
+      <button id="btnBlobDel">清空势丘</button>
     </div>
     <div class="row"><label>势丘半径 R</label><input type="range" id="rBlobR" min="3" max="24" step="1" value="8"><output id="oBlobR">8</output></div>
     <div class="row"><label>势丘强度 V₀</label><input type="range" id="rBlobV0" min="-2" max="2" step="0.05" value="0.5"><output id="oBlobV0">0.50</output></div>
-    <div class="row"><label>势丘位置</label><output id="oBlobPos">关</output></div>
+    <div class="row"><label>势丘列表</label><output id="oBlobPos">无</output></div>
     <div class="grid2" style="margin-top:6px">
       <button id="btnPhase3" class="on">相位着色</button>
       <button id="btnSlice3">切片模式</button>
@@ -340,7 +341,7 @@ ${d3 ? `
       <button id="btnImport3">导入现场</button>
     </div>
     <input type="file" id="fileImport3" accept=".json,application/json" style="display:none">
-    <div class="hint" style="margin-top:4px">拖拽旋转 · 滚轮缩放。V₀/R 仅球势垒预设生效；ω/σ 决定谐振子基态（σ=1/√ω）；Z 仅氢原子预设生效（改动后波包按新 Z 重发）；墙心 x₀/墙厚 T/缝宽 W/缝距 D 仅双缝预设生效（D=0 退化为单缝，改动即时生效）。<b>势刷</b>：切到「势刷放置」后在体积上拖拽，沿视线中点放置球形硬边势丘（与主势/第二势独立叠加，负 V₀=势阱；放置后演化继续，不重发波包）。积分器：KDK 为速度 Verlet（默认，R34 已验证守恒）；CN 为 Crank-Nicolson + block-Jacobi，Cayley 矩阵严格正交、范数机器精度守恒——同预设下切换可对照二者离散误差（切换即时生效，不重发波包）。导出现场：参数 + 场数据 + 相机 + 积分器选择的单文件 JSON 存档（网格不符时拒绝导入，不重采样）。</div>
+    <div class="hint" style="margin-top:4px">拖拽旋转 · 滚轮缩放。V₀/R 仅球势垒预设生效；ω/σ 决定谐振子基态（σ=1/√ω）；Z 仅氢原子预设生效（改动后波包按新 Z 重发）；墙心 x₀/墙厚 T/缝宽 W/缝距 D 仅双缝预设生效（D=0 退化为单缝，改动即时生效）。<b>势刷</b>：切到「势刷放置」后在体积上拖拽，沿视线中点连续涂抹球形硬边势丘链（按下必落首丘，拖拽按 0.6·R 距离阈值续落——球链重叠 ⟹ 视觉连续；与主势/第二势独立叠加，负 V₀=势阱；上限 16 丘，超出淘汰最旧；放置后演化继续，不重发波包）。积分器：KDK 为速度 Verlet（默认，R34 已验证守恒）；CN 为 Crank-Nicolson + block-Jacobi，Cayley 矩阵严格正交、范数机器精度守恒——同预设下切换可对照二者离散误差（切换即时生效，不重发波包）。导出现场：参数 + 场数据 + 相机 + 积分器选择的单文件 JSON 存档（网格不符时拒绝导入，不重采样）。</div>
   </div>
   <div class="sec" id="scan3Sec">
     <h3>3D 透射扫描</h3>
@@ -1290,42 +1291,63 @@ ${d3 ? `
     return { x: (ro[0] + rd[0]*t)*n, y: (ro[1] + rd[1]*t)*n, z: (ro[2] + rd[2]*t)*n };
   }
 
-  /* 在画布客户坐标处放置/拖动势丘（势刷工具）。首次放置（potBV0=0）赋默认
-     规格 0.5——用户未表达强度意图时不静默启用强势。 */
-  placeBlob3(cx, cy, announce){
+  /* 势刷 stamp（R49 连续涂抹，由 R44 placeBlob3 单丘升级）：在画布客户
+     坐标处沿视线 slab 中点落一个球形硬边势丘（规格 = 当前滑块 potBlobR/
+     potBlobV0，stamp 时快照）。force=true（pointerdown）无视距离阈值必落；
+     force=false（pointermove 拖拽涂抹）仅在与最后一个丘中心距 ≥0.6·R 时
+     落新丘——球链重叠 ⟹ 视觉连续，同时天然节流（慢拖不密、快拖不断）。
+     丘数上限 MAX_BLOBS=16，超出 FIFO 淘汰最旧（announce 时 toast 明示）。 */
+  stampBlob3(cx, cy, force, announce){
     const r = this.canvas.getBoundingClientRect();
     const nx = (cx - r.left)/r.width, ny = 1 - (cy - r.top)/r.height;
     const p = this.pickBlob3(nx, ny);
     if (!p) return false;
-    if (this.state.potBV0 === 0){
-      this.state.potBV0 = 0.5;
-      this.syncBlobRows();
-    }
-    /* 世界 texel ∈ [−n/2, n/2]（slab 中点天然在域内）；留 2 texel 边缘余量，
-       势丘不完全贴壁（硬边球的 |V| 上界 eMaxExtra 与位置无关，无需额外处理）。 */
+    const spec = { r: this.state.potBlobR, v0: this.state.potBlobV0 };
+    /* 世界 texel ∈ [−n/2, n/2]（slab 中点天然在域内）；留 2 texel 边缘余量 */
     const lim = this.state.grid/2 - 2;
-    this.state.potBX = Math.max(-lim, Math.min(lim, p.x));
-    this.state.potBY = Math.max(-lim, Math.min(lim, p.y));
-    this.state.potBZ = Math.max(-lim, Math.min(lim, p.z));
+    const b = {
+      x: Math.max(-lim, Math.min(lim, p.x)),
+      y: Math.max(-lim, Math.min(lim, p.y)),
+      z: Math.max(-lim, Math.min(lim, p.z)),
+      r: spec.r, v0: spec.v0,
+    };
+    const list = this.state.potBlobs || (this.state.potBlobs = []);
+    if (!force && list.length){
+      const last = list[list.length - 1];
+      const dx = b.x - last.x, dy = b.y - last.y, dz = b.z - last.z;
+      if (Math.sqrt(dx*dx + dy*dy + dz*dz) < 0.6*spec.r) return false;   /* 距离阈值：过密不落 */
+    }
+    let evicted = false;
+    if (list.length >= MAX_BLOBS){ list.shift(); evicted = true; }
+    list.push(b);
     this.updateBlobReadout();
-    if (announce) this.toast('势丘 → (' + this.state.potBX.toFixed(1) + ', '
-      + this.state.potBY.toFixed(1) + ', ' + this.state.potBZ.toFixed(1) + ') texel');
+    if (announce){
+      this.toast(evicted
+        ? '势丘 ×' + list.length + '（最旧丘已淘汰，上限 ' + MAX_BLOBS + '）'
+        : '势丘 → (' + b.x.toFixed(1) + ', ' + b.y.toFixed(1) + ', ' + b.z.toFixed(1) + ') texel');
+    }
     return true;
   }
 
-  /* 势丘状态读数（面板「势丘位置」行） */
+  /* 势丘列表读数（面板「势丘」行）：丘数 · 最后位置 · 当前规格 */
   updateBlobReadout(){
     const el = this.q('#oBlobPos'); if (!el) return;
-    el.textContent = this.state.potBV0 === 0 ? '关'
-      : '(' + this.state.potBX.toFixed(1) + ', ' + this.state.potBY.toFixed(1) + ', '
-        + this.state.potBZ.toFixed(1) + ') · R=' + this.state.potBR.toFixed(0)
-        + ' · V₀=' + this.state.potBV0.toFixed(2);
+    const list = this.state.potBlobs || [];
+    if (!list.length){
+      el.textContent = '无';
+      return;
+    }
+    const b = list[list.length - 1];
+    el.textContent = '×' + list.length + ' · (' + b.x.toFixed(1) + ', ' + b.y.toFixed(1)
+      + ', ' + b.z.toFixed(1) + ') · R=' + this.state.potBlobR.toFixed(0)
+      + ' · V₀=' + this.state.potBlobV0.toFixed(2);
   }
 
-  /* 势丘滑块行同步（DOM ← state；放置默认规格 / 导入存档后调用） */
+  /* 势丘规格滑块行同步（DOM ← state；导入存档后调用）。滑块语义是「新丘
+     规格」（R49）：改滑块只影响后续 stamp，不追溯已落丘（丘各自快照）。 */
   syncBlobRows(){
-    const rs = [['#rBlobR','#oBlobR','potBR', v => String(v|0)],
-                ['#rBlobV0','#oBlobV0','potBV0', v => v.toFixed(2)]];
+    const rs = [['#rBlobR','#oBlobR','potBlobR', v => String(v|0)],
+                ['#rBlobV0','#oBlobV0','potBlobV0', v => v.toFixed(2)]];
     for (const [id, out, key, fmt] of rs){
       const el = this.q(id); if (!el) continue;
       el.value = this.state[key];
@@ -1828,6 +1850,10 @@ ${d3 ? `
          （KDK/CN 对照从同一现场出发），故显式存档 + 导入时校验取值。 */
       integrator3: this.state.integrator3 === 'cn' ? 'cn' : 'kdk',
       camera: { theta: this.cam.theta, phi: this.cam.phi, dist: this.cam.dist },
+      /* 势刷丘列表（R49，数组非数字 ⟹ 白名单循环不收，须显式存档）：
+         顶层 blobs 段 [[x,y,z,r,v0],...]（与 state.potBlobs 同构）。
+         R44 旧存档无此段——导入时按 potBV0≠0 从 state 单丘五字段迁移。 */
+      blobs: (this.state.potBlobs || []).map(b => [b.x, b.y, b.z, b.r, b.v0]),
       wave: { encoding: 'rg32f-f32', floats: n*n*n*2, data: f32ToB64(buf) },
     };
   }
@@ -1869,6 +1895,19 @@ ${d3 ? `
       throw new Error('存档相机段无效');
     if (obj.integrator3 !== undefined && obj.integrator3 !== 'kdk' && obj.integrator3 !== 'cn')
       throw new Error('存档积分器段无效（须 kdk/cn）: ' + obj.integrator3);
+    /* 势刷丘列表（R49）：blobs 段须为 ≤MAX_BLOBS 个 [x,y,z,r,v0] 全有限元组。
+       R44 旧存档无 blobs 段——合法（迁移路径见阶段 2）。 */
+    let blobList = null;
+    if (obj.blobs !== undefined){
+      if (!Array.isArray(obj.blobs) || obj.blobs.length > MAX_BLOBS)
+        throw new Error('存档势丘段无效（须数组且 ≤' + MAX_BLOBS + ' 项）');
+      for (let i = 0; i < obj.blobs.length; i++){
+        const b = obj.blobs[i];
+        if (!Array.isArray(b) || b.length !== 5 || !b.every(v => typeof v === 'number' && isFinite(v)))
+          throw new Error('存档势丘 #' + i + ' 无效（须 [x,y,z,r,v0] 全有限）');
+      }
+      blobList = obj.blobs.map(b => ({ x: b[0], y: b[1], z: b[2], r: b[3], v0: b[4] }));
+    }
     /* 阶段 2：写现场 */
     const SKIP = new Set(['grid','paused','simTime','preset','lastWave','waveCount','drag','tool']);
     let n = 0;
@@ -1877,16 +1916,32 @@ ${d3 ? `
       const v = obj.state[k];
       if (typeof v === 'number' && isFinite(v) && k in this.state){ this.state[k] = v; n++; }
     }
+    /* 势刷丘列表恢复（R49）：新存档取 blobs 段；R44 旧存档无该段 ⟹ 若
+       potBV0 为有限数且 ≠0（单丘曾放置过）迁为列表首项（五字段同构），
+       滑块规格 potBR→potBlobR 一并迁移；无段且 potBV0=0/缺失 ⟹ 空列表
+       （与 R44 关闭态一致）。 */
+    if (blobList){
+      this.state.potBlobs = blobList;
+    } else {
+      const st = obj.state || {};
+      const bv0 = st.potBV0;
+      this.state.potBlobs = (typeof bv0 === 'number' && isFinite(bv0) && bv0 !== 0)
+        ? [{ x: st.potBX || 0, y: st.potBY || 0, z: st.potBZ || 0,
+             r: st.potBR || 8, v0: bv0 }]
+        : [];
+      if (typeof st.potBR === 'number' && isFinite(st.potBR)) this.state.potBlobR = st.potBR;
+    }
     if (obj.integrator3) this.state.integrator3 = obj.integrator3;
     if (obj.camera) { this.cam.theta = obj.camera.theta; this.cam.phi = obj.camera.phi; this.cam.dist = obj.camera.dist; }
+    const blobMsg = this.state.potBlobs.length ? ' + 势丘 ' + this.state.potBlobs.length + ' 个' : '';
     if (waveF32){
       this.uploadWave3(waveF32);
       this._baseCaptured = false;          /* P 守恒基准按导入场重捕（HUD err% 口径） */
-      this.toast('3D 现场已导入（恢复 ' + n + ' 项参数 + 场数据 ' + (this.state.grid**3) + ' 体素）');
+      this.toast('3D 现场已导入（恢复 ' + n + ' 项参数' + blobMsg + ' + 场数据 ' + (this.state.grid**3) + ' 体素）');
     } else {
       this.reinitWave();
       this._baseCaptured = false;
-      this.toast('3D 存档无场数据：已恢复 ' + n + ' 项参数并按预设重发初态');
+      this.toast('3D 存档无场数据：已恢复 ' + n + ' 项参数' + blobMsg + ' 并按预设重发初态');
     }
     this.syncControls();
     return n;
@@ -1934,11 +1989,12 @@ ${d3 ? `
     const pk2 = this.q('#selPotKind2');       /* 第二势槽下拉（R41：预设/导入可注入组合） */
     if (pk2) pk2.value = String(this.state.potKind2 | 0);
     this.refreshPot2Rows();
-    /* R44：3D 工具按钮态 + 势丘读数（预设切换 / 导入存档后同步；2D 内核下
-       querySelectorAll 为空、#oBlobPos 不存在 ⟹ 同步调用天然无害） */
+    /* R49：3D 工具按钮态 + 势丘规格滑块与读数（预设切换 / 导入存档后同步；
+       滑块同步覆盖 R44 旧存档迁移（potBR→potBlobR）的面板更新；
+       2D 内核下 querySelectorAll 为空、#oBlobPos 不存在 ⟹ 同步调用天然无害） */
     this.container.querySelectorAll('[data-tool3]').forEach(x =>
       x.classList.toggle('on', x.dataset.tool3 === (this.state.tool3 || 'cam')));
-    this.updateBlobReadout();
+    this.syncBlobRows();
     const abp = this.q('#oABPos');            /* AB 螺线管位置读数（预设 params 可能改 abX/abY） */
     if (abp) abp.textContent = '(' + this.state.abX.toFixed(2) + ', ' + this.state.abY.toFixed(2) + ')';
   }
@@ -1970,20 +2026,20 @@ ${d3 ? `
     const aim = this.q('#aim'), aimLine = this.q('#aimline'), aimDot = this.q('#aimdot'), aimTxt = this.q('#aimtxt');
 
     if (this.kernel.dim3){
-      /* 3D：轨道相机（拖拽旋转 + 滚轮缩放）+ 势刷（R44：拖拽沿视线放置
-         球形势丘）。无拖拽发射（初态由预设/σ 滑块给定）；工具模式
+      /* 3D：轨道相机（拖拽旋转 + 滚轮缩放）+ 势刷（R49：拖拽连续涂抹球
+         形势丘链）。无拖拽发射（初态由预设/σ 滑块给定）；工具模式
          state.tool3='cam' | 'pot' 决定 pointer 语义（面板按钮 / P 键切换）。 */
       this.on(canvas, 'pointerdown', e => {
         try{ canvas.setPointerCapture(e.pointerId); }catch(_){/* 合成/无效 pointerId 时不应中断交互 */ }
         if (this.state.tool3 === 'pot'){
-          this.placeBlob3(e.clientX, e.clientY, true);
+          this.stampBlob3(e.clientX, e.clientY, true, true);   /* 按下必落首丘（无视距离阈值） */
         } else {
           this.cam.drag = { x: e.clientX, y: e.clientY };
         }
       });
       this.on(canvas, 'pointermove', e => {
         if (this.state.tool3 === 'pot'){
-          if (e.buttons & 1) this.placeBlob3(e.clientX, e.clientY, false);
+          if (e.buttons & 1) this.stampBlob3(e.clientX, e.clientY, false, false);  /* 拖拽涂抹（0.6R 距离阈值） */
           return;
         }
         const d = this.cam.drag; if (!d) return;
@@ -2136,16 +2192,18 @@ ${d3 ? `
         this.cam = { theta: 0.7, phi: 0.35, dist: 2.2, drag: null };
         this.toast('相机已重置');
       });
-      /* 势刷（R44）：工具切换 + 势丘规格滑块（半径/强度，负强度 = 势阱）
-         + 删除按钮（BV0=0 关闭）。放置逻辑在 pointer 事件（placeBlob3）。 */
+      /* 势刷（R49 连续涂抹）：工具切换 + 新丘规格滑块（半径/强度，负强度 = 势阱，
+         stamp 时快照进每个丘——改滑块只影响后续丘，不追溯已落丘）
+         + 清空按钮（potBlobs = []）。放置逻辑在 pointer 事件（stampBlob3）。 */
       this.container.querySelectorAll('[data-tool3]').forEach(b =>
         this.on(b, 'click', () => this.setTool3(b.dataset.tool3)));
-      this.bindRange('#rBlobR','#oBlobR','potBR', v => String(v|0), () => this.updateBlobReadout());
-      this.bindRange('#rBlobV0','#oBlobV0','potBV0', v => v.toFixed(2), () => this.updateBlobReadout());
+      this.bindRange('#rBlobR','#oBlobR','potBlobR', v => String(v|0), () => this.updateBlobReadout());
+      this.bindRange('#rBlobV0','#oBlobV0','potBlobV0', v => v.toFixed(2), () => this.updateBlobReadout());
       this.on(this.q('#btnBlobDel'), 'click', () => {
-        this.state.potBV0 = 0;
+        const n = (this.state.potBlobs || []).length;
+        this.state.potBlobs = [];
         this.syncBlobRows();
-        this.toast('势丘已删除');
+        this.toast(n ? '势丘已清空（' + n + ' 个）' : '势丘列表已为空');
       });
       this.syncBlobRows();
       this.on(this.q('#selGrid3'), 'change', e => {
@@ -2380,12 +2438,14 @@ ${d3 ? `
          验证脚本直接对账「CPU 相机镜像 vs shader 相机模型」与放置落点。 */
       screenRay3: (nx, ny) => this.screenRay3(nx, ny),
       pickBlob3: (nx, ny) => this.pickBlob3(nx, ny),
+      /* 势刷 stamp（R49）：pointer 事件同一入口的调试转发（客户坐标）——
+         验证脚本驱动连续涂抹/FIFO/规格快照断言，不合成 mouse 事件序列。 */
+      stampBlob3: (cx, cy, force, announce) => this.stampBlob3(cx, cy, force, announce),
       /* 3D 工具模式（R44）：'cam' | 'pot'，按钮 / P 键 / 验证脚本共用入口 */
       setTool3: (m) => this.setTool3(m),
       tool3: () => this.state.tool3 || 'cam',
-      /* 势丘状态（R44）：放置/删除/规格的当前值（对账 GLSL uniform 与面板读数） */
-      blob: () => ({ bx: this.state.potBX, by: this.state.potBY, bz: this.state.potBZ,
-                     br: this.state.potBR, v0: this.state.potBV0 }),
+      /* 势丘列表（R49）：当前丘列表快照 [{x,y,z,r,v0}]（对账 GLSL uniform 与面板读数） */
+      blobs: () => (this.state.potBlobs || []).map(b => ({ x: b.x, y: b.y, z: b.z, r: b.r, v0: b.v0 })),
       /* 3D 当前体积原始数据（逐层 readPixels 拼装，RG32F 交错 (re,im)）：
          供验证脚本把 GPU 场搬到 CPU 做镜像对账（R36 CN 的 GPU↔CPU 互证）。
          与现场序列化共用 readWave3——「存档的场」与「验证看到的场」同源。 */

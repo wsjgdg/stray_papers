@@ -33,8 +33,13 @@
  *                     eMaxExtra 抬子步（dt·E≤2 稳定界）。
  *   w = (p−0.5)·N 为世界坐标（格点单位、居中，p 为纹理坐标）——与
  *   TPL_EVOLVE3D 的 uGrid3 口径逐字一致。
- *   R44 势刷：上述解析势之外，交互放置的球形硬边势丘（pot3Blob）按
- *   主槽 + 第二槽 + blob 三者之和进入 pot3/pot3JS（BV0=0 默认关闭）。
+ *   R44 势刷：上述解析势之外，交互放置的球形硬边势丘与主槽、第二槽
+ *   三者之和进入 pot3/pot3JS。
+ *   R49 体积连续笔刷：势丘由单丘（R44 的 potBX/BY/BZ/BR/BV0 五字段）
+ *   升级为**丘列表** state.potBlobs（≤16 个 {x,y,z,r,v0}）——拖拽连续
+ *   涂抹（相邻 stamp 中心距 ≥0.6R 时落新丘，球链重叠 ⟹ 视觉连续），
+ *   GLSL blobSum 循环求和、CPU pot3Blobs 逐字镜像。空列表恒 0 ⟹ 与
+ *   R44 单丘关闭态逐位一致；融合语义 = 求和（重叠处强度相加）。
  *
  * 边界（与 2D 不同，如实标注）：3D 纹理 CLAMP_TO_EDGE ⟹ Neumann 零梯度
  * （波包触壁软反射）；2D 的 S() 越界返回 0 是 Dirichlet。有界势（谐振子/
@@ -74,12 +79,14 @@ const POT_FREE = 0, POT_SPHERE = 1, POT_OSC = 2, POT_COULOMB = 3, POT_DOUBLE_SLI
    主槽 + 第二槽之和（总势）。potKind2=0（默认 POT_FREE）时第二槽恒 0 ⟹
    与 R34–R40 逐位一致（零回归）。CPU 与 GLSL pot3Slot 逐分支同构。
 
-   R44 势刷（笔刷势丘）：pot3Blob 为交互放置的球形硬边势丘——球心
-   (bx,by,bz)、半径 r、强度 v0 由 3D 视图「势刷」工具拖拽写入
-   state.potBX/potBY/potBZ/potBR/potBV0，与主槽、第二槽三者独立叠加。
-   potBV0=0（默认）时 blob 恒 0 ⟹ 与 R34–R43 逐位一致。强度可负
-   （势阱）或正（势垒）；硬边球与球势垒（kind 1）同构，KDK 无特殊处理。
-   GLSL pot3Blob 与 CPU pot3Blob 逐字一致（镜像契约见文件头）。 */
+   R44/R49 势刷（笔刷势丘）：pot3Blobs 为交互放置的球形硬边势丘**列表**
+   ——丘列表由 3D 视图「势刷」工具拖拽连续涂抹写入 state.potBlobs
+   （≤16 个 {x,y,z,r,v0}；R49 由 R44 单丘五字段 potBX/BY/BZ/BR/BV0
+   升级而来，旧存档导入时迁移为列表首项）。与主槽、第二槽三者之和
+   （融合语义：硬边球重叠处强度相加）。空列表恒 0 ⟹ 与 R34–R44 单丘
+   关闭态逐位一致。强度可负（势阱）或正（势垒）；硬边球与球势垒
+   （kind 1）同构，KDK 无特殊处理。GLSL blobSum 与 CPU pot3Blobs
+   逐字一致（镜像契约见文件头）。 */
 export function pot3Slot(wx, wy, wz, kind, v0, r, om, z, wallX, wallT, slitW, slitD){
   const r2 = wx*wx + wy*wy + wz*wz;
   if (kind === POT_SPHERE) return r2 < r*r ? v0 : 0;
@@ -96,12 +103,20 @@ export function pot3Slot(wx, wy, wz, kind, v0, r, om, z, wallX, wallT, slitW, sl
   return 0;
 }
 
-/* 笔刷势丘（R44）：球形硬边势，中心 (bx,by,bz)（世界 texel）、半径 r、
-   强度 v0。v0=0 ⟹ 恒 0（关闭）。GLSL pot3Blob 与本函数逐字一致。 */
-export function pot3Blob(wx, wy, wz, bx, by, bz, r, v0){
-  if (!v0) return 0;
-  const dx = wx - bx, dy = wy - by, dz = wz - bz;
-  return dx*dx + dy*dy + dz*dz < r*r ? v0 : 0;
+/* 笔刷势丘列表（R44 单丘 → R49 连续涂抹丘列表）：球形硬边势之和。
+   list：[{x,y,z,r,v0}]（世界 texel；v0=0 的项恒 0——导入容错）。
+   空列表恒 0。GLSL blobSum 与本函数逐字一致。 */
+export const MAX_BLOBS = 16;
+export function pot3Blobs(wx, wy, wz, list){
+  let s = 0;
+  if (!list) return 0;
+  for (let i = 0; i < list.length; i++){
+    const b = list[i];
+    if (!b || !b.v0) continue;
+    const dx = wx - b.x, dy = wy - b.y, dz = wz - b.z;
+    if (dx*dx + dy*dy + dz*dz < b.r*b.r) s += b.v0;
+  }
+  return s;
 }
 
 export function pot3JS(wx, wy, wz, st){
@@ -109,7 +124,7 @@ export function pot3JS(wx, wy, wz, st){
     st.potWallX, st.potWallT, st.potSlitW, st.potSlitD)
     + pot3Slot(wx, wy, wz, st.potKind2, st.potV02, st.potR2, st.potW2, st.potZ2,
       st.potWallX2, st.potWallT2, st.potSlitW2, st.potSlitD2)
-    + pot3Blob(wx, wy, wz, st.potBX, st.potBY, st.potBZ, st.potBR, st.potBV0);
+    + pot3Blobs(wx, wy, wz, st.potBlobs);
 }
 
 /* 单槽势在域内的 |V| 上界（格点单位）——R41 拆出供两槽求和。
@@ -192,12 +207,13 @@ class Schrodinger3dKernel extends PhysicsKernel {
       density: 'dot(psi.xy,psi.xy)',
       kinetic: '0.25*(dot(dxp,dxp)+dot(dyp,dyp))',
       potential: 'V*p',
-      /* R41 双槽势组合 + R44 笔刷势丘：pot3Slot 为单槽势函数（HELPERS 注入位
-         定义，evolve3d/cnRhs3d/cnSweep3d/reduce3d 四处同源），pot3 取主槽 +
-         第二槽 + blob 三者之和。uPotKind2=0（默认 POT_FREE）且 uPotBV0=0
-         （默认关闭）时后两项恒 0 ⟹ 与 R34–R43 逐位一致。
-         —— 与 pot3JS/pot3Slot/pot3Blob（CPU）逐分支一致（镜像契约见文件头） */
-      helpers: `float pot3Slot(vec3 w, int kind, float v0, float r, float om, float z,
+      /* R41 双槽势组合 + R49 笔刷势丘列表：pot3Slot 为单槽势函数（HELPERS
+         注入位定义，evolve3d/cnRhs3d/cnSweep3d/reduce3d 四处同源），pot3
+         取主槽 + 第二槽 + blobSum 三者之和。uPotKind2=0（默认 POT_FREE）
+         且 uBlobCount=0（默认无丘）时后两项恒 0 ⟹ 与 R34–R44 逐位一致。
+         —— 与 pot3JS/pot3Slot/pot3Blobs（CPU）逐分支一致（镜像契约见文件头） */
+      helpers: `#define MAX_BLOBS 16
+float pot3Slot(vec3 w, int kind, float v0, float r, float om, float z,
                 float wallX, float wallT, float slitW, float slitD){
   if (kind == 1) return (dot(w,w) < r*r) ? v0 : 0.0;
   if (kind == 2) return 0.5*om*om*dot(w,w);
@@ -207,17 +223,26 @@ class Schrodinger3dKernel extends PhysicsKernel {
                          && abs(w.y + 0.5*slitD) > 0.5*slitW) ? v0 : 0.0;
   return 0.0;
 }
-/* R44 笔刷势丘：球形硬边势（v0=0 关闭）——与 CPU pot3Blob 逐字一致 */
-float pot3Blob(vec3 w, vec3 c, float r, float v0){
-  if (v0 == 0.0) return 0.0;
-  vec3 d = w - c;
-  return (dot(d,d) < r*r) ? v0 : 0.0;
+/* R49 笔刷势丘列表：球形硬边势之和（与 CPU pot3Blobs 逐字一致）。
+   uBlobA[i] = (x,y,z,r)（世界 texel），uBlobV[i].x = 强度（0 = 跳过）。
+   循环上界 MAX_BLOBS 为编译期常量；uBlobCount 动态截断（GLSL ES 3.00
+   允许循环内 break）。空列表（count=0）恒 0 ⟹ 零回归。 */
+float blobSum(vec3 w){
+  float s = 0.0;
+  for (int i = 0; i < MAX_BLOBS; i++){
+    if (i >= uBlobCount) break;
+    vec4 a = uBlobA[i];
+    if (uBlobV[i].x == 0.0) continue;
+    vec3 d = w - a.xyz;
+    if (dot(d, d) < a.w*a.w) s += uBlobV[i].x;
+  }
+  return s;
 }`,
       pot3: `(pot3Slot(w, uPotKind, uPotV0, uPotR, uPotW, uPotZ,
                 uPotWallX, uPotWallT, uPotSlitW, uPotSlitD)
         + pot3Slot(w, uPotKind2, uPotV02, uPotR2, uPotW2, uPotZ2,
                 uPotWallX2, uPotWallT2, uPotSlitW2, uPotSlitD2)
-        + pot3Blob(w, vec3(uPotBX, uPotBY, uPotBZ), uPotBR, uPotBV0))`,
+        + blobSum(w))`,
       /* 体积密度 / 相位（ray-march 与切片两条显示路径经 den3/ph3 共用） */
       density3: 'dot(c.xy,c.xy)',
       phase3: 'atan(c.y, c.x)',
@@ -254,13 +279,11 @@ uniform float uPotWallX2;
 uniform float uPotWallT2;
 uniform float uPotSlitW2;
 uniform float uPotSlitD2;
-/* 笔刷势丘（R44 势刷）：球形硬边势，中心 (BX,BY,BZ)（世界 texel）、
-   半径 BR、强度 BV0——0 = 关闭。与主槽/第二槽独立叠加。 */
-uniform float uPotBX;
-uniform float uPotBY;
-uniform float uPotBZ;
-uniform float uPotBR;
-uniform float uPotBV0;`,
+/* 笔刷势丘列表（R49，由 R44 单丘升级）：uBlobA[i]=(x,y,z,r)、uBlobV[i].x=强度，
+   uBlobCount=实际丘数（0 = 无丘）。与主槽/第二槽独立叠加。 */
+uniform int   uBlobCount;
+uniform vec4  uBlobA[16];
+uniform vec2  uBlobV[16];`,
     };
   }
 
@@ -286,19 +309,34 @@ uniform float uPotBV0;`,
     const wt2 = gl.getUniformLocation(prog, 'uPotWallT2'); if (wt2) gl.uniform1f(wt2, state.potWallT2 || 0);
     const sw2 = gl.getUniformLocation(prog, 'uPotSlitW2'); if (sw2) gl.uniform1f(sw2, state.potSlitW2 || 0);
     const sd2 = gl.getUniformLocation(prog, 'uPotSlitD2'); if (sd2) gl.uniform1f(sd2, state.potSlitD2 || 0);
-    /* 笔刷势丘（R44）：state 字段缺失（旧存档）时按 0 处理 ⟹ 无 blob */
-    const bx = gl.getUniformLocation(prog, 'uPotBX'); if (bx) gl.uniform1f(bx, state.potBX || 0);
-    const by = gl.getUniformLocation(prog, 'uPotBY'); if (by) gl.uniform1f(by, state.potBY || 0);
-    const bz = gl.getUniformLocation(prog, 'uPotBZ'); if (bz) gl.uniform1f(bz, state.potBZ || 0);
-    const br = gl.getUniformLocation(prog, 'uPotBR'); if (br) gl.uniform1f(br, state.potBR || 0);
-    const bv = gl.getUniformLocation(prog, 'uPotBV0'); if (bv) gl.uniform1f(bv, state.potBV0 || 0);
+    /* 笔刷势丘列表（R49）：state 字段缺失（旧存档/未初始化）按空列表处理 ⟹ 无丘。
+       每帧对三个 program 各上传一次（96 float，uniform 上传廉价；未引用的
+       program location 为 null 自然跳过）。 */
+    const bc = gl.getUniformLocation(prog, 'uBlobCount');
+    const ba = gl.getUniformLocation(prog, 'uBlobA[0]');
+    const bv = gl.getUniformLocation(prog, 'uBlobV[0]');
+    if (bc) gl.uniform1i(bc, Math.min(state.potBlobs ? state.potBlobs.length : 0, MAX_BLOBS));
+    if (ba && bv){
+      const A = new Float32Array(64), V = new Float32Array(32);
+      const list = state.potBlobs || [];
+      for (let i = 0; i < Math.min(list.length, MAX_BLOBS); i++){
+        const b = list[i];
+        A[i*4] = b.x; A[i*4+1] = b.y; A[i*4+2] = b.z; A[i*4+3] = b.r;
+        V[i*2] = b.v0;
+      }
+      gl.uniform4fv(ba, A);
+      gl.uniform2fv(bv, V);
+    }
   }
 
   /* H 特征值上界附加项（引擎 eMax = uK·12 + 1 + 本项）：
-     各势形在域内的 |V| 最大值（格点单位）。R44 势刷 blob 叠加 |potBV0|。 */
+     各势形在域内的 |V| 最大值（格点单位）。R49 笔刷丘列表叠加 Σ|v0|
+     （保守：所有丘极值同点位时取等）。 */
   eMaxExtra(state){
+    let blobMax = 0;
+    for (const b of (state.potBlobs || [])) blobMax += Math.abs(b.v0 || 0);
     return eMaxSlot(state.potKind, state) + eMaxSlot(state.potKind2, state, 2)
-      + Math.abs(state.potBV0 || 0);
+      + blobMax;
   }
 
   /* 3D 透射率扫描的解析模型（R38）：s 波球势垒。与 2D 的 transmissionModel
@@ -460,10 +498,12 @@ uniform float uPotBV0;`,
          预设 params 可注入组合（如 slit_sphere3d：主槽双缝墙 + 第二槽球垒）。 */
       potKind2: POT_FREE, potV02: 0.02, potR2: 10, potW2: 1/64, potZ2: 0.25,
       potWallX2: 0, potWallT2: 4, potSlitW2: 6, potSlitD2: 20,
-      /* 笔刷势丘（R44 势刷）：默认 BV0=0 ⟹ 关闭（与 R34–R43 逐位一致）。
-         首次「势刷」拖拽放置时若 BV0=0 则赋默认规格 0.5（app.js placeBlob3）；
-         BR/BV0 由面板滑块控制（负 BV0 = 势阱），删除按钮置 BV0=0。 */
-      potBX: 0, potBY: 0, potBZ: 0, potBR: 8, potBV0: 0,
+      /* 笔刷势丘列表（R49，由 R44 单丘升级）：默认空列表 ⟹ 无丘（与
+         R34–R44 单丘关闭态逐位一致）。potBlobR/potBlobV0 是「新丘规格」
+         （面板滑块，stamp 时快照进每个丘）；丘数上限 MAX_BLOBS=16，
+         超出 FIFO 淘汰最旧（app.js stampBlob3）。负 V0 = 势阱。 */
+      potBlobs: [],
+      potBlobR: 8, potBlobV0: 0.5,
       /* 曝光默认 3600（= free3d 预设值，见预设表的实测标定）；其余预设各自覆盖 */
       steps3: 48, exposure3: 3600, phaseColor: 1, slice3: 0, sliceZ: 0.5,
       sigma: 6,
