@@ -32,6 +32,7 @@
 | R38 | 3D 透射率扫描（#34 backlog ④，#34 完结） | 球形势垒 T(V₀) 实测扫描 + s 波解析对照：停止判据重设计（兜底置顶/门/窗）并修 framesMax 兜底永不可达 bug；32³→64³ 网格策略（32³ 盒装不下首程测量窗的实测依据）；**「绕球透射」物理发现**（b>R 份额不撞球 ⟹ 实测 3D T 系统性高于 s 波，vs s 波 ×4.06 如实记录）；rayCorrected 经典射线近似；13 点实测 T 单调 0.9151→0.6820、P≤2e-5、vs 射线修正带 0.922–0.965 |
 | R39 | 3D 双缝干涉预设（#34 backlog ⑤） | 双缝/单缝预设（potKind=4 解析墙 + 缝参数面板）+ **可分离性证明**（Σ_z\|ψ_3D\|²=\|φ_2D\|²）⟹ Node 2D CPU 镜像与 GPU 逐帧对账 maxDiff ≤1.62e-3（24 条屏剖面、峰位 0/24 mismatch）；诚实记录深 Fresnel 区图样为「双瓣+弱中心」而非等间距条纹（脉冲 smear + λ/W=0.87 非近轴，CPU 参考同步复现）；单缝 D=0 对照（干净时窗峰数 1 vs 双缝 ≥3）；cdp39 34/34 |
 | R43 | 面板视觉保真度评审（README「后续方向」①） | 客观化评审（CDP 多 viewport 几何 + getComputedStyle + PIL 对比度）抓出两个真实缺陷：**① CSS 变量全部失效**——CSS 字符串以字面 `<style>` 开头（自初版 9c397d0），注入 textContent ⟹ `:root` 被解析为 `<style> :root` 永不匹配选择器的声明块 ⟹ 所有 `color:var(--x)`/`font-family:var(--x)` 退化为黑字+Times New Roman（面板文字对比度 ≈1.0:1 不可读）；删除标签后 **12.7:1 / HUD 11.8:1**（WCAG AAA）；**② panel × desc 重叠 238×80px**（左列同 x，panel 底 100vh−44 vs desc 顶 100vh−132）⟹ max-height 改 calc(100vh−216px)，四 viewport 重叠归零。未决项（客观数据 + 三选项留用户定）：面板内容溢出 697px(2D)/1673px(3D)/980px(GP)，元凶为累积的长 hint |
+| R44 | 3D 势刷：交互式球形势丘（README「后续方向」③） | 体积视图「势刷」工具（P 键/按钮）：拖拽沿视线中点放置球形硬边势丘（`pot3Blob`，CPU+GLSL 严格镜像），与主槽/第二槽**三方独立叠加**、负 V₀=势阱；放置深度取 slab 穿透段中点（确定可复现）；`screenRay3` 为 TPL_DISPLAY3D 相机段 CPU 逐字镜像（注释互指契约）；BV0=0 默认关闭 ⟹ 零回归（6 配置 × 400 点 worst=0）；blob 跨预设/扫描保留（组合实验叙事）；eMaxExtra 加 \|BV0\|；CDP **真实 pointer 拖拽**放置 + GLSL↔CPU ⟨V⟩ 对账 rel ≤4.4e-8 + P 守恒 0.0000%；pot44 22/22 + cdp44 30/30 + smoke44 5/5 |
 | R42 | NLS/GP 物理工具（README「后续方向」②，用户选定两者都做） | 通用扫描框架 `GenericScanner`（生命周期与既有三扫描器同契约）+ GP/NLS 双适配器；**固定测量窗 + 全程序列**替代停止判据（非线性无耗散无终态：呼吸模永久振荡实测 8.6↔9.3）；GP 初态 σ=R_TF(g)（TF 自洽验算一致）⟹ **峰值对账 3.5%**；NLS **g=6 塌缩检出（峰值比 10.80）** + 网格截断崩坏 P→0.68；**P 诚实更正**：非线性 P 漂移 0.5–3.1%（KDK 离散耗散，随 \|g\| 增长）vs 线性对照 2.06e-6；判据修正：塌缩用序列峰值最大值（末值会因崩坏骤降误判）；既有三扫描器零改动；cdp42 32/32；环境记录：headless Chrome 无 X display 时 ANGLE Vulkan-XCB 失败 ⟹ 须 `xvfb-run` 启动 |
 | R41 | 3D 双槽势组合（README「后续方向」①，用户选定通用双槽） | 势由单枚举升级为 V=pot3Slot(主)+pot3Slot(第二)（CPU `pot3JS` 与 GLSL `helpers` 同名函数严格镜像）；**TPL_REDUCE3D 补 {{HELPERS}} 注入位**（原只有 POT3，否则势不同源、R35 对账失效）；eMaxExtra 取两槽之和（保守）⟹ 组合势 120 帧 P 守恒 1.36e-4；GPU↔CPU ⟨V⟩ 同帧对账 rel 8.8e-10/7.6e-8/6.5e-9（阈值 2e-7）；组合预设「球垒调制双缝」（球垒 R₂=6 不遮缝）；cdp41 30/30；副作用诚实记录：shader 变复杂 ⟹ 挂载预演化帧数分布 4↔5 下移到 3↔5，cdp39 PRE 断言阈值过时（判据放宽 3–6，对账走实测 PRE 故 33 项全绿） |
 | R40 | 3D 双缝图样扫描（README「后续方向」①） | SlitScanner（与 R38 同生命周期契约）：D=0,8,16,24,32 五点扫描 117s、P 守恒 1.02e-4、峰数 **1/1/3/5/3**（双缝等距条纹：D=16 距 9.5、D=24 距 7.8、D=32 ±15.5 贴提取边界）；Fraunhofer 最近邻匹配中位偏差 1.65（nMatched=8）但实测间距大于预测 1.2–1.5×（深 Fresnel 修正，与 R39 结论互证）；CDP 诊断轮抓出并修复四个真 bug：screenSlice3 类方法化（原仅 debugHandle 对象 ⟹ 类路径 TypeError）、slitPeaks 实质密度门限（float32 残余 8e-22 假峰令 _best 停噪声帧）、_finish `o.d`→`r.d` NaN 全表、measureFrom 窗门限生效；cdp40 35/35 + dist 冒烟 11/11 + cdp39 回归 34/34 |
@@ -96,6 +97,46 @@ README「后续方向」①「面板视觉保真度评审」（原注「偏软�
 
 ### 后续
 README「后续方向」表余四项：面板**内容溢出**处理（见上，待选择）/ 3D 势场笔刷 / 既有三扫描器迁移基类 / GP 初态平滑窗改进。
+
+---
+
+## R44（2026-10-18）3D 势刷：交互式球形势丘（README「后续方向」③）
+
+### 缘起
+README「后续方向」③「3D 势交互（当前 3D 势全解析，用户抱怨不能像 2D 一样画）」——原注「笔刷不适用体积，改交互放置」。本轮落地为**势刷工具**：不引入体积势纹理（那会与 pot3 解析势双轨制、镜像契约翻倍），而是把「交互放置」做成**第三势成分**——球形硬边势丘（球心/半径/强度由拖拽写入），与主槽、第二槽独立叠加。
+
+### 设计决策（架构层，标出）
+1. **独立 blob 而非复用第二槽**：第二槽（R41）被组合势占用且球心固定原点；blob 是独立 state 字段（potBX/BY/BZ/BR/BV0）⟹ 与 preset 组合势正交，用户可在任意预设上叠自定义势丘
+2. **放置深度 = slab 穿透段中点**（非最近表面）：确定、可复现（CDP 逐位断言），拖拽微调位置；表面拾取会让 blob 贴在近端壳上、被体积发射-吸收遮挡难以判断位置
+3. **硬边球**（非平滑核）：与球势垒（potKind=1）同构，KDK 无特殊处理；GLSL/CPU 逐字镜像简单。代价：势的硬边含高频分量——但 R34 球垒已验证硬边稳定（dt·E≤2 稳定界覆盖）
+4. **BV0=0 默认关闭**：首次放置赋默认规格 0.5（不静默启用强势）；删除按钮置 0。零回归：Node 单测 6 组配置 × 400 点 worst=0
+
+### 完成项
+- [x] `schrodinger3d.js`：`pot3Blob`（CPU 导出）+ GLSL `helpers` 注入 `pot3Blob(vec3 w, vec3 c, float r, float v0)`；`pot3` 表达式三方求和；5 个 uniform（uPotBX/BY/BZ/BR/BV0）+ `setUniforms` 赋值；`eMaxExtra` 加 `|potBV0|`；defaults 5 字段（BV0=0）
+- [x] `app.js`：`screenRay3`（TPL_DISPLAY3D 相机段 CPU 逐字镜像）+ `pickBlob3`（slab 求交取段中点）+ `placeBlob3`（pointer 客户坐标 → 世界 texel，钳域内）+ `setTool3`（cam/pot 切换，按钮态/光标/toast 集中同步）+ 势刷面板小节（工具按钮组 + R/V₀ 滑块 + 位置读数 + 删除）+ `syncControls` 同步 + P 快捷键 + footer 提示 + debugHandle 转发（screenRay3/pickBlob3/setTool3/tool3/blob）
+- [x] pointer 事件 tool3 分流：pot 模式拖拽放置/跟手；cam 模式拖拽转相机（零改动逻辑）
+- [x] README：交互表 + R44 专节 + 验证表；worklog：本段
+
+### 验证
+- **pot44（Node 单测）22/22**：blob 分支语义（球心/球内/球外/硬边界 |d|=R 取外/偏心/负强度/关闭）+ 三方叠加（主槽球垒 + 第二槽谐振子 + blob 同点位精确）+ eMaxExtra 覆盖（0/正/负/球垒+blob 之和）+ **零回归**（BV0=0 ⟹ pot3JS ≡ R43 两槽版，6 配置 × 400 点 worst=0）+ GLSL 源码契约（helpers/pot3/uniforms 含 blob 项）
+- **cdp44（CDP 浏览器实测）30/30**，零控制台异常：
+  - 相机镜像自检：中心射线 rd∥fwd（|cos|=1）、rd·ro<−0.9、拾取确定性、默认视角落点域内
+  - **真实 pointer 拖拽放置**（mouse down/move/up ⟹ potBV0=0.5 默认规格、位置 (8.5,−8.0,−8.3) texel 域内、面板读数同步、二次拖拽跟手 Δ=42 texel）
+  - P 键切换 + cam 模式拖拽转相机（Δθ=1.600，回归）
+  - **GLSL↔CPU ⟨V⟩ 同帧对账 rel 2.4e-8~4.4e-8**（含 blob；双路独立实现：GLSL float32 pot3Blob vs CPU float64 pot3Blob）
+  - P 守恒 0.0000%（放置后 30 帧，硬边势不破坏幺正性）
+  - 删除回落 ⟨V⟩→0（0.00e+00）；三方共存（slits3d + blob 跨预设完整保留：v0/位置/半径逐位不变）
+- **smoke44（跨内核回归）5/5**：schrodinger/gp/nls/pauli/dirac 挂载无错误、帧推进、diag 空（app.js 势刷改动对非 3D 内核无害）
+- dist 单文件重建通过（324.7 KB）
+
+### 诚实记录
+- **放置深度是段中点而非几何拾取点**：用户预期可能是「点哪放哪」（射线第一交点），段中点是确定性折中——界面用拖拽跟手补偿（位置连续可调），面板读数始终显示实际世界坐标
+- **「势刷」名实说明**：不是 2D 式的连续涂抹（体积笔刷需要势纹理或 blob 列表演化），而是「点击/拖拽放置单个势丘」——命名取用户原话「3D potential brush」的直译，能力边界在 README 明示
+- blob 硬边高频分量未单独做谱分析（R34 球垒同构已覆盖稳定性论证）；若用户报告特定参数下异常，优先查 dt·E≤2 稳定界（eMaxExtra 已含 |BV0|）
+
+### 后续
+- 面板内容溢出（2D 697px / 3D 1673px / GP 980px）仍未决——三选项（可折叠 hint / 精简 hint 移 detail 进 README / 保持现状）待用户定；本轮新增势刷小节使 3D 面板再增约 90px，若选「保持现状」则滚动加深，建议优先「可折叠 hint」
+- README「后续方向」余项：既有三扫描器迁移 GenericScanner 基座；GP 初态平滑窗改进（R42 记录的半径偏差 29.9% 根因）
 
 ---
 

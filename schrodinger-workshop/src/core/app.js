@@ -70,6 +70,8 @@ export class QuantumField {
       abX: 0.5, abY: 0.5, abPhi: 0,   /* AB 螺线管（世界坐标）与磁通 Φ（rad）；Φ=0 = 关 */
       preset: null, lastWave: null, waveCount: 1,
       drag: null,
+      /* 3D 交互工具（R44）：'cam' 拖拽旋转相机（默认）/ 'pot' 势刷放置 blob */
+      tool3: 'cam',
       ...this.kernel.defaults(),
       ...(options.state || {}),
     };
@@ -318,6 +320,14 @@ ${d3 ? `
     <div class="row" id="rowPotSlitW2"><label>叠加缝宽 W₂</label><input type="range" id="rPotSlitW2" min="2" max="16" step="1" value="6"><output id="oPotSlitW2">6</output></div>
     <div class="row" id="rowPotSlitD2"><label>叠加缝距 D₂</label><input type="range" id="rPotSlitD2" min="0" max="32" step="1" value="20"><output id="oPotSlitD2">20</output></div>
     <div class="grid2" style="margin-top:6px">
+      <button data-tool3="cam" class="on">视角旋转</button>
+      <button data-tool3="pot">势刷放置</button>
+      <button id="btnBlobDel">删除势丘</button>
+    </div>
+    <div class="row"><label>势丘半径 R</label><input type="range" id="rBlobR" min="3" max="24" step="1" value="8"><output id="oBlobR">8</output></div>
+    <div class="row"><label>势丘强度 V₀</label><input type="range" id="rBlobV0" min="-2" max="2" step="0.05" value="0.5"><output id="oBlobV0">0.50</output></div>
+    <div class="row"><label>势丘位置</label><output id="oBlobPos">关</output></div>
+    <div class="grid2" style="margin-top:6px">
       <button id="btnPhase3" class="on">相位着色</button>
       <button id="btnSlice3">切片模式</button>
     </div>
@@ -328,7 +338,7 @@ ${d3 ? `
       <button id="btnImport3">导入现场</button>
     </div>
     <input type="file" id="fileImport3" accept=".json,application/json" style="display:none">
-    <div class="hint" style="margin-top:4px">拖拽旋转 · 滚轮缩放。V₀/R 仅球势垒预设生效；ω/σ 决定谐振子基态（σ=1/√ω）；Z 仅氢原子预设生效（改动后波包按新 Z 重发）；墙心 x₀/墙厚 T/缝宽 W/缝距 D 仅双缝预设生效（D=0 退化为单缝，改动即时生效）。积分器：KDK 为速度 Verlet（默认，R34 已验证守恒）；CN 为 Crank-Nicolson + block-Jacobi，Cayley 矩阵严格正交、范数机器精度守恒——同预设下切换可对照二者离散误差（切换即时生效，不重发波包）。导出现场：参数 + 场数据 + 相机 + 积分器选择的单文件 JSON 存档（网格不符时拒绝导入，不重采样）。</div>
+    <div class="hint" style="margin-top:4px">拖拽旋转 · 滚轮缩放。V₀/R 仅球势垒预设生效；ω/σ 决定谐振子基态（σ=1/√ω）；Z 仅氢原子预设生效（改动后波包按新 Z 重发）；墙心 x₀/墙厚 T/缝宽 W/缝距 D 仅双缝预设生效（D=0 退化为单缝，改动即时生效）。<b>势刷</b>：切到「势刷放置」后在体积上拖拽，沿视线中点放置球形硬边势丘（与主势/第二势独立叠加，负 V₀=势阱；放置后演化继续，不重发波包）。积分器：KDK 为速度 Verlet（默认，R34 已验证守恒）；CN 为 Crank-Nicolson + block-Jacobi，Cayley 矩阵严格正交、范数机器精度守恒——同预设下切换可对照二者离散误差（切换即时生效，不重发波包）。导出现场：参数 + 场数据 + 相机 + 积分器选择的单文件 JSON 存档（网格不符时拒绝导入，不重采样）。</div>
   </div>
   <div class="sec" id="scan3Sec">
     <h3>3D 透射扫描</h3>
@@ -404,7 +414,7 @@ ${d3 ? `
 
 <footer id="hint" class="panel">
   ${d3
-    ? '<b>拖拽</b> 旋转视角 · <b>滚轮</b> 缩放 · <span class="k">1-'+Object.keys(presets).length+'</span> 预设 · <span class="k">Space</span> 暂停 · <span class="k">R</span> 重置波包'
+    ? '<b>拖拽</b> 旋转视角 · <b>滚轮</b> 缩放 · <span class="k">P</span> 势刷 · <span class="k">1-'+Object.keys(presets).length+'</span> 预设 · <span class="k">Space</span> 暂停 · <span class="k">R</span> 重置波包'
     : '<b>拖拽</b> 发射波包（方向=动量 k）· <span class="k">1-'+Object.keys(presets).length+'</span> 预设 · <span class="k">Space</span> 暂停 · <span class="k">T</span> 拖尾 · <span class="k">R</span> 重置 · <span class="k">C</span> 清空势场'}
 </footer>
 <div id="toast"></div>
@@ -1227,6 +1237,114 @@ ${d3 ? `
     return { n, xi, sliceWx: xi + 0.5 - half, prof, zs, profYZ, simTime: this.state.simTime };
   }
 
+  /* ---------- 3D 势刷（R44）：屏幕 → 体积射线拾取 ----------
+     相机模型的 CPU 镜像，与 TPL_DISPLAY3D 的 ray-march 段逐字同源
+     （镜像契约：改 shader 相机段必须同步此处，否则拾取点与画面不符）：
+        ro   = dist·(cp·ct, sp, cp·st)
+        fwd  = −ro/|ro|
+        right= normalize(cross(fwd, (0,1,0)))      φ 钳制 ±1.45 ⟹ |right|≥0.12 不退化
+        up   = cross(right, fwd)
+        rd   = normalize(fwd*1.6 + right·ndc.x·aspect*0.5 + up·ndc.y·0.5)
+     输入 nx/ny 为画布分数坐标（ny 向上，与 vUv 同口径——2D toWorld 的
+     uy=1−(cy−top)/height 即此口径）。 */
+  screenRay3(nx, ny){
+    const cw = this.canvas.width, ch = this.canvas.height;
+    const ct = Math.cos(this.cam.theta), st = Math.sin(this.cam.theta);
+    const cp = Math.cos(this.cam.phi), sp = Math.sin(this.cam.phi);
+    const ro = [this.cam.dist*cp*ct, this.cam.dist*sp, this.cam.dist*cp*st];
+    const rl = Math.hypot(ro[0], ro[1], ro[2]);
+    const fwd = [-ro[0]/rl, -ro[1]/rl, -ro[2]/rl];
+    /* right = normalize(cross(fwd, (0,1,0))) = normalize((−fwd.z, 0, fwd.x)) */
+    let rx = -fwd[2], ry = 0, rz = fwd[0];
+    const rn = Math.hypot(rx, ry, rz);
+    rx /= rn; ry /= rn; rz /= rn;
+    /* up = cross(right, fwd) */
+    const ux = ry*fwd[2] - rz*fwd[1], uy = rz*fwd[0] - rx*fwd[2], uz = rx*fwd[1] - ry*fwd[0];
+    const ndcx = (nx - 0.5)*2, ndcy = (ny - 0.5)*2, aspect = cw/ch;
+    let dx = fwd[0]*1.6 + rx*ndcx*aspect*0.5 + ux*ndcy*0.5;
+    let dy = fwd[1]*1.6 + ry*ndcx*aspect*0.5 + uy*ndcy*0.5;
+    let dz = fwd[2]*1.6 + rz*ndcx*aspect*0.5 + uz*ndcy*0.5;
+    const dl = Math.hypot(dx, dy, dz);
+    dx /= dl; dy /= dl; dz /= dl;
+    return { ro, rd: [dx, dy, dz] };
+  }
+
+  /* 射线与单位立方体 [−0.5,0.5]³ slab 求交（TPL_DISPLAY3D 同口径），
+     返回穿透段 { tEnter, tExit }；未命中（视线离开体积）返回 null。
+     放置深度取段中点——确定、可复现（测试可断言），用户用拖拽微调位置。 */
+  pickBlob3(nx, ny){
+    const { ro, rd } = this.screenRay3(nx, ny);
+    let tEnter = -Infinity, tExit = Infinity;
+    for (let a = 0; a < 3; a++){
+      const o = ro[a], d = rd[a];
+      /* d=0 时 ±Infinity（GLSL 同行为）；|ro|≥dist≥1.1>0.5 ⟹ 不会 0/0 */
+      const t0 = (-0.5 - o)/d, t1 = (0.5 - o)/d;
+      tEnter = Math.max(tEnter, Math.min(t0, t1));
+      tExit = Math.min(tExit, Math.max(t0, t1));
+    }
+    if (!(tEnter < tExit)) return null;
+    const t = Math.max(0, tEnter) + 0.5*(tExit - Math.max(0, tEnter));
+    const n = this.state.grid;
+    return { x: (ro[0] + rd[0]*t)*n, y: (ro[1] + rd[1]*t)*n, z: (ro[2] + rd[2]*t)*n };
+  }
+
+  /* 在画布客户坐标处放置/拖动势丘（势刷工具）。首次放置（potBV0=0）赋默认
+     规格 0.5——用户未表达强度意图时不静默启用强势。 */
+  placeBlob3(cx, cy, announce){
+    const r = this.canvas.getBoundingClientRect();
+    const nx = (cx - r.left)/r.width, ny = 1 - (cy - r.top)/r.height;
+    const p = this.pickBlob3(nx, ny);
+    if (!p) return false;
+    if (this.state.potBV0 === 0){
+      this.state.potBV0 = 0.5;
+      this.syncBlobRows();
+    }
+    /* 世界 texel ∈ [−n/2, n/2]（slab 中点天然在域内）；留 2 texel 边缘余量，
+       势丘不完全贴壁（硬边球的 |V| 上界 eMaxExtra 与位置无关，无需额外处理）。 */
+    const lim = this.state.grid/2 - 2;
+    this.state.potBX = Math.max(-lim, Math.min(lim, p.x));
+    this.state.potBY = Math.max(-lim, Math.min(lim, p.y));
+    this.state.potBZ = Math.max(-lim, Math.min(lim, p.z));
+    this.updateBlobReadout();
+    if (announce) this.toast('势丘 → (' + this.state.potBX.toFixed(1) + ', '
+      + this.state.potBY.toFixed(1) + ', ' + this.state.potBZ.toFixed(1) + ') texel');
+    return true;
+  }
+
+  /* 势丘状态读数（面板「势丘位置」行） */
+  updateBlobReadout(){
+    const el = this.q('#oBlobPos'); if (!el) return;
+    el.textContent = this.state.potBV0 === 0 ? '关'
+      : '(' + this.state.potBX.toFixed(1) + ', ' + this.state.potBY.toFixed(1) + ', '
+        + this.state.potBZ.toFixed(1) + ') · R=' + this.state.potBR.toFixed(0)
+        + ' · V₀=' + this.state.potBV0.toFixed(2);
+  }
+
+  /* 势丘滑块行同步（DOM ← state；放置默认规格 / 导入存档后调用） */
+  syncBlobRows(){
+    const rs = [['#rBlobR','#oBlobR','potBR', v => String(v|0)],
+                ['#rBlobV0','#oBlobV0','potBV0', v => v.toFixed(2)]];
+    for (const [id, out, key, fmt] of rs){
+      const el = this.q(id); if (!el) continue;
+      el.value = this.state[key];
+      this.q(out).textContent = fmt(this.state[key]);
+    }
+    this.updateBlobReadout();
+  }
+
+  /* 3D 工具模式切换（R44）：'cam' 视角旋转 | 'pot' 势刷放置。
+     面板按钮 / P 键 / 自动化测试共用同一入口（按钮态与光标在此集中同步）。 */
+  setTool3(mode){
+    this.state.tool3 = mode === 'pot' ? 'pot' : 'cam';
+    const canvas = this.q('#gl');
+    if (canvas) canvas.style.cursor = this.state.tool3 === 'pot' ? 'crosshair' : '';
+    this.container.querySelectorAll('[data-tool3]').forEach(x =>
+      x.classList.toggle('on', x.dataset.tool3 === this.state.tool3));
+    this.toast(this.state.tool3 === 'pot'
+      ? '势刷：拖拽放置球形势丘（负 V₀ = 势阱，P 键切回视角）'
+      : '视角旋转（P 键切到势刷）');
+  }
+
   /* ---------- 3D 场数据读回 / 上传（R37 现场存档的基础件）----------
      readWave3：psiA3 全卷回读（RG32F 交错 (re,im)，与 probSum3d 同一逐层
        协议，但返回原始 Float32Array 而非物理矩）——现场序列化与调试句柄
@@ -1714,6 +1832,11 @@ ${d3 ? `
     const pk2 = this.q('#selPotKind2');       /* 第二势槽下拉（R41：预设/导入可注入组合） */
     if (pk2) pk2.value = String(this.state.potKind2 | 0);
     this.refreshPot2Rows();
+    /* R44：3D 工具按钮态 + 势丘读数（预设切换 / 导入存档后同步；2D 内核下
+       querySelectorAll 为空、#oBlobPos 不存在 ⟹ 同步调用天然无害） */
+    this.container.querySelectorAll('[data-tool3]').forEach(x =>
+      x.classList.toggle('on', x.dataset.tool3 === (this.state.tool3 || 'cam')));
+    this.updateBlobReadout();
     const abp = this.q('#oABPos');            /* AB 螺线管位置读数（预设 params 可能改 abX/abY） */
     if (abp) abp.textContent = '(' + this.state.abX.toFixed(2) + ', ' + this.state.abY.toFixed(2) + ')';
   }
@@ -1745,13 +1868,22 @@ ${d3 ? `
     const aim = this.q('#aim'), aimLine = this.q('#aimline'), aimDot = this.q('#aimdot'), aimTxt = this.q('#aimtxt');
 
     if (this.kernel.dim3){
-      /* 3D：轨道相机（拖拽旋转 + 滚轮缩放）。无拖拽发射（初态由预设/σ 滑块
-         给定）、无势场笔刷（势经 pot3 解析注入）。 */
+      /* 3D：轨道相机（拖拽旋转 + 滚轮缩放）+ 势刷（R44：拖拽沿视线放置
+         球形势丘）。无拖拽发射（初态由预设/σ 滑块给定）；工具模式
+         state.tool3='cam' | 'pot' 决定 pointer 语义（面板按钮 / P 键切换）。 */
       this.on(canvas, 'pointerdown', e => {
         try{ canvas.setPointerCapture(e.pointerId); }catch(_){/* 合成/无效 pointerId 时不应中断交互 */ }
-        this.cam.drag = { x: e.clientX, y: e.clientY };
+        if (this.state.tool3 === 'pot'){
+          this.placeBlob3(e.clientX, e.clientY, true);
+        } else {
+          this.cam.drag = { x: e.clientX, y: e.clientY };
+        }
       });
       this.on(canvas, 'pointermove', e => {
+        if (this.state.tool3 === 'pot'){
+          if (e.buttons & 1) this.placeBlob3(e.clientX, e.clientY, false);
+          return;
+        }
         const d = this.cam.drag; if (!d) return;
         this.cam.theta -= (e.clientX - d.x)*0.008;
         /* φ 钳制 ±1.45 rad（cos φ ≥ 0.12）：相机视线与 up 接近平行时
@@ -1902,6 +2034,18 @@ ${d3 ? `
         this.cam = { theta: 0.7, phi: 0.35, dist: 2.2, drag: null };
         this.toast('相机已重置');
       });
+      /* 势刷（R44）：工具切换 + 势丘规格滑块（半径/强度，负强度 = 势阱）
+         + 删除按钮（BV0=0 关闭）。放置逻辑在 pointer 事件（placeBlob3）。 */
+      this.container.querySelectorAll('[data-tool3]').forEach(b =>
+        this.on(b, 'click', () => this.setTool3(b.dataset.tool3)));
+      this.bindRange('#rBlobR','#oBlobR','potBR', v => String(v|0), () => this.updateBlobReadout());
+      this.bindRange('#rBlobV0','#oBlobV0','potBV0', v => v.toFixed(2), () => this.updateBlobReadout());
+      this.on(this.q('#btnBlobDel'), 'click', () => {
+        this.state.potBV0 = 0;
+        this.syncBlobRows();
+        this.toast('势丘已删除');
+      });
+      this.syncBlobRows();
       this.on(this.q('#selGrid3'), 'change', e => {
         const g = parseInt(e.target.value, 10);
         this.allocGrid3d(g);
@@ -2035,6 +2179,7 @@ ${d3 ? `
       else if (e.key >= '1' && e.key <= '9'){ const pk = presetKeys[+e.key - 1]; if (pk) this.loadPreset(pk); }
       else if (e.key === 'r' || e.key === 'R'){ this.reinitWave(); }   /* 2D: lastWave；3D: lastWave3 */
       else if ((e.key === 'c' || e.key === 'C') && !this.kernel.dim3){ this.clearV(); }   /* 3D 无势场画布 */
+      else if ((e.key === 'p' || e.key === 'P') && this.kernel.dim3){ this.setTool3(this.state.tool3 === 'pot' ? 'cam' : 'pot'); }   /* R44：势刷/视角切换 */
       else if (e.key === 't' || e.key === 'T'){ this.state.decay = this.state.decay > 0.01 ? 0 : 0.97; this.q('#rTrail').value = this.state.decay; this.q('#oTrail').textContent = this.state.decay.toFixed(2); }
     });
 
@@ -2129,6 +2274,16 @@ ${d3 ? `
       /* 屏幕剖面（R39）：类方法 screenSlice3 的调试句柄转发（R40 SlitScanner
          直接走类方法路径 app.screenSlice3，不经过此对象）。 */
       screenSlice3: (wx) => this.screenSlice3(wx),
+      /* 势刷射线拾取（R44）：screenRay3/pickBlob3 的调试句柄转发——
+         验证脚本直接对账「CPU 相机镜像 vs shader 相机模型」与放置落点。 */
+      screenRay3: (nx, ny) => this.screenRay3(nx, ny),
+      pickBlob3: (nx, ny) => this.pickBlob3(nx, ny),
+      /* 3D 工具模式（R44）：'cam' | 'pot'，按钮 / P 键 / 验证脚本共用入口 */
+      setTool3: (m) => this.setTool3(m),
+      tool3: () => this.state.tool3 || 'cam',
+      /* 势丘状态（R44）：放置/删除/规格的当前值（对账 GLSL uniform 与面板读数） */
+      blob: () => ({ bx: this.state.potBX, by: this.state.potBY, bz: this.state.potBZ,
+                     br: this.state.potBR, v0: this.state.potBV0 }),
       /* 3D 当前体积原始数据（逐层 readPixels 拼装，RG32F 交错 (re,im)）：
          供验证脚本把 GPU 场搬到 CPU 做镜像对账（R36 CN 的 GPU↔CPU 互证）。
          与现场序列化共用 readWave3——「存档的场」与「验证看到的场」同源。 */
