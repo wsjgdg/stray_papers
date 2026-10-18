@@ -1073,7 +1073,9 @@ export class GenericScanner {
     const o = this.opts;
     let done = false, m = null;
     for (let b = 0; b < o.boost && !done; b++){
-      this.app.evolve();
+      /* R52：GP 基态渐进弛豫占用本帧（evolve 返回 false）⟹ 不计数、不测量、
+         不判定——固定测量窗从弛豫完成（基态就绪）起算，序列长度不受影响。 */
+      if (this.app.evolve() === false) break;
       this._frames++;
       if (this._frames % o.measureEvery === 0 || this._frames >= o.framesMax){
         m = this._measure();

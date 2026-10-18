@@ -76,7 +76,9 @@ const HOLE_RC = 4;
 
    收敛判据：Rrms 连续 5 步相对变化 < 1e-8（上限 RELAX_MAX_STEPS 步；未收敛
    也返回当前态——仍远好于穹顶）。g≥0（吸引侧）无稳定基态（2D L² 临界塌缩），
-   直接跳过弛豫保留穹顶（与 NLS focus 同机制，如实不做数值美化）。 */
+   直接跳过弛豫保留穹顶（与 NLS focus 同机制，如实不做数值美化）。
+   R52（渐进化）：弛豫任务由引擎帧循环分帧推进（relaxStep(budget)），
+   makeWave 不再同步阻塞——单步数学与本注释描述逐字相同。 */
 const RELAX_TAU = 1.0;
 const RELAX_MAX_STEPS = 400;
 
@@ -121,6 +123,9 @@ export class GPKernel extends PhysicsKernel {
   /* 初始场：TF 密度穹顶（可选相位绕数涡旋）× 可选动量平面波。
      引擎负责归一化（Σ|ψ|²=1）与等份叠加，这里只给形状。 */
   makeWave(grid, p){
+    /* R52：任何重发都取消未完成的弛豫任务（切预设/改 σ/拖拽发射/扫描布点
+       都是全新初态；gs 分支会在下方重建任务）⟹ 旧任务不会写到新场上。 */
+    this._relaxTask = null;
     const cx = p.fx*grid, cy = p.fy*grid;
     const s = 256/grid;                          /* 世界 px / 网格 px */
     const R = p.sigma;                           /* 云半径（世界 px，来自 σ 滑块） */
@@ -175,75 +180,115 @@ export class GPKernel extends PhysicsKernel {
   }
 
   /* ---------- 基态（虚时间弛豫）---------- */
-  /* 起点穹顶 → 虚时间流 → 离散 H 的精确基态。a 为实振幅（Float64Array(grid²)），
-     就地演化；V 须为生产纹理口径（min(1,·) 封顶 + round(v·127)/127 量化）。 */
-  _relaxGS(a, n, g, V){
-    const N = n*n;
-    const t1 = new Float64Array(N), t2 = new Float64Array(N), t3 = new Float64Array(N);
-    const lapInto = (src, out) => {
-      for (let y=0; y<n; y++){
-        const y0 = y*n;
-        for (let x=0; x<n; x++){
-          const l = (x>0? src[y0+x-1] : 0) + (x<n-1? src[y0+x+1] : 0)
-                  + (y>0? src[y0-n+x] : 0) + (y<n-1? src[y0+n+x] : 0) - 4*src[y0+x];
-          out[y0+x] = l;
-        }
-      }
-    };
-    /* 变分能 μ = ⟨H⟩（GP 能量泛函变分 ⟹ Hψ=μψ，归一化梯度流的正确乘子） */
-    const energyOf = (src) => {
-      lapInto(src, t1);
-      let e = 0;
-      for (let i=0; i<N; i++) e += src[i]*(-0.5*t1[i] + (V[i] - g*src[i]*src[i])*src[i]);
-      return e;
-    };
-    let mu = energyOf(a);
-    let prev = 0, stable = 0, steps = 0;
-    for (let s=0; s<RELAX_MAX_STEPS; s++){
-      steps++;
-      const h = RELAX_TAU/2, aa = 0.25*RELAX_TAU;
-      /* 对角半步：a *= exp((μ − V + g·a²)·τ/2) */
-      for (let i=0; i<N; i++) a[i] *= Math.exp((mu - V[i] + g*a[i]*a[i])*h);
-      /* ADI 动能：exp(0.5τ·Dx) 后 exp(0.5τ·Dy)，各解 (I − 0.25τD)ψ* = (I + 0.25τD)ψ */
-      for (let y=0; y<n; y++){
-        const row = y*n;
-        for (let x=0; x<n; x++){
-          const l = (x>0? a[row+x-1] : 0) + (x<n-1? a[row+x+1] : 0) - 2*a[row+x];
-          t3[row+x] = a[row+x] + aa*l;
-        }
-      }
-      tridiagSolveX(t3, t2, n, aa);
+  /* R52（渐进化）：弛豫任务与帧循环解耦——makeWave 只建任务并立即返回穹顶
+     初态（不阻塞）；relaxStep(budget) 由引擎帧循环每帧调用推进有限步虚时间
+     流，返回本帧场快照 { data, done, info } 供上层上传显示（收敛过程可见），
+     无任务返回 null。单步数学与 R51 同步版逐字相同（循环拆分不改浮点轨迹）
+     ⟹ 分帧驱动与一次性驱动结果逐位一致（gs52 单测断言）。 */
+  get relaxPending(){ return this._relaxTask !== null; }
+
+  /* 变分能 μ = ⟨H⟩（GP 能量泛函变分 ⟹ Hψ=μψ，归一化梯度流的正确乘子）。
+     a 实振幅（Float64Array(n²)）；V 须为生产纹理口径。 */
+  _energyOf(t){
+    const n = t.n, a = t.a, V = t.V, g = t.g, out = t.t1;
+    for (let y=0; y<n; y++){
+      const y0 = y*n;
       for (let x=0; x<n; x++){
-        for (let y=0; y<n; y++){
-          const ym = y>0? t2[(y-1)*n+x] : 0, yp = y<n-1? t2[(y+1)*n+x] : 0;
-          t3[y*n+x] = t2[y*n+x] + aa*(ym + yp - 2*t2[y*n+x]);
-        }
+        const l = (x>0? a[y0+x-1] : 0) + (x<n-1? a[y0+x+1] : 0)
+                + (y>0? a[y0-n+x] : 0) + (y<n-1? a[y0+n+x] : 0) - 4*a[y0+x];
+        out[y0+x] = l;
       }
-      tridiagSolveY(t3, a, n, aa);
-      /* 对角半步 + 归一化 */
-      for (let i=0; i<N; i++) a[i] *= Math.exp((mu - V[i] + g*a[i]*a[i])*h);
-      let ss = 0;
-      for (let i=0; i<N; i++) ss += a[i]*a[i];
-      if (!(ss > 0) || !isFinite(ss)) return { steps, converged: false, diverged: true };
-      const inv = 1/Math.sqrt(ss);
-      for (let i=0; i<N; i++) a[i] *= inv;
-      mu = energyOf(a);
-      if (!isFinite(mu)) return { steps, converged: false, diverged: true };
-      /* 收敛判据：Rrms（网格坐标，比例无关）连续 5 步相对变化 < 1e-8 */
-      let s0 = 0, s2 = 0;
-      for (let y=0; y<n; y++){
-        const row = y*n, dy = y - 0.5*n;
-        for (let x=0; x<n; x++){
-          const v = a[row+x], dx = x - 0.5*n;
-          s0 += v*v; s2 += v*v*(dx*dx + dy*dy);
-        }
-      }
-      const cur = s0 > 0 ? Math.sqrt(s2/s0) : 0;
-      if (Math.abs(cur - prev) < 1e-8*cur) stable++; else stable = 0;
-      prev = cur;
-      if (stable >= 5) break;
     }
-    return { steps, converged: stable >= 5, diverged: false };
+    let e = 0;
+    for (let i=0; i<a.length; i++) e += a[i]*(-0.5*out[i] + (V[i] - g*a[i]*a[i])*a[i]);
+    return e;
+  }
+
+  /* 单步虚时间流（与 R51 _relaxGS 循环体逐字相同）：
+     Strang 分裂 exp(对角·τ/2) → ADI exp(0.5τDx)exp(0.5τDy) → exp(对角·τ/2)，
+     ADI 每行/列解三对角 (I−0.25τD)ψ*=(I+0.25τD)ψ（Thomas，无条件稳定）；
+     每步归一化；收敛判据 Rrms 连续 5 步相对变化 < 1e-8。 */
+  _relaxOnce(t){
+    const n = t.n, a = t.a, V = t.V, g = t.g, N = n*n;
+    const t1 = t.t1, t2 = t.t2, t3 = t.t3;
+    const h = RELAX_TAU/2, aa = 0.25*RELAX_TAU;
+    /* 对角半步：a *= exp((μ − V + g·a²)·τ/2) */
+    for (let i=0; i<N; i++) a[i] *= Math.exp((t.mu - V[i] + g*a[i]*a[i])*h);
+    /* ADI 动能：exp(0.5τ·Dx) 后 exp(0.5τ·Dy) */
+    for (let y=0; y<n; y++){
+      const row = y*n;
+      for (let x=0; x<n; x++){
+        const l = (x>0? a[row+x-1] : 0) + (x<n-1? a[row+x+1] : 0) - 2*a[row+x];
+        t3[row+x] = a[row+x] + aa*l;
+      }
+    }
+    tridiagSolveX(t3, t2, n, aa);
+    for (let x=0; x<n; x++){
+      for (let y=0; y<n; y++){
+        const ym = y>0? t2[(y-1)*n+x] : 0, yp = y<n-1? t2[(y+1)*n+x] : 0;
+        t3[y*n+x] = t2[y*n+x] + aa*(ym + yp - 2*t2[y*n+x]);
+      }
+    }
+    tridiagSolveY(t3, a, n, aa);
+    /* 对角半步 + 归一化 */
+    for (let i=0; i<N; i++) a[i] *= Math.exp((t.mu - V[i] + g*a[i]*a[i])*h);
+    let ss = 0;
+    for (let i=0; i<N; i++) ss += a[i]*a[i];
+    if (!(ss > 0) || !isFinite(ss)){ t.finished = true; t.diverged = true; return; }
+    const inv = 1/Math.sqrt(ss);
+    for (let i=0; i<N; i++) a[i] *= inv;
+    t.mu = this._energyOf(t);
+    if (!isFinite(t.mu)){ t.finished = true; t.diverged = true; return; }
+    /* 收敛判据：Rrms（网格坐标，比例无关）连续 5 步相对变化 < 1e-8 */
+    let s0 = 0, s2 = 0;
+    for (let y=0; y<n; y++){
+      const row = y*n, dy = y - 0.5*n;
+      for (let x=0; x<n; x++){
+        const v = a[row+x], dx = x - 0.5*n;
+        s0 += v*v; s2 += v*v*(dx*dx + dy*dy);
+      }
+    }
+    const cur = s0 > 0 ? Math.sqrt(s2/s0) : 0;
+    if (Math.abs(cur - t.prev) < 1e-8*cur) t.stable++; else t.stable = 0;
+    t.prev = cur;
+    if (t.stable >= 5) t.finished = true;
+  }
+
+  /* 任务完结出口：构造交错场快照 + 记录 info + 清任务 */
+  _relaxFinalize(t){
+    const N = t.n*t.n, a = t.a;
+    let sum = 0;
+    for (let i=0; i<N; i++) sum += a[i]*a[i];
+    const norm = sum > 0 ? 1/Math.sqrt(sum) : 0;
+    const data = new Float32Array(N*2);
+    for (let i=0; i<N; i++) data[i*2] = a[i]*norm;
+    const info = { steps: t.steps, converged: t.stable >= 5 && !t.diverged, diverged: !!t.diverged };
+    this._relaxTask = null;
+    this._lastRelax = info;
+    return { data, done: true, info };
+  }
+
+  _relaxSnapshot(t){
+    const N = t.n*t.n, a = t.a;
+    let sum = 0;
+    for (let i=0; i<N; i++) sum += a[i]*a[i];
+    const norm = sum > 0 ? 1/Math.sqrt(sum) : 0;
+    const data = new Float32Array(N*2);
+    for (let i=0; i<N; i++) data[i*2] = a[i]*norm;
+    return { data, done: false };
+  }
+
+  /* 推进最多 budget 步；返回本帧场快照 { data, done, info }（data 供上层上传），
+     无任务返回 null。done=true 时任务完结（收敛/上限/发散三种出口同 R51）。 */
+  relaxStep(budget){
+    const t = this._relaxTask;
+    if (!t) return null;
+    for (let k=0; k<budget && !t.finished; k++){
+      t.steps++;
+      this._relaxOnce(t);
+    }
+    if (t.finished || t.steps >= RELAX_MAX_STEPS) return this._relaxFinalize(t);
+    return this._relaxSnapshot(t);
   }
 
   _makeGS(grid, cx, cy, s, R, g){
@@ -276,12 +321,15 @@ export class GPKernel extends PhysicsKernel {
     let s0 = 0;
     for (let i=0; i<N; i++) s0 += a[i]*a[i];
     if (s0 > 0){ const inv = 1/Math.sqrt(s0); for (let i=0; i<N; i++) a[i] *= inv; }
-    /* 弛豫：g≥0（吸引侧）无稳定基态（2D L² 临界塌缩）⟹ 跳过，保留穹顶 */
-    const info = (g < 0)
-      ? this._relaxGS(a, n, g, V)
-      : { steps: 0, converged: false, diverged: false, skipped: true };
-    this._lastRelax = info;
-    /* 基态为实场（相位恒 0） */
+    /* 建弛豫任务（R52：渐进推进）。g≥0（吸引侧）无稳定基态（2D L² 临界
+       塌缩）⟹ 不建任务，保留穹顶（与 R51 跳过语义一致）。 */
+    if (g < 0){
+      const t = { a, n, g, V, mu: 0, prev: 0, stable: 0, steps: 0, finished: false, diverged: false,
+                  t1: new Float64Array(N), t2: new Float64Array(N), t3: new Float64Array(N) };
+      t.mu = this._energyOf(t);
+      this._relaxTask = t;
+    }
+    /* 立即返回穹顶初态（实场、相位恒 0）；基态由 relaxStep 分帧收敛后写回 */
     let sum = 0;
     for (let i=0; i<N; i++) sum += a[i]*a[i];
     const norm = sum > 0 ? 1/Math.sqrt(sum) : 0;

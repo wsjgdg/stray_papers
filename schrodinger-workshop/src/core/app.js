@@ -18,6 +18,13 @@ import { TransmissionScanner3 } from './scan.js';
 import { SlitScanner } from './scan.js';
 import { GpScanner, NlsScanner } from './scan.js';
 
+/* ---------- R52：GP 基态渐进弛豫的每帧步数预算 ----------
+   GP 预设「基态（虚时间弛豫）」的虚时间流由帧循环分帧推进：每帧最多
+   RELAX_BUDGET 步（实测单步 ~4ms@256² ⟹ 8 步 ≈ 32ms CPU/帧），总步数
+   ~212 ⟹ ~27 帧（~0.45s@60fps）完成；弛豫期间 KDK 冻结、场快照逐帧
+   上传（收敛过程可见）。数学与步进语义见 physics/gp.js 的 RELAX 注释。 */
+const RELAX_BUDGET = 8;
+
 /* ---------- 大数组 base64 助手（R37 3D 现场存档用）----------
    Float32Array ↔ base64（字节序 = 运行平台原生序，x86/ARM 均为小端；
    WebGL readPixels 产出的就是该字节序，round-trip 逐位一致）。
@@ -559,6 +566,14 @@ ${d3 ? `
      等份叠加：发射前场上有 n 个波包，新包加入后 n+1 个各占 1/(n+1) 概率
      ——旧场整体 ×√(n/(n+1))、新包 ×√(1/(n+1))，叠加后总概率恰为 1。
      任意连发次数下所有波包份额一致、旧包永不消失（实测 6 连发 7 包列积分相等）。 */
+  /* CPU 场数据上传 psiA 纹理（initWave 与 R52 渐进弛豫写回共用）。
+     data 为 Float32Array(grid²·pairs·2?)——与 makeWave 返回的交错布局一致。 */
+  _uploadPsi(data){
+    const gl = this.gl, g = this.state.grid;
+    gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, this.ifmt, g, g, 0, this.fmt, gl.FLOAT, data);
+  }
+
   initWave(fx, fy, kx, ky, add){
     const g = this.state.grid, gl = this.gl;
     /* 内核私有初相参数（Pauli 的 spinTheta/spinPhi 等）随 state 透传给 makeWave；
@@ -598,8 +613,7 @@ ${d3 ? `
     }
     const s = 1/Math.sqrt(sum);
     for (let i=0; i<data.length; i++) data[i] *= s;
-    gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
-    gl.texImage2D(gl.TEXTURE_2D, 0, this.ifmt, g, g, 0, this.fmt, gl.FLOAT, data);
+    this._uploadPsi(data);
     this.state.lastWave = [fx, fy, kx, ky];
     this.state.simTime = 0;
     /* 自旋 HUD 即时刷新：自旋角滑块/重置/预设切换都走 initWave，帧循环节流
@@ -745,6 +759,18 @@ ${d3 ? `
      3D（dim3）由 state.integrator3 在 evolve3d/evolveCN3d 间运行时切换
      （R36；内核不支持 CN3D 时恒为 KDK）。 */
   evolve(){
+    /* R52：GP 基态预设的虚时间渐进弛豫（初态构造）优先于实时演化——任务
+       未完成时冻结 KDK，每帧推进 RELAX_BUDGET 步虚时间流并上传场快照
+       （收敛过程在画面上可见）；完成当帧恢复正常演化。返回 false 表示本帧
+       被弛豫占用（扫描器 _tick 据此跳过帧计数/测量，固定测量窗从基态起算）。 */
+    if (this.kernel.relaxStep){
+      const r = this.kernel.relaxStep(RELAX_BUDGET);
+      if (r){
+        this._uploadPsi(r.data);
+        if (r.done && this.kernel.spinReadout) this.spinHud();
+      }
+    }
+    if (this.kernel.relaxPending) return false;
     const dt = 1.2;
     if (this.kernel.dim3){
       /* 3D 体积路径（R34/R36）：7 点拉普拉斯 KDK 或 CN（state.integrator3），
@@ -1026,7 +1052,11 @@ ${d3 ? `
     this._raf = requestAnimationFrame(this.frame);
     const k = 0.5/this.state.m;
     const gl = this.gl;
-    if (!this.state.paused) this.evolve();
+    /* R52：弛豫任务不受暂停影响（初态构造必须完成——暂停态切 gs 预设不能
+       卡死；scanBusy 时物理由扫描器 _tick 独家驱动，frame() 不重复推进，
+       避免同一帧双倍弛豫步进）。 */
+    const scanBusy = this.scanner.busy || this.scannerGp.busy || this.scannerNls.busy || this.scannerSlit.busy;
+    if (!this.state.paused || (this.kernel.relaxPending && !scanBusy)) this.evolve();
     /* 3D 体积路径（kernel.dim3）：volume ray-march → 合成 → 全卷 HUD；与 2D 路径
        完全分离（互不共享显示 program / 归约管线），零分支风险。 */
     if (this.kernel.dim3){ this.frame3d(now); return; }
@@ -2564,6 +2594,9 @@ ${d3 ? `
       /* 非线性参数扫描器（R42）：GP / NLS 各一实例，start() 内核不符时拒绝 */
       scanGp: this.scannerGp,
       scanNls: this.scannerNls,
+      /* R52：内核实例（渐进弛豫任务状态诊断：relaxPending/_relaxTask.steps/
+         _lastRelax——虚时间流分帧推进是异步引擎行为，CDP 需直读任务态） */
+      kernel: this.kernel,
       vpx: (x, y) => { const d = this.vctx.getImageData(x|0, y|0, 1, 1).data; return d[0]; },
       vscan: () => {
         const d = this.vctx.getImageData(0,0,256,256).data;
