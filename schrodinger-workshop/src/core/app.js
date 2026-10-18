@@ -216,9 +216,9 @@ export class QuantumField {
     <div class="row" ${d3?'style="display:none"':''}><label>笔刷半径</label><input type="range" id="rBrush" min="3" max="40" step="1" value="10"><output id="oBrush">10</output></div>
     ${extraHtml}
     <div class="row" ${d3?'style="display:none"':''}><label>V 值</label><input type="range" id="rV" min="0.01" max="1" step="0.01" value="0.3"><output id="oV">0.30</output></div>
-    <div class="row" ${d3?'style="display:none"':''}><label>耗散 γ</label><input type="range" id="rGamma" min="0" max="0.2" step="0.005" value="0"><output id="oGamma">0.000</output></div>
+    <div class="row"><label>耗散 γ</label><input type="range" id="rGamma" min="0" max="0.2" step="0.005" value="0"><output id="oGamma">0.000</output></div>
   </div>
-  <div class="sec" ${d3?'style="display:none"':''}>
+  <div class="sec">
     <h3>含时外场</h3>
     <div class="row"><label>驱动幅值 A</label><input type="range" id="rDriveAmp" min="0" max="0.5" step="0.005" value="0"><output id="oDriveAmp">0.000</output></div>
     <div class="row"><label>驱动频率 ω</label><input type="range" id="rDriveOmega" min="0.01" max="0.5" step="0.01" value="0.1"><output id="oDriveOmega">0.10</output></div>
@@ -505,6 +505,8 @@ ${d3 ? `
         this.progCnRhs3d = createProgram(gl, sh.cnRhs3d);
         this.progCnSweep3d = createProgram(gl, sh.cnSweep3d);
       }
+      /* R58 3D 耗散缩放 pass（γ≠0 时帧末跑；与 2D progScale 同义） */
+      this.progScale3d = sh.scale3d ? createProgram(gl, sh.scale3d) : null;
     }
   }
 
@@ -965,7 +967,9 @@ ${d3 ? `
   evolve3d(dt){
     const k = 0.5/this.state.m;
     const gl = this.gl, n = this.state.grid;
-    const eMax = k*12 + 1 + this.kernel.eMaxExtra(this.state);
+    /* R58：含时外场幅值计入 H 特征值上界（与 2D 同口径），防极端小质量下
+       dt·E 越过 KDK 稳定极限；A=0 时该项为 0 ⟹ 与 R34–R57 逐位一致。 */
+    const eMax = k*12 + 1 + this.kernel.eMaxExtra(this.state) + Math.abs(this.state.driveAmp);
     const sub = Math.max(this.state.substeps, Math.ceil(dt*eMax/1.5));
     const dtSub = dt/sub;
     gl.useProgram(this.progEvolve3d);
@@ -974,6 +978,11 @@ ${d3 ? `
     gl.uniform1f(this.u(this.progEvolve3d,'uK'), k);
     gl.uniform3f(this.u(this.progEvolve3d,'uTexel3'), 1/n, 1/n, 1/n);
     gl.uniform1f(this.u(this.progEvolve3d,'uGrid3'), n);
+    /* R58 含时外场：帧中点冻结相位 φ = ω·(t + dt/2)（与 2D KDK 同口径，
+       simTime 派生无累加态）；A=0 时 shader 内 `V += 0·cos(φ)` 精确恒等。 */
+    gl.uniform1f(this.u(this.progEvolve3d,'uDriveAmp'), this.state.driveAmp);
+    gl.uniform1f(this.u(this.progEvolve3d,'uDrivePhase'), this.state.driveOmega*(this.state.simTime + 0.5*dt));
+    gl.uniform1i(this.u(this.progEvolve3d,'uDriveMode'), this.state.driveMode|0);
     this.kernel.setUniforms(gl, this.progEvolve3d, this.state);   /* 私有 uniform（势参数） */
     /* R57：3D AB 磁通管 uniform（引擎级，与 2D 同一 setABUniforms；管轴沿 z、
        uABPos=管轴 xy 投影）。count=0 ⟹ uABOn=0 走原 7 点 stencil 逐位等价。 */
@@ -1005,6 +1014,18 @@ ${d3 ? `
   _evolve3dFrame(dt){
     if (this.state.integrator3 === 'cn' && this.progCnRhs3d) this.evolveCN3d(dt);
     else this.evolve3d(dt);
+    /* R58 耗散（开放系统）：帧级标量衰减 e^{-γ·dt}——与 2D 同一论证（数学精确、
+       与子步数/网格/内核/积分器解耦；把 −iγ 塞进 H 的方案衰减率带 O((γ·dt_sub)²)
+       误差且与谱耦合，已弃用）。3D 经 _volumePass3 逐层 draw 缩放全卷（与
+       evolve3d 同机制）；u/v 两通道同乘（v 是 KDK 辅助量，同步缩放保持 u/v
+       比例）。γ=0 时跳过 ⟹ 厄米路径零改动（零回归）。 */
+    if (this.state.gamma !== 0 && this.progScale3d){
+      const gl = this.gl;
+      gl.useProgram(this.progScale3d);
+      gl.uniform1f(this.u(this.progScale3d,'uScale'), Math.exp(-this.state.gamma * dt));
+      this._volumePass3(this.progScale3d, this.psiA3.tex, this.psiB3, null);
+      const tmp = this.psiA3; this.psiA3 = this.psiB3; this.psiB3 = tmp;
+    }
   }
 
   /* 3D CN 一帧推进（kernel.dim3 且 state.integrator3='cn'，R36；TPL_CN_RHS3D/
@@ -1020,7 +1041,9 @@ ${d3 ? `
   evolveCN3d(dt){
     const k = 0.5/this.state.m;
     const gl = this.gl, n = this.state.grid;
-    const eMax = k*12 + 1 + this.kernel.eMaxExtra(this.state);
+    /* R58：含时外场幅值计入 H 特征值上界（与 2D 同口径），防极端小质量下
+       dt·E 越过 KDK 稳定极限；A=0 时该项为 0 ⟹ 与 R34–R57 逐位一致。 */
+    const eMax = k*12 + 1 + this.kernel.eMaxExtra(this.state) + Math.abs(this.state.driveAmp);
     const sub = Math.max(this.state.substeps, Math.ceil(dt*eMax/1.5));
     const hh = 0.5*dt/sub;
     /* 帧首统一设置两个 CN3D program 的子步无关 uniform + 内核私有 uniform（势参数）。
@@ -1031,6 +1054,10 @@ ${d3 ? `
       gl.uniform1f(this.u(prog,'uK'), k);
       gl.uniform3f(this.u(prog,'uTexel3'), 1/n, 1/n, 1/n);
       gl.uniform1f(this.u(prog,'uGrid3'), n);
+      /* R58 含时外场（rhs/sweep 两 program 同源，与 KDK 同帧中点口径） */
+      gl.uniform1f(this.u(prog,'uDriveAmp'), this.state.driveAmp);
+      gl.uniform1f(this.u(prog,'uDrivePhase'), this.state.driveOmega*(this.state.simTime + 0.5*dt));
+      gl.uniform1i(this.u(prog,'uDriveMode'), this.state.driveMode|0);
       this.kernel.setUniforms(gl, prog, this.state);   /* 私有 uniform（势参数） */
       /* R57：3D AB uniform（rhs/sweep 两 program 同源，与 KDK 路径同一份 abSols） */
       this.setABUniforms(gl, prog, false);

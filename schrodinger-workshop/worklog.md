@@ -45,10 +45,56 @@
 | R54 | AB 螺线管多管化（用户任务 a：磁通可放置多个、分别调参） | 单管 ⟹ `abSols` 列表（≤8 根 FIFO 淘汰）：放置即选中/点已有环切换选中（命中半径 0.05）/`Delete` 删除选中管删后顺移/「置中」对选中管生效；Φ 滑块写入目标随选中态切换（选中管 Φ vs 草稿 abPhi），面板读数「#k/N · Φ=x.xx @ (x, y)」、HUD「N 管 · 选中管 Φ(2π 份额)」。**shader**：U(1) 链变量相乘 ⟹ 各管相位线性相加——循环体每管独立 β_k/θ_k + 四方向跨管累加器 + `-4c` 只减一次；编译期常量循环 + uABCount 动态 break（R49 blobSum 同款）；四模板 uniform 区逐字同款。**序列化**：abSols 顶层段 + 旧存档 abX/abY/abPhi 迁移（abPhi≠0 ⟹ 单管选中；0/缺失 ⟹ 空表）；**URL**：`?abSols=x,y,φ;…` 多管语法 + 旧简写兼容。**cdp54 34/34**：count=0/1 逐位零回归（唯一差异 IEEE ±0 符号位，无数值意义）+ kx=0 原地 60 帧 P 漂移对照（无管 1.21e-6 / 单 π 3.26e-6 / 共位双 π≡单 2π 1.70e-5 / 不共位 π+2π 6.45e-5 ⟹ float32+GPU transcendentals 固有极限非回归）+ 环渲染像素位（选中金环暖/未选蓝环冷，lift>15）+ 3D 隔离 + link_math CPU 镜像 ALL PASS |
 | R55 | AB 图形视觉编码（用户任务 b：优化磁通的图形） | Φ→色相轮 hue=0.55+0.28·fract(Φ/2π)（周期 2π 与规范等价周期一致）+ |sin(Φ/2)| 辉光 + 选中金色外环 + 负 x 规范弦低 α 射线 + flux 悬停放置预览虚影环（草稿 Φ 外观）+ 世界坐标环 uAspect 修正屏幕正圆。**float32 回绕实证**：URL 6.283185307179586 与字面量 6.28318530718 舍入到同一 float32 ⟹ fract 恒 0 ⟹ Φ=2π 与 Φ=0 外观逐位相同（规范等价自洽设计非 bug）。**cdp55 12/12**：环-对照相消法（环带绝对色相被场背景污染，同截图同半径固定偏移对照环相减）实测 Δ(Φ=0) G/B=1.13、Δ(π) G/B=0.38（理论 0.35）、**Δ(2π) G/B=0.86 恰等于青理论值**；管心辉光相消 core0=29.3 vs corePi=61.5（比 2.10 vs 理论 2.09）；弦射线/预览环/选中环全过 + preset=ab 宽束场 420px 平滑回归（G5）。**测试口径修正记录**：G1「B−R 单调递减」预期与 float32 回绕设计矛盾（重设计为 G 通道比/色相签名/回绕三判据）；G2 阈值 1.8→1.5（辉光物理正确）；G3 dB 8→6；G4 dLum 8→3（预览环为故意 0.30 半透明虚影）+ 偏蓝断言 + paused 冻结去噪 |
 | R56 | 左右面板双向收起（用户任务 c：试验场占满整个屏幕） | 左列（#panel+#desc）/右列（#hud+#legend）均可整列收起：
+| R58 | 3D 驱动（含时外场）+ 耗散（开放系统） | 补齐 3D 侧最后两类能力（R57 后仅剩的真实物理缺口）。**驱动**：3D 三模板（KDK/CN-rhs/CN-sweep）注入与 2D 逐式同构的 `V += A·cos(2π·p.x−φ)`（mode 1）/ `A·cos(φ)`（mode 0），x 取 uv 空间 `p.x`；稳定界 3D 改为 `k·12+1+附加项+\|A\|`；**⟨V⟩ 归约不含时变项**（与 2D TPL_REDUCE 同口径）。**耗散**：新增 `TPL_SCALE3D`（sampler3D + 逐层 draw）在 `_evolve3dFrame` 帧末做 e^{-γ·dt} 全卷标量缩放（与子步/网格/内核/积分器解耦，γ=0 跳过）。面板解除 d3 隐藏（含时外场 sec + 耗散 γ 行 2D+3D 通用）。**cdp58 12/12**（src + dist 双通道）：零回归（A=0 ⟹ 524288 float 逐位相同）、均匀 AC Stark 密度不变（相对峰值残差 8.75e-4，与 2D 相关系数 0.9995 同量级）、行波密度改变、耗散 P 比 vs e^{-2γt} **相对误差 1.4e-7**、CN 同源。**诚实记录**：驱动引入的 P 漂移是**时变 H 的独立离散项**（与静态基线不同源、比值恒 ~44× 不收敛到基线），但 ∝1/sub²（sub 6→12→24 ⟹ 1.086e-2→2.720e-3→6.844e-4，每档降 3.98×），收敛档相对漂移 6.8e-6 **优于 2D 记录**（1.1e-5）。**两例构建期真 bug**：① kernel.js 注释内的**反引号**提前结束 JS 模板字符串致模块语法错误（R33 双花括号教训的同族延伸）；② `replace_all` 把驱动行误注入 TPL_REDUCE3D（它也有 `float V = {{POT3}};` 但无 drive uniform）⟹ GLSL 'undeclared identifier' 编译失败，按 2D TPL_REDUCE 同口径移除 |
 | R57 | 3D AB 磁通管（后续方向表清空后新开的能力项，用户从四候选中选定） | 后续方向表经核实**已清空**（面板溢出续降判定「可接受、仍不做」、GP 半径对账 R52 闭环）⟹ 诊断出真实未决项后由用户定题。落地：AB 由 2D 专属升级为 **2D+3D 通用**——3D 磁通管沿 **z 轴贯穿体积**，θ(q)=atan2(q.y−y_k, q.x−x_k) 与 z 无关 ⟹ **±z 两 link 相位恒 0**、仅 ±x/±y 四 link 携带相位（与 A_z=0 的对称规范自洽，是 3D 与 2D 唯一结构性差异）；抽 `TPL_LAP3D_BLOCK` 让 KDK/CN-rhs/CN-sweep 三模板共享 7 点 stencil（R33 单源真值原则，此前三份内联复制）；uniform 引擎级与 2D 同名同义（setABUniforms 一次上传）；3D 体积面板新增「磁通(AB)」工具模式（点击取 R44 同口径「视线 slab 穿透段中点」xy 投影，管沿 z 贯穿 ⟹ 命中只看 xy <0.05）；R37 3D 现场存档新增 `abSols` 顶层段。**cdp57 12/12**：零回归（无管 vs Φ=0 单管，64³ 全卷 524288 float **max-abs=0** 逐位相同）、矢势可加性（共位双管 π/2+π/2 ≡ 单管 π **max-abs=0**）、Φ=π 使场改 3.56e-3、加第二根不共位管再改 7.16e-4、CN 同源 dP=1.2e-6、序列化 round-trip 逐位恢复、真实点击落管、glError=0、零异常。link_math3d 10/10 + shader 构建 13/13 + dist 冒烟 OK（370.8 KB）。**契约变更**：cdp54 F2 由「3D 下 AB sec 隐藏」反转为「显示」（回归矩阵 cdp54 34/34 + cdp55 12/12 + cdp56 15/15 全绿） |边缘拉手 `.qf-tab`（常驻、z-index 11 压面板 10 只压边框+padding、滑出态 pointer-events:none）+ 快捷键 `[`/`]`（表单聚焦守卫）+ body class `qf-hide-left/right` 驱动 transform 滑出（#gl 本就 fixed 全屏 ⟹ 无需 resize/重绘）+ localStorage `qf.panels.state={left,right}` 持久化（缺省/坏值宽松默认全展开）+ hint 补 `[` `]` 提示。**cdp56 15/15**：拉手贴边几何（lx=0/rr=1440、20px、z-index 11）/左右列滑出（panel.r=−10、hud.l=1450、字形翻转）/键盘交替序列/表单守卫/持久化+重载恢复/**双隐藏态 flux 真实点击落管 @(0.5,0.5)**（拉手与面板不挡画布）/3D 内核 smoke + 零异常。**关键环境发现**：`python3 -m http.server` 不发 Cache-Control/ETag ⟹ Chrome 按 Last-Modified 龄 10% 启发式缓存——styles.js（mtime 3 天前）新鲜期 ~7h，src 改了浏览器不重验，表现为「JS 是新的、CSS 是旧的」⟹ 全部 CDP 套件补 `Network.setCacheDisabled`（cdp54/55/56 回填）；另记 cdp56 T1 二轮 FAIL 根因 `.qf-tab` 漏设 left/right（静态位置巧合）与 dist smoke 假失败根因（localStorage 跨套件残留改变挂载初态，探针须先 clear） |
 | R42 | NLS/GP 物理工具（README「后续方向」②，用户选定两者都做） | 通用扫描框架 `GenericScanner`（生命周期与既有三扫描器同契约）+ GP/NLS 双适配器；**固定测量窗 + 全程序列**替代停止判据（非线性无耗散无终态：呼吸模永久振荡实测 8.6↔9.3）；GP 初态 σ=R_TF(g)（TF 自洽验算一致）⟹ **峰值对账 3.5%**；NLS **g=6 塌缩检出（峰值比 10.80）** + 网格截断崩坏 P→0.68；**P 诚实更正**：非线性 P 漂移 0.5–3.1%（KDK 离散耗散，随 \|g\| 增长）vs 线性对照 2.06e-6；判据修正：塌缩用序列峰值最大值（末值会因崩坏骤降误判）；既有三扫描器零改动；cdp42 32/32；环境记录：headless Chrome 无 X display 时 ANGLE Vulkan-XCB 失败 ⟹ 须 `xvfb-run` 启动 |
 | R41 | 3D 双槽势组合（README「后续方向」①，用户选定通用双槽） | 势由单枚举升级为 V=pot3Slot(主)+pot3Slot(第二)（CPU `pot3JS` 与 GLSL `helpers` 同名函数严格镜像）；**TPL_REDUCE3D 补 {{HELPERS}} 注入位**（原只有 POT3，否则势不同源、R35 对账失效）；eMaxExtra 取两槽之和（保守）⟹ 组合势 120 帧 P 守恒 1.36e-4；GPU↔CPU ⟨V⟩ 同帧对账 rel 8.8e-10/7.6e-8/6.5e-9（阈值 2e-7）；组合预设「球垒调制双缝」（球垒 R₂=6 不遮缝）；cdp41 30/30；副作用诚实记录：shader 变复杂 ⟹ 挂载预演化帧数分布 4↔5 下移到 3↔5，cdp39 PRE 断言阈值过时（判据放宽 3–6，对账走实测 PRE 故 33 项全绿） |
 | R40 | 3D 双缝图样扫描（README「后续方向」①） | SlitScanner（与 R38 同生命周期契约）：D=0,8,16,24,32 五点扫描 117s、P 守恒 1.02e-4、峰数 **1/1/3/5/3**（双缝等距条纹：D=16 距 9.5、D=24 距 7.8、D=32 ±15.5 贴提取边界）；Fraunhofer 最近邻匹配中位偏差 1.65（nMatched=8）但实测间距大于预测 1.2–1.5×（深 Fresnel 修正，与 R39 结论互证）；CDP 诊断轮抓出并修复四个真 bug：screenSlice3 类方法化（原仅 debugHandle 对象 ⟹ 类路径 TypeError）、slitPeaks 实质密度门限（float32 残余 8e-22 假峰令 _best 停噪声帧）、_finish `o.d`→`r.d` NaN 全表、measureFrom 窗门限生效；cdp40 35/35 + dist 冒烟 11/11 + cdp39 回归 34/34 |
+
+---
+
+## R58（2026-10-19）3D 驱动（含时外场）+ 耗散（开放系统）
+
+### 缘起
+R57 落地 3D AB 后，3D 侧真实物理缺口只剩「驱动 + 耗散」（README 188 行诚实限制：3D 模板仅预留 `{{UNIFORMS}}` 未启用）。用户「继续」⟹ 按上一轮汇报中列出的下一项候选推进。
+
+### 实现
+
+**驱动（引擎级，与 2D 逐式同构）**：
+- 3D 三模板（TPL_EVOLVE3D / CN_RHS3D / CN_SWEEP3D）加 uniform `uDriveAmp/uDrivePhase/uDriveMode`，并在 `float V = {{POT3}};` 之后注入
+  `V += uDriveAmp * (uDriveMode == 1 ? cos(6.28318530718*p.x - uDrivePhase) : cos(uDrivePhase));`
+  —— x 取 **uv 空间的 `p.x`**（与 2D 的 `vUv.x` 同口径）；行波波长仍为一个世界周期（2π·uv）
+- 相位 φ = ω·(simTime + dt/2) 由 CPU 按帧中点推算（与 2D 同口径，simTime 派生无累加态）
+- 稳定界 3D 由 `k*12+1+eMaxExtra` 改为 `k*12+1+eMaxExtra+|A|`（2D 同款，防极端小质量下 dt_sub·E 越过 KDK 稳定极限）
+- **⟨V⟩ 归约不含时变项**：TPL_REDUCE3D 的 V 保持静态解析势口径（与 2D TPL_REDUCE 一致）
+
+**耗散（帧级标量衰减，3D 版）**：
+- 新增 `TPL_SCALE3D`（sampler3D + uLayer，与 TPL_SCALE 同义），在 `_evolve3dFrame`（KDK/CN 分流后的统一入口，manualPass3d 与实时帧共用）帧末跑：`if (gamma !== 0)` ⟹ `_volumePass3(progScale3d, psiA3.tex, psiB3)` 全卷乘 e^{-γ·dt} 后 ping-pong
+- 与 2D 同一论证：数学精确、与子步数/网格/内核/积分器解耦；γ=0 时整个 pass 跳过 ⟹ 厄米路径零改动
+
+**面板**：解除「含时外场 sec」与「耗散 γ 行」的 `${d3?'display:none':''}` ⟹ 2D+3D 通用（与 R57 的 AB 区同策略）
+
+### 构建期抓出并修复的两个真 bug
+
+1. **注释内的反引号致模块语法错误**：kernel.js 的 3D 模板是 JS 模板字符串，我在注释里写了 `` `V += 0·cos(φ)` `` —— 反引号**提前结束模板字符串** ⟹ `SyntaxError: Unexpected identifier 'V'`，整个 kernel.js 模块无法加载。这是 R33「模板注释内禁写 `{{TOKEN}}`」教训的**同族延伸**（模板字符串内的特殊字符：`{{}}` 与反引号），已在注释内显式补记该约束。
+2. **`replace_all` 误注入 TPL_REDUCE3D**：三个演化模板与 **TPL_REDUCE3D** 都含逐字相同的 `float V = {{POT3}};` ⟹ 驱动行被一并加到 reduce3d，而后者没有 drive uniform ⟹ GLSL 编译失败（`ERROR: 0:100: 'uDriveAmp' : undeclared identifier`）。按 2D TPL_REDUCE 同口径（⟨V⟩ 只算静态势）移除，并在 reduce3d 原位留下口径说明注释。
+
+### 验证
+
+- **shader 构建 smoke 11/11**（Node）：三 program 均含驱动 uniform 三件套 + V_d 行；scale3d 存在且含 uLayer/uScale；3D stencil 仍为 7 点；2D TPL_SCALE 未改动
+- **cdp58 12/12**（src 通道，3D 内核 64³）：
+  - **V1 零回归**：A=0（mode/ω 变化）⟹ 全卷 524288 float **max-abs = 0**（逐位相同——`V += 0·cos(φ)` IEEE 精确恒等）
+  - **V4 均匀 AC Stark 密度不变**：mode 0 下密度场相对峰值残差 **8.75e-4**；V4b 复场确实改变（max-abs 8.7e-3，即只有整体相位变）
+  - **V5 行波**：密度场改变 1.89e-4（空间力生效）
+  - **V6 耗散**：γ=0.05、24 帧 ⟹ P 比 0.0561348 vs 理论 e^{-2γt} 0.0561348，**相对误差 1.4e-7**
+  - V8 面板两处可见；V10 CN 路径驱动+耗散同源；V9 零异常
+- **dist 双通道 12/12**（375.6 KB / 486120 字节）+ 回归矩阵（见下）
+- **P 守恒的诚实边界（诊断取证，非拍阈值）**：首轮 V7 按「dP<0.01%」失败（实测 1.086e-2%），未直接放宽阈值，而是写 `diag_drive58` 做标度诊断——
+  - 子步标度：sub 6→12→24 ⟹ dP 1.086e-2 → 2.720e-3 → 6.844e-4（**每档降 ~3.98× ⟹ ∝1/sub²**，离散截断的明确签名）
+  - A 标度（mode 0 均匀）：A=0.1/0.3/0.5 ⟹ 4.77e-3 / 4.85e-2 / 8.97e-2（近线性）
+  - **关键**：基线（A=0, sub=24）dP=1.56e-5 而驱动 6.84e-4 ⟹ 比值恒 **~44×，不随子步收敛到基线** ⟹ 驱动引入的是**时变 H 的独立离散项**（KDK 帧中点冻结），与静态基线的浮点/静态离散**不同源**
+  - 故判据改为「绝对量级与 2D 同口径 + 子步收敛性」两条：收敛档 sub=24 相对漂移 6.8e-6 **优于 2D 记录**（2D 驱动 P∈[0.999989,1.000000] ⟹ 1.1e-5）；收敛比 15.87≈16 ✓
+  - 定性：与 AB 的 O((ω·dt_sub)²) 误差同族，属 KDK 子步离散截断而非实现缺陷；默认 6 子步的 0.011% 量级教学演示无可见影响，精密对账应抬高子步
 
 ---
 

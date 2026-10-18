@@ -412,6 +412,15 @@ void main(){
     vec4 dzp = texture(uPsi, uvw+vec3(0.0,0.0,inv)) - c;
     vec3 w = (uvw - 0.5)*float(n);
     float V = {{POT3}};
+  /* R58 含时外场（与 2D TPL_EVOLVE:342 逐式同构）：mode 0 均匀 AC Stark
+     V_d=A·cos(φ) 空间均匀（与 H 全部对易 ⟹ 密度逐点不变、ψ 仅获整体相位）；
+     mode 1 x 行波 V_d=A·cos(2πx−φ) 空间非匀（产生周期力 F=A·2π·sin(2πx−φ)）。
+     3D 取 p.x（uv 空间 x），与 2D 的 vUv.x 同口径。A=0 时 V += 0·cos(φ)
+     为 IEEE 精确恒等 ⟹ 零回归（厄米路径逐位不变）。
+     （教训同 R33：本注释位于 JS 模板字符串内，禁止出现反引号——会提前
+     结束模板字符串致模块语法错误。） */
+    /* 注意：TPL_REDUCE3D 的 ⟨V⟩ 归约**不含**时变驱动项——与 2D TPL_REDUCE
+       同口径（HUD 的 ⟨V⟩ 为静态解析势期望值，驱动的瞬时贡献不计入）。 */
     sp += p; sp2 += p*p;
     st  += kin3(c, dxp, dyp, dzp);
     stx += kin3(c, dxp, vec4(0.0), vec4(0.0));
@@ -453,6 +462,11 @@ uniform float uABOn;            // 0 = 原 7 点 stencil（count=0 时逐位等�
 uniform vec2  uABPos[AB_MAX];   // 各管轴 xy 投影（uABCount 之外不读）
 uniform float uABPhi[AB_MAX];   // 各管磁通 Φ（rad，绕管一周总相位）
 uniform int   uABCount;         // 实际管数（编译期常量循环 + 动态 break）
+/* R58 含时外场（引擎级，与 2D 同款 uniform）：φ = ω·(t+dt/2) 由 CPU 按帧中点
+   推算（simTime 派生，无累加态）⟹ shader 只接收相位，不接收 ω。 */
+uniform float uDriveAmp;        // 驱动幅值 A（势单位），0 = 关闭（精确恒等）
+uniform float uDrivePhase;      // 驱动相位 φ
+uniform int   uDriveMode;       // 0 = 均匀 AC Stark A·cos(φ)；1 = x 行波 A·cos(2πx−φ)
 {{UNIFORMS}}
 vec4 S(vec3 p){ return texture(uPsi, clamp(p, vec3(0.0), vec3(1.0))); }
 /* AB link 相位辅助（与 2D 逐字同款，保证两边数学单源） */
@@ -468,6 +482,14 @@ void main(){
   {{LAP3D_BLOCK}}
   vec3 w = (p - 0.5)*uGrid3;                         /* 世界坐标（格点单位，居中） */
   float V = {{POT3}};
+  /* R58 含时外场（与 2D TPL_EVOLVE:342 逐式同构）：mode 0 均匀 AC Stark
+     V_d=A·cos(φ) 空间均匀（与 H 全部对易 ⟹ 密度逐点不变、ψ 仅获整体相位）；
+     mode 1 x 行波 V_d=A·cos(2πx−φ) 空间非匀（产生周期力 F=A·2π·sin(2πx−φ)）。
+     3D 取 p.x（uv 空间 x），与 2D 的 vUv.x 同口径。A=0 时 V += 0·cos(φ)
+     为 IEEE 精确恒等 ⟹ 零回归（厄米路径逐位不变）。
+     （教训同 R33：本注释位于 JS 模板字符串内，禁止出现反引号——会提前
+     结束模板字符串致模块语法错误。） */
+  V += uDriveAmp * (uDriveMode == 1 ? cos(6.28318530718*p.x - uDrivePhase) : cos(uDrivePhase));
   vec4 Hc = -uK*lap + V*c;                           /* 标量：势逐通道同乘 */
   if(uUpdateV > 0.5){
     o = vec4(c.x, c.y - 0.5*uDt*Hc.x, c.z, c.w - 0.5*uDt*Hc.z);   // v_half/v_new = v - dt/2*H*u
@@ -509,6 +531,11 @@ uniform float uABOn;            // 0 = 原 7 点 stencil（count=0 时逐位等�
 uniform vec2  uABPos[AB_MAX];   // 各管轴 xy 投影（uABCount 之外不读）
 uniform float uABPhi[AB_MAX];   // 各管磁通 Φ（rad，绕管一周总相位）
 uniform int   uABCount;         // 实际管数（编译期常量循环 + 动态 break）
+/* R58 含时外场（引擎级，与 2D 同款 uniform）：φ = ω·(t+dt/2) 由 CPU 按帧中点
+   推算（simTime 派生，无累加态）⟹ shader 只接收相位，不接收 ω。 */
+uniform float uDriveAmp;        // 驱动幅值 A（势单位），0 = 关闭（精确恒等）
+uniform float uDrivePhase;      // 驱动相位 φ
+uniform int   uDriveMode;       // 0 = 均匀 AC Stark A·cos(φ)；1 = x 行波 A·cos(2πx−φ)
 {{UNIFORMS}}
 vec4 S(vec3 p){ return texture(uPsi, clamp(p, vec3(0.0), vec3(1.0))); }
 /* AB link 相位辅助（与 2D 逐字同款，保证两边数学单源） */
@@ -524,6 +551,14 @@ void main(){
   {{LAP3D_BLOCK}}
   vec3 w = (p - 0.5)*uGrid3;
   float V = {{POT3}};
+  /* R58 含时外场（与 2D TPL_EVOLVE:342 逐式同构）：mode 0 均匀 AC Stark
+     V_d=A·cos(φ) 空间均匀（与 H 全部对易 ⟹ 密度逐点不变、ψ 仅获整体相位）；
+     mode 1 x 行波 V_d=A·cos(2πx−φ) 空间非匀（产生周期力 F=A·2π·sin(2πx−φ)）。
+     3D 取 p.x（uv 空间 x），与 2D 的 vUv.x 同口径。A=0 时 V += 0·cos(φ)
+     为 IEEE 精确恒等 ⟹ 零回归（厄米路径逐位不变）。
+     （教训同 R33：本注释位于 JS 模板字符串内，禁止出现反引号——会提前
+     结束模板字符串致模块语法错误。） */
+  V += uDriveAmp * (uDriveMode == 1 ? cos(6.28318530718*p.x - uDrivePhase) : cos(uDrivePhase));
   vec4 Hc = -uK*lap + V*c;                           /* M·w 全量（标量：势逐通道同乘） */
   vec4 Gc = vec4(Hc.y, -Hc.x, Hc.w, -Hc.z);          /* G = −i·M（复结构作用） */
   o = c + uDtHalf * Gc;                              /* rhs = w + h·G(w) */
@@ -547,6 +582,11 @@ uniform float uABOn;            // 0 = 原 7 点 stencil（count=0 时逐位等�
 uniform vec2  uABPos[AB_MAX];   // 各管轴 xy 投影（uABCount 之外不读）
 uniform float uABPhi[AB_MAX];   // 各管磁通 Φ（rad，绕管一周总相位）
 uniform int   uABCount;         // 实际管数（编译期常量循环 + 动态 break）
+/* R58 含时外场（引擎级，与 2D 同款 uniform）：φ = ω·(t+dt/2) 由 CPU 按帧中点
+   推算（simTime 派生，无累加态）⟹ shader 只接收相位，不接收 ω。 */
+uniform float uDriveAmp;        // 驱动幅值 A（势单位），0 = 关闭（精确恒等）
+uniform float uDrivePhase;      // 驱动相位 φ
+uniform int   uDriveMode;       // 0 = 均匀 AC Stark A·cos(φ)；1 = x 行波 A·cos(2πx−φ)
 {{UNIFORMS}}
 vec4 S(vec3 p){ return texture(uPsi, clamp(p, vec3(0.0), vec3(1.0))); }
 /* AB link 相位辅助（与 2D 逐字同款，保证两边数学单源） */
@@ -564,6 +604,14 @@ void main(){
   {{LAP3D_BLOCK}}
   vec3 w = (p - 0.5)*uGrid3;
   float V = {{POT3}};
+  /* R58 含时外场（与 2D TPL_EVOLVE:342 逐式同构）：mode 0 均匀 AC Stark
+     V_d=A·cos(φ) 空间均匀（与 H 全部对易 ⟹ 密度逐点不变、ψ 仅获整体相位）；
+     mode 1 x 行波 V_d=A·cos(2πx−φ) 空间非匀（产生周期力 F=A·2π·sin(2πx−φ)）。
+     3D 取 p.x（uv 空间 x），与 2D 的 vUv.x 同口径。A=0 时 V += 0·cos(φ)
+     为 IEEE 精确恒等 ⟹ 零回归（厄米路径逐位不变）。
+     （教训同 R33：本注释位于 JS 模板字符串内，禁止出现反引号——会提前
+     结束模板字符串致模块语法错误。） */
+  V += uDriveAmp * (uDriveMode == 1 ? cos(6.28318530718*p.x - uDrivePhase) : cos(uDrivePhase));
   vec4 Hk = -uK*lap;                            /* Gkin = −i·(−uK·lap)：仅导数部分 */
   vec4 Gk = vec4(Hk.y, -Hk.x, Hk.w, -Hk.z);
   vec4 arg = rhs + uDtHalf * Gk;                /* 正确迭代符号: +（与 2D 同，klein_td 数值验证） */
@@ -765,6 +813,22 @@ uniform sampler2D uPsi;
 uniform float uScale;
 void main(){
   o = texture(uPsi, vUv) * uScale;
+}`;
+
+/* ---------- 3D 耗散缩放（R58）：与 2D TPL_SCALE 同义，sampler3D + 逐层 draw ----------
+   开放系统的帧级标量衰减 e^{-γ·dt}：iψ_t=Hψ+γ 损失项的解为密度 e^{-2γt} 衰减，
+   γ<0 为增益。选帧级标量乘法的理由（与 2D 同一论证）：数学精确、与子步数/
+   网格/内核/积分器解耦——早期把 −iγ 塞进 KDK 的 H 方案，衰减率带 O((γ·dt_sub)²)
+   误差且与谱耦合，已弃用。3D 经 _volumePass3 逐层 draw（与 evolve3d 同机制），
+   u/v 两通道同乘（v 是 KDK 辅助量，同步缩放保持 u/v 比例）。 */
+const TPL_SCALE3D = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform highp sampler3D uPsi;
+uniform float uScale;
+uniform float uLayer;
+void main(){
+  o = texture(uPsi, vec3(vUv, uLayer)) * uScale;
 }`;
 
 /* ---------- 显示：相位->色相，概率->亮度，等值线，网格，余晖 max 混合 ---------- */
@@ -1080,6 +1144,8 @@ export function buildShaders(kernel){
       PHASE3: s.phase3 || 'atan(c.y, c.x)',
       HSV: SNIP_HSV,
     });
+    /* R58 3D 耗散缩放 pass（γ≠0 时帧末跑）：无 {{}} token，直接源码。 */
+    out.scale3d = TPL_SCALE3D;
     out.reduce3d = fill(TPL_REDUCE3D, {
       UNIFORMS: uni,
       DENSITY3: s.density3 || 'dot(c.xy,c.xy)',
@@ -1103,4 +1169,4 @@ export function buildShaders(kernel){
 }
 
 /* 导出模板仅供测试/文档引用（生产路径经 buildShaders 消费） */
-export const TEMPLATES = { TPL_EVOLVE, TPL_EVOLVE3D, TPL_CN_RHS3D, TPL_CN_SWEEP3D, TPL_DISPLAY3D, TPL_REDUCE3D, SNIP_HSV, TPL_CN_RHS, TPL_CN_SWEEP, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, TPL_LAP_BLOCK, TPL_LAP3D_BLOCK, DEFAULT_PIXEL_COLOR, DEFAULT_PMEAN };
+export const TEMPLATES = { TPL_EVOLVE, TPL_EVOLVE3D, TPL_CN_RHS3D, TPL_CN_SWEEP3D, TPL_DISPLAY3D, TPL_REDUCE3D, TPL_SCALE3D, SNIP_HSV, TPL_CN_RHS, TPL_CN_SWEEP, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, TPL_LAP_BLOCK, TPL_LAP3D_BLOCK, DEFAULT_PIXEL_COLOR, DEFAULT_PMEAN };
