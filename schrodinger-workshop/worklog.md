@@ -44,10 +44,55 @@
 | R53 | 面板 b 控件精简（R48 让位项现代化落地，用户选定「面板b」⟹「继续」） | R48 记录「b（控件精简）让位——删除控件伤 CDP 契约」的**非删除解法**：① **层 1 主势槽 8 参数行按 potKind 动态显隐**（`refreshPotRows()`，与 R41 `refreshPot2Rows` 同构：球 V₀/R·谐振子 ω·库仑 Z·双缝 V₀+墙五参；主势无面板下拉、类型由预设 params 注入 ⟹ syncControls 四路径（预设/2D 导入/3D 导入/URL）统一覆盖）——FREE 预设下 8 行全隐（原 6~8 行纯占位）；② **层 2 2D 两个单行 sec 合并**（「势场强度」「开放系统」⟹ 并入「物理参数」，行/id 保留、d3 隐藏语义随行迁移，sec 10→8）。实效（1440×900 overflow 口径）：2D 414→**354**（−60px）·GP 415→**355**（−60px）·3D 505→**321**（−184px，sec3d 652→468）；生产代码零语义改动（显隐不动值、隐藏行编程 input 仍写 state、slits3d 挂载口径逐项不变）；**cdp53 19/19**（新契约套件：七预设显隐矩阵 + 值保持 + 隐行写入 + sec 合并 + d3 语义 + 物理零变化 + 零异常）+ cdp48 27/27 + cdp52 30/30 + cdp41 30/30 + cdp42 45/45 + smoke43 16/16 + cdp49 51/53（2 项 favicon 404 环境产物）+ pot49 48/48 + cdp45 26/26 + smoke44 5/5；cdp39 31/34（3 项既存失败，git stash 基线对照证实同败）；**环境修复**：playwright 自带 chromium swiftshader WebGL2 失效 ⟹ 套件改驱系统 chromium（executable_path + DISPLAY=:99 headful + `--use-angle=vulkan`），断言逻辑零改动；cdp44 已过期（R44 单丘 API 被 R49 `blobs()` 取代，R52 矩阵亦未含） |
 | R54 | AB 螺线管多管化（用户任务 a：磁通可放置多个、分别调参） | 单管 ⟹ `abSols` 列表（≤8 根 FIFO 淘汰）：放置即选中/点已有环切换选中（命中半径 0.05）/`Delete` 删除选中管删后顺移/「置中」对选中管生效；Φ 滑块写入目标随选中态切换（选中管 Φ vs 草稿 abPhi），面板读数「#k/N · Φ=x.xx @ (x, y)」、HUD「N 管 · 选中管 Φ(2π 份额)」。**shader**：U(1) 链变量相乘 ⟹ 各管相位线性相加——循环体每管独立 β_k/θ_k + 四方向跨管累加器 + `-4c` 只减一次；编译期常量循环 + uABCount 动态 break（R49 blobSum 同款）；四模板 uniform 区逐字同款。**序列化**：abSols 顶层段 + 旧存档 abX/abY/abPhi 迁移（abPhi≠0 ⟹ 单管选中；0/缺失 ⟹ 空表）；**URL**：`?abSols=x,y,φ;…` 多管语法 + 旧简写兼容。**cdp54 34/34**：count=0/1 逐位零回归（唯一差异 IEEE ±0 符号位，无数值意义）+ kx=0 原地 60 帧 P 漂移对照（无管 1.21e-6 / 单 π 3.26e-6 / 共位双 π≡单 2π 1.70e-5 / 不共位 π+2π 6.45e-5 ⟹ float32+GPU transcendentals 固有极限非回归）+ 环渲染像素位（选中金环暖/未选蓝环冷，lift>15）+ 3D 隔离 + link_math CPU 镜像 ALL PASS |
 | R55 | AB 图形视觉编码（用户任务 b：优化磁通的图形） | Φ→色相轮 hue=0.55+0.28·fract(Φ/2π)（周期 2π 与规范等价周期一致）+ |sin(Φ/2)| 辉光 + 选中金色外环 + 负 x 规范弦低 α 射线 + flux 悬停放置预览虚影环（草稿 Φ 外观）+ 世界坐标环 uAspect 修正屏幕正圆。**float32 回绕实证**：URL 6.283185307179586 与字面量 6.28318530718 舍入到同一 float32 ⟹ fract 恒 0 ⟹ Φ=2π 与 Φ=0 外观逐位相同（规范等价自洽设计非 bug）。**cdp55 12/12**：环-对照相消法（环带绝对色相被场背景污染，同截图同半径固定偏移对照环相减）实测 Δ(Φ=0) G/B=1.13、Δ(π) G/B=0.38（理论 0.35）、**Δ(2π) G/B=0.86 恰等于青理论值**；管心辉光相消 core0=29.3 vs corePi=61.5（比 2.10 vs 理论 2.09）；弦射线/预览环/选中环全过 + preset=ab 宽束场 420px 平滑回归（G5）。**测试口径修正记录**：G1「B−R 单调递减」预期与 float32 回绕设计矛盾（重设计为 G 通道比/色相签名/回绕三判据）；G2 阈值 1.8→1.5（辉光物理正确）；G3 dB 8→6；G4 dLum 8→3（预览环为故意 0.30 半透明虚影）+ 偏蓝断言 + paused 冻结去噪 |
-| R56 | 左右面板双向收起（用户任务 c：试验场占满整个屏幕） | 左列（#panel+#desc）/右列（#hud+#legend）均可整列收起：边缘拉手 `.qf-tab`（常驻、z-index 11 压面板 10 只压边框+padding、滑出态 pointer-events:none）+ 快捷键 `[`/`]`（表单聚焦守卫）+ body class `qf-hide-left/right` 驱动 transform 滑出（#gl 本就 fixed 全屏 ⟹ 无需 resize/重绘）+ localStorage `qf.panels.state={left,right}` 持久化（缺省/坏值宽松默认全展开）+ hint 补 `[` `]` 提示。**cdp56 15/15**：拉手贴边几何（lx=0/rr=1440、20px、z-index 11）/左右列滑出（panel.r=−10、hud.l=1450、字形翻转）/键盘交替序列/表单守卫/持久化+重载恢复/**双隐藏态 flux 真实点击落管 @(0.5,0.5)**（拉手与面板不挡画布）/3D 内核 smoke + 零异常。**关键环境发现**：`python3 -m http.server` 不发 Cache-Control/ETag ⟹ Chrome 按 Last-Modified 龄 10% 启发式缓存——styles.js（mtime 3 天前）新鲜期 ~7h，src 改了浏览器不重验，表现为「JS 是新的、CSS 是旧的」⟹ 全部 CDP 套件补 `Network.setCacheDisabled`（cdp54/55/56 回填）；另记 cdp56 T1 二轮 FAIL 根因 `.qf-tab` 漏设 left/right（静态位置巧合）与 dist smoke 假失败根因（localStorage 跨套件残留改变挂载初态，探针须先 clear） |
+| R56 | 左右面板双向收起（用户任务 c：试验场占满整个屏幕） | 左列（#panel+#desc）/右列（#hud+#legend）均可整列收起：
+| R57 | 3D AB 磁通管（后续方向表清空后新开的能力项，用户从四候选中选定） | 后续方向表经核实**已清空**（面板溢出续降判定「可接受、仍不做」、GP 半径对账 R52 闭环）⟹ 诊断出真实未决项后由用户定题。落地：AB 由 2D 专属升级为 **2D+3D 通用**——3D 磁通管沿 **z 轴贯穿体积**，θ(q)=atan2(q.y−y_k, q.x−x_k) 与 z 无关 ⟹ **±z 两 link 相位恒 0**、仅 ±x/±y 四 link 携带相位（与 A_z=0 的对称规范自洽，是 3D 与 2D 唯一结构性差异）；抽 `TPL_LAP3D_BLOCK` 让 KDK/CN-rhs/CN-sweep 三模板共享 7 点 stencil（R33 单源真值原则，此前三份内联复制）；uniform 引擎级与 2D 同名同义（setABUniforms 一次上传）；3D 体积面板新增「磁通(AB)」工具模式（点击取 R44 同口径「视线 slab 穿透段中点」xy 投影，管沿 z 贯穿 ⟹ 命中只看 xy <0.05）；R37 3D 现场存档新增 `abSols` 顶层段。**cdp57 12/12**：零回归（无管 vs Φ=0 单管，64³ 全卷 524288 float **max-abs=0** 逐位相同）、矢势可加性（共位双管 π/2+π/2 ≡ 单管 π **max-abs=0**）、Φ=π 使场改 3.56e-3、加第二根不共位管再改 7.16e-4、CN 同源 dP=1.2e-6、序列化 round-trip 逐位恢复、真实点击落管、glError=0、零异常。link_math3d 10/10 + shader 构建 13/13 + dist 冒烟 OK（370.8 KB）。**契约变更**：cdp54 F2 由「3D 下 AB sec 隐藏」反转为「显示」（回归矩阵 cdp54 34/34 + cdp55 12/12 + cdp56 15/15 全绿） |边缘拉手 `.qf-tab`（常驻、z-index 11 压面板 10 只压边框+padding、滑出态 pointer-events:none）+ 快捷键 `[`/`]`（表单聚焦守卫）+ body class `qf-hide-left/right` 驱动 transform 滑出（#gl 本就 fixed 全屏 ⟹ 无需 resize/重绘）+ localStorage `qf.panels.state={left,right}` 持久化（缺省/坏值宽松默认全展开）+ hint 补 `[` `]` 提示。**cdp56 15/15**：拉手贴边几何（lx=0/rr=1440、20px、z-index 11）/左右列滑出（panel.r=−10、hud.l=1450、字形翻转）/键盘交替序列/表单守卫/持久化+重载恢复/**双隐藏态 flux 真实点击落管 @(0.5,0.5)**（拉手与面板不挡画布）/3D 内核 smoke + 零异常。**关键环境发现**：`python3 -m http.server` 不发 Cache-Control/ETag ⟹ Chrome 按 Last-Modified 龄 10% 启发式缓存——styles.js（mtime 3 天前）新鲜期 ~7h，src 改了浏览器不重验，表现为「JS 是新的、CSS 是旧的」⟹ 全部 CDP 套件补 `Network.setCacheDisabled`（cdp54/55/56 回填）；另记 cdp56 T1 二轮 FAIL 根因 `.qf-tab` 漏设 left/right（静态位置巧合）与 dist smoke 假失败根因（localStorage 跨套件残留改变挂载初态，探针须先 clear） |
 | R42 | NLS/GP 物理工具（README「后续方向」②，用户选定两者都做） | 通用扫描框架 `GenericScanner`（生命周期与既有三扫描器同契约）+ GP/NLS 双适配器；**固定测量窗 + 全程序列**替代停止判据（非线性无耗散无终态：呼吸模永久振荡实测 8.6↔9.3）；GP 初态 σ=R_TF(g)（TF 自洽验算一致）⟹ **峰值对账 3.5%**；NLS **g=6 塌缩检出（峰值比 10.80）** + 网格截断崩坏 P→0.68；**P 诚实更正**：非线性 P 漂移 0.5–3.1%（KDK 离散耗散，随 \|g\| 增长）vs 线性对照 2.06e-6；判据修正：塌缩用序列峰值最大值（末值会因崩坏骤降误判）；既有三扫描器零改动；cdp42 32/32；环境记录：headless Chrome 无 X display 时 ANGLE Vulkan-XCB 失败 ⟹ 须 `xvfb-run` 启动 |
 | R41 | 3D 双槽势组合（README「后续方向」①，用户选定通用双槽） | 势由单枚举升级为 V=pot3Slot(主)+pot3Slot(第二)（CPU `pot3JS` 与 GLSL `helpers` 同名函数严格镜像）；**TPL_REDUCE3D 补 {{HELPERS}} 注入位**（原只有 POT3，否则势不同源、R35 对账失效）；eMaxExtra 取两槽之和（保守）⟹ 组合势 120 帧 P 守恒 1.36e-4；GPU↔CPU ⟨V⟩ 同帧对账 rel 8.8e-10/7.6e-8/6.5e-9（阈值 2e-7）；组合预设「球垒调制双缝」（球垒 R₂=6 不遮缝）；cdp41 30/30；副作用诚实记录：shader 变复杂 ⟹ 挂载预演化帧数分布 4↔5 下移到 3↔5，cdp39 PRE 断言阈值过时（判据放宽 3–6，对账走实测 PRE 故 33 项全绿） |
 | R40 | 3D 双缝图样扫描（README「后续方向」①） | SlitScanner（与 R38 同生命周期契约）：D=0,8,16,24,32 五点扫描 117s、P 守恒 1.02e-4、峰数 **1/1/3/5/3**（双缝等距条纹：D=16 距 9.5、D=24 距 7.8、D=32 ±15.5 贴提取边界）；Fraunhofer 最近邻匹配中位偏差 1.65（nMatched=8）但实测间距大于预测 1.2–1.5×（深 Fresnel 修正，与 R39 结论互证）；CDP 诊断轮抓出并修复四个真 bug：screenSlice3 类方法化（原仅 debugHandle 对象 ⟹ 类路径 TypeError）、slitPeaks 实质密度门限（float32 残余 8e-22 假峰令 _best 停噪声帧）、_finish `o.d`→`r.d` NaN 全表、measureFrom 窗门限生效；cdp40 35/35 + dist 冒烟 11/11 + cdp39 回归 34/34 |
+
+---
+
+## R57（2026-10-19）3D AB 磁通管（后续方向表清空后新开的能力项）
+
+### 缘起
+用户指令「继续后续方向」。**诊断先行核实后续方向表状态**（不静默开工）：表内仅两项——① 面板结构性溢出续降：R48/R53 已续降至 321–355px，备注明确「属可接受范围（面板信息密度优先）」「删除式精简仍不做」，仅留「扫描 canvas 进一步缩比 / 势丘面板并入」两个边际子选项；② GP 半径对账：R52 已闭环。**即后续方向表实际已清空**。
+
+另诊断出两处真实未决项：① README 188 行「3D 无势场笔刷…笔刷缺口仍在」与 197 行交互表（R44⟹R49 已落地 3D 势刷）**自相矛盾**——代码实证 `schrodinger3d.js:110 pot3Blobs`（CPU）+ `:226 blobSum`（GLSL）+ app.js 势刷按钮/P 键，3D 确已支持球形硬边势丘列表；真实缺口是「无 2D 那样的 256² 势场画布自由涂抹」（已更正表述）。② kernel.js:391 注释与 R54 实现确认 3D **无 AB/驱动/耗散**（模板仅预留 `{{UNIFORMS}}` 未启用）。
+
+按项目约定「未定选题，待用户决定」+ 用户偏好「架构层不确定性优先标出再决策」，呈现四项候选（3D AB / 3D 驱动+耗散 / 面板溢出子选项 / 全量文档核账）⟹ **用户选定 3D AB**（教学价值最高的 3D 物理缺口）。
+
+### 物理设计（3D 与 2D 的唯一结构性差异）
+
+3D 的无限细螺线管是**沿 z 轴的直线**，对称规范 A_k=(Φ_k/2π)·dθ_k 的方位角 **θ_k(q)=atan2(q.y−y_k, q.x−x_k) 与 z 无关** ⟹ **±z 两个 link 的相位恒为 0**（沿管轴平移不改变方位角，与 A_z=0 的规范自洽），仅 ±x/±y 四个 link 携带相位；7 点 stencil 的 −6c 中心项仍只减一次（与管数无关）。
+
+其余数学与 2D **逐字同构**：θ 取精确线积分 `wrapPi(θ(p+Δ)−θ(p))`（被积函数分子恒定 ⟹ 沿直线 link 的积分即端点张角差，比中点采样高一阶、atan2 处处有限无奇点）；正反 link 共享同一对端点 ⟹ 精确反号 ⟹ link 拉普拉斯严格厄米；Wilson 环 = e^{iΦ} 精确成立；多管 U(1) 链变量相乘 ⟹ 相位线性相加（R54 同构）。
+
+### 实现
+
+**kernel.js**：
+- 抽 `TPL_LAP3D_BLOCK`（7 点 stencil + 3D AB 分支）：此前 TPL_EVOLVE3D/CN_RHS3D/CN_SWEEP3D **各自内联复制** 7 点 stencil（三份），与 R33 确立的「LAP_BLOCK 单源真值」原则相悖 ⟹ 抽为共享 token，AB 分支只有一个真源；加入 TEMPLATES 导出
+- 三模板 uniform 区加 `#define AB_MAX 8` + uABOn/uABPos[AB_MAX]/uABPhi[AB_MAX]/uABCount（**引擎级**，与 2D 同名同义），helper 区加 rot/rot4/ang/wrapPi（与 2D 逐字同款）
+- fill() 注册 `LAP3D_BLOCK`（evolve3d/cnRhs3d/cnSweep3d 三处）
+
+**app.js**：
+- `evolve3d` / `evolveCN3d` 的 uniform 段各加 `this.setABUniforms(gl, prog, false)`（引擎级通用方法，location=null 静默跳过）
+- 面板 AB sec **去掉 `${d3?'display:none':''}`** ⟹ 2D+3D 通用（契约变更）
+- `setTool3` 支持 `'flux'`（P 键仍在 cam↔pot 切换，R44 契约不变；flux 仅经面板按钮进入）
+- 新增 `pickFlux3(clientX, clientY)`：`pickBlob3`（R44 同口径「视线 slab 穿透段中点」）⟹ 世界 texel 转 uv（w/n+0.5）⟹ `pickSolenoid` 命中则选中、否则以草稿 Φ 放新管；未命中体积则 toast
+- R37 3D 现场存档新增 `abSols` 顶层段（序列化 + 导入校验「≤AB_MAX 且全有限三元组」+ 旧存档无段 ⟹ 空列表，3D 此前不支持 AB 无需迁移）+ toast 计数
+
+### 验证
+
+- **link_math3d 10/10**（Node CPU 数学镜像，与 GLSL 逐式同构）：Wilson 环绕管一周 = Φ（1.234000000000 精确）、反向 = −Φ、±z link 相位恒 0、正反 link 精确反号（worst=0）、共位双管 ≡ 单管（Φ₁+Φ₂）、wrapPi 规范弦（raw −6.281 ⟹ wrapped 0.002）、Φ=0 精确 0、Φ=2π float32 回绕（URL 值与 shader 字面量同一 float32 ⟹ ck 恒 1.0）
+- **shader 构建 smoke 13/13**（Node，无 GL）：fill 无重复/unknown token、三 program 含 AB uniform/helper/#define、±z 无 rot4、±x/±y 带 rot4、−6c 只减一次、else 分支为原 7 点、2D LAP_BLOCK 未被污染
+- **cdp57 12/12**（浏览器，3D 内核 64³）：
+  - **Z1 零回归（最强证据）**：无管 vs Φ=0 单管，manualPass3d(10) 后 wave3Data **524288 个 float max-abs = 0**（逐位相同——走 if 分支但 ck=0 ⟹ rot4(c,0)=c 精确）
+  - **Z3 矢势可加性**：共位双管 π/2+π/2 ≡ 单管 π，同样 **max-abs = 0**
+  - **Z2/Z4 生效**：Φ=π 管使场改 3.56e-3；加第二根不共位管（@0.3,0.7 Φ=1）再改 7.16e-4
+  - Z5 P 漂移 0.0043%（KDK 20 帧，Φ=π）+ glError=0；Z8 CN 路径 dP=1.2e-6（严格正交，低于 KDK，符合预期）
+  - Z6 3D 下 AB 面板区显示；Z7 setTool3('flux') + **真实 pointer 点击画布中心落管 @(0.5,0.5)**；Z10 3D 现场存档 abSols 段 round-trip **逐位恢复**（清空后导入还原 2 根）；Z9 零异常
+- **回归矩阵（顺序执行）**：cdp54 34/34 + cdp55 12/12 + cdp56 15/15 —— **cdp54 F2 契约变更**：原断言「3D 内核下 AB sec 隐藏（2D 专属控件不泄漏）」反转为「3D 下 AB sec 显示」（R57 使 AB 成为通用能力），已在套件内注释说明变更缘由
+- **dist 冒烟 OK**：370.8 KB（478645 字节）；3D 挂载 glError=0、AB 面板可见、磁通模式点击落管、零回归 zeroVsNone=0、生效 piVsNone=2.89e-3、零异常
 
 ---
 

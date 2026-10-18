@@ -260,6 +260,52 @@ const TPL_LAP_BLOCK = `  vec4 lap;
          + S(vUv+vec2(0.0,-uTexel.y))+S(vUv+vec2(0.0,uTexel.y)) - 4.0*c;
   }`;
 
+/* ---------- 3D 拉普拉斯 stencil 块（引擎级共享 token，TPL_EVOLVE3D/CN_RHS3D/CN_SWEEP3D 共用）----------
+   R57：3D 模板此前各自内联复制 7 点 stencil（三份），与 R33 确立的「LAP_BLOCK
+   单源真值」原则相悖 ⟹ 抽为本 token，AB 分支只有一个真源。
+   契约（展开处必须满足）：
+     - 局部变量 vec3 p（当前体素 uv，含 uLayer 的 z）、vec3 e = uTexel3（体素步长）
+     - 局部变量 vec4 c = S(p)（中心体素）
+     - helper rot/rot4/ang/wrapPi（与 2D TPL_LAP_BLOCK 逐字同款）与
+       uniform uABOn/uABPos[AB_MAX]/uABPhi[AB_MAX]/uABCount 已声明
+   产出：vec4 lap（7 点 stencil，含 3D AB 最小耦合 link 相位分支）。
+   与 2D 的维度差异：
+     · 5 点 → 7 点（六个邻格 + −6c 中心项，中心项只减一次与管数无关）
+     · 磁通管在 3D 是沿 z 轴的**直线**（无限细螺线管），管轴在 xy 平面的
+       投影点即 uABPos[k]（vec2）；对称规范 A_k=(Φ_k/2π)·dθ_k 的方位角
+       θ_k(q)=atan2(q.y−y_k, q.x−x_k) **与 z 无关** ⟹ ±z 两个 link 的相位
+       恒 0（沿管轴平移不改变方位角，与 A_z=0 的规范自洽），只 ±x/±y 四个
+       link 携带相位——这是 3D AB 与 2D AB 的唯一结构性差异。
+     · 其余数学与 2D 逐字同构：θ 取**精确线积分**（被积函数分子恒定，沿直线
+       link 的积分即端点张角差 wrapPi(θ(p+Δ)−θ(p))，比中点采样高一阶且
+       atan2 处处有限无奇点）；正反 link 共享同一对端点 ⟹ θ 精确反号 ⟹
+       link 拉普拉斯严格厄米；Wilson 环 = e^{iΦ} 精确成立；多管 U(1) 链变量
+       相乘 ⟹ 相位线性相加（R54 同构）。
+     · 零回归：count=0 ⟹ uABOn=0 走 else 分支，逐位等价 R34–R56 的 3D 路径。 */
+const TPL_LAP3D_BLOCK = `  vec4 lap;
+  if(uABOn > 0.5){
+    float abPhXp = 0.0, abPhXm = 0.0, abPhYp = 0.0, abPhYm = 0.0;
+    for (int k = 0; k < AB_MAX; k++){
+      if (k >= uABCount) break;
+      float ck = uABPhi[k]/6.28318530718;
+      vec2 dk = p.xy - uABPos[k];
+      float bk = ang(dk);
+      abPhXp += ck*wrapPi(ang(p.xy + vec2( e.x, 0.0) - uABPos[k]) - bk);
+      abPhXm += ck*wrapPi(ang(p.xy + vec2(-e.x, 0.0) - uABPos[k]) - bk);
+      abPhYp += ck*wrapPi(ang(p.xy + vec2( 0.0, e.y) - uABPos[k]) - bk);
+      abPhYm += ck*wrapPi(ang(p.xy + vec2( 0.0,-e.y) - uABPos[k]) - bk);
+    }
+    lap = rot4(S(p+vec3(e.x,0.0,0.0)), abPhXp)
+        + rot4(S(p-vec3(e.x,0.0,0.0)), abPhXm)
+        + rot4(S(p+vec3(0.0,e.y,0.0)), abPhYp)
+        + rot4(S(p-vec3(0.0,e.y,0.0)), abPhYm)
+        + S(p+vec3(0.0,0.0,e.z)) + S(p-vec3(0.0,0.0,e.z)) - 6.0*c;
+  } else {
+    lap = S(p+vec3(e.x,0.0,0.0)) + S(p-vec3(e.x,0.0,0.0))
+        + S(p+vec3(0.0,e.y,0.0)) + S(p-vec3(0.0,e.y,0.0))
+        + S(p+vec3(0.0,0.0,e.z)) + S(p-vec3(0.0,0.0,e.z)) - 6.0*c;
+  }`;
+
 const TPL_EVOLVE = `#version 300 es
 precision highp float;
 #define AB_MAX ${AB_MAX}
@@ -399,16 +445,27 @@ uniform float uUpdateV;   // 1.0 = 更新 v 分量, 0.0 = 更新 u 分量
 uniform vec3 uTexel3;     // (1/N, 1/N, 1/N)
 uniform float uLayer;     // 当前绘制层 z ∈ (0,1)（层中点）
 uniform float uGrid3;     // N（格点数；世界坐标 = (p−0.5)·N，格点单位）
+#define AB_MAX ${AB_MAX}
+/* AB 多螺线管（R57，引擎级——与 2D 同款 uniform，3D 磁通管沿 z 轴，
+   uABPos[k] 为管轴在 xy 平面的投影点（uv 空间）。同 AB_MAX #define 已在
+   2D 模板使用，3D 三个模板各声明一次（GLSL 编译期常量，无链接冲突）。 */
+uniform float uABOn;            // 0 = 原 7 点 stencil（count=0 时逐位等价）
+uniform vec2  uABPos[AB_MAX];   // 各管轴 xy 投影（uABCount 之外不读）
+uniform float uABPhi[AB_MAX];   // 各管磁通 Φ（rad，绕管一周总相位）
+uniform int   uABCount;         // 实际管数（编译期常量循环 + 动态 break）
 {{UNIFORMS}}
 vec4 S(vec3 p){ return texture(uPsi, clamp(p, vec3(0.0), vec3(1.0))); }
+/* AB link 相位辅助（与 2D 逐字同款，保证两边数学单源） */
+vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
+vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }
+float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
+float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
 {{HELPERS}}
 void main(){
   vec3 p = vec3(vUv, uLayer);
   vec4 c = S(p);
   vec3 e = uTexel3;
-  vec4 lap = S(p+vec3(e.x,0.0,0.0)) + S(p-vec3(e.x,0.0,0.0))
-           + S(p+vec3(0.0,e.y,0.0)) + S(p-vec3(0.0,e.y,0.0))
-           + S(p+vec3(0.0,0.0,e.z)) + S(p-vec3(0.0,0.0,e.z)) - 6.0*c;
+  {{LAP3D_BLOCK}}
   vec3 w = (p - 0.5)*uGrid3;                         /* 世界坐标（格点单位，居中） */
   float V = {{POT3}};
   vec4 Hc = -uK*lap + V*c;                           /* 标量：势逐通道同乘 */
@@ -444,16 +501,27 @@ uniform float uK;
 uniform vec3 uTexel3;
 uniform float uGrid3;
 uniform float uLayer;       /* 当前绘制层 z ∈ (0,1)（层中点） */
+#define AB_MAX ${AB_MAX}
+/* AB 多螺线管（R57，引擎级——与 2D 同款 uniform，3D 磁通管沿 z 轴，
+   uABPos[k] 为管轴在 xy 平面的投影点（uv 空间）。同 AB_MAX #define 已在
+   2D 模板使用，3D 三个模板各声明一次（GLSL 编译期常量，无链接冲突）。 */
+uniform float uABOn;            // 0 = 原 7 点 stencil（count=0 时逐位等价）
+uniform vec2  uABPos[AB_MAX];   // 各管轴 xy 投影（uABCount 之外不读）
+uniform float uABPhi[AB_MAX];   // 各管磁通 Φ（rad，绕管一周总相位）
+uniform int   uABCount;         // 实际管数（编译期常量循环 + 动态 break）
 {{UNIFORMS}}
 vec4 S(vec3 p){ return texture(uPsi, clamp(p, vec3(0.0), vec3(1.0))); }
+/* AB link 相位辅助（与 2D 逐字同款，保证两边数学单源） */
+vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
+vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }
+float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
+float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
 {{HELPERS}}
 void main(){
   vec3 p = vec3(vUv, uLayer);
   vec4 c = S(p);
   vec3 e = uTexel3;
-  vec4 lap = S(p+vec3(e.x,0.0,0.0)) + S(p-vec3(e.x,0.0,0.0))
-           + S(p+vec3(0.0,e.y,0.0)) + S(p-vec3(0.0,e.y,0.0))
-           + S(p+vec3(0.0,0.0,e.z)) + S(p-vec3(0.0,0.0,e.z)) - 6.0*c;
+  {{LAP3D_BLOCK}}
   vec3 w = (p - 0.5)*uGrid3;
   float V = {{POT3}};
   vec4 Hc = -uK*lap + V*c;                           /* M·w 全量（标量：势逐通道同乘） */
@@ -471,8 +539,21 @@ uniform float uK;
 uniform vec3 uTexel3;
 uniform float uGrid3;
 uniform float uLayer;
+#define AB_MAX ${AB_MAX}
+/* AB 多螺线管（R57，引擎级——与 2D 同款 uniform，3D 磁通管沿 z 轴，
+   uABPos[k] 为管轴在 xy 平面的投影点（uv 空间）。同 AB_MAX #define 已在
+   2D 模板使用，3D 三个模板各声明一次（GLSL 编译期常量，无链接冲突）。 */
+uniform float uABOn;            // 0 = 原 7 点 stencil（count=0 时逐位等价）
+uniform vec2  uABPos[AB_MAX];   // 各管轴 xy 投影（uABCount 之外不读）
+uniform float uABPhi[AB_MAX];   // 各管磁通 Φ（rad，绕管一周总相位）
+uniform int   uABCount;         // 实际管数（编译期常量循环 + 动态 break）
 {{UNIFORMS}}
 vec4 S(vec3 p){ return texture(uPsi, clamp(p, vec3(0.0), vec3(1.0))); }
+/* AB link 相位辅助（与 2D 逐字同款，保证两边数学单源） */
+vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
+vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }
+float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
+float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
 {{HELPERS}}
 {{CN_LOCAL_SOLVE3}}
 void main(){
@@ -480,9 +561,7 @@ void main(){
   vec4 c = S(p);                     /* x_k 中心值（lap stencil 的 −6c 项） */
   vec4 rhs = texture(uRhs, p);
   vec3 e = uTexel3;
-  vec4 lap = S(p+vec3(e.x,0.0,0.0)) + S(p-vec3(e.x,0.0,0.0))
-           + S(p+vec3(0.0,e.y,0.0)) + S(p-vec3(0.0,e.y,0.0))
-           + S(p+vec3(0.0,0.0,e.z)) + S(p-vec3(0.0,0.0,e.z)) - 6.0*c;
+  {{LAP3D_BLOCK}}
   vec3 w = (p - 0.5)*uGrid3;
   float V = {{POT3}};
   vec4 Hk = -uK*lap;                            /* Gkin = −i·(−uK·lap)：仅导数部分 */
@@ -993,6 +1072,7 @@ export function buildShaders(kernel){
   if (kernel.dim3){
     out.evolve3d = fill(TPL_EVOLVE3D, {
       UNIFORMS: uni, POT3: s.pot3 || '0.0', HELPERS: s.helpers || '',
+      LAP3D_BLOCK: TPL_LAP3D_BLOCK,
     });
     out.display3d = fill(TPL_DISPLAY3D, {
       UNIFORMS: uni,
@@ -1015,12 +1095,12 @@ export function buildShaders(kernel){
        sh.cnRhs3d 是否存在决定编译与 evolveCN3d 分支；无该 snippet 的 dim3
        内核装配结果与 R34/R35 逐字一致（零回归）。 */
     if (typeof s.cnLocalSolve3 === 'string' && s.cnLocalSolve3.trim()){
-      out.cnRhs3d = fill(TPL_CN_RHS3D, { UNIFORMS: uni, POT3: s.pot3 || '0.0', HELPERS: s.helpers || '' });
-      out.cnSweep3d = fill(TPL_CN_SWEEP3D, { UNIFORMS: uni, POT3: s.pot3 || '0.0', HELPERS: s.helpers || '', CN_LOCAL_SOLVE3: s.cnLocalSolve3 });
+      out.cnRhs3d = fill(TPL_CN_RHS3D, { UNIFORMS: uni, POT3: s.pot3 || '0.0', HELPERS: s.helpers || '', LAP3D_BLOCK: TPL_LAP3D_BLOCK });
+      out.cnSweep3d = fill(TPL_CN_SWEEP3D, { UNIFORMS: uni, POT3: s.pot3 || '0.0', HELPERS: s.helpers || '', CN_LOCAL_SOLVE3: s.cnLocalSolve3, LAP3D_BLOCK: TPL_LAP3D_BLOCK });
     }
   }
   return out;
 }
 
 /* 导出模板仅供测试/文档引用（生产路径经 buildShaders 消费） */
-export const TEMPLATES = { TPL_EVOLVE, TPL_EVOLVE3D, TPL_CN_RHS3D, TPL_CN_SWEEP3D, TPL_DISPLAY3D, TPL_REDUCE3D, SNIP_HSV, TPL_CN_RHS, TPL_CN_SWEEP, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, TPL_LAP_BLOCK, DEFAULT_PIXEL_COLOR, DEFAULT_PMEAN };
+export const TEMPLATES = { TPL_EVOLVE, TPL_EVOLVE3D, TPL_CN_RHS3D, TPL_CN_SWEEP3D, TPL_DISPLAY3D, TPL_REDUCE3D, SNIP_HSV, TPL_CN_RHS, TPL_CN_SWEEP, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, TPL_LAP_BLOCK, TPL_LAP3D_BLOCK, DEFAULT_PIXEL_COLOR, DEFAULT_PMEAN };

@@ -255,7 +255,7 @@ export class QuantumField {
     <canvas id="paramScanCanvas" width="420" height="180"></canvas>
     <div class="hint" style="margin-top:4px">GP：扫 g（排斥侧 g&lt;0，托马斯-费米云/涡旋）——测云半径 Rrms（⟹R_TF=√3·Rrms）、峰值 n₀、涡旋愈合层 ξ，与 TF 解析 R_TF=(2R_trap²|g|/π)^¼、n₀=μ/|g| 对照。NLS：扫 g（focusing 侧 g&gt;0，条带孤子）——测 σx/σy 与峰值末/初比（&gt;3 判自聚焦发散）。**固定测量窗 200 帧 + 全程序列**：非线性无耗散系统（呼吸模永久振荡、TOF 单调膨胀、孤子稳定传播）没有天然终点，故不用「清空/双稳」类停止判据，改由时间平均 + 摆动幅度给出结论。P 在两内核下守恒（幺正非线性），塌缩/网格截断导致的数值漂移属诚实限制。</div>
   </div>
-  <div class="sec" ${d3?'style="display:none"':''}>
+  <div class="sec">
     <h3>AB 磁通（多管）</h3>
     <div class="row"><label>磁通 Φ</label><input type="range" id="rABPhi" min="0" max="6.2832" step="0.01" value="0"><output id="oABPhi">0.00</output></div>
     <div class="row"><label>选中</label><output id="oABSel">无 · 放置即新建</output><button id="btnABCenter">置中</button></div>
@@ -263,7 +263,7 @@ export class QuantumField {
       <button id="btnABDel">删除选中</button>
       <button id="btnABClear">清空</button>
     </div>
-    <div class="row"><label>放置</label><span class="hint">「磁通(AB)」工具：点空白放新管（取滑块 Φ 并选中），点已有环选中；Delete 删选中</span></div>
+    <div class="row"><label>放置</label><span class="hint">「磁通(AB)」工具（2D：快捷键/工具按钮；3D：体积面板「磁通」模式）：点空白放新管（取滑块 Φ 并选中），点已有管选中；Delete 删选中。3D 磁通管**沿 z 轴贯穿整个体积**，管轴位置取点击视线的 xy 投影；Φ 为绕管一周的相位。</span></div>
   </div>
   <div class="sec">
     <h3>渲染与网格</h3>
@@ -336,6 +336,7 @@ ${d3 ? `
     <div class="grid2" style="margin-top:6px">
       <button data-tool3="cam" class="on">视角旋转</button>
       <button data-tool3="pot">势刷放置</button>
+      <button data-tool3="flux">磁通(AB)</button>
       <button id="btnBlobDel">清空势丘</button>
     </div>
     <div class="row"><label>势丘半径 R</label><input type="range" id="rBlobR" min="3" max="24" step="1" value="8"><output id="oBlobR">8</output></div>
@@ -974,6 +975,9 @@ ${d3 ? `
     gl.uniform3f(this.u(this.progEvolve3d,'uTexel3'), 1/n, 1/n, 1/n);
     gl.uniform1f(this.u(this.progEvolve3d,'uGrid3'), n);
     this.kernel.setUniforms(gl, this.progEvolve3d, this.state);   /* 私有 uniform（势参数） */
+    /* R57：3D AB 磁通管 uniform（引擎级，与 2D 同一 setABUniforms；管轴沿 z、
+       uABPos=管轴 xy 投影）。count=0 ⟹ uABOn=0 走原 7 点 stencil 逐位等价。 */
+    this.setABUniforms(gl, this.progEvolve3d, false);
     const uUV = this.u(this.progEvolve3d,'uUpdateV');
     const uLayer = this.u(this.progEvolve3d,'uLayer');
     for (let s=0; s<sub; s++){
@@ -1028,6 +1032,8 @@ ${d3 ? `
       gl.uniform3f(this.u(prog,'uTexel3'), 1/n, 1/n, 1/n);
       gl.uniform1f(this.u(prog,'uGrid3'), n);
       this.kernel.setUniforms(gl, prog, this.state);   /* 私有 uniform（势参数） */
+      /* R57：3D AB uniform（rhs/sweep 两 program 同源，与 KDK 路径同一份 abSols） */
+      this.setABUniforms(gl, prog, false);
     }
     for (let s=0; s<sub; s++){
       /* 1) rhs pass：w_n(psiA3) → rhs3 */
@@ -1464,17 +1470,40 @@ ${d3 ? `
     this.updateBlobReadout();
   }
 
-  /* 3D 工具模式切换（R44）：'cam' 视角旋转 | 'pot' 势刷放置。
-     面板按钮 / P 键 / 自动化测试共用同一入口（按钮态与光标在此集中同步）。 */
+  /* 3D 工具模式切换（R44 ⟹ R57 加 'flux'）：'cam' 视角旋转 | 'pot' 势刷放置
+     | 'flux' AB 磁通管放置（R57）。面板按钮 / P 键 / 自动化测试共用同一入口
+     （按钮态与光标在此集中同步）。P 键仍在 cam↔pot 间切换（R44 契约不变，
+     flux 只能经面板按钮进入，避免打乱既有快捷键语义）。 */
   setTool3(mode){
-    this.state.tool3 = mode === 'pot' ? 'pot' : 'cam';
+    this.state.tool3 = (mode === 'pot' || mode === 'flux') ? mode : 'cam';
     const canvas = this.q('#gl');
-    if (canvas) canvas.style.cursor = this.state.tool3 === 'pot' ? 'crosshair' : '';
+    if (canvas) canvas.style.cursor = this.state.tool3 === 'cam' ? '' : 'crosshair';
     this.container.querySelectorAll('[data-tool3]').forEach(x =>
       x.classList.toggle('on', x.dataset.tool3 === this.state.tool3));
     this.toast(this.state.tool3 === 'pot'
       ? '势刷：拖拽放置球形势丘（负 V₀ = 势阱，P 键切回视角）'
-      : '视角旋转（P 键切到势刷）');
+      : this.state.tool3 === 'flux'
+        ? '磁通(AB)：点击体积放置沿 z 轴贯穿的磁通管（管轴取视线的 xy 投影，取当前 Φ）'
+        : '视角旋转（P 键切到势刷）');
+  }
+
+  /* R57：3D AB 磁通管放置/选中。磁通管沿 z 轴贯穿整个体积 ⟹ 管轴由 xy 两个
+     自由度确定（uABPos 存 uv 空间 [0,1]²）。点击位置取 R44 同口径的「视线
+     slab 穿透段中点」（pickBlob3，世界 texel）⟹ 转 uv（w/n + 0.5）；未命中
+     体积（视线离开 box）返回 false 并由调用方 toast。命中已有管（xy 距离
+     < 0.05，与 2D pickSolenoid 同阈值）则切换选中，否则以草稿 Φ 放新管。
+     因管沿 z 贯穿，z 不参与命中判据——任何视角下的点击只看 xy 投影。 */
+  pickFlux3(clientX, clientY){
+    const r = this.canvas.getBoundingClientRect();
+    const nx = (clientX - r.left)/r.width, ny = (clientY - r.top)/r.height;
+    const hit = this.pickBlob3(nx, ny);
+    if (!hit) { this.toast('视线未命中体积（磁通管需放在体积内）'); return false; }
+    const n = this.state.grid;
+    const ux = hit.x/n + 0.5, uy = hit.y/n + 0.5;
+    const found = this.pickSolenoid(ux, uy);
+    if (found >= 0) this.selectSolenoid(found);
+    else this.placeSolenoid(ux, uy, this.state.abPhi);
+    return true;
   }
 
   /* ---------- hint 可折叠（R45，用户选定方案 a）----------
@@ -2102,6 +2131,12 @@ ${d3 ? `
          顶层 blobs 段 [[x,y,z,r,v0],...]（与 state.potBlobs 同构）。
          R44 旧存档无此段——导入时按 potBV0≠0 从 state 单丘五字段迁移。 */
       blobs: (this.state.potBlobs || []).map(b => [b.x, b.y, b.z, b.r, b.v0]),
+      /* AB 磁通管列表（R57，数组非数字 ⟹ 白名单循环不收，须显式存档）：
+         顶层 abSols 段 [[x,y,φ],...]（3D 磁通管沿 z 轴，x/y 为管轴在 xy
+         平面的 uv 投影；与 state.abSols 同构、与 2D 势场存档同段名）。
+         abSel 为 UI 选中态（运行时概念，不存档）；R57 前旧存档无此段——
+         导入时按「无 abSols 段 ⟹ 空列表」迁移（与旧版无 AB 语义一致）。 */
+      abSols: (this.state.abSols || []).map(s => [s[0], s[1], s[2]]),
       wave: { encoding: 'rg32f-f32', floats: n*n*n*2, data: f32ToB64(buf) },
     };
   }
@@ -2181,15 +2216,30 @@ ${d3 ? `
     }
     if (obj.integrator3) this.state.integrator3 = obj.integrator3;
     if (obj.camera) { this.cam.theta = obj.camera.theta; this.cam.phi = obj.camera.phi; this.cam.dist = obj.camera.dist; }
+    /* AB 磁通管列表恢复（R57）：新存档取 abSols 段（≤AB_MAX 个 [x,y,φ] 全有限
+       元组，x/y 为管轴 xy 的 uv 投影）；R57 前旧存档无该段 ⟹ 空列表（与旧版
+       3D 无 AB 语义一致，无迁移必要——3D 此前根本不显示/不支持 AB）。 */
+    if (obj.abSols !== undefined){
+      if (!Array.isArray(obj.abSols) || obj.abSols.length > AB_MAX)
+        throw new Error('非法 abSols 段（须为 ≤' + AB_MAX + ' 个元组的数组）');
+      for (let i = 0; i < obj.abSols.length; i++){
+        const s = obj.abSols[i];
+        if (!Array.isArray(s) || s.length !== 3 || !s.every(v => typeof v === 'number' && isFinite(v)))
+          throw new Error('非法 abSols[' + i + ']（须为 [x,y,φ] 全有限三元组）');
+      }
+      this.state.abSols = obj.abSols.map(s => [s[0], s[1], s[2]]);
+      this.state.abSel = this.state.abSols.length ? 0 : -1;
+    }
     const blobMsg = this.state.potBlobs.length ? ' + 势丘 ' + this.state.potBlobs.length + ' 个' : '';
+    const abMsg = this.state.abSols.length ? ' + AB 磁通管 ' + this.state.abSols.length + ' 根' : '';
     if (waveF32){
       this.uploadWave3(waveF32);
       this._baseCaptured = false;          /* P 守恒基准按导入场重捕（HUD err% 口径） */
-      this.toast('3D 现场已导入（恢复 ' + n + ' 项参数' + blobMsg + ' + 场数据 ' + (this.state.grid**3) + ' 体素）');
+      this.toast('3D 现场已导入（恢复 ' + n + ' 项参数' + blobMsg + abMsg + ' + 场数据 ' + (this.state.grid**3) + ' 体素）');
     } else {
       this.reinitWave();
       this._baseCaptured = false;
-      this.toast('3D 存档无场数据：已恢复 ' + n + ' 项参数' + blobMsg + ' 并按预设重发初态');
+      this.toast('3D 存档无场数据：已恢复 ' + n + ' 项参数' + blobMsg + abMsg + ' 并按预设重发初态');
     }
     this.syncControls();
     return n;
@@ -2308,6 +2358,8 @@ ${d3 ? `
         try{ canvas.setPointerCapture(e.pointerId); }catch(_){/* 合成/无效 pointerId 时不应中断交互 */ }
         if (this.state.tool3 === 'pot'){
           this.stampBlob3(e.clientX, e.clientY, true, true);   /* 按下必落首丘（无视距离阈值） */
+        } else if (this.state.tool3 === 'flux'){
+          this.pickFlux3(e.clientX, e.clientY);   /* R57：AB 磁通管放置/选中（不设 cam.drag ⟹ 不旋转视角） */
         } else {
           this.cam.drag = { x: e.clientX, y: e.clientY };
         }

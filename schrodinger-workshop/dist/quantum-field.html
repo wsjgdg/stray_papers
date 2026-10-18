@@ -447,6 +447,52 @@ const TPL_LAP_BLOCK = `  vec4 lap;
          + S(vUv+vec2(0.0,-uTexel.y))+S(vUv+vec2(0.0,uTexel.y)) - 4.0*c;
   }`;
 
+/* ---------- 3D 拉普拉斯 stencil 块（引擎级共享 token，TPL_EVOLVE3D/CN_RHS3D/CN_SWEEP3D 共用）----------
+   R57：3D 模板此前各自内联复制 7 点 stencil（三份），与 R33 确立的「LAP_BLOCK
+   单源真值」原则相悖 ⟹ 抽为本 token，AB 分支只有一个真源。
+   契约（展开处必须满足）：
+     - 局部变量 vec3 p（当前体素 uv，含 uLayer 的 z）、vec3 e = uTexel3（体素步长）
+     - 局部变量 vec4 c = S(p)（中心体素）
+     - helper rot/rot4/ang/wrapPi（与 2D TPL_LAP_BLOCK 逐字同款）与
+       uniform uABOn/uABPos[AB_MAX]/uABPhi[AB_MAX]/uABCount 已声明
+   产出：vec4 lap（7 点 stencil，含 3D AB 最小耦合 link 相位分支）。
+   与 2D 的维度差异：
+     · 5 点 → 7 点（六个邻格 + −6c 中心项，中心项只减一次与管数无关）
+     · 磁通管在 3D 是沿 z 轴的**直线**（无限细螺线管），管轴在 xy 平面的
+       投影点即 uABPos[k]（vec2）；对称规范 A_k=(Φ_k/2π)·dθ_k 的方位角
+       θ_k(q)=atan2(q.y−y_k, q.x−x_k) **与 z 无关** ⟹ ±z 两个 link 的相位
+       恒 0（沿管轴平移不改变方位角，与 A_z=0 的规范自洽），只 ±x/±y 四个
+       link 携带相位——这是 3D AB 与 2D AB 的唯一结构性差异。
+     · 其余数学与 2D 逐字同构：θ 取**精确线积分**（被积函数分子恒定，沿直线
+       link 的积分即端点张角差 wrapPi(θ(p+Δ)−θ(p))，比中点采样高一阶且
+       atan2 处处有限无奇点）；正反 link 共享同一对端点 ⟹ θ 精确反号 ⟹
+       link 拉普拉斯严格厄米；Wilson 环 = e^{iΦ} 精确成立；多管 U(1) 链变量
+       相乘 ⟹ 相位线性相加（R54 同构）。
+     · 零回归：count=0 ⟹ uABOn=0 走 else 分支，逐位等价 R34–R56 的 3D 路径。 */
+const TPL_LAP3D_BLOCK = `  vec4 lap;
+  if(uABOn > 0.5){
+    float abPhXp = 0.0, abPhXm = 0.0, abPhYp = 0.0, abPhYm = 0.0;
+    for (int k = 0; k < AB_MAX; k++){
+      if (k >= uABCount) break;
+      float ck = uABPhi[k]/6.28318530718;
+      vec2 dk = p.xy - uABPos[k];
+      float bk = ang(dk);
+      abPhXp += ck*wrapPi(ang(p.xy + vec2( e.x, 0.0) - uABPos[k]) - bk);
+      abPhXm += ck*wrapPi(ang(p.xy + vec2(-e.x, 0.0) - uABPos[k]) - bk);
+      abPhYp += ck*wrapPi(ang(p.xy + vec2( 0.0, e.y) - uABPos[k]) - bk);
+      abPhYm += ck*wrapPi(ang(p.xy + vec2( 0.0,-e.y) - uABPos[k]) - bk);
+    }
+    lap = rot4(S(p+vec3(e.x,0.0,0.0)), abPhXp)
+        + rot4(S(p-vec3(e.x,0.0,0.0)), abPhXm)
+        + rot4(S(p+vec3(0.0,e.y,0.0)), abPhYp)
+        + rot4(S(p-vec3(0.0,e.y,0.0)), abPhYm)
+        + S(p+vec3(0.0,0.0,e.z)) + S(p-vec3(0.0,0.0,e.z)) - 6.0*c;
+  } else {
+    lap = S(p+vec3(e.x,0.0,0.0)) + S(p-vec3(e.x,0.0,0.0))
+        + S(p+vec3(0.0,e.y,0.0)) + S(p-vec3(0.0,e.y,0.0))
+        + S(p+vec3(0.0,0.0,e.z)) + S(p-vec3(0.0,0.0,e.z)) - 6.0*c;
+  }`;
+
 const TPL_EVOLVE = `#version 300 es
 precision highp float;
 #define AB_MAX ${AB_MAX}
@@ -586,16 +632,27 @@ uniform float uUpdateV;   // 1.0 = 更新 v 分量, 0.0 = 更新 u 分量
 uniform vec3 uTexel3;     // (1/N, 1/N, 1/N)
 uniform float uLayer;     // 当前绘制层 z ∈ (0,1)（层中点）
 uniform float uGrid3;     // N（格点数；世界坐标 = (p−0.5)·N，格点单位）
+#define AB_MAX ${AB_MAX}
+/* AB 多螺线管（R57，引擎级——与 2D 同款 uniform，3D 磁通管沿 z 轴，
+   uABPos[k] 为管轴在 xy 平面的投影点（uv 空间）。同 AB_MAX #define 已在
+   2D 模板使用，3D 三个模板各声明一次（GLSL 编译期常量，无链接冲突）。 */
+uniform float uABOn;            // 0 = 原 7 点 stencil（count=0 时逐位等价）
+uniform vec2  uABPos[AB_MAX];   // 各管轴 xy 投影（uABCount 之外不读）
+uniform float uABPhi[AB_MAX];   // 各管磁通 Φ（rad，绕管一周总相位）
+uniform int   uABCount;         // 实际管数（编译期常量循环 + 动态 break）
 {{UNIFORMS}}
 vec4 S(vec3 p){ return texture(uPsi, clamp(p, vec3(0.0), vec3(1.0))); }
+/* AB link 相位辅助（与 2D 逐字同款，保证两边数学单源） */
+vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
+vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }
+float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
+float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
 {{HELPERS}}
 void main(){
   vec3 p = vec3(vUv, uLayer);
   vec4 c = S(p);
   vec3 e = uTexel3;
-  vec4 lap = S(p+vec3(e.x,0.0,0.0)) + S(p-vec3(e.x,0.0,0.0))
-           + S(p+vec3(0.0,e.y,0.0)) + S(p-vec3(0.0,e.y,0.0))
-           + S(p+vec3(0.0,0.0,e.z)) + S(p-vec3(0.0,0.0,e.z)) - 6.0*c;
+  {{LAP3D_BLOCK}}
   vec3 w = (p - 0.5)*uGrid3;                         /* 世界坐标（格点单位，居中） */
   float V = {{POT3}};
   vec4 Hc = -uK*lap + V*c;                           /* 标量：势逐通道同乘 */
@@ -631,16 +688,27 @@ uniform float uK;
 uniform vec3 uTexel3;
 uniform float uGrid3;
 uniform float uLayer;       /* 当前绘制层 z ∈ (0,1)（层中点） */
+#define AB_MAX ${AB_MAX}
+/* AB 多螺线管（R57，引擎级——与 2D 同款 uniform，3D 磁通管沿 z 轴，
+   uABPos[k] 为管轴在 xy 平面的投影点（uv 空间）。同 AB_MAX #define 已在
+   2D 模板使用，3D 三个模板各声明一次（GLSL 编译期常量，无链接冲突）。 */
+uniform float uABOn;            // 0 = 原 7 点 stencil（count=0 时逐位等价）
+uniform vec2  uABPos[AB_MAX];   // 各管轴 xy 投影（uABCount 之外不读）
+uniform float uABPhi[AB_MAX];   // 各管磁通 Φ（rad，绕管一周总相位）
+uniform int   uABCount;         // 实际管数（编译期常量循环 + 动态 break）
 {{UNIFORMS}}
 vec4 S(vec3 p){ return texture(uPsi, clamp(p, vec3(0.0), vec3(1.0))); }
+/* AB link 相位辅助（与 2D 逐字同款，保证两边数学单源） */
+vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
+vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }
+float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
+float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
 {{HELPERS}}
 void main(){
   vec3 p = vec3(vUv, uLayer);
   vec4 c = S(p);
   vec3 e = uTexel3;
-  vec4 lap = S(p+vec3(e.x,0.0,0.0)) + S(p-vec3(e.x,0.0,0.0))
-           + S(p+vec3(0.0,e.y,0.0)) + S(p-vec3(0.0,e.y,0.0))
-           + S(p+vec3(0.0,0.0,e.z)) + S(p-vec3(0.0,0.0,e.z)) - 6.0*c;
+  {{LAP3D_BLOCK}}
   vec3 w = (p - 0.5)*uGrid3;
   float V = {{POT3}};
   vec4 Hc = -uK*lap + V*c;                           /* M·w 全量（标量：势逐通道同乘） */
@@ -658,8 +726,21 @@ uniform float uK;
 uniform vec3 uTexel3;
 uniform float uGrid3;
 uniform float uLayer;
+#define AB_MAX ${AB_MAX}
+/* AB 多螺线管（R57，引擎级——与 2D 同款 uniform，3D 磁通管沿 z 轴，
+   uABPos[k] 为管轴在 xy 平面的投影点（uv 空间）。同 AB_MAX #define 已在
+   2D 模板使用，3D 三个模板各声明一次（GLSL 编译期常量，无链接冲突）。 */
+uniform float uABOn;            // 0 = 原 7 点 stencil（count=0 时逐位等价）
+uniform vec2  uABPos[AB_MAX];   // 各管轴 xy 投影（uABCount 之外不读）
+uniform float uABPhi[AB_MAX];   // 各管磁通 Φ（rad，绕管一周总相位）
+uniform int   uABCount;         // 实际管数（编译期常量循环 + 动态 break）
 {{UNIFORMS}}
 vec4 S(vec3 p){ return texture(uPsi, clamp(p, vec3(0.0), vec3(1.0))); }
+/* AB link 相位辅助（与 2D 逐字同款，保证两边数学单源） */
+vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
+vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }
+float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
+float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
 {{HELPERS}}
 {{CN_LOCAL_SOLVE3}}
 void main(){
@@ -667,9 +748,7 @@ void main(){
   vec4 c = S(p);                     /* x_k 中心值（lap stencil 的 −6c 项） */
   vec4 rhs = texture(uRhs, p);
   vec3 e = uTexel3;
-  vec4 lap = S(p+vec3(e.x,0.0,0.0)) + S(p-vec3(e.x,0.0,0.0))
-           + S(p+vec3(0.0,e.y,0.0)) + S(p-vec3(0.0,e.y,0.0))
-           + S(p+vec3(0.0,0.0,e.z)) + S(p-vec3(0.0,0.0,e.z)) - 6.0*c;
+  {{LAP3D_BLOCK}}
   vec3 w = (p - 0.5)*uGrid3;
   float V = {{POT3}};
   vec4 Hk = -uK*lap;                            /* Gkin = −i·(−uK·lap)：仅导数部分 */
@@ -1180,6 +1259,7 @@ function buildShaders(kernel){
   if (kernel.dim3){
     out.evolve3d = fill(TPL_EVOLVE3D, {
       UNIFORMS: uni, POT3: s.pot3 || '0.0', HELPERS: s.helpers || '',
+      LAP3D_BLOCK: TPL_LAP3D_BLOCK,
     });
     out.display3d = fill(TPL_DISPLAY3D, {
       UNIFORMS: uni,
@@ -1202,15 +1282,15 @@ function buildShaders(kernel){
        sh.cnRhs3d 是否存在决定编译与 evolveCN3d 分支；无该 snippet 的 dim3
        内核装配结果与 R34/R35 逐字一致（零回归）。 */
     if (typeof s.cnLocalSolve3 === 'string' && s.cnLocalSolve3.trim()){
-      out.cnRhs3d = fill(TPL_CN_RHS3D, { UNIFORMS: uni, POT3: s.pot3 || '0.0', HELPERS: s.helpers || '' });
-      out.cnSweep3d = fill(TPL_CN_SWEEP3D, { UNIFORMS: uni, POT3: s.pot3 || '0.0', HELPERS: s.helpers || '', CN_LOCAL_SOLVE3: s.cnLocalSolve3 });
+      out.cnRhs3d = fill(TPL_CN_RHS3D, { UNIFORMS: uni, POT3: s.pot3 || '0.0', HELPERS: s.helpers || '', LAP3D_BLOCK: TPL_LAP3D_BLOCK });
+      out.cnSweep3d = fill(TPL_CN_SWEEP3D, { UNIFORMS: uni, POT3: s.pot3 || '0.0', HELPERS: s.helpers || '', CN_LOCAL_SOLVE3: s.cnLocalSolve3, LAP3D_BLOCK: TPL_LAP3D_BLOCK });
     }
   }
   return out;
 }
 
 /* 导出模板仅供测试/文档引用（生产路径经 buildShaders 消费） */
-const TEMPLATES = { TPL_EVOLVE, TPL_EVOLVE3D, TPL_CN_RHS3D, TPL_CN_SWEEP3D, TPL_DISPLAY3D, TPL_REDUCE3D, SNIP_HSV, TPL_CN_RHS, TPL_CN_SWEEP, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, TPL_LAP_BLOCK, DEFAULT_PIXEL_COLOR, DEFAULT_PMEAN };
+const TEMPLATES = { TPL_EVOLVE, TPL_EVOLVE3D, TPL_CN_RHS3D, TPL_CN_SWEEP3D, TPL_DISPLAY3D, TPL_REDUCE3D, SNIP_HSV, TPL_CN_RHS, TPL_CN_SWEEP, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, TPL_LAP_BLOCK, TPL_LAP3D_BLOCK, DEFAULT_PIXEL_COLOR, DEFAULT_PMEAN };
 
 /* ===== src/physics/barrier3d.js ===== */
 /* ============================================================================
@@ -3710,7 +3790,7 @@ class QuantumField {
     <canvas id="paramScanCanvas" width="420" height="180"></canvas>
     <div class="hint" style="margin-top:4px">GP：扫 g（排斥侧 g&lt;0，托马斯-费米云/涡旋）——测云半径 Rrms（⟹R_TF=√3·Rrms）、峰值 n₀、涡旋愈合层 ξ，与 TF 解析 R_TF=(2R_trap²|g|/π)^¼、n₀=μ/|g| 对照。NLS：扫 g（focusing 侧 g&gt;0，条带孤子）——测 σx/σy 与峰值末/初比（&gt;3 判自聚焦发散）。**固定测量窗 200 帧 + 全程序列**：非线性无耗散系统（呼吸模永久振荡、TOF 单调膨胀、孤子稳定传播）没有天然终点，故不用「清空/双稳」类停止判据，改由时间平均 + 摆动幅度给出结论。P 在两内核下守恒（幺正非线性），塌缩/网格截断导致的数值漂移属诚实限制。</div>
   </div>
-  <div class="sec" ${d3?'style="display:none"':''}>
+  <div class="sec">
     <h3>AB 磁通（多管）</h3>
     <div class="row"><label>磁通 Φ</label><input type="range" id="rABPhi" min="0" max="6.2832" step="0.01" value="0"><output id="oABPhi">0.00</output></div>
     <div class="row"><label>选中</label><output id="oABSel">无 · 放置即新建</output><button id="btnABCenter">置中</button></div>
@@ -3718,7 +3798,7 @@ class QuantumField {
       <button id="btnABDel">删除选中</button>
       <button id="btnABClear">清空</button>
     </div>
-    <div class="row"><label>放置</label><span class="hint">「磁通(AB)」工具：点空白放新管（取滑块 Φ 并选中），点已有环选中；Delete 删选中</span></div>
+    <div class="row"><label>放置</label><span class="hint">「磁通(AB)」工具（2D：快捷键/工具按钮；3D：体积面板「磁通」模式）：点空白放新管（取滑块 Φ 并选中），点已有管选中；Delete 删选中。3D 磁通管**沿 z 轴贯穿整个体积**，管轴位置取点击视线的 xy 投影；Φ 为绕管一周的相位。</span></div>
   </div>
   <div class="sec">
     <h3>渲染与网格</h3>
@@ -3791,6 +3871,7 @@ ${d3 ? `
     <div class="grid2" style="margin-top:6px">
       <button data-tool3="cam" class="on">视角旋转</button>
       <button data-tool3="pot">势刷放置</button>
+      <button data-tool3="flux">磁通(AB)</button>
       <button id="btnBlobDel">清空势丘</button>
     </div>
     <div class="row"><label>势丘半径 R</label><input type="range" id="rBlobR" min="3" max="24" step="1" value="8"><output id="oBlobR">8</output></div>
@@ -4429,6 +4510,9 @@ ${d3 ? `
     gl.uniform3f(this.u(this.progEvolve3d,'uTexel3'), 1/n, 1/n, 1/n);
     gl.uniform1f(this.u(this.progEvolve3d,'uGrid3'), n);
     this.kernel.setUniforms(gl, this.progEvolve3d, this.state);   /* 私有 uniform（势参数） */
+    /* R57：3D AB 磁通管 uniform（引擎级，与 2D 同一 setABUniforms；管轴沿 z、
+       uABPos=管轴 xy 投影）。count=0 ⟹ uABOn=0 走原 7 点 stencil 逐位等价。 */
+    this.setABUniforms(gl, this.progEvolve3d, false);
     const uUV = this.u(this.progEvolve3d,'uUpdateV');
     const uLayer = this.u(this.progEvolve3d,'uLayer');
     for (let s=0; s<sub; s++){
@@ -4483,6 +4567,8 @@ ${d3 ? `
       gl.uniform3f(this.u(prog,'uTexel3'), 1/n, 1/n, 1/n);
       gl.uniform1f(this.u(prog,'uGrid3'), n);
       this.kernel.setUniforms(gl, prog, this.state);   /* 私有 uniform（势参数） */
+      /* R57：3D AB uniform（rhs/sweep 两 program 同源，与 KDK 路径同一份 abSols） */
+      this.setABUniforms(gl, prog, false);
     }
     for (let s=0; s<sub; s++){
       /* 1) rhs pass：w_n(psiA3) → rhs3 */
@@ -4919,17 +5005,40 @@ ${d3 ? `
     this.updateBlobReadout();
   }
 
-  /* 3D 工具模式切换（R44）：'cam' 视角旋转 | 'pot' 势刷放置。
-     面板按钮 / P 键 / 自动化测试共用同一入口（按钮态与光标在此集中同步）。 */
+  /* 3D 工具模式切换（R44 ⟹ R57 加 'flux'）：'cam' 视角旋转 | 'pot' 势刷放置
+     | 'flux' AB 磁通管放置（R57）。面板按钮 / P 键 / 自动化测试共用同一入口
+     （按钮态与光标在此集中同步）。P 键仍在 cam↔pot 间切换（R44 契约不变，
+     flux 只能经面板按钮进入，避免打乱既有快捷键语义）。 */
   setTool3(mode){
-    this.state.tool3 = mode === 'pot' ? 'pot' : 'cam';
+    this.state.tool3 = (mode === 'pot' || mode === 'flux') ? mode : 'cam';
     const canvas = this.q('#gl');
-    if (canvas) canvas.style.cursor = this.state.tool3 === 'pot' ? 'crosshair' : '';
+    if (canvas) canvas.style.cursor = this.state.tool3 === 'cam' ? '' : 'crosshair';
     this.container.querySelectorAll('[data-tool3]').forEach(x =>
       x.classList.toggle('on', x.dataset.tool3 === this.state.tool3));
     this.toast(this.state.tool3 === 'pot'
       ? '势刷：拖拽放置球形势丘（负 V₀ = 势阱，P 键切回视角）'
-      : '视角旋转（P 键切到势刷）');
+      : this.state.tool3 === 'flux'
+        ? '磁通(AB)：点击体积放置沿 z 轴贯穿的磁通管（管轴取视线的 xy 投影，取当前 Φ）'
+        : '视角旋转（P 键切到势刷）');
+  }
+
+  /* R57：3D AB 磁通管放置/选中。磁通管沿 z 轴贯穿整个体积 ⟹ 管轴由 xy 两个
+     自由度确定（uABPos 存 uv 空间 [0,1]²）。点击位置取 R44 同口径的「视线
+     slab 穿透段中点」（pickBlob3，世界 texel）⟹ 转 uv（w/n + 0.5）；未命中
+     体积（视线离开 box）返回 false 并由调用方 toast。命中已有管（xy 距离
+     < 0.05，与 2D pickSolenoid 同阈值）则切换选中，否则以草稿 Φ 放新管。
+     因管沿 z 贯穿，z 不参与命中判据——任何视角下的点击只看 xy 投影。 */
+  pickFlux3(clientX, clientY){
+    const r = this.canvas.getBoundingClientRect();
+    const nx = (clientX - r.left)/r.width, ny = (clientY - r.top)/r.height;
+    const hit = this.pickBlob3(nx, ny);
+    if (!hit) { this.toast('视线未命中体积（磁通管需放在体积内）'); return false; }
+    const n = this.state.grid;
+    const ux = hit.x/n + 0.5, uy = hit.y/n + 0.5;
+    const found = this.pickSolenoid(ux, uy);
+    if (found >= 0) this.selectSolenoid(found);
+    else this.placeSolenoid(ux, uy, this.state.abPhi);
+    return true;
   }
 
   /* ---------- hint 可折叠（R45，用户选定方案 a）----------
@@ -5557,6 +5666,12 @@ ${d3 ? `
          顶层 blobs 段 [[x,y,z,r,v0],...]（与 state.potBlobs 同构）。
          R44 旧存档无此段——导入时按 potBV0≠0 从 state 单丘五字段迁移。 */
       blobs: (this.state.potBlobs || []).map(b => [b.x, b.y, b.z, b.r, b.v0]),
+      /* AB 磁通管列表（R57，数组非数字 ⟹ 白名单循环不收，须显式存档）：
+         顶层 abSols 段 [[x,y,φ],...]（3D 磁通管沿 z 轴，x/y 为管轴在 xy
+         平面的 uv 投影；与 state.abSols 同构、与 2D 势场存档同段名）。
+         abSel 为 UI 选中态（运行时概念，不存档）；R57 前旧存档无此段——
+         导入时按「无 abSols 段 ⟹ 空列表」迁移（与旧版无 AB 语义一致）。 */
+      abSols: (this.state.abSols || []).map(s => [s[0], s[1], s[2]]),
       wave: { encoding: 'rg32f-f32', floats: n*n*n*2, data: f32ToB64(buf) },
     };
   }
@@ -5636,15 +5751,30 @@ ${d3 ? `
     }
     if (obj.integrator3) this.state.integrator3 = obj.integrator3;
     if (obj.camera) { this.cam.theta = obj.camera.theta; this.cam.phi = obj.camera.phi; this.cam.dist = obj.camera.dist; }
+    /* AB 磁通管列表恢复（R57）：新存档取 abSols 段（≤AB_MAX 个 [x,y,φ] 全有限
+       元组，x/y 为管轴 xy 的 uv 投影）；R57 前旧存档无该段 ⟹ 空列表（与旧版
+       3D 无 AB 语义一致，无迁移必要——3D 此前根本不显示/不支持 AB）。 */
+    if (obj.abSols !== undefined){
+      if (!Array.isArray(obj.abSols) || obj.abSols.length > AB_MAX)
+        throw new Error('非法 abSols 段（须为 ≤' + AB_MAX + ' 个元组的数组）');
+      for (let i = 0; i < obj.abSols.length; i++){
+        const s = obj.abSols[i];
+        if (!Array.isArray(s) || s.length !== 3 || !s.every(v => typeof v === 'number' && isFinite(v)))
+          throw new Error('非法 abSols[' + i + ']（须为 [x,y,φ] 全有限三元组）');
+      }
+      this.state.abSols = obj.abSols.map(s => [s[0], s[1], s[2]]);
+      this.state.abSel = this.state.abSols.length ? 0 : -1;
+    }
     const blobMsg = this.state.potBlobs.length ? ' + 势丘 ' + this.state.potBlobs.length + ' 个' : '';
+    const abMsg = this.state.abSols.length ? ' + AB 磁通管 ' + this.state.abSols.length + ' 根' : '';
     if (waveF32){
       this.uploadWave3(waveF32);
       this._baseCaptured = false;          /* P 守恒基准按导入场重捕（HUD err% 口径） */
-      this.toast('3D 现场已导入（恢复 ' + n + ' 项参数' + blobMsg + ' + 场数据 ' + (this.state.grid**3) + ' 体素）');
+      this.toast('3D 现场已导入（恢复 ' + n + ' 项参数' + blobMsg + abMsg + ' + 场数据 ' + (this.state.grid**3) + ' 体素）');
     } else {
       this.reinitWave();
       this._baseCaptured = false;
-      this.toast('3D 存档无场数据：已恢复 ' + n + ' 项参数' + blobMsg + ' 并按预设重发初态');
+      this.toast('3D 存档无场数据：已恢复 ' + n + ' 项参数' + blobMsg + abMsg + ' 并按预设重发初态');
     }
     this.syncControls();
     return n;
@@ -5763,6 +5893,8 @@ ${d3 ? `
         try{ canvas.setPointerCapture(e.pointerId); }catch(_){/* 合成/无效 pointerId 时不应中断交互 */ }
         if (this.state.tool3 === 'pot'){
           this.stampBlob3(e.clientX, e.clientY, true, true);   /* 按下必落首丘（无视距离阈值） */
+        } else if (this.state.tool3 === 'flux'){
+          this.pickFlux3(e.clientX, e.clientY);   /* R57：AB 磁通管放置/选中（不设 cam.drag ⟹ 不旋转视角） */
         } else {
           this.cam.drag = { x: e.clientX, y: e.clientY };
         }
