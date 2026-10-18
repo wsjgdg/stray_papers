@@ -41,9 +41,39 @@
 | R50 | GP 半径对账演化层修正——子选项①虚时间预弛豫（诊断轮，生产零改动） | 诊断先行（256² 逐字镜像 + 离线 harness）：**修复 harness 自身两 bug**（Y 回代索引 +1 应为 +GRID，回代退化致分裂方案不收敛；KDK kick/drift 分量用反致 v 冻结 + u 反扩散爆炸）并以受控实验链取证（2D 包装 vs 密集 2.220e-16、GS 残差 8.161e-4、显式/分裂交叉验证 12.727 vs 12.720）；**生产 TPL_EVOLVE 验证无此二 bug**（kick `c.y-=0.5dt·Hc.x`/drift `c.x+=dt·Hc.y`/localH 全密度）⟹ cdp42 46% 偏差是真实呼吸物理；**数据**：弛豫基态呼吸 0.13–0.98% vs 穹顶 31.8–84.4%（两个数量级）、√3Rrms_gs vs R_TF +30.0…+5.2%（真实 TF 有限耦合修正，随 \|g\| 收敛）、③呼吸中心估计不等价（overshoot +5.0…27.7%）、基态唯一性 0.0000%、弛豫成本 1.25–1.84s；落地三选项（运行时渐进/离线烘焙/解析近似）待用户定 |
 | R51 | GP 基态预设（虚时间弛豫落地——R50 子选项①生产化） | 定参实验取证后落地 `gs` 预设「基态（虚时间弛豫）」（`_relaxGS`：Strang 分裂 + ADI 三对角 Thomas + 变分 μ=⟨H⟩，τ=1/**212 步 ~0.87s**；**V 逐字镜像生产纹理** min(1,(r/48)²)+round(v·127)/127——量化镜像把密度峰呼吸 1.165%→0.541%）；引擎一行透传 `g: state.g`；g≥0 吸引侧跳过弛豫退回穹顶；**gs51 34/34**（含与 HEAD 逐位比对零回归 worst=0、半径 12.6902/+15.31%、呼吸 0.361%·峰 0.541%、唯一性 1.9e-5%、源码契约 7 项）+ **cdp51 17/17**（浏览器 √3RrmsMean 12.75/+15.86%、摆动 1.219%、P 1.205%；**tf 对照 58.24% ⟹ 48×**）+ cdp42 32/32 + smoke43 16/16 + smoke44 5/5 + cdp45 26/26 + dist 342.1KB；已知取舍：预设切换一次性阻塞 0.87s（分帧/Worker 留后续）、浏览器摆动 1.219% > CPU 0.361%（GPU float32 + 纹理编码残差）|
 | R52 | 对账口径重构 + 运行时渐进弛豫（R51 遗留两项闭环） | **渐进弛豫**：`_relaxGS` 同步版重构为任务制（`_relaxOnce` 单步与 R51 逐字相同 + `relaxStep(budget)` 分帧推进 + `relaxPending` getter + makeWave 取消旧任务）；app.js `evolve()` 开头弛豫钩子（每帧 8 步 + 快照上传 + `relaxPending` 冻结 KDK 返回 false）、`frame()` 暂停特准 + scanBusy 防双推、`_uploadPsi` 抽取、debugHandle 暴露 kernel；scan.js `_tick` 弛豫占用 break（不占测量窗）⟹ **makeWave 18ms vs 870ms、27 帧 ~0.45s 完成、弛豫期 KDK 冻结（simTime 恒定）完成后恢复、暂停态可用**。**对账口径重构**：cdp42 新增 2b 节 gs 3 点扫描为对账基准（vs GS_REF 参考表——Node 离线驱动生产 makeGS：14.2669/13.0557/11.3315，浏览器偏差 +0.48/+0.49/+0.26%）；tf 段 46% 偏差定性为呼吸模物理（非基准）；**gs52 48/48**（三路终态 worst=0 + 与 R51 逐位 worst=0 + 212 步/12.6902/+15.31%/呼吸 0.361%·0.541%）+ **cdp52 30/30** + **cdp42 45/45** + cdp49 51/51 + pot49 48/48 + smoke43 16/16 + smoke44 5/5 + cdp45 26/26 + cdp41 30/30 + cdp37 38/38 + dist 345.2KB |
+| R53 | 面板 b 控件精简（R48 让位项现代化落地，用户选定「面板b」⟹「继续」） | R48 记录「b（控件精简）让位——删除控件伤 CDP 契约」的**非删除解法**：① **层 1 主势槽 8 参数行按 potKind 动态显隐**（`refreshPotRows()`，与 R41 `refreshPot2Rows` 同构：球 V₀/R·谐振子 ω·库仑 Z·双缝 V₀+墙五参；主势无面板下拉、类型由预设 params 注入 ⟹ syncControls 四路径（预设/2D 导入/3D 导入/URL）统一覆盖）——FREE 预设下 8 行全隐（原 6~8 行纯占位）；② **层 2 2D 两个单行 sec 合并**（「势场强度」「开放系统」⟹ 并入「物理参数」，行/id 保留、d3 隐藏语义随行迁移，sec 10→8）。实效（1440×900 overflow 口径）：2D 414→**354**（−60px）·GP 415→**355**（−60px）·3D 505→**321**（−184px，sec3d 652→468）；生产代码零语义改动（显隐不动值、隐藏行编程 input 仍写 state、slits3d 挂载口径逐项不变）；**cdp53 19/19**（新契约套件：七预设显隐矩阵 + 值保持 + 隐行写入 + sec 合并 + d3 语义 + 物理零变化 + 零异常）+ cdp48 27/27 + cdp52 30/30 + cdp41 30/30 + cdp42 45/45 + smoke43 16/16 + cdp49 51/53（2 项 favicon 404 环境产物）+ pot49 48/48 + cdp45 26/26 + smoke44 5/5；cdp39 31/34（3 项既存失败，git stash 基线对照证实同败）；**环境修复**：playwright 自带 chromium swiftshader WebGL2 失效 ⟹ 套件改驱系统 chromium（executable_path + DISPLAY=:99 headful + `--use-angle=vulkan`），断言逻辑零改动；cdp44 已过期（R44 单丘 API 被 R49 `blobs()` 取代，R52 矩阵亦未含） |
 | R42 | NLS/GP 物理工具（README「后续方向」②，用户选定两者都做） | 通用扫描框架 `GenericScanner`（生命周期与既有三扫描器同契约）+ GP/NLS 双适配器；**固定测量窗 + 全程序列**替代停止判据（非线性无耗散无终态：呼吸模永久振荡实测 8.6↔9.3）；GP 初态 σ=R_TF(g)（TF 自洽验算一致）⟹ **峰值对账 3.5%**；NLS **g=6 塌缩检出（峰值比 10.80）** + 网格截断崩坏 P→0.68；**P 诚实更正**：非线性 P 漂移 0.5–3.1%（KDK 离散耗散，随 \|g\| 增长）vs 线性对照 2.06e-6；判据修正：塌缩用序列峰值最大值（末值会因崩坏骤降误判）；既有三扫描器零改动；cdp42 32/32；环境记录：headless Chrome 无 X display 时 ANGLE Vulkan-XCB 失败 ⟹ 须 `xvfb-run` 启动 |
 | R41 | 3D 双槽势组合（README「后续方向」①，用户选定通用双槽） | 势由单枚举升级为 V=pot3Slot(主)+pot3Slot(第二)（CPU `pot3JS` 与 GLSL `helpers` 同名函数严格镜像）；**TPL_REDUCE3D 补 {{HELPERS}} 注入位**（原只有 POT3，否则势不同源、R35 对账失效）；eMaxExtra 取两槽之和（保守）⟹ 组合势 120 帧 P 守恒 1.36e-4；GPU↔CPU ⟨V⟩ 同帧对账 rel 8.8e-10/7.6e-8/6.5e-9（阈值 2e-7）；组合预设「球垒调制双缝」（球垒 R₂=6 不遮缝）；cdp41 30/30；副作用诚实记录：shader 变复杂 ⟹ 挂载预演化帧数分布 4↔5 下移到 3↔5，cdp39 PRE 断言阈值过时（判据放宽 3–6，对账走实测 PRE 故 33 项全绿） |
 | R40 | 3D 双缝图样扫描（README「后续方向」①） | SlitScanner（与 R38 同生命周期契约）：D=0,8,16,24,32 五点扫描 117s、P 守恒 1.02e-4、峰数 **1/1/3/5/3**（双缝等距条纹：D=16 距 9.5、D=24 距 7.8、D=32 ±15.5 贴提取边界）；Fraunhofer 最近邻匹配中位偏差 1.65（nMatched=8）但实测间距大于预测 1.2–1.5×（深 Fresnel 修正，与 R39 结论互证）；CDP 诊断轮抓出并修复四个真 bug：screenSlice3 类方法化（原仅 debugHandle 对象 ⟹ 类路径 TypeError）、slitPeaks 实质密度门限（float32 残余 8e-22 假峰令 _best 停噪声帧）、_finish `o.d`→`r.d` NaN 全表、measureFrom 窗门限生效；cdp40 35/35 + dist 冒烟 11/11 + cdp39 回归 34/34 |
+
+---
+
+## R53（2026-10-18）面板 b 控件精简（R48 让位项现代化落地）
+
+### 缘起
+R48 落地 sec 级折叠（a2）+ canvas 缩比（a3）时，README 后续方向表记录「b（控件精简）让位——a2 折叠后控件仍在（点击即见），删除控件伤 CDP 契约」。用户指令「继续面板b」⟹「继续」要求重新推进该项。诊断先行（1440×900，`/tmp/r53_verify/diag_panel.mjs` 三视图实测）：2D 溢出 414px、GP 415px、3D 505px；3D 大头为 sec3d 单块 652px/29 rows/35 ctrls，其中**主势槽 8 参数行全显示无显隐**（FREE 预设下 6~8 行纯占位）是最大结构性来源；2D/GP 各有两个 1 行 sec（「势场强度」「开放系统」，仅 h3+padding 就 ~30px/个）。
+
+**关键判断（与 R48「删除让位」记录的衔接）**：R48 反对的是「删除控件」——伤信息与测试契约，该判断对删除仍然成立；但「按预设显隐 + sec 合并」是非删除的现代化解法，且与 R41 `refreshPot2Rows`（第二势槽显隐，已受 cdp41 30/30 契约保护）完全同构 ⟹ 两层方案均契约安全，落地前完成全套件断言核对（cdp39 只读 value/min/max 可见性无关；cdp48 用 `includes('预设')` 查找 + upgraded≥6 总数断言；upgradeSecs 全动态无硬编码清单）。
+
+### 实现
+
+**层 1 主势槽参数行动态显隐（`src/core/app.js`）**：
+- sec3d 内 8 个主势行加 row id（`rowPotV0/rowPotR/rowPotW/rowPotZ/rowPotWallX/rowPotWallT/rowPotSlitW/rowPotSlitD`）
+- 新增 `refreshPotRows()`（与 R41 `refreshPot2Rows` 逐字同构：show 映射 + 仅在实际变化时写 style）：`potKind` 0=全隐 / 1=球势垒 V₀,R / 2=谐振子 ω / 3=库仑 Z / 4=双缝 V₀,墙心,墙厚,缝宽,缝距
+- 调用点：`syncControls()` 内与 `refreshPot2Rows()` 并列（覆盖 loadPreset / importV / import3 / URL 参数四条路径）+ `bindUI()` 初始态（默认 FREE ⟹ 8 行全隐，语义正确：自由传播无势参数）
+
+**层 2 2D 单行 sec 合并（`src/core/app.js` buildDOM 模板）**：
+- 「势场强度」（rV）「开放系统」（rGamma）两个 1 行 sec 删除，两行并入「物理参数」sec（置于 extraHtml 后）；行/id 保留，**d3 隐藏语义由 sec 级迁移到行级**（`${d3?'style="display:none"':''}`，与同 sec 内 σ/笔刷行同构——已实测 3D 下四行均 none）
+- 2D sec 总数 10→8，`upgradeSecs`（key=id|h3 摘要）与 `qf.secs.state` 持久化全动态适配，无残留
+
+### 验证
+
+- **新契约套件 cdp53 19/19**：七预设显隐矩阵（free3d 全隐 / sphere V₀,R / oscillator ω / ground Z / slits3d+slit1_3d V₀+墙五参 / slit_sphere3d 主 5 显且 R41 第二槽联动不受影响）+ 切预设后隐藏行 state/DOM 值保持（syncControls 全量同步不动值）+ 隐藏行编程 input 仍写 state（物理路径零改的直接证据）+ sec 合并四项（标题消失/closest 口径并入/2D 可见/10→8 全升级）+ 3D 下 rV/rGamma 行隐藏（与 σ/笔刷同构）+ slits3d 挂载口径逐项不变（potKind=4,V0=3,wallT=4,slitW=6,slitD=20,grid=64,glError=0）+ 零异常
+- **溢出量化复测（diag_panel，1440×900，overflow=scrollH−clientH）**：2D 414→**354**（−60px，两个 sec 的 h3+padding）/ GP 415→**355**（−60px）/ 3D 505→**321**（−184px = 8 行×23px；sec3d 652→468）；全展开态 2D 600px/GP 609px/3D 821px
+- **回归矩阵**：cdp48 27/27（R45 基线溢出断言直接体现收益：3D 1403→321、GP 813→355）+ cdp52 30/30 + cdp41 30/30 + cdp42 45/45 + smoke43 16/16 + cdp45 26/26 + smoke44 5/5 + pot49 48/48（Node 物理）+ cdp49 51/53（2 项 FAIL 为 dev server 无 favicon 文件的浏览器自动请求 404，属环境产物；dist file:// 套件不受影响）
+- **cdp39 31/34 基线对照**：3 项 FAIL（PRE 帧数/时间线 cxMin/CPU 剖面条数）经 `git stash` 回 166a1c6 复跑**同败**（PRE=8、cxMin=-18.61、n=22）⟹ 既存环境敏感项（PRE 套件自述「不当作回归项」；cxMin 临界 −18.55 vs −18.61；剖面条数 21↔22 抖动），非本轮引入
+- **环境修复（playwright 侧，断言逻辑零改动）**：playwright 自带 chromium 的 swiftshader ANGLE 在本环境 WebGL2 全面失效（'ERR no webgl2'，vulkan/headful 组合亦不work）⟹ 六个 playwright 套件改驱系统 chromium：`executable_path='/usr/bin/chromium'` + `headless=False` + `DISPLAY=:99`（Xvfb）+ `--use-gl=angle --use-angle=vulkan --enable-unsafe-swiftshader --no-sandbox`（root 下缺 --no-sandbox 会渲染进程沙箱崩溃，表现为 wait_for_function 超时——首轮误诊为 rAF 节流）；cdp44 已过期（R44 单丘 `blob()` API 被 R49 `blobs()` 列表取代，R52 矩阵亦未含该套件）⟹ 不适用
+- dist 重建（346.1 KB，15 模块拓扑序不变）+ 构建标记核验（rowPot×8/refreshPotRows 就位；「势场强度/开放系统」仅剩代码注释中的「耗散（开放系统）」字样）
 
 ---
 

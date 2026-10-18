@@ -209,14 +209,8 @@ export class QuantumField {
     <div class="row"><label>积分子步</label><input type="range" id="rSpeed" min="1" max="16" step="1" value="6"><output id="oSpeed">6</output></div>
     <div class="row" ${d3?'style="display:none"':''}><label>笔刷半径</label><input type="range" id="rBrush" min="3" max="40" step="1" value="10"><output id="oBrush">10</output></div>
     ${extraHtml}
-  </div>
-  <div class="sec" ${d3?'style="display:none"':''}>
-    <h3>势场强度</h3>
-    <div class="row"><label>V 值</label><input type="range" id="rV" min="0.01" max="1" step="0.01" value="0.3"><output id="oV">0.30</output></div>
-  </div>
-  <div class="sec" ${d3?'style="display:none"':''}>
-    <h3>开放系统</h3>
-    <div class="row"><label>耗散 γ</label><input type="range" id="rGamma" min="0" max="0.2" step="0.005" value="0"><output id="oGamma">0.000</output></div>
+    <div class="row" ${d3?'style="display:none"':''}><label>V 值</label><input type="range" id="rV" min="0.01" max="1" step="0.01" value="0.3"><output id="oV">0.30</output></div>
+    <div class="row" ${d3?'style="display:none"':''}><label>耗散 γ</label><input type="range" id="rGamma" min="0" max="0.2" step="0.005" value="0"><output id="oGamma">0.000</output></div>
   </div>
   <div class="sec" ${d3?'style="display:none"':''}>
     <h3>含时外场</h3>
@@ -304,14 +298,14 @@ ${d3 ? `
     <div class="row"><label>射线步数</label><input type="range" id="rSteps3" min="16" max="128" step="8" value="48"><output id="oSteps3">48</output></div>
     <div class="row"><label>曝光</label><input type="range" id="rExp3" min="100" max="10000" step="100" value="3600"><output id="oExp3">3600</output></div>
     <div class="row"><label>波包宽度 σ</label><input type="range" id="rSigma3" min="2" max="20" step="0.5" value="6"><output id="oSigma3">6.0</output></div>
-    <div class="row"><label>势垒 V₀</label><input type="range" id="rPotV0" min="0" max="5" step="0.005" value="0.02"><output id="oPotV0">0.020</output></div>
-    <div class="row"><label>势垒半径 R</label><input type="range" id="rPotR" min="4" max="20" step="1" value="10"><output id="oPotR">10</output></div>
-    <div class="row"><label>谐振子 ω</label><input type="range" id="rPotW" min="0.004" max="0.06" step="0.002" value="0.0156"><output id="oPotW">0.0156</output></div>
-    <div class="row"><label>核电荷 Z</label><input type="range" id="rPotZ" min="0.1" max="0.5" step="0.01" value="0.25"><output id="oPotZ">0.25</output></div>
-    <div class="row"><label>墙心 x₀</label><input type="range" id="rPotWallX" min="-20" max="20" step="1" value="0"><output id="oPotWallX">0</output></div>
-    <div class="row"><label>墙厚 T</label><input type="range" id="rPotWallT" min="1" max="10" step="1" value="4"><output id="oPotWallT">4</output></div>
-    <div class="row"><label>缝宽 W</label><input type="range" id="rPotSlitW" min="2" max="16" step="1" value="6"><output id="oPotSlitW">6</output></div>
-    <div class="row"><label>缝距 D</label><input type="range" id="rPotSlitD" min="0" max="32" step="1" value="20"><output id="oPotSlitD">20</output></div>
+    <div class="row" id="rowPotV0"><label>势垒 V₀</label><input type="range" id="rPotV0" min="0" max="5" step="0.005" value="0.02"><output id="oPotV0">0.020</output></div>
+    <div class="row" id="rowPotR"><label>势垒半径 R</label><input type="range" id="rPotR" min="4" max="20" step="1" value="10"><output id="oPotR">10</output></div>
+    <div class="row" id="rowPotW"><label>谐振子 ω</label><input type="range" id="rPotW" min="0.004" max="0.06" step="0.002" value="0.0156"><output id="oPotW">0.0156</output></div>
+    <div class="row" id="rowPotZ"><label>核电荷 Z</label><input type="range" id="rPotZ" min="0.1" max="0.5" step="0.01" value="0.25"><output id="oPotZ">0.25</output></div>
+    <div class="row" id="rowPotWallX"><label>墙心 x₀</label><input type="range" id="rPotWallX" min="-20" max="20" step="1" value="0"><output id="oPotWallX">0</output></div>
+    <div class="row" id="rowPotWallT"><label>墙厚 T</label><input type="range" id="rPotWallT" min="1" max="10" step="1" value="4"><output id="oPotWallT">4</output></div>
+    <div class="row" id="rowPotSlitW"><label>缝宽 W</label><input type="range" id="rPotSlitW" min="2" max="16" step="1" value="6"><output id="oPotSlitW">6</output></div>
+    <div class="row" id="rowPotSlitD"><label>缝距 D</label><input type="range" id="rPotSlitD" min="0" max="32" step="1" value="20"><output id="oPotSlitD">20</output></div>
     <div class="row"><label>第二势</label>
       <select id="selPotKind2">
         <option value="0" selected>无（单势）</option>
@@ -2022,6 +2016,7 @@ ${d3 ? `
     const pk2 = this.q('#selPotKind2');       /* 第二势槽下拉（R41：预设/导入可注入组合） */
     if (pk2) pk2.value = String(this.state.potKind2 | 0);
     this.refreshPot2Rows();
+    this.refreshPotRows();                    /* R53：主势槽 8 行按 potKind 显隐（预设注入类型） */
     /* R49：3D 工具按钮态 + 势丘规格滑块与读数（预设切换 / 导入存档后同步；
        滑块同步覆盖 R44 旧存档迁移（potBR→potBlobR）的面板更新；
        2D 内核下 querySelectorAll 为空、#oBlobPos 不存在 ⟹ 同步调用天然无害） */
@@ -2046,6 +2041,30 @@ ${d3 ? `
       rowPotWallT2: k === 4,
       rowPotSlitW2: k === 4,
       rowPotSlitD2: k === 4,
+    };
+    for (const [id, on] of Object.entries(show)){
+      const el = this.q('#' + id); if (!el) continue;
+      const want = on ? '' : 'none';
+      if (el.style.display !== want) el.style.display = want;
+    }
+  }
+
+  /* 主势槽参数行的动态显隐（R53 面板精简）：主势无面板下拉（类型由预设 params 注入，
+     URL/导入存档可改），8 个参数行历来全显示——FREE 预设下 6~8 行纯占位，是 3D
+     面板单块 652px / 溢出 505px 的最大结构性来源。按 potKind 显隐（与 refreshPot2Rows
+     同一模式，层 1）：球势垒 V₀/R、谐振子 ω、库仑 Z、双缝 V₀/墙心/墙厚/缝宽/缝距。
+     调用点：syncControls（预设切换/导入存档/URL 参数后统一同步）。 */
+  refreshPotRows(){
+    const k = this.state.potKind | 0;
+    const show = {
+      rowPotV0: k === 1 || k === 4,
+      rowPotR: k === 1,
+      rowPotW: k === 2,
+      rowPotZ: k === 3,
+      rowPotWallX: k === 4,
+      rowPotWallT: k === 4,
+      rowPotSlitW: k === 4,
+      rowPotSlitD: k === 4,
     };
     for (const [id, on] of Object.entries(show)){
       const el = this.q('#' + id); if (!el) continue;
@@ -2211,6 +2230,7 @@ ${d3 ? `
       this.bindRange('#rPotSlitW2','#oPotSlitW2','potSlitW2', v => String(v|0));
       this.bindRange('#rPotSlitD2','#oPotSlitD2','potSlitD2', v => String(v|0));
       this.refreshPot2Rows();
+      this.refreshPotRows();                  /* R53：初始态主势行显隐（默认 FREE ⟹ 8 行全隐） */
       this.bindRange('#rSliceZ3','#oSliceZ3','sliceZ', v => v.toFixed(2));
       this.on(this.q('#btnPhase3'), 'click', () => {
         this.state.phaseColor = this.state.phaseColor ? 0 : 1;
