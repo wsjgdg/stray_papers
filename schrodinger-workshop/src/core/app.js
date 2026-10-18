@@ -10,7 +10,7 @@
  * （WebGL 上下文上限约 16，且元素 ID 为全局单例设计）。
  * ========================================================================== */
 import { createContext, createProgram, Quad, makeTarget, makeRGBA16F, makeReduce, makeTarget3D, FS_BLIT } from './gl.js';
-import { getKernel, buildShaders } from '../physics/kernel.js';
+import { getKernel, buildShaders, AB_MAX } from '../physics/kernel.js';
 import { MAX_BLOBS } from '../physics/schrodinger3d.js';
 import { injectStyles } from './styles.js';
 import { TransmissionScanner } from './scan.js';
@@ -75,7 +75,12 @@ export class QuantumField {
       grid: 256, m: 1.0, sigma: 7, substeps: 6, brush: 10, vStrength: 0.3,
       decay: 0.97, bright: 1.0, gamma: 0, tool: 'wave', paused: false, simTime: 0,
       driveAmp: 0, driveOmega: 0.1, driveMode: 0,
-      abX: 0.5, abY: 0.5, abPhi: 0,   /* AB 螺线管（世界坐标）与磁通 Φ（rad）；Φ=0 = 关 */
+      /* AB 螺线管（R54 多管）：abSols = [[x,y,φ],...] 世界坐标元组列表
+         （≤AB_MAX，放置/删除/选中见 placeSolenoid 一族）；abPhi 为「草稿磁通」——
+         无选中管时 Φ 滑块编辑它，放置新管时取用；abSel 为选中管索引
+         （-1 = 无选中，UI 态不存档）。abCursor 为 R55 放置预览环的鼠标世界
+         坐标（null = 无预览；仅 flux 工具悬停时非空，UI 态不存档）。 */
+      abPhi: 0, abSols: [], abSel: -1, abCursor: null,
       preset: null, lastWave: null, waveCount: 1,
       drag: null,
       /* 3D 交互工具（R44）：'cam' 拖拽旋转相机（默认）/ 'pot' 势刷放置 blob */
@@ -130,6 +135,7 @@ export class QuantumField {
   mount(){
     injectStyles();
     this.buildDOM();
+    this.restorePanels();    /* R56：恢复上次的左右面板收起状态（localStorage） */
     this.upgradeHints();   /* R45：hint 折叠升级（DOM 构建后一次；模板零改动） */
     this.upgradeSecs();    /* R48：sec 级分区折叠（同上模式；扫描 sec 默认折） */
     this.canvas = this.q('#gl');
@@ -250,10 +256,14 @@ export class QuantumField {
     <div class="hint" style="margin-top:4px">GP：扫 g（排斥侧 g&lt;0，托马斯-费米云/涡旋）——测云半径 Rrms（⟹R_TF=√3·Rrms）、峰值 n₀、涡旋愈合层 ξ，与 TF 解析 R_TF=(2R_trap²|g|/π)^¼、n₀=μ/|g| 对照。NLS：扫 g（focusing 侧 g&gt;0，条带孤子）——测 σx/σy 与峰值末/初比（&gt;3 判自聚焦发散）。**固定测量窗 200 帧 + 全程序列**：非线性无耗散系统（呼吸模永久振荡、TOF 单调膨胀、孤子稳定传播）没有天然终点，故不用「清空/双稳」类停止判据，改由时间平均 + 摆动幅度给出结论。P 在两内核下守恒（幺正非线性），塌缩/网格截断导致的数值漂移属诚实限制。</div>
   </div>
   <div class="sec" ${d3?'style="display:none"':''}>
-    <h3>AB 磁通</h3>
+    <h3>AB 磁通（多管）</h3>
     <div class="row"><label>磁通 Φ</label><input type="range" id="rABPhi" min="0" max="6.2832" step="0.01" value="0"><output id="oABPhi">0.00</output></div>
-    <div class="row"><label>螺线管位置</label><output id="oABPos">(0.50, 0.50)</output><button id="btnABCenter">置中</button></div>
-    <div class="row"><label>放置方式</label><span class="hint">选「磁通(AB)」工具后点击画布</span></div>
+    <div class="row"><label>选中</label><output id="oABSel">无 · 放置即新建</output><button id="btnABCenter">置中</button></div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnABDel">删除选中</button>
+      <button id="btnABClear">清空</button>
+    </div>
+    <div class="row"><label>放置</label><span class="hint">「磁通(AB)」工具：点空白放新管（取滑块 Φ 并选中），点已有环选中；Delete 删选中</span></div>
   </div>
   <div class="sec">
     <h3>渲染与网格</h3>
@@ -418,13 +428,49 @@ ${d3 ? `
 
 <footer id="hint" class="panel">
   ${d3
-    ? '<b>拖拽</b> 旋转视角 · <b>滚轮</b> 缩放 · <span class="k">P</span> 势刷 · <span class="k">1-'+Object.keys(presets).length+'</span> 预设 · <span class="k">Space</span> 暂停 · <span class="k">R</span> 重置波包'
-    : '<b>拖拽</b> 发射波包（方向=动量 k）· <span class="k">1-'+Object.keys(presets).length+'</span> 预设 · <span class="k">Space</span> 暂停 · <span class="k">T</span> 拖尾 · <span class="k">R</span> 重置 · <span class="k">C</span> 清空势场'}
+    ? '<b>拖拽</b> 旋转视角 · <b>滚轮</b> 缩放 · <span class="k">P</span> 势刷 · <span class="k">1-'+Object.keys(presets).length+'</span> 预设 · <span class="k">Space</span> 暂停 · <span class="k">R</span> 重置波包 · <span class="k">[</span><span class="k">]</span> 收起侧面板'
+    : '<b>拖拽</b> 发射波包（方向=动量 k）· <span class="k">1-'+Object.keys(presets).length+'</span> 预设 · <span class="k">Space</span> 暂停 · <span class="k">T</span> 拖尾 · <span class="k">R</span> 重置 · <span class="k">C</span> 清空势场 · <span class="k">[</span><span class="k">]</span> 收起侧面板'}
 </footer>
 <div id="toast"></div>
 <div id="brushcursor"></div>
 <div id="diag"></div>
+<button class="qf-tab" id="tabL" title="左侧面板：收起（快捷键 [）">‹</button>
+<button class="qf-tab" id="tabR" title="右侧面板：收起（快捷键 ]）">›</button>
 `;
+  }
+
+  /* ---------- 面板双向收起（R56，「试验场全屏」）----------
+     左列 #panel + #desc、右列 #hud + #legend 各为一组，由 body class
+     （qf-hide-left / qf-hide-right）驱动整组 transform 滑出（styles.js）。
+     拉手（#tabL/#tabR）与快捷键 [ / ] 触发；状态持久化于
+     localStorage qf.panels.state = {left,right}（true = 展开）。
+     设计口径：默认全展开（无存档/坏存档都不改行为）；存档只记显式
+     false——局部升级（如未来加第三组）不影响旧存档语义。 */
+  panelSideOpen(side){ return !document.body.classList.contains('qf-hide-' + side); }
+  setPanelSide(side, open, persist = true){
+    document.body.classList.toggle('qf-hide-' + side, !open);
+    const tab = this.q(side === 'left' ? '#tabL' : '#tabR');
+    if (tab){
+      const L = side === 'left';
+      tab.textContent = L ? (open ? '\u2039' : '\u203a') : (open ? '\u203a' : '\u2039');
+      tab.title = (L ? '左' : '右') + '侧面板：' + (open ? '收起' : '展开') +
+                  '（快捷键 ' + (L ? '[' : ']') + '）';
+    }
+    if (persist){
+      try {
+        localStorage.setItem('qf.panels.state', JSON.stringify({
+          left: this.panelSideOpen('left'), right: this.panelSideOpen('right')
+        }));
+      } catch(_){ /* 隐私模式等写入失败：静默降级为会话内有效 */ }
+    }
+  }
+  togglePanelSide(side){ this.setPanelSide(side, !this.panelSideOpen(side)); }
+  restorePanels(){
+    let st = null;
+    try { st = JSON.parse(localStorage.getItem('qf.panels.state') || 'null'); } catch(_){}
+    /* 缺省/坏值 → 全展开；仅显式 false 收起（向后兼容的宽松口径） */
+    this.setPanelSide('left', !(st && st.left === false), false);
+    this.setPanelSide('right', !(st && st.right === false), false);
   }
 
   /* ---------- 着色器 / 目标 / 势场 ---------- */
@@ -714,7 +760,13 @@ ${d3 ? `
   loadPreset(key){
     const p = this.kernel.presets()[key]; if (!p) return;
     this.state.preset = key;
-    if (p.params) Object.assign(this.state, p.params);   /* 内核预设参数（σ/g/potKind 等） */
+    if (p.params){
+      Object.assign(this.state, p.params);   /* 内核预设参数（σ/g/potKind 等） */
+      /* R54：abSols 是数组（元组列表）——预设对象每次 presets() 调用虽重建，
+         仍做显式深拷贝，杜绝「调 Φ 改到预设字面量」的共享引用隐患 */
+      if (Array.isArray(this.state.abSols))
+        this.state.abSols = this.state.abSols.map(s => [s[0], s[1], s[2]]);
+    }
     this.syncControls();
     if (this.kernel.dim3){
       /* 3D：无势场画布（势经 pot3 解析注入），初态走 initWave3d */
@@ -798,6 +850,41 @@ ${d3 ? `
     }
   }
 
+  /* AB 多螺线管 uniform 上传（R54）：扁平数组一次 uniform2fv/uniform1fv——
+     uABPos[AB_MAX]/uABPhi[AB_MAX] 尾部不足处补 (0.5,0.5)/0（shader 只读前
+     uABCount 项，尾部值无物理意义；缓冲区复用，每帧重填 8 项成本可忽略）。
+     uABSel 仅 display program 声明（其余 program location=null，静默忽略）。
+     diag=true（manualPass 诊断路径）与 count=0 一样强制 uABOn=0：走原 5 点
+     stencil（精确等价无矢势路径，R26 口径不变）。 */
+  setABUniforms(gl, prog, diag){
+    const st = this.state;
+    const sols = st.abSols || [];
+    const n = Math.min(sols.length, AB_MAX);
+    const pos = this._abPos || (this._abPos = new Float32Array(AB_MAX*2));
+    const phi = this._abPhi || (this._abPhi = new Float32Array(AB_MAX));
+    for (let i = 0; i < AB_MAX; i++){
+      if (i < n){ pos[i*2] = sols[i][0]; pos[i*2+1] = sols[i][1]; phi[i] = sols[i][2]; }
+      else { pos[i*2] = 0.5; pos[i*2+1] = 0.5; phi[i] = 0; }
+    }
+    gl.uniform1f(this.u(prog,'uABOn'), (!diag && n > 0) ? 1 : 0);
+    gl.uniform2fv(this.u(prog,'uABPos'), pos);
+    gl.uniform1fv(this.u(prog,'uABPhi'), phi);
+    gl.uniform1i(this.u(prog,'uABCount'), diag ? 0 : n);
+    const selLoc = this.u(prog,'uABSel');
+    if (selLoc !== null && selLoc !== undefined)
+      gl.uniform1i(selLoc, (!diag && st.abSel >= 0 && st.abSel < n) ? st.abSel : -1);
+    /* R55 放置预览环（仅 display program 声明这两个 uniform；evolve/CN 的
+       location=null 静默跳过——同 uABSel 模式）。cursor 为 null 时上传
+       (-1,-1) 关闭预览；草稿 Φ 供预览环的色相/辉光映射。 */
+    const curLoc = this.u(prog,'uABCursor');
+    if (curLoc !== null && curLoc !== undefined){
+      const c = st.abCursor;
+      gl.uniform2f(curLoc, c ? c[0] : -1, c ? c[1] : -1);
+    }
+    const dLoc = this.u(prog,'uABDraftPhi');
+    if (dLoc !== null && dLoc !== undefined) gl.uniform1f(dLoc, st.abPhi || 0);
+  }
+
   /* KDK 速度 Verlet 一帧推进（标量/NLS/GP/Pauli 路径；从 evolve() 原样抽出） */
   evolveKDK(dt){
     const k = 0.5/this.state.m;
@@ -817,11 +904,9 @@ ${d3 ? `
     gl.uniform1f(this.u(this.progEvolve,'uDriveAmp'), this.state.driveAmp);
     gl.uniform1f(this.u(this.progEvolve,'uDrivePhase'), dPhase);
     gl.uniform1i(this.u(this.progEvolve,'uDriveMode'), this.state.driveMode);
-    /* Aharonov-Bohm：Φ=0 → uABOn=0 走原 5 点 stencil（精确等价旧路径）；
+    /* Aharonov-Bohm（R54 多管）：count=0 → uABOn=0 走原 5 点 stencil（精确等价旧路径）；
        link 相位算子厄米且谱半径不变（|U|=1），P 守恒、E_max 不变。 */
-    gl.uniform1f(this.u(this.progEvolve,'uABOn'), this.state.abPhi === 0 ? 0 : 1);
-    gl.uniform2f(this.u(this.progEvolve,'uABPos'), this.state.abX, this.state.abY);
-    gl.uniform1f(this.u(this.progEvolve,'uABPhi'), this.state.abPhi);
+    this.setABUniforms(gl, this.progEvolve, false);
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, this.vTex);
     gl.uniform1i(this.u(this.progEvolve,'uV'), 1);
@@ -1033,9 +1118,7 @@ ${d3 ? `
     gl.uniform1f(this.u(prog,'uDriveAmp'), diag ? 0 : st.driveAmp);
     gl.uniform1f(this.u(prog,'uDrivePhase'), dPhase);
     gl.uniform1i(this.u(prog,'uDriveMode'), diag ? 0 : st.driveMode);
-    gl.uniform1f(this.u(prog,'uABOn'), (diag || st.abPhi === 0) ? 0 : 1);
-    gl.uniform2f(this.u(prog,'uABPos'), st.abX, st.abY);
-    gl.uniform1f(this.u(prog,'uABPhi'), diag ? 0 : st.abPhi);
+    this.setABUniforms(gl, prog, diag);   /* AB 多螺线管（diag 时强制关闭，同 R31 诊断口径） */
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, this.vTex);
     gl.uniform1i(this.u(prog,'uV'), 1);
@@ -1075,10 +1158,8 @@ ${d3 ? `
     gl.uniform2f(this.u(this.progDisplay,'uAspect'),
       cw >= ch ? cw/ch : 1,
       cw >= ch ? 1 : ch/cw);
-    /* AB 螺线管标记（与演化同开关：Φ=0 不画环） */
-    gl.uniform1f(this.u(this.progDisplay,'uABOn'), this.state.abPhi === 0 ? 0 : 1);
-    gl.uniform2f(this.u(this.progDisplay,'uABPos'), this.state.abX, this.state.abY);
-    gl.uniform1f(this.u(this.progDisplay,'uABPhi'), this.state.abPhi);
+    /* AB 螺线管标记（与演化同开关：count=0 不画环；选中管金环供交互反馈） */
+    this.setABUniforms(gl, this.progDisplay, false);
     this.kernel.setUniforms(gl, this.progDisplay, this.state);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     const td = this.dispA; this.dispA = this.dispB; this.dispB = td;
@@ -1647,9 +1728,18 @@ ${d3 ? `
     const dPhi = this.state.driveOmega * (this.state.simTime + 0.6);
     const dv = this.state.driveAmp * (this.state.driveMode === 1 ? -Math.cos(dPhi) : Math.cos(dPhi));
     this.q('#hDrive').textContent = this.state.driveAmp === 0 ? '关' : dv.toFixed(4);
-    /* AB 磁通：0 = 关闭（等价无矢势）；非零显示弧度 + 2π 份额 */
-    this.q('#hAB').textContent = this.state.abPhi === 0 ? '关'
-      : this.state.abPhi.toFixed(3) + ' rad (' + (this.state.abPhi/6.2831853).toFixed(2) + '×2π)';
+    /* AB 磁通（R54 多管）：0 根 = 关；否则「N 管」+ 选中管 Φ（弧度 + 2π 份额），
+       无选中管时仅报管数（选中是 UI 态，HUD 不引申）。 */
+    const sols = this.state.abSols || [];
+    if (sols.length === 0){
+      this.q('#hAB').textContent = '关';
+    } else {
+      const i = this.state.abSel;
+      const tail = (i >= 0 && i < sols.length)
+        ? ' · Φ=' + sols[i][2].toFixed(2) + ' (' + (sols[i][2]/6.2831853).toFixed(2) + '×2π)'
+        : ' · 无选中';
+      this.q('#hAB').textContent = sols.length + ' 管' + tail;
+    }
     /* 磁场读数（Pauli 内核；参数派生，暂停时拖 B 滑块也即时刷新——滑块 after
        回调注入 refreshParamHud）。显示三分量 + |B| + 梯度（SG 场）。 */
     if (this.kernel.spinReadout && this.q('#hB')){
@@ -1694,6 +1784,107 @@ ${d3 ? `
     const r = lad.nearest(e);
     const fmtE = v => Math.abs(v) < 1e-3 ? v.toExponential(2) : v.toFixed(6);
     this.q('#hLadNear').textContent = 'E' + r.label + ' = ' + fmtE(r.e);
+  }
+
+  /* ---------- AB 多螺线管（R54）：放置 / 选中 / 删除 / 调参 ----------
+     数据模型 state.abSols = [[x,y,φ],...]（世界坐标，≤AB_MAX）。「分别调参」
+     的交互模型：放置即选中 → Φ 滑块编辑选中管；点已有环切换选中；删除/清空
+     按选中操作。所有变更统一走 refreshABReadout + syncABPhiSlider + HUD 刷新，
+     pointer 事件与 debugHandle（CDP）共用同一方法入口（不合成鼠标事件）。 */
+  placeSolenoid(wx, wy, phi){
+    const list = this.state.abSols || (this.state.abSols = []);
+    let evicted = false;
+    if (list.length >= AB_MAX){ list.shift(); evicted = true; }   /* FIFO 淘汰最旧（R49 potBlobs 同策） */
+    list.push([wx, wy, phi]);
+    this.state.abSel = list.length - 1;                           /* 放置即选中（滑块随之对齐） */
+    this.syncABPhiSlider();
+    this.refreshABReadout();
+    this.refreshParamHud();
+    this.toast('AB 螺线管 ×' + list.length + (evicted ? '（最旧已淘汰，上限 ' + AB_MAX + '）' : '')
+      + ' → (' + wx.toFixed(2) + ', ' + wy.toFixed(2) + ') Φ=' + phi.toFixed(2));
+    return this.state.abSel;
+  }
+  selectSolenoid(i){
+    const n = (this.state.abSols || []).length;
+    this.state.abSel = (i >= 0 && i < n) ? i : -1;
+    this.syncABPhiSlider();
+    this.refreshABReadout();
+    this.refreshParamHud();
+    return this.state.abSel;
+  }
+  deleteSolenoid(){
+    const list = this.state.abSols || [];
+    const i = this.state.abSel;
+    if (i < 0 || i >= list.length){ this.toast('无选中的螺线管'); return -1; }
+    list.splice(i, 1);
+    this.state.abSel = list.length ? Math.min(i, list.length - 1) : -1;   /* 删后顺移选中，保持可继续调参 */
+    this.syncABPhiSlider();
+    this.refreshABReadout();
+    this.refreshParamHud();
+    this.toast('已删除螺线管（剩 ' + list.length + ' 根）');
+    return this.state.abSel;
+  }
+  clearSolenoids(){
+    const n = (this.state.abSols || []).length;
+    this.state.abSols = [];
+    this.state.abSel = -1;
+    this.syncABPhiSlider();
+    this.refreshABReadout();
+    this.refreshParamHud();
+    this.toast(n ? '螺线管已清空（' + n + ' 根）' : '螺线管列表已为空');
+  }
+  /* 命中测试：点击落点与各管中心的距离 < 0.05 世界单位（显示环半径 0.035，
+     容忍 ~40% 余量；toWorld 输出即 shader 的 Aspect 修正坐标，同空间直接比）。
+     后放置者优先（重叠时最后落的管在上层被选中）。 */
+  pickSolenoid(wx, wy){
+    const list = this.state.abSols || [];
+    for (let i = list.length - 1; i >= 0; i--){
+      if (Math.hypot(wx - list[i][0], wy - list[i][1]) < 0.05) return i;
+    }
+    return -1;
+  }
+  /* Φ 滑块当前应对齐的值：选中管 Φ，或无选中时的草稿 abPhi */
+  abSelPhi(){
+    const i = this.state.abSel;
+    if (i >= 0 && this.state.abSols && this.state.abSols[i]) return this.state.abSols[i][2];
+    return this.state.abPhi;
+  }
+  syncABPhiSlider(){
+    const el = this.q('#rABPhi'), o = this.q('#oABPhi');
+    if (!el || !o) return;
+    const v = this.abSelPhi();
+    el.value = v;
+    o.textContent = v.toFixed(2);
+  }
+  /* AB 面板读数：选中行「#k/N · Φ=x.xx @ (x, y)」或「无 · 放置即新建」
+     （位置并入选中行，省一行面板空间——R48/R53 溢出控制口径）。 */
+  refreshABReadout(){
+    const list = this.state.abSols || [];
+    const n = list.length;
+    const sel = (this.state.abSel >= 0 && this.state.abSel < n) ? this.state.abSel : -1;
+    const oSel = this.q('#oABSel');
+    if (oSel) oSel.textContent = sel >= 0
+      ? '#' + (sel + 1) + '/' + n + ' · Φ=' + list[sel][2].toFixed(2)
+        + ' @ (' + list[sel][0].toFixed(2) + ', ' + list[sel][1].toFixed(2) + ')'
+      : '无 · 放置即新建';
+  }
+  /* AB 磁通滑块（R54 多管）：写入目标随选中态切换——有选中管时编辑该管 Φ，
+     无选中时编辑草稿 abPhi（放置新管时取用）。不用 bindRange（其 key 固定），
+     滑块同步由 syncABPhiSlider 单独负责（syncControls 调用）。 */
+  bindABPhi(){
+    const el = this.q('#rABPhi'), o = this.q('#oABPhi');
+    if (!el || !o) return;
+    const self = this;
+    el.addEventListener('input', () => {
+      const v = parseFloat(el.value);
+      const i = self.state.abSel;
+      if (i >= 0 && self.state.abSols[i]) self.state.abSols[i][2] = v;
+      else self.state.abPhi = v;
+      o.textContent = v.toFixed(2);
+      self.refreshABReadout();
+      self.refreshParamHud();
+    });
+    this.syncABPhiSlider();
   }
 
   /* ---------- 交互 ---------- */
@@ -1777,7 +1968,7 @@ ${d3 ? `
     for (let i = 0; i < gray.length; i++) gray[i] = d[i*4];   /* R 通道（vGray 写入时 R=G=B） */
     let bin = '';
     for (let i = 0; i < gray.length; i++) bin += String.fromCharCode(gray[i]);
-    const SKIP = new Set(['grid','paused','simTime','preset','lastWave','waveCount','drag','tool']);
+    const SKIP = new Set(['grid','paused','simTime','preset','lastWave','waveCount','drag','tool','abSel']);
     const params = {};
     for (const k of Object.keys(this.state)){
       if (SKIP.has(k)) continue;
@@ -1789,6 +1980,11 @@ ${d3 ? `
       version: 1,
       kernel: this.kernelId,
       state: params,
+      /* AB 螺线管列表（R54，数组非数字 ⟹ 白名单循环不收，须显式存档）：
+         顶层 abSols 段 [[x,y,φ],...]（与 state.abSols 同构）。abSel 是 UI
+         选中态（运行时概念，入 SKIP 不存档）；旧存档无 abSols 段——导入时
+         按 abX/abY/abPhi 标量段迁移为单管列表（见 importPotentialData）。 */
+      abSols: (this.state.abSols || []).map(s => [s[0], s[1], s[2]]),
       potential: { grid: 256, encoding: 'gray-v', data: btoa(bin) },
     };
   }
@@ -1824,16 +2020,41 @@ ${d3 ? `
     this.vctx.globalCompositeOperation = 'source-over';
     this.vctx.putImageData(img, 0, 0);
     this.uploadV();
-    /* 参数恢复：仅白名单标量键（须已存在于 state）；运行时态/结构键不碰 */
-    const SKIP = new Set(['grid','paused','simTime','preset','lastWave','waveCount','drag','tool']);
+    /* 参数恢复：仅白名单标量键（须已存在于 state）；运行时态/结构键不碰。
+       注：旧存档的 abX/abY 标量键已不在 state（R54 起为 abSols 列表）⟹
+       `k in this.state` 守卫天然跳过；abPhi 仍是草稿键，照常恢复。 */
+    const SKIP = new Set(['grid','paused','simTime','preset','lastWave','waveCount','drag','tool','abSel']);
     let n = 0;
     for (const k of Object.keys(obj.state || {})){
       if (SKIP.has(k)) continue;
       const v = obj.state[k];
       if (typeof v === 'number' && isFinite(v) && k in this.state){ this.state[k] = v; n++; }
     }
+    /* AB 螺线管列表恢复（R54）：新存档取 abSols 段（≤AB_MAX 个 [x,y,φ] 全有限
+       元组）；旧存档无该段 ⟹ 若 abPhi≠0（单管曾启用过）由 abX/abY/abPhi 迁为
+       单管列表并选中，abPhi=0/缺失 ⟹ 空列表（与旧版关闭态一致）。 */
+    const fin = v => (typeof v === 'number' && isFinite(v)) ? v : null;
+    if (obj.abSols !== undefined){
+      if (!Array.isArray(obj.abSols) || obj.abSols.length > AB_MAX)
+        throw new Error('存档 AB 螺线管段无效（须数组且 ≤' + AB_MAX + ' 项）');
+      for (let i = 0; i < obj.abSols.length; i++){
+        const s = obj.abSols[i];
+        if (!Array.isArray(s) || s.length !== 3 || !s.every(v => typeof v === 'number' && isFinite(v)))
+          throw new Error('存档 AB 螺线管 #' + i + ' 无效（须 [x,y,φ] 全有限）');
+      }
+      this.state.abSols = obj.abSols.map(s => [s[0], s[1], s[2]]);
+      this.state.abSel = this.state.abSols.length ? 0 : -1;
+    } else {
+      const st0 = obj.state || {};
+      const ax0 = fin(st0.abX), ay0 = fin(st0.abY), ap0 = fin(st0.abPhi);
+      this.state.abSols = (ap0 !== null && ap0 !== 0)
+        ? [[ax0 === null ? 0.5 : ax0, ay0 === null ? 0.5 : ay0, ap0]]
+        : [];
+      this.state.abSel = this.state.abSols.length ? 0 : -1;
+    }
     this.syncControls();
-    this.toast('势场已导入（恢复 ' + n + ' 项参数）');
+    this.toast('势场已导入（恢复 ' + n + ' 项参数'
+      + (this.state.abSols.length ? ' + AB 螺线管 ' + this.state.abSols.length + ' 根' : '') + '）');
     return n;
   }
 
@@ -2023,8 +2244,10 @@ ${d3 ? `
     this.container.querySelectorAll('[data-tool3]').forEach(x =>
       x.classList.toggle('on', x.dataset.tool3 === (this.state.tool3 || 'cam')));
     this.syncBlobRows();
-    const abp = this.q('#oABPos');            /* AB 螺线管位置读数（预设 params 可能改 abX/abY） */
-    if (abp) abp.textContent = '(' + this.state.abX.toFixed(2) + ', ' + this.state.abY.toFixed(2) + ')';
+    /* R54：AB 多螺线管面板同步（预设 params/URL/导入存档可注入 abSols/abSel；
+       滑块对齐选中管 Φ，选中行/位置读数随列表刷新） */
+    this.syncABPhiSlider();
+    this.refreshABReadout();
   }
 
   /* 第二势槽参数行的动态显隐（R41 组合势）：仅当前 potKind2 所需的行显示，
@@ -2117,17 +2340,26 @@ ${d3 ? `
         aim.style.display = 'block';
         aimDot.setAttribute('cx', e.clientX); aimDot.setAttribute('cy', e.clientY);
       } else if (this.state.tool === 'flux'){
-        /* AB 螺线管放置：点击即落点（世界坐标）；磁通 Φ 由滑块控制，
-           Φ=0 时画环隐藏、演化走标准路径（点放无副作用） */
-        this.state.abX = wx; this.state.abY = wy;
-        this.q('#oABPos').textContent = '(' + wx.toFixed(2) + ', ' + wy.toFixed(2) + ')';
-        this.toast('AB 螺线管 → (' + wx.toFixed(2) + ', ' + wy.toFixed(2) + ')');
+        /* AB 螺线管放置/选中（R54 多管）：点已有环 → 选中（分别调参的对象）；
+           点空白 → 以草稿 abPhi 放新管并自动选中。Φ=0 也落点（位置标记，
+           演化路径 link 相位恒 0、与无矢势逐位等价——点放无物理副作用）。
+           R55：放置/选中后同步预览环 cursor（虚影环留在操作点，与真环重合
+           同色——快速连点时 preview 不闪回旧位置）。 */
+        const hit = this.pickSolenoid(wx, wy);
+        if (hit >= 0) this.selectSolenoid(hit);
+        else this.placeSolenoid(wx, wy, this.state.abPhi);
+        this.state.abCursor = [wx, wy];
       } else {
         this.paintV(e);
       }
     });
     this.on(canvas, 'pointermove', e => {
       this.updateBrushCursor(e);
+      /* R55 放置预览环：flux 工具悬停时预览环跟随鼠标（世界坐标） */
+      if (this.state.tool === 'flux'){
+        const [wx, wy] = this.toWorld(e.clientX, e.clientY);
+        this.state.abCursor = [wx, wy];
+      }
       if (this.state.drag){
         this.state.drag.cx = e.clientX; this.state.drag.cy = e.clientY;
         aimLine.setAttribute('x1', this.state.drag.cx0 ?? e.clientX);
@@ -2141,7 +2373,7 @@ ${d3 ? `
         this.paintV(e);
       }
     });
-    this.on(canvas, 'pointerleave', () => { this.q('#brushcursor').style.display = 'none'; });
+    this.on(canvas, 'pointerleave', () => { this.q('#brushcursor').style.display = 'none'; this.state.abCursor = null; });
     this.on(canvas, 'pointerup', e => {
       if (!this.state.drag) return;
       const d = this.state.drag; this.state.drag = null;
@@ -2158,6 +2390,7 @@ ${d3 ? `
       this.state.tool = b.dataset.tool;
       this.container.querySelectorAll('[data-tool]').forEach(x => x.classList.toggle('on', x === b));
       canvas.style.cursor = (this.state.tool === 'wave' || this.state.tool === 'flux') ? 'crosshair' : 'cell';
+      if (this.state.tool !== 'flux') this.state.abCursor = null;   /* R55：离开 flux 工具即撤预览环 */
       if (this.state.tool === 'wave') this.q('#brushcursor').style.display = 'none';
     }));
     this.on(this.q('#btnPause'), 'click', () => this.togglePause());
@@ -2185,12 +2418,17 @@ ${d3 ? `
     this.bindRange('#rGamma','#oGamma','gamma', v => v.toFixed(3));
     this.bindRange('#rDriveAmp','#oDriveAmp','driveAmp', v => v.toFixed(3), () => this.refreshParamHud());
     this.bindRange('#rDriveOmega','#oDriveOmega','driveOmega', v => v.toFixed(2), () => this.refreshParamHud());
-    this.bindRange('#rABPhi','#oABPhi','abPhi', v => v.toFixed(2), () => this.refreshParamHud());
+    this.bindABPhi();   /* R54：多管 Φ 滑块（写入目标随选中态切换，见方法注释） */
+    this.refreshABReadout();   /* R54：初始态读数（构造默认 abSols=[] ⟹ 「无 · 放置即新建」） */
     this.on(this.q('#btnABCenter'), 'click', () => {
-      this.state.abX = 0.5; this.state.abY = 0.5;
-      this.q('#oABPos').textContent = '(0.50, 0.50)';
-      this.toast('AB 螺线管已置中');
+      const i = this.state.abSel;
+      if (i < 0 || !(this.state.abSols || [])[i]){ this.toast('无选中的螺线管'); return; }
+      this.state.abSols[i][0] = 0.5; this.state.abSols[i][1] = 0.5;
+      this.refreshABReadout();
+      this.toast('AB 螺线管 #' + (i + 1) + ' 已置中');
     });
+    this.on(this.q('#btnABDel'), 'click', () => this.deleteSolenoid());
+    this.on(this.q('#btnABClear'), 'click', () => this.clearSolenoids());
     this.bindRange('#rTrail','#oTrail','decay', v => v.toFixed(2));
     this.bindRange('#rBright','#oBright','bright', v => '×'+v.toFixed(2));
     const extra = this.kernel.extraControls(() => this.reinitWave(), () => this.refreshParamHud());   /* 内核附加滑块（如 NLS 的 g / Pauli 自旋角） */
@@ -2385,6 +2623,10 @@ ${d3 ? `
     });
     this.on(this.q('#btnParamScanStop'), 'click', () => paramScanner().stop());
 
+    /* 面板收起拉手（R56）：点击边缘 tab 切换对应侧整列面板 */
+    this.on(this.q('#tabL'), 'click', () => this.togglePanelSide('left'));
+    this.on(this.q('#tabR'), 'click', () => this.togglePanelSide('right'));
+
     /* 键盘 */
     const presetKeys = Object.keys(this.kernel.presets());
     this.on(window, 'keydown', e => {
@@ -2394,6 +2636,20 @@ ${d3 ? `
       else if ((e.key === 'c' || e.key === 'C') && !this.kernel.dim3){ this.clearV(); }   /* 3D 无势场画布 */
       else if ((e.key === 'p' || e.key === 'P') && this.kernel.dim3){ this.setTool3(this.state.tool3 === 'pot' ? 'cam' : 'pot'); }   /* R44：势刷/视角切换 */
       else if (e.key === 't' || e.key === 'T'){ this.state.decay = this.state.decay > 0.01 ? 0 : 0.97; this.q('#rTrail').value = this.state.decay; this.q('#oTrail').textContent = this.state.decay.toFixed(2); }
+      else if (e.key === '[' || e.key === ']'){
+        /* R56：左/右侧面板整列收起/展开。表单元素聚焦时不拦截
+           （避免误伤滑块/下拉/按钮的键盘操作）。 */
+        const t = e.target;
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA')) return;
+        this.togglePanelSide(e.key === '[' ? 'left' : 'right');
+      }
+      else if (e.key === 'Delete' || e.key === 'Backspace'){
+        /* R54：删除选中的 AB 螺线管。表单元素聚焦时不拦截（避免误伤
+           滑块/下拉/按钮的键盘操作）；无管时无操作（不 preventDefault）。 */
+        const t = e.target;
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA')) return;
+        if ((this.state.abSols || []).length){ e.preventDefault(); this.deleteSolenoid(); }
+      }
     });
 
     this.on(window, 'resize', () => this.resize());
@@ -2452,7 +2708,46 @@ ${d3 ? `
       this.initWave(w[0], w[1], isNaN(kxO)?w[2]:kxO, isNaN(kyO)?w[3]:kyO);
     }
     this.kernel.applyParams(qp, this.state);   /* 内核私有 URL 参数（如 NLS ?g=） */
+    this.applyABParams(qp);                    /* R54：AB 多螺线管 URL 参数（引擎级） */
     this.syncControls();
+  }
+
+  /* AB 多螺线管 URL 参数（R54，引擎级——abSols 是引擎状态，全 2D 内核可用；
+     AB 处理从 schrodinger.js applyParams 迁来并扩展为多管语法）：
+       ?abSols=x,y,φ;x,y,φ;…   多管语法（分号分隔元组），整体替换列表并选中首管；
+       ?abX&abY&abPhi          旧单管简写（R26 起测试链接兼容）：编辑当前选中/首管，
+                               列表为空且 Φ≠0 时落一根新管（默认位置 0.5,0.5）。
+     时序：loadPreset（预设 params 可注入 abSols/abSel）→ initWave → 此处覆盖，
+     均在 frame() 主循环启动之前，首帧即以目标配置演化（旧口径不变）。 */
+  applyABParams(qp){
+    const st = this.state;
+    const as = qp.get('abSols');
+    if (as !== null && as !== ''){
+      const list = [];
+      for (const tup of as.split(';')){
+        const p = tup.split(',').map(v => parseFloat(v));
+        if (p.length === 3 && p.every(v => isFinite(v))) list.push([p[0], p[1], p[2]]);
+      }
+      st.abSols = list.slice(0, AB_MAX);
+      st.abSel = list.length ? 0 : -1;
+    }
+    const ax = parseFloat(qp.get('abX')), ay = parseFloat(qp.get('abY'));
+    const ap = parseFloat(qp.get('abPhi'));
+    if (!isNaN(ax) || !isNaN(ay) || !isNaN(ap)){
+      const list = st.abSols || (st.abSols = []);
+      let i = (st.abSel >= 0 && st.abSel < list.length) ? st.abSel : (list.length ? 0 : -1);
+      if (i < 0){
+        /* 列表为空：仅当最终 Φ≠0 时落新管（Φ=0 保持关闭态，与旧版语义一致） */
+        const phi = isNaN(ap) ? 0 : ap;
+        if (phi !== 0) list.push([isNaN(ax) ? 0.5 : ax, isNaN(ay) ? 0.5 : ay, phi]);
+        i = list.length ? list.length - 1 : -1;
+      } else {
+        if (!isNaN(ax)) list[i][0] = Math.max(0, Math.min(1, ax));
+        if (!isNaN(ay)) list[i][1] = Math.max(0, Math.min(1, ay));
+        if (!isNaN(ap)) list[i][2] = ap;
+      }
+      st.abSel = i;
+    }
   }
 
   /* ---------- 调试句柄：供自动化测试读取内部状态（不影响正常使用） ---------- */
@@ -2499,6 +2794,30 @@ ${d3 ? `
       tool3: () => this.state.tool3 || 'cam',
       /* 势丘列表（R49）：当前丘列表快照 [{x,y,z,r,v0}]（对账 GLSL uniform 与面板读数） */
       blobs: () => (this.state.potBlobs || []).map(b => ({ x: b.x, y: b.y, z: b.z, r: b.r, v0: b.v0 })),
+      /* AB 螺线管列表（R54）：[[x,y,φ],...] 快照 + 选中索引（对账 GLSL uniform
+         数组与面板读数）；abPlace/abSelect/abDelete/abClear/abPick 为 pointer
+         事件同一入口的调试转发（CDP 驱动放置/选中/删除，不合成鼠标事件序列）。 */
+      abSols: () => (this.state.abSols || []).map(s => ({ x: s[0], y: s[1], phi: s[2] })),
+      abSel: () => this.state.abSel,
+      abPlace: (x, y, phi) => this.placeSolenoid(x, y, phi),
+      abSelect: (i) => this.selectSolenoid(i),
+      abDelete: () => this.deleteSolenoid(),
+      abClear: () => this.clearSolenoids(),
+      abPick: (x, y) => this.pickSolenoid(x, y),
+      /* R55 放置预览环：flux 工具悬游标世界坐标（null = 无预览）。
+         abSetCursor 供 CDP 直接驱动预览环渲染（不合成鼠标事件）。 */
+      abCursor: () => { const c = this.state.abCursor; return c ? [c[0], c[1]] : null; },
+      abSetCursor: (x, y) => { this.state.abCursor = (x < 0 || y < 0) ? null : [x, y]; return this.state.abCursor ? [x, y] : null; },
+      /* 2D 当前场原始数据（psiA 回读，RG/RGBA32F 交错）：供验证脚本做跨版本
+         场级比对（R54 单管零回归：HEAD dist vs 新 dist 同参数同帧数对账）。 */
+      field2d: () => {
+        const g = this.state.grid, ch = this.kernel.pairs === 2 ? 4 : 2;
+        const buf = new Float32Array(g*g*ch);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
+        gl.readPixels(0, 0, g, g, this.fmt, gl.FLOAT, buf);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        return { g, ch, data: Array.from(buf) };
+      },
       /* 3D 当前体积原始数据（逐层 readPixels 拼装，RG32F 交错 (re,im)）：
          供验证脚本把 GPU 场搬到 CPU 做镜像对账（R36 CN 的 GPU↔CPU 互证）。
          与现场序列化共用 readWave3——「存档的场」与「验证看到的场」同源。 */
@@ -2847,9 +3166,7 @@ ${d3 ? `
         gl.uniform1f(this.u(this.progEvolve,'uDriveAmp'), 0);
         gl.uniform1f(this.u(this.progEvolve,'uDrivePhase'), 0);
         gl.uniform1i(this.u(this.progEvolve,'uDriveMode'), 0);
-        gl.uniform1f(this.u(this.progEvolve,'uABOn'), 0);
-        gl.uniform2f(this.u(this.progEvolve,'uABPos'), 0.5, 0.5);
-        gl.uniform1f(this.u(this.progEvolve,'uABPhi'), 0);
+        this.setABUniforms(gl, this.progEvolve, true);   /* 诊断路径强制无 AB（diag，同 evolveCN 口径） */
         this.kernel.setUniforms(gl, this.progEvolve, this.state);   /* 内核私有 uniform（Dirac 的 uMass 等）：暂停态手动步进时 evolve 帧循环可能尚未设置过 */
         gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, this.vTex);

@@ -195,43 +195,66 @@
 
 import { gaussianWave } from './gaussian.js';
 
+/* AB 螺线管数量上限（R54 多管）：与四个 2D shader 模板内的 #define AB_MAX
+   逐字同步（JS↔GLSL 契约，同 R49 MAX_BLOBS 模式——循环上界取编译期常量，
+   uABCount 动态 break 截断；任一侧改动必须同步另一侧）。 */
+export const AB_MAX = 8;
+
 /* ---------- KDK 速度 Verlet 骨架（引擎级，{{LOCAL_H}} 由内核注入） ---------- */
 
 /* ---------- 拉普拉斯 stencil 块（引擎级共享 token，TPL_EVOLVE/CN_RHS/CN_SWEEP 共用）----------
    契约（展开处必须满足）：
      - 局部变量 c = texture(uPsi,vUv)（中心 texel；CN_SWEEP 中即 Jacobi 当前迭代 x_k）
-     - helper S/rot4/ang/wrapPi 与 uniform uABOn/uABPos/uABPhi/uTexel 已声明
+     - helper S/rot4/ang/wrapPi 与 uniform uABOn/uABPos[]/uABPhi[]/uABCount/uTexel
+       及 #define AB_MAX 已声明（四个模板的 uniform 区逐字同款）
    产出：vec4 lap（5 点 stencil，含 AB 最小耦合 link 相位分支）。
    KINETIC_E 默认 -uK*lap 依赖本块；一阶内核（Dirac）覆写 kineticE 为函数（如
    diracD(vUv)）时 lap 沦为死代码，被编译器消除——行为零变化（R33 起 CN 路径
    的 Pauli 用默认 -uK*lap，必须共享本块而非各自复制，保证 AB 分支单源真值）。 */
 const TPL_LAP_BLOCK = `  vec4 lap;
   if(uABOn > 0.5){
-    /* 最小耦合 link 相位（精确线积分）：每条邻格跳变乘 U=e^{iθ}，θ=∫A·dl。
-       对称规范 A=(Φ/2π)·(−(y−y0),(x−x0))/r² = (Φ/2π)·dθ 是角度 1-形式，
-       沿直线 link 的线积分**精确**等于端点视角差：
-         θ_link(p→p+Δ) = (Φ/2π)·wrapPi(β(p+Δ) − β(p)),  β(q)=atan2(q.y−y0, q.x−x0)
-       （被积函数 (d×Δ)/|d+sΔ|² 分子恒定，积分即张角差——比中点采样 A(mid)·Δ
-       的 O(texel²) 近似高高一阶；且 atan2 处处有限，无奇点、无需 r² 钳制。）
-       wrapPi 到 (−π,π] 处理 atan2 分支切割（螺线管负 x 射线）：切割处 link 相位
-       ≈∓π·Φ/2π 为规范弦（纯规范，密度等规范不变量不受影响；垂直跨弦 link 的
-       原始角差 ≈±2π 被 wrap 精确恢复为小值）。ang() 对 |d|²≈0 回退 0 防
-       atan2(0,0)（螺线管被工具放到格点上时），保持反向 link 精确反号。
-       正向/反向 link 共享同一对端点 ⟹ θ 精确反号 ⟹ link 拉普拉斯严格厄米；
-       围绕螺线管的 Wilson 环 = e^{iΦ} **精确**成立（无钳制残差）⟹
+    /* 多管最小耦合 link 相位（R54）：U(1) 链变量相乘 ⟹ 各管相位**线性相加**。
+       每根管以本管位置为心独立贡献 θ_k=(Φ_k/2π)·wrapPi(β_k(p+Δ)−β_k(p))，
+       β_k(q)=atan2(q.y−y_k, q.x−x_k)——对称规范 A_k=(Φ_k/2π)·dθ_k 是角度
+       1-形式，沿直线 link 的线积分**精确**等于端点视角差（被积函数
+       (d×Δ)/|d+sΔ|² 分子恒定，积分即张角差——比中点采样 A(mid)·Δ 的
+       O(texel²) 近似高高一阶；且 atan2 处处有限，无奇点、无需 r² 钳制）。
+       矢势可加 ⟹ 共位两管 Φ₁,Φ₂ ≡ 单管 Φ₁+Φ₂（Wilson 环 = e^{i(Φ₁+Φ₂)}）；
+       float32 下各管 c_k=Φ_k/2π 独立舍入，Σc_k 与 (ΣΦ)/2π 一般相差 ~1ulp——
+       如共位双 π 管：2·fround(π/2π)=1.0 与 fround(2π/2π)=1.0 恰相等，但
+       一般 Φ 值不保证逐位一致，属系数舍入级差异（物理等价不变）。
+       wrapPi 到 (−π,π] 处理 atan2 分支切割（螺线管负 x 射线）：切割处 link
+       相位 ≈∓π·Φ/2π 为规范弦（纯规范，密度等规范不变量不受影响；垂直跨弦
+       link 的原始角差 ≈±2π 被 wrap 精确恢复为小值）。ang() 对 |d|²≈0 回退 0
+       防 atan2(0,0)（螺线管被工具放到格点上时），保持反向 link 精确反号。
+       正向/反向 link 共享同一对端点 ⟹ 每管 θ 精确反号 ⟹ link 拉普拉斯严格
+       厄米；围绕螺线管的 Wilson 环 = e^{iΦ} **精确**成立（无钳制残差）⟹
        H(Φ+2π)=G†·H(Φ)·G（G=diag(e^{iβ_v})，算符层面规范等价；「密度图样
        逐时刻不变」需初态同步变换 ψ₀→Gψ₀，初态固定时 I(2π) vs I(0) 差 17%
-       属预期——R26 CDP 复测，详见文件头约定节）。|U|=1 ⟹ 谱半径
-       仍 ≤8，E_max 不变。 */
-    float cAB = uABPhi/6.28318530718;
-    vec2 dp = vUv - uABPos;
-    float b0 = ang(dp);
-    vec2 dq;
-    dq = vUv + vec2(uTexel.x,0.0) - uABPos;  lap  = rot4(S(vUv+vec2( uTexel.x,0.0)), cAB*wrapPi(ang(dq)-b0));
-    dq = vUv - vec2(uTexel.x,0.0) - uABPos;  lap += rot4(S(vUv+vec2(-uTexel.x,0.0)), cAB*wrapPi(ang(dq)-b0));
-    dq = vUv + vec2(0.0,uTexel.y) - uABPos;  lap += rot4(S(vUv+vec2(0.0, uTexel.y)), cAB*wrapPi(ang(dq)-b0));
-    dq = vUv - vec2(0.0,uTexel.y) - uABPos;  lap += rot4(S(vUv+vec2(0.0,-uTexel.y)), cAB*wrapPi(ang(dq)-b0));
-    lap -= 4.0*c;
+       属预期——R26 CDP 复测，详见文件头约定节）。|U|=1 ⟹ 谱半径仍 ≤8，
+       E_max 不变。
+       与单管版（R26）的回归关系：count=0 ⟹ uABOn=0 走 else 分支逐位等价旧
+       5 点 stencil；count=1 ⟹ 循环体即旧单管体（相位和 0+θ、加法结合序
+       一致），max-abs 口径零回归——唯一差异是 IEEE ±0 符号位（0.0+x=x 精确
+       除非 x=∓0：邻值精确 0 的边界 texel 或相位精确 0 时可能出现），无任何
+       数值/物理意义（JS === 与最大差都不可分辨）。
+       循环上界 AB_MAX 为编译期常量，uABCount 动态 break（R49 blobSum 同款
+       GLSL ES 3.00 写法）；尾部未用管位不读。 */
+    float abPhXp = 0.0, abPhXm = 0.0, abPhYp = 0.0, abPhYm = 0.0;
+    for (int k = 0; k < AB_MAX; k++){
+      if (k >= uABCount) break;
+      float ck = uABPhi[k]/6.28318530718;
+      vec2 dk = vUv - uABPos[k];
+      float bk = ang(dk);
+      abPhXp += ck*wrapPi(ang(vUv + vec2( uTexel.x, 0.0) - uABPos[k]) - bk);
+      abPhXm += ck*wrapPi(ang(vUv + vec2(-uTexel.x, 0.0) - uABPos[k]) - bk);
+      abPhYp += ck*wrapPi(ang(vUv + vec2( 0.0, uTexel.y) - uABPos[k]) - bk);
+      abPhYm += ck*wrapPi(ang(vUv + vec2( 0.0,-uTexel.y) - uABPos[k]) - bk);
+    }
+    lap = rot4(S(vUv+vec2( uTexel.x,0.0)), abPhXp)
+        + rot4(S(vUv+vec2(-uTexel.x,0.0)), abPhXm)
+        + rot4(S(vUv+vec2( 0.0, uTexel.y)), abPhYp)
+        + rot4(S(vUv+vec2( 0.0,-uTexel.y)), abPhYm) - 4.0*c;
   } else {
     lap = S(vUv+vec2(-uTexel.x,0.0))+S(vUv+vec2(uTexel.x,0.0))
          + S(vUv+vec2(0.0,-uTexel.y))+S(vUv+vec2(0.0,uTexel.y)) - 4.0*c;
@@ -239,6 +262,7 @@ const TPL_LAP_BLOCK = `  vec4 lap;
 
 const TPL_EVOLVE = `#version 300 es
 precision highp float;
+#define AB_MAX ${AB_MAX}
 in vec2 vUv; out vec4 o;
 uniform sampler2D uPsi;
 uniform sampler2D uV;
@@ -249,9 +273,10 @@ uniform vec2 uTexel;
 uniform float uDriveAmp;    // 含时外场幅值 A（势单位），0 = 关闭（精确恒等）
 uniform float uDrivePhase;  // 驱动相位 φ = ω·(t+dt/2)，CPU 每帧按帧中点推算
 uniform int   uDriveMode;   // 0 = 均匀 AC Stark A·cos(φ)；1 = x 行波 A·cos(2πx−φ)
-uniform float uABOn;        // AB 磁通开关：0 = 原 5 点 stencil（Φ=0 时精确等价）
-uniform vec2  uABPos;       // 螺线管位置（世界坐标）
-uniform float uABPhi;       // 磁通 Φ（rad，绕行一周总相位；0 = 关闭）
+uniform float uABOn;        // AB 多螺线管开关：0 = 原 5 点 stencil（count=0 时精确等价）
+uniform vec2  uABPos[AB_MAX];   // 各螺线管位置（世界坐标；uABCount 之外不读）
+uniform float uABPhi[AB_MAX];   // 各管磁通 Φ（rad，绕行一周总相位；0 = 该管 link 相位恒 0）
+uniform int   uABCount;     // 实际管数（编译期常量循环 + 动态 break 截断）
 {{UNIFORMS}}
 vec4 S(vec2 uv){
   if(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0) return vec4(0.0);
@@ -569,6 +594,7 @@ void main(){
    （Dirac：βm+V 对角 2×2 块；Pauli：σ·B Cayley 全 4×4 块——见各自 cnLocalSolve）。 */
 const TPL_CN_RHS = `#version 300 es
 precision highp float;
+#define AB_MAX ${AB_MAX}
 in vec2 vUv; out vec4 o;
 uniform sampler2D uPsi;
 uniform sampler2D uV;
@@ -579,8 +605,9 @@ uniform float uDriveAmp;
 uniform float uDrivePhase;
 uniform int   uDriveMode;
 uniform float uABOn;
-uniform vec2  uABPos;
-uniform float uABPhi;
+uniform vec2  uABPos[AB_MAX];
+uniform float uABPhi[AB_MAX];
+uniform int   uABCount;
 {{UNIFORMS}}
 vec4 S(vec2 uv){
   if(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0) return vec4(0.0);
@@ -603,6 +630,7 @@ void main(){
 
 const TPL_CN_SWEEP = `#version 300 es
 precision highp float;
+#define AB_MAX ${AB_MAX}
 in vec2 vUv; out vec4 o;
 uniform sampler2D uPsi;        /* x_k（Jacobi 当前迭代值） */
 uniform sampler2D uRhs;        /* rhs = w_n + h·G(w_n)（CN_RHS pass 产物） */
@@ -614,8 +642,9 @@ uniform float uDriveAmp;
 uniform float uDrivePhase;
 uniform int   uDriveMode;
 uniform float uABOn;
-uniform vec2  uABPos;
-uniform float uABPhi;
+uniform vec2  uABPos[AB_MAX];
+uniform float uABPhi[AB_MAX];
+uniform int   uABCount;
 {{UNIFORMS}}
 vec4 S(vec2 uv){
   if(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0) return vec4(0.0);
@@ -662,6 +691,7 @@ void main(){
 /* ---------- 显示：相位->色相，概率->亮度，等值线，网格，余晖 max 混合 ---------- */
 const TPL_DISPLAY = `#version 300 es
 precision highp float;
+#define AB_MAX ${AB_MAX}
 in vec2 vUv; out vec4 o;
 uniform sampler2D uPsi;
 uniform sampler2D uTrail;
@@ -669,9 +699,13 @@ uniform sampler2D uV;
 uniform float uDecay;
 uniform vec2 uPsiTexel;
 uniform vec2 uAspect;
-uniform float uABOn;        // AB 螺线管标记开关（与演化一致：Φ=0 不画）
-uniform vec2  uABPos;       // 螺线管位置（世界坐标）
-uniform float uABPhi;       // 磁通 Φ（rad；标记亮度随 |Φ| 增强）
+uniform float uABOn;          // AB 螺线管标记开关（与演化一致：count=0 不画）
+uniform vec2  uABPos[AB_MAX]; // 各螺线管位置（世界坐标）
+uniform float uABPhi[AB_MAX]; // 各管磁通 Φ（rad）
+uniform int   uABCount;       // 实际管数（编译期常量循环 + 动态 break）
+uniform int   uABSel;         // 选中管索引（-1 = 无；画金色外环作交互反馈）
+uniform vec2  uABCursor;      // R55：放置预览环世界坐标（(-1,-1) = 无预览；仅本 program 有）
+uniform float uABDraftPhi;    // R55：草稿磁通（预览环的 Φ 色相/辉光源）
 {{UNIFORMS}}
 vec4 bilerp(sampler2D t, vec2 uv, vec2 texel){
   vec2 f = fract(uv/texel - 0.5) - 0.5;
@@ -715,15 +749,49 @@ void main(){
   img += vec3(0.07,0.11,0.16)*(1.0-smoothstep(0.47,0.5,max(g.x,g.y)))*0.30;
   vec2 q = vUv-0.5;
   img *= 1.0-0.35*dot(q,q);
-  /* AB 螺线管标记：世界坐标圆环（uAspect 修正保证屏幕正圆）+ 核芯微光，
-     Φ≠0 时显现（与演化 uABOn 同开关）。磁场约束在管内，管外只有矢势——
-     这个环就是「看不见的磁通」的位置标记。 */
+  /* AB 螺线管标记（R54 多管 + R55 视觉编码增强）：
+     世界坐标圆环（uAspect 修正保证屏幕正圆）+ 核芯辉光 + 规范弦射线 +
+     放置预览环；count=0 时不画（与演化 uABOn 同开关）。磁场约束在管内，
+     管外只有矢势——这些环就是「看不见的磁通」的位置标记。
+     R55 视觉编码（Φ→颜色的映射，多管「分别调参」的直观反馈）：
+     - 色相轮：hue = 0.55 + 0.28·fract(Φ/2π)，Φ=0 青 → π 蓝紫 → 2π 紫红，
+       周期 2π 与 AB 规范等价周期一致（Φ 与 Φ+2π 同色——物理自洽）
+     - 辉光：aglow = 0.30 + 0.50·|sin(Φ/2)|，Φ=π 峰值 0.80、Φ=0/2π 谷值 0.30，
+       |sin(Φ/2)| 周期恰为 2π ⟹ Φ=2π 与 Φ=0 辉光相同（规范等价）
+     - 规范弦：wrapPi 的 (−π,π] 分支切割在螺线管负 x 世界射线，此处 link
+       原始角差 ≈±2π 被 wrap 恢复为小值——弦是纯规范对象（密度等规范不
+       变量不受影响），以低 alpha 水平线提示其存在与走向
+     - 放置预览环（uABCursor）：flux 工具悬停处的半透明虚影环，色相/辉光
+       取草稿 abPhi（放置即得该外观），(-1,-1) 关闭 */
   if(uABOn > 0.5){
-    vec2 dq = (wuv - uABPos)*uAspect;
-    float rr = length(dq);
-    float wq = max(fwidth(rr), 1e-4);
-    img += vec3(0.55,0.75,1.0)*smoothstep(1.4,0.0,abs(rr-0.035)/wq)*0.9;
-    img += vec3(0.35,0.55,0.95)*smoothstep(0.035,0.012,rr)*0.55;
+    for (int k = 0; k < AB_MAX; k++){
+      if (k >= uABCount) break;
+      vec2 dq = (wuv - uABPos[k])*uAspect;
+      float rr = length(dq);
+      float wq = max(fwidth(rr), 1e-4);
+      float frac = fract(uABPhi[k]/6.28318530718);
+      vec3 acol = hsv2rgb(vec3(0.55 + 0.28*frac, 0.65, 1.0));   /* Φ 色相轮（周期 2π） */
+      float aglow = 0.30 + 0.50*abs(sin(uABPhi[k]*0.5));        /* 辉光随 |Φ|（规范等价周期） */
+      img += acol*smoothstep(1.4,0.0,abs(rr-0.035)/wq)*0.9;
+      img += acol*smoothstep(0.035,0.012,rr)*aglow*0.55;
+      /* 规范弦：管左侧（dq.x≤0）水平射线，exp(dq.x·4) 向左 0.25 单位衰减 */
+      float str = step(dq.x, 0.0)*smoothstep(0.004,0.0,abs(dq.y))*exp(dq.x*4.0);
+      img += vec3(0.45,0.55,0.75)*str*0.12;
+      if (k == uABSel){
+        img += vec3(1.0,0.82,0.30)*smoothstep(1.1,0.0,abs(rr-0.055)/wq)*0.85;
+      }
+    }
+  }
+  /* 放置预览环（R55）：与真环同一套色相/辉光映射，半透明（0.30/0.18）示虚影 */
+  if(uABCursor.x >= 0.0){
+    vec2 dc = (wuv - uABCursor)*uAspect;
+    float rc = length(dc);
+    float wc = max(fwidth(rc), 1e-4);
+    float fracC = fract(uABDraftPhi/6.28318530718);
+    vec3 pcol = hsv2rgb(vec3(0.55 + 0.28*fracC, 0.65, 1.0));
+    float pglow = 0.30 + 0.50*abs(sin(uABDraftPhi*0.5));
+    img += pcol*smoothstep(1.2,0.0,abs(rc-0.035)/wc)*0.30;
+    img += pcol*smoothstep(0.035,0.012,rc)*pglow*0.18;
   }
   o = vec4(max(img, texture(uTrail,vUv).rgb*uDecay), 1.0);
 }`;
