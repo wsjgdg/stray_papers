@@ -1,0 +1,2519 @@
+<!DOCTYPE html>
+<html data-page-node-id="R3bVeyBwYlZrC0eoeslwZ4" lang="zh-CN">
+<head data-page-node-id="fXqpTTPkkC9IQoLODSnGCk">
+<script data-page-node-id="ZDb4HXOOGnhdEZuBEBY0ST" src="/page/page_comm/inject.js"></script>
+<meta data-page-node-id="FJa7cH1zQtFf1eMzMwPqLR" charset="UTF-8">
+<meta data-page-node-id="6FiUVcsJluavD6ox0yxOhV" content="width=device-width, initial-scale=1.0" name="viewport">
+<title data-page-node-id="tKxEfH8ooJgHJrjlpUK6SQ" data-pnid-children="CdmFwmpkJtP864ss3ozhDk">Particle Life · Node Graph Emitter (WebGL2 + GPU Physics)</title>
+<style data-page-node-id="Gif4pppZv8T12OxZ1Tjsu2" data-pnid-children="jwCk9HqgKR58YWX3kBkTrf">
+  :root{
+    --bg0:#0a0e16; --bg1:#0e141f; --bg2:#131b29; --bg3:#1a2536;
+    --ln:#26344a; --ln2:#324558;
+    --tx:#cdd9e8; --tx2:#8aa0bb; --tx3:#5f7a99;
+    --accent:#5cc8ff; --accent2:#8b7bff; --good:#5cffb1; --warn:#ffcf6b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:var(--bg0);color:var(--tx);
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,"Liberation Mono",monospace;
+    -webkit-font-smoothing:antialiased;font-size:12px;}
+  #app{display:flex;height:100vh;width:100vw}
+  #graphPanel{width:340px;min-width:340px;background:linear-gradient(180deg,var(--bg1),var(--bg0));
+    border-right:1px solid var(--ln);display:flex;flex-direction:column;position:relative;z-index:5}
+  /* 高级模式：加宽面板以容纳 3 列节点图，避免端口被裁切 */
+  #graphPanel.adv-panel{width:560px;min-width:560px}
+  .gp-head{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--ln);
+    background:var(--bg2);}
+  .gp-head .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 8px var(--accent)}
+  .gp-head b{font-size:11px;letter-spacing:1.5px;color:var(--tx);font-weight:600}
+  .gp-head .sub{color:var(--tx2);font-size:10px;letter-spacing:.5px}
+  .gp-head .spacer{flex:1}
+  .gp-head button{background:var(--bg3);border:1px solid var(--ln2);color:var(--tx2);
+    width:24px;height:22px;border-radius:5px;cursor:pointer;font-size:13px;line-height:1}
+  .gp-head button:hover{color:var(--tx);border-color:var(--accent)}
+  /* 简单模式面板仅 340px，隐藏过长副标题避免把末尾按钮挤出面板 */
+  #graphPanel:not(.adv-panel) .gp-head .sub{display:none}
+  #graphPanel .gp-head{overflow:hidden}
+  #graph{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px;display:flex;flex-direction:column;
+    background:
+      radial-gradient(circle at 30% 20%,rgba(92,200,255,.05),transparent 60%),
+      radial-gradient(circle at 80% 90%,rgba(139,123,255,.05),transparent 60%),
+      var(--bg0);}
+  #graph::-webkit-scrollbar{width:7px}
+  #graph::-webkit-scrollbar-thumb{background:var(--ln2);border-radius:4px}
+  .node{background:linear-gradient(180deg,var(--bg3),var(--bg2));border:1px solid var(--ln2);border-radius:8px;
+    box-shadow:0 4px 12px rgba(0,0,0,.4);user-select:none;overflow:hidden}
+  .node.off{opacity:.5}
+  .node.off .node-body{opacity:.7}
+  .offnote{color:var(--warn);font-size:10px;padding:3px 2px 0;letter-spacing:.2px}
+  .node-head{display:flex;align-items:center;gap:7px;padding:8px 10px;cursor:pointer;
+    border-bottom:1px solid transparent}
+  .node.open .node-head{border-bottom-color:var(--ln)}
+  .node-head .ic{width:8px;height:8px;border-radius:2px;flex:none;background:var(--accent2)}
+  .node-head .nm{font-size:11px;letter-spacing:.5px;color:var(--tx);font-weight:600;flex:1}
+  .node-head .chev{color:var(--tx3);font-size:8px;transition:transform .15s}
+  .node.open .node-head .chev{transform:rotate(90deg)}
+  /* 行为开关 */
+  .sw{width:30px;height:16px;border-radius:9px;background:var(--ln2);position:relative;flex:none;cursor:pointer;transition:background .15s}
+  .sw::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--tx3);transition:left .15s}
+  .sw.on{background:var(--accent)}
+  .sw.on::after{left:16px;background:#04121d}
+  /* 管线连接线 */
+  .connector{height:9px;width:2px;background:linear-gradient(var(--ln2),var(--accent));margin:1px auto;opacity:.55}
+  /* ===== 高级模式：自由节点图 ===== */
+  #graph.adv{display:block;overflow:auto;padding:0;background:var(--bg0)}
+  #canvasGraph{position:relative;width:920px;height:760px;flex:none;min-width:920px;min-height:760px;
+    background:
+      linear-gradient(var(--ln) 1px,transparent 1px) 0 0/24px 24px,
+      linear-gradient(90deg,var(--ln) 1px,transparent 1px) 0 0/24px 24px,
+      radial-gradient(circle at 20% 10%,rgba(92,200,255,.06),transparent 55%);}
+  #edges{position:absolute;inset:0;width:920px;height:760px;overflow:visible;pointer-events:none;z-index:1}
+  #edges .edge{fill:none;stroke:var(--accent);stroke-width:2;opacity:.5}
+  #edges .edge:hover{stroke:var(--warn);opacity:.95}
+  #edges .tmp{fill:none;stroke:var(--accent2);stroke-width:2;stroke-dasharray:5 4;opacity:.85;pointer-events:none}
+  /* 命中层置于节点之下：空白处连线可点击删除，但不会遮挡端口（端口在节点内、层级更高） */
+  #edgesHit{position:absolute;inset:0;width:920px;height:760px;overflow:visible;pointer-events:none;z-index:0}
+  #edgesHit .edge-hit{fill:none;stroke:transparent;stroke-width:12;pointer-events:stroke;cursor:pointer}
+  #edgesHit .edge-hit:hover{stroke:rgba(255,207,107,.35)}
+  .node.adv{position:absolute;width:150px;z-index:2;overflow:visible}
+  .node.adv .node-head{cursor:grab}
+  .node.adv .node-body{max-height:280px;overflow-y:auto}
+  .port{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--bg2);
+    border:2px solid var(--accent);top:9px;cursor:crosshair;z-index:3}
+  .port.in{left:-7px}
+  .port.out{right:-7px}
+  .port:hover{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+  .node.adv .del{position:absolute;top:6px;right:6px;width:15px;height:15px;line-height:13px;text-align:center;
+    border-radius:3px;background:rgba(255,123,123,.16);color:var(--warn);border:1px solid rgba(255,123,123,.45);
+    cursor:pointer;font-size:11px;z-index:4;display:none}
+  .node.adv:hover .del{display:block}
+  .m-addmenu{position:absolute;background:var(--bg3);border:1px solid var(--ln2);border-radius:8px;
+    padding:4px;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:2px}
+  .m-addmenu button{background:var(--bg1);border:1px solid var(--ln);color:var(--tx2);font-size:10px;
+    padding:5px 12px;border-radius:5px;cursor:pointer;text-align:left;white-space:nowrap}
+  .m-addmenu button:hover{color:var(--tx);border-color:var(--accent);background:var(--bg2)}
+  .node-body{padding:8px 10px 10px;display:flex;flex-direction:column;gap:6px}
+  .node.collapsed .node-body{display:none}
+  .row{display:flex;align-items:center;gap:6px}
+  .row label{width:46px;color:var(--tx2);font-size:9px;letter-spacing:.4px}
+  .row input[type=range]{flex:1;-webkit-appearance:none;height:4px;border-radius:3px;
+    background:linear-gradient(90deg,rgba(92,200,255,.45),rgba(139,123,255,.45));outline:none}
+  .row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;
+    border-radius:50%;background:radial-gradient(circle at 34% 30%,#ffffff,var(--accent) 58%,var(--accent2));
+    border:2px solid rgba(255,255,255,.9);cursor:pointer;box-shadow:0 0 9px rgba(92,200,255,.75);
+    transition:transform .12s,box-shadow .15s}
+  .row input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.18);box-shadow:0 0 13px rgba(92,200,255,1)}
+  .row .val{width:30px;text-align:right;color:var(--tx);font-size:9px}
+  .seg{display:flex;gap:3px;flex:1;flex-wrap:wrap}
+  .seg button{flex:1 1 auto;min-width:34px;background:var(--bg1);border:1px solid var(--ln);color:var(--tx2);
+    font-size:9px;padding:3px 0;border-radius:4px;cursor:pointer;letter-spacing:.3px}
+  .seg button.on{background:var(--accent);color:#04121d;border-color:var(--accent);font-weight:700}
+  .matrix-wrap{display:grid;gap:2px}
+  .mcell{width:100%;aspect-ratio:1/1;border-radius:3px;border:1px solid var(--ln);
+    background:var(--bg1);font-size:8px;color:var(--tx2);cursor:pointer;display:flex;
+    align-items:center;justify-content:center;padding:0}
+  .mcell:hover{border-color:var(--accent)}
+  #stage{flex:1;position:relative;background:#05070d;overflow:hidden}
+  /* 星云背景：CSS 层置于画布之下，粒子以透明拖尾叠加其上，空旷处透出星云 */
+  #bg{position:absolute;inset:0;z-index:0;
+    background:
+      radial-gradient(ellipse 55% 45% at 22% 28%,rgba(54,120,210,.16),transparent 60%),
+      radial-gradient(ellipse 50% 50% at 78% 72%,rgba(150,86,224,.16),transparent 60%),
+      radial-gradient(ellipse 45% 40% at 55% 52%,rgba(36,180,160,.09),transparent 60%),
+      #05070d;
+    animation:nebula 36s ease-in-out infinite alternate}
+  @keyframes nebula{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(22deg)}}
+  /* 远景星场：在星云之下叠加一层缓慢漂移的星点，增加宇宙纵深与电影感 */
+  #stars{position:absolute;inset:0;z-index:0;opacity:.55;pointer-events:none;
+    background-image:
+      radial-gradient(1.2px 1.2px at 18% 28%,rgba(255,255,255,.9),transparent),
+      radial-gradient(1px 1px at 67% 58%,rgba(255,255,255,.65),transparent),
+      radial-gradient(1.1px 1.1px at 41% 80%,rgba(180,220,255,.8),transparent),
+      radial-gradient(1px 1px at 84% 19%,rgba(255,255,255,.55),transparent),
+      radial-gradient(1px 1px at 54% 13%,rgba(200,230,255,.7),transparent),
+      radial-gradient(1.2px 1.2px at 9% 67%,rgba(255,255,255,.6),transparent),
+      radial-gradient(1px 1px at 73% 87%,rgba(210,235,255,.6),transparent),
+      radial-gradient(1px 1px at 30% 47%,rgba(255,255,255,.5),transparent);
+    background-repeat:no-repeat;
+    animation:stars 64s ease-in-out infinite alternate}
+  @keyframes stars{from{transform:translate(0,0)}to{transform:translate(-14px,9px)}}
+  #gl{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+  #gl2d{position:absolute;inset:0;width:100%;height:100%;display:none;z-index:1}
+  /* 暗角：聚焦中心、增加电影感纵深（不挡 UI） */
+  #vignette{position:absolute;inset:0;z-index:3;pointer-events:none;
+    background:radial-gradient(ellipse 78% 78% at 50% 50%,transparent 52%,rgba(0,0,0,.55) 100%)}
+  #toolbar{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;
+    flex-wrap:wrap;justify-content:center;gap:5px 6px;align-items:center;
+    max-width:calc(100% - 340px);
+    background:rgba(14,20,31,.8);backdrop-filter:blur(8px);
+    border:1px solid var(--ln);border-radius:10px;padding:6px 10px;z-index:10}
+  #toolbar button{background:var(--bg3);border:1px solid var(--ln2);color:var(--tx2);
+    border-radius:6px;padding:5px 9px;cursor:pointer;font-size:11px;letter-spacing:.4px;
+    white-space:nowrap;flex:none}
+  #toolbar button:hover{color:var(--tx);border-color:var(--accent)}
+  #toolbar button.primary{background:var(--accent);color:#04121d;font-weight:700;border-color:var(--accent)}
+  #toolbar button:disabled{opacity:.4;cursor:default;pointer-events:none}
+  #toolbar .sep{width:1px;height:18px;background:var(--ln2)}
+  #toolbar select{background:var(--bg3);border:1px solid var(--ln2);color:var(--tx);
+    border-radius:6px;padding:4px 6px;font-size:11px;font-family:inherit;flex:none}
+  #toolbar label.chk{color:var(--tx2);font-size:10px;display:flex;align-items:center;gap:3px;cursor:pointer;white-space:nowrap;flex:none}
+  #status{position:absolute;bottom:10px;left:12px;display:flex;gap:14px;align-items:center;
+    background:rgba(14,20,31,.78);border:1px solid var(--ln);border-radius:8px;padding:6px 11px;
+    z-index:10;font-size:10px;letter-spacing:.4px;color:var(--tx2)}
+  #status b{color:var(--accent);font-weight:700}
+  #status .fps b{color:var(--good)}
+  #status .phys b{color:var(--accent2)}
+  #hint{position:absolute;top:10px;right:12px;background:rgba(14,20,31,.78);border:1px solid var(--ln);
+    border-radius:8px;padding:6px 10px;font-size:9px;color:var(--tx2);letter-spacing:.3px;z-index:10;
+    line-height:1.5;max-width:150px}
+  #hint b{color:var(--accent)}
+  #err{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+    color:var(--warn);font-size:14px;text-align:center;padding:40px;z-index:30}
+  /* 移动端/触控：禁用舞台滚动劫持与长按选择，使粒子拖动在触屏上可用 */
+  #stage{touch-action:none;-webkit-user-select:none;user-select:none;overscroll-behavior:none}
+  /* ===== 可收起：控制面板 / 展示台 / 提示语 ===== */
+  #btnPanel{flex:none}
+  #app.panel-collapsed #graphPanel{width:26px!important;min-width:26px!important}
+  #app.panel-collapsed #graphPanel .gp-head{justify-content:center;padding:9px 2px}
+  #app.panel-collapsed #graphPanel .gp-head > *:not(#btnPanel){display:none}
+  #app.panel-collapsed #graphPanel #graph{display:none}
+  #app.stage-hidden #stage{display:none}
+  #app.stage-hidden:not(.panel-collapsed) #graphPanel{flex:1;width:auto;min-width:340px}
+  #app.stage-hidden #stageReopen{display:block}
+  #app.hint-hidden #hint{display:none}
+  #app.hint-hidden #btnHint{display:none}
+  #app.hint-hidden #hintReopen{display:block}
+  #stageReopen{position:fixed;top:12px;left:50%;transform:translateX(-50%);display:none;z-index:40;
+    background:rgba(14,20,31,.85);border:1px solid var(--ln);color:var(--tx2);
+    border-radius:8px;padding:6px 14px;cursor:pointer;font-size:11px;letter-spacing:.4px}
+  #stageReopen:hover{color:var(--tx);border-color:var(--accent)}
+  #hintReopen{position:fixed;top:10px;right:12px;display:none;z-index:40;width:26px;height:26px;border-radius:50%;
+    background:rgba(14,20,31,.85);border:1px solid var(--ln);color:var(--accent);cursor:pointer;font-size:13px;line-height:1}
+  #hintReopen:hover{color:var(--tx);border-color:var(--accent)}
+  #btnHint{position:absolute;top:12px;right:14px;width:16px;height:16px;line-height:14px;border:none;
+    background:none;color:var(--tx3);cursor:pointer;font-size:12px;padding:0;z-index:11}
+  #btnHint:hover{color:var(--accent)}
+  #hint{padding-right:22px}
+  /* 诊断浮层 */
+  #diag{display:none;position:fixed;inset:0;z-index:60;align-items:center;justify-content:center;background:rgba(4,8,14,.6)}
+  #diag.on{display:flex}
+  #diag .diag-box{width:min(560px,92vw);max-height:78vh;overflow:auto;background:linear-gradient(180deg,rgba(18,26,40,.98),rgba(10,15,24,.99));
+    border:1px solid rgba(255,255,255,.10);border-radius:12px;padding:14px 16px;box-shadow:0 18px 50px rgba(0,0,0,.6)}
+  #diag h4{margin:0 0 10px;font-size:12px;letter-spacing:.6px;color:var(--tx)}
+  #diag pre{margin:0;font:11px/1.65 ui-monospace,Menlo,Consolas,monospace;color:var(--tx2);white-space:pre-wrap;word-break:break-all}
+  #diag .diag-row{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:11px;color:var(--tx2)}
+  #diag .diag-row select{flex:1;font-size:11px;padding:4px 6px;border-radius:6px;border:1px solid var(--ln);
+    background:rgba(255,255,255,.04);color:var(--tx2);outline:none}
+  #diag .diag-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+  #diag .diag-btns button{font-size:11px;padding:5px 12px;border-radius:7px;border:1px solid var(--ln);background:rgba(255,255,255,.04);color:var(--tx2);cursor:pointer}
+  #diag .diag-btns button:hover{color:var(--tx);border-color:var(--accent)}
+  #btnDiag{font-size:11px;line-height:1;padding:3px 6px;border-radius:6px;border:1px solid var(--ln);
+    background:rgba(255,255,255,.04);color:var(--tx2);cursor:pointer}
+  #btnDiag:hover{color:var(--tx);border-color:var(--accent)}
+  /* ===== 高级化打磨 ===== */
+  /* 统一滑块外观：发光滑钮 + 细渐变轨道（覆盖工具栏原生滑杆） */
+  input[type=range]{-webkit-appearance:none;appearance:none;height:4px;border-radius:3px;outline:none;cursor:pointer;
+    background:linear-gradient(90deg,rgba(92,200,255,.45),rgba(139,123,255,.45));transition:filter .15s}
+  input[type=range]:hover{filter:brightness(1.18)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;
+    background:radial-gradient(circle at 34% 30%,#ffffff,var(--accent) 58%,var(--accent2));
+    border:2px solid rgba(255,255,255,.9);box-shadow:0 0 9px rgba(92,200,255,.75);
+    transition:transform .12s,box-shadow .15s}
+  input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.18);box-shadow:0 0 13px rgba(92,200,255,1)}
+  input[type=range]::-webkit-slider-thumb:active{transform:scale(1.05)}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;border:2px solid rgba(255,255,255,.9);
+    background:radial-gradient(circle at 34% 30%,#fff,var(--accent) 58%,var(--accent2));box-shadow:0 0 9px rgba(92,200,255,.75)}
+  input[type=range]::-moz-range-track{height:4px;border-radius:3px;background:var(--ln2)}
+  /* 自定义复选框（工具栏 自适应 / 连线） */
+  #toolbar label.chk{gap:5px}
+  #toolbar label.chk input[type=checkbox]{-webkit-appearance:none;appearance:none;width:14px;height:14px;margin:0;
+    border-radius:4px;border:1px solid var(--ln2);background:var(--bg1);position:relative;cursor:pointer;
+    transition:background .15s,border-color .15s}
+  #toolbar label.chk input[type=checkbox]:checked{background:var(--accent);border-color:var(--accent)}
+  #toolbar label.chk input[type=checkbox]:checked::after{content:"";position:absolute;left:4px;top:1px;width:3px;height:7px;
+    border:solid #04121d;border-width:0 2px 2px 0;transform:rotate(45deg)}
+  /* 玻璃面板：更柔和的投影 + 顶部高光 + 更强毛玻璃 */
+  /* 关键性能点：面板不再使用 backdrop-filter 模糊（每帧都要把背后动画画布重新模糊一次，
+     即使 GPU 渲染也会因此卡顿）。改用磨砂实底 + 顶部高光 + 投影，视觉仍高级但零逐帧模糊开销 */
+  #toolbar,#status,#hint,#stageReopen,#hintReopen{border-color:rgba(255,255,255,.10);
+    background:linear-gradient(180deg,rgba(18,26,40,.94),rgba(10,15,24,.96));
+    box-shadow:0 12px 36px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.07)}
+  #toolbar{border-radius:12px}
+  /* 按钮微交互：悬停上浮、按下下沉、聚焦描边、主按钮渐变发光 */
+  #toolbar button,#toolbar select,.gp-head button,.m-addmenu button,.seg button,.mcell,.port{
+    transition:background .16s,border-color .16s,color .16s,box-shadow .16s,transform .1s}
+  #toolbar button:active,.gp-head button:active,.seg button:active,.mcell:active{transform:translateY(1px)}
+  #toolbar button:focus-visible,.gp-head button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  #toolbar button.primary{background:linear-gradient(180deg,#7ad4ff,var(--accent));color:#04121d;border-color:transparent}
+  #toolbar button.primary:hover{box-shadow:0 0 16px rgba(92,200,255,.6)}
+  .gp-head button:hover{transform:translateY(-1px)}
+  /* 面板标题渐变字 + 实时指示点脉冲 */
+  .gp-head b{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;
+    background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+  .gp-head .dot{animation:pulse 2.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 6px var(--accent);opacity:1}50%{box-shadow:0 0 14px var(--accent);opacity:.55}}
+  /* 节点卡片更精致 */
+  .node{border-radius:11px;box-shadow:0 8px 22px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.05)}
+  .node-head .ic{box-shadow:0 0 8px var(--accent2)}
+  /* 统一细滚动条 */
+  #graph::-webkit-scrollbar,#graph.adv::-webkit-scrollbar,.node-body::-webkit-scrollbar{width:8px;height:8px}
+  #graph::-webkit-scrollbar-thumb,#graph.adv::-webkit-scrollbar-thumb,.node-body::-webkit-scrollbar-thumb{
+    background:linear-gradient(var(--ln2),var(--ln));border-radius:6px;border:2px solid transparent;background-clip:padding-box}
+  #graph::-webkit-scrollbar-track,#graph.adv::-webkit-scrollbar-track,.node-body::-webkit-scrollbar-track{background:transparent}
+  /* 入场淡入 */
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  #toolbar,#status,#hint{animation:fadeIn .5s ease both}
+</style>
+</head>
+<body data-page-node-id="jDTn33VeGnPsLLOaJVYOTU">
+<div data-page-node-id="g6EEWP5bgftJHgKJt5L0dC" id="app">
+  <div data-page-node-id="9e1Z4DRjUHFsExMufkOddy" id="graphPanel">
+    <div data-page-node-id="lY6NuwQfV6iyOED0PflLBg" class="gp-head">
+      <button data-page-node-id="Q7wqFGQRhjHNTzaEoAd1X1" id="btnPanel" title="收起/展开控制面板"><!--pnid:oFh3DfEUFJJaUKckhzxi9c-->⟨</button>
+      <span data-page-node-id="ewTfSfLw9sJ8L6gfBvaqNN" class="dot"></span>
+      <b data-page-node-id="7MX9dmsb5JdJAbOudOhGXh"><!--pnid:IuEe5IqMrXfz95PNZn1MPQ-->EMITTER</b>
+      <span data-page-node-id="A4vQLCuOB64qGoYHZ8Vk9f" class="sub"><!--pnid:wRWEWy6E3qT3DjeB1bMR6k-->粒子源 → 行为 → 渲染</span>
+      <span data-page-node-id="CUczzCNm8VFXi4a1LL4SNM" class="spacer"></span>
+      <button data-page-node-id="bbRPRRloIUR0NA0bMB1eMc" id="btnFit" title="全部展开/折叠"><!--pnid:PkkR8NOqvUPPgsj7j4FuZx-->⊞</button>
+      <button data-page-node-id="y6ahvYvFXTyM9eFxfjf2Jr" id="btnAdv" title="切换高级节点图编辑"><!--pnid:oWR2YA6w2lN3wc4T4tSTrj-->⬡ 高级</button>
+      <button data-page-node-id="5Q9HzAQQmdaVwcZfmmClY5" id="btnAdd" title="新增行为节点" style="display:none"><!--pnid:sU7cSoS5BosY6NXbI50d4b-->＋</button>
+    </div>
+    <div data-page-node-id="YsCup7htrUauqHvd4jCe31" id="graph"></div>
+  </div>
+  <div data-page-node-id="j56dtOAw3sBN01DGw92291" id="stage">
+    <div data-page-node-id="VzP6cMHpAtPQZRNcKm5zEM" id="bg"></div>
+    <div data-page-node-id="I6o8S3eAgTnCPbRZEVYMGe" id="stars"></div>
+    <canvas data-page-node-id="0fvaliddE0AgNPTCfsYY0K" id="gl"></canvas>
+    <canvas data-page-node-id="j1ThE06W63dE43BgJsvD2D" id="gl2d"></canvas>
+    <div data-page-node-id="6iM3gJO68BWUb0u2E7LDsW" id="vignette"></div>
+    <div data-page-node-id="Ylk78vJTlAnD92680YVJCu" id="toolbar">
+      <button data-page-node-id="4ek8zE1VSOyrOf5dyAjR46" id="btnStage" title="收起展示台"><!--pnid:6UvVcP7Kj5vZZiIybN7hHo-->▾</button>
+      <button data-page-node-id="nIlOVCKyBtHOvHCaOB3rz6" class="primary" id="btnPlay"><!--pnid:EIneDrLGZa4gjOufeubWh5-->⏸ 暂停</button>
+      <button data-page-node-id="NbCHq24RUsqb6smgb7ZaQj" id="btnStep" title="单步推进一帧（暂停时可用）"><!--pnid:iWA7U6fUDWTDnajGJICYE1-->⏭ 单步</button>
+      <button data-page-node-id="whEUvOK6PBdlJeLY14xTfD" id="btnReset"><!--pnid:eGNBiPJFU1y5Gh01RO32n0-->↻ 重置</button>
+      <button data-page-node-id="7q0kcv1qcxp9HD0T4V441V" id="btnDefault" title="恢复默认场景（清除本地存档）"><!--pnid:0GOWQsr01Nug4nyDkbcDTu-->↺ 默认</button>
+      <button data-page-node-id="v6z0hrw36mVTE4fD0JikGE" id="btnShot"><!--pnid:wPbnfrtlBNBeDokeUlERNd-->⤓ 截图</button>
+      <span data-page-node-id="wxgqkixS19RkvldKODb8Be" class="sep"></span>
+      <button data-page-node-id="WhxWvL2Zp1BhorPnowcx6p" id="btnExport" title="导出当前场景（含粒子坐标与全部设置）"><!--pnid:PCECMMM1krXnbNaRTSq5Nw-->⤒ 导出</button>
+      <button data-page-node-id="ebuXtpQK7m14ghovNncJXR" id="btnImport" title="导入场景文件（.json）"><!--pnid:UedTXeKzNoGXJeBFmOyDst-->⤓ 导入</button>
+      <input data-page-node-id="Tv8C5zO1RwWAOUTP5V7VhN" accept="application/json,.json" id="fileImport" type="file" style="display:none">
+      <span data-page-node-id="k65L1eQmn9L6boS1EXYhIF" class="sep"></span>
+      <select data-page-node-id="wC0wb7lMPNDPe7FIePdljQ" id="selPreset"></select>
+      <select data-page-node-id="kzvAkQg611UZElPmEKtwoh" id="selTheme"></select>
+      <span data-page-node-id="h4diuvJoGKkyZd4pJWPyJx" class="sep"></span>
+      <label data-page-node-id="4EHr9vOwfhDWfU24TgRdvz" style="color:var(--tx2); font-size:10px"><!--pnid:mBkfDxX0USPtSjJXk8e0gk-->N</label>
+      <input data-page-node-id="S3sDmSeZhJjTHh8ouH885n" id="rngCount" max="12000" min="300" step="100" type="range" value="3000" style="width:90px">
+      <span data-page-node-id="M5zVQgGl5YiAC1bmFNqB5C" id="lblCount" style="color:var(--accent); font-size:10px; width:42px"><!--pnid:kmIgM5GcQdRRv6h9suPpQP-->3000</span>
+      <label data-page-node-id="yJ8wfiEYjJhrsBnltYUrQw" class="chk"><input data-page-node-id="7ysH0Zp9JcqaI3qqGGtBX8" checked id="chkAdapt" type="checkbox"><!--pnid:vowXQVOa0SEMUCFhGAAurj-->自适应</label>
+      <label data-page-node-id="lAgKnOS2FVUsOvYq4lOHCt" class="chk"><input data-page-node-id="62EtWvV6seXA3awI1wCgQZ" checked id="chkDynRes" type="checkbox"><!--pnid:3Iw05rIGmuzVb1MPgiu8tq-->动态分辨率</label>
+      <label data-page-node-id="V5FF1pDAxsajeHWHJDwJFR" class="chk"><input data-page-node-id="FWfnGuriUi2FxffMaTnLmL" id="chkLinks" type="checkbox"><!--pnid:etykYhnaha82ol0lzBvHgA-->连线</label>
+      <span data-page-node-id="Vbjft5cHYGbhMjyZPTRGHE" id="linkCtl" style="display:none; gap:5px; flex-wrap:wrap; flex:none; align-items:center">
+        <label data-page-node-id="5PGQOrNApTNfIqhy91bTJL" style="color:var(--tx2); font-size:10px; white-space:nowrap"><!--pnid:JyvLEnu9foeocParYC9pAV-->半径</label>
+        <input data-page-node-id="eP2VWaWIxswRYDs0eYYQLk" id="rngLinkR" max="80" min="12" step="1" type="range" value="28" style="width:52px">
+        <label data-page-node-id="vuozknGuegTH8KIc8XVis4" style="color:var(--tx2); font-size:10px; white-space:nowrap"><!--pnid:5R9rswlpgMQPhVQFbpBhMb-->亮度</label>
+        <input data-page-node-id="Thi1qT4ByZqPuihiIL6XA7" id="rngLinkA" max="0.7" min="0.05" step="0.01" type="range" value="0.22" style="width:52px">
+      </span>
+    </div>
+    <button data-page-node-id="jngc6cec7cJBsPz6HEECYf" id="btnHint" title="收起提示"><!--pnid:qmG943tOG2NTEtaHFI0Zo3-->×</button>
+    <div data-page-node-id="z6YYr2NPN0D1a9kiaRmhgI" id="hint">
+      <b data-page-node-id="6sts2FxcMawLRdcXlBlNVG"><!--pnid:hNTLByWxILRsUxG4pxYuwk-->行为卡</b><!--pnid:EpZ8wxHDMeGKchFQ70CPwV-->：开关=启停 · 标题=展开/折叠<br data-page-node-id="p46q5zXTXkHlRi2zogp04q">
+      <b data-page-node-id="JSlb1p5TbXZEob26WoKK7e"><!--pnid:91CQlca702DfMOGooNObMj-->矩阵格</b><!--pnid:F23JCSCC1sqFcCZXaqShIh-->：点击循环 -1→0→+1<br data-page-node-id="XvUFtlppUcwPDWXfkGvW7q">
+      <b data-page-node-id="dI2okT5U9l0VKF0603Qs0y"><!--pnid:p4yinLG5ZgTGwl9cYMTfG2-->画布</b><!--pnid:r3uDwnTDJEjQvfUgYNDcPO-->：拖动=扰动 · 滚轮=力<br data-page-node-id="SUoujDTBfaNG9LhhufLwPx">
+      <b data-page-node-id="l40YQDKDgWWvz8BGji5jwW"><!--pnid:0X9rqnArC3F9MmnCxkBltA-->快捷键</b><!--pnid:LsiVTdzIKyU6wL36r0S6Zf-->：空格=暂停/播放 · <b data-page-node-id="vkUxnnfZKzzmdnfR1u0PVc"><!--pnid:6UaS2eClzlRSLBzALLkJNs-->.</b><!--pnid:BlOnGt9sVYrmKOj5178i0x-->=单步 · <b data-page-node-id="yjwDRUJtkiN5mFYVkVGgfZ"><!--pnid:UU2MzOPeqjmxLLJ56SSSZK-->E</b><!--pnid:FgJwfPJ7tzSizq9Cg6m3ss-->=导出 · <b data-page-node-id="yl0MlZ9cmk3WXYTIuLVDdK"><!--pnid:uDtYBSVoWb2of1DBftcgpH-->I</b><!--pnid:e771qtuvzzp9cPUHX2Pi7m-->=导入
+    </div>
+    <div data-page-node-id="bvLG7OTosQOZQRtbvotd9e" id="status">
+      <span data-page-node-id="uL6CRwt5W1VmkgBsR2wB9U" class="fps"><!--pnid:MR2I6neHxHSzdNpQHnUahL-->FPS <b data-page-node-id="eOkgmEBYrxGhR6XzcJJwgS" id="sFps"><!--pnid:rdjyWgs5oBERN9uoJfr5xe-->–</b></span>
+      <span data-page-node-id="xpLfButKmFAscewtSm9KC1"><!--pnid:JNmaYOFmUEhl9paiLavdP5-->粒子 <b data-page-node-id="7AuocvHWc7KSMmH28u8IIB" id="sN"><!--pnid:6A5gfV9j4nAHq04NWAewGf-->–</b></span>
+      <span data-page-node-id="Mhw1LYHNjPHsSM4q1h7QwN"><!--pnid:gJNxOFjffAlctgnKHtcEyt-->行为 <b data-page-node-id="9BDBUrFwpR1TMgFCuLUFJL" id="sBeh"><!--pnid:6LDQev11wyniofK0XIhvhk-->–</b></span>
+      <span data-page-node-id="7NxoWtElp1OJspTYAaPAvJ"><!--pnid:yiGMS42opORslDrrznpPSW-->模式 <b data-page-node-id="roC7soo9kqDsZuEXZgfGGn" id="sMode"><!--pnid:hjJX2eYsYBtvgxpCwN08qy-->matrix</b></span>
+      <span data-page-node-id="JBEbJprbY8HEGfIDSJN2Oo" class="phys"><!--pnid:7YnhxBbAmYA9NaNCjQRRrH-->物理 <b data-page-node-id="JWpDmjFP1PlKDqirlPRCj0" id="sPhys"><!--pnid:yPFw73rhEKBt37ESwQ6XWF-->–</b></span>
+      <button data-page-node-id="jMQYzwhDCMkDJJC2662cVh" id="btnDiag" title="自检 / 诊断"><!--pnid:abkOYkROqSPZ2cVx9s3MFP-->ⓘ</button>
+    </div>
+    <div data-page-node-id="H2L1Jp5cxUDk3KccrD1ktN" id="diag"><div data-page-node-id="3i58vDzefANfWusD8bmwpO" class="diag-box">
+      <h4 data-page-node-id="cupdZ79YPaoYEHYHUAx9V5"><!--pnid:NOztpAVrvzAHnQw2FULEI4-->自检 / 诊断</h4>
+      <pre data-page-node-id="vpjB82aDc8YCU23L2ieKGz" id="diagText"></pre>
+      <div data-page-node-id="6kheZ2I5qa7hwsYL0eAXoK" class="diag-row">
+        <label data-page-node-id="v0gCvywLeD9lcQRkZhzlNZ"><!--pnid:KPt4DtTTWTWbraz40ymtlz-->强制后端</label>
+        <select data-page-node-id="Y6phA4MQQynSz3AySpo1sO" id="selBackend">
+          <option data-page-node-id="VWRsrA0U7P4CA6s6eRA9vW" value="auto"><!--pnid:vk4oaLg19BuPHHCzbHzVtZ-->自动</option>
+          <option data-page-node-id="WyC2YffAHoxUxSLxHyUha7" value="gpu"><!--pnid:h366yIjDAGyrUacVT6Arel-->GPU（着色器 O(N²)）</option>
+          <option data-page-node-id="NbbyerE7wCwZkh5QVjm66R" value="cpu"><!--pnid:uAy4wlfKUGHXoOdOCxviVo-->CPU（网格 O(N·k)）</option>
+        </select>
+      </div>
+      <div data-page-node-id="b0FjACbQ1pSuxRBLDQ0L9A" class="diag-btns"><button data-page-node-id="nR6vQtYXrGu5JszjES8j4B" id="btnDiagCopy"><!--pnid:KwhtyKCC5YWFiO3ckQ5Gl0-->复制</button><button data-page-node-id="53yMezpS5GpfnAvE4XhPDL" id="btnDiagClose"><!--pnid:dw8k8TaBAHZL6fLQmPZarq-->关闭</button></div>
+    </div></div>
+    <div data-page-node-id="nvRkkykfWCka4rjqWNAJt6" id="err"><!--pnid:g3BFKDWKbDrW8uJv4DjK3N-->当前浏览器不支持 WebGL2，无法运行粒子渲染。</div>
+  </div>
+  <button data-page-node-id="ryBl7aKjYrKK5NDduWhfRn" id="stageReopen" title="显示展示台"><!--pnid:Chd5HhNI3q2U1aZQbekFVm-->◂ 展示台</button>
+  <button data-page-node-id="AKfQUoCSMQj3VoKdn0hog7" id="hintReopen" title="显示提示"><!--pnid:BYe4P5h3q9leHUXV5nrLhc-->?</button>
+</div>
+
+<script data-page-node-id="H0uCFjja3NFOHIA5cZI3ra" data-pnid-children="fKpTGenHCgNy1QxJ1nVYEv">
+(function(){
+"use strict";
+
+/* ===== 0. 全局状态 / 配置 ===== */
+const stage=document.getElementById("stage");
+const appEl=document.getElementById("app");
+const W0 = () => stage.clientWidth, H0 = () => stage.clientHeight;
+let W = 800, H = 600;
+
+const THEMES = {
+  Neon:  [[0.40,0.95,1.00],[0.65,0.55,1.00],[1.00,0.45,0.85],[0.45,1.00,0.70],[1.00,0.80,0.40],[0.55,0.80,1.00],[0.95,0.55,0.55]],
+  Ice:   [[0.55,0.85,1.00],[0.70,0.95,1.00],[0.40,0.70,1.00],[0.85,1.00,1.00],[0.50,0.90,0.95],[0.75,0.80,1.00],[0.60,0.95,0.85]],
+  Sunset:[[1.00,0.55,0.40],[1.00,0.75,0.35],[1.00,0.45,0.55],[0.95,0.60,0.75],[1.00,0.85,0.50],[0.85,0.50,0.85],[1.00,0.65,0.45]],
+  Mono:  [[0.85,0.90,1.00],[0.70,0.78,0.95],[0.95,0.97,1.00],[0.60,0.70,0.90],[0.80,0.85,1.00],[0.90,0.93,1.00],[0.75,0.82,0.98]],
+  Aurora:[[0.30,1.00,0.70],[0.20,0.85,1.00],[0.55,1.00,0.85],[0.70,0.55,1.00],[0.35,0.95,0.75],[0.85,1.00,0.95],[0.45,0.78,1.00]],
+  Inferno:[[1.00,0.30,0.20],[1.00,0.60,0.15],[1.00,0.85,0.35],[1.00,0.40,0.50],[0.95,0.22,0.42],[1.00,0.55,0.10],[0.90,0.35,0.65]],
+  // —— 新增调色板 ——
+  Candy: [[1.00,0.45,0.70],[0.55,0.85,1.00],[1.00,0.80,0.40],[0.70,1.00,0.55],[0.85,0.55,1.00],[1.00,0.60,0.85],[0.55,1.00,0.85]],
+  Forest:[[0.40,0.85,0.45],[0.65,0.95,0.55],[0.30,0.70,0.40],[0.80,0.95,0.60],[0.45,0.80,0.55],[0.55,1.00,0.70],[0.35,0.60,0.35]],
+  Ocean: [[0.20,0.65,0.95],[0.30,0.85,0.95],[0.45,0.95,0.85],[0.15,0.50,0.85],[0.55,0.90,1.00],[0.35,0.75,0.90],[0.25,0.55,0.80]],
+  Grape: [[0.70,0.45,1.00],[0.85,0.55,1.00],[0.55,0.35,0.95],[1.00,0.55,0.95],[0.65,0.35,0.85],[0.80,0.45,1.00],[0.90,0.65,1.00]],
+  Vapor: [[1.00,0.55,0.85],[0.55,0.85,1.00],[0.85,0.55,1.00],[1.00,0.75,0.90],[0.65,0.95,0.95],[0.95,0.65,1.00],[0.75,0.70,1.00]],
+  Citrus:[[0.95,0.95,0.35],[0.55,0.95,0.45],[0.35,0.90,0.80],[1.00,0.80,0.35],[0.70,1.00,0.50],[0.85,1.00,0.60],[1.00,0.90,0.45]],
+  Steel: [[0.65,0.72,0.82],[0.80,0.86,0.92],[0.50,0.58,0.70],[0.90,0.94,1.00],[0.58,0.66,0.78],[0.72,0.80,0.90],[0.45,0.52,0.62]],
+  Toxic: [[0.70,1.00,0.20],[0.45,0.95,0.35],[1.00,0.95,0.25],[0.55,1.00,0.45],[0.85,1.00,0.30],[0.35,0.90,0.50],[0.95,1.00,0.40]],
+  Pastel:[[1.00,0.75,0.80],[0.75,0.85,1.00],[0.80,1.00,0.85],[1.00,0.95,0.75],[0.90,0.78,1.00],[0.78,1.00,0.95],[1.00,0.85,0.95]],
+  Rainbow:[[1.00,0.35,0.35],[1.00,0.62,0.22],[1.00,0.92,0.35],[0.42,0.88,0.42],[0.32,0.84,1.00],[0.45,0.52,1.00],[0.90,0.42,1.00]],
+};
+const BEHAVIOR_TYPES = ["matrix","damping","noise","mouse","repel","align","cohere"];
+const TYPE_LABEL = {matrix:"吸引力矩阵",damping:"阻尼",noise:"旋度噪声",mouse:"鼠标力",repel:"近距排斥",align:"速度对齐",cohere:"聚合",particles:"粒子源",render:"渲染"};
+const TYPE_COLOR = {matrix:"#5cc8ff",damping:"#8b7bff",noise:"#5cffb1",mouse:"#ffcf6b",repel:"#ff7b7b",align:"#7bb0ff",cohere:"#b07bff",particles:"#9aa7bd",render:"#5cffb1"};
+
+const G = {
+  count:3000, species:5,
+  matrix:null, preset:"cluster",
+  friction:0.10,
+  noiseAmp:0.0, noiseScale:0.004, noiseSpeed:0.15,
+  mouseMode:"attract", mouseR:140, mouseStr:0.9,
+  repelR:18, repelStr:1.6,
+  alignR:60, alignStr:0.5,
+  cohereR:70, cohereStr:0.4,
+  tail:0.9, size:2.6, bloom:0.6, glow:0.7,
+  chroma:1, hue:0, vignette:1,             // P2 视觉：色散强度(0关) / 色相旋转(°) / 暗角开关
+  theme:"Neon",
+  links:false, linkR:28, linkAlpha:0.22, autoMorph:false, morphPeriod:1.1,
+  running:true, timeScale:1, simTime:0,
+  minN:1200,                               // P2 自适应下限：CPU 模式下 N 不低于此值（GPU 固定 3000）
+};
+// 网格尺寸由 activeRadii() 动态计算（per-behavior 半径），不再用全局 rMax；
+
+/* ===== 1. 节点图数据模型 ===== */
+let nodes=[], edges=[], nid=0;
+let advancedMode=false;            // 高级模式：自由节点图编辑（拖拽/连线/增删）
+
+function makeMatrix(kind,n){
+  const m=[];
+  for(let i=0;i<n;i++)m[i]=new Array(n).fill(0);
+  if(kind==='cluster'){ for(let i=0;i<n;i++)for(let j=0;j<n;j++)m[i][j]=(i===j)?-0.4:+(Math.random()*0.7+0.2).toFixed(2); }
+  else if(kind==='chain'){ for(let i=0;i<n;i++)for(let j=0;j<n;j++){if(i===j)m[i][j]=-0.5;else m[i][j]=(((j-i+n)%n)===1)?0.85:(Math.random()<0.3?+(Math.random()*0.6).toFixed(2):-0.2);} }
+  else if(kind==='sym'){ for(let i=0;i<n;i++)for(let j=0;j<n;j++)m[i][j]=m[j][i]=+(Math.random()*2-1).toFixed(2); }
+  else if(kind==='allatt'){ for(let i=0;i<n;i++)for(let j=0;j<n;j++)m[i][j]=(i===j)?-0.3:+(Math.random()*0.4+0.3).toFixed(2); }
+  else if(kind==='allrep'){ for(let i=0;i<n;i++)for(let j=0;j<n;j++)m[i][j]=(i===j)?0.1:-(Math.random()*0.4+0.4).toFixed(2); }
+  else if(kind==='ecosystem'){ for(let i=0;i<n;i++)for(let j=0;j<n;j++){if(i===j)m[i][j]=-0.3;else{const d=(j-i+n)%n;m[i][j]=d===1?0.8:d===n-1?0.5:(Math.random()<0.4?+(Math.random()*1.2-0.4).toFixed(2):-0.2);}} }
+  else if(kind==='crystal'){ for(let i=0;i<n;i++)for(let j=0;j<n;j++){const a=Math.cos(2*Math.PI*(i-j)/n);m[i][j]=+(a*0.8).toFixed(2);} }
+  else if(kind==='cyclic'){   // 单向环：吸后继、斥前驱、自弱斥，其余中性 → 干净循环流
+    for(let i=0;i<n;i++)for(let j=0;j<n;j++){ const d=(j-i+n)%n; m[i][j]= d===1?0.9 : (d===n-1? -0.9 : (i===j? -0.3 : (Math.random()<0.5?0.18:-0.18))); }
+  }
+  else if(kind==='amoeba'){    // 自吸他斥 → 团块状变形虫
+    for(let i=0;i<n;i++)for(let j=0;j<n;j++){ m[i][j] = (i===j)? 0.32 : -(0.18+Math.random()*0.18); }
+  }
+  else if(kind==='flowers'){   // 棋盘吸引/排斥 → 花瓣状结构
+    for(let i=0;i<n;i++)for(let j=0;j<n;j++){ m[i][j] = ((i+j)%2===0)? 0.62 : -0.62; }
+  }
+  else if(kind==='band'){      // 三段式色带：同带相吸、邻带弱吸、异带强斥
+    const w=Math.ceil(n/3);
+    for(let i=0;i<n;i++)for(let j=0;j<n;j++){ const g=Math.floor(i/w), h=Math.floor(j/w); m[i][j]= (g===h)?0.5 : (Math.abs(g-h)===1?0.3:-0.6); }
+  }
+  else if(kind==='war'){       // 两阵营：内部相吸、外阵营强斥
+    const half=Math.ceil(n/2);
+    for(let i=0;i<n;i++)for(let j=0;j<n;j++){ const ia=i<half, ja=j<half; m[i][j]= (ia===ja)?0.42 : -0.82; }
+  }
+  else if(kind==='predator'){  // 延伸食物链：吃后继、被前驱吃，其余随机
+    for(let i=0;i<n;i++)for(let j=0;j<n;j++){ const d=(j-i+n)%n; m[i][j]= d===1?0.85 : (d===n-1? -0.6 : (Math.random()<0.35?0.4:-0.3)); }
+  }
+  else if(kind==='swirl'){     // 旋转相位 → 漩涡/涡旋
+    for(let i=0;i<n;i++)for(let j=0;j<n;j++){ m[i][j]= +((Math.cos((i-j)/n*Math.PI*2))*0.7).toFixed(2); }
+  }
+  else if(kind==='wave'){      // 正弦干涉 → 波纹/涟漪
+    for(let i=0;i<n;i++)for(let j=0;j<n;j++){ m[i][j]= +((Math.sin((i-j)/n*Math.PI*2))*0.7).toFixed(2); }
+  }
+  else if(kind==='purple'){    // 双频干涉 → 斑驳晶簇
+    for(let i=0;i<n;i++)for(let j=0;j<n;j++){ m[i][j]= +((Math.sin(i*0.7+j*1.3))*0.7).toFixed(2); }
+  }
+  else { for(let i=0;i<n;i++)for(let j=0;j<n;j++)m[i][j]=+(Math.random()*2-1).toFixed(2); }
+  return m;
+}
+function resizeMatrix(m,newN){
+  const old=m.length, nm=[];
+  for(let i=0;i<newN;i++){ nm[i]=[]; for(let j=0;j<newN;j++) nm[i][j]= (i<old&&j<old)? m[i][j] : +(Math.random()*2-1).toFixed(2); }
+  return nm;
+}
+function defaultParams(type){
+  switch(type){
+    case "particles": return {count:3000, species:5};
+    case "matrix": return {preset:"cluster", n:5, radius:90, m:makeMatrix("cluster",5)};
+    case "damping": return {friction:0.10};
+    case "noise": return {amp:0.0, scale:0.004, speed:0.15};
+    case "mouse": return {mode:"attract", radius:140, strength:0.9};
+    case "repel": return {radius:18, strength:1.6};
+    case "align": return {radius:60, strength:0.5};
+    case "cohere": return {radius:70, strength:0.4};
+    case "render": return {tail:0.88, size:2.4, bloom:0.5, glow:0.6, theme:"Neon", chroma:1, hue:0, vignette:1, minN:1200};
+  }
+  return {};
+}
+function addNode(type,x,y,wire){
+  const n={id:"n"+(++nid),type,x:(x==null?60:x|0),y:(y==null?60:y|0),params:defaultParams(type)};
+  nodes.push(n);
+  if(wire!==false){
+    const src=nodes.find(z=>z.type==="particles");
+    const snk=nodes.find(z=>z.type==="render");
+    if(src && type!=="particles") edges.push({from:src.id,to:n.id});
+    if(snk && type!=="render" && type!=="particles") edges.push({from:n.id,to:snk.id});
+  }
+  rebuildGraphUI();
+  return n;
+}
+function removeNode(id){
+  nodes=nodes.filter(z=>z.id!==id);
+  edges=edges.filter(e=>e.from!==id && e.to!==id);
+  syncEnabledToReachability(); if(_booted)onCommit();
+}
+function reaches(a,b){
+  const seen=new Set([a]); const st=[a];
+  while(st.length){ const c=st.pop();
+    for(const e of edges){ if(e.from===c && !seen.has(e.to)){ if(e.to===b)return true; seen.add(e.to); st.push(e.to);} } }
+  return false;
+}
+function addEdge(from,to){
+  if(from===to) return;
+  const tf=nodeById(from), tt=nodeById(to);
+  if(!tf||!tt) return;
+  if(tt.type==="particles") return;   // 粒子源只能作为起点
+  if(tf.type==="render") return;      // 渲染节点只能作为终点
+  if(edges.some(e=>e.from===from && e.to===to)) return;
+  if(reaches(to,from)) return; // 防环
+  edges.push({from,to});
+  if(tt.enabled===false){ tt.enabled=true; }  // 连线即激活，与简单模式开关状态一致
+  rebuildGraphUI(); if(_booted)onCommit();
+}
+function reachableSet(){
+  const src=nodes.find(z=>z.type==="particles");
+  const seen=new Set();
+  if(!src) return seen;
+  seen.add(src.id); const st=[src.id];
+  while(st.length){ const c=st.pop();
+    for(const e of edges){ if(e.from===c && !seen.has(e.to)){ seen.add(e.to); st.push(e.to);} } }
+  return seen;
+}
+// 统一门控：行为激活 = 从粒子源可达(reachable) 且 未手动禁用(enabled!==false)
+// 简单模式与高级模式共用同一判定，保证两套 UI 的激活集一致、效果对应
+function activeBehaviors(){
+  const seen=reachableSet();
+  const set=new Set();
+  for(const n of nodes){ if(n.type!=="particles" && n.type!=="render" && seen.has(n.id) && n.enabled!==false) set.add(n.id); }
+  return set;
+}
+
+/* ===== 2. 粒子数据（CPU / GPU 物理共享） ===== */
+const MAXN=12000;
+const GRID_TEX_MAX=256;
+const NP=16384;                 // B：bitonic 排序长度 = ≥MAXN 的最小 2 次幂（填充粒子排到末尾）
+let px,py,vx,vy,sp;
+function allocParticles(){ px=new Float32Array(MAXN); py=new Float32Array(MAXN); vx=new Float32Array(MAXN); vy=new Float32Array(MAXN); sp=new Int8Array(MAXN); }
+function initParticles(){
+  const n=Math.min(G.count,MAXN);
+  for(let i=0;i<n;i++){ px[i]=Math.random()*W; py[i]=Math.random()*H; vx[i]=(Math.random()*2-1)*0.4; vy[i]=(Math.random()*2-1)*0.4; sp[i]=(Math.random()*G.species)|0; }
+}
+// 速度钳制 / 亮度归一化的参考半径，与网格尺寸解耦（B：网格按各行为实际半径收缩，不改变动力学尺度）
+let curCapVal=5.4;
+const grid={cols:0,rows:0,cell:0,buckets:null};
+// E：2D/CPU 与 GPU 共用网格改用 CSR（单一 Int32Array 前缀和），废除「Array-of-Arrays」桶，去每帧数组分配与 GC 压力
+let gridStart=null, gridCursor=null, gridIdx=null, gridNCols=-1, gridNRows=-1;
+
+// 收集当前行为图里“激活”的行为及其参数（CPU/GPU 步进共用）
+function collectBehaviors(){
+  const active=activeBehaviors();
+  const act={};
+  for(const id of active){ const z=nodes.find(z=>z.id===id); if(z)act[z.type]=z; }
+  const has=k=>!!act[k];
+  return {
+    hasMatrix:has("matrix"), mat:act.matrix?act.matrix.params.m:null, mR:act.matrix?act.matrix.params.radius:90,
+    hasDamp:has("damping"), fr:act.damping?act.damping.params.friction:0,
+    hasNoise:has("noise"), nAmp:act.noise?act.noise.params.amp:0, nSc:act.noise?act.noise.params.scale:0.004, nSp:act.noise?act.noise.params.speed:0.15,
+    hasMouse:has("mouse"), moMode:act.mouse?act.mouse.params.mode:"none", moR:act.mouse?act.mouse.params.radius:0, moS:act.mouse?act.mouse.params.strength:0,
+    hasRepel:has("repel"), rR:act.repel?act.repel.params.radius:0, rS:act.repel?act.repel.params.strength:0,
+    hasAlign:has("align"), aR:act.align?act.align.params.radius:0, aS:act.align?act.align.params.strength:0,
+    hasCohere:has("cohere"), cR:act.cohere?act.cohere.params.radius:0, cS:act.cohere?act.cohere.params.strength:0,
+    species:G.species,
+  };
+}
+// 网格尺寸 = 所有参与邻居查询的行为的最大作用半径（matrix/align/cohere/mouse/repel）；
+// 必须覆盖全部半径，否则 3×3 邻格无法兜住最远作用距离，导致漏算。再夹到 GPU 网格纹理上限内。
+function activeRadii(b){
+  let cs=30;
+  if(b.hasMatrix) cs=Math.max(cs,b.mR);
+  if(b.hasAlign) cs=Math.max(cs,b.aR);
+  if(b.hasCohere) cs=Math.max(cs,b.cR);
+  if(b.hasRepel) cs=Math.max(cs,b.rR);
+  if(b.hasMouse) cs=Math.max(cs,b.moR);
+  const cmin=Math.max(1,Math.max(W,H)/(GRID_TEX_MAX-1));
+  if(cs<cmin) cs=cmin;
+  return cs;
+}
+function buildGrid(){
+  const b=collectBehaviors();
+  const cs=activeRadii(b);
+  const cols=Math.max(1,Math.ceil(W/cs)), rows=Math.max(1,Math.ceil(H/cs));
+  const nCells=cols*rows;
+  if(gridStart===null || gridNCols!==cols || gridNRows!==rows){
+    gridStart=new Int32Array(nCells+1);
+    gridCursor=new Int32Array(nCells);
+    gridIdx=new Int32Array(MAXN);
+    gridNCols=cols; gridNRows=rows;
+  }
+  grid.cols=cols; grid.rows=rows; grid.cell=cs;
+  const n=Math.min(G.count,MAXN);
+  gridStart.fill(0);
+  for(let i=0;i<n;i++){
+    let cx=(px[i]/cs)|0, cy=(py[i]/cs)|0;
+    if(cx<0)cx=0;else if(cx>=cols)cx=cols-1;
+    if(cy<0)cy=0;else if(cy>=rows)cy=rows-1;
+    gridStart[cy*cols+cx+1]++;          // 计数写入 [c+1]，为前缀和让位
+  }
+  for(let c=1;c<=nCells;c++) gridStart[c]+=gridStart[c-1];   // 前缀和 → 每格 [start,end)
+  gridCursor.set(gridStart.subarray(0,nCells));
+  for(let i=0;i<n;i++){                  // 实际落桶（CSR 紧凑存放）
+    let cx=(px[i]/cs)|0, cy=(py[i]/cs)|0;
+    if(cx<0)cx=0;else if(cx>=cols)cx=cols-1;
+    if(cy<0)cy=0;else if(cy>=rows)cy=rows-1;
+    const c=cy*cols+cx; gridIdx[gridCursor[c]++]=i;
+  }
+}
+
+/* ===== 3. CPU 仿真步进（per-behavior 半径，O(N·邻居)） ===== */
+function cpuStep(){
+  const b=collectBehaviors();
+  const mat=b.mat, fr=b.fr;
+  const n=Math.min(G.count,MAXN);
+  const cs=grid.cell, cols=grid.cols, rows=grid.rows;
+  const mR2=b.mR*b.mR, aR2=b.aR*b.aR, cR2=b.cR*b.cR, rR2=b.rR*b.rR;
+  const maxR=cs, maxR2=maxR*maxR;
+  curCapVal=Math.max(30,Math.max(b.mR,b.aR,b.cR))*0.06;
+  const moActive=b.hasMouse && mouse.inside;
+  const mx=mouse.x, my=mouse.y;
+  const t=G.simTime*b.nSp;
+  function curl(x,y){
+    const a=Math.sin(x*b.nSc+t)*Math.cos(y*b.nSc*1.3 - t*0.7) + Math.sin((x+y)*b.nSc*0.6 + t*0.5);
+    return a*Math.PI;
+  }
+  let avx,avy,acx,acy;
+  if(b.hasAlign||b.hasCohere){
+    if(!window._avx){window._avx=new Float32Array(MAXN);window._avy=new Float32Array(MAXN);window._acx=new Float32Array(MAXN);window._acy=new Float32Array(MAXN);}
+    avx=window._avx;avy=window._avy;acx=window._acx;acy=window._acy;
+    avx.fill(0);avy.fill(0);acx.fill(0);acy.fill(0);
+  }
+  const cntA=new Int32Array(n), cntC=new Int32Array(n);
+  for(let i=0;i<n;i++){
+    const xi=px[i], yi=py[i], ti=sp[i];
+    let fxc=0, fyc=0;
+    const cx=(xi/cs)|0, cy=(yi/cs)|0;
+    for(let gy=cy-1;gy<=cy+1;gy++){
+      if(gy<0||gy>=rows)continue;
+      for(let gx=cx-1;gx<=cx+1;gx++){
+        if(gx<0||gx>=cols)continue;
+        const c0=gy*cols+gx, s=gridStart[c0], e=gridStart[c0+1];
+        for(let bk=s;bk<e;bk++){
+          const j=gridIdx[bk]; if(j===i)continue;
+          const dx=px[j]-xi, dy=py[j]-yi, d2=dx*dx+dy*dy;
+          if(d2<1e-6||d2>maxR2)continue;
+          const d=Math.sqrt(d2), ux=dx/d, uy=dy/d;
+          if(b.hasMatrix && mat){
+            const f=mat[ti][sp[j]];
+            if(f!==0){
+              let a;
+              if(f>0){ a = d<b.mR*0.5 ? f*(d/(b.mR*0.5)) : f*((b.mR-d)/b.mR); }
+              else { const f0=b.mR*0.2; a = d<f0 ? f*0.8 : f*((f0-d)/(b.mR-f0)); }
+              fxc+=ux*a; fyc+=uy*a;
+            }
+          }
+          if(b.hasRepel && d2<=rR2){ const a=(b.rR-d)/b.rR*b.rS; fxc-=ux*a; fyc-=uy*a; }
+          if(b.hasAlign && d2<=aR2){ avx[i]+=vx[j]; avy[i]+=vy[j]; cntA[i]++; }
+          if(b.hasCohere && d2<=cR2){ acx[i]+=px[j]; acy[i]+=py[j]; cntC[i]++; }
+        }
+      }
+    }
+    if(b.hasAlign && cntA[i]>0){ const dvx=avx[i]/cntA[i]-vx[i], dvy=avy[i]/cntA[i]-vy[i], m=Math.hypot(dvx,dvy)||1; fxc+=dvx/m*b.aS; fyc+=dvy/m*b.aS; }
+    if(b.hasCohere && cntC[i]>0){ const dxc=acx[i]/cntC[i]-xi, dyc=acy[i]/cntC[i]-yi, m=Math.hypot(dxc,dyc)||1; fxc+=dxc/m*b.cS; fyc+=dyc/m*b.cS; }
+    if(b.hasNoise && b.nAmp>0){ const ang=curl(xi,yi); fxc+=Math.cos(ang)*b.nAmp; fyc+=Math.sin(ang)*b.nAmp; }
+    if(moActive){
+      const dx=mx-xi, dy=my-yi, d=Math.hypot(dx,dy);
+      if(d<b.moR && d>0.5){
+        const ux=dx/d, uy=dy/d, w=(1-d/b.moR);
+        if(b.moMode==="attract"){ fxc+=ux*b.moS*w; fyc+=uy*b.moS*w; }
+        else if(b.moMode==="repel"){ fxc-=ux*b.moS*w; fyc-=uy*b.moS*w; }
+        else { fxc+=-uy*b.moS*w; fyc+=ux*b.moS*w; }
+      }
+    }
+    let nvx=vx[i]+fxc, nvy=vy[i]+fyc;
+    const damp=1-fr; nvx*=damp; nvy*=damp;
+    const sp2=nvx*nvx+nvy*nvy;
+    if(sp2>curCapVal*curCapVal){ const s=curCapVal/Math.sqrt(sp2); nvx*=s; nvy*=s; }
+    vx[i]=nvx; vy[i]=nvy;
+  }
+  for(let i=0;i<n;i++){
+    let x=px[i]+vx[i], y=py[i]+vy[i];
+    if(x<0)x+=W;else if(x>=W)x-=W; if(y<0)y+=H;else if(y>=H)y-=H;
+    px[i]=x; py[i]=y;
+  }
+  G.simTime+=FIXED_DT*G.timeScale;
+}
+
+/* ===== 3b. GPU 仿真步进（WebGL2 transform feedback，全配对并行） ===== */
+let gpuPhysicsReady=false, gpuActive=false, gpuErr="";
+let posTexSrc=null,posTexDst=null,spTex=null,physFboSrc=null,physFboDst=null,physVAO=null,progPhys=null;
+let gpuReadback=null, gpuUploadPos=null, gpuUploadSp=null, gpuMatArr=null, matUBO=null;
+let PHYS_16F=false, readIsHalf=false, readType=null, gpuReadbackH=null;   // A：物理状态纹理半精度标志 + 回读缓冲/类型
+function halfToFloat(h){ // IEEE754 binary16 → number（仅用于 16F 纹理回读解码）
+  const s=(h&0x8000)>>15, e=(h&0x7C00)>>10, f=h&0x03FF;
+  if(e===0) return (s?-1:1)*Math.pow(2,-14)*(f/1024);
+  if(e===31) return f?NaN:(s?-Infinity:Infinity);
+  return (s?-1:1)*Math.pow(2,e-15)*(1+f/1024);
+}
+let locP_pos,locP_sp,locP_N,locP_species,locP_mat,locP_hasMat,locP_hasDamp,locP_hasNoise,
+    locP_hasMouse,locP_hasRepel,locP_hasAlign,locP_hasCohere,locP_fr,locP_mR,locP_rR,locP_aR,locP_cR,
+    locP_rS,locP_aS,locP_cS,locP_mouseX,locP_mouseY,locP_mouseActive,locP_mouseMode,locP_mouseR,locP_mouseS,
+    locP_nAmp,locP_nSc,locP_nSp,locP_simTime,locP_W,locP_H,locP_cap,
+    locP_useGrid,locP_cs,locP_cols,locP_rows,locP_grid,locP_sortedPos,locP_sortedSp;
+let gridPosTex=null,gridSpTex=null,gridInfoTex=null;
+let gridStartArr=null,sortedPosArr=null,sortedSpArr=null;
+let gpuGridCols=0,gpuGridRows=0,gpuGridCell=30;
+// ===== B：GPU 内建网格（计数排序免 CPU 建桶）=====
+//   bitonic 排序把 (cellKey, origIndex) 按 cellKey 升序排好 → scatter 出 sortedPos/sortedSp → 单 pass 扫出 gridInfo。
+//   默认关（?gpuGrid=1 开启）；开启后由一次性校验守卫确认排序正确，失败则回退 CPU 路径（=21.7 现状）。
+let progCellKey=null,progBitonic=null,progScatter=null,progGridInfo=null;
+let locCK_pos,locCK_N,locCK_cols,locCK_rows,locCK_cs;
+let renderScale=1.0;            // H：动态分辨率——有效渲染缩放（×devicePixelRatio），FPS 低时下调减填充率
+const MIN_SCALE=0.5;
+let dynResOn=true;              // H：动态分辨率总开关（默认开；UI 复选框可关，关闭即锁定 1.0 原分辨率）
+let locB_N,locB_k,locB_j,locB_arr;
+let locSC_N,locSC_loopN,locSC_arr,locSC_pos,locSC_sp;
+let locGI_loopN,locGI_cols,locGI_rows,locGI_cs,locGI_sortedPos,locGI_vcols,locGI_vrows;
+let sortTexA=null,sortTexB=null,sortFboA=null,sortFboB=null,gridSortFbo=null,gridInfoFbo=null,sortVAO=null;
+let gpuGridUse=false, gpuGridVerified=false;   // gpuGridUse=true 时走 GPU 建桶；校验失败置 false 回退 CPU
+let lastSortedTex=null, lastSortedFbo=null;
+const SORT_SENTINEL=4000000.0;   // 填充粒子 cellKey 哨兵（远大于任何合法 cellKey≤65535）
+let locS_pos,locS_sp,locS_res,locS_baseSize,locS_cap,locS_palette,locS_chroma,locS_hue,locS_vignette;
+let paletteFlat=new Float32Array(48), _paletteTheme=null;
+function buildPaletteFlat(){
+  const pal=THEMES[G.theme]||THEMES.Neon;
+  for(let i=0;i<16;i++){ const c=pal[i%pal.length]; paletteFlat[i*3]=c[0]; paletteFlat[i*3+1]=c[1]; paletteFlat[i*3+2]=c[2]; }
+  _paletteTheme=G.theme;
+}
+// 物理改为 RTT（render-to-texture）：VS 仅做顶点定位（gl_VertexID→像素列），FS 完成全部力计算并写回状态纹理。
+// 状态全程驻留 GPU，彻底消除 transform feedback 的 getBufferSubData 同步回读。
+const VS_PHYS=`#version 300 es
+precision highp float;
+uniform int u_N;
+void main(){
+  float i=float(gl_VertexID);
+  gl_Position=vec4((i+0.5)/float(u_N)*2.0-1.0, 0.0, 0.0, 1.0);
+  gl_PointSize=1.0;   // GPGPU：状态纹理 1×n，每粒子=1 像素；不显式设 PointSize 时 ANGLE/D3D 不栅格化 → FBO 永不写入 → 粒子静止在原点
+}`;
+const FS_PHYS=`#version 300 es
+precision highp float;
+precision highp int;
+uniform sampler2D u_pos;
+uniform sampler2D u_sp;
+uniform sampler2D u_grid;        // 每网格(start,count,...)，按 (gx,gy) 索引
+uniform sampler2D u_sortedPos;   // (x,y,vx,vy) 按网格排序，长度 N
+uniform sampler2D u_sortedSp;    // sp 排序，长度 N
+uniform int u_N; uniform int u_species;
+layout(std140) uniform MatUBO { vec4 u_mat[13]; };   // D：49 矩阵项打包进 13×vec4(=52 浮点)，std140 天然对齐，逐位等价于原 float[49]
+uniform float u_hasMatrix,u_hasDamp,u_hasNoise,u_hasMouse,u_hasRepel,u_hasAlign,u_hasCohere;
+uniform float u_fr,u_mR,u_rR,u_aR,u_cR,u_rS,u_aS,u_cS;
+uniform float u_mouseX,u_mouseY,u_mouseActive,u_mouseMode,u_mouseR,u_mouseS;
+uniform float u_nAmp,u_nSc,u_nSp,u_simTime,u_W,u_H,u_cap;
+uniform int u_useGrid;
+uniform float u_cs; uniform int u_cols; uniform int u_rows;
+out vec4 o;
+void main(){
+  int i=int(gl_FragCoord.x+0.5);
+  vec4 me=texelFetch(u_pos,ivec2(i,0),0);
+  float spi=texelFetch(u_sp,ivec2(i,0),0).r;
+  vec2 xi=me.xy; vec2 vi=me.zw;
+  float maxR=max(max(u_mR,u_aR),u_cR); if(maxR<1.0)maxR=1.0;
+  float maxR2=maxR*maxR, mR2=u_mR*u_mR, aR2=u_aR*u_aR, cR2=u_cR*u_cR, rR2=u_rR*u_rR;
+  vec2 f=vec2(0.0); vec2 av=vec2(0.0),ac=vec2(0.0); float cntA=0.0,cntC=0.0;
+  if(u_useGrid==1){
+    int cx=int(floor(xi.x/u_cs)); int cy=int(floor(xi.y/u_cs));
+    if(cx<0)cx=0; else if(cx>=u_cols)cx=u_cols-1;
+    if(cy<0)cy=0; else if(cy>=u_rows)cy=u_rows-1;
+    for(int dy=-1;dy<=1;dy++){
+      int gy=cy+dy; if(gy<0||gy>=u_rows)continue;
+      for(int dx=-1;dx<=1;dx++){
+        int gx=cx+dx; if(gx<0||gx>=u_cols)continue;
+        vec2 gc=texelFetch(u_grid,ivec2(gx,gy),0).rg;
+        int start=int(gc.x); int count=int(gc.y);
+        for(int j=0;j<count;j++){
+          int idx=start+j;
+          vec4 ob=texelFetch(u_sortedPos,ivec2(idx,0),0);
+          vec2 d=ob.xy-xi; float d2=dot(d,d);
+          if(d2<1e-6)continue; if(d2>maxR2)continue;
+          float dist=sqrt(d2); vec2 uu=d/dist;
+          int spk=int(texelFetch(u_sortedSp,ivec2(idx,0),0).r);
+          if(u_hasMatrix>0.5 && d2<=mR2){
+            int _mi=int(spi)*u_species+spk; float fm=u_mat[_mi/4][_mi%4];   // D：vec4 打包索引（mi→[mi/4][mi%4] 逐位等价 float[mi]）
+            if(fm!=0.0){
+              float a;
+              if(fm>0.0){ a=dist<u_mR*0.5?fm*(dist/(u_mR*0.5)):fm*((u_mR-dist)/u_mR); }
+              else { float f0=u_mR*0.2; a=dist<f0?fm*0.8:fm*((f0-dist)/(u_mR-f0)); }
+              f+=uu*a;
+            }
+          }
+          if(u_hasRepel>0.5 && d2<=rR2){ float a=(u_rR-dist)/u_rR*u_rS; f-=uu*a; }
+          if(u_hasAlign>0.5 && d2<=aR2){ av+=ob.zw; cntA+=1.0; }
+          if(u_hasCohere>0.5 && d2<=cR2){ ac+=ob.xy; cntC+=1.0; }
+        }
+      }
+    }
+  } else {
+    for(int k=0;k<u_N;k++){
+      if(k==i)continue;
+      vec4 ob=texelFetch(u_pos,ivec2(k,0),0);
+      vec2 d=ob.xy-xi; float d2=dot(d,d);
+      if(d2<1e-6||d2>maxR2)continue;
+      float dist=sqrt(d2); vec2 uu=d/dist;
+      int spk=int(texelFetch(u_sp,ivec2(k,0),0).r);
+      if(u_hasMatrix>0.5 && d2<=mR2){
+        int _mi2=int(spi)*u_species+spk; float fm=u_mat[_mi2/4][_mi2%4];   // D：vec4 打包索引
+        if(fm!=0.0){
+          float a;
+          if(fm>0.0){ a=dist<u_mR*0.5?fm*(dist/(u_mR*0.5)):fm*((u_mR-dist)/u_mR); }
+          else { float f0=u_mR*0.2; a=dist<f0?fm*0.8:fm*((f0-dist)/(u_mR-f0)); }
+          f+=uu*a;
+        }
+      }
+      if(u_hasRepel>0.5 && d2<=rR2){ float a=(u_rR-dist)/u_rR*u_rS; f-=uu*a; }
+      if(u_hasAlign>0.5 && d2<=aR2){ av+=ob.zw; cntA+=1.0; }
+      if(u_hasCohere>0.5 && d2<=cR2){ ac+=ob.xy; cntC+=1.0; }
+    }
+  }
+  if(u_hasAlign>0.5 && cntA>0.0){ vec2 dv=av/cntA-vi; float m=length(dv); if(m>1e-4) f+=dv/m*u_aS; }
+  if(u_hasCohere>0.5 && cntC>0.0){ vec2 dc=ac/cntC-xi; float m=length(dc); if(m>1e-4) f+=dc/m*u_cS; }
+  if(u_hasNoise>0.5 && u_nAmp>0.0){
+    float ang=sin(xi.x*u_nSc+u_simTime*u_nSp)*cos(xi.y*u_nSc*1.3-u_simTime*u_nSp*0.7)+sin((xi.x+xi.y)*u_nSc*0.6+u_simTime*u_nSp*0.5);
+    ang*=3.14159265; f+=vec2(cos(ang),sin(ang))*u_nAmp;
+  }
+  if(u_hasMouse>0.5 && u_mouseActive>0.5){
+    vec2 dm=vec2(u_mouseX,u_mouseY)-xi; float dmag=length(dm);
+    if(dmag<u_mouseR && dmag>0.5){ vec2 uu=dm/dmag; float w=(1.0-dmag/u_mouseR);
+      if(u_mouseMode<0.5) f+=uu*u_mouseS*w;
+      else if(u_mouseMode<1.5) f-=uu*u_mouseS*w;
+      else f+=vec2(-uu.y,uu.x)*u_mouseS*w;
+    }
+  }
+  vec2 nv=vi+f; nv*=(1.0-u_fr);
+  float sp2=dot(nv,nv);
+  if(sp2>u_cap*u_cap){ float s=u_cap/sqrt(sp2); nv*=s; }
+  vec2 np=xi+nv;
+  if(np.x<0.0)np.x+=u_W; else if(np.x>=u_W)np.x-=u_W;
+  if(np.y<0.0)np.y+=u_H; else if(np.y>=u_H)np.y-=u_H;
+  o=vec4(np.x,np.y,nv.x,nv.y);
+}`;
+// ===== B：GPU 内建网格（计数排序免 CPU 建桶）=====
+// 顶点着色器：gl_VertexID → 1D 像素列定位（与 VS_PHYS 同构，GPGPU 状态纹理布局）
+const VS_SORT=`#version 300 es
+precision highp float;
+uniform int u_N;
+void main(){
+  float i=float(gl_VertexID);
+  gl_Position=vec4((i+0.5)/float(u_N)*2.0-1.0, 0.0, 0.0, 1.0);
+  gl_PointSize=1.0;
+}`;
+// 1) 初始化：每个粒子 i → (cellKey, origIndex)，填充粒子(i≥N) → 哨兵 key（排到末尾）
+const FS_CELLKEY=`#version 300 es
+precision highp float;
+uniform int u_N,u_cols,u_rows; uniform float u_cs; uniform sampler2D u_pos;
+out vec4 o;
+void main(){
+  int i=int(gl_FragCoord.x+0.5);
+  float key,oi;
+  if(i<u_N){ vec4 me=texelFetch(u_pos,ivec2(i,0),0);
+    float cx=clamp(floor(me.x/u_cs),0.0,float(u_cols-1));
+    float cy=clamp(floor(me.y/u_cs),0.0,float(u_rows-1));
+    key=cy*float(u_cols)+cx; oi=float(i);
+  } else { key=4000000.0; oi=float(i); }
+  o=vec4(key,oi,0.0,0.0);
+}`;
+// 2) bitonic 比较-交换：i 与 p=i^j 比较。方向由「低位 lo=min(i,p)」的 (lo&k) 决定（标准 bitonic 网络：
+//    同块内低位升序、高位降序；必须用 lo 判定，不可用 fragment 自身 i，否则同块高低位都判升序导致交换错乱）。
+//    低位取 min(升序)/max(降序)，高位取 max(升序)/min(降序)。texelFetch 读 (key,origIndex) 于 .x/.y
+const FS_BITONIC=`#version 300 es
+precision highp float;
+uniform int u_N,u_k,u_j; uniform sampler2D u_arr;
+out vec4 o;
+void main(){
+  int i=int(gl_FragCoord.x+0.5);
+  int p=i^u_j;
+  vec4 a=texelFetch(u_arr,ivec2(i,0),0);
+  vec4 b=texelFetch(u_arr,ivec2(p,0),0);
+  int lo = (i<p)? i : p;
+  int asc = ((lo & u_k)==0)?1:0;
+  bool takeA;
+  if(i==lo) takeA = (asc==1)? (a.x<=b.x) : (a.x>=b.x);   // 低位：升序取小 / 降序取大
+  else      takeA = (asc==1)? (a.x>=b.x) : (a.x<=b.x);   // 高位：升序取大 / 降序取小
+  o = takeA ? a : b;
+}`;
+// 3) scatter：sorted 位置 i 的 origIndex → 取 posTexSrc/spTex 写出 sortedPos/sortedSp（MRT 双附件）
+const FS_SCATTER=`#version 300 es
+precision highp float;
+uniform int u_N,u_loopN; uniform sampler2D u_arr,u_pos,u_sp;
+layout(location=0) out vec4 oPos;
+layout(location=1) out vec4 oSp;
+void main(){
+  int i=int(gl_FragCoord.x+0.5);
+  vec4 e=texelFetch(u_arr,ivec2(i,0),0);
+  int oi=int(e.y+0.5);
+  if(i<u_loopN){ oPos=texelFetch(u_pos,ivec2(oi,0),0); oSp=vec4(texelFetch(u_sp,ivec2(oi,0),0).r,0.0,0.0,0.0); }
+  else { oPos=vec4(0.0); oSp=vec4(0.0); }
+}`;
+// 4) gridInfo：对每个 cell c，单 pass 扫 sortedPos（长度 N）累计 start/count（O(N·cells)，cells 通常 <4096）
+//    VS_GRIDINFO 专用：把顶点 i 映射到 cell (gx,gy)=（i%cols, i/cols），使 fragCoord 直接等于格子坐标
+const VS_GRIDINFO=`#version 300 es
+precision highp float;
+uniform int u_cols,u_rows;
+void main(){
+  int i=gl_VertexID;
+  int gx=i%u_cols; int gy=i/u_cols;
+  gl_Position=vec4((float(gx)+0.5)/float(u_cols)*2.0-1.0, (float(gy)+0.5)/float(u_rows)*2.0-1.0, 0.0, 1.0);
+  gl_PointSize=1.0;
+}`;
+const FS_GRIDINFO=`#version 300 es
+precision highp float;
+uniform int u_loopN,u_cols,u_rows; uniform float u_cs; uniform sampler2D u_sortedPos;
+out vec4 o;
+void main(){
+  int gx=int(gl_FragCoord.x+0.5), gy=int(gl_FragCoord.y+0.5);
+  int c=gy*u_cols+gx;
+  int start=-1,count=0;
+  for(int idx=0; idx<u_loopN; idx++){
+    vec4 me=texelFetch(u_sortedPos,ivec2(idx,0),0);
+    float cx=clamp(floor(me.x/u_cs),0.0,float(u_cols-1));
+    float cy=clamp(floor(me.y/u_cs),0.0,float(u_rows-1));
+    int ck=int(cy*float(u_cols)+cx);
+    if(ck==c){ if(start<0)start=idx; count++; }
+  }
+  if(start<0) o=vec4(0.0,0.0,0.0,0.0);
+  else o=vec4(float(start),float(count),0.0,0.0);
+}`;
+function setupGPU(){
+  if(!GL_OK) return;
+  try{
+    if(!GL_FLOAT) throw new Error("需要 EXT_color_buffer_float 以承载浮点物理状态纹理");
+    // A：物理状态纹理优先用 RGBA16F（每帧 3 步 ×N×4 分量 + 异步回读带宽减半），不可用时退回 RGBA32F
+    (function(){ try{
+      const t=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,t);
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA16F,4,1,0,gl.RGBA,gl.HALF_FLOAT,null);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+      const f=gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER,f);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);
+      const ok=gl.checkFramebufferStatus(gl.FRAMEBUFFER)===gl.FRAMEBUFFER_COMPLETE;
+      let rok=false; if(ok){ try{ const tmp=new Uint16Array(4); gl.readPixels(0,0,1,1,gl.RGBA,gl.HALF_FLOAT,tmp); rok=true; }catch(e){ rok=false; } }
+      gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.deleteFramebuffer(f); gl.deleteTexture(t);
+      PHYS_16F=ok&&rok;
+    }catch(e){ PHYS_16F=false; } })();
+    function mkStateTex(){ const t=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,t);
+      gl.texImage2D(gl.TEXTURE_2D,0,PHYS_16F?gl.RGBA16F:gl.RGBA32F,MAXN,1,0,gl.RGBA,PHYS_16F?gl.HALF_FLOAT:gl.FLOAT,null);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE); return t; }
+    posTexSrc=mkStateTex(); posTexDst=mkStateTex();
+    spTex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,spTex);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.R32F,MAXN,1,0,gl.RED,gl.FLOAT,null);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+    function mkFbo(tex){ const f=gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER,f);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);
+      if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE) throw new Error("物理 FBO 不完整");
+      return f; }
+    physFboSrc=mkFbo(posTexSrc); physFboDst=mkFbo(posTexDst);
+    function mkGridTex(w,h){ const t=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,t);
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA32F,w,h,0,gl.RGBA,gl.FLOAT,null);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE); return t; }
+    gridPosTex=mkGridTex(MAXN,1);
+    gridSpTex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,gridSpTex);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.R32F,MAXN,1,0,gl.RED,gl.FLOAT,null);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+    gridInfoTex=mkGridTex(GRID_TEX_MAX,GRID_TEX_MAX);
+    gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+    physVAO=gl.createVertexArray();   // 空 VAO：物理由 gl_VertexID 定位，无需顶点属性
+    progPhys=gl.createProgram();
+    gl.attachShader(progPhys,compile(gl.VERTEX_SHADER,VS_PHYS));
+    gl.attachShader(progPhys,compile(gl.FRAGMENT_SHADER,FS_PHYS));
+    gl.linkProgram(progPhys);
+    if(!gl.getProgramParameter(progPhys,gl.LINK_STATUS)) throw new Error("phys link: "+gl.getProgramInfoLog(progPhys));
+    gl.useProgram(progPhys);
+    const L=n=>gl.getUniformLocation(progPhys,n);
+    locP_pos=L("u_pos"); locP_sp=L("u_sp"); locP_N=L("u_N"); locP_species=L("u_species"); locP_mat=L("u_mat[0]");
+    locP_hasMat=L("u_hasMatrix"); locP_hasDamp=L("u_hasDamp"); locP_hasNoise=L("u_hasNoise");
+    locP_hasMouse=L("u_hasMouse"); locP_hasRepel=L("u_hasRepel"); locP_hasAlign=L("u_hasAlign"); locP_hasCohere=L("u_hasCohere");
+    locP_fr=L("u_fr"); locP_mR=L("u_mR"); locP_rR=L("u_rR"); locP_aR=L("u_aR"); locP_cR=L("u_cR");
+    locP_rS=L("u_rS"); locP_aS=L("u_aS"); locP_cS=L("u_cS");
+    locP_mouseX=L("u_mouseX"); locP_mouseY=L("u_mouseY"); locP_mouseActive=L("u_mouseActive");
+    locP_mouseMode=L("u_mouseMode"); locP_mouseR=L("u_mouseR"); locP_mouseS=L("u_mouseS");
+    locP_nAmp=L("u_nAmp"); locP_nSc=L("u_nSc"); locP_nSp=L("u_nSp"); locP_simTime=L("u_simTime");
+    locP_W=L("u_W"); locP_H=L("u_H"); locP_cap=L("u_cap");
+    locP_useGrid=L("u_useGrid"); locP_cs=L("u_cs"); locP_cols=L("u_cols"); locP_rows=L("u_rows");
+    // D：吸引矩阵打包进 UBO（std140 vec4[13]），每帧一次 bufferSubData 替代 uniform1fv，减 uniform 位置查找与逐元素上传
+    matUBO=gl.createBuffer(); gl.bindBuffer(gl.UNIFORM_BUFFER,matUBO); gl.bufferData(gl.UNIFORM_BUFFER,52*4,gl.DYNAMIC_DRAW);
+    gl.bindBufferBase(gl.UNIFORM_BUFFER,0,matUBO);
+    { const _blk=gl.getUniformBlockIndex(progPhys,"MatUBO"); if(_blk!==gl.INVALID_INDEX) gl.uniformBlockBinding(progPhys,_blk,0); }
+    locP_grid=L("u_grid"); locP_sortedPos=L("u_sortedPos"); locP_sortedSp=L("u_sortedSp");
+    // ===== B：GPU 内建网格（计数排序免 CPU 建桶）纹理/FBO/program =====
+    // 独立 try/catch：B 初始化失败（如部分驱动 MRT FBO 不完整）只关 B，绝不连累主 GPU 物理路径（gpuPhysicsReady 保持 true）。
+    (function(){ try{
+      const mkF1=(w,internal,fmt,type)=>{ const t=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,t);
+        gl.texImage2D(gl.TEXTURE_2D,0,internal,w,1,0,fmt,type,null);
+        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE); return t; };
+      const mkF2=(w,h,internal,fmt,type)=>{ const t=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,t);
+        gl.texImage2D(gl.TEXTURE_2D,0,internal,w,h,0,fmt,type,null);
+        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE); return t; };
+      const mkFbo1=(tex)=>{ const f=gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER,f);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);
+        if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE) throw new Error("B sortFbo 不完整"); return f; };
+      sortTexA=mkF1(NP,gl.RGBA32F,gl.RGBA,gl.FLOAT); sortTexB=mkF1(NP,gl.RGBA32F,gl.RGBA,gl.FLOAT);
+      sortFboA=mkFbo1(sortTexA); sortFboB=mkFbo1(sortTexB);
+      // MRT：gridPosTex(RGBA32F)@0 + gridSpTex(R32F)@1
+      gridSortFbo=gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER,gridSortFbo);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,gridPosTex,0);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT1,gl.TEXTURE_2D,gridSpTex,0);
+      if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE) throw new Error("B gridSortFbo 不完整");
+      gl.drawBuffers([gl.COLOR_ATTACHMENT0,gl.COLOR_ATTACHMENT1]);
+      gridInfoFbo=mkFbo1(gridInfoTex);
+      gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+      sortVAO=gl.createVertexArray();
+      // programs
+      progCellKey=linkP(VS_SORT,FS_CELLKEY); progBitonic=linkP(VS_SORT,FS_BITONIC);
+      progScatter=linkP(VS_SORT,FS_SCATTER); progGridInfo=linkP(VS_GRIDINFO,FS_GRIDINFO);
+      locCK_pos=gl.getUniformLocation(progCellKey,"u_pos"); locCK_N=gl.getUniformLocation(progCellKey,"u_N");
+      locCK_cols=gl.getUniformLocation(progCellKey,"u_cols"); locCK_rows=gl.getUniformLocation(progCellKey,"u_rows"); locCK_cs=gl.getUniformLocation(progCellKey,"u_cs");
+      locB_N=gl.getUniformLocation(progBitonic,"u_N"); locB_k=gl.getUniformLocation(progBitonic,"u_k"); locB_j=gl.getUniformLocation(progBitonic,"u_j"); locB_arr=gl.getUniformLocation(progBitonic,"u_arr");
+      locSC_N=gl.getUniformLocation(progScatter,"u_N"); locSC_loopN=gl.getUniformLocation(progScatter,"u_loopN"); locSC_arr=gl.getUniformLocation(progScatter,"u_arr"); locSC_pos=gl.getUniformLocation(progScatter,"u_pos"); locSC_sp=gl.getUniformLocation(progScatter,"u_sp");
+      locGI_loopN=gl.getUniformLocation(progGridInfo,"u_loopN"); locGI_cols=gl.getUniformLocation(progGridInfo,"u_cols"); locGI_rows=gl.getUniformLocation(progGridInfo,"u_rows"); locGI_cs=gl.getUniformLocation(progGridInfo,"u_cs"); locGI_sortedPos=gl.getUniformLocation(progGridInfo,"u_sortedPos");
+      locGI_vcols=gl.getUniformLocation(progGridInfo,"u_cols"); locGI_vrows=gl.getUniformLocation(progGridInfo,"u_rows");
+      gpuGridReady=true;   // B program 全部链接成功
+      }catch(eB){ gpuGridErr=String(eB&&eB.message||eB); gpuGridReady=false; console.warn("B GPU-grid 初始化失败，回退 CPU 建桶（主 GPU 物理保留）：",eB); }
+    })();
+    gpuUploadPos=new Float32Array(MAXN*4);
+    gpuUploadSp=new Float32Array(MAXN);
+    gpuMatArr=new Float32Array(52);       // D：13×vec4=52 浮点（覆盖 49 矩阵项，末 3 个填充 0）
+    gpuReadback=new Float32Array(MAXN*4); gpuReadbackH=new Uint16Array(MAXN*4);
+    readType=PHYS_16F?gl.HALF_FLOAT:gl.FLOAT; readIsHalf=PHYS_16F;
+    gridStartArr=new Float32Array(GRID_TEX_MAX*GRID_TEX_MAX*4);
+    sortedPosArr=new Float32Array(MAXN*4);
+    sortedSpArr=new Float32Array(MAXN);
+    gpuPhysicsReady=true;
+  }catch(e){ gpuErr=String(e&&e.message||e); console.warn("GPU physics unavailable, fallback to CPU:",e); gpuPhysicsReady=false; }
+}
+// 混合空间网格：CPU 每帧建桶（O(N)）+ 上传网格纹理（O(N)），GPU 仅 gather 3×3 邻格（O(N·k)）。
+// 替代原 GPU O(N²) 暴力全配对，把每帧迭代从 N² 降到 N·k。WebGL2 无 atomic，故「建桶」放 CPU。
+function buildGpuGrid(b){
+  buildGrid();                         // 复用 CPU 网格桶划分
+  const cs=grid.cell, cols=grid.cols, rows=grid.rows;
+  if(cols>GRID_TEX_MAX||rows>GRID_TEX_MAX) return false;
+  gpuGridCols=cols; gpuGridRows=rows; gpuGridCell=cs;
+  const n=Math.min(G.count,MAXN);
+  const nCells=cols*rows;
+  for(let c=0;c<nCells;c++){            // 直接复用 buildGrid 的 CSR 前缀和，避免重复建桶
+    const s=gridStart[c], e=gridStart[c+1];
+    gridStartArr[c*4]=s; gridStartArr[c*4+1]=e-s;   // 上传 [start,count]，GPU 据此 gather 3×3 邻格
+    for(let idx=s;idx<e;idx++){
+      const k=gridIdx[idx];
+      sortedPosArr[idx*4]=px[k]; sortedPosArr[idx*4+1]=py[k]; sortedPosArr[idx*4+2]=vx[k]; sortedPosArr[idx*4+3]=vy[k];
+      sortedSpArr[idx]=sp[k];
+    }
+  }
+  gl.bindTexture(gl.TEXTURE_2D,gridPosTex); gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,n,1,gl.RGBA,gl.FLOAT,sortedPosArr.subarray(0,n*4));
+  gl.bindTexture(gl.TEXTURE_2D,gridSpTex); gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,n,1,gl.RED,gl.FLOAT,sortedSpArr.subarray(0,n));
+  gl.bindTexture(gl.TEXTURE_2D,gridInfoTex); gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,cols,rows,gl.RGBA,gl.FLOAT,gridStartArr.subarray(0,nCells*4));
+  return true;
+}
+// ===== B：GPU 内建网格（计数排序免 CPU 建桶）=====
+// 在 GPU 上完成 cellKey 生成 → bitonic 排序 → scatter(出 sortedPos/sortedSp) → gridInfo 扫描，
+// 彻底免去 CPU buildGrid + 192KB sortedPos 上传 + 48KB gridInfo 上传（仅保留 96KB 异步回读以保 px/py 新鲜供连线/诊断）。
+function runBitonic(){
+  gl.useProgram(progBitonic);
+  gl.bindVertexArray(sortVAO);
+  gl.disable(gl.BLEND);
+  gl.uniform1i(locB_N,NP);
+  let src=sortTexA, dst=sortTexB, dstFbo=sortFboB;
+  for(let k=2;k<=NP;k<<=1){
+    for(let j=k>>1;j>0;j>>=1){
+      gl.bindFramebuffer(gl.FRAMEBUFFER,dstFbo);
+      gl.viewport(0,0,NP,1);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,src); gl.uniform1i(locB_arr,0);
+      gl.uniform1i(locB_k,k); gl.uniform1i(locB_j,j);
+      gl.drawArrays(gl.POINTS,0,NP);
+      const t=src; src=dst; dst=t; const tf=dstFbo; dstFbo=(tf===sortFboA)?sortFboB:sortFboA;  // ping-pong
+    }
+  }
+  return src;   // 最终排好序的纹理
+}
+function buildGpuGridGPU(b){
+  const cs=activeRadii(b);
+  const cols=Math.max(1,Math.ceil(W/cs)), rows=Math.max(1,Math.ceil(H/cs));
+  if(cols>GRID_TEX_MAX||rows>GRID_TEX_MAX||cols*rows>4096) return false;   // 单元过多时 gridInfo 单 pass 扫描过贵 → 回退 CPU
+  gpuGridCols=cols; gpuGridRows=rows; gpuGridCell=cs;
+  const n=Math.min(G.count,MAXN);
+  // 1) cellKey 初始化（含填充粒子哨兵）
+  gl.useProgram(progCellKey);
+  gl.bindVertexArray(sortVAO);
+  gl.disable(gl.BLEND);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,sortFboA);
+  gl.viewport(0,0,NP,1);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,posTexSrc); gl.uniform1i(locCK_pos,0);
+  gl.uniform1i(locCK_N,NP); gl.uniform1i(locCK_cols,cols); gl.uniform1i(locCK_rows,rows); gl.uniform1f(locCK_cs,cs);
+  gl.drawArrays(gl.POINTS,0,NP);
+  // 2) bitonic 排序 → sorted
+  const sorted=runBitonic();
+  lastSortedTex=sorted; lastSortedFbo=(sorted===sortTexA)?sortFboA:sortFboB;
+  // 3) scatter → gridPosTex / gridSpTex（MRT）
+  gl.useProgram(progScatter);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,gridSortFbo);
+  gl.viewport(0,0,NP,1);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,sorted); gl.uniform1i(locSC_arr,0);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,posTexSrc); gl.uniform1i(locSC_pos,1);
+  gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D,spTex); gl.uniform1i(locSC_sp,2);
+  gl.uniform1i(locSC_N,NP); gl.uniform1i(locSC_loopN,n);
+  gl.drawArrays(gl.POINTS,0,NP);
+  // 恢复单附件（避免影响后续绘制）
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  // 4) gridInfo：单 pass 扫 sortedPos（长度 N）累计每格 start/count
+  gl.useProgram(progGridInfo);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,gridInfoFbo);
+  gl.viewport(0,0,cols,rows);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,gridPosTex); gl.uniform1i(locGI_sortedPos,0);
+  gl.uniform1i(locGI_loopN,n); gl.uniform1i(locGI_cols,cols); gl.uniform1i(locGI_rows,rows); gl.uniform1f(locGI_cs,cs);
+  gl.uniform1i(locGI_vcols,cols); gl.uniform1i(locGI_vrows,rows);   // VS_GRIDINFO 2D 顶点定位
+  gl.drawArrays(gl.POINTS,0,cols*rows);
+  gl.bindVertexArray(null);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  return true;
+}
+// 一次性校验：排序后 (cellKey 升序 && origIndex 是 0..N-1 的合法排列)。bitonic 是确定性算法，一次通过即永久信任。
+function verifyGpuGrid(){
+  try{
+    const b=collectBehaviors();
+    if(!buildGpuGridGPU(b)) return false;
+    const n=Math.min(G.count,MAXN);
+    const buf=new Float32Array(n*4);
+    gl.bindFramebuffer(gl.FRAMEBUFFER,lastSortedFbo);
+    gl.readPixels(0,0,n,1,gl.RGBA,gl.FLOAT,buf);
+    gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+    let prev=-1,sum=0,minI=1e9,maxI=-1,mono=true;
+    for(let i=0;i<n;i++){
+      const key=buf[i*4], oi=Math.round(buf[i*4+1]);
+      if(key<prev-0.5){ mono=false; break; } prev=key;
+      sum+=oi; if(oi<minI)minI=oi; if(oi>maxI)maxI=oi;
+    }
+    const expect=n*(n-1)/2;
+    return mono && sum===expect && minI===0 && maxI===n-1;
+  }catch(e){ return false; }
+}
+function gpuStep(){
+  const n=Math.min(G.count,MAXN);
+  const b=collectBehaviors();
+  // B 免回读：连线关闭时无 CPU 端 px/py 消费方（鼠标力走 uniform、渲染走 GPU 纹理、诊断不依赖 px/py），
+  // 故跳过回读→GPU 模式真正零回读；连线开启时每帧同步回读 px/py（连线需 CPU 坐标绘制）。
+  // 先前用异步 PBO 回读（readbackGPUAsync）：其 fence(clientWaitSync) 在部分 GPU/driver 上始终不就绪
+  // (TIMEOUT_EXPIRED) → px/py 冻结于首帧 syncReadback 值 → 连线不随粒子运动。改用确定的每帧 syncReadback
+  // （仅连线开启时付出一次同步 readPixels 开销），保证连线正确跟随粒子，且不触碰 A 项的物理状态纹理上传 PBO 优化。
+  if(G.links){ syncReadback(); }
+  // B：gpuGridUse 时建桶全在 GPU（免 CPU 建桶 + 192KB sortedPos/48KB gridInfo 上传）；否则走 CPU 建桶
+  let gridOK;
+  if(gpuGridUse){ gridOK=buildGpuGridGPU(b); if(!gridOK) gpuGridUse=false; }   // 单元过多等异常 → 回退 CPU
+  if(!gpuGridUse) gridOK=buildGpuGrid(b);
+  curCapVal=Math.max(30,Math.max(b.mR,b.aR,b.cR))*0.06;
+  const nn=b.mat?b.mat.length:0;
+  gpuMatArr.fill(0);
+  if(b.hasMatrix && b.mat){ for(let i=0;i<nn;i++)for(let j=0;j<nn;j++) gpuMatArr[i*nn+j]=b.mat[i][j]; }
+  gl.bindFramebuffer(gl.FRAMEBUFFER,physFboDst);
+  gl.viewport(0,0,n,1);
+  gl.disable(gl.BLEND);
+  gl.useProgram(progPhys);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,posTexSrc); gl.uniform1i(locP_pos,0);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,spTex); gl.uniform1i(locP_sp,1);
+  gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D,gridInfoTex); gl.uniform1i(locP_grid,2);
+  gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D,gridPosTex); gl.uniform1i(locP_sortedPos,3);
+  gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D,gridSpTex); gl.uniform1i(locP_sortedSp,4);
+  gl.uniform1i(locP_N,n); gl.uniform1i(locP_species,nn);
+  gl.bindBuffer(gl.UNIFORM_BUFFER,matUBO); gl.bufferSubData(gl.UNIFORM_BUFFER,0,gpuMatArr); gl.bindBufferBase(gl.UNIFORM_BUFFER,0,matUBO);   // D：矩阵 UBO 更新
+  gl.uniform1f(locP_hasMat,b.hasMatrix?1:0); gl.uniform1f(locP_hasDamp,b.hasDamp?1:0); gl.uniform1f(locP_hasNoise,b.hasNoise?1:0);
+  gl.uniform1f(locP_hasMouse,b.hasMouse?1:0); gl.uniform1f(locP_hasRepel,b.hasRepel?1:0); gl.uniform1f(locP_hasAlign,b.hasAlign?1:0); gl.uniform1f(locP_hasCohere,b.hasCohere?1:0);
+  gl.uniform1f(locP_fr,b.fr); gl.uniform1f(locP_mR,b.mR); gl.uniform1f(locP_rR,b.rR); gl.uniform1f(locP_aR,b.aR); gl.uniform1f(locP_cR,b.cR);
+  gl.uniform1f(locP_rS,b.rS); gl.uniform1f(locP_aS,b.aS); gl.uniform1f(locP_cS,b.cS);
+  gl.uniform1f(locP_mouseX,mouse.x); gl.uniform1f(locP_mouseY,mouse.y); gl.uniform1f(locP_mouseActive,(b.hasMouse&&mouse.inside)?1:0);
+  gl.uniform1f(locP_mouseMode,b.moMode==="attract"?0:b.moMode==="repel"?1:2); gl.uniform1f(locP_mouseR,b.moR); gl.uniform1f(locP_mouseS,b.moS);
+  gl.uniform1f(locP_nAmp,b.nAmp); gl.uniform1f(locP_nSc,b.nSc); gl.uniform1f(locP_nSp,b.nSp); gl.uniform1f(locP_simTime,G.simTime);
+  gl.uniform1f(locP_W,W); gl.uniform1f(locP_H,H);   gl.uniform1f(locP_cap,curCapVal);
+  gl.uniform1i(locP_useGrid, gridOK?1:0);   // 网格 O(N·k) gather；建桶失败自动回退暴力 O(N²)
+  gl.uniform1f(locP_cs, gpuGridCell);
+  gl.uniform1i(locP_cols, gpuGridCols);
+  gl.uniform1i(locP_rows, gpuGridRows);
+  gl.bindVertexArray(physVAO);
+  gl.drawArrays(gl.POINTS,0,n);
+  gl.bindVertexArray(null);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  // ping-pong 交换：下一帧读最新、写旧缓冲（状态全程驻留 GPU，零回读，无管线停顿）
+  const t1=posTexSrc; posTexSrc=posTexDst; posTexDst=t1;
+  const t2=physFboSrc; physFboSrc=physFboDst; physFboDst=t2;
+  G.simTime+=FIXED_DT*G.timeScale;
+}
+// 把 GPU 上的粒子状态回读到 CPU 数组（后端切换 / 降级前调用，避免状态跳变）
+function readbackGPUState(){
+  if(!gpuPhysicsReady||!GL_OK) return;
+  const rn=Math.min(G.count,MAXN);
+  try{
+    gl.bindFramebuffer(gl.FRAMEBUFFER,physFboSrc);
+    if(readIsHalf){ gl.readPixels(0,0,rn,1,gl.RGBA,gl.HALF_FLOAT,gpuReadbackH); for(let i=0;i<rn;i++){const o=i*4; px[i]=halfToFloat(gpuReadbackH[o]); py[i]=halfToFloat(gpuReadbackH[o+1]); vx[i]=halfToFloat(gpuReadbackH[o+2]); vy[i]=halfToFloat(gpuReadbackH[o+3]);} }
+    else { gl.readPixels(0,0,rn,1,gl.RGBA,gl.FLOAT,gpuReadback); for(let i=0;i<rn;i++){const o=i*4; px[i]=gpuReadback[o]; py[i]=gpuReadback[o+1]; vx[i]=gpuReadback[o+2]; vy[i]=gpuReadback[o+3];} }
+    gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  }catch(e){}
+}
+// 【已弃用】异步 PBO 回读：原用于把 GPU 状态坐标取回 CPU 供连线绘制。
+// 但其 fence(clientWaitSync) 在部分 GPU/driver 上始终不就绪(TIMEOUT_EXPIRED) → px/py 冻结于首帧 → 连线不随粒子运动。
+// 连线路径已改回每帧确定的 syncReadback（见 gpuStep L1148）。此函数保留但不再被调用。
+let _pboList=null, _pboFence=[null,null], _pboWrite=0, _pboReady=false, gpuReadbackMode="无";
+function _initPBO(){
+  try{
+    if(!gl.fenceSync) return false;
+    _pboList=[gl.createBuffer(),gl.createBuffer()];
+    for(const b of _pboList){ gl.bindBuffer(gl.PIXEL_PACK_BUFFER,b); gl.bufferData(gl.PIXEL_PACK_BUFFER,MAXN*16,gl.STREAM_READ); }
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER,null);
+    return true;
+  }catch(e){ return false; }
+}
+function readbackGPUAsync(){
+  const n=Math.min(G.count,MAXN);
+  if(!_pboReady){ _pboReady=_initPBO(); if(!_pboReady){ gpuReadbackMode="同步"; syncReadback(); return; } }
+  const readBuf=1-_pboWrite;
+  // 1) 若上一帧写入的 buffer 已就绪，取回坐标（非阻塞：先查 fence，未就绪则沿用旧坐标）
+  if(_pboFence[readBuf]){
+    const st=gl.clientWaitSync(_pboFence[readBuf],0,0);
+    if(st===gl.ALREADY_SIGNALED||st===gl.CONDITION_SATISFIED){
+      gl.bindBuffer(gl.PIXEL_PACK_BUFFER,_pboList[readBuf]);
+      if(readIsHalf) gl.getBufferSubData(gl.PIXEL_PACK_BUFFER,0,gpuReadbackH.subarray(0,n*4));
+      else gl.getBufferSubData(gl.PIXEL_PACK_BUFFER,0,gpuReadback.subarray(0,n*4));
+      gl.bindBuffer(gl.PIXEL_PACK_BUFFER,null);
+      if(readIsHalf){ for(let i=0;i<n;i++){const o=i*4; px[i]=halfToFloat(gpuReadbackH[o]); py[i]=halfToFloat(gpuReadbackH[o+1]); vx[i]=halfToFloat(gpuReadbackH[o+2]); vy[i]=halfToFloat(gpuReadbackH[o+3]);} }
+      else { for(let i=0;i<n;i++){const o=i*4; px[i]=gpuReadback[o]; py[i]=gpuReadback[o+1]; vx[i]=gpuReadback[o+2]; vy[i]=gpuReadback[o+3];} }
+    }
+  }
+  // 2) 把当前最新状态异步读入写 buffer（不等待），下一帧再消费
+  gl.bindBuffer(gl.PIXEL_PACK_BUFFER,_pboList[_pboWrite]);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,physFboSrc);
+  gl.readPixels(0,0,n,1,gl.RGBA,readType,0);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  if(_pboFence[_pboWrite]) gl.deleteSync(_pboFence[_pboWrite]);
+  _pboFence[_pboWrite]=gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE,0);
+  gl.bindBuffer(gl.PIXEL_PACK_BUFFER,null);
+  _pboWrite=readBuf;
+  gpuReadbackMode=readIsHalf?"PBO异步(16F)":"PBO异步";
+}
+function syncReadback(){
+  const n=Math.min(G.count,MAXN);
+  gpuReadbackMode="同步"+(PHYS_16F?" ·16F":"");
+  try{
+    gl.bindFramebuffer(gl.FRAMEBUFFER,physFboSrc);
+    if(readIsHalf){ gl.readPixels(0,0,n,1,gl.RGBA,gl.HALF_FLOAT,gpuReadbackH); for(let i=0;i<n;i++){const o=i*4; px[i]=halfToFloat(gpuReadbackH[o]); py[i]=halfToFloat(gpuReadbackH[o+1]); vx[i]=halfToFloat(gpuReadbackH[o+2]); vy[i]=halfToFloat(gpuReadbackH[o+3]);} }
+    else { gl.readPixels(0,0,n,1,gl.RGBA,gl.FLOAT,gpuReadback); for(let i=0;i<n;i++){const o=i*4; px[i]=gpuReadback[o]; py[i]=gpuReadback[o+1]; vx[i]=gpuReadback[o+2]; vy[i]=gpuReadback[o+3];} }
+    gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  }catch(e){}
+}
+function step(){
+  if(gpuActive && gpuPhysicsReady) gpuStep();
+  else cpuStep();
+}
+function autoMorph(){
+  const mNode=nodes.find(z=>z.type==="matrix"); if(!mNode)return;
+  const m=mNode.params.m, nn=m.length;
+  if(Math.random()<0.04){
+    const i=(Math.random()*nn)|0, j=(Math.random()*nn)|0;
+    m[i][j]=Math.max(-1,Math.min(1,m[i][j]+(Math.random()*0.5-0.25)));
+    renderMatrixCell(mNode,i,j);
+  }
+}
+
+/* ===== 4. WebGL2 渲染 ===== */
+const canvas=document.getElementById("gl");
+const errEl=document.getElementById("err");
+let gl=canvas.getContext("webgl2",{antialias:false,alpha:true,premultipliedAlpha:false,preserveDrawingBuffer:true});
+let GL_OK=!!gl, GL_FLOAT=false, ctx2=null, CTX2D=false, gl2d=null, glFrames=0;
+
+let progScene,progFade,progBlur,progComp,progLink,quadVAO,instVAO,instVBO,instCount=0;
+let linkVBO=null,linkVAO=null; const LINK_CAP=16000;   // 连线顶点上限（最多 8000 条），防止极端密度下几何爆炸
+let fboScene,texScene,fboA,texA,fboB,texB;
+
+function compile(type,src){ const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){ const log=gl.getShaderInfoLog(s); console.error('[shader]',log); throw new Error("shader: "+log); } return s; }
+function linkP(vs,fs){ const p=gl.createProgram(); gl.attachShader(p,compile(gl.VERTEX_SHADER,vs)); gl.attachShader(p,compile(gl.FRAGMENT_SHADER,fs)); gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS)){ const log=gl.getProgramInfoLog(p); console.error('[link]',log); throw new Error("link: "+log); } return p; }
+
+const VS_SCENE=`#version 300 es
+layout(location=0) in vec2 a_corner;
+uniform sampler2D u_pos;
+uniform sampler2D u_sp;
+uniform vec2 u_res;
+uniform float u_baseSize;
+uniform float u_cap;
+uniform vec3 u_palette[16];
+out vec2 v_local; out vec3 v_color; out float v_bri;
+void main(){
+  int id=gl_InstanceID;
+  vec4 st=texelFetch(u_pos, ivec2(id,0),0);
+  int spi=int(texelFetch(u_sp, ivec2(id,0),0).r)%16;
+  vec2 c=st.xy*2.0/u_res-1.0; c.y=-c.y;
+  float spd=length(st.zw);
+  float k=clamp(spd/u_cap,0.0,1.0);
+  float sz=u_baseSize*(0.7+k*0.9);
+  vec2 corner=c+a_corner*(sz/u_res)*2.0;
+  gl_Position=vec4(corner,0.0,1.0);
+  v_local=a_corner; v_color=u_palette[spi]; v_bri=0.3+k*0.9;
+}`;
+const FS_SCENE=`#version 300 es
+precision highp float;
+in vec2 v_local; in vec3 v_color; in float v_bri;
+out vec4 o;
+void main(){
+  float d=length(v_local);
+  float a=smoothstep(1.0,0.0,d);
+  float glow=a*a;
+  vec3 col=v_color*glow*(0.6+v_bri*0.9);
+  float hot=pow(v_bri,2.0);            // 速度越快 → 白热星核，呈彗星/星尘感
+  col+=vec3(1.0)*hot*0.7;
+  o=vec4(col*glow*0.55, glow*0.55);   // 单颗更透：密集区靠加色叠加显色，避免整团过曝白
+}`;
+const VS_QUAD=`#version 300 es
+layout(location=0) in vec2 a_pos;
+out vec2 v_uv;
+void main(){ v_uv=a_pos*0.5+0.5; gl_Position=vec4(a_pos,0.0,1.0); }`;
+const FS_FADE=`#version 300 es
+precision highp float;
+out vec4 o;
+uniform float u_fade;
+void main(){ o=vec4(0.0,0.0,0.0,u_fade); }`;
+const FS_BLUR=`#version 300 es
+precision highp float;
+in vec2 v_uv; out vec4 o;
+uniform sampler2D u_tex; uniform vec2 u_dir; uniform vec2 u_res;
+void main(){
+  vec2 px=u_dir/u_res;
+  float w[5]=float[](0.227,0.194,0.121,0.054,0.016);
+  vec4 c=texture(u_tex,v_uv)*w[0];
+  for(int i=1;i<5;i++){ c+=texture(u_tex,v_uv+px*float(i))*w[i]; c+=texture(u_tex,v_uv-px*float(i))*w[i]; }
+  o=c;
+}`;
+const FS_COMP=`#version 300 es
+precision highp float;
+in vec2 v_uv; out vec4 o;
+uniform sampler2D u_scene; uniform sampler2D u_bloom;
+uniform float u_bloomStr; uniform float u_glow;
+uniform float u_exposure; uniform float u_core; uniform float u_bloomThresh;
+uniform float u_chroma; uniform float u_hue; uniform float u_vignette;
+vec3 hueRotate(vec3 c, float a){
+  const vec3 k=vec3(0.57735026);
+  float ca=cos(a);
+  return c*ca + cross(k,c)*sin(a) + k*dot(k,c)*(1.0-ca);
+}
+void main(){
+  // 径向色散（棱镜边光）：中心无色偏，边角按半径拉伸 RGB；u_chroma=0 时完全关闭
+  vec2 dir=v_uv-0.5; float rr=length(dir);
+  vec2 off=dir*(0.0024*u_chroma*rr);
+  vec3 s;
+  s.r=texture(u_scene,v_uv+off).r;
+  s.g=texture(u_scene,v_uv).g;
+  s.b=texture(u_scene,v_uv-off).b;
+  vec3 b=texture(u_bloom,v_uv).rgb;
+  vec3 bSoft=max(b-u_bloomThresh,vec3(0.0));        // 软阈值：只有亮处才泛光，避免整团泛白
+  vec3 base=s*(1.0+u_glow*0.3)+bSoft*u_bloomStr;
+  float l=max(base.r,max(base.g,base.b));
+  vec3 hue=(l>1e-4)? base/l : vec3(0.0);            // 色相保留：密集区保持颜色方向
+  float v=1.0-exp(-l*u_exposure);                    // 仅对亮度压缩，不冲掉颜色
+  vec3 col=hue*v;
+  col+=vec3(1.0-v)*u_core*smoothstep(1.5,6.0,l);    // 仅极高密度加白核高光，呈星核感
+  col=pow(col,vec3(0.9));
+  col=hueRotate(col, u_hue);                          // P2：全局色相旋转（弧度）
+  // 暗角：u_vignette=0 时关闭，避免不需要时压暗边角
+  vec2 q=v_uv*2.0-1.0;
+  float vig=smoothstep(1.45,0.25,length(q));
+  col*=mix(mix(1.0,0.5,u_vignette),1.0,vig);
+  // 暗区透明，透出底层星云背景
+  float a=clamp(max(col.r,max(col.g,col.b))*1.25,0.0,1.0);
+  o=vec4(col,a);
+}`;
+
+const VS_LINK=`#version 300 es
+layout(location=0) in vec2 a_pos; layout(location=1) in vec3 a_col;
+uniform vec2 u_res; out vec3 v_col;
+void main(){ vec2 c=a_pos/u_res*2.0-1.0; c.y=-c.y; gl_Position=vec4(c,0.0,1.0); v_col=a_col; }`;
+const FS_LINK=`#version 300 es
+precision highp float; in vec3 v_col; out vec4 o; uniform float u_alpha;
+void main(){ o=vec4(v_col*u_alpha, u_alpha); }`;
+function makeFBO(w,h){
+  const tex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,tex);
+  const ifmt=GL_FLOAT?gl.RGBA16F:gl.RGBA8, typ=GL_FLOAT?gl.HALF_FLOAT:gl.UNSIGNED_BYTE;
+  gl.texImage2D(gl.TEXTURE_2D,0,ifmt,w,h,0,gl.RGBA,typ,null);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  const fbo=gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER,fbo);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  return {fbo,tex,w,h};
+}
+function setupGL(){
+  if(!GL_OK) return;
+  try{
+    GL_FLOAT=!!gl.getExtension('EXT_color_buffer_float');
+    progScene=linkP(VS_SCENE,FS_SCENE);
+    locS_pos=gl.getUniformLocation(progScene,"u_pos");
+    locS_sp=gl.getUniformLocation(progScene,"u_sp");
+    locS_res=gl.getUniformLocation(progScene,"u_res");
+    locS_baseSize=gl.getUniformLocation(progScene,"u_baseSize");
+    locS_cap=gl.getUniformLocation(progScene,"u_cap");
+    locS_palette=gl.getUniformLocation(progScene,"u_palette");
+    locS_chroma=gl.getUniformLocation(progScene,"u_chroma");
+    locS_hue=gl.getUniformLocation(progScene,"u_hue");
+    locS_vignette=gl.getUniformLocation(progScene,"u_vignette");
+    progFade=linkP(VS_QUAD,FS_FADE);
+    progBlur=linkP(VS_QUAD,FS_BLUR);
+    progComp=linkP(VS_QUAD,FS_COMP);
+    progLink=linkP(VS_LINK,FS_LINK);
+    linkVBO=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,linkVBO); gl.bufferData(gl.ARRAY_BUFFER,LINK_CAP*5*4,gl.DYNAMIC_DRAW);
+    linkVAO=gl.createVertexArray(); gl.bindVertexArray(linkVAO);
+    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,20,0);
+    gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1,3,gl.FLOAT,false,20,8);
+    gl.bindVertexArray(null); gl.bindBuffer(gl.ARRAY_BUFFER,null);
+  }catch(e){ GL_OK=false; errEl.style.display="flex"; errEl.textContent="着色器编译失败："+e.message; return; }
+  const qb=new Float32Array([-1,-1,1,-1,-1,1,1,1]);
+  quadVAO=gl.createVertexArray(); gl.bindVertexArray(quadVAO);
+  const qvbo=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,qvbo);
+  gl.bufferData(gl.ARRAY_BUFFER,qb,gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+  instVAO=gl.createVertexArray(); gl.bindVertexArray(instVAO);
+  // 单位四边形角点（location 0）挂到 instVAO；粒子状态改由 VS_SCENE 直接从 GPU 状态纹理采样，不再需要实例属性缓冲
+  gl.bindBuffer(gl.ARRAY_BUFFER,qvbo);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0); gl.vertexAttribDivisor(0,0);
+  gl.bindVertexArray(null); gl.bindBuffer(gl.ARRAY_BUFFER,null);
+  resizeGL();
+}
+function resizeGL(){
+  if(appEl.classList.contains("stage-hidden")) return;  // 展示台收起时不重置画布尺寸，避免 0 尺寸缓冲
+  W=Math.floor(stage.clientWidth); H=Math.floor(stage.clientHeight);
+  if(!GL_OK){ if(CTX2D){ gl2d.width=W; gl2d.height=H; gl2d.style.width=W+"px"; gl2d.style.height=H+"px"; } return; }
+  const baseDpr=Math.min(window.devicePixelRatio||1,2);
+  const eff=baseDpr*renderScale;
+  canvas.width=Math.max(1,Math.round(W*eff)); canvas.height=Math.max(1,Math.round(H*eff)); canvas.style.width=W+"px"; canvas.style.height=H+"px";
+  try{
+    if(texScene){ gl.deleteTexture(texScene); gl.deleteFramebuffer(fboScene.fbo); }
+    if(texA){ gl.deleteTexture(texA); gl.deleteFramebuffer(fboA.fbo); }
+    if(texB){ gl.deleteTexture(texB); gl.deleteFramebuffer(fboB.fbo); }
+    fboScene=makeFBO(canvas.width,canvas.height); texScene=fboScene.tex;
+    fboA=makeFBO(canvas.width>>1,canvas.height>>1); texA=fboA.tex;
+    fboB=makeFBO(canvas.width>>1,canvas.height>>1); texB=fboB.tex;
+    gl.bindFramebuffer(gl.FRAMEBUFFER,fboScene.fbo); gl.clearColor(0,0,0,1); gl.clear(gl.COLOR_BUFFER_BIT);
+  }catch(e){ GL_OK=false; errEl.style.display="flex"; errEl.textContent="帧缓冲创建失败："+e.message; }
+}
+// 一次性把 CPU 初始状态上传到 GPU 状态纹理（仅 reset / setCount / boot 时调用，热路径零上传）
+function uploadStateToGPU(){
+  if(!gpuPhysicsReady) return;
+  const n=Math.min(G.count,MAXN);
+  for(let i=0;i<n;i++){ const o=i*4; gpuUploadPos[o]=px[i]; gpuUploadPos[o+1]=py[i]; gpuUploadPos[o+2]=vx[i]; gpuUploadPos[o+3]=vy[i]; gpuUploadSp[i]=sp[i]; }
+  gl.bindTexture(gl.TEXTURE_2D,posTexSrc); gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,n,1,gl.RGBA,gl.FLOAT,gpuUploadPos);
+  gl.bindTexture(gl.TEXTURE_2D,spTex); gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,n,1,gl.RED,gl.FLOAT,gpuUploadSp);
+}
+function renderScene(){
+  if(!GL_OK) return;
+  gl.bindFramebuffer(gl.FRAMEBUFFER,fboScene.fbo);
+  gl.viewport(0,0,canvas.width,canvas.height);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+  gl.useProgram(progFade);
+  gl.uniform1f(gl.getUniformLocation(progFade,"u_fade"),1.0-G.tail);
+  gl.bindVertexArray(quadVAO); gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+  gl.blendFunc(gl.ONE,gl.ONE);
+  gl.useProgram(progScene);
+  gl.uniform1i(locS_pos,0); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,posTexSrc);
+  gl.uniform1i(locS_sp,1); gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,spTex);
+  gl.uniform2f(locS_res,W,H);
+  gl.uniform1f(locS_baseSize,G.size);
+  gl.uniform1f(locS_cap,curCapVal);
+  if(_paletteTheme!==G.theme) buildPaletteFlat();
+  gl.uniform3fv(locS_palette, paletteFlat);
+  const n=Math.min(G.count,MAXN);
+  gl.bindVertexArray(instVAO);
+  gl.drawArraysInstanced(gl.TRIANGLE_STRIP,0,4,n);
+  gl.bindVertexArray(null);
+  if(G.links){ const vc=collectLinks(); if(vc>0) drawLinksGL(vc); }   // 连线网绘入场景，随 bloom 泛光
+  gl.disable(gl.BLEND);
+  if(G.bloom>0.02){   // C：辉光≈0 时跳过整条 bloom 模糊 pass，省两次全屏绘制（comp 端 u_bloomStr=0 仍归零，无视觉差异）
+    gl.bindFramebuffer(gl.FRAMEBUFFER,fboA.fbo); gl.viewport(0,0,fboA.w,fboA.h);
+    gl.useProgram(progBlur);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,texScene);
+    gl.uniform1i(gl.getUniformLocation(progBlur,"u_tex"),0);
+    gl.uniform2f(gl.getUniformLocation(progBlur,"u_res"),fboA.w,fboA.h);
+    gl.uniform2f(gl.getUniformLocation(progBlur,"u_dir"),1,0);
+    gl.bindVertexArray(quadVAO); gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+    gl.bindFramebuffer(gl.FRAMEBUFFER,fboB.fbo); gl.viewport(0,0,fboB.w,fboB.h);
+    gl.bindTexture(gl.TEXTURE_2D,texA);
+    gl.uniform2f(gl.getUniformLocation(progBlur,"u_dir"),0,1);
+    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.viewport(0,0,canvas.width,canvas.height);
+  gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT);   // 默认帧缓冲透明，暗区透出星云
+  gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+  gl.useProgram(progComp);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,texScene);
+  gl.uniform1i(gl.getUniformLocation(progComp,"u_scene"),0);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,texB);
+  gl.uniform1i(gl.getUniformLocation(progComp,"u_bloom"),1);
+  gl.uniform1f(gl.getUniformLocation(progComp,"u_bloomStr"),G.bloom);
+  gl.uniform1f(gl.getUniformLocation(progComp,"u_glow"),G.glow);
+  gl.uniform1f(gl.getUniformLocation(progComp,"u_exposure"),1.0);
+  gl.uniform1f(gl.getUniformLocation(progComp,"u_core"),0.32);
+  gl.uniform1f(gl.getUniformLocation(progComp,"u_bloomThresh"),0.22);
+  gl.uniform1f(locS_chroma,G.chroma);                 // P2：色散强度（0=关）
+  gl.uniform1f(locS_hue,G.hue*Math.PI/180.0);         // P2：色相旋转（度→弧度）
+  gl.uniform1f(locS_vignette,G.vignette);             // P2：暗角开关
+  gl.bindVertexArray(quadVAO); gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+  gl.bindVertexArray(null);
+}
+
+/* 2D 兜底渲染：WebGL2 不可用 / 着色器失败时启用，保证任何环境都能看到粒子 */
+function setup2D(){
+  gl2d=document.getElementById("gl2d");
+  try{ ctx2=gl2d.getContext("2d"); }catch(e){ ctx2=null; }
+  if(!ctx2){ errEl.style.display="flex"; errEl.textContent="当前环境既不支持 WebGL2 也无 2D 画布，无法渲染。"; return false; }
+  canvas.style.display="none";        // WebGL 画布隐藏，避免透明层遮挡 2D 路径
+  gl2d.style.display="block";
+  CTX2D=true; errEl.style.display="none";
+  return true;
+}
+let _spriteTheme=null, _sprites=[], _cores=null;
+// 每个物种预渲染一张发光贴图（离屏 canvas 缓存），渲染时纯 drawImage 混合，
+// 避免每粒子每帧 createRadialGradient 造成的 GC 抖动与卡顿
+function buildSprites(){
+  const pal=THEMES[G.theme]||THEMES.Neon;
+  const S=64;
+  _sprites=pal.map(col=>{
+    const cv=document.createElement("canvas"); cv.width=S; cv.height=S;
+    const c=cv.getContext("2d");
+    const R=(col[0]*255)|0, gc=(col[1]*255)|0, B=(col[2]*255)|0;
+    const g=c.createRadialGradient(S/2,S/2,0,S/2,S/2,S/2);
+    g.addColorStop(0,`rgba(${R},${gc},${B},0.85)`);
+    g.addColorStop(0.18,`rgba(${R},${gc},${B},0.42)`);
+    g.addColorStop(0.5,`rgba(${R},${gc},${B},0.12)`);
+    g.addColorStop(1,`rgba(${R},${gc},${B},0)`);
+    c.fillStyle=g; c.fillRect(0,0,S,S);
+    return cv;
+  });
+  if(!_cores){   // 速度越快越白热的星核（主题无关）
+    const cv=document.createElement("canvas"); cv.width=S; cv.height=S;
+    const c=cv.getContext("2d");
+    const g=c.createRadialGradient(S/2,S/2,0,S/2,S/2,S/2);
+    g.addColorStop(0,"rgba(255,255,255,0.95)");
+    g.addColorStop(0.4,"rgba(255,255,255,0.32)");
+    g.addColorStop(1,"rgba(255,255,255,0)");
+    c.fillStyle=g; c.fillRect(0,0,S,S);
+    _cores=cv;
+  }
+  _spriteTheme=G.theme;
+}
+function renderScene2D(){
+  const n=Math.min(G.count,MAXN);
+  if(_spriteTheme!==G.theme) buildSprites();
+  const cap=curCapVal;
+  // 透明拖尾：用 destination-out 削减旧像素 alpha，使轨迹随时间淡入底层星云（而非涂黑）
+  ctx2.globalCompositeOperation="destination-out";
+  ctx2.fillStyle=`rgba(0,0,0,${1-G.tail})`;
+  ctx2.fillRect(0,0,gl2d.width,gl2d.height);
+  ctx2.globalCompositeOperation="lighter";
+  if(G.links){   // 近邻连线网（constellation）：画在粒子下层，一次性 Path 批量描边
+    const vc=collectLinks();
+    if(vc>0){
+      ctx2.globalAlpha=1;
+      ctx2.beginPath();
+      for(let v=0; v<vc; v+=2){ const o=v*5; ctx2.moveTo(linkData[o],linkData[o+1]); ctx2.lineTo(linkData[(v+1)*5],linkData[(v+1)*5+1]); }
+      ctx2.strokeStyle=`rgba(150,205,255,${G.linkAlpha})`; ctx2.lineWidth=1; ctx2.stroke();
+    }
+  }
+  const ns=_sprites.length;
+  for(let i=0;i<n;i++){
+    const spd=Math.min(1,Math.hypot(vx[i],vy[i])/cap);
+    const r=Math.max(2, G.size*(0.7+spd*0.9)*2.6);
+    ctx2.globalAlpha=0.10+spd*0.24;
+    ctx2.drawImage(_sprites[sp[i]%ns], px[i]-r, py[i]-r, r*2, r*2);
+    if(spd>0.2){   // 高速粒子叠加白热星核，呈彗星/星尘感
+      const cr=r*0.7, ca=(spd-0.2)*0.6;
+      ctx2.globalAlpha=Math.min(0.9,ca);
+      ctx2.drawImage(_cores, px[i]-cr, py[i]-cr, cr*2, cr*2);
+    }
+  }
+  ctx2.globalAlpha=1;
+  ctx2.globalCompositeOperation="source-over";
+}
+
+/* ===== 4b. 近邻连线网（constellation）===== */
+let linkBuckets=null, linkCols=0, linkRows=0, linkData=null;
+function buildLinkGrid(){
+  const lr=G.linkR;
+  const cols=Math.max(1,Math.ceil(W/lr)), rows=Math.max(1,Math.ceil(H/lr));
+  if(!linkBuckets||linkCols!==cols||linkRows!==rows){
+    linkBuckets=new Array(cols*rows); for(let k=0;k<cols*rows;k++)linkBuckets[k]=[];
+  } else { for(let k=0;k<linkBuckets.length;k++)linkBuckets[k].length=0; }
+  linkCols=cols; linkRows=rows;
+  const n=Math.min(G.count,MAXN);
+  for(let i=0;i<n;i++){ let cx=(px[i]/lr)|0, cy=(py[i]/lr)|0;
+    if(cx<0)cx=0; else if(cx>=cols)cx=cols-1;
+    if(cy<0)cy=0; else if(cy>=rows)cy=rows-1;
+    linkBuckets[cy*cols+cx].push(i); }
+}
+// 填充 linkData（每顶点 x,y,r,g,b），返回顶点数；按 j>i 去重，超 LINK_CAP 截断
+function collectLinks(){
+  if(!linkData) linkData=new Float32Array(LINK_CAP*5);
+  buildLinkGrid();
+  const lr=G.linkR, lr2=lr*lr, n=Math.min(G.count,MAXN);
+  const pal=THEMES[G.theme]||THEMES.Neon;
+  let vc=0;
+  for(let i=0;i<n && vc+2<=LINK_CAP;i++){
+    const xi=px[i], yi=py[i], ci=pal[sp[i]%pal.length];
+    const cx=(xi/lr)|0, cy=(yi/lr)|0;
+    for(let gy=cy-1;gy<=cy+1;gy++){ if(gy<0||gy>=linkRows)continue;
+      for(let gx=cx-1;gx<=cx+1;gx++){ if(gx<0||gx>=linkCols)continue;
+        const bk=linkBuckets[gy*linkCols+gx];
+        for(let k=0;k<bk.length;k++){ const j=bk[k]; if(j<=i)continue;
+          const dx=px[j]-xi, dy=py[j]-yi, d2=dx*dx+dy*dy; if(d2>lr2)continue;
+          const cj=pal[sp[j]%pal.length];
+          let o=vc*5; linkData[o]=xi; linkData[o+1]=yi; linkData[o+2]=ci[0]; linkData[o+3]=ci[1]; linkData[o+4]=ci[2]; vc++;
+          o=vc*5; linkData[o]=px[j]; linkData[o+1]=py[j]; linkData[o+2]=cj[0]; linkData[o+3]=cj[1]; linkData[o+4]=cj[2]; vc++;
+          if(vc>=LINK_CAP) return LINK_CAP;   // 单粒子邻居众多时会越界，及早截断
+        }
+      }
+    }
+  }
+  return vc>LINK_CAP?LINK_CAP:vc;
+}
+function drawLinksGL(vc){
+  gl.useProgram(progLink);
+  gl.bindBuffer(gl.ARRAY_BUFFER,linkVBO);
+  gl.bufferSubData(gl.ARRAY_BUFFER,0,linkData.subarray(0,vc*5));
+  gl.uniform2f(gl.getUniformLocation(progLink,"u_res"),W,H);
+  gl.uniform1f(gl.getUniformLocation(progLink,"u_alpha"),G.linkAlpha);
+  gl.bindVertexArray(linkVAO);
+  gl.drawArrays(gl.LINES,0,vc);
+  gl.bindVertexArray(null);
+}
+
+/* ===== 5. 主循环 ===== */
+let lastT=performance.now(), fpsAcc=0, fpsCnt=0, fpsEMA=0, adaptOn=true;
+// C2：固定步长累加器 —— 物理按真实时间以 FIXED_DT 定步推进，与渲染帧率解耦
+// （此前每帧一步：20fps 下演化速度只有 60fps 的 1/3，不同机器行为不一致）
+const FIXED_DT=1/60, MAX_STEPS=3;
+let physAcc=0, lastFrameT=performance.now(), diagSteps=0, cpuStepMsEMA=0, gpuStepMsEMA=0;
+let forceBackend="auto";   // auto | gpu | cpu —— 诊断用：强制后端以 A/B 对比真实耗时
+// B 开关：GPU 内建网格（计数排序免 CPU 建桶 + 免 192KB/48KB 上传）。bitonic 排序在 GPU 上完成，
+// WebGL2 无 atomic 故用比较-交换网络（确定性，可一次性校验）。沙箱 gl=null 不可测，默认关；
+// ?gpuGrid=1 开启，开启后跑一次排序读回校验，失败自动回退 CPU 建桶（=现状 21.7）。
+const _QS=new URLSearchParams(location.search);
+if(_QS.get("backend")) forceBackend=_QS.get("backend");
+const gpuGridEnabled=_QS.get("gpuGrid")==="1";
+let gpuGridReady=false;      // 预留：B program 全部链接成功即 true（与 gpuGridUse 区分：后者含运行时校验）
+let gpuGridErr="";           // B 初始化/运行期错误（仅用于诊断，不影响主 GPU 物理）
+// _linkPrime 已弃用：连线改每帧 syncReadback（见 gpuStep L1148），不再需要"首帧补一次"开关。
+
+/* ===== G. Web Worker 搬运 CPU 物理（?worker=1 开启，默认关）=====
+ * CPU 模式（粒子数<3000 或 GPU 不可用时）的物理步进 buildGrid+cpuStep 搬进 Worker，以 60Hz 独立步进并回传状态；
+ * 主线程把回传状态复制进 px/py/... 供渲染与连线。worker 创建/运行失败 → 自动回退主线程同步步进（默认路径零影响）。
+ * 注：GPU 模式（用户 12000 粒子主场景）不走此路——worker 无 GPU 访问，仅服务于 CPU 后端轻量场景。 */
+const workerEnabled=_QS.get("worker")==="1";
+let cpuWorker=null, workerReady=false, workerHasState=false, _lastWorkerRunning=null;
+function gatherWorkerParams(){
+  const b=collectBehaviors();
+  const cs=activeRadii(b);
+  const cols=Math.max(1,Math.ceil(W/cs)), rows=Math.max(1,Math.ceil(H/cs));
+  return {
+    hasMatrix:b.hasMatrix, mat:b.mat, mR:b.mR, aR:b.aR, cR:b.cR,
+    hasDamp:b.hasDamp, fr:b.fr, hasNoise:b.hasNoise, nAmp:b.nAmp, nSc:b.nSc, nSp:b.nSp,
+    hasRepel:b.hasRepel, rR:b.rR, rS:b.rS, hasAlign:b.hasAlign, aS:b.aS,
+    hasCohere:b.hasCohere, cS:b.cS, species:b.species,
+    hasMouse:b.hasMouse, moMode:b.moMode, moR:b.moR, moS:b.moS,
+    cs, cols, rows, curCap:Math.max(30,Math.max(b.mR,b.aR,b.cR))*0.06,
+    mx:mouse.x, my:mouse.y, mInside:mouse.inside, timeScale:G.timeScale
+  };
+}
+const workerSrc=`'use strict';
+let px,py,vx,vy,sp,N=0,W=0,H=0;
+let P=null, running=false, timer=null;
+const MAX_STEPS=3, FIXED_DT=1/60;
+let _avx,_avy,_acx,_acy;
+let gridStart,gridCursor,gridIdx,gridNCols=-1,gridNRows=-1;
+function buildGrid(){
+  const b=P, cs=b.cs, cols=b.cols, rows=b.rows, nCells=cols*rows;
+  if(!gridStart||gridNCols!==cols||gridNRows!==rows){ gridStart=new Int32Array(nCells+1); gridCursor=new Int32Array(nCells); gridIdx=new Int32Array(N); gridNCols=cols; gridNRows=rows; }
+  gridStart.fill(0);
+  for(let i=0;i<N;i++){ let cx=(px[i]/cs)|0,cy=(py[i]/cs)|0; if(cx<0)cx=0;else if(cx>=cols)cx=cols-1; if(cy<0)cy=0;else if(cy>=rows)cy=rows-1; gridStart[cy*cols+cx+1]++; }
+  for(let c=1;c<=nCells;c++) gridStart[c]+=gridStart[c-1];
+  gridCursor.set(gridStart.subarray(0,nCells));
+  for(let i=0;i<N;i++){ let cx=(px[i]/cs)|0,cy=(py[i]/cs)|0; if(cx<0)cx=0;else if(cx>=cols)cx=cols-1; if(cy<0)cy=0;else if(cy>=rows)cy=rows-1; const c=cy*cols+cx; gridIdx[gridCursor[c]++]=i; }
+}
+function stepOnce(){
+  const b=P, mat=b.mat, fr=b.fr, n=N, cs=b.cs, cols=b.cols, rows=b.rows;
+  const mR2=b.mR*b.mR,aR2=b.aR*b.aR,cR2=b.cR*b.cR,rR2=b.rR*b.rR,maxR2=cs*cs;
+  b.curCap=Math.max(30,Math.max(b.mR,b.aR,b.cR))*0.06;
+  const moActive=b.hasMouse&&b.mInside, mx=b.mx,my=b.my, t=b.simTime*b.nSp;
+  function curl(x,y){ const a=Math.sin(x*b.nSc+t)*Math.cos(y*b.nSc*1.3-t*0.7)+Math.sin((x+y)*b.nSc*0.6+t*0.5); return a*Math.PI; }
+  if(b.hasAlign||b.hasCohere){ if(!_avx){_avx=new Float32Array(N);_avy=new Float32Array(N);_acx=new Float32Array(N);_acy=new Float32Array(N);} _avx.fill(0);_avy.fill(0);_acx.fill(0);_acy.fill(0); }
+  const cntA=new Int32Array(n),cntC=new Int32Array(n);
+  for(let i=0;i<n;i++){
+    const xi=px[i],yi=py[i],ti=sp[i]; let fxc=0,fyc=0;
+    const cx=(xi/cs)|0,cy=(yi/cs)|0;
+    for(let gy=cy-1;gy<=cy+1;gy++){ if(gy<0||gy>=rows)continue; for(let gx=cx-1;gx<=cx+1;gx++){ if(gx<0||gx>=cols)continue; const c0=gy*cols+gx,s=gridStart[c0],e=gridStart[c0+1]; for(let bk=s;bk<e;bk++){ const j=gridIdx[bk]; if(j===i)continue; const dx=px[j]-xi,dy=py[j]-yi,d2=dx*dx+dy*dy; if(d2<1e-6||d2>maxR2)continue; const d=Math.sqrt(d2),ux=dx/d,uy=dy/d; if(b.hasMatrix&&mat){ const f=mat[ti][sp[j]]; if(f!==0){ let a; if(f>0){a=d<b.mR*0.5?f*(d/(b.mR*0.5)):f*((b.mR-d)/b.mR);} else {const f0=b.mR*0.2;a=d<f0?f*0.8:f*((f0-d)/(b.mR-f0));} fxc+=ux*a;fyc+=uy*a; } } if(b.hasRepel&&d2<=rR2){const a=(b.rR-d)/b.rR*b.rS;fxc-=ux*a;fyc-=uy*a;} if(b.hasAlign&&d2<=aR2){_avx[i]+=vx[j];_avy[i]+=vy[j];cntA[i]++;} if(b.hasCohere&&d2<=cR2){_acx[i]+=px[j];_acy[i]+=py[j];cntC[i]++;} } } }
+    if(b.hasAlign&&cntA[i]>0){const dvx=_avx[i]/cntA[i]-vx[i],dvy=_avy[i]/cntA[i]-vy[i],m=Math.hypot(dvx,dvy)||1;fxc+=dvx/m*b.aS;fyc+=dvy/m*b.aS;}
+    if(b.hasCohere&&cntC[i]>0){const dxc=_acx[i]/cntC[i]-xi,dyc=_acy[i]/cntC[i]-yi,m=Math.hypot(dxc,dyc)||1;fxc+=dxc/m*b.cS;fyc+=dyc/m*b.cS;}
+    if(b.hasNoise&&b.nAmp>0){const ang=curl(xi,yi);fxc+=Math.cos(ang)*b.nAmp;fyc+=Math.sin(ang)*b.nAmp;}
+    if(moActive){ const dx=mx-xi,dy=my-yi,d=Math.hypot(dx,dy); if(d<b.moR&&d>0.5){const ux=dx/d,uy=dy/d,w=(1-d/b.moR); if(b.moMode==='attract'){fxc+=ux*b.moS*w;fyc+=uy*b.moS*w;} else if(b.moMode==='repel'){fxc-=ux*b.moS*w;fyc-=uy*b.moS*w;} else {fxc+=-uy*b.moS*w;fyc+=ux*b.moS*w;} } }
+    let nvx=vx[i]+fxc,nvy=vy[i]+fyc; const damp=1-fr; nvx*=damp;nvy*=damp; const sp2=nvx*nvx+nvy*nvy; if(sp2>b.curCap*b.curCap){const s=b.curCap/Math.sqrt(sp2);nvx*=s;nvy*=s;} vx[i]=nvx;vy[i]=nvy;
+  }
+  for(let i=0;i<n;i++){ let x=px[i]+vx[i],y=py[i]+vy[i]; if(x<0)x+=W;else if(x>=W)x-=W; if(y<0)y+=H;else if(y>=H)y-=H; px[i]=x;py[i]=y; }
+  b.simTime+=FIXED_DT*b.timeScale;
+}
+function tick(){ if(!running)return; for(let s=0;s<MAX_STEPS;s++){ buildGrid(); stepOnce(); } if(N>0){ const buf=new Float32Array(N*5); for(let i=0;i<N;i++){buf[i*5]=px[i];buf[i*5+1]=py[i];buf[i*5+2]=vx[i];buf[i*5+3]=vy[i];buf[i*5+4]=sp[i];} self.postMessage({type:'state',buf:buf,simTime:P?P.simTime:0},[buf.buffer]); } }
+function tickStart(){ if(timer)return; timer=setInterval(tick,1000/60); }
+function tickStop(){ if(timer){clearInterval(timer);timer=null;} }
+self.onmessage=(e)=>{ const m=e.data;
+  if(m.type==='init'){ N=m.N;W=m.W;H=m.H;px=m.px;py=m.py;vx=m.vx;vy=m.vy;sp=m.sp;P=m.P;P.simTime=m.simTime;running=m.running; if(running)tickStart(); }
+  else if(m.type==='params'){ P=m.P; W=m.W; H=m.H; }
+  else if(m.type==='running'){ running=m.running; if(running)tickStart(); else tickStop(); }
+  else if(m.type==='step'){ buildGrid(); stepOnce(); if(N>0){ const buf=new Float32Array(N*5); for(let i=0;i<N;i++){buf[i*5]=px[i];buf[i*5+1]=py[i];buf[i*5+2]=vx[i];buf[i*5+3]=vy[i];buf[i*5+4]=sp[i];} self.postMessage({type:'state',buf:buf,simTime:P?P.simTime:0},[buf.buffer]); } }
+  else if(m.type==='reset'){ N=m.N;W=m.W;H=m.H;px=m.px;py=m.py;vx=m.vx;vy=m.vy;sp=m.sp;P=m.P;P.simTime=m.simTime; }
+};`;
+function ensureWorker(){
+  if(cpuWorker||!workerEnabled) return;
+  try{
+    const blob=new Blob([workerSrc],{type:"application/javascript"});
+    cpuWorker=new Worker(URL.createObjectURL(blob));
+    cpuWorker.onmessage=(e)=>{
+      const m=e.data;
+      if(m.type==="state"){
+        const n=Math.min(m.buf.length/5|0, MAXN);
+        for(let i=0;i<n;i++){ const o=i*5; px[i]=m.buf[o]; py[i]=m.buf[o+1]; vx[i]=m.buf[o+2]; vy[i]=m.buf[o+3]; sp[i]=m.buf[o+4]; }
+        if(m.simTime!=null) G.simTime=m.simTime;
+        workerHasState=true;
+      }
+    };
+    cpuWorker.onerror=()=>{ cpuWorker=null; workerReady=false; workerHasState=false; };
+    workerReady=true;
+  }catch(e){ cpuWorker=null; workerReady=false; workerHasState=false; }
+}
+function frame(now){
+  const dt=Math.min(0.05,(now-lastT)/1000); lastT=now;
+  fpsAcc+=dt; fpsCnt++;
+  if(fpsAcc>=0.5){
+    const fps=Math.round(fpsCnt/fpsAcc);
+    document.getElementById("sFps").textContent=fps;
+    fpsEMA = fpsEMA? fpsEMA*0.85+fps*0.15 : fps;
+    fpsAcc=0; fpsCnt=0;
+  }
+  // C2：固定步长 —— 复用本帧 dt（已钳制 0.05s），定步推进物理；渲染仍每帧一次
+  // 0.05s 钳制 ÷ (1/60)s = 3 步，与 MAX_STEPS 自洽，天然防追帧螺旋
+  diagSteps=0;
+  if(G.running){
+    // 后端判定：forceBackend 可强制 A/B 对比（用于量出 GPU O(N²) 与 CPU 网格的真实差距）
+    let want = gpuPhysicsReady && GL_OK && G.count>=3000;
+    if(forceBackend==="cpu") want=false;
+    else if(forceBackend==="gpu") want = gpuPhysicsReady && GL_OK;  // 忽略粒子数阈值
+    // 后端切换时同步粒子状态，避免两套状态不一致导致跳变
+    if(want!==gpuActive){
+      if(gpuActive) readbackGPUState();                 // GPU → CPU
+      else if(want && gpuPhysicsReady) uploadStateToGPU();  // CPU → GPU
+      // G：进入 CPU 模式且 ?worker=1 时启动 worker 接管物理；回到 GPU 模式则停 worker 回退主线程
+      if(workerEnabled){
+        if(!want){
+          ensureWorker();
+          if(cpuWorker) cpuWorker.postMessage({type:"init",N:Math.min(G.count,MAXN),W,H,px:px.slice(),py:py.slice(),vx:vx.slice(),vy:vy.slice(),sp:sp.slice(),P:gatherWorkerParams(),simTime:G.simTime,running:G.running});
+          _lastWorkerRunning=G.running;
+        } else if(cpuWorker){
+          cpuWorker.postMessage({type:"running",running:false});
+          _lastWorkerRunning=null;
+        }
+      }
+    }
+    gpuActive = want;
+    // B：首次进入 GPU 模式且 ?gpuGrid=1 时，跑一次 bitonic 排序并读回校验（合法排列 + cellKey 升序）。
+    // 确定性算法，一次通过即永久信任；单元过多(>4096)或过校验失败 → gpuGridUse=false，回退 CPU 建桶(=21.7)。
+    if(gpuActive && gpuGridEnabled && gpuGridReady && !gpuGridVerified){
+      gpuGridVerified=true;
+      try{
+        const cb=collectBehaviors(); const cs0=activeRadii(cb);
+        const c0=Math.ceil(W/cs0), r0=Math.ceil(H/cs0);
+        if(c0>GRID_TEX_MAX||r0>GRID_TEX_MAX||c0*r0>4096) gpuGridUse=false;
+        else gpuGridUse=verifyGpuGrid();
+      }catch(e){ gpuGridUse=false; }
+    }
+    if(!gpuActive) gpuGridUse=false;
+    // G：worker 模式下每帧同步运行态与参数（参数含鼠标/半径，structured clone 开销极小）
+    if(workerEnabled && cpuWorker && !gpuActive){
+      if(G.running!==_lastWorkerRunning){ cpuWorker.postMessage({type:"running",running:G.running}); _lastWorkerRunning=G.running; }
+      cpuWorker.postMessage({type:"params",P:gatherWorkerParams(),W,H});
+    }
+    physAcc += dt*G.timeScale;
+    while(physAcc>=FIXED_DT && diagSteps<MAX_STEPS){
+      physAcc-=FIXED_DT; diagSteps++;
+      const t0=performance.now();
+      const workerActive = workerEnabled && cpuWorker && !gpuActive && workerHasState;
+      if(gpuActive) gpuStep();
+      else if(workerActive){ /* G：worker 以 60Hz 独立步进并回传状态，主线程不步进（仅 draining physAcc 防螺旋） */ }
+      else { buildGrid(); cpuStep(); }
+      const el=performance.now()-t0;
+      if(gpuActive) gpuStepMsEMA = gpuStepMsEMA? gpuStepMsEMA*0.85+el*0.15 : el;
+      else cpuStepMsEMA = cpuStepMsEMA? cpuStepMsEMA*0.85+el*0.15 : el;
+    }
+    if(diagSteps===MAX_STEPS) physAcc=0;   // 追不上则丢弃余量，防死亡螺旋
+    if(G.autoMorph) autoMorph();
+  } else { physAcc=0; }
+  if(!appEl.classList.contains("stage-hidden")){
+  if(GL_OK){ renderScene();
+    glFrames++;
+    if(glFrames===90){ // 运行时健康检查：仅当 WebGL 上下文真正丢失(isContextLost)时才降级 2D。
+      // 移除原「抽样判黑」启发式——稀疏粒子(如 1200 颗)经 1/97 抽样极易误判为全黑，把本应正常显示的 WebGL2 硬降成 2D 兜底。
+      if(gl.isContextLost()){ GL_OK=false; setup2D(); resizeGL(); }
+    }
+  }
+  else if(CTX2D){ renderScene2D(); }
+  }
+  document.getElementById("sN").textContent=Math.min(G.count,MAXN);
+  // 物理后端诊断：明确区分 2D兜底 / GPU init 失败 / CPU 步进，让"为什么卡/为什么CPU"可见
+  const sPhysEl=document.getElementById("sPhys");
+  if(gpuActive) sPhysEl.textContent="GPU";
+  else if(GL_OK) sPhysEl.textContent = gpuPhysicsReady? "CPU" : "CPU·GPU失败";
+  else sPhysEl.textContent="2D兜底";
+  if(!gpuPhysicsReady && GL_OK) sPhysEl.title="GPU物理初始化失败: "+(gpuErr||"未知");
+  // 自适应节流：
+  //   CPU 模式 —— 分级平滑降载（目标 55fps，下限 G.minN），回升时温和恢复。
+  //   GPU 模式 —— 锁定用户显式粒子数，绝不自动降载（用户要求 12000 不降数；墙是 O(N·k) 算力，降数亦非真解）。
+  if(adaptOn && G.running && fpsEMA>0){
+    if(gpuActive){
+      // 不降粒子数：保持 G.count 不变（B 排序优化在 GPU 内完成，不靠降数提 FPS）
+    }else{
+      const target=55, floor=G.minN;
+      if(fpsEMA<target){
+        const ratio=Math.min(1,fpsEMA/target);          // 20fps→0.36，50fps→0.91
+        const factor=1-(1-ratio)*0.35;                  // 缺口越大降得越狠（最多约 22%/次）
+        if(G.count>floor) setCount(Math.max(floor, Math.round(G.count*factor)));
+      }else if(fpsEMA>target+6 && G.count<MAXN){
+        setCount(Math.min(MAXN, G.count*1.01));         // 富余帧率时缓慢回升
+      }
+    }
+  }
+  // H：动态分辨率——FPS 偏低时降低渲染分辨率（减填充率，bloom 模糊 / comp 合成 / fade 全受益），回升时恢复。
+  // 仅离散台阶变动且 fpsEMA(每 0.5s 刷新) 跨阈值才触发，极少重建 FBO，无感知抖动。
+  if(dynResOn && G.running && fpsEMA>0){
+    if(fpsEMA<28 && renderScale>MIN_SCALE){ renderScale=Math.max(MIN_SCALE,+(renderScale-0.15).toFixed(2)); resizeGL(); }
+    else if(fpsEMA>52 && renderScale<1){ renderScale=Math.min(1,+(renderScale+0.08).toFixed(2)); resizeGL(); }
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ===== 6. 管线面板 UI ===== */
+const graphEl=document.getElementById("graph");
+
+function rebuildGraphUI(){
+  graphEl.className = advancedMode ? "adv" : "";
+  graphEl.innerHTML="";
+  if(advancedMode) rebuildAdvanced();
+  else rebuildSimple();
+  updateHint();
+}
+
+function rebuildSimple(){
+  const order=["particles",...BEHAVIOR_TYPES,"render"];
+  const byType={}; for(const n of nodes)(byType[n.type]=byType[n.type]||[]).push(n);
+  let first=true;
+  for(const t of order){
+    const list=byType[t]; if(!list)continue;
+    for(const n of list){
+      if(!first){ const c=document.createElement("div"); c.className="connector"; graphEl.appendChild(c); }
+      first=false;
+      const el=document.createElement("div");
+      el.className="node"+(n.open?" open":" collapsed")+(n.enabled===false?" off":"");
+      el.dataset.id=n.id;
+      const head=document.createElement("div"); head.className="node-head";
+      const isTop=(t==="particles"||t==="render");
+      head.innerHTML=`<span class="ic" style="background:${TYPE_COLOR[n.type]||'#5cc8ff'}"></span>
+        <span class="nm">${TYPE_LABEL[n.type]||n.type}</span>
+        ${isTop?'':'<span class="sw'+(n.enabled!==false?' on':'')+'"></span>'}
+        <span class="chev">▶</span>`;
+      el.appendChild(head);
+      const body=document.createElement("div"); body.className="node-body"; body.appendChild(buildNodeBody(n));
+      el.appendChild(body);
+      graphEl.appendChild(el);
+      const sw=head.querySelector(".sw");
+      if(sw) sw.addEventListener("click",e=>{ e.stopPropagation(); n.enabled=(n.enabled===false); syncEngine(); sw.classList.toggle("on",n.enabled!==false); el.classList.toggle("off",n.enabled===false); const body=el.querySelector(".node-body"); body.innerHTML=""; body.appendChild(buildNodeBody(n)); });
+      head.addEventListener("click",()=>{ n.open=!n.open; el.classList.toggle("open",n.open); el.classList.toggle("collapsed",!n.open); });
+    }
+  }
+  syncEngine();
+}
+function buildNodeBody(n){
+  const p=n.params; const frag=document.createDocumentFragment();
+  const slider=(label,key,min,max,step,fmt)=>{
+    const r=document.createElement("div"); r.className="row";
+    r.innerHTML=`<label>${label}</label><input type="range" min="${min}" max="${max}" step="${step}" value="${p[key]}"><span class="val">${(p[key]*1).toFixed(fmt==null?2:fmt)}</span>`;
+    const inp=r.querySelector("input"), v=r.querySelector(".val");
+    inp.addEventListener("input",()=>{ p[key]=parseFloat(inp.value); v.textContent=(p[key]*1).toFixed(fmt==null?2:fmt); syncEngine(); });
+    inp.addEventListener("change",()=>{ if(_booted)onCommit(); });   // 释放滑块才入撤销栈，避免拖拽过程刷屏
+    return r;
+  };
+  const seg=(label,key,opts)=>{
+    const r=document.createElement("div"); r.className="row";
+    let html=`<label>${label}</label><div class="seg">`;
+    for(const o of opts) html+=`<button data-v="${o.v}" class="${p[key]===o.v?'on':''}">${o.t}</button>`;
+    html+=`</div>`; r.innerHTML=html;
+    r.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{ p[key]=b.dataset.v; r.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b)); syncEngine(); if(_booted)onCommit(); }));
+    return r;
+  };
+  const chk=(label,key)=>{
+    const r=document.createElement("div"); r.className="row";
+    r.innerHTML=`<label>${label}</label><label style="flex:1;display:flex;align-items:center;gap:5px;color:var(--tx2);font-size:9px;cursor:pointer"><input type="checkbox" ${p[key]?"checked":""}>启用</label>`;
+    const inp=r.querySelector("input");
+    inp.addEventListener("change",()=>{ p[key]=inp.checked?1:0; syncEngine(); if(_booted)onCommit(); });
+    return r;
+  };
+  switch(n.type){
+    case "particles":
+      frag.appendChild(slider("数量","count",300,12000,100,0));
+      frag.appendChild(slider("物种","species",2,7,1,0));
+      break;
+    case "matrix":
+      { const mopts=[{v:"cluster",t:"聚团"},{v:"chain",t:"链状"},{v:"sym",t:"对称"},{v:"ecosystem",t:"生态"},{v:"crystal",t:"晶格"},{v:"allatt",t:"全吸"},{v:"allrep",t:"全斥"},
+        {v:"cyclic",t:"环流"},{v:"amoeba",t:"变形虫"},{v:"flowers",t:"花朵"},{v:"band",t:"色带"},{v:"war",t:"阵营"},{v:"predator",t:"捕食"},{v:"swirl",t:"漩涡"},{v:"wave",t:"波纹"},{v:"purple",t:"斑斓"}];
+        const mr=document.createElement("div"); mr.className="row"; mr.innerHTML=`<label>预设</label><div class="seg"></div>`;
+        const mseg=mr.querySelector(".seg");
+        for(const o of mopts){ const b=document.createElement("button"); b.dataset.v=o.v; b.textContent=o.t; if(p.preset===o.v)b.classList.add("on");
+          b.addEventListener("click",()=>{ p.preset=o.v; p.m=makeMatrix(o.v,G.species); p.n=G.species;   // 选中即重建矩阵值（此前只改标签、矩阵不变）
+            [...mseg.children].forEach(x=>x.classList.toggle("on",x===b)); syncEngine(); if(_booted)onCommit(); });
+          mseg.appendChild(b); }
+        frag.appendChild(mr); }
+      // B：矩阵作用半径独立可调 → 直接决定网格尺寸，越小邻居越稀疏、CPU 越省
+      frag.appendChild(slider("作用半径","radius",30,140,1,0));
+      const mw=document.createElement("div"); mw.className="matrix-wrap"; mw.style.gridTemplateColumns=`repeat(${p.n},1fr)`; mw.dataset.node=n.id;
+      for(let i=0;i<p.n;i++)for(let j=0;j<p.n;j++){
+        const c=document.createElement("button"); c.className="mcell"; c.dataset.i=i; c.dataset.j=j;
+        setCellColor(c,p.m[i][j]);
+        c.addEventListener("click",()=>{ let v=p.m[i][j]+0.34; if(v>1.01)v=-1; p.m[i][j]=+v.toFixed(2); setCellColor(c,v); syncEngine(); if(_booted)onCommit(); });
+        mw.appendChild(c);
+      }
+      frag.appendChild(mw);
+      break;
+    case "damping": frag.appendChild(slider("摩擦","friction",0,0.4,0.01,2)); break;
+    case "noise":
+      frag.appendChild(slider("幅度","amp",0,1.5,0.01,2));
+      frag.appendChild(slider("尺度","scale",0.001,0.02,0.001,3));
+      frag.appendChild(slider("速度","speed",0,1,0.01,2));
+      break;
+    case "mouse":
+      frag.appendChild(seg("模式","mode",[{v:"attract",t:"吸引"},{v:"repel",t:"排斥"},{v:"swirl",t:"漩涡"}]));
+      frag.appendChild(slider("半径","radius",40,300,1,0));
+      frag.appendChild(slider("强度","strength",0,3,0.05,2));
+      break;
+    case "repel": frag.appendChild(slider("半径","radius",5,60,1,0)); frag.appendChild(slider("强度","strength",0,4,0.05,2)); break;
+    case "align": frag.appendChild(slider("半径","radius",20,120,1,0)); frag.appendChild(slider("强度","strength",0,2,0.05,2)); break;
+    case "cohere": frag.appendChild(slider("半径","radius",20,140,1,0)); frag.appendChild(slider("强度","strength",0,2,0.05,2)); break;
+    case "render":
+      frag.appendChild(slider("拖尾","tail",0.5,0.97,0.01,2));
+      frag.appendChild(slider("尺寸","size",1,5,0.1,1));
+      frag.appendChild(slider("辉光","bloom",0,2,0.05,2));
+      frag.appendChild(slider("强度","glow",0.3,2,0.05,2));
+      frag.appendChild(slider("色相","hue",0,360,1,0));
+      frag.appendChild(chk("色散","chroma"));
+      frag.appendChild(chk("暗角","vignette"));
+      frag.appendChild(slider("自适应下限","minN",1200,6000,100,0));
+      break;
+  }
+  if(n.enabled===false){
+    const note=document.createElement("div"); note.className="offnote";
+    note.textContent="未启用 · 拨动上方开关后参数才生效";
+    frag.appendChild(note);
+  }
+  return frag;
+}
+/* ===== 高级模式：自由节点图编辑 ===== */
+const SVGNS="http://www.w3.org/2000/svg";
+let canvasGraphEl=null, edgesSvg=null, edgesHit=null, tempEdge=null, addMenuEl=null;
+function nodeById(id){ return nodes.find(z=>z.id===id); }
+function updateHint(){
+  const h=document.getElementById("hint");
+  if(advancedMode){
+    h.innerHTML=`<b>节点图</b>：拖标题=移动 · 拖右端口→节点=连线<br>点连线=删除 · 悬停×=删节点<br><b>＋</b>=新增行为 · 画布拖动=扰动`;
+  } else {
+    h.innerHTML=`<b>行为卡</b>：开关=启停 · 标题=展开/折叠<br><b>矩阵格</b>：点击循环 -1→0→+1<br><b>画布</b>：拖动=扰动 · 滚轮=调力（需启用「鼠标力」）<br><b>快捷键</b>：空格 播放/暂停 · R 重置 · P 截图 · L 连线 · A 高级 · ? 诊断 · Ctrl+Z/Y 撤销重做`;
+  }
+}
+function portPos(node,dir){
+  if(!canvasGraphEl)return null;
+  const el=canvasGraphEl.querySelector(`.node[data-id="${node.id}"]`); if(!el)return null;
+  const p=el.querySelector(`.port.${dir}`); if(!p)return null;
+  const cr=canvasGraphEl.getBoundingClientRect(); const pr=p.getBoundingClientRect();
+  return {x:pr.left+pr.width/2-cr.left, y:pr.top+pr.height/2-cr.top};
+}
+function edgeD(a,b){ const mx=(a.x+b.x)/2; return `M ${a.x} ${a.y} C ${mx} ${a.y}, ${mx} ${b.y}, ${b.x} ${b.y}`; }
+function drawEdges(){
+  if(!edgesSvg)return;
+  edgesSvg.querySelectorAll(".edge").forEach(e=>e.remove());
+  if(edgesHit) edgesHit.querySelectorAll(".edge-hit").forEach(e=>e.remove());
+  for(const e of edges){
+    const a=portPos(nodeById(e.from),"out"), b=portPos(nodeById(e.to),"in");
+    if(!a||!b)continue;
+    const d=edgeD(a,b);
+    const vis=document.createElementNS(SVGNS,"path"); vis.setAttribute("class","edge"); vis.setAttribute("d",d);
+    edgesSvg.appendChild(vis);
+    const hit=document.createElementNS(SVGNS,"path"); hit.setAttribute("class","edge-hit"); hit.setAttribute("d",d);
+    hit.addEventListener("click",ev=>{ ev.stopPropagation(); removeEdge(e); });
+    if(edgesHit) edgesHit.appendChild(hit);
+  }
+}
+function removeEdge(e){ const i=edges.indexOf(e); if(i>=0){ edges.splice(i,1); syncEnabledToReachability(); if(_booted)onCommit(); } }
+function syncEnabledToReachability(){
+  const seen=reachableSet();
+  for(const n of nodes){ if(n.type!=="particles"&&n.type!=="render" && !seen.has(n.id)) n.enabled=false; }
+  rebuildGraphUI();
+}
+function rebuildAdvanced(){
+  graphEl.innerHTML="";
+  const cv=document.createElement("div"); cv.id="canvasGraph";
+  const svg=document.createElementNS(SVGNS,"svg"); svg.id="edges"; svg.setAttribute("width",920); svg.setAttribute("height",760);
+  const hit=document.createElementNS(SVGNS,"svg"); hit.id="edgesHit"; hit.setAttribute("width",920); hit.setAttribute("height",760);
+  cv.appendChild(hit); cv.appendChild(svg);
+  for(const n of nodes){
+    const el=document.createElement("div");
+    el.className="node adv"+(n.open?" open":" collapsed")+(n.enabled===false?" off":"");
+    el.dataset.id=n.id; el.style.left=(n.x||0)+"px"; el.style.top=(n.y||0)+"px";
+    const isSrc=n.type==="particles", isSnk=n.type==="render";
+    const head=document.createElement("div"); head.className="node-head";
+    head.innerHTML=`<span class="ic" style="background:${TYPE_COLOR[n.type]||'#5cc8ff'}"></span>
+      <span class="nm">${TYPE_LABEL[n.type]||n.type}</span>
+      ${isSrc||isSnk?'':'<span class="sw'+(n.enabled!==false?' on':'')+'"></span>'}
+      ${isSrc||isSnk?'':`<span class="del" title="删除节点">×</span>`}
+      <span class="chev">▶</span>`;
+    if(!isSrc){ const pin=document.createElement("div"); pin.className="port in"; el.appendChild(pin); }
+    if(!isSnk){ const pout=document.createElement("div"); pout.className="port out"; el.appendChild(pout); }
+    el.appendChild(head);
+    const body=document.createElement("div"); body.className="node-body"; body.appendChild(buildNodeBody(n));
+    el.appendChild(body);
+    cv.appendChild(el);
+    head.addEventListener("pointerdown",e=>{
+      if(e.target.classList.contains("del")||e.target.classList.contains("port")||e.target.classList.contains("sw"))return;
+      dragNode(n,e);
+    });
+    head.querySelector(".chev").addEventListener("click",e=>{ e.stopPropagation(); n.open=!n.open; el.classList.toggle("open",n.open); el.classList.toggle("collapsed",!n.open); });
+    const del=head.querySelector(".del");
+    if(del) del.addEventListener("click",e=>{ e.stopPropagation(); removeNode(n.id); });
+    const pout=el.querySelector(".port.out");
+    if(pout) pout.addEventListener("pointerdown",e=>{ e.stopPropagation(); startConnect(n,e); });
+    const sw=head.querySelector(".sw");
+    if(sw) sw.addEventListener("click",e=>{ e.stopPropagation(); n.enabled=(n.enabled===false); syncEngine(); sw.classList.toggle("on",n.enabled!==false); el.classList.toggle("off",n.enabled===false); const body=el.querySelector(".node-body"); body.innerHTML=""; body.appendChild(buildNodeBody(n)); });
+  }
+  graphEl.appendChild(cv);
+  canvasGraphEl=cv; edgesSvg=svg; edgesHit=hit;
+  drawEdges();
+  syncEngine();   // 刷新状态栏（与简单模式一致），避免高级模式下增删连线/节点后 sBeh 显示滞后
+}
+function dragNode(node,ev){
+  const el=canvasGraphEl.querySelector(`.node[data-id="${node.id}"]`);
+  if(!el)return;
+  const sx=ev.clientX, sy=ev.clientY, ox=node.x||0, oy=node.y||0;
+  function mv(e){ node.x=Math.max(0,ox+(e.clientX-sx)); node.y=Math.max(0,oy+(e.clientY-sy)); el.style.left=node.x+"px"; el.style.top=node.y+"px"; drawEdges(); }
+  function up(){ window.removeEventListener("pointermove",mv); window.removeEventListener("pointerup",up); }
+  window.addEventListener("pointermove",mv); window.addEventListener("pointerup",up);
+}
+function startConnect(node,ev){
+  const a=portPos(node,"out"); if(!a)return;
+  const line=document.createElementNS(SVGNS,"path"); line.setAttribute("class","tmp");
+  edgesSvg.appendChild(line); tempEdge=line; line.setAttribute("d",edgeD(a,a));
+  function mv(e){ const gr=canvasGraphEl.getBoundingClientRect(); line.setAttribute("d",edgeD(a,{x:e.clientX-gr.left,y:e.clientY-gr.top})); }
+  function up(e){
+    window.removeEventListener("pointermove",mv); window.removeEventListener("pointerup",up);
+    if(tempEdge){ tempEdge.remove(); tempEdge=null; }
+    const tgt=document.elementFromPoint(e.clientX,e.clientY);
+    const tnodeEl=tgt&&tgt.closest?tgt.closest(".node"):null;
+    if(tnodeEl){ const tid=tnodeEl.dataset.id; if(tid!==node.id) addEdge(node.id,tid); }
+    else drawEdges();
+  }
+  window.addEventListener("pointermove",mv); window.addEventListener("pointerup",up);
+}
+function openAddMenu(btn){
+  closeAddMenu();
+  const m=document.createElement("div"); m.className="m-addmenu";
+  for(const t of BEHAVIOR_TYPES){ const b=document.createElement("button"); b.textContent=TYPE_LABEL[t]||t;
+    b.addEventListener("click",()=>{ addBehaviorNode(t); closeAddMenu(); }); m.appendChild(b); }
+  document.body.appendChild(m);
+  const r=btn.getBoundingClientRect(); m.style.left=r.left+"px"; m.style.top=(r.bottom+4)+"px";
+  addMenuEl=m;
+}
+function closeAddMenu(){ if(addMenuEl){ addMenuEl.remove(); addMenuEl=null; } }
+function addBehaviorNode(type){
+  const cx=canvasGraphEl?(canvasGraphEl.scrollLeft+canvasGraphEl.clientWidth/2-75):200;
+  const cy=canvasGraphEl?(canvasGraphEl.scrollTop+canvasGraphEl.clientHeight/2-20):100;
+  const n=addNode(type,Math.max(0,cx|0),Math.max(0,cy|0),false);
+  n.enabled=true;
+  const src=nodes.find(z=>z.type==="particles"), snk=nodes.find(z=>z.type==="render");
+  if(src) edges.push({from:src.id,to:n.id});
+  if(snk) edges.push({from:n.id,to:snk.id});
+  rebuildGraphUI(); if(_booted)onCommit();
+}
+document.addEventListener("pointerdown",e=>{ if(addMenuEl && !addMenuEl.contains(e.target)) closeAddMenu(); },true);
+
+function setCellColor(c,v){
+  const a=Math.min(1,Math.abs(v));
+  c.style.background = v>=0 ? `rgba(92,255,177,${0.15+a*0.8})` : `rgba(255,123,123,${0.15+a*0.8})`;
+  c.style.color = a>0.5?"#04121d":"#9fb0c4";
+  c.textContent=v.toFixed(1);
+}
+function renderMatrixCell(n,i,j){
+  const mw=graphEl.querySelector(`.matrix-wrap[data-node="${n.id}"]`); if(!mw)return;
+  const c=mw.querySelector(`.mcell[data-i="${i}"][data-j="${j}"]`); if(c)setCellColor(c,n.params.m[i][j]);
+}
+// 全部展开 / 折叠
+let allOpen=true;
+document.getElementById("btnFit").addEventListener("click",()=>{
+  allOpen=!allOpen;
+  for(const n of nodes) n.open=allOpen;
+  rebuildGraphUI();
+});
+const btnAdv=document.getElementById("btnAdv");
+const btnAdd=document.getElementById("btnAdd");
+btnAdv.addEventListener("click",()=>{
+  advancedMode=!advancedMode;
+  btnAdv.classList.toggle("primary",advancedMode);
+  btnAdv.textContent=advancedMode?"⬡ 简化":"⬡ 高级";
+  btnAdd.style.display=advancedMode?"block":"none";
+  document.getElementById("graphPanel").classList.toggle("adv-panel",advancedMode);
+  rebuildGraphUI();
+});
+btnAdd.addEventListener("click",e=>{ e.stopPropagation(); openAddMenu(e.currentTarget); });
+
+/* 可收起：控制面板 / 展示台 / 提示语 */
+const btnPanel=document.getElementById("btnPanel");
+btnPanel.addEventListener("click",()=>{
+  const c=appEl.classList.toggle("panel-collapsed");
+  btnPanel.textContent=c?"⟩":"⟨";
+});
+document.getElementById("btnStage").addEventListener("click",()=>{
+  appEl.classList.add("stage-hidden"); glFrames=0;   // 重置健康检查计数，避免隐藏期误判黑屏降级
+});
+document.getElementById("stageReopen").addEventListener("click",()=>{
+  appEl.classList.remove("stage-hidden"); glFrames=0;
+});
+document.getElementById("btnHint").addEventListener("click",()=>{
+  appEl.classList.add("hint-hidden");
+});
+document.getElementById("hintReopen").addEventListener("click",()=>{
+  appEl.classList.remove("hint-hidden");
+});
+
+/* ===== 7. 引擎同步 ===== */
+function syncEngine(){
+  const find=t=>nodes.find(z=>z.type===t);
+  const P=find("particles"); if(P){ G.count=Math.min(MAXN,P.params.count|0); G.species=P.params.species|0; }
+  const M=find("matrix"); if(M){ G.matrix=M.params.m; G.preset=M.params.preset;
+    if(G.species!==M.params.m.length){ M.params.m=resizeMatrix(M.params.m,G.species); M.params.n=G.species; rebuildGraphUI(); return; } }
+  const D=find("damping"); if(D)G.friction=D.params.friction;
+  const N=find("noise"); if(N){ G.noiseAmp=N.params.amp; G.noiseScale=N.params.scale; G.noiseSpeed=N.params.speed; }
+  const MO=find("mouse"); if(MO){ G.mouseMode=MO.params.mode; G.mouseR=MO.params.radius; G.mouseStr=MO.params.strength; }
+  const R=find("repel"); if(R){ G.repelR=R.params.radius; G.repelStr=R.params.strength; }
+  const A=find("align"); if(A){ G.alignR=A.params.radius; G.alignStr=A.params.strength; }
+  const C=find("cohere"); if(C){ G.cohereR=C.params.radius; G.cohereStr=C.params.strength; }
+  const RN=find("render"); if(RN){ G.tail=RN.params.tail; G.size=RN.params.size; G.bloom=RN.params.bloom; G.glow=RN.params.glow; G.theme=RN.params.theme;
+    G.chroma=RN.params.chroma; G.hue=RN.params.hue; G.vignette=RN.params.vignette; G.minN=RN.params.minN; }
+  // 2D 兜底：色相走 canvas CSS filter（GPU 端由着色器统一处理）；暗角走 DOM 遮罩开关
+  const vig=document.getElementById("vignette"); if(vig) vig.style.display=G.vignette?"block":"none";
+  if(CTX2D) gl2d.style.filter = G.hue? "hue-rotate("+G.hue+"deg)" : "none";
+  else if(canvas) canvas.style.filter="none";
+  const ab=activeBehaviors(); const types=[...ab].map(id=>nodes.find(z=>z.id===id).type);
+  document.getElementById("sBeh").textContent=types.length?types.map(t=>TYPE_LABEL[t]||t).join("·"):"无";
+  document.getElementById("sMode").textContent=types.includes("matrix")?"matrix":(types[0]||"–");
+}
+
+/* ===== 8. 交互 ===== */
+const mouse={x:0,y:0,inside:false};
+function ptr(e){ const r=stage.getBoundingClientRect(); mouse.x=e.clientX-r.left; mouse.y=e.clientY-r.top; mouse.inside=true; }
+stage.addEventListener("pointermove",ptr);
+stage.addEventListener("pointerdown",ptr);
+stage.addEventListener("pointerleave",()=>{ mouse.inside=false; });
+stage.addEventListener("wheel",e=>{ e.preventDefault();
+  const MO=nodes.find(z=>z.type==="mouse"); if(!MO) return;
+  const f=Math.max(0,Math.min(3, MO.params.strength*(e.deltaY<0?1.1:0.9)));
+  MO.params.strength=+f.toFixed(2); G.mouseStr=f;
+  // 同步“鼠标力”卡片里打开的强度滑块显示（不整体重建面板，避免卡顿）
+  const el=[...document.querySelectorAll('#graph .node')].find(n=>n.querySelector('.nm')&&n.querySelector('.nm').textContent==='鼠标力');
+  if(el){ const sl=[...el.querySelectorAll('.node-body input[type=range]')]; const s=sl[sl.length-1];
+    if(s){ s.value=f; const v=s.parentElement.querySelector('.val'); if(v)v.textContent=f.toFixed(2); } }
+  syncEngine();
+},{passive:false});
+function setRunning(r){ G.running=r; document.getElementById("btnPlay").textContent=r?"⏸ 暂停":"▶ 播放"; const bs=document.getElementById("btnStep"); if(bs) bs.disabled=r; }
+document.getElementById("btnPlay").addEventListener("click",()=>setRunning(!G.running));
+document.getElementById("btnReset").addEventListener("click",()=>{ initParticles(); if(gpuPhysicsReady) uploadStateToGPU(); });
+document.getElementById("btnShot").addEventListener("click",()=>{ if(GL_OK)renderScene(); const cnv=GL_OK?canvas:gl2d; const a=document.createElement("a"); a.download="particle-life.png"; a.href=cnv.toDataURL("image/png"); a.click(); });
+// ===== 暂停 + 单步 / 场景导出导入 =====
+// 单步：仅在暂停时有效，推进恰好一个固定步长（GPU/CPU 主线程直接步进；worker 模式转发给 worker）
+function stepPhysicsOnce(){
+  const t0=performance.now();
+  if(gpuActive) gpuStep();
+  else { buildGrid(); cpuStep(); }
+  const el=performance.now()-t0;
+  if(gpuActive) gpuStepMsEMA = gpuStepMsEMA? gpuStepMsEMA*0.85+el*0.15 : el;
+  else cpuStepMsEMA = cpuStepMsEMA? cpuStepMsEMA*0.85+el*0.15 : el;
+}
+function doStep(){
+  if(G.running) return;
+  const workerActive = workerEnabled && cpuWorker && !gpuActive && workerHasState;
+  if(workerActive) cpuWorker.postMessage({type:"step"});
+  else stepPhysicsOnce();
+  if(GL_OK) renderScene();      // 立即重绘，单步结果当帧可见
+}
+document.getElementById("btnStep").addEventListener("click",doStep);
+// 导出：序列化节点图+全局参数+精确粒子坐标（GPU 模式先回读坐标到 CPU），下载为 .json
+function exportScene(){
+  if(gpuActive && gpuPhysicsReady && GL_OK) readbackGPUState();
+  const n=Math.min(G.count,MAXN);
+  const data={
+    app:"particle-life", version:2, w0:W, h0:H,
+    scene: serializeState(),
+    particles:{ count:n, species:G.species,
+      px:Array.from(px.subarray(0,n)), py:Array.from(py.subarray(0,n)),
+      vx:Array.from(vx.subarray(0,n)), vy:Array.from(vy.subarray(0,n)),
+      sp:Array.from(sp.subarray(0,n)) }
+  };
+  const blob=new Blob([JSON.stringify(data)],{type:"application/json"});
+  const a=document.createElement("a"); a.download="particle-life-scene.json"; a.href=URL.createObjectURL(blob); a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  flashStatus("已导出场景（"+n+" 粒子）");
+}
+// 导入：解析 .json → 还原节点图/参数 → 覆盖精确粒子坐标（按当前画布尺寸等比缩放），推送到 GPU
+function importScene(file){
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const data=JSON.parse(r.result);
+      if(!data||data.app!=="particle-life"||!data.scene) throw new Error("文件格式不符");
+      if(!data.particles) throw new Error("缺少粒子数据");
+      applyState(data.scene);
+      const P=nodes.find(z=>z.type==="particles");
+      const wantSp=Math.max(1,(data.particles.species|0)||(P?P.params.species|0:5));
+      G.species=wantSp; if(P){ P.params.species=wantSp; P.params.count=data.particles.count; }
+      const n=Math.max(1,Math.min(data.particles.count|0,MAXN)); G.count=n;
+      const sx=(data.w0>0)? W/data.w0 : 1, sy=(data.h0>0)? H/data.h0 : 1;
+      const p=data.particles;
+      for(let i=0;i<n;i++){ px[i]=p.px[i]*sx; py[i]=p.py[i]*sy; vx[i]=p.vx[i]; vy[i]=p.vy[i]; sp[i]=p.sp[i]|0; }
+      for(let i=n;i<MAXN;i++){ px[i]=py[i]=vx[i]=vy[i]=0; sp[i]=0; }
+      if(gpuPhysicsReady) uploadStateToGPU();
+      pushHistory(); scheduleSave();
+      flashStatus("已导入场景（"+n+" 粒子 · 物种"+wantSp+"）");
+    }catch(e){ flashStatus("导入失败："+e.message); }
+  };
+  r.readAsText(file);
+}
+document.getElementById("btnExport").addEventListener("click",exportScene);
+document.getElementById("btnImport").addEventListener("click",()=>document.getElementById("fileImport").click());
+document.getElementById("fileImport").addEventListener("change",e=>{ const f=e.target.files&&e.target.files[0]; if(f) importScene(f); e.target.value=""; });
+// 轻量状态提示（独立 toast，不污染 status 栏字段）
+function flashStatus(msg){
+  let t=document.getElementById("toast");
+  if(!t){ t=document.createElement("div"); t.id="toast"; t.style.cssText="position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:999;background:rgba(8,18,28,.92);border:1px solid var(--accent);color:var(--accent);padding:7px 14px;border-radius:8px;font-size:12px;letter-spacing:.4px;pointer-events:none;opacity:0;transition:opacity .2s;box-shadow:0 4px 18px rgba(0,0,0,.4)"; document.body.appendChild(t); }
+  t.textContent=msg; t.style.opacity="1";
+  clearTimeout(flashStatus._t); flashStatus._t=setTimeout(()=>{ t.style.opacity="0"; },1500);
+}
+
+/* ===== D. GPU/性能自检诊断 ===== */
+// 目的：把沙箱看不见的 WebGL 分支变成可观测，便于一键反馈真实机器上的后端与耗时
+function collectDiag(){
+  const d={};
+  d["01_后端"] = gpuActive?"GPU 着色器物理":(GL_OK?(gpuPhysicsReady?"CPU 网格":"CPU（GPU 物理初始化失败）"):"2D 兜底");
+  d["02_粒子数"] = Math.min(G.count,MAXN);
+  d["03_FPS均值"] = +fpsEMA.toFixed(1);
+  d["04_本帧物理步数"] = diagSteps+" / 上限 "+MAX_STEPS;
+  d["05_固定步长"] = FIXED_DT.toFixed(4)+"s";
+  d["06_WebGL2"] = !!GL_OK;
+  d["07_GPU物理就绪"] = !!gpuPhysicsReady;
+  d["08_GPU物理错误"] = gpuErr||"无";
+  if(gl){
+    const dbg=gl.getExtension("WEBGL_debug_renderer_info");
+    d["09_显卡"] = dbg? String(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)):"n/a";
+    d["10_厂商"] = dbg? String(gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL)):"n/a";
+    d["11_浮点渲染EXT"] = !!gl.getExtension("EXT_color_buffer_float");
+    d["12_浮点混合EXT"] = !!gl.getExtension("EXT_float_blend");
+    d["13_最大纹理"] = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+  }
+  d["14_CPU步进ms"] = cpuStepMsEMA? +cpuStepMsEMA.toFixed(2):null;
+  // 注意：GPU 为异步提交，此值仅是 CPU 侧提交耗时，不等于 GPU 实际执行耗时
+  d["15_GPU提交ms*"] = gpuStepMsEMA? +gpuStepMsEMA.toFixed(2):null;
+  d["16_坐标回读"] = (!gpuActive)? "关/不适用" : (gpuGridUse? "GPU内建(免建桶上传)" : (G.links? (gpuReadbackMode+(PHYS_16F?" ·16F":"")) : "免回读(连线关)"));
+  d["17_自适应"] = adaptOn?"开":"关";
+  d["18_强制后端"] = forceBackend;
+  // GPU 物理已改为混合空间网格 O(N·k)：量化每帧候选邻居遍历规模（含 3×3 邻格候选上限）
+  const nn=Math.min(G.count,MAXN);
+  const gc=gpuGridCols||0, gr=gpuGridRows||0;
+  const perCell = gc>0&&gr>0 ? Math.ceil(nn/(gc*gr)) : 0;
+  d["19_GPU迭代规模"] = gpuActive
+    ? ("网格 "+gc+"×"+gr+" 格，单格约 "+perCell+" 粒子；每帧 gather ≈ "+(nn*perCell).toLocaleString("en-US")+" 次（网格 O(N·k)，已替 O(N²)="+(nn*nn).toLocaleString("en-US")+"）")
+    : "不适用(非GPU后端)";
+  // 20：网格建桶后端（B：GPU 内建计数排序免 CPU 建桶；默认关，?gpuGrid=1 开启，失败回退 CPU）
+  d["20_GPU网格"] = gpuActive
+    ? (gpuGridUse ? "GPU内建排序(bitonic,免CPU建桶)"
+        : (!gpuGridEnabled ? "CPU建桶(异步PBO回读)"
+            : (gpuGridReady ? "B校验失败→回退CPU建桶" : "B初始化失败→回退CPU建桶("+gpuGridErr.slice(0,40)+")")))
+    : "不适用(非GPU后端)";
+  // 21：动态分辨率（H）——仅渲染缩放，不影响物理迭代规模
+  d["21_动态分辨率"] = dynResOn ? ("×"+renderScale.toFixed(2)+(renderScale<1?" (动态降载)":"")) : "关(锁定×1.00)";
+  // 22：物理执行线程（G）——GPU 模式不搬运；CPU 模式默认主线程，?worker=1 且 worker 存活时改 Worker 异步搬运
+  d["22_物理线程"] = gpuActive ? "GPU(不搬运)"
+    : (workerEnabled && cpuWorker ? "Worker(异步搬运)" : (workerEnabled? "Worker启动失败→主线程" : "主线程"));
+  return d;
+}
+const diagEl=document.getElementById("diag"), diagTextEl=document.getElementById("diagText");
+function diagString(){
+  const d=collectDiag();
+  return Object.keys(d).map(k=>k.padEnd(16," ")+": "+d[k]).join("\n");
+}
+document.getElementById("btnDiag").addEventListener("click",()=>{
+  diagTextEl.textContent=diagString(); diagEl.classList.add("on");
+});
+document.getElementById("btnDiagClose").addEventListener("click",()=>diagEl.classList.remove("on"));
+diagEl.addEventListener("click",e=>{ if(e.target===diagEl) diagEl.classList.remove("on"); });
+document.getElementById("selBackend").addEventListener("change",e=>{
+  forceBackend=e.target.value;
+  if(diagEl.classList.contains("on")) diagTextEl.textContent=diagString();  // 切换后立即刷新读数
+});
+document.getElementById("btnDiagCopy").addEventListener("click",async()=>{
+  const t=diagString();
+  try{ await navigator.clipboard.writeText(t); }catch(e){}
+  const b=document.getElementById("btnDiagCopy"); b.textContent="已复制"; setTimeout(()=>b.textContent="复制",1200);
+});
+
+const PRESETS={
+  "聚团矩阵":{matrix:"cluster"}, "链状":{matrix:"chain"}, "对称":{matrix:"sym"},
+  "生态循环":{matrix:"ecosystem"}, "晶格":{matrix:"crystal"}, "全吸引":{matrix:"allatt"},
+  "全排斥":{matrix:"allrep"}, "随机":{matrix:"rand"},
+  // —— 新增矩阵预设 ——
+  "环流矩阵":{matrix:"cyclic"}, "变形虫矩阵":{matrix:"amoeba"}, "花朵矩阵":{matrix:"flowers"},
+  "色带矩阵":{matrix:"band"}, "阵营矩阵":{matrix:"war"}, "捕食链":{matrix:"predator"},
+  "漩涡矩阵":{matrix:"swirl"}, "波纹矩阵":{matrix:"wave"}, "斑斓矩阵":{matrix:"purple"},
+  // —— 行为组合 ——
+  "类鸟群boids":{behaviors:["align","cohere","damping"]},
+  "流体噪声":{behaviors:["noise","damping"]}, "混沌":{behaviors:["repel","matrix","damping"]},
+  "捕食+噪声":{matrix:"predator",behaviors:["noise","damping"]}, "漩涡+对齐":{matrix:"swirl",behaviors:["align","cohere","damping"]},
+};
+const selP=document.getElementById("selPreset");
+selP.innerHTML=Object.keys(PRESETS).map(k=>`<option value="${k}">${k}</option>`).join("");
+selP.addEventListener("change",()=>applyPreset(selP.value));
+function applyPreset(name){
+  const cfg=PRESETS[name]; if(!cfg)return;
+  const M=nodes.find(z=>z.type==="matrix");
+  if(cfg.matrix && M){ M.params.m=makeMatrix(cfg.matrix,G.species); M.params.preset=cfg.matrix; }
+  if(cfg.behaviors){
+    const keep=new Set(cfg.behaviors);
+    const src=nodes.find(z=>z.type==="particles"), snk=nodes.find(z=>z.type==="render");
+    for(const n of nodes){
+      if(n.type==="particles"||n.type==="render") continue;
+      // 仅启用预设列出的行为；绝不关闭用户已开启的其他行为（如鼠标力），
+      // 否则切换预设会静默干掉鼠标力等独立开关（此前 n.enabled=keep.has(n.type) 的锅）
+      if(keep.has(n.type)) n.enabled=true;
+      // C1：预设要求启用的行为，若在高级模式被断开则补回连线，保证可达
+      if(keep.has(n.type) && src && snk){
+        if(!edges.some(e=>e.from===src.id&&e.to===n.id)) edges.push({from:src.id,to:n.id});
+        if(!edges.some(e=>e.from===n.id&&e.to===snk.id)) edges.push({from:n.id,to:snk.id});
+      }
+    }
+  }
+  rebuildGraphUI(); if(_booted)onCommit();
+}
+const selT=document.getElementById("selTheme");
+selT.innerHTML=Object.keys(THEMES).map(k=>`<option value="${k}">${k}</option>`).join("");
+selT.value=G.theme;
+selT.addEventListener("change",()=>{ G.theme=selT.value; const RN=nodes.find(z=>z.type==="render"); if(RN)RN.params.theme=G.theme; if(_booted)onCommit(); });
+const rngC=document.getElementById("rngCount"), lblC=document.getElementById("lblCount");
+// A：N 滑块直接驱动 G.count（经 setCount 保持图节点/滑块/标签一致）
+function setCount(v){
+  // 2D 兜底模式下软件渲染极慢，封顶 N 避免无意义卡死（仅 WebGL2 不可用才走此路）
+  const cap=GL_OK?MAXN:4000;
+  v=Math.max(1200,Math.min(cap,Math.round(v/100)*100));
+  G.count=v;
+  if(gpuPhysicsReady) uploadStateToGPU();
+  const P=nodes.find(z=>z.type==="particles"); if(P)P.params.count=v;
+  rngC.value=v; lblC.textContent=v;
+}
+rngC.addEventListener("input",()=>setCount(parseInt(rngC.value)));
+rngC.value=G.count; lblC.textContent=G.count;
+const chkAdapt=document.getElementById("chkAdapt");
+chkAdapt.addEventListener("change",()=>{ adaptOn=chkAdapt.checked; });
+const chkDynRes=document.getElementById("chkDynRes");
+chkDynRes.addEventListener("change",()=>{ dynResOn=chkDynRes.checked; if(!dynResOn && renderScale!==1){ renderScale=1; resizeGL(); } });
+const chkLinks=document.getElementById("chkLinks");
+const linkCtl=document.getElementById("linkCtl");
+const rngLinkR=document.getElementById("rngLinkR");
+const rngLinkA=document.getElementById("rngLinkA");
+chkLinks.addEventListener("change",()=>{ G.links=chkLinks.checked; linkCtl.style.display=G.links?"flex":"none"; });
+rngLinkR.addEventListener("input",()=>{ G.linkR=parseInt(rngLinkR.value,10); });
+rngLinkA.addEventListener("input",()=>{ G.linkAlpha=parseFloat(rngLinkA.value); });
+
+/* ===== 9b. 持久化 + 撤销/重做 + 键盘快捷键 ===== */
+const LS_KEY="particle-life-state";
+let history=[], histIndex=-1, _suspendHist=false, _saveT=0, _booted=false;
+// 序列化当前场景（节点/连线/渲染参数/全局开关）；粒子坐标不持久化（重置即随机）
+function serializeState(){
+  return {
+    v:1,
+    nodes:nodes.map(n=>({id:n.id,type:n.type,x:n.x,y:n.y,enabled:n.enabled,open:n.open,params:JSON.parse(JSON.stringify(n.params))})),
+    edges:edges.map(e=>({from:e.from,to:e.to})),
+    advancedMode,
+    G:{links:G.links,linkR:G.linkR,linkAlpha:G.linkAlpha,autoMorph:G.autoMorph,timeScale:G.timeScale,adaptOn,forceBackend,minN:G.minN}
+  };
+}
+function applyState(obj){
+  if(!obj||obj.v!==1) return false;
+  _suspendHist=true;
+  nodes=obj.nodes.map(n=>({id:n.id,type:n.type,x:n.x,y:n.y,enabled:n.enabled,open:n.open,params:n.params}));
+  edges=obj.edges.map(e=>({from:e.from,to:e.to}));
+  nid=nodes.length? Math.max(...nodes.map(n=>(+n.id.slice(1)||0))) : 0;
+  advancedMode=!!obj.advancedMode;
+  btnAdv.classList.toggle("primary",advancedMode);
+  btnAdv.textContent=advancedMode?"⬡ 简化":"⬡ 高级";
+  btnAdd.style.display=advancedMode?"block":"none";
+  document.getElementById("graphPanel").classList.toggle("adv-panel",advancedMode);
+  const g=obj.G||{};
+  G.links=!!g.links; G.linkR=g.linkR||28; G.linkAlpha=g.linkAlpha==null?0.22:g.linkAlpha;
+  G.autoMorph=!!g.autoMorph; G.timeScale=g.timeScale==null?1:g.timeScale;
+  adaptOn=g.adaptOn!==false; G.minN=g.minN||1200;
+  forceBackend=g.forceBackend||"auto";
+  const fp=document.getElementById("selBackend"); if(fp) fp.value=forceBackend;
+  const ca=document.getElementById("chkAdapt"); if(ca) ca.checked=adaptOn;
+  const cl=document.getElementById("chkLinks"); if(cl){ cl.checked=G.links; if(typeof linkCtl!=="undefined") linkCtl.style.display=G.links?"flex":"none"; }
+  // 还原粒子数（持久化于粒子节点 params.count；2D 兜底经 setCount 自动封顶）
+  { const _P=nodes.find(z=>z.type==="particles");
+    if(_P && _P.params && _P.params.count){ setCount(_P.params.count); } }
+  rebuildGraphUI();
+  initParticles();
+  if(gpuPhysicsReady) uploadStateToGPU();
+  _suspendHist=false;
+  return true;
+}
+function saveState(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(serializeState())); }catch(e){} }
+function scheduleSave(){ clearTimeout(_saveT); _saveT=setTimeout(saveState,700); }
+function loadPersisted(){ try{ const raw=localStorage.getItem(LS_KEY); if(!raw) return false; return applyState(JSON.parse(raw)); }catch(e){ return false; } }
+// 撤销/重做：快照式历史栈（最多 80 步），提交点入栈，_suspendHist 防止撤销/重载时递归入栈
+function pushHistory(){
+  if(_suspendHist) return;
+  if(histIndex<history.length-1) history=history.slice(0,histIndex+1);
+  history.push(serializeState());
+  if(history.length>80) history.shift();
+  histIndex=history.length-1;
+}
+function undo(){ if(histIndex<=0) return; histIndex--; _suspendHist=true; applyState(history[histIndex]); _suspendHist=false; }
+function redo(){ if(histIndex>=history.length-1) return; histIndex++; _suspendHist=true; applyState(history[histIndex]); _suspendHist=false; }
+function clearHistory(){ history=[]; histIndex=-1; }
+function onCommit(){ if(!_booted) return; pushHistory(); scheduleSave(); }
+// 键盘快捷键：空格 播放/暂停 · R 重置 · P 截图 · L 连线 · A 高级 · ? 诊断 · Ctrl+Z/Y 撤销重做
+function isTyping(e){ const t=e.target; return t&&(t.tagName==="INPUT"||t.tagName==="SELECT"||t.tagName==="TEXTAREA"); }
+window.addEventListener("keydown",e=>{
+  if((e.ctrlKey||e.metaKey)&&(e.key==="z"||e.key==="Z")){ e.preventDefault(); if(e.shiftKey) redo(); else undo(); return; }
+  if((e.ctrlKey||e.metaKey)&&(e.key==="y"||e.key==="Y")){ e.preventDefault(); redo(); return; }
+  if(isTyping(e)) return;
+  switch(e.key){
+    case " ": e.preventDefault(); setRunning(!G.running); break;
+    case ".": e.preventDefault(); doStep(); break;                         // 单步（暂停时）
+    case "e": case "E": e.preventDefault(); exportScene(); break;          // 导出场景
+    case "i": case "I": e.preventDefault(); document.getElementById("btnImport").click(); break; // 导入场景
+    case "r": case "R": document.getElementById("btnReset").click(); break;
+    case "p": case "P": document.getElementById("btnShot").click(); break;
+    case "l": case "L": chkLinks.click(); break;
+    case "a": case "A": btnAdv.click(); break;
+    case "?": document.getElementById("btnDiag").click(); break;
+  }
+});
+// 恢复默认：清除本地存档并重建初始场景
+document.getElementById("btnDefault").addEventListener("click",()=>{
+  try{ localStorage.removeItem(LS_KEY); }catch(e){}
+  initGraph(); initParticles(); if(gpuPhysicsReady) uploadStateToGPU();
+  clearHistory(); pushHistory(); scheduleSave();
+});
+
+/* ===== 9. 初始化 ===== */
+function initGraph(){
+  nodes=[]; edges=[]; nid=0;
+  const src=addNode("particles",0,0,false);
+  const m=addNode("matrix",0,0,false); m.params.m=makeMatrix("cluster",G.species); m.params.n=G.species;
+  addNode("damping",0,0,false);
+  const ns=addNode("noise",0,0,false); ns.params.amp=0.5;
+  addNode("mouse",0,0,false);
+  addNode("repel",0,0,false);
+  addNode("align",0,0,false);
+  addNode("cohere",0,0,false);
+  const snk=addNode("render",0,0,false);
+  // 所有行为节点都接入管线（src→behavior→snk）；激活与否由每节点的 enabled 开关控制
+  for(const n of nodes){ if(n.type!=="particles"&&n.type!=="render"){ edges.push({from:src.id,to:n.id}); edges.push({from:n.id,to:snk.id}); } }
+  // 默认启用 matrix + damping + mouse（聚团核心 + 画布拖动扰动；其余可选行为默认关闭）
+  for(const n of nodes){
+    n.enabled=(n.type==="matrix"||n.type==="damping"||n.type==="mouse");
+    if(n.type==="particles"||n.type==="render") n.enabled=true;  // 源/渲染始终启用，不被列为“未启用”
+    n.open=(n.type==="matrix");
+  }
+  // 高级模式节点图布局（固定栅格，进入高级模式立即可用；拖动后位置持久化）
+  const LAY={particles:[12,40],matrix:[200,18],damping:[200,150],noise:[200,280],mouse:[200,410],
+            repel:[380,18],align:[380,150],cohere:[380,280],render:[560,120]};
+  for(const n of nodes){ const p=LAY[n.type]; if(p){ n.x=p[0]; n.y=p[1]; } }
+  rebuildGraphUI();
+}
+function boot(){
+  allocParticles();
+  if(!loadPersisted()) initGraph();        // 有本地存档则恢复场景，否则建默认图
+  initParticles();
+  setupGL();
+  if(!GL_OK){ if(setup2D()){ resizeGL(); } else { return; } }
+  else { resizeGL(); setupGPU(); if(gpuPhysicsReady) uploadStateToGPU(); }   // C：WebGL2 可用则尝试初始化 GPU 物理，失败自动回退 CPU
+  setCount(parseInt(rngC.value));          // setCount 统一处理 2D 封顶 / GPU 上限
+  document.getElementById("sPhys").textContent=GL_OK?"CPU":"2D兜底";
+  let _resizeT=null;
+  function resizeGLDebounced(){ if(_resizeT)clearTimeout(_resizeT); _resizeT=setTimeout(()=>{ _resizeT=null; resizeGL(); },150); }   // F：窗口拖拽时防抖，避免反复重建 FBO/纹理
+  window.addEventListener("resize",resizeGLDebounced);
+  _booted=true;
+  pushHistory();                            // 基线快照，供撤销回到初始
+  setRunning(true); requestAnimationFrame(frame);
+}
+boot();
+
+})();
+</script>
+</body>
+</html>

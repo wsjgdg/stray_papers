@@ -1,0 +1,11 @@
+{
+  "name": "schrodinger-workshop",
+  "version": "2.0.0",
+  "description": "薛定谔工场 —— 单页量子场实时求解器（WebGL2 + ES 模块 + 可插拔物理内核）",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "python3 -m http.server 8765",
+    "build:standalone": "node scripts/build-standalone.mjs"
+  }
+}
