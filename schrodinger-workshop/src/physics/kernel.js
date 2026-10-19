@@ -191,6 +191,26 @@
  *   开关（Dirac/Pauli 因 KDK 结构性失效被迫切换），3D 的 CN 是**运行时可选**
  *   （state.integrator3='kdk'|'cn'，面板/URL 切换）——标量 3D 的 KDK 并无缺陷
  *   （R34 已验证守恒），CN 的价值是严格正交性（Cayley）与教学上的积分器对照。
+ *
+ * 概率流约定（R61；J = (1/m)·Im(ψ*∇ψ)，ℏ=1）：
+ *   currentSnippets() —— 内核方法，返回 { jx, jy, jz } 三个 GLSL 表达式
+ *     （vec4 psi 与 dxp/dyp/dzp「即 2∂」差分在作用域内）。默认
+ *     (1/m)·pmeanX/Y/Z（基类由 pmeanSnippets 组装）；一阶内核覆写为
+ *     ψ†σ_kψ 双线性型（Dirac：jx=2(xz+yw), jy=2(xw−yz)，无 1/m 因子）。
+ *     单位制自洽：格点坐标 x_t=w·g，∂_{x_t}=dxp/2，PMEANX=⟨p_x⟩ 密度
+ *     ⟹ J_x=(1/m)·PMEANX；平面波 ψ=e^{ik·x_t} ⟹ J_x=k/m（相速度）✓。
+ *   装配产物（buildShaders 无条件追加，app.js 按存在性编译）：
+ *     jField   —— ψ → RG32F (Jx,Jy)（TPL_JFIELD，4 阶中心差分）
+ *     jRed     —— 32² MRT 归约 (TPL_JRED)：o0=(ΣJx,ΣJy,ΣdivJ,Σρ)、
+ *                 o1=(左右下上通量)、o2=(max|J|,Σ|J|)。divJ 用 2 阶中心
+ *                 差分（4 阶不望远镜，见模板注）；ΣdivJ ≡ 边界通量和（精确
+ *                 望远镜）⟹ Gauss 残差为 float 舍入量级（自校验锚点）。
+ *     bohmStep —— 64×1 viewport 的制导速度步进（TPL_BOHM_STEP：
+ *                 v=J/max(ρ,floor)，步长钳制，出界停泊 (−1,−1)）。
+ *     jField3/jRed3 —— dim3 时追加（TPL_JFIELD3 逐层 draw RGBA32F
+ *                 (Jx,Jy,Jz,0)；TPL_JRED3 线性分块、前向差 divJ 望远镜）。
+ *   零回归：showJ/bohmOn 默认 false；TPL_DISPLAY 新增段全部 uniform
+ *   门控（uShowJ/uBohmOn），关闭时最终行与旧路径逐字等价。
  * ========================================================================== */
 
 import { gaussianWave } from './gaussian.js';
@@ -433,6 +453,83 @@ void main(){
   o0 = vec4(sp, uK*st, sp2, sv);
   o1 = vec4(sx, sy, sz, peak);
   o2 = vec4(uK*stx, uK*sty, uK*stz, 0.0);
+}`;
+
+/* ---------- 3D 概率流场（R61）：逐层 draw，RGBA32F (Jx,Jy,Jz,0) ----------
+   1-texel 中心差分 dxp = S(p+e)−S(p−e)（≈2∂，与 CURRENT snippet 的 dxp
+   约定同：snippet 内 0.5·Im(ψ*Δψ) = Im(ψ*∂ψ)）——故 2D/3D 共用
+   currentSnippets() 的同一套表达式（2D 用 4 阶、3D 用 2 阶，均满足
+   「dxp 即 2∂」的接口约定）。CLAMP_TO_EDGE（Neumann）与 TPL_REDUCE3D 同口径。 */
+const TPL_JFIELD3 = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform highp sampler3D uPsi;
+uniform vec3 uTexel3;
+uniform float uLayer;
+uniform float uInvM;
+{{UNIFORMS}}
+vec4 S(vec3 p){ return texture(uPsi, clamp(p, vec3(0.0), vec3(1.0))); }
+void main(){
+  vec3 p = vec3(vUv, uLayer);
+  vec4 psi = S(p);
+  vec4 dxp = S(p+vec3(uTexel3.x,0.0,0.0)) - S(p-vec3(uTexel3.x,0.0,0.0));
+  vec4 dyp = S(p+vec3(0.0,uTexel3.y,0.0)) - S(p-vec3(0.0,uTexel3.y,0.0));
+  vec4 dzp = S(p+vec3(0.0,0.0,uTexel3.z)) - S(p-vec3(0.0,0.0,uTexel3.z));
+  o = vec4({{CURRENT_X}}, {{CURRENT_Y}}, {{CURRENT_Z}}, 1.0);
+}`;
+
+/* ---------- 3D 概率流归约（R61）：线性索引分块（同 TPL_REDUCE3D）----------
+   o0：(ΣJx, ΣJy, ΣJz, ΣdivJ)
+   o1：(x−面通量, x+面通量, y−面通量, y+面通量)
+   o2：(z−面通量, z+面通量, max|J|, Σρ)
+   前向差分 divJ=(J(i+ex)−J(i))+...：界外钳制 ⟹ 末面贡献 0，精确望远镜
+   ΣdivJ ≡ Σ(f+) − Σ(f−)（Gauss 自校验锚点，与 2D jRed 同口径）。 */
+const TPL_JRED3 = `#version 300 es
+precision highp float;
+in vec2 vUv;
+layout(location=0) out vec4 o0;
+layout(location=1) out vec4 o1;
+layout(location=2) out vec4 o2;
+uniform highp sampler3D uJ;
+uniform highp sampler3D uPsi;
+uniform float uGrid3;
+{{UNIFORMS}}
+float den3(vec4 c){ return {{DENSITY3}}; }
+void main(){
+  int n = int(uGrid3 + 0.5);
+  ivec2 gi = ivec2(floor(gl_FragCoord.xy));
+  int id = gi.y*32 + gi.x;
+  int total = n*n*n;
+  int per = (total + 1023)/1024;
+  float sjx=0.0, sjy=0.0, sjz=0.0, sdj=0.0, sp=0.0, mj=0.0;
+  float fxm=0.0, fxp=0.0, fym=0.0, fyp=0.0, fzm=0.0, fzp=0.0;
+  float inv = 1.0/float(n);
+  for(int k=0;k<per;k++){
+    int idx = id*per + k;
+    if(idx >= total) break;
+    int ix = idx - (idx/n)*n;
+    int iy = (idx/n) - (idx/(n*n))*n;
+    int iz = idx/(n*n);
+    vec3 uvw = (vec3(float(ix),float(iy),float(iz))+0.5)*inv;
+    vec3 J = texture(uJ, uvw).rgb;
+    vec4 psi = texture(uPsi, uvw);
+    sp += den3(psi);
+    vec3 Jxp = texture(uJ, uvw+vec3(inv,0.0,0.0)).rgb;
+    vec3 Jyp = texture(uJ, uvw+vec3(0.0,inv,0.0)).rgb;
+    vec3 Jzp = texture(uJ, uvw+vec3(0.0,0.0,inv)).rgb;
+    float dj = (Jxp.x-J.x) + (Jyp.y-J.y) + (Jzp.z-J.z);
+    sjx += J.x; sjy += J.y; sjz += J.z; sdj += dj;
+    mj = max(mj, length(J));
+    if(ix==0) fxm += J.x;
+    if(ix==n-1) fxp += J.x;
+    if(iy==0) fym += J.y;
+    if(iy==n-1) fyp += J.y;
+    if(iz==0) fzm += J.z;
+    if(iz==n-1) fzp += J.z;
+  }
+  o0 = vec4(sjx,sjy,sjz,sdj);
+  o1 = vec4(fxm,fxp,fym,fyp);
+  o2 = vec4(fzm,fzp,mj,sp);
 }`;
 
 /* ---------- 3D KDK 速度 Verlet 骨架（引擎级，kernel.dim3=true 时启用）----------
@@ -893,6 +990,12 @@ uniform int   uABCount;       // 实际管数（编译期常量循环 + 动态 b
 uniform int   uABSel;         // 选中管索引（-1 = 无；画金色外环作交互反馈）
 uniform vec2  uABCursor;      // R55：放置预览环世界坐标（(-1,-1) = 无预览；仅本 program 有）
 uniform float uABDraftPhi;    // R55：草稿磁通（预览环的 Φ 色相/辉光源）
+uniform float uShowJ;         // R61：概率流箭头开关（0/1；0 时整段不执行）
+uniform sampler2D uJ;         // R61：J 场（RG32F，格心 NEAREST 采样）
+uniform float uJScale;        // R61：max|J|（jRed 回读，箭头长度归一化基准）
+uniform float uBohmOn;        // R61：Bohm 轨迹叠加开关（0/1）
+uniform sampler2D uBohmTrail; // R61：轨迹残影（RGBA16F ping-pong 当前读纹理）
+uniform float uBohmGain;      // R61：轨迹增益（bohmOn=0 时为 0）
 {{UNIFORMS}}
 vec4 bilerp(sampler2D t, vec2 uv, vec2 texel){
   vec2 f = fract(uv/texel - 0.5) - 0.5;
@@ -902,6 +1005,12 @@ vec4 bilerp(sampler2D t, vec2 uv, vec2 texel){
   vec4 c = texture(t, base+vec2(0.0,texel.y));
   vec4 d = texture(t, base+texel);
   return mix(mix(a,b,f.x+0.5), mix(c,d,f.x+0.5), f.y+0.5);
+}
+/* R61：点到线段距离（概率流箭头 SDF） */
+float segDist(vec2 p, vec2 a, vec2 b){
+  vec2 pa = p-a, ba = b-a;
+  float h = clamp(dot(pa,ba)/max(dot(ba,ba),1e-12), 0.0, 1.0);
+  return length(pa - ba*h);
 }
 {{HSV}}
 void main(){
@@ -980,7 +1089,36 @@ void main(){
     img += pcol*smoothstep(1.2,0.0,abs(rc-0.035)/wc)*0.30;
     img += pcol*smoothstep(0.035,0.012,rc)*pglow*0.18;
   }
-  o = vec4(max(img, texture(uTrail,vUv).rgb*uDecay), 1.0);
+  /* R61 概率流箭头：24×24 世界格阵，格心 NEAREST 采 J（jTex 为格点尺寸，
+     采样点 (cell+0.5)/24 由 NEAREST 取最近格点值），轴 + 箭头两翼三段 SDF；
+     半长 ∝ |J|/max|J|（uJScale 由 jRed 回读建立，toggle 时即时建尺度）；
+     方向与距离均在 uAspect 修正空间计算 ⟹ 屏幕正圆、45° 箭头仍呈 45°；
+     青 → 暖白随幅值，细流也可见（0.35+0.65·mag 亮度底）。 */
+  if(uShowJ > 0.5){
+    vec2 cell = floor(wuv*24.0);
+    vec2 jc = texture(uJ, (cell+0.5)/24.0).rg;
+    float mag = length(jc);
+    float ratio = uJScale > 1e-9 ? min(mag/uJScale, 1.0) : 0.0;
+    if(mag > 1e-9 && ratio > 0.0){
+      vec2 dq = (wuv - (cell+0.5)/24.0)*uAspect;
+      vec2 jdir = normalize(vec2(jc.x*uAspect.x, jc.y*uAspect.y));
+      float L = 0.45/24.0*uAspect.x*ratio;          /* 半长（屏幕单位，≤半格） */
+      vec2 tip = jdir*L;
+      vec2 w1 = vec2(-jdir.y, jdir.x)*0.18*L;       /* 箭翼法向 */
+      float d = min(segDist(dq, -tip, tip),
+                min(segDist(dq, tip, tip - jdir*0.32*L + w1),
+                    segDist(dq, tip, tip - jdir*0.32*L - w1)));
+      float wq = max(fwidth(d), 1e-4);
+      vec3 jcol = mix(vec3(0.20,0.85,1.00), vec3(1.00,0.92,0.75), ratio);
+      img += jcol*smoothstep(1.4,0.0,d/wq)*(0.35+0.65*ratio);
+    }
+  }
+  /* R61：Bohm 轨迹残影叠加。bohmOn=0 时分支不采样、增益 0 ⟹ 与重构前
+     逐字等价（outc = max(img, trail·decay) 不变）；trail 与 bohmTrail
+     均为 ping-pong 当前读纹理（app.js 逐帧交换）。 */
+  vec3 outc = max(img, texture(uTrail,vUv).rgb*uDecay);
+  if(uBohmOn > 0.5) outc += texture(uBohmTrail, vUv).rgb*uBohmGain;
+  o = vec4(outc, 1.0);
 }`;
 
 /* ---------- 能量/概率/矩归约：32^2 MRT 三 RGBA32F ----------
@@ -1063,15 +1201,143 @@ void main(){
   o2 = vec4(stx,sty,pmx,pmy);
 }`;
 
+/* ---------- 概率流场 J（R61）：ψ → RG32F (Jx,Jy) ----------
+   单位制契约（与 TPL_REDUCE 的 PMEANX 同源）：dxp/dyp 为 2∂ψ（4 阶中心差分），
+   CURRENT_X/Y = (1/m)·Im(ψ*∂ψ) = J（ℏ=1）。平面波校验：ψ=e^{ik·x_t}
+   ⟹ PMEANX=k、J_x=k/m（相速度）✓。Dirac 等一阶内核经 currentSnippets()
+   覆写为 ψ†σ_kψ 双线性型（无 1/m 因子）。
+   界外 CLAMP_TO_EDGE 与 TPL_REDUCE 同口径（Dirichlet 边界 ψ≈0 ⟹ J≈0）。 */
+const TPL_JFIELD = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uPsi;
+uniform vec2 uTexel;
+uniform float uInvM;
+{{UNIFORMS}}
+vec4 S(vec2 p){ return texture(uPsi, clamp(p, vec2(0.0), vec2(1.0))); }
+void main(){
+  vec4 psi = S(vUv);
+  /* 4 阶中心差分（与 TPL_REDUCE 的 dxp/dyp 逐字同款，2h 标度 ⟹ snippet 内
+     0.5·Im(ψ*Δψ) 即 Im(ψ*∂ψ)，无需额外系数） */
+  vec4 dxp = (S(vUv-vec2(2.0*uTexel.x,0.0)) - 8.0*S(vUv-vec2(uTexel.x,0.0))
+            + 8.0*S(vUv+vec2(uTexel.x,0.0)) - S(vUv+vec2(2.0*uTexel.x,0.0)))/6.0;
+  vec4 dyp = (S(vUv-vec2(0.0,2.0*uTexel.y)) - 8.0*S(vUv-vec2(0.0,uTexel.y))
+            + 8.0*S(vUv+vec2(0.0,uTexel.y)) - S(vUv+vec2(0.0,2.0*uTexel.y)))/6.0;
+  o = vec4({{CURRENT_X}}, {{CURRENT_Y}}, 0.0, 1.0);
+}`;
+
+/* ---------- 概率流归约（R61）：32^2 MRT 三 RGBA32F ----------
+   o0：(ΣJx, ΣJy, ΣdivJ, Σρ)
+   o1：(左通量, 右通量, 下通量, 上通量)（界面 J·n 求和）
+   o2：(max|J|, Σ|J|, 0, 0)
+   divJ 用 **2 阶中心差分**（非 4 阶）：4 阶 stencil 的域内求差不望远镜
+   （ΣdivJ₄阶 = (1/6)[−13J(0)+J(1)−J(g−2)+13J(g−1)]，恒非零）；2 阶 +
+   CLAMP_TO_EDGE 精确望远镜：ΣdivJ ≡ fr−fl+ft−fb（1D 推演
+   Σ_i(J(i+1)−J(i−1))/2 = J(g−1)−J(0)）。Gauss 残差
+   (ΣdivJ − 边界通量和) 因此为 float 舍入量级——实现自校验锚点。
+   墙边界诚实性：顶点 J 的面通量与 Dirichlet 精确 link 流（恒 0）有 O(h)
+   差；室内波包两者均≈0（连续性紧密），撞墙时 ΣdivJ 显示瞬时面通量而
+   dP/dt≈0——CDP 断言只针对室内波包的紧密连续性。
+   分块界守卫：g<256 时 8×8 块会越出格点（vUv*32 映射假设 g=256），
+   显式 continue——不继承 TPL_REDUCE 对「钳制读边值≈0」的脆弱依赖。 */
+const TPL_JRED = `#version 300 es
+precision highp float;
+in vec2 vUv;
+layout(location=0) out vec4 o0;
+layout(location=1) out vec4 o1;
+layout(location=2) out vec4 o2;
+uniform sampler2D uJ;
+uniform sampler2D uPsi;
+uniform float uGrid;
+{{UNIFORMS}}
+void main(){
+  vec2 base = floor(vUv*32.0)*8.0;
+  float g = uGrid;
+  float sjx=0.0, sjy=0.0, sdj=0.0, sp=0.0;
+  float fl=0.0, fr=0.0, fb=0.0, ft=0.0;
+  float mj=0.0, saj=0.0;
+  for(int j=0;j<8;j++){
+    for(int i=0;i<8;i++){
+      ivec2 ij = ivec2(base)+ivec2(i,j);
+      if(ij.x >= int(g) || ij.y >= int(g)) continue;
+      vec2 uv = (vec2(ij)+0.5)/g;
+      vec2 J = texture(uJ, uv).rg;
+      vec4 psi = texture(uPsi, uv);
+      float p = {{DENSITY}};   /* 片段引用 psi（2D 内核约定，见 TPL_BOHM_STEP）——
+                                     不可包成 den(vec4 c)：c 与片段变量名不符致编译失败 */
+      vec2 Jxp = texture(uJ, uv+vec2(1.0/g,0.0)).rg;
+      vec2 Jxm = texture(uJ, uv-vec2(1.0/g,0.0)).rg;
+      vec2 Jyp = texture(uJ, uv+vec2(0.0,1.0/g)).rg;
+      vec2 Jym = texture(uJ, uv-vec2(0.0,1.0/g)).rg;
+      float dj = 0.5*(Jxp.x-Jxm.x) + 0.5*(Jyp.y-Jym.y);
+      sjx += J.x; sjy += J.y; sdj += dj; sp += p;
+      float mag = length(J);
+      mj = max(mj, mag); saj += mag;
+      if(ij.x==0) fl += J.x;
+      if(ij.x==int(g)-1) fr += J.x;
+      if(ij.y==0) fb += J.y;
+      if(ij.y==int(g)-1) ft += J.y;
+    }
+  }
+  o0 = vec4(sjx,sjy,sdj,sp);
+  o1 = vec4(fl,fr,fb,ft);
+  o2 = vec4(mj,saj,0.0,0.0);
+}`;
+
+/* ---------- Bohm 轨迹步进（R61）：64×1 viewport，RG32F ping-pong ----------
+   制导速度 v = J/max(ρ, floor)（Bohm 力学一阶形式；floor 防节点除零——
+   节点附近轨迹无定义，钳制后穿节点而过）。步长钳制 uMaxStep（防大 J 跳格）；
+   出界 ⟹ 停泊 (−1,−1)（显示侧按 p.x<0 剔除）。
+   ψ/J 采样用手动 bilerp（4 NEAREST fetch）——规避 32F 线性滤波对
+   OES_texture_float_linear 的依赖。jTex 与 psiTex 同尺寸 ⟹ 共用 uTexel。 */
+const TPL_BOHM_STEP = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uPos;
+uniform sampler2D uJ;
+uniform sampler2D uPsi;
+uniform vec2 uTexel;
+uniform float uInvGrid;  /* 1/g：J 为格点动量通量（v=J/ρ 是格点速度），位置是 uv ⟹ 步长 ×1/g */
+uniform float uDt;
+uniform float uRhoFloor;
+uniform float uMaxStep;
+{{UNIFORMS}}
+vec4 bilerp(sampler2D t, vec2 uv, vec2 texel){
+  vec2 f = fract(uv/texel - 0.5) - 0.5;
+  vec2 base = (uv/texel - 0.5 - f)*texel;
+  vec4 a = texture(t, base);
+  vec4 b = texture(t, base+vec2(texel.x,0.0));
+  vec4 c = texture(t, base+vec2(0.0,texel.y));
+  vec4 d = texture(t, base+texel);
+  return mix(mix(a,b,f.x+0.5), mix(c,d,f.x+0.5), f.y+0.5);
+}
+void main(){
+  float fi = floor(gl_FragCoord.x);
+  vec2 p = texture(uPos, vec2((fi+0.5)/64.0, 0.5)).rg;
+  if(p.x < 0.0){ o = vec4(p, 0.0, 1.0); return; }
+  vec2 J = bilerp(uJ, p, uTexel).rg;
+  vec4 psi = bilerp(uPsi, p, uTexel);
+  float rho = {{DENSITY}};
+  /* v = J/ρ 为格点速度（平面波 ψ=e^{ik·x_t} ⟹ v=k/m）；×uInvGrid 换算 uv */
+  vec2 d = J/max(rho, uRhoFloor)*uDt*uInvGrid;
+  float dl = length(d);
+  if(dl > uMaxStep) d *= uMaxStep/dl;
+  vec2 q = p + d;
+  if(q.x<0.0||q.x>1.0||q.y<0.0||q.y>1.0) q = vec2(-1.0,-1.0);
+  o = vec4(q, 0.0, 1.0);
+}`;
+
 /* 默认像素着色：色相 = 相位 arg(ψ)（取第一复分量），亮度 = 概率密度 */
 const DEFAULT_PIXEL_COLOR = 'hsv2rgb(vec3(atan(psi.y,psi.x)/6.2831853+0.5,0.80,1.0))';
 
 /* 默认均值动量片段（复标量；dxp/dyp 为 2∂ψ，故 ×0.5 得 Im(ψ*∂ψ)=|ψ|²∂_xφ）：
    pairs=1 取唯一复分量；pairs=2 两复分量求和（总动量）。 */
 const DEFAULT_PMEAN = {
-  1: { x: '0.5*(psi.x*dxp.y-psi.y*dxp.x)', y: '0.5*(psi.x*dyp.y-psi.y*dyp.x)' },
+  1: { x: '0.5*(psi.x*dxp.y-psi.y*dxp.x)', y: '0.5*(psi.x*dyp.y-psi.y*dyp.x)',
+       z: '0.5*(psi.x*dzp.y-psi.y*dzp.x)' },
   2: { x: '0.5*((psi.x*dxp.y-psi.y*dxp.x)+(psi.z*dxp.w-psi.w*dxp.z))',
-       y: '0.5*((psi.x*dyp.y-psi.y*dyp.x)+(psi.z*dyp.w-psi.w*dyp.z))' },
+       y: '0.5*((psi.x*dyp.y-psi.y*dyp.x)+(psi.z*dyp.w-psi.w*dyp.z))',
+       z: '0.5*((psi.x*dzp.y-psi.y*dzp.x)+(psi.z*dzp.w-psi.w*dzp.z))' },
 };
 
 /* ---------- 基类：给出全部默认值，子类按需覆盖 ---------- */
@@ -1103,7 +1369,20 @@ export class PhysicsKernel {
        不确定原理 HUD 的 ⟨p⟩ 来源；多分量/耦合内核可改（如相对论性动量）。 */
   pmeanSnippets(){
     const d = DEFAULT_PMEAN[this.pairs] || DEFAULT_PMEAN[1];
-    return { pmeanX: d.x, pmeanY: d.y };
+    return { pmeanX: d.x, pmeanY: d.y, pmeanZ: d.z };
+  }
+  /* 概率流密度片段（R61）：J = (1/m)·Im(ψ*∇ψ)（复标量，ℏ=1）。引擎单位制：
+     格点坐标 x_t = w·g，∂_{x_t} = dxp/2（dxp 为 2∂_wψ 差分，dxp.y 即 Im 分量），
+     PMEANX = ⟨p_x⟩ 密度 = Im(ψ*∂_{x_t}ψ) ⟹ J_x = (1/m)·PMEANX。
+     平面波校验：ψ=e^{ik·x_t} ⟹ PMEANX=k、J_x=k/m = 相速度，正确。
+     一阶内核（Dirac）覆写为 ψ†σ_kψ 双线性型（无 1/m 因子，见 dirac.js）。 */
+  currentSnippets(){
+    const pm = this.pmeanSnippets();
+    return {
+      jx: 'uInvM*(' + pm.pmeanX + ')',
+      jy: 'uInvM*(' + pm.pmeanY + ')',
+      jz: 'uInvM*(' + pm.pmeanZ + ')',
+    };
   }
   cpuDensity(buf, i){ return buf[i]*buf[i] + buf[i+1]*buf[i+1]; } /* 调试句柄用 */
 }
@@ -1133,6 +1412,8 @@ export function buildShaders(kernel){
      由 kernel.setUniforms() 逐帧赋值；program 中未引用时被编译器优化掉，取值返回 null。 */
   const uni = s.uniforms || '';
   const pm = kernel.pmeanSnippets();
+  /* R61：概率流片段（默认 (1/m)·PMEAN；Dirac 等一阶内核覆写） */
+  const cur = kernel.currentSnippets();
   const fill = (tpl, map) => {
     /* 重复 token 守卫：fill() 是全局替换，模板注释里误写 {{TOKEN}} 会把片段源码
        注入注释、片段内部的注释结束符会提前关闭外层注释，致函数体半沉成活代码
@@ -1157,6 +1438,11 @@ export function buildShaders(kernel){
     }),
     reduce: fill(TPL_REDUCE, { ...need, ...opt, UNIFORMS: uni, PMEANX: pm.pmeanX, PMEANY: pm.pmeanY }),
     scale: TPL_SCALE,
+    /* R61 概率流：jField（ψ → RG32F J 场）+ jRed（通量/散度归约 MRT）+
+       bohmStep（64 粒子制导速度步进）。token 唯一性由 fill() 守卫保证。 */
+    jField: fill(TPL_JFIELD, { UNIFORMS: uni, CURRENT_X: cur.jx, CURRENT_Y: cur.jy }),
+    jRed: fill(TPL_JRED, { UNIFORMS: uni, DENSITY: s.density }),
+    bohmStep: fill(TPL_BOHM_STEP, { UNIFORMS: uni, DENSITY: s.density }),
   };
   /* CN 积分器路径（kernel.integrator==='cn'，Dirac/Pauli）：两个额外 program，
      shaders() 返回的对象即 {evolve, display, reduce, scale, cnRhs, cnSweep}。
@@ -1208,9 +1494,13 @@ export function buildShaders(kernel){
       out.cnRhs3d = fill(TPL_CN_RHS3D, { UNIFORMS: uni, POT3: s.pot3 || '0.0', HELPERS: s.helpers || '', LAP3D_BLOCK: TPL_LAP3D_BLOCK });
       out.cnSweep3d = fill(TPL_CN_SWEEP3D, { UNIFORMS: uni, POT3: s.pot3 || '0.0', HELPERS: s.helpers || '', CN_LOCAL_SOLVE3: s.cnLocalSolve3, LAP3D_BLOCK: TPL_LAP3D_BLOCK });
     }
+    /* R61 3D 概率流：逐层 J 场（RGBA32F）+ 线性分块归约（前向差 divJ 望远镜）。
+       2D/3D 共用 currentSnippets() 表达式（dxp 均约定为 2∂）。 */
+    out.jField3 = fill(TPL_JFIELD3, { UNIFORMS: uni, CURRENT_X: cur.jx, CURRENT_Y: cur.jy, CURRENT_Z: cur.jz });
+    out.jRed3 = fill(TPL_JRED3, { UNIFORMS: uni, DENSITY3: s.density3 || 'dot(c.xy,c.xy)' });
   }
   return out;
 }
 
 /* 导出模板仅供测试/文档引用（生产路径经 buildShaders 消费） */
-export const TEMPLATES = { TPL_EVOLVE, TPL_EVOLVE3D, TPL_CN_RHS3D, TPL_CN_SWEEP3D, TPL_DISPLAY3D, TPL_REDUCE3D, TPL_SCALE3D, SNIP_HSV, TPL_CN_RHS, TPL_CN_SWEEP, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, TPL_LAP_BLOCK, TPL_LAP3D_BLOCK, DEFAULT_PIXEL_COLOR, DEFAULT_PMEAN };
+export const TEMPLATES = { TPL_EVOLVE, TPL_EVOLVE3D, TPL_CN_RHS3D, TPL_CN_SWEEP3D, TPL_DISPLAY3D, TPL_REDUCE3D, TPL_SCALE3D, SNIP_HSV, TPL_CN_RHS, TPL_CN_SWEEP, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, TPL_LAP_BLOCK, TPL_LAP3D_BLOCK, DEFAULT_PIXEL_COLOR, DEFAULT_PMEAN, TPL_JFIELD, TPL_JRED, TPL_BOHM_STEP, TPL_JFIELD3, TPL_JRED3 };

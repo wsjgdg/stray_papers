@@ -63,6 +63,36 @@ void main(){
   o = vec4(c*uBright,1.0);
 }`;
 
+/* ---------- R61 Bohm 轨迹残影管线（引擎级，无内核注入）----------
+   双纹理 ping-pong（RGBA16F）：fade 全屏 pass（B = A·uFade）→ blit B→A →
+   stamp POINTS + MAX 混合（A = max(A, stamp)）。读写分离避免 FBO↔sampler
+   反馈环；MAX 混合对 16F 是 WebGL2 核心能力（32F 才需 EXT_float_blend）。
+   stamp 的 VS 无属性输入：gl_VertexID 索引 uPos（64×1 RG32F）⟹ createProgram
+   的第三参自定义 VS（gl.js R61 扩展）。停泊粒子 (−1,−1) 的裁剪坐标在
+   NDC 外被光栅化丢弃。 */
+const VS_BOHM_STAMP = `#version 300 es
+uniform sampler2D uPos;      /* 64×1 RG32F：(x,y) uv 世界坐标 */
+uniform float uPointSize;
+void main(){
+  vec2 p = texture(uPos, vec2((float(gl_VertexID)+0.5)/64.0, 0.5)).rg;
+  gl_Position = vec4(p*2.0-1.0, 0.0, 1.0);
+  gl_PointSize = uPointSize;
+}`;
+const FS_BOHM_STAMP = `#version 300 es
+precision highp float;
+uniform vec3 uColor;
+out vec4 o;
+void main(){
+  float r = length(gl_PointCoord-0.5)*2.0;
+  o = vec4(uColor*smoothstep(1.0, 0.35, r), 1.0);
+}`;
+const FS_BOHM_FADE = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uTrail;
+uniform float uFade;
+void main(){ o = vec4(texture(uTrail, vUv).rgb*uFade, 1.0); }`;
+
 export class QuantumField {
   constructor(container, options = {}){
     this.container = typeof container === 'string' ? document.querySelector(container) : (container || document.body);
@@ -85,6 +115,11 @@ export class QuantumField {
       drag: null,
       /* 3D 交互工具（R44）：'cam' 拖拽旋转相机（默认）/ 'pot' 势刷放置 blob */
       tool3: 'cam',
+      /* R61 概率流可视化：showJ = J 箭头 overlay（2D，24×24 格阵；3D 为 HUD
+         统计读数）；bohmOn = Bohm 轨迹（2D 专属：64 粒子制导速度积分 +
+         残影）。默认关——TPL_DISPLAY 新增段全部 uniform 门控，关闭时最终
+         行与旧路径逐字等价。bohmFade = 残影每帧衰减系数。 */
+      showJ: false, bohmOn: false, bohmFade: 0.985,
       ...this.kernel.defaults(),
       ...(options.state || {}),
     };
@@ -210,6 +245,7 @@ export class QuantumField {
     </div>
     <div class="grid3" style="margin-top:6px">
       <button data-tool="flux">磁通(AB)</button>
+      <button data-tool="bohm">Bohm 放点</button>
     </div>
   </div>
   <div class="sec">
@@ -268,6 +304,19 @@ export class QuantumField {
       <button id="btnABClear">清空</button>
     </div>
     <div class="row"><label>放置</label><span class="hint">「磁通(AB)」工具（2D：快捷键/工具按钮；3D：体积面板「磁通」模式）：点空白放新管（取滑块 Φ 并选中），点已有管选中；Delete 删选中。3D 磁通管**沿 z 轴贯穿整个体积**，管轴位置取点击视线的 xy 投影；Φ 为绕管一周的相位。</span></div>
+  </div>
+  <div class="sec" ${d3?'style="display:none"':''}>
+    <h3>概率流与 Bohm 轨迹</h3>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnShowJ">J 箭头</button>
+      <button id="btnBohm">Bohm 轨迹</button>
+    </div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnBohmSeed">撒 24 粒子</button>
+      <button id="btnBohmClear">清轨迹</button>
+    </div>
+    <div class="row"><label>残影衰减</label><input type="range" id="rBohmFade" min="0.9" max="1" step="0.001" value="0.985"><output id="oBohmFade">0.985</output></div>
+    <div class="hint" style="margin-top:4px"><b>J = (1/m)·Im(ψ*∇ψ)</b>（Dirac 内核为 ψ†σψ，群速口径）——连续性方程 ∂<sub>t</sub>ρ + ∇·J = 0 的守恒流。箭头：24×24 格阵格心采样，长度 ∝ |J|/max|J|，青→暖白随幅值。<b>Bohm 轨迹</b>：64 粒子沿制导速度 v = J/ρ 积分（节点附近钳制），暖色残影为轨迹历史；「Bohm 放点」工具单击放单粒子。快捷键 <span class="k">J</span> / <span class="k">B</span>。HUD 的 Gauss 残差 = Σ∇·J − 界面通量和（离散望远镜恒等式，float 舍入量级为自校验）。</div>
   </div>
   <div class="sec">
     <h3>渲染与网格</h3>
@@ -356,6 +405,10 @@ ${d3 ? `
       <button id="btnPhase3" class="on">相位着色</button>
       <button id="btnSlice3">切片模式</button>
     </div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnShowJ3">J 场统计</button>
+    </div>
+    <div class="row"><label>J 场</label><span class="hint">3D 下 showJ 为 HUD 统计读数（ΣJ / Σ∇·J / Gauss 残差 / max|J|）——箭头 overlay 与 Bohm 轨迹为 2D 专属（volume 路径未挂 J 层）。</span></div>
     <div class="row" id="sliceRow3" style="display:none"><label>切片层 z</label><input type="range" id="rSliceZ3" min="0" max="1" step="0.01" value="0.5"><output id="oSliceZ3">0.50</output></div>
     <div class="grid2" style="margin-top:6px">
       <button id="btnCam3">重置相机</button>
@@ -423,6 +476,14 @@ ${d3 ? `
     <div class="hrow"><span>|⟨σ⟩|</span><span id="hSLen">—</span></div>
     <div class="hrow"><span>磁场 B</span><span id="hB">—</span></div>
   </div>
+  <div id="jSec" style="display:none">
+    <hr>
+    <div class="hrow"><span>ΣJ (Jx, Jy[, Jz])</span><span id="hJSum">—</span></div>
+    <div class="hrow"><span>Σ∇·J</span><span id="hJDiv">—</span></div>
+    <div class="hrow"><span>Gauss 残差</span><span id="hJGauss">—</span></div>
+    <div class="hrow"><span>max|J|</span><span id="hJMax">—</span></div>
+    <div class="hrow"><span>Bohm 粒子</span><span id="hBohmN">—</span></div>
+  </div>
   <hr>
   <div class="hrow"><span>峰值 |ψ|²</span><span id="hPeak">—</span></div>
   <div class="hrow"><span>模拟时间 t</span><span id="hTime">—</span></div>
@@ -440,7 +501,7 @@ ${d3 ? `
 <footer id="hint" class="panel">
   ${d3
     ? '<b>拖拽</b> 旋转视角 · <b>滚轮</b> 缩放 · <span class="k">P</span> 势刷 · <span class="k">1-'+Object.keys(presets).length+'</span> 预设 · <span class="k">Space</span> 暂停 · <span class="k">R</span> 重置波包 · <span class="k">[</span><span class="k">]</span> 收起侧面板'
-    : '<b>拖拽</b> 发射波包（方向=动量 k）· <span class="k">1-'+Object.keys(presets).length+'</span> 预设 · <span class="k">Space</span> 暂停 · <span class="k">T</span> 拖尾 · <span class="k">R</span> 重置 · <span class="k">C</span> 清空势场 · <span class="k">[</span><span class="k">]</span> 收起侧面板'}
+    : '<b>拖拽</b> 发射波包（方向=动量 k）· <span class="k">1-'+Object.keys(presets).length+'</span> 预设 · <span class="k">Space</span> 暂停 · <span class="k">T</span> 拖尾 · <span class="k">R</span> 重置 · <span class="k">C</span> 清空势场 · <span class="k">J</span> 概率流 · <span class="k">B</span> Bohm 轨迹 · <span class="k">[</span><span class="k">]</span> 收起侧面板'}
 </footer>
 <div id="toast"></div>
 <div id="brushcursor"></div>
@@ -495,6 +556,17 @@ ${d3 ? `
     this.progReduce = createProgram(gl, sh.reduce);
     this.progBlit = createProgram(gl, FS_BLIT);
     this.progScale = createProgram(gl, sh.scale);   /* 耗散帧级衰减 pass */
+    /* R61 概率流 program（buildShaders 无条件装配 ⟹ 编译；帧内按 state 开关）：
+       jField（ψ → RG32F J 场）+ jRed（通量/散度归约 MRT）+ bohmStep（64 粒子
+       制导步进）+ bohmFade（残影衰减全屏）+ bohmStamp（POINTS 盖章，自定义
+       VS_BOHM_STAMP——createProgram 第三参）。 */
+    if (sh.jField){
+      this.progJField = createProgram(gl, sh.jField);
+      this.progJRed = createProgram(gl, sh.jRed);
+      this.progBohmStep = createProgram(gl, sh.bohmStep);
+      this.progBohmFade = createProgram(gl, FS_BOHM_FADE);
+      this.progBohmStamp = createProgram(gl, FS_BOHM_STAMP, VS_BOHM_STAMP);
+    }
     /* CN 积分器（kernel.integrator='cn'，Dirac/Pauli）：rhs pass + block-Jacobi
        扫掠 pass 两个额外 program（契约见 kernel.js 头注【CN 积分器约定】） */
     if (sh.cnRhs){
@@ -517,6 +589,11 @@ ${d3 ? `
       }
       /* R58 3D 耗散缩放 pass（γ≠0 时帧末跑；与 2D progScale 同义） */
       this.progScale3d = sh.scale3d ? createProgram(gl, sh.scale3d) : null;
+      /* R61 3D 概率流：jField3（逐层 J 场 RGBA32F）+ jRed3（线性分块归约） */
+      if (sh.jField3){
+        this.progJField3 = createProgram(gl, sh.jField3);
+        this.progJRed3 = createProgram(gl, sh.jRed3);
+      }
     }
   }
 
@@ -533,6 +610,34 @@ ${d3 ? `
       this.allocGrid(this.state.grid);
     }
     this.reduceT = makeReduce(gl);
+    /* R61：概率流归约 MRT（与 reduceT 同构：o0=(ΣJx,ΣJy,ΣdivJ,Σρ)、
+       o1=界面通量、o2=(max|J|,Σ|J|)）。2D/3D 各一份（3D 的 reduce3d 占用
+       reduceT，不能复用）。 */
+    this.jRedT = makeReduce(gl);
+    if (this.kernel.dim3) this.jRedT3 = makeReduce(gl);
+    /* R61 Bohm 粒子位置 ping-pong（64×1 RG32F；(−1,−1) = 停泊/未激活）——
+       网格无关，构造期一次分配。 */
+    const mkPos = () => {
+      const t = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG32F, 64, 1, 0, gl.RG, gl.FLOAT, null);
+      const f = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, f);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+      return { tex: t, fbo: f };
+    };
+    this.posA = mkPos(); this.posB = mkPos();
+    this.ptsVao = gl.createVertexArray();   /* POINTS stamp：无属性（VS 只用 gl_VertexID） */
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    this._bohmN = 0; this._bohmRow = 0;
+    this._jScale = 0; this._j = null; this._j3 = null;
+    this._jBuf0 = new Float32Array(32*32*4);   /* jRed MRT 附件 0：(ΣJx,ΣJy,ΣdivJ,Σρ) */
+    this._jBuf1 = new Float32Array(32*32*4);   /* 附件 1：界面通量（2D 四下上 / 3D 前四） */
+    this._jBuf2 = new Float32Array(32*32*4);   /* 附件 2：(max|J|,Σ|J|[,0,0]) */
   }
 
   /* 3D 体积 ping-pong 目标（n³ RG32F NEAREST；fbo 不预附着层——evolve3d/回读
@@ -551,6 +656,9 @@ ${d3 ? `
        内核支持 CN3D 时分配（progCnRhs3d 在 initTargets 前已由 initPrograms 置位）；
        不支持时不占 n³ 显存。 */
     if (this.progCnRhs3d) this.rhs3 = makeTarget3D(gl, n, gl.RG32F, gl.RG, gl.NEAREST);
+    /* R61 3D 概率流场（RGBA32F n³：(Jx,Jy,Jz,0)，NEAREST；jField3 逐层写入） */
+    if (this.jT3){ gl.deleteTexture(this.jT3.tex); gl.deleteFramebuffer(this.jT3.fbo); }
+    this.jT3 = makeTarget3D(gl, n, gl.RGBA32F, gl.RGBA, gl.NEAREST);
   }
 
   allocGrid(g){
@@ -567,6 +675,10 @@ ${d3 ? `
     if (this.kernel.integrator === 'cn'){
       this.rhs = makeTarget(gl, g, g, this.ifmt, this.fmt, gl.NEAREST);
     }
+    /* R61 概率流场（RG32F (Jx,Jy)，与 psi 同尺寸 NEAREST；CLAMP_TO_EDGE
+       与 TPL_JFIELD 的界外约定一致）。常驻分配一次，开关时每 evolve 后重算。 */
+    if (this.jT){ gl.deleteTexture(this.jT.tex); gl.deleteFramebuffer(this.jT.fbo); }
+    this.jT = makeTarget(gl, g, g, gl.RG32F, gl.RG, gl.NEAREST);
   }
 
   allocDisplay(){
@@ -589,6 +701,23 @@ ${d3 ? `
       gl.deleteTexture(oldA.tex); gl.deleteFramebuffer(oldA.fbo);
     }
     if (oldB){ gl.deleteTexture(oldB.tex); gl.deleteFramebuffer(oldB.fbo); }
+    /* R61 Bohm 轨迹残影：RGBA16F 双纹理 ping-pong（与 dispA/dispB 同口径：
+       resize blit 保留，不丢轨迹）。fade/stamp 管线见 bohmStamp()。 */
+    const oldTA = this.bohmTrailA, oldTB = this.bohmTrailB;
+    this.bohmTrailA = makeRGBA16F(gl, w, h);
+    this.bohmTrailB = makeRGBA16F(gl, w, h);
+    if (oldTA){
+      gl.useProgram(this.progBlit);
+      gl.bindVertexArray(this.quad.vao);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.bohmTrailA.fbo);
+      gl.viewport(0,0,w,h);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, oldTA.tex);
+      gl.uniform1i(this.u(this.progBlit,'uTex'), 0);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      gl.deleteTexture(oldTA.tex); gl.deleteFramebuffer(oldTA.fbo);
+    }
+    if (oldTB){ gl.deleteTexture(oldTB.tex); gl.deleteFramebuffer(oldTB.fbo); }
   }
 
   initPotential(){
@@ -865,6 +994,343 @@ ${d3 ? `
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
     }
+  }
+
+  /* ---------- R61 概率流 J：场 / 归约 / Bohm 轨迹 ----------
+     数学契约见 kernel.js 头注【概率流约定】。单位制：J = (1/m)·Im(ψ*∇ψ)
+     为格点动量通量（平面波 ⟹ J_x=k/m）；Dirac 覆写为 ψ†σψ（群速口径）。
+     Bohm 制导速度 v = J/ρ（格点速度 ⟹ ×1/g 换算 uv 步长）。 */
+  jFieldPass(){
+    const gl = this.gl, st = this.state;
+    gl.useProgram(this.progJField);
+    gl.bindVertexArray(this.quad.vao);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.jT.fbo);
+    gl.viewport(0,0,st.grid,st.grid);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
+    gl.uniform1i(this.u(this.progJField,'uPsi'), 0);
+    gl.uniform2f(this.u(this.progJField,'uTexel'), 1/st.grid, 1/st.grid);
+    gl.uniform1f(this.u(this.progJField,'uInvM'), 1/st.m);
+    this.kernel.setUniforms(gl, this.progJField, st);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+
+  jRedPass(){
+    const gl = this.gl, st = this.state;
+    gl.useProgram(this.progJRed);
+    gl.bindVertexArray(this.quad.vao);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.jRedT.fbo);
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2]);
+    gl.viewport(0,0,32,32);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.jT.tex);
+    gl.uniform1i(this.u(this.progJRed,'uJ'), 0);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
+    gl.uniform1i(this.u(this.progJRed,'uPsi'), 1);
+    gl.uniform1f(this.u(this.progJRed,'uGrid'), st.grid);
+    this.kernel.setUniforms(gl, this.progJRed, st);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.readBuffer(gl.COLOR_ATTACHMENT0);
+    gl.readPixels(0,0,32,32,gl.RGBA,gl.FLOAT,this._jBuf0);
+    gl.readBuffer(gl.COLOR_ATTACHMENT1);
+    gl.readPixels(0,0,32,32,gl.RGBA,gl.FLOAT,this._jBuf1);
+    gl.readBuffer(gl.COLOR_ATTACHMENT2);
+    gl.readPixels(0,0,32,32,gl.RGBA,gl.FLOAT,this._jBuf2);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    const o0 = [0,0,0,0], o1 = [0,0,0,0], o2 = [0,0,0,0];
+    for (let i=0;i<1024;i++){
+      for (let c=0;c<4;c++){
+        o0[c] += this._jBuf0[i*4+c]; o1[c] += this._jBuf1[i*4+c]; o2[c] += this._jBuf2[i*4+c];
+      }
+    }
+    this._j = { sjx:o0[0], sjy:o0[1], sdj:o0[2], sp:o0[3], fl:o1[0], fr:o1[1], fb:o1[2], ft:o1[3], mj:o2[0], saj:o2[1] };
+    this._jScale = o2[0];   /* max|J|：显示箭头长度归一化基准 */
+    this.jHud();
+  }
+
+  jField3Pass(){
+    const gl = this.gl, st = this.state, n = st.grid;
+    gl.useProgram(this.progJField3);
+    gl.bindVertexArray(this.quad.vao);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.jT3.fbo);
+    gl.viewport(0,0,n,n);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_3D, this.psiA3.tex);
+    gl.uniform1i(this.u(this.progJField3,'uPsi'), 0);
+    gl.uniform3f(this.u(this.progJField3,'uTexel3'), 1/n, 1/n, 1/n);
+    gl.uniform1f(this.u(this.progJField3,'uInvM'), 1/st.m);
+    this.kernel.setUniforms(gl, this.progJField3, st);
+    const uLayer = this.u(this.progJField3,'uLayer');
+    for (let l=0;l<n;l++){
+      gl.framebufferTextureLayer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, this.jT3.tex, 0, l);
+      gl.uniform1f(uLayer, (l+0.5)/n);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+
+  jRed3Pass(){
+    const gl = this.gl, st = this.state;
+    gl.useProgram(this.progJRed3);
+    gl.bindVertexArray(this.quad.vao);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.jRedT3.fbo);
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2]);
+    gl.viewport(0,0,32,32);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_3D, this.jT3.tex);
+    gl.uniform1i(this.u(this.progJRed3,'uJ'), 0);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_3D, this.psiA3.tex);
+    gl.uniform1i(this.u(this.progJRed3,'uPsi'), 1);
+    gl.uniform1f(this.u(this.progJRed3,'uGrid3'), st.grid);
+    this.kernel.setUniforms(gl, this.progJRed3, st);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.readBuffer(gl.COLOR_ATTACHMENT0);
+    gl.readPixels(0,0,32,32,gl.RGBA,gl.FLOAT,this._jBuf0);
+    gl.readBuffer(gl.COLOR_ATTACHMENT1);
+    gl.readPixels(0,0,32,32,gl.RGBA,gl.FLOAT,this._jBuf1);
+    gl.readBuffer(gl.COLOR_ATTACHMENT2);
+    gl.readPixels(0,0,32,32,gl.RGBA,gl.FLOAT,this._jBuf2);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    const o0 = [0,0,0,0], o1 = [0,0,0,0], o2 = [0,0,0,0];
+    for (let i=0;i<1024;i++){
+      for (let c=0;c<4;c++){
+        o0[c] += this._jBuf0[i*4+c]; o1[c] += this._jBuf1[i*4+c]; o2[c] += this._jBuf2[i*4+c];
+      }
+    }
+    this._j3 = { jx:o0[0], jy:o0[1], jz:o0[2], dj:o0[3],
+                 fxm:o1[0], fxp:o1[1], fym:o1[2], fyp:o1[3],
+                 fzm:o2[0], fzp:o2[1], mj:o2[2], sp:o2[3] };
+    this._jScale = o2[2];
+    this.jHud();
+  }
+
+  /* J HUD（2D/3D 同一节）：ΣJ 向量、Σ∇·J、Gauss 残差（望远镜自校验）、
+     max|J|（箭头归一化基准）、Bohm 粒子数。 */
+  jHud(){
+    if (!this.q('#jSec')) return;
+    const ex = v => (v === 0 ? '0' : v.toExponential(2));
+    if (this._j){
+      const j = this._j;
+      const gauss = j.sdj - (j.fr - j.fl + j.ft - j.fb);
+      this.q('#hJSum').textContent = '(' + ex(j.sjx) + ', ' + ex(j.sjy) + ')';
+      this.q('#hJDiv').textContent = ex(j.sdj);
+      this.q('#hJGauss').textContent = ex(gauss);
+      this.q('#hJMax').textContent = ex(j.mj);
+    } else if (this._j3){
+      const j = this._j3;
+      const gauss = j.dj - (j.fxp - j.fxm + j.fyp - j.fym + j.fzp - j.fzm);
+      this.q('#hJSum').textContent = '(' + ex(j.jx) + ', ' + ex(j.jy) + ', ' + ex(j.jz) + ')';
+      this.q('#hJDiv').textContent = ex(j.dj);
+      this.q('#hJGauss').textContent = ex(gauss);
+      this.q('#hJMax').textContent = ex(j.mj);
+    }
+    const bn = this.q('#hBohmN');
+    if (bn) bn.textContent = this.kernel.dim3 ? '—（2D 专属）' : String(this._bohmN);
+  }
+
+  /* J/Bohm HUD 节可见性（任一开关打开即显示） */
+  _jSecVis(){
+    const s = this.q('#jSec');
+    if (s) s.style.display = (this.state.showJ || this.state.bohmOn) ? '' : 'none';
+  }
+
+  setShowJ(v){
+    this.state.showJ = !!v;
+    const b = this.q('#btnShowJ'); if (b) b.classList.toggle('on', this.state.showJ);
+    const b3 = this.q('#btnShowJ3'); if (b3) b3.classList.toggle('on', this.state.showJ);
+    this._jSecVis();
+    /* toggle 时立即建立 J 场与尺度（箭头长度归一化基准 max|J| 来自 jRed） */
+    if (this.state.showJ && this.progJField){
+      if (this.kernel.dim3){ this.jField3Pass(); this.jRed3Pass(); }
+      else { this.jFieldPass(); this.jRedPass(); }
+    }
+    return this.state.showJ;
+  }
+
+  setBohmOn(v){
+    if (this.kernel.dim3){ this.state.bohmOn = false; return false; }   /* Bohm 轨迹 2D 专属 */
+    this.state.bohmOn = !!v;
+    const b = this.q('#btnBohm'); if (b) b.classList.toggle('on', this.state.bohmOn);
+    this._jSecVis();
+    if (this.state.bohmOn){
+      if (this._bohmN === 0) this.bohmSeeds(24);   /* 默认 |ψ|² 加权撒 24 粒 */
+      this.jFieldPass(); this.jRedPass();          /* 立即可用的 J 场 + 尺度 */
+      this.bohmClearTrail();
+    }
+    return this.state.bohmOn;
+  }
+
+  /* 读回 64 个粒子（posA 为当前读纹理）：null = 停泊/未激活 */
+  bohmPositions(){
+    const gl = this.gl;
+    const buf = new Float32Array(64*2);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.posA.fbo);
+    gl.readPixels(0,0,64,1,gl.RG,gl.FLOAT,buf);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return Array.from({length:64}, (_,i) => buf[i*2] < 0 ? null : [buf[i*2], buf[i*2+1]]);
+  }
+
+  /* 放置单粒子（pointer 'bohm' 工具 / CDP）：空位追加；满员轮换最旧。
+     返回槽位；dim3 内核拒绝（轨迹 2D 专属）。 */
+  bohmPlace(wx, wy){
+    if (this.kernel.dim3) return -1;
+    const pos = this.bohmPositions();
+    let slot = -1;
+    for (let i=0;i<64;i++) if (!pos[i]){ slot = i; break; }
+    if (slot < 0){ slot = this._bohmRow % 64; this._bohmRow++; }
+    const wasActive = !!pos[slot];
+    const buf = new Float32Array(64*2).fill(-1);
+    for (let i=0;i<64;i++) if (pos[i]){ buf[i*2] = pos[i][0]; buf[i*2+1] = pos[i][1]; }
+    buf[slot*2] = Math.max(0, Math.min(1, wx));
+    buf[slot*2+1] = Math.max(0, Math.min(1, wy));
+    const gl = this.gl;
+    for (const t of [this.posA, this.posB]){
+      gl.bindTexture(gl.TEXTURE_2D, t.tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG32F, 64, 1, 0, gl.RG, gl.FLOAT, buf);
+    }
+    this._bohmN = pos.filter(Boolean).length + (wasActive ? 0 : 1);
+    this.jHud();
+    return slot;
+  }
+
+  /* |ψ|² 加权撒 n 个粒子（一次 CPU 回读 + 前缀和二分；用户触发，非每帧） */
+  bohmSeeds(n){
+    n = Math.max(1, Math.min(64, n|0));
+    const gl = this.gl, g = this.state.grid, ch = this.kernel.pairs === 2 ? 4 : 2;
+    const buf = new Float32Array(g*g*ch);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
+    gl.readPixels(0,0,g,g,this.fmt,gl.FLOAT,buf);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    const cdf = new Float64Array(g*g);
+    let acc = 0;
+    for (let i=0;i<g*g;i++){ acc += this.kernel.cpuDensity(buf, i*ch); cdf[i] = acc; }
+    if (!(acc > 0)) return 0;   /* 空场不撒 */
+    const pos = new Float32Array(64*2).fill(-1);
+    for (let s=0; s<n; s++){
+      const r = Math.random()*acc;
+      let lo = 0, hi = g*g-1;
+      while (lo < hi){ const mid = (lo+hi)>>1; if (cdf[mid] >= r) hi = mid; else lo = mid+1; }
+      pos[s*2] = ((lo % g) + 0.5)/g;
+      pos[s*2+1] = (((lo/g)|0) + 0.5)/g;
+    }
+    for (const t of [this.posA, this.posB]){
+      gl.bindTexture(gl.TEXTURE_2D, t.tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG32F, 64, 1, 0, gl.RG, gl.FLOAT, pos);
+    }
+    this._bohmN = n; this._bohmRow = 0;
+    this.jHud();
+    return n;
+  }
+
+  bohmClearTrail(){
+    const gl = this.gl;
+    for (const t of [this.bohmTrailA, this.bohmTrailB]){
+      gl.bindFramebuffer(gl.FRAMEBUFFER, t.fbo);
+      gl.clearColor(0,0,0,1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+
+  bohmReset(){
+    const gl = this.gl;
+    const pos = new Float32Array(64*2).fill(-1);
+    for (const t of [this.posA, this.posB]){
+      gl.bindTexture(gl.TEXTURE_2D, t.tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG32F, 64, 1, 0, gl.RG, gl.FLOAT, pos);
+    }
+    this._bohmN = 0; this._bohmRow = 0;
+    this.bohmClearTrail();
+    this.jHud();
+  }
+
+  /* 制导步进一帧：v = J/max(ρ,floor)（格点速度）× dt × 1/g（uv 步长），
+     长度钳制 uMaxStep；出界停泊。ping-pong 后 posA 恒为当前读纹理。 */
+  bohmStep(){
+    const gl = this.gl, st = this.state;
+    gl.useProgram(this.progBohmStep);
+    gl.bindVertexArray(this.quad.vao);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.posB.fbo);
+    gl.viewport(0,0,64,1);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.posA.tex);
+    gl.uniform1i(this.u(this.progBohmStep,'uPos'), 0);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this.jT.tex);
+    gl.uniform1i(this.u(this.progBohmStep,'uJ'), 1);
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
+    gl.uniform1i(this.u(this.progBohmStep,'uPsi'), 2);
+    gl.uniform2f(this.u(this.progBohmStep,'uTexel'), 1/st.grid, 1/st.grid);
+    gl.uniform1f(this.u(this.progBohmStep,'uInvGrid'), 1/st.grid);
+    gl.uniform1f(this.u(this.progBohmStep,'uDt'), 1.2);        /* 与帧 dt 同 */
+    gl.uniform1f(this.u(this.progBohmStep,'uRhoFloor'), 1e-7); /* 节点防除零 */
+    gl.uniform1f(this.u(this.progBohmStep,'uMaxStep'), 0.05);  /* uv 单位半格上限 */
+    this.kernel.setUniforms(gl, this.progBohmStep, st);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    const t = this.posA; this.posA = this.posB; this.posB = t;
+  }
+
+  /* 残影一帧：fade（B=A·uFade）→ blit B→A → stamp POINTS（MAX 混合）→
+     A 持有最新（display 采样 A）。**无 ping-pong 交换**——fade/blit/stamp
+     三步依次读写分离（fade 读 A 写 B、blit 读 B 写 A、stamp 读 posA 写 A），
+     终点即 A；若学 bohmStep 的写法在末尾交换 A↔B，stamp 会落进 B 而显示
+     采样空 A（残影永不可见，2026-10 R61 CDP 实测捕获：bohmTrailStats
+     A.mx≡0 / B.n≈790）。resize 段亦以「blit 旧 A→新 A」维持同一不变量。 */
+  bohmStamp(){
+    const gl = this.gl, cw = this.canvas.width, ch = this.canvas.height;
+    gl.useProgram(this.progBohmFade);
+    gl.bindVertexArray(this.quad.vao);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.bohmTrailB.fbo);
+    gl.viewport(0,0,cw,ch);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.bohmTrailA.tex);
+    gl.uniform1i(this.u(this.progBohmFade,'uTrail'), 0);
+    gl.uniform1f(this.u(this.progBohmFade,'uFade'), this.state.bohmFade);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.useProgram(this.progBlit);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.bohmTrailA.fbo);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.bohmTrailB.tex);
+    gl.uniform1i(this.u(this.progBlit,'uTex'), 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.useProgram(this.progBohmStamp);
+    gl.bindVertexArray(this.ptsVao);
+    gl.viewport(0,0,cw,ch);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.posA.tex);
+    gl.uniform1i(this.u(this.progBohmStamp,'uPos'), 0);
+    gl.uniform1f(this.u(this.progBohmStamp,'uPointSize'), Math.max(2, Math.min(cw,ch)*0.008));
+    gl.uniform3f(this.u(this.progBohmStamp,'uColor'), 1.0, 0.85, 0.35);
+    gl.enable(gl.BLEND);
+    gl.blendEquation(gl.MAX);
+    gl.drawArrays(gl.POINTS, 0, 64);
+    gl.blendEquation(gl.FUNC_ADD);
+    gl.disable(gl.BLEND);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+
+  /* 残影纹理回读（调试/验证）：两张 ping-pong 纹理的亮像素统计
+     {cw, ch, A:{mx,sum,n}, B:{mx,sum,n}}。bohmTrailA 恒为显示采样纹理
+     （display pass TEXTURE4）⟹ stamp 后 A.mx>0.1、B 为 scratch。
+     R61 取证与回归断言面：曾因 bohmStamp 末尾误置 ping-pong 交换致
+     stamp 写进 B、显示永远采样空 A（截图无残影），见 worklog R61。 */
+  bohmTrailStats(){
+    const gl = this.gl, cw = this.canvas.width, ch = this.canvas.height;
+    const read = (t) => {
+      const buf = new Float32Array(cw*ch*4);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, t.fbo);
+      gl.readPixels(0,0,cw,ch,gl.RGBA,gl.FLOAT,buf);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      let mx = 0, sum = 0, n = 0;
+      for (let i=0;i<cw*ch;i++){ const v = buf[i*4]+buf[i*4+1]+buf[i*4+2]; if (v > mx) mx = v; sum += v; if (v > 0.05) n++; }
+      return { mx, sum, n };
+    };
+    return { cw, ch, A: read(this.bohmTrailA), B: read(this.bohmTrailB) };
   }
 
   /* AB 多螺线管 uniform 上传（R54）：扁平数组一次 uniform2fv/uniform1fv——
@@ -1181,9 +1647,18 @@ ${d3 ? `
        避免同一帧双倍弛豫步进）。 */
     const scanBusy = this.scanner.busy || this.scannerGp.busy || this.scannerNls.busy || this.scannerSlit.busy;
     if (!this.state.paused || (this.kernel.relaxPending && !scanBusy)) this.evolve();
+    /* R61 3D 概率流（evolve 后重算逐层 J 场；归约在 frame3d 的 120ms 节流块内）。
+       3D 无箭头 overlay（volume ray-march 未挂 J 层）——showJ 在 3D 为 HUD
+       统计读数（ΣJ/Σ∇·J/Gauss 残差/max|J|），面板按钮与文档如实标注。 */
+    if (this.kernel.dim3 && (this.state.showJ || this.state.bohmOn)) this.jField3Pass();
     /* 3D 体积路径（kernel.dim3）：volume ray-march → 合成 → 全卷 HUD；与 2D 路径
        完全分离（互不共享显示 program / 归约管线），零分支风险。 */
     if (this.kernel.dim3){ this.frame3d(now); return; }
+
+    /* R61 概率流 / Bohm 轨迹（默认关；evolve 后重算 J 场，与显示同帧——
+       扫描器独占物理时 frame() 的 evolve 不跑，此处仍按 psiA 重算，读数不陈旧） */
+    if (this.state.showJ || this.state.bohmOn) this.jFieldPass();
+    if (this.state.bohmOn && this._bohmN > 0){ this.bohmStep(); this.bohmStamp(); }
 
     /* 显示 pass（含余晖） */
     gl.useProgram(this.progDisplay);
@@ -1208,6 +1683,18 @@ ${d3 ? `
     /* AB 螺线管标记（与演化同开关：count=0 不画环；选中管金环供交互反馈） */
     this.setABUniforms(gl, this.progDisplay, false);
     this.kernel.setUniforms(gl, this.progDisplay, this.state);
+    /* R61：概率流箭头 / Bohm 残影 uniform（默认 0 ⟹ shader 门控段不执行，
+       与旧路径逐字等价）。uJScale = max|J|（jRed 回读；0 时箭头段整体跳过）。 */
+    gl.uniform1f(this.u(this.progDisplay,'uShowJ'), this.state.showJ ? 1 : 0);
+    gl.uniform1f(this.u(this.progDisplay,'uBohmOn'), this.state.bohmOn ? 1 : 0);
+    gl.uniform1f(this.u(this.progDisplay,'uBohmGain'), this.state.bohmOn ? 0.9 : 0);
+    gl.uniform1f(this.u(this.progDisplay,'uJScale'), this._jScale || 0);
+    gl.activeTexture(gl.TEXTURE3);
+    gl.bindTexture(gl.TEXTURE_2D, this.jT.tex);
+    gl.uniform1i(this.u(this.progDisplay,'uJ'), 3);
+    gl.activeTexture(gl.TEXTURE4);
+    gl.bindTexture(gl.TEXTURE_2D, this.bohmTrailA.tex);
+    gl.uniform1i(this.u(this.progDisplay,'uBohmTrail'), 4);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     const td = this.dispA; this.dispA = this.dispB; this.dispB = td;
 
@@ -1258,6 +1745,8 @@ ${d3 ? `
       }
       if (!this._baseCaptured){ this.baseP0 = sp; this._baseCaptured = true; }
       this.hud(sp, st, sv, Math.sqrt(sp2), {sx, sy, sxx, syy, stx, sty, pmx, pmy});
+      /* R61 概率流归约（同 120ms 节流；仅开关时跑）——max|J| 驱动箭头归一化 */
+      if (this.state.showJ || this.state.bohmOn) this.jRedPass();
     }
 
     /* 自旋 HUD（Pauli 内核）：与 reduce 同频 120ms 节流（spinSum 也是一次
@@ -1345,6 +1834,8 @@ ${d3 ? `
       this.q('#hGrid').textContent = st.grid + '³ · ' + st.m.toFixed(2);
       this._lastE = m.E;                 /* 能级阶梯对照读数（refreshParamHud） */
       this.refreshParamHud();
+      /* R61 3D 概率流归约（同 120ms 节流；仅开关时跑） */
+      if (this.state.showJ || this.state.bohmOn) this.jRed3Pass();
     }
     this.frameTail(now);
   }
@@ -2146,6 +2637,9 @@ ${d3 ? `
       this.state.abSel = this.state.abSols.length ? 0 : -1;
     }
     this.syncControls();
+    /* R61：导入即换场——Bohm 粒子与残影对旧场无意义，重置（开关本身保留：
+       用户可在新场上重新撒点/放点）。 */
+    if (this.posA) this.bohmReset();
     this.toast('势场已导入（恢复 ' + n + ' 项参数'
       + (this.state.abSols.length ? ' + AB 螺线管 ' + this.state.abSols.length + ' 根' : '') + '）');
     return n;
@@ -2372,6 +2866,14 @@ ${d3 ? `
        滑块对齐选中管 Φ，选中行/位置读数随列表刷新） */
     this.syncABPhiSlider();
     this.refreshABReadout();
+    /* R61：概率流/Bohm 开关按钮态 + HUD 节可见性（预设/导入不改变开关，
+       但 URL ?showJ/?bohm 与 debugHandle 可能已置位——此处对齐 UI） */
+    const bj = this.q('#btnShowJ'); if (bj) bj.classList.toggle('on', !!this.state.showJ);
+    const bj3 = this.q('#btnShowJ3'); if (bj3) bj3.classList.toggle('on', !!this.state.showJ);
+    const bb = this.q('#btnBohm'); if (bb) bb.classList.toggle('on', !!this.state.bohmOn);
+    const bt = this.container.querySelector('[data-tool="bohm"]');
+    if (bt) bt.classList.toggle('on', this.state.tool === 'bohm');
+    this._jSecVis();
   }
 
   /* 第二势槽参数行的动态显隐（R41 组合势）：仅当前 potKind2 所需的行显示，
@@ -2475,6 +2977,10 @@ ${d3 ? `
         if (hit >= 0) this.selectSolenoid(hit);
         else this.placeSolenoid(wx, wy, this.state.abPhi);
         this.state.abCursor = [wx, wy];
+      } else if (this.state.tool === 'bohm'){
+        /* R61：Bohm 放点——单击落单粒子（自动开启轨迹，同 flux 工具的即时反馈） */
+        if (!this.state.bohmOn) this.setBohmOn(true);
+        this.bohmPlace(wx, wy);
       } else {
         this.paintV(e);
       }
@@ -2495,7 +3001,7 @@ ${d3 ? `
         const k = this.dragK(this.state.drag);
         aimTxt.setAttribute('x', e.clientX + 10); aimTxt.setAttribute('y', e.clientY - 8);
         aimTxt.textContent = 'k = ' + k.mag.toFixed(3);
-      } else if (e.buttons & 1 && this.state.tool !== 'wave' && this.state.tool !== 'flux'){
+      } else if (e.buttons & 1 && this.state.tool !== 'wave' && this.state.tool !== 'flux' && this.state.tool !== 'bohm'){
         this.paintV(e);
       }
     });
@@ -2515,12 +3021,20 @@ ${d3 ? `
     this.container.querySelectorAll('[data-tool]').forEach(b => this.on(b, 'click', () => {
       this.state.tool = b.dataset.tool;
       this.container.querySelectorAll('[data-tool]').forEach(x => x.classList.toggle('on', x === b));
-      canvas.style.cursor = (this.state.tool === 'wave' || this.state.tool === 'flux') ? 'crosshair' : 'cell';
+      canvas.style.cursor = (this.state.tool === 'wave' || this.state.tool === 'flux' || this.state.tool === 'bohm') ? 'crosshair' : 'cell';
       if (this.state.tool !== 'flux') this.state.abCursor = null;   /* R55：离开 flux 工具即撤预览环 */
+      if (this.state.tool !== 'bohm') this.q('#brushcursor').style.display = 'none';
       if (this.state.tool === 'wave') this.q('#brushcursor').style.display = 'none';
     }));
     this.on(this.q('#btnPause'), 'click', () => this.togglePause());
     this.on(this.q('#btnStep'), 'click', () => { const p = this.state.paused; this.state.paused = false; requestAnimationFrame(() => { this.state.paused = p; }); });
+    /* R61 概率流 / Bohm 轨迹开关与操作（2D；3D 仅 J 场统计） */
+    this.on(this.q('#btnShowJ'), 'click', () => this.setShowJ(!this.state.showJ));
+    this.on(this.q('#btnBohm'), 'click', () => this.setBohmOn(!this.state.bohmOn));
+    this.on(this.q('#btnBohmSeed'), 'click', () => { this.bohmSeeds(24); this.toast('已撒 24 个 Bohm 粒子（|ψ|² 加权）'); });
+    this.on(this.q('#btnBohmClear'), 'click', () => { this.bohmClearTrail(); this.toast('轨迹残影已清空'); });
+    this.bindRange('#rBohmFade','#oBohmFade','bohmFade', v => v.toFixed(3));
+    if (this.q('#btnShowJ3')) this.on(this.q('#btnShowJ3'), 'click', () => this.setShowJ(!this.state.showJ));
     this.on(this.q('#btnReset'), 'click', () => {
       if (this.kernel.dim3){ this.reinitWave(); return; }        /* 3D：按 lastWave3 重发体积初态 */
       const w = this.state.lastWave; if (w) this.initWave(w[0],w[1],w[2],w[3]);
@@ -2767,6 +3281,8 @@ ${d3 ? `
       else if ((e.key === 'c' || e.key === 'C') && !this.kernel.dim3){ this.clearV(); }   /* 3D 无势场画布 */
       else if ((e.key === 'p' || e.key === 'P') && this.kernel.dim3){ this.setTool3(this.state.tool3 === 'pot' ? 'cam' : 'pot'); }   /* R44：势刷/视角切换 */
       else if (e.key === 't' || e.key === 'T'){ this.state.decay = this.state.decay > 0.01 ? 0 : 0.97; this.q('#rTrail').value = this.state.decay; this.q('#oTrail').textContent = this.state.decay.toFixed(2); }
+      else if (e.key === 'j' || e.key === 'J'){ this.setShowJ(!this.state.showJ); }   /* R61：概率流箭头 / 3D J 场统计 */
+      else if ((e.key === 'b' || e.key === 'B') && !this.kernel.dim3){ this.setBohmOn(!this.state.bohmOn); }   /* R61：Bohm 轨迹（2D 专属） */
       else if (e.key === '[' || e.key === ']'){
         /* R56：左/右侧面板整列收起/展开。表单元素聚焦时不拦截
            （避免误伤滑块/下拉/按钮的键盘操作）。 */
@@ -2840,6 +3356,10 @@ ${d3 ? `
     }
     this.kernel.applyParams(qp, this.state);   /* 内核私有 URL 参数（如 NLS ?g=） */
     this.applyABParams(qp);                    /* R54：AB 多螺线管 URL 参数（引擎级） */
+    /* R61：?showJ=1 / ?bohm=1（2D 专属；3D 仅 showJ 有效——J 场统计）。
+       须在 syncControls 前（setShowJ 内部会同步按钮态与 HUD 节可见性）。 */
+    if (qp.get('showJ') === '1') this.setShowJ(true);
+    if (qp.get('bohm') === '1') this.setBohmOn(true);
     this.syncControls();
   }
 
@@ -2940,6 +3460,33 @@ ${d3 ? `
          abSetCursor 供 CDP 直接驱动预览环渲染（不合成鼠标事件）。 */
       abCursor: () => { const c = this.state.abCursor; return c ? [c[0], c[1]] : null; },
       abSetCursor: (x, y) => { this.state.abCursor = (x < 0 || y < 0) ? null : [x, y]; return this.state.abCursor ? [x, y] : null; },
+      /* R61 概率流 / Bohm 轨迹调试句柄：
+         - jRed()：最近一次归约快照（2D {sjx,sjy,sdj,sp,fl,fr,fb,ft,mj,saj}；
+           3D {jx,jy,jz,dj,fxm,fxp,fym,fyp,fzm,fzp,mj,sp}）
+         - jScale()：max|J|（箭头归一化基准）
+         - jFieldPass()/jRedPass()：手动跑一次（维度自适应）——CDP 可在暂停态
+           建立 J 场后直接断言，无需等帧循环节流
+         - bohmPositions()：64 粒子快照（null = 停泊）——轨迹推进断言
+         - bohmPlace/bohmSeeds/bohmStep/bohmStamp/bohmReset/bohmClearTrail：
+           pointer 事件同一入口的调试转发（不合成鼠标事件序列） */
+      showJ: () => this.state.showJ,
+      bohmOn: () => this.state.bohmOn,
+      setShowJ: (v) => this.setShowJ(v),
+      setBohmOn: (v) => this.setBohmOn(v),
+      jRed: () => (this.kernel.dim3 ? this._j3 : this._j) || null,
+      jScale: () => this._jScale || 0,
+      jFieldPass: () => this.kernel.dim3 ? this.jField3Pass() : this.jFieldPass(),
+      jRedPass: () => this.kernel.dim3 ? this.jRed3Pass() : this.jRedPass(),
+      bohmPositions: () => this.bohmPositions(),
+      bohmPlace: (x, y) => this.bohmPlace(x, y),
+      bohmSeeds: (n) => this.bohmSeeds(n),
+      bohmStep: () => this.bohmStep(),
+      bohmStamp: () => this.bohmStamp(),
+      bohmClearTrail: () => this.bohmClearTrail(),
+      bohmReset: () => this.bohmReset(),
+      /* 残影纹理统计（R61 swap 修复的取证/断言面）：A=显示采样纹理
+         （stamp 后必须非空），B=scratch */
+      bohmTrailStats: () => this.bohmTrailStats(),
       /* 2D 当前场原始数据（psiA 回读，RG/RGBA32F 交错）：供验证脚本做跨版本
          场级比对（R54 单管零回归：HEAD dist vs 新 dist 同参数同帧数对账）。 */
       field2d: () => {
@@ -3448,7 +3995,13 @@ ${d3 ? `
       const gl = this.gl;
       for (const t of [this.psiA, this.psiB, this.dispA, this.dispB]) if (t){ gl.deleteTexture(t.tex); gl.deleteFramebuffer(t.fbo); }
       for (const t of [this.psiA3, this.psiB3]) if (t){ gl.deleteTexture(t.tex); gl.deleteFramebuffer(t.fbo); }
-      if (this.reduceT){ gl.deleteTexture(this.reduceT.tex); gl.deleteFramebuffer(this.reduceT.fbo); }
+      /* R61：J 场 / 残影 / 粒子目标（含全部三个 MRT 附件） */
+      for (const t of [this.jT, this.bohmTrailA, this.bohmTrailB, this.posA, this.posB]) if (t){ gl.deleteTexture(t.tex); gl.deleteFramebuffer(t.fbo); }
+      for (const t of [this.jT3]) if (t){ gl.deleteTexture(t.tex); gl.deleteFramebuffer(t.fbo); }
+      for (const t of [this.reduceT, this.jRedT, this.jRedT3]) if (t){
+        gl.deleteTexture(t.tex); gl.deleteTexture(t.tex2); gl.deleteTexture(t.tex3); gl.deleteFramebuffer(t.fbo);
+      }
+      if (this.ptsVao) gl.deleteVertexArray(this.ptsVao);
       gl.deleteTexture(this.vTex);
       const lose = gl.getExtension('WEBGL_lose_context');
       if (lose) lose.loseContext();

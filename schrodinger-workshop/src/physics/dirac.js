@@ -215,6 +215,23 @@ export class DiracKernel extends PhysicsKernel {
     if (loc) gl.uniform1f(loc, state.m);
   }
 
+  /* R61 概率流覆写：Dirac 的守恒流为 J^k = ψ†α^kψ（Noether 电流，ℏ=c=1，
+     无 1/m 因子——lattice 单位下速度即无量纲群速）。Weyl 表象手算：
+       J_x = ψ†σ_xψ = 2Re(ψ₁*ψ₂) = 2(x·z + y·w)
+       J_y = ψ†σ_yψ = 2Im(ψ₁*ψ₂) = 2(x·w − y·z)
+     物理校验：正能平面波 u=(1,w)、w=s/(E+m)（k_y=0）⟹ J_x/ρ = s/E =
+     群速 ∂E/∂k_x ✓（Bohm 制导速度与群速一致，一阶方程的自洽签名）。
+     连续性方程 ∂_tρ + ∇·J = 0 对 Dirac 严格成立（ρ=ψ†ψ）⟹ 引擎 jRed 的
+     Gauss 望远镜自校验同样适用。基类默认 (1/m)·Im(ψ*∇ψ) 对一阶方程不适用
+     （会把 group velocity 错标上 1/m），故必须覆写。 */
+  currentSnippets(){
+    return {
+      jx: '2.0*(psi.x*psi.z + psi.y*psi.w)',
+      jy: '2.0*(psi.x*psi.w - psi.y*psi.z)',
+      jz: '0.0',
+    };
+  }
+
   /* 稳定性附加项：Dirac H 谱半径 √2+m+1（|α·p|≤√2、|βm|=m、|V|≤1）；
      引擎基线 4/m+1+eMaxExtra+|A| 须 ≥ 之 ⟹ 补 max(0, √2+m−4/m)。 */
   eMaxExtra(state){

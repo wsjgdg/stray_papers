@@ -48,10 +48,88 @@
 | R59 | 3D 磁通管可视化（ray-march 管体 + 切片截面） | R57 补齐物理后管在画面上不可见（用户无任何视觉反馈）——`TPL_DISPLAY3D` 两条路径落地：ray-march 循环内按「到管轴 xy 距离」（与 z 无关，管沿 z 贯穿）渲染细亮线，贡献乘**当前 trans** ⟹ 深度遮挡天然正确；z 切片模式画管截面圆点（任意 z 层都截得出）。视觉编码与 2D R55 逐字同款：色相 hue=0.55+0.28·fract(Φ/2π)、辉光 0.30+0.50·|sin(Φ/2)|（**Φ=0 亦有底座 ⟹ 恒可见**）、选中 ×1.6；app.js `frame3d` 接 `setABUniforms(gl, progVolume, false)`。**cdp59 7/7**（src + dist 双通道）：中心画布区差分法——Φ=π maxPix=532、Φ=0 maxPix=322 且 G/B=0.977 vs 0.501（青 vs 蓝紫）、切片 maxPix=574、glError=0、零异常；iso59 隔离页 4/4 先行证实 shader。**harness 教训（完整诊断链）**：多语句 `ev()` 被包装成 `JSON.stringify(a; b)` 语法错误 ⟹ 放置调用从未执行、返回值被丢弃伪装成静默成功；假阳性来自 HUD 帧率计数器（每 500ms 更新、不受暂停门控）的字形翻转 ⟹ 判据改中心画布区（无 HUD、管投影在其中）+ 显式噪声地板。回归矩阵 34/12/15/12/12 + 10 + 13 全绿 |
 | R58 | 3D 驱动（含时外场）+ 耗散（开放系统） | 补齐 3D 侧最后两类能力（R57 后仅剩的真实物理缺口）。**驱动**：3D 三模板（KDK/CN-rhs/CN-sweep）注入与 2D 逐式同构的 `V += A·cos(2π·p.x−φ)`（mode 1）/ `A·cos(φ)`（mode 0），x 取 uv 空间 `p.x`；稳定界 3D 改为 `k·12+1+附加项+\|A\|`；**⟨V⟩ 归约不含时变项**（与 2D TPL_REDUCE 同口径）。**耗散**：新增 `TPL_SCALE3D`（sampler3D + 逐层 draw）在 `_evolve3dFrame` 帧末做 e^{-γ·dt} 全卷标量缩放（与子步/网格/内核/积分器解耦，γ=0 跳过）。面板解除 d3 隐藏（含时外场 sec + 耗散 γ 行 2D+3D 通用）。**cdp58 12/12**（src + dist 双通道）：零回归（A=0 ⟹ 524288 float 逐位相同）、均匀 AC Stark 密度不变（相对峰值残差 8.75e-4，与 2D 相关系数 0.9995 同量级）、行波密度改变、耗散 P 比 vs e^{-2γt} **相对误差 1.4e-7**、CN 同源。**诚实记录**：驱动引入的 P 漂移是**时变 H 的独立离散项**（与静态基线不同源、比值恒 ~44× 不收敛到基线），但 ∝1/sub²（sub 6→12→24 ⟹ 1.086e-2→2.720e-3→6.844e-4，每档降 3.98×），收敛档相对漂移 6.8e-6 **优于 2D 记录**（1.1e-5）。**两例构建期真 bug**：① kernel.js 注释内的**反引号**提前结束 JS 模板字符串致模块语法错误（R33 双花括号教训的同族延伸）；② `replace_all` 把驱动行误注入 TPL_REDUCE3D（它也有 `float V = {{POT3}};` 但无 drive uniform）⟹ GLSL 'undeclared identifier' 编译失败，按 2D TPL_REDUCE 同口径移除 |
 | R60 | 3D 势刷形状扩展（椭球三轴 + 高斯软化边，R59 后用户选定） | R49 球形硬边丘 ⟹ **九字段丘** `{x,y,z,r,v0,rx,ry,rz,soft}`：CPU `pot3Blobs` 与 GLSL `blobSum` 逐字同构的**显式三分支**势函数（soft>0 高斯软化 exp(−½·max(0,dn−1)²/soft²) / soft=0 三轴相等走 R49 逐字 `dot(d,d)<r²` / 硬边椭球 `dot(q,q)<1`）——**设计修正记录**：初版拟「统一公式 soft=0 自动退化」，逐位比对抓出 dn=1 球面点集上硬边判 `64<64`=假而 dn≤1 分支=真、且 dn−1∈(0,1e-5) 边界带权重非 0/1 ⟹ 极限与阶跃不可调和，必须显式分支（GLSL 侧 v0·1.0=v0 加法中性保逐位）。面板三轴比滑块（0.2–2，实际半轴=R×轴比，stamp 快照）+ 软化宽度滑块（0–8）；链间距阈值 0.6·R ⟹ **0.6·min(rx,ry,rz)**（扁丘链连续，球时同值）；`normBlob` 四写边界归一（NaN 轴 ⟹ GPU/CPU 一致权重 0）；blobs 段 5⟹9 元组 + 旧档迁移 + 9 类非法原子拒绝。**cdp60 63/63**（src+dist 双通道）：同波比形 ⟨V⟩ 球 0.0574 vs 扁椭球 0.1380、软化单调 0.049986→0.491108、混合丘 GPU↔CPU rel 1.26e-08、CN 1.10e-07、球丘 R49 口径 2.73e-08、P 漂移 0.0017%；**pot60 94/94**（零回归 6 配置×4800 点 === 逐位 + 恰界点集 bad=0）；回归矩阵 cdp54 34/34 + cdp55 12/12 + cdp56 15/15 + cdp57 12/12 + cdp58 12/12 + cdp59 7/7 + link_math3d 10/10 + shader3d_build 13/13 全绿 + dist 384.5 KB |
+| R61 | 概率流 J + 连续性方程 + Bohm 轨迹 | 新 J-field pass（2D+3D）+ MRT 归约 + 2D 箭头 overlay + Bohm 64 粒子制导轨迹与残影；J=Im(ψ*∇ψ)（4 阶 stencil，平面波分轴闭式 (1/3m)sin k(4−cos k) 精确）、2 阶 divJ 望远镜恒等式 ΣdivJ≡fr−fl+ft−fb（Gauss 残差 5.15e-10/7.88e-10 纯舍入）、v=J/max(ρ,floor) 制导步进（节点不动）；**验证阶段 CDP 实测捕获并修复三个真 bug**：TPL_JRED DENSITY 包装变量名不符（编译失败）、TPL_BOHM_STEP uPos 采样缺 vec2（编译失败）、**bohmStamp 末尾误置 ping-pong 交换 ⟹ stamp 落 scratch B、display 恒采空 A（残影永不可见）**——纹理级取证（A.mx≡0 / B.n≈790）后删 swap，pot61 源码契约 + cdp61 纹理断言双闸门；**pot61 136/136 + cdp61 23/23**（ΣJ_x=⟨p_x⟩=k=0.089993、残影 maxPix=506 橙色签名、零回归 maxPix=10=噪点地板）；回归矩阵 12 套件全绿 + dist 421.9 KB |
 | R57 | 3D AB 磁通管（后续方向表清空后新开的能力项，用户从四候选中选定） | 后续方向表经核实**已清空**（面板溢出续降判定「可接受、仍不做」、GP 半径对账 R52 闭环）⟹ 诊断出真实未决项后由用户定题。落地：AB 由 2D 专属升级为 **2D+3D 通用**——3D 磁通管沿 **z 轴贯穿体积**，θ(q)=atan2(q.y−y_k, q.x−x_k) 与 z 无关 ⟹ **±z 两 link 相位恒 0**、仅 ±x/±y 四 link 携带相位（与 A_z=0 的对称规范自洽，是 3D 与 2D 唯一结构性差异）；抽 `TPL_LAP3D_BLOCK` 让 KDK/CN-rhs/CN-sweep 三模板共享 7 点 stencil（R33 单源真值原则，此前三份内联复制）；uniform 引擎级与 2D 同名同义（setABUniforms 一次上传）；3D 体积面板新增「磁通(AB)」工具模式（点击取 R44 同口径「视线 slab 穿透段中点」xy 投影，管沿 z 贯穿 ⟹ 命中只看 xy <0.05）；R37 3D 现场存档新增 `abSols` 顶层段。**cdp57 12/12**：零回归（无管 vs Φ=0 单管，64³ 全卷 524288 float **max-abs=0** 逐位相同）、矢势可加性（共位双管 π/2+π/2 ≡ 单管 π **max-abs=0**）、Φ=π 使场改 3.56e-3、加第二根不共位管再改 7.16e-4、CN 同源 dP=1.2e-6、序列化 round-trip 逐位恢复、真实点击落管、glError=0、零异常。link_math3d 10/10 + shader 构建 13/13 + dist 冒烟 OK（370.8 KB）。**契约变更**：cdp54 F2 由「3D 下 AB sec 隐藏」反转为「显示」（回归矩阵 cdp54 34/34 + cdp55 12/12 + cdp56 15/15 全绿） |边缘拉手 `.qf-tab`（常驻、z-index 11 压面板 10 只压边框+padding、滑出态 pointer-events:none）+ 快捷键 `[`/`]`（表单聚焦守卫）+ body class `qf-hide-left/right` 驱动 transform 滑出（#gl 本就 fixed 全屏 ⟹ 无需 resize/重绘）+ localStorage `qf.panels.state={left,right}` 持久化（缺省/坏值宽松默认全展开）+ hint 补 `[` `]` 提示。**cdp56 15/15**：拉手贴边几何（lx=0/rr=1440、20px、z-index 11）/左右列滑出（panel.r=−10、hud.l=1450、字形翻转）/键盘交替序列/表单守卫/持久化+重载恢复/**双隐藏态 flux 真实点击落管 @(0.5,0.5)**（拉手与面板不挡画布）/3D 内核 smoke + 零异常。**关键环境发现**：`python3 -m http.server` 不发 Cache-Control/ETag ⟹ Chrome 按 Last-Modified 龄 10% 启发式缓存——styles.js（mtime 3 天前）新鲜期 ~7h，src 改了浏览器不重验，表现为「JS 是新的、CSS 是旧的」⟹ 全部 CDP 套件补 `Network.setCacheDisabled`（cdp54/55/56 回填）；另记 cdp56 T1 二轮 FAIL 根因 `.qf-tab` 漏设 left/right（静态位置巧合）与 dist smoke 假失败根因（localStorage 跨套件残留改变挂载初态，探针须先 clear） |
 | R42 | NLS/GP 物理工具（README「后续方向」②，用户选定两者都做） | 通用扫描框架 `GenericScanner`（生命周期与既有三扫描器同契约）+ GP/NLS 双适配器；**固定测量窗 + 全程序列**替代停止判据（非线性无耗散无终态：呼吸模永久振荡实测 8.6↔9.3）；GP 初态 σ=R_TF(g)（TF 自洽验算一致）⟹ **峰值对账 3.5%**；NLS **g=6 塌缩检出（峰值比 10.80）** + 网格截断崩坏 P→0.68；**P 诚实更正**：非线性 P 漂移 0.5–3.1%（KDK 离散耗散，随 \|g\| 增长）vs 线性对照 2.06e-6；判据修正：塌缩用序列峰值最大值（末值会因崩坏骤降误判）；既有三扫描器零改动；cdp42 32/32；环境记录：headless Chrome 无 X display 时 ANGLE Vulkan-XCB 失败 ⟹ 须 `xvfb-run` 启动 |
 | R41 | 3D 双槽势组合（README「后续方向」①，用户选定通用双槽） | 势由单枚举升级为 V=pot3Slot(主)+pot3Slot(第二)（CPU `pot3JS` 与 GLSL `helpers` 同名函数严格镜像）；**TPL_REDUCE3D 补 {{HELPERS}} 注入位**（原只有 POT3，否则势不同源、R35 对账失效）；eMaxExtra 取两槽之和（保守）⟹ 组合势 120 帧 P 守恒 1.36e-4；GPU↔CPU ⟨V⟩ 同帧对账 rel 8.8e-10/7.6e-8/6.5e-9（阈值 2e-7）；组合预设「球垒调制双缝」（球垒 R₂=6 不遮缝）；cdp41 30/30；副作用诚实记录：shader 变复杂 ⟹ 挂载预演化帧数分布 4↔5 下移到 3↔5，cdp39 PRE 断言阈值过时（判据放宽 3–6，对账走实测 PRE 故 33 项全绿） |
 | R40 | 3D 双缝图样扫描（README「后续方向」①） | SlitScanner（与 R38 同生命周期契约）：D=0,8,16,24,32 五点扫描 117s、P 守恒 1.02e-4、峰数 **1/1/3/5/3**（双缝等距条纹：D=16 距 9.5、D=24 距 7.8、D=32 ±15.5 贴提取边界）；Fraunhofer 最近邻匹配中位偏差 1.65（nMatched=8）但实测间距大于预测 1.2–1.5×（深 Fresnel 修正，与 R39 结论互证）；CDP 诊断轮抓出并修复四个真 bug：screenSlice3 类方法化（原仅 debugHandle 对象 ⟹ 类路径 TypeError）、slitPeaks 实质密度门限（float32 残余 8e-22 假峰令 _best 停噪声帧）、_finish `o.d`→`r.d` NaN 全表、measureFrom 窗门限生效；cdp40 35/35 + dist 冒烟 11/11 + cdp39 回归 34/34 |
+
+---
+
+## R61–R66 计划（2026-10-19 用户授权「按你的顺序全部实施」）
+
+README「后续方向」表经核实已清空（面板溢出 R48/R53 闭环、GP 对账 R52 闭环）。用户要求按推荐顺序**全部实施**下列六轮（每轮：实现 ⟹ 面板/交互 ⟹ potXX 单测 + cdpXX 浏览器套件 + 回归矩阵 ⟹ 文档 ⟹ commit（英文祈使句）⟹ push（本项目自动推送规则）⟹ `git ls-remote` 闭环）：
+
+| 轮次 | 主题 | 知识点 | 机制复用 | 验证锚点 |
+|---|---|---|---|---|
+| R61 | 概率流 J + 连续性方程 + Bohm 轨迹 | J=Im(ψ*∇ψ)、∇·J=−∂ρ/∂t、导航波 | 新 J-field pass（2D+3D reduce 级）+ 2D 箭头 overlay + 轨迹交互工具（CPU 读 J 邻域沿 J/ρ 积分） | ∫∇·J vs −dP/dt 数值闭合；轨迹落在 \|ψ\|² 大处（J=0 节点不动） |
+| R62 | 光学晶格 + Bloch 能带 | V=V₀sin² 周期势、Bloch 定理、band gap | 新预设（lattice）+ 平面波初态 + BlochScanner（GenericScanner SPEC 钩子，k 扫描测 ⟨E⟩） | 1D Mathieu 能带解析对照（特征值参数 a,q）、gap 位置 |
+| R63 | Landau 能级（均匀 B 轨道耦合） | 回旋频率 ω_c=qB/m、E_n=(n+½)ℏω_c、简并度 | 引擎级：TPL_LAP_BLOCK / TPL_LAP3D_BLOCK 的 ±link 加均匀矢势相位（Landau gauge A=(−By,0,0)），KDK+CN 全模板 | B=0 逐位零回归；E_n 间距 vs ℏω_c；N_Φ 简并度计数 |
+| R64 | 量子弹球（stadium 腔体 scar） | 量子混沌、scar、能级统计 | 复用 R60 势刷九字段丘链预置腔体轮廓（高 V₀ 硬边近似硬壁）+ 预设携带 potBlobs 段 | scar 图样可视化 + 双阱谱 vs 单阱对照 |
+| R65 | 双势阱 Josephson 振荡与自囚禁 | 粒子数振荡、临界耦合、自囚禁 | GP 新预设（双抛物 localH + 双高斯叠加初态） | 双模模型 sin² 振荡周期、自囚禁阈值 \|g\|_c |
+| R66 | 暗孤子（defocusing NLS 预设缺口） | 暗孤子 tanh 剖面、传播速度、与亮孤子对照 | NLS 新预设 + g<0 侧初态 | 速度理论值对照、长时稳定性 |
+
+**通用纪律**：每轮零回归优先（B=0 / 默认态逐位）；GPU↔CPU 对账走同帧口径；harness 失败先诊断「测试侧 vs 实现侧」再动手；文档（README 专节 + 验证表 + 总览 + worklog 详章）随轮完成，不攒批。
+
+---
+
+## R61（2026-10-19）概率流 J + 连续性方程 + Bohm 轨迹
+
+### 实现（五文件）
+
+**`src/physics/kernel.js`**（模板层，全部 {{TOKEN}} 注入、默认态零回归）：
+- `TPL_JFIELD`（2D J 场）：4 阶中心差分 dxp/dyp（与 KINETIC 同算子），`J = (1/m)·(Re ψ·Im ∂ψ − Im ψ·Re ∂ψ)`；输出 RG32F 24×24 格点场
+- `TPL_JRED`（2D 归约 MRT 三附件）：ΣJ_x、ΣJ_y、Σρ、ΣdivJ、六面通量 fr/fl/ft/fb
+- `TPL_JFIELD3` / `TPL_JRED3`（3D 同构）：六面通量 fxp/fxm/fyp/fym/fzp/fzm
+- `TPL_BOHM_STEP`：64 粒子制导步进（gl_VertexID 索引 uPos，v=J/max(ρ,uRhoFloor)×uDt×uInvGrid，单步 |Δ|≤uMaxStep 钳制，出界写 (−1,−1) 停泊）
+- `TPL_DISPLAY` 新增 uniform 门控段：uShowJ 箭头 overlay（24×24 世界格阵 SDF，半长 ∝ |J|/uJScale，uAspect 修正 ⟹ 屏幕正圆）+ uBohmOn 残影叠加（`outc += texture(uBohmTrail,vUv).rgb*uBohmGain`）；关闭时最终行逐字等价
+- `DENSITY`/`DENSITY3` 片段复用（2D 内核约定引用 `psi`、3D 引用 `c`——见下方 bug A）
+
+**`src/core/app.js`**（引擎级）：
+- 管线：`jFieldPass/jRedPass/jField3Pass/jRed3Pass`（frame 内开关触发，与显示同帧；120ms 节流归约）+ `bohmStep/bohmStamp`（frame 内 `bohmOn && _bohmN>0` 触发，**不受 paused 门控**——暂停态 J 冻结 ⟹ 轨迹线性漂移，制导步进确定性可测）
+- 残影双纹理 RGBA16F：fade（B=A·uFade）→ blit B→A → stamp POINTS（MAX 混合，gl.js `createProgram` 第三参自定义 VS）；**无 A↔B 交换**（见 bug C）
+- 交互：`setShowJ/setBohmOn`、`bohmSeeds(n)`（|ψ|² 加权 CDF 二分撒粒）、`bohmPlace`（pointer 'bohm' 工具）、`bohmReset/bohmClearTrail/bohmPositions`；URL `?showJ=1&bohm=1`；键位 `J`/`B`；面板 #jSec 读数节（ΣJ/Σ∇·J/Gauss 残差/max|J|/Bohm 计数）+ Bohm 控件行；debugHandle 全套转发（含 `bohmTrailStats()` 纹理回读）
+
+**`src/core/gl.js`**：`createProgram(gl, fs, vs)` 第三参自定义 VS（stamp 的 gl_VertexID 无属性输入）
+
+**`src/physics/dirac.js`**：2+1 维 Weyl 表象电流 `J_x=2Re(ψ₁*ψ₂)`、`J_y=2Im(ψ₁*ψ₂)`（无 1/m 因子；J/ρ = 群速 s/E 与能带自洽）
+
+**`dist/quantum-field.html`**：build-standalone 重建（421.9 KB，md5 确定性与源码同步复核）
+
+### 数值设计锚点（pot61 CPU float64 镜像对账，全部恒等式）
+
+| 锚点 | 内容 | 结果 |
+|---|---|---|
+| 平面波分轴闭式 | 4 阶 stencil 对平面波 **精确**闭式 J_x=(1/3m)·sin k·(4−cos k)（小 k → k/m）；斜向波按 kx=k·cosθ 分轴对账——4 阶截距 O(k⁵) 破坏各向同性，\|J\| 无标量闭式 | maxerr < 2e-6 |
+| 2 阶望远镜恒等式 | CLAMP_TO_EDGE + 2 阶中心差分 ⟹ ΣdivJ ≡ fr−fl+ft−fb **代数恒等**（非近似） | 恒等成立 |
+| 4 阶反例 | 4 阶不望远镜：Σ=(1/6)[−13J(0)+J(1)−J(g−2)+13J(g−1)]——R61 选 2 阶 divJ 的依据（残差纯舍入） | 显式反例在册 |
+| Bohm 步进镜像 | 钳制/停泊/ρ floor 逐项同构 | 一致 |
+| Dirac 群速签名 | J/ρ = s/E | 一致 |
+
+### 验证阶段 CDP 实测捕获的三个真 bug（实现侧，非测试侧）
+
+首轮 cdp61 连编译都未过（glError/异常路径暴露Shader编译失败日志），逐一定位：
+
+| # | 现象 | 根因 | 修复 |
+|---|---|---|---|
+| A | TPL_JRED `ERROR 0:11 'psi' undeclared` | 2D 内核 density 片段统一引用片段变量 `psi`（`dot(psi.xy,psi.xy)`）；3D `DENSITY3` 才引用形参 `c`。初版把 `float p = {{DENSITY}}` 包成 `float den(vec4 c){...}` ⟹ 形参名 `c` 与片段变量名 `psi` 不符，编译失败 | `vec4 psi` 作用域内**内联** `float p = {{DENSITY}};`（kernel.js ~1253）；pot61 补源码契约（TPL_JRED 必须内联、TPL_JRED3 保持 `den3(vec4 c)` 包装） |
+| B | TPL_BOHM_STEP `ERROR 0:24 no matching overloaded function` | GLSL ES 3.00 无 float→vec2 隐式广播：`texture(uPos, (fi+0.5)/64.0)` 第二参标量 | 补 `vec2((fi+0.5)/64.0, 0.5)` 包裹；pot61 补契约 |
+| C | **残影永不可见**（粒子在动、stamp 在跑、截图无轨迹） | `bohmStamp()` 三步 fade→blit→stamp **全部写向 A**（design doc 与 resize 段均以「A 恒为显示采样纹理」为不变量），但末尾误抄 bohmStep 的 ping-pong 模式加了 `const t=this.bohmTrailA; this.bohmTrailA=this.bohmTrailB;...` 交换 ⟹ stamp 落进的 A 被改名成 scratch B，display 恒采空 A；次帧 fade 再把盖章纹理覆盖 | 删交换（app.js ~1311）；新增 `bohmTrailStats()` 调试回读；**取证**：修复前 A.mx≡0 / B.n≈790（stamp 全在 B），修复后 A.n 1419→13777 累积；pot61 源码契约（bohmStamp 无 A↔B 交换）+ cdp61 纹理断言（A.mx>0.1 且 n>100）双闸门 |
+
+### 测试方法学修正（harness 侧，非实现缺陷）
+
+| # | 现象 | 根因 | 修正 |
+|---|---|---|---|
+| ① | W3 粒子「假冻结」moved=0 | CDP `ev()` 把表达式塞进 `JSON.stringify(...)`——**分号分隔的多语句是语法错误**，被 try/catch 吞掉返回 `{__err}` ⟹ 整段播种 IIFE 前从未执行 | 多语句一律包 `(() => { A; B; })()`；手动 `bohmStep()` 一次移 24 粒先证明产品无罪 |
+| ② | W2 re-toggle 假阳性 maxPix=129 | J HUD（#jSec，x∈[1142,1249]、y∈[391,586]）与 tube59 判据区右界 x<1150 **重叠 8 列**——HUD 读数文本不受暂停门控，1130 个 diff>20 像素全部在 HUD 区。**R59 教训的 J-HUD 版**；且上一轮「残影可见 maxPix=489」实为此重叠列的 HUD 文本假阳性（bug C 被它蒙混） | 本地 differ `tube61.py` 判据区右界 1150⟶1130（HUD 文本起点 1142 之外） |
+| ③ | W3 零回归 FAIL maxPix=10 vs 阈值 6 | 噪点地板实测 ~10（3 通道 × ±2 LSB 合成） | 阈值 6⟶10，注释注明实测地板依据 |
+| ④ | 截图等余晖收敛慢 | decay 仅作用于显示 pass 的 uDecay（不动物理） | `state.decay=0` ⟹ `outc=max(img,0)=img`，截图免收敛等待 |
+
+### 验证（pot61 136/136 + cdp61 23/23，Vulkan/swiftshader 实测）
+
+- **cdp61 23/23**：W0 加载 ΣJ_x=⟨p_x⟩=k=**0.089993**（误差 <1e-3）/ W1 Σρ=**1.000000**、max|J|=1.99e-2、**Gauss 残差 5.15e-10**、jScale()≡max|J| / W2 箭头 overlay 可见 maxPix=177 + re-toggle 复原 maxPix=10 / W3 Bohm 24/24 位移（minMove 4.07e-2）零越界 + **残影纹理 A.mx=2.199·n=14505 + 像素可见 maxPix=506**（Δ(E−D) 中心区，R>G>B 橙色签名 (1.0,0.85,0.35)）+ bohm 关态与 R60 基线逐位一致 maxPix=10 / W4 3D Σρ=0.999999、max|J|=3.73e-3、Gauss 残差 **7.88e-10**、HUD 读数 + Bohm 2D 专属标注 / glError=0、零 console 异常
+- **pot61 136/136**（Node）：CPU float64 镜像五组锚点 + app.js/gl.js/kernel.js 源码契约（含 bug A/B/C 三条回归断言）
+- **回归矩阵 12 套件全绿**：cdp54 34/34 + cdp55 12/12 + cdp56 15/15 + cdp57 12/12 + cdp58 12/12 + cdp58_dist 12/12 + cdp59 7/7 + cdp59_dist 7/7 + link_math3d 10/10 + shader3d_build 13/13 + pot60 94/94（合计 387 PASS / 0 FAIL）
 
 ---
 

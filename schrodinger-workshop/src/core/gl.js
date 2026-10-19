@@ -27,10 +27,12 @@ export function compileShader(gl, type, src){
   return s;
 }
 
-/* 编译 program：全屏三角形 VS + 调用方提供的 FS */
-export function createProgram(gl, fs){
+/* 编译 program：全屏三角形 VS + 调用方提供的 FS。
+   vs 参数可选（R61 Bohm 轨迹 stamp：POINTS 程序需自定义 VS，无属性输入、
+   gl_VertexID 索引位置纹理）——缺省逐字等价旧路径。 */
+export function createProgram(gl, fs, vs){
   const p = gl.createProgram();
-  gl.attachShader(p, compileShader(gl, gl.VERTEX_SHADER, VS));
+  gl.attachShader(p, compileShader(gl, gl.VERTEX_SHADER, vs || VS));
   gl.attachShader(p, compileShader(gl, gl.FRAGMENT_SHADER, fs));
   gl.linkProgram(p);
   if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error('link: ' + gl.getProgramInfoLog(p));
