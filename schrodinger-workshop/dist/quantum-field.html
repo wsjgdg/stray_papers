@@ -1551,13 +1551,20 @@ function sphericalBarrierModel3(m){
  *                     eMaxExtra 抬子步（dt·E≤2 稳定界）。
  *   w = (p−0.5)·N 为世界坐标（格点单位、居中，p 为纹理坐标）——与
  *   TPL_EVOLVE3D 的 uGrid3 口径逐字一致。
- *   R44 势刷：上述解析势之外，交互放置的球形硬边势丘与主槽、第二槽
- *   三者之和进入 pot3/pot3JS。
+ *   R44 势刷：上述解析势之外，交互放置的势丘与主槽、第二槽三者之和
+ *   进入 pot3/pot3JS。
  *   R49 体积连续笔刷：势丘由单丘（R44 的 potBX/BY/BZ/BR/BV0 五字段）
  *   升级为**丘列表** state.potBlobs（≤16 个 {x,y,z,r,v0}）——拖拽连续
  *   涂抹（相邻 stamp 中心距 ≥0.6R 时落新丘，球链重叠 ⟹ 视觉连续），
  *   GLSL blobSum 循环求和、CPU pot3Blobs 逐字镜像。空列表恒 0 ⟹ 与
  *   R44 单丘关闭态逐位一致；融合语义 = 求和（重叠处强度相加）。
+ *   R60 形状扩展（椭球 + 高斯软化边）：丘字段扩为
+ *   {x,y,z,r,v0,rx,ry,rz,soft}——rx/ry/rz 为椭球三轴半轴（= r·轴比，
+ *   相等 ⟹ 球），soft 为高斯软化宽度（0 = 硬边；>0 时归一化椭球距离
+ *   dn≤1 内恒 1、dn>1 外按 exp(−(dn−1)²/2soft²) 衰减）。**零回归契约**：
+ *   soft=0 且三轴=r 时 GLSL/JS 同构走 R49 逐字硬边判据 ⟹ 逐位一致
+ *   （统一 exp 公式在 soft=0 时边界带非逐位等价，故采显式三分支，
+ *   详见 pot3Blobs 处注释）。旧存档五字段丘经 normBlob 归为球+硬边。
  *
  * 边界（与 2D 不同，如实标注）：3D 纹理 CLAMP_TO_EDGE ⟹ Neumann 零梯度
  * （波包触壁软反射）；2D 的 S() 越界返回 0 是 Dirichlet。有界势（谐振子/
@@ -1595,14 +1602,14 @@ const POT_FREE = 0, POT_SPHERE = 1, POT_OSC = 2, POT_COULOMB = 3, POT_DOUBLE_SLI
    主槽 + 第二槽之和（总势）。potKind2=0（默认 POT_FREE）时第二槽恒 0 ⟹
    与 R34–R40 逐位一致（零回归）。CPU 与 GLSL pot3Slot 逐分支同构。
 
-   R44/R49 势刷（笔刷势丘）：pot3Blobs 为交互放置的球形硬边势丘**列表**
+   R44/R49/R60 势刷（笔刷势丘）：pot3Blobs 为交互放置的势丘**列表**
    ——丘列表由 3D 视图「势刷」工具拖拽连续涂抹写入 state.potBlobs
-   （≤16 个 {x,y,z,r,v0}；R49 由 R44 单丘五字段 potBX/BY/BZ/BR/BV0
-   升级而来，旧存档导入时迁移为列表首项）。与主槽、第二槽三者之和
-   （融合语义：硬边球重叠处强度相加）。空列表恒 0 ⟹ 与 R34–R44 单丘
-   关闭态逐位一致。强度可负（势阱）或正（势垒）；硬边球与球势垒
+   （≤16 个 {x,y,z,r,v0,rx,ry,rz,soft}；R49 由 R44 单丘五字段升级，
+   R60 再加椭球三轴 rx/ry/rz 与软化宽度 soft）。与主槽、第二槽三者
+   之和（融合语义：丘重叠处强度/权重相加）。空列表恒 0 ⟹ 与
+   R34–R44 关闭态逐位一致。强度可负（势阱）或正（势垒）；丘与球势垒
    （kind 1）同构，KDK 无特殊处理。GLSL blobSum 与 CPU pot3Blobs
-   逐字一致（镜像契约见文件头）。 */
+   逐分支一致（镜像契约见文件头；soft=0 球路径逐字复刻 R49）。 */
 function pot3Slot(wx, wy, wz, kind, v0, r, om, z, wallX, wallT, slitW, slitD){
   const r2 = wx*wx + wy*wy + wz*wz;
   if (kind === POT_SPHERE) return r2 < r*r ? v0 : 0;
@@ -1619,10 +1626,38 @@ function pot3Slot(wx, wy, wz, kind, v0, r, om, z, wallX, wallT, slitW, slitD){
   return 0;
 }
 
-/* 笔刷势丘列表（R44 单丘 → R49 连续涂抹丘列表）：球形硬边势之和。
-   list：[{x,y,z,r,v0}]（世界 texel；v0=0 的项恒 0——导入容错）。
-   空列表恒 0。GLSL blobSum 与本函数逐字一致。 */
+/* 笔刷势丘列表（R44 单丘 → R49 连续涂抹丘列表 ⟹ R60 椭球+软化）：
+   丘字段 {x,y,z,r,v0,rx,ry,rz,soft}（世界 texel）：
+     r           主半径（面板「势丘半径」滑块，链间距阈值的口径）
+     rx/ry/rz    椭球三轴半轴（= r·轴比；相等 ⟹ 球）
+     soft        高斯软化宽度（0 = 硬边；>0 时 dn≤1 内恒 1、
+                 dn>1 外按 exp(−(dn−1)²/2soft²) 衰减，dn 为归一化
+                 椭球距离 sqrt((dx/rx)²+(dy/ry)²+(dz/rz)²)）
+   缺字段丘（R49 旧存档/程序化注入）经 normBlob 归一为球+硬边。
+   v0=0 的项恒 0（导入容错）。空列表恒 0。GLSL blobSum 与本函数
+   逐分支同构（镜像契约见文件头）。
+
+   R60 零回归契约：soft=0 且 rx=ry=rz=r 时走 R49 逐字硬边判据
+   dot(d,d)<r*r（内 v0·1.0=v0、外 v0·0.0 加法中性 ⟹ 逐位一致）。
+   注意统一公式 exp(−½·max(0,dn−1)²/max(soft²,1e-12)) 在 soft=0 时
+   **并非** float 逐位等价：texel 恰在 dn=1（如 (8,0,0) vs r=8）时
+   硬边判 64<64 为假（外），而 dn≤1 分支为真（内），且 dn−1 落在
+   (3e-10,1e-5) 边界带时 w∈(0,1) 既非 0 亦非 1——故 GLSL/JS 同构
+   采三分支显式处理，零回归路径逐字复刻 R49 表达式。 */
 const MAX_BLOBS = 16;
+/* 丘字段归一（R60）：缺/非正轴回落 r（球）、缺/负软化回落 0（硬边）——
+   R49 五字段旧丘与程序化注入的统一入口；stamp/导入/构造三处写边界调用，
+   物理读取路径（pot3Blobs/setUniforms）因此可直接读全字段（与 GLSL
+   uniform 数组全字段同构，无 JS 侧特判）。 */
+function normBlob(b){
+  const r = b.r;
+  const ax = v => (typeof v === 'number' && isFinite(v) && v > 0) ? v : r;
+  return {
+    x: b.x, y: b.y, z: b.z, r, v0: b.v0,
+    rx: ax(b.rx), ry: ax(b.ry), rz: ax(b.rz),
+    soft: (typeof b.soft === 'number' && isFinite(b.soft) && b.soft >= 0) ? b.soft : 0,
+  };
+}
 function pot3Blobs(wx, wy, wz, list){
   let s = 0;
   if (!list) return 0;
@@ -1630,7 +1665,22 @@ function pot3Blobs(wx, wy, wz, list){
     const b = list[i];
     if (!b || !b.v0) continue;
     const dx = wx - b.x, dy = wy - b.y, dz = wz - b.z;
-    if (dx*dx + dy*dy + dz*dz < b.r*b.r) s += b.v0;
+    let wgt;
+    if (b.soft > 0){
+      /* 高斯软化边：归一化椭球距离 dn；内（dn≤1）恒 1，外指数衰减 */
+      const qx = dx/Math.max(b.rx, 1e-6), qy = dy/Math.max(b.ry, 1e-6), qz = dz/Math.max(b.rz, 1e-6);
+      const dn = Math.sqrt(qx*qx + qy*qy + qz*qz);
+      const e = Math.max(dn - 1, 0);
+      wgt = Math.exp(-0.5*e*e/Math.max(b.soft*b.soft, 1e-12));
+    } else if (b.rx === b.r && b.ry === b.r && b.rz === b.r){
+      /* R49 逐字硬边球（零回归路径：与 R49 pot3Blobs 同一表达式） */
+      wgt = (dx*dx + dy*dy + dz*dz < b.r*b.r) ? 1 : 0;
+    } else {
+      /* 硬边椭球：归一化平方距离 < 1 */
+      const qx = dx/Math.max(b.rx, 1e-6), qy = dy/Math.max(b.ry, 1e-6), qz = dz/Math.max(b.rz, 1e-6);
+      wgt = (qx*qx + qy*qy + qz*qz < 1) ? 1 : 0;
+    }
+    s += b.v0*wgt;
   }
   return s;
 }
@@ -1723,7 +1773,7 @@ class Schrodinger3dKernel extends PhysicsKernel {
       density: 'dot(psi.xy,psi.xy)',
       kinetic: '0.25*(dot(dxp,dxp)+dot(dyp,dyp))',
       potential: 'V*p',
-      /* R41 双槽势组合 + R49 笔刷势丘列表：pot3Slot 为单槽势函数（HELPERS
+      /* R41 双槽势组合 + R49/R60 笔刷势丘列表：pot3Slot 为单槽势函数（HELPERS
          注入位定义，evolve3d/cnRhs3d/cnSweep3d/reduce3d 四处同源），pot3
          取主槽 + 第二槽 + blobSum 三者之和。uPotKind2=0（默认 POT_FREE）
          且 uBlobCount=0（默认无丘）时后两项恒 0 ⟹ 与 R34–R44 逐位一致。
@@ -1739,10 +1789,16 @@ float pot3Slot(vec3 w, int kind, float v0, float r, float om, float z,
                          && abs(w.y + 0.5*slitD) > 0.5*slitW) ? v0 : 0.0;
   return 0.0;
 }
-/* R49 笔刷势丘列表：球形硬边势之和（与 CPU pot3Blobs 逐字一致）。
-   uBlobA[i] = (x,y,z,r)（世界 texel），uBlobV[i].x = 强度（0 = 跳过）。
+/* R60 笔刷势丘列表：椭球 + 高斯软化边（R49 球形硬边之扩展，与 CPU
+   pot3Blobs 逐分支同构）。
+   uBlobA[i] = (x,y,z,r)（世界 texel），uBlobV[i].x = 强度（0 = 跳过），
+   uBlobB[i] = (rx,ry,rz,soft)（三轴半轴与软化宽度；soft=0 = 硬边）。
    循环上界 MAX_BLOBS 为编译期常量；uBlobCount 动态截断（GLSL ES 3.00
-   允许循环内 break）。空列表（count=0）恒 0 ⟹ 零回归。 */
+   允许循环内 break）。空列表（count=0）恒 0 ⟹ 零回归。
+   三分支（与 CPU 同构，注释同 file 头 R60 零回归契约）：
+     soft>0            高斯软化：dn=length(d/axes)，内恒 1、外 exp 衰减
+     soft=0 且三轴=r    R49 逐字硬边球（零回归路径）
+     soft=0 椭球        归一化平方距离 < 1 */
 float blobSum(vec3 w){
   float s = 0.0;
   for (int i = 0; i < MAX_BLOBS; i++){
@@ -1750,7 +1806,20 @@ float blobSum(vec3 w){
     vec4 a = uBlobA[i];
     if (uBlobV[i].x == 0.0) continue;
     vec3 d = w - a.xyz;
-    if (dot(d, d) < a.w*a.w) s += uBlobV[i].x;
+    vec4 b = uBlobB[i];
+    float wgt;
+    if (b.w > 0.0){
+      vec3 q = d / max(b.xyz, vec3(1e-6));
+      float dn = length(q);
+      float e = max(dn - 1.0, 0.0);
+      wgt = exp(-0.5*e*e/max(b.w*b.w, 1e-12));
+    } else if (b.x == a.w && b.y == a.w && b.z == a.w){
+      wgt = (dot(d, d) < a.w*a.w) ? 1.0 : 0.0;
+    } else {
+      vec3 q = d / max(b.xyz, vec3(1e-6));
+      wgt = (dot(q, q) < 1.0) ? 1.0 : 0.0;
+    }
+    s += uBlobV[i].x*wgt;
   }
   return s;
 }`,
@@ -1795,11 +1864,13 @@ uniform float uPotWallX2;
 uniform float uPotWallT2;
 uniform float uPotSlitW2;
 uniform float uPotSlitD2;
-/* 笔刷势丘列表（R49，由 R44 单丘升级）：uBlobA[i]=(x,y,z,r)、uBlobV[i].x=强度，
-   uBlobCount=实际丘数（0 = 无丘）。与主槽/第二槽独立叠加。 */
+/* 笔刷势丘列表（R49 丘列表 ⟹ R60 椭球+软化）：uBlobA[i]=(x,y,z,r)、
+   uBlobV[i].x=强度、uBlobB[i]=(rx,ry,rz,soft)，uBlobCount=实际丘数
+   （0 = 无丘）。与主槽/第二槽独立叠加。 */
 uniform int   uBlobCount;
 uniform vec4  uBlobA[16];
-uniform vec2  uBlobV[16];`,
+uniform vec2  uBlobV[16];
+uniform vec4  uBlobB[16];`,
     };
   }
 
@@ -1825,29 +1896,34 @@ uniform vec2  uBlobV[16];`,
     const wt2 = gl.getUniformLocation(prog, 'uPotWallT2'); if (wt2) gl.uniform1f(wt2, state.potWallT2 || 0);
     const sw2 = gl.getUniformLocation(prog, 'uPotSlitW2'); if (sw2) gl.uniform1f(sw2, state.potSlitW2 || 0);
     const sd2 = gl.getUniformLocation(prog, 'uPotSlitD2'); if (sd2) gl.uniform1f(sd2, state.potSlitD2 || 0);
-    /* 笔刷势丘列表（R49）：state 字段缺失（旧存档/未初始化）按空列表处理 ⟹ 无丘。
-       每帧对三个 program 各上传一次（96 float，uniform 上传廉价；未引用的
-       program location 为 null 自然跳过）。 */
+    /* 笔刷势丘列表（R49 ⟹ R60 椭球+软化）：state 字段缺失（旧存档/未初始化）
+       按空列表处理 ⟹ 无丘。每帧对三个 program 各上传一次（A 64 + V 32 +
+       B 64 float，uniform 上传廉价；未引用的 program location 为 null 自然
+       跳过——display3d 不注入 pot3/blobSum，三件套 location 均 null）。 */
     const bc = gl.getUniformLocation(prog, 'uBlobCount');
     const ba = gl.getUniformLocation(prog, 'uBlobA[0]');
     const bv = gl.getUniformLocation(prog, 'uBlobV[0]');
+    const bb = gl.getUniformLocation(prog, 'uBlobB[0]');
     if (bc) gl.uniform1i(bc, Math.min(state.potBlobs ? state.potBlobs.length : 0, MAX_BLOBS));
-    if (ba && bv){
-      const A = new Float32Array(64), V = new Float32Array(32);
+    if (ba && bv && bb){
+      const A = new Float32Array(64), V = new Float32Array(32), B = new Float32Array(64);
       const list = state.potBlobs || [];
       for (let i = 0; i < Math.min(list.length, MAX_BLOBS); i++){
         const b = list[i];
         A[i*4] = b.x; A[i*4+1] = b.y; A[i*4+2] = b.z; A[i*4+3] = b.r;
         V[i*2] = b.v0;
+        B[i*4] = b.rx; B[i*4+1] = b.ry; B[i*4+2] = b.rz; B[i*4+3] = b.soft;
       }
       gl.uniform4fv(ba, A);
       gl.uniform2fv(bv, V);
+      gl.uniform4fv(bb, B);
     }
   }
 
   /* H 特征值上界附加项（引擎 eMax = uK·12 + 1 + 本项）：
-     各势形在域内的 |V| 最大值（格点单位）。R49 笔刷丘列表叠加 Σ|v0|
-     （保守：所有丘极值同点位时取等）。 */
+     各势形在域内的 |V| 最大值（格点单位）。R49/R60 笔刷丘列表叠加 Σ|v0|
+     （保守：所有丘极值同点位时取等——R60 软化权重 ≤1、椭球不越轴包络，
+     该上界对椭球/软化丘依然成立，无需改动）。 */
   eMaxExtra(state){
     let blobMax = 0;
     for (const b of (state.potBlobs || [])) blobMax += Math.abs(b.v0 || 0);
@@ -2014,12 +2090,17 @@ uniform vec2  uBlobV[16];`,
          预设 params 可注入组合（如 slit_sphere3d：主槽双缝墙 + 第二槽球垒）。 */
       potKind2: POT_FREE, potV02: 0.02, potR2: 10, potW2: 1/64, potZ2: 0.25,
       potWallX2: 0, potWallT2: 4, potSlitW2: 6, potSlitD2: 20,
-      /* 笔刷势丘列表（R49，由 R44 单丘升级）：默认空列表 ⟹ 无丘（与
+      /* 笔刷势丘列表（R49 丘列表 ⟹ R60 椭球+软化）：默认空列表 ⟹ 无丘（与
          R34–R44 单丘关闭态逐位一致）。potBlobR/potBlobV0 是「新丘规格」
-         （面板滑块，stamp 时快照进每个丘）；丘数上限 MAX_BLOBS=16，
-         超出 FIFO 淘汰最旧（app.js stampBlob3）。负 V0 = 势阱。 */
+         （面板滑块，stamp 时快照进每个丘）；potBlobRX/RY/RZ 为三轴**轴比**
+         （×R 得半轴，1 = 球；0.2–2.0）、potBlobSoft 为高斯软化宽度（texel，
+         0 = 硬边）。轴比全 1 且 soft=0 时新丘 ≡ R49 硬边球（零回归）；
+         soft>0 时 dn≤1 内恒 V₀、dn>1 外按 exp(−(dn−1)²/2soft²) 衰减。
+         丘数上限 MAX_BLOBS=16，超出 FIFO 淘汰最旧（app.js stampBlob3）。
+         负 V0 = 势阱。 */
       potBlobs: [],
       potBlobR: 8, potBlobV0: 0.5,
+      potBlobRX: 1, potBlobRY: 1, potBlobRZ: 1, potBlobSoft: 0,
       /* 曝光默认 3600（= free3d 预设值，见预设表的实测标定）；其余预设各自覆盖 */
       steps3: 48, exposure3: 3600, phaseColor: 1, slice3: 0, sliceZ: 0.5,
       sigma: 6,
@@ -2079,6 +2160,9 @@ const CSS = `
   .sec>h3::after{content:"";flex:1;height:1px;background:var(--line)}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
   .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  /* R60 势刷轴比三连同控（grid3 单元格内的迷你标签行：名称 + 实时值） */
+  .mini{font-size:9.5px;color:var(--dim);display:flex;justify-content:space-between;gap:4px;margin:3px 0 1px;white-space:nowrap}
+  .mini b{color:var(--cyan);font-weight:600;font-family:var(--mono)}
   button{font-family:var(--sans);font-size:12px;color:var(--txt);background:rgba(255,255,255,.045);
     border:1px solid var(--line);border-radius:8px;padding:7px 8px;cursor:pointer;transition:all .15s;text-align:center}
   button:hover{background:rgba(103,232,249,.12);border-color:rgba(103,232,249,.4)}
@@ -3733,6 +3817,10 @@ class QuantumField {
       ...this.kernel.defaults(),
       ...(options.state || {}),
     };
+    /* R60：程序化注入的丘列表（options.state.potBlobs，如课程站嵌入/旧调用方）
+       可能缺椭球/软化字段——经 normBlob 归一为球+硬边，与导入迁移同口径 */
+    if (Array.isArray(this.state.potBlobs))
+      this.state.potBlobs = this.state.potBlobs.map(normBlob);
     this._uloc = new Map();     /* program → uniform name → location 缓存 */
     this._rows = [];            /* 面板滑块行（引擎 + 内核），syncControls 用 */
     this._listeners = [];       /* unmount 时统一移除 */
@@ -3986,6 +4074,12 @@ ${d3 ? `
     </div>
     <div class="row"><label>势丘半径 R</label><input type="range" id="rBlobR" min="3" max="24" step="1" value="8"><output id="oBlobR">8</output></div>
     <div class="row"><label>势丘强度 V₀</label><input type="range" id="rBlobV0" min="-2" max="2" step="0.05" value="0.5"><output id="oBlobV0">0.50</output></div>
+    <div class="grid3" style="margin:4px 0 2px">
+      <div><div class="mini">X 轴比 <b id="oBlobRX">1.00</b></div><input type="range" id="rBlobRX" min="0.2" max="2" step="0.05" value="1"></div>
+      <div><div class="mini">Y 轴比 <b id="oBlobRY">1.00</b></div><input type="range" id="rBlobRY" min="0.2" max="2" step="0.05" value="1"></div>
+      <div><div class="mini">Z 轴比 <b id="oBlobRZ">1.00</b></div><input type="range" id="rBlobRZ" min="0.2" max="2" step="0.05" value="1"></div>
+    </div>
+    <div class="row"><label>边缘软化</label><input type="range" id="rBlobSoft" min="0" max="8" step="0.5" value="0"><output id="oBlobSoft">0</output></div>
     <div class="row"><label>势丘列表</label><output id="oBlobPos">无</output></div>
     <div class="grid2" style="margin-top:6px">
       <button id="btnPhase3" class="on">相位着色</button>
@@ -3998,7 +4092,7 @@ ${d3 ? `
       <button id="btnImport3">导入现场</button>
     </div>
     <input type="file" id="fileImport3" accept=".json,application/json" style="display:none">
-    <div class="hint" style="margin-top:4px">拖拽旋转 · 滚轮缩放。V₀/R 仅球势垒预设生效；ω/σ 决定谐振子基态（σ=1/√ω）；Z 仅氢原子预设生效（改动后波包按新 Z 重发）；墙心 x₀/墙厚 T/缝宽 W/缝距 D 仅双缝预设生效（D=0 退化为单缝，改动即时生效）。<b>势刷</b>：切到「势刷放置」后在体积上拖拽，沿视线中点连续涂抹球形硬边势丘链（按下必落首丘，拖拽按 0.6·R 距离阈值续落——球链重叠 ⟹ 视觉连续；与主势/第二势独立叠加，负 V₀=势阱；上限 16 丘，超出淘汰最旧；放置后演化继续，不重发波包）。积分器：KDK 为速度 Verlet（默认，R34 已验证守恒）；CN 为 Crank-Nicolson + block-Jacobi，Cayley 矩阵严格正交、范数机器精度守恒——同预设下切换可对照二者离散误差（切换即时生效，不重发波包）。导出现场：参数 + 场数据 + 相机 + 积分器选择的单文件 JSON 存档（网格不符时拒绝导入，不重采样）。</div>
+    <div class="hint" style="margin-top:4px">拖拽旋转 · 滚轮缩放。V₀/R 仅球势垒预设生效；ω/σ 决定谐振子基态（σ=1/√ω）；Z 仅氢原子预设生效（改动后波包按新 Z 重发）；墙心 x₀/墙厚 T/缝宽 W/缝距 D 仅双缝预设生效（D=0 退化为单缝，改动即时生效）。<b>势刷</b>：切到「势刷放置」后在体积上拖拽，沿视线中点连续涂抹势丘链（按下必落首丘，拖拽按 0.6·最短轴距离阈值续落——丘链重叠 ⟹ 视觉连续；与主势/第二势独立叠加，负 V₀=势阱；上限 16 丘，超出淘汰最旧；放置后演化继续，不重发波包）。<b>形状（R60）</b>：轴比 X/Y/Z（0.2–2，半轴 = R×轴比，全 1 = 球）× 边缘软化（0 = 硬边；&gt;0 时丘内恒 V₀、丘外按 exp(−(dn−1)²/2soft²) 高斯衰减，dn 为归一化椭球距离）——轴比与软化同样 stamp 时快照，只影响后续丘。积分器：KDK 为速度 Verlet（默认，R34 已验证守恒）；CN 为 Crank-Nicolson + block-Jacobi，Cayley 矩阵严格正交、范数机器精度守恒——同预设下切换可对照二者离散误差（切换即时生效，不重发波包）。导出现场：参数 + 场数据 + 相机 + 积分器选择的单文件 JSON 存档（网格不符时拒绝导入，不重采样）。</div>
   </div>
   <div class="sec" id="scan3Sec">
     <h3>3D 透射扫描</h3>
@@ -4414,6 +4508,10 @@ ${d3 ? `
          仍做显式深拷贝，杜绝「调 Φ 改到预设字面量」的共享引用隐患 */
       if (Array.isArray(this.state.abSols))
         this.state.abSols = this.state.abSols.map(s => [s[0], s[1], s[2]]);
+      /* R60：丘列表同策——预设若注入 potBlobs（当前无预设含该字段），
+         经 normBlob 归一全字段（旧五字段丘 ⟹ 球+硬边），杜绝共享引用 */
+      if (Array.isArray(this.state.potBlobs))
+        this.state.potBlobs = this.state.potBlobs.map(normBlob);
     }
     this.syncControls();
     if (this.kernel.dim3){
@@ -5080,18 +5178,27 @@ ${d3 ? `
     return { x: (ro[0] + rd[0]*t)*n, y: (ro[1] + rd[1]*t)*n, z: (ro[2] + rd[2]*t)*n };
   }
 
-  /* 势刷 stamp（R49 连续涂抹，由 R44 placeBlob3 单丘升级）：在画布客户
-     坐标处沿视线 slab 中点落一个球形硬边势丘（规格 = 当前滑块 potBlobR/
-     potBlobV0，stamp 时快照）。force=true（pointerdown）无视距离阈值必落；
-     force=false（pointermove 拖拽涂抹）仅在与最后一个丘中心距 ≥0.6·R 时
-     落新丘——球链重叠 ⟹ 视觉连续，同时天然节流（慢拖不密、快拖不断）。
-     丘数上限 MAX_BLOBS=16，超出 FIFO 淘汰最旧（announce 时 toast 明示）。 */
+  /* 势刷 stamp（R49 连续涂抹 ⟹ R60 椭球+软化，由 R44 placeBlob3 单丘
+     升级）：在画布客户坐标处沿视线 slab 中点落一个势丘（规格 = 当前滑块
+     potBlobR/potBlobV0/potBlobRX/RY/RZ/potBlobSoft，stamp 时快照；三轴
+     半轴 = R·轴比，soft=0 = 硬边、>0 = 高斯软化边）。force=true
+     （pointerdown）无视距离阈值必落；force=false（pointermove 拖拽涂抹）
+     仅在与最后一个丘中心距 ≥0.6·min(rx,ry,rz) 时落新丘——按最短轴取阈值
+     ⟹ 任意轴比下丘链均重叠连续（球时 min=R ⟹ 与 R49 的 0.6R 一致），
+     同时天然节流（慢拖不密、快拖不断）。丘数上限 MAX_BLOBS=16，超出
+     FIFO 淘汰最旧（announce 时 toast 明示）。 */
   stampBlob3(cx, cy, force, announce){
     const r = this.canvas.getBoundingClientRect();
     const nx = (cx - r.left)/r.width, ny = 1 - (cy - r.top)/r.height;
     const p = this.pickBlob3(nx, ny);
     if (!p) return false;
-    const spec = { r: this.state.potBlobR, v0: this.state.potBlobV0 };
+    const spec = {
+      r: this.state.potBlobR, v0: this.state.potBlobV0,
+      rx: this.state.potBlobR*this.state.potBlobRX,
+      ry: this.state.potBlobR*this.state.potBlobRY,
+      rz: this.state.potBlobR*this.state.potBlobRZ,
+      soft: this.state.potBlobSoft,
+    };
     /* 世界 texel ∈ [−n/2, n/2]（slab 中点天然在域内）；留 2 texel 边缘余量 */
     const lim = this.state.grid/2 - 2;
     const b = {
@@ -5099,12 +5206,15 @@ ${d3 ? `
       y: Math.max(-lim, Math.min(lim, p.y)),
       z: Math.max(-lim, Math.min(lim, p.z)),
       r: spec.r, v0: spec.v0,
+      rx: spec.rx, ry: spec.ry, rz: spec.rz, soft: spec.soft,
     };
     const list = this.state.potBlobs || (this.state.potBlobs = []);
     if (!force && list.length){
       const last = list[list.length - 1];
       const dx = b.x - last.x, dy = b.y - last.y, dz = b.z - last.z;
-      if (Math.sqrt(dx*dx + dy*dy + dz*dz) < 0.6*spec.r) return false;   /* 距离阈值：过密不落 */
+      /* 最短轴口径（R60）：任意轴比下链连续；球 ⟹ 0.6R（R49 同值） */
+      const thr = 0.6*Math.min(spec.rx, spec.ry, spec.rz);
+      if (Math.sqrt(dx*dx + dy*dy + dz*dz) < thr) return false;   /* 距离阈值：过密不落 */
     }
     let evicted = false;
     if (list.length >= MAX_BLOBS){ list.shift(); evicted = true; }
@@ -5118,7 +5228,9 @@ ${d3 ? `
     return true;
   }
 
-  /* 势丘列表读数（面板「势丘」行）：丘数 · 最后位置 · 当前规格 */
+  /* 势丘列表读数（面板「势丘」行）：丘数 · 最后丘位置 · 最后丘实际形状
+     （R60：轴比按最后丘快照显示——改滑块只影响后续丘，与 stamp 快照语义一致；
+     三轴相等显「球」，否则显 X/Y/Z 轴比） */
   updateBlobReadout(){
     const el = this.q('#oBlobPos'); if (!el) return;
     const list = this.state.potBlobs || [];
@@ -5127,16 +5239,22 @@ ${d3 ? `
       return;
     }
     const b = list[list.length - 1];
+    const ax = (b.rx === b.r && b.ry === b.r && b.rz === b.r) ? '球'
+      : (b.rx/b.r).toFixed(1) + '/' + (b.ry/b.r).toFixed(1) + '/' + (b.rz/b.r).toFixed(1);
     el.textContent = '×' + list.length + ' · (' + b.x.toFixed(1) + ', ' + b.y.toFixed(1)
-      + ', ' + b.z.toFixed(1) + ') · R=' + this.state.potBlobR.toFixed(0)
-      + ' · V₀=' + this.state.potBlobV0.toFixed(2);
+      + ', ' + b.z.toFixed(1) + ') · R=' + b.r.toFixed(0) + ' 轴' + ax
+      + ' · 软化' + b.soft.toFixed(1) + ' · V₀=' + b.v0.toFixed(2);
   }
 
   /* 势丘规格滑块行同步（DOM ← state；导入存档后调用）。滑块语义是「新丘
-     规格」（R49）：改滑块只影响后续 stamp，不追溯已落丘（丘各自快照）。 */
+     规格」（R49 ⟹ R60）：改滑块只影响后续 stamp，不追溯已落丘（丘各自快照）。 */
   syncBlobRows(){
     const rs = [['#rBlobR','#oBlobR','potBlobR', v => String(v|0)],
-                ['#rBlobV0','#oBlobV0','potBlobV0', v => v.toFixed(2)]];
+                ['#rBlobV0','#oBlobV0','potBlobV0', v => v.toFixed(2)],
+                ['#rBlobRX','#oBlobRX','potBlobRX', v => v.toFixed(2)],
+                ['#rBlobRY','#oBlobRY','potBlobRY', v => v.toFixed(2)],
+                ['#rBlobRZ','#oBlobRZ','potBlobRZ', v => v.toFixed(2)],
+                ['#rBlobSoft','#oBlobSoft','potBlobSoft', v => v.toFixed(1)]];
     for (const [id, out, key, fmt] of rs){
       const el = this.q(id); if (!el) continue;
       el.value = this.state[key];
@@ -5802,10 +5920,12 @@ ${d3 ? `
          （KDK/CN 对照从同一现场出发），故显式存档 + 导入时校验取值。 */
       integrator3: this.state.integrator3 === 'cn' ? 'cn' : 'kdk',
       camera: { theta: this.cam.theta, phi: this.cam.phi, dist: this.cam.dist },
-      /* 势刷丘列表（R49，数组非数字 ⟹ 白名单循环不收，须显式存档）：
-         顶层 blobs 段 [[x,y,z,r,v0],...]（与 state.potBlobs 同构）。
-         R44 旧存档无此段——导入时按 potBV0≠0 从 state 单丘五字段迁移。 */
-      blobs: (this.state.potBlobs || []).map(b => [b.x, b.y, b.z, b.r, b.v0]),
+      /* 势刷丘列表（R49 数组 ⟹ R60 椭球+软化，数组非数字 ⟹ 白名单循环不收，
+         须显式存档）：顶层 blobs 段 [[x,y,z,r,v0,rx,ry,rz,soft],...]（与
+         state.potBlobs 同构）。R49 旧存档为 5 元组 [x,y,z,r,v0]——导入时
+         迁为球+硬边（rx=ry=rz=r, soft=0）；R44 旧存档无此段——导入时按
+         potBV0≠0 从 state 单丘五字段迁移。 */
+      blobs: (this.state.potBlobs || []).map(b => [b.x, b.y, b.z, b.r, b.v0, b.rx, b.ry, b.rz, b.soft]),
       /* AB 磁通管列表（R57，数组非数字 ⟹ 白名单循环不收，须显式存档）：
          顶层 abSols 段 [[x,y,φ],...]（3D 磁通管沿 z 轴，x/y 为管轴在 xy
          平面的 uv 投影；与 state.abSols 同构、与 2D 势场存档同段名）。
@@ -5853,7 +5973,9 @@ ${d3 ? `
       throw new Error('存档相机段无效');
     if (obj.integrator3 !== undefined && obj.integrator3 !== 'kdk' && obj.integrator3 !== 'cn')
       throw new Error('存档积分器段无效（须 kdk/cn）: ' + obj.integrator3);
-    /* 势刷丘列表（R49）：blobs 段须为 ≤MAX_BLOBS 个 [x,y,z,r,v0] 全有限元组。
+    /* 势刷丘列表（R49 5 元组 ⟹ R60 9 元组）：blobs 段每项须为 5 元组
+       [x,y,z,r,v0]（R49 旧档 ⟹ 迁为球+硬边）或 9 元组
+       [x,y,z,r,v0,rx,ry,rz,soft]（R60；三轴须 >0、软化须 ≥0）且全有限。
        R44 旧存档无 blobs 段——合法（迁移路径见阶段 2）。 */
     let blobList = null;
     if (obj.blobs !== undefined){
@@ -5861,10 +5983,15 @@ ${d3 ? `
         throw new Error('存档势丘段无效（须数组且 ≤' + MAX_BLOBS + ' 项）');
       for (let i = 0; i < obj.blobs.length; i++){
         const b = obj.blobs[i];
-        if (!Array.isArray(b) || b.length !== 5 || !b.every(v => typeof v === 'number' && isFinite(v)))
-          throw new Error('存档势丘 #' + i + ' 无效（须 [x,y,z,r,v0] 全有限）');
+        if (!Array.isArray(b) || (b.length !== 5 && b.length !== 9)
+            || !b.every(v => typeof v === 'number' && isFinite(v)))
+          throw new Error('存档势丘 #' + i + ' 无效（须 [x,y,z,r,v0] 或 [x,y,z,r,v0,rx,ry,rz,soft] 全有限）');
+        if (b.length === 9 && (b[5] <= 0 || b[6] <= 0 || b[7] <= 0 || b[8] < 0))
+          throw new Error('存档势丘 #' + i + ' 形状无效（三轴半轴须 >0、软化宽度须 ≥0）');
       }
-      blobList = obj.blobs.map(b => ({ x: b[0], y: b[1], z: b[2], r: b[3], v0: b[4] }));
+      blobList = obj.blobs.map(b => b.length === 9
+        ? { x: b[0], y: b[1], z: b[2], r: b[3], v0: b[4], rx: b[5], ry: b[6], rz: b[7], soft: b[8] }
+        : normBlob({ x: b[0], y: b[1], z: b[2], r: b[3], v0: b[4] }));
     }
     /* 阶段 2：写现场 */
     const SKIP = new Set(['grid','paused','simTime','preset','lastWave','waveCount','drag','tool']);
@@ -5874,18 +6001,19 @@ ${d3 ? `
       const v = obj.state[k];
       if (typeof v === 'number' && isFinite(v) && k in this.state){ this.state[k] = v; n++; }
     }
-    /* 势刷丘列表恢复（R49）：新存档取 blobs 段；R44 旧存档无该段 ⟹ 若
-       potBV0 为有限数且 ≠0（单丘曾放置过）迁为列表首项（五字段同构），
-       滑块规格 potBR→potBlobR 一并迁移；无段且 potBV0=0/缺失 ⟹ 空列表
-       （与 R44 关闭态一致）。 */
+    /* 势刷丘列表恢复（R49 5 元组 ⟹ R60 9 元组）：新存档取 blobs 段（5 元组
+       旧档在此已归一为球+硬边）；R44 旧存档无该段 ⟹ 若 potBV0 为有限数且
+       ≠0（单丘曾放置过）迁为列表首项（经 normBlob 补球+硬边默认），滑块
+       规格 potBR→potBlobR 一并迁移；无段且 potBV0=0/缺失 ⟹ 空列表（与
+       R44 关闭态一致）。 */
     if (blobList){
       this.state.potBlobs = blobList;
     } else {
       const st = obj.state || {};
       const bv0 = st.potBV0;
       this.state.potBlobs = (typeof bv0 === 'number' && isFinite(bv0) && bv0 !== 0)
-        ? [{ x: st.potBX || 0, y: st.potBY || 0, z: st.potBZ || 0,
-             r: st.potBR || 8, v0: bv0 }]
+        ? [normBlob({ x: st.potBX || 0, y: st.potBY || 0, z: st.potBZ || 0,
+             r: st.potBR || 8, v0: bv0 })]
         : [];
       if (typeof st.potBR === 'number' && isFinite(st.potBR)) this.state.potBlobR = st.potBR;
     }
@@ -6210,13 +6338,18 @@ ${d3 ? `
         this.cam = { theta: 0.7, phi: 0.35, dist: 2.2, drag: null };
         this.toast('相机已重置');
       });
-      /* 势刷（R49 连续涂抹）：工具切换 + 新丘规格滑块（半径/强度，负强度 = 势阱，
-         stamp 时快照进每个丘——改滑块只影响后续丘，不追溯已落丘）
+      /* 势刷（R49 连续涂抹 ⟹ R60 椭球+软化）：工具切换 + 新丘规格滑块
+         （半径/强度/三轴比/软化，负强度 = 势阱，stamp 时快照进每个丘——
+         改滑块只影响后续丘，不追溯已落丘；轴比全 1 + 软化 0 = R49 硬边球）
          + 清空按钮（potBlobs = []）。放置逻辑在 pointer 事件（stampBlob3）。 */
       this.container.querySelectorAll('[data-tool3]').forEach(b =>
         this.on(b, 'click', () => this.setTool3(b.dataset.tool3)));
       this.bindRange('#rBlobR','#oBlobR','potBlobR', v => String(v|0), () => this.updateBlobReadout());
       this.bindRange('#rBlobV0','#oBlobV0','potBlobV0', v => v.toFixed(2), () => this.updateBlobReadout());
+      this.bindRange('#rBlobRX','#oBlobRX','potBlobRX', v => v.toFixed(2), () => this.updateBlobReadout());
+      this.bindRange('#rBlobRY','#oBlobRY','potBlobRY', v => v.toFixed(2), () => this.updateBlobReadout());
+      this.bindRange('#rBlobRZ','#oBlobRZ','potBlobRZ', v => v.toFixed(2), () => this.updateBlobReadout());
+      this.bindRange('#rBlobSoft','#oBlobSoft','potBlobSoft', v => v.toFixed(1), () => this.updateBlobReadout());
       this.on(this.q('#btnBlobDel'), 'click', () => {
         const n = (this.state.potBlobs || []).length;
         this.state.potBlobs = [];
@@ -6519,8 +6652,9 @@ ${d3 ? `
       /* 3D 工具模式（R44）：'cam' | 'pot'，按钮 / P 键 / 验证脚本共用入口 */
       setTool3: (m) => this.setTool3(m),
       tool3: () => this.state.tool3 || 'cam',
-      /* 势丘列表（R49）：当前丘列表快照 [{x,y,z,r,v0}]（对账 GLSL uniform 与面板读数） */
-      blobs: () => (this.state.potBlobs || []).map(b => ({ x: b.x, y: b.y, z: b.z, r: b.r, v0: b.v0 })),
+      /* 势丘列表（R49 ⟹ R60）：当前丘列表快照 [{x,y,z,r,v0,rx,ry,rz,soft}]
+         （对账 GLSL uniform 与面板读数；soft=0 且三轴=r 即 R49 硬边球） */
+      blobs: () => (this.state.potBlobs || []).map(b => ({ x: b.x, y: b.y, z: b.z, r: b.r, v0: b.v0, rx: b.rx, ry: b.ry, rz: b.rz, soft: b.soft })),
       /* AB 螺线管列表（R54）：[[x,y,φ],...] 快照 + 选中索引（对账 GLSL uniform
          数组与面板读数）；abPlace/abSelect/abDelete/abClear/abPick 为 pointer
          事件同一入口的调试转发（CDP 驱动放置/选中/删除，不合成鼠标事件序列）。 */

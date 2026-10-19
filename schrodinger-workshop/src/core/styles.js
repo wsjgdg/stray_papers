@@ -47,6 +47,9 @@ export const CSS = `
   .sec>h3::after{content:"";flex:1;height:1px;background:var(--line)}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
   .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  /* R60 势刷轴比三连同控（grid3 单元格内的迷你标签行：名称 + 实时值） */
+  .mini{font-size:9.5px;color:var(--dim);display:flex;justify-content:space-between;gap:4px;margin:3px 0 1px;white-space:nowrap}
+  .mini b{color:var(--cyan);font-weight:600;font-family:var(--mono)}
   button{font-family:var(--sans);font-size:12px;color:var(--txt);background:rgba(255,255,255,.045);
     border:1px solid var(--line);border-radius:8px;padding:7px 8px;cursor:pointer;transition:all .15s;text-align:center}
   button:hover{background:rgba(103,232,249,.12);border-color:rgba(103,232,249,.4)}

@@ -33,13 +33,20 @@
  *                     eMaxExtra 抬子步（dt·E≤2 稳定界）。
  *   w = (p−0.5)·N 为世界坐标（格点单位、居中，p 为纹理坐标）——与
  *   TPL_EVOLVE3D 的 uGrid3 口径逐字一致。
- *   R44 势刷：上述解析势之外，交互放置的球形硬边势丘与主槽、第二槽
- *   三者之和进入 pot3/pot3JS。
+ *   R44 势刷：上述解析势之外，交互放置的势丘与主槽、第二槽三者之和
+ *   进入 pot3/pot3JS。
  *   R49 体积连续笔刷：势丘由单丘（R44 的 potBX/BY/BZ/BR/BV0 五字段）
  *   升级为**丘列表** state.potBlobs（≤16 个 {x,y,z,r,v0}）——拖拽连续
  *   涂抹（相邻 stamp 中心距 ≥0.6R 时落新丘，球链重叠 ⟹ 视觉连续），
  *   GLSL blobSum 循环求和、CPU pot3Blobs 逐字镜像。空列表恒 0 ⟹ 与
  *   R44 单丘关闭态逐位一致；融合语义 = 求和（重叠处强度相加）。
+ *   R60 形状扩展（椭球 + 高斯软化边）：丘字段扩为
+ *   {x,y,z,r,v0,rx,ry,rz,soft}——rx/ry/rz 为椭球三轴半轴（= r·轴比，
+ *   相等 ⟹ 球），soft 为高斯软化宽度（0 = 硬边；>0 时归一化椭球距离
+ *   dn≤1 内恒 1、dn>1 外按 exp(−(dn−1)²/2soft²) 衰减）。**零回归契约**：
+ *   soft=0 且三轴=r 时 GLSL/JS 同构走 R49 逐字硬边判据 ⟹ 逐位一致
+ *   （统一 exp 公式在 soft=0 时边界带非逐位等价，故采显式三分支，
+ *   详见 pot3Blobs 处注释）。旧存档五字段丘经 normBlob 归为球+硬边。
  *
  * 边界（与 2D 不同，如实标注）：3D 纹理 CLAMP_TO_EDGE ⟹ Neumann 零梯度
  * （波包触壁软反射）；2D 的 S() 越界返回 0 是 Dirichlet。有界势（谐振子/
@@ -79,14 +86,14 @@ const POT_FREE = 0, POT_SPHERE = 1, POT_OSC = 2, POT_COULOMB = 3, POT_DOUBLE_SLI
    主槽 + 第二槽之和（总势）。potKind2=0（默认 POT_FREE）时第二槽恒 0 ⟹
    与 R34–R40 逐位一致（零回归）。CPU 与 GLSL pot3Slot 逐分支同构。
 
-   R44/R49 势刷（笔刷势丘）：pot3Blobs 为交互放置的球形硬边势丘**列表**
+   R44/R49/R60 势刷（笔刷势丘）：pot3Blobs 为交互放置的势丘**列表**
    ——丘列表由 3D 视图「势刷」工具拖拽连续涂抹写入 state.potBlobs
-   （≤16 个 {x,y,z,r,v0}；R49 由 R44 单丘五字段 potBX/BY/BZ/BR/BV0
-   升级而来，旧存档导入时迁移为列表首项）。与主槽、第二槽三者之和
-   （融合语义：硬边球重叠处强度相加）。空列表恒 0 ⟹ 与 R34–R44 单丘
-   关闭态逐位一致。强度可负（势阱）或正（势垒）；硬边球与球势垒
+   （≤16 个 {x,y,z,r,v0,rx,ry,rz,soft}；R49 由 R44 单丘五字段升级，
+   R60 再加椭球三轴 rx/ry/rz 与软化宽度 soft）。与主槽、第二槽三者
+   之和（融合语义：丘重叠处强度/权重相加）。空列表恒 0 ⟹ 与
+   R34–R44 关闭态逐位一致。强度可负（势阱）或正（势垒）；丘与球势垒
    （kind 1）同构，KDK 无特殊处理。GLSL blobSum 与 CPU pot3Blobs
-   逐字一致（镜像契约见文件头）。 */
+   逐分支一致（镜像契约见文件头；soft=0 球路径逐字复刻 R49）。 */
 export function pot3Slot(wx, wy, wz, kind, v0, r, om, z, wallX, wallT, slitW, slitD){
   const r2 = wx*wx + wy*wy + wz*wz;
   if (kind === POT_SPHERE) return r2 < r*r ? v0 : 0;
@@ -103,10 +110,38 @@ export function pot3Slot(wx, wy, wz, kind, v0, r, om, z, wallX, wallT, slitW, sl
   return 0;
 }
 
-/* 笔刷势丘列表（R44 单丘 → R49 连续涂抹丘列表）：球形硬边势之和。
-   list：[{x,y,z,r,v0}]（世界 texel；v0=0 的项恒 0——导入容错）。
-   空列表恒 0。GLSL blobSum 与本函数逐字一致。 */
+/* 笔刷势丘列表（R44 单丘 → R49 连续涂抹丘列表 ⟹ R60 椭球+软化）：
+   丘字段 {x,y,z,r,v0,rx,ry,rz,soft}（世界 texel）：
+     r           主半径（面板「势丘半径」滑块，链间距阈值的口径）
+     rx/ry/rz    椭球三轴半轴（= r·轴比；相等 ⟹ 球）
+     soft        高斯软化宽度（0 = 硬边；>0 时 dn≤1 内恒 1、
+                 dn>1 外按 exp(−(dn−1)²/2soft²) 衰减，dn 为归一化
+                 椭球距离 sqrt((dx/rx)²+(dy/ry)²+(dz/rz)²)）
+   缺字段丘（R49 旧存档/程序化注入）经 normBlob 归一为球+硬边。
+   v0=0 的项恒 0（导入容错）。空列表恒 0。GLSL blobSum 与本函数
+   逐分支同构（镜像契约见文件头）。
+
+   R60 零回归契约：soft=0 且 rx=ry=rz=r 时走 R49 逐字硬边判据
+   dot(d,d)<r*r（内 v0·1.0=v0、外 v0·0.0 加法中性 ⟹ 逐位一致）。
+   注意统一公式 exp(−½·max(0,dn−1)²/max(soft²,1e-12)) 在 soft=0 时
+   **并非** float 逐位等价：texel 恰在 dn=1（如 (8,0,0) vs r=8）时
+   硬边判 64<64 为假（外），而 dn≤1 分支为真（内），且 dn−1 落在
+   (3e-10,1e-5) 边界带时 w∈(0,1) 既非 0 亦非 1——故 GLSL/JS 同构
+   采三分支显式处理，零回归路径逐字复刻 R49 表达式。 */
 export const MAX_BLOBS = 16;
+/* 丘字段归一（R60）：缺/非正轴回落 r（球）、缺/负软化回落 0（硬边）——
+   R49 五字段旧丘与程序化注入的统一入口；stamp/导入/构造三处写边界调用，
+   物理读取路径（pot3Blobs/setUniforms）因此可直接读全字段（与 GLSL
+   uniform 数组全字段同构，无 JS 侧特判）。 */
+export function normBlob(b){
+  const r = b.r;
+  const ax = v => (typeof v === 'number' && isFinite(v) && v > 0) ? v : r;
+  return {
+    x: b.x, y: b.y, z: b.z, r, v0: b.v0,
+    rx: ax(b.rx), ry: ax(b.ry), rz: ax(b.rz),
+    soft: (typeof b.soft === 'number' && isFinite(b.soft) && b.soft >= 0) ? b.soft : 0,
+  };
+}
 export function pot3Blobs(wx, wy, wz, list){
   let s = 0;
   if (!list) return 0;
@@ -114,7 +149,22 @@ export function pot3Blobs(wx, wy, wz, list){
     const b = list[i];
     if (!b || !b.v0) continue;
     const dx = wx - b.x, dy = wy - b.y, dz = wz - b.z;
-    if (dx*dx + dy*dy + dz*dz < b.r*b.r) s += b.v0;
+    let wgt;
+    if (b.soft > 0){
+      /* 高斯软化边：归一化椭球距离 dn；内（dn≤1）恒 1，外指数衰减 */
+      const qx = dx/Math.max(b.rx, 1e-6), qy = dy/Math.max(b.ry, 1e-6), qz = dz/Math.max(b.rz, 1e-6);
+      const dn = Math.sqrt(qx*qx + qy*qy + qz*qz);
+      const e = Math.max(dn - 1, 0);
+      wgt = Math.exp(-0.5*e*e/Math.max(b.soft*b.soft, 1e-12));
+    } else if (b.rx === b.r && b.ry === b.r && b.rz === b.r){
+      /* R49 逐字硬边球（零回归路径：与 R49 pot3Blobs 同一表达式） */
+      wgt = (dx*dx + dy*dy + dz*dz < b.r*b.r) ? 1 : 0;
+    } else {
+      /* 硬边椭球：归一化平方距离 < 1 */
+      const qx = dx/Math.max(b.rx, 1e-6), qy = dy/Math.max(b.ry, 1e-6), qz = dz/Math.max(b.rz, 1e-6);
+      wgt = (qx*qx + qy*qy + qz*qz < 1) ? 1 : 0;
+    }
+    s += b.v0*wgt;
   }
   return s;
 }
@@ -207,7 +257,7 @@ class Schrodinger3dKernel extends PhysicsKernel {
       density: 'dot(psi.xy,psi.xy)',
       kinetic: '0.25*(dot(dxp,dxp)+dot(dyp,dyp))',
       potential: 'V*p',
-      /* R41 双槽势组合 + R49 笔刷势丘列表：pot3Slot 为单槽势函数（HELPERS
+      /* R41 双槽势组合 + R49/R60 笔刷势丘列表：pot3Slot 为单槽势函数（HELPERS
          注入位定义，evolve3d/cnRhs3d/cnSweep3d/reduce3d 四处同源），pot3
          取主槽 + 第二槽 + blobSum 三者之和。uPotKind2=0（默认 POT_FREE）
          且 uBlobCount=0（默认无丘）时后两项恒 0 ⟹ 与 R34–R44 逐位一致。
@@ -223,10 +273,16 @@ float pot3Slot(vec3 w, int kind, float v0, float r, float om, float z,
                          && abs(w.y + 0.5*slitD) > 0.5*slitW) ? v0 : 0.0;
   return 0.0;
 }
-/* R49 笔刷势丘列表：球形硬边势之和（与 CPU pot3Blobs 逐字一致）。
-   uBlobA[i] = (x,y,z,r)（世界 texel），uBlobV[i].x = 强度（0 = 跳过）。
+/* R60 笔刷势丘列表：椭球 + 高斯软化边（R49 球形硬边之扩展，与 CPU
+   pot3Blobs 逐分支同构）。
+   uBlobA[i] = (x,y,z,r)（世界 texel），uBlobV[i].x = 强度（0 = 跳过），
+   uBlobB[i] = (rx,ry,rz,soft)（三轴半轴与软化宽度；soft=0 = 硬边）。
    循环上界 MAX_BLOBS 为编译期常量；uBlobCount 动态截断（GLSL ES 3.00
-   允许循环内 break）。空列表（count=0）恒 0 ⟹ 零回归。 */
+   允许循环内 break）。空列表（count=0）恒 0 ⟹ 零回归。
+   三分支（与 CPU 同构，注释同 file 头 R60 零回归契约）：
+     soft>0            高斯软化：dn=length(d/axes)，内恒 1、外 exp 衰减
+     soft=0 且三轴=r    R49 逐字硬边球（零回归路径）
+     soft=0 椭球        归一化平方距离 < 1 */
 float blobSum(vec3 w){
   float s = 0.0;
   for (int i = 0; i < MAX_BLOBS; i++){
@@ -234,7 +290,20 @@ float blobSum(vec3 w){
     vec4 a = uBlobA[i];
     if (uBlobV[i].x == 0.0) continue;
     vec3 d = w - a.xyz;
-    if (dot(d, d) < a.w*a.w) s += uBlobV[i].x;
+    vec4 b = uBlobB[i];
+    float wgt;
+    if (b.w > 0.0){
+      vec3 q = d / max(b.xyz, vec3(1e-6));
+      float dn = length(q);
+      float e = max(dn - 1.0, 0.0);
+      wgt = exp(-0.5*e*e/max(b.w*b.w, 1e-12));
+    } else if (b.x == a.w && b.y == a.w && b.z == a.w){
+      wgt = (dot(d, d) < a.w*a.w) ? 1.0 : 0.0;
+    } else {
+      vec3 q = d / max(b.xyz, vec3(1e-6));
+      wgt = (dot(q, q) < 1.0) ? 1.0 : 0.0;
+    }
+    s += uBlobV[i].x*wgt;
   }
   return s;
 }`,
@@ -279,11 +348,13 @@ uniform float uPotWallX2;
 uniform float uPotWallT2;
 uniform float uPotSlitW2;
 uniform float uPotSlitD2;
-/* 笔刷势丘列表（R49，由 R44 单丘升级）：uBlobA[i]=(x,y,z,r)、uBlobV[i].x=强度，
-   uBlobCount=实际丘数（0 = 无丘）。与主槽/第二槽独立叠加。 */
+/* 笔刷势丘列表（R49 丘列表 ⟹ R60 椭球+软化）：uBlobA[i]=(x,y,z,r)、
+   uBlobV[i].x=强度、uBlobB[i]=(rx,ry,rz,soft)，uBlobCount=实际丘数
+   （0 = 无丘）。与主槽/第二槽独立叠加。 */
 uniform int   uBlobCount;
 uniform vec4  uBlobA[16];
-uniform vec2  uBlobV[16];`,
+uniform vec2  uBlobV[16];
+uniform vec4  uBlobB[16];`,
     };
   }
 
@@ -309,29 +380,34 @@ uniform vec2  uBlobV[16];`,
     const wt2 = gl.getUniformLocation(prog, 'uPotWallT2'); if (wt2) gl.uniform1f(wt2, state.potWallT2 || 0);
     const sw2 = gl.getUniformLocation(prog, 'uPotSlitW2'); if (sw2) gl.uniform1f(sw2, state.potSlitW2 || 0);
     const sd2 = gl.getUniformLocation(prog, 'uPotSlitD2'); if (sd2) gl.uniform1f(sd2, state.potSlitD2 || 0);
-    /* 笔刷势丘列表（R49）：state 字段缺失（旧存档/未初始化）按空列表处理 ⟹ 无丘。
-       每帧对三个 program 各上传一次（96 float，uniform 上传廉价；未引用的
-       program location 为 null 自然跳过）。 */
+    /* 笔刷势丘列表（R49 ⟹ R60 椭球+软化）：state 字段缺失（旧存档/未初始化）
+       按空列表处理 ⟹ 无丘。每帧对三个 program 各上传一次（A 64 + V 32 +
+       B 64 float，uniform 上传廉价；未引用的 program location 为 null 自然
+       跳过——display3d 不注入 pot3/blobSum，三件套 location 均 null）。 */
     const bc = gl.getUniformLocation(prog, 'uBlobCount');
     const ba = gl.getUniformLocation(prog, 'uBlobA[0]');
     const bv = gl.getUniformLocation(prog, 'uBlobV[0]');
+    const bb = gl.getUniformLocation(prog, 'uBlobB[0]');
     if (bc) gl.uniform1i(bc, Math.min(state.potBlobs ? state.potBlobs.length : 0, MAX_BLOBS));
-    if (ba && bv){
-      const A = new Float32Array(64), V = new Float32Array(32);
+    if (ba && bv && bb){
+      const A = new Float32Array(64), V = new Float32Array(32), B = new Float32Array(64);
       const list = state.potBlobs || [];
       for (let i = 0; i < Math.min(list.length, MAX_BLOBS); i++){
         const b = list[i];
         A[i*4] = b.x; A[i*4+1] = b.y; A[i*4+2] = b.z; A[i*4+3] = b.r;
         V[i*2] = b.v0;
+        B[i*4] = b.rx; B[i*4+1] = b.ry; B[i*4+2] = b.rz; B[i*4+3] = b.soft;
       }
       gl.uniform4fv(ba, A);
       gl.uniform2fv(bv, V);
+      gl.uniform4fv(bb, B);
     }
   }
 
   /* H 特征值上界附加项（引擎 eMax = uK·12 + 1 + 本项）：
-     各势形在域内的 |V| 最大值（格点单位）。R49 笔刷丘列表叠加 Σ|v0|
-     （保守：所有丘极值同点位时取等）。 */
+     各势形在域内的 |V| 最大值（格点单位）。R49/R60 笔刷丘列表叠加 Σ|v0|
+     （保守：所有丘极值同点位时取等——R60 软化权重 ≤1、椭球不越轴包络，
+     该上界对椭球/软化丘依然成立，无需改动）。 */
   eMaxExtra(state){
     let blobMax = 0;
     for (const b of (state.potBlobs || [])) blobMax += Math.abs(b.v0 || 0);
@@ -498,12 +574,17 @@ uniform vec2  uBlobV[16];`,
          预设 params 可注入组合（如 slit_sphere3d：主槽双缝墙 + 第二槽球垒）。 */
       potKind2: POT_FREE, potV02: 0.02, potR2: 10, potW2: 1/64, potZ2: 0.25,
       potWallX2: 0, potWallT2: 4, potSlitW2: 6, potSlitD2: 20,
-      /* 笔刷势丘列表（R49，由 R44 单丘升级）：默认空列表 ⟹ 无丘（与
+      /* 笔刷势丘列表（R49 丘列表 ⟹ R60 椭球+软化）：默认空列表 ⟹ 无丘（与
          R34–R44 单丘关闭态逐位一致）。potBlobR/potBlobV0 是「新丘规格」
-         （面板滑块，stamp 时快照进每个丘）；丘数上限 MAX_BLOBS=16，
-         超出 FIFO 淘汰最旧（app.js stampBlob3）。负 V0 = 势阱。 */
+         （面板滑块，stamp 时快照进每个丘）；potBlobRX/RY/RZ 为三轴**轴比**
+         （×R 得半轴，1 = 球；0.2–2.0）、potBlobSoft 为高斯软化宽度（texel，
+         0 = 硬边）。轴比全 1 且 soft=0 时新丘 ≡ R49 硬边球（零回归）；
+         soft>0 时 dn≤1 内恒 V₀、dn>1 外按 exp(−(dn−1)²/2soft²) 衰减。
+         丘数上限 MAX_BLOBS=16，超出 FIFO 淘汰最旧（app.js stampBlob3）。
+         负 V0 = 势阱。 */
       potBlobs: [],
       potBlobR: 8, potBlobV0: 0.5,
+      potBlobRX: 1, potBlobRY: 1, potBlobRZ: 1, potBlobSoft: 0,
       /* 曝光默认 3600（= free3d 预设值，见预设表的实测标定）；其余预设各自覆盖 */
       steps3: 48, exposure3: 3600, phaseColor: 1, slice3: 0, sliceZ: 0.5,
       sigma: 6,
