@@ -830,6 +830,16 @@ uniform float uDensity;    /* 曝光/密度标度 */
 uniform float uPhaseColor; /* 0 = 单色热度, 1 = 相位着色 */
 uniform float uSlice;      /* 0 = ray-march, 1 = z 切片 */
 uniform float uSliceZ;     /* 切片层 z ∈ [0,1] */
+#define AB_MAX ${AB_MAX}
+/* AB 磁通管标记（R59，引擎级，与演化模板同名同义）：3D 磁通管沿 z 轴贯穿
+   体积 ⟹ 视觉上是一条平行于 z 轴的细亮线，xy 位置即 uABPos[k]（uv 空间）。
+   与 2D R55 同一套视觉编码（hue=0.55+0.28·fract(Φ/2π)、辉光 0.30+0.50·|sin(Φ/2)|），
+   保证 2D/3D 的「Φ→颜色」直觉一致；uABSel 的选中管额外提亮以便分辨。 */
+uniform float uABOn;
+uniform vec2  uABPos[AB_MAX];
+uniform float uABPhi[AB_MAX];
+uniform int   uABCount;
+uniform int   uABSel;
 {{UNIFORMS}}
 /* 单点注入：den3/ph3 两条渲染路径（切片 / ray-march）共用同一函数体 */
 float den3(vec4 c){ return {{DENSITY3}}; }
@@ -842,7 +852,23 @@ void main(){
     float d = den3(c);
     float ph = ph3(c);
     vec3 col = uPhaseColor > 0.5 ? hsv2rgb(vec3(ph/6.28318530718+0.5, 0.80, 1.0)) : vec3(1.0,0.75,0.35);
-    o = vec4(col*clamp(d*uDensity*2.2, 0.0, 1.0), 1.0);
+    vec3 sc = col*clamp(d*uDensity*2.2, 0.0, 1.0);
+    /* R59 磁通管截面（切片视图：管沿 z 贯穿 ⟹ 每个 z 切片上都截出一个圆点） */
+    if(uABOn > 0.5){
+      for(int k=0;k<AB_MAX;k++){
+        if(k >= uABCount) break;
+        vec2 dv = vUv - uABPos[k];
+        float rr = dot(dv,dv);
+        if(rr < 0.0016){                       /* 半径 0.04 uv */
+          float hue = 0.55 + 0.28*fract(uABPhi[k]/6.28318530718);
+          vec3 tc = hsv2rgb(vec3(hue, 0.65, 1.0));
+          float gl = 0.30 + 0.50*abs(sin(uABPhi[k]*0.5));
+          float sel = (k == uABSel) ? 1.6 : 1.0;
+          sc += tc * gl * sel * (1.0 - rr/0.0016) * 1.5;
+        }
+      }
+    }
+    o = vec4(sc, 1.0);
     return;
   }
   /* ---- ray-march：轨道相机 ---- */
@@ -869,6 +895,24 @@ void main(){
     vec3 col = uPhaseColor > 0.5 ? hsv2rgb(vec3(ph/6.28318530718+0.5, 0.80, 1.0)) : vec3(1.0,0.72,0.32);
     float a = 1.0 - exp(-d*uDensity*dt*14.0);
     acc += trans*a*col;
+    /* R59 磁通管标记：管沿 z 轴贯穿 ⟹ 判据只有「到管轴的 xy 距离」，与 z 无关。
+       乘当前 trans ⟹ 深度遮挡天然正确（管被前方高密度区挡住时变暗），无需
+       单独的深度排序。沿 z 轴方向看管子时射线在圆柱内行进较长 ⟹ 自然更亮
+       （等价于看到端面 + 更长光程），物理直观。 */
+    if(uABOn > 0.5){
+      for(int k=0;k<AB_MAX;k++){
+        if(k >= uABCount) break;
+        vec2 dv = p.xy - (uABPos[k] - 0.5);     /* uv → ray-march 的 [-0.5,0.5] */
+        float rr = dot(dv,dv);
+        if(rr < 0.0004){                        /* 半径 0.02 世界单位（细管） */
+          float hue = 0.55 + 0.28*fract(uABPhi[k]/6.28318530718);
+          vec3 tc = hsv2rgb(vec3(hue, 0.65, 1.0));
+          float gl = 0.30 + 0.50*abs(sin(uABPhi[k]*0.5));
+          float sel = (k == uABSel) ? 1.6 : 1.0;
+          acc += trans * tc * gl * sel * (1.0 - rr/0.0004) * dt * 30.0;
+        }
+      }
+    }
     trans *= 1.0-a;
     if(trans < 0.004) break;
   }
@@ -4894,6 +4938,9 @@ ${d3 ? `
     gl.uniform1f(this.u(this.progVolume,'uPhaseColor'), st.phaseColor ? 1 : 0);
     gl.uniform1f(this.u(this.progVolume,'uSlice'), st.slice3 ? 1 : 0);
     gl.uniform1f(this.u(this.progVolume,'uSliceZ'), st.sliceZ);
+    /* R59：3D 磁通管标记 uniform（与演化同一份 abSols，复用 setABUniforms；
+       uABSel 选中提亮；显示路径不需要 abCursor/uABDraftPhi ⟹ location 为 null 静默跳过） */
+    this.setABUniforms(gl, this.progVolume, false);
     this.kernel.setUniforms(gl, this.progVolume, st);   /* 私有 uniform（3D 内核一般无） */
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     const td = this.dispA; this.dispA = this.dispB; this.dispB = td;

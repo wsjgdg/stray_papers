@@ -1293,6 +1293,9 @@ ${d3 ? `
     gl.uniform1f(this.u(this.progVolume,'uPhaseColor'), st.phaseColor ? 1 : 0);
     gl.uniform1f(this.u(this.progVolume,'uSlice'), st.slice3 ? 1 : 0);
     gl.uniform1f(this.u(this.progVolume,'uSliceZ'), st.sliceZ);
+    /* R59：3D 磁通管标记 uniform（与演化同一份 abSols，复用 setABUniforms；
+       uABSel 选中提亮；显示路径不需要 abCursor/uABDraftPhi ⟹ location 为 null 静默跳过） */
+    this.setABUniforms(gl, this.progVolume, false);
     this.kernel.setUniforms(gl, this.progVolume, st);   /* 私有 uniform（3D 内核一般无） */
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     const td = this.dispA; this.dispA = this.dispB; this.dispB = td;
