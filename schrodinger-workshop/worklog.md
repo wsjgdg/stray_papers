@@ -139,9 +139,38 @@ JS 侧实现**傅里叶三对角 Sturm 二分**特征值模型（与 scipy.mathi
 - **实测偏差（n=256）**：V₀=0.1 时 gap 实测 0.03891091 vs 解析 0.037743（+3.1%）、band1 0.01979 vs 0.020646（−4.1%）；V₀=0.3 时 gap 0.07029665 vs 0.070851（−0.78%）。来源：势纹理 8 位量化（round(v·127)/127，步长 1/127≈0.0079）+ 有限差分离散化。n=64/128 偏差达 80%/500%（有效质量不同，属**不同物理系统**而非误差）⟹ **BlochScanner 必须用 grid=256**（也是引擎默认，无需强制切换）。
 - **BZ 覆盖**：twistX（面板滑块）= θ_B = k·a ∈ [0,π] 覆盖简约 BZ；内部 twisted BC 相位 θ_BC = h·θ_B（h=256/a）。
 
-#### 待完成（下一轮）
+#### UI 接线（本轮同批完成）
 
-`app.js`（state.latV0/latA/twistX/latBand 默认值 + URL `?twistX=` + lattice 参数行 + `loadPreset` 的 build 传 `state` + uTwistX 每帧上传 + Bloch 面板 + scannerBloch 挂载）、`scan.js`（`SCAN_BLOCH_SPEC` + `BlochScanner`）、`index.html`、cdp62 浏览器实测、dist 重建、README 回填。
+**`src/core/scan.js`**：`BLOCH_SPEC` + `BlochScanner`（第六个具体扫描器）。与既有四个扫描器的物理差异：本扫描**没有时间演化**——每点是静态本征问题，测量在弛漾收敛那一帧发生。生命周期仍复用 GenericScanner：
+- `gate`：内核 + 预设检查，缓存解析模型（`kernel.blochModel`）；
+- `prepare`：强制 grid=256（解析对照唯一自洽档，同 scan 的「扫描定义在固定网格」口径）；
+- `buildList`：θ_B=k·a ∈ [0,π] 线性布点（面板同一口径）；
+- `beginPoint`：设 twistX + `startRelax(band 1)`；
+- `measure`：**相位机**（0=等带1 / 1=等带2 / 2=完成）——带 1 收敛后起带 2，带 1 未收敛则如实跳过带 2（不空转、不编造）。弛漾期间 `evolve()` 恒返回 false ⟹ `_frames` 不推进 ⟹ 不会误触发测量，`measureEvery=1` 保证带间切换 1 帧内响应；
+- `plot`：E(k) 双带 + 解析虚线（含 ey₀）+ BZ 边界 gap 竖标注。
+
+**`src/core/app.js`**：
+- state 默认 `latV0/latA/twistX/latBand`；URL `?latV0=&latA=&twistX=&latBand=`（引擎级，与 abSols 同属引擎 state；覆盖后重画势 + 重发初态）；
+- `twistBC()`：θ_BC = h·θ_B（h=256/latA）——**面板语义是每周期相位，BC 要的是跨网格总相位**，两者差 h 倍（第五轮教训）；
+- `uTwistX` 每帧上传（KDK / CN 两路径；manualPass 诊断路径置 0，同驱动/AB 归零口径）；
+- `loadPreset` 的 `build` 调用透传 `state`（lattice 的势重画要读 latV0/latA）；`initWave` 的 `makeWave` 参数补 latV0/latA/twistX（不透传则 lattice 初态拿到 undefined ⟹ NaN 场）；
+- 面板「光学晶格（Bloch）」sec（V₀/a/θ 滑块 + 目标带下拉 + 弛漾按钮/状态行）与「Bloch 能带扫描」sec；`applyLatticeParams()` 统一走「确保在晶格场景 → 重画势 → 重发初态」——**不走 loadPreset**（那条路径会用预设 params 把三个参数打回默认值，与拖滑块调参语义冲突）；
+- `startBlochRelax/stopBlochRelax/_onRelaxDone`：单次弛漾 + 带 2 排队（无 band1 参考态时先跑带 1）+ 状态行如实标注（`blockProj=false` 时明确提示「带 2 不可信」）；进度行 200ms 节流且**不受 paused 门控**（弛漾在暂停态也推进）；
+- scanBusy / unmount / debugHandle（`latParams/startBlochRelax/relaxTask/lastRelax/blochModel/scanBloch`）全套接线。
+
+#### 浏览器实测（cdp62，headless chromium + swiftshader WebGL2）
+
+| 项 | 结果 |
+|---|---|
+| 加载 / 控制台 | 零异常（仅 favicon 404）；title `OK f=17 p=1.0000` |
+| 面板门控 | latticeSec、blochScanSec 均可见 |
+| HUD 阶梯 | 「光学晶格 Mathieu · V₀=0.100000 · a=32 · q=5.187645 · gap=0.037743」 |
+| 单次弛漾（grid=256, θ=0） | 带1 **32 步 E=0.019789773**（参考 0.0197897732）；带2 **28 步 E=0.058700688**（参考 0.0587006877） |
+| 9 点能带扫描 | 9.6s，9/9 有效；带1 单调升 0.019790→0.019832、带2 单调降 0.058701→0.057664 |
+| **BZ 边界 gap** | 实测 **0.037832** vs 解析 0.037743 ⟹ **偏差 0.24%** |
+| 绘图 | canvas 非空像素 7597；状态行 summary 正确 |
+
+带 1 的中位相对偏差 4.49% 看似偏大，但**绝对偏差仅 ~8.9e-4**（带 1 本身只有 0.0198）——来自势纹理 8 位量化；gap 偏差 0.24% 是因为两带的量化偏移部分抵消。二者都在 README 中如实记录，未按「看起来漂亮」裁剪。
 
 ---
 

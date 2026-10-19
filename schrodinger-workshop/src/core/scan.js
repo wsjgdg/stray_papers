@@ -1412,7 +1412,232 @@ export const NLS_SPEC = {
   },
 };
 
-/* ---------- 五个具体扫描器（薄子类：仅绑定各自 SPEC） ---------- */
+/* ============================================================================
+ * R62 Bloch 能带扫描（k 扫描测两带 ⟨E⟩，叠 1D Mathieu 解析谱）
+ *
+ * 与既有四个扫描器的物理差异：这里**没有时间演化**——每点是「CPU 虚时间弛漾
+ * 求本征态」的**静态本征问题**，测量在弛漾收敛的那一帧发生（relaxStep 返回
+ * done 时内核已把 _lastRelax 写好）。生命周期仍复用 GenericScanner：
+ *   beginPoint(k) → 起 band1 弛漾 → _tick 里 evolve() 被弛漾占用（返回 false，
+ *   不计帧）→ band1 完成后的首个 measure 捕获 E1 并起 band2 → band2 完成后
+ *   的首个 measure 捕获 E2 → decide 判完成 → 记点。
+ *
+ * 相位机（s._phase）：0=等 band1、1=等 band2、2=完成。measure 是唯一的推进
+ * 点（弛漾期间 _frames 不推进 ⟹ 不会误触发测量；measureEvery=1 保证带间
+ * 切换的响应在 1 帧内）。
+ *
+ * 解析对照口径（worklog R62）：实测 E = E_x(带,k) + ey0 ⟹ 叠图画
+ * 「mathieuBands + ey0」；有效质量 m·(grid/256)² ⟹ **强制 grid=256**（引擎
+ * 默认档，且与 Bloch 弛漾的 Mathieu 对照唯一自洽的分辨率）。
+ * ========================================================================== */
+const BLOCH_DEFAULTS = {
+  kN: 17,                /* 简约 BZ [0,π/a] 内的取样点数（含两端） */
+  boost: 1,              /* 弛漾期间 evolve 恒返回 false ⟹ boost 无意义，取 1 */
+  measureEvery: 1,       /* 相位机靠 measure 推进 ⟹ 必须每帧测 */
+  framesMax: 4000,       /* 兜底（实测 9–49 步/带，budget 8 步/帧 ⟹ 远够） */
+  grid: 256,             /* 解析对照唯一自洽档（见文件头） */
+};
+
+export const BLOCH_SPEC = {
+  id: 'bloch', label: 'Bloch 能带扫描',
+  defaults: BLOCH_DEFAULTS,
+  ids: { btn: '#btnBlochScan', btnStop: '#btnBlochScanStop', stat: '#blochScanStat', canvas: '#blochScanCanvas' },
+  gate(app, s){
+    if (app.kernelId !== 'schrodinger') return '当前内核无光学晶格场景';
+    if (app.state.preset !== 'lattice') return '请先切换到「光学晶格」预设';
+    if (!app.kernel.startRelax) return '当前内核无 Bloch 弛漾';
+    /* 解析模型（Mathieu 带 + 横向基模能量）——扫描级缓存一次供 plot/汇总用 */
+    s.model = app.kernel.blochModel(app.state);
+    if (!s.model || !s.model.ref1) return '内核未提供 Bloch 解析模型';
+    return null;
+  },
+  prepare(app, o, s){
+    /* 强制 grid=o.grid（解析对照的自洽分辨率；同 scan 的「扫描定义在固定
+       网格」口径）：切换后按当前预设重载（势重画 + 初态重发） */
+    if (app.state.grid !== o.grid){
+      app.state.grid = o.grid;
+      const sel = app.q('#selGrid');
+      if (sel) sel.value = String(o.grid);
+      app.allocGrid(o.grid);
+      app.loadPreset(app.state.preset);
+    }
+    s._latV0 = app.state.latV0; s._latA = app.state.latA; s._twist = app.state.twistX;
+    s._phase = 0;
+  },
+  teardown(app, s){
+    /* 保留最后一点的 twistX（画面上就是该 k 的 Bloch 态，与 scan 保留末点同策）；
+       latV0/latA 未被扫描改动，仅同步面板 */
+    app.syncControls();
+  },
+  buildList(o, s){
+    /* twistX = θ_B = k·a ∈ [0,π]（简约 BZ）；列表存 θ_B（面板同一口径） */
+    const list = [];
+    for (let i = 0; i < o.kN; i++) list.push(Math.PI*i/(o.kN - 1));
+    return list;
+  },
+  beginPoint(app, x, o, s){
+    app.state.twistX = x;
+    s._phase = 0; s._E1 = NaN; s._E2 = NaN;
+    s._s1 = 0; s._s2 = 0; s._ok1 = false; s._ok2 = false;
+    app.kernel.startRelax({ grid: app.state.grid, m: app.state.m,
+                            v0: app.state.latV0, a: app.state.latA,
+                            theta: x, band: 1 });
+  },
+  /* measure：弛漾完成后才被调用（弛漾期间 evolve()===false ⟹ 不计数不测量） */
+  measure(app, o, frames, s){
+    const info = app.kernel._lastRelax;
+    if (info && info.band === 1 && s._phase === 0 && !app.kernel.relaxPending){
+      s._E1 = info.energy; s._s1 = info.steps; s._ok1 = !!info.converged && !!info.blockProj;
+      if (s._ok1){
+        /* 起 band2（内核以 band1 收敛态作 Gram-Schmidt 参考） */
+        app.kernel.startRelax({ grid: app.state.grid, m: app.state.m,
+                                v0: app.state.latV0, a: app.state.latA,
+                                theta: s._x, band: 2 });
+        s._phase = 1;
+      } else {
+        /* band1 未收敛 ⟹ band2 无可靠参考态：如实跳过（不空转、不编造） */
+        s._phase = 2;
+      }
+    } else if (info && info.band === 2 && s._phase === 1 && !app.kernel.relaxPending){
+      s._E2 = info.energy; s._s2 = info.steps; s._ok2 = !!info.converged && !!info.blockProj;
+      s._phase = 2;
+    }
+    return { frames, E1: s._E1, E2: s._E2, phase: s._phase };
+  },
+  decide(m, frames, s){
+    /* phase 2 = 本点结束（正常完成，或 band1 未收敛而如实跳过 band2） */
+    return s._phase === 2;
+  },
+  record(m, s){
+    const gap = (isFinite(s._E1) && isFinite(s._E2)) ? s._E2 - s._E1 : NaN;
+    s.results.push({
+      x: s._x,                          /* θ_B = k·a */
+      k: s._x/s._latA,                  /* 晶体动量（世界单位） */
+      E1: s._E1, E2: s._E2, gap,
+      steps1: s._s1, steps2: s._s2,
+      ok: s._ok1 && s._ok2,
+    });
+  },
+  summarize(results, app, o, s){
+    /* 与解析（Mathieu + ey0）对照：按 k 线性插值取解析带，统计相对偏差 */
+    const B = s.model, f = (k) => {
+      const t = Math.max(0, Math.min(1, k/B.kMax))*(B.kN - 1);
+      const i0 = Math.floor(t), i1 = Math.min(B.kN - 1, i0 + 1), fr = t - i0;
+      const lp = a => a[i0]*(1 - fr) + a[i1]*fr;
+      return { e1: lp(B.ref1), e2: lp(B.ref2) };
+    };
+    let d1 = [], d2 = [], gaps = [];
+    for (const r of results){
+      if (!r.ok || !isFinite(r.E1)) continue;
+      const a = f(r.k);
+      d1.push(Math.abs(r.E1 - a.e1)/Math.max(1e-12, Math.abs(a.e1)));
+      if (isFinite(r.E2)){
+        d2.push(Math.abs(r.E2 - a.e2)/Math.max(1e-12, Math.abs(a.e2)));
+        gaps.push(r.gap);
+      }
+    }
+    const med = a => { if (!a.length) return NaN; a = a.slice().sort((x, y) => x - y); return a[a.length >> 1]; };
+    const gapA = B.band2[B.kN - 1] - B.band1[B.kN - 1];
+    return {
+      nPoints: results.length, nOk: results.filter(r => r.ok).length,
+      medDev1: med(d1), medDev2: med(d2),
+      gapMeas: gaps.length ? gaps[gaps.length - 1] : NaN, gapAnalytic: gapA,
+      text: '带1 中位偏差 ' + (isFinite(med(d1)) ? (100*med(d1)).toFixed(2) + '%' : '—') +
+            ' · 带2 ' + (isFinite(med(d2)) ? (100*med(d2)).toFixed(2) + '%' : '—') +
+            ' · BZ 边界 gap 实测 ' + (gaps.length ? gaps[gaps.length-1].toFixed(6) : '—') +
+            ' vs 解析 ' + gapA.toFixed(6),
+    };
+  },
+  statusText(final, s){
+    if (final){
+      const sm = s.summary;
+      return sm ? ('完成 ' + sm.nPoints + ' 点（' + sm.nOk + ' 有效）· ' + sm.text) : '完成';
+    }
+    const band = s._phase === 0 ? '带1' : '带2';
+    const pr = app_state_bar(s);
+    return (s._i + 1) + '/' + s.xs.length + ' · θ_B=' + s._x.toFixed(3) +
+      ' · ' + band + '弛漾中' + (pr ? ' ' + pr : '') + ' · 帧 ' + s._frames;
+  },
+  startToast(s){ return 'Bloch 能带扫描开始 · ' + s.xs.length + ' 个 k 点 · 每点带1+带2'; },
+  finishToast(s){ return 'Bloch 能带扫描完成 · ' + s.results.length + ' 点'; },
+  plot(cv, results, app, s){
+    const x = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    x.clearRect(0, 0, W, H);
+    x.fillStyle = 'rgba(4,8,16,.55)'; x.fillRect(0, 0, W, H);
+    if (!results.length) return;
+    const B = s.model;
+    const T = 14, Bm = 20, L = 40;
+    const HP = H - T - Bm;
+    const all = [];
+    for (const r of results){ if (isFinite(r.E1)) all.push(r.E1); if (isFinite(r.E2)) all.push(r.E2); }
+    for (const v of B.ref1) all.push(v);
+    for (const v of B.ref2) all.push(v);
+    let lo = Math.min(...all), hi = Math.max(...all);
+    const pad = (hi - lo)*0.08 || 1e-6;
+    lo -= pad; hi += pad;
+    const kMax = B.kMax;
+    const X = k => L + k/kMax*(W - L - 10);
+    const Y = v => T + (hi - v)/(hi - lo)*HP;
+    x.font = '9px ui-monospace,monospace';
+    x.strokeStyle = 'rgba(120,160,220,.14)'; x.lineWidth = 1;
+    for (let i = 0; i <= 4; i++){
+      const yy = T + HP*i/4;
+      x.beginPath(); x.moveTo(L, yy); x.lineTo(W - 10, yy); x.stroke();
+      x.fillStyle = '#9aa7bd'; x.textAlign = 'right';
+      x.fillText((hi - (hi - lo)*i/4).toFixed(4), L - 3, yy + 3);
+    }
+    /* 解析带（虚线）：带1 青、带2 琥珀；含横向基模能量 ey0 */
+    for (const [arr, col] of [[B.ref1, 'rgba(103,232,249,.55)'], [B.ref2, 'rgba(251,191,36,.55)']]){
+      x.strokeStyle = col; x.setLineDash([4, 3]); x.beginPath();
+      B.k.forEach((kk, i) => {
+        const px = X(kk), py = Y(arr[i]);
+        if (i === 0) x.moveTo(px, py); else x.lineTo(px, py);
+      });
+      x.stroke(); x.setLineDash([]);
+    }
+    /* 实测点 */
+    for (const [key, col] of [['E1', '#67e8f9'], ['E2', '#fbbf24']]){
+      x.fillStyle = col; x.strokeStyle = col; x.lineWidth = 1;
+      x.beginPath();
+      let first = true;
+      for (const r of results){
+        if (!isFinite(r[key])) continue;
+        const px = X(r.k), py = Y(r[key]);
+        if (first){ x.moveTo(px, py); first = false; } else x.lineTo(px, py);
+      }
+      x.stroke();
+      for (const r of results){
+        if (!isFinite(r[key])) continue;
+        x.beginPath(); x.arc(X(r.k), Y(r[key]), r.ok ? 2.4 : 1.8, 0, 6.2832); x.fill();
+      }
+    }
+    /* BZ 边界的 gap 标注（实测末点 vs 解析） */
+    const last = results[results.length - 1];
+    if (last && isFinite(last.gap)){
+      x.strokeStyle = 'rgba(248,113,113,.75)'; x.setLineDash([2, 2]);
+      x.beginPath(); x.moveTo(X(last.k), Y(last.E1)); x.lineTo(X(last.k), Y(last.E2)); x.stroke();
+      x.setLineDash([]);
+      x.fillStyle = '#f87171'; x.textAlign = 'left';
+      x.fillText('gap ' + last.gap.toFixed(5), X(last.k) - 62, (Y(last.E1) + Y(last.E2))/2 + 3);
+    }
+    x.fillStyle = '#9aa7bd'; x.textAlign = 'left';
+    x.fillText('E(k) 能带', L, 10);
+    x.fillStyle = '#67e8f9'; x.fillText('● 带1', W - 160, 10);
+    x.fillStyle = '#fbbf24'; x.fillText('● 带2', W - 118, 10);
+    x.fillStyle = 'rgba(180,200,230,.7)'; x.fillText('-- 解析(Mathieu+ey₀)', W - 78, 10);
+    x.fillStyle = '#9aa7bd'; x.textAlign = 'center';
+    x.fillText('k（简约 BZ 0→π/a）', L + (W - L - 10)/2, H - 5);
+  },
+};
+
+/* 状态行里的弛漾进度条（纯文本；CPU 弛漾步数已由内核记录） */
+function app_state_bar(s){
+  const tot = (s._s1 || 0) + (s._s2 || 0);
+  return tot ? ('累计 ' + tot + ' 步') : '';
+}
+
+/* ---------- 六个具体扫描器（薄子类：仅绑定各自 SPEC） ---------- */
 export class TransmissionScanner extends GenericScanner {
   constructor(app){ super(app, SCAN_SPEC); }
 }
@@ -1427,4 +1652,7 @@ export class GpScanner extends GenericScanner {
 }
 export class NlsScanner extends GenericScanner {
   constructor(app){ super(app, NLS_SPEC); }
+}
+export class BlochScanner extends GenericScanner {
+  constructor(app){ super(app, BLOCH_SPEC); }
 }

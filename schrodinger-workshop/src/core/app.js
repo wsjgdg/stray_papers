@@ -17,6 +17,7 @@ import { TransmissionScanner } from './scan.js';
 import { TransmissionScanner3 } from './scan.js';
 import { SlitScanner } from './scan.js';
 import { GpScanner, NlsScanner } from './scan.js';
+import { BlochScanner } from './scan.js';
 
 /* ---------- R52：GP 基态渐进弛豫的每帧步数预算 ----------
    GP 预设「基态（虚时间弛豫）」的虚时间流由帧循环分帧推进：每帧最多
@@ -120,6 +121,11 @@ export class QuantumField {
          残影）。默认关——TPL_DISPLAY 新增段全部 uniform 门控，关闭时最终
          行与旧路径逐字等价。bohmFade = 残影每帧衰减系数。 */
       showJ: false, bohmOn: false, bohmFade: 0.985,
+      /* R62 光学晶格：latV0（势深，世界单位）/ latA（周期，世界 px）/
+         twistX（Bloch 相位 θ_B=k·a，∈[0,π] 覆盖简约 BZ）/ latBand（弛漾目标带
+         1|2）。lattice 预设的 params 会注入同名默认值，此处给非 lattice 预设
+         下也存在的初值（面板滑块绑定需要 state 有键）。 */
+      latV0: 0.1, latA: 32, twistX: 0, latBand: 1,
       ...this.kernel.defaults(),
       ...(options.state || {}),
     };
@@ -148,6 +154,9 @@ export class QuantumField {
        focusing，孤子宽度/自聚焦发散）——共享一套面板 DOM，按内核选实例。 */
     this.scannerGp = new GpScanner(this);
     this.scannerNls = new NlsScanner(this);
+    /* R62 Bloch 能带扫描（k 扫描测两带 ⟨E⟩ + Mathieu 解析叠图）；仅薛定谔
+       内核的光学晶格预设可用（面板在 buildDOM 后按内核静态门控） */
+    this.scannerBloch = new BlochScanner(this);
     this._onError = e => {
       const d = this.q('#diag');
       if (d) d.textContent = 'ERR ' + e.message;
@@ -269,6 +278,24 @@ export class QuantumField {
       </select>
     </div>
   </div>
+  <div class="sec" id="latticeSec">
+    <h3>光学晶格（Bloch）</h3>
+    <div class="row"><label>晶格深度 V₀</label><input type="range" id="rLatV0" min="0.01" max="0.5" step="0.005" value="0.1"><output id="oLatV0">0.100</output></div>
+    <div class="row"><label>晶格周期 a</label><input type="range" id="rLatA" min="8" max="32" step="8" value="32"><output id="oLatA">32</output></div>
+    <div class="row"><label>Bloch 相位 θ=k·a</label><input type="range" id="rTwistX" min="0" max="3.1416" step="0.005" value="0"><output id="oTwistX">0.000</output></div>
+    <div class="row"><label>目标能带</label>
+      <select id="selLatBand">
+        <option value="1" selected>带 1（最低）</option>
+        <option value="2">带 2（需先收敛带 1）</option>
+      </select>
+    </div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnBlochRelax">Bloch 弛漾</button>
+      <button id="btnBlochStop" disabled>中止</button>
+    </div>
+    <div class="row"><label>弛漾状态</label><span id="blochStat">就绪</span></div>
+    <div class="hint" style="margin-top:4px">V=V₀sin²(πx/a) 周期势。Bloch 定理：ψ(x+a)=e^{ika}ψ(x)，准动量 k 只在简约布里渊区 [0,π/a] 内独立 ⟹ 能量分成能带、带间是能隙。<b>θ 滑块</b>直接设定 Bloch 相位 θ=k·a（0→π 覆盖整个简约 BZ；GPU 侧由 twisted 边界 e^{±iθ} wrap 携带）。<b>Bloch 弛漾</b>：CPU 虚时间流（PR-ADI + twisted 循环三对角）收敛到当前 (k, 带) 的精确本征态——带 2 以带 1 收敛态作 Gram-Schmidt 投影，并每步投影回目标晶体动量块与横向基模（否则会塌到相邻 k 的带 1，见 worklog R62 五轮记录）。</div>
+  </div>
   <div class="sec" id="scanSec">
     <h3>透射率扫描</h3>
     <div class="row"><label>V0/E 下限</label><input type="range" id="rScanLo" min="0.05" max="2" step="0.05" value="0.25"><output id="oScanLo">0.25</output></div>
@@ -294,6 +321,17 @@ export class QuantumField {
     <div class="row"><label>状态</label><span id="paramScanStat">就绪</span></div>
     <canvas id="paramScanCanvas" width="420" height="180"></canvas>
     <div class="hint" style="margin-top:4px">GP：扫 g（排斥侧 g&lt;0，托马斯-费米云/涡旋）——测云半径 Rrms（⟹R_TF=√3·Rrms）、峰值 n₀、涡旋愈合层 ξ，与 TF 解析 R_TF=(2R_trap²|g|/π)^¼、n₀=μ/|g| 对照。NLS：扫 g（focusing 侧 g&gt;0，条带孤子）——测 σx/σy 与峰值末/初比（&gt;3 判自聚焦发散）。**固定测量窗 200 帧 + 全程序列**：非线性无耗散系统（呼吸模永久振荡、TOF 单调膨胀、孤子稳定传播）没有天然终点，故不用「清空/双稳」类停止判据，改由时间平均 + 摆动幅度给出结论。P 在两内核下守恒（幺正非线性），塌缩/网格截断导致的数值漂移属诚实限制。</div>
+  </div>
+  <div class="sec" id="blochScanSec">
+    <h3>Bloch 能带扫描</h3>
+    <div class="row"><label>k 取样点数</label><input type="range" id="rBlochN" min="5" max="33" step="1" value="17"><output id="oBlochN">17</output></div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnBlochScan">开始扫描</button>
+      <button id="btnBlochScanStop" disabled>中止</button>
+    </div>
+    <div class="row"><label>状态</label><span id="blochScanStat">就绪</span></div>
+    <canvas id="blochScanCanvas" width="420" height="180"></canvas>
+    <div class="hint" style="margin-top:4px">逐 k 点跑 CPU 弛漾：先带 1（作 Gram-Schmidt 参考）再带 2，读收敛后的 ⟨E⟩；叠图 1D Mathieu 解析谱（连续谱对照含横向基模能量 ey₀）。<b>口径</b>：离散系统的有效质量为 m·(grid/256)² ⟹ 强制 grid=256² 才是与解析同一物理系统（其余网格是不同系统，偏差 80%~500%）；残余 ~1% 量级偏差来自势纹理 8 位量化（round(v·127)/127）与有限差分。虚线=解析，实点=实测，BZ 边界竖虚线标注第一能隙。</div>
   </div>
   <div class="sec">
     <h3>AB 磁通（多管）</h3>
@@ -765,7 +803,12 @@ ${d3 ? `
                                                               /* R51：g 透传（GP 基态预设的虚时间弛豫需要当前 g；
                                                                  无此概念的内核忽略多余字段——契约允许） */
                                                               g: this.state.g,
-                                                              spinTheta: this.state.spinTheta, spinPhi: this.state.spinPhi });
+                                                              spinTheta: this.state.spinTheta, spinPhi: this.state.spinPhi,
+                                                              /* R62：晶格参数透传（lattice 模式的初态是 Bloch
+                                                                 平面波 × y 基模，需要 latA 与 twistX；不传则
+                                                                 makeWave 拿到 undefined ⟹ NaN 场） */
+                                                              latV0: this.state.latV0, latA: this.state.latA,
+                                                              twistX: this.state.twistX });
     let sum = rawSum;
     /* 新波包先归一化到 Σ|ψ|²=1，再与旧场叠加。
        纹理中的旧场恒满足 Σ|ψ|²=1（初始归一化 + 演化酉守恒，HUD P=1.0000/err=0.000%）。
@@ -926,7 +969,9 @@ ${d3 ? `
     }
     this.vctx.globalCompositeOperation = 'source-over';
     this.vctx.fillStyle = this.vGray(0); this.vctx.fillRect(0,0,256,256);
-    p.build({ vctx: this.vctx, vGray: v => this.vGray(v) });
+    /* R62：state 透传给 build —— lattice 预设的势重画要读当前 latV0/latA
+       （滑块实时调参；不传则 drawLattice 拿到 undefined ⟹ NaN 势场） */
+    p.build({ vctx: this.vctx, vGray: v => this.vGray(v), state: this.state });
     this.uploadV();
     this.initWave(p.wave[0], p.wave[1], p.wave[2], p.wave[3]);
     this.q('#descName').textContent = p.name;
@@ -934,6 +979,81 @@ ${d3 ? `
     this.container.querySelectorAll('[data-preset]').forEach(b => b.classList.toggle('on', b.dataset.preset === key));
     this.refreshParamHud();   /* 参数派生 HUD（B 场行/透射面板门控）随预设参数刷新 */
     this.toast(p.name);
+  }
+
+  /* R62 晶格参数（latV0/latA/twistX）变更后的统一生效路径：
+     ① 确保在晶格场景内（preset 非 lattice 时静默进入并 toast——拖 V₀ 就该看到
+        晶格，比「滑块无效」直观）；② 按新参数重画势（内核 enterLattice 与
+        presets().lattice.build 共用 drawLatticeV，单源真值）；③ 按新 θ 重发初态。
+     **不走 loadPreset**：那条路径会用预设 params 把三个参数打回默认值，与
+     「拖滑块调参」的语义冲突（loadPreset 的语义是切场景，不是调参）。 */
+  applyLatticeParams(){
+    const st = this.state;
+    if (this.kernelId !== 'schrodinger' || !this.kernel.enterLattice) return;
+    if (st.preset !== 'lattice'){
+      st.preset = 'lattice';
+      const p = this.kernel.presets().lattice;
+      if (p){
+        this.q('#descName').textContent = p.name;
+        this.q('#descText').textContent = p.text;
+      }
+      this.container.querySelectorAll('[data-preset]').forEach(b =>
+        b.classList.toggle('on', b.dataset.preset === 'lattice'));
+      this.toast('光学晶格');
+    }
+    this.kernel.enterLattice({ vctx: this.vctx, state: st });
+    this.uploadV();
+    this.reinitWave();        /* 初态按新 θ 重发（makeWave 在 lattice 模式读 twistX） */
+    this.refreshParamHud();
+  }
+
+  /* R62 单次 Bloch 弛漾（面板「Bloch 弛漾」）：起 CPU 虚时间任务，由 frame()
+     主循环经 kernel.relaxStep 分帧推进（暂停态也推进——同 R52 GP 基态口径）。
+     带 2 需要带 1 收敛态作 Gram-Schmidt 参考 ⟹ 无参考时先跑带 1，_blochQueue
+     记录待跑的带 2（在 _onRelaxDone 里接续，与扫描器的 per-point 次序同策）。 */
+  startBlochRelax(){
+    const st = this.state;
+    if (this.kernelId !== 'schrodinger' || !this.kernel.startRelax){ this.toast('当前内核无 Bloch 弛漾'); return; }
+    if (st.preset !== 'lattice'){ this.toast('请先切换到「光学晶格」预设'); return; }
+    let band = st.latBand === 2 ? 2 : 1;
+    this._blochQueue = 0;
+    if (band === 2 && !this.kernel._band1Ref){ this._blochQueue = 2; band = 1; }
+    this.kernel.startRelax({ grid: st.grid, m: st.m, v0: st.latV0, a: st.latA, theta: st.twistX, band });
+    this._blochStat('带 ' + band + ' 弛漾中…');
+    this.toast('Bloch 弛漾 · 带 ' + band);
+  }
+
+  stopBlochRelax(){
+    if (!this.kernel.relaxStep) return;
+    this._blochQueue = 0;
+    this.kernel._relaxTask = null;      /* 丢弃任务（无副作用：任务态自包含） */
+    this._blochStat('已中止');
+    this.toast('Bloch 弛漾已中止');
+  }
+
+  /* 弛漾完成回调（evolve() 在 r.done 当帧调用）：写状态行 + 接续排队的带 2。
+     状态行如实标注：收敛步数、⟨E⟩、本征残差；blockProj=false 时明确提示
+     「带 2 数值不可信」（a_t 非整数 ⟹ 块投影关闭），不静默给出错误数值。 */
+  _onRelaxDone(info){
+    if (!info || this.kernelId !== 'schrodinger') return;
+    const fmtE = v => (Math.abs(v) < 1e-3 ? v.toExponential(3) : v.toFixed(6));
+    const warn = (info.band === 2 && info.blockProj === false) ? ' · ⚠ 块投影关闭，带2 不可信' : '';
+    this._blochStat((info.converged ? '带 ' + info.band + ' 收敛' : '带 ' + info.band + ' 未收敛') +
+      ' @' + info.steps + ' 步 · E=' + fmtE(info.energy) + ' · 残差 ' + info.res.toExponential(2) + warn);
+    if (this._blochQueue === 2 && info.band === 1 && info.converged){
+      this._blochQueue = 0;
+      const st = this.state;
+      this.kernel.startRelax({ grid: st.grid, m: st.m, v0: st.latV0, a: st.latA, theta: st.twistX, band: 2 });
+      this._blochStat('带 2 弛漾中…');
+    } else if (this._blochQueue === 2 && info.band === 1){
+      this._blochQueue = 0;
+      this._blochStat('带 1 未收敛 ⟹ 带 2 已跳过（无可靠参考态）');
+    }
+  }
+
+  _blochStat(txt){
+    const el = this.q('#blochStat');
+    if (el) el.textContent = txt;
   }
 
   toast(msg){
@@ -960,6 +1080,9 @@ ${d3 ? `
       if (r){
         this._uploadPsi(r.data);
         if (r.done && this.kernel.spinReadout) this.spinHud();
+        /* R62：Bloch 弛漾完成当帧写状态行 / 接续排队的带 2（扫描器的相位机
+           用自己的 measure 钩子，与此互不干扰——二者不会同时活跃） */
+        if (r.done) this._onRelaxDone(r.info);
       }
     }
     if (this.kernel.relaxPending) return false;
@@ -1368,6 +1491,18 @@ ${d3 ? `
     if (dLoc !== null && dLoc !== undefined) gl.uniform1f(dLoc, st.abPhi || 0);
   }
 
+  /* R62 Bloch 扭曲边界的**总相位** θ_BC = h·θ_B（h = 256/latA = 网格内的晶格
+     周期数）。面板 twistX 的语义是**每晶格周期**的 Bloch 相位 θ_B = k·a
+     （∈[0,π] 覆盖简约 BZ）；而 twisted BC（ψ(x+n)=e^{iθ}ψ(x)）要求的是跨越
+     整个网格 h 个周期累积的总相位——两者差 h 倍（worklog R62 第五轮：混用会
+     使 θ≠0 的初态动量支撑错位 ⟹ 带 2 弛漾崩塌到相邻 k 的带 1）。
+     latA 非 256 的约数时 h 非整数 ⟹ 直接取实数值（GPU 相位仍可运行，但势与
+     边界不严格自洽；CPU 弛漾的块投影会在 info.blockProj=false 中如实标注）。 */
+  twistBC(){
+    const h = 256/Math.max(1e-9, this.state.latA || 32);
+    return (this.state.twistX || 0)*h;
+  }
+
   /* KDK 速度 Verlet 一帧推进（标量/NLS/GP/Pauli 路径；从 evolve() 原样抽出） */
   evolveKDK(dt){
     const k = 0.5/this.state.m;
@@ -1387,6 +1522,10 @@ ${d3 ? `
     gl.uniform1f(this.u(this.progEvolve,'uDriveAmp'), this.state.driveAmp);
     gl.uniform1f(this.u(this.progEvolve,'uDrivePhase'), dPhase);
     gl.uniform1i(this.u(this.progEvolve,'uDriveMode'), this.state.driveMode);
+    /* R62 Bloch 扭曲边界：uTwistX = **跨整个网格**的总相位 θ_BC = h·θ_B
+       （h=256/latA 个晶格周期；面板 twistX 语义是每周期相位 θ_B=k·a）。
+       θ_BC=0 ⟹ shader 走原 Dirichlet 路径逐位等价（同 uABOn/uDriveAmp 门控）。 */
+    gl.uniform1f(this.u(this.progEvolve,'uTwistX'), this.twistBC());
     /* Aharonov-Bohm（R54 多管）：count=0 → uABOn=0 走原 5 点 stencil（精确等价旧路径）；
        link 相位算子厄米且谱半径不变（|U|=1），P 守恒、E_max 不变。 */
     this.setABUniforms(gl, this.progEvolve, false);
@@ -1631,6 +1770,8 @@ ${d3 ? `
     gl.uniform1f(this.u(prog,'uDriveAmp'), diag ? 0 : st.driveAmp);
     gl.uniform1f(this.u(prog,'uDrivePhase'), dPhase);
     gl.uniform1i(this.u(prog,'uDriveMode'), diag ? 0 : st.driveMode);
+    /* R62 Bloch 扭曲边界（CN 两个 program 同源，同 KDK 口径） */
+    gl.uniform1f(this.u(prog,'uTwistX'), diag ? 0 : this.twistBC());
     this.setABUniforms(gl, prog, diag);   /* AB 多螺线管（diag 时强制关闭，同 R31 诊断口径） */
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, this.vTex);
@@ -1645,7 +1786,8 @@ ${d3 ? `
     /* R52：弛豫任务不受暂停影响（初态构造必须完成——暂停态切 gs 预设不能
        卡死；scanBusy 时物理由扫描器 _tick 独家驱动，frame() 不重复推进，
        避免同一帧双倍弛豫步进）。 */
-    const scanBusy = this.scanner.busy || this.scannerGp.busy || this.scannerNls.busy || this.scannerSlit.busy;
+    const scanBusy = this.scanner.busy || this.scannerGp.busy || this.scannerNls.busy ||
+                     this.scannerSlit.busy || this.scannerBloch.busy;
     if (!this.state.paused || (this.kernel.relaxPending && !scanBusy)) this.evolve();
     /* R61 3D 概率流（evolve 后重算逐层 J 场；归约在 frame3d 的 120ms 节流块内）。
        3D 无箭头 overlay（volume ray-march 未挂 J 层）——showJ 在 3D 为 HUD
@@ -1659,6 +1801,13 @@ ${d3 ? `
        扫描器独占物理时 frame() 的 evolve 不跑，此处仍按 psiA 重算，读数不陈旧） */
     if (this.state.showJ || this.state.bohmOn) this.jFieldPass();
     if (this.state.bohmOn && this._bohmN > 0){ this.bohmStep(); this.bohmStamp(); }
+    /* R62：Bloch 弛漾进度（200ms 节流；**不受 paused 门控**——弛漾在暂停态也
+       推进，进度行必须跟着走，否则看起来像卡死） */
+    if (this.kernelId === 'schrodinger' && this.kernel.relaxPending && now - (this._lastBlochF || 0) > 200){
+      this._lastBlochF = now;
+      const t = this.kernel._relaxTask;
+      if (t) this._blochStat('带 ' + t.band + ' 弛漾中… ' + t.steps + ' 步');
+    }
 
     /* 显示 pass（含余晖） */
     gl.useProgram(this.progDisplay);
@@ -2356,6 +2505,14 @@ ${d3 ? `
       const wantSlit = this.kernel.dim3 ? '' : 'none';
       if (slitScanSec.style.display !== wantSlit) slitScanSec.style.display = wantSlit;
     }
+    /* R62 Bloch 能带扫描面板门控：仅薛定谔内核 + lattice 预设可用（扫描 gate
+       内亦有同款检查兜底——面板先行隐藏，避免用户点到一个必然失败的按钮）。
+       与 scanSec 同一动态门控模式（仅在实际变化时写 style）。 */
+    const blochScanSec = this.q('#blochScanSec');
+    if (blochScanSec){
+      const wantBloch = (this.kernelId === 'schrodinger' && this.state.preset === 'lattice') ? '' : 'none';
+      if (blochScanSec.style.display !== wantBloch) blochScanSec.style.display = wantBloch;
+    }
     /* 能级阶梯（内核可选）：解析谱 + 最近能级对照。最近能级用最近一次归约的
        ⟨E⟩（_lastE）——暂停时归约停跑，该行保持上次读数而非清零。 */
     const lad = this.kernel.energyLevels ? this.kernel.energyLevels(this.state) : null;
@@ -2862,6 +3019,15 @@ ${d3 ? `
     this.container.querySelectorAll('[data-tool3]').forEach(x =>
       x.classList.toggle('on', x.dataset.tool3 === (this.state.tool3 || 'cam')));
     this.syncBlobRows();
+    /* R62：晶格目标带下拉 + 两个晶格面板的显隐（仅薛定谔内核有 lattice 场景；
+       扫描面板还需 preset==='lattice'，由 refreshParamHud 动态门控） */
+    const lb = this.q('#selLatBand');
+    if (lb) lb.value = String(this.state.latBand === 2 ? 2 : 1);
+    const latSec = this.q('#latticeSec');
+    if (latSec){
+      const want = (this.kernelId === 'schrodinger') ? '' : 'none';
+      if (latSec.style.display !== want) latSec.style.display = want;
+    }
     /* R54：AB 多螺线管面板同步（预设 params/URL/导入存档可注入 abSols/abSel；
        滑块对齐选中管 Φ，选中行/位置读数随列表刷新） */
     this.syncABPhiSlider();
@@ -3058,6 +3224,37 @@ ${d3 ? `
     this.bindRange('#rGamma','#oGamma','gamma', v => v.toFixed(3));
     this.bindRange('#rDriveAmp','#oDriveAmp','driveAmp', v => v.toFixed(3), () => this.refreshParamHud());
     this.bindRange('#rDriveOmega','#oDriveOmega','driveOmega', v => v.toFixed(2), () => this.refreshParamHud());
+    /* R62 光学晶格参数：三个滑块的 after 回调统一走 applyLatticeParams
+       （确保处于晶格场景 → 按新 V₀/a/θ 重画势 + 重发初态） */
+    this.bindRange('#rLatV0','#oLatV0','latV0', v => v.toFixed(3), () => this.applyLatticeParams());
+    this.bindRange('#rLatA','#oLatA','latA', v => v.toFixed(0), () => this.applyLatticeParams());
+    this.bindRange('#rTwistX','#oTwistX','twistX', v => v.toFixed(3), () => this.applyLatticeParams());
+    if (this.q('#selLatBand')){
+      this.on(this.q('#selLatBand'), 'change', e => {
+        this.state.latBand = parseInt(e.target.value, 10) === 2 ? 2 : 1;
+        this.refreshParamHud();
+      });
+    }
+    /* Bloch 单次弛漾（面板按钮）：以当前 θ 与目标带起 CPU 虚时间流，由 frame()
+       主循环分帧推进（relaxStep），完成当帧写状态行。带 2 需要带 1 参考态——
+       无则先跑带 1（同扫描器的 per-point 次序）。 */
+    if (this.q('#btnBlochRelax')){
+      this.on(this.q('#btnBlochRelax'), 'click', () => this.startBlochRelax());
+      this.on(this.q('#btnBlochStop'), 'click', () => this.stopBlochRelax());
+    }
+    /* Bloch 能带扫描（BLOCH_SPEC；面板按钮 + k 点数滑块） */
+    if (this.q('#btnBlochScan')){
+      const blochBind = (id, out, fmt) => {
+        const el = this.q(id), o = this.q(out);
+        const upd = () => { o.textContent = fmt(parseFloat(el.value)); };
+        el.addEventListener('input', upd); upd();
+      };
+      blochBind('#rBlochN', '#oBlochN', v => String(v|0));
+      this.on(this.q('#btnBlochScan'), 'click', () => {
+        this.scannerBloch.start({ kN: parseInt(this.q('#rBlochN').value, 10) || 17 });
+      });
+      this.on(this.q('#btnBlochScanStop'), 'click', () => this.scannerBloch.stop());
+    }
     this.bindABPhi();   /* R54：多管 Φ 滑块（写入目标随选中态切换，见方法注释） */
     this.refreshABReadout();   /* R54：初始态读数（构造默认 abSols=[] ⟹ 「无 · 放置即新建」） */
     this.on(this.q('#btnABCenter'), 'click', () => {
@@ -3356,6 +3553,21 @@ ${d3 ? `
     }
     this.kernel.applyParams(qp, this.state);   /* 内核私有 URL 参数（如 NLS ?g=） */
     this.applyABParams(qp);                    /* R54：AB 多螺线管 URL 参数（引擎级） */
+    /* R62 晶格 URL 参数（引擎级：latV0/latA/twistX 与 abSols 同属引擎 state）：
+         ?latV0=0.3&latA=32&twistX=1.5708&latBand=2     （twistX = θ_B = k·a）
+       时序：loadPreset（预设 params 注入默认值）→ 此处覆盖 → syncControls ⟹
+       首帧即按目标晶格演化。非 schrodinger 内核忽略。 */
+    const qlv = parseFloat(qp.get('latV0')), qla = parseFloat(qp.get('latA'));
+    const qtw = parseFloat(qp.get('twistX')), qlb = parseInt(qp.get('latBand'), 10);
+    if (isFinite(qlv)) this.state.latV0 = qlv;
+    if (isFinite(qla)) this.state.latA = qla;
+    if (isFinite(qtw)) this.state.twistX = qtw;
+    if (qlb === 1 || qlb === 2) this.state.latBand = qlb;
+    /* 晶格参数经 URL 覆盖后需重画势 / 重发初态（loadPreset 用的是预设默认值）：
+       latV0/latA 影响势纹理，twistX 影响初态平面波相位 ⟹ 任一被覆盖都要重走 */
+    if (this.kernelId === 'schrodinger' && this.state.preset === 'lattice' &&
+        (isFinite(qlv) || isFinite(qla) || isFinite(qtw)))
+      this.applyLatticeParams();
     /* R61：?showJ=1 / ?bohm=1（2D 专属；3D 仅 showJ 有效——J 场统计）。
        须在 syncControls 前（setShowJ 内部会同步按钮态与 HUD 节可见性）。 */
     if (qp.get('showJ') === '1') this.setShowJ(true);
@@ -3612,6 +3824,23 @@ ${d3 ? `
       /* 非线性参数扫描器（R42）：GP / NLS 各一实例，start() 内核不符时拒绝 */
       scanGp: this.scannerGp,
       scanNls: this.scannerNls,
+      /* R62 光学晶格 / Bloch 调试句柄（cdp62 浏览器验证用）：
+         - latParams()：晶格参数快照 + θ_BC（twisted 边界总相位 = h·θ_B）
+         - startBlochRelax/stopBlochRelax：面板同一入口（无需合成点击）
+         - relaxPending()/relaxTask()/lastRelax()：弛漾任务态直读（异步分帧推进）
+         - blochModel()：解析模型（Mathieu 带 + 横向基模能量 ey0）供对账 */
+      scanBloch: this.scannerBloch,
+      latParams: () => ({
+        latV0: this.state.latV0, latA: this.state.latA, twistX: this.state.twistX,
+        latBand: this.state.latBand, grid: this.state.grid, m: this.state.m,
+        thetaBC: this.twistBC(), preset: this.state.preset,
+      }),
+      startBlochRelax: () => { this.startBlochRelax(); return !!this.kernel.relaxPending; },
+      stopBlochRelax: () => { this.stopBlochRelax(); return !!this.kernel.relaxPending; },
+      relaxPending: () => !!this.kernel.relaxPending,
+      relaxTask: () => { const t = this.kernel._relaxTask; return t ? { band: t.band, steps: t.steps, mu: t.mu, blockOff: t.blockOff } : null; },
+      lastRelax: () => this.kernel._lastRelax || null,
+      blochModel: () => (this.kernel.blochModel ? this.kernel.blochModel(this.state) : null),
       /* R52：内核实例（渐进弛豫任务状态诊断：relaxPending/_relaxTask.steps/
          _lastRelax——虚时间流分帧推进是异步引擎行为，CDP 需直读任务态） */
       kernel: this.kernel,
@@ -3845,6 +4074,7 @@ ${d3 ? `
         gl.uniform1f(this.u(this.progEvolve,'uDriveAmp'), 0);
         gl.uniform1f(this.u(this.progEvolve,'uDrivePhase'), 0);
         gl.uniform1i(this.u(this.progEvolve,'uDriveMode'), 0);
+        gl.uniform1f(this.u(this.progEvolve,'uTwistX'), 0);   /* 诊断路径：无扭曲边界（同驱动/AB 归零口径） */
         this.setABUniforms(gl, this.progEvolve, true);   /* 诊断路径强制无 AB（diag，同 evolveCN 口径） */
         this.kernel.setUniforms(gl, this.progEvolve, this.state);   /* 内核私有 uniform（Dirac 的 uMass 等）：暂停态手动步进时 evolve 帧循环可能尚未设置过 */
         gl.activeTexture(gl.TEXTURE1);
@@ -3986,6 +4216,7 @@ ${d3 ? `
   /* ---------- 卸载（课程站 SPA 路由切换时调用） ---------- */
   unmount(){
     if (this.scanner) this.scanner.stop();   /* 停止扫描 rAF，恢复 paused/σ */
+    if (this.scannerBloch) this.scannerBloch.stop();
     cancelAnimationFrame(this._raf);
     for (const [t, type, fn, opts] of this._listeners) t.removeEventListener(type, fn, opts);
     this._listeners = [];

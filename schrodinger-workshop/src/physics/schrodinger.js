@@ -259,6 +259,26 @@ function blockProject0C(re, im, outR, outI, n, aTexel, h, theta){
   for (let i = 0; i < N; i++){ re[i] = outR[i]*inv; im[i] = outI[i]*inv; }
 }
 
+/* R62 光学晶格势重画（presets.build 与 enterLattice 共用——单源真值）：
+   V=V₀sin²(πx/a)（世界 px），vGray=round(v·127+128)，shader 解码
+   (gray−128)/127 ⟹ 与 CPU 弛漾的 round(v·127)/127 同源（R51 口径）。
+   paint.state 提供 latV0/latA（app.loadPreset 已透传 state）。 */
+function drawLatticeV(paint){
+  const st = paint.state;
+  const V0 = st.latV0, a = st.latA;
+  const img = paint.vctx.getImageData(0, 0, 256, 256);
+  for (let x = 0; x < 256; x++){
+    const sn = Math.sin(Math.PI*x/a);
+    const v = V0*sn*sn;
+    const g = Math.round(Math.max(-1, Math.min(1, v))*127 + 128);
+    for (let y = 0; y < 256; y++){
+      const i = (y*256 + x)*4;
+      img.data[i] = g; img.data[i+1] = g; img.data[i+2] = g; img.data[i+3] = 255;
+    }
+  }
+  paint.vctx.putImageData(img, 0, 0);
+}
+
 /* y 向 Dirichlet 基模（归一化）：n 点网格、边界外恒 0 ⟹ 基模 sin(π(y+1)/(n+1))。
    （旧版 sin(π(y+0.5)/n) 非本征态；正确分母是 n+1 而非 n） */
 function makeYBase(n){
@@ -306,6 +326,17 @@ class SchrodingerKernel extends PhysicsKernel {
 
   /* ---------- R62 Bloch 弛漾（虚时间，复振幅）---------- */
   get relaxPending(){ return this._relaxTask !== null; }
+
+  /* 进入晶格场景并按当前 latV0/latA 重画势（面板滑块 / 扫描网格切换后恢复用）。
+     与 presets().lattice.build 同源（drawLatticeV 单源真值）；丢弃进行中的弛漾
+     任务（晶格已变，旧任务无意义）。不走 loadPreset——那条路径会用预设 params
+     把 latV0/latA/twistX 打回默认值，与「拖滑块调参」的语义冲突。 */
+  enterLattice(paint){
+    this._mode = 'lattice';
+    this._relaxTask = null;
+    this._band1Ref = null;
+    drawLatticeV(paint);
+  }
 
   /* 建弛漾任务。opts：{grid, m, v0, a, theta, band(1|2)}。
      band2 以 this._band1Ref（band1 上次收敛态）为投影参考；无参考时先跑
@@ -665,6 +696,25 @@ class SchrodingerKernel extends PhysicsKernel {
     /* 薛定谔内核暂无私有 URL 参数（保留扩展点；AB 已迁引擎级） */
   }
 
+  /* R62 Bloch 能带的解析模型（HUD「E → 最近能级」与 BlochScanner 叠图共用，
+     单源真值）。返回 mathieuBands 全字段 + 横向基模能量 ey0。
+     **口径说明（与实测对账的前提，见 worklog R62「解析对照的口径」）**：
+       实测 E = E_x(带,k) + ey0（2D 可分离 + 每步 y 基模投影 ⟹ 严格成立）；
+       ey0 = uK·(2−2cos(π/(grid+1)))（Dirichlet y 基模）。
+       连续谱对照的有效质量为 m·(grid/256)² ⟹ **只有 grid=256 时 mathieuBands
+       的 (m, a) 才与离散系统同一物理系统**；其余网格下二者是不同系统（差
+       80%~500%），扫描/HUD 均按 grid=256 口径给出（BlochScanner 强制 256）。 */
+  blochModel(state){
+    const o = { m: state.m, a: state.latA, V0: state.latV0, kN: 65 };
+    const B = mathieuBands(o);
+    const ey0 = (0.5/state.m)*(2 - 2*Math.cos(Math.PI/(state.grid + 1)));
+    return Object.assign(B, {
+      ey0, q: mathieuQ(o), m: o.m, a: o.a, V0: o.V0,
+      /* 带 1/2 的「可比对账曲线」= 解析带 + 横向基模能量 */
+      ref1: B.band1.map(v => v + ey0), ref2: B.band2.map(v => v + ey0),
+    });
+  }
+
   /* 解析能级阶梯（HUD「E → 最近能级」对照）：仅 box/harmonic 两预设返回，
      其余 null（HUD 隐藏该区）。单位与引擎一致：格点（texel）单位、ℏ=1、
      m=state.m。两个势场的解析谱：
@@ -717,9 +767,9 @@ class SchrodingerKernel extends PhysicsKernel {
     if (state.preset === 'lattice'){
       /* R62 Mathieu 能带模型（mathieu.js，scipy 对账锚点）：HUD 显示当前
          k=θ/a 的带 1/带 2 位置与 BZ 边界 gap。k 网格线性插值（kN=65）。 */
+      const B = this.blochModel(state);
       const o = { m, a: state.latA, V0: state.latV0 };
-      const B = mathieuBands({ m: o.m, a: o.a, V0: o.V0, kN: 65 });
-      const q = mathieuQ(o);
+      const q = B.q;
       const k = (state.twistX || 0)/o.a;
       const f = Math.max(0, Math.min(1, k/B.kMax))*(B.kN - 1);
       const i0 = Math.floor(f), i1 = Math.min(B.kN - 1, i0 + 1), fr = f - i0;
@@ -728,7 +778,8 @@ class SchrodingerKernel extends PhysicsKernel {
         kind: '光学晶格 Mathieu',
         param: 'V₀=' + fmtE(o.V0) + ' · a=' + o.a + ' · q=' + fmtE(q) + ' · gap=' + fmtE(B.gap.width),
         nearest(e){
-          const e1 = lerp(B.band1), e2 = lerp(B.band2);
+          /* ref1/ref2 = 解析带 + 横向基模能量 ey0 ⟹ 与实测 ⟨E⟩ 同口径可比 */
+          const e1 = lerp(B.ref1), e2 = lerp(B.ref2);
           const d1 = e1 - e, d2 = e2 - e;
           return Math.abs(d1) <= Math.abs(d2)
             ? { label: '带1', e: e1, d: d1 }
@@ -748,25 +799,8 @@ class SchrodingerKernel extends PhysicsKernel {
 
   presets(){
     const self = this;
-    /* R62 光学晶格：V=V₀sin²(πx/a)（a=32 世界 px ⟹ 8 周期）。vGray 量化
-       round(v·127+128)——shader 解码 (gray−128)/127，与 CPU 弛漾镜像
-       round(v·127)/127 同源（R51 口径）。build 从 paint.state 读当前
-       latV0/latA（滑块实时重画 ⟹ loadPreset 需传 state，见 app.js）。 */
-    const drawLattice = (paint) => {
-      const st = paint.state;
-      const V0 = st.latV0, a = st.latA;
-      const img = paint.vctx.getImageData(0, 0, 256, 256);
-      for (let x = 0; x < 256; x++){
-        const sn = Math.sin(Math.PI*x/a);
-        const v = V0*sn*sn;
-        const g = Math.round(Math.max(-1, Math.min(1, v))*127 + 128);
-        for (let y = 0; y < 256; y++){
-          const i = (y*256 + x)*4;
-          img.data[i] = g; img.data[i+1] = g; img.data[i+2] = g; img.data[i+3] = 255;
-        }
-      }
-      paint.vctx.putImageData(img, 0, 0);
-    };
+    /* R62 光学晶格：V=V₀sin²(πx/a)（a=32 世界 px ⟹ 8 周期）；势重画实现提到
+       模块级 drawLatticeV（presets.build 与 enterLattice 共用，单源真值）。 */
     return {
       free:     { name:'自由传播',     text:'高斯波包在无势场中飞行。色相保持纯净，但波包随时间自然扩散——不确定性原理的直接可视化。',
                   build(){} , wave:[0.18,0.5,0.09,0] },
@@ -797,8 +831,8 @@ class SchrodingerKernel extends PhysicsKernel {
                   build(paint){ paint.vctx.fillStyle = paint.vGray(0.5); paint.vctx.beginPath(); paint.vctx.arc(128,128,24,0,7); paint.vctx.fill(); }, wave:[0.10,0.5,0.14,0] },
       box:      { name:'无限深方阱',   text:'四壁为无限高势墙（世界边界）的盒子。波包斜向入射，往复弹跳并与自身发生干涉。',
                   build(){} , wave:[0.5,0.5,0.12,0.10] },
-      lattice:  { name:'光学晶格',       text:'V=V₀sin²(πx/a) 周期势（默认 V₀=0.1、a=32 世界 px，8 个周期）——原子在光场驻波中的标准模型。Bloch 定理：周期势中本征态满足 ψ(x+a)=e^{ika}ψ(x)，准动量 k 只在简约布里渊区 [0,π/a] 内独立，能量分成能带，带间是能隙（gap）。「twistX」滑块直接设定 Bloch 相位 θ=k·a（GPU 边界透传 e^{±iθ} wrap，见 kernel.js R62 约定）；平面波初态在晶格中演化时能带色散与散射清晰可见。「Bloch 弛漾」按钮做 CPU 虚时间流（复振幅 Strang 分裂 + twisted 循环三对角），收敛到当前 (k, 带) 的精确本征态——带 2 用对带 1 的 Gram-Schmidt 投影激发。「Bloch 能带扫描」逐 k 测两带 ⟨E⟩，叠图 1D Mathieu 解析谱（特征值参数 a,q 与 scipy.special 对账）：V₀/a 滑块改变晶格深度与周期，能隙随之宽窄。',
-                  build(paint){ self._mode = 'lattice'; drawLattice(paint); }, wave:[0.5,0.5,0.30,0],
+      lattice:  { name:'光学晶格',       text:'V=V₀sin²(πx/a) 周期势（默认 V₀=0.1、a=32 世界 px，8 个周期）——原子在光场驻波中的标准模型。Bloch 定理：周期势中本征态满足 ψ(x+a)=e^{ika}ψ(x)，准动量 k 只在简约布里渊区 [0,π/a] 内独立，能量分成能带，带间是能隙（gap）。「Bloch 相位 θ」滑块直接设定 θ=k·a（0→π 覆盖整个简约 BZ；GPU 边界按 e^{±iθ} wrap 携带——总相位是 h·θ，h=网格内周期数）；平面波初态在晶格中演化时能带色散与散射清晰可见。「Bloch 弛漾」按钮做 CPU 虚时间流（PR-ADI + twisted 循环三对角 + 晶体动量块投影），收敛到当前 (k, 带) 的精确本征态——带 2 以带 1 收敛态作 Gram-Schmidt 投影。「Bloch 能带扫描」逐 k 测两带 ⟨E⟩，叠图 1D Mathieu 解析谱（含横向基模能量）：V₀/a 滑块改变晶格深度与周期，能隙随之宽窄。',
+                  build(paint){ self._mode = 'lattice'; drawLatticeV(paint); }, wave:[0.5,0.5,0.30,0],
                   params:{ latV0:0.1, latA:32, twistX:0, latBand:1 } },
     };
   }
