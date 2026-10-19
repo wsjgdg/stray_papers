@@ -1,0 +1,1282 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  min-height: 100%;
+  /* React 挂载和父页面主题消息到达前，先按系统主题保持正确首帧。 */
+  background-color: #08090a;
+}
+
+@media (prefers-color-scheme: light) {
+  html,
+  body,
+  #root {
+    background-color: #ffffff;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* shadcn 基础层兜底: 没写显式 text-x / bg-x 的文字和表面 (textarea 输入文字、
+     placeholder、气泡正文) 从这里继承主题色, 不依赖 UA 默认色.
+     烧主题前 token 未定义时这两行按无效值优雅回退, 无副作用. */
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* 中英混排对齐:一行里英文(尤其 ds 的 display/像素字体如 Press Start 2P)和中文(系统黑体)
+   混在一起时,英文会偏小、偏上,跟中文对不齐。把纯英文/数字那一截用 <span className="cjk-latin">
+   包起来即可统一对齐:font-size-adjust 拉平字号,vertical-align 把英文下移到与中文同基线。
+   --cjk-latin-shift 由 design_picker 按 ds 烧进 :root(默认 -0.15em);极个别字体偏差大改这一个值。 */
+.cjk-latin {
+  font-size-adjust: 0.56;
+  vertical-align: var(--cjk-latin-shift, -0.15em);
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --background: 227 33% 5%;
+    --foreground: 210 40% 98%;
+    --card-foreground: 210 40% 98%;
+    --popover-foreground: 210 40% 98%;
+    --card: 221 31% 10%;
+    --popover: 221 31% 10%;
+    --secondary: 222 31% 15%;
+    --muted: 222 31% 15%;
+    --accent: 222 31% 15%;
+    --secondary-foreground: 213 27% 84%;
+    --accent-foreground: 213 27% 84%;
+    --muted-foreground: 215 20% 65%;
+    --border: 219 26% 22%;
+    --input: 219 26% 22%;
+    --primary: 213 94% 68%;
+    --ring: 213 94% 68%;
+    --primary-foreground: 214 66% 7%;
+    --destructive-foreground: 214 66% 7%;
+    --destructive: 355 100% 64%;
+    --radius: var(--radius-md);
+
+    --space-1: 4px;
+    --space-12: 48px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --radius-pill: 9999px;
+    --radius-sm: 10px;
+    --elev-flat: none;
+    --focus-ring: 0 0 0 4px rgba(96, 165, 250, 0.28);
+    --elev-raised: 0 24px 72px rgba(0, 0, 0, 0.42);
+    --elev-ring: 0 0 0 1px var(--border);
+    --text-2xl: 28px;
+    --text-3xl: 40px;
+    --text-4xl: 56px;
+    --text-base: 14px;
+    --text-lg: 16px;
+    --text-sm: 12px;
+    --text-xl: 20px;
+    --text-xs: 11px;
+    --leading-body: 1.45;
+    --leading-tight: 1.06;
+    --font-display: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    --font-body: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    --font-mono: "SF Mono", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", ui-monospace, Menlo, monospace;
+    --cjk-latin-shift: -0.15em;
+  }
+
+  .dark {
+    color-scheme: dark;
+    --background: 227 33% 5%;
+    --foreground: 210 40% 98%;
+    --card-foreground: 210 40% 98%;
+    --popover-foreground: 210 40% 98%;
+    --card: 221 31% 10%;
+    --popover: 221 31% 10%;
+    --secondary: 222 31% 15%;
+    --muted: 222 31% 15%;
+    --accent: 222 31% 15%;
+    --secondary-foreground: 213 27% 84%;
+    --accent-foreground: 213 27% 84%;
+    --muted-foreground: 215 20% 65%;
+    --border: 219 26% 22%;
+    --input: 219 26% 22%;
+    --primary: 213 94% 68%;
+    --ring: 213 94% 68%;
+    --primary-foreground: 214 66% 7%;
+    --destructive-foreground: 214 66% 7%;
+    --destructive: 355 100% 64%;
+    --radius: var(--radius-md);
+
+    --space-1: 4px;
+    --space-12: 48px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --radius-pill: 9999px;
+    --radius-sm: 10px;
+    --elev-flat: none;
+    --focus-ring: 0 0 0 4px rgba(96, 165, 250, 0.28);
+    --elev-raised: 0 24px 72px rgba(0, 0, 0, 0.42);
+    --elev-ring: 0 0 0 1px var(--border);
+    --text-2xl: 28px;
+    --text-3xl: 40px;
+    --text-4xl: 56px;
+    --text-base: 14px;
+    --text-lg: 16px;
+    --text-sm: 12px;
+    --text-xl: 20px;
+    --text-xs: 11px;
+    --leading-body: 1.45;
+    --leading-tight: 1.06;
+    --font-display: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    --font-body: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    --font-mono: "SF Mono", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", ui-monospace, Menlo, monospace;
+    --cjk-latin-shift: -0.15em;
+  }
+
+  body { font-family: var(--font-body); }
+
+  /* 中英混排: 把英文/数字那一截用 <span class="cjk-latin"> 包起来, 字号 + 基线对齐中文 (font-size-adjust 0.56 实测最贴中文字高) */
+  .cjk-latin { font-size-adjust: 0.56; vertical-align: var(--cjk-latin-shift, -0.15em); }
+}
+
+/* LUNA-9 点火发射时的页面震颤动画（不改任何主题 token） */
+@keyframes mission-shake {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  15% { transform: translate3d(-4px, 2px, 0); }
+  30% { transform: translate3d(4px, -2px, 0); }
+  45% { transform: translate3d(-3px, -3px, 0); }
+  60% { transform: translate3d(3px, 3px, 0); }
+  75% { transform: translate3d(-2px, 1px, 0); }
+  90% { transform: translate3d(2px, -1px, 0); }
+}
+
+.animate-mission-shake {
+  animation: mission-shake 0.5s ease-in-out 3;
+}
+
+/* 成就解锁 toast：右上角滑入 → 停留 → 淡出（不改任何主题 token） */
+@keyframes achievement-toast {
+  0% { opacity: 0; transform: translate3d(24px, -8px, 0); }
+  12% { opacity: 1; transform: translate3d(0, 0, 0); }
+  78% { opacity: 1; transform: translate3d(0, 0, 0); }
+  100% { opacity: 0; transform: translate3d(16px, -6px, 0); }
+}
+
+.animate-achievement-toast {
+  animation: achievement-toast 3s ease-in-out forwards;
+}
+
+/* 样品博物馆陈列厅：扫描线装饰 + 缓慢滚动（不改任何主题 token） */
+@keyframes museum-scanline {
+  0% { transform: translate3d(0, -6px, 0); }
+  100% { transform: translate3d(0, 6px, 0); }
+}
+
+.museum-scanlines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    hsl(var(--primary) / 0.05) 0px,
+    hsl(var(--primary) / 0.05) 1px,
+    transparent 1px,
+    transparent 7px
+  );
+  animation: museum-scanline 5s ease-in-out infinite alternate;
+}
+
+/* 样品厅藏品稀有度光效：S 级脉冲辉光 + 周期掠光，A 级常亮辉光，B 级悬停微光（不改任何主题 token） */
+@keyframes museum-rarity-pulse {
+  0%, 100% { box-shadow: 0 0 10px hsl(var(--primary) / 0.28), 0 0 30px hsl(var(--primary) / 0.12); }
+  50% { box-shadow: 0 0 20px hsl(var(--primary) / 0.55), 0 0 52px hsl(var(--primary) / 0.24); }
+}
+
+@keyframes museum-rarity-shine {
+  0% { transform: translate3d(-150%, 0, 0) rotate(12deg); opacity: 0; }
+  30% { opacity: 1; }
+  65% { transform: translate3d(450%, 0, 0) rotate(12deg); opacity: 0; }
+  100% { transform: translate3d(450%, 0, 0) rotate(12deg); opacity: 0; }
+}
+
+.museum-rarity-s {
+  animation: museum-rarity-pulse 2.6s ease-in-out infinite;
+}
+
+.museum-shine {
+  background: linear-gradient(
+    100deg,
+    transparent 32%,
+    hsl(var(--primary) / 0.18) 46%,
+    hsl(var(--foreground) / 0.26) 50%,
+    hsl(var(--primary) / 0.18) 54%,
+    transparent 68%
+  );
+  animation: museum-rarity-shine 3.6s ease-in-out infinite;
+}
+
+.museum-rarity-a {
+  box-shadow: 0 0 12px hsl(var(--primary) / 0.24), 0 0 34px hsl(var(--primary) / 0.09);
+}
+
+.museum-rarity-a:hover {
+  box-shadow: 0 0 18px hsl(var(--primary) / 0.36), 0 0 46px hsl(var(--primary) / 0.16);
+}
+
+.museum-rarity-b:hover {
+  box-shadow: 0 0 12px hsl(var(--primary) / 0.18);
+}
+
+/* S 级藏品入馆光柱仪式：垂直光柱从展柜上方落下罩住卡片 + 底部扩散光环，
+   一次性 ~2.8s 后淡出消散（forwards 收尾停在 opacity 0，纯视觉不改任何主题 token） */
+@keyframes museum-pillar-drop {
+  0% { transform: translate3d(0, -110%, 0); opacity: 0; }
+  14% { opacity: 1; }
+  52% { transform: translate3d(0, 0, 0); opacity: 1; }
+  78% { opacity: 0.7; }
+  100% { transform: translate3d(0, 0, 0); opacity: 0; }
+}
+
+@keyframes museum-pillar-ring {
+  0%, 44% { transform: scale(0.35); opacity: 0; }
+  60% { opacity: 0.95; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+
+.museum-pillar-beam {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    hsl(var(--primary) / 0.1) 16%,
+    hsl(var(--primary) / 0.34) 52%,
+    hsl(var(--primary) / 0.52) 86%,
+    hsl(var(--foreground) / 0.3) 100%
+  );
+  filter: blur(2px);
+  animation: museum-pillar-drop 2.8s ease-out forwards;
+}
+
+.museum-pillar-ring {
+  background: radial-gradient(
+    ellipse at center,
+    hsl(var(--primary) / 0.55) 0%,
+    hsl(var(--primary) / 0.2) 48%,
+    transparent 72%
+  );
+  animation: museum-pillar-ring 2.8s ease-out forwards;
+}
+
+/* 光柱仪式增强：中心亮核 + 三颗上浮星芒粒子（一次性, 与光柱同步消散） */
+.museum-pillar-core {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    hsl(var(--foreground) / 0.35) 50%,
+    hsl(var(--foreground) / 0.7) 100%
+  );
+  filter: blur(1px);
+  animation: museum-pillar-drop 2.8s ease-out forwards;
+}
+
+@keyframes museum-pillar-spark {
+  0% { transform: translate3d(0, 10px, 0) scale(0.3); opacity: 0; }
+  22% { opacity: 1; }
+  100% { transform: translate3d(var(--spark-dx, 8px), -54px, 0) scale(1.15); opacity: 0; }
+}
+
+.museum-pillar-spark {
+  height: 5px;
+  width: 5px;
+  border-radius: 9999px;
+  opacity: 0;
+  background: radial-gradient(
+    circle,
+    hsl(var(--foreground) / 0.95) 0%,
+    hsl(var(--primary) / 0.55) 45%,
+    transparent 72%
+  );
+  animation: museum-pillar-spark 2.4s ease-out forwards;
+}
+
+.mps-1 { left: 24%; animation-delay: 0.5s; --spark-dx: -12px; }
+.mps-2 { left: 52%; animation-delay: 0.95s; --spark-dx: 9px; }
+.mps-3 { left: 74%; animation-delay: 1.4s; --spark-dx: 15px; }
+
+/* 风暴放晴过渡：阳光破尘放射光效 + 横幅掠光（一次性 ~5s / 循环掠光） */
+@keyframes clearing-sunburst {
+  0% { opacity: 0; transform: scale(0.55) rotate(-6deg); }
+  26% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.55) rotate(6deg); }
+}
+
+.clearing-sunburst {
+  background: radial-gradient(
+    ellipse 62% 92% at 50% 0%,
+    hsl(var(--primary) / 0.34) 0%,
+    hsl(var(--primary) / 0.14) 38%,
+    transparent 72%
+  );
+  animation: clearing-sunburst 5.2s ease-out forwards;
+}
+
+@keyframes clearing-shine {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.clearing-banner {
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    hsl(var(--primary) / 0.28) 47%,
+    hsl(var(--foreground) / 0.34) 50%,
+    hsl(var(--primary) / 0.28) 53%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: clearing-shine 2.2s linear infinite;
+}
+
+/* 全球风暴警报横幅：destructive 红色扫光快速循环（比普通闪烁更有警报压迫感） */
+.storm-banner {
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    hsl(var(--destructive) / 0.32) 47%,
+    hsl(var(--foreground) / 0.3) 50%,
+    hsl(var(--destructive) / 0.32) 53%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: clearing-shine 1.6s linear infinite;
+}
+
+/* 全球风暴倒计时最后 10 秒：心跳式缩放脉冲（替代普通闪烁, 压秒感更强） */
+@keyframes countdown-heartbeat {
+  0%, 100% { transform: scale(1); }
+  28% { transform: scale(1.16); }
+  56% { transform: scale(1.03); }
+}
+
+.countdown-urgent {
+  display: inline-block;
+  animation: countdown-heartbeat 0.9s ease-in-out infinite;
+}
+
+/* 成就墙时间轴定位：命中卡片脉冲辉光 3 次（0.8s × 3 ≈ 高亮窗口 2.4s） */
+@keyframes ach-focus-flash {
+  0%, 100% { box-shadow: 0 0 0 2px hsl(var(--primary) / 0.85), 0 0 16px hsl(var(--primary) / 0.35); }
+  50% { box-shadow: 0 0 0 3px hsl(var(--primary) / 0.55), 0 0 36px hsl(var(--primary) / 0.65); }
+}
+
+.ach-focus-flash {
+  animation: ach-focus-flash 0.8s ease-in-out 3;
+}
+
+/* 第七轮动画增强：点火蓄力呼吸辉光（安全盖打开后循环） */
+@keyframes ignite-armed-glow {
+  0%, 100% { box-shadow: 0 0 12px hsl(var(--primary) / 0.35), 0 0 34px hsl(var(--primary) / 0.12); }
+  50% { box-shadow: 0 0 26px hsl(var(--primary) / 0.7), 0 0 64px hsl(var(--primary) / 0.3); }
+}
+
+.ignite-armed {
+  animation: ignite-armed-glow 1.1s ease-in-out infinite;
+}
+
+/* 着陆冲击波：双环从中心扩散 + 全屏一次性闪光 */
+@keyframes landing-shockwave {
+  0% { transform: scale(0.15); opacity: 0.85; }
+  100% { transform: scale(2.8); opacity: 0; }
+}
+
+.landing-shockwave {
+  animation: landing-shockwave 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes landing-flash {
+  0% { opacity: 0.5; }
+  100% { opacity: 0; }
+}
+
+.landing-flash {
+  animation: landing-flash 0.8s ease-out forwards;
+}
+
+/* 回放切机位转场：亮度过冲 + 上浮, 模拟信号切换 */
+@keyframes cam-switch {
+  0% { opacity: 0; transform: translate3d(0, 8px, 0); filter: brightness(1.7) saturate(1.3); }
+  35% { opacity: 1; }
+  100% { opacity: 1; transform: translate3d(0, 0, 0); filter: brightness(1) saturate(1); }
+}
+
+.cam-switch-fx {
+  animation: cam-switch 0.34s ease-out;
+}
+
+/* 成就 toast 弹性缩放（与外层滑入淡出动画分层叠加） */
+@keyframes toast-pop {
+  0% { transform: scale(0.55); }
+  55% { transform: scale(1.1); }
+  78% { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+
+.toast-pop {
+  animation: toast-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* 第八轮动画增强：警报全屏边缘红色闪烁（vignette 呼吸, critical 快 / caution 慢） */
+@keyframes alarm-vignette {
+  0%, 100% { opacity: 0.22; }
+  50% { opacity: 1; }
+}
+
+.alarm-vignette {
+  box-shadow: inset 0 0 96px 20px hsl(var(--destructive) / 0.5);
+  animation: alarm-vignette 0.9s ease-in-out infinite;
+}
+
+.alarm-vignette-caution {
+  box-shadow: inset 0 0 84px 16px hsl(var(--foreground) / 0.26);
+  animation: alarm-vignette 1.8s ease-in-out infinite;
+}
+
+/* 阶段链当前节点呼吸辉光 */
+@keyframes phase-node-glow {
+  0%, 100% { box-shadow: 0 0 6px hsl(var(--primary) / 0.4), 0 1px 2px hsl(var(--background) / 0.6); }
+  50% { box-shadow: 0 0 18px hsl(var(--primary) / 0.85), 0 1px 2px hsl(var(--background) / 0.6); }
+}
+
+.phase-node-glow {
+  animation: phase-node-glow 1.6s ease-in-out infinite;
+}
+
+/* 遥测面板周期扫描线：一道 primary 淡光带自上而下扫过（错峰 delay 内联传入） */
+@keyframes telemetry-scan {
+  0% { transform: translate3d(0, -3.5rem, 0); opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { transform: translate3d(0, 16rem, 0); opacity: 0; }
+}
+
+.telemetry-scan {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    hsl(var(--primary) / 0.12) 55%,
+    hsl(var(--primary) / 0.3) 100%
+  );
+  animation: telemetry-scan 7s linear infinite;
+}
+
+/* 样品分析舱扫描光束：化验期间一道细光束在舱块内往返扫描 */
+@keyframes lab-scan {
+  0% { top: -14%; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.lab-scan-beam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 14px;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    hsl(var(--primary) / 0.32) 50%,
+    transparent 100%
+  );
+  animation: lab-scan 1.6s ease-in-out infinite;
+}
+
+/* 事件日志新行入场闪光：primary 淡色覆盖层一次性褪去（background-image 层不覆盖行底色） */
+@keyframes log-row-flash {
+  0% { background-image: linear-gradient(hsl(var(--primary) / 0.38), hsl(var(--primary) / 0.38)); }
+  100% { background-image: linear-gradient(hsl(var(--primary) / 0), hsl(var(--primary) / 0)); }
+}
+
+.log-row-flash {
+  animation: log-row-flash 1.4s ease-out;
+}
+
+/* 第九轮动画增强：影院模式黑幕开启（上下幕布从主视口向两侧滑出, 一次性） */
+@keyframes curtain-top {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(0, -100%, 0); }
+}
+
+@keyframes curtain-bottom {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(0, 100%, 0); }
+}
+
+.cinema-curtain-top {
+  animation: curtain-top 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.cinema-curtain-bottom {
+  animation: curtain-bottom 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* 上电自检进度条掠光 */
+@keyframes boot-bar-shine {
+  0% { transform: translate3d(-110%, 0, 0); }
+  100% { transform: translate3d(340%, 0, 0); }
+}
+
+.boot-bar-shine {
+  background: linear-gradient(
+    100deg,
+    transparent 15%,
+    hsl(var(--foreground) / 0.55) 50%,
+    transparent 85%
+  );
+  animation: boot-bar-shine 1.3s linear infinite;
+}
+
+/* 任务时钟秒级 tick：每秒轻微上滑 + 亮度回落, 翻页钟质感（key 换时钟文本重触发） */
+@keyframes clock-tick {
+  0% { transform: translate3d(0, 28%, 0); opacity: 0.45; filter: brightness(1.6); }
+  100% { transform: translate3d(0, 0, 0); opacity: 1; filter: brightness(1); }
+}
+
+.clock-tick {
+  animation: clock-tick 0.28s ease-out;
+}
+
+/* 第十轮动画增强：成就墙卡片错峰弹入（animation-delay 内联按索引传入） */
+@keyframes ach-card-in {
+  0% { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.92); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+.ach-card-in {
+  animation: ach-card-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+/* 入场动画与时间轴定位脉冲共存时两条动画并列, 避免后者被前者覆盖 */
+.ach-card-in.ach-focus-flash {
+  animation:
+    ach-card-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards,
+    ach-focus-flash 0.8s ease-in-out 3;
+}
+
+/* 通话字幕语音波形：三根竖条错峰跳动（说话中） */
+@keyframes comm-wave {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1.15); }
+}
+
+.comm-wave {
+  transform-origin: bottom;
+  animation: comm-wave 0.85s ease-in-out infinite;
+}
+
+.cw-1 { animation-delay: 0s; }
+.cw-2 { animation-delay: 0.18s; }
+.cw-3 { animation-delay: 0.36s; }
+
+/* 地面站链路数据流：底栏顶部一条流动光带（黑障/全球风暴时变红停流） */
+@keyframes link-flow {
+  0% { background-position-x: 0; }
+  100% { background-position-x: 64px; }
+}
+
+.link-flow-line {
+  background-image: repeating-linear-gradient(
+    90deg,
+    hsl(var(--primary) / 0.6) 0 18px,
+    transparent 18px 64px
+  );
+  animation: link-flow 1.6s linear infinite;
+}
+
+.link-flow-line-dead {
+  background-image: repeating-linear-gradient(
+    90deg,
+    hsl(var(--destructive) / 0.35) 0 18px,
+    transparent 18px 64px
+  );
+}
+
+/* 第十一轮动画增强：回放播放时时钟呼吸辉光 */
+@keyframes replay-clock-glow {
+  0%, 100% { text-shadow: 0 0 4px hsl(var(--primary) / 0.25); }
+  50% { text-shadow: 0 0 16px hsl(var(--primary) / 0.75); }
+}
+
+.replay-clock-glow {
+  animation: replay-clock-glow 1.4s ease-in-out infinite;
+}
+
+/* 警报处置确认涟漪：✓ 徽章弹跳上浮 + 圆环扩散, 一次性 ~0.9s */
+@keyframes ack-ring {
+  0% { transform: scale(0.4); opacity: 0.9; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+.ack-ring {
+  animation: ack-ring 0.8s ease-out forwards;
+}
+
+@keyframes ack-float {
+  0% { transform: translate3d(0, 6px, 0) scale(0.6); opacity: 0; }
+  30% { transform: translate3d(0, 0, 0) scale(1.1); opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translate3d(0, -10px, 0) scale(1); opacity: 0; }
+}
+
+.ack-float {
+  animation: ack-float 0.9s ease-out forwards;
+}
+
+/* 影院模式常驻暗角（电影 vignette 氛围, 静态无动画） */
+.cinema-vignette {
+  box-shadow: inset 0 0 180px 46px hsl(var(--background) / 0.8);
+}
+
+/* 第十二轮动画增强：阶段推进过场光带（斜切竖光带横扫主视口, 一次性 0.7s） */
+@keyframes phase-band {
+  0% { transform: translate3d(-130%, 0, 0) skewX(-14deg); opacity: 0; }
+  22% { opacity: 1; }
+  100% { transform: translate3d(430%, 0, 0) skewX(-14deg); opacity: 0; }
+}
+
+.phase-flash-band {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--primary) / 0.26) 44%,
+    hsl(var(--foreground) / 0.3) 50%,
+    hsl(var(--primary) / 0.26) 56%,
+    transparent 100%
+  );
+  animation: phase-band 0.7s ease-out forwards;
+}
+
+/* 任务切换信号重锁定：全屏扫描线叠层 + 文字闪烁, 一次性 ~1.2s */
+@keyframes relock-fade {
+  0% { opacity: 0; }
+  14% { opacity: 1; }
+  76% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.relock-overlay {
+  background-color: hsl(var(--background) / 0.55);
+  background-image: repeating-linear-gradient(
+    0deg,
+    hsl(var(--primary) / 0.06) 0 2px,
+    transparent 2px 5px
+  );
+  backdrop-filter: blur(2px);
+  animation: relock-fade 1.2s ease-out forwards;
+}
+
+@keyframes relock-flicker {
+  0%, 100% { opacity: 1; }
+  42% { opacity: 0.35; }
+  52% { opacity: 1; }
+  68% { opacity: 0.5; }
+}
+
+.relock-text {
+  animation: relock-flicker 0.9s linear infinite;
+}
+
+/* 遥测详情大曲线描绘动画（pathLength 归一 100, 弹层打开时画一次） */
+@keyframes spark-draw {
+  0% { stroke-dashoffset: 100; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.spark-draw {
+  stroke-dasharray: 100;
+  animation: spark-draw 1.1s ease-out forwards;
+}
+
+/* 第十三轮动画增强：主发动机尾焰（点火上升段, 视口底部高频抖动的双层喷焰） */
+@keyframes plume-flicker {
+  0%, 100% { opacity: 0.85; transform: scaleY(1) scaleX(1); }
+  30% { opacity: 1; transform: scaleY(1.12) scaleX(0.94); }
+  62% { opacity: 0.72; transform: scaleY(0.9) scaleX(1.07); }
+}
+
+.engine-plume-outer {
+  background: radial-gradient(
+    ellipse 50% 100% at 50% 100%,
+    hsl(var(--primary) / 0.5) 0%,
+    hsl(var(--primary) / 0.18) 45%,
+    transparent 72%
+  );
+  transform-origin: bottom center;
+  filter: blur(3px);
+  animation: plume-flicker 0.14s linear infinite;
+}
+
+.engine-plume-core {
+  background: radial-gradient(
+    ellipse 50% 100% at 50% 100%,
+    hsl(var(--foreground) / 0.8) 0%,
+    hsl(var(--primary) / 0.4) 50%,
+    transparent 78%
+  );
+  transform-origin: bottom center;
+  filter: blur(1px);
+  animation: plume-flicker 0.1s linear infinite reverse;
+}
+
+/* 黑障恢复信号雪花：交叉扫描线叠层高频闪烁后消散（一次性 ~0.9s） */
+@keyframes static-flicker {
+  0% { opacity: 0.9; transform: translate3d(0, -2px, 0); }
+  20% { opacity: 0.35; transform: translate3d(1px, 1px, 0); }
+  40% { opacity: 0.8; }
+  60% { opacity: 0.25; transform: translate3d(-1px, 0, 0); }
+  80% { opacity: 0.55; }
+  100% { opacity: 0; transform: translate3d(0, 0, 0); }
+}
+
+.signal-static {
+  background-image:
+    repeating-linear-gradient(0deg, hsl(var(--foreground) / 0.14) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, hsl(var(--foreground) / 0.08) 0 1px, transparent 1px 4px);
+  animation: static-flicker 0.9s linear forwards;
+}
+
+/* 成就解锁全屏金光扫过：一道亮带横贯整屏（一次性 ~0.85s, 与 toast 弹跳同步） */
+@keyframes ach-burst {
+  0% { transform: translate3d(-130%, 0, 0) skewX(-10deg); opacity: 0; }
+  18% { opacity: 1; }
+  100% { transform: translate3d(430%, 0, 0) skewX(-10deg); opacity: 0; }
+}
+
+.ach-burst-band {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--primary) / 0.22) 42%,
+    hsl(var(--foreground) / 0.4) 50%,
+    hsl(var(--primary) / 0.22) 58%,
+    transparent 100%
+  );
+  animation: ach-burst 0.85s ease-out forwards;
+}
+
+/* 第十四轮动画增强：动力下降段 retro 引擎反推——间歇脉冲光锥（点几下停一下的减速节奏） */
+@keyframes retro-pulse {
+  0%, 100% { opacity: 0; transform: scaleY(0.35); }
+  8% { opacity: 1; transform: scaleY(1); }
+  26% { opacity: 0.5; transform: scaleY(0.8); }
+  42% { opacity: 0; transform: scaleY(0.35); }
+  56% { opacity: 0.9; transform: scaleY(0.92); }
+  78% { opacity: 0.25; transform: scaleY(0.55); }
+}
+
+.retro-plume {
+  background: radial-gradient(
+    ellipse 50% 100% at 50% 100%,
+    hsl(var(--primary) / 0.42) 0%,
+    hsl(var(--primary) / 0.14) 48%,
+    transparent 74%
+  );
+  transform-origin: bottom center;
+  filter: blur(2px);
+  animation: retro-pulse 1.8s ease-in-out infinite;
+}
+
+.retro-plume-core {
+  background: radial-gradient(
+    ellipse 50% 100% at 50% 100%,
+    hsl(var(--foreground) / 0.7) 0%,
+    hsl(var(--primary) / 0.32) 52%,
+    transparent 78%
+  );
+  transform-origin: bottom center;
+  filter: blur(1px);
+  animation: retro-pulse 1.8s ease-in-out 0.06s infinite;
+}
+
+/* 全球沙尘暴闪电：随机调度的一次性双闪（React key 驱动, 与滚雷音效同步） */
+@keyframes lightning-flash {
+  0%, 100% { opacity: 0; }
+  8% { opacity: 0.75; }
+  17% { opacity: 0.08; }
+  28% { opacity: 0.55; }
+  46% { opacity: 0; }
+}
+
+.storm-lightning {
+  background: radial-gradient(
+    ellipse 85% 55% at 28% 18%,
+    hsl(var(--foreground) / 0.45) 0%,
+    hsl(var(--foreground) / 0.12) 42%,
+    transparent 70%
+  );
+  animation: lightning-flash 0.7s ease-out forwards;
+}
+
+.storm-lightning-2 {
+  background: radial-gradient(
+    ellipse 70% 50% at 72% 34%,
+    hsl(var(--foreground) / 0.38) 0%,
+    hsl(var(--foreground) / 0.1) 45%,
+    transparent 72%
+  );
+  animation: lightning-flash 0.7s ease-out forwards;
+}
+
+/* 样品评级揭晓翻牌：评级大徽章 rotateY 翻转入场（延迟到报告标题之后揭晓） */
+@keyframes grade-flip {
+  0% { transform: perspective(600px) rotateY(92deg); opacity: 0; }
+  55% { transform: perspective(600px) rotateY(-14deg); opacity: 1; }
+  78% { transform: perspective(600px) rotateY(6deg); }
+  100% { transform: perspective(600px) rotateY(0deg); opacity: 1; }
+}
+
+.grade-flip {
+  animation: grade-flip 0.75s cubic-bezier(0.34, 1.3, 0.64, 1) 0.4s both;
+}
+
+/* 影院模式胶片颗粒：三层微噪点 + steps 抖动（常驻, 与暗角同层氛围） */
+@keyframes film-grain {
+  0% { transform: translate3d(0, 0, 0); }
+  25% { transform: translate3d(-2%, 1%, 0); }
+  50% { transform: translate3d(1%, -2%, 0); }
+  75% { transform: translate3d(-1%, 2%, 0); }
+  100% { transform: translate3d(2%, -1%, 0); }
+}
+
+.film-grain {
+  background-image:
+    radial-gradient(circle at 20% 30%, hsl(var(--foreground) / 0.06) 0.5px, transparent 1px),
+    radial-gradient(circle at 70% 60%, hsl(var(--foreground) / 0.05) 0.5px, transparent 1px),
+    radial-gradient(circle at 45% 85%, hsl(var(--foreground) / 0.06) 0.5px, transparent 1px);
+  background-size: 7px 7px, 11px 11px, 13px 13px;
+  animation: film-grain 0.4s steps(4) infinite;
+}
+
+/* 回放老电视滤镜：扫描线+噪点常驻抖动, 外加一道横向亮带缓慢垂直滚动 */
+.replay-static {
+  background-image:
+    repeating-linear-gradient(0deg, hsl(var(--foreground) / 0.05) 0 1px, transparent 1px 3px),
+    radial-gradient(circle at 30% 40%, hsl(var(--foreground) / 0.05) 0.5px, transparent 1px),
+    radial-gradient(circle at 75% 70%, hsl(var(--foreground) / 0.04) 0.5px, transparent 1px);
+  background-size: auto, 9px 9px, 12px 12px;
+  animation: film-grain 0.3s steps(3) infinite;
+}
+
+@keyframes replay-roll {
+  0% { transform: translate3d(0, -120%, 0); }
+  100% { transform: translate3d(0, 1300%, 0); }
+}
+
+.replay-roll-bar {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    hsl(var(--foreground) / 0.07) 50%,
+    transparent 100%
+  );
+  animation: replay-roll 7s linear infinite;
+}
+
+/* 第十六轮动画增强：S 级评级徽章金尘持续飘落（循环, 复用星芒粒子视觉, 方向改向下） */
+@keyframes grade-sparkle-fall {
+  0% { transform: translate3d(0, -6px, 0) scale(0.4); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translate3d(var(--spark-dx, 6px), 48px, 0) scale(1); opacity: 0; }
+}
+
+.grade-sparkle {
+  height: 4px;
+  width: 4px;
+  border-radius: 9999px;
+  opacity: 0;
+  background: radial-gradient(
+    circle,
+    hsl(var(--foreground) / 0.95) 0%,
+    hsl(var(--primary) / 0.55) 45%,
+    transparent 72%
+  );
+  animation: grade-sparkle-fall 1.8s ease-in infinite;
+}
+
+.gsf-1 { left: 22%; animation-delay: 0.5s; --spark-dx: -8px; }
+.gsf-2 { left: 50%; animation-delay: 1.1s; --spark-dx: 6px; }
+.gsf-3 { left: 76%; animation-delay: 1.7s; --spark-dx: 10px; }
+
+/* 影院模式镜头呼吸：星野层极缓慢微缩放（6.5s 循环, 手持摄影机质感） */
+@keyframes cinema-breath {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.014); }
+}
+
+.cinema-breath {
+  animation: cinema-breath 6.5s ease-in-out infinite;
+}
+
+/* 第十七轮：减弱动画开关——开启后全页 CSS 动画/过渡瞬时完成（功能态保留, canvas 动画不受影响） */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  animation-delay: 0ms !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* 第十八轮：动效导览行内预览——点击 ▶ 后播一次代表性效果（辉光 / 掠光 / 弹跳） */
+.demo-glow {
+  animation: ach-focus-flash 0.6s ease-in-out 2;
+}
+
+.demo-shine {
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    hsl(var(--primary) / 0.3) 47%,
+    hsl(var(--foreground) / 0.36) 50%,
+    hsl(var(--primary) / 0.3) 53%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: clearing-shine 1.2s linear 1;
+}
+
+.demo-pop {
+  animation: toast-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 1;
+}
+
+/* 第十九轮：三星统帅全屏庆典（径向辉光 + 大标题弹入 + 两道金光扫过, 一次性 ~3.4s） */
+@keyframes triple-glow {
+  0% { opacity: 0; }
+  14% { opacity: 1; }
+  78% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.triple-celebration {
+  background: radial-gradient(ellipse at center, hsl(var(--primary) / 0.2) 0%, transparent 62%);
+  animation: triple-glow 3.4s ease-out forwards;
+}
+
+@keyframes triple-banner-in {
+  0% { transform: scale(0.55) translate3d(0, 18px, 0); opacity: 0; filter: brightness(1.9); }
+  18% { transform: scale(1.08) translate3d(0, 0, 0); opacity: 1; }
+  30% { transform: scale(1) translate3d(0, 0, 0); filter: brightness(1); }
+  78% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.03) translate3d(0, -8px, 0); }
+}
+
+.triple-banner {
+  animation: triple-banner-in 3.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* 第二十轮：裂隙边缘紧急制动车身晃动（火面画布容器短促抖动 0.5s） */
+@keyframes rover-brake-shake {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  18% { transform: translate3d(-4px, 2px, 0); }
+  38% { transform: translate3d(4px, -3px, 0); }
+  58% { transform: translate3d(-3px, -1px, 0); }
+  78% { transform: translate3d(2px, 2px, 0); }
+}
+
+.rover-brake-shake {
+  animation: rover-brake-shake 0.5s linear;
+}
+
+/* 三星统帅庆典彩带粒子：12 片三色小矩形旋转飘落（--cf-dx 横向漂移差异化） */
+@keyframes confetti-fall {
+  0% { transform: translate3d(0, -8vh, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate3d(var(--cf-dx, 12px), 106vh, 0) rotate(760deg); opacity: 0.55; }
+}
+
+.confetti {
+  position: absolute;
+  top: 0;
+  width: 8px;
+  height: 14px;
+  border-radius: 1px;
+  animation: confetti-fall 3.2s linear forwards;
+}
+
+.cf-1 { left: 6%; background: hsl(var(--primary)); animation-delay: 0.05s; --cf-dx: 26px; }
+.cf-2 { left: 14%; background: hsl(var(--foreground) / 0.85); animation-delay: 0.3s; --cf-dx: -18px; }
+.cf-3 { left: 22%; background: hsl(var(--primary) / 0.7); animation-delay: 0.12s; --cf-dx: 14px; }
+.cf-4 { left: 30%; background: hsl(var(--destructive) / 0.75); animation-delay: 0.42s; --cf-dx: -26px; }
+.cf-5 { left: 38%; background: hsl(var(--foreground) / 0.7); animation-delay: 0.08s; --cf-dx: 20px; }
+.cf-6 { left: 46%; background: hsl(var(--primary)); animation-delay: 0.5s; --cf-dx: -12px; }
+.cf-7 { left: 54%; background: hsl(var(--primary) / 0.7); animation-delay: 0.2s; --cf-dx: 24px; }
+.cf-8 { left: 62%; background: hsl(var(--foreground) / 0.85); animation-delay: 0.36s; --cf-dx: -20px; }
+.cf-9 { left: 70%; background: hsl(var(--destructive) / 0.7); animation-delay: 0.1s; --cf-dx: 16px; }
+.cf-10 { left: 78%; background: hsl(var(--primary)); animation-delay: 0.46s; --cf-dx: -24px; }
+.cf-11 { left: 86%; background: hsl(var(--foreground) / 0.7); animation-delay: 0.16s; --cf-dx: 18px; }
+.cf-12 { left: 93%; background: hsl(var(--primary) / 0.7); animation-delay: 0.32s; --cf-dx: -14px; }
+
+
+/* 中继握手信号干扰：按钮小幅高频抖动（配合 destructive 描边, 长按顶住干扰完成校准） */
+@keyframes jam-shake-fx {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  20% { transform: translate3d(-2px, 1px, 0); }
+  40% { transform: translate3d(2px, -1px, 0); }
+  60% { transform: translate3d(-1.5px, -1px, 0); }
+  80% { transform: translate3d(1.5px, 1px, 0); }
+}
+
+.jam-shake {
+  animation: jam-shake-fx 0.28s linear infinite;
+}
+
+/* 演练移动靶：三连靶 50% 概率整组漂移——每帧保留 translate(-50%,-50%) 定位基线再叠加游走位移 */
+@keyframes drill-drift-fx {
+  0% { transform: translate(-50%, -50%) translate3d(0, 0, 0); }
+  25% { transform: translate(-50%, -50%) translate3d(34px, -22px, 0); }
+  50% { transform: translate(-50%, -50%) translate3d(-28px, 26px, 0); }
+  75% { transform: translate(-50%, -50%) translate3d(22px, 30px, 0); }
+  100% { transform: translate(-50%, -50%) translate3d(-32px, -26px, 0); }
+}
+
+.drill-drift {
+  animation: drill-drift-fx 2.4s ease-in-out infinite alternate;
+}
+
+/* 演练加速冲刺靶：移动靶的高速变体——周期更短、摆幅更大, 落点更难预判 */
+@keyframes drill-dash-fx {
+  0%, 100% { transform: translate(-50%, -50%) translate3d(0, 0, 0); }
+  20% { transform: translate(-50%, -50%) translate3d(46px, -30px, 0); }
+  40% { transform: translate(-50%, -50%) translate3d(-40px, 34px, 0); }
+  60% { transform: translate(-50%, -50%) translate3d(36px, 40px, 0); }
+  80% { transform: translate(-50%, -50%) translate3d(-44px, -34px, 0); }
+}
+
+.drill-dash {
+  animation: drill-dash-fx 1.1s linear infinite;
+}
+
+/* 救援车钢缆挂接时机条：光标 1.6s 匀速扫过（与 useRover TUG_CYCLE_MS 同步）, 滑进中央绿区时点击才算挂牢 */
+@keyframes tug-sweep-fx {
+  from { left: 0%; }
+  to { left: 100%; }
+}
+
+.tug-sweep {
+  animation: tug-sweep-fx 1.6s linear infinite;
+}
+
+/* 中继天线对准盘：指针 2s 匀速旋转一周（与 AntennaCard CYCLE_MS 判定周期严格一致, 改一处必须同步另一处） */
+@keyframes antenna-spin-fx {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.antenna-spin {
+  animation: antenna-spin-fx 2s linear infinite;
+}
+
+/* 反转干扰局：指针倒扫（与 AntennaCard reverse 判定相位取反严格一致） */
+.antenna-spin-rev {
+  animation-direction: reverse;
+}
+
+/* 双针干扰局：半透明副针非匀速反向扫动——忽快忽慢带顿挫（纯视觉干扰, 判定只认主针） */
+@keyframes antenna-wobble-fx {
+  0% { transform: rotate(360deg); }
+  18% { transform: rotate(262deg); }
+  32% { transform: rotate(250deg); }
+  52% { transform: rotate(146deg); }
+  66% { transform: rotate(128deg); }
+  84% { transform: rotate(36deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.antenna-spin-2 {
+  animation: antenna-wobble-fx 2.6s linear infinite;
+}
+
+/* 天线三段全锁金色庆典：光环一次性外扩淡出（0.7s, 配合 useHome 延迟收卡展示） */
+@keyframes antenna-lock-fx {
+  0% { transform: scale(0.7); opacity: 0.95; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+
+.antenna-lock-burst {
+  animation: antenna-lock-fx 0.7s ease-out forwards;
+}
+
+/* 红色罕见极光全屏幕布：顶部血红天光渐变 + 慢呼吸（destructive token 派生, 装饰层不挡点击） */
+@keyframes aurora-veil-fx {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+.aurora-veil {
+  background: linear-gradient(to bottom, hsl(var(--destructive) / 0.14), hsl(var(--destructive) / 0.05) 32%, transparent 60%);
+  animation: aurora-veil-fx 3.2s ease-in-out infinite;
+}
+
+/* 干扰局噪声波形：一排竖条错峰 scaleY 跳动; 振幅乘 --jam-lvl（HandshakeCard 按长按进度实时压低——进度越满噪声越弱） */
+@keyframes jam-wave-fx {
+  0%, 100% { transform: scaleY(calc(0.25 * var(--jam-lvl, 1))); }
+  50% { transform: scaleY(calc(1 * var(--jam-lvl, 1))); }
+}
+
+.jam-wave-bar {
+  width: 3px;
+  height: 100%;
+  border-radius: 1px;
+  background: hsl(var(--destructive));
+  transform-origin: center;
+  animation: jam-wave-fx 0.5s ease-in-out infinite;
+}
+
+.jam-wave-bar:nth-child(2n) { animation-duration: 0.34s; animation-delay: 0.08s; }
+.jam-wave-bar:nth-child(3n) { animation-duration: 0.62s; animation-delay: 0.16s; }
+.jam-wave-bar:nth-child(4n) { animation-duration: 0.44s; animation-delay: 0.24s; }
+.jam-wave-bar:nth-child(5n) { animation-duration: 0.56s; animation-delay: 0.04s; }
+
+/* ============ 性能档位「省电 SAVER」覆盖段 ============
+   根容器挂 .perf-saver 时关停常驻循环装饰动画（扫光 / 扫描线 / 呼吸辉光 / 噪点抖动），
+   只保留静态视觉（阴影、渐变底色不动）。一次性动画（着陆冲击波 / 成就弹入 / 彩带 / 评级翻转）
+   与状态提示类（countdown-urgent 心跳、phase-node-glow、ignite-armed-glow、警报红晕本体、
+   巡视车玩法反馈 jam/drill/tug/antenna）全部保留, 不在关停范围。 */
+.perf-saver .museum-scanlines,
+.perf-saver .museum-rarity-s,
+.perf-saver .museum-shine,
+.perf-saver .museum-rarity-a:hover,
+.perf-saver .telemetry-scan,
+.perf-saver .boot-bar-shine,
+.perf-saver .comm-wave,
+.perf-saver .link-flow-line,
+.perf-saver .storm-banner,
+.perf-saver .clearing-banner,
+.perf-saver .film-grain,
+.perf-saver .replay-static,
+.perf-saver .replay-roll-bar,
+.perf-saver .replay-clock-glow,
+.perf-saver .grade-sparkle,
+.perf-saver .cinema-breath,
+.perf-saver .aurora-veil {
+  animation: none !important;
+}
+
+/* 警报红晕：去掉呼吸循环但保留静态压迫感（透明度定在中档, 状态可见性不丢） */
+.perf-saver .alarm-vignette,
+.perf-saver .alarm-vignette-caution {
+  animation: none !important;
+  opacity: 0.6;
+}
+
+/* ============ 手机端操作优化（渐进增强段 · 桌面 lg 布局与交互语义不受影响） ============ */
+
+/* 防下拉刷新 / 滚动链回弹：整页禁 overscroll（桌面端同样无副作用） */
+html {
+  overscroll-behavior-y: none;
+}
+
+/* 刘海屏 / 手势条安全区：左右与底部由 body 统一让位（桌面 env() 恒为 0） */
+body {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* 顶栏安全区：sticky 顶栏内层挂 .dsc-safe-top, 在 py-3 基础上追加顶部安全区 */
+.dsc-safe-top {
+  padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
+}
+
+/* 主视口窄屏高度自适应：sm 以下按视口高度伸缩, min-h-96 仍是保底（覆盖同名工具类靠后置顺序） */
+@media (max-width: 639px) {
+  .dsc-viewport-canvas {
+    min-height: 56vh;
+  }
+}
+
+/* hover 依赖的提示在触屏（无 hover 能力）降级为常显 */
+.touch-only-hint {
+  display: none;
+}
+
+@media (hover: none) {
+  .touch-only-hint {
+    display: inline;
+  }
+}
+
+
+/* 阶段迁跃过场（增强 N 扩展）：确认迁跃后的全屏跃迁动画——
+   中心闪光 + 扩散光环 + 径向光迹四散 + 整体淡入淡出; 省动画模式只走快速淡入淡出 */
+@keyframes warp-in-out {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.warp-in-out {
+  animation: warp-in-out 1.55s ease-in-out forwards;
+}
+
+@keyframes warp-in-out-fast {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  65% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.warp-in-out-fast {
+  animation: warp-in-out-fast 0.5s ease-in-out forwards;
+}
+
+@keyframes warp-flash {
+  0% { opacity: 0.7; }
+  100% { opacity: 0; }
+}
+.warp-flash {
+  animation: warp-flash 0.75s ease-out forwards;
+}
+
+@keyframes warp-ring {
+  0% { transform: translate(-50%, -50%) scale(0.15); opacity: 0.9; }
+  100% { transform: translate(-50%, -50%) scale(7); opacity: 0; }
+}
+.warp-ring {
+  animation: warp-ring 1.2s ease-out forwards;
+}
+
+@keyframes warp-streak {
+  0% { transform: scaleX(0); opacity: 0; }
+  25% { opacity: 1; }
+  100% { transform: scaleX(1); opacity: 0; }
+}
+.warp-streak {
+  animation: warp-streak 1.05s ease-out forwards;
+}
+
+/* 迁跃过场屏幕扭曲（增强 N 扩展）：迁跃瞬间整个主场景被"空间拉扯"——
+   skew + 缩放脉冲 + 色相偏移 + 轻模糊, 1.55s 与过场动画同拍; 省动画模式不挂此 class */
+@keyframes warp-scene-distort {
+  0% { transform: none; filter: none; }
+  14% { transform: skewX(2.4deg) scale(1.014); filter: hue-rotate(-14deg) blur(1.4px) contrast(1.08); }
+  34% { transform: skewX(-1.8deg) skewY(0.7deg) scale(0.994); filter: hue-rotate(10deg) blur(0.8px); }
+  56% { transform: skewX(1.1deg) scale(1.008); filter: hue-rotate(-6deg) blur(1.1px) contrast(1.05); }
+  78% { transform: skewX(-0.4deg) scale(1.002); filter: blur(0.4px); }
+  100% { transform: none; filter: none; }
+}
+.warp-scene-distort {
+  animation: warp-scene-distort 1.55s ease-in-out both;
+  will-change: transform, filter;
+}
