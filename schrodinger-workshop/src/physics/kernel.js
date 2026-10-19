@@ -140,6 +140,21 @@
  * e^{-2γt} 衰减；γ<0 为增益。帧级标量衰减数学上精确、与子步数/网格/内核解耦
  * （早期方案把 -iγ 塞进 KDK 的 H，衰减率带 O((γ·dt_sub)²) 误差且与谱耦合，已弃用）。
  *
+ * Bloch 扭曲边界约定（R62 光学晶格）：引擎级 uniform uTwistX（θ = k·a，
+ * lattice 预设专用，每帧上传）改 TPL_EVOLVE 的 S()——x 向越界采样 wrap 到
+ * 对端并乘 e^{∓iθ}，即周期盒上的 Bloch 定理 ψ(x+L)=e^{iθ}ψ(x)：
+ *   ψ_{-1}=e^{−iθ}·ψ_{N−1}（左越界：uv.x<0 ⟹ wrap 右端，相位 −θ）
+ *   ψ_N =e^{+iθ}·ψ_0  （右越界：uv.x>1 ⟹ wrap 左端，相位 +θ）
+ * 两个复分量（u,v）同相旋转（rot4 口径，GLSL 侧内联同款式子）。y 向仍
+ * Dirichlet 归零——晶格沿 x 展开，横向边界不参与能带结构。
+ * 数值性质（与 AB 同级零风险保证）：θ=0 时 uTwistX!=0.0 为假 ⟹ 走原
+ * Dirichlet 路径逐位等价；|e^{iθ}|=1 ⟹ link 拉普拉斯每行模不变
+ * （Gershgorin 谱半径仍 ≤8，E_max 不变）；正反 link 共享同一对端点、
+ * 相位精确反号 ⟹ 厄米 ⟹ 总概率严格守恒。
+ * 注入点仅 TPL_EVOLVE：CN_RHS/CN_SWEEP 的 S() 各自独立、不共享本分支
+ * （lattice 的 Bloch 弛漾走 CPU 复振幅路径，GPU 演化默认 KDK）⟹ CN 与
+ * 其余五模板零回归。
+ *
  * 含时外场约定（AC Stark / 行波驱动）：引擎在 TPL_EVOLVE 内、{{LOCAL_H}} 展开前
  * 对 V 叠加时变项 V_d（uniform uDriveAmp/uDrivePhase/uDriveMode，每帧设置）：
  *   mode 0（均匀 AC Stark）：V_d = A·cos(φ) —— 空间均匀，整体能级周期性移动；
@@ -343,8 +358,19 @@ uniform float uABOn;        // AB 多螺线管开关：0 = 原 5 点 stencil（c
 uniform vec2  uABPos[AB_MAX];   // 各螺线管位置（世界坐标；uABCount 之外不读）
 uniform float uABPhi[AB_MAX];   // 各管磁通 Φ（rad，绕行一周总相位；0 = 该管 link 相位恒 0）
 uniform int   uABCount;     // 实际管数（编译期常量循环 + 动态 break 截断）
+uniform float uTwistX;      // R62 Bloch 扭曲边界相位 θ=k·a（lattice 专用）：0 = 原 Dirichlet 路径（精确等价）
 {{UNIFORMS}}
 vec4 S(vec2 uv){
+  /* R62 Bloch 扭曲边界（文件头约定节）：x 越界 wrap 对端 × e^{∓iθ}（两个复分量
+     同相旋转，与 rot4 逐字同款——内联因 rot/rot4 定义在本函数之后）；
+     y 越界仍 Dirichlet 归零（晶格沿 x）。θ=0 走原路径，逐位等价。 */
+  if(uTwistX != 0.0 && (uv.x < 0.0 || uv.x > 1.0)){
+    if(uv.y < 0.0 || uv.y > 1.0) return vec4(0.0);
+    vec4 w = texture(uPsi, uv + vec2(uv.x < 0.0 ? 1.0 : -1.0, 0.0));
+    float a = uv.x < 0.0 ? -uTwistX : uTwistX;
+    float s = sin(a), co = cos(a);
+    return vec4(w.x*co - w.y*s, w.x*s + w.y*co, w.z*co - w.w*s, w.z*s + w.w*co);
+  }
   if(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0) return vec4(0.0);
   return texture(uPsi,uv);
 }
