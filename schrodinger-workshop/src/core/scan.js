@@ -911,6 +911,7 @@ export const GENERIC_DEFAULTS = {
   measureEvery: 10,      /* 测量间隔（帧） */
   framesMax: 200,        /* 固定测量窗终点（无停止判据；非线性无终态） */
   grid: 256,             /* 扫描网格（2D 内核默认 256） */
+  warmup: 0,             /* 预热帧数：只推进不测量（deph 扫描先建立 fringe 再开 γ_φ） */
 };
 
 /* 基类默认元素 ID（GP/NLS 参数扫描面板；SPEC.ids 可覆写） */
@@ -1077,7 +1078,15 @@ export class GenericScanner {
          不判定——固定测量窗从弛豫完成（基态就绪）起算，序列长度不受影响。 */
       if (this.app.evolve() === false) break;
       this._frames++;
-      if (this._frames % o.measureEvery === 0 || this._frames >= o.framesMax){
+      /* warmup（R69 deph 扫描）：前 warmup 帧只推进不测量——γ_φ=0 先把
+         双缝 fringe 建起来（脉冲几何下屏上条纹是瞬态：直接开噪测的是建立
+         过程而非衰减律）。到达 warmup 当帧触发 onWarmup 钩子（SPEC 在此
+         写入扫描值，如 deph 的 gammaPhi=γ）。warmup=0 时本分支恒跳过
+         （_frames>0 即测量），向后兼容。 */
+      if (o.warmup > 0 && this._frames === o.warmup && this.spec.onWarmup)
+        this.spec.onWarmup(this._x, o, this);
+      if (this._frames > o.warmup &&
+          ((this._frames - o.warmup) % o.measureEvery === 0 || this._frames >= o.warmup + o.framesMax)){
         m = this._measure();
         if (this.spec.onMeasure) this.spec.onMeasure(m, this._frames, this);
         done = this._decide(m);
@@ -1097,8 +1106,9 @@ export class GenericScanner {
   }
 
   _decide(m){
+    /* warmup 记账：固定窗终点 = warmup + framesMax（warmup=0 时退化为原口径）。 */
     return this.spec.decide ? this.spec.decide(m, this._frames, this)
-                            : this._frames >= this.opts.framesMax;
+                            : this._frames >= this.opts.warmup + this.opts.framesMax;
   }
 
   _record(m){
@@ -2048,7 +2058,353 @@ export const DW_SPEC = {
   },
 };
 
-/* ---------- 六个具体扫描器（薄子类：仅绑定各自 SPEC） ---------- */
+/* ---------- R69 退相干对比度扫描（γ_φ → 双缝条纹对比度 C(t)） ----------
+   物理（与 app.js #dephSec 面板 hint 同源）：
+   纯退相位 = 位置基白噪声（帧末逐 texel 乘 e^{iφ}，φ~N(0,γ_φ·dt)）。两个
+   texel 的相位差方差 2γ_φ·t ⟹ 互相干 ⟨e^{iΔφ}⟩=e^{−γ_φ·t}；双缝条纹对比度
+   （van Cittert–Zernike：屏上对比度 = 两缝区的互相干）以 T_φ=1/γ_φ 指数衰减
+   到 0 ⟹ 路径信息泄漏到环境 ⟹ 经典极限。与 T₁ 耗散（标量衰减，改 |ψ|²）不同，
+   本扫描中密度图样原样保留、只有相干性衰减。
+
+   测量口径（自标定一阶谐波）：
+   屏窗 x∈[sx0,sx1)（4 列）平均密度剖面 prof[y]（y∈[0,256)）；DFT 扫描
+   m∈[mLo,mHi]（纹距 5.3–32 texel，避开包络谱 m≈4/单缝衍射 m≈6.5 与 DC）。
+   γ_φ=0 参考点的全局最强谐波 m*=k* 自标定（所有 γ 点共享同一 k*——退相只
+   改对比度不改纹距）。对比度 C = 2|Â(k*)|/Â(0)（包络谱修正因子对各 γ 点
+   相同 ⟹ 比值干净；绝对值含包络偏置，属自标定量）。
+
+   衰减律验证：各 γ 点与参考点在相同帧序号对齐（同步长/同步测量间隔），
+   r(t)=C_γ(t)/C_0(t)，在 C_0(t)>cThresh（条纹已建立）窗口对 ln r ~ t 做
+   线性回归，斜率应等于 −γ_φ（报告斜率/期望/R²/拟合点数）。
+
+   扫描几何（slits 预设墙 x=112..124、缝 y 80–104/136–160、D=56、墙高
+   V=0.05；8 位量化 v0q≈0.051）：自定入射 x₀=0.22、y₀=0.469、kx=0.35
+   （v≈0.42 texel/帧）、σ=24；E=½k²≈0.061>V ⟹ 弱振幅/相位调制仍生近满
+   可见度条纹。framesMax=480：波前到屏窗 ~271–327 帧（两种速度口径包住），
+   右边界反射返回屏窗 >480 帧（不污染）。 */
+/* R69 v3 几何与方案（pot69.mjs v3 / diag5-14 实证，CPU 与 app 逐位同构）：
+   自绘墙 x∈[120,132)（V=0.5 不透明）+ 缝 w=6、D=48（y∈[101,107)/[149,155)）
+   + 屏 x∈[216,220)（L=90 远场化）+ 入射 σ=24 @ x₀=48/256、kx=0.7。
+   warmup=230：γ_φ=0 先把 fringe 建到峰台（浏览器 KDK 路径 C₀≈0.69）再开噪
+   ——脉冲几何下屏上条纹是瞬态（坍塌是可见度坍塌非啁啾），直接开噪测的是
+   建立过程。**两实现 warmup 不同的根因**（cdp69e 包络诊断 + cdp69f 群速实测）：
+   KDK 五点 Laplacian 数值色散 v_g=sin(k)/m=0.644 vs CPU SSF 谱方法精确
+   k/m=0.7 ⟹ 浏览器 fringe 峰值 @ f~228，CPU 峰值 @ f~207，差 ~21 帧
+   （= 168px 行程 ×8%）。warmup 按各实现峰值帧标定，测量窗落在「峰值→坍塌」。
+   framesMax=40 + measureEvery=2：20 个测量点。
+   斜率拟合窗 fitT0/fitT1=2.4/28.8（局部时刻，与 CPU 验证口径一致）。 */
+const DEPHSCAN_DEFAULTS = {
+  preset: 'slits', paramKey: 'gammaPhi',
+  xs: [0, 0.002, 0.004, 0.006, 0.008, 0.012],
+  x0: 48/256, y0: 0.5, kx: 0.7, sigma: 24,
+  sx0: 216, sx1: 220,                /* 屏窗（texel，4 列平均） */
+  /* warmup=230：浏览器 KDK 路径的 fringe 峰值标定（实测 C₀ 峰 0.686 @ f~228、
+     F₀ 峰 @ f~234，cdp69e 包络诊断）。与 pot69 CPU 镜像（SSF 谱方法，峰
+     @ f~207 ⟹ warmup 190）差 ~25 帧的根因是**积分器数值色散**：KDK 五点
+     Laplacian 的群速 v_g=sin(k)/m=0.644（kx=0.7）比谱方法精确值 k/m=0.7
+     慢 8% ⟹ 脉冲到达屏幕晚 ~21 帧（168px 行程）。warmup 必须按各实现的
+     峰值帧分别标定——测量窗设计意图是「峰值→坍塌起始」段（平台+坍塌），
+     落在建辉度段会让 C₀(t) 仍在上升、F₀ ×3.6 增长，衰减信号被瞬态淹没
+     （cdp69 首跑 B2b 斜率 38% 偏离的根因，非判据问题）。 */
+  warmup: 230, framesMax: 40, measureEvery: 2, boost: 4, grid: 256,
+  mLo: 6, mHi: 24,                   /* DFT 谐波扫描窗（纹距 ≈16.8 texel ⟹ k*≈14） */
+  fitT0: 2.4, fitT1: 28.8,           /* 斜率拟合窗（测量窗局部时刻） */
+  cThresh: 0.2,                      /* 条纹建立门限（参考点 C₀） */
+};
+
+/* 屏剖面 prof[y]（屏窗 4 列平均密度）→ DFT 幅度谱 [{m,amp},...]（含 m=0）。
+   返回按 m 升序；amp=hypot(Re,Im)。 */
+export function dephSpectrum(prof, g, mLo, mHi){
+  const out = [{ m: 0, amp: 0 }];
+  let re0 = 0;
+  for (let y = 0; y < g; y++) re0 += prof[y];
+  out[0].amp = Math.abs(re0);
+  for (let m = mLo; m <= mHi; m++){
+    let re = 0, im = 0;
+    const w = 2*Math.PI*m/g;
+    for (let y = 0; y < g; y++){
+      const a = w*y;
+      re += prof[y]*Math.cos(a);
+      im -= prof[y]*Math.sin(a);
+    }
+    out.push({ m, amp: Math.hypot(re, im) });
+  }
+  return out;
+}
+
+/* 一元线性回归（ln r ~ t）：返回斜率/截距/R²。n<2 或 t 无跨度 ⟹ 全 NaN。 */
+export function dephFit(ts, vs){
+  const n = ts.length;
+  if (n < 2) return { slope: NaN, intercept: NaN, r2: NaN, n };
+  const tm = ts.reduce((a, b) => a + b, 0)/n;
+  const vm = vs.reduce((a, b) => a + b, 0)/n;
+  let sxx = 0, sxy = 0, syy = 0;
+  for (let i = 0; i < n; i++){
+    const dx = ts[i] - tm, dy = vs[i] - vm;
+    sxx += dx*dx; sxy += dx*dy; syy += dy*dy;
+  }
+  if (!(sxx > 0)) return { slope: NaN, intercept: NaN, r2: NaN, n };
+  const slope = sxy/sxx;
+  const intercept = vm - slope*tm;
+  const r2 = syy > 0 ? (sxy*sxy)/(sxx*syy) : NaN;
+  return { slope, intercept, r2, n };
+}
+
+const DEPH_SPEC = {
+  id: 'deph', label: '退相干对比度扫描',
+  defaults: DEPHSCAN_DEFAULTS,
+  ids: { btn: '#btnDephScan', btnStop: '#btnDephStop', stat: '#dephStat', canvas: '#dephCanvas' },
+  gate(app){
+    if (app.kernelId !== 'schrodinger') return '退相干扫描仅薛定谔内核';
+    return null;
+  },
+  prepare(app, o, s){
+    /* 冻结并清零污染源：T₁ 耗散 γ、均匀 B（bOrb）、行波驱动（driveAmp）——
+       扫描要的是纯 T₂ 通道；teardown 对称恢复（syncControls 推回滑块）。 */
+    s._savedGamma = app.state.gamma;   app.state.gamma = 0;
+    s._savedBOrb = app.state.bOrb;     app.state.bOrb = 0;
+    s._savedDrive = app.state.driveAmp; app.state.driveAmp = 0;
+    s._savedGammaPhi = app.state.gammaPhi;   /* v3：扫描值逐点改写，teardown 恢复 */
+    /* 冻结 σ（每点 initWave 用）；teardown 恢复 */
+    s._savedSigma = app.state.sigma;
+    app.state.sigma = o.sigma;
+    if (app.state.grid !== o.grid){
+      app.state.grid = o.grid;
+      const sel = app.q('#selGrid'); if (sel) sel.value = String(o.grid);
+      app.allocGrid(o.grid);
+    }
+  },
+  teardown(app, s){
+    app.state.gamma = s._savedGamma;
+    app.state.bOrb = s._savedBOrb;
+    app.state.driveAmp = s._savedDrive;
+    app.state.gammaPhi = s._savedGammaPhi;
+    app.state.sigma = s._savedSigma;
+  },
+  beginPoint(app, x, o, s){
+    /* v3 几何：自绘双缝墙（x∈[120,132) V=0.5 不透明 + 缝 w=6、D=48，
+       y∈[101,107)/[149,155)）——不用 slits 预设（墙薄 V 低、L 短深近场
+       啁啾，v1/v2 实测失败）。势用量化口径 vGray(0.5)=192 ⟹ shader
+       V=(192−128)/127=0.5039（CPU 镜像同值）。initWave 复位 simTime=0
+       ⟹ 各 γ 点帧末 dephase 的 uSeed=simTime 序列逐点相同（共同随机数，
+       消扫描采样误差）。扫描值在 warmup 末（onWarmup）才写入，此前 γ_φ=0。 */
+    const g = app.state.grid;
+    app.vctx.fillStyle = app.vGray(0); app.vctx.fillRect(0, 0, g, g);
+    app.vctx.fillStyle = app.vGray(0.5); app.vctx.fillRect(120, 0, 12, g);
+    app.vctx.fillStyle = app.vGray(0);
+    app.vctx.fillRect(120, 101, 12, 6);
+    app.vctx.fillRect(120, 149, 12, 6);
+    app.uploadV();
+    app.state[o.paramKey] = 0;
+    app.initWave(o.x0, o.y0, o.kx, 0);
+    s._traj = [];
+    if (s._i === 0){ s._kstar = null; s._cref = null; }   /* 重启扫描重新标定 */
+  },
+  onWarmup(x, o, s){
+    /* warmup 结束当帧：写入扫描值（γ_φ=γ），并记录 warmup 终止时刻——
+       测量序列用局部时刻 t = simTime − warmupT（与 CPU 验证口径一致，
+       拟合窗 fitT0/fitT1 才可跨实现移植）。 */
+    s._warmupT = s.app.state.simTime;
+    s.app.state[o.paramKey] = x;
+  },
+  measure(app, o, frames, s){
+    const { buf, ch, g } = app._readPsi();
+    const prof = new Float64Array(g);
+    for (let y = 0; y < g; y++){
+      let acc = 0;
+      for (let x = o.sx0; x < o.sx1; x++){
+        const i = (y*g + x)*ch;
+        acc += buf[i]*buf[i] + buf[i+1]*buf[i+1];
+      }
+      prof[y] = acc/(o.sx1 - o.sx0);
+    }
+    const amp = dephSpectrum(prof, g, o.mLo, o.mHi);
+    const p = { t: app.state.simTime - (s._warmupT || 0), frames, amp, C: NaN, F: NaN };
+    /* k* 已标定（非首点或首点已记录）⟹ 即时算 C/F；首点在 record 时
+       回溯计算（k* 要等整点跑完取全局最强对比度谐波）。 */
+    if (s._kstar != null){
+      const a0 = amp.find(a => a.m === 0).amp;
+      const ak = amp.find(a => a.m === s._kstar).amp;
+      p.C = a0 > 0 ? 2*ak/a0 : 0;
+      p.F = ak;                      /* raw Â(k*)：积分抑制证据的权重/分子 */
+    }
+    s._traj.push(p);
+    return p;
+  },
+  decide(m, frames, s){ return frames >= s.opts.warmup + s.opts.framesMax; },
+  record(m, s){
+    const ser = s._traj;
+    if (s._i === 0){
+      /* 参考点（γ=0）：max-C 标定——各谐波历史最佳对比度（抗包络残余
+         污染；max-|Â| 标定会被脉冲越屏后的包络残余误导，diag6 实证）。 */
+      let bestM = 0, bestC = -1;
+      for (let m = s.opts.mLo; m <= s.opts.mHi; m++){
+        let mx = -1;
+        for (const p of ser){
+          const a0 = p.amp.find(a => a.m === 0).amp;
+          const ak = p.amp.find(a => a.m === m).amp;
+          const c = a0 > 0 ? 2*ak/a0 : 0;
+          if (c > mx) mx = c;
+        }
+        if (mx > bestC){ bestC = mx; bestM = m; }
+      }
+      s._kstar = bestM;
+      for (const p of ser){
+        const a0 = p.amp.find(a => a.m === 0).amp;
+        const ak = p.amp.find(a => a.m === s._kstar).amp;
+        p.C = a0 > 0 ? 2*ak/a0 : 0;
+        p.F = ak;
+      }
+      s._cref = ser.map(p => ({ t: p.t, C: p.C, F: p.F }));
+    }
+    s.results.push({
+      x: s._x, gamma: s._x, kstar: s._kstar,
+      series: ser.map(p => ({ t: p.t, C: p.C, F: p.F })),
+    });
+  },
+  summarize(results, app, o){
+    /* 衰减律三重证据（与 pot69.mjs v3 B2 同构）：
+       a 积分抑制（无拟合、抗瞬态抖动）：I_γ/I₀ vs 理论 Σe^{−γt}Â₀(t)/ΣÂ₀(t)
+       b 斜率一致性：ln(C_γ/C₀) ~ t，窗 [fitT0,fitT1]，±25%（端到端为一致性
+         检验；精确指数律由通道级 A3 集合平均验证承担）
+       c 趋势单调 + γ 排序 */
+    const ref = results[0];
+    const fits = [], integs = [];
+    let worst = [];
+    if (ref && ref.x === 0){
+      for (const r of results){
+        if (r === ref) continue;
+        /* a 积分抑制 */
+        const wSum = ref.series.reduce((a, p) => a + p.F, 0);
+        const meas = r.series.reduce((a, p) => a + p.F, 0)/wSum;
+        const theo = ref.series.reduce((a, p) => a + p.F*Math.exp(-r.gamma*p.t), 0)/wSum;
+        const dev = Math.abs(meas - theo)/theo;
+        integs.push({ gamma: r.gamma, meas, theo, dev });
+        if (dev > 0.15) worst.push('γ=' + r.gamma + ' 积分偏差 ' + (dev*100).toFixed(0) + '%');
+        /* b 斜率 */
+        const ts = [], vs = [];
+        for (let i = 0; i < Math.min(r.series.length, ref.series.length); i++){
+          const t = r.series[i].t;
+          if (t < o.fitT0 || t > o.fitT1) continue;
+          const c0 = ref.series[i].C, cg = r.series[i].C;
+          if (c0 > 0 && cg > 0){ ts.push(t); vs.push(Math.log(cg/c0)); }
+        }
+        const f = dephFit(ts, vs);
+        fits.push({ gamma: r.gamma, slope: f.slope, expect: -r.gamma, r2: f.r2, nFit: f.n });
+        if (!isFinite(f.slope) || Math.abs(f.slope + r.gamma) > 0.25*r.gamma || f.r2 < 0.25)
+          worst.push('γ=' + r.gamma + ' 斜率偏离 >25%');
+      }
+      /* c 趋势 + 排序 */
+      const idx = ref.series.map((p, i) => i).filter(i => ref.series[i].t >= o.fitT0 && ref.series[i].t <= o.fitT1);
+      for (const r of results){
+        if (r === ref) continue;
+        const first = idx.slice(0, 5).map(i => r.series[i].C).reduce((a, b) => a + b, 0)/5;
+        const last = idx.slice(-5).map(i => r.series[i].C).reduce((a, b) => a + b, 0)/5;
+        if (!(last < first)) worst.push('γ=' + r.gamma + ' 窗内趋势非下降');
+      }
+      const endVals = results.map(r => r.series[Math.min(idx[idx.length-1], r.series.length-1)].C);
+      for (let i = 1; i < endVals.length; i++)
+        if (!(endVals[i] <= endVals[i-1] + 0.01)) worst.push('末端对比度未按 γ 排序');
+    }
+    return {
+      nPoints: results.length,
+      kstar: ref ? ref.kstar : NaN,
+      maxC0: ref ? Math.max(...ref.series.map(p => p.C)) : NaN,
+      fits, integs,
+      text: fits.length
+        ? ('k*=' + (ref ? ref.kstar : '?') + ' · C₀max=' + (ref ? Math.max(...ref.series.map(p => p.C)).toFixed(3) : '?') +
+           ' · ' + fits.length + ' 个 γ 点衰减律检验' +
+           (worst.length ? ' · ' + worst.length + ' 项未过（' + worst[0] + (worst.length > 1 ? ' 等' : '') + '）'
+                         : ' · 全部符合 −γ_φ（±25%）'))
+        : '无 γ=0 参考点（xs[0]≠0）——仅记录原始 C(t) 曲线',
+    };
+  },
+  statusText(final, s){
+    if (final){
+      const sm = s.summary;
+      return sm ? ('完成 ' + sm.nPoints + ' 点 · ' + sm.text) : '完成';
+    }
+    const last = s._traj && s._traj.length ? s._traj[s._traj.length - 1] : null;
+    const cTxt = last && isFinite(last.C) ? last.C.toFixed(3) : '—';
+    const w = s.opts.warmup || 0;
+    const prog = s._frames <= w
+      ? '预热 ' + s._frames + '/' + w + ' 帧'
+      : '测量 ' + (s._frames - w) + '/' + s.opts.framesMax + ' 帧';
+    return (s._i + 1) + '/' + s.xs.length + ' · γ_φ=' + s._x +
+      ' · C=' + cTxt + ' · ' + prog;
+  },
+  startToast(s){
+    const w = s.opts.warmup || 0;
+    return '退相干扫描 · ' + s.xs.length + ' 个 γ_φ 点 · 双缝条纹对比度 C(t) · ' +
+      (w > 0 ? w + ' 帧预热 + ' + s.opts.framesMax + ' 帧测量/点' : s.opts.framesMax + ' 帧/点');
+  },
+  finishToast(s){ return s.summary ? s.summary.text : '退相干扫描完成'; },
+  plot(cv, results, app, s){
+    const x = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    x.clearRect(0, 0, W, H);
+    x.fillStyle = 'rgba(4,8,16,.55)'; x.fillRect(0, 0, W, H);
+    if (!results.length) return;
+    const L = 42, T = 14, Bm = 20, HP = H - T - Bm;
+    const ref = results[0];
+    let tMax = 0;
+    for (const r of results) for (const p of r.series) if (p.t > tMax) tMax = p.t;
+    if (!(tMax > 0)) tMax = 1;
+    const X = t => L + t/tMax*(W - L - 10);
+    const Y = v => T + (1 - v/1.05)*HP;
+    x.font = '9px ui-monospace,monospace';
+    x.strokeStyle = 'rgba(120,160,220,.14)'; x.lineWidth = 1;
+    for (const v of [0, 0.25, 0.5, 0.75, 1]){
+      const yy = Y(v);
+      x.beginPath(); x.moveTo(L, yy); x.lineTo(W - 10, yy); x.stroke();
+      x.fillStyle = '#9aa7bd'; x.textAlign = 'right'; x.fillText(v.toFixed(2), L - 3, yy + 3);
+    }
+    const pal = ['#67e8f9', '#fbbf24', '#f87171', '#a78bfa', '#34d399', '#fb923c', '#e879f9'];
+    /* 参考 C₀(t) 作浅灰底图（脉冲几何下条纹自身在测量窗内坍塌——比值图将其归一化掉） */
+    if (ref){
+      x.strokeStyle = 'rgba(154,167,189,.35)'; x.lineWidth = 0.8; x.setLineDash([2, 4]);
+      x.beginPath();
+      ref.series.forEach((p, j) => { const px = X(p.t), py = Y(Math.min(1.05, p.C)); if (j === 0) x.moveTo(px, py); else x.lineTo(px, py); });
+      x.stroke(); x.setLineDash([]);
+    }
+    results.forEach((r, i) => {
+      if (i === 0 || !ref || ref.x !== 0) return;
+      const col = pal[(i - 1) % pal.length];
+      /* 实测 R(t)=C_γ(t)/C₀(t)（实线；C₀ 过小的点跳过，避免分母噪声放大） */
+      x.strokeStyle = col; x.lineWidth = 1.4;
+      x.beginPath();
+      let started = false;
+      ref.series.forEach((p, j) => {
+        if (p.C < 0.02 || !r.series[j]) return;
+        const rr = r.series[j].C/p.C;
+        const px = X(p.t), py = Y(Math.min(1.05, Math.max(0, rr)));
+        if (!started){ x.moveTo(px, py); started = true; } else x.lineTo(px, py);
+      });
+      x.stroke();
+      /* 理论 e^{−γ_φ·t}（虚线） */
+      x.strokeStyle = col; x.lineWidth = 0.8; x.setLineDash([3, 3]);
+      x.beginPath();
+      ref.series.forEach((p, j) => {
+        const cc = Math.exp(-r.gamma*p.t);
+        const px = X(p.t), py = Y(cc);
+        if (j === 0) x.moveTo(px, py); else x.lineTo(px, py);
+      });
+      x.stroke(); x.setLineDash([]);
+      /* 右端 γ 标注 */
+      const lp = r.series[r.series.length - 1];
+      if (lp){
+        x.fillStyle = col; x.textAlign = 'left';
+        x.fillText('γ=' + r.gamma, Math.min(W - 34, X(lp.t) + 2), Y(Math.exp(-r.gamma*lp.t)) - 2);
+      }
+    });
+    x.fillStyle = '#9aa7bd'; x.textAlign = 'left';
+    x.fillText('对比度衰减比 R(t)=C_γ(t)/C₀(t)（实线=实测，虚线=理论 e^(−γ_φ·t)，灰=C₀(t) 参考）', L, 10);
+    x.textAlign = 'center';
+    x.fillText('t（测量窗局部时刻）', L + (W - L - 10)/2, H - 5);
+  },
+};
+
+/* ---------- 七个具体扫描器（薄子类：仅绑定各自 SPEC） ---------- */
 export class TransmissionScanner extends GenericScanner {
   constructor(app){ super(app, SCAN_SPEC); }
 }
@@ -2072,4 +2428,7 @@ export class LandauScanner extends GenericScanner {
 }
 export class DwScanner extends GenericScanner {
   constructor(app){ super(app, DW_SPEC); }
+}
+export class DephaseScanner extends GenericScanner {
+  constructor(app){ super(app, DEPH_SPEC); }
 }

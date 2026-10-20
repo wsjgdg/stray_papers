@@ -1112,6 +1112,53 @@ void main(){
   o = texture(uPsi, vUv) * uScale;
 }`;
 
+/* ---------- R69 纯退相位（T₂）：逐 texel 随机相位 pass ----------
+   位置基下的纯退相位（pure dephasing）Lindblad 通道：每帧每个 texel 的复振幅
+   乘一个高斯随机相位 e^{iφ}，φ~N(0,σ²)、σ²=γ_φ·dt（帧级）。只旋转相位、
+   **不动 |ψ|²**（与 R25/R58 的 T₁ 式标量衰减 e^{−γ·dt} 本质不同：那个改密度、
+   这个只毁相干）。
+   物理：两个 texel 的相位各自独立随机游走 ⟹ 相位差方差 2γ_φ·t ⟹ 互相干
+   ⟨e^{iΔφ}⟩=e^{−γ_φ·t}——双缝条纹对比度（= 两缝区的互相干，van Cittert–
+   Zernike）以时间常数 T_φ=1/γ_φ 指数衰减到 0（经典极限：路径可区分 ⟹ 无干涉）。
+   单位根保持（R63 教训）：GPU 的 sin/cos 非严格正交（~1e-6）⟹ 与 rot4 同款
+   inversesqrt 归一化，否则 |ψ|² 每帧丢 ~1e-7、600 帧随机游走 ~2e-6 会污染
+   「|ψ|² 逐点不变」的验证锚点。
+   随机数：GLSL ES 3.00 整数位运算（lowbias32 哈希）+ Box–Muller；种子
+   uSeed 每帧变（app 传 simTime——每个 evolve() 调用 +dt；扫描时 loadPreset
+   复位 simTime ⟹ 各扫描点共享同一噪声实现，共同随机数降方差）。
+   门控：仅 2D 薛定谔内核（pairs=1：RG32F 只有 (re,im) 两通道，另两通道恒 0、
+   旋转无副作用；pairs=2 旋量的独立退相位语义未定义，app.js 门控保证不进）。
+   γ_φ=0 时 app.js 跳过本 pass——厄米路径零改动（与 TPL_SCALE 同纪律）。 */
+const TPL_DEPHASE = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uPsi;
+uniform float uSigma;    /* 每帧相位标准差 σ = √(γ_φ·dt) */
+uniform float uSeed;     /* 每帧种子（simTime） */
+uniform vec2 uTexel;     /* 1/grid：texel 索引 = uv/uTexel */
+/* lowbias32（Chris Wellons 整数哈希；GLSL ES 3.00 支持 uint 位运算） */
+uint hashU(uint x){
+  x ^= x >> 16; x *= 0x7feb352dU;
+  x ^= x >> 15; x *= 0x846ca68bU;
+  x ^= x >> 16;
+  return x;
+}
+void main(){
+  vec4 c = texture(uPsi, vUv);
+  ivec2 ij = ivec2(vUv / uTexel);
+  uint h = hashU((uint(ij.x) << 16) ^ uint(ij.y) ^ (uint(uSeed) * 0x9e3779b9U));
+  /* 取高 24 位转 float（uint→float 直接转会丢低 8 位精度；+0.5 防 log(0)） */
+  float u1 = (float(h >> 8) + 0.5) * (1.0/16777216.0);
+  float u2 = (float(hashU(h ^ 0x5bf03635U) >> 8) + 0.5) * (1.0/16777216.0);
+  /* Box–Muller：N(0,1) */
+  float z = sqrt(-2.0*log(u1)) * cos(6.28318530718*u2);
+  float phi = uSigma * z;
+  float s = sin(phi), co = cos(phi);
+  float n = inversesqrt(max(1e-30, s*s + co*co));   /* 严格正交化（保 |ψ|²，R63 同款） */
+  s *= n; co *= n;
+  o = vec4(c.x*co - c.y*s, c.x*s + c.y*co, c.z*co - c.w*s, c.z*s + c.w*co);
+}`;
+
 /* ---------- 3D 耗散缩放（R58）：与 2D TPL_SCALE 同义，sampler3D + 逐层 draw ----------
    开放系统的帧级标量衰减 e^{-γ·dt}：iψ_t=Hψ+γ 损失项的解为密度 e^{-2γt} 衰减，
    γ<0 为增益。选帧级标量乘法的理由（与 2D 同一论证）：数学精确、与子步数/
@@ -1829,6 +1876,10 @@ export function buildShaders(kernel){
     }),
     reduce: fill(TPL_REDUCE, { ...need, ...opt, UNIFORMS: uni, PMEANX: pm.pmeanX, PMEANY: pm.pmeanY }),
     scale: TPL_SCALE,
+    /* R69 纯退相位（T₂）逐 texel 随机相位 pass（γ_φ≠0 时帧末跑）：位置基白噪声，
+       无 {{}} token，直接源码。与 scale（T₁ 耗散，改变 |ψ|²）本质不同——
+       dephase 只乘单位根 e^{iφ}，|ψ|² 逐点严格不变。 */
+    dephase: TPL_DEPHASE,
     /* R61 概率流：jField（ψ → RG32F J 场）+ jRed（通量/散度归约 MRT）+
        bohmStep（64 粒子制导速度步进）。token 唯一性由 fill() 守卫保证。 */
     jField: fill(TPL_JFIELD, { UNIFORMS: uni, CURRENT_X: cur.jx, CURRENT_Y: cur.jy }),
@@ -1894,4 +1945,4 @@ export function buildShaders(kernel){
 }
 
 /* 导出模板仅供测试/文档引用（生产路径经 buildShaders 消费） */
-export const TEMPLATES = { TPL_EVOLVE, TPL_EVOLVE3D, TPL_CN_RHS3D, TPL_CN_SWEEP3D, TPL_DISPLAY3D, TPL_REDUCE3D, TPL_SCALE3D, SNIP_HSV, TPL_CN_RHS, TPL_CN_SWEEP, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, TPL_LAP_BLOCK, TPL_LAP3D_BLOCK, DEFAULT_PIXEL_COLOR, DEFAULT_PMEAN, TPL_JFIELD, TPL_JRED, TPL_BOHM_STEP, TPL_JFIELD3, TPL_JRED3 };
+export const TEMPLATES = { TPL_EVOLVE, TPL_EVOLVE3D, TPL_CN_RHS3D, TPL_CN_SWEEP3D, TPL_DISPLAY3D, TPL_REDUCE3D, TPL_SCALE3D, TPL_DEPHASE, SNIP_HSV, TPL_CN_RHS, TPL_CN_SWEEP, TPL_DISPLAY, TPL_REDUCE, TPL_SCALE, TPL_LAP_BLOCK, TPL_LAP3D_BLOCK, DEFAULT_PIXEL_COLOR, DEFAULT_PMEAN, TPL_JFIELD, TPL_JRED, TPL_BOHM_STEP, TPL_JFIELD3, TPL_JRED3 };

@@ -19,6 +19,7 @@ import { SlitScanner } from './scan.js';
 import { GpScanner, NlsScanner } from './scan.js';
 import { BlochScanner } from './scan.js';
 import { LandauScanner, DwScanner, fieldMoments2 } from './scan.js';
+import { DephaseScanner } from './scan.js';
 import { bandMask, bandProb, projectBand, normalizeBuf, maxResidual, bernoulli, densityAt } from '../physics/measure.js';
 
 /* ---------- R52：GP 基态渐进弛豫的每帧步数预算 ----------
@@ -151,6 +152,12 @@ export class QuantumField {
          总帧数。面板 #measSec 仅薛定谔内核显示（测量公理与内核无关，但非酉
          通道目前只接到 2D 标量路径）。 */
       measXc: 0.25, measW: 0.249, measEvery: 30, measNF: 600,
+      /* R69 退相干 T₂（纯退相位）：gammaPhi = γ_φ（位置基纯退相位速率）。
+         每帧逐 texel 随机相位 e^{iφ}（φ~N(0,γ_φ·dt)）：不动 |ψ|²、只毁相干
+         ⟹ 条纹对比度以 T_φ=1/γ_φ 指数衰减。与 gamma（T₁ 式振幅衰减，改密度）
+         是两个独立通道、可同时开。面板 #dephSec 仅薛定谔内核显示（pass 只接
+         2D 标量路径；γ_φ=0 跳过该 pass，厄米路径零改动）。 */
+      gammaPhi: 0,
       /* R66 暗孤子：darkV = 速度分数 v/c（|v/c|<1 才是亚声速暗孤子）。 */
       darkV: 0.4,
       ...this.kernel.defaults(),
@@ -189,6 +196,9 @@ export class QuantumField {
     this.scannerLandau = new LandauScanner(this);
     /* R65 双势阱扫描（g 扫描 → z_min/自囚禁阈值）；仅 GP 内核 + dw 预设 */
     this.scannerDw = new DwScanner(this);
+    /* R69 退相干对比度扫描（γ_φ 扫描 → 双缝条纹对比度 C(t) 衰减曲线族）；
+       仅薛定谔内核（dephSec 同款门控，pass 走 2D psiA/psiB 目标） */
+    this.scannerDeph = new DephaseScanner(this);
     this._onError = e => {
       const d = this.q('#diag');
       if (d) d.textContent = 'ERR ' + e.message;
@@ -427,6 +437,18 @@ export class QuantumField {
     <div class="row"><label>状态</label><span id="measStat">未测量</span></div>
     <canvas id="measCanvas" width="420" height="180"></canvas>
     <div class="hint" style="margin-top:4px"><b>投影测量</b>是量子力学唯一非酉的公理操作：对「粒子是否在监视带 S 内」做一次理想位置测量，测得概率 p=⟨ψ|Π_S|ψ⟩=Σ_S|ψ|²，随后态<b>坍缩</b>为 Π_Sψ/√p（命中）或 (1−Π_S)ψ/√(1−p)（未命中）并重新归一化——画面上能看到波包突然变小（单次测量按钮），统计上重复同样的测量必然得到同一结果（幂等验证：复测确定性=1.000000、残差≤1e-6）。<b>量子芝诺</b>：「跑芝诺序列」自动布置方盒 + 左半弹道波包（v=0.5px/帧，384 帧到右墙），每 N 帧问一次「还在左半吗」——问得越勤，漏到右半越慢（CPU 独立模拟：频率 ×10 逃逸概率降 7.8×，实测曲线画在下方，灰线为不投影对照）。<b>口径说明（重要）</b>：芝诺序列用<b>选择性演化</b>（命中才投影，未命中分支丢弃 = 只追踪「从未逃逸」的轨迹）；「单次测量」按钮是<b>完整 von Neumann</b>（未命中也坍缩到带外）。为什么序列不能用完整语义：方盒两端是墙，未命中一次就把粒子放到对面且后续测量持续确认它在对面——CPU 实测末态呈 0/1 双峰（std≈0.5），是公理操作在该几何下的真实后果，不是求解器误差。<b>哪条路测量</b>：对「粒子在上半平面吗」做一次完整 von Neumann 测量（p≈0.5，与单次测量同一套公理操作，只是监视带取 y 向中线）。GPU 三种投影时机实测：投影<b>瞬间</b>密度完全约束在命中半区（对半概率=0、P=1、质心从 0.50 跳进上半），300 步后整场质心稳定在上缝附近（0.50→0.37）——路径信息的获得是真实的；但<b>条纹并不消失</b>（谐波降幅 ≤1.2×）：透射前投影会被自由演化重新跨中线衍射抵消（300 步后下半概率从 0 回流到 0.19），透射后投影则保留已形成的干涉（双束被中线切割后幅值对称化，谐波反升）。根因：半平面要分离两束需要缝距大于衍射束宽（slits 缝距 56px vs 束宽 ~40px）——这是公理操作在该几何下的真实后果，本面板不承诺做不到的「干涉消除」。<b>物理限制</b>：投影是理想化的公理操作（无限快的测量），真实探测器有有限时间分辨率与不完全量子效率；每次测量会因 float32 纹理往返引入 ~1e-7 舍入（幂等验证即量化这条）。</div>
+  </div>
+  <div class="sec" id="dephSec">
+    <h3>退相干 T₂（纯退相位）</h3>
+    <div class="row"><label>退相干速率 γ_φ</label><input type="range" id="rGammaPhi" min="0" max="0.01" step="0.0005" value="0"><output id="oGammaPhi">0.0000</output></div>
+    <div class="row"><label>相干时间 T_φ</label><span id="dephT2">∞（γ_φ=0 无退相）</span></div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnDephScan">跑对比度扫描</button>
+      <button id="btnDephStop" disabled>中止</button>
+    </div>
+    <div class="row"><label>状态</label><span id="dephStat">未扫描</span></div>
+    <canvas id="dephCanvas" width="420" height="180"></canvas>
+    <div class="hint" style="margin-top:4px"><b>纯退相位（T₂）</b>是「测量 ⟹ 退相干」的连续版本：与 R68 的单次投影（一次公理操作）不同，这里每个演化帧给每个格点乘一个高斯随机相位 e^{iφ}（φ~N(0,γ_φ·dt)，白噪声、逐 texel 独立）。它<b>只破坏相位关联、完全不动 |ψ|²</b>——画面上亮度图样（概率密度）原样保留，但色相（相位）逐渐起噪、双缝条纹对比度以时间常数 T_φ=1/γ_φ 指数衰减到 0：路径信息泄漏到环境 ⟹ 经典极限（可区分路径则无干涉）。<b>与 T₁ 耗散的区别（重要）</b>：「物理参数」区的耗散 γ 是 T₁ 式振幅衰减（整场乘 e^{−γ·dt}，密度 e^{−2γt} 衰减 = 粒子损失）；本滑块是 T₂ 纯退相（密度严格不变、只有相干性衰减）。两个通道物理独立、可同时开。NMR 口径里 1/T₂ = 1/(2T₁)+1/T_φ，本面板的 γ_φ 即纯退相份额 T_φ⁻¹。<b>条纹对比度扫描（v3 几何）</b>：自动布置双缝——自绘墙 x∈[120,132)（V=0.5 不透明，8 位量化后 0.5039）+ 双缝 w=6、缝距 D=48（y∈[101,107)/[149,155)）+ 屏幕窗 x∈[216,220)（缝屏距 L=90）+ 入射波包 x₀=48、kx=0.7、σ=24；每 γ_φ 点先 <b>230 帧预热</b>（γ_φ=0 建立条纹）再进 <b>40 帧测量窗</b>（局部时刻 t=simTime−预热末时刻），屏窗密度一阶谐波幅度给对比度 C(t)=2|Â(k*)|/Â₀，k* 由 γ_φ=0 参考点 max-C 自标定（m∈[6,24]）。理论预期 C(γ,t)/C(0,t)=e^{−γ_φ·t}。<b>三重证据口径（重要）</b>：脉冲几何下条纹是瞬态——波包越屏后包络残余在测量窗内坍塌参考 C₀(t)（KDK 积分器数值色散 v_g=sin(k)/m 比谱方法慢 8% ⟹ 浏览器 fringe 峰台在 ~f228，预热 230 帧即按此标定；CPU SSF 镜像峰在 ~f207、预热 190——两实现瞬态差 ~21 帧是积分器属性非缺陷），单指数拟合会被时序污染，故端到端检验改为：① 积分抑制 I_γ/I₀ ≈ Σe^{−γt}Â₀(t)/ΣÂ₀(t)（±15%，无拟合抗抖动）；② ln(C_γ/C₀)~t 峰值后坍塌起始窗斜率 = −γ_φ（±25%）；③ 窗内趋势下降 + 末端值按 γ 排序。精确指数律由通道级集合平均验证（CPU 套件 A3：|⟨ψ_iψ_j*⟩|=e^{−γt}）承担，端到端为一致性检验；绘图即为归一化比值图 R(t)=C_γ/C₀（灰线为坍塌中的 C₀(t) 参考）。<b>物理限制（诚实标注）</b>：① 本模型是位置基白噪声（马尔可夫、逐 texel 独立）——真实退相干环境有空间关联长度；② 相位随机游走会泵入高波数动能，⟨E⟩ 随 γ_φ 缓慢上升（该噪声模型的物理后果，非数值误差）；③ |ψ|² 每帧因 float32 往返有 ~1e-7 舍入，长程随机游走（∝√帧数），幂等/守恒验证已量化。
   </div>
   <div class="sec" id="scanSec">
     <h3>透射率扫描</h3>
@@ -726,6 +748,7 @@ ${d3 ? `
     this.progReduce = createProgram(gl, sh.reduce);
     this.progBlit = createProgram(gl, FS_BLIT);
     this.progScale = createProgram(gl, sh.scale);   /* 耗散帧级衰减 pass */
+    this.progDephase = createProgram(gl, sh.dephase);  /* R69 纯退相位（T₂）逐 texel 随机相位 pass */
     /* R61 概率流 program（buildShaders 无条件装配 ⟹ 编译；帧内按 state 开关）：
        jField（ψ → RG32F J 场）+ jRed（通量/散度归约 MRT）+ bohmStep（64 粒子
        制导步进）+ bohmFade（残影衰减全屏）+ bohmStamp（POINTS 盖章，自定义
@@ -1804,6 +1827,38 @@ ${d3 ? `
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
     }
+    /* R69 退相干 T₂（纯退相位）：帧末逐 texel 乘高斯随机相位 e^{iφ}。与上面
+       T₁ 标量衰减（改 |ψ|²）本质不同——单位根乘法只动相位，|ψ|² 逐点严格
+       不变（验证锚点）。两通道交换子可换（位置基对角 vs 标量），先后次序
+       物理无关。门控：γ_φ≠0 且仅薛定谔内核（pass 走 2D psiA/psiB 目标；
+       3D 早退、Dirac/Pauli 走 CN 且 kernelId≠schrodinger）。uSeed=simTime
+       （每 evolve() +dt ⟹ 帧间确定不同；loadPreset/扫描复位后各 γ 点共享
+       同一噪声实现 = 共同随机数，消扫描采样误差）。 */
+    if (this.state.gammaPhi !== 0 && this.kernelId === 'schrodinger'){
+      this._dephasePass(Math.sqrt(this.state.gammaPhi * dt), this.state.simTime);
+    }
+  }
+
+  /* R69 退相干 T₂（纯退相位）帧末 pass：读 psiA 写 psiB 后交换（与 _scalePass
+     同构的 ping-pong）。σ=√(γ_φ·dt)：每 texel 相位 φ~N(0,σ²)，两 texel 相位差
+     方差 2γ_φ·dt ⟹ 互相干 ⟨e^{iΔφ}⟩=e^{−γ_φ·dt}/帧 ⟹ 条纹对比度以 T_φ=1/γ_φ
+     指数衰减（van Cittert–Zernike：对比度 = 双缝区互相干）。hash 取 Chris
+     Wellons lowbias32 + Box–Muller；sin/cos 后 inversesqrt 正交化（R63 教训：
+     GPU 非正交 sin/cos 每旋转丢 ~1e-7 范数，长程随机游走会污染 |ψ|² 锚点）。 */
+  _dephasePass(sigma, seed){
+    const gl = this.gl, st = this.state;
+    gl.useProgram(this.progDephase);
+    gl.bindVertexArray(this.quad.vao);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiB.fbo);
+    gl.viewport(0,0,st.grid,st.grid);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
+    gl.uniform1i(this.u(this.progDephase,'uPsi'), 0);
+    gl.uniform1f(this.u(this.progDephase,'uSigma'), sigma);
+    gl.uniform1f(this.u(this.progDephase,'uSeed'), seed);
+    gl.uniform2f(this.u(this.progDephase,'uTexel'), 1/st.grid, 1/st.grid);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
   }
 
   /* ---------- R61 概率流 J：场 / 归约 / Bohm 轨迹 ----------
@@ -2555,7 +2610,7 @@ ${d3 ? `
        卡死；scanBusy 时物理由扫描器 _tick 独家驱动，frame() 不重复推进，
        避免同一帧双倍弛豫步进）。 */
     const scanBusy = this.scanner.busy || this.scannerGp.busy || this.scannerNls.busy ||
-                     this.scannerSlit.busy || this.scannerBloch.busy;
+                     this.scannerSlit.busy || this.scannerBloch.busy || this.scannerDeph.busy;
     if (!this.state.paused || (this.kernel.relaxPending && !scanBusy)) this.evolve();
     /* R61 3D 概率流（evolve 后重算逐层 J 场；归约在 frame3d 的 120ms 节流块内）。
        3D 无箭头 overlay（volume ray-march 未挂 J 层）——showJ 在 3D 为 HUD
@@ -3914,6 +3969,13 @@ ${d3 ? `
       const wantM = (this.kernelId === 'schrodinger') ? '' : 'none';
       if (measSec.style.display !== wantM) measSec.style.display = wantM;
     }
+    /* R69 退相干面板：仅薛定谔内核（pass 走 2D psiA/psiB 目标，与 measSec
+       同款常驻门控——与预设无关，任意势上都能退相） */
+    const dephSec = this.q('#dephSec');
+    if (dephSec){
+      const wantD = (this.kernelId === 'schrodinger') ? '' : 'none';
+      if (dephSec.style.display !== wantD) dephSec.style.display = wantD;
+    }
     /* R65 双势阱面板：仅 GP 内核 + dw 预设 */
     const dwSec = this.q('#dwSec');
     if (dwSec){
@@ -4121,6 +4183,16 @@ ${d3 ? `
     this.bindRange('#rBrush','#oBrush','brush', v => v.toFixed(0));
     this.bindRange('#rV','#oV','vStrength', v => v.toFixed(2));
     this.bindRange('#rGamma','#oGamma','gamma', v => v.toFixed(3));
+    /* R69 退相干速率 γ_φ（T₂ 纯退相）：帧末 pass 门控，即时生效（与 γ 的
+       帧级标量衰减同一时机但物理独立）。after 回调同步 T_φ=1/γ_φ 读数。 */
+    this.bindRange('#rGammaPhi','#oGammaPhi','gammaPhi', v => v.toFixed(4), () => {
+      const t2 = this.q('#dephT2');
+      if (t2){
+        t2.textContent = this.state.gammaPhi > 0
+          ? 'T_φ = ' + (1/this.state.gammaPhi).toFixed(1) + '（相干衰减到 1/e 的时刻）'
+          : '∞（γ_φ=0 无退相）';
+      }
+    });
     this.bindRange('#rDriveAmp','#oDriveAmp','driveAmp', v => v.toFixed(3), () => this.refreshParamHud());
     this.bindRange('#rDriveOmega','#oDriveOmega','driveOmega', v => v.toFixed(2), () => this.refreshParamHud());
     /* R63 均匀 B 轨道耦合：滑块即时生效（每帧 evolveKDK_B 上传 uBOn/uBz/uLapDir，
@@ -4276,6 +4348,14 @@ ${d3 ? `
       this.on(this.q('#btnMeasPath'), 'click', () => this.whichPath());
       this.on(this.q('#btnMeasZeno'), 'click', () => { this.measSetup(); this.zenoRun(); });
       this.on(this.q('#btnMeasFree'), 'click', () => { this.measSetup(); this.zenoRun(0); });
+    }
+
+    /* R69 退相干对比度扫描：γ_φ 滑块上方的按钮驱动 DephaseScanner（start/stop
+       与其余扫描器同款握手：busy 时 frame() 不推进物理，由扫描器 _tick 独家
+       驱动——R67 起的统一协议）。 */
+    if (this.q('#btnDephScan')){
+      this.on(this.q('#btnDephScan'), 'click', () => this.scannerDeph.start());
+      this.on(this.q('#btnDephStop'), 'click', () => this.scannerDeph.stop());
     }
 
     /* R65 双势阱：z₀/φ₀ 滑块（重发初态）+ 求 ΔE + 扫 g */
@@ -4969,6 +5049,45 @@ ${d3 ? `
       zenoRun: (every, nF, mode) => this.zenoRun(every, nF, mode),
       zenoRuns: () => (this._zenoRuns || []).map(r => ({ every: r.every, mode: r.mode, nF: r.nF, pOut: r.pOut,
         meas: r.meas, hits: r.hits, cut: r.cut, pts: r.series.length })),
+      /* R69 退相干调试句柄（CDP 断言用）：
+         - dephaseOnce(sigma, seed)：单次 _dephasePass 转发（静态 |ψ|² 不变性
+           测试：同一 seed 下多次调用密度逐点不变，相对偏差 ≤1e-6）
+         - dephaseCheck(sigma, n, seed0)：n 次 _dephasePass（seed0+i 帧递增，
+           模拟真实帧序列）前后逐 texel 密度对比——maxRel（D0>1e-12 的 texel
+           上 |Δρ|/ρ）、越 1e-6 计数、范数漂移。GPU float32 口径的静态不变性
+           锚点（对比在页内完成，CDP 只回传摘要）。
+         - scanDeph：扫描器实例（start/opts 注入 γ 表/几何、stop、busy、
+           results/summary） */
+      dephaseOnce: (sigma, seed) => this._dephasePass(sigma, seed),
+      dephaseCheck: (sigma, n, seed0) => {
+        const read = () => {
+          gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
+          const g = this.state.grid, ch = this.kernel.pairs === 2 ? 4 : 2;
+          const buf = new Float32Array(g*g*ch);
+          gl.readPixels(0,0,g,g,this.fmt,gl.FLOAT,buf);
+          gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+          const d = new Float64Array(g*g);
+          for (let i = 0, j = 0; i < buf.length; i += ch, j++)
+            d[j] = buf[i]*buf[i] + buf[i+1]*buf[i+1];
+          return d;
+        };
+        const d0 = read();
+        const s0 = seed0 === undefined ? 1 : seed0;
+        const nn = Math.max(1, n|0);
+        for (let k = 0; k < nn; k++) this._dephasePass(sigma, s0 + k);
+        const d1 = read();
+        let maxRel = 0, nBad = 0, p0 = 0, p1 = 0;
+        for (let j = 0; j < d0.length; j++){
+          p0 += d0[j]; p1 += d1[j];
+          if (d0[j] > 1e-12){
+            const rel = Math.abs(d1[j] - d0[j])/d0[j];
+            if (rel > maxRel) maxRel = rel;
+            if (rel > 1e-6) nBad++;
+          }
+        }
+        return { n: nn, sigma, maxRel, nBad, nTot: d0.length, P0: p0, P1: p1 };
+      },
+      scanDeph: this.scannerDeph,
       /* R66 暗孤子调试句柄 */
       darkProfile: (near) => this.darkProfile(near),
       darkModel: () => (this.kernel.darkModel ? this.kernel.darkModel(this.state) : null),
