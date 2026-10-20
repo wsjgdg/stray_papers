@@ -133,6 +133,10 @@ export class QuantumField {
          1|2）。lattice 预设的 params 会注入同名默认值，此处给非 lattice 预设
          下也存在的初值（面板滑块绑定需要 state 有键）。 */
       latV0: 0.1, latA: 32, twistX: 0, latBand: 1,
+      /* R64 量子弹球：billKind = 'stadium' | 'circle'（两个预设各注入一个；
+         面板下拉可切换并重画硬壁势）。billBand = 当前显示的本征态序号
+         （0 起，UI 态，不存档——谱是运行时缓存）。 */
+      billKind: 'stadium', billBand: 0,
       ...this.kernel.defaults(),
       ...(options.state || {}),
     };
@@ -318,6 +322,23 @@ export class QuantumField {
     </div>
     <div class="row"><label>弛漾状态</label><span id="blochStat">就绪</span></div>
     <div class="hint" style="margin-top:4px">V=V₀sin²(πx/a) 周期势。Bloch 定理：ψ(x+a)=e^{ika}ψ(x)，准动量 k 只在简约布里渊区 [0,π/a] 内独立 ⟹ 能量分成能带、带间是能隙。<b>θ 滑块</b>直接设定 Bloch 相位 θ=k·a（0→π 覆盖整个简约 BZ；GPU 侧由 twisted 边界 e^{±iθ} wrap 携带）。<b>Bloch 弛漾</b>：CPU 虚时间流（PR-ADI + twisted 循环三对角）收敛到当前 (k, 带) 的精确本征态——带 2 以带 1 收敛态作 Gram-Schmidt 投影，并每步投影回目标晶体动量块与横向基模（否则会塌到相邻 k 的带 1，见 worklog R62 五轮记录）。</div>
+  </div>
+  <div class="sec" id="billiardSec">
+    <h3>量子弹球（能级统计）</h3>
+    <div class="row"><label>腔体形状</label>
+      <select id="selBillKind">
+        <option value="stadium" selected>stadium（混沌）</option>
+        <option value="circle">圆形（可积）</option>
+      </select>
+    </div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnBillSpec">求谱（前 16 态）</button>
+      <button id="btnBillShow">显示选中态</button>
+    </div>
+    <div class="row"><label>本征态序号</label><input type="range" id="rBillBand" min="1" max="16" step="1" value="1"><output id="oBillBand">1</output></div>
+    <div class="row"><label>谱统计</label><span id="billStat">未求解</span></div>
+    <div class="row"><label>能级 E</label><span id="billLevels">—</span></div>
+    <div class="hint" style="margin-top:4px">硬壁腔（腔外 V=1.0）内的自由粒子。<b>经典动力学决定量子谱</b>：stadium 混沌 ⟹ 能级互相排斥（最近邻间距比 ⟨r⟩→0.53，GOE）；圆形腔可积 ⟹ 间距服从 Poisson（⟨r⟩≈0.39，含简并时更低）。<b>⟨r⟩</b>=⟨min(sᵢ,sᵢ₋₁)/max(sᵢ,sᵢ₋₁)⟩ 不需要展开能级密度，是有限样本下最稳的可积/混沌判据。<b>求谱</b>用 Lanczos（全重正交化，krylov 96）解 <b>与 GPU 同一离散</b>的 H=−uK·∇²₅+V，耗时数秒（一次性）；<b>显示选中态</b>把该本征向量上传到场上——混沌腔的高激发态会出现 <b>scar</b>（沿不稳定周期轨道增强的密度脊）。注意 stadium 的谱若有 x/y 反射对称会裂成多条独立序列、低能 ⟨r⟩ 假装可积，故腔内置了一个偏心小凸起破坏对称；样本仅 16 态（间距 14 个）⟹ 只能定性看分离方向，定量值以 CPU 200 态样本为准。</div>
   </div>
   <div class="sec" id="scanSec">
     <h3>透射率扫描</h3>
@@ -1077,6 +1098,73 @@ ${d3 ? `
   _blochStat(txt){
     const el = this.q('#blochStat');
     if (el) el.textContent = txt;
+  }
+
+  /* ---------- R64 量子弹球：求谱 + 显示本征态 ----------
+     求谱是**一次性 CPU 计算**（Lanczos，与 GPU 同一离散口径）。强制 256²：
+     vctx 恒 256²，1:1 采样才没有插值/缩放的口径差（与 BlochScanner 强制 256
+     同策）。求谱与「当前演化中的场」完全解耦——它只读势场、不改 psi 与本征态
+     之外的任何 state。 */
+  billiardSpectrum(){
+    if (this.kernelId !== 'schrodinger' || !this.kernel.spectrum){
+      return this.toast('当前内核无弹球谱求解');
+    }
+    const st = this.state;
+    const stat = this.q('#billStat');
+    if (stat) stat.textContent = '求解中…（腔压缩 + shift-invert Lanczos）';
+    /* 用当前网格（evecs 全长 = grid²，可直接上传显示）。谱按**预设腔体几何**
+       计算，忽略用户手绘的势场改动——面板 hint 已注明。 */
+    const sp = this.kernel.spectrum({ grid: st.grid, m: st.m, kind: st.billKind,
+                                      nev: 10, eps: 1e-4 });
+    this._billSpec = sp;
+    this._refreshBillStat();
+    const r = sp.meanR;
+    this.toast('求谱完成 · ' + sp.evals.length + ' 态 · ⟨r⟩=' +
+      (isFinite(r.r) ? r.r.toFixed(3) : '—') + ' · ' + (sp.ms/1000).toFixed(2) + 's');
+  }
+
+  _refreshBillStat(){
+    const sp = this._billSpec, stat = this.q('#billStat');
+    if (!stat) return;
+    if (!sp){ stat.textContent = '未求解'; return; }
+    const r = sp.meanR;
+    const rmax = sp.resid.reduce((a, b) => Math.max(a, b), 0);
+    stat.textContent = sp.evals.length + ' 态 · ⟨r⟩=' + (isFinite(r.r) ? r.r.toFixed(3) : '—') +
+      '（n=' + r.n + ' 间距）· ' + (sp.ms/1000).toFixed(1) + 's · 残差 ' + rmax.toExponential(1) +
+      (sp.notConv ? ' ⚠未完全收敛' : '');
+    const lv = this.q('#billLevels');
+    if (lv) lv.textContent = sp.evals.slice(0, 6).map(v => v.toExponential(2)).join(' · ') + ' …';
+  }
+
+  /* 谱结果快照（面板读数 + CDP 断言共用；无谱返回 null） */
+  billInfo(){
+    const sp = this._billSpec;
+    if (!sp) return null;
+    return {
+      kind: this.state.billKind, n: sp.evals.length, mK: sp.mK, ms: sp.ms, nc: sp.nc,
+      evals: Array.from(sp.evals), r: sp.meanR.r, nR: sp.meanR.n,
+      residMax: sp.resid.reduce((a, b) => Math.max(a, b), 0),
+      notConv: sp.resid.some(v => v > 1e-6),
+      stat: (this.q('#billStat') || {}).textContent,
+      levels: (this.q('#billLevels') || {}).textContent,
+    };
+  }
+
+  /* 把第 idx 个本征向量上传到 psiA（实部，虚部 0）。本征态在演化下只累积
+     全局相位 ⟹ 密度图样静止，可直接观察 scar；同时把 lastWave 置为中点零
+     动量，避免「重置波包」把画面对回高斯包以外的旧几何。 */
+  billiardShowBand(idx){
+    const sp = this._billSpec;
+    if (!sp || !sp.evecs[idx]) return this.toast('先点「求谱」');
+    const g = this.state.grid, N = g*g, x = sp.evecs[idx];
+    const data = new Float32Array(N*2);
+    for (let i = 0; i < N; i++){ data[i*2] = x[i]; data[i*2+1] = 0; }
+    this._uploadPsi(data);
+    this.state.waveCount = 1;
+    this.state.simTime = 0;
+    this.state.lastWave = [0.5, 0.5, 0, 0];
+    this.state.billBand = idx;
+    this.toast('第 ' + (idx + 1) + ' 个本征态 · E=' + sp.evals[idx].toFixed(6));
   }
 
   toast(msg){
@@ -3190,6 +3278,21 @@ ${d3 ? `
       const wantL = (this.kernelId === 'schrodinger') ? '' : 'none';
       if (landauSec.style.display !== wantL) landauSec.style.display = wantL;
     }
+    /* R64 量子弹球面板：仅薛定谔内核 + 两个弹球预设（腔体几何是预设内绘制
+       的势场，别的预设下没有硬壁可解谱）。形状下拉同步 state.billKind。 */
+    const billSec = this.q('#billiardSec');
+    if (billSec){
+      const wantB = (this.kernelId === 'schrodinger' &&
+        (this.state.preset === 'billiard' || this.state.preset === 'billiardC')) ? '' : 'none';
+      if (billSec.style.display !== wantB) billSec.style.display = wantB;
+    }
+    const sbk = this.q('#selBillKind');
+    if (sbk) sbk.value = this.state.billKind === 'circle' ? 'circle' : 'stadium';
+    /* 预设切换 = 腔体变了 ⟹ 旧谱作废（避免读数与画面不一致） */
+    if (this._billPresetKey !== this.state.preset){
+      this._billPresetKey = this.state.preset;
+      if (this._billSpec){ this._billSpec = null; this._refreshBillStat(); }
+    }
     /* R54：AB 多螺线管面板同步（预设 params/URL/导入存档可注入 abSols/abSel；
        滑块对齐选中管 Φ，选中行/位置读数随列表刷新） */
     this.syncABPhiSlider();
@@ -3444,6 +3547,27 @@ ${d3 ? `
     if (this.q('#btnLandauScan')){
       this.on(this.q('#btnLandauScan'), 'click', () => this.scannerLandau.start({}));
       this.on(this.q('#btnLandauScanStop'), 'click', () => this.scannerLandau.stop());
+    }
+    /* R64 量子弹球：形状下拉（重画硬壁势 + 作废旧谱）+ 求谱 + 显示选中态 */
+    if (this.q('#btnBillSpec')){
+      this.on(this.q('#selBillKind'), 'change', () => {
+        const el = this.q('#selBillKind');
+        this.state.billKind = el.value === 'circle' ? 'circle' : 'stadium';
+        this._billSpec = null; this._refreshBillStat();
+        this.kernel.paintBilliard({ vctx: this.vctx, vGray: v => this.vGray(v), state: this.state });
+        this.uploadV();
+      });
+      this.on(this.q('#btnBillSpec'), 'click', () => this.billiardSpectrum());
+      this.on(this.q('#btnBillShow'), 'click', () => this.billiardShowBand(this.state.billBand || 0));
+      const rb = this.q('#rBillBand'), ob = this.q('#oBillBand');
+      if (rb && ob){
+        const upd = () => {
+          ob.textContent = rb.value;
+          this.state.billBand = (parseInt(rb.value, 10) || 1) - 1;
+        };
+        rb.addEventListener('input', upd);
+        rb.value = String((this.state.billBand || 0) + 1); ob.textContent = rb.value;
+      }
     }
     this.bindABPhi();   /* R54：多管 Φ 滑块（写入目标随选中态切换，见方法注释） */
     this.refreshABReadout();   /* R54：初始态读数（构造默认 abSols=[] ⟹ 「无 · 放置即新建」） */
@@ -4072,6 +4196,23 @@ ${d3 ? `
            120ms 节流读数）——CDP 逐帧采样回旋轨迹用 */
       scanLandau: this.scannerLandau,
       landauModel: () => (this.kernel.landauModel ? this.kernel.landauModel(this.state) : null),
+      /* R64 量子弹球调试句柄（cdp64 用）：求谱 + 选态 + 结果快照 */
+      billiardSpectrum: () => { this.billiardSpectrum(); return this.billInfo(); },
+      billiardShowBand: (i) => { this.billiardShowBand(Number(i) || 0); return true; },
+      billInfo: () => this.billInfo(),
+      /* 本征态的密度摘要（scar 判据用）：中央带（|y−g/2|<8）均值 / 全腔均值 */
+      billBand: (i) => {
+        const sp = this._billSpec;
+        if (!sp || !sp.evecs[i]) return null;
+        const g = this.state.grid, x = sp.evecs[i], row = Math.floor(g/2);
+        let all = 0, band = 0, nb = 0, peak = 0;
+        for (let y = 0; y < g; y++) for (let k = 0; k < g; k++){
+          const p = x[y*g + k]*x[y*g + k];
+          all += p; if (p > peak) peak = p;
+          if (Math.abs(y - row) < 8){ band += p; nb++; }
+        }
+        return { bandRatio: (band/nb)/(all/(g*g) || 1), peak, mean: all/(g*g) };
+      },
       mom2: () => {
         const m = fieldMoments2(this);
         return { cx: m.cx, cy: m.cy, P: m.P, peak: m.peak, Rrms: m.Rrms, t: this.state.simTime };
