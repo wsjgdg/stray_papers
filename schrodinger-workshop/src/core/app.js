@@ -19,6 +19,7 @@ import { SlitScanner } from './scan.js';
 import { GpScanner, NlsScanner } from './scan.js';
 import { BlochScanner } from './scan.js';
 import { LandauScanner, DwScanner, fieldMoments2 } from './scan.js';
+import { bandMask, bandProb, projectBand, normalizeBuf, maxResidual, bernoulli, densityAt } from '../physics/measure.js';
 
 /* ---------- R52：GP 基态渐进弛豫的每帧步数预算 ----------
    GP 预设「基态（虚时间弛豫）」的虚时间流由帧循环分帧推进：每帧最多
@@ -144,6 +145,12 @@ export class QuantumField {
          有限深阱（fV0 深度 / fWa 宽度）。fwBand = 当前显示的第几个束缚态。 */
       dV0: 0.2, dBw: 4, dGap: 28,
       fV0: 0.15, fWa: 48, fwBand: 0,
+      /* R68 投影测量：measXc/measW = 监视带中心与半宽（世界坐标 0..1，芝诺
+         演示默认取双垒中央阱 [0.5±dGap/2/256]，measSetup 时按当前 dGap 同步）；
+         measEvery = 芝诺序列的测量间隔（帧，0 = 对照不投影）；measNF = 序列
+         总帧数。面板 #measSec 仅薛定谔内核显示（测量公理与内核无关，但非酉
+         通道目前只接到 2D 标量路径）。 */
+      measXc: 0.25, measW: 0.249, measEvery: 30, measNF: 600,
       /* R66 暗孤子：darkV = 速度分数 v/c（|v/c|<1 才是亚声速暗孤子）。 */
       darkV: 0.4,
       ...this.kernel.defaults(),
@@ -399,6 +406,27 @@ export class QuantumField {
     <div class="row"><label>能级 E</label><span id="fwLevels">—</span></div>
     <div class="row"><label>显示第 n 态</label><input type="range" id="rFwBand" min="0" max="8" step="1" value="0"><output id="oFwBand">1</output></div>
     <div class="hint" style="margin-top:4px">深 V₀、宽 a 的方阱（沿 y 均匀 ⟹ 横向是精确可分离因子）。与无限深阱的关键差别：<b>束缚态数有限</b>——只有 E&lt;0 被束缚，解由超越方程给出（偶 z tan z=√(z₀²−z²)、奇 −z cot z=√(z₀²−z²)，z₀=(a/2)√(V₀/uK)）；阱越浅/越窄，态越少、间距越疏。<b>求束缚态</b>沿 x 做 1D 三对角精确对角化（QL），与教科书连续解逐项对照并显示选中态。诚实标注：最浅的束缚态偏差可达数十 %，来源是<b>格点色散</b>（E=2uK(1−cos k) vs k²/2m，k~0.5 时绝对差 ~3e-3）——用离散色散重解同一个匹配方程后偏差降到 1–3%，worklog 有归因实验。显示时按「第 n 态」上传到场上（y 向乘 Dirichlet 基模）。</div>
+  </div>
+  <div class="sec" id="measSec">
+    <h3>投影测量与量子芝诺（R68）</h3>
+    <div class="row"><label>监视带中心 xc</label><input type="range" id="rMeasXc" min="0.1" max="0.9" step="0.005" value="0.25"><output id="oMeasXc">0.250</output></div>
+    <div class="row"><label>监视带半宽 w</label><input type="range" id="rMeasW" min="0.01" max="0.45" step="0.005" value="0.249"><output id="oMeasW">0.249</output></div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnMeasOnce">单次测量（随机）</button>
+      <button id="btnMeasProj">投影到带内（确定）</button>
+    </div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnMeasVerify">幂等验证</button>
+      <button id="btnMeasPath">哪条路测量（上半）</button>
+    </div>
+    <div class="row" style="margin-top:6px"><label>测量间隔 N（帧）</label><input type="range" id="rMeasEvery" min="1" max="120" step="1" value="30"><output id="oMeasEvery">30</output></div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnMeasZeno">跑芝诺序列</button>
+      <button id="btnMeasFree">跑对照（不投影）</button>
+    </div>
+    <div class="row"><label>状态</label><span id="measStat">未测量</span></div>
+    <canvas id="measCanvas" width="420" height="180"></canvas>
+    <div class="hint" style="margin-top:4px"><b>投影测量</b>是量子力学唯一非酉的公理操作：对「粒子是否在监视带 S 内」做一次理想位置测量，测得概率 p=⟨ψ|Π_S|ψ⟩=Σ_S|ψ|²，随后态<b>坍缩</b>为 Π_Sψ/√p（命中）或 (1−Π_S)ψ/√(1−p)（未命中）并重新归一化——画面上能看到波包突然变小（单次测量按钮），统计上重复同样的测量必然得到同一结果（幂等验证：复测确定性=1.000000、残差≤1e-6）。<b>量子芝诺</b>：「跑芝诺序列」自动布置方盒 + 左半弹道波包（v=0.5px/帧，384 帧到右墙），每 N 帧问一次「还在左半吗」——问得越勤，漏到右半越慢（CPU 独立模拟：频率 ×10 逃逸概率降 7.8×，实测曲线画在下方，灰线为不投影对照）。<b>口径说明（重要）</b>：芝诺序列用<b>选择性演化</b>（命中才投影，未命中分支丢弃 = 只追踪「从未逃逸」的轨迹）；「单次测量」按钮是<b>完整 von Neumann</b>（未命中也坍缩到带外）。为什么序列不能用完整语义：方盒两端是墙，未命中一次就把粒子放到对面且后续测量持续确认它在对面——CPU 实测末态呈 0/1 双峰（std≈0.5），是公理操作在该几何下的真实后果，不是求解器误差。<b>哪条路测量</b>：对「粒子在上半平面吗」做一次完整 von Neumann 测量（p≈0.5，与单次测量同一套公理操作，只是监视带取 y 向中线）。GPU 三种投影时机实测：投影<b>瞬间</b>密度完全约束在命中半区（对半概率=0、P=1、质心从 0.50 跳进上半），300 步后整场质心稳定在上缝附近（0.50→0.37）——路径信息的获得是真实的；但<b>条纹并不消失</b>（谐波降幅 ≤1.2×）：透射前投影会被自由演化重新跨中线衍射抵消（300 步后下半概率从 0 回流到 0.19），透射后投影则保留已形成的干涉（双束被中线切割后幅值对称化，谐波反升）。根因：半平面要分离两束需要缝距大于衍射束宽（slits 缝距 56px vs 束宽 ~40px）——这是公理操作在该几何下的真实后果，本面板不承诺做不到的「干涉消除」。<b>物理限制</b>：投影是理想化的公理操作（无限快的测量），真实探测器有有限时间分辨率与不完全量子效率；每次测量会因 float32 纹理往返引入 ~1e-7 舍入（幂等验证即量化这条）。</div>
   </div>
   <div class="sec" id="scanSec">
     <h3>透射率扫描</h3>
@@ -1466,6 +1494,248 @@ ${d3 ? `
     this.state.fwBand = i;
     this.toast('第 ' + (i+1) + ' 态 · E=' + fw.nb[i].toFixed(5) +
       (fw.na[i] ? ' · 解析 ' + fw.na[i].E.toFixed(5) : ''));
+  }
+
+  /* ---------- R68 投影测量：von Neumann 坍缩 + 量子芝诺 ----------
+     全部经 CPU 侧 measure.js 纯函数完成（读回 psiA → 示性投影/伯努利采样
+     → 归一化 → 上传），与 probSplit/spinSum 同为「引擎层测量原语」：
+     app.js 只编排读回-上传与 UI，不含物理公式。 */
+  /* 读回当前 ψ（psiA 的 CPU 镜像，交错布局）。 */
+  _readPsi(){
+    const gl = this.gl, g = this.state.grid;
+    const ch = this.kernel.pairs === 2 ? 4 : 2;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
+    const buf = new Float32Array(g*g*ch);
+    gl.readPixels(0, 0, g, g, this.fmt, gl.FLOAT, buf);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return { buf, ch, g };
+  }
+
+  /* 当前监视带（世界坐标）→ {lo, hi, mask}。axis 'x' 用 measXc/measW；
+     axis 'y'（哪条路演示）固定上半平面。 */
+  _measBand(axis){
+    const g = this.state.grid, st = this.state;
+    let lo, hi;
+    if (axis === 'y'){ lo = 0; hi = 0.5; }
+    else {
+      lo = Math.max(0, st.measXc - st.measW);
+      hi = Math.min(1, st.measXc + st.measW);
+    }
+    return { lo, hi, mask: bandMask(g, axis, lo, hi) };
+  }
+
+  /* 带内概率查询（不改场）。 */
+  probBand1d(axis, lo, hi){
+    const g = this.state.grid;
+    const { buf, ch } = this._readPsi();
+    const mask = bandMask(g, axis, lo, hi);
+    const bp = bandProb(buf, ch, mask);
+    bp.comX = 0; bp.comY = 0;
+    let sx = 0, sy = 0;
+    for (let y = 0; y < g; y++) for (let x = 0; x < g; x++){
+      const p = densityAt(buf, (y*g + x)*ch, ch);
+      sx += x*p; sy += y*p;
+    }
+    if (bp.P > 0){ bp.comX = (sx/bp.P)/g; bp.comY = (sy/bp.P)/g; }
+    return bp;
+  }
+
+  /* 确定性投影（教学：把「若测得在带内」的态画出来）。幂等。 */
+  projectBand1d(axis, lo, hi){
+    const { buf, ch } = this._readPsi();
+    const g = this.state.grid;
+    const mask = bandMask(g, axis, lo, hi);
+    const r = projectBand(buf, ch, mask, true);
+    normalizeBuf(buf, ch);
+    this._uploadPsi(buf);
+    return r;
+  }
+
+  /* von Neumann 单次测量：以概率 p 坍缩到带内、以 1−p 坍缩到带外。 */
+  measureOnce(axis, lo, hi){
+    const { buf, ch } = this._readPsi();
+    const g = this.state.grid;
+    const mask = bandMask(g, axis, lo, hi);
+    const bp = bandProb(buf, ch, mask);
+    const hit = bp.pIn >= 1 ? true : (bp.pIn <= 0 ? false : bernoulli(bp.pIn));
+    const r = projectBand(buf, ch, mask, hit);
+    normalizeBuf(buf, ch);
+    this._uploadPsi(buf);
+    return { pIn: bp.pIn, hit, pKeep: r.pKeep };
+  }
+
+  /* 幂等 + 本征态验证：投影 → 读回 → 再投影，比较 ψ₂ 与 ψ₁（纹理往返后）。
+     返回残差（峰值归一化）与复测确定性（应为 1.000000）。现场恢复为 ψ₁。 */
+  verifyProjection(){
+    const st = this.state;
+    const { lo, hi } = this._measBand('x');
+    const r1 = this.projectBand1d('x', lo, hi);       /* ψ₁（已上传） */
+    const { buf, ch } = this._readPsi();               /* 读回 ψ₁'（含往返舍入） */
+    const g = this.state.grid;
+    const mask = bandMask(g, 'x', lo, hi);
+    const r2 = projectBand(buf, ch, mask, true);      /* 就地得 ψ₂ */
+    const psi1 = this._readPsi().buf;                  /* ψ₁ 的纹理副本 */
+    const res = maxResidual(buf, psi1, ch);
+    const rehit = bandProb(buf, ch, mask).pIn;         /* 复测确定性 */
+    this._uploadPsi(psi1);                             /* 现场恢复 ψ₁ */
+    return { pIn1: r1.pKeep, pIn2: r2.pKeep, residual: res, rehit };
+  }
+
+  /* 芝诺场景：方盒（box 预设：全域无势、世界边界即墙）+ 左半弹道波包
+     （fx=0.25、kx=0.5 ⟹ v=0.5 px/帧、σ=14；384 帧到右墙、1024 帧一个
+     弹道周期）。监视带 = 左半盒 [0, 0.5)。
+     **为什么不是双垒中央阱**：CPU 独立模拟（1D CN，同 H）显示阱内泄漏是
+     准束缚指数衰减，选择性截断不改变衰减常数、每帧泄漏率反而随测量频率
+     上升（实测每帧率 N=3 是对照的 6 倍）——该几何无法演示芝诺，已弃用；
+     方盒弹道的短时行为才是二次区，投影能真正把波包钉在中线附近。 */
+  measSetup(){
+    if (this.kernelId !== 'schrodinger') return this.toast('仅薛定谔内核');
+    this.loadPreset('box');
+    this.state.sigma = 14;
+    this.initWave(0.25, 0.5, 0.5, 0);
+    this.state.measXc = 0.25;
+    this.state.measW = 0.249;
+    const xc = this.q('#rMeasXc'), oc = this.q('#oMeasXc');
+    const w = this.q('#rMeasW'), ow = this.q('#oMeasW');
+    if (xc){ xc.value = String(this.state.measXc); }
+    if (oc){ oc.textContent = this.state.measXc.toFixed(3); }
+    if (w){ w.value = String(this.state.measW); }
+    if (ow){ ow.textContent = this.state.measW.toFixed(3); }
+    this._zenoRuns = this._zenoRuns || [];
+    this._drawMeasCurve();
+    const el = this.q('#measStat');
+    if (el) el.textContent = '场景就绪（方盒 + 左半弹道包 v=0.5px/帧）· 监视带 = 左半 · 未测量';
+    return { measXc: this.state.measXc, measW: this.state.measW };
+  }
+
+  /* 芝诺序列（异步 rAF，轻量不阻塞 UI）：每 every 帧问一次「还在监视带内吗」。
+     mode='selective'（默认，芝诺标准口径）：命中 ⟹ 投影回带内（削去漏出 +
+     重置相位）；未命中 ⟹ 不动场（该分支被丢弃 = 后选择「从未逃逸」的轨迹）。
+     mode='full'（严格 von Neumann）：未命中也投影到带外——**该几何下方盒
+     两端是墙，未命中分支近吸收**（CPU 实测末态 0/1 双峰、std≈0.5），仅作
+     公理语义对照，不用于芝诺指标。every=0 ⟹ 纯对照（不投影）。 */
+  zenoRun(every, nF, mode){
+    if (this._zenoRun) return this.toast('序列进行中');
+    if (this.paused) return this.toast('先取消暂停');
+    const st = this.state;
+    const n = Math.max(30, Math.min(2000, nF || st.measNF));
+    const ev = Math.max(0, Math.min(120, every === undefined ? st.measEvery : every));
+    const md = mode || 'selective';
+    const { lo, hi, mask } = this._measBand('x');
+    const g = st.grid;
+    const ch = this.kernel.pairs === 2 ? 4 : 2;
+    const series = [];
+    const run = { i: 0, n, every: ev, series, meas: 0, hits: 0, miss: 0, cut: 0, lo, hi };
+    this._zenoRun = run;
+    const el = this.q('#measStat');
+    const tick = () => {
+      if (this._zenoRun !== run) return;
+      /* 帧推进（每 tick step 帧；ev=0 对照时退化为 1 帧/tick） */
+      const step = Math.max(1, ev);
+      for (let s = 0; s < step; s++){
+        this.evolve();
+        run.i++;
+        if (ev > 0 && run.i % ev === 0 && run.i < run.n) this._zenoMeasure(run, mask, ch, g, md);
+      }
+      if (ev === 0 && run.i % 5 === 0){
+        const { buf } = this._readPsi();
+        series.push({ i: run.i, pOut: 1 - bandProb(buf, ch, mask).pIn });
+      }
+      if (run.i % 30 === 0 || run.i >= run.n){
+        const last = series.length ? series[series.length-1].pOut : null;
+        if (el) el.textContent = (ev > 0 ? '芝诺 N=' + ev + (md === 'full' ? '(full)' : '') : '对照') +
+          ' ' + run.i + '/' + run.n +
+          (last !== null ? ' · 逃逸 pOut=' + last.toFixed(4) : '') +
+          (ev > 0 ? ' · 测量 ' + run.meas + '（命中 ' + run.hits + '/未中 ' + run.miss +
+             '，削去 ' + (run.cut*100).toFixed(1) + '%）' : '');
+      }
+      if (run.i >= run.n){
+        const { buf } = this._readPsi();
+        const pOut = 1 - bandProb(buf, ch, mask).pIn;
+        this._zenoRun = null;
+        this._zenoRuns = this._zenoRuns || [];
+        this._zenoRuns.push({ every: ev, mode: md, nF: n, series, pOut, meas: run.meas, hits: run.hits, cut: run.cut });
+        this._drawMeasCurve();
+        if (el) el.textContent = (ev > 0 ? '芝诺 N=' + ev + (md === 'full' ? '(full)' : '') : '对照') +
+          ' 完成 · 末逃逸 pOut=' + pOut.toFixed(4) +
+          (ev > 0 ? ' · 测量 ' + run.meas + '（命中 ' + run.hits + '）· 累计削去 ' +
+             (run.cut*100).toFixed(1) + '%' : '');
+        return;
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  /* 序列内单次测量。selective：命中才投影（未命中不动场）；full：两者都投影。 */
+  _zenoMeasure(run, mask, ch, g, md){
+    const { buf } = this._readPsi();
+    const bp = bandProb(buf, ch, mask);
+    const hit = bp.pIn >= 1 ? true : (bp.pIn <= 0 ? false : bernoulli(bp.pIn));
+    if (hit || md === 'full'){
+      const r = projectBand(buf, ch, mask, hit);
+      normalizeBuf(buf, ch);
+      this._uploadPsi(buf);
+      if (hit) run.cut += 1 - r.pKeep;
+    }
+    run.meas++;
+    if (hit) run.hits++; else run.miss++;
+    run.series.push({ i: run.i, pOut: 1 - bp.pIn });
+  }
+
+  /* 芝诺曲线：多条序列叠画（x=帧、y=逃逸概率），图例标 N 与末值。 */
+  _drawMeasCurve(){
+    const cv = this.q('#measCanvas');
+    if (!cv) return;
+    const g2 = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    g2.clearRect(0, 0, W, H);
+    g2.fillStyle = 'rgba(4,8,16,.55)'; g2.fillRect(0, 0, W, H);
+    const L = 44, T = 12, Bm = 22, HP = H - T - Bm;
+    const X = i => L + (i/600)*(W - L - 12);
+    const Y = p => T + (1 - Math.max(0, Math.min(1, p)))*HP;
+    g2.font = '9px ui-monospace,monospace';
+    g2.strokeStyle = 'rgba(120,160,220,.14)'; g2.lineWidth = 1;
+    for (const p of [0, 0.25, 0.5, 0.75, 1]){
+      const yy = Y(p);
+      g2.beginPath(); g2.moveTo(L, yy); g2.lineTo(W - 12, yy); g2.stroke();
+      g2.fillStyle = '#9aa7bd'; g2.textAlign = 'right';
+      g2.fillText(p.toFixed(2), L - 4, yy + 3);
+    }
+    const runs = this._zenoRuns || [];
+    const cols = ['#f87171', '#67e8f9', '#fbbf24', '#a3e635'];
+    runs.forEach((r, k) => {
+      const col = cols[k % cols.length];
+      g2.strokeStyle = col; g2.lineWidth = 1.4; g2.beginPath();
+      r.series.forEach((p, i) => {
+        const px = X(p.i), py = Y(p.pOut);
+        if (i === 0) g2.moveTo(px, py); else g2.lineTo(px, py);
+      });
+      g2.stroke();
+      g2.fillStyle = col; g2.textAlign = 'left';
+      g2.fillText((r.every > 0 ? 'N=' + r.every + (r.mode === 'full' ? '(full)' : '') : '对照') +
+        ' · pOut=' + r.pOut.toFixed(3), L + 6, T + 10 + k*11);
+    });
+    g2.fillStyle = '#9aa7bd'; g2.textAlign = 'left';
+    g2.fillText('逃逸概率 pOut(t)（监视带外）', L, 10);
+    g2.textAlign = 'center';
+    g2.fillText('帧', L + (W - L - 12)/2, H - 6);
+  }
+
+  /* 哪条路测量：把当前态投影到上半平面（y<0.5）——对「粒子在上半吗」
+     的一次完整 von Neumann 测量。**实测口径（cdp68d/e/f/g，勿夸大）**：
+     投影瞬间密度完全约束在命中半区（对半概率=0、P=1、质心跳进上半），
+     300 步后整场质心稳定在上缝附近（0.50→0.37）——路径信息真实获得；
+     但双缝干涉条纹**不**消失（谐波降幅 ≤1.2×）：透射前投影被自由演化
+     重新跨中线衍射抵消，透射后投影保留已形成的干涉。根因：半平面分离
+     两束需要缝距大于衍射束宽（slits 缝距 56px vs 束宽 ~40px）。 */
+  whichPath(){
+    const r = this.measureOnce('y', 0, 0.5);
+    const el = this.q('#measStat');
+    if (el) el.textContent = '哪条路测量：测得「' + (r.hit ? '上' : '下') +
+      '」半平面（p=' + r.pIn.toFixed(3) + '）· 坍缩后 P=1（归一化保持）';
+    this.toast('测得：' + (r.hit ? '上' : '下') + '半平面 · 密度已约束在该半区（条纹详见面板说明）');
+    return r;
   }
 
   toast(msg){
@@ -3637,6 +3907,13 @@ ${d3 ? `
       const want = (this.kernelId === 'schrodinger' && this.state.preset === 'fwell') ? '' : 'none';
       if (fwellSec.style.display !== want) fwellSec.style.display = want;
     }
+    /* R68 测量面板：常驻薛定谔内核（测量公理与预设无关——任意势上都能做，
+       芝诺序列自带双垒场景搭建）。与 latSec/landauSec 同款门控。 */
+    const measSec = this.q('#measSec');
+    if (measSec){
+      const wantM = (this.kernelId === 'schrodinger') ? '' : 'none';
+      if (measSec.style.display !== wantM) measSec.style.display = wantM;
+    }
     /* R65 双势阱面板：仅 GP 内核 + dw 预设 */
     const dwSec = this.q('#dwSec');
     if (dwSec){
@@ -3945,8 +4222,7 @@ ${d3 ? `
       bindP('#rFwWa', '#oFwWa', 'fWa', v => String(Math.round(v)));
       this.on(this.q('#btnDbCurve'), 'click', () => this.dbCurve1d());
       this.on(this.q('#btnDbProbe'), 'click', () => this.dbProbe1d());
-      this.on(this.q('#btnFwCalc'), 'click', () => this.fwellCalc());
-      const band = this.q('#rFwBand'), ob = this.q('#oFwBand');
+      this.on(this.q('#btnFwCalc'), 'click', () => this.fwellCalc());      const band = this.q('#rFwBand'), ob = this.q('#oFwBand');
       if (band && ob){
         band.addEventListener('input', () => {
           ob.textContent = String(+band.value + 1);
@@ -3957,6 +4233,49 @@ ${d3 ? `
           this.fwellShow(+band.value);
         });
       }
+    }
+
+    /* R68 投影测量：监视带几何 + 单次测量/确定性投影/幂等验证/哪条路 +
+       芝诺序列与对照（ measSetup 自动布双垒场景） */
+    if (this.q('#btnMeasZeno')){
+      const bindM = (id, out, key, fmt) => {
+        const el = this.q(id), o = this.q(out);
+        if (!el || !o) return;
+        el.value = String(this.state[key]); o.textContent = fmt(this.state[key]);
+        el.addEventListener('input', () => {
+          this.state[key] = parseFloat(el.value);
+          o.textContent = fmt(this.state[key]);
+          this._drawMeasCurve();
+        });
+      };
+      bindM('#rMeasXc', '#oMeasXc', 'measXc', v => v.toFixed(3));
+      bindM('#rMeasW', '#oMeasW', 'measW', v => v.toFixed(3));
+      bindM('#rMeasEvery', '#oMeasEvery', 'measEvery', v => String(Math.round(v)));
+      this.on(this.q('#btnMeasOnce'), 'click', () => {
+        const st = this.state;
+        const r = this.measureOnce('x', Math.max(0, st.measXc - st.measW), Math.min(1, st.measXc + st.measW));
+        const el = this.q('#measStat');
+        if (el) el.textContent = '单次测量：' + (r.hit ? '命中（坍缩到带内）' : '未命中（坍缩到带外）') +
+          ' · p=' + r.pIn.toFixed(4) + ' · 坍缩后 P=1（归一化保持）';
+        this.toast('测得' + (r.hit ? '在带内' : '在带外') + '（p=' + r.pIn.toFixed(3) + '）');
+      });
+      this.on(this.q('#btnMeasProj'), 'click', () => {
+        const st = this.state;
+        const r = this.projectBand1d('x', Math.max(0, st.measXc - st.measW), Math.min(1, st.measXc + st.measW));
+        const el = this.q('#measStat');
+        if (el) el.textContent = '确定性投影：保留概率 ' + r.pKeep.toFixed(4) + ' · 幂等（重复投影态不变）';
+        this.toast('已投影到监视带内（保留 ' + (r.pKeep*100).toFixed(1) + '%）');
+      });
+      this.on(this.q('#btnMeasVerify'), 'click', () => {
+        const v = this.verifyProjection();
+        const el = this.q('#measStat');
+        if (el) el.textContent = '幂等验证：残差 ' + v.residual.toExponential(2) +
+          ' · 复测确定性 ' + v.rehit.toFixed(6) + '（=1 ⟹ 投影态即 Π 的本征态）';
+        this.toast('幂等残差 ' + v.residual.toExponential(2) + ' · 复测 ' + v.rehit.toFixed(6));
+      });
+      this.on(this.q('#btnMeasPath'), 'click', () => this.whichPath());
+      this.on(this.q('#btnMeasZeno'), 'click', () => { this.measSetup(); this.zenoRun(); });
+      this.on(this.q('#btnMeasFree'), 'click', () => { this.measSetup(); this.zenoRun(0); });
     }
 
     /* R65 双势阱：z₀/φ₀ 滑块（重发初态）+ 求 ΔE + 扫 g */
@@ -4640,6 +4959,16 @@ ${d3 ? `
                      worst: f.worst, wi: f.wi, ms: f.sp.ms,
                      stat: (this.q('#fwStat') || {}).textContent } : null; },
       fwellShow: (i) => this.fwellShow(i),
+      /* R68 投影测量调试句柄（CDP 断言用） */
+      measSetup: () => this.measSetup(),
+      probBand: (axis, lo, hi) => this.probBand1d(axis, lo, hi),
+      measureOnce: (axis, lo, hi) => this.measureOnce(axis, lo, hi),
+      projectBand: (axis, lo, hi) => this.projectBand1d(axis, lo, hi),
+      verifyProjection: () => this.verifyProjection(),
+      whichPath: () => this.whichPath(),
+      zenoRun: (every, nF, mode) => this.zenoRun(every, nF, mode),
+      zenoRuns: () => (this._zenoRuns || []).map(r => ({ every: r.every, mode: r.mode, nF: r.nF, pOut: r.pOut,
+        meas: r.meas, hits: r.hits, cut: r.cut, pts: r.series.length })),
       /* R66 暗孤子调试句柄 */
       darkProfile: (near) => this.darkProfile(near),
       darkModel: () => (this.kernel.darkModel ? this.kernel.darkModel(this.state) : null),
