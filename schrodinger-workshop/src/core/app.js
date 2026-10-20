@@ -140,6 +140,8 @@ export class QuantumField {
       /* R65 双势阱：dwZ0 = 初始粒子数差 z0=(N_L−N_R)/N（双高斯幅度 √((1±z0)/2)）、
          dwPhi = 两阱相对相位 φ0（右阱乘 e^{iφ0}）。两者都进 makeWave 的 dw 分支。 */
       dwZ0: 0.6, dwPhi: 0,
+      /* R66 暗孤子：darkV = 速度分数 v/c（|v/c|<1 才是亚声速暗孤子）。 */
+      darkV: 0.4,
       ...this.kernel.defaults(),
       ...(options.state || {}),
     };
@@ -359,6 +361,17 @@ export class QuantumField {
     <div class="row"><label>扫描状态</label><span id="dwScanStat">就绪</span></div>
     <canvas id="dwScanCanvas" width="420" height="180"></canvas>
     <div class="hint" style="margin-top:4px">两抛物阱（阱心距 20px、阱宽 44px、垒高 ≈0.052）中的 BEC，初态为双高斯叠加：左/右幅度 √((1±z₀)/2)、右阱带相位 φ₀。<b>Josephson 振荡</b>：z(t)=(N_L−N_R)/N 在两阱间来回（线性极限 z=z₀cos(ΔE·t/ħ)，ΔE 是双阱对称/反对称本征态的能量分裂——点「求 ΔE」用 R64 的谱求解器独立算出，与实测周期对照）。<b>宏观量子自囚禁</b>：相互作用 Λ=N·U/2K 超过 1 且初始不平衡足够大时，z(t) 不再过零、云锁在一侧——扫 g 看 z_min 随 |g| 抬升（实测本几何扫到 |g|=150 时 |z_min| 从 0.35 压到 0.26，趋势明确但**未跨过自囚禁相变**——面板如实标注，不宣称相变）。诚实限制：双高斯初态不是双阱精确基态组合，会额外激发阱内呼吸模（z 上的高频抖动）；两模模型只是近似，Λ 的 U 估计有 ~20% 误差，阈值只报量级。</div>
+  </div>
+  <div class="sec" id="darkSec">
+    <h3>暗孤子（defocusing）</h3>
+    <div class="row"><label>速度 v/c</label><input type="range" id="rDarkV" min="-0.9" max="0.9" step="0.05" value="0.4"><output id="oDarkV">0.40</output></div>
+    <div class="row"><label>位置 / 深度</label><span id="darkStat">—</span></div>
+    <div class="row"><label>理论</label><span id="darkTheory">—</span></div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnDarkMark">标记起点</button>
+      <button id="btnDarkV">测速度</button>
+    </div>
+    <div class="hint" style="margin-top:4px">g&lt;0（排斥）侧的强度解：均匀背景上的密度凹陷 |ψ|²=ρ₀[1−(1−v²/c²)sech²((x−vt)/ξ)]，相位在凹陷处跳 π。愈合长度 ξ=1/√(Gρ₀)、声速 c=√(Gρ₀)、凹陷深度 1−v²/c²。<b>v/c 滑块</b>直接设定传播速度（|v/c|&lt;1；越接近声速凹陷越浅）。它与「条带孤子」（g&gt;0 的密度尖峰）互为补集——同一方程的两侧。<b>测速度</b>：先「标记起点」，传播一段时间后再点「测速度」，用两次位置差除以时间差，与理论 v 对照。诚实限制：这是沿 y 均匀的暗<b>带</b>（准 1D），严格 1D 暗孤子才无条件稳定；2D 里会有缓慢的横向不稳定性与背景声波辐射。</div>
   </div>
   <div class="sec" id="scanSec">
     <h3>透射率扫描</h3>
@@ -874,7 +887,9 @@ ${d3 ? `
                                                               latV0: this.state.latV0, latA: this.state.latA,
                                                               twistX: this.state.twistX,
                                                               /* R65 双势阱初态参数（GP 的 dw 分支读；其它内核忽略） */
-                                                              dwZ0: this.state.dwZ0, dwPhi: this.state.dwPhi });
+                                                              dwZ0: this.state.dwZ0, dwPhi: this.state.dwPhi,
+                                                              /* R66 暗孤子初态参数（NLS 的 dark 分支读） */
+                                                              darkV: this.state.darkV });
     let sum = rawSum;
     /* 新波包先归一化到 Σ|ψ|²=1，再与旧场叠加。
        纹理中的旧场恒满足 Σ|ψ|²=1（初始归一化 + 演化酉守恒，HUD P=1.0000/err=0.000%）。
@@ -1156,6 +1171,38 @@ ${d3 ? `
       (sp.notConv ? ' ⚠未完全收敛' : '');
     const lv = this.q('#billLevels');
     if (lv) lv.textContent = sp.evals.slice(0, 6).map(v => v.toExponential(2)).join(' · ') + ' …';
+  }
+
+  /* ---------- R66 暗孤子：剖面极小位置 / 深度 ----------
+     沿 x 把 |ψ|² 对 y 求和（暗带沿 y 均匀），极小值位置即暗带中心；
+     背景取剖面中位数（避开 Dirichlet 边缘的下弯与凹陷本身）。 */
+  darkProfile(nearX){
+    const gl = this.gl, g = this.state.grid;
+    const ch = this.kernel.pairs === 2 ? 4 : 2;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
+    const buf = new Float32Array(g*g*ch);
+    gl.readPixels(0, 0, g, g, this.fmt, gl.FLOAT, buf);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    const prof = new Float64Array(g);
+    for (let y = 0; y < g; y++){
+      const row = y*g;
+      for (let x = 0; x < g; x++) prof[x] += this.kernel.cpuDensity(buf, (row + x)*ch);
+    }
+    /* nearX 给定 = 只在 ±30 texel 窗口内找极小（**跟踪**已知暗带）：全局最小
+       会被背景声波辐射产生的次级涟漪抢走（实测位置在 90↔251 之间乱跳）。 */
+    let im;
+    if (nearX !== undefined && nearX !== null && nearX >= 0){
+      const c0 = Math.round(nearX), lo = Math.max(3, c0 - 30), hi = Math.min(g - 4, c0 + 30);
+      im = lo;
+      for (let x = lo + 1; x <= hi; x++) if (prof[x] < prof[im]) im = x;
+    } else {
+      im = 3;
+      for (let x = 4; x < g - 4; x++) if (prof[x] < prof[im]) im = x;
+    }
+    const sorted = Array.from(prof).sort((a, b) => a - b);
+    const bg = sorted[g >> 1] || 1;
+    return { x: im/g, xi: im, depth: bg > 0 ? 1 - prof[im]/bg : 0, bg,
+             simTime: this.state.simTime };
   }
 
   /* ---------- R65 双势阱：ΔE（R64 谱求解器）+ z(t) 读数 ---------- */
@@ -2781,6 +2828,22 @@ ${d3 ? `
           ' · t=' + this.state.simTime.toFixed(0);
       }
     }
+    /* R66 暗孤子读数：位置（x 剖面极小）+ 凹陷深度 vs 理论 1−v²/c² */
+    const darkStat = this.q('#darkStat');
+    if (darkStat && this.kernelId === 'nls' && this.state.preset === 'dark'){
+      const nowD2 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+      if (!this._darkT || nowD2 - this._darkT > 150){
+        this._darkT = nowD2;
+        const pr = this.darkProfile();
+        this._darkPos = pr;
+        const lm = this.kernel.darkModel ? this.kernel.darkModel(this.state) : null;
+        darkStat.textContent = 'x=' + (pr.x*256).toFixed(1) + 'px · 深度=' + pr.depth.toFixed(3) +
+          (lm ? '（理论 ' + lm.depth.toFixed(3) + '）' : '') + ' · t=' + pr.simTime.toFixed(0);
+        const th = this.q('#darkTheory');
+        if (th && lm) th.textContent = 'ξ=' + lm.xi.toFixed(1) + 'px · c=' + lm.c.toExponential(2) +
+          ' · v=' + lm.v.toExponential(2) + ' px/tu · v/c=' + lm.vRel.toFixed(2);
+      }
+    }
     const landauStat = this.q('#landauStat');
     if (landauStat){
       const B = this.state.bOrb || 0;
@@ -3354,6 +3417,12 @@ ${d3 ? `
         (this.state.preset === 'billiard' || this.state.preset === 'billiardC')) ? '' : 'none';
       if (billSec.style.display !== wantB) billSec.style.display = wantB;
     }
+    /* R66 暗孤子面板：仅 NLS 内核 + dark 预设 */
+    const darkSec = this.q('#darkSec');
+    if (darkSec){
+      const wantDark = (this.kernelId === 'nls' && this.state.preset === 'dark') ? '' : 'none';
+      if (darkSec.style.display !== wantDark) darkSec.style.display = wantDark;
+    }
     /* R65 双势阱面板：仅 GP 内核 + dw 预设 */
     const dwSec = this.q('#dwSec');
     if (dwSec){
@@ -3621,6 +3690,27 @@ ${d3 ? `
     if (this.q('#btnLandauScan')){
       this.on(this.q('#btnLandauScan'), 'click', () => this.scannerLandau.start({}));
       this.on(this.q('#btnLandauScanStop'), 'click', () => this.scannerLandau.stop());
+    }
+    /* R66 暗孤子：v/c 滑块（重发初态）+ 标记起点/测速度 */
+    if (this.q('#rDarkV')){
+      this.bindRange('#rDarkV', '#oDarkV', 'darkV', v => v.toFixed(2), () => this.reinitWave());
+      this.on(this.q('#btnDarkMark'), 'click', () => {
+        const pr = this.darkProfile();
+        this._darkMark = { x: pr.x*256, t: pr.simTime };
+        this.toast('起点 x=' + this._darkMark.x.toFixed(1) + 'px · t=' + pr.simTime.toFixed(0));
+      });
+      this.on(this.q('#btnDarkV'), 'click', () => {
+        const mk = this._darkMark;
+        if (!mk) return this.toast('先点「标记起点」');
+        const pr = this.darkProfile();
+        const dt = pr.simTime - mk.t;
+        if (!(dt > 1e-6)) return this.toast('时间差太小');
+        const v = (pr.x*256 - mk.x)/dt;
+        const lm = this.kernel.darkModel ? this.kernel.darkModel(this.state) : null;
+        this._darkMark = null;
+        this.toast('实测 v=' + v.toExponential(2) + ' px/tu' +
+          (lm ? ' · 理论 ' + lm.v.toExponential(2) + '（比值 ' + (v/lm.v).toFixed(2) + '）' : ''));
+      });
     }
     /* R65 双势阱：z₀/φ₀ 滑块（重发初态）+ 求 ΔE + 扫 g */
     if (this.q('#btnDwScan')){
@@ -4293,6 +4383,9 @@ ${d3 ? `
       billiardSpectrum: () => { this.billiardSpectrum(); return this.billInfo(); },
       billiardShowBand: (i) => { this.billiardShowBand(Number(i) || 0); return true; },
       billInfo: () => this.billInfo(),
+      /* R66 暗孤子调试句柄 */
+      darkProfile: (near) => this.darkProfile(near),
+      darkModel: () => (this.kernel.darkModel ? this.kernel.darkModel(this.state) : null),
       /* R65 双势阱调试句柄 */
       dwSpectrum: () => { this.dwSpectrum(); return this._dwSpec || null; },
       dwZ: () => {

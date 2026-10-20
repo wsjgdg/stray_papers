@@ -998,7 +998,13 @@ class SchrodingerKernel extends PhysicsKernel {
     for (const key in P){
       if (key === 'lattice') continue;
       const b = P[key].build;
-      P[key].build = (paint) => { self._mode = 'free'; if (b) b(paint); };
+      P[key].build = (paint) => {
+        self._mode = 'free';
+        /* R66 反向守卫：NLS 的暗孤子预设借 twistX 开 x 周期边界（1e-9），
+           切回薛定谔的非 lattice 预设时必须归零，否则波包会 x 向绕回。 */
+        if (paint && paint.state) paint.state.twistX = 0;
+        if (b) b(paint);
+      };
     }
     return P;
   }
