@@ -927,7 +927,7 @@ function defaultList(o){
 /* 2D 全卷场矩（供 GP/NLS 适配器测量；pairs 感知，与 probSplit/cpuDensity 同源）：
    P / 质心 / 二阶矩半径 Rrms / 逐轴宽度 sx,sy / 峰值 |ψ|²max，外加原始缓冲
    供适配器做径向或轴向剖面。世界单位 = 格点（grid=256 时世界 px 1:1）。 */
-function fieldMoments2(app){
+export function fieldMoments2(app){
   const gl = app.gl, g = app.state.grid;
   const ch = app.kernel.pairs === 2 ? 4 : 2;
   gl.bindFramebuffer(gl.FRAMEBUFFER, app.psiA.fbo);
@@ -1637,6 +1637,280 @@ function app_state_bar(s){
   return tot ? ('累计 ' + tot + ' 步') : '';
 }
 
+/* ==========================================================================
+ * R63 Landau 回旋周期扫描（LANDAU_SPEC）
+ *
+ * 物理：均匀 B_z + 紧束缚带 E(k)=−(1/m)(cosθ+cosφ)（θ=k_x+B·y, φ=k_y）的
+ *   半经典轨道是闭合回旋，周期由振幅决定：
+ *     T₀ = 2πm/B（小振幅/谐振极限 = 连续统 Landau 回旋）
+ *     T(θ₀) = (4m/B)∫₀^{π/2}dα/√((1−s²sin²α)(1−s²cos²α))，s=sin(θ₀/2)
+ *   θ₀ = B·r 随轨道半径线性增长 ⟹ 固定半径扫 B 时，实测周期应贴着 T(θ₀)
+ *   曲线而非 1/B 直线——这正是「晶格非谐修正」的可视化（闭式与 ODE/量子
+ *   ADI 三方对账见 worklog R63）。
+ *
+ * 量子侧观测量：**质心轨迹**（fieldMoments2 的 Σx·p/P, Σy·p/P）。线性演化
+ *   下质心严格走经典轨道（Ehrenfest），y(t)=y_gc+r·cos ωt、x(t)=x_gc+r·sin ωt
+ *   ⟹ 复信号 z=(cx−x̄)+i(cy−ȳ) 的相位单调累积，展开后线性拟合得平均角速度
+ *   （见 orbitPeriod；比穿越/过零对幅度衰减与非谐稳健得多）。波包弥散会让
+ *   振幅衰减但不改变相位斜率；撞壁（Dirichlet 边界）才会污染，故发射几何
+ *   固定在盒心、r=30 texel、σ=5（≪ 磁长度 1/B），窗长 3.0·T_lattice（3 圈
+ *   ⟹ 斜率可靠）。
+ *   **已知限制（诚实标注）**：包宽必须远小于磁长度，B 越大可用 σ 越受限
+ *   （B=0.06 时 θ 空间散布仍有 B·σ=0.3 rad）；实测偏差随 B 单调变大
+ *   （0.4%→2.3%），这是 Ehrenfest 有限尺寸修正 + 非谐相位不均匀，已在
+ *   worklog R63 记录，不做「拟合到齐」式的掩盖。
+ *
+ * 发射几何（θ₀ = B·r 的构造）：guided center 落在盒心 y_gc、轨道半径 r ⟹
+ *   发射点取轨道**上端** y_gc+r（φ₀=k_y=0 ⟹ θ̇=(B/m)sinφ=0 ⟹ y 取极值），
+ *   k_x = −B·y_gc ⟹ θ(0) = k_x+B·(y_gc+r) = B·r > 0。
+ *
+ * 口径与既有约定一致：仅 schrodinger 内核（NLS/GP 双扫描会双重计数非线性项、
+ *   Dirac/Pauli 走 CN、3D 无 B 分支）；与 AB 磁通/扭曲边界互斥（规范帧不兼容，
+ *   gate 层拒绝并提示先清空——不静默改写用户状态）；强制 grid=256（与 Bloch
+ *   扫描同策：扫描定义在固定网格上）。
+ * ========================================================================== */
+const LANDAU_R = 30;        /* 轨道 y 向半径（texel）：θ₀ = B·(r+0.5) */
+/* 初始包宽（texel）。**必须 ≪ 磁长度 1/B**：轨道「厚度」≈ 空间包宽，B=0.05
+   时 1/B=20，σ=16 的包（θ 空间散布 B·σ=0.8 rad）与轨道半径 30 同量级 ⟹ 直接
+   糊成一团、相位不单调（CPU 镜像实测 turns=1.75/mono=0.77，周期误差 +37%）。
+   σ=5 时散布降到 B·σ=0.25 rad，5 个 B 点相位残差 ≤0.16 rad、偏差 ≤2.3%。 */
+const LANDAU_SIGMA = 5;
+const LANDAU_DEFAULTS = {
+  preset: 'free',
+  paramKey: 'bOrb',
+  /* 5 个 B 点：θ₀ = B·30.5 ∈ [0.61, 1.83] ⟹ T/T₀ ∈ [1.02, 1.52]——非谐
+     修正跨 50%，曲线与 1/B 直线的分离肉眼可辨 */
+  xs: [0.02, 0.03, 0.04, 0.05, 0.06],
+  boost: 4,
+  measureEvery: 8,
+  framesMax: 900,           /* 兜底；实际每点按 3.0·T_lattice 动态设定 */
+  grid: 256,
+  sigma: LANDAU_SIGMA,
+};
+
+/* 质心回旋周期：**复相位展开法**（对幅度衰减/非谐免疫）。
+   轨道绕指导中心转圈 ⟹ 复信号 z=(cx−x̄)+i(cy−ȳ) 的相位单调累积，展开后
+   φ(t)≈ω·t+φ₀，最小二乘斜率即平均角速度，T=2π/|ω|。
+   为什么不用「上升穿越」：波包弥散使振幅按 ~exp(−(t/τ)²) 衰减且非谐轨道
+   y(t) 含谐波，固定阈值的穿越会漏检/多检（CPU 镜像实测：B=0.04 时 cy 通道
+   偏差 −10.8% 而 cx 只 +1.8%，两者本应相同）。相位法只要「绕圈单调」，衰减
+   不影响斜率。返回 turns=净圈数（<1.6 圈则结果不可信，ok=false）。 */
+function orbitPeriod(traj){
+  const n = traj.length;
+  if (n < 12) return { T: NaN, turns: 0, resid: 0, amp: 0 };
+  /* 中段（去掉首尾 5%，避开起停瞬态）；中心取中段均值 */
+  const a = Math.floor(n*0.05), b = Math.ceil(n*0.95);
+  const seg = traj.slice(a, Math.max(a + 8, b));
+  let mx = 0, my = 0;
+  for (const p of seg){ mx += p.cx; my += p.cy; }
+  mx /= seg.length; my /= seg.length;
+  /* 相位展开 */
+  const ph = [];
+  let prev = null, acc = 0, path = 0, rmin = Infinity, rmax = 0;
+  for (const p of seg){
+    const dx = p.cx - mx, dy = p.cy - my;
+    const r = Math.hypot(dx, dy);
+    if (r < rmin) rmin = r;
+    if (r > rmax) rmax = r;
+    let th = Math.atan2(dy, dx);
+    if (prev == null) acc = th;
+    else {
+      let d = th - prev;
+      while (d > Math.PI) d -= 2*Math.PI;
+      while (d < -Math.PI) d += 2*Math.PI;
+      acc += d; path += Math.abs(d);
+    }
+    prev = th;
+    ph.push([p.t, acc]);
+  }
+  if (ph.length < 8) return { T: NaN, turns: 0, resid: 1, amp: 0 };
+  /* 最小二乘拟合 φ = ω t + b */
+  const nP = ph.length;
+  let st = 0, sa = 0, stt = 0, sta = 0;
+  for (const [t, v] of ph){ st += t; sa += v; stt += t*t; sta += t*v; }
+  const den = nP*stt - st*st;
+  if (!(Math.abs(den) > 1e-12)) return { T: NaN, turns: 0, resid: 1, amp: 0 };
+  const w = (nP*sta - st*sa)/den, b0 = (sa - w*st)/nP;
+  let ss = 0;
+  for (const [t, v] of ph){ const e = v - (w*t + b0); ss += e*e; }
+  const rms = Math.sqrt(ss/nP);                      /* 相位拟合残差（rad） */
+  const turns = Math.abs(acc)/2/Math.PI;
+  return {
+    T: Math.abs(w) > 1e-12 ? 2*Math.PI/Math.abs(w) : NaN,
+    turns, resid: rms, amp: 0.5*(rmax - rmin),
+    mono: path > 1e-9 ? Math.abs(acc)/path : 0,      /* ≈1 表示单调绕圈 */
+  };
+}
+
+export const LANDAU_SPEC = {
+  id: 'landau', label: 'Landau 回旋周期扫描',
+  defaults: LANDAU_DEFAULTS,
+  ids: { btn: '#btnLandauScan', btnStop: '#btnLandauScanStop',
+         stat: '#landauScanStat', canvas: '#landauScanCanvas' },
+  gate(app, s){
+    if (app.kernelId !== 'schrodinger') return 'Landau 回旋扫描仅薛定谔内核（2D 标量）';
+    if ((app.state.abSols || []).length) return '请先清空 AB 螺线管（B 模式与点磁通互斥）';
+    if (Math.abs(app.state.twistX || 0) > 1e-9) return '请先把 Bloch 相位 θ 拖回 0（B 模式禁用扭曲边界）';
+    /* 叠图参考曲线来自内核闭式（单源真值）；缺失则不扫描，避免「无量纲对照」 */
+    if (!app.kernel.landauModel) return '内核未提供 Landau 半经典模型';
+    return null;
+  },
+  prepare(app, o, s){
+    s._preset0 = app.state.preset;
+    s._sigma0 = app.state.sigma;
+    s._b0 = app.state.bOrb || 0;
+    if (app.state.grid !== o.grid){
+      app.state.grid = o.grid;
+      const sel = app.q('#selGrid');
+      if (sel) sel.value = String(o.grid);
+      app.allocGrid(o.grid);
+    }
+    /* 强制无势场场景：回旋周期是「B + 带结构」的函数，势场梯度会扭曲轨道
+       （扫描就不再有可对账的解析曲线）。loadPreset 同时把内核 _mode 归
+       'free'（R63 修复的场景开关，见 schrodinger.js presets()）。 */
+    app.loadPreset('free');
+    app.state.sigma = o.sigma;
+  },
+  teardown(app, s){
+    /* 恢复用户场景：B 复位到扫描前的值（不残留磁场，HUD 读数随之回零）、
+       预设（势场 + 初态）、σ。慢于「保留末点」的取舍：残留 B 会让面板读数
+       与已恢复的势场场景不对应，容易误读。 */
+    app.state.bOrb = s._b0;
+    if (s._preset0) app.loadPreset(s._preset0);
+    app.state.sigma = s._sigma0;
+    app.syncControls();
+  },
+  beginPoint(app, x, o, s){
+    const g = app.state.grid, r = LANDAU_R, ygc = g/2, B = x;
+    app.state.bOrb = B;
+    app.state.sigma = LANDAU_SIGMA;
+    app.initWave(0.5, (ygc + r)/g, -B*ygc, 0);
+    s._lm = app.kernel.landauModel(app.state) ||
+            { T0: 2*Math.PI*app.state.m/B, T: NaN, th0: B*r, valid: false };
+    s._traj = []; s._p0 = null;
+    /* 窗长：3.0 个半经典周期（T 为时间单位，dt=1.2/帧）——起点在轨道上端，
+       上升穿越落在 0.5T/1.5T/2.5T ⟹ 3 次穿越给 2 个间隔（中位）。
+       T 不可用（θ₀>π）时退化为 3.0·T₀ 并如实标注。 */
+    const Tref = isFinite(s._lm.T) ? s._lm.T : s._lm.T0;
+    s._framesMaxPt = Math.max(160, Math.min(6000, Math.ceil(3.0*Tref/1.2)));
+    app.syncControls();          /* 让面板滑块/读数跟随当前扫描点 */
+  },
+  measure(app, o, frames, s){
+    const m = fieldMoments2(app);
+    if (s._p0 == null) s._p0 = m.P;
+    s._traj.push({ t: app.state.simTime, cx: m.cx, cy: m.cy, P: m.P });
+    return m;
+  },
+  decide(m, frames, s){ return frames >= s._framesMaxPt; },
+  record(m, s){
+    const lm = s._lm;
+    const op = orbitPeriod(s._traj);
+    s.results.push({
+      x: s._x, B: s._x, T: op.T,
+      T0: lm.T0, Tl: lm.T, th0: lm.th0, valid: !!lm.valid,
+      amp: op.amp, turns: op.turns, resid: op.resid, mono: op.mono,
+      frames: s._frames, P0: s._p0, Pend: m.P,
+      /* 有效判据：≥1.6 圈（斜率有意义）+ 相位拟合残差 <0.5 rad + 绕圈单调 */
+      ok: isFinite(op.T) && op.turns >= 1.6 && op.resid < 0.5 && op.mono > 0.9,
+    });
+  },
+  summarize(results, app, o, s){
+    const dl = [], d0 = [];
+    for (const r of results){
+      if (!r.ok) continue;
+      if (isFinite(r.Tl)) dl.push((r.T - r.Tl)/r.Tl);
+      if (isFinite(r.T0)) d0.push((r.T - r.T0)/r.T0);
+    }
+    const med = a => { if (!a.length) return NaN; const b = a.slice().sort((x, y) => x - y); return b[b.length >> 1]; };
+    const pct = v => isFinite(v) ? (100*v).toFixed(1) + '%' : '—';
+    return {
+      nPoints: results.length, nOk: results.filter(r => r.ok).length,
+      medDevL: med(dl), medDev0: med(d0),
+      text: '实测 vs T_晶格 中位 ' + pct(med(dl)) + ' · vs T₀ ' + pct(med(d0)),
+    };
+  },
+  statusText(final, s){
+    if (final){
+      const sm = s.summary;
+      return sm ? ('完成 ' + sm.nPoints + ' 点（' + sm.nOk + ' 有效）· ' + sm.text) : '完成';
+    }
+    const lm = s._lm;
+    return (s._i + 1) + '/' + s.xs.length + ' · B=' + s._x.toFixed(3) +
+      ' · θ₀=' + (lm && isFinite(lm.th0) ? lm.th0.toFixed(2) : '—') +
+      ' · ' + s._frames + '/' + s._framesMaxPt + ' 帧';
+  },
+  startToast(s){ return 'Landau 回旋扫描 · ' + s.xs.length + " 个 B 点 · r=" + LANDAU_R + ' texel'; },
+  finishToast(s){ return 'Landau 回旋扫描完成 · ' + s.results.length + ' 点'; },
+  plot(cv, results, app, s){
+    const x = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    x.clearRect(0, 0, W, H);
+    x.fillStyle = 'rgba(4,8,16,.55)'; x.fillRect(0, 0, W, H);
+    if (!results.length) return;
+    const m = app.state.m, kern = app.kernel, rr = LANDAU_R + 0.5;
+    const T0f = B => 2*Math.PI*m/B;
+    const Tlf = B => { const th = B*rr; return th < Math.PI ? kern._landauPeriod(B, m, th) : NaN; };
+    let bLo = Math.min(...results.map(p => p.x)), bHi = Math.max(...results.map(p => p.x));
+    const padB = (bHi - bLo)*0.14 || 0.004;
+    bLo = Math.max(1e-3, bLo - padB); bHi += padB;
+    const KB = 48, T0s = [], Tls = [];
+    for (let i = 0; i <= KB; i++){
+      const B = bLo + (bHi - bLo)*i/KB;
+      T0s.push([B, T0f(B)]);
+      Tls.push([B, Tlf(B)]);
+    }
+    const vals = [];
+    for (const p of results) if (isFinite(p.T)) vals.push(p.T);
+    for (const [B, v] of T0s) if (isFinite(v)) vals.push(v);
+    for (const [B, v] of Tls) if (isFinite(v)) vals.push(v);
+    let lo = Math.min(...vals), hi = Math.max(...vals);
+    const padT = (hi - lo)*0.10 || 1;
+    lo -= padT; hi += padT;
+    const L = 42, T = 14, Bm = 20, HP = H - T - Bm;
+    const X = B => L + (B - bLo)/(bHi - bLo)*(W - L - 10);
+    const Y = v => T + (hi - v)/(hi - lo)*HP;
+    x.font = '9px ui-monospace,monospace';
+    x.strokeStyle = 'rgba(120,160,220,.14)'; x.lineWidth = 1;
+    for (let i = 0; i <= 4; i++){
+      const yy = T + HP*i/4;
+      x.beginPath(); x.moveTo(L, yy); x.lineTo(W - 10, yy); x.stroke();
+      x.fillStyle = '#9aa7bd'; x.textAlign = 'right';
+      x.fillText((hi - (hi - lo)*i/4).toFixed(0), L - 3, yy + 3);
+    }
+    /* T₀=2πm/B（灰虚线，连续统极限）与 T_晶格（青虚线，含非谐） */
+    for (const [arr, col, dash] of [[T0s, 'rgba(154,167,189,.75)', [3, 3]], [Tls, 'rgba(103,232,249,.85)', [6, 3]]]){
+      x.strokeStyle = col; x.setLineDash(dash); x.beginPath();
+      let first = true;
+      for (const [B, v] of arr){
+        if (!isFinite(v)) { first = true; continue; }
+        const px = X(B), py = Y(v);
+        if (first){ x.moveTo(px, py); first = false; } else x.lineTo(px, py);
+      }
+      x.stroke(); x.setLineDash([]);
+    }
+    /* 实测点（琥珀，误差棒 = |T−T_晶格| 的可视残差以竖线示意） */
+    x.strokeStyle = 'rgba(251,191,36,.9)'; x.fillStyle = '#fbbf24'; x.lineWidth = 1.4;
+    x.beginPath(); let first = true;
+    for (const r of results){
+      if (!isFinite(r.T)) continue;
+      const px = X(r.x), py = Y(r.T);
+      if (first){ x.moveTo(px, py); first = false; } else x.lineTo(px, py);
+    }
+    x.stroke();
+    for (const r of results){
+      if (!isFinite(r.T)) continue;
+      x.beginPath(); x.arc(X(r.x), Y(r.T), r.ok ? 2.8 : 2, 0, 6.2832); x.fill();
+    }
+    x.fillStyle = '#9aa7bd'; x.textAlign = 'left';
+    x.fillText('T(B) 回旋周期', L, 10);
+    x.fillStyle = '#fbbf24'; x.fillText('● 实测', W - 176, 10);
+    x.fillStyle = '#67e8f9'; x.fillText('-- T晶格', W - 128, 10);
+    x.fillStyle = '#9aa7bd'; x.fillText('-- T₀', W - 82, 10);
+    x.textAlign = 'center';
+    x.fillText('B_z', L + (W - L - 10)/2, H - 5);
+  },
+};
+
 /* ---------- 六个具体扫描器（薄子类：仅绑定各自 SPEC） ---------- */
 export class TransmissionScanner extends GenericScanner {
   constructor(app){ super(app, SCAN_SPEC); }
@@ -1655,4 +1929,7 @@ export class NlsScanner extends GenericScanner {
 }
 export class BlochScanner extends GenericScanner {
   constructor(app){ super(app, BLOCH_SPEC); }
+}
+export class LandauScanner extends GenericScanner {
+  constructor(app){ super(app, LANDAU_SPEC); }
 }

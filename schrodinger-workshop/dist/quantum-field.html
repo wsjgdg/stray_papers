@@ -431,11 +431,15 @@ const AB_MAX = 8;
    契约（展开处必须满足）：
      - 局部变量 c = texture(uPsi,vUv)（中心 texel；CN_SWEEP 中即 Jacobi 当前迭代 x_k）
      - helper S/rot4/ang/wrapPi 与 uniform uABOn/uABPos[]/uABPhi[]/uABCount/uTexel
-       及 #define AB_MAX 已声明（四个模板的 uniform 区逐字同款）
+       及 #define AB_MAX 已声明（2D 三个模板的 uniform 区逐字同款）
    产出：vec4 lap（5 点 stencil，含 AB 最小耦合 link 相位分支）。
    KINETIC_E 默认 -uK*lap 依赖本块；一阶内核（Dirac）覆写 kineticE 为函数（如
    diracD(vUv)）时 lap 沦为死代码，被编译器消除——行为零变化（R33 起 CN 路径
-   的 Pauli 用默认 -uK*lap，必须共享本块而非各自复制，保证 AB 分支单源真值）。 */
+   的 Pauli 用默认 -uK*lap，必须共享本块而非各自复制，保证 AB 分支单源真值）。
+   R63 注记：均匀磁场 B_z 的轨道耦合**不在本块**——复数 H 的 Peierls stencil 配
+   KDK 的 Re/Im 拆分不酉（实测 ρ−1 随网格线性增长，n=128 必爆，见 worklog R63
+   实施记录），已改为 TPL_EVOLVE 内的规范帧 ADI 定制分支（uLapDir 门控）；
+   本块保持 R61 的 AB+else 两分支原样（零回归单源真值）。 */
 const TPL_LAP_BLOCK = `  vec4 lap;
   if(uABOn > 0.5){
     /* 多管最小耦合 link 相位（R54）：U(1) 链变量相乘 ⟹ 各管相位**线性相加**。
@@ -545,6 +549,9 @@ uniform float uDriveAmp;    // 含时外场幅值 A（势单位），0 = 关闭�
 uniform float uDrivePhase;  // 驱动相位 φ = ω·(t+dt/2)，CPU 每帧按帧中点推算
 uniform int   uDriveMode;   // 0 = 均匀 AC Stark A·cos(φ)；1 = x 行波 A·cos(2πx−φ)
 uniform float uABOn;        // AB 多螺线管开关：0 = 原 5 点 stencil（count=0 时精确等价）
+uniform float uBOn;         // R63 均匀 B_z 轨道耦合开关（规范帧 ADI 专用）：0 = 走原 stencil（精确等价）
+uniform float uBz;          // R63 均匀 B_z（格点单位，q=1）：规范角 gA=B·x·y，+x link 相对相位 +B·y（Landau 规范 A=(−B·y,0,0)）
+uniform float uLapDir;      // R63 规范帧 ADI 扫描方向：0 = 全 5 点（KDK 原路径逐位等价）/ 1 = x-only 规范帧定制分支 / 2 = y-only 定制分支
 uniform vec2  uABPos[AB_MAX];   // 各螺线管位置（世界坐标；uABCount 之外不读）
 uniform float uABPhi[AB_MAX];   // 各管磁通 Φ（rad，绕行一周总相位；0 = 该管 link 相位恒 0）
 uniform int   uABCount;     // 实际管数（编译期常量循环 + 动态 break 截断）
@@ -565,17 +572,90 @@ vec4 S(vec2 uv){
   return texture(uPsi,uv);
 }
 vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
-vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }   /* 两复分量同相旋转 */
+/* 两复分量同相旋转。**s/co 必须正交归一化**（R63 实测）：GPU 的 sin/cos 只有
+   ~1e-6 相对精度，sin²+cos²≠1 的偏差带系统性符号；在 LAP/AB 里每次 pass 要
+   做 4~8 次旋转，24 pass/帧 ⟹ 每帧 3e-3 的范数损失（B 模式实测 155 帧掉 37%，
+   plain 路径 120 帧只掉 5e-7）。inversesqrt 一次把旋转矩阵拉回严格正交，
+   代价 1 次 rsqrt/旋转，四分量共享 ⟹ 可忽略。float64 的 CPU 镜像不受影响。 */
+vec4 rot4(vec4 c, float a){
+  float s = sin(a), co = cos(a);
+  float n = inversesqrt(max(1e-30, s*s + co*co));
+  s *= n; co *= n;
+  return vec4(c.x*co - c.y*s, c.x*s + c.y*co, c.z*co - c.w*s, c.z*s + c.w*co);
+}   /* 两复分量同相旋转 */
 /* AB link 相位辅助：视角（螺线管格点上 |d|²≈0 回退 0，防 atan2(0,0)）与 (−π,π] wrap */
 float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
 float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
 {{HELPERS}}
 void main(){
   vec4 c = texture(uPsi,vUv);
-{{LAP_BLOCK}}
   float V = (texture(uV,vUv).r*255.0-128.0)/127.0;
   /* 含时外场（实势 → H 厄米 → 概率守恒；A=0 时为 IEEE 精确恒等） */
   V += uDriveAmp * (uDriveMode == 1 ? cos(6.28318530718*vUv.x - uDrivePhase) : cos(uDrivePhase));
+  /* ---------- R63 规范帧 ADI 定制分支（uLapDir≠0 且 uBOn=1 时进入；B=0 路径
+     零影响：两个条件都不满足 ⟹ 原样走 LAP_BLOCK + KDK，逐位等价）----------
+     均匀 B_z（Landau 规范 A=(−B·y,0,0)，q=1）的离散 H 在 x 向 link 带 Peierls
+     相位 e^{+iB·y}（+x）/ e^{−iB·y}（−x）——复数 H。GPU KDK 的 Re/Im 拆分
+     （kick 用 Re(Hψ)、drift 用 Im(Hψ)）对复数 H **不酉**（实测 ρ−1 随网格
+     线性增长，128² 网格必爆，根因分析见 worklog R63 实施记录），故 B≠0 时
+     弃用 Peierls-stencil KDK，改用交替方向隐式风格的**规范帧分裂**：
+       · x 扫描（本分支 uLapDir=1）：规范变换 φ=e^{+iB·x·y}ψ 把 x 向 link 的
+         相位吸收为**实** stencil（邻居按 gA±B·y 预旋、中心按 gA 旋转、输出按
+         −gA 旋回）⟹ 与 B=0 逐字同构的精确酉 KDK；
+       · y 扫描（下一分支 uLapDir=2）：Landau 规范下 y 向 link 本无相位 ⟹
+         原帧内裸实 1D stencil；
+       · 两个方向交替（偶子步 x→y、奇子步 y→x）⟹ [A,B] 项相消的二阶格式
+         （等价 Strang；CPU float64 镜像已验证：保范 ~1e-6/5000 子步、二阶
+         收敛 ×4.0、与精确 expm 轨道周期吻合 0.15%）；
+       · V 对半 splitting（每个扫描只含 V/2，含驱动势——驱动是 V 的一部分，
+         规范不变；两扫描合计恰为全 V）。
+     门控由 app.js 保证：仅 2D 薛定谔内核（kernelId='schrodinger' 且 !dim3），
+     且 B 模式强制 uABOn=0/uTwistX=0（AB 与扭曲边界在规范帧下不成立，互斥）。 */
+  if(uLapDir > 0.5 && uLapDir < 1.5 && uBOn > 0.5){
+    /* x 扫描：规范帧。xT/yT = 格点索引（uv∈[0,1]；texel 中心口径 (i+0.5)，
+       与 AB 分支同款——一致性的关键是 ĝ_{x+1}−ĝ_x = B·yT 精确成立，谱与整数
+       索引口径等价（相差纯规范 diag(e^{iBx/2})，plaquette 磁通皆为 B））。 */
+    float xT = vUv.x/uTexel.x, yT = vUv.y/uTexel.y;
+    /* 规范角必须**先归约到 [0,2π)**：gA=B·x·y 在 256² 网格上可达 B·65536
+       （B=0.06 ⟹ 3.9e3 rad），而 GPU 的 sin/cos 对大参数做角度归约时精度
+       崩溃（实测 B=0.05 时范数 780 帧内衰减 97%，CPU float64 镜像只有 2e-4
+       ⟹ 差异全在 float32 三角函数）。归约不影响相对相位：三个角各自 mod
+       2π 后两两之差与原值模 2π 同余，e^{iφ} 完全相同。 */
+    float gA = uBz*xT*yT;
+    gA = gA - 6.28318530718*floor(gA*0.15915494309);
+    c = rot4(c, gA);                                       /* 规范帧中心值（复用 c 名供 LOCAL_H） */
+    float gP = gA + uBz*yT, gM = gA - uBz*yT;              /* 邻居相对角 ±B·y */
+    gP = gP - 6.28318530718*floor(gP*0.15915494309);
+    gM = gM - 6.28318530718*floor(gM*0.15915494309);
+    vec4 sp = rot4(S(vUv+vec2( uTexel.x,0.0)), gP);        /* +x 邻居 */
+    vec4 sm = rot4(S(vUv+vec2(-uTexel.x,0.0)), gM);        /* −x 邻居 */
+    vec4 lap = sp + sm - 2.0*c;                            /* 实 stencil（无 rot4） */
+    V *= 0.5;                                              /* V/2 对半 splitting */
+    vec4 Hc = {{KINETIC_E_X}} + {{LOCAL_H_X}};             /* 与 B=0 逐字同构（token 后缀 _X/_Y：fill() 重复注入位守卫要求每 token 每模板仅出现一次，取值与主路径同源） */
+    vec4 cp;
+    if(uUpdateV > 0.5){
+      cp = vec4(c.x, c.y - 0.5*uDt*Hc.x, c.z, c.w - 0.5*uDt*Hc.z);   // v_half/v_new = v - dt/2*H*u
+    } else {
+      cp = vec4(c.x + uDt*Hc.y, c.y, c.z + uDt*Hc.w, c.w);           // u_new = u + dt*H*v_half
+    }
+    o = rot4(cp, -gA);                                     /* 旋回原规范帧 */
+    return;
+  }
+  if(uLapDir > 1.5 && uBOn > 0.5){
+    /* y 扫描：Landau 规范 y 向 link 无 Peierls 相位 ⟹ 原帧内裸实 1D stencil。 */
+    vec4 sp = S(vUv+vec2(0.0, uTexel.y));
+    vec4 sm = S(vUv+vec2(0.0,-uTexel.y));
+    vec4 lap = sp + sm - 2.0*c;
+    V *= 0.5;                                              /* V/2 对半 splitting */
+    vec4 Hc = {{KINETIC_E_Y}} + {{LOCAL_H_Y}};
+    if(uUpdateV > 0.5){
+      o = vec4(c.x, c.y - 0.5*uDt*Hc.x, c.z, c.w - 0.5*uDt*Hc.z);   // v_half/v_new = v - dt/2*H*u
+    } else {
+      o = vec4(c.x + uDt*Hc.y, c.y, c.z + uDt*Hc.w, c.w);           // u_new = u + dt*H*v_half
+    }
+    return;
+  }
+{{LAP_BLOCK}}
   vec4 Hc = {{KINETIC_E}} + {{LOCAL_H}};   /* KINETIC_E 默认 -uK*lap（标量内核逐字等价）；一阶内核（Dirac）注入 -i·α·∂ */
   if(uUpdateV > 0.5){
     o = vec4(c.x, c.y - 0.5*uDt*Hc.x, c.z, c.w - 0.5*uDt*Hc.z);   // v_half/v_new = v - dt/2*H*u
@@ -784,7 +864,17 @@ uniform int   uDriveMode;       // 0 = 均匀 AC Stark A·cos(φ)；1 = x 行波
 vec4 S(vec3 p){ return texture(uPsi, clamp(p, vec3(0.0), vec3(1.0))); }
 /* AB link 相位辅助（与 2D 逐字同款，保证两边数学单源） */
 vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
-vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }
+/* 两复分量同相旋转。**s/co 必须正交归一化**（R63 实测）：GPU 的 sin/cos 只有
+   ~1e-6 相对精度，sin²+cos²≠1 的偏差带系统性符号；在 LAP/AB 里每次 pass 要
+   做 4~8 次旋转，24 pass/帧 ⟹ 每帧 3e-3 的范数损失（B 模式实测 155 帧掉 37%，
+   plain 路径 120 帧只掉 5e-7）。inversesqrt 一次把旋转矩阵拉回严格正交，
+   代价 1 次 rsqrt/旋转，四分量共享 ⟹ 可忽略。float64 的 CPU 镜像不受影响。 */
+vec4 rot4(vec4 c, float a){
+  float s = sin(a), co = cos(a);
+  float n = inversesqrt(max(1e-30, s*s + co*co));
+  s *= n; co *= n;
+  return vec4(c.x*co - c.y*s, c.x*s + c.y*co, c.z*co - c.w*s, c.z*s + c.w*co);
+}
 float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
 float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
 {{HELPERS}}
@@ -853,7 +943,17 @@ uniform int   uDriveMode;       // 0 = 均匀 AC Stark A·cos(φ)；1 = x 行波
 vec4 S(vec3 p){ return texture(uPsi, clamp(p, vec3(0.0), vec3(1.0))); }
 /* AB link 相位辅助（与 2D 逐字同款，保证两边数学单源） */
 vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
-vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }
+/* 两复分量同相旋转。**s/co 必须正交归一化**（R63 实测）：GPU 的 sin/cos 只有
+   ~1e-6 相对精度，sin²+cos²≠1 的偏差带系统性符号；在 LAP/AB 里每次 pass 要
+   做 4~8 次旋转，24 pass/帧 ⟹ 每帧 3e-3 的范数损失（B 模式实测 155 帧掉 37%，
+   plain 路径 120 帧只掉 5e-7）。inversesqrt 一次把旋转矩阵拉回严格正交，
+   代价 1 次 rsqrt/旋转，四分量共享 ⟹ 可忽略。float64 的 CPU 镜像不受影响。 */
+vec4 rot4(vec4 c, float a){
+  float s = sin(a), co = cos(a);
+  float n = inversesqrt(max(1e-30, s*s + co*co));
+  s *= n; co *= n;
+  return vec4(c.x*co - c.y*s, c.x*s + c.y*co, c.z*co - c.w*s, c.z*s + c.w*co);
+}
 float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
 float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
 {{HELPERS}}
@@ -904,7 +1004,17 @@ uniform int   uDriveMode;       // 0 = 均匀 AC Stark A·cos(φ)；1 = x 行波
 vec4 S(vec3 p){ return texture(uPsi, clamp(p, vec3(0.0), vec3(1.0))); }
 /* AB link 相位辅助（与 2D 逐字同款，保证两边数学单源） */
 vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
-vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }
+/* 两复分量同相旋转。**s/co 必须正交归一化**（R63 实测）：GPU 的 sin/cos 只有
+   ~1e-6 相对精度，sin²+cos²≠1 的偏差带系统性符号；在 LAP/AB 里每次 pass 要
+   做 4~8 次旋转，24 pass/帧 ⟹ 每帧 3e-3 的范数损失（B 模式实测 155 帧掉 37%，
+   plain 路径 120 帧只掉 5e-7）。inversesqrt 一次把旋转矩阵拉回严格正交，
+   代价 1 次 rsqrt/旋转，四分量共享 ⟹ 可忽略。float64 的 CPU 镜像不受影响。 */
+vec4 rot4(vec4 c, float a){
+  float s = sin(a), co = cos(a);
+  float n = inversesqrt(max(1e-30, s*s + co*co));
+  s *= n; co *= n;
+  return vec4(c.x*co - c.y*s, c.x*s + c.y*co, c.z*co - c.w*s, c.z*s + c.w*co);
+}
 float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
 float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
 {{HELPERS}}
@@ -1098,7 +1208,17 @@ vec4 S(vec2 uv){
   return texture(uPsi,uv);
 }
 vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
-vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }
+/* 两复分量同相旋转。**s/co 必须正交归一化**（R63 实测）：GPU 的 sin/cos 只有
+   ~1e-6 相对精度，sin²+cos²≠1 的偏差带系统性符号；在 LAP/AB 里每次 pass 要
+   做 4~8 次旋转，24 pass/帧 ⟹ 每帧 3e-3 的范数损失（B 模式实测 155 帧掉 37%，
+   plain 路径 120 帧只掉 5e-7）。inversesqrt 一次把旋转矩阵拉回严格正交，
+   代价 1 次 rsqrt/旋转，四分量共享 ⟹ 可忽略。float64 的 CPU 镜像不受影响。 */
+vec4 rot4(vec4 c, float a){
+  float s = sin(a), co = cos(a);
+  float n = inversesqrt(max(1e-30, s*s + co*co));
+  s *= n; co *= n;
+  return vec4(c.x*co - c.y*s, c.x*s + c.y*co, c.z*co - c.w*s, c.z*s + c.w*co);
+}
 float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
 float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
 {{HELPERS}}
@@ -1135,7 +1255,17 @@ vec4 S(vec2 uv){
   return texture(uPsi,uv);
 }
 vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
-vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }
+/* 两复分量同相旋转。**s/co 必须正交归一化**（R63 实测）：GPU 的 sin/cos 只有
+   ~1e-6 相对精度，sin²+cos²≠1 的偏差带系统性符号；在 LAP/AB 里每次 pass 要
+   做 4~8 次旋转，24 pass/帧 ⟹ 每帧 3e-3 的范数损失（B 模式实测 155 帧掉 37%，
+   plain 路径 120 帧只掉 5e-7）。inversesqrt 一次把旋转矩阵拉回严格正交，
+   代价 1 次 rsqrt/旋转，四分量共享 ⟹ 可忽略。float64 的 CPU 镜像不受影响。 */
+vec4 rot4(vec4 c, float a){
+  float s = sin(a), co = cos(a);
+  float n = inversesqrt(max(1e-30, s*s + co*co));
+  s *= n; co *= n;
+  return vec4(c.x*co - c.y*s, c.x*s + c.y*co, c.z*co - c.w*s, c.z*s + c.w*co);
+}
 float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
 float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
 {{HELPERS}}
@@ -1645,7 +1775,12 @@ function buildShaders(kernel){
     });
   };
   const out = {
-    evolve: fill(TPL_EVOLVE, { ...need, ...opt, UNIFORMS: uni, LAP_BLOCK: TPL_LAP_BLOCK }),
+    evolve: fill(TPL_EVOLVE, { ...need, ...opt, UNIFORMS: uni, LAP_BLOCK: TPL_LAP_BLOCK,
+      /* R63 规范帧 ADI 定制分支的动能/局部项 token（TPL_EVOLVE 主路径之外的两个
+         注入位；fill() 重复注入位守卫要求一模板内同名 token 仅出现一次 ⟹ 加
+         _X/_Y 后缀，取值与主路径的 KINETIC_E/LOCAL_H 完全同源） */
+      KINETIC_E_X: opt.KINETIC_E, LOCAL_H_X: s.localH,
+      KINETIC_E_Y: opt.KINETIC_E, LOCAL_H_Y: s.localH }),
     display: fill(TPL_DISPLAY, {
       DENSITY: s.density,
       PIXEL_COLOR: s.pixelColor || DEFAULT_PIXEL_COLOR,
@@ -4261,6 +4396,280 @@ function app_state_bar(s){
   return tot ? ('累计 ' + tot + ' 步') : '';
 }
 
+/* ==========================================================================
+ * R63 Landau 回旋周期扫描（LANDAU_SPEC）
+ *
+ * 物理：均匀 B_z + 紧束缚带 E(k)=−(1/m)(cosθ+cosφ)（θ=k_x+B·y, φ=k_y）的
+ *   半经典轨道是闭合回旋，周期由振幅决定：
+ *     T₀ = 2πm/B（小振幅/谐振极限 = 连续统 Landau 回旋）
+ *     T(θ₀) = (4m/B)∫₀^{π/2}dα/√((1−s²sin²α)(1−s²cos²α))，s=sin(θ₀/2)
+ *   θ₀ = B·r 随轨道半径线性增长 ⟹ 固定半径扫 B 时，实测周期应贴着 T(θ₀)
+ *   曲线而非 1/B 直线——这正是「晶格非谐修正」的可视化（闭式与 ODE/量子
+ *   ADI 三方对账见 worklog R63）。
+ *
+ * 量子侧观测量：**质心轨迹**（fieldMoments2 的 Σx·p/P, Σy·p/P）。线性演化
+ *   下质心严格走经典轨道（Ehrenfest），y(t)=y_gc+r·cos ωt、x(t)=x_gc+r·sin ωt
+ *   ⟹ 复信号 z=(cx−x̄)+i(cy−ȳ) 的相位单调累积，展开后线性拟合得平均角速度
+ *   （见 orbitPeriod；比穿越/过零对幅度衰减与非谐稳健得多）。波包弥散会让
+ *   振幅衰减但不改变相位斜率；撞壁（Dirichlet 边界）才会污染，故发射几何
+ *   固定在盒心、r=30 texel、σ=5（≪ 磁长度 1/B），窗长 3.0·T_lattice（3 圈
+ *   ⟹ 斜率可靠）。
+ *   **已知限制（诚实标注）**：包宽必须远小于磁长度，B 越大可用 σ 越受限
+ *   （B=0.06 时 θ 空间散布仍有 B·σ=0.3 rad）；实测偏差随 B 单调变大
+ *   （0.4%→2.3%），这是 Ehrenfest 有限尺寸修正 + 非谐相位不均匀，已在
+ *   worklog R63 记录，不做「拟合到齐」式的掩盖。
+ *
+ * 发射几何（θ₀ = B·r 的构造）：guided center 落在盒心 y_gc、轨道半径 r ⟹
+ *   发射点取轨道**上端** y_gc+r（φ₀=k_y=0 ⟹ θ̇=(B/m)sinφ=0 ⟹ y 取极值），
+ *   k_x = −B·y_gc ⟹ θ(0) = k_x+B·(y_gc+r) = B·r > 0。
+ *
+ * 口径与既有约定一致：仅 schrodinger 内核（NLS/GP 双扫描会双重计数非线性项、
+ *   Dirac/Pauli 走 CN、3D 无 B 分支）；与 AB 磁通/扭曲边界互斥（规范帧不兼容，
+ *   gate 层拒绝并提示先清空——不静默改写用户状态）；强制 grid=256（与 Bloch
+ *   扫描同策：扫描定义在固定网格上）。
+ * ========================================================================== */
+const LANDAU_R = 30;        /* 轨道 y 向半径（texel）：θ₀ = B·(r+0.5) */
+/* 初始包宽（texel）。**必须 ≪ 磁长度 1/B**：轨道「厚度」≈ 空间包宽，B=0.05
+   时 1/B=20，σ=16 的包（θ 空间散布 B·σ=0.8 rad）与轨道半径 30 同量级 ⟹ 直接
+   糊成一团、相位不单调（CPU 镜像实测 turns=1.75/mono=0.77，周期误差 +37%）。
+   σ=5 时散布降到 B·σ=0.25 rad，5 个 B 点相位残差 ≤0.16 rad、偏差 ≤2.3%。 */
+const LANDAU_SIGMA = 5;
+const LANDAU_DEFAULTS = {
+  preset: 'free',
+  paramKey: 'bOrb',
+  /* 5 个 B 点：θ₀ = B·30.5 ∈ [0.61, 1.83] ⟹ T/T₀ ∈ [1.02, 1.52]——非谐
+     修正跨 50%，曲线与 1/B 直线的分离肉眼可辨 */
+  xs: [0.02, 0.03, 0.04, 0.05, 0.06],
+  boost: 4,
+  measureEvery: 8,
+  framesMax: 900,           /* 兜底；实际每点按 3.0·T_lattice 动态设定 */
+  grid: 256,
+  sigma: LANDAU_SIGMA,
+};
+
+/* 质心回旋周期：**复相位展开法**（对幅度衰减/非谐免疫）。
+   轨道绕指导中心转圈 ⟹ 复信号 z=(cx−x̄)+i(cy−ȳ) 的相位单调累积，展开后
+   φ(t)≈ω·t+φ₀，最小二乘斜率即平均角速度，T=2π/|ω|。
+   为什么不用「上升穿越」：波包弥散使振幅按 ~exp(−(t/τ)²) 衰减且非谐轨道
+   y(t) 含谐波，固定阈值的穿越会漏检/多检（CPU 镜像实测：B=0.04 时 cy 通道
+   偏差 −10.8% 而 cx 只 +1.8%，两者本应相同）。相位法只要「绕圈单调」，衰减
+   不影响斜率。返回 turns=净圈数（<1.6 圈则结果不可信，ok=false）。 */
+function orbitPeriod(traj){
+  const n = traj.length;
+  if (n < 12) return { T: NaN, turns: 0, resid: 0, amp: 0 };
+  /* 中段（去掉首尾 5%，避开起停瞬态）；中心取中段均值 */
+  const a = Math.floor(n*0.05), b = Math.ceil(n*0.95);
+  const seg = traj.slice(a, Math.max(a + 8, b));
+  let mx = 0, my = 0;
+  for (const p of seg){ mx += p.cx; my += p.cy; }
+  mx /= seg.length; my /= seg.length;
+  /* 相位展开 */
+  const ph = [];
+  let prev = null, acc = 0, path = 0, rmin = Infinity, rmax = 0;
+  for (const p of seg){
+    const dx = p.cx - mx, dy = p.cy - my;
+    const r = Math.hypot(dx, dy);
+    if (r < rmin) rmin = r;
+    if (r > rmax) rmax = r;
+    let th = Math.atan2(dy, dx);
+    if (prev == null) acc = th;
+    else {
+      let d = th - prev;
+      while (d > Math.PI) d -= 2*Math.PI;
+      while (d < -Math.PI) d += 2*Math.PI;
+      acc += d; path += Math.abs(d);
+    }
+    prev = th;
+    ph.push([p.t, acc]);
+  }
+  if (ph.length < 8) return { T: NaN, turns: 0, resid: 1, amp: 0 };
+  /* 最小二乘拟合 φ = ω t + b */
+  const nP = ph.length;
+  let st = 0, sa = 0, stt = 0, sta = 0;
+  for (const [t, v] of ph){ st += t; sa += v; stt += t*t; sta += t*v; }
+  const den = nP*stt - st*st;
+  if (!(Math.abs(den) > 1e-12)) return { T: NaN, turns: 0, resid: 1, amp: 0 };
+  const w = (nP*sta - st*sa)/den, b0 = (sa - w*st)/nP;
+  let ss = 0;
+  for (const [t, v] of ph){ const e = v - (w*t + b0); ss += e*e; }
+  const rms = Math.sqrt(ss/nP);                      /* 相位拟合残差（rad） */
+  const turns = Math.abs(acc)/2/Math.PI;
+  return {
+    T: Math.abs(w) > 1e-12 ? 2*Math.PI/Math.abs(w) : NaN,
+    turns, resid: rms, amp: 0.5*(rmax - rmin),
+    mono: path > 1e-9 ? Math.abs(acc)/path : 0,      /* ≈1 表示单调绕圈 */
+  };
+}
+
+const LANDAU_SPEC = {
+  id: 'landau', label: 'Landau 回旋周期扫描',
+  defaults: LANDAU_DEFAULTS,
+  ids: { btn: '#btnLandauScan', btnStop: '#btnLandauScanStop',
+         stat: '#landauScanStat', canvas: '#landauScanCanvas' },
+  gate(app, s){
+    if (app.kernelId !== 'schrodinger') return 'Landau 回旋扫描仅薛定谔内核（2D 标量）';
+    if ((app.state.abSols || []).length) return '请先清空 AB 螺线管（B 模式与点磁通互斥）';
+    if (Math.abs(app.state.twistX || 0) > 1e-9) return '请先把 Bloch 相位 θ 拖回 0（B 模式禁用扭曲边界）';
+    /* 叠图参考曲线来自内核闭式（单源真值）；缺失则不扫描，避免「无量纲对照」 */
+    if (!app.kernel.landauModel) return '内核未提供 Landau 半经典模型';
+    return null;
+  },
+  prepare(app, o, s){
+    s._preset0 = app.state.preset;
+    s._sigma0 = app.state.sigma;
+    s._b0 = app.state.bOrb || 0;
+    if (app.state.grid !== o.grid){
+      app.state.grid = o.grid;
+      const sel = app.q('#selGrid');
+      if (sel) sel.value = String(o.grid);
+      app.allocGrid(o.grid);
+    }
+    /* 强制无势场场景：回旋周期是「B + 带结构」的函数，势场梯度会扭曲轨道
+       （扫描就不再有可对账的解析曲线）。loadPreset 同时把内核 _mode 归
+       'free'（R63 修复的场景开关，见 schrodinger.js presets()）。 */
+    app.loadPreset('free');
+    app.state.sigma = o.sigma;
+  },
+  teardown(app, s){
+    /* 恢复用户场景：B 复位到扫描前的值（不残留磁场，HUD 读数随之回零）、
+       预设（势场 + 初态）、σ。慢于「保留末点」的取舍：残留 B 会让面板读数
+       与已恢复的势场场景不对应，容易误读。 */
+    app.state.bOrb = s._b0;
+    if (s._preset0) app.loadPreset(s._preset0);
+    app.state.sigma = s._sigma0;
+    app.syncControls();
+  },
+  beginPoint(app, x, o, s){
+    const g = app.state.grid, r = LANDAU_R, ygc = g/2, B = x;
+    app.state.bOrb = B;
+    app.state.sigma = LANDAU_SIGMA;
+    app.initWave(0.5, (ygc + r)/g, -B*ygc, 0);
+    s._lm = app.kernel.landauModel(app.state) ||
+            { T0: 2*Math.PI*app.state.m/B, T: NaN, th0: B*r, valid: false };
+    s._traj = []; s._p0 = null;
+    /* 窗长：3.0 个半经典周期（T 为时间单位，dt=1.2/帧）——起点在轨道上端，
+       上升穿越落在 0.5T/1.5T/2.5T ⟹ 3 次穿越给 2 个间隔（中位）。
+       T 不可用（θ₀>π）时退化为 3.0·T₀ 并如实标注。 */
+    const Tref = isFinite(s._lm.T) ? s._lm.T : s._lm.T0;
+    s._framesMaxPt = Math.max(160, Math.min(6000, Math.ceil(3.0*Tref/1.2)));
+    app.syncControls();          /* 让面板滑块/读数跟随当前扫描点 */
+  },
+  measure(app, o, frames, s){
+    const m = fieldMoments2(app);
+    if (s._p0 == null) s._p0 = m.P;
+    s._traj.push({ t: app.state.simTime, cx: m.cx, cy: m.cy, P: m.P });
+    return m;
+  },
+  decide(m, frames, s){ return frames >= s._framesMaxPt; },
+  record(m, s){
+    const lm = s._lm;
+    const op = orbitPeriod(s._traj);
+    s.results.push({
+      x: s._x, B: s._x, T: op.T,
+      T0: lm.T0, Tl: lm.T, th0: lm.th0, valid: !!lm.valid,
+      amp: op.amp, turns: op.turns, resid: op.resid, mono: op.mono,
+      frames: s._frames, P0: s._p0, Pend: m.P,
+      /* 有效判据：≥1.6 圈（斜率有意义）+ 相位拟合残差 <0.5 rad + 绕圈单调 */
+      ok: isFinite(op.T) && op.turns >= 1.6 && op.resid < 0.5 && op.mono > 0.9,
+    });
+  },
+  summarize(results, app, o, s){
+    const dl = [], d0 = [];
+    for (const r of results){
+      if (!r.ok) continue;
+      if (isFinite(r.Tl)) dl.push((r.T - r.Tl)/r.Tl);
+      if (isFinite(r.T0)) d0.push((r.T - r.T0)/r.T0);
+    }
+    const med = a => { if (!a.length) return NaN; const b = a.slice().sort((x, y) => x - y); return b[b.length >> 1]; };
+    const pct = v => isFinite(v) ? (100*v).toFixed(1) + '%' : '—';
+    return {
+      nPoints: results.length, nOk: results.filter(r => r.ok).length,
+      medDevL: med(dl), medDev0: med(d0),
+      text: '实测 vs T_晶格 中位 ' + pct(med(dl)) + ' · vs T₀ ' + pct(med(d0)),
+    };
+  },
+  statusText(final, s){
+    if (final){
+      const sm = s.summary;
+      return sm ? ('完成 ' + sm.nPoints + ' 点（' + sm.nOk + ' 有效）· ' + sm.text) : '完成';
+    }
+    const lm = s._lm;
+    return (s._i + 1) + '/' + s.xs.length + ' · B=' + s._x.toFixed(3) +
+      ' · θ₀=' + (lm && isFinite(lm.th0) ? lm.th0.toFixed(2) : '—') +
+      ' · ' + s._frames + '/' + s._framesMaxPt + ' 帧';
+  },
+  startToast(s){ return 'Landau 回旋扫描 · ' + s.xs.length + " 个 B 点 · r=" + LANDAU_R + ' texel'; },
+  finishToast(s){ return 'Landau 回旋扫描完成 · ' + s.results.length + ' 点'; },
+  plot(cv, results, app, s){
+    const x = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    x.clearRect(0, 0, W, H);
+    x.fillStyle = 'rgba(4,8,16,.55)'; x.fillRect(0, 0, W, H);
+    if (!results.length) return;
+    const m = app.state.m, kern = app.kernel, rr = LANDAU_R + 0.5;
+    const T0f = B => 2*Math.PI*m/B;
+    const Tlf = B => { const th = B*rr; return th < Math.PI ? kern._landauPeriod(B, m, th) : NaN; };
+    let bLo = Math.min(...results.map(p => p.x)), bHi = Math.max(...results.map(p => p.x));
+    const padB = (bHi - bLo)*0.14 || 0.004;
+    bLo = Math.max(1e-3, bLo - padB); bHi += padB;
+    const KB = 48, T0s = [], Tls = [];
+    for (let i = 0; i <= KB; i++){
+      const B = bLo + (bHi - bLo)*i/KB;
+      T0s.push([B, T0f(B)]);
+      Tls.push([B, Tlf(B)]);
+    }
+    const vals = [];
+    for (const p of results) if (isFinite(p.T)) vals.push(p.T);
+    for (const [B, v] of T0s) if (isFinite(v)) vals.push(v);
+    for (const [B, v] of Tls) if (isFinite(v)) vals.push(v);
+    let lo = Math.min(...vals), hi = Math.max(...vals);
+    const padT = (hi - lo)*0.10 || 1;
+    lo -= padT; hi += padT;
+    const L = 42, T = 14, Bm = 20, HP = H - T - Bm;
+    const X = B => L + (B - bLo)/(bHi - bLo)*(W - L - 10);
+    const Y = v => T + (hi - v)/(hi - lo)*HP;
+    x.font = '9px ui-monospace,monospace';
+    x.strokeStyle = 'rgba(120,160,220,.14)'; x.lineWidth = 1;
+    for (let i = 0; i <= 4; i++){
+      const yy = T + HP*i/4;
+      x.beginPath(); x.moveTo(L, yy); x.lineTo(W - 10, yy); x.stroke();
+      x.fillStyle = '#9aa7bd'; x.textAlign = 'right';
+      x.fillText((hi - (hi - lo)*i/4).toFixed(0), L - 3, yy + 3);
+    }
+    /* T₀=2πm/B（灰虚线，连续统极限）与 T_晶格（青虚线，含非谐） */
+    for (const [arr, col, dash] of [[T0s, 'rgba(154,167,189,.75)', [3, 3]], [Tls, 'rgba(103,232,249,.85)', [6, 3]]]){
+      x.strokeStyle = col; x.setLineDash(dash); x.beginPath();
+      let first = true;
+      for (const [B, v] of arr){
+        if (!isFinite(v)) { first = true; continue; }
+        const px = X(B), py = Y(v);
+        if (first){ x.moveTo(px, py); first = false; } else x.lineTo(px, py);
+      }
+      x.stroke(); x.setLineDash([]);
+    }
+    /* 实测点（琥珀，误差棒 = |T−T_晶格| 的可视残差以竖线示意） */
+    x.strokeStyle = 'rgba(251,191,36,.9)'; x.fillStyle = '#fbbf24'; x.lineWidth = 1.4;
+    x.beginPath(); let first = true;
+    for (const r of results){
+      if (!isFinite(r.T)) continue;
+      const px = X(r.x), py = Y(r.T);
+      if (first){ x.moveTo(px, py); first = false; } else x.lineTo(px, py);
+    }
+    x.stroke();
+    for (const r of results){
+      if (!isFinite(r.T)) continue;
+      x.beginPath(); x.arc(X(r.x), Y(r.T), r.ok ? 2.8 : 2, 0, 6.2832); x.fill();
+    }
+    x.fillStyle = '#9aa7bd'; x.textAlign = 'left';
+    x.fillText('T(B) 回旋周期', L, 10);
+    x.fillStyle = '#fbbf24'; x.fillText('● 实测', W - 176, 10);
+    x.fillStyle = '#67e8f9'; x.fillText('-- T晶格', W - 128, 10);
+    x.fillStyle = '#9aa7bd'; x.fillText('-- T₀', W - 82, 10);
+    x.textAlign = 'center';
+    x.fillText('B_z', L + (W - L - 10)/2, H - 5);
+  },
+};
+
 /* ---------- 六个具体扫描器（薄子类：仅绑定各自 SPEC） ---------- */
 class TransmissionScanner extends GenericScanner {
   constructor(app){ super(app, SCAN_SPEC); }
@@ -4279,6 +4688,9 @@ class NlsScanner extends GenericScanner {
 }
 class BlochScanner extends GenericScanner {
   constructor(app){ super(app, BLOCH_SPEC); }
+}
+class LandauScanner extends GenericScanner {
+  constructor(app){ super(app, LANDAU_SPEC); }
 }
 
 /* ===== src/core/app.js ===== */
@@ -4396,6 +4808,12 @@ class QuantumField {
          残影）。默认关——TPL_DISPLAY 新增段全部 uniform 门控，关闭时最终
          行与旧路径逐字等价。bohmFade = 残影每帧衰减系数。 */
       showJ: false, bohmOn: false, bohmFade: 0.985,
+      /* R63 均匀磁场 B_z 的**轨道**耦合（Landau 能级）：bOrb 为格点单位的
+         B（q=1）⟹ 回旋频率 ω_c=bOrb/m、回旋周期 T=2πm/bOrb、Landau 能级
+         E_n=(n+½)ω_c。**与 Pauli 的 bX/bY/bZ 正交**（后者是自旋塞曼项，不含
+         轨道耦合）；与 AB 的 abSols 亦正交（点磁通 vs 均匀矢势）。默认 0 ⟹
+         uBOn=0 走原 stencil 逐位等价。 */
+      bOrb: 0,
       /* R62 光学晶格：latV0（势深，世界单位）/ latA（周期，世界 px）/
          twistX（Bloch 相位 θ_B=k·a，∈[0,π] 覆盖简约 BZ）/ latBand（弛漾目标带
          1|2）。lattice 预设的 params 会注入同名默认值，此处给非 lattice 预设
@@ -4432,6 +4850,9 @@ class QuantumField {
     /* R62 Bloch 能带扫描（k 扫描测两带 ⟨E⟩ + Mathieu 解析叠图）；仅薛定谔
        内核的光学晶格预设可用（面板在 buildDOM 后按内核静态门控） */
     this.scannerBloch = new BlochScanner(this);
+    /* R63 Landau 回旋周期扫描（bOrb 扫描 + 质心轨迹周期检测 + T₀/T_晶格 叠图）；
+       仅薛定谔内核（landauSec 同款门控），与 AB/扭曲边界互斥（gate 层拒绝） */
+    this.scannerLandau = new LandauScanner(this);
     this._onError = e => {
       const d = this.q('#diag');
       if (d) d.textContent = 'ERR ' + e.message;
@@ -4552,6 +4973,19 @@ class QuantumField {
         <option value="1">x 行波驱动</option>
       </select>
     </div>
+  </div>
+  <div class="sec" id="landauSec">
+    <h3>均匀磁场 B（Landau 能级）</h3>
+    <div class="row"><label>磁场 B_z</label><input type="range" id="rBOrb" min="-0.06" max="0.06" step="0.001" value="0"><output id="oBOrb">0.000</output></div>
+    <div class="row"><label>回旋预测</label><span id="landauStat">B=0 · 无轨道耦合</span></div>
+    <div class="hint" style="margin-top:4px">均匀 B 的**轨道**耦合（最小耦合 p→p−qA，Landau 规范 A=(−B·y,0,0)，q=1）：仅 x 向 link 有 Peierls 相位 e^{±iB·y}（A_x 沿 x 恒定 ⟹ 线积分**精确**，离散 H 严格厄米）。<b>积分器</b>：复数 H 配 KDK 的 Re/Im 拆分<b>不酉</b>（kick 用 Re(Hψ)、drift 用 Im(Hψ)，B≠0 时范数漂移随网格放大直至爆炸）⟹ B≠0 自动切**规范帧 ADI**：x 扫描以 φ=e^{iBxy}ψ 把 x 相位吸收成实 stencil（精确保酉），y 扫描在原帧走裸实 stencil（Landau 规范 y 向本无相位），两方向交替 ⟹ 二阶；CPU float64 镜像已验证保范/二阶/轨道周期（+0.15%）。<b>Landau 能级</b> E_n=(n+½)ℏω_c、<b>回旋频率</b> ω_c=B/m；连续统周期 T₀=2πm/B 是<b>小振幅极限</b>——紧束缚带非抛物 ⟹ 大振幅轨道类单摆拉长（读数实时给 T_晶格；能级间距=ω_c 不受影响，CPU 对角化已验）。B=0 走原 KDK 逐位等价。<b>仅薛定谔内核</b>（NLS/GP 非线性项双重计数、Dirac/Pauli 走 CN、3D 无 B 分支）；<b>与 AB 磁通/扭曲边界互斥</b>（规范帧不兼容，拖 B 前请先清空）；<b>与 Pauli 自旋塞曼滑块正交</b>（那是纯自旋项，无轨道耦合）。</div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnLandauScan">扫描回旋周期</button>
+      <button id="btnLandauScanStop" disabled>中止</button>
+    </div>
+    <div class="row"><label>扫描状态</label><span id="landauScanStat">就绪</span></div>
+    <canvas id="landauScanCanvas" width="420" height="180"></canvas>
+    <div class="hint" style="margin-top:4px"><b>回旋周期扫描</b>：固定轨道半径（r=30 texel）、逐点扫 B，发高斯包测<b>质心轨迹</b>（Ehrenfest：线性演化下质心严格走经典轨道），按 y/x 两条通道的上升穿越间隔取中位数得周期 T。叠图两条参考曲线：灰虚线 <b>T₀=2πm/B</b>（连续统/谐振极限）与青虚线 <b>T_晶格</b>（紧束缚带的半经典闭式，含非谐）——θ₀=B·r 随 B 线性增长，实测点应贴 T_晶格 而非 1/B 直线。扫描会临时切到「自由传播」场景并强制 256² 网格，结束后恢复原预设与 σ。</div>
   </div>
   <div class="sec" id="latticeSec">
     <h3>光学晶格（Bloch）</h3>
@@ -5371,6 +5805,11 @@ ${d3 ? `
     }
     if (this.kernel.integrator === 'cn'){
       this.evolveCN(dt);
+    } else if (this.state.bOrb !== 0 && this.kernelId === 'schrodinger'){
+      /* R63 均匀 B_z：仅 2D 薛定谔内核走规范帧 ADI（evolveKDK_B）。NLS/GP 的
+         非线性项进 ADI 双扫描会被双重计数、Dirac/Pauli 走 CN、3D 无 B 分支
+         ——面板/滑块/URL 三层门控保证不会带 B 进这些内核，此处为分派兜底。 */
+      this.evolveKDK_B(dt);
     } else {
       this.evolveKDK(dt);
     }
@@ -5801,6 +6240,14 @@ ${d3 ? `
        （h=256/latA 个晶格周期；面板 twistX 语义是每周期相位 θ_B=k·a）。
        θ_BC=0 ⟹ shader 走原 Dirichlet 路径逐位等价（同 uABOn/uDriveAmp 门控）。 */
     gl.uniform1f(this.u(this.progEvolve,'uTwistX'), this.twistBC());
+    /* R63 均匀 B_z：B 模式由 evolveKDK_B 独家处理（规范帧 ADI 定制分支），
+       本 plain 路径恒 uBOn=0/uBz=0/uLapDir=0 ⟹ 定制分支不进、LAP_BLOCK 无
+       B 分支 ⟹ 逐位等价 R62 及以前的裸 5 点 KDK（含 NLS/GP/Dirac/Pauli）。
+       uLapDir=0 显式上传还消除「evolveKDK_B 跑过后 program 级 state 残留」
+       的隐患（B 滑块拖回 0 的当帧即回 plain 路径）。 */
+    gl.uniform1f(this.u(this.progEvolve,'uBOn'), 0);
+    gl.uniform1f(this.u(this.progEvolve,'uBz'), 0);
+    gl.uniform1f(this.u(this.progEvolve,'uLapDir'), 0);
     /* Aharonov-Bohm（R54 多管）：count=0 → uABOn=0 走原 5 点 stencil（精确等价旧路径）；
        link 相位算子厄米且谱半径不变（|U|=1），P 守恒、E_max 不变。 */
     this.setABUniforms(gl, this.progEvolve, false);
@@ -5820,6 +6267,79 @@ ${d3 ? `
         gl.uniform1f(uUV, pass === 1 ? 0.0 : 1.0);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
         const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
+      }
+    }
+    this.state.simTime += dt;
+  }
+
+  /* R63 均匀磁场 B_z 的**规范帧 ADI**一帧推进（kernelId='schrodinger' 且
+     state.bOrb≠0；2D 专属，evolve() 门控分派）。
+     立项根因：复数 H（Peierls 相位）配 GPU KDK 的 Re/Im 拆分**不酉**——kick
+     用 Re(Hψ)、drift 用 Im(Hψ)，B≠0 时放大矩阵谱半径 ρ>1 且 ρ−1 随网格线性
+     增长（CPU 镜像实测 n=16: 3.4e-3@B=0.02，外推 n=128 ~2.4e-2/子步必爆），
+     AB 多管分支同构亦有此病（|U|=1 只保谱半径，不保 KDK 的酉性）。
+     算法（kernel.js TPL_EVOLVE 定制分支，CPU float64 镜像数值验证见 worklog
+     R63「实施记录与验证」）：
+       · 每子步两个方向扫描，偶子步 x→y、奇子步 y→x（alternating-Lie，
+         [A,B] 相消 ⟹ 二阶，等价 Strang 精度）；
+       · 每扫描 = 完整 KDK（kick/drift/kick 3 pass）⟹ 6 pass/子步（plain
+         KDK 3 pass 的 2×；规范变换融合在 x 扫描着色器内，无额外 pass）；
+       · x 扫描（uLapDir=1）：shader 内 φ=e^{+iBxy}ψ 规范旋转使 x 向 link 变
+         **实** stencil ⟹ 与 B=0 逐字同构的精确酉 KDK；y 扫描（uLapDir=2）：
+         Landau 规范 y 向本无相位 ⟹ 原帧裸实 1D stencil；
+       · V/2 对半 splitting（shader 内 V*=0.5；含驱动势——驱动是 V 的一部分，
+         规范不变，两扫描合计恰为全 V）；
+       · B 模式强制 uTwistX=0 与 AB off（setABUniforms diag=true）——规范帧
+         要求无扭曲边界/无点磁通，面板/滑块/URL 层已互斥，此处兜底；
+       · **稳定性（实测修正，勿再按单方向界推）**：交替 splitting 的稳定域由
+         **完整 2D H 的谱**支配，不是单方向 1D 界——交叉项 (dts²/2)[A,B] 在
+         λ~O(1) 时被放大。CPU float64 镜像（n=256/B=0.05 同扫描几何，3 个
+         回旋周期）实测：dts=0.1/0.2/0.3 保范 2e-6/5e-5/2e-4（有界、不增长），
+         dts=0.4 在 t≈90 崩溃（P−1→4.8），dts=0.6 立即漂移（t=32 即 1.3）。
+         ⟹ eMax 取与 plain KDK **逐字相同**的全 2D 界（uK·8+1）⟹ dt=1.2 时
+         sub=4、dts=0.3（成本 4×6=24 pass/帧，plain 为 4×3=12 pass）。 */
+  evolveKDK_B(dt){
+    const k = 0.5/this.state.m;
+    const gl = this.gl;
+    /* 与 evolveKDK 同一 eMax（全 2D 界；理由见上段实测） */
+    const eMax = k*8 + 1 + this.kernel.eMaxExtra(this.state) + Math.abs(this.state.driveAmp);
+    const sub = Math.max(this.state.substeps, Math.ceil(dt*eMax/1.5));
+    const dtSub = dt/sub;
+    gl.useProgram(this.progEvolve);
+    gl.bindVertexArray(this.quad.vao);
+    gl.uniform1f(this.u(this.progEvolve,'uDt'), dtSub);
+    gl.uniform1f(this.u(this.progEvolve,'uK'), k);
+    gl.uniform2f(this.u(this.progEvolve,'uTexel'), 1/this.state.grid, 1/this.state.grid);
+    /* 含时外场：帧中点冻结相位（与 plain KDK 同口径；驱动经 V/2 进两个扫描） */
+    const dPhase = this.state.driveOmega * (this.state.simTime + dt*0.5);
+    gl.uniform1f(this.u(this.progEvolve,'uDriveAmp'), this.state.driveAmp);
+    gl.uniform1f(this.u(this.progEvolve,'uDrivePhase'), dPhase);
+    gl.uniform1i(this.u(this.progEvolve,'uDriveMode'), this.state.driveMode);
+    gl.uniform1f(this.u(this.progEvolve,'uTwistX'), 0);          /* B 模式禁扭曲边界 */
+    gl.uniform1f(this.u(this.progEvolve,'uBOn'), 1);
+    gl.uniform1f(this.u(this.progEvolve,'uBz'), this.state.bOrb);
+    this.setABUniforms(gl, this.progEvolve, true);               /* B 模式禁 AB（diag 口径） */
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this.vTex);
+    gl.uniform1i(this.u(this.progEvolve,'uV'), 1);
+    this.kernel.setUniforms(gl, this.progEvolve, this.state);   /* 内核私有 uniform */
+    const uUV = this.u(this.progEvolve,'uUpdateV');
+    const uDir = this.u(this.progEvolve,'uLapDir');
+    for (let s=0; s<sub; s++){
+      /* alternating-Lie：偶子步先 x 后 y、奇子步先 y 后 x */
+      const order = (s % 2 === 0) ? [1.0, 2.0] : [2.0, 1.0];
+      for (const dir of order){
+        gl.uniform1f(uDir, dir);
+        for (let pass=0; pass<3; pass++){
+          gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiB.fbo);
+          gl.viewport(0,0,this.state.grid,this.state.grid);
+          gl.activeTexture(gl.TEXTURE0);
+          gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
+          gl.uniform1i(this.u(this.progEvolve,'uPsi'), 0);
+          gl.uniform1f(uUV, pass === 1 ? 0.0 : 1.0);   // kick, drift, kick
+          gl.drawArrays(gl.TRIANGLES, 0, 3);
+          const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
+        }
       }
     }
     this.state.simTime += dt;
@@ -6168,6 +6688,9 @@ ${d3 ? `
         pmx+=this._readBuf3[i*4+2]; pmy+=this._readBuf3[i*4+3];
       }
       if (!this._baseCaptured){ this.baseP0 = sp; this._baseCaptured = true; }
+      /* R63：留存最近一次归约矩——质心（Σx·p/P, Σy·p/P）是回旋运动的观测量，
+         验证脚本需按帧采样（无额外 GPU 回读） */
+      this._lastMom = { sp, st, sv, sx, sy, sxx, syy };
       this.hud(sp, st, sv, Math.sqrt(sp2), {sx, sy, sxx, syy, stx, sty, pmx, pmy});
       /* R61 概率流归约（同 120ms 节流；仅开关时跑）——max|J| 驱动箭头归一化 */
       if (this.state.showJ || this.state.bohmOn) this.jRedPass();
@@ -6780,6 +7303,40 @@ ${d3 ? `
       const wantSlit = this.kernel.dim3 ? '' : 'none';
       if (slitScanSec.style.display !== wantSlit) slitScanSec.style.display = wantSlit;
     }
+    /* R63 Landau 回旋预测读数（schrodinger.js landauModel 单源模型；暂停时拖
+       B 滑块也即时刷新）。B≠0 时同时给出：
+       · ω_c=B/m 与连续统周期 T₀=2πm/B（小振幅谐振极限）；
+       · T_晶格——紧束缚带非抛物的半经典修正（闭式椭圆积分型求积，大振幅
+         类单摆拉长；与 CPU/ODE 实测 1e-5 对账，见 worklog R63）；
+       · 轨道振幅 θ₀=k_x+B·y_c 与 y 向包络（贴墙时预警——半经典轨道出界后
+         Ehrenfest 对应失效，实测周期不再遵循任何一条曲线）。
+       URL 层拒绝 ?bOrb= 时展示原因（拖滑块即清除）。 */
+    const landauStat = this.q('#landauStat');
+    if (landauStat){
+      const B = this.state.bOrb || 0;
+      if (B === 0){
+        landauStat.textContent = this._urlBOrbNote
+          ? 'B=0 · ' + this._urlBOrbNote
+          : 'B=0 · 无轨道耦合（走原 KDK 路径，逐位等价）';
+      } else {
+        const lm = this.kernel.landauModel ? this.kernel.landauModel(this.state) : null;
+        if (lm){
+          const wall = Math.min(lm.yLo, this.state.grid - lm.yHi);
+          /* θ₀ ≥ π（轨道跨布里渊边界）时闭式失效 ⟹ 只报 T₀ 与几何量，
+             T_晶格 明确标注「近似失效」而不是给 NaN/假值。 */
+          const tl = lm.valid
+            ? ' · T_晶格≈' + lm.T.toFixed(0) + '（×' + lm.ratio.toFixed(2) + '）'
+            : ' · T_晶格：θ₀>π 半经典近似失效';
+          landauStat.textContent = 'ω_c=' + lm.wc.toFixed(4) +
+            ' · T₀=2πm/B=' + lm.T0.toFixed(0) + '（≈' + Math.round(lm.T0/1.2) + ' 帧）' +
+            tl + ' · θ₀=' + lm.th0.toFixed(2) + 'rad' +
+            (wall < 0 ? ' · ⚠轨道已出界（越 ' + (-wall).toFixed(0) + ' texel）'
+              : wall < 4 ? ' · ⚠轨道将撞壁（余 ' + wall.toFixed(0) + ' texel）' : '');
+        } else {
+          landauStat.textContent = 'ω_c=' + (Math.abs(B)/this.state.m).toFixed(4) + ' · 当前内核无 Landau 模型';
+        }
+      }
+    }
     /* R62 Bloch 能带扫描面板门控：仅薛定谔内核 + lattice 预设可用（扫描 gate
        内亦有同款检查兜底——面板先行隐藏，避免用户点到一个必然失败的按钮）。
        与 scanSec 同一动态门控模式（仅在实际变化时写 style）。 */
@@ -6808,6 +7365,13 @@ ${d3 ? `
      按选中操作。所有变更统一走 refreshABReadout + syncABPhiSlider + HUD 刷新，
      pointer 事件与 debugHandle（CDP）共用同一方法入口（不合成鼠标事件）。 */
   placeSolenoid(wx, wy, phi){
+    /* R63 互斥守卫：均匀 B 模式（evolveKDK_B 强制 uABOn=0）下放置 AB 会静默
+       失效 ⟹ 直接拒绝并提示（与 rBOrb 滑块守卫对称：B≠0 时清空 AB 才能开 B，
+       开 B 后不放 AB）。twistX 同理由 applyLatticeParams/URL 层天然错开。 */
+    if (this.state.bOrb !== 0 && this.kernelId === 'schrodinger'){
+      this.toast('均匀磁场模式下 AB 磁通被禁用（互斥）——请先把 B_z 拖回 0');
+      return -1;
+    }
     const list = this.state.abSols || (this.state.abSols = []);
     let evicted = false;
     if (list.length >= AB_MAX){ list.shift(); evicted = true; }   /* FIFO 淘汰最旧（R49 potBlobs 同策） */
@@ -7303,6 +7867,15 @@ ${d3 ? `
       const want = (this.kernelId === 'schrodinger') ? '' : 'none';
       if (latSec.style.display !== want) latSec.style.display = want;
     }
+    /* R63 Landau 面板门控：仅薛定谔内核（schrodinger 永非 dim3——3D 是独立
+       内核 schrodinger3d）。规范帧 ADI 定制分支为标量路径：NLS/GP 非线性项
+       进双扫描会双重计数、Dirac/Pauli 走 CN、3D 无 B 分支。滑块/URL 层
+       亦有同款兜底（见 bindRange('#rBOrb') 与 applyUrlParams）。 */
+    const landauSec = this.q('#landauSec');
+    if (landauSec){
+      const wantL = (this.kernelId === 'schrodinger') ? '' : 'none';
+      if (landauSec.style.display !== wantL) landauSec.style.display = wantL;
+    }
     /* R54：AB 多螺线管面板同步（预设 params/URL/导入存档可注入 abSols/abSel；
        滑块对齐选中管 Φ，选中行/位置读数随列表刷新） */
     this.syncABPhiSlider();
@@ -7499,6 +8072,29 @@ ${d3 ? `
     this.bindRange('#rGamma','#oGamma','gamma', v => v.toFixed(3));
     this.bindRange('#rDriveAmp','#oDriveAmp','driveAmp', v => v.toFixed(3), () => this.refreshParamHud());
     this.bindRange('#rDriveOmega','#oDriveOmega','driveOmega', v => v.toFixed(2), () => this.refreshParamHud());
+    /* R63 均匀 B 轨道耦合：滑块即时生效（每帧 evolveKDK_B 上传 uBOn/uBz/uLapDir，
+       无需重发波包——与驱动幅值同类：只改算符不改态）。
+       门控（与面板显隐/URL 层三层一致）：
+       ① 仅薛定谔内核（NLS/GP 非线性项 ADI 双扫描双重计数、Dirac/Pauli 走 CN）；
+       ② 与 AB 磁通/扭曲边界互斥——规范帧 ADI 要求 uABOn=0/uTwistX=0（Landau
+          规范的规范变换 φ=e^{iBxy}ψ 与扭曲边界/点磁通不兼容）。
+       拒绝时把 state 回退 0 并 syncControls 推回 DOM（bindRange 的 upd 先写
+       state 后调 after，故此处纠正是唯一落点）。 */
+    this.bindRange('#rBOrb','#oBOrb','bOrb', v => v.toFixed(3), () => {
+      this._urlBOrbNote = null;                     /* 用户主动操作 ⟹ URL 拒绝备注失效 */
+      const st = this.state;
+      if (st.bOrb !== 0 && this.kernelId !== 'schrodinger'){
+        st.bOrb = 0; this.syncControls();
+        this.toast('均匀磁场（Landau）仅支持薛定谔内核（当前：' + this.kernelId + '）');
+        return;
+      }
+      if (st.bOrb !== 0 && ((st.abSols && st.abSols.length) || (st.twistX || 0) !== 0)){
+        st.bOrb = 0; this.syncControls();
+        this.toast('均匀磁场与 AB 磁通/扭曲边界互斥（规范帧 ADI 要求先清空两者）');
+        return;
+      }
+      this.refreshParamHud();
+    });
     /* R62 光学晶格参数：三个滑块的 after 回调统一走 applyLatticeParams
        （确保处于晶格场景 → 按新 V₀/a/θ 重画势 + 重发初态） */
     this.bindRange('#rLatV0','#oLatV0','latV0', v => v.toFixed(3), () => this.applyLatticeParams());
@@ -7529,6 +8125,11 @@ ${d3 ? `
         this.scannerBloch.start({ kN: parseInt(this.q('#rBlochN').value, 10) || 17 });
       });
       this.on(this.q('#btnBlochScanStop'), 'click', () => this.scannerBloch.stop());
+    }
+    /* R63 Landau 回旋周期扫描（LANDAU_SPEC；面板按钮） */
+    if (this.q('#btnLandauScan')){
+      this.on(this.q('#btnLandauScan'), 'click', () => this.scannerLandau.start({}));
+      this.on(this.q('#btnLandauScanStop'), 'click', () => this.scannerLandau.stop());
     }
     this.bindABPhi();   /* R54：多管 Φ 滑块（写入目标随选中态切换，见方法注释） */
     this.refreshABReadout();   /* R54：初始态读数（构造默认 abSols=[] ⟹ 「无 · 放置即新建」） */
@@ -7838,6 +8439,19 @@ ${d3 ? `
     if (isFinite(qla)) this.state.latA = qla;
     if (isFinite(qtw)) this.state.twistX = qtw;
     if (qlb === 1 || qlb === 2) this.state.latBand = qlb;
+    /* R63 均匀 B 轨道耦合：?bOrb=0.01（格点单位，q=1）。门控同滑块层：仅
+       薛定谔内核 + 与 AB/扭曲边界互斥；不满足时忽略并记因（landauStat 读数
+       展示，拖滑块即清除——URL 冲突不静默）。 */
+    const qbo = parseFloat(qp.get('bOrb'));
+    if (isFinite(qbo) && qbo !== 0){
+      if (this.kernelId !== 'schrodinger'){
+        this._urlBOrbNote = '?bOrb=' + qbo + ' 已忽略：均匀磁场仅支持薛定谔内核';
+      } else if ((this.state.abSols && this.state.abSols.length) || (this.state.twistX || 0) !== 0){
+        this._urlBOrbNote = '?bOrb=' + qbo + ' 已忽略：与 AB 磁通/扭曲边界互斥';
+      } else {
+        this.state.bOrb = qbo;
+      }
+    }
     /* 晶格参数经 URL 覆盖后需重画势 / 重发初态（loadPreset 用的是预设默认值）：
        latV0/latA 影响势纹理，twistX 影响初态平面波相位 ⟹ 任一被覆盖都要重走 */
     if (this.kernelId === 'schrodinger' && this.state.preset === 'lattice' &&
@@ -8116,6 +8730,43 @@ ${d3 ? `
       relaxTask: () => { const t = this.kernel._relaxTask; return t ? { band: t.band, steps: t.steps, mu: t.mu, blockOff: t.blockOff } : null; },
       lastRelax: () => this.kernel._lastRelax || null,
       blochModel: () => (this.kernel.blochModel ? this.kernel.blochModel(this.state) : null),
+      /* R63 质心（归约矩 Σx·p/P, Σy·p/P，格点单位）+ simTime：回旋轨迹采样。
+         归约为 120ms 节流 ⟹ 采样间隔同频（回旋周期 ~10² 帧，足够密） */
+      centroid: () => {
+        const m = this._lastMom;
+        if (!m || !(m.sp > 0)) return null;
+        return { x: m.sx/m.sp, y: m.sy/m.sp, P: m.sp, T: m.st, V: m.sv, t: this.state.simTime };
+      },
+      bOrb: () => this.state.bOrb || 0,
+      /* R63：setBOrb 门控同滑块层（仅薛定谔内核 + 与 AB/扭曲边界互斥）。
+         拒绝时返回**当前生效值**（非请求值）——CDP 诊断方可自证门控生效，
+         不会把「静默失败」误读成「已设置」。 */
+      setBOrb: (v) => {
+        const nv = Number(v) || 0;
+        const st = this.state;
+        const ok = nv === 0 || (this.kernelId === 'schrodinger' &&
+          !(st.abSols && st.abSols.length) && (st.twistX || 0) === 0);
+        st.bOrb = ok ? nv : 0;
+        this._urlBOrbNote = null;
+        this.syncControls(); this.refreshParamHud();
+        return st.bOrb;
+      },
+      /* R63 Landau 扫描调试句柄（cdp63 浏览器验证用）：
+         - scanLandau：扫描器实例（start(opts)/stop()/busy/results/summary）
+         - landauModel()：半经典模型快照（θ₀/T₀/T_晶格/valid——与 HUD 同源）
+         - mom2()：**精确**质心（fieldMoments2，扫描器同一原语；非 HUD 的
+           120ms 节流读数）——CDP 逐帧采样回旋轨迹用 */
+      scanLandau: this.scannerLandau,
+      landauModel: () => (this.kernel.landauModel ? this.kernel.landauModel(this.state) : null),
+      mom2: () => {
+        const m = fieldMoments2(this);
+        return { cx: m.cx, cy: m.cy, P: m.P, peak: m.peak, Rrms: m.Rrms, t: this.state.simTime };
+      },
+      /* 单帧物理推进（不经 rAF）：CDP 以固定步数驱动，避免受帧率影响 */
+      stepOnce: () => { this.evolve(); return this.state.simTime; },
+      /* 按给定几何重发波包 + 设 σ（cdp63 单点回旋验证：与扫描器 beginPoint 同口径） */
+      emit: (fx, fy, kx, ky) => { this.initWave(fx, fy, kx, ky); return this.state.lastWave; },
+      setSigma: (v) => { this.state.sigma = Number(v) || 0; if (this.state.lastWave) this.reinitWave(); return this.state.sigma; },
       /* R52：内核实例（渐进弛豫任务状态诊断：relaxPending/_relaxTask.steps/
          _lastRelax——虚时间流分帧推进是异步引擎行为，CDP 需直读任务态） */
       kernel: this.kernel,
@@ -8341,6 +8992,44 @@ ${d3 ? `
         gl.bindVertexArray(this.quad.vao);
         if (this.kernel.integrator === 'cn'){
           this._cnSteps(n, 0.5*(1.2/6), 0, tx, true);
+        } else if (this.state.bOrb !== 0 && this.kernelId === 'schrodinger'){
+          /* R63 B 模式诊断步进：规范帧 ADI 序列（evolveKDK_B 同构；diag 口径：
+             驱动/AB/扭曲归零）。语义：n = 子步数，每子步 = 6 pass（x,y 两扫描
+             各 kick/drift/kick）——与 plain 路径的「n = 平铺 pass 数」不同，
+             调用方（cdp 诊断）按 B 模式口径解读。 */
+          gl.useProgram(this.progEvolve);
+          gl.uniform1f(this.u(this.progEvolve,'uDt'), 1.2/6);
+          gl.uniform1f(this.u(this.progEvolve,'uK'), 0.5/this.state.m);
+          gl.uniform2f(this.u(this.progEvolve,'uTexel'), tx, tx);
+          gl.uniform1f(this.u(this.progEvolve,'uDriveAmp'), 0);
+          gl.uniform1f(this.u(this.progEvolve,'uDrivePhase'), 0);
+          gl.uniform1i(this.u(this.progEvolve,'uDriveMode'), 0);
+          gl.uniform1f(this.u(this.progEvolve,'uTwistX'), 0);
+          gl.uniform1f(this.u(this.progEvolve,'uBOn'), 1);
+          gl.uniform1f(this.u(this.progEvolve,'uBz'), this.state.bOrb);
+          this.setABUniforms(gl, this.progEvolve, true);
+          this.kernel.setUniforms(gl, this.progEvolve, this.state);
+          gl.activeTexture(gl.TEXTURE1);
+          gl.bindTexture(gl.TEXTURE_2D, this.vTex);
+          gl.uniform1i(this.u(this.progEvolve,'uV'), 1);
+          const uUV = this.u(this.progEvolve,'uUpdateV');
+          const uDir = this.u(this.progEvolve,'uLapDir');
+          for (let i=0;i<n;i++){
+            const order = (i % 2 === 0) ? [1.0, 2.0] : [2.0, 1.0];
+            for (const dir of order){
+              gl.uniform1f(uDir, dir);
+              for (let pass=0; pass<3; pass++){
+                gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiB.fbo);
+                gl.viewport(0,0,g0,g0);
+                gl.activeTexture(gl.TEXTURE0);
+                gl.bindTexture(gl.TEXTURE_2D, this.psiA.tex);
+                gl.uniform1i(this.u(this.progEvolve,'uPsi'), 0);
+                gl.uniform1f(uUV, pass === 1 ? 0.0 : 1.0);
+                gl.drawArrays(gl.TRIANGLES, 0, 3);
+                const tmp = this.psiA; this.psiA = this.psiB; this.psiB = tmp;
+              }
+            }
+          }
         } else {
         gl.useProgram(this.progEvolve);
         gl.uniform1f(this.u(this.progEvolve,'uDt'), 1.2/6);
@@ -8350,6 +9039,9 @@ ${d3 ? `
         gl.uniform1f(this.u(this.progEvolve,'uDrivePhase'), 0);
         gl.uniform1i(this.u(this.progEvolve,'uDriveMode'), 0);
         gl.uniform1f(this.u(this.progEvolve,'uTwistX'), 0);   /* 诊断路径：无扭曲边界（同驱动/AB 归零口径） */
+        gl.uniform1f(this.u(this.progEvolve,'uBOn'), 0);      /* 诊断路径：无轨道耦合（同上） */
+        gl.uniform1f(this.u(this.progEvolve,'uBz'), 0);
+        gl.uniform1f(this.u(this.progEvolve,'uLapDir'), 0);   /* R63：plain 诊断路径无 ADI 扫描 */
         this.setABUniforms(gl, this.progEvolve, true);   /* 诊断路径强制无 AB（diag，同 evolveCN 口径） */
         this.kernel.setUniforms(gl, this.progEvolve, this.state);   /* 内核私有 uniform（Dirac 的 uMass 等）：暂停态手动步进时 evolve 帧循环可能尚未设置过 */
         gl.activeTexture(gl.TEXTURE1);
@@ -9384,6 +10076,58 @@ class SchrodingerKernel extends PhysicsKernel {
     /* 薛定谔内核暂无私有 URL 参数（保留扩展点；AB 已迁引擎级） */
   }
 
+  /* ---------- R63 Landau 半经典模型（HUD 读数 + LandauScanner 叠图共用，单源真值）----------
+     均匀 B_z（Landau 规范 A=(−B·y,0,0)，q=1）+ 紧束缚带
+     E(k)=−(1/m)(cos(k_x+B·y)+cos k_y)（uK=1/2m）的半经典回旋：
+       θ̇=(B/m)·sinφ,  φ̇=−(B/m)·sinθ,  守恒量 H=−(cosθ+cosφ)
+     （θ=k_x+B·y、φ=k_y；(0,0) 稳定平衡 ⟹ 小振幅 T₀=2πm/B=2π/ω_c，即连续统
+     Landau 回旋周期）。大振幅时非谐（类单摆）拉长周期——这正是「连续统公式
+     只在小轨道极限成立」的晶格修正，诚实标注而非隐藏。
+     周期闭式（两步代换 w=sin(θ/2)、w=s·sinα 去掉端点 1/√ 奇性，被积函数在
+     [0,π/2] 光滑；与 scipy ODE 实测 10 点全部吻合到 1e-5，见 worklog R63）：
+       T(θ₀) = (4m/B)∫₀^{π/2} dα / √((1−s²sin²α)(1−s²cos²α)),  s=sin(θ₀/2)
+     复合 Simpson N=256 求积（光滑被积 ⟹ ~1e-13；单次调用 ~512 次 flop，
+     HUD 每帧刷新成本可忽略）。 */
+  landauModel(state){
+    const B = Math.abs(state.bOrb || 0), m = state.m;
+    if (!B) return null;
+    /* **单位口径**：lastWave = [fx, fy, kx, ky]，fx/fy 是**分数坐标**（0..1，
+       gaussianWave 内部 cx=fx·grid）——旧版直接把 fy 当 texel 用，θ₀ 随 B
+       差一个 grid 因子（B=0.05、fy=0.5 时 θ₀ 由 6.4 误算成 0.325）。现统一
+       折到 texel 中心（y_c = fy·grid，texel y 的中心在 y+0.5，与 shader 的
+       yT=vUv.y/uTexel.y 同口径）。 */
+    const w = state.lastWave;
+    const kx = w ? (w[2] || 0) : 0;
+    const yc = w ? w[1]*state.grid + 0.5 : state.grid/2;
+    /* 轨道振幅 θ₀ = k_x + B·y_c（φ₀=k_y≈0 时 y_c 是轨道**上端**：θ̇=(B/m)sinφ
+       在 φ=0 处为 0 ⟹ y 取极值）。轨道 y 向展开 = [y_c−2θ₀/B, y_c]（波包
+       有限尺寸使实际轨迹略宽，Ehrenfest 修正见 worklog R63）。 */
+    const th0 = Math.abs(kx + B*yc);
+    const T0 = 2*Math.PI*m/B;                       /* 连续统/谐振极限 T₀ */
+    /* θ₀ ≥ π ⟹ 轨道跨越 θ=±π（sinθ 的零点 = 布里渊边界），闭式的推导前提
+       （θ 在 (−π,π) 内做单摆式振荡）失效：θ₀→π⁻ 时 T 对数发散，越过 π 后
+       公式给的是另一支的「假周期」（s=sin(θ₀/2) 回落，T 反而变小）。如实
+       置 valid=false 并让 T/ratio 为 NaN，由 HUD/扫描器标注近似失效——不静默
+       返回一个看似合理的错数。 */
+    const valid = th0 < Math.PI - 1e-9;
+    const T = valid ? this._landauPeriod(B, m, th0) : NaN;   /* 晶格半经典（含非谐） */
+    return {
+      B, m, kx, yc, th0, wc: B/m, T0, T, ratio: valid ? T/T0 : NaN, valid,
+      yLo: yc - 2*th0/B, yHi: yc,                   /* 半经典轨道 y 向包络（texel） */
+      rOrb: 2*th0/B,                                /* y 向全展（撞壁判据用） */
+    };
+  }
+
+  _landauPeriod(B, m, th0){
+    /* T(θ₀) = (4m/B)∫₀^{π/2} dα/√((1−s²sin²α)(1−s²cos²α))，复合 Simpson */
+    const s = Math.sin(0.5*th0), s2 = s*s;
+    const N = 256, h = Math.PI/2/N;
+    const f = a => 1/Math.sqrt((1 - s2*Math.sin(a)*Math.sin(a))*(1 - s2*Math.cos(a)*Math.cos(a)));
+    let sum = f(0) + f(Math.PI/2);
+    for (let i = 1; i < N; i++) sum += (i % 2 ? 4 : 2)*f(i*h);
+    return 4*m*sum*h/3/B;
+  }
+
   /* R62 Bloch 能带的解析模型（HUD「E → 最近能级」与 BlochScanner 叠图共用，
      单源真值）。返回 mathieuBands 全字段 + 横向基模能量 ey0。
      **口径说明（与实测对账的前提，见 worklog R62「解析对照的口径」）**：
@@ -9489,7 +10233,7 @@ class SchrodingerKernel extends PhysicsKernel {
     const self = this;
     /* R62 光学晶格：V=V₀sin²(πx/a)（a=32 世界 px ⟹ 8 周期）；势重画实现提到
        模块级 drawLatticeV（presets.build 与 enterLattice 共用，单源真值）。 */
-    return {
+    const P = {
       free:     { name:'自由传播',     text:'高斯波包在无势场中飞行。色相保持纯净，但波包随时间自然扩散——不确定性原理的直接可视化。',
                   build(){} , wave:[0.18,0.5,0.09,0] },
       barrier:  { name:'方势垒隧穿',   text:'波包撞上高于自身能量的势垒：大部分概率幅被反射形成驻波图样，一小部分密度隧穿到墙后。纯量子效应。',
@@ -9523,6 +10267,18 @@ class SchrodingerKernel extends PhysicsKernel {
                   build(paint){ self._mode = 'lattice'; drawLatticeV(paint); }, wave:[0.5,0.5,0.30,0],
                   params:{ latV0:0.1, latA:32, twistX:0, latBand:1 } },
     };
+    /* R63 修复（R62 遗留）：_mode 是 makeWave 的场景开关，此前**只有** lattice
+       的 build 会置 'lattice' 且从不复位——从晶格切回任意其它预设后，makeWave
+       仍走 Bloch 平面波初态：初态忽略 fx/fy/kx/ky ⟹ 拖拽发射完全失效、Landau
+       扫描的自定义发射几何也拿不到高斯包（静默错误，画面仍「正常」）。
+       此处统一包装：除 lattice 外所有预设的 build 先把 _mode 归 'free'。
+       集中一处，避免 8 个 build 各自漏写。 */
+    for (const key in P){
+      if (key === 'lattice') continue;
+      const b = P[key].build;
+      P[key].build = (paint) => { self._mode = 'free'; if (b) b(paint); };
+    }
+    return P;
   }
 }
 
@@ -10445,19 +11201,31 @@ class DiracKernel extends PhysicsKernel {
     return {
       uniforms: 'uniform float uMass;   /* 裸质量 m（βm 项；引擎 uK=1/2m 不适用于一阶项） */',
       /* diracD：−i·α·∂ψ 的实形 4 通道积（推导见文件头）。±x/±y 邻点中心差分，
-         AB on 时经 rot4 乘 link 相位（最小耦合 p→p−A 作用在 α·p 上）。 */
+         AB on 时经 rot4 乘 link 相位（最小耦合 p→p−A 作用在 α·p 上）。
+         **R63 修复（R54 遗留）**：AB 在 R54 已升级为**多管数组**
+         （uABPos[AB_MAX]/uABPhi[AB_MAX]/uABCount），此处仍用 R26 单管标量写法
+         （uABPhi/uABPos 无下标）⟹ 生成的 shader 报 "array / non-array
+         mismatch"、Dirac 内核**整个挂掉**（WebGL 编译失败，页面 diag 显示
+         ERR shader）。改为与 TPL_LAP_BLOCK 逐字同构的数组循环（相位线性
+         相加，Wilson 环可加性同款）。 */
       helpers:
         'vec4 diracD(vec2 uv){\n' +
         '  vec4 sp, sm, tp, tm;\n' +
         '  if(uABOn > 0.5){\n' +
-        '    float cAB = uABPhi/6.28318530718;\n' +
-        '    vec2 dp = uv - uABPos;\n' +
-        '    float b0 = ang(dp);\n' +
-        '    vec2 dq;\n' +
-        '    dq = uv + vec2(uTexel.x,0.0) - uABPos;  sp = rot4(S(uv+vec2( uTexel.x,0.0)), cAB*wrapPi(ang(dq)-b0));\n' +
-        '    dq = uv - vec2(uTexel.x,0.0) - uABPos;  sm = rot4(S(uv+vec2(-uTexel.x,0.0)), cAB*wrapPi(ang(dq)-b0));\n' +
-        '    dq = uv + vec2(0.0,uTexel.y) - uABPos;  tp = rot4(S(uv+vec2(0.0, uTexel.y)), cAB*wrapPi(ang(dq)-b0));\n' +
-        '    dq = uv - vec2(0.0,uTexel.y) - uABPos;  tm = rot4(S(uv+vec2(0.0,-uTexel.y)), cAB*wrapPi(ang(dq)-b0));\n' +
+        '    float axp = 0.0, axm = 0.0, ayp = 0.0, aym = 0.0;\n' +
+        '    for (int k = 0; k < AB_MAX; k++){\n' +
+        '      if (k >= uABCount) break;\n' +
+        '      float ck = uABPhi[k]/6.28318530718;\n' +
+        '      float bk = ang(uv - uABPos[k]);\n' +
+        '      axp += ck*wrapPi(ang(uv + vec2( uTexel.x,0.0) - uABPos[k]) - bk);\n' +
+        '      axm += ck*wrapPi(ang(uv + vec2(-uTexel.x,0.0) - uABPos[k]) - bk);\n' +
+        '      ayp += ck*wrapPi(ang(uv + vec2(0.0, uTexel.y) - uABPos[k]) - bk);\n' +
+        '      aym += ck*wrapPi(ang(uv + vec2(0.0,-uTexel.y) - uABPos[k]) - bk);\n' +
+        '    }\n' +
+        '    sp = rot4(S(uv+vec2( uTexel.x,0.0)), axp);\n' +
+        '    sm = rot4(S(uv+vec2(-uTexel.x,0.0)), axm);\n' +
+        '    tp = rot4(S(uv+vec2(0.0, uTexel.y)), ayp);\n' +
+        '    tm = rot4(S(uv+vec2(0.0,-uTexel.y)), aym);\n' +
         '  } else {\n' +
         '    sp = S(uv+vec2( uTexel.x,0.0)); sm = S(uv+vec2(-uTexel.x,0.0));\n' +
         '    tp = S(uv+vec2(0.0, uTexel.y)); tm = S(uv+vec2(0.0,-uTexel.y));\n' +

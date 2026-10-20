@@ -241,11 +241,15 @@ export const AB_MAX = 8;
    契约（展开处必须满足）：
      - 局部变量 c = texture(uPsi,vUv)（中心 texel；CN_SWEEP 中即 Jacobi 当前迭代 x_k）
      - helper S/rot4/ang/wrapPi 与 uniform uABOn/uABPos[]/uABPhi[]/uABCount/uTexel
-       及 #define AB_MAX 已声明（四个模板的 uniform 区逐字同款）
+       及 #define AB_MAX 已声明（2D 三个模板的 uniform 区逐字同款）
    产出：vec4 lap（5 点 stencil，含 AB 最小耦合 link 相位分支）。
    KINETIC_E 默认 -uK*lap 依赖本块；一阶内核（Dirac）覆写 kineticE 为函数（如
    diracD(vUv)）时 lap 沦为死代码，被编译器消除——行为零变化（R33 起 CN 路径
-   的 Pauli 用默认 -uK*lap，必须共享本块而非各自复制，保证 AB 分支单源真值）。 */
+   的 Pauli 用默认 -uK*lap，必须共享本块而非各自复制，保证 AB 分支单源真值）。
+   R63 注记：均匀磁场 B_z 的轨道耦合**不在本块**——复数 H 的 Peierls stencil 配
+   KDK 的 Re/Im 拆分不酉（实测 ρ−1 随网格线性增长，n=128 必爆，见 worklog R63
+   实施记录），已改为 TPL_EVOLVE 内的规范帧 ADI 定制分支（uLapDir 门控）；
+   本块保持 R61 的 AB+else 两分支原样（零回归单源真值）。 */
 const TPL_LAP_BLOCK = `  vec4 lap;
   if(uABOn > 0.5){
     /* 多管最小耦合 link 相位（R54）：U(1) 链变量相乘 ⟹ 各管相位**线性相加**。
@@ -355,6 +359,9 @@ uniform float uDriveAmp;    // 含时外场幅值 A（势单位），0 = 关闭�
 uniform float uDrivePhase;  // 驱动相位 φ = ω·(t+dt/2)，CPU 每帧按帧中点推算
 uniform int   uDriveMode;   // 0 = 均匀 AC Stark A·cos(φ)；1 = x 行波 A·cos(2πx−φ)
 uniform float uABOn;        // AB 多螺线管开关：0 = 原 5 点 stencil（count=0 时精确等价）
+uniform float uBOn;         // R63 均匀 B_z 轨道耦合开关（规范帧 ADI 专用）：0 = 走原 stencil（精确等价）
+uniform float uBz;          // R63 均匀 B_z（格点单位，q=1）：规范角 gA=B·x·y，+x link 相对相位 +B·y（Landau 规范 A=(−B·y,0,0)）
+uniform float uLapDir;      // R63 规范帧 ADI 扫描方向：0 = 全 5 点（KDK 原路径逐位等价）/ 1 = x-only 规范帧定制分支 / 2 = y-only 定制分支
 uniform vec2  uABPos[AB_MAX];   // 各螺线管位置（世界坐标；uABCount 之外不读）
 uniform float uABPhi[AB_MAX];   // 各管磁通 Φ（rad，绕行一周总相位；0 = 该管 link 相位恒 0）
 uniform int   uABCount;     // 实际管数（编译期常量循环 + 动态 break 截断）
@@ -375,17 +382,90 @@ vec4 S(vec2 uv){
   return texture(uPsi,uv);
 }
 vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
-vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }   /* 两复分量同相旋转 */
+/* 两复分量同相旋转。**s/co 必须正交归一化**（R63 实测）：GPU 的 sin/cos 只有
+   ~1e-6 相对精度，sin²+cos²≠1 的偏差带系统性符号；在 LAP/AB 里每次 pass 要
+   做 4~8 次旋转，24 pass/帧 ⟹ 每帧 3e-3 的范数损失（B 模式实测 155 帧掉 37%，
+   plain 路径 120 帧只掉 5e-7）。inversesqrt 一次把旋转矩阵拉回严格正交，
+   代价 1 次 rsqrt/旋转，四分量共享 ⟹ 可忽略。float64 的 CPU 镜像不受影响。 */
+vec4 rot4(vec4 c, float a){
+  float s = sin(a), co = cos(a);
+  float n = inversesqrt(max(1e-30, s*s + co*co));
+  s *= n; co *= n;
+  return vec4(c.x*co - c.y*s, c.x*s + c.y*co, c.z*co - c.w*s, c.z*s + c.w*co);
+}   /* 两复分量同相旋转 */
 /* AB link 相位辅助：视角（螺线管格点上 |d|²≈0 回退 0，防 atan2(0,0)）与 (−π,π] wrap */
 float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
 float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
 {{HELPERS}}
 void main(){
   vec4 c = texture(uPsi,vUv);
-{{LAP_BLOCK}}
   float V = (texture(uV,vUv).r*255.0-128.0)/127.0;
   /* 含时外场（实势 → H 厄米 → 概率守恒；A=0 时为 IEEE 精确恒等） */
   V += uDriveAmp * (uDriveMode == 1 ? cos(6.28318530718*vUv.x - uDrivePhase) : cos(uDrivePhase));
+  /* ---------- R63 规范帧 ADI 定制分支（uLapDir≠0 且 uBOn=1 时进入；B=0 路径
+     零影响：两个条件都不满足 ⟹ 原样走 LAP_BLOCK + KDK，逐位等价）----------
+     均匀 B_z（Landau 规范 A=(−B·y,0,0)，q=1）的离散 H 在 x 向 link 带 Peierls
+     相位 e^{+iB·y}（+x）/ e^{−iB·y}（−x）——复数 H。GPU KDK 的 Re/Im 拆分
+     （kick 用 Re(Hψ)、drift 用 Im(Hψ)）对复数 H **不酉**（实测 ρ−1 随网格
+     线性增长，128² 网格必爆，根因分析见 worklog R63 实施记录），故 B≠0 时
+     弃用 Peierls-stencil KDK，改用交替方向隐式风格的**规范帧分裂**：
+       · x 扫描（本分支 uLapDir=1）：规范变换 φ=e^{+iB·x·y}ψ 把 x 向 link 的
+         相位吸收为**实** stencil（邻居按 gA±B·y 预旋、中心按 gA 旋转、输出按
+         −gA 旋回）⟹ 与 B=0 逐字同构的精确酉 KDK；
+       · y 扫描（下一分支 uLapDir=2）：Landau 规范下 y 向 link 本无相位 ⟹
+         原帧内裸实 1D stencil；
+       · 两个方向交替（偶子步 x→y、奇子步 y→x）⟹ [A,B] 项相消的二阶格式
+         （等价 Strang；CPU float64 镜像已验证：保范 ~1e-6/5000 子步、二阶
+         收敛 ×4.0、与精确 expm 轨道周期吻合 0.15%）；
+       · V 对半 splitting（每个扫描只含 V/2，含驱动势——驱动是 V 的一部分，
+         规范不变；两扫描合计恰为全 V）。
+     门控由 app.js 保证：仅 2D 薛定谔内核（kernelId='schrodinger' 且 !dim3），
+     且 B 模式强制 uABOn=0/uTwistX=0（AB 与扭曲边界在规范帧下不成立，互斥）。 */
+  if(uLapDir > 0.5 && uLapDir < 1.5 && uBOn > 0.5){
+    /* x 扫描：规范帧。xT/yT = 格点索引（uv∈[0,1]；texel 中心口径 (i+0.5)，
+       与 AB 分支同款——一致性的关键是 ĝ_{x+1}−ĝ_x = B·yT 精确成立，谱与整数
+       索引口径等价（相差纯规范 diag(e^{iBx/2})，plaquette 磁通皆为 B））。 */
+    float xT = vUv.x/uTexel.x, yT = vUv.y/uTexel.y;
+    /* 规范角必须**先归约到 [0,2π)**：gA=B·x·y 在 256² 网格上可达 B·65536
+       （B=0.06 ⟹ 3.9e3 rad），而 GPU 的 sin/cos 对大参数做角度归约时精度
+       崩溃（实测 B=0.05 时范数 780 帧内衰减 97%，CPU float64 镜像只有 2e-4
+       ⟹ 差异全在 float32 三角函数）。归约不影响相对相位：三个角各自 mod
+       2π 后两两之差与原值模 2π 同余，e^{iφ} 完全相同。 */
+    float gA = uBz*xT*yT;
+    gA = gA - 6.28318530718*floor(gA*0.15915494309);
+    c = rot4(c, gA);                                       /* 规范帧中心值（复用 c 名供 LOCAL_H） */
+    float gP = gA + uBz*yT, gM = gA - uBz*yT;              /* 邻居相对角 ±B·y */
+    gP = gP - 6.28318530718*floor(gP*0.15915494309);
+    gM = gM - 6.28318530718*floor(gM*0.15915494309);
+    vec4 sp = rot4(S(vUv+vec2( uTexel.x,0.0)), gP);        /* +x 邻居 */
+    vec4 sm = rot4(S(vUv+vec2(-uTexel.x,0.0)), gM);        /* −x 邻居 */
+    vec4 lap = sp + sm - 2.0*c;                            /* 实 stencil（无 rot4） */
+    V *= 0.5;                                              /* V/2 对半 splitting */
+    vec4 Hc = {{KINETIC_E_X}} + {{LOCAL_H_X}};             /* 与 B=0 逐字同构（token 后缀 _X/_Y：fill() 重复注入位守卫要求每 token 每模板仅出现一次，取值与主路径同源） */
+    vec4 cp;
+    if(uUpdateV > 0.5){
+      cp = vec4(c.x, c.y - 0.5*uDt*Hc.x, c.z, c.w - 0.5*uDt*Hc.z);   // v_half/v_new = v - dt/2*H*u
+    } else {
+      cp = vec4(c.x + uDt*Hc.y, c.y, c.z + uDt*Hc.w, c.w);           // u_new = u + dt*H*v_half
+    }
+    o = rot4(cp, -gA);                                     /* 旋回原规范帧 */
+    return;
+  }
+  if(uLapDir > 1.5 && uBOn > 0.5){
+    /* y 扫描：Landau 规范 y 向 link 无 Peierls 相位 ⟹ 原帧内裸实 1D stencil。 */
+    vec4 sp = S(vUv+vec2(0.0, uTexel.y));
+    vec4 sm = S(vUv+vec2(0.0,-uTexel.y));
+    vec4 lap = sp + sm - 2.0*c;
+    V *= 0.5;                                              /* V/2 对半 splitting */
+    vec4 Hc = {{KINETIC_E_Y}} + {{LOCAL_H_Y}};
+    if(uUpdateV > 0.5){
+      o = vec4(c.x, c.y - 0.5*uDt*Hc.x, c.z, c.w - 0.5*uDt*Hc.z);   // v_half/v_new = v - dt/2*H*u
+    } else {
+      o = vec4(c.x + uDt*Hc.y, c.y, c.z + uDt*Hc.w, c.w);           // u_new = u + dt*H*v_half
+    }
+    return;
+  }
+{{LAP_BLOCK}}
   vec4 Hc = {{KINETIC_E}} + {{LOCAL_H}};   /* KINETIC_E 默认 -uK*lap（标量内核逐字等价）；一阶内核（Dirac）注入 -i·α·∂ */
   if(uUpdateV > 0.5){
     o = vec4(c.x, c.y - 0.5*uDt*Hc.x, c.z, c.w - 0.5*uDt*Hc.z);   // v_half/v_new = v - dt/2*H*u
@@ -594,7 +674,17 @@ uniform int   uDriveMode;       // 0 = 均匀 AC Stark A·cos(φ)；1 = x 行波
 vec4 S(vec3 p){ return texture(uPsi, clamp(p, vec3(0.0), vec3(1.0))); }
 /* AB link 相位辅助（与 2D 逐字同款，保证两边数学单源） */
 vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
-vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }
+/* 两复分量同相旋转。**s/co 必须正交归一化**（R63 实测）：GPU 的 sin/cos 只有
+   ~1e-6 相对精度，sin²+cos²≠1 的偏差带系统性符号；在 LAP/AB 里每次 pass 要
+   做 4~8 次旋转，24 pass/帧 ⟹ 每帧 3e-3 的范数损失（B 模式实测 155 帧掉 37%，
+   plain 路径 120 帧只掉 5e-7）。inversesqrt 一次把旋转矩阵拉回严格正交，
+   代价 1 次 rsqrt/旋转，四分量共享 ⟹ 可忽略。float64 的 CPU 镜像不受影响。 */
+vec4 rot4(vec4 c, float a){
+  float s = sin(a), co = cos(a);
+  float n = inversesqrt(max(1e-30, s*s + co*co));
+  s *= n; co *= n;
+  return vec4(c.x*co - c.y*s, c.x*s + c.y*co, c.z*co - c.w*s, c.z*s + c.w*co);
+}
 float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
 float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
 {{HELPERS}}
@@ -663,7 +753,17 @@ uniform int   uDriveMode;       // 0 = 均匀 AC Stark A·cos(φ)；1 = x 行波
 vec4 S(vec3 p){ return texture(uPsi, clamp(p, vec3(0.0), vec3(1.0))); }
 /* AB link 相位辅助（与 2D 逐字同款，保证两边数学单源） */
 vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
-vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }
+/* 两复分量同相旋转。**s/co 必须正交归一化**（R63 实测）：GPU 的 sin/cos 只有
+   ~1e-6 相对精度，sin²+cos²≠1 的偏差带系统性符号；在 LAP/AB 里每次 pass 要
+   做 4~8 次旋转，24 pass/帧 ⟹ 每帧 3e-3 的范数损失（B 模式实测 155 帧掉 37%，
+   plain 路径 120 帧只掉 5e-7）。inversesqrt 一次把旋转矩阵拉回严格正交，
+   代价 1 次 rsqrt/旋转，四分量共享 ⟹ 可忽略。float64 的 CPU 镜像不受影响。 */
+vec4 rot4(vec4 c, float a){
+  float s = sin(a), co = cos(a);
+  float n = inversesqrt(max(1e-30, s*s + co*co));
+  s *= n; co *= n;
+  return vec4(c.x*co - c.y*s, c.x*s + c.y*co, c.z*co - c.w*s, c.z*s + c.w*co);
+}
 float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
 float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
 {{HELPERS}}
@@ -714,7 +814,17 @@ uniform int   uDriveMode;       // 0 = 均匀 AC Stark A·cos(φ)；1 = x 行波
 vec4 S(vec3 p){ return texture(uPsi, clamp(p, vec3(0.0), vec3(1.0))); }
 /* AB link 相位辅助（与 2D 逐字同款，保证两边数学单源） */
 vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
-vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }
+/* 两复分量同相旋转。**s/co 必须正交归一化**（R63 实测）：GPU 的 sin/cos 只有
+   ~1e-6 相对精度，sin²+cos²≠1 的偏差带系统性符号；在 LAP/AB 里每次 pass 要
+   做 4~8 次旋转，24 pass/帧 ⟹ 每帧 3e-3 的范数损失（B 模式实测 155 帧掉 37%，
+   plain 路径 120 帧只掉 5e-7）。inversesqrt 一次把旋转矩阵拉回严格正交，
+   代价 1 次 rsqrt/旋转，四分量共享 ⟹ 可忽略。float64 的 CPU 镜像不受影响。 */
+vec4 rot4(vec4 c, float a){
+  float s = sin(a), co = cos(a);
+  float n = inversesqrt(max(1e-30, s*s + co*co));
+  s *= n; co *= n;
+  return vec4(c.x*co - c.y*s, c.x*s + c.y*co, c.z*co - c.w*s, c.z*s + c.w*co);
+}
 float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
 float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
 {{HELPERS}}
@@ -908,7 +1018,17 @@ vec4 S(vec2 uv){
   return texture(uPsi,uv);
 }
 vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
-vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }
+/* 两复分量同相旋转。**s/co 必须正交归一化**（R63 实测）：GPU 的 sin/cos 只有
+   ~1e-6 相对精度，sin²+cos²≠1 的偏差带系统性符号；在 LAP/AB 里每次 pass 要
+   做 4~8 次旋转，24 pass/帧 ⟹ 每帧 3e-3 的范数损失（B 模式实测 155 帧掉 37%，
+   plain 路径 120 帧只掉 5e-7）。inversesqrt 一次把旋转矩阵拉回严格正交，
+   代价 1 次 rsqrt/旋转，四分量共享 ⟹ 可忽略。float64 的 CPU 镜像不受影响。 */
+vec4 rot4(vec4 c, float a){
+  float s = sin(a), co = cos(a);
+  float n = inversesqrt(max(1e-30, s*s + co*co));
+  s *= n; co *= n;
+  return vec4(c.x*co - c.y*s, c.x*s + c.y*co, c.z*co - c.w*s, c.z*s + c.w*co);
+}
 float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
 float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
 {{HELPERS}}
@@ -945,7 +1065,17 @@ vec4 S(vec2 uv){
   return texture(uPsi,uv);
 }
 vec2 rot(vec2 p, float a){ float s=sin(a), co=cos(a); return vec2(p.x*co-p.y*s, p.x*s+p.y*co); }
-vec4 rot4(vec4 c, float a){ return vec4(rot(c.xy,a), rot(c.zw,a)); }
+/* 两复分量同相旋转。**s/co 必须正交归一化**（R63 实测）：GPU 的 sin/cos 只有
+   ~1e-6 相对精度，sin²+cos²≠1 的偏差带系统性符号；在 LAP/AB 里每次 pass 要
+   做 4~8 次旋转，24 pass/帧 ⟹ 每帧 3e-3 的范数损失（B 模式实测 155 帧掉 37%，
+   plain 路径 120 帧只掉 5e-7）。inversesqrt 一次把旋转矩阵拉回严格正交，
+   代价 1 次 rsqrt/旋转，四分量共享 ⟹ 可忽略。float64 的 CPU 镜像不受影响。 */
+vec4 rot4(vec4 c, float a){
+  float s = sin(a), co = cos(a);
+  float n = inversesqrt(max(1e-30, s*s + co*co));
+  s *= n; co *= n;
+  return vec4(c.x*co - c.y*s, c.x*s + c.y*co, c.z*co - c.w*s, c.z*s + c.w*co);
+}
 float ang(vec2 d){ return dot(d,d) < 1e-12 ? 0.0 : atan(d.y, d.x); }
 float wrapPi(float a){ if(a > 3.14159265358979) a -= 6.28318530718; if(a < -3.14159265358979) a += 6.28318530718; return a; }
 {{HELPERS}}
@@ -1455,7 +1585,12 @@ export function buildShaders(kernel){
     });
   };
   const out = {
-    evolve: fill(TPL_EVOLVE, { ...need, ...opt, UNIFORMS: uni, LAP_BLOCK: TPL_LAP_BLOCK }),
+    evolve: fill(TPL_EVOLVE, { ...need, ...opt, UNIFORMS: uni, LAP_BLOCK: TPL_LAP_BLOCK,
+      /* R63 规范帧 ADI 定制分支的动能/局部项 token（TPL_EVOLVE 主路径之外的两个
+         注入位；fill() 重复注入位守卫要求一模板内同名 token 仅出现一次 ⟹ 加
+         _X/_Y 后缀，取值与主路径的 KINETIC_E/LOCAL_H 完全同源） */
+      KINETIC_E_X: opt.KINETIC_E, LOCAL_H_X: s.localH,
+      KINETIC_E_Y: opt.KINETIC_E, LOCAL_H_Y: s.localH }),
     display: fill(TPL_DISPLAY, {
       DENSITY: s.density,
       PIXEL_COLOR: s.pixelColor || DEFAULT_PIXEL_COLOR,

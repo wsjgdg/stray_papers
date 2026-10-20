@@ -696,6 +696,58 @@ class SchrodingerKernel extends PhysicsKernel {
     /* 薛定谔内核暂无私有 URL 参数（保留扩展点；AB 已迁引擎级） */
   }
 
+  /* ---------- R63 Landau 半经典模型（HUD 读数 + LandauScanner 叠图共用，单源真值）----------
+     均匀 B_z（Landau 规范 A=(−B·y,0,0)，q=1）+ 紧束缚带
+     E(k)=−(1/m)(cos(k_x+B·y)+cos k_y)（uK=1/2m）的半经典回旋：
+       θ̇=(B/m)·sinφ,  φ̇=−(B/m)·sinθ,  守恒量 H=−(cosθ+cosφ)
+     （θ=k_x+B·y、φ=k_y；(0,0) 稳定平衡 ⟹ 小振幅 T₀=2πm/B=2π/ω_c，即连续统
+     Landau 回旋周期）。大振幅时非谐（类单摆）拉长周期——这正是「连续统公式
+     只在小轨道极限成立」的晶格修正，诚实标注而非隐藏。
+     周期闭式（两步代换 w=sin(θ/2)、w=s·sinα 去掉端点 1/√ 奇性，被积函数在
+     [0,π/2] 光滑；与 scipy ODE 实测 10 点全部吻合到 1e-5，见 worklog R63）：
+       T(θ₀) = (4m/B)∫₀^{π/2} dα / √((1−s²sin²α)(1−s²cos²α)),  s=sin(θ₀/2)
+     复合 Simpson N=256 求积（光滑被积 ⟹ ~1e-13；单次调用 ~512 次 flop，
+     HUD 每帧刷新成本可忽略）。 */
+  landauModel(state){
+    const B = Math.abs(state.bOrb || 0), m = state.m;
+    if (!B) return null;
+    /* **单位口径**：lastWave = [fx, fy, kx, ky]，fx/fy 是**分数坐标**（0..1，
+       gaussianWave 内部 cx=fx·grid）——旧版直接把 fy 当 texel 用，θ₀ 随 B
+       差一个 grid 因子（B=0.05、fy=0.5 时 θ₀ 由 6.4 误算成 0.325）。现统一
+       折到 texel 中心（y_c = fy·grid，texel y 的中心在 y+0.5，与 shader 的
+       yT=vUv.y/uTexel.y 同口径）。 */
+    const w = state.lastWave;
+    const kx = w ? (w[2] || 0) : 0;
+    const yc = w ? w[1]*state.grid + 0.5 : state.grid/2;
+    /* 轨道振幅 θ₀ = k_x + B·y_c（φ₀=k_y≈0 时 y_c 是轨道**上端**：θ̇=(B/m)sinφ
+       在 φ=0 处为 0 ⟹ y 取极值）。轨道 y 向展开 = [y_c−2θ₀/B, y_c]（波包
+       有限尺寸使实际轨迹略宽，Ehrenfest 修正见 worklog R63）。 */
+    const th0 = Math.abs(kx + B*yc);
+    const T0 = 2*Math.PI*m/B;                       /* 连续统/谐振极限 T₀ */
+    /* θ₀ ≥ π ⟹ 轨道跨越 θ=±π（sinθ 的零点 = 布里渊边界），闭式的推导前提
+       （θ 在 (−π,π) 内做单摆式振荡）失效：θ₀→π⁻ 时 T 对数发散，越过 π 后
+       公式给的是另一支的「假周期」（s=sin(θ₀/2) 回落，T 反而变小）。如实
+       置 valid=false 并让 T/ratio 为 NaN，由 HUD/扫描器标注近似失效——不静默
+       返回一个看似合理的错数。 */
+    const valid = th0 < Math.PI - 1e-9;
+    const T = valid ? this._landauPeriod(B, m, th0) : NaN;   /* 晶格半经典（含非谐） */
+    return {
+      B, m, kx, yc, th0, wc: B/m, T0, T, ratio: valid ? T/T0 : NaN, valid,
+      yLo: yc - 2*th0/B, yHi: yc,                   /* 半经典轨道 y 向包络（texel） */
+      rOrb: 2*th0/B,                                /* y 向全展（撞壁判据用） */
+    };
+  }
+
+  _landauPeriod(B, m, th0){
+    /* T(θ₀) = (4m/B)∫₀^{π/2} dα/√((1−s²sin²α)(1−s²cos²α))，复合 Simpson */
+    const s = Math.sin(0.5*th0), s2 = s*s;
+    const N = 256, h = Math.PI/2/N;
+    const f = a => 1/Math.sqrt((1 - s2*Math.sin(a)*Math.sin(a))*(1 - s2*Math.cos(a)*Math.cos(a)));
+    let sum = f(0) + f(Math.PI/2);
+    for (let i = 1; i < N; i++) sum += (i % 2 ? 4 : 2)*f(i*h);
+    return 4*m*sum*h/3/B;
+  }
+
   /* R62 Bloch 能带的解析模型（HUD「E → 最近能级」与 BlochScanner 叠图共用，
      单源真值）。返回 mathieuBands 全字段 + 横向基模能量 ey0。
      **口径说明（与实测对账的前提，见 worklog R62「解析对照的口径」）**：
@@ -801,7 +853,7 @@ class SchrodingerKernel extends PhysicsKernel {
     const self = this;
     /* R62 光学晶格：V=V₀sin²(πx/a)（a=32 世界 px ⟹ 8 周期）；势重画实现提到
        模块级 drawLatticeV（presets.build 与 enterLattice 共用，单源真值）。 */
-    return {
+    const P = {
       free:     { name:'自由传播',     text:'高斯波包在无势场中飞行。色相保持纯净，但波包随时间自然扩散——不确定性原理的直接可视化。',
                   build(){} , wave:[0.18,0.5,0.09,0] },
       barrier:  { name:'方势垒隧穿',   text:'波包撞上高于自身能量的势垒：大部分概率幅被反射形成驻波图样，一小部分密度隧穿到墙后。纯量子效应。',
@@ -835,6 +887,18 @@ class SchrodingerKernel extends PhysicsKernel {
                   build(paint){ self._mode = 'lattice'; drawLatticeV(paint); }, wave:[0.5,0.5,0.30,0],
                   params:{ latV0:0.1, latA:32, twistX:0, latBand:1 } },
     };
+    /* R63 修复（R62 遗留）：_mode 是 makeWave 的场景开关，此前**只有** lattice
+       的 build 会置 'lattice' 且从不复位——从晶格切回任意其它预设后，makeWave
+       仍走 Bloch 平面波初态：初态忽略 fx/fy/kx/ky ⟹ 拖拽发射完全失效、Landau
+       扫描的自定义发射几何也拿不到高斯包（静默错误，画面仍「正常」）。
+       此处统一包装：除 lattice 外所有预设的 build 先把 _mode 归 'free'。
+       集中一处，避免 8 个 build 各自漏写。 */
+    for (const key in P){
+      if (key === 'lattice') continue;
+      const b = P[key].build;
+      P[key].build = (paint) => { self._mode = 'free'; if (b) b(paint); };
+    }
+    return P;
   }
 }
 

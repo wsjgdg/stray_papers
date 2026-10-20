@@ -151,19 +151,31 @@ export class DiracKernel extends PhysicsKernel {
     return {
       uniforms: 'uniform float uMass;   /* 裸质量 m（βm 项；引擎 uK=1/2m 不适用于一阶项） */',
       /* diracD：−i·α·∂ψ 的实形 4 通道积（推导见文件头）。±x/±y 邻点中心差分，
-         AB on 时经 rot4 乘 link 相位（最小耦合 p→p−A 作用在 α·p 上）。 */
+         AB on 时经 rot4 乘 link 相位（最小耦合 p→p−A 作用在 α·p 上）。
+         **R63 修复（R54 遗留）**：AB 在 R54 已升级为**多管数组**
+         （uABPos[AB_MAX]/uABPhi[AB_MAX]/uABCount），此处仍用 R26 单管标量写法
+         （uABPhi/uABPos 无下标）⟹ 生成的 shader 报 "array / non-array
+         mismatch"、Dirac 内核**整个挂掉**（WebGL 编译失败，页面 diag 显示
+         ERR shader）。改为与 TPL_LAP_BLOCK 逐字同构的数组循环（相位线性
+         相加，Wilson 环可加性同款）。 */
       helpers:
         'vec4 diracD(vec2 uv){\n' +
         '  vec4 sp, sm, tp, tm;\n' +
         '  if(uABOn > 0.5){\n' +
-        '    float cAB = uABPhi/6.28318530718;\n' +
-        '    vec2 dp = uv - uABPos;\n' +
-        '    float b0 = ang(dp);\n' +
-        '    vec2 dq;\n' +
-        '    dq = uv + vec2(uTexel.x,0.0) - uABPos;  sp = rot4(S(uv+vec2( uTexel.x,0.0)), cAB*wrapPi(ang(dq)-b0));\n' +
-        '    dq = uv - vec2(uTexel.x,0.0) - uABPos;  sm = rot4(S(uv+vec2(-uTexel.x,0.0)), cAB*wrapPi(ang(dq)-b0));\n' +
-        '    dq = uv + vec2(0.0,uTexel.y) - uABPos;  tp = rot4(S(uv+vec2(0.0, uTexel.y)), cAB*wrapPi(ang(dq)-b0));\n' +
-        '    dq = uv - vec2(0.0,uTexel.y) - uABPos;  tm = rot4(S(uv+vec2(0.0,-uTexel.y)), cAB*wrapPi(ang(dq)-b0));\n' +
+        '    float axp = 0.0, axm = 0.0, ayp = 0.0, aym = 0.0;\n' +
+        '    for (int k = 0; k < AB_MAX; k++){\n' +
+        '      if (k >= uABCount) break;\n' +
+        '      float ck = uABPhi[k]/6.28318530718;\n' +
+        '      float bk = ang(uv - uABPos[k]);\n' +
+        '      axp += ck*wrapPi(ang(uv + vec2( uTexel.x,0.0) - uABPos[k]) - bk);\n' +
+        '      axm += ck*wrapPi(ang(uv + vec2(-uTexel.x,0.0) - uABPos[k]) - bk);\n' +
+        '      ayp += ck*wrapPi(ang(uv + vec2(0.0, uTexel.y) - uABPos[k]) - bk);\n' +
+        '      aym += ck*wrapPi(ang(uv + vec2(0.0,-uTexel.y) - uABPos[k]) - bk);\n' +
+        '    }\n' +
+        '    sp = rot4(S(uv+vec2( uTexel.x,0.0)), axp);\n' +
+        '    sm = rot4(S(uv+vec2(-uTexel.x,0.0)), axm);\n' +
+        '    tp = rot4(S(uv+vec2(0.0, uTexel.y)), ayp);\n' +
+        '    tm = rot4(S(uv+vec2(0.0,-uTexel.y)), aym);\n' +
         '  } else {\n' +
         '    sp = S(uv+vec2( uTexel.x,0.0)); sm = S(uv+vec2(-uTexel.x,0.0));\n' +
         '    tp = S(uv+vec2(0.0, uTexel.y)); tm = S(uv+vec2(0.0,-uTexel.y));\n' +

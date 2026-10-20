@@ -49,6 +49,8 @@
 | R58 | 3D 驱动（含时外场）+ 耗散（开放系统） | 补齐 3D 侧最后两类能力（R57 后仅剩的真实物理缺口）。**驱动**：3D 三模板（KDK/CN-rhs/CN-sweep）注入与 2D 逐式同构的 `V += A·cos(2π·p.x−φ)`（mode 1）/ `A·cos(φ)`（mode 0），x 取 uv 空间 `p.x`；稳定界 3D 改为 `k·12+1+附加项+\|A\|`；**⟨V⟩ 归约不含时变项**（与 2D TPL_REDUCE 同口径）。**耗散**：新增 `TPL_SCALE3D`（sampler3D + 逐层 draw）在 `_evolve3dFrame` 帧末做 e^{-γ·dt} 全卷标量缩放（与子步/网格/内核/积分器解耦，γ=0 跳过）。面板解除 d3 隐藏（含时外场 sec + 耗散 γ 行 2D+3D 通用）。**cdp58 12/12**（src + dist 双通道）：零回归（A=0 ⟹ 524288 float 逐位相同）、均匀 AC Stark 密度不变（相对峰值残差 8.75e-4，与 2D 相关系数 0.9995 同量级）、行波密度改变、耗散 P 比 vs e^{-2γt} **相对误差 1.4e-7**、CN 同源。**诚实记录**：驱动引入的 P 漂移是**时变 H 的独立离散项**（与静态基线不同源、比值恒 ~44× 不收敛到基线），但 ∝1/sub²（sub 6→12→24 ⟹ 1.086e-2→2.720e-3→6.844e-4，每档降 3.98×），收敛档相对漂移 6.8e-6 **优于 2D 记录**（1.1e-5）。**两例构建期真 bug**：① kernel.js 注释内的**反引号**提前结束 JS 模板字符串致模块语法错误（R33 双花括号教训的同族延伸）；② `replace_all` 把驱动行误注入 TPL_REDUCE3D（它也有 `float V = {{POT3}};` 但无 drive uniform）⟹ GLSL 'undeclared identifier' 编译失败，按 2D TPL_REDUCE 同口径移除 |
 | R60 | 3D 势刷形状扩展（椭球三轴 + 高斯软化边，R59 后用户选定） | R49 球形硬边丘 ⟹ **九字段丘** `{x,y,z,r,v0,rx,ry,rz,soft}`：CPU `pot3Blobs` 与 GLSL `blobSum` 逐字同构的**显式三分支**势函数（soft>0 高斯软化 exp(−½·max(0,dn−1)²/soft²) / soft=0 三轴相等走 R49 逐字 `dot(d,d)<r²` / 硬边椭球 `dot(q,q)<1`）——**设计修正记录**：初版拟「统一公式 soft=0 自动退化」，逐位比对抓出 dn=1 球面点集上硬边判 `64<64`=假而 dn≤1 分支=真、且 dn−1∈(0,1e-5) 边界带权重非 0/1 ⟹ 极限与阶跃不可调和，必须显式分支（GLSL 侧 v0·1.0=v0 加法中性保逐位）。面板三轴比滑块（0.2–2，实际半轴=R×轴比，stamp 快照）+ 软化宽度滑块（0–8）；链间距阈值 0.6·R ⟹ **0.6·min(rx,ry,rz)**（扁丘链连续，球时同值）；`normBlob` 四写边界归一（NaN 轴 ⟹ GPU/CPU 一致权重 0）；blobs 段 5⟹9 元组 + 旧档迁移 + 9 类非法原子拒绝。**cdp60 63/63**（src+dist 双通道）：同波比形 ⟨V⟩ 球 0.0574 vs 扁椭球 0.1380、软化单调 0.049986→0.491108、混合丘 GPU↔CPU rel 1.26e-08、CN 1.10e-07、球丘 R49 口径 2.73e-08、P 漂移 0.0017%；**pot60 94/94**（零回归 6 配置×4800 点 === 逐位 + 恰界点集 bad=0）；回归矩阵 cdp54 34/34 + cdp55 12/12 + cdp56 15/15 + cdp57 12/12 + cdp58 12/12 + cdp59 7/7 + link_math3d 10/10 + shader3d_build 13/13 全绿 + dist 384.5 KB |
 | R61 | 概率流 J + 连续性方程 + Bohm 轨迹 | 新 J-field pass（2D+3D）+ MRT 归约 + 2D 箭头 overlay + Bohm 64 粒子制导轨迹与残影；J=Im(ψ*∇ψ)（4 阶 stencil，平面波分轴闭式 (1/3m)sin k(4−cos k) 精确）、2 阶 divJ 望远镜恒等式 ΣdivJ≡fr−fl+ft−fb（Gauss 残差 5.15e-10/7.88e-10 纯舍入）、v=J/max(ρ,floor) 制导步进（节点不动）；**验证阶段 CDP 实测捕获并修复三个真 bug**：TPL_JRED DENSITY 包装变量名不符（编译失败）、TPL_BOHM_STEP uPos 采样缺 vec2（编译失败）、**bohmStamp 末尾误置 ping-pong 交换 ⟹ stamp 落 scratch B、display 恒采空 A（残影永不可见）**——纹理级取证（A.mx≡0 / B.n≈790）后删 swap，pot61 源码契约 + cdp61 纹理断言双闸门；**pot61 136/136 + cdp61 23/23**（ΣJ_x=⟨p_x⟩=k=0.089993、残影 maxPix=506 橙色签名、零回归 maxPix=10=噪点地板）；回归矩阵 12 套件全绿 + dist 421.9 KB |
+| R62 | 光学晶格 + Bloch 能带 | V=V₀sin²(πx/a) 周期势 + Bloch 平面波初态 + twistX（e^{±iθ} 周期边界）+ CPU 虚时间弛豫（PR-ADI + twisted 循环三对角 + 晶体动量块投影）⟹ BlochScanner 逐 k 测两带 ⟨E⟩，叠 1D Mathieu 解析谱（含横向基模 ey₀）；**五轮修复**（带 2 塌到相邻 k 的带 1 的根因是 θ_BC=h·θ_B 与 k=θ_BC/a 混用）；实测带 1/带 2 中位偏差 ~1%（势纹理 8 位量化 + 有限差分），**强制 grid=256**（有效质量 m·(grid/256)² 才是同一物理系统） |
+| R63 | Landau 能级（均匀磁场轨道耦合） | Peierls 相位的**复数 H 配 KDK Re/Im 拆分不酉**（ρ−1 随网格线性增长）⟹ 弃 Peierls-stencil 走 **规范帧 ADI**（x 扫描 φ=e^{iBxy}ψ 吸收相位成实 stencil、y 扫描原帧裸实、交替 ⟹ 二阶，6 pass/子步）；半经典晶格回旋**非谐闭式** T(θ₀)=(4m/B)∫dα/√((1−s²sin²α)(1−s²cos²α))（小振幅 T₀=2πm/B 精确、大振幅类单摆拉长）；LandauScanner 扫 5 个 B 点测质心回旋周期，实测 vs 闭式**中位 0.6%**（vs T₀ 21.8%）；**四个新发现真 bug**：① `rot4` 的 sin/cos 非正交 ⟹ 每帧 3e-4 范数损失（155 帧掉 37%，float64 镜像掩盖）；② ADI 稳定域由完整 2D 谱支配（dts 0.3 稳/0.4 崩，原 1D 界估计过于乐观）；③ `landauModel` 把分数坐标当 texel；④ dirac.js 的 AB helper 仍是 R26 单管标量 ⟹ **Dirac 内核此前整个无法启动**（shader 编译失败） |
 | R57 | 3D AB 磁通管（后续方向表清空后新开的能力项，用户从四候选中选定） | 后续方向表经核实**已清空**（面板溢出续降判定「可接受、仍不做」、GP 半径对账 R52 闭环）⟹ 诊断出真实未决项后由用户定题。落地：AB 由 2D 专属升级为 **2D+3D 通用**——3D 磁通管沿 **z 轴贯穿体积**，θ(q)=atan2(q.y−y_k, q.x−x_k) 与 z 无关 ⟹ **±z 两 link 相位恒 0**、仅 ±x/±y 四 link 携带相位（与 A_z=0 的对称规范自洽，是 3D 与 2D 唯一结构性差异）；抽 `TPL_LAP3D_BLOCK` 让 KDK/CN-rhs/CN-sweep 三模板共享 7 点 stencil（R33 单源真值原则，此前三份内联复制）；uniform 引擎级与 2D 同名同义（setABUniforms 一次上传）；3D 体积面板新增「磁通(AB)」工具模式（点击取 R44 同口径「视线 slab 穿透段中点」xy 投影，管沿 z 贯穿 ⟹ 命中只看 xy <0.05）；R37 3D 现场存档新增 `abSols` 顶层段。**cdp57 12/12**：零回归（无管 vs Φ=0 单管，64³ 全卷 524288 float **max-abs=0** 逐位相同）、矢势可加性（共位双管 π/2+π/2 ≡ 单管 π **max-abs=0**）、Φ=π 使场改 3.56e-3、加第二根不共位管再改 7.16e-4、CN 同源 dP=1.2e-6、序列化 round-trip 逐位恢复、真实点击落管、glError=0、零异常。link_math3d 10/10 + shader 构建 13/13 + dist 冒烟 OK（370.8 KB）。**契约变更**：cdp54 F2 由「3D 下 AB sec 隐藏」反转为「显示」（回归矩阵 cdp54 34/34 + cdp55 12/12 + cdp56 15/15 全绿） |边缘拉手 `.qf-tab`（常驻、z-index 11 压面板 10 只压边框+padding、滑出态 pointer-events:none）+ 快捷键 `[`/`]`（表单聚焦守卫）+ body class `qf-hide-left/right` 驱动 transform 滑出（#gl 本就 fixed 全屏 ⟹ 无需 resize/重绘）+ localStorage `qf.panels.state={left,right}` 持久化（缺省/坏值宽松默认全展开）+ hint 补 `[` `]` 提示。**cdp56 15/15**：拉手贴边几何（lx=0/rr=1440、20px、z-index 11）/左右列滑出（panel.r=−10、hud.l=1450、字形翻转）/键盘交替序列/表单守卫/持久化+重载恢复/**双隐藏态 flux 真实点击落管 @(0.5,0.5)**（拉手与面板不挡画布）/3D 内核 smoke + 零异常。**关键环境发现**：`python3 -m http.server` 不发 Cache-Control/ETag ⟹ Chrome 按 Last-Modified 龄 10% 启发式缓存——styles.js（mtime 3 天前）新鲜期 ~7h，src 改了浏览器不重验，表现为「JS 是新的、CSS 是旧的」⟹ 全部 CDP 套件补 `Network.setCacheDisabled`（cdp54/55/56 回填）；另记 cdp56 T1 二轮 FAIL 根因 `.qf-tab` 漏设 left/right（静态位置巧合）与 dist smoke 假失败根因（localStorage 跨套件残留改变挂载初态，探针须先 clear） |
 | R42 | NLS/GP 物理工具（README「后续方向」②，用户选定两者都做） | 通用扫描框架 `GenericScanner`（生命周期与既有三扫描器同契约）+ GP/NLS 双适配器；**固定测量窗 + 全程序列**替代停止判据（非线性无耗散无终态：呼吸模永久振荡实测 8.6↔9.3）；GP 初态 σ=R_TF(g)（TF 自洽验算一致）⟹ **峰值对账 3.5%**；NLS **g=6 塌缩检出（峰值比 10.80）** + 网格截断崩坏 P→0.68；**P 诚实更正**：非线性 P 漂移 0.5–3.1%（KDK 离散耗散，随 \|g\| 增长）vs 线性对照 2.06e-6；判据修正：塌缩用序列峰值最大值（末值会因崩坏骤降误判）；既有三扫描器零改动；cdp42 32/32；环境记录：headless Chrome 无 X display 时 ANGLE Vulkan-XCB 失败 ⟹ 须 `xvfb-run` 启动 |
 | R41 | 3D 双槽势组合（README「后续方向」①，用户选定通用双槽） | 势由单枚举升级为 V=pot3Slot(主)+pot3Slot(第二)（CPU `pot3JS` 与 GLSL `helpers` 同名函数严格镜像）；**TPL_REDUCE3D 补 {{HELPERS}} 注入位**（原只有 POT3，否则势不同源、R35 对账失效）；eMaxExtra 取两槽之和（保守）⟹ 组合势 120 帧 P 守恒 1.36e-4；GPU↔CPU ⟨V⟩ 同帧对账 rel 8.8e-10/7.6e-8/6.5e-9（阈值 2e-7）；组合预设「球垒调制双缝」（球垒 R₂=6 不遮缝）；cdp41 30/30；副作用诚实记录：shader 变复杂 ⟹ 挂载预演化帧数分布 4↔5 下移到 3↔5，cdp39 PRE 断言阈值过时（判据放宽 3–6，对账走实测 PRE 故 33 项全绿） |
@@ -70,6 +72,128 @@ README「后续方向」表经核实已清空（面板溢出 R48/R53 闭环、GP
 | R66 | 暗孤子（defocusing NLS 预设缺口） | 暗孤子 tanh 剖面、传播速度、与亮孤子对照 | NLS 新预设 + g<0 侧初态 | 速度理论值对照、长时稳定性 |
 
 **通用纪律**：每轮零回归优先（B=0 / 默认态逐位）；GPU↔CPU 对账走同帧口径；harness 失败先诊断「测试侧 vs 实现侧」再动手；文档（README 专节 + 验证表 + 总览 + worklog 详章）随轮完成，不攒批。
+
+---
+
+## R63（2026-10-20）Landau 能级（均匀磁场轨道耦合）
+
+### 设计定稿（开工前记录）
+
+**目标**（承接上方计划表 R63 行）：均匀磁场 B 的**轨道**耦合（最小耦合 Peierls 相位），回旋频率 ω_c=qB/m、Landau 能级 E_n=(n+½)ℏω_c、简并度 N_Φ。
+
+**物理与离散化**：H=(1/2m)(−i∇−qA)²。取 **Landau 规范 A=(−B·y, 0, 0)**（B 沿 z 垂直屏幕）——A_x 只依赖 y，沿 x 向 link 恒定 ⟹ **Peierls 相位的线积分精确**（无中点近似的 O(texel²) 误差）：
+- x 向 ±link 相位：phXp=−qB·y_texel、phXm=+qB·y_texel（中点 y 相同 ⟹ 精确反号 ⟹ **离散 H 严格厄米**，与 AB 的 rot4 同款论证）；
+- y 向 link 无相位（A_y=0）。
+|U|=1 ⟹ 谱半径不变（E_max 仍 ≤8/m）、P 与 E 守恒。
+
+**为什么不用对称规范 A=(B×r)/2**：A 沿 link 线性变化，中点采样引入 O(texel²) 误差；Landau 规范下相位精确，是数值对照的首选（对称规范留作规范不变性对照项）。
+
+**与既有机制的边界（避免概念混淆）**：
+- **AB 效应（R54）**：点磁通（奇异矢势、Wilson 环 = e^{iΦ}），`uABOn/uABPos/uABPhi`；
+- **Pauli 塞曼（R33）**：自旋耦合 −uK·σ·B，state.bX/bY/bZ，**不涉及轨道**；
+- **R63 轨道耦合**：均匀 B_z 的 Peierls 相位，新增引擎级 `state.bOrb` 与 `uBOn/uBz`。三者正交、可叠加（uABOn 分支优先，其次 uBOn，否则裸 stencil）。
+
+**验证锚点（计划表三项 + 动态对照）**：
+1. **B=0 逐位零回归**：uBOn=0 走原 5 点 stencil 分支（同 uABOn/uDriveAmp/uTwistX 门控口径）；
+2. **回旋周期（GPU 动态、主锚点）**：高斯波包质心做经典回旋（Ehrenfest；相干态质心严格走经典轨迹），周期 T=2π/ω_c=2πm/(qB)、半径 r_c=v/ω_c=k/(qB)。扫 B 测 T ⟹ T∝1/B 线性对照（LandauScanner）；
+3. **Landau 能级间距 + 简并度（CPU 静态）**：pot63 用 numpy 直接对角化小网格（64² 的 Peierls 离散 H，~4096×4096 稠密或按 y 分块），核对体区能级间距 ≈ ℏω_c、最低能级简并 ≈ N_Φ=qBA/2π。
+4. 守恒：|U|=1 ⟹ P/E 守恒（GPU 归约读数）。
+
+**架构（四块）**：
+1. **kernel.js**：`TPL_LAP_BLOCK` / `TPL_LAP3D_BLOCK` 新增 `uBOn/uBz` 分支（3D：B 沿 z、A=(−B·y,0,0)，仅 x 向 link 有相位）；
+2. **app.js**：state.bOrb + URL `?bOrb=` + 面板滑块 + uBOn/uBz 每帧上传（KDK/CN；诊断路径置 0）+ Landau 面板（回旋测量读数）+ LandauScanner 挂载；
+3. **scan.js**：`LANDAU_SPEC` + `LandauScanner`（扫 bOrb，每点发波包 + 固定窗采质心轨迹 ⟹ 拟合回旋周期/半径，与 2πm/(qB) 对照）；
+4. **schrodinger.js**：`energyLevels` 的 Landau 解析阶梯（E_n=(n+½)ω_c，供 HUD 对照）。
+
+**验证计划**：pot63（numpy 对角化：能级间距/简并度 + Peierls 相位厄米性 + 规范对照）+ cdp63（浏览器：B=0 零回归 + 质心回旋周期/半径 vs 理论 + 守恒 + 扫描器）+ 回归矩阵全绿 + dist 重建。
+
+**已知诚实限制（先记录）**：Dirichlet 硬壁系统不是无限平面 ⟹ 体 Landau 能级只在回旋半径 ≪ 系统尺寸时成立，边界处有 edge states（能量在 Landau 能级之间上弯）；简并度数值是近似计数（硬壁解除部分简并）。波包质心回旋在 r_c 接近边界时会撞墙 ⟹ 扫描取 r_c ≲ 60 texel 的参数区间。
+
+### 实施记录与验证（本轮完工回填）
+
+#### 一、算法：为什么最终不是 Peierls-stencil KDK
+
+设计定稿原计划「±link 加 Peierls 相位，KDK/CN 全模板通用」。开工后 CPU 镜像（float64）立刻否掉了这条路线：
+
+| 量 | 结果 |
+|---|---|
+| KDK 对**实** H（B=0） | 精确酉，P 漂移 ~1e-9/千步 |
+| KDK 对**复** H（B≠0） | `v_half = v − ½dt·Re(Hψ)`、`u_new = u + dt·Im(Hψ)` 的 Re/Im 拆分**不是酉算子**：放大矩阵谱半径 ρ>1，且 ρ−1 随网格线性增长（n=16, B=0.02 时 3.4e-3/子步 ⟹ n=128 外推 ~2.4e-2，数十步即爆） |
+| CN 对复 H | 严格保范，但 CN 是本项目的 Dirac/Pauli 专用路径（2D 标量走 KDK） |
+
+**规范帧 ADI**（落地方案）：Landau 规范 A=(−B·y,0,0) 下 y 向 link 本来无相位；x 向的相位 e^{±iB·y} 只依赖 y。于是对 x 扫描做逐 texel 规范旋转 φ=e^{+iBxy}ψ，把 x 向 link 变成**实** stencil ⟹ 与 B=0 **逐字同构**的精确酉 KDK；y 扫描留在原帧走裸实 1D stencil。两个方向交替（偶子步 x→y、奇子步 y→x）⟹ `[A,B]` 项相消的二阶格式（等价 Strang）；V 对半 splitting（每个扫描含 V/2，两次合计恰为全 V；驱动势是 V 的一部分，规范不变）。
+
+结构：每子步两个方向扫描 × 每扫描 3 pass（kick/drift/kick）= **6 pass/子步**；规范旋转融合在 x 扫描的着色器内，不额外占 pass。
+
+**符号口径**：连续统展开 (p−qA)² = ½(−i∂_x + By)² 给出 **+x link = e^{+iB·y}**（原实现写成 e^{−iB·y}，对应 A_x=+By、B_z=−B，与文档规范相反）。已翻转；谱不变（H(−B)=H(B)*，机器精度 4e-16 验证），只影响回旋**方向**。规范角采用半 texel 中心口径 (i+0.5)，与整数索引口径相差纯规范 diag(e^{iBx/2})，plaquette 磁通同为 B ⟹ 谱相同。
+
+#### 二、物理：晶格回旋的非谐修正（本轮核心发现）
+
+紧束缚带 E(k)=−(1/m)(cosθ+cosφ)（θ=k_x+B·y、φ=k_y）的半经典方程 θ̇=(B/m)sinφ、φ̇=−(B/m)sinθ，守恒量 H=−(cosθ+cosφ)。(0,0) 是**稳定平衡** ⟹ 小振幅下 T₀=2πm/B **精确成立**（CPU ODE：θ₀=0.05 时 T/T₀=1.000）；振幅变大后轨道类单摆拉长（θ₀=2.4 时 ×2.18）——此前实测的「约 2× 偏差」由此完全解释，不是 bug。
+
+**周期闭式**（两步代换 w=sin(θ/2)、w=s·sinα 去掉端点 1/√ 奇性，被积函数在 [0,π/2] 光滑）：
+
+```
+T(θ₀) = (4m/B)∫₀^{π/2} dα / √((1−s²sin²α)(1−s²cos²α)),   s = sin(θ₀/2)
+```
+
+复合 Simpson N=256 求积（与 ODE 实测 10 点吻合到 1e-5）。θ₀ ≥ π 时推导前提失效（θ₀→π⁻ 时 T 对数发散，越过 π 后 s 回落会给出「假周期」）⟹ `landauModel` 返回 `valid=false`、T/ratio 置 NaN，HUD 与扫描器都显式标注「半经典近似失效」，不静默给错数。
+
+#### 三、数值验证（CPU float64 镜像 `/tmp/pot63_verify`，不入库）
+
+| 脚本 | 内容 | 结果 |
+|---|---|---|
+| pot63f | 谱不变 / 保范 / 二阶收敛 / 轨道方向 | 谱差 4.44e-16；n=128/B=0.05/5000 子步 P−1 ≈ +2e-6；误差 3.753e-2→9.693e-3→2.409e-3→6.009e-4（×3.87/×4.02/×4.01）；k_x>0@y>0 向 −y 弯（顺时针，q=1,B>0）✓ |
+| pot63g | B=0.1 大网格谱 | max\|谱差\|=4.97e-15；间距/B=0.9861（r_B≈3.16 格点下的格点修正 −1.4%） |
+| pot63h | 晶格半经典 T vs 振幅（ODE + 谷值抛物线插值） | θ₀=0.4 时 T/T₀=1.020，与闭式一致 |
+| pot63i | 量子 ADI 波包 vs 半经典 | B=0.05/θ₀=0.6: 131.47 vs 133.78；θ₀=1.0: 142.58 vs 143.61；B=0.08/θ₀=0.8: 85.13 vs 85.79；B=0.03/θ₀=0.4: 213.68 vs 217.15（0.3–1.8%） |
+| pot63k | **ADI 稳定域扫 dts** | dts=0.1/0.2/0.3 保范 2e-6/5e-5/2e-4（有界）；**dts=0.4 在 t≈90 崩（P−1→4.8）、dts=0.6 立即漂移** |
+| pot63m/n/o | 扫描器发射几何 + 周期检测（σ 扫参） | σ=16 大 B 点相位不单调（turns 1.75/mono 0.77，+37%）；σ=7 降到 ≤4.6%；**σ=5 时 5 点全部 ≤2.3%、相位残差 ≤0.16** |
+
+**pot63k 的教训**：我最初按「单方向 1D 算子谱半径 ≤ uK·4+0.5」推 eMax，得到 dt=1.2 只需 2 子步（dts=0.6）。实测推翻了它——交替 splitting 的稳定域由**完整 2D H 的谱**支配（交叉项 (dts²/2)[A,B] 在 λ~O(1) 时被放大）。`evolveKDK_B` 的 eMax 已改为与 plain KDK **逐字相同**的全 2D 界（uK·8+1）⟹ sub=4、dts=0.3。
+
+#### 四、浏览器实测（cdp63 系列，Chromium + Xvfb + SwiftShader WebGL2）
+
+| 测试 | 结果 |
+|---|---|
+| boot | WebGL2 (OpenGL ES 3.0 Chromium)，kernel=schrodinger，preset=free，diag 空 |
+| B=0 零回归 | 200 帧 ΔP = **−6.8e-7** |
+| B=0.05 保范（780 帧 ≈ 6 周期） | P−1 = +1.8e-4 / +3.3e-4 / +4.9e-4（t=156/312/468，有界） |
+| 单点回旋（256²，B=0.05） | T_meas=**170.5** vs T_晶格=169.3（**+0.69%**），turns=2.73、resid=0.072 |
+| LandauScanner 端到端（128²，5 点） | T/T_lat：331.3/329.2、234.9/232.8、191.4/189.8、170.3/169.3、161.2/161.8 ⟹ **中位 0.6%**；vs T₀ 中位 **21.8%**；5/5 ok |
+| 门控（nls 内核页） | `#landauSec` display=none、`setBOrb` 返回 0、`scanLandau.start()`=false |
+| 门控（AB / 扭曲） | AB 存在 ⟹ start=false + toast「请先清空 AB 螺线管」；twistX≠0 ⟹ start=false；干净 ⟹ start=true |
+| 跨内核回归 | free −6.8e-7 / AB +5.4e-6 / pauli(CN) +6.7e-5 / dirac(CN) +4.9e-6 / nls −6.1e-7 / 3D P=1.0000 |
+
+#### 五、本轮抓出并修掉的四个真 bug（都不是 R63 新写的代码）
+
+**① `rot4` 的 sin/cos 非正交 ⟹ 系统性范数损失（最隐蔽）**
+第一次浏览器实测 B=0.05 时 P 在 780 帧内掉到 **0.03**，而 CPU float64 镜像只掉 2e-4。判别实验：B=1e-6（物理上等于无磁场）同样掉 32% ⟹ 与 B 无关，是分支结构问题。单步测量：B 模式每帧掉 0.32%，plain 路径 120 帧只掉 5e-7。
+根因：`rot4` 用 `sin(a)/cos(a)` 做旋转，float32 下 `sin²+cos² = 1 ± ε`（ε~1e-6）且偏差带**系统性符号**；B 模式每 pass 要做 4 次旋转 × 24 pass/帧 ⟹ 每帧 3e-3 的范数损失。float64 的 sin 精度 1e-16，所以 CPU 镜像完全掩盖了它（这也解释了 R54 记录里「AB 分支 0.01–0.15% 长时程残差」的同源现象）。
+修复：`rot4` 内用 `inversesqrt(s*s+co*co)` 把旋转矩阵拉回严格正交（1 次 rsqrt/旋转，四分量共享）。修复后 B 模式 156 帧 P=**1.00017**。同时把规范角归约到 [0,2π)（gA 可达 3.9e3 rad，减少大参数三角函数的角度归约误差；对相对相位无影响）。
+
+**② ADI 稳定域被低估**（见 pot63k，eMax 已改）
+
+**③ `landauModel` 单位错**：`lastWave = [fx, fy, kx, ky]` 里 fy 是**分数坐标**，旧代码直接当 texel 用（`yc = w[1]`），θ₀ 差一个 grid 因子（B=0.05、fy=0.5 时 6.4 被算成 0.325）。已改为 `yc = fy·grid + 0.5`（texel 中心口径，与着色器 `yT=vUv.y/uTexel.y` 一致）。
+
+**④ Dirac 内核整个无法启动（R54 遗留）**：`dirac.js` 注入的 `diracD()` helper 仍用 **R26 单管标量** `uABPhi/uABPos`，而 R54 已把 AB 升级成数组（`uABPos[AB_MAX]/uABPhi[AB_MAX]/uABCount`）⟹ 生成的着色器报 `array / non-array mismatch`、**编译失败**，页面 diag 显示 `ERR shader`。此前没有任何一轮回归覆盖 Dirac 页面（R31 的 cdp 套件是 KDK 时代）。已改为与 `TPL_LAP_BLOCK` 逐字同构的数组循环（相位线性相加，Wilson 环可加性同款）；修复后 diag 空、P=1.0000。
+
+另修一个 **R62 遗留**：内核 `_mode` 只在 lattice 预设的 `build()` 里置 `'lattice'` 且**从不复位** ⟹ 从晶格切回任意其它预设后 `makeWave` 仍走 Bloch 平面波初态（初态忽略 fx/fy/kx/ky，拖拽发射完全失效，画面却「正常」）。已在 `presets()` 统一包装：除 lattice 外所有预设的 build 先把 `_mode` 归 `'free'`。
+
+#### 六、LandauScanner（LANDAU_SPEC）
+
+- 发射几何：指导中心落盒心 y_gc=grid/2、轨道半径 r=30 texel ⟹ 发射点在轨道**上端** y_gc+r（φ₀=k_y=0 ⟹ θ̇=0，y 取极值），k_x=−B·y_gc ⟹ θ(0)=B·r；
+- **σ=5**（≪ 磁长度 1/B）：这是本轮的第二个物理约束——轨道「厚度」≈ 空间包宽，σ=16 时 θ 空间散布 B·σ=0.8 rad 与轨道半径同量级，直接糊成一团；
+- 窗长 3.0·T_lattice；测量 `fieldMoments2`（与 HUD 归约同源，非节流的精确读数）；
+- 周期用**复相位展开法**（z=(cx−x̄)+i(cy−ȳ) 相位单调累积 → 最小二乘斜率），而不是上升穿越：波包弥散让振幅按 exp(−(t/τ)²) 衰减、非谐轨道 y(t) 含谐波，固定阈值穿越会漏检/多检（实测 B=0.04 时 cy 通道偏 −10.8%、cx 只 +1.8%，两者本应相同）；相位法只要「绕圈单调」就免疫，衰减不影响斜率；
+- 有效性判据 `turns≥1.6 && resid<0.5 && mono>0.9`，不满足则 `ok=false`（面板如实留空，不给假点）；
+- 叠图两条曲线：T₀=2πm/B（灰虚线）与 T_晶格（青虚线，单源取 `schrodinger.js` 的闭式）；实测点琥珀色；
+- 门控：仅 schrodinger 内核、AB 与扭曲边界互斥（gate 拒绝并 toast，**不静默改写用户状态**）；扫描期临时切 `free` 场景 + 强制 256²，结束恢复原预设/σ/bOrb。
+
+#### 七、跳过「energyLevels 的 Landau 阶梯」的理由
+
+设计定稿第 4 项是给 HUD 加 E_n=(n+½)ℏω_c 的解析阶梯。落地时判定**不做**：波包是连续谱的叠加，`⟨E⟩` 不是本征值，与阶梯对照没有意义（R27 的 box/harmonic 阶梯之所以成立，是因为那两处是**离散谱**且波包可视为若干本征态叠加，误差有明确解释）。能级间距这一锚点已由 CPU 对角化（pot63g：间距/B=0.9861，格点修正 −1.4%）独立验证，HUD 侧的定量读数由 `landauStat`（ω_c、T₀、T_晶格、θ₀、撞壁预警）承担。
+
 
 ---
 
