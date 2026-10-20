@@ -18,7 +18,7 @@ import { TransmissionScanner3 } from './scan.js';
 import { SlitScanner } from './scan.js';
 import { GpScanner, NlsScanner } from './scan.js';
 import { BlochScanner } from './scan.js';
-import { LandauScanner, fieldMoments2 } from './scan.js';
+import { LandauScanner, DwScanner, fieldMoments2 } from './scan.js';
 
 /* ---------- R52：GP 基态渐进弛豫的每帧步数预算 ----------
    GP 预设「基态（虚时间弛豫）」的虚时间流由帧循环分帧推进：每帧最多
@@ -137,6 +137,9 @@ export class QuantumField {
          面板下拉可切换并重画硬壁势）。billBand = 当前显示的本征态序号
          （0 起，UI 态，不存档——谱是运行时缓存）。 */
       billKind: 'stadium', billBand: 0,
+      /* R65 双势阱：dwZ0 = 初始粒子数差 z0=(N_L−N_R)/N（双高斯幅度 √((1±z0)/2)）、
+         dwPhi = 两阱相对相位 φ0（右阱乘 e^{iφ0}）。两者都进 makeWave 的 dw 分支。 */
+      dwZ0: 0.6, dwPhi: 0,
       ...this.kernel.defaults(),
       ...(options.state || {}),
     };
@@ -171,6 +174,8 @@ export class QuantumField {
     /* R63 Landau 回旋周期扫描（bOrb 扫描 + 质心轨迹周期检测 + T₀/T_晶格 叠图）；
        仅薛定谔内核（landauSec 同款门控），与 AB/扭曲边界互斥（gate 层拒绝） */
     this.scannerLandau = new LandauScanner(this);
+    /* R65 双势阱扫描（g 扫描 → z_min/自囚禁阈值）；仅 GP 内核 + dw 预设 */
+    this.scannerDw = new DwScanner(this);
     this._onError = e => {
       const d = this.q('#diag');
       if (d) d.textContent = 'ERR ' + e.message;
@@ -339,6 +344,21 @@ export class QuantumField {
     <div class="row"><label>谱统计</label><span id="billStat">未求解</span></div>
     <div class="row"><label>能级 E</label><span id="billLevels">—</span></div>
     <div class="hint" style="margin-top:4px">硬壁腔（腔外 V=1.0）内的自由粒子。<b>经典动力学决定量子谱</b>：stadium 混沌 ⟹ 能级互相排斥（最近邻间距比 ⟨r⟩→0.53，GOE）；圆形腔可积 ⟹ 间距服从 Poisson（⟨r⟩≈0.39，含简并时更低）。<b>⟨r⟩</b>=⟨min(sᵢ,sᵢ₋₁)/max(sᵢ,sᵢ₋₁)⟩ 不需要展开能级密度，是有限样本下最稳的可积/混沌判据。<b>求谱</b>用 Lanczos（全重正交化，krylov 96）解 <b>与 GPU 同一离散</b>的 H=−uK·∇²₅+V，耗时数秒（一次性）；<b>显示选中态</b>把该本征向量上传到场上——混沌腔的高激发态会出现 <b>scar</b>（沿不稳定周期轨道增强的密度脊）。注意 stadium 的谱若有 x/y 反射对称会裂成多条独立序列、低能 ⟨r⟩ 假装可积，故腔内置了一个偏心小凸起破坏对称；样本仅 16 态（间距 14 个）⟹ 只能定性看分离方向，定量值以 CPU 200 态样本为准。</div>
+  </div>
+  <div class="sec" id="dwSec">
+    <h3>双势阱（Josephson）</h3>
+    <div class="row"><label>初始不平衡 z₀</label><input type="range" id="rDwZ0" min="-0.9" max="0.9" step="0.05" value="0.6"><output id="oDwZ0">0.60</output></div>
+    <div class="row"><label>相对相位 φ₀</label><input type="range" id="rDwPhi" min="0" max="6.2832" step="0.05" value="0"><output id="oDwPhi">0.00</output></div>
+    <div class="row"><label>粒子数差 z(t)</label><span id="dwStat">—</span></div>
+    <div class="row"><label>ΔE / 周期</label><span id="dwDE">未求（点左侧按钮）</span></div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnDwDE">求 ΔE（双阱谱）</button>
+      <button id="btnDwScan">扫 g（自囚禁）</button>
+    </div>
+    <div class="row" style="margin-top:4px"><button id="btnDwScanStop" disabled>中止扫描</button></div>
+    <div class="row"><label>扫描状态</label><span id="dwScanStat">就绪</span></div>
+    <canvas id="dwScanCanvas" width="420" height="180"></canvas>
+    <div class="hint" style="margin-top:4px">两抛物阱（阱心距 20px、阱宽 44px、垒高 ≈0.052）中的 BEC，初态为双高斯叠加：左/右幅度 √((1±z₀)/2)、右阱带相位 φ₀。<b>Josephson 振荡</b>：z(t)=(N_L−N_R)/N 在两阱间来回（线性极限 z=z₀cos(ΔE·t/ħ)，ΔE 是双阱对称/反对称本征态的能量分裂——点「求 ΔE」用 R64 的谱求解器独立算出，与实测周期对照）。<b>宏观量子自囚禁</b>：相互作用 Λ=N·U/2K 超过 1 且初始不平衡足够大时，z(t) 不再过零、云锁在一侧——扫 g 看 z_min 随 |g| 抬升（实测本几何扫到 |g|=150 时 |z_min| 从 0.35 压到 0.26，趋势明确但**未跨过自囚禁相变**——面板如实标注，不宣称相变）。诚实限制：双高斯初态不是双阱精确基态组合，会额外激发阱内呼吸模（z 上的高频抖动）；两模模型只是近似，Λ 的 U 估计有 ~20% 误差，阈值只报量级。</div>
   </div>
   <div class="sec" id="scanSec">
     <h3>透射率扫描</h3>
@@ -852,7 +872,9 @@ ${d3 ? `
                                                                  平面波 × y 基模，需要 latA 与 twistX；不传则
                                                                  makeWave 拿到 undefined ⟹ NaN 场） */
                                                               latV0: this.state.latV0, latA: this.state.latA,
-                                                              twistX: this.state.twistX });
+                                                              twistX: this.state.twistX,
+                                                              /* R65 双势阱初态参数（GP 的 dw 分支读；其它内核忽略） */
+                                                              dwZ0: this.state.dwZ0, dwPhi: this.state.dwPhi });
     let sum = rawSum;
     /* 新波包先归一化到 Σ|ψ|²=1，再与旧场叠加。
        纹理中的旧场恒满足 Σ|ψ|²=1（初始归一化 + 演化酉守恒，HUD P=1.0000/err=0.000%）。
@@ -1134,6 +1156,35 @@ ${d3 ? `
       (sp.notConv ? ' ⚠未完全收敛' : '');
     const lv = this.q('#billLevels');
     if (lv) lv.textContent = sp.evals.slice(0, 6).map(v => v.toExponential(2)).join(' · ') + ' …';
+  }
+
+  /* ---------- R65 双势阱：ΔE（R64 谱求解器）+ z(t) 读数 ---------- */
+  /* 双阱对称/反对称本征态的能量分裂 ΔE：线性极限下粒子数振荡频率就是 ΔE
+     （z(t)=z₀cos(ΔE·t)）。走 R64 的「压缩 + shift-invert」，V 由势场纹理读
+     （与 shader 同解码），vCut=0.5 把远处高势排除在支撑区外。 */
+  dwSpectrum(){
+    if (!this.kernel.spectrum) return this.toast('当前内核无谱求解');
+    const st = this.state, g = st.grid, N = g*g;
+    const d = this.vctx.getImageData(0, 0, 256, 256).data;
+    const S = 256/g;
+    const V = new Float64Array(N);
+    for (let y = 0; y < g; y++){
+      for (let x = 0; x < g; x++){
+        const vx = Math.min(255, Math.floor((x + 0.5)*S));
+        const vy = Math.min(255, Math.floor((y + 0.5)*S));
+        V[y*g + x] = (d[(vy*256 + vx)*4] - 128)/127;
+      }
+    }
+    const sp = this.kernel.spectrum({ grid: g, m: st.m, V, vCut: 0.5, nev: 4, eps: 1e-3 });
+    const el = this.q('#dwDE');
+    if (!sp.evals.length){ if (el) el.textContent = '求解失败（腔为空？）'; return; }
+    const dE = sp.evals[1] - sp.evals[0];
+    this._dwSpec = { dE, evals: Array.from(sp.evals), ms: sp.ms, nc: sp.nc };
+    const T = dE > 0 ? 2*Math.PI/dE : Infinity;          /* 时间单位 */
+    if (el) el.textContent = 'ΔE=' + dE.toExponential(3) + ' · T=2π/ΔE≈' +
+      (isFinite(T) ? Math.round(T) + '（' + Math.round(T/1.2) + ' 帧）' : '∞') +
+      ' · ' + (sp.ms/1000).toFixed(2) + 's';
+    this.toast('ΔE=' + dE.toExponential(3) + ' · 谱 ' + sp.evals.length + ' 态 · ' + (sp.ms/1000).toFixed(2) + 's');
   }
 
   /* 谱结果快照（面板读数 + CDP 断言共用；无谱返回 null） */
@@ -2713,6 +2764,23 @@ ${d3 ? `
        · 轨道振幅 θ₀=k_x+B·y_c 与 y 向包络（贴墙时预警——半经典轨道出界后
          Ehrenfest 对应失效，实测周期不再遵循任何一条曲线）。
        URL 层拒绝 ?bOrb= 时展示原因（拖滑块即清除）。 */
+    /* R65 双势阱 z(t) 读数：z=(N_L−N_R)/N，用 probSplit(0.5)（左/右概率）。
+       每 150 ms 最多一次 readPixels（HUD 本身 120 ms 节流，这里再加一道闸，
+       避免 refreshParamHud 被其它路径高频调用时反复回读）。 */
+    const dwStat = this.q('#dwStat');
+    if (dwStat && this.kernelId === 'gp' && this.state.preset === 'dw'){
+      const nowD = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+      if (!this._dwT || nowD - this._dwT > 150){
+        this._dwT = nowD;
+        const sp = this.probSplit(0.5);
+        const z = sp.P > 0 ? (sp.left - sp.right)/sp.P : 0;
+        this._dwZ = z;
+        dwStat.textContent = 'z=' + (z >= 0 ? '+' : '') + z.toFixed(3) +
+          ' · N_L=' + (sp.P > 0 ? sp.left/sp.P : 0).toFixed(3) +
+          ' · N_R=' + (sp.P > 0 ? sp.right/sp.P : 0).toFixed(3) +
+          ' · t=' + this.state.simTime.toFixed(0);
+      }
+    }
     const landauStat = this.q('#landauStat');
     if (landauStat){
       const B = this.state.bOrb || 0;
@@ -3286,6 +3354,12 @@ ${d3 ? `
         (this.state.preset === 'billiard' || this.state.preset === 'billiardC')) ? '' : 'none';
       if (billSec.style.display !== wantB) billSec.style.display = wantB;
     }
+    /* R65 双势阱面板：仅 GP 内核 + dw 预设 */
+    const dwSec = this.q('#dwSec');
+    if (dwSec){
+      const wantDW = (this.kernelId === 'gp' && this.state.preset === 'dw') ? '' : 'none';
+      if (dwSec.style.display !== wantDW) dwSec.style.display = wantDW;
+    }
     const sbk = this.q('#selBillKind');
     if (sbk) sbk.value = this.state.billKind === 'circle' ? 'circle' : 'stadium';
     /* 预设切换 = 腔体变了 ⟹ 旧谱作废（避免读数与画面不一致） */
@@ -3547,6 +3621,25 @@ ${d3 ? `
     if (this.q('#btnLandauScan')){
       this.on(this.q('#btnLandauScan'), 'click', () => this.scannerLandau.start({}));
       this.on(this.q('#btnLandauScanStop'), 'click', () => this.scannerLandau.stop());
+    }
+    /* R65 双势阱：z₀/φ₀ 滑块（重发初态）+ 求 ΔE + 扫 g */
+    if (this.q('#btnDwScan')){
+      const bindDw = (id, out, key, fmt) => {
+        const el = this.q(id), o = this.q(out);
+        if (!el || !o) return;
+        const upd = () => {
+          this.state[key] = parseFloat(el.value);
+          o.textContent = fmt(this.state[key]);
+          this.reinitWave();                    /* 初态变了 ⟹ 重发（dw 分支读 state） */
+        };
+        el.addEventListener('input', upd);
+        el.value = String(this.state[key]); o.textContent = fmt(this.state[key]);
+      };
+      bindDw('#rDwZ0', '#oDwZ0', 'dwZ0', v => v.toFixed(2));
+      bindDw('#rDwPhi', '#oDwPhi', 'dwPhi', v => v.toFixed(2));
+      this.on(this.q('#btnDwDE'), 'click', () => this.dwSpectrum());
+      this.on(this.q('#btnDwScan'), 'click', () => this.scannerDw.start({}));
+      this.on(this.q('#btnDwScanStop'), 'click', () => this.scannerDw.stop());
     }
     /* R64 量子弹球：形状下拉（重画硬壁势 + 作废旧谱）+ 求谱 + 显示选中态 */
     if (this.q('#btnBillSpec')){
@@ -4200,6 +4293,13 @@ ${d3 ? `
       billiardSpectrum: () => { this.billiardSpectrum(); return this.billInfo(); },
       billiardShowBand: (i) => { this.billiardShowBand(Number(i) || 0); return true; },
       billInfo: () => this.billInfo(),
+      /* R65 双势阱调试句柄 */
+      dwSpectrum: () => { this.dwSpectrum(); return this._dwSpec || null; },
+      dwZ: () => {
+        const sp = this.probSplit(0.5);
+        return { z: sp.P > 0 ? (sp.left - sp.right)/sp.P : 0, P: sp.P, t: this.state.simTime };
+      },
+      scanDw: this.scannerDw,
       /* 本征态的密度摘要（scar 判据用）：中央带（|y−g/2|<8）均值 / 全腔均值 */
       billBand: (i) => {
         const sp = this._billSpec;

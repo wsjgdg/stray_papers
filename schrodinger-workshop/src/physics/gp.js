@@ -42,7 +42,7 @@
      的 1.4–2.2 倍：弱耦合 TF 穹顶宽于精确基态 + 无耗散呼吸模不衰减，
      g=−4 最弱耦合推宽 +118%），6px 窗压窄初态（−17~−28%）恰是部分补偿
      （误差相消）⟹ 比例窗让初态诚实、偏差如实暴露，而非靠窗变形掩盖。 */
-import { PhysicsKernel, registerKernel } from './kernel.js';
+import { PhysicsKernel, registerKernel, linearSpectrum } from './kernel.js';
 
 /* 世界坐标：势场面布 256²，特征量以世界 px 计。
    谐波阱 V(r) = (r/TRAP_R)²（V(48)=1，阱频率 ω = √2/TRAP_R ≈ 0.0295，
@@ -85,6 +85,56 @@ const RELAX_MAX_STEPS = 400;
 /* ADI 三对角求解（零 Dirichlet）：(I − a·D)x = rhs，D = tridiag(1,−2,1)，Thomas 算法。
    注意 Y 方向回代读「下一行」(偏移 +n) 而非「下一列」(+1)——诊断期踩过的坑
    （从 X 版复制未改偏移 ⟹ 回代退化、分裂方案不收敛），见 worklog R50。 */
+/* ---------- R65 双势阱（Josephson / 自囚禁）---------- */
+/* 几何（世界 px，势场面布 256²）：两个抛物阱心相距 DW_SEP，阱宽 DW_R。
+   中央垒高 = (DW_SEP/2/DW_R)²（V 在 x=128 处取 min 的两个阱值）。
+   sep=20/R=44 ⟹ 垒高 0.0517，对 E~1e-2 的云是「深垒但可隧穿」。 */
+const DW_SEP = 14, DW_R = 48, DW_SIG = 6;
+
+function drawDW(paint){
+  const img = paint.vctx.getImageData(0, 0, 256, 256);
+  const x1 = 128 - DW_SEP/2, x2 = 128 + DW_SEP/2;
+  for (let y = 0; y < 256; y++){
+    for (let x = 0; x < 256; x++){
+      const px = x + 0.5, py = y + 0.5;
+      const v1 = ((px - x1)**2 + (py - 128)**2)/(DW_R*DW_R);
+      const v2 = ((px - x2)**2 + (py - 128)**2)/(DW_R*DW_R);
+      const v = Math.min(1, Math.min(v1, v2));
+      const gv = Math.round(v*127 + 128);
+      const i2 = (y*256 + x)*4;
+      img.data[i2] = gv; img.data[i2+1] = gv; img.data[i2+2] = gv; img.data[i2+3] = 255;
+    }
+  }
+  paint.vctx.putImageData(img, 0, 0);
+}
+
+/* 双高斯初态：左/右阱幅度 √((1±z₀)/2)、相对相位 φ₀（右阱乘 e^{iφ₀}）。
+   幅度直接给定初始粒子数差 z₀=(N_L−N_R)/N（引擎随后统一归一化，比值不变）。 */
+function makeDW(grid, p){
+  const s = grid/256;
+  const x1 = (128 - DW_SEP/2)*s, x2 = (128 + DW_SEP/2)*s, cy = 128*s;
+  const sg = DW_SIG*s;
+  const z0 = Math.max(-0.95, Math.min(0.95, typeof p.dwZ0 === 'number' ? p.dwZ0 : 0));
+  const phi = typeof p.dwPhi === 'number' ? p.dwPhi : 0;
+  const a1 = Math.sqrt((1 + z0)/2), a2 = Math.sqrt((1 - z0)/2);
+  const cph = Math.cos(phi), sph = Math.sin(phi);
+  const data = new Float32Array(grid*grid*2);
+  let sum = 0;
+  const inv2 = 1/(2*sg*sg);
+  for (let y = 0; y < grid; y++){
+    for (let x = 0; x < grid; x++){
+      const dy = y - cy;
+      const g1 = Math.exp(-(((x - x1)**2 + dy*dy))*inv2);
+      const g2 = Math.exp(-(((x - x2)**2 + dy*dy))*inv2);
+      const re = a1*g1 + a2*cph*g2, im = a2*sph*g2;
+      const i2 = (y*grid + x)*2;
+      data[i2] = re; data[i2+1] = im;
+      sum += re*re + im*im;
+    }
+  }
+  return { data, sum };
+}
+
 function tridiagSolveX(rhs, out, n, a){
   const lo = -a, dg = 1 + 2*a, up = -a;
   const cp = new Float64Array(n), dp = new Float64Array(n);
@@ -126,6 +176,7 @@ export class GPKernel extends PhysicsKernel {
     /* R52：任何重发都取消未完成的弛豫任务（切预设/改 σ/拖拽发射/扫描布点
        都是全新初态；gs 分支会在下方重建任务）⟹ 旧任务不会写到新场上。 */
     this._relaxTask = null;
+    if (this._mode === 'dw') return makeDW(grid, p);
     const cx = p.fx*grid, cy = p.fy*grid;
     const s = 256/grid;                          /* 世界 px / 网格 px */
     const R = p.sigma;                           /* 云半径（世界 px，来自 σ 滑块） */
@@ -380,6 +431,19 @@ export class GPKernel extends PhysicsKernel {
     if (!isNaN(g)) state.g = Math.max(-150, Math.min(300, g));
   }
 
+  /* 双阱势重画（扫描器切网格 / 形状下拉共用） */
+  paintDW(paint){ drawDW(paint); }
+
+  /* R65 双势阱：线性谱（对称/反对称本征态的能量分裂 ΔE）。
+     与弹球共用引擎层求解器（同一离散口径、同一 shift-invert）。 */
+  spectrum(opts){
+    const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    const r = linearSpectrum({ n: opts.grid || 256, m: opts.m, V: opts.V,
+                               vCut: opts.vCut, nev: opts.nev || 4, eps: opts.eps || 1e-3 });
+    const ms = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0;
+    return Object.assign(r, { ms });
+  }
+
   presets(){
     const self = this;
     /* 谐波阱 V(r) = (r/48)²：径向渐变，每 4 世界 px 一个色标
@@ -403,6 +467,9 @@ export class GPKernel extends PhysicsKernel {
                   build(paint){ self._mode = 'tf'; }, wave:[0.5,0.5,0,0], params:{ g:-10, sigma:16 } },
       breather:{ name:'集体呼吸模',   text:'强过压缩初态（R=10，峰值约为默认云 3.4×）释放后云大幅膨胀再回缩：实测峰值摆动 ×9.4–10（最低 ×0.15）、周期 ~107 sim-time，无耗散下长时不衰减——BEC 集体激发的大振幅演示，区别于单粒子薛定谔的量子化能级。',
                   build(paint){ self._mode = 'tf'; trap(paint); }, wave:[0.5,0.5,0,0], params:{ g:-10, sigma:10 } },
+      dw:      { name:'双势阱（Josephson）', text:'两个抛物阱（阱心相距 14px、阱宽 48px、中央垒高 ≈0.021）中的 BEC。初态是两个高斯叠加：左/右阱幅度 √((1±z₀)/2)、右阱带相对相位 φ₀ —— 直接给定初始粒子数差 z₀ 与相位差 φ₀。**Josephson 振荡**：g 小时粒子数差在两阱间来回振荡（z(t)=z₀cos(Ωt)，Ω=双阱对称/反对称本征态的能量分裂 ΔE）；**宏观量子自囚禁**：相互作用足够强（Λ=N·U/2K>1）且初始不平衡足够大时，粒子数差不再过零，云被锁在一侧。面板实时显示 z(t)，扫描器逐点扫 g 给出自囚禁阈值。注意：两高斯初态不是双阱的精确基态组合，会额外激发阱内呼吸模（z(t) 上的高频小抖动）。',
+                  build(paint){ self._mode = 'dw'; drawDW(paint); }, wave:[0.5,0.5,0,0],
+                  params:{ g:-10, sigma:6, dwZ0:0.6, dwPhi:0 } },
       gs:      { name:'基态（虚时间弛豫）', text:'虚时间流 ∂ψ/∂τ = −(H−μ)ψ 收敛到离散哈密顿量的精确基态（Hψ=μψ）：集体呼吸模被弛豫掉，云半径与密度峰在实时间演化中保持平稳（实测 200 帧窗 Rrms 呼吸 0.36%、密度峰呼吸 0.54%，对比 TF 穹顶初态的 60%）。基态由 g 唯一确定——σ 只作弛豫起点（任意起点收敛到同一基态：σ=16 与 σ=R_TF 起点结果逐位一致），故拖动 σ 对稳态无影响。半径对账：√3·Rrms≈12.7 比 TF 公式 R_TF≈11.0 大 15.6%——有限耦合下 TF 近似的真实系统误差（g=−10 时 R_TF/ξ≈2.5，仅中间区），随 |g| 增大收敛到 TF 渐线（g=−40 时 +5.2%）。g≥0（吸引侧）无稳定基态（2D L² 临界塌缩），此时退回穹顶初态。弛豫成本 ~0.7s（τ=1、<250 步），仅在预设切换/重置时执行一次。',
                   build(paint){ self._mode = 'gs'; trap(paint); }, wave:[0.5,0.5,0,0], params:{ g:-10, sigma:11 } },
     };

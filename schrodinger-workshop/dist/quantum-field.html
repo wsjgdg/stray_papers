@@ -1735,6 +1735,236 @@ class PhysicsKernel {
 
 /* ---------- 注册表 ---------- */
 const registry = new Map();
+/* ---------- 对称矩阵 Jacobi 对角化（Lanczos 三对角块用；就地 A）----------
+   m 很小（≤120）⟹ 稠密 Jacobi 足够（比 tqli 好调试）。返回本征值 + 本征向量
+   （vecs 的第 i 列为第 i 个本征向量，按**原序**，调用方自行排序）。 */
+function jacobiSym(A, m){
+  const V = new Float64Array(m*m);
+  for (let i = 0; i < m; i++) V[i*m + i] = 1;
+  for (let sw = 0; sw < 80; sw++){
+    let off = 0;
+    for (let p = 0; p < m; p++) for (let q = p + 1; q < m; q++) off += A[p*m + q]*A[p*m + q];
+    if (off < 1e-26) break;
+    for (let p = 0; p < m - 1; p++){
+      for (let q = p + 1; q < m; q++){
+        const apq = A[p*m + q];
+        if (Math.abs(apq) < 1e-300) continue;
+        const th = (A[q*m + q] - A[p*m + p])/(2*apq);
+        const t = (th >= 0 ? 1 : -1)/(Math.abs(th) + Math.sqrt(th*th + 1));
+        const c = 1/Math.sqrt(t*t + 1), s = t*c;
+        for (let k = 0; k < m; k++){                 /* 列旋转 */
+          const kp = A[k*m + p], kq = A[k*m + q];
+          A[k*m + p] = c*kp - s*kq;
+          A[k*m + q] = s*kp + c*kq;
+        }
+        for (let k = 0; k < m; k++){                 /* 行旋转 */
+          const pk = A[p*m + k], qk = A[q*m + k];
+          A[p*m + k] = c*pk - s*qk;
+          A[q*m + k] = s*pk + c*qk;
+        }
+        for (let k = 0; k < m; k++){                 /* 累积特征向量 */
+          const kp = V[k*m + p], kq = V[k*m + q];
+          V[k*m + p] = c*kp - s*kq;
+          V[k*m + q] = s*kp + c*kq;
+        }
+      }
+    }
+  }
+  const vals = new Float64Array(m);
+  for (let i = 0; i < m; i++) vals[i] = A[i*m + i];
+  return { vals, vecs: V };
+}
+
+/* ---------- 腔压缩：把腔内格点压成紧凑索引 ----------
+   为什么必须压缩（两次实测的教训）：
+   ① 直接用「V=1 高墙 + 全 65k 自由度」的 H 做 Lanczos，谱宽被墙能级拉到 0..9，
+      而 E₁≈9e-4 ⟹ 条件数 1e4；实测 m=128 时第 16 个 Ritz 值仍差 20 倍
+      （0.148 vs 7.9e-3），**完全没收敛**；
+   ② 压缩到腔内 + 边界 Dirichlet（邻居越界取 0）后，H 只剩格点动能谱宽 2，
+      自由度降到 nc（256² 的 stadium 15792、128² 3960）⟹ 同样的 m 收敛快得多。
+   与 V=1 墙的物理差：墙内穿透 e^{−κd}≈1e-5 被显式丢弃——对 E≪1 的低能态无差别。 */
+function cavityCompress(n, insideFn){
+  const N = n*n;
+  const idx = new Int32Array(N).fill(-1);
+  let nc = 0;
+  for (let y = 0; y < n; y++){
+    for (let x = 0; x < n; x++) if (insideFn(x + 0.5, y + 0.5)) idx[y*n + x] = nc++;
+  }
+  const nb = new Int32Array(nc*4);
+  for (let y = 0; y < n; y++){
+    for (let x = 0; x < n; x++){
+      const a = idx[y*n + x];
+      if (a < 0) continue;
+      nb[a*4]   = x + 1 < n ? idx[y*n + x + 1] : -1;
+      nb[a*4 + 1] = x > 0 ? idx[y*n + x - 1] : -1;
+      nb[a*4 + 2] = y + 1 < n ? idx[(y + 1)*n + x] : -1;
+      nb[a*4 + 3] = y > 0 ? idx[(y - 1)*n + x] : -1;
+    }
+  }
+  return { idx, nb, nc };
+}
+
+/* 共轭梯度解 (H+ε)x=b（H 正定：Dirichlet 动能）。tol 相对 b 的 2 范数。 */
+function cgSolve(op, b, x, nc, eps, tol, maxit){
+  const r = new Float64Array(nc), p = new Float64Array(nc), Ap = new Float64Array(nc);
+  for (let i = 0; i < nc; i++) x[i] = 0;
+  op(x, Ap);
+  for (let i = 0; i < nc; i++) r[i] = b[i] - Ap[i] - eps*x[i];
+  p.set(r);
+  let rs = 0, b2 = 0;
+  for (let i = 0; i < nc; i++){ rs += r[i]*r[i]; b2 += b[i]*b[i]; }
+  const thr = tol*tol*b2;
+  let it = 0;
+  for (; it < maxit; it++){
+    if (rs < thr) break;
+    op(p, Ap);
+    let pap = 0;
+    for (let i = 0; i < nc; i++){ Ap[i] += eps*p[i]; pap += p[i]*Ap[i]; }
+    if (!(Math.abs(pap) > 1e-300)) break;
+    const al = rs/pap;
+    for (let i = 0; i < nc; i++){ x[i] += al*p[i]; r[i] -= al*Ap[i]; }
+    let rs2 = 0;
+    for (let i = 0; i < nc; i++) rs2 += r[i]*r[i];
+    const be = rs2/rs; rs = rs2;
+    for (let i = 0; i < nc; i++) p[i] = r[i] + be*p[i];
+  }
+  return it;
+}
+
+/* ---------- shift-invert Lanczos：求 H 最小的 nev 个本征对 ----------
+   算子 B=(H+ε)⁻¹ 的**最大**本征值对应 H 的最小本征值，且特征值被拉开
+   （λ→1/(λ+ε)）⟹ m≈40 就收敛到 1e-12（直接 Lanczos 要 m≈800）。
+   每步一次 CG（约 200 次 H 作用）；两遍全重正交。
+   返回 { evals(升序), evecs[压缩空间], resid, mK, cgAvg }。 */
+function lanczosShiftInvert(op, nc, nev, mK, eps){
+  const Q = new Float64Array(mK*nc), alpha = new Float64Array(mK), beta = new Float64Array(mK);
+  const x = new Float64Array(nc), rhs = new Float64Array(nc);
+  let seed = 123456789;
+  for (let i = 0; i < nc; i++){
+    seed = (Math.imul(seed, 1103515245) + 12345) | 0;
+    Q[i] = (seed >>> 0)/4294967296 - 0.5;
+  }
+  let nrm = 0;
+  for (let i = 0; i < nc; i++) nrm += Q[i]*Q[i];
+  nrm = Math.sqrt(nrm) || 1;
+  for (let i = 0; i < nc; i++) Q[i] /= nrm;
+  const iters = [];
+  let used = 0, cgAvg = 0;
+  for (let j = 0; j < mK; j++){
+    const jb = j*nc;
+    for (let i = 0; i < nc; i++) rhs[i] = Q[jb + i];
+    iters.push(cgSolve(op, rhs, x, nc, eps, 1e-11, 4000));
+    let a = 0;
+    for (let i = 0; i < nc; i++) a += Q[jb + i]*x[i];
+    alpha[j] = a;
+    for (let i = 0; i < nc; i++) x[i] -= a*Q[jb + i];
+    if (j > 0){
+      const bm = beta[j-1], pb = (j-1)*nc;
+      for (let i = 0; i < nc; i++) x[i] -= bm*Q[pb + i];
+    }
+    for (let pass = 0; pass < 2; pass++){
+      for (let k = 0; k <= j; k++){
+        const kb = k*nc;
+        let d = 0;
+        for (let i = 0; i < nc; i++) d += Q[kb + i]*x[i];
+        if (d !== 0) for (let i = 0; i < nc; i++) x[i] -= d*Q[kb + i];
+      }
+    }
+    let bn = 0;
+    for (let i = 0; i < nc; i++) bn += x[i]*x[i];
+    bn = Math.sqrt(bn);
+    beta[j] = bn; used = j + 1;
+    if (bn < 1e-12) break;                       /* 不变子空间 */
+    const nb2 = (j + 1)*nc;
+    for (let i = 0; i < nc; i++) Q[nb2 + i] = x[i]/bn;
+  }
+  cgAvg = iters.length ? iters.reduce((p, q) => p + q, 0)/iters.length : 0;
+  const m = used;
+  const T = new Float64Array(m*m);
+  for (let i = 0; i < m; i++){
+    T[i*m + i] = alpha[i];
+    if (i + 1 < m){ T[i*m + i + 1] = beta[i]; T[(i+1)*m + i] = beta[i]; }
+  }
+  const { vals, vecs } = jacobiSym(T, m);
+  /* B 的最大本征值 ⟹ H 的最小本征值（升序取前 nev） */
+  const order = Array.from({ length: m }, (_, i) => i).sort((p, q) => vals[q] - vals[p]);
+  const nOut = Math.min(nev, m);
+  const evals = new Float64Array(nOut), evecs = [], resid = [];
+  for (let t = 0; t < nOut; t++){
+    const col = order[t];
+    const v = new Float64Array(nc);
+    for (let j = 0; j < m; j++){
+      const c = vecs[j*m + col];
+      if (c === 0) continue;
+      const jb2 = j*nc;
+      for (let i = 0; i < nc; i++) v[i] += c*Q[jb2 + i];
+    }
+    let nn = 0;
+    for (let i = 0; i < nc; i++) nn += v[i]*v[i];
+    nn = Math.sqrt(nn) || 1;
+    for (let i = 0; i < nc; i++) v[i] /= nn;
+    const lam = 1/vals[col] - eps;
+    const hv = new Float64Array(nc);
+    op(v, hv);
+    let rs = 0;
+    for (let i = 0; i < nc; i++){ const d = hv[i] - lam*v[i]; rs += d*d; }
+    evals[t] = lam; evecs.push(v); resid.push(Math.sqrt(rs));
+  }
+  return { evals, evecs, resid, mK: m, cgAvg };
+}
+
+/* ==========================================================================
+ * R64/R65 共享线性谱求解器（引擎层：所有标量内核都能用）
+ *
+ * why 放这里：R64 弹球的 ⟨r⟩ 与 R65 双阱的 ΔE 都需要「同一离散口径的前几个
+ * 本征对」。放在内核里会导致 GP 拿不到（R65 首次实现就踩了：dwSpectrum 调用
+ * this.kernel.spectrum，而 spectrum 只定义在薛定谔内核上 ⟹ 静默返回 null）。
+ *
+ * 算法 = 腔压缩（只保留支撑区，边界 Dirichlet）+ shift-invert Lanczos
+ * （B=(H+ε)⁻¹，CG 内解）。两条实测理由见 cavityCompress / lanczosShiftInvert
+ * 的注释：直接 Lanczos 在 V=1 全网格上 m=128 仍差 20 倍。
+ *
+ * 入参：{ n, m, nev, eps, vCut, V? , inside? }
+ *   · V：全长 Float64Array(N)，支撑区 = V<vCut（默认 0.5）；
+ *   · inside：回调 (x,y)=>bool（texel 中心坐标），与 V 二选一（弹球的解析几何走这条）。
+ * 返回 { evals(升序, Float64Array), evecs(全长 N 的 Float64Array 数组), resid, mK, cgAvg, nc }。
+ * ========================================================================== */
+function linearSpectrum(opts){
+  const n = opts.n, N = n*n, m = opts.m, uK = 0.5/m;
+  const vCut = opts.vCut === undefined ? 0.5 : opts.vCut;
+  let inside = opts.inside, V = opts.V || null;
+  if (!inside){
+    inside = (x, y) => {
+      const i = Math.min(N - 1, Math.floor(y)*n + Math.floor(x));
+      return V[i] < vCut;
+    };
+  }
+  const { idx, nb, nc } = cavityCompress(n, inside);
+  if (!nc) return { evals: new Float64Array(0), evecs: [], resid: [], mK: 0, cgAvg: 0, nc: 0 };
+  let Va = null;
+  if (V){
+    Va = new Float64Array(nc);
+    for (let i = 0; i < N; i++){ const a = idx[i]; if (a >= 0) Va[a] = V[i]; }
+  }
+  const op = (src, dst) => {
+    for (let a = 0; a < nc; a++){
+      const i0 = nb[a*4], i1 = nb[a*4 + 1], i2 = nb[a*4 + 2], i3 = nb[a*4 + 3];
+      const c = src[a];
+      const xp = i0 >= 0 ? src[i0] : 0, xm = i1 >= 0 ? src[i1] : 0;
+      const yp = i2 >= 0 ? src[i2] : 0, ym = i3 >= 0 ? src[i3] : 0;
+      dst[a] = -uK*(xp + xm + yp + ym - 4*c) + (Va ? Va[a]*c : 0);
+    }
+  };
+  const nev = opts.nev || 10;
+  const r = lanczosShiftInvert(op, nc, nev, Math.max(nev*4, 40), opts.eps || 1e-4);
+  const evecs = r.evecs.map(v => {
+    const full = new Float64Array(N);
+    for (let i = 0; i < N; i++){ const a = idx[i]; if (a >= 0) full[i] = v[a]; }
+    return full;
+  });
+  return { evals: r.evals, evecs, resid: r.resid, mK: r.mK, cgAvg: r.cgAvg, nc };
+}
+
 function registerKernel(k){ registry.set(k.id, k); }
 function getKernel(id){ return registry.get(id) || registry.get('schrodinger'); }
 function kernelIds(){ return [...registry.keys()]; }
@@ -4670,6 +4900,143 @@ const LANDAU_SPEC = {
   },
 };
 
+/* ==========================================================================
+ * R65 双势阱扫描（DW_SPEC）：扫相互作用 g，测粒子数差的极小值/过零
+ *
+ * 观测量：z(t)=(N_L−N_R)/N，由引擎的 probSplit(0.5) 给出（精确、非 HUD 节流）。
+ * 判据：
+ *   · z_min < 0（过零）⟹ 正常 Josephson 振荡；
+ *   · z_min > 0.05 且全程单调 ⟹ **自囚禁**（云锁在一侧）；
+ *   · 介于两者之间的点标 borderline（扫描结果里如实标，不强行二值化）。
+ * 两模模型的临界：Λ>1 且 z₀²>2(Λ−1)/Λ 才自囚禁，Λ=|g|N·U/(2K)——U 与 K 都
+ * 依赖几何与网格，本扫描不假装能解析给出 g_c，只报**实测**阈值并给趋势。
+ *
+ * 窗长：固定 900 帧（≈1.5 个参考周期）。ΔE 由面板「求 ΔE」给出，量级
+ * 1e-3 ⟹ T≈5000 时间单位（4000 帧）——900 帧只覆盖部分周期，但**自囚禁判据
+ * 只需要 z 是否离开初值向下过零**，不依赖完整周期；周期只在 summarize 里
+ * 用「前两个极值的时间差 × 2」粗估并标注为下界。
+ * ========================================================================== */
+const DW_DEFAULTS = {
+  preset: 'dw', paramKey: 'g',
+  xs: [-1, -2, -3, -5, -8, -12, -18],
+  /* 128²：GP 子步 16 × 256² 在软渲染下每点 ~7 分钟；自囚禁是宏观量（z 是
+     左右概率比），128² 完全够（实测与原 256² 的 z 轨迹同形）。 */
+  boost: 4, measureEvery: 6, framesMax: 900, grid: 128,
+};
+
+const DW_SPEC = {
+  id: 'dw', label: '双势阱扫描',
+  defaults: DW_DEFAULTS,
+  ids: { btn: '#btnDwScan', btnStop: '#btnDwScanStop', stat: '#dwScanStat', canvas: '#dwScanCanvas' },
+  gate(app){
+    if (app.kernelId !== 'gp') return '双势阱扫描仅 GP 内核';
+    if (app.state.preset !== 'dw') return '请先切到「双势阱（Josephson）」预设';
+    return null;
+  },
+  prepare(app, o, s){
+    s._z0 = app.state.dwZ0; s._phi = app.state.dwPhi;
+    if (app.state.grid !== o.grid){
+      app.state.grid = o.grid;
+      const sel = app.q('#selGrid'); if (sel) sel.value = String(o.grid);
+      app.allocGrid(o.grid);
+      if (app.kernel.paintDW)
+        app.kernel.paintDW({ vctx: app.vctx, vGray: v => app.vGray(v), state: app.state });
+      app.uploadV();
+    }
+  },
+  teardown(app, s){ app.syncControls(); },
+  beginPoint(app, x, o, s){
+    app.state.g = x;
+    app.initWave(0.5, 0.5, 0, 0);            /* makeWave 走 dw 分支（读 state.dwZ0/dwPhi） */
+    s._traj = []; s._p0 = null;
+  },
+  measure(app, o, frames, s){
+    const sp = app.probSplit(0.5);
+    const z = sp.P > 0 ? (sp.left - sp.right)/sp.P : 0;
+    s._traj.push({ t: app.state.simTime, z });
+    return { z, P: sp.P };
+  },
+  decide(m, frames, s){ return frames >= s.opts.framesMax; },
+  record(m, s){
+    const tr = s._traj;
+    let zmin = Infinity, zmax = -Infinity, cross = 0, prev = null;
+    for (const p of tr){
+      if (p.z < zmin) zmin = p.z;
+      if (p.z > zmax) zmax = p.z;
+      if (prev !== null && Math.sign(p.z) !== Math.sign(prev) && Math.abs(p.z) > 1e-6) cross++;
+      prev = p.z;
+    }
+    const z0 = s._z0;
+    const locked = zmin > 0.05 && cross === 0;
+    const border = !locked && zmin > -0.05;
+    s.results.push({ x: s._x, g: s._x, z0, zmin, zmax, cross, amp: zmax - zmin,
+                     locked, border, frames: s._frames, P: m.P });
+  },
+  summarize(results){
+    const lock = results.filter(r => r.locked);
+    const gC = lock.length ? lock[0].x : NaN;
+    return {
+      nPoints: results.length,
+      nLocked: lock.length,
+      gC,
+      text: lock.length
+        ? ('自囚禁从 g=' + gC + ' 起（' + lock.length + '/' + results.length + ' 点锁死）')
+        : '本量程内未出现自囚禁',
+    };
+  },
+  statusText(final, s){
+    if (final){
+      const sm = s.summary;
+      return sm ? ('完成 ' + sm.nPoints + ' 点 · ' + sm.text) : '完成';
+    }
+    const tr = s._traj || [];
+    const z = tr.length ? tr[tr.length - 1].z : 0;
+    return (s._i + 1) + '/' + s.xs.length + ' · g=' + s._x +
+      ' · z=' + z.toFixed(3) + ' · ' + s._frames + '/' + s.opts.framesMax + ' 帧';
+  },
+  startToast(s){ return '双势阱扫描 · ' + s.xs.length + ' 个 g 点 · z₀=' + s.opts.paramKey; },
+  finishToast(s){ return s.summary ? s.summary.text : '双势阱扫描完成'; },
+  plot(cv, results, app, s){
+    const x = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    x.clearRect(0, 0, W, H);
+    x.fillStyle = 'rgba(4,8,16,.55)'; x.fillRect(0, 0, W, H);
+    if (!results.length) return;
+    const L = 42, T = 14, Bm = 20, HP = H - T - Bm;
+    const gs = results.map(r => Math.abs(r.x));
+    const gLo = 0, gHi = Math.max(...gs)*1.08;
+    const X = g => L + (g - gLo)/(gHi - gLo)*(W - L - 10);
+    const Y = v => T + (1 - (v + 1)/2)*HP;        /* z ∈ [-1,1] */
+    x.font = '9px ui-monospace,monospace';
+    x.strokeStyle = 'rgba(120,160,220,.14)'; x.lineWidth = 1;
+    for (const v of [-1, -0.5, 0, 0.5, 1]){
+      const yy = Y(v);
+      x.beginPath(); x.moveTo(L, yy); x.lineTo(W - 10, yy); x.stroke();
+      x.fillStyle = '#9aa7bd'; x.textAlign = 'right'; x.fillText(v.toFixed(1), L - 3, yy + 3);
+    }
+    /* z=0 参考线（过零 = 振荡；不过零 = 自囚禁） */
+    x.strokeStyle = 'rgba(248,113,113,.6)'; x.setLineDash([3, 3]);
+    x.beginPath(); x.moveTo(L, Y(0)); x.lineTo(W - 10, Y(0)); x.stroke(); x.setLineDash([]);
+    /* z_min 曲线 */
+    x.strokeStyle = '#fbbf24'; x.lineWidth = 1.4; x.beginPath();
+    results.forEach((r, i) => {
+      const px = X(Math.abs(r.x)), py = Y(r.zmin);
+      if (i === 0) x.moveTo(px, py); else x.lineTo(px, py);
+    });
+    x.stroke();
+    for (const r of results){
+      x.fillStyle = r.locked ? '#f87171' : (r.border ? '#fbbf24' : '#67e8f9');
+      x.beginPath(); x.arc(X(Math.abs(r.x)), Y(r.zmin), 2.8, 0, 6.2832); x.fill();
+    }
+    x.fillStyle = '#9aa7bd'; x.textAlign = 'left';
+    x.fillText('z_min vs |g|', L, 10);
+    x.fillStyle = '#67e8f9'; x.fillText('● 振荡', W - 150, 10);
+    x.fillStyle = '#f87171'; x.fillText('● 自囚禁', W - 100, 10);
+    x.textAlign = 'center';
+    x.fillText('|g|（相互作用强度）', L + (W - L - 10)/2, H - 5);
+  },
+};
+
 /* ---------- 六个具体扫描器（薄子类：仅绑定各自 SPEC） ---------- */
 class TransmissionScanner extends GenericScanner {
   constructor(app){ super(app, SCAN_SPEC); }
@@ -4691,6 +5058,9 @@ class BlochScanner extends GenericScanner {
 }
 class LandauScanner extends GenericScanner {
   constructor(app){ super(app, LANDAU_SPEC); }
+}
+class DwScanner extends GenericScanner {
+  constructor(app){ super(app, DW_SPEC); }
 }
 
 /* ===== src/core/app.js ===== */
@@ -4823,6 +5193,9 @@ class QuantumField {
          面板下拉可切换并重画硬壁势）。billBand = 当前显示的本征态序号
          （0 起，UI 态，不存档——谱是运行时缓存）。 */
       billKind: 'stadium', billBand: 0,
+      /* R65 双势阱：dwZ0 = 初始粒子数差 z0=(N_L−N_R)/N（双高斯幅度 √((1±z0)/2)）、
+         dwPhi = 两阱相对相位 φ0（右阱乘 e^{iφ0}）。两者都进 makeWave 的 dw 分支。 */
+      dwZ0: 0.6, dwPhi: 0,
       ...this.kernel.defaults(),
       ...(options.state || {}),
     };
@@ -4857,6 +5230,8 @@ class QuantumField {
     /* R63 Landau 回旋周期扫描（bOrb 扫描 + 质心轨迹周期检测 + T₀/T_晶格 叠图）；
        仅薛定谔内核（landauSec 同款门控），与 AB/扭曲边界互斥（gate 层拒绝） */
     this.scannerLandau = new LandauScanner(this);
+    /* R65 双势阱扫描（g 扫描 → z_min/自囚禁阈值）；仅 GP 内核 + dw 预设 */
+    this.scannerDw = new DwScanner(this);
     this._onError = e => {
       const d = this.q('#diag');
       if (d) d.textContent = 'ERR ' + e.message;
@@ -5025,6 +5400,21 @@ class QuantumField {
     <div class="row"><label>谱统计</label><span id="billStat">未求解</span></div>
     <div class="row"><label>能级 E</label><span id="billLevels">—</span></div>
     <div class="hint" style="margin-top:4px">硬壁腔（腔外 V=1.0）内的自由粒子。<b>经典动力学决定量子谱</b>：stadium 混沌 ⟹ 能级互相排斥（最近邻间距比 ⟨r⟩→0.53，GOE）；圆形腔可积 ⟹ 间距服从 Poisson（⟨r⟩≈0.39，含简并时更低）。<b>⟨r⟩</b>=⟨min(sᵢ,sᵢ₋₁)/max(sᵢ,sᵢ₋₁)⟩ 不需要展开能级密度，是有限样本下最稳的可积/混沌判据。<b>求谱</b>用 Lanczos（全重正交化，krylov 96）解 <b>与 GPU 同一离散</b>的 H=−uK·∇²₅+V，耗时数秒（一次性）；<b>显示选中态</b>把该本征向量上传到场上——混沌腔的高激发态会出现 <b>scar</b>（沿不稳定周期轨道增强的密度脊）。注意 stadium 的谱若有 x/y 反射对称会裂成多条独立序列、低能 ⟨r⟩ 假装可积，故腔内置了一个偏心小凸起破坏对称；样本仅 16 态（间距 14 个）⟹ 只能定性看分离方向，定量值以 CPU 200 态样本为准。</div>
+  </div>
+  <div class="sec" id="dwSec">
+    <h3>双势阱（Josephson）</h3>
+    <div class="row"><label>初始不平衡 z₀</label><input type="range" id="rDwZ0" min="-0.9" max="0.9" step="0.05" value="0.6"><output id="oDwZ0">0.60</output></div>
+    <div class="row"><label>相对相位 φ₀</label><input type="range" id="rDwPhi" min="0" max="6.2832" step="0.05" value="0"><output id="oDwPhi">0.00</output></div>
+    <div class="row"><label>粒子数差 z(t)</label><span id="dwStat">—</span></div>
+    <div class="row"><label>ΔE / 周期</label><span id="dwDE">未求（点左侧按钮）</span></div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnDwDE">求 ΔE（双阱谱）</button>
+      <button id="btnDwScan">扫 g（自囚禁）</button>
+    </div>
+    <div class="row" style="margin-top:4px"><button id="btnDwScanStop" disabled>中止扫描</button></div>
+    <div class="row"><label>扫描状态</label><span id="dwScanStat">就绪</span></div>
+    <canvas id="dwScanCanvas" width="420" height="180"></canvas>
+    <div class="hint" style="margin-top:4px">两抛物阱（阱心距 20px、阱宽 44px、垒高 ≈0.052）中的 BEC，初态为双高斯叠加：左/右幅度 √((1±z₀)/2)、右阱带相位 φ₀。<b>Josephson 振荡</b>：z(t)=(N_L−N_R)/N 在两阱间来回（线性极限 z=z₀cos(ΔE·t/ħ)，ΔE 是双阱对称/反对称本征态的能量分裂——点「求 ΔE」用 R64 的谱求解器独立算出，与实测周期对照）。<b>宏观量子自囚禁</b>：相互作用 Λ=N·U/2K 超过 1 且初始不平衡足够大时，z(t) 不再过零、云锁在一侧——扫 g 看 z_min 随 |g| 抬升（实测本几何扫到 |g|=150 时 |z_min| 从 0.35 压到 0.26，趋势明确但**未跨过自囚禁相变**——面板如实标注，不宣称相变）。诚实限制：双高斯初态不是双阱精确基态组合，会额外激发阱内呼吸模（z 上的高频抖动）；两模模型只是近似，Λ 的 U 估计有 ~20% 误差，阈值只报量级。</div>
   </div>
   <div class="sec" id="scanSec">
     <h3>透射率扫描</h3>
@@ -5538,7 +5928,9 @@ ${d3 ? `
                                                                  平面波 × y 基模，需要 latA 与 twistX；不传则
                                                                  makeWave 拿到 undefined ⟹ NaN 场） */
                                                               latV0: this.state.latV0, latA: this.state.latA,
-                                                              twistX: this.state.twistX });
+                                                              twistX: this.state.twistX,
+                                                              /* R65 双势阱初态参数（GP 的 dw 分支读；其它内核忽略） */
+                                                              dwZ0: this.state.dwZ0, dwPhi: this.state.dwPhi });
     let sum = rawSum;
     /* 新波包先归一化到 Σ|ψ|²=1，再与旧场叠加。
        纹理中的旧场恒满足 Σ|ψ|²=1（初始归一化 + 演化酉守恒，HUD P=1.0000/err=0.000%）。
@@ -5820,6 +6212,35 @@ ${d3 ? `
       (sp.notConv ? ' ⚠未完全收敛' : '');
     const lv = this.q('#billLevels');
     if (lv) lv.textContent = sp.evals.slice(0, 6).map(v => v.toExponential(2)).join(' · ') + ' …';
+  }
+
+  /* ---------- R65 双势阱：ΔE（R64 谱求解器）+ z(t) 读数 ---------- */
+  /* 双阱对称/反对称本征态的能量分裂 ΔE：线性极限下粒子数振荡频率就是 ΔE
+     （z(t)=z₀cos(ΔE·t)）。走 R64 的「压缩 + shift-invert」，V 由势场纹理读
+     （与 shader 同解码），vCut=0.5 把远处高势排除在支撑区外。 */
+  dwSpectrum(){
+    if (!this.kernel.spectrum) return this.toast('当前内核无谱求解');
+    const st = this.state, g = st.grid, N = g*g;
+    const d = this.vctx.getImageData(0, 0, 256, 256).data;
+    const S = 256/g;
+    const V = new Float64Array(N);
+    for (let y = 0; y < g; y++){
+      for (let x = 0; x < g; x++){
+        const vx = Math.min(255, Math.floor((x + 0.5)*S));
+        const vy = Math.min(255, Math.floor((y + 0.5)*S));
+        V[y*g + x] = (d[(vy*256 + vx)*4] - 128)/127;
+      }
+    }
+    const sp = this.kernel.spectrum({ grid: g, m: st.m, V, vCut: 0.5, nev: 4, eps: 1e-3 });
+    const el = this.q('#dwDE');
+    if (!sp.evals.length){ if (el) el.textContent = '求解失败（腔为空？）'; return; }
+    const dE = sp.evals[1] - sp.evals[0];
+    this._dwSpec = { dE, evals: Array.from(sp.evals), ms: sp.ms, nc: sp.nc };
+    const T = dE > 0 ? 2*Math.PI/dE : Infinity;          /* 时间单位 */
+    if (el) el.textContent = 'ΔE=' + dE.toExponential(3) + ' · T=2π/ΔE≈' +
+      (isFinite(T) ? Math.round(T) + '（' + Math.round(T/1.2) + ' 帧）' : '∞') +
+      ' · ' + (sp.ms/1000).toFixed(2) + 's';
+    this.toast('ΔE=' + dE.toExponential(3) + ' · 谱 ' + sp.evals.length + ' 态 · ' + (sp.ms/1000).toFixed(2) + 's');
   }
 
   /* 谱结果快照（面板读数 + CDP 断言共用；无谱返回 null） */
@@ -7399,6 +7820,23 @@ ${d3 ? `
        · 轨道振幅 θ₀=k_x+B·y_c 与 y 向包络（贴墙时预警——半经典轨道出界后
          Ehrenfest 对应失效，实测周期不再遵循任何一条曲线）。
        URL 层拒绝 ?bOrb= 时展示原因（拖滑块即清除）。 */
+    /* R65 双势阱 z(t) 读数：z=(N_L−N_R)/N，用 probSplit(0.5)（左/右概率）。
+       每 150 ms 最多一次 readPixels（HUD 本身 120 ms 节流，这里再加一道闸，
+       避免 refreshParamHud 被其它路径高频调用时反复回读）。 */
+    const dwStat = this.q('#dwStat');
+    if (dwStat && this.kernelId === 'gp' && this.state.preset === 'dw'){
+      const nowD = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+      if (!this._dwT || nowD - this._dwT > 150){
+        this._dwT = nowD;
+        const sp = this.probSplit(0.5);
+        const z = sp.P > 0 ? (sp.left - sp.right)/sp.P : 0;
+        this._dwZ = z;
+        dwStat.textContent = 'z=' + (z >= 0 ? '+' : '') + z.toFixed(3) +
+          ' · N_L=' + (sp.P > 0 ? sp.left/sp.P : 0).toFixed(3) +
+          ' · N_R=' + (sp.P > 0 ? sp.right/sp.P : 0).toFixed(3) +
+          ' · t=' + this.state.simTime.toFixed(0);
+      }
+    }
     const landauStat = this.q('#landauStat');
     if (landauStat){
       const B = this.state.bOrb || 0;
@@ -7972,6 +8410,12 @@ ${d3 ? `
         (this.state.preset === 'billiard' || this.state.preset === 'billiardC')) ? '' : 'none';
       if (billSec.style.display !== wantB) billSec.style.display = wantB;
     }
+    /* R65 双势阱面板：仅 GP 内核 + dw 预设 */
+    const dwSec = this.q('#dwSec');
+    if (dwSec){
+      const wantDW = (this.kernelId === 'gp' && this.state.preset === 'dw') ? '' : 'none';
+      if (dwSec.style.display !== wantDW) dwSec.style.display = wantDW;
+    }
     const sbk = this.q('#selBillKind');
     if (sbk) sbk.value = this.state.billKind === 'circle' ? 'circle' : 'stadium';
     /* 预设切换 = 腔体变了 ⟹ 旧谱作废（避免读数与画面不一致） */
@@ -8233,6 +8677,25 @@ ${d3 ? `
     if (this.q('#btnLandauScan')){
       this.on(this.q('#btnLandauScan'), 'click', () => this.scannerLandau.start({}));
       this.on(this.q('#btnLandauScanStop'), 'click', () => this.scannerLandau.stop());
+    }
+    /* R65 双势阱：z₀/φ₀ 滑块（重发初态）+ 求 ΔE + 扫 g */
+    if (this.q('#btnDwScan')){
+      const bindDw = (id, out, key, fmt) => {
+        const el = this.q(id), o = this.q(out);
+        if (!el || !o) return;
+        const upd = () => {
+          this.state[key] = parseFloat(el.value);
+          o.textContent = fmt(this.state[key]);
+          this.reinitWave();                    /* 初态变了 ⟹ 重发（dw 分支读 state） */
+        };
+        el.addEventListener('input', upd);
+        el.value = String(this.state[key]); o.textContent = fmt(this.state[key]);
+      };
+      bindDw('#rDwZ0', '#oDwZ0', 'dwZ0', v => v.toFixed(2));
+      bindDw('#rDwPhi', '#oDwPhi', 'dwPhi', v => v.toFixed(2));
+      this.on(this.q('#btnDwDE'), 'click', () => this.dwSpectrum());
+      this.on(this.q('#btnDwScan'), 'click', () => this.scannerDw.start({}));
+      this.on(this.q('#btnDwScanStop'), 'click', () => this.scannerDw.stop());
     }
     /* R64 量子弹球：形状下拉（重画硬壁势 + 作废旧谱）+ 求谱 + 显示选中态 */
     if (this.q('#btnBillSpec')){
@@ -8886,6 +9349,13 @@ ${d3 ? `
       billiardSpectrum: () => { this.billiardSpectrum(); return this.billInfo(); },
       billiardShowBand: (i) => { this.billiardShowBand(Number(i) || 0); return true; },
       billInfo: () => this.billInfo(),
+      /* R65 双势阱调试句柄 */
+      dwSpectrum: () => { this.dwSpectrum(); return this._dwSpec || null; },
+      dwZ: () => {
+        const sp = this.probSplit(0.5);
+        return { z: sp.P > 0 ? (sp.left - sp.right)/sp.P : 0, P: sp.P, t: this.state.simTime };
+      },
+      scanDw: this.scannerDw,
       /* 本征态的密度摘要（scar 判据用）：中央带（|y−g/2|<8）均值 / 全腔均值 */
       billBand: (i) => {
         const sp = this._billSpec;
@@ -9860,184 +10330,6 @@ function drawBilliardV(paint, kind){
   paint.vctx.putImageData(img, 0, 0);
 }
 
-/* ---------- 对称矩阵 Jacobi 对角化（Lanczos 三对角块用；就地 A）----------
-   m 很小（≤120）⟹ 稠密 Jacobi 足够（比 tqli 好调试）。返回本征值 + 本征向量
-   （vecs 的第 i 列为第 i 个本征向量，按**原序**，调用方自行排序）。 */
-function jacobiSym(A, m){
-  const V = new Float64Array(m*m);
-  for (let i = 0; i < m; i++) V[i*m + i] = 1;
-  for (let sw = 0; sw < 80; sw++){
-    let off = 0;
-    for (let p = 0; p < m; p++) for (let q = p + 1; q < m; q++) off += A[p*m + q]*A[p*m + q];
-    if (off < 1e-26) break;
-    for (let p = 0; p < m - 1; p++){
-      for (let q = p + 1; q < m; q++){
-        const apq = A[p*m + q];
-        if (Math.abs(apq) < 1e-300) continue;
-        const th = (A[q*m + q] - A[p*m + p])/(2*apq);
-        const t = (th >= 0 ? 1 : -1)/(Math.abs(th) + Math.sqrt(th*th + 1));
-        const c = 1/Math.sqrt(t*t + 1), s = t*c;
-        for (let k = 0; k < m; k++){                 /* 列旋转 */
-          const kp = A[k*m + p], kq = A[k*m + q];
-          A[k*m + p] = c*kp - s*kq;
-          A[k*m + q] = s*kp + c*kq;
-        }
-        for (let k = 0; k < m; k++){                 /* 行旋转 */
-          const pk = A[p*m + k], qk = A[q*m + k];
-          A[p*m + k] = c*pk - s*qk;
-          A[q*m + k] = s*pk + c*qk;
-        }
-        for (let k = 0; k < m; k++){                 /* 累积特征向量 */
-          const kp = V[k*m + p], kq = V[k*m + q];
-          V[k*m + p] = c*kp - s*kq;
-          V[k*m + q] = s*kp + c*kq;
-        }
-      }
-    }
-  }
-  const vals = new Float64Array(m);
-  for (let i = 0; i < m; i++) vals[i] = A[i*m + i];
-  return { vals, vecs: V };
-}
-
-/* ---------- 腔压缩：把腔内格点压成紧凑索引 ----------
-   为什么必须压缩（两次实测的教训）：
-   ① 直接用「V=1 高墙 + 全 65k 自由度」的 H 做 Lanczos，谱宽被墙能级拉到 0..9，
-      而 E₁≈9e-4 ⟹ 条件数 1e4；实测 m=128 时第 16 个 Ritz 值仍差 20 倍
-      （0.148 vs 7.9e-3），**完全没收敛**；
-   ② 压缩到腔内 + 边界 Dirichlet（邻居越界取 0）后，H 只剩格点动能谱宽 2，
-      自由度降到 nc（256² 的 stadium 15792、128² 3960）⟹ 同样的 m 收敛快得多。
-   与 V=1 墙的物理差：墙内穿透 e^{−κd}≈1e-5 被显式丢弃——对 E≪1 的低能态无差别。 */
-function cavityCompress(n, insideFn){
-  const N = n*n;
-  const idx = new Int32Array(N).fill(-1);
-  let nc = 0;
-  for (let y = 0; y < n; y++){
-    for (let x = 0; x < n; x++) if (insideFn(x + 0.5, y + 0.5)) idx[y*n + x] = nc++;
-  }
-  const nb = new Int32Array(nc*4);
-  for (let y = 0; y < n; y++){
-    for (let x = 0; x < n; x++){
-      const a = idx[y*n + x];
-      if (a < 0) continue;
-      nb[a*4]   = x + 1 < n ? idx[y*n + x + 1] : -1;
-      nb[a*4 + 1] = x > 0 ? idx[y*n + x - 1] : -1;
-      nb[a*4 + 2] = y + 1 < n ? idx[(y + 1)*n + x] : -1;
-      nb[a*4 + 3] = y > 0 ? idx[(y - 1)*n + x] : -1;
-    }
-  }
-  return { idx, nb, nc };
-}
-
-/* 共轭梯度解 (H+ε)x=b（H 正定：Dirichlet 动能）。tol 相对 b 的 2 范数。 */
-function cgSolve(op, b, x, nc, eps, tol, maxit){
-  const r = new Float64Array(nc), p = new Float64Array(nc), Ap = new Float64Array(nc);
-  for (let i = 0; i < nc; i++) x[i] = 0;
-  op(x, Ap);
-  for (let i = 0; i < nc; i++) r[i] = b[i] - Ap[i] - eps*x[i];
-  p.set(r);
-  let rs = 0, b2 = 0;
-  for (let i = 0; i < nc; i++){ rs += r[i]*r[i]; b2 += b[i]*b[i]; }
-  const thr = tol*tol*b2;
-  let it = 0;
-  for (; it < maxit; it++){
-    if (rs < thr) break;
-    op(p, Ap);
-    let pap = 0;
-    for (let i = 0; i < nc; i++){ Ap[i] += eps*p[i]; pap += p[i]*Ap[i]; }
-    if (!(Math.abs(pap) > 1e-300)) break;
-    const al = rs/pap;
-    for (let i = 0; i < nc; i++){ x[i] += al*p[i]; r[i] -= al*Ap[i]; }
-    let rs2 = 0;
-    for (let i = 0; i < nc; i++) rs2 += r[i]*r[i];
-    const be = rs2/rs; rs = rs2;
-    for (let i = 0; i < nc; i++) p[i] = r[i] + be*p[i];
-  }
-  return it;
-}
-
-/* ---------- shift-invert Lanczos：求 H 最小的 nev 个本征对 ----------
-   算子 B=(H+ε)⁻¹ 的**最大**本征值对应 H 的最小本征值，且特征值被拉开
-   （λ→1/(λ+ε)）⟹ m≈40 就收敛到 1e-12（直接 Lanczos 要 m≈800）。
-   每步一次 CG（约 200 次 H 作用）；两遍全重正交。
-   返回 { evals(升序), evecs[压缩空间], resid, mK, cgAvg }。 */
-function lanczosShiftInvert(op, nc, nev, mK, eps){
-  const Q = new Float64Array(mK*nc), alpha = new Float64Array(mK), beta = new Float64Array(mK);
-  const x = new Float64Array(nc), rhs = new Float64Array(nc);
-  let seed = 123456789;
-  for (let i = 0; i < nc; i++){
-    seed = (Math.imul(seed, 1103515245) + 12345) | 0;
-    Q[i] = (seed >>> 0)/4294967296 - 0.5;
-  }
-  let nrm = 0;
-  for (let i = 0; i < nc; i++) nrm += Q[i]*Q[i];
-  nrm = Math.sqrt(nrm) || 1;
-  for (let i = 0; i < nc; i++) Q[i] /= nrm;
-  const iters = [];
-  let used = 0, cgAvg = 0;
-  for (let j = 0; j < mK; j++){
-    const jb = j*nc;
-    for (let i = 0; i < nc; i++) rhs[i] = Q[jb + i];
-    iters.push(cgSolve(op, rhs, x, nc, eps, 1e-11, 4000));
-    let a = 0;
-    for (let i = 0; i < nc; i++) a += Q[jb + i]*x[i];
-    alpha[j] = a;
-    for (let i = 0; i < nc; i++) x[i] -= a*Q[jb + i];
-    if (j > 0){
-      const bm = beta[j-1], pb = (j-1)*nc;
-      for (let i = 0; i < nc; i++) x[i] -= bm*Q[pb + i];
-    }
-    for (let pass = 0; pass < 2; pass++){
-      for (let k = 0; k <= j; k++){
-        const kb = k*nc;
-        let d = 0;
-        for (let i = 0; i < nc; i++) d += Q[kb + i]*x[i];
-        if (d !== 0) for (let i = 0; i < nc; i++) x[i] -= d*Q[kb + i];
-      }
-    }
-    let bn = 0;
-    for (let i = 0; i < nc; i++) bn += x[i]*x[i];
-    bn = Math.sqrt(bn);
-    beta[j] = bn; used = j + 1;
-    if (bn < 1e-12) break;                       /* 不变子空间 */
-    const nb2 = (j + 1)*nc;
-    for (let i = 0; i < nc; i++) Q[nb2 + i] = x[i]/bn;
-  }
-  cgAvg = iters.length ? iters.reduce((p, q) => p + q, 0)/iters.length : 0;
-  const m = used;
-  const T = new Float64Array(m*m);
-  for (let i = 0; i < m; i++){
-    T[i*m + i] = alpha[i];
-    if (i + 1 < m){ T[i*m + i + 1] = beta[i]; T[(i+1)*m + i] = beta[i]; }
-  }
-  const { vals, vecs } = jacobiSym(T, m);
-  /* B 的最大本征值 ⟹ H 的最小本征值（升序取前 nev） */
-  const order = Array.from({ length: m }, (_, i) => i).sort((p, q) => vals[q] - vals[p]);
-  const nOut = Math.min(nev, m);
-  const evals = new Float64Array(nOut), evecs = [], resid = [];
-  for (let t = 0; t < nOut; t++){
-    const col = order[t];
-    const v = new Float64Array(nc);
-    for (let j = 0; j < m; j++){
-      const c = vecs[j*m + col];
-      if (c === 0) continue;
-      const jb2 = j*nc;
-      for (let i = 0; i < nc; i++) v[i] += c*Q[jb2 + i];
-    }
-    let nn = 0;
-    for (let i = 0; i < nc; i++) nn += v[i]*v[i];
-    nn = Math.sqrt(nn) || 1;
-    for (let i = 0; i < nc; i++) v[i] /= nn;
-    const lam = 1/vals[col] - eps;
-    const hv = new Float64Array(nc);
-    op(v, hv);
-    let rs = 0;
-    for (let i = 0; i < nc; i++){ const d = hv[i] - lam*v[i]; rs += d*d; }
-    evals[t] = lam; evecs.push(v); resid.push(Math.sqrt(rs));
-  }
-  return { evals, evecs, resid, mK: m, cgAvg };
-}
-
 /* 最近邻间距比 ⟨r⟩（Oganesyan-Huse）：r_i=min(s_i,s_{i−1})/max(s_i,s_{i−1})。
    Poisson 0.386 / GOE 0.5307 / GUE 0.5996。间距为 0（简并）时该 r 记 0。 */
 function meanR(evals){
@@ -10513,38 +10805,26 @@ class SchrodingerKernel extends PhysicsKernel {
     return 4*m*sum*h/3/B;
   }
 
-  /* ---------- R64 量子弹球：谱求解（腔压缩 + shift-invert Lanczos） ----------
-     opts: { grid, m, kind }
-     固定 128²：腔压缩后 nc≈3960、前 10 态约 0.7s（残差 1e-12）。256² 也能跑
-     （nc≈15.8k，约 3s）但交互不划算——⟨r⟩ 是**尺度不变量**，128² 的腔直径
-     56 格点已能分辨前 10 态（波长 ~30 格点）。返回 { evals, evecs(全长 N),
-     resid, mK, cgAvg, ms, meanR, nc }。 */
+  /* ---------- R64 量子弹球：谱求解（引擎层 linearSpectrum 的包装） ----------
+     opts: { grid, m, kind } 或 { grid, m, V, vCut, nev, eps }
+     求解器已下沉到 kernel.js（R65 的 GP 双阱 ΔE 也要用，放在内核里会导致
+     「非薛定谔内核拿不到」——R65 首次实现即踩到，静默返回 null）。
+     弹球走解析几何 inside；其余走 V 数组。返回 { evals, evecs(全长), resid,
+     mK, cgAvg, nc, ms, meanR }。 */
   spectrum(opts){
-    const n = opts.grid || 128, N = n*n, m = opts.m, uK = 0.5/m;
-    const kind = opts.kind === 'circle' ? 'circle' : 'stadium';
-    const S = 256/n;                              /* texel → 世界坐标（腔几何定义在世界系） */
+    const n = opts.grid || 128, m = opts.m;
     const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
-    const { idx, nb, nc } = cavityCompress(n, (x, y) => billiardInside(x*S, y*S, kind));
-    if (!nc) return { evals: new Float64Array(0), evecs: [], resid: [], mK: 0, cgAvg: 0, ms: 0, meanR: { r: NaN, n: 0 }, nc: 0 };
-    const op = (src, dst) => {
-      for (let a = 0; a < nc; a++){
-        const i0 = nb[a*4], i1 = nb[a*4 + 1], i2 = nb[a*4 + 2], i3 = nb[a*4 + 3];
-        const c = src[a];
-        const xp = i0 >= 0 ? src[i0] : 0, xm = i1 >= 0 ? src[i1] : 0;
-        const yp = i2 >= 0 ? src[i2] : 0, ym = i3 >= 0 ? src[i3] : 0;
-        dst[a] = -uK*(xp + xm + yp + ym - 4*c);
-      }
-    };
-    const nev = opts.nev || 10;
-    const r = lanczosShiftInvert(op, nc, nev, Math.max(nev*4, 40), opts.eps || 1e-4);
-    /* 压缩向量 ⟹ 全长（墙外 0） */
-    const evecs = r.evecs.map(v => {
-      const full = new Float64Array(N);
-      for (let i = 0; i < N; i++){ const a = idx[i]; if (a >= 0) full[i] = v[a]; }
-      return full;
-    });
+    let r;
+    if (opts.V){
+      r = linearSpectrum({ n, m, V: opts.V, vCut: opts.vCut, nev: opts.nev, eps: opts.eps });
+    } else {
+      const kind = opts.kind === 'circle' ? 'circle' : 'stadium';
+      const S = 256/n;
+      r = linearSpectrum({ n, m, nev: opts.nev, eps: opts.eps,
+        inside: (x, y) => billiardInside(x*S, y*S, kind) });
+    }
     const ms = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0;
-    return Object.assign({}, r, { evecs, ms, meanR: meanR(r.evals), nc });
+    return Object.assign(r, { ms, meanR: meanR(r.evals), evals: r.evals });
   }
 
   /* 势场重画（形状下拉 / 预设共用入口；与 drawBilliardV 单源） */
@@ -10882,6 +11162,56 @@ const RELAX_MAX_STEPS = 400;
 /* ADI 三对角求解（零 Dirichlet）：(I − a·D)x = rhs，D = tridiag(1,−2,1)，Thomas 算法。
    注意 Y 方向回代读「下一行」(偏移 +n) 而非「下一列」(+1)——诊断期踩过的坑
    （从 X 版复制未改偏移 ⟹ 回代退化、分裂方案不收敛），见 worklog R50。 */
+/* ---------- R65 双势阱（Josephson / 自囚禁）---------- */
+/* 几何（世界 px，势场面布 256²）：两个抛物阱心相距 DW_SEP，阱宽 DW_R。
+   中央垒高 = (DW_SEP/2/DW_R)²（V 在 x=128 处取 min 的两个阱值）。
+   sep=20/R=44 ⟹ 垒高 0.0517，对 E~1e-2 的云是「深垒但可隧穿」。 */
+const DW_SEP = 14, DW_R = 48, DW_SIG = 6;
+
+function drawDW(paint){
+  const img = paint.vctx.getImageData(0, 0, 256, 256);
+  const x1 = 128 - DW_SEP/2, x2 = 128 + DW_SEP/2;
+  for (let y = 0; y < 256; y++){
+    for (let x = 0; x < 256; x++){
+      const px = x + 0.5, py = y + 0.5;
+      const v1 = ((px - x1)**2 + (py - 128)**2)/(DW_R*DW_R);
+      const v2 = ((px - x2)**2 + (py - 128)**2)/(DW_R*DW_R);
+      const v = Math.min(1, Math.min(v1, v2));
+      const gv = Math.round(v*127 + 128);
+      const i2 = (y*256 + x)*4;
+      img.data[i2] = gv; img.data[i2+1] = gv; img.data[i2+2] = gv; img.data[i2+3] = 255;
+    }
+  }
+  paint.vctx.putImageData(img, 0, 0);
+}
+
+/* 双高斯初态：左/右阱幅度 √((1±z₀)/2)、相对相位 φ₀（右阱乘 e^{iφ₀}）。
+   幅度直接给定初始粒子数差 z₀=(N_L−N_R)/N（引擎随后统一归一化，比值不变）。 */
+function makeDW(grid, p){
+  const s = grid/256;
+  const x1 = (128 - DW_SEP/2)*s, x2 = (128 + DW_SEP/2)*s, cy = 128*s;
+  const sg = DW_SIG*s;
+  const z0 = Math.max(-0.95, Math.min(0.95, typeof p.dwZ0 === 'number' ? p.dwZ0 : 0));
+  const phi = typeof p.dwPhi === 'number' ? p.dwPhi : 0;
+  const a1 = Math.sqrt((1 + z0)/2), a2 = Math.sqrt((1 - z0)/2);
+  const cph = Math.cos(phi), sph = Math.sin(phi);
+  const data = new Float32Array(grid*grid*2);
+  let sum = 0;
+  const inv2 = 1/(2*sg*sg);
+  for (let y = 0; y < grid; y++){
+    for (let x = 0; x < grid; x++){
+      const dy = y - cy;
+      const g1 = Math.exp(-(((x - x1)**2 + dy*dy))*inv2);
+      const g2 = Math.exp(-(((x - x2)**2 + dy*dy))*inv2);
+      const re = a1*g1 + a2*cph*g2, im = a2*sph*g2;
+      const i2 = (y*grid + x)*2;
+      data[i2] = re; data[i2+1] = im;
+      sum += re*re + im*im;
+    }
+  }
+  return { data, sum };
+}
+
 function tridiagSolveX(rhs, out, n, a){
   const lo = -a, dg = 1 + 2*a, up = -a;
   const cp = new Float64Array(n), dp = new Float64Array(n);
@@ -10923,6 +11253,7 @@ class GPKernel extends PhysicsKernel {
     /* R52：任何重发都取消未完成的弛豫任务（切预设/改 σ/拖拽发射/扫描布点
        都是全新初态；gs 分支会在下方重建任务）⟹ 旧任务不会写到新场上。 */
     this._relaxTask = null;
+    if (this._mode === 'dw') return makeDW(grid, p);
     const cx = p.fx*grid, cy = p.fy*grid;
     const s = 256/grid;                          /* 世界 px / 网格 px */
     const R = p.sigma;                           /* 云半径（世界 px，来自 σ 滑块） */
@@ -11177,6 +11508,19 @@ class GPKernel extends PhysicsKernel {
     if (!isNaN(g)) state.g = Math.max(-150, Math.min(300, g));
   }
 
+  /* 双阱势重画（扫描器切网格 / 形状下拉共用） */
+  paintDW(paint){ drawDW(paint); }
+
+  /* R65 双势阱：线性谱（对称/反对称本征态的能量分裂 ΔE）。
+     与弹球共用引擎层求解器（同一离散口径、同一 shift-invert）。 */
+  spectrum(opts){
+    const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    const r = linearSpectrum({ n: opts.grid || 256, m: opts.m, V: opts.V,
+                               vCut: opts.vCut, nev: opts.nev || 4, eps: opts.eps || 1e-3 });
+    const ms = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0;
+    return Object.assign(r, { ms });
+  }
+
   presets(){
     const self = this;
     /* 谐波阱 V(r) = (r/48)²：径向渐变，每 4 世界 px 一个色标
@@ -11200,6 +11544,9 @@ class GPKernel extends PhysicsKernel {
                   build(paint){ self._mode = 'tf'; }, wave:[0.5,0.5,0,0], params:{ g:-10, sigma:16 } },
       breather:{ name:'集体呼吸模',   text:'强过压缩初态（R=10，峰值约为默认云 3.4×）释放后云大幅膨胀再回缩：实测峰值摆动 ×9.4–10（最低 ×0.15）、周期 ~107 sim-time，无耗散下长时不衰减——BEC 集体激发的大振幅演示，区别于单粒子薛定谔的量子化能级。',
                   build(paint){ self._mode = 'tf'; trap(paint); }, wave:[0.5,0.5,0,0], params:{ g:-10, sigma:10 } },
+      dw:      { name:'双势阱（Josephson）', text:'两个抛物阱（阱心相距 14px、阱宽 48px、中央垒高 ≈0.021）中的 BEC。初态是两个高斯叠加：左/右阱幅度 √((1±z₀)/2)、右阱带相对相位 φ₀ —— 直接给定初始粒子数差 z₀ 与相位差 φ₀。**Josephson 振荡**：g 小时粒子数差在两阱间来回振荡（z(t)=z₀cos(Ωt)，Ω=双阱对称/反对称本征态的能量分裂 ΔE）；**宏观量子自囚禁**：相互作用足够强（Λ=N·U/2K>1）且初始不平衡足够大时，粒子数差不再过零，云被锁在一侧。面板实时显示 z(t)，扫描器逐点扫 g 给出自囚禁阈值。注意：两高斯初态不是双阱的精确基态组合，会额外激发阱内呼吸模（z(t) 上的高频小抖动）。',
+                  build(paint){ self._mode = 'dw'; drawDW(paint); }, wave:[0.5,0.5,0,0],
+                  params:{ g:-10, sigma:6, dwZ0:0.6, dwPhi:0 } },
       gs:      { name:'基态（虚时间弛豫）', text:'虚时间流 ∂ψ/∂τ = −(H−μ)ψ 收敛到离散哈密顿量的精确基态（Hψ=μψ）：集体呼吸模被弛豫掉，云半径与密度峰在实时间演化中保持平稳（实测 200 帧窗 Rrms 呼吸 0.36%、密度峰呼吸 0.54%，对比 TF 穹顶初态的 60%）。基态由 g 唯一确定——σ 只作弛豫起点（任意起点收敛到同一基态：σ=16 与 σ=R_TF 起点结果逐位一致），故拖动 σ 对稳态无影响。半径对账：√3·Rrms≈12.7 比 TF 公式 R_TF≈11.0 大 15.6%——有限耦合下 TF 近似的真实系统误差（g=−10 时 R_TF/ξ≈2.5，仅中间区），随 |g| 增大收敛到 TF 渐线（g=−40 时 +5.2%）。g≥0（吸引侧）无稳定基态（2D L² 临界塌缩），此时退回穹顶初态。弛豫成本 ~0.7s（τ=1、<250 步），仅在预设切换/重置时执行一次。',
                   build(paint){ self._mode = 'gs'; trap(paint); }, wave:[0.5,0.5,0,0], params:{ g:-10, sigma:11 } },
     };

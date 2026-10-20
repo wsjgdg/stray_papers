@@ -1545,6 +1545,236 @@ export class PhysicsKernel {
 
 /* ---------- 注册表 ---------- */
 const registry = new Map();
+/* ---------- 对称矩阵 Jacobi 对角化（Lanczos 三对角块用；就地 A）----------
+   m 很小（≤120）⟹ 稠密 Jacobi 足够（比 tqli 好调试）。返回本征值 + 本征向量
+   （vecs 的第 i 列为第 i 个本征向量，按**原序**，调用方自行排序）。 */
+function jacobiSym(A, m){
+  const V = new Float64Array(m*m);
+  for (let i = 0; i < m; i++) V[i*m + i] = 1;
+  for (let sw = 0; sw < 80; sw++){
+    let off = 0;
+    for (let p = 0; p < m; p++) for (let q = p + 1; q < m; q++) off += A[p*m + q]*A[p*m + q];
+    if (off < 1e-26) break;
+    for (let p = 0; p < m - 1; p++){
+      for (let q = p + 1; q < m; q++){
+        const apq = A[p*m + q];
+        if (Math.abs(apq) < 1e-300) continue;
+        const th = (A[q*m + q] - A[p*m + p])/(2*apq);
+        const t = (th >= 0 ? 1 : -1)/(Math.abs(th) + Math.sqrt(th*th + 1));
+        const c = 1/Math.sqrt(t*t + 1), s = t*c;
+        for (let k = 0; k < m; k++){                 /* 列旋转 */
+          const kp = A[k*m + p], kq = A[k*m + q];
+          A[k*m + p] = c*kp - s*kq;
+          A[k*m + q] = s*kp + c*kq;
+        }
+        for (let k = 0; k < m; k++){                 /* 行旋转 */
+          const pk = A[p*m + k], qk = A[q*m + k];
+          A[p*m + k] = c*pk - s*qk;
+          A[q*m + k] = s*pk + c*qk;
+        }
+        for (let k = 0; k < m; k++){                 /* 累积特征向量 */
+          const kp = V[k*m + p], kq = V[k*m + q];
+          V[k*m + p] = c*kp - s*kq;
+          V[k*m + q] = s*kp + c*kq;
+        }
+      }
+    }
+  }
+  const vals = new Float64Array(m);
+  for (let i = 0; i < m; i++) vals[i] = A[i*m + i];
+  return { vals, vecs: V };
+}
+
+/* ---------- 腔压缩：把腔内格点压成紧凑索引 ----------
+   为什么必须压缩（两次实测的教训）：
+   ① 直接用「V=1 高墙 + 全 65k 自由度」的 H 做 Lanczos，谱宽被墙能级拉到 0..9，
+      而 E₁≈9e-4 ⟹ 条件数 1e4；实测 m=128 时第 16 个 Ritz 值仍差 20 倍
+      （0.148 vs 7.9e-3），**完全没收敛**；
+   ② 压缩到腔内 + 边界 Dirichlet（邻居越界取 0）后，H 只剩格点动能谱宽 2，
+      自由度降到 nc（256² 的 stadium 15792、128² 3960）⟹ 同样的 m 收敛快得多。
+   与 V=1 墙的物理差：墙内穿透 e^{−κd}≈1e-5 被显式丢弃——对 E≪1 的低能态无差别。 */
+function cavityCompress(n, insideFn){
+  const N = n*n;
+  const idx = new Int32Array(N).fill(-1);
+  let nc = 0;
+  for (let y = 0; y < n; y++){
+    for (let x = 0; x < n; x++) if (insideFn(x + 0.5, y + 0.5)) idx[y*n + x] = nc++;
+  }
+  const nb = new Int32Array(nc*4);
+  for (let y = 0; y < n; y++){
+    for (let x = 0; x < n; x++){
+      const a = idx[y*n + x];
+      if (a < 0) continue;
+      nb[a*4]   = x + 1 < n ? idx[y*n + x + 1] : -1;
+      nb[a*4 + 1] = x > 0 ? idx[y*n + x - 1] : -1;
+      nb[a*4 + 2] = y + 1 < n ? idx[(y + 1)*n + x] : -1;
+      nb[a*4 + 3] = y > 0 ? idx[(y - 1)*n + x] : -1;
+    }
+  }
+  return { idx, nb, nc };
+}
+
+/* 共轭梯度解 (H+ε)x=b（H 正定：Dirichlet 动能）。tol 相对 b 的 2 范数。 */
+function cgSolve(op, b, x, nc, eps, tol, maxit){
+  const r = new Float64Array(nc), p = new Float64Array(nc), Ap = new Float64Array(nc);
+  for (let i = 0; i < nc; i++) x[i] = 0;
+  op(x, Ap);
+  for (let i = 0; i < nc; i++) r[i] = b[i] - Ap[i] - eps*x[i];
+  p.set(r);
+  let rs = 0, b2 = 0;
+  for (let i = 0; i < nc; i++){ rs += r[i]*r[i]; b2 += b[i]*b[i]; }
+  const thr = tol*tol*b2;
+  let it = 0;
+  for (; it < maxit; it++){
+    if (rs < thr) break;
+    op(p, Ap);
+    let pap = 0;
+    for (let i = 0; i < nc; i++){ Ap[i] += eps*p[i]; pap += p[i]*Ap[i]; }
+    if (!(Math.abs(pap) > 1e-300)) break;
+    const al = rs/pap;
+    for (let i = 0; i < nc; i++){ x[i] += al*p[i]; r[i] -= al*Ap[i]; }
+    let rs2 = 0;
+    for (let i = 0; i < nc; i++) rs2 += r[i]*r[i];
+    const be = rs2/rs; rs = rs2;
+    for (let i = 0; i < nc; i++) p[i] = r[i] + be*p[i];
+  }
+  return it;
+}
+
+/* ---------- shift-invert Lanczos：求 H 最小的 nev 个本征对 ----------
+   算子 B=(H+ε)⁻¹ 的**最大**本征值对应 H 的最小本征值，且特征值被拉开
+   （λ→1/(λ+ε)）⟹ m≈40 就收敛到 1e-12（直接 Lanczos 要 m≈800）。
+   每步一次 CG（约 200 次 H 作用）；两遍全重正交。
+   返回 { evals(升序), evecs[压缩空间], resid, mK, cgAvg }。 */
+function lanczosShiftInvert(op, nc, nev, mK, eps){
+  const Q = new Float64Array(mK*nc), alpha = new Float64Array(mK), beta = new Float64Array(mK);
+  const x = new Float64Array(nc), rhs = new Float64Array(nc);
+  let seed = 123456789;
+  for (let i = 0; i < nc; i++){
+    seed = (Math.imul(seed, 1103515245) + 12345) | 0;
+    Q[i] = (seed >>> 0)/4294967296 - 0.5;
+  }
+  let nrm = 0;
+  for (let i = 0; i < nc; i++) nrm += Q[i]*Q[i];
+  nrm = Math.sqrt(nrm) || 1;
+  for (let i = 0; i < nc; i++) Q[i] /= nrm;
+  const iters = [];
+  let used = 0, cgAvg = 0;
+  for (let j = 0; j < mK; j++){
+    const jb = j*nc;
+    for (let i = 0; i < nc; i++) rhs[i] = Q[jb + i];
+    iters.push(cgSolve(op, rhs, x, nc, eps, 1e-11, 4000));
+    let a = 0;
+    for (let i = 0; i < nc; i++) a += Q[jb + i]*x[i];
+    alpha[j] = a;
+    for (let i = 0; i < nc; i++) x[i] -= a*Q[jb + i];
+    if (j > 0){
+      const bm = beta[j-1], pb = (j-1)*nc;
+      for (let i = 0; i < nc; i++) x[i] -= bm*Q[pb + i];
+    }
+    for (let pass = 0; pass < 2; pass++){
+      for (let k = 0; k <= j; k++){
+        const kb = k*nc;
+        let d = 0;
+        for (let i = 0; i < nc; i++) d += Q[kb + i]*x[i];
+        if (d !== 0) for (let i = 0; i < nc; i++) x[i] -= d*Q[kb + i];
+      }
+    }
+    let bn = 0;
+    for (let i = 0; i < nc; i++) bn += x[i]*x[i];
+    bn = Math.sqrt(bn);
+    beta[j] = bn; used = j + 1;
+    if (bn < 1e-12) break;                       /* 不变子空间 */
+    const nb2 = (j + 1)*nc;
+    for (let i = 0; i < nc; i++) Q[nb2 + i] = x[i]/bn;
+  }
+  cgAvg = iters.length ? iters.reduce((p, q) => p + q, 0)/iters.length : 0;
+  const m = used;
+  const T = new Float64Array(m*m);
+  for (let i = 0; i < m; i++){
+    T[i*m + i] = alpha[i];
+    if (i + 1 < m){ T[i*m + i + 1] = beta[i]; T[(i+1)*m + i] = beta[i]; }
+  }
+  const { vals, vecs } = jacobiSym(T, m);
+  /* B 的最大本征值 ⟹ H 的最小本征值（升序取前 nev） */
+  const order = Array.from({ length: m }, (_, i) => i).sort((p, q) => vals[q] - vals[p]);
+  const nOut = Math.min(nev, m);
+  const evals = new Float64Array(nOut), evecs = [], resid = [];
+  for (let t = 0; t < nOut; t++){
+    const col = order[t];
+    const v = new Float64Array(nc);
+    for (let j = 0; j < m; j++){
+      const c = vecs[j*m + col];
+      if (c === 0) continue;
+      const jb2 = j*nc;
+      for (let i = 0; i < nc; i++) v[i] += c*Q[jb2 + i];
+    }
+    let nn = 0;
+    for (let i = 0; i < nc; i++) nn += v[i]*v[i];
+    nn = Math.sqrt(nn) || 1;
+    for (let i = 0; i < nc; i++) v[i] /= nn;
+    const lam = 1/vals[col] - eps;
+    const hv = new Float64Array(nc);
+    op(v, hv);
+    let rs = 0;
+    for (let i = 0; i < nc; i++){ const d = hv[i] - lam*v[i]; rs += d*d; }
+    evals[t] = lam; evecs.push(v); resid.push(Math.sqrt(rs));
+  }
+  return { evals, evecs, resid, mK: m, cgAvg };
+}
+
+/* ==========================================================================
+ * R64/R65 共享线性谱求解器（引擎层：所有标量内核都能用）
+ *
+ * why 放这里：R64 弹球的 ⟨r⟩ 与 R65 双阱的 ΔE 都需要「同一离散口径的前几个
+ * 本征对」。放在内核里会导致 GP 拿不到（R65 首次实现就踩了：dwSpectrum 调用
+ * this.kernel.spectrum，而 spectrum 只定义在薛定谔内核上 ⟹ 静默返回 null）。
+ *
+ * 算法 = 腔压缩（只保留支撑区，边界 Dirichlet）+ shift-invert Lanczos
+ * （B=(H+ε)⁻¹，CG 内解）。两条实测理由见 cavityCompress / lanczosShiftInvert
+ * 的注释：直接 Lanczos 在 V=1 全网格上 m=128 仍差 20 倍。
+ *
+ * 入参：{ n, m, nev, eps, vCut, V? , inside? }
+ *   · V：全长 Float64Array(N)，支撑区 = V<vCut（默认 0.5）；
+ *   · inside：回调 (x,y)=>bool（texel 中心坐标），与 V 二选一（弹球的解析几何走这条）。
+ * 返回 { evals(升序, Float64Array), evecs(全长 N 的 Float64Array 数组), resid, mK, cgAvg, nc }。
+ * ========================================================================== */
+export function linearSpectrum(opts){
+  const n = opts.n, N = n*n, m = opts.m, uK = 0.5/m;
+  const vCut = opts.vCut === undefined ? 0.5 : opts.vCut;
+  let inside = opts.inside, V = opts.V || null;
+  if (!inside){
+    inside = (x, y) => {
+      const i = Math.min(N - 1, Math.floor(y)*n + Math.floor(x));
+      return V[i] < vCut;
+    };
+  }
+  const { idx, nb, nc } = cavityCompress(n, inside);
+  if (!nc) return { evals: new Float64Array(0), evecs: [], resid: [], mK: 0, cgAvg: 0, nc: 0 };
+  let Va = null;
+  if (V){
+    Va = new Float64Array(nc);
+    for (let i = 0; i < N; i++){ const a = idx[i]; if (a >= 0) Va[a] = V[i]; }
+  }
+  const op = (src, dst) => {
+    for (let a = 0; a < nc; a++){
+      const i0 = nb[a*4], i1 = nb[a*4 + 1], i2 = nb[a*4 + 2], i3 = nb[a*4 + 3];
+      const c = src[a];
+      const xp = i0 >= 0 ? src[i0] : 0, xm = i1 >= 0 ? src[i1] : 0;
+      const yp = i2 >= 0 ? src[i2] : 0, ym = i3 >= 0 ? src[i3] : 0;
+      dst[a] = -uK*(xp + xm + yp + ym - 4*c) + (Va ? Va[a]*c : 0);
+    }
+  };
+  const nev = opts.nev || 10;
+  const r = lanczosShiftInvert(op, nc, nev, Math.max(nev*4, 40), opts.eps || 1e-4);
+  const evecs = r.evecs.map(v => {
+    const full = new Float64Array(N);
+    for (let i = 0; i < N; i++){ const a = idx[i]; if (a >= 0) full[i] = v[a]; }
+    return full;
+  });
+  return { evals: r.evals, evecs, resid: r.resid, mK: r.mK, cgAvg: r.cgAvg, nc };
+}
+
 export function registerKernel(k){ registry.set(k.id, k); }
 export function getKernel(id){ return registry.get(id) || registry.get('schrodinger'); }
 export function kernelIds(){ return [...registry.keys()]; }

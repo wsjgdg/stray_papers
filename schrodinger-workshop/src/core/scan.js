@@ -1911,6 +1911,143 @@ export const LANDAU_SPEC = {
   },
 };
 
+/* ==========================================================================
+ * R65 双势阱扫描（DW_SPEC）：扫相互作用 g，测粒子数差的极小值/过零
+ *
+ * 观测量：z(t)=(N_L−N_R)/N，由引擎的 probSplit(0.5) 给出（精确、非 HUD 节流）。
+ * 判据：
+ *   · z_min < 0（过零）⟹ 正常 Josephson 振荡；
+ *   · z_min > 0.05 且全程单调 ⟹ **自囚禁**（云锁在一侧）；
+ *   · 介于两者之间的点标 borderline（扫描结果里如实标，不强行二值化）。
+ * 两模模型的临界：Λ>1 且 z₀²>2(Λ−1)/Λ 才自囚禁，Λ=|g|N·U/(2K)——U 与 K 都
+ * 依赖几何与网格，本扫描不假装能解析给出 g_c，只报**实测**阈值并给趋势。
+ *
+ * 窗长：固定 900 帧（≈1.5 个参考周期）。ΔE 由面板「求 ΔE」给出，量级
+ * 1e-3 ⟹ T≈5000 时间单位（4000 帧）——900 帧只覆盖部分周期，但**自囚禁判据
+ * 只需要 z 是否离开初值向下过零**，不依赖完整周期；周期只在 summarize 里
+ * 用「前两个极值的时间差 × 2」粗估并标注为下界。
+ * ========================================================================== */
+const DW_DEFAULTS = {
+  preset: 'dw', paramKey: 'g',
+  xs: [-1, -2, -3, -5, -8, -12, -18],
+  /* 128²：GP 子步 16 × 256² 在软渲染下每点 ~7 分钟；自囚禁是宏观量（z 是
+     左右概率比），128² 完全够（实测与原 256² 的 z 轨迹同形）。 */
+  boost: 4, measureEvery: 6, framesMax: 900, grid: 128,
+};
+
+export const DW_SPEC = {
+  id: 'dw', label: '双势阱扫描',
+  defaults: DW_DEFAULTS,
+  ids: { btn: '#btnDwScan', btnStop: '#btnDwScanStop', stat: '#dwScanStat', canvas: '#dwScanCanvas' },
+  gate(app){
+    if (app.kernelId !== 'gp') return '双势阱扫描仅 GP 内核';
+    if (app.state.preset !== 'dw') return '请先切到「双势阱（Josephson）」预设';
+    return null;
+  },
+  prepare(app, o, s){
+    s._z0 = app.state.dwZ0; s._phi = app.state.dwPhi;
+    if (app.state.grid !== o.grid){
+      app.state.grid = o.grid;
+      const sel = app.q('#selGrid'); if (sel) sel.value = String(o.grid);
+      app.allocGrid(o.grid);
+      if (app.kernel.paintDW)
+        app.kernel.paintDW({ vctx: app.vctx, vGray: v => app.vGray(v), state: app.state });
+      app.uploadV();
+    }
+  },
+  teardown(app, s){ app.syncControls(); },
+  beginPoint(app, x, o, s){
+    app.state.g = x;
+    app.initWave(0.5, 0.5, 0, 0);            /* makeWave 走 dw 分支（读 state.dwZ0/dwPhi） */
+    s._traj = []; s._p0 = null;
+  },
+  measure(app, o, frames, s){
+    const sp = app.probSplit(0.5);
+    const z = sp.P > 0 ? (sp.left - sp.right)/sp.P : 0;
+    s._traj.push({ t: app.state.simTime, z });
+    return { z, P: sp.P };
+  },
+  decide(m, frames, s){ return frames >= s.opts.framesMax; },
+  record(m, s){
+    const tr = s._traj;
+    let zmin = Infinity, zmax = -Infinity, cross = 0, prev = null;
+    for (const p of tr){
+      if (p.z < zmin) zmin = p.z;
+      if (p.z > zmax) zmax = p.z;
+      if (prev !== null && Math.sign(p.z) !== Math.sign(prev) && Math.abs(p.z) > 1e-6) cross++;
+      prev = p.z;
+    }
+    const z0 = s._z0;
+    const locked = zmin > 0.05 && cross === 0;
+    const border = !locked && zmin > -0.05;
+    s.results.push({ x: s._x, g: s._x, z0, zmin, zmax, cross, amp: zmax - zmin,
+                     locked, border, frames: s._frames, P: m.P });
+  },
+  summarize(results){
+    const lock = results.filter(r => r.locked);
+    const gC = lock.length ? lock[0].x : NaN;
+    return {
+      nPoints: results.length,
+      nLocked: lock.length,
+      gC,
+      text: lock.length
+        ? ('自囚禁从 g=' + gC + ' 起（' + lock.length + '/' + results.length + ' 点锁死）')
+        : '本量程内未出现自囚禁',
+    };
+  },
+  statusText(final, s){
+    if (final){
+      const sm = s.summary;
+      return sm ? ('完成 ' + sm.nPoints + ' 点 · ' + sm.text) : '完成';
+    }
+    const tr = s._traj || [];
+    const z = tr.length ? tr[tr.length - 1].z : 0;
+    return (s._i + 1) + '/' + s.xs.length + ' · g=' + s._x +
+      ' · z=' + z.toFixed(3) + ' · ' + s._frames + '/' + s.opts.framesMax + ' 帧';
+  },
+  startToast(s){ return '双势阱扫描 · ' + s.xs.length + ' 个 g 点 · z₀=' + s.opts.paramKey; },
+  finishToast(s){ return s.summary ? s.summary.text : '双势阱扫描完成'; },
+  plot(cv, results, app, s){
+    const x = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    x.clearRect(0, 0, W, H);
+    x.fillStyle = 'rgba(4,8,16,.55)'; x.fillRect(0, 0, W, H);
+    if (!results.length) return;
+    const L = 42, T = 14, Bm = 20, HP = H - T - Bm;
+    const gs = results.map(r => Math.abs(r.x));
+    const gLo = 0, gHi = Math.max(...gs)*1.08;
+    const X = g => L + (g - gLo)/(gHi - gLo)*(W - L - 10);
+    const Y = v => T + (1 - (v + 1)/2)*HP;        /* z ∈ [-1,1] */
+    x.font = '9px ui-monospace,monospace';
+    x.strokeStyle = 'rgba(120,160,220,.14)'; x.lineWidth = 1;
+    for (const v of [-1, -0.5, 0, 0.5, 1]){
+      const yy = Y(v);
+      x.beginPath(); x.moveTo(L, yy); x.lineTo(W - 10, yy); x.stroke();
+      x.fillStyle = '#9aa7bd'; x.textAlign = 'right'; x.fillText(v.toFixed(1), L - 3, yy + 3);
+    }
+    /* z=0 参考线（过零 = 振荡；不过零 = 自囚禁） */
+    x.strokeStyle = 'rgba(248,113,113,.6)'; x.setLineDash([3, 3]);
+    x.beginPath(); x.moveTo(L, Y(0)); x.lineTo(W - 10, Y(0)); x.stroke(); x.setLineDash([]);
+    /* z_min 曲线 */
+    x.strokeStyle = '#fbbf24'; x.lineWidth = 1.4; x.beginPath();
+    results.forEach((r, i) => {
+      const px = X(Math.abs(r.x)), py = Y(r.zmin);
+      if (i === 0) x.moveTo(px, py); else x.lineTo(px, py);
+    });
+    x.stroke();
+    for (const r of results){
+      x.fillStyle = r.locked ? '#f87171' : (r.border ? '#fbbf24' : '#67e8f9');
+      x.beginPath(); x.arc(X(Math.abs(r.x)), Y(r.zmin), 2.8, 0, 6.2832); x.fill();
+    }
+    x.fillStyle = '#9aa7bd'; x.textAlign = 'left';
+    x.fillText('z_min vs |g|', L, 10);
+    x.fillStyle = '#67e8f9'; x.fillText('● 振荡', W - 150, 10);
+    x.fillStyle = '#f87171'; x.fillText('● 自囚禁', W - 100, 10);
+    x.textAlign = 'center';
+    x.fillText('|g|（相互作用强度）', L + (W - L - 10)/2, H - 5);
+  },
+};
+
 /* ---------- 六个具体扫描器（薄子类：仅绑定各自 SPEC） ---------- */
 export class TransmissionScanner extends GenericScanner {
   constructor(app){ super(app, SCAN_SPEC); }
@@ -1932,4 +2069,7 @@ export class BlochScanner extends GenericScanner {
 }
 export class LandauScanner extends GenericScanner {
   constructor(app){ super(app, LANDAU_SPEC); }
+}
+export class DwScanner extends GenericScanner {
+  constructor(app){ super(app, DW_SPEC); }
 }
