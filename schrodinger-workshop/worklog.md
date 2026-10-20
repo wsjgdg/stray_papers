@@ -51,6 +51,7 @@
 | R61 | 概率流 J + 连续性方程 + Bohm 轨迹 | 新 J-field pass（2D+3D）+ MRT 归约 + 2D 箭头 overlay + Bohm 64 粒子制导轨迹与残影；J=Im(ψ*∇ψ)（4 阶 stencil，平面波分轴闭式 (1/3m)sin k(4−cos k) 精确）、2 阶 divJ 望远镜恒等式 ΣdivJ≡fr−fl+ft−fb（Gauss 残差 5.15e-10/7.88e-10 纯舍入）、v=J/max(ρ,floor) 制导步进（节点不动）；**验证阶段 CDP 实测捕获并修复三个真 bug**：TPL_JRED DENSITY 包装变量名不符（编译失败）、TPL_BOHM_STEP uPos 采样缺 vec2（编译失败）、**bohmStamp 末尾误置 ping-pong 交换 ⟹ stamp 落 scratch B、display 恒采空 A（残影永不可见）**——纹理级取证（A.mx≡0 / B.n≈790）后删 swap，pot61 源码契约 + cdp61 纹理断言双闸门；**pot61 136/136 + cdp61 23/23**（ΣJ_x=⟨p_x⟩=k=0.089993、残影 maxPix=506 橙色签名、零回归 maxPix=10=噪点地板）；回归矩阵 12 套件全绿 + dist 421.9 KB |
 | R62 | 光学晶格 + Bloch 能带 | V=V₀sin²(πx/a) 周期势 + Bloch 平面波初态 + twistX（e^{±iθ} 周期边界）+ CPU 虚时间弛豫（PR-ADI + twisted 循环三对角 + 晶体动量块投影）⟹ BlochScanner 逐 k 测两带 ⟨E⟩，叠 1D Mathieu 解析谱（含横向基模 ey₀）；**五轮修复**（带 2 塌到相邻 k 的带 1 的根因是 θ_BC=h·θ_B 与 k=θ_BC/a 混用）；实测带 1/带 2 中位偏差 ~1%（势纹理 8 位量化 + 有限差分），**强制 grid=256**（有效质量 m·(grid/256)² 才是同一物理系统） |
 | R63 | Landau 能级（均匀磁场轨道耦合） | Peierls 相位的**复数 H 配 KDK Re/Im 拆分不酉**（ρ−1 随网格线性增长）⟹ 弃 Peierls-stencil 走 **规范帧 ADI**（x 扫描 φ=e^{iBxy}ψ 吸收相位成实 stencil、y 扫描原帧裸实、交替 ⟹ 二阶，6 pass/子步）；半经典晶格回旋**非谐闭式** T(θ₀)=(4m/B)∫dα/√((1−s²sin²α)(1−s²cos²α))（小振幅 T₀=2πm/B 精确、大振幅类单摆拉长）；LandauScanner 扫 5 个 B 点测质心回旋周期，实测 vs 闭式**中位 0.6%**（vs T₀ 21.8%）；**四个新发现真 bug**：① `rot4` 的 sin/cos 非正交 ⟹ 每帧 3e-4 范数损失（155 帧掉 37%，float64 镜像掩盖）；② ADI 稳定域由完整 2D 谱支配（dts 0.3 稳/0.4 崩，原 1D 界估计过于乐观）；③ `landauModel` 把分数坐标当 texel；④ dirac.js 的 AB helper 仍是 R26 单管标量 ⟹ **Dirac 内核此前整个无法启动**（shader 编译失败） |
+| R70 | 解析对照补齐：WKB 透射率曲线 + 散射相移/截面 | 新建 wkb.js/scatter.js 两解析模块 + dbarrier/3D sphere 两面板叠加；pot70 CPU **34/34** + cdp70 浏览器 **24/24**（src+dist 双通道）；修 modSphRatio 连分数 bug（z≳16 退化为震荡垃圾，破坏 l≥1 硬球极限）+ #scatSec boot 首算缺失 |
 | R57 | 3D AB 磁通管（后续方向表清空后新开的能力项，用户从四候选中选定） | 后续方向表经核实**已清空**（面板溢出续降判定「可接受、仍不做」、GP 半径对账 R52 闭环）⟹ 诊断出真实未决项后由用户定题。落地：AB 由 2D 专属升级为 **2D+3D 通用**——3D 磁通管沿 **z 轴贯穿体积**，θ(q)=atan2(q.y−y_k, q.x−x_k) 与 z 无关 ⟹ **±z 两 link 相位恒 0**、仅 ±x/±y 四 link 携带相位（与 A_z=0 的对称规范自洽，是 3D 与 2D 唯一结构性差异）；抽 `TPL_LAP3D_BLOCK` 让 KDK/CN-rhs/CN-sweep 三模板共享 7 点 stencil（R33 单源真值原则，此前三份内联复制）；uniform 引擎级与 2D 同名同义（setABUniforms 一次上传）；3D 体积面板新增「磁通(AB)」工具模式（点击取 R44 同口径「视线 slab 穿透段中点」xy 投影，管沿 z 贯穿 ⟹ 命中只看 xy <0.05）；R37 3D 现场存档新增 `abSols` 顶层段。**cdp57 12/12**：零回归（无管 vs Φ=0 单管，64³ 全卷 524288 float **max-abs=0** 逐位相同）、矢势可加性（共位双管 π/2+π/2 ≡ 单管 π **max-abs=0**）、Φ=π 使场改 3.56e-3、加第二根不共位管再改 7.16e-4、CN 同源 dP=1.2e-6、序列化 round-trip 逐位恢复、真实点击落管、glError=0、零异常。link_math3d 10/10 + shader 构建 13/13 + dist 冒烟 OK（370.8 KB）。**契约变更**：cdp54 F2 由「3D 下 AB sec 隐藏」反转为「显示」（回归矩阵 cdp54 34/34 + cdp55 12/12 + cdp56 15/15 全绿） |边缘拉手 `.qf-tab`（常驻、z-index 11 压面板 10 只压边框+padding、滑出态 pointer-events:none）+ 快捷键 `[`/`]`（表单聚焦守卫）+ body class `qf-hide-left/right` 驱动 transform 滑出（#gl 本就 fixed 全屏 ⟹ 无需 resize/重绘）+ localStorage `qf.panels.state={left,right}` 持久化（缺省/坏值宽松默认全展开）+ hint 补 `[` `]` 提示。**cdp56 15/15**：拉手贴边几何（lx=0/rr=1440、20px、z-index 11）/左右列滑出（panel.r=−10、hud.l=1450、字形翻转）/键盘交替序列/表单守卫/持久化+重载恢复/**双隐藏态 flux 真实点击落管 @(0.5,0.5)**（拉手与面板不挡画布）/3D 内核 smoke + 零异常。**关键环境发现**：`python3 -m http.server` 不发 Cache-Control/ETag ⟹ Chrome 按 Last-Modified 龄 10% 启发式缓存——styles.js（mtime 3 天前）新鲜期 ~7h，src 改了浏览器不重验，表现为「JS 是新的、CSS 是旧的」⟹ 全部 CDP 套件补 `Network.setCacheDisabled`（cdp54/55/56 回填）；另记 cdp56 T1 二轮 FAIL 根因 `.qf-tab` 漏设 left/right（静态位置巧合）与 dist smoke 假失败根因（localStorage 跨套件残留改变挂载初态，探针须先 clear） |
 | R42 | NLS/GP 物理工具（README「后续方向」②，用户选定两者都做） | 通用扫描框架 `GenericScanner`（生命周期与既有三扫描器同契约）+ GP/NLS 双适配器；**固定测量窗 + 全程序列**替代停止判据（非线性无耗散无终态：呼吸模永久振荡实测 8.6↔9.3）；GP 初态 σ=R_TF(g)（TF 自洽验算一致）⟹ **峰值对账 3.5%**；NLS **g=6 塌缩检出（峰值比 10.80）** + 网格截断崩坏 P→0.68；**P 诚实更正**：非线性 P 漂移 0.5–3.1%（KDK 离散耗散，随 \|g\| 增长）vs 线性对照 2.06e-6；判据修正：塌缩用序列峰值最大值（末值会因崩坏骤降误判）；既有三扫描器零改动；cdp42 32/32；环境记录：headless Chrome 无 X display 时 ANGLE Vulkan-XCB 失败 ⟹ 须 `xvfb-run` 启动 |
 | R41 | 3D 双槽势组合（README「后续方向」①，用户选定通用双槽） | 势由单枚举升级为 V=pot3Slot(主)+pot3Slot(第二)（CPU `pot3JS` 与 GLSL `helpers` 同名函数严格镜像）；**TPL_REDUCE3D 补 {{HELPERS}} 注入位**（原只有 POT3，否则势不同源、R35 对账失效）；eMaxExtra 取两槽之和（保守）⟹ 组合势 120 帧 P 守恒 1.36e-4；GPU↔CPU ⟨V⟩ 同帧对账 rel 8.8e-10/7.6e-8/6.5e-9（阈值 2e-7）；组合预设「球垒调制双缝」（球垒 R₂=6 不遮缝）；cdp41 30/30；副作用诚实记录：shader 变复杂 ⟹ 挂载预演化帧数分布 4↔5 下移到 3↔5，cdp39 PRE 断言阈值过时（判据放宽 3–6，对账走实测 PRE 故 33 项全绿） |
@@ -143,6 +144,88 @@ README「后续方向」表经核实已清空（面板溢出 R48/R53 闭环、GP
 | R66 | 暗孤子（defocusing NLS 预设缺口） | 暗孤子 tanh 剖面、传播速度、与亮孤子对照 | NLS 新预设 + g<0 侧初态 | 速度理论值对照、长时稳定性 |
 
 **通用纪律**：每轮零回归优先（B=0 / 默认态逐位）；GPU↔CPU 对账走同帧口径；harness 失败先诊断「测试侧 vs 实现侧」再动手；文档（README 专节 + 验证表 + 总览 + worklog 详章）随轮完成，不攒批。
+---
+
+## R70（2026-10-21）解析对照补齐：WKB 透射率曲线 + 散射相移/截面
+
+### 立项锚点（worklog 预定）
+
+WKB 透射率 vs 精确数值在 E≪V₀ 与 E≫V₀ 两端收敛、在 E≈V₀ 处如预期失效（诚实标注适用范围）；相移 δ_l 与解析球贝塞尔对照。
+
+### 一、实现（两个新物理模块 + 两处面板接线，零新 pass）
+
+| 层 | 文件 | 内容 |
+|---|---|---|
+| WKB 模型 | `src/physics/wkb.js`（新建） | `wkbBarrierModel(m)`：opacity 闭式 O=2κb、envelope 半经典包络（前因子 4E(V₀−E)/V0² × exp(−O)）、准能级估计（双垒中间阱渗透修正 n≈(2a/π)·κ_d/π 型）、dbCurve1d 采样（Emax 参数化） |
+| 相移模型 | `src/physics/scatter.js`（新建） | `sphericalScatterModel(m)`：分波相移 δ_l（tanδ_l = j_l(kR)·[k j_l'(κR)+κ j_l(κR)]⁻¹ 型软球 Dirichlet 匹配，色散口径 `disp:'discrete'`——与 GPU 同一格点色散）、截面 σ=4π/k²·Σ(2l+1)sin²δ_l、振幅 f(θ)（含 Re/Im 分量供光学定理检验） |
+| 2D 面板 | `src/core/app.js` | `#dbarSec`（dbarrier 预设）：T(E) 精确曲线（离散 TMM）+ **WKB 包络虚线叠加** + 共振峰标记（琥珀竖线 + 点）+ **E=V₀ 失效标记**（红竖虚线）+ #dbStat 峰位汇总；`dbCurve1d/dbProbe1d/_drawDbCurve` |
+| 3D 面板 | `src/core/app.js` + `src/physics/schrodinger3d.js` | `#scatSec`（3D sphere 预设）：E 滑块 `scatE`（state 新增，默认 0.011 ≈ sphere kx=0.15 的离散色散能量）、「取当前波包 E」按钮（按 lastWave3 的 kx 反推）、「计算相移」按钮（幂等）、#scatStat（k/kR/σ/幺正上限/尾部）、#scatDeltas（l=0..8 相移角 + sin² 权重）、#scatCanvas（log₁₀ dσ/dΩ 曲线 + 红幺正线） |
+
+### 二、WKB 侧判据重设计（pot70 W1–W4：原锚点逐条被实测修正）
+
+| 判据 | 原预定 | 实测结论 |
+|---|---|---|
+| W1 不透明度斜率 | O(b) 线性斜率 → 连续 κ | **双垒固定 E 时 T(b) 在共振峰/谷跳跃（b=12 的 O 反而小于 b=10），斜率无意义**；必须用单垒（gap=0、宽 2bw）。单垒 O(a)=−½lnT vs 半宽 a 线性成立，斜率 → **离散湮灭率 κ_d=arccosh(1+m(v0q−E))**（v0q=round(127·V₀)/127，8 位量化后垒高）：拟合 0.84875 vs κ_d=0.84795（偏差 **0.09%**）；与连续 κ 差 **2.7%** = 格点色散。拟合区间限 b∈[3,8]（a≥16 起 T≲1e-12 触 TMM 噪声底） |
+| W1c 包络下界 | envelope ≤ T | 干净区不是全区间：实测违例只出现在三段——[0.00052,0.00431] 与 [0.00601,0.01528]（低 E 前因子 4E(V₀−E)/V0²<1）与 [0.18527,0.19988]（近 V₀ WKB 失效）⟹ **干净区 = (0.077,0.925)·V₀**（V₀ 的分数，非原始 E 值——判据推导时在此错过一轮） |
+| W2 双垒收敛带 | [1.0,1.6] >0.95 / [1.6,1.98] >0.95 | 第二带上沿放到 **0.85**：E→V₀ 时群速→0，WKB 在带顶必然失效。实测 [1.0,1.6] **0.9558**、[1.6,1.98] **0.9025**（附「带顶群速→0」标注） |
+| W3 三支分离 | 三支互不混淆 | E=V₀ 处 opacity 闭式 **NaN**（κ=0，面板红标记同源）；T<0.9 的带宽 0.600·V₀ < 0.8·V₀ 阈值；峰处包络比 **7372×**（信息行，非判据） |
+| W4 峰位配对 | 6 峰两两配对 | dbCurve 自身 Emax=0.21 会**截掉 WKB 侧第 6 峰 E₆=0.2182** ⟹ 统一 Emax=**0.25**：6↔6 峰全配对、峰位比值 0.7954→0.7808 单调（∈[0.75,0.85]）、渗透估计 n≤3 与准能级差 0.0099<0.1 |
+
+### 三、本轮最硬的 bug：scatter.js modSphRatio 连分数（pot70 S10/S12 抓到）
+
+**旧版缺陷**：修正球贝塞尔比值 î_l(z)=i_l(z)/i_{l−1}(z) 用种子 (î_L, î_{L+1})=(1,0) 的**向下递推**。z≫l 时向下递推混入不衰减的第二解（交替解 |λ|≈1），z≳16 后比值退化为 ~(−1)^n 震荡垃圾——l=2、z=1.1e5 时返回 **1.3e-3** 而非 1+2/z，直接破坏 l≥1 的 Dirichlet 硬球极限（δ₂ 偏 **3.3%**）。**potR≤20 × V₀≳0.35 ⟹ z=κR 可达 28，UI 高端参数区同样踩坑**，不是仅测试极端值。
+
+**修复**：改连分数（全正项、无条件稳定）。三层独立参考验证：
+
+| 层 | 参考 | 结果 |
+|---|---|---|
+| ① 直接 i 级数 | l=1..8、中 z | mod π 残差 **4.9e-16**（S12：l=1 z=6.97 时 7.608e-16） |
+| ② 硬球前向 j/n 级数参考（V₀=1e8） | l=0..2 低能 + 大 z | mod π ≤**2.2e-5**；残差 = atan((k/κ)tanh κR) 有限 V₀ 修正（解析可释，随 V₀→∞ 归零） |
+| ③ Numerov 端到端（1/x 渐近修正 + Richardson） | l=0..3 × 7 组含 E>V₀ | ≤**8.5e-6** |
+
+**参考实现侧的坑（如实记录）**：γ(n+½) 闭式 Γ(n+1/2)=(2n)!√π/(4^n·n!) 的阶乘循环错写成 `f2 *= (i-1)`（=(n−1)!）⟹ l≥1 全错（iExact 差 1/(l+1) 权重），Lanczos + 闭式三方对账后确认模型连分数 3.80e-16 正确、参考实现错；nSeries 修正项比曾错写 2n+1−2l（正确 2n−1−2l）；jSeries 需 1/(2l+1)!! 因子。Numerov 参考：W=k²−2V−l(l+1)/r²、级数起点 a=−dv/(2l+3)、b=dv²/(2(2l+3)(2l+5))、c=−dv³/(6·(2l+3)(2l+5)(2l+7))、渐近 tanψ=(u−ε·u'/k)/(u'/k+ε·u)（ε=l(l+1)/(2x)）、Richardson 2·raw(15600)−raw(7800)。
+
+### 四、CPU 数值验证（/tmp/pot70_verify/pot70.mjs，不入库）：**34 PASS / 0 FAIL**
+
+| 组 | 结果 |
+|---|---|
+| W1a 单垒斜率→κ_d | 拟合 0.84875 vs κ_d=0.84795（0.09%）；附双垒失效信息行 O(b=6/10/12)=9.272/15.582/14.679 |
+| W1b / W1c | opacity=2κb 闭式 4.800；干净区 (0.077,0.925)·V₀ **零违例** + 三段违例区间断言 |
+| W2 / W3 | 双阈值 0.9558 / 0.9025；三支（E=V₀ NaN / 带宽 0.600·V₀ / 峰包络比 7372× 信息行） |
+| W4 Emax=0.25 | 6↔6 峰、比值 0.7954→0.7808 单调、渗透估计差 0.0099 |
+| S1/S2/S3/S5/S8/S9 | 原样保留全 PASS |
+| S4 硬球 mod π | δ₀+kR ≡ atan((k/κ)tanh κR)（**7.46e-17**）+ l=1,2 低能 δ/x^{2l+1}→−1/3、−1/45（rel 1.03e-4 / 7.47e-5） |
+| S6 三支 | 级数 vs 模型 sphJ/sphN（3.07e-15 / 3.71e-15）；硬球 δ_l 级数参考 vs V₀=1e8（1.00e-5）；低能比值稳定性（0.024% / 0.014%）；软化球 δ₀/x→−a_s/R（2.48e-6） |
+| S7 分波上限 | σ ≤ 81·4π/k²（lmax=8，实测 0.9466）+ sin²δ₀>0.99 |
+| S10 大 κR | z≈1.131e5：4 个 l 全 finite 且级数参考 mod π ≤4.47e-5 |
+| S11 Numerov | 自由 δ≡0（6.04e-6）+ 有限垒 l=0..3×7 组含 E>V₀（8.54e-6） |
+| S12 modSphRatio | 直接 i 级数 7.608e-16（<1e-12） |
+
+### 五、浏览器实测（cdp70，Chromium + SwiftShader，src + dist 双通道）：**24 PASS / 0 FAIL**
+
+| 组 | 结果 |
+|---|---|
+| P0 boot | schrodinger3d/sphere/potKind=1/potV0=0.02/potR=10/scatE=0.011，#scatSec 可见 |
+| P1 相移面板 vs CPU 参考 | k=0.148460、kR=1.4846、σ=**279.45**（幺正上限 570.15、尾部 1.13e-9、9 分波）；δ₀=−0.716783、δ₁=−0.139308 逐位一致；σ/幺正=0.0061；页内 import 复算 ≡ 面板（same=true）+ 光学定理 **1.35e-16**；#scatStat/#scatDeltas 文本含 kR=1.48 与 l=8；#scatCanvas 像素 cyan=527/red=463 |
+| P2 软化球低能标度 | E=0.002：δ₀/x=−0.511662 vs −a_s/R=−0.517986（a_s=5.17986，dev **1.22%**） |
+| P3 门控 | 2D slits：#scatSec **不存在**（2D 模板无此节点）且 scatCalc()→null |
+| P4 WKB 叠加 | dbCurve Emax=0.21 **6 峰**（0.0050/0.0199/0.0445/0.0782/0.1205/0.1704，与 pot70 W4 同参）；像素三色签名 green=988（青柠包络）/amber=732（琥珀峰）/red=555（E=V₀ 标记）/cyan=1407（TMM 曲线）；#dbStat 报 6 峰；页内 WKB opacity(0.02)=2κb 闭式 **4.800** |
+| P5 UI 接线 | E 滑块：0.05→σ=196.08、0.002→σ=319.76，state/output 联动；「取当前波包 E」=**0.011229**（kx=0.15 离散色散反推）；「计算相移」按钮幂等 |
+| P6 dist 冒烟 | 面板可见 + scat 就绪（k=0.148460）+ 画布 cyan=527 |
+| P7 console | 全程零 error/exception |
+
+**本轮抓出并修复一个真 UI bug（#scatSec boot 首算缺失）**：d3 模板里 scatSec 无 inline display，`style.display===''` 与 wantScat='' 相等 ⟹ 门控跳过首算，面板停在「未计算」直到帧循环 120ms 节流块才触发（且暂停态若早于首帧即无计算）。修法：`refreshParamHud` 门控加 `else if (wantScat==='' && !this._scat) this.scatterCalc()` 分支（app.js:3463）——boot 必算、不依赖帧循环。src/dist 双通道 P1/P6 坐实。
+
+**cdp70 测试侧缺陷（首轮 15/24 的失败全部归测试脚本，非产品代码，如实记录）**：① `a._scat` 打在 `window.__app` 调试句柄对象上（句柄非 app 实例、无该字段）⟹ 改 `a.scat()`；② `#scatDeltas` 文本被 `slice(0,80)` 截断，l=8 在 80 字符后 ⟹ 正则测全文；③ 2D DOM 无 #scatSec，`getComputedStyle(null)` 抛 TypeError ⟹ 元素不存在即通过；④ **CDP 时序脆弱性**：`Page.navigate` 后首次 evaluate 可能跑在旧页面上下文（旧 `__app` 仍在场）⟹ P6 误判「dist 面板可见但未计算」，nav() 轮询条件加 `location.pathname` 校验后消除。
+
+### 六、诚实限制（面板 hint 已按实写）
+
+① 离散湮灭率 κ_d 与连续 κ 差 **2.7%**（格点色散，软球深度量化 v0q=round(127·V₀)/127 同源）；② WKB 包络在 (0,0.077)·V₀ 低能段（前因子 <1）与 (0.925,1)·V₀ 近带顶段（群速→0）失效，干净区外的曲线仅供形状参考；③ 大 z 硬球参考的 mod π 残差 = atan((k/κ)tanh κR) 有限 V₀ 修正（解析可释）；④ 软化球 δ/x 低能标度有有限 x 修正（1.22%）；⑤ dσ/dΩ 画布纵轴 log₁₀（低 k 截面 ~1/k² 跨数个量级）。
+
+### 验证矩阵
+
+pot70 CPU **34/34** · cdp70 浏览器 **24/24**（P0–P7，src + dist 双通道）。
+
 ---
 
 ## R69（2026-10-20）退相干 T₂（纯退相位）——「测量 ⟹ 退相干」的连续版本

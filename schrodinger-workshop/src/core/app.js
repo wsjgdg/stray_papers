@@ -21,6 +21,8 @@ import { BlochScanner } from './scan.js';
 import { LandauScanner, DwScanner, fieldMoments2 } from './scan.js';
 import { DephaseScanner } from './scan.js';
 import { bandMask, bandProb, projectBand, normalizeBuf, maxResidual, bernoulli, densityAt } from '../physics/measure.js';
+import { wkbBarrierModel } from '../physics/wkb.js';
+import { sphericalScatterModel } from '../physics/scatter.js';
 
 /* ---------- R52：GP 基态渐进弛豫的每帧步数预算 ----------
    GP 预设「基态（虚时间弛豫）」的虚时间流由帧循环分帧推进：每帧最多
@@ -635,6 +637,18 @@ ${d3 ? `
     <div class="row"><label>状态</label><span id="slitScanStat">就绪</span></div>
     <canvas id="slitScanCanvas" width="420" height="180"></canvas>
     <div class="hint" style="margin-top:4px">双缝墙 V₀=3 T=4 W=6（slits3d 口径）· 迎头波包 kx=1.2 σ=6 · 64³ · 每点重发波包、固定测量窗 [32,56] 帧等间隔取 4 次、记峰数最多帧（时间线确定性 R39 已验证：飞行时间只由 kx/σ 决定，与 D 无关）· 屏剖面为 x=24 处 z 求和（可分离性 ⟹ 等价 2D 衍射）· 琥珀虚线 = Fraunhofer 远场预测 y_n=nλL/D——深 Fresnel 区仅定性参考，偏差如实汇报 · D=0 为单缝退化对照点 · 9 点软渲染约 4min，真实 GPU 秒级</div>
+  </div>
+  <div class="sec" id="scatSec">
+    <h3>球势垒散射（相移/截面）</h3>
+    <div class="row"><label>入射能量 E</label><input type="range" id="rScatE" min="0.002" max="0.2" step="0.002" value="0.011"><output id="oScatE">0.011</output></div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnScatE">取当前波包 E</button>
+      <button id="btnScatCalc">计算相移</button>
+    </div>
+    <div class="row"><label>kR / 总截面 σ</label><span id="scatStat">未计算</span></div>
+    <div class="row"><label>分波 δ_l（度）</label><span id="scatDeltas">—</span></div>
+    <canvas id="scatCanvas" width="420" height="150"></canvas>
+    <div class="hint" style="margin-top:4px">与「球形势垒」预设同参数的<b>解析对照</b>：平面波入射半径 R、高 V₀ 的球方垒，分波展开给出相移 δ_l 与截面 σ=4π/k²·Σ(2l+1)sin²δ_l。势参数取自主槽 V₀/R 滑块（即时生效，与 GPU 同一球）；E 为独立滑块——「取当前波包 E」按 lastWave3 的 kx 用引擎离散色散 E=2uK(1−cos k) 反推，把面板锚到屏幕上真实的波包。<b>截面画布</b>为 dσ/dΩ(θ)（纵轴 log₁₀，绝对口径）：纯 s 波时是水平直线（各向同性），高 k 小 R（kR≫1）时向前峰化。红线 = s 波幺正上限 4π/k²（δ_0=π/2 共振时触及）。<b>口径与边界（诚实标注）</b>：① 本模型是<b>球方垒平面波</b>，GPU 实测是有限宽波包（Δk 展宽 + 横向 l≥1 分波 + 绕球份额，R38 已量化）——对照目标是包络与极限，不是点值相等；② 色散用引擎离散口径 k=2asin(√(mE/2))（与 GPU 同一条曲线），连续教科书值 k=√(2mE) 在低能处与它不可分辨、高端分叉（CPU 验证已量化）；③ 分波按 l≤8 截断，尾部 (2l+1)sin²δ_l 已估计并显示；④ 模型公式经教科书关系机器精度 + 格点奇宇称独立积分双重验证（O(h²) 界面修正 ~0.02 rad 已解析归因，见 README「解析对照」节）。</div>
   </div>` : ''}
 </aside>
 
@@ -1397,6 +1411,37 @@ ${d3 ? `
       g.fillStyle = '#fbbf24';
       g.beginPath(); g.arc(px, Y(p.T), 3, 0, 6.2832); g.fill();
     }
+    /* R70：WKB 解析对照叠加（纯渲染，模型在 physics/wkb.js）——
+       · 包络（青柠虚线）：E<V0 谷底 exp(−4κb)（κ=√(2m(V0−E))，两片墙）；
+         E>V0 领头阶无反射 ⟹ T=1；E=V0 转向点重合 ⟹ WKB 失效，竖红虚线标注。
+       · 准能级（青柠点线）：Bohr–Sommerfeld k·a=nπ 的离散色散版
+         E_n=2uK(1−cos(nπ/a))——有限高垒会把峰整体压低 ~20%（波函数渗入
+         垒区），故准能级线是「峰应在哪」的量级参照，与琥珀精确峰的点位差
+         即有限垒修正，不宣称逐峰对应。 */
+    const wm = wkbBarrierModel(this.state.m || 1);
+    const env = wm.curvePoints(this.state.dV0, this.state.dBw, this.state.dGap, c.Emax, 480);
+    g.strokeStyle = 'rgba(163,230,53,.75)'; g.lineWidth = 1.1; g.setLineDash([5, 3]);
+    let pen = false;
+    for (const p of env){
+      if (!isFinite(p.T)){ pen = false; continue; }      /* E=V0 失效区：断开 */
+      const px = X(p.E), py = Y(p.T);
+      if (!pen){ g.moveTo(px, py); pen = true; } else g.lineTo(px, py);
+    }
+    g.stroke(); g.setLineDash([]);
+    for (const ql of wm.quasiLevels(this.state.dV0, this.state.dGap, 60, c.Emax)){
+      const px = X(ql.E);
+      g.strokeStyle = 'rgba(163,230,53,.28)'; g.setLineDash([1, 3]);
+      g.beginPath(); g.moveTo(px, T); g.lineTo(px, T + HP); g.stroke(); g.setLineDash([]);
+    }
+    if (this.state.dV0 > 0 && this.state.dV0 < c.Emax){
+      const px = X(this.state.dV0);
+      g.strokeStyle = 'rgba(248,113,113,.5)'; g.setLineDash([3, 3]);
+      g.beginPath(); g.moveTo(px, T); g.lineTo(px, T + HP); g.stroke(); g.setLineDash([]);
+      g.fillStyle = 'rgba(248,113,113,.85)'; g.textAlign = 'left';
+      g.fillText('E=V₀ · WKB 失效', px + 3, T + 9);
+    }
+    g.fillStyle = 'rgba(163,230,53,.85)'; g.textAlign = 'left';
+    g.fillText('WKB 包络（虚线）/ 准能级（点线）', L, 10);
     const pr = this._dbProbe;
     if (pr && isFinite(pr.E)){
       g.fillStyle = '#f87171';
@@ -1469,6 +1514,79 @@ ${d3 ? `
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
+  }
+
+  /* ---------- R70 球势垒散射：相移表 + 截面（解析对照，渲染在 app.js、模型在 physics/scatter.js） ---------- */
+  /* 势参数取主槽 potV0/potR（与 GPU 同一球），E 取独立滑块 scatE；
+     色散口径 'discrete'（与 GPU 同一离散色散，见 scatter.js 文件头）。 */
+  scatterCalc(){
+    const sec = this.q('#scatSec');
+    if (!sec || sec.style.display === 'none') return null;
+    const st = this.state;
+    const V0 = st.potV0, R = st.potR, E = st.scatE, m = st.m || 1;
+    const M = sphericalScatterModel(m);
+    const sc = M.scatter(E, V0, R, { disp: 'discrete', lmax: 8 });
+    const uni = sc.k > 1e-9 ? 4*Math.PI/(sc.k*sc.k) : 0;
+    this._scat = { E, V0, R, k: sc.k, sigma: sc.sigma, tail: sc.tail, uni, lmax: sc.lmax,
+                   deltas: sc.deltas };
+    const stat = this.q('#scatStat');
+    if (stat){
+      stat.textContent = 'k=' + sc.k.toFixed(4) + ' · kR=' + (sc.k*R).toFixed(2) +
+        ' · σ=' + sc.sigma.toPrecision(4) + '（幺正上限 ' + uni.toPrecision(3) +
+        '，l≤8 尾部 ' + sc.tail.toPrecision(2) + '）';
+    }
+    const dl = this.q('#scatDeltas');
+    if (dl){
+      dl.textContent = sc.deltas.map(d =>
+        'l=' + d.l + ': ' + (d.delta*180/Math.PI).toFixed(1) + '°(sin²=' + d.s2.toFixed(3) + ')'
+      ).join(' ');
+    }
+    this._drawScatCurve();
+    return this._scat;
+  }
+
+  /* dσ/dΩ(θ) 画布：纵轴 log₁₀（低 k 截面 ~1/k² 跨数个量级，线性轴不可读），
+     红虚线 = s 波幺正上限 dσ/dΩ=1/k²（δ₀=π/2 共振时纯 s 波曲线触及它）。 */
+  _drawScatCurve(){
+    const cv = this.q('#scatCanvas');
+    const s = this._scat;
+    if (!cv || !s) return;
+    const g = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    g.clearRect(0, 0, W, H);
+    g.fillStyle = 'rgba(4,8,16,.55)'; g.fillRect(0, 0, W, H);
+    const L = 44, T = 12, Bm = 22, HP = H - T - Bm;
+    const X = th => L + (th/Math.PI)*(W - L - 12);
+    const lgMin = -9, lgMax = 3;
+    const Y = v => T + (1 - (Math.log10(Math.max(v, 1e-9)) - lgMin)/(lgMax - lgMin))*HP;
+    g.font = '9px ui-monospace,monospace';
+    g.strokeStyle = 'rgba(120,160,220,.14)'; g.lineWidth = 1;
+    for (let p = lgMin; p <= lgMax; p += 3){
+      const yy = Y(Math.pow(10, p));
+      g.beginPath(); g.moveTo(L, yy); g.lineTo(W - 12, yy); g.stroke();
+      g.fillStyle = '#9aa7bd'; g.textAlign = 'right';
+      g.fillText('1e' + p, L - 4, yy + 3);
+    }
+    if (s.k > 1e-9){
+      const yy = Y(1/(s.k*s.k));
+      g.strokeStyle = 'rgba(248,113,113,.6)'; g.setLineDash([4, 3]);
+      g.beginPath(); g.moveTo(L, yy); g.lineTo(W - 12, yy); g.stroke(); g.setLineDash([]);
+      g.fillStyle = 'rgba(248,113,113,.85)'; g.textAlign = 'left';
+      g.fillText('s 波幺正 1/k²', L + 4, yy - 3);
+    }
+    const M = sphericalScatterModel(this.state.m || 1);
+    g.strokeStyle = '#67e8f9'; g.lineWidth = 1.3; g.beginPath();
+    for (let i = 0; i <= 120; i++){
+      const th = Math.PI*i/120;
+      const a = M.amplitude(s.E, s.V0, s.R, Math.cos(th), { disp: 'discrete', lmax: s.lmax });
+      const px = X(th), py = Y(a.dsdO);
+      if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
+    }
+    g.stroke();
+    g.fillStyle = '#9aa7bd'; g.textAlign = 'left';
+    g.fillText('dσ/dΩ · log₁₀', L, 10);
+    g.textAlign = 'center';
+    g.fillText('θ（散射角）', L + (W - L - 12)/2, H - 6);
   }
 
   /* 有限深阱：1D 精确对角化 + 连续超越方程逐项对照 */
@@ -3331,6 +3449,21 @@ ${d3 ? `
       const wantSlit = this.kernel.dim3 ? '' : 'none';
       if (slitScanSec.style.display !== wantSlit) slitScanSec.style.display = wantSlit;
     }
+    /* R70 球势垒散射相移面板门控：3D 内核 + 主槽为球势垒（POT_SPHERE=1，
+       解析模型假设「孤球」——组合势/双缝几何下不显示，不把不适用的模型
+       摆到用户面前）。显示即按当前 V₀/R/E 计算——包括 boot 首帧
+       （d3 模板里 scatSec 本就无 inline display，style.display==='' 与
+       wantScat='' 相等会跳过首算，面板停在「未计算」——cdp70 P1 抓到）。 */
+    const scatSec = this.q('#scatSec');
+    if (scatSec){
+      const wantScat = (this.kernel.dim3 && this.state.potKind === 1) ? '' : 'none';
+      if (scatSec.style.display !== wantScat){
+        scatSec.style.display = wantScat;
+        if (wantScat === '') this.scatterCalc();
+      } else if (wantScat === '' && !this._scat){
+        this.scatterCalc();
+      }
+    }
     /* R63 Landau 回旋预测读数（schrodinger.js landauModel 单源模型；暂停时拖
        B 滑块也即时刷新）。B≠0 时同时给出：
        · ω_c=B/m 与连续统周期 T₀=2πm/B（小振幅谐振极限）；
@@ -4423,8 +4556,8 @@ ${d3 ? `
       this.bindRange('#rSteps3','#oSteps3','steps3', v => String(v|0));
       this.bindRange('#rExp3','#oExp3','exposure3', v => String(v|0));
       this.bindRange('#rSigma3','#oSigma3','sigma', v => v.toFixed(1), () => this.reinitWave());
-      this.bindRange('#rPotV0','#oPotV0','potV0', v => v.toFixed(3));
-      this.bindRange('#rPotR','#oPotR','potR', v => String(v|0));
+      this.bindRange('#rPotV0','#oPotV0','potV0', v => v.toFixed(3), () => this.scatterCalc());
+      this.bindRange('#rPotR','#oPotR','potR', v => String(v|0), () => this.scatterCalc());
       this.bindRange('#rPotW','#oPotW','potW', v => v.toFixed(4), () => this.reinitWave());
       this.bindRange('#rPotZ','#oPotZ','potZ', v => v.toFixed(2), () => this.reinitWave());
       /* 双缝墙（R39；仅 potKind=4 预设生效）——势参数即时生效，无需重发波包 */
@@ -4463,6 +4596,22 @@ ${d3 ? `
         this.cam = { theta: 0.7, phi: 0.35, dist: 2.2, drag: null };
         this.toast('相机已重置');
       });
+      /* R70 球势垒散射相移面板：E 滑块独立于波包（解析模型参数），
+         V₀/R 沿用主槽滑块（bindRange 的 after 已挂重算）；「取当前波包 E」
+         按 lastWave3 的 kx 以引擎离散色散反推 E，把面板锚到屏幕上的波包。 */
+      this.bindRange('#rScatE','#oScatE','scatE', v => v.toFixed(3), () => this.scatterCalc());
+      this.on(this.q('#btnScatE'), 'click', () => {
+        const w = this.state.lastWave3;
+        if (!w || !w.wave3){ this.toast('无波包记录（先运行 3D 预设）'); return; }
+        const kx = w.wave3[3] || 0;
+        const uK = 0.5/(this.state.m || 1);
+        const E = 2*uK*(1 - Math.cos(kx));
+        this.state.scatE = Math.max(0.002, Math.min(0.2, E));
+        this.syncControls();
+        this.scatterCalc();
+        this.toast('波包 kx=' + kx.toFixed(3) + ' ⟹ E=' + E.toFixed(4));
+      });
+      this.on(this.q('#btnScatCalc'), 'click', () => this.scatterCalc());
       /* 势刷（R49 连续涂抹 ⟹ R60 椭球+软化）：工具切换 + 新丘规格滑块
          （半径/强度/三轴比/软化，负强度 = 势阱，stamp 时快照进每个丘——
          改滑块只影响后续丘，不追溯已落丘；轴比全 1 + 软化 0 = R49 硬边球）
@@ -5033,6 +5182,10 @@ ${d3 ? `
       dbCurve: () => { this.dbCurve1d(); return this._dbCurve || null; },
       dbProbe: () => this._dbProbe || null,
       dbProbeRun: () => this.dbProbe1d(),
+      /* R70 散射相移调试句柄（CDP 断言用）：scatCalc() 重算并返回快照
+         （E/V0/R/k/kR/sigma/uni/tail/deltas），scat() 取上次结果 */
+      scatCalc: () => this.scatterCalc(),
+      scat: () => this._scat || null,
       fwellCalc: () => { this.fwellCalc();
         const f = this._fwell;
         return f ? { n: f.nb.length, evals: f.nb, analytic: f.na.map(r => r.E),

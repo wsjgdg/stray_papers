@@ -587,6 +587,10 @@ uniform vec4  uBlobB[16];`,
       potBlobRX: 1, potBlobRY: 1, potBlobRZ: 1, potBlobSoft: 0,
       /* 曝光默认 3600（= free3d 预设值，见预设表的实测标定）；其余预设各自覆盖 */
       steps3: 48, exposure3: 3600, phaseColor: 1, slice3: 0, sliceZ: 0.5,
+      /* R70 散射相移面板的入射能量滑块（解析模型参数，与 GPU 波包解耦——
+         「取当前波包 E」按钮按 lastWave3 的 kx 反推写入）。默认 0.011 ≈
+         sphere 预设 kx=0.15 的离散色散能量 2uK(1−cos 0.15)。 */
+      scatE: 0.011,
       sigma: 6,
     };
   }

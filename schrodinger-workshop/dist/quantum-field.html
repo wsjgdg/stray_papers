@@ -20,6 +20,8 @@
       src/core/styles.js
       src/core/scan.js
       src/physics/measure.js
+      src/physics/wkb.js
+      src/physics/scatter.js
       src/core/app.js
       src/physics/barrier.js
       src/physics/mathieu.js
@@ -2839,6 +2841,10 @@ uniform vec4  uBlobB[16];`,
       potBlobRX: 1, potBlobRY: 1, potBlobRZ: 1, potBlobSoft: 0,
       /* 曝光默认 3600（= free3d 预设值，见预设表的实测标定）；其余预设各自覆盖 */
       steps3: 48, exposure3: 3600, phaseColor: 1, slice3: 0, sliceZ: 0.5,
+      /* R70 散射相移面板的入射能量滑块（解析模型参数，与 GPU 波包解耦——
+         「取当前波包 E」按钮按 lastWave3 的 kx 反推写入）。默认 0.011 ≈
+         sphere 预设 kx=0.15 的离散色散能量 2uK(1−cos 0.15)。 */
+      scatE: 0.011,
       sigma: 6,
     };
   }
@@ -5579,6 +5585,313 @@ function bernoulli(p, rng){
   return r() < p;
 }
 
+/* ===== src/physics/wkb.js ===== */
+/* ============================================================================
+ * WKB 透射包络（R70：双势垒 T(E) 曲线的解析对照）
+ *
+ * 动机：R67 的离散 TMM 给出双垒 T(E) 的「精确数值」（与 GPU 同一 5 点递推），
+ * 但曲线上**没有解析参照**——共振峰为什么在那里、包络为什么按那个斜率衰减，
+ * 都缺一个闭式答案。WKB 补上这一块：
+ *   · E < V0：T_WKB ≈ exp(−4κb)（两片墙各贡献 exp(−2κb)，κ=√(2m(V0−E))）
+ *     ——这是「非共振谷底」的包络；精确曲线在谷底附近贴着它，在共振处冲到 1。
+ *   · E > V0：领头阶 WKB 无反射 ⟹ T=1；精确曲线在 1 附近振荡（垒内往返相位），
+ *     振幅 ~ V0²/(4E(E−V0)) 随 E 衰减 ⟹ 高端「平均」收敛到 1。
+ *   · E ≈ V0：**WKB 失效**（两个转向点重合，连接公式的指数衰减假设崩溃）——
+ *     如实标注，不把失效区画成可信曲线。
+ *
+ * 诚实边界（与 README/面板 hint 同款，不装作精确）：
+ *   · 领头阶 WKB 不含连接公式的振幅前因子：单垒精确解
+ *     T = [1 + V0²sinh²(κa)/(4E(V0−E))]⁻¹ ≈ 16E(V0−E)/V0² · e^{−2κa}
+ *     比 e^{−2κa} 多一个前因子 16E(V0−E)/V0²（E≪V0 时 ≪1）。所以收敛性
+ *     判据用**不透明度**（=−½ln T，前因子只是可加常数）而非 T 点值：
+ *     不透明度_WKB = 2κb（T_WKB=e^{−4κb}）与不透明度_精确在 E≪V0、κb 大时收敛。
+ *   · WKB 包络**看不到共振峰**（准束缚结构需要well内相位匹配，超出领头阶）——
+ *     这正是「精确 TMM 峰 + WKB 谷底包络」对照的教学价值所在。
+ *   · 准能级用 Bohr–Sommerfeld 驻波条件 k·gap = nπ；本模块给**离散色散版**
+ *     E_n = 2uK(1−cos(nπ/gap))（R67 的 (nπ/gap)²uK 是其低 k 近似，
+ *     n 高时 k→π、离散版显著更低——引擎离散口径的正确答案）。
+ * ========================================================================== */
+
+/* 双垒 WKB 模型。单位与引擎一致：格点（texel）、ℏ=1、m 为粒子质量。
+   参数：V0 垒高、bw 单片垒宽（texel）、gap 中央阱宽（texel）。 */
+function wkbBarrierModel(m){
+  const uK = 0.5/m;
+  /* 连续衰减常数 κ(E)=√(2m(V0−E))（ℏ=1） */
+  const kappa = (E, V0) => (E < V0) ? Math.sqrt(Math.max(0, 2*m*(V0 - E))) : 0;
+  /* WKB 双垒透射包络（领头阶）：
+     E<V0：exp(−4κb)（谷底）；E>V0：1（无反射领头阶）；E=V0：失效（返回 NaN，
+     调用方负责标注——不把失效区画成曲线）。 */
+  const envelope = (E, V0, bw, gap) => {
+    if (!(V0 > 0)) return 1;
+    if (Math.abs(E - V0) < 1e-9) return NaN;      /* 转向点重合：WKB 失效 */
+    if (E < V0) return Math.exp(-4*kappa(E, V0)*bw);
+    return 1;
+  };
+  /* WKB 不透明度（=−½ln T；双垒 T_WKB=e^{−4κb} ⟹ 不透明度 = 2κb。
+     E>V0 时为 0（领头阶无反射）。注意与「光学深度」−lnT=4κb 的口径差
+     2×——本模块统一用 −½lnT（与 TMM 实测 −½lnT 直接可比）。 */
+  const opacity = (E, V0, bw) => (E < V0) ? 2*kappa(E, V0)*bw : 0;
+  /* Bohr–Sommerfeld 准能级（离散色散）：阱内驻波 k·gap = nπ，
+     k = 2·asin(√(mE/2)) 的反演 ⟹ E_n = 2uK(1−cos(nπ/gap))。
+     返回 [{n, E, k}]，k=nπ/gap 为离散波数。 */
+  const quasiLevels = (V0, gap, nMax, Emax) => {
+    const out = [];
+    for (let n = 1; n <= nMax; n++){
+      const k = n*Math.PI/gap;
+      if (k >= Math.PI) break;                    /* 带顶以上无导带 */
+      const E = 2*uK*(1 - Math.cos(k));
+      if (E < Emax) out.push({ n, E, k });
+    }
+    return out;
+  };
+  /* 与 dbCurve 同网格采样的包络点（画布叠加用） */
+  const curvePoints = (V0, bw, gap, Emax, nE) => {
+    const pts = [];
+    for (let i = 0; i < nE; i++){
+      const E = 2e-4 + (Emax - 2e-4)*i/(nE - 1);
+      pts.push({ E, T: envelope(E, V0, bw, gap) });
+    }
+    return pts;
+  };
+  return { uK, kappa, envelope, opacity, quasiLevels, curvePoints };
+}
+
+/* ===== src/physics/scatter.js ===== */
+/* ============================================================================
+ * 球方垒散射：相移 δ_l + 分波截面（R70：解析对照补齐）
+ *
+ * 物理：半径 R、高 V0 的球形势垒，入射平面波能量 E。分波展开
+ *     ψ = Σ_l (2l+1) i^l P_l(cosθ) · R_l(r)
+ * 径向约化函数 u_l = r·R_l 满足 u_l'' + [k² − l(l+1)/r² − V(r)]u_l = 0，
+ * 渐近 u_l ∝ sin(kr − lπ/2 + δ_l)。相移由 r=R 的对数导数匹配定出：
+ *
+ *   垒外（E>V0）：u ∝ kr·j_l(kr)，散射解 u ∝ kr[j_l(kr)cos δ − n_l(kr)sin δ]
+ *   垒内（E>V0）：u ∝ qr·j_l(qr)，q = √(2m(E−V0))（正则）
+ *   垒内（E<V0）：u ∝ κr·i_l(κr)，κ = √(2m(V0−E))（修正球贝塞尔，正则）
+ *
+ * 匹配 u、u' 连续 ⟹ tan δ_l = (A' − L_in·A)/(B' − L_in·B)
+ *     A = j_l(kR), B = n_l(kR), A' = k·j_l'(kR), B' = k·n_l'(kR)
+ *     L_in = 垒内对数导数 u'_in(R)/u_in(R)：
+ *       E>V0：q·j_l'(qR)/j_l(qR)（节点处 → ±∞，公式自然给出 Dirichlet 极限）
+ *       E=V0：u ∝ r^{l+1} ⟹ (l+1)/R（精确极限）
+ *       E<V0：κ·i_l'(κR)/i_l(κR)（**标度化**求值防 e^{κR} 上溢，见下）
+ *
+ * 自检锚点（CPU 验证脚本同款）：硬球 V0→∞ ⟹ δ_0=−kR；自由 V0=0 ⟹ δ_l=0；
+ * 低能 δ_l ~ (kR)^{2l+1}；s 波共振 δ_0=π/2 ⟹ σ_0=4π/k²（幺正上限）；
+ * 与 1D 全宽 2R 对称垒 TMM 的奇宇称 sector 对应 δ_0=½arg(t−r)。
+ *
+ * 截面（分波求和）：
+ *     σ_tot = (4π/k²) Σ_l (2l+1) sin²δ_l
+ *     f(θ) = (1/2ik) Σ_l (2l+1)(e^{2iδ_l}−1) P_l(cosθ)
+ *     dσ/dΩ = |f(θ)|²
+ *
+ * 验证结论（pot70 验证脚本同款，CPU 三层交叉）：
+ *   ① 教科书关系机器精度：E<V0 cot(kR+δ)=(κ/k)coth(κR)；
+ *      E>V0 tan(kR+δ)=(k/q)tan(qR)（偏差 1e-11~1e-16）。
+ *   ② 格点奇宇称直接积分（独立数值实现，原点节点奇初值向右递推）
+ *      与 texel 级精确离散界面条件机器精度一致（1e-13~1e-15）：
+ *        tan(kR+δ) = tan(k/2)·coth(κ/2)·tanh(κR)   （E<V0）
+ *        tan(kR+δ) = tan(k/2)·cot(q/2)·tan(qR)      （E>V0）
+ *      连续极限 (k/κ)tanh(κR)、(k/q)tan(qR) ✓ 自洽。
+ *   ③ 模型（连续函数形式 + 离散色散）vs 格点精确解残差 0.014~0.04 rad，
+ *      与 O(h²) 界面修正解析预测**逐位吻合**：连续式 (k/κ)tanh(κR) 与
+ *      离散式 tan(k/2)coth(κ/2)tanh(κR) 之差 = 因子 1+(k²−κ²)/12。
+ *      ⟹ 模型在连续极限精确；格点 O(h²) 修正已解析量化（非 bug）。
+ *   ④ 离散档湮灭指数必须用负能解析延拓 κ=arccosh(1+m·d)（=2asinh(√(md/2))），
+ *      误用传播公式 arccos(1−m·d) 曾造成 0.05 rad 恒定残差（已修）。
+ *   ⑤ modSphRatio 连分数修复（R70 收尾轮，pot70 S10/S12）：旧版用种子
+ *      (î_L, î_{L+1})=(1,0) 的向下递推，z≫l 时递推混入不衰减的第二解
+ *      （交替解 |λ|≈1），z≳16 后比值退化为 ~(−1)^n 震荡垃圾（l=2、
+ *      z=1.1e5 时返回 1.3e-3 而非 1+2/z），破坏 l≥1 的 Dirichlet 硬球
+ *      极限（δ_2 偏 3.3%）。potR≤20 × V0≳0.35 ⟹ z=κR 可达 28——UI
+ *      高端同样踩坑，故必须连分数（全正项、无条件稳定）。修复后经三层
+ *      独立参考验证：直接 i 级数 4.9e-16（l=1..8、中 z）；硬球前向
+ *      j/n 级数参考（V0=1e8）mod π ≤2.2e-5（残差 = atan((k/κ)tanh κR)
+ *      有限 V0 修正，解析可释）；Numerov 端到端（1/x 渐近修正 +
+ *      Richardson）l=0..3、E 双侧 ≤8.5e-6。
+ *
+ * 色散口径（与 barrier3d.js 逐字一致的项目约定）：
+ *   · 'continuous'：教科书连续色散 k=√(2mE)（解析球贝塞尔对照的基准）；
+ *   · 'discrete'：引擎 5 点/7 点 stencil 沿轴离散色散 k=kOf(E)=2asin(√(mE/2))
+ *     （E≥2/m 截到带顶 π）——与 GPU 实测对照时用这一档。
+ *   两档差异即格点色散效应，CPU 验证脚本量化（低 k 处应不可分辨）。
+ *
+ * 诚实边界（文档化，不装作精确）：
+ *   · 模型是**球方垒平面波**；GPU 实测是有限宽波包（Δk 展宽 + 横向 l≥1
+ *     耦合 + 绕球份额，R38 已量化）⟹ 对照目标是包络与极限，不是点值相等。
+ *   · 分波求和按 l 截断（lmax），截断误差由尾部 (2l+1)sin²δ_l 估计。
+ *   · 球方垒解析解假设 r<R 内 V 恒为 V0。引擎侧：**3D** 势经 uniform 以
+ *     float 注入（uPotV0，无量化，R70 面板直接读 state.potV0/potR）；
+ *     **2D** 势纹理 8 位量化（vGray: round(v·127+128)，解码 round(v·127)/127）
+ *     ——2D 对照须对齐量化后的 V0（调用方负责）。
+ * ========================================================================== */
+
+/* ---- 球贝塞尔（float64）----
+   j_l：向下递推（Miller）+ j_0=sin z/z 归一化——对 l>z 也稳定；
+   **起始索引必须远在转折区 n≈z+c·z^{1/3} 之上**：L=ceil(z)+12+⌈6·z^{1/3}⌉
+   （实证：固定 L=16 在 z≳10 后精度崩塌——z=20 时 69× 错、符号都反；
+   potR≤20 × k≤π ⟹ z=kR 可达 63，UI 高端全靠这条规则兜底）。 */
+function sphJ(l, z){
+  if (l === 0) return Math.abs(z) < 1e-12 ? 1 : Math.sin(z)/z;
+  const L = Math.max(l + 12, Math.ceil(z) + 12 + Math.ceil(6*Math.cbrt(z)));
+  let jp1 = 0, jp0 = 1, jl = 0;               /* j_{n+1}, j_n；jl 捕获 j_l */
+  for (let n = L; n >= 1; n--){
+    const jm1 = (2*n + 1)/z*jp0 - jp1;        /* j_{n-1} = (2n+1)/z·j_n − j_{n+1} */
+    if (n - 1 === l) jl = jm1;
+    jp1 = jp0; jp0 = jm1;
+  }
+  /* 循环结束后 jp0 = 未归一化 j_0；用精确 j_0 定标度 */
+  const j0 = Math.abs(z) < 1e-12 ? 1 : Math.sin(z)/z;
+  return jl*(j0/jp0);
+}
+function sphN(l, z){
+  if (l === 0) return -Math.cos(z)/z;
+  let nm1 = -Math.cos(z)/z;                   /* n_0 */
+  let n0 = -Math.cos(z)/(z*z) - Math.sin(z)/z;/* n_1 */
+  if (l === 1) return n0;
+  for (let n = 1; n < l; n++){
+    const np1 = (2*n + 1)/z*n0 - nm1;         /* n_{n+1} = (2n+1)/z·n_n − n_{n-1} */
+    nm1 = n0; n0 = np1;
+  }
+  return n0;
+}
+/* 标度化修正球贝塞尔比值 i_{l-1}(z)/i_l(z)（防 e^z 上溢）：
+   **连分数递推**（全正项、无条件稳定）。由递推 i_{n-1} = i_{n+1} +
+   (2n+1)/z·i_n 除以 i_n：令 ρ_n = i_{n+1}/i_n，则
+       ρ_{n-1} = 1/(ρ_n + (2n+1)/z)，  r_l = i_{l-1}/i_l = ρ_l + (2l+1)/z
+   自高阶截断 N = max(l+24, ⌈z⌉+24) 起步（ρ_N ≈ z/(2N+3)），截断误差按
+   ∏1/a_n²（a_n=(2n+1)/z）指数衰减。l=0 用闭式 coth z。
+   历史 bug（已修）：旧版用种子 (î_L, î_{L+1})=(1,0) 的向下递推——z≫l 时
+   递推的第二解（交替解 |λ|≈1）不衰减，算出的比值在 z≳16 后变成
+   ~(−1)^n 震荡垃圾（l=2、z=1.1e5 时返回 1.3e-3 而非 1+2/z），破坏
+   l≥1 的 Dirichlet 硬球极限（δ_2 偏 3.3%）。potR≤20 × V0≳0.35 ⟹
+   z=κR 可达 28——UI 高端同样踩坑，故必须连分数。 */
+function modSphRatio(l, z){
+  if (l === 0) return 1/Math.tanh(z);                  /* i_{-1}/i_0 = coth z（不溢出） */
+  if (l < 0) return NaN;
+  const N = Math.max(l + 24, Math.ceil(z) + 24);
+  let rho = z/(2*N + 3);                              /* 高阶种子 i_{N+1}/i_N ≈ z/(2N+3) */
+  for (let n = N; n >= l + 1; n--) rho = 1/(rho + (2*n + 1)/z);
+  return rho + (2*l + 1)/z;
+}
+const dSphJ = (l, z) => (l === 0) ? -sphJ(1, z) : sphJ(l - 1, z) - (l + 1)/z*sphJ(l, z);
+const dSphN = (l, z) => (l === 0) ? -sphN(1, z) : sphN(l - 1, z) - (l + 1)/z*sphN(l, z);
+
+/* 引擎离散色散（barrier.js / barrier3d.js 同款反解） */
+const kOfD = (E, m) => {
+  if (!(E > 0)) return 0;
+  const s = m*E/2;
+  return s >= 1 ? Math.PI : 2*Math.asin(Math.sqrt(s));
+};
+
+function sphericalScatterModel(m){
+  /* 垒内对数导数 L_in = u'_in(R)/u_in(R)（数值稳定形式） */
+  const logDerivIn = (l, E, V0, R, disp) => {
+    const d = V0 - E;
+    if (Math.abs(d) < 1e-12) return (l + 1)/R;         /* E=V0：u ∝ r^{l+1} */
+    if (d < 0){                                          /* E>V0：导带 */
+      const q = disp === 'discrete' ? kOfD(E - V0, m) : Math.sqrt(2*m*(E - V0));
+      if (!(q > 1e-9)) return (l + 1)/R;                /* q→0 同 E=V0 极限 */
+      const z = q*R;
+      const jl = sphJ(l, z);
+      if (Math.abs(jl) < 1e-300) return Infinity;       /* 内节点：Dirichlet 极限 */
+      /* i_l' = j_{l-1} − (l+1)/z·j_l；l=0 时 j_0' = −j_1 */
+      const jlp = (l === 0) ? -sphJ(1, z) : sphJ(l - 1, z) - (l + 1)/z*jl;
+      return q*jlp/jl;
+    }
+    /* E<V0：倏逝（标度化比值防上溢）。
+       离散档湮灭指数必须用色散的负能解析延拓 κ=arccosh(1+m·d)，
+       而非传播公式 arccos(1−m·d)（asinh/asin 分叉，d~0.3 时相对差 5%，
+       曾造成与格点积分的 0.05 rad 恒定残差）。数值稳定式：
+       arccosh(1+x) = 2·asinh(√(x/2))（小 x 不损失精度）。 */
+    const ka = disp === 'discrete' ? 2*Math.asinh(Math.sqrt(m*d/2)) : Math.sqrt(2*m*d);
+    const z = ka*R;
+    /* i_l' = i_{l-1} − (l+1)/z·i_l ⟹ L_in = κ·(i_{l-1}/i_l − (l+1)/z) */
+    const r = modSphRatio(l, z);
+    return ka*(r - (l + 1)/z);
+  };
+  /* 单分波相移。disp='continuous' | 'discrete'（见文件头）。
+     返回 { delta, tan }；E≤0 或 k=0 时 δ=0（无散射）。
+     delta 归一化到 (−π/2, π/2]（相移定义 mod π；sin²δ 与 e^{2iδ} 不受
+     影响，但避免自由情形 numer≡0 时 atan2(0,<0)=π 的显示伪影）。 */
+  const phaseShift = (l, E, V0, R, disp) => {
+    if (!(E > 0) || !(R > 0)) return { delta: 0, tan: 0 };
+    const k = disp === 'discrete' ? kOfD(E, m) : Math.sqrt(2*m*E);
+    if (!(k > 1e-9)) return { delta: 0, tan: 0 };
+    const A = sphJ(l, k*R), B = sphN(l, k*R);
+    const Ap = k*dSphJ(l, k*R), Bp = k*dSphN(l, k*R);
+    const L = logDerivIn(l, E, V0, R, disp);
+    const numer = Ap - L*A, denom = Bp - L*B;
+    const norm = d => (d > Math.PI/2) ? d - Math.PI : d;
+    if (!isFinite(numer) || !isFinite(denom)){
+      /* L=±∞（内节点）⟹ Dirichlet 极限 tan δ = A/B */
+      if (!isFinite(L)) return { delta: norm(Math.atan2(A, B)), tan: A/B };
+      return { delta: 0, tan: 0 };
+    }
+    return { delta: norm(Math.atan2(numer, denom)), tan: numer/denom };
+  };
+  /* 分波求和：相移表 + 截面。lmax 截断 + 尾部估计。 */
+  const scatter = (E, V0, R, opts) => {
+    const o = Object.assign({ disp: 'continuous', lmax: 16 }, opts);
+    const k = o.disp === 'discrete' ? kOfD(E, m) : Math.sqrt(2*m*E);
+    const deltas = [];
+    let sig = 0, tail = 0;
+    for (let l = 0; l <= o.lmax; l++){
+      const { delta } = phaseShift(l, E, V0, R, o.disp);
+      const s2 = Math.sin(delta)*Math.sin(delta);
+      const w = (2*l + 1)*s2;
+      sig += w;
+      if (l >= 4) tail = Math.max(tail, w);   /* 尾部量级估计（粗） */
+      deltas.push({ l, delta, s2, w });
+    }
+    const sigma = k > 1e-9 ? 4*Math.PI/(k*k)*sig : 0;
+    return { k, deltas, sigma, tail, lmax: o.lmax };
+  };
+  /* 散射振幅 f(θ)（复数，分波截断 lmax）与 dσ/dΩ。
+     f(θ) = (1/2ik)·Σ_l (2l+1)(e^{2iδ_l}−1)P_l(cosθ)
+     令 S = Σ(2l+1)P(e^{2iδ}−1) = Sr + i·Si，则 f = −i·S/(2k)
+     ⟹ Re f = Si/(2k)、Im f = −Sr/(2k)（1/i 因子曾漏挂——|f|² 不受影响，
+     但 Im f(0)=kσ/4π 光学定理会抓到，见 pot70 S8）。 */
+  const amplitude = (E, V0, R, cosT, opts) => {
+    const o = Object.assign({ disp: 'continuous', lmax: 16 }, opts);
+    const sc = scatter(E, V0, R, o);
+    if (!(sc.k > 1e-9)) return { re: 0, im: 0, abs: 0, dsdO: 0 };
+    let sr = 0, si = 0;
+    for (const d of sc.deltas){
+      const e2 = Math.cos(2*d.delta), s2i = Math.sin(2*d.delta);
+      /* (e^{2iδ}−1) = (cos2δ−1) + i·sin2δ */
+      const cr = e2 - 1, ci = s2i;
+      const P = legendre(d.l, cosT);
+      const w = (2*d.l + 1)*P/(2*sc.k);
+      sr += w*cr; si += w*ci;
+    }
+    const re = si, im = -sr;               /* f = −i·S/(2k) */
+    const abs = Math.hypot(re, im);
+    return { re, im, abs, dsdO: abs*abs };
+  };
+  /* 分波截面 σ_l = (4π/k²)(2l+1)sin²δ_l；s 波幺正上限 4π/k² */
+  const partial = (E, V0, R, l, opts) => {
+    const o = Object.assign({ disp: 'continuous' }, opts);
+    const k = o.disp === 'discrete' ? kOfD(E, m) : Math.sqrt(2*m*E);
+    if (!(k > 1e-9)) return 0;
+    const { delta } = phaseShift(l, E, V0, R, o.disp);
+    return 4*Math.PI/(k*k)*(2*l + 1)*Math.sin(delta)*Math.sin(delta);
+  };
+  return { phaseShift, scatter, amplitude, partial, logDerivIn, sphJ, sphN };
+}
+
+/* Legendre P_l（递推，cosθ∈[−1,1] 稳定） */
+function legendre(l, x){
+  if (l === 0) return 1;
+  if (l === 1) return x;
+  let pm = 1, p0 = x;
+  for (let n = 1; n < l; n++){
+    const p1 = ((2*n + 1)*x*p0 - n*pm)/(n + 1);
+    pm = p0; p0 = p1;
+  }
+  return p0;
+}
+
 /* ===== src/core/app.js ===== */
 /* ============================================================================
  * QuantumField —— 量子场演化组件（引擎层）
@@ -6205,6 +6518,18 @@ ${d3 ? `
     <div class="row"><label>状态</label><span id="slitScanStat">就绪</span></div>
     <canvas id="slitScanCanvas" width="420" height="180"></canvas>
     <div class="hint" style="margin-top:4px">双缝墙 V₀=3 T=4 W=6（slits3d 口径）· 迎头波包 kx=1.2 σ=6 · 64³ · 每点重发波包、固定测量窗 [32,56] 帧等间隔取 4 次、记峰数最多帧（时间线确定性 R39 已验证：飞行时间只由 kx/σ 决定，与 D 无关）· 屏剖面为 x=24 处 z 求和（可分离性 ⟹ 等价 2D 衍射）· 琥珀虚线 = Fraunhofer 远场预测 y_n=nλL/D——深 Fresnel 区仅定性参考，偏差如实汇报 · D=0 为单缝退化对照点 · 9 点软渲染约 4min，真实 GPU 秒级</div>
+  </div>
+  <div class="sec" id="scatSec">
+    <h3>球势垒散射（相移/截面）</h3>
+    <div class="row"><label>入射能量 E</label><input type="range" id="rScatE" min="0.002" max="0.2" step="0.002" value="0.011"><output id="oScatE">0.011</output></div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnScatE">取当前波包 E</button>
+      <button id="btnScatCalc">计算相移</button>
+    </div>
+    <div class="row"><label>kR / 总截面 σ</label><span id="scatStat">未计算</span></div>
+    <div class="row"><label>分波 δ_l（度）</label><span id="scatDeltas">—</span></div>
+    <canvas id="scatCanvas" width="420" height="150"></canvas>
+    <div class="hint" style="margin-top:4px">与「球形势垒」预设同参数的<b>解析对照</b>：平面波入射半径 R、高 V₀ 的球方垒，分波展开给出相移 δ_l 与截面 σ=4π/k²·Σ(2l+1)sin²δ_l。势参数取自主槽 V₀/R 滑块（即时生效，与 GPU 同一球）；E 为独立滑块——「取当前波包 E」按 lastWave3 的 kx 用引擎离散色散 E=2uK(1−cos k) 反推，把面板锚到屏幕上真实的波包。<b>截面画布</b>为 dσ/dΩ(θ)（纵轴 log₁₀，绝对口径）：纯 s 波时是水平直线（各向同性），高 k 小 R（kR≫1）时向前峰化。红线 = s 波幺正上限 4π/k²（δ_0=π/2 共振时触及）。<b>口径与边界（诚实标注）</b>：① 本模型是<b>球方垒平面波</b>，GPU 实测是有限宽波包（Δk 展宽 + 横向 l≥1 分波 + 绕球份额，R38 已量化）——对照目标是包络与极限，不是点值相等；② 色散用引擎离散口径 k=2asin(√(mE/2))（与 GPU 同一条曲线），连续教科书值 k=√(2mE) 在低能处与它不可分辨、高端分叉（CPU 验证已量化）；③ 分波按 l≤8 截断，尾部 (2l+1)sin²δ_l 已估计并显示；④ 模型公式经教科书关系机器精度 + 格点奇宇称独立积分双重验证（O(h²) 界面修正 ~0.02 rad 已解析归因，见 README「解析对照」节）。</div>
   </div>` : ''}
 </aside>
 
@@ -6967,6 +7292,37 @@ ${d3 ? `
       g.fillStyle = '#fbbf24';
       g.beginPath(); g.arc(px, Y(p.T), 3, 0, 6.2832); g.fill();
     }
+    /* R70：WKB 解析对照叠加（纯渲染，模型在 physics/wkb.js）——
+       · 包络（青柠虚线）：E<V0 谷底 exp(−4κb)（κ=√(2m(V0−E))，两片墙）；
+         E>V0 领头阶无反射 ⟹ T=1；E=V0 转向点重合 ⟹ WKB 失效，竖红虚线标注。
+       · 准能级（青柠点线）：Bohr–Sommerfeld k·a=nπ 的离散色散版
+         E_n=2uK(1−cos(nπ/a))——有限高垒会把峰整体压低 ~20%（波函数渗入
+         垒区），故准能级线是「峰应在哪」的量级参照，与琥珀精确峰的点位差
+         即有限垒修正，不宣称逐峰对应。 */
+    const wm = wkbBarrierModel(this.state.m || 1);
+    const env = wm.curvePoints(this.state.dV0, this.state.dBw, this.state.dGap, c.Emax, 480);
+    g.strokeStyle = 'rgba(163,230,53,.75)'; g.lineWidth = 1.1; g.setLineDash([5, 3]);
+    let pen = false;
+    for (const p of env){
+      if (!isFinite(p.T)){ pen = false; continue; }      /* E=V0 失效区：断开 */
+      const px = X(p.E), py = Y(p.T);
+      if (!pen){ g.moveTo(px, py); pen = true; } else g.lineTo(px, py);
+    }
+    g.stroke(); g.setLineDash([]);
+    for (const ql of wm.quasiLevels(this.state.dV0, this.state.dGap, 60, c.Emax)){
+      const px = X(ql.E);
+      g.strokeStyle = 'rgba(163,230,53,.28)'; g.setLineDash([1, 3]);
+      g.beginPath(); g.moveTo(px, T); g.lineTo(px, T + HP); g.stroke(); g.setLineDash([]);
+    }
+    if (this.state.dV0 > 0 && this.state.dV0 < c.Emax){
+      const px = X(this.state.dV0);
+      g.strokeStyle = 'rgba(248,113,113,.5)'; g.setLineDash([3, 3]);
+      g.beginPath(); g.moveTo(px, T); g.lineTo(px, T + HP); g.stroke(); g.setLineDash([]);
+      g.fillStyle = 'rgba(248,113,113,.85)'; g.textAlign = 'left';
+      g.fillText('E=V₀ · WKB 失效', px + 3, T + 9);
+    }
+    g.fillStyle = 'rgba(163,230,53,.85)'; g.textAlign = 'left';
+    g.fillText('WKB 包络（虚线）/ 准能级（点线）', L, 10);
     const pr = this._dbProbe;
     if (pr && isFinite(pr.E)){
       g.fillStyle = '#f87171';
@@ -7039,6 +7395,79 @@ ${d3 ? `
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
+  }
+
+  /* ---------- R70 球势垒散射：相移表 + 截面（解析对照，渲染在 app.js、模型在 physics/scatter.js） ---------- */
+  /* 势参数取主槽 potV0/potR（与 GPU 同一球），E 取独立滑块 scatE；
+     色散口径 'discrete'（与 GPU 同一离散色散，见 scatter.js 文件头）。 */
+  scatterCalc(){
+    const sec = this.q('#scatSec');
+    if (!sec || sec.style.display === 'none') return null;
+    const st = this.state;
+    const V0 = st.potV0, R = st.potR, E = st.scatE, m = st.m || 1;
+    const M = sphericalScatterModel(m);
+    const sc = M.scatter(E, V0, R, { disp: 'discrete', lmax: 8 });
+    const uni = sc.k > 1e-9 ? 4*Math.PI/(sc.k*sc.k) : 0;
+    this._scat = { E, V0, R, k: sc.k, sigma: sc.sigma, tail: sc.tail, uni, lmax: sc.lmax,
+                   deltas: sc.deltas };
+    const stat = this.q('#scatStat');
+    if (stat){
+      stat.textContent = 'k=' + sc.k.toFixed(4) + ' · kR=' + (sc.k*R).toFixed(2) +
+        ' · σ=' + sc.sigma.toPrecision(4) + '（幺正上限 ' + uni.toPrecision(3) +
+        '，l≤8 尾部 ' + sc.tail.toPrecision(2) + '）';
+    }
+    const dl = this.q('#scatDeltas');
+    if (dl){
+      dl.textContent = sc.deltas.map(d =>
+        'l=' + d.l + ': ' + (d.delta*180/Math.PI).toFixed(1) + '°(sin²=' + d.s2.toFixed(3) + ')'
+      ).join(' ');
+    }
+    this._drawScatCurve();
+    return this._scat;
+  }
+
+  /* dσ/dΩ(θ) 画布：纵轴 log₁₀（低 k 截面 ~1/k² 跨数个量级，线性轴不可读），
+     红虚线 = s 波幺正上限 dσ/dΩ=1/k²（δ₀=π/2 共振时纯 s 波曲线触及它）。 */
+  _drawScatCurve(){
+    const cv = this.q('#scatCanvas');
+    const s = this._scat;
+    if (!cv || !s) return;
+    const g = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    g.clearRect(0, 0, W, H);
+    g.fillStyle = 'rgba(4,8,16,.55)'; g.fillRect(0, 0, W, H);
+    const L = 44, T = 12, Bm = 22, HP = H - T - Bm;
+    const X = th => L + (th/Math.PI)*(W - L - 12);
+    const lgMin = -9, lgMax = 3;
+    const Y = v => T + (1 - (Math.log10(Math.max(v, 1e-9)) - lgMin)/(lgMax - lgMin))*HP;
+    g.font = '9px ui-monospace,monospace';
+    g.strokeStyle = 'rgba(120,160,220,.14)'; g.lineWidth = 1;
+    for (let p = lgMin; p <= lgMax; p += 3){
+      const yy = Y(Math.pow(10, p));
+      g.beginPath(); g.moveTo(L, yy); g.lineTo(W - 12, yy); g.stroke();
+      g.fillStyle = '#9aa7bd'; g.textAlign = 'right';
+      g.fillText('1e' + p, L - 4, yy + 3);
+    }
+    if (s.k > 1e-9){
+      const yy = Y(1/(s.k*s.k));
+      g.strokeStyle = 'rgba(248,113,113,.6)'; g.setLineDash([4, 3]);
+      g.beginPath(); g.moveTo(L, yy); g.lineTo(W - 12, yy); g.stroke(); g.setLineDash([]);
+      g.fillStyle = 'rgba(248,113,113,.85)'; g.textAlign = 'left';
+      g.fillText('s 波幺正 1/k²', L + 4, yy - 3);
+    }
+    const M = sphericalScatterModel(this.state.m || 1);
+    g.strokeStyle = '#67e8f9'; g.lineWidth = 1.3; g.beginPath();
+    for (let i = 0; i <= 120; i++){
+      const th = Math.PI*i/120;
+      const a = M.amplitude(s.E, s.V0, s.R, Math.cos(th), { disp: 'discrete', lmax: s.lmax });
+      const px = X(th), py = Y(a.dsdO);
+      if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
+    }
+    g.stroke();
+    g.fillStyle = '#9aa7bd'; g.textAlign = 'left';
+    g.fillText('dσ/dΩ · log₁₀', L, 10);
+    g.textAlign = 'center';
+    g.fillText('θ（散射角）', L + (W - L - 12)/2, H - 6);
   }
 
   /* 有限深阱：1D 精确对角化 + 连续超越方程逐项对照 */
@@ -8901,6 +9330,21 @@ ${d3 ? `
       const wantSlit = this.kernel.dim3 ? '' : 'none';
       if (slitScanSec.style.display !== wantSlit) slitScanSec.style.display = wantSlit;
     }
+    /* R70 球势垒散射相移面板门控：3D 内核 + 主槽为球势垒（POT_SPHERE=1，
+       解析模型假设「孤球」——组合势/双缝几何下不显示，不把不适用的模型
+       摆到用户面前）。显示即按当前 V₀/R/E 计算——包括 boot 首帧
+       （d3 模板里 scatSec 本就无 inline display，style.display==='' 与
+       wantScat='' 相等会跳过首算，面板停在「未计算」——cdp70 P1 抓到）。 */
+    const scatSec = this.q('#scatSec');
+    if (scatSec){
+      const wantScat = (this.kernel.dim3 && this.state.potKind === 1) ? '' : 'none';
+      if (scatSec.style.display !== wantScat){
+        scatSec.style.display = wantScat;
+        if (wantScat === '') this.scatterCalc();
+      } else if (wantScat === '' && !this._scat){
+        this.scatterCalc();
+      }
+    }
     /* R63 Landau 回旋预测读数（schrodinger.js landauModel 单源模型；暂停时拖
        B 滑块也即时刷新）。B≠0 时同时给出：
        · ω_c=B/m 与连续统周期 T₀=2πm/B（小振幅谐振极限）；
@@ -9993,8 +10437,8 @@ ${d3 ? `
       this.bindRange('#rSteps3','#oSteps3','steps3', v => String(v|0));
       this.bindRange('#rExp3','#oExp3','exposure3', v => String(v|0));
       this.bindRange('#rSigma3','#oSigma3','sigma', v => v.toFixed(1), () => this.reinitWave());
-      this.bindRange('#rPotV0','#oPotV0','potV0', v => v.toFixed(3));
-      this.bindRange('#rPotR','#oPotR','potR', v => String(v|0));
+      this.bindRange('#rPotV0','#oPotV0','potV0', v => v.toFixed(3), () => this.scatterCalc());
+      this.bindRange('#rPotR','#oPotR','potR', v => String(v|0), () => this.scatterCalc());
       this.bindRange('#rPotW','#oPotW','potW', v => v.toFixed(4), () => this.reinitWave());
       this.bindRange('#rPotZ','#oPotZ','potZ', v => v.toFixed(2), () => this.reinitWave());
       /* 双缝墙（R39；仅 potKind=4 预设生效）——势参数即时生效，无需重发波包 */
@@ -10033,6 +10477,22 @@ ${d3 ? `
         this.cam = { theta: 0.7, phi: 0.35, dist: 2.2, drag: null };
         this.toast('相机已重置');
       });
+      /* R70 球势垒散射相移面板：E 滑块独立于波包（解析模型参数），
+         V₀/R 沿用主槽滑块（bindRange 的 after 已挂重算）；「取当前波包 E」
+         按 lastWave3 的 kx 以引擎离散色散反推 E，把面板锚到屏幕上的波包。 */
+      this.bindRange('#rScatE','#oScatE','scatE', v => v.toFixed(3), () => this.scatterCalc());
+      this.on(this.q('#btnScatE'), 'click', () => {
+        const w = this.state.lastWave3;
+        if (!w || !w.wave3){ this.toast('无波包记录（先运行 3D 预设）'); return; }
+        const kx = w.wave3[3] || 0;
+        const uK = 0.5/(this.state.m || 1);
+        const E = 2*uK*(1 - Math.cos(kx));
+        this.state.scatE = Math.max(0.002, Math.min(0.2, E));
+        this.syncControls();
+        this.scatterCalc();
+        this.toast('波包 kx=' + kx.toFixed(3) + ' ⟹ E=' + E.toFixed(4));
+      });
+      this.on(this.q('#btnScatCalc'), 'click', () => this.scatterCalc());
       /* 势刷（R49 连续涂抹 ⟹ R60 椭球+软化）：工具切换 + 新丘规格滑块
          （半径/强度/三轴比/软化，负强度 = 势阱，stamp 时快照进每个丘——
          改滑块只影响后续丘，不追溯已落丘；轴比全 1 + 软化 0 = R49 硬边球）
@@ -10603,6 +11063,10 @@ ${d3 ? `
       dbCurve: () => { this.dbCurve1d(); return this._dbCurve || null; },
       dbProbe: () => this._dbProbe || null,
       dbProbeRun: () => this.dbProbe1d(),
+      /* R70 散射相移调试句柄（CDP 断言用）：scatCalc() 重算并返回快照
+         （E/V0/R/k/kR/sigma/uni/tail/deltas），scat() 取上次结果 */
+      scatCalc: () => this.scatterCalc(),
+      scat: () => this._scat || null,
       fwellCalc: () => { this.fwellCalc();
         const f = this._fwell;
         return f ? { n: f.nb.length, evals: f.nb, analytic: f.na.map(r => r.E),
