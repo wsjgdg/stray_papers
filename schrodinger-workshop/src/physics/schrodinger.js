@@ -279,6 +279,101 @@ function drawLatticeV(paint){
   paint.vctx.putImageData(img, 0, 0);
 }
 
+/* 对称三对角矩阵的 QL 隐式位移本征分解（Numerical Recipes tqli 口径）。
+   d=对角、e=次对角（e[0] 占位不用）；返回 vals 升序 + vecs（列优先，n×n）。
+   **为什么 R67 不用 linearSpectrum 求有限深阱**（两条都是实测教训）：
+   ① V=−V₀ 使 H 不定，而 shift-invert 的 CG 解 (H+ε)x=b 要求正定——虽然可以先
+      整体抬 +V₀ 绕过，但那是权宜；
+   ② 2D 谱会把 y 向的高阶横向模一起算进来：实测 128²、V₀=0.15、a=48 时前 10 个
+      Ritz 值全部落在 −0.143…−0.123（间距就是横向模间距 0.9e-3、1.5e-3…），
+      与 1D 束缚态的 −0.143/−0.124/−0.093/−0.051/−0.0047 完全对不上（最坏
+      偏差 2815%）——**「2D 谱 = 1D 谱 + 横向基模」只在「每个 n_x 只取 n_y=1」
+      时成立**，而谱求解器不知道要挑这些态。直接解 1D 截面对角化同时避开两点，
+      且快三个数量级（128 点 ~3ms vs 2D 的 10.8s）。 */
+function tridiagEig(d, e, n){
+  const dd = Float64Array.from(d), ee = new Float64Array(n);
+  for (let i = 1; i < n; i++) ee[i] = e[i];
+  const z = new Float64Array(n*n);
+  for (let i = 0; i < n; i++) z[i*n + i] = 1;
+  for (let l = 0; l < n; l++){
+    let iter = 0, m;
+    do {
+      for (m = l; m < n - 1; m++){
+        const t = Math.abs(dd[m]) + Math.abs(dd[m+1]);
+        if (Math.abs(ee[m+1]) + t === t) break;
+      }
+      if (m !== l){
+        if (iter++ === 40) break;
+        let g = (dd[l+1] - dd[l])/(2*ee[l+1]);
+        let r = Math.hypot(g, 1);
+        g = dd[m] - dd[l] + ee[l+1]/(g + (g >= 0 ? Math.abs(r) : -Math.abs(r)));
+        let ss = 1, cc = 1, pp = 0;
+        for (let i = m - 1; i >= l; i--){
+          let f = ss*ee[i+1], b = cc*ee[i+1];
+          r = Math.hypot(f, g);
+          ee[i+2] = r;
+          if (r === 0){ dd[i+1] -= pp; ee[m+1] = 0; break; }
+          ss = f/r; cc = g/r;
+          g = dd[i+1] - pp;
+          r = (dd[i] - g)*ss + 2*cc*b;
+          pp = ss*r;
+          dd[i+1] = g + pp;
+          g = cc*r - b;
+          for (let k = 0; k < n; k++){
+            f = z[k*n + i + 1];
+            z[k*n + i + 1] = ss*z[k*n + i] + cc*f;
+            z[k*n + i]     = cc*z[k*n + i] - ss*f;
+          }
+        }
+        if (r === 0 && m !== l) continue;
+        dd[l] -= pp; ee[l+1] = g; ee[m+1] = 0;
+      }
+    } while (m !== l);
+  }
+  const idx = Array.from({ length: n }, (_, i) => i).sort((a, b) => dd[a] - dd[b]);
+  const vals = new Float64Array(n);
+  const vecs = new Float64Array(n*n);
+  for (let j = 0; j < n; j++){
+    vals[j] = dd[idx[j]];
+    for (let k = 0; k < n; k++) vecs[j*n + k] = z[k*n + idx[j]];
+  }
+  return { vals, vecs };
+}
+
+/* ---------- R67 一维势谱：双势垒 + 有限深方阱 ---------- */
+
+/* 双垒几何（世界 px）：两片宽 bw 的墙夹出中间的阱，整体以 x=128 对称。
+   中央阱的准束缚能级 ≈ (nπ/gap)²·uK ⟹ 透射谱在 E 扫过这些值时出现
+   T→1 的共振峰（Ramsauer–Townsend），垒间驻波被「共振透射」。 */
+function drawDBarrier(paint){
+  const st = paint.state;
+  const V0 = (st.dV0 === undefined ? 0.2 : st.dV0);
+  const bw = (st.dBw === undefined ? 4 : st.dBw);
+  const gap = (st.dGap === undefined ? 28 : st.dGap);
+  const x1 = 128 - gap/2 - bw, x2 = 128 + gap/2;
+  paint.vctx.globalCompositeOperation = 'source-over';
+  paint.vctx.fillStyle = paint.vGray(0);
+  paint.vctx.fillRect(0, 0, 256, 256);
+  paint.vctx.fillStyle = paint.vGray(V0);
+  paint.vctx.fillRect(x1, 0, bw, 256);
+  paint.vctx.fillRect(x2, 0, bw, 256);
+}
+
+/* 有限深方阱（沿 y 均匀，只依赖 x）：阱内 V=−V₀、阱外 0，宽 a（世界 px）。
+   束缚态 E<0；阱越浅/越窄束缚态越少（1D 超越方程的解数 = ⌊2z₀/π⌋+1，
+   z₀=(a/2)√(V₀/uK)）。沿 y 均匀是刻意的：这样 2D 谱 = 1D 谱 + 横向基模，
+   可以拿 1D 解析解做硬对照（与 R62 Mathieu 同法）。 */
+function drawFWell(paint){
+  const st = paint.state;
+  const V0 = (st.fV0 === undefined ? 0.15 : st.fV0);
+  const a = (st.fWa === undefined ? 48 : st.fWa);
+  paint.vctx.globalCompositeOperation = 'source-over';
+  paint.vctx.fillStyle = paint.vGray(0);
+  paint.vctx.fillRect(0, 0, 256, 256);
+  paint.vctx.fillStyle = paint.vGray(-V0);
+  paint.vctx.fillRect(128 - a/2, 0, a, 256);
+}
+
 /* y 向 Dirichlet 基模（归一化）：n 点网格、边界外恒 0 ⟹ 基模 sin(π(y+1)/(n+1))。
    （旧版 sin(π(y+0.5)/n) 非本征态；正确分母是 n+1 而非 n） */
 function makeYBase(n){
@@ -814,6 +909,285 @@ class SchrodingerKernel extends PhysicsKernel {
     return 4*m*sum*h/3/B;
   }
 
+  /* 重画 R67 两座势（滑块改参数后由 app 调用；与 presets 的 build 同源） */
+  paintDb(paint){ drawDBarrier(paint); }
+  paintFw(paint){ drawFWell(paint); }
+
+  /* ---------- R67 一维势谱：双垒共振（离散 TMM）+ 有限深阱（超越方程） ---------- */
+
+  /* 离散转移矩阵：与 GPU 的 5 点 stencil 在 1D 截面上**同一递推**
+       ψ_{n+1} = (2 − (E−V_n)/uK)·ψ_n − ψ_{n−1}
+     与连续 TMM 的唯一差别是色散关系 E=2uK(1−cos k)（格点口径，不是 k²/2m）。
+     取两个基解（入射 e^{+ikn} 与 e^{−ikn}）线性叠加，右端只剩出射波 ⟹ 解出 r、t，
+     T=|t|²。势按 8 位纹理同口径量化（round(V·127)/127），否则与 GPU 差一个
+     ~0.4% 的高度偏差。 */
+  dbTmm(E, opts){
+    const m = opts.m || 1, uK = 0.5/m;
+    const n = opts.n || 256;
+    if (!(E > 0) || E >= 4*uK) return { T: 0, k: 0 };
+    const k = Math.acos(1 - E/(2*uK));
+    const v0q = Math.round(Math.max(0, Math.min(1, opts.v0))*127)/127;
+    const bw = opts.bw, gap = opts.gap;
+    const x1 = 128 - gap/2 - bw, x2 = 128 + gap/2, x3 = x2 + bw;
+    const V = new Float64Array(n);
+    for (let i = 0; i < n; i++){
+      const wx = i + 0.5;
+      V[i] = ((wx >= x1 && wx < x1 + bw) || (wx >= x2 && wx < x3)) ? v0q : 0;
+    }
+    /* 索引约定：arr[0]=ψ_{−1}、arr[1]=ψ_0、…、arr[n+2]=ψ_{n+1} */
+    const ar = new Float64Array(n + 3), ai = new Float64Array(n + 3);
+    const br = new Float64Array(n + 3), bi = new Float64Array(n + 3);
+    ar[0] = Math.cos(k); ai[0] = -Math.sin(k);     /* e^{−ik n} */
+    ar[1] = 1; ai[1] = 0;
+    br[0] = Math.cos(k); bi[0] = Math.sin(k);      /* e^{+ik n} */
+    br[1] = 1; bi[1] = 0;
+    /* 循环上界必须是 n（含 i=n）：右端匹配要同时用 ψ_N=arr[n+1] 与
+       ψ_{N+1}=arr[n+2]，只算到 i=n−1 会让 arr[n+2] 恒为 0 ⟹ numer 恒等于
+       −A_N e^{ik} ⟹ 无势时 T 也归零（R67 初版即踩到，靠「v0=0 应 T=1」
+       这条对照抓出）。 */
+    for (let i = 0; i <= n; i++){
+      const vv = (i < n) ? V[i] : 0;
+      const c = 2 - (E - vv)/uK;
+      ar[i + 2] = c*ar[i + 1] - ar[i];
+      ai[i + 2] = c*ai[i + 1] - ai[i];
+      br[i + 2] = c*br[i + 1] - br[i];
+      bi[i + 2] = c*bi[i + 1] - bi[i];
+    }
+    /* 右端：A_N + r·B_N = t·e^{ikN}；A_{N+1} + r·B_{N+1} = t·e^{ik(N+1)}
+       ⟹ r = (A_{N+1} − A_N e^{ik}) / (B_N e^{ik} − B_{N+1}) */
+    const ck = Math.cos(k), sk = Math.sin(k);
+    const aNr = ar[n + 1], aNi = ai[n + 1], aN1r = ar[n + 2], aN1i = ai[n + 2];
+    const bNr = br[n + 1], bNi = bi[n + 1], bN1r = br[n + 2], bN1i = bi[n + 2];
+    /* numer = A_{N+1} − A_N·e^{ik} */
+    const nur = aN1r - (aNr*ck - aNi*sk), nui = aN1i - (aNr*sk + aNi*ck);
+    /* denom = B_N·e^{ik} − B_{N+1} */
+    const der = (bNr*ck - bNi*sk) - bN1r, dei = (bNr*sk + bNi*ck) - bN1i;
+    const dd = der*der + dei*dei;
+    if (!(dd > 0)) return { T: 0, k };
+    const rr = (nur*der + nui*dei)/dd, ri = (nui*der - nur*dei)/dd;
+    /* t = (A_N + r B_N)·e^{−ikN} */
+    const tr0 = aNr + (rr*bNr - ri*bNi), ti0 = aNi + (rr*bNi + ri*bNr);
+    const ph = -k*n, cp = Math.cos(ph), sp = Math.sin(ph);
+    const tr = tr0*cp - ti0*sp, ti = tr0*sp + ti0*cp;
+    return { T: tr*tr + ti*ti, k, r: Math.hypot(rr, ri) };
+  }
+
+  /* 扫 E 出 T(E) 曲线 + 定位共振峰。
+     **峰宽的实测口径**：对称双垒的共振全宽 Γ ≈ 2E·√(T_单垒)，而 T_单垒 ≈
+     4e^{−2κb} 随垒厚指数下降。默认 b=4（薄垒）时 Γ/E ~ 1e-2，8000 点网格
+     （步长 2.6e-5）能画出峰形；把 b 调到 8 时 Γ/E ~ 1e-5，第一个峰窄到
+     1e-7 —— 20 万点细扫都只能踩到肩部（实测记录在 worklog）。因此：
+     · 曲线用 8000 点均匀网格（画「背景透射」与可分辨的峰）；
+     · 峰检测 = 局部极大（T>0.5）+ 近邻合并（间距 < 6e-3 视为同一个）+
+       三分细化（把峰顶 T 逼到 1）；
+     · 明显窄到分辨不出的低能峰不假装找到，面板如实标注「未分辨」。
+     单垒对照：gap=0 时两片墙相邻 ⟹ 等价于宽 2b 的单垒（这条口径写进 hint，
+     否则会误以为「单垒也有峰」）。 */
+  dbCurve(opts){
+    const o = Object.assign({ v0: 0.2, bw: 4, gap: 28, n: 256, m: 1, nE: 8000 }, opts);
+    const uK = 0.5/o.m;
+    const Emax = Math.min(o.v0*1.05, 4*uK*0.995);
+    const pts = [];
+    for (let i = 0; i < o.nE; i++){
+      const E = 2e-4 + (Emax - 2e-4)*i/(o.nE - 1);
+      pts.push({ E, T: this.dbTmm(E, o).T });
+    }
+    const raw = [];
+    for (let i = 1; i < pts.length - 1; i++){
+      if (pts[i].T > 0.5 && pts[i].T >= pts[i-1].T && pts[i].T > pts[i+1].T) raw.push(pts[i]);
+    }
+    const merged = [];
+    for (const p of raw){
+      const last = merged[merged.length - 1];
+      if (last && p.E - last.E < 6e-3){ if (p.T > last.T) merged[merged.length - 1] = p; }
+      else merged.push(p);
+    }
+    /* 三分细化：峰顶多半落在两个采样点之间 */
+    const Tof = E => this.dbTmm(E, o).T;
+    const step = (Emax - 2e-4)/(o.nE - 1);
+    const peaks = merged.map(p => {
+      let lo = p.E - step, hi = p.E + step;
+      for (let k = 0; k < 60; k++){
+        const m1 = lo + (hi - lo)/3, m2 = hi - (hi - lo)/3;
+        if (Tof(m1) < Tof(m2)) lo = m1; else hi = m2;
+      }
+      const E = 0.5*(lo + hi);
+      return { E, T: Tof(E) };
+    });
+    /* 中央阱的准束缚能级估计（**无限深阱**口径）：(nπ/gap)²·uK。
+       有限高垒会把它整体压低 ~20%（波函数渗入垒区），故只作量级参考，
+       面板明确标注「无限深阱估计」。 */
+    const est = [];
+    for (let n = 1; n <= 10; n++){
+      const E = uK*Math.pow(n*Math.PI/o.gap, 2);
+      if (E < Emax) est.push({ n, E });
+    }
+    return { pts, peaks, est, Emax, uK };
+  }
+
+  /* 波包谱卷积后的透射率（**与 GPU 实测可比的量**）。
+     TMM 的 T(E) 是**单色平面波**的透射率：共振峰 T=1、宽 Γ≈2E√(T_单垒)。
+     有限宽波包在 k 空间有 σ_k=1/(√2σ_x) 的展宽 ⟹ ΔE=sin(k)·σ_k，默认
+     σ=14、E=0.078 时 ΔE≈0.020 而 Γ≈0.002，**峰被稀释 10 倍**。所以
+     GPU 实测的 T 不该与单点 TMM 直接比（实测 0.009–0.13 vs 单色 1.0），
+     而应与 ∫T(E(k))·G(k−k₀)dk 比——这正是 R29 矩垒扫描的 Δk 卷积口径。
+     高斯加权、±3σ、41 点。 */
+  dbConvT(E0, sigma, opts){
+    const uK = 0.5/(opts.m || 1);
+    const sk = 1/(Math.SQRT2*Math.max(1e-6, sigma));
+    const k0 = Math.acos(Math.max(-1, Math.min(1, 1 - E0/(2*uK))));
+    const N = 41;
+    let num = 0, den = 0;
+    for (let i = 0; i < N; i++){
+      const dk = (i - (N - 1)/2)*(6*sk/(N - 1));
+      const k = k0 + dk;
+      if (k <= 1e-6 || k >= Math.PI - 1e-6) continue;
+      const E = 2*uK*(1 - Math.cos(k));
+      const w = Math.exp(-0.5*(dk/sk)*(dk/sk));
+      num += w*this.dbTmm(E, opts).T;
+      den += w;
+    }
+    return den > 0 ? num/den : 0;
+  }
+
+  /* 有限深方阱的 1D 束缚态（超越方程，连续口径）：
+       偶：z·sin z − √(z₀²−z²)·cos z = 0
+       奇：z·cos z + √(z₀²−z²)·sin z = 0
+     z = k·a/2、z₀ = (a/2)√(V₀/uK)，E = 4uK z²/a² − V₀。
+     写成这两个整函数形式（而非 z·tan z = …）是为了避开 tan/cot 的极点，
+     可以在 (0,z₀) 上直接扫符号变化 + 二分。 */
+  fwellLevels(opts){
+    const o = Object.assign({ v0: 0.15, a: 48, n: 128, m: 1 }, opts);
+    const uK = 0.5/o.m;
+    const s = 256/o.n;
+    /* 阱宽用**实际阱内格点数**（不是 a/s 的连续值）：势纹理的判据是
+       |(i+0.5)s−128| < a/2，边界那一个格点进不进会差 ~4% 的宽度 ⟹ 差 ~8% 的
+       能级。与 fwellSpectrum 的 V 构造逐字同口径，对照才有意义。 */
+    let nIn = 0;
+    for (let i = 0; i < o.n; i++) if (Math.abs((i + 0.5)*s - 128) < o.a/2) nIn++;
+    /* **单位口径**：aG 必须是**格点数**（不是世界 px）——uK=0.5/m 是格距=1 的
+       动能系数，z₀=(a/2)√(V₀/uK) 里的 a 与它同单位。写成 nIn*s（世界 px）会
+       差一个 s=256/n 倍（n=128 时能级差 4 倍、束缚态数从 5 变 9）。 */
+    const aG = nIn;
+    const v0q = Math.round(Math.max(0, Math.min(1, o.v0))*127)/127;
+    const z0 = (aG/2)*Math.sqrt(v0q/uK);
+    const fE = z => z*Math.sin(z) - Math.sqrt(Math.max(0, z0*z0 - z*z))*Math.cos(z);
+    const fO = z => z*Math.cos(z) + Math.sqrt(Math.max(0, z0*z0 - z*z))*Math.sin(z);
+    const roots = [];
+    const M = 4000;
+    const scan = (f, parity) => {
+      let pz = 1e-9, prev = f(pz);
+      for (let i = 1; i <= M; i++){
+        const z = z0*i/M, cur = f(z);
+        if (prev === 0 || (prev < 0) !== (cur < 0)){
+          let lo = pz, hi = z;
+          const flo = prev;
+          for (let t = 0; t < 64; t++){
+            const mid = 0.5*(lo + hi);
+            if ((flo < 0) !== (f(mid) < 0)) hi = mid; else lo = mid;
+          }
+          const zr = 0.5*(lo + hi);
+          roots.push({ z: zr, E: 4*uK*zr*zr/(aG*aG) - v0q, parity });
+        }
+        prev = cur; pz = z;
+      }
+    };
+    scan(fE, 'even'); scan(fO, 'odd');
+    roots.sort((p, q) => p.E - q.E);
+    return { roots, z0, aG, nIn, v0q, uK,
+             nBound: roots.length };
+  }
+
+  /* 有限深阱的**离散色散**超越方程（与连续版对照用，面板不显示）。
+     连续版用 k²/2m 与 κ²/2m；格点上是 E_in = 2uK(1−cos k)、|E| = 2uK(cosh κ−1)，
+     两者在 k~0.5 时差 ~2%（绝对 ~3e-3），对**最浅的束缚态**（|E|~7e-3）就是
+     40%+ 的相对偏差。这个版本用离散色散重解同一个匹配条件：
+       偶：k·sin(k a/2) − κ·cos(k a/2) = 0
+       奇：k·cos(k a/2) + κ·sin(k a/2) = 0
+     若它与数值对角化的偏差落到 <1%，就证明「连续 vs 数值」的差确实只是色散
+     修正，而不是求解器的 bug（R67 的归因实验）。 */
+  fwellLevelsDisc(opts){
+    const o = Object.assign({ v0: 0.15, a: 48, n: 128, m: 1 }, opts);
+    const uK = 0.5/o.m, s = 256/o.n;
+    let nIn = 0;
+    for (let i = 0; i < o.n; i++) if (Math.abs((i + 0.5)*s - 128) < o.a/2) nIn++;
+    const aG = nIn;
+    const v0q = Math.round(Math.max(0, Math.min(1, o.v0))*127)/127;
+    const f = (E, parity) => {
+      const Ei = E + v0q;
+      if (!(Ei > 0) || Ei >= 2*uK) return NaN;
+      const k = Math.acos(1 - Ei/(2*uK));
+      const kap = Math.acosh(Math.max(1, 1 + Math.abs(E)/(2*uK)));
+      const t = k*aG/2;
+      return parity === 'even' ? k*Math.sin(t) - kap*Math.cos(t)
+                               : k*Math.cos(t) + kap*Math.sin(t);
+    };
+    const roots = [];
+    const M = 20000;
+    const eLo = -v0q + v0q*1e-4, eHi = -v0q*1e-4;
+    for (const parity of ['even', 'odd']){
+      let pE = eLo, pf = f(eLo, parity);
+      for (let i = 1; i <= M; i++){
+        const E = eLo + (eHi - eLo)*i/M;
+        const cur = f(E, parity);
+        if (isFinite(pf) && isFinite(cur) && ((pf < 0) !== (cur < 0))){
+          let lo = pE, hi = E;
+          const flo = pf;
+          for (let t = 0; t < 64; t++){
+            const mid = 0.5*(lo + hi);
+            const fm = f(mid, parity);
+            if (((flo < 0) !== (fm < 0))) hi = mid; else lo = mid;
+          }
+          roots.push({ E: 0.5*(lo + hi), parity });
+        }
+        pE = E; pf = cur;
+      }
+    }
+    roots.sort((p, q) => p.E - q.E);
+    return { roots, aG, nIn, v0q, uK };
+  }
+
+  /* 有限深阱的束缚态谱：**沿 x 的 1D 截面精确对角化**，与超越方程逐项对照。
+     y 向取 Dirichlet 基模（势沿 y 均匀 ⟹ 横向是精确的可分离因子），把 1D 本征
+     向量乘上它再展开成 2D，供「显示本征态」使用。
+     返回 { evals, evecs(全长 grid²), ms, nIn, aG }。 */
+  fwellSpectrum(opts){
+    const o = Object.assign({ grid: 128, m: 1, nev: 6 }, opts);
+    const g = o.grid, m = o.m, uK = 0.5/m, s = 256/g;
+    const v0q = Math.round(Math.max(0, Math.min(1, o.v0))*127)/127;
+    const d = new Float64Array(g), e = new Float64Array(g);
+    let nIn = 0;
+    for (let x = 0; x < g; x++){
+      const wx = (x + 0.5)*s;
+      const inW = Math.abs(wx - 128) < o.a/2;
+      if (inW) nIn++;
+      d[x] = 2*uK + (inW ? -v0q : 0);      /* 1D 5 点 stencil 的对角元 */
+      e[x] = -uK;                          /* 次对角 */
+    }
+    e[0] = 0;
+    const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    const { vals, vecs } = tridiagEig(d, e, g);
+    const ms = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0;
+    const nev = Math.min(o.nev, g);
+    const evals = Array.from(vals.subarray(0, nev));
+    /* y 向基模（与 makeYBase 同式：sin(π(y+1)/(g+1)) 归一化） */
+    const yb = new Float64Array(g);
+    let ss = 0;
+    for (let y = 0; y < g; y++){ yb[y] = Math.sin(Math.PI*(y + 1)/(g + 1)); ss += yb[y]*yb[y]; }
+    const inv = 1/Math.sqrt(ss);
+    for (let y = 0; y < g; y++) yb[y] *= inv;
+    const evecs = [];
+    for (let j = 0; j < nev; j++){
+      const full = new Float64Array(g*g);
+      for (let y = 0; y < g; y++){
+        const wy = yb[y];
+        for (let x = 0; x < g; x++) full[y*g + x] = vecs[j*g + x]*wy;
+      }
+      evecs.push(full);
+    }
+    return { evals, evecs, ms, nIn, aG: nIn*s, nc: g };
+  }
+
   /* ---------- R64 量子弹球：谱求解（引擎层 linearSpectrum 的包装） ----------
      opts: { grid, m, kind } 或 { grid, m, V, vCut, nev, eps }
      求解器已下沉到 kernel.js（R65 的 GP 双阱 ΔE 也要用，放在内核里会导致
@@ -988,6 +1362,13 @@ class SchrodingerKernel extends PhysicsKernel {
       lattice:  { name:'光学晶格',       text:'V=V₀sin²(πx/a) 周期势（默认 V₀=0.1、a=32 世界 px，8 个周期）——原子在光场驻波中的标准模型。Bloch 定理：周期势中本征态满足 ψ(x+a)=e^{ika}ψ(x)，准动量 k 只在简约布里渊区 [0,π/a] 内独立，能量分成能带，带间是能隙（gap）。「Bloch 相位 θ」滑块直接设定 θ=k·a（0→π 覆盖整个简约 BZ；GPU 边界按 e^{±iθ} wrap 携带——总相位是 h·θ，h=网格内周期数）；平面波初态在晶格中演化时能带色散与散射清晰可见。「Bloch 弛漾」按钮做 CPU 虚时间流（PR-ADI + twisted 循环三对角 + 晶体动量块投影），收敛到当前 (k, 带) 的精确本征态——带 2 以带 1 收敛态作 Gram-Schmidt 投影。「Bloch 能带扫描」逐 k 测两带 ⟨E⟩，叠图 1D Mathieu 解析谱（含横向基模能量）：V₀/a 滑块改变晶格深度与周期，能隙随之宽窄。',
                   build(paint){ self._mode = 'lattice'; drawLatticeV(paint); }, wave:[0.5,0.5,0.30,0],
                   params:{ latV0:0.1, latA:32, twistX:0, latBand:1 } },
+      /* R67 一维势谱两座势：双垒（共振透射）与有限深阱（束缚态计数）。
+         两者都是「沿 y 均匀」的 1D 势——2D 谱 = 1D 谱 + 横向基模，可拿 1D
+         解析解做硬对照（Mathieu/弹球同法）。 */
+      dbarrier:{ name:'双势垒共振', text:'两片方墙夹出一个中央阱（默认墙宽 4、阱宽 28、高 0.2）。经典粒子只要 E<V₀ 就必被反射；量子波包在**特定能量**下却能近乎全透射——中央阱里形成的准束缚驻波与两侧倏逝波相位匹配（Ramsauer–Townsend 共振），峰位≈阱的准束缚能级 (nπ/gap)²·uK。点「求 T(E)」用**离散转移矩阵**（与 GPU 同一 5 点递推，色散 E=2uK(1−cos k)）一次算出整条曲线并标出共振峰；「实测当前 k」跑一次真实波包演化，把 GPU 的 T 叠到曲线上对照。单垒对照：去掉一片墙（把阱宽调到 0）曲线就单调无峰。', 
+                  build(paint){ drawDBarrier(paint); }, wave:[0.18,0.5,0.55,0], params:{ dV0:0.2, dBw:4, dGap:28, sigma:14 } },
+      fwell:    { name:'有限深方阱', text:'深 V₀、宽 a 的一维方阱（沿 y 均匀）。与无限深阱的关键差别：**束缚态数有限**——只有 E<0 的态被束缚，且解由超越方程 z·tan z=√(z₀²−z²)（偶）/ −z·cot z=√(z₀²−z²)（奇）给出，z₀=(a/2)√(V₀/uK)。阱越浅或越窄，能级越少、越往上越稀疏。点「求束缚态」用 R64 的 shift-invert 求解器（腔压缩 + 谱）算 2D 前若干本征值、减去横向基模后与 1D 解析解逐项对照，并把选中态画到场上。注意 V<0 使 H 不定，求解器内部会先把势整体抬 +V₀ 变正定、求完再平移回来。',
+                  build(paint){ drawFWell(paint); }, wave:[0.5,0.5,0,0], params:{ fV0:0.15, fWa:48, sigma:10 } },
     };
     /* R63 修复（R62 遗留）：_mode 是 makeWave 的场景开关，此前**只有** lattice
        的 build 会置 'lattice' 且从不复位——从晶格切回任意其它预设后，makeWave

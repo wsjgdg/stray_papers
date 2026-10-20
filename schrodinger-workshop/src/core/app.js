@@ -140,6 +140,10 @@ export class QuantumField {
       /* R65 双势阱：dwZ0 = 初始粒子数差 z0=(N_L−N_R)/N（双高斯幅度 √((1±z0)/2)）、
          dwPhi = 两阱相对相位 φ0（右阱乘 e^{iφ0}）。两者都进 makeWave 的 dw 分支。 */
       dwZ0: 0.6, dwPhi: 0,
+      /* R67 一维势谱：双垒（dV0 垒高 / dBw 垒宽 / dGap 阱宽，世界 px）与
+         有限深阱（fV0 深度 / fWa 宽度）。fwBand = 当前显示的第几个束缚态。 */
+      dV0: 0.2, dBw: 4, dGap: 28,
+      fV0: 0.15, fWa: 48, fwBand: 0,
       /* R66 暗孤子：darkV = 速度分数 v/c（|v/c|<1 才是亚声速暗孤子）。 */
       darkV: 0.4,
       ...this.kernel.defaults(),
@@ -372,6 +376,29 @@ export class QuantumField {
       <button id="btnDarkV">测速度</button>
     </div>
     <div class="hint" style="margin-top:4px">g&lt;0（排斥）侧的强度解：均匀背景上的密度凹陷 |ψ|²=ρ₀[1−(1−v²/c²)sech²((x−vt)/ξ)]，相位在凹陷处跳 π。愈合长度 ξ=1/√(Gρ₀)、声速 c=√(Gρ₀)、凹陷深度 1−v²/c²。<b>v/c 滑块</b>直接设定传播速度（|v/c|&lt;1；越接近声速凹陷越浅）。它与「条带孤子」（g&gt;0 的密度尖峰）互为补集——同一方程的两侧。<b>测速度</b>：先「标记起点」，传播一段时间后再点「测速度」，用两次位置差除以时间差，与理论 v 对照。诚实限制：这是沿 y 均匀的暗<b>带</b>（准 1D），严格 1D 暗孤子才无条件稳定；2D 里会有缓慢的横向不稳定性与背景声波辐射。</div>
+  </div>
+  <div class="sec" id="dbarSec">
+    <h3>双势垒共振（T(E)）</h3>
+    <div class="row"><label>垒高 V₀</label><input type="range" id="rDbV0" min="0.05" max="0.6" step="0.01" value="0.2"><output id="oDbV0">0.20</output></div>
+    <div class="row"><label>垒宽 b</label><input type="range" id="rDbBw" min="2" max="12" step="1" value="4"><output id="oDbBw">4</output></div>
+    <div class="row"><label>阱宽 a</label><input type="range" id="rDbGap" min="10" max="60" step="2" value="28"><output id="oDbGap">28</output></div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnDbCurve">求 T(E)</button>
+      <button id="btnDbProbe">实测当前 k</button>
+    </div>
+    <div class="row"><label>共振峰</label><span id="dbStat">未求</span></div>
+    <canvas id="dbCanvas" width="420" height="180"></canvas>
+    <div class="hint" style="margin-top:4px">两片方墙夹出中央阱（墙宽 b、阱宽 a、高 V₀）。经典粒子 E&lt;V₀ 必反射；量子波包在**特定能量**近乎全透射——中央阱里的准束缚驻波与两侧倏逝波相位匹配（Ramsauer–Townsend）。<b>求 T(E)</b> 用离散转移矩阵一次算出整条曲线（与 GPU 同一 5 点递推，色散 E=2uK(1−cos k)）并标出 T=1 的峰；<b>实测当前 k</b> 跑一次真实波包演化，把 GPU 的 T 叠到曲线上。纵轴为 log₁₀T（否则峰谷 5 个数量级的差看不出）。注意：峰宽 Γ∝e^{−2κb}，垒越厚峰越窄——b=8 时第一个峰窄到 1e-7，任何均匀采样都画不出（面板会标「未分辨」）；b=4 是「峰可见」与「垒够厚」的折中。单垒对照：把阱宽 a 调到 0（两墙相邻）⟹ T 单调无峰。<b>实测为什么看不到 T=1</b>：TMM 的 T=1 是<b>单色平面波</b>的结果；σ=14 的波包在 k 空间有 σ_k≈0.05 ⟹ ΔE≈0.02，而峰宽 Γ≈0.002，<b>峰被谱宽稀释十倍</b>（E=0.17 实测 T=0.131，非相干卷积给 0.176）。要逼近单色极限需要 σ≥80（ΔE≤Γ），但 256 网格装不下这么大的包——这是物理限制，不是求解器误差。</div>
+  </div>
+  <div class="sec" id="fwellSec">
+    <h3>有限深方阱（束缚态）</h3>
+    <div class="row"><label>阱深 V₀</label><input type="range" id="rFwV0" min="0.03" max="0.5" step="0.01" value="0.15"><output id="oFwV0">0.15</output></div>
+    <div class="row"><label>阱宽 a</label><input type="range" id="rFwWa" min="12" max="80" step="2" value="48"><output id="oFwWa">48</output></div>
+    <div class="row" style="margin-top:6px"><button id="btnFwCalc">求束缚态</button></div>
+    <div class="row"><label>态数 / 最坏偏差</label><span id="fwStat">未求</span></div>
+    <div class="row"><label>能级 E</label><span id="fwLevels">—</span></div>
+    <div class="row"><label>显示第 n 态</label><input type="range" id="rFwBand" min="0" max="8" step="1" value="0"><output id="oFwBand">1</output></div>
+    <div class="hint" style="margin-top:4px">深 V₀、宽 a 的方阱（沿 y 均匀 ⟹ 横向是精确可分离因子）。与无限深阱的关键差别：<b>束缚态数有限</b>——只有 E&lt;0 被束缚，解由超越方程给出（偶 z tan z=√(z₀²−z²)、奇 −z cot z=√(z₀²−z²)，z₀=(a/2)√(V₀/uK)）；阱越浅/越窄，态越少、间距越疏。<b>求束缚态</b>沿 x 做 1D 三对角精确对角化（QL），与教科书连续解逐项对照并显示选中态。诚实标注：最浅的束缚态偏差可达数十 %，来源是<b>格点色散</b>（E=2uK(1−cos k) vs k²/2m，k~0.5 时绝对差 ~3e-3）——用离散色散重解同一个匹配方程后偏差降到 1–3%，worklog 有归因实验。显示时按「第 n 态」上传到场上（y 向乘 Dirichlet 基模）。</div>
   </div>
   <div class="sec" id="scanSec">
     <h3>透射率扫描</h3>
@@ -1263,6 +1290,182 @@ ${d3 ? `
     this.state.lastWave = [0.5, 0.5, 0, 0];
     this.state.billBand = idx;
     this.toast('第 ' + (idx + 1) + ' 个本征态 · E=' + sp.evals[idx].toFixed(6));
+  }
+
+  /* ---------- R67 一维势谱：双垒 T(E) + 有限深阱束缚态 ---------- */
+  /* 重画当前 R67 势并清空旧结果（滑块改动后调用） */
+  _repaint1d(){
+    const paint = { vctx: this.vctx, vGray: v => this.vGray(v), state: this.state };
+    const p = this.state.preset;
+    if (p === 'dbarrier' && this.kernel.paintDb) this.kernel.paintDb(paint);
+    else if (p === 'fwell' && this.kernel.paintFw) this.kernel.paintFw(paint);
+    else return;
+    this.uploadV();
+    this._dbCurve = null; this._dbProbe = null; this._fwell = null;
+    const cv = this.q('#dbCanvas');
+    if (cv){
+      const g = cv.getContext('2d');
+      g.clearRect(0, 0, cv.width, cv.height);
+      g.fillStyle = 'rgba(4,8,16,.55)'; g.fillRect(0, 0, cv.width, cv.height);
+    }
+    const st = this.q('#dbStat'); if (st) st.textContent = '未求（参数已改）';
+    const fs = this.q('#fwStat'); if (fs) fs.textContent = '未求（参数已改）';
+    const fl = this.q('#fwLevels'); if (fl) fl.textContent = '—';
+  }
+
+  /* T(E) 曲线：x=E、y=log₁₀T（跨 5 个数量级，线性轴会把峰压成贴底的尖刺） */
+  _drawDbCurve(c){
+    const cv = this.q('#dbCanvas');
+    if (!cv || !c) return;
+    const g = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    g.clearRect(0, 0, W, H);
+    g.fillStyle = 'rgba(4,8,16,.55)'; g.fillRect(0, 0, W, H);
+    const L = 44, T = 12, Bm = 22, HP = H - T - Bm;
+    const Tmin = 1e-6, lgT = Math.log10(Tmin);
+    const X = E => L + (E/c.Emax)*(W - L - 12);
+    const Y = t => T + (1 - Math.log10(Math.max(t, Tmin))/lgT)*HP;
+    g.font = '9px ui-monospace,monospace';
+    g.strokeStyle = 'rgba(120,160,220,.14)'; g.lineWidth = 1;
+    for (const t of [1, 1e-2, 1e-4, 1e-6]){
+      const yy = Y(t);
+      g.beginPath(); g.moveTo(L, yy); g.lineTo(W - 12, yy); g.stroke();
+      g.fillStyle = '#9aa7bd'; g.textAlign = 'right';
+      g.fillText(t === 1 ? '1' : '1e' + Math.round(Math.log10(t)), L - 4, yy + 3);
+    }
+    g.strokeStyle = '#67e8f9'; g.lineWidth = 1.3; g.beginPath();
+    c.pts.forEach((p, i) => {
+      const px = X(p.E), py = Y(p.T);
+      if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
+    });
+    g.stroke();
+    for (const p of c.peaks){
+      const px = X(p.E);
+      g.strokeStyle = 'rgba(251,191,36,.65)'; g.setLineDash([2, 2]);
+      g.beginPath(); g.moveTo(px, T); g.lineTo(px, T + HP); g.stroke(); g.setLineDash([]);
+      g.fillStyle = '#fbbf24';
+      g.beginPath(); g.arc(px, Y(p.T), 3, 0, 6.2832); g.fill();
+    }
+    const pr = this._dbProbe;
+    if (pr && isFinite(pr.E)){
+      g.fillStyle = '#f87171';
+      g.beginPath(); g.arc(X(pr.E), Y(pr.T), 4, 0, 6.2832); g.fill();
+      g.strokeStyle = '#f87171'; g.lineWidth = 1;
+      g.beginPath();
+      g.moveTo(X(pr.E) - 6, Y(pr.T)); g.lineTo(X(pr.E) + 6, Y(pr.T));
+      g.moveTo(X(pr.E), Y(pr.T) - 6); g.lineTo(X(pr.E), Y(pr.T) + 6);
+      g.stroke();
+    }
+    g.fillStyle = '#9aa7bd'; g.textAlign = 'left';
+    g.fillText('T(E) · 纵轴 log₁₀', L, 10);
+    g.textAlign = 'center';
+    g.fillText('E（格点单位，E ≤ V₀）', L + (W - L - 12)/2, H - 6);
+  }
+
+  /* 求 T(E)：一次离散 TMM 扫（~0.6s），叠共振峰 */
+  dbCurve1d(){
+    if (this.kernelId !== 'schrodinger' || !this.kernel.dbCurve)
+      return this.toast('当前内核无 TMM');
+    const st = this.state;
+    const c = this.kernel.dbCurve({ v0: st.dV0, bw: st.dBw, gap: st.dGap,
+                                    n: 256, m: st.m, nE: 8000 });
+    this._dbCurve = c; this._dbProbe = null;
+    this._drawDbCurve(c);
+    const el = this.q('#dbStat');
+    if (el){
+      el.textContent = c.peaks.length
+        ? (c.peaks.length + ' 峰 · ' + c.peaks.map(p => p.E.toFixed(4)).join(' / ') +
+           '（T=1.000' + (c.peaks.length ? '，峰宽 < 采样步长时只标峰位' : '') + '）')
+        : '未分辨出 T>0.5 的峰（垒太厚或量程不对）';
+    }
+  }
+
+  /* 实测当前 k：跑真实波包演化测右侧概率，与 TMM 同能量点对照。
+     轻量异步（rAF 逐帧，不阻塞 UI）：420 帧 ≈ 3–5s（软渲染）。 */
+  dbProbe1d(){
+    if (this._dbRun) return this.toast('探测进行中');
+    if (this.paused) return this.toast('先取消暂停');
+    const st = this.state;
+    const w = st.lastWave || [0.18, 0.5, 0.55, 0];
+    const kx = w[2] || 0;
+    const uK = 0.5/st.m;
+    const E = 2*uK*(1 - Math.cos(kx));
+    this.initWave(0.18, 0.5, kx, 0);
+    const nF = 420, run = { i: 0, n: nF, E, kx };
+    this._dbRun = run;
+    const el = this.q('#dbStat');
+    const tick = () => {
+      if (this._dbRun !== run) return;
+      this.evolve();
+      run.i++;
+      if (run.i % 30 === 0 && el)
+        el.textContent = '探测中 ' + run.i + '/' + nF + ' · E=' + E.toFixed(4);
+      if (run.i >= nF){
+        const sp = this.probSplit(160/256);
+        const T = sp.P > 0 ? sp.right/sp.P : 0;
+        const o = { v0: st.dV0, bw: st.dBw, gap: st.dGap, n: 256, m: st.m };
+        const tm = this.kernel.dbTmm(E, o);
+        /* 与实测**可比**的是波包谱卷积值（单色 TMM 的峰被 Δk 稀释，见 dbConvT 注释） */
+        const tc = this.kernel.dbConvT(E, st.sigma, o);
+        this._dbProbe = { E, T, Ttmm: tm.T, Tconv: tc, kx, P: sp.P };
+        if (el) el.textContent = 'E=' + E.toFixed(4) + ' · 实测 T=' + T.toFixed(4) +
+          ' · 单色 TMM=' + tm.T.toFixed(3) + ' · Δk 卷积=' + tc.toFixed(4) +
+          (tc > 1e-6 ? ' · 实测/卷积 ' + (T/tc).toFixed(2) : '');
+        this._drawDbCurve(this._dbCurve);
+        this._dbRun = null;
+        return;
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  /* 有限深阱：1D 精确对角化 + 连续超越方程逐项对照 */
+  fwellCalc(){
+    if (this.kernelId !== 'schrodinger' || !this.kernel.fwellSpectrum)
+      return this.toast('当前内核无束缚态求解器');
+    const st = this.state;
+    const lv = this.kernel.fwellLevels({ v0: st.fV0, a: st.fWa, n: st.grid, m: st.m });
+    const sp = this.kernel.fwellSpectrum({ grid: st.grid, m: st.m, v0: st.fV0, a: st.fWa, nev: 12 });
+    const nb = sp.evals.filter(e => e < 0);
+    const na = lv.roots.filter(r => r.E < 0);
+    const n = Math.min(nb.length, na.length);
+    let worst = 0, wi = 0;
+    for (let i = 0; i < n; i++){
+      const rel = Math.abs(nb[i] - na[i].E)/Math.abs(na[i].E);
+      if (rel > worst){ worst = rel; wi = i; }
+    }
+    this._fwell = { lv, sp, nb, na, worst, wi };
+    const stat = this.q('#fwStat');
+    if (stat) stat.textContent = nb.length + ' 态 · 最坏 ' +
+      (n ? (worst*100).toFixed(1) + '%（第 ' + (wi+1) + ' 态）' : '—') +
+      ' · ' + sp.ms.toFixed(0) + 'ms';
+    const lev = this.q('#fwLevels');
+    if (lev) lev.textContent = nb.slice(0, 5).map(v => v.toFixed(4)).join(' · ') +
+      (nb.length > 5 ? ' …' : '');
+    const band = this.q('#rFwBand');
+    if (band){
+      band.max = String(Math.max(0, nb.length - 1));
+      if (+band.value >= nb.length) band.value = '0';
+    }
+    this.toast('束缚态 ' + nb.length + ' 个 · 最坏偏差 ' +
+      (n ? (worst*100).toFixed(1) + '%' : '—'));
+  }
+
+  /* 显示第 i 个束缚态（1D 本征向量 × y 向基模 ⟹ 2D 场） */
+  fwellShow(i){
+    const fw = this._fwell;
+    if (!fw || !fw.sp.evecs[i]) return this.toast('先点「求束缚态」');
+    const g = this.state.grid, N = g*g, x = fw.sp.evecs[i];
+    const data = new Float32Array(N*2);
+    for (let k = 0; k < N; k++){ data[k*2] = x[k]; data[k*2+1] = 0; }
+    this._uploadPsi(data);
+    this.state.waveCount = 1;
+    this.state.simTime = 0;
+    this.state.lastWave = [0.5, 0.5, 0, 0];
+    this.state.fwBand = i;
+    this.toast('第 ' + (i+1) + ' 态 · E=' + fw.nb[i].toFixed(5) +
+      (fw.na[i] ? ' · 解析 ' + fw.na[i].E.toFixed(5) : ''));
   }
 
   toast(msg){
@@ -3423,6 +3626,17 @@ ${d3 ? `
       const wantDark = (this.kernelId === 'nls' && this.state.preset === 'dark') ? '' : 'none';
       if (darkSec.style.display !== wantDark) darkSec.style.display = wantDark;
     }
+    /* R67 一维势谱面板：两个预设各显示自己的 sec */
+    const dbarSec = this.q('#dbarSec');
+    if (dbarSec){
+      const want = (this.kernelId === 'schrodinger' && this.state.preset === 'dbarrier') ? '' : 'none';
+      if (dbarSec.style.display !== want) dbarSec.style.display = want;
+    }
+    const fwellSec = this.q('#fwellSec');
+    if (fwellSec){
+      const want = (this.kernelId === 'schrodinger' && this.state.preset === 'fwell') ? '' : 'none';
+      if (fwellSec.style.display !== want) fwellSec.style.display = want;
+    }
     /* R65 双势阱面板：仅 GP 内核 + dw 预设 */
     const dwSec = this.q('#dwSec');
     if (dwSec){
@@ -3712,6 +3926,39 @@ ${d3 ? `
           (lm ? ' · 理论 ' + lm.v.toExponential(2) + '（比值 ' + (v/lm.v).toFixed(2) + '）' : ''));
       });
     }
+    /* R67 一维势谱：参数滑块改后重画势并作废旧结果 + 两个按钮 */
+    if (this.q('#btnDbCurve')){
+      const bindP = (id, out, key, fmt) => {
+        const el = this.q(id), o = this.q(out);
+        if (!el || !o) return;
+        el.value = String(this.state[key]); o.textContent = fmt(this.state[key]);
+        el.addEventListener('input', () => {
+          this.state[key] = parseFloat(el.value);
+          o.textContent = fmt(this.state[key]);
+          this._repaint1d();
+        });
+      };
+      bindP('#rDbV0', '#oDbV0', 'dV0', v => v.toFixed(2));
+      bindP('#rDbBw', '#oDbBw', 'dBw', v => String(Math.round(v)));
+      bindP('#rDbGap', '#oDbGap', 'dGap', v => String(Math.round(v)));
+      bindP('#rFwV0', '#oFwV0', 'fV0', v => v.toFixed(2));
+      bindP('#rFwWa', '#oFwWa', 'fWa', v => String(Math.round(v)));
+      this.on(this.q('#btnDbCurve'), 'click', () => this.dbCurve1d());
+      this.on(this.q('#btnDbProbe'), 'click', () => this.dbProbe1d());
+      this.on(this.q('#btnFwCalc'), 'click', () => this.fwellCalc());
+      const band = this.q('#rFwBand'), ob = this.q('#oFwBand');
+      if (band && ob){
+        band.addEventListener('input', () => {
+          ob.textContent = String(+band.value + 1);
+          this.fwellShow(+band.value);
+        });
+        band.addEventListener('change', () => {
+          ob.textContent = String(+band.value + 1);
+          this.fwellShow(+band.value);
+        });
+      }
+    }
+
     /* R65 双势阱：z₀/φ₀ 滑块（重发初态）+ 求 ΔE + 扫 g */
     if (this.q('#btnDwScan')){
       const bindDw = (id, out, key, fmt) => {
@@ -4383,6 +4630,16 @@ ${d3 ? `
       billiardSpectrum: () => { this.billiardSpectrum(); return this.billInfo(); },
       billiardShowBand: (i) => { this.billiardShowBand(Number(i) || 0); return true; },
       billInfo: () => this.billInfo(),
+      /* R67 一维势谱调试句柄（CDP 断言用） */
+      dbCurve: () => { this.dbCurve1d(); return this._dbCurve || null; },
+      dbProbe: () => this._dbProbe || null,
+      dbProbeRun: () => this.dbProbe1d(),
+      fwellCalc: () => { this.fwellCalc();
+        const f = this._fwell;
+        return f ? { n: f.nb.length, evals: f.nb, analytic: f.na.map(r => r.E),
+                     worst: f.worst, wi: f.wi, ms: f.sp.ms,
+                     stat: (this.q('#fwStat') || {}).textContent } : null; },
+      fwellShow: (i) => this.fwellShow(i),
       /* R66 暗孤子调试句柄 */
       darkProfile: (near) => this.darkProfile(near),
       darkModel: () => (this.kernel.darkModel ? this.kernel.darkModel(this.state) : null),
