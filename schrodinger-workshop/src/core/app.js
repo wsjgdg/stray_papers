@@ -288,6 +288,7 @@ export class QuantumField {
   <a class="navlink" href="./hubbard.html" title="格点费米-哈伯德：莫特绝缘体 / 纠缠熵（R73）">哈伯德 ⛓</a>
   <a class="navlink" href="./paths.html" title="费曼路径求和：路径族 / 相位 / 双缝条纹（R74）">路径 ∿</a>
   <a class="navlink" href="./qcircuit.html" title="小规模量子线路：Bell / GHZ / QFT / Grover（R75）">线路 ⧉</a>
+  <a class="navlink" href="./noise.html" title="开放量子系统：T₁ 弛豫 / T₂ 退相位 / 纠缠猝死（R77）">噪声 ◍</a>
 </header>
 
 <aside id="panel" class="panel">

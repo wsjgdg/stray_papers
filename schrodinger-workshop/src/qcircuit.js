@@ -128,6 +128,7 @@ export class QCircuitApp {
         <a href="./two-body.html">双粒子 ⟋</a>
         <a href="./hubbard.html">哈伯德 ⛓</a>
         <a href="./paths.html">路径 ∿</a>
+        <a href="./noise.html">噪声 ◍</a>
       </header>
 
       <aside id="qcPanel" class="panel">
