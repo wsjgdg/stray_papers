@@ -290,7 +290,7 @@ export class QuantumField {
   <a class="navlink" href="./qcircuit.html" title="小规模量子线路：Bell / GHZ / QFT / Grover（R75）">线路 ⧉</a>
   <a class="navlink" href="./noise.html" title="开放量子系统：T₁ 弛豫 / T₂ 退相位 / 纠缠猝死（R77）">噪声 ◍</a>
   <a class="navlink" href="./qec.html" title="量子纠错：3 比特重复码 / 稳定子 / 阈值（R78）">纠错 ◈</a>
-  <a class="navlink" href="./shor.html" title="Shor 9 比特码：3×3 级联，纠正任意单比特错误（R79）">级联 ⊗3</a>
+  <a class="navlink" href="./gatenoise.html" title="线路级门噪声：门保真度 → 线路保真度 / 三错误谱 / 纠缠猝死（R80）">门噪声 ⌁</a>
 </header>
 
 <aside id="panel" class="panel">

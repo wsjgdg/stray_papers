@@ -146,7 +146,7 @@ export class PathsApp {
         <a href="./qcircuit.html">线路 ⧉</a>
         <a href="./noise.html">噪声 ◍</a>
         <a href="./qec.html">纠错 ◈</a>
-        <a href="./shor.html">级联 ⊗3</a>
+        <a href="./gatenoise.html">门噪声 ⌁</a>
       </header>
 
       <aside id="pvPanel" class="panel">

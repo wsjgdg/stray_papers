@@ -100,7 +100,7 @@ export class HubbardApp {
   <a href="./qcircuit.html">线路页</a>
   <a href="./noise.html">噪声页</a>
   <a href="./qec.html">纠错页</a>
-  <a href="./shor.html">级联页</a>
+  <a href="./gatenoise.html">门噪声 ⌁</a>
 </div>
 <div id="hbPanel" class="panel">
   <div class="sec"><h3>预设</h3><div class="grid2" id="hbPresets">
