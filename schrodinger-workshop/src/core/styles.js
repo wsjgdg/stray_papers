@@ -30,6 +30,11 @@ export const CSS = `
   #topbar .eq b{color:var(--cyan);font-weight:600}
   #topbar .eq i{color:var(--mag);font-style:italic}
   #status{font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:.08em}
+  /* R72：双粒子构型空间页入口（与 status 同排，flex:none 防被 eq 压缩） */
+  #topbar .navlink{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
+    border:1px solid var(--line);border-radius:6px;padding:3px 8px;flex:none;transition:all .15s;letter-spacing:.05em}
+  #topbar .navlink:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
+  @media (max-width:900px){#topbar .navlink{display:none}}
   /* ---------- 左侧控制面板 ---------- */
   /* R43 修复①：原 max-height:calc(100vh−120px) ⟹ 面板底 = 100vh−44，而左下
      #desc（bottom:52px）顶部随预设描述长度变化（实测 82px 文本 ⟹ 顶 100vh−132；

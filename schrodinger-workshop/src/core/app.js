@@ -284,6 +284,7 @@ export class QuantumField {
   <div class="logo">${k.name}工场</div>
   <div class="eq">${k.equation}</div>
   <div id="status">● LIVE</div>
+  <a class="navlink" href="./two-body.html" title="双粒子构型空间：全同粒子 / 交换对称（R72）">双粒子 ⟋</a>
 </header>
 
 <aside id="panel" class="panel">

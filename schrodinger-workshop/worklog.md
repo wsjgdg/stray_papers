@@ -51,6 +51,7 @@
 | R61 | 概率流 J + 连续性方程 + Bohm 轨迹 | 新 J-field pass（2D+3D）+ MRT 归约 + 2D 箭头 overlay + Bohm 64 粒子制导轨迹与残影；J=Im(ψ*∇ψ)（4 阶 stencil，平面波分轴闭式 (1/3m)sin k(4−cos k) 精确）、2 阶 divJ 望远镜恒等式 ΣdivJ≡fr−fl+ft−fb（Gauss 残差 5.15e-10/7.88e-10 纯舍入）、v=J/max(ρ,floor) 制导步进（节点不动）；**验证阶段 CDP 实测捕获并修复三个真 bug**：TPL_JRED DENSITY 包装变量名不符（编译失败）、TPL_BOHM_STEP uPos 采样缺 vec2（编译失败）、**bohmStamp 末尾误置 ping-pong 交换 ⟹ stamp 落 scratch B、display 恒采空 A（残影永不可见）**——纹理级取证（A.mx≡0 / B.n≈790）后删 swap，pot61 源码契约 + cdp61 纹理断言双闸门；**pot61 136/136 + cdp61 23/23**（ΣJ_x=⟨p_x⟩=k=0.089993、残影 maxPix=506 橙色签名、零回归 maxPix=10=噪点地板）；回归矩阵 12 套件全绿 + dist 421.9 KB |
 | R62 | 光学晶格 + Bloch 能带 | V=V₀sin²(πx/a) 周期势 + Bloch 平面波初态 + twistX（e^{±iθ} 周期边界）+ CPU 虚时间弛豫（PR-ADI + twisted 循环三对角 + 晶体动量块投影）⟹ BlochScanner 逐 k 测两带 ⟨E⟩，叠 1D Mathieu 解析谱（含横向基模 ey₀）；**五轮修复**（带 2 塌到相邻 k 的带 1 的根因是 θ_BC=h·θ_B 与 k=θ_BC/a 混用）；实测带 1/带 2 中位偏差 ~1%（势纹理 8 位量化 + 有限差分），**强制 grid=256**（有效质量 m·(grid/256)² 才是同一物理系统） |
 | R63 | Landau 能级（均匀磁场轨道耦合） | Peierls 相位的**复数 H 配 KDK Re/Im 拆分不酉**（ρ−1 随网格线性增长）⟹ 弃 Peierls-stencil 走 **规范帧 ADI**（x 扫描 φ=e^{iBxy}ψ 吸收相位成实 stencil、y 扫描原帧裸实、交替 ⟹ 二阶，6 pass/子步）；半经典晶格回旋**非谐闭式** T(θ₀)=(4m/B)∫dα/√((1−s²sin²α)(1−s²cos²α))（小振幅 T₀=2πm/B 精确、大振幅类单摆拉长）；LandauScanner 扫 5 个 B 点测质心回旋周期，实测 vs 闭式**中位 0.6%**（vs T₀ 21.8%）；**四个新发现真 bug**：① `rot4` 的 sin/cos 非正交 ⟹ 每帧 3e-4 范数损失（155 帧掉 37%，float64 镜像掩盖）；② ADI 稳定域由完整 2D 谱支配（dts 0.3 稳/0.4 崩，原 1D 界估计过于乐观）；③ `landauModel` 把分数坐标当 texel；④ dirac.js 的 AB helper 仍是 R26 单管标量 ⟹ **Dirac 内核此前整个无法启动**（shader 编译失败） |
+| R72 | 全同粒子 / 交换对称（双粒子构型空间新页） | `two-body.html` + `src/physics/twobody.js`：对称/反对称化 ⟹ **费米对角线 ≡0**（泡利不相容）、⟨P⟩=±1 且 [H,P]=0⟺V₁=V₂；**HBT 2×/0×**（正交极限 1.99999997）、格点接触 δ 只压玻色 8210×、费米 1.5e-16 不变；KDK vs 余弦模精确解 1.30e-4 + 二阶 4.00×；虚时间松弛到离散本征态（残差 8.9e-9）+ stationary 1.1e-7；ε 可区分 ⟹ ⟨P⟩ −0.907、n₁≠n₂；pot72 CPU **40/40** + cdp72 浏览器 **23/23**（src+dist）；修四个真 bug（H 少负号 / (u,v) 误当速度 / kick uniform 时序 / 虚时间 sector 泄漏） |
 | R71 | Berry 相位（Pauli 绝热循环） | 磁场沿锥面缓慢转一圈 ⟹ γ=−Ω/2=**−π(1−cosθ)**；**三段式定 γ**（正/反消除法定值 + θ=0 参考定分支——消除法只给 γ mod π，θ=π/2 退化；参考相减含 δ∝(ω/Δ)²·sin²θ）；相位**增量解包裹**（Φ_dyn 达 60 rad）；pot71 CPU **20/20**（含旋转参考系精确解互证）+ cdp71 浏览器 **15/15** |
 | R70 | 解析对照补齐：WKB 透射率曲线 + 散射相移/截面 | 新建 wkb.js/scatter.js 两解析模块 + dbarrier/3D sphere 两面板叠加；pot70 CPU **34/34** + cdp70 浏览器 **24/24**（src+dist 双通道）；修 modSphRatio 连分数 bug（z≳16 退化为震荡垃圾，破坏 l≥1 硬球极限）+ #scatSec boot 首算缺失 |
 | R57 | 3D AB 磁通管（后续方向表清空后新开的能力项，用户从四候选中选定） | 后续方向表经核实**已清空**（面板溢出续降判定「可接受、仍不做」、GP 半径对账 R52 闭环）⟹ 诊断出真实未决项后由用户定题。落地：AB 由 2D 专属升级为 **2D+3D 通用**——3D 磁通管沿 **z 轴贯穿体积**，θ(q)=atan2(q.y−y_k, q.x−x_k) 与 z 无关 ⟹ **±z 两 link 相位恒 0**、仅 ±x/±y 四 link 携带相位（与 A_z=0 的对称规范自洽，是 3D 与 2D 唯一结构性差异）；抽 `TPL_LAP3D_BLOCK` 让 KDK/CN-rhs/CN-sweep 三模板共享 7 点 stencil（R33 单源真值原则，此前三份内联复制）；uniform 引擎级与 2D 同名同义（setABUniforms 一次上传）；3D 体积面板新增「磁通(AB)」工具模式（点击取 R44 同口径「视线 slab 穿透段中点」xy 投影，管沿 z 贯穿 ⟹ 命中只看 xy <0.05）；R37 3D 现场存档新增 `abSols` 顶层段。**cdp57 12/12**：零回归（无管 vs Φ=0 单管，64³ 全卷 524288 float **max-abs=0** 逐位相同）、矢势可加性（共位双管 π/2+π/2 ≡ 单管 π **max-abs=0**）、Φ=π 使场改 3.56e-3、加第二根不共位管再改 7.16e-4、CN 同源 dP=1.2e-6、序列化 round-trip 逐位恢复、真实点击落管、glError=0、零异常。link_math3d 10/10 + shader 构建 13/13 + dist 冒烟 OK（370.8 KB）。**契约变更**：cdp54 F2 由「3D 下 AB sec 隐藏」反转为「显示」（回归矩阵 cdp54 34/34 + cdp55 12/12 + cdp56 15/15 全绿） |边缘拉手 `.qf-tab`（常驻、z-index 11 压面板 10 只压边框+padding、滑出态 pointer-events:none）+ 快捷键 `[`/`]`（表单聚焦守卫）+ body class `qf-hide-left/right` 驱动 transform 滑出（#gl 本就 fixed 全屏 ⟹ 无需 resize/重绘）+ localStorage `qf.panels.state={left,right}` 持久化（缺省/坏值宽松默认全展开）+ hint 补 `[` `]` 提示。**cdp56 15/15**：拉手贴边几何（lx=0/rr=1440、20px、z-index 11）/左右列滑出（panel.r=−10、hud.l=1450、字形翻转）/键盘交替序列/表单守卫/持久化+重载恢复/**双隐藏态 flux 真实点击落管 @(0.5,0.5)**（拉手与面板不挡画布）/3D 内核 smoke + 零异常。**关键环境发现**：`python3 -m http.server` 不发 Cache-Control/ETag ⟹ Chrome 按 Last-Modified 龄 10% 启发式缓存——styles.js（mtime 3 天前）新鲜期 ~7h，src 改了浏览器不重验，表现为「JS 是新的、CSS 是旧的」⟹ 全部 CDP 套件补 `Network.setCacheDisabled`（cdp54/55/56 回填）；另记 cdp56 T1 二轮 FAIL 根因 `.qf-tab` 漏设 left/right（静态位置巧合）与 dist smoke 假失败根因（localStorage 跨套件残留改变挂载初态，探针须先 clear） |
@@ -145,6 +146,79 @@ README「后续方向」表经核实已清空（面板溢出 R48/R53 闭环、GP
 | R66 | 暗孤子（defocusing NLS 预设缺口） | 暗孤子 tanh 剖面、传播速度、与亮孤子对照 | NLS 新预设 + g<0 侧初态 | 速度理论值对照、长时稳定性 |
 
 **通用纪律**：每轮零回归优先（B=0 / 默认态逐位）；GPU↔CPU 对账走同帧口径；harness 失败先诊断「测试侧 vs 实现侧」再动手；文档（README 专节 + 验证表 + 总览 + worklog 详章）随轮完成，不攒批。
+---
+
+## R72（2026-10-21）全同粒子 / 交换对称——双粒子构型空间新页 `two-body.html`
+
+### 立项锚点（worklog 预定）
+
+双粒子构型空间 ψ(x₁,x₂)：对称/反对称化初态 + 相互作用；反对称态对角线上密度 ≡0 = 泡利不相容的可视化；交换算符期望 ∓1。新页（构型空间语义与主页差异过大），共用 `src/core/*`，主页加切换入口。
+
+### 一、实现
+
+| 层 | 文件 | 内容 |
+|---|---|---|
+| 物理内核 | `src/physics/twobody.js`（新） | CPU 参考（`tbMakeWave` 对称化 / `tbApplyH` 5 点×2 轴 / `tbKdkStep` / `tbMeasure`⟨P⟩、对角、n₁/n₂ / `tbRelax` 虚时间+sector 投影 / `tbFreeEvolve1D` 余弦模精确解 / `tbHarmonicEigen` / `tbMakeVArray` 势表 / `tbFieldHash`）+ GLSL（kick/drift/draw）+ 三预设（自由对穿 / 阱中对穿 / 阱中本征态）+ 诚实限制头注 |
+| 页面 | `src/two-body.js`（新）+ `src/two-body-main.js`（入口） | `TwoBodyApp`：DOM/GL/2 纹理 ping-pong/readback 测量/HUD/边缘分布条/密度-相位双显示/松弛（分帧）/URL 参数/`window.__tb` 调试句柄（step/compareMirror/relaxNow/fieldHash） |
+| 页面壳 | `two-body.html`（新） | 与 index.html 同构；顶栏含「← 单粒子主页」 |
+| 构建 | `scripts/build-standalone.mjs` | 参数化为**双页面**（index→quantum-field.html、two-body→two-body.html），各自 `node --check` 自校验 |
+| 主页入口 | `src/core/app.js` + `src/core/styles.js` | 顶栏 `.navlink`「双粒子 ⟋」→ `./two-body.html`（≤900px 隐藏） |
+| 版面 | `src/two-body.js` TB_CSS | 复用 styles.js 的 :root/reset；`#tbStage` 居中方形场 + 右/下边缘条 + 轴标签 |
+
+**数值设计（与引擎同族，单源真值）**：H = −uK(∂₁²+∂₂²) + V，uK=1/2、ℏ=1、世界坐标=texel；势场由 **CPU 烘焙成 R32F 纹理 uPot**（`tbPot1/tbPot2 + g·δ`，页面 `bakePot()` 签名变化才重算），kick/drift 只采样——避免两段 GLSL 各写一份 trap/bump/接触项。状态纹理两张（RG32F 的 .xy=(Reψ,Imψ)）：kick 改 .y、drift 改 .x，三 pass 后 parity 翻转（与引擎 psiA/psiB 同构）。
+
+### 二、本轮修掉的四个真 bug（全部有量化取证）
+
+| # | 症状 | 根因 | 修法 |
+|---|---|---|---|
+| 1 | E₀=0.000175（理论 0.04）、松弛收敛到 **E=−3.98** 的不可能值 | `tbApplyH` 写成 `+uK·lap`（H=+uK∇²）⟹ 动能变负、谱下界 −4 | `−uK·lap`（与引擎 kineticE 默认 `-uK*lap` 同号） |
+| 2 | 600 子步范数掉到 **0.484**、exch 同步掉（双曲化） | 把 (u,v) 当成「位置+速度」并给了一对独立的速度数组且**置零**——(u,v) 就是 (Reψ,Imψ)，初始 v 必须是 Imψ；drift 也漏了 H | 状态就是 (re,im)；kick `im−=h·H·re`、drift `re+=dt·H·im`、kick2 同（与 TPL_EVOLVE 的 uUpdateV 序列逐字同构） |
+| 3 | 阱预设 GPU↔CPU maxDiff **0.039**（相对 0.93），自由预设只 1.7e-4 掩盖 | `setKickUniforms()` 在 `gl.useProgram` **之前**调用 ⟹ uniform 写在上一帧残留的 progDraw 上（GL INVALID_OPERATION，静默无效）：uDtHalf=0、uPot 默认 0 采样成波函数本身 | 全部 uniform/纹理绑定移进 `pass()` 的 setup（useProgram 之后） |
+| 4 | 松弛 6000 步后残差从 1e-9 **回退到 5.9e-2**、E 跌向 0.0199 | 虚时间流对 H 的多项式与 P 对易，但 float64 舍入种子含对称分量，而玻色基态 E≈ω 衰减更快 ⟹ 相对增长 e^{−ωτ} 反超 | 每步显式 sector 投影 ψ←(ψ+sym·Pψ)/2（引擎 Bloch 弛豫同思路） |
+
+另三项工程修正：① `tbMakeWave` 交错索引 `2(jL+i)` 与 `tbApplyH` 连续索引混用（统一为连续 L²，交错只在 GPU 上传/回读边界）；② 势场改 CPU 烘焙纹理（见上）；③ g 抬高 λ_max 后 `dt·λ>2` 必炸（g=25,dt=0.08 实测 1e+266）⟹ 页面 `effStep()` 自适应 `dt=min(dt, 1.9/(4+V_max))`，**每帧物理时间不变**。
+
+### 三、CPU 数值验证（/tmp/pot72_verify/pot72.mjs，直接 import 真码，不入库）：**40 PASS / 0 FAIL**
+
+| 组 | 结果 |
+|---|---|
+| A 初态 | 玻色/费米 max\|ψ∓Pψ\|=**0**（逐 texel）；费米对角 \|ψ(i,i)\|²≡0；⟨P⟩=±1（2e-14）；Pauli guard 前提（同态反对称化≡0）；norm=1；n₁≡n₂（0）；L=96/128/160 网格无关 |
+| B HBT | 正交轨道极限 玻色/可区分=**1.99999997**、费米=0；分离包三者对角 ~0。首版 1.823 是用了 Δk·σ=2.16 的非正交轨道（S=0.31 ⟹ 2/(1+S²)），**物理一致**，改正交极限后验证 2× |
+| C 积分器 | KDK vs 余弦模**精确解**（Neumann 3 点闭式）t=40 相对 **1.30e-4**、dt 减半 **4.00×**；能量 2000 步 1.69e-8；范数影子漂移 ≤2.16e-6（dt 减半降 575×）；[H,P]=3.1e-16（ε=0）/4.1e-2（ε=0.3）；g 项保持对易 8.9e-16 |
+| D 接触 | 费米 g=25≡g=0（1.5e-16）；玻色对角 3.90e-2→3.06e-4→3.39e-5→4.75e-6（g=0/5/15/40，单调，8210×）；dt 稳定界与自适应步长验证 |
+| E 谐振子阱 | 解析 E(0,1)=0.0400252、E(0,0)=0.0200750（偏 0.063%/0.375%）；松弛 5050 步残差 **8.94e-9**、E=0.039924843（较连续 −0.188%）；stationary 4000 步 1.1e-7；⟨x²⟩ 极小 77/242/398 ⟹ 间距 160.3 vs π/ω=157.1 |
+| F 可区分 | ε=0：⟨P⟩≡−norm（0）、n₁≡n₂；ε=0.3：⟨P⟩=**−0.907405**、n₁−n₂=4.4e-3；Neumann 反射 3000 步无吸收 |
+
+**观测口径修正（测试侧）**：首版用「对角质量峰间距」测阱中周期——费米对角恒零（diagMass 全程 ~1e-31），检出的峰全是噪声；改用一阶密度二阶矩 ⟨x²⟩（cos²(ωt) ⟹ 极小间距 π/ω）。另 [H,P] 首版写成 \|Hψ(i,j)−Hψ(j,i)\|（那是 P(Hψ) 与自身），正确为 H(Pψ)−P(Hψ)。
+
+### 四、浏览器实测（cdp72，Chromium + SwiftShader，src + dist 双通道）：**23 PASS / 0 FAIL**
+
+| 组 | 结果 |
+|---|---|
+| P0–P2 | boot（__tb/WebGL2/128 格/无 ERR）；初态 vs Node CPU（norm 1−5e-9、exch −1、对角 0、峰值 3.766981e-3 逐位） |
+| P3–P5 | step(60) 后 GPU↔页内 CPU 镜像 **maxDiff 5.98e-8**（初版 1.7e-4 ⟹ uniform 时序修复后降 3 个量级）；观测量 1e-5；费米对角 6.6e-17 |
+| P6/P12 | 跨对角相位差 ≡π（max\|Δarg−π\|=**7.5e-5**，幅度>1e-4 的 128 点）；相位模式 URL+按钮文案 |
+| P7/P8 | UI 统计按钮真实 click：exch −1→+1→−1，对角归零 |
+| P9/P10 | 玻色接触 g=25 对角 **3.90e-2→1.22e-5（3202×）**；费米 g=25 对角 7.9e-17、norm 1.000000034 |
+| P11 | ε=0.3、250 帧：exch −0.0659、n₁−n₂ 1.44e-2 |
+| P13 | 边缘条像素 n1=797 / n2=797（青） |
+| P14/P15 | 松弛 E=0.039924843 ≡ Node（8.94e-9）；之后 100 帧 |ψ|² 峰值漂移 −1.7e-6 |
+| P16–P18 | 主页顶栏 navlink href=./two-body.html；双向真实 click 导航成功 |
+| P19–P21 | dist/two-body.html boot + 30 帧 maxDiff 4.3e-8；dist 主场 __app/navlink/无 ERR |
+| P22 | 全程零 console 错误 |
+
+### 五、回归（本轮改动了 app.js 顶栏与 styles.js、构建脚本）
+
+cdp70 **24/24** + cdp71 **15/15** 重跑全绿；dist 双页重建（quantum-field 661.3 KB / two-body 64.2 KB）。
+
+### 六、诚实限制（面板 hint 已按实写）
+
+① 接触相互作用是**格点 δ**（只对 x₁=x₂ texel 生效），非连续 δ，不给散射长度公式；② 边界 CLAMP_TO_EDGE（Neumann 反射）非硬墙，长时边界反射污染（范数仍守恒、无吸收）；③ 谐振子阱 \|V\|>vcap 截断；④ 离散本征态 vs 解析差 O(h²)（0.19%）；⑤ 费米「弹开」是交换相互作用（无实作用力时的密度效应），Tonks–Girardeau 映射不在本轮；⑥ HBT 2× 要求正交轨道（非正交为 2/(1+\|⟨a\|b⟩\|²)）。
+
+### 验证矩阵
+
+pot72 CPU **40/40** · cdp72 浏览器 **23/23**（src + dist 双通道）· 回归 cdp70 24/24 + cdp71 15/15。
+
 ---
 
 ## R71（2026-10-21）Berry 相位（Pauli 绝热循环）——「几何相位」落地

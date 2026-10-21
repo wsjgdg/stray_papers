@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>双粒子工场 · 全同粒子与交换对称（薛定谔工场 R72）</title>
+</head>
+<body>
+<!-- 引擎（src/core）+ 物理内核（src/physics/twobody.js）为 ES 模块，需经 HTTP 访问
+     （file:// 受 CORS 限制）。单文件分发版由 scripts/build-standalone.mjs 生成到
+     dist/two-body.html（可 file:// 直开）。 -->
+<script>
+/*! 薛定谔工场 · 单文件分发版（two-body.html）— 由 scripts/build-standalone.mjs 自动生成，请勿手改。
+    源码工程（ES 模块，课程站组件化用）：two-body.html + src/
+    模块拼接序（拓扑序，依赖在前）：
+      src/core/styles.js
+      src/core/gl.js
+      src/physics/twobody.js
+      src/two-body.js
+      src/two-body-main.js
+*/
+
+/* ===== src/core/styles.js ===== */
+/* 组件样式：挂载时注入 <style id="qf-styles">（多实例只注入一次）。
+   R43 修复：本字符串此前**以字面 `<style>` 开头**（自初版 9c397d0 起），
+   注入用 textContent ⟹ CSS 解析器把 `<style>` 当 selector 前缀，紧接的
+   `:root{…}` 被解析为「`<style> :root`」这一永不匹配的后代选择器的声明块
+   ⟹ **:root 内所有 CSS 变量失效**（--txt/--dim/--mono/--panel 全空），
+   于是全部 `color:var(--dim)` 等退化为浏览器默认（黑字 + Times New Roman），
+   在深色半透明面板上几乎不可读——而 font-size/letter-spacing 等字面值声明
+   仍生效，故长期未被察觉（旧注释「视觉零回归」的自评有误）。
+   R43 CDP 实测（getComputedStyle 读 CSS 变量全为空 + h3 color=rgb(0,0,0)
+   / fontFamily=Times New Roman）定位并删除该标签后，变量与字体恢复。 */
+const CSS = `
+  :root{
+    --bg:#04060c; --panel:rgba(8,12,22,.74); --line:rgba(120,160,220,.14);
+    --txt:#e6edf3; --dim:#9aa7bd; --cyan:#67e8f9; --mag:#f0abfc; --amber:#fbbf24;
+    --mono:ui-monospace,"SF Mono","Cascadia Code",Consolas,"Courier New",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font-family:var(--sans)}
+  #gl{position:fixed;inset:0;width:100vw;height:100vh;display:block;cursor:crosshair;touch-action:none}
+  .panel{position:fixed;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    box-shadow:0 8px 32px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04)}
+  /* ---------- 顶栏 ---------- */
+  #topbar{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:18px;
+    padding:10px 20px;z-index:10;white-space:nowrap}
+  #topbar .logo{font-family:var(--mono);font-weight:700;font-size:15px;letter-spacing:.12em;
+    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
+  #topbar .eq{font-family:var(--mono);font-size:12.5px;color:var(--dim);letter-spacing:.02em}
+  #topbar .eq b{color:var(--cyan);font-weight:600}
+  #topbar .eq i{color:var(--mag);font-style:italic}
+  #status{font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:.08em}
+  /* R72：双粒子构型空间页入口（与 status 同排，flex:none 防被 eq 压缩） */
+  #topbar .navlink{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
+    border:1px solid var(--line);border-radius:6px;padding:3px 8px;flex:none;transition:all .15s;letter-spacing:.05em}
+  #topbar .navlink:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
+  @media (max-width:900px){#topbar .navlink{display:none}}
+  /* ---------- 左侧控制面板 ---------- */
+  /* R43 修复①：原 max-height:calc(100vh−120px) ⟹ 面板底 = 100vh−44，而左下
+     #desc（bottom:52px）顶部随预设描述长度变化（实测 82px 文本 ⟹ 顶 100vh−132；
+     GP/Pauli 长文本 177px ⟹ 顶 100vh−229）⟹ 两者在左列重叠（最大 238×80 px）。
+     修复：#desc 限高 120px + 内部滚动（高度可控），面板按最坏情况预留
+     (76 顶距 + 120 desc + 52 底距 + 8 间隙 = 256) ⟹ 面板底 100vh−180 ≤ desc 顶
+     100vh−172，四 viewport × 五内核实测无重叠。 */
+  #panel{top:76px;left:14px;width:238px;padding:14px;z-index:10;max-height:calc(100vh - 256px);overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  #panel::-webkit-scrollbar{width:4px}#panel::-webkit-scrollbar-thumb{background:rgba(120,160,220,.25);border-radius:2px}
+  .sec{margin-bottom:14px}
+  .sec:last-child{margin-bottom:0}
+  .sec>h3{font-size:10px;letter-spacing:.22em;color:var(--dim);font-weight:600;margin-bottom:8px;
+    display:flex;align-items:center;gap:8px}
+  .sec>h3::after{content:"";flex:1;height:1px;background:var(--line)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  /* R60 势刷轴比三连同控（grid3 单元格内的迷你标签行：名称 + 实时值） */
+  .mini{font-size:9.5px;color:var(--dim);display:flex;justify-content:space-between;gap:4px;margin:3px 0 1px;white-space:nowrap}
+  .mini b{color:var(--cyan);font-weight:600;font-family:var(--mono)}
+  button{font-family:var(--sans);font-size:12px;color:var(--txt);background:rgba(255,255,255,.045);
+    border:1px solid var(--line);border-radius:8px;padding:7px 8px;cursor:pointer;transition:all .15s;text-align:center}
+  button:hover{background:rgba(103,232,249,.12);border-color:rgba(103,232,249,.4)}
+  button.on{background:rgba(103,232,249,.16);border-color:var(--cyan);color:var(--cyan)}
+  button.wide{width:100%}
+  .row{display:flex;align-items:center;gap:8px;margin:7px 0}
+  .row label{font-size:11px;color:var(--dim);width:64px;flex:none}
+  .row output{font-family:var(--mono);font-size:11px;color:var(--cyan);width:44px;text-align:right;flex:none}
+  input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:3px;border-radius:2px;
+    background:rgba(120,160,220,.25);outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;border-radius:50%;
+    background:var(--cyan);box-shadow:0 0 8px rgba(103,232,249,.7);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:12px;height:12px;border:none;border-radius:50%;background:var(--cyan);cursor:pointer}
+  select{font-family:var(--mono);font-size:11px;color:var(--txt);background:rgba(255,255,255,.05);
+    border:1px solid var(--line);border-radius:6px;padding:4px 6px;width:100%;outline:none}
+  /* ---------- 右侧 HUD ---------- */
+  #hud{top:76px;right:14px;padding:12px 14px;z-index:10;min-width:196px;font-family:var(--mono)}
+  #hud .hrow{display:flex;justify-content:space-between;gap:14px;font-size:11.5px;padding:3px 0}
+  #hud .hrow span:first-child{color:var(--dim)}
+  #hud .hrow span:last-child{color:var(--txt)}
+  #hud .hrow .ok{color:#4ade80}#hud .hrow .warn{color:var(--amber)}
+  #hud hr{border:none;border-top:1px solid var(--line);margin:7px 0}
+  /* ---------- 相位图例 ---------- */
+  #legend{right:14px;bottom:52px;padding:10px 12px;z-index:10;display:flex;align-items:center;gap:12px}
+  #wheel{width:84px;height:84px;border-radius:50%;border:1px solid var(--line)}
+  #legend .cap{font-size:10.5px;color:var(--dim);line-height:1.7;max-width:130px}
+  #legend .cap b{color:var(--cyan);font-weight:600}
+  /* ---------- 底部提示 ---------- */
+  #hint{left:50%;bottom:14px;transform:translateX(-50%);padding:8px 18px;z-index:10;
+    font-size:11.5px;color:var(--dim);white-space:nowrap;letter-spacing:.02em}
+  #hint b{color:var(--txt);font-weight:600}
+  #hint .k{font-family:var(--mono);color:var(--cyan);background:rgba(103,232,249,.1);
+    border:1px solid rgba(103,232,249,.25);border-radius:4px;padding:0 5px;font-size:10.5px}
+  /* ---------- 预设描述 ---------- */
+  /* R43 修复②：描述文本长度随内核/预设变化（实测 82–177px 高），高度不可控会
+     顶进 #panel 区域 ⟹ 限高 120px + 内部滚动：既压住几何冲突，又保留全文
+     （长描述可滚动查看）。 */
+  #desc{left:14px;bottom:52px;z-index:10;padding:10px 14px;max-width:340px;font-size:11.5px;
+    color:var(--dim);line-height:1.65;max-height:120px;overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  #desc b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:12px}
+  /* ---------- toast ---------- */
+  #toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:20;pointer-events:none;
+    font-family:var(--mono);font-size:13px;color:var(--cyan);letter-spacing:.2em;opacity:0;transition:opacity .4s;
+    text-shadow:0 0 18px rgba(103,232,249,.8)}
+  /* ---------- 笔刷光标预览环 ---------- */
+  #brushcursor{position:fixed;border:1px solid rgba(140,190,255,.85);border-radius:50%;pointer-events:none;
+    display:none;z-index:15;box-shadow:0 0 10px rgba(80,140,255,.35),inset 0 0 10px rgba(80,140,255,.18)}
+  /* ---------- 准星瞄准线 ---------- */
+  #aim{position:fixed;inset:0;width:100vw;height:100vh;z-index:5;pointer-events:none;display:none}
+  #aim line{stroke:var(--amber);stroke-width:1.5;stroke-dasharray:5 4;filter:drop-shadow(0 0 4px rgba(251,191,36,.8))}
+  #aim circle{fill:none;stroke:var(--amber);stroke-width:1;opacity:.7}
+  #aim text{fill:var(--amber);font-family:var(--mono);font-size:11px}
+  /* ---------- 角标 ---------- */
+  .corner{position:fixed;width:22px;height:22px;z-index:4;pointer-events:none;opacity:.5}
+  .corner::before,.corner::after{content:"";position:absolute;background:var(--cyan)}
+  .corner::before{width:100%;height:1px}.corner::after{width:1px;height:100%}
+  #c1{top:8px;left:8px}.corner::before{top:0}#c1::after{left:0}
+  #c2{top:8px;right:8px}#c2::before{top:0}#c2::after{right:0}
+  #c3{bottom:8px;left:8px}#c3::before{bottom:0}#c3::after{left:0}
+  #c4{bottom:8px;right:8px}#c4::before{bottom:0}#c4::after{right:0}
+  #diag{position:fixed;left:-9999px}
+  /* ---------- 透射率扫描面板 ---------- */
+  .hint{font-size:10px;color:var(--dim);line-height:1.5;flex:1}
+  /* ---------- hint 可折叠（R45，用户选定方案 a）----------
+     运行时升级（app.js upgradeHints）：原 hint 文本搬进 .hintBody，
+     前置 .hintToggle 按钮。默认折叠（长 hint 是面板溢出的元凶，R43
+     实测 2D 697px / 3D 1673px / GP 980px）；展开态经 localStorage
+     持久化（key = hint 文本摘要，跨内核/面板切换稳定）。 */
+  .hintToggle{display:block;width:100%;text-align:left;background:none;border:none;
+    color:var(--dim);font:inherit;font-size:10px;cursor:pointer;padding:0;margin:0;
+    letter-spacing:.05em}
+  .hintToggle:hover{color:var(--cyan)}
+  .hintToggle:focus-visible{outline:1px solid var(--cyan);outline-offset:2px}
+  .hint .hintBody{display:none}
+  .hint.open .hintBody{display:block}
+  .hint.open .hintToggle{color:var(--cyan);margin-bottom:3px}
+  /* ---------- sec 级分区折叠（R48，README「后续方向」a2）----------
+     与 hint 折叠（R45）同模式：h3 变切换头（class 驱动显隐），展开态经
+     localStorage 持久化（qf.secs.state，key = sec id / h3 摘要）。
+     默认折叠：四个扫描面板 sec——R45 实测（1440×900，overflow 口径
+     scrollH−clientH）溢出大头正是区块结构：2D 687 / 3D 1403 / GP 813，
+     canvas 硬高占其中 820px。与门控正交：syncControls 按内核切 sec 的
+     style.display（整区显隐），本折叠切 sec 内部子元素，互不竞争。
+     扫描开始（GenericScanner.start → app.expandSecFor）自动展开所在
+     sec——用户点了「开始扫描」就应看到 canvas 与状态行。
+     特异度注意：规则须带 #panel 前缀——四个扫描 canvas 的 display:block
+     规则（ID 选择器 1,0,0）会压过裸 .sec.collapsed > *:not(h3)（0,1,1）
+     ⟹ 折叠态 canvas 仍显示（cdp48 首轮实证）。 */
+  #panel .sec.collapsed > *:not(h3){display:none}
+  .sec > h3{cursor:pointer;user-select:none;-webkit-user-select:none}
+  .sec > h3:focus-visible{outline:1px solid var(--cyan);outline-offset:2px}
+  .sec > h3::before{content:"▾ ";color:var(--dim);font-weight:400}
+  .sec.collapsed > h3::before{content:"▸ "}
+  /* R48：range flex item 默认 min-width:auto（Chrome ~129px 固有最小宽）
+     ⟹ label64+gap+range129+gap+output44 超出面板内容宽 236px ~31px，
+     面板被迫横向滚动（R43 起既有缺陷，R45 溢出台账只记了纵向）。 */
+  input[type=range]{min-width:0}
+  /* R48 a3：扫描 canvas 统一 width:100%（修复 paramScanCanvas/scanCanvas3/
+     slitScanCanvas 三个缺规则 ⟹ 420px attribute 宽在 210px 面板内容区横向
+     溢出、面板被迫横向滚动——R45 溢出台账只记了纵向，此项本轮补录）；
+     attribute 高 260/300 → 180（_plot 全部按 cv.width/height 自适应绘制，
+     内部分辨率 420×180 不变、显示高 210×180/420=90px，展开态每块省 40–60px）。 */
+  #scanCanvas,#paramScanCanvas,#scanCanvas3,#slitScanCanvas{width:100%;margin-top:6px;
+    border:1px solid var(--line);border-radius:8px;background:rgba(4,8,16,.4);display:block}
+  #scanStat{font-size:10px;color:var(--cyan);font-family:var(--mono);flex:1;line-height:1.45}
+  button:disabled{opacity:.4;cursor:default}
+  button:disabled:hover{background:rgba(255,255,255,.045);border-color:var(--line)}
+  /* ---------- 面板双向收起（R56，「试验场全屏」）----------
+     左列 #panel(上) + #desc(下)、右列 #hud(上) + #legend(下) 各为一组，
+     整组 transform 滑出屏幕——#gl 本就 position:fixed 全屏，滑出即露全场，
+     无需 resize/重绘（画布尺寸不变，只是不再被面板遮挡）。
+     边缘拉手 .qf-tab 常驻（z-index 11 压面板 10，只压边框+padding 6px，
+     不挡内容）；点击拉手或快捷键 [ / ] 切换；状态经 localStorage
+     qf.panels.state = {left,right}（true=展开，缺省/坏值默认全展开）。
+     滑出态 pointer-events:none ⟹ 画布交互全程不被残留命中区遮挡。 */
+  #panel,#desc,#hud,#legend{transition:transform .28s cubic-bezier(.4,0,.2,1),opacity .24s}
+  body.qf-hide-left #panel,body.qf-hide-left #desc{transform:translateX(calc(-100% - 24px));opacity:0;pointer-events:none}
+  body.qf-hide-right #hud,body.qf-hide-right #legend{transform:translateX(calc(100% + 24px));opacity:0;pointer-events:none}
+  .qf-tab{position:fixed;top:50%;transform:translateY(-50%);z-index:11;width:20px;height:60px;
+    padding:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);
+    font-size:14px;line-height:1;color:var(--dim);background:var(--panel);border:1px solid var(--line);
+    border-radius:0 10px 10px 0;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    cursor:pointer;user-select:none;-webkit-user-select:none;
+    box-shadow:0 4px 16px rgba(0,0,0,.4);transition:color .15s,border-color .15s}
+  #tabL{left:0}
+  #tabR{right:0;border-radius:10px 0 0 10px}
+  .qf-tab:hover{color:var(--cyan);border-color:rgba(103,232,249,.45)}
+  @media (max-width:1100px){#legend,#desc{display:none}}
+`;
+
+function injectStyles(){
+  if (document.getElementById("qf-styles")) return;
+  const st = document.createElement("style");
+  st.id = "qf-styles";
+  st.textContent = CSS;
+  document.head.appendChild(st);
+}
+
+/* ===== src/core/gl.js ===== */
+/* WebGL2 引导、着色器编译、全屏三角形与渲染目标。
+   所有函数显式接收 gl 参数——不持有模块级 GL 状态，多实例安全。 */
+const VS = `#version 300 es
+layout(location=0) in vec2 aPos;
+out vec2 vUv;
+void main(){ vUv = aPos*0.5+0.5; gl_Position = vec4(aPos,0.0,1.0); }`;
+
+/* 纯拷贝 shader：resize 时把旧 dispA（历史余晖）blit 进新 dispA */
+const FS_BLIT = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uTex;
+void main(){ o = texture(uTex, vUv); }`;
+
+/* 创建 WebGL2 上下文；失败时返回 { gl:null, error } 由调用方展示诊断 */
+function createContext(canvas){
+  const gl = canvas.getContext('webgl2', { antialias:false, alpha:false, depth:false, stencil:false, powerPreference:'high-performance' });
+  if (!gl) return { gl:null, error:'no webgl2' };
+  if (!gl.getExtension('EXT_color_buffer_float')) return { gl:null, error:'no EXT_color_buffer_float' };
+  return { gl, error:null };
+}
+
+function compileShader(gl, type, src){
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error('shader: ' + gl.getShaderInfoLog(s));
+  return s;
+}
+
+/* 编译 program：全屏三角形 VS + 调用方提供的 FS。
+   vs 参数可选（R61 Bohm 轨迹 stamp：POINTS 程序需自定义 VS，无属性输入、
+   gl_VertexID 索引位置纹理）——缺省逐字等价旧路径。 */
+function createProgram(gl, fs, vs){
+  const p = gl.createProgram();
+  gl.attachShader(p, compileShader(gl, gl.VERTEX_SHADER, vs || VS));
+  gl.attachShader(p, compileShader(gl, gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error('link: ' + gl.getProgramInfoLog(p));
+  return p;
+}
+
+/* 全屏大三角形（覆盖 NDC，比 quad 少一次插值对角线） */
+class Quad {
+  constructor(gl){
+    this.vao = gl.createVertexArray();
+    gl.bindVertexArray(this.vao);
+    const vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    gl.bindVertexArray(null);
+  }
+  bind(gl){ gl.bindVertexArray(this.vao); }
+  draw(gl){ gl.bindVertexArray(this.vao); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+}
+
+/* RG32F / RGBA32F 浮点场目标（量子波函数，NEAREST） */
+function makeTarget(gl, w, h, internalFormat, format, filter){
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, w, h, 0, format, gl.FLOAT, null);
+  const fbo = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+  return { tex, fbo, w, h };
+}
+
+/* 3D 纹理目标（体积求解器 ping-pong；layer 级 FBO 附着由调用方按需重绑）。
+   注意：fbo 初始不附着任何层（WebGL2 无默认完整 3D FBO）——绘制前须
+   framebufferTextureLayer(FRAMEBUFFER, COLOR_ATTACHMENT0, tex, 0, layer)。 */
+function makeTarget3D(gl, n, internalFormat, format, filter){
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_3D, tex);
+  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, filter);
+  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, filter);
+  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE);
+  gl.texImage3D(gl.TEXTURE_3D, 0, internalFormat, n, n, n, 0, format, gl.FLOAT, null);
+  const fbo = gl.createFramebuffer();
+  return { tex, fbo, n };
+}
+
+/* RGBA16F 显示目标（拖尾历史，LINEAR 兼做 resize 重采样） */
+function makeRGBA16F(gl, w, h){
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, w, h, 0, gl.RGBA, gl.HALF_FLOAT, null);
+  const fbo = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+  return { tex, fbo, w, h };
+}
+
+/* 32^2 归约目标（MRT 三附件，各 RGBA32F）：
+   tex  (location 0)：(Σp, uK·ΣT, Σp², ΣVp)
+   tex2 (location 1)：(Σx·p, Σy·p, Σx²·p, Σy²·p)（世界坐标概率矩，
+      供不确定原理 HUD 的 Δx/Δy 与质心使用）。
+   tex3 (location 2)：(uK·ΣT_x, uK·ΣT_y, Σ⟨p_x⟩, Σ⟨p_y⟩)（分轴动能 + 梯度版
+      均值动量——per-axis 紧致界 Δx·Δk_x ≥ ½；若只给总 Δk，2D 高斯波包单向
+      宽度配双向展宽仅得保守界 √2·½=0.707，呈现不出「高斯是不确定原理饱和态」
+      这一关键物理；均值 ⟨p⟩ 与 ⟨p²⟩ 同用 4 阶算子，Δk 全 Fourier 一致）。
+   调用方须 gl.drawBuffers([COLOR_ATTACHMENT0,1,2]) 后绘制；
+   读取时对每个附件分别 gl.readBuffer + readPixels。 */
+function makeReduce(gl){
+  const mk = () => {
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, 32, 32, 0, gl.RGBA, gl.FLOAT, null);
+    return tex;
+  };
+  const tex = mk(), tex2 = mk(), tex3 = mk();
+  const fbo = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, tex2, 0);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT2, gl.TEXTURE_2D, tex3, 0);
+  if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE){
+    throw new Error('makeReduce: MRT framebuffer incomplete');
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  return { fbo, tex, tex2, tex3 };
+}
+
+/* ===== src/physics/twobody.js ===== */
+/* ============================================================================
+ * twobody.js — R72 全同粒子 / 交换对称（双粒子构型空间内核）
+ *
+ * 物理模型（一维双粒子构型空间 ψ(x₁,x₂)，L×L 格点）：
+ *   iℏ∂ψ/∂t = Hψ，  H = −uK(∂²/∂x₁² + ∂²/∂x₂²) + V₁(x₁) + V₂(x₂) + U(x₁−x₂)
+ *   uK = 1/(2m)（引擎同款 uniform；本页 m=1 ⟹ uK=0.5），ℏ=1，世界坐标 = texel。
+ *
+ * 为什么开新页而不是并进主页（README R72 行的原定结论）：
+ *   构型空间语义与主页的单粒子 x 空间差异过大（坐标轴是两个粒子的位置、
+ *   对角线 x₁=x₂ 是「重合线」、交换算符 P 是一等观测对象），面板/HUD/预设
+ *   体系都无法复用；但**离散算子与引擎同族**（5 点交叉 stencil、KDK、
+ *   CLAMP_TO_EDGE），故共用 src/core/gl.js 与 styles.js，物理与 GPU 实现
+ *   收在本文件（CPU 镜像与 GLSL 同源手写平行实现，pot72/cdp72 互为独立通道）。
+ *
+ * 【交换对称】Pψ(x₁,x₂) = ψ(x₂,x₁)。初态按统计对称化：
+ *   ψ₀(x₁,x₂) = [φ_a(x₁)φ_b(x₂) ± φ_b(x₁)φ_a(x₂)]/√2   （+ 玻色 / − 费米）
+ *   ⟹ ⟨P⟩ = ⟨ψ|P|ψ⟩ = ±1；反对称态在对角线 x₁=x₂ 上**恒零**
+ *   （泡利不相容的直接可视化）；同单粒子态（a=b）的反对称化恒等于 0
+ *   （Pauli guard：makeWave 返回 norm≈0，页面拒绝加载并 toast）。
+ *
+ * 【交换对称何时守恒】[H,P]=0 ⟺ V₁=V₂（粒子全同）。本文件势场：
+ *   V₁(x) = trap ? min(½ω²(x−xc)², vcap) : 0
+ *   V₂(x) = (1+ε)·V₁(x) + ε·bump(x)          bump = bumpH·exp(−((x−xc)/bumpW)²)
+ *   U(x₁−x₂) = g·δ_{x₁=x₂}（格点接触相互作用，仅对对角 texel 生效）
+ *   ε=0 ⟹ 全同 ⟹ ⟨P⟩ 严格守恒（H 与 P 对易，KDK 逐通道保持对称性）；
+ *   ε>0 ⟹ 粒子 2 的势场不同 ⟹ 可区分 ⟹ ⟨P⟩ 漂离 ±1（物理本身，非 bug），
+ *   且一阶边缘密度 n₁(x)=∫|ψ(x,x₂)|²dx₂ 与 n₂ 不再重合（全同时恒等）。
+ *
+ * 【积分器】KDK（kick-drift-kick，与主页引擎同族的一阶系统 w=(u,v) 分裂，
+ *   u=Reψ、v=Imψ；u'=Hv、v'=−Hu）。H 为实对称离散算符（5 点 stencil 含
+ *   CLAMP_TO_EDGE Neumann 闭合 + 对角势），故 KDK 保**影子哈密顿量**：
+ *   范数漂移有界 O(dt²)（非长期累积），pot72 C4 定量入档。对角接触项
+ *   g 只进 kick（势项），无条件稳定。
+ *
+ * 【验证锚点（pot72/cdp72 共用本文件导出的 CPU 函数）】
+ *   - 无相互作用时 H=H₁+H₂ 可分 ⟹ 精确解 = 两个 1D 精确演化的乘积；
+ *     1D 精确演化用 Neumann 3 点拉普拉斯的**余弦模**闭式（λ_k=2cos(πk/L)−2，
+ *     特征向量 cos(πk(i+½)/L)，机器精度）⟹ KDK 误差 O(dt²) 可标定。
+ *   - 谐振子阱：解析 φ₀/φ₁ 反对称化初态 + 虚时间松弛到**离散**本征态
+ *     （‖Hψ−Eψ‖ 残差检验，pot72 E2/E3）。
+ *   - HBT 接触统计：对角密度 玻色 = 2×可区分、费米 = 0×（pot72 B）。
+ *
+ * 诚实限制（文档同款，面板 hint 亦标注）：
+ *   1. 接触相互作用是**格点 δ**（仅 x₁=x₂ texel），非连续 δ；不给散射长度
+ *      公式，只定性展示「费米子不受接触作用影响 / 玻色子被压制」。
+ *   2. 边界为 CLAMP_TO_EDGE（Neumann 反射）而非硬墙 Dirichlet；短时演示
+ *      无影响，长时边界反射会污染（波包抵达边窗 ≈L/2/v 时间后）。
+ *   3. 谐振子阱在 |V|>vcap 处截断（本预设参数下截断点在波包尾部之外，
+ *      影响 <1e-4，但严格说阱是截断的）。
+ *   4. 离散本征态与解析本征态差 O(h²)——「松弛」按钮的作用即收敛到离散态。
+ *   5. 费米子「弹开」是**交换相互作用**（无实作用力时的密度效应），不是
+ *      经典碰撞；Tonks–Girardeau 精确映射不在本轮范围。
+ * ========================================================================== */
+
+/* ---------- 预设与共享参数 ----------
+   bumpH=0.2：ε 滑块的可区分势垒峰高（只按 ε 缩放，ε=0 时全预设不受影响）。
+   pot72 实测 ε=0.3 时 ⟨P⟩ 偏离 −1 达 9.3e-2（bumpH=0.08 仅 1.7e-2，视觉/读数
+   区分度不足），故定 0.2。 */
+const TB_COMMON = { bumpH: 0.2, bumpW: 10, vcap: 6 };
+
+const TB_PRESETS = {
+  /* 自由空间对穿：两个相向波包（±k₀），g 滑块加接触相互作用，
+     统计切换对比「玻色穿插 / 费米交换空穴 / 接触排斥」。 */
+  cross: {
+    name: '自由对穿', trap: 0, omega: 0.02, g: 0, eps: 0,
+    d: 52, sigma: 6.5, k0: 0.25, r0: 26,
+    text: '两个相同波包相向运动（x₀=∓d/2，k=±k₀），无外势。**玻色**：对称化密度在对角线上**聚束**（HBT 因子 2×），两包穿插而过；**费米**：反对称态对角线密度恒 0（交换空穴），一阶密度表现为**交换弹开**——没有任何真实排斥力。g 滑块加**格点接触相互作用**（只压对角线）：玻色子被压回、费米子毫无变化（它们本来就不在对角线上）。ε 滑块让粒子 2 多一个势垒 ⟹ 不再全同 ⟹ ⟨P⟩ 漂离 ±1、n₁ 与 n₂ 分开。',
+  },
+  /* 谐振子阱对穿：阱中双粒子从 ±r₀ 静止释放，相对坐标振荡。 */
+  trap: {
+    name: '阱中对穿', trap: 1, omega: 0.02, g: 0, eps: 0,
+    d: 0, sigma: 6.5, k0: 0, r0: 26,
+    text: '每个粒子受同一谐振子阱 V=½ω²(x−L/2)²（ω 滑块）。双包从 ±r₀ 静止释放：经典地各自荡向中心（首次相遇 t=π/2ω），**费米**在对角线处交换弹开，来回周期 π/ω（对角质量峰间距，pot72 E4 定量）。ε≠0 时粒子 2 的阱深 ×(1+ε) ⟹ 可区分 ⟹ ⟨P⟩ 不再守恒。',
+  },
+  /* 阱中本征态：解析 (0,0) 玻色基态 / (0,1) 费米第一激发；
+     「松弛」按钮收敛到**离散**本征态（|ψ|² 冻结、整体相位以 E 旋转）。 */
+  eigen: {
+    name: '阱中本征态', trap: 1, omega: 0.02, g: 0, eps: 0,
+    d: 0, sigma: 6.5, k0: 0, r0: 26, eigen: 1,
+    text: '谐振子阱中双粒子的**定态**：玻色取 (0,0)（E=ω）、费米取 (0,1) 斯莱特态（E=2ω，最低反对称态）。解析初态与离散本征态差 O(h²)（|ψ|² 会轻微呼吸）；点「松弛到离散本征态」跑虚时间流收敛到**当前格点**的严格本征态（‖Hψ−Eψ‖→0，pot72 E2 检验），之后 |ψ|² 冻结、整体相位以 E=ω/2+3ω/2 旋转。',
+  },
+};
+
+/* ---------- 布局约定（单一真值）----------
+   CPU 状态 = 两个 **连续** Float64Array(L²)：re[k]、im[k]，k = idx(L,i,j) = j·L+i
+   （i=x₁ 列、j=x₂ 行）。交错只在 GPU 上传/回读边界做（two-body.js upload/splitField）。
+   R72 首版 tbMakeWave 用 2·(jL+i) 交错、tbApplyH 用连续索引——两套坐标混用，
+   演化读错元素；统一后所有 CPU 函数（MakeWave/ApplyH/Kdk/Measure/Relax/SymErr）
+   共用本 idx。 */
+const idx = (L, i, j) => j * L + i;
+
+/* 势场（CPU 与 GLSL 同源：GLSL 不重算势，页面把本函数烘焙成 R32F 纹理
+   uPot 供 kick/drift 采样——单源真值，改这里即全场生效） */
+function tbPot1(x, P){
+  if (!P.trap) return 0;
+  const r = x - P.xc;
+  return Math.min(0.5 * P.omega * P.omega * r * r, P.vcap);
+}
+function tbPot2(x, P){
+  const r = x - P.xc;
+  const bump = P.bumpH * Math.exp(-(r * r) / (P.bumpW * P.bumpW));
+  return (1 + P.eps) * tbPot1(x, P) + P.eps * bump;
+}
+/* 全势 V(x₁,x₂)（含格点接触项 g·δ_{x₁=x₂}） */
+function tbV(i, j, P){
+  let V = tbPot1(i, P) + tbPot2(j, P);
+  if (i === j) V += P.g;
+  return V;
+}
+/* 预计算整张 V 表（L²，float64）：tbApplyH/tbKdkStep/tbRelax/tbEnergy 都可选传，
+   避免每 texel 每步调 exp/min（JS 下是数量级差距；物理与 tbV 逐字同值）。 */
+function tbMakeVArray(L, P){
+  const V = new Float64Array(L * L);
+  const p1 = new Float64Array(L), p2 = new Float64Array(L);
+  for (let i = 0; i < L; i++){ p1[i] = tbPot1(i, P); p2[i] = tbPot2(i, P); }
+  for (let j = 0; j < L; j++) for (let i = 0; i < L; i++)
+    V[j * L + i] = p1[i] + p2[j] + (i === j ? P.g : 0);
+  return V;
+}
+
+/* ---------- H·ψ（5 点交叉 stencil ×2 轴 + 势；CLAMP_TO_EDGE = Neumann 闭合） ----------
+   H = −uK·∇² + V（∇² 取 lap = Σ邻居 − 4c）——与引擎 TPL_EVOLVE 的
+   kineticE 默认 '-uK*lap' 同号；漏掉负号会让动能变负、谱下界跑到 −4，R72
+   首版冒烟（E₀=0.000175 vs 理论 0.04、松弛收敛到 E=−3.98）即由此外露。 */
+function tbApplyH(re, im, L, P, outRe, outIm, Varr){
+  const uK = P.uK;
+  for (let j = 0; j < L; j++){
+    const jm = (j > 0 ? j - 1 : 0), jp = (j < L - 1 ? j + 1 : L - 1);
+    const row = j * L;
+    for (let i = 0; i < L; i++){
+      const im0 = (i > 0 ? i - 1 : 0), ip = (i < L - 1 ? i + 1 : L - 1);
+      const k = row + i;
+      const cr = re[k], ci = im[k];
+      const lr = re[row + im0] + re[row + ip] + re[jm * L + i] + re[jp * L + i] - 4 * cr;
+      const li = im[row + im0] + im[row + ip] + im[jm * L + i] + im[jp * L + i] - 4 * ci;
+      const V = Varr ? Varr[k] : tbV(i, j, P);
+      outRe[k] = -uK * lr + V * cr;
+      outIm[k] = -uK * li + V * ci;
+    }
+  }
+}
+
+/* ---------- 一步 KDK（状态即 (u,v)=(Reψ,Imψ)，无独立速度；与 GPU 三 pass 逐式同构） ----------
+   iψ'=Hψ 拆成 u'=Hv、v'=−Hu 的一阶系统，Strang 分裂（与引擎 TPL_EVOLVE 的
+   uUpdateV 序列逐字同构）：
+     kick1: v ← v − (dt/2)·H·u      （只改 Im 通道）
+     drift: u ← u + dt·H·v          （只改 Re 通道；**左乘 H**，不是 u+dt·v）
+     kick2: v ← v − (dt/2)·H·u
+   H 为实算符 ⟹ 通道可分：H·u 只依赖 re、H·v 只依赖 im（tbApplyH 同时算两者，
+   各取所需）。R72 首版把 (re,im) 之外再挂一对"速度"数组并置零，等于丢掉了
+   初态 Imψ 的相位信息——600 子步范数掉到 0.484，冒烟即拦下。 */
+function tbKdkStep(re, im, L, P, dt, Varr){
+  const h = dt / 2;
+  const N = re.length;
+  const hRe = new Float64Array(N), hIm = new Float64Array(N);
+  /* kick1: im −= h·H·re */
+  tbApplyH(re, im, L, P, hRe, hIm, Varr);
+  for (let k = 0; k < N; k++) im[k] -= h * hRe[k];
+  /* drift: re += dt·H·im */
+  tbApplyH(re, im, L, P, hRe, hIm, Varr);
+  for (let k = 0; k < N; k++) re[k] += dt * hIm[k];
+  /* kick2: im −= h·H·re（新 re） */
+  tbApplyH(re, im, L, P, hRe, hIm, Varr);
+  for (let k = 0; k < N; k++) im[k] -= h * hRe[k];
+}
+
+/* ---------- 初态：单粒子波包 + 对称/反对称化 ---------- */
+/* 高斯波包 φ(x)=exp(−(x−x₀)²/2σ²)·e^{ik₀x}（未归一化，调用方统一离散归一化） */
+function packet(x, x0, k0, sig){
+  const r = x - x0;
+  return { re: Math.exp(-(r * r) / (2 * sig * sig)) * Math.cos(k0 * x),
+           im: Math.exp(-(r * r) / (2 * sig * sig)) * Math.sin(k0 * x) };
+}
+/* 谐振子解析本征函数 φₙ(x)（实；NₙHₙ(α(x−xc))e^{−α²(x−xc)²/2}，α=√ω） */
+function tbHarmonicEigen(n, L, omega, xc){
+  const alpha = Math.sqrt(omega);
+  const out = new Float64Array(L);
+  const H = [z => 1, z => 2 * z, z => 4 * z * z - 2, z => 8 * z * z * z - 12 * z];
+  const norm = Math.pow(alpha / Math.PI, 0.25) / Math.sqrt(Math.pow(2, n) * [1, 1, 2, 6][n]);
+  for (let i = 0; i < L; i++){
+    const z = alpha * (i + 0.5 - xc);
+    out[i] = norm * H[n](z) * Math.exp(-0.5 * z * z);
+  }
+  return out;
+}
+
+/* makeWave：返回 {re, im, norm}（norm=离散范数；<1e-9 ⟹ 页面应拒绝加载）
+   opts: {stats:'boson'|'fermion', g, eps, omega, d, sigma, k0, r0, eigen}
+   —— g/eps/omega 只影响势场不改变初态（初态与它们无关），此处接收是为了一并
+   返回完整参数快照；真正消费它们的是演化循环。 */
+function tbMakeWave(L, presetKey, opts = {}){
+  const pr = TB_PRESETS[presetKey] || TB_PRESETS.cross;
+  const stats = opts.stats || 'boson';
+  const omega = opts.omega ?? pr.omega;
+  const xc = (L - 1) / 2;
+  const re = new Float64Array(L * L), im = new Float64Array(L * L);
+  let fa, fb;   /* 两个单粒子态（实或复，逐点 {re,im} 或实数数组） */
+  if (pr.eigen){
+    /* 玻色 (0,0) 基态（E=ω）；费米 (0,1) 斯莱特态（E=2ω，最低反对称态） */
+    const na = 0, nb = stats === 'boson' ? 0 : 1;
+    const A = tbHarmonicEigen(na, L, omega, xc), B = tbHarmonicEigen(nb, L, omega, xc);
+    fa = i => ({ re: A[i], im: 0 }); fb = i => ({ re: B[i], im: 0 });
+  } else {
+    const d = opts.d ?? pr.d, sig = opts.sigma ?? pr.sigma, k0 = opts.k0 ?? pr.k0, r0 = opts.r0 ?? pr.r0;
+    const xa = pr.trap ? xc - r0 : xc - d / 2, xb = pr.trap ? xc + r0 : xc + d / 2;
+    const ka = pr.trap ? 0 : +k0, kb = pr.trap ? 0 : -k0;
+    fa = i => packet(i + 0.5, xa, ka, sig); fb = i => packet(i + 0.5, xb, kb, sig);
+  }
+  const sgn = stats === 'boson' ? 1 : -1;
+  for (let j = 0; j < L; j++) for (let i = 0; i < L; i++){
+    const a1 = fa(i), b2 = fb(j), b1 = fb(i), a2 = fa(j);
+    const k = idx(L, i, j);
+    re[k] = (a1.re * b2.re - a1.im * b2.im + sgn * (b1.re * a2.re - b1.im * a2.im)) / Math.SQRT2;
+    im[k] = (a1.re * b2.im + a1.im * b2.re + sgn * (b1.re * a2.im + b1.im * a2.re)) / Math.SQRT2;
+  }
+  let norm = 0;
+  for (let k = 0; k < re.length; k++) norm += re[k] * re[k] + im[k] * im[k];
+  if (norm > 1e-18){ const s = 1 / Math.sqrt(norm); for (let k = 0; k < re.length; k++){ re[k] *= s; im[k] *= s; } norm = 1; }
+  return { re, im, norm };
+}
+
+/* ---------- 测量（readback 后直接消费；返回一阶边缘密度 n₁/n₂） ---------- */
+function tbMeasure(re, im, L){
+  let norm = 0, exch = 0, diagMass = 0, diagMax = 0, peak = 0;
+  const n1 = new Float64Array(L), n2 = new Float64Array(L);
+  for (let j = 0; j < L; j++) for (let i = 0; i < L; i++){
+    const k = idx(L, i, j), kk = idx(L, j, i);
+    const p = re[k] * re[k] + im[k] * im[k];
+    norm += p; peak = Math.max(peak, p);
+    n1[i] += p; n2[j] += p;
+    if (i === j){ diagMass += p; diagMax = Math.max(diagMax, p); }
+    /* ⟨P⟩ = Σ Re(ψ*(i,j)·ψ(j,i)) */
+    exch += re[k] * re[kk] + im[k] * im[kk];
+  }
+  let dn = 0;
+  for (let i = 0; i < L; i++) dn = Math.max(dn, Math.abs(n1[i] - n2[i]));
+  return { norm, exch, diagMass, diagMax, peak, n1, n2, dn12: dn };
+}
+
+/* ---------- 能量 ⟨H⟩（实数；H 实对称 ⟹ Im 部分为 0） ---------- */
+function tbEnergy(re, im, L, P, Varr){
+  const hRe = new Float64Array(re.length), hIm = new Float64Array(im.length);
+  tbApplyH(re, im, L, P, hRe, hIm, Varr);
+  let E = 0;
+  for (let k = 0; k < re.length; k++) E += re[k] * hRe[k] + im[k] * hIm[k];
+  return E;
+}
+
+/* ---------- 虚时间松弛（∂ψ/∂τ=−Hψ + 归一化 + sector 投影；收敛到 sector 基态） ----------
+   【sector 投影必须显式做】τ 流对 H 的多项式作用于 P 对易，精确算术下不混 sector；
+   但 float64 舍入种子（~1e-16）里含对称分量，而玻色基态 E≈ω 比反对称基态 E≈2ω
+   衰减更快 ⟹ 相对增长 e^{−ω·τ}，约 6000 步后反超（R72 实测：it=6000 resid=1.0e-9，
+   it=12000 resid 回退到 5.9e-2、E 跌向 0.0199）。每步投影 ψ←(ψ+sym·Pψ)/2 后
+   该泄漏结构性归零（与引擎 Bloch 弛豫「每步投影回目标块」同思路）。
+   opts.sym: +1 玻色 / −1 费米 / 缺省 0（不投影，仅用于通用诊断）。 */
+function tbRelax(re, im, L, P, opts = {}){
+  /* 显式 τ 步稳定界：λ_max(H) ≈ 8uK(动能) + V_max ≤ vcap + g；取 1.7/λ 留安全余量，
+     上限 0.15（收敛速率 ∝ dtτ ⟹ 默认取上限，pot72 实测 ~3000 步到残差 1e-10）。
+     R72 首版固定 0.05 且 H 符号错，18750 步收敛到 E=−3.98（不可能值）——两处均修。 */
+  const dtTau = opts.dtTau ?? Math.min(0.15, 1.7 / (8 * P.uK + P.vcap + P.g + 1e-9));
+  const maxIters = opts.maxIters ?? 30000, tol = opts.tol ?? 1e-13;
+  const checkEvery = opts.checkEvery ?? 50;   /* 分块调用（页面 30 步/帧）时传 25 */
+  const sym = opts.sym ?? 0;
+  const tolResid = opts.residual ?? 1e-8;     /* 残差判据（能量判据二次收敛、过早停） */
+  const Varr = tbMakeVArray(L, P);
+  const hRe = new Float64Array(re.length), hIm = new Float64Array(im.length);
+  let E0 = tbEnergy(re, im, L, P, Varr), iters = 0, dE = 1;
+  for (; iters < maxIters; iters++){
+    tbApplyH(re, im, L, P, hRe, hIm, Varr);
+    let nrm = 0;
+    for (let k = 0; k < re.length; k++){
+      re[k] -= dtTau * hRe[k]; im[k] -= dtTau * hIm[k];
+      nrm += re[k] * re[k] + im[k] * im[k];
+    }
+    const s = 1 / Math.sqrt(nrm);
+    for (let k = 0; k < re.length; k++){ re[k] *= s; im[k] *= s; }
+    /* sector 投影（i<j 成对处理；费米对角置零） */
+    if (sym !== 0){
+      for (let j = 0; j < L; j++) for (let i = j; i < L; i++){
+        if (i === j){
+          if (sym < 0){ const k = idx(L, i, j); re[k] = 0; im[k] = 0; }
+          continue;
+        }
+        const k = idx(L, i, j), kk = idx(L, j, i);
+        const ar = 0.5 * (re[k] + sym * re[kk]), ai = 0.5 * (im[k] + sym * im[kk]);
+        re[k] = ar; im[k] = ai; re[kk] = sym * ar; im[kk] = sym * ai;
+      }
+      let n2 = 0;
+      for (let k = 0; k < re.length; k++) n2 += re[k] * re[k] + im[k] * im[k];
+      const s2 = 1 / Math.sqrt(n2);
+      for (let k = 0; k < re.length; k++){ re[k] *= s2; im[k] *= s2; }
+    }
+    if ((iters + 1) % checkEvery === 0){
+      /* 残差判据（与最终返回同口径）：能量判据 E=E∞+gap·c² 是二次的，c=1e-5 时
+         dE~1e-11 早已低于 1e-13 阈值而残差仍有 1e-7 ⟹ 单用 dE 会过早停。 */
+      tbApplyH(re, im, L, P, hRe, hIm, Varr);
+      let E1 = 0;
+      for (let k = 0; k < re.length; k++) E1 += re[k] * hRe[k] + im[k] * hIm[k];
+      let num = 0, den = 0;
+      for (let k = 0; k < re.length; k++){
+        const dr = hRe[k] - E1 * re[k], di = hIm[k] - E1 * im[k];
+        num += dr * dr + di * di; den += hRe[k] * hRe[k] + hIm[k] * hIm[k];
+      }
+      const resid = Math.sqrt(num / Math.max(den, 1e-300));
+      dE = Math.abs(E1 - E0) / Math.max(Math.abs(E1), 1e-12);
+      E0 = E1;
+      /* 只认残差：dE 在 c~1e-6 时就已 <1e-13（E=E∞+gap·c² 二次），会把残差
+         3e-7 的状态判成收敛（R72 实测 3800 步即停）。 */
+      if (resid < tolResid) { iters++; break; }
+    }
+  }
+  /* 本征态残差 ‖Hψ−Eψ‖/‖Hψ‖ */
+  const E = tbEnergy(re, im, L, P, Varr);
+  tbApplyH(re, im, L, P, hRe, hIm, Varr);
+  let num = 0, den = 0;
+  for (let k = 0; k < re.length; k++){
+    const dr = hRe[k] - E * re[k], di = hIm[k] - E * im[k];
+    num += dr * dr + di * di; den += hRe[k] * hRe[k] + hIm[k] * hIm[k];
+  }
+  return { iters, energy: E, residual: Math.sqrt(num / Math.max(den, 1e-300)) };
+}
+
+/* ---------- 1D 精确自由演化（Neumann 3 点拉普拉斯余弦模闭式，机器精度） ----------
+   特征向量 v_k(i)=cos(πk(i+½)/L)，特征值 λ_k=2cos(πk/L)−2（含 i=0 的 clamp
+   闭合，已代入验证）；H_1D=−uK·lap ⟹ 精确演化 ψ(t)=Σ c_k e^{−i uK λ_k t} v_k。 */
+function tbFreeEvolve1D(re, im, L, uK, t){
+  const outRe = new Float64Array(L), outIm = new Float64Array(L);
+  for (let k = 0; k < L; k++){
+    const lam = 2 * Math.cos(Math.PI * k / L) - 2;   /* lap 特征值 ≤0 */
+    const ph = uK * lam * t;                          /* E_k=−uK·λ ⟹ e^{−iE_k t}=e^{i uK λ t} */
+    const cp = Math.cos(ph), sp = Math.sin(ph);
+    let ar = 0, ai = 0, nrm = (k === 0 ? L : L / 2);
+    for (let i = 0; i < L; i++){
+      const v = Math.cos(Math.PI * k * (i + 0.5) / L);
+      ar += v * re[i]; ai += v * im[i];
+    }
+    ar /= nrm; ai /= nrm;
+    for (let i = 0; i < L; i++){
+      const v = Math.cos(Math.PI * k * (i + 0.5) / L);
+      outRe[i] += v * (ar * cp - ai * sp);
+      outIm[i] += v * (ar * sp + ai * cp);
+    }
+  }
+  return { re: outRe, im: outIm };
+}
+
+/* ---------- 对称性误差（测试用）：max|ψ(i,j) − sgn·ψ(j,i)| ---------- */
+function tbSymErr(re, im, L, sgn){
+  let m = 0;
+  for (let j = 0; j < L; j++) for (let i = 0; i < L; i++){
+    const k = idx(L, i, j), kk = idx(L, j, i);
+    m = Math.max(m, Math.abs(re[k] - sgn * re[kk]), Math.abs(im[k] - sgn * im[kk]));
+  }
+  return m;
+}
+
+/* ---------- 场哈希（FNV-1a over float32 比特；GPU↔GPU 确定性比对用） ---------- */
+function tbFieldHash(f32){
+  const u = new Uint32Array(f32.buffer, f32.byteOffset, Math.floor(f32.byteLength / 4));
+  let h = 0x811c9dc5;
+  for (let i = 0; i < u.length; i++){ h ^= u[i]; h = Math.imul(h, 0x01000193); }
+  return h >>> 0;
+}
+
+/* ============================================================================
+ * GPU shader（与上方 CPU 函数逐式同源；改任一侧必须同步另一侧并重跑 pot72/cdp72）
+ *
+ * 势场 V 不在 shader 里重算：页面把 tbPot1/tbPot2 烘焙成 R32F 纹理 uPot
+ * （CPU 侧 float64 → 纹理 float32），kick/drift 只采样 —— 单源真值，避免
+ * 两段 GLSL 各写一份 trap/bump/接触项 的漂移风险（R72 设计修订）。
+ * ========================================================================== */
+/* kick：v ← v − (dt/2)·H·u（只改 .y=Im 通道，.x 原样拷贝）；H = −uK·lap + V */
+const TB_FS_KICK = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uU;
+uniform sampler2D uPot;
+uniform vec2 uTexel;
+uniform float uDtHalf, uK;
+void main(){
+  vec2 c  = texture(uU, vUv).xy;
+  vec2 xm = texture(uU, vUv - vec2(uTexel.x, 0.0)).xy;
+  vec2 xp = texture(uU, vUv + vec2(uTexel.x, 0.0)).xy;
+  vec2 ym = texture(uU, vUv - vec2(0.0, uTexel.y)).xy;
+  vec2 yp = texture(uU, vUv + vec2(0.0, uTexel.y)).xy;
+  vec2 lap = xm + xp + ym + yp - 4.0*c;
+  float V = texture(uPot, vUv).r;
+  float Hu = -uK*lap.x + V*c.x;
+  o = vec4(c.x, c.y - uDtHalf*Hu, 0.0, 1.0);
+}`;
+
+/* drift：u ← u + dt·H·v（只改 .x=Re 通道；H 左乘 v，与引擎 uUpdateV=0 逐字同构） */
+const TB_FS_DRIFT = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uU;
+uniform sampler2D uPot;
+uniform vec2 uTexel;
+uniform float uDt, uK;
+void main(){
+  vec2 c  = texture(uU, vUv).xy;
+  vec2 xm = texture(uU, vUv - vec2(uTexel.x, 0.0)).xy;
+  vec2 xp = texture(uU, vUv + vec2(uTexel.x, 0.0)).xy;
+  vec2 ym = texture(uU, vUv - vec2(0.0, uTexel.y)).xy;
+  vec2 yp = texture(uU, vUv + vec2(0.0, uTexel.y)).xy;
+  vec2 lap = xm + xp + ym + yp - 4.0*c;
+  float V = texture(uPot, vUv).r;
+  float Hv = -uK*lap.y + V*c.y;
+  o = vec4(c.x + uDt*Hv, c.y, 0.0, 1.0);
+}`;
+
+/* 显示：密度模式（青白辉度）/ 相位模式（色相=argψ，跨对角 π 跳变可见）+
+   对角线 x₁=x₂ 琥珀缝 + 边框。bilerp 手工上采样（状态纹理必须 NEAREST，
+   stencil 精确性不能让给 LINEAR）。 */
+const TB_FS_DRAW = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uU;
+uniform vec2 uTexel;
+uniform float uScale;
+uniform float uMode;
+uniform float uDiagOn;
+vec3 hsv2rgb(vec3 c){
+  vec3 p = abs(fract(c.xxx + vec3(1.0, 2.0/3.0, 1.0/3.0))*6.0 - 3.0);
+  return c.z * mix(vec3(1.0), clamp(p - 1.0, 0.0, 1.0), c.y);
+}
+vec4 bilerp(sampler2D t, vec2 uv, vec2 texel){
+  vec2 f = fract(uv/texel - 0.5) - 0.5;
+  vec2 base = (uv/texel - 0.5 - f)*texel;
+  vec4 a = texture(t, base);
+  vec4 b = texture(t, base + vec2(texel.x, 0.0));
+  vec4 c = texture(t, base + vec2(0.0, texel.y));
+  vec4 d = texture(t, base + texel);
+  return mix(mix(a,b,f.x+0.5), mix(c,d,f.x+0.5), f.y+0.5);
+}
+void main(){
+  vec2 c = bilerp(uU, vUv, uTexel).xy;
+  float p = dot(c, c);
+  vec3 col = (uMode > 0.5)
+    ? hsv2rgb(vec3(atan(c.y, c.x)/6.28318530718 + 0.5, 0.72, 1.0))
+    : vec3(0.36, 0.82, 0.98);
+  float lum = 1.0 - exp(-p*uScale);
+  vec3 img = col*lum + vec3(0.016, 0.024, 0.045);
+  if (uDiagOn > 0.5){
+    float d = abs(vUv.x - vUv.y)*0.70710678;
+    float w = max(fwidth(d), 1e-5);
+    img += vec3(0.98, 0.75, 0.14)*smoothstep(1.6*w, 0.0, d)*0.9;
+  }
+  vec2 e = min(vUv, 1.0 - vUv);
+  float edge = min(e.x, e.y);
+  img += vec3(0.13, 0.2, 0.3)*smoothstep(0.004, 0.0, edge)*0.8;
+  o = vec4(img, 1.0);
+}`;
+
+/* ===== src/two-body.js ===== */
+/* ============================================================================
+ * two-body.js — R72 双粒子构型空间页（two-body.html 入口）
+ *
+ * 与主页（QuantumField）的关系：共用 src/core/gl.js（GL 引导/Program/Quad/
+ * RG32F 目标）与 src/core/styles.js（CSS 变量与 reset），物理内核为
+ * src/physics/twobody.js（CPU 镜像与 GLSL 同源）。主页顶栏有切换入口。
+ *
+ * 页面语义：场 = |ψ(x₁,x₂)|²（或相位），x₁ 横轴、x₂ 纵轴；对角线 x₁=x₂
+ * 是「重合线」（琥珀缝）——反对称态在其上恒零（泡利不相容可视化）。
+ * 一阶边缘密度 n₁(x₁)=∫|ψ|²dx₂（下条）与 n₂(x₂)=∫|ψ|²dx₁（右条）：
+ * 全同粒子（ε=0）时两条恒等；可区分（ε>0）时分开。
+ *
+ * KDK 三 pass 结构（与 twobody.js CPU 逐步同构）：
+ *   kick1: u[p],v[q] → v[p]   （v += dt/2·H·u）
+ *   drift: u[p],v[p] → u[q]   （u += dt·v）
+ *   kick2: u[q],v[p] → v[q]   （v += dt/2·H·u）   ⟹ parity 翻转
+ * 四个 RG32F 目标（u×2、v×2）NEAREST（stencil 精确性）；显示 pass 手工
+ * bilerp 上采样。
+ *
+ * 调试句柄 window.__tb（cdp72 专用）：measure/readField/step/mirror
+ * （页内 CPU 镜像对比）/compareMirror（GPU vs 页内 CPU，页内算完只回传
+ * 摘要）/relaxNow。step/mirror 全部确定性接口（不依赖 rAF 时序）。
+ * ========================================================================== */
+
+/* 页面布局（复用 styles.js 的 :root 变量与 reset；本块只管 two-body 专属结构） */
+const TB_CSS = `
+  #tbTop{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;
+    padding:9px 18px;z-index:10;white-space:nowrap}
+  #tbTop .logo{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.12em;
+    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
+  #tbTop .eq{font-family:var(--mono);font-size:12px;color:var(--dim)}
+  #tbTop .eq b{color:var(--cyan);font-weight:600}
+  #tbTop a{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
+    border:1px solid var(--line);border-radius:6px;padding:3px 8px;transition:all .15s}
+  #tbTop a:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
+  #tbPanel{top:74px;left:14px;width:224px;padding:13px;z-index:10;max-height:calc(100vh - 250px);overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  #tbHud{top:74px;right:14px;padding:11px 13px;z-index:10;min-width:200px;font-family:var(--mono)}
+  #tbHud .hrow{display:flex;justify-content:space-between;gap:12px;font-size:11.5px;padding:2.5px 0}
+  #tbHud .hrow span:first-child{color:var(--dim)}
+  #tbHud .hrow span:last-child{color:var(--txt)}
+  #tbHud hr{border:none;border-top:1px solid var(--line);margin:6px 0}
+  #tbStage{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;
+    display:flex;flex-direction:column;align-items:center;gap:5px;--sz:min(62vh,52vw)}
+  #tbFieldWrap{position:relative}
+  #tbField{display:block;width:var(--sz);height:var(--sz);border-radius:10px;touch-action:none}
+  #tbN2{position:absolute;left:calc(100% + 5px);top:0;width:52px;height:var(--sz);display:block}
+  #tbN1{width:var(--sz);height:52px;display:block}
+  .tbAxis{font-family:var(--mono);font-size:10.5px;color:var(--dim);position:fixed;z-index:6;pointer-events:none}
+  #tbAxX{transform:translateX(-50%)}
+  #tbAxY{transform:translateY(-50%) rotate(-90deg);transform-origin:center}
+  #tbHint{left:14px;bottom:52px;z-index:10;padding:10px 14px;max-width:330px;font-size:11.5px;
+    color:var(--dim);line-height:1.65;max-height:120px;overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  #tbHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:12px}
+  #tbToast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:20;pointer-events:none;
+    font-family:var(--mono);font-size:13px;color:var(--cyan);letter-spacing:.18em;opacity:0;transition:opacity .4s;
+    text-shadow:0 0 18px rgba(103,232,249,.8);text-align:center;white-space:pre-line}
+  #tbDiag{position:fixed;left:-9999px}
+  @media (max-width:1100px){#tbStage{--sz:min(56vh,86vw)}#tbHint{display:none}}
+`;
+
+const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
+const sci = (x, d = 2) => (Number.isFinite(x) ? x.toExponential(d) : '—');
+
+class TwoBodyApp {
+  constructor(container, options = {}){
+    this.container = typeof container === 'string' ? document.querySelector(container) : (container || document.body);
+    this.options = options;
+    /* URL 参数（cdp72 确定性加载用）：preset/stats/g/eps/omega/substeps/dt/L/mode/paused */
+    const q = new URLSearchParams(location.search);
+    const num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
+    const L = Math.round(num('L', 128));
+    this.state = {
+      L, preset: q.get('preset') || 'cross', stats: q.get('stats') || 'boson',
+      g: num('g', 0), eps: num('eps', 0), omega: num('omega', 0.02),
+      substeps: Math.round(num('substeps', 6)), dt: num('dt', 0.08),
+      mode: Math.round(num('mode', 0)), paused: q.get('paused') === '1',
+      simTime: 0, frames: 0,
+    };
+    if (!TB_PRESETS[this.state.preset]) this.state.preset = 'cross';
+    if (!['boson', 'fermion'].includes(this.state.stats)) this.state.stats = 'boson';
+    this._scale = 400; this._nScale = 16; this._E = null; this._relax = null;
+    this._field = null; this._m = null; this._baseNorm = null;
+    this._listeners = []; this._uloc = new Map();
+    this._fps = 0; this._fpsFrames = 0; this._lastFpsT = performance.now();
+    this._onError = e => {
+      const d = this.q('#tbDiag');
+      if (d) d.textContent = 'ERR ' + e.message;
+      document.title = 'ERR ' + e.message;
+    };
+    window.addEventListener('error', this._onError);
+    this.frame = this.frame.bind(this);
+  }
+
+  q(s){ return this.container.querySelector(s); }
+  on(t, type, fn, opts){ t.addEventListener(type, fn, opts); this._listeners.push([t, type, fn, opts]); }
+  u(prog, name){
+    let m = this._uloc.get(prog);
+    if (!m){ m = new Map(); this._uloc.set(prog, m); }
+    if (!m.has(name)) m.set(name, this.gl.getUniformLocation(prog, name));
+    return m.get(name);
+  }
+  toast(msg, ms = 2200){
+    const t = this.q('#tbToast');
+    if (!t) return;
+    t.textContent = msg; t.style.opacity = 1;
+    clearTimeout(this._toastT);
+    this._toastT = setTimeout(() => { t.style.opacity = 0; }, ms);
+  }
+
+  /* ---------- 挂载 ---------- */
+  mount(){
+    injectStyles();
+    const st = document.createElement('style');
+    st.id = 'tb-styles'; st.textContent = TB_CSS;
+    document.head.appendChild(st);
+    this.buildDOM();
+    this.canvas = this.q('#tbField');
+    const { gl, error } = createContext(this.canvas);
+    if (!gl){ this.fail(error); return this; }
+    this.gl = gl;
+    try {
+      this.quad = new Quad(gl);
+      this.initPrograms();
+      this.initTargets();
+      /* 初次加载沿用 URL 参数（不重置 g/eps/omega） */
+      this.loadPreset(this.state.preset, this.state.stats, false);
+      this.resize();
+      requestAnimationFrame(this.frame);
+    } catch (err){
+      this.fail((err && err.message) || String(err));
+      return this;
+    }
+    window.__tb = this.debugHandle();
+    return this;
+  }
+
+  fail(msg){
+    const d = this.q('#tbDiag');
+    if (d) d.textContent = 'ERR ' + msg;
+    document.title = 'ERR ' + msg;
+    const c = this.q('#tbField');
+    if (c){
+      const ctx = c.getContext('2d');
+      if (ctx){ ctx.fillStyle = '#04060c'; ctx.fillRect(0, 0, c.width, c.height);
+        ctx.fillStyle = '#fbbf24'; ctx.font = '13px monospace';
+        ctx.fillText('WebGL2 初始化失败: ' + msg, 16, 28); }
+    }
+  }
+
+  /* ---------- DOM ---------- */
+  buildDOM(){
+    const pr = TB_PRESETS;
+    this.container.innerHTML = `
+<div id="tbTop" class="panel">
+  <div class="logo">双粒子工场 · TWO-BODY</div>
+  <div class="eq"><b>i</b>ℏ∂ψ/∂t = [−ℏ²/2m(∂₁²+∂₂²)+V₁+V₂+<b>g</b>δ]ψ</div>
+  <a href="./index.html">← 单粒子主页</a>
+</div>
+<div id="tbPanel" class="panel">
+  <div class="sec"><h3>预设</h3><div class="grid3" id="tbPresets">
+    ${Object.keys(pr).map(k => '<button data-preset="' + k + '">' + pr[k].name + '</button>').join('')}
+  </div></div>
+  <div class="sec"><h3>统计（交换对称）</h3><div class="grid2">
+    <button id="tbBoson" class="on">玻色子 +</button><button id="tbFermion">费米子 −</button>
+  </div></div>
+  <div class="sec"><h3>参数</h3>
+    <div class="row"><label>接触 g</label><input type="range" id="rG" min="0" max="40" step="0.5" value="0"><output id="oG">0.0</output></div>
+    <div class="row"><label>可区分 ε</label><input type="range" id="rEps" min="0" max="0.6" step="0.02" value="0"><output id="oEps">0.00</output></div>
+    <div class="row"><label>阱频 ω</label><input type="range" id="rOm" min="0.005" max="0.08" step="0.001" value="0.02"><output id="oOm">0.020</output></div>
+    <div class="row"><label>积分子步</label><input type="range" id="rSub" min="1" max="16" step="1" value="6"><output id="oSub">6</output></div>
+  </div>
+  <div class="sec"><h3>操作</h3><div class="grid2">
+    <button id="tbPause">暂停</button><button id="tbStep">单步</button>
+    <button id="tbReset">重置</button><button id="tbRelax">松弛</button>
+    <button id="tbMode" style="grid-column:1/3">显示：密度</button>
+  </div></div>
+</div>
+<div id="tbHud" class="panel">
+  <div class="hrow"><span>⟨P⟩ 交换期望</span><span id="hExch">—</span></div>
+  <div class="hrow"><span>‖ψ‖² / 初值</span><span id="hNorm">—</span></div>
+  <div class="hrow"><span>对角质量</span><span id="hDiag">—</span></div>
+  <div class="hrow"><span>对角峰值</span><span id="hDiagMax">—</span></div>
+  <div class="hrow"><span>max|n₁−n₂|</span><span id="hDn">—</span></div>
+  <hr>
+  <div class="hrow"><span>E（离散）</span><span id="hE">—</span></div>
+  <div class="hrow"><span>t / 帧</span><span id="hT">—</span></div>
+  <div class="hrow"><span>fps</span><span id="hFps">—</span></div>
+  <hr>
+  <div class="hrow"><span>探针 (x₁,x₂)</span><span id="hProbe">—</span></div>
+</div>
+<div id="tbStage">
+  <div id="tbFieldWrap">
+    <canvas id="tbField"></canvas>
+    <canvas id="tbN2"></canvas>
+  </div>
+  <canvas id="tbN1"></canvas>
+</div>
+<div class="tbAxis" id="tbAxX">x₁ →</div>
+<div class="tbAxis" id="tbAxY">x₂ →</div>
+<div id="tbHint" class="panel"><b></b><span></span></div>
+<div id="tbToast"></div>
+<div id="tbDiag"></div>`;
+    this.container.querySelectorAll('[data-preset]').forEach(b =>
+      this.on(b, 'click', () => this.loadPreset(b.dataset.preset, this.state.stats, true)));
+    this.on(this.q('#tbBoson'), 'click', () => this.setStats('boson'));
+    this.on(this.q('#tbFermion'), 'click', () => this.setStats('fermion'));
+    this.on(this.q('#tbPause'), 'click', () => this.togglePause());
+    this.on(this.q('#tbStep'), 'click', () => this.stepFrames(1));
+    this.on(this.q('#tbReset'), 'click', () => this.resetWave());
+    this.on(this.q('#tbRelax'), 'click', () => this.startRelax());
+    this.on(this.q('#tbMode'), 'click', () => this.toggleMode());
+    /* 滑块：g/eps/子步只改 uniform（即时生效，不重置演化）；ω 在 eigen 预设下
+       改变解析初态 ⟹ 重发波包（保留其他参数），trap 预设下只改 uniform。 */
+    const bind = (id, key, outId, fmt, after) => {
+      const el = this.q(id), out = this.q(outId);
+      this.on(el, 'input', () => {
+        this.state[key] = parseFloat(el.value);
+        if (out) out.textContent = fmt(this.state[key]);
+        if (after) after();
+      });
+    };
+    bind('#rG', 'g', '#oG', v => v.toFixed(1));
+    bind('#rEps', 'eps', '#oEps', v => v.toFixed(2));
+    bind('#rOm', 'omega', '#oOm', v => v.toFixed(3),
+      () => { if (this.state.preset === 'eigen') this.loadPreset('eigen', this.state.stats, false); });
+    bind('#rSub', 'substeps', '#oSub', v => String(v | 0));
+    /* 悬停探针：报告 texel 坐标与 |ψ(i,j)|²、|ψ(j,i)|²（交换结构直接可见） */
+    this.on(this.q('#tbField'), 'pointermove', ev => {
+      if (!this._field) return;
+      const r = ev.target.getBoundingClientRect();
+      const i = Math.floor((ev.clientX - r.left) / r.width * this.state.L);
+      const j = Math.floor((1 - (ev.clientY - r.top) / r.height) * this.state.L);
+      if (i < 0 || j < 0 || i >= this.state.L || j >= this.state.L) return;
+      const L = this.state.L, k = 2 * (j * L + i), kk = 2 * (i * L + j);
+      const p = this._field[k] * this._field[k] + this._field[k + 1] * this._field[k + 1];
+      const p2 = this._field[kk] * this._field[kk] + this._field[kk + 1] * this._field[kk + 1];
+      this.q('#hProbe').textContent = `(${i},${j}) ${sci(p)} | ${sci(p2)}`;
+    });
+    this.on(window, 'resize', () => this.resize());
+    /* 布局尺寸可能晚于 mount 落定（--sz 依赖 vh/vw + 字体度量）：observe 初次回调
+       即校正缓冲尺寸。元素尺寸由 CSS 固定，改 canvas.width 不会反向触发循环。 */
+    if (window.ResizeObserver){
+      this._ro = new ResizeObserver(() => { if (this.q('#tbField').clientWidth > 0) this.resize(); });
+      this._ro.observe(this.q('#tbField'));
+    }
+  }
+
+  initPrograms(){
+    this.progKick = createProgram(this.gl, TB_FS_KICK);
+    this.progDrift = createProgram(this.gl, TB_FS_DRIFT);
+    this.progDraw = createProgram(this.gl, TB_FS_DRAW);
+  }
+  initTargets(){
+    const { gl } = this, L = this.state.L;
+    /* 状态纹理只两张（ping-pong）：RG32F 的 .xy = (Reψ, Imψ)，kick 改 .y、
+       drift 改 .x——与引擎 psiA/psiB 同构（无独立"速度"纹理）。 */
+    const mk = () => makeTarget(gl, L, L, gl.RG32F, gl.RG, gl.NEAREST);
+    this.psi = [mk(), mk()];
+    /* 势场纹理（CPU 烘焙 tbPot1/tbPot2 + 接触项，shader 只采样——单源真值） */
+    this.potTex = makeTarget(gl, L, L, gl.R32F, gl.RED, gl.NEAREST);
+    this._potSig = '';
+    this.parity = 0;
+    this._readBuf = new Float32Array(2 * L * L);
+  }
+  /* 势场烘焙：签名变化才重算（拖滑块时每帧一次，O(L²) 加法，~10μs） */
+  bakePot(){
+    const L = this.state.L, P = this.params();
+    const sig = [this.state.preset, P.trap, P.omega, P.eps, P.g, L].join('|');
+    if (sig === this._potSig) return false;
+    const p1 = new Float64Array(L), p2 = new Float64Array(L);
+    for (let i = 0; i < L; i++){ p1[i] = tbPot1(i, P); p2[i] = tbPot2(i, P); }
+    const V = new Float32Array(L * L);
+    let vmax = 0;
+    for (let j = 0; j < L; j++) for (let i = 0; i < L; i++){
+      const v = p1[i] + p2[j] + (i === j ? P.g : 0);
+      V[j * L + i] = v;
+      if (Math.abs(v) > vmax) vmax = Math.abs(v);
+    }
+    this._vmax = vmax;
+    const gl = this.gl;
+    gl.bindTexture(gl.TEXTURE_2D, this.potTex.tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R32F, L, L, 0, gl.RED, gl.FLOAT, V);
+    this._potSig = sig;
+    return true;
+  }
+  resize(){
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const sz = this.q('#tbField').clientWidth || 480;
+    this.canvas.width = Math.round(sz * dpr); this.canvas.height = Math.round(sz * dpr);
+    const n1 = this.q('#tbN1'), n2 = this.q('#tbN2');
+    n1.width = Math.round(sz * dpr); n1.height = Math.round(52 * dpr);
+    n2.width = Math.round(52 * dpr); n2.height = Math.round(sz * dpr);
+    /* 轴标签定位（随舞台尺寸） */
+    const r = this.q('#tbFieldWrap').getBoundingClientRect();
+    const ax = this.q('#tbAxX'), ay = this.q('#tbAxY');
+    ax.style.left = (r.left + r.width / 2) + 'px'; ax.style.top = (r.bottom + 40) + 'px';
+    ay.style.left = (r.right + 62) + 'px'; ay.style.top = (r.top + r.height / 2) + 'px';
+  }
+
+  /* ---------- 预设 / 统计 ---------- */
+  syncPanel(){
+    const pr = TB_PRESETS[this.state.preset];
+    this.container.querySelectorAll('[data-preset]').forEach(b =>
+      b.classList.toggle('on', b.dataset.preset === this.state.preset));
+    this.q('#tbBoson').classList.toggle('on', this.state.stats === 'boson');
+    this.q('#tbFermion').classList.toggle('on', this.state.stats === 'fermion');
+    this.q('#rG').value = this.state.g; this.q('#oG').textContent = this.state.g.toFixed(1);
+    this.q('#rEps').value = this.state.eps; this.q('#oEps').textContent = this.state.eps.toFixed(2);
+    this.q('#rOm').value = this.state.omega; this.q('#oOm').textContent = this.state.omega.toFixed(3);
+    this.q('#rSub').value = this.state.substeps; this.q('#oSub').textContent = String(this.state.substeps);
+    this.q('#rOm').disabled = !pr.trap;
+    this.q('#rOm').style.opacity = pr.trap ? 1 : 0.4;
+    this.q('#tbHint').querySelector('b').textContent = pr.name;
+    this.q('#tbHint').querySelector('span').innerHTML = pr.text;
+    this.q('#tbMode').textContent = '显示：' + (this.state.mode ? '相位' : '密度');
+  }
+  /* 参数快照（CPU 镜像与 GPU uniform 同源） */
+  params(){
+    const pr = TB_PRESETS[this.state.preset], L = this.state.L;
+    return {
+      uK: 0.5, g: this.state.g, eps: this.state.eps, trap: pr.trap ? 1 : 0,
+      omega: this.state.omega, bumpH: TB_COMMON.bumpH, bumpW: TB_COMMON.bumpW,
+      vcap: TB_COMMON.vcap, xc: (L - 1) / 2, L,
+    };
+  }
+  /* resetParams=true 仅在点预设按钮时（切场景恢复该预设默认参数）；
+     URL 初次加载 / 统计切换 / ω 拖动均保持当前参数。 */
+  loadPreset(key, stats, resetParams = false){
+    const w = tbMakeWave(this.state.L, key, { stats, omega: this.state.omega });
+    if (w.norm < 1e-9){
+      this.toast('泡利不相容：两个费米子不能占据同一单粒子态');
+      return false;
+    }
+    this.state.preset = key; this.state.stats = stats;
+    if (resetParams){
+      const pr = TB_PRESETS[key];
+      this.state.g = pr.g; this.state.eps = pr.eps; this.state.omega = pr.omega;
+    }
+    this._init = { re: w.re, im: w.im };
+    this.state.simTime = 0; this.state.frames = 0; this._E = null;
+    this.upload(w.re, w.im);
+    this.syncPanel();
+    this.bakePot();
+    this.refreshMeasure();
+    return true;
+  }
+  setStats(s){
+    if (s === this.state.stats) return;
+    this.loadPreset(this.state.preset, s, false);
+  }
+  togglePause(){
+    this.state.paused = !this.state.paused;
+    this.q('#tbPause').textContent = this.state.paused ? '继续' : '暂停';
+    this.q('#tbPause').classList.toggle('on', this.state.paused);
+  }
+  toggleMode(){
+    this.state.mode = this.state.mode ? 0 : 1;
+    this.q('#tbMode').textContent = '显示：' + (this.state.mode ? '相位' : '密度');
+  }
+  resetWave(){
+    if (!this._init) return;
+    this.upload(this._init.re, this._init.im);
+    this.state.simTime = 0; this.state.frames = 0; this._E = null;
+    this.refreshMeasure();
+    this.toast('已重置');
+  }
+
+  /* ---------- GPU 上传 / 读取 ---------- */
+  upload(re, im){
+    const { gl } = this, L = this.state.L, n = 2 * L * L;
+    const inter = new Float32Array(n);
+    for (let k = 0; k < n; k += 2){ inter[k] = re[k / 2]; inter[k + 1] = im[k / 2]; }
+    gl.bindTexture(gl.TEXTURE_2D, this.psi[0].tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG32F, L, L, 0, gl.RG, gl.FLOAT, inter);
+    this.parity = 0;
+  }
+  readField(){
+    const { gl } = this, L = this.state.L;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.psi[this.parity].fbo);
+    gl.readBuffer(gl.COLOR_ATTACHMENT0);
+    gl.readPixels(0, 0, L, L, gl.RG, gl.FLOAT, this._readBuf);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return this._readBuf;
+  }
+  /* 交错 readback → (re,im) 拆分（tbMeasure 口径） */
+  splitField(f){
+    const n = f.length / 2;
+    const re = new Float64Array(n), im = new Float64Array(n);
+    for (let k = 0; k < n; k++){ re[k] = f[2 * k]; im[k] = f[2 * k + 1]; }
+    return { re, im };
+  }
+
+  /* ---------- 演化 ----------
+     uniform 必须在 gl.useProgram 之后设置（pass() 内部先 useProgram 再 setup）——
+     R72 首版在 pass 之前调 setKickUniforms，结果写在上一帧残留的 progDraw 上
+     （GL INVALID_OPERATION，静默无效）：kick 的 uDtHalf/uK/uTexel 全为 0、uPot
+     默认 0 采样成波函数本身。自由预设差异小（V=0 vs Reψ~0.05）掩盖了它，阱预设
+     maxDiff 0.039（相对 0.93）才暴露。 */
+  kickUniforms(dt){
+    const { gl } = this, L = this.state.L, k = this.progKick;
+    gl.uniform2f(this.u(k, 'uTexel'), 1 / L, 1 / L);
+    gl.uniform1f(this.u(k, 'uDtHalf'), dt / 2);
+    gl.uniform1f(this.u(k, 'uK'), 0.5);
+    this.bindTex(k, 'uPot', 2, this.potTex.tex);
+  }
+  /* 自适应步长：显式 KDK 稳定界 dt·λ_max ≲ 2，λ_max ≈ 8uK(动能) + V_max。
+     格点 δ 接触项 g 直接抬高 V_max（g=25 ⟹ dt·29>2 会指数爆炸到 NaN），
+     故把一步拆成 k 份 dt/k，**每帧物理时间不变**（simTime 仍按名义 dt·substeps）。 */
+  effStep(){
+    const dtSafe = 1.9 / (4 + (this._vmax || 0));
+    const k = Math.max(1, Math.ceil(this.state.dt / dtSafe));
+    return { dt: this.state.dt / k, k };
+  }
+  pass(prog, target, setup){
+    const { gl } = this;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, target.fbo);
+    gl.viewport(0, 0, target.w, target.h);
+    gl.useProgram(prog);
+    setup();
+    this.quad.draw(gl);
+  }
+  bindTex(prog, name, unit, tex){
+    const { gl } = this;
+    gl.activeTexture(gl.TEXTURE0 + unit);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.uniform1i(this.u(prog, name), unit);
+  }
+  kdkSubstep(dt){
+    const { gl } = this, p = this.parity, q = 1 - p, L = this.state.L;
+    /* kick1: u[p] → u[q]（只改 Im） */
+    this.pass(this.progKick, this.psi[q], () => {
+      this.bindTex(this.progKick, 'uU', 0, this.psi[p].tex);
+      this.kickUniforms(dt);
+    });
+    /* drift: u[q] → u[p]（只改 Re） */
+    this.pass(this.progDrift, this.psi[p], () => {
+      gl.uniform1f(this.u(this.progDrift, 'uDt'), dt);
+      gl.uniform1f(this.u(this.progDrift, 'uK'), 0.5);
+      gl.uniform2f(this.u(this.progDrift, 'uTexel'), 1 / L, 1 / L);
+      this.bindTex(this.progDrift, 'uU', 0, this.psi[q].tex);
+      this.bindTex(this.progDrift, 'uPot', 2, this.potTex.tex);
+    });
+    /* kick2: u[p] → u[q]（只改 Im） */
+    this.pass(this.progKick, this.psi[q], () => {
+      this.bindTex(this.progKick, 'uU', 0, this.psi[p].tex);
+      this.kickUniforms(dt);
+    });
+    this.parity = q;
+  }
+  evolveFrame(){
+    const { dt, k } = this.effStep();
+    for (let s = 0; s < this.state.substeps; s++)
+      for (let j = 0; j < k; j++) this.kdkSubstep(dt);
+    this.state.simTime += this.state.dt * this.state.substeps;
+    this.state.frames++;
+  }
+  stepFrames(n){
+    for (let i = 0; i < n; i++) this.evolveFrame();
+    this.refreshMeasure();
+  }
+
+  /* ---------- 测量 / HUD / 条带 ---------- */
+  measureNow(){ return this.refreshMeasure(); }
+  refreshMeasure(){
+    const f = this.readField();
+    this._field = f;
+    const { re, im } = this.splitField(f);
+    const m = tbMeasure(re, im, this.state.L);
+    this._m = m;
+    if (this._baseNorm === null) this._baseNorm = m.norm || 1;
+    this.q('#hExch').textContent = nf(m.exch, 5);
+    this.q('#hNorm').textContent = nf(m.norm / this._baseNorm, 6);
+    this.q('#hDiag').textContent = sci(m.diagMass);
+    this.q('#hDiagMax').textContent = sci(m.diagMax);
+    this.q('#hDn').textContent = sci(m.dn12);
+    this.q('#hE').textContent = this._E === null ? '—' : nf(this._E, 5);
+    this.q('#hT').textContent = nf(this.state.simTime, 1) + ' / ' + this.state.frames;
+    const tgt = 0.9 / Math.max(m.peak, 1e-9);
+    this._scale += (Math.min(Math.max(tgt, 1), 1e6) - this._scale) * 0.25;
+    this.drawStrips(m.n1, m.n2);
+    return m;
+  }
+  drawStrips(n1, n2){
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let peak = 1e-12;
+    for (let i = 0; i < n1.length; i++) peak = Math.max(peak, n1[i], n2[i]);
+    this._nScale = 0.92 / peak;
+    const draw = (cv, arr, horiz) => {
+      const ctx = cv.getContext('2d');
+      const W = cv.width, H = cv.height;
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = 'rgba(4,8,16,.4)'; ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = 'rgba(103,232,249,.85)'; ctx.lineWidth = 1.5 * dpr;
+      ctx.beginPath();
+      for (let i = 0; i < arr.length; i++){
+        const t = (i + 0.5) / arr.length;
+        const v = Math.min(arr[i] * this._nScale, 1);
+        if (horiz){ const x = t * W, y = H - v * (H - 4 * dpr) - 2 * dpr; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+        else { const y = (1 - t) * H, x = v * (W - 4 * dpr) + 2 * dpr; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+      }
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(251,191,36,.35)'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      if (horiz){ ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H); } else { ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2); }
+      ctx.stroke();
+    };
+    draw(this.q('#tbN1'), n1, true);
+    draw(this.q('#tbN2'), n2, false);
+  }
+
+  /* ---------- 松弛（虚时间 → 当前对称 sector 的离散基态） ---------- */
+  startRelax(){
+    if (this._relax){ this.toast('松弛进行中…'); return; }
+    const { re, im } = this.splitField(this.readField());
+    this._relax = { re, im, iters: 0, done: false, chunk: 0 };
+    this.q('#tbRelax').textContent = '松弛中…';
+    this.q('#tbRelax').disabled = true;
+    this.toast('虚时间松弛中（保持交换对称）', 1200);
+  }
+  relaxChunk(){
+    const r = this._relax;
+    if (!r || r.done) return;
+    r.chunk++;
+    const sym = this.state.stats === 'boson' ? 1 : -1;
+    const res = tbRelax(r.re, r.im, this.state.L, this.params(), { maxIters: 30, checkEvery: 25, sym });
+    r.iters += res.iters;
+    if (r.chunk % 4 === 0) this.q('#hE').textContent = '松弛 ' + r.iters + ' 步';
+    if (res.iters < 30 || r.iters > 30000){
+      r.done = true;
+      this._E = res.energy;
+      this.upload(r.re, r.im);
+      this.q('#tbRelax').textContent = '松弛';
+      this.q('#tbRelax').disabled = false;
+      this.q('#hE').textContent = nf(res.energy, 5) + ' (' + res.iters + ')';
+      this.toast('已收敛到离散本征态\nE=' + nf(res.energy, 5) + ' · 残差 ' + sci(res.residual) + ' · ' + res.iters + ' 步');
+      this._relax = null;
+      this.refreshMeasure();
+    }
+  }
+  relaxSync(){
+    const { re, im } = this.splitField(this.readField());
+    const sym = this.state.stats === 'boson' ? 1 : -1;
+    const res = tbRelax(re, im, this.state.L, this.params(), { sym });
+    this._E = res.energy;
+    this.upload(re, im);
+    this.q('#hE').textContent = nf(res.energy, 5) + ' (' + res.iters + ')';
+    this.refreshMeasure();
+    return res;
+  }
+
+  /* ---------- 渲染 ---------- */
+  draw(){
+    const { gl } = this;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+    gl.useProgram(this.progDraw);
+    gl.uniform2f(this.u(this.progDraw, 'uTexel'), 1 / this.state.L, 1 / this.state.L);
+    gl.uniform1f(this.u(this.progDraw, 'uScale'), this._scale);
+    gl.uniform1f(this.u(this.progDraw, 'uMode'), this.state.mode);
+    gl.uniform1f(this.u(this.progDraw, 'uDiagOn'), 1);
+    this.bindTex(this.progDraw, 'uU', 0, this.psi[this.parity].tex);
+    this.quad.draw(gl);
+  }
+
+  /* ---------- 帧循环 ---------- */
+  frame(){
+    requestAnimationFrame(this.frame);
+    this._fpsFrames++;
+    const now = performance.now();
+    if (now - this._lastFpsT > 500){
+      this._fps = Math.round(this._fpsFrames * 1000 / (now - this._lastFpsT));
+      this._fpsFrames = 0; this._lastFpsT = now;
+      this.q('#hFps').textContent = String(this._fps);
+    }
+    this.bakePot();   /* 签名未变则立即返回（滑块/预设改动下一帧生效） */
+    if (this._relax) this.relaxChunk();
+    else if (!this.state.paused) this.evolveFrame();
+    this.draw();
+    if (this.state.frames % 6 === 0) this.refreshMeasure();
+  }
+
+  /* ---------- 调试句柄（cdp72） ---------- */
+  summary(m){
+    return { norm: m.norm, exch: m.exch, diagMass: m.diagMass, diagMax: m.diagMax, peak: m.peak, dn12: m.dn12 };
+  }
+  debugHandle(){
+    return {
+      app: this, state: this.state,
+      measure: () => this.summary(this.measureNow()),
+      readField: () => Array.from(this.readField()),
+      fieldHash: () => tbFieldHash(this.readField()),
+      step: (n = 1) => this.stepFrames(n),
+      preset: k => this.loadPreset(k, this.state.stats, false),
+      stats: s => this.setStats(s),
+      relaxNow: () => { const r = this.relaxSync(); return { iters: r.iters, energy: r.energy, residual: r.residual }; },
+      /* 页内 CPU 镜像：从初态按当前参数跑 frames 帧，与 GPU 场逐 texel 对比
+         （GPU float32 vs CPU float64；页内算完只回传摘要） */
+      compareMirror: (frames) => {
+        const P = this.params(), L = this.state.L;
+        const re = Float64Array.from(this._init.re), im = Float64Array.from(this._init.im);
+        const Varr = tbMakeVArray(L, P);
+        const { dt, k } = this.effStep();
+        const sub = this.state.substeps;
+        for (let f = 0; f < frames; f++) for (let s = 0; s < sub; s++)
+          for (let j = 0; j < k; j++) tbKdkStep(re, im, L, P, dt, Varr);
+        const cpu = this.summary(tbMeasure(re, im, L));
+        const gpu = this.summary(this.measureNow());
+        let md = 0, mrd = 0;
+        for (let k = 0; k < re.length; k++){
+          const gr = this._field[2 * k], gi = this._field[2 * k + 1];
+          const d = Math.hypot(gr - re[k], gi - im[k]);
+          if (d > md) md = d;
+          const sc = Math.max(Math.abs(re[k]), Math.abs(im[k]), 1e-6);
+          if (d / sc > mrd) mrd = d / sc;
+        }
+        return { frames, cpu, gpu, maxDiff: md, maxRelDiff: mrd };
+      },
+    };
+  }
+}
+
+/* ===== src/two-body-main.js ===== */
+/* 演示入口：R72 双粒子构型空间页（two-body.html）。
+   课程站嵌入同理：
+     import { TwoBodyApp } from './src/two-body.js';
+     new TwoBodyApp(document.body, {}).mount();
+*/
+
+new TwoBodyApp(document.body, {}).mount();
+
+</script>
+</body>
+</html>
