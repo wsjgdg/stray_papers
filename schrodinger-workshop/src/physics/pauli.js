@@ -230,6 +230,9 @@ export class PauliKernel extends PhysicsKernel {
     const f = (k, lo, hi) => { const v = parseFloat(qp.get(k)); if (!isNaN(v)) state[k] = Math.max(lo, Math.min(hi, v)); };
     f('bX', -0.05, 0.05); f('bY', -0.05, 0.05); f('bZ', -0.05, 0.05);
     f('bGrad', 0, 0.05); f('spinTheta', 0, Math.PI); f('spinPhi', -Math.PI, Math.PI);
+    /* R71 Berry 循环参数（引擎级 state，供 CDP/URL 直设）：
+       ?berryTheta=&berryOmega=&berryB0= —— 上下界与面板滑块一致。 */
+    f('berryTheta', 0.05, Math.PI); f('berryOmega', 0.002, 0.02); f('berryB0', 0.01, 0.05);
   }
 
   /* 自旋读数（引擎 spinSum 原始求和 → 布洛赫向量）。
@@ -252,6 +255,13 @@ export class PauliKernel extends PhysicsKernel {
     return rectangularBarrierModel(state.m);
   }
 
+  /* R71 Berry 相位（绝热循环）：本内核的 uB uniform **每帧从 state.bX/bY/bZ
+     读取**（setUniforms），故 Berry 循环可以让引擎逐帧覆写这三个分量而零
+     新 shader（B(t)=B₀(sinθ cosφ, sinθ sinφ, cosθ)、φ=ωt）——这是把几何
+     相位做进面板的关键：无需引擎或模板改动。约束：Berry 面板要求 bGrad=0
+     （有梯度则不同 x 走不同大小的锥，相位被平均掉），循环期间强制归零、
+     结束恢复。σ·B 的局部 Cayley 闭式（cnLocalSolve）对任意方向的 B 成立，
+     故锥面路径上的 CN 演化与静态均匀场同一精度。 */
   presets(){
     return {
       larmor: { name:'拉莫尔进动', text:'自旋沿 +x 的波包置于均匀磁场 B_z 中：自旋（布洛赫向量）绕磁场轴进动，频率 ω = qB/m（ℏ=1，q=1）——B_z=0.02、m=1 时周期 ≈ 314 模拟时间 ≈ 4.4 秒。波包取 k=0 静止：空间与自旋解耦（均匀场、无势），进动不受波包扩散干扰。HUD 自旋区实时显示 ⟨σ_x⟩=cos(ωt)、⟨σ_y⟩=−sin(ωt)、⟨σ_z⟩=0，|⟨σ⟩|=1 严格守恒。拖动 B_z 滑块可连续改变进动频率（含反向）。',

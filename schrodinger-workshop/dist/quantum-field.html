@@ -6041,6 +6041,13 @@ class QuantumField {
          是两个独立通道、可同时开。面板 #dephSec 仅薛定谔内核显示（pass 只接
          2D 标量路径；γ_φ=0 跳过该 pass，厄米路径零改动）。 */
       gammaPhi: 0,
+      /* R71 Berry 相位（Pauli 绝热循环）：berryTheta = 磁场锥角 θ
+         （B(t)=B₀(sinθ cos φ, sinθ sin φ, cos θ)，φ=ωt）；berryOmega = 进动
+         角频率 ω（一循环 φ:0→2π，T=2π/ω）；berryB0 = 磁场模长（绝热判据
+         ω ≪ 塞曼劈裂 Δ=B₀/m，面板给 ω/Δ 读数）。循环期间逐帧覆写 bX/bY/bZ
+         （Pauli 的 uB uniform 每帧从 state 读 ⟹ 零新 shader），bGrad 强制 0
+         并在结束时恢复。面板 #berrySec 仅 Pauli 内核显示。 */
+      berryTheta: Math.PI/2, berryOmega: 0.01, berryB0: 0.05,
       /* R66 暗孤子：darkV = 速度分数 v/c（|v/c|<1 才是亚声速暗孤子）。 */
       darkV: 0.4,
       ...this.kernel.defaults(),
@@ -6332,6 +6339,26 @@ class QuantumField {
     <div class="row"><label>状态</label><span id="dephStat">未扫描</span></div>
     <canvas id="dephCanvas" width="420" height="180"></canvas>
     <div class="hint" style="margin-top:4px"><b>纯退相位（T₂）</b>是「测量 ⟹ 退相干」的连续版本：与 R68 的单次投影（一次公理操作）不同，这里每个演化帧给每个格点乘一个高斯随机相位 e^{iφ}（φ~N(0,γ_φ·dt)，白噪声、逐 texel 独立）。它<b>只破坏相位关联、完全不动 |ψ|²</b>——画面上亮度图样（概率密度）原样保留，但色相（相位）逐渐起噪、双缝条纹对比度以时间常数 T_φ=1/γ_φ 指数衰减到 0：路径信息泄漏到环境 ⟹ 经典极限（可区分路径则无干涉）。<b>与 T₁ 耗散的区别（重要）</b>：「物理参数」区的耗散 γ 是 T₁ 式振幅衰减（整场乘 e^{−γ·dt}，密度 e^{−2γt} 衰减 = 粒子损失）；本滑块是 T₂ 纯退相（密度严格不变、只有相干性衰减）。两个通道物理独立、可同时开。NMR 口径里 1/T₂ = 1/(2T₁)+1/T_φ，本面板的 γ_φ 即纯退相份额 T_φ⁻¹。<b>条纹对比度扫描（v3 几何）</b>：自动布置双缝——自绘墙 x∈[120,132)（V=0.5 不透明，8 位量化后 0.5039）+ 双缝 w=6、缝距 D=48（y∈[101,107)/[149,155)）+ 屏幕窗 x∈[216,220)（缝屏距 L=90）+ 入射波包 x₀=48、kx=0.7、σ=24；每 γ_φ 点先 <b>230 帧预热</b>（γ_φ=0 建立条纹）再进 <b>40 帧测量窗</b>（局部时刻 t=simTime−预热末时刻），屏窗密度一阶谐波幅度给对比度 C(t)=2|Â(k*)|/Â₀，k* 由 γ_φ=0 参考点 max-C 自标定（m∈[6,24]）。理论预期 C(γ,t)/C(0,t)=e^{−γ_φ·t}。<b>三重证据口径（重要）</b>：脉冲几何下条纹是瞬态——波包越屏后包络残余在测量窗内坍塌参考 C₀(t)（KDK 积分器数值色散 v_g=sin(k)/m 比谱方法慢 8% ⟹ 浏览器 fringe 峰台在 ~f228，预热 230 帧即按此标定；CPU SSF 镜像峰在 ~f207、预热 190——两实现瞬态差 ~21 帧是积分器属性非缺陷），单指数拟合会被时序污染，故端到端检验改为：① 积分抑制 I_γ/I₀ ≈ Σe^{−γt}Â₀(t)/ΣÂ₀(t)（±15%，无拟合抗抖动）；② ln(C_γ/C₀)~t 峰值后坍塌起始窗斜率 = −γ_φ（±25%）；③ 窗内趋势下降 + 末端值按 γ 排序。精确指数律由通道级集合平均验证（CPU 套件 A3：|⟨ψ_iψ_j*⟩|=e^{−γt}）承担，端到端为一致性检验；绘图即为归一化比值图 R(t)=C_γ/C₀（灰线为坍塌中的 C₀(t) 参考）。<b>物理限制（诚实标注）</b>：① 本模型是位置基白噪声（马尔可夫、逐 texel 独立）——真实退相干环境有空间关联长度；② 相位随机游走会泵入高波数动能，⟨E⟩ 随 γ_φ 缓慢上升（该噪声模型的物理后果，非数值误差）；③ |ψ|² 每帧因 float32 往返有 ~1e-7 舍入，长程随机游走（∝√帧数），幂等/守恒验证已量化。
+  </div>
+  <div class="sec" id="berrySec">
+    <h3>Berry 相位（绝热循环）</h3>
+    <div class="row"><label>锥角 θ</label><input type="range" id="rBerT" min="0.05" max="3.10" step="0.01" value="1.5708"><output id="oBerT">1.57</output></div>
+    <div class="row"><label>进动频率 ω</label><input type="range" id="rBerOm" min="0.002" max="0.02" step="0.001" value="0.010"><output id="oBerOm">0.0100</output></div>
+    <div class="row"><label>磁场模长 |B|</label><input type="range" id="rBerB" min="0.01" max="0.05" step="0.001" value="0.050"><output id="oBerB">0.050</output></div>
+    <div class="row"><label>绝热比 ω/Δ</label><span id="berryAdia">—</span></div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnBerF">正向循环</button>
+      <button id="btnBerB">反向循环</button>
+    </div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="btnBerR">参考循环（θ=0）</button>
+      <button id="btnBerStop" disabled>中止</button>
+    </div>
+    <div class="row" style="margin-top:6px"><button id="btnBerClear">清空读数</button></div>
+    <div class="row"><label>状态</label><span id="berryStat">未跑</span></div>
+    <div class="row"><label>γ 实测 / 理论</label><span id="berryGamma">—</span></div>
+    <div class="row"><label>末态 ⟨σ⟩</label><span id="berrySpin">—</span></div>
+    <div class="hint" style="margin-top:4px"><b>Berry 相位</b>：让磁场<b>缓慢</b>地沿一个锥面转满一圈——B(t)=|B|·(sinθ·cos φ, sinθ·sin φ, cos θ)，φ=ωt 从 0 转到 2π——自旋态绝热跟随瞬时本征态 |+;n̂(t)⟩，回到出发点时多出一个<b>只依赖路径几何</b>的相位 γ=−Ω/2=−π(1−cos θ)（Ω=2π(1−cos θ) 是这条路径在参数空间张的立体角）。θ=π/2（沿赤道转一圈）时 γ=−π：自旋态变号而磁场回到原值——这是纯粹的几何效应，与转多快、转多久无关。<b>怎么把几何相位从总相位里挑出来</b>：总相位 Φ=Φ_动力学+γ，动力学部分（塞曼能 −uK|B| 与波包动能相位，合计可达几十弧度）在<b>反向</b>再转一圈时<b>逐字不变</b>、而 γ 变号 ⟹ 正/反相减即消掉它（γ=(Φ⁺−Φ⁻)/2）。但相减只给出 <b>γ mod π</b>：θ=π/2 时 γ=±π 而两条路径的连续相位恰好相等（cosθ=0），相减得 0 而不是 ±π。故再跑一次 <b>θ=0 的参考循环</b>（场恒沿 +z、不张立体角 ⟹ γ=0，实测 Φ_参考 ≡ uK·B₀·T 精确）——它连续无歧义但带一点非绝热偏移 δ（∝(ω/Δ)²·sin²θ）⟹ 用它<b>定分支</b> k=round((γ_参考−γ_相减)/π)，最终 γ=γ_相减+kπ。三行读数全部列出（γ_相减 / γ_参考相减 / δ），不做取舍隐藏。<b>绝热比 ω/Δ</b>（Δ=B₀/m 是上下两个自旋能级的劈裂）必须远小于 1：越大则非绝热泄漏越强（末态 ⟨σ⟩ 偏离 n̂(0)、|⟨σ⟩|&lt;1），实测 γ 的系统误差 ∝(ω/Δ)²。<b>诚实限制</b>：① 循环期间 B_z 梯度被强制归零（有梯度则不同 x 走不同大小的锥，相位被平均掉），结束后恢复；② 重叠模长 |z|&lt;1 是波包扩散的存活振幅（信噪比指标，不影响相位——空间与自旋在均匀场下可分离，空间因子在正/反两次运行里逐字相同）；③ 离散积分器（CN，13 pass/子步）与 float32 纹理引入 ~1e-3 量级的相位残差。</div>
   </div>
   <div class="sec" id="scanSec">
     <h3>透射率扫描</h3>
@@ -6993,6 +7020,234 @@ ${d3 ? `
     const el = this.q('#hSLen');
     el.textContent = s.len.toFixed(4);
     el.className = s.len > 0.999 && s.len < 1.001 ? 'ok' : '';
+  }
+
+  /* ---------- R71 Berry 相位（Pauli 绝热循环）----------
+     物理：磁场沿锥面缓慢转一圈 B(t)=B₀(sinθ cos φ, sinθ sin φ, cos θ)（φ=ωt），
+     自旋 1/2 绝热跟随瞬时本征态 |+;n̂(t)⟩，回到出发点时积累
+         Φ_总 = Φ_动力学 + γ，  γ = −Ω/2 = −π(1−cos θ)
+     （Ω=2π(1−cos θ) 为路径张的立体角；符号由取向定：φ 递增（逆时针、绕 +z）
+       ⟹ 自旋 + 本征态取负号——布洛赫约定 |+;n̂⟩=(cos(θ/2), e^{iφ}sin(θ/2))
+       给出 A_φ=i⟨+|∂_φ|+⟩=−½，∮A·dφ=−π(1−cos θ)）。
+
+     消去动力学相位：反向循环（φ 递减）γ 反号、动力学部分**逐字不变** ⟹
+         γ = (Φ⁺ − Φ⁻)/2，  Φ_动力学 = (Φ⁺ + Φ⁻)/2
+     这同时消掉空间（动能）相位：均匀 B 下 H = H_空间⊗I + I⊗(−uK σ·B)，
+     V 自旋无关 ⟹ 空间与自旋严格可分离，空间因子在正/反两次运行里逐字相同。
+
+     测量：z = ⟨ψ(T)|ψ(0)⟩（一次 readPixels 同时产出自旋期望），
+     z = |z|·e^{−iΦ} ⟹ Φ = −arg(z)；|z|<1 为波包扩散的存活振幅（信噪比）。
+
+     **为什么还要跑一次 θ=0 的参考循环（关键，实测定夺）**：
+     总相位 Φ_θ ≈ uK·B₀·T + γ + δ（δ = 非绝热泄漏造成的能量偏移，实测
+     ∝(ω/Δ)²·sin²θ，ω/Δ=0.1 时可达 γ 的 5–9%）。正/反向相减里 δ 逐字抵消
+     （δ 只依赖 |ω| 与 |B|，与转向无关）⟹ 消除法精度高（0.1–0.5%），但它
+     给出的只是 **γ mod π**——θ=π/2 时 γ=−π 而两条路径的连续相位恰好相等
+     （cosθ=0 ⟹ 旋转参考系里两个方向的 H_rot 本征值相同），消除法返回 0。
+     参考循环（θ=0 ⟹ 不张立体角 ⟹ γ=0，实测 Φ_ref ≡ uK·B₀·T 精确）给出连续
+     无歧义但带 δ 的 γ_ref ⟹ **用它定分支**：k=round((γ_ref − γ_elim)/π)，
+     γ = γ_elim + kπ。实测（ω/Δ=0.1，θ=0.15…2.5 七档）该配方偏差 ≤1%，
+     含 θ=π/2 的 ±π 退化点。面板三行读数全部列出，不做取舍隐藏。
+
+     驱动：循环期间逐帧覆写 state.bX/bY/bZ（Pauli 的 uB uniform 每帧从 state
+     读 ⟹ 零新 shader、零引擎改动）；bGrad 强制 0（梯度让各 x 走不同大小的锥，
+     相位被平均掉），结束时恢复原值。绝热判据 ω ≪ Δ=B₀/m（面板给 ω/Δ）。 */
+  /* ref=true ⟹ θ=0 的参考循环（B 恒沿 +z：路径不张立体角 ⟹ γ=0，且初态 |↑⟩
+     是精确本征态 ⟹ Φ_ref ≡ uK·B₀·T 无泄漏偏移）。与 θ 循环同 ω、同 |B| ⟹
+     同 T、同帧结构，差值即 γ（含 δ，见上）。 */
+  berryStart(dir, ref){
+    if (this.kernelId !== 'pauli') return false;
+    if (this._berry) return false;
+    const st = this.state;
+    if (st.bGrad !== 0){ this.toast('Berry 循环要求均匀场：B_z 梯度须为 0'); return false; }
+    const d = dir < 0 ? -1 : 1;
+    const prev = { bX: st.bX, bY: st.bY, bZ: st.bZ, bGrad: st.bGrad,
+                   sigma: st.sigma, paused: st.paused,
+                   spinTheta: st.spinTheta, spinPhi: st.spinPhi };
+    const th = ref ? 0 : st.berryTheta;
+    /* 初态：自旋沿 n̂(0)=(sinθ,0,cosθ)（即 |+;n̂(0)⟩，本征态 ⟹ 无初始混合）、
+       kx=ky=0（不引入与方向无关的漂移相位，|z| 最大）、σ=24（窄包扩散快 ⟹
+       存活振幅小、相位信噪比差）。 */
+    st.spinTheta = th; st.spinPhi = 0; st.sigma = 24;
+    this.initWave(0.5, 0.5, 0, 0);        /* 含 simTime 归零 ⟹ t0 取 0 */
+    this.syncControls();
+    /* 采样间隔（解包裹用）：相位速率 ≈ uK·|B₀|（塞曼主导，动能项小两个量级）
+       ⟹ 每帧 ΔΦ ≈ uK·B₀·dt；取 S 使单次采样增量 ≈π/5（远小于 π ⟹ 解包裹
+       无混叠；maxStep 读数实测校验）。旋量泄漏振荡频率 Δ=B₀/m 同量级，
+       幅度小，不主导。 */
+    const rate = (0.5/(st.m || 1))*st.berryB0*1.2;
+    const S = Math.max(4, Math.min(60, Math.floor((Math.PI/5)/Math.max(rate, 1e-9))));
+    this._berry = { dir: d, t0: st.simTime, theta: th, om: st.berryOmega,
+                    B0: st.berryB0, prev, snap: this._readPsiFull(), ref: !!ref,
+                    name: ref ? '参考(θ=0)' : (d > 0 ? '正向' : '反向'),
+                    /* 增量解包裹状态：z(t=0)=1 ⟹ arg=0、cum=0 */
+                    sample: S, nf: 0, prevArg: 0, cum: 0, maxStep: 0, nSamp: 0 };
+    this._setB(0, th, st.berryB0);
+    st.paused = false;                    /* 循环期间必须演化（结束时恢复） */
+    this._berryRender();
+    return true;
+  }
+
+  berryStop(){
+    if (!this._berry) return false;
+    const st = this.state, r = this._berry;
+    st.bX = r.prev.bX; st.bY = r.prev.bY; st.bZ = r.prev.bZ; st.bGrad = r.prev.bGrad;
+    st.sigma = r.prev.sigma; st.spinTheta = r.prev.spinTheta; st.spinPhi = r.prev.spinPhi;
+    st.paused = r.prev.paused;
+    this._berry = null;
+    this.syncControls();
+    this._berryRender();
+    return true;
+  }
+
+  /* 帧循环钩子：必须在 evolve 之前（uniform 取帧初 simTime 的场值）。
+     暂停时 simTime 冻结 ⟹ φ 不推进，循环自然挂起（结束/中止再恢复暂停态）。 */
+  _berryTick(){
+    const r = this._berry; if (!r) return;
+    const st = this.state;
+    const t = st.simTime - r.t0;
+    const full = 2*Math.PI;
+    /* 到达终点后**还要再演化一帧**（场取 B(±2π)=B(0)）才收尾：否则路径只
+       累积到 2π−ω·dt，缺最后一小段（且末帧的动力学相位丢失）。此处
+       finishing 标记让本帧先跑完、下一 tick 采样收尾。 */
+    if (r.finishing){ this._berryFinish(st.simTime - r.t0); return; }
+    let phi = r.dir * r.om * t;
+    if (Math.abs(phi) >= full){
+      phi = r.dir * full;
+      this._setB(phi, r.theta, r.B0);
+      r.finishing = true;
+      this._berryRender();
+      return;
+    }
+    this._setB(phi, r.theta, r.B0);
+    /* 相位解包裹采样（每 r.sample 帧）：Φ 总量含 ~uK·B₀·T 的动力学部分
+       （远大于 2π），单次 arg 会混叠 ⟹ 累积逐段增量（每段 <π 即无混叠）。 */
+    r.nf++;
+    if (r.nf % r.sample === 0) this._berrySample();
+    this._berryRender();
+  }
+
+  /* 采样一次重叠相位增量（(−π,π] 折叠后累加 ⟹ 连续相位）。返回本次测量
+     （含 |z| 与末态自旋期望），终点的那次即循环结果。 */
+  _berrySample(){
+    const r = this._berry; if (!r) return null;
+    const m = this._berryOverlap(r.snap, this._readPsiFull());
+    let d = m.arg - r.prevArg;
+    while (d > Math.PI) d -= 2*Math.PI;
+    while (d <= -Math.PI) d += 2*Math.PI;
+    r.cum += d; r.prevArg = m.arg;
+    r.maxStep = Math.max(r.maxStep, Math.abs(d)); r.nSamp++;
+    return m;
+  }
+
+  _setB(phi, th, B0){
+    const st = this.state;
+    const s = Math.sin(th) * B0;
+    st.bX = s*Math.cos(phi); st.bY = s*Math.sin(phi); st.bZ = Math.cos(th)*B0;
+    st.bGrad = 0;
+  }
+
+  _berryFinish(t){
+    const r = this._berry, st = this.state;
+    const m = this._berrySample();       /* 终点采样 ⟹ cum 覆盖完整循环 */
+    const Phi = -r.cum;                  /* 解包裹后的连续总相位（−arg(z)） */
+    const rec = { dir: r.dir, theta: r.theta, om: r.om, B0: r.B0, T: t,
+                  Phi, abs: m ? m.abs : 0, spin: m ? m.spin : null, P: m ? m.P : 0,
+                  maxStep: r.maxStep, nSamp: r.nSamp, ref: r.ref,
+                  pred: -Math.PI*(1 - Math.cos(r.theta)) };
+    if (r.ref) this._berryR = rec;
+    else if (r.dir > 0) this._berryF = rec; else this._berryB = rec;
+    st.bX = r.prev.bX; st.bY = r.prev.bY; st.bZ = r.prev.bZ; st.bGrad = r.prev.bGrad;
+    st.sigma = r.prev.sigma; st.paused = r.prev.paused;
+    st.spinTheta = r.prev.spinTheta; st.spinPhi = r.prev.spinPhi;
+    this._berry = null;
+    this.syncControls();
+    this._berryRender();
+  }
+
+  /* 引擎层测量原语（无物理公式，与 probSplit/spinSum 同族）：
+     一次 readPixels 的场与起始快照逐 texel 求 Σ conj(ψ_T)·ψ_0（双分量），
+     顺带给出末态自旋期望的原始求和（⟨σ⟩ 的解释由内核 spinRead 给）。 */
+  _readPsiFull(){
+    const gl = this.gl, g = this.state.grid;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.psiA.fbo);
+    const buf = new Float32Array(g*g*4);
+    gl.readPixels(0,0,g,g,gl.RGBA,gl.FLOAT,buf);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return buf;
+  }
+
+  _berryOverlap(snap, cur){
+    let re = 0, im = 0, n1 = 0, n2 = 0, re12 = 0, im12 = 0;
+    for (let i = 0; i < cur.length; i += 4){
+      const A = cur[i], B = cur[i+1], C = cur[i+2], D = cur[i+3];       /* ψ(T) */
+      const a = snap[i], b = snap[i+1], c = snap[i+2], d = snap[i+3];   /* ψ(0) */
+      /* conj(A+iB)·(a+ib) = (A·a + B·b) + i(A·b − B·a) */
+      re += A*a + B*b + C*c + D*d;
+      im += A*b - B*a + C*d - D*c;
+      n1 += A*A + B*B; n2 += C*C + D*D;
+      re12 += A*C + B*D; im12 += A*D - B*C;
+    }
+    const P = n1 + n2;
+    const spin = this.kernel.spinRead
+      ? this.kernel.spinRead({ re12, im12, n1, n2, P }) : null;
+    return { re, im, abs: Math.hypot(re, im)/Math.max(P, 1e-30),
+             arg: Math.atan2(im, re), P, spin };
+  }
+
+  _berryRender(){
+    const st = this.state;
+    const set = (id, t) => { const e = this.q(id); if (e) e.textContent = t; };
+    if (!this.q('#berryStat')) return;
+    const adia = st.berryOmega * st.m / st.berryB0;      /* ω/Δ，Δ=B₀/m */
+    set('#berryAdia', (adia).toFixed(3) + '（Δ=B₀/m=' + (st.berryB0/st.m).toFixed(4) +
+      '，T=2π/ω=' + (2*Math.PI/st.berryOmega).toFixed(0) + '）');
+    const bs = this.q('#btnBerStop'); if (bs) bs.disabled = !this._berry;
+    if (this._berry){
+      const r = this._berry;
+      const phi = r.dir * r.om * (st.simTime - r.t0);
+      set('#berryStat', r.name + '循环中 φ=' + phi.toFixed(3) + '/6.283（t=' +
+        (st.simTime - r.t0).toFixed(1) + '）');
+    } else {
+      const f = this._berryF, b = this._berryB, rf = this._berryR;
+      const lastN = this._berryB || this._berryF || this._berryR;
+      let tag = '正/反/参：' + (f ? '✓' : '—') + '/' + (b ? '✓' : '—') + '/' + (rf ? '✓' : '—');
+      if (lastN) tag += ' · 末次 ' + (lastN.ref ? '参考' : (lastN.dir > 0 ? '正向' : '反向')) +
+        ' T=' + lastN.T.toFixed(1) + ' |z|=' + lastN.abs.toFixed(3) +
+        '（解包裹 ' + lastN.nSamp + ' 段，最大增量 ' + (lastN.maxStep || 0).toFixed(3) + ' rad）';
+      set('#berryStat', tag);
+    }
+    /* 三段式 γ（见 berryStart 头注）：γ_elim=(Φ⁺−Φ⁻)/2 精度高但只给 γ mod π；
+       γ_ref=Φ⁺−Φ_ref 连续无歧义但含 δ ⟹ 取 k=round((γ_ref−γ_elim)/π) 定分支。 */
+    const f = this._berryF, b = this._berryB, rf = this._berryR;
+    const same = (x, y) => x && y && Math.abs(x.theta - y.theta) < 1e-12 &&
+      Math.abs(x.om - y.om) < 1e-12 && Math.abs(x.B0 - y.B0) < 1e-12;
+    if (same(f, b)){
+      const elim = (f.Phi - b.Phi)/2;
+      let out = 'γ_消除=(Φ⁺−Φ⁻)/2=' + elim.toFixed(4);
+      if (rf && Math.abs(rf.om - f.om) < 1e-12 && Math.abs(rf.B0 - f.B0) < 1e-12){
+        const gref = f.Phi - rf.Phi;
+        const k = Math.round((gref - elim)/Math.PI);
+        const g = elim + k*Math.PI;
+        const dev = Math.abs(g - f.pred)/Math.max(Math.abs(f.pred), 1e-9)*100;
+        out = 'γ=' + g.toFixed(4) + '（分支 k=' + k + '）· 理论 −π(1−cosθ)=' + f.pred.toFixed(4) +
+          ' · 偏差 ' + dev.toFixed(2) + '% · γ_消除=' + elim.toFixed(4) +
+          ' · γ_参考相减=' + gref.toFixed(4) + '（含非绝热偏移 δ=' + (gref - g).toFixed(4) + '）';
+      } else out += ' · 需再跑「参考循环（θ=0）」定分支';
+      set('#berryGamma', out);
+    } else if (f || b){
+      const r = f || b;
+      set('#berryGamma', (f ? '正向' : '反向') + ' Φ=' + r.Phi.toFixed(4) +
+        '（|z|=' + r.abs.toFixed(3) + '）⟹ 还需跑另一方向与参考循环');
+    } else set('#berryGamma', '—');
+    const last = this._berryB || this._berryF;
+    if (last && last.spin){
+      const n0 = [Math.sin(last.theta), 0, Math.cos(last.theta)];
+      const dv = Math.hypot(last.spin.sx - n0[0], last.spin.sy - n0[1], last.spin.sz - n0[2]);
+      set('#berrySpin', '(' + last.spin.sx.toFixed(3) + ',' + last.spin.sy.toFixed(3) + ',' +
+        last.spin.sz.toFixed(3) + ') |⟨σ⟩|=' + last.spin.len.toFixed(4) +
+        ' · 偏离 n̂(0) ' + dv.toFixed(4));
+    } else set('#berrySpin', '—');
   }
 
   /* ---------- 预设 ---------- */
@@ -8610,6 +8865,10 @@ ${d3 ? `
        避免同一帧双倍弛豫步进）。 */
     const scanBusy = this.scanner.busy || this.scannerGp.busy || this.scannerNls.busy ||
                      this.scannerSlit.busy || this.scannerBloch.busy || this.scannerDeph.busy;
+    /* R71 Berry 绝热循环：逐帧写入锥面磁场，**必须在 evolve 之前**（uB uniform
+       每帧从 state 读，B 取帧初值；暂停时 simTime 冻结 ⟹ φ 不推进，循环
+       自然挂起，结束/中止时恢复原 paused）。 */
+    if (this._berry) this._berryTick();
     if (!this.state.paused || (this.kernel.relaxPending && !scanBusy)) this.evolve();
     /* R61 3D 概率流（evolve 后重算逐层 J 场；归约在 frame3d 的 120ms 节流块内）。
        3D 无箭头 overlay（volume ray-march 未挂 J 层）——showJ 在 3D 为 HUD
@@ -9329,6 +9588,14 @@ ${d3 ? `
     if (slitScanSec){
       const wantSlit = this.kernel.dim3 ? '' : 'none';
       if (slitScanSec.style.display !== wantSlit) slitScanSec.style.display = wantSlit;
+    }
+    /* R71 Berry 相位面板门控：仅 Pauli 内核（需要 spin-1/2 旋量 + 每帧可写的
+       bX/bY/bZ uniform；其余内核无自旋自由度，几何相位无从谈起）。与 scatSec
+       同款口径（仅在实际变化时写 style，避免每 tick 无谓的布局失效）。 */
+    const berrySec = this.q('#berrySec');
+    if (berrySec){
+      const wantB = this.kernelId === 'pauli' ? '' : 'none';
+      if (berrySec.style.display !== wantB) berrySec.style.display = wantB;
     }
     /* R70 球势垒散射相移面板门控：3D 内核 + 主槽为球势垒（POT_SPHERE=1，
        解析模型假设「孤球」——组合势/双缝几何下不显示，不把不适用的模型
@@ -10428,6 +10695,30 @@ ${d3 ? `
     const extra = this.kernel.extraControls(() => this.reinitWave(), () => this.refreshParamHud());   /* 内核附加滑块（如 NLS 的 g / Pauli 自旋角） */
     if (extra) for (const r of extra.rows) this.bindRange(r.id, r.out, r.key, r.fmt, r.after);
 
+    /* R71 Berry 相位面板（#berrySec，仅 Pauli 门控显示；元素在 2D 模板里恒存在
+       ⟹ 绑定不设内核分支，门控走 style.display）。**必须挂在 3D 分支之外**——
+       Pauli 是 2D 内核，挂在 `if (this.kernel.dim3)` 里永远不会被接线（cdp71
+       首轮即踩中：按钮存在但无监听器、读数恒为「—」）。改 θ/ω/|B| 作废旧读数
+       （正/反/参考三次循环必须同参才能消去动力学相位）。 */
+    if (this.q('#berrySec')){
+      const bReset = () => { this._berryF = this._berryB = null; this._berryR = null; this._berryRender(); };
+      this.bindRange('#rBerT','#oBerT','berryTheta', v => v.toFixed(2), bReset);
+      this.bindRange('#rBerOm','#oBerOm','berryOmega', v => v.toFixed(4), bReset);
+      this.bindRange('#rBerB','#oBerB','berryB0', v => v.toFixed(3), bReset);
+      this.on(this.q('#btnBerF'), 'click', () => {
+        if (!this.berryStart(1)) this.toast('Berry 循环仅在 Pauli 内核可用（或已在跑）');
+      });
+      this.on(this.q('#btnBerB'), 'click', () => {
+        if (!this.berryStart(-1)) this.toast('Berry 循环仅在 Pauli 内核可用（或已在跑）');
+      });
+      this.on(this.q('#btnBerR'), 'click', () => {
+        if (!this.berryStart(1, true)) this.toast('Berry 循环仅在 Pauli 内核可用（或已在跑）');
+      });
+      this.on(this.q('#btnBerStop'), 'click', () => { this.berryStop(); });
+      this.on(this.q('#btnBerClear'), 'click', bReset);
+      this._berryRender();
+    }
+
     /* 3D 体积面板（kernel.dim3）：网格 / 射线步数 / 曝光 / σ / 解析势参数 /
        相位着色 / 切片模式 / 相机重置。
        V₀、R 为纯势参数（每帧从 uniform 读入演化，即时生效，无需重发波包）；
@@ -11067,6 +11358,31 @@ ${d3 ? `
          （E/V0/R/k/kR/sigma/uni/tail/deltas），scat() 取上次结果 */
       scatCalc: () => this.scatterCalc(),
       scat: () => this._scat || null,
+      /* R71 Berry 相位调试句柄（cdp71 用）：berryStart(dir) 起循环（返回是否
+         起得来——非 Pauli / 梯度非 0 / 已在跑 均 false），berryInfo() 给
+         进度与两次循环的结果（含消去法算出的 γ 与理论值 −π(1−cosθ)）。 */
+      berryStart: (d, ref) => this.berryStart(Number(d) || 1, !!ref),
+      berryStop: () => { this.berryStop(); return !this._berry; },
+      berryInfo: () => {
+        const st = this.state, r = this._berry, f = this._berryF, b = this._berryB, rf = this._berryR;
+        const same = (x, y) => x && y && Math.abs(x.theta - y.theta) < 1e-12 &&
+          Math.abs(x.om - y.om) < 1e-12 && Math.abs(x.B0 - y.B0) < 1e-12;
+        const elim = same(f, b) ? (f.Phi - b.Phi)/2 : null;
+        const gref = (f && rf && Math.abs(f.om - rf.om) < 1e-12 && Math.abs(f.B0 - rf.B0) < 1e-12)
+          ? f.Phi - rf.Phi : null;
+        const k = (elim !== null && gref !== null) ? Math.round((gref - elim)/Math.PI) : null;
+        return { running: !!r,
+          phi: r ? r.dir*r.om*(st.simTime - r.t0) : null,
+          t: r ? st.simTime - r.t0 : null,
+          dir: r ? r.dir : null, ref: r ? !!r.ref : null,
+          theta: st.berryTheta, om: st.berryOmega, B0: st.berryB0,
+          adia: st.berryOmega*st.m/st.berryB0,
+          pred: -Math.PI*(1 - Math.cos(st.berryTheta)),
+          fwd: f || null, bwd: b || null, ref0: rf || null,
+          elim, gref, k,
+          gamma: (elim !== null && k !== null) ? elim + k*Math.PI : null,
+          dyn: same(f, b) ? (f.Phi + b.Phi)/2 : null };
+      },
       fwellCalc: () => { this.fwellCalc();
         const f = this._fwell;
         return f ? { n: f.nb.length, evals: f.nb, analytic: f.na.map(r => r.E),
@@ -14017,6 +14333,9 @@ class PauliKernel extends PhysicsKernel {
     const f = (k, lo, hi) => { const v = parseFloat(qp.get(k)); if (!isNaN(v)) state[k] = Math.max(lo, Math.min(hi, v)); };
     f('bX', -0.05, 0.05); f('bY', -0.05, 0.05); f('bZ', -0.05, 0.05);
     f('bGrad', 0, 0.05); f('spinTheta', 0, Math.PI); f('spinPhi', -Math.PI, Math.PI);
+    /* R71 Berry 循环参数（引擎级 state，供 CDP/URL 直设）：
+       ?berryTheta=&berryOmega=&berryB0= —— 上下界与面板滑块一致。 */
+    f('berryTheta', 0.05, Math.PI); f('berryOmega', 0.002, 0.02); f('berryB0', 0.01, 0.05);
   }
 
   /* 自旋读数（引擎 spinSum 原始求和 → 布洛赫向量）。
@@ -14039,6 +14358,13 @@ class PauliKernel extends PhysicsKernel {
     return rectangularBarrierModel(state.m);
   }
 
+  /* R71 Berry 相位（绝热循环）：本内核的 uB uniform **每帧从 state.bX/bY/bZ
+     读取**（setUniforms），故 Berry 循环可以让引擎逐帧覆写这三个分量而零
+     新 shader（B(t)=B₀(sinθ cosφ, sinθ sinφ, cosθ)、φ=ωt）——这是把几何
+     相位做进面板的关键：无需引擎或模板改动。约束：Berry 面板要求 bGrad=0
+     （有梯度则不同 x 走不同大小的锥，相位被平均掉），循环期间强制归零、
+     结束恢复。σ·B 的局部 Cayley 闭式（cnLocalSolve）对任意方向的 B 成立，
+     故锥面路径上的 CN 演化与静态均匀场同一精度。 */
   presets(){
     return {
       larmor: { name:'拉莫尔进动', text:'自旋沿 +x 的波包置于均匀磁场 B_z 中：自旋（布洛赫向量）绕磁场轴进动，频率 ω = qB/m（ℏ=1，q=1）——B_z=0.02、m=1 时周期 ≈ 314 模拟时间 ≈ 4.4 秒。波包取 k=0 静止：空间与自旋解耦（均匀场、无势），进动不受波包扩散干扰。HUD 自旋区实时显示 ⟨σ_x⟩=cos(ωt)、⟨σ_y⟩=−sin(ωt)、⟨σ_z⟩=0，|⟨σ⟩|=1 严格守恒。拖动 B_z 滑块可连续改变进动频率（含反向）。',
