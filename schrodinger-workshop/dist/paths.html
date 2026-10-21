@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>路径工场 · 费曼路径求和（薛定谔工场 R74）</title>
+</head>
+<body>
+<!-- 纯 CPU + 2D canvas（无 WebGL、无引擎）；ES 模块需经 HTTP 访问。
+     单文件分发版由 scripts/build-standalone.mjs 生成到 dist/paths.html。 -->
+<script>
+/*! 薛定谔工场 · 单文件分发版（paths.html）— 由 scripts/build-standalone.mjs 自动生成，请勿手改。
+    源码工程（ES 模块，课程站组件化用）：paths.html + src/
+    模块拼接序（拓扑序，依赖在前）：
+      src/core/styles.js
+      src/physics/paths.js
+      src/paths.js
+      src/paths-main.js
+*/
+
+/* ===== src/core/styles.js ===== */
+/* 组件样式：挂载时注入 <style id="qf-styles">（多实例只注入一次）。
+   R43 修复：本字符串此前**以字面 `<style>` 开头**（自初版 9c397d0 起），
+   注入用 textContent ⟹ CSS 解析器把 `<style>` 当 selector 前缀，紧接的
+   `:root{…}` 被解析为「`<style> :root`」这一永不匹配的后代选择器的声明块
+   ⟹ **:root 内所有 CSS 变量失效**（--txt/--dim/--mono/--panel 全空），
+   于是全部 `color:var(--dim)` 等退化为浏览器默认（黑字 + Times New Roman），
+   在深色半透明面板上几乎不可读——而 font-size/letter-spacing 等字面值声明
+   仍生效，故长期未被察觉（旧注释「视觉零回归」的自评有误）。
+   R43 CDP 实测（getComputedStyle 读 CSS 变量全为空 + h3 color=rgb(0,0,0)
+   / fontFamily=Times New Roman）定位并删除该标签后，变量与字体恢复。 */
+const CSS = `
+  :root{
+    --bg:#04060c; --panel:rgba(8,12,22,.74); --line:rgba(120,160,220,.14);
+    --txt:#e6edf3; --dim:#9aa7bd; --cyan:#67e8f9; --mag:#f0abfc; --amber:#fbbf24;
+    --mono:ui-monospace,"SF Mono","Cascadia Code",Consolas,"Courier New",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font-family:var(--sans)}
+  #gl{position:fixed;inset:0;width:100vw;height:100vh;display:block;cursor:crosshair;touch-action:none}
+  .panel{position:fixed;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    box-shadow:0 8px 32px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04)}
+  /* ---------- 顶栏 ---------- */
+  #topbar{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:18px;
+    padding:10px 20px;z-index:10;white-space:nowrap}
+  #topbar .logo{font-family:var(--mono);font-weight:700;font-size:15px;letter-spacing:.12em;
+    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
+  #topbar .eq{font-family:var(--mono);font-size:12.5px;color:var(--dim);letter-spacing:.02em}
+  #topbar .eq b{color:var(--cyan);font-weight:600}
+  #topbar .eq i{color:var(--mag);font-style:italic}
+  #status{font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:.08em}
+  /* R72：双粒子构型空间页入口（与 status 同排，flex:none 防被 eq 压缩） */
+  #topbar .navlink{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
+    border:1px solid var(--line);border-radius:6px;padding:3px 8px;flex:none;transition:all .15s;letter-spacing:.05em}
+  #topbar .navlink:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
+  @media (max-width:900px){#topbar .navlink{display:none}}
+  /* ---------- 左侧控制面板 ---------- */
+  /* R43 修复①：原 max-height:calc(100vh−120px) ⟹ 面板底 = 100vh−44，而左下
+     #desc（bottom:52px）顶部随预设描述长度变化（实测 82px 文本 ⟹ 顶 100vh−132；
+     GP/Pauli 长文本 177px ⟹ 顶 100vh−229）⟹ 两者在左列重叠（最大 238×80 px）。
+     修复：#desc 限高 120px + 内部滚动（高度可控），面板按最坏情况预留
+     (76 顶距 + 120 desc + 52 底距 + 8 间隙 = 256) ⟹ 面板底 100vh−180 ≤ desc 顶
+     100vh−172，四 viewport × 五内核实测无重叠。 */
+  #panel{top:76px;left:14px;width:238px;padding:14px;z-index:10;max-height:calc(100vh - 256px);overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  #panel::-webkit-scrollbar{width:4px}#panel::-webkit-scrollbar-thumb{background:rgba(120,160,220,.25);border-radius:2px}
+  .sec{margin-bottom:14px}
+  .sec:last-child{margin-bottom:0}
+  .sec>h3{font-size:10px;letter-spacing:.22em;color:var(--dim);font-weight:600;margin-bottom:8px;
+    display:flex;align-items:center;gap:8px}
+  .sec>h3::after{content:"";flex:1;height:1px;background:var(--line)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  /* R60 势刷轴比三连同控（grid3 单元格内的迷你标签行：名称 + 实时值） */
+  .mini{font-size:9.5px;color:var(--dim);display:flex;justify-content:space-between;gap:4px;margin:3px 0 1px;white-space:nowrap}
+  .mini b{color:var(--cyan);font-weight:600;font-family:var(--mono)}
+  button{font-family:var(--sans);font-size:12px;color:var(--txt);background:rgba(255,255,255,.045);
+    border:1px solid var(--line);border-radius:8px;padding:7px 8px;cursor:pointer;transition:all .15s;text-align:center}
+  button:hover{background:rgba(103,232,249,.12);border-color:rgba(103,232,249,.4)}
+  button.on{background:rgba(103,232,249,.16);border-color:var(--cyan);color:var(--cyan)}
+  button.wide{width:100%}
+  .row{display:flex;align-items:center;gap:8px;margin:7px 0}
+  .row label{font-size:11px;color:var(--dim);width:64px;flex:none}
+  .row output{font-family:var(--mono);font-size:11px;color:var(--cyan);width:44px;text-align:right;flex:none}
+  input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:3px;border-radius:2px;
+    background:rgba(120,160,220,.25);outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;border-radius:50%;
+    background:var(--cyan);box-shadow:0 0 8px rgba(103,232,249,.7);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:12px;height:12px;border:none;border-radius:50%;background:var(--cyan);cursor:pointer}
+  select{font-family:var(--mono);font-size:11px;color:var(--txt);background:rgba(255,255,255,.05);
+    border:1px solid var(--line);border-radius:6px;padding:4px 6px;width:100%;outline:none}
+  /* ---------- 右侧 HUD ---------- */
+  #hud{top:76px;right:14px;padding:12px 14px;z-index:10;min-width:196px;font-family:var(--mono)}
+  #hud .hrow{display:flex;justify-content:space-between;gap:14px;font-size:11.5px;padding:3px 0}
+  #hud .hrow span:first-child{color:var(--dim)}
+  #hud .hrow span:last-child{color:var(--txt)}
+  #hud .hrow .ok{color:#4ade80}#hud .hrow .warn{color:var(--amber)}
+  #hud hr{border:none;border-top:1px solid var(--line);margin:7px 0}
+  /* ---------- 相位图例 ---------- */
+  #legend{right:14px;bottom:52px;padding:10px 12px;z-index:10;display:flex;align-items:center;gap:12px}
+  #wheel{width:84px;height:84px;border-radius:50%;border:1px solid var(--line)}
+  #legend .cap{font-size:10.5px;color:var(--dim);line-height:1.7;max-width:130px}
+  #legend .cap b{color:var(--cyan);font-weight:600}
+  /* ---------- 底部提示 ---------- */
+  #hint{left:50%;bottom:14px;transform:translateX(-50%);padding:8px 18px;z-index:10;
+    font-size:11.5px;color:var(--dim);white-space:nowrap;letter-spacing:.02em}
+  #hint b{color:var(--txt);font-weight:600}
+  #hint .k{font-family:var(--mono);color:var(--cyan);background:rgba(103,232,249,.1);
+    border:1px solid rgba(103,232,249,.25);border-radius:4px;padding:0 5px;font-size:10.5px}
+  /* ---------- 预设描述 ---------- */
+  /* R43 修复②：描述文本长度随内核/预设变化（实测 82–177px 高），高度不可控会
+     顶进 #panel 区域 ⟹ 限高 120px + 内部滚动：既压住几何冲突，又保留全文
+     （长描述可滚动查看）。 */
+  #desc{left:14px;bottom:52px;z-index:10;padding:10px 14px;max-width:340px;font-size:11.5px;
+    color:var(--dim);line-height:1.65;max-height:120px;overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  #desc b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:12px}
+  /* ---------- toast ---------- */
+  #toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:20;pointer-events:none;
+    font-family:var(--mono);font-size:13px;color:var(--cyan);letter-spacing:.2em;opacity:0;transition:opacity .4s;
+    text-shadow:0 0 18px rgba(103,232,249,.8)}
+  /* ---------- 笔刷光标预览环 ---------- */
+  #brushcursor{position:fixed;border:1px solid rgba(140,190,255,.85);border-radius:50%;pointer-events:none;
+    display:none;z-index:15;box-shadow:0 0 10px rgba(80,140,255,.35),inset 0 0 10px rgba(80,140,255,.18)}
+  /* ---------- 准星瞄准线 ---------- */
+  #aim{position:fixed;inset:0;width:100vw;height:100vh;z-index:5;pointer-events:none;display:none}
+  #aim line{stroke:var(--amber);stroke-width:1.5;stroke-dasharray:5 4;filter:drop-shadow(0 0 4px rgba(251,191,36,.8))}
+  #aim circle{fill:none;stroke:var(--amber);stroke-width:1;opacity:.7}
+  #aim text{fill:var(--amber);font-family:var(--mono);font-size:11px}
+  /* ---------- 角标 ---------- */
+  .corner{position:fixed;width:22px;height:22px;z-index:4;pointer-events:none;opacity:.5}
+  .corner::before,.corner::after{content:"";position:absolute;background:var(--cyan)}
+  .corner::before{width:100%;height:1px}.corner::after{width:1px;height:100%}
+  #c1{top:8px;left:8px}.corner::before{top:0}#c1::after{left:0}
+  #c2{top:8px;right:8px}#c2::before{top:0}#c2::after{right:0}
+  #c3{bottom:8px;left:8px}#c3::before{bottom:0}#c3::after{left:0}
+  #c4{bottom:8px;right:8px}#c4::before{bottom:0}#c4::after{right:0}
+  #diag{position:fixed;left:-9999px}
+  /* ---------- 透射率扫描面板 ---------- */
+  .hint{font-size:10px;color:var(--dim);line-height:1.5;flex:1}
+  /* ---------- hint 可折叠（R45，用户选定方案 a）----------
+     运行时升级（app.js upgradeHints）：原 hint 文本搬进 .hintBody，
+     前置 .hintToggle 按钮。默认折叠（长 hint 是面板溢出的元凶，R43
+     实测 2D 697px / 3D 1673px / GP 980px）；展开态经 localStorage
+     持久化（key = hint 文本摘要，跨内核/面板切换稳定）。 */
+  .hintToggle{display:block;width:100%;text-align:left;background:none;border:none;
+    color:var(--dim);font:inherit;font-size:10px;cursor:pointer;padding:0;margin:0;
+    letter-spacing:.05em}
+  .hintToggle:hover{color:var(--cyan)}
+  .hintToggle:focus-visible{outline:1px solid var(--cyan);outline-offset:2px}
+  .hint .hintBody{display:none}
+  .hint.open .hintBody{display:block}
+  .hint.open .hintToggle{color:var(--cyan);margin-bottom:3px}
+  /* ---------- sec 级分区折叠（R48，README「后续方向」a2）----------
+     与 hint 折叠（R45）同模式：h3 变切换头（class 驱动显隐），展开态经
+     localStorage 持久化（qf.secs.state，key = sec id / h3 摘要）。
+     默认折叠：四个扫描面板 sec——R45 实测（1440×900，overflow 口径
+     scrollH−clientH）溢出大头正是区块结构：2D 687 / 3D 1403 / GP 813，
+     canvas 硬高占其中 820px。与门控正交：syncControls 按内核切 sec 的
+     style.display（整区显隐），本折叠切 sec 内部子元素，互不竞争。
+     扫描开始（GenericScanner.start → app.expandSecFor）自动展开所在
+     sec——用户点了「开始扫描」就应看到 canvas 与状态行。
+     特异度注意：规则须带 #panel 前缀——四个扫描 canvas 的 display:block
+     规则（ID 选择器 1,0,0）会压过裸 .sec.collapsed > *:not(h3)（0,1,1）
+     ⟹ 折叠态 canvas 仍显示（cdp48 首轮实证）。 */
+  #panel .sec.collapsed > *:not(h3){display:none}
+  .sec > h3{cursor:pointer;user-select:none;-webkit-user-select:none}
+  .sec > h3:focus-visible{outline:1px solid var(--cyan);outline-offset:2px}
+  .sec > h3::before{content:"▾ ";color:var(--dim);font-weight:400}
+  .sec.collapsed > h3::before{content:"▸ "}
+  /* R48：range flex item 默认 min-width:auto（Chrome ~129px 固有最小宽）
+     ⟹ label64+gap+range129+gap+output44 超出面板内容宽 236px ~31px，
+     面板被迫横向滚动（R43 起既有缺陷，R45 溢出台账只记了纵向）。 */
+  input[type=range]{min-width:0}
+  /* R48 a3：扫描 canvas 统一 width:100%（修复 paramScanCanvas/scanCanvas3/
+     slitScanCanvas 三个缺规则 ⟹ 420px attribute 宽在 210px 面板内容区横向
+     溢出、面板被迫横向滚动——R45 溢出台账只记了纵向，此项本轮补录）；
+     attribute 高 260/300 → 180（_plot 全部按 cv.width/height 自适应绘制，
+     内部分辨率 420×180 不变、显示高 210×180/420=90px，展开态每块省 40–60px）。 */
+  #scanCanvas,#paramScanCanvas,#scanCanvas3,#slitScanCanvas{width:100%;margin-top:6px;
+    border:1px solid var(--line);border-radius:8px;background:rgba(4,8,16,.4);display:block}
+  #scanStat{font-size:10px;color:var(--cyan);font-family:var(--mono);flex:1;line-height:1.45}
+  button:disabled{opacity:.4;cursor:default}
+  button:disabled:hover{background:rgba(255,255,255,.045);border-color:var(--line)}
+  /* ---------- 面板双向收起（R56，「试验场全屏」）----------
+     左列 #panel(上) + #desc(下)、右列 #hud(上) + #legend(下) 各为一组，
+     整组 transform 滑出屏幕——#gl 本就 position:fixed 全屏，滑出即露全场，
+     无需 resize/重绘（画布尺寸不变，只是不再被面板遮挡）。
+     边缘拉手 .qf-tab 常驻（z-index 11 压面板 10，只压边框+padding 6px，
+     不挡内容）；点击拉手或快捷键 [ / ] 切换；状态经 localStorage
+     qf.panels.state = {left,right}（true=展开，缺省/坏值默认全展开）。
+     滑出态 pointer-events:none ⟹ 画布交互全程不被残留命中区遮挡。 */
+  #panel,#desc,#hud,#legend{transition:transform .28s cubic-bezier(.4,0,.2,1),opacity .24s}
+  body.qf-hide-left #panel,body.qf-hide-left #desc{transform:translateX(calc(-100% - 24px));opacity:0;pointer-events:none}
+  body.qf-hide-right #hud,body.qf-hide-right #legend{transform:translateX(calc(100% + 24px));opacity:0;pointer-events:none}
+  .qf-tab{position:fixed;top:50%;transform:translateY(-50%);z-index:11;width:20px;height:60px;
+    padding:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);
+    font-size:14px;line-height:1;color:var(--dim);background:var(--panel);border:1px solid var(--line);
+    border-radius:0 10px 10px 0;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    cursor:pointer;user-select:none;-webkit-user-select:none;
+    box-shadow:0 4px 16px rgba(0,0,0,.4);transition:color .15s,border-color .15s}
+  #tabL{left:0}
+  #tabR{right:0;border-radius:10px 0 0 10px}
+  .qf-tab:hover{color:var(--cyan);border-color:rgba(103,232,249,.45)}
+  @media (max-width:1100px){#legend,#desc{display:none}}
+`;
+
+function injectStyles(){
+  if (document.getElementById("qf-styles")) return;
+  const st = document.createElement("style");
+  st.id = "qf-styles";
+  st.textContent = CSS;
+  document.head.appendChild(st);
+}
+
+/* ===== src/physics/paths.js ===== */
+/* ============================================================================
+ * paths.js — R74 费曼路径求和（自由粒子 · 单缝 / 双缝）
+ *
+ * 单位制：m=1, ħ=1，且取「以 x 为参数、速度 v_x=1」⟹ 每段飞行时间 T=X。
+ *   于是 p=mv=1、λ=2π/k=2π。所有相位都以这个单位制算，页面坐标即世界坐标。
+ *
+ * 一条路径（单段，从 (0,ya) 到 (X,yb)）用模态展开参数化：
+ *   y(τ) = ya + Δy·τ + Σ_n a_n sin(nπτ),  τ = x/X ∈ [0,1]
+ * 代入 S=(m/2)∫(ẋ²+ẏ²)dt 得
+ *   S = X/2 + Δy²/(2X) + Σ_n a_n² n²π²/(4X)
+ * 第一项对所有路径相同（可丢），第二项是直线路径的相对作用量，第三项是
+ * 波折的「超出作用量」。∫δ'² 的交叉项因 δ(0)=δ(1)=0 而恒为零——这是模态
+ * 展开能给出闭式相位的根据。
+ *
+ * 关键结构（本模块的核心恒等式，pot74 逐项验证）：
+ *   模求和因子 C(X) = Σ_{路径} e^{i·Σ_n a_n²n²π²/(4X)} 只依赖 X，与端点无关
+ *   ⟹ 单段振幅 = e^{iΔy²/(2X)}·C(X)。故
+ *   **截断模态只改变整体归一化，不改变条纹位置/间距/包络**；绝对幅度的
+ *   X 标度不是物理的（等权平测度截断的固有性质，不是数值误差，见文件末）。
+ *
+ * 与解析传播子的关系：
+ *   K(X,Δy) = (2πiX)^{-1/2} e^{iΔy²/(2X)}（1D 自由传播子，m=ħ=1）
+ *   路径和 = C(X)·√(2πiX)·K ⟹ 逐点只差一个复常数（页面 HUD 实时显示该比值
+ *   的起伏，量级 1e-15）。
+ * ========================================================================== */
+
+const PI_LAMBDA = 2 * Math.PI;   /* m=ħ=1、v_x=1 ⟹ 波长 2π */
+
+const PI_DEFAULTS = {
+  L1: 160,        /* 源 → 屏 */
+  L2: 400,        /* 屏 → 探测面 */
+  ys: 0,          /* 源横向位置（世界坐标，页面里再平移到画布中心） */
+  d: 40,          /* 缝间距 */
+  w: 6,           /* 缝宽 */
+  modes: 1,       /* 模态数（1 或 2；对条纹无影响，只影响归一） */
+  K: 48,          /* 每个模态的采样区间数（2K+1 个取值） */
+  W: 26,          /* 一阶模态最大波折幅度（θ_n 幅度 = W/n） */
+  nxi: 5,         /* 缝宽方向的求积点数 */
+  nY: 241,        /* 剖面采样点数 */
+  yFov: 200,      /* 剖面纵向半宽（世界单位；= 画布可见半高） */
+  openA: true, openB: true,
+  coherent: true, /* true=幅度相加；false=强度相加（可区分路径） */
+};
+
+/* ---------- 单段：相位与模态系数 ---------- */
+function piModeCoef(X, n){ return n * n * Math.PI * Math.PI / (4 * X); }
+
+/* 相对作用量（已去掉公共的 X/2）：Δy²/(2X) + Σ a_n²n²π²/(4X) */
+function piSegmentPhase(X, dy, amps){
+  let ph = dy * dy / (2 * X);
+  for (let i = 0; i < amps.length; i++){
+    const n = i + 1;
+    ph += n * n * Math.PI * Math.PI * amps[i] * amps[i] / (4 * X);
+  }
+  return ph;
+}
+
+/* 直线路径的相对作用量 */
+function piStraightPhase(X, dy){ return dy * dy / (2 * X); }
+
+/* ---------- 模态族的等权求和 ---------- */
+/* 嵌套循环（不用因式分解）：这正是「逐条路径相加」的字面实现，
+   pot74 用它和 1D 乘积对照，证明 C(X) 的因式分解成立。 */
+function piModeSum(X, opts = {}){
+  const K = opts.K ?? PI_DEFAULTS.K;
+  const W = opts.W ?? PI_DEFAULTS.W;
+  const modes = Math.max(1, Math.min(2, opts.modes ?? PI_DEFAULTS.modes));
+  const cs = [];
+  for (let n = 1; n <= modes; n++) cs.push(piModeCoef(X, n));
+  /* 中点法则：每个模态取 2K 个等距样本（a=(i+½)h−A, h=A/K），不含端点。
+     端点法则（含 a=±A）在端点处有半个区间误差，实测收敛是 O(h)；中点法则
+     实测 O(h²)（K 加倍误差降 4×，见 pot74 A2）。步长 h 同时作为「测度因子」
+     的参考尺度（sum·h ≈ ∫da）。 */
+  let re = 0, im = 0, count = 0;
+  const rec = (n, ph) => {
+    if (n === modes){ re += Math.cos(ph); im += Math.sin(ph); count++; return; }
+    const c = cs[n], A = W / (n + 1), h = A / K;
+    for (let i = 0; i < 2 * K; i++){
+      const a = -A + (i + 0.5) * h;
+      rec(n + 1, ph + c * a * a);
+    }
+  };
+  rec(0, 0);
+  return { re, im, count, mag: Math.hypot(re, im), h: W / K };
+}
+
+/* 单模态求和（因式分解的一侧） */
+function piModeSum1D(X, n, opts = {}){
+  const K = opts.K ?? PI_DEFAULTS.K, W = opts.W ?? PI_DEFAULTS.W;
+  const c = piModeCoef(X, n), A = W / n, h = A / K;
+  let re = 0, im = 0;
+  for (let i = 0; i < 2 * K; i++){
+    const a = -A + (i + 0.5) * h, ph = c * a * a;
+    re += Math.cos(ph); im += Math.sin(ph);
+  }
+  return { re, im, count: 2 * K, mag: Math.hypot(re, im), h };
+}
+
+/* ---------- 单段振幅（含端点几何相位） ---------- */
+function piSegmentAmp(X, dy, opts = {}){
+  const C = piModeSum(X, opts);
+  const ph = piStraightPhase(X, dy);
+  const cp = Math.cos(ph), sp = Math.sin(ph);
+  return { re: cp * C.re - sp * C.im, im: sp * C.re + cp * C.im, mag: C.mag };
+}
+
+/* ---------- 解析传播子（对照） ---------- */
+/* K = (2πiX)^{-1/2} e^{iΔy²/2X}；实部/虚部显式展开，避免复数库 */
+function piAnalyticSegment(X, dy){
+  const ph = piStraightPhase(X, dy);
+  const pref = 1 / Math.sqrt(2 * Math.PI * X);
+  /* (2πiX)^{-1/2} = pref·e^{-iπ/4} */
+  const c = Math.SQRT1_2 * pref;
+  const cr = Math.cos(ph), ci = Math.sin(ph);
+  return { re: c * (cr + ci), im: c * (ci - cr) };
+}
+
+/* ---------- 缝位置 ---------- */
+function piSlits(cfg = {}){
+  const c = { ...PI_DEFAULTS, ...cfg };
+  const out = [];
+  if (c.openA) out.push(+c.d / 2);
+  if (c.openB) out.push(-c.d / 2);
+  return out;
+}
+
+/* ξ 求积点数：跨缝相位变化 ≈ (|Y|/L₂)·w（源曲率项同量级），要求每样本的相位步
+   ≤0.5 rad 才不混叠。w=20、yFov=293、L₂=400 时需要 30 点；首版固定 nxi=7 时
+   相位步 2.07 rad，单缝剖面被混叠出两个假暗纹（pot74 C3 抓到）。 */
+function piNxiFor(w, L2, ymax, base = PI_DEFAULTS.nxi){
+  const need = Math.ceil(w * Math.max(1, Math.abs(ymax)) / (0.5 * Math.max(1e-9, L2)));
+  return Math.max(base, need);
+}
+
+/* ξ 求积点（中点法） */
+function piXiSamples(w, n){
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(-w / 2 + w * (i + 0.5) / n);
+  return out;
+}
+
+/* ---------- 探测点振幅 ---------- */
+/* 返回：
+ *   raw   路径求和（未归一）
+ *   an    解析传播子（同一 ξ 求积）
+ *   scale raw/an 的复比值（应逐点恒定）
+ *   per   各缝单独振幅（相干/非相干用）
+ */
+function piAmpAt(Y, cfg = {}){
+  const c = { ...PI_DEFAULTS, ...cfg };
+  const C1 = piModeSum(c.L1, c), C2 = piModeSum(c.L2, c);
+  const slits = piSlits(c);
+  const xi = piXiSamples(c.w, piNxiFor(c.w, c.L2, Math.abs(Y), Math.max(1, c.nxi | 0)));
+  let re = 0, im = 0, anRe = 0, anIm = 0;
+  const per = [];
+  for (const s of slits){
+    let sr = 0, si = 0, ar = 0, ai = 0;
+    for (const dx of xi){
+      const x = s + dx;
+      const ph = piStraightPhase(c.L1, x - c.ys) + piStraightPhase(c.L2, Y - x);
+      sr += Math.cos(ph); si += Math.sin(ph);
+      const k1 = piAnalyticSegment(c.L1, x - c.ys), k2 = piAnalyticSegment(c.L2, Y - x);
+      /* (a+bi)(c+di) */
+      ar += k1.re * k2.re - k1.im * k2.im;
+      ai += k1.re * k2.im + k1.im * k2.re;
+    }
+    const n = xi.length;
+    /* 路径和：几何相位 × C1·C2，逐缝。(gr+i·gi)(a+ib)(c+id) 的实部是
+       gr·ac − gi·bc − gr·bd − gi·ad —— 第四项是 **−**gr·bd（首版写成 +，
+       逐缝振幅的相位因此偏 1.24 rad；剖面走的是 piProfile 里的另一条正确展开，
+       所以只有 pot74 的干涉项恒等式把它抓出来）。 */
+    const gr = sr / n, gi = si / n;
+    const pr = gr * C1.re * C2.re - gi * C1.im * C2.re - gr * C1.im * C2.im - gi * C1.re * C2.im;
+    const pi2 = gr * C1.re * C2.im + gr * C1.im * C2.re + gi * C1.re * C2.re - gi * C1.im * C2.im;
+    per.push({ slit: s, re: pr, im: pi2, mag: Math.hypot(pr, pi2) });
+    re += pr; im += pi2;
+    anRe += ar / n; anIm += ai / n;
+  }
+  return { raw: { re, im, mag: Math.hypot(re, im) }, an: { re: anRe, im: anIm, mag: Math.hypot(anRe, anIm) }, per };
+}
+
+/* 单点强度（相干/非相干按 cfg.coherent 选） */
+function piIntensity(Y, cfg = {}){
+  const A = piAmpAt(Y, cfg);
+  if (cfg.coherent === false){
+    let I = 0;
+    for (const p of A.per) I += p.mag * p.mag;
+    return I;
+  }
+  return A.raw.mag * A.raw.mag;
+}
+
+/* ---------- 剖面 ---------- */
+/* 用同一模态常数 C1·C2（已验证与显式逐路径求和一致到 1e-14），
+   所以 241 个探测点的剖面是 O(nY·nSlit·nxi) 而不是 O(nY·K²...) */
+function piProfile(cfg = {}){
+  const c = { ...PI_DEFAULTS, ...cfg };
+  const C1 = piModeSum(c.L1, c), C2 = piModeSum(c.L2, c);
+  const slits = piSlits(c);
+  const xi = piXiSamples(c.w, piNxiFor(c.w, c.L2, c.yFov, Math.max(1, c.nxi | 0)));
+  const n = c.nY | 0;
+  const yMin = -c.yFov, yMax = c.yFov;   /* 剖面覆盖画布可见的纵向范围 */
+  const Ys = new Float64Array(n), Ip = new Float64Array(n), Ia = new Float64Array(n), Ii = new Float64Array(n);
+  for (let k = 0; k < n; k++){
+    const Y = yMin + (yMax - yMin) * k / (n - 1);
+    Ys[k] = Y;
+    let re = 0, im = 0, ar = 0, ai = 0, incoh = 0, anIncoh = 0;
+    for (const s of slits){
+      let sr = 0, si = 0, kr = 0, ki = 0;
+      for (const dx of xi){
+        const x = s + dx;
+        const ph = piStraightPhase(c.L1, x - c.ys) + piStraightPhase(c.L2, Y - x);
+        sr += Math.cos(ph); si += Math.sin(ph);
+        const k1 = piAnalyticSegment(c.L1, x - c.ys), k2 = piAnalyticSegment(c.L2, Y - x);
+        kr += k1.re * k2.re - k1.im * k2.im;
+        ki += k1.re * k2.im + k1.im * k2.re;
+      }
+      const m = xi.length;
+      const gr = sr / m, gi = si / m;
+      const pr = (gr * C1.re - gi * C1.im) * C2.re - (gr * C1.im + gi * C1.re) * C2.im;
+      const pii = (gr * C1.re - gi * C1.im) * C2.im + (gr * C1.im + gi * C1.re) * C2.re;
+      re += pr; im += pii;
+      incoh += pr * pr + pii * pii;
+      anIncoh += (kr * kr + ki * ki) / (m * m);
+      ar += kr / m; ai += ki / m;
+    }
+    Ip[k] = c.coherent === false ? incoh : re * re + im * im;
+    /* 非相干时对照也换成「各缝强度相加」，否则比值不是常数（那是模式差异，
+       不是数值误差，HUD 的「比值起伏」会误报） */
+    Ia[k] = c.coherent === false ? anIncoh : ar * ar + ai * ai;
+    Ii[k] = incoh;
+  }
+  /* 归一 + 比值起伏（验证「只差一个常数」） */
+  const mp = Math.max(...Ip), ma = Math.max(...Ia);
+  let sMin = Infinity, sMax = -Infinity, sSum = 0;
+  for (let k = 0; k < n; k++){
+    if (Ia[k] > 1e-30 * ma && Ip[k] > 1e-30 * mp){
+      const r = Ip[k] / Ia[k];
+      if (r < sMin) sMin = r;
+      if (r > sMax) sMax = r;
+      sSum += r;
+    }
+  }
+  const sMean = sSum / Math.max(1, n);
+  return {
+    Y: Ys, path: Float64Array.from(Ip, v => v / mp), an: Float64Array.from(Ia, v => v / ma),
+    raw: Ip, iAn: Ia, incoh: Ii,
+    scale: { min: sMin, max: sMax, mean: sMean, spread: (sMax - sMin) / Math.max(sMean, 1e-300) },
+    maxPath: mp, maxAn: ma,
+  };
+}
+
+/* ---------- 可视化：路径折线 ---------- */
+/* 单段：y(τ) = ya + Δy·τ + Σ a_n sin(nπτ) */
+function piPolyline(xa, ya, xb, yb, amps, N = 28){
+  const pts = [];
+  for (let i = 0; i <= N; i++){
+    const t = i / N;
+    let y = ya + (yb - ya) * t;
+    for (let n = 0; n < amps.length; n++) y += amps[n] * Math.sin((n + 1) * Math.PI * t);
+    pts.push([xa + (xb - xa) * t, y]);
+  }
+  return pts;
+}
+
+/* 取一组「能代表整个族」的路径样本（画图用）：两段各在 [-W,W] 上取 nA 个
+   等距值 f，构成 nA² 的**子网格**（族本身是 2K×2K 的完整网格，画图只抽子集）。
+   注意两段都要有波折——只给段 1 加波折会让画面撒谎（求和时两段都有 C(X)）。 */
+function piPathSamples(Y, cfg = {}, nA = 7){
+  const c = { ...PI_DEFAULTS, ...cfg };
+  const slits = piSlits(c);
+  const xi = piXiSamples(c.w, Math.max(1, c.nxi | 0));
+  const frac = [];
+  for (let i = 0; i < nA; i++) frac.push(-1 + 2 * i / (nA - 1));
+  const out = [];
+  for (const s of slits){
+    for (const dx of xi){
+      const x = s + dx;
+      for (const f1 of frac){
+        for (const f2 of frac){
+          const seg1 = [f1 * c.W];
+          const seg2 = [f2 * c.W];
+          if (c.modes > 1){ seg1.push(f2 * c.W / 2); seg2.push(f1 * c.W / 2); }
+          const ph = piSegmentPhase(c.L1, x - c.ys, seg1) + piSegmentPhase(c.L2, Y - x, seg2);
+          out.push({ slit: s, xi: x, seg1, seg2, phase: ph });
+        }
+      }
+    }
+  }
+  return out;
+}
+
+/* ---------- 数值参考（验证用，页面不用） ---------- */
+/* 细网格 Simpson 求 ∫_{-A}^{A} e^{i c a²} da，作为模态和的独立真值 */
+function piFresnelRef(A, cCoef, N = 20001){
+  const h = 2 * A / N;
+  let re = 0, im = 0, wsum = 0;
+  for (let i = 0; i <= N; i++){
+    const a = -A + i * h;
+    const w = (i === 0 || i === N) ? 1 : (i % 2 ? 4 : 2);
+    const ph = cCoef * a * a;
+    re += w * Math.cos(ph); im += w * Math.sin(ph); wsum += w;
+  }
+  re *= h / 3; im *= h / 3; wsum *= h / 3;
+  return { re, im, len: wsum };
+}
+
+/* ---------- 派生量 ---------- */
+function piFringeSpacing(cfg = {}){
+  const c = { ...PI_DEFAULTS, ...cfg };
+  return c.d > 1e-9 ? PI_LAMBDA * c.L2 / c.d : Infinity;   /* λL₂/d */
+}
+function piEnvelopeZero(cfg = {}){
+  const c = { ...PI_DEFAULTS, ...cfg };
+  return c.w > 1e-9 ? PI_LAMBDA * c.L2 / c.w : Infinity;   /* 单缝第一零点 λL₂/w */
+}
+
+
+/* 条纹计数与对比度：数**内部局部极小**（暗纹），深度按两侧较浅的极大算。
+   为什么不用「内部极大」：单缝包络的中心极大是真极大，但它是单调下降的起点、
+   不是振荡——数极大就会把单缝算成 1 条（pot74 首版的实测）。
+   数极小则天然区分：单调包络没有内部极小，双缝每两条明纹之间必有一个。
+   返回 {count（暗纹数）, contrast（平均深度）, peaks}。 */
+function piFringes(prof){
+  const n = prof.path.length;
+  const dips = [];
+  for (let k = 3; k < n - 3; k++){
+    const v = prof.path[k];
+    if (!(v <= prof.path[k - 1] && v < prof.path[k + 1])) continue;
+    let j = k;
+    while (j > 0 && prof.path[j - 1] >= prof.path[j]) j--;
+    const lmax = prof.path[j];
+    j = k;
+    while (j < n - 1 && prof.path[j + 1] >= prof.path[j]) j++;
+    const rmax = prof.path[j];
+    const shallow = Math.min(lmax, rmax);
+    if (shallow < 1e-9) continue;
+    const depth = (shallow - v) / shallow;
+    if (depth < 0.15) continue;
+    dips.push({ Y: prof.Y[k], I: v, contrast: (shallow - v) / (shallow + v), depth });
+  }
+  const contrast = dips.length ? dips.reduce((a, d) => a + d.contrast, 0) / dips.length : 0;
+  return { count: dips.length, contrast, dips };
+}
+
+const PI_PRESETS = {
+  double: { name: '双缝', text: '两条缝各贡献一个振幅，路径族在此处**分岔**：同一探测点有两条「路径束」，它们的几何相位差 = k·δ（δ 为光程差）⟹ 明暗条纹。逐条路径看相位是乱的，但**沿每条缝**求和后只剩两个宏观振幅——这正是「路径求和 ⟹ 传播子」的可视化。', cfg: { openA: true, openB: true, coherent: true, d: 48, w: 8 } },
+  single: { name: '单缝', text: '关掉一条缝、并把留下的那条移到轴上（d=0 ⟹ 光束居中）：干涉消失，只剩**单缝衍射包络**（缝宽 w 的 sinc²），远场第一暗纹在 λL₂/w。这一步是「哪条路」信息的判据——只剩一条路时没有第二个振幅可加。', cfg: { openA: true, openB: false, coherent: true, d: 0, w: 20 } },
+  incoherent: { name: '可区分', text: '两条缝都开，但**不做幅度相加**（强度相加——等价于「测量了粒子走哪条缝」）。条纹立刻消失，回到两个单缝包络的叠加。这是 R72「可区分性 ε」在路径语言里的同一条物理。', cfg: { openA: true, openB: true, coherent: false, d: 48, w: 8 } },
+};
+
+/* ---------- 可视化：一阶模态扫描的累积和（Cornu 型螺旋） ----------
+   只扫 a₁（a₂=0），因为二维族（模态数 2）的累积曲线是二维稠密走线，
+   看不出螺旋结构；一维扫描才有「越转越快、收敛到极限点」的经典图像。
+   返回归一化到 (2K) 的累积点列，页面直接画。 */
+function piSpiral(X, opts = {}){
+  const K = opts.K ?? PI_DEFAULTS.K, W = opts.W ?? PI_DEFAULTS.W;
+  const c = piModeCoef(X, 1), A = W, h = A / K;
+  const pts = [[0, 0]];
+  let re = 0, im = 0;
+  for (let i = 0; i < 2 * K; i++){
+    const a = -A + (i + 0.5) * h, ph = c * a * a;
+    re += Math.cos(ph); im += Math.sin(ph);
+    pts.push([re, im]);
+  }
+  return { pts, total: { re, im, mag: Math.hypot(re, im) }, count: 2 * K, len: 2 * K, h };
+}
+
+/* ===== src/paths.js ===== */
+/* ============================================================================
+ * paths.js（页面）— R74 费曼路径求和：路径族 / 相位螺旋 / 条纹剖面
+ *
+ * 纯 CPU、纯 2D canvas（无 WebGL、无引擎）：几何是「源 → 双缝屏 → 探测面」的
+ * 平面图，路径是平面曲线，相位是 e^{iS/ħ}。物理全在 src/physics/paths.js。
+ *
+ * 三块画布：
+ *   #pvMain    世界图：源/屏/探测面 + 路径族（按相位着色）+ 探测面强度条
+ *   #pvSpiral  一阶模态扫描的累积和（Cornu 型螺旋）→ 相消的几何真相
+ *   #pvProfile 探测面强度剖面：路径和 vs 解析传播子（归一后重合）
+ *
+ * 重绘策略：主图只在参数/探测点变化时重绘（路径族 686 条 × 40 段，每帧重画
+ * 是浪费）；螺旋与剖面同理。reveal 动画期间只重画螺旋。
+ *
+ * 调试句柄 window.__pv（cdp74 用）：state / setParam / setY / preset / ampAt /
+ * current / profileAt / profile / pathCount / sumInfo / spiralInfo / navLinks。
+ * ========================================================================== */
+
+const PV_CSS = `
+  #pvTop{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;
+    padding:9px 18px;z-index:10;white-space:nowrap}
+  #pvTop .logo{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.12em;
+    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
+  #pvTop .eq{font-family:var(--mono);font-size:12px;color:var(--dim)}
+  #pvTop .eq b{color:var(--cyan);font-weight:600}
+  #pvTop .eq i{color:var(--mag);font-style:italic}
+  #pvTop a{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
+    border:1px solid var(--line);border-radius:6px;padding:3px 8px;transition:all .15s}
+  #pvTop a:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
+  #pvPanel{top:74px;left:14px;width:232px;padding:13px;z-index:10;max-height:calc(100vh - 210px);
+    overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  #pvPanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
+    text-transform:uppercase;margin:10px 0 5px}
+  #pvPanel .row{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:11.5px}
+  #pvPanel .row label{color:var(--dim);min-width:62px}
+  #pvPanel input[type=range]{flex:1;height:3px;-webkit-appearance:none;background:rgba(120,160,220,.22);border-radius:2px}
+  #pvPanel input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;
+    border-radius:50%;background:var(--cyan);box-shadow:0 0 8px rgba(103,232,249,.7);cursor:pointer}
+  #pvPanel output{font-family:var(--mono);font-size:11px;color:var(--txt);min-width:38px;text-align:right}
+  #pvPanel .btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+  #pvPanel button{font-family:var(--mono);font-size:11px;padding:5px 6px;border-radius:6px;cursor:pointer;
+    background:rgba(103,232,249,.08);border:1px solid var(--line);color:var(--txt);transition:all .15s}
+  #pvPanel button:hover{border-color:rgba(103,232,249,.45);color:var(--cyan)}
+  #pvPanel button.on{background:rgba(103,232,249,.18);border-color:var(--cyan);color:var(--cyan)}
+  #pvPanel .chk{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--dim);margin:4px 0}
+  #pvPanel .chk input{accent-color:#67e8f9}
+  #pvHud{top:74px;right:14px;padding:11px 13px;z-index:10;min-width:216px;font-family:var(--mono)}
+  #pvHud .hrow{display:flex;justify-content:space-between;gap:12px;font-size:11.5px;padding:2.5px 0}
+  #pvHud .hrow span:first-child{color:var(--dim)}
+  #pvHud .hrow span:last-child{color:var(--txt)}
+  #pvHud hr{border:none;border-top:1px solid var(--line);margin:6px 0}
+  #pvStage{position:fixed;left:50%;top:calc(50% + 12px);transform:translate(-50%,-50%);z-index:5;
+    display:grid;grid-template-columns:minmax(0,1fr) 282px;grid-template-rows:1fr 1fr;gap:9px;
+    width:min(calc(100vw - 520px),1060px);height:min(78vh,620px)}
+  #pvMain{grid-row:1 / span 2;width:100%;height:100%;border:1px solid var(--line);border-radius:10px;
+    background:rgba(4,8,16,.55);display:block;cursor:crosshair;touch-action:none}
+  #pvSpiral,#pvProfile{width:100%;height:100%;border:1px solid var(--line);border-radius:10px;
+    background:rgba(4,8,16,.55);display:block}
+  #pvHint{left:14px;bottom:14px;z-index:10;padding:9px 13px;max-width:320px;font-size:11px;
+    color:var(--dim);line-height:1.6;max-height:110px;overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  #pvHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
+  #pvDiag{position:fixed;left:-9999px}
+  @media (max-width:1180px){#pvStage{width:calc(100vw - 60px);grid-template-columns:minmax(0,1fr) 220px}
+    #pvHint{display:none}}
+`;
+
+const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
+const ex = (x, d = 2) => (Number.isFinite(x) && x !== 0 ? x.toExponential(d) : '0');
+
+/* 页面侧折线（只画不求值；与 physics 的 piPolyline 同式，避免为了画图 import） */
+function polyline(xa, ya, xb, yb, amps, N){
+  const pts = [];
+  for (let i = 0; i <= N; i++){
+    const t = i / N;
+    let y = ya + (yb - ya) * t;
+    for (let n = 0; n < amps.length; n++) y += amps[n] * Math.sin((n + 1) * Math.PI * t);
+    pts.push([xa + (xb - xa) * t, y]);
+  }
+  return pts;
+}
+
+class PathsApp {
+  constructor(container, options = {}){
+    this.container = typeof container === 'string' ? document.querySelector(container) : (container || document.body);
+    const q = new URLSearchParams(location.search);
+    const num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
+    const preset = q.get('preset') || 'double';
+    const pcfg = (PI_PRESETS[preset] || PI_PRESETS.double).cfg;
+    /* URL 里的 preset 必须带上它自己的 d/w（单缝是 d=0、w=20）；显式 ?d=/?w= 优先 */
+    this.state = {
+      preset,
+      L1: num('L1', PI_DEFAULTS.L1), L2: num('L2', PI_DEFAULTS.L2),
+      d: num('d', pcfg.d ?? 48), w: num('w', pcfg.w ?? 8), W: num('W', 40),
+      K: Math.round(num('K', PI_DEFAULTS.K)), modes: Math.round(num('modes', PI_DEFAULTS.modes)),
+      nxi: Math.round(num('nxi', 7)), Y: num('Y', 0),
+      openA: q.has('A') ? q.get('A') !== '0' : pcfg.openA,
+      openB: q.has('B') ? q.get('B') !== '0' : pcfg.openB,
+      coherent: q.has('coh') ? q.get('coh') !== '0' : pcfg.coherent,
+      reveal: q.get('reveal') === '0' ? 0 : 1,
+      paused: q.get('paused') === '1',
+    };
+    this._listeners = []; this._dirty = true; this._needDraw = true;
+    this._fps = 0; this._fpsFrames = 0; this._lastFpsT = performance.now();
+    this.view = { sx: 1, yFov: 130, ox: 0, oy: 0, w: 800, h: 520, padT: 22, padB: 26, dpr: 1 };
+    this.prof = null; this.samples = []; this.spir = null; this.stats = null;
+    this._onError = e => {
+      const d = this.q('#pvDiag'); if (d) d.textContent = 'ERR ' + e.message;
+      document.title = 'ERR ' + e.message;
+    };
+    window.addEventListener('error', this._onError);
+    this.frame = this.frame.bind(this);
+  }
+
+  q(s){ return this.container.querySelector(s); }
+  on(t, type, fn, opt){ if (t){ t.addEventListener(type, fn, opt); this._listeners.push([t, type, fn]); } }
+
+  cfg(){
+    const s = this.state;
+    return {
+      L1: s.L1, L2: s.L2, ys: 0, d: s.d, w: s.w,
+      modes: s.modes, K: s.K, W: s.W,
+      /* ξ 求积点数按跨缝相位步长自适应（piProfile 内部同一条公式）：页面必须
+         用同一个有效值报「路径总数」，否则 HUD 少报 */
+      nxi: piNxiFor(s.w, s.L2, this.view.yFov, s.nxi),
+      nY: 241, yFov: this.view.yFov,
+      openA: s.openA, openB: s.openB, coherent: s.coherent,
+    };
+  }
+
+  mount(){
+    injectStyles();
+    const st = document.createElement('style');
+    st.textContent = PV_CSS;
+    document.head.appendChild(st);
+
+    this.container.insertAdjacentHTML('beforeend', `
+      <header id="pvTop" class="panel">
+        <div class="logo">路径工场</div>
+        <div class="eq">ψ = Σ<b><sub>路径</sub></b> <i>e</i><sup>iS/ħ</sup></div>
+        <a href="./index.html">← 单粒子主页</a>
+        <a href="./two-body.html">双粒子 ⟋</a>
+        <a href="./hubbard.html">哈伯德 ⛓</a>
+      </header>
+
+      <aside id="pvPanel" class="panel">
+        <div class="grp">情形</div>
+        <div class="btns">
+          <button id="pvP0" data-p="double">双缝</button>
+          <button id="pvP1" data-p="single">单缝</button>
+        </div>
+        <div class="btns" style="margin-top:6px">
+          <button id="pvP2" data-p="incoherent" style="grid-column:1 / span 2">可区分（强度相加）</button>
+        </div>
+        <div class="grp">缝</div>
+        <div class="chk"><input type="checkbox" id="pvA"><label for="pvA">缝 A 开</label></div>
+        <div class="chk"><input type="checkbox" id="pvB"><label for="pvB">缝 B 开</label></div>
+        <div class="row"><label>缝间距 d</label><input type="range" id="pvD" min="0" max="80" step="1"><output id="pvDo">—</output></div>
+        <div class="row"><label>缝宽 w</label><input type="range" id="pvW" min="2" max="24" step="1"><output id="pvWo">—</output></div>
+        <div class="grp">路径族</div>
+        <div class="row"><label>波折幅度</label><input type="range" id="pvAmp" min="0" max="46" step="1"><output id="pvAmpO">—</output></div>
+        <div class="row"><label>每段样本</label><input type="range" id="pvK" min="8" max="120" step="4"><output id="pvKo">—</output></div>
+        <div class="row"><label>模态数</label><input type="range" id="pvM" min="1" max="2" step="1"><output id="pvMo">—</output></div>
+        <div class="grp">探测点</div>
+        <div class="row"><label>位置 Y</label><input type="range" id="pvY" min="-200" max="200" step="0.5"><output id="pvYo">—</output></div>
+        <div class="btns" style="margin-top:6px"><button id="pvReplay" style="grid-column:1 / span 2">重放求和</button></div>
+      </aside>
+
+      <div id="pvStage">
+        <canvas id="pvMain"></canvas>
+        <canvas id="pvSpiral"></canvas>
+        <canvas id="pvProfile"></canvas>
+      </div>
+
+      <aside id="pvHud" class="panel">
+        <div class="hrow"><span>当前情形</span><span id="hCase">—</span></div>
+        <div class="hrow"><span>路径总数</span><span id="hN">—</span></div>
+        <div class="hrow"><span>每缝（2K × 2K × ξ）</span><span id="hPer">—</span></div>
+        <hr>
+        <div class="hrow"><span>|Σ 路径|（段1）</span><span id="hSum">—</span></div>
+        <div class="hrow"><span>Σ|A| / |Σ|（相消比）</span><span id="hCancel">—</span></div>
+        <hr>
+        <div class="hrow"><span>I(Y) 归一</span><span id="hI">—</span></div>
+        <div class="hrow"><span>暗纹数 / 对比度</span><span id="hVis">—</span></div>
+        <div class="hrow"><span>条纹间距 λL₂/d</span><span id="hFringe">—</span></div>
+        <hr>
+        <div class="hrow"><span>路径和 vs 解析（归一）</span><span id="hRatio">—</span></div>
+        <div class="hrow"><span>比值起伏</span><span id="hSpread">—</span></div>
+        <div class="hrow"><span>FPS</span><span id="hFps">—</span></div>
+      </aside>
+
+      <div id="pvHint" class="panel"></div>
+      <div id="pvDiag"></div>
+    `);
+
+    this._bind();
+    this.syncPanel();
+    this.resize();
+    const ro = new ResizeObserver(() => this.resize());
+    ro.observe(this.q('#pvStage'));
+    this.recompute();
+    requestAnimationFrame(this.frame);
+    return this;
+  }
+
+  _bind(){
+    const s = this.state;
+    for (const id of ['pvP0', 'pvP1', 'pvP2']){
+      this.on(this.q('#' + id), 'click', e => { this.applyPreset(e.currentTarget.dataset.p); this.recompute(); });
+    }
+    const slider = (id, out, key, post) => {
+      const el = this.q('#' + id), o = this.q('#' + out);
+      this.on(el, 'input', () => {
+        const v = parseFloat(el.value);
+        this.setParam(key, v);
+        if (o) o.textContent = post ? post(v) : String(v);
+      });
+    };
+    slider('pvD', 'pvDo', 'd');
+    slider('pvW', 'pvWo', 'w');
+    slider('pvAmp', 'pvAmpO', 'W');
+    slider('pvK', 'pvKo', 'K', v => String(Math.round(2 * v)));
+    slider('pvM', 'pvMo', 'modes');
+    slider('pvY', 'pvYo', 'Y', v => v.toFixed(0));
+    this.on(this.q('#pvA'), 'change', e => { s.openA = e.currentTarget.checked; this._touch(true); });
+    this.on(this.q('#pvB'), 'change', e => { s.openB = e.currentTarget.checked; this._touch(true); });
+    this.on(this.q('#pvReplay'), 'click', () => { s.reveal = 0; this._needDraw = true; });
+
+    const cv = this.q('#pvMain');
+    let drag = false;
+    const fromEvent = e => {
+      const r = cv.getBoundingClientRect();
+      const t = (e.clientY - r.top) / Math.max(1, r.height);
+      this.setY(this.view.yFov - t * 2 * this.view.yFov);
+    };
+    this.on(cv, 'pointerdown', e => { drag = true; cv.setPointerCapture?.(e.pointerId); fromEvent(e); });
+    this.on(cv, 'pointermove', e => { if (drag) fromEvent(e); });
+    this.on(cv, 'pointerup', () => { drag = false; });
+    this.on(cv, 'pointercancel', () => { drag = false; });
+    this.on(window, 'keydown', e => {
+      if (e.key === 'ArrowUp'){ this.setY(s.Y - 2); e.preventDefault(); }
+      if (e.key === 'ArrowDown'){ this.setY(s.Y + 2); e.preventDefault(); }
+    });
+  }
+
+  applyPreset(name){
+    const p = PI_PRESETS[name];
+    if (!p) return;
+    this.state.preset = name;
+    Object.assign(this.state, p.cfg);
+    this.syncPanel();
+    this._touch(true);
+    this._msg = name === 'double' ? '双缝：两个振幅相加' :
+      name === 'single' ? '单缝：只剩一个振幅' : '可区分：强度相加，条纹消失';
+  }
+
+  setParam(k, v){
+    if (k === 'K') this.state.K = Math.max(4, Math.round(v));
+    else if (k === 'modes') this.state.modes = Math.max(1, Math.min(2, Math.round(v)));
+    else if (k === 'Y') this.state.Y = v;
+    else this.state[k] = v;
+    this._touch(k !== 'Y');
+  }
+  setY(y){
+    const lim = 1.4 * this.view.yFov;
+    this.state.Y = Math.max(-lim, Math.min(lim, y));
+    const el = this.q('#pvY'), o = this.q('#pvYo');
+    if (el) el.value = String(this.state.Y);
+    if (o) o.textContent = this.state.Y.toFixed(0);
+    this._touch(false);
+  }
+  /* 结构变化才重置 reveal 动画；拖探测点时不要重置（否则螺旋一直闪回起点） */
+  _touch(resetReveal){
+    this._dirty = true; this._needDraw = true;
+    if (resetReveal) this.state.reveal = 0;
+  }
+
+  resize(){
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    for (const id of ['#pvMain', '#pvSpiral', '#pvProfile']){
+      const cv = this.q(id);
+      if (!cv) continue;
+      const w = Math.max(80, cv.clientWidth), h = Math.max(60, cv.clientHeight);
+      if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)){
+        cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+      }
+    }
+    const cv = this.q('#pvMain');
+    if (cv){
+      const w = cv.clientWidth, h = cv.clientHeight;
+      const padL = 28, padR = 54, padT = 22, padB = 26;
+      const spanX = this.state.L1 + this.state.L2;
+      const sx = (w - padL - padR) / spanX;
+      this.view = { sx, ox: padL, oy: h / 2, w, h, padT, padB, dpr,
+                    yFov: (h - padT - padB) / 2 / sx };
+      const ys = this.q('#pvY');
+      if (ys){ const lim = 1.4 * this.view.yFov; ys.min = String(-lim); ys.max = String(lim); }
+    }
+    this._dirty = true; this._needDraw = true;
+  }
+
+  recompute(){
+    const c = this.cfg();
+    this.prof = piProfile(c);
+    this.samples = piPathSamples(this.state.Y, c, 9);
+    this.spir = piSpiral(c.L1, { K: c.K, W: c.W });
+    const C1 = piModeSum(c.L1, c), C2 = piModeSum(c.L2, c);
+    const A = piAmpAt(this.state.Y, c);
+    const p = this.prof;
+    const k = Math.round((this.state.Y - p.Y[0]) / (p.Y[1] - p.Y[0]));
+    const I = (k >= 0 && k < p.path.length) ? p.path[k] : 0;
+    const nSlit = (c.openA ? 1 : 0) + (c.openB ? 1 : 0);
+    this.stats = {
+      C1, C2, amp: A, I,
+      perSlit: A.per.map(x => x.mag),
+      nSeam: C1.count * C2.count,
+      nTotal: C1.count * C2.count * c.nxi * nSlit,
+      nSlit, fringe: piFringeSpacing(c), spread: p.scale.spread,
+      maxPath: p.maxPath, maxAn: p.maxAn,
+    };
+    this._dirty = false; this._needDraw = true;
+    this.renderHud();
+    this.renderHint();
+  }
+
+  renderHint(){
+    const p = PI_PRESETS[this.state.preset] || PI_PRESETS.double;
+    const el = this.q('#pvHint');
+    if (!el) return;
+    el.innerHTML = (this._msg ? '<b>' + this._msg + '</b>' : '') + '<div style="margin-top:5px">' + p.text + '</div>';
+  }
+
+  renderHud(){
+    const s = this.stats, st = this.state, c = this.cfg(), p = this.prof;
+    const set = (id, v) => { const e = this.q('#' + id); if (e) e.textContent = v; };
+    set('hCase', st.preset === 'double' ? '双缝·相干' : st.preset === 'single' ? '单缝' : '双缝·可区分');
+    set('hN', s.nTotal >= 1000 ? (s.nTotal / 1000).toFixed(1) + 'k' : String(s.nTotal));
+    set('hPer', s.nSeam.toLocaleString('en-US') + ' × ' + c.nxi);
+    set('hSum', nf(s.C1.mag, 2) + ' / ' + s.C1.count);
+    set('hCancel', nf(s.C1.count / Math.max(s.C1.mag, 1e-12), 2));
+    set('hI', nf(s.I, 4));
+    const fr = piFringes(p);
+    this.stats.fringes = fr;
+    set('hVis', fr.count + ' 暗纹 · ' + fr.contrast.toFixed(3) +
+      '（' + (fr.count === 0 ? '无条纹' : fr.contrast > 0.45 ? '清晰' : '弱') + '）');
+    set('hFringe', nf(s.fringe, 2));
+    let dev = 0;
+    for (let k = 0; k < p.path.length; k++) dev = Math.max(dev, Math.abs(p.path[k] - p.an[k]));
+    set('hRatio', ex(dev, 1) + '（逐点最大）');
+    set('hSpread', ex(s.spread, 1));
+  }
+
+  /* ---------- 世界坐标 ---------- */
+  world(x, y){
+    const v = this.view;
+    return [v.ox + x * v.sx, v.oy - y * v.sx];
+  }
+
+  drawMain(){
+    const cv = this.q('#pvMain');
+    if (!cv) return;
+    const g = cv.getContext('2d');
+    const dpr = this.view.dpr || 1;
+    const W = cv.width, H = cv.height;
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.clearRect(0, 0, W, H);
+    g.scale(dpr, dpr);
+    const w = W / dpr, h = H / dpr, v = this.view;
+    const st = this.state;
+    const [xs] = this.world(0, 0);
+    const [xb] = this.world(st.L1, 0);
+    const [xd] = this.world(st.L1 + st.L2, 0);
+    const yTop = v.padT, yBot = h - v.padB;
+
+    /* 路径族（两段都有波折） */
+    for (const sp of this.samples){
+      const hue = ((sp.phase / (2 * Math.PI)) % 1 + 1) % 1;
+      g.strokeStyle = 'hsla(' + Math.round(182 + hue * 128) + ',88%,64%,.22)';
+      g.lineWidth = 0.85;
+      const a = polyline(0, 0, st.L1, sp.xi, sp.seg1, 18);
+      const b = polyline(st.L1, sp.xi, st.L1 + st.L2, st.Y, sp.seg2, 22);
+      g.beginPath();
+      let [px, py] = this.world(a[0][0], a[0][1]);
+      g.moveTo(px, py);
+      for (let k = 1; k < a.length; k++){ [px, py] = this.world(a[k][0], a[k][1]); g.lineTo(px, py); }
+      for (let k = 1; k < b.length; k++){ [px, py] = this.world(b[k][0], b[k][1]); g.lineTo(px, py); }
+      g.stroke();
+    }
+
+    /* 屏（双缝挡板）：把可见区间按缝口切成若干段 */
+    const slitY = [];
+    if (st.openA) slitY.push(st.d / 2);
+    if (st.openB) slitY.push(-st.d / 2);
+    const cuts = slitY.map(y0 => {
+      const [, y1] = this.world(st.L1, y0 + st.w / 2);
+      const [, y2] = this.world(st.L1, y0 - st.w / 2);
+      return [Math.min(y1, y2), Math.max(y1, y2)];
+    }).sort((a, b) => a[0] - b[0]);
+    /* 挡板画成 5px 厚的板（不是一条线），缝口是真实缺口 */
+    g.fillStyle = 'rgba(154,167,189,.55)';
+    let yCur = yTop;
+    const slab = (a, b) => { if (b - a > 0.5) g.fillRect(xb - 2.5, a, 5, b - a); };
+    for (const [t0, b0] of cuts){
+      if (t0 > yCur) slab(yCur, t0);
+      yCur = Math.max(yCur, b0);
+    }
+    if (yCur < yBot) slab(yCur, yBot);
+    g.strokeStyle = 'rgba(154,167,189,.35)'; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(xb - 3.5, yTop); g.lineTo(xb - 3.5, yBot);
+    g.moveTo(xb + 3.5, yTop); g.lineTo(xb + 3.5, yBot); g.stroke();
+
+    /* 缝高亮 + 标签 */
+    g.font = '10px ui-monospace,monospace';
+    for (const y0 of slitY){
+      const [, ya] = this.world(st.L1, y0 + st.w / 2);
+      const [, yb2] = this.world(st.L1, y0 - st.w / 2);
+      g.strokeStyle = 'rgba(103,232,249,.95)'; g.lineWidth = 3.6;
+      g.beginPath(); g.moveTo(xb, Math.min(ya, yb2)); g.lineTo(xb, Math.max(ya, yb2)); g.stroke();
+      g.fillStyle = 'rgba(103,232,249,.9)'; g.textAlign = 'left';
+      g.fillText(y0 > 0 ? 'A' : 'B', xb + 5, Math.min(ya, yb2) - 3);
+    }
+
+    /* 探测面 + 强度条 */
+    const p = this.prof;
+    g.strokeStyle = 'rgba(154,167,189,.45)'; g.lineWidth = 1.1;
+    g.beginPath(); g.moveTo(xd, yTop); g.lineTo(xd, yBot); g.stroke();
+    if (p){
+      const maxBar = Math.max(8, w - xd - 6);
+      for (let k = 0; k < p.Y.length; k += 2){
+        const [, py] = this.world(st.L1 + st.L2, p.Y[k]);
+        const len = p.path[k] * maxBar;
+        g.strokeStyle = 'rgba(250,204,21,' + (0.10 + 0.72 * p.path[k]).toFixed(3) + ')';
+        g.lineWidth = 1.7;
+        g.beginPath(); g.moveTo(xd + 3, py); g.lineTo(xd + 3 + len, py); g.stroke();
+      }
+    }
+
+    /* 源 */
+    const [sx0, sy0] = this.world(0, 0);
+    const rg = g.createRadialGradient(sx0, sy0, 0, sx0, sy0, 15);
+    rg.addColorStop(0, 'rgba(248,113,113,.95)');
+    rg.addColorStop(1, 'rgba(248,113,113,0)');
+    g.fillStyle = rg; g.beginPath(); g.arc(sx0, sy0, 15, 0, 6.2832); g.fill();
+    g.fillStyle = '#f87171'; g.beginPath(); g.arc(sx0, sy0, 3.2, 0, 6.2832); g.fill();
+
+    /* 探测点 */
+    const [, yDet] = this.world(st.L1 + st.L2, st.Y);
+    g.strokeStyle = 'rgba(217,70,239,.55)'; g.setLineDash([5, 4]); g.lineWidth = 1;
+    g.beginPath(); g.moveTo(xb, yDet); g.lineTo(xd, yDet); g.stroke(); g.setLineDash([]);
+    g.fillStyle = '#d946ef'; g.beginPath(); g.arc(xd, yDet, 3.4, 0, 6.2832); g.fill();
+
+    /* 标签 */
+    g.font = '10px ui-monospace,monospace'; g.fillStyle = '#9aa7bd'; g.textAlign = 'center';
+    g.fillText('源', sx0, h - 8);
+    g.fillText('屏', xb, h - 8);
+    g.fillText('探测面', xd + 20, h - 8);
+    g.textAlign = 'left'; g.fillStyle = 'rgba(217,70,239,.9)';
+    g.fillText('Y=' + st.Y.toFixed(0), xd + 7, yDet - 5);
+  }
+
+  drawSpiral(){
+    const cv = this.q('#pvSpiral');
+    const s = this.spir;
+    if (!cv || !s) return;
+    const g = cv.getContext('2d');
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const W = cv.width, H = cv.height;
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.clearRect(0, 0, W, H);
+    g.scale(dpr, dpr);
+    const w = W / dpr, h = H / dpr, pad = 24;
+    const N = s.pts.length;
+    const nShow = Math.max(2, Math.round(N * Math.max(0, Math.min(1, this.state.reveal))));
+    let mx = 1;
+    for (const [a, b] of s.pts) mx = Math.max(mx, Math.abs(a), Math.abs(b));
+    const sc = Math.min(w - 2 * pad, h - 2 * pad) / (2 * mx);
+    const cx = w / 2, cy = h / 2;
+    const P = ([a, b]) => [cx + a * sc, cy - b * sc];
+
+    g.strokeStyle = 'rgba(120,160,220,.14)'; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(pad, cy); g.lineTo(w - pad, cy); g.moveTo(cx, pad); g.lineTo(cx, h - pad); g.stroke();
+
+    g.lineWidth = 1.15;
+    for (let i = 1; i < nShow; i++){
+      const t = i / Math.max(1, nShow - 1);
+      const [x0, y0] = P(s.pts[i - 1]), [x1, y1] = P(s.pts[i]);
+      g.strokeStyle = 'hsla(' + Math.round(192 + 104 * t) + ',86%,64%,.85)';
+      g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+    }
+    const tot = s.pts[nShow - 1];
+    const [tx, ty] = P(tot);
+    g.strokeStyle = 'rgba(103,232,249,.95)'; g.lineWidth = 1.7;
+    g.beginPath(); g.moveTo(cx, cy); g.lineTo(tx, ty); g.stroke();
+    g.fillStyle = '#67e8f9'; g.beginPath(); g.arc(tx, ty, 2.8, 0, 6.2832); g.fill();
+    g.font = '9.5px ui-monospace,monospace'; g.textAlign = 'left';
+    g.fillStyle = 'rgba(154,167,189,.9)';
+    g.fillText('段1 a₁ 扫描：累积 e^{iS/ħ}', 8, 13);
+    g.fillStyle = 'rgba(103,232,249,.95)';
+    g.fillText('|Σ|=' + Math.hypot(tot[0], tot[1]).toFixed(1) + '  N=' + nShow + '  Σ|A|/|Σ|=' +
+      (nShow / Math.max(1e-9, Math.hypot(tot[0], tot[1]))).toFixed(2), 8, h - 7);
+  }
+
+  drawProfile(){
+    const cv = this.q('#pvProfile');
+    const p = this.prof;
+    if (!cv || !p) return;
+    const g = cv.getContext('2d');
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const W = cv.width, H = cv.height;
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.clearRect(0, 0, W, H);
+    g.scale(dpr, dpr);
+    const w = W / dpr, h = H / dpr;
+    const padL = 8, padR = 8, padT = 16, padB = 15;
+    const y0 = p.Y[0], y1 = p.Y[p.Y.length - 1];
+    const X = Y => padL + (Y - y0) / (y1 - y0) * (w - padL - padR);
+    const Yv = I => h - padB - Math.max(0, Math.min(1, I)) * (h - padT - padB);
+    g.strokeStyle = 'rgba(120,160,220,.12)'; g.lineWidth = 1;
+    for (const q of [0.25, 0.5, 0.75]){
+      g.beginPath(); g.moveTo(padL, Yv(q)); g.lineTo(w - padR, Yv(q)); g.stroke();
+    }
+    /* 路径和（青实 + 填充），先画 */
+
+    g.beginPath();
+    for (let k = 0; k < p.path.length; k++){
+      const x = X(p.Y[k]), y = Yv(p.path[k]);
+      if (k === 0) g.moveTo(x, y); else g.lineTo(x, y);
+    }
+    g.strokeStyle = '#67e8f9'; g.lineWidth = 1.35; g.stroke();
+    g.lineTo(X(y1), Yv(0)); g.lineTo(X(y0), Yv(0)); g.closePath();
+    g.fillStyle = 'rgba(103,232,249,.12)'; g.fill();
+    /* 解析传播子（红虚）：画在青色**之上**，两条重合才看得见（差 <1e-15） */
+    g.strokeStyle = 'rgba(248,113,113,.85)'; g.setLineDash([4, 3]); g.lineWidth = 1.1;
+    g.beginPath();
+    for (let k = 0; k < p.an.length; k++){
+      const x = X(p.Y[k]), y = Yv(p.an[k]);
+      if (k === 0) g.moveTo(x, y); else g.lineTo(x, y);
+    }
+    g.stroke(); g.setLineDash([]);
+    /* 当前 Y */
+    const xc = X(this.state.Y);
+    g.strokeStyle = 'rgba(217,70,239,.75)'; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(xc, padT - 5); g.lineTo(xc, h - padB); g.stroke();
+    g.fillStyle = '#d946ef';
+    g.beginPath(); g.arc(xc, Yv(this.stats.I), 2.6, 0, 6.2832); g.fill();
+    g.font = '9.5px ui-monospace,monospace'; g.textAlign = 'left';
+    g.fillStyle = 'rgba(154,167,189,.9)';
+    g.fillText('I(Y)：路径和（青）≡ 解析传播子（红虚）', 4, 11);
+    g.fillStyle = 'rgba(248,113,113,.85)'; g.textAlign = 'right';
+    const sp = piFringeSpacing(this.cfg());
+    g.fillText('间距 ' + (Number.isFinite(sp) ? sp.toFixed(1) : '—'), w - padR, h - 4);
+  }
+
+  frame(){
+    requestAnimationFrame(this.frame);
+    this._fpsFrames++;
+    const now = performance.now();
+    if (now - this._lastFpsT > 500){
+      this._fps = Math.round(this._fpsFrames * 1000 / (now - this._lastFpsT));
+      this._fpsFrames = 0; this._lastFpsT = now;
+      const e = this.q('#hFps'); if (e) e.textContent = this._fps ? String(this._fps) : '—';
+    }
+    if (this._dirty) this.recompute();
+    if (this.state.reveal < 1){
+      this.state.reveal = Math.min(1, this.state.reveal + 0.05);
+      this.drawSpiral();
+      return;
+    }
+    if (this._needDraw){
+      this.drawMain(); this.drawSpiral(); this.drawProfile();
+      this._needDraw = false;
+    }
+  }
+
+  syncPanel(){
+    const st = this.state;
+    const set = (id, v) => { const e = this.q('#' + id); if (e) e.value = String(v); };
+    const txt = (id, v) => { const e = this.q('#' + id); if (e) e.textContent = String(v); };
+    set('pvD', st.d); txt('pvDo', st.d);
+    set('pvW', st.w); txt('pvWo', st.w);
+    set('pvAmp', st.W); txt('pvAmpO', st.W);
+    set('pvK', st.K); txt('pvKo', 2 * st.K);
+    set('pvM', st.modes); txt('pvMo', st.modes);
+    set('pvY', st.Y); txt('pvYo', st.Y.toFixed(0));
+    const A = this.q('#pvA'), B = this.q('#pvB');
+    if (A) A.checked = st.openA;
+    if (B) B.checked = st.openB;
+    for (const b of ['pvP0', 'pvP1', 'pvP2']){
+      const e = this.q('#' + b);
+      if (e) e.classList.toggle('on', e.dataset.p === st.preset);
+    }
+  }
+
+  _drawAll(){ this.state.reveal = 1; this.drawMain(); this.drawSpiral(); this.drawProfile(); }
+
+  /* ---------- 调试句柄（cdp74） ---------- */
+  debugHandle(){
+    const self = this;
+    return {
+      get state(){ return self.state; },
+      get view(){ return self.view; },
+      setParam: (k, v) => { self.setParam(k, v); self.syncPanel(); self.recompute(); self._drawAll(); },
+      setY: y => { self.setY(y); self.recompute(); self._drawAll(); },
+      preset: n => { self.applyPreset(n); self.recompute(); self._drawAll(); },
+      recompute: () => { self.recompute(); self._drawAll(); },
+      pathCount: () => ({ seam: self.stats.nSeam, total: self.stats.nTotal, drawn: self.samples.length }),
+      sumInfo: () => ({ C1: self.stats.C1, C2: self.stats.C2, cancel: self.stats.C1.count / self.stats.C1.mag }),
+      spiralInfo: () => ({ n: self.spir.pts.length, total: self.spir.total, pts: self.spir.pts.slice(0, 3) }),
+      ampAt: Y => { const A = piAmpAt(Y, self.cfg()); return { raw: A.raw, an: A.an, per: A.per }; },
+      current: () => ({ Y: self.state.Y, I: self.stats.I, spread: self.stats.spread,
+                        fringe: self.stats.fringe, per: self.stats.perSlit, n: self.stats.nTotal,
+                        fringes: self.stats.fringes, cfg: self.cfg() }),
+      profileAt: Y => {
+        const p = self.prof;
+        const k = Math.round((Y - p.Y[0]) / (p.Y[1] - p.Y[0]));
+        return { Y: p.Y[k], path: p.path[k], an: p.an[k] };
+      },
+      profile: () => Array.from(self.prof.Y, (y, k) => [y, self.prof.path[k], self.prof.an[k]]),
+      samplePhase: i => (self.samples[i] ? self.samples[i].phase : null),
+      straightPhase: (X, dy) => piStraightPhase(X, dy),
+      drawAll: () => self._drawAll(),
+      fringes: () => self.stats.fringes,
+      navLinks: () => Array.from(document.querySelectorAll('#pvTop a')).map(a => a.getAttribute('href')),
+    };
+  }
+}
+
+/* ===== src/paths-main.js ===== */
+/* 演示入口：R74 费曼路径求和页（paths.html）。
+   课程站嵌入同理：
+     import { PathsApp } from './src/paths.js';
+     new PathsApp(document.body, {}).mount();
+*/
+
+const app = new PathsApp(document.body, {});
+app.mount();
+window.__pv = app.debugHandle();
+
+</script>
+</body>
+</html>

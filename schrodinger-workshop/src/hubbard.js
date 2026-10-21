@@ -96,6 +96,7 @@ export class HubbardApp {
   <div class="eq"><b>H</b> = −<b>t</b>Σ(c†<sub>i</sub>c<sub>i+1</sub>+h.c.) + <b>U</b>Σ n<sub>i↑</sub>n<sub>i↓</sub></div>
   <a href="./index.html">← 单粒子主页</a>
   <a href="./two-body.html">双粒子页</a>
+  <a href="./paths.html">路径页</a>
 </div>
 <div id="hbPanel" class="panel">
   <div class="sec"><h3>预设</h3><div class="grid2" id="hbPresets">

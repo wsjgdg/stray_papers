@@ -286,6 +286,7 @@ export class QuantumField {
   <div id="status">● LIVE</div>
   <a class="navlink" href="./two-body.html" title="双粒子构型空间：全同粒子 / 交换对称（R72）">双粒子 ⟋</a>
   <a class="navlink" href="./hubbard.html" title="格点费米-哈伯德：莫特绝缘体 / 纠缠熵（R73）">哈伯德 ⛓</a>
+  <a class="navlink" href="./paths.html" title="费曼路径求和：路径族 / 相位 / 双缝条纹（R74）">路径 ∿</a>
 </header>
 
 <aside id="panel" class="panel">
