@@ -162,6 +162,7 @@ export class TwoBodyApp {
   <a href="./index.html">← 单粒子主页</a>
   <a href="./hubbard.html">哈伯德页</a>
   <a href="./paths.html">路径页</a>
+  <a href="./qcircuit.html">线路页</a>
 </div>
 <div id="tbPanel" class="panel">
   <div class="sec"><h3>预设</h3><div class="grid3" id="tbPresets">

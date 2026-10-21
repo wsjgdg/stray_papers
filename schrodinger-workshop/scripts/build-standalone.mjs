@@ -7,6 +7,7 @@
      two-body.html   → dist/two-body.html（双粒子构型空间，入口 src/two-body-main.js）
      hubbard.html    → dist/hubbard.html（格点费米-哈伯德，入口 src/hubbard-main.js）
      paths.html      → dist/paths.html（费曼路径求和，入口 src/paths-main.js）
+     qcircuit.html   → dist/qcircuit.html（小规模量子线路，入口 src/qcircuit-main.js）
    两页共用 src/core/*；各自独立 bundle（拓扑序不同），互不影响。
 
    做法（mini-bundler，零依赖）：
@@ -36,6 +37,7 @@ const PAGES = [
   ['two-body.html', 'two-body.html'],
   ['hubbard.html', 'hubbard.html'],
   ['paths.html', 'paths.html'],
+  ['qcircuit.html', 'qcircuit.html'],
 ];
 
 /* ---------- 1. 入口定位 ---------- */
