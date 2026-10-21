@@ -13,6 +13,7 @@
  *     shor.html       → dist/shor.html（Shor 9 比特级联码，入口 src/shor-main.js）
  *     gatenoise.html  → dist/gatenoise.html（线路级门噪声，入口 src/gatenoise-main.js）
  *     flag.html       → dist/flag.html（综合提取容错：冗余验证 vs 猫态，入口 src/flag-main.js）
+ *     rounds.html     → dist/rounds.html（多轮提取 + 跨轮联合解码，入口 src/rounds-main.js）
    各页共用 src/core/*（仅 index 用）；各自独立 bundle（拓扑序不同），互不影响。
 
    做法（mini-bundler，零依赖）：
@@ -48,6 +49,7 @@ const PAGES = [
   ['shor.html', 'shor.html'],
   ['gatenoise.html', 'gatenoise.html'],
   ['flag.html', 'flag.html'],
+  ['rounds.html', 'rounds.html'],
 ];
 
 /* ---------- 1. 入口定位 ---------- */

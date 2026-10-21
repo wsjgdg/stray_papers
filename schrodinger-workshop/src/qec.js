@@ -99,6 +99,7 @@ export class QecApp {
         <a href="./noise.html">噪声 ◍</a>
         <a href="./gatenoise.html">门噪声 ⌁</a>
         <a href="./flag.html">容错 ⚑</a>
+        <a href="./rounds.html">多轮 ⟳</a>
       </header>
 
       <aside id="qePanel" class="panel">

@@ -99,6 +99,7 @@ const NAV = [
   ['./paths.html', '路径 ∿'], ['./qcircuit.html', '线路 ⧉'], ['./noise.html', '噪声 ◍'],
   ['./qec.html', '纠错 ◈'], ['./shor.html', '级联 ⊗3'], ['./gatenoise.html', '门噪声 ⌁'],
   ['./flag.html', '容错 ⚑'],
+  ['./rounds.html', '多轮 ⟳'],
 ];
 
 export class FlagApp {

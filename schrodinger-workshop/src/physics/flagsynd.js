@@ -67,6 +67,10 @@ export const FS_DEFAULTS = {
      ⟨X_L⟩=⟨Z_L⟩=0，逻辑判据退化（R79 pot79 C2 的教训）。这里三个分量都非零。 */
   theta: 0.9, phi: 1.3,
   trials: 400, seed: 7,
+  /* ---- R82 多轮提取 ---- */
+  rounds: 1,                      /* 综合征提取轮数 R（1 = R81 的单轮口径） */
+  decode: 'single',               /* 跨轮解码：single 只修最后一轮 · immediate 每轮都修 · repeat 连续 need 轮一致才修 */
+  need: 2,                        /* agree 需要连续多少轮综合征一致才接受 */
   /* 噪声范围：'extract'（默认）只给综合提取段挂故障——编码/解码按理想处理，
      与 R79 的口径一致（R79 也是「编码后注错、解码前纠错」）。这样做是为了让对照
      只看提取线路本身；'all' 把 encode/extract/decode 全挂上，会看到编码器自己的
@@ -188,6 +192,74 @@ function fsMeasureZ(s, q, rng, diag){
 /* ============================================================================
  * 线路构建
  * ========================================================================== */
+/* ============================================================================
+ * 单个稳定子的提取块（R82 的多轮线路复用同一份，保证「单轮 ≡ R82 的 r=1」）
+ *   返回带 ph/stab/round 的完整 op 数组；调用方只需依次 push。
+ * ========================================================================== */
+export function fsBlockOps(stabIndex, spec, lay, round = 0){
+  const st = SHOR_STABS[stabIndex];
+  const A0 = lay.A0, F = lay.F;
+  const out = [];
+  const add = (o) => { out.push({ ...o, ph: 'extract', stab: stabIndex, round }); return out.length - 1; };
+  if (st.k === 'z'){
+    const [d0, d1] = st.qs;
+    if (spec.z === 'single'){
+      add({ op: 'cnot', c: d0, q2: A0 });
+      add({ op: 'cnot', c: d1, q2: A0 });
+      add({ op: 'meas', q: A0, role: 'syn', stab: stabIndex });
+    } else if (spec.z === 'dup'){
+      add({ op: 'cnot', c: d0, q2: A0 });
+      add({ op: 'cnot', c: d1, q2: A0 });
+      add({ op: 'meas', q: A0, role: 'syn', stab: stabIndex });
+      add({ op: 'cnot', c: d0, q2: A0 + 1 });
+      add({ op: 'cnot', c: d1, q2: A0 + 1 });
+      add({ op: 'meas', q: A0 + 1, role: 'syn2', stab: stabIndex });
+    } else {   /* cat：2 个 ancilla 的 GHZ，每只碰 1 个数据比特 */
+      add({ op: 'h', q: A0 });
+      add({ op: 'cnot', c: A0, q2: A0 + 1 });
+      add({ op: 'cnot', c: A0, q2: F });
+      add({ op: 'cnot', c: A0 + 1, q2: F });
+      add({ op: 'meas', q: F, role: 'flag', stab: stabIndex });
+      add({ op: 'cnot', c: d0, q2: A0 });
+      add({ op: 'cnot', c: d1, q2: A0 + 1 });
+      add({ op: 'meas', q: A0, role: 'cat', stab: stabIndex });
+      add({ op: 'meas', q: A0 + 1, role: 'cat', stab: stabIndex });
+    }
+  } else if (spec.x === 'single'){
+    add({ op: 'h', q: A0 });
+    for (const q of st.qs) add({ op: 'cnot', c: A0, q2: q });
+    add({ op: 'h', q: A0 });
+    add({ op: 'meas', q: A0, role: 'syn', stab: stabIndex });
+  } else if (spec.x === 'dup'){
+    add({ op: 'h', q: A0 });
+    for (const q of st.qs) add({ op: 'cnot', c: A0, q2: q });
+    add({ op: 'h', q: A0 });
+    add({ op: 'meas', q: A0, role: 'syn', stab: stabIndex });
+    add({ op: 'h', q: A0 + 1 });
+    for (const q of st.qs) add({ op: 'cnot', c: A0 + 1, q2: q });
+    add({ op: 'h', q: A0 + 1 });
+    add({ op: 'meas', q: A0 + 1, role: 'syn2', stab: stabIndex });
+  } else {
+    /* X 类猫态：nc 个 ancilla 的 GHZ，数据比特按 j → floor(j·nc/6) 分配给 ancilla。
+       nc=6 ⟹ 1:1（单故障最多污染 1 个）；nc=3 ⟹ 1:2（最多 2 个，但态矢小 8 倍）。 */
+    const nc = Math.max(2, Math.min(6, spec.catX || 3));
+    add({ op: 'h', q: A0 });
+    for (let k = 1; k < nc; k++) add({ op: 'cnot', c: A0 + k - 1, q2: A0 + k });
+    /* ⚠ 只用「相邻两两异或」，不要用「全加求和」：求和只抓得住**奇数个** X 错误
+       （偶数个 X 的奇偶不变 ⟹ 逃逸，pot81 实测 nc=6 求和版留 2 个静默逻辑位点）；
+       两两异或对任意单个 X 错误都翻转某一对 ⟹ 确定性检出（nc=2 时两者等价）。 */
+    for (let k = 1; k < nc; k++){
+      add({ op: 'cnot', c: A0 + k - 1, q2: F });
+      add({ op: 'cnot', c: A0 + k, q2: F });
+      add({ op: 'meas', q: F, role: 'flag', stab: stabIndex });
+    }
+    for (let j = 0; j < 6; j++) add({ op: 'cnot', c: A0 + Math.floor(j * nc / 6), q2: st.qs[j] });
+    for (let k = 0; k < nc; k++) add({ op: 'h', q: A0 + k });
+    for (let k = 0; k < nc; k++) add({ op: 'meas', q: A0 + k, role: 'cat', stab: stabIndex });
+  }
+  return out;
+}
+
 export function fsBuildCircuit(kind = 'std', cfg = {}){
   const base = FS_KINDS[kind] || FS_KINDS.std;
   const c = { ...FS_DEFAULTS, ...cfg };
@@ -205,77 +277,24 @@ export function fsBuildCircuit(kind = 'std', cfg = {}){
   /* ② 编码 */
   for (const g of shorEncodeGates()) push({ ...g, ph: 'encode' });
 
-  /* ③ 综合提取 */
-  for (let i = 0; i < SHOR_STABS.length; i++){
-    const st = SHOR_STABS[i];
-    const blk = { stab: i, kind: st.k, short: st.short, label: st.label, gates: 0, ops: [] };
-    const add = (o) => {
-      const idx = push({ ...o, ph: 'extract' });
-      blk.ops.push(idx);
-      if (o.op !== 'meas') blk.gates++;
-      return idx;
-    };
-    if (st.k === 'z'){
-      const [d0, d1] = st.qs;
-      if (spec.z === 'single'){
-        add({ op: 'cnot', c: d0, q2: A0 });
-        add({ op: 'cnot', c: d1, q2: A0 });
-        add({ op: 'meas', q: A0, role: 'syn', stab: i });
-      } else if (spec.z === 'dup'){
-        add({ op: 'cnot', c: d0, q2: A0 });
-        add({ op: 'cnot', c: d1, q2: A0 });
-        add({ op: 'meas', q: A0, role: 'syn', stab: i });
-        add({ op: 'cnot', c: d0, q2: A0 + 1 });
-        add({ op: 'cnot', c: d1, q2: A0 + 1 });
-        add({ op: 'meas', q: A0 + 1, role: 'syn2', stab: i });
-      } else {   /* cat：2 个 ancilla 的 GHZ，每只碰 1 个数据比特 */
-        add({ op: 'h', q: A0 });
-        add({ op: 'cnot', c: A0, q2: A0 + 1 });
-        add({ op: 'cnot', c: A0, q2: F });
-        add({ op: 'cnot', c: A0 + 1, q2: F });
-        add({ op: 'meas', q: F, role: 'flag', stab: i });
-        add({ op: 'cnot', c: d0, q2: A0 });
-        add({ op: 'cnot', c: d1, q2: A0 + 1 });
-        add({ op: 'meas', q: A0, role: 'cat', stab: i });
-        add({ op: 'meas', q: A0 + 1, role: 'cat', stab: i });
+  /* ③ 综合提取：重复 R 轮（R=1 即 R81 的单轮口径，逐位一致） */
+  const R = Math.max(1, Math.min(8, c.rounds | 0 || 1));
+  for (let r = 0; r < R; r++){
+    for (let i = 0; i < SHOR_STABS.length; i++){
+      const blkOps = fsBlockOps(i, spec, lay, r);
+      const blk = { stab: i, kind: SHOR_STABS[i].k, short: SHOR_STABS[i].short,
+        label: SHOR_STABS[i].label, gates: 0, ops: [], round: r };
+      for (const o of blkOps){
+        const idx = push(o);
+        blk.ops.push(idx);
+        if (o.op !== 'meas') blk.gates++;
       }
-    } else if (spec.x === 'single'){
-      add({ op: 'h', q: A0 });
-      for (const q of st.qs) add({ op: 'cnot', c: A0, q2: q });
-      add({ op: 'h', q: A0 });
-      add({ op: 'meas', q: A0, role: 'syn', stab: i });
-    } else if (spec.x === 'dup'){
-      add({ op: 'h', q: A0 });
-      for (const q of st.qs) add({ op: 'cnot', c: A0, q2: q });
-      add({ op: 'h', q: A0 });
-      add({ op: 'meas', q: A0, role: 'syn', stab: i });
-      add({ op: 'h', q: A0 + 1 });
-      for (const q of st.qs) add({ op: 'cnot', c: A0 + 1, q2: q });
-      add({ op: 'h', q: A0 + 1 });
-      add({ op: 'meas', q: A0 + 1, role: 'syn2', stab: i });
-    } else {
-      /* X 类猫态：nc 个 ancilla 的 GHZ，数据比特按 j → floor(j·nc/6) 分配给 ancilla。
-         nc=6 ⟹ 1:1（单故障最多污染 1 个）；nc=3 ⟹ 1:2（最多 2 个，但态矢小 8 倍）。 */
-      const nc = Math.max(2, Math.min(6, spec.catX || 3));
-      add({ op: 'h', q: A0 });
-      for (let k = 1; k < nc; k++) add({ op: 'cnot', c: A0 + k - 1, q2: A0 + k });
-      /* 验证：**偶数个** ancilla 的 GHZ 有确定的 Z 奇偶（|1…1⟩ 里 1 的个数为偶），
-         一次求和型 CNOT(a_k→F) 全加就够了；**奇数个**没有（|111⟩ 奇偶为 1），
-         求和会把 F 与 GHZ 纠缠（本轮踩过：nc=3 时理想态直接崩）。奇数个改用
-         相邻两两异或：单个 X 错误必然翻转某一对 ⟹ 仍然确定性检出。 */
-      /* ⚠ 只用「相邻两两异或」，不要用「全加求和」：求和只抓得住**奇数个** X 错误
-         （偶数个 X 的奇偶不变 ⟹ 逃逸，pot81 实测 nc=6 求和版留 2 个静默逻辑位点）；
-         两两异或对任意单个 X 错误都翻转某一对 ⟹ 确定性检出（nc=2 时两者等价）。 */
-      for (let k = 1; k < nc; k++){
-        add({ op: 'cnot', c: A0 + k - 1, q2: F });
-        add({ op: 'cnot', c: A0 + k, q2: F });
-        add({ op: 'meas', q: F, role: 'flag', stab: i });
-      }
-      for (let j = 0; j < 6; j++) add({ op: 'cnot', c: A0 + Math.floor(j * nc / 6), q2: st.qs[j] });
-      for (let k = 0; k < nc; k++) add({ op: 'h', q: A0 + k });
-      for (let k = 0; k < nc; k++) add({ op: 'meas', q: A0 + k, role: 'cat', stab: i });
+      blocks.push(blk);
     }
-    blocks.push(blk);
+    /* 轮末修正点：跨轮联合解码在这里决定是否把该轮的修正落到态矢与 Pauli 帧上。
+       ⚠ 早期版本只在所有轮跑完后修正一次 ⟹ 错误跨轮累积而修正能力不变，
+       实测 P_L 随轮数**上升**（R=3 是 R=1 的 19×）。真实协议必须每轮清账。 */
+    push({ op: 'fixr', ph: 'extract', round: r });
   }
 
   /* ④ 修正点（运行期按综合征查表插入，不带噪声） */
@@ -286,19 +305,22 @@ export function fsBuildCircuit(kind = 'std', cfg = {}){
   let gates = 0, cnots = 0, singles = 0, meas = 0;
   for (const o of ops){
     if (o.op === 'meas'){ meas++; continue; }
-    if (o.op === 'fix') continue;
+    /* fix（探针点）与 fixr（轮末修正点）都不是门，不计入门数——R81 的开销数字必须逐位不变 */
+    if (o.op === 'fix' || o.op === 'fixr') continue;
     gates++;
     if (o.op === 'cnot') cnots++; else singles++;
   }
-  return { kind, nq: lay.nq, spec: { ...spec, lay }, cfg: c, ops, blocks, stats: {
-    nq: lay.nq, data: 9, ancillas: lay.nq - 9, gates, cnots, singles, meas,
-  } };
+  return { kind, nq: lay.nq, spec: { ...spec, lay }, cfg: c, ops, blocks,
+    rounds: R, stats: {
+      nq: lay.nq, data: 9, ancillas: lay.nq - 9, gates, cnots, singles, meas,
+      rounds: R, sitesPerRound: blocks.length ? blocks.filter(b => b.round === 0).length : 0,
+    } };
 }
 
 const CIRC_CACHE = new Map();
 export function fsCircuit(kind = 'std', cfg = {}){
   const c = { ...FS_DEFAULTS, ...cfg };
-  const key = `${kind}|${c.theta}|${c.phi}|${c.catX || (FS_KINDS[kind] || {}).catX || 0}`;
+  const key = `${kind}|${c.theta}|${c.phi}|${c.catX || (FS_KINDS[kind] || {}).catX || 0}|R${c.rounds | 0 || 1}|${c.decode || 'single'}|${c.need | 0 || 2}`;
   let circ = CIRC_CACHE.get(key);
   if (!circ){ circ = fsBuildCircuit(kind, c); CIRC_CACHE.set(key, circ); }
   return circ;
@@ -311,9 +333,12 @@ export function fsFaultSites(circ){
   const out = [];
   for (let i = 0; i < circ.ops.length; i++){
     const o = circ.ops[i];
-    if (o.op === 'meas' || o.op === 'fix' || o.ph === 'prep') continue;
+    /* fixr = 轮末修正点（R82）：不是门，不产生故障位点。早先漏跳它 ⟹ gnTouched 的
+       fallback 返回 [undefined]，凭空多出 3 个 q=undefined 的位点（R=1 变 159 而非 156）。 */
+    if (o.op === 'meas' || o.op === 'fix' || o.op === 'fixr' || o.ph === 'prep') continue;
     for (const q of gnTouched(o)) for (const t of ['x', 'y', 'z']){
-      out.push({ gate: i, q, t, ph: o.ph, gop: o.op, stab: stabOf.has(i) ? stabOf.get(i) : -1 });
+      out.push({ gate: i, q, t, ph: o.ph, gop: o.op, stab: stabOf.has(i) ? stabOf.get(i) : -1,
+        round: o.round || 0 });
     }
   }
   return out;
@@ -371,12 +396,23 @@ function fsExec(circ, opts = {}){
   const diag = { random: 0, frameFlip: 0, frameMiss: 0 };
   const s = qcNewState(nq);
   const fr = { x: 0, z: 0 };
-  const syn = new Array(SHOR_STABS.length).fill(0);
+  const R = circ.rounds || 1;
+  const syn = new Array(SHOR_STABS.length).fill(0);        /* 最终用于解码的综合征 */
   const syn2 = new Array(SHOR_STABS.length).fill(0);
   const flags = [];
   const fired = [];
+  /* R82：按轮记录（synRounds[r][stab] / flagRounds[r]），跨轮解码在 fix 点做 */
+  const synRounds = Array.from({ length: R }, () => new Array(SHOR_STABS.length).fill(0));
+  const syn2Rounds = Array.from({ length: R }, () => new Array(SHOR_STABS.length).fill(0));
+  const flagRounds = new Array(R).fill(false);
   let fix = [];
   let wPre = 0, pre = null, frAtFix = { x: 0, z: 0 }, frBeforeFix = { x: 0, z: 0 };
+  /* R82 跨轮解码的结果（在 fix 点填，块外可见） */
+  let usableR = [], dec = opts.decode || c.decode || 'single', chosen = -1, unsure = false,
+      usedRounds = 1, synFinal = null;
+  let prevSyn = null, run = 0;
+  const need = Math.max(1, Math.min(R, opts.need || c.need || 2));
+  const fixLog = [];
   /* 只有真的用 dup 的稳定子类型才有「第二份读数」，否则 syn2 恒 0 会被误判成 flag */
   const dupZ = circ.spec.z === 'dup', dupX = circ.spec.x === 'dup';
 
@@ -398,18 +434,56 @@ function fsExec(circ, opts = {}){
       if ((fr.x >> o.q) & 1 && (o.role === 'syn' || o.role === 'flag')) diag.frameFlip++;
       fr.x &= ~(1 << o.q); fr.z &= ~(1 << o.q);
       if (bit) qcApply(s, { op: 'x', q: o.q });   /* 重置 → |0⟩（理想重置） */
-      if (o.role === 'syn') syn[o.stab] = bit;
-      else if (o.role === 'syn2') syn2[o.stab] = bit;
-      else if (o.role === 'cat') syn[o.stab] ^= bit;
-      else flags.push(Boolean(bit));
+      const r = o.round || 0;
+      if (o.role === 'syn'){ syn[o.stab] = bit; synRounds[r][o.stab] = bit; }
+      else if (o.role === 'syn2'){ syn2[o.stab] = bit; syn2Rounds[r][o.stab] = bit; }
+      else if (o.role === 'cat'){ syn[o.stab] ^= bit; synRounds[r][o.stab] ^= bit; }
+      else { if (bit){ flags.push(true); flagRounds[r] = true; } }
+      continue;
+    }
+    if (o.op === 'fixr'){
+      /* ---- 跨轮联合解码（R82）----
+         可用轮：dup 两份读数不一致、或猫态验证位为 1 ⟹ 该轮不可信。
+         single    = 只在最后一轮修正一次（R81 口径；其余轮白测，只增加故障机会）
+         immediate = 每轮都按该轮综合征直接修正（假综合征 ⟹ 误修，引入新错误）
+         repeat    = 连续 need 轮综合征完全相同才修正（真错误会持续显示，
+                     一次性的假综合征不会）⟹ 既不累积也不误修
+         修正在这里落到态矢 + 帧上（修正门本身按理想处理，不注入故障） */
+      const r = o.round || 0;
+      let bad = flagRounds[r];
+      if (!bad) for (let i = 0; i < SHOR_STABS.length; i++){
+        const g = SHOR_STABS[i];
+        if ((g.k === 'z' && dupZ) || (g.k === 'x' && dupX)){
+          if (synRounds[r][i] !== syn2Rounds[r][i]){ bad = true; break; }
+        }
+      }
+      usableR.push(!bad);
+      if (r === 0){ frBeforeFix = { x: fr.x & DATA_MASK, z: fr.z & DATA_MASK }; wPre = fsMinWeight(frBeforeFix); }
+      let fixR = [];
+      if (dec === 'single'){
+        if (r === R - 1) fixR = shorDecode(synRounds[r]);
+      } else if (dec === 'immediate'){
+        if (!bad) fixR = shorDecode(synRounds[r]);
+      } else {   /* repeat */
+        const sR = synRounds[r];
+        /* 不可信的轮**完全不参与**一致性判断（既不能促成也不能打断连续段）——
+           早先让 bad 轮把 run 重置为 1 并把它自己的（不可信）综合征当基准，是错的。 */
+        if (bad){ prevSyn = null; run = 0; }
+        else if (prevSyn && sR.join('') === prevSyn.join('')) run++;
+        else { run = 1; prevSyn = sR.slice(); }
+        if (!bad && run >= need){
+          fixR = shorDecode(sR);
+          prevSyn = null; run = 0;
+        }
+      }
+      for (const e of fixR){ qcApply(s, { op: e.t, q: e.q }); frToggle(fr, e.q, e.t); }
+      fixLog.push({ round: r, syn: synRounds[r].slice(), usable: !bad, fix: fixR.slice() });
       continue;
     }
     if (o.op === 'fix'){
-      /* 修正前先量传播：此刻数据上的错误权重就是「单故障污染了几个比特」
-         （取模稳定子的最小代表元——稳定子本身物理不可见，不该算作错误） */
-      frBeforeFix = { x: fr.x & DATA_MASK, z: fr.z & DATA_MASK };
-      wPre = fsMinWeight(frBeforeFix);
-      fix = shorDecode(syn);
+      /* 探针取样点：所有轮修正已完成、解码之前（码空间仍完好定义） */
+      fix = [];   /* 修正已在每轮末 fixr 做过；这里只取探针 */
+
       for (const e of fix){ qcApply(s, { op: e.t, q: e.q }); frToggle(fr, e.q, e.t); }
       frAtFix = { x: fr.x & DATA_MASK, z: fr.z & DATA_MASK };
       /* 修正后、解码前的末态探针（判定口径的取样点：此时码空间仍完好定义） */
@@ -463,6 +537,8 @@ function fsExec(circ, opts = {}){
        wPost：解码之后的帧权重 —— 只作诊断：解码线路会把权重 1 摊回 3~5，
                拿它当「残差大小」会严重误导（这是个容易踩的坑，留字段备查） */
     cosetFinal: cosetDecoded(decodeMaps(circ), { x: fr.x & DATA_MASK, z: fr.z & DATA_MASK }),
+    synRounds, flagRounds, usableRounds: usableR.filter(Boolean).length, usableR, fixLog,
+    synFinal, chosenRound: chosen, unsure, usedRounds, decode: dec, rounds: R, need,
     wPre, wRes: fsMinWeight(frAtFix),
     wPost: popc((fr.x | fr.z) & DATA_MASK),
     frAtFix, frBeforeFix,
@@ -546,7 +622,8 @@ export function fsRun(kind = 'std', cfg = {}, faults = null, seed = 1){
   const ref = fsRef(circ);
   /* 枚举时必须给 rng：猫态的单个 ancilla 读数是真随机的（只有奇偶确定） */
   const rng = mulberry32(seed);
-  const r = fsExec(circ, { faults, rng, p: 0, spectrum: cfg.spectrum, noisyPhase: cfg.noisyPhase });
+  const r = fsExec(circ, { faults, rng, p: 0, spectrum: cfg.spectrum, noisyPhase: cfg.noisyPhase,
+    decode: cfg.decode, need: cfg.need });
   const cl = fsClass(r.pre, ref, r.F);
   return { ...r, ...cl, ref };
 }
@@ -568,7 +645,8 @@ export function fsFirstOrder(kind = 'std', cfg = {}){
   let wMax = 0, wMaxSite = null, wSumRes = 0;
 
   for (const site of sites){
-    const r = fsExec(circ, { faults: [{ gate: site.gate, q: site.q, t: site.t }], rng: mulberry32(12345) });
+    const r = fsExec(circ, { faults: [{ gate: site.gate, q: site.q, t: site.t }], rng: mulberry32(12345),
+      decode: c.decode, need: c.need });
     const cl = fsClass(r.pre, ref, r.F);
     /* 分类口径用**解码后**的残差帧陪集：它覆盖全部阶段（含解码段自身的故障，
        那些故障在探针取样点之后）。残差 ∈ S ⟺ F=1，与 F 判据一致。 */
@@ -641,10 +719,11 @@ export function fsEnsemble(kind = 'std', cfg = {}){
   const rng = mulberry32(c.seed);
   const n = Math.max(1, c.trials | 0);
   const acc = { perfect: 0, outside: 0, logic: 0, flagged: 0, gauge: 0, mixed: 0 };
-  let wSum = 0, flips = 0, random = 0, faultSum = 0;
+  let wSum = 0, flips = 0, random = 0, faultSum = 0, unsureN = 0, usedSum = 0;
   const wHist = {};
   for (let k = 0; k < n; k++){
-    const r = fsExec(circ, { rng, p: c.p, spectrum: c.spectrum, noisyPhase: c.noisyPhase });
+    const r = fsExec(circ, { rng, p: c.p, spectrum: c.spectrum, noisyPhase: c.noisyPhase,
+      decode: c.decode, need: c.need });
     const cl = fsClass(r.pre, ref, r.F);
     const cos = r.cosetFinal;
     const bucket = r.flagged ? 'flagged'
@@ -653,16 +732,23 @@ export function fsEnsemble(kind = 'std', cfg = {}){
     if (!r.flagged && bucket !== 'perfect'){ wHist[r.wRes] = (wHist[r.wRes] || 0) + 1; wSum += r.wRes; }
     flips += r.diag.frameFlip; random += r.diag.random;
     faultSum += r.fired.length;
+    if (r.unsure) unsureN++;
+    usedSum += r.usedRounds;
   }
   return {
     kind: c.kind, p: c.p, spectrum: c.spectrum, trials: n, ...acc,
     PL: acc.logic / n,
     harmful: (acc.logic + acc.outside) / n,
+    /* 条件于「未被判不可信」的样本：cat/dup 的 flag 率高，只看 PL 会把「信息少一轮」
+       当成失败。两个率一起看才公平（页面 HUD 两个都显示）。 */
+    PLgiven: acc.flagged >= n ? null : acc.logic / (n - acc.flagged),
     gaugeRate: acc.gauge / n,
     residual: acc.outside / n,
     discard: acc.flagged / n,
     wMean: wSum / Math.max(1, n - acc.perfect - acc.flagged),
     wHist, meanFaults: faultSum / n, frameFlips: flips, randomMeas: random,
+    unsureRate: unsureN / n, acceptRate: 1 - unsureN / n,
+    meanUsedRounds: usedSum / n, rounds: circ.rounds, decode: c.decode,
     stats: circ.stats,
   };
 }
@@ -741,4 +827,78 @@ export function fsProbeWorst(kind = 'std', cfg = {}){
     wPre: run.wPre, wRes: run.wRes, coset: run.coset, cls: run.cls,
     F: run.F, flagged: run.flagged, syn: run.syn.slice(),
   };
+}
+
+/* ============================================================================
+ * R82 多轮提取 + 跨轮联合解码：扫描 / 伪阈值 / 斜率 / 组合对照
+ * ========================================================================== */
+
+/* P_L(p) 扫描（MC 每点）。伪阈值与斜率都从这条曲线上取，不在别处另算一套。 */
+export function rdSweep(kind = 'std', cfg = {}){
+  const c = { ...FS_DEFAULTS, ...(typeof kind === 'string' ? { kind } : kind), ...cfg };
+  const ps = c.ps || [0.002, 0.005, 0.01, 0.02, 0.04, 0.07, 0.1, 0.15, 0.2];
+  const out = { kind: c.kind, rounds: c.rounds, decode: c.decode, need: c.need,
+    trials: c.trials, seed: c.seed, p: [], PL: [], discard: [], unsure: [],
+    meanFaults: [], meanUsedRounds: [] };
+  for (const p of ps){
+    const e = fsEnsemble(c.kind, { ...c, p, trials: c.trials, seed: c.seed });
+    out.p.push(p); out.PL.push(e.PL); out.discard.push(e.discard);
+    out.unsure.push(e.unsureRate); out.meanFaults.push(e.meanFaults);
+    out.meanUsedRounds.push(e.meanUsedRounds);
+  }
+  return out;
+}
+
+/* 伪阈值：P_L(p) = p 的交叉点（网格上变号 + 双对数线性插值）。
+   ⚠ 这是**伪阈值**不是阈值：码距固定为 3，加轮数不加码距 ⟹ 不存在真阈值
+   （真阈值需要码族：不同码距的码在同一 p 下 P_L 随距离下降）。 */
+export function rdPseudoThreshold(sw){
+  if (!sw || !sw.p.length) return null;
+  let cross = null;
+  for (let i = 1; i < sw.p.length; i++){
+    const f0 = sw.PL[i - 1] - sw.p[i - 1], f1 = sw.PL[i] - sw.p[i];
+    if (f0 < 0 && f1 >= 0){
+      /* 双对数线性插值：ln P_L 与 ln p 之间线性 ⟹ 解 P_L = p */
+      const l0 = Math.log(sw.p[i - 1]), l1 = Math.log(sw.p[i]);
+      const g0 = Math.log(Math.max(1e-12, sw.PL[i - 1])), g1 = Math.log(Math.max(1e-12, sw.PL[i]));
+      /* 在 p 上插值 h(p) = ln PL(p) − ln p，求 h=0 */
+      const h0 = g0 - l0, h1 = g1 - l1;
+      const t = h0 / (h0 - h1);
+      cross = Math.exp(l0 + t * (l1 - l0));
+      break;
+    }
+  }
+  return cross;
+}
+
+/* 小 p 区的 log-log 斜率：P_L ∝ p^α。α≈1 表示「单个故障就能逻辑失败」（不容错），
+   α≈2 表示「要两个故障才逻辑失败」（容错）——这是本轮最硬的一条数字。 */
+export function rdSlope(sw, i0 = 0, i1 = 2){
+  if (!sw || sw.p.length <= i1) return null;
+  const p0 = sw.p[i0], p1 = sw.p[i1];
+  const q0 = Math.max(1e-9, sw.PL[i0]), q1 = Math.max(1e-9, sw.PL[i1]);
+  return Math.log(q1 / q0) / Math.log(p1 / p0);
+}
+
+/* 组合对照：轮数 × 解码器（可再乘线路方案） */
+export function rdCompare(cfg = {}){
+  const base = { ...FS_DEFAULTS, ...cfg };
+  const rows = [];
+  const kinds = cfg.kinds || [base.kind || 'std'];
+  const roundsList = cfg.roundsList || [1, 2, 3];
+  const decodes = cfg.decodes || ['single', 'immediate', 'repeat'];
+  for (const kind of kinds) for (const rounds of roundsList) for (const decode of decodes){
+    if (decode === 'repeat' && rounds < (base.need || 2)) continue;   /* 轮数不足时 repeat 永远达不成一致 */
+    const c = { ...base, kind, rounds, decode };
+    const sw = rdSweep(kind, { ...c, ps: cfg.ps });
+    rows.push({
+      kind, rounds, decode, need: c.need,
+      PL: sw.PL, p: sw.p,
+      PLat: sw.PL[cfg.pIdx || 2], pAt: sw.p[cfg.pIdx || 2],
+      pseudo: rdPseudoThreshold(sw), slope: rdSlope(sw),
+      unsure: sw.unsure[cfg.pIdx || 2], meanUsed: sw.meanUsedRounds[cfg.pIdx || 2],
+      trials: sw.trials,
+    });
+  }
+  return rows;
 }
