@@ -130,6 +130,7 @@ export class QCircuitApp {
         <a href="./paths.html">路径 ∿</a>
         <a href="./noise.html">噪声 ◍</a>
         <a href="./qec.html">纠错 ◈</a>
+        <a href="./shor.html">级联 ⊗3</a>
       </header>
 
       <aside id="qcPanel" class="panel">

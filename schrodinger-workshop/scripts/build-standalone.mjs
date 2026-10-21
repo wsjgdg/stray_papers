@@ -2,7 +2,7 @@
 /* build-standalone.mjs — 把 ES 模块工程（src/）打回单文件 HTML 分发版（dist/）。
    恢复重构前的「双击即开」能力（file:// 无 CORS 限制，经典 <script> 无需 HTTP）。
 
-   R72 起工程有两个页面：
+   R72 起工程有多个页面（PAGES 表见下）：
      index.html      → dist/quantum-field.html（单粒子主场，入口 src/main.js）
      two-body.html   → dist/two-body.html（双粒子构型空间，入口 src/two-body-main.js）
      hubbard.html    → dist/hubbard.html（格点费米-哈伯德，入口 src/hubbard-main.js）
@@ -10,7 +10,8 @@
      qcircuit.html   → dist/qcircuit.html（小规模量子线路，入口 src/qcircuit-main.js）
      noise.html      → dist/noise.html（开放量子系统：T₁/T₂，入口 src/noise-main.js）
      qec.html        → dist/qec.html（3 比特重复码纠错，入口 src/qec-main.js）
-   两页共用 src/core/*；各自独立 bundle（拓扑序不同），互不影响。
+ *     shor.html       → dist/shor.html（Shor 9 比特级联码，入口 src/shor-main.js）
+   各页共用 src/core/*（仅 index 用）；各自独立 bundle（拓扑序不同），互不影响。
 
    做法（mini-bundler，零依赖）：
    1. 从页面 HTML 找到入口 <script type="module" src="./src/...">
@@ -42,6 +43,7 @@ const PAGES = [
   ['qcircuit.html', 'qcircuit.html'],
   ['noise.html', 'noise.html'],
   ['qec.html', 'qec.html'],
+  ['shor.html', 'shor.html'],
 ];
 
 /* ---------- 1. 入口定位 ---------- */

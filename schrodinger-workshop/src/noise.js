@@ -121,6 +121,7 @@ export class NoiseApp {
         <a href="./paths.html">路径 ∿</a>
         <a href="./qcircuit.html">线路 ⧉</a>
         <a href="./qec.html">纠错 ◈</a>
+        <a href="./shor.html">级联 ⊗3</a>
       </header>
 
       <aside id="nzPanel" class="panel">
