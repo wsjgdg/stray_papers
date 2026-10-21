@@ -9,6 +9,7 @@
      paths.html      → dist/paths.html（费曼路径求和，入口 src/paths-main.js）
      qcircuit.html   → dist/qcircuit.html（小规模量子线路，入口 src/qcircuit-main.js）
      noise.html      → dist/noise.html（开放量子系统：T₁/T₂，入口 src/noise-main.js）
+     qec.html        → dist/qec.html（3 比特重复码纠错，入口 src/qec-main.js）
    两页共用 src/core/*；各自独立 bundle（拓扑序不同），互不影响。
 
    做法（mini-bundler，零依赖）：
@@ -40,6 +41,7 @@ const PAGES = [
   ['paths.html', 'paths.html'],
   ['qcircuit.html', 'qcircuit.html'],
   ['noise.html', 'noise.html'],
+  ['qec.html', 'qec.html'],
 ];
 
 /* ---------- 1. 入口定位 ---------- */

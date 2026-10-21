@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>纠错工场 · 3 比特重复码（薛定谔工场 R78）</title>
+</head>
+<body>
+<!-- 纯 CPU + 2D canvas（态矢 + ancilla 稳定子测量 + 经典前馈，无 WebGL）；
+     ES 模块需经 HTTP 访问。单文件分发版由 scripts/build-standalone.mjs 生成到 dist/qec.html。 -->
+<script>
+/*! 薛定谔工场 · 单文件分发版（qec.html）— 由 scripts/build-standalone.mjs 自动生成，请勿手改。
+    源码工程（ES 模块，课程站组件化用）：qec.html + src/
+    模块拼接序（拓扑序，依赖在前）：
+      src/core/styles.js
+      src/physics/qcircuit.js
+      src/physics/qec.js
+      src/qec.js
+      src/qec-main.js
+*/
+
+/* ===== src/core/styles.js ===== */
+/* 组件样式：挂载时注入 <style id="qf-styles">（多实例只注入一次）。
+   R43 修复：本字符串此前**以字面 `<style>` 开头**（自初版 9c397d0 起），
+   注入用 textContent ⟹ CSS 解析器把 `<style>` 当 selector 前缀，紧接的
+   `:root{…}` 被解析为「`<style> :root`」这一永不匹配的后代选择器的声明块
+   ⟹ **:root 内所有 CSS 变量失效**（--txt/--dim/--mono/--panel 全空），
+   于是全部 `color:var(--dim)` 等退化为浏览器默认（黑字 + Times New Roman），
+   在深色半透明面板上几乎不可读——而 font-size/letter-spacing 等字面值声明
+   仍生效，故长期未被察觉（旧注释「视觉零回归」的自评有误）。
+   R43 CDP 实测（getComputedStyle 读 CSS 变量全为空 + h3 color=rgb(0,0,0)
+   / fontFamily=Times New Roman）定位并删除该标签后，变量与字体恢复。 */
+const CSS = `
+  :root{
+    --bg:#04060c; --panel:rgba(8,12,22,.74); --line:rgba(120,160,220,.14);
+    --txt:#e6edf3; --dim:#9aa7bd; --cyan:#67e8f9; --mag:#f0abfc; --amber:#fbbf24;
+    --mono:ui-monospace,"SF Mono","Cascadia Code",Consolas,"Courier New",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font-family:var(--sans)}
+  #gl{position:fixed;inset:0;width:100vw;height:100vh;display:block;cursor:crosshair;touch-action:none}
+  .panel{position:fixed;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    box-shadow:0 8px 32px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04)}
+  /* ---------- 顶栏 ---------- */
+  #topbar{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:18px;
+    padding:10px 20px;z-index:10;white-space:nowrap}
+  #topbar .logo{font-family:var(--mono);font-weight:700;font-size:15px;letter-spacing:.12em;
+    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
+  #topbar .eq{font-family:var(--mono);font-size:12.5px;color:var(--dim);letter-spacing:.02em}
+  #topbar .eq b{color:var(--cyan);font-weight:600}
+  #topbar .eq i{color:var(--mag);font-style:italic}
+  #status{font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:.08em}
+  /* R72：双粒子构型空间页入口（与 status 同排，flex:none 防被 eq 压缩） */
+  #topbar .navlink{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
+    border:1px solid var(--line);border-radius:6px;padding:3px 8px;flex:none;transition:all .15s;letter-spacing:.05em}
+  #topbar .navlink:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
+  @media (max-width:900px){#topbar .navlink{display:none}}
+  /* ---------- 左侧控制面板 ---------- */
+  /* R43 修复①：原 max-height:calc(100vh−120px) ⟹ 面板底 = 100vh−44，而左下
+     #desc（bottom:52px）顶部随预设描述长度变化（实测 82px 文本 ⟹ 顶 100vh−132；
+     GP/Pauli 长文本 177px ⟹ 顶 100vh−229）⟹ 两者在左列重叠（最大 238×80 px）。
+     修复：#desc 限高 120px + 内部滚动（高度可控），面板按最坏情况预留
+     (76 顶距 + 120 desc + 52 底距 + 8 间隙 = 256) ⟹ 面板底 100vh−180 ≤ desc 顶
+     100vh−172，四 viewport × 五内核实测无重叠。 */
+  #panel{top:76px;left:14px;width:238px;padding:14px;z-index:10;max-height:calc(100vh - 256px);overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  #panel::-webkit-scrollbar{width:4px}#panel::-webkit-scrollbar-thumb{background:rgba(120,160,220,.25);border-radius:2px}
+  .sec{margin-bottom:14px}
+  .sec:last-child{margin-bottom:0}
+  .sec>h3{font-size:10px;letter-spacing:.22em;color:var(--dim);font-weight:600;margin-bottom:8px;
+    display:flex;align-items:center;gap:8px}
+  .sec>h3::after{content:"";flex:1;height:1px;background:var(--line)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  /* R60 势刷轴比三连同控（grid3 单元格内的迷你标签行：名称 + 实时值） */
+  .mini{font-size:9.5px;color:var(--dim);display:flex;justify-content:space-between;gap:4px;margin:3px 0 1px;white-space:nowrap}
+  .mini b{color:var(--cyan);font-weight:600;font-family:var(--mono)}
+  button{font-family:var(--sans);font-size:12px;color:var(--txt);background:rgba(255,255,255,.045);
+    border:1px solid var(--line);border-radius:8px;padding:7px 8px;cursor:pointer;transition:all .15s;text-align:center}
+  button:hover{background:rgba(103,232,249,.12);border-color:rgba(103,232,249,.4)}
+  button.on{background:rgba(103,232,249,.16);border-color:var(--cyan);color:var(--cyan)}
+  button.wide{width:100%}
+  .row{display:flex;align-items:center;gap:8px;margin:7px 0}
+  .row label{font-size:11px;color:var(--dim);width:64px;flex:none}
+  .row output{font-family:var(--mono);font-size:11px;color:var(--cyan);width:44px;text-align:right;flex:none}
+  input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:3px;border-radius:2px;
+    background:rgba(120,160,220,.25);outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;border-radius:50%;
+    background:var(--cyan);box-shadow:0 0 8px rgba(103,232,249,.7);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:12px;height:12px;border:none;border-radius:50%;background:var(--cyan);cursor:pointer}
+  select{font-family:var(--mono);font-size:11px;color:var(--txt);background:rgba(255,255,255,.05);
+    border:1px solid var(--line);border-radius:6px;padding:4px 6px;width:100%;outline:none}
+  /* ---------- 右侧 HUD ---------- */
+  #hud{top:76px;right:14px;padding:12px 14px;z-index:10;min-width:196px;font-family:var(--mono)}
+  #hud .hrow{display:flex;justify-content:space-between;gap:14px;font-size:11.5px;padding:3px 0}
+  #hud .hrow span:first-child{color:var(--dim)}
+  #hud .hrow span:last-child{color:var(--txt)}
+  #hud .hrow .ok{color:#4ade80}#hud .hrow .warn{color:var(--amber)}
+  #hud hr{border:none;border-top:1px solid var(--line);margin:7px 0}
+  /* ---------- 相位图例 ---------- */
+  #legend{right:14px;bottom:52px;padding:10px 12px;z-index:10;display:flex;align-items:center;gap:12px}
+  #wheel{width:84px;height:84px;border-radius:50%;border:1px solid var(--line)}
+  #legend .cap{font-size:10.5px;color:var(--dim);line-height:1.7;max-width:130px}
+  #legend .cap b{color:var(--cyan);font-weight:600}
+  /* ---------- 底部提示 ---------- */
+  #hint{left:50%;bottom:14px;transform:translateX(-50%);padding:8px 18px;z-index:10;
+    font-size:11.5px;color:var(--dim);white-space:nowrap;letter-spacing:.02em}
+  #hint b{color:var(--txt);font-weight:600}
+  #hint .k{font-family:var(--mono);color:var(--cyan);background:rgba(103,232,249,.1);
+    border:1px solid rgba(103,232,249,.25);border-radius:4px;padding:0 5px;font-size:10.5px}
+  /* ---------- 预设描述 ---------- */
+  /* R43 修复②：描述文本长度随内核/预设变化（实测 82–177px 高），高度不可控会
+     顶进 #panel 区域 ⟹ 限高 120px + 内部滚动：既压住几何冲突，又保留全文
+     （长描述可滚动查看）。 */
+  #desc{left:14px;bottom:52px;z-index:10;padding:10px 14px;max-width:340px;font-size:11.5px;
+    color:var(--dim);line-height:1.65;max-height:120px;overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  #desc b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:12px}
+  /* ---------- toast ---------- */
+  #toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:20;pointer-events:none;
+    font-family:var(--mono);font-size:13px;color:var(--cyan);letter-spacing:.2em;opacity:0;transition:opacity .4s;
+    text-shadow:0 0 18px rgba(103,232,249,.8)}
+  /* ---------- 笔刷光标预览环 ---------- */
+  #brushcursor{position:fixed;border:1px solid rgba(140,190,255,.85);border-radius:50%;pointer-events:none;
+    display:none;z-index:15;box-shadow:0 0 10px rgba(80,140,255,.35),inset 0 0 10px rgba(80,140,255,.18)}
+  /* ---------- 准星瞄准线 ---------- */
+  #aim{position:fixed;inset:0;width:100vw;height:100vh;z-index:5;pointer-events:none;display:none}
+  #aim line{stroke:var(--amber);stroke-width:1.5;stroke-dasharray:5 4;filter:drop-shadow(0 0 4px rgba(251,191,36,.8))}
+  #aim circle{fill:none;stroke:var(--amber);stroke-width:1;opacity:.7}
+  #aim text{fill:var(--amber);font-family:var(--mono);font-size:11px}
+  /* ---------- 角标 ---------- */
+  .corner{position:fixed;width:22px;height:22px;z-index:4;pointer-events:none;opacity:.5}
+  .corner::before,.corner::after{content:"";position:absolute;background:var(--cyan)}
+  .corner::before{width:100%;height:1px}.corner::after{width:1px;height:100%}
+  #c1{top:8px;left:8px}.corner::before{top:0}#c1::after{left:0}
+  #c2{top:8px;right:8px}#c2::before{top:0}#c2::after{right:0}
+  #c3{bottom:8px;left:8px}#c3::before{bottom:0}#c3::after{left:0}
+  #c4{bottom:8px;right:8px}#c4::before{bottom:0}#c4::after{right:0}
+  #diag{position:fixed;left:-9999px}
+  /* ---------- 透射率扫描面板 ---------- */
+  .hint{font-size:10px;color:var(--dim);line-height:1.5;flex:1}
+  /* ---------- hint 可折叠（R45，用户选定方案 a）----------
+     运行时升级（app.js upgradeHints）：原 hint 文本搬进 .hintBody，
+     前置 .hintToggle 按钮。默认折叠（长 hint 是面板溢出的元凶，R43
+     实测 2D 697px / 3D 1673px / GP 980px）；展开态经 localStorage
+     持久化（key = hint 文本摘要，跨内核/面板切换稳定）。 */
+  .hintToggle{display:block;width:100%;text-align:left;background:none;border:none;
+    color:var(--dim);font:inherit;font-size:10px;cursor:pointer;padding:0;margin:0;
+    letter-spacing:.05em}
+  .hintToggle:hover{color:var(--cyan)}
+  .hintToggle:focus-visible{outline:1px solid var(--cyan);outline-offset:2px}
+  .hint .hintBody{display:none}
+  .hint.open .hintBody{display:block}
+  .hint.open .hintToggle{color:var(--cyan);margin-bottom:3px}
+  /* ---------- sec 级分区折叠（R48，README「后续方向」a2）----------
+     与 hint 折叠（R45）同模式：h3 变切换头（class 驱动显隐），展开态经
+     localStorage 持久化（qf.secs.state，key = sec id / h3 摘要）。
+     默认折叠：四个扫描面板 sec——R45 实测（1440×900，overflow 口径
+     scrollH−clientH）溢出大头正是区块结构：2D 687 / 3D 1403 / GP 813，
+     canvas 硬高占其中 820px。与门控正交：syncControls 按内核切 sec 的
+     style.display（整区显隐），本折叠切 sec 内部子元素，互不竞争。
+     扫描开始（GenericScanner.start → app.expandSecFor）自动展开所在
+     sec——用户点了「开始扫描」就应看到 canvas 与状态行。
+     特异度注意：规则须带 #panel 前缀——四个扫描 canvas 的 display:block
+     规则（ID 选择器 1,0,0）会压过裸 .sec.collapsed > *:not(h3)（0,1,1）
+     ⟹ 折叠态 canvas 仍显示（cdp48 首轮实证）。 */
+  #panel .sec.collapsed > *:not(h3){display:none}
+  .sec > h3{cursor:pointer;user-select:none;-webkit-user-select:none}
+  .sec > h3:focus-visible{outline:1px solid var(--cyan);outline-offset:2px}
+  .sec > h3::before{content:"▾ ";color:var(--dim);font-weight:400}
+  .sec.collapsed > h3::before{content:"▸ "}
+  /* R48：range flex item 默认 min-width:auto（Chrome ~129px 固有最小宽）
+     ⟹ label64+gap+range129+gap+output44 超出面板内容宽 236px ~31px，
+     面板被迫横向滚动（R43 起既有缺陷，R45 溢出台账只记了纵向）。 */
+  input[type=range]{min-width:0}
+  /* R48 a3：扫描 canvas 统一 width:100%（修复 paramScanCanvas/scanCanvas3/
+     slitScanCanvas 三个缺规则 ⟹ 420px attribute 宽在 210px 面板内容区横向
+     溢出、面板被迫横向滚动——R45 溢出台账只记了纵向，此项本轮补录）；
+     attribute 高 260/300 → 180（_plot 全部按 cv.width/height 自适应绘制，
+     内部分辨率 420×180 不变、显示高 210×180/420=90px，展开态每块省 40–60px）。 */
+  #scanCanvas,#paramScanCanvas,#scanCanvas3,#slitScanCanvas{width:100%;margin-top:6px;
+    border:1px solid var(--line);border-radius:8px;background:rgba(4,8,16,.4);display:block}
+  #scanStat{font-size:10px;color:var(--cyan);font-family:var(--mono);flex:1;line-height:1.45}
+  button:disabled{opacity:.4;cursor:default}
+  button:disabled:hover{background:rgba(255,255,255,.045);border-color:var(--line)}
+  /* ---------- 面板双向收起（R56，「试验场全屏」）----------
+     左列 #panel(上) + #desc(下)、右列 #hud(上) + #legend(下) 各为一组，
+     整组 transform 滑出屏幕——#gl 本就 position:fixed 全屏，滑出即露全场，
+     无需 resize/重绘（画布尺寸不变，只是不再被面板遮挡）。
+     边缘拉手 .qf-tab 常驻（z-index 11 压面板 10，只压边框+padding 6px，
+     不挡内容）；点击拉手或快捷键 [ / ] 切换；状态经 localStorage
+     qf.panels.state = {left,right}（true=展开，缺省/坏值默认全展开）。
+     滑出态 pointer-events:none ⟹ 画布交互全程不被残留命中区遮挡。 */
+  #panel,#desc,#hud,#legend{transition:transform .28s cubic-bezier(.4,0,.2,1),opacity .24s}
+  body.qf-hide-left #panel,body.qf-hide-left #desc{transform:translateX(calc(-100% - 24px));opacity:0;pointer-events:none}
+  body.qf-hide-right #hud,body.qf-hide-right #legend{transform:translateX(calc(100% + 24px));opacity:0;pointer-events:none}
+  .qf-tab{position:fixed;top:50%;transform:translateY(-50%);z-index:11;width:20px;height:60px;
+    padding:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);
+    font-size:14px;line-height:1;color:var(--dim);background:var(--panel);border:1px solid var(--line);
+    border-radius:0 10px 10px 0;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    cursor:pointer;user-select:none;-webkit-user-select:none;
+    box-shadow:0 4px 16px rgba(0,0,0,.4);transition:color .15s,border-color .15s}
+  #tabL{left:0}
+  #tabR{right:0;border-radius:10px 0 0 10px}
+  .qf-tab:hover{color:var(--cyan);border-color:rgba(103,232,249,.45)}
+  @media (max-width:1100px){#legend,#desc{display:none}}
+`;
+
+function injectStyles(){
+  if (document.getElementById("qf-styles")) return;
+  const st = document.createElement("style");
+  st.id = "qf-styles";
+  st.textContent = CSS;
+  document.head.appendChild(st);
+}
+
+/* ===== src/physics/qcircuit.js ===== */
+/* ============================================================================
+ * qcircuit.js — R75 小规模量子线路：态矢模拟器（纯 CPU，n ≤ 12）
+ *
+ * 约定（页面、测试、文档共用同一套，写错一处就会全盘错位）：
+ *   ① 态矢 ψ = Σ_i a_i |i⟩，i ∈ [0, 2^n)；**指数的第 k 位 = 量子比特 k**
+ *      （LSB 是 q0）。X 作用在 q_k 上就是翻转指数的第 k 位。
+ *   ② 振幅存成两条 Float64Array（re/im），门是 2×2 复矩阵 {a,b,c,d}（各为 [re,im]）。
+ *   ③ 受控门：控制位全 1 时才作用；CNOT 的 c=[control]、t=target。
+ *   ④ 子系统 A = **低 k_A 位**（q0..q_{k_A−1}），环境 = 高位块；这样 reshape 成
+ *      [2^{n−kA}][2^{kA}] 就是连续的，约化密度矩阵直接 Gram 求和。
+ *   ⑤ 全局相位不可观测：涉及 Rz/Rx/Ry 的断言一律用保真度 |⟨φ|ψ⟩|² 或概率，
+ *      不比振幅本身（相位约定不同不是 bug）。
+ *
+ * 复杂度：单门 O(2^n)；n=12 时 4096 振幅、单门 ~4096 次复乘（微秒级）。
+ * ========================================================================== */
+
+/* ---------- 复数小工具 ---------- */
+const cx = (re, im) => ({ re, im });
+const cadd = (x, y) => cx(x.re + y.re, x.im + y.im);
+const cmul = (x, y) => cx(x.re * y.re - x.im * y.im, x.re * y.im + x.im * y.re);
+const cabs2 = x => x.re * x.re + x.im * x.im;
+const C0 = cx(0, 0), C1 = cx(1, 0), CI = cx(0, 1);
+
+/* ---------- 门表 ---------- */
+/* 每个门：{ name, arity, matrix? }；带参门由工厂生成 */
+const S2 = Math.SQRT1_2;
+
+const QC_UNARY = {
+  h: { label: 'H', m: [cx(S2, 0), cx(S2, 0), cx(S2, 0), cx(-S2, 0)] },
+  x: { label: 'X', m: [C0, C1, C1, C0] },
+  y: { label: 'Y', m: [C0, cx(0, -1), cx(0, 1), C0] },
+  z: { label: 'Z', m: [C1, C0, C0, cx(-1, 0)] },
+  s: { label: 'S', m: [C1, C0, C0, CI] },
+  sdg: { label: 'S†', m: [C1, C0, C0, cx(0, -1)] },
+  t: { label: 'T', m: [C1, C0, C0, cx(Math.SQRT1_2, Math.SQRT1_2)] },
+  tdg: { label: 'T†', m: [C1, C0, C0, cx(Math.SQRT1_2, -Math.SQRT1_2)] },
+};
+
+function qcRotation(op, theta){
+  const c = Math.cos(theta / 2), s = Math.sin(theta / 2);
+  if (op === 'rx') return [cx(c, 0), cx(0, -s), cx(0, -s), cx(c, 0)];
+  if (op === 'ry') return [cx(c, 0), cx(-s, 0), cx(s, 0), cx(c, 0)];
+  if (op === 'rz') return [cx(Math.cos(theta / 2), -Math.sin(theta / 2)), C0, C0,
+                           cx(Math.cos(theta / 2), Math.sin(theta / 2))];
+  throw new Error('unknown rotation ' + op);
+}
+
+/* ---------- 态 ---------- */
+function qcNewState(n){
+  const dim = 1 << n;
+  const s = { n, dim, re: new Float64Array(dim), im: new Float64Array(dim) };
+  s.re[0] = 1;
+  return s;
+}
+/* 基态 |j⟩（qcNewState 默认给 |0⟩；测试与页面都需要任意基态，别手写 re[j]=1
+   ——那会和已有的 re[0]=1 叠加成两个基态的相干和，是本轮踩过的坑）。 */
+function qcBasis(n, j){
+  const dim = 1 << n;
+  const s = { n, dim, re: new Float64Array(dim), im: new Float64Array(dim) };
+  s.re[j & (dim - 1)] = 1;
+  return s;
+}
+function qcClone(s){
+  return { n: s.n, dim: s.dim, re: Float64Array.from(s.re), im: Float64Array.from(s.im) };
+}
+function qcNorm(s){
+  let a = 0;
+  for (let i = 0; i < s.dim; i++) a += s.re[i] * s.re[i] + s.im[i] * s.im[i];
+  return a;
+}
+function qcProbs(s){
+  const p = new Float64Array(s.dim);
+  for (let i = 0; i < s.dim; i++) p[i] = s.re[i] * s.re[i] + s.im[i] * s.im[i];
+  return p;
+}
+/* 归一化（测量后、数值漂移后） */
+function qcRenormalize(s){
+  const n2 = qcNorm(s);
+  if (n2 <= 0) throw new Error('norm collapsed');
+  const k = 1 / Math.sqrt(n2);
+  for (let i = 0; i < s.dim; i++){ s.re[i] *= k; s.im[i] *= k; }
+  return s;
+}
+
+/* ---------- 门作用 ---------- */
+/* 单比特矩阵 m 作用在比特 q（就地） */
+function applyMatrix(s, m, q){
+  const bit = 1 << q;
+  const { re, im } = s;
+  for (let i = 0; i < s.dim; i++){
+    if (i & bit) continue;
+    const j = i | bit;
+    const a0r = re[i], a0i = im[i], a1r = re[j], a1i = im[j];
+    /* m = [m00 m01; m10 m11]，逐项展开免临时对象 */
+    re[i] = m[0].re * a0r - m[0].im * a0i + m[1].re * a1r - m[1].im * a1i;
+    im[i] = m[0].re * a0i + m[0].im * a0r + m[1].re * a1i + m[1].im * a1r;
+    re[j] = m[2].re * a0r - m[2].im * a0i + m[3].re * a1r - m[3].im * a1i;
+    im[j] = m[2].re * a0i + m[2].im * a0r + m[3].re * a1i + m[3].im * a1r;
+  }
+}
+function ctrlMask(controls){
+  let m = 0;
+  for (const c of controls || []) m |= 1 << c;
+  return m;
+}
+/* 受控单比特门：控制位全 1 时才对 target 作用。就地实现：逐对扫描后仅处理
+   满足控制条件的指数（不做子空间拷贝，n=12 也只有 4096 次判断） */
+function applyControlled(s, m, q, controls){
+  const mask = ctrlMask(controls);
+  if (!mask){ applyMatrix(s, m, q); return; }
+  const bit = 1 << q;
+  const { re, im } = s;
+  for (let i = 0; i < s.dim; i++){
+    if ((i & mask) !== mask) continue;
+    if (i & bit) continue;
+    const j = i | bit;
+    const a0r = re[i], a0i = im[i], a1r = re[j], a1i = im[j];
+    re[i] = m[0].re * a0r - m[0].im * a0i + m[1].re * a1r - m[1].im * a1i;
+    im[i] = m[0].re * a0i + m[0].im * a0r + m[1].re * a1i + m[1].im * a1r;
+    re[j] = m[2].re * a0r - m[2].im * a0i + m[3].re * a1r - m[3].im * a1i;
+    im[j] = m[2].re * a0i + m[2].im * a0r + m[3].re * a1i + m[3].im * a1r;
+  }
+}
+function applySwap(s, a, b){
+  const ba = 1 << a, bb = 1 << b;
+  if (a === b) return;
+  const { re, im } = s;
+  for (let i = 0; i < s.dim; i++){
+    const ia = (i & ba) ? 1 : 0, ib = (i & bb) ? 1 : 0;
+    if (ia === ib) continue;
+    if (ia === 0) continue;             /* 每对只处理一次（i 的 a 位为 0、b 位为 1） */
+    const j = i ^ ba ^ bb;
+    const tr = re[i], ti = im[i];
+    re[i] = re[j]; im[i] = im[j];
+    re[j] = tr; im[j] = ti;
+  }
+}
+
+/* 展开成统一形式：{ op, q, c, theta } */
+function qcApply(s, g){
+  const op = g.op;
+  if (op === 'cnot'){ applyControlled(s, QC_UNARY.x.m, g.t ?? g.q2, [g.c ?? g.q1]); return s; }
+  if (op === 'cz'){ applyControlled(s, QC_UNARY.z.m, g.t ?? g.q2, [g.c ?? g.q1]); return s; }
+  if (op === 'swap'){ applySwap(s, g.q1, g.q2); return s; }
+  if (op === 'toffoli'){
+    applyControlled(s, QC_UNARY.x.m, g.q3, [g.q1, g.q2]); return s;
+  }
+  if (op === 'rx' || op === 'ry' || op === 'rz'){
+    const m = qcRotation(op, g.theta ?? 0);
+    if (g.c != null) applyControlled(s, m, g.q, [g.c]);
+    else applyMatrix(s, m, g.q);
+    return s;
+  }
+  if (op === 'phase'){
+    /* P(φ)=diag(1,e^{iφ})：受控 P 就是标准「受控相位门」diag(1,1,1,e^{iφ})。
+       QFT 必须用它而不是受控 Rz——受控 Rz 差一个控制位上的 Rz(φ)，只对
+       计算基输入无害，对叠加输入会错（这也是本轮设计时纠正的一处）。 */
+    const th = g.theta ?? 0;
+    const m = [C1, C0, C0, cx(Math.cos(th), Math.sin(th))];
+    if (g.c != null) applyControlled(s, m, g.q, [g.c]);
+    else applyMatrix(s, m, g.q);
+    return s;
+  }
+  const u = QC_UNARY[op];
+  if (!u) throw new Error('unknown gate ' + op);
+  if (g.c != null) applyControlled(s, u.m, g.q, [g.c]);
+  else applyMatrix(s, u.m, g.q);
+  return s;
+}
+function qcApplyAll(s, gates){ for (const g of gates) qcApply(s, g); return s; }
+
+/* 稠密矩阵（测试用，n ≤ 3）：把线路作用到每个基矢上拼成列 */
+function qcProgramMatrix(n, gates){
+  const dim = 1 << n;
+  const M = [];
+  for (let k = 0; k < dim; k++){
+    const s = { n, dim, re: new Float64Array(dim), im: new Float64Array(dim) };
+    s.re[k] = 1;
+    qcApplyAll(s, gates);
+    M.push(s);
+  }
+  return M;   /* M[k][j] = 第 k 列的第 j 行 = ⟨j|U|k⟩ */
+}
+
+/* ---------- 测量与统计 ---------- */
+function mulberry32(seed){
+  let a = seed >>> 0;
+  return function(){
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+/* 按 |a|² 抽样一个指数 */
+function qcSample(s, rng){
+  const p = qcProbs(s);
+  const u = rng();
+  let acc = 0;
+  for (let i = 0; i < s.dim; i++){
+    acc += p[i];
+    if (u < acc) return i;
+  }
+  return s.dim - 1;
+}
+/* 塌缩到指数 i（就地归一化，其余振幅归零） */
+function qcCollapse(s, idx){
+  for (let i = 0; i < s.dim; i++){ if (i !== idx){ s.re[i] = 0; s.im[i] = 0; } }
+  qcRenormalize(s);
+  return s;
+}
+/* 单比特边缘：p0 = P(该位=0) */
+function qcMarginal(s, q){
+  const bit = 1 << q;
+  let p1 = 0;
+  for (let i = 0; i < s.dim; i++) if (i & bit) p1 += s.re[i] * s.re[i] + s.im[i] * s.im[i];
+  return { p0: 1 - p1, p1, z: 1 - 2 * p1 };
+}
+/* 两体 ZZ 关联 ⟨Z_a Z_b⟩（实；Z 对角） */
+function qcZZ(s, a, b){
+  const ba = 1 << a, bb = 1 << b;
+  let v = 0;
+  for (let i = 0; i < s.dim; i++){
+    const sa = (i & ba) ? -1 : 1, sb = (i & bb) ? -1 : 1;
+    v += sa * sb * (s.re[i] * s.re[i] + s.im[i] * s.im[i]);
+  }
+  return v;
+}
+function qcPauliCorr(s, a, pa, b, pb){
+  const t = qcClone(s);
+  const applyTo = (st, q, p) => {
+    if (p === 'x') applyMatrix(st, QC_UNARY.x.m, q);
+    else if (p === 'y') applyMatrix(st, QC_UNARY.y.m, q);
+    else if (p === 'z'){
+      const bit = 1 << q;
+      for (let i = 0; i < st.dim; i++) if (i & bit){ st.re[i] = -st.re[i]; st.im[i] = -st.im[i]; }
+    }
+  };
+  /* 先作用在 |ψ⟩ 上得到 P_b|ψ⟩，再与 P_a|ψ⟩ 内积 */
+  applyTo(t, b, pb);
+  const u = qcClone(s);
+  applyTo(u, a, pa);
+  let re = 0, im = 0;
+  for (let i = 0; i < s.dim; i++){
+    re += u.re[i] * t.re[i] + u.im[i] * t.im[i];
+    im += u.im[i] * t.re[i] - u.re[i] * t.im[i];
+  }
+  /* ⟨u|t⟩ 应为实数（对易/反对易都给实数） */
+  return re;
+}
+
+/* ---------- 纠缠 ---------- */
+/* 约化密度矩阵 ρ_A（A = 低 kA 位）的特征值：Gram 矩阵 ρ[i][j]=Σ_e ψ(i,e)ψ*(j,e)，
+   用实嵌入 [[Re,−Im],[Im,Re]] 的 Jacobi（本征值各二重，排序后隔一取、不折半，
+   与 R73 熵的修法同一坑）。 */
+function jacobiReal(A, m, sweeps = 60){
+  const V = [];
+  for (let i = 0; i < m; i++){ V.push(new Float64Array(m)); V[i][i] = 1; }
+  for (let sw = 0; sw < sweeps; sw++){
+    let off = 0;
+    for (let p = 0; p < m; p++) for (let q = p + 1; q < m; q++) off += A[p][q] * A[p][q];
+    if (off < 1e-30) break;
+    for (let p = 0; p < m; p++){
+      for (let q = p + 1; q < m; q++){
+        const apq = A[p][q];
+        if (Math.abs(apq) < 1e-18) continue;
+        const theta = (A[q][q] - A[p][p]) / (2 * apq);
+        const t = Math.sign(theta || 1) / (Math.abs(theta) + Math.sqrt(theta * theta + 1));
+        const c = 1 / Math.sqrt(t * t + 1), sn = t * c;
+        for (let k = 0; k < m; k++){
+          const akp = A[k][p], akq = A[k][q];
+          A[k][p] = c * akp - sn * akq;
+          A[k][q] = sn * akp + c * akq;
+        }
+        for (let k = 0; k < m; k++){
+          const apk = A[p][k], aqk = A[q][k];
+          A[p][k] = c * apk - sn * aqk;
+          A[q][k] = sn * apk + c * aqk;
+        }
+        for (let k = 0; k < m; k++){
+          const vkp = V[k][p], vkq = V[k][q];
+          V[k][p] = c * vkp - sn * vkq;
+          V[k][q] = sn * vkp + c * vkq;
+        }
+      }
+    }
+  }
+  const val = [];
+  for (let i = 0; i < m; i++) val.push(A[i][i]);
+  return { val, vec: V };
+}
+
+function qcReducedRho(s, kA){
+  const mA = 1 << kA, rest = s.dim / mA;
+  const A = [];
+  for (let i = 0; i < 2 * mA; i++) A.push(new Float64Array(2 * mA));
+  for (let i = 0; i < mA; i++){
+    for (let j = 0; j < mA; j++){
+      let rr = 0, ii = 0;
+      for (let e = 0; e < rest; e++){
+        const p = e * mA + i, q = e * mA + j;
+        rr += s.re[p] * s.re[q] + s.im[p] * s.im[q];
+        ii += s.re[p] * s.im[q] - s.im[p] * s.re[q];
+      }
+      /* ρ = [[rr, -ii],[ii, rr]] 的实嵌入块 */
+      A[i][j] += rr;
+      A[i][mA + j] += -ii;
+      A[mA + i][j] += ii;
+      A[mA + i][mA + j] += rr;
+    }
+  }
+  /* i,j 与 j,i 的实部对称性由上面求和自动满足（ρ 厄米） */
+  return A;
+}
+
+function qcEntropy(s, kA){
+  const mA = 1 << kA, m = 2 * mA;
+  const A = qcReducedRho(s, kA);
+  const { val } = jacobiReal(A, m, 80);
+  const sorted = val.slice().sort((a, b) => b - a);
+  const lam = [];
+  for (let i = 0; i < m; i += 2){          /* 实嵌入本征值各二重 ⟹ 隔一取 */
+    const v = Math.max(0, sorted[i]);
+    if (v > 1e-14) lam.push(v);
+  }
+  const sum = lam.reduce((a, b) => a + b, 0);
+  let S = 0;
+  for (const v of lam) if (v > 1e-14) S -= v * Math.log(v);
+  /* λ=1 的纯态在 float64 里会算出 −0（Σ 干净时 −1·log1 = −0），钳到 0 */
+  if (S < 0 && S > -1e-12) S = 0;
+  return { S, spectrum: lam, sum, kA, dimA: mA };
+}
+
+/* 两比特 concurrence（n=2，A 取 q0）：C = 2|a00 a11 − a01 a10| */
+function qcConcurrence(s){
+  if (s.n !== 2) return NaN;
+  const [a00r, a00i] = [s.re[0], s.im[0]];
+  const [a01r, a01i] = [s.re[1], s.im[1]];
+  const [a10r, a10i] = [s.re[2], s.im[2]];
+  const [a11r, a11i] = [s.re[3], s.im[3]];
+  const dr = a00r * a11r - a00i * a11i - (a01r * a10r - a01i * a10i);
+  const di = a00r * a11i + a00i * a11r - (a01r * a10i + a01i * a10r);
+  return 2 * Math.hypot(dr, di);
+}
+
+/* 保真度 |⟨φ|ψ⟩|² */
+function qcFidelity(s, t){
+  if (s.dim !== t.dim) return NaN;
+  let re = 0, im = 0;
+  for (let i = 0; i < s.dim; i++){
+    re += s.re[i] * t.re[i] + s.im[i] * t.im[i];
+    im += s.re[i] * t.im[i] - s.im[i] * t.re[i];
+  }
+  const d = qcNorm(s) * qcNorm(t);
+  return d > 0 ? (re * re + im * im) / d : 0;
+}
+
+/* 振幅信息（页面/测试用）：指数、|a|、相位 */
+function qcAmplitudes(s){
+  const out = [];
+  for (let i = 0; i < s.dim; i++){
+    const p = s.re[i] * s.re[i] + s.im[i] * s.im[i];
+    if (p < 1e-14) continue;
+    out.push({ i, re: s.re[i], im: s.im[i], abs: Math.sqrt(p), phase: Math.atan2(s.im[i], s.re[i]) });
+  }
+  return out;
+}
+/* 把指数写成 |q_{n-1}…q_0⟩ 的比特串（显示用：最左 = 最高位） */
+function qcBits(idx, n){
+  let s = '';
+  for (let k = n - 1; k >= 0; k--) s += ((idx >> k) & 1) ? '1' : '0';
+  return s;
+}
+
+/* ---------- 预设线路 ---------- */
+const QC_PRESETS = {
+  bell: {
+    label: '贝尔对',
+    n: 2, text: 'H 把 q0 打成叠加，再 CNOT 把 q1 拉过来：**两个振幅，相位锁死**。(|00⟩+|11⟩)/√2 的每一个边缘都是 50/50，但 Z 基测量结果**完全相关**——这就是「局域看是噪声、全局看是完美关联」。走一遍后再点「测量」，看它塌到 00 还是 11。',
+    gates: [{ op: 'h', q: 0 }, { op: 'cnot', c: 0, q2: 1 }],
+  },
+  ghz: {
+    label: 'GHZ (4)',
+    n: 4, text: 'H + CNOT 链 ⟹ (|0000⟩+|1111⟩)/√2。**任意单比特的约化态都是完全混合**（熵 = ln2），但四体 ZZ 关联 = 1。GHZ 是「纠缠不是两两关联的总和」的最短反例（三体以上才有真正的多体纠缠）。',
+    gates: [{ op: 'h', q: 0 }, { op: 'cnot', c: 0, q2: 1 }, { op: 'cnot', c: 0, q2: 2 }, { op: 'cnot', c: 0, q2: 3 }],
+  },
+  qft: {
+    label: 'QFT (4)',
+    n: 4, text: '量子傅里叶变换 = H + 受控相位 + 逆序 SWAP：|j⟩ → (1/√N)Σ_k e^{2πijk/N}|k⟩。当输入是**周期态**时输出会在某个动量上集中（相位估计/Shor 的核心）。本条线路逐基态与解析 DFT 矩阵对照到 1e-15（pot75）。',
+    gates: [],   /* 真正线路由 qcQftGates(n) 生成 */
+  },
+  teleport: {
+    label: '量子传态',
+    n: 3, text: '把 q0 上的未知态**搬到 q2**：Bell 对 + Bell 测量 + 两个经典位前馈。三条硬事实：① 分支内 q2 是纯态 X^m1Z^m0|ψ⟩（未修正时保真度只有 1/2），② 修正后四个分支**都**回到 |ψ⟩（F=1），③ 只看 q2、没有经典位的话拿不到任何信息（分支平均 = I/2）——量子不可克隆与无信号性同时成立。拖 θ/φ 换个待传态，换种子换个分支。',
+    gates: [],
+  },
+  grover: {
+    label: 'Grover (2)',
+    n: 2, text: '两比特搜索 |11⟩：H⊗H → 标记（CZ）→ 扩散（H X CZ X H）。**一轮就把概率全部搬到 |11⟩**（P=1，精确，不是逼近）——两比特是唯一一轮收敛的尺寸，正好用来看清「振幅放大」的几何：先把目标翻个相位，再围绕平均值反射。',
+    gates: [
+      { op: 'h', q: 0 }, { op: 'h', q: 1 },
+      { op: 'cz', c: 0, q2: 1 },
+      { op: 'h', q: 0 }, { op: 'h', q: 1 },
+      { op: 'x', q: 0 }, { op: 'x', q: 1 },
+      { op: 'cz', c: 0, q2: 1 },
+      { op: 'x', q: 0 }, { op: 'x', q: 1 },
+      { op: 'h', q: 0 }, { op: 'h', q: 1 },
+    ],
+  },
+};
+
+/* QFT 线路（n 比特）。**次序是实测定的**（穷举 n=2 的八种变体，只有这一族给出
+   2.7e-16 的 DFT 符合）：
+     从最高位 j=n−1 往下：H(q_j)，再由每个更低位 q_k（k<j）控制一个
+     相位门 φ=π/2^{j−k}，最后把比特顺序整体反转（SWAP 对）。
+   为什么不是「从低位往上」：那种写法里相位落在还没做过 H 的高位上，控制位此刻
+   还是计算基态，相位永远不起作用——n=2 的输出只剩 ±1/√N 的实数符号（本轮踩过）。
+   受控相位门 diag(1,1,1,e^{iφ}) 对控制/目标对称，所以 q_j 与 q_k 的角色互换等价。 */
+function qcQftGates(n, inverse = false){
+  const g = [];
+  for (let j = n - 1; j >= 0; j--){
+    g.push({ op: 'h', q: j });
+    for (let k = j - 1; k >= 0; k--){
+      g.push({ op: 'phase', q: j, c: k, theta: Math.PI / (1 << (j - k)) });
+    }
+  }
+  for (let i = 0; i < (n >> 1); i++) g.push({ op: 'swap', q1: i, q2: n - 1 - i });
+  return inverse ? qcInvertGates(g) : g;
+}
+
+/* 通用逆线路：逆序 + 每个门取逆（h/x/y/z/swap/cnot/cz/toffoli 自逆；s↔sdg、
+   t↔tdg；带参门 θ→−θ）。pot75 用它验证 U†U=I。 */
+function qcInvertGates(gates){
+  const dual = { s: 'sdg', sdg: 's', t: 'tdg', tdg: 't' };
+  return gates.slice().reverse().map(g => {
+    if (g.op === 'phase' || g.op === 'rx' || g.op === 'ry' || g.op === 'rz')
+      return { ...g, theta: -(g.theta ?? 0) };
+    return { ...g, op: dual[g.op] || g.op };
+  });
+}
+
+function qcPresetGates(name, n){
+  if (name === 'qft') return qcQftGates(n ?? 4);
+  const p = QC_PRESETS[name];
+  if (!p) return [];
+  if (name === 'ghz' && n && n !== p.n){
+    const g = [{ op: 'h', q: 0 }];
+    for (let k = 1; k < n; k++) g.push({ op: 'cnot', c: 0, q2: k });
+    return g;
+  }
+  return p.gates.map(x => ({ ...x }));
+}
+
+/* ============================================================================
+ * 经典寄存器与「测量-前馈」（R76）
+ *
+ * R75 的线路是纯酉的：门依次作用，末尾才允许测量。真实的协议（传态、纠错、
+ * 迭代相位估计）需要**中途测量 + 用结果控制后面的门**。这里补上两件事：
+ *   ① qcMeasureQubit：只测一个比特（投影到该位的 0/1 子空间 + 归一化），
+ *      不是把整个态塌到一个基态——传态里测 q0/q1 之后 q2 的叠加必须留着；
+ *   ② qcExec：把 {op:'measure'}、{op:'cond'} 与普通门统一成「一步」。
+ * ========================================================================== */
+
+function qcNewClassical(nbits){ return new Uint8Array(nbits); }
+
+/* 单比特 Z 基测量：返回 0/1，就地把态投影到对应子空间并归一化 */
+function qcMeasureQubit(s, q, rng){
+  const bit = 1 << q;
+  let p1 = 0;
+  for (let i = 0; i < s.dim; i++) if (i & bit) p1 += s.re[i] * s.re[i] + s.im[i] * s.im[i];
+  const out = rng() < p1 ? 1 : 0;
+  for (let i = 0; i < s.dim; i++){
+    const has = (i & bit) ? 1 : 0;
+    if (has !== out){ s.re[i] = 0; s.im[i] = 0; }
+  }
+  qcRenormalize(s);
+  return out;
+}
+
+/* 执行一步：普通门 / 测量写入经典位 / 条件门 */
+function qcExec(s, op, cres, rng){
+  if (op.op === 'measure'){
+    const bit = qcMeasureQubit(s, op.q, rng);
+    if (cres && op.cbit != null) cres[op.cbit] = bit;
+    return { kind: 'measure', q: op.q, cbit: op.cbit, bit };
+  }
+  if (op.op === 'cond'){
+    const on = cres ? !!cres[op.cbit] : false;
+    if (on) qcApply(s, op.gate);
+    return { kind: 'cond', cbit: op.cbit, on };
+  }
+  qcApply(s, op);
+  return { kind: 'gate' };
+}
+
+/* 跑一整段（含测量/条件），返回每步的记录 */
+function qcRunProgram(s, ops, rng, cres = qcNewClassical(8)){
+  const rec = [];
+  for (const op of ops) rec.push(qcExec(s, op, cres, rng));
+  return { cres, rec };
+}
+
+/* 任意比特的约化密度矩阵（2×2，复）：ρ[a][b] = Σ_rest ψ(a,rest) ψ*(b,rest) */
+function qcQubitRho(s, q){
+  const bit = 1 << q;
+  const rr = [[0, 0], [0, 0]], ii = [[0, 0], [0, 0]];
+  for (let i = 0; i < s.dim; i++){
+    if (i & bit) continue;
+    const j = i | bit;
+    /* |0⟩⟨0| / |1⟩⟨1| 对角 */
+    rr[0][0] += s.re[i] * s.re[i] + s.im[i] * s.im[i];
+    rr[1][1] += s.re[j] * s.re[j] + s.im[j] * s.im[j];
+    /* 非对角：ψ0 ψ1* = (r0+ii0)(r1−ii1) */
+    rr[0][1] += s.re[i] * s.re[j] + s.im[i] * s.im[j];
+    ii[0][1] += s.im[i] * s.re[j] - s.re[i] * s.im[j];
+  }
+  rr[1][0] = rr[0][1];
+  ii[1][0] = -ii[0][1];
+  return { re: rr, im: ii };
+}
+
+/* 纯态 |ψ⟩=α|0⟩+β|1⟩ 与 ρ 的保真度 ⟨ψ|ρ|ψ⟩（α,β 为 [re,im]） */
+function qcRhoFidelity(rho, alpha, beta){
+  const a = alpha, b = beta;
+  const ac = [a[0], -a[1]], bc = [b[0], -b[1]];
+  const mul = (x, y) => [x[0]*y[0] - x[1]*y[1], x[0]*y[1] + x[1]*y[0]];
+  const add = (x, y) => [x[0]+y[0], x[1]+y[1]];
+  /* v = ρ|ψ⟩: v_a = Σ_b ρ_ab ψ_b */
+  let v0 = add(mul([rho.re[0][0], rho.im[0][0]], b), [0, 0]);
+  v0 = add([0, 0], mul([rho.re[0][0], rho.im[0][0]], b));
+  v0 = add(v0, mul([rho.re[0][1], rho.im[0][1]], [0, 0]));
+  /* 上面写复杂了，直接逐项算 */
+  v0 = add(mul([rho.re[0][0], rho.im[0][0]], a), mul([rho.re[0][1], rho.im[0][1]], b));
+  const v1 = add(mul([rho.re[1][0], rho.im[1][0]], a), mul([rho.re[1][1], rho.im[1][1]], b));
+  const val = add(mul(ac, v0), mul(bc, v1));
+  return val[0];
+}
+
+/* 单比特态制备：Ry(θ) 再 Rz(φ) ⟹ cos(θ/2)|0⟩ + e^{iφ} sin(θ/2)|1⟩ */
+function qcPrep1q(theta, phi, q = 0){
+  return [{ op: 'ry', q, theta }, { op: 'rz', q, theta: phi }];
+}
+
+/* |ψ⟩ = cos(θ/2)|0⟩ + e^{iφ}sin(θ/2)|1⟩ 的振幅（测试/显示用） */
+function qcTargetAmps(theta, phi){
+  return { alpha: [Math.cos(theta / 2), 0], beta: [Math.sin(theta / 2) * Math.cos(phi), Math.sin(theta / 2) * Math.sin(phi)] };
+}
+
+/* 传态线路：q0 载待传态，q1/q2 为 Bell 对，Bell 测量后按 m0→Z、m1→X 修正 q2。
+   经典位：cbit 0 = m0（q0 的 H 之后测量），cbit 1 = m1（q1 测量）。 */
+function qcTeleportGates(theta = 1.0, phi = 0.4, withFix = true){
+  const g = [];
+  /* ① 制备待传态到 q0 */
+  g.push(...qcPrep1q(theta, phi, 0));
+  /* ② Bell 对 (q1,q2) */
+  g.push({ op: 'h', q: 1 }, { op: 'cnot', c: 1, q2: 2 });
+  /* ③ Bell 测量 */
+  g.push({ op: 'cnot', c: 0, q2: 1 }, { op: 'h', q: 0 });
+  g.push({ op: 'measure', q: 0, cbit: 0 });
+  g.push({ op: 'measure', q: 1, cbit: 1 });
+  /* ④ 经典前馈 */
+  if (withFix){
+    g.push({ op: 'cond', cbit: 1, gate: { op: 'x', q: 2 } });
+    g.push({ op: 'cond', cbit: 0, gate: { op: 'z', q: 2 } });
+  }
+  return g;
+}
+
+/* ===== src/physics/qec.js ===== */
+/* ============================================================================
+ * qec.js — R78 量子纠错：3 比特重复码（bit-flip / phase-flip）
+ *
+ * 3 比特重复码是最小的「真」纠错码：把一个逻辑比特摊到 3 个物理比特上
+ *
+ *   编码  α|0⟩+β|1⟩  ─CNOT(0→1),CNOT(0→2)─►  α|000⟩+β|111⟩
+ *   错误  每个物理比特以概率 p 发生 X（bit-flip）或 Z（phase-flip）
+ *   诊断  测两个稳定子 Z₀Z₁、Z₁Z₂（用 ancilla：CNOT(a→q) 再测 a）
+ *         综合 (m₀,m₁) 唯一确定「哪个比特翻了」
+ *   修正  按综合施加对应的 X（或 Z）
+ *   解码  CNOT(1→0),CNOT(2→0) ⟹ q0 恢复成逻辑态
+ *
+ * 为什么这算「纠错」而不是「容错」：单比特错误**必然**被纠回（3 种位置 + 无错，
+ * 综合是 4 → 4 的双射）；双比特错误会被误诊成「第三种单错」，于是把好比特也翻掉
+ * ⟹ 逻辑错误。所以 P_L = P(≥2 个错) = 3p²(1−p)+p³ = 3p²−2p³，与未编码的 p
+ * 在 **p = 1/2** 处交叉（这就是阈值；更低阈值要靠更多层/更大码距）。
+ *
+ * phase-flip 码是同一件事在 H 基下的对偶：稳定子换成 X₀X₁、X₁X₂，错误与修正换成 Z。
+ * 两个码都只处理**一类**错误——这正是 Shor 9 比特码要把它们串起来的原因（本轮诚实标注）。
+ * ========================================================================== */
+
+const QEC_DEFAULTS = {
+  code: 'bitflip',        /* bitflip | phaseflip */
+  p: 0.05,
+  /* 逻辑初态 Ry(θ)Rz(φ)|0⟩ = cos(θ/2)|0⟩ + e^{iφ}sin(θ/2)|1⟩。
+     默认取 **|+i⟩**（θ=π/2, φ=π/2）而不是 |+⟩：X_L|+⟩=|+⟩，逻辑 X 错误在 |+⟩ 上
+     **完全不可观测**（首版用 |+⟩，双错试验的保真度仍是 1，P_L 恒为 0）。 */
+  theta: Math.PI / 2, phase: Math.PI / 2,
+  trials: 4000,
+  seed: 7,
+};
+
+const QEC_CODES = {
+  bitflip: {
+    label: '比特翻转码',
+    err: 'x', fix: 'x', stab: 'z',
+    text: '把 α|0⟩+β|1⟩ 编成 α|000⟩+β|111⟩，每个物理比特以概率 p 翻 **X**。稳定子 Z₀Z₁、Z₁Z₂ 的综合 (m₀m₁) 唯一确定翻的是哪一位（10→q0、11→q1、01→q2、00→无错），据此施加 X 即可。**单错必纠、双错必错**：两个比特翻时综合会指向「第三个比特」，修正把好比特也翻掉 ⟹ 逻辑错误。于是 P_L = 3p²(1−p)+p³ = 3p²−2p³，与未编码的 p 在 **p=1/2** 处交叉——编码只在 p<1/2 时有益。',
+  },
+  phaseflip: {
+    label: '相位翻转码',
+    err: 'z', fix: 'z', stab: 'x',
+    text: '同一个码在 **H 基**下的对偶：错误换成 **Z**（相位翻转），稳定子换成 X₀X₁、X₁X₂（用 ancilla 做 H–CNOT–CNOT–H 后测量）。综合与修正的逻辑完全同构，P_L 也是 3p²−2p³。注意它**完全不管 X 错误**——单个 Z 错能纠，一个 X 错就直接毁掉相位信息。这就是为什么真正的通用纠错要把两个码串起来（Shor 9 比特码 = 3×3），本轮只做重复码这一层。',
+  },
+};
+
+/* 错误位置数组 → 两个稳定子的本征值（0 = +1，1 = −1）
+   Z₀Z₁ 对 |abc⟩ 的本征值 = (−1)^{a+b}；X₀X₁ 同理（在 H 基下同构）。 */
+function qecSyndromeOf(errors){
+  const e = [0, 0, 0];
+  for (const q of errors) if (q >= 0 && q < 3) e[q] ^= 1;
+  return [e[0] ^ e[1], e[1] ^ e[2]];
+}
+
+/* 综合 → 应该修正哪个比特（−1 = 不动） */
+function qecFixFromSyndrome(syn){
+  const k = syn[0] * 2 + syn[1];
+  return k === 2 ? 0 : k === 3 ? 1 : k === 1 ? 2 : -1;
+}
+
+/* 逻辑错误判定：≥2 个物理比特翻 ⟹ 综合指向第三个 ⟹ 修完还剩一个错 */
+function qecIsLogicalError(errors){
+  return errors.length >= 2;
+}
+
+/* 单次试验：真跑 5 比特态矢（3 数据 + 2 ancilla），返回全过程
+   cfg: { code, p, theta }；rng: mulberry32 风格 */
+function qecTrial(cfg = {}, rng){
+  const c = { ...QEC_DEFAULTS, ...cfg };
+  const spec = QEC_CODES[c.code] || QEC_CODES.bitflip;
+  const s = qcNewState(5);
+  const trace = [];
+
+  /* ① 逻辑初态（同时把 ancilla 置 |0⟩ —— qcNewState 已经是） */
+  qcApply(s, { op: 'ry', q: 0, theta: c.theta });
+  qcApply(s, { op: 'rz', q: 0, theta: c.phase });
+  trace.push({ step: 'prepare', gate: 'Ry(θ)Rz(φ)' });
+
+  /* ② 编码 */
+  qcApply(s, { op: 'cnot', c: 0, q2: 1 });
+  qcApply(s, { op: 'cnot', c: 0, q2: 2 });
+  trace.push({ step: 'encode', gate: 'CNOT×2' });
+
+  /* phase-flip 码要把编码态转到 **H 基**（α|+++⟩+β|---⟩）——它的稳定子是 X₀X₁/X₁X₂，
+     而 α|000⟩+β|111⟩ 不是 X 稳定子的本征态（首版漏了这三步 H，测出的综合恒为 01）。 */
+  if (c.code === 'phaseflip'){
+    for (let q = 0; q < 3; q++) qcApply(s, { op: 'h', q });
+    trace.push({ step: 'basis', gate: 'H×3' });
+  }
+
+  /* ③ 噪声：逐数据比特独立以 p 施加错误 Pauli（forceErrors 供 pot78 穷举用） */
+  const errors = [];
+  if (c.forceErrors){
+    for (const q of c.forceErrors){ qcApply(s, { op: spec.err, q }); errors.push(q); }
+  } else {
+    for (let q = 0; q < 3; q++){
+      if (rng() < c.p){ qcApply(s, { op: spec.err, q }); errors.push(q); }
+    }
+  }
+  trace.push({ step: 'noise', errors: errors.slice() });
+
+  /* ④ 稳定子测量（ancilla 3 测 Z₀Z₁ 或 X₀X₁；4 测 Z₁Z₂ 或 X₁X₂） */
+  const syn = [];
+  for (const [qa, qb, anc] of [[0, 1, 3], [1, 2, 4]]){
+    if (spec.stab === 'z'){
+      qcApply(s, { op: 'cnot', c: qa, q2: anc });
+      qcApply(s, { op: 'cnot', c: qb, q2: anc });
+    } else {
+      qcApply(s, { op: 'h', q: anc });
+      qcApply(s, { op: 'cnot', c: anc, q2: qa });
+      qcApply(s, { op: 'cnot', c: anc, q2: qb });
+      qcApply(s, { op: 'h', q: anc });
+    }
+    syn.push(qcMeasureQubit(s, anc, rng));
+  }
+  trace.push({ step: 'syndrome', syn: syn.slice() });
+
+  /* ⑤ 修正：按综合指向的比特施加同一 Pauli */
+  const fixQ = qecFixFromSyndrome(syn);
+  if (fixQ >= 0) qcApply(s, { op: spec.fix, q: fixQ });
+  trace.push({ step: 'correct', q: fixQ });
+
+  /* ⑥ 解码：phase-flip 先回计算基，再用编码的逆（CNOT 自逆，但**控制必须是 q0**） */
+  if (c.code === 'phaseflip'){
+    for (let q = 0; q < 3; q++) qcApply(s, { op: 'h', q });
+    trace.push({ step: 'basis', gate: 'H×3' });
+  }
+  qcApply(s, { op: 'cnot', c: 0, q2: 1 });
+  qcApply(s, { op: 'cnot', c: 0, q2: 2 });
+  trace.push({ step: 'decode', gate: 'CNOT×2' });
+
+  /* ⑦ 逻辑判定：q0 的部分迹 vs 目标纯态 |ψ0⟩ = cos(θ/2)|0⟩ + e^{iφ}sin(θ/2)|1⟩。
+     X_L / Z_L 都会让 F 掉到 0（只要 |ψ0⟩ 不是 |+⟩ 或 |0⟩ 这类退化态）。 */
+  const th = c.theta / 2, ph = c.phase;
+  const alpha = [Math.cos(th), 0];
+  const beta = [Math.sin(th) * Math.cos(ph), Math.sin(th) * Math.sin(ph)];
+  const F = qcRhoFidelity(qcQubitRho(s, 0), alpha, beta);
+  const logicalError = F < 0.5;
+  const x0 = blochX(s, 0);
+  /* 数据比特的最终比特串（|000⟩ + 正确的 q0 逻辑态 ⟹ q1,q2 应为 0） */
+  const rho0 = qcQubitRho(s, 0);
+  const p000 = rho0.re[0][0], p100 = rho0.re[1][1];
+  return {
+    errors, syn, fixQ, F, logicalError,
+    ok: !logicalError,
+    trace,
+    /* 三比特振幅（|000⟩ 与 |111⟩ 的模方，解码后应分别在 |000⟩/|100⟩ 上） */
+    p0: p000, p1: p100,
+    state: s,
+  };
+}
+
+function blochX(s, q){
+  const D = s.dim, bit = 1 << q;
+  let orr = 0;
+  for (let i = 0; i < D; i++){
+    if (i & bit) continue;
+    const j = i | bit;
+    orr += s.re[i] * s.re[j] + s.im[i] * s.im[j];
+  }
+  return 2 * orr;
+}
+
+
+/* 一批试验：P_L 与按「错误个数」的分解 */
+function qecEnsemble(cfg = {}){
+  const c = { ...QEC_DEFAULTS, ...cfg };
+  const rng = mulberry32(c.seed);
+  const n = Math.max(1, c.trials | 0);
+  let nL = 0;
+  const byCount = [0, 0, 0, 0];          /* 0/1/2/3 个错 */
+  const byCountL = [0, 0, 0, 0];         /* 其中判成逻辑错误的 */
+  const synCount = [0, 0, 0, 0];         /* 四种综合的频次 */
+  for (let k = 0; k < n; k++){
+    const r = qecTrial(c, rng);
+    const ec = r.errors.length;
+    byCount[ec]++;
+    if (r.logicalError){ nL++; byCountL[ec]++; }
+    synCount[r.syn[0] * 2 + r.syn[1]]++;
+  }
+  return {
+    p: c.p, code: c.code, trials: n, PL: nL / n,
+    PLexact: qecLogicalRate(c.p), Pun: c.p,
+    byCount, byCountL, synCount,
+  };
+}
+
+/* 解析：P_L = 3p²(1−p) + p³ = 3p² − 2p³ */
+function qecLogicalRate(p){
+  return 3 * p * p * (1 - p) + p * p * p;
+}
+/* 阈值：P_L(p) = p ⟹ p = 1/2（另一根 p=1 是退化解） */
+function qecThreshold(){ return 0.5; }
+
+/* 扫描：对一组 p 各跑一批（页面曲线用；pot78 用大 trials） */
+function qecSweep(cfg = {}){
+  const c = { ...QEC_DEFAULTS, ...cfg };
+  const ps = c.ps || [0.002, 0.005, 0.01, 0.02, 0.04, 0.07, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5];
+  const out = { p: [], PL: [], PLexact: [], Pun: [] };
+  for (const p of ps){
+    const e = qecEnsemble({ ...c, p });
+    out.p.push(p); out.PL.push(e.PL);
+    out.PLexact.push(e.PLexact); out.Pun.push(p);
+  }
+  return out;
+}
+
+/* 单比特错误的「教科书」对照：给定错误位置集合，综合与修正是否把它纠回。
+   这是 pot78 A 组的穷举对象（3 种单错 + 1 种无错 + 3 种双错 + 1 种三错 = 8 种）。 */
+function qecSyndromeTable(){
+  const rows = [];
+  const all = [[], [0], [1], [2], [0, 1], [0, 2], [1, 2], [0, 1, 2]];
+  for (const e of all){
+    const syn = qecSyndromeOf(e);
+    const fixQ = qecFixFromSyndrome(syn);
+    /* 修正后的残余错误 = 原错误 XOR 修正位 */
+    const res = e.slice();
+    if (fixQ >= 0){
+      const i = res.indexOf(fixQ);
+      if (i >= 0) res.splice(i, 1); else res.push(fixQ);
+    }
+    rows.push({ errors: e, syn, fixQ, residual: res, ok: res.length === 0 });
+  }
+  return rows;
+}
+
+/* ===== src/qec.js ===== */
+/* ============================================================================
+ * qec.js（页面）— R78 量子纠错：3 比特重复码的线路图 / P_L(p) / 错误分解
+ *
+ * 三块画布：
+ *   #qecCircuit  5 比特线路（3 数据 + 2 ancilla）：制备→编码→噪声→综合→修正→解码，
+ *                当前试验的错误位与修正位高亮
+ *   #qecCurve    P_L(p) 双对数：本码（MC 点 + 3p²−2p³ 解析）、未编码 y=p、阈值 p=1/2
+ *   #qecHist     按错误个数分组的柱状（0/1/2/3 错，堆叠「纠对 / 逻辑错误」）
+ * ========================================================================== */
+
+const QEC_CSS = `
+  #qeTop{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;
+    padding:9px 18px;z-index:10;white-space:nowrap}
+  #qeTop .logo{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.12em;
+    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
+  #qeTop .eq{font-family:var(--mono);font-size:12px;color:var(--dim)}
+  #qeTop .eq b{color:var(--cyan);font-weight:600}
+  #qeTop a{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
+    border:1px solid var(--line);border-radius:6px;padding:3px 8px;transition:all .15s}
+  #qeTop a:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
+  #qePanel{top:74px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 200px);
+    overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  #qePanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
+    text-transform:uppercase;margin:10px 0 5px}
+  #qePanel .row{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:11.5px}
+  #qePanel .row label{color:var(--dim);min-width:54px}
+  #qePanel input[type=range]{flex:1;height:3px;-webkit-appearance:none;background:rgba(120,160,220,.22);border-radius:2px}
+  #qePanel input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;
+    border-radius:50%;background:var(--cyan);box-shadow:0 0 8px rgba(103,232,249,.7);cursor:pointer}
+  #qePanel output{font-family:var(--mono);font-size:11px;color:var(--txt);min-width:40px;text-align:right}
+  #qePanel .btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+  #qePanel button{font-family:var(--mono);font-size:10.5px;padding:5px 4px;border-radius:6px;cursor:pointer;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    background:rgba(103,232,249,.08);border:1px solid var(--line);color:var(--txt);transition:all .15s}
+  #qePanel button:hover{border-color:rgba(103,232,249,.45);color:var(--cyan)}
+  #qePanel button.on{background:rgba(103,232,249,.18);border-color:var(--cyan);color:var(--cyan)}
+  #qeHud{top:74px;right:14px;padding:11px 13px;z-index:10;min-width:222px;font-family:var(--mono)}
+  #qeHud .hrow{display:flex;justify-content:space-between;gap:12px;font-size:11.5px;padding:2.5px 0}
+  #qeHud .hrow span:first-child{color:var(--dim)}
+  #qeHud .hrow span:last-child{color:var(--txt)}
+  #qeHud hr{border:none;border-top:1px solid var(--line);margin:6px 0}
+  #qeHud .big{font-size:13px}
+  #qeStage{position:fixed;left:50%;top:calc(50% + 8px);transform:translate(-50%,-50%);z-index:5;
+    display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1.12fr 1fr;gap:9px;
+    width:min(calc(100vw - 530px),1000px);height:min(78vh,640px)}
+  #qecCircuit{grid-column:1 / span 2}
+  #qecCircuit,#qecCurve,#qecHist{width:100%;height:100%;border:1px solid var(--line);border-radius:10px;
+    background:rgba(4,8,16,.55);display:block}
+  #qeHint{left:14px;bottom:14px;z-index:10;padding:9px 12px;width:238px;font-size:10px;
+    color:var(--dim);line-height:1.55;max-height:210px;overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  #qeHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
+  #qeDiag{position:fixed;left:-9999px}
+  @media (max-width:1180px){#qeStage{width:calc(100vw - 60px)}#qeHint{display:none}}
+`;
+
+const mdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
+const ex = (x, d = 2) => (Number.isFinite(x) && x !== 0 ? x.toExponential(d) : '0');
+
+class QecApp {
+  constructor(container, options = {}){
+    this.container = typeof container === 'string' ? document.querySelector(container) : (container || document.body);
+    const q = new URLSearchParams(location.search);
+    const num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
+    this.state = {
+      code: q.get('code') === 'phaseflip' ? 'phaseflip' : 'bitflip',
+      p: num('p', 0.05),
+      trials: Math.round(num('trials', 3000)),
+      seed: Math.round(num('seed', 7)),
+      paused: q.has('paused'),
+    };
+    this.trial = null;
+    this.ens = null;
+    this.curve = null;
+    this._curveKey = '';
+  }
+
+  q(sel){ return this.container.querySelector(sel) || document.querySelector(sel); }
+  on(el, ev, fn){ if (el) el.addEventListener(ev, fn); }
+
+  mount(){
+    injectStyles();
+    const sheet = document.createElement('style');
+    sheet.textContent = QEC_CSS;
+    document.head.appendChild(sheet);
+    this.container.insertAdjacentHTML('beforeend', `
+      <header id="qeTop" class="panel">
+        <div class="logo">纠错工场</div>
+        <div class="eq">|ψ⟩ ─<b>编码</b>─► α|000⟩+β|111⟩ ─<b>噪声</b>─► <b>综合</b> ─► <b>修正</b></div>
+        <a href="./index.html">单粒子主页</a>
+        <a href="./two-body.html">双粒子 ⧉</a>
+        <a href="./hubbard.html">哈伯德 ⛓</a>
+        <a href="./paths.html">路径 ∿</a>
+        <a href="./qcircuit.html">线路 ⧉</a>
+        <a href="./noise.html">噪声 ◍</a>
+      </header>
+
+      <aside id="qePanel" class="panel">
+        <div class="grp">码</div>
+        <div class="btns">
+          <button data-c="bitflip">比特翻转码</button>
+          <button data-c="phaseflip">相位翻转码</button>
+        </div>
+
+        <div class="grp">物理错误率 p</div>
+        <div class="row"><label>p</label><input type="range" id="qeP" min="0" max="0.6" step="0.005"><output id="qePO">—</output></div>
+
+        <div class="grp">实验</div>
+        <div class="btns">
+          <button id="qeOnce">单次实验</button>
+          <button id="qeReseed">换种子</button>
+        </div>
+        <div class="row"><label>样本数</label><input type="range" id="qeTrials" min="500" max="20000" step="500"><output id="qeTrialsO">—</output></div>
+
+        <div class="grp">综合表</div>
+        <div id="qeTable" style="font-family:var(--mono);font-size:10.5px;color:var(--dim);line-height:1.55"></div>
+      </aside>
+
+      <aside id="qeHud" class="panel">
+        <div class="hrow"><span>本次错误</span><span id="hErr">—</span></div>
+        <div class="hrow"><span>综合 m₀m₁</span><span id="hSyn">—</span></div>
+        <div class="hrow"><span>修正</span><span id="hFix">—</span></div>
+        <div class="hrow"><span>逻辑保真度 F</span><span id="hF">—</span></div>
+        <div class="hrow"><span>判定</span><span id="hJudge" class="big">—</span></div>
+        <hr>
+        <div class="hrow"><span>P_L（实测）</span><span id="hPL">—</span></div>
+        <div class="hrow"><span>3p²−2p³</span><span id="hPLx">—</span></div>
+        <div class="hrow"><span>未编码 p</span><span id="hPun">—</span></div>
+        <div class="hrow"><span>P_L / p</span><span id="hRatio">—</span></div>
+        <hr>
+        <div class="hrow"><span>0 错</span><span id="hC0">—</span></div>
+        <div class="hrow"><span>1 错</span><span id="hC1">—</span></div>
+        <div class="hrow"><span>2 错</span><span id="hC2">—</span></div>
+        <div class="hrow"><span>3 错</span><span id="hC3">—</span></div>
+      </aside>
+
+      <div id="qeStage">
+        <canvas id="qecCircuit"></canvas>
+        <canvas id="qecCurve"></canvas>
+        <canvas id="qecHist"></canvas>
+      </div>
+
+      <div id="qeHint" class="panel"><b>—</b><span></span></div>
+      <div id="qeDiag"></div>
+    `);
+
+    this.cv = { circuit: this.q('#qecCircuit'), curve: this.q('#qecCurve'), hist: this.q('#qecHist') };
+
+    for (const b of this.container.querySelectorAll('#qePanel button[data-c]')){
+      this.on(b, 'click', () => this.setCode(b.dataset.c));
+    }
+    this.on(this.q('#qeP'), 'input', e => { this.state.p = parseFloat(e.target.value); this.recompute(); this.syncPanel(); });
+    this.on(this.q('#qeTrials'), 'input', e => { this.state.trials = parseInt(e.target.value, 10); this.recompute(); this.syncPanel(); });
+    this.on(this.q('#qeOnce'), 'click', () => { this.rollOnce(); this.drawAll(); this.renderHud(); });
+    this.on(this.q('#qeReseed'), 'click', () => {
+      this.state.seed = (this.state.seed * 1103515245 + 12345) % 2147483647;
+      this.recompute();
+    });
+
+    this.on(window, 'resize', () => this.resize());
+    if (window.ResizeObserver){
+      const ro = new ResizeObserver(() => this.resize());
+      ro.observe(this.q('#qeStage'));
+      this._ro = ro;
+    }
+
+    this.syncPanel();
+    this.renderTable();
+    this.recompute();
+    this.resize();
+    this.renderHint();
+  }
+
+  /* ---------- 数据 ---------- */
+  cfg(){ return { code: this.state.code, p: this.state.p, trials: this.state.trials, seed: this.state.seed }; }
+
+  recompute(){
+    this.ens = qecEnsemble(this.cfg());
+    this.rollOnce();
+    const key = this.state.code + '|' + this.state.trials;
+    if (key !== this._curveKey){
+      this.curve = qecSweep({ code: this.state.code, trials: Math.max(600, Math.round(this.state.trials / 3)), seed: 101 });
+      this._curveKey = key;
+    }
+    this.renderHud();
+    this.drawAll();
+  }
+
+  rollOnce(){
+    this._rng = this._rng || mulberry32(this.state.seed ^ 0x9e37);
+    this.trial = qecTrial({ code: this.state.code, p: this.state.p }, this._rng);
+  }
+
+  setCode(c){
+    if (!QEC_CODES[c]) return;
+    this.state.code = c;
+    this._curveKey = '';
+    this.syncPanel(); this.renderTable(); this.recompute(); this.renderHint();
+  }
+  setP(v){ this.state.p = v; this.syncPanel(); this.recompute(); }
+  setTrials(n){ this.state.trials = n; this.syncPanel(); this.recompute(); }
+  reseed(s){ this.state.seed = s; this._rng = null; this.recompute(); }
+
+  syncPanel(){
+    const s = this.state;
+    for (const b of this.container.querySelectorAll('#qePanel button[data-c]')) b.classList.toggle('on', b.dataset.c === s.code);
+    const setv = (id, v) => { const e = this.q('#' + id); if (e) e.value = v; };
+    setv('qeP', s.p); this.q('#qePO').textContent = s.p.toFixed(3);
+    setv('qeTrials', s.trials); this.q('#qeTrialsO').textContent = s.trials;
+  }
+
+  renderHint(){
+    const P = QEC_CODES[this.state.code];
+    const b = this.q('#qeHint b'), sp = this.q('#qeHint span');
+    if (b) b.textContent = P.label;
+    if (sp) sp.innerHTML = mdLite(P.text);
+  }
+
+  renderTable(){
+    const rows = qecSyndromeTable();
+    const txt = rows.filter(r => r.errors.length <= 1 || r.errors.length === 2)
+      .map(r => {
+        const e = r.errors.length ? '[' + r.errors.join(',') + ']' : '无错';
+        return e + ' → ' + r.syn.join('') + ' → ' + (r.fixQ < 0 ? '不动' : 'X' + r.fixQ) + (r.ok ? ' ✓' : ' ✗');
+      }).join('<br>');
+    const el = this.q('#qeTable');
+    if (el) el.innerHTML = txt + '<br><span style="color:var(--amber)">双错必 ✗（综合指向第三个）</span>';
+  }
+
+  renderHud(){
+    const s = this.state, t = this.trial, e = this.ens;
+    const set = (id, v) => { const el = this.q('#' + id); if (el) el.textContent = v; };
+    if (t){
+      set('hErr', t.errors.length ? 'q' + t.errors.join(',q') : '无');
+      set('hSyn', t.syn.join('') + (t.syn[0] * 2 + t.syn[1] === 0 ? '（无错）' : ''));
+      /* 修正算符随码变（bitflip→X、phaseflip→Z）；首版硬编码 X，与线路图的 Z 不一致 */
+      const fixSym = (QEC_CODES[s.code] || QEC_CODES.bitflip).fix.toUpperCase();
+      set('hFix', t.fixQ < 0 ? '不动' : fixSym + t.fixQ);
+      set('hF', nf(t.F, 6));
+      const j = this.q('#hJudge');
+      if (j){ j.textContent = t.logicalError ? '逻辑错误 ✗' : '纠回 ✓'; j.style.color = t.logicalError ? 'var(--red)' : 'var(--cyan)'; }
+    }
+    if (e){
+      set('hPL', nf(e.PL, 5));
+      set('hPLx', nf(e.PLexact, 5));
+      set('hPun', nf(e.Pun, 4));
+      set('hRatio', s.p > 0 ? nf(e.PL / e.Pun, 3) + (e.PL < e.Pun ? ' ↓' : ' ↑') : '—');
+      for (let k = 0; k < 4; k++) set('hC' + k, e.byCount[k] + (e.byCountL[k] ? ' /L' + e.byCountL[k] : ' ✓'));
+    }
+  }
+
+  resize(){
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    for (const k of Object.keys(this.cv)){
+      const c = this.cv[k];
+      if (!c) continue;
+      const w = c.clientWidth, h = c.clientHeight;
+      if (!w || !h) continue;
+      c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
+    }
+    this.drawAll();
+  }
+  drawAll(){ this.drawCircuit(); this.drawCurve(); this.drawHist(); }
+
+  /* ---------- 线路图 ---------- */
+  drawCircuit(){
+    const c = this.cv.circuit, t = this.trial;
+    if (!c || !c.width) return;
+    const g = c.getContext('2d');
+    const W = c.width, H = c.height, dpr = W / c.clientWidth;
+    g.clearRect(0, 0, W, H);
+    const s = this.state, code = s.code;
+    const isPhase = code === 'phaseflip';
+    const errPauli = isPhase ? 'Z' : 'X';
+    const errs = t ? t.errors : [];
+    const fixQ = t ? t.fixQ : -1;
+
+    /* 列定义：[标签, 类型, 参数] */
+    /* phase 名显式挂在每一列上（首版用三元表达式推名字，条件写错 ⟹ 标注乱序） */
+    const cols = [
+      { t: 'prep', label: 'P', q: 0, ph: '制备' },
+      { t: 'cnot', a: 0, b: 1, ph: '编码' },
+      { t: 'cnot', a: 0, b: 2, ph: '编码' },
+    ];
+    if (isPhase) cols.push({ t: 'h3', ph: '编码' });
+    cols.push({ t: 'noise', ph: '噪声' });
+    cols.push({ t: 'cnot', a: 0, b: 3, ph: '综合' }, { t: 'cnot', a: 1, b: 3, ph: '综合' }, { t: 'meas', q: 3, ph: '综合' });
+    cols.push({ t: 'cnot', a: 1, b: 4, ph: '综合' }, { t: 'cnot', a: 2, b: 4, ph: '综合' }, { t: 'meas', q: 4, ph: '综合' });
+    cols.push({ t: 'fix', ph: '修正' });
+    if (isPhase) cols.push({ t: 'h3', ph: '解码' });
+    cols.push({ t: 'cnot', a: 0, b: 1, ph: '解码' }, { t: 'cnot', a: 0, b: 2, ph: '解码' });
+    const N = cols.length;
+
+    const padL = 40 * dpr, padR = 12 * dpr, padT = 26 * dpr, padB = 22 * dpr;
+    const rows = 5;
+    const rowH = (H - padT - padB) / rows;
+    const yOf = q => padT + (q + 0.5) * rowH;
+    const colW = (W - padL - padR) / N;
+    const xOf = i => padL + (i + 0.5) * colW;
+    const labels = ['q0', 'q1', 'q2', 'a0', 'a1'];
+
+    /* 导线 */
+    g.strokeStyle = 'rgba(120,160,220,.28)'; g.lineWidth = 1 * dpr;
+    for (let q = 0; q < rows; q++){
+      const y = yOf(q);
+      g.beginPath(); g.moveTo(padL - 12 * dpr, y); g.lineTo(W - padR + 4 * dpr, y); g.stroke();
+      g.fillStyle = q < 3 ? 'rgba(203,213,225,.85)' : 'rgba(148,163,184,.65)';
+      g.font = (10 * dpr) + 'px ui-monospace,monospace';
+      g.textAlign = 'right'; g.textBaseline = 'middle';
+      g.fillText(labels[q], padL - 16 * dpr, y);
+    }
+
+    const box = (x, y, size, label, col, dash) => {
+      g.strokeStyle = col; g.lineWidth = 1.3 * dpr;
+      if (dash) g.setLineDash([3 * dpr, 3 * dpr]);
+      g.beginPath(); g.roundRect(x - size / 2, y - size / 2, size, size, 4 * dpr); g.stroke();
+      g.setLineDash([]);
+      g.fillStyle = 'rgba(4,8,16,.78)'; g.fill();
+      g.fillStyle = col; g.font = (10 * dpr) + 'px ui-monospace,monospace';
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(label, x, y + 0.5 * dpr);
+      g.textBaseline = 'alphabetic';
+    };
+    const cnot = (x, ya, yb, hi) => {
+      const col = hi ? 'rgba(248,113,113,.95)' : 'rgba(203,213,225,.75)';
+      g.strokeStyle = col; g.lineWidth = 1.2 * dpr;
+      g.beginPath(); g.moveTo(x, ya); g.lineTo(x, yb); g.stroke();
+      g.fillStyle = col;
+      g.beginPath(); g.arc(x, ya, 3.4 * dpr, 0, 6.2832); g.fill();
+      g.beginPath(); g.arc(x, yb, 6 * dpr, 0, 6.2832); g.stroke();
+      g.beginPath(); g.moveTo(x, yb); g.lineTo(x, yb); g.stroke();
+      g.beginPath(); g.moveTo(x - 6 * dpr, yb); g.lineTo(x + 6 * dpr, yb);
+      g.moveTo(x, yb - 6 * dpr); g.lineTo(x, yb + 6 * dpr); g.stroke();
+    };
+
+    const size = Math.min(26 * dpr, colW * 0.62, rowH * 0.56);
+    for (let i = 0; i < N; i++){
+      const cx = xOf(i), col = cols[i];
+      if (col.t === 'prep'){
+        box(cx, yOf(col.q), size, col.label, 'rgba(103,232,249,.9)');
+      } else if (col.t === 'cnot'){
+        cnot(cx, yOf(col.a), yOf(col.b), false);
+      } else if (col.t === 'meas'){
+        box(cx, yOf(col.q), size, 'M', 'rgba(203,213,225,.8)', false);
+      } else if (col.t === 'h3'){
+        /* 三比特同时 H：横跨 q0..q2 的竖条 */
+        const y0 = yOf(0), y2 = yOf(2);
+        g.strokeStyle = 'rgba(240,171,252,.8)'; g.lineWidth = 1.3 * dpr;
+        g.beginPath(); g.moveTo(cx, y0 - size / 2); g.lineTo(cx, y0 + size / 2);
+        g.moveTo(cx, y2 - size / 2); g.lineTo(cx, y2 + size / 2); g.stroke();
+        g.beginPath(); g.moveTo(cx, y0); g.lineTo(cx, y2); g.stroke();
+        g.fillStyle = 'rgba(240,171,252,.85)';
+        g.font = (9 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
+        g.fillText('H×3', cx, y0 - size / 2 - 5 * dpr);
+      } else if (col.t === 'noise'){
+        /* 三个数据比特上的错误门：命中时红实心，未命中虚框 */
+        for (let q = 0; q < 3; q++){
+          const hit = errs.includes(q);
+          const y = yOf(q);
+          g.strokeStyle = hit ? 'rgba(248,113,113,.95)' : 'rgba(148,163,184,.55)';
+          g.lineWidth = hit ? 1.7 * dpr : 1 * dpr;
+          if (!hit) g.setLineDash([3 * dpr, 3 * dpr]);
+          g.beginPath(); g.roundRect(cx - size / 2, y - size / 2, size, size, 4 * dpr); g.stroke();
+          g.setLineDash([]);
+          g.fillStyle = hit ? 'rgba(248,113,113,.18)' : 'rgba(4,8,16,.5)'; g.fill();
+          g.fillStyle = hit ? 'rgba(255,180,180,1)' : 'rgba(148,163,184,.7)';
+          g.font = (10 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
+          g.textBaseline = 'middle'; g.fillText(errPauli, cx, y + 0.5 * dpr);
+          g.textBaseline = 'alphabetic';
+        }
+        g.fillStyle = 'rgba(148,163,184,.8)'; g.font = (9 * dpr) + 'px ui-monospace,monospace';
+        g.textAlign = 'center'; g.fillText('噪声 p', cx, yOf(0) - size / 2 - 7 * dpr);
+      } else if (col.t === 'fix'){
+        if (fixQ >= 0){
+          box(cx, yOf(fixQ), size, isPhase ? 'Z' : 'X', 'rgba(251,191,36,.95)');
+          g.fillStyle = 'rgba(251,191,36,.9)'; g.font = (9 * dpr) + 'px ui-monospace,monospace';
+          g.textAlign = 'center'; g.fillText('修正 q' + fixQ, cx, yOf(fixQ) - size / 2 - 7 * dpr);
+        } else {
+          g.fillStyle = 'rgba(148,163,184,.55)'; g.font = (9.5 * dpr) + 'px ui-monospace,monospace';
+          g.textAlign = 'center'; g.fillText('不修正', cx, yOf(1));
+        }
+      }
+    }
+
+    /* 顶部阶段标注：每个 phase 段画在它的**中心**（而不是起点，避免贴左边界） */
+    g.font = (9.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
+    let segStart = 0;
+    for (let i = 1; i <= N; i++){
+      if (i === N || cols[i].ph !== cols[segStart].ph){
+        const mid = xOf(Math.floor((segStart + i - 1) / 2));
+        g.fillStyle = 'rgba(148,163,184,.5)';
+        g.fillText(cols[segStart].ph, mid, 12 * dpr);
+        /* 段分隔短线 */
+        g.strokeStyle = 'rgba(120,160,220,.18)'; g.lineWidth = 1 * dpr;
+        if (segStart > 0){
+          const xb = padL + segStart * colW;
+          g.beginPath(); g.moveTo(xb, padT - 16 * dpr); g.lineTo(xb, H - padB + 6 * dpr); g.stroke();
+        }
+        segStart = i;
+      }
+    }
+  }
+
+  /* ---------- P_L(p) 双对数 ---------- */
+  drawCurve(){
+    const c = this.cv.curve, sw = this.curve;
+    if (!c || !c.width || !sw) return;
+    const g = c.getContext('2d');
+    const W = c.width, H = c.height, dpr = W / c.clientWidth;
+    g.clearRect(0, 0, W, H);
+    const padL = 44 * dpr, padR = 12 * dpr, padT = 26 * dpr, padB = 30 * dpr;
+    const x0 = padL, x1 = W - padR, y0 = padT, y1 = H - padB;
+    const pMin = 0.004, pMax = 0.62, yMin = 1e-4, yMax = 1;
+    const X = p => x0 + (Math.log10(p) - Math.log10(pMin)) / (Math.log10(pMax) - Math.log10(pMin)) * (x1 - x0);
+    const Y = v => y1 - (Math.log10(Math.max(yMin, v)) - Math.log10(yMin)) / (Math.log10(yMax) - Math.log10(yMin)) * (y1 - y0);
+
+    /* 网格 + 刻度 */
+    g.strokeStyle = 'rgba(120,160,220,.12)'; g.lineWidth = 1 * dpr;
+    g.font = (9 * dpr) + 'px ui-monospace,monospace';
+    g.textAlign = 'right'; g.textBaseline = 'middle';
+    for (const v of [1e-4, 1e-3, 1e-2, 1e-1, 1]){
+      const y = Y(v);
+      g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke();
+      g.fillStyle = 'rgba(148,163,184,.7)';
+      g.fillText(v === 1 ? '1' : v.toExponential(0).replace('e-', 'e−'), x0 - 4 * dpr, y);
+    }
+    g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    for (const v of [0.01, 0.03, 0.1, 0.3]){
+      const x = X(v);
+      g.beginPath(); g.moveTo(x, y0); g.lineTo(x, y1); g.stroke();
+      g.fillStyle = 'rgba(148,163,184,.6)';
+      g.fillText(String(v), x, y1 + 12 * dpr);
+    }
+    g.fillStyle = 'rgba(148,163,184,.55)'; g.textAlign = 'right';
+    g.fillText('p', x1, y1 + 23 * dpr);
+    g.save(); g.translate(11 * dpr, (y0 + y1) / 2); g.rotate(-Math.PI / 2);
+    g.textAlign = 'center'; g.fillText('逻辑错误率 P_L', 0, 0); g.restore();
+
+    /* 未编码 y=p（灰虚） */
+    const line = (pts, col, dash, w) => {
+      g.strokeStyle = col; g.lineWidth = w * dpr;
+      if (dash) g.setLineDash(dash.map(v => v * dpr));
+      g.beginPath();
+      let first = true;
+      for (const [p, v] of pts){
+        if (p < pMin || p > pMax) continue;
+        const x = X(p), y = Y(v);
+        if (first){ g.moveTo(x, y); first = false; } else g.lineTo(x, y);
+      }
+      g.stroke(); g.setLineDash([]);
+    };
+    const ref = [];
+    for (let k = 0; k <= 60; k++) ref.push([pMin * Math.pow(pMax / pMin, k / 60), 0]);
+    line(ref.map(([p]) => [p, p]), 'rgba(148,163,184,.55)', [4, 3], 1.2);
+
+    /* 解析 3p²−2p³（青实） */
+    line(ref.map(([p]) => [p, qecLogicalRate(p)]), 'rgba(103,232,249,.9)', null, 1.8);
+
+    /* MC 点 */
+    g.fillStyle = 'rgba(240,171,252,.95)';
+    for (let i = 0; i < sw.p.length; i++){
+      const x = X(sw.p[i]), y = Y(sw.PL[i]);
+      g.beginPath(); g.arc(x, y, 3 * dpr, 0, 6.2832); g.fill();
+    }
+
+    /* 阈值 p=1/2 */
+    const xth = X(qecThreshold());
+    g.strokeStyle = 'rgba(251,191,36,.75)'; g.setLineDash([2 * dpr, 3 * dpr]); g.lineWidth = 1 * dpr;
+    g.beginPath(); g.moveTo(xth, y0); g.lineTo(xth, y1); g.stroke(); g.setLineDash([]);
+    g.fillStyle = 'rgba(251,191,36,.95)'; g.font = (9 * dpr) + 'px ui-monospace,monospace';
+    g.textAlign = 'right'; g.fillText('阈值 p=1/2', xth - 3 * dpr, y0 + 10 * dpr);
+
+    /* 当前 p 位置（白竖线 + 端点） */
+    const xc = X(Math.max(pMin, Math.min(pMax, this.state.p)));
+    g.strokeStyle = 'rgba(226,232,240,.55)'; g.lineWidth = 1 * dpr;
+    g.beginPath(); g.moveTo(xc, y0); g.lineTo(xc, y1); g.stroke();
+    if (this.ens){
+      const y = Y(this.ens.PL);
+      g.fillStyle = 'rgba(226,232,240,.95)';
+      g.beginPath(); g.arc(xc, y, 3.4 * dpr, 0, 6.2832); g.fill();
+    }
+
+    /* 标题与图例 */
+    g.fillStyle = 'rgba(226,232,240,.9)'; g.font = (10.5 * dpr) + 'px ui-monospace,monospace';
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    g.fillText('P_L vs p（双对数）', 8 * dpr, 15 * dpr);
+    g.font = (9.5 * dpr) + 'px ui-monospace,monospace';
+    g.textAlign = 'right';
+    g.fillStyle = 'rgba(103,232,249,.9)'; g.fillText('3p²−2p³', x1 - 52 * dpr, 15 * dpr);
+    g.fillStyle = 'rgba(240,171,252,.95)'; g.fillText('MC', x1 - 8 * dpr, 15 * dpr);
+    g.fillStyle = 'rgba(148,163,184,.7)'; g.fillText('未编码 p', x1 - 92 * dpr, 15 * dpr);
+  }
+
+  /* ---------- 按错误数分解 ---------- */
+  drawHist(){
+    const c = this.cv.hist, e = this.ens;
+    if (!c || !c.width || !e) return;
+    const g = c.getContext('2d');
+    const W = c.width, H = c.height, dpr = W / c.clientWidth;
+    g.clearRect(0, 0, W, H);
+    const padL = 42 * dpr, padR = 14 * dpr, padT = 28 * dpr, padB = 34 * dpr;
+    const x0 = padL, x1 = W - padR, y0 = padT, y1 = H - padB;
+    const N = e.trials;
+    const maxC = Math.max(1, ...e.byCount);
+    const bw = (x1 - x0) / 4;
+    const Y = v => y1 - (v / maxC) * (y1 - y0);
+
+    /* 网格 */
+    g.strokeStyle = 'rgba(120,160,220,.12)'; g.lineWidth = 1 * dpr;
+    g.font = (9 * dpr) + 'px ui-monospace,monospace';
+    g.textAlign = 'right'; g.textBaseline = 'middle';
+    for (let k = 0; k <= 4; k++){
+      const v = maxC * k / 4, y = Y(v);
+      g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke();
+      g.fillStyle = 'rgba(148,163,184,.7)';
+      g.fillText(v >= 1000 ? (v / 1000).toFixed(1) + 'k' : String(Math.round(v)), x0 - 4 * dpr, y);
+    }
+
+    for (let k = 0; k < 4; k++){
+      const cx = x0 + bw * (k + 0.5);
+      const w = Math.min(54 * dpr, bw * 0.52);
+      const tot = e.byCount[k], bad = e.byCountL[k], good = tot - bad;
+      const yGood = Y(good), yTot = Y(tot);
+      /* 纠对（青）在下、逻辑错误（红）在上 */
+      g.fillStyle = 'rgba(103,232,249,.55)';
+      g.fillRect(cx - w / 2, yGood, w, y1 - yGood);
+      g.fillStyle = 'rgba(248,113,113,.62)';
+      g.fillRect(cx - w / 2, yTot, w, yGood - yTot);
+      g.strokeStyle = 'rgba(226,232,240,.25)'; g.lineWidth = 1 * dpr;
+      g.strokeRect(cx - w / 2, yTot, w, y1 - yTot);
+
+      /* 标注 */
+      g.fillStyle = 'rgba(226,232,240,.9)'; g.font = (9.5 * dpr) + 'px ui-monospace,monospace';
+      g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+      g.fillText(k + ' 错', cx, y1 + 13 * dpr);
+      g.fillStyle = 'rgba(148,163,184,.8)';
+      g.fillText((100 * tot / N).toFixed(1) + '%', cx, y1 + 24 * dpr);
+      if (tot > 0){
+        g.fillStyle = bad > 0 ? 'rgba(248,113,113,.95)' : 'rgba(103,232,249,.95)';
+        g.font = (9 * dpr) + 'px ui-monospace,monospace';
+        g.fillText(bad > 0 ? '全部 ✗' : '全部 ✓', cx, yTot - 4 * dpr);
+      }
+    }
+
+    /* 标题 + 图例 */
+    g.fillStyle = 'rgba(226,232,240,.9)'; g.font = (10.5 * dpr) + 'px ui-monospace,monospace';
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    g.fillText('按错误个数分解（' + N + ' 次试验）', 8 * dpr, 15 * dpr);
+    g.font = (9.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'right';
+    g.fillStyle = 'rgba(103,232,249,.9)'; g.fillText('纠回', x1 - 46 * dpr, 15 * dpr);
+    g.fillStyle = 'rgba(248,113,113,.95)'; g.fillText('逻辑错误', x1 - 8 * dpr, 15 * dpr);
+  }
+
+  /* ---------- 调试句柄 ---------- */
+  debugHandle(){
+    const self = this;
+    return {
+      get state(){ return self.state; },
+      trial: () => {
+        const t = self.trial;
+        return t ? {
+          errors: t.errors.slice(), syn: t.syn.slice(), fixQ: t.fixQ, F: t.F,
+          logicalError: t.logicalError, p0: t.p0, p1: t.p1, trace: t.trace,
+        } : null;
+      },
+      ensemble: () => self.ens ? {
+        p: self.ens.p, code: self.ens.code, trials: self.ens.trials, PL: self.ens.PL,
+        PLexact: self.ens.PLexact, Pun: self.ens.Pun,
+        byCount: self.ens.byCount.slice(), byCountL: self.ens.byCountL.slice(), synCount: self.ens.synCount.slice(),
+      } : null,
+      curve: () => self.curve ? { p: self.curve.p.slice(), PL: self.curve.PL.slice(), PLexact: self.curve.PLexact.slice() } : null,
+      table: () => qecSyndromeTable(),
+      setCode: c => { self.setCode(c); self.drawAll(); },
+      setP: v => { self.setP(v); self.drawAll(); },
+      setTrials: n => { self.setTrials(n); self.drawAll(); },
+      reseed: s => { self.reseed(s); self.drawAll(); },
+      roll: () => { self.rollOnce(); self.renderHud(); self.drawAll(); },
+      trialWith: (opts) => {
+        /* 确定性单次（forceErrors），测试用 */
+        const t = qecTrial({ ...self.cfg(), ...opts }, mulberry32(12345));
+        return { errors: t.errors.slice(), syn: t.syn.slice(), fixQ: t.fixQ, F: t.F, logicalError: t.logicalError };
+      },
+      navLinks: () => Array.from(document.querySelectorAll('#qeTop a')).map(a => a.getAttribute('href')),
+    };
+  }
+}
+
+/* ===== src/qec-main.js ===== */
+/* 演示入口：R78 量子纠错页（qec.html）。
+   课程站嵌入同理：
+     import { QecApp } from './src/qec.js';
+     new QecApp(document.body, {}).mount();
+*/
+
+const app = new QecApp(document.body, {});
+app.mount();
+window.__qe = app.debugHandle();
+
+</script>
+</body>
+</html>
