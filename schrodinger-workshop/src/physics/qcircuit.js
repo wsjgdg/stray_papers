@@ -389,6 +389,11 @@ export const QC_PRESETS = {
     n: 4, text: '量子傅里叶变换 = H + 受控相位 + 逆序 SWAP：|j⟩ → (1/√N)Σ_k e^{2πijk/N}|k⟩。当输入是**周期态**时输出会在某个动量上集中（相位估计/Shor 的核心）。本条线路逐基态与解析 DFT 矩阵对照到 1e-15（pot75）。',
     gates: [],   /* 真正线路由 qcQftGates(n) 生成 */
   },
+  teleport: {
+    label: '量子传态',
+    n: 3, text: '把 q0 上的未知态**搬到 q2**：Bell 对 + Bell 测量 + 两个经典位前馈。三条硬事实：① 分支内 q2 是纯态 X^m1Z^m0|ψ⟩（未修正时保真度只有 1/2），② 修正后四个分支**都**回到 |ψ⟩（F=1），③ 只看 q2、没有经典位的话拿不到任何信息（分支平均 = I/2）——量子不可克隆与无信号性同时成立。拖 θ/φ 换个待传态，换种子换个分支。',
+    gates: [],
+  },
   grover: {
     label: 'Grover (2)',
     n: 2, text: '两比特搜索 |11⟩：H⊗H → 标记（CZ）→ 扩散（H X CZ X H）。**一轮就把概率全部搬到 |11⟩**（P=1，精确，不是逼近）——两比特是唯一一轮收敛的尺寸，正好用来看清「振幅放大」的几何：先把目标翻个相位，再围绕平均值反射。',
@@ -444,4 +449,119 @@ export function qcPresetGates(name, n){
     return g;
   }
   return p.gates.map(x => ({ ...x }));
+}
+
+/* ============================================================================
+ * 经典寄存器与「测量-前馈」（R76）
+ *
+ * R75 的线路是纯酉的：门依次作用，末尾才允许测量。真实的协议（传态、纠错、
+ * 迭代相位估计）需要**中途测量 + 用结果控制后面的门**。这里补上两件事：
+ *   ① qcMeasureQubit：只测一个比特（投影到该位的 0/1 子空间 + 归一化），
+ *      不是把整个态塌到一个基态——传态里测 q0/q1 之后 q2 的叠加必须留着；
+ *   ② qcExec：把 {op:'measure'}、{op:'cond'} 与普通门统一成「一步」。
+ * ========================================================================== */
+
+export function qcNewClassical(nbits){ return new Uint8Array(nbits); }
+
+/* 单比特 Z 基测量：返回 0/1，就地把态投影到对应子空间并归一化 */
+export function qcMeasureQubit(s, q, rng){
+  const bit = 1 << q;
+  let p1 = 0;
+  for (let i = 0; i < s.dim; i++) if (i & bit) p1 += s.re[i] * s.re[i] + s.im[i] * s.im[i];
+  const out = rng() < p1 ? 1 : 0;
+  for (let i = 0; i < s.dim; i++){
+    const has = (i & bit) ? 1 : 0;
+    if (has !== out){ s.re[i] = 0; s.im[i] = 0; }
+  }
+  qcRenormalize(s);
+  return out;
+}
+
+/* 执行一步：普通门 / 测量写入经典位 / 条件门 */
+export function qcExec(s, op, cres, rng){
+  if (op.op === 'measure'){
+    const bit = qcMeasureQubit(s, op.q, rng);
+    if (cres && op.cbit != null) cres[op.cbit] = bit;
+    return { kind: 'measure', q: op.q, cbit: op.cbit, bit };
+  }
+  if (op.op === 'cond'){
+    const on = cres ? !!cres[op.cbit] : false;
+    if (on) qcApply(s, op.gate);
+    return { kind: 'cond', cbit: op.cbit, on };
+  }
+  qcApply(s, op);
+  return { kind: 'gate' };
+}
+
+/* 跑一整段（含测量/条件），返回每步的记录 */
+export function qcRunProgram(s, ops, rng, cres = qcNewClassical(8)){
+  const rec = [];
+  for (const op of ops) rec.push(qcExec(s, op, cres, rng));
+  return { cres, rec };
+}
+
+/* 任意比特的约化密度矩阵（2×2，复）：ρ[a][b] = Σ_rest ψ(a,rest) ψ*(b,rest) */
+export function qcQubitRho(s, q){
+  const bit = 1 << q;
+  const rr = [[0, 0], [0, 0]], ii = [[0, 0], [0, 0]];
+  for (let i = 0; i < s.dim; i++){
+    if (i & bit) continue;
+    const j = i | bit;
+    /* |0⟩⟨0| / |1⟩⟨1| 对角 */
+    rr[0][0] += s.re[i] * s.re[i] + s.im[i] * s.im[i];
+    rr[1][1] += s.re[j] * s.re[j] + s.im[j] * s.im[j];
+    /* 非对角：ψ0 ψ1* = (r0+ii0)(r1−ii1) */
+    rr[0][1] += s.re[i] * s.re[j] + s.im[i] * s.im[j];
+    ii[0][1] += s.im[i] * s.re[j] - s.re[i] * s.im[j];
+  }
+  rr[1][0] = rr[0][1];
+  ii[1][0] = -ii[0][1];
+  return { re: rr, im: ii };
+}
+
+/* 纯态 |ψ⟩=α|0⟩+β|1⟩ 与 ρ 的保真度 ⟨ψ|ρ|ψ⟩（α,β 为 [re,im]） */
+export function qcRhoFidelity(rho, alpha, beta){
+  const a = alpha, b = beta;
+  const ac = [a[0], -a[1]], bc = [b[0], -b[1]];
+  const mul = (x, y) => [x[0]*y[0] - x[1]*y[1], x[0]*y[1] + x[1]*y[0]];
+  const add = (x, y) => [x[0]+y[0], x[1]+y[1]];
+  /* v = ρ|ψ⟩: v_a = Σ_b ρ_ab ψ_b */
+  let v0 = add(mul([rho.re[0][0], rho.im[0][0]], b), [0, 0]);
+  v0 = add([0, 0], mul([rho.re[0][0], rho.im[0][0]], b));
+  v0 = add(v0, mul([rho.re[0][1], rho.im[0][1]], [0, 0]));
+  /* 上面写复杂了，直接逐项算 */
+  v0 = add(mul([rho.re[0][0], rho.im[0][0]], a), mul([rho.re[0][1], rho.im[0][1]], b));
+  const v1 = add(mul([rho.re[1][0], rho.im[1][0]], a), mul([rho.re[1][1], rho.im[1][1]], b));
+  const val = add(mul(ac, v0), mul(bc, v1));
+  return val[0];
+}
+
+/* 单比特态制备：Ry(θ) 再 Rz(φ) ⟹ cos(θ/2)|0⟩ + e^{iφ} sin(θ/2)|1⟩ */
+export function qcPrep1q(theta, phi, q = 0){
+  return [{ op: 'ry', q, theta }, { op: 'rz', q, theta: phi }];
+}
+
+/* |ψ⟩ = cos(θ/2)|0⟩ + e^{iφ}sin(θ/2)|1⟩ 的振幅（测试/显示用） */
+export function qcTargetAmps(theta, phi){
+  return { alpha: [Math.cos(theta / 2), 0], beta: [Math.sin(theta / 2) * Math.cos(phi), Math.sin(theta / 2) * Math.sin(phi)] };
+}
+
+/* 传态线路：q0 载待传态，q1/q2 为 Bell 对，Bell 测量后按 m0→Z、m1→X 修正 q2。
+   经典位：cbit 0 = m0（q0 的 H 之后测量），cbit 1 = m1（q1 测量）。 */
+export function qcTeleportGates(theta = 1.0, phi = 0.4, withFix = true){
+  const g = [];
+  /* ① 制备待传态到 q0 */
+  g.push(...qcPrep1q(theta, phi, 0));
+  /* ② Bell 对 (q1,q2) */
+  g.push({ op: 'h', q: 1 }, { op: 'cnot', c: 1, q2: 2 });
+  /* ③ Bell 测量 */
+  g.push({ op: 'cnot', c: 0, q2: 1 }, { op: 'h', q: 0 });
+  g.push({ op: 'measure', q: 0, cbit: 0 });
+  g.push({ op: 'measure', q: 1, cbit: 1 });
+  /* ④ 经典前馈 */
+  if (withFix){
+    g.push({ op: 'cond', cbit: 1, gate: { op: 'x', q: 2 } });
+    g.push({ op: 'cond', cbit: 0, gate: { op: 'z', q: 2 } });
+  }
+  return g;
 }

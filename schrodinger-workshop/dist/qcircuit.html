@@ -607,6 +607,11 @@ const QC_PRESETS = {
     n: 4, text: '量子傅里叶变换 = H + 受控相位 + 逆序 SWAP：|j⟩ → (1/√N)Σ_k e^{2πijk/N}|k⟩。当输入是**周期态**时输出会在某个动量上集中（相位估计/Shor 的核心）。本条线路逐基态与解析 DFT 矩阵对照到 1e-15（pot75）。',
     gates: [],   /* 真正线路由 qcQftGates(n) 生成 */
   },
+  teleport: {
+    label: '量子传态',
+    n: 3, text: '把 q0 上的未知态**搬到 q2**：Bell 对 + Bell 测量 + 两个经典位前馈。三条硬事实：① 分支内 q2 是纯态 X^m1Z^m0|ψ⟩（未修正时保真度只有 1/2），② 修正后四个分支**都**回到 |ψ⟩（F=1），③ 只看 q2、没有经典位的话拿不到任何信息（分支平均 = I/2）——量子不可克隆与无信号性同时成立。拖 θ/φ 换个待传态，换种子换个分支。',
+    gates: [],
+  },
   grover: {
     label: 'Grover (2)',
     n: 2, text: '两比特搜索 |11⟩：H⊗H → 标记（CZ）→ 扩散（H X CZ X H）。**一轮就把概率全部搬到 |11⟩**（P=1，精确，不是逼近）——两比特是唯一一轮收敛的尺寸，正好用来看清「振幅放大」的几何：先把目标翻个相位，再围绕平均值反射。',
@@ -662,6 +667,121 @@ function qcPresetGates(name, n){
     return g;
   }
   return p.gates.map(x => ({ ...x }));
+}
+
+/* ============================================================================
+ * 经典寄存器与「测量-前馈」（R76）
+ *
+ * R75 的线路是纯酉的：门依次作用，末尾才允许测量。真实的协议（传态、纠错、
+ * 迭代相位估计）需要**中途测量 + 用结果控制后面的门**。这里补上两件事：
+ *   ① qcMeasureQubit：只测一个比特（投影到该位的 0/1 子空间 + 归一化），
+ *      不是把整个态塌到一个基态——传态里测 q0/q1 之后 q2 的叠加必须留着；
+ *   ② qcExec：把 {op:'measure'}、{op:'cond'} 与普通门统一成「一步」。
+ * ========================================================================== */
+
+function qcNewClassical(nbits){ return new Uint8Array(nbits); }
+
+/* 单比特 Z 基测量：返回 0/1，就地把态投影到对应子空间并归一化 */
+function qcMeasureQubit(s, q, rng){
+  const bit = 1 << q;
+  let p1 = 0;
+  for (let i = 0; i < s.dim; i++) if (i & bit) p1 += s.re[i] * s.re[i] + s.im[i] * s.im[i];
+  const out = rng() < p1 ? 1 : 0;
+  for (let i = 0; i < s.dim; i++){
+    const has = (i & bit) ? 1 : 0;
+    if (has !== out){ s.re[i] = 0; s.im[i] = 0; }
+  }
+  qcRenormalize(s);
+  return out;
+}
+
+/* 执行一步：普通门 / 测量写入经典位 / 条件门 */
+function qcExec(s, op, cres, rng){
+  if (op.op === 'measure'){
+    const bit = qcMeasureQubit(s, op.q, rng);
+    if (cres && op.cbit != null) cres[op.cbit] = bit;
+    return { kind: 'measure', q: op.q, cbit: op.cbit, bit };
+  }
+  if (op.op === 'cond'){
+    const on = cres ? !!cres[op.cbit] : false;
+    if (on) qcApply(s, op.gate);
+    return { kind: 'cond', cbit: op.cbit, on };
+  }
+  qcApply(s, op);
+  return { kind: 'gate' };
+}
+
+/* 跑一整段（含测量/条件），返回每步的记录 */
+function qcRunProgram(s, ops, rng, cres = qcNewClassical(8)){
+  const rec = [];
+  for (const op of ops) rec.push(qcExec(s, op, cres, rng));
+  return { cres, rec };
+}
+
+/* 任意比特的约化密度矩阵（2×2，复）：ρ[a][b] = Σ_rest ψ(a,rest) ψ*(b,rest) */
+function qcQubitRho(s, q){
+  const bit = 1 << q;
+  const rr = [[0, 0], [0, 0]], ii = [[0, 0], [0, 0]];
+  for (let i = 0; i < s.dim; i++){
+    if (i & bit) continue;
+    const j = i | bit;
+    /* |0⟩⟨0| / |1⟩⟨1| 对角 */
+    rr[0][0] += s.re[i] * s.re[i] + s.im[i] * s.im[i];
+    rr[1][1] += s.re[j] * s.re[j] + s.im[j] * s.im[j];
+    /* 非对角：ψ0 ψ1* = (r0+ii0)(r1−ii1) */
+    rr[0][1] += s.re[i] * s.re[j] + s.im[i] * s.im[j];
+    ii[0][1] += s.im[i] * s.re[j] - s.re[i] * s.im[j];
+  }
+  rr[1][0] = rr[0][1];
+  ii[1][0] = -ii[0][1];
+  return { re: rr, im: ii };
+}
+
+/* 纯态 |ψ⟩=α|0⟩+β|1⟩ 与 ρ 的保真度 ⟨ψ|ρ|ψ⟩（α,β 为 [re,im]） */
+function qcRhoFidelity(rho, alpha, beta){
+  const a = alpha, b = beta;
+  const ac = [a[0], -a[1]], bc = [b[0], -b[1]];
+  const mul = (x, y) => [x[0]*y[0] - x[1]*y[1], x[0]*y[1] + x[1]*y[0]];
+  const add = (x, y) => [x[0]+y[0], x[1]+y[1]];
+  /* v = ρ|ψ⟩: v_a = Σ_b ρ_ab ψ_b */
+  let v0 = add(mul([rho.re[0][0], rho.im[0][0]], b), [0, 0]);
+  v0 = add([0, 0], mul([rho.re[0][0], rho.im[0][0]], b));
+  v0 = add(v0, mul([rho.re[0][1], rho.im[0][1]], [0, 0]));
+  /* 上面写复杂了，直接逐项算 */
+  v0 = add(mul([rho.re[0][0], rho.im[0][0]], a), mul([rho.re[0][1], rho.im[0][1]], b));
+  const v1 = add(mul([rho.re[1][0], rho.im[1][0]], a), mul([rho.re[1][1], rho.im[1][1]], b));
+  const val = add(mul(ac, v0), mul(bc, v1));
+  return val[0];
+}
+
+/* 单比特态制备：Ry(θ) 再 Rz(φ) ⟹ cos(θ/2)|0⟩ + e^{iφ} sin(θ/2)|1⟩ */
+function qcPrep1q(theta, phi, q = 0){
+  return [{ op: 'ry', q, theta }, { op: 'rz', q, theta: phi }];
+}
+
+/* |ψ⟩ = cos(θ/2)|0⟩ + e^{iφ}sin(θ/2)|1⟩ 的振幅（测试/显示用） */
+function qcTargetAmps(theta, phi){
+  return { alpha: [Math.cos(theta / 2), 0], beta: [Math.sin(theta / 2) * Math.cos(phi), Math.sin(theta / 2) * Math.sin(phi)] };
+}
+
+/* 传态线路：q0 载待传态，q1/q2 为 Bell 对，Bell 测量后按 m0→Z、m1→X 修正 q2。
+   经典位：cbit 0 = m0（q0 的 H 之后测量），cbit 1 = m1（q1 测量）。 */
+function qcTeleportGates(theta = 1.0, phi = 0.4, withFix = true){
+  const g = [];
+  /* ① 制备待传态到 q0 */
+  g.push(...qcPrep1q(theta, phi, 0));
+  /* ② Bell 对 (q1,q2) */
+  g.push({ op: 'h', q: 1 }, { op: 'cnot', c: 1, q2: 2 });
+  /* ③ Bell 测量 */
+  g.push({ op: 'cnot', c: 0, q2: 1 }, { op: 'h', q: 0 });
+  g.push({ op: 'measure', q: 0, cbit: 0 });
+  g.push({ op: 'measure', q: 1, cbit: 1 });
+  /* ④ 经典前馈 */
+  if (withFix){
+    g.push({ op: 'cond', cbit: 1, gate: { op: 'x', q: 2 } });
+    g.push({ op: 'cond', cbit: 0, gate: { op: 'z', q: 2 } });
+  }
+  return g;
 }
 
 /* ===== src/qcircuit.js ===== */
@@ -729,6 +849,11 @@ const ex = (x, d = 2) => (Number.isFinite(x) && x !== 0 ? x.toExponential(d) : '
 /* 门的展示信息（纯表现层，物理在 physics 里） */
 function gateView(g){
   const op = g.op;
+  if (op === 'measure') return { text: 'M', wires: [g.q], kind: 'measure', target: g.q, cbit: g.cbit };
+  if (op === 'cond'){
+    const inner = gateView(g.gate);
+    return { text: inner.text, wires: [g.gate.q], kind: 'cond', target: g.gate.q, cbit: g.cbit };
+  }
   if (op === 'cnot') return { text: '', wires: [g.c, g.q2], kind: 'cnot', control: g.c, target: g.q2 };
   if (op === 'cz') return { text: 'Z', wires: [g.c, g.q2], kind: 'cz', control: g.c, target: g.q2 };
   if (op === 'swap') return { text: '×', wires: [g.q1, g.q2], kind: 'swap' };
@@ -755,8 +880,9 @@ class QCircuitApp {
     this.state = {
       preset,
       n: Math.max(2, Math.min(10, Math.round(num('n', p.n)))),
+      theta: num('theta', 1.0), phi: num('phi', 0.4),
       step: 0, playing: false, speed: num('speed', 260),
-      measured: null, seed: Math.round(num('seed', 20261021)),
+      measured: null, seed: Math.round(num('seed', 137)),
       paused: q.get('paused') === '1',
     };
     this.gates = [];
@@ -799,9 +925,15 @@ class QCircuitApp {
           <button id="qcP2" data-p="qft">QFT</button>
           <button id="qcP3" data-p="grover">Grover</button>
         </div>
+        <div class="btns" style="margin-top:6px">
+          <button id="qcP4" data-p="teleport" style="grid-column:1 / span 2">量子传态（测量 + 前馈）</button>
+        </div>
         <div class="grp">规模</div>
         <div class="row"><label>比特数 n</label><input type="range" id="qcN" min="2" max="8" step="1"><output id="qcNo">—</output></div>
         <div class="row"><label>速度 ms</label><input type="range" id="qcSpeed" min="40" max="600" step="20"><output id="qcSpeedO">—</output></div>
+        <div class="grp" id="qcPrepGrp">待传态（θ, φ）</div>
+        <div class="row" id="qcThRow"><label>θ</label><input type="range" id="qcTheta" min="0" max="3.14" step="0.01"><output id="qcThetaO">—</output></div>
+        <div class="row" id="qcPhRow"><label>φ</label><input type="range" id="qcPhi" min="-3.14" max="3.14" step="0.01"><output id="qcPhiO">—</output></div>
         <div class="grp">执行</div>
         <div class="btns">
           <button id="qcStep">单步 ▸</button>
@@ -835,7 +967,9 @@ class QCircuitApp {
         <div class="hrow"><span>并发度 C</span><span id="hConc">—</span></div>
         <div class="hrow"><span>⟨Z0Z1⟩</span><span id="hZZ">—</span></div>
         <hr>
-        <div class="hrow"><span>测量结果</span><span id="hMeas">—</span></div>
+        <div class="hrow"><span>经典位 m0 m1</span><span id="hCbits">—</span></div>
+        <div class="hrow"><span>q2 保真度 vs 目标</span><span id="hFid">—</span></div>
+        <div class="hrow"><span>末端测量</span><span id="hMeas">—</span></div>
         <div class="hrow"><span>FPS</span><span id="hFps">—</span></div>
       </aside>
 
@@ -853,9 +987,11 @@ class QCircuitApp {
 
   _bind(){
     const st = this.state;
-    for (const id of ['qcP0', 'qcP1', 'qcP2', 'qcP3']){
+    for (const id of ['qcP0', 'qcP1', 'qcP2', 'qcP3', 'qcP4']){
       this.on(this.q('#' + id), 'click', e => this.applyPreset(e.currentTarget.dataset.p));
     }
+    this.on(this.q('#qcTheta'), 'input', e => this.setParam('theta', parseFloat(e.target.value)));
+    this.on(this.q('#qcPhi'), 'input', e => this.setParam('phi', parseFloat(e.target.value)));
     this.on(this.q('#qcN'), 'input', e => {
       st.n = Math.max(2, Math.min(8, parseInt(e.target.value, 10)));
       this.q('#qcNo').textContent = String(st.n);
@@ -882,6 +1018,7 @@ class QCircuitApp {
     /* GHZ 至少 3 比特（n=2 的「GHZ」就是贝尔对，标签写的是 GHZ(4)）；
        用户已经把 n 调到 ≥3 时保留用户的选择 */
     if (name === 'ghz' && this.state.n < 3) this.state.n = 4;
+    if (name === 'teleport') this.state.n = 3;
     if (name === 'bell' || name === 'grover') this.state.n = 2;
     this.syncPanel();
     this.reset();
@@ -891,8 +1028,15 @@ class QCircuitApp {
 
   reset(){
     const st = this.state;
-    this.gates = qcPresetGates(st.preset, st.n);
+    if (st.preset === 'teleport'){
+      st.n = 3;
+      this.gates = qcTeleportGates(st.theta, st.phi, true);
+    } else {
+      this.gates = qcPresetGates(st.preset, st.n);
+    }
     this.psi = qcNewState(st.n);
+    this.cres = qcNewClassical(8);
+    this.rng = mulberry32(st.seed);
     st.step = 0; st.measured = null; st.playing = false;
     this._needDraw = true;
     this.syncPanel();
@@ -900,11 +1044,24 @@ class QCircuitApp {
     this.renderHud();
   }
 
+  /* 统一的参数入口：θ/φ 会改变线路本身（制备门 + 目标态），必须重建 */
+  setParam(k, v){
+    if (k === 'theta' || k === 'phi'){
+      this.state[k] = v;
+      this.syncPanel();
+      if (this.state.preset === 'teleport') this.reset();
+      return;
+    }
+    if (k === 'n'){ this.state.n = Math.max(2, Math.min(8, v | 0)); this.syncPanel(); this.reset(); return; }
+    this.state[k] = v;
+    this.syncPanel();
+  }
+
   step(k = 1){
     const st = this.state;
     if (st.measured != null) return;          /* 测量后必须重置才能继续 */
     for (let i = 0; i < k && st.step < this.gates.length; i++){
-      qcApply(this.psi, this.gates[st.step]);
+      qcExec(this.psi, this.gates[st.step], this.cres, this.rng);
       st.step++;
     }
     if (st.step >= this.gates.length) st.playing = false;
@@ -958,6 +1115,13 @@ class QCircuitApp {
     set('hConc', st.n === 2 ? nf(qcConcurrence(s), 6) : '（n≠2）');
     set('hZZ', st.n >= 2 ? nf(qcZZ(s, 0, 1), 6) : '—');
     set('hMeas', st.measured ? '|' + st.measured.bits + '⟩' : '未测量');
+    const cb = this.cres ? Array.from(this.cres.slice(0, 2)).join(' ') : '—';
+    set('hCbits', st.preset === 'teleport' ? cb : '—（无经典位）');
+    if (st.preset === 'teleport' && s.n === 3){
+      const t = qcTargetAmps(st.theta, st.phi);
+      const F = qcRhoFidelity(qcQubitRho(s, 2), t.alpha, t.beta);
+      set('hFid', nf(F, 6));
+    } else set('hFid', '—');
   }
 
   syncPanel(){
@@ -967,7 +1131,11 @@ class QCircuitApp {
     set('qcN', st.n); txt('qcNo', st.n);
     set('qcSpeed', st.speed); txt('qcSpeedO', st.speed);
     set('qcSeed', st.seed); txt('qcSeedO', st.seed);
-    for (const b of ['qcP0', 'qcP1', 'qcP2', 'qcP3']){
+    set('qcTheta', st.theta); txt('qcThetaO', st.theta.toFixed(2));
+    set('qcPhi', st.phi); txt('qcPhiO', st.phi.toFixed(2));
+    const tp = st.preset === 'teleport';
+    for (const id of ['qcTheta', 'qcPhi']){ const e = this.q('#' + id); if (e) e.style.opacity = tp ? '1' : '.4'; }
+    for (const b of ['qcP0', 'qcP1', 'qcP2', 'qcP3', 'qcP4']){
       const e = this.q('#' + b);
       if (e) e.classList.toggle('on', e.dataset.p === st.preset);
     }
@@ -1019,6 +1187,11 @@ class QCircuitApp {
     g.fillStyle = 'rgba(103,232,249,.05)';
     if (this.state.step > 0) g.fillRect(x0 - colW / 2 - 4, padT - 10, this.state.step * colW + 2, H - padT - padB + 16);
 
+    const cbitCol = {};
+    for (let i = 0; i < N; i++){
+      const gg = this.gates[i];
+      if (gg.op === 'measure' && gg.cbit != null) cbitCol[gg.cbit] = i;
+    }
     for (let i = 0; i < N; i++){
       const gv = gateView(this.gates[i]);
       const x = xOf(i);
@@ -1061,6 +1234,36 @@ class QCircuitApp {
           g.fillStyle = cur ? '#f87171' : 'rgba(226,232,240,' + (0.45 + 0.55*alpha) + ')';
           g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('Z', x, yt + 0.5);
           g.textBaseline = 'alphabetic';
+        }
+      } else if (gv.kind === 'measure' || gv.kind === 'cond'){
+        const y = yOf(gv.target);
+        const size = Math.min(28, colW * 0.66, rowH * 0.66);
+        /* 条件门还没收到经典位时画虚框（未执行），收到后实框 */
+        const pending = gv.kind === 'cond' && this.state.step <= i;
+        g.strokeStyle = gv.kind === 'cond' ? 'rgba(250,204,21,.9)' : col;
+        g.lineWidth = 1.3;
+        if (pending) g.setLineDash([3, 3]);
+        g.beginPath(); g.roundRect(x - size / 2, y - size / 2, size, size, gv.kind === 'cond' ? 4 : 12); g.stroke();
+        g.setLineDash([]);
+        g.fillStyle = 'rgba(4,8,16,.75)'; g.fill();
+        g.fillStyle = gv.kind === 'cond' ? 'rgba(250,204,21,.95)' : (cur ? '#f87171' : 'rgba(226,232,240,.85)');
+        g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.font = '9.5px ui-monospace,monospace';
+        g.fillText(gv.text, x, y + 0.5);
+        g.textBaseline = 'alphabetic';
+        g.font = '8px ui-monospace,monospace'; g.textAlign = 'left';
+        g.fillStyle = 'rgba(250,204,21,.85)';
+        g.textAlign = 'center';
+        g.fillText((gv.kind === 'measure' ? '→c' : 'c') + gv.cbit + (gv.kind === 'cond' ? '=1' : ''), x, y + size / 2 + 9);
+        /* 经典连线：从写入该位的测量盒到条件门（正交折线，虚线） */
+        if (gv.kind === 'cond' && cbitCol[gv.cbit] != null){
+          const xm = xOf(cbitCol[gv.cbit]);
+          const ym = yOf(this.gates[cbitCol[gv.cbit]].q);
+          const yMid = ym + (y - ym) * 0.5;
+          g.strokeStyle = 'rgba(250,204,21,.55)'; g.setLineDash([4, 3]); g.lineWidth = 1;
+          g.beginPath(); g.moveTo(xm + 14, ym); g.lineTo(xm + 20, ym);
+          g.lineTo(xm + 20, yMid); g.lineTo(x - 20, yMid); g.lineTo(x - 20, y);
+          g.lineTo(x - size / 2, y); g.stroke(); g.setLineDash([]);
         }
       } else if (gv.kind === 'swap'){
         for (const q of gv.wires){
@@ -1160,10 +1363,7 @@ class QCircuitApp {
     return {
       get state(){ return self.state; },
       get gates(){ return self.gates; },
-      setParam: (k, v) => {
-        if (k === 'n'){ self.state.n = Math.max(2, Math.min(8, v | 0)); self.syncPanel(); self.reset(); }
-        else { self.state[k] = v; self.syncPanel(); }
-      },
+      setParam: (k, v) => { self.setParam(k, v); self._drawAll(); },
       preset: name => { self.applyPreset(name); self._drawAll(); },
       step: (k = 1) => { self.step(k); self._drawAll(); return self.state.step; },
       runAll: () => { self.step(self.gates.length); self._drawAll(); return self.state.step; },
