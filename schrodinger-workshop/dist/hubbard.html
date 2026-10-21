@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>哈伯德工场 · 格点费米子与莫特绝缘体（薛定谔工场 R73）</title>
+</head>
+<body>
+<!-- 纯 CPU（二次量子化固定粒子数基）+ 2D canvas；ES 模块需经 HTTP 访问。
+     单文件分发版由 scripts/build-standalone.mjs 生成到 dist/hubbard.html。 -->
+<script>
+/*! 薛定谔工场 · 单文件分发版（hubbard.html）— 由 scripts/build-standalone.mjs 自动生成，请勿手改。
+    源码工程（ES 模块，课程站组件化用）：hubbard.html + src/
+    模块拼接序（拓扑序，依赖在前）：
+      src/core/styles.js
+      src/physics/hubbard.js
+      src/hubbard.js
+      src/hubbard-main.js
+*/
+
+/* ===== src/core/styles.js ===== */
+/* 组件样式：挂载时注入 <style id="qf-styles">（多实例只注入一次）。
+   R43 修复：本字符串此前**以字面 `<style>` 开头**（自初版 9c397d0 起），
+   注入用 textContent ⟹ CSS 解析器把 `<style>` 当 selector 前缀，紧接的
+   `:root{…}` 被解析为「`<style> :root`」这一永不匹配的后代选择器的声明块
+   ⟹ **:root 内所有 CSS 变量失效**（--txt/--dim/--mono/--panel 全空），
+   于是全部 `color:var(--dim)` 等退化为浏览器默认（黑字 + Times New Roman），
+   在深色半透明面板上几乎不可读——而 font-size/letter-spacing 等字面值声明
+   仍生效，故长期未被察觉（旧注释「视觉零回归」的自评有误）。
+   R43 CDP 实测（getComputedStyle 读 CSS 变量全为空 + h3 color=rgb(0,0,0)
+   / fontFamily=Times New Roman）定位并删除该标签后，变量与字体恢复。 */
+const CSS = `
+  :root{
+    --bg:#04060c; --panel:rgba(8,12,22,.74); --line:rgba(120,160,220,.14);
+    --txt:#e6edf3; --dim:#9aa7bd; --cyan:#67e8f9; --mag:#f0abfc; --amber:#fbbf24;
+    --mono:ui-monospace,"SF Mono","Cascadia Code",Consolas,"Courier New",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font-family:var(--sans)}
+  #gl{position:fixed;inset:0;width:100vw;height:100vh;display:block;cursor:crosshair;touch-action:none}
+  .panel{position:fixed;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    box-shadow:0 8px 32px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04)}
+  /* ---------- 顶栏 ---------- */
+  #topbar{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:18px;
+    padding:10px 20px;z-index:10;white-space:nowrap}
+  #topbar .logo{font-family:var(--mono);font-weight:700;font-size:15px;letter-spacing:.12em;
+    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
+  #topbar .eq{font-family:var(--mono);font-size:12.5px;color:var(--dim);letter-spacing:.02em}
+  #topbar .eq b{color:var(--cyan);font-weight:600}
+  #topbar .eq i{color:var(--mag);font-style:italic}
+  #status{font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:.08em}
+  /* R72：双粒子构型空间页入口（与 status 同排，flex:none 防被 eq 压缩） */
+  #topbar .navlink{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
+    border:1px solid var(--line);border-radius:6px;padding:3px 8px;flex:none;transition:all .15s;letter-spacing:.05em}
+  #topbar .navlink:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
+  @media (max-width:900px){#topbar .navlink{display:none}}
+  /* ---------- 左侧控制面板 ---------- */
+  /* R43 修复①：原 max-height:calc(100vh−120px) ⟹ 面板底 = 100vh−44，而左下
+     #desc（bottom:52px）顶部随预设描述长度变化（实测 82px 文本 ⟹ 顶 100vh−132；
+     GP/Pauli 长文本 177px ⟹ 顶 100vh−229）⟹ 两者在左列重叠（最大 238×80 px）。
+     修复：#desc 限高 120px + 内部滚动（高度可控），面板按最坏情况预留
+     (76 顶距 + 120 desc + 52 底距 + 8 间隙 = 256) ⟹ 面板底 100vh−180 ≤ desc 顶
+     100vh−172，四 viewport × 五内核实测无重叠。 */
+  #panel{top:76px;left:14px;width:238px;padding:14px;z-index:10;max-height:calc(100vh - 256px);overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  #panel::-webkit-scrollbar{width:4px}#panel::-webkit-scrollbar-thumb{background:rgba(120,160,220,.25);border-radius:2px}
+  .sec{margin-bottom:14px}
+  .sec:last-child{margin-bottom:0}
+  .sec>h3{font-size:10px;letter-spacing:.22em;color:var(--dim);font-weight:600;margin-bottom:8px;
+    display:flex;align-items:center;gap:8px}
+  .sec>h3::after{content:"";flex:1;height:1px;background:var(--line)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  /* R60 势刷轴比三连同控（grid3 单元格内的迷你标签行：名称 + 实时值） */
+  .mini{font-size:9.5px;color:var(--dim);display:flex;justify-content:space-between;gap:4px;margin:3px 0 1px;white-space:nowrap}
+  .mini b{color:var(--cyan);font-weight:600;font-family:var(--mono)}
+  button{font-family:var(--sans);font-size:12px;color:var(--txt);background:rgba(255,255,255,.045);
+    border:1px solid var(--line);border-radius:8px;padding:7px 8px;cursor:pointer;transition:all .15s;text-align:center}
+  button:hover{background:rgba(103,232,249,.12);border-color:rgba(103,232,249,.4)}
+  button.on{background:rgba(103,232,249,.16);border-color:var(--cyan);color:var(--cyan)}
+  button.wide{width:100%}
+  .row{display:flex;align-items:center;gap:8px;margin:7px 0}
+  .row label{font-size:11px;color:var(--dim);width:64px;flex:none}
+  .row output{font-family:var(--mono);font-size:11px;color:var(--cyan);width:44px;text-align:right;flex:none}
+  input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:3px;border-radius:2px;
+    background:rgba(120,160,220,.25);outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;border-radius:50%;
+    background:var(--cyan);box-shadow:0 0 8px rgba(103,232,249,.7);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:12px;height:12px;border:none;border-radius:50%;background:var(--cyan);cursor:pointer}
+  select{font-family:var(--mono);font-size:11px;color:var(--txt);background:rgba(255,255,255,.05);
+    border:1px solid var(--line);border-radius:6px;padding:4px 6px;width:100%;outline:none}
+  /* ---------- 右侧 HUD ---------- */
+  #hud{top:76px;right:14px;padding:12px 14px;z-index:10;min-width:196px;font-family:var(--mono)}
+  #hud .hrow{display:flex;justify-content:space-between;gap:14px;font-size:11.5px;padding:3px 0}
+  #hud .hrow span:first-child{color:var(--dim)}
+  #hud .hrow span:last-child{color:var(--txt)}
+  #hud .hrow .ok{color:#4ade80}#hud .hrow .warn{color:var(--amber)}
+  #hud hr{border:none;border-top:1px solid var(--line);margin:7px 0}
+  /* ---------- 相位图例 ---------- */
+  #legend{right:14px;bottom:52px;padding:10px 12px;z-index:10;display:flex;align-items:center;gap:12px}
+  #wheel{width:84px;height:84px;border-radius:50%;border:1px solid var(--line)}
+  #legend .cap{font-size:10.5px;color:var(--dim);line-height:1.7;max-width:130px}
+  #legend .cap b{color:var(--cyan);font-weight:600}
+  /* ---------- 底部提示 ---------- */
+  #hint{left:50%;bottom:14px;transform:translateX(-50%);padding:8px 18px;z-index:10;
+    font-size:11.5px;color:var(--dim);white-space:nowrap;letter-spacing:.02em}
+  #hint b{color:var(--txt);font-weight:600}
+  #hint .k{font-family:var(--mono);color:var(--cyan);background:rgba(103,232,249,.1);
+    border:1px solid rgba(103,232,249,.25);border-radius:4px;padding:0 5px;font-size:10.5px}
+  /* ---------- 预设描述 ---------- */
+  /* R43 修复②：描述文本长度随内核/预设变化（实测 82–177px 高），高度不可控会
+     顶进 #panel 区域 ⟹ 限高 120px + 内部滚动：既压住几何冲突，又保留全文
+     （长描述可滚动查看）。 */
+  #desc{left:14px;bottom:52px;z-index:10;padding:10px 14px;max-width:340px;font-size:11.5px;
+    color:var(--dim);line-height:1.65;max-height:120px;overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  #desc b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:12px}
+  /* ---------- toast ---------- */
+  #toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:20;pointer-events:none;
+    font-family:var(--mono);font-size:13px;color:var(--cyan);letter-spacing:.2em;opacity:0;transition:opacity .4s;
+    text-shadow:0 0 18px rgba(103,232,249,.8)}
+  /* ---------- 笔刷光标预览环 ---------- */
+  #brushcursor{position:fixed;border:1px solid rgba(140,190,255,.85);border-radius:50%;pointer-events:none;
+    display:none;z-index:15;box-shadow:0 0 10px rgba(80,140,255,.35),inset 0 0 10px rgba(80,140,255,.18)}
+  /* ---------- 准星瞄准线 ---------- */
+  #aim{position:fixed;inset:0;width:100vw;height:100vh;z-index:5;pointer-events:none;display:none}
+  #aim line{stroke:var(--amber);stroke-width:1.5;stroke-dasharray:5 4;filter:drop-shadow(0 0 4px rgba(251,191,36,.8))}
+  #aim circle{fill:none;stroke:var(--amber);stroke-width:1;opacity:.7}
+  #aim text{fill:var(--amber);font-family:var(--mono);font-size:11px}
+  /* ---------- 角标 ---------- */
+  .corner{position:fixed;width:22px;height:22px;z-index:4;pointer-events:none;opacity:.5}
+  .corner::before,.corner::after{content:"";position:absolute;background:var(--cyan)}
+  .corner::before{width:100%;height:1px}.corner::after{width:1px;height:100%}
+  #c1{top:8px;left:8px}.corner::before{top:0}#c1::after{left:0}
+  #c2{top:8px;right:8px}#c2::before{top:0}#c2::after{right:0}
+  #c3{bottom:8px;left:8px}#c3::before{bottom:0}#c3::after{left:0}
+  #c4{bottom:8px;right:8px}#c4::before{bottom:0}#c4::after{right:0}
+  #diag{position:fixed;left:-9999px}
+  /* ---------- 透射率扫描面板 ---------- */
+  .hint{font-size:10px;color:var(--dim);line-height:1.5;flex:1}
+  /* ---------- hint 可折叠（R45，用户选定方案 a）----------
+     运行时升级（app.js upgradeHints）：原 hint 文本搬进 .hintBody，
+     前置 .hintToggle 按钮。默认折叠（长 hint 是面板溢出的元凶，R43
+     实测 2D 697px / 3D 1673px / GP 980px）；展开态经 localStorage
+     持久化（key = hint 文本摘要，跨内核/面板切换稳定）。 */
+  .hintToggle{display:block;width:100%;text-align:left;background:none;border:none;
+    color:var(--dim);font:inherit;font-size:10px;cursor:pointer;padding:0;margin:0;
+    letter-spacing:.05em}
+  .hintToggle:hover{color:var(--cyan)}
+  .hintToggle:focus-visible{outline:1px solid var(--cyan);outline-offset:2px}
+  .hint .hintBody{display:none}
+  .hint.open .hintBody{display:block}
+  .hint.open .hintToggle{color:var(--cyan);margin-bottom:3px}
+  /* ---------- sec 级分区折叠（R48，README「后续方向」a2）----------
+     与 hint 折叠（R45）同模式：h3 变切换头（class 驱动显隐），展开态经
+     localStorage 持久化（qf.secs.state，key = sec id / h3 摘要）。
+     默认折叠：四个扫描面板 sec——R45 实测（1440×900，overflow 口径
+     scrollH−clientH）溢出大头正是区块结构：2D 687 / 3D 1403 / GP 813，
+     canvas 硬高占其中 820px。与门控正交：syncControls 按内核切 sec 的
+     style.display（整区显隐），本折叠切 sec 内部子元素，互不竞争。
+     扫描开始（GenericScanner.start → app.expandSecFor）自动展开所在
+     sec——用户点了「开始扫描」就应看到 canvas 与状态行。
+     特异度注意：规则须带 #panel 前缀——四个扫描 canvas 的 display:block
+     规则（ID 选择器 1,0,0）会压过裸 .sec.collapsed > *:not(h3)（0,1,1）
+     ⟹ 折叠态 canvas 仍显示（cdp48 首轮实证）。 */
+  #panel .sec.collapsed > *:not(h3){display:none}
+  .sec > h3{cursor:pointer;user-select:none;-webkit-user-select:none}
+  .sec > h3:focus-visible{outline:1px solid var(--cyan);outline-offset:2px}
+  .sec > h3::before{content:"▾ ";color:var(--dim);font-weight:400}
+  .sec.collapsed > h3::before{content:"▸ "}
+  /* R48：range flex item 默认 min-width:auto（Chrome ~129px 固有最小宽）
+     ⟹ label64+gap+range129+gap+output44 超出面板内容宽 236px ~31px，
+     面板被迫横向滚动（R43 起既有缺陷，R45 溢出台账只记了纵向）。 */
+  input[type=range]{min-width:0}
+  /* R48 a3：扫描 canvas 统一 width:100%（修复 paramScanCanvas/scanCanvas3/
+     slitScanCanvas 三个缺规则 ⟹ 420px attribute 宽在 210px 面板内容区横向
+     溢出、面板被迫横向滚动——R45 溢出台账只记了纵向，此项本轮补录）；
+     attribute 高 260/300 → 180（_plot 全部按 cv.width/height 自适应绘制，
+     内部分辨率 420×180 不变、显示高 210×180/420=90px，展开态每块省 40–60px）。 */
+  #scanCanvas,#paramScanCanvas,#scanCanvas3,#slitScanCanvas{width:100%;margin-top:6px;
+    border:1px solid var(--line);border-radius:8px;background:rgba(4,8,16,.4);display:block}
+  #scanStat{font-size:10px;color:var(--cyan);font-family:var(--mono);flex:1;line-height:1.45}
+  button:disabled{opacity:.4;cursor:default}
+  button:disabled:hover{background:rgba(255,255,255,.045);border-color:var(--line)}
+  /* ---------- 面板双向收起（R56，「试验场全屏」）----------
+     左列 #panel(上) + #desc(下)、右列 #hud(上) + #legend(下) 各为一组，
+     整组 transform 滑出屏幕——#gl 本就 position:fixed 全屏，滑出即露全场，
+     无需 resize/重绘（画布尺寸不变，只是不再被面板遮挡）。
+     边缘拉手 .qf-tab 常驻（z-index 11 压面板 10，只压边框+padding 6px，
+     不挡内容）；点击拉手或快捷键 [ / ] 切换；状态经 localStorage
+     qf.panels.state = {left,right}（true=展开，缺省/坏值默认全展开）。
+     滑出态 pointer-events:none ⟹ 画布交互全程不被残留命中区遮挡。 */
+  #panel,#desc,#hud,#legend{transition:transform .28s cubic-bezier(.4,0,.2,1),opacity .24s}
+  body.qf-hide-left #panel,body.qf-hide-left #desc{transform:translateX(calc(-100% - 24px));opacity:0;pointer-events:none}
+  body.qf-hide-right #hud,body.qf-hide-right #legend{transform:translateX(calc(100% + 24px));opacity:0;pointer-events:none}
+  .qf-tab{position:fixed;top:50%;transform:translateY(-50%);z-index:11;width:20px;height:60px;
+    padding:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);
+    font-size:14px;line-height:1;color:var(--dim);background:var(--panel);border:1px solid var(--line);
+    border-radius:0 10px 10px 0;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    cursor:pointer;user-select:none;-webkit-user-select:none;
+    box-shadow:0 4px 16px rgba(0,0,0,.4);transition:color .15s,border-color .15s}
+  #tabL{left:0}
+  #tabR{right:0;border-radius:10px 0 0 10px}
+  .qf-tab:hover{color:var(--cyan);border-color:rgba(103,232,249,.45)}
+  @media (max-width:1100px){#legend,#desc{display:none}}
+`;
+
+function injectStyles(){
+  if (document.getElementById("qf-styles")) return;
+  const st = document.createElement("style");
+  st.id = "qf-styles";
+  st.textContent = CSS;
+  document.head.appendChild(st);
+}
+
+/* ===== src/physics/hubbard.js ===== */
+/* ============================================================================
+ * hubbard.js — R73 二次量子化：一维格点费米-哈伯德（固定粒子数基，纯 CPU）
+ *
+ *   H = −t Σ_{i,σ} (c†_{iσ} c_{i+1,σ} + h.c.) + U Σ_i n_{i↑} n_{i↓}
+ *
+ * 【基与维度】自旋分部门：↑ 与 ↓ 各自固定粒子数 ⟹ 基 = C(L,N↑)·C(L,N↓)，
+ * 而非 2^(2L)。每格每自旋占据数 0/1 —— **同自旋两费米子不能同格点**是基构造
+ * 的结构性事实（不是相互作用）；U 只惩罚 ↑↓ 同格（双占）。这正是二次量子化
+ * 语言与 R72 实空间反对称化的对应：R72 的对角线恒零 = 这里的「同格 0/1」。
+ *
+ * 【Jordan–Wigner 符号】最近邻跃迁 c†_{i+1}c_i 的符号 = (−1)^{popcount(mask
+ * & ((1<<min(i,i+1))−1))}：沿格点次序把 c_i 移过左侧占据算符的相位。省略它
+ * 会得到「硬核玻色子」而非费米子（pot73 用 2 格点解析解与稠密对角化双重校验）。
+ *
+ * 【存储】跃迁表用 **CSR**（offsets+targets+signs，nnz≈dim×4~8）而非「每态固定
+ * 槽位」——后者要 4(L−1) 槽、L=10 时 11MB 且 matvec 满槽扫描；CSR 紧凑且循环
+ * 只走真实非零。
+ *
+ * 【积分器】
+ *   - 基态：Lanczos（全重正交、三对角 Jacobi），分帧驱动 `HbGsTask.step(n)`；
+ *     固定 (N↑,N↓) 扇区内的最低态。
+ *   - 实时：**Krylov 指数** exp(−iHdt)ψ（m 步 Lanczos + 三对角本征分解），
+ *     酉到机器精度（pot73 对照 Taylor 参考量化截断）。
+ *   - 电荷能隙：Δ=E(N↑+1,N↓)+E(N↑−1,N↓)−2E(N↑,N↓)（两次额外 Lanczos）。
+ *
+ * 【纠缠熵】半链切分：ρ_L 在 (k↑_L,k↓_L) 上**块对角** ⟹ 逐块 SVD（L=8 每块
+ * ≤36×36，L=10 ≤100×100），S=Σ_blocks −Σλlnλ。不做全 2^L 对角化（L=10 是
+ * 1024 维，全矩阵 Jacobi 不可行）；块分解精确，因粒子数守恒按块封闭。
+ *
+ * 【诚实限制】
+ *   1. 自旋ful 维度是 C(L,N↑)·C(L,N↓)：L=12 半满 924²=854k（matvec ~0.2s，
+ *      只适合离线），本页实际 L=8（4900）/L=10（63504）。README 里
+ *      「L=20/N=10 ⟹ 184756」是**单自旋**估计，不适用双自旋。
+ *   2. 开边界（跨边界绕行符号不在本轮）。
+ *   3. 无 μ 项（固定粒子数扇区）。
+ *   4. Krylov 截断 O(dt^{m+1})，pot73 与 Taylor 参考对账。
+ * ========================================================================== */
+
+/* ---------- 基构造 ---------- */
+function popcount(x){
+  x = x - ((x >> 1) & 0x55555555);
+  x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
+  x = (x + (x >> 4)) & 0x0f0f0f0f;
+  return (x * 0x01010101) >> 24;
+}
+/* 单自旋扇区：所有 popcount=N 的 L 位掩码（升序）+ 掩码→索引查找表 */
+function hbBasis(L, N){
+  const size = 1 << L;
+  const masks = [];
+  for (let m = 0; m < size; m++) if (popcount(m) === N) masks.push(m);
+  const index = new Int32Array(size).fill(-1);
+  masks.forEach((m, i) => { index[m] = i; });
+  return { L, N, dim: masks.length, masks: Int32Array.from(masks), index };
+}
+
+/* 双自旋扇区：CSR 跃迁表 + 对角 U 表（↑掩码 & ↓掩码 的 popcount） */
+function hbSector(L, Nup, Ndn){
+  const bu = hbBasis(L, Nup), bd = hbBasis(L, Ndn);
+  const du = bu.dim, dd = bd.dim, dim = du * dd;
+  const diagU = new Uint8Array(dim);
+  for (let a = 0; a < du; a++){
+    const mu = bu.masks[a];
+    for (let b = 0; b < dd; b++) diagU[a * dd + b] = popcount(mu & bd.masks[b]);
+  }
+  /* 每态跃迁（↑ 与 ↓）：先数再填（CSR 两遍） */
+  const hopOne = (mask, i, j) => {
+    const bi = 1 << i, bj = 1 << j;
+    if (!(mask & bj) || (mask & bi)) return null;
+    const lo = Math.min(i, j);
+    const sign = (popcount(mask & (lo ? (1 << lo) - 1 : 0)) % 2) ? -1 : 1;
+    return [mask ^ bi ^ bj, sign];
+  };
+  const offsets = new Int32Array(dim + 1);
+  const tmp = [];   /* [stateIdx, target, sign] */
+  for (let a = 0; a < du; a++) for (let b = 0; b < dd; b++){
+    const k = a * dd + b;
+    const mu = bu.masks[a], md = bd.masks[b];
+    for (let s = 0; s < L - 1; s++){
+      /* 每个键要**两个方向**：hopOne(mask,i,j) 实现 c†_i c_j（j 占、i 空），
+         只写单向会让 H 非厄米（R73 首版即此：2 格点解析解全错、Lanczos NaN）。 */
+      for (const [i, j] of [[s, s + 1], [s + 1, s]]){
+        const hu = hopOne(mu, i, j);
+        if (hu){ tmp.push([k, bu.index[hu[0]] * dd + b, hu[1]]); }
+        const hd = hopOne(md, i, j);
+        if (hd){ tmp.push([k, a * dd + bd.index[hd[0]], hd[1]]); }
+      }
+    }
+  }
+  const nnz = tmp.length;
+  const targets = new Int32Array(nnz), signs = new Int8Array(nnz);
+  for (const [k, tg, sg] of tmp){ offsets[k + 1]++; }
+  for (let k = 0; k < dim; k++) offsets[k + 1] += offsets[k];
+  const cursor = Int32Array.from(offsets.subarray(0, dim));
+  for (const [k, tg, sg] of tmp){ targets[cursor[k]] = tg; signs[cursor[k]] = sg; cursor[k]++; }
+  return { L, Nup, Ndn, du, dd, dim, bu, bd, diagU, offsets, targets, signs, nnz };
+}
+
+/* ---------- H·ψ（re/im 分离；H 实对称 ⟹ 两通道同一算子） ---------- */
+function hbMatvec(sec, re, im, outRe, outIm, t, U){
+  const { dim, offsets, targets, signs, diagU } = sec;
+  for (let k = 0; k < dim; k++){
+    const d = U * diagU[k];
+    let sr = d * re[k], si = d * im[k];
+    for (let p = offsets[k]; p < offsets[k + 1]; p++){
+      const c = -t * signs[p], tg = targets[p];
+      sr += c * re[tg]; si += c * im[tg];
+    }
+    outRe[k] = sr; outIm[k] = si;
+  }
+}
+function hbNorm(re, im){
+  let n = 0;
+  for (let k = 0; k < re.length; k++) n += re[k] * re[k] + im[k] * im[k];
+  return n;
+}
+function hbDot(ar, ai, br, bi){
+  let s = 0;
+  for (let k = 0; k < ar.length; k++) s += ar[k] * br[k] + ai[k] * bi[k];
+  return s;
+}
+function hbEnergy(sec, re, im, t, U){
+  const hr = new Float64Array(re.length), hi = new Float64Array(im.length);
+  hbMatvec(sec, re, im, hr, hi, t, U);
+  return hbDot(re, im, hr, hi);
+}
+
+/* ---------- 测量：逐格占据 / 双占 ---------- */
+function hbMeasure(sec, re, im){
+  const { L, bu, bd, dd } = sec;
+  const nU = new Float64Array(L), nD = new Float64Array(L), nT = new Float64Array(L);
+  let Dtot = 0;
+  for (let a = 0; a < bu.dim; a++){
+    const mu = bu.masks[a];
+    for (let b = 0; b < bd.dim; b++){
+      const k = a * dd + b;
+      const p = re[k] * re[k] + im[k] * im[k];
+      if (p < 1e-30) continue;
+      const md = bd.masks[b];
+      Dtot += p * popcount(mu & md);
+      for (let i = 0; i < L; i++){
+        if (mu & (1 << i)) nU[i] += p;
+        if (md & (1 << i)) nD[i] += p;
+      }
+    }
+  }
+  for (let i = 0; i < L; i++) nT[i] = nU[i] + nD[i];
+  return { nU, nD, nT, Dtot };
+}
+
+/* ---------- 实对称 Jacobi 对角化（循环法，标准旋转；返回本征值/本征向量） ----------
+   旋转公式：τ=(a_qq−a_pp)/(2a_pq)、t=sgn(τ)/(|τ|+√(1+τ²))、c=1/√(1+t²)、s=tc；
+   对 k≠p,q 更新行列并写回对称位置，然后**显式置零** a_pq（不置零则 off() 不收敛）。 */
+function jacobiEigen(Ain, maxSweep = 50){
+  const n = Ain.length;
+  const A = Ain.map(r => Float64Array.from(r));
+  const V = [];
+  for (let i = 0; i < n; i++){ const v = new Float64Array(n); v[i] = 1; V.push(v); }
+  const off = () => {
+    let s = 0;
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) s += A[i][j] * A[i][j];
+    return Math.sqrt(s);
+  };
+  for (let sweep = 0; sweep < maxSweep; sweep++){
+    if (off() < 1e-13) break;
+    for (let p = 0; p < n - 1; p++) for (let q = p + 1; q < n; q++){
+      const apq = A[p][q];
+      if (Math.abs(apq) < 1e-16) continue;
+      const tau = (A[q][q] - A[p][p]) / (2 * apq);
+      const tS = (tau >= 0 ? 1 : -1) / (Math.abs(tau) + Math.sqrt(1 + tau * tau));
+      const c = 1 / Math.sqrt(1 + tS * tS), s = tS * c;
+      for (let k = 0; k < n; k++){
+        if (k === p || k === q) continue;
+        const akp = A[k][p], akq = A[k][q];
+        A[k][p] = c * akp - s * akq; A[p][k] = A[k][p];
+        A[k][q] = s * akp + c * akq; A[q][k] = A[k][q];
+      }
+      A[p][p] -= tS * apq; A[q][q] += tS * apq;
+      A[p][q] = 0; A[q][p] = 0;
+      for (let k = 0; k < n; k++){
+        const vkp = V[k][p], vkq = V[k][q];
+        V[k][p] = c * vkp - s * vkq; V[k][q] = s * vkp + c * vkq;
+      }
+    }
+  }
+  return { val: Float64Array.from({ length: n }, (_, i) => A[i][i]), vec: V };
+}
+
+/* ---------- Lanczos 基态（分帧任务；全重正交） ---------- */
+class HbGsTask {
+  constructor(sec, t, U, opts = {}){
+    this.sec = sec; this.t = t; this.U = U; this.m = opts.m ?? 80;
+    const dim = sec.dim;
+    const re = new Float64Array(dim), im = new Float64Array(dim);
+    let s = opts.seed ?? 12345;
+    for (let k = 0; k < dim; k++){ s = (s * 16807) % 2147483647; re[k] = (s / 2147483647) - 0.5; }
+    const nn = Math.sqrt(hbNorm(re, im));
+    for (let k = 0; k < dim; k++) re[k] /= nn;
+    this.re = re; this.im = im;
+    this.V = []; this.alpha = []; this.beta = [];
+    this.iter = 0; this.done = false; this.energy = NaN;
+  }
+  step(n = 1){
+    const { sec, t, U, m } = this;
+    const dim = sec.dim;
+    for (let it = 0; it < n && !this.done; it++){
+      const vr = this.iter === 0 ? Float64Array.from(this.re) : this._nextR;
+      const vi = this.iter === 0 ? Float64Array.from(this.im) : this._nextI;
+      this.V.push([vr, vi]);
+      /* w 必须**每步新分配**：若复用同一个缓冲，下一轮的 matvec 输出会覆盖
+         上一轮存下的基向量（别名），多步调用时 beta 爆炸成 1e14/NaN——逐步
+         调用因每次新建缓冲而掩盖（R73 首版即此）。 */
+      const wR = new Float64Array(dim), wI = new Float64Array(dim);
+      hbMatvec(sec, vr, vi, wR, wI, t, U);
+      const a = hbDot(vr, vi, wR, wI);
+      this.alpha.push(a);
+      const prev = this.V.length > 1 ? this.V[this.V.length - 2] : null;
+      const bprev = this.beta.length ? this.beta[this.beta.length - 1] : 0;
+      for (let k = 0; k < dim; k++){
+        wR[k] -= a * vr[k]; wI[k] -= a * vi[k];
+        if (prev){ wR[k] -= bprev * prev[0][k]; wI[k] -= bprev * prev[1][k]; }
+      }
+      /* 两遍 Gram–Schmidt（Lanczos 基失正交通常是小规模 ED 的头号精度杀手） */
+      for (let pass = 0; pass < 2; pass++){
+        for (const [vjR, vjI] of this.V){
+          const c = hbDot(vjR, vjI, wR, wI);
+          if (c === 0) continue;
+          for (let k = 0; k < dim; k++){ wR[k] -= c * vjR[k]; wI[k] -= c * vjI[k]; }
+        }
+      }
+      const nb = Math.sqrt(hbNorm(wR, wI));
+      this.beta.push(nb);
+      this.iter++;
+      if (nb < 1e-12 || this.iter >= m){
+        this.done = true;
+        this._extract();
+      } else {
+        for (let k = 0; k < dim; k++){ wR[k] /= nb; wI[k] /= nb; }
+        this._nextR = wR; this._nextI = wI;
+      }
+    }
+    return { iter: this.iter, done: this.done, energy: this.energy };
+  }
+  _extract(){
+    const m = this.alpha.length;
+    const T = [];
+    for (let i = 0; i < m; i++){ T.push(new Float64Array(m)); T[i][i] = this.alpha[i]; }
+    for (let i = 0; i + 1 < m; i++){ T[i][i + 1] = this.beta[i]; T[i + 1][i] = this.beta[i]; }
+    const { val, vec } = jacobiEigen(T, 40);
+    let imin = 0;
+    for (let i = 1; i < m; i++) if (val[i] < val[imin]) imin = i;
+    this.energy = val[imin];
+    const dim = this.sec.dim;
+    const re = new Float64Array(dim), im = new Float64Array(dim);
+    for (let j = 0; j < m; j++){
+      const c = vec[j][imin];
+      if (c === 0) continue;
+      const [vjR, vjI] = this.V[j];
+      for (let k = 0; k < dim; k++){ re[k] += c * vjR[k]; im[k] += c * vjI[k]; }
+    }
+    const nn = Math.sqrt(hbNorm(re, im));
+    for (let k = 0; k < dim; k++){ re[k] /= nn; im[k] /= nn; }
+    this.re = re; this.im = im;
+  }
+}
+
+/* ---------- Krylov 指数：exp(−iH·dt)ψ（m 步 Lanczos + 三对角本征分解） ---------- */
+function hbKrylovExp(sec, re, im, t, U, dt, m = 12){
+  const dim = sec.dim;
+  const nrm = Math.sqrt(hbNorm(re, im));
+  if (nrm < 1e-300) return { re: Float64Array.from(re), im: Float64Array.from(im) };
+  let curR = Float64Array.from(re, v => v / nrm), curI = Float64Array.from(im, v => v / nrm);
+  const Vs = [], Ws = [], alpha = [], beta = [];
+  const tmpR = new Float64Array(dim), tmpI = new Float64Array(dim);
+  let steps = 0;
+  for (let j = 0; j < m; j++){
+    Vs.push(curR); Ws.push(curI);
+    hbMatvec(sec, curR, curI, tmpR, tmpI, t, U);
+    const a = hbDot(curR, curI, tmpR, tmpI);
+    alpha.push(a);
+    const prevR = j > 0 ? Vs[j - 1] : null, prevI = j > 0 ? Ws[j - 1] : null;
+    const bprev = beta.length ? beta[beta.length - 1] : 0;
+    for (let k = 0; k < dim; k++){
+      tmpR[k] -= a * curR[k]; tmpI[k] -= a * curI[k];
+      if (prevR){ tmpR[k] -= bprev * prevR[k]; tmpI[k] -= bprev * prevI[k]; }
+    }
+    const nb = Math.sqrt(hbNorm(tmpR, tmpI));
+    steps = j + 1;
+    if (nb < 1e-13) break;                 /* 不变子空间 */
+    beta.push(nb);
+    curR = new Float64Array(dim); curI = new Float64Array(dim);
+    for (let k = 0; k < dim; k++){ curR[k] = tmpR[k] / nb; curI[k] = tmpI[k] / nb; }
+  }
+  const T = [];
+  for (let i = 0; i < steps; i++){ T.push(new Float64Array(steps)); T[i][i] = alpha[i]; }
+  for (let i = 0; i + 1 < steps; i++){ T[i][i + 1] = beta[i]; T[i + 1][i] = beta[i]; }
+  const { val, vec } = jacobiEigen(T, 40);
+  /* c_j = Σ_k V[j][k]·V[0][k]·e^{−iλ_k dt}：V[0][k]=⟨u_k|v_0⟩ 是初态在第 k 个
+     本征矢上的投影——漏掉它系数不构成正交变换，范数会指数爆炸（R73 首版
+     50 步涨到 1e53，Taylor 对照 maxdiff 2.3）。 */
+  const cr = new Float64Array(steps), ci = new Float64Array(steps);
+  for (let k = 0; k < steps; k++){
+    const ph = -val[k] * dt, cp = Math.cos(ph), sp = Math.sin(ph);
+    const w0 = vec[0][k];
+    for (let j = 0; j < steps; j++){ const vjk = vec[j][k] * w0; cr[j] += vjk * cp; ci[j] += vjk * sp; }
+  }
+  const outR = new Float64Array(dim), outI = new Float64Array(dim);
+  for (let j = 0; j < steps; j++){
+    const wr = nrm * cr[j], wi = nrm * ci[j];
+    const vr = Vs[j], vi = Ws[j];
+    for (let k = 0; k < dim; k++){
+      outR[k] += wr * vr[k] - wi * vi[k];
+      outI[k] += wr * vi[k] + wi * vr[k];
+    }
+  }
+  return { re: outR, im: outI };
+}
+
+/* ---------- 纠缠熵（半链，块对角 SVD；L 偶数） ----------
+   对 (k↑_L,k↓_L) 每个块：A[row=(lU,lD)][col=(rU,rD)]=ψ；
+   ρ=A A† → 实对称嵌入 [[Re,−Im],[Im,Re]]（本征值各二重）→ Jacobi；
+   取前 nL 个本征值（重复项自然成对，前 nL 即唯一谱）⟹ Σλ=1。 */
+function hbEntropy(sec, re, im){
+  const { L, bu, bd, dd } = sec;
+  const half = L >> 1, lowMask = (1 << half) - 1;
+  const blocks = new Map();
+  for (let a = 0; a < bu.dim; a++){
+    const mu = bu.masks[a], ml = mu & lowMask, mr = mu >> half;
+    for (let b = 0; b < bd.dim; b++){
+      const k = a * dd + b;
+      const p = re[k] * re[k] + im[k] * im[k];
+      if (p < 1e-28) continue;
+      const md = bd.masks[b], mdl = md & lowMask, mdr = md >> half;
+      const key = popcount(ml) + ',' + popcount(mdl);
+      let blk = blocks.get(key);
+      if (!blk){ blk = { lu: new Map(), ld: new Map(), ru: new Map(), rd: new Map(), entries: [] }; blocks.set(key, blk); }
+      if (!blk.lu.has(ml)) blk.lu.set(ml, blk.lu.size);
+      if (!blk.ld.has(mdl)) blk.ld.set(mdl, blk.ld.size);
+      if (!blk.ru.has(mr)) blk.ru.set(mr, blk.ru.size);
+      if (!blk.rd.has(mdr)) blk.rd.set(mdr, blk.rd.size);
+      blk.entries.push([ml, mdl, mr, mdr, re[k], im[k]]);
+    }
+  }
+  let S = 0;
+  let spectrum = [];
+  for (const blk of blocks.values()){
+    const Lu = blk.lu.size, Ld = blk.ld.size, Ru = blk.ru.size, Rd = blk.rd.size;
+    const nL = Lu * Ld, nR = Ru * Rd;
+    /* 只在非零行/列上建稠密块（nL,nR ≤ C(L/2,·)²，L=10 时 ≤100） */
+    const Ar = Array.from({ length: nL }, () => new Float64Array(nR));
+    const Ai = Array.from({ length: nL }, () => new Float64Array(nR));
+    for (const [ml, mdl, mr, mdr, ar, ai] of blk.entries){
+      Ar[blk.lu.get(ml) * Ld + blk.ld.get(mdl)][blk.ru.get(mr) * Rd + blk.rd.get(mdr)] = ar;
+      Ai[blk.lu.get(ml) * Ld + blk.ld.get(mdl)][blk.ru.get(mr) * Rd + blk.rd.get(mdr)] = ai;
+    }
+    const n2 = 2 * nL;
+    const M = Array.from({ length: n2 }, () => new Float64Array(n2));
+    for (let i = 0; i < nL; i++) for (let j = 0; j < nL; j++){
+      let rr = 0, ri = 0;
+      for (let c = 0; c < nR; c++){
+        rr += Ar[i][c] * Ar[j][c] + Ai[i][c] * Ai[j][c];
+        ri += Ai[i][c] * Ar[j][c] - Ar[i][c] * Ai[j][c];
+      }
+      M[i][j] = rr; M[i][j + nL] = -ri; M[i + nL][j] = ri; M[i + nL][j + nL] = rr;
+    }
+    const { val } = jacobiEigen(M, 40);
+    /* 实嵌入 [[Re,−Im],[Im,Re]] 的本征值 = ρ 的每个本征值**各二重**（不是折半！
+       首版 val/2 再取前 nL：乘积态会得 Σλ=0.5、S=0.347 而非 0）。排序后隔一取
+       即得物理谱；物理简并（自旋 SU(2)）会给出 4 重，隔一后仍恰为 2 重 ✓。 */
+    const vals = Array.from(val).sort((a, b) => b - a);
+    for (let i = 0; i < vals.length; i += 2){
+      const lam = vals[i];
+      if (lam > 1e-13){ S -= lam * Math.log(lam); spectrum.push(lam); }
+    }
+  }
+  spectrum.sort((a, b) => b - a);
+  return { S, spectrum: spectrum.slice(0, 12), sum: spectrum.reduce((a, b) => a + b, 0) };
+}
+
+/* ---------- 关联矩阵 C_ij = Σ_σ ⟨c†_{iσ} c_{jσ}⟩（复；对角 = n_i） ---------- */
+function hbCorrelation(sec, re, im){
+  const { L, bu, bd, dd } = sec;
+  const Cr = Array.from({ length: L }, () => new Float64Array(L));
+  const Ci = Array.from({ length: L }, () => new Float64Array(L));
+  const hopOne = (mask, i, j) => {
+    const bi = 1 << i, bj = 1 << j;
+    if (!(mask & bj) || (mask & bi)) return null;
+    const lo = Math.min(i, j);
+    const sign = (popcount(mask & (lo ? (1 << lo) - 1 : 0)) % 2) ? -1 : 1;
+    return [mask ^ bi ^ bj, sign];
+  };
+  for (let a = 0; a < bu.dim; a++){
+    const mu = bu.masks[a];
+    for (let b = 0; b < bd.dim; b++){
+      const k = a * dd + b;
+      const pr = re[k], pi = im[k], p = pr * pr + pi * pi;
+      if (p < 1e-30) continue;
+      const md = bd.masks[b];
+      for (let i = 0; i < L; i++){
+        if (mu & (1 << i)) Cr[i][i] += p;
+        if (md & (1 << i)) Cr[i][i] += p;
+      }
+      for (let i = 0; i < L; i++) for (let j = 0; j < L; j++){
+        if (i === j) continue;
+        const hu = hopOne(mu, i, j);
+        if (hu){
+          const k2 = bu.index[hu[0]] * dd + b;
+          /* ⟨n|c†_i c_j|m⟩ = sign ⟹ 贡献 ψ*_n ψ_m·sign */
+          const sg = hu[1] * 1;
+          Cr[i][j] += (pr * re[k2] + pi * im[k2]) * sg;
+          Ci[i][j] += (pr * im[k2] - pi * re[k2]) * sg;
+        }
+        const hd = hopOne(md, i, j);
+        if (hd){
+          const k2 = a * dd + bd.index[hd[0]];
+          const sg = hd[1] * 1;
+          Cr[i][j] += (pr * re[k2] + pi * im[k2]) * sg;
+          Ci[i][j] += (pr * im[k2] - pi * re[k2]) * sg;
+        }
+      }
+    }
+  }
+  return { Cr, Ci };
+}
+
+/* ---------- 初态 ---------- */
+/* 指定格点集合上的单一乘积态（左半链填充等） */
+function hbInitProduct(sec, sitesU, sitesD){
+  const { bu, bd } = sec;
+  let mu = 0, md = 0;
+  for (const i of sitesU) mu |= 1 << i;
+  for (const i of sitesD) md |= 1 << i;
+  const a = bu.index[mu], b = bd.index[md];
+  const re = new Float64Array(sec.dim), im = new Float64Array(sec.dim);
+  if (a < 0 || b < 0) return { re, im, ok: false };
+  re[a * sec.dd + b] = 1;
+  return { re, im, ok: true };
+}
+
+/* ---------- 预设 ---------- */
+const HB_PRESETS = {
+  mott: {
+    name: '莫特绝缘体',
+    text: '半满（N↑=N↓=L/2）基态：U=0 是金属（双占 D>0、占据均匀）；U≫t 时电荷涨落冻结、每格恰好一个电子（D→0）成为**莫特绝缘体**——不是能带填充，而是相互作用把电荷冻住。拖 U/t 看 D 与占据剖面；「算能隙」额外解 (N↑±1,N↓) 两个扇区给电荷能隙 Δ=E(+1)+E(−1)−2E(0)。**同自旋两费米子不能同格**是基构造的结构性事实（每格每自旋 0/1），U 只惩罚 ↑↓ 同格。',
+  },
+  quench: {
+    name: '猝变纠缠增长',
+    text: '初态 = **奈尔态**（↑ 偶格、↓ 奇格；乘积态 ⟹ S(0)=0，无相干项 ⟹ ⟨H⟩=0），t=0 起按当前 U 自由演化：局域相互作用把定域态迅速「弄脏」，半链纠缠熵 S(t) 从 0 **近似线性增长**、在 t~L/2 后饱和——纠缠不是瞬间建立的，而是由准空穴对沿链传播逐点生成（面板给早窗 t≤L/3 的拟合斜率；1D 可积/非可积的对数 vs 线性之争本轮只作定性展示，斜率随 U/t 变化）。**注意**：用 U=0 基态当初态时 S(0)≈1.5 且几乎立即饱和（小系统有效维度耗尽），演示不出线性段——这是换奈尔态的原因。',
+  },
+};
+
+/* ---------- 最近邻键关联 J_i = Σ_σ Re⟨c†_{i+1} c_i⟩（L−1 个；动能分布） ----------
+   只算键（而非全 L² 矩阵）：成本 dim×(L−1)×2，L=10 半满 63504 维 ~30–50ms，
+   可每 20 帧刷新；全关联矩阵是 O(dim·L²)，L=10 会到 0.3s，本页不提供（诚实标注）。 */
+function hbBondCorr(sec, re, im, t){
+  const { L, bu, bd, dd } = sec;
+  const out = new Float64Array(Math.max(0, L - 1));
+  const hopOne = (mask, i, j) => {
+    const bi = 1 << i, bj = 1 << j;
+    if (!(mask & bj) || (mask & bi)) return null;
+    const lo = Math.min(i, j);
+    const sign = (popcount(mask & (lo ? (1 << lo) - 1 : 0)) % 2) ? -1 : 1;
+    return [mask ^ bi ^ bj, sign];
+  };
+  for (let a = 0; a < bu.dim; a++){
+    const mu = bu.masks[a];
+    for (let b = 0; b < bd.dim; b++){
+      const k = a * dd + b;
+      const pr = re[k], pi = im[k], p = pr * pr + pi * pi;
+      if (p < 1e-30) continue;
+      const md = bd.masks[b];
+      for (let s = 0; s < L - 1; s++){
+        const hu = hopOne(mu, s, s + 1);
+        if (hu){
+          const k2 = bu.index[hu[0]] * dd + b;
+          out[s] += (pr * re[k2] + pi * im[k2]) * hu[1];
+        }
+        const hd = hopOne(md, s, s + 1);
+        if (hd){
+          const k2 = a * dd + bd.index[hd[0]];
+          out[s] += (pr * re[k2] + pi * im[k2]) * hd[1];
+        }
+      }
+    }
+  }
+  /* 关联 J 的符号约定：⟨c†_{i+1}c_i⟩ 的实部；乘 −t 即该键的动能贡献 */
+  return out;
+}
+
+/* ===== src/hubbard.js ===== */
+/* ============================================================================
+ * hubbard.js（页面）— R73 格点费米-哈伯德：二次量子化 / 莫特 / 纠缠熵
+ *
+ * 纯 CPU、纯 2D canvas（无 WebGL）：态是固定粒子数基上的复向量，视图是
+ * 「格点阶梯」（每格 ↑/↓ 占据 + 双占点 + 键关联）与 S(t) 曲线。
+ * 物理全部在 src/physics/hubbard.js；本文件只管 DOM/循环/绘制。
+ *
+ * 与主页的关系：共用 styles.js 的 :root/reset；加载逻辑层不做 GPU 事。
+ * 调试句柄 window.__hb（cdp73 用）：measures/entropy/step/setU/setL/solveNow/
+ * gapNow/history —— 全部确定性接口（不依赖 rAF 时序）。
+ * ========================================================================== */
+
+const HB_CSS = `
+  #hbTop{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;
+    padding:9px 18px;z-index:10;white-space:nowrap}
+  #hbTop .logo{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.12em;
+    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
+  #hbTop .eq{font-family:var(--mono);font-size:12px;color:var(--dim)}
+  #hbTop .eq b{color:var(--cyan);font-weight:600}
+  #hbTop a{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
+    border:1px solid var(--line);border-radius:6px;padding:3px 8px;transition:all .15s}
+  #hbTop a:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
+  #hbPanel{top:74px;left:14px;width:224px;padding:13px;z-index:10;max-height:calc(100vh - 250px);overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  #hbHud{top:74px;right:14px;padding:11px 13px;z-index:10;min-width:206px;font-family:var(--mono)}
+  #hbHud .hrow{display:flex;justify-content:space-between;gap:12px;font-size:11.5px;padding:2.5px 0}
+  #hbHud .hrow span:first-child{color:var(--dim)}
+  #hbHud .hrow span:last-child{color:var(--txt)}
+  #hbHud hr{border:none;border-top:1px solid var(--line);margin:6px 0}
+  #hbStage{position:fixed;left:50%;top:52%;transform:translate(-50%,-50%);z-index:5;
+    display:flex;flex-direction:column;align-items:center;gap:8px;--w:min(78vw,760px)}
+  #hbLadder{width:var(--w);height:300px;border:1px solid var(--line);border-radius:10px;background:rgba(4,8,16,.5);display:block}
+  #hbChart{width:var(--w);height:170px;border:1px solid var(--line);border-radius:10px;background:rgba(4,8,16,.5);display:block}
+  #hbHint{left:14px;bottom:52px;z-index:10;padding:10px 14px;max-width:330px;font-size:11.5px;
+    color:var(--dim);line-height:1.65;max-height:130px;overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  #hbHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:12px}
+  #hbToast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:20;pointer-events:none;
+    font-family:var(--mono);font-size:13px;color:var(--cyan);letter-spacing:.16em;opacity:0;transition:opacity .4s;
+    text-shadow:0 0 18px rgba(103,232,249,.8);text-align:center;white-space:pre-line}
+  #hbDiag{position:fixed;left:-9999px}
+  @media (max-width:1100px){#hbStage{--w:min(92vw,640px)}#hbHint{display:none}}
+`;
+
+const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
+
+class HubbardApp {
+  constructor(container, options = {}){
+    this.container = typeof container === 'string' ? document.querySelector(container) : (container || document.body);
+    const q = new URLSearchParams(location.search);
+    const num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
+    this.state = {
+      preset: q.get('preset') || 'mott',
+      L: Math.round(num('L', 8)), U: num('U', 4),
+      paused: q.get('paused') === '1', dt: num('dt', 0.05), spf: Math.round(num('spf', 2)),
+      t: 0, frames: 0,
+    };
+    if (!HB_PRESETS[this.state.preset]) this.state.preset = 'mott';
+    this.sec = null; this.re = null; this.im = null;
+    this.job = null; this.gapJob = null; this.gap = null;
+    this.hist = []; this.S = 0; this.bsig = null; this.msg = '';
+    this._listeners = []; this._fps = 0; this._fpsFrames = 0; this._lastFpsT = performance.now();
+    this._onError = e => { const d = this.q('#hbDiag'); if (d) d.textContent = 'ERR ' + e.message; document.title = 'ERR ' + e.message; };
+    window.addEventListener('error', this._onError);
+    this.frame = this.frame.bind(this);
+  }
+
+  q(s){ return this.container.querySelector(s); }
+  on(t, type, fn){ t.addEventListener(type, fn); this._listeners.push([t, type, fn]); }
+  toast(m, ms = 2000){
+    const el = this.q('#hbToast'); if (!el) return;
+    el.textContent = m; el.style.opacity = 1;
+    clearTimeout(this._tt); this._tt = setTimeout(() => { el.style.opacity = 0; }, ms);
+  }
+
+  mount(){
+    injectStyles();
+    const st = document.createElement('style');
+    st.id = 'hb-styles'; st.textContent = HB_CSS;
+    document.head.appendChild(st);
+    this.buildDOM();
+    this.bindUI();
+    this.resize();
+    this.initPreset();
+    requestAnimationFrame(this.frame);
+    window.__hb = this.debugHandle();
+    return this;
+  }
+
+  buildDOM(){
+    this.container.innerHTML = `
+<div id="hbTop" class="panel">
+  <div class="logo">哈伯德工场 · HUBBARD</div>
+  <div class="eq"><b>H</b> = −<b>t</b>Σ(c†<sub>i</sub>c<sub>i+1</sub>+h.c.) + <b>U</b>Σ n<sub>i↑</sub>n<sub>i↓</sub></div>
+  <a href="./index.html">← 单粒子主页</a>
+  <a href="./two-body.html">双粒子页</a>
+</div>
+<div id="hbPanel" class="panel">
+  <div class="sec"><h3>预设</h3><div class="grid2" id="hbPresets">
+    ${Object.keys(HB_PRESETS).map(k => '<button data-preset="' + k + '">' + HB_PRESETS[k].name + '</button>').join('')}
+  </div></div>
+  <div class="sec"><h3>格点</h3><div class="grid2">
+    <button data-L="8" class="on">L = 8</button><button data-L="10">L = 10</button>
+  </div></div>
+  <div class="sec"><h3>参数</h3>
+    <div class="row"><label>U / t</label><input type="range" id="rU" min="0" max="8" step="0.25" value="4"><output id="oU">4.00</output></div>
+    <div class="row"><label>半链熵</label><span id="hbStat" style="font-size:10px;color:var(--cyan);font-family:var(--mono)">—</span></div>
+  </div>
+  <div class="sec"><h3>操作</h3><div class="grid2">
+    <button id="hbPause">暂停</button><button id="hbStep">单步</button>
+    <button id="hbReset">重置</button><button id="hbGap">算能隙</button>
+  </div></div>
+</div>
+<div id="hbHud" class="panel">
+  <div class="hrow"><span>维度 C(L,N↑)C(L,N↓)</span><span id="hDim">—</span></div>
+  <div class="hrow"><span>E / t</span><span id="hE">—</span></div>
+  <div class="hrow"><span>双占 D = Σ⟨n↑n↓⟩</span><span id="hD">—</span></div>
+  <div class="hrow"><span>半链熵 S</span><span id="hS">—</span></div>
+  <div class="hrow"><span>‖ψ‖</span><span id="hNorm">—</span></div>
+  <hr>
+  <div class="hrow"><span>U / t</span><span id="hU">—</span></div>
+  <div class="hrow"><span>t / 帧</span><span id="hT">—</span></div>
+  <div class="hrow"><span>电荷能隙 Δ</span><span id="hGap">—</span></div>
+  <div class="hrow"><span>早窗斜率 dS/dt</span><span id="hSlope">—</span></div>
+  <div class="hrow"><span>fps</span><span id="hFps">—</span></div>
+</div>
+<div id="hbStage">
+  <canvas id="hbLadder"></canvas>
+  <canvas id="hbChart"></canvas>
+</div>
+<div id="hbHint" class="panel"><b></b><span></span></div>
+<div id="hbToast"></div>
+<div id="hbDiag"></div>`;
+    this.container.querySelectorAll('[data-preset]').forEach(b =>
+      this.on(b, 'click', () => this.setPreset(b.dataset.preset)));
+    this.container.querySelectorAll('[data-L]').forEach(b =>
+      this.on(b, 'click', () => this.setL(parseInt(b.dataset.L, 10))));
+  }
+
+  bindUI(){
+    this.on(this.q('#rU'), 'input', () => {
+      this.state.U = parseFloat(this.q('#rU').value);
+      this.q('#oU').textContent = this.state.U.toFixed(2);
+      this.q('#hU').textContent = this.state.U.toFixed(2);
+      if (this.state.preset === 'mott') this.scheduleSolve();
+    });
+    this.on(this.q('#hbPause'), 'click', () => this.togglePause());
+    this.on(this.q('#hbStep'), 'click', () => this.stepFrames(1));
+    this.on(this.q('#hbReset'), 'click', () => this.initPreset());
+    this.on(this.q('#hbGap'), 'click', () => this.startGap());
+    this.on(window, 'resize', () => { this.resize(); this.draw(); });
+  }
+
+  /* ---------- 预设初始化 ---------- */
+  initPreset(){
+    const { L, preset, U } = this.state;
+    this.sec = hbSector(L, L / 2, L / 2);
+    this.hist = []; this.gap = null; this.state.t = 0; this.state.frames = 0;
+    this.q('#hGap').textContent = '—';
+    this.q('#hSlope').textContent = '—';
+    this.syncPanel();
+    if (preset === 'mott'){
+      this.startSolve();
+    } else {
+      /* 猝变：奈尔态（↑偶、↓奇）S(0)=0，随 U 自由演化 */
+      const even = [], odd = [];
+      for (let i = 0; i < L; i++) (i % 2 === 0 ? even : odd).push(i);
+      const w = hbInitProduct(this.sec, even, odd);
+      this.re = w.re; this.im = w.im;
+      this.job = null;
+      this.measureAll(true);
+      this.q('#hbPause').textContent = this.state.paused ? '继续' : '暂停';
+    }
+    this.draw();
+  }
+
+  startSolve(){
+    this.state.paused = true;
+    this.q('#hbPause').textContent = this.state.paused ? '继续' : '暂停';
+    this.msg = '基态求解中…';
+    this.job = { task: new HbGsTask(this.sec, 1, this.state.U, { m: this.sec.dim > 10000 ? 90 : 140 }), kind: 'gs' };
+  }
+  scheduleSolve(){
+    clearTimeout(this._solveTimer);
+    this._solveTimer = setTimeout(() => this.startSolve(), 260);
+  }
+  startGap(){
+    if (this.gapJob || !this.re) return;
+    const L = this.state.L, U = this.state.U, N = L / 2;
+    this.gapJob = {
+      phase: 0, U,
+      ep: new HbGsTask(hbSector(L, N + 1, N), 1, U, { m: 120 }),
+      em: null,
+    };
+    this.toast('算能隙：解 (N+1,N) 扇区…', 1200);
+  }
+  advanceJobs(){
+    /* 基态求解：每帧 6 步（L=10 半满 matvec ~2.4ms ⟹ ~15ms/帧） */
+    if (this.job){
+      const r = this.job.task.step(6);
+      if (r.done){
+        this.re = this.job.task.re; this.im = this.job.task.im;
+        this.E = this.job.task.energy;
+        this.job = null;
+        this.msg = '';
+        this.measureAll(true);
+        this.state.paused = false;
+        this.q('#hbPause').textContent = '暂停';
+      }
+    }
+    if (this.gapJob){
+      const g = this.gapJob;
+      if (g.phase === 0){
+        const r = g.ep.step(6);
+        if (r.done){
+          g.phase = 1;
+          g.em = new HbGsTask(hbSector(this.state.L, this.state.L / 2 - 1, this.state.L / 2), 1, g.U, { m: 120 });
+          this.toast('算能隙：解 (N−1,N) 扇区…', 1200);
+        }
+      } else if (g.phase === 1){
+        const r = g.em.step(6);
+        if (r.done){
+          const e0 = this.E !== undefined ? this.E : hbEnergy(this.sec, this.re, this.im, 1, g.U);
+          this.gap = g.ep.energy + g.em.energy - 2 * e0;
+          this.q('#hGap').textContent = nf(this.gap, 4);
+          this.toast('Δ = ' + nf(this.gap, 4) + ' t', 2000);
+          this.gapJob = null;
+        }
+      }
+    }
+  }
+
+  /* ---------- 演化 ---------- */
+  evolveFrame(){
+    const { dt, spf } = this.state;
+    for (let i = 0; i < spf; i++){
+      const o = hbKrylovExp(this.sec, this.re, this.im, 1, this.state.U, dt, 12);
+      this.re = o.re; this.im = o.im;
+      this.state.t += dt;
+    }
+    this.state.frames++;
+  }
+  stepFrames(n){
+    if (this.state.preset !== 'quench') return;
+    /* 每 2 步测一次（与实时循环同频）：只测末点会让 S(t) 曲线历史稀疏到两点 */
+    for (let i = 0; i < n; i++){
+      this.evolveFrame();
+      if (i % 2 === 1) this.measureAll(false);
+    }
+    this.measureAll(true);
+    this.draw();
+  }
+  measureAll(force){
+    if (!this.re) return;
+    const m = hbMeasure(this.sec, this.re, this.im);
+    this.m = m;
+    this.E = hbEnergy(this.sec, this.re, this.im, 1, this.state.U);
+    const ent = hbEntropy(this.sec, this.re, this.im);
+    this.S = ent.S;
+    if (this.state.preset === 'quench'){
+      if (!this.hist.length || this.state.t - this.hist[this.hist.length - 1][0] > 1e-9)
+        this.hist.push([this.state.t, ent.S]);
+      if (this.hist.length > 4000) this.hist.shift();
+    } else {
+      this.hist = [[0, ent.S], [1, ent.S]];
+    }
+    this.bsig = hbBondCorr(this.sec, this.re, this.im, 1);
+    /* HUD */
+    this.q('#hDim').textContent = String(this.sec.dim);
+    this.q('#hE').textContent = nf(this.E, 5);
+    this.q('#hD').textContent = nf(m.Dtot, 4);
+    this.q('#hS').textContent = nf(ent.S, 4);
+    this.q('#hNorm').textContent = nf(hbNorm(this.re, this.im), 8);
+    this.q('#hT').textContent = nf(this.state.t, 2) + ' / ' + this.state.frames;
+    this.q('#hbStat').textContent = 'S=' + nf(ent.S, 3) + ' · D=' + nf(m.Dtot, 2);
+    /* 早窗斜率（t ≤ L/3 的线性拟合，quench 才显示） */
+    if (this.state.preset === 'quench'){
+      const win = this.hist.filter(p => p[0] <= this.state.L / 3);
+      if (win.length > 3){
+        const xs = win.map(p => p[0]), ys = win.map(p => p[1]);
+        const mx = xs.reduce((a, b) => a + b, 0) / xs.length, my = ys.reduce((a, b) => a + b, 0) / ys.length;
+        let sxy = 0, sxx = 0;
+        for (let i = 0; i < xs.length; i++){ sxy += (xs[i] - mx) * (ys[i] - my); sxx += (xs[i] - mx) ** 2; }
+        this.slope = sxx > 0 ? sxy / sxx : 0;
+        this.q('#hSlope').textContent = nf(this.slope, 3);
+      }
+    }
+    void force;
+  }
+
+  /* ---------- 绘制 ---------- */
+  resize(){
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    for (const id of ['#hbLadder', '#hbChart']){
+      const c = this.q(id), w = c.clientWidth || 640, h = c.clientHeight || (id === '#hbLadder' ? 300 : 170);
+      c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
+    }
+  }
+  draw(){
+    this.drawLadder();
+    this.drawChart();
+  }
+  drawLadder(){
+    const cv = this.q('#hbLadder'), ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height, dpr = W / (cv.clientWidth || W);
+    ctx.clearRect(0, 0, W, H);
+    if (!this.m) return;
+    const L = this.state.L, m = this.m;
+    const pad = 46 * dpr, top = 34 * dpr, botH = 76 * dpr;
+    const innerW = W - 2 * pad, stepX = innerW / (L - 1);
+    const maxBar = H - top - botH;
+    const xOf = i => pad + i * stepX;
+    /* 基线 */
+    ctx.strokeStyle = 'rgba(120,160,220,.25)'; ctx.lineWidth = 1 * dpr;
+    ctx.beginPath(); ctx.moveTo(pad - 20 * dpr, H - botH); ctx.lineTo(W - pad + 20 * dpr, H - botH); ctx.stroke();
+    /* 键关联条（J_i，正青负琥珀，中点绘制） */
+    if (this.bsig){
+      const maxJ = Math.max(1e-6, ...Array.from(this.bsig, Math.abs));
+      for (let s = 0; s < L - 1; s++){
+        const j = this.bsig[s], mx = (xOf(s) + xOf(s + 1)) / 2;
+        const hgt = Math.abs(j) / maxJ * 26 * dpr;
+        ctx.fillStyle = j >= 0 ? 'rgba(103,232,249,.55)' : 'rgba(251,191,36,.6)';
+        ctx.fillRect(mx - 3 * dpr, H - botH + 10 * dpr - (j >= 0 ? hgt : 0), 6 * dpr, hgt);
+      }
+      ctx.fillStyle = 'rgba(154,167,189,.9)'; ctx.font = `${9 * dpr}px ui-monospace,monospace`;
+      ctx.fillText('bond J (cyan + / amber −)', pad, H - botH + 52 * dpr);
+    }
+    /* 每格 ↑/↓ 占据柱 + 双占点 */
+    for (let i = 0; i < L; i++){
+      const x = xOf(i), nu = m.nU[i], nd = m.nD[i];
+      const barW = Math.max(5 * dpr, stepX * 0.28);
+      ctx.fillStyle = 'rgba(103,232,249,.75)';
+      ctx.fillRect(x - barW - 1 * dpr, H - botH - nu * maxBar, barW, nu * maxBar);
+      ctx.fillStyle = 'rgba(240,171,252,.75)';
+      ctx.fillRect(x + 1 * dpr, H - botH - nd * maxBar, barW, nd * maxBar);
+      /* 双占：两自旋同时占据的交叠量 ≈ min(n↑,n↓)，画琥珀点（半径∝D_i） */
+      const dSite = Math.max(0, Math.min(nu, nd));
+      if (dSite > 0.02){
+        ctx.fillStyle = 'rgba(251,191,36,.85)';
+        ctx.beginPath(); ctx.arc(x, H - botH - Math.max(nu, nd) * maxBar - 12 * dpr, (3 + 8 * dSite) * dpr, 0, 6.2832); ctx.fill();
+      }
+      ctx.fillStyle = 'rgba(154,167,189,.85)'; ctx.font = `${10 * dpr}px ui-monospace,monospace`; ctx.textAlign = 'center';
+      ctx.fillText(String(i), x, H - botH + 18 * dpr);
+      ctx.fillStyle = 'rgba(230,237,243,.75)';
+      ctx.fillText((nu + nd).toFixed(2), x, H - botH - Math.max(nu, nd) * maxBar - 34 * dpr);
+    }
+    ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(154,167,189,.9)'; ctx.font = `${10.5 * dpr}px ui-monospace,monospace`;
+    ctx.fillText('site i   (cyan ↑ / magenta ↓ / amber ● = double occupancy ∝ D_i)', pad - 20 * dpr, 20 * dpr);
+  }
+  drawChart(){
+    const cv = this.q('#hbChart'), ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height, dpr = W / (cv.clientWidth || W);
+    ctx.clearRect(0, 0, W, H);
+    const padL = 42 * dpr, padR = 14 * dpr, padT = 20 * dpr, padB = 26 * dpr;
+    const x0 = padL, y0 = H - padB, w = W - padL - padR, h = H - padT - padB;
+    ctx.strokeStyle = 'rgba(120,160,220,.2)'; ctx.lineWidth = 1 * dpr;
+    ctx.strokeRect(x0, padT, w, h);
+    ctx.fillStyle = 'rgba(154,167,189,.9)'; ctx.font = `${10.5 * dpr}px ui-monospace,monospace`;
+    ctx.fillText(this.state.preset === 'quench' ? '半链纠缠熵 S(t)  ·  早窗线虚线拟合' : '半链纠缠熵 S（基态，t 轴无演化）', padL, 13 * dpr);
+    const hist = this.hist.length ? this.hist : [[0, 0], [1, 0]];
+    const tMax = Math.max(1e-6, hist[hist.length - 1][0]);
+    const sMax = Math.max(1e-3, ...hist.map(p => p[1])) * 1.15;
+    const px = t => x0 + (t / tMax) * w;
+    const py = s => y0 - (s / sMax) * h;
+    /* 轴刻度 */
+    ctx.fillStyle = 'rgba(154,167,189,.8)';
+    ctx.fillText(tMax.toFixed(1), x0 + w - 26 * dpr, y0 + 16 * dpr);
+    ctx.fillText('0', x0 - 10 * dpr, y0 + 16 * dpr);
+    ctx.fillText(sMax.toFixed(2), 4 * dpr, padT + 10 * dpr);
+    /* 曲线 */
+    ctx.strokeStyle = 'rgba(103,232,249,.95)'; ctx.lineWidth = 1.8 * dpr;
+    ctx.beginPath();
+    hist.forEach(([t2, s2], i) => { i ? ctx.lineTo(px(t2), py(s2)) : ctx.moveTo(px(t2), py(s2)); });
+    ctx.stroke();
+    /* 早窗拟合线 */
+    if (this.state.preset === 'quench' && this.slope){
+      ctx.strokeStyle = 'rgba(251,191,36,.8)'; ctx.setLineDash([5 * dpr, 4 * dpr]); ctx.lineWidth = 1.2 * dpr;
+      ctx.beginPath();
+      const tEnd = this.state.L / 3;
+      const s0 = hist[0][1];
+      ctx.moveTo(px(0), py(s0)); ctx.lineTo(px(tEnd), py(s0 + this.slope * tEnd));
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+    if (this.state.preset === 'mott'){
+      ctx.fillStyle = 'rgba(154,167,189,.75)';
+      ctx.fillText('定态：S 恒定；拖 U 看重解后的 S 与 D', padL, H - 6 * dpr);
+    }
+  }
+
+  /* ---------- 帧循环 ---------- */
+  frame(){
+    requestAnimationFrame(this.frame);
+    this._fpsFrames++;
+    const now = performance.now();
+    if (now - this._lastFpsT > 500){
+      this._fps = Math.round(this._fpsFrames * 1000 / (now - this._lastFpsT));
+      this._fpsFrames = 0; this._lastFpsT = now;
+      this.q('#hFps').textContent = String(this._fps);
+    }
+    this.advanceJobs();
+    if (this.state.preset === 'quench' && !this.state.paused && !this.job) this.evolveFrame();
+    if (this.state.frames % 2 === 0 && this.state.preset === 'quench') this.measureAll(false);
+    this.draw();
+    if (this.job) this.q('#hbStat').textContent = this.msg;
+  }
+
+  syncPanel(){
+    this.container.querySelectorAll('[data-preset]').forEach(b => b.classList.toggle('on', b.dataset.preset === this.state.preset));
+    this.container.querySelectorAll('[data-L]').forEach(b => b.classList.toggle('on', parseInt(b.dataset.L, 10) === this.state.L));
+    this.q('#rU').value = this.state.U; this.q('#oU').textContent = this.state.U.toFixed(2);
+    this.q('#hU').textContent = this.state.U.toFixed(2);
+    const pr = HB_PRESETS[this.state.preset];
+    this.q('#hbHint').querySelector('b').textContent = pr.name;
+    this.q('#hbHint').querySelector('span').innerHTML = pr.text;
+    this.q('#hbPause').textContent = this.state.paused ? '继续' : '暂停';
+    this.q('#hbPause').style.opacity = this.state.preset === 'mott' ? 0.45 : 1;
+  }
+
+  setPreset(k){ if (k !== this.state.preset){ this.state.preset = k; this.initPreset(); } }
+  setL(L){ if (L !== this.state.L){ this.state.L = L; this.initPreset(); } }
+  togglePause(){
+    if (this.state.preset !== 'quench') return;
+    this.state.paused = !this.state.paused;
+    this.q('#hbPause').textContent = this.state.paused ? '继续' : '暂停';
+  }
+
+  /* ---------- 调试句柄（cdp73） ---------- */
+  debugHandle(){
+    return {
+      app: this, state: this.state,
+      measures: () => ({
+        dim: this.sec.dim, E: this.E, D: this.m ? this.m.Dtot : null, S: this.S,
+        norm: this.re ? hbNorm(this.re, this.im) : null, t: this.state.t, frames: this.state.frames,
+        U: this.state.U, L: this.state.L, gap: this.gap, slope: this.slope ?? null,
+        nT: this.m ? Array.from(this.m.nT) : null, busy: !!this.job || !!this.gapJob,
+      }),
+      entropy: () => (this.re ? hbEntropy(this.sec, this.re, this.im) : null),
+      step: (n = 1) => this.stepFrames(n),
+      setU: u => { this.state.U = u; this.q('#rU').value = u; this.q('#oU').textContent = u.toFixed(2); if (this.state.preset === 'mott') this.startSolve(); },
+      setL: L => this.setL(L),
+      preset: k => this.setPreset(k),
+      solveNow: () => {   /* 同步跑完当前基态任务（pot/cdp 确定性） */
+        if (!this.job) return this.E;
+        while (!this.job.task.done) this.job.task.step(20);
+        this.re = this.job.task.re; this.im = this.job.task.im; this.E = this.job.task.energy;
+        this.job = null; this.measureAll(true); this.state.paused = false;
+        return this.E;
+      },
+      gapNow: () => {
+        if (this.gap !== null) return this.gap;
+        this.startGap();
+        while (this.gapJob) this.advanceJobs();
+        return this.gap;
+      },
+      history: () => this.hist.slice(-600),
+      bond: () => (this.bsig ? Array.from(this.bsig) : null),
+    };
+  }
+}
+
+/* ===== src/hubbard-main.js ===== */
+/* 演示入口：R73 格点费米-哈伯德页（hubbard.html）。
+   课程站嵌入同理：
+     import { HubbardApp } from './src/hubbard.js';
+     new HubbardApp(document.body, {}).mount();
+*/
+
+new HubbardApp(document.body, {}).mount();
+
+</script>
+</body>
+</html>

@@ -5,6 +5,7 @@
    R72 起工程有两个页面：
      index.html      → dist/quantum-field.html（单粒子主场，入口 src/main.js）
      two-body.html   → dist/two-body.html（双粒子构型空间，入口 src/two-body-main.js）
+     hubbard.html    → dist/hubbard.html（格点费米-哈伯德，入口 src/hubbard-main.js）
    两页共用 src/core/*；各自独立 bundle（拓扑序不同），互不影响。
 
    做法（mini-bundler，零依赖）：
@@ -32,6 +33,7 @@ const fail = (msg) => { console.error('BUILD FAIL: ' + msg); process.exit(1); };
 const PAGES = [
   ['index.html', 'quantum-field.html'],
   ['two-body.html', 'two-body.html'],
+  ['hubbard.html', 'hubbard.html'],
 ];
 
 /* ---------- 1. 入口定位 ---------- */

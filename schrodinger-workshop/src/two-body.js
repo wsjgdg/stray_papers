@@ -160,6 +160,7 @@ export class TwoBodyApp {
   <div class="logo">双粒子工场 · TWO-BODY</div>
   <div class="eq"><b>i</b>ℏ∂ψ/∂t = [−ℏ²/2m(∂₁²+∂₂²)+V₁+V₂+<b>g</b>δ]ψ</div>
   <a href="./index.html">← 单粒子主页</a>
+  <a href="./hubbard.html">哈伯德页</a>
 </div>
 <div id="tbPanel" class="panel">
   <div class="sec"><h3>预设</h3><div class="grid3" id="tbPresets">
