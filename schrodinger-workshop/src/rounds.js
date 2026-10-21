@@ -113,6 +113,7 @@ export class RoundsApp {
       rounds: Math.max(1, Math.min(4, Math.round(num('rounds', 2)))),
       decode: DECODES.some(d => d.k === str('decode', 'repeat')) ? str('decode', 'repeat') : 'repeat',
       need: Math.max(2, Math.min(3, Math.round(num('need', 2)))),
+      retry: Math.max(0, Math.min(2, Math.round(num('retry', 0)))),
       p: Math.max(0.001, Math.min(0.2, num('p', 0.02))),
       trials: Math.max(200, Math.min(2000, Math.round(num('trials', 500)))),
       seed: Math.round(num('seed', 7)),
@@ -124,10 +125,10 @@ export class RoundsApp {
   }
   q(sel){ return this.container.querySelector(sel) || document.querySelector(sel); }
   on(el, ev, fn){ if (el) el.addEventListener(ev, fn); }
-  key(){ const s = this.state; return `${s.kind}|R${s.rounds}|${s.decode}|n${s.need}`; }
+  key(){ const s = this.state; return `${s.kind}|R${s.rounds}|${s.decode}|n${s.need}|rt${s.retry}`; }
   cfg(extra = {}){
     const s = this.state;
-    return { kind: s.kind, rounds: s.rounds, decode: s.decode, need: s.need,
+    return { kind: s.kind, rounds: s.rounds, decode: s.decode, need: s.need, retry: s.retry,
       p: s.p, trials: s.trials, seed: s.seed, ...extra };
   }
 
@@ -152,6 +153,8 @@ export class RoundsApp {
         <div class="btns" id="rdDecodes"></div>
         <div class="grp">need（连续几轮一致才修）</div>
         <div class="btns g2" id="rdNeeds"></div>
+        <div class="grp">不可信读数怎么办（R83）</div>
+        <div class="btns" id="rdRetries"></div>
         <div class="grp">每门每比特错误率 p</div>
         <div class="row"><label>p</label><input type="range" id="rdP" min="0.001" max="0.12" step="0.001"><output id="rdPO">—</output></div>
         <div class="grp">MC 样本数</div>
@@ -176,7 +179,8 @@ export class RoundsApp {
         <hr>
         <div class="hrow"><span>MC P_L</span><span id="hPL">—</span></div>
         <div class="hrow"><span>MC P_L | 接受</span><span id="hPLg">—</span></div>
-        <div class="hrow"><span>MC 丢弃率</span><span id="hDisc">—</span></div>
+        <div class="hrow"><span>MC 自检触发率</span><span id="hDisc">—</span></div>
+        <div class="hrow"><span>MC 真丢弃率</span><span id="hDisc2">—</span></div>
         <div class="hrow"><span>MC 平均故障数</span><span id="hF">—</span></div>
         <div class="hrow"><span>伪阈值 p*</span><span id="hTh">—</span></div>
         <hr>
@@ -206,6 +210,11 @@ export class RoundsApp {
     mk(this.q('#rdRounds'), [1, 2, 3].map(r => ({ v: r, label: 'R=' + r })), v => this.state.rounds = v);
     mk(this.q('#rdDecodes'), DECODES.map(d => ({ v: d.k, label: d.name, title: d.desc })), v => this.state.decode = v);
     mk(this.q('#rdNeeds'), [2, 3].map(n => ({ v: n, label: 'need=' + n })), v => this.state.need = v);
+    mk(this.q('#rdRetries'), [
+      { v: 0, label: '跳过该轮', title: 'R82 口径：不可信就跳过，代价是丢弃率被高估' },
+      { v: 1, label: '重测 ×1', title: '每个稳定子最多再测 1 次，取第一个可用读数' },
+      { v: 2, label: '重测 ×2', title: '每个稳定子最多再测 2 次' },
+    ], v => this.state.retry = v);
 
     this.on(this.q('#rdP'), 'input', e => { this.state.p = parseFloat(e.target.value); this.syncPanel(); this.runMc(); });
     this.on(this.q('#rdTrials'), 'input', e => { this.state.trials = parseInt(e.target.value, 10); this.syncPanel(); });
@@ -223,8 +232,11 @@ export class RoundsApp {
   syncPanel(){
     const s = this.state;
     const mark = (host, v) => { for (const b of this.container.querySelectorAll(host + ' button')) b.classList.toggle('on', b.dataset.v === String(v)); };
-    mark('#rdKinds', s.kind); mark('#rdRounds', s.rounds); mark('#rdDecodes', s.decode); mark('#rdNeeds', s.need);
+    mark('#rdKinds', s.kind); mark('#rdRounds', s.rounds); mark('#rdDecodes', s.decode);
+    mark('#rdNeeds', s.need); mark('#rdRetries', s.retry);
+    /* std 没有任何自检手段 ⟹ 重测对它既无收益也无代价（页面如实置灰） */
     for (const b of this.container.querySelectorAll('#rdNeeds button')) b.classList.toggle('dim', s.decode !== 'repeat');
+    for (const b of this.container.querySelectorAll('#rdRetries button')) b.classList.toggle('dim', s.kind === 'std');
     const setv = (id, v) => { const e = this.q('#' + id); if (e) e.value = v; };
     setv('rdP', s.p); this.q('#rdPO').textContent = s.p.toFixed(3);
     setv('rdTrials', s.trials); this.q('#rdTrialsO').textContent = s.trials;
@@ -275,7 +287,8 @@ export class RoundsApp {
     const s = this.state;
     const set = (id, v, cls) => { const el = this.q('#' + id); if (!el) return; el.textContent = v; el.className = cls || ''; };
     set('hCfg', `${FS_KINDS[s.kind].label} · R=${s.rounds} · ${(DECODES.find(d => d.k === s.decode) || {}).name}` +
-      (s.decode === 'repeat' ? `(${s.need})` : ''));
+      (s.decode === 'repeat' ? `(${s.need})` : '') +
+      (s.kind === 'std' ? ' · 无自检' : (s.retry ? ` · 重测×${s.retry}` : ' · 跳过')));
     if (!this.fo){
       set('hCost', '计算中…');
       ['hLogic', 'hOrder', 'hFate', 'hFlag'].forEach(id => set(id, '—'));
@@ -291,13 +304,22 @@ export class RoundsApp {
       set('hPL', (100 * this.mc.PL).toFixed(2) + '%  (' + this.mc.logic + '/' + this.mc.trials + ')');
       set('hPLg', this.mc.PLgiven == null ? '—' : (100 * this.mc.PLgiven).toFixed(2) + '%');
       set('hDisc', (100 * this.mc.discard).toFixed(1) + '%');
+      set('hDisc2', this.state.retry === 0 ? '—（= 跳过口径）' : (100 * this.mc.noGoodRate).toFixed(1) + '%');
       set('hF', nf(this.mc.meanFaults, 2));
-    } else { ['hPL', 'hPLg', 'hDisc', 'hF'].forEach(id => set(id, '—')); }
+    } else { ['hPL', 'hPLg', 'hDisc', 'hDisc2', 'hF'].forEach(id => set(id, '—')); }
     const th = this.sweep ? rdPseudoThreshold(this.sweep) : null;
     set('hTh', th ? th.toFixed(4) : '未越过（曲线不下穿 p）');
     if (this.trial){
       const t = this.trial;
-      set('hTrial', `轮序列 ${t.synRounds.map(r => r.join('')).join(' → ')}${t.unsure ? ' · 未确认' : ''}`);
+      /* 紧凑：每轮一个符号（✓ 可用并修正 / · 可用无修正 / ✗ 重测后仍不可用），
+         完整综合征留给画布（时间线里已经逐位画了） */
+      const marks = t.synRounds.map((_, r) => {
+        const usable = t.usableR ? t.usableR[r] : true;
+        const fx = (t.fixLog || []).find(f => f.round === r);
+        if (!usable) return '✗';
+        return fx && fx.fix.length ? '✓' : '·';
+      }).join(' ');
+      set('hTrial', `R1..R${t.rounds}: ${marks}${t.unsure ? ' · 未确认' : ''}${t.retried ? ' · 重测 ' + t.retried : ''}`);
     } else set('hTrial', '—');
   }
 
@@ -486,7 +508,9 @@ export class RoundsApp {
       mc: () => (self.mc ? { PL: self.mc.PL, PLgiven: self.mc.PLgiven, discard: self.mc.discard,
         logic: self.mc.logic, outside: self.mc.outside, gauge: self.mc.gauge, perfect: self.mc.perfect,
         flagged: self.mc.flagged, meanFaults: self.mc.meanFaults, trials: self.mc.trials,
-        rounds: self.mc.rounds, decode: self.mc.decode } : null),
+        rounds: self.mc.rounds, decode: self.mc.decode,
+        noGoodRate: self.mc.noGoodRate, meanRetried: self.mc.meanRetried,
+        meanSkipped: self.mc.meanSkipped } : null),
       sweep: () => (self.sweep ? { p: self.sweep.p.slice(), PL: self.sweep.PL.slice(),
         discard: self.sweep.discard.slice(), trials: self.sweep.trials,
         pseudo: rdPseudoThreshold(self.sweep), slope: rdSlope(self.sweep, 0, 2) } : null),

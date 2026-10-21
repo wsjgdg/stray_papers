@@ -2501,6 +2501,11 @@ const FS_DEFAULTS = {
   trials: 400, seed: 7,
   /* ---- R82 多轮提取 ---- */
   rounds: 1,                      /* 综合征提取轮数 R（1 = R81 的单轮口径） */
+  /* R83：不可信读数的处理。0 = 跳过该轮（R82 口径，代价是丢弃率被高估）；
+     k>0 = 每个稳定子最多再**重测** k 次，取第一个「可用」的读数
+     （dup 两份一致 / 猫态验证位为 0）。重测是**条件性**的：一旦取得可用读数，
+     后续尝试的门在运行时被真正跳过（不作用到态矢、不注入故障），
+     所以 retry=0 与 R82 逐位等价，retry>0 只在真的失败时才多花门。 */
   decode: 'single',               /* 跨轮解码：single 只修最后一轮 · immediate 每轮都修 · repeat 连续 need 轮一致才修 */
   need: 2,                        /* agree 需要连续多少轮综合征一致才接受 */
   /* 噪声范围：'extract'（默认）只给综合提取段挂故障——编码/解码按理想处理，
@@ -2628,11 +2633,11 @@ function fsMeasureZ(s, q, rng, diag){
  * 单个稳定子的提取块（R82 的多轮线路复用同一份，保证「单轮 ≡ R82 的 r=1」）
  *   返回带 ph/stab/round 的完整 op 数组；调用方只需依次 push。
  * ========================================================================== */
-function fsBlockOps(stabIndex, spec, lay, round = 0){
+function fsBlockOps(stabIndex, spec, lay, round = 0, att = 0){
   const st = SHOR_STABS[stabIndex];
   const A0 = lay.A0, F = lay.F;
   const out = [];
-  const add = (o) => { out.push({ ...o, ph: 'extract', stab: stabIndex, round }); return out.length - 1; };
+  const add = (o) => { out.push({ ...o, ph: 'extract', stab: stabIndex, round, att }); return out.length - 1; };
   if (st.k === 'z'){
     const [d0, d1] = st.qs;
     if (spec.z === 'single'){
@@ -2711,17 +2716,20 @@ function fsBuildCircuit(kind = 'std', cfg = {}){
 
   /* ③ 综合提取：重复 R 轮（R=1 即 R81 的单轮口径，逐位一致） */
   const R = Math.max(1, Math.min(8, c.rounds | 0 || 1));
+  const RT = Math.max(0, Math.min(3, c.retry | 0 || 0));   /* 每个稳定子的额外重测次数 */
   for (let r = 0; r < R; r++){
     for (let i = 0; i < SHOR_STABS.length; i++){
-      const blkOps = fsBlockOps(i, spec, lay, r);
-      const blk = { stab: i, kind: SHOR_STABS[i].k, short: SHOR_STABS[i].short,
-        label: SHOR_STABS[i].label, gates: 0, ops: [], round: r };
-      for (const o of blkOps){
-        const idx = push(o);
-        blk.ops.push(idx);
-        if (o.op !== 'meas') blk.gates++;
+      for (let a = 0; a <= RT; a++){
+        const blkOps = fsBlockOps(i, spec, lay, r, a);
+        const blk = { stab: i, kind: SHOR_STABS[i].k, short: SHOR_STABS[i].short,
+          label: SHOR_STABS[i].label, gates: 0, ops: [], round: r, att: a };
+        for (const o of blkOps){
+          const idx = push(o);
+          blk.ops.push(idx);
+          if (o.op !== 'meas') blk.gates++;
+        }
+        blocks.push(blk);
       }
-      blocks.push(blk);
     }
     /* 轮末修正点：跨轮联合解码在这里决定是否把该轮的修正落到态矢与 Pauli 帧上。
        ⚠ 早期版本只在所有轮跑完后修正一次 ⟹ 错误跨轮累积而修正能力不变，
@@ -2745,14 +2753,15 @@ function fsBuildCircuit(kind = 'std', cfg = {}){
   return { kind, nq: lay.nq, spec: { ...spec, lay }, cfg: c, ops, blocks,
     rounds: R, stats: {
       nq: lay.nq, data: 9, ancillas: lay.nq - 9, gates, cnots, singles, meas,
-      rounds: R, sitesPerRound: blocks.length ? blocks.filter(b => b.round === 0).length : 0,
+      rounds: R, retry: RT,
+      sitesPerRound: blocks.length ? blocks.filter(b => b.round === 0 && b.att === 0).length : 0,
     } };
 }
 
 const CIRC_CACHE = new Map();
 function fsCircuit(kind = 'std', cfg = {}){
   const c = { ...FS_DEFAULTS, ...cfg };
-  const key = `${kind}|${c.theta}|${c.phi}|${c.catX || (FS_KINDS[kind] || {}).catX || 0}|R${c.rounds | 0 || 1}|${c.decode || 'single'}|${c.need | 0 || 2}`;
+  const key = `${kind}|${c.theta}|${c.phi}|${c.catX || (FS_KINDS[kind] || {}).catX || 0}|R${c.rounds | 0 || 1}|${c.decode || 'single'}|${c.need | 0 || 2}|rt${c.retry | 0 || 0}`;
   let circ = CIRC_CACHE.get(key);
   if (!circ){ circ = fsBuildCircuit(kind, c); CIRC_CACHE.set(key, circ); }
   return circ;
@@ -2829,6 +2838,7 @@ function fsExec(circ, opts = {}){
   const s = qcNewState(nq);
   const fr = { x: 0, z: 0 };
   const R = circ.rounds || 1;
+  const RT = (circ.stats && circ.stats.retry) || 0;
   const syn = new Array(SHOR_STABS.length).fill(0);        /* 最终用于解码的综合征 */
   const syn2 = new Array(SHOR_STABS.length).fill(0);
   const flags = [];
@@ -2837,6 +2847,15 @@ function fsExec(circ, opts = {}){
   const synRounds = Array.from({ length: R }, () => new Array(SHOR_STABS.length).fill(0));
   const syn2Rounds = Array.from({ length: R }, () => new Array(SHOR_STABS.length).fill(0));
   const flagRounds = new Array(R).fill(false);
+  /* R83 重测：按 (轮, 尝试) 记录；chosenAtt[r][stab] = 采用的尝试号（-1 = 全部不可用）。
+     被跳过的尝试的门**不执行、不注入故障**（条件性重测，不是白跑）。 */
+  const synAtt = Array.from({ length: R }, () => Array.from({ length: RT + 1 }, () => new Array(SHOR_STABS.length).fill(0)));
+  const syn2Att = Array.from({ length: R }, () => Array.from({ length: RT + 1 }, () => new Array(SHOR_STABS.length).fill(0)));
+  const flagAtt = Array.from({ length: R }, () => Array.from({ length: RT + 1 }, () => new Array(SHOR_STABS.length).fill(false)));
+  const chosenAtt = Array.from({ length: R }, () => new Array(SHOR_STABS.length).fill(-1));
+  const endOfBlock = new Map();
+  for (const b of (circ.blocks || [])) if (b.ops.length) endOfBlock.set(b.ops[b.ops.length - 1], b);
+  let skippedGates = 0, retried = 0;
   let fix = [];
   let wPre = 0, pre = null, frAtFix = { x: 0, z: 0 }, frBeforeFix = { x: 0, z: 0 };
   /* R82 跨轮解码的结果（在 fix 点填，块外可见） */
@@ -2861,16 +2880,32 @@ function fsExec(circ, opts = {}){
 
   for (let i = 0; i < ops.length; i++){
     const o = ops[i];
+    /* 条件性重测：该稳定子已取得可用读数 ⟹ 后续尝试的门整体跳过（不执行、不注错） */
+    if (o.ph === 'extract' && o.stab >= 0){
+      const rr = o.round || 0, aa = o.att || 0;
+      if (chosenAtt[rr][o.stab] >= 0 && aa > chosenAtt[rr][o.stab]){ skippedGates++; continue; }
+    }
     if (o.op === 'meas'){
       const bit = fsMeasureZ(s, o.q, rng, diag);
       if ((fr.x >> o.q) & 1 && (o.role === 'syn' || o.role === 'flag')) diag.frameFlip++;
       fr.x &= ~(1 << o.q); fr.z &= ~(1 << o.q);
       if (bit) qcApply(s, { op: 'x', q: o.q });   /* 重置 → |0⟩（理想重置） */
-      const r = o.round || 0;
-      if (o.role === 'syn'){ syn[o.stab] = bit; synRounds[r][o.stab] = bit; }
-      else if (o.role === 'syn2'){ syn2[o.stab] = bit; syn2Rounds[r][o.stab] = bit; }
-      else if (o.role === 'cat'){ syn[o.stab] ^= bit; synRounds[r][o.stab] ^= bit; }
-      else { if (bit){ flags.push(true); flagRounds[r] = true; } }
+      const r = o.round || 0, a = o.att || 0;
+      if (o.role === 'syn'){ syn[o.stab] = bit; synRounds[r][o.stab] = bit; synAtt[r][a][o.stab] = bit; }
+      else if (o.role === 'syn2'){ syn2[o.stab] = bit; syn2Rounds[r][o.stab] = bit; syn2Att[r][a][o.stab] = bit; }
+      else if (o.role === 'cat'){ syn[o.stab] ^= bit; synRounds[r][o.stab] ^= bit; synAtt[r][a][o.stab] ^= bit; }
+      else { if (bit){ flags.push(true); flagRounds[r] = true; flagAtt[r][a][o.stab] = true; } }
+      /* 块末：判定这次尝试是否可用，可用即采纳（后续尝试随后会被跳过） */
+      const blkE = endOfBlock.get(i);
+      if (blkE && chosenAtt[blkE.round][blkE.stab] < 0){
+        const g = SHOR_STABS[blkE.stab];
+        const isDup = (g.k === 'z' && dupZ) || (g.k === 'x' && dupX);
+        const isCat = g.k === 'z' ? circ.spec.z === 'cat' : circ.spec.x === 'cat';
+        let ok = true;
+        if (isDup) ok = synAtt[blkE.round][blkE.att][blkE.stab] === syn2Att[blkE.round][blkE.att][blkE.stab];
+        if (isCat && flagAtt[blkE.round][blkE.att][blkE.stab]) ok = false;
+        if (ok){ chosenAtt[blkE.round][blkE.stab] = blkE.att; if (blkE.att > 0) retried++; }
+      }
       continue;
     }
     if (o.op === 'fixr'){
@@ -2882,13 +2917,10 @@ function fsExec(circ, opts = {}){
                      一次性的假综合征不会）⟹ 既不累积也不误修
          修正在这里落到态矢 + 帧上（修正门本身按理想处理，不注入故障） */
       const r = o.round || 0;
-      let bad = flagRounds[r];
-      if (!bad) for (let i = 0; i < SHOR_STABS.length; i++){
-        const g = SHOR_STABS[i];
-        if ((g.k === 'z' && dupZ) || (g.k === 'x' && dupX)){
-          if (synRounds[r][i] !== syn2Rounds[r][i]){ bad = true; break; }
-        }
-      }
+      /* 该轮是否可用 = 每个稳定子都取得了可信读数（重测后仍不可信 ⟹ 该轮不可用）。
+         retry=0 时与 R82 的「flagRounds || dup 不一致」逐位等价。 */
+      let bad = false;
+      for (let i = 0; i < SHOR_STABS.length; i++) if (chosenAtt[r][i] < 0){ bad = true; break; }
       usableR.push(!bad);
       if (r === 0){ frBeforeFix = { x: fr.x & DATA_MASK, z: fr.z & DATA_MASK }; wPre = fsMinWeight(frBeforeFix); }
       let fixR = [];
@@ -2970,6 +3002,9 @@ function fsExec(circ, opts = {}){
                拿它当「残差大小」会严重误导（这是个容易踩的坑，留字段备查） */
     cosetFinal: cosetDecoded(decodeMaps(circ), { x: fr.x & DATA_MASK, z: fr.z & DATA_MASK }),
     synRounds, flagRounds, usableRounds: usableR.filter(Boolean).length, usableR, fixLog,
+    chosenAtt, skippedGates, retried,
+    /* 「重测后仍无可信读数」的轮：这才是真正需要丢弃的比例（R82 的丢弃率把它高估了） */
+    noGoodRounds: usableR.filter(v => !v).length,
     synFinal, chosenRound: chosen, unsure, usedRounds, decode: dec, rounds: R, need,
     wPre, wRes: fsMinWeight(frAtFix),
     wPost: popc((fr.x | fr.z) & DATA_MASK),
@@ -3151,7 +3186,7 @@ function fsEnsemble(kind = 'std', cfg = {}){
   const rng = mulberry32(c.seed);
   const n = Math.max(1, c.trials | 0);
   const acc = { perfect: 0, outside: 0, logic: 0, flagged: 0, gauge: 0, mixed: 0 };
-  let wSum = 0, flips = 0, random = 0, faultSum = 0, unsureN = 0, usedSum = 0;
+  let wSum = 0, flips = 0, random = 0, faultSum = 0, unsureN = 0, usedSum = 0, noGoodN = 0, retrySum = 0, skipSum = 0;
   const wHist = {};
   for (let k = 0; k < n; k++){
     const r = fsExec(circ, { rng, p: c.p, spectrum: c.spectrum, noisyPhase: c.noisyPhase,
@@ -3166,6 +3201,7 @@ function fsEnsemble(kind = 'std', cfg = {}){
     faultSum += r.fired.length;
     if (r.unsure) unsureN++;
     usedSum += r.usedRounds;
+    noGoodN += r.noGoodRounds; retrySum += r.retried; skipSum += r.skippedGates;
   }
   return {
     kind: c.kind, p: c.p, spectrum: c.spectrum, trials: n, ...acc,
@@ -3180,6 +3216,10 @@ function fsEnsemble(kind = 'std', cfg = {}){
     wMean: wSum / Math.max(1, n - acc.perfect - acc.flagged),
     wHist, meanFaults: faultSum / n, frameFlips: flips, randomMeas: random,
     unsureRate: unsureN / n, acceptRate: 1 - unsureN / n,
+    /* R83：真正「重测后仍无可信读数」的轮比例（这才是必须丢弃的），
+       与 discard（触发过自检的轮比例）对照，可量化 R82 的高估幅度。 */
+    noGoodRate: noGoodN / n / Math.max(1, circ.rounds || 1),
+    meanRetried: retrySum / n, meanSkipped: skipSum / n,
     meanUsedRounds: usedSum / n, rounds: circ.rounds, decode: c.decode,
     stats: circ.stats,
   };
