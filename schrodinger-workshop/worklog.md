@@ -209,7 +209,7 @@ README「后续方向」表经核实已清空（面板溢出 R48/R53 闭环、GP
 
 ### 五、回归（本轮改动了 app.js 顶栏与 styles.js、构建脚本）
 
-cdp70 **24/24** + cdp71 **15/15** 重跑全绿；dist 双页重建（quantum-field 661.3 KB / two-body 64.2 KB）。
+cdp70 **24/24** + cdp71 **15/15** 重跑全绿；dist 双页重建（quantum-field 661.3 KB / two-body 64.5 KB）。
 
 ### 六、诚实限制（面板 hint 已按实写）
 
