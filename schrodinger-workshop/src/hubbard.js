@@ -101,6 +101,7 @@ export class HubbardApp {
   <a href="./noise.html">噪声页</a>
   <a href="./qec.html">纠错页</a>
   <a href="./gatenoise.html">门噪声 ⌁</a>
+  <a href="./flag.html">容错 ⚑</a>
 </div>
 <div id="hbPanel" class="panel">
   <div class="sec"><h3>预设</h3><div class="grid2" id="hbPresets">
