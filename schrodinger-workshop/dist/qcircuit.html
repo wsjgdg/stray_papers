@@ -533,6 +533,71 @@ function qcPauliCorr(s, a, pa, b, pb){
   return re;
 }
 
+/* ---------- 任意 Pauli 期望 ⟨P⟩（P 由 x/z 两个比特掩码给出，支持 Y） ----------
+   判定用：R81 起「从末态反推」的容错判定、R86 起 qec.js/shor.js 的门噪声
+   结局判定都靠它（稳定子期望 + 逻辑期望），故收为此处共享单源
+   （原为 flagsynd.js 私有的 fsExpect，R86 提取）。
+   算法：P|i⟩ = i^{n_Y}·(−1)^{popcount(z & i)}·|i ⊕ x⟩（各比特独立作用、无次序
+   问题），⟨P⟩ = Σ_i ψ_i* · (Pψ)_i；n_Y = popcount(x&z) mod 4 决定整体相位。 */
+function qcExpect(s, xm, zm){
+  const { re, im, dim } = s;
+  let ar = 0, ai = 0;
+  for (let i = 0; i < dim; i++){
+    const r0 = re[i], i0 = im[i];
+    if (r0 === 0 && i0 === 0) continue;
+    const j = i ^ xm;
+    let c = 0, v = zm & i;
+    while (v){ c ^= v & 1; v >>= 1; }
+    const sg = c ? -1 : 1;
+    const br = re[j] * sg, bi = im[j] * sg;
+    ar += r0 * br + i0 * bi;
+    ai += r0 * bi - i0 * br;
+  }
+  let xy = xm & zm, nY = 0;
+  while (xy){ nY += xy & 1; xy >>= 1; }
+  nY &= 3;
+  if (nY === 0) return ar;
+  if (nY === 1) return -ai;
+  if (nY === 2) return -ar;
+  return ai;
+}
+
+/* ---------- Pauli 帧（辛表示）：只跟踪错误、忽略相位 ----------
+   R86 起 qec.js 的门噪声判定与 flagsynd.js 的容错提取共用（与 qcExpect 同一
+   「共享单源」原则：原为 flagsynd.js 私有的 frToggle/frGate）。帧 = {x,z} 两个
+   比特掩码（x 位 = 该比特上有 X/Y 分量，z 位 = Z/Y 分量），描述「相对理想线路
+   的残差 Pauli」，不含全局相位。
+   传播规则（与 qcApply 的门集合一致）：
+     CNOT(c,t)：X_c → X_c X_t（前向）；Z_t → Z_c Z_t（后向）；X_t、Z_c 不动。
+     H(q)：X_q ↔ Z_q。测量：帧的 X_q 翻转 Z 读数（重置才清帧，本工程线路每个
+     ancilla 只用一次，无需重置）。
+     x/y/z 门：就地 toggle。ry/rz/rx/phase 在非零帧上出现即抛错（非 Clifford，
+     帧语义未定义——flagsynd 与 qec 的制备段都保证帧为零时才过旋转门）。 */
+function qcFrToggle(fr, q, t){
+  const b = 1 << q;
+  if (t === 'x' || t === 'y') fr.x ^= b;
+  if (t === 'z' || t === 'y') fr.z ^= b;
+}
+function qcFrGate(fr, o){
+  const op = o.op;
+  if (op === 'cnot'){
+    const c = o.c ?? o.q1, t = o.t ?? o.q2;
+    if ((fr.x >> c) & 1) fr.x ^= 1 << t;
+    if ((fr.z >> t) & 1) fr.z ^= 1 << c;
+    return;
+  }
+  if (op === 'h'){
+    const b = 1 << o.q, xb = (fr.x & b) ? 1 : 0, zb = (fr.z & b) ? 1 : 0;
+    if (zb) fr.x |= b; else fr.x &= ~b;
+    if (xb) fr.z |= b; else fr.z &= ~b;
+    return;
+  }
+  if (op === 'x' || op === 'y' || op === 'z'){ qcFrToggle(fr, o.q, op); return; }
+  if (op === 'ry' || op === 'rz' || op === 'rx' || op === 'phase'){
+    if (fr.x || fr.z) throw new Error('frame: 非 Clifford 门在非零帧上出现 ' + op);
+  }
+}
+
 /* ---------- 纠缠 ---------- */
 /* 约化密度矩阵 ρ_A（A = 低 kA 位）的特征值：Gram 矩阵 ρ[i][j]=Σ_e ψ(i,e)ψ*(j,e)，
    用实嵌入 [[Re,−Im],[Im,Re]] 的 Jacobi（本征值各二重，排序后隔一取、不折半，

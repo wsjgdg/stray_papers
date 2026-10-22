@@ -55,7 +55,7 @@
  *   ⑤ 猫态按「每个 ancilla 只碰 1 个数据比特」的理想结构实现；真实器件上
  *      猫态的制备本身比这贵得多（GHZ 制备的 5 道 CNOT 已计入开销）。
  * ========================================================================== */
-import { qcNewState, qcApply, mulberry32, qcQubitRho, qcRhoFidelity } from './qcircuit.js';
+import { qcNewState, qcApply, mulberry32, qcQubitRho, qcRhoFidelity, qcExpect, qcFrToggle, qcFrGate } from './qcircuit.js';
 import { shorDecode, shorEncodeGates, shorDecodeGates, SHOR_STABS } from './shor.js';
 import { gnTouched, gnPauli, gnSampleError } from './gatenoise.js';
 
@@ -128,53 +128,18 @@ function parityOf(v){ let c = 0; while (v){ c ^= v & 1; v >>>= 1; } return c; }
 function maskOf(qs){ let m = 0; for (const q of qs) m |= 1 << q; return m; }
 
 /* ---------- Pauli 期望（P 由 x/z 掩码给，支持 Y） ----------
-   P|i⟩ = i^{n_Y}·(−1)^{popcount(z & i)}·|i ⊕ x⟩  （各比特独立作用，无次序问题） */
-function fsExpect(s, xm, zm){
-  const { re, im, dim } = s;
-  let ar = 0, ai = 0;
-  for (let i = 0; i < dim; i++){
-    const r0 = re[i], i0 = im[i];
-    if (r0 === 0 && i0 === 0) continue;
-    const j = i ^ xm;
-    const sg = parityOf(zm & i) ? -1 : 1;
-    const br = re[j] * sg, bi = im[j] * sg;
-    ar += r0 * br + i0 * bi;
-    ai += r0 * bi - i0 * br;
-  }
-  const nY = popc(xm & zm) & 3;
-  if (nY === 0) return ar;
-  if (nY === 1) return -ai;
-  if (nY === 2) return -ar;
-  return ai;
-}
+   已提取为 qcircuit.js 的 qcExpect（R86 共享单源：qec.js/shor.js 的门噪声
+   判定也要用），此处经导入使用。 */
+
+function fsExpect(s, xm, zm){ return qcExpect(s, xm, zm); }
 
 /* ---------- Pauli 帧（辛表示），只跟踪错误、忽略相位 ----------
+   已提取为 qcircuit.js 的 qcFrToggle/qcFrGate（R86 共享单源：qec.js 的门噪声
+   判定也要用），此处经导入使用。规则：
    CNOT(c,t)：X_c → X_c X_t（前向）；Z_t → Z_c Z_t（后向）；X_t、Z_c 不动。
    H(q)：X_q ↔ Z_q。测量+重置：帧的 X_q 翻转 Z 读数，重置把该比特帧清空。 */
-function frToggle(fr, q, t){
-  const b = 1 << q;
-  if (t === 'x' || t === 'y') fr.x ^= b;
-  if (t === 'z' || t === 'y') fr.z ^= b;
-}
-function frGate(fr, o){
-  const op = o.op;
-  if (op === 'cnot'){
-    const c = o.c ?? o.q1, t = o.t ?? o.q2;
-    if ((fr.x >> c) & 1) fr.x ^= 1 << t;
-    if ((fr.z >> t) & 1) fr.z ^= 1 << c;
-    return;
-  }
-  if (op === 'h'){
-    const b = 1 << o.q, xb = (fr.x & b) ? 1 : 0, zb = (fr.z & b) ? 1 : 0;
-    if (zb) fr.x |= b; else fr.x &= ~b;
-    if (xb) fr.z |= b; else fr.z &= ~b;
-    return;
-  }
-  if (op === 'x' || op === 'y' || op === 'z'){ frToggle(fr, o.q, op); return; }
-  if (op === 'ry' || op === 'rz' || op === 'rx' || op === 'phase'){
-    if (fr.x || fr.z) throw new Error('frame: 非 Clifford 门在非零帧上出现 ' + op);
-  }
-}
+function frToggle(fr, q, t){ return qcFrToggle(fr, q, t); }
+function frGate(fr, o){ return qcFrGate(fr, o); }
 
 /* ---------- 测量（确定性优先，真随机时计数） ---------- */
 function normInPlace(s){
