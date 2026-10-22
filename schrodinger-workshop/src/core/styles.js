@@ -22,7 +22,7 @@ export const CSS = `
     backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
     box-shadow:0 8px 32px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04)}
   /* ---------- 顶栏 ---------- */
-  #topbar{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:18px;
+  #topbar{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;
     padding:10px 20px;z-index:10;white-space:nowrap}
   #topbar .logo{font-family:var(--mono);font-weight:700;font-size:15px;letter-spacing:.12em;
     background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}

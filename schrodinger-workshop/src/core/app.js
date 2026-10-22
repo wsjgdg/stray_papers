@@ -291,6 +291,9 @@ export class QuantumField {
   <a class="navlink" href="./noise.html" title="开放量子系统：T₁ 弛豫 / T₂ 退相位 / 纠缠猝死（R77）">噪声 ◍</a>
   <a class="navlink" href="./qec.html" title="量子纠错：3 比特重复码 / 稳定子 / 阈值（R78）">纠错 ◈</a>
   <a class="navlink" href="./gatenoise.html" title="线路级门噪声：门保真度 → 线路保真度 / 三错误谱 / 纠缠猝死（R80）">门噪声 ⌁</a>
+  <a class="navlink" href="./flag.html" title="容错综合征提取：冗余校验 / 猫态 / 旗标（R81）">容错 ⚑</a>
+  <a class="navlink" href="./rounds.html" title="多轮提取 + 跨轮联合解码：伪阈值（R82/R83）">多轮 ⟳</a>
+  <a class="navlink" href="./cycle.html" title="循环 EC + 横向逻辑门：门拦截与保真度口径（R84）">循环 ↻</a>
 </header>
 
 <aside id="panel" class="panel">

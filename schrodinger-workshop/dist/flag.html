@@ -47,7 +47,7 @@ const CSS = `
     backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
     box-shadow:0 8px 32px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04)}
   /* ---------- 顶栏 ---------- */
-  #topbar{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:18px;
+  #topbar{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;
     padding:10px 20px;z-index:10;white-space:nowrap}
   #topbar .logo{font-family:var(--mono);font-weight:700;font-size:15px;letter-spacing:.12em;
     background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -2513,6 +2513,15 @@ const FS_DEFAULTS = {
      只看提取线路本身；'all' 把 encode/extract/decode 全挂上，会看到编码器自己的
      单故障就有 18% 走成静默逻辑错误（它是所有四种线路的共同下限，不是对照对象）。 */
   noisyPhase: 'extract',
+  /* ---- R83 重测 ---- */
+  retry: 0,                       /* 每个稳定子最多再重测几次（0 = R82 的跳过口径） */
+  /* ---- R84 循环 EC + 逻辑线路 ---- */
+  cycles: 1,                      /* EC 周期数 T（T>1 时周期之间插逻辑门） */
+  logic: 'none',                  /* 周期之间的逻辑操作：none / idle / xl / zl（横向 Pauli） */
+  /* 在**最后一个周期之后**再插一次逻辑门（后面没有 EC）。只用于对照实验：
+     「同一个门、门后有没有 EC」的差别就是 EC 对门错误的拦截能力。 */
+  trailingLogic: false,
+  noisyLogic: false,              /* 逻辑门段是否也注错（默认只在提取段注错） */
 };
 
 /* 比特布局：0..8 数据 · 9.. = A0..（ancilla 池）· 池后一位 = F（验证/flag）
@@ -2714,28 +2723,63 @@ function fsBuildCircuit(kind = 'std', cfg = {}){
   /* ② 编码 */
   for (const g of shorEncodeGates()) push({ ...g, ph: 'encode' });
 
-  /* ③ 综合提取：重复 R 轮（R=1 即 R81 的单轮口径，逐位一致） */
+  /* ③ 综合提取：T 个 EC 周期 × 每周期 R 轮（T=1,R=1 即 R81 的单轮口径，逐位一致） */
   const R = Math.max(1, Math.min(8, c.rounds | 0 || 1));
   const RT = Math.max(0, Math.min(3, c.retry | 0 || 0));   /* 每个稳定子的额外重测次数 */
-  for (let r = 0; r < R; r++){
-    for (let i = 0; i < SHOR_STABS.length; i++){
-      for (let a = 0; a <= RT; a++){
-        const blkOps = fsBlockOps(i, spec, lay, r, a);
-        const blk = { stab: i, kind: SHOR_STABS[i].k, short: SHOR_STABS[i].short,
-          label: SHOR_STABS[i].label, gates: 0, ops: [], round: r, att: a };
-        for (const o of blkOps){
-          const idx = push(o);
-          blk.ops.push(idx);
-          if (o.op !== 'meas') blk.gates++;
-        }
-        blocks.push(blk);
-      }
+  const T = Math.max(1, Math.min(6, c.cycles | 0 || 1));
+  const LOGIC = ['none', 'idle', 'xl', 'zl'].includes(c.logic) ? c.logic : 'none';
+  /* 横向逻辑门（都对数据比特逐个施加 Pauli，不传播错误）：
+       X_L = Z₀Z₃Z₆（R81 数值裁决的标签）· Z_L = X₀X₁X₂
+       idle = 每个数据比特一个恒等门（只为产生「空闲也是错误机会」的 R80 口径） */
+  const logicOpsOf = (k) => {
+    if (k === 'idle') return Array.from({ length: 9 }, (_, q) => ({ op: 'id', q }));
+    if (k === 'xl') return [{ op: 'z', q: 0 }, { op: 'z', q: 3 }, { op: 'z', q: 6 }];
+    if (k === 'zl') return [{ op: 'x', q: 0 }, { op: 'x', q: 1 }, { op: 'x', q: 2 }];
+    return [];
+  };
+  const logicSeq = [];
+  let logicGates = 0, unlogicGates = 0;
+  for (let t = 0; t < T; t++){
+    if (t > 0 && LOGIC !== 'none'){
+      const gl = logicOpsOf(LOGIC);
+      logicSeq.push(gl);
+      for (const g of gl){ push({ ...g, ph: 'logic', cycle: t }); logicGates++; }
     }
-    /* 轮末修正点：跨轮联合解码在这里决定是否把该轮的修正落到态矢与 Pauli 帧上。
-       ⚠ 早期版本只在所有轮跑完后修正一次 ⟹ 错误跨轮累积而修正能力不变，
-       实测 P_L 随轮数**上升**（R=3 是 R=1 的 19×）。真实协议必须每轮清账。 */
-    push({ op: 'fixr', ph: 'extract', round: r });
+    for (let r = 0; r < R; r++){
+      /* 扁平轮索引：跨周期的一致性判断天然连续（循环 EC 正是这个语义） */
+      const rr = t * R + r;
+      for (let i = 0; i < SHOR_STABS.length; i++){
+        for (let a = 0; a <= RT; a++){
+          const blkOps = fsBlockOps(i, spec, lay, rr, a);
+          const blk = { stab: i, kind: SHOR_STABS[i].k, short: SHOR_STABS[i].short,
+            label: SHOR_STABS[i].label, gates: 0, ops: [], round: rr, cycle: t, att: a };
+          for (const o of blkOps){
+            const idx = push(o);
+            blk.ops.push(idx);
+            if (o.op !== 'meas') blk.gates++;
+          }
+          blocks.push(blk);
+        }
+      }
+      /* 轮末修正点：跨轮联合解码在这里决定是否把该轮的修正落到态矢与 Pauli 帧上。
+         ⚠ 早期版本只在所有轮跑完后修正一次 ⟹ 错误跨轮累积而修正能力不变，
+         实测 P_L 随轮数**上升**（R=3 是 R=1 的 19×）。真实协议必须每轮清账。 */
+      push({ op: 'fixr', ph: 'extract', round: rr, cycle: t });
+    }
   }
+  /* 末尾逻辑门（对照实验用）：后面没有 EC，门的错误直接进解码 */
+  if (c.trailingLogic && LOGIC !== 'none'){
+    const gl = logicOpsOf(LOGIC);
+    logicSeq.push(gl);
+    for (const g of gl){ push({ ...g, ph: 'logicTail', cycle: T }); logicGates++; }
+  }
+  /* ⚠ 不做「撤销逻辑门」。首版在探针前把逻辑门按逆序撤掉（Pauli 自逆），
+     结果是错的：撤销发生在**最后一个 EC 之后**，而 EC 会看到「门 + 注入错误」的合成
+     Pauli 并把它当 Y 错误纠掉（Y₀ 与两类稳定子都反对易），撤销再把 Z₀ 加回来 ⟹
+     末端留下权重 1 的 Z 错误、无人可纠（pot84 首轮实测：门上位点救回率 22%，
+     与「门后无 EC」完全相同，正是「EC 的工作被撤销抵消」的指纹）。
+     正确口径：**逻辑门留在末态，参考态也含同一个门**（fsRef 走同一条线路），
+     保真度改用 |⟨ref|ψ⟩|²。逻辑算符 ∈ N(S) ⟹ EC 本来就看不见它，不会误纠。 */
 
   /* ④ 修正点（运行期按综合征查表插入，不带噪声） */
   push({ op: 'fix', ph: 'correct' });
@@ -2753,7 +2797,7 @@ function fsBuildCircuit(kind = 'std', cfg = {}){
   return { kind, nq: lay.nq, spec: { ...spec, lay }, cfg: c, ops, blocks,
     rounds: R, stats: {
       nq: lay.nq, data: 9, ancillas: lay.nq - 9, gates, cnots, singles, meas,
-      rounds: R, retry: RT,
+      rounds: R, retry: RT, cycles: T, logic: LOGIC, logicGates, trailingLogic: !!c.trailingLogic,
       sitesPerRound: blocks.length ? blocks.filter(b => b.round === 0 && b.att === 0).length : 0,
     } };
 }
@@ -2761,7 +2805,9 @@ function fsBuildCircuit(kind = 'std', cfg = {}){
 const CIRC_CACHE = new Map();
 function fsCircuit(kind = 'std', cfg = {}){
   const c = { ...FS_DEFAULTS, ...cfg };
-  const key = `${kind}|${c.theta}|${c.phi}|${c.catX || (FS_KINDS[kind] || {}).catX || 0}|R${c.rounds | 0 || 1}|${c.decode || 'single'}|${c.need | 0 || 2}|rt${c.retry | 0 || 0}`;
+  /* ⚠ noisyLogic 必须进缓存键：fsExec 的注错范围回退读 circ.cfg.noisyLogic，
+     漏了它 ⟹ 「注错/理想」切换拿到的是另一档的缓存线路（MC 完全不变，页面开关假死）。 */
+  const key = `${kind}|${c.theta}|${c.phi}|${c.catX || (FS_KINDS[kind] || {}).catX || 0}|R${c.rounds | 0 || 1}|${c.decode || 'single'}|${c.need | 0 || 2}|rt${c.retry | 0 || 0}|c${c.cycles | 0 || 1}|${c.logic || 'none'}|t${c.trailingLogic ? 1 : 0}|nl${c.noisyLogic ? 1 : 0}`;
   let circ = CIRC_CACHE.get(key);
   if (!circ){ circ = fsBuildCircuit(kind, c); CIRC_CACHE.set(key, circ); }
   return circ;
@@ -2777,6 +2823,8 @@ function fsFaultSites(circ){
     /* fixr = 轮末修正点（R82）：不是门，不产生故障位点。早先漏跳它 ⟹ gnTouched 的
        fallback 返回 [undefined]，凭空多出 3 个 q=undefined 的位点（R=1 变 159 而非 156）。 */
     if (o.op === 'meas' || o.op === 'fix' || o.op === 'fixr' || o.ph === 'prep') continue;
+    /* unlogic 是判定口径里的「撤销」，不是线路的一部分：不产生故障位点 */
+    if (o.ph === 'unlogic') continue;
     for (const q of gnTouched(o)) for (const t of ['x', 'y', 'z']){
       out.push({ gate: i, q, t, ph: o.ph, gop: o.op, stab: stabOf.has(i) ? stabOf.get(i) : -1,
         round: o.round || 0 });
@@ -2834,10 +2882,11 @@ function fsExec(circ, opts = {}){
   const p = opts.p != null ? opts.p : 0;
   const spectrum = opts.spectrum || 'depolar';
   const noisyAll = (opts.noisyPhase || c.noisyPhase || 'extract') === 'all';
+  const noisyLogic = opts.noisyLogic != null ? !!opts.noisyLogic : !!c.noisyLogic;
   const diag = { random: 0, frameFlip: 0, frameMiss: 0 };
   const s = qcNewState(nq);
   const fr = { x: 0, z: 0 };
-  const R = circ.rounds || 1;
+  const R = (circ.stats && circ.stats.rounds ? circ.stats.rounds * (circ.stats.cycles || 1) : (circ.rounds || 1));
   const RT = (circ.stats && circ.stats.retry) || 0;
   const syn = new Array(SHOR_STABS.length).fill(0);        /* 最终用于解码的综合征 */
   const syn2 = new Array(SHOR_STABS.length).fill(0);
@@ -2856,6 +2905,11 @@ function fsExec(circ, opts = {}){
   const endOfBlock = new Map();
   for (const b of (circ.blocks || [])) if (b.ops.length) endOfBlock.set(b.ops[b.ops.length - 1], b);
   let skippedGates = 0, retried = 0;
+  /* 逻辑门在帧里的累积（只含数据比特）。帧判定的对象是「相对理想线路的残差」，
+     所以探针点必须把逻辑门这一项扣掉——否则 X_L 本身就会被当成残差
+     （pot84 实测：不扣时 disagree=467、perfect=0，因为每个位点的 coset 都被门污染）。
+     探针路径不需要这一步：它拿 ref（同一条线路、含同一个门）做比较，天然抵消。 */
+  const logicFr = { x: 0, z: 0 };
   let fix = [];
   let wPre = 0, pre = null, frAtFix = { x: 0, z: 0 }, frBeforeFix = { x: 0, z: 0 };
   /* R82 跨轮解码的结果（在 fix 点填，块外可见） */
@@ -2947,6 +3001,8 @@ function fsExec(circ, opts = {}){
     if (o.op === 'fix'){
       /* 探针取样点：所有轮修正已完成、解码之前（码空间仍完好定义） */
       fix = [];   /* 修正已在每轮末 fixr 做过；这里只取探针 */
+      /* 扣掉逻辑门在帧里的贡献：之后的帧 = 「相对理想线路的残差」 */
+      fr.x ^= logicFr.x; fr.z ^= logicFr.z;
 
       for (const e of fix){ qcApply(s, { op: e.t, q: e.q }); frToggle(fr, e.q, e.t); }
       frAtFix = { x: fr.x & DATA_MASK, z: fr.z & DATA_MASK };
@@ -2969,12 +3025,18 @@ function fsExec(circ, opts = {}){
       };
       continue;
     }
-    qcApply(s, o);
-    frGate(fr, o);
+    /* id 门只为产生错误机会（R80 的 idle 口径），态矢上没有操作 */
+    if (o.op !== 'id'){ qcApply(s, o); frGate(fr, o); }
+    if ((o.ph === 'logic' || o.ph === 'logicTail') && o.op !== 'id'){
+      if (o.op === 'x') logicFr.x ^= 1 << o.q;
+      else if (o.op === 'z') logicFr.z ^= 1 << o.q;
+      else if (o.op === 'y'){ logicFr.x ^= 1 << o.q; logicFr.z ^= 1 << o.q; }
+    }
     if (faults){
       const list = forced.get(i);
       if (list) for (const f of list) inject(f.q, f.t, i);
-    } else if (rng && p > 0 && o.ph !== 'prep' && (noisyAll || o.ph === 'extract')){
+    } else if (rng && p > 0 && o.ph !== 'prep' && o.ph !== 'unlogic' &&
+      (noisyAll || o.ph === 'extract' || (noisyLogic && (o.ph === 'logic' || o.ph === 'logicTail')))){
       for (const q of gnTouched(o)){
         const t = gnSampleError(spectrum, p, rng);
         if (t) inject(q, t, i);
@@ -3040,15 +3102,32 @@ function fsClass(pre, ref, F){
 
 const REF_CACHE = new Map();
 function fsRef(circ){
-  const key = `${circ.kind}|${circ.cfg.theta}|${circ.cfg.phi}|${circ.nq}`;
+  const key = `${circ.kind}|${circ.cfg.theta}|${circ.cfg.phi}|${circ.nq}|` +
+    `${circ.stats ? circ.stats.logic : 'none'}|${circ.stats ? (circ.stats.cycles || 1) : 1}|` +
+    `${circ.stats && circ.stats.trailingLogic ? 1 : 0}`;
   let r = REF_CACHE.get(key);
   if (!r){
     const run = fsExec(circ, { faults: [] });
     r = { XL: run.pre.XL, ZL: run.pre.ZL, YL: run.pre.YL, F: run.F, mixed: run.pre.mixed,
-          synErr: run.pre.synErr.slice() };
+          synErr: run.pre.synErr.slice(),
+          /* 理想末态：含逻辑门时保真度必须用它算 |⟨ref|ψ⟩|²——
+             逻辑门把态翻到 |1_L⟩，用 |0_L⟩ 的解析参数会得到 F≈0（这是个陷阱）。 */
+          state: { n: run.state.n, dim: run.state.dim,
+            re: Float64Array.from(run.state.re), im: Float64Array.from(run.state.im) } };
     REF_CACHE.set(key, r);
   }
   return r;
+}
+
+/* |⟨a|b⟩|²（纯态保真度） */
+function stateFidelity(a, b){
+  let ar = 0, ai = 0;
+  const n = Math.min(a.dim || a.re.length, b.dim || b.re.length);
+  for (let i = 0; i < n; i++){
+    ar += a.re[i] * b.re[i] + a.im[i] * b.im[i];
+    ai += a.re[i] * b.im[i] - a.im[i] * b.re[i];
+  }
+  return ar * ar + ai * ai;
 }
 
 /* ---------- 帧残差 → 陪集（与探针独立的一条路径） ---------- */
@@ -3091,8 +3170,12 @@ function fsRun(kind = 'std', cfg = {}, faults = null, seed = 1){
   const rng = mulberry32(seed);
   const r = fsExec(circ, { faults, rng, p: 0, spectrum: cfg.spectrum, noisyPhase: cfg.noisyPhase,
     decode: cfg.decode, need: cfg.need });
-  const cl = fsClass(r.pre, ref, r.F);
-  return { ...r, ...cl, ref };
+  /* 含逻辑门时保真度改用 |⟨ref|ψ⟩|²：逻辑门把态翻到 |1_L⟩，解析的 alpha/beta 只对
+     「没有逻辑门」的参考态成立（logic==='none' 时保持原口径，R81–R83 逐位不变）。 */
+  const hasLogic = (circ.stats && circ.stats.logic && circ.stats.logic !== 'none');
+  const F = hasLogic ? stateFidelity(ref.state, r.state) : r.F;
+  const cl = fsClass(r.pre, ref, F);
+  return { ...r, F, Fref: r.F, ...cl, ref };
 }
 
 /* ============================================================================
@@ -3190,7 +3273,7 @@ function fsEnsemble(kind = 'std', cfg = {}){
   const wHist = {};
   for (let k = 0; k < n; k++){
     const r = fsExec(circ, { rng, p: c.p, spectrum: c.spectrum, noisyPhase: c.noisyPhase,
-      decode: c.decode, need: c.need });
+      noisyLogic: c.noisyLogic, decode: c.decode, need: c.need });
     const cl = fsClass(r.pre, ref, r.F);
     const cos = r.cosetFinal;
     const bucket = r.flagged ? 'flagged'
@@ -3218,7 +3301,7 @@ function fsEnsemble(kind = 'std', cfg = {}){
     unsureRate: unsureN / n, acceptRate: 1 - unsureN / n,
     /* R83：真正「重测后仍无可信读数」的轮比例（这才是必须丢弃的），
        与 discard（触发过自检的轮比例）对照，可量化 R82 的高估幅度。 */
-    noGoodRate: noGoodN / n / Math.max(1, circ.rounds || 1),
+    noGoodRate: noGoodN / n / Math.max(1, (circ.rounds || 1) * (circ.stats ? (circ.stats.cycles || 1) : 1)),
     meanRetried: retrySum / n, meanSkipped: skipSum / n,
     meanUsedRounds: usedSum / n, rounds: circ.rounds, decode: c.decode,
     stats: circ.stats,
@@ -3375,6 +3458,52 @@ function rdCompare(cfg = {}){
   return rows;
 }
 
+/* ============================================================================
+ * R84 循环 EC + 逻辑线路：门错误的拦截率 / P_L 随周期数
+ * ========================================================================== */
+
+/* 逻辑门上的单故障「救回率」——门后有 EC vs 门后无 EC（trailingLogic）。
+   ⚠ 必须用 immediate：repeat 要连续 need 轮一致才修，而门错误只出现在门之后的周期，
+   单周期内等不到确认（见 pot84 D）。 */
+function cyInterception(cfg = {}){
+  const base = { ...FS_DEFAULTS, ...cfg };
+  const out = {};
+  for (const where of ['mid', 'tail']){
+    const c = { ...base, logic: base.logic === 'none' ? 'xl' : base.logic,
+      /* 中间门只在 t>0 插 ⟹ 至少要 2 个周期；tail 变体在末尾再插一个 */
+      cycles: Math.max(2, base.cycles | 0 || 2),
+      trailingLogic: where === 'tail', decode: 'immediate' };
+    const circ = fsCircuit(c.kind, c);
+    const sites = fsFaultSites(circ).filter(x => x.ph === (where === 'tail' ? 'logicTail' : 'logic'));
+    const acc = { n: 0, perfect: 0, gauge: 0, outside: 0, logic: 0, flagged: 0 };
+    for (const st of sites){
+      const r = fsRun(c.kind, c, [{ gate: st.gate, q: st.q, t: st.t }], 1);
+      acc.n++;
+      if (r.flagged) acc.flagged++;
+      else if (r.coset === 0) acc.perfect++;
+      else if (r.coset === -1) { if (r.F > 1 - 1e-9) acc.gauge++; else acc.outside++; }
+      else acc.logic++;
+    }
+    acc.rescue = acc.n ? (acc.perfect + acc.gauge) / acc.n : null;
+    out[where] = acc;
+  }
+  return out;
+}
+
+/* P_L 随周期数（MC 每个 T 一次）。cycle 之间插逻辑门，noisyLogic 决定门段是否注错。 */
+function cySweepCycles(cfg = {}){
+  const base = { ...FS_DEFAULTS, ...cfg };
+  const Ts = cfg.Ts || [1, 2, 3, 4];
+  const out = { T: [], PL: [], logic: [], faults: [], noGood: [], gates: [], trials: base.trials || 400 };
+  for (const T of Ts){
+    const e = fsEnsemble(base.kind, { ...base, cycles: T, trials: base.trials || 400 });
+    out.T.push(T); out.PL.push(e.PL); out.logic.push(e.logic);
+    out.faults.push(e.meanFaults); out.noGood.push(e.noGoodRate);
+    out.gates.push((fsCircuit(base.kind, { ...base, cycles: T }).stats.gates));
+  }
+  return out;
+}
+
 /* ===== src/flag.js ===== */
 /* ============================================================================
  * flag.js（页面）— R81 综合提取自身的容错：冗余验证 vs 猫态
@@ -3476,6 +3605,7 @@ const NAV = [
   ['./qec.html', '纠错 ◈'], ['./shor.html', '级联 ⊗3'], ['./gatenoise.html', '门噪声 ⌁'],
   ['./flag.html', '容错 ⚑'],
   ['./rounds.html', '多轮 ⟳'],
+  ['./cycle.html', '循环 ↻'],
 ];
 
 class FlagApp {

@@ -99,7 +99,7 @@ const NAV = [
   ['./index.html', '主页'], ['./two-body.html', '双粒子 ⧉'], ['./hubbard.html', '哈伯德 ⛓'],
   ['./paths.html', '路径 ∿'], ['./qcircuit.html', '线路 ⧉'], ['./noise.html', '噪声 ◍'],
   ['./qec.html', '纠错 ◈'], ['./shor.html', '级联 ⊗3'], ['./gatenoise.html', '门噪声 ⌁'],
-  ['./flag.html', '容错 ⚑'], ['./rounds.html', '多轮 ⟳'],
+  ['./flag.html', '容错 ⚑'], ['./rounds.html', '多轮 ⟳'], ['./cycle.html', '循环 ↻'],
 ];
 
 export class RoundsApp {

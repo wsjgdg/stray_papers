@@ -100,6 +100,7 @@ const NAV = [
   ['./qec.html', '纠错 ◈'], ['./shor.html', '级联 ⊗3'], ['./gatenoise.html', '门噪声 ⌁'],
   ['./flag.html', '容错 ⚑'],
   ['./rounds.html', '多轮 ⟳'],
+  ['./cycle.html', '循环 ↻'],
 ];
 
 export class FlagApp {

@@ -22,6 +22,7 @@ const HB_CSS = `
   #hbTop a{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
     border:1px solid var(--line);border-radius:6px;padding:3px 8px;transition:all .15s}
   #hbTop a:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
+  #hbTop a.cur{color:var(--mag);border-color:rgba(240,171,252,.45)}
   #hbPanel{top:74px;left:14px;width:224px;padding:13px;z-index:10;max-height:calc(100vh - 250px);overflow-y:auto;
     scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #hbHud{top:74px;right:14px;padding:11px 13px;z-index:10;min-width:206px;font-family:var(--mono)}
@@ -96,13 +97,16 @@ export class HubbardApp {
   <div class="eq"><b>H</b> = −<b>t</b>Σ(c†<sub>i</sub>c<sub>i+1</sub>+h.c.) + <b>U</b>Σ n<sub>i↑</sub>n<sub>i↓</sub></div>
   <a href="./index.html">← 单粒子主页</a>
   <a href="./two-body.html">双粒子页</a>
+  <a href="./hubbard.html" class="cur">哈伯德 ⛓</a>
   <a href="./paths.html">路径页</a>
   <a href="./qcircuit.html">线路页</a>
   <a href="./noise.html">噪声页</a>
   <a href="./qec.html">纠错页</a>
+  <a href="./shor.html">级联 ⊗3</a>
   <a href="./gatenoise.html">门噪声 ⌁</a>
   <a href="./flag.html">容错 ⚑</a>
   <a href="./rounds.html">多轮 ⟳</a>
+  <a href="./cycle.html">循环 ↻</a>
 </div>
 <div id="hbPanel" class="panel">
   <div class="sec"><h3>预设</h3><div class="grid2" id="hbPresets">

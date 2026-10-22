@@ -24,6 +24,7 @@ const QC_CSS = `
   #qcTop a{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
     border:1px solid var(--line);border-radius:6px;padding:3px 8px;transition:all .15s}
   #qcTop a:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
+  #qcTop a.cur{color:var(--mag);border-color:rgba(240,171,252,.45)}
   #qcPanel{top:74px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 200px);
     overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #qcPanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
@@ -128,11 +129,14 @@ export class QCircuitApp {
         <a href="./two-body.html">双粒子 ⟋</a>
         <a href="./hubbard.html">哈伯德 ⛓</a>
         <a href="./paths.html">路径 ∿</a>
+        <a href="./qcircuit.html" class="cur">线路 ⧉</a>
         <a href="./noise.html">噪声 ◍</a>
         <a href="./qec.html">纠错 ◈</a>
+        <a href="./shor.html">级联 ⊗3</a>
         <a href="./gatenoise.html">门噪声 ⌁</a>
         <a href="./flag.html">容错 ⚑</a>
         <a href="./rounds.html">多轮 ⟳</a>
+        <a href="./cycle.html">循环 ↻</a>
       </header>
 
       <aside id="qcPanel" class="panel">
