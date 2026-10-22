@@ -15,6 +15,7 @@
  *     flag.html       → dist/flag.html（综合提取容错：冗余验证 vs 猫态，入口 src/flag-main.js）
  *     rounds.html     → dist/rounds.html（多轮提取 + 跨轮联合解码，入口 src/rounds-main.js）
  *     cycle.html      → dist/cycle.html（循环 EC + 逻辑线路，入口 src/cycle-main.js）
+ *     family.html     → dist/family.html（码族与真阈值：重复码族 / Steane 级联，入口 src/family-main.js）
    各页共用 src/core/*（仅 index 用）；各自独立 bundle（拓扑序不同），互不影响。
 
    做法（mini-bundler，零依赖）：
@@ -52,6 +53,7 @@ const PAGES = [
   ['flag.html', 'flag.html'],
   ['rounds.html', 'rounds.html'],
   ['cycle.html', 'cycle.html'],
+  ['family.html', 'family.html'],
 ];
 
 /* ---------- 1. 入口定位 ---------- */
@@ -146,7 +148,9 @@ function bundlePage(htmlName, outName){
   const outPath = resolve(distDir, outName);
   writeFileSync(outPath, out);
 
-  console.log(`BUILD OK: dist/${outName} (${(out.length/1024).toFixed(1)} KB)`);
+  /* ⚠ 体积必须按 UTF-8 字节算（Buffer.byteLength）：JS 字符串 .length 是 UTF-16
+   * 码元数，中文每字只计 1，日志曾一贯偏小 15–25%（R85 对账 dist 时发现）。 */
+  console.log(`BUILD OK: dist/${outName} (${(Buffer.byteLength(out, 'utf8')/1024).toFixed(1)} KB)`);
   console.log(`  模块 ${order.length} 个，拓扑序: ${order.map(f => relative(ROOT, f)).join(' → ')}`);
   if (nScript) console.log(`  注: 转义了 ${nScript} 处 </script> 字面量`);
   for (const w of warnings) console.log('  WARN: ' + w);

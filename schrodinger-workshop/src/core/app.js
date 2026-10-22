@@ -13,6 +13,7 @@ import { createContext, createProgram, Quad, makeTarget, makeRGBA16F, makeReduce
 import { getKernel, buildShaders, AB_MAX } from '../physics/kernel.js';
 import { MAX_BLOBS, normBlob } from '../physics/schrodinger3d.js';
 import { injectStyles } from './styles.js';
+import { navLinksHtml } from './nav.js';
 import { TransmissionScanner } from './scan.js';
 import { TransmissionScanner3 } from './scan.js';
 import { SlitScanner } from './scan.js';
@@ -284,16 +285,7 @@ export class QuantumField {
   <div class="logo">${k.name}工场</div>
   <div class="eq">${k.equation}</div>
   <div id="status">● LIVE</div>
-  <a class="navlink" href="./two-body.html" title="双粒子构型空间：全同粒子 / 交换对称（R72）">双粒子 ⟋</a>
-  <a class="navlink" href="./hubbard.html" title="格点费米-哈伯德：莫特绝缘体 / 纠缠熵（R73）">哈伯德 ⛓</a>
-  <a class="navlink" href="./paths.html" title="费曼路径求和：路径族 / 相位 / 双缝条纹（R74）">路径 ∿</a>
-  <a class="navlink" href="./qcircuit.html" title="小规模量子线路：Bell / GHZ / QFT / Grover（R75）">线路 ⧉</a>
-  <a class="navlink" href="./noise.html" title="开放量子系统：T₁ 弛豫 / T₂ 退相位 / 纠缠猝死（R77）">噪声 ◍</a>
-  <a class="navlink" href="./qec.html" title="量子纠错：3 比特重复码 / 稳定子 / 阈值（R78）">纠错 ◈</a>
-  <a class="navlink" href="./gatenoise.html" title="线路级门噪声：门保真度 → 线路保真度 / 三错误谱 / 纠缠猝死（R80）">门噪声 ⌁</a>
-  <a class="navlink" href="./flag.html" title="容错综合征提取：冗余校验 / 猫态 / 旗标（R81）">容错 ⚑</a>
-  <a class="navlink" href="./rounds.html" title="多轮提取 + 跨轮联合解码：伪阈值（R82/R83）">多轮 ⟳</a>
-  <a class="navlink" href="./cycle.html" title="循环 EC + 横向逻辑门：门拦截与保真度口径（R84）">循环 ↻</a>
+${navLinksHtml()}
 </header>
 
 <aside id="panel" class="panel">

@@ -10,6 +10,7 @@
  * rho/curve/preset/kind/navLinks —— 全部确定性。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
+import { navHtml } from './core/nav.js';
 import { NZ_DEFAULTS, NZ_PRESETS, nzScan, nzTrajEnsemble, nzBloch, nzConcurrence, nzPurity, nzTrace, nzEsdTime, nzStepParam } from './physics/noise.js';
 
 const NZ_CSS = `
@@ -116,18 +117,7 @@ export class NoiseApp {
         <div class="logo">噪声工场</div>
         <div class="eq">ρ′ = Σ<sub>k</sub> <i>E</i><sub>k</sub> ρ <i>E</i><sub>k</sub><sup>†</sup></div>
         <div class="eq" style="opacity:.7">开放量子系统 · T₁ / T₂</div>
-        <a href="./index.html">单粒子主页</a>
-        <a href="./two-body.html">双粒子 ⧉</a>
-        <a href="./hubbard.html">哈伯德 ⛓</a>
-        <a href="./paths.html">路径 ∿</a>
-        <a href="./qcircuit.html">线路 ⧉</a>
-        <a href="./noise.html" class="cur">噪声 ◍</a>
-        <a href="./qec.html">纠错 ◈</a>
-        <a href="./shor.html">级联 ⊗3</a>
-        <a href="./gatenoise.html">门噪声 ⌁</a>
-        <a href="./flag.html">容错 ⚑</a>
-        <a href="./rounds.html">多轮 ⟳</a>
-        <a href="./cycle.html">循环 ↻</a>
+        ${navHtml('./noise.html', '      ')}
       </header>
 
       <aside id="nzPanel" class="panel">

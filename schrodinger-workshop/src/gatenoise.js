@@ -16,6 +16,7 @@
  * 参数口径：p 是每门每比特 Pauli 错误率；R77 退极化 Kraus 参数 p_K = 4p/3。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
+import { navHtml } from './core/nav.js';
 import { GN_DEFAULTS, GN_SPECTRA, GN_PRESETS, gnPresetGates, gnTrial, gnTouched, gnRun, gnSweep, gnClosedAt, gnEsdBells, gnGateFidelity, gnLambda, gnGammaZ, gnRhoRun, gnRhoInfo } from './physics/gatenoise.js';
 import { mulberry32 } from './physics/qcircuit.js';
 
@@ -137,18 +138,7 @@ export class GateNoiseApp {
       <header id="gnTop" class="panel">
         <div class="logo">门噪声工场</div>
         <div class="eq">F_gate = <i>1−2p/3</i> ─每门每比特 p─► <b>线路保真度</b></div>
-        <a href="./index.html">单粒子主页</a>
-        <a href="./two-body.html">双粒子 ⧉</a>
-        <a href="./hubbard.html">哈伯德 ⛓</a>
-        <a href="./paths.html">路径 ∿</a>
-        <a href="./qcircuit.html">线路 ⧉</a>
-        <a href="./noise.html">噪声 ◍</a>
-        <a href="./qec.html">纠错 ◈</a>
-        <a href="./shor.html">级联 ⊗3</a>
-        <a href="./gatenoise.html" class="cur">门噪声 ⌁</a>
-        <a href="./flag.html">容错 ⚑</a>
-        <a href="./rounds.html">多轮 ⟳</a>
-        <a href="./cycle.html">循环 ↻</a>
+        ${navHtml('./gatenoise.html', '      ')}
       </header>
 
       <aside id="gnPanel" class="panel">

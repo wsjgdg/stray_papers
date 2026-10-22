@@ -22,6 +22,7 @@
  * 摘要）/relaxNow。step/mirror 全部确定性接口（不依赖 rAF 时序）。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
+import { navHtml } from './core/nav.js';
 import { createContext, createProgram, Quad, makeTarget } from './core/gl.js';
 import { TB_PRESETS, TB_COMMON, tbMakeWave, tbKdkStep, tbMeasure, tbRelax, tbPot1, tbPot2, tbMakeVArray, tbFieldHash, TB_FS_KICK, TB_FS_DRIFT, TB_FS_DRAW } from './physics/twobody.js';
 
@@ -160,18 +161,7 @@ export class TwoBodyApp {
 <div id="tbTop" class="panel">
   <div class="logo">双粒子工场 · TWO-BODY</div>
   <div class="eq"><b>i</b>ℏ∂ψ/∂t = [−ℏ²/2m(∂₁²+∂₂²)+V₁+V₂+<b>g</b>δ]ψ</div>
-  <a href="./index.html">← 单粒子主页</a>
-  <a href="./two-body.html" class="cur">双粒子 ⧉</a>
-  <a href="./hubbard.html">哈伯德页</a>
-  <a href="./paths.html">路径页</a>
-  <a href="./qcircuit.html">线路页</a>
-  <a href="./noise.html">噪声页</a>
-  <a href="./qec.html">纠错页</a>
-  <a href="./shor.html">级联 ⊗3</a>
-  <a href="./gatenoise.html">门噪声 ⌁</a>
-  <a href="./flag.html">容错 ⚑</a>
-  <a href="./rounds.html">多轮 ⟳</a>
-  <a href="./cycle.html">循环 ↻</a>
+  ${navHtml('./two-body.html', '  ')}
 </div>
 <div id="tbPanel" class="panel">
   <div class="sec"><h3>预设</h3><div class="grid3" id="tbPresets">

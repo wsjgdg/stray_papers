@@ -11,6 +11,7 @@
  * measure/entropy/amps/probs/summary/navLinks —— 全部确定性（测量用种子）。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
+import { navHtml } from './core/nav.js';
 import { QC_UNARY, QC_PRESETS, qcNewState, qcApply, qcNorm, qcProbs, qcZZ, qcEntropy, qcConcurrence, qcAmplitudes, qcBits, qcSample, qcCollapse, qcPresetGates, mulberry32, qcExec, qcNewClassical, qcQubitRho, qcRhoFidelity, qcTargetAmps, qcTeleportGates, qcPrep1q } from './physics/qcircuit.js';
 
 const QC_CSS = `
@@ -125,18 +126,7 @@ export class QCircuitApp {
       <header id="qcTop" class="panel">
         <div class="logo">线路工场</div>
         <div class="eq">|ψ⟩ → <b>U<sub>m</sub></b>…<b>U<sub>1</sub></b>|0…0⟩ · <i>测量 = |a<sub>i</sub>|²</i></div>
-        <a href="./index.html">← 单粒子主页</a>
-        <a href="./two-body.html">双粒子 ⟋</a>
-        <a href="./hubbard.html">哈伯德 ⛓</a>
-        <a href="./paths.html">路径 ∿</a>
-        <a href="./qcircuit.html" class="cur">线路 ⧉</a>
-        <a href="./noise.html">噪声 ◍</a>
-        <a href="./qec.html">纠错 ◈</a>
-        <a href="./shor.html">级联 ⊗3</a>
-        <a href="./gatenoise.html">门噪声 ⌁</a>
-        <a href="./flag.html">容错 ⚑</a>
-        <a href="./rounds.html">多轮 ⟳</a>
-        <a href="./cycle.html">循环 ↻</a>
+        ${navHtml('./qcircuit.html', '      ')}
       </header>
 
       <aside id="qcPanel" class="panel">

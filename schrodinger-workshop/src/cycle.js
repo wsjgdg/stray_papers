@@ -16,6 +16,7 @@
  *   用「|0_L⟩ 的解析参数」会得到 F≈0（逻辑门把态翻到 |1_L⟩），这是 R84 踩过的坑。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
+import { navHtml, NAV_HREFS } from './core/nav.js';
 import { FS_KINDS, fsCircuit, fsFirstOrder, fsEnsemble, fsRun, cyInterception, cySweepCycles } from './physics/flagsynd.js';
 
 const CY_CSS = `
@@ -92,12 +93,6 @@ const DECODES = [
   { k: 'immediate', name: '每轮都修' },
   { k: 'repeat', name: '连续一致', desc: '连续 need 轮综合征相同才修；T×R<2 时永远等不到第二轮（恒不修正）' },
 ];
-const NAV = [
-  ['./index.html', '主页'], ['./two-body.html', '双粒子 ⧉'], ['./hubbard.html', '哈伯德 ⛓'],
-  ['./paths.html', '路径 ∿'], ['./qcircuit.html', '线路 ⧉'], ['./noise.html', '噪声 ◍'],
-  ['./qec.html', '纠错 ◈'], ['./shor.html', '级联 ⊗3'], ['./gatenoise.html', '门噪声 ⌁'],
-  ['./flag.html', '容错 ⚑'], ['./rounds.html', '多轮 ⟳'], ['./cycle.html', '循环 ↻'],
-];
 
 export class CycleApp {
   constructor(container, options = {}){
@@ -139,7 +134,7 @@ export class CycleApp {
       <header id="cyTop" class="panel">
         <div class="logo">循环工场</div>
         <div class="eq">一次 EC 只能管一段——<i>循环</i>才管整条线路</div>
-        ${NAV.map(([h, t]) => `<a href="${h}"${h === './cycle.html' ? ' class="cur"' : ''}>${t}</a>`).join('')}
+        ${navHtml('./cycle.html')}
       </header>
 
       <aside id="cyPanel" class="panel">
@@ -536,7 +531,7 @@ export class CycleApp {
       get state(){ return self.state; },
       kinds: () => KINDS.map(k => ({ k, label: FS_KINDS[k].label })),
       logics: () => LOGICS.map(l => ({ k: l.k, name: l.name })),
-      navLinks: () => NAV.map(([h]) => h),
+      navLinks: () => NAV_HREFS,
       data: () => ({
         cfg: { ...self.state },
         stats: self.fo ? self.fo.stats : (() => { const c = fsCircuit(self.state.kind, self.cfg()); return c.stats; })(),

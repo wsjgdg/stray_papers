@@ -12,6 +12,7 @@
  * 符号定陪集；另有一条独立的 Pauli 帧演算给出权重，两条路径逐位点对账（不一致即报错）。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
+import { navHtml } from './core/nav.js';
 import { FS_KINDS, FS_DEFAULTS, fsFirstOrder, fsProbeWorst, fsEnsemble } from './physics/flagsynd.js';
 
 const FL_CSS = `
@@ -94,14 +95,6 @@ const KINDS = Object.keys(FS_KINDS);
 /* 谱权重：depolar 三等分；x/z 只一种 */
 const SPEC_W = { depolar: { x: 1 / 3, y: 1 / 3, z: 1 / 3 }, x: { x: 1 }, z: { z: 1 } };
 const SPEC_NAME = { depolar: '退极化 X/Y/Z', x: '仅 X', z: '仅 Z' };
-const NAV = [
-  ['./index.html', '单粒子主页'], ['./two-body.html', '双粒子 ⧉'], ['./hubbard.html', '哈伯德 ⛓'],
-  ['./paths.html', '路径 ∿'], ['./qcircuit.html', '线路 ⧉'], ['./noise.html', '噪声 ◍'],
-  ['./qec.html', '纠错 ◈'], ['./shor.html', '级联 ⊗3'], ['./gatenoise.html', '门噪声 ⌁'],
-  ['./flag.html', '容错 ⚑'],
-  ['./rounds.html', '多轮 ⟳'],
-  ['./cycle.html', '循环 ↻'],
-];
 
 export class FlagApp {
   constructor(container, options = {}){
@@ -135,7 +128,7 @@ export class FlagApp {
       <header id="flTop" class="panel">
         <div class="logo">容错工场</div>
         <div class="eq">每门一次错误机会 ─► 综合提取<b>自己</b>出错时，码还成立吗？</div>
-        ${NAV.map(([href, txt]) => `<a href="${href}"${href === './flag.html' ? ' class="cur"' : ''}>${txt}</a>`).join('')}
+        ${navHtml('./flag.html')}
       </header>
 
       <aside id="flPanel" class="panel">

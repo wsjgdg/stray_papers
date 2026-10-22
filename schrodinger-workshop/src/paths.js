@@ -16,6 +16,7 @@
  * current / profileAt / profile / pathCount / sumInfo / spiralInfo / navLinks。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
+import { navHtml } from './core/nav.js';
 import { PI_DEFAULTS, PI_PRESETS, piProfile, piAmpAt, piPathSamples, piSpiral, piFringeSpacing, piStraightPhase, piModeSum, piFringes, piNxiFor } from './physics/paths.js';
 
 const PV_CSS = `
@@ -141,18 +142,7 @@ export class PathsApp {
       <header id="pvTop" class="panel">
         <div class="logo">路径工场</div>
         <div class="eq">ψ = Σ<b><sub>路径</sub></b> <i>e</i><sup>iS/ħ</sup></div>
-        <a href="./index.html">← 单粒子主页</a>
-        <a href="./two-body.html">双粒子 ⟋</a>
-        <a href="./hubbard.html">哈伯德 ⛓</a>
-        <a href="./paths.html" class="cur">路径 ∿</a>
-        <a href="./qcircuit.html">线路 ⧉</a>
-        <a href="./noise.html">噪声 ◍</a>
-        <a href="./qec.html">纠错 ◈</a>
-        <a href="./shor.html">级联 ⊗3</a>
-        <a href="./gatenoise.html">门噪声 ⌁</a>
-        <a href="./flag.html">容错 ⚑</a>
-        <a href="./rounds.html">多轮 ⟳</a>
-        <a href="./cycle.html">循环 ↻</a>
+        ${navHtml('./paths.html', '      ')}
       </header>
 
       <aside id="pvPanel" class="panel">

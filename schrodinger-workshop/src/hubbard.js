@@ -10,6 +10,7 @@
  * gapNow/history —— 全部确定性接口（不依赖 rAF 时序）。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
+import { navHtml } from './core/nav.js';
 import { hbSector, hbMeasure, hbEnergy, hbEntropy, hbKrylovExp, hbBondCorr, hbInitProduct, hbNorm, HbGsTask, HB_PRESETS } from './physics/hubbard.js';
 
 const HB_CSS = `
@@ -95,18 +96,7 @@ export class HubbardApp {
 <div id="hbTop" class="panel">
   <div class="logo">哈伯德工场 · HUBBARD</div>
   <div class="eq"><b>H</b> = −<b>t</b>Σ(c†<sub>i</sub>c<sub>i+1</sub>+h.c.) + <b>U</b>Σ n<sub>i↑</sub>n<sub>i↓</sub></div>
-  <a href="./index.html">← 单粒子主页</a>
-  <a href="./two-body.html">双粒子页</a>
-  <a href="./hubbard.html" class="cur">哈伯德 ⛓</a>
-  <a href="./paths.html">路径页</a>
-  <a href="./qcircuit.html">线路页</a>
-  <a href="./noise.html">噪声页</a>
-  <a href="./qec.html">纠错页</a>
-  <a href="./shor.html">级联 ⊗3</a>
-  <a href="./gatenoise.html">门噪声 ⌁</a>
-  <a href="./flag.html">容错 ⚑</a>
-  <a href="./rounds.html">多轮 ⟳</a>
-  <a href="./cycle.html">循环 ↻</a>
+  ${navHtml('./hubbard.html', '  ')}
 </div>
 <div id="hbPanel" class="panel">
   <div class="sec"><h3>预设</h3><div class="grid2" id="hbPresets">

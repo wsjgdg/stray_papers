@@ -12,6 +12,7 @@
  * 曲线用**精确**值（穷举与 p 无关），MC 只标当前 p 一点。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
+import { navHtml } from './core/nav.js';
 import { SHOR_STABS, SHOR_LOGICALS, shorTrial, shorEnsemble, shorSweep, shorExactPL, repPLexact, shorCrossover, shorDecode, shorSyndromeOf, shorCoset, shorTableStats, shorDistance, shorWeight2Stats, SHOR_STAB_COUNT } from './physics/shor.js';
 import { mulberry32 } from './physics/qcircuit.js';
 
@@ -113,18 +114,7 @@ export class ShorApp {
       <header id="shTop" class="panel">
         <div class="logo">级联工场</div>
         <div class="eq">[(|000⟩+|111⟩)/√2]⊗3 ─<b>噪声</b>─► <b>8 稳定子</b> ─► <b>最大似然修正</b></div>
-        <a href="./index.html">单粒子主页</a>
-        <a href="./two-body.html">双粒子 ⧉</a>
-        <a href="./hubbard.html">哈伯德 ⛓</a>
-        <a href="./paths.html">路径 ∿</a>
-        <a href="./qcircuit.html">线路 ⧉</a>
-        <a href="./noise.html">噪声 ◍</a>
-        <a href="./qec.html">纠错 ◈</a>
-        <a href="./shor.html" class="cur">级联 ⊗3</a>
-        <a href="./gatenoise.html">门噪声 ⌁</a>
-        <a href="./flag.html">容错 ⚑</a>
-        <a href="./rounds.html">多轮 ⟳</a>
-        <a href="./cycle.html">循环 ↻</a>
+        ${navHtml('./shor.html', '      ')}
       </header>
 
       <aside id="shPanel" class="panel">

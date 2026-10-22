@@ -17,6 +17,7 @@
  * >0 ⟺ O(p)。MC 斜率在 600 样本下噪声到 0.5–9.6，不可用作判据。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
+import { navHtml } from './core/nav.js';
 import { FS_KINDS, fsFirstOrder, fsEnsemble, fsRun, rdSweep, rdPseudoThreshold, rdSlope } from './physics/flagsynd.js';
 
 const RD_CSS = `
@@ -95,12 +96,6 @@ const FATES = [
   { k: 'logic', name: '静默逻辑', hue: COL.red },
   { k: 'flagged', name: '检出', hue: COL.mag },
 ];
-const NAV = [
-  ['./index.html', '主页'], ['./two-body.html', '双粒子 ⧉'], ['./hubbard.html', '哈伯德 ⛓'],
-  ['./paths.html', '路径 ∿'], ['./qcircuit.html', '线路 ⧉'], ['./noise.html', '噪声 ◍'],
-  ['./qec.html', '纠错 ◈'], ['./shor.html', '级联 ⊗3'], ['./gatenoise.html', '门噪声 ⌁'],
-  ['./flag.html', '容错 ⚑'], ['./rounds.html', '多轮 ⟳'], ['./cycle.html', '循环 ↻'],
-];
 
 export class RoundsApp {
   constructor(container, options = {}){
@@ -141,7 +136,7 @@ export class RoundsApp {
       <header id="rdTop" class="panel">
         <div class="logo">多轮工场</div>
         <div class="eq">同一个码，多测几轮——<i>怎么用</i>这些轮次才是关键</div>
-        ${NAV.map(([h, t]) => `<a href="${h}"${h === './rounds.html' ? ' class="cur"' : ''}>${t}</a>`).join('')}
+        ${navHtml('./rounds.html')}
       </header>
 
       <aside id="rdPanel" class="panel">
