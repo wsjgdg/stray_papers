@@ -13,7 +13,7 @@
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
 import { navHtml } from './core/nav.js';
-import { SHOR_STABS, SHOR_LOGICALS, shorTrial, shorEnsemble, shorSweep, shorExactPL, repPLexact, shorCrossover, shorDecode, shorSyndromeOf, shorCoset, shorTableStats, shorDistance, shorWeight2Stats, SHOR_STAB_COUNT } from './physics/shor.js';
+import { SHOR_STABS, SHOR_LOGICALS, shorTrial, shorEnsemble, shorSweep, shorExactPL, repPLexact, shorCrossover, shorDecode, shorSyndromeOf, shorCoset, shorTableStats, shorDistance, shorWeight2Stats, SHOR_STAB_COUNT, shorFaultSurvey, shorCircuitStats } from './physics/shor.js';
 import { mulberry32 } from './physics/qcircuit.js';
 
 const SHOR_CSS = `
@@ -45,6 +45,9 @@ const SHOR_CSS = `
     background:rgba(103,232,249,.08);border:1px solid var(--line);color:var(--txt);transition:all .15s}
   #shPanel button:hover{border-color:rgba(103,232,249,.45);color:var(--cyan)}
   #shPanel button.on{background:rgba(103,232,249,.18);border-color:var(--cyan);color:var(--cyan)}
+  #shPanel button:disabled{opacity:.38;cursor:not-allowed;filter:grayscale(1)}
+  #shPanel button:disabled:hover{border-color:var(--line);color:var(--txt)}
+  #shPanel #shSpWrap.off{opacity:.4;pointer-events:none;filter:grayscale(1)}
   #shHud{top:74px;right:14px;padding:11px 13px;z-index:10;min-width:224px;font-family:var(--mono)}
   #shHud .hrow{display:flex;justify-content:space-between;gap:12px;font-size:11.5px;padding:2.5px 0}
   #shHud .hrow span:first-child{color:var(--dim)}
@@ -86,6 +89,8 @@ export class ShorApp {
     this.container = typeof container === 'string' ? document.querySelector(container) : (container || document.body);
     const q = new URLSearchParams(location.search);
     const num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
+    /* R87 三键（与 R86 同款校验：非法值回落默认 ⟹ 零回归） */
+    const str = (k, d, ok) => (q.has(k) && ok(q.get(k)) ? q.get(k) : d);
     this.state = {
       p: num('p', 0.05),
       theta: num('theta', Math.PI / 2),
@@ -94,12 +99,16 @@ export class ShorApp {
       seed: Math.round(num('seed', 7)),
       injectQ: 4,
       injectT: 'x',
+      noise: str('noise', 'iid', v => v === 'iid' || v === 'gate'),
+      spectrum: str('spectrum', 'depolar', v => v === 'depolar' || v === 'x' || v === 'z'),
+      noisyPhase: str('noisyPhase', 'extract', v => v === 'extract' || v === 'all'),
     };
     this.trial = null;
     this.ens = null;
-    this.sweep = shorSweep({});
+    this.sweep = shorSweep(this.state);
     this.xover = { uncoded: shorCrossover('uncoded'), rep: shorCrossover('rep') };
     this._pDebounce = 0;
+    this._curveKey = null;
   }
 
   q(sel){ return this.container.querySelector(sel) || document.querySelector(sel); }
@@ -123,7 +132,26 @@ export class ShorApp {
         <div class="row"><label>φ</label><input type="range" id="shPhase" min="-3.1416" max="3.1416" step="0.01"><output id="shPhaseO">—</output></div>
         <div class="btns g5" id="shPresets"></div>
 
-        <div class="grp">物理错误率 p（逐比特独立 Pauli）</div>
+        <div class="grp">噪声模型（R87）</div>
+        <div class="btns">
+          <button data-n="iid">静态 i.i.d.</button>
+          <button data-n="gate">门级（R80）</button>
+        </div>
+        <div id="shSpWrap">
+          <div class="grp">错误谱（门级）</div>
+          <div class="btns g3">
+            <button data-sp="depolar">退极化</button>
+            <button data-sp="x">仅 X</button>
+            <button data-sp="z">仅 Z</button>
+          </div>
+          <div class="grp">注错相位（门级）</div>
+          <div class="btns">
+            <button data-np="extract">仅提取段</button>
+            <button data-np="all">全程</button>
+          </div>
+        </div>
+
+        <div class="grp">物理错误率 p<span id="shPLab">（逐比特独立 Pauli）</span></div>
         <div class="row"><label>p</label><input type="range" id="shP" min="0" max="0.3" step="0.002"><output id="shPO">—</output></div>
 
         <div class="grp">实验</div>
@@ -153,10 +181,17 @@ export class ShorApp {
         <div class="hrow"><span>判定</span><span id="hJudge" class="big">—</span></div>
         <hr>
         <div class="hrow"><span>P_L（实测）</span><span id="hPL">—</span></div>
-        <div class="hrow"><span>P_L（精确穷举）</span><span id="hPLx">—</span></div>
+        <div class="hrow"><span id="hPLxL">P_L（精确穷举）</span><span id="hPLx">—</span></div>
         <div class="hrow"><span>未编码 p</span><span id="hPun">—</span></div>
         <div class="hrow"><span>重复码对照</span><span id="hRep">—</span></div>
         <div class="hrow"><span>P_L / p</span><span id="hRatio">—</span></div>
+
+        <div id="hGateStats" style="display:none">
+          <div class="hrow"><span>机会数 M</span><span id="hM">—</span></div>
+          <div class="hrow"><span>c₁（P_L≈c₁p）</span><span id="hC1g">—</span></div>
+          <div class="hrow"><span>平均注入故障</span><span id="hMF">—</span></div>
+          <div class="hrow"><span>逻辑错 X_L/Z_L/Y_L/越界</span><span id="hFates">—</span></div>
+        </div>
         <hr>
         <div class="hrow"><span>0 错</span><span id="hC0">—</span></div>
         <div class="hrow"><span>1 错</span><span id="hC1">—</span></div>
@@ -203,6 +238,17 @@ export class ShorApp {
       b.textContent = t.toUpperCase(); b.dataset.t = t;
       this.on(b, 'click', () => { this.state.injectT = t; this.syncPanel(); });
       tb.appendChild(b);
+    }
+
+    /* R87 噪声模型 / 错误谱 / 注错相位 */
+    for (const b of this.container.querySelectorAll('#shPanel button[data-n]')){
+      this.on(b, 'click', () => { this.state.noise = b.dataset.n; this.modeChanged(); });
+    }
+    for (const b of this.container.querySelectorAll('#shPanel button[data-sp]')){
+      this.on(b, 'click', () => { this.state.spectrum = b.dataset.sp; this.modeChanged(); });
+    }
+    for (const b of this.container.querySelectorAll('#shPanel button[data-np]')){
+      this.on(b, 'click', () => { this.state.noisyPhase = b.dataset.np; this.modeChanged(); });
     }
 
     this.on(this.q('#shP'), 'input', e => {
@@ -252,9 +298,24 @@ export class ShorApp {
   }
 
   /* ---------- 数据 ---------- */
-  cfg(){ return { p: this.state.p, theta: this.state.theta, phase: this.state.phase, trials: this.state.trials, seed: this.state.seed }; }
+  cfg(){ return { p: this.state.p, theta: this.state.theta, phase: this.state.phase, trials: this.state.trials, seed: this.state.seed, noise: this.state.noise, spectrum: this.state.spectrum, noisyPhase: this.state.noisyPhase }; }
+
+  /* 噪声模型/谱/相位切换：曲线必须重算（门级走 MC 网格，与 i.i.d. 的精确网格不同） */
+  modeChanged(){
+    this._curveKey = null;
+    this.syncPanel();
+    this.renderHint();
+    this.recompute();
+  }
 
   recompute(){
+    /* 曲线：i.i.d. 的精确穷举与 p 无关（O(1) 每点，随时可重算）；门级是 16 点 ×
+       400 次 MC（~1.2s），只在口径/样本数变化时重算，拖 p 滑块不重算。 */
+    const key = this.state.noise + '|' + this.state.spectrum + '|' + this.state.noisyPhase + '|' + this.state.trials;
+    if (key !== this._curveKey){
+      this.sweep = shorSweep({ ...this.cfg(), sweepTrials: 400 });
+      this._curveKey = key;
+    }
     this.ens = shorEnsemble(this.cfg());
     this.rollOnce();
     this.renderHud();
@@ -263,9 +324,11 @@ export class ShorApp {
 
   rollOnce(force){
     this._rng = this._rng || mulberry32(this.state.seed ^ 0x9e37);
+    const base = { theta: this.state.theta, phase: this.state.phase,
+      noise: this.state.noise, spectrum: this.state.spectrum, noisyPhase: this.state.noisyPhase };
     this.trial = force
-      ? shorTrial({ theta: this.state.theta, phase: this.state.phase, forceErrors: force }, this._rng)
-      : shorTrial({ p: this.state.p, theta: this.state.theta, phase: this.state.phase }, this._rng);
+      ? shorTrial({ ...base, forceErrors: force }, this._rng)
+      : shorTrial({ ...base, p: this.state.p }, this._rng);
   }
 
   inject(errs){
@@ -282,6 +345,23 @@ export class ShorApp {
     for (const b of this.container.querySelectorAll('#shPresets button')){
       b.classList.toggle('on', Math.abs(+b.dataset.theta - s.theta) < 1e-6 && Math.abs(+b.dataset.phase - s.phase) < 1e-6);
     }
+    /* R87 三键高亮 + i.i.d. 下谱/相位组置灰 */
+    const gate = s.noise === 'gate';
+    for (const b of this.container.querySelectorAll('#shPanel button[data-n]')) b.classList.toggle('on', b.dataset.n === s.noise);
+    for (const b of this.container.querySelectorAll('#shPanel button[data-sp]')) b.classList.toggle('on', b.dataset.sp === s.spectrum);
+    for (const b of this.container.querySelectorAll('#shPanel button[data-np]')) b.classList.toggle('on', b.dataset.np === s.noisyPhase);
+    const spw = this.q('#shSpWrap');
+    if (spw) spw.classList.toggle('off', !gate);
+    /* 「指定错误注入」是 i.i.d. 口径的教学装置（forceErrors 直接打在数据比特上），
+       门级口径没有对应语义 ⟹ 置灰而不是假装有 */
+    for (const id of ['shInject', 'shInject2']) { const b = this.q('#' + id); if (b) b.disabled = gate; }
+    const lab = this.q('#shPLab');
+    if (lab) lab.textContent = gate ? '（每门 × 触及比特）' : '（逐比特独立 Pauli）';
+    const gst = this.q('#hGateStats');
+    if (gst) gst.style.display = gate ? '' : 'none';
+    const plxl = this.q('#hPLxL');
+    if (plxl) plxl.textContent = gate ? 'P_L 精确（无闭式）' : 'P_L（精确穷举）';
+
     const setv = (id, v) => { const e = this.q('#' + id); if (e) e.value = v; };
     setv('shP', s.p); this.q('#shPO').textContent = s.p.toFixed(3);
     setv('shTheta', s.theta); this.q('#shThetaO').textContent = s.theta.toFixed(2);
@@ -296,7 +376,12 @@ export class ShorApp {
       '内层 3 个**比特翻转码**纠 X，外层**相位翻转码**纠 Z。8 个稳定子（6 个 Z 对 + 2 个 X 六重）' +
       '撑起 2⁸=256 维稳定子空间，码空间维数 2⁹/2⁸=2。码距 3：**任意单比特错误全纠回**，' +
       '双错开始漏（权重 2 失败 117/324）。综合征用**单个复用 ancilla 顺序测量**（10 比特态矢，' +
-      '与并行 8-ancilla 逐位等价）。精确 P_L(p) 由 3⁹=19683 个错误模式穷举得出。');
+      '与并行 8-ancilla 逐位等价）。精确 P_L(p) 由 3⁹=19683 个错误模式穷举得出。' +
+      (this.state.noise === 'gate'
+        ? ' <b style="color:var(--mag)">门级口径（R87）</b>：噪声改为「每个门 × 该门触及的每个比特」' +
+          '一次机会 ⟹ 提取段 <b>52</b> 个机会（全程 90 个），P_L 从 O(p²) 退化到 <b>O(p)</b>' +
+          '（领先阶 c₁ 由单故障枚举精确给出）。判定走 Pauli 帧（综合征可由帧精确预测）。'
+        : ' <span style="color:var(--dim)">切到「门级（R80）」可换到 R87 的门级噪声口径。</span>'));
   }
 
   /* 综合征表：恒等 + 21 个单错类 + 3 个双错样例（现场计算，不硬编码结论） */
@@ -347,9 +432,20 @@ export class ShorApp {
     }
     if (e){
       set('hPL', nf(e.PL, 5));
-      set('hPLx', ex(e.PLexact, 3));
+      if (e.noise === 'gate'){
+        /* 门级：没有便宜的精确多项式（帧空间 2¹⁸ × 综合征 2⁸），精确量只有
+           单故障枚举给出的**领先阶 c₁** ⟹ 如实显示「无闭式」而非伪造一个值。 */
+        set('hPLx', '无闭式（c₁=' + nf(e.c1, 3) + '）');
+        set('hRep', '不同电路（M=52/90）');
+        set('hM', e.M + '（' + (s.noisyPhase === 'all' ? '全程' : '仅提取段') + '）');
+        set('hC1g', nf(e.c1, 3) + '（致命位点 ' + e.fatal + '/' + e.total + '）');
+        set('hMF', nf(e.meanFaults, 3) + '（≈M·p=' + nf(e.M * e.p, 3) + '）');
+        set('hFates', e.byCoset.slice(1).join('/'));
+      } else {
+        set('hPLx', ex(e.PLexact, 3));
+        set('hRep', nf(e.repExact, 5) + (e.repExact > e.PLexact ? ' ↓' : ' ↑'));
+      }
       set('hPun', nf(e.Pun, 4));
-      set('hRep', nf(e.repExact, 5) + (e.repExact > e.PLexact ? ' ↓' : ' ↑'));
       set('hRatio', s.p > 0 ? nf(e.PL / e.Pun, 3) + (e.PL < e.Pun ? ' ↓' : ' ↑') : '—');
       const cnt = (a, b) => a + (b ? ' /L' + b : ' ✓');
       set('hC0', cnt(e.byWeight[0], e.byWeightL[0]));
@@ -573,7 +669,9 @@ export class ShorApp {
     g.clearRect(0, 0, W, H);
     const padL = 44 * dpr, padR = 12 * dpr, padT = 26 * dpr, padB = 30 * dpr;
     const x0 = padL, x1 = W - padR, y0 = padT, y1 = H - padB;
-    const pMin = 0.004, pMax = 0.62, yMin = 1e-4, yMax = 1;
+    /* 门级曲线的网格起点更小（0.001），纵轴下限抬高到 1e-3（P_L 没有 i.i.d. 那种 1e-4 量级） */
+    const gate = this.state.noise === 'gate';
+    const pMin = gate ? 8e-4 : 0.004, pMax = 0.62, yMin = gate ? 1e-3 : 1e-4, yMax = 1;
     const X = p => x0 + (Math.log10(p) - Math.log10(pMin)) / (Math.log10(pMax) - Math.log10(pMin)) * (x1 - x0);
     const Y = v => y1 - (Math.log10(Math.max(yMin, v)) - Math.log10(yMin)) / (Math.log10(yMax) - Math.log10(yMin)) * (y1 - y0);
 
@@ -612,11 +710,9 @@ export class ShorApp {
     };
     /* 细网格上的连续曲线（sweep 只有 12 点，加密到 120 点画线） */
     const dense = f => { const a = []; for (let k = 0; k <= 120; k++){ const p = pMin * Math.pow(pMax / pMin, k / 120); a.push([p, f(p)]); } return a; };
-    line(dense(p => p), 'rgba(148,163,184,.5)', [4, 3], 1.2);                    /* 未编码 */
-    line(dense(p => repPLexact(p).PL), 'rgba(251,191,36,.75)', [6, 3], 1.5);     /* 重复码（同信道） */
-    line(dense(p => shorExactPL(p).PL), 'rgba(103,232,249,.9)', null, 1.8);      /* Shor 精确 */
+    line(dense(p => p), 'rgba(148,163,184,.5)', [4, 3], 1.2);                    /* 未编码 p */
 
-    /* 交叉点标注 */
+    /* 交叉点标注（i.i.d. 口径：精确穷举曲线与两条基线的交点） */
     const xo = (v, label, col) => {
       if (!(v > pMin && v < pMax)) return;
       const x = X(v);
@@ -626,8 +722,26 @@ export class ShorApp {
       g.textAlign = v > 0.2 ? 'right' : 'left';
       g.fillText(label, x + (v > 0.2 ? -4 * dpr : 4 * dpr), y0 + 10 * dpr);
     };
-    xo(this.xover.uncoded, 'p*≈' + (this.xover.uncoded || 0).toFixed(3) + '（追平未编码）', 'rgba(226,232,240,.65)');
-    xo(this.xover.rep, 'p*≈' + (this.xover.rep || 0).toFixed(3) + '（追平重复码）', 'rgba(251,191,36,.8)');
+    if (gate){
+      /* 门级：MC 折线 + 单故障枚举给出的**精确领先阶** c₁·p（小 p 参照）。
+         ⚠ 不画重复码/未编码的「交叉点」——门级口径下三者不是同一机会数基准。 */
+      const c1 = this.sweep.c1 || 0;
+      line(sw.p.map((p, i) => [p, sw.PL[i]]), 'rgba(103,232,249,.9)', null, 1.8);
+      line(dense(p => c1 * p), 'rgba(240,171,252,.75)', [5, 3], 1.4);
+      for (let i = 0; i < sw.p.length; i++){
+        const x = X(sw.p[i]), y = Y(sw.PL[i]);
+        g.fillStyle = 'rgba(103,232,249,.55)';
+        g.beginPath(); g.arc(x, y, 2.2 * dpr, 0, 6.2832); g.fill();
+      }
+      g.fillStyle = 'rgba(240,171,252,.85)'; g.font = (9 * dpr) + 'px ui-monospace,monospace';
+      g.textAlign = 'left';
+      g.fillText('c₁·p = ' + c1.toFixed(2) + '·p（领先阶，单故障枚举精确）', x0 + 4 * dpr, y0 + 10 * dpr);
+    } else {
+      line(dense(p => repPLexact(p).PL), 'rgba(251,191,36,.75)', [6, 3], 1.5);   /* 重复码（同信道） */
+      line(dense(p => shorExactPL(p).PL), 'rgba(103,232,249,.9)', null, 1.8);    /* Shor 精确 */
+      xo(this.xover.uncoded, 'p*≈' + (this.xover.uncoded || 0).toFixed(3) + '（追平未编码）', 'rgba(226,232,240,.65)');
+      xo(this.xover.rep, 'p*≈' + (this.xover.rep || 0).toFixed(3) + '（追平重复码）', 'rgba(251,191,36,.8)');
+    }
 
     /* 当前 p：竖线 + MC 点（±3σ） */
     const xc = X(Math.max(pMin, Math.min(pMax, this.state.p)));
@@ -645,12 +759,18 @@ export class ShorApp {
     /* 标题与图例 */
     g.fillStyle = 'rgba(226,232,240,.9)'; g.font = (10.5 * dpr) + 'px ui-monospace,monospace';
     g.textAlign = 'left'; g.textBaseline = 'alphabetic';
-    g.fillText('P_L vs p（双对数，Shor 精确 = 3⁹ 穷举）', 8 * dpr, 15 * dpr);
+    g.fillText(gate ? 'P_L vs p（双对数，门级噪声：MC 折线 + 精确领先阶）'
+                    : 'P_L vs p（双对数，Shor 精确 = 3⁹ 穷举）', 8 * dpr, 15 * dpr);
     g.font = (9.5 * dpr) + 'px ui-monospace,monospace';
     g.textAlign = 'right';
-    g.fillStyle = 'rgba(103,232,249,.9)'; g.fillText('Shor', x1 - 92 * dpr, 15 * dpr);
-    g.fillStyle = 'rgba(251,191,36,.85)'; g.fillText('重复码', x1 - 52 * dpr, 15 * dpr);
-    g.fillStyle = 'rgba(240,171,252,.95)'; g.fillText('MC±3σ', x1 - 8 * dpr, 15 * dpr);
+    if (gate){
+      g.fillStyle = 'rgba(103,232,249,.9)'; g.fillText('门级 MC', x1 - 66 * dpr, 15 * dpr);
+      g.fillStyle = 'rgba(240,171,252,.95)'; g.fillText('c₁·p', x1 - 20 * dpr, 15 * dpr);
+    } else {
+      g.fillStyle = 'rgba(103,232,249,.9)'; g.fillText('Shor', x1 - 92 * dpr, 15 * dpr);
+      g.fillStyle = 'rgba(251,191,36,.85)'; g.fillText('重复码', x1 - 52 * dpr, 15 * dpr);
+      g.fillStyle = 'rgba(240,171,252,.95)'; g.fillText('MC±3σ', x1 - 8 * dpr, 15 * dpr);
+    }
   }
 
   /* ---------- 按错误数分解（0..9） ---------- */
@@ -663,6 +783,7 @@ export class ShorApp {
     const padL = 42 * dpr, padR = 14 * dpr, padT = 28 * dpr, padB = 34 * dpr;
     const x0 = padL, x1 = W - padR, y0 = padT, y1 = H - padB;
     const N = e.trials;
+    const gate = e.noise === 'gate';
     const maxC = Math.max(1, ...e.byWeight);
     const bw = (x1 - x0) / 10;
     const Y = v => y1 - (v / maxC) * (y1 - y0);
@@ -693,7 +814,8 @@ export class ShorApp {
 
       g.fillStyle = 'rgba(226,232,240,.9)'; g.font = (9 * dpr) + 'px ui-monospace,monospace';
       g.textAlign = 'center'; g.textBaseline = 'alphabetic';
-      g.fillText(k + ' 错', cx, y1 + 13 * dpr);
+      /* i.i.d.：k = 数据比特错误个数；门级：k = 注入故障个数，第 10 桶是「≥9」 */
+      g.fillText((gate ? (k === 9 ? '≥9' : String(k)) : String(k)) + (gate ? ' 故障' : ' 错'), cx, y1 + 13 * dpr);
       g.fillStyle = 'rgba(148,163,184,.8)'; g.font = (8.5 * dpr) + 'px ui-monospace,monospace';
       g.fillText((100 * tot / N).toFixed(1) + '%', cx, y1 + 24 * dpr);
       if (tot > 0){
@@ -705,7 +827,7 @@ export class ShorApp {
 
     g.fillStyle = 'rgba(226,232,240,.9)'; g.font = (10.5 * dpr) + 'px ui-monospace,monospace';
     g.textAlign = 'left'; g.textBaseline = 'alphabetic';
-    g.fillText('按错误个数分解（' + N + ' 次试验）', 8 * dpr, 15 * dpr);
+    g.fillText('按' + (gate ? '注入故障数' : '错误个数') + '分解（' + N + ' 次试验）', 8 * dpr, 15 * dpr);
     g.font = (9.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'right';
     g.fillStyle = 'rgba(103,232,249,.9)'; g.fillText('纠回', x1 - 46 * dpr, 15 * dpr);
     g.fillStyle = 'rgba(248,113,113,.95)'; g.fillText('逻辑错误', x1 - 8 * dpr, 15 * dpr);
@@ -727,9 +849,29 @@ export class ShorApp {
         p: self.ens.p, trials: self.ens.trials, PL: self.ens.PL, PLexact: self.ens.PLexact,
         Pun: self.ens.Pun, repExact: self.ens.repExact,
         byWeight: self.ens.byWeight.slice(), byWeightL: self.ens.byWeightL.slice(), byCoset: self.ens.byCoset.slice(),
+        /* ---- R87 门级 ---- */
+        noise: self.ens.noise, spectrum: self.ens.spectrum, noisyPhase: self.ens.noisyPhase,
+        M: self.ens.M, sites: self.ens.sites, c1: self.ens.c1,
+        fatal: self.ens.fatal, total: self.ens.total,
+        meanFaults: self.ens.meanFaults, synMiss: self.ens.synMiss,
       } : null,
-      sweep: () => ({ p: self.sweep.p.slice(), PLexact: self.sweep.PLexact.slice(), rep: self.sweep.rep.slice() }),
+      sweep: () => ({ p: self.sweep.p.slice(), PLexact: self.sweep.PLexact.slice(), PL: self.sweep.PL.slice(),
+        rep: self.sweep.rep.slice(), noise: self.sweep.noise, spectrum: self.sweep.spectrum,
+        noisyPhase: self.sweep.noisyPhase, c1: self.sweep.c1, M: self.sweep.M }),
       crossover: () => ({ ...self.xover }),
+      /* R87：单故障精确枚举（领先阶 c₁ 的独立来源） */
+      survey: () => { const s = shorFaultSurvey(self.cfg(), 1); return { M: s.M, sites: s.sites, c1: s.c1, fatal: s.fatal, total: s.total, rows: s.rows.map(r => ({ ...r })) }; },
+      circuitStats: () => shorCircuitStats(self.cfg()),
+      /* 门级确定性单次（faults 强制注入），测试用。
+         ⚠ p 必须置 0：否则随机注错会叠加在强制位点之上，病例不再确定。 */
+      trialGate: (faults) => {
+        const t = shorTrial({ ...self.cfg(), p: 0, faults, noise: 'gate' }, mulberry32(12345));
+        return { faults: t.faults.map(f => ({ ...f })), syn: t.syn.slice(), synFrame: t.synFrame.slice(),
+          fix: t.fix.map(e => ({ q: e.q, t: e.t })), F: t.F, coset: t.coset, logicalError: t.logicalError, synMiss: t.synMiss };
+      },
+      setNoise: v => { self.state.noise = v; self.modeChanged(); },
+      setSpectrum: v => { self.state.spectrum = v; self.modeChanged(); },
+      setNoisyPhase: v => { self.state.noisyPhase = v; self.modeChanged(); },
       table: () => shorTableStats(),
       distance: () => shorDistance(),
       weight2: () => shorWeight2Stats(),

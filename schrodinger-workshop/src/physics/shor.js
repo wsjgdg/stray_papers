@@ -21,7 +21,8 @@
  * 对易向量。态矢真跑用**单个复用 ancilla 顺序测 8 个稳定子**（10 比特，测后重置），
  * 与并行 8-ancilla（17 比特，shorTrialParallel）在同种子下逐位一致——pot79 D 组对账。
  * ========================================================================== */
-import { qcNewState, qcApply, qcApplyAll, qcMeasureQubit, mulberry32, qcQubitRho, qcRhoFidelity } from './qcircuit.js';
+import { qcNewState, qcApply, qcApplyAll, qcMeasureQubit, mulberry32, qcQubitRho, qcRhoFidelity, qcExpect, qcFrToggle, qcFrGate } from './qcircuit.js';
+import { gnTouched, gnPauli, gnSampleError } from './gatenoise.js';
 
 export const SHOR_N = 9;
 
@@ -34,6 +35,12 @@ export const SHOR_DEFAULTS = {
   theta: Math.PI / 2, phase: Math.PI / 2,
   trials: 3000,
   seed: 7,
+  /* ---- R87 门级噪声三键（默认 iid ⟹ 与 R79 逐位等价，零回归）----
+     noise:      'iid'  = R79 静态口径（9 个数据比特各一次机会，P_L = O(p²)）
+                 'gate' = R80 口径（每个门 × 该门触及的每个比特 = 一次机会）
+     spectrum:   'depolar'（X/Y/Z 各 p/3）/ 'x'（仅 X，概率 p）/ 'z'（仅 Z，概率 p）
+     noisyPhase: 'extract' 仅综合征提取段（M = 52）/ 'all' 编码+提取+解码（M = 90） */
+  noise: 'iid', spectrum: 'depolar', noisyPhase: 'extract',
 };
 
 /* ---------- Pauli 辛表示 ---------- */
@@ -201,7 +208,7 @@ export function shorDecodeGates(){
    稳定子两两对易 ⟹ 顺序测量与并行 8-ancilla 测量给出相同综合征、相同数据末态
    （pot79 D 组用 shorTrialParallel 的 17 比特真跑逐条对账，同种子逐位一致）。
    收益：态矢 2¹⁷ → 2¹⁰（128 倍），单次 ~23ms → ~0.2ms，MC 集合达到可交互。 */
-export function shorTrial(cfg = {}, rng){
+function shorTrialIid(cfg = {}, rng){
   const c = { ...SHOR_DEFAULTS, ...cfg };
   const s = qcNewState(10);
   const ANC = 9;
@@ -339,6 +346,258 @@ export function shorTrialParallel(cfg = {}, rng){
   return { errors, syn, fix, F, logicalError: shorCoset(res) !== 0, visibleError: F < 0.5, ok: shorCoset(res) === 0, coset: shorCoset(res), weight: errors.length, trace, state: s };
 }
 
+/* ============================================================================
+ * R87：门级噪声（noise='gate'）接进 Shor 码
+ *
+ * 与 R86（重复码）同口径三键：noise / spectrum / noisyPhase，复用 R80 的
+ * gnTouched（单比特门 1 / CNOT 2）与 gnSampleError。有效机会数
+ *   M(extract) = 6 个 Z 类稳定子 × 2 CNOT × 2 + 2 个 X 类稳定子 × (H + 6 CNOT + H)
+ *              = 24 + 28 = 52
+ *   M(all)     = 编码 19 + 提取 52 + 解码 19 = 90
+ * 每个机会再分 x/y/z 三个 Pauli 位点 ⟹ sites = 3M（156 / 270）。
+ * 机会数是重复码（8/16）的 6.5 倍 —— 这是本轮要量化的代价。
+ *
+ * 判定走**Pauli 帧**（不依赖参考态，与 shorExactPL 的代数口径同源）：
+ *   ① 帧随线路逐门传播（qcFrGate），注错用 qcFrToggle 打点；
+ *   ② 综合征由**帧在测量时刻的 ancilla x 位精确预测**——Z 类稳定子的 CNOT 把数据
+ *      x 帧 parity 送到 ancilla，X 类稳定子把数据 z 帧经两道 H 转成 ancilla x 帧
+ *      ⟹ 两类都统一为 (fr.x >> ANC) & 1；与态矢实测逐位对照 ⟹ synMiss ≡ 0；
+ *   ③ 修正后（解码前）取数据 9 位的残差帧，shorCoset 定陪集 = 逻辑判据。
+ * 测量后 ancilla 复位 ⟹ 帧位清零（复用 ancilla 的必要处理，否则下一次预测串味）。
+ * ========================================================================== */
+export const SHOR_ANC = 9;
+const DATA_MASK = 0x1FF;                 /* 9 个数据比特 */
+const OPS_CACHE = new Map();
+
+/* 扁平 ops 列表（带 ph 相位标签）。缓存 key 只含 theta|phase —— 逐次运行选项
+   （forceErrors / faults）由 shorExec 经 opts 传入，绝不进缓存（R86 的
+   CIRC_CACHE 污染坑：缓存里烘进空数组会让后续 ensemble 的噪声分支走空循环）。 */
+export function shorOps(cfg = {}){
+  const c = { ...SHOR_DEFAULTS, ...cfg };
+  const key = c.theta + '|' + c.phase;
+  let ops = OPS_CACHE.get(key);
+  if (ops) return ops;
+  ops = [];
+  const push = (o, ph) => ops.push({ ...o, ph });
+  push({ op: 'ry', q: 0, theta: c.theta }, 'prep');
+  push({ op: 'rz', q: 0, theta: c.phase }, 'prep');
+  for (const g of shorEncodeGates()) push(g, 'encode');
+  for (const st of SHOR_STABS){
+    if (st.k === 'z'){
+      for (const q of st.qs) push({ op: 'cnot', c: q, q2: SHOR_ANC }, 'extract');
+    } else {
+      push({ op: 'h', q: SHOR_ANC }, 'extract');
+      for (const q of st.qs) push({ op: 'cnot', c: SHOR_ANC, q2: q }, 'extract');
+      push({ op: 'h', q: SHOR_ANC }, 'extract');
+    }
+    push({ op: 'meas', q: SHOR_ANC }, 'extract');
+    push({ op: 'reset', q: SHOR_ANC }, 'extract');   /* 复位不计机会、不计门数 */
+  }
+  push({ op: 'fix' }, 'correct');
+  for (const g of shorDecodeGates()) push(g, 'decode');
+  OPS_CACHE.set(key, ops);
+  return ops;
+}
+
+export function shorCircuitStats(cfg = {}){
+  const c = { ...SHOR_DEFAULTS, ...cfg };
+  const opps = { prep: 0, encode: 0, extract: 0, decode: 0 };
+  let gates = 0;
+  for (const o of shorOps(c)){
+    if (o.op === 'meas' || o.op === 'reset' || o.op === 'fix') continue;
+    gates++;
+    opps[o.ph] += gnTouched(o).length;
+  }
+  const M = c.noisyPhase === 'all' ? opps.encode + opps.extract + opps.decode : opps.extract;
+  return { opps, M, sites: 3 * M, gates, nq: 10, noisy: c.noisyPhase === 'all' ? 'encode+extract+decode' : 'extract' };
+}
+
+/* 执行一次线路（态矢 + Pauli 帧）。opts: { rng, cfg, faults, probe }
+   faults: [{gate,q,t}] 强制注入位点（枚举/测试用，无视注错范围与概率） */
+export function shorExec(cfg, opts = {}){
+  const c = { ...SHOR_DEFAULTS, ...cfg };
+  const { rng = null, faults = null, probe = false } = opts;
+  const ops = shorOps(c);
+  const p = c.p, spectrum = c.spectrum;
+  const noisyPh = c.noisyPhase === 'all' ? ['encode', 'extract', 'decode'] : ['extract'];
+  const s = qcNewState(10);
+  const fr = { x: 0, z: 0 };
+  const fired = [];
+  const syn = [], synFrame = [];
+  const diag = { synMiss: 0, random: 0 };
+  const forced = new Map();
+  if (faults) for (const f of faults){
+    if (!forced.has(f.gate)) forced.set(f.gate, []);
+    forced.get(f.gate).push(f);
+  }
+  const inject = (q, t, gate) => { gnPauli(s, q, t); qcFrToggle(fr, q, t); fired.push({ gate, q, t }); };
+
+  /* 测量：rng 在时走 qcMeasureQubit；无 rng 时确定性优先（枚举用，与 R86 同口径）。
+     帧预测 = 测量时刻 ancilla 的 x 帧位（Z 类：数据 x 帧 parity 已被 CNOT 送到
+     ancilla；X 类：数据 z 帧经两道 H 转成 ancilla x 帧）。 */
+  const measure = (q) => {
+    const bit = 1 << q;
+    let p1 = 0;
+    for (let i = 0; i < s.dim; i++) if (i & bit) p1 += s.re[i] * s.re[i] + s.im[i] * s.im[i];
+    let out;
+    if (rng){
+      out = qcMeasureQubit(s, q, rng);
+    } else {
+      if (p1 < 1e-9) out = 0;
+      else if (p1 > 1 - 1e-9) out = 1;
+      else { diag.random++; out = p1 > 0.5 ? 1 : 0; }
+      for (let i = 0; i < s.dim; i++) if ((((i & bit) ? 1 : 0) !== out)) { s.re[i] = 0; s.im[i] = 0; }
+      let nrm = 0;
+      for (let i = 0; i < s.dim; i++) nrm += s.re[i] * s.re[i] + s.im[i] * s.im[i];
+      if (nrm > 0){ const rr = 1 / Math.sqrt(nrm); for (let i = 0; i < s.dim; i++){ s.re[i] *= rr; s.im[i] *= rr; } }
+    }
+    const sf = (fr.x >> q) & 1;
+    synFrame.push(sf);
+    if (sf !== out) diag.synMiss++;
+    return out;
+  };
+
+  let fix = [], coset = 0, res = { x: 0, z: 0 }, probeOut = null, F = 0;
+  const synBits = [];
+  for (let i = 0; i < ops.length; i++){
+    const o = ops[i];
+    if (o.op === 'meas'){ synBits.push(measure(o.q)); syn.push(synBits[synBits.length - 1]); continue; }
+    if (o.op === 'reset'){
+      if (synBits[synBits.length - 1]) qcApply(s, { op: 'x', q: o.q });
+      fr.x &= ~(1 << o.q); fr.z &= ~(1 << o.q);      /* 复位后重新制备 |0⟩，帧清零 */
+      continue;
+    }
+    if (o.op === 'fix'){
+      fix = shorDecode(syn);
+      for (const e of fix){ qcApply(s, { op: e.t, q: e.q }); qcFrToggle(fr, e.q, e.t); }
+      /* 探针：所有修正已完成、解码之前（码空间仍完好定义） */
+      res = { x: fr.x & DATA_MASK, z: fr.z & DATA_MASK };
+      coset = shorCoset(res);
+      if (probe){
+        probeOut = { stab: [], logic: [] };
+        for (const g of SHOR_STABS){
+          let xm = 0, zm = 0;
+          for (const q of g.qs) { if (g.k === 'z') zm |= 1 << q; else xm |= 1 << q; }
+          probeOut.stab.push(qcExpect(s, xm, zm));
+        }
+        for (const lg of SHOR_LOGICALS) probeOut.logic.push(qcExpect(s, lg.v.x, lg.v.z));
+        const th = c.theta / 2, ph = c.phase;
+        probeOut.F = qcRhoFidelity(qcQubitRho(s, 0), [Math.cos(th), 0], [Math.sin(th) * Math.cos(ph), Math.sin(th) * Math.sin(ph)]);
+      }
+      continue;
+    }
+    qcApply(s, o);
+    qcFrGate(fr, o);
+    const list = forced.get(i);
+    if (list){
+      for (const f of list) inject(f.q, f.t, i);
+    } else if (rng && p > 0 && o.ph !== 'prep' && noisyPh.includes(o.ph)){
+      for (const q of gnTouched(o)){
+        const t = gnSampleError(spectrum, p, rng);
+        if (t) inject(q, t, i);
+      }
+    }
+  }
+  /* 解码后残差：把末态帧沿**解码门的逆序**回推到码空间再定陪集。
+     ⚠ 必须做这一步，否则 noisyPhase='all' 时解码段（19 个机会）的故障全部发生在
+     探针点之后、判定完全看不见。推导：无解码故障时 fr_end = D R D†（D=解码、
+     R=探针点残差），回推给 D† fr_end D = R ⟹ 与 cosetFix 恒等；有解码故障时
+     故障被 D† 映回码空间与 R 合并 ⟹ 正确计入。自洽性检验：extract 口径下
+     cosetDec ≡ cosetFix（解码段不注错，二者必须逐位相等）。 */
+  for (let i = shorDecodeGates().length - 1; i >= 0; i--) qcFrGate(fr, shorDecodeGates()[i]);
+  const resDec = { x: fr.x & DATA_MASK, z: fr.z & DATA_MASK };
+  const cosetDec = shorCoset(resDec);
+
+  /* 末态保真度（解码后 q0 的部分迹 vs 目标纯态）——R79 口径，仅叙事用 */
+  if (!probe){
+    const th = c.theta / 2, ph = c.phase;
+    F = qcRhoFidelity(qcQubitRho(s, 0), [Math.cos(th), 0], [Math.sin(th) * Math.cos(ph), Math.sin(th) * Math.sin(ph)]);
+  } else {
+    F = probeOut.F;
+  }
+  /* 主判据 = cosetDec（覆盖解码段故障）；cosetFix = 探针点（解码前）陪集，对照用 */
+  return { syn, synFrame, fix, res, coset: cosetDec, cosetFix: coset, cosetDec,
+    resDec, F, fired, diag, state: s, probe: probeOut,
+    logicalError: cosetDec !== 0, weight: fired.length };
+}
+
+/* 门级模式单次试验（页面与 MC 的入口；i.i.d. 走 shorTrialIid 保零回归） */
+export function shorTrialGate(cfg = {}, rng){
+  const c = { ...SHOR_DEFAULTS, ...cfg };
+  const r = shorExec(c, { rng, faults: c.faults || null });
+  const st = shorCircuitStats(c);
+  const trace = [
+    { step: 'prepare', gate: 'Ry(θ)Rz(φ)' },
+    { step: 'encode', gate: 'CNOT×8 + H×3' },
+    { step: 'gatenoise', faults: r.fired.map(f => ({ gate: f.gate, q: f.q, t: f.t })) },
+    { step: 'syndrome', syn: r.syn.slice(), synFrame: r.synFrame.slice() },
+    { step: 'correct', fix: r.fix.map(e => ({ q: e.q, t: e.t })) },
+    { step: 'decode', gate: 'CNOT×8 + H×3' },
+  ];
+  return {
+    errors: r.fired.map(f => ({ q: f.q, t: f.t })),
+    syn: r.syn, synFrame: r.synFrame, fix: r.fix, F: r.F,
+    logicalError: r.logicalError, ok: r.coset === 0, coset: r.coset,
+    visibleError: r.F < 0.5, weight: r.weight, trace, state: r.state,
+    noise: c.noise, spectrum: c.spectrum, noisyPhase: c.noisyPhase,
+    faults: r.fired.slice(), synMiss: r.diag.synMiss, M: st.M,
+  };
+}
+
+/* 统一入口：i.i.d. 逐位等价 R79，gate 走门级路径 */
+export function shorTrial(cfg = {}, rng){
+  const c = { ...SHOR_DEFAULTS, ...cfg };
+  if (c.noise === 'gate') return shorTrialGate(c, rng);
+  const r = shorTrialIid(c, rng);
+  r.noise = 'iid'; r.spectrum = c.spectrum; r.noisyPhase = c.noisyPhase;
+  return r;
+}
+
+/* ---------- 单故障精确枚举 ⟹ 领先阶 c₁（P_L = c₁p + O(p²)）----------
+   位点 = (机会, Pauli 类型)。退极化谱每个位点三类型各 p/3 ⟹ 权重 1/3；
+   单谱只有本类型、概率 p ⟹ 权重 1。fatal = 该单故障下残差 ∉ S。
+   c₁ = Σ w(t)·fatal(位点,t)。这是**精确**的领先阶，不含统计误差。 */
+export function shorFaultSurvey(cfg = {}, order = 1){
+  const c = { ...SHOR_DEFAULTS, ...cfg, noise: 'gate' };
+  const ops = shorOps(c);
+  const noisyPh = c.noisyPhase === 'all' ? ['encode', 'extract', 'decode'] : ['extract'];
+  const sites = [];
+  for (let i = 0; i < ops.length; i++){
+    const o = ops[i];
+    if (o.op === 'meas' || o.op === 'reset' || o.op === 'fix') continue;
+    if (o.ph === 'prep' || !noisyPh.includes(o.ph)) continue;
+    for (const q of gnTouched(o)) sites.push({ gate: i, q, ph: o.ph, op: o.op });
+  }
+  const types = c.spectrum === 'x' ? ['x'] : c.spectrum === 'z' ? ['z'] : ['x', 'y', 'z'];
+  const w = types.length === 1 ? 1 : 1 / 3;
+  const rows = [];
+  let c1 = 0, fatal = 0, total = 0;
+  for (const s of sites){
+    for (const t of types){
+      const r = shorExec(c, { rng: null, faults: [{ gate: s.gate, q: s.q, t }] });
+      const f = r.coset !== 0;
+      total++; if (f){ fatal++; c1 += w; }
+      rows.push({ gate: s.gate, q: s.q, t, ph: s.ph, op: s.op, coset: r.coset, fatal: f, syn: r.syn.join('') });
+    }
+  }
+  /* 二阶（可选）：位点对。退极化提取段 N=156 ⟹ 12090 对，约 1s；仅测试用。 */
+  let c2 = null, pairs = null;
+  if (order >= 2){
+    const list = [];
+    for (const s of sites) for (const t of types) list.push({ gate: s.gate, q: s.q, t, w });
+    c2 = 0; pairs = 0;
+    for (let i = 0; i < list.length; i++)
+      for (let j = i + 1; j < list.length; j++){
+        const r = shorExec(c, { rng: null, faults: [list[i], list[j]] });
+        pairs++;
+        if (r.coset !== 0) c2 += list[i].w * list[j].w;
+      }
+  }
+  const st = shorCircuitStats(c);
+  return { M: st.M, sites: st.sites, opps: st.opps, spectrum: c.spectrum, noisyPhase: c.noisyPhase,
+    rows, fatal, total, c1, c2, pairs, byPhase: sites.reduce((a, s) => (a[s.ph] = (a[s.ph] || 0) + 1, a), {}) };
+}
+
 /* ---------- 精确 P_L：3⁹ = 19683 个错误模式一次性穷举 ----------
    fail[w] = 权重 w 的错误模式中被判逻辑失败的个数（与 p 无关），
    P_L(p) = Σ_w fail[w]·(p/3)^w·(1−p)^{9−w} 是 9 次多项式。 */
@@ -459,27 +718,52 @@ export function repPLexact(p){
    逻辑失败用**代数判据**（残差 ∉ S，即 coset≠0），与 shorExactPL 同口径：
    综合征超出权重 ≤2 覆盖时解码器不动作（shorDecode 返回 []），残差 ∉ N(S)，
    计入 byCoset[4]（越界类）。F<0.5 的可见判据另见 trial.visibleError。 */
+const SURVEY_CACHE = new Map();
+export function shorSurveyCached(cfg = {}){
+  const c = { ...SHOR_DEFAULTS, ...cfg, noise: 'gate' };
+  const key = c.spectrum + '|' + c.noisyPhase;
+  let v = SURVEY_CACHE.get(key);
+  if (!v){ v = shorFaultSurvey(c, 1); SURVEY_CACHE.set(key, v); }
+  return v;
+}
+
 export function shorEnsemble(cfg = {}){
   const c = { ...SHOR_DEFAULTS, ...cfg };
   const rng = mulberry32(c.seed);
   const n = Math.max(1, c.trials | 0);
-  let nL = 0;
+  const gate = c.noise === 'gate';
+  let nL = 0, nF = 0, synMiss = 0;
   const byWeight = new Array(10).fill(0);
   const byWeightL = new Array(10).fill(0);
   const byCoset = [0, 0, 0, 0, 0];   /* [∈S, X_L·S, Z_L·S, Y_L·S, ∉N(S)]；shorCoset 的 −1 归入越界类 */
   for (let k = 0; k < n; k++){
     const r = shorTrial(c, rng);
-    byWeight[r.weight]++;
-    if (r.logicalError){ nL++; byWeightL[r.weight]++; byCoset[r.coset === -1 ? 4 : r.coset]++; }
+    /* i.i.d.：weight = 数据错误数 ∈[0,9]；gate：weight = 注入故障数，第 10 桶为「≥9」 */
+    const wi = Math.min(r.weight, 9);
+    byWeight[wi]++;
+    if (gate){ nF += r.weight; synMiss += r.synMiss || 0; }
+    if (r.logicalError){ nL++; byWeightL[wi]++; byCoset[r.coset === -1 ? 4 : r.coset]++; }
   }
   const ex = shorExactPL(c.p);
-  return {
+  const out = {
     p: c.p, trials: n, PL: nL / n,
-    PLexact: ex.PL, Pun: c.p,
+    PLexact: gate ? null : ex.PL, Pun: c.p,
     byWeight, byWeightL, byCoset,
     /* 对照：重复码（同信道）与未编码 */
     repExact: repPLexact(c.p).PL,
+    noise: c.noise, spectrum: c.spectrum, noisyPhase: c.noisyPhase,
   };
+  if (gate){
+    const st = shorCircuitStats(c);
+    const sv = shorSurveyCached(c);
+    out.M = st.M; out.sites = st.sites; out.opps = st.opps;
+    out.c1 = sv.c1; out.fatal = sv.fatal; out.total = sv.total;
+    out.meanFaults = nF / n; out.synMiss = synMiss;
+    /* 门级口径下「重复码基线」不是同一个电路（机会数 8/16 vs 52/90），
+       repExact 是 i.i.d. 口径的值 ⟹ 不相干，置 null；跨码对照见 pot87。 */
+    out.repExact = null;
+  }
+  return out;
 }
 
 /* 扫描（页面曲线用）：**精确** P_L(p) 与重复码对照（穷举与 p 无关，O(1) 每点）。
@@ -487,11 +771,30 @@ export function shorEnsemble(cfg = {}){
    但 12 点 × 数千次仍要数秒，曲线用精确值即可（pot79 C 组多点对账 MC vs 精确）。 */
 export function shorSweep(cfg = {}){
   const c = { ...SHOR_DEFAULTS, ...cfg };
-  const ps = c.ps || [0.002, 0.005, 0.01, 0.02, 0.04, 0.07, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5];
-  const out = { p: [], PLexact: [], rep: [], Pun: [] };
+  const gate = c.noise === 'gate';
+  const ps = c.ps || (gate
+    /* 门级：几何网格，覆盖到交点之外（P_L 在 p≳0.3 已接近饱和） */
+    ? [0.001, 0.0015, 0.002, 0.003, 0.005, 0.007, 0.01, 0.015, 0.02, 0.03, 0.05, 0.08, 0.12, 0.2, 0.3, 0.45]
+    : [0.002, 0.005, 0.01, 0.02, 0.04, 0.07, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5]);
+  const out = { p: [], PLexact: [], PL: [], rep: [], Pun: [], noise: c.noise, spectrum: c.spectrum, noisyPhase: c.noisyPhase };
+  if (gate){
+    /* 门级没有便宜的精确多项式（帧空间 2¹⁸ × 综合征 2⁸ 太大），曲线走 MC；
+       领先阶 c₁·p 由单故障枚举精确给出，一并回显作小 p 参照。 */
+    const sv = shorSurveyCached(c);
+    out.c1 = sv.c1; out.M = shorCircuitStats(c).M;
+    const tr = Math.max(120, c.sweepTrials | 0 || 400);
+    for (const p of ps){
+      const rng = mulberry32(c.seed ^ 0x5f3a);
+      let nL = 0;
+      for (let k = 0; k < tr; k++) if (shorTrialGate({ ...c, p }, rng).logicalError) nL++;
+      out.p.push(p); out.PL.push(nL / tr); out.PLexact.push(null); out.rep.push(null); out.Pun.push(p);
+    }
+    return out;
+  }
   for (const p of ps){
     out.p.push(p);
     out.PLexact.push(shorExactPL(p).PL);
+    out.PL.push(null);
     out.rep.push(repPLexact(p).PL);
     out.Pun.push(p);
   }
