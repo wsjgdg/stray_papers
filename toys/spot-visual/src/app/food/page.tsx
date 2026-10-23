@@ -8,6 +8,7 @@ import { PROVINCE_FOODS, CUISINE_COLORS, TASTE_KEYS, TASTE_DIMENSIONS, getProvin
 import { TASTE_EVIDENCE, EVIDENCE_LABEL, EVIDENCE_STYLE, SCOVILLE_BANDS, getDishNutrition, sodiumToScore } from '@/lib/taste-evidence';
 import { getDishIngredients, SODIUM_BANDS } from '@/lib/ingredient-nutrition';
 import { DISH_SODIUM, SODIUM_DATASET_SIZE } from '@/lib/dish-sodium.generated';
+import { getSimilarTaste, tierOf, TIER_LABEL, TIER_STYLE } from '@/lib/taste-similar';
 import { resolveCityFood } from '@/lib/food-city';
 import { loadCityGeo, getCachedCityGeo, type CityGeo } from '@/lib/city-geo';
 import { TasteRadar } from '@/components/food/taste-radar';
@@ -406,6 +407,20 @@ export default function FoodPage() {
             <p className="text-sm text-gray-600 leading-relaxed">{panel.desc}</p>
           </div>
 
+          <div className="flex items-center gap-1.5 flex-wrap text-[11px] mb-3">
+            <span className="text-gray-400 shrink-0">口味相近</span>
+            {getSimilarTaste(selected.name, 5).map((x) => (
+              <button
+                key={x.prov.name}
+                onClick={() => enterProvince(x.prov.name)}
+                title={x.prov.fullName + ' · ' + x.prov.dish + ' · 相似度 ' + (x.sim * 100).toFixed(0) + '%'}
+                className="px-2 py-0.5 rounded-full border border-gray-200 text-gray-600 hover:border-emerald-400 hover:text-emerald-700 transition-colors"
+              >
+                {x.prov.dish}
+              </button>
+            ))}
+          </div>
+
           {drill && cityRows.length > 0 && (
             <div className="mt-3 pt-3 border-t border-gray-100">
               <div className="flex items-center justify-between mb-1.5">
@@ -470,6 +485,21 @@ export default function FoodPage() {
             <div className="min-h-[52px] flex items-start justify-between gap-2 mb-1">
               <h2 className="text-lg font-bold text-gray-900 leading-tight line-clamp-2">{panel.title}</h2>
               <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: panelColor }}>{panel.cuisine}</span>
+            {(() => {
+              const tier = tierOf({
+                dish: !!DISH_SODIUM[panel.dish],
+                nutrition: !!getDishNutrition(panel.dish),
+                ingredient: !!getDishIngredients(panel.dish),
+              });
+              return (
+                <span
+                  className={'shrink-0 text-[10px] px-1.5 py-0.5 rounded-full border ' + TIER_STYLE[tier]}
+                  title="这道菜目前有几层外部数据可核"
+                >
+                  {TIER_LABEL[tier]}
+                </span>
+              );
+            })()}
             </div>
             <p className="text-xs text-gray-400 mb-4 flex items-center gap-1">
               <MapPin className="w-3 h-3" />{panel.sub}
