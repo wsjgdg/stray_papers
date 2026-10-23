@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Share2, Check, UtensilsCrossed, MapPin, Flame, ChevronLeft, Loader2, Sparkles, Layers } from 'lucide-react';
 import type { EChartsOption } from 'echarts';
@@ -32,6 +32,10 @@ export default function FoodPage() {
   const [drill, setDrill] = useState<string | null>(null);
   /** 下钻后选中的城市展示简称 */
   const [citySel, setCitySel] = useState<string | null>(null);
+  /** 城市清单搜索词（匹配城市名或该地菜名） */
+  const [cityQuery, setCityQuery] = useState('');
+  /** 信息卡引用：选中城市后滚到这里 */
+  const infoRef = useRef<HTMLDivElement | null>(null);
 
   const [cityGeo, setCityGeo] = useState<CityGeo | null>(null);
   const [cityLoading, setCityLoading] = useState(false);
@@ -72,6 +76,12 @@ export default function FoodPage() {
       .finally(() => { if (alive) setCityLoading(false); });
     return () => { alive = false; };
   }, [drill]);
+
+  // 点地图上的城市后，说明卡在下方，自动带过去（block:'nearest' 不打扰已在视口内的情况）
+  useEffect(() => {
+    if (!citySel) return;
+    infoRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [citySel]);
 
   const enterProvince = useCallback((name: string) => {
     const code = nameToCode[name];
@@ -394,6 +404,7 @@ export default function FoodPage() {
             右栏放雷达和口味条就够高了，把文字类内容挪到地图下方，
             左栏不再空一大片，整页高度也更接近。 */}
         <motion.div
+          ref={infoRef}
           key={`${panel.key}-info`}
           initial={{ opacity: 0.45 }}
           animate={{ opacity: 1 }}
@@ -427,8 +438,20 @@ export default function FoodPage() {
                 <span className="text-xs font-semibold text-gray-700">城市清单</span>
                 <span className="text-[10px] text-gray-400">{localCount}/{cityRows.length} 有专属名食</span>
               </div>
+              <input
+                value={cityQuery}
+                onChange={(e) => setCityQuery(e.target.value)}
+                placeholder="搜索城市或菜名…"
+                className="w-full mb-1.5 px-2 py-1 text-[11px] rounded-lg border border-gray-200 focus:border-emerald-400 focus:outline-none"
+              />
               <div className="flex flex-wrap gap-1.5 max-h-[104px] overflow-y-auto pr-1 content-start">
-                {cityRows.map((c) => (
+                {cityRows
+                  .filter((c) => {
+                    const q = cityQuery.trim();
+                    if (!q) return true;
+                    return c.label.includes(q) || c.food.dish.includes(q) || c.fullName.includes(q);
+                  })
+                  .map((c) => (
                   <button
                     key={c.fullName}
                     onClick={() => setCitySel(c.label)}
