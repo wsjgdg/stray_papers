@@ -126,6 +126,14 @@ export const DISH_NUTRITION: Record<string, DishNutrition> = {
     sugarsG: 10.3,
     caveat: '对应 FDC 的「Sweet and sour pork」（糖醋猪肉类做法），锅包肉同属挂糊糖醋汁，作量级参照。',
   },
+  庐州烤鸭: {
+    fdcId: 2706141,
+    description: 'Duck, Peking',
+    dataType: 'Survey (FNDDS)',
+    sodiumMg: 287,
+    sugarsG: 4.41,
+    caveat: 'FDC 只有北京烤鸭条目，庐州烤鸭是合肥的挂炉烤鸭，腌料与吃法不同，此处仅作烤鸭类的量级参照。',
+  },
   扬州炒饭: {
     fdcId: 2708951,
     description: 'Rice, fried, meatless',
