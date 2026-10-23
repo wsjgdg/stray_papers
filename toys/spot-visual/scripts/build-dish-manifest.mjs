@@ -22,7 +22,7 @@ const IMG_RE = /\.(jpe?g|png|webp|avif)$/i;
 /** 从数据文件里收所有菜名（省级 + 市级，去重） */
 function dishNames() {
   const names = new Set();
-  for (const f of ['src/lib/food-data.ts', 'src/lib/food-city.ts']) {
+  for (const f of ['src/lib/food-data.ts', 'src/lib/food-city.ts', 'src/lib/food-city-extra.ts']) {
     if (!fs.existsSync(f)) continue;
     const s = fs.readFileSync(f, 'utf8');
     for (const m of s.matchAll(/dish:\s*'([^'（）]+)'/g)) names.add(m[1].trim());
@@ -51,7 +51,8 @@ for (const [dish, cfg] of Object.entries(index)) {
 const byLength = [...dishes].sort((a, b) => b.length - a.length);
 for (const file of files) {
   const base = file.replace(IMG_RE, '');
-  const hit = byLength.find((d) => base.includes(d) || d.includes(base));
+  // 文件名与菜名完全一致时直接命中，避免被更长的菜名抢走
+  const hit = dishes.includes(base) ? base : byLength.find((d) => base.includes(d) || d.includes(base));
   if (!hit) {
     unmatched.push(file);
     continue;
