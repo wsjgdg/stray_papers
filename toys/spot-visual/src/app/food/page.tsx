@@ -4,10 +4,11 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Share2, Check, UtensilsCrossed, MapPin, Flame, ChevronLeft, Loader2, Sparkles, Layers } from 'lucide-react';
 import type { EChartsOption } from 'echarts';
-import { PROVINCE_FOODS, CUISINE_COLORS, TASTE_KEYS, getProvince } from '@/lib/food-data';
+import { PROVINCE_FOODS, CUISINE_COLORS, TASTE_KEYS, TASTE_DIMENSIONS, getProvince } from '@/lib/food-data';
 import { resolveCityFood } from '@/lib/food-city';
 import { loadCityGeo, getCachedCityGeo, type CityGeo } from '@/lib/city-geo';
 import { TasteRadar } from '@/components/food/taste-radar';
+import { DishVisual } from '@/components/food/dish-visual';
 import ChinaMap, { type MapRegistration } from '@/components/map/china-map';
 import { cn } from '@/lib/utils';
 
@@ -31,6 +32,7 @@ export default function FoodPage() {
   const [cityLoading, setCityLoading] = useState(false);
   const [cityErr, setCityErr] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showBasis, setShowBasis] = useState(false);
 
   const selected = getProvince(provCode) ?? PROVINCE_FOODS[0];
   const cuisineColor = CUISINE_COLORS[selected.cuisine] ?? '#64748B';
@@ -382,16 +384,46 @@ export default function FoodPage() {
                 </div>
               )}
 
-              <div className="text-center mb-2">
-                <div className="text-3xl font-bold" style={{ color: panelColor }}>{panel.dish}</div>
+              <div className="mb-3">
+                <DishVisual
+                  dish={panel.dish}
+                  cuisine={panel.cuisine}
+                  cuisineColor={panelColor}
+                  taste={selected.taste}
+                />
               </div>
 
-              <div className="flex justify-center mb-4">
+              <div className="flex justify-center mb-2">
                 <TasteRadar taste={selected.taste} color={panelColor} size={240} />
               </div>
-              <p className="text-[10px] text-center text-gray-400 -mt-2 mb-3">
-                {panel.isCity ? '雷达图取所属省域口味参考' : '口味雷达为按菜系特征的估算标签'}
-              </p>
+
+              {/* 口径披露：数值无外部统计来源，仅为本项目自评标尺 */}
+              <div className="mb-3 text-center">
+                <button
+                  onClick={() => setShowBasis((v) => !v)}
+                  className="inline-flex items-center gap-1 text-[10px] text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {panel.isCity ? '口味取所属省域参考' : '口味雷达为本项目自评口径'}
+                  <span className="underline decoration-dotted underline-offset-2">{showBasis ? '收起依据' : '依据？'}</span>
+                </button>
+              </div>
+              {showBasis && (
+                <div className="mb-4 rounded-xl border border-gray-200 bg-gray-50/80 p-2.5 text-left">
+                  <p className="text-[10px] text-gray-500 leading-relaxed mb-2">
+                    <b className="text-gray-700">数值没有外部凭据。</b>不来自消费调研、营养数据库或文献量表，
+                    而是按下列锚点对「该省代表菜典型做法」逐项定标后 0–100 归一，只适合菜系间横向比较。
+                  </p>
+                  <ul className="space-y-1">
+                    {TASTE_DIMENSIONS.map((d) => (
+                      <li key={d.key} className="text-[10px] leading-snug text-gray-500">
+                        <span className="font-semibold text-gray-700">{d.name}</span>
+                        <span className="text-gray-400"> · </span>
+                        0 = {d.low}；100 = {d.high}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* taste bars */}
               <div className="space-y-2 mb-4">

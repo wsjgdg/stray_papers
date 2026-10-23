@@ -19,6 +19,15 @@ export interface MapRegistration {
   geo: unknown;
 }
 
+/** 从 option 里取出当前使用的 map 名（map series 或 geo 组件） */
+function mapNameOf(option: EChartsOption): string | undefined {
+  const series = Array.isArray(option.series) ? (option.series as Record<string, unknown>[]) : [];
+  const fromSeries = series.find((s) => typeof s?.map === 'string')?.map as string | undefined;
+  if (fromSeries) return fromSeries;
+  const geo = option.geo as { map?: string } | undefined;
+  return geo?.map;
+}
+
 export interface ChinaMapProps {
   option: EChartsOption;
   /** 点击地图元素（省份区块 / 市级区块 / 散点）时回调，参数为 ECharts 事件对象 */
@@ -68,7 +77,26 @@ export default function ChinaMap({ option, onSelect, maps, className, height = '
         registeredMaps.add(m.name);
       }
     }
-    chartRef.current?.setOption(option, { notMerge: true });
+    const chart = chartRef.current;
+    if (!chart) return;
+
+    // 同一张地图上的数据更新（如选中某个市）会走 notMerge 全量重建，
+    // 那样会把用户已经缩放/拖拽的视野重置回初始 boundingCoords。
+    // 这里先取出当前 roam 状态，再回灌到新 option，保证「选择后视野不动」。
+    const nextMap = mapNameOf(option);
+    const prev = chart.getOption() as { series?: Array<{ map?: string; zoom?: number; center?: number[] }> } | undefined;
+    const prevSeries = prev?.series?.[0];
+    let next = option;
+    if (nextMap && prevSeries?.map === nextMap && (prevSeries.zoom != null || prevSeries.center != null)) {
+      const series = (Array.isArray(option.series) ? option.series : []) as Record<string, unknown>[];
+      next = {
+        ...option,
+        series: series.map((s, i) =>
+          i === 0 ? { ...s, zoom: prevSeries.zoom, center: prevSeries.center } : s,
+        ),
+      } as EChartsOption;
+    }
+    chart.setOption(next, { notMerge: true });
   }, [option, maps]);
 
   return <div ref={elRef} className={className} style={{ width: '100%', height }} />;
