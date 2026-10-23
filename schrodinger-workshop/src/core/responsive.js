@@ -44,15 +44,24 @@ export const RESP_CSS = `
     .qtop.qtop a{font-size:9.5px;padding:2px 6px}}
   /* ---- ≤900：导航收进汉堡抽屉（替代原「隐导航」） ---- */
   @media (max-width:900px){
+    /* position:relative + z-index:11：burger 须压在抽屉（z:9）之上。二者同是
+       .qtop  stacking context 的子元素，.qtop 的 z:10 只管对外层级——初版漏了
+       这条，实测 elementFromPoint 命中 .qnav，真实手指点汉堡位置无效。 */
     .qburger{display:flex;align-items:center;justify-content:center;flex:none;
+      position:relative;z-index:11;
       width:30px;height:26px;padding:0;font-size:15px;line-height:1}
     .qnav{display:none;position:fixed;top:0;left:0;right:0;z-index:9;
       grid-template-columns:repeat(auto-fill,minmax(102px,1fr));gap:7px;
-      padding:52px 12px 14px;max-height:100vh;overflow-y:auto;
+      padding:52px 12px 14px;max-height:100vh;max-height:100dvh;overflow-y:auto;
       background:rgba(4,6,12,.96);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
       border-bottom:1px solid var(--line)}
     .qtop.open .qnav{display:grid}
-    .qnav a{font-size:12px;padding:8px 4px;text-align:center}
+    /* !important 收口：抽屉是覆盖层上下文，页面级顶栏规则不得泄漏进来——主页
+       id 级 #topbar .navlink（styles.js，11px/3px 8px）与 1400 档 .qtop.qtop a
+       （9.5px/2px 6px）特权都高于类选择器（id 赢 (0,3,1)），升维打不过；实测
+       抽屉链接曾被压到 20px 高（< WCAG 2.5.8 AA 的 24px）。13×1.25+14×2
+       = 44.25px，同时满足 44px 触摸目标。仅 ≤900 生效。 */
+    .qnav a{font-size:13px!important;padding:14px 6px!important;line-height:1.25!important;text-align:center}
   }
   /* ---- ≤860 手机段：底部 dock 三态（控制/读数/全屏；dock 三态常驻，
      off 态退让为半透明——曾把 off 态 dock 也 display:none，实测成死胡同：
@@ -68,16 +77,25 @@ export const RESP_CSS = `
   html.qf-mobile body.qf-m-off .qpanel,html.qf-mobile body.qf-m-off .qhud{display:none}
   html.qf-mobile body.qf-m-off .qf-dock{opacity:.4}
   html.qf-mobile body.qf-m-off .qf-dock:active{opacity:.85}
-  /* ---- ≤860 手机段：hint 换行防溢出、给 dock 让位 ---- */
+  /* ---- ≤860 手机段：hint 换行防溢出、给 dock 让位；hud sheet 统一可滚
+     （各页 #xxHud 的 overflow 不一致：hubbard/shor 无声明 ⟹ 内容超 46vh
+      时静默裁切，实测 shor 已临界 387>386；gatenoise 的 .sfill 在 .strack
+      内 top:0;bottom:0，加滚动不裁切——13 页 × 2 视口实测确认） ---- */
   @media (max-width:860px){
     .qhint{white-space:normal;max-width:calc(100vw - 20px);bottom:40px;
       font-size:10.5px;line-height:1.5}
+    .qhud{overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   }
+  @media (prefers-reduced-motion:reduce){.qf-dock{transition:none}.qtop a{transition:none}}
 `;
 
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const MQ = '(max-width:860px)';
-const SHEET_G = 'position:fixed;left:6px;right:6px;width:auto;top:auto;bottom:44px;max-height:46vh;z-index:12';
+/* dvh 双声明：移动浏览器工具栏收放时 100vh 按大视口计算 ⟹ stage/sheet 带
+   跳动（iOS 经典病）。旧浏览器忽略不认识的 dvh 行、保留 vh 行（CSS 错误
+   处理即 fallback，无需 @supports）。dvh 支持：Safari 15.4+/Chrome 108+/
+   Firefox 101+，低于本项目 README 地板 Safari 16.4。 */
+const SHEET_G = 'position:fixed;left:6px;right:6px;width:auto;top:auto;bottom:44px;max-height:46vh;max-height:46dvh;z-index:12';
 const STAGE_G = 'position:fixed;left:6px;right:6px;width:auto;top:48px;transform:none';
 
 export function injectResponsive(){
@@ -110,14 +128,32 @@ export function injectResponsive(){
     const b = document.createElement('button');
     b.className = 'qburger';
     b.type = 'button';
+    b.setAttribute('aria-expanded', 'false');
     b.setAttribute('aria-label', '打开导航');
     b.textContent = '☰';
-    b.addEventListener('click', e => { e.stopPropagation(); top.classList.toggle('open'); });
+    /* 开合状态同步 aria-expanded / aria-label（a11y：初版恒为「打开导航」） */
+    const setOpen = open => {
+      top.classList.toggle('open', open);
+      b.setAttribute('aria-expanded', open ? 'true' : 'false');
+      b.setAttribute('aria-label', open ? '关闭导航' : '打开导航');
+    };
+    b.addEventListener('click', e => { e.stopPropagation(); setOpen(!top.classList.contains('open')); });
     top.insertBefore(b, top.firstChild);
-    nav.addEventListener('click', e => { if (e.target.closest('a')) top.classList.remove('open'); });
+    /* 抽屉内任意点击即收起：点链接本就导航，点 backdrop 现在也能取消
+       （初版只认链接 ⟹ 打开后除了导航无法退出，实测确认的死胡同） */
+    nav.addEventListener('click', () => setOpen(false));
   });
   document.addEventListener('click', e => {
     if (!e.target.closest('.qtop')) $$('.qtop.open').forEach(t => t.classList.remove('open'));
+  });
+  /* Escape 收抽屉 + 焦点回汉堡（键盘用户路径；初版无 Escape） */
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    $$('.qtop.open').forEach(t => {
+      t.classList.remove('open');
+      const b = t.querySelector('.qburger');
+      if (b){ b.setAttribute('aria-expanded', 'false'); b.setAttribute('aria-label', '打开导航'); b.focus(); }
+    });
   });
 
   /* ---- 2. 底部 dock（三态常驻：默认 off = 舞台优先，dock 退让为半透明） ---- */
@@ -130,7 +166,10 @@ export function injectResponsive(){
   const syncStage = () => {
     if (!document.documentElement.classList.contains('qf-mobile')) return;
     /* dock 三态常驻 ⟹ 舞台恒让出底部 44px dock 带（off 态不再压缩到 8px） */
-    $$('.qstage').forEach(el => { el.style.height = 'calc(100vh - 48px - 44px)'; });
+    $$('.qstage').forEach(el => {
+      el.style.height = 'calc(100vh - 48px - 44px)';
+      el.style.height = 'calc(100dvh - 48px - 44px)'; /* 旧浏览器忽略此行保留上一行 */
+    });
   };
   dock.addEventListener('click', e => {
     const b = e.target.closest('button');

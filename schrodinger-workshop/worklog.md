@@ -68,6 +68,7 @@
 | R92 | README 收尾段串写修复（文档追改轮，生产代码零改动） | 用户报「readme 和 worklog 内容串了」。根因：README 收尾段「RX 收官」段自 R85（c147971）起整段替换式更新，但 f249f5e（R86）/19b476f（R87）/db4453c（R88）三代只改标签号不改内容 ⟹ 「R88 收官」下挂的是 R85 内容，R85–R88 真身收官全缺失。修复：R88/R87/R86 三段补回 + 原段标签改回 R85 + 标题改「R67–R92 全部闭环」 |
 | R93 | README 职责重构：只留功能/实现/使用，R 轮次记录归 worklog（文档重构轮，生产代码零改动） | 用户澄清职责边界：「readme 不应该写工作流程和完成进度（R）…只放现有功能和结构、实现方式、使用说明」。重构后 README 六节：简介 → 运行 → 功能 → 物理与数值方法 → 架构 → 技术栈。**删两节**：`## 验证`（bak L2178 起，CDP 通过率总表）、`## 后续方向`（bak L2443 起，backlog + R67–R72 计划表）——均属工作流程/进度，归 worklog。全文清扫 R1–R92 轮次引用：批次一 `/tmp/r93_clean.py` 261 对（260 命中：删 5 块、悬空引用修 5 处、标题清理、轮数缩写 `R1/single`→`R=1/single` 防混淆、架构图 10 条目 + 12 处注释）+ 批次二 `/tmp/r93_patch2.py` 11 对（修 5 MISS 转录误差 + 4 漏网行内引用）。误抓保留 2 处（L508 `potR2` 参数名、L1934 `R32F` 纹理格式名）。diff：删 440 / 增 304，净 −136 行（2503→2367） |
 | R94 | 手机竖屏适配公共模块化：顶栏收编 + 汉堡抽屉 + 底部 dock | 用户指令「做小屏适配，尽量用公共模块，少每页独立维护」。盘点病灶：36 处同构顶栏媒体查询（12 页 × 1500/1400/900）+ 12 页 `#xxTop` 规则族重复、≤900 只隐导航 ⟹ 12 页互链手机端不可达、390px 竖屏面板+HUD 必重叠。新增 `src/core/responsive.js`（约 180 行）四件套：① 顶栏三档收编公共类 `.qtop`（差异值 5 页各 1–3 行属性选择器，7 页零差异）② ≤900 汉堡抽屉（桌面 `.qnav{display:contents}` 逐位不变）③ ≤860 底部 dock 三态 + 面板/HUD 转底部 sheet + stage 内联让位（`dataset.qfRestore` 精确还原）④ `injectResponsive()` DOM 增强包 `queueMicrotask`。六坑：时序（innerHTML 重写清 dock ⟹ microtask）、CSS 特异性三轮（类输 id ⟹ 删本地族 ⟹ 差异行压响应段 ⟹ 终局属性选择器 (0,2,0) vs `.qtop.qtop` (0,2,0) 后注入赢）、styles.js 跨行删除残骸吞 `#panel` 规则、flag drawFan 负半径崩（numW 收缩 + 三重 clamp）、responsive.js 两处笔误（冒号/`}}}`）、dock 死胡同（off 态 dock display:none ⟹ 无恢复路径；改常驻退让 opacity .4）。cdp92 **23/23** + cdp90 4/4 + cdp91 12/12 + pot85 38/38 + pot87 47/47；28 files，2726+/706− |
+| R95 | R94 缺口核查与修复：抽屉死胡同 / 链接 20px / hud 裁切 | 用户问「有什么缺口或可优化的？」⟹「要，其他也写入worklog」。方法：四个只读探测套件（cdp93 边界带/resize/dvh/a11y、cdp94 切态裁切 + 触摸目标、cdp95 抽屉计算样式、cdp96 可取消性、cdp97 全页绝对定位子元素扫描）。**实测确认 3 缺陷**：D1 抽屉打开后无法取消（`.qnav` z:9 盖住 static burger，外点关闭判据恒真；唯一退出是导航）⟹ burger `position:relative;z-index:11` + backdrop 点击收 + Escape 收 + 焦点回汉堡；D2 抽屉链接 20px 高（`.qtop.qtop a` (0,2,1) 压死 `.qnav a`，主页 id 级 `#topbar .navlink` 连 (0,3,1) 都打不过）⟹ `!important` 收口 13px/14px 6px/1.25 = **44.25px**（顺带满足 44px 触摸目标）；D3 hud overflow 各页不一（hubbard/shor 无声明，shor 已临界裁切 387>386）⟹ ≤860 段收编 `.qhud{overflow-y:auto}`（前置核查 gatenoise `.sfill` 在 `.strack` 内不受影响）。a11y 同批：aria-expanded/label 翻转。P2：三处 vh→dvh 双声明（Safari 15.4+/Chrome 108+ 支持，低于 README 地板 16.4）+ prefers-reduced-motion。**排除 3 项疑罪**（边界带四档 / 跨断点 resize / 面板可滚全实测无罪）。**两个断言假阳性教训**：G1 不切态量隐藏元素、M13 把「可滚容器折叠线外」当裁切。cdp92 扩至 **38/38**（+M2c/M7e/M12/M13）+ cdp90 4/4 + cdp91 12/12 + pot85 38/38 + pot87 47/47 |
 | R77 | 开放量子系统（新页 `noise.html`） | 密度矩阵 + **Kraus 三通道**（振幅/相位/退极化，均为精确解）+ 量子轨迹（Kraus 分支采样，平均 ⟹ ρ）；单比特闭式（**T₂ ≤ 2T₁** 的弧线几何，斜率实测 −0.500000）、Bell 的 **X 态 concurrence 闭式**（六通道 × 三 τ 9.3e-15）、**ESD t\*=τln3/2**（0.330/0.550/1.100）、⟨XX⟩=−⟨YY⟩=e^{−2t} & ⟨ZZ⟩≡1、Kraus 完备性 2.2e-16、半正定 λ_min 7.7e-43；**与 R69 的定量对照**（MC 4 万条逐帧随机相位 ⟹ 1/T₂=γ_φ，0.9σ）；pot77 CPU **24/24** + cdp77 浏览器 **14/14**（src+dist）；修 6 个问题（relax 双侧闭式漏两跳衰变 / NZ_CSS 未注入 / scanBell 漏 y / nzApplyAll 不收 null / C0 与 qcircuit 重名 / 四处测试口径） |
 | R76 | 量子传态（R75 同页扩展） | **中途测量 + 经典前馈**：`qcMeasureQubit` 只投影该比特（不塌整个态）+ `{measure}`/`{cond}` 两种步 + `qcRunProgram`；Bell 对 + Bell 测量 + X^m1 Z^m0 ⟹ **四分支各自 F=1**（72 条轨迹最坏 4.4e-16）；未修正 ≡ Pauli 像、平均 F=1/2；**无信号两口径**（测量前 I/2、分支平均 I/2）；同种子跨 8 个态分支完全相同；pot76 **14/14** + cdp76 **9/9**（src+dist）；修三个问题（无信号判据混淆纯/混合态、setParam 不重建线路、分支平均漏 00） |
 | R75 | 小规模量子线路（新页 `qcircuit.html`） | 态矢模拟器（q0 = 最低位，单门 O(2^n)）：13 门 + 受控单比特 + 相位门；Bell/GHZ/QFT/Grover；**QFT ≡ 解析 DFT（n=2..5 全基态 5.6e-15，次序由穷举八变体锁定）**、Grover 一轮 P=1、Bell S=ln2/C=1、GHZ(12) 6-6 熵 ln2、种子测量可复现；pot75 CPU **31/31** + cdp75 浏览器 **16/16**（src+dist）；修六个问题（QFT 相位方向 / GHZ 控制目标 / 受控旋转丢 c / 图漏画 phase / 熵 −0 / 半成品 API） |
@@ -908,6 +909,62 @@ README 收尾段按 roadmap 表与 worklog section 归位：
 ### 五、diff 统计
 
 28 files changed, 2726 insertions(+), 706 deletions(-)：新增 `src/core/responsive.js`（约 180 行）；12 子页 + app.js/styles.js 删 36 处重复媒体查询 + 12 页顶栏族，各页留 0–3 行差异行；flag.js 负半径修复；13 dist 页重建。加本worklog/README 文档两件后共 30 files，2791 insertions(+)。
+
+## R95（2026-10-23）R94 缺口核查与修复：抽屉死胡同 / 链接 20px / hud 裁切（用户问「有什么缺口或可优化的？」⟹「要，其他也写入worklog」）
+
+### 起因与方法
+
+R94 收官后用户问「有什么缺口或可优化的？」。回答不靠猜——先写四个**只读探测套件**（cdp93 边界带/resize/dvh/a11y、cdp94 切态后 sheet 裁切 + 触摸目标、cdp95 抽屉链接计算样式、cdp96 抽屉可取消性、cdp97 全页 hud/panel 绝对定位子元素扫描），用实测把缺口分成「确认」与「推断」两类，再修。
+
+### 一、实测确认的缺陷（3 项，全部收在 responsive.js 单文件修）
+
+| # | 缺陷 | 实测证据 | 根因 |
+|---|---|---|---|
+| D1 | **抽屉打开后无法取消** | cdp96：`burgerTopmost=qnav`（抽屉盖住汉堡）、backdrop 点击后仍 grid、Escape 无响应；唯一退出是点链接（必然导航） | `.qnav`(z:9) 与 burger 同是 `.qtop`(z:10) stacking context 的子元素，`.qtop` 的 z:10 只管对外层级、管不了自家子元素互压；burger 是 static 被压在下面；外点关闭判据 `closest('.qtop')` 恒真（drawer 在 topbar 内）⟹ 永不触发 |
+| D2 | **抽屉链接只有 20px 高** | cdp95：计算样式 `font-size:9.5px;padding:2px 6px`（=1400 档值），13 链实测高 20–23px，**低于 WCAG 2.5.8 AA 的 24px 最小值** | 特异性反噬：`.qtop.qtop a`(0,2,1) 压死抽屉自有 `.qnav a`(0,1,1)；主页更糟——id 级 `#topbar .navlink`(1,1,0)（styles.js:31）连 (0,3,1) 的类选择器升维都打不过 |
+| D3 | **hud overflow 各页不一致** | cdp94：6 页中 hubbard/shor 为 `visible`（无声明）、其余 `auto`；shor 的 hud 在 46vh sheet 下 387px vs 386px **已临界裁切**，gatenoise 477px vs 386px 靠 auto 才没丢内容 | 各页 `#xxHud` 自带规则不统一；公共模块 sheet 段没收编 |
+
+**修复**（responsive.js，13 页零改动）：
+1. **D1**：`.qburger` 加 `position:relative;z-index:11`（压回抽屉之上）+ 抽屉内任意点击即收起（backdrop 可取消）+ `keydown` Escape 收起且焦点回汉堡；
+2. **D2**：抽屉链接规则 `!important` 收口（`font-size:13px;padding:14px 6px;line-height:1.25` ⟹ 13×1.25+14×2=**44.25px**，同时满足 44px 触摸目标）——类选择器打不过 id 级页面规则，覆盖层上下文用 !important 是正解并非偷懒，注释已写明；
+3. **D3**：≤860 段加 `.qhud{overflow-y:auto;scrollbar-width:thin;...}`。前置核查：13 页 × 2 视口扫 hud/panel 内绝对定位子元素，仅 gatenoise 有 4 个 `.sfill`（`.strack` 进度条，top:0;bottom:0 在轨内）⟹ 加滚动不裁切，M13 以「sfill 在轨道内」为不变量验证。
+
+**a11y 同批修**：burger 补 `aria-expanded` 翻转 + label「打开导航/关闭导航」切换（初版恒为「打开导航」）；Escape 路径焦点回汉堡。
+
+### 二、P2 优化（同批落地）
+
+- **dvh 双声明**：抽屉 `max-height`、SHEET_G `max-height:46vh`、syncStage 的 stage 高度三处改 `vh` 先行 + `dvh` 第二行（旧浏览器忽略不认识的声明即天然 fallback，无需 @supports）。依据：移动浏览器工具栏收放时 100vh 按大视口计算 ⟹ stage/dock 带跳动；dvh 支持 Safari 15.4+/Chrome 108+/Firefox 101+，低于本项目 README 地板 Safari 16.4；
+- **prefers-reduced-motion**：`@media (prefers-reduced-motion:reduce)` 关 dock opacity 过渡与顶栏链接过渡。
+
+### 三、实测排除项（曾疑为缺口，实测无罪）
+
+| 曾疑 | 实测结论 |
+|---|---|
+| 断点边界带（861–900 / 901–1023 / iPad 768 竖屏 / 844×390 横屏）布局错或顶栏溢出 | cdp93 G2：四档全部正常（顶栏右缘 498/878/447/485 ≤ 视口；横屏 stage bottom=346=390−44 精确） |
+| 跨断点 resize 不 reload 时内联几何残留 | cdp93 G3：390→1440 内联全清、dock 隐、nav 回 contents；1440→390 移动布局完整重生效 |
+| 面板 sheet 内容超出被裁且不可达 | cdp94：`.qpanel` 均 `overflow-y:auto`，shor 1021px→386px 可滚可达（设计行为） |
+
+### 四、探测/断言自身的两个假阳性（记录教训）
+
+1. **G1 初版探针缺陷**：off 态下面板/HUD `display:none`，`scrollHeight` 恒 0——不切 dock 态就量裁切等于没量。修正版（cdp94）先点 controls/readout 再测；
+2. **M13 断言缺陷**：初版断言「sfill 在 hud 框内」——可滚容器中折叠线以下子元素矩形落在框外是**滚动可达、非裁切**，477>386 的 gatenoise 必假阳性。改为不变量「sfill 在 `.strack` 轨道内」。
+
+### 五、验证（五套件全绿，src+dist 双通道）
+
+| 套件 | 结果 | 变化 |
+|---|---|---|
+| cdp92 | **38/38** | 新增 M2c（链接 ≥44px + aria 翻转，13 页 × 2 通道）、M7e（dvh 双声明）、M12（抽屉三路可取消 + z 序 + aria，qec/index 双页——index 是 id 级 navlink 规则的关键见证）、M13（hud 可滚 + sfill 在轨，6 页） |
+| cdp90 / cdp91 | 4/4 · 12/12 | 无回归 |
+| pot85 / pot87 | 38/38 · 47/47 | 无回归 |
+
+### 六、诚实遗留（未修，明示）
+
+- **真实触摸未测**：全部走合成 click——手指 tap 延迟、`:hover` 粘滞、sheet 惯性滚动需真机；
+- **iOS Safari 真机未测**：工具栏动态高度、backdrop-filter、rubber-band；
+- **其他移动视口未测**：360×640 / 414×896 / 430×932（只测 390×844 + 四边界档）；
+- **burger 30×26 / dock 按钮 57×29** 仍低于 44px 舒适线（过 WCAG 2.5.8 AA 24px；放大挤占顶栏/dock 空间，待权衡）；
+- **新页漏调 `injectResponsive()` 无构建守卫**：13 页各自记得调用，漏一页即静默丢失移动适配——可在 build-standalone.mjs 加断言，或把注入收进公共路径（改架构，待决策）；
+- 横屏面板 46vh 偏小（844×390 实测面板带仅 179px），未针对 landscape 放宽。
 
 ## R90（2026-10-23）面板视觉保真度评审（README「后续方向」② 收官）
 
