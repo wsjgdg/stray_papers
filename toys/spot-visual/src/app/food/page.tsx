@@ -72,6 +72,16 @@ export default function FoodPage() {
     setCitySel(null);
   }, [nameToCode]);
 
+  // 深链：?prov=海南 / ?prov=HI 直接进入该省下钻视图（便于分享与复现）
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search).get('prov');
+    if (!p) return;
+    const hit = PROVINCE_FOODS.find(
+      (x) => x.name === p || x.fullName === p || x.code === p.toUpperCase(),
+    );
+    if (hit) enterProvince(hit.name);
+  }, [enterProvince]);
+
   const backToNation = useCallback(() => {
     setDrill(null);
     setCitySel(null);
@@ -135,7 +145,6 @@ export default function FoodPage() {
   // ── 省级（市级边界）option ─────────────────────────────
   const provinceOption = useMemo<EChartsOption>(() => {
     if (!cityGeo || !cityRows.length) return nationalOption;
-    const big = drill === '香港' || drill === '澳门';
     const data = cityRows.map((c) => {
       const color = c.food.isLocal
         ? (CUISINE_COLORS[c.food.cuisine] ?? cuisineColor)
@@ -165,8 +174,10 @@ export default function FoodPage() {
           type: 'map',
           map: cityGeo.mapName,
           roam: true,
-          layoutCenter: ['50%', '52%'],
-          layoutSize: big ? '280%' : '134%',
+          // 用剔除远海岛礁后的包围盒定初始视野，避免主陆地被压扁/挤出画面
+          boundingCoords: cityGeo.viewBounds,
+          layoutCenter: ['50%', '50%'],
+          layoutSize: '112%',
           selectedMode: 'single',
           label: { show: false },
           emphasis: {
@@ -334,6 +345,13 @@ export default function FoodPage() {
           <div className="absolute right-3 top-3 text-[10px] text-gray-400 bg-white/80 rounded px-1.5 py-0.5">
             可滚轮缩放 / 拖拽{drill && cityGeo ? ` · 共 ${cityRows.length} 个地级行政区` : ''}
           </div>
+
+          {/* 视野剔除提示（如三沙市岛礁跨越南海，会把本岛压扁） */}
+          {drill && cityGeo && cityGeo.offscreen.length > 0 && (
+            <div className="absolute right-3 bottom-3 max-w-[230px] text-[10px] text-gray-500 bg-white/88 backdrop-blur-sm border border-gray-200 rounded-lg px-2 py-1.5 leading-relaxed">
+              {cityGeo.offscreen.map((o) => o.fullName).join('、')} 的范围远超本岛，已移出初始视野，可在右侧城市清单中查看。
+            </div>
+          )}
         </section>
 
         {/* ══ 详情面板 ══ */}
@@ -442,7 +460,8 @@ export default function FoodPage() {
       <p className="text-[11px] text-gray-400 mt-3 leading-relaxed">
         省域代表菜汇编自公开资料（百度百科《中国菜》名录等）；市级代表菜为公开饮食文化常识整理，
         未收录的城市明确标注「沿用省域风味」，不做臆造。口味雷达数值为按菜系特征的估算标签，仅供文化科普与演示。
-        地图为 DataV 省级 / 市级矢量边界（含台湾、南海诸岛），非在线地图服务，不请求境外瓦片。
+        地图为矢量静态边界（省级与大部分市级来自 DataV GeoAtlas；台湾 20 县市边界 DataV 未提供，取自 GeoJSON.cn），
+        含台湾、南海诸岛，非在线地图服务，不请求境外瓦片。
       </p>
     </div>
   );
