@@ -9,14 +9,11 @@
      paths.html      → dist/paths.html（费曼路径求和，入口 src/paths-main.js）
      qcircuit.html   → dist/qcircuit.html（小规模量子线路，入口 src/qcircuit-main.js）
      noise.html      → dist/noise.html（开放量子系统：T₁/T₂，入口 src/noise-main.js）
-     qec.html        → dist/qec.html（3 比特重复码纠错，入口 src/qec-main.js）
- *     shor.html       → dist/shor.html（Shor 9 比特级联码，入口 src/shor-main.js）
- *     gatenoise.html  → dist/gatenoise.html（线路级门噪声，入口 src/gatenoise-main.js）
- *     flag.html       → dist/flag.html（综合提取容错：冗余验证 vs 猫态，入口 src/flag-main.js）
- *     rounds.html     → dist/rounds.html（多轮提取 + 跨轮联合解码，入口 src/rounds-main.js）
- *     cycle.html      → dist/cycle.html（循环 EC + 逻辑线路，入口 src/cycle-main.js）
- *     family.html     → dist/family.html（码族与真阈值：重复码族 / Steane 级联，入口 src/family-main.js）
+     qec.html        → dist/qec.html（量子纠错 hub：七模式单页，入口 src/qec-main.js）
    各页共用 src/core/*（仅 index 用）；各自独立 bundle（拓扑序不同），互不影响。
+
+   R98：QEC 七页（shor/gatenoise/flag/rounds/cycle/family）整合进 qec.html hub，
+   六页名降级为跳转桩（STUBS 表，dist 侧 meta-refresh → qec.html?mode=…）。
 
    做法（mini-bundler，零依赖）：
    1. 从页面 HTML 找到入口 <script type="module" src="./src/...">
@@ -39,7 +36,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const fail = (msg) => { console.error('BUILD FAIL: ' + msg); process.exit(1); };
 
-/* 页面表：html 源 → dist 输出名（R72 增加 two-body 页） */
+/* 页面表：html 源 → dist 输出名（R72 增加 two-body 页；R98 QEC 七页整合收 6 条） */
 const PAGES = [
   ['index.html', 'quantum-field.html'],
   ['two-body.html', 'two-body.html'],
@@ -48,13 +45,39 @@ const PAGES = [
   ['qcircuit.html', 'qcircuit.html'],
   ['noise.html', 'noise.html'],
   ['qec.html', 'qec.html'],
-  ['shor.html', 'shor.html'],
-  ['gatenoise.html', 'gatenoise.html'],
-  ['flag.html', 'flag.html'],
-  ['rounds.html', 'rounds.html'],
-  ['cycle.html', 'cycle.html'],
-  ['family.html', 'family.html'],
 ];
+
+/* R98 跳转桩表（dist 侧）：旧页名 → hub 模式深链。根级同名桩为手写静态文件
+   （与 quantum-field.html 桩同款式），此处保证 dist 与根级口径一致——
+   旧书签/外链（含 cdp 套件历史 URL）不 404，直接落对应 mode。 */
+const STUBS = [
+  ['shor.html', 'shor'],
+  ['gatenoise.html', 'gate'],
+  ['flag.html', 'flag'],
+  ['rounds.html', 'rounds'],
+  ['cycle.html', 'cycle'],
+  ['family.html', 'family'],
+];
+
+/* 跳转桩内容（根级/dist 同款）：meta refresh 直达 + 兜底链接（file:// 也跳） */
+function stubHtml(mode){
+  const name = ({ shor: 'Shor 9 比特级联码', gate: '线路级门噪声', flag: '容错综合征提取',
+    rounds: '多轮提取', cycle: '循环 EC', family: '码族与真阈值' })[mode];
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f1626'/%3E%3Ctext x='16' y='23' font-family='serif' font-size='22' fill='%2367e8f9' text-anchor='middle'%3E%CF%88%3C/text%3E%3C/svg%3E">
+<title>纠错工场 · ${name}（R98 起整合进 qec.html）</title>
+<meta http-equiv="refresh" content="0; url=qec.html?mode=${mode}">
+</head>
+<body>
+<p>R98 起本页已整合进 <a href="qec.html?mode=${mode}">纠错工场 hub</a>（${name} 模式），正在跳转…</p>
+</body>
+</html>
+`;
+}
 
 /* ---------- 1. 入口定位 ---------- */
 function findEntry(html, htmlName){
@@ -184,3 +207,10 @@ function bundlePage(htmlName, outName){
 }
 
 for (const [htmlName, outName] of PAGES) bundlePage(htmlName, outName);
+
+/* R98：dist 跳转桩（旧 QEC 六页名 → qec.html?mode=…） */
+for (const [stubName, mode] of STUBS){
+  const outPath = resolve(ROOT, 'dist', stubName);
+  writeFileSync(outPath, stubHtml(mode));
+  console.log(`STUB OK: dist/${stubName} → qec.html?mode=${mode}`);
+}

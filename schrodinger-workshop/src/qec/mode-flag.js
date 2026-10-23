@@ -1,5 +1,5 @@
 /* ============================================================================
- * flag.js（页面）— R81 综合提取自身的容错：冗余验证 vs 猫态
+ * mode-flag.js（QEC hub 模式）— 由 flag.js 重构而来（R98 七页整合）：R81 综合提取自身的容错：冗余验证 vs 猫态
  *
  * 物理核心在 src/physics/flagsynd.js。本页只做三件事：
  *   ① 把「同一个语义位点」的故障在四种线路上并排画出来（ancilla 吃一个 X，
@@ -11,14 +11,10 @@
  * 判定口径（与物理核心一致）：修正后、解码前取样，用 8 个稳定子期望 + 三个逻辑分量
  * 符号定陪集；另有一条独立的 Pauli 帧演算给出权重，两条路径逐位点对账（不一致即报错）。
  * ========================================================================== */
-import { injectStyles } from './core/styles.js';
-import { injectResponsive } from './core/responsive.js';
-import { navHtml } from './core/nav.js';
-import { FS_KINDS, FS_DEFAULTS, fsFirstOrder, fsProbeWorst, fsEnsemble } from './physics/flagsynd.js';
+import { FS_KINDS, FS_DEFAULTS, fsFirstOrder, fsProbeWorst, fsEnsemble } from '../physics/flagsynd.js';
 
 const FL_CSS = `
-  .qtop[id="flTop"]{gap:12px;padding:9px 16px}.qtop[id="flTop"] a{font-size:10.5px}.qtop[id="flTop"] .eq i{color:var(--amber);font-style:italic}
-  #flPanel{top:74px;left:14px;width:242px;padding:13px;z-index:10;max-height:calc(100vh - 200px);
+  #flPanel{top:108px;left:14px;width:242px;padding:13px;z-index:10;max-height:calc(100vh - 234px);
     overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #flPanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
     text-transform:uppercase;margin:10px 0 5px}
@@ -37,8 +33,8 @@ const FL_CSS = `
   #flPanel button:hover{border-color:rgba(103,232,249,.45);color:var(--cyan)}
   #flPanel button.on{background:rgba(103,232,249,.18);border-color:var(--cyan);color:var(--cyan)}
   #flPanel .note{font-size:9.5px;color:var(--dim);line-height:1.55;margin-top:8px}
-  #flHud{top:74px;right:14px;padding:11px 13px;z-index:10;width:262px;font-family:var(--mono);
-    max-height:calc(100vh - 120px);overflow-y:auto;scrollbar-width:thin;
+  #flHud{top:108px;right:14px;padding:11px 13px;z-index:10;width:262px;font-family:var(--mono);
+    max-height:calc(100vh - 154px);overflow-y:auto;scrollbar-width:thin;
     scrollbar-color:rgba(120,160,220,.25) transparent}
   #flHud .hrow{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:2.5px 0}
   #flHud .hrow span:first-child{color:var(--dim)}
@@ -65,37 +61,39 @@ const FL_CSS = `
 `;
 
 /* 站点 palette（core/styles.js 的 :root 变量，canvas 里只能用字面量） */
-const COL = {
+const flCOL = {
   cyan: 'rgba(103,232,249,', mag: 'rgba(240,171,252,', amber: 'rgba(251,191,36,',
   red: 'rgba(248,113,113,', dim: 'rgba(154,167,189,', txt: 'rgba(230,237,243,',
   wire: 'rgba(120,160,220,', green: 'rgba(74,222,128,',
 };
-const mdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-const pct = (a, b) => (b ? (100 * a / b).toFixed(0) + '%' : '—');
-const nf = (x, d = 3) => (Number.isFinite(x) ? x.toFixed(d) : '—');
+const flMdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+const flPct = (a, b) => (b ? (100 * a / b).toFixed(0) + '%' : '—');
+const flNf = (x, d = 3) => (Number.isFinite(x) ? x.toFixed(d) : '—');
 
 /* 五类结局：颜色 + 名称（与物理核心的 bucket 一一对应） */
-const FATES = [
-  { k: 'perfect', name: '纠回', hue: COL.cyan, desc: '残差 ∈ S' },
-  { k: 'gauge', name: '仅规范比特', hue: COL.green, desc: 'F=1，逻辑比特完好' },
-  { k: 'outside', name: '逻辑受损', hue: COL.amber, desc: '残差 ∉ N(S) 且 F<1' },
-  { k: 'logic', name: '静默逻辑', hue: COL.red, desc: '残差 ∈ 逻辑陪集（最危险）' },
-  { k: 'flagged', name: '检出丢弃', hue: COL.mag, desc: 'flag=1' },
+const flFATES = [
+  { k: 'perfect', name: '纠回', hue: flCOL.cyan, desc: '残差 ∈ S' },
+  { k: 'gauge', name: '仅规范比特', hue: flCOL.green, desc: 'F=1，逻辑比特完好' },
+  { k: 'outside', name: '逻辑受损', hue: flCOL.amber, desc: '残差 ∉ N(S) 且 F<1' },
+  { k: 'logic', name: '静默逻辑', hue: flCOL.red, desc: '残差 ∈ 逻辑陪集（最危险）' },
+  { k: 'flagged', name: '检出丢弃', hue: flCOL.mag, desc: 'flag=1' },
 ];
-const KINDS = Object.keys(FS_KINDS);
+const flKINDS = Object.keys(FS_KINDS);
 /* 谱权重：depolar 三等分；x/z 只一种 */
-const SPEC_W = { depolar: { x: 1 / 3, y: 1 / 3, z: 1 / 3 }, x: { x: 1 }, z: { z: 1 } };
-const SPEC_NAME = { depolar: '退极化', x: '仅 X', z: '仅 Z' };
+const flSPEC_W = { depolar: { x: 1 / 3, y: 1 / 3, z: 1 / 3 }, x: { x: 1 }, z: { z: 1 } };
+const flSPEC_NAME = { depolar: '退极化', x: '仅 X', z: '仅 Z' };
 
 export class FlagApp {
-  constructor(container, options = {}){
-    this.container = typeof container === 'string' ? document.querySelector(container) : (container || document.body);
+  constructor(shell){
+    this.shell = shell;
+    this.modeRoot = shell.modeRoot;
+    this._listeners = [];
     const q = new URLSearchParams(location.search);
     const num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
     const str = (k, d) => (q.has(k) ? q.get(k) : d);
     this.state = {
       kind: FS_KINDS[str('kind', 'std')] ? str('kind', 'std') : 'std',
-      spectrum: SPEC_W[str('spectrum', 'depolar')] ? str('spectrum', 'depolar') : 'depolar',
+      spectrum: flSPEC_W[str('spectrum', 'depolar')] ? str('spectrum', 'depolar') : 'depolar',
       p: Math.max(0, Math.min(0.2, num('p', FS_DEFAULTS.p))),
       trials: Math.max(100, Math.min(2000, Math.round(num('trials', 400)))),
       seed: Math.round(num('seed', FS_DEFAULTS.seed)),
@@ -103,26 +101,24 @@ export class FlagApp {
     this.fo = {};        /* kind → fsFirstOrder 结果（精确枚举，一次算好） */
     this.worst = {};     /* kind → fsProbeWorst（扇出图） */
     this.mc = null;
-    this._queue = KINDS.slice();
+    this._queue = flKINDS.slice();
     this._busy = false;
   }
 
-  q(sel){ return this.container.querySelector(sel) || document.querySelector(sel); }
-  on(el, ev, fn){ if (el) el.addEventListener(ev, fn); }
+  q(sel){ return this.modeRoot.querySelector(sel); }
+  on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
-  mount(){
-    injectStyles();
-    injectResponsive();
-    const sheet = document.createElement('style');
-    sheet.textContent = FL_CSS;
-    document.head.appendChild(sheet);
-    this.container.insertAdjacentHTML('beforeend', `
-      <header id="flTop" class="panel qtop">
-        <div class="logo">容错工场</div>
-        <div class="eq">每门一次错误机会 ─► 综合提取<b>自己</b>出错时，码还成立吗？</div>
-        ${navHtml('./flag.html')}
-      </header>
+  deactivate(){
+    clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
+    if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
+    this._ro?.disconnect();
+    for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
+    this._listeners.length = 0;
+    this.modeRoot.replaceChildren();      /* 移除本 mode 的 DOM（面板/HUD/画布/提示） */
+  }
 
+  activate(){
+    this.modeRoot.insertAdjacentHTML('beforeend', `
       <aside id="flPanel" class="panel qpanel">
         <div class="grp">提取线路（X 类 / Z 类）</div>
         <div class="btns g4" id="flKinds"></div>
@@ -182,7 +178,7 @@ export class FlagApp {
     this.cv = { fan: this.q('#flFan'), fate: this.q('#flFate'), prop: this.q('#flProp') };
 
     const kb = this.q('#flKinds');
-    for (const k of KINDS){
+    for (const k of flKINDS){
       const b = document.createElement('button');
       b.textContent = FS_KINDS[k].label; b.dataset.kind = k; b.title = FS_KINDS[k].desc;
       this.on(b, 'click', () => { this.state.kind = k; this.syncPanel(); this.renderHud(); this.drawAll(); });
@@ -191,7 +187,7 @@ export class FlagApp {
     const sb = this.q('#flSpectra');
     for (const sp of ['depolar', 'x', 'z']){
       const b = document.createElement('button');
-      b.textContent = SPEC_NAME[sp]; b.dataset.sp = sp;
+      b.textContent = flSPEC_NAME[sp]; b.dataset.sp = sp;
       this.on(b, 'click', () => { this.state.spectrum = sp; this.syncPanel(); this.renderHud(); this.drawAll(); });
       sb.appendChild(b);
     }
@@ -231,8 +227,8 @@ export class FlagApp {
 
   syncPanel(){
     const s = this.state;
-    for (const b of this.container.querySelectorAll('#flKinds button')) b.classList.toggle('on', b.dataset.kind === s.kind);
-    for (const b of this.container.querySelectorAll('#flSpectra button')) b.classList.toggle('on', b.dataset.sp === s.spectrum);
+    for (const b of this.modeRoot.querySelectorAll('#flKinds button')) b.classList.toggle('on', b.dataset.kind === s.kind);
+    for (const b of this.modeRoot.querySelectorAll('#flSpectra button')) b.classList.toggle('on', b.dataset.sp === s.spectrum);
     const setv = (id, v) => { const e = this.q('#' + id); if (e) e.value = v; };
     setv('flP', s.p); this.q('#flPO').textContent = s.p.toFixed(3);
     setv('flTrials', s.trials); this.q('#flTrialsO').textContent = s.trials;
@@ -241,7 +237,7 @@ export class FlagApp {
   renderHint(){
     const b = this.q('#flHint b'), sp = this.q('#flHint span');
     if (b) b.textContent = '综合提取自己的容错（R81）';
-    if (sp) sp.innerHTML = mdLite(
+    if (sp) sp.innerHTML = flMdLite(
       'R79 把综合提取当**理想**的；真实线路每个 CNOT 都是错误机会。X 类 ancilla 在 |+⟩ 上，' +
       '**X 错误是它的稳定子** ⟹ 读数看不见，却把 X 扇到后面所有数据比特——单故障就**静默逻辑错误**。');
   }
@@ -251,7 +247,7 @@ export class FlagApp {
     const fo = this.fo[kind];
     if (!fo) return null;
     const e = fo.byPhase.extract || { n: 0, perfect: 0, gauge: 0, outside: 0, logic: 0, flagged: 0, wMax: 0, wSum: 0 };
-    const w = SPEC_W[this.state.spectrum];
+    const w = flSPEC_W[this.state.spectrum];
     let wL = 0, wF = 0, wO = 0;
     for (const r of fo.rows){
       if (r.ph !== 'extract') continue;
@@ -299,8 +295,8 @@ export class FlagApp {
     set('hCost', d.stats.gates + ' / ' + d.stats.cnots + ' / ' + d.stats.meas);
     set('hSites', d.n);
     set('hFate1', d.perfect + ' / ' + d.gauge + ' / ' + d.outside);
-    set('hLogic', d.logic + '（' + pct(d.logic, d.n) + '）', d.logic ? 'warn' : null);
-    set('hFlag', d.flagged + '（' + pct(d.flagged, d.n) + '）');
+    set('hLogic', d.logic + '（' + flPct(d.logic, d.n) + '）', d.logic ? 'warn' : null);
+    set('hFlag', d.flagged + '（' + flPct(d.flagged, d.n) + '）');
     set('hW', d.wMax + ' 个比特');
     set('hPL1', d.PL1 ? d.PL1.toExponential(2) : '0');
     set('hDet1', d.det1 ? d.det1.toExponential(2) : '0');
@@ -308,7 +304,7 @@ export class FlagApp {
     if (mc && mc.kind === s.kind){
       set('hMcPL', (100 * mc.PL).toFixed(1) + '%  (' + mc.logic + '/' + mc.trials + ')');
       set('hMcDisc', (100 * mc.discard).toFixed(1) + '%');
-      set('hMcF', nf(mc.meanFaults, 2));
+      set('hMcF', flNf(mc.meanFaults, 2));
     } else {
       set('hMcPL', '按「跑一次 MC」'); set('hMcDisc', '—'); set('hMcF', '—');
     }
@@ -347,10 +343,10 @@ export class FlagApp {
     g.clearRect(0, 0, W, H);
     g.textAlign = 'left';
     g.font = (11.5 * dpr) + 'px ui-monospace,monospace';
-    g.fillStyle = COL.txt + '.95)';
+    g.fillStyle = flCOL.txt + '.95)';
     g.fillText('同一语义位点：X 类首块首道 CNOT 之后，ancilla 吃一个 X ⟹ 扇到哪些数据比特', 10 * dpr, 16 * dpr);
     g.font = (9 * dpr) + 'px ui-monospace,monospace';
-    g.fillStyle = COL.dim + '.85)';
+    g.fillStyle = flCOL.dim + '.85)';
     g.fillText('实心红 = 该故障污染的数据比特（Pauli 帧的实际支撑）；空心 = 干净比特', 10 * dpr, 29 * dpr);
 
     const rowH = (H - 38 * dpr) / 4;
@@ -365,23 +361,23 @@ export class FlagApp {
     const step = Math.max(0, Math.min(span / 7.6, 40 * dpr));
     const r = Math.max(0, Math.min(8 * dpr, step * 0.28));
 
-    KINDS.forEach((kind, i) => {
+    flKINDS.forEach((kind, i) => {
       const yTop = 38 * dpr + rowH * i;
       const cy = yTop + rowH * 0.5;
       const w = this.worst[kind];
       const sel = kind === this.state.kind;
       if (sel){
-        g.fillStyle = COL.cyan + '.07)';
+        g.fillStyle = flCOL.cyan + '.07)';
         g.fillRect(x0 - 3 * dpr, yTop + 2 * dpr, W - 2 * x0 + 6 * dpr, rowH - 4 * dpr);
-        g.strokeStyle = COL.cyan + '.32)'; g.lineWidth = 1 * dpr;
+        g.strokeStyle = flCOL.cyan + '.32)'; g.lineWidth = 1 * dpr;
         g.strokeRect(x0 - 3 * dpr, yTop + 2 * dpr, W - 2 * x0 + 6 * dpr, rowH - 4 * dpr);
       }
       g.textAlign = 'left';
       g.font = (11 * dpr) + 'px ui-monospace,monospace';
-      g.fillStyle = sel ? COL.cyan + '.95)' : COL.txt + '.78)';
+      g.fillStyle = sel ? flCOL.cyan + '.95)' : flCOL.txt + '.78)';
       g.fillText(FS_KINDS[kind].label, x0 + 2 * dpr, cy - 2 * dpr);
       g.font = (8.5 * dpr) + 'px ui-monospace,monospace';
-      g.fillStyle = COL.dim + '.8)';
+      g.fillStyle = flCOL.dim + '.8)';
       const st = this.fo[kind] ? this.fo[kind].stats : null;
       g.fillText(st ? `${st.nq}q · ${st.ancillas}anc · ${st.gates}g` : '计算中…', x0 + 2 * dpr, cy + 10 * dpr);
 
@@ -389,10 +385,10 @@ export class FlagApp {
       /* ancilla 圆点（故障点） */
       const ax = fanX0 + step * 0.4;
       g.beginPath(); g.arc(ax, cy, r * 0.92, 0, Math.PI * 2);
-      g.fillStyle = COL.red + '.5)'; g.fill();
-      g.strokeStyle = COL.red + '1)'; g.lineWidth = 1.3 * dpr; g.stroke();
+      g.fillStyle = flCOL.red + '.5)'; g.fill();
+      g.strokeStyle = flCOL.red + '1)'; g.lineWidth = 1.3 * dpr; g.stroke();
       g.font = (8 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
-      g.fillStyle = COL.txt + '.95)';
+      g.fillStyle = flCOL.txt + '.95)';
       g.fillText('a', ax, cy + 3 * dpr);
       /* 数据圆点 + 扇出曲线 */
       for (let q = 0; q < 6; q++){
@@ -402,14 +398,14 @@ export class FlagApp {
           g.beginPath();
           g.moveTo(ax + r * 0.9, cy);
           g.quadraticCurveTo((ax + cx) / 2, cy - 15 * dpr, cx - r, cy - 1 * dpr);
-          g.strokeStyle = COL.red + '.42)'; g.lineWidth = 1.1 * dpr; g.stroke();
+          g.strokeStyle = flCOL.red + '.42)'; g.lineWidth = 1.1 * dpr; g.stroke();
         }
         g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2);
-        if (hit){ g.fillStyle = COL.red + '.85)'; g.fill(); g.strokeStyle = COL.red + '1)'; g.lineWidth = 1.2 * dpr; }
-        else { g.fillStyle = 'rgba(10,18,32,.85)'; g.fill(); g.strokeStyle = COL.wire + '.5)'; g.lineWidth = 1 * dpr; }
+        if (hit){ g.fillStyle = flCOL.red + '.85)'; g.fill(); g.strokeStyle = flCOL.red + '1)'; g.lineWidth = 1.2 * dpr; }
+        else { g.fillStyle = 'rgba(10,18,32,.85)'; g.fill(); g.strokeStyle = flCOL.wire + '.5)'; g.lineWidth = 1 * dpr; }
         g.stroke();
         g.font = (8.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
-        g.fillStyle = hit ? COL.txt + '.95)' : COL.dim + '.75)';
+        g.fillStyle = hit ? flCOL.txt + '.95)' : flCOL.dim + '.75)';
         g.fillText('q' + q, cx, cy + r + 11 * dpr);
       }
       /* 右侧数字（右对齐，避免出界） */
@@ -417,11 +413,11 @@ export class FlagApp {
       const fate = w.cls === 'logic' ? '静默逻辑' : w.cls === 'gauge' ? '仅规范' : w.cls === 'outside' ? '逻辑受损' : '纠回';
       g.textAlign = 'right';
       g.font = (10 * dpr) + 'px ui-monospace,monospace';
-      g.fillStyle = w.cls === 'logic' ? COL.red + '.95)' : w.cls === 'outside' ? COL.amber + '.95)' : COL.green + '.95)';
+      g.fillStyle = w.cls === 'logic' ? flCOL.red + '.95)' : w.cls === 'outside' ? flCOL.amber + '.95)' : flCOL.green + '.95)';
       g.fillText(`污染 ${support} 个比特 · ${fate}`, W - 8 * dpr, cy - 4 * dpr);
       g.font = (9 * dpr) + 'px ui-monospace,monospace';
-      g.fillStyle = COL.dim + '.85)';
-      g.fillText(`F=${nf(w.F, 3)} · 最小权重 ${w.wPre} · ${w.flagged ? '已检出' : '未检出'}`, W - 8 * dpr, cy + 9 * dpr);
+      g.fillStyle = flCOL.dim + '.85)';
+      g.fillText(`F=${flNf(w.F, 3)} · 最小权重 ${w.wPre} · ${w.flagged ? '已检出' : '未检出'}`, W - 8 * dpr, cy + 9 * dpr);
     });
   }
 
@@ -433,34 +429,34 @@ export class FlagApp {
     const W = c.width, H = c.height, dpr = W / c.clientWidth;
     g.clearRect(0, 0, W, H);
     g.font = (11.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'left';
-    g.fillStyle = COL.txt + '.95)';
+    g.fillStyle = flCOL.txt + '.95)';
     g.fillText('单故障结局分布（提取段 · 精确枚举）', 10 * dpr, 17 * dpr);
 
     const x0 = 10 * dpr + 104 * dpr, x1 = W - 12 * dpr;
-    const top = 40 * dpr, rowH = (H - top - 26 * dpr) / KINDS.length;
+    const top = 40 * dpr, rowH = (H - top - 26 * dpr) / flKINDS.length;
     let legendX = 10 * dpr;
     g.font = (9 * dpr) + 'px ui-monospace,monospace';
-    for (const f of FATES){
+    for (const f of flFATES){
       g.fillStyle = f.hue + '.85)';
       g.fillRect(legendX, 25 * dpr, 7 * dpr, 7 * dpr);
-      g.fillStyle = COL.dim + '.9)';
+      g.fillStyle = flCOL.dim + '.9)';
       g.fillText(f.name, legendX + 10 * dpr, 31 * dpr);
       legendX += (20 + f.name.length * 9) * dpr;
     }
-    KINDS.forEach((kind, i) => {
+    flKINDS.forEach((kind, i) => {
       const d = this.derive(kind);
       const y = top + rowH * i + rowH * 0.5;
       const bh = Math.min(15 * dpr, rowH * 0.5);
       g.font = (10.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'left';
-      g.fillStyle = kind === this.state.kind ? COL.cyan + '.95)' : COL.txt + '.75)';
+      g.fillStyle = kind === this.state.kind ? flCOL.cyan + '.95)' : flCOL.txt + '.75)';
       g.fillText(FS_KINDS[kind].label, 10 * dpr, y - 2 * dpr);
       g.font = (8.5 * dpr) + 'px ui-monospace,monospace';
-      g.fillStyle = COL.dim + '.8)';
+      g.fillStyle = flCOL.dim + '.8)';
       g.fillText(d ? d.n + ' 位点' : '…', 10 * dpr, y + 9 * dpr);
-      if (!d){ g.fillStyle = COL.dim + '.7)'; g.fillText('计算中…', 10 * dpr + 104 * dpr, y + 3 * dpr); return; }
+      if (!d){ g.fillStyle = flCOL.dim + '.7)'; g.fillText('计算中…', 10 * dpr + 104 * dpr, y + 3 * dpr); return; }
       const tot = Math.max(1, d.n);
       let x = x0;
-      for (const f of FATES){
+      for (const f of flFATES){
         const v = d[f.k] || 0;
         if (!v) continue;
         const wBar = (x1 - x0) * v / tot;
@@ -474,7 +470,7 @@ export class FlagApp {
       }
     });
     g.font = (9 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'left';
-    g.fillStyle = COL.dim + '.85)';
+    g.fillStyle = flCOL.dim + '.85)';
     g.fillText('横轴 = 该线路提取段全部单故障位点（每门每比特 × X/Y/Z 三种 Pauli）', 10 * dpr, H - 8 * dpr);
   }
 
@@ -486,18 +482,18 @@ export class FlagApp {
     const W = c.width, H = c.height, dpr = W / c.clientWidth;
     g.clearRect(0, 0, W, H);
     g.font = (11.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'left';
-    g.fillStyle = COL.txt + '.95)';
+    g.fillStyle = flCOL.txt + '.95)';
     g.fillText('一个故障污染几个比特（提取段）', 10 * dpr, 16 * dpr);
 
     const plotX = 44 * dpr, plotY = 40 * dpr, plotW = W - plotX - 12 * dpr, plotH = H - plotY - 26 * dpr;
     const maxW = 4;
-    const bw = plotW / (maxW + 1) / (KINDS.length + 0.6);
+    const bw = plotW / (maxW + 1) / (flKINDS.length + 0.6);
     const gap = 2 * dpr;
     /* 轴 */
-    g.strokeStyle = COL.wire + '.28)'; g.lineWidth = 1 * dpr;
+    g.strokeStyle = flCOL.wire + '.28)'; g.lineWidth = 1 * dpr;
     g.beginPath(); g.moveTo(plotX, plotY); g.lineTo(plotX, plotY + plotH); g.lineTo(plotX + plotW, plotY + plotH); g.stroke();
     let maxV = 1;
-    for (const kind of KINDS){
+    for (const kind of flKINDS){
       const fo = this.fo[kind];
       if (!fo) continue;
       for (const r of fo.rows) if (r.ph === 'extract') maxV = Math.max(maxV, 0);
@@ -514,18 +510,18 @@ export class FlagApp {
     g.font = (8.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'right';
     for (const frac of [0.5, 1]){
       const yy = plotY + plotH * (1 - frac);
-      g.strokeStyle = COL.wire + '.14)'; g.lineWidth = 1 * dpr;
+      g.strokeStyle = flCOL.wire + '.14)'; g.lineWidth = 1 * dpr;
       g.beginPath(); g.moveTo(plotX, yy); g.lineTo(plotX + plotW, yy); g.stroke();
-      g.fillStyle = COL.dim + '.7)';
+      g.fillStyle = flCOL.dim + '.7)';
       g.fillText((frac * 100) + '%', plotX - 4 * dpr, yy + 3 * dpr);
     }
     for (let w = 0; w <= maxW; w++){
-      KINDS.forEach((kind, ki) => {
+      flKINDS.forEach((kind, ki) => {
         if (!this.fo[kind]) return;
         const v = val(kind, w);
         const x = plotX + (w + 0.3) * (plotW / (maxW + 1)) + ki * bw;
         const h = Math.max(0, v) * plotH;
-        const hue = [COL.cyan, COL.green, COL.amber, COL.red, COL.mag][Math.min(w, 4)];
+        const hue = [flCOL.cyan, flCOL.green, flCOL.amber, flCOL.red, flCOL.mag][Math.min(w, 4)];
         g.fillStyle = hue + (kind === this.state.kind ? '.9)' : '.42)');
         g.fillRect(x, plotY + plotH - h, bw - gap, h);
       });
@@ -534,17 +530,17 @@ export class FlagApp {
     g.font = (9 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
     for (let w = 0; w <= maxW; w++){
       const x = plotX + (w + 0.5) * (plotW / (maxW + 1));
-      g.fillStyle = COL.dim + '.85)';
+      g.fillStyle = flCOL.dim + '.85)';
       g.fillText('w=' + w, x, plotY + plotH + 13 * dpr);
     }
     /* 图例（顶部，避免与 w= 刻度打架） */
     let lx = 10 * dpr;
     g.textAlign = 'left';
-    for (const kind of KINDS){
+    for (const kind of flKINDS){
       const on = kind === this.state.kind;
-      g.fillStyle = on ? COL.cyan + '.9)' : COL.wire + '.42)';
+      g.fillStyle = on ? flCOL.cyan + '.9)' : flCOL.wire + '.42)';
       g.fillRect(lx, 24 * dpr, 8 * dpr, 6 * dpr);
-      g.fillStyle = on ? COL.cyan + '.95)' : COL.dim + '.85)';
+      g.fillStyle = on ? flCOL.cyan + '.95)' : flCOL.dim + '.85)';
       g.font = (8.5 * dpr) + 'px ui-monospace,monospace';
       g.fillText(FS_KINDS[kind].label, lx + 11 * dpr, 30 * dpr);
       lx += (18 + FS_KINDS[kind].label.length * 8.6) * dpr;
@@ -556,7 +552,7 @@ export class FlagApp {
     const self = this;
     return {
       get state(){ return self.state; },
-      kinds: () => KINDS.map(k => ({
+      kinds: () => flKINDS.map(k => ({
         kind: k, label: FS_KINDS[k].label,
         ready: !!self.fo[k],
         stats: self.fo[k] ? self.fo[k].stats : null,
@@ -585,15 +581,18 @@ export class FlagApp {
         for (const r of fo.rows){ if (r.ph !== 'extract') continue; h[r.wPre] = (h[r.wPre] || 0) + 1; }
         return h;
       },
-      fates: () => FATES.map(f => f.k),
+      fates: () => flFATES.map(f => f.k),
       setKind: k => { if (FS_KINDS[k]){ self.state.kind = k; self.syncPanel(); self.renderHud(); self.drawAll(); } },
       setP: v => { self.state.p = v; self.syncPanel(); self.renderHud(); self.drawAll(); },
-      setSpectrum: s => { if (SPEC_W[s]){ self.state.spectrum = s; self.syncPanel(); self.renderHud(); self.drawAll(); } },
+      setSpectrum: s => { if (flSPEC_W[s]){ self.state.spectrum = s; self.syncPanel(); self.renderHud(); self.drawAll(); } },
       setSeed: s => { self.state.seed = s; },
       runMc: () => self.runMc(),
       busy: () => self._queue.length,
       canvasPixels: () => Object.fromEntries(Object.entries(self.cv).map(([k, c]) => [k, c ? c.width * c.height : 0])),
-      navLinks: () => Array.from(document.querySelectorAll('#flTop a')).map(a => a.getAttribute('href')),
+      navLinks: () => Array.from(document.querySelectorAll('.qtop a')).map(a => a.getAttribute('href')),
     };
   }
 }
+
+/* ---- QEC hub mode 描述符（R98）：壳按 id/tab 建切换条；css 在 activate 时注入、deactivate 时移除 ---- */
+export const FLAG_MODE = { handle: '__fl', id: 'flag', name: 'Flag 提取', tab: '⚑', css: FL_CSS, mount(shell){ const app = new FlagApp(shell); app.activate(); return app; } };

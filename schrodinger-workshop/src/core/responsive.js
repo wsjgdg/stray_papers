@@ -111,6 +111,46 @@ const MQ = '(max-width:860px)';
 const SHEET_G = 'position:fixed;left:6px;right:6px;width:auto;top:auto;bottom:44px;max-height:var(--qf-sm,46vh);z-index:12';
 const STAGE_G = 'position:fixed;left:6px;right:6px;width:auto;top:48px;transform:none';
 
+/* ---- 手机段几何三件套（R98 提为模块级：原为 injectResponsive 内闭包，
+   仅覆盖 enhance 时刻存在的元素；QEC hub 切换 mode 是整块换 DOM，需导出
+   重放入口给壳调用。行为与原闭包逐字一致） ---- */
+function syncStage(){
+  if (!document.documentElement.classList.contains('qf-mobile')) return;
+  /* dock 三态常驻 ⟹ 舞台恒让出底部 44px dock 带（off 态不再压缩到 8px） */
+  $$('.qstage').forEach(el => {
+    el.style.height = 'calc(100vh - 48px - 44px)';
+    el.style.height = 'calc(100dvh - 48px - 44px)'; /* 旧浏览器忽略此行保留上一行 */
+  });
+}
+function sheetify(root = document){
+  $$('.qpanel,.qhud', root).forEach(el => {
+    if (el.dataset.qfRestore != null) return;
+    el.dataset.qfRestore = el.getAttribute('style') || '';
+    el.style.cssText += ';' + SHEET_G;
+  });
+  $$('.qstage', root).forEach(el => {
+    if (el.dataset.qfRestore != null) return;
+    el.dataset.qfRestore = el.getAttribute('style') || '';
+    el.style.cssText += ';' + STAGE_G;
+  });
+  syncStage();
+}
+function unsheetify(){
+  $$('.qpanel,.qhud,.qstage').forEach(el => {
+    if (el.dataset.qfRestore == null) return;
+    el.setAttribute('style', el.dataset.qfRestore);
+    delete el.dataset.qfRestore;
+  });
+  syncStage();
+}
+
+/** R98：hub 切 mode 后，对新插入的 .qpanel/.qhud/.qstage 重放手机段几何
+ *  （桌面宽度为空操作；幂等——已带 qfRestore 的元素跳过）。 */
+export function refreshMobileGeometry(root = document){
+  if (!matchMedia(MQ).matches) return;
+  sheetify(root);
+}
+
 export function injectResponsive(){
   /* ---- 样式只注入一次（同步，不等 DOM） ---- */
   if (!document.getElementById('qf-resp')){
@@ -176,14 +216,6 @@ export function injectResponsive(){
     + '<button type="button" data-tab="readout">◫ 读数</button>'
     + '<button type="button" data-tab="off">✕ 全屏</button>';
   document.body.appendChild(dock);
-  const syncStage = () => {
-    if (!document.documentElement.classList.contains('qf-mobile')) return;
-    /* dock 三态常驻 ⟹ 舞台恒让出底部 44px dock 带（off 态不再压缩到 8px） */
-    $$('.qstage').forEach(el => {
-      el.style.height = 'calc(100vh - 48px - 44px)';
-      el.style.height = 'calc(100dvh - 48px - 44px)'; /* 旧浏览器忽略此行保留上一行 */
-    });
-  };
   dock.addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b) return;
@@ -197,25 +229,7 @@ export function injectResponsive(){
   const mq = matchMedia(MQ);
   const apply = m => {
     document.documentElement.classList.toggle('qf-mobile', m);
-    if (m){
-      $$('.qpanel,.qhud').forEach(el => {
-        if (el.dataset.qfRestore != null) return;
-        el.dataset.qfRestore = el.getAttribute('style') || '';
-        el.style.cssText += ';' + SHEET_G;
-      });
-      $$('.qstage').forEach(el => {
-        if (el.dataset.qfRestore != null) return;
-        el.dataset.qfRestore = el.getAttribute('style') || '';
-        el.style.cssText += ';' + STAGE_G;
-      });
-    } else {
-      $$('.qpanel,.qhud,.qstage').forEach(el => {
-        if (el.dataset.qfRestore == null) return;
-        el.setAttribute('style', el.dataset.qfRestore);
-        delete el.dataset.qfRestore;
-      });
-    }
-    syncStage();
+    if (m) sheetify(); else unsheetify();
   };
   if (mq.addEventListener) mq.addEventListener('change', ev => apply(ev.matches));
   else if (mq.addListener) mq.addListener(ev => apply(ev.matches)); /* 旧 Safari */

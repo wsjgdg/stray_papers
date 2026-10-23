@@ -13,6 +13,8 @@
  *     标题文案在 NAV_TITLES，与 NAV 同源，不会再漏。
  * ========================================================================== */
 
+/* R98：QEC 七页整合为单页 hub（qec.html?mode=rep|shor|gate|flag|rounds|cycle|family），
+   NAV 由 13 条收为 7 条；六个旧页名各留跳转桩（根级 + dist），旧书签不 404。 */
 export const NAV = [
   ['./index.html', '主页'],
   ['./two-body.html', '双粒子 ⧉'],
@@ -21,12 +23,6 @@ export const NAV = [
   ['./qcircuit.html', '线路 ⧉'],
   ['./noise.html', '噪声 ◍'],
   ['./qec.html', '纠错 ◈'],
-  ['./shor.html', '级联 ⊗3'],
-  ['./gatenoise.html', '门噪声 ⌁'],
-  ['./flag.html', '容错 ⚑'],
-  ['./rounds.html', '多轮 ⟳'],
-  ['./cycle.html', '循环 ↻'],
-  ['./family.html', '码族 ⌗'],
 ].filter(Boolean);
 
 /** 主页顶栏各页的 title 工具提示（与 NAV 同序；缺省回退为标签文案） */
@@ -36,13 +32,7 @@ export const NAV_TITLES = {
   './paths.html': '费曼路径求和：路径族 / 相位 / 双缝条纹（R74）',
   './qcircuit.html': '小规模量子线路：Bell / GHZ / QFT / Grover（R75）',
   './noise.html': '开放量子系统：T₁ 弛豫 / T₂ 退相位 / 纠缠猝死（R77）',
-  './qec.html': '量子纠错：3 比特重复码 / 稳定子 / 阈值（R78）',
-  './shor.html': 'Shor 9 比特级联码：级联阈值（R79）',
-  './gatenoise.html': '线路级门噪声：门保真度 → 线路保真度 / 三错误谱 / 纠缠猝死（R80）',
-  './flag.html': '容错综合征提取：冗余校验 / 猫态 / 旗标（R81）',
-  './rounds.html': '多轮提取 + 跨轮联合解码：伪阈值（R82/R83）',
-  './cycle.html': '循环 EC + 横向逻辑门：门拦截与保真度口径（R84）',
-  './family.html': '码族与真阈值：重复码 / Steane 级联 / 测量噪声地板（R85）',
+  './qec.html': '量子纠错 hub：重复码 / Shor 9 / 门噪声 / Flag / 多轮 / 循环 / 码族（R78–R85，R98 七页整合）',
 };
 
 /** 生成子页顶栏导航 HTML；cur = 当前页 href（打 cur 高亮，自链也在——与 flag/rounds/cycle 一致）。

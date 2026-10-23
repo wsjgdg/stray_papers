@@ -1124,6 +1124,50 @@ dev 与 dist 双通道各 37/37。**结论：没有死控件、没有坏控件�
 
 30 files changed, 178 insertions(+), 0 deletions(-)：13 个根 HTML 各 +1 favicon 行、新增 `quantum-field.html` 深链桩（+17）、`src/two-body.js` 净 +11（接线移入 bindUI + fail() 禁用控件 + 注释；纯移动无删除）、README 运行节 +1（别名深链说明）、13 dist 各 +1（favicon 随 head 进产物）、worklog R97（+112）。
 
+## R98（2026-10-23）QEC 七页整合为单页 hub + 全站实时沙盒化立项（用户指令「QEC 七页整合，剩下的能不能都做成实时沙盒类？」）
+
+### 起因
+
+R97 评估结论：13 页对「课程站按讲分发」成立，但 **QEC 七页有真实整合收益**（壳同构、flag/rounds/cycle 各仅 2 按钮 2 滑块、分页性价比低），列为决策项待用户拍板。用户本轮拍板：**七页整合**，且提出第二问——**剩下的能不能都做成实时沙盒类**（即各页从「调参→一次性重算→静态渲染」升级为「连续流式演出」）。
+
+五期计划（已批准）：P1 七页整合 → P2 hub 实时化 → P3 noise 实时化 → P4 paths/qcircuit 增强 → P5 收尾（README/worklog + 全门禁）。
+
+### P1：七页整合（本轮完成）
+
+**架构**：壳/模式分离。`src/qechub.js`（QecHub）管 chrome——顶栏 + mode tab 条 + `#qeModeRoot` 挂载点 + `?mode=` URL 直达/同步 + 每 mode 私有 CSS 注入/移除 + debug 句柄转发（`window.__qe/__sh/__gn/__fl/__rd/__cy/__fm` 七枚与旧页同名，旧 cdp 断言语义不变）+ 切 mode 后重放手机段几何。七个 mode 控制器（`src/qec/mode-*.js`，由旧 `src/{qec,shor,gatenoise,flag,rounds,cycle,family}.js` 重命名+重构）管各自面板/HUD/画布/交互，描述符接口 `{ handle, id, name, tab, css, mount(shell) }`，新增 `deactivate()` 统一清理（定时器/监听/DOM）。
+
+| 项 | 处理 |
+|---|---|
+| mode 接口 | `constructor(shell)` + `q()` 限定 modeRoot（去 document 兜底防跨 mode 误命中）+ `on()` 记 `_listeners` + `activate()/deactivate()` |
+| bundler 单作用域 | 7 个 mode 文件顶层私有名加 mode 前缀（rep/sh/gn/fl/rd/cy/fm）；物理模块间 `signOf/popc/CIRC_CACHE/REF_CACHE`（qec.js 与 flagsynd.js 重复定义）在 flagsynd.js 侧加 `fs` 前缀——**拼接后全图 333 个顶层名零重复**（Node import 逐文件验证） |
+| 几何 | tab 条置于顶栏下方通栏（桌面 top:64 高 32；≤900 top:72 z-index:8 让位汉堡抽屉）；七 mode 面板/HUD top 74→108px、max-height calc 补偿（−200→−234 等）保底边不变；移动端 `.qstage{top:108px!important}` 压 responsive.js 的 STAGE_G 内联声明 |
+| responsive.js | sheetify/unsheetify/syncStage 提为模块级函数并导出 `refreshMobileGeometry(root)`——hub 切 mode 是整块换 DOM，enhance 时的 sheetify 只覆盖当时存在的元素 |
+| 跳转桩 | 6 个旧页名（shor/gatenoise/flag/rounds/cycle/family）降级为 meta-refresh 桩 → `qec.html?mode=X`（根级手写 + dist 由构建脚本 STUBS 表生成；file:// 直开也跳） |
+| 导航/构建表 | nav.js NAV 13→7 条；build-standalone PAGES 13→7 + STUBS 6 条 |
+| 死代码 | 删 5 个 mode CSS 里的 `.qtop[id="xxTop"]{…}` 差异行（R94 遗留，topbar 已由壳提供） |
+| 物理模块 | 5 个 physics 模块零代码改动（仅 flagsynd.js 私有名加前缀，导出 API 不变）⟹ pot85/pot87 数值断言继续有效 |
+
+**验证（P1c 新套件 cdp101：111/111）**：
+
+| 组 | 断言 |
+|---|---|
+| A 深链+boot | 7 mode ×：零 console error / 画布像素非空 / HUD 有数 / tab on 态独占 / debug 句柄就位 / 同屏无重复 id / 7 钮；`?mode=rep&trials=500&p=0.2` 与 `?mode=cycle&cycles=4` 参数透传（经 debug 句柄 state 断言）；非法值回落 rep；无参默认 rep |
+| B tab 切换 | A→B→A 状态不串（控件指纹一致 + 无对端 DOM 残留 + 句柄换手）；URL replaceState 同步；10 次往返零 error 且 DOM/style/canvas 计数回基线（163→163、CSS 单份、舞台单份） |
+| C 移动档 375×667 | tab 条 top:72 z:8；舞台 top:108 !important 生效；面板 sheetify；汉堡抽屉 z:9 压 tab（elementFromPoint 实测）；切 mode 后新 DOM 几何重放 |
+| D 跳转桩 | 根级 + dist 各 6 桩：200 + meta refresh 目标正确 + 非全量 bundle |
+| E dist 通道 | 单文件 bundle boot 零 error + 画布/HUD/tab + 切 mode（**单作用域拼接的运行时验证**） |
+
+旧套件适配（P1c 同步）：cdp90（PAGES 13→7 + 新增 V8 hub chrome 渲染查）、cdp91（NAV ∪ 桩集合 14 个、dist = 7 bundle + 6 桩、往返改 qec hub ↔ 主页）、cdp92（M2 链数 7/6、M3 抽屉点击改主页→纠错、M13 sfill 断言改 hub gate mode）、cdp98（新增通道 E：桩 200 + refresh 落定 + hub 真实就位）、cdp99（PAGES 12→7，hub 控件审计归 cdp101）。
+
+**harness 教训（两处假阳性，均非产品缺陷）**：① cdp101 首跑 A11 FAIL——`goto` 在导航前重置 errs，旧执行上下文卸载期的 error 回灌落入新窗口；改「新文档 load 时重置」+ 回落断言轮询后稳定（隔离探针 3/3 场景确认产品行为正确）。② E2 曾抽到 `width=0` 空画布——pot 套件并发占 CPU，bundle 启动后 RO 定尺寸晚于固定 settle；CV_SUM 改就绪轮询（30×100ms）。
+
+### 后续（P2–P5，待追加）
+
+- **P2**：QEC hub 实时 EC 沙盒——rAF 20 次/秒 MC 分帧演出（流式累加器 + 播放/暂停 + `?live=`），先 rep 后推七 mode
+- **P3**：noise 实时化（nzScan 拆 stepper）
+- **P4**：paths 相位累积播放 + qcircuit 门列表编辑
+- **P5**：README/worklog R98 收尾 + dist 重建 + 全门禁 + commit/push 闭环
+
 ## R90（2026-10-23）面板视觉保真度评审（README「后续方向」② 收官）
 
 ### 立项动机

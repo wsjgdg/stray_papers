@@ -1,5 +1,5 @@
 /* ============================================================================
- * shor.js（页面）— R79 Shor 9 比特码：3×3 级联，纠正**任意**单比特错误
+ * mode-shor.js（QEC hub 模式）— 由 shor.js 重构而来（R98 七页整合）：R79 Shor 9 比特码：3×3 级联，纠正**任意**单比特错误
  *
  * 三块画布：
  *   #shCircuit  10 行线路（q0..q8 + 1 个复用 ancilla）：制备→外编码→内编码→噪声
@@ -11,14 +11,11 @@
  * 与 R78 qec 页的差异： ancilla 顺序复用（10 比特态矢，单次 0.2ms）；
  * 曲线用**精确**值（穷举与 p 无关），MC 只标当前 p 一点。
  * ========================================================================== */
-import { injectStyles } from './core/styles.js';
-import { injectResponsive } from './core/responsive.js';
-import { navHtml } from './core/nav.js';
-import { SHOR_STABS, SHOR_LOGICALS, shorTrial, shorEnsemble, shorSweep, shorExactPL, repPLexact, shorCrossover, shorDecode, shorSyndromeOf, shorCoset, shorTableStats, shorDistance, shorWeight2Stats, SHOR_STAB_COUNT, shorFaultSurvey, shorCircuitStats } from './physics/shor.js';
-import { mulberry32 } from './physics/qcircuit.js';
+import { SHOR_STABS, SHOR_LOGICALS, shorTrial, shorEnsemble, shorSweep, shorExactPL, repPLexact, shorCrossover, shorDecode, shorSyndromeOf, shorCoset, shorTableStats, shorDistance, shorWeight2Stats, SHOR_STAB_COUNT, shorFaultSurvey, shorCircuitStats } from '../physics/shor.js';
+import { mulberry32 } from '../physics/qcircuit.js';
 
 const SHOR_CSS = `
-  #shPanel{top:74px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 306px);
+  #shPanel{top:108px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 340px);
     overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #shPanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
     text-transform:uppercase;margin:10px 0 5px}
@@ -39,7 +36,7 @@ const SHOR_CSS = `
   #shPanel button:disabled{opacity:.38;cursor:not-allowed;filter:grayscale(1)}
   #shPanel button:disabled:hover{border-color:var(--line);color:var(--txt)}
   #shPanel #shSpWrap.off{opacity:.4;pointer-events:none;filter:grayscale(1)}
-  #shHud{top:74px;right:14px;padding:11px 13px;z-index:10;min-width:224px;font-family:var(--mono)}
+  #shHud{top:108px;right:14px;padding:11px 13px;z-index:10;min-width:224px;font-family:var(--mono)}
   #shHud .hrow{display:flex;justify-content:space-between;gap:12px;font-size:11.5px;padding:2.5px 0}
   #shHud .hrow span:first-child{color:var(--dim)}
   #shHud .hrow span:last-child{color:var(--txt)}
@@ -58,18 +55,18 @@ const SHOR_CSS = `
   #shDiag{position:fixed;left:-9999px}
   @media (max-width:1180px){#shStage{width:calc(100vw - 60px)}#shHint{display:none}
     /* R90：hint 隐身时面板恢复全高（ hint 可见时为 calc(100vh-306px)：14 底距 + 210 hint 上限 + 8 间隙） */
-    #shPanel{max-height:calc(100vh - 200px)}}
+    #shPanel{max-height:calc(100vh - 234px)}}
 `;
 
-const mdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
-const ex = (x, d = 2) => (Number.isFinite(x) && x !== 0 ? x.toExponential(d) : '0');
-const PTYPES = ['x', 'y', 'z'];
+const shMdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+const shNf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
+const shEx = (x, d = 2) => (Number.isFinite(x) && x !== 0 ? x.toExponential(d) : '0');
+const shPTYPES = ['x', 'y', 'z'];
 /* 陪集名（HUD/调试用）；−1 = 综合征超出权重 ≤2 覆盖，解码器不动作 */
-const COSET_NAME = ['纠回（∈S）', 'X_L·S', 'Z_L·S', 'Y_L·S', '∉N(S)'];
-const cosetName = cs => (cs === -1 ? COSET_NAME[4] : COSET_NAME[cs] || '?');
+const shCOSET_NAME = ['纠回（∈S）', 'X_L·S', 'Z_L·S', 'Y_L·S', '∉N(S)'];
+const shCosetName = cs => (cs === -1 ? shCOSET_NAME[4] : shCOSET_NAME[cs] || '?');
 
-const PRESETS = [
+const shPRESETS = [
   { name: '|+i⟩', theta: Math.PI / 2, phase: Math.PI / 2 },
   { name: '|0⟩', theta: 0, phase: 0 },
   { name: '|1⟩', theta: Math.PI, phase: 0 },
@@ -78,8 +75,10 @@ const PRESETS = [
 ];
 
 export class ShorApp {
-  constructor(container, options = {}){
-    this.container = typeof container === 'string' ? document.querySelector(container) : (container || document.body);
+  constructor(shell){
+    this.shell = shell;
+    this.modeRoot = shell.modeRoot;
+    this._listeners = [];
     const q = new URLSearchParams(location.search);
     const num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
     /* R87 三键（与 R86 同款校验：非法值回落默认 ⟹ 零回归） */
@@ -104,22 +103,20 @@ export class ShorApp {
     this._curveKey = null;
   }
 
-  q(sel){ return this.container.querySelector(sel) || document.querySelector(sel); }
-  on(el, ev, fn){ if (el) el.addEventListener(ev, fn); }
+  q(sel){ return this.modeRoot.querySelector(sel); }
+  on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
-  mount(){
-    injectStyles();
-    injectResponsive();
-    const sheet = document.createElement('style');
-    sheet.textContent = SHOR_CSS;
-    document.head.appendChild(sheet);
-    this.container.insertAdjacentHTML('beforeend', `
-      <header id="shTop" class="panel qtop">
-        <div class="logo">级联工场</div>
-        <div class="eq">[(|000⟩+|111⟩)/√2]⊗3 ─<b>噪声</b>─► <b>8 稳定子</b> ─► <b>最大似然修正</b></div>
-        ${navHtml('./shor.html', '      ')}
-      </header>
+  deactivate(){
+    clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
+    if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
+    this._ro?.disconnect();
+    for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
+    this._listeners.length = 0;
+    this.modeRoot.replaceChildren();      /* 移除本 mode 的 DOM（面板/HUD/画布/提示） */
+  }
 
+  activate(){
+    this.modeRoot.insertAdjacentHTML('beforeend', `
       <aside id="shPanel" class="panel qpanel">
         <div class="grp">逻辑初态 Ry(θ)Rz(φ)|0⟩</div>
         <div class="row"><label>θ</label><input type="range" id="shTheta" min="0" max="3.1416" step="0.01"><output id="shThetaO">—</output></div>
@@ -209,7 +206,7 @@ export class ShorApp {
 
     /* 预设按钮 */
     const pb = this.q('#shPresets');
-    for (const P of PRESETS){
+    for (const P of shPRESETS){
       const b = document.createElement('button');
       b.textContent = P.name; b.dataset.theta = P.theta; b.dataset.phase = P.phase;
       this.on(b, 'click', () => {
@@ -227,7 +224,7 @@ export class ShorApp {
       qb.appendChild(b);
     }
     const tb = this.q('#shTbtns');
-    for (const t of PTYPES){
+    for (const t of shPTYPES){
       const b = document.createElement('button');
       b.textContent = t.toUpperCase(); b.dataset.t = t;
       this.on(b, 'click', () => { this.state.injectT = t; this.syncPanel(); });
@@ -235,13 +232,13 @@ export class ShorApp {
     }
 
     /* R87 噪声模型 / 错误谱 / 注错相位 */
-    for (const b of this.container.querySelectorAll('#shPanel button[data-n]')){
+    for (const b of this.modeRoot.querySelectorAll('#shPanel button[data-n]')){
       this.on(b, 'click', () => { this.state.noise = b.dataset.n; this.modeChanged(); });
     }
-    for (const b of this.container.querySelectorAll('#shPanel button[data-sp]')){
+    for (const b of this.modeRoot.querySelectorAll('#shPanel button[data-sp]')){
       this.on(b, 'click', () => { this.state.spectrum = b.dataset.sp; this.modeChanged(); });
     }
-    for (const b of this.container.querySelectorAll('#shPanel button[data-np]')){
+    for (const b of this.modeRoot.querySelectorAll('#shPanel button[data-np]')){
       this.on(b, 'click', () => { this.state.noisyPhase = b.dataset.np; this.modeChanged(); });
     }
 
@@ -334,16 +331,16 @@ export class ShorApp {
 
   syncPanel(){
     const s = this.state;
-    for (const b of this.container.querySelectorAll('#shQbtns button')) b.classList.toggle('on', +b.dataset.q === s.injectQ);
-    for (const b of this.container.querySelectorAll('#shTbtns button')) b.classList.toggle('on', b.dataset.t === s.injectT);
-    for (const b of this.container.querySelectorAll('#shPresets button')){
+    for (const b of this.modeRoot.querySelectorAll('#shQbtns button')) b.classList.toggle('on', +b.dataset.q === s.injectQ);
+    for (const b of this.modeRoot.querySelectorAll('#shTbtns button')) b.classList.toggle('on', b.dataset.t === s.injectT);
+    for (const b of this.modeRoot.querySelectorAll('#shPresets button')){
       b.classList.toggle('on', Math.abs(+b.dataset.theta - s.theta) < 1e-6 && Math.abs(+b.dataset.phase - s.phase) < 1e-6);
     }
     /* R87 三键高亮 + i.i.d. 下谱/相位组置灰 */
     const gate = s.noise === 'gate';
-    for (const b of this.container.querySelectorAll('#shPanel button[data-n]')) b.classList.toggle('on', b.dataset.n === s.noise);
-    for (const b of this.container.querySelectorAll('#shPanel button[data-sp]')) b.classList.toggle('on', b.dataset.sp === s.spectrum);
-    for (const b of this.container.querySelectorAll('#shPanel button[data-np]')) b.classList.toggle('on', b.dataset.np === s.noisyPhase);
+    for (const b of this.modeRoot.querySelectorAll('#shPanel button[data-n]')) b.classList.toggle('on', b.dataset.n === s.noise);
+    for (const b of this.modeRoot.querySelectorAll('#shPanel button[data-sp]')) b.classList.toggle('on', b.dataset.sp === s.spectrum);
+    for (const b of this.modeRoot.querySelectorAll('#shPanel button[data-np]')) b.classList.toggle('on', b.dataset.np === s.noisyPhase);
     const spw = this.q('#shSpWrap');
     if (spw) spw.classList.toggle('off', !gate);
     /* 「指定错误注入」是 i.i.d. 口径的教学装置（forceErrors 直接打在数据比特上），
@@ -366,7 +363,7 @@ export class ShorApp {
   renderHint(){
     const b = this.q('#shHint b'), sp = this.q('#shHint span');
     if (b) b.textContent = 'Shor 9 比特码（3×3 级联）';
-    if (sp) sp.innerHTML = mdLite(
+    if (sp) sp.innerHTML = shMdLite(
       '内层 3 个**比特翻转码**纠 X，外层**相位翻转码**纠 Z。8 个稳定子（6 个 Z 对 + 2 个 X 六重）' +
       '撑起 2⁸=256 维稳定子空间，码空间维数 2⁹/2⁸=2。码距 3：**任意单比特错误全纠回**，' +
       '双错开始漏（权重 2 失败 117/324）。综合征用**单个复用 ancilla 顺序测量**（10 比特态矢，' +
@@ -381,7 +378,7 @@ export class ShorApp {
   /* 综合征表：恒等 + 21 个单错类 + 3 个双错样例（现场计算，不硬编码结论） */
   renderTable(){
     const groups = new Map();
-    for (let q = 0; q < 9; q++) for (const t of PTYPES){
+    for (let q = 0; q < 9; q++) for (const t of shPTYPES){
       const syn = shorSyndromeOf([{ q, t }]);
       const k = syn.join('');
       if (!groups.has(k)) groups.set(k, { q, t, syn });
@@ -396,9 +393,9 @@ export class ShorApp {
     lines.push('<span style="color:var(--amber)">— 双错样例（综合征与单错撞车）—</span>');
     for (const errs of [[{ q: 0, t: 'x' }, { q: 1, t: 'x' }], [{ q: 3, t: 'x' }, { q: 4, t: 'x' }], [{ q: 0, t: 'z' }, { q: 3, t: 'z' }], [{ q: 0, t: 'x' }, { q: 3, t: 'z' }]]){
       const syn = shorSyndromeOf(errs);
-      const cs = shorCoset(residualOf(errs));
+      const cs = shorCoset(shResidualOf(errs));
       const who = errs.map(e => e.t.toUpperCase() + e.q).join('');
-      lines.push(who + ' → ' + bitsOf(syn) + ' → ' + fixOf(syn) + ' → ' + cosetName(cs) + (cs === 0 ? ' ✓' : ' ✗'));
+      lines.push(who + ' → ' + bitsOf(syn) + ' → ' + fixOf(syn) + ' → ' + shCosetName(cs) + (cs === 0 ? ' ✓' : ' ✗'));
     }
     const el = this.q('#shTable');
     if (el) el.innerHTML = lines.join('<br>');
@@ -412,35 +409,35 @@ export class ShorApp {
       /* 综合征按「6 个 Z 对 | 2 个 X 六重」分组显示 */
       set('hSyn', t.syn.slice(0, 6).join('') + ' | ' + t.syn.slice(6).join(''));
       set('hFix', t.fix.length ? t.fix.map(x => x.t.toUpperCase() + x.q).join(' ') : '不动');
-      set('hF', nf(t.F, 6));
+      set('hF', shNf(t.F, 6));
       const j = this.q('#hJudge');
       if (j){
         /* 判定用代数判据（残差 ∉ S），与精确 P_L 同口径；F 单独显示。
            Y_L 类残差在 Y 本征态（默认 |+i⟩）上 F=1 —— 物理上不可见，仍是逻辑错误。 */
         const cs = t.coset;
-        let txt = t.logicalError ? '逻辑错误 ✗ ' + cosetName(cs) : '纠回 ✓';
+        let txt = t.logicalError ? '逻辑错误 ✗ ' + shCosetName(cs) : '纠回 ✓';
         if (t.logicalError && t.F > 0.9) txt += '（F 仍高：本参考态近不可见）';
         j.textContent = txt;
         j.style.color = t.logicalError ? 'var(--red)' : 'var(--cyan)';
       }
     }
     if (e){
-      set('hPL', nf(e.PL, 5));
+      set('hPL', shNf(e.PL, 5));
       if (e.noise === 'gate'){
         /* 门级：没有便宜的精确多项式（帧空间 2¹⁸ × 综合征 2⁸），精确量只有
            单故障枚举给出的**领先阶 c₁** ⟹ 如实显示「无闭式」而非伪造一个值。 */
-        set('hPLx', '无闭式（c₁=' + nf(e.c1, 3) + '）');
+        set('hPLx', '无闭式（c₁=' + shNf(e.c1, 3) + '）');
         set('hRep', '不同电路（M=52/90）');
         set('hM', e.M + '（' + (s.noisyPhase === 'all' ? '全程' : '仅提取段') + '）');
-        set('hC1g', nf(e.c1, 3) + '（致命位点 ' + e.fatal + '/' + e.total + '）');
-        set('hMF', nf(e.meanFaults, 3) + '（≈M·p=' + nf(e.M * e.p, 3) + '）');
+        set('hC1g', shNf(e.c1, 3) + '（致命位点 ' + e.fatal + '/' + e.total + '）');
+        set('hMF', shNf(e.meanFaults, 3) + '（≈M·p=' + shNf(e.M * e.p, 3) + '）');
         set('hFates', e.byCoset.slice(1).join('/'));
       } else {
-        set('hPLx', ex(e.PLexact, 3));
-        set('hRep', nf(e.repExact, 5) + (e.repExact > e.PLexact ? ' ↓' : ' ↑'));
+        set('hPLx', shEx(e.PLexact, 3));
+        set('hRep', shNf(e.repExact, 5) + (e.repExact > e.PLexact ? ' ↓' : ' ↑'));
       }
-      set('hPun', nf(e.Pun, 4));
-      set('hRatio', s.p > 0 ? nf(e.PL / e.Pun, 3) + (e.PL < e.Pun ? ' ↓' : ' ↑') : '—');
+      set('hPun', shNf(e.Pun, 4));
+      set('hRatio', s.p > 0 ? shNf(e.PL / e.Pun, 3) + (e.PL < e.Pun ? ' ↓' : ' ↑') : '—');
       const cnt = (a, b) => a + (b ? ' /L' + b : ' ✓');
       set('hC0', cnt(e.byWeight[0], e.byWeightL[0]));
       set('hC1', cnt(e.byWeight[1], e.byWeightL[1]));
@@ -883,16 +880,19 @@ export class ShorApp {
         const t = shorTrial({ theta: self.state.theta, phase: self.state.phase, ...opts }, mulberry32(12345));
         return { errors: t.errors.slice(), syn: t.syn.slice(), fix: t.fix.slice(), F: t.F, logicalError: t.logicalError, coset: t.coset };
       },
-      navLinks: () => Array.from(document.querySelectorAll('#shTop a')).map(a => a.getAttribute('href')),
+      navLinks: () => Array.from(document.querySelectorAll('.qtop a')).map(a => a.getAttribute('href')),
     };
   }
 }
 
 /* 双错样例的残差（页面综合表用）：错误 × 表修正 的代数乘积陪集 */
-function residualOf(errs){
+function shResidualOf(errs){
   let res = { x: 0, z: 0 };
   const pauli = (q, t) => t === 'x' ? { x: 1 << q, z: 0 } : t === 'z' ? { x: 0, z: 1 << q } : { x: 1 << q, z: 1 << q };
   for (const e of errs) res = { x: res.x ^ pauli(e.q, e.t).x, z: res.z ^ pauli(e.q, e.t).z };
   for (const e of shorDecode(shorSyndromeOf(errs))) res = { x: res.x ^ pauli(e.q, e.t).x, z: res.z ^ pauli(e.q, e.t).z };
   return res;
 }
+
+/* ---- QEC hub mode 描述符（R98）：壳按 id/tab 建切换条；css 在 activate 时注入、deactivate 时移除 ---- */
+export const SHOR_MODE = { handle: '__sh', id: 'shor', name: 'Shor 9', tab: '⬒', css: SHOR_CSS, mount(shell){ const app = new ShorApp(shell); app.activate(); return app; } };

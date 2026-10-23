@@ -1,5 +1,6 @@
 /* ============================================================================
- * qec.js（页面）— R78/R86 量子纠错：3 比特重复码的线路图 / P_L(p) / 错误分解
+ * mode-rep.js（QEC hub 模式）— 由 qec.js（R78/R86）重构而来（R98 七页整合）
+ * 量子纠错：3 比特重复码的线路图 / P_L(p) / 错误分解
  *
  * 两种噪声口径（面板切换，URL 参数同）：
  *   noise='iid'（R78 默认，零回归）：编码后、解码前，每个数据比特独立以概率 p
@@ -15,15 +16,17 @@
  *                两侧方向与静态相反，不称阈值——见 gateThreshold 注记）
  *   #qecHist     iid = 按错误个数分组的柱状（0/1/2/3 错，堆叠纠对/逻辑错误）；
  *                gate = 结局分解（码空间五分类 + 解码后三分类）
+ *
+ * R98 重构要点（保行为）：去 topbar（壳提供）；mount→activate；q() 限定
+ * modeRoot；on() 记 _listeners 供 deactivate 摘除；window resize / RO /
+ * _queueTimer 类定时器在 deactivate 统一清理。CSS 原样（选择器全 id 锚定，
+ * mode 间 DOM 不同屏共存，无串台）。
  * ========================================================================== */
-import { injectStyles } from './core/styles.js';
-import { injectResponsive } from './core/responsive.js';
-import { navHtml } from './core/nav.js';
-import { QEC_DEFAULTS, QEC_CODES, QEC_NOISE, QEC_SPECTRA, qecTrial, qecEnsemble, qecSweep, qecLogicalRate, qecThreshold, qecSyndromeTable, qecCircuit, qecExactPL, qecFaultSurvey } from './physics/qec.js';
-import { mulberry32 } from './physics/qcircuit.js';
+import { QEC_DEFAULTS, QEC_CODES, QEC_NOISE, QEC_SPECTRA, qecTrial, qecEnsemble, qecSweep, qecLogicalRate, qecThreshold, qecSyndromeTable, qecCircuit, qecExactPL, qecFaultSurvey } from '../physics/qec.js';
+import { mulberry32 } from '../physics/qcircuit.js';
 
 const QEC_CSS = `
-  #qePanel{top:74px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 200px);
+  #qePanel{top:108px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 234px);
     overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #qePanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
     text-transform:uppercase;margin:10px 0 5px}
@@ -42,8 +45,8 @@ const QEC_CSS = `
   #qePanel button.on{background:rgba(103,232,249,.18);border-color:var(--cyan);color:var(--cyan)}
   /* 门级专属组（错误谱 / 注错相位）：iid 模式下置灰不可点 */
   #qeSpWrap.off{opacity:.32;pointer-events:none}
-  #qeHud{top:74px;right:14px;padding:11px 13px;z-index:10;min-width:222px;max-width:250px;font-family:var(--mono);
-    max-height:calc(100vh - 200px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  #qeHud{top:108px;right:14px;padding:11px 13px;z-index:10;min-width:222px;max-width:250px;font-family:var(--mono);
+    max-height:calc(100vh - 234px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #qeHud .hrow{display:flex;justify-content:space-between;gap:12px;font-size:11.5px;padding:2.5px 0;flex-wrap:wrap}
   #qeHud .hrow span:last-child{color:var(--txt);text-align:right}
   #qeHud .hrow span:first-child{color:var(--dim)}
@@ -64,13 +67,15 @@ const QEC_CSS = `
   @media (max-width:1180px){#qeStage{width:calc(100vw - 60px)}#qeHint{display:none}}
 `;
 
-const mdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
-const ex = (x, d = 2) => (Number.isFinite(x) && x !== 0 ? x.toExponential(d) : '0');
+const repMdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+const repNf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
+const repEx = (x, d = 2) => (Number.isFinite(x) && x !== 0 ? x.toExponential(d) : '0');
 
 export class QecApp {
-  constructor(container, options = {}){
-    this.container = typeof container === 'string' ? document.querySelector(container) : (container || document.body);
+  constructor(shell){
+    this.shell = shell;
+    this.modeRoot = shell.modeRoot;
+    this._listeners = [];
     const q = new URLSearchParams(location.search);
     const num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
     const str = (k, d, ok) => { const v = q.get(k); return ok(v) ? v : d; };
@@ -93,22 +98,20 @@ export class QecApp {
     this._curveKey = '';
   }
 
-  q(sel){ return this.container.querySelector(sel) || document.querySelector(sel); }
-  on(el, ev, fn){ if (el) el.addEventListener(ev, fn); }
+  q(sel){ return this.modeRoot.querySelector(sel); }
+  on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
-  mount(){
-    injectStyles();
-    injectResponsive();
-    const sheet = document.createElement('style');
-    sheet.textContent = QEC_CSS;
-    document.head.appendChild(sheet);
-    this.container.insertAdjacentHTML('beforeend', `
-      <header id="qeTop" class="panel qtop">
-        <div class="logo">纠错工场</div>
-        <div class="eq">|ψ⟩ ─<b>编码</b>─► α|000⟩+β|111⟩ ─<b>噪声</b>─► <b>综合</b> ─► <b>修正</b></div>
-        ${navHtml('./qec.html', '      ')}
-      </header>
+  deactivate(){
+    clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
+    if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
+    this._ro?.disconnect();
+    for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
+    this._listeners.length = 0;
+    this.modeRoot.replaceChildren();      /* 移除本 mode 的 DOM（面板/HUD/画布/提示） */
+  }
 
+  activate(){
+    this.modeRoot.insertAdjacentHTML('beforeend', `
       <aside id="qePanel" class="panel qpanel">
         <div class="grp">码</div>
         <div class="btns">
@@ -188,16 +191,16 @@ export class QecApp {
 
     this.cv = { circuit: this.q('#qecCircuit'), curve: this.q('#qecCurve'), hist: this.q('#qecHist') };
 
-    for (const b of this.container.querySelectorAll('#qePanel button[data-c]')){
+    for (const b of this.modeRoot.querySelectorAll('#qePanel button[data-c]')){
       this.on(b, 'click', () => this.setCode(b.dataset.c));
     }
-    for (const b of this.container.querySelectorAll('#qePanel button[data-n]')){
+    for (const b of this.modeRoot.querySelectorAll('#qePanel button[data-n]')){
       this.on(b, 'click', () => this.setNoise(b.dataset.n));
     }
-    for (const b of this.container.querySelectorAll('#qePanel button[data-sp]')){
+    for (const b of this.modeRoot.querySelectorAll('#qePanel button[data-sp]')){
       this.on(b, 'click', () => this.setSpectrum(b.dataset.sp));
     }
-    for (const b of this.container.querySelectorAll('#qePanel button[data-np]')){
+    for (const b of this.modeRoot.querySelectorAll('#qePanel button[data-np]')){
       this.on(b, 'click', () => this.setNoisyPhase(b.dataset.np));
     }
     this.on(this.q('#qeP'), 'input', e => { this.state.p = parseFloat(e.target.value); this.recompute(); this.syncPanel(); });
@@ -332,10 +335,10 @@ export class QecApp {
 
   syncPanel(){
     const s = this.state;
-    for (const b of this.container.querySelectorAll('#qePanel button[data-c]')) b.classList.toggle('on', b.dataset.c === s.code);
-    for (const b of this.container.querySelectorAll('#qePanel button[data-n]')) b.classList.toggle('on', b.dataset.n === s.noise);
-    for (const b of this.container.querySelectorAll('#qePanel button[data-sp]')) b.classList.toggle('on', b.dataset.sp === s.spectrum);
-    for (const b of this.container.querySelectorAll('#qePanel button[data-np]')) b.classList.toggle('on', b.dataset.np === s.noisyPhase);
+    for (const b of this.modeRoot.querySelectorAll('#qePanel button[data-c]')) b.classList.toggle('on', b.dataset.c === s.code);
+    for (const b of this.modeRoot.querySelectorAll('#qePanel button[data-n]')) b.classList.toggle('on', b.dataset.n === s.noise);
+    for (const b of this.modeRoot.querySelectorAll('#qePanel button[data-sp]')) b.classList.toggle('on', b.dataset.sp === s.spectrum);
+    for (const b of this.modeRoot.querySelectorAll('#qePanel button[data-np]')) b.classList.toggle('on', b.dataset.np === s.noisyPhase);
     const wrap = this.q('#qeSpWrap');
     if (wrap) wrap.classList.toggle('off', s.noise !== 'gate');
     const setv = (id, v) => { const e = this.q('#' + id); if (e) e.value = v; };
@@ -349,7 +352,7 @@ export class QecApp {
     const b = this.q('#qeHint b'), sp = this.q('#qeHint span');
     if (b) b.textContent = P.label;
     if (sp){
-      sp.innerHTML = mdLite(P.text) +
+      sp.innerHTML = repMdLite(P.text) +
         '<hr style="border:none;border-top:1px solid var(--line);margin:6px 0">' +
         '<span style="color:var(--cyan);font-weight:600">' + QEC_NOISE[s.noise].label + '</span> ' + QEC_NOISE[s.noise].desc +
         (s.noise === 'gate'
@@ -385,16 +388,16 @@ export class QecApp {
       /* 修正算符随码变（bitflip→X、phaseflip→Z）；首版硬编码 X，与线路图的 Z 不一致 */
       const fixSym = (QEC_CODES[s.code] || QEC_CODES.bitflip).fix.toUpperCase();
       set('hFix', t.fixQ < 0 ? '不动' : fixSym + t.fixQ);
-      set('hF', nf(t.F, 6));
+      set('hF', repNf(t.F, 6));
       const j = this.q('#hJudge');
       if (j){ j.textContent = t.logicalError ? '逻辑错误 ✗' : '纠回 ✓'; j.style.color = t.logicalError ? 'var(--red)' : 'var(--cyan)'; }
     }
     if (e){
-      set('hPL', nf(e.PL, 5));
-      set('hPLx', nf(e.PLexact, 5));
+      set('hPL', repNf(e.PL, 5));
+      set('hPLx', repNf(e.PLexact, 5));
       set('hPLxL', s.noise === 'gate' ? 'P_L 精确（DP）' : '3p²−2p³');
-      set('hPun', nf(e.Pun, 4));
-      set('hRatio', s.p > 0 ? nf(e.PL / e.Pun, 3) + (e.PL < e.Pun ? ' ↓' : ' ↑') : '—');
+      set('hPun', repNf(e.Pun, 4));
+      set('hRatio', s.p > 0 ? repNf(e.PL / e.Pun, 3) + (e.PL < e.Pun ? ' ↓' : ' ↑') : '—');
       const gi = this.q('#hGateStats'), ii = this.q('#hIidCounts');
       if (gi) gi.style.display = s.noise === 'gate' ? '' : 'none';
       if (ii) ii.style.display = s.noise === 'gate' ? 'none' : '';
@@ -406,7 +409,7 @@ export class QecApp {
           .map(v => (100 * v / e.trials).toFixed(1) + '%').join(' / '));
         set('hFatesD', [D.perfect, D.gauge, D.logic]
           .map(v => (100 * v / e.trials).toFixed(1) + '%').join(' / '));
-        set('hC1g', this.svy ? nf(this.svy.c1, 3) : '—');
+        set('hC1g', this.svy ? repNf(this.svy.c1, 3) : '—');
       } else {
         for (let k = 0; k < 4; k++) set('hC' + k, e.byCount[k] + (e.byCountL[k] ? ' /L' + e.byCountL[k] : ' ✓'));
       }
@@ -1029,7 +1032,10 @@ export class QecApp {
           faults: t.faults ? t.faults.slice() : [], cls: t.cls, noise: t.noise,
         };
       },
-      navLinks: () => Array.from(document.querySelectorAll('#qeTop a')).map(a => a.getAttribute('href')),
+      navLinks: () => Array.from(document.querySelectorAll('.qtop a')).map(a => a.getAttribute('href')),
     };
   }
 }
+
+/* ---- QEC hub mode 描述符（R98）：壳按 id/tab 建切换条；css 在 activate 时注入、deactivate 时移除 ---- */
+export const REP_MODE = { handle: '__qe', id: 'rep', name: '重复码', tab: '◈', css: QEC_CSS, mount(shell){ const app = new QecApp(shell); app.activate(); return app; } };

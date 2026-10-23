@@ -1,5 +1,5 @@
 /* ============================================================================
- * gatenoise.js（页面）— R80 线路级门噪声：门保真度 → 线路保真度
+ * mode-gatenoise.js（QEC hub 模式）— 由 gatenoise.js 重构而来（R98 七页整合）：R80 线路级门噪声：门保真度 → 线路保真度
  *
  * 模型（src/physics/gatenoise.js）：每个门作用后，对它**触及的每个比特**以概率 p
  * 注入随机 Pauli（单比特门 1 个、CNOT/CZ 2 个、Toffoli 3 个）。三种错误谱：
@@ -15,15 +15,11 @@
  * 预设：恒等链（单比特）、旋转链（单比特）、Bell 对（2 比特）、GHZ（3/4/5 比特）。
  * 参数口径：p 是每门每比特 Pauli 错误率；R77 退极化 Kraus 参数 p_K = 4p/3。
  * ========================================================================== */
-import { injectStyles } from './core/styles.js';
-import { injectResponsive } from './core/responsive.js';
-import { navHtml } from './core/nav.js';
-import { GN_DEFAULTS, GN_SPECTRA, GN_PRESETS, gnPresetGates, gnTrial, gnTouched, gnRun, gnSweep, gnClosedAt, gnEsdBells, gnGateFidelity, gnLambda, gnGammaZ, gnRhoRun, gnRhoInfo } from './physics/gatenoise.js';
-import { mulberry32 } from './physics/qcircuit.js';
+import { GN_DEFAULTS, GN_SPECTRA, GN_PRESETS, gnPresetGates, gnTrial, gnTouched, gnRun, gnSweep, gnClosedAt, gnEsdBells, gnGateFidelity, gnLambda, gnGammaZ, gnRhoRun, gnRhoInfo } from '../physics/gatenoise.js';
+import { mulberry32 } from '../physics/qcircuit.js';
 
 const GN_CSS = `
-  .qtop[id="gnTop"]{gap:14px;padding:9px 18px}.qtop[id="gnTop"] .eq i{color:var(--amber);font-style:italic}
-  #gnPanel{top:74px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 200px);
+  #gnPanel{top:108px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 234px);
     overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #gnPanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
     text-transform:uppercase;margin:10px 0 5px}
@@ -42,8 +38,8 @@ const GN_CSS = `
   #gnPanel button:hover{border-color:rgba(103,232,249,.45);color:var(--cyan)}
   #gnPanel button.on{background:rgba(103,232,249,.18);border-color:var(--cyan);color:var(--cyan)}
   #gnPanel button.dim{opacity:.38}
-  #gnHud{top:74px;right:14px;padding:11px 13px;z-index:10;width:248px;font-family:var(--mono);
-    max-height:calc(100vh - 120px);overflow-y:auto;scrollbar-width:thin;
+  #gnHud{top:108px;right:14px;padding:11px 13px;z-index:10;width:248px;font-family:var(--mono);
+    max-height:calc(100vh - 154px);overflow-y:auto;scrollbar-width:thin;
     scrollbar-color:rgba(120,160,220,.25) transparent}
   #gnHud .hrow{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:2.5px 0}
   #gnHud .hrow span:first-child{color:var(--dim)}
@@ -76,26 +72,28 @@ const GN_CSS = `
 `;
 
 /* 站点 palette（core/styles.js 的 :root 变量，canvas 里只能用字面量） */
-const COL = {
+const gnCOL = {
   cyan: 'rgba(103,232,249,', mag: 'rgba(240,171,252,', amber: 'rgba(251,191,36,',
   red: 'rgba(248,113,113,', dim: 'rgba(154,167,189,', txt: 'rgba(230,237,243,',
   wire: 'rgba(120,160,220,',
 };
-const mdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
-const ex = (x, d = 2) => (Number.isFinite(x) && x !== 0 ? x.toExponential(d) : '0');
+const gnMdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+const gnNf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
+const gnEx = (x, d = 2) => (Number.isFinite(x) && x !== 0 ? x.toExponential(d) : '0');
 
-/* 主可观测量（HUD / MC 点 / 三谱对比条用）与曲线键（与物理核心 gnCurveKeys 一致） */
-const PRIMARY = { idle: 'F', rot: 'F', bell: 'C', ghz: 'zz01' };
-const curveKeys = preset => (preset === 'bell' ? ['C'] : preset === 'ghz' ? ['zz01', 'zz12', 'zN'] : ['F']);
-const KEY_NAME = { F: '保真度 F', C: 'concurrence C', zz01: '⟨Z₀Z₁⟩', zz12: '⟨Z₁Z₂⟩', zN: '⟨Z⊗n⟩' };
-const KEY_HUE = { F: COL.cyan, C: COL.cyan, zz01: COL.cyan, zz12: COL.mag, zN: COL.amber };
-const SPECTRA = ['depolar', 'x', 'z'];
-const SPECTRA_HUE = { depolar: COL.cyan, x: COL.mag, z: COL.amber };
+/* 主可观测量（HUD / MC 点 / 三谱对比条用）与曲线键（与物理核心 gnCurveKeysOf 一致） */
+const gnPRIMARY = { idle: 'F', rot: 'F', bell: 'C', ghz: 'zz01' };
+const gnCurveKeysOf = preset => (preset === 'bell' ? ['C'] : preset === 'ghz' ? ['zz01', 'zz12', 'zN'] : ['F']);
+const gnKEY_NAME = { F: '保真度 F', C: 'concurrence C', zz01: '⟨Z₀Z₁⟩', zz12: '⟨Z₁Z₂⟩', zN: '⟨Z⊗n⟩' };
+const gnKEY_HUE = { F: gnCOL.cyan, C: gnCOL.cyan, zz01: gnCOL.cyan, zz12: gnCOL.mag, zN: gnCOL.amber };
+const gnSPECTRA = ['depolar', 'x', 'z'];
+const gnSPECTRA_HUE = { depolar: gnCOL.cyan, x: gnCOL.mag, z: gnCOL.amber };
 
 export class GateNoiseApp {
-  constructor(container, options = {}){
-    this.container = typeof container === 'string' ? document.querySelector(container) : (container || document.body);
+  constructor(shell){
+    this.shell = shell;
+    this.modeRoot = shell.modeRoot;
+    this._listeners = [];
     const q = new URLSearchParams(location.search);
     const num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
     const str = (k, d) => (q.has(k) ? q.get(k) : d);
@@ -117,22 +115,20 @@ export class GateNoiseApp {
     this._deb = 0;
   }
 
-  q(sel){ return this.container.querySelector(sel) || document.querySelector(sel); }
-  on(el, ev, fn){ if (el) el.addEventListener(ev, fn); }
+  q(sel){ return this.modeRoot.querySelector(sel); }
+  on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
-  mount(){
-    injectStyles();
-    injectResponsive();
-    const sheet = document.createElement('style');
-    sheet.textContent = GN_CSS;
-    document.head.appendChild(sheet);
-    this.container.insertAdjacentHTML('beforeend', `
-      <header id="gnTop" class="panel qtop">
-        <div class="logo">门噪声工场</div>
-        <div class="eq">F_gate = <i>1−2p/3</i> ─每门每比特 p─► <b>线路保真度</b></div>
-        ${navHtml('./gatenoise.html', '      ')}
-      </header>
+  deactivate(){
+    clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
+    if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
+    this._ro?.disconnect();
+    for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
+    this._listeners.length = 0;
+    this.modeRoot.replaceChildren();      /* 移除本 mode 的 DOM（面板/HUD/画布/提示） */
+  }
 
+  activate(){
+    this.modeRoot.insertAdjacentHTML('beforeend', `
       <aside id="gnPanel" class="panel qpanel">
         <div class="grp">线路预设</div>
         <div class="btns g4" id="gnPresets"></div>
@@ -229,7 +225,7 @@ export class GateNoiseApp {
     }
     /* 错误谱 */
     const sb = this.q('#gnSpectra');
-    for (const sp of SPECTRA){
+    for (const sp of gnSPECTRA){
       const b = document.createElement('button');
       b.textContent = GN_SPECTRA[sp].short; b.dataset.sp = sp; b.title = GN_SPECTRA[sp].label;
       this.on(b, 'click', () => { this.state.spectrum = sp; this.syncPanel(); this.recompute(); });
@@ -323,12 +319,12 @@ export class GateNoiseApp {
 
   syncPanel(){
     const s = this.state;
-    for (const b of this.container.querySelectorAll('#gnPresets button')) b.classList.toggle('on', b.dataset.preset === s.preset);
-    for (const b of this.container.querySelectorAll('#gnNs button')){
+    for (const b of this.modeRoot.querySelectorAll('#gnPresets button')) b.classList.toggle('on', b.dataset.preset === s.preset);
+    for (const b of this.modeRoot.querySelectorAll('#gnNs button')){
       b.classList.toggle('on', +b.dataset.n === s.n);
       b.classList.toggle('dim', s.preset !== 'ghz');
     }
-    for (const b of this.container.querySelectorAll('#gnSpectra button')) b.classList.toggle('on', b.dataset.sp === s.spectrum);
+    for (const b of this.modeRoot.querySelectorAll('#gnSpectra button')) b.classList.toggle('on', b.dataset.sp === s.spectrum);
     const setv = (id, v) => { const e = this.q('#' + id); if (e) e.value = v; };
     setv('gnP', s.p); this.q('#gnPO').textContent = s.p.toFixed(3);
     setv('gnK', s.k); this.q('#gnKO').textContent = s.k;
@@ -340,7 +336,7 @@ export class GateNoiseApp {
   renderHint(){
     const b = this.q('#gnHint b'), sp = this.q('#gnHint span');
     if (b) b.textContent = '线路级门噪声（R80）';
-    if (sp) sp.innerHTML = mdLite(
+    if (sp) sp.innerHTML = gnMdLite(
       '**每个门都是错误机会**：门作用后，对它触及的每个比特以概率 p 注入随机 Pauli' +
       '（单比特门 1 个、CNOT/CZ 2 个）。三种谱：退极化（X/Y/Z 各 p/3）、仅 X、仅 Z。' +
       '**平均门保真度 1−2p/3 与谱无关**，但线路保真度强依赖谱：退极化下任意单比特线路' +
@@ -356,21 +352,21 @@ export class GateNoiseApp {
     const set = (id, v) => { const el = this.q('#' + id); if (el) el.textContent = v; };
     set('hPreset', GN_PRESETS[s.preset].label + (s.preset === 'ghz' ? ' n=' + s.n : ''));
     set('hCfg', GN_SPECTRA[s.spectrum].short + ' / k=' + s.k + ' / p=' + s.p.toFixed(3));
-    set('hFgate', nf(gnGateFidelity(s.p), 5));
-    set('hLam', nf(gnLambda(s.spectrum, s.p), 5));
-    set('hGam', nf(gnGammaZ(s.spectrum, s.p), 5));
+    set('hFgate', gnNf(gnGateFidelity(s.p), 5));
+    set('hLam', gnNf(gnLambda(s.spectrum, s.p), 5));
+    set('hGam', gnNf(gnGammaZ(s.spectrum, s.p), 5));
 
     /* 主可观测量三层值 */
-    const key = PRIMARY[s.preset];
+    const key = gnPRIMARY[s.preset];
     const closed = gnClosedAt(this.cfg(), s.p, s.k)[key];
     const exV = this.exactPrimary();
     const mcV = mc ? (key === 'C' ? mc.info.C : key === 'F' ? mc.info.F : (mc.info.zz.find(z => z.i === 0 && z.j === 1) || {}).v) : NaN;
     const mcSd = mc ? (key === 'F' ? mc.F.sd : (mc.zz.find(z => z.i === 0 && z.j === 1) || {}).sd) : NaN;
-    set('hKeyN', KEY_NAME[key] + (s.preset === 'ghz' ? ' 等' : ''));
-    set('hKeyV', nf(mcV, 4));
-    set('hClosed', Number.isFinite(closed) ? nf(closed, 5) : '无闭式');
-    set('hExact', Number.isFinite(exV) ? nf(exV, 5) : '—');
-    set('hMc', Number.isFinite(mcSd) ? nf(mcV, 5) + ' ±' + nf(mcSd, 4) : nf(mcV, 5));
+    set('hKeyN', gnKEY_NAME[key] + (s.preset === 'ghz' ? ' 等' : ''));
+    set('hKeyV', gnNf(mcV, 4));
+    set('hClosed', Number.isFinite(closed) ? gnNf(closed, 5) : '无闭式');
+    set('hExact', Number.isFinite(exV) ? gnNf(exV, 5) : '—');
+    set('hMc', Number.isFinite(mcSd) ? gnNf(mcV, 5) + ' ±' + gnNf(mcSd, 4) : gnNf(mcV, 5));
 
     if (t){
       const errs = t.errors;
@@ -379,7 +375,7 @@ export class GateNoiseApp {
         : '无错误');
     }
     if (mc){
-      set('hErr', nf(mc.errMean, 3));
+      set('hErr', gnNf(mc.errMean, 3));
       set('hErr0', (100 * mc.errHist[0] / mc.trials).toFixed(1) + '%');
     }
     /* Bell 专属：ESD + 逐轨迹 C */
@@ -388,13 +384,13 @@ export class GateNoiseApp {
     if (s.preset === 'bell'){
       const esd = gnEsdBells(s.spectrum, s.p, s.k);
       set('hEsd', Number.isFinite(esd) ? 'p*≈' + esd.toFixed(4) + (esd > GN_DEFAULTS.pMax ? '（超图外）' : '') : '—');
-      set('hCtraj', mc ? nf(mc.meanCtraj, 6) + '（恒 1：系综性质）' : '—');
+      set('hCtraj', mc ? gnNf(mc.meanCtraj, 6) + '（恒 1：系综性质）' : '—');
     }
   }
 
   /* 当前 (p,k,谱) 下主可观测量的精确 ρ 值（HUD 与三谱对比条共用） */
   exactPrimary(){
-    const s = this.state, key = PRIMARY[s.preset];
+    const s = this.state, key = gnPRIMARY[s.preset];
     const sp = gnPresetGates(s.preset, s.n, s.k, s.theta, s.phase);
     const rho = gnRhoRun(sp.n, sp.gates, { pGate: s.p, spectrum: s.spectrum, noisyFrom: sp.noisyFrom });
     const info = gnRhoInfo(rho, sp);
@@ -405,7 +401,7 @@ export class GateNoiseApp {
 
   /* 三谱对比条（HTML）：门保真度参考 + 三谱精确值 */
   renderSpec(){
-    const s = this.state, key = PRIMARY[s.preset];
+    const s = this.state, key = gnPRIMARY[s.preset];
     const fg = gnGateFidelity(s.p);
     const bar = (id, v, hue, cur) => {
       const fill = this.q('#' + id + 'Fill'), val = this.q('#' + id + 'V'), row = this.q('#' + id);
@@ -416,14 +412,14 @@ export class GateNoiseApp {
       if (val) val.textContent = Number.isFinite(v) ? v.toFixed(3) : '—';
       if (row) row.classList.toggle('cur', !!cur);
     };
-    bar('gnSpecGate', fg, COL.amber, false);
-    for (const sp of SPECTRA){
+    bar('gnSpecGate', fg, gnCOL.amber, false);
+    for (const sp of gnSPECTRA){
       const spc = gnPresetGates(s.preset, s.n, s.k, s.theta, s.phase);
       const rho = gnRhoRun(spc.n, spc.gates, { pGate: s.p, spectrum: sp, noisyFrom: spc.noisyFrom });
       const info = gnRhoInfo(rho, spc);
       const v = key === 'F' ? info.F : key === 'C' ? info.C : (info.zz.find(z => z.i === 0 && z.j === 1) || {}).v;
       const id = sp === 'depolar' ? 'gnSpecDepolar' : sp === 'x' ? 'gnSpecX' : 'gnSpecZ';
-      bar(id, v, SPECTRA_HUE[sp], sp === s.spectrum);
+      bar(id, v, gnSPECTRA_HUE[sp], sp === s.spectrum);
     }
   }
 
@@ -458,8 +454,8 @@ export class GateNoiseApp {
     const x0 = padL, x1 = W - padR;
 
     /* 导线 */
-    g.strokeStyle = COL.wire + '.28)'; g.lineWidth = 1 * dpr;
-    g.fillStyle = COL.dim + '.85)'; g.font = (10 * dpr) + 'px ui-monospace,monospace';
+    g.strokeStyle = gnCOL.wire + '.28)'; g.lineWidth = 1 * dpr;
+    g.fillStyle = gnCOL.dim + '.85)'; g.font = (10 * dpr) + 'px ui-monospace,monospace';
     g.textAlign = 'right'; g.textBaseline = 'middle';
     for (let q = 0; q < n; q++){
       const y = yOf(q);
@@ -483,9 +479,9 @@ export class GateNoiseApp {
       g.beginPath(); g.arc(x, y, 2.2 * dpr, 0, 6.2832); g.fill();
     };
     const cnot = (x, yc, yt) => {
-      g.strokeStyle = COL.txt + '.75)'; g.lineWidth = 1.2 * dpr;
+      g.strokeStyle = gnCOL.txt + '.75)'; g.lineWidth = 1.2 * dpr;
       g.beginPath(); g.moveTo(x, yc); g.lineTo(x, yt); g.stroke();
-      g.fillStyle = COL.txt + '.85)';
+      g.fillStyle = gnCOL.txt + '.85)';
       g.beginPath(); g.arc(x, yc, 3.2 * dpr, 0, 6.2832); g.fill();
       g.beginPath(); g.arc(x, yt, 5.6 * dpr, 0, 6.2832); g.stroke();
       g.beginPath(); g.moveTo(x - 5.6 * dpr, yt); g.lineTo(x + 5.6 * dpr, yt);
@@ -506,7 +502,7 @@ export class GateNoiseApp {
     const xOf = i => x0 + (i + 0.5) * colW;
     for (let i = 0; i < cols.length; i++){
       const gg = cols[i].g, x = xOf(i), isPrep = i < prep.length;
-      const hue = isPrep ? COL.cyan : COL.mag;
+      const hue = isPrep ? gnCOL.cyan : gnCOL.mag;
       if (gg.op === 'cnot') cnot(x, yOf(gg.c), yOf(gg.q2));
       else if (gg.op === 'h') box(x, yOf(gg.q), 'H', hue);
       else if (gg.op === 'ry') box(x, yOf(gg.q), 'Ry', hue);
@@ -514,33 +510,33 @@ export class GateNoiseApp {
       else box(x, yOf(gg.q), gg.op === 'id' ? 'I' : gg.op.toUpperCase(), hue);
       /* 注入点（操作段的门才有） */
       if (!isPrep){
-        for (const q of gnTouched(gg)) dot(x, yOf(q) + size / 2 + 4 * dpr, COL.amber, '.75');
+        for (const q of gnTouched(gg)) dot(x, yOf(q) + size / 2 + 4 * dpr, gnCOL.amber, '.75');
       }
     }
     /* 压缩块 */
     if (rest > 0){
       const bx = x0 + (cols.length + 0.8) * colW, bw = colW * 1.6;
-      g.strokeStyle = COL.mag + '.55)'; g.lineWidth = 1.1 * dpr;
+      g.strokeStyle = gnCOL.mag + '.55)'; g.lineWidth = 1.1 * dpr;
       g.setLineDash([4 * dpr, 3 * dpr]);
       g.beginPath(); g.roundRect(bx - bw / 2, padT + rowH * 0.15, bw, diaH - padT - rowH * 0.3 - 10 * dpr, 6 * dpr); g.stroke();
       g.setLineDash([]);
-      g.fillStyle = COL.mag + '.8)'; g.font = (9.5 * dpr) + 'px ui-monospace,monospace';
+      g.fillStyle = gnCOL.mag + '.8)'; g.font = (9.5 * dpr) + 'px ui-monospace,monospace';
       g.textAlign = 'center';
       g.fillText('×' + rest, bx, padT + rowH * 0.15 + 14 * dpr);
-      g.fillStyle = COL.dim + '.8)'; g.font = (8.5 * dpr) + 'px ui-monospace,monospace';
+      g.fillStyle = gnCOL.dim + '.8)'; g.font = (8.5 * dpr) + 'px ui-monospace,monospace';
       g.fillText((s.preset === 'idle' ? '恒等' : s.preset === 'rot' ? 'Ry' : '空闲') + '门', bx, padT + rowH * 0.15 + 26 * dpr);
-      for (let q = 0; q < n; q++) for (let d = 0; d < 3; d++) dot(bx - bw / 2 + bw * (0.25 + 0.25 * d), yOf(q), COL.amber, '.4');
+      for (let q = 0; q < n; q++) for (let d = 0; d < 3; d++) dot(bx - bw / 2 + bw * (0.25 + 0.25 * d), yOf(q), gnCOL.amber, '.4');
     }
     /* 制备 | 操作 分界 */
     if (prep.length){
       const xb = x0 + prep.length * colW;
-      g.strokeStyle = COL.wire + '.4)'; g.lineWidth = 1 * dpr; g.setLineDash([3 * dpr, 3 * dpr]);
+      g.strokeStyle = gnCOL.wire + '.4)'; g.lineWidth = 1 * dpr; g.setLineDash([3 * dpr, 3 * dpr]);
       g.beginPath(); g.moveTo(xb, padT - 8 * dpr); g.lineTo(xb, diaH - 4 * dpr); g.stroke(); g.setLineDash([]);
-      g.fillStyle = COL.dim + '.75)'; g.font = (8.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
+      g.fillStyle = gnCOL.dim + '.75)'; g.font = (8.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
       g.fillText('制备（无噪）', (x0 + xb) / 2, padT - 12 * dpr);
       g.fillText('操作（每门注入）', (xb + x1) / 2, padT - 12 * dpr);
     } else {
-      g.fillStyle = COL.dim + '.75)'; g.font = (8.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
+      g.fillStyle = gnCOL.dim + '.75)'; g.font = (8.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
       g.fillText('全程带噪（H/CNOT 即线路本身）', (x0 + x1) / 2, padT - 12 * dpr);
     }
 
@@ -548,34 +544,34 @@ export class GateNoiseApp {
     const errs = t ? t.errors : [];
     const X = gi => x0 + (G <= 1 ? 0.5 : gi / (G - 1)) * (x1 - x0);
     const laneH = tlH / n;
-    g.strokeStyle = COL.wire + '.14)'; g.lineWidth = 1 * dpr;
+    g.strokeStyle = gnCOL.wire + '.14)'; g.lineWidth = 1 * dpr;
     for (let q = 0; q < n; q++){
       const y = tlY0 + (q + 0.5) * laneH;
       g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke();
-      g.fillStyle = COL.dim + '.6)'; g.font = (8 * dpr) + 'px ui-monospace,monospace';
+      g.fillStyle = gnCOL.dim + '.6)'; g.font = (8 * dpr) + 'px ui-monospace,monospace';
       g.textAlign = 'right'; g.textBaseline = 'middle';
       g.fillText('q' + q, x0 - 4 * dpr, y);
     }
     g.textBaseline = 'alphabetic';
     for (const e of errs){
       const y = tlY0 + (e.q + 0.5) * laneH;
-      g.fillStyle = COL.red + '.95)';
+      g.fillStyle = gnCOL.red + '.95)';
       g.beginPath(); g.arc(X(e.gate), y, 3.6 * dpr, 0, 6.2832); g.fill();
       g.strokeStyle = 'rgba(4,8,16,.9)'; g.lineWidth = 1 * dpr; g.stroke();
     }
     /* 轴刻度 */
-    g.fillStyle = COL.dim + '.7)'; g.font = (8 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
+    g.fillStyle = gnCOL.dim + '.7)'; g.font = (8 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
     for (let f = 0; f <= 4; f++){
       const gi = Math.round((G - 1) * f / 4);
       g.fillText('g' + gi, X(gi), H - 6 * dpr);
     }
     /* 标题 + 轨迹摘要 */
-    g.fillStyle = COL.txt + '.9)'; g.font = (10.5 * dpr) + 'px ui-monospace,monospace';
+    g.fillStyle = gnCOL.txt + '.9)'; g.font = (10.5 * dpr) + 'px ui-monospace,monospace';
     g.textAlign = 'left'; g.fillText('线路与错误注入点（' + G + ' 道门）', 8 * dpr, 14 * dpr);
     g.font = (9.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'right';
-    g.fillStyle = COL.red + '.9)';
+    g.fillStyle = gnCOL.red + '.9)';
     g.fillText(errs.length ? '本轨迹 ' + errs.length + ' 个错误（红点）' : '本轨迹无错误', x1, 14 * dpr);
-    g.fillStyle = COL.amber + '.8)'; g.textAlign = 'left';
+    g.fillStyle = gnCOL.amber + '.8)'; g.textAlign = 'left';
     g.fillText('▼ 注入点', x0, diaH + 2 * dpr);
   }
 
@@ -598,7 +594,7 @@ export class GateNoiseApp {
     const W = c.width, H = c.height, dpr = W / c.clientWidth;
     g.clearRect(0, 0, W, H);
     const s = this.state;
-    const keys = curveKeys(s.preset);
+    const keys = gnCurveKeysOf(s.preset);
     const padL = 46 * dpr, padR = 14 * dpr, padT = 26 * dpr, padB = 30 * dpr;
     const x0 = padL, x1 = W - padR, y0 = padT, y1 = H - padB;
     const xMin = xs[0], xMax = xs[xs.length - 1];
@@ -606,21 +602,21 @@ export class GateNoiseApp {
     const Y = v => y1 - (Math.max(-0.06, Math.min(1.06, v)) + 0.06) / 1.12 * (y1 - y0);
 
     /* 网格 */
-    g.strokeStyle = COL.wire + '.12)'; g.lineWidth = 1 * dpr;
+    g.strokeStyle = gnCOL.wire + '.12)'; g.lineWidth = 1 * dpr;
     g.font = (9 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'right'; g.textBaseline = 'middle';
     for (const v of [0, 0.25, 0.5, 0.75, 1]){
       const y = Y(v);
       g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke();
-      g.fillStyle = COL.dim + '.7)'; g.fillText(v.toFixed(2), x0 - 4 * dpr, y);
+      g.fillStyle = gnCOL.dim + '.7)'; g.fillText(v.toFixed(2), x0 - 4 * dpr, y);
     }
     g.textAlign = 'center'; g.textBaseline = 'alphabetic';
     for (let f = 0; f <= 4; f++){
       const v = xMin + (xMax - xMin) * f / 4, x = X(v);
       g.beginPath(); g.moveTo(x, y0); g.lineTo(x, y1); g.stroke();
-      g.fillStyle = COL.dim + '.6)';
+      g.fillStyle = gnCOL.dim + '.6)';
       g.fillText(xName === 'p' ? v.toFixed(3) : String(Math.round(v)), x, y1 + 12 * dpr);
     }
-    g.fillStyle = COL.dim + '.55)'; g.textAlign = 'right';
+    g.fillStyle = gnCOL.dim + '.55)'; g.textAlign = 'right';
     g.fillText(xLabel, x1, y1 + 23 * dpr);
 
     /* 曲线（NaN 处断线） */
@@ -638,7 +634,7 @@ export class GateNoiseApp {
       g.stroke(); g.setLineDash([]);
     };
     for (const key of keys){
-      const hue = KEY_HUE[key];
+      const hue = gnKEY_HUE[key];
       line(exact[key], hue, [5, 3], 1.2);       /* 精确 ρ：虚线 */
       line(closed[key], hue, null, 1.8);        /* 闭式：实线 */
     }
@@ -648,9 +644,9 @@ export class GateNoiseApp {
       const esd = gnEsdBells(s.spectrum, s.p, s.k);
       if (Number.isFinite(esd) && esd >= xMin && esd <= xMax){
         const x = X(esd);
-        g.strokeStyle = COL.red + '.7)'; g.lineWidth = 1 * dpr; g.setLineDash([2 * dpr, 3 * dpr]);
+        g.strokeStyle = gnCOL.red + '.7)'; g.lineWidth = 1 * dpr; g.setLineDash([2 * dpr, 3 * dpr]);
         g.beginPath(); g.moveTo(x, y0); g.lineTo(x, y1); g.stroke(); g.setLineDash([]);
-        g.fillStyle = COL.red + '.9)'; g.font = (9 * dpr) + 'px ui-monospace,monospace';
+        g.fillStyle = gnCOL.red + '.9)'; g.font = (9 * dpr) + 'px ui-monospace,monospace';
         g.textAlign = x > (x0 + x1) / 2 ? 'right' : 'left';
         g.fillText('ESD p*≈' + esd.toFixed(3), x + (x > (x0 + x1) / 2 ? -4 * dpr : 4 * dpr), y0 + 10 * dpr);
       }
@@ -660,37 +656,37 @@ export class GateNoiseApp {
     const cur = xName === 'p' ? s.p : s.k;
     if (cur >= xMin && cur <= xMax){
       const xc = X(cur);
-      g.strokeStyle = COL.txt + '.45)'; g.lineWidth = 1 * dpr;
+      g.strokeStyle = gnCOL.txt + '.45)'; g.lineWidth = 1 * dpr;
       g.beginPath(); g.moveTo(xc, y0); g.lineTo(xc, y1); g.stroke();
       const mc = showMc ? this.mc : null;
       if (mc){
-        const key = PRIMARY[s.preset];
+        const key = gnPRIMARY[s.preset];
         const mv = key === 'C' ? mc.info.C : key === 'F' ? mc.info.F : (mc.info.zz.find(z => z.i === 0 && z.j === 1) || {}).v;
         const sd = key === 'C' ? 0 : key === 'F' ? mc.F.sd : (mc.zz.find(z => z.i === 0 && z.j === 1) || {}).sd;
         const se = sd / Math.sqrt(mc.trials);
         if (Number.isFinite(mv)){
           const y = Y(mv);
           if (se > 0){
-            g.strokeStyle = COL.txt + '.8)'; g.lineWidth = 1.4 * dpr;
+            g.strokeStyle = gnCOL.txt + '.8)'; g.lineWidth = 1.4 * dpr;
             g.beginPath(); g.moveTo(xc, Y(Math.max(-0.06, mv - 3 * se))); g.lineTo(xc, Y(Math.min(1.06, mv + 3 * se))); g.stroke();
           }
-          g.fillStyle = COL.txt + '.95)';
+          g.fillStyle = gnCOL.txt + '.95)';
           g.beginPath(); g.arc(xc, y, 3.4 * dpr, 0, 6.2832); g.fill();
         }
       }
     }
 
     /* 标题 + 图例 */
-    g.fillStyle = COL.txt + '.9)'; g.font = (10.5 * dpr) + 'px ui-monospace,monospace';
+    g.fillStyle = gnCOL.txt + '.9)'; g.font = (10.5 * dpr) + 'px ui-monospace,monospace';
     g.textAlign = 'left'; g.textBaseline = 'alphabetic';
     const ttl = xName === 'p'
-      ? keys.map(k => KEY_NAME[k]).join(' / ') + ' vs p（k=' + s.k + '，' + GN_SPECTRA[s.spectrum].label + '）'
-      : keys.map(k => KEY_NAME[k]).join(' / ') + ' vs k（p=' + s.p.toFixed(3) + '，' + GN_SPECTRA[s.spectrum].label + '）';
+      ? keys.map(k => gnKEY_NAME[k]).join(' / ') + ' vs p（k=' + s.k + '，' + GN_SPECTRA[s.spectrum].label + '）'
+      : keys.map(k => gnKEY_NAME[k]).join(' / ') + ' vs k（p=' + s.p.toFixed(3) + '，' + GN_SPECTRA[s.spectrum].label + '）';
     g.fillText(ttl, 8 * dpr, 15 * dpr);
     g.font = (9.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'right';
-    g.fillStyle = COL.txt + '.85)'; g.fillText('● MC', x1 - 8 * dpr, 15 * dpr);
-    g.fillStyle = COL.dim + '.85)'; g.fillText('虚线 精确ρ', x1 - 52 * dpr, 15 * dpr);
-    g.fillStyle = COL.dim + '.85)'; g.fillText('实线 闭式', x1 - 116 * dpr, 15 * dpr);
+    g.fillStyle = gnCOL.txt + '.85)'; g.fillText('● MC', x1 - 8 * dpr, 15 * dpr);
+    g.fillStyle = gnCOL.dim + '.85)'; g.fillText('虚线 精确ρ', x1 - 52 * dpr, 15 * dpr);
+    g.fillStyle = gnCOL.dim + '.85)'; g.fillText('实线 闭式', x1 - 116 * dpr, 15 * dpr);
   }
 
   /* ---------- 调试句柄 ---------- */
@@ -719,12 +715,12 @@ export class GateNoiseApp {
       },
       closed: (p, k) => gnClosedAt(self.cfg(), p == null ? self.state.p : p, k == null ? self.state.k : k),
       exact: () => {
-        const key = PRIMARY[self.state.preset];
+        const key = gnPRIMARY[self.state.preset];
         return { key, v: self.exactPrimary() };
       },
       specBars: () => {
-        const key = PRIMARY[self.state.preset], out = { key, gateFidelity: gnGateFidelity(self.state.p), spectra: {} };
-        for (const sp of SPECTRA){
+        const key = gnPRIMARY[self.state.preset], out = { key, gateFidelity: gnGateFidelity(self.state.p), spectra: {} };
+        for (const sp of gnSPECTRA){
           const spc = gnPresetGates(self.state.preset, self.state.n, self.state.k, self.state.theta, self.state.phase);
           const rho = gnRhoRun(spc.n, spc.gates, { pGate: self.state.p, spectrum: sp, noisyFrom: spc.noisyFrom });
           const info = gnRhoInfo(rho, spc);
@@ -743,7 +739,10 @@ export class GateNoiseApp {
       setTrials: n => { self.state.trials = n; self.syncPanel(); self.recompute(); },
       reseed: s => { self.state.seed = s; self._rng = null; self.recompute(); },
       roll: () => { self.rollOnce(); self.renderHud(); self.drawCircuit(); },
-      navLinks: () => Array.from(document.querySelectorAll('#gnTop a')).map(a => a.getAttribute('href')),
+      navLinks: () => Array.from(document.querySelectorAll('.qtop a')).map(a => a.getAttribute('href')),
     };
   }
 }
+
+/* ---- QEC hub mode 描述符（R98）：壳按 id/tab 建切换条；css 在 activate 时注入、deactivate 时移除 ---- */
+export const GATE_MODE = { handle: '__gn', id: 'gate', name: '门级线路', tab: '⌗', css: GN_CSS, mount(shell){ const app = new GateNoiseApp(shell); app.activate(); return app; } };

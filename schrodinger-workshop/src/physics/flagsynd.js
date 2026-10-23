@@ -123,7 +123,7 @@ export const FS_KINDS = {
 };
 
 /* ---------- 小工具 ---------- */
-function popc(v){ let c = 0; while (v){ c += v & 1; v >>>= 1; } return c; }
+function fsPopc(v){ let c = 0; while (v){ c += v & 1; v >>>= 1; } return c; }
 function parityOf(v){ let c = 0; while (v){ c ^= v & 1; v >>>= 1; } return c; }
 function maskOf(qs){ let m = 0; for (const q of qs) m |= 1 << q; return m; }
 
@@ -335,14 +335,14 @@ export function fsBuildCircuit(kind = 'std', cfg = {}){
     } };
 }
 
-const CIRC_CACHE = new Map();
+const fsCIRC_CACHE = new Map();
 export function fsCircuit(kind = 'std', cfg = {}){
   const c = { ...FS_DEFAULTS, ...cfg };
   /* ⚠ noisyLogic 必须进缓存键：fsExec 的注错范围回退读 circ.cfg.noisyLogic，
      漏了它 ⟹ 「注错/理想」切换拿到的是另一档的缓存线路（MC 完全不变，页面开关假死）。 */
   const key = `${kind}|${c.theta}|${c.phi}|${c.catX || (FS_KINDS[kind] || {}).catX || 0}|R${c.rounds | 0 || 1}|${c.decode || 'single'}|${c.need | 0 || 2}|rt${c.retry | 0 || 0}|c${c.cycles | 0 || 1}|${c.logic || 'none'}|t${c.trailingLogic ? 1 : 0}|nl${c.noisyLogic ? 1 : 0}`;
-  let circ = CIRC_CACHE.get(key);
-  if (!circ){ circ = fsBuildCircuit(kind, c); CIRC_CACHE.set(key, circ); }
+  let circ = fsCIRC_CACHE.get(key);
+  if (!circ){ circ = fsBuildCircuit(kind, c); fsCIRC_CACHE.set(key, circ); }
   return circ;
 }
 
@@ -602,14 +602,14 @@ function fsExec(circ, opts = {}){
     noGoodRounds: usableR.filter(v => !v).length,
     synFinal, chosenRound: chosen, unsure, usedRounds, decode: dec, rounds: R, need,
     wPre, wRes: fsMinWeight(frAtFix),
-    wPost: popc((fr.x | fr.z) & FS_DATA_MASK),
+    wPost: fsPopc((fr.x | fr.z) & FS_DATA_MASK),
     frAtFix, frBeforeFix,
     fired, diag, flagged: anyFlag,
   };
 }
 
 /* ---------- 分类：末态探针 + 参考态 → 陪集 ---------- */
-function signOf(v, ref){
+function fsSignOf(v, ref){
   if (Math.abs(ref) < 0.2) return 0;      /* 该分量在参考态上不可观测 */
   return (v * ref >= 0) ? 1 : -1;
 }
@@ -622,9 +622,9 @@ export function fsClass(pre, ref, F){
     const f = F == null ? 0 : F;
     return { coset: -1, cls: f > 1 - 1e-9 ? 'gauge' : 'outside' };
   }
-  const sX = signOf(pre.XL, ref.XL);
-  const sZ = signOf(pre.ZL, ref.ZL);
-  const sY = signOf(pre.YL, ref.YL);
+  const sX = fsSignOf(pre.XL, ref.XL);
+  const sZ = fsSignOf(pre.ZL, ref.ZL);
+  const sY = fsSignOf(pre.YL, ref.YL);
   let coset = 0;
   if (sZ === -1 && sY === -1 && sX === 1) coset = 1;        /* X_L */
   else if (sX === -1 && sY === -1 && sZ === 1) coset = 2;   /* Z_L */
@@ -633,12 +633,12 @@ export function fsClass(pre, ref, F){
   return { coset, cls: coset === 0 ? 'perfect' : 'logic', sX, sY, sZ };
 }
 
-const REF_CACHE = new Map();
+const fsREF_CACHE = new Map();
 export function fsRef(circ){
   const key = `${circ.kind}|${circ.cfg.theta}|${circ.cfg.phi}|${circ.nq}|` +
     `${circ.stats ? circ.stats.logic : 'none'}|${circ.stats ? (circ.stats.cycles || 1) : 1}|` +
     `${circ.stats && circ.stats.trailingLogic ? 1 : 0}`;
-  let r = REF_CACHE.get(key);
+  let r = fsREF_CACHE.get(key);
   if (!r){
     const run = fsExec(circ, { faults: [] });
     r = { XL: run.pre.XL, ZL: run.pre.ZL, YL: run.pre.YL, F: run.F, mixed: run.pre.mixed,
@@ -647,7 +647,7 @@ export function fsRef(circ){
              逻辑门把态翻到 |1_L⟩，用 |0_L⟩ 的解析参数会得到 F≈0（这是个陷阱）。 */
           state: { n: run.state.n, dim: run.state.dim,
             re: Float64Array.from(run.state.re), im: Float64Array.from(run.state.im) } };
-    REF_CACHE.set(key, r);
+    fsREF_CACHE.set(key, r);
   }
   return r;
 }
@@ -687,9 +687,9 @@ export function fsFrameCoset(v){
    X₀X₁X₂X₃X₄X₅（一个稳定子）帧权重是 6，但「错了几个比特」是 0 —— 不取最小
    代表元会把「无害的稳定子」报成权重 6（本轮踩过的坑，pot81 抓出）。 */
 export function fsMinWeight(v){
-  let best = popc(v.x | v.z);
+  let best = fsPopc(v.x | v.z);
   for (const g of FS_STAB_LIST){
-    const w = popc((v.x ^ g.x) | (v.z ^ g.z));
+    const w = fsPopc((v.x ^ g.x) | (v.z ^ g.z));
     if (w < best) best = w;
   }
   return best;

@@ -1,10 +1,9 @@
-/* 演示入口：R78 量子纠错页（qec.html）。
+/* 演示入口：R98 QEC hub 页（qec.html）——七模式单页（重复码/Shor/门噪声/Flag/多轮/循环/码族）。
    课程站嵌入同理：
-     import { QecApp } from './src/qec.js';
-     new QecApp(document.body, {}).mount();
+     import { QecHub } from './src/qechub.js';
+     new QecHub(document.body).mount();
+   ?mode=shor&p=0.02 直达模式（七模式 id：rep/shor/gate/flag/rounds/cycle/family）。
 */
-import { QecApp } from './qec.js';
+import { QecHub } from './qechub.js';
 
-const app = new QecApp(document.body, {});
-app.mount();
-window.__qe = app.debugHandle();
+new QecHub(document.body).mount();

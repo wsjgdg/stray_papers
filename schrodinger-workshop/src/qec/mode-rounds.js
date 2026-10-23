@@ -1,5 +1,5 @@
 /* ============================================================================
- * rounds.js（页面）— R82 多轮提取 + 跨轮联合解码
+ * mode-rounds.js（QEC hub 模式）— 由 rounds.js 重构而来（R98 七页整合）：R82 多轮提取 + 跨轮联合解码
  *
  * R81 的判据是「单故障 → 结局」，R82 补的是「怎么用好多轮的综合征」：
  *   编码 → R 轮综合征提取（每轮独立带噪）→ 跨轮联合解码 → 解码 → 判定
@@ -16,14 +16,10 @@
  * 量级判据用**精确单故障枚举**（不是 MC 斜率）：静默逻辑位点数 = 0 ⟺ P_L = O(p²)，
  * >0 ⟺ O(p)。MC 斜率在 600 样本下噪声到 0.5–9.6，不可用作判据。
  * ========================================================================== */
-import { injectStyles } from './core/styles.js';
-import { injectResponsive } from './core/responsive.js';
-import { navHtml } from './core/nav.js';
-import { FS_KINDS, fsFirstOrder, fsEnsemble, fsRun, rdSweep, rdPseudoThreshold, rdSlope } from './physics/flagsynd.js';
+import { FS_KINDS, fsFirstOrder, fsEnsemble, fsRun, rdSweep, rdPseudoThreshold, rdSlope } from '../physics/flagsynd.js';
 
 const RD_CSS = `
-  .qtop[id="rdTop"]{gap:11px;padding:9px 15px}.qtop[id="rdTop"] a{font-size:10px}.qtop[id="rdTop"] .eq i{color:var(--amber);font-style:italic}
-  #rdPanel{top:74px;left:14px;width:246px;padding:13px;z-index:10;max-height:calc(100vh - 200px);
+  #rdPanel{top:108px;left:14px;width:246px;padding:13px;z-index:10;max-height:calc(100vh - 234px);
     overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #rdPanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
     text-transform:uppercase;margin:10px 0 5px}
@@ -41,8 +37,8 @@ const RD_CSS = `
   #rdPanel button:hover{border-color:rgba(103,232,249,.45);color:var(--cyan)}
   #rdPanel button.on{background:rgba(103,232,249,.18);border-color:var(--cyan);color:var(--cyan)}
   #rdPanel .note{font-size:9.5px;color:var(--dim);line-height:1.5;margin-top:8px}
-  #rdHud{top:74px;right:14px;padding:11px 13px;z-index:10;width:266px;font-family:var(--mono);
-    max-height:calc(100vh - 120px);overflow-y:auto;scrollbar-width:thin;
+  #rdHud{top:108px;right:14px;padding:11px 13px;z-index:10;width:266px;font-family:var(--mono);
+    max-height:calc(100vh - 154px);overflow-y:auto;scrollbar-width:thin;
     scrollbar-color:rgba(120,160,220,.25) transparent}
   #rdHud .hrow{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:2.5px 0}
   #rdHud .hrow span:first-child{color:var(--dim)}
@@ -65,39 +61,41 @@ const RD_CSS = `
   @media (max-width:1240px){#rdStage{width:calc(100vw - 40px)}#rdHint{display:none}}
 `;
 
-const COL = {
+const rdCOL = {
   cyan: 'rgba(103,232,249,', mag: 'rgba(240,171,252,', amber: 'rgba(251,191,36,',
   red: 'rgba(248,113,113,', dim: 'rgba(154,167,189,', txt: 'rgba(230,237,243,',
   wire: 'rgba(120,160,220,', green: 'rgba(74,222,128,',
 };
-const mdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
-const pct = (a, b) => (b ? (100 * a / b).toFixed(0) + '%' : '—');
+const rdMdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+const rdNf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
+const rdPct = (a, b) => (b ? (100 * a / b).toFixed(0) + '%' : '—');
 
-const KINDS = ['std', 'cat'];
-const DECODES = [
+const rdKINDS = ['std', 'cat'];
+const rdDECODES = [
   { k: 'single', name: '只修最后', desc: '只用最后一轮的综合征（R81 口径；其余轮白测）' },
   { k: 'immediate', name: '每轮都修', desc: '每轮按该轮综合征直接修正（假综合征 ⟹ 误修）' },
   { k: 'repeat', name: '连续一致', desc: '连续 need 轮综合征完全相同才修正（挡一次性假综合征）' },
 ];
-const FATES = [
-  { k: 'perfect', name: '纠回', hue: COL.cyan },
-  { k: 'gauge', name: '仅规范', hue: COL.green },
-  { k: 'outside', name: '逻辑受损', hue: COL.amber },
-  { k: 'logic', name: '静默逻辑', hue: COL.red },
-  { k: 'flagged', name: '检出', hue: COL.mag },
+const rdFATES = [
+  { k: 'perfect', name: '纠回', hue: rdCOL.cyan },
+  { k: 'gauge', name: '仅规范', hue: rdCOL.green },
+  { k: 'outside', name: '逻辑受损', hue: rdCOL.amber },
+  { k: 'logic', name: '静默逻辑', hue: rdCOL.red },
+  { k: 'flagged', name: '检出', hue: rdCOL.mag },
 ];
 
 export class RoundsApp {
-  constructor(container, options = {}){
-    this.container = typeof container === 'string' ? document.querySelector(container) : (container || document.body);
+  constructor(shell){
+    this.shell = shell;
+    this.modeRoot = shell.modeRoot;
+    this._listeners = [];
     const q = new URLSearchParams(location.search);
     const num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
     const str = (k, d) => (q.has(k) ? q.get(k) : d);
     this.state = {
-      kind: KINDS.includes(str('kind', 'std')) ? str('kind', 'std') : 'std',
+      kind: rdKINDS.includes(str('kind', 'std')) ? str('kind', 'std') : 'std',
       rounds: Math.max(1, Math.min(4, Math.round(num('rounds', 2)))),
-      decode: DECODES.some(d => d.k === str('decode', 'repeat')) ? str('decode', 'repeat') : 'repeat',
+      decode: rdDECODES.some(d => d.k === str('decode', 'repeat')) ? str('decode', 'repeat') : 'repeat',
       need: Math.max(2, Math.min(3, Math.round(num('need', 2)))),
       retry: Math.max(0, Math.min(2, Math.round(num('retry', 0)))),
       p: Math.max(0.001, Math.min(0.2, num('p', 0.02))),
@@ -109,8 +107,17 @@ export class RoundsApp {
     this.sweep = null;     /* 当前配置的 P_L(p) 扫描 */
     this._queue = [];
   }
-  q(sel){ return this.container.querySelector(sel) || document.querySelector(sel); }
-  on(el, ev, fn){ if (el) el.addEventListener(ev, fn); }
+  q(sel){ return this.modeRoot.querySelector(sel); }
+  on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
+
+  deactivate(){
+    clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
+    if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
+    this._ro?.disconnect();
+    for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
+    this._listeners.length = 0;
+    this.modeRoot.replaceChildren();      /* 移除本 mode 的 DOM（面板/HUD/画布/提示） */
+  }
   key(){ const s = this.state; return `${s.kind}|R${s.rounds}|${s.decode}|n${s.need}|rt${s.retry}`; }
   cfg(extra = {}){
     const s = this.state;
@@ -118,19 +125,8 @@ export class RoundsApp {
       p: s.p, trials: s.trials, seed: s.seed, ...extra };
   }
 
-  mount(){
-    injectStyles();
-    injectResponsive();
-    const sheet = document.createElement('style');
-    sheet.textContent = RD_CSS;
-    document.head.appendChild(sheet);
-    this.container.insertAdjacentHTML('beforeend', `
-      <header id="rdTop" class="panel qtop">
-        <div class="logo">多轮工场</div>
-        <div class="eq">同一个码，多测几轮——<i>怎么用</i>这些轮次才是关键</div>
-        ${navHtml('./rounds.html')}
-      </header>
-
+  activate(){
+    this.modeRoot.insertAdjacentHTML('beforeend', `
       <aside id="rdPanel" class="panel qpanel">
         <div class="grp">提取线路</div>
         <div class="btns g2" id="rdKinds"></div>
@@ -193,9 +189,9 @@ export class RoundsApp {
         host.appendChild(b);
       }
     };
-    mk(this.q('#rdKinds'), KINDS.map(k => ({ v: k, label: FS_KINDS[k].label, title: FS_KINDS[k].desc })), v => this.state.kind = v);
+    mk(this.q('#rdKinds'), rdKINDS.map(k => ({ v: k, label: FS_KINDS[k].label, title: FS_KINDS[k].desc })), v => this.state.kind = v);
     mk(this.q('#rdRounds'), [1, 2, 3].map(r => ({ v: r, label: 'R=' + r })), v => this.state.rounds = v);
-    mk(this.q('#rdDecodes'), DECODES.map(d => ({ v: d.k, label: d.name, title: d.desc })), v => this.state.decode = v);
+    mk(this.q('#rdDecodes'), rdDECODES.map(d => ({ v: d.k, label: d.name, title: d.desc })), v => this.state.decode = v);
     mk(this.q('#rdNeeds'), [2, 3].map(n => ({ v: n, label: 'need=' + n })), v => this.state.need = v);
     mk(this.q('#rdRetries'), [
       { v: 0, label: '跳过该轮', title: 'R82 口径：不可信就跳过，代价是丢弃率被高估' },
@@ -218,12 +214,12 @@ export class RoundsApp {
 
   syncPanel(){
     const s = this.state;
-    const mark = (host, v) => { for (const b of this.container.querySelectorAll(host + ' button')) b.classList.toggle('on', b.dataset.v === String(v)); };
+    const mark = (host, v) => { for (const b of this.modeRoot.querySelectorAll(host + ' button')) b.classList.toggle('on', b.dataset.v === String(v)); };
     mark('#rdKinds', s.kind); mark('#rdRounds', s.rounds); mark('#rdDecodes', s.decode);
     mark('#rdNeeds', s.need); mark('#rdRetries', s.retry);
     /* std 没有任何自检手段 ⟹ 重测对它既无收益也无代价（页面如实置灰） */
-    for (const b of this.container.querySelectorAll('#rdNeeds button')) b.classList.toggle('dim', s.decode !== 'repeat');
-    for (const b of this.container.querySelectorAll('#rdRetries button')) b.classList.toggle('dim', s.kind === 'std');
+    for (const b of this.modeRoot.querySelectorAll('#rdNeeds button')) b.classList.toggle('dim', s.decode !== 'repeat');
+    for (const b of this.modeRoot.querySelectorAll('#rdRetries button')) b.classList.toggle('dim', s.kind === 'std');
     const setv = (id, v) => { const e = this.q('#' + id); if (e) e.value = v; };
     setv('rdP', s.p); this.q('#rdPO').textContent = s.p.toFixed(3);
     setv('rdTrials', s.trials); this.q('#rdTrialsO').textContent = s.trials;
@@ -232,7 +228,7 @@ export class RoundsApp {
   renderHint(){
     const b = this.q('#rdHint b'), sp = this.q('#rdHint span');
     if (b) b.textContent = '多轮提取 + 跨轮联合解码（R82）';
-    if (sp) sp.innerHTML = mdLite(
+    if (sp) sp.innerHTML = rdMdLite(
       'R81 只测一轮：单故障就能打成静默逻辑错误。多测几轮并不会自动变好——' +
       '**每轮都产生新错误**，若只在最后修正一次，错误跨轮累积而修正能力不变，' +
       'P_L 反而随轮数上升（实测 std：R=1 0.0075 ⟶ R=3 0.1285）。' +
@@ -273,7 +269,7 @@ export class RoundsApp {
   renderHud(){
     const s = this.state;
     const set = (id, v, cls) => { const el = this.q('#' + id); if (!el) return; el.textContent = v; el.className = cls || ''; };
-    set('hCfg', `${FS_KINDS[s.kind].label} · R=${s.rounds} · ${(DECODES.find(d => d.k === s.decode) || {}).name}` +
+    set('hCfg', `${FS_KINDS[s.kind].label} · R=${s.rounds} · ${(rdDECODES.find(d => d.k === s.decode) || {}).name}` +
       (s.decode === 'repeat' ? `(${s.need})` : '') +
       (s.kind === 'std' ? ' · 无自检' : (s.retry ? ` · 重测×${s.retry}` : ' · 跳过')));
     if (!this.fo){
@@ -292,7 +288,7 @@ export class RoundsApp {
       set('hPLg', this.mc.PLgiven == null ? '—' : (100 * this.mc.PLgiven).toFixed(2) + '%');
       set('hDisc', (100 * this.mc.discard).toFixed(1) + '%');
       set('hDisc2', this.state.retry === 0 ? '—（= 跳过口径）' : (100 * this.mc.noGoodRate).toFixed(1) + '%');
-      set('hF', nf(this.mc.meanFaults, 2));
+      set('hF', rdNf(this.mc.meanFaults, 2));
     } else { ['hPL', 'hPLg', 'hDisc', 'hDisc2', 'hF'].forEach(id => set(id, '—')); }
     const th = this.sweep ? rdPseudoThreshold(this.sweep) : null;
     set('hTh', th ? th.toFixed(4) : '未越过（曲线不下穿 p）');
@@ -332,10 +328,10 @@ export class RoundsApp {
     g.clearRect(0, 0, W, H);
     g.textAlign = 'left';
     g.font = (11.5 * dpr) + 'px ui-monospace,monospace';
-    g.fillStyle = COL.txt + '.95)';
+    g.fillStyle = rdCOL.txt + '.95)';
     g.fillText('轮次时间线：每轮 8 位综合征 · 该轮是否可信 · 是否落了修正', 10 * dpr, 16 * dpr);
     g.font = (9 * dpr) + 'px ui-monospace,monospace';
-    g.fillStyle = COL.dim + '.85)';
+    g.fillStyle = rdCOL.dim + '.85)';
     const t = this.trial;
     g.fillText(t ? `最近一条轨迹（${this.state.decode}${this.state.decode === 'repeat' ? ' need=' + this.state.need : ''}）：✓=修正 · ✗=不可信跳过 · –=未触发`
       : '按「单次试验」取一条轨迹', 10 * dpr, 29 * dpr);
@@ -347,31 +343,31 @@ export class RoundsApp {
     for (let r = 0; r < R; r++){
       const y = top + rowH * r;
       g.font = (10 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'left';
-      g.fillStyle = COL.dim + '.95)';
+      g.fillStyle = rdCOL.dim + '.95)';
       g.fillText('轮 ' + (r + 1), x0, y + 10 * dpr);
       const bx = x0 + 46 * dpr;
       const bw = Math.min(15 * dpr, (W - bx - 120 * dpr) / 8 - 2 * dpr);
       for (let i = 0; i < 8; i++){
         const on = t.synRounds[r][i];
-        g.fillStyle = on ? COL.amber + '.85)' : 'rgba(12,20,34,.9)';
+        g.fillStyle = on ? rdCOL.amber + '.85)' : 'rgba(12,20,34,.9)';
         g.fillRect(bx + i * (bw + 2 * dpr), y, bw, 12 * dpr);
-        g.strokeStyle = COL.wire + '.45)'; g.lineWidth = 1 * dpr;
+        g.strokeStyle = rdCOL.wire + '.45)'; g.lineWidth = 1 * dpr;
         g.strokeRect(bx + i * (bw + 2 * dpr), y, bw, 12 * dpr);
       }
       const fx = t.fixLog ? t.fixLog[r] : null;
       const usable = t.usableR ? t.usableR[r] : true;
-      let mark = '–', hue = COL.dim;
-      if (!usable){ mark = '✗ 跳过'; hue = COL.mag; }
-      else if (fx && fx.fix.length){ mark = '✓ 修正 q' + fx.fix.map(e => e.q).join(','); hue = COL.cyan; }
-      else if (this.state.decode === 'repeat'){ mark = '– 待确认'; hue = COL.dim; }
+      let mark = '–', hue = rdCOL.dim;
+      if (!usable){ mark = '✗ 跳过'; hue = rdCOL.mag; }
+      else if (fx && fx.fix.length){ mark = '✓ 修正 q' + fx.fix.map(e => e.q).join(','); hue = rdCOL.cyan; }
+      else if (this.state.decode === 'repeat'){ mark = '– 待确认'; hue = rdCOL.dim; }
       g.font = (9.5 * dpr) + 'px ui-monospace,monospace';
       g.fillStyle = hue + '.95)';
       g.fillText(mark, bx + 8 * (bw + 2 * dpr) + 12 * dpr, y + 10 * dpr);
     }
     g.font = (9.5 * dpr) + 'px ui-monospace,monospace';
-    g.fillStyle = COL.dim + '.8)';
+    g.fillStyle = rdCOL.dim + '.8)';
     g.fillText('结局：' + (t.cls === 'logic' ? '静默逻辑' : t.cls === 'gauge' ? '仅规范' : t.cls === 'outside' ? '逻辑受损' : '纠回') +
-      ' · 支撑权重 ' + t.wPre + ' · F=' + nf(t.F, 3), 12 * dpr, H - 9 * dpr);
+      ' · 支撑权重 ' + t.wPre + ' · F=' + rdNf(t.F, 3), 12 * dpr, H - 9 * dpr);
   }
 
   /* 画布 2：P_L(p) + 未编码基线 + 伪阈值 */
@@ -383,7 +379,7 @@ export class RoundsApp {
     g.clearRect(0, 0, W, H);
     g.textAlign = 'left';
     g.font = (11.5 * dpr) + 'px ui-monospace,monospace';
-    g.fillStyle = COL.txt + '.95)';
+    g.fillStyle = rdCOL.txt + '.95)';
     g.fillText('P_L(p)：与未编码基线 p 的交叉 = 伪阈值', 10 * dpr, 16 * dpr);
     const px0 = 46 * dpr, py0 = 32 * dpr, pw = W - px0 - 14 * dpr, ph = H - py0 - 24 * dpr;
     /* x: log10 p ∈ [-3.1, -0.7]（0.0008 .. 0.2）；y: log10 P_L ∈ [-4, -0.4]（1e-4 .. 0.4）
@@ -391,45 +387,45 @@ export class RoundsApp {
     const X0 = -3.1, X1 = -0.7, Y0 = -4, Y1 = -0.4;
     const lx = p => px0 + (Math.log10(p) - X0) / (X1 - X0) * pw;
     const ly = v => py0 + ph - (Math.log10(Math.max(1e-5, v)) - Y0) / (Y1 - Y0) * ph;
-    g.strokeStyle = COL.wire + '.14)'; g.lineWidth = 1 * dpr;
+    g.strokeStyle = rdCOL.wire + '.14)'; g.lineWidth = 1 * dpr;
     g.font = (8.5 * dpr) + 'px ui-monospace,monospace';
     for (let e = -3; e <= -1; e++){
       const X = lx(Math.pow(10, e));
       g.beginPath(); g.moveTo(X, py0); g.lineTo(X, py0 + ph); g.stroke();
-      g.fillStyle = COL.dim + '.7)'; g.textAlign = 'center';
+      g.fillStyle = rdCOL.dim + '.7)'; g.textAlign = 'center';
       g.fillText('1e' + e, X, py0 + ph + 12 * dpr);
     }
     for (let e = -4; e <= -1; e++){
       const Y = ly(Math.pow(10, e));
       g.beginPath(); g.moveTo(px0, Y); g.lineTo(px0 + pw, Y); g.stroke();
-      g.fillStyle = COL.dim + '.7)'; g.textAlign = 'right';
+      g.fillStyle = rdCOL.dim + '.7)'; g.textAlign = 'right';
       g.fillText('1e' + e, px0 - 4 * dpr, Y + 3 * dpr);
     }
     /* 未编码基线 P = p */
-    g.strokeStyle = COL.dim + '.55)'; g.lineWidth = 1.2 * dpr; g.setLineDash([4 * dpr, 3 * dpr]);
+    g.strokeStyle = rdCOL.dim + '.55)'; g.lineWidth = 1.2 * dpr; g.setLineDash([4 * dpr, 3 * dpr]);
     g.beginPath(); g.moveTo(lx(Math.pow(10, X0)), ly(Math.pow(10, X0))); g.lineTo(lx(Math.pow(10, X1)), ly(Math.pow(10, X1))); g.stroke();
     g.setLineDash([]);
     g.font = (9 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'left';
-    g.fillStyle = COL.dim + '.8)'; g.fillText('未编码 P=p', px0 + 6 * dpr, py0 + 12 * dpr);
-    if (!this.sweep){ g.fillStyle = COL.dim + '.7)'; g.fillText('计算中…', px0 + pw / 2, py0 + ph / 2); return; }
+    g.fillStyle = rdCOL.dim + '.8)'; g.fillText('未编码 P=p', px0 + 6 * dpr, py0 + 12 * dpr);
+    if (!this.sweep){ g.fillStyle = rdCOL.dim + '.7)'; g.fillText('计算中…', px0 + pw / 2, py0 + ph / 2); return; }
     const sw = this.sweep;
-    g.strokeStyle = COL.cyan + '.95)'; g.lineWidth = 1.6 * dpr;
+    g.strokeStyle = rdCOL.cyan + '.95)'; g.lineWidth = 1.6 * dpr;
     g.beginPath();
     sw.p.forEach((p, i) => { const X = lx(p), Y = ly(Math.max(1e-5, sw.PL[i])); i ? g.lineTo(X, Y) : g.moveTo(X, Y); });
     g.stroke();
     for (let i = 0; i < sw.p.length; i++){
       g.beginPath(); g.arc(lx(sw.p[i]), ly(Math.max(1e-5, sw.PL[i])), 2.6 * dpr, 0, Math.PI * 2);
-      g.fillStyle = COL.cyan + '.95)'; g.fill();
+      g.fillStyle = rdCOL.cyan + '.95)'; g.fill();
     }
     const th = rdPseudoThreshold(sw);
     if (th){
-      g.strokeStyle = COL.red + '.9)'; g.lineWidth = 1.2 * dpr;
+      g.strokeStyle = rdCOL.red + '.9)'; g.lineWidth = 1.2 * dpr;
       g.beginPath(); g.arc(lx(th), ly(th), 5 * dpr, 0, Math.PI * 2); g.stroke();
-      g.fillStyle = COL.red + '.95)'; g.font = (9 * dpr) + 'px ui-monospace,monospace';
+      g.fillStyle = rdCOL.red + '.95)'; g.font = (9 * dpr) + 'px ui-monospace,monospace';
       g.fillText('p*=' + th.toFixed(4), lx(th) + 7 * dpr, ly(th) - 5 * dpr);
     }
     const sl = rdSlope(sw, 0, 2);
-    g.fillStyle = COL.dim + '.85)'; g.font = (9 * dpr) + 'px ui-monospace,monospace';
+    g.fillStyle = rdCOL.dim + '.85)'; g.font = (9 * dpr) + 'px ui-monospace,monospace';
     g.fillText(`MC 斜率 α=${sl == null ? '—' : sl.toFixed(2)}（样本 ${sw.trials}，仅作参考；判据用精确枚举）`, px0 + 6 * dpr, py0 + ph - 6 * dpr);
   }
 
@@ -442,22 +438,22 @@ export class RoundsApp {
     g.clearRect(0, 0, W, H);
     g.textAlign = 'left';
     g.font = (11.5 * dpr) + 'px ui-monospace,monospace';
-    g.fillStyle = COL.txt + '.95)';
+    g.fillStyle = rdCOL.txt + '.95)';
     g.fillText('单故障结局分布（提取段 · 精确枚举）', 10 * dpr, 16 * dpr);
     let lx = 10 * dpr;
     g.font = (8.5 * dpr) + 'px ui-monospace,monospace';
-    for (const f of FATES){
+    for (const f of rdFATES){
       g.fillStyle = f.hue + '.85)'; g.fillRect(lx, 24 * dpr, 7 * dpr, 7 * dpr);
-      g.fillStyle = COL.dim + '.9)'; g.fillText(f.name, lx + 10 * dpr, 30 * dpr);
+      g.fillStyle = rdCOL.dim + '.9)'; g.fillText(f.name, lx + 10 * dpr, 30 * dpr);
       lx += (18 + f.name.length * 8.6) * dpr;
     }
-    if (!this.fo){ g.fillStyle = COL.dim + '.7)'; g.fillText('计算中…', 10 * dpr, 60 * dpr); return; }
+    if (!this.fo){ g.fillStyle = rdCOL.dim + '.7)'; g.fillText('计算中…', 10 * dpr, 60 * dpr); return; }
     const e = this.fo.byPhase.extract;
     const tot = Math.max(1, e.n);
     const x0 = 10 * dpr, x1 = W - 12 * dpr;
     const y = 62 * dpr, bh = 18 * dpr;
     let x = x0;
-    for (const f of FATES){
+    for (const f of rdFATES){
       const v = e[f.k] || 0;
       if (!v) continue;
       const w = (x1 - x0) * v / tot;
@@ -470,10 +466,10 @@ export class RoundsApp {
       x += w;
     }
     g.textAlign = 'left'; g.font = (9.5 * dpr) + 'px ui-monospace,monospace';
-    g.fillStyle = COL.dim + '.85)';
+    g.fillStyle = rdCOL.dim + '.85)';
     g.fillText(`共 ${e.n} 个位点（每轮 ${Math.round(e.n / this.state.rounds)} × ${this.state.rounds} 轮）`, 10 * dpr, y + bh + 16 * dpr);
     /* 轮数趋势（把 R=1..3 的静默逻辑位点数列出来，数据由页面现算过的不全，这里只画当前 + 提示） */
-    g.fillStyle = COL.dim + '.8)';
+    g.fillStyle = rdCOL.dim + '.8)';
     g.fillText('切换轮数 R 看趋势：std 各轮数静默逻辑位点都 >0；cat + 连续一致在 R=2 为 0', 10 * dpr, y + bh + 30 * dpr);
   }
 
@@ -509,16 +505,19 @@ export class RoundsApp {
         const e = fo.byPhase.extract;
         return { n: e.n, logic: e.logic, outside: e.outside, gauge: e.gauge, perfect: e.perfect, flagged: e.flagged };
       },
-      setKind: v => { if (KINDS.includes(v)){ self.state.kind = v; self.syncPanel(); self.compute(); } },
+      setKind: v => { if (rdKINDS.includes(v)){ self.state.kind = v; self.syncPanel(); self.compute(); } },
       setRounds: v => { self.state.rounds = v; self.syncPanel(); self.compute(); },
-      setDecode: v => { if (DECODES.some(d => d.k === v)){ self.state.decode = v; self.syncPanel(); self.compute(); } },
+      setDecode: v => { if (rdDECODES.some(d => d.k === v)){ self.state.decode = v; self.syncPanel(); self.compute(); } },
       setNeed: v => { self.state.need = v; self.syncPanel(); self.compute(); },
       setP: v => { self.state.p = v; self.syncPanel(); self.runMc(); },
       setTrials: v => { self.state.trials = v; self.syncPanel(); },
       runMc: () => self.runMc(),
       once: () => { self.once(); self.renderHud(); self.drawTime(); },
       canvasPixels: () => Object.fromEntries(Object.entries(self.cv).map(([k, c]) => [k, c ? c.width * c.height : 0])),
-      navLinks: () => Array.from(document.querySelectorAll('#rdTop a')).map(a => a.getAttribute('href')),
+      navLinks: () => Array.from(document.querySelectorAll('.qtop a')).map(a => a.getAttribute('href')),
     };
   }
 }
+
+/* ---- QEC hub mode 描述符（R98）：壳按 id/tab 建切换条；css 在 activate 时注入、deactivate 时移除 ---- */
+export const ROUNDS_MODE = { handle: '__rd', id: 'rounds', name: '多轮提取', tab: '⟳', css: RD_CSS, mount(shell){ const app = new RoundsApp(shell); app.activate(); return app; } };

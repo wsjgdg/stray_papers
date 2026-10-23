@@ -1,5 +1,5 @@
 /* ============================================================================
- * cycle.js（页面）— R84 循环 EC + 逻辑线路
+ * mode-cycle.js（QEC hub 模式）— 由 cycle.js 重构而来（R98 七页整合）：R84 循环 EC + 逻辑线路
  *
  * R82 是「一次 EC 用好几轮」，R84 把 EC 变成**周期**：编码 → [逻辑门 + EC 周期]×T → 解码。
  * 这一页要回答两个问题：
@@ -15,14 +15,11 @@
  * ⚠ 判定口径：含逻辑门时保真度必须用 |⟨ref|ψ⟩|²（ref 走同一条线路、含同一个门）。
  *   用「|0_L⟩ 的解析参数」会得到 F≈0（逻辑门把态翻到 |1_L⟩），这是 R84 踩过的坑。
  * ========================================================================== */
-import { injectStyles } from './core/styles.js';
-import { injectResponsive } from './core/responsive.js';
-import { navHtml, NAV_HREFS } from './core/nav.js';
-import { FS_KINDS, fsCircuit, fsFirstOrder, fsEnsemble, fsRun, cyInterception, cySweepCycles } from './physics/flagsynd.js';
+import { NAV_HREFS } from '../core/nav.js';
+import { FS_KINDS, fsCircuit, fsFirstOrder, fsEnsemble, fsRun, cyInterception, cySweepCycles } from '../physics/flagsynd.js';
 
 const CY_CSS = `
-  .qtop[id="cyTop"]{gap:11px;padding:9px 15px}.qtop[id="cyTop"] a{font-size:10px}.qtop[id="cyTop"] .eq i{color:var(--amber);font-style:italic}
-  #cyPanel{top:74px;left:14px;width:246px;padding:13px;z-index:10;max-height:calc(100vh - 200px);
+  #cyPanel{top:108px;left:14px;width:246px;padding:13px;z-index:10;max-height:calc(100vh - 234px);
     overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #cyPanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
     text-transform:uppercase;margin:10px 0 5px}
@@ -41,8 +38,8 @@ const CY_CSS = `
   #cyPanel button:hover{border-color:rgba(103,232,249,.45);color:var(--cyan)}
   #cyPanel button.on{background:rgba(103,232,249,.18);border-color:var(--cyan);color:var(--cyan)}
   #cyPanel .note{font-size:9.5px;color:var(--dim);line-height:1.5;margin-top:8px}
-  #cyHud{top:74px;right:14px;padding:11px 13px;z-index:10;width:272px;font-family:var(--mono);
-    max-height:calc(100vh - 120px);overflow-y:auto;scrollbar-width:thin;
+  #cyHud{top:108px;right:14px;padding:11px 13px;z-index:10;width:272px;font-family:var(--mono);
+    max-height:calc(100vh - 154px);overflow-y:auto;scrollbar-width:thin;
     scrollbar-color:rgba(120,160,220,.25) transparent}
   #cyHud .hrow{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:2.5px 0}
   #cyHud .hrow span:first-child{color:var(--dim);white-space:nowrap}
@@ -65,40 +62,42 @@ const CY_CSS = `
   @media (max-width:1240px){#cyStage{width:calc(100vw - 40px)}#cyHint{display:none}}
 `;
 
-const COL = {
+const cyCOL = {
   cyan: 'rgba(103,232,249,', mag: 'rgba(240,171,252,', amber: 'rgba(251,191,36,',
   red: 'rgba(248,113,113,', dim: 'rgba(154,167,189,', txt: 'rgba(230,237,243,',
   wire: 'rgba(120,160,220,', green: 'rgba(74,222,128,',
 };
-const mdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
+const cyMdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+const cyNf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
 
-const KINDS = ['std', 'cat'];
-const LOGICS = [
+const cyKINDS = ['std', 'cat'];
+const cyLOGICS = [
   { k: 'none', name: '无', sym: '', desc: '周期之间不插逻辑门（纯 EC 循环）' },
   { k: 'idle', name: '空闲', sym: 'I', desc: '每数据比特一个恒等门——空闲本身也是错误机会（R80 的 idle 口径）' },
   { k: 'xl', name: 'X_L', sym: 'X', desc: '横向 X_L = Z₀Z₃Z₆：逐比特 Z，不传播错误' },
   { k: 'zl', name: 'Z_L', sym: 'Z', desc: '横向 Z_L = X₀X₁X₂：逐比特 X，不传播错误' },
 ];
-const DECODES = [
+const cyDECODES = [
   { k: 'single', name: '只修最后' },
   { k: 'immediate', name: '每轮都修' },
   { k: 'repeat', name: '连续一致', desc: '连续 need 轮综合征相同才修；T×R<2 时永远等不到第二轮（恒不修正）' },
 ];
 
 export class CycleApp {
-  constructor(container, options = {}){
-    this.container = typeof container === 'string' ? document.querySelector(container) : (container || document.body);
+  constructor(shell){
+    this.shell = shell;
+    this.modeRoot = shell.modeRoot;
+    this._listeners = [];
     const q = new URLSearchParams(location.search);
     const num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
     const str = (k, d) => (q.has(k) ? q.get(k) : d);
     this.state = {
-      kind: KINDS.includes(str('kind', 'cat')) ? str('kind', 'cat') : 'cat',
+      kind: cyKINDS.includes(str('kind', 'cat')) ? str('kind', 'cat') : 'cat',
       cycles: Math.max(1, Math.min(4, Math.round(num('cycles', 2)))),
       rounds: Math.max(1, Math.min(2, Math.round(num('rounds', 1)))),
-      logic: LOGICS.some(l => l.k === str('logic', 'xl')) ? str('logic', 'xl') : 'xl',
+      logic: cyLOGICS.some(l => l.k === str('logic', 'xl')) ? str('logic', 'xl') : 'xl',
       noisyLogic: str('noisyLogic', '1') !== '0',
-      decode: DECODES.some(d => d.k === str('decode', 'repeat')) ? str('decode', 'repeat') : 'repeat',
+      decode: cyDECODES.some(d => d.k === str('decode', 'repeat')) ? str('decode', 'repeat') : 'repeat',
       p: Math.max(0.001, Math.min(0.12, num('p', 0.02))),
       trials: Math.max(120, Math.min(1200, Math.round(num('trials', 400)))),
       seed: Math.round(num('seed', 7)),
@@ -108,8 +107,17 @@ export class CycleApp {
     this.mc = null;        /* 当前配置的 MC */
     this.fo = null;        /* 当前配置的精确单故障枚举 */
   }
-  q(sel){ return this.container.querySelector(sel) || document.querySelector(sel); }
-  on(el, ev, fn){ if (el) el.addEventListener(ev, fn); }
+  q(sel){ return this.modeRoot.querySelector(sel); }
+  on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
+
+  deactivate(){
+    clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
+    if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
+    this._ro?.disconnect();
+    for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
+    this._listeners.length = 0;
+    this.modeRoot.replaceChildren();      /* 移除本 mode 的 DOM（面板/HUD/画布/提示） */
+  }
   key(){ const s = this.state; return `${s.kind}|T${s.cycles}|R${s.rounds}|${s.logic}|${s.noisyLogic ? 1 : 0}|${s.decode}`; }
   cfg(extra = {}){
     const s = this.state;
@@ -117,19 +125,8 @@ export class CycleApp {
       noisyLogic: s.noisyLogic, decode: s.decode, p: s.p, trials: s.trials, seed: s.seed, ...extra };
   }
 
-  mount(){
-    injectStyles();
-    injectResponsive();
-    const sheet = document.createElement('style');
-    sheet.textContent = CY_CSS;
-    document.head.appendChild(sheet);
-    this.container.insertAdjacentHTML('beforeend', `
-      <header id="cyTop" class="panel qtop">
-        <div class="logo">循环工场</div>
-        <div class="eq">一次 EC 只能管一段——<i>循环</i>才管整条线路</div>
-        ${navHtml('./cycle.html')}
-      </header>
-
+  activate(){
+    this.modeRoot.insertAdjacentHTML('beforeend', `
       <aside id="cyPanel" class="panel qpanel">
         <div class="grp">提取线路</div>
         <div class="btns g2" id="cyKinds"></div>
@@ -195,12 +192,12 @@ export class CycleApp {
         el.appendChild(b);
       }
     };
-    mk('#cyKinds', KINDS.map(k => ({ v: k, label: FS_KINDS[k].label })), v => this.state.kind = v);
+    mk('#cyKinds', cyKINDS.map(k => ({ v: k, label: FS_KINDS[k].label })), v => this.state.kind = v);
     mk('#cyCycles', [1, 2, 3, 4].map(t => ({ v: t, label: 'T=' + t })), v => this.state.cycles = v);
     mk('#cyRounds', [1, 2].map(r => ({ v: r, label: 'R=' + r })), v => this.state.rounds = v);
-    mk('#cyLogics', LOGICS.map(l => ({ v: l.k, label: l.name, title: l.desc })), v => this.state.logic = v);
+    mk('#cyLogics', cyLOGICS.map(l => ({ v: l.k, label: l.name, title: l.desc })), v => this.state.logic = v);
     mk('#cyNoisy', [{ v: 1, label: '注错' }, { v: 0, label: '理想' }], v => this.state.noisyLogic = !!v);
-    mk('#cyDecodes', DECODES.map(d => ({ v: d.k, label: d.name })), v => this.state.decode = v);
+    mk('#cyDecodes', cyDECODES.map(d => ({ v: d.k, label: d.name })), v => this.state.decode = v);
 
     const pIn = this.q('#cyP'), trIn = this.q('#cyTrials');
     this.on(pIn, 'input', () => { this.state.p = parseFloat(pIn.value); this.q('#cyPO').textContent = this.state.p.toFixed(3); });
@@ -219,12 +216,12 @@ export class CycleApp {
 
   syncPanel(){
     const s = this.state;
-    const mark = (host, v) => { for (const b of this.container.querySelectorAll(host + ' button')) b.classList.toggle('on', b.dataset.v === String(v)); };
+    const mark = (host, v) => { for (const b of this.modeRoot.querySelectorAll(host + ' button')) b.classList.toggle('on', b.dataset.v === String(v)); };
     mark('#cyKinds', s.kind); mark('#cyCycles', s.cycles); mark('#cyRounds', s.rounds);
     mark('#cyLogics', s.logic); mark('#cyNoisy', s.noisyLogic ? 1 : 0); mark('#cyDecodes', s.decode);
-    for (const b of this.container.querySelectorAll('#cyNoisy button')) b.classList.toggle('dim', s.logic === 'none');
+    for (const b of this.modeRoot.querySelectorAll('#cyNoisy button')) b.classList.toggle('dim', s.logic === 'none');
     /* 只有「连续一致」自己会在 T×R<2 时永远等不到确认 ⟹ 只置灰它这一个选项 */
-    for (const b of this.container.querySelectorAll('#cyDecodes button'))
+    for (const b of this.modeRoot.querySelectorAll('#cyDecodes button'))
       b.classList.toggle('dim', b.dataset.v === 'repeat' && s.cycles * s.rounds < 2);
     const setv = (id, v) => { const e = this.q('#' + id); if (e) e.value = v; };
     setv('cyP', s.p); const po = this.q('#cyPO'); if (po) po.textContent = s.p.toFixed(3);
@@ -234,7 +231,7 @@ export class CycleApp {
   renderHint(){
     const b = this.q('#cyHint b'), sp = this.q('#cyHint span');
     if (b) b.textContent = '循环 EC + 逻辑线路（R84）';
-    if (sp) sp.innerHTML = mdLite(
+    if (sp) sp.innerHTML = cyMdLite(
       'R82 的「一次 EC」把残留留在最后一轮。循环 EC 把它接成 **T 个周期**：' +
       '中间周期的残留由下一周期清掉，只剩**最后一个周期** ⟹ P_L 随 T 饱和而非线性增长。' +
       '逻辑门（横向 X_L / Z_L）与所有稳定子对易 ⟹ EC 看不见它、不会误纠；' +
@@ -284,7 +281,7 @@ export class CycleApp {
   renderHud(){
     const s = this.state;
     const set = (id, v, cls) => { const el = this.q('#' + id); if (!el) return; el.textContent = v; el.className = cls || ''; };
-    const lg = (LOGICS.find(l => l.k === s.logic) || {}).name || '无';
+    const lg = (cyLOGICS.find(l => l.k === s.logic) || {}).name || '无';
     /* R=1 时 repeat 永远等不到第二轮确认 ⟹ 恒不修正。这不是 bug 而是口径：
        提前亮出来，避免把「没修」误读成「修不好」。 */
     const vacuous = s.decode === 'repeat' && s.rounds < 2;
@@ -306,7 +303,7 @@ export class CycleApp {
     } else { set('hLogic', '—'); set('hOrder', '—'); }
     if (this.mc){
       set('hPL', (100 * this.mc.PL).toFixed(2) + '%  (' + this.mc.logic + '/' + this.mc.trials + ')');
-      set('hF', nf(this.mc.meanFaults, 2));
+      set('hF', cyNf(this.mc.meanFaults, 2));
       set('hDisc', (100 * this.mc.noGoodRate).toFixed(1) + '%');
     } else { set('hPL', '—'); set('hF', '—'); set('hDisc', '—'); }
     if (this.trial){
@@ -317,7 +314,7 @@ export class CycleApp {
         if (!usable) return '✗';
         return fx && fx.fix.length ? '✓' : '·';
       }).join('');
-      set('hTrial', `${marks} · F=${nf(t.F, 3)}${t.cls === 'perfect' ? ' 纠回' : t.cls === 'logic' ? ' 静默逻辑' : ''}`);
+      set('hTrial', `${marks} · F=${cyNf(t.F, 3)}${t.cls === 'perfect' ? ' 纠回' : t.cls === 'logic' ? ' 静默逻辑' : ''}`);
     } else set('hTrial', '—');
   }
 
@@ -330,12 +327,12 @@ export class CycleApp {
     g.clearRect(0, 0, W, H);
     g.textAlign = 'left';
     g.font = (11.5 * dpr) + 'px ui-monospace,monospace';
-    g.fillStyle = COL.txt + '.95)';
+    g.fillStyle = cyCOL.txt + '.95)';
     g.fillText('周期时间线：每周期 R 轮 EC（格 = 一轮，✓ 落了修正 / ✗ 无可用读数），周期之间的 ⟦门⟧ 由后面的周期处理', 10 * dpr, 16 * dpr);
 
     const s = this.state;
     const T = s.cycles, R = s.rounds;
-    const lg = LOGICS.find(l => l.k === s.logic) || LOGICS[0];
+    const lg = cyLOGICS.find(l => l.k === s.logic) || cyLOGICS[0];
     const x0 = 12 * dpr, top = 40 * dpr;
     const rowH = Math.min(66 * dpr, (H - top - 44 * dpr));
     const cyW = (W - 2 * x0) / T;
@@ -343,12 +340,12 @@ export class CycleApp {
     for (let t = 0; t < T; t++){
       const cx = x0 + cyW * t;
       /* 周期框 */
-      g.strokeStyle = COL.wire + '.38)'; g.lineWidth = 1 * dpr;
+      g.strokeStyle = cyCOL.wire + '.38)'; g.lineWidth = 1 * dpr;
       g.beginPath(); g.roundRect ? g.roundRect(cx + 4 * dpr, top, cyW - 8 * dpr, rowH, 8 * dpr)
         : g.rect(cx + 4 * dpr, top, cyW - 8 * dpr, rowH);
       g.stroke();
       g.font = (10 * dpr) + 'px ui-monospace,monospace';
-      g.fillStyle = COL.dim + '.95)'; g.textAlign = 'left';
+      g.fillStyle = cyCOL.dim + '.95)'; g.textAlign = 'left';
       g.fillText('周期 ' + (t + 1), cx + 12 * dpr, top + 15 * dpr);
 
       /* R 个 EC 轮 */
@@ -356,16 +353,16 @@ export class CycleApp {
       for (let r = 0; r < R; r++){
         const bx = cx + 12 * dpr + r * (boxW + 6 * dpr);
         const by = top + 24 * dpr;
-        g.fillStyle = COL.cyan + '.10)';
-        g.strokeStyle = COL.cyan + '.35)';
+        g.fillStyle = cyCOL.cyan + '.10)';
+        g.strokeStyle = cyCOL.cyan + '.35)';
         g.beginPath(); g.rect(bx, by, boxW, 20 * dpr); g.fill(); g.stroke();
         g.font = (8.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
-        g.fillStyle = COL.dim + '.9)';
+        g.fillStyle = cyCOL.dim + '.9)';
         g.fillText('R' + (r + 1), bx + boxW / 2, by + 13 * dpr);
       }
       /* 该周期的自检率（样本级统计，逐周期细分留给轨迹行） */
       g.font = (9 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'left';
-      g.fillStyle = COL.dim + '.8)';
+      g.fillStyle = cyCOL.dim + '.8)';
       g.fillText(this.mc ? `自检 ${(100 * this.mc.discard).toFixed(0)}%` : '计算中…', cx + 12 * dpr, top + rowH - 10 * dpr);
 
       /* 周期之间的逻辑门 */
@@ -373,11 +370,11 @@ export class CycleApp {
         const gx = cx - 2 * dpr;
         g.save();
         g.translate(gx, top + rowH / 2);
-        g.fillStyle = COL.amber + '.16)';
-        g.strokeStyle = COL.amber + '.75)'; g.lineWidth = 1.2 * dpr;
+        g.fillStyle = cyCOL.amber + '.16)';
+        g.strokeStyle = cyCOL.amber + '.75)'; g.lineWidth = 1.2 * dpr;
         g.beginPath(); g.rect(-12 * dpr, -13 * dpr, 24 * dpr, 26 * dpr); g.fill(); g.stroke();
         g.font = (12 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
-        g.fillStyle = COL.amber + '.95)';
+        g.fillStyle = cyCOL.amber + '.95)';
         g.fillText(lg.sym || '·', 0, 4 * dpr);
         g.restore();
       }
@@ -385,12 +382,12 @@ export class CycleApp {
 
     /* 末尾：解码 */
     g.font = (9.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'right';
-    g.fillStyle = COL.mag + '.9)';
+    g.fillStyle = cyCOL.mag + '.9)';
     g.fillText('→ 解码 · 判定', W - 12 * dpr, top + rowH + 16 * dpr);
 
     /* 图例 */
     g.textAlign = 'left'; g.font = (8.5 * dpr) + 'px ui-monospace,monospace';
-    g.fillStyle = COL.dim + '.8)';
+    g.fillStyle = cyCOL.dim + '.8)';
     const legend = '⟦' + (lg.sym || '·') + '⟧ = 逻辑门（' + lg.name + '）：与稳定子对易 ⟹ EC 看不见它本身，但看得见它上面的错误';
     g.fillText(legend, 10 * dpr, H - 8 * dpr);
   }
@@ -404,12 +401,12 @@ export class CycleApp {
     g.clearRect(0, 0, W, H);
     g.textAlign = 'left';
     g.font = (11.5 * dpr) + 'px ui-monospace,monospace';
-    g.fillStyle = COL.txt + '.95)';
+    g.fillStyle = cyCOL.txt + '.95)';
     g.fillText('P_L 随周期数（饱和 = 中间残留被后续周期清掉）', 10 * dpr, 16 * dpr);
 
     if (!this.sw){
       g.font = (10 * dpr) + 'px ui-monospace,monospace';
-      g.fillStyle = COL.dim + '.8)';
+      g.fillStyle = cyCOL.dim + '.8)';
       g.fillText('MC 扫描计算中…', 10 * dpr, 36 * dpr);
       return;
     }
@@ -421,44 +418,44 @@ export class CycleApp {
     const Y = v => py0 + ph - Math.min(1, v / maxPL) * ph;
 
     /* 网格 + 轴 */
-    g.strokeStyle = COL.wire + '.14)'; g.lineWidth = 1 * dpr;
+    g.strokeStyle = cyCOL.wire + '.14)'; g.lineWidth = 1 * dpr;
     g.font = (8.5 * dpr) + 'px ui-monospace,monospace';
     for (let k = 0; k <= 4; k++){
       const v = maxPL * k / 4, y = Y(v);
       g.beginPath(); g.moveTo(px0, y); g.lineTo(px0 + pw, y); g.stroke();
-      g.fillStyle = COL.dim + '.7)'; g.textAlign = 'right';
+      g.fillStyle = cyCOL.dim + '.7)'; g.textAlign = 'right';
       g.fillText((100 * v).toFixed(1) + '%', px0 - 4 * dpr, y + 3 * dpr);
     }
     for (const t of Ts){
       const x = X(t);
       g.beginPath(); g.moveTo(x, py0); g.lineTo(x, py0 + ph); g.stroke();
-      g.fillStyle = COL.dim + '.75)'; g.textAlign = 'center';
+      g.fillStyle = cyCOL.dim + '.75)'; g.textAlign = 'center';
       g.fillText('T=' + t, x, py0 + ph + 13 * dpr);
     }
 
     /* 未编码基线 p */
-    g.strokeStyle = COL.dim + '.5)'; g.setLineDash([4 * dpr, 4 * dpr]);
+    g.strokeStyle = cyCOL.dim + '.5)'; g.setLineDash([4 * dpr, 4 * dpr]);
     g.beginPath(); g.moveTo(px0, Y(this.state.p)); g.lineTo(px0 + pw, Y(this.state.p)); g.stroke();
     g.setLineDash([]);
-    g.fillStyle = COL.dim + '.85)'; g.textAlign = 'left';
+    g.fillStyle = cyCOL.dim + '.85)'; g.textAlign = 'left';
     g.fillText('未编码 p', px0 + 4 * dpr, Y(this.state.p) - 4 * dpr);
 
     /* 曲线 */
-    g.strokeStyle = COL.cyan + '.95)'; g.lineWidth = 1.8 * dpr;
+    g.strokeStyle = cyCOL.cyan + '.95)'; g.lineWidth = 1.8 * dpr;
     g.beginPath();
     sw.PL.forEach((v, i) => { const x = X(Ts[i]), y = Y(v); i ? g.lineTo(x, y) : g.moveTo(x, y); });
     g.stroke();
     sw.PL.forEach((v, i) => {
       const x = X(Ts[i]), y = Y(v);
       g.beginPath(); g.arc(x, y, 3.2 * dpr, 0, Math.PI * 2);
-      g.fillStyle = COL.cyan + '.95)'; g.fill();
+      g.fillStyle = cyCOL.cyan + '.95)'; g.fill();
       g.font = (8.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
-      g.fillStyle = COL.txt + '.9)';
+      g.fillStyle = cyCOL.txt + '.9)';
       g.fillText((100 * v).toFixed(2), x, y - 7 * dpr);
     });
 
     g.font = (8.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'left';
-    g.fillStyle = COL.dim + '.8)';
+    g.fillStyle = cyCOL.dim + '.8)';
     g.fillText(`MC ${sw.trials} 样本/点 · 每点平均故障 ${sw.faults.map(f => f.toFixed(1)).join(' / ')}`, 10 * dpr, H - 8 * dpr);
   }
 
@@ -471,35 +468,35 @@ export class CycleApp {
     g.clearRect(0, 0, W, H);
     g.textAlign = 'left';
     g.font = (11.5 * dpr) + 'px ui-monospace,monospace';
-    g.fillStyle = COL.txt + '.95)';
+    g.fillStyle = cyCOL.txt + '.95)';
     g.fillText('同一个逻辑门错误，门后有 / 无 EC', 10 * dpr, 16 * dpr);
     g.font = (8.5 * dpr) + 'px ui-monospace,monospace';
-    g.fillStyle = COL.dim + '.85)';
+    g.fillStyle = cyCOL.dim + '.85)';
     g.fillText('精确单故障枚举（immediate 解码：repeat 需要 2 轮一致，单周期内等不到确认）', 10 * dpr, 29 * dpr);
 
-    if (!this.ic){ g.fillStyle = COL.dim + '.8)'; g.fillText('计算中…', 10 * dpr, 50 * dpr); return; }
+    if (!this.ic){ g.fillStyle = cyCOL.dim + '.8)'; g.fillText('计算中…', 10 * dpr, 50 * dpr); return; }
     const rows = [
-      { k: 'mid', label: '门在周期之间', sub: '后面还有 EC', hue: COL.cyan, a: this.ic.mid },
-      { k: 'tail', label: '门在末尾', sub: '后面没有 EC', hue: COL.red, a: this.ic.tail },
+      { k: 'mid', label: '门在周期之间', sub: '后面还有 EC', hue: cyCOL.cyan, a: this.ic.mid },
+      { k: 'tail', label: '门在末尾', sub: '后面没有 EC', hue: cyCOL.red, a: this.ic.tail },
     ];
     const x0 = 12 * dpr, labelW = 108 * dpr, barX = x0 + labelW, barW = W - barX - 58 * dpr;
     const top = 46 * dpr, rowH = (H - top - 32 * dpr) / rows.length;
     for (const r of rows){
       const y = top + rowH * 0.5 + (rowH * rows.indexOf(r));
       g.textAlign = 'left'; g.font = (10.5 * dpr) + 'px ui-monospace,monospace';
-      g.fillStyle = COL.txt + '.9)';
+      g.fillStyle = cyCOL.txt + '.9)';
       g.fillText(r.label, x0, y - 2 * dpr);
       g.font = (8.5 * dpr) + 'px ui-monospace,monospace';
-      g.fillStyle = COL.dim + '.8)';
+      g.fillStyle = cyCOL.dim + '.8)';
       g.fillText(r.sub + ' · n=' + r.a.n, x0, y + 10 * dpr);
       /* 轨道 */
       g.fillStyle = 'rgba(10,18,32,.9)';
-      g.strokeStyle = COL.wire + '.28)'; g.lineWidth = 1 * dpr;
+      g.strokeStyle = cyCOL.wire + '.28)'; g.lineWidth = 1 * dpr;
       g.beginPath(); g.rect(barX, y - 9 * dpr, barW, 18 * dpr); g.fill(); g.stroke();
       /* 分段：纠回 / 仅规范 / 逻辑受损 */
       const tot = Math.max(1, r.a.n);
       let acc = 0;
-      const segs = [['perfect', COL.cyan], ['gauge', COL.green], ['outside', COL.amber], ['logic', COL.red], ['flagged', COL.mag]];
+      const segs = [['perfect', cyCOL.cyan], ['gauge', cyCOL.green], ['outside', cyCOL.amber], ['logic', cyCOL.red], ['flagged', cyCOL.mag]];
       for (const [key, hue] of segs){
         const w = barW * (r.a[key] || 0) / tot;
         if (w <= 0) continue;
@@ -508,11 +505,11 @@ export class CycleApp {
         acc += w;
       }
       g.textAlign = 'left'; g.font = (10 * dpr) + 'px ui-monospace,monospace';
-      g.fillStyle = r.a.rescue >= 0.99 ? COL.green + '.95)' : (r.a.rescue <= 0.01 ? COL.red + '.95)' : COL.amber + '.95)');
+      g.fillStyle = r.a.rescue >= 0.99 ? cyCOL.green + '.95)' : (r.a.rescue <= 0.01 ? cyCOL.red + '.95)' : cyCOL.amber + '.95)');
       g.fillText((100 * r.a.rescue).toFixed(0) + '%', barX + barW + 6 * dpr, y + 4 * dpr);
     }
     g.font = (8.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'left';
-    g.fillStyle = COL.dim + '.8)';
+    g.fillStyle = cyCOL.dim + '.8)';
     g.fillText('青 = 纠回 · 绿 = 仅规范 · 黄 = 逻辑受损 · 红 = 静默逻辑 · 品红 = 检出', 10 * dpr, H - 8 * dpr);
   }
 
@@ -522,8 +519,8 @@ export class CycleApp {
     const self = this;
     return {
       get state(){ return self.state; },
-      kinds: () => KINDS.map(k => ({ k, label: FS_KINDS[k].label })),
-      logics: () => LOGICS.map(l => ({ k: l.k, name: l.name })),
+      kinds: () => cyKINDS.map(k => ({ k, label: FS_KINDS[k].label })),
+      logics: () => cyLOGICS.map(l => ({ k: l.k, name: l.name })),
       navLinks: () => NAV_HREFS,
       data: () => ({
         cfg: { ...self.state },
@@ -544,7 +541,7 @@ export class CycleApp {
         logicGates: (self.trial.fixLog || []).length } : null),
       canvasPixels: () => {
         const f = sel => {
-          const c = document.querySelector(sel);
+          const c = self.modeRoot.querySelector(sel);
           if (!c || !c.width) return -1;
           const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
           let n = 0;
@@ -556,3 +553,6 @@ export class CycleApp {
     };
   }
 }
+
+/* ---- QEC hub mode 描述符（R98）：壳按 id/tab 建切换条；css 在 activate 时注入、deactivate 时移除 ---- */
+export const CYCLE_MODE = { handle: '__cy', id: 'cycle', name: '循环 EC', tab: '↻', css: CY_CSS, mount(shell){ const app = new CycleApp(shell); app.activate(); return app; } };
