@@ -55,3 +55,6 @@ server.log
 /skills/
 # 抓取缓存（USDA 营养数据等）
 .cache/
+
+# 抓图候选（待人工挑选，不入库）
+public/dishes/_candidates/
