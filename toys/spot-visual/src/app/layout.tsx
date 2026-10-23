@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import { TopNav } from "@/components/top-nav";
 
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className="antialiased bg-gray-50 text-gray-900">
-        <TopNav />
+        <Suspense fallback={<div className="h-[52px] border-b border-gray-200/80 bg-white/85" />}>
+          <TopNav />
+        </Suspense>
         {children}
       </body>
     </html>

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Compass, MapPin, UtensilsCrossed, GraduationCap } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -14,9 +14,13 @@ const MODULES = [
 
 export function TopNav() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  // 保留分享链接的 ?sharecode=... ，避免子路由跳转/刷新时丢失访问参数
+  const qs = searchParams?.toString() ?? '';
+  const withQuery = (path: string) => (qs ? `${path}?${qs}` : path);
   return (
     <header className="sticky top-0 z-50 h-[52px] flex items-center gap-3 px-4 border-b border-gray-200/80 bg-white/85 backdrop-blur-md">
-      <Link href="/" className="flex items-center gap-2 shrink-0">
+      <Link href={withQuery('/')} className="flex items-center gap-2 shrink-0">
         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
           <Compass className="w-4 h-4 text-white" />
         </div>
@@ -31,7 +35,7 @@ export function TopNav() {
           return (
             <Link
               key={m.href}
-              href={m.href}
+              href={withQuery(m.href)}
               className={cn(
                 'relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
                 active ? 'text-emerald-700' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50',

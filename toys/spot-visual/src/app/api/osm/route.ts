@@ -137,7 +137,7 @@ export async function GET(req: Request) {
     const elements = (await queryOverpass(bbox, limit)) as Array<{ type: string; id: number; lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: OsmTag }>;
     // 过滤掉无名称与无坐标的噪声，按名称去重
     const seen = new Set<string>();
-    const spots = [];
+    const spots: ReturnType<typeof mapElement>[] = [];
     for (const el of elements) {
       const tags = el.tags || {};
       const name = tags.name || tags['name:zh'] || tags['name:en'];
