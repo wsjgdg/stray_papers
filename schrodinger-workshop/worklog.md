@@ -67,6 +67,7 @@
 | R91 | 全站联通性核查 + dist 断链修复 | 用户问「各文件之间是否联通」。结论：**src 一直全联通**（跨页链接唯一机制是 R85 的 nav.js 单一数据源，13 页顶栏全网格互链）；**dist 曾断链**——PAGES 把 index.html 输出为 quantum-field.html 而导航 href 未跟着改 ⟹ 12 个子页「主页」链 404。修复：构建时按 PAGES 映射重写 bundle 内 `'./index.html'` → `'./quantum-field.html'`（NAV 条目 + 自链过滤两处同源替换，只改一边会让主页多出自我链接）。cdp91 **12/12**：NAV ≡ 磁盘集合、13 页 × {src, dist} 导航条数、全部 href 实取 200、cur 高亮精确、真实点击往返（主页 ⇄ shor）；cdp90 复跑 4/4 无视觉回归 |
 | R92 | README 收尾段串写修复（文档追改轮，生产代码零改动） | 用户报「readme 和 worklog 内容串了」。根因：README 收尾段「RX 收官」段自 R85（c147971）起整段替换式更新，但 f249f5e（R86）/19b476f（R87）/db4453c（R88）三代只改标签号不改内容 ⟹ 「R88 收官」下挂的是 R85 内容，R85–R88 真身收官全缺失。修复：R88/R87/R86 三段补回 + 原段标签改回 R85 + 标题改「R67–R92 全部闭环」 |
 | R93 | README 职责重构：只留功能/实现/使用，R 轮次记录归 worklog（文档重构轮，生产代码零改动） | 用户澄清职责边界：「readme 不应该写工作流程和完成进度（R）…只放现有功能和结构、实现方式、使用说明」。重构后 README 六节：简介 → 运行 → 功能 → 物理与数值方法 → 架构 → 技术栈。**删两节**：`## 验证`（bak L2178 起，CDP 通过率总表）、`## 后续方向`（bak L2443 起，backlog + R67–R72 计划表）——均属工作流程/进度，归 worklog。全文清扫 R1–R92 轮次引用：批次一 `/tmp/r93_clean.py` 261 对（260 命中：删 5 块、悬空引用修 5 处、标题清理、轮数缩写 `R1/single`→`R=1/single` 防混淆、架构图 10 条目 + 12 处注释）+ 批次二 `/tmp/r93_patch2.py` 11 对（修 5 MISS 转录误差 + 4 漏网行内引用）。误抓保留 2 处（L508 `potR2` 参数名、L1934 `R32F` 纹理格式名）。diff：删 440 / 增 304，净 −136 行（2503→2367） |
+| R94 | 手机竖屏适配公共模块化：顶栏收编 + 汉堡抽屉 + 底部 dock | 用户指令「做小屏适配，尽量用公共模块，少每页独立维护」。盘点病灶：36 处同构顶栏媒体查询（12 页 × 1500/1400/900）+ 12 页 `#xxTop` 规则族重复、≤900 只隐导航 ⟹ 12 页互链手机端不可达、390px 竖屏面板+HUD 必重叠。新增 `src/core/responsive.js`（约 180 行）四件套：① 顶栏三档收编公共类 `.qtop`（差异值 5 页各 1–3 行属性选择器，7 页零差异）② ≤900 汉堡抽屉（桌面 `.qnav{display:contents}` 逐位不变）③ ≤860 底部 dock 三态 + 面板/HUD 转底部 sheet + stage 内联让位（`dataset.qfRestore` 精确还原）④ `injectResponsive()` DOM 增强包 `queueMicrotask`。六坑：时序（innerHTML 重写清 dock ⟹ microtask）、CSS 特异性三轮（类输 id ⟹ 删本地族 ⟹ 差异行压响应段 ⟹ 终局属性选择器 (0,2,0) vs `.qtop.qtop` (0,2,0) 后注入赢）、styles.js 跨行删除残骸吞 `#panel` 规则、flag drawFan 负半径崩（numW 收缩 + 三重 clamp）、responsive.js 两处笔误（冒号/`}}}`）、dock 死胡同（off 态 dock display:none ⟹ 无恢复路径；改常驻退让 opacity .4）。cdp92 **23/23** + cdp90 4/4 + cdp91 12/12 + pot85 38/38 + pot87 47/47；28 files，2726+/706− |
 | R77 | 开放量子系统（新页 `noise.html`） | 密度矩阵 + **Kraus 三通道**（振幅/相位/退极化，均为精确解）+ 量子轨迹（Kraus 分支采样，平均 ⟹ ρ）；单比特闭式（**T₂ ≤ 2T₁** 的弧线几何，斜率实测 −0.500000）、Bell 的 **X 态 concurrence 闭式**（六通道 × 三 τ 9.3e-15）、**ESD t\*=τln3/2**（0.330/0.550/1.100）、⟨XX⟩=−⟨YY⟩=e^{−2t} & ⟨ZZ⟩≡1、Kraus 完备性 2.2e-16、半正定 λ_min 7.7e-43；**与 R69 的定量对照**（MC 4 万条逐帧随机相位 ⟹ 1/T₂=γ_φ，0.9σ）；pot77 CPU **24/24** + cdp77 浏览器 **14/14**（src+dist）；修 6 个问题（relax 双侧闭式漏两跳衰变 / NZ_CSS 未注入 / scanBell 漏 y / nzApplyAll 不收 null / C0 与 qcircuit 重名 / 四处测试口径） |
 | R76 | 量子传态（R75 同页扩展） | **中途测量 + 经典前馈**：`qcMeasureQubit` 只投影该比特（不塌整个态）+ `{measure}`/`{cond}` 两种步 + `qcRunProgram`；Bell 对 + Bell 测量 + X^m1 Z^m0 ⟹ **四分支各自 F=1**（72 条轨迹最坏 4.4e-16）；未修正 ≡ Pauli 像、平均 F=1/2；**无信号两口径**（测量前 I/2、分支平均 I/2）；同种子跨 8 个态分支完全相同；pot76 **14/14** + cdp76 **9/9**（src+dist）；修三个问题（无信号判据混淆纯/混合态、setParam 不重建线路、分支平均漏 00） |
 | R75 | 小规模量子线路（新页 `qcircuit.html`） | 态矢模拟器（q0 = 最低位，单门 O(2^n)）：13 门 + 受控单比特 + 相位门；Bell/GHZ/QFT/Grover；**QFT ≡ 解析 DFT（n=2..5 全基态 5.6e-15，次序由穷举八变体锁定）**、Grover 一轮 P=1、Bell S=ln2/C=1、GHZ(12) 6-6 熵 ln2、种子测量可复现；pot75 CPU **31/31** + cdp75 浏览器 **16/16**（src+dist）；修六个问题（QFT 相位方向 / GHZ 控制目标 / 受控旋转丢 c / 图漏画 phase / 熵 −0 / 半成品 API） |
@@ -852,6 +853,61 @@ README 收尾段按 roadmap 表与 worklog section 归位：
 - **误抓保留 2 处**（`R[0-9]` 复检仅剩，均非轮次）：L508 `potR2`（第二势槽半径参数名）、L1934 `R32F`（OpenGL 纹理格式名，CPU 烘焙纹理的实现说明）。
 - 最终复检：全文 `R[0-9]` 仅上述 2 处；抽读编辑区 L178/L286/L404/L428/L488-500（删块边界：表格 → 空行 → 设计口径 bullet 无缝衔接）/L1310-1330/L1680-1710/L1934/L2180-2257 均通顺。
 - diff 统计（vs bak）：删 440 行 / 增 304 行，净 −136 行（2503 → 2367）；生产代码、dist、测试套件零改动（纯文档轮），无需跑 pot/cdp 回归。
+
+## R94（2026-10-23）手机竖屏适配公共模块化：顶栏收编 + 汉堡抽屉 + 底部 dock（用户指令「做小屏适配，尽量用公共模块，少每页独立维护」）
+
+### 起因与现状盘点
+
+用户指令：「做小屏（手机端）适配，尽量用公共模块，少每页独立维护。」
+
+盘点病灶（改造前 13 页 DOM 全由 JS 构建、每页 CSS 为模板字符串）：
+
+| 病灶 | 规模 | 后果 |
+|---|---|---|
+| 顶栏媒体查询重复 | 12 页 × 3 档（1500/1400/900）= 36 处完全同构（只换 id 前缀） | 任何顶栏改动要同步 12 份 |
+| 顶栏规则族重复 | 12 页各自 `#xxTop` 族 7–8 条同构规则 | 同上 |
+| ≤900 只「隐导航」 | 12 页同款 | 手机/窄桌窗下 12 页互链全部不可达 |
+| 面板 + HUD 并排 | 390px 竖屏左面板 ~238px + 右 HUD ≥200px | 必重叠，无移动端布局 |
+
+### 一、公共模块 `src/core/responsive.js`（四件套）
+
+新增约 180 行公共模块，13 页各自只做「容器加公共类 + import/mount 一行」：
+
+1. **顶栏收编 `.qtop`**：12 页同构的 `#xxTop` 规则族（top/left/transform/display/gap/padding + .logo/.eq/a/hover/cur）收编为公共类 `.qtop`；页面差异值（gap/padding/字号）留在各页、用属性选择器写成差异行（5 页需要，各 1–3 行；其余 7 页零差异行）。
+2. **≤900 汉堡抽屉**：桌面 `.qnav{display:contents}` 透明包裹（a 们仍是 flex item，布局逐位不变）；≤900 转全屏抽屉，汉堡按钮由公共模块注入——修复「手机/窄桌窗 12 页互链不可达」。
+3. **≤860 底部 dock 三态**：⚙控制 / ◫读数 / ✕全屏，默认 off（舞台优先）；面板/HUD 转底部全宽 sheet（`SHEET_G`：fixed + left/right 6px + bottom 44px + max-height 46vh），stage 让位（`STAGE_G`：top 48px + 高度让出 dock 带），退出按 `dataset.qfRestore` 精确还原。
+4. **`injectResponsive()`**：样式同步注入；DOM 增强（包 `.qnav`、注入汉堡、dock、matchMedia 内联几何）整体包进 `queueMicrotask(enhance)`，幂等标记 `document.body.dataset.qfResp`。
+
+### 二、实施六坑
+
+1. **时序坑（13 页全中）**：`injectResponsive()` 在原调用位（injectStyles 后）早于 DOM 构建——`.qtop` 找不到（无汉堡/抽屉），且 index/two-body/hubbard 的 `body.innerHTML` 重写会清掉已注入 dock（probe 实测 dock=0，qec 因 insertAdjacentHTML 追加式幸存）。修复：DOM 增强整体推迟到 `queueMicrotask(enhance)`——mount 同步返回后必执行，三种构建方式（innerHTML/insertAdjacentHTML/buildDOM）均安全，13 页调用位置零改动。
+2. **CSS 特异性三轮战争**：① 响应段类选择器 (0,1,0) 输各页 `#xxTop` 基础 id 规则 (1,0,0) ⟹ 顶栏收紧失效、1440/1024 溢出复现；② 删本地族改差异行后，差异行（id）反过来压死响应段（主页 topbar right=1467>1440）；③ **终局**：差异行用属性选择器 `.qtop[id="xxTop"]` (0,2,0)、响应段升维 `.qtop.qtop` (0,2,0) 靠 qf-resp 后注入赢同权重竞争；子元素 `.qtop.qtop X` (0,3,x) 压 `.qtop[id="xxTop"] X` (0,2,x)。
+3. **styles.js 跨行删除残骸（最隐蔽）**：R90 的 1500 段本就跨两行（`#topbar .navlink{...}}` 为续行），补丁一只删首行留下两行无效 CSS（多一个 `}`）⟹ 解析断裂吞掉后续 `#panel` 全部规则（面板 max-height 失效爆炸到 4968px，cdp90 V4/V5 大败）。修复：正则删两行残骸；全站括号平衡 + 孤儿行扫描确认无同类（app.js 两处 UNBALANCED 经与 bak 对比确认是 `${...}` 插值假阳性，非回归）。
+4. **flag.js drawFan 负半径崩溃（cdp92 抓到）**：手机段 stage 压缩 ⟹ fan canvas 变窄 ⟹ `span = W - fanX0 - numW - 8*dpr` 转负 ⟹ `arc(..., -0.135579, ...)` 抛 IndexSizeError。修复：numW 窄屏自适应收缩 + span/step/r 三重 `Math.max(0, ...)` clamp；桌面（可用宽 ≥720）numW 恒 216·dpr 逐位不变。
+5. **responsive.js 两处笔误**：`padding:2px:6px`（冒号）与 1400 段结尾 `}}}`（多一个闭括号，吞掉后续 900 段 ⟹ 汉堡/抽屉全失效，cdp92 一度 18/23）。sed 逐一修复后括号平衡 32/32。
+6. **dock 死胡同（收尾复查抓到，CDP 断言盲区）**：初版把 off 态 dock 也 `display:none`——默认即全屏且**无任何 UI 路径回到控制/读数态**（只能旋转屏幕或刷新）。cdp92 M7 用编程式 `.click()` 验证三态切换，display:none 也能触发 ⟹ 初版 23/23 全绿仍带此缺陷，靠人读代码才发现。修复：off 态 dock 常驻但退让（`opacity:.4` + transition，`:active` 回 .85），stage 三态统一让出 44px dock 带（去掉 off 态 8px 压缩分支）。M7 断言随之改写（dock 常驻可见 + 退让 + 恢复路径非死胡同），并因 opacity 过渡把点击后等待 120ms→260ms。
+
+### 三、验证（五套件全绿，src+dist 双通道）
+
+| 套件 | 结果 | 覆盖 |
+|---|---|---|
+| cdp92（新写） | **23/23** | 11 项 × {src, dist}：M1 汉堡可见 / M2 抽屉链接数 + 默认收起 / M3 抽屉真实点击跳转（qec→shor）/ M4 dock 存在且默认 off / M5 面板 sheet 化内联生效 / M6 stage 不遮顶栏不出视口 / M7 dock 三态切换几何（含 off 态 dock 常驻退让）/ M8 无横向溢出 / M9·M10 桌面回归（1440×900 + 1024×700：qnav=contents、无汉堡/dock、无内联残留、顶栏不溢出）/ M11 零 console |
+| cdp90 | 4/4 | 面板保真度复测无回归 |
+| cdp91 | 12/12 | 联通性复测无回归 |
+| pot85 | 38/38 | 门级噪声回归 |
+| pot87 | 47/47 | Shor 门级回归 |
+
+13/13 dist 重建，responsive 模块入拓扑序（styles → responsive → nav → …）；physics/ 目录零改动。
+
+### 四、诚实限制
+
+- flag 页 fan 图窄屏下 numW 收缩（三重 clamp 防崩），桌面逐位不变；窄屏视觉未做精细调优。
+- 手机段 stage 高度沿用各页原有公式（仅位置/尺寸让位），未逐页推导移动端最佳构图。
+- dock 三态是全局公共行为，未按页定制（13 页同款，符合「少每页独立维护」目标）。
+
+### 五、diff 统计
+
+28 files changed, 2726 insertions(+), 706 deletions(-)：新增 `src/core/responsive.js`（约 180 行）；12 子页 + app.js/styles.js 删 36 处重复媒体查询 + 12 页顶栏族，各页留 0–3 行差异行；flag.js 负半径修复；13 dist 页重建。加本worklog/README 文档两件后共 30 files，2791 insertions(+)。
 
 ## R90（2026-10-23）面板视觉保真度评审（README「后续方向」② 收官）
 

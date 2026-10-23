@@ -10,20 +10,11 @@
  * gapNow/history —— 全部确定性接口（不依赖 rAF 时序）。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
+import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
 import { hbSector, hbMeasure, hbEnergy, hbEntropy, hbKrylovExp, hbBondCorr, hbInitProduct, hbNorm, HbGsTask, HB_PRESETS } from './physics/hubbard.js';
 
 const HB_CSS = `
-  #hbTop{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;
-    padding:9px 18px;z-index:10;white-space:nowrap}
-  #hbTop .logo{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.12em;
-    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
-  #hbTop .eq{font-family:var(--mono);font-size:12px;color:var(--dim)}
-  #hbTop .eq b{color:var(--cyan);font-weight:600}
-  #hbTop a{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
-    border:1px solid var(--line);border-radius:6px;padding:3px 8px;transition:all .15s}
-  #hbTop a:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
-  #hbTop a.cur{color:var(--mag);border-color:rgba(240,171,252,.45)}
   #hbPanel{top:74px;left:14px;width:224px;padding:13px;z-index:10;max-height:calc(100vh - 250px);overflow-y:auto;
     scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #hbHud{top:74px;right:14px;padding:11px 13px;z-index:10;min-width:206px;font-family:var(--mono)}
@@ -44,11 +35,6 @@ const HB_CSS = `
     text-shadow:0 0 18px rgba(103,232,249,.8);text-align:center;white-space:pre-line}
   #hbDiag{position:fixed;left:-9999px}
   @media (max-width:1100px){#hbStage{--w:min(92vw,640px)}#hbHint{display:none}}
-  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：quantum-field/two-body 溢出；1024：全页溢出）。
-     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（与主页一致）。 */
-  @media (max-width:1500px){#hbTop{gap:10px;padding:7px 14px}#hbTop .logo{font-size:13px}#hbTop a{font-size:10px;padding:2px 7px}}
-  @media (max-width:1400px){#hbTop .eq{display:none}#hbTop{gap:8px}#hbTop a{font-size:9.5px;padding:2px 6px}}
-  @media (max-width:900px){#hbTop a{display:none}}
 `;
 
 const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
@@ -84,6 +70,7 @@ export class HubbardApp {
 
   mount(){
     injectStyles();
+    injectResponsive();
     const st = document.createElement('style');
     st.id = 'hb-styles'; st.textContent = HB_CSS;
     document.head.appendChild(st);
@@ -98,12 +85,12 @@ export class HubbardApp {
 
   buildDOM(){
     this.container.innerHTML = `
-<div id="hbTop" class="panel">
+<div id="hbTop" class="panel qtop">
   <div class="logo">哈伯德工场 · HUBBARD</div>
   <div class="eq"><b>H</b> = −<b>t</b>Σ(c†<sub>i</sub>c<sub>i+1</sub>+h.c.) + <b>U</b>Σ n<sub>i↑</sub>n<sub>i↓</sub></div>
   ${navHtml('./hubbard.html', '  ')}
 </div>
-<div id="hbPanel" class="panel">
+<div id="hbPanel" class="panel qpanel">
   <div class="sec"><h3>预设</h3><div class="grid2" id="hbPresets">
     ${Object.keys(HB_PRESETS).map(k => '<button data-preset="' + k + '">' + HB_PRESETS[k].name + '</button>').join('')}
   </div></div>
@@ -119,7 +106,7 @@ export class HubbardApp {
     <button id="hbReset">重置</button><button id="hbGap">算能隙</button>
   </div></div>
 </div>
-<div id="hbHud" class="panel">
+<div id="hbHud" class="panel qhud">
   <div class="hrow"><span>维度 C(L,N↑)C(L,N↓)</span><span id="hDim">—</span></div>
   <div class="hrow"><span>E / t</span><span id="hE">—</span></div>
   <div class="hrow"><span>双占 D = Σ⟨n↑n↓⟩</span><span id="hD">—</span></div>
@@ -132,11 +119,11 @@ export class HubbardApp {
   <div class="hrow"><span>早窗斜率 dS/dt</span><span id="hSlope">—</span></div>
   <div class="hrow"><span>fps</span><span id="hFps">—</span></div>
 </div>
-<div id="hbStage">
+<div id="hbStage" class="qstage">
   <canvas id="hbLadder"></canvas>
   <canvas id="hbChart"></canvas>
 </div>
-<div id="hbHint" class="panel"><b></b><span></span></div>
+<div id="hbHint" class="panel qhint"><b></b><span></span></div>
 <div id="hbToast"></div>
 <div id="hbDiag"></div>`;
     this.container.querySelectorAll('[data-preset]').forEach(b =>

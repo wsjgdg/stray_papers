@@ -22,22 +22,13 @@
  * 摘要）/relaxNow。step/mirror 全部确定性接口（不依赖 rAF 时序）。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
+import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
 import { createContext, createProgram, Quad, makeTarget } from './core/gl.js';
 import { TB_PRESETS, TB_COMMON, tbMakeWave, tbKdkStep, tbMeasure, tbRelax, tbPot1, tbPot2, tbMakeVArray, tbFieldHash, TB_FS_KICK, TB_FS_DRIFT, TB_FS_DRAW } from './physics/twobody.js';
 
 /* 页面布局（复用 styles.js 的 :root 变量与 reset；本块只管 two-body 专属结构） */
 const TB_CSS = `
-  #tbTop{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;
-    padding:9px 18px;z-index:10;white-space:nowrap}
-  #tbTop .logo{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.12em;
-    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
-  #tbTop .eq{font-family:var(--mono);font-size:12px;color:var(--dim)}
-  #tbTop .eq b{color:var(--cyan);font-weight:600}
-  #tbTop a{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
-    border:1px solid var(--line);border-radius:6px;padding:3px 8px;transition:all .15s}
-  #tbTop a:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
-  #tbTop a.cur{color:var(--mag);border-color:rgba(240,171,252,.45)}
   #tbPanel{top:74px;left:14px;width:224px;padding:13px;z-index:10;max-height:calc(100vh - 250px);overflow-y:auto;
     scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #tbHud{top:74px;right:14px;padding:11px 13px;z-index:10;min-width:200px;font-family:var(--mono)}
@@ -63,11 +54,6 @@ const TB_CSS = `
     text-shadow:0 0 18px rgba(103,232,249,.8);text-align:center;white-space:pre-line}
   #tbDiag{position:fixed;left:-9999px}
   @media (max-width:1100px){#tbStage{--sz:min(56vh,86vw)}#tbHint{display:none}}
-  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：quantum-field/two-body 溢出；1024：全页溢出）。
-     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（与主页一致）。 */
-  @media (max-width:1500px){#tbTop{gap:10px;padding:7px 14px}#tbTop .logo{font-size:13px}#tbTop a{font-size:10px;padding:2px 7px}}
-  @media (max-width:1400px){#tbTop .eq{display:none}#tbTop{gap:8px}#tbTop a{font-size:9.5px;padding:2px 6px}}
-  @media (max-width:900px){#tbTop a{display:none}}
 `;
 
 const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
@@ -122,6 +108,7 @@ export class TwoBodyApp {
   /* ---------- 挂载 ---------- */
   mount(){
     injectStyles();
+    injectResponsive();
     const st = document.createElement('style');
     st.id = 'tb-styles'; st.textContent = TB_CSS;
     document.head.appendChild(st);
@@ -163,12 +150,12 @@ export class TwoBodyApp {
   buildDOM(){
     const pr = TB_PRESETS;
     this.container.innerHTML = `
-<div id="tbTop" class="panel">
+<div id="tbTop" class="panel qtop">
   <div class="logo">双粒子工场 · TWO-BODY</div>
   <div class="eq"><b>i</b>ℏ∂ψ/∂t = [−ℏ²/2m(∂₁²+∂₂²)+V₁+V₂+<b>g</b>δ]ψ</div>
   ${navHtml('./two-body.html', '  ')}
 </div>
-<div id="tbPanel" class="panel">
+<div id="tbPanel" class="panel qpanel">
   <div class="sec"><h3>预设</h3><div class="grid3" id="tbPresets">
     ${Object.keys(pr).map(k => '<button data-preset="' + k + '">' + pr[k].name + '</button>').join('')}
   </div></div>
@@ -187,7 +174,7 @@ export class TwoBodyApp {
     <button id="tbMode" style="grid-column:1/3">显示：密度</button>
   </div></div>
 </div>
-<div id="tbHud" class="panel">
+<div id="tbHud" class="panel qhud">
   <div class="hrow"><span>⟨P⟩ 交换期望</span><span id="hExch">—</span></div>
   <div class="hrow"><span>‖ψ‖² / 初值</span><span id="hNorm">—</span></div>
   <div class="hrow"><span>对角质量</span><span id="hDiag">—</span></div>
@@ -200,7 +187,7 @@ export class TwoBodyApp {
   <hr>
   <div class="hrow"><span>探针 (x₁,x₂)</span><span id="hProbe">—</span></div>
 </div>
-<div id="tbStage">
+<div id="tbStage" class="qstage">
   <div id="tbFieldWrap">
     <canvas id="tbField"></canvas>
     <canvas id="tbN2"></canvas>
@@ -209,7 +196,7 @@ export class TwoBodyApp {
 </div>
 <div class="tbAxis" id="tbAxX">x₁ →</div>
 <div class="tbAxis" id="tbAxY">x₂ →</div>
-<div id="tbHint" class="panel"><b></b><span></span></div>
+<div id="tbHint" class="panel qhint"><b></b><span></span></div>
 <div id="tbToast"></div>
 <div id="tbDiag"></div>`;
     this.container.querySelectorAll('[data-preset]').forEach(b =>

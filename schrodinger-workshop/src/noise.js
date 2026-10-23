@@ -10,21 +10,11 @@
  * rho/curve/preset/kind/navLinks —— 全部确定性。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
+import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
 import { NZ_DEFAULTS, NZ_PRESETS, nzScan, nzTrajEnsemble, nzBloch, nzConcurrence, nzPurity, nzTrace, nzEsdTime, nzStepParam } from './physics/noise.js';
 
 const NZ_CSS = `
-  #nzTop{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;
-    padding:9px 18px;z-index:10;white-space:nowrap}
-  #nzTop .logo{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.12em;
-    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
-  #nzTop .eq{font-family:var(--mono);font-size:12px;color:var(--dim)}
-  #nzTop .eq b{color:var(--cyan);font-weight:600}
-  #nzTop .eq i{color:var(--mag);font-style:italic}
-  #nzTop a{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
-    border:1px solid var(--line);border-radius:6px;padding:3px 8px;transition:all .15s}
-  #nzTop a:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
-  #nzTop a.cur{color:var(--mag);border-color:rgba(240,171,252,.45)}
   #nzPanel{top:74px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 200px);
     overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #nzPanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
@@ -59,11 +49,6 @@ const NZ_CSS = `
   #nzHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
   #nzDiag{position:fixed;left:-9999px}
   @media (max-width:1180px){#nzStage{width:calc(100vw - 60px);left:50%}#nzHint{display:none}}
-  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：quantum-field/two-body 溢出；1024：全页溢出）。
-     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（与主页一致）。 */
-  @media (max-width:1500px){#nzTop{gap:10px;padding:7px 14px}#nzTop .logo{font-size:13px}#nzTop a{font-size:10px;padding:2px 7px}}
-  @media (max-width:1400px){#nzTop .eq{display:none}#nzTop{gap:8px}#nzTop a{font-size:9.5px;padding:2px 6px}}
-  @media (max-width:900px){#nzTop a{display:none}}
 `;
 
 /* 极简 Markdown：只处理 **粗体**（预设文案里用它标关键词）。不引入渲染库。 */
@@ -113,19 +98,20 @@ export class NoiseApp {
 
   mount(){
     injectStyles();
+    injectResponsive();
     const sheet = document.createElement('style');
     sheet.textContent = NZ_CSS;
     document.head.appendChild(sheet);
     const st = this.state;
     this.container.insertAdjacentHTML('beforeend', `
-      <header id="nzTop" class="panel">
+      <header id="nzTop" class="panel qtop">
         <div class="logo">噪声工场</div>
         <div class="eq">ρ′ = Σ<sub>k</sub> <i>E</i><sub>k</sub> ρ <i>E</i><sub>k</sub><sup>†</sup></div>
         <div class="eq" style="opacity:.7">开放量子系统 · T₁ / T₂</div>
         ${navHtml('./noise.html', '      ')}
       </header>
 
-      <aside id="nzPanel" class="panel">
+      <aside id="nzPanel" class="panel qpanel">
         <div class="grp">预设</div>
         <div class="btns">
           <button data-p="relax">T₁ 弛豫</button>
@@ -169,7 +155,7 @@ export class NoiseApp {
         </div>
       </aside>
 
-      <aside id="nzHud" class="panel">
+      <aside id="nzHud" class="panel qhud">
         <div class="hrow"><span>tr ρ</span><span id="hTr">—</span></div>
         <div class="hrow"><span>纯度 tr ρ²</span><span id="hPur">—</span></div>
         <div class="hrow"><span>Bloch 长度 r</span><span id="hR">—</span></div>
@@ -186,13 +172,13 @@ export class NoiseApp {
         <div class="hrow"><span>单步参数</span><span id="hP">—</span></div>
       </aside>
 
-      <div id="nzStage">
+      <div id="nzStage" class="qstage">
         <canvas id="nzBloch"></canvas>
         <canvas id="nzRho"></canvas>
         <canvas id="nzCurve"></canvas>
       </div>
 
-      <div id="nzHint" class="panel"><b>—</b><span></span></div>
+      <div id="nzHint" class="panel qhint"><b>—</b><span></span></div>
       <div id="nzDiag"></div>
     `);
 

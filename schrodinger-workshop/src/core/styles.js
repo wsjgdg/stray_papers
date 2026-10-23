@@ -22,25 +22,15 @@ export const CSS = `
     backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
     box-shadow:0 8px 32px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04)}
   /* ---------- 顶栏 ---------- */
-  #topbar{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;
-    padding:10px 20px;z-index:10;white-space:nowrap}
-  #topbar .logo{font-family:var(--mono);font-weight:700;font-size:15px;letter-spacing:.12em;
-    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
-  #topbar .eq{font-family:var(--mono);font-size:12.5px;color:var(--dim);letter-spacing:.02em}
-  #topbar .eq b{color:var(--cyan);font-weight:600}
-  #topbar .eq i{color:var(--mag);font-style:italic}
+  /* 布局与子元素规则已收编 core/responsive.js 的 .qtop 族；主页差异值保留： */
+  .qtop[id="topbar"]{gap:14px;padding:10px 20px}
+  .qtop[id="topbar"] .logo{font-size:15px}
+  .qtop[id="topbar"] .eq{font-size:12.5px;letter-spacing:.02em}
   #status{font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:.08em}
   /* R72：双粒子构型空间页入口（与 status 同排，flex:none 防被 eq 压缩） */
   #topbar .navlink{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
     border:1px solid var(--line);border-radius:6px;padding:3px 8px;flex:none;transition:all .15s;letter-spacing:.05em}
   #topbar .navlink:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
-  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：本页 1493px 即溢出 27px；1024：全站溢出）。
-     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（原有规则）。 */
-  @media (max-width:1500px){#topbar{gap:10px;padding:8px 14px}#topbar .logo{font-size:13px}
-    #topbar .navlink{font-size:10px;padding:2px 7px}}
-  @media (max-width:1400px){#topbar .eq{display:none}#topbar{gap:8px}
-    #topbar .navlink{font-size:9.5px;padding:2px 6px}}
-  @media (max-width:900px){#topbar .navlink{display:none}}
   /* ---------- 左侧控制面板 ---------- */
   /* R43 修复①：原 max-height:calc(100vh−120px) ⟹ 面板底 = 100vh−44，而左下
      #desc（bottom:52px）顶部随预设描述长度变化（实测 82px 文本 ⟹ 顶 100vh−132；

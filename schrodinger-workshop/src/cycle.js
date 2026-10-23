@@ -16,20 +16,12 @@
  *   用「|0_L⟩ 的解析参数」会得到 F≈0（逻辑门把态翻到 |1_L⟩），这是 R84 踩过的坑。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
+import { injectResponsive } from './core/responsive.js';
 import { navHtml, NAV_HREFS } from './core/nav.js';
 import { FS_KINDS, fsCircuit, fsFirstOrder, fsEnsemble, fsRun, cyInterception, cySweepCycles } from './physics/flagsynd.js';
 
 const CY_CSS = `
-  #cyTop{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:11px;
-    padding:9px 15px;z-index:10;white-space:nowrap}
-  #cyTop .logo{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.12em;
-    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
-  #cyTop .eq{font-family:var(--mono);font-size:12px;color:var(--dim)}
-  #cyTop .eq i{color:var(--amber);font-style:italic}
-  #cyTop a{font-family:var(--mono);font-size:10px;color:var(--dim);text-decoration:none;
-    border:1px solid var(--line);border-radius:6px;padding:3px 6px;transition:all .15s}
-  #cyTop a:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
-  #cyTop a.cur{color:var(--mag);border-color:rgba(240,171,252,.45)}
+  .qtop[id="cyTop"]{gap:11px;padding:9px 15px}.qtop[id="cyTop"] a{font-size:10px}.qtop[id="cyTop"] .eq i{color:var(--amber);font-style:italic}
   #cyPanel{top:74px;left:14px;width:246px;padding:13px;z-index:10;max-height:calc(100vh - 200px);
     overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #cyPanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
@@ -71,11 +63,6 @@ const CY_CSS = `
   #cyHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
   #cyDiag{position:fixed;left:-9999px}
   @media (max-width:1240px){#cyStage{width:calc(100vw - 40px)}#cyHint{display:none}}
-  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：quantum-field/two-body 溢出；1024：全页溢出）。
-     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（与主页一致）。 */
-  @media (max-width:1500px){#cyTop{gap:10px;padding:7px 14px}#cyTop .logo{font-size:13px}#cyTop a{font-size:10px;padding:2px 7px}}
-  @media (max-width:1400px){#cyTop .eq{display:none}#cyTop{gap:8px}#cyTop a{font-size:9.5px;padding:2px 6px}}
-  @media (max-width:900px){#cyTop a{display:none}}
 `;
 
 const COL = {
@@ -132,17 +119,18 @@ export class CycleApp {
 
   mount(){
     injectStyles();
+    injectResponsive();
     const sheet = document.createElement('style');
     sheet.textContent = CY_CSS;
     document.head.appendChild(sheet);
     this.container.insertAdjacentHTML('beforeend', `
-      <header id="cyTop" class="panel">
+      <header id="cyTop" class="panel qtop">
         <div class="logo">循环工场</div>
         <div class="eq">一次 EC 只能管一段——<i>循环</i>才管整条线路</div>
         ${navHtml('./cycle.html')}
       </header>
 
-      <aside id="cyPanel" class="panel">
+      <aside id="cyPanel" class="panel qpanel">
         <div class="grp">提取线路</div>
         <div class="btns g2" id="cyKinds"></div>
         <div class="grp">EC 周期数 T</div>
@@ -169,7 +157,7 @@ export class CycleApp {
           就是「循环 EC 有什么用」的直答。</div>
       </aside>
 
-      <aside id="cyHud" class="panel">
+      <aside id="cyHud" class="panel qhud">
         <div class="hrow"><span>配置</span><span id="hCfg" class="big">—</span></div>
         <div class="hrow"><span>开销</span><span id="hCost">—</span></div>
         <div class="hrow"><span>逻辑门</span><span id="hGates">—</span></div>
@@ -186,12 +174,12 @@ export class CycleApp {
         <div class="hrow"><span>最近一条轨迹</span><span id="hTrial">—</span></div>
       </aside>
 
-      <div id="cyStage">
+      <div id="cyStage" class="qstage">
         <canvas id="cyFlow"></canvas>
         <canvas id="cyCurve"></canvas>
         <canvas id="cyGate"></canvas>
       </div>
-      <div id="cyHint" class="panel"><b>—</b><span></span></div>
+      <div id="cyHint" class="panel qhint"><b>—</b><span></span></div>
       <div id="cyDiag"></div>
     `);
     this.cv = { flow: this.q('#cyFlow'), curve: this.q('#cyCurve'), gate: this.q('#cyGate') };

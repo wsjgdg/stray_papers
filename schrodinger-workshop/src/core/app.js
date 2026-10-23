@@ -13,6 +13,7 @@ import { createContext, createProgram, Quad, makeTarget, makeRGBA16F, makeReduce
 import { getKernel, buildShaders, AB_MAX } from '../physics/kernel.js';
 import { MAX_BLOBS, normBlob } from '../physics/schrodinger3d.js';
 import { injectStyles } from './styles.js';
+import { injectResponsive } from './responsive.js';
 import { navLinksHtml } from './nav.js';
 import { TransmissionScanner } from './scan.js';
 import { TransmissionScanner3 } from './scan.js';
@@ -234,6 +235,7 @@ export class QuantumField {
   /* ---------- 挂载 ---------- */
   mount(){
     injectStyles();
+    injectResponsive();
     this.buildDOM();
     this.restorePanels();    /* R56：恢复上次的左右面板收起状态（localStorage） */
     this.upgradeHints();   /* R45：hint 折叠升级（DOM 构建后一次；模板零改动） */
@@ -281,14 +283,14 @@ export class QuantumField {
 <svg id="aim"><line id="aimline" x1="0" y1="0" x2="0" y2="0"></line><circle id="aimdot" r="4"></circle><text id="aimtxt" x="0" y="0"></text></svg>
 <div class="corner" id="c1"></div><div class="corner" id="c2"></div><div class="corner" id="c3"></div><div class="corner" id="c4"></div>
 
-<header id="topbar" class="panel">
+<header id="topbar" class="panel qtop">
   <div class="logo">${k.name}工场</div>
   <div class="eq">${k.equation}</div>
   <div id="status">● LIVE</div>
 ${navLinksHtml()}
 </header>
 
-<aside id="panel" class="panel">
+<aside id="panel" class="panel qpanel">
   <div class="sec">
     <h3>预设场景</h3>
     <div class="grid2">${presetBtns}</div>
@@ -681,7 +683,7 @@ ${d3 ? `
   </div>` : ''}
 </aside>
 
-<section id="hud" class="panel">
+<section id="hud" class="panel qhud">
   <div class="hrow"><span>总概率 P</span><span id="hP">—</span></div>
   <div class="hrow"><span>守恒误差</span><span id="hErr">—</span></div>
   <hr>
@@ -733,7 +735,7 @@ ${d3 ? `
 
 <div id="desc" class="panel"><b id="descName">自由传播</b><span id="descText"></span></div>
 
-<footer id="hint" class="panel">
+<footer id="hint" class="panel qhint">
   ${d3
     ? '<b>拖拽</b> 旋转视角 · <b>滚轮</b> 缩放 · <span class="k">P</span> 势刷 · <span class="k">1-'+Object.keys(presets).length+'</span> 预设 · <span class="k">Space</span> 暂停 · <span class="k">R</span> 重置波包 · <span class="k">[</span><span class="k">]</span> 收起侧面板'
     : '<b>拖拽</b> 发射波包（方向=动量 k）· <span class="k">1-'+Object.keys(presets).length+'</span> 预设 · <span class="k">Space</span> 暂停 · <span class="k">T</span> 拖尾 · <span class="k">R</span> 重置 · <span class="k">C</span> 清空势场 · <span class="k">J</span> 概率流 · <span class="k">B</span> Bohm 轨迹 · <span class="k">[</span><span class="k">]</span> 收起侧面板'}

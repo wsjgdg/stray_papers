@@ -13,6 +13,7 @@
     源码工程（ES 模块，课程站组件化用）：cycle.html + src/
     模块拼接序（拓扑序，依赖在前）：
       src/core/styles.js
+      src/core/responsive.js
       src/core/nav.js
       src/physics/qcircuit.js
       src/physics/noise.js
@@ -48,25 +49,15 @@ const CSS = `
     backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
     box-shadow:0 8px 32px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04)}
   /* ---------- 顶栏 ---------- */
-  #topbar{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;
-    padding:10px 20px;z-index:10;white-space:nowrap}
-  #topbar .logo{font-family:var(--mono);font-weight:700;font-size:15px;letter-spacing:.12em;
-    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
-  #topbar .eq{font-family:var(--mono);font-size:12.5px;color:var(--dim);letter-spacing:.02em}
-  #topbar .eq b{color:var(--cyan);font-weight:600}
-  #topbar .eq i{color:var(--mag);font-style:italic}
+  /* 布局与子元素规则已收编 core/responsive.js 的 .qtop 族；主页差异值保留： */
+  .qtop[id="topbar"]{gap:14px;padding:10px 20px}
+  .qtop[id="topbar"] .logo{font-size:15px}
+  .qtop[id="topbar"] .eq{font-size:12.5px;letter-spacing:.02em}
   #status{font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:.08em}
   /* R72：双粒子构型空间页入口（与 status 同排，flex:none 防被 eq 压缩） */
   #topbar .navlink{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
     border:1px solid var(--line);border-radius:6px;padding:3px 8px;flex:none;transition:all .15s;letter-spacing:.05em}
   #topbar .navlink:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
-  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：本页 1493px 即溢出 27px；1024：全站溢出）。
-     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（原有规则）。 */
-  @media (max-width:1500px){#topbar{gap:10px;padding:8px 14px}#topbar .logo{font-size:13px}
-    #topbar .navlink{font-size:10px;padding:2px 7px}}
-  @media (max-width:1400px){#topbar .eq{display:none}#topbar{gap:8px}
-    #topbar .navlink{font-size:9.5px;padding:2px 6px}}
-  @media (max-width:900px){#topbar .navlink{display:none}}
   /* ---------- 左侧控制面板 ---------- */
   /* R43 修复①：原 max-height:calc(100vh−120px) ⟹ 面板底 = 100vh−44，而左下
      #desc（bottom:52px）顶部随预设描述长度变化（实测 82px 文本 ⟹ 顶 100vh−132；
@@ -224,6 +215,182 @@ function injectStyles(){
   st.id = "qf-styles";
   st.textContent = CSS;
   document.head.appendChild(st);
+}
+
+/* ===== src/core/responsive.js ===== */
+/* ============================================================================
+ * responsive.js — 全站响应式公共模块（R94 引入）
+ *
+ * 背景：R90 给 12 个子页各写了一式三份的顶栏渐进收缩（1500/1400/900 三档
+ * 媒体查询只换 id 前缀，36 处重复）；小屏更只做到「≤900 隐导航」——导航全隐
+ * 等于 12 页互链在窄桌窗/平板/手机上不可达，且左面板（~238px 固定）+ 右 HUD
+ * （≥200px）在 390px 竖屏下必重叠。R94 收编 + 补齐：
+ *   1. 顶栏三档（1500/1400/900）收归公共类 .qtop——12 页删除本地副本；
+ *   2. ≤900 导航改汉堡抽屉：桌面 .qnav 用 display:contents 透明包裹（a 们
+ *      仍是 .qtop 的 flex item，布局逐位不变），手机变全屏下拉网格；
+ *   3. ≤860 手机段：面板/HUD 转底部全宽 sheet（内联样式覆盖各页 id 规则，
+ *      退出时按 dataset.qfRestore 精确还原），stage 内联几何让位顶栏与 dock；
+ *   4. 底部 dock 三态（控制/读数/全屏），matchMedia 跨越 860px 自动进出。
+ *
+ * 各页接入约定（一次性）：
+ *   - 顶栏/面板/HUD/stage/hint 容器分别加类 qtop/qpanel/qhud/qstage/qhint；
+ *   - mount() 里调用 injectResponsive()（幂等；无这些类的页面静默跳过）。
+ * ========================================================================== */
+
+const RESP_CSS = `
+  /* ---- 顶栏基础（收编自 12 子页本地规则；.eq i 取主页口径 mag，
+       amber 派的 5 页保留本地差异行） ---- */
+  .qtop{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;
+    gap:16px;padding:9px 18px;z-index:10;white-space:nowrap}
+  .qtop .logo{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.12em;
+    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .qtop .eq{font-family:var(--mono);font-size:12px;color:var(--dim)}
+  .qtop .eq b{color:var(--cyan);font-weight:600}
+  .qtop .eq i{color:var(--mag);font-style:italic}
+  .qtop a{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
+    border:1px solid var(--line);border-radius:6px;padding:3px 8px;transition:all .15s}
+  .qtop a:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
+  .qtop a.cur{color:var(--mag);border-color:rgba(240,171,252,.45)}
+  /* ---- 桌面：.qnav 透明包裹（a 们仍是 .qtop 的直接 flex item） ---- */
+  .qnav{display:contents}
+  .qburger{display:none}
+  /* ---- 顶栏渐进收缩（收编自 R90 的 12 页本地副本，规则逐字保留） ---- */
+  /* 特异性：.qtop.qtop（0,2,0）压各页差异行 .qtop[id="xxTop"]（0,2,0）靠
+     本 style 后注入（同权重比源码序）；子元素 .qtop.qtop X（0,3,x）压
+     .qtop[id="xxTop"] X（0,2,x）。 */
+  @media (max-width:1500px){.qtop.qtop{gap:10px;padding:7px 14px}.qtop.qtop .logo{font-size:13px}
+    .qtop.qtop a{font-size:10px;padding:2px 7px}}
+  @media (max-width:1400px){.qtop.qtop .eq{display:none}.qtop.qtop{gap:8px}
+    .qtop.qtop a{font-size:9.5px;padding:2px 6px}}
+  /* ---- ≤900：导航收进汉堡抽屉（替代原「隐导航」） ---- */
+  @media (max-width:900px){
+    .qburger{display:flex;align-items:center;justify-content:center;flex:none;
+      width:30px;height:26px;padding:0;font-size:15px;line-height:1}
+    .qnav{display:none;position:fixed;top:0;left:0;right:0;z-index:9;
+      grid-template-columns:repeat(auto-fill,minmax(102px,1fr));gap:7px;
+      padding:52px 12px 14px;max-height:100vh;overflow-y:auto;
+      background:rgba(4,6,12,.96);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+      border-bottom:1px solid var(--line)}
+    .qtop.open .qnav{display:grid}
+    .qnav a{font-size:12px;padding:8px 4px;text-align:center}
+  }
+  /* ---- ≤860 手机段：底部 dock 三态（控制/读数/全屏；dock 三态常驻，
+     off 态退让为半透明——曾把 off 态 dock 也 display:none，实测成死胡同：
+     默认即全屏且无任何 UI 路径回到控制/读数，只能旋转屏幕或刷新） ---- */
+  .qf-dock{position:fixed;left:50%;bottom:0;transform:translateX(-50%);display:none;
+    gap:6px;padding:5px 8px;z-index:14;transition:opacity .18s;
+    background:var(--panel);border:1px solid var(--line);border-bottom:none;border-radius:10px 10px 0 0;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+  html.qf-mobile .qf-dock{display:flex}
+  .qf-dock button{font-size:11px;padding:5px 10px;border-radius:6px;white-space:nowrap}
+  html.qf-mobile body.qf-m-controls .qhud{display:none}
+  html.qf-mobile body.qf-m-readout .qpanel{display:none}
+  html.qf-mobile body.qf-m-off .qpanel,html.qf-mobile body.qf-m-off .qhud{display:none}
+  html.qf-mobile body.qf-m-off .qf-dock{opacity:.4}
+  html.qf-mobile body.qf-m-off .qf-dock:active{opacity:.85}
+  /* ---- ≤860 手机段：hint 换行防溢出、给 dock 让位 ---- */
+  @media (max-width:860px){
+    .qhint{white-space:normal;max-width:calc(100vw - 20px);bottom:40px;
+      font-size:10.5px;line-height:1.5}
+  }
+`;
+
+const $ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const MQ = '(max-width:860px)';
+const SHEET_G = 'position:fixed;left:6px;right:6px;width:auto;top:auto;bottom:44px;max-height:46vh;z-index:12';
+const STAGE_G = 'position:fixed;left:6px;right:6px;width:auto;top:48px;transform:none';
+
+function injectResponsive(){
+  /* ---- 样式只注入一次（同步，不等 DOM） ---- */
+  if (!document.getElementById('qf-resp')){
+    const st = document.createElement('style');
+    st.id = 'qf-resp';
+    st.textContent = RESP_CSS;
+    document.head.appendChild(st);
+  }
+  if (document.body.dataset.qfResp) return;
+  document.body.dataset.qfResp = '1';
+
+  /* ---- DOM 增强推迟到 microtask ----
+     各页 mount() 的调用时序是 injectStyles() → injectResponsive() →
+     构建 DOM（insertAdjacentHTML / container.innerHTML）——本函数若同步
+     增强，.qtop 尚不存在（汉堡/抽屉无从包起），且 body.innerHTML 整体
+     重写会把已 append 的 dock 清掉（index/two-body/hubbard 三页实测）。
+     mount() 是同步函数 ⟹ microtask 必在其返回后执行：那时 DOM 已就绪，
+     三种构建方式（insertAdjacentHTML / innerHTML / buildDOM）均安全。 */
+  const enhance = () => {
+
+  /* ---- 1. 顶栏增强：包 .qnav + 注入汉堡（幂等） ---- */
+  $('.qtop').forEach(top => {
+    if (top.querySelector('.qburger')) return;
+    const nav = document.createElement('nav');
+    nav.className = 'qnav';
+    $('a', top).forEach(a => nav.appendChild(a));
+    top.appendChild(nav);
+    const b = document.createElement('button');
+    b.className = 'qburger';
+    b.type = 'button';
+    b.setAttribute('aria-label', '打开导航');
+    b.textContent = '☰';
+    b.addEventListener('click', e => { e.stopPropagation(); top.classList.toggle('open'); });
+    top.insertBefore(b, top.firstChild);
+    nav.addEventListener('click', e => { if (e.target.closest('a')) top.classList.remove('open'); });
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.qtop')) $('.qtop.open').forEach(t => t.classList.remove('open'));
+  });
+
+  /* ---- 2. 底部 dock（三态常驻：默认 off = 舞台优先，dock 退让为半透明） ---- */
+  const dock = document.createElement('div');
+  dock.className = 'qf-dock';
+  dock.innerHTML = '<button type="button" data-tab="controls">⚙ 控制</button>'
+    + '<button type="button" data-tab="readout">◫ 读数</button>'
+    + '<button type="button" data-tab="off">✕ 全屏</button>';
+  document.body.appendChild(dock);
+  const syncStage = () => {
+    if (!document.documentElement.classList.contains('qf-mobile')) return;
+    /* dock 三态常驻 ⟹ 舞台恒让出底部 44px dock 带（off 态不再压缩到 8px） */
+    $('.qstage').forEach(el => { el.style.height = 'calc(100vh - 48px - 44px)'; });
+  };
+  dock.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    document.body.classList.remove('qf-m-controls', 'qf-m-readout', 'qf-m-off');
+    document.body.classList.add('qf-m-' + b.dataset.tab);
+    syncStage();
+  });
+  document.body.classList.add('qf-m-off');
+
+  /* ---- 3. 手机段几何：内联覆盖各页 id 规则，退出精确还原 ---- */
+  const mq = matchMedia(MQ);
+  const apply = m => {
+    document.documentElement.classList.toggle('qf-mobile', m);
+    if (m){
+      $('.qpanel,.qhud').forEach(el => {
+        if (el.dataset.qfRestore != null) return;
+        el.dataset.qfRestore = el.getAttribute('style') || '';
+        el.style.cssText += ';' + SHEET_G;
+      });
+      $('.qstage').forEach(el => {
+        if (el.dataset.qfRestore != null) return;
+        el.dataset.qfRestore = el.getAttribute('style') || '';
+        el.style.cssText += ';' + STAGE_G;
+      });
+    } else {
+      $('.qpanel,.qhud,.qstage').forEach(el => {
+        if (el.dataset.qfRestore == null) return;
+        el.setAttribute('style', el.dataset.qfRestore);
+        delete el.dataset.qfRestore;
+      });
+    }
+    syncStage();
+  };
+  if (mq.addEventListener) mq.addEventListener('change', ev => apply(ev.matches));
+  else if (mq.addListener) mq.addListener(ev => apply(ev.matches)); /* 旧 Safari */
+  apply(mq.matches); /* 页面可能直接在手机宽度打开 */
+
+  };
+  queueMicrotask(enhance);
 }
 
 /* ===== src/core/nav.js ===== */
@@ -3928,16 +4095,7 @@ function cySweepCycles(cfg = {}){
  * ========================================================================== */
 
 const CY_CSS = `
-  #cyTop{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:11px;
-    padding:9px 15px;z-index:10;white-space:nowrap}
-  #cyTop .logo{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.12em;
-    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
-  #cyTop .eq{font-family:var(--mono);font-size:12px;color:var(--dim)}
-  #cyTop .eq i{color:var(--amber);font-style:italic}
-  #cyTop a{font-family:var(--mono);font-size:10px;color:var(--dim);text-decoration:none;
-    border:1px solid var(--line);border-radius:6px;padding:3px 6px;transition:all .15s}
-  #cyTop a:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
-  #cyTop a.cur{color:var(--mag);border-color:rgba(240,171,252,.45)}
+  .qtop[id="cyTop"]{gap:11px;padding:9px 15px}.qtop[id="cyTop"] a{font-size:10px}.qtop[id="cyTop"] .eq i{color:var(--amber);font-style:italic}
   #cyPanel{top:74px;left:14px;width:246px;padding:13px;z-index:10;max-height:calc(100vh - 200px);
     overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #cyPanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
@@ -3979,11 +4137,6 @@ const CY_CSS = `
   #cyHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
   #cyDiag{position:fixed;left:-9999px}
   @media (max-width:1240px){#cyStage{width:calc(100vw - 40px)}#cyHint{display:none}}
-  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：quantum-field/two-body 溢出；1024：全页溢出）。
-     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（与主页一致）。 */
-  @media (max-width:1500px){#cyTop{gap:10px;padding:7px 14px}#cyTop .logo{font-size:13px}#cyTop a{font-size:10px;padding:2px 7px}}
-  @media (max-width:1400px){#cyTop .eq{display:none}#cyTop{gap:8px}#cyTop a{font-size:9.5px;padding:2px 6px}}
-  @media (max-width:900px){#cyTop a{display:none}}
 `;
 
 const COL = {
@@ -4040,17 +4193,18 @@ class CycleApp {
 
   mount(){
     injectStyles();
+    injectResponsive();
     const sheet = document.createElement('style');
     sheet.textContent = CY_CSS;
     document.head.appendChild(sheet);
     this.container.insertAdjacentHTML('beforeend', `
-      <header id="cyTop" class="panel">
+      <header id="cyTop" class="panel qtop">
         <div class="logo">循环工场</div>
         <div class="eq">一次 EC 只能管一段——<i>循环</i>才管整条线路</div>
         ${navHtml('./cycle.html')}
       </header>
 
-      <aside id="cyPanel" class="panel">
+      <aside id="cyPanel" class="panel qpanel">
         <div class="grp">提取线路</div>
         <div class="btns g2" id="cyKinds"></div>
         <div class="grp">EC 周期数 T</div>
@@ -4077,7 +4231,7 @@ class CycleApp {
           就是「循环 EC 有什么用」的直答。</div>
       </aside>
 
-      <aside id="cyHud" class="panel">
+      <aside id="cyHud" class="panel qhud">
         <div class="hrow"><span>配置</span><span id="hCfg" class="big">—</span></div>
         <div class="hrow"><span>开销</span><span id="hCost">—</span></div>
         <div class="hrow"><span>逻辑门</span><span id="hGates">—</span></div>
@@ -4094,12 +4248,12 @@ class CycleApp {
         <div class="hrow"><span>最近一条轨迹</span><span id="hTrial">—</span></div>
       </aside>
 
-      <div id="cyStage">
+      <div id="cyStage" class="qstage">
         <canvas id="cyFlow"></canvas>
         <canvas id="cyCurve"></canvas>
         <canvas id="cyGate"></canvas>
       </div>
-      <div id="cyHint" class="panel"><b>—</b><span></span></div>
+      <div id="cyHint" class="panel qhint"><b>—</b><span></span></div>
       <div id="cyDiag"></div>
     `);
     this.cv = { flow: this.q('#cyFlow'), curve: this.q('#cyCurve'), gate: this.q('#cyGate') };

@@ -12,21 +12,12 @@
  * 符号定陪集；另有一条独立的 Pauli 帧演算给出权重，两条路径逐位点对账（不一致即报错）。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
+import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
 import { FS_KINDS, FS_DEFAULTS, fsFirstOrder, fsProbeWorst, fsEnsemble } from './physics/flagsynd.js';
 
 const FL_CSS = `
-  #flTop{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;
-    padding:9px 16px;z-index:10;white-space:nowrap}
-  #flTop .logo{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.12em;
-    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
-  #flTop .eq{font-family:var(--mono);font-size:12px;color:var(--dim)}
-  #flTop .eq b{color:var(--cyan);font-weight:600}
-  #flTop .eq i{color:var(--amber);font-style:italic}
-  #flTop a{font-family:var(--mono);font-size:10.5px;color:var(--dim);text-decoration:none;
-    border:1px solid var(--line);border-radius:6px;padding:3px 7px;transition:all .15s}
-  #flTop a:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
-  #flTop a.cur{color:var(--mag);border-color:rgba(240,171,252,.45)}
+  .qtop[id="flTop"]{gap:12px;padding:9px 16px}.qtop[id="flTop"] a{font-size:10.5px}.qtop[id="flTop"] .eq i{color:var(--amber);font-style:italic}
   #flPanel{top:74px;left:14px;width:242px;padding:13px;z-index:10;max-height:calc(100vh - 200px);
     overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #flPanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
@@ -71,11 +62,6 @@ const FL_CSS = `
   #flHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
   #flDiag{position:fixed;left:-9999px}
   @media (max-width:1220px){#flStage{width:calc(100vw - 40px)}#flHint{display:none}}
-  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：quantum-field/two-body 溢出；1024：全页溢出）。
-     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（与主页一致）。 */
-  @media (max-width:1500px){#flTop{gap:10px;padding:7px 14px}#flTop .logo{font-size:13px}#flTop a{font-size:10px;padding:2px 7px}}
-  @media (max-width:1400px){#flTop .eq{display:none}#flTop{gap:8px}#flTop a{font-size:9.5px;padding:2px 6px}}
-  @media (max-width:900px){#flTop a{display:none}}
 `;
 
 /* 站点 palette（core/styles.js 的 :root 变量，canvas 里只能用字面量） */
@@ -126,17 +112,18 @@ export class FlagApp {
 
   mount(){
     injectStyles();
+    injectResponsive();
     const sheet = document.createElement('style');
     sheet.textContent = FL_CSS;
     document.head.appendChild(sheet);
     this.container.insertAdjacentHTML('beforeend', `
-      <header id="flTop" class="panel">
+      <header id="flTop" class="panel qtop">
         <div class="logo">容错工场</div>
         <div class="eq">每门一次错误机会 ─► 综合提取<b>自己</b>出错时，码还成立吗？</div>
         ${navHtml('./flag.html')}
       </header>
 
-      <aside id="flPanel" class="panel">
+      <aside id="flPanel" class="panel qpanel">
         <div class="grp">提取线路（X 类 / Z 类）</div>
         <div class="btns g4" id="flKinds"></div>
 
@@ -160,7 +147,7 @@ export class FlagApp {
           MC 才按 p 采样。</div>
       </aside>
 
-      <aside id="flHud" class="panel">
+      <aside id="flHud" class="panel qhud">
         <div class="hrow"><span>线路</span><span id="hKind" class="big">—</span></div>
         <div class="hrow"><span>比特 / ancilla</span><span id="hLayout">—</span></div>
         <div class="hrow"><span>门数 / CNOT / 测量</span><span id="hCost">—</span></div>
@@ -183,13 +170,13 @@ export class FlagApp {
         <div class="hrow"><span>最坏位点</span><span id="hWorst">—</span></div>
       </aside>
 
-      <div id="flStage">
+      <div id="flStage" class="qstage">
         <canvas id="flFan"></canvas>
         <canvas id="flFate"></canvas>
         <canvas id="flProp"></canvas>
       </div>
 
-      <div id="flHint" class="panel"><b>—</b><span></span></div>
+      <div id="flHint" class="panel qhint"><b>—</b><span></span></div>
       <div id="flDiag"></div>
     `);
     this.cv = { fan: this.q('#flFan'), fate: this.q('#flFate'), prop: this.q('#flProp') };
@@ -367,11 +354,16 @@ export class FlagApp {
     g.fillText('实心红 = 该故障污染的数据比特（Pauli 帧的实际支撑）；空心 = 干净比特', 10 * dpr, 29 * dpr);
 
     const rowH = (H - 38 * dpr) / 4;
-    const x0 = 10 * dpr, labW = 116 * dpr, numW = 216 * dpr;
+    const x0 = 10 * dpr, labW = 116 * dpr;
     const fanX0 = x0 + labW;
-    const span = W - fanX0 - numW - 8 * dpr;
-    const step = Math.min(span / 7.6, 40 * dpr);
-    const r = Math.min(8 * dpr, step * 0.28);
+    /* R94：numW 原固定 216·dpr——窄画布（手机段 stage 压缩）下
+       span=W−fanX0−numW−8 转负 ⟹ step/r 负 ⟹ arc() 抛 IndexSizeError
+       （cdp92 实测）。numW 改为随可用宽收缩（桌面 ≥720 可用宽时恒
+       216·dpr 逐位不变），span/step/r 兜底 clamp ≥0。 */
+    const numW = Math.min(216 * dpr, Math.max(64 * dpr, (W - fanX0 - 8 * dpr) * 0.32));
+    const span = Math.max(0, W - fanX0 - numW - 8 * dpr);
+    const step = Math.max(0, Math.min(span / 7.6, 40 * dpr));
+    const r = Math.max(0, Math.min(8 * dpr, step * 0.28));
 
     KINDS.forEach((kind, i) => {
       const yTop = 38 * dpr + rowH * i;

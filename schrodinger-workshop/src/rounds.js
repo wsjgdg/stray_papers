@@ -17,21 +17,12 @@
  * >0 ⟺ O(p)。MC 斜率在 600 样本下噪声到 0.5–9.6，不可用作判据。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
+import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
 import { FS_KINDS, fsFirstOrder, fsEnsemble, fsRun, rdSweep, rdPseudoThreshold, rdSlope } from './physics/flagsynd.js';
 
 const RD_CSS = `
-  #rdTop{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:11px;
-    padding:9px 15px;z-index:10;white-space:nowrap}
-  #rdTop .logo{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.12em;
-    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
-  #rdTop .eq{font-family:var(--mono);font-size:12px;color:var(--dim)}
-  #rdTop .eq b{color:var(--cyan);font-weight:600}
-  #rdTop .eq i{color:var(--amber);font-style:italic}
-  #rdTop a{font-family:var(--mono);font-size:10px;color:var(--dim);text-decoration:none;
-    border:1px solid var(--line);border-radius:6px;padding:3px 6px;transition:all .15s}
-  #rdTop a:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
-  #rdTop a.cur{color:var(--mag);border-color:rgba(240,171,252,.45)}
+  .qtop[id="rdTop"]{gap:11px;padding:9px 15px}.qtop[id="rdTop"] a{font-size:10px}.qtop[id="rdTop"] .eq i{color:var(--amber);font-style:italic}
   #rdPanel{top:74px;left:14px;width:246px;padding:13px;z-index:10;max-height:calc(100vh - 200px);
     overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #rdPanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
@@ -72,11 +63,6 @@ const RD_CSS = `
   #rdHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
   #rdDiag{position:fixed;left:-9999px}
   @media (max-width:1240px){#rdStage{width:calc(100vw - 40px)}#rdHint{display:none}}
-  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：quantum-field/two-body 溢出；1024：全页溢出）。
-     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（与主页一致）。 */
-  @media (max-width:1500px){#rdTop{gap:10px;padding:7px 14px}#rdTop .logo{font-size:13px}#rdTop a{font-size:10px;padding:2px 7px}}
-  @media (max-width:1400px){#rdTop .eq{display:none}#rdTop{gap:8px}#rdTop a{font-size:9.5px;padding:2px 6px}}
-  @media (max-width:900px){#rdTop a{display:none}}
 `;
 
 const COL = {
@@ -134,17 +120,18 @@ export class RoundsApp {
 
   mount(){
     injectStyles();
+    injectResponsive();
     const sheet = document.createElement('style');
     sheet.textContent = RD_CSS;
     document.head.appendChild(sheet);
     this.container.insertAdjacentHTML('beforeend', `
-      <header id="rdTop" class="panel">
+      <header id="rdTop" class="panel qtop">
         <div class="logo">多轮工场</div>
         <div class="eq">同一个码，多测几轮——<i>怎么用</i>这些轮次才是关键</div>
         ${navHtml('./rounds.html')}
       </header>
 
-      <aside id="rdPanel" class="panel">
+      <aside id="rdPanel" class="panel qpanel">
         <div class="grp">提取线路</div>
         <div class="btns g2" id="rdKinds"></div>
         <div class="grp">轮数 R</div>
@@ -168,7 +155,7 @@ export class RoundsApp {
           不用 MC 斜率——600 样本的斜率噪声到 0.5–9.6，不能当判据。</div>
       </aside>
 
-      <aside id="rdHud" class="panel">
+      <aside id="rdHud" class="panel qhud">
         <div class="hrow"><span>配置</span><span id="hCfg" class="big">—</span></div>
         <div class="hrow"><span>开销</span><span id="hCost">—</span></div>
         <hr>
@@ -187,12 +174,12 @@ export class RoundsApp {
         <div class="hrow"><span>最近一条轨迹</span><span id="hTrial">—</span></div>
       </aside>
 
-      <div id="rdStage">
+      <div id="rdStage" class="qstage">
         <canvas id="rdTime"></canvas>
         <canvas id="rdCurve"></canvas>
         <canvas id="rdFate"></canvas>
       </div>
-      <div id="rdHint" class="panel"><b>—</b><span></span></div>
+      <div id="rdHint" class="panel qhint"><b>—</b><span></span></div>
       <div id="rdDiag"></div>
     `);
     this.cv = { time: this.q('#rdTime'), curve: this.q('#rdCurve'), fate: this.q('#rdFate') };

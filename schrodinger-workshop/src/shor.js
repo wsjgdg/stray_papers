@@ -12,21 +12,12 @@
  * 曲线用**精确**值（穷举与 p 无关），MC 只标当前 p 一点。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
+import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
 import { SHOR_STABS, SHOR_LOGICALS, shorTrial, shorEnsemble, shorSweep, shorExactPL, repPLexact, shorCrossover, shorDecode, shorSyndromeOf, shorCoset, shorTableStats, shorDistance, shorWeight2Stats, SHOR_STAB_COUNT, shorFaultSurvey, shorCircuitStats } from './physics/shor.js';
 import { mulberry32 } from './physics/qcircuit.js';
 
 const SHOR_CSS = `
-  #shTop{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;
-    padding:9px 18px;z-index:10;white-space:nowrap}
-  #shTop .logo{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.12em;
-    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
-  #shTop .eq{font-family:var(--mono);font-size:12px;color:var(--dim)}
-  #shTop .eq b{color:var(--cyan);font-weight:600}
-  #shTop a{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
-    border:1px solid var(--line);border-radius:6px;padding:3px 8px;transition:all .15s}
-  #shTop a:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
-  #shTop a.cur{color:var(--mag);border-color:rgba(240,171,252,.45)}
   #shPanel{top:74px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 306px);
     overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #shPanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
@@ -68,11 +59,6 @@ const SHOR_CSS = `
   @media (max-width:1180px){#shStage{width:calc(100vw - 60px)}#shHint{display:none}
     /* R90：hint 隐身时面板恢复全高（ hint 可见时为 calc(100vh-306px)：14 底距 + 210 hint 上限 + 8 间隙） */
     #shPanel{max-height:calc(100vh - 200px)}}
-  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：quantum-field/two-body 溢出；1024：全页溢出）。
-     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（与主页一致）。 */
-  @media (max-width:1500px){#shTop{gap:10px;padding:7px 14px}#shTop .logo{font-size:13px}#shTop a{font-size:10px;padding:2px 7px}}
-  @media (max-width:1400px){#shTop .eq{display:none}#shTop{gap:8px}#shTop a{font-size:9.5px;padding:2px 6px}}
-  @media (max-width:900px){#shTop a{display:none}}
 `;
 
 const mdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
@@ -123,17 +109,18 @@ export class ShorApp {
 
   mount(){
     injectStyles();
+    injectResponsive();
     const sheet = document.createElement('style');
     sheet.textContent = SHOR_CSS;
     document.head.appendChild(sheet);
     this.container.insertAdjacentHTML('beforeend', `
-      <header id="shTop" class="panel">
+      <header id="shTop" class="panel qtop">
         <div class="logo">级联工场</div>
         <div class="eq">[(|000⟩+|111⟩)/√2]⊗3 ─<b>噪声</b>─► <b>8 稳定子</b> ─► <b>最大似然修正</b></div>
         ${navHtml('./shor.html', '      ')}
       </header>
 
-      <aside id="shPanel" class="panel">
+      <aside id="shPanel" class="panel qpanel">
         <div class="grp">逻辑初态 Ry(θ)Rz(φ)|0⟩</div>
         <div class="row"><label>θ</label><input type="range" id="shTheta" min="0" max="3.1416" step="0.01"><output id="shThetaO">—</output></div>
         <div class="row"><label>φ</label><input type="range" id="shPhase" min="-3.1416" max="3.1416" step="0.01"><output id="shPhaseO">—</output></div>
@@ -180,7 +167,7 @@ export class ShorApp {
         <div id="shTable" style="font-family:var(--mono);font-size:10px;color:var(--dim);line-height:1.5"></div>
       </aside>
 
-      <aside id="shHud" class="panel">
+      <aside id="shHud" class="panel qhud">
         <div class="hrow"><span>本次错误</span><span id="hErr">—</span></div>
         <div class="hrow"><span>综合征</span><span id="hSyn">—</span></div>
         <div class="hrow"><span>修正</span><span id="hFix">—</span></div>
@@ -208,13 +195,13 @@ export class ShorApp {
         <div class="hrow"><span>≥5 错</span><span id="hC5">—</span></div>
       </aside>
 
-      <div id="shStage">
+      <div id="shStage" class="qstage">
         <canvas id="shCircuit"></canvas>
         <canvas id="shCurve"></canvas>
         <canvas id="shHist"></canvas>
       </div>
 
-      <div id="shHint" class="panel"><b>—</b><span></span></div>
+      <div id="shHint" class="panel qhint"><b>—</b><span></span></div>
       <div id="shDiag"></div>
     `);
 

@@ -69,6 +69,10 @@ python3 -m http.server 8765          # 或 npm start
 **环境要求**：支持 WebGL2 + `EXT_color_buffer_float` 的浏览器
 （Chrome/Edge 90+、Firefox 90+、Safari 16.4+）。无 WebGL2 时页面会明确报错而非白屏。
 
+**小屏适配**：≤900px 顶栏导航收进汉堡抽屉（13 页互链在手机/窄桌窗仍可达）；
+≤860px 面板与读数转底部全宽 sheet，底部 dock 三态切换（⚙控制 / ◫读数 / ✕全屏，
+默认全屏、dock 半透明常驻可随时唤回）；桌面布局逐位不变。
+
 **URL 参数**：`?kernel=schrodinger|nls|gp|pauli|dirac|schrodinger3d` 物理内核 ·
 `?preset=free|barrier|slits|harmonic|scatter|box`（薛定谔）、
 `free|soliton|focus|barrier`（NLS）、`tf|vortex|tof|breather`（GP）、
@@ -2186,6 +2190,11 @@ schrodinger-workshop/
 │   │   ├── gl.js                 GL 引导：compile/link、Quad、makeTarget、
 │   │   │                         makeRGBA16F、makeReduce（均显式接收 gl，多实例安全）
 │   │   ├── styles.js             CSS（重构时从原版逐字提取）+ injectStyles()
+│   │   ├── responsive.js         公共响应式模块：顶栏三档收编为公共类 .qtop（12 页
+│   │   │                         差异值用属性选择器留各页）、≤900 汉堡抽屉（12 页互链
+│   │   │                         移动端可达）、≤860 底部 dock 三态（⚙控制/◫读数/✕全屏）
+│   │   │                         + 面板/HUD 转底部 sheet + stage 让位（injectResponsive，
+│   │   │                         DOM 增强走 queueMicrotask 避开各页构建时序）
 │   │   ├── scan.js               扫描框架：GenericScanner 基类承载全部生命周期
 │   │   │                         （start/stop/_restore/_tick/_record/_finish/_status/
 │   │   │                         _plot + busy 守卫 + 按钮翻转），五个 SPEC 钩子集

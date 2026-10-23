@@ -17,21 +17,12 @@
  *                gate = 结局分解（码空间五分类 + 解码后三分类）
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
+import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
 import { QEC_DEFAULTS, QEC_CODES, QEC_NOISE, QEC_SPECTRA, qecTrial, qecEnsemble, qecSweep, qecLogicalRate, qecThreshold, qecSyndromeTable, qecCircuit, qecExactPL, qecFaultSurvey } from './physics/qec.js';
 import { mulberry32 } from './physics/qcircuit.js';
 
 const QEC_CSS = `
-  #qeTop{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;
-    padding:9px 18px;z-index:10;white-space:nowrap}
-  #qeTop .logo{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.12em;
-    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
-  #qeTop .eq{font-family:var(--mono);font-size:12px;color:var(--dim)}
-  #qeTop .eq b{color:var(--cyan);font-weight:600}
-  #qeTop a{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
-    border:1px solid var(--line);border-radius:6px;padding:3px 8px;transition:all .15s}
-  #qeTop a:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
-  #qeTop a.cur{color:var(--mag);border-color:rgba(240,171,252,.45)}
   #qePanel{top:74px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 200px);
     overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #qePanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
@@ -71,11 +62,6 @@ const QEC_CSS = `
   #qeHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
   #qeDiag{position:fixed;left:-9999px}
   @media (max-width:1180px){#qeStage{width:calc(100vw - 60px)}#qeHint{display:none}}
-  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：quantum-field/two-body 溢出；1024：全页溢出）。
-     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（与主页一致）。 */
-  @media (max-width:1500px){#qeTop{gap:10px;padding:7px 14px}#qeTop .logo{font-size:13px}#qeTop a{font-size:10px;padding:2px 7px}}
-  @media (max-width:1400px){#qeTop .eq{display:none}#qeTop{gap:8px}#qeTop a{font-size:9.5px;padding:2px 6px}}
-  @media (max-width:900px){#qeTop a{display:none}}
 `;
 
 const mdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
@@ -112,17 +98,18 @@ export class QecApp {
 
   mount(){
     injectStyles();
+    injectResponsive();
     const sheet = document.createElement('style');
     sheet.textContent = QEC_CSS;
     document.head.appendChild(sheet);
     this.container.insertAdjacentHTML('beforeend', `
-      <header id="qeTop" class="panel">
+      <header id="qeTop" class="panel qtop">
         <div class="logo">纠错工场</div>
         <div class="eq">|ψ⟩ ─<b>编码</b>─► α|000⟩+β|111⟩ ─<b>噪声</b>─► <b>综合</b> ─► <b>修正</b></div>
         ${navHtml('./qec.html', '      ')}
       </header>
 
-      <aside id="qePanel" class="panel">
+      <aside id="qePanel" class="panel qpanel">
         <div class="grp">码</div>
         <div class="btns">
           <button data-c="bitflip">比特翻转码</button>
@@ -162,7 +149,7 @@ export class QecApp {
         <div id="qeTable" style="font-family:var(--mono);font-size:10.5px;color:var(--dim);line-height:1.55"></div>
       </aside>
 
-      <aside id="qeHud" class="panel">
+      <aside id="qeHud" class="panel qhud">
         <div class="hrow"><span>本次错误</span><span id="hErr">—</span></div>
         <div class="hrow"><span>综合 m₀m₁</span><span id="hSyn">—</span></div>
         <div class="hrow"><span>修正</span><span id="hFix">—</span></div>
@@ -189,13 +176,13 @@ export class QecApp {
         </div>
       </aside>
 
-      <div id="qeStage">
+      <div id="qeStage" class="qstage">
         <canvas id="qecCircuit"></canvas>
         <canvas id="qecCurve"></canvas>
         <canvas id="qecHist"></canvas>
       </div>
 
-      <div id="qeHint" class="panel"><b>—</b><span></span></div>
+      <div id="qeHint" class="panel qhint"><b>—</b><span></span></div>
       <div id="qeDiag"></div>
     `);
 

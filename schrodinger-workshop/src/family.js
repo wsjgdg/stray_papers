@@ -24,21 +24,12 @@
  *      不随 d 改善 ⟹ 只是伪阈值意义上的数学交点。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
+import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
 import { CF_FAMILIES, CF_NOISES, cfSweep, cfEnsemble, cfExactPL, cfFloor, cfNQ, cfDistance, cfSynBits, cfLeadingPower, CF_FAMILY_ST3 } from './physics/codefamily.js';
 
 const FM_CSS = `
-  #fmTop{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;
-    padding:9px 16px;z-index:10;white-space:nowrap}
-  #fmTop .logo{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.12em;
-    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
-  #fmTop .eq{font-family:var(--mono);font-size:12px;color:var(--dim)}
-  #fmTop .eq b{color:var(--cyan);font-weight:600}
-  #fmTop .eq i{color:var(--amber);font-style:italic}
-  #fmTop a{font-family:var(--mono);font-size:10.5px;color:var(--dim);text-decoration:none;
-    border:1px solid var(--line);border-radius:6px;padding:3px 7px;transition:all .15s}
-  #fmTop a:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
-  #fmTop a.cur{color:var(--mag);border-color:rgba(240,171,252,.45)}
+  .qtop[id="fmTop"]{gap:12px;padding:9px 16px}.qtop[id="fmTop"] a{font-size:10.5px}.qtop[id="fmTop"] .eq i{color:var(--amber);font-style:italic}
   #fmPanel{top:74px;left:14px;width:250px;padding:13px;z-index:10;max-height:calc(100vh - 200px);
     overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #fmPanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
@@ -81,11 +72,6 @@ const FM_CSS = `
   #fmHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
   #fmDiag{position:fixed;left:-9999px}
   @media (max-width:1260px){#fmStage{width:calc(100vw - 40px)}#fmHint{display:none}}
-  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：quantum-field/two-body 溢出；1024：全页溢出）。
-     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（与主页一致）。 */
-  @media (max-width:1500px){#fmTop{gap:10px;padding:7px 14px}#fmTop .logo{font-size:13px}#fmTop a{font-size:10px;padding:2px 7px}}
-  @media (max-width:1400px){#fmTop .eq{display:none}#fmTop{gap:8px}#fmTop a{font-size:9.5px;padding:2px 6px}}
-  @media (max-width:900px){#fmTop a{display:none}}
 `;
 
 /* 站点 palette（core/styles.js 的 :root 变量，canvas 里只能用字面量） */
@@ -138,17 +124,18 @@ export class FamilyApp {
 
   mount(){
     injectStyles();
+    injectResponsive();
     const sheet = document.createElement('style');
     sheet.textContent = FM_CSS;
     document.head.appendChild(sheet);
     this.container.insertAdjacentHTML('beforeend', `
-      <header id="fmTop" class="panel">
+      <header id="fmTop" class="panel qtop">
         <div class="logo">码族工场</div>
         <div class="eq">同一个噪声，<b>一整族</b>码——阈值是码族的性质，不是单个码的运气</div>
         ${navHtml('./family.html')}
       </header>
 
-      <aside id="fmPanel" class="panel">
+      <aside id="fmPanel" class="panel qpanel">
         <div class="grp">错误谱（每比特以 p 注入）</div>
         <div class="btns" id="fmNoises"></div>
 
@@ -175,7 +162,7 @@ export class FamilyApp {
           与精确值 <b>4σ 对账</b>。改噪声谱 / 测量开关会重算全族扫描（约 0.2–0.7s）。</div>
       </aside>
 
-      <aside id="fmHud" class="panel">
+      <aside id="fmHud" class="panel qhud">
         <div class="hrow"><span>配置</span><span id="hCfg" class="big">—</span></div>
         <div class="hrow"><span>结构</span><span id="hStruct">—</span></div>
         <hr>
@@ -193,13 +180,13 @@ export class FamilyApp {
           p=10⁻³ 处 P_L≈10⁻¹⁷，任何可行 MC 样本都是 0 事件，画出来只能是噪声。</div>
       </aside>
 
-      <div id="fmStage">
+      <div id="fmStage" class="qstage">
         <canvas id="fmCurve"></canvas>
         <canvas id="fmFate"></canvas>
         <canvas id="fmPower"></canvas>
       </div>
 
-      <div id="fmHint" class="panel"><b>—</b><span></span></div>
+      <div id="fmHint" class="panel qhint"><b>—</b><span></span></div>
       <div id="fmDiag"></div>
     `);
     this.cv = { curve: this.q('#fmCurve'), fate: this.q('#fmFate'), power: this.q('#fmPower') };

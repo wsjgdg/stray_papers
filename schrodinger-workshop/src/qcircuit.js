@@ -11,21 +11,11 @@
  * measure/entropy/amps/probs/summary/navLinks —— 全部确定性（测量用种子）。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
+import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
 import { QC_UNARY, QC_PRESETS, qcNewState, qcApply, qcNorm, qcProbs, qcZZ, qcEntropy, qcConcurrence, qcAmplitudes, qcBits, qcSample, qcCollapse, qcPresetGates, mulberry32, qcExec, qcNewClassical, qcQubitRho, qcRhoFidelity, qcTargetAmps, qcTeleportGates, qcPrep1q } from './physics/qcircuit.js';
 
 const QC_CSS = `
-  #qcTop{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;
-    padding:9px 18px;z-index:10;white-space:nowrap}
-  #qcTop .logo{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.12em;
-    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
-  #qcTop .eq{font-family:var(--mono);font-size:12px;color:var(--dim)}
-  #qcTop .eq b{color:var(--cyan);font-weight:600}
-  #qcTop .eq i{color:var(--mag);font-style:italic}
-  #qcTop a{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
-    border:1px solid var(--line);border-radius:6px;padding:3px 8px;transition:all .15s}
-  #qcTop a:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
-  #qcTop a.cur{color:var(--mag);border-color:rgba(240,171,252,.45)}
   #qcPanel{top:74px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 200px);
     overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #qcPanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
@@ -58,11 +48,6 @@ const QC_CSS = `
   #qcHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
   #qcDiag{position:fixed;left:-9999px}
   @media (max-width:1180px){#qcStage{width:calc(100vw - 60px)}#qcHint{display:none}}
-  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：quantum-field/two-body 溢出；1024：全页溢出）。
-     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（与主页一致）。 */
-  @media (max-width:1500px){#qcTop{gap:10px;padding:7px 14px}#qcTop .logo{font-size:13px}#qcTop a{font-size:10px;padding:2px 7px}}
-  @media (max-width:1400px){#qcTop .eq{display:none}#qcTop{gap:8px}#qcTop a{font-size:9.5px;padding:2px 6px}}
-  @media (max-width:900px){#qcTop a{display:none}}
 `;
 
 const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
@@ -124,17 +109,18 @@ export class QCircuitApp {
 
   mount(){
     injectStyles();
+    injectResponsive();
     const st = document.createElement('style');
     st.textContent = QC_CSS;
     document.head.appendChild(st);
     this.container.insertAdjacentHTML('beforeend', `
-      <header id="qcTop" class="panel">
+      <header id="qcTop" class="panel qtop">
         <div class="logo">线路工场</div>
         <div class="eq">|ψ⟩ → <b>U<sub>m</sub></b>…<b>U<sub>1</sub></b>|0…0⟩ · <i>测量 = |a<sub>i</sub>|²</i></div>
         ${navHtml('./qcircuit.html', '      ')}
       </header>
 
-      <aside id="qcPanel" class="panel">
+      <aside id="qcPanel" class="panel qpanel">
         <div class="grp">线路</div>
         <div class="btns">
           <button id="qcP0" data-p="bell">贝尔对</button>
@@ -167,12 +153,12 @@ export class QCircuitApp {
         <div class="row"><label>随机种子</label><input type="range" id="qcSeed" min="1" max="999" step="1"><output id="qcSeedO">—</output></div>
       </aside>
 
-      <div id="qcStage">
+      <div id="qcStage" class="qstage">
         <canvas id="qcCircuit"></canvas>
         <canvas id="qcAmp"></canvas>
       </div>
 
-      <aside id="qcHud" class="panel">
+      <aside id="qcHud" class="panel qhud">
         <div class="hrow"><span>线路</span><span id="hLine">—</span></div>
         <div class="hrow"><span>进度</span><span id="hProg">—</span></div>
         <div class="hrow"><span>维度 2^n</span><span id="hDim">—</span></div>
@@ -192,7 +178,7 @@ export class QCircuitApp {
         <div class="hrow"><span>FPS</span><span id="hFps">—</span></div>
       </aside>
 
-      <div id="qcHint" class="panel"></div>
+      <div id="qcHint" class="panel qhint"></div>
       <div id="qcDiag"></div>
     `);
     this._bind();

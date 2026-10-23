@@ -16,21 +16,11 @@
  * current / profileAt / profile / pathCount / sumInfo / spiralInfo / navLinks。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
+import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
 import { PI_DEFAULTS, PI_PRESETS, piProfile, piAmpAt, piPathSamples, piSpiral, piFringeSpacing, piStraightPhase, piModeSum, piFringes, piNxiFor } from './physics/paths.js';
 
 const PV_CSS = `
-  #pvTop{top:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:16px;
-    padding:9px 18px;z-index:10;white-space:nowrap}
-  #pvTop .logo{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.12em;
-    background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
-  #pvTop .eq{font-family:var(--mono);font-size:12px;color:var(--dim)}
-  #pvTop .eq b{color:var(--cyan);font-weight:600}
-  #pvTop .eq i{color:var(--mag);font-style:italic}
-  #pvTop a{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
-    border:1px solid var(--line);border-radius:6px;padding:3px 8px;transition:all .15s}
-  #pvTop a:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
-  #pvTop a.cur{color:var(--mag);border-color:rgba(240,171,252,.45)}
   #pvPanel{top:74px;left:14px;width:232px;padding:13px;z-index:10;max-height:calc(100vh - 210px);
     overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #pvPanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
@@ -67,11 +57,6 @@ const PV_CSS = `
   #pvDiag{position:fixed;left:-9999px}
   @media (max-width:1180px){#pvStage{width:calc(100vw - 60px);grid-template-columns:minmax(0,1fr) 220px}
     #pvHint{display:none}}
-  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：quantum-field/two-body 溢出；1024：全页溢出）。
-     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（与主页一致）。 */
-  @media (max-width:1500px){#pvTop{gap:10px;padding:7px 14px}#pvTop .logo{font-size:13px}#pvTop a{font-size:10px;padding:2px 7px}}
-  @media (max-width:1400px){#pvTop .eq{display:none}#pvTop{gap:8px}#pvTop a{font-size:9.5px;padding:2px 6px}}
-  @media (max-width:900px){#pvTop a{display:none}}
 `;
 
 const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
@@ -139,18 +124,19 @@ export class PathsApp {
 
   mount(){
     injectStyles();
+    injectResponsive();
     const st = document.createElement('style');
     st.textContent = PV_CSS;
     document.head.appendChild(st);
 
     this.container.insertAdjacentHTML('beforeend', `
-      <header id="pvTop" class="panel">
+      <header id="pvTop" class="panel qtop">
         <div class="logo">路径工场</div>
         <div class="eq">ψ = Σ<b><sub>路径</sub></b> <i>e</i><sup>iS/ħ</sup></div>
         ${navHtml('./paths.html', '      ')}
       </header>
 
-      <aside id="pvPanel" class="panel">
+      <aside id="pvPanel" class="panel qpanel">
         <div class="grp">情形</div>
         <div class="btns">
           <button id="pvP0" data-p="double">双缝</button>
@@ -173,13 +159,13 @@ export class PathsApp {
         <div class="btns" style="margin-top:6px"><button id="pvReplay" style="grid-column:1 / span 2">重放求和</button></div>
       </aside>
 
-      <div id="pvStage">
+      <div id="pvStage" class="qstage">
         <canvas id="pvMain"></canvas>
         <canvas id="pvSpiral"></canvas>
         <canvas id="pvProfile"></canvas>
       </div>
 
-      <aside id="pvHud" class="panel">
+      <aside id="pvHud" class="panel qhud">
         <div class="hrow"><span>当前情形</span><span id="hCase">—</span></div>
         <div class="hrow"><span>路径总数</span><span id="hN">—</span></div>
         <div class="hrow"><span>每缝（2K × 2K × ξ）</span><span id="hPer">—</span></div>
@@ -196,7 +182,7 @@ export class PathsApp {
         <div class="hrow"><span>FPS</span><span id="hFps">—</span></div>
       </aside>
 
-      <div id="pvHint" class="panel"></div>
+      <div id="pvHint" class="panel qhint"></div>
       <div id="pvDiag"></div>
     `);
 
