@@ -80,7 +80,7 @@ function mapElement(el: { type: string; id: number; lat?: number; lon?: number; 
 
 async function geocode(city: string): Promise<{ lat: number; lng: number; bbox: [number, number, number, number] }> {
   const url = `${NOMINATIM}?q=${encodeURIComponent(city)}&format=json&limit=1&accept-language=zh-CN`;
-  const res = await fetch(url, { headers: { 'User-Agent': UA, 'Accept-Language': 'zh-CN' }, signal: AbortSignal.timeout(10000) });
+  const res = await fetch(url, { headers: { 'User-Agent': UA, 'Accept-Language': 'zh-CN' }, signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new Error(`Nominatim ${res.status}`);
   const arr = (await res.json()) as Array<{ lat: string; lon: string; boundingbox?: string[] }>;
   if (!arr.length) throw new Error('city_not_found');
@@ -113,7 +113,7 @@ out center tags ${limit};`;
     method: 'POST',
     headers: { 'User-Agent': UA, 'Content-Type': 'application/x-www-form-urlencoded' },
     body: 'data=' + encodeURIComponent(q),
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(20000),
   });
   if (!res.ok) throw new Error(`Overpass ${res.status}`);
   const json = (await res.json()) as { elements?: unknown[] };
@@ -161,7 +161,7 @@ export async function GET(req: Request) {
     // 内置兜底：返回 error，前端保留内置示例景点
     return NextResponse.json({
       source: 'error',
-      message: `实时数据获取失败（${msg}），已保留内置示例景点。部署到公网后 OpenStreetMap 实时数据将自动启用。`,
+      message: `实时数据获取失败（${msg}），已保留内置示例景点。OpenStreetMap 为公开开放数据（ODbL），需服务器联网访问；当前环境暂无法连接时自动降级。`,
       city,
       count: 0,
       spots: [],
