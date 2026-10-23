@@ -82,7 +82,7 @@ function bingImages(dish) {
     } catch {
       continue;
     }
-    items.push({ murl: j.murl, purl: j.purl || '', title: (j.t || '').slice(0, 60), host, score: domainScore(host) });
+    items.push({ murl: j.murl, turl: j.turl || '', purl: j.purl || '', title: (j.t || '').slice(0, 60), host, score: domainScore(host) });
   }
   return items.sort((a, b) => b.score - a.score);
 }
@@ -91,12 +91,25 @@ fs.mkdirSync(OUT_DIR, { recursive: true });
 const src = fs.readFileSync('src/lib/food-data.ts', 'utf8');
 const re = /code:\s*'([A-Z]+)'[^\n]*?fullName:\s*'([^']+)'[^\n]*?dish:\s*'([^']+)'/g;
 let dishes = [...src.matchAll(re)].map((m) => ({ prov: m[2], dish: m[3] }));
+if (process.argv.includes('--all')) {
+  // 把城市级名食也纳入（含补充表）
+  const seen = new Set(dishes.map((d) => d.dish));
+  for (const file of ['src/lib/food-city.ts', 'src/lib/food-city-extra.ts']) {
+    const t = fs.readFileSync(file, 'utf8');
+    for (const m of t.matchAll(/dish:\s*'([^']+)'/g)) {
+      const dish = m[1];
+      if (!seen.has(dish)) { seen.add(dish); dishes.push({ prov: '城市', dish }); }
+    }
+  }
+}
 if (args.length) dishes = dishes.filter((d) => args.includes(d.dish));
 
 const seenHash = new Set();
 const report = [];
 
 for (const { prov, dish } of dishes) {
+  const already = fs.readdirSync(OUT_DIR).some((f) => f.startsWith(dish + '-'));
+  if (already && !process.argv.includes('--force')) { console.log(`-- ${dish} 已有`); continue; }
   console.log(`\n── ${prov} / ${dish} ──`);
   const items = bingImages(dish);
   console.log(`  候选 ${items.length} 条`);
@@ -107,7 +120,8 @@ for (const { prov, dish } of dishes) {
     try {
       buf = curl(it.murl, { bin: true });
     } catch {
-      continue;
+      if (!it.turl) continue;
+      try { buf = curl(it.turl, { bin: true }); } catch { continue; }
     }
     if (!buf || buf.length < 20000) continue;
     // 只认真正的图片（jp/png/webp 魔数）
@@ -127,7 +141,7 @@ for (const { prov, dish } of dishes) {
     console.log(`  ✓ ${path.basename(file)}  ${Math.round(buf.length / 1024)}KB  ← ${it.host}`);
   }
   if (!saved) console.log('  ✗ 没有可用图');
-  await sleep(500);
+  await sleep(150);
 }
 
 fs.writeFileSync(path.join(OUT_DIR, '_report.json'), JSON.stringify(report, null, 2));

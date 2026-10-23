@@ -10,6 +10,7 @@
 // ════════════════════════════════════════════════════════════════════════
 
 import type { ProvinceFood } from './food-data';
+import { CITY_EXTRA } from './food-city-extra';
 
 export interface CityFoodOverride {
   dish: string;
@@ -66,7 +67,9 @@ export function cityKey(name: string): string {
 }
 
 export function lookupCityOverride(fullName: string): CityFoodOverride | undefined {
-  return CITY_OVERRIDES[cityKey(fullName)] ?? CITY_OVERRIDES[cityLabel(fullName)];
+  const k1 = cityKey(fullName);
+  const k2 = cityLabel(fullName);
+  return CITY_OVERRIDES[k1] ?? CITY_OVERRIDES[k2] ?? CITY_EXTRA[k1] ?? CITY_EXTRA[k2];
 }
 
 /** 城市级代表菜覆盖表（键为 cityKey / cityLabel 结果） */
@@ -365,12 +368,20 @@ export function resolveCityFood(province: ProvinceFood, fullName: string): CityF
       isLocal: true,
     };
   }
+  // 剩下的多是「本身不是独立饮食单元」的行政区，把原因写清楚，而不是丢一句「暂无收录」
+  const BINGTUAN = ['石河子', '阿拉尔', '图木舒克', '五家渠', '北屯', '铁门关', '双河', '可克达拉', '昆玉', '胡杨河'];
+  let reason: string;
+  if (BINGTUAN.includes(label)) reason = '这里是兵团城市，饮食以新疆风味为底，没有自成一路的地方名菜';
+  else if (/(区|堂区)$/.test(fullName)) reason = '这里是城区，饮食与所在城市一体，不单列名食';
+  else if (/林区$/.test(fullName)) reason = '这里是林区，人口稀少，未形成独立的地方名菜';
+  else reason = '暂未收录到确切的地方名食';
+
   return {
     label,
     fullName,
     dish: province.dish,
     cuisine: province.cuisine,
-    desc: `该市暂无单独收录的地方名食，此处沿用${province.fullName}省域代表菜「${province.dish}」。${province.desc}`,
+    desc: `${reason}，此处按${province.fullName}省域代表菜「${province.dish}」展示。${province.desc}`,
     isLocal: false,
   };
 }
