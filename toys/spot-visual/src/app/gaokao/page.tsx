@@ -67,12 +67,14 @@ export default function GaoKaoPage() {
         schoolCode: s.code,
         gap,
         tier,
-        symbolSize: active ? 18 : 10,
+        symbolSize: active ? 22 : 14,
         itemStyle: {
           color: TIER_COLOR[tier],
           borderColor: active ? '#0F172A' : '#ffffff',
-          borderWidth: active ? 2 : 1,
+          borderWidth: active ? 2.5 : 1.2,
           opacity: tier === 'none' ? 0.55 : 1,
+          shadowBlur: 5,
+          shadowColor: 'rgba(15,23,42,0.28)',
         },
       };
     }).filter(Boolean);
@@ -99,16 +101,16 @@ export default function GaoKaoPage() {
         map: 'china-compliant',
         roam: true,
         layoutCenter: ['50%', '52%'],
-        layoutSize: '116%',
+        layoutSize: '130%',
         label: { show: false },
-        itemStyle: { areaColor: '#F8FAFC', borderColor: '#CBD5E1', borderWidth: 0.6 },
-        emphasis: { itemStyle: { areaColor: '#EEF2F6' }, label: { show: false } },
+        itemStyle: { areaColor: '#E9EEF4', borderColor: '#AFBCCD', borderWidth: 0.7 },
+        emphasis: { itemStyle: { areaColor: '#DEE6F0' }, label: { show: false } },
       },
       series: [
         {
           type: 'scatter',
           coordinateSystem: 'geo',
-          symbolSize: 10,
+          symbolSize: 14,
           data: points as any[],
           emphasis: { scale: 1.5, label: { show: false } },
           label: { show: false },

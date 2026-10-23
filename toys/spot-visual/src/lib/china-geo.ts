@@ -56,3 +56,15 @@ export const PROVINCE_CENTERS: Record<string, [number, number]> = (() => {
   }
   return m;
 })();
+
+// 省份简称 → adcode（用于按需加载 /geo/{adcode}.json 的市级边界）
+export const PROVINCE_ADCODE: Record<string, number> = (() => {
+  const m: Record<string, number> = {};
+  for (const f of raw.features) {
+    const full = f.properties?.name;
+    const code = f.properties?.adcode;
+    if (!full || typeof code !== 'number') continue;
+    m[shortName(full)] = code;
+  }
+  return m;
+})();
