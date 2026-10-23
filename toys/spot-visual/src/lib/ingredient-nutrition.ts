@@ -8,6 +8,7 @@
 //   - 只引用了个位数十几个条目并注明食品编号（foodCode），便于回原书核对。
 // 单位：能量 kcal/100g，钠 mg/100g。
 // ════════════════════════════════════════════════════════════════════════
+import { CITY_INGREDIENTS } from './ingredient-city.generated';
 
 export interface Ingredient {
   /** 原书食品编号，可据此回查 */
@@ -91,7 +92,8 @@ export const SODIUM_BANDS = [
 ];
 
 export function getDishIngredients(dish: string) {
-  const hit = DISH_INGREDIENTS[dish];
+  // 先用手工核过的省级映射，再退回自动生成的市级映射
+  const hit = DISH_INGREDIENTS[dish] ?? CITY_INGREDIENTS[dish];
   if (!hit) return null;
   const items = hit.items.map((k) => INGREDIENTS[k]).filter(Boolean);
   return items.length ? { items, caveat: hit.caveat } : null;
