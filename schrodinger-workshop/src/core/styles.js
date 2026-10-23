@@ -34,6 +34,12 @@ export const CSS = `
   #topbar .navlink{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
     border:1px solid var(--line);border-radius:6px;padding:3px 8px;flex:none;transition:all .15s;letter-spacing:.05em}
   #topbar .navlink:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
+  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：本页 1493px 即溢出 27px；1024：全站溢出）。
+     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（原有规则）。 */
+  @media (max-width:1500px){#topbar{gap:10px;padding:8px 14px}#topbar .logo{font-size:13px}
+    #topbar .navlink{font-size:10px;padding:2px 7px}}
+  @media (max-width:1400px){#topbar .eq{display:none}#topbar{gap:8px}
+    #topbar .navlink{font-size:9.5px;padding:2px 6px}}
   @media (max-width:900px){#topbar .navlink{display:none}}
   /* ---------- 左侧控制面板 ---------- */
   /* R43 修复①：原 max-height:calc(100vh−120px) ⟹ 面板底 = 100vh−44，而左下

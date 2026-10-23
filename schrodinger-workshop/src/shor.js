@@ -27,7 +27,7 @@ const SHOR_CSS = `
     border:1px solid var(--line);border-radius:6px;padding:3px 8px;transition:all .15s}
   #shTop a:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
   #shTop a.cur{color:var(--mag);border-color:rgba(240,171,252,.45)}
-  #shPanel{top:74px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 200px);
+  #shPanel{top:74px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 306px);
     overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #shPanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
     text-transform:uppercase;margin:10px 0 5px}
@@ -65,7 +65,14 @@ const SHOR_CSS = `
     scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #shHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
   #shDiag{position:fixed;left:-9999px}
-  @media (max-width:1180px){#shStage{width:calc(100vw - 60px)}#shHint{display:none}}
+  @media (max-width:1180px){#shStage{width:calc(100vw - 60px)}#shHint{display:none}
+    /* R90：hint 隐身时面板恢复全高（ hint 可见时为 calc(100vh-306px)：14 底距 + 210 hint 上限 + 8 间隙） */
+    #shPanel{max-height:calc(100vh - 200px)}}
+  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：quantum-field/two-body 溢出；1024：全页溢出）。
+     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（与主页一致）。 */
+  @media (max-width:1500px){#shTop{gap:10px;padding:7px 14px}#shTop .logo{font-size:13px}#shTop a{font-size:10px;padding:2px 7px}}
+  @media (max-width:1400px){#shTop .eq{display:none}#shTop{gap:8px}#shTop a{font-size:9.5px;padding:2px 6px}}
+  @media (max-width:900px){#shTop a{display:none}}
 `;
 
 const mdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');

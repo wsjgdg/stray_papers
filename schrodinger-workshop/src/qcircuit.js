@@ -58,6 +58,11 @@ const QC_CSS = `
   #qcHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
   #qcDiag{position:fixed;left:-9999px}
   @media (max-width:1180px){#qcStage{width:calc(100vw - 60px)}#qcHint{display:none}}
+  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：quantum-field/two-body 溢出；1024：全页溢出）。
+     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（与主页一致）。 */
+  @media (max-width:1500px){#qcTop{gap:10px;padding:7px 14px}#qcTop .logo{font-size:13px}#qcTop a{font-size:10px;padding:2px 7px}}
+  @media (max-width:1400px){#qcTop .eq{display:none}#qcTop{gap:8px}#qcTop a{font-size:9.5px;padding:2px 6px}}
+  @media (max-width:900px){#qcTop a{display:none}}
 `;
 
 const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');

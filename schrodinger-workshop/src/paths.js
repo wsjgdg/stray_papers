@@ -67,6 +67,11 @@ const PV_CSS = `
   #pvDiag{position:fixed;left:-9999px}
   @media (max-width:1180px){#pvStage{width:calc(100vw - 60px);grid-template-columns:minmax(0,1fr) 220px}
     #pvHint{display:none}}
+  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：quantum-field/two-body 溢出；1024：全页溢出）。
+     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（与主页一致）。 */
+  @media (max-width:1500px){#pvTop{gap:10px;padding:7px 14px}#pvTop .logo{font-size:13px}#pvTop a{font-size:10px;padding:2px 7px}}
+  @media (max-width:1400px){#pvTop .eq{display:none}#pvTop{gap:8px}#pvTop a{font-size:9.5px;padding:2px 6px}}
+  @media (max-width:900px){#pvTop a{display:none}}
 `;
 
 const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');

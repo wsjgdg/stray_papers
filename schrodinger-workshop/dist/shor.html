@@ -59,6 +59,12 @@ const CSS = `
   #topbar .navlink{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;
     border:1px solid var(--line);border-radius:6px;padding:3px 8px;flex:none;transition:all .15s;letter-spacing:.05em}
   #topbar .navlink:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
+  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：本页 1493px 即溢出 27px；1024：全站溢出）。
+     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（原有规则）。 */
+  @media (max-width:1500px){#topbar{gap:10px;padding:8px 14px}#topbar .logo{font-size:13px}
+    #topbar .navlink{font-size:10px;padding:2px 7px}}
+  @media (max-width:1400px){#topbar .eq{display:none}#topbar{gap:8px}
+    #topbar .navlink{font-size:9.5px;padding:2px 6px}}
   @media (max-width:900px){#topbar .navlink{display:none}}
   /* ---------- 左侧控制面板 ---------- */
   /* R43 修复①：原 max-height:calc(100vh−120px) ⟹ 面板底 = 100vh−44，而左下
@@ -2890,7 +2896,7 @@ const SHOR_CSS = `
     border:1px solid var(--line);border-radius:6px;padding:3px 8px;transition:all .15s}
   #shTop a:hover{color:var(--cyan);border-color:rgba(103,232,249,.4)}
   #shTop a.cur{color:var(--mag);border-color:rgba(240,171,252,.45)}
-  #shPanel{top:74px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 200px);
+  #shPanel{top:74px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 306px);
     overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #shPanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
     text-transform:uppercase;margin:10px 0 5px}
@@ -2928,7 +2934,14 @@ const SHOR_CSS = `
     scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #shHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
   #shDiag{position:fixed;left:-9999px}
-  @media (max-width:1180px){#shStage{width:calc(100vw - 60px)}#shHint{display:none}}
+  @media (max-width:1180px){#shStage{width:calc(100vw - 60px)}#shHint{display:none}
+    /* R90：hint 隐身时面板恢复全高（ hint 可见时为 calc(100vh-306px)：14 底距 + 210 hint 上限 + 8 间隙） */
+    #shPanel{max-height:calc(100vh - 200px)}}
+  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：quantum-field/two-body 溢出；1024：全页溢出）。
+     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（与主页一致）。 */
+  @media (max-width:1500px){#shTop{gap:10px;padding:7px 14px}#shTop .logo{font-size:13px}#shTop a{font-size:10px;padding:2px 7px}}
+  @media (max-width:1400px){#shTop .eq{display:none}#shTop{gap:8px}#shTop a{font-size:9.5px;padding:2px 6px}}
+  @media (max-width:900px){#shTop a{display:none}}
 `;
 
 const mdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');

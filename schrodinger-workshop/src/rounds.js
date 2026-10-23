@@ -72,6 +72,11 @@ const RD_CSS = `
   #rdHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
   #rdDiag{position:fixed;left:-9999px}
   @media (max-width:1240px){#rdStage{width:calc(100vw - 40px)}#rdHint{display:none}}
+  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：quantum-field/two-body 溢出；1024：全页溢出）。
+     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（与主页一致）。 */
+  @media (max-width:1500px){#rdTop{gap:10px;padding:7px 14px}#rdTop .logo{font-size:13px}#rdTop a{font-size:10px;padding:2px 7px}}
+  @media (max-width:1400px){#rdTop .eq{display:none}#rdTop{gap:8px}#rdTop a{font-size:9.5px;padding:2px 6px}}
+  @media (max-width:900px){#rdTop a{display:none}}
 `;
 
 const COL = {

@@ -81,6 +81,11 @@ const FM_CSS = `
   #fmHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
   #fmDiag{position:fixed;left:-9999px}
   @media (max-width:1260px){#fmStage{width:calc(100vw - 40px)}#fmHint{display:none}}
+  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：quantum-field/two-body 溢出；1024：全页溢出）。
+     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（与主页一致）。 */
+  @media (max-width:1500px){#fmTop{gap:10px;padding:7px 14px}#fmTop .logo{font-size:13px}#fmTop a{font-size:10px;padding:2px 7px}}
+  @media (max-width:1400px){#fmTop .eq{display:none}#fmTop{gap:8px}#fmTop a{font-size:9.5px;padding:2px 6px}}
+  @media (max-width:900px){#fmTop a{display:none}}
 `;
 
 /* 站点 palette（core/styles.js 的 :root 变量，canvas 里只能用字面量） */

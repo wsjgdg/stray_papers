@@ -71,6 +71,11 @@ const CY_CSS = `
   #cyHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
   #cyDiag{position:fixed;left:-9999px}
   @media (max-width:1240px){#cyStage{width:calc(100vw - 40px)}#cyHint{display:none}}
+  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：quantum-field/two-body 溢出；1024：全页溢出）。
+     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（与主页一致）。 */
+  @media (max-width:1500px){#cyTop{gap:10px;padding:7px 14px}#cyTop .logo{font-size:13px}#cyTop a{font-size:10px;padding:2px 7px}}
+  @media (max-width:1400px){#cyTop .eq{display:none}#cyTop{gap:8px}#cyTop a{font-size:9.5px;padding:2px 6px}}
+  @media (max-width:900px){#cyTop a{display:none}}
 `;
 
 const COL = {

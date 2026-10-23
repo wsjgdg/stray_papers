@@ -104,7 +104,7 @@ function layoutFor(spec){
   const nq = A0 + pool + (hasF ? 1 : 0);
   return { A0, pool, F, nq, hasF };
 }
-const DATA_MASK = 0x1ff;
+const FS_DATA_MASK = 0x1ff;
 /* 逻辑算符（**R81 修正过的标签**：内层是相位翻转码，X₀X₁X₂ 作用为 Z_L；
    Z₀Z₃Z₆ 才是 X_L。R79 源码/README 里两者对调了，见 shor.js 的留档） */
 const LXL = { x: 0, z: 0b001001001 };            /* X_L = Z₀Z₃Z₆ */
@@ -116,7 +116,7 @@ export const FS_KINDS = {
     desc: '两类稳定子都用一个 ancilla 顺序提取（R79 的做法）。X 类提取里 ancilla 的 X 错误顺着剩下的 CNOT 传播到多个数据比特，而且对读数**不可见**（X|+⟩=|+⟩）⟹ 静默逻辑错误。' },
   dup: { label: '冗余验证', short: 'dup', z: 'dup', x: 'dup',
     desc: '每个稳定子用两个独立 ancilla 各测一遍，读数不一致 ⟹ flag ⟹ 丢弃本轮。Z 类有效；X 类**完全无效**——ancilla 的 X 错误对两份读数都不可见，两份读数一样地"正确"。' },
-  cat: { label: '猫态（3 ancilla）', short: 'cat', z: 'cat', x: 'cat', catX: 3,
+  cat: { label: '猫态 ×3', short: 'cat', z: 'cat', x: 'cat', catX: 3,
     desc: '权重 w 的稳定子用 GHZ ancilla（Z 类 2 个 1:1；X 类 3 个、每个碰 2 个数据比特），GHZ 的 Z 奇偶由验证序列搬到 flag：单 X 错误必然把偶奇偶翻成奇 ⟹ 确定性检出。' },
   full: { label: '冗余 + 猫态', short: 'full', z: 'dup', x: 'cat', catX: 3,
     desc: 'Z 类用冗余比对（猫态在 Z 类抓不到交互期的 X 错误），X 类用猫态（限定传播 + 可检）。分工由故障画像决定。' },
@@ -381,7 +381,7 @@ function decodeMaps(circ){
   const img = v => {
     const fr = { x: v.x, z: v.z };
     for (const o of ops) frGate(fr, o);
-    return { x: fr.x & DATA_MASK, z: fr.z & DATA_MASK };
+    return { x: fr.x & FS_DATA_MASK, z: fr.z & FS_DATA_MASK };
   };
   const gens = SHOR_STABS.map(g => ({ x: g.k === 'x' ? maskOf(g.qs) : 0, z: g.k === 'z' ? maskOf(g.qs) : 0 }));
   const span = new Set();
@@ -509,7 +509,7 @@ function fsExec(circ, opts = {}){
       let bad = false;
       for (let i = 0; i < SHOR_STABS.length; i++) if (chosenAtt[r][i] < 0){ bad = true; break; }
       usableR.push(!bad);
-      if (r === 0){ frBeforeFix = { x: fr.x & DATA_MASK, z: fr.z & DATA_MASK }; wPre = fsMinWeight(frBeforeFix); }
+      if (r === 0){ frBeforeFix = { x: fr.x & FS_DATA_MASK, z: fr.z & FS_DATA_MASK }; wPre = fsMinWeight(frBeforeFix); }
       let fixR = [];
       if (dec === 'single'){
         if (r === R - 1) fixR = shorDecode(synRounds[r]);
@@ -538,7 +538,7 @@ function fsExec(circ, opts = {}){
       fr.x ^= logicFr.x; fr.z ^= logicFr.z;
 
       for (const e of fix){ qcApply(s, { op: e.t, q: e.q }); frToggle(fr, e.q, e.t); }
-      frAtFix = { x: fr.x & DATA_MASK, z: fr.z & DATA_MASK };
+      frAtFix = { x: fr.x & FS_DATA_MASK, z: fr.z & FS_DATA_MASK };
       /* 修正后、解码前的末态探针（判定口径的取样点：此时码空间仍完好定义） */
       const synErr = [];
       let mixed = false;
@@ -590,19 +590,19 @@ function fsExec(circ, opts = {}){
   const anyFlag = flags.some(Boolean) || dupFlag.some(Boolean);
   return {
     syn, syn2, dupFlag, flags, fix, state: s, F, pre,
-    frame: { x: fr.x & DATA_MASK, z: fr.z & DATA_MASK },
+    frame: { x: fr.x & FS_DATA_MASK, z: fr.z & FS_DATA_MASK },
     /* wPre：提取结束、修正之前的错误权重（「一个故障污染了几个数据比特」）
        wRes：修正之后、解码之前的残差权重（码该处理的东西）
        wPost：解码之后的帧权重 —— 只作诊断：解码线路会把权重 1 摊回 3~5，
                拿它当「残差大小」会严重误导（这是个容易踩的坑，留字段备查） */
-    cosetFinal: cosetDecoded(decodeMaps(circ), { x: fr.x & DATA_MASK, z: fr.z & DATA_MASK }),
+    cosetFinal: cosetDecoded(decodeMaps(circ), { x: fr.x & FS_DATA_MASK, z: fr.z & FS_DATA_MASK }),
     synRounds, flagRounds, usableRounds: usableR.filter(Boolean).length, usableR, fixLog,
     chosenAtt, skippedGates, retried,
     /* 「重测后仍无可信读数」的轮：这才是真正需要丢弃的比例（R82 的丢弃率把它高估了） */
     noGoodRounds: usableR.filter(v => !v).length,
     synFinal, chosenRound: chosen, unsure, usedRounds, decode: dec, rounds: R, need,
     wPre, wRes: fsMinWeight(frAtFix),
-    wPost: popc((fr.x | fr.z) & DATA_MASK),
+    wPost: popc((fr.x | fr.z) & FS_DATA_MASK),
     frAtFix, frBeforeFix,
     fired, diag, flagged: anyFlag,
   };
@@ -911,7 +911,7 @@ export function fsProbeWorst(kind = 'std', cfg = {}){
     kind, gate, anc, target,
     label: `X 类首块首道 CNOT 后 · ancilla q${anc} 吃 X（打在 q${target} 之前）`,
     xMask: run.frBeforeFix.x, zMask: run.frBeforeFix.z,
-    dataMask: (run.frBeforeFix.x | run.frBeforeFix.z) & DATA_MASK,
+    dataMask: (run.frBeforeFix.x | run.frBeforeFix.z) & FS_DATA_MASK,
     wPre: run.wPre, wRes: run.wRes, coset: run.coset, cls: run.cls,
     F: run.F, flagged: run.flagged, syn: run.syn.slice(),
   };

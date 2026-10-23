@@ -71,6 +71,11 @@ const QEC_CSS = `
   #qeHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
   #qeDiag{position:fixed;left:-9999px}
   @media (max-width:1180px){#qeStage{width:calc(100vw - 60px)}#qeHint{display:none}}
+  /* R90：顶栏渐进收缩——13 页导航累计超宽（1440：quantum-field/two-body 溢出；1024：全页溢出）。
+     ≤1500 收紧间距/字号；≤1400 隐 .eq（公式信息 HUD/面板仍在）；≤900 隐导航（与主页一致）。 */
+  @media (max-width:1500px){#qeTop{gap:10px;padding:7px 14px}#qeTop .logo{font-size:13px}#qeTop a{font-size:10px;padding:2px 7px}}
+  @media (max-width:1400px){#qeTop .eq{display:none}#qeTop{gap:8px}#qeTop a{font-size:9.5px;padding:2px 6px}}
+  @media (max-width:900px){#qeTop a{display:none}}
 `;
 
 const mdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
