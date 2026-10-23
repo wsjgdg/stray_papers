@@ -9,6 +9,7 @@ import { TASTE_EVIDENCE, EVIDENCE_LABEL, EVIDENCE_STYLE, SCOVILLE_BANDS, getDish
 import { resolveCityFood } from '@/lib/food-city';
 import { loadCityGeo, getCachedCityGeo, type CityGeo } from '@/lib/city-geo';
 import { TasteRadar } from '@/components/food/taste-radar';
+import { TasteScatter } from '@/components/food/taste-scatter';
 import { DishVisual } from '@/components/food/dish-visual';
 import ChinaMap, { type MapRegistration } from '@/components/map/china-map';
 import { cn } from '@/lib/utils';
@@ -34,6 +35,8 @@ export default function FoodPage() {
   const [cityErr, setCityErr] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showBasis, setShowBasis] = useState(false);
+  /** 左栏视图：地图 / 口味图谱 */
+  const [view, setView] = useState<'map' | 'atlas'>('map');
 
   const selected = getProvince(provCode) ?? PROVINCE_FOODS[0];
   const cuisineColor = CUISINE_COLORS[selected.cuisine] ?? '#64748B';
@@ -282,18 +285,42 @@ export default function FoodPage() {
               <ChevronLeft className="w-3.5 h-3.5" /> 返回全国
             </button>
           )}
+          <div className="ml-auto inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5 text-xs shrink-0">
+            {([['map', '味道地图'], ['atlas', '口味图谱']] as const).map(([k, label]) => (
+              <button
+                key={k}
+                onClick={() => setView(k)}
+                className={cn(
+                  'px-2.5 py-1 rounded-md font-medium transition-colors',
+                  view === k ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-500 hover:text-gray-700',
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
         <p className="text-sm text-gray-500">
-          {drill
-            ? <>已下钻到 <b className="text-gray-700">{selected.fullName}</b>，点击地图上的市/区查看该地代表菜；也可用右侧城市清单定位。</>
-            : '点击任意省份下钻到市级，右侧查看代表菜与口味档案。'}
+          {view === 'atlas'
+            ? '把 34 道省级代表菜铺在「辣 × 甜」平面上：横轴辣度、纵轴甜度，点越大越鲜。点击任意点下钻到该省。'
+            : drill
+              ? <>已下钻到 <b className="text-gray-700">{selected.fullName}</b>，点击地图上的市/区查看该地代表菜；也可用下方城市清单定位。</>
+              : '点击任意省份下钻到市级，下方查看代表菜与口味档案。'}
         </p>
       </div>
 
       <div className="grid lg:grid-cols-[1fr_380px] gap-5 items-start">
         {/* ══ 左栏：地图 + 地图下方的说明/城市清单/分享卡 ══ */}
         <div className="min-w-0 space-y-5">
-        {/* ══ 味道地图 ══ */}
+        {/* ══ 味道地图 / 口味图谱 ══ */}
+        {view === 'atlas' ? (
+          <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <TasteScatter active={drill} onPick={(n) => enterProvince(n)} height={620} />
+            <p className="px-4 py-2 text-[11px] text-gray-400 border-t border-gray-100">
+              横轴辣度、纵轴甜度，点越大越鲜；颜色为菜系。点击任意点下钻到该省。
+            </p>
+          </section>
+        ) : (
         <section className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden">
           <ChinaMap
             option={option}
@@ -358,6 +385,7 @@ export default function FoodPage() {
             </div>
           )}
         </section>
+        )}
 
         {/* ══ 地图下方：菜品说明 · 城市清单 · 分享卡 ══
             右栏放雷达和口味条就够高了，把文字类内容挪到地图下方，
