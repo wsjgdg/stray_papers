@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Share2, Check, UtensilsCrossed, MapPin, Flame, ChevronLeft, Loader2, Sparkles, Layers } from 'lucide-react';
 import type { EChartsOption } from 'echarts';
 import { PROVINCE_FOODS, CUISINE_COLORS, TASTE_KEYS, TASTE_DIMENSIONS, getProvince } from '@/lib/food-data';
+import { TASTE_EVIDENCE, EVIDENCE_LABEL, EVIDENCE_STYLE, SCOVILLE_BANDS, getDishNutrition, sodiumToScore } from '@/lib/taste-evidence';
 import { resolveCityFood } from '@/lib/food-city';
 import { loadCityGeo, getCachedCityGeo, type CityGeo } from '@/lib/city-geo';
 import { TasteRadar } from '@/components/food/taste-radar';
@@ -358,31 +359,39 @@ export default function FoodPage() {
 
         {/* ══ 详情面板 ══ */}
         <aside className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm lg:sticky lg:top-[68px]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={panel.key}
-              initial={false}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.18 }}
-            >
-              <div className="flex items-start justify-between gap-2 mb-1">
-                <h2 className="text-lg font-bold text-gray-900 leading-tight">{panel.title}</h2>
-                <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: panelColor }}>{panel.cuisine}</span>
-              </div>
-              <p className="text-xs text-gray-400 mb-4 flex items-center gap-1">
-                <MapPin className="w-3 h-3" />{panel.sub}
-              </p>
+          {/*
+            切换城市时右栏会「跳一下」的原因有两个：
+            1) 之前用 AnimatePresence mode="wait"，旧内容先退出（且容器高度塌陷）再进新内容；
+            2) 标题行、徽标行、简介、城市清单、分享卡的高度都随内容变。
+            这里改成：不做进出场动画（只做透明度微变），并给高度会变的块预留固定高度，
+            让整块面板在切换城市时尺寸恒定。
+          */}
+          <motion.div
+            key={panel.key}
+            initial={{ opacity: 0.45 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.14 }}
+          >
+            <div className="min-h-[52px] flex items-start justify-between gap-2 mb-1">
+              <h2 className="text-lg font-bold text-gray-900 leading-tight line-clamp-2">{panel.title}</h2>
+              <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: panelColor }}>{panel.cuisine}</span>
+            </div>
+            <p className="text-xs text-gray-400 mb-4 flex items-center gap-1">
+              <MapPin className="w-3 h-3" />{panel.sub}
+            </p>
 
+            {/* 固定高度的徽标位：无论是否城市视角，占位一致 */}
+            <div className="h-6 mb-3">
               {panel.isCity && (
                 <div className={cn(
-                  'inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full mb-3',
+                  'inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full',
                   panel.isLocal ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-gray-50 text-gray-500 border border-gray-200',
                 )}>
                   {panel.isLocal ? <Sparkles className="w-3 h-3" /> : <Layers className="w-3 h-3" />}
                   {panel.isLocal ? '城市专属名食' : '沿用省域风味'}
                 </div>
               )}
+            </div>
 
               <div className="mb-3">
                 <DishVisual
@@ -397,7 +406,7 @@ export default function FoodPage() {
                 <TasteRadar taste={selected.taste} color={panelColor} size={240} />
               </div>
 
-              {/* 口径披露：数值无外部统计来源，仅为本项目自评标尺 */}
+              {/* 口径披露：逐维度标出来源等级，有数据的给数据，没有的直接说没有 */}
               <div className="mb-3 text-center">
                 <button
                   onClick={() => setShowBasis((v) => !v)}
@@ -410,18 +419,68 @@ export default function FoodPage() {
               {showBasis && (
                 <div className="mb-4 rounded-xl border border-gray-200 bg-gray-50/80 p-2.5 text-left">
                   <p className="text-[10px] text-gray-500 leading-relaxed mb-2">
-                    <b className="text-gray-700">数值没有外部凭据。</b>不来自消费调研、营养数据库或文献量表，
-                    而是按下列锚点对「该省代表菜典型做法」逐项定标后 0–100 归一，只适合菜系间横向比较。
+                    6 个维度里，<b className="text-gray-700">咸、甜有公开刻度</b>（钠 mg/100g 与蔗糖相对甜度），
+                    <b className="text-gray-700">辣锚定 Scoville 量表</b>；
+                    <b className="text-gray-700">酸、香、鲜没有公开量纲</b>。
+                    具体数值仍是本项目按各自的 0/50/100 锚点定标，不是实测结果。
                   </p>
-                  <ul className="space-y-1">
-                    {TASTE_DIMENSIONS.map((d) => (
-                      <li key={d.key} className="text-[10px] leading-snug text-gray-500">
-                        <span className="font-semibold text-gray-700">{d.name}</span>
-                        <span className="text-gray-400"> · </span>
-                        0 = {d.low}；100 = {d.high}
-                      </li>
-                    ))}
+
+                  {(() => {
+                    const nut = getDishNutrition(panel.dish);
+                    if (!nut) {
+                      return (
+                        <p className="text-[10px] leading-relaxed text-gray-400 mb-2 border-l-2 border-gray-200 pl-2">
+                          「{panel.dish}」在 USDA FoodData Central 没有能对上的条目，
+                          咸 / 甜也退回自评；其余维度见下表。
+                        </p>
+                      );
+                    }
+                    return (
+                      <div className="text-[10px] leading-relaxed text-gray-500 mb-2 border-l-2 border-emerald-300 pl-2">
+                        <div className="font-semibold text-gray-700 mb-0.5">
+                          营养库有对应条目 · 钠 {nut.sodiumMg} mg/100g · 糖 {nut.sugarsG} g/100g
+                        </div>
+                        <div className="text-gray-500">
+                          {nut.description}（{nut.dataType}，fdcId {nut.fdcId}）。{nut.caveat}
+                        </div>
+                        <div className="text-gray-400 mt-0.5">
+                          按 800mg/100g 归一到 100 折算，咸度刻度值约 {sodiumToScore(nut.sodiumMg)}（当前自评估值 {selected.taste.咸}）。
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  <ul className="space-y-1.5">
+                    {TASTE_DIMENSIONS.map((d) => {
+                      const ev = TASTE_EVIDENCE[d.key];
+                      return (
+                        <li key={d.key} className="text-[10px] leading-snug text-gray-500">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-semibold text-gray-700">{d.name}</span>
+                            <span className={cn('px-1 py-px rounded border text-[9px] font-medium', EVIDENCE_STYLE[ev.level])}>
+                              {EVIDENCE_LABEL[ev.level]}
+                            </span>
+                            <span className="text-gray-600">{ev.scale}</span>
+                          </div>
+                          <div className="text-gray-400 mt-0.5">{ev.note}</div>
+                          <div className="text-gray-400 mt-0.5">0 = {d.low}；100 = {d.high}</div>
+                        </li>
+                      );
+                    })}
                   </ul>
+
+                  <div className="mt-2 border-t border-gray-200 pt-2">
+                    <div className="text-[10px] font-semibold text-gray-600 mb-0.5">辣度换算参照 · Scoville</div>
+                    <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] text-gray-500">
+                      {SCOVILLE_BANDS.map((b) => (
+                        <span key={b.label}>{b.label}：{b.range}（{b.example}）</span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-gray-400 leading-relaxed mt-2">
+                    消费调研（外卖/点评菜品热度）没有公开可引用的数据集，未纳入。
+                  </p>
                 </div>
               )}
 
@@ -438,7 +497,7 @@ export default function FoodPage() {
                 ))}
               </div>
 
-              <p className="text-sm text-gray-600 leading-relaxed mb-4">{panel.desc}</p>
+              <p className="text-sm text-gray-600 leading-relaxed mb-4 min-h-[66px]">{panel.desc}</p>
 
               {/* 城市清单 */}
               {drill && cityRows.length > 0 && (
@@ -447,7 +506,7 @@ export default function FoodPage() {
                     <span className="text-xs font-semibold text-gray-700">城市清单</span>
                     <span className="text-[10px] text-gray-400">{localCount}/{cityRows.length} 有专属名食</span>
                   </div>
-                  <div className="flex flex-wrap gap-1.5 max-h-[132px] overflow-y-auto pr-1">
+                  <div className="flex flex-wrap gap-1.5 h-[132px] overflow-y-auto pr-1 content-start">
                     {cityRows.map((c) => (
                       <button
                         key={c.fullName}
@@ -474,7 +533,7 @@ export default function FoodPage() {
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 mb-1">
                   <Flame className="w-3.5 h-3.5 text-rose-500" /> 分享卡 · #WorkBuddy #1024程序员节
                 </div>
-                <pre className="text-[11px] text-gray-500 whitespace-pre-wrap font-sans leading-relaxed max-h-32 overflow-y-auto">{shareText}</pre>
+                <pre className="text-[11px] text-gray-500 whitespace-pre-wrap font-sans leading-relaxed h-[88px] overflow-y-auto">{shareText}</pre>
               </div>
 
               <button
@@ -485,7 +544,6 @@ export default function FoodPage() {
                 {copied ? '已复制分享文案' : '复制分享文案（带话题标签）'}
               </button>
             </motion.div>
-          </AnimatePresence>
         </aside>
       </div>
 
