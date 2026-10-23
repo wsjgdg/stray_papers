@@ -291,13 +291,15 @@ export default function FoodPage() {
       </div>
 
       <div className="grid lg:grid-cols-[1fr_380px] gap-5 items-start">
+        {/* ══ 左栏：地图 + 地图下方的说明/城市清单/分享卡 ══ */}
+        <div className="min-w-0 space-y-5">
         {/* ══ 味道地图 ══ */}
         <section className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden">
           <ChinaMap
             option={option}
             onSelect={onSelect}
             maps={maps}
-            height={560}
+            height={620}
             className="w-full [&_canvas]:!h-full"
           />
 
@@ -356,6 +358,69 @@ export default function FoodPage() {
             </div>
           )}
         </section>
+
+        {/* ══ 地图下方：菜品说明 · 城市清单 · 分享卡 ══
+            右栏放雷达和口味条就够高了，把文字类内容挪到地图下方，
+            左栏不再空一大片，整页高度也更接近。 */}
+        <motion.div
+          key={`${panel.key}-info`}
+          initial={{ opacity: 0.45 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.14 }}
+          className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm"
+        >
+          <div className="flex items-start gap-3 mb-3">
+            <span className="shrink-0 mt-0.5 text-[11px] px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: panelColor }}>
+              {panel.cuisine}
+            </span>
+            <p className="text-sm text-gray-600 leading-relaxed">{panel.desc}</p>
+          </div>
+
+          {drill && cityRows.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-semibold text-gray-700">城市清单</span>
+                <span className="text-[10px] text-gray-400">{localCount}/{cityRows.length} 有专属名食</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5 max-h-[104px] overflow-y-auto pr-1 content-start">
+                {cityRows.map((c) => (
+                  <button
+                    key={c.fullName}
+                    onClick={() => setCitySel(c.label)}
+                    title={`${c.fullName} · ${c.food.dish}`}
+                    className={cn(
+                      'text-[11px] px-2 py-0.5 rounded-full border transition-colors',
+                      c.label === citySel
+                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        : c.food.isLocal
+                          ? 'bg-white text-gray-700 border-gray-300 hover:border-emerald-400 hover:text-emerald-700'
+                          : 'bg-gray-50 text-gray-400 border-gray-200 hover:border-gray-300',
+                    )}
+                  >
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-3 pt-3 border-t border-gray-100 grid gap-3 sm:grid-cols-[1fr_210px] sm:items-end">
+            <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-3">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 mb-1">
+                <Flame className="w-3.5 h-3.5 text-rose-500" /> 分享卡 · #WorkBuddy #1024程序员节
+              </div>
+              <pre className="text-[11px] text-gray-500 whitespace-pre-wrap font-sans leading-relaxed max-h-[72px] overflow-y-auto">{shareText}</pre>
+            </div>
+            <button
+              onClick={copyShare}
+              className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-50 text-emerald-700 text-sm font-semibold hover:bg-emerald-100 transition-colors border border-emerald-200"
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+              {copied ? '已复制分享文案' : '复制分享文案'}
+            </button>
+          </div>
+        </motion.div>
+        </div>
 
         {/* ══ 详情面板 ══ */}
         <aside className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm lg:sticky lg:top-[68px]">
@@ -497,52 +562,6 @@ export default function FoodPage() {
                 ))}
               </div>
 
-              <p className="text-sm text-gray-600 leading-relaxed mb-4 min-h-[66px]">{panel.desc}</p>
-
-              {/* 城市清单 */}
-              {drill && cityRows.length > 0 && (
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-semibold text-gray-700">城市清单</span>
-                    <span className="text-[10px] text-gray-400">{localCount}/{cityRows.length} 有专属名食</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 h-[132px] overflow-y-auto pr-1 content-start">
-                    {cityRows.map((c) => (
-                      <button
-                        key={c.fullName}
-                        onClick={() => setCitySel(c.label)}
-                        title={`${c.fullName} · ${c.food.dish}`}
-                        className={cn(
-                          'text-[11px] px-2 py-0.5 rounded-full border transition-colors',
-                          c.label === citySel
-                            ? 'bg-emerald-600 text-white border-emerald-600'
-                            : c.food.isLocal
-                              ? 'bg-white text-gray-700 border-gray-300 hover:border-emerald-400 hover:text-emerald-700'
-                              : 'bg-gray-50 text-gray-400 border-gray-200 hover:border-gray-300',
-                        )}
-                      >
-                        {c.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* share card */}
-              <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-3 mb-3">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 mb-1">
-                  <Flame className="w-3.5 h-3.5 text-rose-500" /> 分享卡 · #WorkBuddy #1024程序员节
-                </div>
-                <pre className="text-[11px] text-gray-500 whitespace-pre-wrap font-sans leading-relaxed h-[88px] overflow-y-auto">{shareText}</pre>
-              </div>
-
-              <button
-                onClick={copyShare}
-                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-emerald-50 text-emerald-700 text-sm font-semibold hover:bg-emerald-100 transition-colors border border-emerald-200"
-              >
-                {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-                {copied ? '已复制分享文案' : '复制分享文案（带话题标签）'}
-              </button>
             </motion.div>
         </aside>
       </div>
