@@ -96,6 +96,19 @@ tsconfig.json                       # TypeScript 配置（@/* → src/*）
 
 > **关于本地图片池（第 3 级）的更新机制**：它是编译期写死的常量数组，与第 1/2 级 API 运行时拉取的结果**相互独立**，API 拉到的新 URL 不会自动回写到本地图片池。如需扩展本地池，需手动编辑 `src/lib/spot-data.ts` 中的 `CATEGORY_PHOTOS`。
 
+## 中国味道：菜品照片接入
+
+菜品照片走**本地打包 + 人工供图**，不引用任何境外图床（Wikimedia 在国内不可达，实测 `upload.wikimedia.org` 返回 000）。
+
+把图片放进 `public/dishes/`、文件名带上菜名（如 `麻婆豆腐.jpg`），再跑 `npm run photos`，清单自动生成，详情面板就把「口味卡面」换成照片；没放图的菜保持卡面，不会裂图。命名规则、署名写法与 34 道省级代表菜清单见 `public/dishes/README.md`。
+
+## 部署注意（带访问口令的网关）
+
+本项目发布在 EdgeOne + CloudStudio Gateway 之后，网关对**所有**路径（含 `/_next/static/*`）都校验 `?sharecode=`，而 Next 生成的资源 URL 不带该参数。两处必要处理：
+
+- `scripts/inject-sharecode.mjs`：发布后给 `.next/server` 下的 HTML / RSC / 清单补上口令。**必须覆盖 `route-cache/APP_PAGE` 下的同名 HTML**，那是 Next 16 实际服务的那份，只改 `app/` 目录线上仍然白屏。
+- `server.mjs`：把文档响应强制设为 `Cache-Control: no-store`。否则 CDN 会按 Next 默认的 `s-maxage=31536000` 把某个 URL 的 HTML 缓存一年，下次发布换了 chunk 哈希就会白屏，且应用侧清不掉。
+
 ## JSON 导入格式
 
 支持多种字段名，自动识别：

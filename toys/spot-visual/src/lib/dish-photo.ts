@@ -1,33 +1,32 @@
 // ════════════════════════════════════════════════════════════════════════
 // 菜品图片接入位
 //
-// 现状：暂无真实菜品照片。
-// 已核查的可选图源与结论：
-// - Wikimedia Commons / upload.wikimedia.org：本机与沙箱网络不可达（HTTP 000）
-// - Unsplash / Pexels 搜索 API：接口可达（api.unsplash.com / api.pexels.com），
-//   但项目未配置 UNSPLASH_ACCESS_KEY / PEXELS_API_KEY，且其图库对「麻婆豆腐」
-//   这类具体中国菜品的命中率很低，硬套会造成「图不对菜」的错误信息
-// - GitHub 上的中文菜品数据集（ChineseFoodNet / Food-530 等）：SATA 等研究许可，
-//   体积 20GB 级，不提供可直接引用的图片直链，不适合随前端发布
+// 现状：等待人工供图。图片一律放在 public/dishes/，随前端本地打包，
+// 不引用任何境外图床（Wikimedia 等在国内不可达，实测 upload.wikimedia.org 直接 000）。
 //
-// 因此这里只保留数据契约：往 DISH_PHOTOS 里按菜名补一条 { src, credit, license }，
-// 详情面板就会自动把卡面替换为真实照片，无需改动组件逻辑。
-// src 建议放 public/dishes/ 下的本地文件，避免依赖外网与防盗链。
+// 供图方式：
+//   1. 把图片放进 public/dishes/，文件名带上菜名即可，如 `麻婆豆腐.jpg`、`四川-麻婆豆腐.jpg`
+//   2. 需要署名/协议的，写 public/dishes/credits.json
+//   3. 跑 `npm run photos`，自动生成 dish-photos.generated.ts
+// 没有照片的菜继续走本地生成的口味卡面，不会出现裂图。
 // ════════════════════════════════════════════════════════════════════════
+import { GENERATED_DISH_PHOTOS } from './dish-photos.generated';
 
 export interface DishPhoto {
-  /** 图片地址，建议 /dishes/xxx.jpg（本地静态资源） */
+  /** 图片地址，/dishes/xxx.jpg（本地静态资源） */
   src: string;
   /** 作者 / 来源，用于署名（CC-BY-SA 等协议要求） */
   credit?: string;
-  /** 许可协议，如 CC0 / CC-BY-SA-4.0 */
+  /** 许可协议，如 CC0 / CC-BY-SA-4.0 / 已获授权 */
   license?: string;
   /** 焦点位置，用于 object-position，默认 50% 50% */
   focus?: string;
 }
 
-/** 菜名 → 照片。为空即全部走本地生成卡面（当前状态）。 */
-export const DISH_PHOTOS: Record<string, DishPhoto> = {};
+/** 手工覆盖位：需要临时替换某道菜的图时写在这里，优先级高于自动生成清单。 */
+export const DISH_PHOTOS: Record<string, DishPhoto> = {
+  ...GENERATED_DISH_PHOTOS,
+};
 
 export function getDishPhoto(dish: string): DishPhoto | undefined {
   return DISH_PHOTOS[dish];
