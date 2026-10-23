@@ -121,6 +121,7 @@ export class TwoBodyApp {
       this.quad = new Quad(gl);
       this.initPrograms();
       this.initTargets();
+      this.bindUI();
       /* 初次加载沿用 URL 参数（不重置 g/eps/omega） */
       this.loadPreset(this.state.preset, this.state.stats, false);
       this.resize();
@@ -137,6 +138,9 @@ export class TwoBodyApp {
     const d = this.q('#tbDiag');
     if (d) d.textContent = 'ERR ' + msg;
     document.title = 'ERR ' + msg;
+    /* 控件禁用：GL 缺失时任何点击/输入都不应有动作（曾有此坑——见 worklog R97：
+       buildDOM 先接线后取 gl，失败后点预设抛 TypeError 而非优雅报错）。 */
+    this.container.querySelectorAll('button, input').forEach(el => { el.disabled = true; });
     const c = this.q('#tbField');
     if (c){
       const ctx = c.getContext('2d');
@@ -199,6 +203,13 @@ export class TwoBodyApp {
 <div id="tbHint" class="panel qhint"><b></b><span></span></div>
 <div id="tbToast"></div>
 <div id="tbDiag"></div>`;
+  }
+
+  /* 控件接线：仅在 GL 就绪后调用（与主页 app.js 的 bindUI 同序）——
+     R97 前接线在 buildDOM 内（先接线后取 gl），GL 创建失败时控件仍活着，
+     点预设直接抛 TypeError（读 undefined.bindTexture）。现在失败路径压根
+     没有监听器，双保险（fail() 还会禁用控件）。 */
+  bindUI(){
     this.container.querySelectorAll('[data-preset]').forEach(b =>
       this.on(b, 'click', () => this.loadPreset(b.dataset.preset, this.state.stats, true)));
     this.on(this.q('#tbBoson'), 'click', () => this.setStats('boson'));

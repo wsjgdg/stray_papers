@@ -57,6 +57,7 @@ open dist/family.html                   # 码族与真阈值：重复码族 / St
 # 方式二：ES 模块版（需 HTTP，file:// 受模块 CORS 限制）
 python3 -m http.server 8765          # 或 npm start
 # 访问 http://localhost:8765            （主页，顶栏三个入口进子页）
+# 或   http://localhost:8765/quantum-field.html   （主页别名深链，自动跳 index.html）
 # 或   http://localhost:8765/two-body.html
 # 或   http://localhost:8765/hubbard.html
 # 或   http://localhost:8765/paths.html

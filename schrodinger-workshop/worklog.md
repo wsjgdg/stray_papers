@@ -68,6 +68,7 @@
 | R92 | README 收尾段串写修复（文档追改轮，生产代码零改动） | 用户报「readme 和 worklog 内容串了」。根因：README 收尾段「RX 收官」段自 R85（c147971）起整段替换式更新，但 f249f5e（R86）/19b476f（R87）/db4453c（R88）三代只改标签号不改内容 ⟹ 「R88 收官」下挂的是 R85 内容，R85–R88 真身收官全缺失。修复：R88/R87/R86 三段补回 + 原段标签改回 R85 + 标题改「R67–R92 全部闭环」 |
 | R93 | README 职责重构：只留功能/实现/使用，R 轮次记录归 worklog（文档重构轮，生产代码零改动） | 用户澄清职责边界：「readme 不应该写工作流程和完成进度（R）…只放现有功能和结构、实现方式、使用说明」。重构后 README 六节：简介 → 运行 → 功能 → 物理与数值方法 → 架构 → 技术栈。**删两节**：`## 验证`（bak L2178 起，CDP 通过率总表）、`## 后续方向`（bak L2443 起，backlog + R67–R72 计划表）——均属工作流程/进度，归 worklog。全文清扫 R1–R92 轮次引用：批次一 `/tmp/r93_clean.py` 261 对（260 命中：删 5 块、悬空引用修 5 处、标题清理、轮数缩写 `R1/single`→`R=1/single` 防混淆、架构图 10 条目 + 12 处注释）+ 批次二 `/tmp/r93_patch2.py` 11 对（修 5 MISS 转录误差 + 4 漏网行内引用）。误抓保留 2 处（L508 `potR2` 参数名、L1934 `R32F` 纹理格式名）。diff：删 440 / 增 304，净 −136 行（2503→2367） |
 | R94 | 手机竖屏适配公共模块化：顶栏收编 + 汉堡抽屉 + 底部 dock | 用户指令「做小屏适配，尽量用公共模块，少每页独立维护」。盘点病灶：36 处同构顶栏媒体查询（12 页 × 1500/1400/900）+ 12 页 `#xxTop` 规则族重复、≤900 只隐导航 ⟹ 12 页互链手机端不可达、390px 竖屏面板+HUD 必重叠。新增 `src/core/responsive.js`（约 180 行）四件套：① 顶栏三档收编公共类 `.qtop`（差异值 5 页各 1–3 行属性选择器，7 页零差异）② ≤900 汉堡抽屉（桌面 `.qnav{display:contents}` 逐位不变）③ ≤860 底部 dock 三态 + 面板/HUD 转底部 sheet + stage 内联让位（`dataset.qfRestore` 精确还原）④ `injectResponsive()` DOM 增强包 `queueMicrotask`。六坑：时序（innerHTML 重写清 dock ⟹ microtask）、CSS 特异性三轮（类输 id ⟹ 删本地族 ⟹ 差异行压响应段 ⟹ 终局属性选择器 (0,2,0) vs `.qtop.qtop` (0,2,0) 后注入赢）、styles.js 跨行删除残骸吞 `#panel` 规则、flag drawFan 负半径崩（numW 收缩 + 三重 clamp）、responsive.js 两处笔误（冒号/`}}}`）、dock 死胡同（off 态 dock display:none ⟹ 无恢复路径；改常驻退让 opacity .4）。cdp92 **23/23** + cdp90 4/4 + cdp91 12/12 + pot85 38/38 + pot87 47/47；28 files，2726+/706− |
+| R97 | 404 根因修复 + 交互面审计 + 页面数评估 | 用户三问（「点跳转就 404？」「交互为什么太弱？」「有必要开这么多页面吗？」）。**404 两向量实测确认**（cdp98）：V1 favicon.ico 每导航 404（DevTools 每次跳转一条红 404，体感主因）⟹ 13 HTML head 注入 SVG data-URI favicon（零文件、file:// 双通）；V2 根级 `/quantum-field.html` 404（dev 主页实名 index.html vs README/dist 口径 quantum-field.html）⟹ 新增根级**深链跳转桩**（meta refresh→index.html；不改名 index.html 是为保目录根 `/` 默认入口）。**环境事故连带真 bug**：cdp99 抓到 two-body 点预设抛 `TypeError … bindTexture` → 顺栈发现全环境 webgl2 不可用 → chrome 日志 `xcb_connect() failed` ⟹ **Xvfb 进程已死**（GL 死亡期 cdp90 像素断言空转，修复后全部重测）；连带缺陷：GL 失败时 buildDOM 先接线后取 gl ⟹ 控件全活点击即崩。修复：接线拆入 `bindUI()`（gl 就绪才调，对齐 app.js）+ `fail()` 禁用控件；cdp100 新套件用 `addScriptToEvaluateOnNewDocument` 桩构造 GL 缺失，5/5（明确报错 + 控件全禁用 + 零异常）。**交互审计 cdp99**：12 子页 197 按钮 + 40 滑块逐个点击/拖动，dev+dist 双通道 **237/237 有反应、零死控件**；两个探针假阳性教训（burger aria 盲区、已激活预设幂等）。**评估**：交互弱是类别差异（实时沙盒 vs 参数化计算器）非缺陷——子页全活但无时间维度/画布直操；**QEC 七页（qec/shor/gatenoise/flag/rounds/cycle/family）是最可整合的一簇**，flag/rounds/cycle 各仅 2 按钮 2 滑块，合并列为架构决策项挂起。九套件全绿（cdp98 8/8 · cdp99 37/37×2 · cdp100 5/5 · cdp92 43/43 · cdp90 4/4 · cdp91 12/12 · pot85 38/38 · pot87 47/47）；30 files，178+/0− |
 | R96 | R95 遗留落地：构建守卫 / 触摸目标放大 / 横屏放宽 / 三视口实测 | 用户指令「继续」。① **构建守卫**（build-standalone.mjs +12）：逐页 bundle 扫描**独立成行** `injectResponsive()` 调用，漏调即 `fail()` 并提示改 src 页面模块。**全文正则假阴性教训**：初版 `/injectResponsive\(\)/` 被 responsive.js 自身文档注释骗过——注释掉 qec 调用后构建仍 OK；FAIL 路径实测抓到后改行级匹配，双向验证（正路 13/13 + FAIL 路径准确报错）——再次印证「守卫必须双向验证」。② **触摸目标**：burger 30×26→**40×36**、dock 按钮 57×29→**≈31px 高**（dock 总高 43.2 ≤ 44px 带）；仍低于 44px 舒适线（再放大必抬带高吃 stage 空间），M1b 断言下限 ≥34/≥30 含回归余量。③ **横屏放宽**：SHEET_G `max-height` 改 `var(--qf-sm,46vh)` + ≤860 `:root{--qf-sm:46vh}` + landscape 覆盖 **64vh**（844×390 面板带 179→243px）——CSS 变量驱动免监听 orientationchange。④ **M14**：360×640 / 412×915 / 430×932 × {qec,index,gatenoise} 三视口实测（零 console、抽屉开/关、sheet 可滚）全过。cdp92 **43/43**（+M1b/M14）+ cdp90 4/4 + cdp91 12/12 + pot85 38/38 + pot87 47/47；15 files，264+/70− |
 | R95 | R94 缺口核查与修复：抽屉死胡同 / 链接 20px / hud 裁切 | 用户问「有什么缺口或可优化的？」⟹「要，其他也写入worklog」。方法：四个只读探测套件（cdp93 边界带/resize/dvh/a11y、cdp94 切态裁切 + 触摸目标、cdp95 抽屉计算样式、cdp96 可取消性、cdp97 全页绝对定位子元素扫描）。**实测确认 3 缺陷**：D1 抽屉打开后无法取消（`.qnav` z:9 盖住 static burger，外点关闭判据恒真；唯一退出是导航）⟹ burger `position:relative;z-index:11` + backdrop 点击收 + Escape 收 + 焦点回汉堡；D2 抽屉链接 20px 高（`.qtop.qtop a` (0,2,1) 压死 `.qnav a`，主页 id 级 `#topbar .navlink` 连 (0,3,1) 都打不过）⟹ `!important` 收口 13px/14px 6px/1.25 = **44.25px**（顺带满足 44px 触摸目标）；D3 hud overflow 各页不一（hubbard/shor 无声明，shor 已临界裁切 387>386）⟹ ≤860 段收编 `.qhud{overflow-y:auto}`（前置核查 gatenoise `.sfill` 在 `.strack` 内不受影响）。a11y 同批：aria-expanded/label 翻转。P2：三处 vh→dvh 双声明（Safari 15.4+/Chrome 108+ 支持，低于 README 地板 16.4）+ prefers-reduced-motion。**排除 3 项疑罪**（边界带四档 / 跨断点 resize / 面板可滚全实测无罪）。**两个断言假阳性教训**：G1 不切态量隐藏元素、M13 把「可滚容器折叠线外」当裁切。cdp92 扩至 **38/38**（+M2c/M7e/M12/M13）+ cdp90 4/4 + cdp91 12/12 + pot85 38/38 + pot87 47/47 |
 | R77 | 开放量子系统（新页 `noise.html`） | 密度矩阵 + **Kraus 三通道**（振幅/相位/退极化，均为精确解）+ 量子轨迹（Kraus 分支采样，平均 ⟹ ρ）；单比特闭式（**T₂ ≤ 2T₁** 的弧线几何，斜率实测 −0.500000）、Bell 的 **X 态 concurrence 闭式**（六通道 × 三 τ 9.3e-15）、**ESD t\*=τln3/2**（0.330/0.550/1.100）、⟨XX⟩=−⟨YY⟩=e^{−2t} & ⟨ZZ⟩≡1、Kraus 完备性 2.2e-16、半正定 λ_min 7.7e-43；**与 R69 的定量对照**（MC 4 万条逐帧随机相位 ⟹ 1/T₂=γ_φ，0.9σ）；pot77 CPU **24/24** + cdp77 浏览器 **14/14**（src+dist）；修 6 个问题（relax 双侧闭式漏两跳衰变 / NZ_CSS 未注入 / scanBell 漏 y / nzApplyAll 不收 null / C0 与 qcircuit 重名 / 四处测试口径） |
@@ -1011,6 +1012,117 @@ R95 诚实遗留清单中可在代码侧闭环的 4 项：① 新页漏调 `inje
 ### 六、diff 统计
 
 15 files changed, 264 insertions(+), 70 deletions(-)：`scripts/build-standalone.mjs` +12（守卫）；`src/core/responsive.js` +23/−5（触摸目标两处、横屏 var、M1b/M14 相关注释）；13 dist 页重建。responsive.js 226 行，build-standalone.mjs 186 行。
+
+## R97（2026-10-23）404 根因修复 + 交互面审计 + 页面数评估（用户三问：「点跳转就 404？」「交互为什么太弱？」「有必要开这么多页面吗？」）
+
+### 起因
+
+用户三连问。全部按项目纪律先实测后结论——三个新套件：**cdp98**（404 链路诊断）、**cdp99**（子页交互面功能审计）、**cdp100**（WebGL2 缺失降级路径，`addScriptToEvaluateOnNewDocument` 桩构造）。
+
+### 一、「点跳转就 404」——两个向量，均为实测确认（cdp98）
+
+| # | 向量 | 实测证据 | 影响面 |
+|---|---|---|---|
+| V1 | **favicon.ico 404** | 每次全新页面加载浏览器自动请求 `/favicon.ico` → 404；DevTools network 里**每次跳转都有一条红 404** | 13 页 × 每次导航——「点跳转就 404」的体感主因 |
+| V2 | **根级 `/quantum-field.html` 404** | dev 主页实名为 `index.html`，而 README/dist/书签口径一律 `quantum-field.html`；根级深链必 404 | 任何按分发版口径拼的根级链接/书签 |
+
+页面间点击链路本身无罪：A2（dev 12 navlink 全 200）、B2（dist 12 链接全 200）、A3/B3（主页往返）全过。
+
+**修复**：
+1. **V1**：13 个 HTML head 注入 SVG data-URI favicon（深底青 ψ，`%CF%88` 编码）——零额外文件，file:// 与 HTTP 双通，dist 随 head 自动带入；
+2. **V2**：根级新增 `quantum-field.html` **深链跳转桩**（`<meta http-equiv="refresh" content="0; url=index.html">`，file:// 也跳）。不选「把 index.html 改名 quantum-field.html」——那会让目录根 `/` 失去默认入口（python http.server 直接列目录）。两种主页口径自此合一。
+
+**断言**：cdp98 C1 强化为「不 404 **且** 经桩落 `/index.html`」；cdp91 P1a 随之改为「磁盘 ≡ NAV ∪ 显式别名桩集合」（`STUBS=['quantum-field.html']`）——别名显式列出，防止未来的新页面借壳冒充（那才是真导航洞）。
+
+### 二、环境事故与连带真 bug：Xvfb 死亡 → webgl2 全灭 → two-body 降级路径抛 TypeError
+
+**事故链**（全部实测，非推断）：
+1. cdp99 首跑抓到 two-body 点「自由对穿」抛 `TypeError: Cannot read properties of undefined (reading 'bindTexture')`；
+2. 顺栈查到 `two-body.js:372 upload()` 里 `this.gl` undefined → 探活发现 `#tbDiag = "ERR no webgl2"`；
+3. 对照实验：**主页 quantum-field 同样 `ERR no webgl2`**，全新 canvas 默认属性 `getContext('webgl2')` 也返回 null——**全环境 webgl2 不可用**，5 组 flag 组合（angle/swiftshader/legacy/webgl/in-process/no-flags）全灭；
+4. chrome 日志根因：`DisplayVkXcb.cpp:62 (initialize): xcb_connect() failed, error 1` ⟹ **Xvfb 进程已死**（只剩陈旧 socket `/tmp/.X11-unix/X99`）；`ps aux` 证实无 Xvfb 进程。此前 cdp90 的像素统计断言是在 Xvfb 活着的早期会话跑的——GL 死亡期这些断言是空转，环境修复后已全部重测；
+5. 重启 Xvfb :99 后 5 组 flag 全部恢复 `WebGL 2.0 (OpenGL ES 3.0 Chromium) | fbo-ext:true`。
+
+**连带暴露的真代码缺陷**（独立于环境、值得修）：GL 创建失败时 two-body 的 `mount()` 在 `createContext` 后提前 return，但 `buildDOM()` **先接线后取 gl**——控件全活着，点预设即撞 `undefined.bindTexture`。README 承诺「无 WebGL2 时页面会明确报错而非白屏」，实际是「报错横幅 + 点击崩溃」两重体验。
+
+**修复**（`src/two-body.js`）：
+1. 控件接线从 `buildDOM()` 拆出为 `bindUI()`，mount 里 gl 就绪后才调——与主页 `app.js` 同序（主页本就后接线，故无此患）；
+2. `fail()` 增加禁用全部 `button/input`（双保险，未来加接线也炸不起来）。
+
+**验证**（cdp100，新套件 5/5）：用 `addScriptToEvaluateOnNewDocument` 桩掉 `getContext('webgl2')` 确定性构造 GL 缺失——G1 明确报错（title + #tbDiag）、G2 控件全禁用（10/10 按钮、4/4 滑块）、G3 点击/输入全部控件零异常、G4/G4b 主页对照同样安静。**不靠弄坏环境测降级路径**。
+
+### 三、交互面审计：237/237 控件全有反应，零死控件（cdp99）
+
+对 12 个子页逐个点击每个按钮、逐个拖动每个滑块（设 75% 位值 + input 事件），以「HUD 文本 + canvas 像素摘要 + burger aria 态」为指纹判定可见变化：
+
+| 页 | 按钮 | 滑块 | 合计 | 有反应 |
+|---|---|---|---|---|
+| two-body | 14 | 4 | 18 | 18 |
+| hubbard | 12 | 1 | 13 | 13 |
+| paths | 8 | 6 | 14 | 14 |
+| qcircuit | 14 | 5 | 19 | 19 |
+| noise | 15 | 5 | 20 | 20 |
+| qec | 15 | 2 | 17 | 17 |
+| shor | 32 | 4 | 36 | 36 |
+| gatenoise | 16 | 5 | 21 | 21 |
+| flag | 13 | 2 | 15 | 15 |
+| rounds | 19 | 2 | 21 | 21 |
+| cycle | 23 | 2 | 25 | 25 |
+| family | 16 | 2 | 18 | 18 |
+| **合计** | **197** | **40** | **237** | **237** |
+
+dev 与 dist 双通道各 37/37。**结论：没有死控件、没有坏控件。**
+
+**两个探针假阳性教训**（同 R95 记录传统，初跑 I5 报 23 个「无反应」）：
+1. **burger 盲区**：桌面宽下 `.qnav{display:contents}`，抽屉开合不进文本/canvas 指纹 ⟹ 指纹补采 `aria-expanded`（cdp99b 实测翻转正常，cdp92 移动档另证开关）；
+2. **幂等预设误判**：11 个「无反应」按钮全部 `class="on"`（已激活态）——再点一遍无变化是正确行为 ⟹ 已激活预设跳过无变化判定（仍点击测 error）。
+
+### 四、评估（回答后两问）
+
+**「为什么除了 quantum-field，其他交互都弱？」——是类别差异，不是缺陷：**
+
+| 维度 | quantum-field（主页） | 12 个子页 |
+|---|---|---|
+| 交互类别 | **实时沙盒**：RAF 连续演化、6 物理内核、URL 参数 | **参数化计算器**：设参 → 点算 → 出图出数 |
+| 时间维度 | 播放/暂停/单步、连续流 | 无（一次性快照） |
+| 画布直操 | 轨道拖拽、滚轮缩放、磁通管点选、势场涂抹 | 仅 paths 有指针画路径 |
+| 控件数 | 163 处构造 | 13–36/页 |
+| 键盘 | HUD 有 | 无 |
+
+子页控件**全是活的**（237/237 实测），「弱」的真相是**没有时间维度与画布直操**——拖滑块其实即时重算（qec 等页 input 即 recompute），缺的是「播放着看 P_L(p) 随 p 演变」这类连续反馈。这是增强方向而非修复项：加播放/擦洗、plot hover tooltip、键盘快捷键，都属新功能轮次。
+
+**「有必要开这么多页面吗？」——分域评估：**
+
+| 域 | 页数 | 评估 |
+|---|---|---|
+| 主场 + 物理沙盒（quantum-field / two-body / hubbard / paths / qcircuit / noise） | 6 | 各自独立物理域、独立内核，分页合理 |
+| **QEC 家族（qec / shor / gatenoise / flag / rounds / cycle / family）** | **7** | **最可整合的一簇**：同一叙事线（纠错入门 → 级联 → 门噪声 → 旗标 → 多轮 → 循环 → 码族）拆 7 页，学习者要跳 7 次；且 flag/rounds/cycle 三页各只有 2 按钮 2 滑块，是窄切片 |
+
+诚实结论：**13 页对「课程站按讲分发」成立，但 QEC 七页有真实整合收益**。不主张本轮动刀——七页各有 100+ 数值断言（pot 套件），合并是架构级重构、回归面大；建议列为决策项（见下），由用户定方向。
+
+### 五、验证（九套件全绿，src+dist 双通道；Xvfb 修复后 GL 相关全部重测）
+
+| 套件 | 结果 | 说明 |
+|---|---|---|
+| cdp98 | **8/8** | 404 诊断（+C1 落点强化） |
+| cdp99 dev / dist | **37/37 · 37/37** | 交互审计双通道 |
+| cdp100 | **5/5** | 新：GL 缺失降级路径（桩构造） |
+| cdp92 | **43/43** | R94–R96 移动适配回归 |
+| cdp90 / cdp91 | 4/4 · 12/12 | 渲染/联通（GL 恢复后重测；cdp91 P1a 适配别名桩） |
+| pot85 / pot87 | 38/38 · 47/47 | CPU 数值回归 |
+
+13/13 dist 重建（favicon + two-body 修复随源码进入产物）。
+
+### 六、遗留与决策项（显式挂起，不静默）
+
+- **QEC 七页整合**：架构决策，回归面大（七页各有 pot 套件），待用户拍板方向（整页合并 / 加 QEC 专题 hub 页 / 维持现状）；
+- **子页时间维度与画布直操**（播放/擦洗/hover/键盘）：增强轮次，非缺陷；
+- **真实触摸 / iOS Safari 真机**：仍需设备（R95 起挂起）；
+- **测试环境依赖**：cdp 套件依赖 Xvfb :99（`xcb_connect` 失败即 webgl2 全灭、GL 断言空转）——建议启动器先探 `DISPLAY=:99 xdpyinfo` 再跑套件，此条待写入工程 README/脚本（本轮未动启动器）。
+
+### 七、diff 统计
+
+30 files changed, 178 insertions(+), 0 deletions(-)：13 个根 HTML 各 +1 favicon 行、新增 `quantum-field.html` 深链桩（+17）、`src/two-body.js` 净 +11（接线移入 bindUI + fail() 禁用控件 + 注释；纯移动无删除）、README 运行节 +1（别名深链说明）、13 dist 各 +1（favicon 随 head 进产物）、worklog R97（+112）。
 
 ## R90（2026-10-23）面板视觉保真度评审（README「后续方向」② 收官）
 
