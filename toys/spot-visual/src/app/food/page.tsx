@@ -6,6 +6,7 @@ import { Share2, Check, UtensilsCrossed, MapPin, Flame, ChevronLeft, Loader2, Sp
 import type { EChartsOption } from 'echarts';
 import { PROVINCE_FOODS, CUISINE_COLORS, TASTE_KEYS, TASTE_DIMENSIONS, getProvince } from '@/lib/food-data';
 import { TASTE_EVIDENCE, EVIDENCE_LABEL, EVIDENCE_STYLE, SCOVILLE_BANDS, getDishNutrition, sodiumToScore } from '@/lib/taste-evidence';
+import { getDishIngredients, SODIUM_BANDS } from '@/lib/ingredient-nutrition';
 import { resolveCityFood } from '@/lib/food-city';
 import { loadCityGeo, getCachedCityGeo, type CityGeo } from '@/lib/city-geo';
 import { TasteRadar } from '@/components/food/taste-radar';
@@ -561,6 +562,45 @@ export default function FoodPage() {
                       );
                     })}
                   </ul>
+
+                  {(() => {
+                    const ing = getDishIngredients(panel.dish);
+                    if (!ing) return null;
+                    return (
+                      <div className="mt-2 border-t border-gray-200 pt-2">
+                        <div className="text-[10px] font-semibold text-gray-600 mb-1">
+                          主料参照 ·《中国食物成分表》第 6 版（每 100g）
+                        </div>
+                        <div className="space-y-0.5">
+                          {ing.items.map((it) => (
+                            <div key={it.code} className="flex items-baseline gap-1.5 text-[10px] text-gray-500">
+                              <span className="text-gray-700 font-medium">{it.name}</span>
+                              <span className="text-gray-300">#{it.code}</span>
+                              <span>{it.energyKcal} kcal</span>
+                              <span className="text-gray-300">·</span>
+                              <span>钠 {it.sodiumMg} mg</span>
+                              {it.note && <span className="text-gray-400">（{it.note}）</span>}
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-[10px] text-gray-400 leading-relaxed mt-1">{ing.caveat}</p>
+                        <p className="text-[10px] text-gray-400 leading-relaxed mt-0.5">
+                          这是主料数据，不是整道菜的实测值。
+                        </p>
+                      </div>
+                    );
+                  })()}
+
+                  <div className="mt-2 border-t border-gray-200 pt-2">
+                    <div className="text-[10px] font-semibold text-gray-600 mb-0.5">咸度刻度的量纲锚定</div>
+                    <div className="space-y-0.5">
+                      {SODIUM_BANDS.map((b) => (
+                        <div key={b.label} className="text-[10px] text-gray-500">
+                          {b.label}：{b.range} → 刻度 {b.score}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
                   <div className="mt-2 border-t border-gray-200 pt-2">
                     <div className="text-[10px] font-semibold text-gray-600 mb-0.5">辣度换算参照 · Scoville</div>
