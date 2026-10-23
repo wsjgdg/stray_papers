@@ -7,6 +7,7 @@ import type { EChartsOption } from 'echarts';
 import { PROVINCE_FOODS, CUISINE_COLORS, TASTE_KEYS, TASTE_DIMENSIONS, getProvince } from '@/lib/food-data';
 import { TASTE_EVIDENCE, EVIDENCE_LABEL, EVIDENCE_STYLE, SCOVILLE_BANDS, getDishNutrition, sodiumToScore } from '@/lib/taste-evidence';
 import { getDishIngredients, SODIUM_BANDS } from '@/lib/ingredient-nutrition';
+import { DISH_SODIUM, SODIUM_DATASET_SIZE } from '@/lib/dish-sodium.generated';
 import { resolveCityFood } from '@/lib/food-city';
 import { loadCityGeo, getCachedCityGeo, type CityGeo } from '@/lib/city-geo';
 import { TasteRadar } from '@/components/food/taste-radar';
@@ -562,6 +563,30 @@ export default function FoodPage() {
                       );
                     })}
                   </ul>
+
+                  {(() => {
+                    const sd = DISH_SODIUM[panel.dish];
+                    if (!sd) return null;
+                    return (
+                      <div className="mt-2 border-t border-emerald-200 pt-2">
+                        <div className="text-[10px] font-semibold text-emerald-700 mb-1">
+                          菜肴级实测 · 中国菜肴数据集（3,302 道，CC BY 4.0）
+                        </div>
+                        <div className="text-[10px] text-gray-600 leading-relaxed">
+                          每份钠 <b>{sd.na} mg</b>（库内条目「{sd.db}」，{sd.serving} 份）
+                          <span className="text-gray-400"> · </span>
+                          在 3,302 道菜中排前 <b>{Math.max(1, 100 - sd.pct)}%</b>
+                          <span className="text-gray-400">（分位 {sd.pct}）</span>
+                        </div>
+                        <div className="mt-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                          <div className="h-full rounded-full bg-emerald-500" style={{ width: `${Math.max(2, sd.pct)}%` }} />
+                        </div>
+                        <p className="text-[10px] text-gray-400 leading-relaxed mt-1">
+                          各家做法差异大，此处是全库同菜名的实测值，非本页自评口径。
+                        </p>
+                      </div>
+                    );
+                  })()}
 
                   {(() => {
                     const ing = getDishIngredients(panel.dish);
