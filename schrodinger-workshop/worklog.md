@@ -68,6 +68,7 @@
 | R92 | README 收尾段串写修复（文档追改轮，生产代码零改动） | 用户报「readme 和 worklog 内容串了」。根因：README 收尾段「RX 收官」段自 R85（c147971）起整段替换式更新，但 f249f5e（R86）/19b476f（R87）/db4453c（R88）三代只改标签号不改内容 ⟹ 「R88 收官」下挂的是 R85 内容，R85–R88 真身收官全缺失。修复：R88/R87/R86 三段补回 + 原段标签改回 R85 + 标题改「R67–R92 全部闭环」 |
 | R93 | README 职责重构：只留功能/实现/使用，R 轮次记录归 worklog（文档重构轮，生产代码零改动） | 用户澄清职责边界：「readme 不应该写工作流程和完成进度（R）…只放现有功能和结构、实现方式、使用说明」。重构后 README 六节：简介 → 运行 → 功能 → 物理与数值方法 → 架构 → 技术栈。**删两节**：`## 验证`（bak L2178 起，CDP 通过率总表）、`## 后续方向`（bak L2443 起，backlog + R67–R72 计划表）——均属工作流程/进度，归 worklog。全文清扫 R1–R92 轮次引用：批次一 `/tmp/r93_clean.py` 261 对（260 命中：删 5 块、悬空引用修 5 处、标题清理、轮数缩写 `R1/single`→`R=1/single` 防混淆、架构图 10 条目 + 12 处注释）+ 批次二 `/tmp/r93_patch2.py` 11 对（修 5 MISS 转录误差 + 4 漏网行内引用）。误抓保留 2 处（L508 `potR2` 参数名、L1934 `R32F` 纹理格式名）。diff：删 440 / 增 304，净 −136 行（2503→2367） |
 | R94 | 手机竖屏适配公共模块化：顶栏收编 + 汉堡抽屉 + 底部 dock | 用户指令「做小屏适配，尽量用公共模块，少每页独立维护」。盘点病灶：36 处同构顶栏媒体查询（12 页 × 1500/1400/900）+ 12 页 `#xxTop` 规则族重复、≤900 只隐导航 ⟹ 12 页互链手机端不可达、390px 竖屏面板+HUD 必重叠。新增 `src/core/responsive.js`（约 180 行）四件套：① 顶栏三档收编公共类 `.qtop`（差异值 5 页各 1–3 行属性选择器，7 页零差异）② ≤900 汉堡抽屉（桌面 `.qnav{display:contents}` 逐位不变）③ ≤860 底部 dock 三态 + 面板/HUD 转底部 sheet + stage 内联让位（`dataset.qfRestore` 精确还原）④ `injectResponsive()` DOM 增强包 `queueMicrotask`。六坑：时序（innerHTML 重写清 dock ⟹ microtask）、CSS 特异性三轮（类输 id ⟹ 删本地族 ⟹ 差异行压响应段 ⟹ 终局属性选择器 (0,2,0) vs `.qtop.qtop` (0,2,0) 后注入赢）、styles.js 跨行删除残骸吞 `#panel` 规则、flag drawFan 负半径崩（numW 收缩 + 三重 clamp）、responsive.js 两处笔误（冒号/`}}}`）、dock 死胡同（off 态 dock display:none ⟹ 无恢复路径；改常驻退让 opacity .4）。cdp92 **23/23** + cdp90 4/4 + cdp91 12/12 + pot85 38/38 + pot87 47/47；28 files，2726+/706− |
+| R96 | R95 遗留落地：构建守卫 / 触摸目标放大 / 横屏放宽 / 三视口实测 | 用户指令「继续」。① **构建守卫**（build-standalone.mjs +12）：逐页 bundle 扫描**独立成行** `injectResponsive()` 调用，漏调即 `fail()` 并提示改 src 页面模块。**全文正则假阴性教训**：初版 `/injectResponsive\(\)/` 被 responsive.js 自身文档注释骗过——注释掉 qec 调用后构建仍 OK；FAIL 路径实测抓到后改行级匹配，双向验证（正路 13/13 + FAIL 路径准确报错）——再次印证「守卫必须双向验证」。② **触摸目标**：burger 30×26→**40×36**、dock 按钮 57×29→**≈31px 高**（dock 总高 43.2 ≤ 44px 带）；仍低于 44px 舒适线（再放大必抬带高吃 stage 空间），M1b 断言下限 ≥34/≥30 含回归余量。③ **横屏放宽**：SHEET_G `max-height` 改 `var(--qf-sm,46vh)` + ≤860 `:root{--qf-sm:46vh}` + landscape 覆盖 **64vh**（844×390 面板带 179→243px）——CSS 变量驱动免监听 orientationchange。④ **M14**：360×640 / 412×915 / 430×932 × {qec,index,gatenoise} 三视口实测（零 console、抽屉开/关、sheet 可滚）全过。cdp92 **43/43**（+M1b/M14）+ cdp90 4/4 + cdp91 12/12 + pot85 38/38 + pot87 47/47；15 files，264+/70− |
 | R95 | R94 缺口核查与修复：抽屉死胡同 / 链接 20px / hud 裁切 | 用户问「有什么缺口或可优化的？」⟹「要，其他也写入worklog」。方法：四个只读探测套件（cdp93 边界带/resize/dvh/a11y、cdp94 切态裁切 + 触摸目标、cdp95 抽屉计算样式、cdp96 可取消性、cdp97 全页绝对定位子元素扫描）。**实测确认 3 缺陷**：D1 抽屉打开后无法取消（`.qnav` z:9 盖住 static burger，外点关闭判据恒真；唯一退出是导航）⟹ burger `position:relative;z-index:11` + backdrop 点击收 + Escape 收 + 焦点回汉堡；D2 抽屉链接 20px 高（`.qtop.qtop a` (0,2,1) 压死 `.qnav a`，主页 id 级 `#topbar .navlink` 连 (0,3,1) 都打不过）⟹ `!important` 收口 13px/14px 6px/1.25 = **44.25px**（顺带满足 44px 触摸目标）；D3 hud overflow 各页不一（hubbard/shor 无声明，shor 已临界裁切 387>386）⟹ ≤860 段收编 `.qhud{overflow-y:auto}`（前置核查 gatenoise `.sfill` 在 `.strack` 内不受影响）。a11y 同批：aria-expanded/label 翻转。P2：三处 vh→dvh 双声明（Safari 15.4+/Chrome 108+ 支持，低于 README 地板 16.4）+ prefers-reduced-motion。**排除 3 项疑罪**（边界带四档 / 跨断点 resize / 面板可滚全实测无罪）。**两个断言假阳性教训**：G1 不切态量隐藏元素、M13 把「可滚容器折叠线外」当裁切。cdp92 扩至 **38/38**（+M2c/M7e/M12/M13）+ cdp90 4/4 + cdp91 12/12 + pot85 38/38 + pot87 47/47 |
 | R77 | 开放量子系统（新页 `noise.html`） | 密度矩阵 + **Kraus 三通道**（振幅/相位/退极化，均为精确解）+ 量子轨迹（Kraus 分支采样，平均 ⟹ ρ）；单比特闭式（**T₂ ≤ 2T₁** 的弧线几何，斜率实测 −0.500000）、Bell 的 **X 态 concurrence 闭式**（六通道 × 三 τ 9.3e-15）、**ESD t\*=τln3/2**（0.330/0.550/1.100）、⟨XX⟩=−⟨YY⟩=e^{−2t} & ⟨ZZ⟩≡1、Kraus 完备性 2.2e-16、半正定 λ_min 7.7e-43；**与 R69 的定量对照**（MC 4 万条逐帧随机相位 ⟹ 1/T₂=γ_φ，0.9σ）；pot77 CPU **24/24** + cdp77 浏览器 **14/14**（src+dist）；修 6 个问题（relax 双侧闭式漏两跳衰变 / NZ_CSS 未注入 / scanBell 漏 y / nzApplyAll 不收 null / C0 与 qcircuit 重名 / 四处测试口径） |
 | R76 | 量子传态（R75 同页扩展） | **中途测量 + 经典前馈**：`qcMeasureQubit` 只投影该比特（不塌整个态）+ `{measure}`/`{cond}` 两种步 + `qcRunProgram`；Bell 对 + Bell 测量 + X^m1 Z^m0 ⟹ **四分支各自 F=1**（72 条轨迹最坏 4.4e-16）；未修正 ≡ Pauli 像、平均 F=1/2；**无信号两口径**（测量前 I/2、分支平均 I/2）；同种子跨 8 个态分支完全相同；pot76 **14/14** + cdp76 **9/9**（src+dist）；修三个问题（无信号判据混淆纯/混合态、setParam 不重建线路、分支平均漏 00） |
@@ -965,6 +966,51 @@ R94 收官后用户问「有什么缺口或可优化的？」。回答不靠猜�
 - **burger 30×26 / dock 按钮 57×29** 仍低于 44px 舒适线（过 WCAG 2.5.8 AA 24px；放大挤占顶栏/dock 空间，待权衡）；
 - **新页漏调 `injectResponsive()` 无构建守卫**：13 页各自记得调用，漏一页即静默丢失移动适配——可在 build-standalone.mjs 加断言，或把注入收进公共路径（改架构，待决策）；
 - 横屏面板 46vh 偏小（844×390 实测面板带仅 179px），未针对 landscape 放宽。
+
+## R96（2026-10-23）R95 遗留清单落地：构建守卫 / 触摸目标放大 / 横屏放宽 / 三视口实测（用户指令「继续」）
+
+### 起因
+
+R95 诚实遗留清单中可在代码侧闭环的 4 项：① 新页漏调 `injectResponsive()` 无构建守卫（静默回归）；② burger 30×26 / dock 按钮 57×29 低于 44px 舒适线；③ 横屏面板 46vh 偏小；④ 360×640 / 412×915 / 430×932 三视口未测。真机触摸/iOS Safari 两项仍需设备，继续诚实挂起。
+
+### 一、构建守卫（build-standalone.mjs）
+
+**需求**：13 页各自在 mount() 调 `injectResponsive()`，漏调一页则小屏适配静默丢失，现有五套件也测不到「没注入」（断言语义只在有注入后才成立）。
+
+**实现**（scripts/build-standalone.mjs，+12 行）：每页 bundle 生成后扫描**模块行**，命中 `/^\s*injectResponsive\s*\(\s*\)\s*;?\s*$/` 才置 `respCalled`；全部 bundle 汇总后语法自校验通过、若 `!respCalled` 即 `fail()` 退出并给出修复指引（提示改 src/*.js 页面模块而非 -main 入口）。
+
+**全文正则假阴性教训（FAIL 路径实测抓到）**：初版用全文正则 `/injectResponsive\(\)/` 检索 bundle——responsive.js 自身文档注释里写有 "injectResponsive()" 字样，**注释掉 qec 页调用后构建仍然 BUILD OK**（守卫形同虚设）。改为**独立成行语句匹配**后注释行、行内注释天然不匹配，FAIL 路径复测准确输出 `BUILD FAIL: qec.html 未调用 injectResponsive()（小屏适配将静默丢失）...`。正路复测 13/13 BUILD OK。这印证 R90 以来的纪律：**守卫必须做双向验证，只测正路等于没测**。
+
+### 二、触摸目标放大（responsive.js，两处）
+
+| 元素 | R95 时 | R96 后 | 说明 |
+|---|---|---|---|
+| `.qburger` | 30×26 | **40×36**（font 17px） | WCAG 2.5.8 AA 24px 早已过；逼近 44px 舒适线受顶栏高度（48px 带）挤压，取两档约束下的最大可行值 |
+| `.qf-dock button` | 57×29 | **≈57×31**（font 11px + padding 8px 12px） | dock 总高 43.2px ≤ 44px 带，单按钮 31px 是「不破 44px 带」前提下的上限 |
+
+两档都够不到 44px——继续诚实记录为权衡而非达标：再放大必须抬顶栏/dock 带高，会反向吃 stage 空间。cdp92 新增 M1b 断言**下限**（burger ≥34 / dock 按钮 ≥30，含回归余量），13 页 × 2 通道（src+dist）。
+
+### 三、横屏 sheet 放宽（CSS 变量驱动，免 JS 监听）
+
+**方案**：`SHEET_G` 的 `max-height:46vh` 改 `max-height:var(--qf-sm,46vh)`；`≤860 段 :root{--qf-sm:46vh}`；同段加 `@media (max-width:860px) and (orientation:landscape){:root{--qf-sm:64vh}}`。横屏 844×390 实测面板带 179px → **243px**（+64px，约 +36%）。选 var 驱动而非 JS 切 class 的理由：媒体状态变化时 CSS 自动重算，inline style 里的 var() 引用同步更新，**免监听 orientationchange**、零 JS 时序坑。
+
+### 四、M14 三视口实测（cdp92 新增，qec/index/gatenoise × 360×640 / 412×915 / 430×932）
+
+断言每视口：零 console error、顶栏就位、抽屉可开可关、stage/dock 几何正常、面板 sheet 可滚。三页覆盖三类形态：qec（复杂 HUD+sheet）、index（id 级 navlink 关键见证）、gatenoise（sfill 进度条 + 大 hud）。**结果：三视口全过**——此前 390×844 之外完全未测的机型段，首次纳入回归。
+
+### 五、验证（五套件全绿，src+dist 双通道）
+
+| 套件 | 结果 | 变化 |
+|---|---|---|
+| cdp92 | **43/43** | 新增 M1b（burger ≥34 / dock ≥30）、M14（三视口 × 3 页） |
+| cdp90 / cdp91 | 4/4 · 12/12 | 无回归 |
+| pot85 / pot87 | 38/38 · 47/47 | 无回归 |
+
+13/13 dist 已用新 responsive.js + 新构建脚本重建；守卫 FAIL 路径双向验证见上。
+
+### 六、diff 统计
+
+15 files changed, 264 insertions(+), 70 deletions(-)：`scripts/build-standalone.mjs` +12（守卫）；`src/core/responsive.js` +23/−5（触摸目标两处、横屏 var、M1b/M14 相关注释）；13 dist 页重建。responsive.js 226 行，build-standalone.mjs 186 行。
 
 ## R90（2026-10-23）面板视觉保真度评审（README「后续方向」② 收官）
 

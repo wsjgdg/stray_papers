@@ -3096,10 +3096,12 @@ const RESP_CSS = `
   @media (max-width:900px){
     /* position:relative + z-index:11：burger 须压在抽屉（z:9）之上。二者同是
        .qtop  stacking context 的子元素，.qtop 的 z:10 只管对外层级——初版漏了
-       这条，实测 elementFromPoint 命中 .qnav，真实手指点汉堡位置无效。 */
+       这条，实测 elementFromPoint 命中 .qnav，真实手指点汉堡位置无效。
+       尺寸 40×36：R95 实测 30×26 只过 WCAG 2.5.8 AA（24px），离 44px 舒适线
+       仍远；顶栏 ≤900 时只剩 burger + logo（eq 已隐），放大不挤位。 */
     .qburger{display:flex;align-items:center;justify-content:center;flex:none;
       position:relative;z-index:11;
-      width:30px;height:26px;padding:0;font-size:15px;line-height:1}
+      width:40px;height:36px;padding:0;font-size:17px;line-height:1}
     .qnav{display:none;position:fixed;top:0;left:0;right:0;z-index:9;
       grid-template-columns:repeat(auto-fill,minmax(102px,1fr));gap:7px;
       padding:52px 12px 14px;max-height:100vh;max-height:100dvh;overflow-y:auto;
@@ -3121,7 +3123,10 @@ const RESP_CSS = `
     background:var(--panel);border:1px solid var(--line);border-bottom:none;border-radius:10px 10px 0 0;
     backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
   html.qf-mobile .qf-dock{display:flex}
-  .qf-dock button{font-size:11px;padding:5px 10px;border-radius:6px;white-space:nowrap}
+  /* 按钮 padding 5px 10px → 8px 12px：R95 实测 29px 高，放大到 ≈31px（仍不过
+     44px 舒适线——再大 dock 总高将顶破 44px 预留带，需连带改 stage/sheet 的
+     让位常量，权衡后记为遗留）。dock 总高 43.2 ≤ 44 带不变。 */
+  .qf-dock button{font-size:11px;padding:8px 12px;border-radius:6px;white-space:nowrap}
   html.qf-mobile body.qf-m-controls .qhud{display:none}
   html.qf-mobile body.qf-m-readout .qpanel{display:none}
   html.qf-mobile body.qf-m-off .qpanel,html.qf-mobile body.qf-m-off .qhud{display:none}
@@ -3132,10 +3137,17 @@ const RESP_CSS = `
       时静默裁切，实测 shor 已临界 387>386；gatenoise 的 .sfill 在 .strack
       内 top:0;bottom:0，加滚动不裁切——13 页 × 2 视口实测确认） ---- */
   @media (max-width:860px){
+    /* sheet 最大高经 CSS 变量下发：竖屏 46vh；横屏（844×390 等）放 64vh——
+       R95 实测横屏面板带仅 179px 过小。inline max-height 引用 var()，
+       媒体状态变化自动生效，无需 JS 监听 orientationchange。
+       注：此处只 vh 不 dvh——max-height 非布局临界尺寸（内容可滚），
+       工具栏收放的抖动可接受；stage 高度（关键尺寸）仍保持 dvh 双声明。 */
+    :root{--qf-sm:46vh}
     .qhint{white-space:normal;max-width:calc(100vw - 20px);bottom:40px;
       font-size:10.5px;line-height:1.5}
     .qhud{overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   }
+  @media (max-width:860px) and (orientation:landscape){:root{--qf-sm:64vh}}
   @media (prefers-reduced-motion:reduce){.qf-dock{transition:none}.qtop a{transition:none}}
 `;
 
@@ -3144,8 +3156,9 @@ const MQ = '(max-width:860px)';
 /* dvh 双声明：移动浏览器工具栏收放时 100vh 按大视口计算 ⟹ stage/sheet 带
    跳动（iOS 经典病）。旧浏览器忽略不认识的 dvh 行、保留 vh 行（CSS 错误
    处理即 fallback，无需 @supports）。dvh 支持：Safari 15.4+/Chrome 108+/
-   Firefox 101+，低于本项目 README 地板 Safari 16.4。 */
-const SHEET_G = 'position:fixed;left:6px;right:6px;width:auto;top:auto;bottom:44px;max-height:46vh;max-height:46dvh;z-index:12';
+   Firefox 101+，低于本项目 README 地板 Safari 16.4。
+   sheet 的 max-height 走 var(--qf-sm)（竖 46vh/横 64vh，见 ≤860 段注释）。 */
+const SHEET_G = 'position:fixed;left:6px;right:6px;width:auto;top:auto;bottom:44px;max-height:var(--qf-sm,46vh);z-index:12';
 const STAGE_G = 'position:fixed;left:6px;right:6px;width:auto;top:48px;transform:none';
 
 function injectResponsive(){

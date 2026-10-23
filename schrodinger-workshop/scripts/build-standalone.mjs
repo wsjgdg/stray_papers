@@ -110,6 +110,7 @@ function bundlePage(htmlName, outName){
   for (const f of order) parts.push('      ' + relative(ROOT, f));
   parts.push('*/\n');
 
+  let respCalled = false;
   for (const file of order){
     let src = readFileSync(file, 'utf8');
     const out = [];
@@ -120,6 +121,7 @@ function bundlePage(htmlName, outName){
           fail(`${relative(ROOT, file)}: 无法剥离的 import: ${t}`);
         continue;                                   /* 整行删除 */
       }
+      if (/^\s*injectResponsive\s*\(\s*\)\s*;?\s*$/.test(line)) respCalled = true;
       if (/^export\s+default\b/.test(t)) fail(`${relative(ROOT, file)}: 不支持 export default`);
       if (/^export\s*\{/.test(t)) fail(`${relative(ROOT, file)}: 不支持 export {} 列表`);
       out.push(line.replace(/^(\s*)export\s+(?=(const|let|var|function|class|async)\b)/, '$1'));
@@ -136,6 +138,16 @@ function bundlePage(htmlName, outName){
   } catch (e) {
     fail(`${outName} bundle 语法自校验未过（疑似注释/字符串被误剥离）:\n` + (e.stderr || e.message));
   }
+
+  /* ---------- 3.55 响应式接入守卫（R95 遗留项） ----------
+   * 13 页各自在 mount() 里调用 injectResponsive()——漏调一页即静默丢失全部
+   * 移动适配（R94 时序坑的同源风险：当时每页都要记得加 import + 调用）。
+   * 匹配规则：**独立成行的调用语句**（respCalled 在模块行扫描时收集）。
+   * 曾用 bundle 全文正则，被 responsive.js 自己的文档注释（含 "injectResponsive()"
+   * 字样）骗过——FAIL 路径实测抓到该假阴性，故改行级独立语句匹配（注释行/
+   * 行内注释均不匹配；代码约定即独立行调用）。 */
+  if (!respCalled)
+    fail(`${outName} 未调用 injectResponsive()（小屏适配将静默丢失）：请在 ${htmlName} 对应页面模块（src/*.js，非 -main 入口）的 mount() 接入`);
 
   /* ---------- 3.6 dist 导航 href 重写（R91） ----------
    * PAGES 里改了名的页（index.html → quantum-field.html），其导航 href 必须跟着改：

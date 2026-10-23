@@ -71,7 +71,9 @@ python3 -m http.server 8765          # 或 npm start
 
 **小屏适配**：≤900px 顶栏导航收进汉堡抽屉（13 页互链在手机/窄桌窗仍可达，点汉堡 /
 点背景 / Esc 均可收起）；≤860px 面板与读数转底部全宽 sheet，底部 dock 三态切换
-（⚙控制 / ◫读数 / ✕全屏，默认全屏、dock 半透明常驻可随时唤回）；桌面布局逐位不变。
+（⚙控制 / ◫读数 / ✕全屏，默认全屏、dock 半透明常驻可随时唤回）；横屏（≤860px
+landscape）sheet 自动放宽至 64vh；stage 高度用 dvh 跟随浏览器工具栏收放；
+桌面布局逐位不变。
 
 **URL 参数**：`?kernel=schrodinger|nls|gp|pauli|dirac|schrodinger3d` 物理内核 ·
 `?preset=free|barrier|slits|harmonic|scatter|box`（薛定谔）、
