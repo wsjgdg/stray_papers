@@ -142,3 +142,5 @@ tsconfig.json                       # TypeScript 配置（@/* → src/*）
 - **动画**：Framer Motion 12
 - **UI 组件**：shadcn/ui + Radix UI
 - **图标**：lucide-react
+
+> **发布沙箱不执行 `npm run build`**（实测 `.next/BUILD_ID` 一直停在首次构建的时间），只重启进程。所以 `npm start` 里必须自带构建：`npm run build && node server.mjs`，否则线上永远跑的是老产物。
