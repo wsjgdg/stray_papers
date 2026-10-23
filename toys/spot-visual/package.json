@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "build": "next build && node scripts/build-dish-manifest.mjs && node scripts/inject-sharecode.mjs",
+    "start": "node scripts/inject-sharecode.mjs; node server.mjs",
+    "sharecode": "node scripts/inject-sharecode.mjs",
     "lint": "next lint",
     "photos": "node scripts/build-dish-manifest.mjs"
   },
