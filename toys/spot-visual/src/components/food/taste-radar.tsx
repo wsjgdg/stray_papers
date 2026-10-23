@@ -1,6 +1,6 @@
 'use client';
 
-import { TASTE_KEYS } from '@/lib/food-data';
+import { TASTE_KEYS, TASTE_DIMENSIONS } from '@/lib/food-data';
 
 interface Props {
   taste: Record<string, number>;
@@ -28,6 +28,14 @@ export function TasteRadar({ taste, size = SIZE_DEFAULT, color = '#DC2626' }: Pr
 
   const rings = [0.25, 0.5, 0.75, 1];
 
+  /** 悬停提示：维度名 + 当前值 + 该维度 0/100 的锚点含义 */
+  const tip = (k: string) => {
+    const d = TASTE_DIMENSIONS.find((x) => x.key === k);
+    const v = taste[k] ?? 0;
+    if (!d) return `${k}：${v}`;
+    return `${d.name}：${v} / 100\n0 = ${d.low}\n100 = ${d.high}`;
+  };
+
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="select-none">
       {/* grid rings */}
@@ -48,14 +56,26 @@ export function TasteRadar({ taste, size = SIZE_DEFAULT, color = '#DC2626' }: Pr
       {/* data polygon */}
       <polygon points={dataPoly} fill={color} fillOpacity={0.22} stroke={color} strokeWidth={2} strokeLinejoin="round" />
       {dataPts.map((p, i) => (
-        <circle key={i} cx={p[0]} cy={p[1]} r={3} fill={color} />
+        <g key={i} className="cursor-help">
+          <title>{tip(TASTE_KEYS[i])}</title>
+          <circle cx={p[0]} cy={p[1]} r={4} fill={color} fillOpacity={0.9} />
+        </g>
       ))}
       {/* labels */}
       {TASTE_KEYS.map((k, i) => {
         const [x, y] = point(i, RADIUS + 16);
         const anchor = Math.abs(x - center) < 6 ? 'middle' : x > center ? 'start' : 'end';
         return (
-          <text key={k} x={x} y={y + 4} textAnchor={anchor} className="fill-gray-600" fontSize={12} fontWeight={600}>
+          <text
+            key={k}
+            x={x}
+            y={y + 4}
+            textAnchor={anchor}
+            className="fill-gray-600 cursor-help"
+            fontSize={12}
+            fontWeight={600}
+          >
+            <title>{tip(k)}</title>
             {k}
           </text>
         );
