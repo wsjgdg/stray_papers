@@ -8,6 +8,7 @@
 
 import { PROVINCE_ADCODE } from './china-geo';
 import { cityLabel } from './food-city';
+import { withSharecode } from './share-link';
 
 export interface CityFeature {
   /** 展示简称，同时作为 ECharts feature name */
@@ -44,7 +45,8 @@ async function fetchCityGeo(province: string): Promise<CityGeo> {
   const adcode = PROVINCE_ADCODE[province];
   if (!adcode) throw new Error('未知省份');
 
-  const res = await fetch(`/geo/${adcode}.json`, { cache: 'force-cache' });
+  // 部署环境对 /geo/*.json 同样校验 sharecode，必须透传，否则线上 403
+  const res = await fetch(withSharecode(`/geo/${adcode}.json`), { cache: 'force-cache' });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
   const raw = (await res.json()) as RawGeo;

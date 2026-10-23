@@ -17,6 +17,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useAppStore, type ViewType } from '@/lib/store';
 import { type Spot, getCategoryColor, CATEGORY_ICON_NAMES, CATEGORY_THEME, parseImportedSpots, sampleSpots, getCategoryImageUrl, cachePhotoForCategory } from '@/lib/spot-data'; // 保留：cachePhotoForCategory 缓存机制
+import { withSharecode } from '@/lib/share-link';
 import dynamic from 'next/dynamic';
 
 const NetworkView = dynamic(() => import('@/components/network-view'), { ssr: false });
@@ -365,7 +366,7 @@ function SpotsView() {
     setOsmLoading(true);
     setOsmMsg(null);
     try {
-      const res = await fetch(`/api/osm?city=${encodeURIComponent(c)}&limit=50`);
+      const res = await fetch(withSharecode(`/api/osm?city=${encodeURIComponent(c)}&limit=50`));
       const data = await res.json();
       if (data.source === 'error' || !data.spots || data.spots.length === 0) {
         setOsmMsg({ type: 'err', text: data.message || `未获取到「${c}」的实时景点，已保留内置示例。` });
@@ -453,7 +454,7 @@ function SpotsView() {
           await Promise.allSettled(
             Array.from(byCategory.entries()).map(async ([cat, items]) => {
               try {
-                const res = await fetch(`/api/search-photo?q=${encodeURIComponent(cat)}&n=${items.length}`);
+                const res = await fetch(withSharecode(`/api/search-photo?q=${encodeURIComponent(cat)}&n=${items.length}`));
                 if (!res.ok) throw new Error(`API ${res.status}`);
                 const data = await res.json();
 
