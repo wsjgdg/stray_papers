@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Upload, MapPin, Star, X, LayoutGrid, List,
   Heart, User, Share2, Menu, ChevronLeft, ChevronRight, Image as ImageIcon,
-  TreePine, Landmark, Sparkles, Building2, Waves, Mountain, HomeIcon, Church, UtensilsCrossed, Bike,
+  TreePine, Landmark, Sparkles, Building2, Waves, Mountain, HomeIcon, Church, UtensilsCrossed, Bike, Globe,
   AlertTriangle, Activity, Sparkles as SparklesIcon, Calculator, // 修复：补充缺失的图标导入，移除未使用的 Camera
   Zap, Thermometer, BookX,  // 新增：体力沙盘、PTSI、劝退日记图标
 } from 'lucide-react';
@@ -110,7 +110,7 @@ function MobileHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
   const { activeView, spots, favorites, setActiveView } = useAppStore();
   const currentNav = NAV_ITEMS.find((n) => n.key === activeView);
   return (
-    <header className="md:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-200/60">
+    <header className="md:hidden sticky top-[52px] z-40 bg-white/80 backdrop-blur-md border-b border-gray-200/60">
       <div className="flex items-center justify-between h-14 px-4">
         <button onClick={onMenuOpen} className="p-1 text-gray-500"><Menu className="w-5 h-5" /></button>
         <div className="flex items-center gap-2">
@@ -354,6 +354,34 @@ function SpotsView() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
 
+  // ═══ OSM 实时探索（OpenStreetMap 实时 + 内置兜底） ═══
+  const [city, setCity] = useState('北京');
+  const [osmLoading, setOsmLoading] = useState(false);
+  const [osmMsg, setOsmMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+
+  const exploreOsm = useCallback(async () => {
+    const c = city.trim();
+    if (!c || osmLoading) return;
+    setOsmLoading(true);
+    setOsmMsg(null);
+    try {
+      const res = await fetch(`/api/osm?city=${encodeURIComponent(c)}&limit=50`);
+      const data = await res.json();
+      if (data.source === 'error' || !data.spots || data.spots.length === 0) {
+        setOsmMsg({ type: 'err', text: data.message || `未获取到「${c}」的实时景点，已保留内置示例。` });
+      } else {
+        setSpots(data.spots);
+        setActiveCategory('全部');
+        setSearchQuery('');
+        setOsmMsg({ type: 'ok', text: `已加载 ${data.spots.length} 个「${c}」实时景点 · 数据源 OpenStreetMap（ODbL）` });
+      }
+    } catch {
+      setOsmMsg({ type: 'err', text: '实时请求失败，已保留内置示例景点。' });
+    } finally {
+      setOsmLoading(false);
+    }
+  }, [city, osmLoading, setSpots, setActiveCategory, setSearchQuery]);
+
   const allCategories = useMemo(() => {
     const cats = new Set(spots.map((s) => s.category));
     return ['全部', ...Array.from(cats)];
@@ -486,6 +514,37 @@ function SpotsView() {
 
   return (
     <div className="space-y-5">
+      {/* OSM 实时探索（OpenStreetMap 实时 + 内置兜底） */}
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+        <div className="flex items-center gap-2 mb-2.5">
+          <Globe className="w-4 h-4 text-emerald-600" />
+          <span className="text-sm font-semibold text-emerald-800">实时景点探索 · OpenStreetMap</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">ODbL 开放数据</span>
+        </div>
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') exploreOsm(); }}
+              placeholder="输入城市，如 北京 / 上海 / 成都 / 杭州"
+              className="pl-10 h-11 bg-white border-emerald-200 text-sm"
+            />
+          </div>
+          <Button variant="default" size="sm" className="gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white" disabled={osmLoading} onClick={exploreOsm}>
+            {osmLoading ? <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <Globe className="w-3.5 h-3.5" />}
+            {osmLoading ? '探索中...' : '实时探索'}
+          </Button>
+        </div>
+        {osmMsg && (
+          <p className={`text-xs mt-2 ${osmMsg.type === 'ok' ? 'text-emerald-600' : 'text-rose-500'}`}>{osmMsg.text}</p>
+        )}
+        <p className="text-[11px] text-gray-400 mt-2 leading-relaxed">
+          实时数据由 OpenStreetMap 社区贡献（ODbL 许可）。无网络或接口限流时，自动保留内置示例景点，确保离线可用。
+        </p>
+      </div>
+
       {/* Search + Import */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -597,7 +656,7 @@ export default function Home() {
   const [mobileMenu, setMobileMenu] = useState(false);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50/50">
+    <div className="min-h-[calc(100vh-52px)] flex flex-col bg-gray-50/50">
       <div className="flex flex-1 min-h-0">
         <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
         <MobileHeader onMenuOpen={() => setMobileMenu(true)} />
