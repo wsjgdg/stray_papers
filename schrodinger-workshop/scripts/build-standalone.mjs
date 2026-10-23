@@ -137,6 +137,21 @@ function bundlePage(htmlName, outName){
     fail(`${outName} bundle 语法自校验未过（疑似注释/字符串被误剥离）:\n` + (e.stderr || e.message));
   }
 
+  /* ---------- 3.6 dist 导航 href 重写（R91） ----------
+   * PAGES 里改了名的页（index.html → quantum-field.html），其导航 href 必须跟着改：
+   * nav.js 的 NAV 条目与 navLinksHtml 的自链过滤是同一份字面量，两处一起替换才自洽
+   * （只改 NAV 不改过滤 ⟹ 主页会多出一条指向自己的「主页」链）。替换前 R91 实测：
+   * dist/index.html 404 ⟹ 12 个子页的「主页」链在分发版全部断掉。 */
+  for (const [srcName, dstName] of PAGES){
+    if (srcName === dstName) continue;
+    const from = `'./${srcName}'`, to = `'./${dstName}'`;
+    if (bundle.includes(from)){
+      const n = bundle.split(from).length - 1;
+      bundle = bundle.split(from).join(to);
+      console.log(`  href 重写: ${from} → ${to}（${n} 处：NAV 条目 + 自链过滤）`);
+    }
+  }
+
   /* ---------- 4. </script> 防护 ---------- */
   const nScript = (bundle.match(/<\/script>/gi) || []).length;
   if (nScript) bundle = bundle.replace(/<\/script>/gi, '<\\/script>');
