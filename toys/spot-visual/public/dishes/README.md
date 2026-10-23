@@ -71,3 +71,17 @@
 | 32 | 香港 | 叉烧 | `叉烧.jpg` |
 | 33 | 澳门 | 葡国鸡 | `葡国鸡.jpg` |
 | 34 | 台湾 | 卤肉饭 | `卤肉饭.jpg` |
+
+## 自动采集（国内通道）
+
+如果不想手工找图，可以用 `npm run photos:cn`：博查搜索 → 抓页面主图 → 百度菜品识别核验 → 存到 `_candidates/`。
+
+```bash
+cp .env.example .env      # 填 BOCHA_API_KEY 与 BAIDU_API_KEY / BAIDU_SECRET_KEY
+npm run photos:cn                    # 全部省级代表菜
+npm run photos:cn 麻婆豆腐 剁椒鱼头   # 只跑指定菜
+npm run photos:cn --no-verify        # 跳过核验（不建议，图容易错）
+```
+
+**核验这一步很关键**：搜索引擎给的是页面主图，经常是店铺招牌或菜单。百度「菜品识别」返回菜名 + 置信度，挡掉「图不对菜」。
+`_candidates/` 里的图必须人工过一遍，选中的改名成 `菜名.jpg` 移到上一级目录，再跑 `npm run photos`。

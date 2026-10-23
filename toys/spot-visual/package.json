@@ -8,7 +8,8 @@
     "start": "npm run build && node server.mjs",
     "sharecode": "node scripts/inject-sharecode.mjs",
     "lint": "next lint",
-    "photos": "node scripts/build-dish-manifest.mjs"
+    "photos": "node scripts/build-dish-manifest.mjs",
+    "photos:cn": "node scripts/fetch-dish-photos-cn.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",
