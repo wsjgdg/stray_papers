@@ -1048,7 +1048,7 @@ function qcNewClassical(nbits){ return new Uint8Array(nbits); }
  * basis='x'/'y'（R100）：**旋转-测量-旋回**——X 基 H·M·H；Y 基 S†H·M·H·S
  *（|+i⟩=S·H|0⟩ ⟹ U=H·S† 把 Y 本征基映到 Z 基）。两条性质保证实现正确：
  *  ① 概率：旋转不改变该位在旋转后基下的边缘分布 ⟹ p(±)=(1±⟨P⟩)/2 精确
- *     （⟨X⟩=2Reρ01、⟨Y⟩=2Imρ01，与 qcQubitRho 对账）；
+ *     （⟨X⟩=2Reρ01、⟨Y⟩=−2Imρ01，ρ 为 qcQubitRho 的约化密度矩阵）；
  *  ② 测后态：旋回把 Z 本征态映回该基本征态（X: |±⟩；Y: |±i⟩），
  *     cbit 0 = +1 本征值、1 = −1 本征值。 */
 function qcMeasureQubit(s, q, rng, basis = 'z'){
@@ -1271,7 +1271,7 @@ class QCircuitApp {
       measured: null, seed: Math.round(num('seed', 137)),
       paused: q.get('paused') === '1', edited: false,
     };
-    this.edit = { op: 'h', q: 0, c: -1, c2: -1, theta: Math.PI / 2, basis: 'z', selected: -1 };
+    this.edit = { op: 'h', q: 0, c: -1, c2: -1, theta: Math.PI / 2, basis: 'z', cbit: 0, inner: 'x', selected: -1 };
     this.gates = [];
     this.psi = null;
     this._listeners = []; this._needDraw = true; this._last = 0;
@@ -1338,12 +1338,15 @@ class QCircuitApp {
             <option value="phase">P(θ)</option><option value="cnot">CNOT</option>
             <option value="cz">CZ</option><option value="swap">SWAP</option>
             <option value="toffoli">Toffoli</option><option value="measure">测量 M</option>
+            <option value="cond">受控经典门</option>
           </select>
           <select id="qcGateQ" title="目标位"></select>
           <select id="qcGateC" title="控制位 / 第二位"></select>
         </div>
         <div class="row" id="qcGateC2Row"><label>第二控制位</label><select id="qcGateC2" title="Toffoli 第二控制位"></select></div>
         <div class="row" id="qcGateBasisRow"><label>测量基</label><select id="qcGateBasis" title="测量基：Z 计算基 / X / Y（cbit 0=+1 本征值，1=−1 本征值）"><option value="z">Z 基</option><option value="x">X 基</option><option value="y">Y 基</option></select></div>
+        <div class="row" id="qcGateCbitRow"><label>经典位 cbit</label><select id="qcGateCbit" title="经典位：cbit=1 时执行内部门（测量结果写入的位；未测过为 0）"></select></div>
+        <div class="row" id="qcGateInnerRow"><label>内部门</label><select id="qcGateInner" title="cbit=1 时作用在目标位上的单比特门"><option value="x">X</option><option value="y">Y</option><option value="z">Z</option><option value="h">H</option><option value="s">S</option><option value="sdg">S†</option><option value="t">T</option><option value="tdg">T†</option><option value="rx">Rx</option><option value="ry">Ry</option><option value="rz">Rz</option><option value="phase">P(θ)</option></select></div>
         <div class="row" id="qcGateThetaRow"><label>角度 θ</label><input type="range" id="qcGateTheta" min="-3.1416" max="3.1416" step="0.01"><output id="qcGateThetaO">—</output></div>
         <div class="btns">
           <button id="qcGateAdd">插入选中后</button><button id="qcGateClear">清空线路</button>
@@ -1421,6 +1424,8 @@ class QCircuitApp {
     this.on(this.q('#qcGateC'), 'change', e => { this.edit.c = parseInt(e.target.value, 10); });
     this.on(this.q('#qcGateC2'), 'change', e => { this.edit.c2 = parseInt(e.target.value, 10); });
     this.on(this.q('#qcGateBasis'), 'change', e => { this.edit.basis = e.target.value; });
+    this.on(this.q('#qcGateCbit'), 'change', e => { this.edit.cbit = parseInt(e.target.value, 10); });
+    this.on(this.q('#qcGateInner'), 'change', e => { this.edit.inner = e.target.value; this.syncGateEditor(); });
     this.on(this.q('#qcGateTheta'), 'input', e => {
       this.edit.theta = parseFloat(e.target.value);
       this.q('#qcGateThetaO').textContent = this.edit.theta.toFixed(2);
@@ -1452,7 +1457,7 @@ class QCircuitApp {
     const c = e.c == null ? -1 : e.c | 0;
     const c2 = e.c2 == null ? -1 : e.c2 | 0;
     const two = op === 'cnot' || op === 'cz' || op === 'swap';
-    if ((two && (c < 0 || c >= n || c === q)) || (!two && op !== 'toffoli' && op !== 'measure' && c === q)){
+    if ((two && (c < 0 || c >= n || c === q)) || (!two && op !== 'toffoli' && op !== 'measure' && op !== 'cond' && c === q)){
       this.toast(two ? '双比特门需要两个不同比特' : '控制位不能与目标位相同');
       return null;
     }
@@ -1467,6 +1472,17 @@ class QCircuitApp {
       return { op, q1: c, q2: c2, q3: q };
     }
     if (op === 'measure') return { op, q, cbit: c >= 0 && c < n ? c : 0, basis: e.basis || 'z' };
+    /* R101：受控经典门——cbit=1 时把内部门作用到目标位 q（qcExec cond 分支）。
+       cbit 与 q 是不同命名空间（经典位 vs 量子位），不要求互异；
+       未测过的 cbit 默认 0 ⟹ no-op（qcExec 的 `cres ? !!cres[cbit] : false`）。 */
+    if (op === 'cond'){
+      const cbit = e.cbit == null ? 0 : e.cbit | 0;
+      if (cbit < 0 || cbit >= n){ this.toast('经典位 cbit 超出范围'); return null; }
+      const inner = e.inner || 'x';
+      const gi = { op: inner, q };
+      if (inner === 'rx' || inner === 'ry' || inner === 'rz' || inner === 'phase') gi.theta = e.theta;
+      return { op: 'cond', cbit, gate: gi };
+    }
     const g = { op, q };
     if (c >= 0 && c < n) g.c = c;
     if (op === 'rx' || op === 'ry' || op === 'rz' || op === 'phase') g.theta = e.theta;
@@ -1542,10 +1558,25 @@ class QCircuitApp {
     /* R100：测量基行仅 measure 模式显示（Z/X/Y，默认 Z——与预设的 Z 基测量同路径） */
     const bRow = this.q('#qcGateBasisRow'); if (bRow) bRow.style.display = e.op === 'measure' ? '' : 'none';
     const bEl = this.q('#qcGateBasis'); if (bEl) bEl.value = e.basis || 'z';
+    /* R101：cond 模式——控制位 select 无语义（经典位在专用行选），隐藏避免误用；
+       cbit 行（0..n-1，无「无控」——cond 必须指定经典位）与内部门行仅 cond 显示 */
+    if (cEl) cEl.style.display = e.op === 'cond' ? 'none' : '';
+    const isCond = e.op === 'cond';
+    if (isCond && (e.cbit < 0 || e.cbit >= n)) e.cbit = 0;
+    const cbRow = this.q('#qcGateCbitRow'); if (cbRow) cbRow.style.display = isCond ? '' : 'none';
+    const cbEl = this.q('#qcGateCbit');
+    if (cbEl){
+      cbEl.innerHTML = Array.from({ length: n }, (_, i) => `<option value="${i}">c${i}</option>`).join('');
+      cbEl.value = String(e.cbit);
+    }
+    const inRow = this.q('#qcGateInnerRow'); if (inRow) inRow.style.display = isCond ? '' : 'none';
+    const inEl = this.q('#qcGateInner'); if (inEl) inEl.value = e.inner || 'x';
     const opEl = this.q('#qcGateOp'); if (opEl) opEl.value = e.op;
     const th = this.q('#qcGateTheta'); if (th) th.value = String(e.theta);
     const out = this.q('#qcGateThetaO'); if (out) out.textContent = e.theta.toFixed(2);
-    const rot = e.op === 'rx' || e.op === 'ry' || e.op === 'rz' || e.op === 'phase';
+    const isRotOp = o => o === 'rx' || o === 'ry' || o === 'rz' || o === 'phase';
+    /* R101：cond 的内部门是旋转门时 θ 行同样可调（与顶层旋转门同一条 θ） */
+    const rot = isRotOp(e.op) || (isCond && isRotOp(e.inner));
     const row = this.q('#qcGateThetaRow'); if (row) row.style.opacity = rot ? '1' : '.38';
     this.renderGateList();
   }

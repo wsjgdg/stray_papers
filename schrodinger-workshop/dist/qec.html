@@ -1063,7 +1063,7 @@ function qcNewClassical(nbits){ return new Uint8Array(nbits); }
  * basis='x'/'y'（R100）：**旋转-测量-旋回**——X 基 H·M·H；Y 基 S†H·M·H·S
  *（|+i⟩=S·H|0⟩ ⟹ U=H·S† 把 Y 本征基映到 Z 基）。两条性质保证实现正确：
  *  ① 概率：旋转不改变该位在旋转后基下的边缘分布 ⟹ p(±)=(1±⟨P⟩)/2 精确
- *     （⟨X⟩=2Reρ01、⟨Y⟩=2Imρ01，与 qcQubitRho 对账）；
+ *     （⟨X⟩=2Reρ01、⟨Y⟩=−2Imρ01，ρ 为 qcQubitRho 的约化密度矩阵）；
  *  ② 测后态：旋回把 Z 本征态映回该基本征态（X: |±⟩；Y: |±i⟩），
  *     cbit 0 = +1 本征值、1 = −1 本征值。 */
 function qcMeasureQubit(s, q, rng, basis = 'z'){
