@@ -69,6 +69,7 @@
 | R93 | README 职责重构：只留功能/实现/使用，R 轮次记录归 worklog（文档重构轮，生产代码零改动） | 用户澄清职责边界：「readme 不应该写工作流程和完成进度（R）…只放现有功能和结构、实现方式、使用说明」。重构后 README 六节：简介 → 运行 → 功能 → 物理与数值方法 → 架构 → 技术栈。**删两节**：`## 验证`（bak L2178 起，CDP 通过率总表）、`## 后续方向`（bak L2443 起，backlog + R67–R72 计划表）——均属工作流程/进度，归 worklog。全文清扫 R1–R92 轮次引用：批次一 `/tmp/r93_clean.py` 261 对（260 命中：删 5 块、悬空引用修 5 处、标题清理、轮数缩写 `R1/single`→`R=1/single` 防混淆、架构图 10 条目 + 12 处注释）+ 批次二 `/tmp/r93_patch2.py` 11 对（修 5 MISS 转录误差 + 4 漏网行内引用）。误抓保留 2 处（L508 `potR2` 参数名、L1934 `R32F` 纹理格式名）。diff：删 440 / 增 304，净 −136 行（2503→2367） |
 | R94 | 手机竖屏适配公共模块化：顶栏收编 + 汉堡抽屉 + 底部 dock | 用户指令「做小屏适配，尽量用公共模块，少每页独立维护」。盘点病灶：36 处同构顶栏媒体查询（12 页 × 1500/1400/900）+ 12 页 `#xxTop` 规则族重复、≤900 只隐导航 ⟹ 12 页互链手机端不可达、390px 竖屏面板+HUD 必重叠。新增 `src/core/responsive.js`（约 180 行）四件套：① 顶栏三档收编公共类 `.qtop`（差异值 5 页各 1–3 行属性选择器，7 页零差异）② ≤900 汉堡抽屉（桌面 `.qnav{display:contents}` 逐位不变）③ ≤860 底部 dock 三态 + 面板/HUD 转底部 sheet + stage 内联让位（`dataset.qfRestore` 精确还原）④ `injectResponsive()` DOM 增强包 `queueMicrotask`。六坑：时序（innerHTML 重写清 dock ⟹ microtask）、CSS 特异性三轮（类输 id ⟹ 删本地族 ⟹ 差异行压响应段 ⟹ 终局属性选择器 (0,2,0) vs `.qtop.qtop` (0,2,0) 后注入赢）、styles.js 跨行删除残骸吞 `#panel` 规则、flag drawFan 负半径崩（numW 收缩 + 三重 clamp）、responsive.js 两处笔误（冒号/`}}}`）、dock 死胡同（off 态 dock display:none ⟹ 无恢复路径；改常驻退让 opacity .4）。cdp92 **23/23** + cdp90 4/4 + cdp91 12/12 + pot85 38/38 + pot87 47/47；28 files，2726+/706− |
 | R103 | qcircuit Bell/GHZ 联合基测量（R98 诚实限制 ③ 后半兑现） | R98 限制 ③ 后半「每个 measure 门仍是单比特单次——Bell 基测量需先搭 CNOT+H 线路」兑现。**物理层**（src/physics/qcircuit.js，+55 −2）：`qcMeasureJoint(s, qubits, rng, basis)` = 「旋转-测量-旋回」k 比特版——制备线路 P 的逆序作用（P 自伴 ⟹ P†=逆序）→ 顺序 Z 测 k 次（投影算符互交换 ⟹ 等价联合 Z 测量）→ P 旋回；`JOINT_PREP`（bell: H+CNOT；ghz: H+CNOT+CNOT）+ `qcJointK`（位数校验）；`qcExec` measure 分支联合支持（`{op:'measure', qubits, basis, cbit}` 写 k 个连续经典位，记录 joint:true）。**UI**（src/qcircuit.js，+82 −15）：测量基下拉 +Bell/GHZ 两项、第二/第三位选择行随 basis 显隐、互异校验 toast、cbit+k−1≤7 夹紧、测量盒跨位竖线连中点 + M_bell/M_ghz 与 `→c0+2` 标注、HUD 经典位读数泛化到 k 位（传态 'm0 m1' 格式逐字不变）。**产品侧真 bug 一个**：basis change 不触发 `syncGateEditor()` ⟹ 切到 bell/ghz 后第二/三位行不显示（n=2 下 ghz 插入必败且无从修正）——cdp108 A3/A4 探针实证后一行修复。**验证**：pot103 新套件 **31/31**（Bell 四态确定+复原 / 统计与 P\|j⟩ 测后态 / 手动等价 3n×12 种子 / 联合≠逐比特判别器 / **Bell 基传态 7 门端到端 F=1** / 经典位 / 纠缠交换 / GHZ 八态穷举 / 异常 / 性能 0.05ms）；cdp108 新浏览器套件 **18/18**（五基选项+行显隐 / 插入格式+互异拒绝+cbit 夹紧 / 执行与 Node 同种子逐位对账含 6 种子扫描 / 7 门传态端到端 F=1 / dist 通道 / 零 console）；全量零回归 **2409 断言 0 fail**（pot75/76/80/100/101/102/103 + cdp75/76/92/101/102/103/105/106/107/108）。**测试侧十二处自我更正**（产品仅上述一个）：pot103 八处——① bell() 助手踩 `qcNewState` 预设 `re[0]=1` 陷阱（**项目内第三次**）；② B1 期望错（\|++⟩ 是 {[0,0],[0,1]} 各半非四路均匀——⟨++\|Φ±⟩=1/2 反相分支抵消）；③ B2/B3 索引注释标反（index 0/2=\|+⟩\|0⟩、0/1=\|0⟩\|+⟩）且声明错（皆四路均匀）；④ B4 rigged-rng 强制分支设计错（\|++⟩ 坍缩后 p1 即变 1，强制不可靠）⟹ 改「观测驱动」对账 P\|j⟩；⑤ D1 \|01⟩ 在 Bell 基下非确定性（无计算基态确定性——Bell 基无乘积态）；⑥ E2 门数误算 8，实为 **7**（prep2+Bell2+joint1+cond2）；⑦ G1 Ψ−⊗\|11⟩ 分量索引误写 12/15（实为 Φ+⊗Φ−）⟹ 13/14；⑧ H3 误以为 \|111⟩ 是 GHZ 基态 ⟹ 改八态 P\|j⟩ 穷举；cdp108 四处——⑨ B3 选择器取到「↑」按钮；⑩ C3 忘把页面重置回 n=2 bell 线路（C2 后是 n=3 ghz 线路，对账错位）；⑪ D 节 θ 滑块 min=−3.1416/step=0.01 ⟹ 设 '1' 被吸附到 0.9984，Node oracle 与 HUD 目标必须回读吸附后真实角度；⑫ E1 dist 陈旧（src 修复后未重建 bundle）。**索引约定实证**（本族第四次踩坑）：index = Σ b_k·2^k（qubit k 在 bit k，小端索引；`qcBits` 显示串才是 big-endian "q1q0"）——pot103 B/D/G/H 全节按此重写。README：门表新行/编辑沙盒段/数值事实 header+facts 表+浏览器行/HUD 段/新增「联合测量」小节/传态限制与诚实限制 ③④ 改写/dist 树大小全量刷新（顺带纠正 shor/flag 等存根页被记作 182 KB 的陈旧）；worklog R103 条目；dist qcircuit 104.1→112.0 KB（noise/qec 各 +55 −2 为 bundler 内联共享物理模块纯新增） |
+| R104 | qcircuit 门噪声 T₁/T₂ 接进线路页（R98 诚实限制 ② 兑现） | R98 限制②「无噪声、无退相干」兑现：噪声挂在**门**上而非态上——每个门作用后对**该门触及的每个比特**施加振幅阻尼 γ=1−e^{−tg/T₁} 与相位阻尼 λ=1−e^{−tg/T₂}，**默认关闭**（零回归契约）。**新增 `src/physics/qcnoise.js`（~380 行）**：密度矩阵引擎——`qcnApplyGate` 走 **UρU† 两趟公式**（右乘 U† 再左乘 U，各扫半矩阵，免稠密矩阵乘，每门 O(4ⁿ)）；两通道**就地闭式**更新；密度版测量（Born + 子空间投影，X/Y/Bell/GHZ 走旋转-测量-旋回）、子系统熵、Wootters **全式**并发（R=ρSρ\*S 实嵌入 8×8 Jacobi，非 X 形特式）、cond 前馈（门真实执行才衰减）；常量前缀 `QCN_`（R77 bundle 重名教训）。`qcircuit.js` 两处导出（+2）：`jacobiReal` 改 export（单源复用）、`JOINT_PREP`→`QC_JOINT_PREP`。**UI**（src/qcircuit.js，+~200）：面板「门噪声 T₁/T₂」组（开关 + T₁/T₂/t_g 三滑块 + γ/λ 与 T₂eff 读数，T₂eff=1/(1/T₂+1/2T₁) ≤ 2T₁ 恒立）、URL `?noise=1&t1=&t2=&tg=`、改任一参数即 `resetExecution()`；噪声模式下 HUD 改口径（范数行→**迹 tr ρ**、新增纯度 trρ² 与最大相干 |ρ_ij|）、振幅画布改画 **√ρ_ii**（混合态无相位可编码 ⟹ 固定色相）；调试句柄 +11。**验证**：pot104 **51/51**（零回归 4 / 通道物理 18 / 测量 9 / 协议级 11 / 性能 3 / 异常 6；n=8×50 门 34.7ms = 0.69ms/门）+ cdp104qc **39/39**（控件·派生读数 / 页面↔Node 同参逐位 **1e-12** / HUD+画布像素签名 / 零回归 / dist 通道 / 零 console）+ 13 页构建冒烟 **22 PASS / 0 FAIL / 4 ENV-SKIP**；全量零回归 **2464 断言 0 fail**（pot80 1928 + pot100/101/102/103 + cdp75/92/101/102/103/104/105/106/107/108）。**产品侧真 bug 两个（都只在 dist 通道暴露）**：① `qcnoise.js` 多行 `import {}` ⟹ build-standalone FAIL（只支持单行静态 import）；② `export { mulberry32 }` re-export 列表不被支持 ⟹ 删除（调用方直接 import）——src 全绿而 dist 构建断裂，再次印证「src 绿 ≠ dist 绿」。**测试侧自我更正十三处**（物理与产品代码零 bug）：① B1 用 X 门做「纯衰减」判据错（X 每轮翻转，(1−γ)^k 失效）⟹ 改 **rz(0) 恒等门**（触发噪声但不改态，F5 固定为地基）；② B6 最大混合用 dim=2 索引写 dim=4 矩阵；③ B3 Wootters 二重根 Jacobi 精度 6.7e-9 ⟹ 阈值 1e-7；④ B2c 容差 1e-9 对 160 量级太紧；⑤ C1/C4 两次测量各建 rng ⟹ 同随机数同结果（完全关联假象）⟹ 共用实例；⑥ C3 记错物理（Bell 测 q0 后 q1 **确定** = out）；⑦ C5 期望错 ⟹ **GHZ 预设态 = P_ghz\|0⟩**（八态枚举实证）⟹ 确定 outcome 是 **[0,0,0]** 不是 [1,1,1]（R103 只穷举 P\|j⟩ 未验预设态对应哪个 j），并删掉被写两遍的制备门；⑧ D1 单调断言错 ⟹ 真实物理是**冻结效应**（γ→1 每门后完全弛豫、修正门刚执行完就塌回基态）⟹ F 饱和到 cos²(θ/2)=**0.7702** 而非 1/2、中段非单调谷 0.6715；⑨ D2 拆四条（GHZ 纯态 S(q0)=ln2 非 0；**⟨ZZZ⟩ on GHZ = 0**——GHZ 稳定子是两体 ZZ 不是 ZZZ）；⑩ F6 未排序；⑪ C3b 三连错——「测后整体纯」是错的物理（混合态投影后仍混合，全局纯度 =(1+(1−λ)⁴)/2，被测量的比特才是纯本征态）、q1 的 ⟨X⟩=(1−λ)²=0.81 非 ±1（PD 销毁跨结果子空间相干）；⑫ B8 方向性错——T₁ 造成布居偏置 ⟹ S(q0) **低于** ln2（0.69107<0.69315），不是「混合化必升熵」（补纯 PD 对照：T₁→∞ ⟹ S 精确回 ln2，PD 不改布居）；⑬ cdp 侧两处——`entropy/rhoEntropy` 返回 `{S,spectrum,…}` 对象非数字（取 `.S`）、`measure()` 返回 `{idx,bits:'00',prob}`（bits 是字符串非数组）。**环境记录**：本沙箱 headless chromium 实测 `webgl1=false, webgl2=false` ⟹ quantum-field/two-body 两页 src+dist 共 4 项必然失败，单列 ENV-SKIP（且 dist/quantum-field.html 本轮未重建，不可能受本轮影响）。README：URL 参数 / 数值事实 header + facts 表新行 / R104 小节 / 诚实限制 ② 改写 + 新增 ⑧ / noise 页限制⑤ 同步 / 架构树 qcnoise.js / dist 体积 112.0→141.7 KB；dist qcircuit **112.0→141.7 KB**（noise/qec 连带重建，bundler 内联共享物理模块纯新增） |
 | R102 | qcircuit 任意子系统熵（R98 诚实限制 ⑥ 兑现） | 限制 ⑥ 原「约化子系统固定低 k_A 位，取任意子系统须先搭 SWAP」兑现。**物理层**（src/physics/qcircuit.js，+33 行）：`qcPermuteBits(s, mask)` 把选中位（升序）移低位、其余位（升序）移高位——**索引精确重排**（O(dim·n)，不动浮点、无数值误差，无第二套位序约定），`qcEntropySubset(s, mask)` 置换后复用既有 `qcReducedRho`+Jacobi 求谱（≤6 位，kA=6 求谱 ~25ms）。**UI**（src/qcircuit.js，+40 行）：面板「选位」按钮组（随 n 重建、事件委托、点击切换 mask）、HUD 新行 S(选中 A)、>6 位 toast 拒绝、`reset()` 统一夹紧 mask（滑块与 setParam 两条 n 变更路径）、调试句柄 `setSub/getSub/subEntropy` 与点击同实现。**验证**：pot102 新套件 **16/16**（置换正确性 4 法交叉含独立第二实现全 mask 逐点 / 已知态 Bell·GHZ(4)·W(3)·乘积态 / S(A)=S(Ā) worst **3.44e-15** / 边界 4 节）；cdp107 新浏览器套件 **13/13**（boot·点击切换·ghz 预设·n 夹紧两路径·>6 位拒绝·调试句柄·dist 通道·零 console）；全量零回归 **2360 断言 0 fail**（pot75/76/80/100/101/102 + cdp75/76/92/101/102/103/105/106/107）。**测试侧十一处自我更正**（产品零 bug）：pot102 六处——① 补集 round-trip 前提错（置换非对合，逆映射须由参考实现导出）；② CNOT 形状 `{q,c}` 错（目标默认 bit0）⟹ `{c,q2}`；③ `w3` 手写 `re[j]=1` 未清 `re[0]` 踩 `qcNewState` 模块注释明文警告的陷阱（连踩两次）；④ D4 mask `0b1010101` 只有 4 位；⑤ C3 期望错（两比特最大混合是 I/4 ⟹ ln4）；⑥ B3 忘 |01⟩+|10⟩ 相干 ⟹ W(3) 对谱 {2/3,1/3}；cdp107 五处——① A1/B1 漏 `runAll()`（paused=1 是 |00⟩，S=0 本正确）；② C1 末击点 q3 是关掉它（全集应点 q0）；③ E1 循环点 q0 把它关掉只得 5 位（第 7 位因此被误收）⟹ k=1..5；④ F 节未 runAll 致 oracle 不匹配 + `0bFFFFFFFF` 语法错 ⟹ `0xFF`；⑤ G1 dist 陈旧重建。**环境记录**：跨会话静态服务 8765 死亡 ⟹ cdp101 假失败 103 项（A2–A8 全 FAIL），重启 `python3 -m http.server 8765` 后 111/111 复原——非产品回归。README：facts 纠缠行/熵行/浏览器行/HUD 段/架构图/诚实限制 ⑥⑦ 更新 + 新增「任意子系统熵」小节；worklog R102 条目；dist qcircuit 102.5→104.1 KB |
 | R101 | qcircuit 编辑器 cond 受控经典门（R98 诚实限制 ④ 兑现后半） | R98 限制 ④ 后半「经典前馈仍由预设生成」兑现：编辑器门下拉 17→18（+受控经典门），新增经典位 cbit 行 + 内部门行（12 种单比特门），cond 模式隐藏控制位 select；`_editorGate()` 构造 `{op:'cond', cbit, gate:{op,q,theta?}}`；**cbit 与 q 不同命名空间不要求互异**（与 CNOT 本质区别）；物理层零改动（R76 `qcExec` cond 分支早已支持）。**验证**：pot101 新套件 **24/24**（cond on/off 语义 / 手动传态 F=1 对 5 态×20 seed / 与 `qcTeleportGates` 预设逐字段相等 / 无修正分支平均 F=**1/2 精确**——Bell 测量四分支恒均匀 1/4 / 陈旧 cbit / 覆写 / 编辑器形状）；cdp106 新浏览器套件 **17/17**（三层加固 harness；手动传态 10 门 click 端到端 F=1 对滑块量化后 θ/φ；dist 同码；零 error）；全量零回归 2331 断言（pot75/76/80/100/101 + cdp75/76/92/101/102/103/105/106）。**测试侧九处自我更正**（非产品 bug）：① pot101 slice 索引把测量本身切掉；② rigged rng 方向反（`rng()<p1?1:0` ⟹ −1 恒 bit=1）+ p1=1 态强制不可能分支投零；③ **保真度公式潜伏 bug**——`inner²`（实部平方）应为复模方 `|⟨t|q2⟩|²`，同全局相位时蒙对、有相对相位时系统性低估（pot100 同款一并修复）；④ cdp106 滑块 0.01 量化吸附 + n=2 下 q=2 越界；⑤ 传态门数 10 非 11；⑥ cdp106 D1 两轮——Node 目标未用量化后 θ/φ ⟹ 回读门上实际值；`q2marginal` 用 `a.bits[2]` 提 q2 但 `qcBits` 是 big-endian 字符串 "q2q1q0"（bits[2] 是 q0，fid 0.229 根因）⟹ 改 `(a.i>>2)&1`——README「q0 是最低位唯一约定」在测试侧再次踩坑；⑦ p 索引混淆（q0=1 是 p[1]）；⑧ cdp105 A1 门数 17→18 未同步（R101 自身造成的腐烂）；⑨ cdp76 P7 停留在 R98 整合前 13 条导航口径（nav.js「腐烂四轮」同款）⟹ 更新 7 条口径 + 新增 P7b 六跳转桩根级+dist 存活检查。**诚实性纠正**：R100 README ② 曾写「编辑器可手动插 measure + cond 组合」——`git show 9bd1e03` 实证当时无 cond 选项，属超前误述，R101 起成为事实。README：门表/编辑沙盒段/数值事实表补 cond，限制 ② 改「无循环分支型控制流但瞬时前馈可手搭」、④ 17→18 种门；worklog R101 条目；dist qcircuit 97.4→102.5 KB（noise/qec 各一行 R100 注释同步纯注释） |
 | R100 | qcircuit X/Y 基测量一键化（R98 诚实限制 ③ 兑现） | 延续 R99「诚实限制逐项兑现」。限制 ③ 原「测量只有 Z 基」是教学刚需（Bell 检验在 X/Y 基测）。**物理层**（src/physics/qcircuit.js）：`qcMeasureQubit` 加可选 `basis='z'\|'x'\|'y'`，X/Y 基用**旋转-测量-旋回**（X: H·M_Z·H；Y: S†H·M_Z·H·S，|+i⟩=S·H|0⟩ ⟹ U=H·S† 映 Y 本征基到 Z）；Z 内核抽私有 `qcMeasureZ`；`qcExec` 透传 basis 并写记录；未知 basis 抛错。两条性质：p(±)=(1±⟨P⟩)/2 精确（⟨X⟩=2Reρ01、⟨Y⟩=−2Imρ01——注释初版符号写反已改）；测后态即该基本征态，cbit 0=+1 本征值。**UI**（src/qcircuit.js）：measure 模式显「测量基」行（Z/X/Y select，title 明示本征值语义）；`_editorGate()` 构造 `{op,q,cbit,basis}`；`gateView` 标注 M_z/M_x/M_y；basis 与 c/theta 同为持久编辑器状态（切走切回保留、select 可见）。**验证**：pot100 新套件 **24/24**（本征态确定性 40 seed / 测后态即本征态 / 概率公式逐态 4σ 对账 / **Bell Y-Y 反关联**最强判别 / X-X 正关联 / Z-Z 零回归 / X-Z 交叉均匀 / teleport Z 基保真度 1 / X 基 cond 前馈）；cdp105 扩 K 节 23→**33/33**；零回归 pot75 31/31 · cdp75 16/16 · cdp92 39/39 · cdp101 111/111 · cdp102 55/55 · cdp103 29/29（首跑 27/29 定性为测试基建 heisenbug——cdp103 无进程组加固致孤儿 chromium 干扰 + goto load 事件竞态，已按 cdp92 同款三层加固，复跑 29/29）。**测试侧两处自我更正**：① A2 把 |−⟩ 误写成 X·H|0⟩（实为 |+⟩，应 H|1⟩）；② K6 误期「不传 basis 重置 z」——basis 是持久状态，改断言为「新页面默认 z + 持久语义」双查 |
@@ -1552,6 +1553,98 @@ dist 重建：qcircuit 97.4→102.5 KB；noise/qec 各一行注释同步（R100 
 修正随共享物理模块跨页传播，随本轮一并入库，diff 已核实为纯注释）。
 
 ---
+
+## R104（2026-10-26）qcircuit 门噪声 T₁/T₂ 接进线路页（R98 诚实限制 ② 兑现）
+
+### 完成项
+- [x] 立项依据：R98 诚实限制 ②「无噪声、无退相干」。R77/R80 两条线（**态**的噪声 / 门级随机 Pauli）
+      都不在**线路页**上。R104 补中间这一口：**门噪声接进线路页**——噪声挂在门上而非时间或态上，
+      每个门作用后对该门**触及的每个比特**施加振幅阻尼 γ=1−e^{−tg/T₁} 与相位阻尼 λ=1−e^{−tg/T₂}。
+      **默认关闭**（noise=null ⟹ 逐位复现纯酉路径）。
+- [x] `src/physics/qcnoise.js`（新增 ~380 行）：密度矩阵引擎
+      - `qcnApplyGate`：门作用走 **UρU† 两趟公式**（右乘 U† 再左乘 U，各扫半矩阵；免稠密矩阵乘，
+        每门 O(4ⁿ)）。X 门 1 比特手推验证 XρX=[[d,c],[b,a]]。SWAP 走索引位置换。
+      - `qcnAmpDamp`：`ρ[i0][j0] += γ·ρ[i1][j1]`；跨位 ×√(1−γ)；|1⟩|1⟩ 块 ×(1−γ)。
+        `qcnPhaseDamp`：b_i≠b_j 的矩阵元 ×(1−λ)，对角（布居）不变。
+      - `qcnNoiseParams(t1,t2,tg)` ⟹ `{gamma, lambda, t2eff}`，`t2eff = 1/(1/T₂+1/(2T₁)) ≤ 2T₁`
+        （T₁ 本身就在压横向相干，约束自动满足，不需人工夹紧）。
+      - 测量 = Born 规则 p(j)=ρ_jj + **子空间投影**（保留同结果子空间内的相干，不是只留对角）；
+        X/Y/Bell/GHZ 基走 R100/R103 同款「旋转-测量-旋回」。
+      - 结构量：迹 / 纯度 / 最大相干 / 子系统熵（`qcnPermuteRho` 位置换 → 部分求迹 → 实嵌入 Jacobi）/
+        **Wootters 全式**并发（R=ρSρ*S，S=σ_y⊗σ_y，π=[3,2,1,0]，实嵌入 8×8 Jacobi）。
+      - `qcnExec/qcnRunProgram` 镜像 `qcExec`（cond 前馈门**只有真实执行时**才衰减）。
+      - 常量前缀 `QCN_`（R77 bundle 作用域重名教训）；`jacobiReal` 从 qcircuit.js 复用（单源）。
+- [x] `src/physics/qcircuit.js`（+2 行导出）：`function jacobiReal` → `export function jacobiReal`；
+      `const JOINT_PREP` → `export const QC_JOINT_PREP`（内部两处引用同步）。
+- [x] `src/qcircuit.js`（+~200 行 UI）：面板「门噪声 T₁/T₂（R104）」组（启用开关 + T₁/T₂/t_g 三滑块 +
+      γ/λ 读数 + T₂eff 读数）；URL `?noise=1&t1=&t2=&tg=`；**改任一噪声参数即 `resetExecution()`**
+      （同一口径下才可比）；HUD 噪声分支（标签「范数 ‖ψ‖²」→「迹 tr ρ」、新增纯度 trρ² 与最大相干
+      |ρ_ij| 两行）；振幅画布改画 **√ρ_ii**（混合态无相位可编码 ⟹ 固定色相）；状态行增噪声参数；
+      调试句柄 +11（`setNoise/getNoise/noiseOn/rhoProbs/rhoTrace/purity/maxCoh/rhoEntropy/
+      concurrenceRho/zzRho`）。
+
+### 验证
+- pot104 新套件 **51/51**：A 零回归 4（全预设双路径 worst **1.11e-15**、40 门随机线路振幅级 2.78e-16、
+  含 20 次测量 2.89e-15、显式 γ=λ=0 ≡ null）· B 通道物理 18（|1⟩ 布居 = e^{−k·tg/T₁}、Bloch
+  `x,y=e^{−t/2T₁}`、`z=cosθ·e^{−t/T₁}+1−e^{−t/T₁}`、⟨X⟩=e^{−kλ} 且布居不变、T₂eff=150.0、
+  Bell 并发闭式 worst 5.44e-14、trρ≡1 worst 1.11e-15、厄米性 5.55e-17）· C 测量 9 · D 协议级 11 ·
+  E 性能 3（n=8×50 门 **34.7ms** = 0.69ms/门）· F 异常 6。
+- cdp104qc 新浏览器套件 **39/39**：控件与派生读数（γ/λ 解析对照、T₂eff ≤ 2T₁ 四组极端参数）、
+  **页面 ↔ Node 同参对账逐位 1e-12**（probs/纯度/最大相干/并发/⟨ZZ⟩/子系统熵/迹）、HUD 噪声行显隐与
+  画布像素签名变化、零回归（noise off ⟹ probs=[.5,0,0,.5]、C=1、S=ln2、HUD 标签回归）、dist 同值、
+  全程零 console。
+- 13 页构建冒烟（新增 cdp104smoke）**22 PASS / 0 FAIL / 4 ENV-SKIP**。
+- 全量零回归 **2464 断言 0 fail**：pot80 1928/1928 + pot100 24/24 + pot101 24/24 + pot102 16/16 +
+  pot103 31/31 + cdp75 16 + cdp92 39 + cdp101 111 + cdp102 55 + cdp103 29 + cdp104 23 + cdp105 33 +
+  cdp106 17 + cdp107 13 + cdp108 18。
+
+### 产品侧真 bug（两个，都只在 dist 通道暴露）
+1. `qcnoise.js` 的**多行** `import { … } from './qcircuit.js'` ⟹ `build-standalone.mjs` 报
+   「无法解析的 import 形式（仅支持单行静态 import）」⟹ 改单行。
+2. `export { mulberry32 };` re-export 列表 ⟹ 「不支持 export {} 列表」⟹ 删除（无人从 qcnoise 取
+   RNG，调用方直接从 `./qcircuit.js` import）。
+   **教训**：src 通道（ES 模块直开 + Node 套件）全绿，dist 构建却断裂——**src 绿 ≠ dist 绿**，
+   每轮必须跑全站构建（R90 抓过同款的 `DATA_MASK` 冲撞）。
+
+### 测试侧自我更正（十三处；物理与产品代码零 bug）
+1. B1 用 X 门做「纯衰减」判据——X 每轮把 |1⟩↔|0⟩ 翻转，(1−γ)^k 失效 ⟹ 改用 **rz(0)**（精确恒等门：
+   既触发噪声又不改变态），并把「rz(0)=I」固化为 F5 地基断言。
+2. B6 最大混合态构造用 dim=2 的索引公式写 dim=4 矩阵 ⟹ `re[i*4+i]`。
+3. B3 Wootters 对**二重特征根**的 Jacobi 精度只有 6.7e-9 ⟹ 阈值 1e-7（不能按 1e-12 要求）。
+4. B2c 容差 1e-9 对 160 量级太紧（真值 159.99997）。
+5. C1/C4 两次测量各建 `mulberry32(seed)` ⟹ 同随机数同结果（制造「完全关联」假象）⟹ 共用 rng 实例。
+6. C3 判据记错物理（Bell 测 q0 后 q1 是**确定** = out，纠缠签名）。
+7. C5 期望错 ⟹ **GHZ 预设态 = P_ghz|0⟩**（八态 P|j⟩ 枚举实证）⟹ 联合测确定 outcome 是 **[0,0,0]**
+   而非 [1,1,1]；顺带删掉测试里被施加两遍的制备门（P·P|j⟩ 本就不确定）。
+8. D1 单调断言错 ⟹ 真实物理是**冻结效应**：γ→1 时每门后完全弛豫，修正门刚执行完就塌回基态 ⟹
+   传态 F 饱和到 cos²(θ/2)=**0.7702**（不是 1/2），中段出现非单调谷（0.6715）。
+9. D2 记错（GHZ 纯态 S(q0)=ln2 不是 0）⟹ 拆 D2a 降 / D2b 升 / D2c ⟨Z₀Z₁⟩ 衰减 /
+   D2d **⟨ZZZ⟩ on GHZ = 0** 对照（GHZ 稳定子是两体 ZZ，不是 ZZZ）。
+10. F6 特征根未排序。
+11. C3b 三连错：①「测后整体纯」是错的物理——**混合态被投影后仍是混合态**，全局纯度 =
+    (1+(1−λ)⁴)/2（被测量的那个比特才是纯本征态）；② q1 的 ⟨X⟩ = (1−λ)² = 0.81 而非 ±1
+    （PD 已销毁跨 q0 结果的相干，λ=0 时才严格 ±1）；③ 补 λ=0 对照组。
+12. B8 方向性错：T₁ 振幅阻尼把布居往 |0⟩ 搬 ⟹ q0 约化态出现偏置，**S(q0) 低于 ln2**
+    （0.69107 < 0.69315），不是「混合化就一定升熵」；补纯 PD 对照（T₁→∞ ⟹ S 精确回 ln2，
+    PD 不改布居）+ 相应容差（γ=1e-8 ⟹ 布居偏差 ~1e-8，1e-9 容差过紧）。
+13. cdp 侧两处：`entropy/rhoEntropy` 返回 `{S, spectrum, sum, …}` 对象而非数字（取 `.S`）；
+    `measure()` 返回 `{idx, bits:'00', prob}`（bits 是字符串，不是数组）。
+
+### 环境记录（非回归）
+本沙箱 headless chromium 实测 **`webgl1=false, webgl2=false`**（/tmp/webgl2probe.mjs）⟹
+quantum-field / two-body 两页在 src + dist 共 4 项必然报 `ERR no webgl2`，单列 **ENV-SKIP**；
+且 `dist/quantum-field.html` 本轮根本未被重建（git status 只有 noise/qcircuit/qec 三个 dist 变化），
+不可能受 R104 影响。与 R84 记录的「cdp70/71/72 三套 WebGL2 页被环境阻塞」同源。
+
+### 文档与产物
+- README：线路页 URL 参数（+`?noise=1&t1/t2/tg`）、数值事实 header + facts 表新行、新增「门噪声
+  T₁/T₂（R104）」小节（含三个物理纠错）、诚实限制 ② 改写（默认无噪声 ⟹ R104 起可选开启）+ 新增 ⑧
+  （只有 T₁/T₂ 两通道、无退极化/无读出误差/无非马尔可夫、O(4ⁿ) 上限 n=8）、noise 页限制⑤ 文本同步
+  （「未接线」⟹「R104 已接线，本节是离散随机 Pauli 的另一条口径」）、架构树新增 qcnoise.js、
+  dist 体积 112.0 → **141.7 KB**。
+- worklog：本条目。
+- dist：qcircuit **141.7 KB**（noise / qec 连带重建——bundler 内联共享物理模块的纯新增）。
+
 
 ## R103（2026-10-26）qcircuit Bell/GHZ 联合基测量（R98 诚实限制 ③ 后半兑现）
 

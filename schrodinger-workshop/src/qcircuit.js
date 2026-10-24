@@ -6,14 +6,21 @@
  *   #qcCircuit  线路图（竖线 = 时间列，横线 = 比特；CNOT 控制点/⊕、SWAP ×、
  *               Toffoli 双控）——已执行的列压暗，当前列高亮
  *   #qcAmp      振幅条：高度 = |a_i|，色相 = 相位 arg a_i（π 处翻红、0 处青）
+ *               R104 噪声模式下改画布居 √ρ_ii（混合态无相位，固定色相）
+ *
+ * R104 门噪声（T₁/T₂）：面板「门噪声」组开启后换**密度矩阵路径**
+ * （src/physics/qcnoise.js）——每个门作用后对触及比特施加振幅阻尼 γ 与
+ * 相位阻尼 λ。关闭时逐位等价原纯幺正路径（零回归契约，pot104 A 节验证）。
  *
  * 调试句柄 window.__qc（cdp75 用）：state/gates/step/runAll/reset/preset/
  * measure/entropy/amps/probs/summary/navLinks —— 全部确定性（测量用种子）。
+ * R104 追加 setNoise/getNoise/rhoProbs/purity/maxCoh/rhoEntropy 等。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
 import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
 import { QC_UNARY, QC_PRESETS, qcNewState, qcApply, qcNorm, qcProbs, qcZZ, qcEntropy, qcConcurrence, qcAmplitudes, qcBits, qcSample, qcCollapse, qcPresetGates, mulberry32, qcExec, qcNewClassical, qcQubitRho, qcRhoFidelity, qcTargetAmps, qcTeleportGates, qcPrep1q, qcPermuteBits, qcEntropySubset } from './physics/qcircuit.js';
+import { qcnRho, qcnExec, qcnProbs, qcnTrace, qcnPurity, qcnConcurrence, qcnEntropySubset, qcnNoiseParams, qcnSampleRho, qcnCollapseRho, qcnZZ, qcnQubitRho, qcnMaxCoh } from './physics/qcnoise.js';
 
 const QC_CSS = `
   #qcPanel{top:74px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 200px);
@@ -112,10 +119,19 @@ export class QCircuitApp {
       step: 0, playing: false, speed: num('speed', 260),
       measured: null, seed: Math.round(num('seed', 137)),
       paused: q.get('paused') === '1', edited: false, sub: 1,
+      /* R104：门噪声（T₁/T₂）——默认关闭（纯酉路径逐位不变）；
+         开启后换密度矩阵表示，每个门作用后对触及比特施加 γ=1−e^{−tg/T₁}
+         与 λ=1−e^{−tg/T₂}。改任何噪声参数都重置执行（口径一致）。 */
+      noise: {
+        on: q.get('noise') === '1',
+        t1: num('t1', 300), t2: num('t2', 200), tg: num('tg', 10),
+      },
     };
     this.edit = { op: 'h', q: 0, c: -1, c2: -1, q2: 1, q3: 2, theta: Math.PI / 2, basis: 'z', cbit: 0, inner: 'x', selected: -1 };
     this.gates = [];
     this.psi = null;
+    this.rho = null;        /* R104：噪声开启时的密度矩阵（关闭为 null） */
+    this.noiseParam = null; /* R104：{gamma, lambda}（关闭为 null） */
     this._listeners = []; this._needDraw = true; this._last = 0;
     this._fps = 0; this._fpsFrames = 0; this._lastFpsT = performance.now();
     this._onError = e => {
@@ -201,6 +217,13 @@ export class QCircuitApp {
         <div class="row"><label>随机种子</label><input type="range" id="qcSeed" min="1" max="999" step="1"><output id="qcSeedO">—</output></div>
         <div class="grp">子系统熵 A（R102）</div>
         <div class="row" style="align-items:flex-start"><label style="padding-top:5px">选位</label><span id="qcSubBtns" title="点击加入/移出子系统 A；≤6 位（Jacobi 求谱 O(d³)）；其余位 traced out"></span></div>
+        <div class="grp">门噪声 T₁/T₂（R104）</div>
+        <div class="row"><label>启用</label><button id="qcNoiseOn" style="flex:1" title="开启后切换密度矩阵表示：每个门作用后对触及比特施加振幅阻尼 γ=1−e^{−tg/T₁} 与相位阻尼 λ=1−e^{−tg/T₂}；关闭时逐位等价纯酉路径">关闭</button></div>
+        <div class="row"><label>T₁ 弛豫</label><input type="range" id="qcT1" min="20" max="1000" step="10" title="能量弛豫时间：|1⟩→|0⟩ 布居按 e^{−t/T₁} 衰减"><output id="qcT1O">—</output></div>
+        <div class="row"><label>T₂ 退相位</label><input type="range" id="qcT2" min="20" max="1000" step="10" title="纯退相位时间：跨该比特的相干按 e^{−t/T₂} 衰减（T₁ 本身还贡献 1/(2T₁)）"><output id="qcT2O">—</output></div>
+        <div class="row"><label>门时 t_g</label><input type="range" id="qcTg" min="1" max="100" step="1" title="每个门的持续时间（与 T₁/T₂ 同单位）；γ=1−e^{−tg/T₁}、λ=1−e^{−tg/T₂}"><output id="qcTgO">—</output></div>
+        <div class="row"><label>γ / λ</label><output id="qcGammaLam" style="min-width:96px" title="每个门实际注入的振幅阻尼 / 相位阻尼强度">—</output></div>
+        <div class="row"><label>T₂ 等效</label><output id="qcT2Eff" style="min-width:60px" title="1/(1/T₂+1/(2T₁))：T₁ 本身压横向相干 ⟹ 等效横向时间 ≤ 2T₁">—</output></div>
       </aside>
 
       <div id="qcStage" class="qstage">
@@ -213,9 +236,11 @@ export class QCircuitApp {
         <div class="hrow"><span>进度</span><span id="hProg">—</span></div>
         <div class="hrow"><span>维度 2^n</span><span id="hDim">—</span></div>
         <hr>
-        <div class="hrow"><span>范数 ‖ψ‖²</span><span id="hNorm">—</span></div>
+        <div class="hrow"><span id="hNormL">范数 ‖ψ‖²</span><span id="hNorm">—</span></div>
         <div class="hrow"><span>非零振幅</span><span id="hNz">—</span></div>
         <div class="hrow"><span>最大概率</span><span id="hMaxP">—</span></div>
+        <div class="hrow" id="hPurityRow" style="display:none"><span>纯度 trρ²</span><span id="hPurity">—</span></div>
+        <div class="hrow" id="hCohRow" style="display:none"><span>最大相干 |ρ_ij|</span><span id="hCoh">—</span></div>
         <hr>
         <div class="hrow"><span>S(q0…q0)</span><span id="hS1">—</span></div>
         <div class="hrow"><span>S(低半 / 全)</span><span id="hS2">—</span></div>
@@ -294,6 +319,20 @@ export class QCircuitApp {
       this._renderSubBtns();
       this.renderHud();
     });
+    /* R104：门噪声——开关 + 三参数。任何变动都重置执行（已执行的门用的是
+       旧噪声口径，半途更换会让密度矩阵前后不一致；与改 n/θ 同语义）。 */
+    this.on(this.q('#qcNoiseOn'), 'click', () => {
+      const st = this.state;
+      st.noise.on = !st.noise.on;
+      this.syncPanel();
+      this.resetExecution();
+      this.toast(st.noise.on
+        ? '门噪声已启用：T₁=' + st.noise.t1 + ' · T₂=' + st.noise.t2 + ' · t_g=' + st.noise.tg + '（密度矩阵路径）'
+        : '门噪声已关闭（纯酉路径，与关闭前逐位等价）');
+    });
+    this.on(this.q('#qcT1'), 'input', e => { this.state.noise.t1 = parseFloat(e.target.value); this.syncPanel(); this.resetExecution(); });
+    this.on(this.q('#qcT2'), 'input', e => { this.state.noise.t2 = parseFloat(e.target.value); this.syncPanel(); this.resetExecution(); });
+    this.on(this.q('#qcTg'), 'input', e => { this.state.noise.tg = parseFloat(e.target.value); this.syncPanel(); this.resetExecution(); });
     this.on(this.q('#qcGateAdd'), 'click', () => this.addGate());
     this.on(this.q('#qcGateClear'), 'click', () => this.clearGates());
     this.on(this.q('#qcGateList'), 'click', e => {
@@ -542,6 +581,10 @@ export class QCircuitApp {
   resetExecution(){
     const st = this.state;
     this.psi = qcNewState(st.n);
+    /* R104：噪声开启时并行维护密度矩阵 ρ（psi 保留 |0…0⟩ 作纯路径镜像，
+       但所有读者按 st.noise.on 分支——不会两条路径混读）。 */
+    this.rho = st.noise.on ? qcnRho(st.n) : null;
+    this.noiseParam = st.noise.on ? qcnNoiseParams(st.noise.t1, st.noise.t2, st.noise.tg) : null;
     this.cres = qcNewClassical(8);
     this.rng = mulberry32(st.seed);
     st.step = 0; st.measured = null; st.playing = false;
@@ -569,7 +612,9 @@ export class QCircuitApp {
     const st = this.state;
     if (st.measured != null) return;          /* 测量后必须重置才能继续 */
     for (let i = 0; i < k && st.step < this.gates.length; i++){
-      qcExec(this.psi, this.gates[st.step], this.cres, this.rng);
+      /* R104：噪声开 → 密度矩阵路径（门 + 触及比特 T₁/T₂）；关 → 原态矢路径 */
+      if (st.noise.on) qcnExec(this.rho, this.gates[st.step], this.cres, this.rng, this.noiseParam);
+      else qcExec(this.psi, this.gates[st.step], this.cres, this.rng);
       st.step++;
     }
     if (st.step >= this.gates.length) st.playing = false;
@@ -580,9 +625,16 @@ export class QCircuitApp {
   measure(){
     const st = this.state;
     const rng = mulberry32(st.seed);
-    const idx = qcSample(this.psi, rng);
-    qcCollapse(this.psi, idx);
-    st.measured = { idx, bits: qcBits(idx, st.n), prob: 1 };
+    if (st.noise.on){
+      /* R104：Born 规则 p(j)=ρ_jj 抽样 + 投影 */
+      const idx = qcnSampleRho(this.rho, rng);
+      qcnCollapseRho(this.rho, idx);
+      st.measured = { idx, bits: qcBits(idx, st.n), prob: 1 };
+    } else {
+      const idx = qcSample(this.psi, rng);
+      qcCollapse(this.psi, idx);
+      st.measured = { idx, bits: qcBits(idx, st.n), prob: 1 };
+    }
     st.playing = false;
     this._needDraw = true;
     this.renderHud();
@@ -601,7 +653,15 @@ export class QCircuitApp {
     const p = QC_PRESETS[this.state.preset] || QC_PRESETS.bell;
     const el = this.q('#qcHint');
     if (!el) return;
-    el.innerHTML = (this._msg ? '<b>' + this._msg + '</b>' : '') +
+    /* R104：噪声开启时常驻一行口径说明（γ/λ/T₂eff 实时值） */
+    let noiseLine = '';
+    if (this.state.noise.on){
+      const np = qcnNoiseParams(this.state.noise.t1, this.state.noise.t2, this.state.noise.tg);
+      noiseLine = '<div style="margin-top:5px;color:var(--amber)">门噪声（密度矩阵）：每门后对触及比特施加 γ=' +
+        np.gamma.toFixed(4) + '（T₁ 弛豫）与 λ=' + np.lambda.toFixed(4) +
+        '（T₂ 退相位）；T₂ 等效 ' + np.t2eff.toFixed(1) + '。混合态：HUD 看纯度/相干，振幅条画布居。</div>';
+    }
+    el.innerHTML = (this._msg ? '<b>' + this._msg + '</b>' : '') + noiseLine +
       '<div style="margin-top:5px">' + p.text + '</div>';
   }
 
@@ -611,6 +671,45 @@ export class QCircuitApp {
     set('hLine', (QC_PRESETS[st.preset] || { label: st.preset }).label + (st.edited ? ' · 已编辑' : '') + ' · n=' + st.n);
     set('hProg', st.step + ' / ' + this.gates.length + ' 门');
     set('hDim', String(s.dim));
+    if (st.noise.on){
+      /* R104：密度矩阵路径——迹/布居/纯度/相干/熵/并发/关联全部改读 ρ */
+      const r = this.rho;
+      const setL = (id, v) => { const e = this.q('#' + id); if (e) e.textContent = v; };
+      setL('hNormL', '迹 tr ρ');
+      set('hNorm', nf(qcnTrace(r), 9));
+      const p = qcnProbs(r);
+      let nz = 0, mp = 0;
+      for (const v of p){ if (v > 1e-14) nz++; if (v > mp) mp = v; }
+      set('hNz', nz + ' / ' + s.dim);
+      set('hMaxP', nf(mp, 6));
+      const pr = this.q('#hPurityRow'), cr = this.q('#hCohRow');
+      if (pr) pr.style.display = '';
+      if (cr) cr.style.display = '';
+      set('hPurity', nf(qcnPurity(r), 6));
+      set('hCoh', ex(qcnMaxCoh(r), 2));
+      const kHalf = Math.min(s.n >> 1, 6), kFull = Math.min(s.n, 6);
+      set('hS1', nf(qcnEntropySubset(r, 1).S, 6) + ' nat');
+      set('hS2', nf(qcnEntropySubset(r, (1 << kHalf) - 1).S, 6) + ' / ' + nf(qcnEntropySubset(r, (1 << kFull) - 1).S, 6));
+      const sub = qcnEntropySubset(r, st.sub);
+      set('hS3', (sub.bits.length ? '{q' + sub.bits.join(',q') + '}' : '∅') + ' → ' + nf(sub.S, 6) + ' nat');
+      set('hConc', st.n === 2 ? nf(qcnConcurrence(r), 6) : '（n≠2）');
+      set('hZZ', st.n >= 2 ? nf(qcnZZ(r, 0, 1), 6) : '—');
+      if (st.preset === 'teleport' && s.n === 3){
+        const t = qcTargetAmps(st.theta, st.phi);
+        set('hFid', nf(qcRhoFidelity(qcnQubitRho(r, 2), t.alpha, t.beta), 6));
+      } else set('hFid', '—');
+      set('hMeas', st.measured ? '|' + st.measured.bits + '⟩' : '未测量');
+      let cbN = 0;
+      for (const g of this.gates) if (g.op === 'measure' && g.cbit != null) cbN = Math.max(cbN, g.cbit + (g.qubits ? g.qubits.length : 1));
+      const cb = this.cres ? Array.from(this.cres.slice(0, cbN)).join(' ') : '—';
+      set('hCbits', cbN > 0 ? cb : '—（无经典位）');
+      return;
+    }
+    const setL = (id, v) => { const e = this.q('#' + id); if (e) e.textContent = v; };
+    setL('hNormL', '范数 ‖ψ‖²');
+    const pr = this.q('#hPurityRow'), cr = this.q('#hCohRow');
+    if (pr) pr.style.display = 'none';
+    if (cr) cr.style.display = 'none';
     set('hNorm', nf(qcNorm(s), 9));
     const amps = qcAmplitudes(s);
     set('hNz', String(amps.length));
@@ -657,6 +756,19 @@ export class QCircuitApp {
     }
     const play = this.q('#qcPlay');
     if (play) play.textContent = st.playing ? '暂停 ⏸' : '播放 ▶';
+    /* R104：噪声面板同步（开关态 + 三参数 + 派生读数 γ/λ/T₂eff） */
+    const nb = this.q('#qcNoiseOn');
+    if (nb){
+      nb.textContent = st.noise.on ? '开启' : '关闭';
+      nb.classList.toggle('on', st.noise.on);
+    }
+    const nz = st.noise;
+    set('qcT1', nz.t1); txt('qcT1O', nz.t1);
+    set('qcT2', nz.t2); txt('qcT2O', nz.t2);
+    set('qcTg', nz.tg); txt('qcTgO', nz.tg);
+    const np = qcnNoiseParams(nz.t1, nz.t2, nz.tg);
+    txt('qcGammaLam', np.gamma.toFixed(4) + ' / ' + np.lambda.toFixed(4));
+    txt('qcT2Eff', np.t2eff.toFixed(1));
   }
 
   resize(){
@@ -821,7 +933,9 @@ export class QCircuitApp {
       }
     }
     g.fillStyle = 'rgba(154,167,189,.75)'; g.textAlign = 'left';
-    g.fillText(N + ' 门 · 已执行 ' + this.state.step + (this.state.measured ? ' · 已测量（需重置）' : ''), 8, 13);
+    g.fillText(N + ' 门 · 已执行 ' + this.state.step +
+      (this.state.measured ? ' · 已测量（需重置）' : '') +
+      (this.state.noise.on ? ' · 噪声 T₁=' + this.state.noise.t1 + ' T₂=' + this.state.noise.t2 + ' tg=' + this.state.noise.tg : ''), 8, 13);
   }
 
   /* ---------- 振幅条 ---------- */
@@ -836,7 +950,23 @@ export class QCircuitApp {
     const W = cv.width / dpr, H = cv.height / dpr;
     const padL = 34, padR = 12, padT = 20, padB = 22;
     const n = this.state.n, dim = 1 << n;
-    const amp = qcAmplitudes(this.psi);
+    /* R104：噪声模式画布居 √ρ_ii（混合态无相位 ⟹ 固定色相、标题注明）；
+       纯模式画振幅 |a_i|（色相 = 相位）——两条路径画布语义各自自洽。 */
+    const noisy = !!this.state.noise.on && !!this.rho;
+    let amp, title;
+    if (noisy){
+      const p = qcnProbs(this.rho);
+      amp = [];
+      for (let i = 0; i < dim; i++){
+        const v = p[i];
+        if (v < 1e-14) continue;
+        amp.push({ i, re: Math.sqrt(v), im: 0, abs: Math.sqrt(v), phase: 0 });
+      }
+      title = '√ρ_ii（布居；混合态无色相）· 非零 ' + amp.length + '/' + dim;
+    } else {
+      amp = qcAmplitudes(this.psi);
+      title = '|a_i|（色相 = 相位）· 非零 ' + amp.length + '/' + dim;
+    }
     const maxAbs = Math.max(1e-12, ...amp.map(a => a.abs));
     const bw = (W - padL - padR) / dim;
     const y0 = H - padB, hMax = y0 - padT;
@@ -853,7 +983,8 @@ export class QCircuitApp {
       const x = padL + a.i * bw;
       const hh = (a.abs / maxAbs) * hMax;
       const hue = ((a.phase / (2 * Math.PI)) % 1 + 1) % 1;
-      g.fillStyle = 'hsla(' + Math.round(178 + hue * 140) + ',88%,62%,.92)';
+      g.fillStyle = noisy ? 'hsla(178,72%,58%,.92)'
+        : 'hsla(' + Math.round(178 + hue * 140) + ',88%,62%,.92)';
       g.fillRect(x + Math.max(0.5, bw * 0.12), y0 - hh, Math.max(1, bw * 0.76), hh);
     }
     /* 轴与标签（2^n ≤ 32 时逐条标，否则稀疏标） */
@@ -865,7 +996,7 @@ export class QCircuitApp {
       g.fillText(qcBits(i, n), padL + (i + 0.5) * bw, H - 7);
     }
     g.textAlign = 'left'; g.fillStyle = 'rgba(154,167,189,.75)';
-    g.fillText('|a_i|（色相 = 相位）· 非零 ' + amp.length + '/' + dim, padL, 12);
+    g.fillText(title, padL, 12);
   }
 
   frame(){
@@ -926,6 +1057,26 @@ export class QCircuitApp {
       subEntropy: mask => qcEntropySubset(self.psi, mask & ((1 << self.state.n) - 1)),
       getSub: () => self.state.sub,
       setSub: m => { self.state.sub = m & ((1 << self.state.n) - 1); self._renderSubBtns(); self.renderHud(); },
+      /* R104：门噪声调试句柄（cdp104 用；setNoise 自动重置执行） */
+      setNoise: (on, t1, t2, tg) => {
+        const nz = self.state.noise;
+        if (on != null) nz.on = !!on;
+        if (t1 != null) nz.t1 = t1;
+        if (t2 != null) nz.t2 = t2;
+        if (tg != null) nz.tg = tg;
+        self.syncPanel();
+        self.resetExecution();
+        self._drawAll();
+      },
+      getNoise: () => ({ ...self.state.noise }),
+      noiseOn: () => !!self.state.noise.on,
+      rhoProbs: () => self.state.noise.on ? Array.from(qcnProbs(self.rho)) : null,
+      rhoTrace: () => self.state.noise.on ? qcnTrace(self.rho) : null,
+      purity: () => self.state.noise.on ? qcnPurity(self.rho) : null,
+      maxCoh: () => self.state.noise.on ? qcnMaxCoh(self.rho) : null,
+      rhoEntropy: mask => self.state.noise.on ? qcnEntropySubset(self.rho, mask & ((1 << self.state.n) - 1)) : null,
+      concurrenceRho: () => self.state.noise.on ? qcnConcurrence(self.rho) : null,
+      zzRho: () => self.state.noise.on ? qcnZZ(self.rho, 0, 1) : null,
     };
   }
 }

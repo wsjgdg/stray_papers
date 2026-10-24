@@ -320,7 +320,10 @@ export function qcFrGate(fr, o){
 /* 约化密度矩阵 ρ_A（A = 低 kA 位）的特征值：Gram 矩阵 ρ[i][j]=Σ_e ψ(i,e)ψ*(j,e)，
    用实嵌入 [[Re,−Im],[Im,Re]] 的 Jacobi（本征值各二重，排序后隔一取、不折半，
    与 R73 熵的修法同一坑）。 */
-function jacobiReal(A, m, sweeps = 60){
+/* 实对称矩阵的 Jacobi 本征求解（就地修改 A，返回 {val, vec}）。
+   R104 起导出：qcnoise.js 的密度矩阵谱（部分求迹熵、Wootters concurrence）
+   复用同一求解器——单源真值原则，不复制第二份 Jacobi。 */
+export function jacobiReal(A, m, sweeps = 60){
   const V = [];
   for (let i = 0; i < m; i++){ V.push(new Float64Array(m)); V[i][i] = 1; }
   for (let sw = 0; sw < sweeps; sw++){
@@ -609,18 +612,19 @@ function qcMeasureZ(s, q, rng){
  * cond 前馈按单位读取即可（传态协议：X^{m1}Z^{m0} 仍成立，见 pot103 E）。
  * 标签约定：outcomes = qubits 顺序的比特串；Bell 基 P|00⟩=|Φ+⟩、P|01⟩=|Ψ+⟩、
  * P|10⟩=|Φ−⟩、P|11⟩=|Ψ−⟩（H(q_a)·CNOT(q_a→q_b)，与 bell 预设同款制备线路）。 */
-const JOINT_PREP = {
+/* R104 起导出：qcnoise.js 的密度矩阵联合测量复用同一张制备线路表（单源） */
+export const QC_JOINT_PREP = {
   /* 值 = 制备线路 P（把 |j⟩ 送到联合基态；顺序即门序） */
   bell: qs => [{ op: 'h', q: qs[0] }, { op: 'cnot', c: qs[0], q2: qs[1] }],
   ghz: qs => [{ op: 'h', q: qs[0] }, { op: 'cnot', c: qs[0], q2: qs[1] }, { op: 'cnot', c: qs[0], q2: qs[2] }],
 };
 export function qcJointK(basis){
-  const p = JOINT_PREP[basis];
+  const p = QC_JOINT_PREP[basis];
   if (!p) throw new Error('unknown joint measure basis ' + basis);
   return p([0, 1, 2]).length;   /* 用占位位跑一遍数门数 ⟺ 联合基的比特数 */
 }
 export function qcMeasureJoint(s, qubits, rng, basis = 'bell'){
-  const P = JOINT_PREP[basis];
+  const P = QC_JOINT_PREP[basis];
   if (!P) throw new Error('unknown joint measure basis ' + basis);
   const k = qcJointK(basis);
   if (!Array.isArray(qubits) || qubits.length !== k) throw new Error('joint measure ' + basis + ' needs ' + k + ' qubits');
