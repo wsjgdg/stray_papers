@@ -143,10 +143,8 @@ export default function FoodPage() {
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
     const c = pendingCity.current ?? sp.get('city');
-    if (c && cityRows.some((r) => r.label === c)) {
-      pendingCity.current = null;
-      setCitySel(c);
-    }
+    if (c) pendingCity.current = c;
+    if (c && cityRows.some((r) => r.label === c)) setCitySel(c);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cityRows]);
 
@@ -155,7 +153,7 @@ export default function FoodPage() {
     if (drill) sp.set('prov', drill);
     else sp.delete('prov');
     if (citySel) sp.set('city', citySel);
-    else if (!pendingCity.current && !sp.get('city')) sp.delete('city');
+    else sp.delete('city');
     const qs = sp.toString();
     window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
   }, [drill, citySel]);
