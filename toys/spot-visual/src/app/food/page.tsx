@@ -27,6 +27,15 @@ const REGION_COLORS: Record<string, string> = {
 const REGION_ORDER = ['华北', '东北', '华东', '华中', '华南', '西南', '西北'];
 
 const FALLBACK_CITY_COLOR = '#CBD5E1';
+
+/** 辣度热力色阶：0 浅米 → 100 深红（只用于「热力」着色模式） */
+function heatColor(v: number): string {
+  const t = Math.max(0, Math.min(100, v)) / 100;
+  const c0 = [254, 242, 242];
+  const c1 = [127, 29, 29];
+  const mix = c0.map((a, i) => Math.round(a + (c1[i] - a) * t));
+  return `rgb(${mix[0]},${mix[1]},${mix[2]})`;
+}
 const SELECTED_COLOR = '#0F766E';
 
 export default function FoodPage() {
@@ -50,7 +59,7 @@ export default function FoodPage() {
   const [cmpL, setCmpL] = useState(PROVINCE_FOODS[0]);
   const [cmpR, setCmpR] = useState(PROVINCE_FOODS[3]);
   /** 地图配色：按大区 / 按菜系 */
-  const [colorBy, setColorBy] = useState<'region' | 'cuisine'>('region');
+  const [colorBy, setColorBy] = useState<'region' | 'cuisine' | 'heat'>('region');
   /** 地图首帧骨架屏，绘制完成后隐藏 */
   const [mapReady, setMapReady] = useState(false);
   /** 左栏视图：地图 / 口味图谱 */
@@ -128,6 +137,49 @@ export default function FoodPage() {
     return cityGeo.cities.map((c) => ({ ...c, food: resolveCityFood(selected, c.fullName) }));
   }, [cityGeo, selected]);
 
+// URL 同步：?prov=四川&city=成都，刷新/分享都能还原到市级
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const c = sp.get('city');
+    if (c && cityRows.some((r) => r.label === c)) setCitySel(c);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cityRows]);
+
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    if (drill) sp.set('prov', drill);
+    else sp.delete('prov');
+    if (citySel) sp.set('city', citySel);
+    else sp.delete('city');
+    const qs = sp.toString();
+    window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
+  }, [drill, citySel]);
+
+  // 键盘：←→ 切省，↑↓ 切市
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        const names = PROVINCE_FOODS.map((p) => p.name);
+        const i = drill ? names.indexOf(drill) : -1;
+        const next = e.key === 'ArrowRight' ? (i + 1) % names.length : (i - 1 + names.length) % names.length;
+        enterProvince(names[next]);
+        e.preventDefault();
+      } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        if (!cityRows.length) return;
+        const i = citySel ? cityRows.findIndex((c) => c.label === citySel) : -1;
+        const next = e.key === 'ArrowDown' ? (i + 1) % cityRows.length : (i - 1 + cityRows.length) % cityRows.length;
+        setCitySel(cityRows[next].label);
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [drill, cityRows, citySel, enterProvince]);
+
+
+
   const localCount = useMemo(() => cityRows.filter((c) => c.food.isLocal).length, [cityRows]);
 
   const activeCity = useMemo(
@@ -146,7 +198,9 @@ export default function FoodPage() {
             ? SELECTED_COLOR
             : colorBy === 'cuisine'
               ? CUISINE_COLORS[p.cuisine] ?? '#94A3B8'
-              : REGION_COLORS[p.region] ?? '#94A3B8',
+              : colorBy === 'heat'
+                ? heatColor(p.taste.辣)
+                : REGION_COLORS[p.region] ?? '#94A3B8',
         opacity: p.code === provCode ? 1 : 0.78,
         borderColor: '#ffffff',
         borderWidth: 0.6,
@@ -186,9 +240,12 @@ export default function FoodPage() {
   const provinceOption = useMemo<EChartsOption>(() => {
     if (!cityGeo || !cityRows.length) return nationalOption;
     const data = cityRows.map((c) => {
-      const color = c.food.isLocal
-        ? (CUISINE_COLORS[c.food.cuisine] ?? cuisineColor)
-        : FALLBACK_CITY_COLOR;
+      const color =
+        colorBy === 'heat'
+          ? heatColor(selected.taste.辣)
+          : c.food.isLocal
+            ? (CUISINE_COLORS[c.food.cuisine] ?? cuisineColor)
+            : FALLBACK_CITY_COLOR;
       return {
         name: c.label,
         value: 1,
@@ -419,7 +476,14 @@ export default function FoodPage() {
             </div>
           ) : (
             <div className="absolute left-3 bottom-3 flex flex-wrap gap-1.5 bg-white/85 backdrop-blur-sm rounded-lg border border-gray-200 px-2.5 py-2 max-w-[85%]">
-              {(colorBy === 'cuisine' ? Object.keys(CUISINE_COLORS) : REGION_ORDER).map((r) => (
+              {colorBy === 'heat' ? (
+                <span className="flex items-center gap-1">
+                  <span className="text-[11px] text-gray-600">不辣</span>
+                  <span className="w-24 h-2.5 rounded" style={{ background: 'linear-gradient(90deg,#FEF2F2,#B91C1C,#7F1D1D)' }} />
+                  <span className="text-[11px] text-gray-600">极辣</span>
+                </span>
+              ) : null}
+              {(colorBy === 'heat' ? [] : colorBy === 'cuisine' ? Object.keys(CUISINE_COLORS) : REGION_ORDER).map((r) => (
                 <span key={r} className="inline-flex items-center gap-1 text-[11px] text-gray-600">
                   <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: colorBy === 'cuisine' ? CUISINE_COLORS[r] ?? '#94A3B8' : REGION_COLORS[r] }} />
                   {r}
@@ -430,7 +494,7 @@ export default function FoodPage() {
 
           {!drill && (
             <div className="absolute right-3 top-3 inline-flex rounded-lg border border-gray-200 bg-white/90 backdrop-blur p-0.5 text-[10px]">
-              {([['region', '按大区'], ['cuisine', '按菜系']] as const).map(([k, label]) => (
+              {([['region', '按大区'], ['cuisine', '按菜系'], ['heat', '辣度热力']] as const).map(([k, label]) => (
                 <button
                   key={k}
                   onClick={() => setColorBy(k)}
@@ -445,7 +509,7 @@ export default function FoodPage() {
             </div>
           )}
           <div className="absolute right-3 top-3 text-[10px] text-gray-400 bg-white/80 rounded px-1.5 py-0.5 hidden">
-            可滚轮缩放 / 拖拽{drill && cityGeo ? ` · 共 ${cityRows.length} 个地级行政区` : ''}
+            可滚轮缩放 / 拖拽 · ←→ 切省 ↑↓ 切市{drill && cityGeo ? ` · 共 ${cityRows.length} 个地级行政区` : ''}
           </div>
 
           {/* 视野剔除提示（如三沙市岛礁跨越南海，会把本岛压扁） */}
