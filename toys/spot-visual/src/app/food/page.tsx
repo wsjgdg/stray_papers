@@ -492,8 +492,7 @@ export default function FoodPage() {
             </div>
           )}
 
-          {!drill && (
-            <div className="absolute right-3 top-3 inline-flex rounded-lg border border-gray-200 bg-white/90 backdrop-blur p-0.5 text-[10px]">
+          <div className="absolute right-3 top-3 inline-flex rounded-lg border border-gray-200 bg-white/90 backdrop-blur p-0.5 text-[10px]">
               {([['region', '按大区'], ['cuisine', '按菜系'], ['heat', '辣度热力']] as const).map(([k, label]) => (
                 <button
                   key={k}
@@ -506,9 +505,8 @@ export default function FoodPage() {
                   {label}
                 </button>
               ))}
-            </div>
-          )}
-          <div className="absolute right-3 top-3 text-[10px] text-gray-400 bg-white/80 rounded px-1.5 py-0.5 hidden">
+          </div>
+          <div className="absolute left-3 top-3 text-[10px] text-gray-500 bg-white/85 rounded px-1.5 py-0.5">
             可滚轮缩放 / 拖拽 · ←→ 切省 ↑↓ 切市{drill && cityGeo ? ` · 共 ${cityRows.length} 个地级行政区` : ''}
           </div>
 
