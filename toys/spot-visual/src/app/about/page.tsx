@@ -1,6 +1,8 @@
 'use client';
 
+// useSearchParams 在预渲染时需要 Suspense 边界，这里改为按请求渲染
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 const FEATURES = [
@@ -21,7 +23,7 @@ const LAYERS = [
   ['自评', '本项目按公开锚点定标', '全部 432'],
 ];
 
-export default function AboutPage() {
+function AboutPageInner() {
   const qs = useSearchParams()?.toString() ?? '';
   const link = (p: string) => (qs ? `${p}?${qs}` : p);
 
@@ -79,5 +81,13 @@ export default function AboutPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function AboutPage() {
+  return (
+    <Suspense fallback={null}>
+      <AboutPageInner />
+    </Suspense>
   );
 }

@@ -1,6 +1,8 @@
 'use client';
 
+// useSearchParams 在预渲染时需要 Suspense 边界，这里改为按请求渲染
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 const ROWS = [
@@ -48,7 +50,7 @@ const ROWS = [
   },
 ];
 
-export default function SourcesPage() {
+function SourcesPageInner() {
   const qs = useSearchParams()?.toString() ?? '';
   const link = (p: string) => (qs ? `${p}?${qs}` : p);
 
@@ -89,5 +91,13 @@ export default function SourcesPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function SourcesPage() {
+  return (
+    <Suspense fallback={null}>
+      <SourcesPageInner />
+    </Suspense>
   );
 }
