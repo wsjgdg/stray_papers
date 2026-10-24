@@ -2,13 +2,14 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Share2, Check, UtensilsCrossed, MapPin, Flame, ChevronLeft, Loader2, Sparkles, Layers } from 'lucide-react';
+import { Share2, Check, UtensilsCrossed, MapPin, Flame, ChevronLeft, Loader2, Sparkles, Layers, Download } from 'lucide-react';
 import type { EChartsOption } from 'echarts';
 import { PROVINCE_FOODS, CUISINE_COLORS, TASTE_KEYS, TASTE_DIMENSIONS, getProvince } from '@/lib/food-data';
 import { TASTE_EVIDENCE, EVIDENCE_LABEL, EVIDENCE_STYLE, SCOVILLE_BANDS, getDishNutrition, sodiumToScore } from '@/lib/taste-evidence';
 import { getDishIngredients, SODIUM_BANDS } from '@/lib/ingredient-nutrition';
 import { DISH_SODIUM, SODIUM_DATASET_SIZE } from '@/lib/dish-sodium.generated';
 import { getSimilarTaste, tierOf, TIER_LABEL, TIER_STYLE } from '@/lib/taste-similar';
+import { downloadShareCard } from '@/lib/share-card';
 import { resolveCityFood } from '@/lib/food-city';
 import { loadCityGeo, getCachedCityGeo, type CityGeo } from '@/lib/city-geo';
 import { TasteRadar } from '@/components/food/taste-radar';
@@ -42,6 +43,10 @@ export default function FoodPage() {
   const [cityErr, setCityErr] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showBasis, setShowBasis] = useState(false);
+  /** 地图配色：按大区 / 按菜系 */
+  const [colorBy, setColorBy] = useState<'region' | 'cuisine'>('region');
+  /** 地图首帧骨架屏，绘制完成后隐藏 */
+  const [mapReady, setMapReady] = useState(false);
   /** 左栏视图：地图 / 口味图谱 */
   const [view, setView] = useState<'map' | 'atlas'>('map');
 
@@ -82,6 +87,11 @@ export default function FoodPage() {
     if (!citySel) return;
     infoRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }, [citySel]);
+
+  useEffect(() => {
+    const t = setTimeout(() => setMapReady(true), 800);
+    return () => clearTimeout(t);
+  }, []);
 
   const enterProvince = useCallback((name: string) => {
     const code = nameToCode[name];
@@ -125,7 +135,12 @@ export default function FoodPage() {
       name: p.name,
       value: 1,
       itemStyle: {
-        areaColor: p.code === provCode ? SELECTED_COLOR : (REGION_COLORS[p.region] ?? '#94A3B8'),
+        areaColor:
+          p.code === provCode
+            ? SELECTED_COLOR
+            : colorBy === 'cuisine'
+              ? CUISINE_COLORS[p.cuisine] ?? '#94A3B8'
+              : REGION_COLORS[p.region] ?? '#94A3B8',
         opacity: p.code === provCode ? 1 : 0.78,
         borderColor: '#ffffff',
         borderWidth: 0.6,
@@ -335,6 +350,12 @@ export default function FoodPage() {
           </section>
         ) : (
         <section className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          {!mapReady && (
+            <div className="absolute inset-0 z-10 bg-white flex flex-col items-center justify-center gap-3">
+              <div className="w-3/4 h-3/5 rounded-xl bg-gray-100 animate-pulse" />
+              <div className="text-[11px] text-gray-300">正在绘制味道地图…</div>
+            </div>
+          )}
           <ChinaMap
             option={option}
             onSelect={onSelect}
@@ -378,16 +399,32 @@ export default function FoodPage() {
             </div>
           ) : (
             <div className="absolute left-3 bottom-3 flex flex-wrap gap-1.5 bg-white/85 backdrop-blur-sm rounded-lg border border-gray-200 px-2.5 py-2 max-w-[85%]">
-              {REGION_ORDER.map((r) => (
+              {(colorBy === 'cuisine' ? Object.keys(CUISINE_COLORS) : REGION_ORDER).map((r) => (
                 <span key={r} className="inline-flex items-center gap-1 text-[11px] text-gray-600">
-                  <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: REGION_COLORS[r] }} />
+                  <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: colorBy === 'cuisine' ? CUISINE_COLORS[r] ?? '#94A3B8' : REGION_COLORS[r] }} />
                   {r}
                 </span>
               ))}
             </div>
           )}
 
-          <div className="absolute right-3 top-3 text-[10px] text-gray-400 bg-white/80 rounded px-1.5 py-0.5">
+          {!drill && (
+            <div className="absolute right-3 top-3 inline-flex rounded-lg border border-gray-200 bg-white/90 backdrop-blur p-0.5 text-[10px]">
+              {([['region', '按大区'], ['cuisine', '按菜系']] as const).map(([k, label]) => (
+                <button
+                  key={k}
+                  onClick={() => setColorBy(k)}
+                  className={cn(
+                    'px-1.5 py-0.5 rounded-md transition-colors',
+                    colorBy === k ? 'bg-emerald-600 text-white' : 'text-gray-500 hover:text-gray-700',
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="absolute right-3 top-3 text-[10px] text-gray-400 bg-white/80 rounded px-1.5 py-0.5 hidden">
             可滚轮缩放 / 拖拽{drill && cityGeo ? ` · 共 ${cityRows.length} 个地级行政区` : ''}
           </div>
 
@@ -479,13 +516,33 @@ export default function FoodPage() {
               </div>
               <pre className="text-[11px] text-gray-500 whitespace-pre-wrap font-sans leading-relaxed max-h-[72px] overflow-y-auto">{shareText}</pre>
             </div>
-            <button
-              onClick={copyShare}
-              className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-50 text-emerald-700 text-sm font-semibold hover:bg-emerald-100 transition-colors border border-emerald-200"
-            >
-              {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-              {copied ? '已复制分享文案' : '复制分享文案'}
-            </button>
+            <div className="grid gap-2">
+              <button
+                onClick={copyShare}
+                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-50 text-emerald-700 text-sm font-semibold hover:bg-emerald-100 transition-colors border border-emerald-200"
+              >
+                {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                {copied ? '已复制分享文案' : '复制分享文案'}
+              </button>
+              <button
+                onClick={() =>
+                  downloadShareCard({
+                    title: panel.title,
+                    cuisine: panel.cuisine,
+                    taste: selected.taste,
+                    tier: TIER_LABEL[tierOf({
+                      dish: !!DISH_SODIUM[panel.dish],
+                      nutrition: !!getDishNutrition(panel.dish),
+                      ingredient: !!getDishIngredients(panel.dish),
+                    })],
+                  })
+                }
+                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-colors border border-gray-300"
+              >
+                <Download className="w-4 h-4" />
+                导出分享卡图片
+              </button>
+            </div>
           </div>
         </motion.div>
         </div>
