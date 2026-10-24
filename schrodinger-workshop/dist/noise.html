@@ -1711,12 +1711,11 @@ function trajBloch(s, q){
  * 接着演、暂停时补一个同步全批——与旧行为逐位一致）。noise 页（R98 P3）的
  * nzStream 同款接入。
  *
- * 节拍口径（R98 P2b 修正）：按**时长**而非固定帧数分配每帧样本量。
+ * 节拍口径：按**时长**而非固定帧数分配每帧样本量。
  *   want = ceil(total · dt / duration)，dt = 距上一帧的真实时长
- *   ⟹ 快渲染（真实 GPU，rAF 60Hz 但被 20fps 闸限制，dt≈50ms）落回 total/60；
- *      慢渲染（软件光栅，dt 可能 300–800ms）自动加大每帧样本量，仍能 ~duration 演满。
- *   样本量再夹紧到剩余量（min(want, total−n)）⟹ 永不越界，trials 精确落在 total
- *   （旧实现 batch=round(total/60) 在 total=4000 时会演到 4020，已修）。
+ *   ⟹ 快渲染（dt≈50ms）落回 total/60；慢渲染（dt 300–800ms）自动加大每帧样本量，
+ *      仍能 ~duration 演满。样本量再夹紧到剩余量 ⟹ 永不越界，trials 精确落在 total。
+ *   调度为 rAF + setTimeout 双通道（见 _arm）：rAF 死亡时 timeout 兜底。
  *
  * 契约：
  *   make()  → stream：{ step(count), result(), get total, get n }
@@ -1774,17 +1773,18 @@ class LiveDriver {
     this._setPlaying(true);
     this._last = -1e9;
     this._prev = 0;
-    this._tick();
+    this.pump();          /* 首帧同步（反馈不等调度器） */
+    this._arm();
   }
 
   stop(){
-    if (this._raf){ cancelAnimationFrame(this._raf); this._raf = 0; }
+    this._disarm();
     this._setPlaying(false);
   }
 
   toggle(){ this.playing ? this.stop() : this.start(); }
 
-  /** recompute 钩子：cfg 变了。播放中 → 换累加器立即演一帧（反馈不等 rAF）接着演；
+  /** recompute 钩子：cfg 变了。播放中 → 换累加器立即演一帧（反馈不等调度器）接着演；
        暂停 → 补全批 + 一帧（旧行为逐位保留） */
   sync(){
     this.stream = this.make();
@@ -1794,22 +1794,39 @@ class LiveDriver {
     this.onFrame(this.stream.result(), this.stream.n, this.stream.total);
   }
 
-  _tick(){
+  /* 双通道制（R98 P4b）：rAF 保顺滑（vsync 对齐），setTimeout 保存活。
+     headless / 后台标签页下 compositor 可能完全不产帧（实测 rAF 回调 0–186ms
+     很快，但 12s 只来 4 次，随后彻底停产）⟹ 单靠 rAF 会「播了但不动」。
+     timeout 按 fps 间隔兜底：rAF 活着时它总被闸门挡下（rAF 16ms < 50ms 先到），
+     rAF 死亡时它独占推进。后台标签页 timeout 被 Chrome 节流到 1s ⟹ 降级为 1fps
+     继续演，不冻死。 */
+  _arm(){
+    this._disarm();
     if (!this.playing) return;
-    this._raf = requestAnimationFrame(() => this._tick());
-    const now = performance.now();
-    if (now - this._last < 1000 / this.fps - 1) return;   /* 20fps 节制 */
-    this._last = now;
-    this.pump();
+    const fire = () => {
+      if (!this.playing) return;
+      this._disarm();
+      const now = performance.now();
+      if (now - this._last >= 1000 / this.fps - 1){ this._last = now; this.pump(); }
+      this._arm();
+    };
+    this._raf = requestAnimationFrame(fire);
+    this._to = setTimeout(fire, Math.max(16, Math.round(1000 / this.fps)));
   }
 
-  /** 跑一帧（测试也可直接调，不必等 rAF） */
+  _disarm(){
+    if (this._raf){ cancelAnimationFrame(this._raf); this._raf = 0; }
+    if (this._to){ clearTimeout(this._to); this._to = 0; }
+  }
+
+  /** 跑一帧（测试也可直接调，不必等调度器） */
   pump(){
     if (!this.stream) this.stream = this.make();
     const total = this.stream.total;
     const now = performance.now();
-    /* 时长基准补样本；dt 上限 duration/2（切后台回来不至于一帧爆量） */
-    const dt = this._prev ? Math.min(this.duration / 2, Math.max(0, now - this._prev)) : 1000 / this.fps;
+    /* 时长基准补样本；dt 上限 duration。长延时最多一次补足整批，
+       避免后台/无头环境的重节流把三秒演出拖成几十秒。 */
+    const dt = this._prev ? Math.min(this.duration, Math.max(0, now - this._prev)) : 1000 / this.fps;
     this._prev = now;
     const want = Math.max(1, Math.ceil(total * dt / this.duration));
     const count = Math.min(want, total - this.stream.n);   /* 永不越界 */

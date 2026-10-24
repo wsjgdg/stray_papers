@@ -32,6 +32,19 @@ const QC_CSS = `
   #qcPanel button:hover{border-color:rgba(103,232,249,.45);color:var(--cyan)}
   #qcPanel button.on{background:rgba(103,232,249,.18);border-color:var(--cyan);color:var(--cyan)}
   #qcPanel button:disabled{opacity:.4;cursor:default}
+  #qcPanel select{font:10.5px var(--mono);color:var(--txt);background:#0b1220;border:1px solid var(--line);
+    border-radius:5px;padding:4px;min-width:0;width:100%}
+  #qcPanel .editrow{display:grid;grid-template-columns:1.25fr .8fr .8fr;gap:5px;margin:5px 0}
+  #qcGateList{max-height:142px;overflow-y:auto;margin-top:6px;border:1px solid var(--line);border-radius:6px;
+    scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  #qcGateList .gate{display:grid;grid-template-columns:1fr 22px 22px 22px;align-items:center;gap:2px;
+    padding:3px 4px;border-bottom:1px solid rgba(120,160,220,.09);font:10px var(--mono)}
+  #qcGateList .gate:last-child{border-bottom:none}
+  #qcGateList .gate.sel{background:rgba(103,232,249,.12)}
+  #qcGateList .gate>button:first-child{text-align:left;border:0;background:transparent;padding:3px;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  #qcGateList .gate>button:not(:first-child){padding:2px 0;font-size:10px}
+  #qcGateEmpty{padding:9px;color:var(--dim);font:10px var(--mono);text-align:center}
   #qcHud{top:74px;right:14px;padding:11px 13px;z-index:10;min-width:212px;font-family:var(--mono)}
   #qcHud .hrow{display:flex;justify-content:space-between;gap:12px;font-size:11.5px;padding:2.5px 0}
   #qcHud .hrow span:first-child{color:var(--dim)}
@@ -90,8 +103,9 @@ export class QCircuitApp {
       theta: num('theta', 1.0), phi: num('phi', 0.4),
       step: 0, playing: false, speed: num('speed', 260),
       measured: null, seed: Math.round(num('seed', 137)),
-      paused: q.get('paused') === '1',
+      paused: q.get('paused') === '1', edited: false,
     };
+    this.edit = { op: 'h', q: 0, c: -1, theta: Math.PI / 2, selected: -1 };
     this.gates = [];
     this.psi = null;
     this._listeners = []; this._needDraw = true; this._last = 0;
@@ -148,6 +162,24 @@ export class QCircuitApp {
           <button id="qcPlay">播放 ▶</button>
           <button id="qcReset">重置 ↺</button>
         </div>
+        <div class="grp">门序列编辑</div>
+        <div class="editrow">
+          <select id="qcGateOp" title="门类型">
+            <option value="h">H</option><option value="x">X</option><option value="y">Y</option>
+            <option value="z">Z</option><option value="s">S</option><option value="sdg">S†</option>
+            <option value="t">T</option><option value="tdg">T†</option>
+            <option value="rx">Rx</option><option value="ry">Ry</option><option value="rz">Rz</option>
+            <option value="phase">P(θ)</option><option value="cnot">CNOT</option>
+            <option value="cz">CZ</option><option value="swap">SWAP</option>
+          </select>
+          <select id="qcGateQ" title="目标位"></select>
+          <select id="qcGateC" title="控制位 / 第二位"></select>
+        </div>
+        <div class="row" id="qcGateThetaRow"><label>角度 θ</label><input type="range" id="qcGateTheta" min="-3.1416" max="3.1416" step="0.01"><output id="qcGateThetaO">—</output></div>
+        <div class="btns">
+          <button id="qcGateAdd">插入选中后</button><button id="qcGateClear">清空线路</button>
+        </div>
+        <div id="qcGateList"></div>
         <div class="grp">测量</div>
         <div class="btns"><button id="qcMeasure" style="grid-column:1 / span 2">Z 基测量（坍缩）</button></div>
         <div class="row"><label>随机种子</label><input type="range" id="qcSeed" min="1" max="999" step="1"><output id="qcSeedO">—</output></div>
@@ -213,8 +245,133 @@ export class QCircuitApp {
     this.on(this.q('#qcStep'), 'click', () => this.step(1));
     this.on(this.q('#qcRun'), 'click', () => this.step(this.gates.length));
     this.on(this.q('#qcPlay'), 'click', () => { st.playing = !st.playing; this.syncPanel(); });
-    this.on(this.q('#qcReset'), 'click', () => this.reset());
+    this.on(this.q('#qcReset'), 'click', () => this.resetExecution());
     this.on(this.q('#qcMeasure'), 'click', () => this.measure());
+    this.on(this.q('#qcGateOp'), 'change', e => { this.edit.op = e.target.value; this.syncGateEditor(); });
+    this.on(this.q('#qcGateQ'), 'change', e => { this.edit.q = parseInt(e.target.value, 10); });
+    this.on(this.q('#qcGateC'), 'change', e => { this.edit.c = parseInt(e.target.value, 10); });
+    this.on(this.q('#qcGateTheta'), 'input', e => {
+      this.edit.theta = parseFloat(e.target.value);
+      this.q('#qcGateThetaO').textContent = this.edit.theta.toFixed(2);
+    });
+    this.on(this.q('#qcGateAdd'), 'click', () => this.addGate());
+    this.on(this.q('#qcGateClear'), 'click', () => this.clearGates());
+    this.on(this.q('#qcGateList'), 'click', e => {
+      const b = e.target.closest('button[data-i]');
+      if (!b) return;
+      const i = parseInt(b.dataset.i, 10), act = b.dataset.act;
+      if (act === 'sel') this.selectGate(i);
+      else if (act === 'up') this.moveGate(i, -1);
+      else if (act === 'down') this.moveGate(i, 1);
+      else if (act === 'del') this.deleteGate(i);
+    });
+  }
+
+  /* ---------- 门序列编辑：结构改动只重置执行，不回滚用户线路 ---------- */
+  _edited(msg){
+    this.state.edited = true;
+    this.resetExecution();
+    this._msg = msg;
+    this.renderHint();
+  }
+
+  _editorGate(){
+    const e = this.edit, n = this.state.n, op = e.op;
+    const q = Math.max(0, Math.min(n - 1, e.q | 0));
+    const c = e.c == null ? -1 : e.c | 0;
+    const two = op === 'cnot' || op === 'cz' || op === 'swap';
+    if ((two && (c < 0 || c >= n || c === q)) || (!two && c === q)){
+      this.toast(two ? '双比特门需要两个不同比特' : '控制位不能与目标位相同');
+      return null;
+    }
+    if (op === 'cnot' || op === 'cz') return { op, c, q2: q };
+    if (op === 'swap') return { op, q1: q, q2: c };
+    const g = { op, q };
+    if (c >= 0 && c < n) g.c = c;
+    if (op === 'rx' || op === 'ry' || op === 'rz' || op === 'phase') g.theta = e.theta;
+    return g;
+  }
+
+  addGate(){
+    const g = this._editorGate();
+    if (!g) return false;
+    const at = this.edit.selected >= 0 ? this.edit.selected + 1 : this.gates.length;
+    this.gates.splice(at, 0, g);
+    this.edit.selected = at;
+    this._edited('已插入门 ' + (at + 1) + ' / ' + this.gates.length);
+    return true;
+  }
+
+  moveGate(i, d){
+    const j = i + d;
+    if (i < 0 || i >= this.gates.length || j < 0 || j >= this.gates.length) return false;
+    [this.gates[i], this.gates[j]] = [this.gates[j], this.gates[i]];
+    this.edit.selected = j;
+    this._edited('已移动门 ' + (i + 1) + ' → ' + (j + 1));
+    return true;
+  }
+
+  deleteGate(i){
+    if (i < 0 || i >= this.gates.length) return false;
+    this.gates.splice(i, 1);
+    this.edit.selected = Math.min(i, this.gates.length - 1);
+    this._edited('已删除门 ' + (i + 1));
+    return true;
+  }
+
+  clearGates(){
+    this.gates = [];
+    this.edit.selected = -1;
+    this._edited('线路已清空：从 |0…0⟩ 自由搭建');
+  }
+
+  selectGate(i){
+    this.edit.selected = (i >= 0 && i < this.gates.length) ? i : -1;
+    this.renderGateList();
+  }
+
+  syncGateEditor(){
+    const e = this.edit, n = this.state.n;
+    e.q = Math.max(0, Math.min(n - 1, e.q | 0));
+    if (e.c >= n) e.c = -1;
+    const qEl = this.q('#qcGateQ'), cEl = this.q('#qcGateC');
+    if (qEl){
+      qEl.innerHTML = Array.from({ length: n }, (_, i) => `<option value="${i}">q${i}</option>`).join('');
+      qEl.value = String(e.q);
+    }
+    if (cEl){
+      cEl.innerHTML = '<option value="-1">无控</option>' +
+        Array.from({ length: n }, (_, i) => `<option value="${i}">q${i}</option>`).join('');
+      cEl.value = String(e.c);
+    }
+    const opEl = this.q('#qcGateOp'); if (opEl) opEl.value = e.op;
+    const th = this.q('#qcGateTheta'); if (th) th.value = String(e.theta);
+    const out = this.q('#qcGateThetaO'); if (out) out.textContent = e.theta.toFixed(2);
+    const rot = e.op === 'rx' || e.op === 'ry' || e.op === 'rz' || e.op === 'phase';
+    const row = this.q('#qcGateThetaRow'); if (row) row.style.opacity = rot ? '1' : '.38';
+    this.renderGateList();
+  }
+
+  renderGateList(){
+    const el = this.q('#qcGateList');
+    if (!el) return;
+    if (!this.gates.length){
+      el.innerHTML = '<div id="qcGateEmpty">空线路 · 选择门后插入</div>';
+      return;
+    }
+    el.innerHTML = this.gates.map((g, i) => {
+      const v = gateView(g);
+      const name = v.text || (g.op === 'cnot' ? 'CNOT' : g.op.toUpperCase());
+      const wires = g.op === 'cnot' || g.op === 'cz' ? `q${g.c}→q${g.q2}` :
+        g.op === 'swap' ? `q${g.q1}↔q${g.q2}` :
+        g.op === 'measure' ? `q${g.q}→c${g.cbit}` :
+        g.op === 'cond' ? `c${g.cbit}? q${g.gate.q}` : `q${g.q}${g.c != null ? ` ←q${g.c}` : ''}`;
+      return `<div class="gate${i === this.edit.selected ? ' sel' : ''}">` +
+        `<button data-act="sel" data-i="${i}" title="选中；新门插在其后">${i + 1}. ${name} ${wires}</button>` +
+        `<button data-act="up" data-i="${i}" title="上移" ${i === 0 ? 'disabled' : ''}>↑</button>` +
+        `<button data-act="down" data-i="${i}" title="下移" ${i === this.gates.length - 1 ? 'disabled' : ''}>↓</button>` +
+        `<button data-act="del" data-i="${i}" title="删除">×</button></div>`;
+    }).join('');
   }
 
   applyPreset(name){
@@ -239,12 +396,21 @@ export class QCircuitApp {
     } else {
       this.gates = qcPresetGates(st.preset, st.n);
     }
+    st.edited = false;
+    this.edit.selected = -1;
+    this.resetExecution();
+    this.syncGateEditor();
+  }
+
+  resetExecution(){
+    const st = this.state;
     this.psi = qcNewState(st.n);
     this.cres = qcNewClassical(8);
     this.rng = mulberry32(st.seed);
     st.step = 0; st.measured = null; st.playing = false;
     this._needDraw = true;
     this.syncPanel();
+    this.renderGateList();
     this.renderHint();
     this.renderHud();
   }
@@ -305,7 +471,7 @@ export class QCircuitApp {
   renderHud(){
     const st = this.state, s = this.psi;
     const set = (id, v) => { const e = this.q('#' + id); if (e) e.textContent = v; };
-    set('hLine', (QC_PRESETS[st.preset] || { label: st.preset }).label + ' · n=' + st.n);
+    set('hLine', (QC_PRESETS[st.preset] || { label: st.preset }).label + (st.edited ? ' · 已编辑' : '') + ' · n=' + st.n);
     set('hProg', st.step + ' / ' + this.gates.length + ' 门');
     set('hDim', String(s.dim));
     set('hNorm', nf(qcNorm(s), 9));
@@ -582,6 +748,12 @@ export class QCircuitApp {
       zz: () => qcZZ(self.psi, 0, 1),
       gateCount: () => self.gates.length,
       gateAt: i => self.gates[i],
+      gateList: () => self.gates.map((g, i) => ({ i, ...g })),
+      addGate: () => self.addGate(),
+      moveGate: (i, d) => self.moveGate(i, d),
+      deleteGate: i => self.deleteGate(i),
+      clearGates: () => self.clearGates(),
+      restart: () => { self.resetExecution(); self._drawAll(); },
       navLinks: () => Array.from(document.querySelectorAll('#qcTop a')).map(a => a.getAttribute('href')),
       drawAll: () => self._drawAll(),
     };

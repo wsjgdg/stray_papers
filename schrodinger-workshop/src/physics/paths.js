@@ -352,16 +352,32 @@ export const PI_PRESETS = {
 /* ---------- 可视化：一阶模态扫描的累积和（Cornu 型螺旋） ----------
    只扫 a₁（a₂=0），因为二维族（模态数 2）的累积曲线是二维稠密走线，
    看不出螺旋结构；一维扫描才有「越转越快、收敛到极限点」的经典图像。
-   返回归一化到 (2K) 的累积点列，页面直接画。 */
-export function piSpiral(X, opts = {}){
+   返回归一化到 (2K) 的累积点列，页面直接画。
+
+   流式版（R98 P4）：step(count) 逐点推进（含起点共 2K+1 个点），
+   result() 出当前进度；piSpiral 为薄封装——同一累加顺序，数值逐位一致。 */
+export function piSpiralStream(X, opts = {}){
   const K = opts.K ?? PI_DEFAULTS.K, W = opts.W ?? PI_DEFAULTS.W;
   const c = piModeCoef(X, 1), A = W, h = A / K;
   const pts = [[0, 0]];
-  let re = 0, im = 0;
-  for (let i = 0; i < 2 * K; i++){
-    const a = -A + (i + 0.5) * h, ph = c * a * a;
+  let re = 0, im = 0, n = 0;      /* n = 已累加的样本数（0..2K） */
+  function one(){
+    const a = -A + (n + 0.5) * h, ph = c * a * a;
     re += Math.cos(ph); im += Math.sin(ph);
     pts.push([re, im]);
+    n++;
   }
-  return { pts, total: { re, im, mag: Math.hypot(re, im) }, count: 2 * K, len: 2 * K, h };
+  const total = 2 * K;
+  return {
+    get total(){ return total + 1; },          /* 含起点的点数 */
+    get n(){ return n + 1; },
+    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m && n < total; k++) one(); },
+    result(){ return { pts, total: { re, im, mag: Math.hypot(re, im) }, count: n, len: total, h }; },
+  };
+}
+
+export function piSpiral(X, opts = {}){
+  const s = piSpiralStream(X, opts);
+  s.step(s.total);
+  return s.result();
 }

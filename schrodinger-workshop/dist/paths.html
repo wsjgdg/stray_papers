@@ -17,6 +17,7 @@
       src/core/responsive.js
       src/core/nav.js
       src/physics/paths.js
+      src/qec/live.js
       src/paths.js
       src/paths-main.js
 */
@@ -866,18 +867,182 @@ const PI_PRESETS = {
 /* ---------- 可视化：一阶模态扫描的累积和（Cornu 型螺旋） ----------
    只扫 a₁（a₂=0），因为二维族（模态数 2）的累积曲线是二维稠密走线，
    看不出螺旋结构；一维扫描才有「越转越快、收敛到极限点」的经典图像。
-   返回归一化到 (2K) 的累积点列，页面直接画。 */
-function piSpiral(X, opts = {}){
+   返回归一化到 (2K) 的累积点列，页面直接画。
+
+   流式版（R98 P4）：step(count) 逐点推进（含起点共 2K+1 个点），
+   result() 出当前进度；piSpiral 为薄封装——同一累加顺序，数值逐位一致。 */
+function piSpiralStream(X, opts = {}){
   const K = opts.K ?? PI_DEFAULTS.K, W = opts.W ?? PI_DEFAULTS.W;
   const c = piModeCoef(X, 1), A = W, h = A / K;
   const pts = [[0, 0]];
-  let re = 0, im = 0;
-  for (let i = 0; i < 2 * K; i++){
-    const a = -A + (i + 0.5) * h, ph = c * a * a;
+  let re = 0, im = 0, n = 0;      /* n = 已累加的样本数（0..2K） */
+  function one(){
+    const a = -A + (n + 0.5) * h, ph = c * a * a;
     re += Math.cos(ph); im += Math.sin(ph);
     pts.push([re, im]);
+    n++;
   }
-  return { pts, total: { re, im, mag: Math.hypot(re, im) }, count: 2 * K, len: 2 * K, h };
+  const total = 2 * K;
+  return {
+    get total(){ return total + 1; },          /* 含起点的点数 */
+    get n(){ return n + 1; },
+    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m && n < total; k++) one(); },
+    result(){ return { pts, total: { re, im, mag: Math.hypot(re, im) }, count: n, len: total, h }; },
+  };
+}
+
+function piSpiral(X, opts = {}){
+  const s = piSpiralStream(X, opts);
+  s.step(s.total);
+  return s.result();
+}
+
+/* ===== src/qec/live.js ===== */
+/* ============================================================================
+ * live.js（R98 P2 新建）— 共享 LiveDriver：一次性 MC 批 → rAF 分帧演出
+ *
+ * 背景（用户指令「剩下的能不能都做成实时沙盒类？」）：QEC hub 七个模式的统计
+ * 原先都是「参数变 → 同步跑完整批 → 画」（拖动滑块时整页卡顿几百 ms）。P2 把
+ * 物理层累加器（qecStream / shorStream / gnStream / fsStream / cfStream）接到
+ * 这个共享播放器上：播放时每帧只跑一段试验，统计量随帧增长（trials 计数、
+ * P_L、直方图、结局分解全部在动），20fps 节制；跑满目标批自动停；暂停即冻结
+ * （累加器保留，再播接着演）；参数变化重置累加器（播放中换新的**立即演一帧**
+ * 接着演、暂停时补一个同步全批——与旧行为逐位一致）。noise 页（R98 P3）的
+ * nzStream 同款接入。
+ *
+ * 节拍口径：按**时长**而非固定帧数分配每帧样本量。
+ *   want = ceil(total · dt / duration)，dt = 距上一帧的真实时长
+ *   ⟹ 快渲染（dt≈50ms）落回 total/60；慢渲染（dt 300–800ms）自动加大每帧样本量，
+ *      仍能 ~duration 演满。样本量再夹紧到剩余量 ⟹ 永不越界，trials 精确落在 total。
+ *   调度为 rAF + setTimeout 双通道（见 _arm）：rAF 死亡时 timeout 兜底。
+ *
+ * 契约：
+ *   make()  → stream：{ step(count), result(), get total, get n }
+ *   onFrame(result, n, total) 每帧回调（mode 侧：存结果 + 渲染）
+ *   onState(playing) 播放态变化回调（mode 侧：同步按钮文案/样式）
+ *   deactivate 必须 dispose()（停 rAF，切 mode 零泄漏）
+ *
+ * ?live=1：activate 收尾时 start()（URL 直达即演，与 paused 同款校验）。
+ * ========================================================================== */
+class LiveDriver {
+  /**
+   * @param {object}   o
+   * @param {() => object} o.make    累加器工厂（每次 sync/重置调用，同 cfg）
+   * @param {(r: object, n: number, total: number) => void} o.onFrame
+   * @param {(playing: boolean) => void} [o.onState]
+   * @param {number}   [o.fps=20]        帧率节制上限（rAF 仍每帧回调，只按时间闸放行）
+   * @param {number}   [o.duration=3000] 一批样本的目标演出时长（ms），每帧样本量按时长反推
+   */
+  constructor({ make, onFrame, onState = null, fps = 20, duration = 3000 } = {}){
+    this.make = make;
+    this.onFrame = onFrame;
+    this.onState = onState;
+    this.fps = fps;
+    this.duration = Math.max(600, duration | 0);
+    this.stream = null;
+    this.playing = false;
+    this._raf = 0;
+    this._last = -1e9;
+    this._prev = 0;            /* 上一次 pump 的时刻；0 = 首帧（用名义帧长） */
+    this.lastFrameMs = 0;      /* 最近一帧 step() 耗时（mode HUD/调试用） */
+  }
+
+  /** 名义每帧样本量（快渲染路径；慢渲染由 pump 内的时长反推接管） */
+  get batch(){
+    const t = this.stream ? this.stream.total : 3000;
+    const frames = Math.max(1, Math.round(this.duration / (1000 / this.fps)));
+    return Math.max(1, Math.round(t / frames));
+  }
+
+  /** 已跑 / 目标（按钮文案与测试断言用） */
+  get progress(){
+    return this.stream ? { n: this.stream.n, total: this.stream.total } : { n: 0, total: 0 };
+  }
+
+  _setPlaying(v){
+    if (this.playing === v) return;
+    this.playing = v;
+    this.onState?.(v);
+  }
+
+  start(){
+    if (this.playing) return;
+    /* 演满过再播 ⟹ 换新累加器重演（same cfg ⟹ 同 rng 序列，数值可复现） */
+    if (!this.stream || this.stream.n >= this.stream.total) this.stream = this.make();
+    this._setPlaying(true);
+    this._last = -1e9;
+    this._prev = 0;
+    this.pump();          /* 首帧同步（反馈不等调度器） */
+    this._arm();
+  }
+
+  stop(){
+    this._disarm();
+    this._setPlaying(false);
+  }
+
+  toggle(){ this.playing ? this.stop() : this.start(); }
+
+  /** recompute 钩子：cfg 变了。播放中 → 换累加器立即演一帧（反馈不等调度器）接着演；
+       暂停 → 补全批 + 一帧（旧行为逐位保留） */
+  sync(){
+    this.stream = this.make();
+    this._prev = 0;
+    if (this.playing){ this.pump(); return; }
+    this.stream.step(this.stream.total);
+    this.onFrame(this.stream.result(), this.stream.n, this.stream.total);
+  }
+
+  /* 双通道制（R98 P4b）：rAF 保顺滑（vsync 对齐），setTimeout 保存活。
+     headless / 后台标签页下 compositor 可能完全不产帧（实测 rAF 回调 0–186ms
+     很快，但 12s 只来 4 次，随后彻底停产）⟹ 单靠 rAF 会「播了但不动」。
+     timeout 按 fps 间隔兜底：rAF 活着时它总被闸门挡下（rAF 16ms < 50ms 先到），
+     rAF 死亡时它独占推进。后台标签页 timeout 被 Chrome 节流到 1s ⟹ 降级为 1fps
+     继续演，不冻死。 */
+  _arm(){
+    this._disarm();
+    if (!this.playing) return;
+    const fire = () => {
+      if (!this.playing) return;
+      this._disarm();
+      const now = performance.now();
+      if (now - this._last >= 1000 / this.fps - 1){ this._last = now; this.pump(); }
+      this._arm();
+    };
+    this._raf = requestAnimationFrame(fire);
+    this._to = setTimeout(fire, Math.max(16, Math.round(1000 / this.fps)));
+  }
+
+  _disarm(){
+    if (this._raf){ cancelAnimationFrame(this._raf); this._raf = 0; }
+    if (this._to){ clearTimeout(this._to); this._to = 0; }
+  }
+
+  /** 跑一帧（测试也可直接调，不必等调度器） */
+  pump(){
+    if (!this.stream) this.stream = this.make();
+    const total = this.stream.total;
+    const now = performance.now();
+    /* 时长基准补样本；dt 上限 duration。长延时最多一次补足整批，
+       避免后台/无头环境的重节流把三秒演出拖成几十秒。 */
+    const dt = this._prev ? Math.min(this.duration, Math.max(0, now - this._prev)) : 1000 / this.fps;
+    this._prev = now;
+    const want = Math.max(1, Math.ceil(total * dt / this.duration));
+    const count = Math.min(want, total - this.stream.n);   /* 永不越界 */
+    const t0 = performance.now();
+    this.stream.step(count);
+    this.lastFrameMs = performance.now() - t0;
+    this.onFrame(this.stream.result(), this.stream.n, total);
+    if (this.stream.n >= total) this.stop();   /* 演满自动停 */
+  }
+
+  dispose(){
+    this.stop();
+    this.stream = null;
+    this.make = null;
+    this.onFrame = null;
+    this.onState = null;
+  }
 }
 
 /* ===== src/paths.js ===== */
@@ -893,10 +1058,13 @@ function piSpiral(X, opts = {}){
  *   #pvProfile 探测面强度剖面：路径和 vs 解析传播子（归一后重合）
  *
  * 重绘策略：主图只在参数/探测点变化时重绘（路径族 686 条 × 40 段，每帧重画
- * 是浪费）；螺旋与剖面同理。reveal 动画期间只重画螺旋。
+ * 是浪费）；螺旋与剖面同理。R98 P4 起螺旋的「相位累积」改为播放器驱动
+ * （LiveDriver 时长基准分帧，播/暂停/重放，?live=1 即播），frame() 只余
+ * FPS 与重绘职责。
  *
  * 调试句柄 window.__pv（cdp74 用）：state / setParam / setY / preset / ampAt /
- * current / profileAt / profile / pathCount / sumInfo / spiralInfo / navLinks。
+ * current / profileAt / profile / pathCount / sumInfo / spiralInfo / navLinks /
+ * play / pause / live。
  * ========================================================================== */
 
 const PV_CSS = `
@@ -972,9 +1140,11 @@ class PathsApp {
       coherent: q.has('coh') ? q.get('coh') !== '0' : pcfg.coherent,
       reveal: q.get('reveal') === '0' ? 0 : 1,
       paused: q.get('paused') === '1',
+      live: q.get('live') === '1',
     };
     this._listeners = []; this._dirty = true; this._needDraw = true;
     this._fps = 0; this._fpsFrames = 0; this._lastFpsT = performance.now();
+    this.live = null; this._userPaused = false;
     this.view = { sx: 1, yFov: 130, ox: 0, oy: 0, w: 800, h: 520, padT: 22, padB: 26, dpr: 1 };
     this.prof = null; this.samples = []; this.spir = null; this.stats = null;
     this._onError = e => {
@@ -1035,7 +1205,11 @@ class PathsApp {
         <div class="row"><label>模态数</label><input type="range" id="pvM" min="1" max="2" step="1"><output id="pvMo">—</output></div>
         <div class="grp">探测点</div>
         <div class="row"><label>位置 Y</label><input type="range" id="pvY" min="-200" max="200" step="0.5"><output id="pvYo">—</output></div>
-        <div class="btns" style="margin-top:6px"><button id="pvReplay" style="grid-column:1 / span 2">重放求和</button></div>
+        <div class="grp">演出（相位累积）</div>
+        <div class="btns" style="margin-top:6px">
+          <button id="pvPlay">▶ 播放</button>
+          <button id="pvReplay">重放求和</button>
+        </div>
       </aside>
 
       <div id="pvStage" class="qstage">
@@ -1051,6 +1225,7 @@ class PathsApp {
         <hr>
         <div class="hrow"><span>|Σ 路径|（段1）</span><span id="hSum">—</span></div>
         <div class="hrow"><span>Σ|A| / |Σ|（相消比）</span><span id="hCancel">—</span></div>
+        <div class="hrow"><span>螺旋累积（播放）</span><span id="hAcc">—</span></div>
         <hr>
         <div class="hrow"><span>I(Y) 归一</span><span id="hI">—</span></div>
         <div class="hrow"><span>暗纹数 / 对比度</span><span id="hVis">—</span></div>
@@ -1096,7 +1271,25 @@ class PathsApp {
     slider('pvY', 'pvYo', 'Y', v => v.toFixed(0));
     this.on(this.q('#pvA'), 'change', e => { s.openA = e.currentTarget.checked; this._touch(true); });
     this.on(this.q('#pvB'), 'change', e => { s.openB = e.currentTarget.checked; this._touch(true); });
-    this.on(this.q('#pvReplay'), 'click', () => { s.reveal = 0; this._needDraw = true; });
+    this.on(this.q('#pvReplay'), 'click', () => this.replaySum());
+    /* ---- R98 P4 实时沙盒：相位累积播放（Cornu 螺旋逐点生长） ---- */
+    this.live = new LiveDriver({
+      make: () => piSpiralStream(this.state.L1, { K: this.state.K, W: this.state.W }),
+      onFrame: res => {
+        this.spir = res;
+        this.state.reveal = res.count / Math.max(1, res.len);   /* 0..1 镜像（测试/兼容用） */
+        const e = this.q('#hAcc');                              /* 只更新累积行（renderHud 全量太重） */
+        if (e) e.textContent = ((res.count | 0) + 1) + ' / ' + ((res.len | 0) + 1);
+        this.drawSpiral();
+      },
+      onState: () => this.syncPlayBtn(),
+    });
+    this.on(this.q('#pvPlay'), 'click', () => {
+      this._userPaused = this.live.playing;    /* 播放中点击 ⟹ 用户暂停 */
+      this.live.toggle();
+    });
+    this.syncPlayBtn();
+    if (this.state.live || this.state.reveal === 0) this.live.start();   /* ?live=1 / ?reveal=0 即播 */
 
     const cv = this.q('#pvMain');
     let drag = false;
@@ -1144,7 +1337,28 @@ class PathsApp {
   /* 结构变化才重置 reveal 动画；拖探测点时不要重置（否则螺旋一直闪回起点） */
   _touch(resetReveal){
     this._dirty = true; this._needDraw = true;
-    if (resetReveal) this.state.reveal = 0;
+    if (!resetReveal) return;
+    this.state.reveal = 0;
+    /* R98 P4：换累加器；用户没暂停就自动重演（保持旧行为：改参即重放求和） */
+    this.live?.sync();
+    if (!this._userPaused) this.live?.start();
+  }
+
+  /* 重放求和：从零点开始重新累积（不论之前暂停与否） */
+  replaySum(){
+    this._userPaused = false;
+    this.state.reveal = 0;
+    this.live?.sync();
+    this.live?.start();
+    this._needDraw = true;
+  }
+
+  syncPlayBtn(){
+    const b = this.q('#pvPlay');
+    if (!b) return;
+    const on = !!(this.live && this.live.playing);
+    b.textContent = on ? '⏸ 暂停' : '▶ 播放';
+    b.classList.toggle('on', on);
   }
 
   resize(){
@@ -1175,7 +1389,8 @@ class PathsApp {
     const c = this.cfg();
     this.prof = piProfile(c);
     this.samples = piPathSamples(this.state.Y, c, 9);
-    this.spir = piSpiral(c.L1, { K: c.K, W: c.W });
+    /* R98 P4：播放中螺旋由流式累加器逐帧供给（recompute 不得用全批覆盖半场状态） */
+    if (!(this.live && this.live.playing)) this.spir = piSpiral(c.L1, { K: c.K, W: c.W });
     const C1 = piModeSum(c.L1, c), C2 = piModeSum(c.L2, c);
     const A = piAmpAt(this.state.Y, c);
     const p = this.prof;
@@ -1210,6 +1425,8 @@ class PathsApp {
     set('hPer', s.nSeam.toLocaleString('en-US') + ' × ' + c.nxi);
     set('hSum', nf(s.C1.mag, 2) + ' / ' + s.C1.count);
     set('hCancel', nf(s.C1.count / Math.max(s.C1.mag, 1e-12), 2));
+    /* R98 P4：螺旋累积进度（播放中随帧增长，暂停冻结） */
+    set('hAcc', this.spir ? ((this.spir.count | 0) + 1) + ' / ' + ((this.spir.len | 0) + 1) : '—');
     set('hI', nf(s.I, 4));
     const fr = piFringes(p);
     this.stats.fringes = fr;
@@ -1342,7 +1559,8 @@ class PathsApp {
     g.scale(dpr, dpr);
     const w = W / dpr, h = H / dpr, pad = 24;
     const N = s.pts.length;
-    const nShow = Math.max(2, Math.round(N * Math.max(0, Math.min(1, this.state.reveal))));
+    /* R98 P4：进度由流式累加器的 count 决定（全批时 count=2K ⟹ 全显） */
+    const nShow = Math.max(2, Math.min(N, (s.count | 0) + 1));
     let mx = 1;
     for (const [a, b] of s.pts) mx = Math.max(mx, Math.abs(a), Math.abs(b));
     const sc = Math.min(w - 2 * pad, h - 2 * pad) / (2 * mx);
@@ -1433,11 +1651,7 @@ class PathsApp {
       const e = this.q('#hFps'); if (e) e.textContent = this._fps ? String(this._fps) : '—';
     }
     if (this._dirty) this.recompute();
-    if (this.state.reveal < 1){
-      this.state.reveal = Math.min(1, this.state.reveal + 0.05);
-      this.drawSpiral();
-      return;
-    }
+    /* R98 P4：螺旋推进交给 LiveDriver（时长基准分帧）；此处只处理重绘 */
     if (this._needDraw){
       this.drawMain(); this.drawSpiral(); this.drawProfile();
       this._needDraw = false;
@@ -1463,7 +1677,13 @@ class PathsApp {
     }
   }
 
-  _drawAll(){ this.state.reveal = 1; this.drawMain(); this.drawSpiral(); this.drawProfile(); }
+  _drawAll(){
+    /* R98 P4：确定性收尾——停播 + 补全批（暂停态 sync ⟹ step(total) + 一帧） */
+    this.live?.stop();
+    this.live?.sync();
+    this.state.reveal = 1;
+    this.drawMain(); this.drawSpiral(); this.drawProfile();
+  }
 
   /* ---------- 调试句柄（cdp74） ---------- */
   debugHandle(){
@@ -1477,7 +1697,8 @@ class PathsApp {
       recompute: () => { self.recompute(); self._drawAll(); },
       pathCount: () => ({ seam: self.stats.nSeam, total: self.stats.nTotal, drawn: self.samples.length }),
       sumInfo: () => ({ C1: self.stats.C1, C2: self.stats.C2, cancel: self.stats.C1.count / self.stats.C1.mag }),
-      spiralInfo: () => ({ n: self.spir.pts.length, total: self.spir.total, pts: self.spir.pts.slice(0, 3) }),
+      spiralInfo: () => ({ n: self.spir.pts.length, total: self.spir.total, count: self.spir.count, len: self.spir.len, pts: self.spir.pts.slice(0, 3) }),
+      spiralPts: () => self.spir.pts.map(p => [p[0], p[1]]),
       ampAt: Y => { const A = piAmpAt(Y, self.cfg()); return { raw: A.raw, an: A.an, per: A.per }; },
       current: () => ({ Y: self.state.Y, I: self.stats.I, spread: self.stats.spread,
                         fringe: self.stats.fringe, per: self.stats.perSlit, n: self.stats.nTotal,
@@ -1491,6 +1712,10 @@ class PathsApp {
       samplePhase: i => (self.samples[i] ? self.samples[i].phase : null),
       straightPhase: (X, dy) => piStraightPhase(X, dy),
       drawAll: () => self._drawAll(),
+      /* R98 P4：实时播放（按钮等价路径；测试可直驱） */
+      play: () => { self._userPaused = false; self.live.start(); self.syncPlayBtn(); },
+      pause: () => { self._userPaused = true; self.live.stop(); self.syncPlayBtn(); },
+      live: () => ({ playing: self.live.playing, ...self.live.progress }),
       fringes: () => self.stats.fringes,
       navLinks: () => Array.from(document.querySelectorAll('#pvTop a')).map(a => a.getAttribute('href')),
     };

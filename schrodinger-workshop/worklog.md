@@ -68,7 +68,7 @@
 | R92 | README 收尾段串写修复（文档追改轮，生产代码零改动） | 用户报「readme 和 worklog 内容串了」。根因：README 收尾段「RX 收官」段自 R85（c147971）起整段替换式更新，但 f249f5e（R86）/19b476f（R87）/db4453c（R88）三代只改标签号不改内容 ⟹ 「R88 收官」下挂的是 R85 内容，R85–R88 真身收官全缺失。修复：R88/R87/R86 三段补回 + 原段标签改回 R85 + 标题改「R67–R92 全部闭环」 |
 | R93 | README 职责重构：只留功能/实现/使用，R 轮次记录归 worklog（文档重构轮，生产代码零改动） | 用户澄清职责边界：「readme 不应该写工作流程和完成进度（R）…只放现有功能和结构、实现方式、使用说明」。重构后 README 六节：简介 → 运行 → 功能 → 物理与数值方法 → 架构 → 技术栈。**删两节**：`## 验证`（bak L2178 起，CDP 通过率总表）、`## 后续方向`（bak L2443 起，backlog + R67–R72 计划表）——均属工作流程/进度，归 worklog。全文清扫 R1–R92 轮次引用：批次一 `/tmp/r93_clean.py` 261 对（260 命中：删 5 块、悬空引用修 5 处、标题清理、轮数缩写 `R1/single`→`R=1/single` 防混淆、架构图 10 条目 + 12 处注释）+ 批次二 `/tmp/r93_patch2.py` 11 对（修 5 MISS 转录误差 + 4 漏网行内引用）。误抓保留 2 处（L508 `potR2` 参数名、L1934 `R32F` 纹理格式名）。diff：删 440 / 增 304，净 −136 行（2503→2367） |
 | R94 | 手机竖屏适配公共模块化：顶栏收编 + 汉堡抽屉 + 底部 dock | 用户指令「做小屏适配，尽量用公共模块，少每页独立维护」。盘点病灶：36 处同构顶栏媒体查询（12 页 × 1500/1400/900）+ 12 页 `#xxTop` 规则族重复、≤900 只隐导航 ⟹ 12 页互链手机端不可达、390px 竖屏面板+HUD 必重叠。新增 `src/core/responsive.js`（约 180 行）四件套：① 顶栏三档收编公共类 `.qtop`（差异值 5 页各 1–3 行属性选择器，7 页零差异）② ≤900 汉堡抽屉（桌面 `.qnav{display:contents}` 逐位不变）③ ≤860 底部 dock 三态 + 面板/HUD 转底部 sheet + stage 内联让位（`dataset.qfRestore` 精确还原）④ `injectResponsive()` DOM 增强包 `queueMicrotask`。六坑：时序（innerHTML 重写清 dock ⟹ microtask）、CSS 特异性三轮（类输 id ⟹ 删本地族 ⟹ 差异行压响应段 ⟹ 终局属性选择器 (0,2,0) vs `.qtop.qtop` (0,2,0) 后注入赢）、styles.js 跨行删除残骸吞 `#panel` 规则、flag drawFan 负半径崩（numW 收缩 + 三重 clamp）、responsive.js 两处笔误（冒号/`}}}`）、dock 死胡同（off 态 dock display:none ⟹ 无恢复路径；改常驻退让 opacity .4）。cdp92 **23/23** + cdp90 4/4 + cdp91 12/12 + pot85 38/38 + pot87 47/47；28 files，2726+/706− |
-| R98 | QEC 七页整合为单页 hub（P1）+ 全站实时沙盒化（P2：七模式播放式 MC） | 用户指令「QEC 七页整合，剩下的能不能都做成实时沙盒类？」。**P1 七页整合**（commit 320e9c3）：壳/模式分离——`src/qechub.js` 管 chrome + `?mode=` + 私有 CSS + 七枚 debug 句柄转发；7 个 mode 控制器加 `activate/deactivate` 统一清理；6 旧页降级 meta-refresh 桩；NAV 13→7、PAGES 13→7+6 桩；bundler 单作用域 333 个顶层名零重复（7 mode 顶层名加前缀 + flagsynd 私有名 `fs` 前缀）；移动端 tab 条 top:72 z:8 压抽屉、面板/HUD 上移 74→108。cdp101 **111/111**（深链/boot/tab 切换零泄漏/375×667/dist 单文件）。**P2 实时沙盒**：5 个物理模块流式化（`qecStream/shorStream/gnStream/fsStream/cfStream` 契约 `{total,n,step,result}`，旧 API 薄封装 ⟹ rng 同序数值零漂移）+ 共享 `LiveDriver`（20fps 闸 + **时长基准**每帧样本量 + 越界夹紧 + 演满自动停 + sync 双语义 + dispose 零泄漏）；七模式同款接线（播放钮/`?live=1`/recompute 分叉）。**教训两处**：① cdp102 首跑 50/55——swiftshader 下 rAF 仅 ~1–5fps，固定帧数预算（60 帧 ≈3s）实际要 40s+ ⟹ 产品侧改时长基准（顺带修 total=4000 越界 4020 的潜伏 bug）+ 测试侧 waitIdle 轮询替固定 sleep，复跑 **55/55**；② pot/cdp 并发抢 CPU 使 RO 定尺寸晚于 settle（P1 已记录）。回归全绿：pot86/85/87/80/81/82/83/84/88/89 + cdp102 55/55 + cdp101 111/111 + cdp90/91/92/98/99 4/12/39/10/19；dist 552.6 KB / 20 模块。**P3 noise 实时化**：`nzScan` 拆流式 `nzStream`（one() 记录 + 推进一步，steps+1 个记录点，rho 每步刷新 ⟹ HUD/热图随帧更新）+ 面板播放钮 + `?live=1` + HUD「演化时刻 t」+ 曲线进度头（竖线 + 头部亮点）。**LiveDriver sync 语义修正**（影响 P2 的 QEC hub，cdp102 复跑 55/55 无回归）：播放中换累加器后立即演一帧——探针（注入 rAF 计数器）证实 headless 下 rAF 仅 ~1 次/秒，挂载期首帧被 sync 清零后迟迟不落 ⟹ 首帧反馈不能依赖 rAF。cdp103 新套件 **29/29**（含 dist 通道）+ cdp77 14/14（P13 导航断言 13→7 同步修）+ pot80 1928/1928；dist noise 122.6 KB / qec 553.6 KB。P4 paths/qcircuit 待启 |
+| R98 | QEC 七页整合为单页 hub（P1）+ 全站实时沙盒化（P2：七模式播放式 MC） | 用户指令「QEC 七页整合，剩下的能不能都做成实时沙盒类？」。**P1 七页整合**（commit 320e9c3）：壳/模式分离——`src/qechub.js` 管 chrome + `?mode=` + 私有 CSS + 七枚 debug 句柄转发；7 个 mode 控制器加 `activate/deactivate` 统一清理；6 旧页降级 meta-refresh 桩；NAV 13→7、PAGES 13→7+6 桩；bundler 单作用域 333 个顶层名零重复（7 mode 顶层名加前缀 + flagsynd 私有名 `fs` 前缀）；移动端 tab 条 top:72 z:8 压抽屉、面板/HUD 上移 74→108。cdp101 **111/111**（深链/boot/tab 切换零泄漏/375×667/dist 单文件）。**P2 实时沙盒**：5 个物理模块流式化（`qecStream/shorStream/gnStream/fsStream/cfStream` 契约 `{total,n,step,result}`，旧 API 薄封装 ⟹ rng 同序数值零漂移）+ 共享 `LiveDriver`（20fps 闸 + **时长基准**每帧样本量 + 越界夹紧 + 演满自动停 + sync 双语义 + dispose 零泄漏）；七模式同款接线（播放钮/`?live=1`/recompute 分叉）。**教训两处**：① cdp102 首跑 50/55——swiftshader 下 rAF 仅 ~1–5fps，固定帧数预算（60 帧 ≈3s）实际要 40s+ ⟹ 产品侧改时长基准（顺带修 total=4000 越界 4020 的潜伏 bug）+ 测试侧 waitIdle 轮询替固定 sleep，复跑 **55/55**；② pot/cdp 并发抢 CPU 使 RO 定尺寸晚于 settle（P1 已记录）。回归全绿：pot86/85/87/80/81/82/83/84/88/89 + cdp102 55/55 + cdp101 111/111 + cdp90/91/92/98/99 4/12/39/10/19；dist 552.6 KB / 20 模块。**P3 noise 实时化**：`nzScan` 拆流式 `nzStream`（one() 记录 + 推进一步，steps+1 个记录点，rho 每步刷新 ⟹ HUD/热图随帧更新）+ 面板播放钮 + `?live=1` + HUD「演化时刻 t」+ 曲线进度头（竖线 + 头部亮点）。**LiveDriver sync 语义修正**（影响 P2 的 QEC hub，cdp102 复跑 55/55 无回归）：播放中换累加器后立即演一帧——探针（注入 rAF 计数器）证实 headless 下 rAF 仅 ~1 次/秒，挂载期首帧被 sync 清零后迟迟不落 ⟹ 首帧反馈不能依赖 rAF。cdp103 新套件 **29/29**（含 dist 通道）+ cdp77 14/14（P13 导航断言 13→7 同步修）+ pot80 1928/1928；dist noise 122.6 KB / qec 553.6 KB。**P4 paths/qcircuit**：paths 改 `piSpiralStream` + 播放/重放/`?live=1`；LiveDriver 针对 compositor 停产改 rAF+timeout 双通道；qcircuit 新增 15 种门的插入/换序/删除/清空编辑器，结构改动只重置执行、不清用户线路。cdp104 23/23 + cdp105 15/15 + cdp74/75/102/103 20/16/55/29 全绿。P5 收尾待启 |
 | R97 | 404 根因修复 + 交互面审计 + 页面数评估 | 用户三问（「点跳转就 404？」「交互为什么太弱？」「有必要开这么多页面吗？」）。**404 两向量实测确认**（cdp98）：V1 favicon.ico 每导航 404（DevTools 每次跳转一条红 404，体感主因）⟹ 13 HTML head 注入 SVG data-URI favicon（零文件、file:// 双通）；V2 根级 `/quantum-field.html` 404（dev 主页实名 index.html vs README/dist 口径 quantum-field.html）⟹ 新增根级**深链跳转桩**（meta refresh→index.html；不改名 index.html 是为保目录根 `/` 默认入口）。**环境事故连带真 bug**：cdp99 抓到 two-body 点预设抛 `TypeError … bindTexture` → 顺栈发现全环境 webgl2 不可用 → chrome 日志 `xcb_connect() failed` ⟹ **Xvfb 进程已死**（GL 死亡期 cdp90 像素断言空转，修复后全部重测）；连带缺陷：GL 失败时 buildDOM 先接线后取 gl ⟹ 控件全活点击即崩。修复：接线拆入 `bindUI()`（gl 就绪才调，对齐 app.js）+ `fail()` 禁用控件；cdp100 新套件用 `addScriptToEvaluateOnNewDocument` 桩构造 GL 缺失，5/5（明确报错 + 控件全禁用 + 零异常）。**交互审计 cdp99**：12 子页 197 按钮 + 40 滑块逐个点击/拖动，dev+dist 双通道 **237/237 有反应、零死控件**；两个探针假阳性教训（burger aria 盲区、已激活预设幂等）。**评估**：交互弱是类别差异（实时沙盒 vs 参数化计算器）非缺陷——子页全活但无时间维度/画布直操；**QEC 七页（qec/shor/gatenoise/flag/rounds/cycle/family）是最可整合的一簇**，flag/rounds/cycle 各仅 2 按钮 2 滑块，合并列为架构决策项挂起。九套件全绿（cdp98 8/8 · cdp99 37/37×2 · cdp100 5/5 · cdp92 43/43 · cdp90 4/4 · cdp91 12/12 · pot85 38/38 · pot87 47/47）；30 files，178+/0− |
 | R96 | R95 遗留落地：构建守卫 / 触摸目标放大 / 横屏放宽 / 三视口实测 | 用户指令「继续」。① **构建守卫**（build-standalone.mjs +12）：逐页 bundle 扫描**独立成行** `injectResponsive()` 调用，漏调即 `fail()` 并提示改 src 页面模块。**全文正则假阴性教训**：初版 `/injectResponsive\(\)/` 被 responsive.js 自身文档注释骗过——注释掉 qec 调用后构建仍 OK；FAIL 路径实测抓到后改行级匹配，双向验证（正路 13/13 + FAIL 路径准确报错）——再次印证「守卫必须双向验证」。② **触摸目标**：burger 30×26→**40×36**、dock 按钮 57×29→**≈31px 高**（dock 总高 43.2 ≤ 44px 带）；仍低于 44px 舒适线（再放大必抬带高吃 stage 空间），M1b 断言下限 ≥34/≥30 含回归余量。③ **横屏放宽**：SHEET_G `max-height` 改 `var(--qf-sm,46vh)` + ≤860 `:root{--qf-sm:46vh}` + landscape 覆盖 **64vh**（844×390 面板带 179→243px）——CSS 变量驱动免监听 orientationchange。④ **M14**：360×640 / 412×915 / 430×932 × {qec,index,gatenoise} 三视口实测（零 console、抽屉开/关、sheet 可滚）全过。cdp92 **43/43**（+M1b/M14）+ cdp90 4/4 + cdp91 12/12 + pot85 38/38 + pot87 47/47；15 files，264+/70− |
 | R95 | R94 缺口核查与修复：抽屉死胡同 / 链接 20px / hud 裁切 | 用户问「有什么缺口或可优化的？」⟹「要，其他也写入worklog」。方法：四个只读探测套件（cdp93 边界带/resize/dvh/a11y、cdp94 切态裁切 + 触摸目标、cdp95 抽屉计算样式、cdp96 可取消性、cdp97 全页绝对定位子元素扫描）。**实测确认 3 缺陷**：D1 抽屉打开后无法取消（`.qnav` z:9 盖住 static burger，外点关闭判据恒真；唯一退出是导航）⟹ burger `position:relative;z-index:11` + backdrop 点击收 + Escape 收 + 焦点回汉堡；D2 抽屉链接 20px 高（`.qtop.qtop a` (0,2,1) 压死 `.qnav a`，主页 id 级 `#topbar .navlink` 连 (0,3,1) 都打不过）⟹ `!important` 收口 13px/14px 6px/1.25 = **44.25px**（顺带满足 44px 触摸目标）；D3 hud overflow 各页不一（hubbard/shor 无声明，shor 已临界裁切 387>386）⟹ ≤860 段收编 `.qhud{overflow-y:auto}`（前置核查 gatenoise `.sfill` 在 `.strack` 内不受影响）。a11y 同批：aria-expanded/label 翻转。P2：三处 vh→dvh 双声明（Safari 15.4+/Chrome 108+ 支持，低于 README 地板 16.4）+ prefers-reduced-motion。**排除 3 项疑罪**（边界带四档 / 跨断点 resize / 面板可滚全实测无罪）。**两个断言假阳性教训**：G1 不切态量隐藏元素、M13 把「可滚容器折叠线外」当裁切。cdp92 扩至 **38/38**（+M2c/M7e/M12/M13）+ cdp90 4/4 + cdp91 12/12 + pot85 38/38 + pot87 47/47 |
@@ -1251,9 +1251,46 @@ pause/play 序列）证实环是活的、只是 ~1fps，真正缺口是「首帧
 
 dist 重建：noise 122.6 KB / qec 553.6 KB。
 
-### 后续（P4–P5，待追加）
+### P4：paths 相位累积播放 + qcircuit 门序列编辑（本轮完成）
 
-- **P4**：paths 相位累积播放 + qcircuit 门列表编辑
+**paths 物理层与 UI**：`piSpiral` 拆成 `piSpiralStream(X,{K,W})`，每次 `step()` 追加一段相位、
+保存累积点列，`result()` 给当前快照；旧 `piSpiral` 保持薄封装。Node 对照 5 组 `(X,K,W)`：
+一次性全批与 7 点/帧流式结果均 `JSON.stringify` 逐位一致。页面接入共享 LiveDriver，新增
+播放/暂停、重放、`?live=1`、HUD 累积进度；旧 `?reveal=0` 动画语义保留，结构参数变化才重置，
+拖探测点不再闪回起点。
+
+**LiveDriver 双通道调度（产品层真修复）**：paths 页探针发现 headless swiftshader 的 compositor
+可在 rAF 回调本身仅 0–186ms 的情况下彻底停止产帧；QEC 页也能复现，说明不是某个物理模块卡顿。
+播放器由单一 rAF 改为 **rAF + setTimeout 双通道**：rAF 负责正常浏览器 vsync 顺滑，定时器在后台/
+无头环境兜底；同一时刻只保留各一个待处理句柄，`stop/dispose` 两路都清理。补样本 dt 上限从
+`duration/2` 调整为 `duration`，防止 Chrome 重节流把 3 秒演出拖成几十秒；仍夹紧 `total-n`，
+不会越界。修复后 cdp102/103/104 三页全部通过。
+
+**qcircuit 门序列编辑沙盒**：新增 15 种常用门选择（H/X/Y/Z/S/S†/T/T†/Rx/Ry/Rz/P/CNOT/CZ/SWAP）、
+目标位/控制位与角度控件、门列表、选中后插入、上移/下移/删除/清空。双比特门控制=目标、
+受控单比特门控制=目标会拒绝并提示。任何结构修改停止播放且只重置执行态；`resetExecution()`
+与 `reset()` 分离，因此页面「重置」保留用户线路，载入预设才恢复默认。调试句柄补
+`gateList/addGate/moveGate/deleteGate/clearGates/restart`。
+
+**验证**：
+
+| 套件 | 结果 | 覆盖 |
+|---|---|---|
+| cdp104（新） | **23/23** | paths 播放钮/累积 HUD/暂停冻结/重放/自动播/参数重置/reveal 兼容/逐位一致/dist |
+| cdp105（新） | **15/15** | qcircuit 编辑器 boot/插入/换序改变末态/删除/空线路/HZH/Ry 概率/非法门/重置保留/预设恢复/dist |
+| cdp74 | **20/20** | paths 旧物理与交互回归；导航断言更新为 R98 的 7 条 |
+| cdp75 | **16/16** | qcircuit 旧预设/测量/熵/画布回归；导航断言更新为 7 条 |
+| cdp102 | **55/55** | LiveDriver 双通道变更后的 QEC 七模式与逐位一致 |
+| cdp103 | **29/29** | LiveDriver 双通道变更后的 noise 单比特/Bell 与 dist |
+
+**harness 修正**：播放器演满更快后，旧测试的「sleep 后一定仍在播放」「完成后再点仍是暂停」
+产生竞态。改为页面内原子执行「若已演满则重播 → 点击暂停 → 同次读取」；自动播断言接受
+「进行中或已演满」，但保留 `n>0`、最终总数、暂停冻结与逐位一致硬判据，不靠放宽容差掩盖产品问题。
+
+dist 重建：paths 87 KB / qcircuit 94 KB / qec 555 KB / noise 124 KB。
+
+### 后续（P5，待追加）
+
 - **P5**：README/worklog R98 收尾 + dist 重建 + 全门禁 + commit/push 闭环
 
 ## R90（2026-10-23）面板视觉保真度评审（README「后续方向」② 收官）

@@ -10,15 +10,19 @@
  *   #pvProfile 探测面强度剖面：路径和 vs 解析传播子（归一后重合）
  *
  * 重绘策略：主图只在参数/探测点变化时重绘（路径族 686 条 × 40 段，每帧重画
- * 是浪费）；螺旋与剖面同理。reveal 动画期间只重画螺旋。
+ * 是浪费）；螺旋与剖面同理。R98 P4 起螺旋的「相位累积」改为播放器驱动
+ * （LiveDriver 时长基准分帧，播/暂停/重放，?live=1 即播），frame() 只余
+ * FPS 与重绘职责。
  *
  * 调试句柄 window.__pv（cdp74 用）：state / setParam / setY / preset / ampAt /
- * current / profileAt / profile / pathCount / sumInfo / spiralInfo / navLinks。
+ * current / profileAt / profile / pathCount / sumInfo / spiralInfo / navLinks /
+ * play / pause / live。
  * ========================================================================== */
 import { injectStyles } from './core/styles.js';
 import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
-import { PI_DEFAULTS, PI_PRESETS, piProfile, piAmpAt, piPathSamples, piSpiral, piFringeSpacing, piStraightPhase, piModeSum, piFringes, piNxiFor } from './physics/paths.js';
+import { PI_DEFAULTS, PI_PRESETS, piProfile, piAmpAt, piPathSamples, piSpiral, piSpiralStream, piFringeSpacing, piStraightPhase, piModeSum, piFringes, piNxiFor } from './physics/paths.js';
+import { LiveDriver } from './qec/live.js';
 
 const PV_CSS = `
   #pvPanel{top:74px;left:14px;width:232px;padding:13px;z-index:10;max-height:calc(100vh - 210px);
@@ -93,9 +97,11 @@ export class PathsApp {
       coherent: q.has('coh') ? q.get('coh') !== '0' : pcfg.coherent,
       reveal: q.get('reveal') === '0' ? 0 : 1,
       paused: q.get('paused') === '1',
+      live: q.get('live') === '1',
     };
     this._listeners = []; this._dirty = true; this._needDraw = true;
     this._fps = 0; this._fpsFrames = 0; this._lastFpsT = performance.now();
+    this.live = null; this._userPaused = false;
     this.view = { sx: 1, yFov: 130, ox: 0, oy: 0, w: 800, h: 520, padT: 22, padB: 26, dpr: 1 };
     this.prof = null; this.samples = []; this.spir = null; this.stats = null;
     this._onError = e => {
@@ -156,7 +162,11 @@ export class PathsApp {
         <div class="row"><label>模态数</label><input type="range" id="pvM" min="1" max="2" step="1"><output id="pvMo">—</output></div>
         <div class="grp">探测点</div>
         <div class="row"><label>位置 Y</label><input type="range" id="pvY" min="-200" max="200" step="0.5"><output id="pvYo">—</output></div>
-        <div class="btns" style="margin-top:6px"><button id="pvReplay" style="grid-column:1 / span 2">重放求和</button></div>
+        <div class="grp">演出（相位累积）</div>
+        <div class="btns" style="margin-top:6px">
+          <button id="pvPlay">▶ 播放</button>
+          <button id="pvReplay">重放求和</button>
+        </div>
       </aside>
 
       <div id="pvStage" class="qstage">
@@ -172,6 +182,7 @@ export class PathsApp {
         <hr>
         <div class="hrow"><span>|Σ 路径|（段1）</span><span id="hSum">—</span></div>
         <div class="hrow"><span>Σ|A| / |Σ|（相消比）</span><span id="hCancel">—</span></div>
+        <div class="hrow"><span>螺旋累积（播放）</span><span id="hAcc">—</span></div>
         <hr>
         <div class="hrow"><span>I(Y) 归一</span><span id="hI">—</span></div>
         <div class="hrow"><span>暗纹数 / 对比度</span><span id="hVis">—</span></div>
@@ -217,7 +228,25 @@ export class PathsApp {
     slider('pvY', 'pvYo', 'Y', v => v.toFixed(0));
     this.on(this.q('#pvA'), 'change', e => { s.openA = e.currentTarget.checked; this._touch(true); });
     this.on(this.q('#pvB'), 'change', e => { s.openB = e.currentTarget.checked; this._touch(true); });
-    this.on(this.q('#pvReplay'), 'click', () => { s.reveal = 0; this._needDraw = true; });
+    this.on(this.q('#pvReplay'), 'click', () => this.replaySum());
+    /* ---- R98 P4 实时沙盒：相位累积播放（Cornu 螺旋逐点生长） ---- */
+    this.live = new LiveDriver({
+      make: () => piSpiralStream(this.state.L1, { K: this.state.K, W: this.state.W }),
+      onFrame: res => {
+        this.spir = res;
+        this.state.reveal = res.count / Math.max(1, res.len);   /* 0..1 镜像（测试/兼容用） */
+        const e = this.q('#hAcc');                              /* 只更新累积行（renderHud 全量太重） */
+        if (e) e.textContent = ((res.count | 0) + 1) + ' / ' + ((res.len | 0) + 1);
+        this.drawSpiral();
+      },
+      onState: () => this.syncPlayBtn(),
+    });
+    this.on(this.q('#pvPlay'), 'click', () => {
+      this._userPaused = this.live.playing;    /* 播放中点击 ⟹ 用户暂停 */
+      this.live.toggle();
+    });
+    this.syncPlayBtn();
+    if (this.state.live || this.state.reveal === 0) this.live.start();   /* ?live=1 / ?reveal=0 即播 */
 
     const cv = this.q('#pvMain');
     let drag = false;
@@ -265,7 +294,28 @@ export class PathsApp {
   /* 结构变化才重置 reveal 动画；拖探测点时不要重置（否则螺旋一直闪回起点） */
   _touch(resetReveal){
     this._dirty = true; this._needDraw = true;
-    if (resetReveal) this.state.reveal = 0;
+    if (!resetReveal) return;
+    this.state.reveal = 0;
+    /* R98 P4：换累加器；用户没暂停就自动重演（保持旧行为：改参即重放求和） */
+    this.live?.sync();
+    if (!this._userPaused) this.live?.start();
+  }
+
+  /* 重放求和：从零点开始重新累积（不论之前暂停与否） */
+  replaySum(){
+    this._userPaused = false;
+    this.state.reveal = 0;
+    this.live?.sync();
+    this.live?.start();
+    this._needDraw = true;
+  }
+
+  syncPlayBtn(){
+    const b = this.q('#pvPlay');
+    if (!b) return;
+    const on = !!(this.live && this.live.playing);
+    b.textContent = on ? '⏸ 暂停' : '▶ 播放';
+    b.classList.toggle('on', on);
   }
 
   resize(){
@@ -296,7 +346,8 @@ export class PathsApp {
     const c = this.cfg();
     this.prof = piProfile(c);
     this.samples = piPathSamples(this.state.Y, c, 9);
-    this.spir = piSpiral(c.L1, { K: c.K, W: c.W });
+    /* R98 P4：播放中螺旋由流式累加器逐帧供给（recompute 不得用全批覆盖半场状态） */
+    if (!(this.live && this.live.playing)) this.spir = piSpiral(c.L1, { K: c.K, W: c.W });
     const C1 = piModeSum(c.L1, c), C2 = piModeSum(c.L2, c);
     const A = piAmpAt(this.state.Y, c);
     const p = this.prof;
@@ -331,6 +382,8 @@ export class PathsApp {
     set('hPer', s.nSeam.toLocaleString('en-US') + ' × ' + c.nxi);
     set('hSum', nf(s.C1.mag, 2) + ' / ' + s.C1.count);
     set('hCancel', nf(s.C1.count / Math.max(s.C1.mag, 1e-12), 2));
+    /* R98 P4：螺旋累积进度（播放中随帧增长，暂停冻结） */
+    set('hAcc', this.spir ? ((this.spir.count | 0) + 1) + ' / ' + ((this.spir.len | 0) + 1) : '—');
     set('hI', nf(s.I, 4));
     const fr = piFringes(p);
     this.stats.fringes = fr;
@@ -463,7 +516,8 @@ export class PathsApp {
     g.scale(dpr, dpr);
     const w = W / dpr, h = H / dpr, pad = 24;
     const N = s.pts.length;
-    const nShow = Math.max(2, Math.round(N * Math.max(0, Math.min(1, this.state.reveal))));
+    /* R98 P4：进度由流式累加器的 count 决定（全批时 count=2K ⟹ 全显） */
+    const nShow = Math.max(2, Math.min(N, (s.count | 0) + 1));
     let mx = 1;
     for (const [a, b] of s.pts) mx = Math.max(mx, Math.abs(a), Math.abs(b));
     const sc = Math.min(w - 2 * pad, h - 2 * pad) / (2 * mx);
@@ -554,11 +608,7 @@ export class PathsApp {
       const e = this.q('#hFps'); if (e) e.textContent = this._fps ? String(this._fps) : '—';
     }
     if (this._dirty) this.recompute();
-    if (this.state.reveal < 1){
-      this.state.reveal = Math.min(1, this.state.reveal + 0.05);
-      this.drawSpiral();
-      return;
-    }
+    /* R98 P4：螺旋推进交给 LiveDriver（时长基准分帧）；此处只处理重绘 */
     if (this._needDraw){
       this.drawMain(); this.drawSpiral(); this.drawProfile();
       this._needDraw = false;
@@ -584,7 +634,13 @@ export class PathsApp {
     }
   }
 
-  _drawAll(){ this.state.reveal = 1; this.drawMain(); this.drawSpiral(); this.drawProfile(); }
+  _drawAll(){
+    /* R98 P4：确定性收尾——停播 + 补全批（暂停态 sync ⟹ step(total) + 一帧） */
+    this.live?.stop();
+    this.live?.sync();
+    this.state.reveal = 1;
+    this.drawMain(); this.drawSpiral(); this.drawProfile();
+  }
 
   /* ---------- 调试句柄（cdp74） ---------- */
   debugHandle(){
@@ -598,7 +654,8 @@ export class PathsApp {
       recompute: () => { self.recompute(); self._drawAll(); },
       pathCount: () => ({ seam: self.stats.nSeam, total: self.stats.nTotal, drawn: self.samples.length }),
       sumInfo: () => ({ C1: self.stats.C1, C2: self.stats.C2, cancel: self.stats.C1.count / self.stats.C1.mag }),
-      spiralInfo: () => ({ n: self.spir.pts.length, total: self.spir.total, pts: self.spir.pts.slice(0, 3) }),
+      spiralInfo: () => ({ n: self.spir.pts.length, total: self.spir.total, count: self.spir.count, len: self.spir.len, pts: self.spir.pts.slice(0, 3) }),
+      spiralPts: () => self.spir.pts.map(p => [p[0], p[1]]),
       ampAt: Y => { const A = piAmpAt(Y, self.cfg()); return { raw: A.raw, an: A.an, per: A.per }; },
       current: () => ({ Y: self.state.Y, I: self.stats.I, spread: self.stats.spread,
                         fringe: self.stats.fringe, per: self.stats.perSlit, n: self.stats.nTotal,
@@ -612,6 +669,10 @@ export class PathsApp {
       samplePhase: i => (self.samples[i] ? self.samples[i].phase : null),
       straightPhase: (X, dy) => piStraightPhase(X, dy),
       drawAll: () => self._drawAll(),
+      /* R98 P4：实时播放（按钮等价路径；测试可直驱） */
+      play: () => { self._userPaused = false; self.live.start(); self.syncPlayBtn(); },
+      pause: () => { self._userPaused = true; self.live.stop(); self.syncPlayBtn(); },
+      live: () => ({ playing: self.live.playing, ...self.live.progress }),
       fringes: () => self.stats.fringes,
       navLinks: () => Array.from(document.querySelectorAll('#pvTop a')).map(a => a.getAttribute('href')),
     };
