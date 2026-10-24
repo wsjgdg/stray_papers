@@ -4,6 +4,8 @@ import { useMemo, useState } from 'react';
 import { PROVINCE_FOODS, TASTE_KEYS, type ProvinceFood } from '@/lib/food-data';
 import { TasteRadar } from './taste-radar';
 import { cn } from '@/lib/utils';
+import { DISH_IMPACT } from '@/lib/dish-impact.generated';
+import { DISH_SODIUM } from '@/lib/dish-sodium.generated';
 
 /* ── 口味测试：自评 6 维，匹配最接近的菜 ────────────────────────── */
 export function TasteTest({ onPick }: { onPick: (p: ProvinceFood) => void }) {
@@ -101,6 +103,18 @@ export function DishCompare({ left, right, onLeft, onRight }: {
         </div>
       </div>
       <div className="mt-3 space-y-1.5">
+        {[
+          ['每份价格(元)', DISH_IMPACT[left.dish]?.price, DISH_IMPACT[right.dish]?.price],
+          ['碳足迹(g)', DISH_IMPACT[left.dish]?.carbon, DISH_IMPACT[right.dish]?.carbon],
+          ['每份钠(mg)', DISH_SODIUM[left.dish]?.na, DISH_SODIUM[right.dish]?.na],
+        ].map(([label, lv, rv]) => (
+          <div key={String(label)} className="flex items-center gap-2 text-[11px]">
+            <span className="w-16 text-gray-500">{label}</span>
+            <span className="flex-1 text-right text-rose-600">{lv == null ? '—' : String(lv)}</span>
+            <span className="w-4 text-center text-gray-300">vs</span>
+            <span className="flex-1 text-emerald-600">{rv == null ? '—' : String(rv)}</span>
+          </div>
+        ))}
         {TASTE_KEYS.map((k) => {
           const d = (right.taste[k] ?? 0) - (left.taste[k] ?? 0);
           return (

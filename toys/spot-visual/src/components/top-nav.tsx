@@ -3,13 +3,15 @@
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Compass, MapPin, UtensilsCrossed, GraduationCap } from 'lucide-react';
+import { Compass, MapPin, UtensilsCrossed, GraduationCap, BookOpen, Database } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const MODULES = [
   { href: '/', label: '景点览胜', icon: MapPin, desc: '探索全国精选景点' },
   { href: '/food', label: '中国味道', icon: UtensilsCrossed, desc: '一省一菜·口味地图' },
   { href: '/gaokao', label: '志愿探索', icon: GraduationCap, desc: '分数位次·冲稳保' },
+  { href: '/about', label: '作品介绍', icon: BookOpen, desc: '这作品做了什么' },
+  { href: '/sources', label: '数据来源', icon: Database, desc: '出处与覆盖边界' },
 ];
 
 export function TopNav() {

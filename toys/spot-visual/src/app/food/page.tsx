@@ -130,12 +130,38 @@ export default function FoodPage() {
   // 深链：?prov=海南 / ?prov=HI 直接进入该省下钻视图（便于分享与复现）
   useEffect(() => {
     const p = new URLSearchParams(window.location.search).get('prov');
-    if (!p) return;
+    if (!p) {
+      // URL 没带参数时，回到上次浏览的位置
+      try {
+        const saved = JSON.parse(localStorage.getItem('food:last') ?? 'null');
+        if (saved?.prov) {
+          pendingCity.current = saved.city ?? null;
+          enterProvince(saved.prov);
+        }
+      } catch {}
+      return;
+    }
     const hit = PROVINCE_FOODS.find(
       (x) => x.name === p || x.fullName === p || x.code === p.toUpperCase(),
     );
     if (hit) enterProvince(hit.name);
+    if (p) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem('food:last') ?? 'null');
+      if (saved?.prov) {
+        pendingCity.current = saved.city ?? null;
+        enterProvince(saved.prov);
+      }
+    } catch {}
   }, [enterProvince]);
+
+  // 记住上次浏览位置（URL 有参数时优先 URL）
+  useEffect(() => {
+    if (!drill) return;
+    try {
+      localStorage.setItem('food:last', JSON.stringify({ prov: drill, city: citySel ?? null }));
+    } catch {}
+  }, [drill, citySel]);
 
   const backToNation = useCallback(() => {
     setDrill(null);

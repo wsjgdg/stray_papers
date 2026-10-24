@@ -1,4 +1,5 @@
 // 分享卡导出：纯 canvas 2D 绘制，不依赖外部资源，避免 CORS 污染画布。
+import QRCode from 'qrcode';
 import { TASTE_KEYS } from './food-data';
 
 export interface ShareCardInput {
@@ -12,7 +13,7 @@ export interface ShareCardInput {
 const W = 720;
 const H = 980;
 
-export function downloadShareCard(input: ShareCardInput) {
+export async function downloadShareCard(input: ShareCardInput) {
   const c = document.createElement('canvas');
   c.width = W;
   c.height = H;
@@ -82,6 +83,22 @@ export function downloadShareCard(input: ShareCardInput) {
   g.fillStyle = '#B91C1C';
   g.font = '700 26px system-ui, sans-serif';
   g.fillText('#WorkBuddy  #1024程序员节', 48, H - 48);
+
+  // 右下角二维码：扫码直达当前省/市上下文
+  try {
+    const url = typeof window !== 'undefined' ? window.location.href : '';
+    if (url) {
+      const qr = await QRCode.toDataURL(url, { width: 140, margin: 1, color: { dark: '#1c1917', light: '#ffffff' } });
+      const img = new Image();
+      await new Promise<void>((res) => { img.onload = () => res(); img.src = qr; });
+      g.fillStyle = '#ffffff';
+      g.fillRect(W - 164, H - 164, 148, 148);
+      g.drawImage(img, W - 160, H - 160, 140, 140);
+      g.fillStyle = '#a8a29e';
+      g.font = '400 14px system-ui, sans-serif';
+      g.fillText('扫码直达', W - 152, H - 172);
+    }
+  } catch {}
 
   const a = document.createElement('a');
   a.download = `中国味道-${input.title}.png`;
