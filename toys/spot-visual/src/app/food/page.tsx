@@ -273,8 +273,8 @@ export default function FoodPage() {
           map: 'china-compliant',
           roam: 'move',
           scaleLimit: { min: 1, max: 1 },
-          layoutCenter: ['50%', '52%'],
-          layoutSize: '120%',
+          layoutCenter: ['50%', '50%'],
+          layoutSize: '96%',
           selectedMode: 'single',
           label: { show: false },
           emphasis: {
@@ -335,7 +335,7 @@ export default function FoodPage() {
           // 用剔除远海岛礁后的包围盒定初始视野，避免主陆地被压扁/挤出画面
           boundingCoords: cityGeo.viewBounds,
           layoutCenter: ['50%', '50%'],
-          layoutSize: '118%',
+          layoutSize: '96%',
           selectedMode: 'single',
           label: { show: false },
           emphasis: {
