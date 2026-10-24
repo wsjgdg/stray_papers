@@ -59,7 +59,6 @@ export default function FoodPage() {
   const [copied, setCopied] = useState(false);
   const [showBasis, setShowBasis] = useState(false);
   /** 右侧工具面板：无 / 口味测试 / 对比 */
-  const [tool, setTool] = useState<'none' | 'test' | 'compare'>('none');
   const [cmpL, setCmpL] = useState(PROVINCE_FOODS[0]);
   const [cmpR, setCmpR] = useState(PROVINCE_FOODS[3]);
   /** 小屏（手机）判断，用于给地图/雷达换尺寸 */
@@ -78,7 +77,8 @@ export default function FoodPage() {
   /** 地图首帧骨架屏，绘制完成后隐藏 */
   const [mapReady, setMapReady] = useState(false);
   /** 左栏视图：地图 / 口味图谱 */
-  const [view, setView] = useState<'map' | 'atlas'>('map');
+  /** 主视图：地图 / 图谱 / 口味测试 / 对比。四个都在同一位置切换，工具不再藏在下方 */
+  const [view, setView] = useState<'map' | 'atlas' | 'test' | 'compare'>('map');
 
   const selected = getProvince(provCode) ?? PROVINCE_FOODS[0];
   const cuisineColor = CUISINE_COLORS[selected.cuisine] ?? '#64748B';
@@ -438,28 +438,24 @@ export default function FoodPage() {
               <ChevronLeft className="w-3.5 h-3.5" /> 返回全国
             </button>
           )}
-          <div className="ml-auto inline-flex items-center gap-1 shrink-0">
-            <button
-              onClick={() => setTool((t) => (t === 'test' ? 'none' : 'test'))}
-              className={cn('px-2.5 py-1 rounded-lg border text-xs font-medium transition-colors', tool === 'test' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-400')}
-            >
-              口味测试
-            </button>
-            <button
-              onClick={() => setTool((t) => (t === 'compare' ? 'none' : 'compare'))}
-              className={cn('px-2.5 py-1 rounded-lg border text-xs font-medium transition-colors', tool === 'compare' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-400')}
-            >
-              对比
-            </button>
-          </div>
-          <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5 text-xs shrink-0">
-            {([['map', '味道地图'], ['atlas', '口味图谱']] as const).map(([k, label]) => (
+          <div className="ml-auto inline-flex flex-wrap rounded-lg border border-gray-200 bg-gray-50 p-0.5 text-xs shrink-0">
+            {(
+              [
+                ['map', '味道地图'],
+                ['atlas', '口味图谱'],
+                ['test', '口味测试'],
+                ['compare', '对比'],
+              ] as const
+            ).map(([k, label]) => (
               <button
                 key={k}
                 onClick={() => setView(k)}
+                aria-pressed={view === k}
                 className={cn(
                   'px-2.5 py-1 rounded-md font-medium transition-colors',
-                  view === k ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-500 hover:text-gray-700',
+                  view === k
+                    ? 'bg-white text-emerald-700 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700',
                 )}
               >
                 {label}
@@ -470,7 +466,11 @@ export default function FoodPage() {
         <p className="text-sm text-gray-500">
           {view === 'atlas'
             ? '把 34 道省级代表菜铺在「辣 × 甜」平面上：横轴辣度、纵轴甜度，点越大越鲜。点击任意点下钻到该省。'
-            : drill
+            : view === 'test'
+              ? '拖动六个维度，系统匹配口味最接近的省域代表菜；点结果跳到该省。'
+              : view === 'compare'
+                ? '并排对比两道菜的口味雷达、价格、碳足迹与每份钠。'
+                : drill
               ? <>已下钻到 <b className="text-gray-700">{selected.fullName}</b>，点击地图上的市/区查看该地代表菜；也可用下方城市清单定位。</>
               : '点击任意省份下钻到市级，下方查看代表菜与口味档案。'}
         </p>
@@ -487,6 +487,10 @@ export default function FoodPage() {
               横轴辣度、纵轴甜度，点越大越鲜；颜色为菜系。点击任意点下钻到该省。
             </p>
           </section>
+        ) : view === 'test' ? (
+          <TasteTest onPick={(p) => enterProvince(p.name)} />
+        ) : view === 'compare' ? (
+          <DishCompare left={cmpL} right={cmpR} onLeft={setCmpL} onRight={setCmpR} />
         ) : (
         <section className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden">
           {!mapReady && (
@@ -579,13 +583,6 @@ export default function FoodPage() {
             </div>
           )}
         </section>
-        )}
-
-        {tool === 'test' && (
-          <TasteTest onPick={(p) => enterProvince(p.name)} />
-        )}
-        {tool === 'compare' && (
-          <DishCompare left={cmpL} right={cmpR} onLeft={setCmpL} onRight={setCmpR} />
         )}
 
         {/* ══ 地图下方：菜品说明 · 城市清单 · 分享卡 ══
