@@ -18,6 +18,10 @@ export interface Ingredient {
   sodiumMg: number;
   /** 形态说明，避免拿干制品和鲜品混用 */
   note?: string;
+  /** 升糖指数 GI（来源：食物升糖指数表） */
+  gi?: number;
+  /** GI 对应的食物名 */
+  giSource?: string;
 }
 
 export const INGREDIENTS: Record<string, Ingredient> = {
@@ -30,10 +34,10 @@ export const INGREDIENTS: Record<string, Ingredient> = {
   carp: { code: '121111', name: '鲤鱼', energyKcal: 109, sodiumMg: 53.7 },
   shrimp: { code: '122106', name: '对虾', energyKcal: 93, sodiumMg: 165.2 },
   seaCucumber: { code: '129001', name: '海参', energyKcal: 78, sodiumMg: 502.9, note: '鲜品' },
-  tofuSoft: { code: '031307', name: '豆腐（南豆腐）', energyKcal: 87, sodiumMg: 3.1 },
+  tofuSoft: { code: '031307', name: '豆腐（南豆腐）', energyKcal: 87, sodiumMg: 3.1, gi: 32, giSource: '豆腐（炖）' },
   egg: { code: '111101x', name: '鸡蛋（代表值）', energyKcal: 139, sodiumMg: 131.5 },
-  wheatFlour: { code: '011201x', name: '小麦粉（代表值）', energyKcal: 359, sodiumMg: 14.1 },
-  glutinousRice: { code: '012301', name: '糯米', energyKcal: 350, sodiumMg: 1.5 },
+  wheatFlour: { code: '011201x', name: '小麦粉（代表值）', energyKcal: 359, sodiumMg: 14.1, gi: 85, giSource: '馒头（精制小麦粉）' },
+  glutinousRice: { code: '012301', name: '糯米', energyKcal: 350, sodiumMg: 1.5, gi: 87, giSource: '糯米饭' },
   cabbage: { code: '045101x', name: '大白菜（代表值）', energyKcal: 20, sodiumMg: 68.9 },
   woodEar: { code: '051014', name: '木耳（水发）', energyKcal: 27, sodiumMg: 8.5 },
   seaweed: { code: '052008', name: '紫菜（干）', energyKcal: 250, sodiumMg: 710.5 },

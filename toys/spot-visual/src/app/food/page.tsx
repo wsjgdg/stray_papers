@@ -10,6 +10,8 @@ import { getDishIngredients, SODIUM_BANDS } from '@/lib/ingredient-nutrition';
 import { DISH_SODIUM, SODIUM_DATASET_SIZE } from '@/lib/dish-sodium.generated';
 import { getSimilarTaste, tierOf, TIER_LABEL, TIER_STYLE } from '@/lib/taste-similar';
 import { downloadShareCard } from '@/lib/share-card';
+import { TasteTest, DishCompare } from '@/components/food/food-panels';
+import { DISH_IMPACT } from '@/lib/dish-impact.generated';
 import { resolveCityFood } from '@/lib/food-city';
 import { loadCityGeo, getCachedCityGeo, type CityGeo } from '@/lib/city-geo';
 import { TasteRadar } from '@/components/food/taste-radar';
@@ -43,6 +45,10 @@ export default function FoodPage() {
   const [cityErr, setCityErr] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showBasis, setShowBasis] = useState(false);
+  /** 右侧工具面板：无 / 口味测试 / 对比 */
+  const [tool, setTool] = useState<'none' | 'test' | 'compare'>('none');
+  const [cmpL, setCmpL] = useState(PROVINCE_FOODS[0]);
+  const [cmpR, setCmpR] = useState(PROVINCE_FOODS[3]);
   /** 地图配色：按大区 / 按菜系 */
   const [colorBy, setColorBy] = useState<'region' | 'cuisine'>('region');
   /** 地图首帧骨架屏，绘制完成后隐藏 */
@@ -313,7 +319,21 @@ export default function FoodPage() {
               <ChevronLeft className="w-3.5 h-3.5" /> 返回全国
             </button>
           )}
-          <div className="ml-auto inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5 text-xs shrink-0">
+          <div className="ml-auto inline-flex items-center gap-1 shrink-0">
+            <button
+              onClick={() => setTool((t) => (t === 'test' ? 'none' : 'test'))}
+              className={cn('px-2.5 py-1 rounded-lg border text-xs font-medium transition-colors', tool === 'test' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-400')}
+            >
+              口味测试
+            </button>
+            <button
+              onClick={() => setTool((t) => (t === 'compare' ? 'none' : 'compare'))}
+              className={cn('px-2.5 py-1 rounded-lg border text-xs font-medium transition-colors', tool === 'compare' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-400')}
+            >
+              对比
+            </button>
+          </div>
+          <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5 text-xs shrink-0">
             {([['map', '味道地图'], ['atlas', '口味图谱']] as const).map(([k, label]) => (
               <button
                 key={k}
@@ -435,6 +455,13 @@ export default function FoodPage() {
             </div>
           )}
         </section>
+        )}
+
+        {tool === 'test' && (
+          <TasteTest onPick={(p) => enterProvince(p.name)} />
+        )}
+        {tool === 'compare' && (
+          <DishCompare left={cmpL} right={cmpR} onLeft={setCmpL} onRight={setCmpR} />
         )}
 
         {/* ══ 地图下方：菜品说明 · 城市清单 · 分享卡 ══
@@ -691,6 +718,21 @@ export default function FoodPage() {
                         <div className="mt-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
                           <div className="h-full rounded-full bg-emerald-500" style={{ width: `${Math.max(2, sd.pct)}%` }} />
                         </div>
+                        {(() => {
+                          const im = DISH_IMPACT[panel.dish];
+                          if (!im) return null;
+                          return (
+                            <div className="mt-1 text-[10px] text-gray-500">
+                              {im.price != null && <span>每份 <b>{im.price} 元</b></span>}
+                              {im.carbon != null && <span className="text-gray-300"> · </span>}
+                              {im.carbon != null && <span>碳足迹 <b>{im.carbon} g</b></span>}
+                              {im.water != null && <span className="text-gray-300"> · </span>}
+                              {im.water != null && <span>水 <b>{im.water} L</b></span>}
+                              {im.land != null && <span className="text-gray-300"> · </span>}
+                              {im.land != null && <span>土地 <b>{im.land} m²</b></span>}
+                            </div>
+                          );
+                        })()}
                         <p className="text-[10px] text-gray-400 leading-relaxed mt-1">
                           各家做法差异大，此处是全库同菜名的实测值，非本页自评口径。
                         </p>
@@ -714,6 +756,11 @@ export default function FoodPage() {
                               <span>{it.energyKcal} kcal</span>
                               <span className="text-gray-300">·</span>
                               <span>钠 {it.sodiumMg} mg</span>
+                              {it.gi != null && (
+                                <span className="text-amber-600" title={'GI 对应食物：' + it.giSource}>
+                                  GI {it.gi}
+                                </span>
+                              )}
                               {it.note && <span className="text-gray-400">（{it.note}）</span>}
                             </div>
                           ))}
