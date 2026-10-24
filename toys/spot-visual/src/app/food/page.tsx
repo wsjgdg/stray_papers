@@ -60,6 +60,15 @@ export default function FoodPage() {
   const [tool, setTool] = useState<'none' | 'test' | 'compare'>('none');
   const [cmpL, setCmpL] = useState(PROVINCE_FOODS[0]);
   const [cmpR, setCmpR] = useState(PROVINCE_FOODS[3]);
+  /** 小屏（手机）判断，用于给地图/雷达换尺寸 */
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const m = window.matchMedia('(max-width: 639px)');
+    const h = () => setIsMobile(m.matches);
+    h();
+    m.addEventListener('change', h);
+    return () => m.removeEventListener('change', h);
+  }, []);
   /** 地图配色：按大区 / 按菜系 */
   const [colorBy, setColorBy] = useState<'region' | 'cuisine' | 'heat'>('region');
   /** 地图首帧骨架屏，绘制完成后隐藏 */
@@ -373,10 +382,10 @@ export default function FoodPage() {
   };
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 overflow-x-hidden">
       {/* Header */}
       <div className="mb-5">
-        <div className="flex items-center gap-2 mb-1">
+        <div className="flex flex-wrap items-center gap-2 mb-1">
           <UtensilsCrossed className="w-5 h-5 text-rose-500" />
           <h1 className="text-xl font-bold text-gray-900">中国味道 · 一省一菜 → 一市一味</h1>
           {drill && (
@@ -431,7 +440,7 @@ export default function FoodPage() {
         {/* ══ 味道地图 / 口味图谱 ══ */}
         {view === 'atlas' ? (
           <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <TasteScatter active={drill} onPick={(n) => enterProvince(n)} height={620} />
+            <TasteScatter active={drill} onPick={(n) => enterProvince(n)} height={isMobile ? 320 : 620} />
             <p className="px-4 py-2 text-[11px] text-gray-400 border-t border-gray-100">
               横轴辣度、纵轴甜度，点越大越鲜；颜色为菜系。点击任意点下钻到该省。
             </p>
@@ -448,7 +457,7 @@ export default function FoodPage() {
             option={option}
             onSelect={onSelect}
             maps={maps}
-            height={620}
+            height={isMobile ? 380 : 620}
             className="w-full [&_canvas]:!h-full"
           />
 
@@ -517,7 +526,7 @@ export default function FoodPage() {
                 </button>
               ))}
           </div>
-          <div className="absolute left-3 top-3 text-[10px] text-gray-500 bg-white/85 rounded px-1.5 py-0.5">
+          <div className="absolute left-3 top-3 text-[10px] text-gray-500 bg-white/85 rounded px-1.5 py-0.5 hidden sm:block">
             可滚轮缩放 / 拖拽 · ←→ 切省 ↑↓ 切市{drill && cityGeo ? ` · 共 ${cityRows.length} 个地级行政区` : ''}
           </div>
 
@@ -708,7 +717,7 @@ export default function FoodPage() {
               </div>
 
               <div className="flex justify-center mb-2">
-                <TasteRadar taste={selected.taste} color={panelColor} size={240} />
+                <TasteRadar taste={selected.taste} color={panelColor} size={isMobile ? 190 : 240} />
               </div>
 
               {/* 口径披露：逐维度标出来源等级，有数据的给数据，没有的直接说没有 */}
