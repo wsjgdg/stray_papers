@@ -68,6 +68,7 @@
 | R92 | README 收尾段串写修复（文档追改轮，生产代码零改动） | 用户报「readme 和 worklog 内容串了」。根因：README 收尾段「RX 收官」段自 R85（c147971）起整段替换式更新，但 f249f5e（R86）/19b476f（R87）/db4453c（R88）三代只改标签号不改内容 ⟹ 「R88 收官」下挂的是 R85 内容，R85–R88 真身收官全缺失。修复：R88/R87/R86 三段补回 + 原段标签改回 R85 + 标题改「R67–R92 全部闭环」 |
 | R93 | README 职责重构：只留功能/实现/使用，R 轮次记录归 worklog（文档重构轮，生产代码零改动） | 用户澄清职责边界：「readme 不应该写工作流程和完成进度（R）…只放现有功能和结构、实现方式、使用说明」。重构后 README 六节：简介 → 运行 → 功能 → 物理与数值方法 → 架构 → 技术栈。**删两节**：`## 验证`（bak L2178 起，CDP 通过率总表）、`## 后续方向`（bak L2443 起，backlog + R67–R72 计划表）——均属工作流程/进度，归 worklog。全文清扫 R1–R92 轮次引用：批次一 `/tmp/r93_clean.py` 261 对（260 命中：删 5 块、悬空引用修 5 处、标题清理、轮数缩写 `R1/single`→`R=1/single` 防混淆、架构图 10 条目 + 12 处注释）+ 批次二 `/tmp/r93_patch2.py` 11 对（修 5 MISS 转录误差 + 4 漏网行内引用）。误抓保留 2 处（L508 `potR2` 参数名、L1934 `R32F` 纹理格式名）。diff：删 440 / 增 304，净 −136 行（2503→2367） |
 | R94 | 手机竖屏适配公共模块化：顶栏收编 + 汉堡抽屉 + 底部 dock | 用户指令「做小屏适配，尽量用公共模块，少每页独立维护」。盘点病灶：36 处同构顶栏媒体查询（12 页 × 1500/1400/900）+ 12 页 `#xxTop` 规则族重复、≤900 只隐导航 ⟹ 12 页互链手机端不可达、390px 竖屏面板+HUD 必重叠。新增 `src/core/responsive.js`（约 180 行）四件套：① 顶栏三档收编公共类 `.qtop`（差异值 5 页各 1–3 行属性选择器，7 页零差异）② ≤900 汉堡抽屉（桌面 `.qnav{display:contents}` 逐位不变）③ ≤860 底部 dock 三态 + 面板/HUD 转底部 sheet + stage 内联让位（`dataset.qfRestore` 精确还原）④ `injectResponsive()` DOM 增强包 `queueMicrotask`。六坑：时序（innerHTML 重写清 dock ⟹ microtask）、CSS 特异性三轮（类输 id ⟹ 删本地族 ⟹ 差异行压响应段 ⟹ 终局属性选择器 (0,2,0) vs `.qtop.qtop` (0,2,0) 后注入赢）、styles.js 跨行删除残骸吞 `#panel` 规则、flag drawFan 负半径崩（numW 收缩 + 三重 clamp）、responsive.js 两处笔误（冒号/`}}}`）、dock 死胡同（off 态 dock display:none ⟹ 无恢复路径；改常驻退让 opacity .4）。cdp92 **23/23** + cdp90 4/4 + cdp91 12/12 + pot85 38/38 + pot87 47/47；28 files，2726+/706− |
+| R103 | qcircuit Bell/GHZ 联合基测量（R98 诚实限制 ③ 后半兑现） | R98 限制 ③ 后半「每个 measure 门仍是单比特单次——Bell 基测量需先搭 CNOT+H 线路」兑现。**物理层**（src/physics/qcircuit.js，+55 −2）：`qcMeasureJoint(s, qubits, rng, basis)` = 「旋转-测量-旋回」k 比特版——制备线路 P 的逆序作用（P 自伴 ⟹ P†=逆序）→ 顺序 Z 测 k 次（投影算符互交换 ⟹ 等价联合 Z 测量）→ P 旋回；`JOINT_PREP`（bell: H+CNOT；ghz: H+CNOT+CNOT）+ `qcJointK`（位数校验）；`qcExec` measure 分支联合支持（`{op:'measure', qubits, basis, cbit}` 写 k 个连续经典位，记录 joint:true）。**UI**（src/qcircuit.js，+82 −15）：测量基下拉 +Bell/GHZ 两项、第二/第三位选择行随 basis 显隐、互异校验 toast、cbit+k−1≤7 夹紧、测量盒跨位竖线连中点 + M_bell/M_ghz 与 `→c0+2` 标注、HUD 经典位读数泛化到 k 位（传态 'm0 m1' 格式逐字不变）。**产品侧真 bug 一个**：basis change 不触发 `syncGateEditor()` ⟹ 切到 bell/ghz 后第二/三位行不显示（n=2 下 ghz 插入必败且无从修正）——cdp108 A3/A4 探针实证后一行修复。**验证**：pot103 新套件 **31/31**（Bell 四态确定+复原 / 统计与 P\|j⟩ 测后态 / 手动等价 3n×12 种子 / 联合≠逐比特判别器 / **Bell 基传态 7 门端到端 F=1** / 经典位 / 纠缠交换 / GHZ 八态穷举 / 异常 / 性能 0.05ms）；cdp108 新浏览器套件 **18/18**（五基选项+行显隐 / 插入格式+互异拒绝+cbit 夹紧 / 执行与 Node 同种子逐位对账含 6 种子扫描 / 7 门传态端到端 F=1 / dist 通道 / 零 console）；全量零回归 **2409 断言 0 fail**（pot75/76/80/100/101/102/103 + cdp75/76/92/101/102/103/105/106/107/108）。**测试侧十二处自我更正**（产品仅上述一个）：pot103 八处——① bell() 助手踩 `qcNewState` 预设 `re[0]=1` 陷阱（**项目内第三次**）；② B1 期望错（\|++⟩ 是 {[0,0],[0,1]} 各半非四路均匀——⟨++\|Φ±⟩=1/2 反相分支抵消）；③ B2/B3 索引注释标反（index 0/2=\|+⟩\|0⟩、0/1=\|0⟩\|+⟩）且声明错（皆四路均匀）；④ B4 rigged-rng 强制分支设计错（\|++⟩ 坍缩后 p1 即变 1，强制不可靠）⟹ 改「观测驱动」对账 P\|j⟩；⑤ D1 \|01⟩ 在 Bell 基下非确定性（无计算基态确定性——Bell 基无乘积态）；⑥ E2 门数误算 8，实为 **7**（prep2+Bell2+joint1+cond2）；⑦ G1 Ψ−⊗\|11⟩ 分量索引误写 12/15（实为 Φ+⊗Φ−）⟹ 13/14；⑧ H3 误以为 \|111⟩ 是 GHZ 基态 ⟹ 改八态 P\|j⟩ 穷举；cdp108 四处——⑨ B3 选择器取到「↑」按钮；⑩ C3 忘把页面重置回 n=2 bell 线路（C2 后是 n=3 ghz 线路，对账错位）；⑪ D 节 θ 滑块 min=−3.1416/step=0.01 ⟹ 设 '1' 被吸附到 0.9984，Node oracle 与 HUD 目标必须回读吸附后真实角度；⑫ E1 dist 陈旧（src 修复后未重建 bundle）。**索引约定实证**（本族第四次踩坑）：index = Σ b_k·2^k（qubit k 在 bit k，小端索引；`qcBits` 显示串才是 big-endian "q1q0"）——pot103 B/D/G/H 全节按此重写。README：门表新行/编辑沙盒段/数值事实 header+facts 表+浏览器行/HUD 段/新增「联合测量」小节/传态限制与诚实限制 ③④ 改写/dist 树大小全量刷新（顺带纠正 shor/flag 等存根页被记作 182 KB 的陈旧）；worklog R103 条目；dist qcircuit 104.1→112.0 KB（noise/qec 各 +55 −2 为 bundler 内联共享物理模块纯新增） |
 | R102 | qcircuit 任意子系统熵（R98 诚实限制 ⑥ 兑现） | 限制 ⑥ 原「约化子系统固定低 k_A 位，取任意子系统须先搭 SWAP」兑现。**物理层**（src/physics/qcircuit.js，+33 行）：`qcPermuteBits(s, mask)` 把选中位（升序）移低位、其余位（升序）移高位——**索引精确重排**（O(dim·n)，不动浮点、无数值误差，无第二套位序约定），`qcEntropySubset(s, mask)` 置换后复用既有 `qcReducedRho`+Jacobi 求谱（≤6 位，kA=6 求谱 ~25ms）。**UI**（src/qcircuit.js，+40 行）：面板「选位」按钮组（随 n 重建、事件委托、点击切换 mask）、HUD 新行 S(选中 A)、>6 位 toast 拒绝、`reset()` 统一夹紧 mask（滑块与 setParam 两条 n 变更路径）、调试句柄 `setSub/getSub/subEntropy` 与点击同实现。**验证**：pot102 新套件 **16/16**（置换正确性 4 法交叉含独立第二实现全 mask 逐点 / 已知态 Bell·GHZ(4)·W(3)·乘积态 / S(A)=S(Ā) worst **3.44e-15** / 边界 4 节）；cdp107 新浏览器套件 **13/13**（boot·点击切换·ghz 预设·n 夹紧两路径·>6 位拒绝·调试句柄·dist 通道·零 console）；全量零回归 **2360 断言 0 fail**（pot75/76/80/100/101/102 + cdp75/76/92/101/102/103/105/106/107）。**测试侧十一处自我更正**（产品零 bug）：pot102 六处——① 补集 round-trip 前提错（置换非对合，逆映射须由参考实现导出）；② CNOT 形状 `{q,c}` 错（目标默认 bit0）⟹ `{c,q2}`；③ `w3` 手写 `re[j]=1` 未清 `re[0]` 踩 `qcNewState` 模块注释明文警告的陷阱（连踩两次）；④ D4 mask `0b1010101` 只有 4 位；⑤ C3 期望错（两比特最大混合是 I/4 ⟹ ln4）；⑥ B3 忘 |01⟩+|10⟩ 相干 ⟹ W(3) 对谱 {2/3,1/3}；cdp107 五处——① A1/B1 漏 `runAll()`（paused=1 是 |00⟩，S=0 本正确）；② C1 末击点 q3 是关掉它（全集应点 q0）；③ E1 循环点 q0 把它关掉只得 5 位（第 7 位因此被误收）⟹ k=1..5；④ F 节未 runAll 致 oracle 不匹配 + `0bFFFFFFFF` 语法错 ⟹ `0xFF`；⑤ G1 dist 陈旧重建。**环境记录**：跨会话静态服务 8765 死亡 ⟹ cdp101 假失败 103 项（A2–A8 全 FAIL），重启 `python3 -m http.server 8765` 后 111/111 复原——非产品回归。README：facts 纠缠行/熵行/浏览器行/HUD 段/架构图/诚实限制 ⑥⑦ 更新 + 新增「任意子系统熵」小节；worklog R102 条目；dist qcircuit 102.5→104.1 KB |
 | R101 | qcircuit 编辑器 cond 受控经典门（R98 诚实限制 ④ 兑现后半） | R98 限制 ④ 后半「经典前馈仍由预设生成」兑现：编辑器门下拉 17→18（+受控经典门），新增经典位 cbit 行 + 内部门行（12 种单比特门），cond 模式隐藏控制位 select；`_editorGate()` 构造 `{op:'cond', cbit, gate:{op,q,theta?}}`；**cbit 与 q 不同命名空间不要求互异**（与 CNOT 本质区别）；物理层零改动（R76 `qcExec` cond 分支早已支持）。**验证**：pot101 新套件 **24/24**（cond on/off 语义 / 手动传态 F=1 对 5 态×20 seed / 与 `qcTeleportGates` 预设逐字段相等 / 无修正分支平均 F=**1/2 精确**——Bell 测量四分支恒均匀 1/4 / 陈旧 cbit / 覆写 / 编辑器形状）；cdp106 新浏览器套件 **17/17**（三层加固 harness；手动传态 10 门 click 端到端 F=1 对滑块量化后 θ/φ；dist 同码；零 error）；全量零回归 2331 断言（pot75/76/80/100/101 + cdp75/76/92/101/102/103/105/106）。**测试侧九处自我更正**（非产品 bug）：① pot101 slice 索引把测量本身切掉；② rigged rng 方向反（`rng()<p1?1:0` ⟹ −1 恒 bit=1）+ p1=1 态强制不可能分支投零；③ **保真度公式潜伏 bug**——`inner²`（实部平方）应为复模方 `|⟨t|q2⟩|²`，同全局相位时蒙对、有相对相位时系统性低估（pot100 同款一并修复）；④ cdp106 滑块 0.01 量化吸附 + n=2 下 q=2 越界；⑤ 传态门数 10 非 11；⑥ cdp106 D1 两轮——Node 目标未用量化后 θ/φ ⟹ 回读门上实际值；`q2marginal` 用 `a.bits[2]` 提 q2 但 `qcBits` 是 big-endian 字符串 "q2q1q0"（bits[2] 是 q0，fid 0.229 根因）⟹ 改 `(a.i>>2)&1`——README「q0 是最低位唯一约定」在测试侧再次踩坑；⑦ p 索引混淆（q0=1 是 p[1]）；⑧ cdp105 A1 门数 17→18 未同步（R101 自身造成的腐烂）；⑨ cdp76 P7 停留在 R98 整合前 13 条导航口径（nav.js「腐烂四轮」同款）⟹ 更新 7 条口径 + 新增 P7b 六跳转桩根级+dist 存活检查。**诚实性纠正**：R100 README ② 曾写「编辑器可手动插 measure + cond 组合」——`git show 9bd1e03` 实证当时无 cond 选项，属超前误述，R101 起成为事实。README：门表/编辑沙盒段/数值事实表补 cond，限制 ② 改「无循环分支型控制流但瞬时前馈可手搭」、④ 17→18 种门；worklog R101 条目；dist qcircuit 97.4→102.5 KB（noise/qec 各一行 R100 注释同步纯注释） |
 | R100 | qcircuit X/Y 基测量一键化（R98 诚实限制 ③ 兑现） | 延续 R99「诚实限制逐项兑现」。限制 ③ 原「测量只有 Z 基」是教学刚需（Bell 检验在 X/Y 基测）。**物理层**（src/physics/qcircuit.js）：`qcMeasureQubit` 加可选 `basis='z'\|'x'\|'y'`，X/Y 基用**旋转-测量-旋回**（X: H·M_Z·H；Y: S†H·M_Z·H·S，|+i⟩=S·H|0⟩ ⟹ U=H·S† 映 Y 本征基到 Z）；Z 内核抽私有 `qcMeasureZ`；`qcExec` 透传 basis 并写记录；未知 basis 抛错。两条性质：p(±)=(1±⟨P⟩)/2 精确（⟨X⟩=2Reρ01、⟨Y⟩=−2Imρ01——注释初版符号写反已改）；测后态即该基本征态，cbit 0=+1 本征值。**UI**（src/qcircuit.js）：measure 模式显「测量基」行（Z/X/Y select，title 明示本征值语义）；`_editorGate()` 构造 `{op,q,cbit,basis}`；`gateView` 标注 M_z/M_x/M_y；basis 与 c/theta 同为持久编辑器状态（切走切回保留、select 可见）。**验证**：pot100 新套件 **24/24**（本征态确定性 40 seed / 测后态即本征态 / 概率公式逐态 4σ 对账 / **Bell Y-Y 反关联**最强判别 / X-X 正关联 / Z-Z 零回归 / X-Z 交叉均匀 / teleport Z 基保真度 1 / X 基 cond 前馈）；cdp105 扩 K 节 23→**33/33**；零回归 pot75 31/31 · cdp75 16/16 · cdp92 39/39 · cdp101 111/111 · cdp102 55/55 · cdp103 29/29（首跑 27/29 定性为测试基建 heisenbug——cdp103 无进程组加固致孤儿 chromium 干扰 + goto load 事件竞态，已按 cdp92 同款三层加固，复跑 29/29）。**测试侧两处自我更正**：① A2 把 |−⟩ 误写成 X·H|0⟩（实为 |+⟩，应 H|1⟩）；② K6 误期「不传 basis 重置 z」——basis 是持久状态，改断言为「新页面默认 z + 持久语义」双查 |
@@ -1551,6 +1552,127 @@ dist 重建：qcircuit 97.4→102.5 KB；noise/qec 各一行注释同步（R100 
 修正随共享物理模块跨页传播，随本轮一并入库，diff 已核实为纯注释）。
 
 ---
+
+## R103（2026-10-26）qcircuit Bell/GHZ 联合基测量（R98 诚实限制 ③ 后半兑现）
+
+### 立项动机
+
+R98 诚实限制 ③ 后半：「每个 measure 门仍是单比特单次——联合测量/中间结果的多比特
+联合基（如 Bell 基测量需先搭 CNOT+H 线路）仍由预设与手动搭建表达」。⑤（QFT 门次序）
+与 ⑥ 已由 R100/R102 兑现，③ 的后半是 qcircuit 页最后一条结构性限制。R101 的 cond
+受控经典门已让「测量 → 前馈」可手搭，联合基是最后一块拼图；兑现后 Bell 基传态从
+10 门（CNOT+H+M+M）降到 7 门（1 个联合测量）。
+
+### 一、实现（物理层 +55 −2，UI 层 +82 −15）
+
+**物理层**（src/physics/qcircuit.js，插在 `qcMeasureZ` 后）：
+
+- `JOINT_PREP`：`bell: qs => [H(qs[0]), CNOT(qs[0]→qs[1])]`；
+  `ghz: qs => [H(qs[0]), CNOT(0→1), CNOT(0→2)]`——制备线路 P 即「把计算基映到
+  联合基」的那一串门。
+- `qcJointK(basis)`：bell=2 / ghz=3；未知 basis 抛错。
+- `qcMeasureJoint(s, qubits, rng, basis)`：「旋转-测量-旋回」的 k 比特版——
+  P 的**逆序**作用（P 全自伴门 ⟹ P†=逆序）→ 顺序 `qcMeasureZ(qubits[i])` k 次
+  （k 个投影算符互交换 ⟹ 等价一次联合 Z 测量）→ P 旋回。校验：位数/互异/范围。
+- `qcExec` 的 measure 分支：`op.qubits` 存在即走联合路径，经典位从 `op.cbit` 起
+  写 k 个连续位，记录 `{kind:'measure', qubits, cbit, bits, basis, joint:true}`。
+- 头注释约定 ④ 补指针：联合基经制备线路逆序迁到计算基后测 Z，与 R100 的
+  「旋转-测量-旋回」、R102 的位置换同族。
+
+**UI 层**（src/qcircuit.js）：
+
+- `gateView` measure 分支：`{qubits}` ⟹ `M_bell`/`M_ghz`，wires=全部被测位。
+- 面板：测量基下拉 +Bell/GHZ 两个 option；新增 `#qcGateQ2Row`/`#qcGateQ3Row`
+  （第二位/第三位 select）；`_bind` 加 q2/q3/basis 的 change 处理器。
+- `_editorGate()` measure 联合分支：被测位互异校验（toast 拒绝）、
+  `cbit = clamp(c, 0, 8−k)`（经典位 8 位上限）。
+- `syncGateEditor()`：q2/q3 随 n 夹紧（默认 `(q+1)%n`/`(q+2)%n` 保互异）；
+  `jm` 模式行显隐（bell 显 Q2、ghz 显 Q2+Q3）；cbit select title 动态说明写 k 位。
+- 绘制层：联合测量盒跨位竖线 + 中点盒 + `→c0+2` 标签；`renderGateList` 标注
+  `q0q1→c0+2`。
+- `renderHud` 的 hCbits 泛化：cbN = 最高 `cbit+k`，显示至该位（传态预设的
+  'm0 m1' 两位读数格式逐字不变，cdp76 P2 依赖保住了）。
+
+### 二、物理结果（pot103 31/31）
+
+- **Bell 四态确定性**：P|00⟩=Φ+→[0,0]、P|10⟩=Φ−→[1,0]、P|01⟩=Ψ+→[0,1]、
+  P|11⟩=Ψ−→[1,1]，40 seed 全同 + 测后态精确复原（≤1e-12）。
+- **统计（4000 seed）**：|++⟩→{[0,0],[0,1]} 各半（⟨++|Φ±⟩=1/2 反相分支抵消）；
+  |+⟩|0⟩、|0⟩|+⟩→四路均匀 1/4；|00⟩→{[0,0],[1,0]} 各半。**无计算基态在 Bell 基下
+  确定性**（Bell 基四态皆纠缠，无乘积态）；测后态恒 = P|j⟩（j=观测 outcome）。
+- **最强判据**：与手动线路（P†+M_Z×k+P）逐位等价——3 种 n × 12 种子 bits+振幅
+  ≤1e-12（Bell）、n=3/4 × 10 种子（GHZ）。
+- **联合 ≠ 逐比特**（判别器）：Bell 态上 X⊗X 逐比特测后 C=0，Bell 联合测后
+  C=1——乘积基投影算符可因子分解，纠缠联合基不可。
+- **Bell 基传态 7 门端到端 F=1**（prep2+Bell2+joint1+cond2；手动版 10 门），
+  5 态 × 20 种子 worst 2.22e-16。
+- **纠缠交换签名**：(Φ+_{01}⊗|00⟩_{23}+Ψ−_{01}⊗|11⟩_{23})/√2 测 (q0,q1)：
+  [0,0]⟺全场 Φ+⊗|00⟩（rest=|00⟩）、[1,1]⟺全场 Ψ−⊗|11⟩（rest=|11⟩），各半。
+- **GHZ 八态穷举**：P_ghz|j⟩（j=0..7）全部确定 outcome j + 精确复原。
+- 经典位写 k 个连续位（cbit+k−1≤7 夹紧）；n=8 单次 0.05ms。
+
+### 三、验证
+
+- **pot103 新套件 31/31**（A 确定性 / B 统计+P|j⟩ / C 手动等价 / D 判别器 /
+  E 传态 / F 经典位 / G 纠缠交换 / H GHZ / I 异常 / J 范数+性能）。
+- **cdp108 新浏览器套件 18/18**（A 五基选项+行显隐 / B 插入格式+互异拒绝+cbit
+  夹紧 / C 执行与 Node 同种子逐位对账（bell@|00⟩ + ghz@GHZ 态 + 6 种子扫描，
+  ampdiff 0.0e+0）/ D 7 门传态端到端 F=1.000000000 含 HUD hFid / E dist 通道 /
+  F 零 console）。
+- **全量零回归 2409 断言 0 fail**：pot75 31 · pot76 14 · pot80 1928 ·
+  pot100 24 · pot101 24 · pot102 16 · pot103 31 + cdp75 16 · cdp76 10 ·
+  cdp92 39 · cdp101 111 · cdp102 55 · cdp103 29 · cdp105 33 · cdp106 17 ·
+  cdp107 13 · cdp108 18。
+
+### 四、本轮修的问题（产品侧 1 个 + 测试侧 12 处自我更正）
+
+**产品侧真 bug（cdp108 A3/A4 实证）**：`#qcGateBasis` 的 change 处理器只更新
+`edit.basis`、不调 `syncGateEditor()`（op/inner 两个 handler 都调了）⟹ 用户把
+测量基切到 bell/ghz 后，第二/第三位选择行**不显示**——默认 q2=1/q3=2 在 n=2 的
+ghz 下越界且夹紧后与目标位重复，插入必败而用户无从修正（行是隐没的）。修复：
+handler 补 `this.syncGateEditor()`（src/qcircuit.js:278）。教训：**行显隐状态只在
+syncGateEditor 里更新，任何改变显隐条件的输入都必须触发它**——与 R101「cbit 与
+量子位不同命名空间」同类：编辑器状态的派生显示不能只改数据不改视图。
+
+**测试侧自我更正（产品零 bug，全部为期望/声明/基建错误）**：
+
+| # | 位置 | 误声明 | 实证更正 |
+|---|---|---|---|
+| 1 | pot103 bell() 助手 | 手写 `re[j]=1` 叠在 `qcNewState` 预设 `re[0]=1` 上 | **项目内第三次**踩此陷阱（pot102 w3 连踩两次后注释已明文警告）⟹ 助手先 `s.re[0]=0` |
+| 2 | pot103 B1 | \|++⟩ Bell 测量四 outcome 均匀 | 实为 {[0,0],[0,1]} 各半——⟨++\|Φ±⟩=1/2 使反相分支抵消；曾据此误读 cnt 索引疑产品，插桩实证产品正确 |
+| 3 | pot103 B2/B3 | index 0/1 标为 \|+⟩\|0⟩、「校验固定」 | index 约定 **qubit k 在 bit k**（小端）：0/2 才是 \|+⟩\|0⟩；且两态皆四路均匀 |
+| 4 | pot103 B4 | rigged rng 强制四分支 | \|++⟩ 一旦坍缩 p1 即变 1，强制分支不可靠（j=2/3 diff 1.414）⟹ 改「观测驱动」：测出什么 j 就对账 P\|j⟩ |
+| 5 | pot103 D1 | \|01⟩ 确定给 [0,1] | P†\|01⟩=(\|01⟩+\|10⟩)/√2 是 2 路随机；无计算基态在 Bell 基下确定性 ⟹ 改 \|00⟩（{[0,0],[1,0]} 各半 + 测后态=P\|j⟩） |
+| 6 | pot103 E2 | 传态 8 门 | 实为 **7** 门（prep2+Bell2+joint1+cond2=7；手搭版 10） |
+| 7 | pot103 G1 | Ψ−⊗\|11⟩ 分量写 re[12]/re[15] | 那其实是 Φ+⊗Φ−（实测 n00=299 n11=0）⟹ 正确 re[13]=−0.5、re[14]=+0.5 |
+| 8 | pot103 H3 | \|111⟩ 是 GHZ 基态 | P†\|111⟩=(\|000⟩−\|100⟩)/√2 是叠加，实测给 [0,0,0] ⟹ 改八态 P\|j⟩ 穷举（ALL 8 PASS） |
+| 9 | cdp108 B3 | 选择器 `#qcGateList .gate button`[1] | 每个门有 sel/up/down/del 四个按钮，[1] 是「↑」⟹ 改 `.gate`[1] 内 `button[data-act="sel"]` |
+| 10 | cdp108 C3 | 种子扫描直接开跑 | C2 后页面是 n=3 的 ghz 线路，对账错位（ampdiff 0.707）⟹ 先 goto 重建 n=2 bell 线路 |
+| 11 | cdp108 D | θ 设 '1' 即 1.0 | range 输入 min=−3.1416/step=0.01 ⟹ 浏览器吸附到 **0.9984**（φ 0.4→0.3984）；Node oracle 与 HUD 目标（qcTargetAmps(state.θ,state.φ)）都必须回读吸附后真实角度，且 setParam 同步 state 后再搭线 |
+| 12 | cdp108 E1 | dist 通道失败 | src 修复后未重建 bundle ⟹ `node scripts/build-standalone.mjs` 后复原 |
+
+**索引约定的第四次踩坑**（R101 第五次家族）：pot103 首轮 B/D/G/H 四节全因
+「qubit k 在 index 第 k 位（小端）」误写为高位而失败——`qcBits` 的显示串才是
+big-endian "q1q0"。教训同前：**提位必须 `(i>>k)&1`，显示串不可当索引用**。
+
+### 五、诚实限制（README 同步更新）
+
+- 联合基只开放 Bell(2)/GHZ(3) 两族——任意 k 比特联合基需用户自选制备线路 P，
+  未开放（面板五选项是 Z/X/Y/Bell/GHZ）。
+- 经典位共 8 位 ⟹ k=3 时 cbit≤5、k=2 时 cbit≤6，越界夹紧（pot103 F 节 +
+  cdp108 B4 双验）。
+- UI 仍只到 n=8；联合测量写 k 位后 HUD 读数泛化，但传态预设两位数格式
+  （'m0 m1'）逐字保留（cdp76 P2 的回归依赖）。
+
+### 六、文档
+
+README：门表新增「联合测量 Bell/GHZ 基（R103）」行、编辑沙盒段补联合基、
+数值事实 header +facts 表 +浏览器行补 pot103/cdp108、HUD 段补经典位读数、
+新增「联合测量 Bell/GHZ 基（R103）」小节、传态「限制」段与诚实限制 ③④ 改写
+（③ 后半正是本轮兑现项）、dist 目录树大小全量刷新为实测值（顺带纠正 shor/
+gatenoise/flag/rounds 四个跳转存根被记作 111–182 KB 的陈旧记载，实际 <1 KB）。
+worklog：本条目 + 总览行。dist：qcircuit 104.1→112.0 KB；noise/qec 各 +55 −2
+（bundler 内联共享物理模块 `qcMeasureJoint`，纯新增零删除）。
 
 ## R102（2026-10-25）qcircuit 任意子系统熵（R98 诚实限制 ⑥ 兑现）
 

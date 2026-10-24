@@ -72,8 +72,12 @@ const ex = (x, d = 2) => (Number.isFinite(x) && x !== 0 ? x.toExponential(d) : '
 function gateView(g){
   const op = g.op;
   /* R100：测量盒标注基（M_z / M_x / M_y）——X/Y 基测量的结果写在经典位，
-     cbit 0 = +1 本征值、1 = −1 本征值 */
-  if (op === 'measure') return { text: 'M' + (g.basis && g.basis !== 'z' ? '_' + g.basis : '_z'), wires: [g.q], kind: 'measure', target: g.q, cbit: g.cbit, basis: g.basis || 'z' };
+     cbit 0 = +1 本征值、1 = −1 本征值。
+     R103：联合测量（qubits 数组）标注 M_bell / M_ghz， wires 跨全部被测位。 */
+  if (op === 'measure'){
+    if (g.qubits) return { text: 'M_' + (g.basis || 'bell'), wires: g.qubits.slice(), kind: 'measure', qubits: g.qubits.slice(), joint: true, cbit: g.cbit, basis: g.basis || 'bell' };
+    return { text: 'M' + (g.basis && g.basis !== 'z' ? '_' + g.basis : '_z'), wires: [g.q], kind: 'measure', target: g.q, cbit: g.cbit, basis: g.basis || 'z' };
+  }
   if (op === 'cond'){
     const inner = gateView(g.gate);
     return { text: inner.text, wires: [g.gate.q], kind: 'cond', target: g.gate.q, cbit: g.cbit };
@@ -109,7 +113,7 @@ export class QCircuitApp {
       measured: null, seed: Math.round(num('seed', 137)),
       paused: q.get('paused') === '1', edited: false, sub: 1,
     };
-    this.edit = { op: 'h', q: 0, c: -1, c2: -1, theta: Math.PI / 2, basis: 'z', cbit: 0, inner: 'x', selected: -1 };
+    this.edit = { op: 'h', q: 0, c: -1, c2: -1, q2: 1, q3: 2, theta: Math.PI / 2, basis: 'z', cbit: 0, inner: 'x', selected: -1 };
     this.gates = [];
     this.psi = null;
     this._listeners = []; this._needDraw = true; this._last = 0;
@@ -182,7 +186,9 @@ export class QCircuitApp {
           <select id="qcGateC" title="控制位 / 第二位"></select>
         </div>
         <div class="row" id="qcGateC2Row"><label>第二控制位</label><select id="qcGateC2" title="Toffoli 第二控制位"></select></div>
-        <div class="row" id="qcGateBasisRow"><label>测量基</label><select id="qcGateBasis" title="测量基：Z 计算基 / X / Y（cbit 0=+1 本征值，1=−1 本征值）"><option value="z">Z 基</option><option value="x">X 基</option><option value="y">Y 基</option></select></div>
+        <div class="row" id="qcGateBasisRow"><label>测量基</label><select id="qcGateBasis" title="测量基：Z/X/Y 单比特（cbit 0=+1 本征值，1=−1 本征值）；Bell/GHZ 联合基一次测 k 个比特、写 k 个连续经典位"><option value="z">Z 基</option><option value="x">X 基</option><option value="y">Y 基</option><option value="bell">Bell 联合基</option><option value="ghz">GHZ 联合基</option></select></div>
+        <div class="row" id="qcGateQ2Row"><label>第二位</label><select id="qcGateQ2" title="联合测量第二位（量子位；与目标位、第三位互异）"></select></div>
+        <div class="row" id="qcGateQ3Row"><label>第三位</label><select id="qcGateQ3" title="联合测量第三位（量子位；GHZ 基需三位互异）"></select></div>
         <div class="row" id="qcGateCbitRow"><label>经典位 cbit</label><select id="qcGateCbit" title="经典位：cbit=1 时执行内部门（测量结果写入的位；未测过为 0）"></select></div>
         <div class="row" id="qcGateInnerRow"><label>内部门</label><select id="qcGateInner" title="cbit=1 时作用在目标位上的单比特门"><option value="x">X</option><option value="y">Y</option><option value="z">Z</option><option value="h">H</option><option value="s">S</option><option value="sdg">S†</option><option value="t">T</option><option value="tdg">T†</option><option value="rx">Rx</option><option value="ry">Ry</option><option value="rz">Rz</option><option value="phase">P(θ)</option></select></div>
         <div class="row" id="qcGateThetaRow"><label>角度 θ</label><input type="range" id="qcGateTheta" min="-3.1416" max="3.1416" step="0.01"><output id="qcGateThetaO">—</output></div>
@@ -264,7 +270,12 @@ export class QCircuitApp {
     this.on(this.q('#qcGateQ'), 'change', e => { this.edit.q = parseInt(e.target.value, 10); });
     this.on(this.q('#qcGateC'), 'change', e => { this.edit.c = parseInt(e.target.value, 10); });
     this.on(this.q('#qcGateC2'), 'change', e => { this.edit.c2 = parseInt(e.target.value, 10); });
-    this.on(this.q('#qcGateBasis'), 'change', e => { this.edit.basis = e.target.value; });
+    /* R103：联合测量的第二/第三量子位（bell 用 q2，ghz 用 q2+q3）。
+       basis change 必须同步 syncGateEditor——否则切到 bell/ghz 后 q2/q3 行
+       不显示（cdp108 A3/A4 实证的 bug：行显隐只在 syncGateEditor 里更新）。 */
+    this.on(this.q('#qcGateQ2'), 'change', e => { this.edit.q2 = parseInt(e.target.value, 10); });
+    this.on(this.q('#qcGateQ3'), 'change', e => { this.edit.q3 = parseInt(e.target.value, 10); });
+    this.on(this.q('#qcGateBasis'), 'change', e => { this.edit.basis = e.target.value; this.syncGateEditor(); });
     this.on(this.q('#qcGateCbit'), 'change', e => { this.edit.cbit = parseInt(e.target.value, 10); });
     this.on(this.q('#qcGateInner'), 'change', e => { this.edit.inner = e.target.value; this.syncGateEditor(); });
     this.on(this.q('#qcGateTheta'), 'input', e => {
@@ -324,7 +335,26 @@ export class QCircuitApp {
       }
       return { op, q1: c, q2: c2, q3: q };
     }
-    if (op === 'measure') return { op, q, cbit: c >= 0 && c < n ? c : 0, basis: e.basis || 'z' };
+    if (op === 'measure'){
+      const basis = e.basis || 'z';
+      /* R103：Bell(2)/GHZ(3) 联合基——被测位必须互异；cbit+k−1 ≤ 7（经典位 8 位） */
+      if (basis === 'bell' || basis === 'ghz'){
+        const k = basis === 'bell' ? 2 : 3;
+        const qs = [q];
+        const extra = [e.q2 == null ? -1 : e.q2 | 0, e.q3 == null ? -1 : e.q3 | 0];
+        for (let i = 0; i < k - 1; i++){
+          const v = extra[i];
+          if (v < 0 || v >= n || qs.includes(v)){
+            this.toast(basis.toUpperCase() + ' 联合测量需要 ' + k + ' 个互异量子位');
+            return null;
+          }
+          qs.push(v);
+        }
+        const cbit = Math.max(0, Math.min(c >= 0 && c < n ? c : 0, 8 - k));
+        return { op: 'measure', qubits: qs, basis, cbit };
+      }
+      return { op, q, cbit: c >= 0 && c < n ? c : 0, basis };
+    }
     /* R101：受控经典门——cbit=1 时把内部门作用到目标位 q（qcExec cond 分支）。
        cbit 与 q 是不同命名空间（经典位 vs 量子位），不要求互异；
        未测过的 cbit 默认 0 ⟹ no-op（qcExec 的 `cres ? !!cres[cbit] : false`）。 */
@@ -395,6 +425,9 @@ export class QCircuitApp {
     e.q = Math.max(0, Math.min(n - 1, e.q | 0));
     if (e.c >= n) e.c = -1;
     if (e.c2 >= n) e.c2 = -1;
+    /* R103：联合测量的第二/第三位随 n 夹紧，默认取 q 之后的位（互异） */
+    if (e.q2 >= n || e.q2 === e.q) e.q2 = (e.q + 1) % n;
+    if (e.q3 >= n || e.q3 === e.q || e.q3 === e.q2) e.q3 = (e.q + 2) % n;
     const qEl = this.q('#qcGateQ'), cEl = this.q('#qcGateC');
     if (qEl){
       qEl.innerHTML = Array.from({ length: n }, (_, i) => `<option value="${i}">q${i}</option>`).join('');
@@ -408,7 +441,7 @@ export class QCircuitApp {
       cEl.innerHTML = (needC ? '' : '<option value="-1">无控</option>') +
         Array.from({ length: n }, (_, i) => `<option value="${i}">q${i}</option>`).join('');
       cEl.value = String(e.c);
-      cEl.title = e.op === 'measure' ? '经典位 cbit（测量结果写入）'
+      cEl.title = e.op === 'measure' ? '经典位 cbit（测量结果写入；Bell/GHZ 联合基起写 ' + (e.basis === 'ghz' ? 3 : e.basis === 'bell' ? 2 : 1) + ' 个连续位）'
         : e.op === 'toffoli' ? '第一控制位' : '控制位 / 第二位';
     }
     const c2El = this.q('#qcGateC2');
@@ -418,7 +451,17 @@ export class QCircuitApp {
       c2El.value = String(e.op === 'toffoli' ? e.c2 : 0);
     }
     const c2Row = this.q('#qcGateC2Row'); if (c2Row) c2Row.style.display = e.op === 'toffoli' ? '' : 'none';
-    /* R100：测量基行仅 measure 模式显示（Z/X/Y，默认 Z——与预设的 Z 基测量同路径） */
+    /* R103：联合测量（measure + bell/ghz 基）——第二/第三量子位行显隐与默认值。
+       bell 需 2 位、ghz 需 3 位；qubits 顺序即 outcomes → cbit+i 的写入顺序。 */
+    const jm = e.op === 'measure' && (e.basis === 'bell' || e.basis === 'ghz');
+    const q2Row = this.q('#qcGateQ2Row'); if (q2Row) q2Row.style.display = jm ? '' : 'none';
+    const q3Row = this.q('#qcGateQ3Row'); if (q3Row) q3Row.style.display = jm && e.basis === 'ghz' ? '' : 'none';
+    const qOpts = Array.from({ length: n }, (_, i) => `<option value="${i}">q${i}</option>`).join('');
+    const q2El = this.q('#qcGateQ2');
+    if (q2El){ q2El.innerHTML = qOpts; q2El.value = String(e.q2); }
+    const q3El = this.q('#qcGateQ3');
+    if (q3El){ q3El.innerHTML = qOpts; q3El.value = String(e.q3); }
+    /* R100：测量基行仅 measure 模式显示（Z/X/Y 单比特 + Bell/GHZ 联合基，默认 Z） */
     const bRow = this.q('#qcGateBasisRow'); if (bRow) bRow.style.display = e.op === 'measure' ? '' : 'none';
     const bEl = this.q('#qcGateBasis'); if (bEl) bEl.value = e.basis || 'z';
     /* R101：cond 模式——控制位 select 无语义（经典位在专用行选），隐藏避免误用；
@@ -457,7 +500,7 @@ export class QCircuitApp {
       const wires = g.op === 'cnot' || g.op === 'cz' ? `q${g.c}→q${g.q2}` :
         g.op === 'swap' ? `q${g.q1}↔q${g.q2}` :
         g.op === 'toffoli' ? `q${g.q1},q${g.q2}→q${g.q3}` :
-        g.op === 'measure' ? `q${g.q}→c${g.cbit}` :
+        g.op === 'measure' ? (g.qubits ? `q${g.qubits.join('q')}→c${g.cbit}+${g.qubits.length}` : `q${g.q}→c${g.cbit}`) :
         g.op === 'cond' ? `c${g.cbit}? q${g.gate.q}` : `q${g.q}${g.c != null ? ` ←q${g.c}` : ''}`;
       return `<div class="gate${i === this.edit.selected ? ' sel' : ''}">` +
         `<button data-act="sel" data-i="${i}" title="选中；新门插在其后">${i + 1}. ${name} ${wires}</button>` +
@@ -583,8 +626,12 @@ export class QCircuitApp {
     set('hConc', st.n === 2 ? nf(qcConcurrence(s), 6) : '（n≠2）');
     set('hZZ', st.n >= 2 ? nf(qcZZ(s, 0, 1), 6) : '—');
     set('hMeas', st.measured ? '|' + st.measured.bits + '⟩' : '未测量');
-    const cb = this.cres ? Array.from(this.cres.slice(0, 2)).join(' ') : '—';
-    set('hCbits', st.preset === 'teleport' ? cb : '—（无经典位）');
+    /* R103：经典位读数泛化——任意含测量门的线路都显示（联合测量写 k 个连续位，
+       读至最高写入位）。传态预设两位读数格式逐字不变（cdp76 P2 依赖 'm0 m1'）。 */
+    let cbN = 0;
+    for (const g of this.gates) if (g.op === 'measure' && g.cbit != null) cbN = Math.max(cbN, g.cbit + (g.qubits ? g.qubits.length : 1));
+    const cb = this.cres ? Array.from(this.cres.slice(0, cbN)).join(' ') : '—';
+    set('hCbits', cbN > 0 ? cb : '—（无经典位）');
     if (st.preset === 'teleport' && s.n === 3){
       const t = qcTargetAmps(st.theta, st.phi);
       const F = qcRhoFidelity(qcQubitRho(s, 2), t.alpha, t.beta);
@@ -659,8 +706,21 @@ export class QCircuitApp {
     const cbitCol = {};
     for (let i = 0; i < N; i++){
       const gg = this.gates[i];
-      if (gg.op === 'measure' && gg.cbit != null) cbitCol[gg.cbit] = i;
+      if (gg.op === 'measure' && gg.cbit != null){
+        /* R103：联合测量写 k 个连续经典位，逐一登记（cond 读任一位都连得上） */
+        const kb = gg.qubits ? gg.qubits.length : 1;
+        for (let b = 0; b < kb; b++) cbitCol[gg.cbit + b] = i;
+      }
     }
+    /* 测量盒的锚点 y（联合测量取全部被测位的中点，与绘制一致） */
+    const measureAnchorY = i => {
+      const gg = this.gates[i];
+      if (gg.op === 'measure' && gg.qubits){
+        const ys = gg.qubits.map(yOf);
+        return (Math.min(...ys) + Math.max(...ys)) / 2;
+      }
+      return yOf(gg.q);
+    };
     for (let i = 0; i < N; i++){
       const gv = gateView(this.gates[i]);
       const x = xOf(i);
@@ -705,7 +765,14 @@ export class QCircuitApp {
           g.textBaseline = 'alphabetic';
         }
       } else if (gv.kind === 'measure' || gv.kind === 'cond'){
-        const y = yOf(gv.target);
+        /* R103：联合测量的盒子跨全部被测位画在中点（先画竖线，同 Toffoli 风格） */
+        if (gv.joint && gv.wires.length > 1){
+          const ys = gv.wires.map(yOf);
+          g.strokeStyle = col; g.lineWidth = 1.2;
+          g.beginPath(); g.moveTo(x, Math.min(...ys)); g.lineTo(x, Math.max(...ys)); g.stroke();
+          for (const q of gv.wires){ g.fillStyle = col; g.beginPath(); g.arc(x, yOf(q), 2.6, 0, 6.2832); g.fill(); }
+        }
+        const y = gv.joint ? (Math.min(...gv.wires.map(yOf)) + Math.max(...gv.wires.map(yOf))) / 2 : yOf(gv.target);
         const size = Math.min(28, colW * 0.66, rowH * 0.66);
         /* 条件门还没收到经典位时画虚框（未执行），收到后实框 */
         const pending = gv.kind === 'cond' && this.state.step <= i;
@@ -723,11 +790,11 @@ export class QCircuitApp {
         g.font = '8px ui-monospace,monospace'; g.textAlign = 'left';
         g.fillStyle = 'rgba(250,204,21,.85)';
         g.textAlign = 'center';
-        g.fillText((gv.kind === 'measure' ? '→c' : 'c') + gv.cbit + (gv.kind === 'cond' ? '=1' : ''), x, y + size / 2 + 9);
+        g.fillText(gv.kind === 'measure' ? '→c' + gv.cbit + (gv.joint ? '+' + gv.wires.length : '') : 'c' + gv.cbit + '=1', x, y + size / 2 + 9);
         /* 经典连线：从写入该位的测量盒到条件门（正交折线，虚线） */
         if (gv.kind === 'cond' && cbitCol[gv.cbit] != null){
           const xm = xOf(cbitCol[gv.cbit]);
-          const ym = yOf(this.gates[cbitCol[gv.cbit]].q);
+          const ym = measureAnchorY(cbitCol[gv.cbit]);
           const yMid = ym + (y - ym) * 0.5;
           g.strokeStyle = 'rgba(250,204,21,.55)'; g.setLineDash([4, 3]); g.lineWidth = 1;
           g.beginPath(); g.moveTo(xm + 14, ym); g.lineTo(xm + 20, ym);

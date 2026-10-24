@@ -537,6 +537,8 @@ const NAV_HREFS = NAV.map(([h]) => h);
  *   ③ 受控门：控制位全 1 时才作用；CNOT 的 c=[control]、t=target。
  *   ④ 子系统 A = **低 k_A 位**（q0..q_{k_A−1}），环境 = 高位块；这样 reshape 成
  *      [2^{n−kA}][2^{kA}] 就是连续的，约化密度矩阵直接 Gram 求和。
+ *      （R102：任意子系统经 `qcPermuteBits` 迁到本约定后复用，见其注释；
+ *        R103：联合测量同理——纠缠联合基经制备线路逆序迁到计算基后测 Z。）
  *   ⑤ 全局相位不可观测：涉及 Rz/Rx/Ry 的断言一律用保真度 |⟨φ|ψ⟩|² 或概率，
  *      不比振幅本身（相位约定不同不是 bug）。
  *
@@ -1122,11 +1124,62 @@ function qcMeasureZ(s, q, rng){
   return out;
 }
 
+/* ---------- 联合测量（R103）：k 个比特在纠缠联合基下一次性测量 ----------
+ * 动机：单比特测量的**乘积基**（如 X⊗Y）投影算符可因子分解 ⟹ 已可由 k 次单测量
+ * 顺序表达（qcMeasureQubit ×k，投影算符互交换）。但 Bell/GHZ 这类**纠缠联合基**
+ * 的投影算符不可因子分解——必须一次性联合测量，无法拆成逐比特测量。
+ * 实现 = R100「旋转-测量-旋回」的 k 比特版：
+ *   ① 作用制备线路 P 的逆（P†；P 全部由自伴门 H/CNOT 构成 ⟹ P† = 逆序），
+ *      把联合基 {P|j⟩} 旋到计算基；
+ *   ② 对每个比特做 Z 基测量——Z 投影算符互交换 ⟹ 顺序测 k 次 ≡ 联合 Z 测量，
+ *      联合分布与测后态都与一次联合测量相同；
+ *   ③ 逆序作用 P 旋回，测后态 = P|j⟩_A ⊗ |rest_j⟩（rest 已被投影）。
+ * 经典位： outcomes[i]（qubits[i] 的结果）写 cbit+i——Bell 写 2 位、GHZ 写 3 位，
+ * cond 前馈按单位读取即可（传态协议：X^{m1}Z^{m0} 仍成立，见 pot103 E）。
+ * 标签约定：outcomes = qubits 顺序的比特串；Bell 基 P|00⟩=|Φ+⟩、P|01⟩=|Ψ+⟩、
+ * P|10⟩=|Φ−⟩、P|11⟩=|Ψ−⟩（H(q_a)·CNOT(q_a→q_b)，与 bell 预设同款制备线路）。 */
+const JOINT_PREP = {
+  /* 值 = 制备线路 P（把 |j⟩ 送到联合基态；顺序即门序） */
+  bell: qs => [{ op: 'h', q: qs[0] }, { op: 'cnot', c: qs[0], q2: qs[1] }],
+  ghz: qs => [{ op: 'h', q: qs[0] }, { op: 'cnot', c: qs[0], q2: qs[1] }, { op: 'cnot', c: qs[0], q2: qs[2] }],
+};
+function qcJointK(basis){
+  const p = JOINT_PREP[basis];
+  if (!p) throw new Error('unknown joint measure basis ' + basis);
+  return p([0, 1, 2]).length;   /* 用占位位跑一遍数门数 ⟺ 联合基的比特数 */
+}
+function qcMeasureJoint(s, qubits, rng, basis = 'bell'){
+  const P = JOINT_PREP[basis];
+  if (!P) throw new Error('unknown joint measure basis ' + basis);
+  const k = qcJointK(basis);
+  if (!Array.isArray(qubits) || qubits.length !== k) throw new Error('joint measure ' + basis + ' needs ' + k + ' qubits');
+  const seen = new Set();
+  for (const q of qubits){
+    if (!Number.isInteger(q) || q < 0 || q >= s.n) throw new Error('joint measure qubit out of range: ' + q);
+    if (seen.has(q)) throw new Error('joint measure qubits must be distinct: ' + qubits.join(','));
+    seen.add(q);
+  }
+  const prep = P(qubits);
+  const outcomes = [];
+  for (const g of [...prep].reverse()) qcApply(s, g);      /* P†（自伴门 ⟹ 逆序） */
+  for (const q of qubits) outcomes.push(qcMeasureZ(s, q, rng));
+  for (const g of prep) qcApply(s, g);                      /* P 旋回 */
+  return outcomes;
+}
+
 /* 执行一步：普通门 / 测量写入经典位 / 条件门。
- * measure 的 basis（'z' 默认 / 'x' / 'y'，R100）透传给 qcMeasureQubit，
- * 并写进执行记录供 UI 标注；未给 basis 的旧调用逐位等价 R76/R99 路径。 */
+ * measure 两种形状（R103）：
+ *   单比特 {op:'measure', q, cbit, basis}——basis 'z'/'x'/'y'（R100）；
+ *   联合   {op:'measure', qubits:[...], cbit, basis:'bell'|'ghz'}——一次测 k 个
+ *   比特（qcMeasureJoint），outcomes[i] 写 cbit+i（k 个连续经典位）。
+ * 未给 basis 的旧调用逐位等价 R76/R99 路径。 */
 function qcExec(s, op, cres, rng){
   if (op.op === 'measure'){
+    if (op.qubits){
+      const bits = qcMeasureJoint(s, op.qubits, rng, op.basis || 'bell');
+      if (cres && op.cbit != null) for (let i = 0; i < bits.length; i++) cres[op.cbit + i] = bits[i];
+      return { kind: 'measure', qubits: op.qubits.slice(), cbit: op.cbit, bits, basis: op.basis || 'bell', joint: true };
+    }
     const bit = qcMeasureQubit(s, op.q, rng, op.basis || 'z');
     if (cres && op.cbit != null) cres[op.cbit] = bit;
     return { kind: 'measure', q: op.q, cbit: op.cbit, bit, basis: op.basis || 'z' };
