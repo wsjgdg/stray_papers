@@ -48,8 +48,10 @@ export default function FoodPage() {
   const [cityQuery, setCityQuery] = useState('');
   /** URL 带进来的 city，等城市清单加载后套用（不能被同步 effect 提前清掉） */
   const pendingCity = useRef<string | null>(null);
-  /** 信息卡引用：选中城市后滚到这里 */
+  /** 信息卡引用 */
   const infoRef = useRef<HTMLDivElement | null>(null);
+  /** 仅在点地图选城市时才允许滚动（点列表芯片、键盘切换不滚） */
+  const scrollOnCitySelect = useRef(false);
 
   const [cityGeo, setCityGeo] = useState<CityGeo | null>(null);
   const [cityLoading, setCityLoading] = useState(false);
@@ -110,10 +112,17 @@ export default function FoodPage() {
     return () => { alive = false; };
   }, [drill]);
 
-  // 点地图上的城市后，说明卡在下方，自动带过去（block:'nearest' 不打扰已在视口内的情况）
+  // 只在「手机 + 点地图选中 + 说明卡完全不在视野内」时才滚动。
+  // 桌面右栏本来就在视野里，一滚动就显得整屏乱跳（用户反馈过）。
   useEffect(() => {
-    if (!citySel) return;
-    infoRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    if (!citySel || !scrollOnCitySelect.current) return;
+    scrollOnCitySelect.current = false;
+    const el = infoRef.current;
+    if (!el || typeof window === 'undefined') return;
+    if (window.innerWidth >= 1024) return;
+    const r = el.getBoundingClientRect();
+    if (r.top < window.innerHeight && r.bottom > 0) return;
+    el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }, [citySel]);
 
   useEffect(() => {
@@ -352,7 +361,10 @@ export default function FoodPage() {
       return;
     }
     if (!cityGeo) return;
-    if (cityRows.some((c) => c.label === p.name)) setCitySel(p.name);
+    if (cityRows.some((c) => c.label === p.name)) {
+      scrollOnCitySelect.current = true;
+      setCitySel(p.name);
+    }
   }, [drill, cityGeo, cityRows, enterProvince]);
 
   // ── 面板数据：城市优先，否则省域 ────────────────────────
