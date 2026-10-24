@@ -71,6 +71,8 @@ export default function FoodPage() {
   }, []);
   /** 地图配色：按大区 / 按菜系 */
   const [colorBy, setColorBy] = useState<'region' | 'cuisine' | 'heat'>('region');
+  /** 地图高亮的省份（与数据面板的 provCode 分开，返回全国时清空高亮） */
+  const [highlightProv, setHighlightProv] = useState<string | null>(null);
   /** 地图首帧骨架屏，绘制完成后隐藏 */
   const [mapReady, setMapReady] = useState(false);
   /** 左栏视图：地图 / 口味图谱 */
@@ -123,6 +125,7 @@ export default function FoodPage() {
     const code = nameToCode[name];
     if (!code) return;
     setProvCode(code);
+    setHighlightProv(code);
     setDrill(name);
     setCitySel(null);
   }, [nameToCode]);
@@ -166,6 +169,7 @@ export default function FoodPage() {
   const backToNation = useCallback(() => {
     setDrill(null);
     setCitySel(null);
+    setHighlightProv(null);
   }, []);
 
   // ── 城市列表（含代表菜解析结果） ────────────────────────
@@ -232,14 +236,14 @@ export default function FoodPage() {
       value: 1,
       itemStyle: {
         areaColor:
-          p.code === provCode
+          p.code === highlightProv
             ? SELECTED_COLOR
             : colorBy === 'cuisine'
               ? CUISINE_COLORS[p.cuisine] ?? '#94A3B8'
               : colorBy === 'heat'
                 ? heatColor(p.taste.辣)
                 : REGION_COLORS[p.region] ?? '#94A3B8',
-        opacity: p.code === provCode ? 1 : 0.78,
+        opacity: p.code === highlightProv ? 1 : 0.78,
         borderColor: '#ffffff',
         borderWidth: 0.6,
       },
@@ -272,7 +276,7 @@ export default function FoodPage() {
         },
       ],
     };
-  }, [provCode]);
+  }, [highlightProv, colorBy]);
 
   // ── 省级（市级边界）option ─────────────────────────────
   const provinceOption = useMemo<EChartsOption>(() => {
@@ -332,7 +336,7 @@ export default function FoodPage() {
         },
       ],
     };
-  }, [cityGeo, cityRows, citySel, drill, cuisineColor, nationalOption]);
+  }, [cityGeo, cityRows, citySel, drill, cuisineColor, nationalOption, colorBy]);
 
   const maps = useMemo<MapRegistration[]>(
     () => (cityGeo ? [{ name: cityGeo.mapName, geo: cityGeo.geo }] : []),
