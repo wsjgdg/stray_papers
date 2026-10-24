@@ -396,6 +396,39 @@ export function qcEntropy(s, kA){
   return { S, spectrum: lam, sum, kA, dimA: mA };
 }
 
+/* R102：按 mask 重排态矢比特——mask 中的位（升序、保持相对次序）移到低位，
+   其余位（升序）移到高位。比特置换是索引的精确重排（O(dim·n) 查表，无数值
+   误差），使任意子系统的约化密度矩阵可复用 qcReducedRho 的低位约定——
+   这是 README「q0 是最低位唯一坐标约定」的受控迁移，不引入第二套位序。 */
+export function qcPermuteBits(s, mask){
+  const n = s.n;
+  const keep = [], rest = [];
+  for (let k = 0; k < n; k++) ((mask >> k) & 1 ? keep : rest).push(k);
+  const kA = keep.length;
+  const out = { n, dim: s.dim, re: new Float64Array(s.dim), im: new Float64Array(s.dim) };
+  for (let t = 0; t < s.dim; t++){
+    let lo = 0, hi = 0;
+    for (let b = 0; b < kA; b++) if ((t >> keep[b]) & 1) lo |= 1 << b;
+    for (let b = 0; b < rest.length; b++) if ((t >> rest[b]) & 1) hi |= 1 << b;
+    const u = (hi << kA) | lo;
+    out.re[u] = s.re[t]; out.im[u] = s.im[t];
+  }
+  return out;
+}
+
+/* R102：任意子系统熵——mask 的位构成子系统 A，互补位 traced out（诚实限制 ⑥：
+   此前只有低 k_A 位，取任意子系统须先搭 SWAP）。纯态恒等式 S(A)=S(Ā) 是
+   pot102 E 节的判据；mask=0 ⟹ S=0（平凡子系统）；mask=全 ⟹ S=0（纯态）。
+   返回附带 mask/bits 供 UI 标注。 */
+export function qcEntropySubset(s, mask){
+  const n = s.n;
+  const m = mask & ((1 << n) - 1);
+  const bits = [];
+  for (let k = 0; k < n; k++) if ((m >> k) & 1) bits.push(k);
+  const r = qcEntropy(qcPermuteBits(s, m), bits.length);
+  return { ...r, mask: m, bits };
+}
+
 /* 两比特 concurrence（n=2，A 取 q0）：C = 2|a00 a11 − a01 a10| */
 export function qcConcurrence(s){
   if (s.n !== 2) return NaN;

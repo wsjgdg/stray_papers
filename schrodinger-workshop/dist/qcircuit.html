@@ -910,6 +910,39 @@ function qcEntropy(s, kA){
   return { S, spectrum: lam, sum, kA, dimA: mA };
 }
 
+/* R102：按 mask 重排态矢比特——mask 中的位（升序、保持相对次序）移到低位，
+   其余位（升序）移到高位。比特置换是索引的精确重排（O(dim·n) 查表，无数值
+   误差），使任意子系统的约化密度矩阵可复用 qcReducedRho 的低位约定——
+   这是 README「q0 是最低位唯一坐标约定」的受控迁移，不引入第二套位序。 */
+function qcPermuteBits(s, mask){
+  const n = s.n;
+  const keep = [], rest = [];
+  for (let k = 0; k < n; k++) ((mask >> k) & 1 ? keep : rest).push(k);
+  const kA = keep.length;
+  const out = { n, dim: s.dim, re: new Float64Array(s.dim), im: new Float64Array(s.dim) };
+  for (let t = 0; t < s.dim; t++){
+    let lo = 0, hi = 0;
+    for (let b = 0; b < kA; b++) if ((t >> keep[b]) & 1) lo |= 1 << b;
+    for (let b = 0; b < rest.length; b++) if ((t >> rest[b]) & 1) hi |= 1 << b;
+    const u = (hi << kA) | lo;
+    out.re[u] = s.re[t]; out.im[u] = s.im[t];
+  }
+  return out;
+}
+
+/* R102：任意子系统熵——mask 的位构成子系统 A，互补位 traced out（诚实限制 ⑥：
+   此前只有低 k_A 位，取任意子系统须先搭 SWAP）。纯态恒等式 S(A)=S(Ā) 是
+   pot102 E 节的判据；mask=0 ⟹ S=0（平凡子系统）；mask=全 ⟹ S=0（纯态）。
+   返回附带 mask/bits 供 UI 标注。 */
+function qcEntropySubset(s, mask){
+  const n = s.n;
+  const m = mask & ((1 << n) - 1);
+  const bits = [];
+  for (let k = 0; k < n; k++) if ((m >> k) & 1) bits.push(k);
+  const r = qcEntropy(qcPermuteBits(s, m), bits.length);
+  return { ...r, mask: m, bits };
+}
+
 /* 两比特 concurrence（n=2，A 取 q0）：C = 2|a00 a11 − a01 a10| */
 function qcConcurrence(s){
   if (s.n !== 2) return NaN;
@@ -1196,6 +1229,8 @@ const QC_CSS = `
   #qcPanel button:hover{border-color:rgba(103,232,249,.45);color:var(--cyan)}
   #qcPanel button.on{background:rgba(103,232,249,.18);border-color:var(--cyan);color:var(--cyan)}
   #qcPanel button:disabled{opacity:.4;cursor:default}
+  #qcSubBtns{display:flex;gap:4px;flex-wrap:wrap;flex:1}
+  #qcSubBtns button{padding:4px 9px}
   #qcPanel select{font:10.5px var(--mono);color:var(--txt);background:#0b1220;border:1px solid var(--line);
     border-radius:5px;padding:4px;min-width:0;width:100%}
   #qcPanel .editrow{display:grid;grid-template-columns:1.25fr .8fr .8fr;gap:5px;margin:5px 0}
@@ -1269,7 +1304,7 @@ class QCircuitApp {
       theta: num('theta', 1.0), phi: num('phi', 0.4),
       step: 0, playing: false, speed: num('speed', 260),
       measured: null, seed: Math.round(num('seed', 137)),
-      paused: q.get('paused') === '1', edited: false,
+      paused: q.get('paused') === '1', edited: false, sub: 1,
     };
     this.edit = { op: 'h', q: 0, c: -1, c2: -1, theta: Math.PI / 2, basis: 'z', cbit: 0, inner: 'x', selected: -1 };
     this.gates = [];
@@ -1355,6 +1390,8 @@ class QCircuitApp {
         <div class="grp">测量</div>
         <div class="btns"><button id="qcMeasure" style="grid-column:1 / span 2">Z 基测量（坍缩）</button></div>
         <div class="row"><label>随机种子</label><input type="range" id="qcSeed" min="1" max="999" step="1"><output id="qcSeedO">—</output></div>
+        <div class="grp">子系统熵 A（R102）</div>
+        <div class="row" style="align-items:flex-start"><label style="padding-top:5px">选位</label><span id="qcSubBtns" title="点击加入/移出子系统 A；≤6 位（Jacobi 求谱 O(d³)）；其余位 traced out"></span></div>
       </aside>
 
       <div id="qcStage" class="qstage">
@@ -1373,6 +1410,7 @@ class QCircuitApp {
         <hr>
         <div class="hrow"><span>S(q0…q0)</span><span id="hS1">—</span></div>
         <div class="hrow"><span>S(低半 / 全)</span><span id="hS2">—</span></div>
+        <div class="hrow"><span>S(选中 A)</span><span id="hS3">—</span></div>
         <div class="hrow"><span>并发度 C</span><span id="hConc">—</span></div>
         <div class="hrow"><span>⟨Z0Z1⟩</span><span id="hZZ">—</span></div>
         <hr>
@@ -1429,6 +1467,18 @@ class QCircuitApp {
     this.on(this.q('#qcGateTheta'), 'input', e => {
       this.edit.theta = parseFloat(e.target.value);
       this.q('#qcGateThetaO').textContent = this.edit.theta.toFixed(2);
+    });
+    /* R102：子系统 A 选位切换（事件委托——按钮随 n 重建，逐按钮 bind 会漏） */
+    this.on(this.q('#qcSubBtns'), 'click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      const k = parseInt(b.dataset.q, 10);
+      const st = this.state;
+      const next = st.sub ^ (1 << k);
+      let c = 0; for (let j = 0; j < st.n; j++) if ((next >> j) & 1) c++;
+      if (c > 6){ this.toast('子系统最多 6 位（Jacobi 求谱 O(d³)，>6 位交互卡顿）'); return; }
+      st.sub = next;
+      this._renderSubBtns();
+      this.renderHud();
     });
     this.on(this.q('#qcGateAdd'), 'click', () => this.addGate());
     this.on(this.q('#qcGateClear'), 'click', () => this.clearGates());
@@ -1527,6 +1577,16 @@ class QCircuitApp {
     this.renderGateList();
   }
 
+  /* R102：重建子系统 A 选位按钮（随 n 变化；on 类复用既有 #qcPanel button.on 样式） */
+  _renderSubBtns(){
+    const st = this.state;
+    const el = this.q('#qcSubBtns'); if (!el) return;
+    el.innerHTML = Array.from({ length: st.n }, (_, k) => {
+      const on = (st.sub >> k) & 1;
+      return `<button type="button" data-q="${k}" class="${on ? 'on' : ''}" title="q${k}${on ? '：在子系统 A 中，点击移出' : '：不在 A 中，点击加入'}">q${k}</button>`;
+    }).join('');
+  }
+
   syncGateEditor(){
     const e = this.edit, n = this.state.n;
     e.q = Math.max(0, Math.min(n - 1, e.q | 0));
@@ -1620,6 +1680,7 @@ class QCircuitApp {
 
   reset(){
     const st = this.state;
+    st.sub &= (1 << st.n) - 1;   /* R102：n 变小时夹掉越界选中位（两条 n 变更路径——面板滑块与 setParam——都经此处；q0 恒在，默认 {q0} 不受影响） */
     if (st.preset === 'teleport'){
       st.n = 3;
       this.gates = qcTeleportGates(st.theta, st.phi, true);
@@ -1713,6 +1774,9 @@ class QCircuitApp {
     set('hMaxP', nf(mp, 6));
     set('hS1', nf(qcEntropy(s, 1).S, 6) + ' nat');
     set('hS2', nf(qcEntropy(s, Math.min(s.n >> 1, 6)).S, 6) + ' / ' + nf(qcEntropy(s, Math.min(s.n, 6)).S, 6));
+    /* R102：选中子系统 A 的熵（qcPermuteBits 把选中位移到低位后复用 qcEntropy） */
+    const sub = qcEntropySubset(s, st.sub);
+    set('hS3', (sub.bits.length ? '{q' + sub.bits.join(',q') + '}' : '∅') + ' → ' + nf(sub.S, 6) + ' nat');
     set('hConc', st.n === 2 ? nf(qcConcurrence(s), 6) : '（n≠2）');
     set('hZZ', st.n >= 2 ? nf(qcZZ(s, 0, 1), 6) : '—');
     set('hMeas', st.measured ? '|' + st.measured.bits + '⟩' : '未测量');
@@ -1730,6 +1794,7 @@ class QCircuitApp {
     const set = (id, v) => { const e = this.q('#' + id); if (e) e.value = String(v); };
     const txt = (id, v) => { const e = this.q('#' + id); if (e) e.textContent = String(v); };
     set('qcN', st.n); txt('qcNo', st.n);
+    this._renderSubBtns();
     set('qcSpeed', st.speed); txt('qcSpeedO', st.speed);
     set('qcSeed', st.seed); txt('qcSeedO', st.seed);
     set('qcTheta', st.theta); txt('qcThetaO', st.theta.toFixed(2));
@@ -1987,6 +2052,10 @@ class QCircuitApp {
       restart: () => { self.resetExecution(); self._drawAll(); },
       navLinks: () => Array.from(document.querySelectorAll('#qcTop a')).map(a => a.getAttribute('href')),
       drawAll: () => self._drawAll(),
+      /* R102：子系统熵调试句柄（cdp107 与控制台对账用；mask 越界位夹掉） */
+      subEntropy: mask => qcEntropySubset(self.psi, mask & ((1 << self.state.n) - 1)),
+      getSub: () => self.state.sub,
+      setSub: m => { self.state.sub = m & ((1 << self.state.n) - 1); self._renderSubBtns(); self.renderHud(); },
     };
   }
 }

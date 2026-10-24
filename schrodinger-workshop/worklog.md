@@ -68,6 +68,7 @@
 | R92 | README 收尾段串写修复（文档追改轮，生产代码零改动） | 用户报「readme 和 worklog 内容串了」。根因：README 收尾段「RX 收官」段自 R85（c147971）起整段替换式更新，但 f249f5e（R86）/19b476f（R87）/db4453c（R88）三代只改标签号不改内容 ⟹ 「R88 收官」下挂的是 R85 内容，R85–R88 真身收官全缺失。修复：R88/R87/R86 三段补回 + 原段标签改回 R85 + 标题改「R67–R92 全部闭环」 |
 | R93 | README 职责重构：只留功能/实现/使用，R 轮次记录归 worklog（文档重构轮，生产代码零改动） | 用户澄清职责边界：「readme 不应该写工作流程和完成进度（R）…只放现有功能和结构、实现方式、使用说明」。重构后 README 六节：简介 → 运行 → 功能 → 物理与数值方法 → 架构 → 技术栈。**删两节**：`## 验证`（bak L2178 起，CDP 通过率总表）、`## 后续方向`（bak L2443 起，backlog + R67–R72 计划表）——均属工作流程/进度，归 worklog。全文清扫 R1–R92 轮次引用：批次一 `/tmp/r93_clean.py` 261 对（260 命中：删 5 块、悬空引用修 5 处、标题清理、轮数缩写 `R1/single`→`R=1/single` 防混淆、架构图 10 条目 + 12 处注释）+ 批次二 `/tmp/r93_patch2.py` 11 对（修 5 MISS 转录误差 + 4 漏网行内引用）。误抓保留 2 处（L508 `potR2` 参数名、L1934 `R32F` 纹理格式名）。diff：删 440 / 增 304，净 −136 行（2503→2367） |
 | R94 | 手机竖屏适配公共模块化：顶栏收编 + 汉堡抽屉 + 底部 dock | 用户指令「做小屏适配，尽量用公共模块，少每页独立维护」。盘点病灶：36 处同构顶栏媒体查询（12 页 × 1500/1400/900）+ 12 页 `#xxTop` 规则族重复、≤900 只隐导航 ⟹ 12 页互链手机端不可达、390px 竖屏面板+HUD 必重叠。新增 `src/core/responsive.js`（约 180 行）四件套：① 顶栏三档收编公共类 `.qtop`（差异值 5 页各 1–3 行属性选择器，7 页零差异）② ≤900 汉堡抽屉（桌面 `.qnav{display:contents}` 逐位不变）③ ≤860 底部 dock 三态 + 面板/HUD 转底部 sheet + stage 内联让位（`dataset.qfRestore` 精确还原）④ `injectResponsive()` DOM 增强包 `queueMicrotask`。六坑：时序（innerHTML 重写清 dock ⟹ microtask）、CSS 特异性三轮（类输 id ⟹ 删本地族 ⟹ 差异行压响应段 ⟹ 终局属性选择器 (0,2,0) vs `.qtop.qtop` (0,2,0) 后注入赢）、styles.js 跨行删除残骸吞 `#panel` 规则、flag drawFan 负半径崩（numW 收缩 + 三重 clamp）、responsive.js 两处笔误（冒号/`}}}`）、dock 死胡同（off 态 dock display:none ⟹ 无恢复路径；改常驻退让 opacity .4）。cdp92 **23/23** + cdp90 4/4 + cdp91 12/12 + pot85 38/38 + pot87 47/47；28 files，2726+/706− |
+| R102 | qcircuit 任意子系统熵（R98 诚实限制 ⑥ 兑现） | 限制 ⑥ 原「约化子系统固定低 k_A 位，取任意子系统须先搭 SWAP」兑现。**物理层**（src/physics/qcircuit.js，+33 行）：`qcPermuteBits(s, mask)` 把选中位（升序）移低位、其余位（升序）移高位——**索引精确重排**（O(dim·n)，不动浮点、无数值误差，无第二套位序约定），`qcEntropySubset(s, mask)` 置换后复用既有 `qcReducedRho`+Jacobi 求谱（≤6 位，kA=6 求谱 ~25ms）。**UI**（src/qcircuit.js，+40 行）：面板「选位」按钮组（随 n 重建、事件委托、点击切换 mask）、HUD 新行 S(选中 A)、>6 位 toast 拒绝、`reset()` 统一夹紧 mask（滑块与 setParam 两条 n 变更路径）、调试句柄 `setSub/getSub/subEntropy` 与点击同实现。**验证**：pot102 新套件 **16/16**（置换正确性 4 法交叉含独立第二实现全 mask 逐点 / 已知态 Bell·GHZ(4)·W(3)·乘积态 / S(A)=S(Ā) worst **3.44e-15** / 边界 4 节）；cdp107 新浏览器套件 **13/13**（boot·点击切换·ghz 预设·n 夹紧两路径·>6 位拒绝·调试句柄·dist 通道·零 console）；全量零回归 **2360 断言 0 fail**（pot75/76/80/100/101/102 + cdp75/76/92/101/102/103/105/106/107）。**测试侧十一处自我更正**（产品零 bug）：pot102 六处——① 补集 round-trip 前提错（置换非对合，逆映射须由参考实现导出）；② CNOT 形状 `{q,c}` 错（目标默认 bit0）⟹ `{c,q2}`；③ `w3` 手写 `re[j]=1` 未清 `re[0]` 踩 `qcNewState` 模块注释明文警告的陷阱（连踩两次）；④ D4 mask `0b1010101` 只有 4 位；⑤ C3 期望错（两比特最大混合是 I/4 ⟹ ln4）；⑥ B3 忘 |01⟩+|10⟩ 相干 ⟹ W(3) 对谱 {2/3,1/3}；cdp107 五处——① A1/B1 漏 `runAll()`（paused=1 是 |00⟩，S=0 本正确）；② C1 末击点 q3 是关掉它（全集应点 q0）；③ E1 循环点 q0 把它关掉只得 5 位（第 7 位因此被误收）⟹ k=1..5；④ F 节未 runAll 致 oracle 不匹配 + `0bFFFFFFFF` 语法错 ⟹ `0xFF`；⑤ G1 dist 陈旧重建。**环境记录**：跨会话静态服务 8765 死亡 ⟹ cdp101 假失败 103 项（A2–A8 全 FAIL），重启 `python3 -m http.server 8765` 后 111/111 复原——非产品回归。README：facts 纠缠行/熵行/浏览器行/HUD 段/架构图/诚实限制 ⑥⑦ 更新 + 新增「任意子系统熵」小节；worklog R102 条目；dist qcircuit 102.5→104.1 KB |
 | R101 | qcircuit 编辑器 cond 受控经典门（R98 诚实限制 ④ 兑现后半） | R98 限制 ④ 后半「经典前馈仍由预设生成」兑现：编辑器门下拉 17→18（+受控经典门），新增经典位 cbit 行 + 内部门行（12 种单比特门），cond 模式隐藏控制位 select；`_editorGate()` 构造 `{op:'cond', cbit, gate:{op,q,theta?}}`；**cbit 与 q 不同命名空间不要求互异**（与 CNOT 本质区别）；物理层零改动（R76 `qcExec` cond 分支早已支持）。**验证**：pot101 新套件 **24/24**（cond on/off 语义 / 手动传态 F=1 对 5 态×20 seed / 与 `qcTeleportGates` 预设逐字段相等 / 无修正分支平均 F=**1/2 精确**——Bell 测量四分支恒均匀 1/4 / 陈旧 cbit / 覆写 / 编辑器形状）；cdp106 新浏览器套件 **17/17**（三层加固 harness；手动传态 10 门 click 端到端 F=1 对滑块量化后 θ/φ；dist 同码；零 error）；全量零回归 2331 断言（pot75/76/80/100/101 + cdp75/76/92/101/102/103/105/106）。**测试侧九处自我更正**（非产品 bug）：① pot101 slice 索引把测量本身切掉；② rigged rng 方向反（`rng()<p1?1:0` ⟹ −1 恒 bit=1）+ p1=1 态强制不可能分支投零；③ **保真度公式潜伏 bug**——`inner²`（实部平方）应为复模方 `|⟨t|q2⟩|²`，同全局相位时蒙对、有相对相位时系统性低估（pot100 同款一并修复）；④ cdp106 滑块 0.01 量化吸附 + n=2 下 q=2 越界；⑤ 传态门数 10 非 11；⑥ cdp106 D1 两轮——Node 目标未用量化后 θ/φ ⟹ 回读门上实际值；`q2marginal` 用 `a.bits[2]` 提 q2 但 `qcBits` 是 big-endian 字符串 "q2q1q0"（bits[2] 是 q0，fid 0.229 根因）⟹ 改 `(a.i>>2)&1`——README「q0 是最低位唯一约定」在测试侧再次踩坑；⑦ p 索引混淆（q0=1 是 p[1]）；⑧ cdp105 A1 门数 17→18 未同步（R101 自身造成的腐烂）；⑨ cdp76 P7 停留在 R98 整合前 13 条导航口径（nav.js「腐烂四轮」同款）⟹ 更新 7 条口径 + 新增 P7b 六跳转桩根级+dist 存活检查。**诚实性纠正**：R100 README ② 曾写「编辑器可手动插 measure + cond 组合」——`git show 9bd1e03` 实证当时无 cond 选项，属超前误述，R101 起成为事实。README：门表/编辑沙盒段/数值事实表补 cond，限制 ② 改「无循环分支型控制流但瞬时前馈可手搭」、④ 17→18 种门；worklog R101 条目；dist qcircuit 97.4→102.5 KB（noise/qec 各一行 R100 注释同步纯注释） |
 | R100 | qcircuit X/Y 基测量一键化（R98 诚实限制 ③ 兑现） | 延续 R99「诚实限制逐项兑现」。限制 ③ 原「测量只有 Z 基」是教学刚需（Bell 检验在 X/Y 基测）。**物理层**（src/physics/qcircuit.js）：`qcMeasureQubit` 加可选 `basis='z'\|'x'\|'y'`，X/Y 基用**旋转-测量-旋回**（X: H·M_Z·H；Y: S†H·M_Z·H·S，|+i⟩=S·H|0⟩ ⟹ U=H·S† 映 Y 本征基到 Z）；Z 内核抽私有 `qcMeasureZ`；`qcExec` 透传 basis 并写记录；未知 basis 抛错。两条性质：p(±)=(1±⟨P⟩)/2 精确（⟨X⟩=2Reρ01、⟨Y⟩=−2Imρ01——注释初版符号写反已改）；测后态即该基本征态，cbit 0=+1 本征值。**UI**（src/qcircuit.js）：measure 模式显「测量基」行（Z/X/Y select，title 明示本征值语义）；`_editorGate()` 构造 `{op,q,cbit,basis}`；`gateView` 标注 M_z/M_x/M_y；basis 与 c/theta 同为持久编辑器状态（切走切回保留、select 可见）。**验证**：pot100 新套件 **24/24**（本征态确定性 40 seed / 测后态即本征态 / 概率公式逐态 4σ 对账 / **Bell Y-Y 反关联**最强判别 / X-X 正关联 / Z-Z 零回归 / X-Z 交叉均匀 / teleport Z 基保真度 1 / X 基 cond 前馈）；cdp105 扩 K 节 23→**33/33**；零回归 pot75 31/31 · cdp75 16/16 · cdp92 39/39 · cdp101 111/111 · cdp102 55/55 · cdp103 29/29（首跑 27/29 定性为测试基建 heisenbug——cdp103 无进程组加固致孤儿 chromium 干扰 + goto load 事件竞态，已按 cdp92 同款三层加固，复跑 29/29）。**测试侧两处自我更正**：① A2 把 |−⟩ 误写成 X·H|0⟩（实为 |+⟩，应 H|1⟩）；② K6 误期「不传 basis 重置 z」——basis 是持久状态，改断言为「新页面默认 z + 持久语义」双查 |
 | R99 | qcircuit 编辑器补 Toffoli 与测量门（R98 诚实限制 ④ 兑现前半） | 用户指令「建成后再自行发掘可优化改进的点，持续推进」。R98 P5 收尾后盘点 README「诚实限制」④——「Toffoli、测量与前馈仍由预设生成」，本轮兑现前两项。**实现**（src/qcircuit.js）：门类型下拉 15→17（+Toffoli +测量 M）；新增「第二控制位」行（仅 toffoli 模式显示，`qcGateC2Row` display 切换）；`_editorGate()` 加两支——toffoli 校验目标+两控**三位互异**后构造 `{op,q1,q2,q3}`（qcApply 既有读取路径），measure 构造 `{op,q,cbit}`（qcExec 既有路径，写经典位并坍缩）；`syncGateEditor()` 按 op 重建 c 的 options（toffoli/measure 不给「无控」）+ c 的 title 动态（「经典位 cbit」/「第一控制位」）+ c2 行显隐；gate 列表 wires 加 toffoli 标签 `q1,q2→q3`；debugHandle 加 `cbits()`。**物理层零改动**（qcApply/qcExec/绘制层 gateView 早已支持）。**验证**：node 侧 5 组（|000>不动 / |111>翻 target / 部分激活不翻 / measure cbit 写入 / 坍缩后复测一致）+ cdp105 扩 15→**23/23**（+G1 c2 行显隐与无「无控」/G1b 切回隐藏/G1c measure title/G2 插入格式+执行归零+已编辑/G3 三位不互异双拒/G4 H0H1X2·Toffoli 四支等幅/G5 插入格式/G5b cbit 写入+q0 坍缩）+ cdp75 16/16 零回归。**测试侧三处自我更正**（非产品 bug）：① `__qc.state` 是 getter 不是函数（EVAL ERR → null）；② G2/G4 在 bell 默认 n=2 下 q2 越界被 syncGateEditor 夹到 q1 ⟹ 先 `setParam('n',3)`；③ **位序教训**——G4 预期我手算 {1,3,5,6}，实测 {3,4,5,6}：页面 index 是 little-endian（q0=bit0），X(q2) 翻 bit2 得 {4,5,6,7}，toffoli 后 {3,4,5,6}——页面正确，断言修正。README 编辑沙盒段 + 限制 ④ + 数值事实行同步（15→17 种门）。**回归加固**：cdp92 复跑连续 EXIT=124——根因是 harness 双层缺陷（ev() 无超时致渲染退化永久挂死 + timeout 杀 node 不级联杀 chromium 致孤儿泄漏跨运行累积，且 `pgrep -x chromium` 查不到真实进程名 chrome），修进程组生命周期 + 真实超时 + 超时自恢复三层，复跑 **39/39**；R99 全门禁：pot 11 套 2175 断言 + cdp105 23/23 + cdp75 16/16 + cdp101 111/111 + cdp92 39/39 全绿 |
@@ -1548,6 +1549,92 @@ R98 诚实限制 ④ 的前半（Toffoli + 测量可手动插入）已由 R99/R1
 
 dist 重建：qcircuit 97.4→102.5 KB；noise/qec 各一行注释同步（R100 的 ⟨Y⟩ 符号
 修正随共享物理模块跨页传播，随本轮一并入库，diff 已核实为纯注释）。
+
+---
+
+## R102（2026-10-25）qcircuit 任意子系统熵（R98 诚实限制 ⑥ 兑现）
+
+### 立项动机
+
+R98 诚实限制 ⑥：「熵的约化子系统固定为**低 k_A 位**（要取任意子系统需先 SWAP）」。
+⑤（QFT 门次序）与 ⑥ 是 qcircuit 页最后两条未兑现的限制。本轮兑 ⑥。
+
+### 实现（物理层 +33 行，UI 层 +40 行）
+
+**物理层**（src/physics/qcircuit.js，插在 `qcEntropy` 后、`qcConcurrence` 前）：
+
+- `qcPermuteBits(s, mask)`：把 mask 中的位（升序）移到低位、其余位（升序）移高位。
+  **索引精确重排**——只搬振幅、不动一个浮点数，O(dim·n)，无 SVD/无对角化近似。
+  与「先搭 SWAP 门再求低 k_A 位」物理等价但零数值路径。
+- `qcEntropySubset(s, mask)`：mask 夹到 n 位 → `qcEntropy(qcPermuteBits(s, m), popcount)`
+  → 附 `mask`/`bits` 字段。任意子系统与低 k_A 位走**同一条代码路径**（复用既有
+  `qcReducedRho` + Jacobi），不引入第二套位序约定。
+
+**UI 层**（src/qcircuit.js）：
+
+- 面板新 grp「子系统熵 A（R102）」+ `#qcSubBtns` 按钮组（随 n 重建，事件委托绑定，
+  按钮无个体 listener）；复用既有 `#qcPanel button.on` 样式
+- HUD 新行 `#hS3`：`{q0,q2} → 0.693147 nat`（bits 升序、∅ 特判）
+- `reset()` 首行 `st.sub &= (1 << st.n) - 1`：**夹紧逻辑上移到两条 n 变更路径
+  （面板滑块与 setParam）的公共入口**，避免 #qcN handler 重复
+- >6 位 toast 拒绝（Jacobi O(d³) 交互上限），mask 不变
+- 调试句柄 `setSub/getSub/subEntropy`（mask 越界夹紧），与点击路径同一实现
+
+### 验证
+
+- **pot102 新套件 16/16**（Node 侧）：A 置换正确性（A1 参考实现导出的逆映射
+  round-trip、A2 范数、A3 **独立第二实现全 mask 逐点**、A4 重标不变）；B 已知态
+  （Bell/GHZ(4) 14 mask/W(3) 谱级/乘积态全 0/非相邻 Bell）；C 交叉验证（低位等价、
+  **S(A)=S(Ā)**、双 Bell 对）；D 边界（∅/全集/越界夹紧/kA=6 性能 25ms）；E 值域
+- **cdp107 新浏览器套件 13/13**（三层加固 harness 同 cdp106）：A boot（按钮随 n 重建、
+  默认 {q0}、HUD 与 Node 一致）；B 点击切换（Bell {q0}=ln2 → {q0,q1}=0 → {q1}=ln2）；
+  C ghz 预设（任意非空真子集 ln2 × 4 组 + 全集 0 + 未跑乘积态 0）；D n 夹紧两路径
+  （setParam 0b10000001→0b001、滑块同）；E >6 位拒绝（toast + mask 不变 + HUD 有效）；
+  F 调试句柄（setSub 越界夹紧 0xFF）；G dist 单文件通道；全程零 console
+- **全量零回归**：pot75 31 · pot76 14 · pot80 1928 · pot100 24 · pot101 24 ·
+  pot102 16 + cdp75 16 · cdp76 10 · cdp92 39 · cdp101 111 · cdp102 55 · cdp103 29 ·
+  cdp105 33 · cdp106 17 · cdp107 13，共 **2360 断言 0 fail**
+
+### 测试侧自我更正（十一处，产品零 bug——记录以防再犯）
+
+pot102 六处：
+
+1. **A1 补集 round-trip 前提错**：置换**非对合**——补集 mask 不是逆映射（A1 初版
+   误设前提）。逆映射须由参考实现导出，不能想当然。
+2. **A2 CNOT 形状错**：`{op:'cnot', q, c}` 让目标默认为 bit0（`1 << undefined` = 1）
+   ——`qcApply` 读 `g.t ?? g.q2`（目标）、`g.c ?? g.q1`（控制）。正确形状
+   `{op:'cnot', c, q2: q}`（编辑器实际构造同款）。
+3. **A3 `w3` 态连踩两次 `qcNewState` 陷阱**：手写 `re[j]=1` 不清 `re[0]` 会叠成
+   相干和——模块注释明文警告过，仍然踩了两次。pot102 之后凡构造非 |0⟩ 初态一律
+   显式清 `re[0]`。
+4. **D4 mask `0b1010101` 只有 4 位**（popcount=4 不是 6）⟹ `0b111111`。
+5. **C3 期望错**：两比特最大混合是 I/4 ⟹ S=ln4=2ln2，我写了 ln2。
+6. **B3 对谱期望错**：忘 |01⟩+|10⟩ 两条同 q2 分量的项 trace 后仍相干 ⟹ W(3) 双比特
+   边缘谱是 {2/3,1/3,0,0} 而非 {1/3,1/3,1/3,0}。**谱级断言**才对。
+
+cdp107 五处（首轮 5/12，全部为测试侧序列错）：
+
+1. A1/B1 漏 `runAll()`：paused=1 态是 |00⟩，S=0 本正确——是预期没写对。
+2. C1 末击点 q3 是**关掉**它（mask 0b1110→0b0110）——补全集应点 q0。
+3. E1 循环从 k=0 起把默认选中的 q0 关掉，只得 5 位，第 7 位因此被误收 ⟹ k=1..5。
+4. F 节页面自 E 节起未执行（|00000000⟩）致 oracle 不匹配 ⟹ 先 `runAll()`
+   （bell@n8 = Bell(q0,q1)⊗|0…⟩，{q0,q2} 熵恰 ln2 与 n=2 oracle 数值一致）；
+   `0bFFFFFFFF` 是语法错 ⟹ `0xFF`。
+5. G1 dist 陈旧（R102 前构建，无 `#qcSubBtns`/`getSub`）⟹ 重建后 13/13。
+
+### 环境记录（非产品回归）
+
+跨会话静态服务 8765（`python3 -m http.server`）被回收 ⟹ cdp101 首跑 103 项假失败
+（A2–A8 全 FAIL：canvas/HUD/tab 全空）。重启服务后 111/111 复原。**教训**：cdp 套件
+失败先查服务存活，再怀疑产品——与 R47「长寿 chrome 实例帧停滞」同族环境陷阱。
+
+### 文档
+
+README：facts 表纠缠行（低 k_A 位 → 任意子系统）、熵行（R102 五条数值事实）、浏览器行
+（cdp107）；页面段 HUD 补 S(选中 A)；诚实限制 ⑥ 改写为「面板任选 ≤6 位」、⑦ 补求谱
+耗时；架构图 qcircuit.js 行「约化密度矩阵熵」→「位置换任意子系统熵」；新增「任意子
+系统熵（R102）」小节（含 W(3) 谱级教训）。worklog：本轮条目 + 总览表 R102 行。
+dist qcircuit 102.5→104.1 KB。
 
 ---
 
