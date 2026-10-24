@@ -6,8 +6,9 @@
  * 物理层累加器（qecStream / shorStream / gnStream / fsStream / cfStream）接到
  * 这个共享播放器上：播放时每帧只跑一段试验，统计量随帧增长（trials 计数、
  * P_L、直方图、结局分解全部在动），20fps 节制；跑满目标批自动停；暂停即冻结
- * （累加器保留，再播接着演）；参数变化重置累加器（播放中换新的接着演、暂停时
- * 补一个同步全批——与旧行为逐位一致）。
+ * （累加器保留，再播接着演）；参数变化重置累加器（播放中换新的**立即演一帧**
+ * 接着演、暂停时补一个同步全批——与旧行为逐位一致）。noise 页（R98 P3）的
+ * nzStream 同款接入。
  *
  * 节拍口径（R98 P2b 修正）：按**时长**而非固定帧数分配每帧样本量。
  *   want = ceil(total · dt / duration)，dt = 距上一帧的真实时长
@@ -82,11 +83,12 @@ export class LiveDriver {
 
   toggle(){ this.playing ? this.stop() : this.start(); }
 
-  /** recompute 钩子：cfg 变了。播放中 → 换累加器下一帧接着演；暂停 → 补全批 + 一帧 */
+  /** recompute 钩子：cfg 变了。播放中 → 换累加器立即演一帧（反馈不等 rAF）接着演；
+       暂停 → 补全批 + 一帧（旧行为逐位保留） */
   sync(){
     this.stream = this.make();
     this._prev = 0;
-    if (this.playing) return;
+    if (this.playing){ this.pump(); return; }
     this.stream.step(this.stream.total);
     this.onFrame(this.stream.result(), this.stream.n, this.stream.total);
   }

@@ -319,27 +319,28 @@ export function nzConcurrenceExact(kind, tau, t, side){
 /* 双侧 ESD 时刻（depolar：解 (1−p)²=1/3）：t* = τ·ln3/2 ≈ 0.5493τ */
 export function nzEsdTime(tau){ return Math.log(3) / 2 * tau; }
 
-function scanSingle(c, steps, dt){
+function streamSingle(c, steps, dt){
   const D = 2;
   let cur = nzRhoQubit(c.theta, c.phi);
   let nxt = { n: 1, dim: D, re: new Float64Array(4), im: new Float64Array(4) };
   const E = nzKrausOf(c.kind, nzStepParam(c.kind, c.tau, dt));
   const out = { t: [], x: [], y: [], z: [], purity: [], ax: [], ay: [], az: [], rho: null, tr: [], kind: c.kind };
-  for (let s = 0; s <= steps; s++){
-    const t = s * dt;
+  let n = 0;                    /* 已记录步数（0..steps，含初态 ⟹ 共 steps+1 个记录点） */
+  function one(){
+    const t = n * dt;
     const b = nzBloch(cur, 0), ex = nzBlochExact(c.kind, c.tau, t, c.theta, c.phi);
     out.t.push(t); out.x.push(b.x); out.y.push(b.y); out.z.push(b.z);
     out.purity.push(nzPurity(cur));
     out.ax.push(ex.x); out.ay.push(ex.y); out.az.push(ex.z);
     out.tr.push(nzTrace(cur).re);
-    if (s === steps){ out.rho = nzCopy(cur); break; }
-    nzApplyKraus(cur, 0, E, nxt);
-    const tmp = cur; cur = nxt; nxt = tmp;
+    out.rho = nzCopy(cur);      /* 当前时刻快照（流式播放时 HUD/热图随帧更新） */
+    if (n < steps){ nzApplyKraus(cur, 0, E, nxt); const tmp = cur; cur = nxt; nxt = tmp; }
+    n++;
   }
-  return out;
+  return { out, one, get n(){ return n; } };
 }
 
-function scanBell(c, steps, dt){
+function streamBell(c, steps, dt){
   const D = 4;
   const r0 = { n: 2, dim: D, re: new Float64Array(16), im: new Float64Array(16) };
   r0.re[0] = 0.5; r0.re[3] = 0.5; r0.re[12] = 0.5; r0.re[15] = 0.5;   /* |Φ⁺⟩⟨Φ⁺| */
@@ -349,8 +350,9 @@ function scanBell(c, steps, dt){
   const qs = c.side === 'q0' ? [0] : [0, 1];
   const out = { t: [], C: [], aC: [], purity: [], x: [], y: [], z: [], xx: [], yy: [], zz: [], F: [], rho: null, tr: [], kind: c.kind, xform: true };
   let xformMax = 0;
-  for (let s = 0; s <= steps; s++){
-    const t = s * dt;
+  let n = 0;
+  function one(){
+    const t = n * dt;
     const cc = nzConcurrence(cur);
     const b = nzBloch(cur, 0);
     out.t.push(t); out.C.push(cc.C);
@@ -361,27 +363,46 @@ function scanBell(c, steps, dt){
     out.zz.push(nzPauliCorr2(cur, 'z', 'z'));
     out.F.push(nzBellFidelity(cur));
     out.tr.push(nzTrace(cur).re);
+    out.rho = nzCopy(cur);
     xformMax = Math.max(xformMax, cc.offmax);
-    if (s === steps){ out.rho = nzCopy(cur); break; }
-    /* 逐比特交替：每趟严格 read=src / write=dst 且两者不同，趟末把 src 指向结果。
-       （首版用「结果可能是 cur 也可能是 nxt」的推断式交换，在 qs.length 为偶数时
-        会出现 src===dst 的自覆盖。） */
-    let src = cur, dst = alt;
-    for (let k = 0; k < qs.length; k++){
-      nzApplyKraus(src, qs[k], E, dst);
-      const tmp = src; src = dst; dst = tmp;
+    if (n < steps){
+      /* 逐比特交替：每趟严格 read=src / write=dst 且两者不同，趟末把 src 指向结果。
+         （首版用「结果可能是 cur 也可能是 nxt」的推断式交换，在 qs.length 为偶数时
+           会出现 src===dst 的自覆盖。） */
+      let src = cur, dst = alt;
+      for (let k = 0; k < qs.length; k++){
+        nzApplyKraus(src, qs[k], E, dst);
+        const tmp = src; src = dst; dst = tmp;
+      }
+      cur = src; alt = dst;
     }
-    cur = src; alt = dst;
+    out.xform = xformMax < 1e-12;
+    out.xformMax = xformMax;
+    n++;
   }
-  out.xform = xformMax < 1e-12;
-  out.xformMax = xformMax;
-  return out;
+  return { out, one, get n(){ return n; } };
+}
+
+/* 流式时间扫描（R98 P3）：step(count) 分帧推进 count 个记录点（含初态共
+   steps+1 个），result() 出当前进度（数组随帧增长、rho 为当前时刻快照）。
+   nzScan 为薄封装——同一演化顺序，数值与逐位一致（pot77 等不变）。 */
+export function nzStream(cfg = {}){
+  const c = { ...NZ_DEFAULTS, ...cfg };
+  const steps = Math.max(1, Math.min(4000, c.steps | 0)), dt = c.dt;
+  const S = (c.n === 2) ? streamBell(c, steps, dt) : streamSingle(c, steps, dt);
+  const total = steps + 1;
+  return {
+    get total(){ return total; },
+    get n(){ return S.n; },
+    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m && S.n < total; k++) S.one(); },
+    result(){ return S.out; },
+  };
 }
 
 export function nzScan(cfg = {}){
-  const c = { ...NZ_DEFAULTS, ...cfg };
-  const steps = Math.max(1, Math.min(4000, c.steps | 0)), dt = c.dt;
-  return (c.n === 2) ? scanBell(c, steps, dt) : scanSingle(c, steps, dt);
+  const s = nzStream(cfg);
+  s.step(s.total);
+  return s.result();
 }
 
 /* ---------- 量子轨迹（纯态 + 随机跳变；平均 ⟹ 密度矩阵） ---------- */

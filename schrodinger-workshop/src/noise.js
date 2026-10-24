@@ -12,7 +12,8 @@
 import { injectStyles } from './core/styles.js';
 import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
-import { NZ_DEFAULTS, NZ_PRESETS, nzScan, nzTrajEnsemble, nzBloch, nzConcurrence, nzPurity, nzTrace, nzEsdTime, nzStepParam } from './physics/noise.js';
+import { NZ_DEFAULTS, NZ_PRESETS, nzScan, nzStream, nzTrajEnsemble, nzBloch, nzConcurrence, nzPurity, nzTrace, nzEsdTime, nzStepParam } from './physics/noise.js';
+import { LiveDriver } from './qec/live.js';
 
 const NZ_CSS = `
   #nzPanel{top:74px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 200px);
@@ -26,6 +27,7 @@ const NZ_CSS = `
     border-radius:50%;background:var(--cyan);box-shadow:0 0 8px rgba(103,232,249,.7);cursor:pointer}
   #nzPanel output{font-family:var(--mono);font-size:11px;color:var(--txt);min-width:36px;text-align:right}
   #nzPanel .btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+  #nzPanel .btns1{display:grid;grid-template-columns:1fr;gap:6px;margin-top:6px}
   #nzPanel .btns3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:6px}
   #nzPanel button{font-family:var(--mono);font-size:10.5px;padding:5px 4px;border-radius:6px;cursor:pointer;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -86,10 +88,12 @@ export class NoiseApp {
       nTraj: Math.round(num('ntraj', 320)),
       seed: Math.round(num('seed', 7)),
       showTraj: q.get('traj') !== '0',
+      live: q.get('live') === '1',
       azim: -0.62, elev: 0.46,
     };
     this.scan = null;
     this.ens = null;
+    this.live = null;
     this._msg = '';
   }
 
@@ -139,6 +143,11 @@ export class NoiseApp {
         <div class="row"><label id="nzTauLbl">T₁</label><input type="range" id="nzTau" min="0.2" max="4" step="0.05"><output id="nzTauO">—</output></div>
         <div class="row"><label>时长</label><input type="range" id="nzSteps" min="120" max="900" step="20"><output id="nzStepsO">—</output></div>
 
+        <div class="grp">演出（时间演化）</div>
+        <div class="btns1">
+          <button id="nzPlay">▶ 播放</button>
+        </div>
+
         <div id="nzPrepGrp">
           <div class="grp">初态 |ψ(θ,φ)⟩</div>
           <div class="row"><label>θ</label><input type="range" id="nzTheta" min="0" max="3.14" step="0.01"><output id="nzThetaO">—</output></div>
@@ -159,6 +168,7 @@ export class NoiseApp {
         <div class="hrow"><span>tr ρ</span><span id="hTr">—</span></div>
         <div class="hrow"><span>纯度 tr ρ²</span><span id="hPur">—</span></div>
         <div class="hrow"><span>Bloch 长度 r</span><span id="hR">—</span></div>
+        <div class="hrow"><span>演化时刻 t</span><span id="hT">—</span></div>
         <hr>
         <div class="hrow"><span>⟨σx⟩</span><span id="hX">—</span></div>
         <div class="hrow"><span>⟨σy⟩</span><span id="hY">—</span></div>
@@ -206,6 +216,16 @@ export class NoiseApp {
     this.on(this.q('#nzReseed'), 'click', () => { this.state.seed = (this.state.seed * 1103515245 + 12345) % 2147483647; this.recompute(); });
     this.on(this.q('#nzNtraj'), 'input', e => { this.state.nTraj = parseInt(e.target.value, 10); this.recompute(); this.syncPanel(); });
 
+    /* ---- R98 P3 实时沙盒：时间演化分帧演出（与 QEC hub 共享 LiveDriver） ---- */
+    this.live = new LiveDriver({
+      make: () => nzStream(this.cfg()),
+      onFrame: res => { this.scan = res; this.renderHud(); this.drawAll(); },
+      onState: () => this.syncPlayBtn(),
+    });
+    this.on(this.q('#nzPlay'), 'click', () => this.live.toggle());
+    this.syncPlayBtn();
+    if (this.state.live) this.live.start();   /* ?live=1：recompute 将走播放分支 */
+
     this.on(window, 'resize', () => this.resize());
     if (window.ResizeObserver){
       const ro = new ResizeObserver(() => this.resize());
@@ -230,13 +250,24 @@ export class NoiseApp {
 
   recompute(){
     const s = this.state;
-    this.scan = nzScan(this.cfg());
+    /* R98 P3：播放中 → 换累加器接着演；否则同步全批（旧行为） */
+    if (this.live && this.live.playing){ this.live.sync(); }
+    else this.scan = nzScan(this.cfg());
     this.ens = null;
     if (s.n === 1 && s.showTraj){
       this.ens = nzTrajEnsemble({ ...this.cfg(), nTraj: s.nTraj, seed: s.seed });
     }
     this.renderHud();
     this.drawAll();
+  }
+
+  /* R98 P3：播放按钮文案/态（on 类 = 播放中） */
+  syncPlayBtn(){
+    const b = this.q('#nzPlay');
+    if (!b) return;
+    const on = !!(this.live && this.live.playing);
+    b.textContent = on ? '⏸ 暂停' : '▶ 播放';
+    b.classList.toggle('on', on);
   }
 
   /* 只算一次（末态 ρ），调试与测试用 */
@@ -302,6 +333,9 @@ export class NoiseApp {
     const b = nzBloch(rho, 0);
     set('hR', nf(b.r, 4));
     set('hX', nf(b.x, 4)); set('hY', nf(b.y, 4)); set('hZ', nf(b.z, 4));
+    /* 演化时刻：当前记录点 / 全程终点（播放中随帧增长，暂停时冻结） */
+    const k = Math.max(0, sc.t.length - 1);
+    set('hT', nf(sc.t[k], 3) + ' / ' + nf(s.steps * s.dt, 2));
     if (s.n === 2){
       const cc = nzConcurrence(rho);
       set('hC', nf(cc.C, 6));
@@ -501,6 +535,20 @@ export class NoiseApp {
     line(sc.yy, 'rgba(240,171,252,.95)', 1.9);
     line(sc.xx, 'rgba(103,232,249,.95)', 1.9);
 
+    /* R98 P3 播放进度头（同上：竖线 + 三线头部亮点） */
+    if (sc.t.length < this.state.steps + 1){
+      const k = sc.t.length - 1;
+      const xh = X(sc.t[k]);
+      g.strokeStyle = 'rgba(226,232,240,.26)'; g.lineWidth = 1 * dpr;
+      g.setLineDash([2, 3]);
+      g.beginPath(); g.moveTo(xh, y0); g.lineTo(xh, y1); g.stroke();
+      g.setLineDash([]);
+      for (const [v, col] of [[sc.xx[k], 'rgba(103,232,249,1)'], [sc.yy[k], 'rgba(240,171,252,1)'], [sc.zz[k], 'rgba(251,191,36,1)']]){
+        g.fillStyle = col;
+        g.beginPath(); g.arc(xh, Y(v), 2.8 * dpr, 0, 6.2832); g.fill();
+      }
+    }
+
     g.fillStyle = 'rgba(226,232,240,.92)'; g.font = (10.5 * dpr) + 'px ui-monospace,monospace';
     g.textAlign = 'left';
     g.fillText('Pauli 关联 ⟨σa⊗σb⟩（直接测量）', 8 * dpr, 16 * dpr);
@@ -668,6 +716,23 @@ export class NoiseApp {
       g.fillStyle = 'rgba(148,163,184,.8)';
       g.fillText('虚线 = 解析', lx + 8 * dpr, 14 * dpr);
     }
+
+    /* R98 P3 播放进度头：未演满时画当前时刻竖线 + 实线头部亮点 */
+    if (sc.t.length < this.state.steps + 1){
+      const k = sc.t.length - 1;
+      const xh = X(sc.t[k]);
+      g.strokeStyle = 'rgba(226,232,240,.26)'; g.lineWidth = 1 * dpr;
+      g.setLineDash([2, 3]);
+      g.beginPath(); g.moveTo(xh, y0); g.lineTo(xh, y1); g.stroke();
+      g.setLineDash([]);
+      const heads = isBell
+        ? [[sc.C[k], 'rgba(103,232,249,1)']]
+        : [[sc.x[k], 'rgba(103,232,249,1)'], [sc.y[k], 'rgba(240,171,252,1)'], [sc.z[k], 'rgba(251,191,36,1)']];
+      for (const [v, col] of heads){
+        g.fillStyle = col;
+        g.beginPath(); g.arc(xh, Y(v), 2.8 * dpr, 0, 6.2832); g.fill();
+      }
+    }
   }
 
   /* ---------- 调试句柄（cdp77） ---------- */
@@ -699,6 +764,10 @@ export class NoiseApp {
       setTau: v => self.setTau(v),
       setParam: (k, v) => { self.state[k] = v; self.syncPanel(); self.recompute(); },
       setTraj: on => { self.state.showTraj = !!on; self.syncPanel(); self.recompute(); },
+      /* R98 P3：实时播放（按钮等价路径；测试可直驱） */
+      play: () => { self.live.start(); self.syncPlayBtn(); },
+      pause: () => { self.live.stop(); self.syncPlayBtn(); },
+      live: () => ({ playing: self.live.playing, ...self.live.progress }),
       drag: (dz, de) => { self.state.azim += dz; self.state.elev = Math.max(-1.4, Math.min(1.4, self.state.elev + de)); self.drawAll(); },
       navLinks: () => Array.from(document.querySelectorAll('#nzTop a')).map(a => a.getAttribute('href')),
     };
