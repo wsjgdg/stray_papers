@@ -11,7 +11,8 @@
  * 判定口径（与物理核心一致）：修正后、解码前取样，用 8 个稳定子期望 + 三个逻辑分量
  * 符号定陪集；另有一条独立的 Pauli 帧演算给出权重，两条路径逐位点对账（不一致即报错）。
  * ========================================================================== */
-import { FS_KINDS, FS_DEFAULTS, fsFirstOrder, fsProbeWorst, fsEnsemble } from '../physics/flagsynd.js';
+import { FS_KINDS, FS_DEFAULTS, fsFirstOrder, fsProbeWorst, fsStream, fsEnsemble } from '../physics/flagsynd.js';
+import { LiveDriver } from './live.js';
 
 const FL_CSS = `
   #flPanel{top:108px;left:14px;width:242px;padding:13px;z-index:10;max-height:calc(100vh - 234px);
@@ -97,6 +98,8 @@ export class FlagApp {
       p: Math.max(0, Math.min(0.2, num('p', FS_DEFAULTS.p))),
       trials: Math.max(100, Math.min(2000, Math.round(num('trials', 400)))),
       seed: Math.round(num('seed', FS_DEFAULTS.seed)),
+      /* R98 P2 实时沙盒：?live=1 直达即播（MC 随播随长） */
+      live: q.get('live') === '1',
     };
     this.fo = {};        /* kind → fsFirstOrder 结果（精确枚举，一次算好） */
     this.worst = {};     /* kind → fsProbeWorst（扇出图） */
@@ -112,6 +115,7 @@ export class FlagApp {
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
+    this.live?.dispose();                 /* R98 P2：停 rAF 播放环 */
     for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
     this._listeners.length = 0;
     this.modeRoot.replaceChildren();      /* 移除本 mode 的 DOM（面板/HUD/画布/提示） */
@@ -133,7 +137,8 @@ export class FlagApp {
         <div class="row"><label>N</label><input type="range" id="flTrials" min="200" max="2000" step="100"><output id="flTrialsO">—</output></div>
 
         <div class="grp">实验</div>
-        <div class="btns">
+        <div class="btns g3">
+          <button id="flPlay">▶ 播放</button>
           <button id="flRun">跑一次 MC</button>
           <button id="flReseed">换种子</button>
         </div>
@@ -204,6 +209,19 @@ export class FlagApp {
       this.state.seed = (this.state.seed * 1103515245 + 12345) % 2147483647;
       this.runMc();
     });
+
+    /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
+    this.live = new LiveDriver({
+      make: () => fsStream(this.state.kind, {
+        p: this.state.p, spectrum: this.state.spectrum,
+        trials: this.state.trials, seed: this.state.seed,
+      }),
+      onFrame: res => { res.ms = this.live.lastFrameMs; this.mc = res; this.renderHud(); },
+      onState: () => this.syncPlayBtn(),
+    });
+    this.on(this.q('#flPlay'), 'click', () => this.live.toggle());
+    this.syncPlayBtn();
+    if (this.state.live) this.live.start();   /* ?live=1：runMc 将走播放分支 */
     this.on(window, 'resize', () => this.resize());
     if (window.ResizeObserver){
       const ro = new ResizeObserver(() => this.resize());
@@ -267,6 +285,8 @@ export class FlagApp {
 
   runMc(){
     const k = this.state.kind;
+    /* R98 P2：播放中 → 换累加器接着演；否则同步全批（旧行为） */
+    if (this.live && this.live.playing){ this.live.sync(); return; }
     const t0 = performance.now();
     this.mc = fsEnsemble(k, {
       p: this.state.p, spectrum: this.state.spectrum,
@@ -274,6 +294,15 @@ export class FlagApp {
     });
     this.mc.ms = performance.now() - t0;
     this.renderHud();
+  }
+
+  /* R98 P2：播放按钮文案/态（on 类 = 播放中） */
+  syncPlayBtn(){
+    const b = this.q('#flPlay');
+    if (!b) return;
+    const on = !!(this.live && this.live.playing);
+    b.textContent = on ? '⏸ 暂停' : '▶ 播放';
+    b.classList.toggle('on', on);
   }
 
   /* ---------- HUD ---------- */
@@ -587,6 +616,10 @@ export class FlagApp {
       setSpectrum: s => { if (flSPEC_W[s]){ self.state.spectrum = s; self.syncPanel(); self.renderHud(); self.drawAll(); } },
       setSeed: s => { self.state.seed = s; },
       runMc: () => self.runMc(),
+      /* R98 P2：实时播放（按钮等价路径；测试可直驱） */
+      play: () => { self.live.start(); self.syncPlayBtn(); },
+      pause: () => { self.live.stop(); self.syncPlayBtn(); },
+      live: () => ({ playing: self.live.playing, ...self.live.progress }),
       busy: () => self._queue.length,
       canvasPixels: () => Object.fromEntries(Object.entries(self.cv).map(([k, c]) => [k, c ? c.width * c.height : 0])),
       navLinks: () => Array.from(document.querySelectorAll('.qtop a')).map(a => a.getAttribute('href')),

@@ -22,8 +22,9 @@
  * _queueTimer 类定时器在 deactivate 统一清理。CSS 原样（选择器全 id 锚定，
  * mode 间 DOM 不同屏共存，无串台）。
  * ========================================================================== */
-import { QEC_DEFAULTS, QEC_CODES, QEC_NOISE, QEC_SPECTRA, qecTrial, qecEnsemble, qecSweep, qecLogicalRate, qecThreshold, qecSyndromeTable, qecCircuit, qecExactPL, qecFaultSurvey } from '../physics/qec.js';
+import { QEC_DEFAULTS, QEC_CODES, QEC_NOISE, QEC_SPECTRA, qecTrial, qecStream, qecEnsemble, qecSweep, qecLogicalRate, qecThreshold, qecSyndromeTable, qecCircuit, qecExactPL, qecFaultSurvey } from '../physics/qec.js';
 import { mulberry32 } from '../physics/qcircuit.js';
+import { LiveDriver } from './live.js';
 
 const QEC_CSS = `
   #qePanel{top:108px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 234px);
@@ -85,6 +86,8 @@ export class QecApp {
       trials: Math.round(num('trials', 3000)),
       seed: Math.round(num('seed', 7)),
       paused: q.has('paused'),
+      /* R98 P2 实时沙盒：?live=1 直达即播（播放器见 activate 的 LiveDriver） */
+      live: q.get('live') === '1',
       /* ---- R86 门级噪声（URL: noise/spectrum/noisyPhase） ---- */
       noise: str('noise', 'iid', v => v === 'iid' || v === 'gate'),
       spectrum: str('spectrum', 'depolar', v => v === 'depolar' || v === 'x' || v === 'z'),
@@ -105,6 +108,7 @@ export class QecApp {
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
+    this.live?.dispose();                 /* R98 P2：停 rAF 播放环（切 mode 零泄漏） */
     for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
     this._listeners.length = 0;
     this.modeRoot.replaceChildren();      /* 移除本 mode 的 DOM（面板/HUD/画布/提示） */
@@ -142,7 +146,8 @@ export class QecApp {
         <div class="row"><label>p</label><input type="range" id="qeP" min="0" max="0.6" step="0.005"><output id="qePO">—</output></div>
 
         <div class="grp">实验</div>
-        <div class="btns">
+        <div class="btns g3">
+          <button id="qePlay">▶ 播放</button>
           <button id="qeOnce">单次实验</button>
           <button id="qeReseed">换种子</button>
         </div>
@@ -211,6 +216,16 @@ export class QecApp {
       this.recompute();
     });
 
+    /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
+    this.live = new LiveDriver({
+      make: () => qecStream(this.cfg()),
+      onFrame: res => { this.ens = res; this.renderHud(); this.drawAll(); },
+      onState: () => this.syncPlayBtn(),
+    });
+    this.on(this.q('#qePlay'), 'click', () => this.live.toggle());
+    this.syncPlayBtn();
+    if (this.state.live) this.live.start();   /* ?live=1：recompute 将走播放分支 */
+
     this.on(window, 'resize', () => this.resize());
     if (window.ResizeObserver){
       const ro = new ResizeObserver(() => this.resize());
@@ -242,7 +257,9 @@ export class QecApp {
   }
 
   recompute(){
-    this.ens = qecEnsemble(this.cfg());
+    /* R98 P2：播放中 → 换累加器接着演（统计从零开始长）；否则同步全批（旧行为） */
+    if (this.live && this.live.playing){ this.live.sync(); this.ens = null; }
+    else this.ens = qecEnsemble(this.cfg());
     this.rollOnce();
     const key = this.state.code + '|' + this.state.noise + '|' + this.state.spectrum + '|' + this.state.noisyPhase + '|' + this.state.trials;
     if (key !== this._curveKey){
@@ -332,6 +349,15 @@ export class QecApp {
   setP(v){ this.state.p = v; this.syncPanel(); this.recompute(); }
   setTrials(n){ this.state.trials = n; this.syncPanel(); this.recompute(); }
   reseed(s){ this.state.seed = s; this._rng = null; this.recompute(); }
+
+  /* R98 P2：播放按钮文案/态（on 类 = 播放中） */
+  syncPlayBtn(){
+    const b = this.q('#qePlay');
+    if (!b) return;
+    const on = !!(this.live && this.live.playing);
+    b.textContent = on ? '⏸ 暂停' : '▶ 播放';
+    b.classList.toggle('on', on);
+  }
 
   syncPanel(){
     const s = this.state;
@@ -1022,6 +1048,10 @@ export class QecApp {
       setNoise: n => { self.setNoise(n); self.drawAll(); },
       setSpectrum: sp => { self.setSpectrum(sp); self.drawAll(); },
       setNoisyPhase: np => { self.setNoisyPhase(np); self.drawAll(); },
+      /* R98 P2：实时播放（按钮等价路径；测试可直驱） */
+      play: () => { self.live.start(); self.syncPlayBtn(); },
+      pause: () => { self.live.stop(); self.syncPlayBtn(); },
+      live: () => ({ playing: self.live.playing, ...self.live.progress }),
       exact: () => qecExactPL(self.cfg()),
       survey: (order = 1) => qecFaultSurvey(self.cfg(), order),
       trialWith: (opts) => {

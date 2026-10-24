@@ -11,8 +11,9 @@
  * 与 R78 qec 页的差异： ancilla 顺序复用（10 比特态矢，单次 0.2ms）；
  * 曲线用**精确**值（穷举与 p 无关），MC 只标当前 p 一点。
  * ========================================================================== */
-import { SHOR_STABS, SHOR_LOGICALS, shorTrial, shorEnsemble, shorSweep, shorExactPL, repPLexact, shorCrossover, shorDecode, shorSyndromeOf, shorCoset, shorTableStats, shorDistance, shorWeight2Stats, SHOR_STAB_COUNT, shorFaultSurvey, shorCircuitStats } from '../physics/shor.js';
+import { SHOR_STABS, SHOR_LOGICALS, shorTrial, shorStream, shorEnsemble, shorSweep, shorExactPL, repPLexact, shorCrossover, shorDecode, shorSyndromeOf, shorCoset, shorTableStats, shorDistance, shorWeight2Stats, SHOR_STAB_COUNT, shorFaultSurvey, shorCircuitStats } from '../physics/shor.js';
 import { mulberry32 } from '../physics/qcircuit.js';
+import { LiveDriver } from './live.js';
 
 const SHOR_CSS = `
   #shPanel{top:108px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 340px);
@@ -94,6 +95,8 @@ export class ShorApp {
       noise: str('noise', 'iid', v => v === 'iid' || v === 'gate'),
       spectrum: str('spectrum', 'depolar', v => v === 'depolar' || v === 'x' || v === 'z'),
       noisyPhase: str('noisyPhase', 'extract', v => v === 'extract' || v === 'all'),
+      /* R98 P2 实时沙盒：?live=1 直达即播 */
+      live: q.get('live') === '1',
     };
     this.trial = null;
     this.ens = null;
@@ -110,6 +113,7 @@ export class ShorApp {
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
+    this.live?.dispose();                 /* R98 P2：停 rAF 播放环 */
     for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
     this._listeners.length = 0;
     this.modeRoot.replaceChildren();      /* 移除本 mode 的 DOM（面板/HUD/画布/提示） */
@@ -146,7 +150,8 @@ export class ShorApp {
         <div class="row"><label>p</label><input type="range" id="shP" min="0" max="0.3" step="0.002"><output id="shPO">—</output></div>
 
         <div class="grp">实验</div>
-        <div class="btns">
+        <div class="btns g3">
+          <button id="shPlay">▶ 播放</button>
           <button id="shOnce">单次实验</button>
           <button id="shReseed">换种子</button>
         </div>
@@ -271,6 +276,16 @@ export class ShorApp {
       this.state.seed = (this.state.seed * 1103515245 + 12345) % 2147483647;
       this.recompute();
     });
+
+    /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
+    this.live = new LiveDriver({
+      make: () => shorStream(this.cfg()),
+      onFrame: res => { this.ens = res; this.renderHud(); this.drawAll(); },
+      onState: () => this.syncPlayBtn(),
+    });
+    this.on(this.q('#shPlay'), 'click', () => this.live.toggle());
+    this.syncPlayBtn();
+    if (this.state.live) this.live.start();   /* ?live=1：recompute 将走播放分支 */
     this.on(this.q('#shInject'), 'click', () => this.inject([{ q: this.state.injectQ, t: this.state.injectT }]));
     this.on(this.q('#shInject2'), 'click', () => this.inject([{ q: 0, t: 'x' }, { q: 1, t: 'x' }]));
 
@@ -307,10 +322,21 @@ export class ShorApp {
       this.sweep = shorSweep({ ...this.cfg(), sweepTrials: 400 });
       this._curveKey = key;
     }
-    this.ens = shorEnsemble(this.cfg());
+    /* R98 P2：播放中 → 换累加器接着演；否则同步全批（旧行为） */
+    if (this.live && this.live.playing){ this.live.sync(); this.ens = null; }
+    else this.ens = shorEnsemble(this.cfg());
     this.rollOnce();
     this.renderHud();
     this.drawAll();
+  }
+
+  /* R98 P2：播放按钮文案/态（on 类 = 播放中） */
+  syncPlayBtn(){
+    const b = this.q('#shPlay');
+    if (!b) return;
+    const on = !!(this.live && this.live.playing);
+    b.textContent = on ? '⏸ 暂停' : '▶ 播放';
+    b.classList.toggle('on', on);
   }
 
   rollOnce(force){
@@ -873,6 +899,10 @@ export class ShorApp {
       setPhase: v => { self.state.phase = v; self.syncPanel(); self.rollOnce(); self.renderHud(); self.drawCircuit(); self.drawCurve(); },
       setTrials: n => { self.state.trials = n; self.syncPanel(); self.recompute(); },
       reseed: s => { self.state.seed = s; self._rng = null; self.recompute(); },
+      /* R98 P2：实时播放（按钮等价路径；测试可直驱） */
+      play: () => { self.live.start(); self.syncPlayBtn(); },
+      pause: () => { self.live.stop(); self.syncPlayBtn(); },
+      live: () => ({ playing: self.live.playing, ...self.live.progress }),
       roll: () => { self.rollOnce(); self.renderHud(); self.drawCircuit(); self.drawCurve(); },
       inject: (errs) => self.inject(errs),
       trialWith: (opts) => {

@@ -513,14 +513,16 @@ export function qecTrial(cfg = {}, rng){
 }
 
 /* ============================================================================
- * 一批试验：P_L 与按「错误个数」的分解（R78 口径）+ 结局五分类（R86）
+ * 流式试验累加器（R98 P2）：step(count) 分帧跑 count 次并入累加器，
+ * result() 出当前统计（trials = 已跑次数，随帧增长）。qecEnsemble 为
+ * 薄封装——同一 rng 消耗序，数值与逐位一致（pot 套件不变）。
  * ========================================================================== */
-export function qecEnsemble(cfg = {}){
+export function qecStream(cfg = {}){
   const c = { ...QEC_DEFAULTS, ...cfg };
   const circ = qecCircuit(c.code, c);
   const ref = qecRef(circ);
   const rng = mulberry32(c.seed);
-  const n = Math.max(1, c.trials | 0);
+  let n = 0;
   let nL = 0, nLdec = 0;
   const byCount = [0, 0, 0, 0];          /* 0/1/2/3 个错（i.i.d. 口径） */
   const byCountL = [0, 0, 0, 0];         /* 其中判成逻辑错误的 */
@@ -529,7 +531,7 @@ export function qecEnsemble(cfg = {}){
   const fatesDec = { perfect: 0, gauge: 0, logic: 0 };                     /* 解码后（逻辑比特） */
   const faultHist = {};
   let faultSum = 0, synMiss = 0, randomMeas = 0, disagree = 0, disagreeBlind = 0, blind = 0;
-  for (let k = 0; k < n; k++){
+  function one(){
     const r = qecExec(circ, { rng, cfg: c });
     const cl = qecClass(r.pre, ref, r.F);
     fates[cl.cls]++;
@@ -563,20 +565,36 @@ export function qecEnsemble(cfg = {}){
       faultSum += nf;
     }
     synCount[r.syn[0] * 2 + r.syn[1]]++;
+    n++;
   }
   return {
-    p: c.p, code: c.code, trials: n, PL: nL / n, PLdec: nLdec / n,
-    /* PLexact：i.i.d. 模式 = 解析 3p²−2p³；gate 模式 = DP-over-frames 精确值
-       （末态判据与 PL 同为 q0 约化 F<0.5，可直接 4σ 对账） */
-    PLexact: c.noise === 'gate' ? qecExactPL(c) : qecLogicalRate(c.p), Pun: c.p,
-    noise: c.noise, spectrum: c.spectrum, noisyPhase: c.noisyPhase,
-    byCount, byCountL, synCount,
-    fates, fatesDec, faultHist,
-    meanFaults: c.noise === 'gate' ? faultSum / n : NaN,
-    meanFaultsIID: c.noise === 'gate' ? NaN : (byCount[1] + 2 * byCount[2] + 3 * byCount[3]) / n,
-    synMiss, randomMeas, disagree, disagreeBlind, blind,
-    stats: circ.stats,
+    get total(){ return Math.max(1, c.trials | 0); },
+    get n(){ return n; },
+    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m; k++) one(); },
+    result(){
+      const nn = Math.max(1, n);          /* 防御 0 次 → 除 0；正常路径 n≥1 */
+      return {
+        p: c.p, code: c.code, trials: n, PL: nL / nn, PLdec: nLdec / nn,
+        /* PLexact：i.i.d. 模式 = 解析 3p²−2p³；gate 模式 = DP-over-frames 精确值
+           （末态判据与 PL 同为 q0 约化 F<0.5，可直接 4σ 对账） */
+        PLexact: c.noise === 'gate' ? qecExactPL(c) : qecLogicalRate(c.p), Pun: c.p,
+        noise: c.noise, spectrum: c.spectrum, noisyPhase: c.noisyPhase,
+        byCount, byCountL, synCount,
+        fates, fatesDec, faultHist,
+        meanFaults: c.noise === 'gate' ? faultSum / nn : NaN,
+        meanFaultsIID: c.noise === 'gate' ? NaN : (byCount[1] + 2 * byCount[2] + 3 * byCount[3]) / nn,
+        synMiss, randomMeas, disagree, disagreeBlind, blind,
+        stats: circ.stats,
+      };
+    },
   };
+}
+
+/* 一次性全批（页面既有口径）：同一 rng 消耗序 ⟹ 数值与流式逐位一致 */
+export function qecEnsemble(cfg = {}){
+  const s = qecStream(cfg);
+  s.step(s.total);
+  return s.result();
 }
 
 /* 解析：P_L = 3p²(1−p) + p³ = 3p² − 2p³ */

@@ -23,7 +23,8 @@
  *      码族、一切 d/层级成立（pot85 E4 六族逐族断言）。它在非物理区段且
  *      不随 d 改善 ⟹ 只是伪阈值意义上的数学交点。
  * ========================================================================== */
-import { CF_FAMILIES, CF_NOISES, cfSweep, cfEnsemble, cfExactPL, cfFloor, cfNQ, cfDistance, cfSynBits, cfLeadingPower, CF_FAMILY_ST3 } from '../physics/codefamily.js';
+import { CF_FAMILIES, CF_NOISES, cfSweep, cfStream, cfEnsemble, cfExactPL, cfFloor, cfNQ, cfDistance, cfSynBits, cfLeadingPower, CF_FAMILY_ST3 } from '../physics/codefamily.js';
+import { LiveDriver } from './live.js';
 
 const FM_CSS = `
   #fmPanel{top:108px;left:14px;width:250px;padding:13px;z-index:10;max-height:calc(100vh - 234px);
@@ -110,6 +111,8 @@ export class FamilyApp {
       p: Math.max(0.001, Math.min(0.85, num('p', 0.02))),
       trials: Math.max(200, Math.min(8000, Math.round(num('trials', 4000)))),
       seed: Math.round(num('seed', 7)),
+      /* R98 P2 实时沙盒：?live=1 直达即播（MC 随播随长） */
+      live: q.get('live') === '1',
     };
     this.sweep = null;    /* 全族精确扫描（只随 noise/meas 变，150–650ms） */
     this.mc = null;       /* 当前族当前点 MC（随 fam/p/seed/trials 变） */
@@ -124,6 +127,7 @@ export class FamilyApp {
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
+    this.live?.dispose();                 /* R98 P2：停 rAF 播放环 */
     for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
     this._listeners.length = 0;
     this.modeRoot.replaceChildren();      /* 移除本 mode 的 DOM（面板/HUD/画布/提示） */
@@ -148,7 +152,8 @@ export class FamilyApp {
         <div class="row"><label>N</label><input type="range" id="fmTrials" min="200" max="8000" step="200"><output id="fmTrialsO">—</output></div>
 
         <div class="grp">实验</div>
-        <div class="btns">
+        <div class="btns g3">
+          <button id="fmPlay">▶ 播放</button>
           <button id="fmRun">跑一次 MC</button>
           <button id="fmSeed">换种子</button>
         </div>
@@ -218,6 +223,16 @@ export class FamilyApp {
       this.state.seed = (this.state.seed * 1103515245 + 12345) % 2147483647;
       this.runMc();
     });
+
+    /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
+    this.live = new LiveDriver({
+      make: () => cfStream(this.state.fam, { noise: this.state.noise, meas: this.state.meas, p: this.state.p, trials: this.state.trials, seed: this.state.seed }),
+      onFrame: res => { res.ms = this.live.lastFrameMs; this.mc = res; this.renderHud(); this.drawFate(); this.drawCurve(); },
+      onState: () => this.syncPlayBtn(),
+    });
+    this.on(this.q('#fmPlay'), 'click', () => this.live.toggle());
+    this.syncPlayBtn();
+    if (this.state.live) this.live.start();   /* ?live=1：runMc 将走播放分支 */
     this.on(window, 'resize', () => this.resize());
     if (window.ResizeObserver){
       const ro = new ResizeObserver(() => this.resize());
@@ -274,10 +289,21 @@ export class FamilyApp {
   runMc(tok){
     if (tok && tok !== this._tok) return;
     const s = this.state;
+    /* R98 P2：播放中 → 换累加器接着演；否则同步全批（旧行为） */
+    if (this.live && this.live.playing){ this.live.sync(); return; }
     const t0 = performance.now();
     this.mc = cfEnsemble(s.fam, { noise: s.noise, meas: s.meas, p: s.p, trials: s.trials, seed: s.seed });
     this.mc.ms = performance.now() - t0;
     this.renderHud(); this.drawFate(); this.drawCurve();
+  }
+
+  /* R98 P2：播放按钮文案/态（on 类 = 播放中） */
+  syncPlayBtn(){
+    const b = this.q('#fmPlay');
+    if (!b) return;
+    const on = !!(this.live && this.live.playing);
+    b.textContent = on ? '⏸ 暂停' : '▶ 播放';
+    b.classList.toggle('on', on);
   }
 
   /* MC↔精确 4σ 对账（口径与 pot85 D 节逐字一致） */
@@ -640,6 +666,10 @@ export class FamilyApp {
       setTrials: v => { self.state.trials = Math.max(200, Math.min(8000, Math.round(v))); self.syncPanel(); },
       setSeed: v => { self.state.seed = v; },
       runMc: () => self.runMc(),
+      /* R98 P2：实时播放（按钮等价路径；测试可直驱） */
+      play: () => { self.live.start(); self.syncPlayBtn(); },
+      pause: () => { self.live.stop(); self.syncPlayBtn(); },
+      live: () => ({ playing: self.live.playing, ...self.live.progress }),
       canvasPixels: () => Object.fromEntries(Object.entries(self.cv).map(([k, c]) => [k, c ? c.width * c.height : 0])),
       navLinks: () => Array.from(document.querySelectorAll('.qtop a')).map(a => a.getAttribute('href')),
     };

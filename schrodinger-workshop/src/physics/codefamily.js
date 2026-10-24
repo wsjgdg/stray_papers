@@ -412,24 +412,40 @@ function hdotL(v7){
   return s;
 }
 
-export function cfEnsemble(fam, cfg = {}){
+/* 流式累加器（R98 P2）：step(count) 分帧；result() 出当前统计。 */
+export function cfStream(fam, cfg = {}){
   const c = { ...CF_DEFAULTS, ...cfg };
   const f = typeof fam === 'string' ? CF_ALL.find(x => x.k === fam) : fam;
   const rng = mulberry32(c.seed);
-  const n = Math.max(1, c.trials | 0);
   const byFate = { perfect: 0, logic: 0, outside: 0 };
-  let wsum = 0;
-  for (let k = 0; k < n; k++){
+  let n = 0, wsum = 0;
+  function one(){
     const t = cfTrial(f, c, rng);
     byFate[t.fate]++;
     wsum += t.xw + t.zw;
+    n++;
   }
   return {
-    family: f.k, p: c.p, noise: c.noise, meas: c.meas, trials: n,
-    PL: (byFate.logic + byFate.outside) / n,
-    byFate, meanFaults: wsum / n,
-    exact: cfExactPL(c.p, f, c.noise, c.meas),
+    get total(){ return Math.max(1, c.trials | 0); },
+    get n(){ return n; },
+    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m; k++) one(); },
+    result(){
+      const nn = Math.max(1, n);
+      return {
+        family: f.k, p: c.p, noise: c.noise, meas: c.meas, trials: n,
+        PL: (byFate.logic + byFate.outside) / nn,
+        byFate, meanFaults: wsum / nn,
+        exact: cfExactPL(c.p, f, c.noise, c.meas),
+      };
+    },
   };
+}
+
+/* 一次性全批：同一 rng 消耗序 ⟹ 数值与流式逐位一致 */
+export function cfEnsemble(fam, cfg = {}){
+  const s = cfStream(fam, cfg);
+  s.step(s.total);
+  return s.result();
 }
 
 /* ============================================================================

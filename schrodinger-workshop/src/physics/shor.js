@@ -727,43 +727,59 @@ export function shorSurveyCached(cfg = {}){
   return v;
 }
 
-export function shorEnsemble(cfg = {}){
+/* 流式累加器（R98 P2）：step(count) 分帧；result() 出当前统计。 */
+export function shorStream(cfg = {}){
   const c = { ...SHOR_DEFAULTS, ...cfg };
   const rng = mulberry32(c.seed);
-  const n = Math.max(1, c.trials | 0);
   const gate = c.noise === 'gate';
-  let nL = 0, nF = 0, synMiss = 0;
+  let n = 0, nL = 0, nF = 0, synMiss = 0;
   const byWeight = new Array(10).fill(0);
   const byWeightL = new Array(10).fill(0);
   const byCoset = [0, 0, 0, 0, 0];   /* [∈S, X_L·S, Z_L·S, Y_L·S, ∉N(S)]；shorCoset 的 −1 归入越界类 */
-  for (let k = 0; k < n; k++){
+  function one(){
     const r = shorTrial(c, rng);
     /* i.i.d.：weight = 数据错误数 ∈[0,9]；gate：weight = 注入故障数，第 10 桶为「≥9」 */
     const wi = Math.min(r.weight, 9);
     byWeight[wi]++;
     if (gate){ nF += r.weight; synMiss += r.synMiss || 0; }
     if (r.logicalError){ nL++; byWeightL[wi]++; byCoset[r.coset === -1 ? 4 : r.coset]++; }
+    n++;
   }
-  const ex = shorExactPL(c.p);
-  const out = {
-    p: c.p, trials: n, PL: nL / n,
-    PLexact: gate ? null : ex.PL, Pun: c.p,
-    byWeight, byWeightL, byCoset,
-    /* 对照：重复码（同信道）与未编码 */
-    repExact: repPLexact(c.p).PL,
-    noise: c.noise, spectrum: c.spectrum, noisyPhase: c.noisyPhase,
+  return {
+    get total(){ return Math.max(1, c.trials | 0); },
+    get n(){ return n; },
+    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m; k++) one(); },
+    result(){
+      const nn = Math.max(1, n);
+      const ex = shorExactPL(c.p);
+      const out = {
+        p: c.p, trials: n, PL: nL / nn,
+        PLexact: gate ? null : ex.PL, Pun: c.p,
+        byWeight, byWeightL, byCoset,
+        /* 对照：重复码（同信道）与未编码 */
+        repExact: repPLexact(c.p).PL,
+        noise: c.noise, spectrum: c.spectrum, noisyPhase: c.noisyPhase,
+      };
+      if (gate){
+        const st = shorCircuitStats(c);
+        const sv = shorSurveyCached(c);
+        out.M = st.M; out.sites = st.sites; out.opps = st.opps;
+        out.c1 = sv.c1; out.fatal = sv.fatal; out.total = sv.total;
+        out.meanFaults = nF / nn; out.synMiss = synMiss;
+        /* 门级口径下「重复码基线」不是同一个电路（机会数 8/16 vs 52/90），
+           repExact 是 i.i.d. 口径的值 ⟹ 不相干，置 null；跨码对照见 pot87。 */
+        out.repExact = null;
+      }
+      return out;
+    },
   };
-  if (gate){
-    const st = shorCircuitStats(c);
-    const sv = shorSurveyCached(c);
-    out.M = st.M; out.sites = st.sites; out.opps = st.opps;
-    out.c1 = sv.c1; out.fatal = sv.fatal; out.total = sv.total;
-    out.meanFaults = nF / n; out.synMiss = synMiss;
-    /* 门级口径下「重复码基线」不是同一个电路（机会数 8/16 vs 52/90），
-       repExact 是 i.i.d. 口径的值 ⟹ 不相干，置 null；跨码对照见 pot87。 */
-    out.repExact = null;
-  }
-  return out;
+}
+
+/* 一次性全批：同一 rng 消耗序 ⟹ 数值与流式逐位一致 */
+export function shorEnsemble(cfg = {}){
+  const s = shorStream(cfg);
+  s.step(s.total);
+  return s.result();
 }
 
 /* 扫描（页面曲线用）：**精确** P_L(p) 与重复码对照（穷举与 p 无关，O(1) 每点）。

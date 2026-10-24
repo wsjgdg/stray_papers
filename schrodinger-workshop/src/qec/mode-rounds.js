@@ -16,7 +16,8 @@
  * 量级判据用**精确单故障枚举**（不是 MC 斜率）：静默逻辑位点数 = 0 ⟺ P_L = O(p²)，
  * >0 ⟺ O(p)。MC 斜率在 600 样本下噪声到 0.5–9.6，不可用作判据。
  * ========================================================================== */
-import { FS_KINDS, fsFirstOrder, fsEnsemble, fsRun, rdSweep, rdPseudoThreshold, rdSlope } from '../physics/flagsynd.js';
+import { FS_KINDS, fsFirstOrder, fsStream, fsEnsemble, fsRun, rdSweep, rdPseudoThreshold, rdSlope } from '../physics/flagsynd.js';
+import { LiveDriver } from './live.js';
 
 const RD_CSS = `
   #rdPanel{top:108px;left:14px;width:246px;padding:13px;z-index:10;max-height:calc(100vh - 234px);
@@ -31,6 +32,7 @@ const RD_CSS = `
   #rdPanel output{font-family:var(--mono);font-size:11px;color:var(--txt);min-width:44px;text-align:right}
   #rdPanel .btns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
   #rdPanel .btns.g2{grid-template-columns:1fr 1fr}
+  #rdPanel .btns.g3{grid-template-columns:repeat(3,1fr)}
   #rdPanel button{font-family:var(--mono);font-size:10px;padding:5px 3px;border-radius:6px;cursor:pointer;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     background:rgba(103,232,249,.08);border:1px solid var(--line);color:var(--txt);transition:all .15s}
@@ -101,6 +103,8 @@ export class RoundsApp {
       p: Math.max(0.001, Math.min(0.2, num('p', 0.02))),
       trials: Math.max(200, Math.min(2000, Math.round(num('trials', 500)))),
       seed: Math.round(num('seed', 7)),
+      /* R98 P2 实时沙盒：?live=1 直达即播（MC 随播随长） */
+      live: q.get('live') === '1',
     };
     this.fo = null;        /* 当前配置的精确单故障枚举 */
     this.mc = null;        /* 当前配置的 MC */
@@ -114,6 +118,7 @@ export class RoundsApp {
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
+    this.live?.dispose();                 /* R98 P2：停 rAF 播放环 */
     for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
     this._listeners.length = 0;
     this.modeRoot.replaceChildren();      /* 移除本 mode 的 DOM（面板/HUD/画布/提示） */
@@ -143,7 +148,8 @@ export class RoundsApp {
         <div class="grp">MC 样本数</div>
         <div class="row"><label>N</label><input type="range" id="rdTrials" min="200" max="2000" step="100"><output id="rdTrialsO">—</output></div>
         <div class="grp">实验</div>
-        <div class="btns g2">
+        <div class="btns g3">
+          <button id="rdPlay">▶ 播放</button>
           <button id="rdRun">跑 MC + 扫描</button>
           <button id="rdOnce">单次试验</button>
         </div>
@@ -203,6 +209,16 @@ export class RoundsApp {
     this.on(this.q('#rdTrials'), 'input', e => { this.state.trials = parseInt(e.target.value, 10); this.syncPanel(); });
     this.on(this.q('#rdRun'), 'click', () => this.runMc());
     this.on(this.q('#rdOnce'), 'click', () => { this.once(); this.renderHud(); this.drawTime(); });
+
+    /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
+    this.live = new LiveDriver({
+      make: () => fsStream(this.state.kind, this.cfg()),
+      onFrame: res => { this.mc = res; this.renderHud(); },
+      onState: () => this.syncPlayBtn(),
+    });
+    this.on(this.q('#rdPlay'), 'click', () => this.live.toggle());
+    this.syncPlayBtn();
+    if (this.state.live) this.live.start();   /* ?live=1：runMc 将走播放分支 */
     this.on(window, 'resize', () => this.resize());
     if (window.ResizeObserver){ const ro = new ResizeObserver(() => this.resize()); ro.observe(this.q('#rdStage')); this._ro = ro; }
 
@@ -260,10 +276,27 @@ export class RoundsApp {
   runMc(tok){
     const s = this.state;
     if (tok && tok !== this._tok) return;
-    this.mc = fsEnsemble(s.kind, this.cfg());
     this.sweep = rdSweep(s.kind, this.cfg({ ps: [0.002, 0.005, 0.01, 0.02, 0.04, 0.08] }));
+    /* R98 P2：播放中 → 换累加器接着演（sweep 已按旧口径重算，MC 交给帧循环）；
+       否则同步全批（旧行为）。 */
+    if (this.live && this.live.playing){
+      this.live.sync();
+      if (!this.trial) this.once();
+      this.renderHud(); this.drawAll();
+      return;
+    }
+    this.mc = fsEnsemble(s.kind, this.cfg());
     if (!this.trial) this.once();
     this.renderHud(); this.drawAll();
+  }
+
+  /* R98 P2：播放按钮文案/态（on 类 = 播放中） */
+  syncPlayBtn(){
+    const b = this.q('#rdPlay');
+    if (!b) return;
+    const on = !!(this.live && this.live.playing);
+    b.textContent = on ? '⏸ 暂停' : '▶ 播放';
+    b.classList.toggle('on', on);
   }
 
   renderHud(){
@@ -512,6 +545,10 @@ export class RoundsApp {
       setP: v => { self.state.p = v; self.syncPanel(); self.runMc(); },
       setTrials: v => { self.state.trials = v; self.syncPanel(); },
       runMc: () => self.runMc(),
+      /* R98 P2：实时播放（按钮等价路径；测试可直驱） */
+      play: () => { self.live.start(); self.syncPlayBtn(); },
+      pause: () => { self.live.stop(); self.syncPlayBtn(); },
+      live: () => ({ playing: self.live.playing, ...self.live.progress }),
       once: () => { self.once(); self.renderHud(); self.drawTime(); },
       canvasPixels: () => Object.fromEntries(Object.entries(self.cv).map(([k, c]) => [k, c ? c.width * c.height : 0])),
       navLinks: () => Array.from(document.querySelectorAll('.qtop a')).map(a => a.getAttribute('href')),

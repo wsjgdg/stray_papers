@@ -15,8 +15,9 @@
  * 预设：恒等链（单比特）、旋转链（单比特）、Bell 对（2 比特）、GHZ（3/4/5 比特）。
  * 参数口径：p 是每门每比特 Pauli 错误率；R77 退极化 Kraus 参数 p_K = 4p/3。
  * ========================================================================== */
-import { GN_DEFAULTS, GN_SPECTRA, GN_PRESETS, gnPresetGates, gnTrial, gnTouched, gnRun, gnSweep, gnClosedAt, gnEsdBells, gnGateFidelity, gnLambda, gnGammaZ, gnRhoRun, gnRhoInfo } from '../physics/gatenoise.js';
+import { GN_DEFAULTS, GN_SPECTRA, GN_PRESETS, gnPresetGates, gnTrial, gnTouched, gnStream, gnRun, gnSweep, gnClosedAt, gnEsdBells, gnGateFidelity, gnLambda, gnGammaZ, gnRhoRun, gnRhoInfo } from '../physics/gatenoise.js';
 import { mulberry32 } from '../physics/qcircuit.js';
+import { LiveDriver } from './live.js';
 
 const GN_CSS = `
   #gnPanel{top:108px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 234px);
@@ -107,6 +108,8 @@ export class GateNoiseApp {
       phase: num('phase', GN_DEFAULTS.phase),
       trials: Math.round(num('trials', GN_DEFAULTS.trials)),
       seed: Math.round(num('seed', GN_DEFAULTS.seed)),
+      /* R98 P2 实时沙盒：?live=1 直达即播 */
+      live: q.get('live') === '1',
     };
     this._rng = null;
     this.trial = null;
@@ -122,6 +125,7 @@ export class GateNoiseApp {
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
+    this.live?.dispose();                 /* R98 P2：停 rAF 播放环 */
     for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
     this._listeners.length = 0;
     this.modeRoot.replaceChildren();      /* 移除本 mode 的 DOM（面板/HUD/画布/提示） */
@@ -150,7 +154,8 @@ export class GateNoiseApp {
         <div class="row"><label>φ</label><input type="range" id="gnPhase" min="-3.1416" max="3.1416" step="0.01"><output id="gnPhaseO">—</output></div>
 
         <div class="grp">实验（MC 态矢采样）</div>
-        <div class="btns">
+        <div class="btns g3">
+          <button id="gnPlay">▶ 播放</button>
           <button id="gnOnce">单次试验</button>
           <button id="gnReseed">换种子</button>
         </div>
@@ -277,6 +282,16 @@ export class GateNoiseApp {
       this.recompute();
     });
 
+    /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
+    this.live = new LiveDriver({
+      make: () => gnStream(this.cfg()),
+      onFrame: res => { this.mc = res; this.renderHud(); this.renderSpec(); this.drawAll(); },
+      onState: () => this.syncPlayBtn(),
+    });
+    this.on(this.q('#gnPlay'), 'click', () => this.live.toggle());
+    this.syncPlayBtn();
+    if (this.state.live) this.live.start();   /* ?live=1：recompute 将走播放分支 */
+
     this.on(window, 'resize', () => this.resize());
     if (window.ResizeObserver){
       const ro = new ResizeObserver(() => this.resize());
@@ -303,11 +318,22 @@ export class GateNoiseApp {
 
   recompute(){
     this.sweep = gnSweep(this.cfg());
-    this.mc = gnRun(this.cfg());
+    /* R98 P2：播放中 → 换累加器接着演；否则同步全批（旧行为） */
+    if (this.live && this.live.playing){ this.live.sync(); this.mc = null; }
+    else this.mc = gnRun(this.cfg());
     this.rollOnce();
     this.renderHud();
     this.renderSpec();
     this.drawAll();
+  }
+
+  /* R98 P2：播放按钮文案/态（on 类 = 播放中） */
+  syncPlayBtn(){
+    const b = this.q('#gnPlay');
+    if (!b) return;
+    const on = !!(this.live && this.live.playing);
+    b.textContent = on ? '⏸ 暂停' : '▶ 播放';
+    b.classList.toggle('on', on);
   }
 
   /* 单条轨迹（电路图画布的错误时间线用）；rng 跨次滚动，与 MC 的 seed 无关 */
@@ -729,6 +755,10 @@ export class GateNoiseApp {
         return out;
       },
       esd: () => gnEsdBells(self.state.spectrum, self.state.p, self.state.k),
+      /* R98 P2：实时播放（按钮等价路径；测试可直驱） */
+      play: () => { self.live.start(); self.syncPlayBtn(); },
+      pause: () => { self.live.stop(); self.syncPlayBtn(); },
+      live: () => ({ playing: self.live.playing, ...self.live.progress }),
       setP: v => { self.state.p = v; self.syncPanel(); self.recompute(); },
       setK: v => { self.state.k = v; self.syncPanel(); self.recompute(); },
       setSpectrum: sp => { if (GN_SPECTRA[sp]){ self.state.spectrum = sp; self.syncPanel(); self.recompute(); } },

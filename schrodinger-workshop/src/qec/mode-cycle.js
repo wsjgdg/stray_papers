@@ -16,7 +16,8 @@
  *   用「|0_L⟩ 的解析参数」会得到 F≈0（逻辑门把态翻到 |1_L⟩），这是 R84 踩过的坑。
  * ========================================================================== */
 import { NAV_HREFS } from '../core/nav.js';
-import { FS_KINDS, fsCircuit, fsFirstOrder, fsEnsemble, fsRun, cyInterception, cySweepCycles } from '../physics/flagsynd.js';
+import { FS_KINDS, fsCircuit, fsFirstOrder, fsStream, fsEnsemble, fsRun, cyInterception, cySweepCycles } from '../physics/flagsynd.js';
+import { LiveDriver } from './live.js';
 
 const CY_CSS = `
   #cyPanel{top:108px;left:14px;width:246px;padding:13px;z-index:10;max-height:calc(100vh - 234px);
@@ -31,6 +32,7 @@ const CY_CSS = `
   #cyPanel output{font-family:var(--mono);font-size:11px;color:var(--txt);min-width:44px;text-align:right}
   #cyPanel .btns{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:6px}
   #cyPanel .btns.g2{grid-template-columns:1fr 1fr}
+  #cyPanel .btns.g3{grid-template-columns:repeat(3,1fr)}
   #cyPanel .btns.g4{grid-template-columns:repeat(4,1fr)}
   #cyPanel button{font-family:var(--mono);font-size:10px;padding:5px 3px;border-radius:6px;cursor:pointer;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -101,6 +103,8 @@ export class CycleApp {
       p: Math.max(0.001, Math.min(0.12, num('p', 0.02))),
       trials: Math.max(120, Math.min(1200, Math.round(num('trials', 400)))),
       seed: Math.round(num('seed', 7)),
+      /* R98 P2 实时沙盒：?live=1 直达即播（MC 随播随长） */
+      live: q.get('live') === '1',
     };
     this.ic = null;        /* 门错误拦截率（精确枚举，快） */
     this.sw = null;        /* P_L 随周期数（MC，慢） */
@@ -114,6 +118,7 @@ export class CycleApp {
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
+    this.live?.dispose();                 /* R98 P2：停 rAF 播放环 */
     for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
     this._listeners.length = 0;
     this.modeRoot.replaceChildren();      /* 移除本 mode 的 DOM（面板/HUD/画布/提示） */
@@ -145,7 +150,8 @@ export class CycleApp {
         <div class="grp">MC 样本数</div>
         <div class="row"><label>N</label><input type="range" id="cyTrials" min="120" max="1200" step="40"><output id="cyTrialsO">—</output></div>
         <div class="grp">实验</div>
-        <div class="btns g2">
+        <div class="btns g3">
+          <button id="cyPlay">▶ 播放</button>
           <button id="cyRun">跑 MC + 扫描</button>
           <button id="cyOnce">单次试验</button>
         </div>
@@ -207,6 +213,16 @@ export class CycleApp {
     this.on(this.q('#cyRun'), 'click', () => this.compute());
     this.on(this.q('#cyOnce'), 'click', () => { this.once(); this.renderHud(); this.drawAll(); });
 
+    /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
+    this.live = new LiveDriver({
+      make: () => fsStream(this.state.kind, this.cfg()),
+      onFrame: res => { this.mc = res; this.renderHud(); this.drawFlow(); },
+      onState: () => this.syncPlayBtn(),
+    });
+    this.on(this.q('#cyPlay'), 'click', () => this.live.toggle());
+    this.syncPlayBtn();
+    if (this.state.live) this.live.start();   /* ?live=1：compute 的 MC 段将走播放分支 */
+
     if (window.ResizeObserver){ const ro = new ResizeObserver(() => this.resize()); ro.observe(this.q('#cyStage')); this._ro = ro; }
     this.syncPanel();
     this.renderHint();
@@ -261,6 +277,19 @@ export class CycleApp {
       this.renderHud(); this.drawGate();
       setTimeout(() => {
         if (tok !== this._tok) return;
+        /* R98 P2：播放中 → 换累加器接着演；否则同步全批（旧行为） */
+        if (this.live && this.live.playing){
+          this.live.sync();
+          this.fo = fsFirstOrder(this.state.kind, this.cfg());
+          this.renderHud(); this.drawFlow();
+          setTimeout(() => {
+            if (tok !== this._tok) return;
+            const Ts = [1, 2, 3, 4].filter(t => t <= Math.max(2, this.state.cycles));
+            this.sw = cySweepCycles(this.cfg({ Ts, trials: Math.max(120, Math.round(this.state.trials / 2)) }));
+            this.renderHud(); this.drawCurve();
+          }, 20);
+          return;
+        }
         this.mc = fsEnsemble(this.state.kind, this.cfg());
         this.fo = fsFirstOrder(this.state.kind, this.cfg());
         this.renderHud(); this.drawFlow();
@@ -276,6 +305,15 @@ export class CycleApp {
 
   once(){
     this.trial = fsRun(this.state.kind, this.cfg(), null, (this.state.seed ^ 0x2b3f) >>> 0 || 1);
+  }
+
+  /* R98 P2：播放按钮文案/态（on 类 = 播放中） */
+  syncPlayBtn(){
+    const b = this.q('#cyPlay');
+    if (!b) return;
+    const on = !!(this.live && this.live.playing);
+    b.textContent = on ? '⏸ 暂停' : '▶ 播放';
+    b.classList.toggle('on', on);
   }
 
   renderHud(){
@@ -539,6 +577,10 @@ export class CycleApp {
         synRounds: self.trial.synRounds.map(s => s.slice()), usableR: (self.trial.usableR || []).slice(),
         fixLog: (self.trial.fixLog || []).map(f => ({ round: f.round, fix: f.fix.length })),
         logicGates: (self.trial.fixLog || []).length } : null),
+      /* R98 P2：实时播放（按钮等价路径；测试可直驱） */
+      play: () => { self.live.start(); self.syncPlayBtn(); },
+      pause: () => { self.live.stop(); self.syncPlayBtn(); },
+      live: () => ({ playing: self.live.playing, ...self.live.progress }),
       canvasPixels: () => {
         const f = sel => {
           const c = self.modeRoot.querySelector(sel);

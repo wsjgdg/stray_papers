@@ -21,6 +21,7 @@
       src/physics/noise.js
       src/physics/gatenoise.js
       src/physics/qec.js
+      src/qec/live.js
       src/qec/mode-rep.js
       src/physics/shor.js
       src/qec/mode-shor.js
@@ -2041,7 +2042,8 @@ function gnRhoInfo(rho, spec){
    用于 MC 误差棒）+ 错误直方图 + 末条轨迹。C 非线性：只给 C(ρ_MC)，不给误差棒
    （页面注明）；另给 meanCtraj——Bell 预设下它恒等于 1，是「纠缠是系综性质」
    的现场证据。 */
-function gnRun(cfg = {}){
+/* 流式累加器（R98 P2）：step(count) 分帧；result() 出当前统计（rho = 累积均值）。 */
+function gnStream(cfg = {}){
   const c = { ...GN_DEFAULTS, ...cfg };
   const spec = gnPresetGates(c.preset, c.n, c.k, c.theta, c.phase);
   const rng = mulberry32(c.seed);
@@ -2054,9 +2056,8 @@ function gnRun(cfg = {}){
   for (let i = 0; i < nq; i++) for (let j = i + 1; j < nq; j++) sumZ.push({ i, j, s: 0, s2: 0 });
   let sumC = 0, nC = 0;
   const errHist = new Array(spec.gates.length + 2).fill(0);
-  let last = null, errSum = 0;
-  const N = Math.max(1, c.trials | 0);
-  for (let t = 0; t < N; t++){
+  let last = null, errSum = 0, N = 0;
+  function one(){
     const tr = gnTrial(spec.n, spec.gates, { pGate: c.pGate, spectrum: c.spectrum, noisyFrom: spec.noisyFrom }, rng);
     const st = tr.state;
     for (let i = 0; i < D; i++) for (let j = 0; j < D; j++){
@@ -2100,22 +2101,38 @@ function gnRun(cfg = {}){
     errHist[tr.errors.length]++;
     errSum += tr.errors.length;
     last = tr;
+    N++;
   }
-  const rho = { n: spec.n, dim: D, re: new Float64Array(len), im: new Float64Array(len) };
-  for (let m = 0; m < len; m++){ rho.re[m] = acc.re[m] / N; rho.im[m] = acc.im[m] / N; }
-  const sd = (o) => Math.sqrt(Math.max(0, o.s2 / N - (o.s / N) * (o.s / N)));
   return {
-    preset: c.preset, n: spec.n, k: spec.k, p: c.pGate, spectrum: c.spectrum, trials: N,
-    rho,
-    info: gnRhoInfo(rho, spec),
-    F: { mean: sumF.s / N, sd: sd(sumF) },
-    bloch: sumB.map(o => ({ x: { mean: o.x.s / N, sd: sd(o.x) }, y: { mean: o.y.s / N, sd: sd(o.y) }, z: { mean: o.z.s / N, sd: sd(o.z) } })),
-    zz: sumZ.map(o => ({ i: o.i, j: o.j, mean: o.s / N, sd: sd(o) })),
-    meanCtraj: nC ? sumC / nC : NaN,
-    errHist: errHist.slice(0, spec.gates.length + 1),
-    errMean: errSum / N,
-    last: { state: last.state, errors: last.errors },
+    get total(){ return Math.max(1, c.trials | 0); },
+    get n(){ return N; },
+    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m; k++) one(); },
+    result(){
+      const NN = Math.max(1, N);
+      const rho = { n: spec.n, dim: D, re: new Float64Array(len), im: new Float64Array(len) };
+      for (let m = 0; m < len; m++){ rho.re[m] = acc.re[m] / NN; rho.im[m] = acc.im[m] / NN; }
+      const sd = (o) => Math.sqrt(Math.max(0, o.s2 / NN - (o.s / NN) * (o.s / NN)));
+      return {
+        preset: c.preset, n: spec.n, k: spec.k, p: c.pGate, spectrum: c.spectrum, trials: N,
+        rho,
+        info: gnRhoInfo(rho, spec),
+        F: { mean: sumF.s / NN, sd: sd(sumF) },
+        bloch: sumB.map(o => ({ x: { mean: o.x.s / NN, sd: sd(o.x) }, y: { mean: o.y.s / NN, sd: sd(o.y) }, z: { mean: o.z.s / NN, sd: sd(o.z) } })),
+        zz: sumZ.map(o => ({ i: o.i, j: o.j, mean: o.s / NN, sd: sd(o) })),
+        meanCtraj: nC ? sumC / nC : NaN,
+        errHist: errHist.slice(0, spec.gates.length + 1),
+        errMean: errSum / NN,
+        last: { state: last.state, errors: last.errors },
+      };
+    },
   };
+}
+
+/* 一次性全批：同一 rng 消耗序 ⟹ 数值与流式逐位一致 */
+function gnRun(cfg = {}){
+  const s = gnStream(cfg);
+  s.step(s.total);
+  return s.result();
 }
 
 /* ---------- ③ 闭式 ---------- */
@@ -2804,14 +2821,16 @@ function qecTrial(cfg = {}, rng){
 }
 
 /* ============================================================================
- * 一批试验：P_L 与按「错误个数」的分解（R78 口径）+ 结局五分类（R86）
+ * 流式试验累加器（R98 P2）：step(count) 分帧跑 count 次并入累加器，
+ * result() 出当前统计（trials = 已跑次数，随帧增长）。qecEnsemble 为
+ * 薄封装——同一 rng 消耗序，数值与逐位一致（pot 套件不变）。
  * ========================================================================== */
-function qecEnsemble(cfg = {}){
+function qecStream(cfg = {}){
   const c = { ...QEC_DEFAULTS, ...cfg };
   const circ = qecCircuit(c.code, c);
   const ref = qecRef(circ);
   const rng = mulberry32(c.seed);
-  const n = Math.max(1, c.trials | 0);
+  let n = 0;
   let nL = 0, nLdec = 0;
   const byCount = [0, 0, 0, 0];          /* 0/1/2/3 个错（i.i.d. 口径） */
   const byCountL = [0, 0, 0, 0];         /* 其中判成逻辑错误的 */
@@ -2820,7 +2839,7 @@ function qecEnsemble(cfg = {}){
   const fatesDec = { perfect: 0, gauge: 0, logic: 0 };                     /* 解码后（逻辑比特） */
   const faultHist = {};
   let faultSum = 0, synMiss = 0, randomMeas = 0, disagree = 0, disagreeBlind = 0, blind = 0;
-  for (let k = 0; k < n; k++){
+  function one(){
     const r = qecExec(circ, { rng, cfg: c });
     const cl = qecClass(r.pre, ref, r.F);
     fates[cl.cls]++;
@@ -2854,20 +2873,36 @@ function qecEnsemble(cfg = {}){
       faultSum += nf;
     }
     synCount[r.syn[0] * 2 + r.syn[1]]++;
+    n++;
   }
   return {
-    p: c.p, code: c.code, trials: n, PL: nL / n, PLdec: nLdec / n,
-    /* PLexact：i.i.d. 模式 = 解析 3p²−2p³；gate 模式 = DP-over-frames 精确值
-       （末态判据与 PL 同为 q0 约化 F<0.5，可直接 4σ 对账） */
-    PLexact: c.noise === 'gate' ? qecExactPL(c) : qecLogicalRate(c.p), Pun: c.p,
-    noise: c.noise, spectrum: c.spectrum, noisyPhase: c.noisyPhase,
-    byCount, byCountL, synCount,
-    fates, fatesDec, faultHist,
-    meanFaults: c.noise === 'gate' ? faultSum / n : NaN,
-    meanFaultsIID: c.noise === 'gate' ? NaN : (byCount[1] + 2 * byCount[2] + 3 * byCount[3]) / n,
-    synMiss, randomMeas, disagree, disagreeBlind, blind,
-    stats: circ.stats,
+    get total(){ return Math.max(1, c.trials | 0); },
+    get n(){ return n; },
+    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m; k++) one(); },
+    result(){
+      const nn = Math.max(1, n);          /* 防御 0 次 → 除 0；正常路径 n≥1 */
+      return {
+        p: c.p, code: c.code, trials: n, PL: nL / nn, PLdec: nLdec / nn,
+        /* PLexact：i.i.d. 模式 = 解析 3p²−2p³；gate 模式 = DP-over-frames 精确值
+           （末态判据与 PL 同为 q0 约化 F<0.5，可直接 4σ 对账） */
+        PLexact: c.noise === 'gate' ? qecExactPL(c) : qecLogicalRate(c.p), Pun: c.p,
+        noise: c.noise, spectrum: c.spectrum, noisyPhase: c.noisyPhase,
+        byCount, byCountL, synCount,
+        fates, fatesDec, faultHist,
+        meanFaults: c.noise === 'gate' ? faultSum / nn : NaN,
+        meanFaultsIID: c.noise === 'gate' ? NaN : (byCount[1] + 2 * byCount[2] + 3 * byCount[3]) / nn,
+        synMiss, randomMeas, disagree, disagreeBlind, blind,
+        stats: circ.stats,
+      };
+    },
   };
+}
+
+/* 一次性全批（页面既有口径）：同一 rng 消耗序 ⟹ 数值与流式逐位一致 */
+function qecEnsemble(cfg = {}){
+  const s = qecStream(cfg);
+  s.step(s.total);
+  return s.result();
 }
 
 /* 解析：P_L = 3p²(1−p) + p³ = 3p² − 2p³ */
@@ -3140,6 +3175,135 @@ function qecSyndromeTable(){
   return rows;
 }
 
+/* ===== src/qec/live.js ===== */
+/* ============================================================================
+ * live.js（R98 P2 新建）— 共享 LiveDriver：一次性 MC 批 → rAF 分帧演出
+ *
+ * 背景（用户指令「剩下的能不能都做成实时沙盒类？」）：QEC hub 七个模式的统计
+ * 原先都是「参数变 → 同步跑完整批 → 画」（拖动滑块时整页卡顿几百 ms）。P2 把
+ * 物理层累加器（qecStream / shorStream / gnStream / fsStream / cfStream）接到
+ * 这个共享播放器上：播放时每帧只跑一段试验，统计量随帧增长（trials 计数、
+ * P_L、直方图、结局分解全部在动），20fps 节制；跑满目标批自动停；暂停即冻结
+ * （累加器保留，再播接着演）；参数变化重置累加器（播放中换新的接着演、暂停时
+ * 补一个同步全批——与旧行为逐位一致）。
+ *
+ * 节拍口径（R98 P2b 修正）：按**时长**而非固定帧数分配每帧样本量。
+ *   want = ceil(total · dt / duration)，dt = 距上一帧的真实时长
+ *   ⟹ 快渲染（真实 GPU，rAF 60Hz 但被 20fps 闸限制，dt≈50ms）落回 total/60；
+ *      慢渲染（软件光栅，dt 可能 300–800ms）自动加大每帧样本量，仍能 ~duration 演满。
+ *   样本量再夹紧到剩余量（min(want, total−n)）⟹ 永不越界，trials 精确落在 total
+ *   （旧实现 batch=round(total/60) 在 total=4000 时会演到 4020，已修）。
+ *
+ * 契约：
+ *   make()  → stream：{ step(count), result(), get total, get n }
+ *   onFrame(result, n, total) 每帧回调（mode 侧：存结果 + 渲染）
+ *   onState(playing) 播放态变化回调（mode 侧：同步按钮文案/样式）
+ *   deactivate 必须 dispose()（停 rAF，切 mode 零泄漏）
+ *
+ * ?live=1：activate 收尾时 start()（URL 直达即演，与 paused 同款校验）。
+ * ========================================================================== */
+class LiveDriver {
+  /**
+   * @param {object}   o
+   * @param {() => object} o.make    累加器工厂（每次 sync/重置调用，同 cfg）
+   * @param {(r: object, n: number, total: number) => void} o.onFrame
+   * @param {(playing: boolean) => void} [o.onState]
+   * @param {number}   [o.fps=20]        帧率节制上限（rAF 仍每帧回调，只按时间闸放行）
+   * @param {number}   [o.duration=3000] 一批样本的目标演出时长（ms），每帧样本量按时长反推
+   */
+  constructor({ make, onFrame, onState = null, fps = 20, duration = 3000 } = {}){
+    this.make = make;
+    this.onFrame = onFrame;
+    this.onState = onState;
+    this.fps = fps;
+    this.duration = Math.max(600, duration | 0);
+    this.stream = null;
+    this.playing = false;
+    this._raf = 0;
+    this._last = -1e9;
+    this._prev = 0;            /* 上一次 pump 的时刻；0 = 首帧（用名义帧长） */
+    this.lastFrameMs = 0;      /* 最近一帧 step() 耗时（mode HUD/调试用） */
+  }
+
+  /** 名义每帧样本量（快渲染路径；慢渲染由 pump 内的时长反推接管） */
+  get batch(){
+    const t = this.stream ? this.stream.total : 3000;
+    const frames = Math.max(1, Math.round(this.duration / (1000 / this.fps)));
+    return Math.max(1, Math.round(t / frames));
+  }
+
+  /** 已跑 / 目标（按钮文案与测试断言用） */
+  get progress(){
+    return this.stream ? { n: this.stream.n, total: this.stream.total } : { n: 0, total: 0 };
+  }
+
+  _setPlaying(v){
+    if (this.playing === v) return;
+    this.playing = v;
+    this.onState?.(v);
+  }
+
+  start(){
+    if (this.playing) return;
+    /* 演满过再播 ⟹ 换新累加器重演（same cfg ⟹ 同 rng 序列，数值可复现） */
+    if (!this.stream || this.stream.n >= this.stream.total) this.stream = this.make();
+    this._setPlaying(true);
+    this._last = -1e9;
+    this._prev = 0;
+    this._tick();
+  }
+
+  stop(){
+    if (this._raf){ cancelAnimationFrame(this._raf); this._raf = 0; }
+    this._setPlaying(false);
+  }
+
+  toggle(){ this.playing ? this.stop() : this.start(); }
+
+  /** recompute 钩子：cfg 变了。播放中 → 换累加器下一帧接着演；暂停 → 补全批 + 一帧 */
+  sync(){
+    this.stream = this.make();
+    this._prev = 0;
+    if (this.playing) return;
+    this.stream.step(this.stream.total);
+    this.onFrame(this.stream.result(), this.stream.n, this.stream.total);
+  }
+
+  _tick(){
+    if (!this.playing) return;
+    this._raf = requestAnimationFrame(() => this._tick());
+    const now = performance.now();
+    if (now - this._last < 1000 / this.fps - 1) return;   /* 20fps 节制 */
+    this._last = now;
+    this.pump();
+  }
+
+  /** 跑一帧（测试也可直接调，不必等 rAF） */
+  pump(){
+    if (!this.stream) this.stream = this.make();
+    const total = this.stream.total;
+    const now = performance.now();
+    /* 时长基准补样本；dt 上限 duration/2（切后台回来不至于一帧爆量） */
+    const dt = this._prev ? Math.min(this.duration / 2, Math.max(0, now - this._prev)) : 1000 / this.fps;
+    this._prev = now;
+    const want = Math.max(1, Math.ceil(total * dt / this.duration));
+    const count = Math.min(want, total - this.stream.n);   /* 永不越界 */
+    const t0 = performance.now();
+    this.stream.step(count);
+    this.lastFrameMs = performance.now() - t0;
+    this.onFrame(this.stream.result(), this.stream.n, total);
+    if (this.stream.n >= total) this.stop();   /* 演满自动停 */
+  }
+
+  dispose(){
+    this.stop();
+    this.stream = null;
+    this.make = null;
+    this.onFrame = null;
+    this.onState = null;
+  }
+}
+
 /* ===== src/qec/mode-rep.js ===== */
 /* ============================================================================
  * mode-rep.js（QEC hub 模式）— 由 qec.js（R78/R86）重构而来（R98 七页整合）
@@ -3226,6 +3390,8 @@ class QecApp {
       trials: Math.round(num('trials', 3000)),
       seed: Math.round(num('seed', 7)),
       paused: q.has('paused'),
+      /* R98 P2 实时沙盒：?live=1 直达即播（播放器见 activate 的 LiveDriver） */
+      live: q.get('live') === '1',
       /* ---- R86 门级噪声（URL: noise/spectrum/noisyPhase） ---- */
       noise: str('noise', 'iid', v => v === 'iid' || v === 'gate'),
       spectrum: str('spectrum', 'depolar', v => v === 'depolar' || v === 'x' || v === 'z'),
@@ -3246,6 +3412,7 @@ class QecApp {
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
+    this.live?.dispose();                 /* R98 P2：停 rAF 播放环（切 mode 零泄漏） */
     for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
     this._listeners.length = 0;
     this.modeRoot.replaceChildren();      /* 移除本 mode 的 DOM（面板/HUD/画布/提示） */
@@ -3283,7 +3450,8 @@ class QecApp {
         <div class="row"><label>p</label><input type="range" id="qeP" min="0" max="0.6" step="0.005"><output id="qePO">—</output></div>
 
         <div class="grp">实验</div>
-        <div class="btns">
+        <div class="btns g3">
+          <button id="qePlay">▶ 播放</button>
           <button id="qeOnce">单次实验</button>
           <button id="qeReseed">换种子</button>
         </div>
@@ -3352,6 +3520,16 @@ class QecApp {
       this.recompute();
     });
 
+    /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
+    this.live = new LiveDriver({
+      make: () => qecStream(this.cfg()),
+      onFrame: res => { this.ens = res; this.renderHud(); this.drawAll(); },
+      onState: () => this.syncPlayBtn(),
+    });
+    this.on(this.q('#qePlay'), 'click', () => this.live.toggle());
+    this.syncPlayBtn();
+    if (this.state.live) this.live.start();   /* ?live=1：recompute 将走播放分支 */
+
     this.on(window, 'resize', () => this.resize());
     if (window.ResizeObserver){
       const ro = new ResizeObserver(() => this.resize());
@@ -3383,7 +3561,9 @@ class QecApp {
   }
 
   recompute(){
-    this.ens = qecEnsemble(this.cfg());
+    /* R98 P2：播放中 → 换累加器接着演（统计从零开始长）；否则同步全批（旧行为） */
+    if (this.live && this.live.playing){ this.live.sync(); this.ens = null; }
+    else this.ens = qecEnsemble(this.cfg());
     this.rollOnce();
     const key = this.state.code + '|' + this.state.noise + '|' + this.state.spectrum + '|' + this.state.noisyPhase + '|' + this.state.trials;
     if (key !== this._curveKey){
@@ -3473,6 +3653,15 @@ class QecApp {
   setP(v){ this.state.p = v; this.syncPanel(); this.recompute(); }
   setTrials(n){ this.state.trials = n; this.syncPanel(); this.recompute(); }
   reseed(s){ this.state.seed = s; this._rng = null; this.recompute(); }
+
+  /* R98 P2：播放按钮文案/态（on 类 = 播放中） */
+  syncPlayBtn(){
+    const b = this.q('#qePlay');
+    if (!b) return;
+    const on = !!(this.live && this.live.playing);
+    b.textContent = on ? '⏸ 暂停' : '▶ 播放';
+    b.classList.toggle('on', on);
+  }
 
   syncPanel(){
     const s = this.state;
@@ -4163,6 +4352,10 @@ class QecApp {
       setNoise: n => { self.setNoise(n); self.drawAll(); },
       setSpectrum: sp => { self.setSpectrum(sp); self.drawAll(); },
       setNoisyPhase: np => { self.setNoisyPhase(np); self.drawAll(); },
+      /* R98 P2：实时播放（按钮等价路径；测试可直驱） */
+      play: () => { self.live.start(); self.syncPlayBtn(); },
+      pause: () => { self.live.stop(); self.syncPlayBtn(); },
+      live: () => ({ playing: self.live.playing, ...self.live.progress }),
       exact: () => qecExactPL(self.cfg()),
       survey: (order = 1) => qecFaultSurvey(self.cfg(), order),
       trialWith: (opts) => {
@@ -4909,43 +5102,59 @@ function shorSurveyCached(cfg = {}){
   return v;
 }
 
-function shorEnsemble(cfg = {}){
+/* 流式累加器（R98 P2）：step(count) 分帧；result() 出当前统计。 */
+function shorStream(cfg = {}){
   const c = { ...SHOR_DEFAULTS, ...cfg };
   const rng = mulberry32(c.seed);
-  const n = Math.max(1, c.trials | 0);
   const gate = c.noise === 'gate';
-  let nL = 0, nF = 0, synMiss = 0;
+  let n = 0, nL = 0, nF = 0, synMiss = 0;
   const byWeight = new Array(10).fill(0);
   const byWeightL = new Array(10).fill(0);
   const byCoset = [0, 0, 0, 0, 0];   /* [∈S, X_L·S, Z_L·S, Y_L·S, ∉N(S)]；shorCoset 的 −1 归入越界类 */
-  for (let k = 0; k < n; k++){
+  function one(){
     const r = shorTrial(c, rng);
     /* i.i.d.：weight = 数据错误数 ∈[0,9]；gate：weight = 注入故障数，第 10 桶为「≥9」 */
     const wi = Math.min(r.weight, 9);
     byWeight[wi]++;
     if (gate){ nF += r.weight; synMiss += r.synMiss || 0; }
     if (r.logicalError){ nL++; byWeightL[wi]++; byCoset[r.coset === -1 ? 4 : r.coset]++; }
+    n++;
   }
-  const ex = shorExactPL(c.p);
-  const out = {
-    p: c.p, trials: n, PL: nL / n,
-    PLexact: gate ? null : ex.PL, Pun: c.p,
-    byWeight, byWeightL, byCoset,
-    /* 对照：重复码（同信道）与未编码 */
-    repExact: repPLexact(c.p).PL,
-    noise: c.noise, spectrum: c.spectrum, noisyPhase: c.noisyPhase,
+  return {
+    get total(){ return Math.max(1, c.trials | 0); },
+    get n(){ return n; },
+    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m; k++) one(); },
+    result(){
+      const nn = Math.max(1, n);
+      const ex = shorExactPL(c.p);
+      const out = {
+        p: c.p, trials: n, PL: nL / nn,
+        PLexact: gate ? null : ex.PL, Pun: c.p,
+        byWeight, byWeightL, byCoset,
+        /* 对照：重复码（同信道）与未编码 */
+        repExact: repPLexact(c.p).PL,
+        noise: c.noise, spectrum: c.spectrum, noisyPhase: c.noisyPhase,
+      };
+      if (gate){
+        const st = shorCircuitStats(c);
+        const sv = shorSurveyCached(c);
+        out.M = st.M; out.sites = st.sites; out.opps = st.opps;
+        out.c1 = sv.c1; out.fatal = sv.fatal; out.total = sv.total;
+        out.meanFaults = nF / nn; out.synMiss = synMiss;
+        /* 门级口径下「重复码基线」不是同一个电路（机会数 8/16 vs 52/90），
+           repExact 是 i.i.d. 口径的值 ⟹ 不相干，置 null；跨码对照见 pot87。 */
+        out.repExact = null;
+      }
+      return out;
+    },
   };
-  if (gate){
-    const st = shorCircuitStats(c);
-    const sv = shorSurveyCached(c);
-    out.M = st.M; out.sites = st.sites; out.opps = st.opps;
-    out.c1 = sv.c1; out.fatal = sv.fatal; out.total = sv.total;
-    out.meanFaults = nF / n; out.synMiss = synMiss;
-    /* 门级口径下「重复码基线」不是同一个电路（机会数 8/16 vs 52/90），
-       repExact 是 i.i.d. 口径的值 ⟹ 不相干，置 null；跨码对照见 pot87。 */
-    out.repExact = null;
-  }
-  return out;
+}
+
+/* 一次性全批：同一 rng 消耗序 ⟹ 数值与流式逐位一致 */
+function shorEnsemble(cfg = {}){
+  const s = shorStream(cfg);
+  s.step(s.total);
+  return s.result();
 }
 
 /* 扫描（页面曲线用）：**精确** P_L(p) 与重复码对照（穷举与 p 无关，O(1) 每点）。
@@ -5091,6 +5300,8 @@ class ShorApp {
       noise: str('noise', 'iid', v => v === 'iid' || v === 'gate'),
       spectrum: str('spectrum', 'depolar', v => v === 'depolar' || v === 'x' || v === 'z'),
       noisyPhase: str('noisyPhase', 'extract', v => v === 'extract' || v === 'all'),
+      /* R98 P2 实时沙盒：?live=1 直达即播 */
+      live: q.get('live') === '1',
     };
     this.trial = null;
     this.ens = null;
@@ -5107,6 +5318,7 @@ class ShorApp {
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
+    this.live?.dispose();                 /* R98 P2：停 rAF 播放环 */
     for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
     this._listeners.length = 0;
     this.modeRoot.replaceChildren();      /* 移除本 mode 的 DOM（面板/HUD/画布/提示） */
@@ -5143,7 +5355,8 @@ class ShorApp {
         <div class="row"><label>p</label><input type="range" id="shP" min="0" max="0.3" step="0.002"><output id="shPO">—</output></div>
 
         <div class="grp">实验</div>
-        <div class="btns">
+        <div class="btns g3">
+          <button id="shPlay">▶ 播放</button>
           <button id="shOnce">单次实验</button>
           <button id="shReseed">换种子</button>
         </div>
@@ -5268,6 +5481,16 @@ class ShorApp {
       this.state.seed = (this.state.seed * 1103515245 + 12345) % 2147483647;
       this.recompute();
     });
+
+    /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
+    this.live = new LiveDriver({
+      make: () => shorStream(this.cfg()),
+      onFrame: res => { this.ens = res; this.renderHud(); this.drawAll(); },
+      onState: () => this.syncPlayBtn(),
+    });
+    this.on(this.q('#shPlay'), 'click', () => this.live.toggle());
+    this.syncPlayBtn();
+    if (this.state.live) this.live.start();   /* ?live=1：recompute 将走播放分支 */
     this.on(this.q('#shInject'), 'click', () => this.inject([{ q: this.state.injectQ, t: this.state.injectT }]));
     this.on(this.q('#shInject2'), 'click', () => this.inject([{ q: 0, t: 'x' }, { q: 1, t: 'x' }]));
 
@@ -5304,10 +5527,21 @@ class ShorApp {
       this.sweep = shorSweep({ ...this.cfg(), sweepTrials: 400 });
       this._curveKey = key;
     }
-    this.ens = shorEnsemble(this.cfg());
+    /* R98 P2：播放中 → 换累加器接着演；否则同步全批（旧行为） */
+    if (this.live && this.live.playing){ this.live.sync(); this.ens = null; }
+    else this.ens = shorEnsemble(this.cfg());
     this.rollOnce();
     this.renderHud();
     this.drawAll();
+  }
+
+  /* R98 P2：播放按钮文案/态（on 类 = 播放中） */
+  syncPlayBtn(){
+    const b = this.q('#shPlay');
+    if (!b) return;
+    const on = !!(this.live && this.live.playing);
+    b.textContent = on ? '⏸ 暂停' : '▶ 播放';
+    b.classList.toggle('on', on);
   }
 
   rollOnce(force){
@@ -5870,6 +6104,10 @@ class ShorApp {
       setPhase: v => { self.state.phase = v; self.syncPanel(); self.rollOnce(); self.renderHud(); self.drawCircuit(); self.drawCurve(); },
       setTrials: n => { self.state.trials = n; self.syncPanel(); self.recompute(); },
       reseed: s => { self.state.seed = s; self._rng = null; self.recompute(); },
+      /* R98 P2：实时播放（按钮等价路径；测试可直驱） */
+      play: () => { self.live.start(); self.syncPlayBtn(); },
+      pause: () => { self.live.stop(); self.syncPlayBtn(); },
+      live: () => ({ playing: self.live.playing, ...self.live.progress }),
       roll: () => { self.rollOnce(); self.renderHud(); self.drawCircuit(); self.drawCurve(); },
       inject: (errs) => self.inject(errs),
       trialWith: (opts) => {
@@ -6002,6 +6240,8 @@ class GateNoiseApp {
       phase: num('phase', GN_DEFAULTS.phase),
       trials: Math.round(num('trials', GN_DEFAULTS.trials)),
       seed: Math.round(num('seed', GN_DEFAULTS.seed)),
+      /* R98 P2 实时沙盒：?live=1 直达即播 */
+      live: q.get('live') === '1',
     };
     this._rng = null;
     this.trial = null;
@@ -6017,6 +6257,7 @@ class GateNoiseApp {
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
+    this.live?.dispose();                 /* R98 P2：停 rAF 播放环 */
     for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
     this._listeners.length = 0;
     this.modeRoot.replaceChildren();      /* 移除本 mode 的 DOM（面板/HUD/画布/提示） */
@@ -6045,7 +6286,8 @@ class GateNoiseApp {
         <div class="row"><label>φ</label><input type="range" id="gnPhase" min="-3.1416" max="3.1416" step="0.01"><output id="gnPhaseO">—</output></div>
 
         <div class="grp">实验（MC 态矢采样）</div>
-        <div class="btns">
+        <div class="btns g3">
+          <button id="gnPlay">▶ 播放</button>
           <button id="gnOnce">单次试验</button>
           <button id="gnReseed">换种子</button>
         </div>
@@ -6172,6 +6414,16 @@ class GateNoiseApp {
       this.recompute();
     });
 
+    /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
+    this.live = new LiveDriver({
+      make: () => gnStream(this.cfg()),
+      onFrame: res => { this.mc = res; this.renderHud(); this.renderSpec(); this.drawAll(); },
+      onState: () => this.syncPlayBtn(),
+    });
+    this.on(this.q('#gnPlay'), 'click', () => this.live.toggle());
+    this.syncPlayBtn();
+    if (this.state.live) this.live.start();   /* ?live=1：recompute 将走播放分支 */
+
     this.on(window, 'resize', () => this.resize());
     if (window.ResizeObserver){
       const ro = new ResizeObserver(() => this.resize());
@@ -6198,11 +6450,22 @@ class GateNoiseApp {
 
   recompute(){
     this.sweep = gnSweep(this.cfg());
-    this.mc = gnRun(this.cfg());
+    /* R98 P2：播放中 → 换累加器接着演；否则同步全批（旧行为） */
+    if (this.live && this.live.playing){ this.live.sync(); this.mc = null; }
+    else this.mc = gnRun(this.cfg());
     this.rollOnce();
     this.renderHud();
     this.renderSpec();
     this.drawAll();
+  }
+
+  /* R98 P2：播放按钮文案/态（on 类 = 播放中） */
+  syncPlayBtn(){
+    const b = this.q('#gnPlay');
+    if (!b) return;
+    const on = !!(this.live && this.live.playing);
+    b.textContent = on ? '⏸ 暂停' : '▶ 播放';
+    b.classList.toggle('on', on);
   }
 
   /* 单条轨迹（电路图画布的错误时间线用）；rng 跨次滚动，与 MC 的 seed 无关 */
@@ -6624,6 +6887,10 @@ class GateNoiseApp {
         return out;
       },
       esd: () => gnEsdBells(self.state.spectrum, self.state.p, self.state.k),
+      /* R98 P2：实时播放（按钮等价路径；测试可直驱） */
+      play: () => { self.live.start(); self.syncPlayBtn(); },
+      pause: () => { self.live.stop(); self.syncPlayBtn(); },
+      live: () => ({ playing: self.live.playing, ...self.live.progress }),
       setP: v => { self.state.p = v; self.syncPanel(); self.recompute(); },
       setK: v => { self.state.k = v; self.syncPanel(); self.recompute(); },
       setSpectrum: sp => { if (GN_SPECTRA[sp]){ self.state.spectrum = sp; self.syncPanel(); self.recompute(); } },
@@ -7437,16 +7704,16 @@ function fsFirstOrder(kind = 'std', cfg = {}){
 /* ============================================================================
  * MC：按 p 在每个门的每个触及比特上采样
  * ========================================================================== */
-function fsEnsemble(kind = 'std', cfg = {}){
+/* 流式累加器（R98 P2）：step(count) 分帧；result() 出当前统计。 */
+function fsStream(kind = 'std', cfg = {}){
   const c = { ...FS_DEFAULTS, ...(typeof kind === 'string' ? { kind } : kind), ...cfg };
   const circ = fsCircuit(c.kind, c);
   const ref = fsRef(circ);
   const rng = mulberry32(c.seed);
-  const n = Math.max(1, c.trials | 0);
   const acc = { perfect: 0, outside: 0, logic: 0, flagged: 0, gauge: 0, mixed: 0 };
-  let wSum = 0, flips = 0, random = 0, faultSum = 0, unsureN = 0, usedSum = 0, noGoodN = 0, retrySum = 0, skipSum = 0;
+  let n = 0, wSum = 0, flips = 0, random = 0, faultSum = 0, unsureN = 0, usedSum = 0, noGoodN = 0, retrySum = 0, skipSum = 0;
   const wHist = {};
-  for (let k = 0; k < n; k++){
+  function one(){
     const r = fsExec(circ, { rng, p: c.p, spectrum: c.spectrum, noisyPhase: c.noisyPhase,
       noisyLogic: c.noisyLogic, decode: c.decode, need: c.need });
     const cl = fsClass(r.pre, ref, r.F);
@@ -7460,27 +7727,43 @@ function fsEnsemble(kind = 'std', cfg = {}){
     if (r.unsure) unsureN++;
     usedSum += r.usedRounds;
     noGoodN += r.noGoodRounds; retrySum += r.retried; skipSum += r.skippedGates;
+    n++;
   }
   return {
-    kind: c.kind, p: c.p, spectrum: c.spectrum, trials: n, ...acc,
-    PL: acc.logic / n,
-    harmful: (acc.logic + acc.outside) / n,
-    /* 条件于「未被判不可信」的样本：cat/dup 的 flag 率高，只看 PL 会把「信息少一轮」
-       当成失败。两个率一起看才公平（页面 HUD 两个都显示）。 */
-    PLgiven: acc.flagged >= n ? null : acc.logic / (n - acc.flagged),
-    gaugeRate: acc.gauge / n,
-    residual: acc.outside / n,
-    discard: acc.flagged / n,
-    wMean: wSum / Math.max(1, n - acc.perfect - acc.flagged),
-    wHist, meanFaults: faultSum / n, frameFlips: flips, randomMeas: random,
-    unsureRate: unsureN / n, acceptRate: 1 - unsureN / n,
-    /* R83：真正「重测后仍无可信读数」的轮比例（这才是必须丢弃的），
-       与 discard（触发过自检的轮比例）对照，可量化 R82 的高估幅度。 */
-    noGoodRate: noGoodN / n / Math.max(1, (circ.rounds || 1) * (circ.stats ? (circ.stats.cycles || 1) : 1)),
-    meanRetried: retrySum / n, meanSkipped: skipSum / n,
-    meanUsedRounds: usedSum / n, rounds: circ.rounds, decode: c.decode,
-    stats: circ.stats,
+    get total(){ return Math.max(1, c.trials | 0); },
+    get n(){ return n; },
+    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m; k++) one(); },
+    result(){
+      const nn = Math.max(1, n);
+      return {
+        kind: c.kind, p: c.p, spectrum: c.spectrum, trials: n, ...acc,
+        PL: acc.logic / nn,
+        harmful: (acc.logic + acc.outside) / nn,
+        /* 条件于「未被判不可信」的样本：cat/dup 的 flag 率高，只看 PL 会把「信息少一轮」
+           当成失败。两个率一起看才公平（页面 HUD 两个都显示）。 */
+        PLgiven: acc.flagged >= n ? null : acc.logic / (n - acc.flagged),
+        gaugeRate: acc.gauge / nn,
+        residual: acc.outside / nn,
+        discard: acc.flagged / nn,
+        wMean: wSum / Math.max(1, n - acc.perfect - acc.flagged),
+        wHist, meanFaults: faultSum / nn, frameFlips: flips, randomMeas: random,
+        unsureRate: unsureN / nn, acceptRate: 1 - unsureN / nn,
+        /* R83：真正「重测后仍无可信读数」的轮比例（这才是必须丢弃的），
+           与 discard（触发过自检的轮比例）对照，可量化 R82 的高估幅度。 */
+        noGoodRate: noGoodN / nn / Math.max(1, (circ.rounds || 1) * (circ.stats ? (circ.stats.cycles || 1) : 1)),
+        meanRetried: retrySum / nn, meanSkipped: skipSum / nn,
+        meanUsedRounds: usedSum / nn, rounds: circ.rounds, decode: c.decode,
+        stats: circ.stats,
+      };
+    },
   };
+}
+
+/* 一次性全批：同一 rng 消耗序 ⟹ 数值与流式逐位一致 */
+function fsEnsemble(kind = 'std', cfg = {}){
+  const s = fsStream(kind, cfg);
+  s.step(s.total);
+  return s.result();
 }
 
 /* ============================================================================
@@ -7778,6 +8061,8 @@ class FlagApp {
       p: Math.max(0, Math.min(0.2, num('p', FS_DEFAULTS.p))),
       trials: Math.max(100, Math.min(2000, Math.round(num('trials', 400)))),
       seed: Math.round(num('seed', FS_DEFAULTS.seed)),
+      /* R98 P2 实时沙盒：?live=1 直达即播（MC 随播随长） */
+      live: q.get('live') === '1',
     };
     this.fo = {};        /* kind → fsFirstOrder 结果（精确枚举，一次算好） */
     this.worst = {};     /* kind → fsProbeWorst（扇出图） */
@@ -7793,6 +8078,7 @@ class FlagApp {
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
+    this.live?.dispose();                 /* R98 P2：停 rAF 播放环 */
     for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
     this._listeners.length = 0;
     this.modeRoot.replaceChildren();      /* 移除本 mode 的 DOM（面板/HUD/画布/提示） */
@@ -7814,7 +8100,8 @@ class FlagApp {
         <div class="row"><label>N</label><input type="range" id="flTrials" min="200" max="2000" step="100"><output id="flTrialsO">—</output></div>
 
         <div class="grp">实验</div>
-        <div class="btns">
+        <div class="btns g3">
+          <button id="flPlay">▶ 播放</button>
           <button id="flRun">跑一次 MC</button>
           <button id="flReseed">换种子</button>
         </div>
@@ -7885,6 +8172,19 @@ class FlagApp {
       this.state.seed = (this.state.seed * 1103515245 + 12345) % 2147483647;
       this.runMc();
     });
+
+    /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
+    this.live = new LiveDriver({
+      make: () => fsStream(this.state.kind, {
+        p: this.state.p, spectrum: this.state.spectrum,
+        trials: this.state.trials, seed: this.state.seed,
+      }),
+      onFrame: res => { res.ms = this.live.lastFrameMs; this.mc = res; this.renderHud(); },
+      onState: () => this.syncPlayBtn(),
+    });
+    this.on(this.q('#flPlay'), 'click', () => this.live.toggle());
+    this.syncPlayBtn();
+    if (this.state.live) this.live.start();   /* ?live=1：runMc 将走播放分支 */
     this.on(window, 'resize', () => this.resize());
     if (window.ResizeObserver){
       const ro = new ResizeObserver(() => this.resize());
@@ -7948,6 +8248,8 @@ class FlagApp {
 
   runMc(){
     const k = this.state.kind;
+    /* R98 P2：播放中 → 换累加器接着演；否则同步全批（旧行为） */
+    if (this.live && this.live.playing){ this.live.sync(); return; }
     const t0 = performance.now();
     this.mc = fsEnsemble(k, {
       p: this.state.p, spectrum: this.state.spectrum,
@@ -7955,6 +8257,15 @@ class FlagApp {
     });
     this.mc.ms = performance.now() - t0;
     this.renderHud();
+  }
+
+  /* R98 P2：播放按钮文案/态（on 类 = 播放中） */
+  syncPlayBtn(){
+    const b = this.q('#flPlay');
+    if (!b) return;
+    const on = !!(this.live && this.live.playing);
+    b.textContent = on ? '⏸ 暂停' : '▶ 播放';
+    b.classList.toggle('on', on);
   }
 
   /* ---------- HUD ---------- */
@@ -8268,6 +8579,10 @@ class FlagApp {
       setSpectrum: s => { if (flSPEC_W[s]){ self.state.spectrum = s; self.syncPanel(); self.renderHud(); self.drawAll(); } },
       setSeed: s => { self.state.seed = s; },
       runMc: () => self.runMc(),
+      /* R98 P2：实时播放（按钮等价路径；测试可直驱） */
+      play: () => { self.live.start(); self.syncPlayBtn(); },
+      pause: () => { self.live.stop(); self.syncPlayBtn(); },
+      live: () => ({ playing: self.live.playing, ...self.live.progress }),
       busy: () => self._queue.length,
       canvasPixels: () => Object.fromEntries(Object.entries(self.cv).map(([k, c]) => [k, c ? c.width * c.height : 0])),
       navLinks: () => Array.from(document.querySelectorAll('.qtop a')).map(a => a.getAttribute('href')),
@@ -8311,6 +8626,7 @@ const RD_CSS = `
   #rdPanel output{font-family:var(--mono);font-size:11px;color:var(--txt);min-width:44px;text-align:right}
   #rdPanel .btns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
   #rdPanel .btns.g2{grid-template-columns:1fr 1fr}
+  #rdPanel .btns.g3{grid-template-columns:repeat(3,1fr)}
   #rdPanel button{font-family:var(--mono);font-size:10px;padding:5px 3px;border-radius:6px;cursor:pointer;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     background:rgba(103,232,249,.08);border:1px solid var(--line);color:var(--txt);transition:all .15s}
@@ -8381,6 +8697,8 @@ class RoundsApp {
       p: Math.max(0.001, Math.min(0.2, num('p', 0.02))),
       trials: Math.max(200, Math.min(2000, Math.round(num('trials', 500)))),
       seed: Math.round(num('seed', 7)),
+      /* R98 P2 实时沙盒：?live=1 直达即播（MC 随播随长） */
+      live: q.get('live') === '1',
     };
     this.fo = null;        /* 当前配置的精确单故障枚举 */
     this.mc = null;        /* 当前配置的 MC */
@@ -8394,6 +8712,7 @@ class RoundsApp {
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
+    this.live?.dispose();                 /* R98 P2：停 rAF 播放环 */
     for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
     this._listeners.length = 0;
     this.modeRoot.replaceChildren();      /* 移除本 mode 的 DOM（面板/HUD/画布/提示） */
@@ -8423,7 +8742,8 @@ class RoundsApp {
         <div class="grp">MC 样本数</div>
         <div class="row"><label>N</label><input type="range" id="rdTrials" min="200" max="2000" step="100"><output id="rdTrialsO">—</output></div>
         <div class="grp">实验</div>
-        <div class="btns g2">
+        <div class="btns g3">
+          <button id="rdPlay">▶ 播放</button>
           <button id="rdRun">跑 MC + 扫描</button>
           <button id="rdOnce">单次试验</button>
         </div>
@@ -8483,6 +8803,16 @@ class RoundsApp {
     this.on(this.q('#rdTrials'), 'input', e => { this.state.trials = parseInt(e.target.value, 10); this.syncPanel(); });
     this.on(this.q('#rdRun'), 'click', () => this.runMc());
     this.on(this.q('#rdOnce'), 'click', () => { this.once(); this.renderHud(); this.drawTime(); });
+
+    /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
+    this.live = new LiveDriver({
+      make: () => fsStream(this.state.kind, this.cfg()),
+      onFrame: res => { this.mc = res; this.renderHud(); },
+      onState: () => this.syncPlayBtn(),
+    });
+    this.on(this.q('#rdPlay'), 'click', () => this.live.toggle());
+    this.syncPlayBtn();
+    if (this.state.live) this.live.start();   /* ?live=1：runMc 将走播放分支 */
     this.on(window, 'resize', () => this.resize());
     if (window.ResizeObserver){ const ro = new ResizeObserver(() => this.resize()); ro.observe(this.q('#rdStage')); this._ro = ro; }
 
@@ -8540,10 +8870,27 @@ class RoundsApp {
   runMc(tok){
     const s = this.state;
     if (tok && tok !== this._tok) return;
-    this.mc = fsEnsemble(s.kind, this.cfg());
     this.sweep = rdSweep(s.kind, this.cfg({ ps: [0.002, 0.005, 0.01, 0.02, 0.04, 0.08] }));
+    /* R98 P2：播放中 → 换累加器接着演（sweep 已按旧口径重算，MC 交给帧循环）；
+       否则同步全批（旧行为）。 */
+    if (this.live && this.live.playing){
+      this.live.sync();
+      if (!this.trial) this.once();
+      this.renderHud(); this.drawAll();
+      return;
+    }
+    this.mc = fsEnsemble(s.kind, this.cfg());
     if (!this.trial) this.once();
     this.renderHud(); this.drawAll();
+  }
+
+  /* R98 P2：播放按钮文案/态（on 类 = 播放中） */
+  syncPlayBtn(){
+    const b = this.q('#rdPlay');
+    if (!b) return;
+    const on = !!(this.live && this.live.playing);
+    b.textContent = on ? '⏸ 暂停' : '▶ 播放';
+    b.classList.toggle('on', on);
   }
 
   renderHud(){
@@ -8792,6 +9139,10 @@ class RoundsApp {
       setP: v => { self.state.p = v; self.syncPanel(); self.runMc(); },
       setTrials: v => { self.state.trials = v; self.syncPanel(); },
       runMc: () => self.runMc(),
+      /* R98 P2：实时播放（按钮等价路径；测试可直驱） */
+      play: () => { self.live.start(); self.syncPlayBtn(); },
+      pause: () => { self.live.stop(); self.syncPlayBtn(); },
+      live: () => ({ playing: self.live.playing, ...self.live.progress }),
       once: () => { self.once(); self.renderHud(); self.drawTime(); },
       canvasPixels: () => Object.fromEntries(Object.entries(self.cv).map(([k, c]) => [k, c ? c.width * c.height : 0])),
       navLinks: () => Array.from(document.querySelectorAll('.qtop a')).map(a => a.getAttribute('href')),
@@ -8834,6 +9185,7 @@ const CY_CSS = `
   #cyPanel output{font-family:var(--mono);font-size:11px;color:var(--txt);min-width:44px;text-align:right}
   #cyPanel .btns{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:6px}
   #cyPanel .btns.g2{grid-template-columns:1fr 1fr}
+  #cyPanel .btns.g3{grid-template-columns:repeat(3,1fr)}
   #cyPanel .btns.g4{grid-template-columns:repeat(4,1fr)}
   #cyPanel button{font-family:var(--mono);font-size:10px;padding:5px 3px;border-radius:6px;cursor:pointer;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -8904,6 +9256,8 @@ class CycleApp {
       p: Math.max(0.001, Math.min(0.12, num('p', 0.02))),
       trials: Math.max(120, Math.min(1200, Math.round(num('trials', 400)))),
       seed: Math.round(num('seed', 7)),
+      /* R98 P2 实时沙盒：?live=1 直达即播（MC 随播随长） */
+      live: q.get('live') === '1',
     };
     this.ic = null;        /* 门错误拦截率（精确枚举，快） */
     this.sw = null;        /* P_L 随周期数（MC，慢） */
@@ -8917,6 +9271,7 @@ class CycleApp {
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
+    this.live?.dispose();                 /* R98 P2：停 rAF 播放环 */
     for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
     this._listeners.length = 0;
     this.modeRoot.replaceChildren();      /* 移除本 mode 的 DOM（面板/HUD/画布/提示） */
@@ -8948,7 +9303,8 @@ class CycleApp {
         <div class="grp">MC 样本数</div>
         <div class="row"><label>N</label><input type="range" id="cyTrials" min="120" max="1200" step="40"><output id="cyTrialsO">—</output></div>
         <div class="grp">实验</div>
-        <div class="btns g2">
+        <div class="btns g3">
+          <button id="cyPlay">▶ 播放</button>
           <button id="cyRun">跑 MC + 扫描</button>
           <button id="cyOnce">单次试验</button>
         </div>
@@ -9010,6 +9366,16 @@ class CycleApp {
     this.on(this.q('#cyRun'), 'click', () => this.compute());
     this.on(this.q('#cyOnce'), 'click', () => { this.once(); this.renderHud(); this.drawAll(); });
 
+    /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
+    this.live = new LiveDriver({
+      make: () => fsStream(this.state.kind, this.cfg()),
+      onFrame: res => { this.mc = res; this.renderHud(); this.drawFlow(); },
+      onState: () => this.syncPlayBtn(),
+    });
+    this.on(this.q('#cyPlay'), 'click', () => this.live.toggle());
+    this.syncPlayBtn();
+    if (this.state.live) this.live.start();   /* ?live=1：compute 的 MC 段将走播放分支 */
+
     if (window.ResizeObserver){ const ro = new ResizeObserver(() => this.resize()); ro.observe(this.q('#cyStage')); this._ro = ro; }
     this.syncPanel();
     this.renderHint();
@@ -9064,6 +9430,19 @@ class CycleApp {
       this.renderHud(); this.drawGate();
       setTimeout(() => {
         if (tok !== this._tok) return;
+        /* R98 P2：播放中 → 换累加器接着演；否则同步全批（旧行为） */
+        if (this.live && this.live.playing){
+          this.live.sync();
+          this.fo = fsFirstOrder(this.state.kind, this.cfg());
+          this.renderHud(); this.drawFlow();
+          setTimeout(() => {
+            if (tok !== this._tok) return;
+            const Ts = [1, 2, 3, 4].filter(t => t <= Math.max(2, this.state.cycles));
+            this.sw = cySweepCycles(this.cfg({ Ts, trials: Math.max(120, Math.round(this.state.trials / 2)) }));
+            this.renderHud(); this.drawCurve();
+          }, 20);
+          return;
+        }
         this.mc = fsEnsemble(this.state.kind, this.cfg());
         this.fo = fsFirstOrder(this.state.kind, this.cfg());
         this.renderHud(); this.drawFlow();
@@ -9079,6 +9458,15 @@ class CycleApp {
 
   once(){
     this.trial = fsRun(this.state.kind, this.cfg(), null, (this.state.seed ^ 0x2b3f) >>> 0 || 1);
+  }
+
+  /* R98 P2：播放按钮文案/态（on 类 = 播放中） */
+  syncPlayBtn(){
+    const b = this.q('#cyPlay');
+    if (!b) return;
+    const on = !!(this.live && this.live.playing);
+    b.textContent = on ? '⏸ 暂停' : '▶ 播放';
+    b.classList.toggle('on', on);
   }
 
   renderHud(){
@@ -9342,6 +9730,10 @@ class CycleApp {
         synRounds: self.trial.synRounds.map(s => s.slice()), usableR: (self.trial.usableR || []).slice(),
         fixLog: (self.trial.fixLog || []).map(f => ({ round: f.round, fix: f.fix.length })),
         logicGates: (self.trial.fixLog || []).length } : null),
+      /* R98 P2：实时播放（按钮等价路径；测试可直驱） */
+      play: () => { self.live.start(); self.syncPlayBtn(); },
+      pause: () => { self.live.stop(); self.syncPlayBtn(); },
+      live: () => ({ playing: self.live.playing, ...self.live.progress }),
       canvasPixels: () => {
         const f = sel => {
           const c = self.modeRoot.querySelector(sel);
@@ -9774,24 +10166,40 @@ function hdotL(v7){
   return s;
 }
 
-function cfEnsemble(fam, cfg = {}){
+/* 流式累加器（R98 P2）：step(count) 分帧；result() 出当前统计。 */
+function cfStream(fam, cfg = {}){
   const c = { ...CF_DEFAULTS, ...cfg };
   const f = typeof fam === 'string' ? CF_ALL.find(x => x.k === fam) : fam;
   const rng = mulberry32(c.seed);
-  const n = Math.max(1, c.trials | 0);
   const byFate = { perfect: 0, logic: 0, outside: 0 };
-  let wsum = 0;
-  for (let k = 0; k < n; k++){
+  let n = 0, wsum = 0;
+  function one(){
     const t = cfTrial(f, c, rng);
     byFate[t.fate]++;
     wsum += t.xw + t.zw;
+    n++;
   }
   return {
-    family: f.k, p: c.p, noise: c.noise, meas: c.meas, trials: n,
-    PL: (byFate.logic + byFate.outside) / n,
-    byFate, meanFaults: wsum / n,
-    exact: cfExactPL(c.p, f, c.noise, c.meas),
+    get total(){ return Math.max(1, c.trials | 0); },
+    get n(){ return n; },
+    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m; k++) one(); },
+    result(){
+      const nn = Math.max(1, n);
+      return {
+        family: f.k, p: c.p, noise: c.noise, meas: c.meas, trials: n,
+        PL: (byFate.logic + byFate.outside) / nn,
+        byFate, meanFaults: wsum / nn,
+        exact: cfExactPL(c.p, f, c.noise, c.meas),
+      };
+    },
   };
+}
+
+/* 一次性全批：同一 rng 消耗序 ⟹ 数值与流式逐位一致 */
+function cfEnsemble(fam, cfg = {}){
+  const s = cfStream(fam, cfg);
+  s.step(s.total);
+  return s.result();
 }
 
 /* ============================================================================
@@ -9933,6 +10341,8 @@ class FamilyApp {
       p: Math.max(0.001, Math.min(0.85, num('p', 0.02))),
       trials: Math.max(200, Math.min(8000, Math.round(num('trials', 4000)))),
       seed: Math.round(num('seed', 7)),
+      /* R98 P2 实时沙盒：?live=1 直达即播（MC 随播随长） */
+      live: q.get('live') === '1',
     };
     this.sweep = null;    /* 全族精确扫描（只随 noise/meas 变，150–650ms） */
     this.mc = null;       /* 当前族当前点 MC（随 fam/p/seed/trials 变） */
@@ -9947,6 +10357,7 @@ class FamilyApp {
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
+    this.live?.dispose();                 /* R98 P2：停 rAF 播放环 */
     for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
     this._listeners.length = 0;
     this.modeRoot.replaceChildren();      /* 移除本 mode 的 DOM（面板/HUD/画布/提示） */
@@ -9971,7 +10382,8 @@ class FamilyApp {
         <div class="row"><label>N</label><input type="range" id="fmTrials" min="200" max="8000" step="200"><output id="fmTrialsO">—</output></div>
 
         <div class="grp">实验</div>
-        <div class="btns">
+        <div class="btns g3">
+          <button id="fmPlay">▶ 播放</button>
           <button id="fmRun">跑一次 MC</button>
           <button id="fmSeed">换种子</button>
         </div>
@@ -10041,6 +10453,16 @@ class FamilyApp {
       this.state.seed = (this.state.seed * 1103515245 + 12345) % 2147483647;
       this.runMc();
     });
+
+    /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
+    this.live = new LiveDriver({
+      make: () => cfStream(this.state.fam, { noise: this.state.noise, meas: this.state.meas, p: this.state.p, trials: this.state.trials, seed: this.state.seed }),
+      onFrame: res => { res.ms = this.live.lastFrameMs; this.mc = res; this.renderHud(); this.drawFate(); this.drawCurve(); },
+      onState: () => this.syncPlayBtn(),
+    });
+    this.on(this.q('#fmPlay'), 'click', () => this.live.toggle());
+    this.syncPlayBtn();
+    if (this.state.live) this.live.start();   /* ?live=1：runMc 将走播放分支 */
     this.on(window, 'resize', () => this.resize());
     if (window.ResizeObserver){
       const ro = new ResizeObserver(() => this.resize());
@@ -10097,10 +10519,21 @@ class FamilyApp {
   runMc(tok){
     if (tok && tok !== this._tok) return;
     const s = this.state;
+    /* R98 P2：播放中 → 换累加器接着演；否则同步全批（旧行为） */
+    if (this.live && this.live.playing){ this.live.sync(); return; }
     const t0 = performance.now();
     this.mc = cfEnsemble(s.fam, { noise: s.noise, meas: s.meas, p: s.p, trials: s.trials, seed: s.seed });
     this.mc.ms = performance.now() - t0;
     this.renderHud(); this.drawFate(); this.drawCurve();
+  }
+
+  /* R98 P2：播放按钮文案/态（on 类 = 播放中） */
+  syncPlayBtn(){
+    const b = this.q('#fmPlay');
+    if (!b) return;
+    const on = !!(this.live && this.live.playing);
+    b.textContent = on ? '⏸ 暂停' : '▶ 播放';
+    b.classList.toggle('on', on);
   }
 
   /* MC↔精确 4σ 对账（口径与 pot85 D 节逐字一致） */
@@ -10463,6 +10896,10 @@ class FamilyApp {
       setTrials: v => { self.state.trials = Math.max(200, Math.min(8000, Math.round(v))); self.syncPanel(); },
       setSeed: v => { self.state.seed = v; },
       runMc: () => self.runMc(),
+      /* R98 P2：实时播放（按钮等价路径；测试可直驱） */
+      play: () => { self.live.start(); self.syncPlayBtn(); },
+      pause: () => { self.live.stop(); self.syncPlayBtn(); },
+      live: () => ({ playing: self.live.playing, ...self.live.progress }),
       canvasPixels: () => Object.fromEntries(Object.entries(self.cv).map(([k, c]) => [k, c ? c.width * c.height : 0])),
       navLinks: () => Array.from(document.querySelectorAll('.qtop a')).map(a => a.getAttribute('href')),
     };

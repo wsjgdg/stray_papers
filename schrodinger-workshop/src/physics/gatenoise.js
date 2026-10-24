@@ -351,7 +351,8 @@ export function gnRhoInfo(rho, spec){
    用于 MC 误差棒）+ 错误直方图 + 末条轨迹。C 非线性：只给 C(ρ_MC)，不给误差棒
    （页面注明）；另给 meanCtraj——Bell 预设下它恒等于 1，是「纠缠是系综性质」
    的现场证据。 */
-export function gnRun(cfg = {}){
+/* 流式累加器（R98 P2）：step(count) 分帧；result() 出当前统计（rho = 累积均值）。 */
+export function gnStream(cfg = {}){
   const c = { ...GN_DEFAULTS, ...cfg };
   const spec = gnPresetGates(c.preset, c.n, c.k, c.theta, c.phase);
   const rng = mulberry32(c.seed);
@@ -364,9 +365,8 @@ export function gnRun(cfg = {}){
   for (let i = 0; i < nq; i++) for (let j = i + 1; j < nq; j++) sumZ.push({ i, j, s: 0, s2: 0 });
   let sumC = 0, nC = 0;
   const errHist = new Array(spec.gates.length + 2).fill(0);
-  let last = null, errSum = 0;
-  const N = Math.max(1, c.trials | 0);
-  for (let t = 0; t < N; t++){
+  let last = null, errSum = 0, N = 0;
+  function one(){
     const tr = gnTrial(spec.n, spec.gates, { pGate: c.pGate, spectrum: c.spectrum, noisyFrom: spec.noisyFrom }, rng);
     const st = tr.state;
     for (let i = 0; i < D; i++) for (let j = 0; j < D; j++){
@@ -410,22 +410,38 @@ export function gnRun(cfg = {}){
     errHist[tr.errors.length]++;
     errSum += tr.errors.length;
     last = tr;
+    N++;
   }
-  const rho = { n: spec.n, dim: D, re: new Float64Array(len), im: new Float64Array(len) };
-  for (let m = 0; m < len; m++){ rho.re[m] = acc.re[m] / N; rho.im[m] = acc.im[m] / N; }
-  const sd = (o) => Math.sqrt(Math.max(0, o.s2 / N - (o.s / N) * (o.s / N)));
   return {
-    preset: c.preset, n: spec.n, k: spec.k, p: c.pGate, spectrum: c.spectrum, trials: N,
-    rho,
-    info: gnRhoInfo(rho, spec),
-    F: { mean: sumF.s / N, sd: sd(sumF) },
-    bloch: sumB.map(o => ({ x: { mean: o.x.s / N, sd: sd(o.x) }, y: { mean: o.y.s / N, sd: sd(o.y) }, z: { mean: o.z.s / N, sd: sd(o.z) } })),
-    zz: sumZ.map(o => ({ i: o.i, j: o.j, mean: o.s / N, sd: sd(o) })),
-    meanCtraj: nC ? sumC / nC : NaN,
-    errHist: errHist.slice(0, spec.gates.length + 1),
-    errMean: errSum / N,
-    last: { state: last.state, errors: last.errors },
+    get total(){ return Math.max(1, c.trials | 0); },
+    get n(){ return N; },
+    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m; k++) one(); },
+    result(){
+      const NN = Math.max(1, N);
+      const rho = { n: spec.n, dim: D, re: new Float64Array(len), im: new Float64Array(len) };
+      for (let m = 0; m < len; m++){ rho.re[m] = acc.re[m] / NN; rho.im[m] = acc.im[m] / NN; }
+      const sd = (o) => Math.sqrt(Math.max(0, o.s2 / NN - (o.s / NN) * (o.s / NN)));
+      return {
+        preset: c.preset, n: spec.n, k: spec.k, p: c.pGate, spectrum: c.spectrum, trials: N,
+        rho,
+        info: gnRhoInfo(rho, spec),
+        F: { mean: sumF.s / NN, sd: sd(sumF) },
+        bloch: sumB.map(o => ({ x: { mean: o.x.s / NN, sd: sd(o.x) }, y: { mean: o.y.s / NN, sd: sd(o.y) }, z: { mean: o.z.s / NN, sd: sd(o.z) } })),
+        zz: sumZ.map(o => ({ i: o.i, j: o.j, mean: o.s / NN, sd: sd(o) })),
+        meanCtraj: nC ? sumC / nC : NaN,
+        errHist: errHist.slice(0, spec.gates.length + 1),
+        errMean: errSum / NN,
+        last: { state: last.state, errors: last.errors },
+      };
+    },
   };
+}
+
+/* 一次性全批：同一 rng 消耗序 ⟹ 数值与流式逐位一致 */
+export function gnRun(cfg = {}){
+  const s = gnStream(cfg);
+  s.step(s.total);
+  return s.result();
 }
 
 /* ---------- ③ 闭式 ---------- */

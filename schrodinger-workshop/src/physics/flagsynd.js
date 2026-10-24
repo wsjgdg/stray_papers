@@ -795,16 +795,16 @@ export function fsFirstOrder(kind = 'std', cfg = {}){
 /* ============================================================================
  * MC：按 p 在每个门的每个触及比特上采样
  * ========================================================================== */
-export function fsEnsemble(kind = 'std', cfg = {}){
+/* 流式累加器（R98 P2）：step(count) 分帧；result() 出当前统计。 */
+export function fsStream(kind = 'std', cfg = {}){
   const c = { ...FS_DEFAULTS, ...(typeof kind === 'string' ? { kind } : kind), ...cfg };
   const circ = fsCircuit(c.kind, c);
   const ref = fsRef(circ);
   const rng = mulberry32(c.seed);
-  const n = Math.max(1, c.trials | 0);
   const acc = { perfect: 0, outside: 0, logic: 0, flagged: 0, gauge: 0, mixed: 0 };
-  let wSum = 0, flips = 0, random = 0, faultSum = 0, unsureN = 0, usedSum = 0, noGoodN = 0, retrySum = 0, skipSum = 0;
+  let n = 0, wSum = 0, flips = 0, random = 0, faultSum = 0, unsureN = 0, usedSum = 0, noGoodN = 0, retrySum = 0, skipSum = 0;
   const wHist = {};
-  for (let k = 0; k < n; k++){
+  function one(){
     const r = fsExec(circ, { rng, p: c.p, spectrum: c.spectrum, noisyPhase: c.noisyPhase,
       noisyLogic: c.noisyLogic, decode: c.decode, need: c.need });
     const cl = fsClass(r.pre, ref, r.F);
@@ -818,27 +818,43 @@ export function fsEnsemble(kind = 'std', cfg = {}){
     if (r.unsure) unsureN++;
     usedSum += r.usedRounds;
     noGoodN += r.noGoodRounds; retrySum += r.retried; skipSum += r.skippedGates;
+    n++;
   }
   return {
-    kind: c.kind, p: c.p, spectrum: c.spectrum, trials: n, ...acc,
-    PL: acc.logic / n,
-    harmful: (acc.logic + acc.outside) / n,
-    /* 条件于「未被判不可信」的样本：cat/dup 的 flag 率高，只看 PL 会把「信息少一轮」
-       当成失败。两个率一起看才公平（页面 HUD 两个都显示）。 */
-    PLgiven: acc.flagged >= n ? null : acc.logic / (n - acc.flagged),
-    gaugeRate: acc.gauge / n,
-    residual: acc.outside / n,
-    discard: acc.flagged / n,
-    wMean: wSum / Math.max(1, n - acc.perfect - acc.flagged),
-    wHist, meanFaults: faultSum / n, frameFlips: flips, randomMeas: random,
-    unsureRate: unsureN / n, acceptRate: 1 - unsureN / n,
-    /* R83：真正「重测后仍无可信读数」的轮比例（这才是必须丢弃的），
-       与 discard（触发过自检的轮比例）对照，可量化 R82 的高估幅度。 */
-    noGoodRate: noGoodN / n / Math.max(1, (circ.rounds || 1) * (circ.stats ? (circ.stats.cycles || 1) : 1)),
-    meanRetried: retrySum / n, meanSkipped: skipSum / n,
-    meanUsedRounds: usedSum / n, rounds: circ.rounds, decode: c.decode,
-    stats: circ.stats,
+    get total(){ return Math.max(1, c.trials | 0); },
+    get n(){ return n; },
+    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m; k++) one(); },
+    result(){
+      const nn = Math.max(1, n);
+      return {
+        kind: c.kind, p: c.p, spectrum: c.spectrum, trials: n, ...acc,
+        PL: acc.logic / nn,
+        harmful: (acc.logic + acc.outside) / nn,
+        /* 条件于「未被判不可信」的样本：cat/dup 的 flag 率高，只看 PL 会把「信息少一轮」
+           当成失败。两个率一起看才公平（页面 HUD 两个都显示）。 */
+        PLgiven: acc.flagged >= n ? null : acc.logic / (n - acc.flagged),
+        gaugeRate: acc.gauge / nn,
+        residual: acc.outside / nn,
+        discard: acc.flagged / nn,
+        wMean: wSum / Math.max(1, n - acc.perfect - acc.flagged),
+        wHist, meanFaults: faultSum / nn, frameFlips: flips, randomMeas: random,
+        unsureRate: unsureN / nn, acceptRate: 1 - unsureN / nn,
+        /* R83：真正「重测后仍无可信读数」的轮比例（这才是必须丢弃的），
+           与 discard（触发过自检的轮比例）对照，可量化 R82 的高估幅度。 */
+        noGoodRate: noGoodN / nn / Math.max(1, (circ.rounds || 1) * (circ.stats ? (circ.stats.cycles || 1) : 1)),
+        meanRetried: retrySum / nn, meanSkipped: skipSum / nn,
+        meanUsedRounds: usedSum / nn, rounds: circ.rounds, decode: c.decode,
+        stats: circ.stats,
+      };
+    },
   };
+}
+
+/* 一次性全批：同一 rng 消耗序 ⟹ 数值与流式逐位一致 */
+export function fsEnsemble(kind = 'std', cfg = {}){
+  const s = fsStream(kind, cfg);
+  s.step(s.total);
+  return s.result();
 }
 
 /* ============================================================================
