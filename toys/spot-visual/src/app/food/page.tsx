@@ -230,7 +230,7 @@ export default function FoodPage() {
           label: { show: false },
           emphasis: {
             label: { show: true, color: '#ffffff', fontWeight: 'bold', fontSize: 11 },
-            itemStyle: { areaColor: SELECTED_COLOR },
+            itemStyle: { areaColor: SELECTED_COLOR, shadowColor: 'rgba(15,23,42,0.5)', shadowBlur: 26, shadowOffsetX: 10, shadowOffsetY: 12 },
           },
           itemStyle: { borderColor: '#ffffff', borderWidth: 0.6 },
           data,
@@ -254,6 +254,14 @@ export default function FoodPage() {
         value: 1,
         itemStyle: {
           areaColor: c.label === citySel ? SELECTED_COLOR : color,
+          ...(c.label === citySel ? {
+              shadowColor: 'rgba(15,23,42,0.5)',
+              shadowBlur: 26,
+              shadowOffsetX: 10,
+              shadowOffsetY: 12,
+              borderColor: '#ffffff',
+              borderWidth: 2,
+            } : {}),
           opacity: 1,
           borderColor: '#ffffff',
           borderWidth: c.label === citySel ? 1.4 : 0.7,
