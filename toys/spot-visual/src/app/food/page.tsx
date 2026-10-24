@@ -271,9 +271,10 @@ export default function FoodPage() {
         {
           type: 'map',
           map: 'china-compliant',
-          roam: true,
+          roam: 'move',
+          scaleLimit: { min: 1, max: 1 },
           layoutCenter: ['50%', '52%'],
-          layoutSize: '116%',
+          layoutSize: '120%',
           selectedMode: 'single',
           label: { show: false },
           emphasis: {
@@ -329,11 +330,12 @@ export default function FoodPage() {
         {
           type: 'map',
           map: cityGeo.mapName,
-          roam: true,
+          roam: 'move',
+          scaleLimit: { min: 1, max: 1 },
           // 用剔除远海岛礁后的包围盒定初始视野，避免主陆地被压扁/挤出画面
           boundingCoords: cityGeo.viewBounds,
           layoutCenter: ['50%', '50%'],
-          layoutSize: '112%',
+          layoutSize: '118%',
           selectedMode: 'single',
           label: { show: false },
           emphasis: {
@@ -573,7 +575,7 @@ export default function FoodPage() {
               ))}
           </div>
           <div className="absolute left-3 top-3 text-[10px] text-gray-500 bg-white/85 rounded px-1.5 py-0.5 hidden sm:block">
-            可滚轮缩放 / 拖拽 · ←→ 切省 ↑↓ 切市{drill && cityGeo ? ` · 共 ${cityRows.length} 个地级行政区` : ''}
+            可拖拽平移（不可缩放）· ←→ 切省 ↑↓ 切市{drill && cityGeo ? ` · 共 ${cityRows.length} 个地级行政区` : ''}
           </div>
 
           {/* 视野剔除提示（如三沙市岛礁跨越南海，会把本岛压扁） */}
