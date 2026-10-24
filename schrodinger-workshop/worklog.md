@@ -68,7 +68,7 @@
 | R92 | README 收尾段串写修复（文档追改轮，生产代码零改动） | 用户报「readme 和 worklog 内容串了」。根因：README 收尾段「RX 收官」段自 R85（c147971）起整段替换式更新，但 f249f5e（R86）/19b476f（R87）/db4453c（R88）三代只改标签号不改内容 ⟹ 「R88 收官」下挂的是 R85 内容，R85–R88 真身收官全缺失。修复：R88/R87/R86 三段补回 + 原段标签改回 R85 + 标题改「R67–R92 全部闭环」 |
 | R93 | README 职责重构：只留功能/实现/使用，R 轮次记录归 worklog（文档重构轮，生产代码零改动） | 用户澄清职责边界：「readme 不应该写工作流程和完成进度（R）…只放现有功能和结构、实现方式、使用说明」。重构后 README 六节：简介 → 运行 → 功能 → 物理与数值方法 → 架构 → 技术栈。**删两节**：`## 验证`（bak L2178 起，CDP 通过率总表）、`## 后续方向`（bak L2443 起，backlog + R67–R72 计划表）——均属工作流程/进度，归 worklog。全文清扫 R1–R92 轮次引用：批次一 `/tmp/r93_clean.py` 261 对（260 命中：删 5 块、悬空引用修 5 处、标题清理、轮数缩写 `R1/single`→`R=1/single` 防混淆、架构图 10 条目 + 12 处注释）+ 批次二 `/tmp/r93_patch2.py` 11 对（修 5 MISS 转录误差 + 4 漏网行内引用）。误抓保留 2 处（L508 `potR2` 参数名、L1934 `R32F` 纹理格式名）。diff：删 440 / 增 304，净 −136 行（2503→2367） |
 | R94 | 手机竖屏适配公共模块化：顶栏收编 + 汉堡抽屉 + 底部 dock | 用户指令「做小屏适配，尽量用公共模块，少每页独立维护」。盘点病灶：36 处同构顶栏媒体查询（12 页 × 1500/1400/900）+ 12 页 `#xxTop` 规则族重复、≤900 只隐导航 ⟹ 12 页互链手机端不可达、390px 竖屏面板+HUD 必重叠。新增 `src/core/responsive.js`（约 180 行）四件套：① 顶栏三档收编公共类 `.qtop`（差异值 5 页各 1–3 行属性选择器，7 页零差异）② ≤900 汉堡抽屉（桌面 `.qnav{display:contents}` 逐位不变）③ ≤860 底部 dock 三态 + 面板/HUD 转底部 sheet + stage 内联让位（`dataset.qfRestore` 精确还原）④ `injectResponsive()` DOM 增强包 `queueMicrotask`。六坑：时序（innerHTML 重写清 dock ⟹ microtask）、CSS 特异性三轮（类输 id ⟹ 删本地族 ⟹ 差异行压响应段 ⟹ 终局属性选择器 (0,2,0) vs `.qtop.qtop` (0,2,0) 后注入赢）、styles.js 跨行删除残骸吞 `#panel` 规则、flag drawFan 负半径崩（numW 收缩 + 三重 clamp）、responsive.js 两处笔误（冒号/`}}}`）、dock 死胡同（off 态 dock display:none ⟹ 无恢复路径；改常驻退让 opacity .4）。cdp92 **23/23** + cdp90 4/4 + cdp91 12/12 + pot85 38/38 + pot87 47/47；28 files，2726+/706− |
-| R99 | qcircuit 编辑器补 Toffoli 与测量门（R98 诚实限制 ④ 兑现前半） | 用户指令「建成后再自行发掘可优化改进的点，持续推进」。R98 P5 收尾后盘点 README「诚实限制」④——「Toffoli、测量与前馈仍由预设生成」，本轮兑现前两项。**实现**（src/qcircuit.js）：门类型下拉 15→17（+Toffoli +测量 M）；新增「第二控制位」行（仅 toffoli 模式显示，`qcGateC2Row` display 切换）；`_editorGate()` 加两支——toffoli 校验目标+两控**三位互异**后构造 `{op,q1,q2,q3}`（qcApply 既有读取路径），measure 构造 `{op,q,cbit}`（qcExec 既有路径，写经典位并坍缩）；`syncGateEditor()` 按 op 重建 c 的 options（toffoli/measure 不给「无控」）+ c 的 title 动态（「经典位 cbit」/「第一控制位」）+ c2 行显隐；gate 列表 wires 加 toffoli 标签 `q1,q2→q3`；debugHandle 加 `cbits()`。**物理层零改动**（qcApply/qcExec/绘制层 gateView 早已支持）。**验证**：node 侧 5 组（|000>不动 / |111>翻 target / 部分激活不翻 / measure cbit 写入 / 坍缩后复测一致）+ cdp105 扩 15→**23/23**（+G1 c2 行显隐与无「无控」/G1b 切回隐藏/G1c measure title/G2 插入格式+执行归零+已编辑/G3 三位不互异双拒/G4 H0H1X2·Toffoli 四支等幅/G5 插入格式/G5b cbit 写入+q0 坍缩）+ cdp75 16/16 零回归。**测试侧三处自我更正**（非产品 bug）：① `__qc.state` 是 getter 不是函数（EVAL ERR → null）；② G2/G4 在 bell 默认 n=2 下 q2 越界被 syncGateEditor 夹到 q1 ⟹ 先 `setParam('n',3)`；③ **位序教训**——G4 预期我手算 {1,3,5,6}，实测 {3,4,5,6}：页面 index 是 little-endian（q0=bit0），X(q2) 翻 bit2 得 {4,5,6,7}，toffoli 后 {3,4,5,6}——页面正确，断言修正。README 编辑沙盒段 + 限制 ④ + 数值事实行同步（15→17 种门） |
+| R99 | qcircuit 编辑器补 Toffoli 与测量门（R98 诚实限制 ④ 兑现前半） | 用户指令「建成后再自行发掘可优化改进的点，持续推进」。R98 P5 收尾后盘点 README「诚实限制」④——「Toffoli、测量与前馈仍由预设生成」，本轮兑现前两项。**实现**（src/qcircuit.js）：门类型下拉 15→17（+Toffoli +测量 M）；新增「第二控制位」行（仅 toffoli 模式显示，`qcGateC2Row` display 切换）；`_editorGate()` 加两支——toffoli 校验目标+两控**三位互异**后构造 `{op,q1,q2,q3}`（qcApply 既有读取路径），measure 构造 `{op,q,cbit}`（qcExec 既有路径，写经典位并坍缩）；`syncGateEditor()` 按 op 重建 c 的 options（toffoli/measure 不给「无控」）+ c 的 title 动态（「经典位 cbit」/「第一控制位」）+ c2 行显隐；gate 列表 wires 加 toffoli 标签 `q1,q2→q3`；debugHandle 加 `cbits()`。**物理层零改动**（qcApply/qcExec/绘制层 gateView 早已支持）。**验证**：node 侧 5 组（|000>不动 / |111>翻 target / 部分激活不翻 / measure cbit 写入 / 坍缩后复测一致）+ cdp105 扩 15→**23/23**（+G1 c2 行显隐与无「无控」/G1b 切回隐藏/G1c measure title/G2 插入格式+执行归零+已编辑/G3 三位不互异双拒/G4 H0H1X2·Toffoli 四支等幅/G5 插入格式/G5b cbit 写入+q0 坍缩）+ cdp75 16/16 零回归。**测试侧三处自我更正**（非产品 bug）：① `__qc.state` 是 getter 不是函数（EVAL ERR → null）；② G2/G4 在 bell 默认 n=2 下 q2 越界被 syncGateEditor 夹到 q1 ⟹ 先 `setParam('n',3)`；③ **位序教训**——G4 预期我手算 {1,3,5,6}，实测 {3,4,5,6}：页面 index 是 little-endian（q0=bit0），X(q2) 翻 bit2 得 {4,5,6,7}，toffoli 后 {3,4,5,6}——页面正确，断言修正。README 编辑沙盒段 + 限制 ④ + 数值事实行同步（15→17 种门）。**回归加固**：cdp92 复跑连续 EXIT=124——根因是 harness 双层缺陷（ev() 无超时致渲染退化永久挂死 + timeout 杀 node 不级联杀 chromium 致孤儿泄漏跨运行累积，且 `pgrep -x chromium` 查不到真实进程名 chrome），修进程组生命周期 + 真实超时 + 超时自恢复三层，复跑 **39/39**；R99 全门禁：pot 11 套 2175 断言 + cdp105 23/23 + cdp75 16/16 + cdp101 111/111 + cdp92 39/39 全绿 |
 | R98 | QEC 七页整合为单页 hub（P1）+ 全站实时沙盒化（P2：七模式播放式 MC） | 用户指令「QEC 七页整合，剩下的能不能都做成实时沙盒类？」。**P1 七页整合**（commit 320e9c3）：壳/模式分离——`src/qechub.js` 管 chrome + `?mode=` + 私有 CSS + 七枚 debug 句柄转发；7 个 mode 控制器加 `activate/deactivate` 统一清理；6 旧页降级 meta-refresh 桩；NAV 13→7、PAGES 13→7+6 桩；bundler 单作用域 333 个顶层名零重复（7 mode 顶层名加前缀 + flagsynd 私有名 `fs` 前缀）；移动端 tab 条 top:72 z:8 压抽屉、面板/HUD 上移 74→108。cdp101 **111/111**（深链/boot/tab 切换零泄漏/375×667/dist 单文件）。**P2 实时沙盒**：5 个物理模块流式化（`qecStream/shorStream/gnStream/fsStream/cfStream` 契约 `{total,n,step,result}`，旧 API 薄封装 ⟹ rng 同序数值零漂移）+ 共享 `LiveDriver`（20fps 闸 + **时长基准**每帧样本量 + 越界夹紧 + 演满自动停 + sync 双语义 + dispose 零泄漏）；七模式同款接线（播放钮/`?live=1`/recompute 分叉）。**教训两处**：① cdp102 首跑 50/55——swiftshader 下 rAF 仅 ~1–5fps，固定帧数预算（60 帧 ≈3s）实际要 40s+ ⟹ 产品侧改时长基准（顺带修 total=4000 越界 4020 的潜伏 bug）+ 测试侧 waitIdle 轮询替固定 sleep，复跑 **55/55**；② pot/cdp 并发抢 CPU 使 RO 定尺寸晚于 settle（P1 已记录）。回归全绿：pot86/85/87/80/81/82/83/84/88/89 + cdp102 55/55 + cdp101 111/111 + cdp90/91/92/98/99 4/12/39/10/19；dist 552.6 KB / 20 模块。**P3 noise 实时化**：`nzScan` 拆流式 `nzStream`（one() 记录 + 推进一步，steps+1 个记录点，rho 每步刷新 ⟹ HUD/热图随帧更新）+ 面板播放钮 + `?live=1` + HUD「演化时刻 t」+ 曲线进度头（竖线 + 头部亮点）。**LiveDriver sync 语义修正**（影响 P2 的 QEC hub，cdp102 复跑 55/55 无回归）：播放中换累加器后立即演一帧——探针（注入 rAF 计数器）证实 headless 下 rAF 仅 ~1 次/秒，挂载期首帧被 sync 清零后迟迟不落 ⟹ 首帧反馈不能依赖 rAF。cdp103 新套件 **29/29**（含 dist 通道）+ cdp77 14/14（P13 导航断言 13→7 同步修）+ pot80 1928/1928；dist noise 122.6 KB / qec 553.6 KB。**P4 paths/qcircuit**：paths 改 `piSpiralStream` + 播放/重放/`?live=1`；LiveDriver 针对 compositor 停产改 rAF+timeout 双通道；qcircuit 新增 15 种门的插入/换序/删除/清空编辑器，结构改动只重置执行、不清用户线路。cdp104 23/23 + cdp105 15/15 + cdp74/75/102/103 20/16/55/29 全绿。**P5 收尾完成**：全量回归 pot 11 套 + cdp 14 套 372 断言零回归（含 cdp92 套件两处缺陷修复：boot 条件 `#topbar`→`.qtop`、dist 通道前重启 chromium），README/worklog R98 终稿，五期计划闭环 |
 | R97 | 404 根因修复 + 交互面审计 + 页面数评估 | 用户三问（「点跳转就 404？」「交互为什么太弱？」「有必要开这么多页面吗？」）。**404 两向量实测确认**（cdp98）：V1 favicon.ico 每导航 404（DevTools 每次跳转一条红 404，体感主因）⟹ 13 HTML head 注入 SVG data-URI favicon（零文件、file:// 双通）；V2 根级 `/quantum-field.html` 404（dev 主页实名 index.html vs README/dist 口径 quantum-field.html）⟹ 新增根级**深链跳转桩**（meta refresh→index.html；不改名 index.html 是为保目录根 `/` 默认入口）。**环境事故连带真 bug**：cdp99 抓到 two-body 点预设抛 `TypeError … bindTexture` → 顺栈发现全环境 webgl2 不可用 → chrome 日志 `xcb_connect() failed` ⟹ **Xvfb 进程已死**（GL 死亡期 cdp90 像素断言空转，修复后全部重测）；连带缺陷：GL 失败时 buildDOM 先接线后取 gl ⟹ 控件全活点击即崩。修复：接线拆入 `bindUI()`（gl 就绪才调，对齐 app.js）+ `fail()` 禁用控件；cdp100 新套件用 `addScriptToEvaluateOnNewDocument` 桩构造 GL 缺失，5/5（明确报错 + 控件全禁用 + 零异常）。**交互审计 cdp99**：12 子页 197 按钮 + 40 滑块逐个点击/拖动，dev+dist 双通道 **237/237 有反应、零死控件**；两个探针假阳性教训（burger aria 盲区、已激活预设幂等）。**评估**：交互弱是类别差异（实时沙盒 vs 参数化计算器）非缺陷——子页全活但无时间维度/画布直操；**QEC 七页（qec/shor/gatenoise/flag/rounds/cycle/family）是最可整合的一簇**，flag/rounds/cycle 各仅 2 按钮 2 滑块，合并列为架构决策项挂起。九套件全绿（cdp98 8/8 · cdp99 37/37×2 · cdp100 5/5 · cdp92 43/43 · cdp90 4/4 · cdp91 12/12 · pot85 38/38 · pot87 47/47）；30 files，178+/0− |
 | R96 | R95 遗留落地：构建守卫 / 触摸目标放大 / 横屏放宽 / 三视口实测 | 用户指令「继续」。① **构建守卫**（build-standalone.mjs +12）：逐页 bundle 扫描**独立成行** `injectResponsive()` 调用，漏调即 `fail()` 并提示改 src 页面模块。**全文正则假阴性教训**：初版 `/injectResponsive\(\)/` 被 responsive.js 自身文档注释骗过——注释掉 qec 调用后构建仍 OK；FAIL 路径实测抓到后改行级匹配，双向验证（正路 13/13 + FAIL 路径准确报错）——再次印证「守卫必须双向验证」。② **触摸目标**：burger 30×26→**40×36**、dock 按钮 57×29→**≈31px 高**（dock 总高 43.2 ≤ 44px 带）；仍低于 44px 舒适线（再放大必抬带高吃 stage 空间），M1b 断言下限 ≥34/≥30 含回归余量。③ **横屏放宽**：SHEET_G `max-height` 改 `var(--qf-sm,46vh)` + ≤860 `:root{--qf-sm:46vh}` + landscape 覆盖 **64vh**（844×390 面板带 179→243px）——CSS 变量驱动免监听 orientationchange。④ **M14**：360×640 / 412×915 / 430×932 × {qec,index,gatenoise} 三视口实测（零 console、抽屉开/关、sheet 可滚）全过。cdp92 **43/43**（+M1b/M14）+ cdp90 4/4 + cdp91 12/12 + pot85 38/38 + pot87 47/47；15 files，264+/70− |
@@ -1169,6 +1169,52 @@ G5 插入格式 / G5b cbit 写入 + q0 坍缩）；cdp75 **16/16** 零回归；d
 
 README 同步：编辑沙盒段（17 种门 + Toffoli/measure 说明）、限制 ④（17 种 + 前馈仍预设）、
 数值事实行（+cdp105 23/23）。
+
+### R99 回归：cdp92 套件加固（测试侧，产品零改动）
+
+**背景**：R99 commit 2da27bc 后复跑 cdp92（qcircuit 编辑器新增 `#qcGateC2Row` DOM 行，
+移动端 390×844 布局需零回归确认）连续三次 EXIT=124，全部挂死在 dist 通道。git 工作区干净、
+pot 11 套全绿 ⟹ 产品侧无改动，锁定测试 harness。
+
+**诊断链（探针 → 假设 → 证伪 → 根因）**：① 首轮怀疑 R98 P5 已修的「单实例 14-15 次导航后
+渲染进程濒死」复发 ⟹ 加 fresh() 段前重启 ⟹ 仍挂死且更早；② 怀疑 fresh() 同端口重启连到
+旧实例 ⟹ 改递增端口 ⟹ 仍挂死；③ 写探针（fresh 分步计时 + send 看门狗 + boot 计时）⟹
+dist 第 6 页（noise）后 `dist/qec` boot 无任何输出——`ev()`=Runtime.evaluate **无超时**，
+渲染进程停止响应后 await 永悬；④ `ps` 查进程 ⟹ **真根因浮现**：上一次被 timeout 杀死的
+探针运行留下的 chromium（PID 236700，端口 9642）**仍活着**，带 11 个 renderer +
+gpu-process，占着调试端口和 Xvfb 资源——而残留检查写的是 `pgrep -x chromium`，
+**进程名实际是 chrome**（/usr/bin/chromium 是指向 /opt/google/chrome/chrome 的符号链接，
+comm 解析为 chrome），检查永远返回 0，误判「无残留」⟹ 僵尸跨运行累积 ⟹ 下一跑首连撞
+同端口僵尸 ⟹ CDP 全错乱 ⟹ 更快挂死。自我增强的恶性循环。
+
+**根因定性**：双层叠加——① ev() 无超时使渲染退化从「慢」升级为「永久挂死」（触发条件）；
+② timeout 杀 node 不级联杀 chromium，孤儿带资源泄漏跨运行累积，且进程名检查错误使其
+不可见（放大条件）。R98 P5 的两处修复（`.qtop`、dist 前重启）与本轮三次修复（fresh()、
+递增端口）都是对症，未打断循环。
+
+**修复（/tmp/cdp92.mjs，三层，套件按惯例不入库）**：
+1. **进程组生命周期**：spawn `detached:true` + close() `kill(-pid,'SIGKILL')` 整组斩杀
+   （主进程 + gpu-process + renderer；实测只 SIGKILL 主进程会留 gpu-process 孤儿）+
+   exit/SIGTERM/SIGINT 处理器（node 死则 chromium 陪葬）+ 开跑前 `pkill -9 -x chrome`
+   清场（`-x` 精确进程名，不会误杀 pkill 自身）；
+2. **真实超时**：sendT/ev 用 clearTimeout 取消定时器，仅 CDP genuinely 无响应才记日志 +
+   抛 `cdp-timeout`（navigate 30s / evaluate 25s / 其他 20s）；
+3. **自恢复**：每页/每段 cdp-timeout ⟹ fresh() 重启重试一次；段级 chk 缓冲到成功后才
+   输出（重试不双计）；页级 findings 每页独立（重试重测不污染通道汇总）。
+
+**验证**：cdp92 **39/39 EXIT=0**；自恢复实测生效——dist/noise 第一次
+`[cdp-timeout] Runtime.evaluate 无响应 25001ms` ⟹ 自动 fresh 重测通过（正是旧版挂死的
+同一点）；M11 全程零 console error（重试未引入杂音）；运行后 `pgrep -x chrome` = 0
+（零泄漏闭环）。R99 全门禁复绿：pot 11 套 2175 断言 0 fail + cdp105 23/23 + cdp75 16/16
++ cdp101 111/111 + cdp92 39/39。
+
+**教训三则**：① **测试 harness 的泄漏比产品 bug 更隐蔽**——产品零改动、git 干净，bug 全在
+测试侧，且「无残留」的错误检查给了虚假安全感；查残留必须用真实进程名（`pgrep -x chrome`），
+符号链接会让 comm 与调用名不一致。② **探针自身会误导**——第一版探针用
+`Promise.race([p, sleep(10s).then(log)])`，定时器无论命令成败都会触发，watchdog 日志 90%
+是 stale 噪声，差点误判「navigate 普遍 >10s」；正确写法是 clearTimeout 取消（与产品修复
+同构）。③ **timeout 杀 node ≠ 杀全家**——spawn 的子进程不随 node 退出而死亡，长跑测试
+框架必须自带进程组生命周期管理，否则每次挂死运行都给下一跑埋雷。
 
 
 ### 起因
