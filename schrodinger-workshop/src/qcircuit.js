@@ -105,7 +105,7 @@ export class QCircuitApp {
       measured: null, seed: Math.round(num('seed', 137)),
       paused: q.get('paused') === '1', edited: false,
     };
-    this.edit = { op: 'h', q: 0, c: -1, theta: Math.PI / 2, selected: -1 };
+    this.edit = { op: 'h', q: 0, c: -1, c2: -1, theta: Math.PI / 2, selected: -1 };
     this.gates = [];
     this.psi = null;
     this._listeners = []; this._needDraw = true; this._last = 0;
@@ -171,10 +171,12 @@ export class QCircuitApp {
             <option value="rx">Rx</option><option value="ry">Ry</option><option value="rz">Rz</option>
             <option value="phase">P(θ)</option><option value="cnot">CNOT</option>
             <option value="cz">CZ</option><option value="swap">SWAP</option>
+            <option value="toffoli">Toffoli</option><option value="measure">测量 M</option>
           </select>
           <select id="qcGateQ" title="目标位"></select>
           <select id="qcGateC" title="控制位 / 第二位"></select>
         </div>
+        <div class="row" id="qcGateC2Row"><label>第二控制位</label><select id="qcGateC2" title="Toffoli 第二控制位"></select></div>
         <div class="row" id="qcGateThetaRow"><label>角度 θ</label><input type="range" id="qcGateTheta" min="-3.1416" max="3.1416" step="0.01"><output id="qcGateThetaO">—</output></div>
         <div class="btns">
           <button id="qcGateAdd">插入选中后</button><button id="qcGateClear">清空线路</button>
@@ -250,6 +252,7 @@ export class QCircuitApp {
     this.on(this.q('#qcGateOp'), 'change', e => { this.edit.op = e.target.value; this.syncGateEditor(); });
     this.on(this.q('#qcGateQ'), 'change', e => { this.edit.q = parseInt(e.target.value, 10); });
     this.on(this.q('#qcGateC'), 'change', e => { this.edit.c = parseInt(e.target.value, 10); });
+    this.on(this.q('#qcGateC2'), 'change', e => { this.edit.c2 = parseInt(e.target.value, 10); });
     this.on(this.q('#qcGateTheta'), 'input', e => {
       this.edit.theta = parseFloat(e.target.value);
       this.q('#qcGateThetaO').textContent = this.edit.theta.toFixed(2);
@@ -279,13 +282,23 @@ export class QCircuitApp {
     const e = this.edit, n = this.state.n, op = e.op;
     const q = Math.max(0, Math.min(n - 1, e.q | 0));
     const c = e.c == null ? -1 : e.c | 0;
+    const c2 = e.c2 == null ? -1 : e.c2 | 0;
     const two = op === 'cnot' || op === 'cz' || op === 'swap';
-    if ((two && (c < 0 || c >= n || c === q)) || (!two && c === q)){
+    if ((two && (c < 0 || c >= n || c === q)) || (!two && op !== 'toffoli' && op !== 'measure' && c === q)){
       this.toast(two ? '双比特门需要两个不同比特' : '控制位不能与目标位相同');
       return null;
     }
     if (op === 'cnot' || op === 'cz') return { op, c, q2: q };
     if (op === 'swap') return { op, q1: q, q2: c };
+    if (op === 'toffoli'){
+      /* qcApply 读 q1/q2 为控制、q3 为目标；三位必须互异 */
+      if (c < 0 || c >= n || c2 < 0 || c2 >= n || q === c || q === c2 || c === c2){
+        this.toast('Toffoli 需要目标位 + 两个互异控制位（三位互不相同的比特）');
+        return null;
+      }
+      return { op, q1: c, q2: c2, q3: q };
+    }
+    if (op === 'measure') return { op, q, cbit: c >= 0 && c < n ? c : 0 };
     const g = { op, q };
     if (c >= 0 && c < n) g.c = c;
     if (op === 'rx' || op === 'ry' || op === 'rz' || op === 'phase') g.theta = e.theta;
@@ -334,16 +347,30 @@ export class QCircuitApp {
     const e = this.edit, n = this.state.n;
     e.q = Math.max(0, Math.min(n - 1, e.q | 0));
     if (e.c >= n) e.c = -1;
+    if (e.c2 >= n) e.c2 = -1;
     const qEl = this.q('#qcGateQ'), cEl = this.q('#qcGateC');
     if (qEl){
       qEl.innerHTML = Array.from({ length: n }, (_, i) => `<option value="${i}">q${i}</option>`).join('');
       qEl.value = String(e.q);
     }
+    /* Toffoli 两位控制与 measure 的 cbit 都必须是有效位（不给「无控」）；
+       其余模式维持「无控」选项（受控单比特门可不要控制）。 */
+    const needC = e.op === 'toffoli' || e.op === 'measure';
+    if (needC && (e.c < 0 || e.c >= n)) e.c = 0;
     if (cEl){
-      cEl.innerHTML = '<option value="-1">无控</option>' +
+      cEl.innerHTML = (needC ? '' : '<option value="-1">无控</option>') +
         Array.from({ length: n }, (_, i) => `<option value="${i}">q${i}</option>`).join('');
       cEl.value = String(e.c);
+      cEl.title = e.op === 'measure' ? '经典位 cbit（测量结果写入）'
+        : e.op === 'toffoli' ? '第一控制位' : '控制位 / 第二位';
     }
+    const c2El = this.q('#qcGateC2');
+    if (c2El){
+      c2El.innerHTML = Array.from({ length: n }, (_, i) => `<option value="${i}">q${i}</option>`).join('');
+      if (e.op === 'toffoli' && (e.c2 < 0 || e.c2 >= n)) e.c2 = (e.c + 1) % n;
+      c2El.value = String(e.op === 'toffoli' ? e.c2 : 0);
+    }
+    const c2Row = this.q('#qcGateC2Row'); if (c2Row) c2Row.style.display = e.op === 'toffoli' ? '' : 'none';
     const opEl = this.q('#qcGateOp'); if (opEl) opEl.value = e.op;
     const th = this.q('#qcGateTheta'); if (th) th.value = String(e.theta);
     const out = this.q('#qcGateThetaO'); if (out) out.textContent = e.theta.toFixed(2);
@@ -364,6 +391,7 @@ export class QCircuitApp {
       const name = v.text || (g.op === 'cnot' ? 'CNOT' : g.op.toUpperCase());
       const wires = g.op === 'cnot' || g.op === 'cz' ? `q${g.c}→q${g.q2}` :
         g.op === 'swap' ? `q${g.q1}↔q${g.q2}` :
+        g.op === 'toffoli' ? `q${g.q1},q${g.q2}→q${g.q3}` :
         g.op === 'measure' ? `q${g.q}→c${g.cbit}` :
         g.op === 'cond' ? `c${g.cbit}? q${g.gate.q}` : `q${g.q}${g.c != null ? ` ←q${g.c}` : ''}`;
       return `<div class="gate${i === this.edit.selected ? ' sel' : ''}">` +
@@ -749,6 +777,7 @@ export class QCircuitApp {
       gateCount: () => self.gates.length,
       gateAt: i => self.gates[i],
       gateList: () => self.gates.map((g, i) => ({ i, ...g })),
+      cbits: () => Array.from(self.cres || []),
       addGate: () => self.addGate(),
       moveGate: (i, d) => self.moveGate(i, d),
       deleteGate: i => self.deleteGate(i),
