@@ -46,6 +46,8 @@ export default function FoodPage() {
   const [citySel, setCitySel] = useState<string | null>(null);
   /** 城市清单搜索词（匹配城市名或该地菜名） */
   const [cityQuery, setCityQuery] = useState('');
+  /** URL 带进来的 city，等城市清单加载后套用（不能被同步 effect 提前清掉） */
+  const pendingCity = useRef<string | null>(null);
   /** 信息卡引用：选中城市后滚到这里 */
   const infoRef = useRef<HTMLDivElement | null>(null);
 
@@ -140,8 +142,11 @@ export default function FoodPage() {
 // URL 同步：?prov=四川&city=成都，刷新/分享都能还原到市级
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
-    const c = sp.get('city');
-    if (c && cityRows.some((r) => r.label === c)) setCitySel(c);
+    const c = pendingCity.current ?? sp.get('city');
+    if (c && cityRows.some((r) => r.label === c)) {
+      pendingCity.current = null;
+      setCitySel(c);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cityRows]);
 
@@ -150,7 +155,7 @@ export default function FoodPage() {
     if (drill) sp.set('prov', drill);
     else sp.delete('prov');
     if (citySel) sp.set('city', citySel);
-    else sp.delete('city');
+    else if (!pendingCity.current && !sp.get('city')) sp.delete('city');
     const qs = sp.toString();
     window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
   }, [drill, citySel]);
