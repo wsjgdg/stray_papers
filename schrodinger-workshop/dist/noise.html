@@ -1039,13 +1039,31 @@ function qcPresetGates(name, n){
  * 迭代相位估计）需要**中途测量 + 用结果控制后面的门**。这里补上两件事：
  *   ① qcMeasureQubit：只测一个比特（投影到该位的 0/1 子空间 + 归一化），
  *      不是把整个态塌到一个基态——传态里测 q0/q1 之后 q2 的叠加必须留着；
+ *      R100 加 basis='x'/'y'（旋转-测量-旋回），默认 'z' 路径逐位不变；
  *   ② qcExec：把 {op:'measure'}、{op:'cond'} 与普通门统一成「一步」。
  * ========================================================================== */
 
 function qcNewClassical(nbits){ return new Uint8Array(nbits); }
 
-/* 单比特 Z 基测量：返回 0/1，就地把态投影到对应子空间并归一化 */
-function qcMeasureQubit(s, q, rng){
+/* 单比特测量：返回 0/1，就地把态投影到对应子空间并归一化。
+ * basis='z'（默认，R76 原路径）：Z 基（计算基）——投影到该位 0/1 子空间。
+ * basis='x'/'y'（R100）：**旋转-测量-旋回**——X 基 H·M·H；Y 基 S†H·M·H·S
+ *（|+i⟩=S·H|0⟩ ⟹ U=H·S† 把 Y 本征基映到 Z 基）。两条性质保证实现正确：
+ *  ① 概率：旋转不改变该位在旋转后基下的边缘分布 ⟹ p(±)=(1±⟨P⟩)/2 精确
+ *     （⟨X⟩=2Reρ01、⟨Y⟩=2Imρ01，与 qcQubitRho 对账）；
+ *  ② 测后态：旋回把 Z 本征态映回该基本征态（X: |±⟩；Y: |±i⟩），
+ *     cbit 0 = +1 本征值、1 = −1 本征值。 */
+function qcMeasureQubit(s, q, rng, basis = 'z'){
+  if (basis !== 'z' && basis !== 'x' && basis !== 'y') throw new Error('unknown measure basis ' + basis);
+  const pre = basis === 'x' ? ['h'] : basis === 'y' ? ['sdg', 'h'] : [];
+  const post = basis === 'x' ? ['h'] : basis === 'y' ? ['h', 's'] : [];
+  for (const g of pre) qcApply(s, { op: g, q });
+  const bit = qcMeasureZ(s, q, rng);
+  for (const g of post) qcApply(s, { op: g, q });
+  return bit;
+}
+/* Z 基测量内核（qcMeasureQubit 的 basis 包装调用它；保持不变导出语义） */
+function qcMeasureZ(s, q, rng){
   const bit = 1 << q;
   let p1 = 0;
   for (let i = 0; i < s.dim; i++) if (i & bit) p1 += s.re[i] * s.re[i] + s.im[i] * s.im[i];
@@ -1058,12 +1076,14 @@ function qcMeasureQubit(s, q, rng){
   return out;
 }
 
-/* 执行一步：普通门 / 测量写入经典位 / 条件门 */
+/* 执行一步：普通门 / 测量写入经典位 / 条件门。
+ * measure 的 basis（'z' 默认 / 'x' / 'y'，R100）透传给 qcMeasureQubit，
+ * 并写进执行记录供 UI 标注；未给 basis 的旧调用逐位等价 R76/R99 路径。 */
 function qcExec(s, op, cres, rng){
   if (op.op === 'measure'){
-    const bit = qcMeasureQubit(s, op.q, rng);
+    const bit = qcMeasureQubit(s, op.q, rng, op.basis || 'z');
     if (cres && op.cbit != null) cres[op.cbit] = bit;
-    return { kind: 'measure', q: op.q, cbit: op.cbit, bit };
+    return { kind: 'measure', q: op.q, cbit: op.cbit, bit, basis: op.basis || 'z' };
   }
   if (op.op === 'cond'){
     const on = cres ? !!cres[op.cbit] : false;

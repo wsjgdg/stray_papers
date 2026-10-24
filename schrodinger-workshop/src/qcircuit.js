@@ -69,7 +69,9 @@ const ex = (x, d = 2) => (Number.isFinite(x) && x !== 0 ? x.toExponential(d) : '
 /* 门的展示信息（纯表现层，物理在 physics 里） */
 function gateView(g){
   const op = g.op;
-  if (op === 'measure') return { text: 'M', wires: [g.q], kind: 'measure', target: g.q, cbit: g.cbit };
+  /* R100：测量盒标注基（M_z / M_x / M_y）——X/Y 基测量的结果写在经典位，
+     cbit 0 = +1 本征值、1 = −1 本征值 */
+  if (op === 'measure') return { text: 'M' + (g.basis && g.basis !== 'z' ? '_' + g.basis : '_z'), wires: [g.q], kind: 'measure', target: g.q, cbit: g.cbit, basis: g.basis || 'z' };
   if (op === 'cond'){
     const inner = gateView(g.gate);
     return { text: inner.text, wires: [g.gate.q], kind: 'cond', target: g.gate.q, cbit: g.cbit };
@@ -105,7 +107,7 @@ export class QCircuitApp {
       measured: null, seed: Math.round(num('seed', 137)),
       paused: q.get('paused') === '1', edited: false,
     };
-    this.edit = { op: 'h', q: 0, c: -1, c2: -1, theta: Math.PI / 2, selected: -1 };
+    this.edit = { op: 'h', q: 0, c: -1, c2: -1, theta: Math.PI / 2, basis: 'z', selected: -1 };
     this.gates = [];
     this.psi = null;
     this._listeners = []; this._needDraw = true; this._last = 0;
@@ -177,6 +179,7 @@ export class QCircuitApp {
           <select id="qcGateC" title="控制位 / 第二位"></select>
         </div>
         <div class="row" id="qcGateC2Row"><label>第二控制位</label><select id="qcGateC2" title="Toffoli 第二控制位"></select></div>
+        <div class="row" id="qcGateBasisRow"><label>测量基</label><select id="qcGateBasis" title="测量基：Z 计算基 / X / Y（cbit 0=+1 本征值，1=−1 本征值）"><option value="z">Z 基</option><option value="x">X 基</option><option value="y">Y 基</option></select></div>
         <div class="row" id="qcGateThetaRow"><label>角度 θ</label><input type="range" id="qcGateTheta" min="-3.1416" max="3.1416" step="0.01"><output id="qcGateThetaO">—</output></div>
         <div class="btns">
           <button id="qcGateAdd">插入选中后</button><button id="qcGateClear">清空线路</button>
@@ -253,6 +256,7 @@ export class QCircuitApp {
     this.on(this.q('#qcGateQ'), 'change', e => { this.edit.q = parseInt(e.target.value, 10); });
     this.on(this.q('#qcGateC'), 'change', e => { this.edit.c = parseInt(e.target.value, 10); });
     this.on(this.q('#qcGateC2'), 'change', e => { this.edit.c2 = parseInt(e.target.value, 10); });
+    this.on(this.q('#qcGateBasis'), 'change', e => { this.edit.basis = e.target.value; });
     this.on(this.q('#qcGateTheta'), 'input', e => {
       this.edit.theta = parseFloat(e.target.value);
       this.q('#qcGateThetaO').textContent = this.edit.theta.toFixed(2);
@@ -298,7 +302,7 @@ export class QCircuitApp {
       }
       return { op, q1: c, q2: c2, q3: q };
     }
-    if (op === 'measure') return { op, q, cbit: c >= 0 && c < n ? c : 0 };
+    if (op === 'measure') return { op, q, cbit: c >= 0 && c < n ? c : 0, basis: e.basis || 'z' };
     const g = { op, q };
     if (c >= 0 && c < n) g.c = c;
     if (op === 'rx' || op === 'ry' || op === 'rz' || op === 'phase') g.theta = e.theta;
@@ -371,6 +375,9 @@ export class QCircuitApp {
       c2El.value = String(e.op === 'toffoli' ? e.c2 : 0);
     }
     const c2Row = this.q('#qcGateC2Row'); if (c2Row) c2Row.style.display = e.op === 'toffoli' ? '' : 'none';
+    /* R100：测量基行仅 measure 模式显示（Z/X/Y，默认 Z——与预设的 Z 基测量同路径） */
+    const bRow = this.q('#qcGateBasisRow'); if (bRow) bRow.style.display = e.op === 'measure' ? '' : 'none';
+    const bEl = this.q('#qcGateBasis'); if (bEl) bEl.value = e.basis || 'z';
     const opEl = this.q('#qcGateOp'); if (opEl) opEl.value = e.op;
     const th = this.q('#qcGateTheta'); if (th) th.value = String(e.theta);
     const out = this.q('#qcGateThetaO'); if (out) out.textContent = e.theta.toFixed(2);
