@@ -280,10 +280,10 @@
 
 | # | 内容 | 状态 |
 |---|---|---|
-| 1 | 烘焙脚本去数量截断：拉 3 页候选，按「较大景点」判据过滤（rating ≥ 4.0 或有官方图），自然收敛 | 待做 |
-| 2 | LIBRARY = sampleSpots ∪ POI（同名优先手工全字段版），cityPoisToSpots 下沉 spot-data | 待做 |
-| 3 | store v2：spots 初始为 LIBRARY，persist migrate 保留用户自定义导入（非库 id 条目），清指向已弃 id 的收藏 | 待做 |
-| 4 | cityFilter 过滤式 chips（叠加分类/搜索），删除替换 confirm；OSM 兜底仅剩库外城市 | 待做 |
+| 1 | 烘焙脚本去数量截断：拉 3 页候选，按「较大景点」判据过滤（rating ≥ 4.0 或有官方图），自然收敛 | 已完成：extensions=all 修复（base 压掉深度字段——十六轮的 300 条其实一直无评分无图）；过滤收紧为 rating ≥ 4.3 + 剔除「-」子景点，20 城 1178 条全有评分有图 |
+| 2 | LIBRARY = sampleSpots ∪ POI（同名优先手工全字段版），cityPoisToSpots 下沉 spot-data | 已完成：LIBRARY = 30 手工 + 1148 POI ≈ 1178 |
+| 3 | store v2：spots 初始为 LIBRARY，persist migrate 保留用户自定义导入（非库 id 条目），清指向已弃 id 的收藏 | 已完成：旧内置 id 用精确集合判断（防误杀用户 JSON 自带数字 id） |
+| 4 | cityFilter 过滤式 chips（叠加分类/搜索），删除替换 confirm；OSM 兜底仅剩库外城市 | 已完成：cityFilter 与分类/搜索叠加，chips 高亮当前城，计数行带清除按钮 |
 
 ## 七轮（2026-10-25）：志愿探索接入真实数据
 
