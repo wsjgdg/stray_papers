@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PROVINCE_FOODS, TASTE_KEYS, type ProvinceFood } from '@/lib/food-data';
 import { TasteRadar } from './taste-radar';
 import { cn } from '@/lib/utils';
@@ -8,6 +8,18 @@ import { DISH_IMPACT } from '@/lib/dish-impact.generated';
 import { DISH_SODIUM } from '@/lib/dish-sodium.generated';
 
 /* ── 口味测试：自评 6 维，匹配最接近的菜 ────────────────────────── */
+function useNarrow() {
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const m = window.matchMedia('(max-width: 639px)');
+    const h = () => setNarrow(m.matches);
+    h();
+    m.addEventListener('change', h);
+    return () => m.removeEventListener('change', h);
+  }, []);
+  return narrow;
+}
+
 export function TasteTest({ onPick }: { onPick: (p: ProvinceFood) => void }) {
   const [vals, setVals] = useState<Record<string, number>>(Object.fromEntries(TASTE_KEYS.map((k) => [k, 50])));
 
@@ -23,7 +35,12 @@ export function TasteTest({ onPick }: { onPick: (p: ProvinceFood) => void }) {
         na += v[i] * v[i];
         nb += u[i] * u[i];
       }
-      return { p, sim: dot / (Math.sqrt(na) * Math.sqrt(nb) || 1) };
+      // 余弦只看方向，六维拉平时会失真；混入欧氏距离兜底
+      const cos = dot / (Math.sqrt(na) * Math.sqrt(nb) || 1);
+      let d2 = 0;
+      for (let i = 0; i < 6; i++) d2 += (v[i] - u[i]) ** 2;
+      const euclid = 1 - Math.sqrt(d2) / (100 * Math.sqrt(6));
+      return { p, sim: 0.7 * cos + 0.3 * euclid };
     })
       .sort((a, b) => b.sim - a.sim)
       .slice(0, 6);
@@ -71,6 +88,8 @@ export function DishCompare({ left, right, onLeft, onRight }: {
   onLeft: (p: ProvinceFood) => void;
   onRight: (p: ProvinceFood) => void;
 }) {
+  const narrow = useNarrow();
+  const radarSize = narrow ? 140 : 170;
   const sel = (cur: ProvinceFood, set: (p: ProvinceFood) => void, tag: string) => (
     <select
       value={cur.name}
@@ -92,13 +111,13 @@ export function DishCompare({ left, right, onLeft, onRight }: {
         <div>
           {sel(left, onLeft, '左侧菜')}
           <div className="flex justify-center mt-2">
-            <TasteRadar taste={left.taste} size={170} color="#B91C1C" />
+            <TasteRadar taste={left.taste} size={radarSize} color="#B91C1C" />
           </div>
         </div>
         <div>
           {sel(right, onRight, '右侧菜')}
           <div className="flex justify-center mt-2">
-            <TasteRadar taste={right.taste} size={170} color="#0F766E" />
+            <TasteRadar taste={right.taste} size={radarSize} color="#0F766E" />
           </div>
         </div>
       </div>

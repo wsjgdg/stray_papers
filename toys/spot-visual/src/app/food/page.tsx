@@ -8,7 +8,7 @@ import { PROVINCE_FOODS, CUISINE_COLORS, TASTE_KEYS, TASTE_DIMENSIONS, getProvin
 import { TASTE_EVIDENCE, EVIDENCE_LABEL, EVIDENCE_STYLE, SCOVILLE_BANDS, getDishNutrition, sodiumToScore } from '@/lib/taste-evidence';
 import { getDishIngredients, SODIUM_BANDS } from '@/lib/ingredient-nutrition';
 import { DISH_SODIUM, SODIUM_DATASET_SIZE } from '@/lib/dish-sodium.generated';
-import { getSimilarTaste, tierOf, TIER_LABEL, TIER_STYLE } from '@/lib/taste-similar';
+import { getSimilarTaste, tierOf, TIER_LABEL, TIER_STYLE, type EvidenceTier } from '@/lib/taste-similar';
 import { downloadShareCard } from '@/lib/share-card';
 import { TasteTest, DishCompare } from '@/components/food/food-panels';
 import { DISH_IMPACT } from '@/lib/dish-impact.generated';
@@ -716,19 +716,21 @@ export default function FoodPage() {
               <h2 className="text-lg font-bold text-gray-900 leading-tight line-clamp-2">{panel.title}</h2>
               <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: panelColor }}>{panel.cuisine}</span>
             {(() => {
-              const tier = tierOf({
-                dish: !!DISH_SODIUM[panel.dish],
-                nutrition: !!getDishNutrition(panel.dish),
-                ingredient: !!getDishIngredients(panel.dish),
-              });
-              return (
+              // 一层数据一个角标：同时有菜肴实测与营养库时都显示，不互相覆盖
+              const tiers: EvidenceTier[] = [];
+              if (DISH_SODIUM[panel.dish]) tiers.push('dish');
+              if (getDishNutrition(panel.dish)) tiers.push('nutrition');
+              if (getDishIngredients(panel.dish)) tiers.push('ingredient');
+              if (!tiers.length) tiers.push('self');
+              return tiers.map((t) => (
                 <span
-                  className={'shrink-0 text-[10px] px-1.5 py-0.5 rounded-full border ' + TIER_STYLE[tier]}
+                  key={t}
+                  className={'shrink-0 text-[10px] px-1.5 py-0.5 rounded-full border ' + TIER_STYLE[t]}
                   title="这道菜目前有几层外部数据可核"
                 >
-                  {TIER_LABEL[tier]}
+                  {TIER_LABEL[t]}
                 </span>
-              );
+              ));
             })()}
             </div>
             <p className="text-xs text-gray-400 mb-4 flex items-center gap-1">
