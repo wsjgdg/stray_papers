@@ -35,6 +35,7 @@ import {
   Zap,
   Thermometer,
   BookX, // 新增：体力沙盘、PTSI、劝退日记图标
+  Navigation,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,6 +58,9 @@ import {
   sampleSpots,
   getCategoryImageUrl,
   cachePhotoForCategory,
+  parseCoords,
+  haversineKm,
+  DISSUASION_TAGS,
 } from "@/lib/spot-data"; // 保留：cachePhotoForCategory 缓存机制
 import { withSharecode } from "@/lib/share-link";
 import dynamic from "next/dynamic";
@@ -550,6 +554,8 @@ function SpotDetailDialog() {
     toggleFavorite,
     addDissuasionRecord,
     setActiveView,
+    spots,
+    dissuasionRecords,
   } = useAppStore();
   const [photoIdx, setPhotoIdx] = useState(0);
   const [showDissuasionEditor, setShowDissuasionEditor] = useState(false);
@@ -562,6 +568,33 @@ function SpotDetailDialog() {
     setPhotoIdx(0);
     setPrevId(spot.id);
   }
+
+  // ═══ 口碑前置：该景点的翻车记录（决策第一现场直接可见） ═══
+  const spotId = selectedSpot?.id ?? null;
+  const spotReviews = useMemo(
+    () =>
+      spotId
+        ? dissuasionRecords
+            .filter((r) => r.spotId === spotId)
+            .sort((a, b) => b.timestamp - a.timestamp)
+        : [],
+    [dissuasionRecords, spotId],
+  );
+  // ═══ 就近串联：同数据集中 25km 内、带坐标的其他景点 ═══
+  const nearbySpots = useMemo(() => {
+    if (!selectedSpot) return [];
+    const here = parseCoords(selectedSpot);
+    if (!here) return [];
+    return spots
+      .filter((s) => s.id !== selectedSpot.id)
+      .map((s) => ({
+        spot: s,
+        km: haversineKm(here, parseCoords(s) ?? { lat: 999, lng: 999 }),
+      }))
+      .filter((x) => x.km <= 25)
+      .sort((a, b) => a.km - b.km)
+      .slice(0, 4);
+  }, [spots, selectedSpot]);
 
   if (!spot) return null;
   const isFav = favorites.includes(spot.id);
@@ -678,6 +711,59 @@ function SpotDetailDialog() {
                 {spot.description}
               </p>
             </div>
+            {/* ═══ 口碑前置：翻车记录数 + 高频标签 ═══ */}
+            {spotReviews.length > 0 && (
+              <div className="rounded-xl border border-rose-100 bg-rose-50/70 p-3">
+                <button
+                  onClick={() => {
+                    setSelectedSpot(null);
+                    setActiveView("dissuasion");
+                  }}
+                  className="flex items-center gap-1.5 text-sm font-semibold text-rose-700 mb-1.5 hover:text-rose-800"
+                >
+                  <BookX className="w-3.5 h-3.5" />
+                  {spotReviews.length} 条翻车记录 · 点击查看
+                </button>
+                <div className="flex flex-wrap gap-1">
+                  {Array.from(new Set(spotReviews.flatMap((r) => r.tags)))
+                    .slice(0, 5)
+                    .map((tagId) => {
+                      const t = DISSUASION_TAGS.find((x) => x.id === tagId);
+                      return t ? (
+                        <span
+                          key={tagId}
+                          className="px-2 py-0.5 rounded-full bg-white text-[11px] text-rose-600 border border-rose-100"
+                        >
+                          {t.emoji} {t.label}
+                        </span>
+                      ) : null;
+                    })}
+                </div>
+              </div>
+            )}
+            {/* ═══ 就近串联：基于坐标的串联建议，点击直达 ═══ */}
+            {nearbySpots.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-1.5">
+                  <Navigation className="w-3.5 h-3.5" />
+                  就近串联
+                </h4>
+                <div className="flex flex-wrap gap-1.5">
+                  {nearbySpots.map(({ spot: s, km }) => (
+                    <button
+                      key={s.id}
+                      onClick={() => setSelectedSpot(s)}
+                      className="px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-[11px] font-medium text-emerald-700 hover:bg-emerald-100 transition-colors"
+                    >
+                      {s.name} ·{" "}
+                      {km < 1
+                        ? `${Math.round(km * 1000)}m`
+                        : `${km.toFixed(1)}km`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <Separator />
             {spot.facilities.length > 0 && (
               <div>
@@ -825,8 +911,36 @@ function SpotsView() {
     return c;
   }, [spots]);
 
+  // ═══ 离我最近排序（geolocation，拒绝授权优雅降级） ═══
+  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(
+    null,
+  );
+  const [locating, setLocating] = useState(false);
+  const toggleNearbySort = useCallback(() => {
+    if (userLoc) {
+      setUserLoc(null);
+      return;
+    }
+    if (!navigator.geolocation) {
+      alert("当前浏览器不支持定位");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocating(false);
+      },
+      () => {
+        alert("未获得定位授权，已保持原排序");
+        setLocating(false);
+      },
+      { timeout: 8000 },
+    );
+  }, [userLoc]);
+
   const filteredSpots = useMemo(() => {
-    return spots.filter((s) => {
+    const list = spots.filter((s) => {
       const mc = activeCategory === "全部" || s.category === activeCategory;
       const q = searchQuery.toLowerCase();
       const mq =
@@ -838,7 +952,19 @@ function SpotsView() {
         s.projects.some((p) => p.toLowerCase().includes(q));
       return mc && mq;
     });
-  }, [spots, activeCategory, searchQuery]);
+    // 离我最近：按用户定位排序，无坐标的景点排最后
+    if (userLoc) {
+      return [...list].sort((a, b) => {
+        const ca = parseCoords(a);
+        const cb = parseCoords(b);
+        if (!ca && !cb) return 0;
+        if (!ca) return 1;
+        if (!cb) return -1;
+        return haversineKm(userLoc, ca) - haversineKm(userLoc, cb);
+      });
+    }
+    return list;
+  }, [spots, activeCategory, searchQuery, userLoc]);
 
   const handleImport = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1112,6 +1238,17 @@ function SpotsView() {
               清空全部
             </Button>
           )}
+          {/* 离我最近排序开关（geolocation，拒绝授权优雅降级） */}
+          <Button
+            variant="outline"
+            size="sm"
+            className={`gap-1.5 text-xs ${userLoc ? "border-emerald-300 bg-emerald-50 text-emerald-700" : ""}`}
+            disabled={locating}
+            onClick={toggleNearbySort}
+          >
+            <Navigation className="w-3.5 h-3.5" />
+            {locating ? "定位中..." : userLoc ? "按距离排序中" : "离我最近"}
+          </Button>
           <div className="hidden sm:flex items-center border border-gray-200 rounded-lg p-0.5 bg-white">
             <button
               onClick={() => setViewMode("grid")}
