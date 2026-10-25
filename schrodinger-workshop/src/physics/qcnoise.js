@@ -42,9 +42,15 @@
  *   口径；与「赋值误差」（连坍缩子空间一起翻）不同，后者本模型不取。ε 钳到
  *   [0, 1/2]（>1/2 无物理意义：等价于确定性报反的补事件）。cond 前馈按**记录位**
  *   决策 ⟹ 传态修正用错位 ⟹ 保真度掉到 ~(1−ε)²（球平均 1−4ε/3+2ε²/3）。
+ * R107 增补热激发（广义振幅阻尼 GAD）：T₁ 弛豫的有限温度推广——总纵弛豫率
+ *   γ=tg/T₁ 按**平衡布居 p_eq** 重新分配为 gDown=γ(1−p_eq)（|1⟩→|0⟩）与
+ *   gUp=γ·p_eq（|0⟩→|1⟩），满足细致平衡 ⟹ 平衡态是对角热态（p₁₁_∞=p_eq、
+ *   z_∞=1−2p_eq），**不是**最大混合（p_eq<1/2 时）也**不是**纯基态（p_eq>0 时）
+ *   ——三通道终点对照就此闭合：T₁(p_eq=0)⟹纯基态、热⟹对角热态、退极化⟹最大混合。
+ *   p_eq=0 ⟹ 精确回到 R104 振幅阻尼路径（零回归锚点）。
  * 诚实限制：① 读出误差是**经典位翻转**（量子态按理想投影坍缩，无「赋值误差」）；
- *   ② 无非马尔可夫记忆、无串扰、无泄漏/热激发（T₁ 只写 |1⟩→|0⟩）；③ 经典前馈
- *   cond 的门噪声语义 = 内部门真实执行才衰减（未触发不衰减）。
+ *   ② 无非马尔可夫记忆、无串扰、无泄漏（热激发只翻转布居，不把比特搬出计算基）；
+ *   ③ 经典前馈 cond 的门噪声语义 = 内部门真实执行才衰减（未触发不衰减）。
  * ========================================================================== */
 import { QC_UNARY, qcRotation, mulberry32, jacobiReal, QC_JOINT_PREP, qcJointK } from './qcircuit.js';
 
@@ -162,7 +168,7 @@ export function qcnApplyGate(rho, g){
 /* ---------- 阻尼通道（就地） ---------- */
 /* 振幅阻尼 γ（T₁）：E₀=diag(1,√(1−γ))、E₁=√γ|0⟩⟨1| 作用在比特 q 上 */
 export function qcnAmpDamp(rho, q, gamma){
-  const g = Math.min(1, Math.max(0, gamma));
+  const g = Math.min(1, Math.max(0, Number.isFinite(gamma) ? gamma : 0));   /* R107：NaN 钳 0（此前 NaN 会静默污染 ρ） */
   if (g <= 0) return;
   const D = rho.dim, bit = 1 << q, s = Math.sqrt(1 - g), oneMg = 1 - g;
   const Re = rho.re, Im = rho.im;
@@ -185,7 +191,7 @@ export function qcnAmpDamp(rho, q, gamma){
 }
 /* 相位阻尼 λ（T₂）：E₀=√(1−λ/2)I、E₁=√(λ/2)Z ⟹ 跨位相干 ×(1−λ)，对角不变 */
 export function qcnPhaseDamp(rho, q, lambda){
-  const l = Math.min(1, Math.max(0, lambda));
+  const l = Math.min(1, Math.max(0, Number.isFinite(lambda) ? lambda : 0)); /* R107：NaN 钳 0（同上） */
   if (l <= 0) return;
   const D = rho.dim, bit = 1 << q, keep = 1 - l;
   const Re = rho.re, Im = rho.im;
@@ -236,19 +242,63 @@ export function qcnDepolar(rho, q, p){
   }
 }
 
+/* ---------- 热激发通道（R107：广义振幅阻尼 GAD） ---------- */
+/* R107：振幅阻尼的有限温度推广——|1⟩→|0⟩ 弛豫（gDown）之外再加 |0⟩→|1⟩ 热激发
+   （gUp），满足细致平衡 gUp/gDown = p_eq/(1−p_eq)（平衡激发布居 p_eq）。
+   就地闭式（与振幅阻尼同块结构）：
+     · 对角块 [[a,c],[b,d]]（q 位相同）：
+         a' = (1−gUp)·a + gDown·d    （|1⟩→|0⟩ 把布居搬进 |0⟩）
+         d' = gUp·a + (1−gDown)·d    （|0⟩→|1⟩ 搬出；平衡态 p11/gUp... 见下）
+         c,b ×s，s = √((1−gDown)(1−gUp))（Kraus E₀=E₀† 对角 ⟹ 相干衰减因子）
+       平衡解：gDown·p11 = gUp·p00 ⟹ p11_∞ = gUp/(gDown+gUp) = p_eq（细致平衡）。
+     · q 位不同的矩阵元：×s（同一单比特通道的相干衰减）。
+   p_eq=0 ⟹ gUp=0 ⟹ s=√(1−gDown)、a'=a+gDown·d、d'=(1−gDown)d——**与 qcnAmpDamp
+   逐位相同**（R104 回归锚点）；p_eq=1/2 ⟹ 无限温 ⟹ 布居平衡是 I/2（但相干衰减
+   因子是 (1−γ/2) 而非退极化的 λ=1−4p/3——布居相同、通道不同）。
+   注意：gDown+gUp = γ（总纵弛豫率，同一 tg/T₁ 口径），温度只**重新分配**上下行速率。 */
+export function qcnThermal(rho, q, gDown, gUp){
+  const gd = Math.min(1, Math.max(0, Number.isFinite(gDown) ? gDown : 0));  /* R107：NaN 钳 0（与 qcnDepolar 同口径） */
+  const gu = Math.min(1, Math.max(0, Number.isFinite(gUp) ? gUp : 0));
+  if (gd <= 0 && gu <= 0) return;
+  if (gu === 0){ qcnAmpDamp(rho, q, gd); return; }   /* p_eq=0 ⟹ 精确回到 R104 路径 */
+  const D = rho.dim, bit = 1 << q, s = Math.sqrt((1 - gd) * (1 - gu));
+  const Re = rho.re, Im = rho.im;
+  for (let i0 = 0; i0 < D; i0++){
+    if (i0 & bit) continue;
+    const i1 = i0 | bit;
+    for (let j0 = 0; j0 < D; j0++){
+      if (j0 & bit) continue;
+      const j1 = j0 | bit;
+      /* 布居再分配：a'=（1−gUp)a + gDown·d、d'=gUp·a +（1−gDown)d（先读后写） */
+      const ar = Re[i0 * D + j0], ai = Im[i0 * D + j0];
+      const dr = Re[i1 * D + j1], di = Im[i1 * D + j1];
+      Re[i0 * D + j0] = (1 - gu) * ar + gd * dr; Im[i0 * D + j0] = (1 - gu) * ai + gd * di;
+      Re[i1 * D + j1] = gu * ar + (1 - gd) * dr; Im[i1 * D + j1] = gu * ai + (1 - gd) * di;
+      /* 相干：跨位与块内同因子 s */
+      Re[i0 * D + j1] *= s; Im[i0 * D + j1] *= s;
+      Re[i1 * D + j0] *= s; Im[i1 * D + j0] *= s;
+    }
+  }
+}
+
 /* ---------- 噪声参数 ---------- */
 /* t1,t2,tg 任意正数（同一单位）；γ=1−e^{−tg/t1}、λ=1−e^{−tg/t2}。
    t2eff = 1/(1/t2 + 1/(2t1))：T₁ 本身贡献的横向衰减（T₂ ≤ 2T₁ 自动满足）。 */
-export function qcnNoiseParams(t1, t2, tg, pd = 0, re = 0){
+export function qcnNoiseParams(t1, t2, tg, pd = 0, re = 0, peq = 0){
   const T1 = Math.max(1e-9, t1), T2 = Math.max(1e-9, t2), TG = Math.max(0, tg);
   const pdep = Math.min(0.75, Math.max(0, Number.isFinite(pd) ? pd : 0));
   const eps = Math.min(0.5, Math.max(0, Number.isFinite(re) ? re : 0));  /* R106：读出误差钳 [0,1/2] */
+  const pe = Math.min(0.5, Math.max(0, Number.isFinite(peq) ? peq : 0)); /* R107：热平衡激发布居钳 [0,1/2]（正温度） */
+  const gamma = 1 - Math.exp(-TG / T1);
   return {
-    gamma: 1 - Math.exp(-TG / T1),
+    gamma,                            /* 总纵弛豫率：gDown+gUp（温度只重新分配上下行） */
+    gDown: gamma * (1 - pe),          /* R107：|1⟩→|0⟩ 弛豫速率 */
+    gUp: gamma * pe,                  /* R107：|0⟩→|1⟩ 热激发速率（p_eq=0 ⟹ 恒 0 ≡ R104 振幅阻尼） */
     lambda: 1 - Math.exp(-TG / T2),
     pdep,
     ldep: 1 - 4 * pdep / 3,           /* 退极化的 Bloch 缩放因子（R77/R80 同口径） */
     eps,                              /* R106：每位测量记录独立翻转的概率 */
+    peq: pe,                          /* R107：平衡激发布居（z_∞ = 1−2p_eq） */
     t2eff: 1 / (1 / T2 + 1 / (2 * T1)),
   };
 }
@@ -314,13 +364,17 @@ export function qcnFlipBits(bits, eps, rng){
   return out;
 }
 
-/* ---------- 执行（镜像 qcExec；noise = {gamma, lambda, pdep, eps} | null） ---------- */
+/* ---------- 执行（镜像 qcExec；noise = {gamma, lambda, pdep, eps, peq, gDown, gUp} | null） ---------- */
 function qcnNoiseAfter(rho, g, noise){
   if (!noise) return;
-  const { gamma, lambda, pdep } = noise;
+  const { gamma, lambda, pdep, peq, gDown, gUp } = noise;
   if (!(gamma > 0 || lambda > 0 || pdep > 0)) return;
   for (const q of qcnGateTouched(g)){
-    if (gamma > 0) qcnAmpDamp(rho, q, gamma);
+    if (gamma > 0){
+      /* R107：p_eq>0 ⟹ 热通道（GAD）；p_eq=0 ⟹ 精确走 R104 振幅阻尼原路径（零回归） */
+      if (peq > 0) qcnThermal(rho, q, gDown, gUp);
+      else qcnAmpDamp(rho, q, gamma);
+    }
     if (lambda > 0) qcnPhaseDamp(rho, q, lambda);
     if (pdep > 0) qcnDepolar(rho, q, pdep);
   }
