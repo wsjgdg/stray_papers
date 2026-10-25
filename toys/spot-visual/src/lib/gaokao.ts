@@ -16,6 +16,9 @@ export interface RecommendItem {
   is211: boolean;
   isDFC: boolean;
   rank?: string; // 软科排名（未上榜无）
+  rankNum?: number;
+  planCount?: number; // 该省该科类本科招生计划人数
+  scoreDelta?: number; // 投档线同比（正=涨分）
   gap: number; // 用户分 - 投档线（正=稳/保，负=冲）
 }
 
@@ -36,6 +39,9 @@ function toItem(a: Admission, score: number): RecommendItem {
     is211: s.is211,
     isDFC: s.isDFC,
     rank: s.rank,
+    rankNum: s.rankNum,
+    planCount: a.planCount,
+    scoreDelta: a.scoreDelta,
     gap: score - a.minScore,
   };
 }

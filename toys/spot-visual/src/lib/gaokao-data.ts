@@ -40,6 +40,8 @@ export interface Admission {
   batch: string;
   minScore: number;
   minRank: number;
+  planCount?: number; // 该校在该省该科类的本科招生计划人数（专业组合计）
+  scoreDelta?: number; // 投档线同比（2025 - 2024，正=涨分）
 }
 
 // ── 生成的 JSON 结构（scripts/fetch-gaokao-data.mjs 输出） ──
@@ -51,6 +53,8 @@ export type AdmRow = [
   minRank: number,
   loc: string,
   flags: number,
+  planCount: number | null,
+  scoreDelta: number | null,
 ];
 
 export interface RealCatData {
@@ -116,15 +120,19 @@ function buildIndexes(data: RealDataset) {
     for (const [cat, cd] of Object.entries(cats)) {
       admIndex.set(
         `${prov}|${cat}`,
-        cd.adm.map(([code, , batch, minScore, minRank]) => ({
-          schoolCode: code,
-          prov,
-          year: data.year,
-          cat,
-          batch,
-          minScore,
-          minRank,
-        })),
+        cd.adm.map(
+          ([code, , batch, minScore, minRank, , , planCount, scoreDelta]) => ({
+            schoolCode: code,
+            prov,
+            year: data.year,
+            cat,
+            batch,
+            minScore,
+            minRank,
+            planCount: planCount ?? undefined,
+            scoreDelta: scoreDelta ?? undefined,
+          }),
+        ),
       );
       if (cd.curve?.length) curveIndex.set(`${prov}|${cat}`, cd.curve);
       for (const [code, name, , , , loc, flags] of cd.adm) {

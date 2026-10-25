@@ -61,11 +61,11 @@ function argValue(name) {
   return i >= 0 ? process.argv[i + 1] : null;
 }
 
-async function fetchCsv(slug, file) {
-  const cachePath = path.join(CACHE, `${YEAR}-${slug}-${file}.csv`);
+async function fetchCsv(slug, file, year = YEAR) {
+  const cachePath = path.join(CACHE, `${year}-${slug}-${file}.csv`);
   if (fs.existsSync(cachePath) && fs.statSync(cachePath).size > 0)
     return fs.readFileSync(cachePath, "utf8");
-  const url = `${BASE}/data/${YEAR}/${slug}/${file}.csv`;
+  const url = `${BASE}/data/${year}/${slug}/${file}.csv`;
   const res = await fetch(url);
   if (!res.ok) return null;
   const text = await res.text();
@@ -193,6 +193,35 @@ for (const [slug, provName] of Object.entries(SLUGS)) {
     if (!prev || row.score < prev.score) best.set(k, row);
   }
 
+  // 招生计划：本科批 plan_count 按院校×科类求和
+  const planByCatUni = new Map();
+  const planText = await fetchCsv(slug, "enrollment-plan");
+  if (planText) {
+    for (const r of parseCsv(planText)) {
+      if (!isKeepBatch(r.batch)) continue;
+      const p = num(r.plan_count);
+      if (p === null) continue;
+      const k = `${r.category}\u0000${r.university_name}`;
+      planByCatUni.set(k, (planByCatUni.get(k) ?? 0) + p);
+    }
+  }
+
+  // 去年投档线：同规则取院校×科类最低分，用于同比
+  const prevScore = new Map();
+  const prevText = await fetchCsv(slug, "school-admission", YEAR - 1);
+  if (prevText) {
+    const prevBest = new Map();
+    for (const r of parseCsv(prevText)) {
+      if (!isKeepBatch(r.batch)) continue;
+      const s = num(r.min_score);
+      if (s === null) continue;
+      const k = `${r.category}\u0000${r.university_name}`;
+      const p = prevBest.get(k);
+      if (p === undefined || s < p) prevBest.set(k, s);
+    }
+    for (const [k, s] of prevBest) prevScore.set(k, s);
+  }
+
   const cats = {};
   for (const row of best.values()) {
     const c = (cats[row.cat] ??= { adm: [] });
@@ -204,6 +233,10 @@ for (const [slug, provName] of Object.entries(SLUGS)) {
       row.rank,
       row.loc,
       row.flags,
+      planByCatUni.get(`${row.cat}\u0000${row.name}`) ?? null, // 在该省该科类的本科招生计划人数
+      prevScore.get(`${row.cat}\u0000${row.name}`) != null
+        ? row.score - prevScore.get(`${row.cat}\u0000${row.name}`) // 投档线同比（正=涨）
+        : null,
     ]);
   }
   for (const [cat, c] of Object.entries(cats)) {

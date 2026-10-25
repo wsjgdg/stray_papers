@@ -31,7 +31,11 @@ import {
   rankForScore,
   type School,
 } from "@/lib/gaokao-data";
-import { provinceCats, recommend } from "@/lib/gaokao";
+import {
+  provinceCats,
+  recommend,
+  type RecommendItem as RecommendItemT,
+} from "@/lib/gaokao";
 import { downloadGaokaoShareCard } from "@/lib/gaokao-share-card";
 import { PROVINCE_CENTERS } from "@/lib/china-geo";
 import ChinaMap from "@/components/map/china-map";
@@ -125,6 +129,8 @@ export default function GaoKaoPage() {
   const [copied, setCopied] = useState(false);
   const [filter, setFilter] = useState<FilterKey>("all");
   const [enriched, setEnriched] = useState(false); // 增强数据（排名/学科）到达后触发重算
+  const [query, setQuery] = useState("");
+  const [sortKey, setSortKey] = useState<"gap" | "rank" | "score">("gap");
 
   const ready = dataState === "ready";
   const provinces = useMemo(() => (ready ? activeProvinces() : []), [ready]);
@@ -260,7 +266,13 @@ export default function GaoKaoPage() {
   const admByCode = useMemo(() => {
     const m = new Map<
       string,
-      { minScore: number; minRank: number; batch: string }
+      {
+        minScore: number;
+        minRank: number;
+        batch: string;
+        planCount?: number;
+        scoreDelta?: number;
+      }
     >();
     if (!ready) return m;
     for (const a of admissionsFor(prov, cat))
@@ -268,6 +280,8 @@ export default function GaoKaoPage() {
         minScore: a.minScore,
         minRank: a.minRank,
         batch: a.batch,
+        planCount: a.planCount,
+        scoreDelta: a.scoreDelta,
       });
     return m;
   }, [ready, prov, cat]);
@@ -301,6 +315,7 @@ export default function GaoKaoPage() {
           tier,
           levelText,
           rank: s.rank,
+          planCount: adm.planCount,
           symbolSize: active ? 22 : 14,
           itemStyle: {
             color: colorMode === "tier" ? TIER_COLOR[tier] : levelColor(s),
@@ -334,6 +349,41 @@ export default function GaoKaoPage() {
       ready ? recommend(score, prov, cat, (s) => matchFilter(s, filter)) : null,
     [ready, score, prov, cat, filter, enriched],
   );
+
+  // ── 院校搜索（限当前省·科类的投档线名单） ──
+  const searchResults = useMemo(() => {
+    const q = query.trim();
+    if (!q || !ready) return [];
+    const out: {
+      code: string;
+      name: string;
+      minScore: number;
+      tier: Tier | "none";
+      rank?: string;
+    }[] = [];
+    for (const a of admissionsFor(prov, cat)) {
+      const s = getSchool(a.schoolCode);
+      if (!s || !s.name.includes(q)) continue;
+      out.push({
+        code: s.code,
+        name: s.name,
+        minScore: a.minScore,
+        tier: tierOf(score - a.minScore),
+        rank: s.rank,
+      });
+      if (out.length >= 8) break;
+    }
+    return out;
+  }, [query, ready, prov, cat, score]);
+
+  const sortList = (list: RecommendItemT[]) => {
+    const arr = [...list];
+    if (sortKey === "rank")
+      arr.sort((a, b) => (a.rankNum ?? 9999) - (b.rankNum ?? 9999));
+    else if (sortKey === "score")
+      arr.sort((a, b) => b.admission.minScore - a.admission.minScore);
+    return arr;
+  };
 
   // ── 分享文案（URL 客户端挂载后再取，避免预渲染不一致） ──
   const [shareUrl, setShareUrl] = useState("");
@@ -375,9 +425,10 @@ export default function GaoKaoPage() {
           if (!d || !d.tier) return String(p.name ?? "");
           const gapText = d.gap <= 0 ? `差 ${-d.gap} 分` : `超 ${d.gap} 分`;
           const rankText = d.rank ? ` · 软科${d.rank}` : "";
+          const planText = d.planCount != null ? ` · 招${d.planCount}人` : "";
           return colorMode === "tier"
-            ? `<b>${d.name}</b>${rankText}<br/>${TIER_LABEL[d.tier as Tier]} · ${gapText}`
-            : `<b>${d.name}</b>${rankText}<br/>${d.levelText} · ${gapText}`;
+            ? `<b>${d.name}</b>${rankText}${planText}<br/>${TIER_LABEL[d.tier as Tier]} · ${gapText}`
+            : `<b>${d.name}</b>${rankText}${planText}<br/>${d.levelText} · ${gapText}`;
         },
       },
       geo: {
@@ -602,26 +653,77 @@ export default function GaoKaoPage() {
         </div>
       </div>
 
-      {/* 地图 / 清单切换 */}
-      <div className="mb-3 inline-flex rounded-lg border border-gray-200 bg-white p-0.5 text-sm">
-        {(
-          [
-            ["map", MapIcon, "院校地图"],
-            ["list", ListFilter, "冲稳保清单"],
-          ] as const
-        ).map(([v, Icon, label]) => (
-          <button
-            key={v}
-            onClick={() => setView(v)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-colors ${view === v ? "bg-indigo-50 text-indigo-700 border border-indigo-200" : "text-gray-500 hover:text-gray-800"}`}
-          >
-            <Icon className="w-4 h-4" />
-            {label}
-          </button>
-        ))}
+      {/* 地图 / 清单切换 + 院校搜索 */}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5 text-sm">
+          {(
+            [
+              ["map", MapIcon, "院校地图"],
+              ["list", ListFilter, "冲稳保清单"],
+            ] as const
+          ).map(([v, Icon, label]) => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-colors ${view === v ? "bg-indigo-50 text-indigo-700 border border-indigo-200" : "text-gray-500 hover:text-gray-800"}`}
+            >
+              <Icon className="w-4 h-4" />
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="relative ml-auto w-full sm:w-64">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="搜索本省院校，如 郑州大学"
+            className="w-full h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none"
+          />
+          {query.trim() && (
+            <div className="absolute z-20 mt-1 w-full rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden">
+              {searchResults.length ? (
+                searchResults.map((r) => (
+                  <button
+                    key={r.code}
+                    onClick={() => {
+                      setSelectedCode(r.code);
+                      setQuery("");
+                      setView("map");
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-indigo-50 transition-colors"
+                  >
+                    <span className="font-medium text-gray-900 truncate">
+                      {r.name}
+                    </span>
+                    {r.rank && (
+                      <span className="text-[10px] px-1 rounded bg-indigo-50 text-indigo-600 border border-indigo-100 shrink-0">
+                        软科{r.rank}
+                      </span>
+                    )}
+                    <span
+                      className="ml-auto text-xs shrink-0"
+                      style={{
+                        color:
+                          r.tier === "none" ? "#94A3B8" : TIER_COLOR[r.tier],
+                      }}
+                    >
+                      {r.tier === "none"
+                        ? "超区间"
+                        : `${TIER_LABEL[r.tier]} · ${r.minScore}分`}
+                    </span>
+                  </button>
+                ))
+              ) : (
+                <div className="px-3 py-2.5 text-xs text-gray-400">
+                  当前省份·科类下没有匹配的院校
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* 院校筛选 */}
+      {/* 院校筛选 + 清单排序 */}
       <div className="mb-3 flex flex-wrap items-center gap-1.5 text-xs">
         <span className="text-gray-400 mr-1">筛选</span>
         {FILTERS.map(([k, label]) => (
@@ -629,6 +731,23 @@ export default function GaoKaoPage() {
             key={k}
             onClick={() => setFilter(k)}
             className={`px-2.5 py-1 rounded-full border transition-colors ${filter === k ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-gray-600 border-gray-200 hover:border-indigo-300"}`}
+          >
+            {label}
+          </button>
+        ))}
+        <span className="text-gray-300 mx-1">|</span>
+        <span className="text-gray-400 mr-1">清单排序</span>
+        {(
+          [
+            ["gap", "按分差"],
+            ["rank", "按排名"],
+            ["score", "按投档线"],
+          ] as const
+        ).map(([k, label]) => (
+          <button
+            key={k}
+            onClick={() => setSortKey(k)}
+            className={`px-2.5 py-1 rounded-full border transition-colors ${sortKey === k ? "bg-gray-800 text-white border-gray-800" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"}`}
           >
             {label}
           </button>
@@ -807,12 +926,41 @@ export default function GaoKaoPage() {
                     <div className="text-lg font-bold text-gray-900">
                       {selAdm.minScore}
                     </div>
+                    {selAdm.scoreDelta != null && (
+                      <div
+                        className={`text-[11px] font-medium mt-0.5 ${selAdm.scoreDelta > 0 ? "text-rose-500" : selAdm.scoreDelta < 0 ? "text-emerald-600" : "text-gray-400"}`}
+                      >
+                        较去年 {selAdm.scoreDelta > 0 ? "+" : ""}
+                        {selAdm.scoreDelta} 分
+                      </div>
+                    )}
                   </div>
                   <div className="rounded-xl border border-gray-200 p-3">
                     <div className="text-xs text-gray-400">最低位次</div>
                     <div className="text-lg font-bold text-gray-900">
                       {selAdm.minRank.toLocaleString()}
                     </div>
+                  </div>
+                  <div className="rounded-xl border border-gray-200 p-3 col-span-2">
+                    <div className="text-xs text-gray-400">
+                      招生计划（{prov}·{cat}·本科批合计）
+                    </div>
+                    {selAdm.planCount != null ? (
+                      <div className="text-lg font-bold text-gray-900">
+                        {selAdm.planCount} 人
+                        <span className="text-xs font-medium text-gray-400 ml-2">
+                          {selAdm.planCount <= 5
+                            ? "名额极少，投档线易大起大落"
+                            : selAdm.planCount <= 20
+                              ? "名额偏少，存在波动风险"
+                              : "名额较充裕"}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-400 mt-1">
+                        暂无计划数据
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -900,7 +1048,7 @@ export default function GaoKaoPage() {
                       </span>
                     </div>
                     <ul className="divide-y divide-gray-50">
-                      {list.map((item) => (
+                      {sortList(list).map((item) => (
                         <li key={item.admission.schoolCode}>
                           <button
                             onClick={() => {
@@ -937,7 +1085,19 @@ export default function GaoKaoPage() {
                             <span className="text-xs text-gray-400 ml-auto hidden sm:inline">
                               {item.schoolProv} · 位次{" "}
                               {item.admission.minRank.toLocaleString()}
+                              {item.planCount != null
+                                ? ` · 招${item.planCount}人`
+                                : ""}
                             </span>
+                            {item.scoreDelta != null && (
+                              <span
+                                className={`text-[11px] shrink-0 ${item.scoreDelta > 0 ? "text-rose-500" : item.scoreDelta < 0 ? "text-emerald-600" : "text-gray-400"}`}
+                                title="投档线较去年"
+                              >
+                                {item.scoreDelta > 0 ? "+" : ""}
+                                {item.scoreDelta}
+                              </span>
+                            )}
                             <span
                               className="text-sm font-semibold shrink-0"
                               style={{ color: TIER_COLOR[t] }}
