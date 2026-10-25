@@ -14,8 +14,9 @@ const NOMINATIM = "https://nominatim.openstreetmap.org/search";
 // 多端点降级：主站 interpreter 在部分国内网络被阻断（status 端点通但 POST 不通，实测），
 // overpass.osm.ch（瑞士镜像，全量数据）实测可达。逐个尝试直到成功。
 const OVERPASS_ENDPOINTS = [
-  "https://overpass-api.de/api/interpreter",
+  // 沙箱实测 200 可用；主站 overpass-api.de 在部署环境 ECONNREFUSED（传输层拒绝，等再久也没用）
   "https://overpass.osm.ch/api/interpreter",
+  "https://overpass-api.de/api/interpreter",
 ];
 const UA =
   "HuaxiaExplore/1.0 (1024 Creator Festival demo; contact: festival-demo@example.com)";
@@ -238,10 +239,23 @@ out center tags ${limit};`;
           "Content-Type": "application/x-www-form-urlencoded",
         },
         body: "data=" + encodeURIComponent(q),
-        signal: AbortSignal.timeout(20000),
+        // 8s：镜像正常响应 ~2s；太短会掐死镜像上稍慢的正常查询，
+        // 太长则纯浪费（主站 ECONNREFUSED 是毫秒级失败，不拖累回退）
+        signal: AbortSignal.timeout(8000),
       });
       if (!res.ok) throw new Error(`Overpass ${res.status}`);
-      const json = (await res.json()) as { elements?: unknown[] };
+      // Overpass 报错（语法/限流）返回 XML 错误页，res.json() 会抛
+      // "Unexpected token '<'" 把真实错误吞掉——先按文本读，透出错误原文
+      const text = (await res.text()).trim();
+      if (!text.startsWith("{")) {
+        const plain = text
+          .replace(/<[^>]+>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 120);
+        throw new Error(`Overpass 返回非 JSON：${plain || "空响应"}`);
+      }
+      const json = JSON.parse(text) as { elements?: unknown[] };
       return json.elements || [];
     } catch (e) {
       lastErr = e;
