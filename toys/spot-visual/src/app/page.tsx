@@ -37,6 +37,7 @@ import {
   BookX, // 新增：体力沙盘、PTSI、劝退日记图标
   Navigation,
   Route,
+  Dices,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1089,11 +1090,21 @@ function SpotsView() {
         });
       }
     } catch {
-      setOsmMsg({ type: "err", text: "实时请求失败，已保留内置示例景点。" });
+      setOsmMsg({
+        type: "err",
+        text: "实时请求失败，已保留内置示例景点。可以点「随便看看」从景点库随机逛逛。",
+      });
     } finally {
       setOsmLoading(false);
     }
   }, [city, osmLoading, spots, setSpots, setActiveCategory, setSearchQuery]);
+
+  // ═══ 随便看看：实时探索不可用（离线/限流）时，从景点库随机抽一个直接看 ═══
+  const randomBrowse = useCallback(() => {
+    const pool = spots.length > 0 ? spots : sampleSpots;
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    setSelectedSpot(pick);
+  }, [spots, setSelectedSpot]);
 
   const allCategories = useMemo(() => {
     const cats = new Set(spots.map((s) => s.category));
@@ -1260,6 +1271,16 @@ function SpotsView() {
               className="pl-10 h-11 bg-white border-emerald-200 text-sm"
             />
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50"
+            onClick={randomBrowse}
+            title="从景点库随机抽一个看看"
+          >
+            <Dices className="w-3.5 h-3.5" />
+            随便看看
+          </Button>
           <Button
             variant="default"
             size="sm"
