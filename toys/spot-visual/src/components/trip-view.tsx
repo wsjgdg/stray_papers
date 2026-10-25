@@ -407,7 +407,7 @@ export default function TripView() {
 
         {/* 汇总卡 */}
         <div className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl p-5 mb-5 text-white shadow-lg">
-          <div className="grid grid-cols-4 gap-2 text-center">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
             <div>
               <Compass className="w-4 h-4 mx-auto mb-1 opacity-80" />
               <div className="text-2xl font-black">{tripSpots.length}</div>
@@ -510,7 +510,7 @@ export default function TripView() {
             return (
               <div key={`day-${d}`}>
                 {days.length > 1 && (
-                  <div className="flex items-center gap-2 mb-2 mt-3">
+                  <div className="flex flex-wrap items-center gap-2 mb-2 mt-3">
                     <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-teal-50 border border-teal-100">
                       <CalendarDays className="w-3.5 h-3.5 text-teal-600" />
                       <span className="text-xs font-black text-teal-700">
