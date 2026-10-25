@@ -1,13 +1,15 @@
 "use client";
 
 import { Heart, Scale } from "lucide-react";
-import { getSchool, type School } from "@/lib/gaokao-data";
+import { getSchool, type School, type HistoryDataset } from "@/lib/gaokao-data";
 import { tierOf, TIER_COLOR, TIER_LABEL, type Tier } from "./shared";
+import { TrendSpark } from "./trendspark";
 
 // ═══ 对比视图：收藏院校并排比较 ═══
 export function CompareTable({
   shortlist,
   admByName,
+  history,
   prov,
   cat,
   score,
@@ -29,6 +31,7 @@ export function CompareTable({
   prov: string;
   cat: string;
   score: number;
+  history?: HistoryDataset | null;
   onRemove: (code: string) => void;
   onLocate: (code: string) => void;
 }) {
@@ -125,6 +128,31 @@ export function CompareTable({
                 )}
               </td>
             ))}
+          </tr>
+          <tr className="border-b border-gray-50">
+            <td className={td + " text-gray-400 text-xs"}>跨年趋势</td>
+            {cols.map(({ name }) => {
+              const tv = history?.cats[cat]?.[name];
+              const n = tv ? tv.filter((v) => v != null).length : 0;
+              return (
+                <td key={name} className="px-3 py-1">
+                  {n >= 2 ? (
+                    <TrendSpark years={history!.years} values={tv!} compact />
+                  ) : n === 1 ? (
+                    // 单年数据画不出趋势：直出数值，避免误认为「无数据」
+                    <span
+                      className="text-[11px] text-gray-400"
+                      title="仅 1 年可比数据"
+                    >
+                      {tv!.find((v) => v != null)}
+                      <span className="text-gray-300"> 单年</span>
+                    </span>
+                  ) : (
+                    <span className="text-gray-300 text-xs">—</span>
+                  )}
+                </td>
+              );
+            })}
           </tr>
           <tr className="border-b border-gray-50">
             <td className={td + " text-gray-400 text-xs"}>投档线（较去年）</td>

@@ -5,7 +5,6 @@ import { WishTable } from "./views/wishtable";
 import { TrendSpark } from "./views/trendspark";
 import { ScoreDistCurve, AdmitProbSignal } from "./views/scoredistcurve";
 
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -183,6 +182,7 @@ export default function GaoKaoPage() {
     "map" | "list" | "compare" | "major" | "wish"
   >("map");
   const [shortlist, setShortlist] = useState<string[]>([]);
+  const [sameRankOpen, setSameRankOpen] = useState(false); // 同分去向展开全部
   const [colorMode, setColorMode] = useState<"tier" | "level">("tier");
   const [isMobile, setIsMobile] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -569,6 +569,38 @@ export default function GaoKaoPage() {
     enriched,
   ]);
 
+  // ── 同分去向：你的位次 ±15% 范围内录取的院校 ──
+  // 无「报考热度」原始数据，用招生计划数（planCount）作代理：
+  // 计划招得越多，实际落在这个位次段的人越多，等同于「去的人最多」。
+  // 计划数相同再按位次接近度排，保证同一热度档内离你最近。
+  const sameRankSchools = useMemo(() => {
+    if (!ready || !userRank || !prov) return [];
+    const lo = Math.round(userRank * 0.85);
+    const hi = Math.round(userRank * 1.15);
+    const out: {
+      name: string;
+      minScore: number;
+      minRank: number;
+      planCount: number;
+    }[] = [];
+    for (const a of admissionsFor(prov, cat, batchGroup)) {
+      if (a.minRank >= lo && a.minRank <= hi) {
+        out.push({
+          name: a.schoolName,
+          minScore: a.minScore,
+          minRank: a.minRank,
+          planCount: a.planCount ?? 0,
+        });
+      }
+    }
+    out.sort(
+      (a, b) =>
+        b.planCount - a.planCount ||
+        Math.abs(a.minRank - userRank) - Math.abs(b.minRank - userRank),
+    );
+    return out;
+  }, [ready, userRank, prov, cat, batchGroup]);
+
   const counts = useMemo(() => {
     const c: Record<Tier, number> = { reach: 0, match: 0, safe: 0 };
     let out = 0;
@@ -760,6 +792,17 @@ export default function GaoKaoPage() {
       setSelectedName(
         p.data.schoolName === selectedName ? null : p.data.schoolName,
       );
+      return;
+    }
+    // geo 区域点击：切换招生省份
+    if (p?.componentType === "geo" && p?.name) {
+      const provName = p.name;
+      const provs = activeProvinces();
+      if (provs.some((x) => x.name === provName)) {
+        setProv(provName);
+        setCat(provinceCats(provName)[0] ?? "");
+        setSelectedName(null);
+      }
     }
   };
 
@@ -893,6 +936,52 @@ export default function GaoKaoPage() {
                 {score - ctrl} 分）
               </span>
             </div>
+          )}
+          {/* 同分去向 */}
+          {ready && sameRankSchools.length > 0 && (
+            <details className="w-full mt-2">
+              <summary className="text-xs text-indigo-400 cursor-pointer select-none hover:text-indigo-600">
+                和你同分的考生去了哪里？（{sameRankSchools.length}{" "}
+                所院校在你的位次附近录取，按招生计划数排序）
+              </summary>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {(sameRankOpen
+                  ? sameRankSchools
+                  : sameRankSchools.slice(0, 12)
+                ).map((r) => (
+                  <button
+                    key={r.name}
+                    onClick={() => {
+                      setSelectedName(r.name);
+                      setView("map");
+                    }}
+                    title={
+                      r.planCount > 0
+                        ? `计划招生 ${r.planCount} 人 · 最低位次 ${r.minRank}`
+                        : `最低位次 ${r.minRank}`
+                    }
+                    className="text-[11px] px-2 py-0.5 rounded-full bg-white border border-indigo-100 text-indigo-600 hover:bg-indigo-50 transition-colors"
+                  >
+                    {r.name} {r.minScore}
+                    {r.planCount > 0 && (
+                      <span className="text-indigo-300 ml-1">
+                        {r.planCount}人
+                      </span>
+                    )}
+                  </button>
+                ))}
+                {sameRankSchools.length > 12 && (
+                  <button
+                    onClick={() => setSameRankOpen((v) => !v)}
+                    className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 hover:bg-indigo-100 transition-colors"
+                  >
+                    {sameRankOpen
+                      ? "收起"
+                      : `展开全部 ${sameRankSchools.length} 所`}
+                  </button>
+                )}
+              </div>
+            </details>
           )}
           <div className="flex items-center gap-3 ml-auto text-xs">
             <span className="inline-flex items-center gap-1">
@@ -1718,6 +1807,7 @@ export default function GaoKaoPage() {
         <CompareTable
           shortlist={shortlist}
           admByName={admByName}
+          history={history}
           prov={prov}
           cat={cat}
           score={scoreDelayed}
