@@ -39,7 +39,32 @@ async function probe(name: string, url: string) {
   }
 }
 
+const ovp = (s: string, w: string, n: string, e: string) =>
+  encodeURIComponent(`[out:json][timeout:20];node["tourism"="attraction"](${s},${w},${n},${e});out center 5;`);
+
+async function count(url: string) {
+  try {
+    const r = await fetch(url, { headers: { 'user-agent': 'spot-visual/1.0' }, signal: AbortSignal.timeout(15000) });
+    const t = await r.text();
+    if (!t.trim().startsWith('{')) return { status: r.status, elements: 'non-json', head: t.slice(0, 80) };
+    const j = JSON.parse(t);
+    return { status: r.status, elements: (j.elements || []).length };
+  } catch (e) {
+    return { error: (e as Error).name };
+  }
+}
+
 export async function GET() {
   const results = await Promise.all(TARGETS.map((t) => probe(t.name, t.url)));
-  return Response.json({ at: new Date().toISOString(), results }, { headers: { 'cache-control': 'no-store' } });
+  const HK: [string, string, string, string] = ['22.2', '114.05', '22.4', '114.25'];
+  const ZH: [string, string, string, string] = ['47.35', '8.5', '47.4', '8.6'];
+  const mirrors = {
+    'osm.ch 香港': 'https://overpass.osm.ch/api/interpreter?data=' + ovp(...HK),
+    'osm.ch 苏黎世': 'https://overpass.osm.ch/api/interpreter?data=' + ovp(...ZH),
+    'mail.ru 香港': 'https://maps.mail.ru/osm/tools/overpass/api/interpreter?data=' + ovp(...HK),
+    'osm.ch 深圳': 'https://overpass.osm.ch/api/interpreter?data=' + ovp('22.45', '113.95', '22.65', '114.2'),
+  };
+  const extra: Record<string, unknown> = {};
+  for (const [k, u] of Object.entries(mirrors)) extra[k] = await count(u);
+  return Response.json({ at: new Date().toISOString(), results, overpass: extra }, { headers: { 'cache-control': 'no-store' } });
 }
