@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { PROVINCE_CENTERS } from "@/lib/china-geo";
+import { CITY_CENTERS } from "@/lib/city-centers.generated";
 
 // ════════════════════════════════════════════════════════════════════
 // OSM 实时景点探索 API
@@ -9,7 +11,12 @@ import { NextResponse } from "next/server";
 // ════════════════════════════════════════════════════════════════════
 
 const NOMINATIM = "https://nominatim.openstreetmap.org/search";
-const OVERPASS = "https://overpass-api.de/api/interpreter";
+// 多端点降级：主站 interpreter 在部分国内网络被阻断（status 端点通但 POST 不通，实测），
+// overpass.osm.ch（瑞士镜像，全量数据）实测可达。逐个尝试直到成功。
+const OVERPASS_ENDPOINTS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.osm.ch/api/interpreter",
+];
 const UA =
   "HuaxiaExplore/1.0 (1024 Creator Festival demo; contact: festival-demo@example.com)";
 
@@ -150,17 +157,42 @@ function mapElement(
   };
 }
 
-async function geocode(
-  city: string,
-): Promise<{
+function localBbox(
+  lng: number,
+  lat: number,
+  deg: number,
+): { lat: number; lng: number; bbox: [number, number, number, number] } {
+  return { lat, lng, bbox: [lat - deg, lng - deg, lat + deg, lng + deg] };
+}
+
+// 地理编码本地化：Nominatim 在国内网络不可达（实测超时），而 Overpass 可达。
+// 城市坐标查本地表（public/geo 生成的全国市级中心），零网络零延迟；
+// 未命中再走省级中心（兜直辖市/省名输入）；最后 Nominatim 短超时兜底县级市等长尾。
+async function geocode(city: string): Promise<{
   lat: number;
   lng: number;
   bbox: [number, number, number, number];
 }> {
-  const url = `${NOMINATIM}?q=${encodeURIComponent(city)}&format=json&limit=1&accept-language=zh-CN`;
+  const raw = city.trim();
+  const short =
+    raw.replace(
+      /(市|地区|自治州|盟|林区|省|特别行政区|维吾尔自治区|回族自治区|自治区)$/,
+      "",
+    ) || raw;
+
+  // 1) 本地城市表（全称 + 简称双键）
+  const cityHit = CITY_CENTERS[raw] ?? CITY_CENTERS[short];
+  if (cityHit) return localBbox(cityHit[0], cityHit[1], 0.25);
+
+  // 2) 省级中心（直辖市、省名输入；键为省级简称）
+  const prov = PROVINCE_CENTERS[short];
+  if (prov) return localBbox(prov[0], prov[1], 0.6);
+
+  // 3) Nominatim 兜底（长尾：县级市/景区名；超时缩到 5s，不可达时快速失败）
+  const url = `${NOMINATIM}?q=${encodeURIComponent(raw)}&format=json&limit=1&accept-language=zh-CN`;
   const res = await fetch(url, {
     headers: { "User-Agent": UA, "Accept-Language": "zh-CN" },
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(5000),
   });
   if (!res.ok) throw new Error(`Nominatim ${res.status}`);
   const arr = (await res.json()) as Array<{
@@ -177,7 +209,6 @@ async function geocode(
     const [s, n, w, e] = hit.boundingbox.map(Number);
     bbox = [s, w, n, e];
   } else {
-    // 无 boundingbox 时以城市中心 ±0.2° 兜底
     bbox = [lat - 0.2, lng - 0.2, lat + 0.2, lng + 0.2];
   }
   return { lat, lng, bbox };
@@ -197,18 +228,26 @@ async function queryOverpass(
   node["natural"~"^(peak|beach|viewpoint|volcano|water|coastline|bay)$"](${s},${w},${n},${e});
 );
 out center tags ${limit};`;
-  const res = await fetch(OVERPASS, {
-    method: "POST",
-    headers: {
-      "User-Agent": UA,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: "data=" + encodeURIComponent(q),
-    signal: AbortSignal.timeout(20000),
-  });
-  if (!res.ok) throw new Error(`Overpass ${res.status}`);
-  const json = (await res.json()) as { elements?: unknown[] };
-  return json.elements || [];
+  let lastErr: unknown = new Error("no endpoint attempted");
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "User-Agent": UA,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: "data=" + encodeURIComponent(q),
+        signal: AbortSignal.timeout(20000),
+      });
+      if (!res.ok) throw new Error(`Overpass ${res.status}`);
+      const json = (await res.json()) as { elements?: unknown[] };
+      return json.elements || [];
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr;
 }
 
 export async function GET(req: Request) {
