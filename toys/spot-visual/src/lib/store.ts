@@ -39,6 +39,11 @@ interface AppStore {
   resetSpots: () => void;
   clearAllSpots: () => void;
 
+  // ═══ 用户改价（预算沙盘，持久化；key = `${spotId}::${project}`） ═══
+  customPrices: Record<string, number>;
+  setCustomPrice: (key: string, price: number) => void;
+  clearCustomPrices: () => void;
+
   // ═══ 体力沙盘状态（不持久化，仅会话内有效） ═══
   staminaBudget: number; // 用户体力预算上限
   activeSpotOrder: string[]; // 沙盘中拖拽排序后的景点 ID 序列
@@ -70,6 +75,11 @@ export const useAppStore = create<AppStore>()(
           // （角标数量与收藏页内容对不上），替换时同步清理。
           favorites: s.favorites.filter((id) =>
             spots.some((sp) => sp.id === id),
+          ),
+          customPrices: Object.fromEntries(
+            Object.entries(s.customPrices).filter(([k]) =>
+              spots.some((sp) => k.startsWith(`${sp.id}::`)),
+            ),
           ),
         })),
       appendSpots: (newSpots) =>
@@ -112,7 +122,14 @@ export const useAppStore = create<AppStore>()(
           activeCategory: "全部",
           searchQuery: "",
           favorites: [],
+          customPrices: {},
         }),
+
+      // ═══ 用户改价 ═══
+      customPrices: {},
+      setCustomPrice: (key, price) =>
+        set((s) => ({ customPrices: { ...s.customPrices, [key]: price } })),
+      clearCustomPrices: () => set({ customPrices: {} }),
 
       // ═══ 体力沙盘状态 ═══
       staminaBudget: 100,
@@ -147,6 +164,7 @@ export const useAppStore = create<AppStore>()(
         favorites: s.favorites,
         spots: s.spots,
         dissuasionRecords: s.dissuasionRecords,
+        customPrices: s.customPrices,
       }),
     },
   ),
