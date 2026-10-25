@@ -51,7 +51,7 @@
  * _queueTimer 类定时器在 deactivate 统一清理。CSS 原样（选择器全 id 锚定，
  * mode 间 DOM 不同屏共存，无串台）。
  * ========================================================================== */
-import { QEC_DEFAULTS, QEC_CODES, QEC_NOISE, QEC_SPECTRA, qecTrial, qecStream, qecEnsemble, qecSweep, qecLogicalRate, qecThreshold, qecSyndromeTable, qecCircuit, qecExactPL, qecFaultSurvey, qecNormRd, qecNormN, qecVoteErr } from '../physics/qec.js';
+import { QEC_DEFAULTS, QEC_CODES, QEC_NOISE, QEC_SPECTRA, qecTrial, qecStream, qecEnsemble, qecSweep, qecLogicalRate, qecThreshold, qecSyndromeTable, qecCircuit, qecExactPL, qecFaultSurvey, qecNormRd, qecNormN, qecVoteErr, qecUncodedSpec, qecUncodedRate, qecUncodedThreshold } from '../physics/qec.js';
 import { mulberry32 } from '../physics/qcircuit.js';
 import { LiveDriver } from './live.js';
 
@@ -154,7 +154,8 @@ export class QecApp {
     this.ens = null;
     this.curve = null;
     this.svy = null;      /* 门级：一阶故障枚举（c₁） */
-    this._thr = null;     /* 门级：数值阈值（PLexact(p)=p 的首个根） */
+    this._thr = null;     /* 门级：数值交点（PLexact(p)=p 的首个根；R86 旧基线口径） */
+    this._thrU = null;    /* R111：公平基线交点（PLexact(p)=P_un(p)；同机会数裸传） */
     this._floor = null;   /* R108 phys：P_L 底座（p→0；DP 精确或 MC） */
     this._curveKey = '';
   }
@@ -248,6 +249,8 @@ export class QecApp {
         <div class="hrow"><span>逻辑保真度 F</span><span id="hF">—</span></div>
         <div class="hrow"><span>判定</span><span id="hJudge" class="big">—</span></div>
         <hr>
+        <div class="hrow" id="hUnRow" style="display:none"><span id="hUnL">未编码基线 P_un</span><span id="hUn">—</span></div>
+        <div class="hrow" id="hRatioURow" style="display:none"><span>P_L / P_un</span><span id="hRatioU">—</span></div>
         <div class="hrow"><span>P_L（实测）</span><span id="hPL">—</span></div>
         <div class="hrow"><span id="hPLxL">3p²−2p³</span><span id="hPLx">—</span></div>
         <div class="hrow"><span>未编码 p</span><span id="hPun">—</span></div>
@@ -434,14 +437,18 @@ export class QecApp {
         /* c₁：一阶故障枚举（p 无关，随 code/spectrum/noisyPhase 变） */
         this.svy = qecFaultSurvey(this.cfg(), 1);
         this._thr = this.gateThreshold();
+        /* R111：公平基线（同机会数裸传）下的交点 */
+        this._thrU = qecUncodedThreshold(this.cfg());
       } else if (this.state.noise === 'phys'){
         this.svy = null;
         /* PLexact 曲线与 y=p 的首个交点（γ=λ=0 时 DP 可得；NaN 时返回 null） */
         this._thr = this.gateThreshold();
+        this._thrU = qecUncodedThreshold(this.cfg());
         this._floor = this.physFloor();
       } else {
         this.svy = null;
         this._thr = null;
+        this._thrU = null;
         this._floor = null;
       }
     }
@@ -630,6 +637,19 @@ export class QecApp {
                 : '：静态口径没有读出误差，表决不改变任何综合征与修正（ ensemble 的 MC 样本因测量抽样序略变，分布不变）；') +
             '每次重复都是新的综合征提取，代价随 k 上升（表决不免费）。'
           : '') +
+        /* R111：未编码公平基线（门级/物理口径）——基线不同，结论就不同 */
+        (s.noise === 'gate' || s.noise === 'phys'
+          ? '<br><span style="color:var(--cyan);font-weight:600">未编码基线（R111）</span> 裸传 1 个比特、' +
+            '<b>同样 M=' + (Number.isFinite(qecUncodedRate(this.cfg())) ? qecUncodedSpec(this.cfg()).M : '—') +
+            ' 个错误机会</b>（同门数／同时间预算）⟹ P_un' +
+            (Number.isFinite(qecUncodedRate(this.cfg()))
+              ? ' = ' + repEx(qecUncodedRate(this.cfg()), 3) + '；P_L/P_un ' +
+                (this.ens && this.ens.PL < qecUncodedRate(this.cfg()) ? '<b>&lt;1 ⟹ 编码有益</b>' : '≥1 ⟹ 编码无益')
+              : '（γ&gt;0 非 Pauli ⟹ 无闭式）') +
+            '。旧口径拿「未编码 p」（只有 1 个机会）当基线，会得出「编码更差」——那是基线不公平（差 M 倍），不是纠错的错。' +
+            '裸传无 ancilla ⟹ 没有 SPAM 读出底座（那是编码特有的代价）。' +
+            '两侧同用保真度判据：|+i⟩ 对 Y 错误不可观测（Y|+i⟩=+|+i⟩）⟹ 致命集 {X,Z}，两侧同口径。'
+          : '') +
         /* R110：n=5 时附两层账说明（码距层 vs 读出层是独立的） */
         (qecNormN(s.n) === 5
           ? '<br><span style="color:var(--cyan);font-weight:600">码长 n=5（d=5）</span> 4 个稳定子 ZᵢZᵢ₊₁：≤2 个数据错必纠（n=3 只到 1 个），P_L=10p³−15p⁴+6p⁵——同 p 下比 3p²−2p³ 低约一个量级。但稳定子 2→4 个：读出误差暴露面翻倍（p=0 底座 ≈2ε_k）。**码距治数据错误、表决治读出错误，是两层独立的账**。'
@@ -702,6 +722,20 @@ export class QecApp {
       set('hPLxL', s.noise === 'gate' || s.noise === 'phys' ? 'P_L 精确（DP）' : (N === 3 ? '3p²−2p³' : '10p³−15p⁴+6p⁵'));
       set('hPun', repNf(e.Pun, 4));
       set('hRatio', s.p > 0 ? repNf(e.PL / e.Pun, 3) + (e.PL < e.Pun ? ' ↓' : ' ↑') : '—');
+      /* R111：未编码公平基线（裸传 1 比特、同样 M 个机会）。iid 下 P_un ≡ p，
+         与上面「未编码 p / P_L÷p」两行重复 ⟹ 只在 gate/phys 口径展开。 */
+      const unRow = this.q('#hUnRow'), unRatioRow = this.q('#hRatioURow');
+      const showUn = s.noise === 'gate' || s.noise === 'phys';
+      if (unRow) unRow.style.display = showUn ? '' : 'none';
+      if (unRatioRow) unRatioRow.style.display = showUn ? '' : 'none';
+      if (showUn){
+        const un = qecUncodedRate(this.cfg());
+        const spec = qecUncodedSpec(this.cfg());
+        const bad = !Number.isFinite(un);
+        set('hUnL', '未编码 P_un（M=' + spec.M + ' 机会）');
+        set('hUn', bad ? '—（γ>0 非 Pauli 无解）' : repEx(un, 3));
+        set('hRatioU', bad ? '—' : repNf(e.PL / un, 3) + (e.PL < un ? ' ↓编码有益' : ' ↑编码无益'));
+      }
       const gi = this.q('#hGateStats'), ii = this.q('#hIidCounts'), pi = this.q('#hPhysStats');
       if (gi) gi.style.display = s.noise === 'gate' ? '' : 'none';
       if (ii) ii.style.display = s.noise === 'gate' ? 'none' : '';
@@ -1218,6 +1252,11 @@ export class QecApp {
     /* DP-over-frames 精确折线（青实，零统计误差） */
     line(sw.p.map((p, i) => [p, sw.PLexact[i]]), 'rgba(103,232,249,.9)', null, 1.8);
 
+    /* R111 未编码公平基线 P_un（橙实）：裸传 1 个比特、同样 M 个错误机会。
+       与 P_L 同 x 轴同判据 ⟹ 「编码是否有益」= P_L 是否落在它下面。 */
+    const unPts = ref.map(([p]) => [p, qecUncodedRate({ ...this.cfg(), p })]);
+    line(unPts, 'rgba(251,146,60,.9)', null, 1.6);
+
     /* MC 点（mag） */
     g.fillStyle = 'rgba(240,171,252,.95)';
     for (let i = 0; i < sw.p.length; i++){
@@ -1225,14 +1264,16 @@ export class QecApp {
       g.beginPath(); g.arc(x, y, 3 * dpr, 0, 6.2832); g.fill();
     }
 
-    /* P_L = p 的交点（琥珀虚）：PLexact(p)−p 的首个变号点（recompute 时二分算出）。
-       门级口径下交点两侧方向与静态相反（p<1/2 时 P_L>p），故只标「交点」不称「阈值」 */
-    if (this._thr != null){
-      const xth = X(this._thr);
+    /* P_L = P_un 的交点（琥珀虚）：公平基线下的相遇点。
+       ⚠ 与旧口径「P_L=p」不同——旧基线只有 1 个机会，会把「编码更差」误判出来
+       （R86 的结论即源于此）；本曲线用同机会数的裸传，结论翻转为「编码有益」。
+       落在 p≈0.5 的交点是两侧**饱和点的相遇**，不是纠错阈值（无码距就没有阈值）。 */
+    if (this._thrU != null){
+      const xth = X(this._thrU);
       g.strokeStyle = 'rgba(251,191,36,.75)'; g.setLineDash([2 * dpr, 3 * dpr]); g.lineWidth = 1 * dpr;
       g.beginPath(); g.moveTo(xth, y0); g.lineTo(xth, y1); g.stroke(); g.setLineDash([]);
       g.fillStyle = 'rgba(251,191,36,.95)'; g.font = (9 * dpr) + 'px ui-monospace,monospace';
-      g.textAlign = 'right'; g.fillText('P_L=p 交点 p≈' + this._thr.toFixed(3), xth - 3 * dpr, y0 + 10 * dpr);
+      g.textAlign = 'right'; g.fillText('P_L=P_un 交点 p≈' + this._thrU.toFixed(3), xth - 3 * dpr, y0 + 10 * dpr);
     }
 
     /* 当前 p 位置（白竖线 + 实测点） */
@@ -1253,7 +1294,9 @@ export class QecApp {
     g.textAlign = 'right';
     g.fillStyle = 'rgba(103,232,249,.9)'; g.fillText('DP 精确', x1 - 56 * dpr, 15 * dpr);
     g.fillStyle = 'rgba(240,171,252,.95)'; g.fillText('MC', x1 - 8 * dpr, 15 * dpr);
-    g.fillStyle = 'rgba(148,163,184,.7)'; g.fillText('未编码 p', x1 - 96 * dpr, 15 * dpr);
+    /* R111：两条基线分列——P_un（同 M 机会，公平）与旧口径的 p（1 机会） */
+    g.fillStyle = 'rgba(251,146,60,.95)'; g.fillText('未编码 P_un', x1 - 116 * dpr, 15 * dpr);
+    g.fillStyle = 'rgba(148,163,184,.7)'; g.fillText('旧基线 p', x1 - 190 * dpr, 15 * dpr);
   }
 
   /* ---------- P_L(p) 双对数（R108 物理通道：MC + DP 精确 + 理想对照 + 底座） ---------- */
@@ -1317,6 +1360,10 @@ export class QecApp {
     const dpPts = sw.p.map((p, i) => [p, sw.PLexact[i]]).filter(([, v]) => Number.isFinite(v));
     if (dpPts.length > 1) line(dpPts, 'rgba(103,232,249,.9)', null, 1.8);
 
+    /* R111 未编码公平基线（橙实；γ=0 才有闭式——γ>0 非 Pauli ⟹ NaN 不画） */
+    const unPts = ref.map(([p]) => [p, qecUncodedRate({ ...this.cfg(), p })]).filter(([, v]) => Number.isFinite(v));
+    if (unPts.length > 1) line(unPts, 'rgba(251,146,60,.9)', null, 1.6);
+
     /* MC 点（mag） */
     g.fillStyle = 'rgba(240,171,252,.95)';
     for (let i = 0; i < sw.p.length; i++){
@@ -1367,6 +1414,7 @@ export class QecApp {
       g.fillStyle = 'rgba(148,163,184,.75)'; g.fillText('γ>0 无精确解', x1 - 78 * dpr, 15 * dpr);
     }
     g.fillStyle = 'rgba(240,171,252,.95)'; g.fillText('MC', x1 - 8 * dpr, 15 * dpr);
+    if (unPts.length > 1) g.fillStyle = 'rgba(251,146,60,.95)'; g.fillText('未编码 P_un', x1 - 116 * dpr, 15 * dpr);
     g.fillStyle = 'rgba(148,163,184,.7)'; g.fillText(analyticLab, x1 - offI * dpr, 15 * dpr);
     g.fillStyle = 'rgba(148,163,184,.55)'; g.fillText('未编码 p', x1 - offU * dpr, 15 * dpr);
   }
@@ -1615,8 +1663,21 @@ export class QecApp {
       curve: () => self.curve ? {
         p: self.curve.p.slice(), PL: self.curve.PL.slice(), PLexact: self.curve.PLexact.slice(),
         noise: self.curve.noise, spectrum: self.curve.spectrum, noisyPhase: self.curve.noisyPhase,
+        /* R86 旧口径（P_L = p 的交点，1 个机会的基线）——cdp86 契约字段，语义不变 */
         threshold: self._thr,
+        /* R111 公平基线交点（P_L = P_un）；null = 扫过的区间内同向 */
+        thresholdUncoded: self._thrU,
       } : null,
+      /* R111：未编码公平基线（裸传 1 比特、同 M 机会） */
+      uncoded: () => {
+        const rate = qecUncodedRate(self.cfg());
+        return {
+          rate: Number.isFinite(rate) ? rate : null,
+          M: qecUncodedSpec(self.cfg()).M,
+          exact: Number.isFinite(rate),
+          thr: self._thrU,
+        };
+      },
       table: () => qecSyndromeTable(qecNormN(self.state.n)),
       setCode: c => { self.setCode(c); self.drawAll(); },
       /* R110：码长（3/5）；n=5 时 rd=5 自动降到 3（nq=25 态矢超限） */

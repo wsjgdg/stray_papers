@@ -1486,3 +1486,162 @@ export function qecSyndromeTable(n = 3){
   }
   return rows;
 }
+
+/* ============================================================================
+ * R111：未编码公平基线 P_un —— R86 遗留「门级口径下编码是否有益」的对照
+ *
+ * 背景（R86 的诚实缺口）：门级口径下页面一直拿 P_L 与「未编码 p」比较，并据此
+ * 说「p<1/2 时 P_L > p，编码反而更差」。但这两个数**不在同一机会数基准上**——
+ * 编码线路在提取段有 M 个错误机会（n=3 时 8/12 个），而「未编码 p」默认的是
+ * 单个比特的一次存储错误（1 个机会）。拿 8 个机会的结果比 1 个机会的基线，
+ * 得到「编码更差」是基线的错，不是纠错的错。
+ *
+ * 本轮的公平基线：**同样的噪声机会数**。裸传（1 个数据比特，不做编码/提取/
+ * 修正/解码）也经历 M 个机会——物理意义是「同样的门周期 / 同样的时间预算」：
+ * 编码把这 M 个机会花在纠错上，裸传把它们花在等待上。
+ *
+ * 判据（⚠ 别写成「累积 Pauli ≠ I」）：逻辑初态是 |+i⟩（θ=φ=π/2），它的 Bloch
+ * 向量沿 +Y ⟹ **Y|+i⟩ = +|+i⟩、F=1** —— Y 是它的稳定子，**Y 错误不可观测**
+ * （dbg111b 实测：F(X)=0、F(Y)=1.000000000000、F(Z)=0）。这与 R78「换掉 |+⟩
+ * 是因为 X_L 在 |+⟩ 上不可观测」是同族问题：纯态总有一个 Pauli 方向是它的
+ * 稳定子，|+i⟩ 换掉了 X 盲区却留下了 Y 盲区。⟹ **致命集合 = {X, Z}**。
+ * ⚠ 编码侧同样用保真度判据（qecExec/qecExactPL 都走 F ⟹ 同样漏 Y_L 类，
+ *   实测 DP ≡ MC 4σ：z ≤ 0.97）⟹ 两侧盲区口径一致，相对比较仍然公平；
+ *   绝对 P_L 若要覆盖 Y 类须换初态或改代数判据（R79 在 Shor 码已这么做）。
+ *
+ * 于是「M 个机会各注入一个 Pauli」是 Pauli 群 Z₂×Z₂ 上的随机游走，只须投影到
+ * 特征标 χ_Y（χ(I)=+1、χ(X)=−1、χ(Y)=+1、χ(Z)=−1）即可得闭式：
+ *
+ *   P_un = 1 − (1/2)·[ 1 + μ_Y·λ_Y^M ]
+ *
+ *   λ_Y = K(I) − K(X) + K(Y) − K(Z)      （每机会 Pauli 分布 K 的 χ_Y 特征标）
+ *   μ_Y = 1 − 2·p_stat                   （静态块：spec.err ∈ {X,Z} 都与 Y 不对易）
+ *
+ * 三种谱的闭式（M 个机会、每机会率 p，无静态块）：
+ *   退极化（X/Y/Z 各 1/3）：λ_Y = 1−4p/3 ⟹ P_un = (1/2)[1 − (1−4p/3)^M]
+ *   x 谱 / z 谱（单一 Pauli）：λ_Y = 1−2p ⟹ P_un = (1/2)[1 − (1−2p)^M]
+ *   iid（M=0、静态块率 p）：P_un = 1 − (1/2)[1 + (1−2p)] = **p**（与页面既有
+ *     「未编码 p」逐位一致——这正是 R86 的旧基线，它只有 1 个机会）。
+ *   小 p 一阶：退极化 ≈ (2/3)M·p（1/3 的注入是 Y、不致命）；x/z 谱 ≈ M·p。
+ *
+ * 两条诚实边界：
+ *   ① 裸传只有 1 个数据比特、无 ancilla ⟹ **没有综合征读出误差**（SPAM 底座
+ *      是编码特有的代价）——本基线按保真度口径（终态不测量），不计裸传的最终
+ *      读出；若比较「逻辑错误率」，裸传的读出只翻经典记录、不改逻辑态。
+ *   ② phys 且 γ>0（振幅阻尼/热激发）非 Pauli ⟹ 随机游走闭式失效 ⟹ 返 NaN
+ *      （与 qecExactPL 同一诚实口径）。退极化/相位阻尼仍是 Pauli 可表示的。
+ * ========================================================================== */
+
+/* 裸传的机会数与每机会 Pauli 分布（与 qecFaultSites 同一口径 ⟹ M 与 c₁ 同源） */
+export function qecUncodedSpec(cfg = {}){
+  const c = { ...QEC_DEFAULTS, ...cfg };
+  const circ = qecCircuit(c.code, c);
+  const noisyPh = c.noisyPhase === 'all' ? ['encode', 'extract', 'decode'] : ['extract'];
+  /* 有效机会数 M = Σ|gnTouched|（同一 (门,比特) 的 3 个 Pauli 位点共享一次抽样） */
+  const M = new Set(qecFaultSites(circ).filter(s => noisyPh.includes(s.ph)).map(s => s.gate + ':' + s.q)).size;
+  /* 静态块：iid 与 phys 有（率 p，注入 spec.err）；gate 无（错误挂在门上） */
+  const pStat = c.noise === 'gate' ? 0 : c.p;
+  let dist = { i: 1, x: 0, y: 0, z: 0 };
+  let exact = true, why = '';
+  if (c.noise === 'gate'){
+    const w = qecSpecW(c.spectrum);
+    dist = { i: 1 - c.p, x: c.p * w.x, y: c.p * w.y, z: c.p * w.z };
+  } else if (c.noise === 'phys'){
+    const g = 1 - Math.exp(-c.tg / Math.max(1e-9, c.t1));
+    const lam = 1 - Math.exp(-c.tg / Math.max(1e-9, c.t2));
+    if (g > 0){ exact = false; why = 'γ>0：振幅阻尼/热激发非 Pauli，随机游走闭式失效'; }
+    /* 每门：先退极化（率 pd，谱恒退极化）后相位阻尼（Z，率 λ/2）——按 qecExecPhys
+       同序合成到 Pauli 群上（YZ≡X、XZ≡Y、ZZ≡I，模全局相位） */
+    const d3 = c.pd / 3, l2 = lam / 2;
+    dist = {
+      i: (1 - c.pd) * (1 - l2) + d3 * l2,
+      x: d3, y: d3,
+      z: d3 * (1 - l2) + (1 - c.pd) * l2,
+    };
+  }
+  return { M, pStat, dist, exact, why, noise: c.noise, spectrum: c.spectrum,
+    noisyPhase: c.noisyPhase, specErr: circ.spec.err, n: circ.n };
+}
+
+/* Z₂×Z₂ 随机游走闭式（见节首注释）：致命集合 = {X, Z}，只投影到 χ_Y。
+   γ>0（非 Pauli）⟹ NaN，与 qecExactPL 同一诚实口径。 */
+export function qecUncodedRate(cfg = {}){
+  const sp = qecUncodedSpec(cfg);
+  if (!sp.exact) return NaN;
+  /* χ_Y：I→+1, X→−1, Y→+1, Z→−1 */
+  const lamY = sp.dist.i - sp.dist.x + sp.dist.y - sp.dist.z;
+  /* 静态块注入 spec.err ∈ {X, Z}，两者 χ_Y 都是 −1 ⟹ μ_Y = 1 − 2p_stat */
+  const muY = 1 - 2 * sp.pStat;
+  return 1 - 0.5 * (1 + muY * Math.pow(lamY, sp.M));
+}
+
+/* 裸传的态矢真跑（1 个比特；与上面的闭式是两套独立表示，4σ 对账）。
+   初态 = 编码线路同一个逻辑初态 Ry(θ)Rz(φ)|0⟩；逻辑错误判据 = 保真度 F。 */
+export function qecUncodedTrial(cfg = {}, rng){
+  const c = { ...QEC_DEFAULTS, ...cfg };
+  const sp = qecUncodedSpec(cfg);
+  if (!sp.exact) return { logicalError: false, F: NaN, jumps: 0, bad: true };
+  const s = qcNewState(1);
+  qcApply(s, { op: 'ry', q: 0, theta: c.theta });
+  qcApply(s, { op: 'rz', q: 0, theta: c.phase });
+  const ideal = { re: Float64Array.from(s.re), im: Float64Array.from(s.im) };
+  let jumps = 0;
+  /* 静态块（iid / phys）；gate 无静态块 */
+  if (sp.pStat > 0 && rng() < sp.pStat){ qcApply(s, { op: sp.specErr, q: 0 }); jumps++; }
+  /* M 个门机会：与 gate/phys 同分布（gnSampleError 是单一数据源） */
+  for (let k = 0; k < sp.M; k++){
+    let t = null;
+    if (c.noise === 'gate'){
+      t = gnSampleError(c.spectrum, c.p, rng);
+    } else if (c.noise === 'phys'){
+      t = gnSampleError('depolar', c.pd, rng);
+      if (!t){
+        const lam = 1 - Math.exp(-c.tg / Math.max(1e-9, c.t2));
+        if (rng() < lam / 2) t = 'z';
+      }
+    }
+    if (t){ qcApply(s, { op: t, q: 0 }); jumps++; }
+  }
+  /* F = |⟨ψ_ideal|ψ⟩|² */
+  let re = 0, im = 0;
+  for (let j = 0; j < 2; j++){
+    re += ideal.re[j] * s.re[j] + ideal.im[j] * s.im[j];
+    im += ideal.re[j] * s.im[j] - ideal.im[j] * s.re[j];
+  }
+  const F = re * re + im * im;
+  return { logicalError: F < 1 - 1e-9, F, jumps, bad: false, M: sp.M };
+}
+
+/* 裸传系综（MC）：与 qecEnsemble 同形（trials / seed / PL） */
+export function qecUncodedEnsemble(cfg = {}){
+  const c = { ...QEC_DEFAULTS, ...cfg };
+  const rng = mulberry32(c.seed);
+  const nn = Math.max(1, c.trials | 0);
+  let nL = 0, jumpSum = 0;
+  for (let k = 0; k < nn; k++){
+    const r = qecUncodedTrial(c, rng);
+    if (r.bad) return { p: c.p, trials: nn, PL: NaN, PLexact: NaN, M: qecUncodedSpec(c).M, meanJumps: NaN, bad: true };
+    if (r.logicalError) nL++;
+    jumpSum += r.jumps;
+  }
+  return { p: c.p, trials: nn, PL: nL / nn, PLexact: qecUncodedRate(c),
+    M: qecUncodedSpec(c).M, meanJumps: jumpSum / nn, bad: false };
+}
+
+/* 门级「编码是否有益」的临界点：P_L(p) − P_un(p) 的首个变号点（二分 20 步）。
+   ⚠ 语义：这是**同机会数基线下的**交点——与 R86 的「P_L = p 交点」（1 个机会的
+   基线）不同。返回 null 表示扫过的区间内**同向**：若全程 P_L < P_un 则编码全程
+   有益（无阈值），由调用方读端点符号判定（见 endBelow）。 */
+export function qecUncodedThreshold(cfg = {}, lo = 1e-4, hi = 0.6){
+  const f = p => qecExactPL({ ...cfg, p }) - qecUncodedRate({ ...cfg, p });
+  const fLo = Number.isFinite(f(lo)) ? f(lo) : NaN;
+  const fHi = Number.isFinite(f(hi)) ? f(hi) : NaN;
+  if (!Number.isFinite(fLo) || !Number.isFinite(fHi)) return null;
+  if (fLo * fHi > 0) return null;          /* 同向：无交点 */
+  let a = lo, b = hi;
+  for (let i = 0; i < 20; i++){
+    const m = 0.5 * (a + b);
+    if (f(m) * f(a) > 0) a = m; else b = m;
+  }
+  return 0.5 * (a + b);
+}
