@@ -319,6 +319,13 @@ export default function GaoKaoPage() {
 
   const cats = useMemo(() => (ready ? provinceCats(prov) : []), [ready, prov]);
 
+  // ── 分数防抖：输入框即时响应，地图/清单等重计算延迟 150ms ──
+  const [scoreDelayed, setScoreDelayed] = useState(score);
+  useEffect(() => {
+    const t = setTimeout(() => setScoreDelayed(score), 150);
+    return () => clearTimeout(t);
+  }, [score]);
+
   // ── 小屏检测（地图降高） ──
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 1023px)");
@@ -403,7 +410,7 @@ export default function GaoKaoPage() {
       .map((s) => {
         const adm = admByCode.get(s.code);
         if (!adm) return null;
-        const gap = score - adm.minScore;
+        const gap = scoreDelayed - adm.minScore;
         const tier = tierOf(gap);
         if (tier === "none") return null; // 地图只画冲稳保三档内的院校
         if (!matchFilter(s, filter)) return null;
@@ -457,8 +464,10 @@ export default function GaoKaoPage() {
 
   const rec = useMemo(
     () =>
-      ready ? recommend(score, prov, cat, (s) => matchFilter(s, filter)) : null,
-    [ready, score, prov, cat, filter, enriched],
+      ready
+        ? recommend(scoreDelayed, prov, cat, (s) => matchFilter(s, filter))
+        : null,
+    [ready, scoreDelayed, prov, cat, filter, enriched],
   );
 
   // ── 院校搜索（限当前省·科类的投档线名单） ──
@@ -479,13 +488,13 @@ export default function GaoKaoPage() {
         code: s.code,
         name: s.name,
         minScore: a.minScore,
-        tier: tierOf(score - a.minScore),
+        tier: tierOf(scoreDelayed - a.minScore),
         rank: s.rank,
       });
       if (out.length >= 8) break;
     }
     return out;
-  }, [query, ready, prov, cat, score]);
+  }, [query, ready, prov, cat, scoreDelayed]);
 
   const sortList = (list: RecommendItemT[]) => {
     const arr = [...list];
@@ -1331,9 +1340,9 @@ export default function GaoKaoPage() {
                               setSelectedCode(item.admission.schoolCode);
                               setView("map");
                             }}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors cursor-pointer"
+                            className="w-full flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors cursor-pointer"
                           >
-                            <span className="text-sm font-medium text-gray-900 w-44 truncate">
+                            <span className="text-sm font-medium text-gray-900 truncate flex-1 min-w-0 sm:flex-none sm:w-44">
                               {item.schoolName}
                             </span>
                             <button
@@ -1380,6 +1389,13 @@ export default function GaoKaoPage() {
                               )}
                             </span>
                             <span className="text-xs text-gray-400 ml-auto hidden sm:inline">
+                              {item.schoolProv} · 位次{" "}
+                              {item.admission.minRank.toLocaleString()}
+                              {item.planCount != null
+                                ? ` · 招${item.planCount}人`
+                                : ""}
+                            </span>
+                            <span className="w-full text-[11px] text-gray-400 sm:hidden">
                               {item.schoolProv} · 位次{" "}
                               {item.admission.minRank.toLocaleString()}
                               {item.planCount != null
@@ -1469,7 +1485,7 @@ export default function GaoKaoPage() {
           admByCode={admByCode}
           prov={prov}
           cat={cat}
-          score={score}
+          score={scoreDelayed}
           onRemove={toggleShort}
           onLocate={(code) => {
             setSelectedCode(code);
@@ -1484,7 +1500,7 @@ export default function GaoKaoPage() {
           setQ={setMajorQuery}
           prov={prov}
           cat={cat}
-          score={score}
+          score={scoreDelayed}
           onOpen={(code) => {
             setSelectedCode(code);
             setMajorsOpen(true);
@@ -1501,7 +1517,7 @@ export default function GaoKaoPage() {
           majors={majors}
           prov={prov}
           cat={cat}
-          score={score}
+          score={scoreDelayed}
           onMove={moveWish}
           onRemove={removeWish}
           onClear={clearWishes}
