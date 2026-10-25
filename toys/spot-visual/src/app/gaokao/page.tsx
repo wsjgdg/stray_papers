@@ -28,7 +28,9 @@ import {
   dataYear,
   dataSource,
   fetchHistory,
+  fetchMajors,
   getSchool,
+  type MajorDataset,
   loadEnrichDataset,
   loadFullDataset,
   type HistoryDataset,
@@ -413,6 +415,19 @@ export default function GaoKaoPage() {
       arr.sort((a, b) => b.admission.minScore - a.admission.minScore);
     return arr;
   };
+
+  // ── 专业级录取数据（按省懒加载，展开详情面板时取） ──
+  const [majors, setMajors] = useState<MajorDataset | null>(null);
+  const [majorsOpen, setMajorsOpen] = useState(false);
+  useEffect(() => {
+    if (!ready || !majorsOpen || !prov) return;
+    let alive = true;
+    setMajors(null);
+    fetchMajors(prov).then((m) => alive && setMajors(m));
+    return () => {
+      alive = false;
+    };
+  }, [ready, majorsOpen, prov]);
 
   // ── 历史投档线（按省懒加载，用于详情面板趋势图） ──
   const [history, setHistory] = useState<HistoryDataset | null>(null);
@@ -1052,6 +1067,93 @@ export default function GaoKaoPage() {
                     </div>
                   );
                 })()}
+
+                {/* 专业级录取数据（折叠懒加载） */}
+                <div className="mb-4 rounded-xl border border-gray-200 overflow-hidden">
+                  <button
+                    onClick={() => setMajorsOpen(!majorsOpen)}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                  >
+                    专业录取数据（{prov}·{cat}·本科批）
+                    <span className="ml-auto text-gray-400">
+                      {majorsOpen ? "收起" : "展开"}
+                    </span>
+                  </button>
+                  {majorsOpen && (
+                    <div className="border-t border-gray-100">
+                      {!selSchool
+                        ? null
+                        : (() => {
+                            const rows = majors?.cats[cat]?.[selSchool.name];
+                            if (majors == null)
+                              return (
+                                <div className="px-3 py-4 text-xs text-gray-400">
+                                  正在加载专业数据…
+                                </div>
+                              );
+                            if (!rows?.length)
+                              return (
+                                <div className="px-3 py-4 text-xs text-gray-400">
+                                  该校在本省本科批暂无专业级数据
+                                </div>
+                              );
+                            const cleared = rows.filter(
+                              (r) => score >= r[3],
+                            ).length;
+                            return (
+                              <div>
+                                <div className="px-3 py-2 text-[11px] text-gray-400 bg-gray-50 border-b border-gray-100">
+                                  共 {rows.length} 个专业（组）·你的分数够得着{" "}
+                                  <b className="text-emerald-600">{cleared}</b>{" "}
+                                  个 · 按最低分排序
+                                </div>
+                                <ul className="max-h-72 overflow-y-auto divide-y divide-gray-50">
+                                  {rows.map((r, i) => {
+                                    const gap = score - r[3];
+                                    const t = tierOf(gap);
+                                    const color =
+                                      t === "none" ? "#CBD5E1" : TIER_COLOR[t];
+                                    const req = majors.reqs[r[2]];
+                                    return (
+                                      <li
+                                        key={i}
+                                        className="flex items-center gap-2 px-3 py-1.5 text-xs"
+                                        style={{
+                                          borderLeft: `3px solid ${color}`,
+                                        }}
+                                      >
+                                        <span
+                                          className="font-medium text-gray-800 truncate flex-1"
+                                          title={req || undefined}
+                                        >
+                                          {r[1]}
+                                          {req && (
+                                            <span className="text-gray-300 ml-1.5 text-[10px]">
+                                              {req}
+                                            </span>
+                                          )}
+                                        </span>
+                                        {r[0] && (
+                                          <span className="text-[10px] px-1 rounded bg-slate-50 text-slate-500 border border-slate-100 shrink-0">
+                                            组{r[0].replace(/[（）()]/g, "")}
+                                          </span>
+                                        )}
+                                        <span className="font-semibold text-gray-900 shrink-0">
+                                          {r[3]}
+                                        </span>
+                                        <span className="text-gray-400 shrink-0 w-16 text-right">
+                                          {r[4].toLocaleString()}
+                                        </span>
+                                      </li>
+                                    );
+                                  })}
+                                </ul>
+                              </div>
+                            );
+                          })()}
+                    </div>
+                  )}
+                </div>
 
                 <div className="text-xs text-gray-500 leading-relaxed">
                   你的分数 {score} 分（位次{" "}

@@ -375,3 +375,43 @@ export async function fetchHistory(
     return null;
   }
 }
+
+// ── 专业级录取数据（按省懒加载，public/data/gaokao-major/{slug}.json） ──
+
+/** [专业组, 专业名, 选科要求索引(数据文件 reqs 表), 最低分, 最低位次] */
+export type MajorRow = [
+  group: string,
+  name: string,
+  reqIdx: number,
+  minScore: number,
+  minRank: number,
+];
+
+export interface MajorDataset {
+  v: number;
+  year: number;
+  reqs: string[];
+  cats: Record<string, Record<string, MajorRow[]>>;
+}
+
+const majorCache = new Map<string, MajorDataset>();
+
+/** 拉取某省专业级投档线（内存缓存；无数据/加载失败返回 null） */
+export async function fetchMajors(
+  prov: string,
+): Promise<MajorDataset | null> {
+  const cached = majorCache.get(prov);
+  if (cached) return cached;
+  const slug = PROV_SLUG[prov];
+  if (!slug) return null;
+  try {
+    const r = await fetch(`/data/gaokao-major/${slug}.json`);
+    if (!r.ok) return null;
+    const d = (await r.json()) as MajorDataset;
+    if (!d?.cats) return null;
+    majorCache.set(prov, d);
+    return d;
+  } catch {
+    return null;
+  }
+}
