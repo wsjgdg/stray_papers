@@ -13,7 +13,8 @@
     "photos:bing": "node scripts/fetch-dish-photos-bing.mjs",
     "photos:pick": "node scripts/pick-dish-photos.mjs",
     "photos:compress": "node scripts/compress-dish-photos.mjs",
-    "photos:sheet": "node scripts/make-contact-sheet.mjs"
+    "photos:sheet": "node scripts/make-contact-sheet.mjs",
+    "gaokao": "node scripts/fetch-gaokao-data.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",

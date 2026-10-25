@@ -840,6 +840,22 @@ function SpotDetailDialog() {
                 </div>
               </div>
             )}
+            {/* ═══ 7 日出行窗口快捷入口（有坐标的景点） ═══ */}
+            {parseCoords(spot) && (
+              <button
+                onClick={() => {
+                  try {
+                    sessionStorage.setItem("ptsi:focusSpotId", spot.id);
+                  } catch {}
+                  setSelectedSpot(null);
+                  setActiveView("ptsi");
+                }}
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-sky-50 text-sky-700 text-sm font-bold hover:bg-sky-100 transition-colors border border-sky-100"
+              >
+                <Thermometer className="w-4 h-4" />看 7
+                日出行窗口：本周哪天去最合适 →
+              </button>
+            )}
             {/* ═══ 行程单：加入/移出 ═══ */}
             <button
               onClick={() =>
@@ -1370,7 +1386,14 @@ function SpotsView() {
 
 /* ═══════ 收藏景点视图 ═══════ */
 function FavoritesView() {
-  const { spots, favorites, setSelectedSpot, toggleFavorite } = useAppStore();
+  const {
+    spots,
+    favorites,
+    setSelectedSpot,
+    toggleFavorite,
+    addToTrip,
+    setActiveView,
+  } = useAppStore();
   const favSpots = useMemo(
     () => spots.filter((s) => favorites.includes(s.id)),
     [spots, favorites],
@@ -1380,19 +1403,38 @@ function FavoritesView() {
       <div className="flex flex-col items-center justify-center py-24 text-center">
         <Heart className="w-12 h-12 text-gray-300 mb-4" />
         <p className="text-gray-500 font-medium mb-1">还没有收藏景点</p>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-400 mb-5">
           在「景点览胜」中点击爱心按钮收藏
         </p>
+        <Button
+          variant="outline"
+          onClick={() => setActiveView("spots")}
+          className="gap-2"
+        >
+          <MapPin className="w-4 h-4" />
+          去挑景点
+        </Button>
       </div>
     );
   }
   return (
     <div>
-      <p className="text-sm text-gray-500 mb-5">
-        已收藏{" "}
-        <span className="font-semibold text-gray-900">{favSpots.length}</span>{" "}
-        个景点
-      </p>
+      <div className="flex items-center gap-3 mb-5">
+        <p className="text-sm text-gray-500 flex-1">
+          已收藏{" "}
+          <span className="font-semibold text-gray-900">{favSpots.length}</span>{" "}
+          个景点
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5 text-xs"
+          onClick={() => favSpots.forEach((s) => addToTrip(s.id))}
+        >
+          <Route className="w-3.5 h-3.5" />
+          全部加入行程
+        </Button>
+      </div>
       <SpotGrid spots={favSpots} onSelect={setSelectedSpot} />
     </div>
   );

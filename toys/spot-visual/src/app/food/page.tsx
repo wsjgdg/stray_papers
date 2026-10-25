@@ -211,6 +211,8 @@ export default function FoodPage() {
     const h = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      // 只有地图视图才响应方向键：工具面板（测试/对比）里按方向键不该偷偷切省
+      if (view !== 'map') return;
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         const names = PROVINCE_FOODS.map((p) => p.name);
         const i = drill ? names.indexOf(drill) : -1;
@@ -227,7 +229,7 @@ export default function FoodPage() {
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [drill, cityRows, citySel, enterProvince]);
+  }, [drill, cityRows, citySel, enterProvince, view]);
 
 
 
@@ -945,7 +947,7 @@ export default function FoodPage() {
         省域代表菜汇编自公开资料（百度百科《中国菜》名录等）；市级代表菜为公开饮食文化常识整理，
         未收录的城市明确标注「沿用省域风味」，不做臆造。口味雷达数值为按菜系特征的估算标签，仅供文化科普与演示。
         <br />
-        <b className="text-gray-500">数据覆盖：</b>菜肴级钠 30 / 432 道（中国菜肴数据集 3,302 道，CC BY 4.0）；USDA 营养库钠糖 7 道；主料参照 330 道（中国食物成分表第 6 版）；其余为自评。逐维度依据见详情页「依据？」。
+        <b className="text-gray-500">数据覆盖：</b>菜肴级钠 37 / 432 道（中国菜肴数据集 3,302 道，CC BY 4.0）；USDA 营养库钠糖 7 道；主料参照 330 道（中国食物成分表第 6 版）；其余为自评。逐维度依据见详情页「依据？」。
         地图为矢量静态边界（省级与大部分市级来自 DataV GeoAtlas；台湾 20 县市边界 DataV 未提供，取自 GeoJSON.cn），
         含台湾、南海诸岛，非在线地图服务，不请求境外瓦片。
       </p>

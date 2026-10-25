@@ -63,6 +63,8 @@ interface AppStore {
   addDissuasionRecord: (r: DissuasionRecord) => void;
   removeDissuasionRecord: (id: string) => void;
   voteDissuasionRecord: (id: string) => void;
+  /** 本会话内是否已对该记录投过票（投票去重的只读查询） */
+  hasVotedDissuasion: (id: string) => boolean;
 }
 
 export const useAppStore = create<AppStore>()(
@@ -175,6 +177,7 @@ export const useAppStore = create<AppStore>()(
         set((s) => ({
           dissuasionRecords: s.dissuasionRecords.filter((r) => r.id !== id),
         })),
+      hasVotedDissuasion: (id) => votedDissuasion.has(id),
       voteDissuasionRecord: (id) => {
         // 会话内去重：同一条记录重复点击不再累加，防止无限刷票
         if (votedDissuasion.has(id)) return;
@@ -194,6 +197,8 @@ export const useAppStore = create<AppStore>()(
         dissuasionRecords: s.dissuasionRecords,
         customPrices: s.customPrices,
         trip: s.trip,
+        // 记住上次浏览的视图，刷新后原地恢复（对齐 food 页行为）
+        activeView: s.activeView,
       }),
     },
   ),

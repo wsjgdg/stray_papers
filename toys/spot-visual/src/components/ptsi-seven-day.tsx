@@ -45,7 +45,14 @@ export default function SevenDayWindow({
     );
   }, [spots, trip]);
 
-  const [spotId, setSpotId] = useState<string>("");
+  // 从景点详情「看 7 日出行窗口」跳转来时，定位到该景点
+  const [spotId, setSpotId] = useState<string>(() => {
+    try {
+      return sessionStorage.getItem("ptsi:focusSpotId") ?? "";
+    } catch {
+      return "";
+    }
+  });
   const [days, setDays] = useState<DayRow[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
