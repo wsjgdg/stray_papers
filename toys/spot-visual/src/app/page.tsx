@@ -198,11 +198,14 @@ function SpotImage({
   alt,
   className = "",
   category = "",
+  eager = false,
 }: {
   src: string;
   alt: string;
   className?: string;
   category?: string;
+  /** 首屏可见的图用 eager + 高优先级，改善 LCP；其余保持 lazy */
+  eager?: boolean;
 }) {
   // 二级降级：原图失效 → 本地分类池 → 渐变占位
   const [stage, setStage] = useState<"primary" | "pool" | "gradient">(
@@ -255,7 +258,9 @@ function SpotImage({
             : "gradient",
         )
       }
-      loading="lazy"
+      loading={eager ? "eager" : "lazy"}
+      fetchPriority={eager ? "high" : undefined}
+      decoding="async"
     />
   );
 }
@@ -482,7 +487,7 @@ function SpotGrid({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
       <AnimatePresence mode="popLayout">
-        {spots.map((spot) => {
+        {spots.map((spot, i) => {
           const isFav = favorites.includes(spot.id);
           return (
             <motion.div
@@ -504,6 +509,7 @@ function SpotGrid({
                       alt={spot.name}
                       category={spot.category}
                       className="w-full h-full group-hover:scale-105 transition-transform duration-500"
+                      eager={i < 6}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                     <Badge
@@ -571,7 +577,7 @@ function SpotList({
   return (
     <div className="space-y-3">
       <AnimatePresence mode="popLayout">
-        {spots.map((spot) => {
+        {spots.map((spot, i) => {
           const isFav = favorites.includes(spot.id);
           return (
             <motion.div
@@ -593,6 +599,7 @@ function SpotList({
                       alt={spot.name}
                       category={spot.category}
                       className="w-full h-full min-h-[120px] group-hover:scale-105 transition-transform duration-500"
+                      eager={i < 3}
                     />
                   </div>
                   <div className="flex-1 p-4 min-w-0">
