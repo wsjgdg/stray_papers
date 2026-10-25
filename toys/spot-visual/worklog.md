@@ -196,7 +196,15 @@
 | 2 | `china-map.tsx`、`taste-scatter.tsx` 切换到按需模块（`EChartsOption` 类型仍从全量包 type-only 导入，不进产物） | 完成 |
 | 3 | 体积对比 | **最大 chunk 1676KB → 1224KB（-452KB / -27%）**，tsc 与生产构建通过 |
 
-## 食物成分表 PDF 提取调研（2026-10-24 夜）
+## 十四轮：LCP 与首屏加载（2026-10-25）
+
+十三轮瘦身后剩余性能项的审计与落地：
+
+| # | 项 | 结果 |
+|---|---|---|
+| 1 | 字体 | 无自定义字体（纯系统栈），无需处理 |
+| 2 | preconnect | 远程图源仅剩 API 结果与 OSM 标签（主机不定），收益不稳，跳过 |
+| 3 | 首屏 LCP | SpotGrid 前 6 张 / SpotList 前 3 张卡片图 `eager + fetchPriority=high + decoding=async`，其余保持 lazy；配合九轮的本地 webp（每张 ~65KB），首屏大图不再排队 |
 
 ### 结论：不做全书提取，仓库数据已够
 
