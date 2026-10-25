@@ -148,11 +148,11 @@
 
 | # | 内容 | 状态 |
 |---|---|---|
-| 1 | 移植 `fetch-dish-photos-bing.mjs` → `fetch-spot-photos-bing.mjs`（搜索词、域名降权表换成景点口径） | 待做 |
-| 2 | 抓 12 个 sampleSpots 候选图 + 人工过目（候选出 `public/spots/_candidates/`） | 待做 |
-| 3 | 压缩 webp（640px/q78，仿 compress-dish-photos）→ `public/spots/` | 待做 |
-| 4 | `build-spot-photos.mjs` 生成 `spot-photos.generated.ts`，sampleSpots 图改本地优先、远程池兜底 | 待做 |
-| 5 | build 验证 + README 图源表补「内置离线包」一级 | 待做 |
+| 1 | 移植 `fetch-dish-photos-bing.mjs` → `fetch-spot-photos-bing.mjs`（搜索词、域名降权表换成景点口径） | 已完成 |
+| 2 | 抓 12 个 sampleSpots 候选图 + 人工过目（候选出 `public/spots/_candidates/`） | 已完成：48 张候选，水印图库（千图/花瓣/588ku）按域名剔除；**终检拼图 `_contact-sheet.jpg` 等用户过目** |
+| 3 | 压缩 webp（640px/q78，仿 compress-dish-photos）→ `public/spots/` | 已完成：12 张共约 800KB |
+| 4 | `build-spot-photos.mjs` 生成 `spot-photos.generated.ts`，sampleSpots 图改本地优先、远程池兜底 | 已完成：`npm run spots` / `npm run spots:fetch` |
+| 5 | build 验证 + README 图源表补「内置离线包」一级 | 已完成 |
 
 ## 食物成分表 PDF 提取调研（2026-10-24 夜）
 

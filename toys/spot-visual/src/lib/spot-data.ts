@@ -1,3 +1,4 @@
+import { SPOT_PHOTOS } from "./spot-photos.generated";
 // ═══ 景点数据类型 ═══
 export interface Spot {
   id: string;
@@ -549,7 +550,8 @@ export const sampleSpots: Spot[] = [
   {
     id: "1",
     name: "张家界国家森林公园",
-    image: getCategoryImageUrl("自然风光", 0),
+    image:
+      SPOT_PHOTOS["张家界国家森林公园"] ?? getCategoryImageUrl("自然风光", 0),
     address: "湖南省张家界市武陵源区",
     facilities: ["游客中心", "索道", "环保车", "餐厅", "医务室", "停车场"],
     projects: [
@@ -568,7 +570,7 @@ export const sampleSpots: Spot[] = [
   {
     id: "2",
     name: "故宫博物院",
-    image: getCategoryImageUrl("历史人文", 0),
+    image: SPOT_PHOTOS["故宫博物院"] ?? getCategoryImageUrl("历史人文", 0),
     address: "北京市东城区景山前街4号",
     facilities: [
       "语音导览",
@@ -588,7 +590,7 @@ export const sampleSpots: Spot[] = [
   {
     id: "3",
     name: "上海迪士尼乐园",
-    image: getCategoryImageUrl("主题乐园", 0),
+    image: SPOT_PHOTOS["上海迪士尼乐园"] ?? getCategoryImageUrl("主题乐园", 0),
     address: "上海市浦东新区川沙镇黄赵路310号",
     facilities: [
       "主题酒店",
@@ -614,7 +616,7 @@ export const sampleSpots: Spot[] = [
   {
     id: "4",
     name: "广州塔",
-    image: getCategoryImageUrl("城市地标", 0),
+    image: SPOT_PHOTOS["广州塔"] ?? getCategoryImageUrl("城市地标", 0),
     address: "广东省广州市海珠区阅江西路222号",
     facilities: [
       "观光层",
@@ -634,7 +636,7 @@ export const sampleSpots: Spot[] = [
   {
     id: "5",
     name: "三亚亚龙湾",
-    image: getCategoryImageUrl("海滨度假", 0),
+    image: SPOT_PHOTOS["三亚亚龙湾"] ?? getCategoryImageUrl("海滨度假", 0),
     address: "海南省三亚市吉阳区亚龙湾",
     facilities: [
       "更衣室",
@@ -654,7 +656,7 @@ export const sampleSpots: Spot[] = [
   {
     id: "6",
     name: "黄山风景区",
-    image: getCategoryImageUrl("山岳景区", 0),
+    image: SPOT_PHOTOS["黄山风景区"] ?? getCategoryImageUrl("山岳景区", 0),
     address: "安徽省黄山市黄山区汤口镇",
     facilities: ["索道", "山上酒店", "环保车", "医疗点", "餐厅", "行李托运"],
     projects: [
@@ -673,7 +675,7 @@ export const sampleSpots: Spot[] = [
   {
     id: "7",
     name: "丽江古城",
-    image: getCategoryImageUrl("古镇村落", 0),
+    image: SPOT_PHOTOS["丽江古城"] ?? getCategoryImageUrl("古镇村落", 0),
     address: "云南省丽江市古城区",
     facilities: ["特色客栈", "美食街", "酒吧街", "手工艺品店", "导游服务"],
     projects: [
@@ -692,7 +694,7 @@ export const sampleSpots: Spot[] = [
   {
     id: "8",
     name: "少林寺",
-    image: getCategoryImageUrl("宗教寺庙", 0),
+    image: SPOT_PHOTOS["少林寺"] ?? getCategoryImageUrl("宗教寺庙", 0),
     address: "河南省郑州市登封市嵩山五乳峰下",
     facilities: [
       "停车场",
@@ -718,7 +720,7 @@ export const sampleSpots: Spot[] = [
   {
     id: "9",
     name: "九寨沟风景区",
-    image: getCategoryImageUrl("自然风光", 1),
+    image: SPOT_PHOTOS["九寨沟风景区"] ?? getCategoryImageUrl("自然风光", 1),
     address: "四川省阿坝藏族羌族自治州九寨沟县",
     facilities: ["观光车", "栈道", "餐厅", "环保厕所", "氧气站", "纪念品店"],
     projects: ["五花海", "珍珠滩瀑布", "诺日朗瀑布", "长海", "镜海倒影"],
@@ -731,7 +733,7 @@ export const sampleSpots: Spot[] = [
   {
     id: "10",
     name: "长城·八达岭",
-    image: getCategoryImageUrl("历史人文", 1),
+    image: SPOT_PHOTOS["长城·八达岭"] ?? getCategoryImageUrl("历史人文", 1),
     address: "北京市延庆区G6京藏高速58号出口",
     facilities: [
       "缆车",
@@ -751,7 +753,7 @@ export const sampleSpots: Spot[] = [
   {
     id: "11",
     name: "长隆海洋王国",
-    image: getCategoryImageUrl("主题乐园", 1),
+    image: SPOT_PHOTOS["长隆海洋王国"] ?? getCategoryImageUrl("主题乐园", 1),
     address: "广东省珠海市横琴新区富祥湾长隆海洋王国",
     facilities: [
       "主题酒店",
@@ -771,7 +773,7 @@ export const sampleSpots: Spot[] = [
   {
     id: "12",
     name: "鼓浪屿",
-    image: getCategoryImageUrl("海滨度假", 1),
+    image: SPOT_PHOTOS["鼓浪屿"] ?? getCategoryImageUrl("海滨度假", 1),
     address: "福建省厦门市思明区鼓浪屿",
     facilities: [
       "轮渡码头",
