@@ -404,6 +404,11 @@ export function rankForScore(prov: string, cat: string, score: number): number {
   return rankFromCurve(curve, score);
 }
 
+/** 一分一段表原始数据（供 UI 绘制分布图） */
+export function curveFor(prov: string, cat: string): [number, number][] {
+  return curveIndex.get(`${prov}|${cat}`) ?? [];
+}
+
 // ── 历史投档线（按省懒加载，public/data/gaokao-history/{slug}.json） ──
 
 export interface HistoryDataset {
