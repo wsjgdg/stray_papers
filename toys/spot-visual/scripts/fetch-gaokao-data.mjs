@@ -14,6 +14,12 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import {
+  isKeepBatch,
+  num,
+  parseCsv,
+  rankFromCurve,
+} from "./gaokao-lib.mjs";
 
 const BASE =
   "https://hf-mirror.com/datasets/choucsan/Gaokao-Compass-11M/resolve/main";
@@ -74,66 +80,6 @@ async function fetchCsv(slug, file, year = YEAR) {
   return text;
 }
 
-/** 最小 CSV 解析（处理引号包裹；无多行字段） */
-function parseCsv(text) {
-  const rows = [];
-  let row = [],
-    cell = "",
-    inQ = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (inQ) {
-      if (c === '"' && text[i + 1] === '"') {
-        cell += '"';
-        i++;
-      } else if (c === '"') inQ = false;
-      else cell += c;
-    } else if (c === '"') inQ = true;
-    else if (c === ",") {
-      row.push(cell);
-      cell = "";
-    } else if (c === "\n" || c === "\r") {
-      if (cell !== "" || row.length) {
-        row.push(cell);
-        rows.push(row);
-        row = [];
-        cell = "";
-      }
-      if (c === "\r" && text[i + 1] === "\n") i++;
-    } else cell += c;
-  }
-  if (cell !== "" || row.length) {
-    row.push(cell);
-    rows.push(row);
-  }
-  const [head, ...body] = rows.filter((r) => r.length > 1);
-  return body.map((r) =>
-    Object.fromEntries(head.map((h, j) => [h, (r[j] ?? "").trim()])),
-  );
-}
-
-const isKeepBatch = (b) =>
-  (b.includes("本科") && !b.includes("艺术") && !b.includes("体育")) ||
-  b.includes("一段");
-const num = (v) => {
-  const s = String(v ?? "").trim();
-  if (!s) return null;
-  const n = Number(s);
-  return Number.isFinite(n) ? n : null;
-};
-
-/** 一分一段表插值：score → 累计位次 */
-function rankFromCurve(curve, score) {
-  if (!curve.length) return null;
-  if (score >= curve[0][0]) return curve[0][1];
-  for (let i = 1; i < curve.length; i++) {
-    const [s1, r1] = curve[i - 1],
-      [s2, r2] = curve[i];
-    if (score >= s2)
-      return Math.round(r1 + ((s1 - score) / (s1 - s2)) * (r2 - r1));
-  }
-  return curve[curve.length - 1][1];
-}
 
 const stats = [];
 const provs = {};

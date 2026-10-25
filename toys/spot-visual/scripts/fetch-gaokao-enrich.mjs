@@ -12,6 +12,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { normName } from "./gaokao-lib.mjs";
 
 const OUT = "public/data/gaokao-enrich.json";
 const CACHE = ".cache/gaokao";
@@ -32,12 +33,6 @@ async function cachedFetch(url, cacheName) {
   return text;
 }
 
-/** 名称归一化：去掉全角/半角括号内容与空白，供跨源匹配 */
-export function normName(n) {
-  return String(n)
-    .replace(/[（(][^（）()]*[）)]/g, "")
-    .replace(/\s+/g, "");
-}
 
 // ── 1. 软科排名 ──
 const bcur = JSON.parse(await cachedFetch(BCUR, "bcur-2025.json"));
