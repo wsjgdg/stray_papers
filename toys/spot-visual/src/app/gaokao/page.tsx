@@ -77,7 +77,11 @@ function jitter(code: string): [number, number] {
   return [dx, dy];
 }
 
-function levelColor(s: { is985: boolean; is211: boolean; isDFC: boolean }): string {
+function levelColor(s: {
+  is985: boolean;
+  is211: boolean;
+  isDFC: boolean;
+}): string {
   if (s.is985) return LEVEL_COLOR.is985;
   if (s.is211) return LEVEL_COLOR.is211;
   if (s.isDFC) return LEVEL_COLOR.isDFC;
@@ -251,15 +255,23 @@ export default function GaoKaoPage() {
         if (!center) return null;
         const [dx, dy] = jitter(s.code);
         const active = s.code === selectedCode;
+        const levelText = s.is985
+          ? "985"
+          : s.is211
+            ? "211"
+            : s.isDFC
+              ? "双一流"
+              : "其他";
         return {
           name: s.name,
           value: [center[0] + dx, center[1] + dy] as [number, number],
           schoolCode: s.code,
           gap,
           tier,
+          levelText,
           symbolSize: active ? 22 : 14,
           itemStyle: {
-            color: TIER_COLOR[tier],
+            color: colorMode === "tier" ? TIER_COLOR[tier] : levelColor(s),
             borderColor: active ? "#0F172A" : "#ffffff",
             borderWidth: active ? 2.5 : 1.2,
             shadowBlur: 5,
@@ -268,7 +280,7 @@ export default function GaoKaoPage() {
         };
       })
       .filter(Boolean);
-  }, [ready, schools, admByCode, score, selectedCode]);
+  }, [ready, schools, admByCode, score, selectedCode, colorMode]);
 
   const counts = useMemo(() => {
     const c: Record<Tier, number> = { reach: 0, match: 0, safe: 0 };
@@ -281,6 +293,37 @@ export default function GaoKaoPage() {
     [ready, score, prov, cat],
   );
 
+  // ── 分享文案（URL 客户端挂载后再取，避免预渲染不一致） ──
+  const [shareUrl, setShareUrl] = useState("");
+  useEffect(() => {
+    setShareUrl(window.location.href);
+  }, [prov, cat, score]);
+  const shareText = `我在「志愿探索」查了 ${prov}·${cat} ${score} 分（位次约 ${
+    userRank ? `#${userRank.toLocaleString()}` : "未知"
+  }）：冲 ${counts.reach} / 稳 ${counts.match} / 保 ${counts.safe} 所。${shareUrl}`;
+
+  const copyShare = () => {
+    navigator.clipboard
+      .writeText(shareText)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(() => {});
+  };
+
+  const exportCard = () => {
+    downloadGaokaoShareCard({
+      prov,
+      cat,
+      score,
+      rank: userRank,
+      ctrl,
+      year: dataYear() ?? 2025,
+      counts,
+    });
+  };
+
   const option = useMemo<EChartsOption>(() => {
     return {
       tooltip: {
@@ -289,7 +332,9 @@ export default function GaoKaoPage() {
           const d = p.data;
           if (!d || !d.tier) return String(p.name ?? "");
           const gapText = d.gap <= 0 ? `差 ${-d.gap} 分` : `超 ${d.gap} 分`;
-          return `<b>${d.name}</b><br/>${TIER_LABEL[d.tier as Tier]} · ${gapText}`;
+          return colorMode === "tier"
+            ? `<b>${d.name}</b><br/>${TIER_LABEL[d.tier as Tier]} · ${gapText}`
+            : `<b>${d.name}</b><br/>${d.levelText} · ${gapText}`;
         },
       },
       geo: {
@@ -320,7 +365,7 @@ export default function GaoKaoPage() {
         },
       ],
     };
-  }, [points]);
+  }, [points, colorMode]);
 
   const onSelect = (p: any) => {
     if (p?.seriesType === "scatter" && p?.data?.schoolCode) {
@@ -481,6 +526,39 @@ export default function GaoKaoPage() {
         </div>
       </div>
 
+      {/* 分享（双视图共用） */}
+      <div className="mb-5 rounded-2xl border border-gray-200 bg-white p-4 grid gap-3 sm:grid-cols-[1fr_210px] sm:items-end">
+        <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-3">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 mb-1">
+            <Share2 className="w-3.5 h-3.5 text-indigo-500" /> 分享卡 ·
+            #WorkBuddy #1024程序员节
+          </div>
+          <pre className="text-[11px] text-gray-500 whitespace-pre-wrap font-sans leading-relaxed max-h-[72px] overflow-y-auto">
+            {shareText}
+          </pre>
+        </div>
+        <div className="grid gap-2">
+          <button
+            onClick={copyShare}
+            className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-indigo-50 text-indigo-700 text-sm font-semibold hover:bg-indigo-100 transition-colors border border-indigo-200"
+          >
+            {copied ? (
+              <Check className="w-4 h-4" />
+            ) : (
+              <Share2 className="w-4 h-4" />
+            )}
+            {copied ? "已复制分享文案" : "复制分享文案"}
+          </button>
+          <button
+            onClick={exportCard}
+            className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-colors border border-gray-300"
+          >
+            <Download className="w-4 h-4" />
+            导出分享卡图片
+          </button>
+        </div>
+      </div>
+
       {/* 地图 / 清单切换 */}
       <div className="mb-3 inline-flex rounded-lg border border-gray-200 bg-white p-0.5 text-sm">
         {(
@@ -507,25 +585,49 @@ export default function GaoKaoPage() {
             <ChinaMap
               option={option}
               onSelect={onSelect}
-              height={560}
+              height={isMobile ? 380 : 560}
               className="w-full"
             />
             <div className="absolute left-3 bottom-3 flex flex-wrap gap-2 bg-white/85 backdrop-blur-sm rounded-lg border border-gray-200 px-2.5 py-2">
-              {TIERS.map((t) => (
-                <span
-                  key={t}
-                  className="inline-flex items-center gap-1 text-[11px] text-gray-600"
-                >
-                  <span
-                    className="w-2.5 h-2.5 rounded-full"
-                    style={{ backgroundColor: TIER_COLOR[t] }}
-                  />
-                  {TIER_LABEL[t]}
-                </span>
-              ))}
+              {colorMode === "tier"
+                ? TIERS.map((t) => (
+                    <span
+                      key={t}
+                      className="inline-flex items-center gap-1 text-[11px] text-gray-600"
+                    >
+                      <span
+                        className="w-2.5 h-2.5 rounded-full"
+                        style={{ backgroundColor: TIER_COLOR[t] }}
+                      />
+                      {TIER_LABEL[t]}
+                    </span>
+                  ))
+                : LEVEL_LEGEND.map(([k, label]) => (
+                    <span
+                      key={k}
+                      className="inline-flex items-center gap-1 text-[11px] text-gray-600"
+                    >
+                      <span
+                        className="w-2.5 h-2.5 rounded-full"
+                        style={{ backgroundColor: LEVEL_COLOR[k] }}
+                      />
+                      {label}
+                    </span>
+                  ))}
             </div>
-            <div className="absolute right-3 top-3 text-[10px] text-gray-400 bg-white/80 rounded px-1.5 py-0.5">
-              可滚轮缩放 / 拖拽
+            <div className="absolute right-3 top-3 flex flex-col items-end gap-1.5">
+              <button
+                onClick={() =>
+                  setColorMode(colorMode === "tier" ? "level" : "tier")
+                }
+                className="flex items-center gap-1 text-[11px] font-medium text-gray-600 bg-white/85 backdrop-blur-sm rounded-lg border border-gray-200 px-2 py-1 hover:bg-gray-50 transition-colors"
+              >
+                <Palette className="w-3 h-3" />
+                {colorMode === "tier" ? "冲稳保" : "院校层次"}着色
+              </button>
+              <span className="text-[10px] text-gray-400 bg-white/80 rounded px-1.5 py-0.5">
+                可滚轮缩放 / 拖拽
+              </span>
             </div>
           </section>
 
