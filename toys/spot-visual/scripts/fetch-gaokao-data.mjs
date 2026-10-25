@@ -233,6 +233,42 @@ for (const [slug, provName] of Object.entries(SLUGS)) {
     for (const [k, s] of prevBest) prevScore.set(k, s);
   }
 
+  // 近四年投档线（含当年）：per cat per uni [y-3, y-2, y-1, y]，缺年 null
+  const histYears = [YEAR - 3, YEAR - 2, YEAR - 1];
+  const histByCat = {};
+  for (const y of histYears) {
+    const t = await fetchCsv(slug, "school-admission", y);
+    if (!t) continue;
+    const bestY = new Map();
+    for (const r of parseCsv(t)) {
+      if (!isKeepBatch(r.batch)) continue;
+      const sc = num(r.min_score);
+      if (sc === null) continue;
+      const k = `${r.category}\u0000${r.university_name}`;
+      const p = bestY.get(k);
+      if (p === undefined || sc < p) bestY.set(k, sc);
+    }
+    for (const [k, sc] of bestY) {
+      const [cat, uni] = k.split("\u0000");
+      const m = (histByCat[cat] ??= new Map());
+      let arr = m.get(uni);
+      if (!arr) {
+        arr = [null, null, null, null];
+        m.set(uni, arr);
+      }
+      arr[y - (YEAR - 3)] = sc;
+    }
+  }
+  for (const row of best.values()) {
+    const m = (histByCat[row.cat] ??= new Map());
+    let arr = m.get(row.name);
+    if (!arr) {
+      arr = [null, null, null, null];
+      m.set(row.name, arr);
+    }
+    arr[3] = row.score;
+  }
+
   const cats = {};
   for (const row of best.values()) {
     const c = (cats[row.cat] ??= { adm: [] });
@@ -283,6 +319,19 @@ for (const [slug, provName] of Object.entries(SLUGS)) {
   });
   if (uniCount) provs[provName] = { cats };
   else console.warn(`warn ${slug}: 0 admissions after filter, skipped`);
+
+  if (!ONLY_PROV && uniCount) {
+    const histOut = {};
+    for (const [cat, m] of Object.entries(histByCat)) {
+      histOut[cat] = Object.fromEntries(m);
+    }
+    const histPath = path.join("public/data/gaokao-history", `${slug}.json`);
+    fs.mkdirSync(path.dirname(histPath), { recursive: true });
+    fs.writeFileSync(
+      histPath,
+      JSON.stringify({ v: 1, year: YEAR, years: [YEAR - 3, YEAR - 2, YEAR - 1, YEAR], cats: histOut }),
+    );
+  }
 }
 
 if (ONLY_PROV) {
