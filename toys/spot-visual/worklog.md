@@ -68,7 +68,7 @@
 | 对比模式补价格/碳/钠数字 | 已完成 |
 | localStorage 记住上次浏览位置 | 已完成 |
 | 打印样式 + 焦点环 | 已完成 |
-| echarts 按需加载 | 未做：Next 已按路由分包，/about /sources 不加载 echarts；再做收益有限 |
+| echarts 按需加载 | 已完成（十三轮）：路由内全量 → core 按需注册，最大 chunk 1676KB → 1224KB |
 | SOURCES.md 一致性审计 | 未做：与页面字段一致，暂无差异 |
 
 ## 五轮：景点览胜细探（2026-10-25）
@@ -184,6 +184,17 @@
 | 1 | 移动端走查六至十轮新视图（行程/体检/清单/7日窗口/详情弹窗），修小屏问题 | 已完成：行程汇总卡 4 列改移动端 2×2、天头部可换行；其余（7 日格子/清单 chips/弹窗）复查无需改 |
 | 2 | 收藏页补分类筛选 chips（对齐景点览胜的筛选交互） | 已完成：多分类才显示 chips，「本类加入行程」随筛选联动 |
 | 3 | 「我的信息」升级为数据中心：行程/翻车/改价统计 + 全量数据导出 JSON + 清空本地数据 | 已完成：新增行程/翻车/改价三格统计 + 数据管理区 |
+
+## 十三轮：echarts 按需注册（2026-10-25）
+
+四轮「未做」的重新评估：Next 按路由分包没错，但路由内用的是 `import * as echarts from "echarts"`
+全量包（~1.7MB chunk）。项目实际只用 map + scatter 两种图。
+
+| # | 内容 | 结果 |
+|---|---|---|
+| 1 | 新建 `src/lib/echarts-core.ts`：core + MapChart/ScatterChart + tooltip/grid/legend/title/geo/visualMap/dataZoom/markLine/markPoint + CanvasRenderer 统一注册 | 完成 |
+| 2 | `china-map.tsx`、`taste-scatter.tsx` 切换到按需模块（`EChartsOption` 类型仍从全量包 type-only 导入，不进产物） | 完成 |
+| 3 | 体积对比 | **最大 chunk 1676KB → 1224KB（-452KB / -27%）**，tsc 与生产构建通过 |
 
 ## 食物成分表 PDF 提取调研（2026-10-24 夜）
 
