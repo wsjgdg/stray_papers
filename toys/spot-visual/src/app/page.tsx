@@ -64,6 +64,8 @@ import {
   DISSUASION_TAGS,
 } from "@/lib/spot-data"; // 保留：cachePhotoForCategory 缓存机制
 import { withSharecode } from "@/lib/share-link";
+import { PROVINCE_FOODS } from "@/lib/food-data";
+import Link from "next/link";
 import dynamic from "next/dynamic";
 
 const NetworkView = dynamic(() => import("@/components/network-view"), {
@@ -610,6 +612,17 @@ function SpotDetailDialog() {
       .slice(0, 4);
   }, [spots, selectedSpot]);
 
+  // ═══ 跨模块联动：地址命中省份时，给「看代表菜」deep link ═══
+  const provinceHit = useMemo(() => {
+    const addr = selectedSpot?.address ?? "";
+    if (!addr) return null;
+    return (
+      PROVINCE_FOODS.find((pf) => addr.includes(pf.fullName)) ??
+      PROVINCE_FOODS.find((pf) => addr.includes(pf.name)) ??
+      null
+    );
+  }, [selectedSpot]);
+
   if (!spot) return null;
   const isFav = favorites.includes(spot.id);
 
@@ -692,6 +705,18 @@ function SpotDetailDialog() {
               <MapPin className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
               <span className="text-sm text-gray-600">{spot.address}</span>
             </div>
+            {/* ═══ 跨模块联动：到中国味道看当地代表菜 ═══ */}
+            {provinceHit && (
+              <Link
+                href={withSharecode(
+                  `/food?prov=${encodeURIComponent(provinceHit.name)}`,
+                )}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50 border border-amber-100 text-xs font-bold text-amber-700 hover:bg-amber-100 transition-colors"
+              >
+                <UtensilsCrossed className="w-3.5 h-3.5 shrink-0" />
+                到「中国味道」看{provinceHit.name}代表菜：{provinceHit.dish} →
+              </Link>
+            )}
             {/* Photo thumbnails */}
             {allPhotos.length > 1 && (
               <div>
