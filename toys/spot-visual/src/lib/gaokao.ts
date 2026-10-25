@@ -1,6 +1,11 @@
 import {
-  SCHOOLS, PROVINCES, activeAdmissions, getSchool, rankForScore, type Admission,
-} from '@/lib/gaokao-data';
+  admissionsFor,
+  activeProvinces,
+  activeSchools,
+  getSchool,
+  rankForScore,
+  type Admission,
+} from "@/lib/gaokao-data";
 
 export interface RecommendItem {
   admission: Admission;
@@ -36,8 +41,12 @@ function toItem(a: Admission, score: number): RecommendItem {
 //   冲：投档线高于用户 0~18 分（有机会）
 //   稳：投档线在用户 -22~0 分（较匹配）
 //   保：投档线在用户 -55~-23 分（较安全）
-export function recommend(score: number, prov: string, cat: string): RecommendResult {
-  const lines = activeAdmissions().filter((a) => a.prov === prov && a.cat === cat);
+export function recommend(
+  score: number,
+  prov: string,
+  cat: string,
+): RecommendResult {
+  const lines = admissionsFor(prov, cat);
   const reach: RecommendItem[] = [];
   const match: RecommendItem[] = [];
   const safe: RecommendItem[] = [];
@@ -57,9 +66,9 @@ export function recommend(score: number, prov: string, cat: string): RecommendRe
 }
 
 export function provinceCats(prov: string): string[] {
-  return PROVINCES.find((p) => p.name === prov)?.cats ?? [];
+  return activeProvinces().find((p) => p.name === prov)?.cats ?? [];
 }
 
 export function schoolCount(): number {
-  return SCHOOLS.length;
+  return activeSchools().length;
 }
