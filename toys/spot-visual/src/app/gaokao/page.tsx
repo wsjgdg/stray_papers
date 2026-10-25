@@ -16,6 +16,9 @@ import {
   Palette,
   Heart,
   Scale,
+  Search,
+  Plus,
+  ClipboardList,
 } from "lucide-react";
 import type { EChartsOption } from "echarts";
 import {
@@ -31,6 +34,7 @@ import {
   fetchMajors,
   getSchool,
   type MajorDataset,
+  type MajorRow,
   loadEnrichDataset,
   loadFullDataset,
   type HistoryDataset,
@@ -121,6 +125,13 @@ function levelColor(s: {
 
 const LS_KEY = "gaokao:last";
 
+/** 志愿表条目：院校 + 专业组 + 专业（minScore 运行时从专业数据实时取，保证与当前分差同步） */
+interface WishItem {
+  code: string;
+  group: string;
+  major: string;
+}
+
 export default function GaoKaoPage() {
   const [dataState, setDataState] = useState<"loading" | "ready" | "fail">(
     "loading",
@@ -129,7 +140,9 @@ export default function GaoKaoPage() {
   const [cat, setCat] = useState("");
   const [score, setScore] = useState(600);
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
-  const [view, setView] = useState<"map" | "list" | "compare">("map");
+  const [view, setView] = useState<
+    "map" | "list" | "compare" | "major" | "wish"
+  >("map");
   const [shortlist, setShortlist] = useState<string[]>([]);
   const [colorMode, setColorMode] = useState<"tier" | "level">("tier");
   const [isMobile, setIsMobile] = useState(false);
@@ -138,6 +151,73 @@ export default function GaoKaoPage() {
   const [enriched, setEnriched] = useState(false); // 增强数据（排名/学科）到达后触发重算
   const [query, setQuery] = useState("");
   const [sortKey, setSortKey] = useState<"gap" | "rank" | "score">("gap");
+  const [majorQuery, setMajorQuery] = useState("");
+
+  // ── 志愿表（localStorage 持久化；条目 = 院校专业组×专业） ──
+  const [wishlist, setWishlist] = useState<WishItem[]>([]);
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("gaokao:wishlist") ?? "[]");
+      if (Array.isArray(saved))
+        setWishlist(
+          saved.filter(
+            (w): w is WishItem =>
+              w && typeof w.code === "string" && typeof w.major === "string",
+          ),
+        );
+    } catch {}
+  }, []);
+  const addWish = (item: WishItem) => {
+    setWishlist((prev) => {
+      if (
+        prev.some(
+          (w) =>
+            w.code === item.code &&
+            w.group === item.group &&
+            w.major === item.major,
+        )
+      )
+        return prev;
+      const next = [...prev, item].slice(0, 96);
+      try {
+        localStorage.setItem("gaokao:wishlist", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+  const removeWish = (i: number) => {
+    setWishlist((prev) => {
+      const next = prev.filter((_, j) => j !== i);
+      try {
+        localStorage.setItem("gaokao:wishlist", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+  const moveWish = (i: number, dir: -1 | 1) => {
+    setWishlist((prev) => {
+      const j = i + dir;
+      if (j < 0 || j >= prev.length) return prev;
+      const next = [...prev];
+      [next[i], next[j]] = [next[j], next[i]];
+      try {
+        localStorage.setItem("gaokao:wishlist", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+  const clearWishes = () => {
+    setWishlist(() => {
+      try {
+        localStorage.setItem("gaokao:wishlist", "[]");
+      } catch {}
+      return [];
+    });
+  };
+  const hasWish = (code: string, group: string, major: string) =>
+    wishlist.some(
+      (w) => w.code === code && w.group === group && w.major === major,
+    );
 
   const ready = dataState === "ready";
   const provinces = useMemo(() => (ready ? activeProvinces() : []), [ready]);
@@ -420,14 +500,15 @@ export default function GaoKaoPage() {
   const [majors, setMajors] = useState<MajorDataset | null>(null);
   const [majorsOpen, setMajorsOpen] = useState(false);
   useEffect(() => {
-    if (!ready || !majorsOpen || !prov) return;
+    if (!ready || !prov || (!majorsOpen && view !== "major" && view !== "wish"))
+      return;
     let alive = true;
     setMajors(null);
     fetchMajors(prov).then((m) => alive && setMajors(m));
     return () => {
       alive = false;
     };
-  }, [ready, majorsOpen, prov]);
+  }, [ready, majorsOpen, prov, view]);
 
   // ── 历史投档线（按省懒加载，用于详情面板趋势图） ──
   const [history, setHistory] = useState<HistoryDataset | null>(null);
@@ -717,6 +798,8 @@ export default function GaoKaoPage() {
               ["map", MapIcon, "院校地图", 0],
               ["list", ListFilter, "冲稳保清单", 0],
               ["compare", Scale, "对比", shortlist.length],
+              ["major", Search, "专业反查", 0],
+              ["wish", ClipboardList, "志愿表", wishlist.length],
             ] as const
           ).map(([v, Icon, label, n]) => (
             <button
@@ -1379,7 +1462,7 @@ export default function GaoKaoPage() {
             )}
           </aside>
         </div>
-      ) : (
+      ) : view === "compare" ? (
         /* 对比视图 */
         <CompareTable
           shortlist={shortlist}
@@ -1390,6 +1473,41 @@ export default function GaoKaoPage() {
           onRemove={toggleShort}
           onLocate={(code) => {
             setSelectedCode(code);
+            setView("map");
+          }}
+        />
+      ) : view === "major" ? (
+        /* 按专业反查院校 */
+        <MajorSearch
+          majors={majors}
+          q={majorQuery}
+          setQ={setMajorQuery}
+          prov={prov}
+          cat={cat}
+          score={score}
+          onOpen={(code) => {
+            setSelectedCode(code);
+            setMajorsOpen(true);
+            setView("map");
+          }}
+          onAddWish={addWish}
+          hasWish={hasWish}
+        />
+      ) : (
+        /* 志愿表模拟 */
+        <WishTable
+          items={wishlist}
+          admByCode={admByCode}
+          majors={majors}
+          prov={prov}
+          cat={cat}
+          score={score}
+          onMove={moveWish}
+          onRemove={removeWish}
+          onClear={clearWishes}
+          onOpen={(code) => {
+            setSelectedCode(code);
+            setMajorsOpen(true);
             setView("map");
           }}
         />
@@ -1731,6 +1849,343 @@ function TrendSpark({
           </g>
         ))}
       </svg>
+    </div>
+  );
+}
+
+// ═══ 按专业反查院校：跨校搜专业名，按可达性排序 ═══
+function MajorSearch({
+  majors,
+  q,
+  setQ,
+  prov,
+  cat,
+  score,
+  onOpen,
+  onAddWish,
+  hasWish,
+}: {
+  majors: MajorDataset | null;
+  q: string;
+  setQ: (v: string) => void;
+  prov: string;
+  cat: string;
+  score: number;
+  onOpen: (code: string) => void;
+  onAddWish: (w: WishItem) => void;
+  hasWish: (code: string, group: string, major: string) => boolean;
+}) {
+  const nameToCode = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const s of activeSchools()) m.set(s.name, s.code);
+    return m;
+  }, []);
+
+  const results = useMemo(() => {
+    const kw = q.trim();
+    if (!kw || !majors) return null;
+    const catData = majors.cats[cat] ?? {};
+    const out: {
+      code: string;
+      uni: string;
+      hits: MajorRow[];
+      best: MajorRow;
+    }[] = [];
+    for (const [uni, rows] of Object.entries(catData)) {
+      const hits = rows.filter((r) => r[1].includes(kw));
+      if (!hits.length) continue;
+      const code = nameToCode.get(uni);
+      if (!code) continue;
+      const best = hits.reduce((a, b) => (b[3] < a[3] ? b : a));
+      out.push({ code, uni, hits, best });
+    }
+    out.sort((a, b) => b.best[3] - a.best[3]); // 难度优先（最低分高的在前）
+    return out;
+  }, [q, majors, cat, nameToCode]);
+
+  const kw = q.trim();
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200">
+      <div className="p-4 border-b border-gray-100">
+        <div className="flex items-center gap-2">
+          <Search className="w-4 h-4 text-indigo-500 shrink-0" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="输入专业关键词，如 计算机 / 法学 / 临床"
+            className="flex-1 h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none"
+          />
+        </div>
+        <p className="mt-2 text-[11px] text-gray-400">
+          在 {prov}·{cat}{" "}
+          的全部院校专业（组）中匹配，按最易达匹配专业的最低分排序；点行进详情，点
+          + 把该系最易达的专业加入志愿表。
+        </p>
+      </div>
+      {!kw ? (
+        <div className="py-14 text-center text-sm text-gray-400">
+          输入专业关键词开始反查
+        </div>
+      ) : !majors ? (
+        <div className="py-14 text-center text-sm text-gray-400">
+          正在加载专业数据…
+        </div>
+      ) : !results?.length ? (
+        <div className="py-14 text-center text-sm text-gray-400">
+          本省本科批没有院校开设名称含「{kw}」的专业
+        </div>
+      ) : (
+        <>
+          <div className="px-4 py-2 text-[11px] text-gray-400 bg-gray-50 border-b border-gray-100">
+            {results.length} 所院校开设相关专业
+          </div>
+          <ul className="divide-y divide-gray-50 max-h-[600px] overflow-y-auto">
+            {results.slice(0, 60).map(({ code, uni, hits, best }) => {
+              const gap = score - best[3];
+              const t = tierOf(gap);
+              const color = t === "none" ? "#94A3B8" : TIER_COLOR[t];
+              const school = getSchool(code);
+              return (
+                <li
+                  key={code}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onOpen(code)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-left hover:bg-indigo-50/40 cursor-pointer transition-colors"
+                >
+                  <span className="text-sm font-medium text-gray-900 truncate max-w-[170px]">
+                    {uni}
+                  </span>
+                  {school?.rank && (
+                    <span className="text-[10px] px-1 rounded bg-indigo-50 text-indigo-600 border border-indigo-100 shrink-0">
+                      软科{school.rank}
+                    </span>
+                  )}
+                  <span className="text-xs text-gray-400 truncate flex-1 hidden sm:inline">
+                    {hits
+                      .slice()
+                      .sort((a, b) => a[3] - b[3])
+                      .slice(0, 3)
+                      .map((r) => `${r[1]} ${r[3]}`)
+                      .join(" · ")}
+                    {hits.length > 3 ? ` · +${hits.length - 3}` : ""}
+                  </span>
+                  <span
+                    className="text-sm font-semibold shrink-0"
+                    style={{ color }}
+                  >
+                    {best[3]} 分
+                    <span className="text-[11px] font-normal ml-1">
+                      {t === "none" ? "超区间" : TIER_LABEL[t]}
+                    </span>
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddWish({ code, group: best[0], major: best[1] });
+                    }}
+                    title="把最易达的匹配专业加入志愿表"
+                    className={`shrink-0 w-6 h-6 rounded border flex items-center justify-center transition-colors ${hasWish(code, best[0], best[1]) ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-white text-gray-300 border-gray-200 hover:text-emerald-500"}`}
+                  >
+                    {hasWish(code, best[0], best[1]) ? (
+                      <Check className="w-3.5 h-3.5" />
+                    ) : (
+                      <Plus className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ═══ 志愿表模拟：有序院校专业组清单 ═══
+function WishTable({
+  items,
+  admByCode,
+  majors,
+  prov,
+  cat,
+  score,
+  onMove,
+  onRemove,
+  onClear,
+  onOpen,
+}: {
+  items: WishItem[];
+  admByCode: Map<
+    string,
+    {
+      minScore: number;
+      minRank: number;
+      batch: string;
+      planCount?: number;
+      scoreDelta?: number;
+      planDelta?: number;
+    }
+  >;
+  majors: MajorDataset | null;
+  prov: string;
+  cat: string;
+  score: number;
+  onMove: (i: number, dir: -1 | 1) => void;
+  onRemove: (i: number) => void;
+  onClear: () => void;
+  onOpen: (code: string) => void;
+}) {
+  const [copied, setCopied] = useState(false);
+  const copyText = () => {
+    const lines = items.map((w, i) => {
+      const school = getSchool(w.code);
+      const row = majors?.cats[cat]?.[school?.name ?? ""]?.find(
+        (r) => r[0] === w.group && r[1] === w.major,
+      );
+      const s = school ? `${school.name}` : w.code;
+      const g = w.group ? ` ${w.group.replace(/[（）()]/g, "")}组` : "";
+      return `${i + 1}. ${s}${g} ${w.major}${row ? `（最低 ${row[3]} 分）` : ""}`;
+    });
+    navigator.clipboard
+      .writeText(
+        `志愿表（${prov}·${cat}）\n${lines.join("\n")}\n—— 来自华夏探索·志愿探索`,
+      )
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(() => {});
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200">
+      <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-gray-100">
+        <ClipboardList className="w-4 h-4 text-indigo-500 shrink-0" />
+        <h3 className="text-sm font-bold text-gray-800">
+          我的志愿表（{items.length}）
+        </h3>
+        {items.length > 0 && (
+          <>
+            <button
+              onClick={copyText}
+              className="ml-auto flex items-center gap-1 px-2.5 py-1 rounded-lg border border-gray-200 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
+            >
+              {copied ? (
+                <Check className="w-3.5 h-3.5" />
+              ) : (
+                <Share2 className="w-3.5 h-3.5" />
+              )}
+              {copied ? "已复制" : "复制文本"}
+            </button>
+            <button
+              onClick={onClear}
+              className="px-2.5 py-1 rounded-lg border border-gray-200 text-xs text-gray-500 hover:bg-gray-50 transition-colors"
+            >
+              清空
+            </button>
+          </>
+        )}
+      </div>
+      {items.length === 0 ? (
+        <div className="py-14 text-center">
+          <ClipboardList className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <p className="text-sm font-medium text-gray-600 mb-1">
+            志愿表还是空的
+          </p>
+          <p className="text-xs text-gray-400 leading-relaxed max-w-sm mx-auto">
+            在「专业反查」结果行、院校详情的专业列表里点{" "}
+            <Plus className="w-3 h-3 inline -mt-0.5" />
+            ，把「院校 + 专业组 +
+            专业」加入志愿表；上下箭头调整顺序。多数省份本科批可填 45~96
+            个院校专业组志愿，以本省规则为准。
+          </p>
+        </div>
+      ) : (
+        <ul className="divide-y divide-gray-50">
+          {items.map((w, i) => {
+            const school = getSchool(w.code);
+            const adm = admByCode.get(w.code);
+            const row = majors?.cats[cat]?.[school?.name ?? ""]?.find(
+              (r) => r[0] === w.group && r[1] === w.major,
+            );
+            const minScore = row?.[3] ?? adm?.minScore;
+            const gap = minScore != null ? score - minScore : null;
+            const t = gap != null ? tierOf(gap) : "none";
+            return (
+              <li
+                key={`${w.code}-${w.major}-${i}`}
+                className="flex items-center gap-2 px-3 py-2"
+              >
+                <span className="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold flex items-center justify-center shrink-0">
+                  {i + 1}
+                </span>
+                <button
+                  onClick={() => onOpen(w.code)}
+                  className="text-sm font-medium text-gray-900 hover:text-indigo-600 hover:underline truncate max-w-[150px]"
+                >
+                  {school?.name ?? w.code}
+                </button>
+                {school?.rank && (
+                  <span className="text-[10px] px-1 rounded bg-indigo-50 text-indigo-600 border border-indigo-100 shrink-0 hidden sm:inline">
+                    软科{school.rank}
+                  </span>
+                )}
+                <span className="text-xs text-gray-500 truncate flex-1">
+                  {w.major}
+                  {w.group && (
+                    <span className="text-gray-300 ml-1 text-[10px]">
+                      {w.group.replace(/[（）()]/g, "")}组
+                    </span>
+                  )}
+                  {row ? (
+                    <span className="text-gray-400 ml-1.5">{row[3]} 分</span>
+                  ) : (
+                    <span
+                      className="text-amber-400 ml-1.5"
+                      title="切到该省后可显示实时分差"
+                    >
+                      分数待查
+                    </span>
+                  )}
+                </span>
+                {gap != null && (
+                  <span
+                    className="text-xs font-semibold shrink-0"
+                    style={{ color: t === "none" ? "#94A3B8" : TIER_COLOR[t] }}
+                  >
+                    {gap <= 0 ? `差 ${-gap}` : `超 ${gap}`}
+                  </span>
+                )}
+                <span className="flex items-center gap-0.5 shrink-0">
+                  <button
+                    onClick={() => onMove(i, -1)}
+                    disabled={i === 0}
+                    className="w-5 h-5 rounded border border-gray-200 text-gray-400 text-[10px] disabled:opacity-30 hover:bg-gray-50"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    onClick={() => onMove(i, 1)}
+                    disabled={i === items.length - 1}
+                    className="w-5 h-5 rounded border border-gray-200 text-gray-400 text-[10px] disabled:opacity-30 hover:bg-gray-50"
+                  >
+                    ↓
+                  </button>
+                  <button
+                    onClick={() => onRemove(i)}
+                    className="w-5 h-5 rounded border border-gray-200 text-gray-400 text-[10px] hover:text-rose-500 hover:border-rose-200"
+                  >
+                    ×
+                  </button>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }
