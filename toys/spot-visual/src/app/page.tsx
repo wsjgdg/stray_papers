@@ -1513,11 +1513,55 @@ function FavoritesView() {
 
 /* ═══════ 我的信息视图 ═══════ */
 function ProfileView() {
-  const { spots, favorites } = useAppStore();
+  const {
+    spots,
+    favorites,
+    trip,
+    tripDaySplit,
+    customPrices,
+    dissuasionRecords,
+  } = useAppStore();
   const cats = useMemo(() => {
     const s = new Set(spots.map((sp) => sp.category));
     return s.size;
   }, [spots]);
+  const tripDays = trip.length > 0 ? tripDaySplit.length + 1 : 0;
+
+  // 全量数据导出（收藏/行程/改价/翻车记录），跨设备迁移用
+  const exportData = () => {
+    const state = useAppStore.getState();
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      favorites: state.favorites,
+      trip: state.trip,
+      tripDaySplit: state.tripDaySplit,
+      customPrices: state.customPrices,
+      dissuasionRecords: state.dissuasionRecords,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `spot-visual-data-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  const clearAllData = () => {
+    if (
+      !window.confirm(
+        "将清空本应用的全部本地数据（收藏、行程、改价、翻车记录），且不可恢复。确定？",
+      )
+    )
+      return;
+    try {
+      localStorage.removeItem("spot-app");
+      localStorage.removeItem("trip-packlist-checked");
+    } catch {}
+    window.location.reload();
+  };
+
   return (
     <div className="max-w-md mx-auto space-y-6">
       <div className="bg-white rounded-xl border border-gray-200/80 p-6 text-center">
@@ -1525,7 +1569,7 @@ function ProfileView() {
           <User className="w-8 h-8 text-white" />
         </div>
         <h2 className="text-lg font-bold text-gray-900 mb-1">游客</h2>
-        <p className="text-sm text-gray-400">景点览胜 · 使用统计</p>
+        <p className="text-sm text-gray-400">景点览胜 · 数据中心</p>
       </div>
       <div className="grid grid-cols-3 gap-4">
         {[
@@ -1542,12 +1586,63 @@ function ProfileView() {
           </div>
         ))}
       </div>
+      <div className="grid grid-cols-3 gap-4">
+        {[
+          {
+            label: "行程站点",
+            value: trip.length,
+            color: "text-teal-600",
+            sub: tripDays > 1 ? `${tripDays} 天` : undefined,
+          },
+          {
+            label: "翻车记录",
+            value: dissuasionRecords.length,
+            color: "text-rose-500",
+          },
+          {
+            label: "手动改价",
+            value: Object.keys(customPrices).length,
+            color: "text-sky-600",
+          },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            className="bg-white rounded-xl border border-gray-200/80 p-4 text-center"
+          >
+            <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+            <p className="text-xs text-gray-400 mt-1">
+              {stat.label}
+              {stat.sub ? ` · ${stat.sub}` : ""}
+            </p>
+          </div>
+        ))}
+      </div>
+      <div className="bg-white rounded-xl border border-gray-200/80 p-5 space-y-3">
+        <h3 className="font-semibold text-gray-900 text-sm">数据管理</h3>
+        <p className="text-xs text-gray-400 leading-relaxed">
+          数据全部保存在浏览器本地（localStorage）。换设备前先导出备份。
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={exportData}
+            className="flex-1 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold hover:bg-emerald-100 transition-colors"
+          >
+            导出全部数据 (JSON)
+          </button>
+          <button
+            onClick={clearAllData}
+            className="flex-1 py-2.5 rounded-xl bg-red-50 text-red-600 text-xs font-bold hover:bg-red-100 transition-colors"
+          >
+            清空本地数据
+          </button>
+        </div>
+      </div>
       <div className="bg-white rounded-xl border border-gray-200/80 p-5 space-y-3">
         <h3 className="font-semibold text-gray-900 text-sm">使用提示</h3>
         <div className="text-xs text-gray-500 space-y-2">
           <p>• 点击「导入 JSON」可加载自定义景点数据</p>
           <p>• JSON 支持多种字段格式，自动识别分类</p>
-          <p>• 收藏数据保存在本地，刷新不丢失</p>
+          <p>• 收藏、行程、改价、翻车记录刷新不丢失</p>
           <p>• 景点网络需要数据包含 location 坐标字段</p>
         </div>
       </div>
