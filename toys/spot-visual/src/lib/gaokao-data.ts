@@ -42,6 +42,7 @@ export interface Admission {
   minRank: number;
   planCount?: number; // 该校在该省该科类的本科招生计划人数（专业组合计）
   scoreDelta?: number; // 投档线同比（2025 - 2024，正=涨分）
+  planDelta?: number; // 招生计划同比（正=扩招）
 }
 
 // ── 生成的 JSON 结构（scripts/fetch-gaokao-data.mjs 输出） ──
@@ -55,6 +56,7 @@ export type AdmRow = [
   flags: number,
   planCount: number | null,
   scoreDelta: number | null,
+  planDelta: number | null,
 ];
 
 export interface RealCatData {
@@ -121,7 +123,7 @@ function buildIndexes(data: RealDataset) {
       admIndex.set(
         `${prov}|${cat}`,
         cd.adm.map(
-          ([code, , batch, minScore, minRank, , , planCount, scoreDelta]) => ({
+          ([code, , batch, minScore, minRank, , , planCount, scoreDelta, planDelta]) => ({
             schoolCode: code,
             prov,
             year: data.year,
@@ -131,6 +133,7 @@ function buildIndexes(data: RealDataset) {
             minRank,
             planCount: planCount ?? undefined,
             scoreDelta: scoreDelta ?? undefined,
+            planDelta: planDelta ?? undefined,
           }),
         ),
       );

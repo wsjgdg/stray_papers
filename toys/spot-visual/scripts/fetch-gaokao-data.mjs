@@ -193,7 +193,7 @@ for (const [slug, provName] of Object.entries(SLUGS)) {
     if (!prev || row.score < prev.score) best.set(k, row);
   }
 
-  // 招生计划：本科批 plan_count 按院校×科类求和
+  // 招生计划：本科批 plan_count 按院校×科类求和（当年 + 去年，用于同比）
   const planByCatUni = new Map();
   const planText = await fetchCsv(slug, "enrollment-plan");
   if (planText) {
@@ -203,6 +203,17 @@ for (const [slug, provName] of Object.entries(SLUGS)) {
       if (p === null) continue;
       const k = `${r.category}\u0000${r.university_name}`;
       planByCatUni.set(k, (planByCatUni.get(k) ?? 0) + p);
+    }
+  }
+  const prevPlanByCatUni = new Map();
+  const prevPlanText = await fetchCsv(slug, "enrollment-plan", YEAR - 1);
+  if (prevPlanText) {
+    for (const r of parseCsv(prevPlanText)) {
+      if (!isKeepBatch(r.batch)) continue;
+      const p = num(r.plan_count);
+      if (p === null) continue;
+      const k = `${r.category}\u0000${r.university_name}`;
+      prevPlanByCatUni.set(k, (prevPlanByCatUni.get(k) ?? 0) + p);
     }
   }
 
@@ -236,6 +247,11 @@ for (const [slug, provName] of Object.entries(SLUGS)) {
       planByCatUni.get(`${row.cat}\u0000${row.name}`) ?? null, // 在该省该科类的本科招生计划人数
       prevScore.get(`${row.cat}\u0000${row.name}`) != null
         ? row.score - prevScore.get(`${row.cat}\u0000${row.name}`) // 投档线同比（正=涨）
+        : null,
+      planByCatUni.get(`${row.cat}\u0000${row.name}`) != null &&
+        prevPlanByCatUni.get(`${row.cat}\u0000${row.name}`) != null
+        ? planByCatUni.get(`${row.cat}\u0000${row.name}`) -
+          prevPlanByCatUni.get(`${row.cat}\u0000${row.name}`) // 计划同比（正=扩招）
         : null,
     ]);
   }

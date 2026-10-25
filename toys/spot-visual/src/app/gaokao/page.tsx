@@ -14,6 +14,8 @@ import {
   Check,
   Download,
   Palette,
+  Heart,
+  Scale,
 } from "lucide-react";
 import type { EChartsOption } from "echarts";
 import {
@@ -123,7 +125,8 @@ export default function GaoKaoPage() {
   const [cat, setCat] = useState("");
   const [score, setScore] = useState(600);
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
-  const [view, setView] = useState<"map" | "list">("map");
+  const [view, setView] = useState<"map" | "list" | "compare">("map");
+  const [shortlist, setShortlist] = useState<string[]>([]);
   const [colorMode, setColorMode] = useState<"tier" | "level">("tier");
   const [isMobile, setIsMobile] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -208,6 +211,28 @@ export default function GaoKaoPage() {
     } catch {}
   }, [ready, prov, cat, score]);
 
+  // ── 收藏对比名单（localStorage 持久化，跨省保留） ──
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("gaokao:shortlist") ?? "[]",
+      );
+      if (Array.isArray(saved))
+        setShortlist(saved.filter((c) => typeof c === "string"));
+    } catch {}
+  }, []);
+  const toggleShort = (code: string) => {
+    setShortlist((prev) => {
+      const next = prev.includes(code)
+        ? prev.filter((c) => c !== code)
+        : [...prev, code].slice(-6); // 最多对比 6 所
+      try {
+        localStorage.setItem("gaokao:shortlist", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+
   const cats = useMemo(() => (ready ? provinceCats(prov) : []), [ready, prov]);
 
   // ── 小屏检测（地图降高） ──
@@ -272,6 +297,7 @@ export default function GaoKaoPage() {
         batch: string;
         planCount?: number;
         scoreDelta?: number;
+        planDelta?: number;
       }
     >();
     if (!ready) return m;
@@ -282,6 +308,7 @@ export default function GaoKaoPage() {
         batch: a.batch,
         planCount: a.planCount,
         scoreDelta: a.scoreDelta,
+        planDelta: a.planDelta,
       });
     return m;
   }, [ready, prov, cat]);
@@ -658,10 +685,11 @@ export default function GaoKaoPage() {
         <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5 text-sm">
           {(
             [
-              ["map", MapIcon, "院校地图"],
-              ["list", ListFilter, "冲稳保清单"],
+              ["map", MapIcon, "院校地图", 0],
+              ["list", ListFilter, "冲稳保清单", 0],
+              ["compare", Scale, "对比", shortlist.length],
             ] as const
-          ).map(([v, Icon, label]) => (
+          ).map(([v, Icon, label, n]) => (
             <button
               key={v}
               onClick={() => setView(v)}
@@ -669,6 +697,11 @@ export default function GaoKaoPage() {
             >
               <Icon className="w-4 h-4" />
               {label}
+              {n > 0 && (
+                <span className="text-[10px] px-1 rounded-full bg-indigo-600 text-white">
+                  {n}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -844,6 +877,24 @@ export default function GaoKaoPage() {
                       民办
                     </span>
                   )}
+                  <button
+                    onClick={() => toggleShort(selSchool.code)}
+                    title={
+                      shortlist.includes(selSchool.code)
+                        ? "移出对比"
+                        : "加入对比"
+                    }
+                    className={`ml-auto w-7 h-7 rounded-lg border flex items-center justify-center transition-colors ${shortlist.includes(selSchool.code) ? "bg-rose-50 text-rose-500 border-rose-200" : "bg-white text-gray-300 border-gray-200 hover:text-rose-400"}`}
+                  >
+                    <Heart
+                      className="w-3.5 h-3.5"
+                      fill={
+                        shortlist.includes(selSchool.code)
+                          ? "currentColor"
+                          : "none"
+                      }
+                    />
+                  </button>
                 </div>
                 <p className="text-xs text-gray-400 mb-4 flex items-center gap-1">
                   <MapPin className="w-3 h-3" />
@@ -946,16 +997,29 @@ export default function GaoKaoPage() {
                       招生计划（{prov}·{cat}·本科批合计）
                     </div>
                     {selAdm.planCount != null ? (
-                      <div className="text-lg font-bold text-gray-900">
-                        {selAdm.planCount} 人
-                        <span className="text-xs font-medium text-gray-400 ml-2">
-                          {selAdm.planCount <= 5
-                            ? "名额极少，投档线易大起大落"
-                            : selAdm.planCount <= 20
-                              ? "名额偏少，存在波动风险"
-                              : "名额较充裕"}
-                        </span>
-                      </div>
+                      <>
+                        <div className="text-lg font-bold text-gray-900">
+                          {selAdm.planCount} 人
+                          {selAdm.planDelta != null &&
+                            selAdm.planDelta !== 0 && (
+                              <span
+                                className={`text-xs font-semibold ml-2 ${selAdm.planDelta > 0 ? "text-emerald-600" : "text-rose-500"}`}
+                              >
+                                较去年 {selAdm.planDelta > 0 ? "+" : ""}
+                                {selAdm.planDelta} 人
+                              </span>
+                            )}
+                        </div>
+                        <div className="text-[11px] text-gray-400 mt-0.5">
+                          {selAdm.planDelta != null && selAdm.planDelta < 0
+                            ? "计划缩减，报考需谨慎"
+                            : selAdm.planCount <= 5
+                              ? "名额极少，投档线易大起大落"
+                              : selAdm.planCount <= 20
+                                ? "名额偏少，存在波动风险"
+                                : "名额较充裕"}
+                        </div>
+                      </>
                     ) : (
                       <div className="text-sm text-gray-400 mt-1">
                         暂无计划数据
@@ -1011,7 +1075,7 @@ export default function GaoKaoPage() {
             )}
           </aside>
         </div>
-      ) : (
+      ) : view === "list" ? (
         /* 冲稳保清单 */
         <div className="grid lg:grid-cols-[1fr_380px] gap-5 items-start">
           <div className="space-y-4">
@@ -1050,16 +1114,39 @@ export default function GaoKaoPage() {
                     <ul className="divide-y divide-gray-50">
                       {sortList(list).map((item) => (
                         <li key={item.admission.schoolCode}>
-                          <button
+                          <div
+                            role="button"
+                            tabIndex={0}
                             onClick={() => {
                               setSelectedCode(item.admission.schoolCode);
                               setView("map");
                             }}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors cursor-pointer"
                           >
                             <span className="text-sm font-medium text-gray-900 w-44 truncate">
                               {item.schoolName}
                             </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleShort(item.admission.schoolCode);
+                              }}
+                              title={
+                                shortlist.includes(item.admission.schoolCode)
+                                  ? "移出对比"
+                                  : "加入对比"
+                              }
+                              className={`shrink-0 ${shortlist.includes(item.admission.schoolCode) ? "text-rose-500" : "text-gray-200 hover:text-rose-400"}`}
+                            >
+                              <Heart
+                                className="w-3.5 h-3.5"
+                                fill={
+                                  shortlist.includes(item.admission.schoolCode)
+                                    ? "currentColor"
+                                    : "none"
+                                }
+                              />
+                            </button>
                             {item.rank && (
                               <span className="text-[10px] px-1 rounded bg-indigo-50 text-indigo-600 border border-indigo-100 shrink-0">
                                 软科{item.rank}
@@ -1106,7 +1193,7 @@ export default function GaoKaoPage() {
                                 ? `差 ${-item.gap} 分`
                                 : `超 ${item.gap} 分`}
                             </span>
-                          </button>
+                          </div>
                         </li>
                       ))}
                     </ul>
@@ -1165,6 +1252,20 @@ export default function GaoKaoPage() {
             )}
           </aside>
         </div>
+      ) : (
+        /* 对比视图 */
+        <CompareTable
+          shortlist={shortlist}
+          admByCode={admByCode}
+          prov={prov}
+          cat={cat}
+          score={score}
+          onRemove={toggleShort}
+          onLocate={(code) => {
+            setSelectedCode(code);
+            setView("map");
+          }}
+        />
       )}
 
       <div className="mt-6 flex gap-2 items-start text-[11px] text-gray-400 bg-gray-50 border border-gray-200 rounded-xl p-3 leading-relaxed">
@@ -1180,6 +1281,258 @@ export default function GaoKaoPage() {
           地图为 DataV 省级矢量边界（含台湾、南海诸岛），非在线地图服务。
         </span>
       </div>
+    </div>
+  );
+}
+
+// ═══ 对比视图：收藏院校并排比较 ═══
+function CompareTable({
+  shortlist,
+  admByCode,
+  prov,
+  cat,
+  score,
+  onRemove,
+  onLocate,
+}: {
+  shortlist: string[];
+  admByCode: Map<
+    string,
+    {
+      minScore: number;
+      minRank: number;
+      batch: string;
+      planCount?: number;
+      scoreDelta?: number;
+      planDelta?: number;
+    }
+  >;
+  prov: string;
+  cat: string;
+  score: number;
+  onRemove: (code: string) => void;
+  onLocate: (code: string) => void;
+}) {
+  if (!shortlist.length) {
+    return (
+      <div className="bg-white rounded-2xl border border-gray-200 py-16 text-center">
+        <Scale className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+        <p className="text-sm font-medium text-gray-600 mb-1">还没有收藏院校</p>
+        <p className="text-xs text-gray-400 leading-relaxed max-w-sm mx-auto">
+          在详情面板或冲稳保清单里点 ❤️ 把院校加入对比（最多 6
+          所），这里会并排比较投档线、排名、招生计划与学科实力。
+        </p>
+      </div>
+    );
+  }
+
+  const cols = shortlist.map((code) => ({
+    code,
+    school: getSchool(code),
+    adm: admByCode.get(code),
+  }));
+
+  const th =
+    "px-3 py-2 text-left text-xs font-medium text-gray-400 whitespace-nowrap";
+  const td = "px-3 py-2 text-sm text-gray-800 whitespace-nowrap";
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 overflow-x-auto">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="border-b border-gray-100">
+            <th className={th}>
+              对比项（{prov}·{cat}）
+            </th>
+            {cols.map(({ code, school }) => (
+              <th key={code} className={th}>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => onLocate(code)}
+                    className="font-semibold text-gray-900 text-sm hover:text-indigo-600 hover:underline truncate max-w-[130px]"
+                  >
+                    {school?.name ?? code}
+                  </button>
+                  <button
+                    onClick={() => onRemove(code)}
+                    title="移出对比"
+                    className="text-gray-300 hover:text-rose-500 shrink-0"
+                  >
+                    <Heart className="w-3.5 h-3.5" fill="currentColor" />
+                  </button>
+                </div>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="border-b border-gray-50">
+            <td className={td + " text-gray-400 text-xs"}>层次</td>
+            {cols.map(({ code, school }) => (
+              <td key={code} className={td}>
+                <span className="flex gap-1">
+                  {school?.is985 && (
+                    <span className="text-[10px] px-1 rounded bg-red-50 text-red-600 border border-red-100">
+                      985
+                    </span>
+                  )}
+                  {school?.is211 && (
+                    <span className="text-[10px] px-1 rounded bg-blue-50 text-blue-600 border border-blue-100">
+                      211
+                    </span>
+                  )}
+                  {school?.isDFC && !school?.is211 && (
+                    <span className="text-[10px] px-1 rounded bg-amber-50 text-amber-600 border border-amber-100">
+                      双一流
+                    </span>
+                  )}
+                  {school?.isPrivate && (
+                    <span className="text-[10px] px-1 rounded bg-gray-50 text-gray-500 border border-gray-200">
+                      民办
+                    </span>
+                  )}
+                </span>
+              </td>
+            ))}
+          </tr>
+          <tr className="border-b border-gray-50">
+            <td className={td + " text-gray-400 text-xs"}>软科排名</td>
+            {cols.map(({ code, school }) => (
+              <td key={code} className={td}>
+                {school?.rank ? (
+                  `第 ${school.rank} 名`
+                ) : (
+                  <span className="text-gray-300">—</span>
+                )}
+              </td>
+            ))}
+          </tr>
+          <tr className="border-b border-gray-50">
+            <td className={td + " text-gray-400 text-xs"}>投档线（较去年）</td>
+            {cols.map(({ code, adm }) => (
+              <td key={code} className={td}>
+                {adm ? (
+                  <>
+                    <b>{adm.minScore}</b>
+                    {adm.scoreDelta != null && (
+                      <span
+                        className={`text-[11px] ml-1 ${adm.scoreDelta > 0 ? "text-rose-500" : adm.scoreDelta < 0 ? "text-emerald-600" : "text-gray-400"}`}
+                      >
+                        {adm.scoreDelta > 0 ? "+" : ""}
+                        {adm.scoreDelta}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-gray-300">本省无投档线</span>
+                )}
+              </td>
+            ))}
+          </tr>
+          <tr className="border-b border-gray-50">
+            <td className={td + " text-gray-400 text-xs"}>
+              你的分差（{score} 分）
+            </td>
+            {cols.map(({ code, adm }) => {
+              if (!adm)
+                return (
+                  <td key={code} className={td}>
+                    <span className="text-gray-300">—</span>
+                  </td>
+                );
+              const gap = score - adm.minScore;
+              const tier = tierOf(gap);
+              return (
+                <td
+                  key={code}
+                  className={td + " font-semibold"}
+                  style={{
+                    color: tier === "none" ? "#94A3B8" : TIER_COLOR[tier],
+                  }}
+                >
+                  {gap <= 0 ? `差 ${-gap} 分` : `超 ${gap} 分`}
+                  <span className="text-[11px] font-normal text-gray-400 ml-1">
+                    {tier === "none" ? "超区间" : TIER_LABEL[tier]}
+                  </span>
+                </td>
+              );
+            })}
+          </tr>
+          <tr className="border-b border-gray-50">
+            <td className={td + " text-gray-400 text-xs"}>最低位次</td>
+            {cols.map(({ code, adm }) => (
+              <td key={code} className={td}>
+                {adm ? (
+                  adm.minRank.toLocaleString()
+                ) : (
+                  <span className="text-gray-300">—</span>
+                )}
+              </td>
+            ))}
+          </tr>
+          <tr className="border-b border-gray-50">
+            <td className={td + " text-gray-400 text-xs"}>
+              招生计划（较去年）
+            </td>
+            {cols.map(({ code, adm }) => (
+              <td key={code} className={td}>
+                {adm?.planCount != null ? (
+                  <>
+                    {adm.planCount} 人
+                    {adm.planDelta != null && adm.planDelta !== 0 && (
+                      <span
+                        className={`text-[11px] ml-1 ${adm.planDelta > 0 ? "text-emerald-600" : "text-rose-500"}`}
+                      >
+                        {adm.planDelta > 0 ? "+" : ""}
+                        {adm.planDelta}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-gray-300">—</span>
+                )}
+              </td>
+            ))}
+          </tr>
+          <tr className="border-b border-gray-50">
+            <td className={td + " text-gray-400 text-xs"}>
+              学科评估（第四轮）
+            </td>
+            {cols.map(({ code, school }) => (
+              <td key={code} className={td}>
+                {school?.aClass ? (
+                  <span>
+                    A+ {school.aPlus} · A 类共 {school.aClass} 项
+                  </span>
+                ) : (
+                  <span className="text-gray-300">无 A 类</span>
+                )}
+              </td>
+            ))}
+          </tr>
+          <tr>
+            <td className={td + " text-gray-400 text-xs align-top"}>A+ 学科</td>
+            {cols.map(({ code, school }) => (
+              <td key={code} className={td}>
+                {school?.topDisc?.length ? (
+                  <span className="flex flex-wrap gap-1">
+                    {school.topDisc.map((d) => (
+                      <span
+                        key={d}
+                        className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100"
+                      >
+                        {d}
+                      </span>
+                    ))}
+                  </span>
+                ) : (
+                  <span className="text-gray-300">—</span>
+                )}
+              </td>
+            ))}
+          </tr>
+        </tbody>
+      </table>
     </div>
   );
 }
