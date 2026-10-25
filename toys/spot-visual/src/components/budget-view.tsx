@@ -371,8 +371,12 @@ function BudgetBar({
    预算沙盘主页面
    ═══════════════════════════════════════════════════ */
 export default function BudgetView() {
-  const { spots, customPrices, setCustomPrice, clearCustomPrices } =
+  const { spots, trip, customPrices, setCustomPrice, clearCustomPrices } =
     useAppStore();
+
+  // 行程单优先：默认按行程单的景点计算，可切换回全部景点
+  const [scope, setScope] = useState<"trip" | "all" | null>(null);
+  const effectiveScope = scope ?? (trip.length > 0 ? "trip" : "all");
 
   // 每个景点上报的已勾选小计，total 恒等于各景点小计之和（改价/重置后自动一致）
   const [spotTotals, setSpotTotals] = useState<Record<string, number>>({});
@@ -398,11 +402,14 @@ export default function BudgetView() {
     [customPrices],
   );
 
-  // 只显示有 projects 的景点
-  const spotItems = useMemo(
-    () => spots.filter((s) => s.projects.length > 0),
-    [spots],
-  );
+  // 只显示有 projects 的景点（行程单作用域下只算行程内的站点）
+  const spotItems = useMemo(() => {
+    const base =
+      effectiveScope === "trip"
+        ? spots.filter((s) => trip.includes(s.id))
+        : spots;
+    return base.filter((s) => s.projects.length > 0);
+  }, [spots, trip, effectiveScope]);
 
   // 总预算数据
   const maxPossible = useMemo(
