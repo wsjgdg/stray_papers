@@ -269,9 +269,9 @@
 
 | # | 内容 | 状态 |
 |---|---|---|
-| 1 | `fetch-city-pois.mjs`：高德 place/text（key 仅本机 .env，不入库）× 20 热门城市 → `city-pois.generated.ts` 入库 | 待做 |
-| 2 | 探索框重构：城市输入/热门 chips → 三级加载（烘好的城市包即时切换 → 库内按地址筛选 → /api/osm 休眠兜底），文案去掉「实时」口径 | 待做 |
-| 3 | 图片：城市包 POI 走 fillSpotImages → 无 key 时落本地分类池（离线可图）；Bing 逐 POI 精准配图列为后续 | 待做 |
+| 1 | `fetch-city-pois.mjs`：高德 place/text（key 仅本机 .env，不入库）× 20 热门城市 → `city-pois.generated.ts` 入库 | 已完成：20 城 × 15 = 300 POI（名称/地址/坐标/分类/评分/高德图） |
+| 2 | 探索框重构：城市输入/热门 chips → 三级加载（烘好的城市包即时切换 → 库内按地址筛选 → /api/osm 休眠兜底），文案去掉「实时」口径 | 已完成：标题改「城市探索」，chips 17 城（10 包城 + 7 库内城），三级加载 |
+| 3 | 图片：城市包 POI 走 fillSpotImages → 无 key 时落本地分类池（离线可图）；Bing 逐 POI 精准配图列为后续 | 已完成（基础版）：高德响应自带 POI 图片 URL（浏览器直连 autonavi CDN），详情标「高德地图」；精准 Bing 配图列后续 |
 
 ## 七轮（2026-10-25）：志愿探索接入真实数据
 

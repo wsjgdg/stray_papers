@@ -67,6 +67,7 @@ import {
 } from "@/lib/spot-data"; // 保留：cachePhotoForCategory 缓存机制
 import { withSharecode } from "@/lib/share-link";
 import { PROVINCE_FOODS } from "@/lib/food-data";
+import { CITY_POI_PACKS, type CityPoi } from "@/lib/city-pois.generated";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 
@@ -660,6 +661,7 @@ function SpotList({
 }
 
 const IMAGE_SOURCE_LABEL: Record<string, string> = {
+  amap: "高德地图",
   osm: "OSM 社区实拍",
   unsplash: "Unsplash",
   pexels: "Pexels",
@@ -1046,7 +1048,7 @@ function SpotsView() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
 
-  // ═══ OSM 实时探索（OpenStreetMap 实时 + 内置兜底） ═══
+  // ═══ 城市探索：三级加载——构建时烘好的城市包（即时） → 库内筛选 → /api/osm 休眠兜底 ═══
   const [city, setCity] = useState("北京");
   const [osmLoading, setOsmLoading] = useState(false);
   const [osmMsg, setOsmMsg] = useState<{
@@ -1054,18 +1056,16 @@ function SpotsView() {
     text: string;
   } | null>(null);
 
+  const confirmReplace = () =>
+    spots.length === 0 ||
+    window.confirm(
+      `探索将替换当前 ${spots.length} 个景点（收藏与行程中引用它们的条目会被清理），继续？`,
+    );
+
   const exploreOsm = useCallback(async () => {
     const c = city.trim();
     if (!c || osmLoading) return;
-    // 换城会整体替换当前景点集（收藏/行程/改价同步清理），先确认
-    if (
-      spots.length > 0 &&
-      !window.confirm(
-        `实时探索将替换当前 ${spots.length} 个景点（收藏与行程中引用它们的条目会被清理），继续？`,
-      )
-    ) {
-      return;
-    }
+    if (!confirmReplace()) return;
     setOsmLoading(true);
     setOsmMsg(null);
     try {
@@ -1082,7 +1082,6 @@ function SpotsView() {
         setSpots(data.spots);
         setActiveCategory("全部");
         setSearchQuery("");
-        // 配图：优先 OSM 自带实拍图，缺图景点按分类拉图（共享流程，失败降级本地池）
         await fillSpotImages(data.spots);
         setOsmMsg({
           type: "ok",
@@ -1098,6 +1097,83 @@ function SpotsView() {
       setOsmLoading(false);
     }
   }, [city, osmLoading, spots, setSpots, setActiveCategory, setSearchQuery]);
+
+  // 城市包 POI → Spot（高德自带图片由浏览器直连 autonavi CDN，不占容器出网）
+  const poiToSpot = useCallback((c: string, p: CityPoi, i: number): Spot => {
+    const short = c.replace(/市$/, "");
+    return {
+      id: `poi-${short}-${i}`,
+      name: p.name,
+      image: p.image,
+      imageSource: p.image ? "amap" : undefined,
+      address: p.address || `${c}（高德 POI）`,
+      facilities: [],
+      projects: [],
+      category: p.category,
+      description: `来自高德地图 POI${p.rating ? ` · 评分 ${p.rating}` : ""}。数据为构建时打包，信息以景区公示为准。`,
+      location: { lat: p.lat, lng: p.lng },
+    };
+  }, []);
+
+  // 热门城市 chips：烘好的城市包优先，附带库内精选城市
+  const HOT_CITIES = useMemo(
+    () => [
+      ...Object.keys(CITY_POI_PACKS).slice(0, 10),
+      "拉萨",
+      "张家界",
+      "黄山",
+      "乐山",
+      "酒泉",
+      "嘉兴",
+      "晋中",
+    ],
+    [],
+  );
+  const libCitySpots = useCallback((c: string) => {
+    const short = c.replace(/市$/, "");
+    return sampleSpots.filter((s) => s.address.includes(short));
+  }, []);
+
+  const loadCity = useCallback(
+    (raw: string) => {
+      const c = raw.trim().replace(/市$/, "") || raw.trim();
+      if (!c) return;
+      const pack = CITY_POI_PACKS[c] ?? CITY_POI_PACKS[raw.trim()];
+      if (pack) {
+        if (!confirmReplace()) return;
+        setSpots(pack.map((p, i) => poiToSpot(c, p, i)));
+        setActiveCategory("全部");
+        setSearchQuery("");
+        setOsmMsg({
+          type: "ok",
+          text: `已加载「${c}」城市包：${pack.length} 个景点 · 高德 POI 构建时打包（图片直连高德 CDN）`,
+        });
+        return;
+      }
+      const lib = libCitySpots(c);
+      if (lib.length > 0) {
+        if (!confirmReplace()) return;
+        setSpots(lib);
+        setActiveCategory("全部");
+        setSearchQuery("");
+        setOsmMsg({
+          type: "ok",
+          text: `库内精选「${c}」：${lib.length} 个景点（内置数据，含完整介绍与离线图）`,
+        });
+        return;
+      }
+      exploreOsm();
+    },
+    [
+      confirmReplace,
+      setSpots,
+      setActiveCategory,
+      setSearchQuery,
+      poiToSpot,
+      libCitySpots,
+      exploreOsm,
+    ],
+  );
 
   // ═══ 随便看看：实时探索不可用（离线/限流）时，从景点库随机抽一个直接看 ═══
   const randomBrowse = useCallback(() => {
@@ -1247,18 +1323,32 @@ function SpotsView() {
 
   return (
     <div className="space-y-5">
-      {/* OSM 实时探索（OpenStreetMap 实时 + 内置兜底） */}
+      {/* 城市探索：城市包 → 库内精选 → 实时兜底 */}
       <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
         <div className="flex items-center gap-2 mb-2.5">
           <Globe className="w-4 h-4 text-emerald-600" />
           <span className="text-sm font-semibold text-emerald-800">
-            实时景点探索 · OpenStreetMap
+            城市探索
           </span>
           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
-            ODbL 开放数据
+            20 城数据包已内置 · 零外链
           </span>
         </div>
         <div className="flex gap-2">
+          <div className="flex flex-wrap gap-1.5 mb-2.5">
+            {HOT_CITIES.map((hc) => (
+              <button
+                key={hc}
+                onClick={() => {
+                  setCity(hc);
+                  loadCity(hc);
+                }}
+                className="px-2.5 py-1 rounded-full text-[11px] font-medium border bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 transition-colors"
+              >
+                {hc}
+              </button>
+            ))}
+          </div>
           <div className="relative flex-1">
             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
@@ -1267,7 +1357,7 @@ function SpotsView() {
               onKeyDown={(e) => {
                 if (e.key === "Enter") exploreOsm();
               }}
-              placeholder="输入城市，如 北京 / 上海 / 成都 / 杭州"
+              placeholder="输入城市，如 苏州 / 洛阳 / 大连 / 哈尔滨"
               className="pl-10 h-11 bg-white border-emerald-200 text-sm"
             />
           </div>
@@ -1286,14 +1376,14 @@ function SpotsView() {
             size="sm"
             className="gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
             disabled={osmLoading}
-            onClick={exploreOsm}
+            onClick={() => loadCity(city)}
           >
             {osmLoading ? (
               <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
             ) : (
               <Globe className="w-3.5 h-3.5" />
             )}
-            {osmLoading ? "探索中..." : "实时探索"}
+            {osmLoading ? "探索中..." : "探索该城市"}
           </Button>
         </div>
         {osmMsg && (
@@ -1304,8 +1394,8 @@ function SpotsView() {
           </p>
         )}
         <p className="text-[11px] text-gray-400 mt-2 leading-relaxed">
-          实时数据由 OpenStreetMap 社区贡献（ODbL
-          许可）。无网络或接口限流时，自动保留内置示例景点，确保离线可用。
+          20 个热门城市已内置数据包（高德 POI，构建时打包，图片直连高德
+          CDN）；库内精选城市含完整介绍与离线图；其余城市回落实时通道（部分环境不可用）。
         </p>
       </div>
 
