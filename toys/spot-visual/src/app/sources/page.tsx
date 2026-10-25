@@ -1,57 +1,67 @@
-'use client';
+"use client";
 
 // useSearchParams 在预渲染时需要 Suspense 边界，这里改为按请求渲染
-import Link from 'next/link';
-import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import Link from "next/link";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 
 const ROWS = [
   {
-    layer: '菜肴级钠 / 价格 / 碳足迹',
-    source: '中国菜肴数据集（3,302 道菜）',
-    license: 'CC BY 4.0',
-    fields: '每份钠 mg、每份价格 元、碳足迹 g、水足迹 L、土地 m²',
-    note: '取中文菜名精确/去前缀后匹配，共 37 道命中（含 7 条地名/别名变体人工确认）。菜系字段不可靠（锅包肉被标成鲁菜），未使用。',
+    layer: "菜肴级钠 / 价格 / 碳足迹",
+    source: "中国菜肴数据集（3,302 道菜）",
+    license: "CC BY 4.0",
+    fields: "每份钠 mg、每份价格 元、碳足迹 g、水足迹 L、土地 m²",
+    note: "取中文菜名精确/去前缀后匹配，共 37 道命中（含 7 条地名/别名变体人工确认）。菜系字段不可靠（锅包肉被标成鲁菜），未使用。",
   },
   {
-    layer: '营养库钠糖',
-    source: 'USDA FoodData Central',
-    license: '美国政府数据',
-    fields: '钠 mg/100g、糖 g/100g',
-    note: '仅 7 道对得上（如 Duck, Peking fdcId 2706141）。美式中餐条目多，中国地方菜少。',
+    layer: "营养库钠糖",
+    source: "USDA FoodData Central",
+    license: "美国政府数据",
+    fields: "钠 mg/100g、糖 g/100g",
+    note: "仅 7 道对得上（如 Duck, Peking fdcId 2706141）。美式中餐条目多，中国地方菜少。",
   },
   {
-    layer: '主料参照',
-    source: '《中国食物成分表 标准版 第 6 版》（经 Sanotsu/china-food-composition-data 转录）',
-    license: '原书版权归出版社；本项目仅引用少量条目并注明食品编号',
-    fields: '主料每 100g 能量 kcal、钠 mg、GI',
-    note: '主料数据，不是整道菜。330 道菜按菜名主料推断。',
+    layer: "主料参照",
+    source:
+      "《中国食物成分表 标准版 第 6 版》（经 Sanotsu/china-food-composition-data 转录）",
+    license: "原书版权归出版社；本项目仅引用少量条目并注明食品编号",
+    fields: "主料每 100g 能量 kcal、钠 mg、GI",
+    note: "主料数据，不是整道菜。330 道菜按菜名主料推断。",
   },
   {
-    layer: '口味雷达（辣/甜/酸/香/鲜）',
-    source: '本项目自评',
-    license: '—',
-    fields: '0–100 六维',
-    note: '按公开锚点定标（Scoville、蔗糖相对甜度），仅适合菜系间横向比较。',
+    layer: "口味雷达（辣/甜/酸/香/鲜）",
+    source: "本项目自评",
+    license: "—",
+    fields: "0–100 六维",
+    note: "按公开锚点定标（Scoville、蔗糖相对甜度），仅适合菜系间横向比较。",
   },
   {
-    layer: '菜品照片',
-    source: 'Bing 图片搜索抓取，按域名优先取菜谱站/门户站',
-    license: '版权归原作者与原站点，仅作演示',
-    fields: '—',
-    note: '432 张本地打包。出处见 public/dishes/SOURCES.md。',
+    layer: "菜品照片",
+    source: "Bing 图片搜索抓取，按域名优先取菜谱站/门户站",
+    license: "版权归原作者与原站点，仅作演示",
+    fields: "—",
+    note: "432 张本地打包。出处见 public/dishes/SOURCES.md。",
   },
   {
-    layer: '地图边界',
-    source: 'DataV GeoAtlas；台湾 20 县市取自 GeoJSON.cn',
-    license: '公开使用',
-    fields: '省级 / 市级矢量边界',
-    note: '含台湾、南海诸岛，非在线地图服务，不请求境外瓦片。',
+    layer: "地图边界",
+    source: "DataV GeoAtlas；台湾 20 县市取自 GeoJSON.cn",
+    license: "公开使用",
+    fields: "省级 / 市级矢量边界",
+    note: "含台湾、南海诸岛，非在线地图服务，不请求境外瓦片。",
+  },
+  {
+    layer: "志愿探索（院校投档线 / 一分一段）",
+    source:
+      "GaokaoCompass（github.com/choucisan/GaokaoCompass，HuggingFace: choucsan/Gaokao-Compass-11M）",
+    license: "MIT",
+    fields:
+      "2025 年 28 省市本科普通批院校投档线（院校、专业组、最低分/位次、985/211 标签）与一分一段表；经 scripts/fetch-gaokao-data.mjs 压缩打包",
+    note: "第三方整理的非官方数据（源自公开报道与考试院公告）。投档线按院校×科类取专业组最低分归并；位次由一分一段表线性插值估算；山西源数据损坏、青海未公布、西藏缺位次，未收录。「双一流」徽标中非 985/211 的部分为项目内维护名单，可能不全。正式填报请以省级教育考试院官方数据为准。",
   },
 ];
 
 function SourcesPageInner() {
-  const qs = useSearchParams()?.toString() ?? '';
+  const qs = useSearchParams()?.toString() ?? "";
   const link = (p: string) => (qs ? `${p}?${qs}` : p);
 
   return (
@@ -64,16 +74,23 @@ function SourcesPageInner() {
 
       <div className="space-y-3">
         {ROWS.map((r) => (
-          <div key={r.layer} className="rounded-2xl border border-gray-200 bg-white p-4">
+          <div
+            key={r.layer}
+            className="rounded-2xl border border-gray-200 bg-white p-4"
+          >
             <div className="flex flex-wrap items-center gap-2 mb-1.5">
-              <span className="text-sm font-semibold text-gray-900">{r.layer}</span>
+              <span className="text-sm font-semibold text-gray-900">
+                {r.layer}
+              </span>
               <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-gray-200 text-gray-500">
                 {r.license}
               </span>
             </div>
             <div className="text-xs text-gray-600 mb-1">来源：{r.source}</div>
             <div className="text-xs text-gray-500 mb-1">字段：{r.fields}</div>
-            <div className="text-[11px] text-gray-400 leading-relaxed">{r.note}</div>
+            <div className="text-[11px] text-gray-400 leading-relaxed">
+              {r.note}
+            </div>
           </div>
         ))}
       </div>
@@ -86,7 +103,10 @@ function SourcesPageInner() {
       </div>
 
       <div className="mt-6">
-        <Link href={link('/about')} className="text-emerald-600 text-sm underline">
+        <Link
+          href={link("/about")}
+          className="text-emerald-600 text-sm underline"
+        >
           ← 返回作品介绍
         </Link>
       </div>
