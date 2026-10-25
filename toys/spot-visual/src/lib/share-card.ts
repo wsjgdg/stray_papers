@@ -100,10 +100,16 @@ export async function downloadShareCard(input: ShareCardInput) {
     }
   } catch {}
 
-  const a = document.createElement('a');
-  a.download = `中国味道-${input.title}.png`;
-  a.href = c.toDataURL('image/png');
-  a.click();
+  // 用 Blob 而不是超长 data URL：data URL 在部分浏览器有长度上限，且更占内存
+  c.toBlob((blob) => {
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.download = `中国味道-${input.title}.png`;
+    a.href = url;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }, 'image/png');
 }
 
 function roundRect(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
