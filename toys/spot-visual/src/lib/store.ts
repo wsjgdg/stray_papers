@@ -15,6 +15,9 @@ export type ViewType =
   | "ptsi"
   | "dissuasion"; // 新增三个视图
 
+// 劝退记录投票去重（仅会话内有效，不持久化）
+const votedDissuasion = new Set<string>();
+
 interface AppStore {
   spots: Spot[];
   favorites: string[];
@@ -127,12 +130,16 @@ export const useAppStore = create<AppStore>()(
         set((s) => ({
           dissuasionRecords: s.dissuasionRecords.filter((r) => r.id !== id),
         })),
-      voteDissuasionRecord: (id) =>
+      voteDissuasionRecord: (id) => {
+        // 会话内去重：同一条记录重复点击不再累加，防止无限刷票
+        if (votedDissuasion.has(id)) return;
+        votedDissuasion.add(id);
         set((s) => ({
           dissuasionRecords: s.dissuasionRecords.map((r) =>
             r.id === id ? { ...r, voteCount: r.voteCount + 1 } : r,
           ),
-        })),
+        }));
+      },
     }),
     {
       name: "spot-app",
