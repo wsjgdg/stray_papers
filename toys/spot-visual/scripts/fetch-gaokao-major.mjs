@@ -85,7 +85,7 @@ for (const [slug, provName] of Object.entries(SLUGS)) {
     let minRank = num(r.min_rank);
     if (minRank === null)
       minRank = rankFromCurve(curves[r.category] ?? [], minScore);
-    if (minRank === null) continue;
+    if (minRank === null) minRank = 0; // 0 = 位次未知，保留专业行
     const k = [
       r.category,
       r.university_name,

@@ -223,6 +223,11 @@ export default function GaoKaoPage() {
   const ready = dataState === "ready";
   const provinces = useMemo(() => (ready ? activeProvinces() : []), [ready]);
   const schools = useMemo(() => (ready ? activeSchools() : []), [ready]);
+  // 去重院校数：同一高校在各省有独立招生代码，schools 按代码计数会重复
+  const uniqueSchoolCount = useMemo(
+    () => new Set(schools.map((s) => s.name)).size,
+    [schools],
+  );
 
   // ── 加载数据文件（主数据必须；增强数据可选，失败不阻塞） ──
   useEffect(() => {
@@ -660,8 +665,8 @@ export default function GaoKaoPage() {
         <p className="text-sm text-gray-500">
           输入分数估算位次；院校点位按冲稳保着色，点击查看详情。
           <span className="text-gray-400">
-            （{dataYear()} 年 · {provinces.length} 省市 · {schools.length}{" "}
-            所院校 · GaokaoCompass 非官方数据）
+            （{dataYear()} 年 · {provinces.length} 省市 · 覆盖高校{" "}
+            {uniqueSchoolCount} 所 · GaokaoCompass 非官方数据）
           </span>
         </p>
       </div>
@@ -1111,7 +1116,7 @@ export default function GaoKaoPage() {
                   <div className="rounded-xl border border-gray-200 p-3">
                     <div className="text-xs text-gray-400">最低位次</div>
                     <div className="text-lg font-bold text-gray-900">
-                      {selAdm.minRank.toLocaleString()}
+                      {selAdm.minRank ? selAdm.minRank.toLocaleString() : "—"}
                     </div>
                   </div>
                   <div className="rounded-xl border border-gray-200 p-3 col-span-2">
@@ -1235,7 +1240,7 @@ export default function GaoKaoPage() {
                                           {r[3]}
                                         </span>
                                         <span className="text-gray-400 shrink-0 w-16 text-right">
-                                          {r[4].toLocaleString()}
+                                          {r[4] ? r[4].toLocaleString() : "—"}
                                         </span>
                                       </li>
                                     );
@@ -1391,14 +1396,18 @@ export default function GaoKaoPage() {
                             </span>
                             <span className="text-xs text-gray-400 ml-auto hidden sm:inline">
                               {item.schoolProv} · 位次{" "}
-                              {item.admission.minRank.toLocaleString()}
+                              {item.admission.minRank
+                                ? item.admission.minRank.toLocaleString()
+                                : "—"}
                               {item.planCount != null
                                 ? ` · 招${item.planCount}人`
                                 : ""}
                             </span>
                             <span className="w-full text-[11px] text-gray-400 sm:hidden">
                               {item.schoolProv} · 位次{" "}
-                              {item.admission.minRank.toLocaleString()}
+                              {item.admission.minRank
+                                ? item.admission.minRank.toLocaleString()
+                                : "—"}
                               {item.planCount != null
                                 ? ` · 招${item.planCount}人`
                                 : ""}
@@ -1461,7 +1470,7 @@ export default function GaoKaoPage() {
                 )}
                 <p className="w-full text-xs text-gray-400">
                   投档线 {selAdm.minScore} · 位次{" "}
-                  {selAdm.minRank.toLocaleString()} ·
+                  {selAdm.minRank ? selAdm.minRank.toLocaleString() : "—"} ·
                   已在地图上标出，切到「院校地图」查看。
                 </p>
               </div>
@@ -1725,7 +1734,11 @@ function CompareTable({
             {cols.map(({ code, adm }) => (
               <td key={code} className={td}>
                 {adm ? (
-                  adm.minRank.toLocaleString()
+                  adm.minRank ? (
+                    adm.minRank.toLocaleString()
+                  ) : (
+                    "—"
+                  )
                 ) : (
                   <span className="text-gray-300">—</span>
                 )}

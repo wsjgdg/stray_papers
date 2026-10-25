@@ -119,7 +119,7 @@ for (const [slug, provName] of Object.entries(SLUGS)) {
     let minRank = num(r.min_rank);
     if (minRank === null)
       minRank = rankFromCurve(curves[r.category] ?? [], minScore);
-    if (minRank === null) continue;
+    if (minRank === null) minRank = 0; // 0 = 位次未知（无一分一段可回填），保留院校只展示分数
     const row = {
       cat: r.category,
       batch: r.batch,
@@ -133,7 +133,7 @@ for (const [slug, provName] of Object.entries(SLUGS)) {
         (r.is_211 === "1" ? 2 : 0) |
         (r.school_nature === "民办" ? 4 : 0),
     };
-    if (row.rank <= 0) continue; // 无位次无法参与冲稳保计算
+
     const k = `${row.cat}\u0000${row.name}`;
     const prev = best.get(k);
     if (!prev || row.score < prev.score) best.set(k, row);

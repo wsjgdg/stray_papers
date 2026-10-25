@@ -29,6 +29,8 @@ const fixture: RealDataset = {
           ["A1", "甲大学", "本科批", 650, 5000, "北京", 3, 100, 5, 10],
           ["A2", "乙大学", "本科批", 620, 9000, "北京", 2, 5, null, -20],
           ["A3", "丙大学", "本科批", 590, 15000, "河南", 0, null, null, null],
+          // rank=0：位次未知（无一分一段可回填），必须保留院校行
+          ["A4", "丁学院", "本科批", 560, 0, "河南", 0, null, null, null],
         ],
       },
       历史类: {
@@ -62,7 +64,7 @@ describe("loadFullDataset + 读取接口", () => {
   });
   it("admissionsFor 携带计划/同比字段", () => {
     const rows = admissionsFor("河南", "物理类");
-    expect(rows).toHaveLength(3);
+    expect(rows).toHaveLength(4);
     const a1 = rows.find((r) => r.schoolCode === "A1")!;
     expect(a1.planCount).toBe(100);
     expect(a1.scoreDelta).toBe(5);
@@ -70,6 +72,13 @@ describe("loadFullDataset + 读取接口", () => {
     expect(a2.planDelta).toBe(-20);
     expect(a2.scoreDelta).toBeUndefined();
   });
+  it("rank=0 的院校行保留且 minRank 为 0（位次未知）", () => {
+    const a4 = admissionsFor("河南", "物理类").find((r) => r.schoolCode === "A4");
+    expect(a4).toBeDefined();
+    expect(a4!.minScore).toBe(560);
+    expect(a4!.minRank).toBe(0);
+  });
+
   it("controlLine", () => {
     expect(controlLine("河南", "物理类")).toBe(400);
     expect(controlLine("河南", "历史类")).toBeUndefined();

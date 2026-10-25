@@ -102,10 +102,17 @@ export default function ChinaMap({
     // 这里先取出当前 roam 状态，再回灌到新 option，保证「选择后视野不动」。
     const nextMap = mapNameOf(option);
     const prev = chart.getOption() as
-      | { series?: Array<{ map?: string; zoom?: number; center?: number[] }> }
+      | {
+          series?: Array<{ map?: string; zoom?: number; center?: number[] }>;
+          geo?: Array<{ map?: string; zoom?: number; center?: number[] }>;
+        }
       | undefined;
     const prevSeries = prev?.series?.[0];
+    const prevGeo = prev?.geo?.[0];
     let next = option;
+    // 视野保持有两种形态：map series（food 页）与 geo 组件（gaokao 页
+    // scatter-on-geo）。notMerge 全量重建会重置视野，把用户当前
+    // zoom/center 回灌进新 option，保证「选择/筛选后视野不动」。
     if (
       nextMap &&
       prevSeries?.map === nextMap &&
@@ -122,6 +129,20 @@ export default function ChinaMap({
             : s,
         ),
       } as EChartsOption;
+    } else if (
+      nextMap &&
+      prevGeo?.map === nextMap &&
+      (prevGeo.zoom != null || prevGeo.center != null) &&
+      option.geo &&
+      !Array.isArray(option.geo)
+    ) {
+      const geo = option.geo as Record<string, unknown>;
+      if (geo.zoom == null && geo.center == null) {
+        next = {
+          ...option,
+          geo: { ...geo, zoom: prevGeo.zoom, center: prevGeo.center },
+        } as EChartsOption;
+      }
     }
     chart.setOption(next, { notMerge: true });
   }, [option, maps]);
