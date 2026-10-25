@@ -12,6 +12,8 @@
 // 仅供演示与参考，正式填报请以省级教育考试院官方数据为准。
 // ════════════════════════════════════════════════════════════════════════
 
+import { withSharecode } from "@/lib/share-link";
+
 export const GAOKAO_DATA_URL = "/data/gaokao-2025.json";
 export const GAOKAO_ENRICH_URL = "/data/gaokao-enrich.json";
 
@@ -365,7 +367,7 @@ export async function fetchHistory(
   const slug = PROV_SLUG[prov];
   if (!slug) return null;
   try {
-    const r = await fetch(`/data/gaokao-history/${slug}.json`);
+    const r = await fetch(withSharecode(`/data/gaokao-history/${slug}.json`));
     if (!r.ok) return null;
     const d = (await r.json()) as HistoryDataset;
     if (!d?.cats) return null;
@@ -397,15 +399,13 @@ export interface MajorDataset {
 const majorCache = new Map<string, MajorDataset>();
 
 /** 拉取某省专业级投档线（内存缓存；无数据/加载失败返回 null） */
-export async function fetchMajors(
-  prov: string,
-): Promise<MajorDataset | null> {
+export async function fetchMajors(prov: string): Promise<MajorDataset | null> {
   const cached = majorCache.get(prov);
   if (cached) return cached;
   const slug = PROV_SLUG[prov];
   if (!slug) return null;
   try {
-    const r = await fetch(`/data/gaokao-major/${slug}.json`);
+    const r = await fetch(withSharecode(`/data/gaokao-major/${slug}.json`));
     if (!r.ok) return null;
     const d = (await r.json()) as MajorDataset;
     if (!d?.cats) return null;

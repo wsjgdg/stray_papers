@@ -46,6 +46,7 @@ import {
   recommend,
   type RecommendItem as RecommendItemT,
 } from "@/lib/gaokao";
+import { withSharecode } from "@/lib/share-link";
 import { downloadGaokaoShareCard } from "@/lib/gaokao-share-card";
 import { PROVINCE_CENTERS } from "@/lib/china-geo";
 import ChinaMap from "@/components/map/china-map";
@@ -226,14 +227,14 @@ export default function GaoKaoPage() {
   // ── 加载数据文件（主数据必须；增强数据可选，失败不阻塞） ──
   useEffect(() => {
     let alive = true;
-    fetch(GAOKAO_DATA_URL)
+    fetch(withSharecode(GAOKAO_DATA_URL))
       .then((r) =>
         r.ok ? r.json() : Promise.reject(new Error(String(r.status))),
       )
       .then((d) => {
         if (alive && loadFullDataset(d)) {
           setDataState("ready");
-          fetch(GAOKAO_ENRICH_URL)
+          fetch(withSharecode(GAOKAO_ENRICH_URL))
             .then((r) => (r.ok ? r.json() : null))
             .then((e) => {
               if (alive && e && loadEnrichDataset(e)) setEnriched(true);
