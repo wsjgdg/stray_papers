@@ -256,7 +256,9 @@
 | 1 | 地理编码本地化：`gen-city-centers.mjs` 从 public/geo 生成全国城市中心表 → `/api/osm` 查表优先（零网络零延迟），未命中再走省级中心 → Nominatim 兜底（超时缩到 5s） | 已完成：495 城 / 857 键 |
 | 2 | 示例库 12 → 30：补 18 个知名景区（覆盖山岳/古镇/历史人文/海滨/主题乐园等），走 Bing 管线扩离线图包 | 已完成：18 张新图全白名单好源（携程×10 等），30 张终检拼图 `_contact-sheet.jpg` |
 
-**终局定位（对照 docs/deploy.md 线上实测）**：线上容器 `/api/osm` 与 `/api/weather` 双双 fetch failed（页面本身 200 正常），而 `/api/search-photo` 返回 NO_API_KEYS（线上未配图库 key，其错误文案还是老的 Vercel 版）。**结论被沙箱出网实测推翻**：容器出网是通的（open-meteo/unsplash/osm.ch 均 200），我此前只凭 osm 失败就下「无出口」判断，不严谨。真实原因有两个：① overpass-api.de 在部署环境 ECONNREFUSED（主站作废）；② `/api/osm` 把 Overpass 的 XML 错误页直接 res.json()，「Unexpected token '<'」吞掉了真实错误。已修：osm.ch 优先、text-first 解析透出 XML 错误原文、超时 8s。nominatim/瓦片在部署环境仍超时——本地地理编码表和内置 GeoJSON 底图正好覆盖。
+**终局定位（对照 docs/deploy.md 线上实测）**：线上容器 `/api/osm` 与 `/api/weather` 双双 fetch failed（页面本身 200 正常），而 `/api/search-photo` 返回 NO_API_KEYS（线上未配图库 key，其错误文案还是老的 Vercel 版）。**二次修正（部署后实测）**：osm.ch 只提供瑞士区域数据（苏黎世 5 条、深圳/香港恒 0 条），不是全量镜像——我写的注释与端点顺序（osm.ch 优先）造成静默失败（200 + 空数组比报错更糟），已移除该端点并把错误消息分级（连接类失败不再诱导换城市重试）。**中国 POI 当前无可用 Overpass 端点**；白名单只可能救活 overpass-api.de（ECONNREFUSED 特征吻合）；更稳方案是接高德/腾讯 POI（国内直连），待 AMAP_KEY（.env.example 已留位）。7 日天气（open-meteo）与 Unsplash 在线上确认可用。诊断端点 /api/net-check 已由并行会话保留（2d78744）。
+
+**结论被沙箱出网实测推翻**：容器出网是通的（open-meteo/unsplash/osm.ch 均 200），我此前只凭 osm 失败就下「无出口」判断，不严谨。真实原因有两个：① overpass-api.de 在部署环境 ECONNREFUSED（主站作废）；② `/api/osm` 把 Overpass 的 XML 错误页直接 res.json()，「Unexpected token '<'」吞掉了真实错误。已修：osm.ch 优先、text-first 解析透出 XML 错误原文、超时 8s。nominatim/瓦片在部署环境仍超时——本地地理编码表和内置 GeoJSON 底图正好覆盖。
 
 **追加发现（E2E 验证）**：geocode 本地化后仍 fetch failed → 进一步实测发现 Overpass **主站 interpreter POST 也被阻断**（status 端点通是假阳性），三个镜像（kumi/osm.ch/private.coffee）要么超时要么恒返空。已改 `/api/osm` 为多端点降级（主站 → osm.ch），部署到有国际出口的环境即可用；本机网络下实时探索确认不可用（网络事实，非代码问题），示例库扩充正是对离线场景的回应。
 

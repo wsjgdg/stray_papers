@@ -13,11 +13,10 @@ import { CITY_CENTERS } from "@/lib/city-centers.generated";
 const NOMINATIM = "https://nominatim.openstreetmap.org/search";
 // 多端点降级：主站 interpreter 在部分国内网络被阻断（status 端点通但 POST 不通，实测），
 // overpass.osm.ch（瑞士镜像，全量数据）实测可达。逐个尝试直到成功。
-const OVERPASS_ENDPOINTS = [
-  // 沙箱实测 200 可用；主站 overpass-api.de 在部署环境 ECONNREFUSED（传输层拒绝，等再久也没用）
-  "https://overpass.osm.ch/api/interpreter",
-  "https://overpass-api.de/api/interpreter",
-];
+// 端点表只保留主站：osm.ch 是瑞士区域镜像（对中国的查询恒返 200 + 0 条，属静默失败，比报错更糟，已移除）。
+// 部署环境对主站是 ECONNREFUSED（传输层拒绝）——若平台放行白名单后本链路即刻可用；
+// 长期方案：接高德/腾讯 POI（国内直连、免费配额，待 AMAP_KEY）。
+const OVERPASS_ENDPOINTS = ["https://overpass-api.de/api/interpreter"];
 const UA =
   "HuaxiaExplore/1.0 (1024 Creator Festival demo; contact: festival-demo@example.com)";
 
@@ -318,10 +317,14 @@ export async function GET(req: Request) {
     return NextResponse.json(payload);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "unknown";
-    // 内置兜底：返回 error，前端保留内置示例景点
+    // 分级提示：连接类失败 ≠ 城市无数据，不要误导用户换城市重试
+    const connectivity =
+      /ECONNREFUSED|fetch failed|aborted|timeout|Overpass/i.test(msg);
     return NextResponse.json({
       source: "error",
-      message: `实时数据获取失败（${msg}），已保留内置示例景点。OpenStreetMap 为公开开放数据（ODbL），需服务器联网访问；当前环境暂无法连接时自动降级。`,
+      message: connectivity
+        ? `当前部署环境暂时无法获取实时数据（Overpass 服务不可达：${msg}）。内置示例景点与「随便看看」不受影响。`
+        : `实时数据获取失败（${msg}），已保留内置示例景点。可尝试其他城市，或点「随便看看」。`,
       city,
       count: 0,
       spots: [],
