@@ -92,3 +92,9 @@ git revert <commit>        # 生成反向提交，再推
 ```
 
 不要用 `git reset --hard` + force push，会和其他会话的并行提交冲突。
+
+---
+
+## 七、怎么构建
+
+见 **[docs/build.md](./build.md)**：一键脚本 `node scripts/build-all.mjs`（或双击 `build.cmd`）、GitHub Actions、手动三步，以及构建失败的常见原因。
