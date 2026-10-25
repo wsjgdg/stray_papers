@@ -174,3 +174,18 @@ describe("loadEnrichDataset 合并", () => {
     expect(loadEnrichDataset({} as never)).toBe(false);
   });
 });
+
+// 回归：生成器产物必须能被数据层加载（曾因 cats 包装层级不一致导致线上白屏失败）
+import fs from "node:fs";
+import path from "node:path";
+
+describe("生成的真实数据文件与数据层结构一致", () => {
+  it("public/data/gaokao-2025.json 能 loadFullDataset 成功", () => {
+    const file = path.resolve("public/data/gaokao-2025.json");
+    if (!fs.existsSync(file)) return; // 数据文件未生成时跳过
+    const raw = JSON.parse(fs.readFileSync(file, "utf8")) as RealDataset;
+    expect(loadFullDataset(raw)).toBe(true);
+    expect(activeProvinces().length).toBeGreaterThan(20);
+    expect(admissionsFor("河南", "物理类").length).toBeGreaterThan(100);
+  });
+});

@@ -263,7 +263,7 @@ for (const [slug, provName] of Object.entries(SLUGS)) {
     curvePts: curveCount,
     batches: batches.join(","),
   });
-  if (uniCount) provs[provName] = { cats };
+  if (uniCount) provs[provName] = cats;
   else console.warn(`warn ${slug}: 0 admissions after filter, skipped`);
 
   if (!ONLY_PROV && uniCount) {
