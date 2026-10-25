@@ -2816,7 +2816,7 @@
       "file_type": "code",
       "norm_label": "aboutpage()",
       "source_file": "src/app/about/page.tsx",
-      "source_location": "L137"
+      "source_location": "L153"
     },
     {
       "id": "src_app_about_page_aboutpageinner",
@@ -2827,7 +2827,7 @@
       "file_type": "code",
       "norm_label": "aboutpageinner()",
       "source_file": "src/app/about/page.tsx",
-      "source_location": "L38"
+      "source_location": "L54"
     },
     {
       "id": "scripts_alias_candidates_strip_mod",
@@ -2882,7 +2882,7 @@
       "file_type": "code",
       "norm_label": "sourcespage()",
       "source_file": "src/app/sources/page.tsx",
-      "source_location": "L134"
+      "source_location": "L172"
     },
     {
       "id": "src_app_sources_page_sourcespageinner",
@@ -2893,7 +2893,7 @@
       "file_type": "code",
       "norm_label": "sourcespageinner()",
       "source_file": "src/app/sources/page.tsx",
-      "source_location": "L80"
+      "source_location": "L118"
     },
     {
       "id": "scripts_carve_pdf_images_jpeg_size",
@@ -7402,7 +7402,7 @@
       "file_type": "code",
       "norm_label": "layers",
       "source_file": "src/app/about/page.tsx",
-      "source_location": "L31"
+      "source_location": "L47"
     },
     {
       "id": "scripts_alias_candidates",
@@ -9000,6 +9000,174 @@
       "source_url": null
     },
     {
+      "id": "readme_packlist",
+      "label": "\u51fa\u884c\u88c5\u5907\u6e05\u5355\uff08README\uff09",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 21,
+      "contributor": null,
+      "file_type": "document",
+      "norm_label": "\u51fa\u884c\u88c5\u5907\u6e05\u5355(readme)",
+      "source_file": "README.md",
+      "source_location": "\u884c\u7a0b\u95ed\u73af \u00b7 \u884c\u7a0b\u5355",
+      "source_url": null
+    },
+    {
+      "id": "readme_trip_day_plan",
+      "label": "\u5206\u5929\u89c4\u5212\uff08README\uff09",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 21,
+      "contributor": null,
+      "file_type": "document",
+      "norm_label": "\u5206\u5929\u89c4\u5212(readme)",
+      "source_file": "README.md",
+      "source_location": "\u884c\u7a0b\u95ed\u73af \u00b7 \u884c\u7a0b\u5355",
+      "source_url": null
+    },
+    {
+      "id": "readme_trip_plan",
+      "label": "\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d\uff08README \u884c\u7a0b\u95ed\u73af\uff09",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 21,
+      "contributor": null,
+      "file_type": "document",
+      "norm_label": "\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d(readme \u884c\u7a0b\u95ed\u73af)",
+      "source_file": "README.md",
+      "source_location": "\u884c\u7a0b\u95ed\u73af \u00b7 \u884c\u7a0b\u5355",
+      "source_url": null
+    },
+    {
+      "id": "readme_trip_weather_checkup",
+      "label": "\u6574\u6761\u884c\u7a0b 7 \u65e5\u4f53\u68c0\uff08README\uff09",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 21,
+      "contributor": null,
+      "file_type": "document",
+      "norm_label": "\u6574\u6761\u884c\u7a0b 7 \u65e5\u4f53\u68c0(readme)",
+      "source_file": "README.md",
+      "source_location": "\u884c\u7a0b\u95ed\u73af \u00b7 \u884c\u7a0b\u5355",
+      "source_url": null
+    },
+    {
+      "id": "worklog_open_meteo_weather_proxy",
+      "label": "Open-Meteo \u5929\u6c14\u4ee3\u7406\uff08/api/weather\uff09",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 21,
+      "contributor": null,
+      "file_type": "document",
+      "norm_label": "open-meteo \u5929\u6c14\u4ee3\u7406(/api/weather)",
+      "source_file": "worklog.md",
+      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#2",
+      "source_url": null
+    },
+    {
+      "id": "worklog_ptsi",
+      "label": "PTSI\uff08\u9010\u65e5\u7d2b\u5916\u7ebf\u51fa\u884c\u6307\u6570\uff09",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 21,
+      "contributor": null,
+      "file_type": "document",
+      "norm_label": "ptsi(\u9010\u65e5\u7d2b\u5916\u7ebf\u51fa\u884c\u6307\u6570)",
+      "source_file": "worklog.md",
+      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#2",
+      "source_url": null
+    },
+    {
+      "id": "worklog_stamina_budget_day_split",
+      "label": "\u4f53\u529b\u9884\u7b97\u81ea\u52a8\u5206\u5929\uff08100/\u5929\uff09",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 21,
+      "contributor": null,
+      "file_type": "document",
+      "norm_label": "\u4f53\u529b\u9884\u7b97\u81ea\u52a8\u5206\u5929(100/\u5929)",
+      "source_file": "worklog.md",
+      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#1",
+      "source_url": null
+    },
+    {
+      "id": "worklog_stamina_sandbox",
+      "label": "\u4f53\u529b\u6c99\u76d8",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 21,
+      "contributor": null,
+      "file_type": "document",
+      "norm_label": "\u4f53\u529b\u6c99\u76d8",
+      "source_file": "worklog.md",
+      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#1",
+      "source_url": null
+    },
+    {
+      "id": "worklog_trip_day_split",
+      "label": "\u884c\u7a0b\u5206\u5929\u89c4\u5212\uff08\u6309\u5929\u5206\u7ec4/tripDaySplit\uff09",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 21,
+      "contributor": null,
+      "file_type": "document",
+      "norm_label": "\u884c\u7a0b\u5206\u5929\u89c4\u5212(\u6309\u5929\u5206\u7ec4/tripdaysplit)",
+      "source_file": "worklog.md",
+      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#1",
+      "source_url": null
+    },
+    {
+      "id": "worklog_trip_packlist",
+      "label": "\u51fa\u884c\u88c5\u5907\u6e05\u5355\uff08CATEGORY_PACKLIST\uff09",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 21,
+      "contributor": null,
+      "file_type": "document",
+      "norm_label": "\u51fa\u884c\u88c5\u5907\u6e05\u5355(category_packlist)",
+      "source_file": "worklog.md",
+      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#3",
+      "source_url": null
+    },
+    {
+      "id": "worklog_trip_view",
+      "label": "\u884c\u7a0b\u5355\uff08Trip View\uff09",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 21,
+      "contributor": null,
+      "file_type": "document",
+      "norm_label": "\u884c\u7a0b\u5355(trip view)",
+      "source_file": "worklog.md",
+      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d",
+      "source_url": null
+    },
+    {
+      "id": "worklog_trip_weather_checkup",
+      "label": "\u884c\u7a0b\u7ea7 7 \u65e5\u4f53\u68c0\uff08\u6574\u6761\u884c\u7a0b\u6700\u4f73\u51fa\u884c\u65e5\uff09",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 21,
+      "contributor": null,
+      "file_type": "document",
+      "norm_label": "\u884c\u7a0b\u7ea7 7 \u65e5\u4f53\u68c0(\u6574\u6761\u884c\u7a0b\u6700\u4f73\u51fa\u884c\u65e5)",
+      "source_file": "worklog.md",
+      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#2",
+      "source_url": null
+    },
+    {
       "id": "public_dishes_readme_photos_cn",
       "label": "npm run photos:cn\uff08\u535a\u67e5\u641c\u7d22 \u2192 \u767e\u5ea6\u83dc\u54c1\u8bc6\u522b\u6838\u9a8c \u2192 _candidates\uff09",
       "_origin": "semantic",
@@ -9132,162 +9300,6 @@
       "rationale": null,
       "source_file": "public/robots.txt",
       "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "readme_packlist",
-      "label": "\u51fa\u884c\u88c5\u5907\u6e05\u5355\uff08README\uff09",
-      "author": null,
-      "captured_at": null,
-      "community": 21,
-      "contributor": null,
-      "file_type": "document",
-      "norm_label": "\u51fa\u884c\u88c5\u5907\u6e05\u5355(readme)",
-      "source_file": "README.md",
-      "source_location": "\u884c\u7a0b\u95ed\u73af \u00b7 \u884c\u7a0b\u5355",
-      "source_url": null
-    },
-    {
-      "id": "readme_trip_day_plan",
-      "label": "\u5206\u5929\u89c4\u5212\uff08README\uff09",
-      "author": null,
-      "captured_at": null,
-      "community": 21,
-      "contributor": null,
-      "file_type": "document",
-      "norm_label": "\u5206\u5929\u89c4\u5212(readme)",
-      "source_file": "README.md",
-      "source_location": "\u884c\u7a0b\u95ed\u73af \u00b7 \u884c\u7a0b\u5355",
-      "source_url": null
-    },
-    {
-      "id": "readme_trip_plan",
-      "label": "\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d\uff08README \u884c\u7a0b\u95ed\u73af\uff09",
-      "author": null,
-      "captured_at": null,
-      "community": 21,
-      "contributor": null,
-      "file_type": "document",
-      "norm_label": "\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d(readme \u884c\u7a0b\u95ed\u73af)",
-      "source_file": "README.md",
-      "source_location": "\u884c\u7a0b\u95ed\u73af \u00b7 \u884c\u7a0b\u5355",
-      "source_url": null
-    },
-    {
-      "id": "readme_trip_weather_checkup",
-      "label": "\u6574\u6761\u884c\u7a0b 7 \u65e5\u4f53\u68c0\uff08README\uff09",
-      "author": null,
-      "captured_at": null,
-      "community": 21,
-      "contributor": null,
-      "file_type": "document",
-      "norm_label": "\u6574\u6761\u884c\u7a0b 7 \u65e5\u4f53\u68c0(readme)",
-      "source_file": "README.md",
-      "source_location": "\u884c\u7a0b\u95ed\u73af \u00b7 \u884c\u7a0b\u5355",
-      "source_url": null
-    },
-    {
-      "id": "worklog_open_meteo_weather_proxy",
-      "label": "Open-Meteo \u5929\u6c14\u4ee3\u7406\uff08/api/weather\uff09",
-      "author": null,
-      "captured_at": null,
-      "community": 21,
-      "contributor": null,
-      "file_type": "document",
-      "norm_label": "open-meteo \u5929\u6c14\u4ee3\u7406(/api/weather)",
-      "source_file": "worklog.md",
-      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#2",
-      "source_url": null
-    },
-    {
-      "id": "worklog_ptsi",
-      "label": "PTSI\uff08\u9010\u65e5\u7d2b\u5916\u7ebf\u51fa\u884c\u6307\u6570\uff09",
-      "author": null,
-      "captured_at": null,
-      "community": 21,
-      "contributor": null,
-      "file_type": "document",
-      "norm_label": "ptsi(\u9010\u65e5\u7d2b\u5916\u7ebf\u51fa\u884c\u6307\u6570)",
-      "source_file": "worklog.md",
-      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#2",
-      "source_url": null
-    },
-    {
-      "id": "worklog_stamina_budget_day_split",
-      "label": "\u4f53\u529b\u9884\u7b97\u81ea\u52a8\u5206\u5929\uff08100/\u5929\uff09",
-      "author": null,
-      "captured_at": null,
-      "community": 21,
-      "contributor": null,
-      "file_type": "document",
-      "norm_label": "\u4f53\u529b\u9884\u7b97\u81ea\u52a8\u5206\u5929(100/\u5929)",
-      "source_file": "worklog.md",
-      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#1",
-      "source_url": null
-    },
-    {
-      "id": "worklog_stamina_sandbox",
-      "label": "\u4f53\u529b\u6c99\u76d8",
-      "author": null,
-      "captured_at": null,
-      "community": 21,
-      "contributor": null,
-      "file_type": "document",
-      "norm_label": "\u4f53\u529b\u6c99\u76d8",
-      "source_file": "worklog.md",
-      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#1",
-      "source_url": null
-    },
-    {
-      "id": "worklog_trip_day_split",
-      "label": "\u884c\u7a0b\u5206\u5929\u89c4\u5212\uff08\u6309\u5929\u5206\u7ec4/tripDaySplit\uff09",
-      "author": null,
-      "captured_at": null,
-      "community": 21,
-      "contributor": null,
-      "file_type": "document",
-      "norm_label": "\u884c\u7a0b\u5206\u5929\u89c4\u5212(\u6309\u5929\u5206\u7ec4/tripdaysplit)",
-      "source_file": "worklog.md",
-      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#1",
-      "source_url": null
-    },
-    {
-      "id": "worklog_trip_packlist",
-      "label": "\u51fa\u884c\u88c5\u5907\u6e05\u5355\uff08CATEGORY_PACKLIST\uff09",
-      "author": null,
-      "captured_at": null,
-      "community": 21,
-      "contributor": null,
-      "file_type": "document",
-      "norm_label": "\u51fa\u884c\u88c5\u5907\u6e05\u5355(category_packlist)",
-      "source_file": "worklog.md",
-      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#3",
-      "source_url": null
-    },
-    {
-      "id": "worklog_trip_view",
-      "label": "\u884c\u7a0b\u5355\uff08Trip View\uff09",
-      "author": null,
-      "captured_at": null,
-      "community": 21,
-      "contributor": null,
-      "file_type": "document",
-      "norm_label": "\u884c\u7a0b\u5355(trip view)",
-      "source_file": "worklog.md",
-      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d",
-      "source_url": null
-    },
-    {
-      "id": "worklog_trip_weather_checkup",
-      "label": "\u884c\u7a0b\u7ea7 7 \u65e5\u4f53\u68c0\uff08\u6574\u6761\u884c\u7a0b\u6700\u4f73\u51fa\u884c\u65e5\uff09",
-      "author": null,
-      "captured_at": null,
-      "community": 21,
-      "contributor": null,
-      "file_type": "document",
-      "norm_label": "\u884c\u7a0b\u7ea7 7 \u65e5\u4f53\u68c0(\u6574\u6761\u884c\u7a0b\u6700\u4f73\u51fa\u884c\u65e5)",
-      "source_file": "worklog.md",
-      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#2",
       "source_url": null
     }
   ],
@@ -10478,18 +10490,6 @@
       "context": "call",
       "source_file": "src/components/network-view.tsx",
       "source_location": "L69",
-      "weight": 1.0
-    },
-    {
-      "source": "src_components_personality_view_personalityview",
-      "target": "src_lib_store_useappstore",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "src/components/personality-view.tsx",
-      "source_location": "L451",
       "weight": 1.0
     },
     {
@@ -18313,7 +18313,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/about/page.tsx",
-      "source_location": "L137",
+      "source_location": "L153",
       "weight": 1.0
     },
     {
@@ -18324,7 +18324,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/about/page.tsx",
-      "source_location": "L31",
+      "source_location": "L47",
       "weight": 1.0
     },
     {
@@ -18335,7 +18335,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/about/page.tsx",
-      "source_location": "L38",
+      "source_location": "L54",
       "weight": 1.0
     },
     {
@@ -19110,13 +19110,24 @@
     },
     {
       "source": "src_app_sources_page",
+      "target": "src_app_sources_page_sourcespageinner",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/app/sources/page.tsx",
+      "source_location": "L118",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_sources_page",
       "target": "src_app_sources_page_sourcespage",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/sources/page.tsx",
-      "source_location": "L134",
+      "source_location": "L172",
       "weight": 1.0
     },
     {
@@ -19128,17 +19139,6 @@
       "confidence_score": 1.0,
       "source_file": "src/app/sources/page.tsx",
       "source_location": "L8",
-      "weight": 1.0
-    },
-    {
-      "source": "src_app_sources_page",
-      "target": "src_app_sources_page_sourcespageinner",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/app/sources/page.tsx",
-      "source_location": "L80",
       "weight": 1.0
     },
     {
@@ -23615,6 +23615,105 @@
       "weight": 1.0
     },
     {
+      "source": "readme_trip_plan",
+      "target": "readme_packlist",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": "\u884c\u7a0b\u95ed\u73af \u00b7 \u884c\u7a0b\u5355",
+      "weight": 1.0
+    },
+    {
+      "source": "readme_trip_plan",
+      "target": "readme_trip_day_plan",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": "\u884c\u7a0b\u95ed\u73af \u00b7 \u884c\u7a0b\u5355",
+      "weight": 1.0
+    },
+    {
+      "source": "readme_trip_plan",
+      "target": "readme_trip_weather_checkup",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": "\u884c\u7a0b\u95ed\u73af \u00b7 \u884c\u7a0b\u5355",
+      "weight": 1.0
+    },
+    {
+      "source": "worklog_stamina_budget_day_split",
+      "target": "worklog_trip_day_split",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "worklog.md",
+      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#1",
+      "weight": 1.0
+    },
+    {
+      "source": "worklog_trip_day_split",
+      "target": "worklog_trip_view",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "worklog.md",
+      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#1",
+      "weight": 1.0
+    },
+    {
+      "source": "worklog_trip_packlist",
+      "target": "worklog_trip_view",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "worklog.md",
+      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#3\uff08\u6309\u884c\u7a0b\u5185\u666f\u70b9\u5206\u7c7b\u751f\u6210\uff09",
+      "weight": 1.0
+    },
+    {
+      "source": "worklog_trip_weather_checkup",
+      "target": "worklog_ptsi",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "worklog.md",
+      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#2\uff08\u6309\u65e5\u5e73\u5747 UV \u7b97 PTSI\uff09",
+      "weight": 1.0
+    },
+    {
+      "source": "worklog_trip_weather_checkup",
+      "target": "worklog_trip_view",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "worklog.md",
+      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#2\uff08\u884c\u7a0b\u5185\u5e26\u5750\u6807\u666f\u70b9\uff09",
+      "weight": 1.0
+    },
+    {
+      "source": "worklog_trip_weather_checkup",
+      "target": "worklog_open_meteo_weather_proxy",
+      "relation": "references",
+      "_origin": "semantic",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "worklog.md",
+      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#2\uff08\u9010\u7ad9\u62c9 /api/weather\uff09",
+      "weight": 1.0
+    },
+    {
       "source": "docs_nutrition_sources_fdc_matches",
       "target": "docs_nutrition_sources_usda_fdc",
       "relation": "shares_data_with",
@@ -23703,6 +23802,17 @@
       "weight": 1.0
     },
     {
+      "source": "worklog_stamina_budget_day_split",
+      "target": "worklog_stamina_sandbox",
+      "relation": "conceptually_related_to",
+      "_origin": "semantic",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "worklog.md",
+      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#1\uff08\u590d\u7528 getStaminaCost \u8ba1\u7b97\u4f53\u529b\u9884\u7b97\uff09",
+      "weight": 1.0
+    },
+    {
       "source": "public_dishes_sources_bing_credits",
       "target": "public_dishes_readme_34_dishes",
       "relation": "shares_data_with",
@@ -23714,120 +23824,10 @@
       "weight": 1.0
     },
     {
-      "source": "docs_vlm_prompt_v1_whole_book_prompt",
-      "target": "docs_vlm_prompt_full_whole_book_prompt",
-      "relation": "semantically_similar_to",
-      "_origin": "semantic",
-      "confidence": "INFERRED",
-      "confidence_score": 0.95,
-      "source_file": "docs/vlm-prompt-v1.md",
-      "source_location": null,
-      "weight": 1.0
-    },
-    {
-      "source": "readme_trip_plan",
-      "target": "readme_packlist",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "README.md",
-      "source_location": "\u884c\u7a0b\u95ed\u73af \u00b7 \u884c\u7a0b\u5355",
-      "weight": 1.0
-    },
-    {
-      "source": "readme_trip_plan",
-      "target": "readme_trip_day_plan",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "README.md",
-      "source_location": "\u884c\u7a0b\u95ed\u73af \u00b7 \u884c\u7a0b\u5355",
-      "weight": 1.0
-    },
-    {
-      "source": "readme_trip_plan",
-      "target": "readme_trip_weather_checkup",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "README.md",
-      "source_location": "\u884c\u7a0b\u95ed\u73af \u00b7 \u884c\u7a0b\u5355",
-      "weight": 1.0
-    },
-    {
-      "source": "worklog_stamina_budget_day_split",
-      "target": "worklog_trip_day_split",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "worklog.md",
-      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#1",
-      "weight": 1.0
-    },
-    {
-      "source": "worklog_trip_day_split",
-      "target": "worklog_trip_view",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "worklog.md",
-      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#1",
-      "weight": 1.0
-    },
-    {
-      "source": "worklog_trip_packlist",
-      "target": "worklog_trip_view",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "worklog.md",
-      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#3\uff08\u6309\u884c\u7a0b\u5185\u666f\u70b9\u5206\u7c7b\u751f\u6210\uff09",
-      "weight": 1.0
-    },
-    {
-      "source": "worklog_trip_weather_checkup",
-      "target": "worklog_ptsi",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "worklog.md",
-      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#2\uff08\u6309\u65e5\u5e73\u5747 UV \u7b97 PTSI\uff09",
-      "weight": 1.0
-    },
-    {
-      "source": "worklog_trip_weather_checkup",
-      "target": "worklog_trip_view",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "worklog.md",
-      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#2\uff08\u884c\u7a0b\u5185\u5e26\u5750\u6807\u666f\u70b9\uff09",
-      "weight": 1.0
-    },
-    {
-      "source": "worklog_trip_weather_checkup",
-      "target": "worklog_open_meteo_weather_proxy",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "worklog.md",
-      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#2\uff08\u9010\u7ad9\u62c9 /api/weather\uff09",
-      "weight": 1.0
-    },
-    {
-      "source": "worklog_stamina_budget_day_split",
-      "target": "worklog_stamina_sandbox",
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "worklog.md",
-      "source_location": "\u5341\u8f6e\uff1a\u884c\u7a0b\u5355\u5347\u7ea7\u4e3a\u300c\u8ba1\u5212\u300d#1\uff08\u590d\u7528 getStaminaCost \u8ba1\u7b97\u4f53\u529b\u9884\u7b97\uff09",
-      "weight": 1.0
-    },
-    {
       "source": "readme_packlist",
       "target": "worklog_trip_packlist",
       "relation": "conceptually_related_to",
+      "_origin": "semantic",
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "README.md",
@@ -23838,6 +23838,7 @@
       "source": "readme_trip_day_plan",
       "target": "worklog_trip_day_split",
       "relation": "conceptually_related_to",
+      "_origin": "semantic",
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "README.md",
@@ -23848,6 +23849,7 @@
       "source": "readme_trip_plan",
       "target": "worklog_trip_view",
       "relation": "conceptually_related_to",
+      "_origin": "semantic",
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "README.md",
@@ -23858,10 +23860,22 @@
       "source": "readme_trip_weather_checkup",
       "target": "worklog_trip_weather_checkup",
       "relation": "conceptually_related_to",
+      "_origin": "semantic",
       "confidence": "INFERRED",
       "confidence_score": 0.95,
       "source_file": "README.md",
       "source_location": "\u884c\u7a0b\u95ed\u73af \u00b7 \u884c\u7a0b\u5355\uff08\u5e26\u5750\u6807\u7ad9\u70b9\u9010\u65e5\u5e73\u5747\u7d2b\u5916\u7ebf\u8bc4\u5206\uff0c\u6807\u51fa\u6700\u4f73\u51fa\u884c\u65e5\uff09",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_vlm_prompt_v1_whole_book_prompt",
+      "target": "docs_vlm_prompt_full_whole_book_prompt",
+      "relation": "semantically_similar_to",
+      "_origin": "semantic",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "docs/vlm-prompt-v1.md",
+      "source_location": null,
       "weight": 1.0
     }
   ],
@@ -23951,5 +23965,5 @@
       ]
     }
   ],
-  "built_at_commit": "0c731a720a01e03e05f512a9d1264bdf44c40096"
+  "built_at_commit": "8a3417c4ea6e63c247e70f6f3eb59cde1e6bed29"
 }

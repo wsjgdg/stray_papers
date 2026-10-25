@@ -1,13 +1,13 @@
 # Graph Report - spot-visual  (2026-10-25)
 
 ## Corpus Check
-- 18 files · ~711,924 words
+- 32 files · ~712,408 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 848 nodes · 1278 edges · 62 communities (48 shown, 14 thin omitted)
+- 848 nodes · 1277 edges · 62 communities (48 shown, 14 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 20 edges (avg confidence: 0.84)
-- Token cost: 154,800 input · 0 output
+- Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
 - Community 0
@@ -71,14 +71,14 @@
 - Community 61
 
 ## God Nodes (most connected - your core abstractions)
-1. `useAppStore` - 34 edges
+1. `useAppStore` - 33 edges
 2. `cn()` - 25 edges
-3. `compilerOptions` - 17 edges
-4. `GaoKaoPage()` - 17 edges
+3. `GaoKaoPage()` - 17 edges
+4. `compilerOptions` - 17 edges
 5. `scripts` - 16 edges
 6. `景点览胜平台（Next.js 单页应用）` - 12 edges
-7. `calcPTSI()` - 11 edges
-8. `getStaminaCost()` - 11 edges
+7. `getStaminaCost()` - 11 edges
+8. `calcPTSI()` - 11 edges
 9. `parseCoords()` - 10 edges
 10. `食物成分表 PDF → VLM 转录作业单（第二册 p57-p140）` - 9 edges
 
@@ -91,7 +91,7 @@
   worklog.md → README.md
 - `六轮：景点览胜功能丰富（补决策链断点，2026-10-25）` --implements--> `行程卡导出（canvas 绘制 + 二维码 PNG）`  [EXTRACTED]
   worklog.md → README.md
-- `分天规划（README）` --conceptually_related_to--> `行程分天规划（按天分组/tripDaySplit）`  [INFERRED]
+- `出行装备清单（README）` --conceptually_related_to--> `出行装备清单（CATEGORY_PACKLIST）`  [INFERRED]
   README.md → worklog.md
 
 ## Import Cycles
@@ -234,7 +234,7 @@ Nodes (8): cache, CacheEntry, CATEGORY_KEYWORDS, fetchPexels(), fetchUnsplash(),
 
 ### Community 31 - "Community 31"
 Cohesion: 0.22
-Nodes (6): PersonalityView, CARD_THEMES, CATEGORY_PERSONALITY, PERSONA_NAMES, PersonalityView(), SOLO_PERSONA
+Nodes (5): PersonalityView, CARD_THEMES, CATEGORY_PERSONALITY, PERSONA_NAMES, SOLO_PERSONA
 
 ### Community 32 - "Community 32"
 Cohesion: 0.32
