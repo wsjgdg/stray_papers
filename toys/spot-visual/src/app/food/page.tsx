@@ -211,6 +211,8 @@ export default function FoodPage() {
     const h = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      // 只有地图视图才响应方向键：工具面板（测试/对比）里按方向键不该偷偷切省
+      if (view !== 'map') return;
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         const names = PROVINCE_FOODS.map((p) => p.name);
         const i = drill ? names.indexOf(drill) : -1;
@@ -227,7 +229,7 @@ export default function FoodPage() {
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [drill, cityRows, citySel, enterProvince]);
+  }, [drill, cityRows, citySel, enterProvince, view]);
 
 
 

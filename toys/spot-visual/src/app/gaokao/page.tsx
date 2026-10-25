@@ -10,6 +10,10 @@ import {
   ListFilter,
   Map as MapIcon,
   School,
+  Share2,
+  Check,
+  Download,
+  Palette,
 } from "lucide-react";
 import type { EChartsOption } from "echarts";
 import {
@@ -25,6 +29,7 @@ import {
   rankForScore,
 } from "@/lib/gaokao-data";
 import { provinceCats, recommend } from "@/lib/gaokao";
+import { downloadGaokaoShareCard } from "@/lib/gaokao-share-card";
 import { PROVINCE_CENTERS } from "@/lib/china-geo";
 import ChinaMap from "@/components/map/china-map";
 
@@ -42,6 +47,20 @@ const TIER_LABEL: Record<Tier, string> = {
 };
 const TIERS: Tier[] = ["reach", "match", "safe"];
 
+// 院校层次着色（地图第二种着色模式）
+const LEVEL_COLOR = {
+  is985: "#DC2626",
+  is211: "#2563EB",
+  isDFC: "#D97706",
+  normal: "#64748B",
+} as const;
+const LEVEL_LEGEND: [keyof typeof LEVEL_COLOR, string][] = [
+  ["is985", "985"],
+  ["is211", "211"],
+  ["isDFC", "双一流"],
+  ["normal", "其他"],
+];
+
 function tierOf(gap: number): Tier | "none" {
   if (gap >= -18 && gap <= 0) return "reach";
   if (gap > 0 && gap <= 22) return "match";
@@ -58,6 +77,13 @@ function jitter(code: string): [number, number] {
   return [dx, dy];
 }
 
+function levelColor(s: { is985: boolean; is211: boolean; isDFC: boolean }): string {
+  if (s.is985) return LEVEL_COLOR.is985;
+  if (s.is211) return LEVEL_COLOR.is211;
+  if (s.isDFC) return LEVEL_COLOR.isDFC;
+  return LEVEL_COLOR.normal;
+}
+
 const LS_KEY = "gaokao:last";
 
 export default function GaoKaoPage() {
@@ -69,6 +95,9 @@ export default function GaoKaoPage() {
   const [score, setScore] = useState(600);
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
   const [view, setView] = useState<"map" | "list">("map");
+  const [colorMode, setColorMode] = useState<"tier" | "level">("tier");
+  const [isMobile, setIsMobile] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const ready = dataState === "ready";
   const provinces = useMemo(() => (ready ? activeProvinces() : []), [ready]);
@@ -140,6 +169,51 @@ export default function GaoKaoPage() {
   }, [ready, prov, cat, score]);
 
   const cats = useMemo(() => (ready ? provinceCats(prov) : []), [ready, prov]);
+
+  // ── 小屏检测（地图降高） ──
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  // ── 键盘：←→ 切省，↑↓ 切科类（输入框聚焦时不劫持） ──
+  useEffect(() => {
+    if (!ready) return;
+    const h = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        const names = activeProvinces().map((p) => p.name);
+        const i = names.indexOf(prov);
+        const next =
+          e.key === "ArrowRight"
+            ? (i + 1) % names.length
+            : (i - 1 + names.length) % names.length;
+        setProv(names[next]);
+        setCat(provinceCats(names[next])[0] ?? "");
+        setSelectedCode(null);
+        e.preventDefault();
+      } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+        const list = provinceCats(prov);
+        const i = list.indexOf(cat);
+        if (list.length > 1) {
+          const next =
+            e.key === "ArrowDown"
+              ? (i + 1) % list.length
+              : (i - 1 + list.length) % list.length;
+          setCat(list[next]);
+          setSelectedCode(null);
+        }
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [ready, prov, cat]);
+
   const userRank = useMemo(
     () => (ready ? rankForScore(prov, cat, score) : 0),
     [ready, prov, cat, score],
