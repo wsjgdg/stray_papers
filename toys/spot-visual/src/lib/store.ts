@@ -49,10 +49,14 @@ interface AppStore {
 
   // ═══ 行程单（有序景点 id 序列，持久化） ═══
   trip: string[];
+  tripDaySplit: number[]; // 分天分段点（每段的结束索引，升序不含末段）
   addToTrip: (id: string) => void;
   removeFromTrip: (id: string) => void;
   moveTripSpot: (id: string, dir: -1 | 1) => void;
   clearTrip: () => void;
+  splitTripDay: (index: number) => void;
+  mergeTripDay: (splitIndex: number) => void;
+  setTripDaySplit: (splits: number[]) => void;
 
   // ═══ 体力沙盘状态（不持久化，仅会话内有效） ═══
   staminaBudget: number; // 用户体力预算上限
@@ -94,6 +98,8 @@ export const useAppStore = create<AppStore>()(
             ),
           ),
           trip: s.trip.filter((id) => spots.some((sp) => sp.id === id)),
+          // 换城属于大改，分天分组直接重置
+          tripDaySplit: [],
         })),
       appendSpots: (newSpots) =>
         set((s) => ({ spots: [...s.spots, ...newSpots] })),
@@ -159,10 +165,19 @@ export const useAppStore = create<AppStore>()(
 
       // ═══ 行程单 ═══
       trip: [],
+      tripDaySplit: [],
       addToTrip: (id) =>
         set((s) => (s.trip.includes(id) ? s : { trip: [...s.trip, id] })),
       removeFromTrip: (id) =>
-        set((s) => ({ trip: s.trip.filter((t) => t !== id) })),
+        set((s) => {
+          const idx = s.trip.indexOf(id);
+          if (idx === -1) return s;
+          // 移除后索引前移，分段点同步收缩
+          const tripDaySplit = s.tripDaySplit
+            .map((p) => (p > idx ? p - 1 : p))
+            .filter((p) => p !== idx && p > 0 && p < s.trip.length - 1);
+          return { trip: s.trip.filter((t) => t !== id), tripDaySplit };
+        }),
       moveTripSpot: (id, dir) =>
         set((s) => {
           const idx = s.trip.indexOf(id);
@@ -170,9 +185,27 @@ export const useAppStore = create<AppStore>()(
           if (idx === -1 || to < 0 || to >= s.trip.length) return s;
           const trip = [...s.trip];
           [trip[idx], trip[to]] = [trip[to], trip[idx]];
-          return { trip };
+          // 相邻换位跨越分段点时，分段点跟着换
+          const tripDaySplit = s.tripDaySplit.map((p) =>
+            p === idx ? to : p === to ? idx : p,
+          );
+          return { trip, tripDaySplit };
         }),
-      clearTrip: () => set({ trip: [] }),
+      clearTrip: () => set({ trip: [], tripDaySplit: [] }),
+      splitTripDay: (index) =>
+        set((s) => {
+          // 在 index 之后分段；末尾分段无意义
+          if (index < 0 || index >= s.trip.length - 1) return s;
+          if (s.tripDaySplit.includes(index)) return s;
+          return {
+            tripDaySplit: [...s.tripDaySplit, index].sort((a, b) => a - b),
+          };
+        }),
+      mergeTripDay: (splitIndex) =>
+        set((s) => ({
+          tripDaySplit: s.tripDaySplit.filter((p) => p !== splitIndex),
+        })),
+      setTripDaySplit: (splits) => set({ tripDaySplit: splits }),
 
       // ═══ 体力沙盘状态 ═══
       staminaBudget: 100,
