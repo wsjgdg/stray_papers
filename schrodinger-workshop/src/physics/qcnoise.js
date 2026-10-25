@@ -33,8 +33,13 @@
  *      全预设 + 随机线路对账）；页面默认关闭噪声，走原 qcExec 路径。
  *
  * 复杂度：单门 O(4^n)（两趟各扫半矩阵）；n=8 时 256² = 65k 复操作/门，毫秒级。
- * 诚实限制：① 只有 T₁/T₂ 两个通道，退极化（ESD）未接；② 测量无读出误差；
- * ③ 经典前馈 cond 的门噪声语义 = 内部门真实执行才衰减（未触发不衰减）。
+ * R105 增补第三通道：退极化 ρ→(1−p)ρ+(p/3)ΣPρP（Bloch 各向同性缩放 λ=1−4p/3），
+ *   与 R77/R80 同口径 ⟹ 线路页可直接演示 **ESD（纠缠猝死）**：Bell 在双侧退极化
+ *   k 步后 C = max(0, (3λ^{2k}−1)/2) 在**有限 k** 精确归零（T₁/T₂ 只是渐近衰减，
+ *   γ<1 时 C 恒 >0）——这是退极化独有的签名。
+ * 诚实限制：① **测量无读出误差**（理想投影）；② 无非马尔可夫记忆、无串扰、无
+ *   泄漏/热激发（T₁ 只写 |1⟩→|0⟩）；③ 经典前馈 cond 的门噪声语义 = 内部门真实
+ *   执行才衰减（未触发不衰减）。
  * ========================================================================== */
 import { QC_UNARY, qcRotation, mulberry32, jacobiReal, QC_JOINT_PREP, qcJointK } from './qcircuit.js';
 
@@ -191,14 +196,52 @@ export function qcnPhaseDamp(rho, q, lambda){
   }
 }
 
+/* ---------- 退极化通道（R105） ---------- */
+/* R105：退极化（第三通道）——单比特去极化 ρ → (1−p)ρ + (p/3)(XρX+YρY+ZρZ)。
+   就地闭式（λ ≡ 1−4p/3 是 Bloch 缩放因子，三方向**各向同性**——这是退极化
+   与 T₁/T₂ 的判据分水岭）：
+     记 σ_yρσ_y 的 2×2 块形式 = [[d,−c],[−b,a]]（注意与 σ_xρσ_x=[[d,c],[b,a]]、
+     σ_zρσ_z=[[a,−b],[−c,d]] 差一个符号位），三者求和后：
+       · q 位**相同**的矩阵元对 (i0,j0)↔(i1,j1)：a' = ((1+λ)a+(1−λ)d)/2、d' 对称
+         （X/Y/Z 各贡献 2·d+a / 2·a+d）
+       · q 位**不同**的矩阵元 (i0,j1) 与 (i1,j0)：仅 ×λ（c 与 −c 相消、只留 −b）
+   p=3/4 ⟹ λ=0 ⟹ 该比特完全去极化（块内取平均、跨位清零 ⟹ ρ→(I/2)⊗tr_q ρ）。 */
+export function qcnDepolar(rho, q, p){
+  const pp = Math.min(0.75, Math.max(0, p));
+  if (!(pp > 0)) return;                 /* p=0 / 负数 / NaN 一律 no-op（与两个阻尼通道同口径） */
+  const D = rho.dim, bit = 1 << q, lam = 1 - 4 * pp / 3;
+  const wA = (1 + lam) / 2, wB = (1 - lam) / 2;   /* = 1−2p/3 与 2p/3 */
+  const Re = rho.re, Im = rho.im;
+  for (let i0 = 0; i0 < D; i0++){
+    if (i0 & bit) continue;
+    const i1 = i0 | bit;
+    for (let j0 = 0; j0 < D; j0++){
+      if (j0 & bit) continue;
+      const j1 = j0 | bit;
+      /* 块内混合：q 位同为 0 / 同为 1 的两个矩阵元（先读后写，就地安全） */
+      const k00 = i0 * D + j0, k11 = i1 * D + j1;
+      const a0r = Re[k00], a0i = Im[k00], a1r = Re[k11], a1i = Im[k11];
+      Re[k00] = wA * a0r + wB * a1r; Im[k00] = wA * a0i + wB * a1i;
+      Re[k11] = wB * a0r + wA * a1r; Im[k11] = wB * a0i + wA * a1i;
+      /* 跨位：q 位不同 ⟹ 只缩放 λ */
+      const k01 = i0 * D + j1, k10 = i1 * D + j0;
+      Re[k01] *= lam; Im[k01] *= lam;
+      Re[k10] *= lam; Im[k10] *= lam;
+    }
+  }
+}
+
 /* ---------- 噪声参数 ---------- */
 /* t1,t2,tg 任意正数（同一单位）；γ=1−e^{−tg/t1}、λ=1−e^{−tg/t2}。
    t2eff = 1/(1/t2 + 1/(2t1))：T₁ 本身贡献的横向衰减（T₂ ≤ 2T₁ 自动满足）。 */
-export function qcnNoiseParams(t1, t2, tg){
+export function qcnNoiseParams(t1, t2, tg, pd = 0){
   const T1 = Math.max(1e-9, t1), T2 = Math.max(1e-9, t2), TG = Math.max(0, tg);
+  const pdep = Math.min(0.75, Math.max(0, Number.isFinite(pd) ? pd : 0));
   return {
     gamma: 1 - Math.exp(-TG / T1),
     lambda: 1 - Math.exp(-TG / T2),
+    pdep,
+    ldep: 1 - 4 * pdep / 3,           /* 退极化的 Bloch 缩放因子（R77/R80 同口径） */
     t2eff: 1 / (1 / T2 + 1 / (2 * T1)),
   };
 }
@@ -255,11 +298,12 @@ export function qcnMeasureJoint(rho, qubits, rng, basis = 'bell'){
 /* ---------- 执行（镜像 qcExec；noise = {gamma, lambda} | null） ---------- */
 function qcnNoiseAfter(rho, g, noise){
   if (!noise) return;
-  const { gamma, lambda } = noise;
-  if (gamma <= 0 && lambda <= 0) return;
+  const { gamma, lambda, pdep } = noise;
+  if (!(gamma > 0 || lambda > 0 || pdep > 0)) return;
   for (const q of qcnGateTouched(g)){
     if (gamma > 0) qcnAmpDamp(rho, q, gamma);
     if (lambda > 0) qcnPhaseDamp(rho, q, lambda);
+    if (pdep > 0) qcnDepolar(rho, q, pdep);
   }
 }
 export function qcnExec(rho, op, cres, rng, noise = null){

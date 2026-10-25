@@ -125,6 +125,9 @@ export class QCircuitApp {
       noise: {
         on: q.get('noise') === '1',
         t1: num('t1', 300), t2: num('t2', 200), tg: num('tg', 10),
+        /* R105：退极化概率（每门每比特）。面板滑块单位是 ×10⁻³（整数 0..50），
+           URL 参数 pd 直接是概率真值（0 … 0.05）。 */
+        pd: num('pd', 0),
       },
     };
     this.edit = { op: 'h', q: 0, c: -1, c2: -1, q2: 1, q3: 2, theta: Math.PI / 2, basis: 'z', cbit: 0, inner: 'x', selected: -1 };
@@ -222,7 +225,9 @@ export class QCircuitApp {
         <div class="row"><label>T₁ 弛豫</label><input type="range" id="qcT1" min="20" max="1000" step="10" title="能量弛豫时间：|1⟩→|0⟩ 布居按 e^{−t/T₁} 衰减"><output id="qcT1O">—</output></div>
         <div class="row"><label>T₂ 退相位</label><input type="range" id="qcT2" min="20" max="1000" step="10" title="纯退相位时间：跨该比特的相干按 e^{−t/T₂} 衰减（T₁ 本身还贡献 1/(2T₁)）"><output id="qcT2O">—</output></div>
         <div class="row"><label>门时 t_g</label><input type="range" id="qcTg" min="1" max="100" step="1" title="每个门的持续时间（与 T₁/T₂ 同单位）；γ=1−e^{−tg/T₁}、λ=1−e^{−tg/T₂}"><output id="qcTgO">—</output></div>
+        <div class="row"><label>退极化 p</label><input type="range" id="qcPd" min="0" max="50" step="1" title="R105：每门每比特的退极化概率（单位 ×10⁻³，0=关闭）；ρ→(1−p)ρ+(p/3)(XρX+YρY+ZρZ)，Bloch 各向同性缩放 λ=1−4p/3——只有这一族会出 ESD（纠缠猝死）"><output id="qcPdO">—</output></div>
         <div class="row"><label>γ / λ</label><output id="qcGammaLam" style="min-width:96px" title="每个门实际注入的振幅阻尼 / 相位阻尼强度">—</output></div>
+        <div class="row"><label>λ 退极化</label><output id="qcDepolLam" style="min-width:60px" title="退极化的 Bloch 缩放因子 λ=1−4p/3（三方向各向同性）；λ=0 ⟹ 完全去极化">—</output></div>
         <div class="row"><label>T₂ 等效</label><output id="qcT2Eff" style="min-width:60px" title="1/(1/T₂+1/(2T₁))：T₁ 本身压横向相干 ⟹ 等效横向时间 ≤ 2T₁">—</output></div>
       </aside>
 
@@ -333,6 +338,8 @@ export class QCircuitApp {
     this.on(this.q('#qcT1'), 'input', e => { this.state.noise.t1 = parseFloat(e.target.value); this.syncPanel(); this.resetExecution(); });
     this.on(this.q('#qcT2'), 'input', e => { this.state.noise.t2 = parseFloat(e.target.value); this.syncPanel(); this.resetExecution(); });
     this.on(this.q('#qcTg'), 'input', e => { this.state.noise.tg = parseFloat(e.target.value); this.syncPanel(); this.resetExecution(); });
+    /* R105：退极化滑块单位是 ×10⁻³（整数 0..50 ⟹ p = 0 … 0.05） */
+    this.on(this.q('#qcPd'), 'input', e => { this.state.noise.pd = parseFloat(e.target.value) / 1000; this.syncPanel(); this.resetExecution(); });
     this.on(this.q('#qcGateAdd'), 'click', () => this.addGate());
     this.on(this.q('#qcGateClear'), 'click', () => this.clearGates());
     this.on(this.q('#qcGateList'), 'click', e => {
@@ -584,7 +591,7 @@ export class QCircuitApp {
     /* R104：噪声开启时并行维护密度矩阵 ρ（psi 保留 |0…0⟩ 作纯路径镜像，
        但所有读者按 st.noise.on 分支——不会两条路径混读）。 */
     this.rho = st.noise.on ? qcnRho(st.n) : null;
-    this.noiseParam = st.noise.on ? qcnNoiseParams(st.noise.t1, st.noise.t2, st.noise.tg) : null;
+    this.noiseParam = st.noise.on ? qcnNoiseParams(st.noise.t1, st.noise.t2, st.noise.tg, st.noise.pd) : null;
     this.cres = qcNewClassical(8);
     this.rng = mulberry32(st.seed);
     st.step = 0; st.measured = null; st.playing = false;
@@ -656,10 +663,14 @@ export class QCircuitApp {
     /* R104：噪声开启时常驻一行口径说明（γ/λ/T₂eff 实时值） */
     let noiseLine = '';
     if (this.state.noise.on){
-      const np = qcnNoiseParams(this.state.noise.t1, this.state.noise.t2, this.state.noise.tg);
+      const nz = this.state.noise;
+      const np = qcnNoiseParams(nz.t1, nz.t2, nz.tg, nz.pd);
       noiseLine = '<div style="margin-top:5px;color:var(--amber)">门噪声（密度矩阵）：每门后对触及比特施加 γ=' +
         np.gamma.toFixed(4) + '（T₁ 弛豫）与 λ=' + np.lambda.toFixed(4) +
-        '（T₂ 退相位）；T₂ 等效 ' + np.t2eff.toFixed(1) + '。混合态：HUD 看纯度/相干，振幅条画布居。</div>';
+        '（T₂ 退相位）；T₂ 等效 ' + np.t2eff.toFixed(1) +
+        (nz.pd > 0 ? '；退极化 p=' + nz.pd.toExponential(1) + '（λ=' + np.ldep.toFixed(4) +
+          '，三方向各向同性——只有它会出 ESD 纠缠猝死）' : '') +
+        '。混合态：HUD 看纯度/相干，振幅条画布居。</div>';
     }
     el.innerHTML = (this._msg ? '<b>' + this._msg + '</b>' : '') + noiseLine +
       '<div style="margin-top:5px">' + p.text + '</div>';
@@ -766,8 +777,10 @@ export class QCircuitApp {
     set('qcT1', nz.t1); txt('qcT1O', nz.t1);
     set('qcT2', nz.t2); txt('qcT2O', nz.t2);
     set('qcTg', nz.tg); txt('qcTgO', nz.tg);
-    const np = qcnNoiseParams(nz.t1, nz.t2, nz.tg);
+    set('qcPd', Math.round(nz.pd * 1000)); txt('qcPdO', (nz.pd * 1000).toFixed(0) + '×10⁻³');
+    const np = qcnNoiseParams(nz.t1, nz.t2, nz.tg, nz.pd);
     txt('qcGammaLam', np.gamma.toFixed(4) + ' / ' + np.lambda.toFixed(4));
+    txt('qcDepolLam', np.ldep.toFixed(4));
     txt('qcT2Eff', np.t2eff.toFixed(1));
   }
 
@@ -1057,13 +1070,26 @@ export class QCircuitApp {
       subEntropy: mask => qcEntropySubset(self.psi, mask & ((1 << self.state.n) - 1)),
       getSub: () => self.state.sub,
       setSub: m => { self.state.sub = m & ((1 << self.state.n) - 1); self._renderSubBtns(); self.renderHud(); },
+      /* R105：按给定门序列**直接推进物理态**（不进门列表、不改 step）——用于
+         在浏览器里搭「预设之外」的线路验证噪声物理（如 ESD：bell + 8 次恒等门）。
+         与 measure() 同类的调试路径：只动 this.rho/this.psi，不动 gates/step，
+         故 UI 一致性不受影响（调用方负责 reset()）。 */
+      applyOps: ops => {
+        for (const g of ops){
+          if (self.state.noise.on) qcnExec(self.rho, g, self.cres, self.rng, self.noiseParam);
+          else qcExec(self.psi, g, self.cres, self.rng);
+        }
+        self._drawAll();
+        return self.state.step;
+      },
       /* R104：门噪声调试句柄（cdp104 用；setNoise 自动重置执行） */
-      setNoise: (on, t1, t2, tg) => {
+      setNoise: (on, t1, t2, tg, pd) => {
         const nz = self.state.noise;
         if (on != null) nz.on = !!on;
         if (t1 != null) nz.t1 = t1;
         if (t2 != null) nz.t2 = t2;
         if (tg != null) nz.tg = tg;
+        if (pd != null) nz.pd = pd;
         self.syncPanel();
         self.resetExecution();
         self._drawAll();
