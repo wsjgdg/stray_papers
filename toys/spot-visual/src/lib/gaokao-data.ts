@@ -16,6 +16,14 @@ import { withSharecode } from "@/lib/share-link";
 
 export const GAOKAO_DATA_URL = "/data/gaokao-2025.json";
 export const GAOKAO_BATCHES_URL = "/data/gaokao-2025-batches.json";
+export const GAOKAO_YEARS = [2026, 2025] as const;
+
+export function dataUrlFor(year: number): string {
+  return `/data/gaokao-${year}.json`;
+}
+export function batchesUrlFor(year: number): string {
+  return `/data/gaokao-${year}-batches.json`;
+}
 export const GAOKAO_ENRICH_URL = "/data/gaokao-enrich.json";
 
 export interface School {
@@ -346,6 +354,11 @@ export function loadBatchesDataset(data: BatchesDataset): boolean {
 
 export function isBatchesLoaded(): boolean {
   return batchIndex.size > 0;
+}
+
+/** 切换数据年份时清空批次索引，强制按新年份重新懒加载 */
+export function resetBatches(): void {
+  batchIndex = new Map();
 }
 
 export function admissionsFor(

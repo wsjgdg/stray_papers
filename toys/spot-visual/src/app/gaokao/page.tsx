@@ -23,9 +23,8 @@ import {
 import type { EChartsOption } from "echarts";
 import {
   BATCH_GROUPS,
-  GAOKAO_BATCHES_URL,
-  GAOKAO_DATA_URL,
   GAOKAO_ENRICH_URL,
+  GAOKAO_YEARS,
   activeProvinces,
   activeSchools,
   admissionsFor,
@@ -36,6 +35,9 @@ import {
   fetchMajors,
   getSchool,
   isBatchesLoaded,
+  batchesUrlFor,
+  dataUrlFor,
+  resetBatches,
   loadBatchesDataset,
   type MajorDataset,
   type MajorRow,
@@ -102,6 +104,15 @@ const LEVEL_LEGEND: [keyof typeof LEVEL_COLOR, string][] = [
   ["normal", "其他"],
 ];
 
+// 绘制优先级：区间外垫底，保→稳→冲依次抬高，选中置顶（后画者覆盖先画者）
+function pointPriority(p: { tier: Tier | "none"; schoolName: string }): number {
+  const t = p.tier;
+  const base = t === "none" ? 0 : t === "safe" ? 1 : t === "match" ? 2 : 3;
+  return p.schoolName === selectedNameRef.value ? 10 : base;
+}
+// 供排序函数读取当前选中（避免 points memo 依赖抖动）
+const selectedNameRef = { value: null as string | null };
+
 function tierOf(gap: number): Tier | "none" {
   if (gap >= -18 && gap <= 0) return "reach";
   if (gap > 0 && gap <= 22) return "match";
@@ -148,6 +159,17 @@ export default function GaoKaoPage() {
   const [selectedName, setSelectedName] = useState<string | null>(null);
   const [batchGroup, setBatchGroup] = useState<BatchGroup>("benke");
   const [batchesLoading, setBatchesLoading] = useState(false);
+  const [year, setYear] = useState<number>(() => {
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const uy = Number(sp.get("year"));
+      if (uy === 2025 || uy === 2026) return uy;
+      const saved = JSON.parse(localStorage.getItem(LS_KEY) ?? "null");
+      if (saved?.year === 2025 || saved?.year === 2026) return saved.year;
+    } catch {}
+    return 2026;
+  });
+  const batchesYearRef = { current: null as number | null };
   const [view, setView] = useState<
     "map" | "list" | "compare" | "major" | "wish"
   >("map");
@@ -228,6 +250,7 @@ export default function GaoKaoPage() {
     );
 
   const ready = dataState === "ready";
+  selectedNameRef.value = selectedName;
   const provinces = useMemo(() => (ready ? activeProvinces() : []), [ready]);
   const schools = useMemo(() => (ready ? activeSchools() : []), [ready]);
   // 去重院校数：同一高校在各省有独立招生代码，schools 按代码计数会重复
@@ -236,29 +259,42 @@ export default function GaoKaoPage() {
     [schools],
   );
 
-  // ── 加载数据文件（主数据必须；增强数据可选，失败不阻塞） ──
+  // ── 加载数据文件（按年份；增强数据可选且与年份无关，缓存后重放） ──
+  const enrichRawRef = { current: null as unknown };
   useEffect(() => {
     let alive = true;
-    fetch(withSharecode(GAOKAO_DATA_URL))
+    setDataState("loading");
+    resetBatches();
+    batchesYearRef.current = null;
+    fetch(withSharecode(dataUrlFor(year)))
       .then((r) =>
         r.ok ? r.json() : Promise.reject(new Error(String(r.status))),
       )
       .then((d) => {
         if (alive && loadFullDataset(d)) {
           setDataState("ready");
-          fetch(withSharecode(GAOKAO_ENRICH_URL))
-            .then((r) => (r.ok ? r.json() : null))
-            .then((e) => {
-              if (alive && e && loadEnrichDataset(e)) setEnriched(true);
-            })
-            .catch(() => {});
+          if (enrichRawRef.current) {
+            loadEnrichDataset(enrichRawRef.current as never);
+            setEnriched(true);
+          } else {
+            fetch(withSharecode(GAOKAO_ENRICH_URL))
+              .then((r) => (r.ok ? r.json() : null))
+              .then((e) => {
+                if (alive && e) {
+                  enrichRawRef.current = e;
+                  if (loadEnrichDataset(e)) setEnriched(true);
+                }
+              })
+              .catch(() => {});
+          }
         } else if (alive) setDataState("fail");
       })
       .catch(() => alive && setDataState("fail"));
     return () => {
       alive = false;
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [year]);
 
   // ── 数据就绪后还原位置：URL 参数 > localStorage > 默认 ──
   useEffect(() => {
@@ -299,14 +335,16 @@ export default function GaoKaoPage() {
   useEffect(() => {
     if (!ready || !prov) return;
     try {
-      localStorage.setItem(LS_KEY, JSON.stringify({ prov, cat, score }));
+      localStorage.setItem(LS_KEY, JSON.stringify({ prov, cat, score, year }));
       const sp = new URLSearchParams(window.location.search);
       sp.set("prov", prov);
       if (cat) sp.set("cat", cat);
       sp.set("score", String(score));
+      sp.set("year", String(year));
       window.history.replaceState(null, "", `?${sp.toString()}`);
     } catch {}
-  }, [ready, prov, cat, score]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, prov, cat, score, year]);
 
   // ── 收藏对比名单（localStorage 持久化，跨省保留） ──
   useEffect(() => {
@@ -332,14 +370,27 @@ export default function GaoKaoPage() {
 
   const cats = useMemo(() => (ready ? provinceCats(prov) : []), [ready, prov]);
 
+  const switchYear = (y: number) => {
+    if (y === year) return;
+    setYear(y);
+    setSelectedName(null);
+    setBatchGroup("benke");
+    setMajors(null);
+    setEnriched(false);
+  };
+
   // ── 批次切换：非本科批首次切换时懒加载批次文件 ──
   const switchBatch = async (g: BatchGroup) => {
     if (g === batchGroup || batchesLoading) return;
-    if (g !== "benke" && !isBatchesLoaded()) {
+    if (g !== "benke" && batchesYearRef.current !== year) {
       setBatchesLoading(true);
       try {
-        const r = await fetch(withSharecode(GAOKAO_BATCHES_URL));
-        if (r.ok) loadBatchesDataset(await r.json());
+        const r = await fetch(withSharecode(batchesUrlFor(year)));
+        if (r.ok) {
+          resetBatches();
+          loadBatchesDataset(await r.json());
+          batchesYearRef.current = year;
+        }
       } catch {}
       setBatchesLoading(false);
     }
@@ -347,9 +398,9 @@ export default function GaoKaoPage() {
     setSelectedName(null);
   };
 
-  // 顶部搜索联动专业：校名命中不足时拉专业数据补结果
+  // 顶部搜索联动专业：校名命中不足时拉专业数据补结果（专业数据仅 2025）
   useEffect(() => {
-    if (!ready || !prov || majors) return;
+    if (!ready || !prov || majors || year !== 2025) return;
     const q = query.trim();
     if (!q) return;
     let alive = true;
@@ -492,7 +543,8 @@ export default function GaoKaoPage() {
           },
         };
       })
-      .filter(Boolean);
+      .filter((x): x is NonNullable<typeof x> => x !== null)
+      .sort((a, b) => pointPriority(a) - pointPriority(b));
   }, [
     ready,
     prov,
@@ -970,8 +1022,22 @@ export default function GaoKaoPage() {
         </div>
       </div>
 
-      {/* 批次切换 */}
+      {/* 年份 + 批次切换 */}
       <div className="mb-3 flex flex-wrap items-center gap-1.5 text-xs">
+        <span className="text-gray-400 mr-1">年份</span>
+        {GAOKAO_YEARS.map((y) => (
+          <button
+            key={y}
+            onClick={() => switchYear(y)}
+            className={`px-2.5 py-1 rounded-full border transition-colors ${year === y ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"}`}
+          >
+            {y}
+            {y === GAOKAO_YEARS[0] && (
+              <span className="ml-1 text-[9px] align-top">最新</span>
+            )}
+          </button>
+        ))}
+        <span className="text-gray-200 mx-1">|</span>
         <span className="text-gray-400 mr-1">批次</span>
         {BATCH_GROUPS.map(({ key, label }) => (
           <button
@@ -1286,6 +1352,7 @@ export default function GaoKaoPage() {
                 </div>
 
                 {batchGroup === "benke" &&
+                  year === 2025 &&
                   (() => {
                     const tv = history?.cats[cat]?.[selSchool.name];
                     if (
@@ -1301,8 +1368,8 @@ export default function GaoKaoPage() {
                     );
                   })()}
 
-                {/* 专业级录取数据（折叠懒加载；专业数据仅本科批口径） */}
-                {batchGroup === "benke" && (
+                {/* 专业级录取数据（折叠懒加载；专业数据仅 2025 本科批口径） */}
+                {batchGroup === "benke" && year === 2025 && (
                   <div className="mb-4 rounded-xl border border-gray-200 overflow-hidden">
                     <button
                       onClick={() => setMajorsOpen(!majorsOpen)}
@@ -1652,6 +1719,8 @@ export default function GaoKaoPage() {
           prov={prov}
           cat={cat}
           score={scoreDelayed}
+          year={year}
+          hasMajors={year === 2025}
           onOpen={(code) => {
             setSelectedName(code);
             setMajorsOpen(true);
@@ -2032,6 +2101,8 @@ function MajorSearch({
   prov,
   cat,
   score,
+  year,
+  hasMajors,
   onOpen,
   onAddWish,
   hasWish,
@@ -2042,10 +2113,48 @@ function MajorSearch({
   prov: string;
   cat: string;
   score: number;
+  year: number;
+  hasMajors: boolean; // 专业级数据仅 2025
   onOpen: (name: string) => void;
   onAddWish: (w: WishItem) => void;
   hasWish: (name: string, group: string, major: string) => boolean;
 }) {
+  const [chipOffset, setChipOffset] = useState(0);
+
+  // 推荐池：该省科类开设的全部专业名，按「用户分数可达的学校数」降序，
+  // 再按开设学校数；池子通常数百项，5 个一批循环展示。
+  const pool = useMemo(() => {
+    if (!majors) return [];
+    const agg = new Map<
+      string,
+      { reach: number; count: number; minScore: number }
+    >();
+    for (const rows of Object.values(majors.cats[cat] ?? {})) {
+      for (const r of rows) {
+        const e = agg.get(r[1]) ?? { reach: 0, count: 0, minScore: 1e9 };
+        e.count++;
+        e.minScore = Math.min(e.minScore, r[3]);
+        const gap = score - r[3];
+        if (gap >= -18 && gap <= 55) e.reach++;
+        agg.set(r[1], e);
+      }
+    }
+    return [...agg.entries()]
+      .sort((a, b) => b[1].reach - a[1].reach || b[1].count - a[1].count)
+      .map(([name]) => name);
+  }, [majors, cat, score]);
+
+  const chips = useMemo(
+    () =>
+      pool.length
+        ? Array.from(
+            { length: Math.min(5, pool.length) },
+            (_, i) => pool[(chipOffset + i) % pool.length],
+          )
+        : [],
+    [pool, chipOffset],
+  );
+
   const results = useMemo(() => {
     const kw = q.trim();
     if (!kw || !majors) return null;
@@ -2080,13 +2189,43 @@ function MajorSearch({
             className="flex-1 h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none"
           />
         </div>
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          {hasMajors && (
+            <span className="text-[11px] text-gray-400">试试：</span>
+          )}
+          {chips.map((c) => (
+            <button
+              key={c}
+              onClick={() => setQ(c)}
+              className="text-[11px] px-2 py-0.5 rounded-full bg-white border border-indigo-100 text-indigo-600 hover:bg-indigo-50 transition-colors"
+            >
+              {c}
+            </button>
+          ))}
+          {pool.length > 5 && (
+            <button
+              onClick={() => setChipOffset((o) => (o + 5) % pool.length)}
+              className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-600 border border-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+            >
+              换一批
+            </button>
+          )}
+          <span className="text-[10px] text-gray-300">
+            共 {pool.length} 个专业名
+          </span>
+        </div>
         <p className="mt-2 text-[11px] text-gray-400">
           在 {prov}·{cat}{" "}
-          的全部院校专业（组）中匹配，按最易达匹配专业的最低分排序；点行进详情，点
+          的全部院校专业（组）中匹配（本科批口径），按最易达匹配专业的最低分排序；点行进详情，点
           + 把该系最易达的专业加入志愿表。
         </p>
       </div>
-      {!kw ? (
+      {!hasMajors ? (
+        <div className="py-14 text-center text-sm text-gray-400">
+          {year} 年暂无专业级数据源（{year} 为院校·专业组口径），切换到 2025
+          年可按专业反查
+        </div>
+      ) : !kw ? (
         <div className="py-14 text-center text-sm text-gray-400">
           输入专业关键词开始反查
         </div>

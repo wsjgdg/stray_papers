@@ -35,12 +35,16 @@ const fixture: RealDataset = {
         ],
       },
       历史类: {
-        adm: [["A1", "甲大学", "本科批", 610, 8000, "北京", 3, null, null, null]],
+        adm: [
+          ["A1", "甲大学", "本科批", 610, 8000, "北京", 3, null, null, null],
+        ],
       },
     },
     广东: {
       物理类: {
-        adm: [["A1", "甲大学", "本科批", 640, 6000, "北京", 3, null, null, null]],
+        adm: [
+          ["A1", "甲大学", "本科批", 640, 6000, "北京", 3, null, null, null],
+        ],
       },
     },
   },
@@ -82,7 +86,9 @@ describe("loadFullDataset + 读取接口", () => {
     expect(a2.scoreDelta).toBeUndefined();
   });
   it("rank=0 的院校行保留且 minRank 为 0（位次未知）", () => {
-    const a4 = admissionsFor("河南", "物理类").find((r) => r.schoolCode === "A4");
+    const a4 = admissionsFor("河南", "物理类").find(
+      (r) => r.schoolCode === "A4",
+    );
     expect(a4).toBeDefined();
     expect(a4!.minScore).toBe(560);
     expect(a4!.minRank).toBe(0);
@@ -130,18 +136,22 @@ describe("recommend 冲稳保分档", () => {
         河南: {
           物理类: {
             ctrl: 400,
-            adm: Array.from({ length: 15 }, (_, i) => [
-              `M${i}`,
-              `大学${i}`,
-              "本科批",
-              610,
-              10000 + i * 100,
-              "北京",
-              0,
-              null,
-              null,
-              null,
-            ] as const),
+            adm: Array.from(
+              { length: 15 },
+              (_, i) =>
+                [
+                  `M${i}`,
+                  `大学${i}`,
+                  "本科批",
+                  610,
+                  10000 + i * 100,
+                  "北京",
+                  0,
+                  null,
+                  null,
+                  null,
+                ] as const,
+            ),
           },
         },
       },
@@ -219,15 +229,37 @@ describe("loadBatchesDataset 批次组", () => {
             zhuanke: {
               物理类: {
                 adm: [
-                ["Z1", "黄河水利职业技术学院", "专科批", 420, 0, "河南", 0, null, null, null],
-              ],
+                  [
+                    "Z1",
+                    "黄河水利职业技术学院",
+                    "专科批",
+                    420,
+                    0,
+                    "河南",
+                    0,
+                    null,
+                    null,
+                    null,
+                  ],
+                ],
               },
             },
             tiqian: {
               物理类: {
                 adm: [
-                ["T1", "国防科技大学", "本科提前批", 640, 900, "湖南", 3, null, null, null],
-              ],
+                  [
+                    "T1",
+                    "国防科技大学",
+                    "本科提前批",
+                    640,
+                    900,
+                    "湖南",
+                    3,
+                    null,
+                    null,
+                    null,
+                  ],
+                ],
               },
             },
           },
@@ -248,5 +280,17 @@ describe("loadBatchesDataset 批次组", () => {
 
   it("无效结构返回 false", () => {
     expect(loadBatchesDataset(null as never)).toBe(false);
+  });
+});
+
+// 回归：secnotes 2026 数据文件同样必须能被数据层加载
+describe("2026 secnotes dataset", () => {
+  it("public/data/gaokao-2026.json loads via loadFullDataset", () => {
+    const file = path.resolve("public/data/gaokao-2026.json");
+    if (!fs.existsSync(file)) return;
+    const raw = JSON.parse(fs.readFileSync(file, "utf8")) as RealDataset;
+    expect(loadFullDataset(raw)).toBe(true);
+    expect(activeProvinces().length).toBeGreaterThan(15);
+    expect(admissionsFor("江苏", "物理类").length).toBeGreaterThan(500);
   });
 });
