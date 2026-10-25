@@ -20,6 +20,7 @@
       src/physics/qcircuit.js
       src/physics/noise.js
       src/physics/gatenoise.js
+      src/physics/qcnoise.js
       src/physics/qec.js
       src/qec/live.js
       src/qec/mode-rep.js
@@ -2439,6 +2440,582 @@ function gnSweep(cfg = {}){
   return { preset: c.preset, spectrum: c.spectrum, n: gnPresetGates(c.preset, c.n, c.k, c.theta, c.phase).n, keys, p, k: kArr, cP, eP, cK, eK };
 }
 
+/* ===== src/physics/qcnoise.js ===== */
+/* ============================================================================
+ * qcnoise.js — R104 线路页 Markov 门噪声（T₁/T₂）：精确密度矩阵通道
+ *
+ * 背景：qcircuit 线路页（physics/qcircuit.js）此前是**纯酉**模拟器——态矢
+ * |ψ⟩ 依次过门、末尾才测量。真实器件上每个门都伴随退相干：与环境的耦合把
+ * 纯态变成混合态，必须用密度矩阵 ρ（2^n × 2^n、厄米、半正定、tr=1）。
+ * noise.html 已有一套时间口径的 Kraus 通道（挂在 t 上）；gatenoise.html 有
+ * 门级 Pauli 噪声（挂在门上，但只报保真度）。本模块补上第三块：
+ * **门级 T₁/T₂ 接进线路编辑器**——每个门作用后，对该门触及的每个比特施加
+ *   振幅阻尼   γ = 1−e^{−t_g/T₁}   （能量弛豫：|1⟩→|0⟩，横向也衰减）
+ *   相位阻尼   λ = 1−e^{−t_g/T₂}   （纯退相位：只压跨该位的相干）
+ * 两条都是 noise.js 同款 Kraus（单源口径），精确解——不是一阶近似。
+ * 自然满足 T₂ ≤ 2T₁：即使 λ=0，T₁ 本身也把横向衰减压到 1/(2T₁)。
+ *
+ * 实现要点（全部经 pot104 数值验证）：
+ *   ① U ρ U† 的**两趟公式**（免稠密矩阵乘，每门 O(4^n)）：
+ *      右乘 U†：对 controls=mask 的 target 列对 (j0,j1)，
+ *        new[j0] = conj(m00)·c0 + conj(m01)·c1
+ *        new[j1] = conj(m10)·c0 + conj(m11)·c1
+ *      左乘 U ：对 controls=mask 的 target 行对 (i0,i1)，
+ *        new[i0][:] = m00·r0 + m01·r1 ；new[i1][:] = m10·r0 + m11·r1
+ *      （推导：U 是「target 上 2×2 块 m、controls=mask 才生效、其余恒等」的
+ *        直和型算符 ⟹ 每个矩阵元只连接 target 对中的两个指数。X 门在
+ *        1 比特上手推验证：XρX = [[d,c],[b,a]] ✓）
+ *   ② SWAP 不保持 target 对结构 ⟹ 按位置换重排索引（O(4^n) 查表，不动浮点）。
+ *   ③ 两个阻尼通道都是**就地对角缩放**（Kraus 和可写成块对角因子）：
+ *      振幅阻尼：|0⟩|0⟩ 块 += γ·|1⟩|1⟩ 块；跨位 ×√(1−γ)；|1⟩|1⟩ 块 ×(1−γ)
+ *      相位阻尼：b_i≠b_j 的矩阵元 ×(1−λ)，对角不变
+ *   ④ 测量 = Born 规则 p(j)=ρ_jj + 子空间投影（保留同结果子空间内的相干，
+ *      不是只留对角——这是「测一个比特」与「读 diagonal」的区别）；
+ *      X/Y/Bell/GHZ 基走 R100/R103 同款「旋转-测量-旋回」。
+ *   ⑤ **零回归契约**：noise=null（γ=λ=0）时逐位复现态矢路径（pot104 A 节
+ *      全预设 + 随机线路对账）；页面默认关闭噪声，走原 qcExec 路径。
+ *
+ * 复杂度：单门 O(4^n)（两趟各扫半矩阵）；n=8 时 256² = 65k 复操作/门，毫秒级。
+ * R105 增补第三通道：退极化 ρ→(1−p)ρ+(p/3)ΣPρP（Bloch 各向同性缩放 λ=1−4p/3），
+ *   与 R77/R80 同口径 ⟹ 线路页可直接演示 **ESD（纠缠猝死）**：Bell 在双侧退极化
+ *   k 步后 C = max(0, (3λ^{2k}−1)/2) 在**有限 k** 精确归零（T₁/T₂ 只是渐近衰减，
+ *   γ<1 时 C 恒 >0）——这是退极化独有的签名。
+ * R106 增补读出误差（SPAM 半边）：量子态**仍按理想投影坍缩**（读出误差不污染 ρ），
+ *   但**记录的经典位**以概率 ε 独立翻转（每位一次 Bernoulli 抽样）——「读出误报」
+ *   口径；与「赋值误差」（连坍缩子空间一起翻）不同，后者本模型不取。ε 钳到
+ *   [0, 1/2]（>1/2 无物理意义：等价于确定性报反的补事件）。cond 前馈按**记录位**
+ *   决策 ⟹ 传态修正用错位 ⟹ 保真度掉到 ~(1−ε)²（球平均 1−4ε/3+2ε²/3）。
+ * R107 增补热激发（广义振幅阻尼 GAD）：T₁ 弛豫的有限温度推广——总纵弛豫率
+ *   γ=tg/T₁ 按**平衡布居 p_eq** 重新分配为 gDown=γ(1−p_eq)（|1⟩→|0⟩）与
+ *   gUp=γ·p_eq（|0⟩→|1⟩），满足细致平衡 ⟹ 平衡态是对角热态（p₁₁_∞=p_eq、
+ *   z_∞=1−2p_eq），**不是**最大混合（p_eq<1/2 时）也**不是**纯基态（p_eq>0 时）
+ *   ——三通道终点对照就此闭合：T₁(p_eq=0)⟹纯基态、热⟹对角热态、退极化⟹最大混合。
+ *   p_eq=0 ⟹ 精确回到 R104 振幅阻尼路径（零回归锚点）。
+ * 诚实限制：① 读出误差是**经典位翻转**（量子态按理想投影坍缩，无「赋值误差」）；
+ *   ② 无非马尔可夫记忆、无串扰、无泄漏（热激发只翻转布居，不把比特搬出计算基）；
+ *   ③ 经典前馈 cond 的门噪声语义 = 内部门真实执行才衰减（未触发不衰减）。
+ * ========================================================================== */
+
+/* ---------- 门矩阵（与 qcApply 同一套展开；mask = 控制位掩码，0 = 无控） ---------- */
+const QCN_C0 = { re: 0, im: 0 }, QCN_C1 = { re: 1, im: 0 };
+function qcnGateMatrix(g){
+  const op = g.op;
+  if (op === 'cnot') return { m: QC_UNARY.x.m, q: g.t ?? g.q2, mask: 1 << (g.c ?? g.q1) };
+  if (op === 'cz') return { m: QC_UNARY.z.m, q: g.t ?? g.q2, mask: 1 << (g.c ?? g.q1) };
+  if (op === 'toffoli') return { m: QC_UNARY.x.m, q: g.q3, mask: (1 << g.q1) | (1 << g.q2) };
+  if (op === 'rx' || op === 'ry' || op === 'rz'){
+    return { m: qcRotation(op, g.theta ?? 0), q: g.q, mask: g.c != null ? (1 << g.c) : 0 };
+  }
+  if (op === 'phase'){
+    const th = g.theta ?? 0;
+    return { m: [QCN_C1, QCN_C0, QCN_C0, { re: Math.cos(th), im: Math.sin(th) }], q: g.q, mask: g.c != null ? (1 << g.c) : 0 };
+  }
+  const u = QC_UNARY[op];
+  if (!u) return null;
+  return { m: u.m, q: g.q, mask: g.c != null ? (1 << g.c) : 0 };
+}
+
+/* 门触及的比特集合（噪声施加对象；cond 未触发时在 qcnExec 里根本不调用） */
+function qcnGateTouched(g){
+  if (g.op === 'swap') return [g.q1, g.q2];
+  if (g.op === 'measure') return g.qubits ? g.qubits.slice() : [g.q];
+  const t = qcnGateMatrix(g);
+  const set = new Set();
+  if (t){
+    set.add(t.q);
+    for (let k = 0; k < 30; k++) if ((t.mask >> k) & 1) set.add(k);
+  }
+  return [...set];
+}
+
+/* ---------- 密度矩阵表示 ---------- */
+function qcnRho(n){
+  const dim = 1 << n;
+  const r = { n, dim, re: new Float64Array(dim * dim), im: new Float64Array(dim * dim) };
+  r.re[0] = 1;
+  return r;
+}
+/* 由纯态 |ψ⟩（qcNewState 结构）构造 ρ = |ψ⟩⟨ψ| */
+function qcnRhoFromPure(s){
+  const D = s.dim;
+  const r = { n: s.n, dim: D, re: new Float64Array(D * D), im: new Float64Array(D * D) };
+  for (let i = 0; i < D; i++) for (let j = 0; j < D; j++){
+    r.re[i * D + j] = s.re[i] * s.re[j] + s.im[i] * s.im[j];       /* ψ_i ψ_j* */
+    r.im[i * D + j] = s.im[i] * s.re[j] - s.re[i] * s.im[j];
+  }
+  return r;
+}
+
+/* ---------- 门作用：U ρ U†（两趟公式，见文件头 ①） ---------- */
+function qcnApply1q(rho, m, q, mask){
+  const D = rho.dim, bit = 1 << q;
+  const Re = rho.re, Im = rho.im;
+  const m00r = m[0].re, m00i = m[0].im, m01r = m[1].re, m01i = m[1].im;
+  const m10r = m[2].re, m10i = m[2].im, m11r = m[3].re, m11i = m[3].im;
+  /* 第一趟：A = ρ U†（右乘）。controls 未满的列对 U† 列为 δ ⟹ 不变 */
+  for (let j0 = 0; j0 < D; j0++){
+    if (j0 & bit) continue;
+    if ((j0 & mask) !== mask) continue;
+    const j1 = j0 | bit;
+    for (let i = 0; i < D; i++){
+      const a0r = Re[i * D + j0], a0i = Im[i * D + j0];
+      const a1r = Re[i * D + j1], a1i = Im[i * D + j1];
+      /* conj(m)·a：Re = mr·ar + mi·ai，Im = mr·ai − mi·ar */
+      Re[i * D + j0] = m00r * a0r + m00i * a0i + m01r * a1r + m01i * a1i;
+      Im[i * D + j0] = m00r * a0i - m00i * a0r + m01r * a1i - m01i * a1r;
+      Re[i * D + j1] = m10r * a0r + m10i * a0i + m11r * a1r + m11i * a1i;
+      Im[i * D + j1] = m10r * a0i - m10i * a0r + m11r * a1i - m11i * a1r;
+    }
+  }
+  /* 第二趟：ρ' = U A（左乘）。controls 未满的行对不变 */
+  for (let i0 = 0; i0 < D; i0++){
+    if (i0 & bit) continue;
+    if ((i0 & mask) !== mask) continue;
+    const i1 = i0 | bit;
+    for (let j = 0; j < D; j++){
+      const a0r = Re[i0 * D + j], a0i = Im[i0 * D + j];
+      const a1r = Re[i1 * D + j], a1i = Im[i1 * D + j];
+      /* m·a：Re = mr·ar − mi·ai，Im = mr·ai + mi·ar */
+      Re[i0 * D + j] = m00r * a0r - m00i * a0i + m01r * a1r - m01i * a1i;
+      Im[i0 * D + j] = m00r * a0i + m00i * a0r + m01r * a1i + m01i * a1r;
+      Re[i1 * D + j] = m10r * a0r - m10i * a0i + m11r * a1r - m11i * a1i;
+      Im[i1 * D + j] = m10r * a0i + m10i * a0r + m11r * a1i + m11i * a1r;
+    }
+  }
+}
+/* SWAP(a,b)：ρ'_{σ(i),σ(j)} = ρ_{ij}，σ = 交换位 a,b 的索引置换 */
+function qcnSwapRho(rho, a, b){
+  if (a === b) return;
+  const D = rho.dim, ba = 1 << a, bb = 1 << b;
+  const map = new Uint32Array(D);
+  for (let i = 0; i < D; i++){
+    const ia = (i & ba) ? 1 : 0, ib = (i & bb) ? 1 : 0;
+    map[i] = ia === ib ? i : (i ^ ba ^ bb);
+  }
+  const nr = new Float64Array(rho.re.length), ni = new Float64Array(rho.im.length);
+  for (let i = 0; i < D; i++) for (let j = 0; j < D; j++){
+    nr[i * D + j] = rho.re[map[i] * D + map[j]];
+    ni[i * D + j] = rho.im[map[i] * D + map[j]];
+  }
+  rho.re.set(nr); rho.im.set(ni);
+}
+function qcnApplyGate(rho, g){
+  if (g.op === 'swap'){ qcnSwapRho(rho, g.q1, g.q2); return rho; }
+  const t = qcnGateMatrix(g);
+  if (!t) throw new Error('qcnApplyGate: unknown gate ' + g.op);
+  qcnApply1q(rho, t.m, t.q, t.mask);
+  return rho;
+}
+
+/* ---------- 阻尼通道（就地） ---------- */
+/* 振幅阻尼 γ（T₁）：E₀=diag(1,√(1−γ))、E₁=√γ|0⟩⟨1| 作用在比特 q 上 */
+function qcnAmpDamp(rho, q, gamma){
+  const g = Math.min(1, Math.max(0, Number.isFinite(gamma) ? gamma : 0));   /* R107：NaN 钳 0（此前 NaN 会静默污染 ρ） */
+  if (g <= 0) return;
+  const D = rho.dim, bit = 1 << q, s = Math.sqrt(1 - g), oneMg = 1 - g;
+  const Re = rho.re, Im = rho.im;
+  for (let i0 = 0; i0 < D; i0++){
+    if (i0 & bit) continue;
+    const i1 = i0 | bit;
+    for (let j0 = 0; j0 < D; j0++){
+      if (j0 & bit) continue;
+      const j1 = j0 | bit;
+      /* E₁ρE₁† 把 |1⟩|1⟩ 块搬到 |0⟩|0⟩ 块（先读后写，就地安全） */
+      const p11r = Re[i1 * D + j1], p11i = Im[i1 * D + j1];
+      Re[i0 * D + j0] += g * p11r;
+      Im[i0 * D + j0] += g * p11i;
+      /* E₀ρE₀†：跨位相干 ×√(1−γ)、|1⟩|1⟩ 块 ×(1−γ) */
+      Re[i0 * D + j1] *= s; Im[i0 * D + j1] *= s;
+      Re[i1 * D + j0] *= s; Im[i1 * D + j0] *= s;
+      Re[i1 * D + j1] *= oneMg; Im[i1 * D + j1] *= oneMg;
+    }
+  }
+}
+/* 相位阻尼 λ（T₂）：E₀=√(1−λ/2)I、E₁=√(λ/2)Z ⟹ 跨位相干 ×(1−λ)，对角不变 */
+function qcnPhaseDamp(rho, q, lambda){
+  const l = Math.min(1, Math.max(0, Number.isFinite(lambda) ? lambda : 0)); /* R107：NaN 钳 0（同上） */
+  if (l <= 0) return;
+  const D = rho.dim, bit = 1 << q, keep = 1 - l;
+  const Re = rho.re, Im = rho.im;
+  for (let i0 = 0; i0 < D; i0++){
+    if (i0 & bit) continue;
+    const i1 = i0 | bit;
+    for (let j0 = 0; j0 < D; j0++){
+      if (j0 & bit) continue;
+      const j1 = j0 | bit;
+      Re[i0 * D + j1] *= keep; Im[i0 * D + j1] *= keep;
+      Re[i1 * D + j0] *= keep; Im[i1 * D + j0] *= keep;
+    }
+  }
+}
+
+/* ---------- 退极化通道（R105） ---------- */
+/* R105：退极化（第三通道）——单比特去极化 ρ → (1−p)ρ + (p/3)(XρX+YρY+ZρZ)。
+   就地闭式（λ ≡ 1−4p/3 是 Bloch 缩放因子，三方向**各向同性**——这是退极化
+   与 T₁/T₂ 的判据分水岭）：
+     记 σ_yρσ_y 的 2×2 块形式 = [[d,−c],[−b,a]]（注意与 σ_xρσ_x=[[d,c],[b,a]]、
+     σ_zρσ_z=[[a,−b],[−c,d]] 差一个符号位），三者求和后：
+       · q 位**相同**的矩阵元对 (i0,j0)↔(i1,j1)：a' = ((1+λ)a+(1−λ)d)/2、d' 对称
+         （X/Y/Z 各贡献 2·d+a / 2·a+d）
+       · q 位**不同**的矩阵元 (i0,j1) 与 (i1,j0)：仅 ×λ（c 与 −c 相消、只留 −b）
+   p=3/4 ⟹ λ=0 ⟹ 该比特完全去极化（块内取平均、跨位清零 ⟹ ρ→(I/2)⊗tr_q ρ）。 */
+function qcnDepolar(rho, q, p){
+  const pp = Math.min(0.75, Math.max(0, p));
+  if (!(pp > 0)) return;                 /* p=0 / 负数 / NaN 一律 no-op（与两个阻尼通道同口径） */
+  const D = rho.dim, bit = 1 << q, lam = 1 - 4 * pp / 3;
+  const wA = (1 + lam) / 2, wB = (1 - lam) / 2;   /* = 1−2p/3 与 2p/3 */
+  const Re = rho.re, Im = rho.im;
+  for (let i0 = 0; i0 < D; i0++){
+    if (i0 & bit) continue;
+    const i1 = i0 | bit;
+    for (let j0 = 0; j0 < D; j0++){
+      if (j0 & bit) continue;
+      const j1 = j0 | bit;
+      /* 块内混合：q 位同为 0 / 同为 1 的两个矩阵元（先读后写，就地安全） */
+      const k00 = i0 * D + j0, k11 = i1 * D + j1;
+      const a0r = Re[k00], a0i = Im[k00], a1r = Re[k11], a1i = Im[k11];
+      Re[k00] = wA * a0r + wB * a1r; Im[k00] = wA * a0i + wB * a1i;
+      Re[k11] = wB * a0r + wA * a1r; Im[k11] = wB * a0i + wA * a1i;
+      /* 跨位：q 位不同 ⟹ 只缩放 λ */
+      const k01 = i0 * D + j1, k10 = i1 * D + j0;
+      Re[k01] *= lam; Im[k01] *= lam;
+      Re[k10] *= lam; Im[k10] *= lam;
+    }
+  }
+}
+
+/* ---------- 热激发通道（R107：广义振幅阻尼 GAD） ---------- */
+/* R107：振幅阻尼的有限温度推广——|1⟩→|0⟩ 弛豫（gDown）之外再加 |0⟩→|1⟩ 热激发
+   （gUp），满足细致平衡 gUp/gDown = p_eq/(1−p_eq)（平衡激发布居 p_eq）。
+   就地闭式（与振幅阻尼同块结构）：
+     · 对角块 [[a,c],[b,d]]（q 位相同）：
+         a' = (1−gUp)·a + gDown·d    （|1⟩→|0⟩ 把布居搬进 |0⟩）
+         d' = gUp·a + (1−gDown)·d    （|0⟩→|1⟩ 搬出；平衡态 p11/gUp... 见下）
+         c,b ×s，s = √((1−gDown)(1−gUp))（Kraus E₀=E₀† 对角 ⟹ 相干衰减因子）
+       平衡解：gDown·p11 = gUp·p00 ⟹ p11_∞ = gUp/(gDown+gUp) = p_eq（细致平衡）。
+     · q 位不同的矩阵元：×s（同一单比特通道的相干衰减）。
+   p_eq=0 ⟹ gUp=0 ⟹ s=√(1−gDown)、a'=a+gDown·d、d'=(1−gDown)d——**与 qcnAmpDamp
+   逐位相同**（R104 回归锚点）；p_eq=1/2 ⟹ 无限温 ⟹ 布居平衡是 I/2（但相干衰减
+   因子是 (1−γ/2) 而非退极化的 λ=1−4p/3——布居相同、通道不同）。
+   注意：gDown+gUp = γ（总纵弛豫率，同一 tg/T₁ 口径），温度只**重新分配**上下行速率。 */
+function qcnThermal(rho, q, gDown, gUp){
+  const gd = Math.min(1, Math.max(0, Number.isFinite(gDown) ? gDown : 0));  /* R107：NaN 钳 0（与 qcnDepolar 同口径） */
+  const gu = Math.min(1, Math.max(0, Number.isFinite(gUp) ? gUp : 0));
+  if (gd <= 0 && gu <= 0) return;
+  if (gu === 0){ qcnAmpDamp(rho, q, gd); return; }   /* p_eq=0 ⟹ 精确回到 R104 路径 */
+  const D = rho.dim, bit = 1 << q, s = Math.sqrt((1 - gd) * (1 - gu));
+  const Re = rho.re, Im = rho.im;
+  for (let i0 = 0; i0 < D; i0++){
+    if (i0 & bit) continue;
+    const i1 = i0 | bit;
+    for (let j0 = 0; j0 < D; j0++){
+      if (j0 & bit) continue;
+      const j1 = j0 | bit;
+      /* 布居再分配：a'=（1−gUp)a + gDown·d、d'=gUp·a +（1−gDown)d（先读后写） */
+      const ar = Re[i0 * D + j0], ai = Im[i0 * D + j0];
+      const dr = Re[i1 * D + j1], di = Im[i1 * D + j1];
+      Re[i0 * D + j0] = (1 - gu) * ar + gd * dr; Im[i0 * D + j0] = (1 - gu) * ai + gd * di;
+      Re[i1 * D + j1] = gu * ar + (1 - gd) * dr; Im[i1 * D + j1] = gu * ai + (1 - gd) * di;
+      /* 相干：跨位与块内同因子 s */
+      Re[i0 * D + j1] *= s; Im[i0 * D + j1] *= s;
+      Re[i1 * D + j0] *= s; Im[i1 * D + j0] *= s;
+    }
+  }
+}
+
+/* ---------- 噪声参数 ---------- */
+/* t1,t2,tg 任意正数（同一单位）；γ=1−e^{−tg/t1}、λ=1−e^{−tg/t2}。
+   t2eff = 1/(1/t2 + 1/(2t1))：T₁ 本身贡献的横向衰减（T₂ ≤ 2T₁ 自动满足）。 */
+function qcnNoiseParams(t1, t2, tg, pd = 0, re = 0, peq = 0){
+  const T1 = Math.max(1e-9, t1), T2 = Math.max(1e-9, t2), TG = Math.max(0, tg);
+  const pdep = Math.min(0.75, Math.max(0, Number.isFinite(pd) ? pd : 0));
+  const eps = Math.min(0.5, Math.max(0, Number.isFinite(re) ? re : 0));  /* R106：读出误差钳 [0,1/2] */
+  const pe = Math.min(0.5, Math.max(0, Number.isFinite(peq) ? peq : 0)); /* R107：热平衡激发布居钳 [0,1/2]（正温度） */
+  const gamma = 1 - Math.exp(-TG / T1);
+  return {
+    gamma,                            /* 总纵弛豫率：gDown+gUp（温度只重新分配上下行） */
+    gDown: gamma * (1 - pe),          /* R107：|1⟩→|0⟩ 弛豫速率 */
+    gUp: gamma * pe,                  /* R107：|0⟩→|1⟩ 热激发速率（p_eq=0 ⟹ 恒 0 ≡ R104 振幅阻尼） */
+    lambda: 1 - Math.exp(-TG / T2),
+    pdep,
+    ldep: 1 - 4 * pdep / 3,           /* 退极化的 Bloch 缩放因子（R77/R80 同口径） */
+    eps,                              /* R106：每位测量记录独立翻转的概率 */
+    peq: pe,                          /* R107：平衡激发布居（z_∞ = 1−2p_eq） */
+    t2eff: 1 / (1 / T2 + 1 / (2 * T1)),
+  };
+}
+
+/* ---------- 测量 ---------- */
+/* Z 基：p1 = Σ_{i:bit} ρ_ii；投影到该位 out 子空间（保留块内相干）+ 归一 */
+function qcnMeasureZ(rho, q, rng){
+  const D = rho.dim, bit = 1 << q;
+  let p1 = 0;
+  for (let i = 0; i < D; i++) if (i & bit) p1 += rho.re[i * D + i];
+  const out = rng() < p1 ? 1 : 0;
+  const Re = rho.re, Im = rho.im;
+  for (let i = 0; i < D; i++){
+    const bi = (i & bit) ? 1 : 0;
+    for (let j = 0; j < D; j++){
+      if (bi !== out || ((j & bit) ? 1 : 0) !== out){ Re[i * D + j] = 0; Im[i * D + j] = 0; }
+    }
+  }
+  const p = out ? p1 : (1 - p1);
+  const k = p > 0 ? 1 / p : 0;
+  for (let i = 0; i < D; i++) for (let j = 0; j < D; j++){ Re[i * D + j] *= k; Im[i * D + j] *= k; }
+  return out;
+}
+/* 单比特测量（R100 同款「旋转-测量-旋回」，旋转走密度路径） */
+function qcnMeasureQubit(rho, q, rng, basis = 'z'){
+  if (basis !== 'z' && basis !== 'x' && basis !== 'y') throw new Error('unknown measure basis ' + basis);
+  if (!Number.isInteger(q) || q < 0 || q >= rho.n) throw new Error('measure qubit out of range: ' + q);   /* R106：与纯路径/联合测量同口径 */
+  const pre = basis === 'x' ? [{ op: 'h', q }] : basis === 'y' ? [{ op: 'sdg', q }, { op: 'h', q }] : [];
+  const post = basis === 'x' ? [{ op: 'h', q }] : basis === 'y' ? [{ op: 'h', q }, { op: 's', q }] : [];
+  for (const g of pre) qcnApplyGate(rho, g);
+  const bit = qcnMeasureZ(rho, q, rng);
+  for (const g of post) qcnApplyGate(rho, g);
+  return bit;
+}
+/* 联合测量（R103 同款）：P† → 顺序 Z 测 k 次（投影互交换 ⟺ 联合 Z）→ P 旋回 */
+function qcnMeasureJoint(rho, qubits, rng, basis = 'bell'){
+  const P = QC_JOINT_PREP[basis];
+  if (!P) throw new Error('unknown joint measure basis ' + basis);
+  const k = qcJointK(basis);
+  if (!Array.isArray(qubits) || qubits.length !== k) throw new Error('joint measure ' + basis + ' needs ' + k + ' qubits');
+  const seen = new Set();
+  for (const q of qubits){
+    if (!Number.isInteger(q) || q < 0 || q >= rho.n) throw new Error('joint measure qubit out of range: ' + q);
+    if (seen.has(q)) throw new Error('joint measure qubits must be distinct: ' + qubits.join(','));
+    seen.add(q);
+  }
+  const prep = P(qubits);
+  const outcomes = [];
+  for (const g of [...prep].reverse()) qcnApplyGate(rho, g);       /* P†（自伴 ⟹ 逆序） */
+  for (const q of qubits) outcomes.push(qcnMeasureZ(rho, q, rng));
+  for (const g of prep) qcnApplyGate(rho, g);                     /* P 旋回 */
+  return outcomes;
+}
+
+/* ---------- 读出误差（R106） ---------- */
+/* 经典位翻转：每位独立地以概率 ε 翻转**记录值**（量子态已在上一层按理想投影
+   坍缩，不受影响）。ε=0 / 负数 / NaN ⟹ 原样返回且**不消耗随机数**（零回归：
+   与 R105 路径的随机流逐位一致）。 */
+function qcnFlipBits(bits, eps, rng){
+  if (!(eps > 0)) return bits;
+  const out = bits.slice();
+  for (let i = 0; i < out.length; i++) if (rng() < eps) out[i] ^= 1;
+  return out;
+}
+
+/* ---------- 执行（镜像 qcExec；noise = {gamma, lambda, pdep, eps, peq, gDown, gUp} | null） ---------- */
+function qcnNoiseAfter(rho, g, noise){
+  if (!noise) return;
+  const { gamma, lambda, pdep, peq, gDown, gUp } = noise;
+  if (!(gamma > 0 || lambda > 0 || pdep > 0)) return;
+  for (const q of qcnGateTouched(g)){
+    if (gamma > 0){
+      /* R107：p_eq>0 ⟹ 热通道（GAD）；p_eq=0 ⟹ 精确走 R104 振幅阻尼原路径（零回归） */
+      if (peq > 0) qcnThermal(rho, q, gDown, gUp);
+      else qcnAmpDamp(rho, q, gamma);
+    }
+    if (lambda > 0) qcnPhaseDamp(rho, q, lambda);
+    if (pdep > 0) qcnDepolar(rho, q, pdep);
+  }
+}
+function qcnExec(rho, op, cres, rng, noise = null){
+  if (op.op === 'measure'){
+    const eps = noise ? noise.eps : 0;
+    if (op.qubits){
+      const trueBits = qcnMeasureJoint(rho, op.qubits, rng, op.basis || 'bell');
+      const bits = qcnFlipBits(trueBits, eps, rng);      /* R106：记录位可翻，态不翻 */
+      if (cres && op.cbit != null) for (let i = 0; i < bits.length; i++) cres[op.cbit + i] = bits[i];
+      return { kind: 'measure', qubits: op.qubits.slice(), cbit: op.cbit, bits, trueBits, basis: op.basis || 'bell', joint: true };
+    }
+    const trueBit = qcnMeasureQubit(rho, op.q, rng, op.basis || 'z');
+    const bit = qcnFlipBits([trueBit], eps, rng)[0];
+    if (cres && op.cbit != null) cres[op.cbit] = bit;
+    return { kind: 'measure', q: op.q, cbit: op.cbit, bit, trueBit, basis: op.basis || 'z' };
+  }
+  if (op.op === 'cond'){
+    const on = cres ? !!cres[op.cbit] : false;
+    if (on){ qcnApplyGate(rho, op.gate); qcnNoiseAfter(rho, op.gate, noise); }
+    return { kind: 'cond', cbit: op.cbit, on };
+  }
+  qcnApplyGate(rho, op);
+  qcnNoiseAfter(rho, op, noise);
+  return { kind: 'gate' };
+}
+function qcnRunProgram(rho, ops, rng, cres = null, noise = null){
+  const c = cres || new Uint8Array(8);
+  const rec = [];
+  for (const op of ops) rec.push(qcnExec(rho, op, c, rng, noise));
+  return { cres: c, rec };
+}
+
+/* ---------- 观测量 ---------- */
+function qcnProbs(rho){
+  const p = new Float64Array(rho.dim);
+  for (let i = 0; i < rho.dim; i++) p[i] = rho.re[i * rho.dim + i];
+  return p;
+}
+function qcnTrace(rho){
+  const D = rho.dim;
+  let tr = 0;
+  for (let i = 0; i < D; i++) tr += rho.re[i * D + i];
+  return tr;
+}
+function qcnPurity(rho){
+  const D = rho.dim;
+  let s = 0;
+  for (let i = 0; i < D; i++) for (let j = 0; j < D; j++){
+    const a = rho.re[i * D + j], b = rho.im[i * D + j];
+    s += a * a + b * b;                     /* ρ 厄米 ⟹ trρ² = Σ|ρ_ij|² */
+  }
+  return s;
+}
+/* 最大非对角相干 max|ρ_ij|（i≠j）——混合态里「还剩多少量子性」的读数 */
+function qcnMaxCoh(rho){
+  const D = rho.dim;
+  let mx = 0;
+  for (let i = 0; i < D; i++) for (let j = 0; j < D; j++){
+    if (i === j) continue;
+    const v = Math.hypot(rho.re[i * D + j], rho.im[i * D + j]);
+    if (v > mx) mx = v;
+  }
+  return mx;
+}
+/* 末态抽样（页面「测量」按钮）：按 Born 规则抽指数 + 投影 */
+function qcnSampleRho(rho, rng){
+  const p = qcnProbs(rho);
+  const u = rng();
+  let acc = 0;
+  for (let i = 0; i < rho.dim; i++){ acc += p[i]; if (u < acc) return i; }
+  return rho.dim - 1;
+}
+function qcnCollapseRho(rho, idx){
+  const D = rho.dim;
+  rho.re.fill(0); rho.im.fill(0);
+  rho.re[idx * D + idx] = 1;
+  return rho;
+}
+/* ⟨Z_a Z_b⟩（Z 对角 ⟹ 只读 diagonal） */
+function qcnZZ(rho, a, b){
+  const ba = 1 << a, bb = 1 << b, D = rho.dim;
+  let v = 0;
+  for (let i = 0; i < D; i++){
+    const sa = (i & ba) ? -1 : 1, sb = (i & bb) ? -1 : 1;
+    v += sa * sb * rho.re[i * D + i];
+  }
+  return v;
+}
+/* 单比特约化密度矩阵（2×2 复；保真度 HUD 用） */
+function qcnQubitRho(rho, q){
+  const D = rho.dim, bit = 1 << q;
+  const rr = [[0, 0], [0, 0]], ii = [[0, 0], [0, 0]];
+  for (let i = 0; i < D; i++){
+    if (i & bit) continue;
+    const j = i | bit;
+    rr[0][0] += rho.re[i * D + i];
+    rr[1][1] += rho.re[j * D + j];
+    rr[0][1] += rho.re[i * D + j];
+    ii[0][1] += rho.im[i * D + j];
+  }
+  rr[1][0] = rr[0][1];
+  ii[1][0] = -ii[0][1];
+  return { re: rr, im: ii };
+}
+
+/* ---------- 位置换（子系统迁低位，与 qcPermuteBits 同构） ---------- */
+function qcnPermuteRho(rho, mask){
+  const n = rho.n, D = rho.dim, m = mask & ((1 << n) - 1);
+  const keep = [], rest = [];
+  for (let k = 0; k < n; k++) ((m >> k) & 1 ? keep : rest).push(k);
+  const kA = keep.length;
+  const map = new Uint32Array(D);
+  for (let t = 0; t < D; t++){
+    let lo = 0, hi = 0;
+    for (let b = 0; b < kA; b++) if ((t >> keep[b]) & 1) lo |= 1 << b;
+    for (let b = 0; b < rest.length; b++) if ((t >> rest[b]) & 1) hi |= 1 << b;
+    map[t] = (hi << kA) | lo;
+  }
+  const out = { n, dim: D, re: new Float64Array(D * D), im: new Float64Array(D * D) };
+  for (let i = 0; i < D; i++) for (let j = 0; j < D; j++){
+    out.re[i * D + j] = rho.re[map[i] * D + map[j]];
+    out.im[i * D + j] = rho.im[map[i] * D + map[j]];
+  }
+  return out;
+}
+/* 任意子系统熵：位置换迁低位 → 部分求迹 → 实嵌入 Jacobi（与 qcEntropy 同判据） */
+function qcnEntropySubset(rho, mask){
+  const n = rho.n, m = mask & ((1 << n) - 1);
+  const bits = [];
+  for (let k = 0; k < n; k++) if ((m >> k) & 1) bits.push(k);
+  const kA = bits.length;
+  if (!kA) return { S: 0, spectrum: [], sum: 0, kA: 0, dimA: 1, mask: m, bits };
+  const pr = qcnPermuteRho(rho, m);
+  const D = pr.dim, mA = 1 << kA, rest = D / mA;
+  const A = [];
+  for (let i = 0; i < 2 * mA; i++) A.push(new Float64Array(2 * mA));
+  for (let i = 0; i < mA; i++) for (let j = 0; j < mA; j++){
+    let rr = 0, ii = 0;
+    for (let e = 0; e < rest; e++){
+      const p = e * mA + i, q = e * mA + j;
+      rr += pr.re[p * D + q];
+      ii += pr.im[p * D + q];
+    }
+    A[i][j] += rr; A[i][mA + j] += -ii;
+    A[mA + i][j] += ii; A[mA + i][mA + j] += rr;
+  }
+  const { val } = jacobiReal(A, 2 * mA, 80);
+  const sorted = val.slice().sort((a, b) => b - a);
+  const lam = [];
+  for (let i = 0; i < 2 * mA; i += 2){          /* 实嵌入本征值各二重 ⟹ 隔一取 */
+    const v = Math.max(0, sorted[i]);
+    if (v > 1e-14) lam.push(v);
+  }
+  const sum = lam.reduce((a, b) => a + b, 0);
+  let S = 0;
+  for (const v of lam) if (v > 1e-14) S -= v * Math.log(v);
+  if (S < 0 && S > -1e-12) S = 0;
+  return { S, spectrum: lam, sum, kA, dimA: mA, mask: m, bits };
+}
+
+/* ---------- Wootters 全式 concurrence（n=2，任意两比特态） ----------
+ * X 态闭式只在 X 形初态 + 保持 X 形的通道下精确；门噪声 + 任意线路会打破
+ * X 形 ⟹ 用全式：R = ρ S ρ* S（S = σ_y⊗σ_y），C = max(0, Σ√λ_i 带符号）。
+ * S|k⟩ = s_k|π(k)⟩，π=[3,2,1,0]、s=[−1,1,1,−1] ⟹ R_{ij} = Σ_k ρ_{i,π(k)} ρ*_{k,π(j)}。 */
+function qcnConcurrence(rho){
+  if (rho.n !== 2) return NaN;
+  const D = 4, R = rho.re, I = rho.im;
+  const pi = [3, 2, 1, 0];
+  const Rre = new Float64Array(16), Rim = new Float64Array(16);
+  for (let i = 0; i < D; i++) for (let j = 0; j < D; j++){
+    let sr = 0, si = 0;
+    for (let k = 0; k < D; k++){
+      const a = i * D + pi[k], b = k * D + pi[j];
+      /* (a_r + i a_i)·conj(b_r + i b_i) */
+      sr += R[a] * R[b] + I[a] * I[b];
+      si += I[a] * R[b] - R[a] * I[b];
+    }
+    Rre[i * D + j] = sr; Rim[i * D + j] = si;
+  }
+  /* 实嵌入 [[Re,−Im],[Im,Re]]（厄米 ⟹ 本征值各二重） */
+  const m = 8;
+  const A = [];
+  for (let i = 0; i < m; i++) A.push(new Float64Array(m));
+  for (let i = 0; i < D; i++) for (let j = 0; j < D; j++){
+    A[i][j] += Rre[i * D + j]; A[i][D + j] += -Rim[i * D + j];
+    A[D + i][j] += Rim[i * D + j]; A[D + i][D + j] += Rre[i * D + j];
+  }
+  const { val } = jacobiReal(A, m, 120);
+  const sorted = val.slice().sort((a, b) => b - a).map(v => Math.max(0, v));
+  const roots = [0, 2, 4, 6].map(i => Math.sqrt(sorted[i]));   /* 隔一取（二重） */
+  return Math.max(0, roots[0] - roots[1] - roots[2] - roots[3]);
+}
+
+/* 注：不再 re-export mulberry32——scripts/build-standalone.mjs 只支持单行静态
+   import + 具名 export 声明，不解析 `export {}` 列表（dist 构建会 FAIL）。
+   需要 RNG 的调用方直接从 ./qcircuit.js import。 */
+
 /* ===== src/physics/qec.js ===== */
 /* ============================================================================
  * qec.js — R78 量子纠错：3 比特重复码（bit-flip / phase-flip）
@@ -2507,6 +3084,38 @@ function gnSweep(cfg = {}){
  *   二阶枚举给 c₂——DP 的小 p 展开必须同时命中两者。
  * ========================================================================== */
 
+/* ============================================================================
+ * R108：物理通道噪声（把 R104–R107 的 qcnoise.js 通道族接进本模块）
+ * ============================================================================
+ * 前两种口径（iid / gate）都是 **Pauli 注入**：错误是离散的 X/Y/Z，帧能精确
+ * 跟踪、DP-over-frames 有零统计误差的精确解。真实硬件不是这样——错误是**连续
+ * 通道**：弛豫、退相位、热激发、退极化、读出误报。新增 noise:'phys' 口径：
+ *
+ *   · 表示换成**密度矩阵** ρ（qcnRho，5 比特 32×32；iid/gate 的态矢路径不动，
+ *     零回归）。
+ *   · 数据错误保留 R78 静态块：编码后、解码前，每个数据比特独立以概率 p 翻一次
+ *     spec.err（bitflip 码 X / phaseflip 码 Z）——与 iid 同一机制，P_L 的
+ *     3p²−2p³ 骨架因此保留（ε=0 且门通道全关时 phys ≡ iid，见 pot108 A 节）。
+ *   · 门通道（noisyPhase 内的每个门作用后，对 gnTouched 的每个比特）：
+ *       振幅阻尼 / 热激发 γ=1−e^{−tg/T₁}（peq>0 走 GAD，peq=0 走振幅阻尼）
+ *       相位阻尼           λ=1−e^{−tg/T₂}
+ *       退极化             p_dep（ρ→(1−p)ρ+(p/3)ΣPρP）
+ *     全部来自 qcnoise.js 单一数据源（与 qcircuit 线路页同一份函数、同一组
+ *     t1/t2/tg/pd/re/peq 参数名）。
+ *   · 读出误差（SPAM）：ancilla 的 Z 测量**量子态仍按理想投影坍缩**，但记录的
+ *     经典位以概率 ε 独立翻转（qcnFlipBits）——综合征因此可能错，修正查表用的
+ *     是翻后的位。单错不再必纠：p=0 时 P_L = ε(1−ε) ≠ 0（只有 m₀ 被翻才会把
+ *     修正打到逻辑比特 q0 上；m₁ / 双翻的错修落在 q1/q2，是规范错误、F=1）。
+ *
+ * 三个新教学签名（pot108 逐条验证）：
+ *   ① 读出底座：p→0 时 P_L → ε(1−ε)（bitflip 与 phaseflip 对偶同值）——与 p
+ *      无关的误差底座，存储错误率再低也回不去；DP-over-syndromes 精确（B 节）。
+ *   ② 退极化等价：phys 只开 p_dep 时 ≡ gate 退极化谱（通道 = 随机 Pauli 注入
+ *      的系综），MC 4σ 对账 + DP 精确折线重合（C 节）——两种表示互相印证。
+ *   ③ 非 Pauli 通道无精确解：γ/λ>0 时帧跟踪失效（振幅阻尼不是 Pauli），
+ *      qecExactPL 返回 NaN，页面只画 MC 并显式标注（诚实限制）。
+ * ========================================================================== */
+
 const QEC_DEFAULTS = {
   code: 'bitflip',        /* bitflip | phaseflip */
   p: 0.05,
@@ -2517,10 +3126,18 @@ const QEC_DEFAULTS = {
   trials: 4000,
   seed: 7,
   /* ---- R86 门级噪声 ---- */
-  noise: 'iid',           /* iid（R78 静态口径，默认）| gate（R80 门级口径） */
+  noise: 'iid',           /* iid（R78 静态口径，默认）| gate（R80 门级口径）| phys（R108 物理通道口径） */
   spectrum: 'depolar',    /* depolar | x | z（gate 模式；iid 模式下谱由码定：
-                             bitflip 只翻 X、phaseflip 只翻 Z，与 R78 一致） */
+                             bitflip 只翻 X、phaseflip 只翻 Z，与 R78 一致；
+                             phys 模式忽略本字段——门通道是 T₁/T₂/退极化族，不是谱选择） */
   noisyPhase: 'extract',  /* extract（默认，只提取段）| all（encode/extract/decode） */
+  /* ---- R108 物理通道参数（与 qcircuit 线路页同名同义；γ=1−e^{−tg/T₁} 等） ---- */
+  t1: 3000,               /* 能量弛豫时间（任意单位；默认偏大 ⟹ 每门 γ≈3.3e-3） */
+  t2: 2000,               /* 退相位时间（T₂ ≤ 2T₁ 自动满足） */
+  tg: 10,                 /* 门时 */
+  pd: 0.002,              /* 每门每比特退极化概率 */
+  re: 0.005,              /* 每位测量记录的独立翻转概率（读出误差 ε） */
+  peq: 0,                 /* 热平衡激发布居（0 = 纯弛豫 ⟹ R104 振幅阻尼） */
 };
 
 /* 噪声模型与谱的页面标签（src/qec.js 用） */
@@ -2529,6 +3146,8 @@ const QEC_NOISE = {
     desc: 'R78 口径：编码后、解码前，每个数据比特独立以概率 p 翻一次 Pauli（bitflip 码翻 X、phaseflip 码翻 Z）。错误**不挂在门上**——3 个数据比特 = 3 次错误机会。' },
   gate: { label: '门级（R80）', short: 'gate',
     desc: 'R80 口径：每个门作用后，对该门触及的每个比特以概率 p 注入随机 Pauli。错误机会数 = Σ|gnTouched(门)|（提取段 8/12 个，「all」口径 16/26 个）——同一个 p，机会越多 P_L 越高。' },
+  phys: { label: '物理通道（R108）', short: 'phys',
+    desc: 'R108 口径：数据错误仍是静态 i.i.d. Pauli（率 p），但提取段每个门作用后对触及比特施加真实硬件通道——振幅阻尼/热激发 γ=1−e^(−tg/T₁)（按 p_eq 分配上下行）、相位阻尼 λ=1−e^(−tg/T₂)、退极化 p_d；ancilla 测量的经典记录位再以概率 ε 翻转（读出误差）。ρ 是混合态、综合征不再确定：单错不再必纠，P_L 有一个与 p 无关的底座 ε(1−ε)+门通道贡献。γ/λ>0 时无精确解（帧跟踪失效），只出 MC。' },
 };
 const QEC_SPECTRA = {
   depolar: { label: '退极化 X/Y/Z', short: 'depol' },
@@ -2762,6 +3381,7 @@ function qecCircuit(code = 'bitflip', cfg = {}){
      基线比对抓出。qecExec 只读 opts.faults，但缓存仍须剔除以防语义泄漏。 */
   const cacheCfg = { ...c };
   delete cacheCfg.forceErrors;
+  delete cacheCfg.forceFlips;   /* R108：phys 的强制综合征翻转（逐次运行选项，同上） */
   delete cacheCfg.faults;
   circ = { code, nq: 5, spec, cfg: cacheCfg, ops, stats: { nq: 5, gates, cnots, singles, meas, opps, M: opps.encode + opps.extract + opps.decode } };
   CIRC_CACHE.set(key, circ);
@@ -2899,6 +3519,190 @@ function qecExec(circ, opts = {}){
   };
 }
 
+/* ============================================================================
+ * R108：phys 口径执行一次（**量子轨迹** MCWF：态矢 + Kraus 跳变采样）
+ *
+ * 为什么不是「密度矩阵 + 通道」：把退极化通道**确定性地**作用到 ρ 上，会把全部
+ * 错误构型的混合态一起保留下来，末态 F = Σ_k w_k·F_k 是**平均**保真度——
+ * 逐试验判 F<0.5 量到的是「混合态里逻辑权重是否过半」，而不是「这次抽样到的
+ * 错误构型是否致命」。QEC 的逻辑错误率是**逐次实验**口径：每次实验环境采样出
+ * 一个具体错误构型，解码器据此成功或失败（首版密度矩阵实现因此把 pdep=0.01 的
+ * P_L 少算了 4 倍——MC 0.013 vs DP 0.045，pot108 C1 抓出）。
+ *
+ * 正确口径 = 量子轨迹（Monte Carlo wave functions）：每次试验在态矢上**采样**
+ * 每个错误机会的一个 Kraus 结果，轨迹系综与密度矩阵通道逐位同分布：
+ *   · 退极化 p_dep：gnSampleError('depolar') —— 无操作 w.p. 1−p，X/Y/Z 各 p/3
+ *     （与 gate 模式同一函数、同一分布 ⟹ pdep-only ≡ gate 退极化谱，4σ 对账）。
+ *   · 相位阻尼 λ：Kraus E₁=√(λ/2)·Z ⟹ w.p. λ/2 施加 Z（保迹 Pauli「跳变」，
+ *     帧仍可跟踪）。通道 = (1−λ/2)ρ + (λ/2)ZρZ，跨位相干 ×(1−λ) ✓。
+ *   · 振幅阻尼 / 热激发 γ（peq>0 走 GAD）：down（|1⟩→|0⟩）w.p. gDown·p₁、
+ *     up（|0⟩→|1⟩）w.p. gUp·p₀；不跳则施加 E₀=diag(√(1−gUp),√(1−gDown))
+ *     并重归一（||E₀ψ||² = 1−gUp·p₀−gDown·p₁）。peq=0 ⟹ 纯 R104 振幅阻尼。
+ *     跳变不是 Pauli ⟹ **Pauli 帧失效**（frameOK 闩死，诚实标注）。
+ *   · 读出误差 ε：量子态按理想投影坍缩，记录经典位以 ε 翻转（qcnFlipBits；
+ *     ε=0 不消耗 rng）。
+ * 数据错误保留 R78 静态块（率 p 的 spec.err 注入）——P_L 的 3p²−2p³ 骨架因此
+ * 保留：全通道关闭时本路径与 iid **逐位一致**（同 rng 消耗形状、同确定性结果）。
+ *
+ * 判定：q0 约化 ρ vs 目标纯态，F<0.5 ⟺ 逻辑错误（R78 口径，逐次实验）。
+ * 帧：Pauli 事件（depol / phase-Z）照常 qcFrToggle；synFrame 是帧对测量结果的
+ *   独立预测，frameOK 时与真实测量位逐位一致（ε 无关——翻的只是经典记录），
+ *   diag.frameMiss 恒 0（pot108 D 节断言）。
+ * ========================================================================== */
+function qecExecPhys(circ, opts = {}){
+  const c = { ...circ.cfg, ...(opts.cfg || {}) };
+  const spec = circ.spec;
+  const rng = opts.rng || null;
+  if (!rng) throw new Error('qecExecPhys: rng required（轨迹跳变与测量是随机的）');
+  const p = opts.p != null ? opts.p : (c.p || 0);
+  const noisyAll = (opts.noisyPhase || c.noisyPhase || 'extract') === 'all';
+  const noisyPh = noisyAll ? ['encode', 'extract', 'decode'] : ['extract'];
+  const np = qcnNoiseParams(c.t1, c.t2, c.tg, c.pd, c.re, c.peq);
+  const s = qcNewState(circ.nq);
+  const fr = { x: 0, z: 0 };
+  let frameOK = true;                 /* T1/热激发跳变不是 Pauli ⟹ 帧失效（闩死） */
+  const syn = [], synFrame = [], synTrue = [], flips = [], fired = [];
+  const noiseErrors = [];
+  let fixQ = -1, pre = null, frAtFix = null;
+  const diag = { frameMiss: 0, jumps: 0 };
+
+  /* 单比特 |1⟩ 布居（跳变概率用） */
+  const pop1 = (q) => {
+    const bit = 1 << q;
+    let p1 = 0;
+    for (let i = 0; i < s.dim; i++) if (i & bit) p1 += s.re[i] * s.re[i] + s.im[i] * s.im[i];
+    return p1;
+  };
+  /* T₁/热激发跳变（MCWF）：down w.p. gDown·p₁、up w.p. gUp·p₀，其余走 E₀+重归一 */
+  const thermalJump = (q, gate) => {
+    const bit = 1 << q;
+    const p1 = pop1(q);
+    const pDown = np.gDown * p1, pUp = np.gUp * (1 - p1);
+    const u = rng();
+    if (u < pDown){
+      /* down：|1⟩⟨1| 振幅搬到 |0⟩⟨0|，除 √p₁ */
+      for (let i0 = 0; i0 < s.dim; i0++){
+        if (i0 & bit) continue;
+        s.re[i0] = s.re[i0 | bit]; s.im[i0] = s.im[i0 | bit];
+        s.re[i0 | bit] = 0; s.im[i0 | bit] = 0;
+      }
+      const k = p1 > 0 ? 1 / Math.sqrt(p1) : 0;
+      for (let i = 0; i < s.dim; i++){ s.re[i] *= k; s.im[i] *= k; }
+      fired.push({ gate, q, t: 't1', kind: 't1' });
+      frameOK = false;
+      return;
+    }
+    if (u < pDown + pUp){
+      /* up：|0⟩⟨0| 振幅搬到 |1⟩⟨1|，除 √p₀ */
+      for (let i0 = 0; i0 < s.dim; i0++){
+        if (i0 & bit) continue;
+        s.re[i0 | bit] = s.re[i0]; s.im[i0 | bit] = s.im[i0];
+        s.re[i0] = 0; s.im[i0] = 0;
+      }
+      const k = (1 - p1) > 0 ? 1 / Math.sqrt(1 - p1) : 0;
+      for (let i = 0; i < s.dim; i++){ s.re[i] *= k; s.im[i] *= k; }
+      fired.push({ gate, q, t: 'up', kind: 'up' });
+      frameOK = false;
+      return;
+    }
+    /* 不跳：E₀ = diag(√(1−gUp), √(1−gDown))，重归一 1/√(1−pUp−pDown) */
+    const sc0 = Math.sqrt(1 - np.gUp), sc1 = Math.sqrt(1 - np.gDown);
+    const k = (1 - pUp - pDown) > 0 ? 1 / Math.sqrt(1 - pUp - pDown) : 0;
+    for (let i = 0; i < s.dim; i++){
+      const sc = (i & bit) ? sc1 : sc0;
+      s.re[i] *= sc * k; s.im[i] *= sc * k;
+    }
+  };
+
+  /* 测量（与 qecExec 同口径：qcMeasureQubit 投影坍缩；帧给独立预测） */
+  const measure = (q) => {
+    const tb = qcMeasureQubit(s, q, rng);
+    /* forceFlips=[δ₀,δ₁]：测试用——记录位 = 真实位 ⊕ δ（不消耗 rng），
+       与 forceErrors 同属逐次运行选项（CIRC_CACHE 已剔除，不烘进 circ.cfg） */
+    const bit = c.forceFlips ? (tb ^ (c.forceFlips[syn.length] ? 1 : 0)) : qcnFlipBits([tb], np.eps, rng)[0];
+    const sf = (fr.x >> q) & 1;
+    syn.push(bit); synTrue.push(tb); synFrame.push(sf);
+    flips.push(bit === tb ? 0 : 1);
+    if (frameOK && tb !== sf) diag.frameMiss++;
+    return bit;
+  };
+
+  for (let i = 0; i < circ.ops.length; i++){
+    const o = circ.ops[i];
+    if (o.op === 'noise'){
+      /* 静态数据块：与 iid 同机制（非 forceErrors 时每比特必调一次 rng） */
+      if (c.forceErrors){
+        for (const q of c.forceErrors){
+          qcApply(s, { op: spec.err, q });
+          qcFrToggle(fr, q, spec.err);
+          noiseErrors.push(q);
+        }
+      } else {
+        for (let q = 0; q < 3; q++){
+          if (rng() < p){
+            qcApply(s, { op: spec.err, q });
+            qcFrToggle(fr, q, spec.err);
+            noiseErrors.push(q);
+          }
+        }
+      }
+      continue;
+    }
+    if (o.op === 'meas'){ measure(o.q); continue; }
+    if (o.op === 'fix'){
+      fixQ = qecFixFromSyndrome(syn);
+      if (fixQ >= 0){
+        qcApply(s, { op: spec.fix, q: fixQ });
+        qcFrToggle(fr, fixQ, spec.fix);
+      }
+      pre = qecProbe(s, circ.code);
+      frAtFix = { x: fr.x & 0b111, z: fr.z & 0b111 };
+      continue;
+    }
+    /* 普通门 + 门后通道（thermal → phase → depol，与 qcnNoiseAfter 同序） */
+    qcApply(s, o);
+    qcFrGate(fr, o);
+    if (o.ph !== 'prep' && noisyPh.includes(o.ph)){
+      for (const q of gnTouched(o)){
+        if (np.gamma > 0){ thermalJump(q, i); diag.jumps++; }
+        if (np.lambda > 0 && rng() < np.lambda / 2){
+          qcApply(s, { op: 'z', q });
+          qcFrToggle(fr, q, 'z');
+          fired.push({ gate: i, q, t: 'z', kind: 'phase' });
+        }
+        if (np.pdep > 0){
+          const t = gnSampleError('depolar', np.pdep, rng);
+          if (t){
+            gnPauli(s, q, t);
+            qcFrToggle(fr, q, t);
+            fired.push({ gate: i, q, t, kind: 'depol' });
+          }
+        }
+      }
+    }
+  }
+
+  /* ⑦ 逻辑判定：q0 约化 vs 目标纯态（R78 口径，零回归） */
+  const th = c.theta / 2, ph = c.phase;
+  const alpha = [Math.cos(th), 0];
+  const beta = [Math.sin(th) * Math.cos(ph), Math.sin(th) * Math.sin(ph)];
+  const F = qcRhoFidelity(qcQubitRho(s, 0), alpha, beta);
+  const rho0 = qcQubitRho(s, 0);
+  const frAtEnd = { x: fr.x & 0b111, z: fr.z & 0b111 };
+  const dec = frameOK ? qecDecodedClass(frAtEnd) : { coset: null, cls: null };
+  return {
+    syn, synFrame, synTrue, flips, fixQ, pre, frAtFix, frAtEnd,
+    cosetFix: frameOK ? qecFrameCoset(circ.code, frAtFix) : null,
+    cosetDec: dec.coset, clsDec: dec.cls,
+    F, logicalError: F < 0.5,
+    errors: noiseErrors.slice(),
+    fired: fired.slice(),
+    frameOK,
+    state: s,
+    p0: rho0.re[0][0], p1: rho0.re[1][1],
+    diag,
+  };
+}
 /* 理想跑同一条线路取参考期望（探针判据的基准；缓存） */
 const REF_CACHE = new Map();
 function qecRef(circ){
@@ -2922,6 +3726,34 @@ function qecRef(circ){
 function qecTrial(cfg = {}, rng){
   const c = { ...QEC_DEFAULTS, ...cfg };
   const circ = qecCircuit(c.code, c);
+  if (c.noise === 'phys'){
+    /* R108：量子轨迹路径（rng 必需——跳变与测量都随机；页面/测试都传 rng） */
+    const r = qecExecPhys(circ, { rng, cfg: c });
+    const ref = qecRef(circ);
+    const cl = qecClass(r.pre, ref, r.F);
+    const trace = [];
+    trace.push({ step: 'prepare', gate: 'Ry(θ)Rz(φ)' });
+    trace.push({ step: 'encode', gate: 'CNOT×2' });
+    if (c.code === 'phaseflip') trace.push({ step: 'basis', gate: 'H×3' });
+    trace.push({ step: 'noise', errors: r.errors.slice() });
+    trace.push({ step: 'gatenoise', faults: r.fired.slice() });
+    trace.push({ step: 'syndrome', syn: r.syn.slice(), synTrue: r.synTrue.slice(), flips: r.flips.slice() });
+    trace.push({ step: 'correct', q: r.fixQ });
+    if (c.code === 'phaseflip') trace.push({ step: 'basis', gate: 'H×3' });
+    trace.push({ step: 'decode', gate: 'CNOT×2' });
+    return {
+      errors: r.errors, syn: r.syn, synTrue: r.synTrue, synFrame: r.synFrame, flips: r.flips, fixQ: r.fixQ,
+      F: r.F, logicalError: r.logicalError, ok: !r.logicalError,
+      trace,
+      p0: r.p0, p1: r.p1,
+      state: r.state,
+      noise: 'phys',
+      /* 探针五分类（轨迹态是纯态，分类照常）；帧分类仅 frameOK 时有效 */
+      cls: cl.cls, coset: cl.coset, sX: cl.sX, sY: cl.sY, sZ: cl.sZ,
+      clsDec: r.clsDec, cosetDec: r.cosetDec, synFrame: r.synFrame, pre: r.pre,
+      faults: r.fired, frameOK: r.frameOK,
+    };
+  }
   const ref = qecRef(circ);
   const r = qecExec(circ, { rng, cfg: c, faults: c.faults || null });
   const cl = qecClass(r.pre, ref, r.F);
@@ -2959,19 +3791,43 @@ function qecTrial(cfg = {}, rng){
  * ========================================================================== */
 function qecStream(cfg = {}){
   const c = { ...QEC_DEFAULTS, ...cfg };
+  const phys = c.noise === 'phys';
   const circ = qecCircuit(c.code, c);
   const ref = qecRef(circ);
   const rng = mulberry32(c.seed);
   let n = 0;
   let nL = 0, nLdec = 0;
-  const byCount = [0, 0, 0, 0];          /* 0/1/2/3 个错（i.i.d. 口径） */
+  const byCount = [0, 0, 0, 0];          /* 0/1/2/3 个错（i.i.d. 口径；phys 的静态数据错） */
   const byCountL = [0, 0, 0, 0];         /* 其中判成逻辑错误的 */
   const synCount = [0, 0, 0, 0];         /* 四种综合的频次 */
   const fates = { perfect: 0, gauge: 0, outside: 0, logic: 0, mixed: 0 };  /* 探针（码空间） */
   const fatesDec = { perfect: 0, gauge: 0, logic: 0 };                     /* 解码后（逻辑比特） */
+  /* R108 phys 专属：综合征读出翻转按个数分解（0/1/2 位被翻） */
+  const byFlip = [0, 0, 0], byFlipL = [0, 0, 0];
+  let flipSum = 0, jumpSum = 0, frameMissSum = 0, noFrame = 0;
   const faultHist = {};
   let faultSum = 0, synMiss = 0, randomMeas = 0, disagree = 0, disagreeBlind = 0, blind = 0;
   function one(){
+    if (phys){
+      const r = qecExecPhys(circ, { rng, cfg: c });
+      const cl = qecClass(r.pre, ref, r.F);
+      fates[cl.cls]++;
+      if (r.frameOK){ fatesDec[r.clsDec]++; if (r.clsDec === 'logic') nLdec++; }
+      else noFrame++;
+      if (r.logicalError) nL++;
+      if (r.diag.frameMiss) frameMissSum++;
+      const ec = r.errors.length;
+      byCount[ec]++;
+      if (r.logicalError) byCountL[ec]++;
+      const nf = r.flips[0] + r.flips[1];
+      byFlip[nf]++;
+      if (r.logicalError) byFlipL[nf]++;
+      flipSum += nf;
+      jumpSum += r.fired.length;
+      synCount[r.syn[0] * 2 + r.syn[1]]++;
+      n++;
+      return;
+    }
     const r = qecExec(circ, { rng, cfg: c });
     const cl = qecClass(r.pre, ref, r.F);
     fates[cl.cls]++;
@@ -3015,14 +3871,22 @@ function qecStream(cfg = {}){
       const nn = Math.max(1, n);          /* 防御 0 次 → 除 0；正常路径 n≥1 */
       return {
         p: c.p, code: c.code, trials: n, PL: nL / nn, PLdec: nLdec / nn,
-        /* PLexact：i.i.d. 模式 = 解析 3p²−2p³；gate 模式 = DP-over-frames 精确值
-           （末态判据与 PL 同为 q0 约化 F<0.5，可直接 4σ 对账） */
-        PLexact: c.noise === 'gate' ? qecExactPL(c) : qecLogicalRate(c.p), Pun: c.p,
+        /* PLexact：i.i.d. 模式 = 解析 3p²−2p³；gate / phys 模式 = DP-over-frames
+           精确值（phys 且 γ/λ>0 时返回 NaN——非 Pauli 通道无精确解，诚实标注） */
+        PLexact: c.noise === 'iid' ? qecLogicalRate(c.p) : qecExactPL(c), Pun: c.p,
         noise: c.noise, spectrum: c.spectrum, noisyPhase: c.noisyPhase,
         byCount, byCountL, synCount,
         fates, fatesDec, faultHist,
         meanFaults: c.noise === 'gate' ? faultSum / nn : NaN,
         meanFaultsIID: c.noise === 'gate' ? NaN : (byCount[1] + 2 * byCount[2] + 3 * byCount[3]) / nn,
+        /* R108 phys：读出翻转统计（iid/gate 恒 0，字段形状保持稳定） */
+        byFlip: phys ? byFlip.slice() : [n, 0, 0],
+        byFlipL: phys ? byFlipL.slice() : [0, 0, 0],
+        meanFlips: phys ? flipSum / nn : 0,
+        meanJumps: phys ? jumpSum / nn : 0,
+        frameMiss: phys ? frameMissSum : 0,
+        noFrame: phys ? noFrame : 0,
+        physParams: phys ? { t1: c.t1, t2: c.t2, tg: c.tg, pd: c.pd, re: c.re, peq: c.peq } : null,
         synMiss, randomMeas, disagree, disagreeBlind, blind,
         stats: circ.stats,
       };
@@ -3049,6 +3913,7 @@ function qecThreshold(){ return 0.5; }
 function qecSweep(cfg = {}){
   const c = { ...QEC_DEFAULTS, ...cfg };
   const gate = c.noise === 'gate';
+  const phys = c.noise === 'phys';
   const ps = c.ps || (gate
     ? Array.from({ length: 16 }, (_, i) => 0.002 * Math.pow(0.3 / 0.002, i / 15))
     : [0.002, 0.005, 0.01, 0.02, 0.04, 0.07, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5]);
@@ -3059,6 +3924,11 @@ function qecSweep(cfg = {}){
     if (gate){
       out.PLexact.push(qecExactPL({ ...c, p }));
       const e = qecEnsemble({ ...c, p, trials: c.sweepTrials || 1200 });
+      out.PL.push(e.PL);
+    } else if (phys){
+      /* R108：DP 精确（γ/λ>0 时 NaN）+ MC（密度矩阵，默认 900 次/点） */
+      out.PLexact.push(qecExactPL({ ...c, p }));
+      const e = qecEnsemble({ ...c, p, trials: c.sweepTrials || 900 });
       out.PL.push(e.PL);
     } else {
       const e = qecEnsemble({ ...c, p });
@@ -3075,23 +3945,40 @@ function qecSweep(cfg = {}){
  * 帧空间 2^{2·5} = 1024（5 比特的 x/z 掩码）× 综合征 4（两位），每个门后按谱
  * 分支；测量读帧的 x 位（确定）、修正查表（确定）、解码传播（确定）⟹ 全程无
  * 随机分支，末态帧完全决定结局。与态矢 MC 是两套独立表示，4σ 对账。
+ *
+ * R108 扩展（三种口径统一到同一 DP）：
+ *   · iid  ：静态数据块（率 p，spec.err）+ 无门分支 + 无读出翻转
+ *   · gate ：无静态块 + 门分支（率 p，谱 = c.spectrum）
+ *   · phys ：静态数据块（率 p）+ 门分支（退极化率 p_dep，谱恒退极化 X/Y/Z 各
+ *             1/3——退极化通道 ≡ 随机 Pauli 注入的系综）+ **相位阻尼**（Z 注入
+ *             率 λ/2：Kraus E₁=√(λ/2)·Z 的 Pauli 通道展开）+ **读出翻转**（每位
+ *             测量以概率 ε 把记录综合征翻过来；量子态/帧不受影响，纯经典分支）
+ *   · 守卫：phys 且 γ>0 ⟹ 返回 NaN。振幅阻尼/热激发不是 Pauli，帧无法表示——
+ *     非 Pauli 通道没有零统计误差的精确解（诚实限制）。退极化、相位阻尼、读出
+ *     翻转都是 Pauli/经典可表示的，照样给精确值。
  * ========================================================================== */
 function qecExactPL(cfg = {}){
   const c = { ...QEC_DEFAULTS, ...cfg };
   const circ = qecCircuit(c.code, c);
   const gate = c.noise === 'gate';
+  const phys = c.noise === 'phys';
   const noisyAll = c.noisyPhase === 'all';
-  const noisyPh = gate ? (noisyAll ? ['encode', 'extract', 'decode'] : ['extract']) : [];
-  const W = qecSpecW(c.spectrum);
+  const noisyPh = gate || phys ? (noisyAll ? ['encode', 'extract', 'decode'] : ['extract']) : [];
+  /* R108：phys 的物理参数（守卫 + 门分支率 + 读出翻转率） */
+  const np = phys ? qcnNoiseParams(c.t1, c.t2, c.tg, c.pd, c.re, c.peq) : null;
+  if (phys && np.gamma > 0) return NaN;   /* 振幅阻尼/热激发非 Pauli：无精确解（λ 有 Z 分支，仍精确） */
+  const eps = phys ? np.eps : 0;
+  const W = gate ? qecSpecW(c.spectrum) : qecSpecW('depolar');   /* phys 门通道恒退极化谱 */
+  const gateP = gate ? Math.max(0, Math.min(1, c.p)) : (phys ? np.pdep : 0);
   const p = Math.max(0, Math.min(1, c.p));
   const spec = circ.spec;
-  /* 键：((x<<5)|z)<<2 | syn */
+  /* 键：((x<<5)|z)<<2 | syn（syn = **记录**综合征位，读出翻转在这里分支） */
   let dist = new Map([[0, 1]]);
   const add = (m, k, v) => m.set(k, (m.get(k) || 0) + v);
   for (const o of circ.ops){
     if (o.op === 'noise'){
-      if (gate) continue;                    /* 门级模式：没有静态块 */
-      /* i.i.d.：逐数据比特独立以 p 施加 spec.err */
+      if (gate) continue;                    /* 门级模式：没有静态块（phys 保留） */
+      /* i.i.d./phys：逐数据比特独立以 p 施加 spec.err */
       const next = new Map();
       for (const [k, v] of dist){
         let cur = new Map([[k, v]]);
@@ -3113,12 +4000,18 @@ function qecExactPL(cfg = {}){
       continue;
     }
     if (o.op === 'meas'){
-      /* 综合征位 = 帧的 x 位（确定，无分支：残差是 Pauli、ancilla 测前是
-         Z 本征态，读数由帧的 X 分量唯一决定——与态矢路径逐位一致） */
+      /* 真实位 = 帧的 x 位（确定：量子态按理想投影坍缩，翻转只发生在经典记录上） */
       const next = new Map();
       for (const [k, v] of dist){
         const x = (k >> 7) & 31, syn = k & 3;
-        add(next, (k & ~3) | (syn | (((x >> o.q) & 1) << o.stab)), v);
+        const tb = (x >> o.q) & 1;
+        const base = k & ~3;
+        if (eps > 0){
+          add(next, base | (syn | ((tb ^ 1) << o.stab)), v * eps);      /* 记录位被翻 */
+          add(next, base | (syn | (tb << o.stab)), v * (1 - eps));      /* 记录位正确 */
+        } else {
+          add(next, base | (syn | (tb << o.stab)), v);
+        }
       }
       dist = next;
       continue;
@@ -3138,26 +4031,39 @@ function qecExactPL(cfg = {}){
       dist = next;
       continue;
     }
-    /* 普通门：帧传播（确定）+ 门后注错（按谱分支） */
+    /* 普通门：帧传播（确定）+ 门后注错（按谱分支；gate 率 p，phys 率 p_dep） */
     const next = new Map();
     for (const [k, v] of dist){
       const fr = { x: (k >> 7) & 31, z: (k >> 2) & 31 };
       const syn = k & 3;
       qcFrGate(fr, o);
       let cur = new Map([[((fr.x << 5) | fr.z) << 2 | syn, v]]);
-      if (gate && p > 0 && o.ph !== 'prep' && noisyPh.includes(o.ph)){
+      if (gateP > 0 && o.ph !== 'prep' && noisyPh.includes(o.ph)){
         for (const q of gnTouched(o)){
           const nx = new Map();
           for (const [kk, vv] of cur){
             const x = (kk >> 7) & 31, z = (kk >> 2) & 31, sy = kk & 3;
-            add(nx, kk, vv * (1 - p));
+            add(nx, kk, vv * (1 - gateP));
             const b = 1 << q;
             for (const t of ['x', 'y', 'z']){
               if (!W[t]) continue;
               const x2 = (t === 'x' || t === 'y') ? (x ^ b) : x;
               const z2 = (t === 'z' || t === 'y') ? (z ^ b) : z;
-              add(nx, ((x2 << 5) | z2) << 2 | sy, vv * p * W[t]);
+              add(nx, ((x2 << 5) | z2) << 2 | sy, vv * gateP * W[t]);
             }
+          }
+          cur = nx;
+        }
+      }
+      /* R108 phys：相位阻尼 = Z 注入率 λ/2（与退极化独立、可交换，后套一层） */
+      if (phys && np.lambda > 0 && o.ph !== 'prep' && noisyPh.includes(o.ph)){
+        const phP = np.lambda / 2;
+        for (const q of gnTouched(o)){
+          const nx = new Map();
+          for (const [kk, vv] of cur){
+            const x = (kk >> 7) & 31, z = (kk >> 2) & 31, sy = kk & 3;
+            add(nx, kk, vv * (1 - phP));
+            add(nx, ((x << 5) | (z ^ (1 << q))) << 2 | sy, vv * phP);
           }
           cur = nx;
         }
@@ -3460,20 +4366,26 @@ class LiveDriver {
  * mode-rep.js（QEC hub 模式）— 由 qec.js（R78/R86）重构而来（R98 七页整合）
  * 量子纠错：3 比特重复码的线路图 / P_L(p) / 错误分解
  *
- * 两种噪声口径（面板切换，URL 参数同）：
+ * 三种噪声口径（面板切换，URL 参数同）：
  *   noise='iid'（R78 默认，零回归）：编码后、解码前，每个数据比特独立以概率 p
  *     翻一次 Pauli。线路图是教学简化视图（P / 编码 / 噪声 / 综合 / 修正 / 解码）。
  *   noise='gate'（R86，R80 口径）：每个门作用后对触及比特按谱注入 Pauli。
  *     线路图改按 physics/qec.js 的 ops 列表**逐门绘制**（单一数据源，不再
  *     重复定义线路），本次试验注入的故障以红字标在对应门列上。
+ *   noise='phys'（R108 物理通道口径）：数据错误仍是静态 i.i.d.（率 p），但提取段
+ *     每个门作用后对触及比特施加真实硬件通道（T₁/T₂/退极化，量子轨迹 MCWF 采样），
+ *     ancilla 测量的经典记录位再以 ε 翻转（读出误差）。P_L 出现与 p 无关的底座；
+ *     γ=λ=0 时 DP-over-frames 有精确解（曲线青色实线），γ>0 非 Pauli 无解只出 MC。
  *
  * 三块画布：
- *   #qecCircuit  5 比特线路（3 数据 + 2 ancilla）
+ *   #qecCircuit  5 比特线路（3 数据 + 2 ancilla；phys 用教学视图 + ε 标记）
  *   #qecCurve    P_L(p) 双对数：iid = MC 点 + 3p²−2p³ 解析 + 阈值 p=1/2；
  *                gate = MC 点 + DP-over-frames 精确折线 + P_L=p 交点（二分根；
- *                两侧方向与静态相反，不称阈值——见 gateThreshold 注记）
+ *                两侧方向与静态相反，不称阈值——见 gateThreshold 注记）；
+ *                phys = MC 点 + 理想 3p²−2p³ + DP 精确（γ=λ=0）+ 底座横线
  *   #qecHist     iid = 按错误个数分组的柱状（0/1/2/3 错，堆叠纠对/逻辑错误）；
- *                gate = 结局分解（码空间五分类 + 解码后三分类）
+ *                gate = 结局分解（码空间五分类 + 解码后三分类）；
+ *                phys = 综合征读出翻转分解（0/1/2 位被翻，堆叠纠对/逻辑错误）
  *
  * R98 重构要点（保行为）：去 topbar（壳提供）；mount→activate；q() 限定
  * modeRoot；on() 记 _listeners 供 deactivate 摘除；window resize / RO /
@@ -3482,10 +4394,12 @@ class LiveDriver {
  * ========================================================================== */
 
 const QEC_CSS = `
-  #qePanel{top:108px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 234px);
+  /* R108：hint 移到右列后左列无底部占位，面板高度帽子放到 100vh−126px
+     （108 顶栏 + 18 底距）；phys 参数组行距收紧防触顶滚动 */
+  #qePanel{top:108px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 126px);
     overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #qePanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
-    text-transform:uppercase;margin:10px 0 5px}
+    text-transform:uppercase;margin:8px 0 4px}
   #qePanel .row{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:11.5px}
   #qePanel .row label{color:var(--dim);min-width:54px}
   #qePanel input[type=range]{flex:1;height:3px;-webkit-appearance:none;background:rgba(120,160,220,.22);border-radius:2px}
@@ -3499,8 +4413,17 @@ const QEC_CSS = `
     background:rgba(103,232,249,.08);border:1px solid var(--line);color:var(--txt);transition:all .15s}
   #qePanel button:hover{border-color:rgba(103,232,249,.45);color:var(--cyan)}
   #qePanel button.on{background:rgba(103,232,249,.18);border-color:var(--cyan);color:var(--cyan)}
-  /* 门级专属组（错误谱 / 注错相位）：iid 模式下置灰不可点 */
+  /* 门级专属组（错误谱）：iid/phys 模式置灰不可点（phys 的谱不适用——门通道是
+     T₁/T₂/退极化族；注错相位拆到 #qeNpWrap，gate/phys 都适用） */
   #qeSpWrap.off{opacity:.32;pointer-events:none}
+  /* 注错相位组：仅 iid 模式置灰（gate/phys 均适用） */
+  #qeNpWrap.off{opacity:.32;pointer-events:none}
+  /* R108：phys 专属组（物理通道参数）：非 phys 模式**整体隐藏**（与 qcircuit 页
+     噪声滑块同风——不进布局，iid/gate 面板与 R107 逐像素一致；phys 内才展开） */
+  #qePhysWrap{display:none}
+  #qePhysWrap.on{display:block}
+  /* phys 参数组行距收紧（六滑块 + 既有控件，防面板触顶滚动） */
+  #qePhysWrap .row{margin:3px 0}
   #qeHud{top:108px;right:14px;padding:11px 13px;z-index:10;min-width:222px;max-width:250px;font-family:var(--mono);
     max-height:calc(100vh - 234px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #qeHud .hrow{display:flex;justify-content:space-between;gap:12px;font-size:11.5px;padding:2.5px 0;flex-wrap:wrap}
@@ -3515,7 +4438,11 @@ const QEC_CSS = `
   #qecCircuit{grid-column:1 / span 2}
   #qecCircuit,#qecCurve,#qecHist{width:100%;height:100%;border:1px solid var(--line);border-radius:10px;
     background:rgba(4,8,16,.55);display:block}
-  #qeHint{left:14px;bottom:14px;z-index:10;padding:9px 12px;width:238px;font-size:10px;
+  /* R108：hint 从左下移到**右列 HUD 下方**（原左下位与面板共享 100vh−234px 的
+     高度预算，phys 六滑块加入后面板必与 hint 重叠——cdp90 V5 实测 98px）。右列
+     HUD 内容只有 ~320px、下方 360px 是死区，hint 移入后面板高度预算解除
+     （max-height 仍保留 100vh−234px 的帽子，内容 481/631px 均不触顶）。 */
+  #qeHint{right:14px;bottom:14px;z-index:10;padding:9px 12px;width:238px;font-size:10px;
     color:var(--dim);line-height:1.55;max-height:210px;overflow-y:auto;
     scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #qeHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
@@ -3544,15 +4471,21 @@ class QecApp {
       /* R98 P2 实时沙盒：?live=1 直达即播（播放器见 activate 的 LiveDriver） */
       live: q.get('live') === '1',
       /* ---- R86 门级噪声（URL: noise/spectrum/noisyPhase） ---- */
-      noise: str('noise', 'iid', v => v === 'iid' || v === 'gate'),
+      noise: str('noise', 'iid', v => v === 'iid' || v === 'gate' || v === 'phys'),
       spectrum: str('spectrum', 'depolar', v => v === 'depolar' || v === 'x' || v === 'z'),
       noisyPhase: str('noisyPhase', 'extract', v => v === 'extract' || v === 'all'),
+      /* ---- R108 物理通道（URL: t1/t2/tg/pd/re/peq，与 qcircuit 线路页同名同义） ---- */
+      phys: {
+        t1: num('t1', 3000), t2: num('t2', 2000), tg: num('tg', 10),
+        pd: num('pd', 0.002), re: num('re', 0.005), peq: num('peq', 0),
+      },
     };
     this.trial = null;
     this.ens = null;
     this.curve = null;
     this.svy = null;      /* 门级：一阶故障枚举（c₁） */
     this._thr = null;     /* 门级：数值阈值（PLexact(p)=p 的首个根） */
+    this._floor = null;   /* R108 phys：P_L 底座（p→0；DP 精确或 MC） */
     this._curveKey = '';
   }
 
@@ -3561,6 +4494,7 @@ class QecApp {
 
   deactivate(){
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
+    clearTimeout(this._physDeb);   /* R108：phys 滑块防抖（切 mode 不泄漏） */
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
     this.live?.dispose();                 /* R98 P2：停 rAF 播放环（切 mode 零泄漏） */
@@ -3583,6 +4517,9 @@ class QecApp {
           <button data-n="iid">静态 i.i.d.</button>
           <button data-n="gate">门级（R80）</button>
         </div>
+        <div class="btns">
+          <button data-n="phys">物理通道（R108）</button>
+        </div>
         <div id="qeSpWrap">
           <div class="grp">错误谱（门级）</div>
           <div class="btns g3">
@@ -3590,11 +4527,21 @@ class QecApp {
             <button data-sp="x">仅 X</button>
             <button data-sp="z">仅 Z</button>
           </div>
-          <div class="grp">注错相位（门级）</div>
+        </div>
+        <div id="qeNpWrap">
+          <div class="grp">注错相位（门级/物理）</div>
           <div class="btns">
             <button data-np="extract">仅提取段</button>
             <button data-np="all">全程</button>
           </div>
+        </div>
+        <div id="qePhysWrap">
+          <div class="row"><label>T₁ 弛豫</label><input type="range" id="qeT1" min="200" max="6000" step="100" title="能量弛豫时间（与 t_g 同单位）；每门 γ=1−e^(−tg/T₁)，peq&gt;0 时按 p_eq 分配为 |1⟩→|0⟩ 与 |0⟩→|1⟩"><output id="qeT1O">—</output></div>
+          <div class="row"><label>T₂ 退相位</label><input type="range" id="qeT2" min="200" max="6000" step="100" title="退相位时间；每门 λ=1−e^(−tg/T₂)，等效为以 λ/2 概率施加 Z"><output id="qeT2O">—</output></div>
+          <div class="row"><label>门时 t_g</label><input type="range" id="qeTg" min="0" max="60" step="1" title="每个门的持续时间；t_g=0 ⟹ γ=λ=0（只剩退极化/读出误差，DP 有精确解）"><output id="qeTgO">—</output></div>
+          <div class="row"><label>退极化 p_d</label><input type="range" id="qePd" min="0" max="20" step="0.5" title="每门每比特退极化概率（单位 ×10⁻³，0=关闭）；ρ→(1−p)ρ+(p/3)ΣPρP，与门级退极化谱同分布"><output id="qePdO">—</output></div>
+          <div class="row"><label>读出误差 ε</label><input type="range" id="qeRe" min="0" max="50" step="0.5" title="每位 ancilla 测量记录独立翻转的概率（单位 ×10⁻³）；量子态仍按理想投影坍缩——翻的只是经典综合征位，p=0 时底座 = ε(1−ε)"><output id="qeReO">—</output></div>
+          <div class="row"><label>热平衡 p_eq</label><input type="range" id="qePeq" min="0" max="500" step="10" title="热平衡激发布居（单位 ×10⁻³，0=纯弛豫 ⟹ 振幅阻尼）；T₁ 总弛豫率按 p_eq 重新分配上下行 ⟹ 平衡态是对角热态"><output id="qePeqO">—</output></div>
         </div>
 
         <div class="grp">物理错误率 p</div>
@@ -3637,6 +4584,12 @@ class QecApp {
           <div class="hrow"><span>解码后 完/规/逻</span><span id="hFatesD">—</span></div>
           <div class="hrow"><span>c₁（P_L≈c₁p）</span><span id="hC1g">—</span></div>
         </div>
+        <div id="hPhysStats" style="display:none">
+          <div class="hrow"><span>P_L 底座（p→0）</span><span id="hFloor">—</span></div>
+          <div class="hrow"><span>读出翻转/试验</span><span id="hFlip">—</span></div>
+          <div class="hrow"><span>通道跳变/试验</span><span id="hJump">—</span></div>
+          <div class="hrow"><span>γ / λ / ε（每门）</span><span id="hChan">—</span></div>
+        </div>
       </aside>
 
       <div id="qeStage" class="qstage">
@@ -3665,6 +4618,16 @@ class QecApp {
     }
     this.on(this.q('#qeP'), 'input', e => { this.state.p = parseFloat(e.target.value); this.recompute(); this.syncPanel(); });
     this.on(this.q('#qeTrials'), 'input', e => { this.state.trials = parseInt(e.target.value, 10); this.recompute(); this.syncPanel(); });
+    /* R108：phys 参数滑块（pd/re/peq 单位 ×10⁻³；改参即重置曲线，防抖 150ms
+       避免拖动时每事件全量重算——sweep 12 点 × MC 比 iid 慢一截） */
+    const physSlider = (id, key, scale) => this.on(this.q('#qe' + id), 'input', e => {
+      this.state.phys[key] = parseFloat(e.target.value) * (scale || 1);
+      this.syncPanel();
+      clearTimeout(this._physDeb);
+      this._physDeb = setTimeout(() => { this._curveKey = ''; this.recompute(); }, 150);
+    });
+    physSlider('T1', 't1'); physSlider('T2', 't2'); physSlider('Tg', 'tg');
+    physSlider('Pd', 'pd', 0.001); physSlider('Re', 're', 0.001); physSlider('Peq', 'peq', 0.001);
     this.on(this.q('#qeOnce'), 'click', () => { this.rollOnce(); this.drawAll(); this.renderHud(); });
     this.on(this.q('#qeReseed'), 'click', () => {
       this.state.seed = (this.state.seed * 1103515245 + 12345) % 2147483647;
@@ -3700,6 +4663,8 @@ class QecApp {
     return {
       code: this.state.code, p: this.state.p, trials: this.state.trials, seed: this.state.seed,
       noise: this.state.noise, spectrum: this.state.spectrum, noisyPhase: this.state.noisyPhase,
+      t1: this.state.phys.t1, t2: this.state.phys.t2, tg: this.state.phys.tg,
+      pd: this.state.phys.pd, re: this.state.phys.re, peq: this.state.phys.peq,
     };
   }
 
@@ -3726,6 +4691,11 @@ class QecApp {
       };
       if (this.state.noise === 'gate'){
         sweepCfg.ps = Array.from({ length: 18 }, (_, i) => 0.002 * Math.pow(0.55 / 0.002, i / 17));
+      } else if (this.state.noise === 'phys'){
+        /* R108：phys 复用 iid 的 12 点网格（0.002…0.5），MC 900 次/点；
+           物理参数随面板走（γ/λ>0 时 PLexact=NaN，曲线只画 MC） */
+        Object.assign(sweepCfg, this.state.phys);
+        sweepCfg.sweepTrials = 900;
       }
       this.curve = qecSweep(sweepCfg);
       this._curveKey = key;
@@ -3733,13 +4703,29 @@ class QecApp {
         /* c₁：一阶故障枚举（p 无关，随 code/spectrum/noisyPhase 变） */
         this.svy = qecFaultSurvey(this.cfg(), 1);
         this._thr = this.gateThreshold();
+      } else if (this.state.noise === 'phys'){
+        this.svy = null;
+        /* PLexact 曲线与 y=p 的首个交点（γ=λ=0 时 DP 可得；NaN 时返回 null） */
+        this._thr = this.gateThreshold();
+        this._floor = this.physFloor();
       } else {
         this.svy = null;
         this._thr = null;
+        this._floor = null;
       }
     }
     this.renderHud();
     this.drawAll();
+  }
+
+  /* R108：P_L 底座（p→0）——γ=λ=0 时 DP-over-frames 精确（含读出误差 ε(1−ε) 项），
+     γ>0（振幅阻尼/热激发）无精确解 ⟹ MC 3000 次估计（HUD 标注「估」） */
+  physFloor(){
+    const cfg0 = { ...this.cfg(), p: 0 };
+    const ex = qecExactPL(cfg0);
+    if (Number.isFinite(ex)) return { exact: true, v: ex };
+    const e = qecEnsemble({ ...cfg0, trials: 3000 });
+    return { exact: false, v: e.PL };
   }
 
   /* 门级「P_L = p 交点」：PLexact(p) − p 的首个变号点。粗扫用 sweep 的 18 个
@@ -3822,9 +4808,21 @@ class QecApp {
     for (const b of this.modeRoot.querySelectorAll('#qePanel button[data-np]')) b.classList.toggle('on', b.dataset.np === s.noisyPhase);
     const wrap = this.q('#qeSpWrap');
     if (wrap) wrap.classList.toggle('off', s.noise !== 'gate');
+    const npw = this.q('#qeNpWrap');
+    if (npw) npw.classList.toggle('off', s.noise === 'iid');
+    const pw = this.q('#qePhysWrap');
+    if (pw) pw.classList.toggle('on', s.noise === 'phys');
     const setv = (id, v) => { const e = this.q('#' + id); if (e) e.value = v; };
+    const txt = (id, v) => { const e = this.q('#' + id); if (e) e.textContent = v; };
     setv('qeP', s.p); this.q('#qePO').textContent = s.p.toFixed(3);
     setv('qeTrials', s.trials); this.q('#qeTrialsO').textContent = s.trials;
+    /* R108：phys 滑块（pd/re/peq 刻度为 ×10⁻³） */
+    setv('qeT1', s.phys.t1); txt('qeT1O', s.phys.t1);
+    setv('qeT2', s.phys.t2); txt('qeT2O', s.phys.t2);
+    setv('qeTg', s.phys.tg); txt('qeTgO', s.phys.tg);
+    setv('qePd', s.phys.pd * 1000); txt('qePdO', (s.phys.pd * 1000).toFixed(1));
+    setv('qeRe', s.phys.re * 1000); txt('qeReO', (s.phys.re * 1000).toFixed(1));
+    setv('qePeq', s.phys.peq * 1000); txt('qePeqO', (s.phys.peq * 1000).toFixed(0));
   }
 
   renderHint(){
@@ -3840,6 +4838,12 @@ class QecApp {
           ? '<br><span style="color:var(--cyan);font-weight:600">注错范围</span> ' +
             (s.noisyPhase === 'all' ? '全程（编码 / 提取 / 解码）' : '仅综合提取段') +
             '；谱 = ' + QEC_SPECTRA[s.spectrum].label + '。'
+          : '') +
+        (s.noise === 'phys'
+          ? '<br><span style="color:var(--cyan);font-weight:600">物理参数</span> T₁=' + s.phys.t1 +
+            ' · T₂=' + s.phys.t2 + ' · t_g=' + s.phys.tg + ' · p_d=' + s.phys.pd +
+            ' · ε=' + s.phys.re + ' · p_eq=' + s.phys.peq +
+            '（γ=1−e^(−tg/T₁)、λ=1−e^(−tg/T₂)；γ=0 时 DP 有精确解，γ>0 非 Pauli 无解只出 MC）。'
           : '');
     }
   }
@@ -3862,10 +4866,19 @@ class QecApp {
       if (s.noise === 'gate'){
         /* 门级：故障挂在门上，按 (Pauli@比特) 列 */
         set('hErr', t.faults.length ? t.faults.map(f => f.t.toUpperCase() + '@q' + f.q).join(' ') : '无');
+      } else if (s.noise === 'phys'){
+        /* R108：静态数据错误 + 门通道跳变（depol Pauli / 相位 Z / T₁ / 热激发 ↑） */
+        const parts = [];
+        if (t.errors.length) parts.push('q' + t.errors.join(',q'));
+        if (t.faults.length) parts.push(t.faults.map(f =>
+          (f.kind === 'depol' ? f.t.toUpperCase() : f.kind === 'phase' ? 'Z(λ)' : f.kind === 't1' ? 'T₁' : '↑') + '@q' + f.q).join(' '));
+        set('hErr', parts.length ? parts.join(' · ') : '无');
       } else {
         set('hErr', t.errors.length ? 'q' + t.errors.join(',q') : '无');
       }
-      set('hSyn', t.syn.join('') + (t.syn[0] * 2 + t.syn[1] === 0 ? '（无错）' : ''));
+      /* 综合征：记录位（修正查表用）；phys 有翻转时附真实位（红字由判定行承担） */
+      set('hSyn', t.syn.join('') + (t.syn[0] * 2 + t.syn[1] === 0 ? '（无错）' : '')
+        + (s.noise === 'phys' && t.flips && t.flips.some(f => f) ? ' 真实 ' + t.synTrue.join('') : ''));
       /* 修正算符随码变（bitflip→X、phaseflip→Z）；首版硬编码 X，与线路图的 Z 不一致 */
       const fixSym = (QEC_CODES[s.code] || QEC_CODES.bitflip).fix.toUpperCase();
       set('hFix', t.fixQ < 0 ? '不动' : fixSym + t.fixQ);
@@ -3875,13 +4888,14 @@ class QecApp {
     }
     if (e){
       set('hPL', repNf(e.PL, 5));
-      set('hPLx', repNf(e.PLexact, 5));
-      set('hPLxL', s.noise === 'gate' ? 'P_L 精确（DP）' : '3p²−2p³');
+      set('hPLx', s.noise === 'phys' && !Number.isFinite(e.PLexact) ? '—（非 Pauli）' : repNf(e.PLexact, 5));
+      set('hPLxL', s.noise === 'gate' ? 'P_L 精确（DP）' : s.noise === 'phys' ? 'P_L 精确（DP）' : '3p²−2p³');
       set('hPun', repNf(e.Pun, 4));
       set('hRatio', s.p > 0 ? repNf(e.PL / e.Pun, 3) + (e.PL < e.Pun ? ' ↓' : ' ↑') : '—');
-      const gi = this.q('#hGateStats'), ii = this.q('#hIidCounts');
+      const gi = this.q('#hGateStats'), ii = this.q('#hIidCounts'), pi = this.q('#hPhysStats');
       if (gi) gi.style.display = s.noise === 'gate' ? '' : 'none';
       if (ii) ii.style.display = s.noise === 'gate' ? 'none' : '';
+      if (pi) pi.style.display = s.noise === 'phys' ? '' : 'none';
       if (s.noise === 'gate'){
         set('hM', this.effM() + '（' + (s.noisyPhase === 'all' ? '全程' : '仅提取段') + '）');
         set('hMF', Number.isFinite(e.meanFaults) ? e.meanFaults.toFixed(3) : '—');
@@ -3891,6 +4905,15 @@ class QecApp {
         set('hFatesD', [D.perfect, D.gauge, D.logic]
           .map(v => (100 * v / e.trials).toFixed(1) + '%').join(' / '));
         set('hC1g', this.svy ? repNf(this.svy.c1, 3) : '—');
+      } else if (s.noise === 'phys'){
+        /* R108：底座 / 读出翻转 / 通道跳变 / 每门速率摘要 */
+        set('hFloor', this._floor ? (this._floor.exact ? '' : '≈') + repNf(this._floor.v, 4) : '—');
+        set('hFlip', repNf(e.meanFlips, 4) + '（' + e.byFlip.map(v => (100 * v / e.trials).toFixed(1) + '%').join('/') + '）');
+        set('hJump', repNf(e.meanJumps, 4));
+        const g = 1 - Math.exp(-s.phys.tg / Math.max(1e-9, s.phys.t1));
+        const l = 1 - Math.exp(-s.phys.tg / Math.max(1e-9, s.phys.t2));
+        set('hChan', repEx(g, 1) + ' / ' + repEx(l, 1) + ' / ' + repEx(s.phys.re, 1));
+        for (let k = 0; k < 4; k++) set('hC' + k, e.byCount[k] + (e.byCountL[k] ? ' /L' + e.byCountL[k] : ' ✓'));
       } else {
         for (let k = 0; k < 4; k++) set('hC' + k, e.byCount[k] + (e.byCountL[k] ? ' /L' + e.byCountL[k] : ' ✓'));
       }
@@ -3991,6 +5014,14 @@ class QecApp {
         cnot(cx, yOf(col.a), yOf(col.b), false);
       } else if (col.t === 'meas'){
         box(cx, yOf(col.q), size, 'M', 'rgba(203,213,225,.8)', false);
+        /* R108 phys：ancilla 测量的记录位以 ε 翻转（读出误差）——琥珀 ε 标记 */
+        if (s.noise === 'phys' && s.phys.re > 0){
+          g.fillStyle = 'rgba(251,191,36,.95)';
+          g.font = (9 * dpr) + 'px ui-monospace,monospace';
+          g.textAlign = 'center'; g.textBaseline = 'middle';
+          g.fillText('ε', cx, yOf(col.q) - size / 2 - 7 * dpr);
+          g.textBaseline = 'alphabetic';
+        }
       } else if (col.t === 'h3'){
         /* 三比特同时 H：横跨 q0..q2 的竖条 */
         const y0 = yOf(0), y2 = yOf(2);
@@ -4018,7 +5049,7 @@ class QecApp {
           g.textBaseline = 'alphabetic';
         }
         g.fillStyle = 'rgba(148,163,184,.8)'; g.font = (9 * dpr) + 'px ui-monospace,monospace';
-        g.textAlign = 'center'; g.fillText('噪声 p', cx, yOf(0) - size / 2 - 7 * dpr);
+        g.textAlign = 'center'; g.fillText(s.noise === 'phys' ? '存储错误 p' : '噪声 p', cx, yOf(0) - size / 2 - 7 * dpr);
       } else if (col.t === 'fix'){
         if (fixQ >= 0){
           box(cx, yOf(fixQ), size, isPhase ? 'Z' : 'X', 'rgba(251,191,36,.95)');
@@ -4047,6 +5078,12 @@ class QecApp {
         }
         segStart = i;
       }
+    }
+    /* R108 phys：标题 + 图例（底部，避开顶部阶段标注） */
+    if (s.noise === 'phys'){
+      g.fillStyle = 'rgba(226,232,240,.9)'; g.font = (10.5 * dpr) + 'px ui-monospace,monospace';
+      g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+      g.fillText('物理通道线路（R108 · 轨迹采样：红=注入故障 / 琥珀 ε=读出翻转）', 8 * dpr, H - 7 * dpr);
     }
   }
 
@@ -4169,6 +5206,7 @@ class QecApp {
     const W = c.width, H = c.height, dpr = W / c.clientWidth;
     g.clearRect(0, 0, W, H);
     if (this.state.noise === 'gate') return this.drawCurveGate(g, W, H, dpr, sw);
+    if (this.state.noise === 'phys') return this.drawCurvePhys(g, W, H, dpr, sw);
     const padL = 44 * dpr, padR = 12 * dpr, padT = 26 * dpr, padB = 30 * dpr;
     const x0 = padL, x1 = W - padR, y0 = padT, y1 = H - padB;
     const pMin = 0.004, pMax = 0.62, yMin = 1e-4, yMax = 1;
@@ -4342,6 +5380,114 @@ class QecApp {
     g.fillStyle = 'rgba(148,163,184,.7)'; g.fillText('未编码 p', x1 - 96 * dpr, 15 * dpr);
   }
 
+  /* ---------- P_L(p) 双对数（R108 物理通道：MC + DP 精确 + 理想对照 + 底座） ---------- */
+  /* 参考线三条：y=p（未编码数据错误率）、3p²−2p³（理想综合征口径）、γ=λ=0 时
+     DP-over-frames 精确折线（与 MC 4σ 内重合——两套独立表示互证）；琥珀虚线是
+     P_L 底座（p→0），门通道/读出误差的「地板」——存储错误率再低也回不去。 */
+  drawCurvePhys(g, W, H, dpr, sw){
+    const padL = 44 * dpr, padR = 12 * dpr, padT = 26 * dpr, padB = 30 * dpr;
+    const x0 = padL, x1 = W - padR, y0 = padT, y1 = H - padB;
+    const pMin = 0.004, pMax = 0.62, yMin = 1e-4, yMax = 1;
+    const X = p => x0 + (Math.log10(p) - Math.log10(pMin)) / (Math.log10(pMax) - Math.log10(pMin)) * (x1 - x0);
+    const Y = v => y1 - (Math.log10(Math.max(yMin, v)) - Math.log10(yMin)) / (Math.log10(yMax) - Math.log10(yMin)) * (y1 - y0);
+
+    /* 网格 + 刻度 */
+    g.strokeStyle = 'rgba(120,160,220,.12)'; g.lineWidth = 1 * dpr;
+    g.font = (9 * dpr) + 'px ui-monospace,monospace';
+    g.textAlign = 'right'; g.textBaseline = 'middle';
+    for (const v of [1e-4, 1e-3, 1e-2, 1e-1, 1]){
+      const y = Y(v);
+      g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke();
+      g.fillStyle = 'rgba(148,163,184,.7)';
+      g.fillText(v === 1 ? '1' : v.toExponential(0).replace('e-', 'e−'), x0 - 4 * dpr, y);
+    }
+    g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    for (const v of [0.01, 0.03, 0.1, 0.3]){
+      const x = X(v);
+      g.beginPath(); g.moveTo(x, y0); g.lineTo(x, y1); g.stroke();
+      g.fillStyle = 'rgba(148,163,184,.6)';
+      g.fillText(String(v), x, y1 + 12 * dpr);
+    }
+    g.fillStyle = 'rgba(148,163,184,.55)'; g.textAlign = 'right';
+    g.fillText('p', x1, y1 + 23 * dpr);
+    g.save(); g.translate(11 * dpr, (y0 + y1) / 2); g.rotate(-Math.PI / 2);
+    g.textAlign = 'center'; g.fillText('逻辑错误率 P_L', 0, 0); g.restore();
+
+    const line = (pts, col, dash, w) => {
+      g.strokeStyle = col; g.lineWidth = w * dpr;
+      if (dash) g.setLineDash(dash.map(v => v * dpr));
+      g.beginPath();
+      let first = true;
+      for (const [p, v] of pts){
+        if (p < pMin || p > pMax) continue;
+        const x = X(p), y = Y(v);
+        if (first){ g.moveTo(x, y); first = false; } else g.lineTo(x, y);
+      }
+      g.stroke(); g.setLineDash([]);
+    };
+    const ref = [];
+    for (let k = 0; k <= 60; k++) ref.push([pMin * Math.pow(pMax / pMin, k / 60), 0]);
+
+    /* 未编码 y=p（灰虚） */
+    line(ref.map(([p]) => [p, p]), 'rgba(148,163,184,.55)', [4, 3], 1.2);
+    /* 理想 3p²−2p³（灰点线：无门通道/无读出误差的教科书口径） */
+    line(ref.map(([p]) => [p, qecLogicalRate(p)]), 'rgba(148,163,184,.75)', [2, 3], 1.2);
+
+    /* DP 精确折线（青实；γ>0 时 PLexact=NaN 不画） */
+    const dpPts = sw.p.map((p, i) => [p, sw.PLexact[i]]).filter(([, v]) => Number.isFinite(v));
+    if (dpPts.length > 1) line(dpPts, 'rgba(103,232,249,.9)', null, 1.8);
+
+    /* MC 点（mag） */
+    g.fillStyle = 'rgba(240,171,252,.95)';
+    for (let i = 0; i < sw.p.length; i++){
+      const x = X(sw.p[i]), y = Y(sw.PL[i]);
+      g.beginPath(); g.arc(x, y, 3 * dpr, 0, 6.2832); g.fill();
+    }
+
+    /* P_L 底座（琥珀横虚线）：p→0 的极限，与 p 无关的误差地板 */
+    if (this._floor && this._floor.v > yMin){
+      const yf = Y(this._floor.v);
+      g.strokeStyle = 'rgba(251,191,36,.8)'; g.setLineDash([5 * dpr, 4 * dpr]); g.lineWidth = 1.2 * dpr;
+      g.beginPath(); g.moveTo(x0, yf); g.lineTo(x1, yf); g.stroke(); g.setLineDash([]);
+      g.fillStyle = 'rgba(251,191,36,.95)'; g.font = (9 * dpr) + 'px ui-monospace,monospace';
+      g.textAlign = 'left';
+      g.fillText('底座 P_L(0)' + (this._floor.exact ? '=' : '≈') + this._floor.v.toExponential(1), x0 + 4 * dpr, yf - 4 * dpr);
+    }
+
+    /* P_L=p 交点（DP 可得时由 recompute 二分算出） */
+    if (this._thr != null){
+      const xth = X(this._thr);
+      g.strokeStyle = 'rgba(251,191,36,.75)'; g.setLineDash([2 * dpr, 3 * dpr]); g.lineWidth = 1 * dpr;
+      g.beginPath(); g.moveTo(xth, y0); g.lineTo(xth, y1); g.stroke(); g.setLineDash([]);
+      g.fillStyle = 'rgba(251,191,36,.95)'; g.font = (9 * dpr) + 'px ui-monospace,monospace';
+      g.textAlign = 'right'; g.fillText('P_L=p 交点 p≈' + this._thr.toFixed(3), xth - 3 * dpr, y0 + 10 * dpr);
+    }
+
+    /* 当前 p 位置（白竖线 + 实测点） */
+    const xc = X(Math.max(pMin, Math.min(pMax, this.state.p)));
+    g.strokeStyle = 'rgba(226,232,240,.55)'; g.lineWidth = 1 * dpr;
+    g.beginPath(); g.moveTo(xc, y0); g.lineTo(xc, y1); g.stroke();
+    if (this.ens){
+      const y = Y(Math.max(yMin, this.ens.PL));
+      g.fillStyle = 'rgba(226,232,240,.95)';
+      g.beginPath(); g.arc(xc, y, 3.4 * dpr, 0, 6.2832); g.fill();
+    }
+
+    /* 标题与图例 */
+    g.fillStyle = 'rgba(226,232,240,.9)'; g.font = (10.5 * dpr) + 'px ui-monospace,monospace';
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    g.fillText('P_L vs p（物理通道 · MC + DP）', 8 * dpr, 15 * dpr);
+    g.font = (9.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'right';
+    if (dpPts.length > 1){
+      g.fillStyle = 'rgba(103,232,249,.9)'; g.fillText('DP 精确', x1 - 56 * dpr, 15 * dpr);
+    } else {
+      g.fillStyle = 'rgba(148,163,184,.75)'; g.fillText('γ>0 无精确解', x1 - 78 * dpr, 15 * dpr);
+    }
+    g.fillStyle = 'rgba(240,171,252,.95)'; g.fillText('MC', x1 - 8 * dpr, 15 * dpr);
+    g.fillStyle = 'rgba(148,163,184,.7)'; g.fillText('理想 3p²−2p³', x1 - 150 * dpr, 15 * dpr);
+    g.fillStyle = 'rgba(148,163,184,.55)'; g.fillText('未编码 p', x1 - 232 * dpr, 15 * dpr);
+  }
+
   /* ---------- 按错误数分解（iid） / 结局分解（gate） ---------- */
   drawHist(){
     const c = this.cv.hist, e = this.ens;
@@ -4350,6 +5496,7 @@ class QecApp {
     const W = c.width, H = c.height, dpr = W / c.clientWidth;
     g.clearRect(0, 0, W, H);
     if (this.state.noise === 'gate') return this.drawHistGate(g, W, H, dpr, e);
+    if (this.state.noise === 'phys') return this.drawHistPhys(g, W, H, dpr, e);
     const padL = 42 * dpr, padR = 14 * dpr, padT = 28 * dpr, padB = 34 * dpr;
     const x0 = padL, x1 = W - padR, y0 = padT, y1 = H - padB;
     const N = e.trials;
@@ -4401,6 +5548,68 @@ class QecApp {
     g.font = (9.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'right';
     g.fillStyle = 'rgba(103,232,249,.9)'; g.fillText('纠回', x1 - 46 * dpr, 15 * dpr);
     g.fillStyle = 'rgba(248,113,113,.95)'; g.fillText('逻辑错误', x1 - 8 * dpr, 15 * dpr);
+  }
+
+  /* ---------- R108 综合征读出翻转分解（phys）：0/1/2 位被翻 × 纠对/逻辑错误 ---------- */
+  /* SPAM 的直接可视化：读出误差不污染量子态，只翻经典综合征位——被翻的试验里
+     修正查表用错综合，单错不再必纠。ε=0 时全部质量落在「0 翻转」柱。 */
+  drawHistPhys(g, W, H, dpr, e){
+    const padL = 42 * dpr, padR = 14 * dpr, padT = 28 * dpr, padB = 34 * dpr;
+    const x0 = padL, x1 = W - padR, y0 = padT, y1 = H - padB;
+    const n = e.trials;
+    const bars = [
+      { lab: '0 翻转', tot: e.byFlip[0], bad: e.byFlipL[0] },
+      { lab: '1 翻转', tot: e.byFlip[1], bad: e.byFlipL[1] },
+      { lab: '2 翻转', tot: e.byFlip[2], bad: e.byFlipL[2] },
+    ];
+    const maxC = Math.max(1, ...bars.map(b => b.tot));
+    const bw = (x1 - x0) / bars.length;
+    const Y = v => y1 - (v / maxC) * (y1 - y0);
+
+    /* 网格 */
+    g.strokeStyle = 'rgba(120,160,220,.12)'; g.lineWidth = 1 * dpr;
+    g.font = (9 * dpr) + 'px ui-monospace,monospace';
+    g.textAlign = 'right'; g.textBaseline = 'middle';
+    for (let k = 0; k <= 4; k++){
+      const v = maxC * k / 4, y = Y(v);
+      g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke();
+      g.fillStyle = 'rgba(148,163,184,.7)';
+      g.fillText(v >= 1000 ? (v / 1000).toFixed(1) + 'k' : String(Math.round(v)), x0 - 4 * dpr, y);
+    }
+
+    for (let k = 0; k < bars.length; k++){
+      const b = bars[k], cx = x0 + bw * (k + 0.5);
+      const w = Math.min(54 * dpr, bw * 0.52);
+      const good = b.tot - b.bad;
+      const yGood = Y(good), yTot = Y(b.tot);
+      g.fillStyle = 'rgba(103,232,249,.55)';
+      g.fillRect(cx - w / 2, yGood, w, y1 - yGood);
+      g.fillStyle = 'rgba(248,113,113,.62)';
+      g.fillRect(cx - w / 2, yTot, w, yGood - yTot);
+      g.strokeStyle = 'rgba(226,232,240,.25)'; g.lineWidth = 1 * dpr;
+      g.strokeRect(cx - w / 2, yTot, w, y1 - yTot);
+
+      g.fillStyle = 'rgba(226,232,240,.9)'; g.font = (9.5 * dpr) + 'px ui-monospace,monospace';
+      g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+      g.fillText(b.lab, cx, y1 + 13 * dpr);
+      g.fillStyle = 'rgba(148,163,184,.8)';
+      g.fillText((100 * b.tot / n).toFixed(1) + '%', cx, y1 + 24 * dpr);
+      if (b.tot > 0){
+        g.fillStyle = b.bad > 0 ? 'rgba(248,113,113,.95)' : 'rgba(103,232,249,.95)';
+        g.font = (9 * dpr) + 'px ui-monospace,monospace';
+        g.fillText(b.bad > 0 ? (100 * b.bad / b.tot).toFixed(0) + '% ✗' : '✓', cx, yTot - 4 * dpr);
+      }
+    }
+
+    /* 标题 + 图例 + 口径注记 */
+    g.fillStyle = 'rgba(226,232,240,.9)'; g.font = (10.5 * dpr) + 'px ui-monospace,monospace';
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    g.fillText('综合征读出翻转分解（' + n + ' 次试验 · ε=' + this.state.phys.re + '）', 8 * dpr, 15 * dpr);
+    g.font = (9.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'right';
+    g.fillStyle = 'rgba(103,232,249,.9)'; g.fillText('纠回', x1 - 46 * dpr, 15 * dpr);
+    g.fillStyle = 'rgba(248,113,113,.95)'; g.fillText('逻辑错误', x1 - 8 * dpr, 15 * dpr);
+    g.fillStyle = 'rgba(148,163,184,.6)'; g.textAlign = 'left';
+    g.fillText('翻转位 = 综合征记录 ≠ 真实（量子态不受污染）', 8 * dpr, H - 7 * dpr);
   }
 
   /* ---------- 结局分解（门级）：上排码空间五分类，下排解码后三分类 ---------- */
@@ -4477,17 +5686,28 @@ class QecApp {
           logicalError: t.logicalError, p0: t.p0, p1: t.p1, trace: t.trace,
           faults: t.faults ? t.faults.slice() : [], cls: t.cls, coset: t.coset,
           noise: t.noise, spectrum: t.spectrum, noisyPhase: t.noisyPhase,
+          /* R108 phys：真实综合征位 / 读出翻转 / 帧有效性 */
+          synTrue: t.synTrue ? t.synTrue.slice() : null,
+          flips: t.flips ? t.flips.slice() : null,
+          frameOK: t.frameOK != null ? t.frameOK : null,
+          clsDec: t.clsDec != null ? t.clsDec : null,
         } : null;
       },
       ensemble: () => self.ens ? {
         p: self.ens.p, code: self.ens.code, trials: self.ens.trials, PL: self.ens.PL,
-        PLexact: self.ens.PLexact, Pun: self.ens.Pun,
+        /* PLexact 非有限（γ>0 无精确解）时序列化为 null——CDP returnByValue 不过 NaN */
+        PLexact: Number.isFinite(self.ens.PLexact) ? self.ens.PLexact : null, Pun: self.ens.Pun,
         noise: self.ens.noise, spectrum: self.ens.spectrum, noisyPhase: self.ens.noisyPhase,
         byCount: self.ens.byCount.slice(), byCountL: self.ens.byCountL.slice(), synCount: self.ens.synCount.slice(),
         fates: { ...self.ens.fates }, fatesDec: { ...self.ens.fatesDec },
         meanFaults: self.ens.meanFaults, M: self.effM(),
         synMiss: self.ens.synMiss, randomMeas: self.ens.randomMeas,
         disagree: self.ens.disagree, disagreeBlind: self.ens.disagreeBlind, blind: self.ens.blind,
+        /* R108 phys：读出翻转 / 通道跳变 / 帧诊断 */
+        byFlip: self.ens.byFlip.slice(), byFlipL: self.ens.byFlipL.slice(),
+        meanFlips: self.ens.meanFlips, meanJumps: self.ens.meanJumps,
+        frameMiss: self.ens.frameMiss, noFrame: self.ens.noFrame,
+        physParams: self.ens.physParams, floor: self._floor,
       } : null,
       curve: () => self.curve ? {
         p: self.curve.p.slice(), PL: self.curve.PL.slice(), PLexact: self.curve.PLexact.slice(),
@@ -4503,6 +5723,16 @@ class QecApp {
       setNoise: n => { self.setNoise(n); self.drawAll(); },
       setSpectrum: sp => { self.setSpectrum(sp); self.drawAll(); },
       setNoisyPhase: np => { self.setNoisyPhase(np); self.drawAll(); },
+      /* R108：phys 参数直驱（真值概率，非 ×10⁻³ 刻度；测试/调试用） */
+      setPhys: (k, v) => {
+        if (!['t1', 't2', 'tg', 'pd', 're', 'peq'].includes(k)) return;
+        if (!Number.isFinite(v) || v < 0) return;
+        self.state.phys[k] = v;
+        self._curveKey = '';
+        self.syncPanel(); self.recompute(); self.drawAll();
+      },
+      phys: () => ({ ...self.state.phys }),
+      floor: () => self._floor,
       /* R98 P2：实时播放（按钮等价路径；测试可直驱） */
       play: () => { self.live.start(); self.syncPlayBtn(); },
       pause: () => { self.live.stop(); self.syncPlayBtn(); },
