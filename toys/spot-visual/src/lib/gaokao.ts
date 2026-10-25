@@ -5,6 +5,7 @@ import {
   getSchool,
   rankForScore,
   type Admission,
+  type School,
 } from "@/lib/gaokao-data";
 
 export interface RecommendItem {
@@ -14,6 +15,7 @@ export interface RecommendItem {
   is985: boolean;
   is211: boolean;
   isDFC: boolean;
+  rank?: string; // 软科排名（未上榜无）
   gap: number; // 用户分 - 投档线（正=稳/保，负=冲）
 }
 
@@ -33,6 +35,7 @@ function toItem(a: Admission, score: number): RecommendItem {
     is985: s.is985,
     is211: s.is211,
     isDFC: s.isDFC,
+    rank: s.rank,
     gap: score - a.minScore,
   };
 }
@@ -41,10 +44,12 @@ function toItem(a: Admission, score: number): RecommendItem {
 //   冲：投档线高于用户 0~18 分（有机会）
 //   稳：投档线在用户 -22~0 分（较匹配）
 //   保：投档线在用户 -55~-23 分（较安全）
+// keep：可选院校筛选（如只看 985），筛选后再取各档前 12
 export function recommend(
   score: number,
   prov: string,
   cat: string,
+  keep?: (s: School) => boolean,
 ): RecommendResult {
   const lines = admissionsFor(prov, cat);
   const reach: RecommendItem[] = [];
@@ -52,6 +57,7 @@ export function recommend(
   const safe: RecommendItem[] = [];
   for (const a of lines) {
     const gap = score - a.minScore;
+    if (keep && !keep(getSchool(a.schoolCode)!)) continue;
     if (gap >= -18 && gap <= 0) reach.push(toItem(a, score));
     else if (gap > 0 && gap <= 22) match.push(toItem(a, score));
     else if (gap > 22 && gap <= 55) safe.push(toItem(a, score));

@@ -13,6 +13,7 @@
 // ════════════════════════════════════════════════════════════════════════
 
 export const GAOKAO_DATA_URL = "/data/gaokao-2025.json";
+export const GAOKAO_ENRICH_URL = "/data/gaokao-enrich.json";
 
 export interface School {
   code: string;
@@ -20,8 +21,15 @@ export interface School {
   prov: string; // 所在地（省/直辖市）
   is985: boolean;
   is211: boolean;
-  isDFC: boolean; // 双一流（985/211 全部属于双一流；另附非 985/211 的双一流名单）
+  isDFC: boolean; // 双一流（优先用软科官方标签，未上榜时回退数据集 flags + 内置名单）
   isPrivate: boolean;
+  category?: string; // 院校类型（综合/理工/师范…，软科）
+  rank?: string; // 软科中国大学排名（如 "14"；"500+" 为并列区间）
+  rankNum?: number; // 排名数值（500+ 记 500，用于筛选）
+  rankScore?: number; // 软科综合得分（500+ 无得分）
+  aPlus?: number; // 第四轮学科评估 A+ 学科数
+  aClass?: number; // A+ / A / A- 学科总数
+  topDisc?: string[]; // A+ 学科名称（最多 4 个）
 }
 
 export interface Admission {
@@ -58,7 +66,7 @@ export interface RealDataset {
   provs: Record<string, Record<string, RealCatData>>;
 }
 
-// ── 双一流（非 985/211 部分）院校名单，用于徽标展示 ──
+// ── 双一流（非 985/211 部分）内置名单，仅在软科增强数据未覆盖时兜底 ──
 const DFC_EXTRA = new Set([
   "中国科学院大学",
   "首都师范大学",
@@ -141,6 +149,78 @@ export function loadFullDataset(data: RealDataset): boolean {
   REAL = data;
   buildIndexes(data);
   return true;
+}
+
+// ── 增强数据（排名 / 官方层次标签 / 学科评估） ──
+
+interface EnrichEntry {
+  name: string;
+  rank?: string | null;
+  rankNum?: number | null;
+  score?: number | null;
+  tags?: string[];
+  category?: string;
+  aPlus?: number;
+  a?: number;
+  aMinus?: number;
+  topDisc?: string[];
+}
+
+export interface EnrichDataset {
+  v: number;
+  rankSrc: string;
+  evalSrc: string;
+  unis: Record<string, EnrichEntry>;
+}
+
+/** 跨源校名匹配：去掉全角/半角括号内容与空白 */
+function normName(n: string): string {
+  return String(n)
+    .replace(/[（(][^（）()]*[）)]/g, "")
+    .replace(/\s+/g, "");
+}
+
+let enrichIndex = new Map<string, EnrichEntry>();
+let RANK_SRC = "";
+let EVAL_SRC = "";
+
+/** 合并增强数据进院校索引；覆盖 985/211/双一流 为软科官方标签 */
+export function loadEnrichDataset(data: EnrichDataset): boolean {
+  if (!data || typeof data !== "object" || !data.unis) return false;
+  enrichIndex = new Map();
+  for (const [k, v] of Object.entries(data.unis)) enrichIndex.set(k, v);
+  RANK_SRC = data.rankSrc ?? "";
+  EVAL_SRC = data.evalSrc ?? "";
+  for (const s of schoolIndex.values()) {
+    const e = enrichIndex.get(normName(s.name));
+    if (!e) continue;
+    if (e.tags?.length) {
+      s.is985 = e.tags.includes("985");
+      s.is211 = e.tags.includes("211");
+      s.isDFC = e.tags.includes("双一流") || s.is985 || s.is211;
+    }
+    if (e.rank) {
+      s.rank = e.rank;
+      s.rankNum = e.rankNum ?? undefined;
+    }
+    if (typeof e.score === "number") s.rankScore = e.score;
+    if (e.category) s.category = e.category;
+    const aTotal = (e.aPlus ?? 0) + (e.a ?? 0) + (e.aMinus ?? 0);
+    if (aTotal > 0) {
+      s.aPlus = e.aPlus ?? 0;
+      s.aClass = aTotal;
+      s.topDisc = e.topDisc ?? [];
+    }
+  }
+  return true;
+}
+
+export function isEnriched(): boolean {
+  return enrichIndex.size > 0;
+}
+
+export function enrichSources(): { rankSrc: string; evalSrc: string } {
+  return { rankSrc: RANK_SRC, evalSrc: EVAL_SRC };
 }
 
 export function isRealData(): boolean {

@@ -9,7 +9,7 @@ import {
   MapPin,
   ListFilter,
   Map as MapIcon,
-  School,
+  School as SchoolIcon,
   Share2,
   Check,
   Download,
@@ -18,6 +18,7 @@ import {
 import type { EChartsOption } from "echarts";
 import {
   GAOKAO_DATA_URL,
+  GAOKAO_ENRICH_URL,
   activeProvinces,
   activeSchools,
   admissionsFor,
@@ -25,8 +26,10 @@ import {
   dataYear,
   dataSource,
   getSchool,
+  loadEnrichDataset,
   loadFullDataset,
   rankForScore,
+  type School,
 } from "@/lib/gaokao-data";
 import { provinceCats, recommend } from "@/lib/gaokao";
 import { downloadGaokaoShareCard } from "@/lib/gaokao-share-card";
@@ -34,6 +37,24 @@ import { PROVINCE_CENTERS } from "@/lib/china-geo";
 import ChinaMap from "@/components/map/china-map";
 
 type Tier = "reach" | "match" | "safe";
+
+// 院校筛选 chips
+type FilterKey = "all" | "is985" | "is211" | "isDFC" | "top100";
+const FILTERS: [FilterKey, string][] = [
+  ["all", "全部"],
+  ["is985", "985"],
+  ["is211", "211"],
+  ["isDFC", "双一流"],
+  ["top100", "软科前100"],
+];
+function matchFilter(s: School | undefined, f: FilterKey): boolean {
+  if (!s) return false;
+  if (f === "all") return true;
+  if (f === "is985") return s.is985;
+  if (f === "is211") return s.is211;
+  if (f === "isDFC") return s.isDFC;
+  return (s.rankNum ?? 9999) <= 100; // top100
+}
 
 const TIER_COLOR: Record<Tier, string> = {
   reach: "#F59E0B", // 冲
@@ -102,12 +123,14 @@ export default function GaoKaoPage() {
   const [colorMode, setColorMode] = useState<"tier" | "level">("tier");
   const [isMobile, setIsMobile] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [filter, setFilter] = useState<FilterKey>("all");
+  const [enriched, setEnriched] = useState(false); // 增强数据（排名/学科）到达后触发重算
 
   const ready = dataState === "ready";
   const provinces = useMemo(() => (ready ? activeProvinces() : []), [ready]);
   const schools = useMemo(() => (ready ? activeSchools() : []), [ready]);
 
-  // ── 加载数据文件 ──
+  // ── 加载数据文件（主数据必须；增强数据可选，失败不阻塞） ──
   useEffect(() => {
     let alive = true;
     fetch(GAOKAO_DATA_URL)
@@ -115,8 +138,15 @@ export default function GaoKaoPage() {
         r.ok ? r.json() : Promise.reject(new Error(String(r.status))),
       )
       .then((d) => {
-        if (alive && loadFullDataset(d)) setDataState("ready");
-        else if (alive) setDataState("fail");
+        if (alive && loadFullDataset(d)) {
+          setDataState("ready");
+          fetch(GAOKAO_ENRICH_URL)
+            .then((r) => (r.ok ? r.json() : null))
+            .then((e) => {
+              if (alive && e && loadEnrichDataset(e)) setEnriched(true);
+            })
+            .catch(() => {});
+        } else if (alive) setDataState("fail");
       })
       .catch(() => alive && setDataState("fail"));
     return () => {
@@ -251,6 +281,7 @@ export default function GaoKaoPage() {
         const gap = score - adm.minScore;
         const tier = tierOf(gap);
         if (tier === "none") return null; // 地图只画冲稳保三档内的院校
+        if (!matchFilter(s, filter)) return null;
         const center = PROVINCE_CENTERS[s.prov];
         if (!center) return null;
         const [dx, dy] = jitter(s.code);
@@ -269,6 +300,7 @@ export default function GaoKaoPage() {
           gap,
           tier,
           levelText,
+          rank: s.rank,
           symbolSize: active ? 22 : 14,
           itemStyle: {
             color: colorMode === "tier" ? TIER_COLOR[tier] : levelColor(s),
@@ -280,7 +312,16 @@ export default function GaoKaoPage() {
         };
       })
       .filter(Boolean);
-  }, [ready, schools, admByCode, score, selectedCode, colorMode]);
+  }, [
+    ready,
+    schools,
+    admByCode,
+    score,
+    selectedCode,
+    colorMode,
+    filter,
+    enriched,
+  ]);
 
   const counts = useMemo(() => {
     const c: Record<Tier, number> = { reach: 0, match: 0, safe: 0 };
@@ -289,8 +330,9 @@ export default function GaoKaoPage() {
   }, [points]);
 
   const rec = useMemo(
-    () => (ready ? recommend(score, prov, cat) : null),
-    [ready, score, prov, cat],
+    () =>
+      ready ? recommend(score, prov, cat, (s) => matchFilter(s, filter)) : null,
+    [ready, score, prov, cat, filter, enriched],
   );
 
   // ── 分享文案（URL 客户端挂载后再取，避免预渲染不一致） ──
@@ -332,9 +374,10 @@ export default function GaoKaoPage() {
           const d = p.data;
           if (!d || !d.tier) return String(p.name ?? "");
           const gapText = d.gap <= 0 ? `差 ${-d.gap} 分` : `超 ${d.gap} 分`;
+          const rankText = d.rank ? ` · 软科${d.rank}` : "";
           return colorMode === "tier"
-            ? `<b>${d.name}</b><br/>${TIER_LABEL[d.tier as Tier]} · ${gapText}`
-            : `<b>${d.name}</b><br/>${d.levelText} · ${gapText}`;
+            ? `<b>${d.name}</b>${rankText}<br/>${TIER_LABEL[d.tier as Tier]} · ${gapText}`
+            : `<b>${d.name}</b>${rankText}<br/>${d.levelText} · ${gapText}`;
         },
       },
       geo: {
@@ -578,6 +621,25 @@ export default function GaoKaoPage() {
         ))}
       </div>
 
+      {/* 院校筛选 */}
+      <div className="mb-3 flex flex-wrap items-center gap-1.5 text-xs">
+        <span className="text-gray-400 mr-1">筛选</span>
+        {FILTERS.map(([k, label]) => (
+          <button
+            key={k}
+            onClick={() => setFilter(k)}
+            className={`px-2.5 py-1 rounded-full border transition-colors ${filter === k ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-gray-600 border-gray-200 hover:border-indigo-300"}`}
+          >
+            {label}
+          </button>
+        ))}
+        {enriched && (
+          <span className="text-gray-400 ml-1 hidden sm:inline">
+            含软科排名 · 学科评估 · 官方层次标签
+          </span>
+        )}
+      </div>
+
       {view === "map" ? (
         <div className="grid lg:grid-cols-[1fr_380px] gap-5 items-start">
           {/* 院校地图 */}
@@ -667,7 +729,60 @@ export default function GaoKaoPage() {
                 <p className="text-xs text-gray-400 mb-4 flex items-center gap-1">
                   <MapPin className="w-3 h-3" />
                   {selSchool.prov} · {prov}招生 · {selAdm.batch}
+                  {selSchool.category ? ` · ${selSchool.category}` : ""}
                 </p>
+
+                {(selSchool.rank || selSchool.aClass) && (
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    {selSchool.rank && (
+                      <div className="rounded-xl border border-gray-200 p-3">
+                        <div className="text-xs text-gray-400">软科排名</div>
+                        <div className="text-lg font-bold text-indigo-700">
+                          第 {selSchool.rank} 名
+                          {selSchool.rankScore != null && (
+                            <span className="text-xs font-medium text-gray-400 ml-1">
+                              {selSchool.rankScore} 分
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {selSchool.aClass ? (
+                      <div className="rounded-xl border border-gray-200 p-3">
+                        <div className="text-xs text-gray-400">
+                          学科评估（第四轮）
+                        </div>
+                        <div className="text-lg font-bold text-gray-900">
+                          A+ {selSchool.aPlus} 项
+                          <span className="text-xs font-medium text-gray-400 ml-1">
+                            A 类共 {selSchool.aClass} 项
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-gray-200 p-3">
+                        <div className="text-xs text-gray-400">
+                          学科评估（第四轮）
+                        </div>
+                        <div className="text-sm text-gray-400 mt-1">
+                          无 A 类学科
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {selSchool.topDisc?.length ? (
+                  <div className="flex flex-wrap gap-1 mb-4">
+                    {selSchool.topDisc.map((d) => (
+                      <span
+                        key={d}
+                        className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100"
+                      >
+                        {d} A+
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
 
                 <div
                   className="rounded-xl px-4 py-3 mb-4 text-white"
@@ -717,7 +832,7 @@ export default function GaoKaoPage() {
               </motion.div>
             ) : (
               <div className="text-center py-10">
-                <School className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                <SchoolIcon className="w-10 h-10 text-gray-300 mx-auto mb-3" />
                 <p className="text-sm font-medium text-gray-600 mb-1">
                   点击地图上的院校点位
                 </p>
@@ -797,6 +912,11 @@ export default function GaoKaoPage() {
                             <span className="text-sm font-medium text-gray-900 w-44 truncate">
                               {item.schoolName}
                             </span>
+                            {item.rank && (
+                              <span className="text-[10px] px-1 rounded bg-indigo-50 text-indigo-600 border border-indigo-100 shrink-0">
+                                软科{item.rank}
+                              </span>
+                            )}
                             <span className="flex gap-1 shrink-0">
                               {item.is985 && (
                                 <span className="text-[10px] px-1 rounded bg-red-50 text-red-600 border border-red-100">
@@ -894,7 +1014,8 @@ export default function GaoKaoPage() {
           <b className="text-gray-500">GaokaoCompass</b>（{dataSource()}）
           {dataYear()} 年数据， 为第三方整理的
           <strong className="text-gray-500">非官方数据</strong>
-          ，按院校专业组最低分归并，仅供演示与参考；
+          ，按院校专业组最低分归并；院校排名与层次标签来自软科中国大学排名，
+          学科评估为教育部学位中心第四轮（2017）结果；均仅供演示与参考，
           正式填报请以省级教育考试院官方数据为准。位次由一分一段表线性插值估算。
           地图为 DataV 省级矢量边界（含台湾、南海诸岛），非在线地图服务。
         </span>
