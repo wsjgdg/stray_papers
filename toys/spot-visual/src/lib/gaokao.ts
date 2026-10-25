@@ -5,6 +5,7 @@ import {
   getSchool,
   rankForScore,
   type Admission,
+  type BatchGroup,
   type School,
 } from "@/lib/gaokao-data";
 
@@ -30,16 +31,16 @@ export interface RecommendResult {
 }
 
 function toItem(a: Admission, score: number): RecommendItem {
-  const s = getSchool(a.schoolCode)!;
+  const s = getSchool(a.schoolName);
   return {
     admission: a,
-    schoolName: s.name,
-    schoolProv: s.prov,
-    is985: s.is985,
-    is211: s.is211,
-    isDFC: s.isDFC,
-    rank: s.rank,
-    rankNum: s.rankNum,
+    schoolName: a.schoolName,
+    schoolProv: s?.prov ?? "",
+    is985: s?.is985 ?? false,
+    is211: s?.is211 ?? false,
+    isDFC: s?.isDFC ?? false,
+    rank: s?.rank,
+    rankNum: s?.rankNum,
     planCount: a.planCount,
     scoreDelta: a.scoreDelta,
     gap: score - a.minScore,
@@ -55,15 +56,16 @@ export function recommend(
   score: number,
   prov: string,
   cat: string,
-  keep?: (s: School) => boolean,
+  keep?: (s: School | undefined) => boolean,
+  group: BatchGroup = "benke",
 ): RecommendResult {
-  const lines = admissionsFor(prov, cat);
+  const lines = admissionsFor(prov, cat, group);
   const reach: RecommendItem[] = [];
   const match: RecommendItem[] = [];
   const safe: RecommendItem[] = [];
   for (const a of lines) {
     const gap = score - a.minScore;
-    if (keep && !keep(getSchool(a.schoolCode)!)) continue;
+    if (keep && !keep(getSchool(a.schoolName))) continue;
     if (gap >= -18 && gap <= 0) reach.push(toItem(a, score));
     else if (gap > 0 && gap <= 22) match.push(toItem(a, score));
     else if (gap > 22 && gap <= 55) safe.push(toItem(a, score));

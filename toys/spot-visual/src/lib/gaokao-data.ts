@@ -15,6 +15,7 @@
 import { withSharecode } from "@/lib/share-link";
 
 export const GAOKAO_DATA_URL = "/data/gaokao-2025.json";
+export const GAOKAO_BATCHES_URL = "/data/gaokao-2025-batches.json";
 export const GAOKAO_ENRICH_URL = "/data/gaokao-enrich.json";
 
 export interface School {
@@ -35,7 +36,9 @@ export interface School {
 }
 
 export interface Admission {
-  schoolCode: string;
+  schoolCode: string; // 本省招生代码（跨省同码不同校，仅展示用）
+  schoolName: string; // 全局键：院校名（跨省一致）
+  group: BatchGroup; // 批次组（benke=本科普通批）
   prov: string; // 招生省份（中文）
   year: number;
   cat: string; // 科类
@@ -59,6 +62,15 @@ export type AdmRow = [
   planCount: number | null,
   scoreDelta: number | null,
   planDelta: number | null,
+];
+
+export type BatchGroup = "benke" | "tiqian" | "zhuanxiang" | "zhuanke";
+
+export const BATCH_GROUPS: { key: BatchGroup; label: string }[] = [
+  { key: "benke", label: "本科批" },
+  { key: "tiqian", label: "提前批" },
+  { key: "zhuanxiang", label: "专项计划" },
+  { key: "zhuanke", label: "专科批" },
 ];
 
 export interface RealCatData {
@@ -127,7 +139,7 @@ function buildIndexes(data: RealDataset) {
         cd.adm.map(
           ([
             code,
-            ,
+            name,
             batch,
             minScore,
             minRank,
@@ -138,6 +150,8 @@ function buildIndexes(data: RealDataset) {
             planDelta,
           ]) => ({
             schoolCode: code,
+            schoolName: name,
+            group: "benke" as const,
             prov,
             year: data.year,
             cat,
@@ -152,16 +166,18 @@ function buildIndexes(data: RealDataset) {
       );
       if (cd.curve?.length) curveIndex.set(`${prov}|${cat}`, cd.curve);
       for (const [code, name, , , , loc, flags] of cd.adm) {
-        if (schoolIndex.has(code)) continue;
-        schoolIndex.set(code, {
-          code,
-          name,
-          prov: loc,
-          is985: (flags & 1) !== 0,
-          is211: (flags & 2) !== 0,
-          isDFC: (flags & 1) !== 0 || (flags & 2) !== 0 || DFC_EXTRA.has(name),
-          isPrivate: (flags & 4) !== 0,
-        });
+        // 招生代码跨省冲突（实测 1.4 万处），院校全局键 = 校名
+        if (!schoolIndex.has(name))
+          schoolIndex.set(name, {
+            code,
+            name,
+            prov: loc,
+            is985: (flags & 1) !== 0,
+            is211: (flags & 2) !== 0,
+            isDFC:
+              (flags & 1) !== 0 || (flags & 2) !== 0 || DFC_EXTRA.has(name),
+            isPrivate: (flags & 4) !== 0,
+          });
       }
     }
   }
@@ -273,12 +289,72 @@ export function activeSchools(): School[] {
   return [...schoolIndex.values()];
 }
 
-export function getSchool(code: string): School | undefined {
-  return schoolIndex.get(code);
+export function getSchool(name: string): School | undefined {
+  return schoolIndex.get(name);
 }
 
-export function admissionsFor(prov: string, cat: string): Admission[] {
-  return admIndex.get(`${prov}|${cat}`) ?? [];
+// ── 非本科批批次组（提前批/专项/专科），懒加载文件合并 ──
+// 文件结构：{ v, year, provs: { 省: { 组: { 科类: { adm: AdmRow[] } } } } }
+export interface BatchesDataset {
+  v: number;
+  year: number;
+  provs: Record<string, Record<string, Record<string, RealCatData>>>;
+}
+
+let batchIndex = new Map<string, Admission[]>(); // `prov|group|cat`
+
+/** 合并批次文件（提前批/专项/专科），并补全院校画像 */
+export function loadBatchesDataset(data: BatchesDataset): boolean {
+  if (!data || typeof data !== "object" || !data.provs) return false;
+  batchIndex = new Map();
+  for (const [prov, groups] of Object.entries(data.provs)) {
+    for (const [group, cats] of Object.entries(groups)) {
+      for (const [cat, cd] of Object.entries(cats)) {
+        const rows = (cd.adm ?? []) as AdmRow[];
+        batchIndex.set(
+          `${prov}|${group}|${cat}`,
+          rows.map(([code, name, batch, minScore, minRank]) => ({
+            schoolCode: code,
+            schoolName: name,
+            group: group as BatchGroup,
+            prov,
+            year: data.year,
+            cat,
+            batch,
+            minScore,
+            minRank,
+          })),
+        );
+        for (const [code, name, , , , loc, flags] of rows) {
+          if (!schoolIndex.has(name))
+            schoolIndex.set(name, {
+              code,
+              name,
+              prov: loc,
+              is985: (flags & 1) !== 0,
+              is211: (flags & 2) !== 0,
+              isDFC:
+                (flags & 1) !== 0 || (flags & 2) !== 0 || DFC_EXTRA.has(name),
+              isPrivate: (flags & 4) !== 0,
+            });
+        }
+      }
+    }
+  }
+  return true;
+}
+
+export function isBatchesLoaded(): boolean {
+  return batchIndex.size > 0;
+}
+
+export function admissionsFor(
+  prov: string,
+  cat: string,
+  group: BatchGroup = "benke",
+): Admission[] {
+  if (group === "benke") return admIndex.get(`${prov}|${cat}`) ?? [];
+  return batchIndex.get(`${prov}|${group}|${cat}`) ?? [];
 }
 
 /** 本科批省控线（无数据返回 undefined） */

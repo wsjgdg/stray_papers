@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import type { EChartsOption } from "echarts";
 import {
+  BATCH_GROUPS,
+  GAOKAO_BATCHES_URL,
   GAOKAO_DATA_URL,
   GAOKAO_ENRICH_URL,
   activeProvinces,
@@ -33,10 +35,13 @@ import {
   fetchHistory,
   fetchMajors,
   getSchool,
+  isBatchesLoaded,
+  loadBatchesDataset,
   type MajorDataset,
   type MajorRow,
   loadEnrichDataset,
   loadFullDataset,
+  type BatchGroup,
   type HistoryDataset,
   rankForScore,
   type School,
@@ -63,7 +68,7 @@ const FILTERS: [FilterKey, string][] = [
   ["top100", "软科前100"],
 ];
 function matchFilter(s: School | undefined, f: FilterKey): boolean {
-  if (!s) return false;
+  if (!s) return f === "all" ? true : false;
   if (f === "all") return true;
   if (f === "is985") return s.is985;
   if (f === "is211") return s.is211;
@@ -128,7 +133,7 @@ const LS_KEY = "gaokao:last";
 
 /** 志愿表条目：院校 + 专业组 + 专业（minScore 运行时从专业数据实时取，保证与当前分差同步） */
 interface WishItem {
-  code: string;
+  name: string; // 院校名（全局键；招生代码跨省冲突不可用）
   group: string;
   major: string;
 }
@@ -140,7 +145,9 @@ export default function GaoKaoPage() {
   const [prov, setProv] = useState("");
   const [cat, setCat] = useState("");
   const [score, setScore] = useState(600);
-  const [selectedCode, setSelectedCode] = useState<string | null>(null);
+  const [selectedName, setSelectedName] = useState<string | null>(null);
+  const [batchGroup, setBatchGroup] = useState<BatchGroup>("benke");
+  const [batchesLoading, setBatchesLoading] = useState(false);
   const [view, setView] = useState<
     "map" | "list" | "compare" | "major" | "wish"
   >("map");
@@ -163,7 +170,7 @@ export default function GaoKaoPage() {
         setWishlist(
           saved.filter(
             (w): w is WishItem =>
-              w && typeof w.code === "string" && typeof w.major === "string",
+              w && typeof w.name === "string" && typeof w.major === "string",
           ),
         );
     } catch {}
@@ -173,7 +180,7 @@ export default function GaoKaoPage() {
       if (
         prev.some(
           (w) =>
-            w.code === item.code &&
+            w.name === item.name &&
             w.group === item.group &&
             w.major === item.major,
         )
@@ -215,9 +222,9 @@ export default function GaoKaoPage() {
       return [];
     });
   };
-  const hasWish = (code: string, group: string, major: string) =>
+  const hasWish = (name: string, group: string, major: string) =>
     wishlist.some(
-      (w) => w.code === code && w.group === group && w.major === major,
+      (w) => w.name === name && w.group === group && w.major === major,
     );
 
   const ready = dataState === "ready";
@@ -311,11 +318,11 @@ export default function GaoKaoPage() {
         setShortlist(saved.filter((c) => typeof c === "string"));
     } catch {}
   }, []);
-  const toggleShort = (code: string) => {
+  const toggleShort = (name: string) => {
     setShortlist((prev) => {
-      const next = prev.includes(code)
-        ? prev.filter((c) => c !== code)
-        : [...prev, code].slice(-6); // 最多对比 6 所
+      const next = prev.includes(name)
+        ? prev.filter((c) => c !== name)
+        : [...prev, name].slice(-6); // 最多对比 6 所
       try {
         localStorage.setItem("gaokao:shortlist", JSON.stringify(next));
       } catch {}
@@ -324,6 +331,21 @@ export default function GaoKaoPage() {
   };
 
   const cats = useMemo(() => (ready ? provinceCats(prov) : []), [ready, prov]);
+
+  // ── 批次切换：非本科批首次切换时懒加载批次文件 ──
+  const switchBatch = async (g: BatchGroup) => {
+    if (g === batchGroup || batchesLoading) return;
+    if (g !== "benke" && !isBatchesLoaded()) {
+      setBatchesLoading(true);
+      try {
+        const r = await fetch(withSharecode(GAOKAO_BATCHES_URL));
+        if (r.ok) loadBatchesDataset(await r.json());
+      } catch {}
+      setBatchesLoading(false);
+    }
+    setBatchGroup(g);
+    setSelectedName(null);
+  };
 
   // ── 分数防抖：输入框即时响应，地图/清单等重计算延迟 150ms ──
   const [scoreDelayed, setScoreDelayed] = useState(score);
@@ -356,7 +378,7 @@ export default function GaoKaoPage() {
             : (i - 1 + names.length) % names.length;
         setProv(names[next]);
         setCat(provinceCats(names[next])[0] ?? "");
-        setSelectedCode(null);
+        setSelectedName(null);
         e.preventDefault();
       } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
         const list = provinceCats(prov);
@@ -367,7 +389,7 @@ export default function GaoKaoPage() {
               ? (i + 1) % list.length
               : (i - 1 + list.length) % list.length;
           setCat(list[next]);
-          setSelectedCode(null);
+          setSelectedName(null);
         }
         e.preventDefault();
       }
@@ -385,7 +407,7 @@ export default function GaoKaoPage() {
     [ready, prov, cat],
   );
 
-  const admByCode = useMemo(() => {
+  const admByName = useMemo(() => {
     const m = new Map<
       string,
       {
@@ -398,8 +420,8 @@ export default function GaoKaoPage() {
       }
     >();
     if (!ready) return m;
-    for (const a of admissionsFor(prov, cat))
-      m.set(a.schoolCode, {
+    for (const a of admissionsFor(prov, cat, batchGroup))
+      m.set(a.schoolName, {
         minScore: a.minScore,
         minRank: a.minRank,
         batch: a.batch,
@@ -408,22 +430,23 @@ export default function GaoKaoPage() {
         planDelta: a.planDelta,
       });
     return m;
-  }, [ready, prov, cat]);
+  }, [ready, prov, cat, batchGroup]);
 
+  // 地图画当前省·科类·批次的全部招生院校：区间内按冲稳保着色，
+  // 区间外（分数够不着/高出太多）以灰色小点保留显示。
   const points = useMemo(() => {
     if (!ready) return [];
-    return schools
-      .map((s) => {
-        const adm = admByCode.get(s.code);
-        if (!adm) return null;
-        const gap = scoreDelayed - adm.minScore;
-        const tier = tierOf(gap);
-        if (tier === "none") return null; // 地图只画冲稳保三档内的院校
+    return admissionsFor(prov, cat, batchGroup)
+      .map((a) => {
+        const s = getSchool(a.schoolName);
+        if (!s) return null;
         if (!matchFilter(s, filter)) return null;
         const center = PROVINCE_CENTERS[s.prov];
         if (!center) return null;
-        const [dx, dy] = jitter(s.code);
-        const active = s.code === selectedCode;
+        const gap = scoreDelayed - a.minScore;
+        const tier = tierOf(gap);
+        const [dx, dy] = jitter(s.name);
+        const active = s.name === selectedName;
         const levelText = s.is985
           ? "985"
           : s.is211
@@ -431,32 +454,40 @@ export default function GaoKaoPage() {
             : s.isDFC
               ? "双一流"
               : "其他";
+        const out = tier === "none";
         return {
           name: s.name,
           value: [center[0] + dx, center[1] + dy] as [number, number],
-          schoolCode: s.code,
+          schoolName: s.name,
           gap,
           tier,
           levelText,
           rank: s.rank,
-          planCount: adm.planCount,
-          symbolSize: active ? 22 : 14,
+          planCount: a.planCount,
+          symbolSize: active ? 22 : out ? 8 : 14,
           itemStyle: {
-            color: colorMode === "tier" ? TIER_COLOR[tier] : levelColor(s),
+            color: out
+              ? "#CBD5E1"
+              : colorMode === "tier"
+                ? TIER_COLOR[tier]
+                : levelColor(s),
+            opacity: out ? 0.75 : 1,
             borderColor: active ? "#0F172A" : "#ffffff",
             borderWidth: active ? 2.5 : 1.2,
-            shadowBlur: 5,
+            shadowBlur: out ? 0 : 5,
             shadowColor: "rgba(15,23,42,0.28)",
           },
+          zlevel: out ? 1 : 2,
         };
       })
       .filter(Boolean);
   }, [
     ready,
-    schools,
-    admByCode,
-    score,
-    selectedCode,
+    prov,
+    cat,
+    batchGroup,
+    scoreDelayed,
+    selectedName,
     colorMode,
     filter,
     enriched,
@@ -464,16 +495,26 @@ export default function GaoKaoPage() {
 
   const counts = useMemo(() => {
     const c: Record<Tier, number> = { reach: 0, match: 0, safe: 0 };
-    for (const p of points as any[]) c[p.tier as Tier]++;
-    return c;
+    let out = 0;
+    for (const p of points as any[]) {
+      if (p.tier === "none") out++;
+      else c[p.tier as Tier]++;
+    }
+    return { ...c, out };
   }, [points]);
 
   const rec = useMemo(
     () =>
       ready
-        ? recommend(scoreDelayed, prov, cat, (s) => matchFilter(s, filter))
+        ? recommend(
+            scoreDelayed,
+            prov,
+            cat,
+            (s) => matchFilter(s, filter),
+            batchGroup,
+          )
         : null,
-    [ready, scoreDelayed, prov, cat, filter, enriched],
+    [ready, scoreDelayed, prov, cat, filter, enriched, batchGroup],
   );
 
   // ── 院校搜索（限当前省·科类的投档线名单） ──
@@ -481,26 +522,24 @@ export default function GaoKaoPage() {
     const q = query.trim();
     if (!q || !ready) return [];
     const out: {
-      code: string;
       name: string;
       minScore: number;
       tier: Tier | "none";
       rank?: string;
     }[] = [];
-    for (const a of admissionsFor(prov, cat)) {
-      const s = getSchool(a.schoolCode);
-      if (!s || !s.name.includes(q)) continue;
+    for (const a of admissionsFor(prov, cat, batchGroup)) {
+      if (!a.schoolName.includes(q)) continue;
+      const s = getSchool(a.schoolName);
       out.push({
-        code: s.code,
-        name: s.name,
+        name: a.schoolName,
         minScore: a.minScore,
         tier: tierOf(scoreDelayed - a.minScore),
-        rank: s.rank,
+        rank: s?.rank,
       });
       if (out.length >= 8) break;
     }
     return out;
-  }, [query, ready, prov, cat, scoreDelayed]);
+  }, [query, ready, prov, cat, batchGroup, scoreDelayed]);
 
   const sortList = (list: RecommendItemT[]) => {
     const arr = [...list];
@@ -614,15 +653,15 @@ export default function GaoKaoPage() {
   }, [points, colorMode]);
 
   const onSelect = (p: any) => {
-    if (p?.seriesType === "scatter" && p?.data?.schoolCode) {
-      setSelectedCode(
-        p.data.schoolCode === selectedCode ? null : p.data.schoolCode,
+    if (p?.seriesType === "scatter" && p?.data?.schoolName) {
+      setSelectedName(
+        p.data.schoolName === selectedName ? null : p.data.schoolName,
       );
     }
   };
 
-  const selSchool = selectedCode ? getSchool(selectedCode) : undefined;
-  const selAdm = selectedCode ? admByCode.get(selectedCode) : undefined;
+  const selSchool = selectedName ? getSchool(selectedName) : undefined;
+  const selAdm = selectedName ? admByName.get(selectedName) : undefined;
   const selGap = selAdm ? score - selAdm.minScore : 0;
   const selTier = selAdm ? tierOf(selGap) : "none";
 
@@ -681,7 +720,7 @@ export default function GaoKaoPage() {
               onChange={(e) => {
                 setProv(e.target.value);
                 setCat(provinceCats(e.target.value)[0] ?? "");
-                setSelectedCode(null);
+                setSelectedName(null);
               }}
               className="mt-1 w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none"
             >
@@ -698,7 +737,7 @@ export default function GaoKaoPage() {
               value={cat}
               onChange={(e) => {
                 setCat(e.target.value);
-                setSelectedCode(null);
+                setSelectedName(null);
               }}
               className="mt-1 w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none"
             >
@@ -767,6 +806,10 @@ export default function GaoKaoPage() {
                 style={{ background: TIER_COLOR.safe }}
               />
               保 {counts.safe}
+            </span>
+            <span className="inline-flex items-center gap-1 text-gray-400">
+              <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+              区间外 {counts.out}
             </span>
           </div>
         </div>
@@ -844,9 +887,9 @@ export default function GaoKaoPage() {
               {searchResults.length ? (
                 searchResults.map((r) => (
                   <button
-                    key={r.code}
+                    key={r.name}
                     onClick={() => {
-                      setSelectedCode(r.code);
+                      setSelectedName(r.name);
                       setQuery("");
                       setView("map");
                     }}
@@ -881,6 +924,30 @@ export default function GaoKaoPage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* 批次切换 */}
+      <div className="mb-3 flex flex-wrap items-center gap-1.5 text-xs">
+        <span className="text-gray-400 mr-1">批次</span>
+        {BATCH_GROUPS.map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => switchBatch(key)}
+            disabled={batchesLoading}
+            className={`px-2.5 py-1 rounded-full border transition-colors ${batchGroup === key ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-gray-600 border-gray-200 hover:border-indigo-300"} ${batchesLoading ? "opacity-50" : ""}`}
+          >
+            {label}
+          </button>
+        ))}
+        {batchGroup !== "benke" && (
+          <span className="text-amber-500 ml-1">
+            {batchGroup === "tiqian"
+              ? "提前批含军警/公费师范等，录取多需政审体检面试"
+              : batchGroup === "zhuanxiang"
+                ? "专项计划面向农村户籍等特定资格考生"
+                : "专科批；冲稳保区间基于你的本科分数会大量超出区间"}
+          </span>
+        )}
       </div>
 
       {/* 院校筛选 + 清单排序 */}
@@ -931,16 +998,22 @@ export default function GaoKaoPage() {
             />
             <div className="absolute left-3 bottom-3 flex flex-wrap gap-2 bg-white/85 backdrop-blur-sm rounded-lg border border-gray-200 px-2.5 py-2">
               {colorMode === "tier"
-                ? TIERS.map((t) => (
+                ? [
+                    ...TIERS.map((t) => ({
+                      label: TIER_LABEL[t],
+                      color: TIER_COLOR[t],
+                    })),
+                    { label: "区间外", color: "#CBD5E1" },
+                  ].map(({ label, color }) => (
                     <span
-                      key={t}
+                      key={label}
                       className="inline-flex items-center gap-1 text-[11px] text-gray-600"
                     >
                       <span
                         className="w-2.5 h-2.5 rounded-full"
-                        style={{ backgroundColor: TIER_COLOR[t] }}
+                        style={{ backgroundColor: color }}
                       />
-                      {TIER_LABEL[t]}
+                      {label}
                     </span>
                   ))
                 : LEVEL_LEGEND.map(([k, label]) => (
@@ -976,7 +1049,7 @@ export default function GaoKaoPage() {
           <aside className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm lg:sticky lg:top-[68px]">
             {selSchool && selAdm ? (
               <motion.div
-                key={selSchool.code}
+                key={selSchool.name}
                 initial={false}
                 animate={{ opacity: 1, y: 0 }}
               >
@@ -1005,18 +1078,18 @@ export default function GaoKaoPage() {
                     </span>
                   )}
                   <button
-                    onClick={() => toggleShort(selSchool.code)}
+                    onClick={() => toggleShort(selSchool.name)}
                     title={
-                      shortlist.includes(selSchool.code)
+                      shortlist.includes(selSchool.name)
                         ? "移出对比"
                         : "加入对比"
                     }
-                    className={`ml-auto w-7 h-7 rounded-lg border flex items-center justify-center transition-colors ${shortlist.includes(selSchool.code) ? "bg-rose-50 text-rose-500 border-rose-200" : "bg-white text-gray-300 border-gray-200 hover:text-rose-400"}`}
+                    className={`ml-auto w-7 h-7 rounded-lg border flex items-center justify-center transition-colors ${shortlist.includes(selSchool.name) ? "bg-rose-50 text-rose-500 border-rose-200" : "bg-white text-gray-300 border-gray-200 hover:text-rose-400"}`}
                   >
                     <Heart
                       className="w-3.5 h-3.5"
                       fill={
-                        shortlist.includes(selSchool.code)
+                        shortlist.includes(selSchool.name)
                           ? "currentColor"
                           : "none"
                       }
@@ -1155,103 +1228,114 @@ export default function GaoKaoPage() {
                   </div>
                 </div>
 
-                {(() => {
-                  const tv = history?.cats[cat]?.[selSchool.name];
-                  if (!history || !tv || tv.filter((v) => v != null).length < 2)
-                    return null;
-                  return (
-                    <div className="rounded-xl border border-gray-200 p-3 mb-4">
-                      <TrendSpark years={history.years} values={tv} />
-                    </div>
-                  );
-                })()}
+                {batchGroup === "benke" &&
+                  (() => {
+                    const tv = history?.cats[cat]?.[selSchool.name];
+                    if (
+                      !history ||
+                      !tv ||
+                      tv.filter((v) => v != null).length < 2
+                    )
+                      return null;
+                    return (
+                      <div className="rounded-xl border border-gray-200 p-3 mb-4">
+                        <TrendSpark years={history.years} values={tv} />
+                      </div>
+                    );
+                  })()}
 
-                {/* 专业级录取数据（折叠懒加载） */}
-                <div className="mb-4 rounded-xl border border-gray-200 overflow-hidden">
-                  <button
-                    onClick={() => setMajorsOpen(!majorsOpen)}
-                    className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-                  >
-                    专业录取数据（{prov}·{cat}·本科批）
-                    <span className="ml-auto text-gray-400">
-                      {majorsOpen ? "收起" : "展开"}
-                    </span>
-                  </button>
-                  {majorsOpen && (
-                    <div className="border-t border-gray-100">
-                      {!selSchool
-                        ? null
-                        : (() => {
-                            const rows = majors?.cats[cat]?.[selSchool.name];
-                            if (majors == null)
+                {/* 专业级录取数据（折叠懒加载；专业数据仅本科批口径） */}
+                {batchGroup === "benke" && (
+                  <div className="mb-4 rounded-xl border border-gray-200 overflow-hidden">
+                    <button
+                      onClick={() => setMajorsOpen(!majorsOpen)}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                    >
+                      专业录取数据（{prov}·{cat}·本科批）
+                      <span className="ml-auto text-gray-400">
+                        {majorsOpen ? "收起" : "展开"}
+                      </span>
+                    </button>
+                    {majorsOpen && (
+                      <div className="border-t border-gray-100">
+                        {!selSchool
+                          ? null
+                          : (() => {
+                              const rows = majors?.cats[cat]?.[selSchool.name];
+                              if (majors == null)
+                                return (
+                                  <div className="px-3 py-4 text-xs text-gray-400">
+                                    正在加载专业数据…
+                                  </div>
+                                );
+                              if (!rows?.length)
+                                return (
+                                  <div className="px-3 py-4 text-xs text-gray-400">
+                                    该校在本省本科批暂无专业级数据
+                                  </div>
+                                );
+                              const cleared = rows.filter(
+                                (r) => score >= r[3],
+                              ).length;
                               return (
-                                <div className="px-3 py-4 text-xs text-gray-400">
-                                  正在加载专业数据…
-                                </div>
-                              );
-                            if (!rows?.length)
-                              return (
-                                <div className="px-3 py-4 text-xs text-gray-400">
-                                  该校在本省本科批暂无专业级数据
-                                </div>
-                              );
-                            const cleared = rows.filter(
-                              (r) => score >= r[3],
-                            ).length;
-                            return (
-                              <div>
-                                <div className="px-3 py-2 text-[11px] text-gray-400 bg-gray-50 border-b border-gray-100">
-                                  共 {rows.length} 个专业（组）·你的分数够得着{" "}
-                                  <b className="text-emerald-600">{cleared}</b>{" "}
-                                  个 · 按最低分排序
-                                </div>
-                                <ul className="max-h-72 overflow-y-auto divide-y divide-gray-50">
-                                  {rows.map((r, i) => {
-                                    const gap = score - r[3];
-                                    const t = tierOf(gap);
-                                    const color =
-                                      t === "none" ? "#CBD5E1" : TIER_COLOR[t];
-                                    const req = majors.reqs[r[2]];
-                                    return (
-                                      <li
-                                        key={i}
-                                        className="flex items-center gap-2 px-3 py-1.5 text-xs"
-                                        style={{
-                                          borderLeft: `3px solid ${color}`,
-                                        }}
-                                      >
-                                        <span
-                                          className="font-medium text-gray-800 truncate flex-1"
-                                          title={req || undefined}
+                                <div>
+                                  <div className="px-3 py-2 text-[11px] text-gray-400 bg-gray-50 border-b border-gray-100">
+                                    共 {rows.length} 个专业（组）·你的分数够得着{" "}
+                                    <b className="text-emerald-600">
+                                      {cleared}
+                                    </b>{" "}
+                                    个 · 按最低分排序
+                                  </div>
+                                  <ul className="max-h-72 overflow-y-auto divide-y divide-gray-50">
+                                    {rows.map((r, i) => {
+                                      const gap = score - r[3];
+                                      const t = tierOf(gap);
+                                      const color =
+                                        t === "none"
+                                          ? "#CBD5E1"
+                                          : TIER_COLOR[t];
+                                      const req = majors.reqs[r[2]];
+                                      return (
+                                        <li
+                                          key={i}
+                                          className="flex items-center gap-2 px-3 py-1.5 text-xs"
+                                          style={{
+                                            borderLeft: `3px solid ${color}`,
+                                          }}
                                         >
-                                          {r[1]}
-                                          {req && (
-                                            <span className="text-gray-300 ml-1.5 text-[10px]">
-                                              {req}
+                                          <span
+                                            className="font-medium text-gray-800 truncate flex-1"
+                                            title={req || undefined}
+                                          >
+                                            {r[1]}
+                                            {req && (
+                                              <span className="text-gray-300 ml-1.5 text-[10px]">
+                                                {req}
+                                              </span>
+                                            )}
+                                          </span>
+                                          {r[0] && (
+                                            <span className="text-[10px] px-1 rounded bg-slate-50 text-slate-500 border border-slate-100 shrink-0">
+                                              组{r[0].replace(/[（）()]/g, "")}
                                             </span>
                                           )}
-                                        </span>
-                                        {r[0] && (
-                                          <span className="text-[10px] px-1 rounded bg-slate-50 text-slate-500 border border-slate-100 shrink-0">
-                                            组{r[0].replace(/[（）()]/g, "")}
+                                          <span className="font-semibold text-gray-900 shrink-0">
+                                            {r[3]}
                                           </span>
-                                        )}
-                                        <span className="font-semibold text-gray-900 shrink-0">
-                                          {r[3]}
-                                        </span>
-                                        <span className="text-gray-400 shrink-0 w-16 text-right">
-                                          {r[4] ? r[4].toLocaleString() : "—"}
-                                        </span>
-                                      </li>
-                                    );
-                                  })}
-                                </ul>
-                              </div>
-                            );
-                          })()}
-                    </div>
-                  )}
-                </div>
+                                          <span className="text-gray-400 shrink-0 w-16 text-right">
+                                            {r[4] ? r[4].toLocaleString() : "—"}
+                                          </span>
+                                        </li>
+                                      );
+                                    })}
+                                  </ul>
+                                </div>
+                              );
+                            })()}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="text-xs text-gray-500 leading-relaxed">
                   你的分数 {score} 分（位次{" "}
@@ -1338,12 +1422,12 @@ export default function GaoKaoPage() {
                     </div>
                     <ul className="divide-y divide-gray-50">
                       {sortList(list).map((item) => (
-                        <li key={item.admission.schoolCode}>
+                        <li key={item.admission.schoolName}>
                           <div
                             role="button"
                             tabIndex={0}
                             onClick={() => {
-                              setSelectedCode(item.admission.schoolCode);
+                              setSelectedName(item.admission.schoolName);
                               setView("map");
                             }}
                             className="w-full flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors cursor-pointer"
@@ -1354,19 +1438,19 @@ export default function GaoKaoPage() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                toggleShort(item.admission.schoolCode);
+                                toggleShort(item.admission.schoolName);
                               }}
                               title={
-                                shortlist.includes(item.admission.schoolCode)
+                                shortlist.includes(item.admission.schoolName)
                                   ? "移出对比"
                                   : "加入对比"
                               }
-                              className={`shrink-0 ${shortlist.includes(item.admission.schoolCode) ? "text-rose-500" : "text-gray-200 hover:text-rose-400"}`}
+                              className={`shrink-0 ${shortlist.includes(item.admission.schoolName) ? "text-rose-500" : "text-gray-200 hover:text-rose-400"}`}
                             >
                               <Heart
                                 className="w-3.5 h-3.5"
                                 fill={
-                                  shortlist.includes(item.admission.schoolCode)
+                                  shortlist.includes(item.admission.schoolName)
                                     ? "currentColor"
                                     : "none"
                                 }
@@ -1492,13 +1576,13 @@ export default function GaoKaoPage() {
         /* 对比视图 */
         <CompareTable
           shortlist={shortlist}
-          admByCode={admByCode}
+          admByName={admByName}
           prov={prov}
           cat={cat}
           score={scoreDelayed}
           onRemove={toggleShort}
-          onLocate={(code) => {
-            setSelectedCode(code);
+          onLocate={(name) => {
+            setSelectedName(name);
             setView("map");
           }}
         />
@@ -1512,7 +1596,7 @@ export default function GaoKaoPage() {
           cat={cat}
           score={scoreDelayed}
           onOpen={(code) => {
-            setSelectedCode(code);
+            setSelectedName(code);
             setMajorsOpen(true);
             setView("map");
           }}
@@ -1523,7 +1607,7 @@ export default function GaoKaoPage() {
         /* 志愿表模拟 */
         <WishTable
           items={wishlist}
-          admByCode={admByCode}
+          admByName={admByName}
           majors={majors}
           prov={prov}
           cat={cat}
@@ -1532,7 +1616,7 @@ export default function GaoKaoPage() {
           onRemove={removeWish}
           onClear={clearWishes}
           onOpen={(code) => {
-            setSelectedCode(code);
+            setSelectedName(code);
             setMajorsOpen(true);
             setView("map");
           }}
@@ -1559,7 +1643,7 @@ export default function GaoKaoPage() {
 // ═══ 对比视图：收藏院校并排比较 ═══
 function CompareTable({
   shortlist,
-  admByCode,
+  admByName,
   prov,
   cat,
   score,
@@ -1567,7 +1651,7 @@ function CompareTable({
   onLocate,
 }: {
   shortlist: string[];
-  admByCode: Map<
+  admByName: Map<
     string,
     {
       minScore: number;
@@ -1597,10 +1681,10 @@ function CompareTable({
     );
   }
 
-  const cols = shortlist.map((code) => ({
-    code,
-    school: getSchool(code),
-    adm: admByCode.get(code),
+  const cols = shortlist.map((name) => ({
+    name,
+    school: getSchool(name),
+    adm: admByName.get(name),
   }));
 
   const th =
@@ -1615,17 +1699,17 @@ function CompareTable({
             <th className={th}>
               对比项（{prov}·{cat}）
             </th>
-            {cols.map(({ code, school }) => (
-              <th key={code} className={th}>
+            {cols.map(({ name, school }) => (
+              <th key={name} className={th}>
                 <div className="flex items-center gap-1.5">
                   <button
-                    onClick={() => onLocate(code)}
+                    onClick={() => onLocate(name)}
                     className="font-semibold text-gray-900 text-sm hover:text-indigo-600 hover:underline truncate max-w-[130px]"
                   >
-                    {school?.name ?? code}
+                    {name}
                   </button>
                   <button
-                    onClick={() => onRemove(code)}
+                    onClick={() => onRemove(name)}
                     title="移出对比"
                     className="text-gray-300 hover:text-rose-500 shrink-0"
                   >
@@ -1639,8 +1723,8 @@ function CompareTable({
         <tbody>
           <tr className="border-b border-gray-50">
             <td className={td + " text-gray-400 text-xs"}>层次</td>
-            {cols.map(({ code, school }) => (
-              <td key={code} className={td}>
+            {cols.map(({ name, school }) => (
+              <td key={name} className={td}>
                 <span className="flex gap-1">
                   {school?.is985 && (
                     <span className="text-[10px] px-1 rounded bg-red-50 text-red-600 border border-red-100">
@@ -1668,8 +1752,8 @@ function CompareTable({
           </tr>
           <tr className="border-b border-gray-50">
             <td className={td + " text-gray-400 text-xs"}>软科排名</td>
-            {cols.map(({ code, school }) => (
-              <td key={code} className={td}>
+            {cols.map(({ name, school }) => (
+              <td key={name} className={td}>
                 {school?.rank ? (
                   `第 ${school.rank} 名`
                 ) : (
@@ -1680,8 +1764,8 @@ function CompareTable({
           </tr>
           <tr className="border-b border-gray-50">
             <td className={td + " text-gray-400 text-xs"}>投档线（较去年）</td>
-            {cols.map(({ code, adm }) => (
-              <td key={code} className={td}>
+            {cols.map(({ name, adm }) => (
+              <td key={name} className={td}>
                 {adm ? (
                   <>
                     <b>{adm.minScore}</b>
@@ -1704,10 +1788,10 @@ function CompareTable({
             <td className={td + " text-gray-400 text-xs"}>
               你的分差（{score} 分）
             </td>
-            {cols.map(({ code, adm }) => {
+            {cols.map(({ name, adm }) => {
               if (!adm)
                 return (
-                  <td key={code} className={td}>
+                  <td key={name} className={td}>
                     <span className="text-gray-300">—</span>
                   </td>
                 );
@@ -1715,7 +1799,7 @@ function CompareTable({
               const tier = tierOf(gap);
               return (
                 <td
-                  key={code}
+                  key={name}
                   className={td + " font-semibold"}
                   style={{
                     color: tier === "none" ? "#94A3B8" : TIER_COLOR[tier],
@@ -1731,8 +1815,8 @@ function CompareTable({
           </tr>
           <tr className="border-b border-gray-50">
             <td className={td + " text-gray-400 text-xs"}>最低位次</td>
-            {cols.map(({ code, adm }) => (
-              <td key={code} className={td}>
+            {cols.map(({ name, adm }) => (
+              <td key={name} className={td}>
                 {adm ? (
                   adm.minRank ? (
                     adm.minRank.toLocaleString()
@@ -1749,8 +1833,8 @@ function CompareTable({
             <td className={td + " text-gray-400 text-xs"}>
               招生计划（较去年）
             </td>
-            {cols.map(({ code, adm }) => (
-              <td key={code} className={td}>
+            {cols.map(({ name, adm }) => (
+              <td key={name} className={td}>
                 {adm?.planCount != null ? (
                   <>
                     {adm.planCount} 人
@@ -1773,8 +1857,8 @@ function CompareTable({
             <td className={td + " text-gray-400 text-xs"}>
               学科评估（第四轮）
             </td>
-            {cols.map(({ code, school }) => (
-              <td key={code} className={td}>
+            {cols.map(({ name, school }) => (
+              <td key={name} className={td}>
                 {school?.aClass ? (
                   <span>
                     A+ {school.aPlus} · A 类共 {school.aClass} 项
@@ -1787,8 +1871,8 @@ function CompareTable({
           </tr>
           <tr>
             <td className={td + " text-gray-400 text-xs align-top"}>A+ 学科</td>
-            {cols.map(({ code, school }) => (
-              <td key={code} className={td}>
+            {cols.map(({ name, school }) => (
+              <td key={name} className={td}>
                 {school?.topDisc?.length ? (
                   <span className="flex flex-wrap gap-1">
                     {school.topDisc.map((d) => (
@@ -1901,22 +1985,15 @@ function MajorSearch({
   prov: string;
   cat: string;
   score: number;
-  onOpen: (code: string) => void;
+  onOpen: (name: string) => void;
   onAddWish: (w: WishItem) => void;
-  hasWish: (code: string, group: string, major: string) => boolean;
+  hasWish: (name: string, group: string, major: string) => boolean;
 }) {
-  const nameToCode = useMemo(() => {
-    const m = new Map<string, string>();
-    for (const s of activeSchools()) m.set(s.name, s.code);
-    return m;
-  }, []);
-
   const results = useMemo(() => {
     const kw = q.trim();
     if (!kw || !majors) return null;
     const catData = majors.cats[cat] ?? {};
     const out: {
-      code: string;
       uni: string;
       hits: MajorRow[];
       best: MajorRow;
@@ -1924,14 +2001,13 @@ function MajorSearch({
     for (const [uni, rows] of Object.entries(catData)) {
       const hits = rows.filter((r) => r[1].includes(kw));
       if (!hits.length) continue;
-      const code = nameToCode.get(uni);
-      if (!code) continue;
+      if (!getSchool(uni)) continue; // 画像缺失（如院校已不在招生表）也允许展示
       const best = hits.reduce((a, b) => (b[3] < a[3] ? b : a));
-      out.push({ code, uni, hits, best });
+      out.push({ uni, hits, best });
     }
     out.sort((a, b) => b.best[3] - a.best[3]); // 难度优先（最低分高的在前）
     return out;
-  }, [q, majors, cat, nameToCode]);
+  }, [q, majors, cat]);
 
   const kw = q.trim();
 
@@ -1971,17 +2047,17 @@ function MajorSearch({
             {results.length} 所院校开设相关专业
           </div>
           <ul className="divide-y divide-gray-50 max-h-[600px] overflow-y-auto">
-            {results.slice(0, 60).map(({ code, uni, hits, best }) => {
+            {results.slice(0, 60).map(({ uni, hits, best }) => {
               const gap = score - best[3];
               const t = tierOf(gap);
               const color = t === "none" ? "#94A3B8" : TIER_COLOR[t];
-              const school = getSchool(code);
+              const school = getSchool(uni);
               return (
                 <li
-                  key={code}
+                  key={uni}
                   role="button"
                   tabIndex={0}
-                  onClick={() => onOpen(code)}
+                  onClick={() => onOpen(uni)}
                   className="flex items-center gap-3 px-4 py-2.5 text-left hover:bg-indigo-50/40 cursor-pointer transition-colors"
                 >
                   <span className="text-sm font-medium text-gray-900 truncate max-w-[170px]">
@@ -2013,12 +2089,12 @@ function MajorSearch({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      onAddWish({ code, group: best[0], major: best[1] });
+                      onAddWish({ name: uni, group: best[0], major: best[1] });
                     }}
                     title="把最易达的匹配专业加入志愿表"
-                    className={`shrink-0 w-6 h-6 rounded border flex items-center justify-center transition-colors ${hasWish(code, best[0], best[1]) ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-white text-gray-300 border-gray-200 hover:text-emerald-500"}`}
+                    className={`shrink-0 w-6 h-6 rounded border flex items-center justify-center transition-colors ${hasWish(uni, best[0], best[1]) ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-white text-gray-300 border-gray-200 hover:text-emerald-500"}`}
                   >
-                    {hasWish(code, best[0], best[1]) ? (
+                    {hasWish(uni, best[0], best[1]) ? (
                       <Check className="w-3.5 h-3.5" />
                     ) : (
                       <Plus className="w-3.5 h-3.5" />
@@ -2037,7 +2113,7 @@ function MajorSearch({
 // ═══ 志愿表模拟：有序院校专业组清单 ═══
 function WishTable({
   items,
-  admByCode,
+  admByName,
   majors,
   prov,
   cat,
@@ -2048,7 +2124,7 @@ function WishTable({
   onOpen,
 }: {
   items: WishItem[];
-  admByCode: Map<
+  admByName: Map<
     string,
     {
       minScore: number;
@@ -2071,11 +2147,11 @@ function WishTable({
   const [copied, setCopied] = useState(false);
   const copyText = () => {
     const lines = items.map((w, i) => {
-      const school = getSchool(w.code);
+      const school = getSchool(w.name);
       const row = majors?.cats[cat]?.[school?.name ?? ""]?.find(
         (r) => r[0] === w.group && r[1] === w.major,
       );
-      const s = school ? `${school.name}` : w.code;
+      const s = w.name;
       const g = w.group ? ` ${w.group.replace(/[（）()]/g, "")}组` : "";
       return `${i + 1}. ${s}${g} ${w.major}${row ? `（最低 ${row[3]} 分）` : ""}`;
     });
@@ -2136,8 +2212,8 @@ function WishTable({
       ) : (
         <ul className="divide-y divide-gray-50">
           {items.map((w, i) => {
-            const school = getSchool(w.code);
-            const adm = admByCode.get(w.code);
+            const school = getSchool(w.name);
+            const adm = admByName.get(w.name);
             const row = majors?.cats[cat]?.[school?.name ?? ""]?.find(
               (r) => r[0] === w.group && r[1] === w.major,
             );
@@ -2146,17 +2222,17 @@ function WishTable({
             const t = gap != null ? tierOf(gap) : "none";
             return (
               <li
-                key={`${w.code}-${w.major}-${i}`}
+                key={`${w.name}-${w.major}-${i}`}
                 className="flex items-center gap-2 px-3 py-2"
               >
                 <span className="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold flex items-center justify-center shrink-0">
                   {i + 1}
                 </span>
                 <button
-                  onClick={() => onOpen(w.code)}
+                  onClick={() => onOpen(w.name)}
                   className="text-sm font-medium text-gray-900 hover:text-indigo-600 hover:underline truncate max-w-[150px]"
                 >
-                  {school?.name ?? w.code}
+                  {w.name}
                 </button>
                 {school?.rank && (
                   <span className="text-[10px] px-1 rounded bg-indigo-50 text-indigo-600 border border-indigo-100 shrink-0 hidden sm:inline">

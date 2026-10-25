@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  batchGroupOf,
   isKeepBatch,
   normName,
   num,
@@ -97,5 +98,26 @@ describe("rankFromCurve", () => {
   });
   it("空表返回 null", () => {
     expect(rankFromCurve([], 600)).toBeNull();
+  });
+});
+
+describe("batchGroupOf", () => {
+  it("benke", () => {
+    expect(batchGroupOf("本科批")).toBe("benke");
+    expect(batchGroupOf("普通类一段")).toBe("benke");
+    expect(batchGroupOf("本科批A段")).toBe("benke");
+  });
+  it("tiqian/zhuanxiang/zhuanke", () => {
+    expect(batchGroupOf("本科提前批")).toBe("tiqian");
+    expect(batchGroupOf("提前批A段")).toBe("tiqian");
+    expect(batchGroupOf("高校专项计划批")).toBe("zhuanxiang");
+    expect(batchGroupOf("国家专项计划本科批")).toBe("zhuanxiang");
+    expect(batchGroupOf("专科批")).toBe("zhuanke");
+    expect(batchGroupOf("专科提前批")).toBe("zhuanke");
+    expect(batchGroupOf("普通类二段")).toBe("zhuanke");
+  });
+  it("art skipped", () => {
+    expect(batchGroupOf("艺术类本科批")).toBe("skip");
+    expect(batchGroupOf("体育本科批")).toBe("skip");
   });
 });

@@ -111,3 +111,13 @@ export function rankFromCurve(curve, score) {
   }
   return last[1];
 }
+
+/** 批次名 → 批次组：benke/tiqian/zhuanxiang/zhuanke（艺术/体育丢弃） */
+export function batchGroupOf(b) {
+  if (b.includes("艺术") || b.includes("体育")) return "skip";
+  if (b.includes("专科")) return "zhuanke"; // 含专科提前批
+  if (b.includes("二段")) return "zhuanke"; // 浙江二段≈专科层次
+  if (b.includes("提前")) return "tiqian";
+  if (b.includes("专项")) return "zhuanxiang";
+  return "benke";
+}

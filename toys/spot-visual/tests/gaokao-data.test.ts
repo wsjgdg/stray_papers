@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   activeProvinces,
   admissionsFor,
+  loadBatchesDataset,
   controlLine,
   getSchool,
   loadEnrichDataset,
@@ -55,12 +56,20 @@ describe("loadFullDataset + 读取接口", () => {
     expect(provs.map((p) => p.name)).toEqual(["河南", "广东"]);
     expect(provs[0].cats).toEqual(["物理类", "历史类"]);
   });
+  it("getSchool 按校名索引（招生代码跨省冲突不可作键）", () => {
+    const gd = admissionsFor("广东", "物理类").find(
+      (r) => r.schoolName === "甲大学",
+    );
+    expect(gd?.schoolCode).toBe("A1");
+    expect(getSchool("甲大学")?.is985).toBe(true);
+  });
+
   it("getSchool 去重与 flags 解析（1=985 2=211 4=民办）", () => {
-    const a1 = getSchool("A1");
+    const a1 = getSchool("甲大学");
     expect(a1?.is985).toBe(true);
     expect(a1?.is211).toBe(true);
     expect(a1?.isPrivate).toBe(false);
-    expect(getSchool("A3")?.isDFC).toBe(false);
+    expect(getSchool("丙大学")?.isDFC).toBe(false);
   });
   it("admissionsFor 携带计划/同比字段", () => {
     const rows = admissionsFor("河南", "物理类");
@@ -108,9 +117,9 @@ describe("recommend 冲稳保分档", () => {
     expect(r.userRank).toBe(8020); // 620 分在 600~700 锚点间插值
   });
   it("keep 筛选在截断前生效", () => {
-    const only985 = recommend(620, "河南", "物理类", (s) => s.is985);
+    const only985 = recommend(620, "河南", "物理类", (s) => s?.is985 ?? false);
     expect(only985.reach).toHaveLength(0); // 乙大学是 211 非 985
-    const only211 = recommend(620, "河南", "物理类", (s) => s.is211);
+    const only211 = recommend(620, "河南", "物理类", (s) => s?.is211 ?? false);
     expect(only211.reach.map((x) => x.schoolName)).toEqual(["乙大学"]);
   });
   it("每档最多 12 条", () => {
@@ -166,7 +175,7 @@ describe("loadEnrichDataset 合并", () => {
         },
       }),
     ).toBe(true);
-    const a1 = getSchool("A1")!;
+    const a1 = getSchool("甲大学")!;
     expect(a1.is985).toBe(false); // 官方标签无 985，覆盖数据集的 flags
     expect(a1.is211).toBe(true);
     expect(a1.isDFC).toBe(true);
@@ -176,7 +185,7 @@ describe("loadEnrichDataset 合并", () => {
     expect(a1.aClass).toBe(12);
     expect(a1.topDisc).toEqual(["力学"]);
     // 未覆盖的院校保持原值
-    expect(getSchool("A3")!.isDFC).toBe(false);
+    expect(getSchool("丙大学")!.isDFC).toBe(false);
   });
   it("无效结构返回 false", () => {
     expect(loadEnrichDataset(null as never)).toBe(false);
@@ -196,5 +205,44 @@ describe("生成的真实数据文件与数据层结构一致", () => {
     expect(loadFullDataset(raw)).toBe(true);
     expect(activeProvinces().length).toBeGreaterThan(20);
     expect(admissionsFor("河南", "物理类").length).toBeGreaterThan(100);
+  });
+});
+
+describe("loadBatchesDataset 批次组", () => {
+  it("非本科批合并并可按组查询", () => {
+    expect(
+      loadBatchesDataset({
+        v: 1,
+        year: 2025,
+        provs: {
+          河南: {
+            zhuanke: {
+              物理类: {
+                adm: [["Z1", "黄河水利职业技术学院", "专科批", 420, 0, "河南", 0]],
+              },
+            },
+            tiqian: {
+              物理类: {
+                adm: [["T1", "国防科技大学", "本科提前批", 640, 900, "湖南", 3]],
+              },
+            },
+          },
+        },
+      }),
+    ).toBe(true);
+    const zk = admissionsFor("河南", "物理类", "zhuanke");
+    expect(zk).toHaveLength(1);
+    expect(zk[0].schoolName).toBe("黄河水利职业技术学院");
+    expect(zk[0].group).toBe("zhuanke");
+    expect(zk[0].minRank).toBe(0);
+    expect(admissionsFor("河南", "物理类", "tiqian")[0].schoolName).toBe(
+      "国防科技大学",
+    );
+    expect(getSchool("国防科技大学")?.is985).toBe(true);
+    expect(admissionsFor("河南", "物理类", "benke")).toHaveLength(4);
+  });
+
+  it("无效结构返回 false", () => {
+    expect(loadBatchesDataset(null as never)).toBe(false);
   });
 });

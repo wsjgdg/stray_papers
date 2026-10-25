@@ -15,6 +15,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import {
+  batchGroupOf,
   isKeepBatch,
   num,
   parseCsv,
@@ -80,12 +81,14 @@ async function fetchCsv(slug, file, year = YEAR) {
   return text;
 }
 
-
 const stats = [];
 const provs = {};
+const batchesBest = new Map(); // prov\u0000group\u0000cat\u0000uni -> row
 
 for (const [slug, provName] of Object.entries(SLUGS)) {
   if (ONLY_PROV && slug !== ONLY_PROV) continue;
+  // 山西源数据损坏：科类为 <NA>、批次列为空、分数是小数模拟值，整体跳过
+  if (slug === "shanxi") continue;
   const admText = await fetchCsv(slug, "school-admission");
   if (!admText) {
     console.warn(`skip ${slug}: no school-admission`);
@@ -111,11 +114,38 @@ for (const [slug, provName] of Object.entries(SLUGS)) {
   }
 
   // 投档线：过滤 → 回填位次 → 院校×科类去重（取最低分）
-  const best = new Map(); // cat\0uni -> row
+  const best = new Map(); // cat\0uni -> row（本科普通批）
   for (const r of parseCsv(admText)) {
-    if (!isKeepBatch(r.batch)) continue;
+    const bg = batchGroupOf(r.batch);
+    if (bg === "skip") continue;
     const minScore = num(r.min_score);
     if (minScore === null) continue;
+    if (bg !== "benke") {
+      // 非本科批：不做一分一段回填（曲线是本科批口径），位次缺失记 0
+      const kb =
+        provName +
+        `\u0000` +
+        bg +
+        `\u0000` +
+        r.category +
+        `\u0000` +
+        r.university_name;
+      const rowB = {
+        code: r.university_code || r.university_name,
+        name: r.university_name,
+        batch: r.batch,
+        score: minScore,
+        rank: num(r.min_rank) ?? 0,
+        loc: r.school_province || "",
+        flags:
+          (r.is_985 === "1" ? 1 : 0) |
+          (r.is_211 === "1" ? 2 : 0) |
+          (r.school_nature === "民办" ? 4 : 0),
+      };
+      const pb = batchesBest.get(kb);
+      if (!pb || rowB.score < pb.score) batchesBest.set(kb, rowB);
+      continue;
+    }
     let minRank = num(r.min_rank);
     if (minRank === null)
       minRank = rankFromCurve(curves[r.category] ?? [], minScore);
@@ -231,7 +261,7 @@ for (const [slug, provName] of Object.entries(SLUGS)) {
         ? row.score - prevScore.get(`${row.cat}\u0000${row.name}`) // 投档线同比（正=涨）
         : null,
       planByCatUni.get(`${row.cat}\u0000${row.name}`) != null &&
-        prevPlanByCatUni.get(`${row.cat}\u0000${row.name}`) != null
+      prevPlanByCatUni.get(`${row.cat}\u0000${row.name}`) != null
         ? planByCatUni.get(`${row.cat}\u0000${row.name}`) -
           prevPlanByCatUni.get(`${row.cat}\u0000${row.name}`) // 计划同比（正=扩招）
         : null,
@@ -275,7 +305,12 @@ for (const [slug, provName] of Object.entries(SLUGS)) {
     fs.mkdirSync(path.dirname(histPath), { recursive: true });
     fs.writeFileSync(
       histPath,
-      JSON.stringify({ v: 1, year: YEAR, years: [YEAR - 3, YEAR - 2, YEAR - 1, YEAR], cats: histOut }),
+      JSON.stringify({
+        v: 1,
+        year: YEAR,
+        years: [YEAR - 3, YEAR - 2, YEAR - 1, YEAR],
+        cats: histOut,
+      }),
     );
   }
 }
@@ -294,5 +329,33 @@ const out = {
 };
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT, JSON.stringify(out));
+
+// 非本科批批次组（提前/专项/专科）→ 独立懒加载文件
+const batches = {};
+for (const [k, row] of batchesBest) {
+  const [provName2, group, cat] = k.split("\u0000");
+  const g = (batches[provName2] ??= {});
+  const c = (g[group] ??= {});
+  (c[cat] ??= { adm: [] }).adm.push([
+    row.code,
+    row.name,
+    row.batch,
+    row.score,
+    row.rank,
+    row.loc,
+    row.flags,
+  ]);
+}
+for (const g of Object.values(batches))
+  for (const c of Object.values(g))
+    for (const cc of Object.values(c)) cc.adm.sort((a, b) => b[3] - a[3]);
+const batchesPath = path.join(path.dirname(OUT), `gaokao-${YEAR}-batches.json`);
+fs.writeFileSync(
+  batchesPath,
+  JSON.stringify({ v: 1, year: YEAR, provs: batches }),
+);
 console.table(stats);
 console.log(`written ${OUT} (${(fs.statSync(OUT).size / 1024).toFixed(0)} KB)`);
+console.log(
+  `written ${batchesPath} (${(fs.statSync(batchesPath).size / 1024).toFixed(0)} KB)`,
+);
