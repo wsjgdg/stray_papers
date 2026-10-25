@@ -13,6 +13,16 @@
  *     ancilla 测量的经典记录位再以 ε 翻转（读出误差）。P_L 出现与 p 无关的底座；
  *     γ=λ=0 时 DP-over-frames 有精确解（曲线青色实线），γ>0 非 Pauli 无解只出 MC。
  *
+ * R109 容错读出表决（URL: rd）——三种口径通用的电路结构参数：
+ *   每位稳定子重复测量 k=1/3/5 次（每次一套 fresh ancilla；ancilla 测后不重置，
+ *   重复利用会把综合征又 XOR 一次，物理上错），修正查表用**多数表决后**的综合。
+ *   有效读出误差 ε_k = Σ_{j≥⌈k/2⌉} C(k,j)ε^j(1−ε)^{k−j}（k=3 ⟹ 3ε²−2ε³，
+ *   k=5 ⟹ 10ε³−15ε⁴+6ε⁵；ε<1/2 时随 k 严格递减）。两条诚实边界：① 表决只纠正
+ *   **经典读出翻转**——数据错误在每次重复里给出相同综合征，多数原样 reproducing，
+ *   3p²−2p³ 骨架不变；② 表决不免费——每次重复都是新的综合征提取，门噪声机会
+ *   ×rd（phys/gate 口径下 k 越大越贵）。iid 口径没有读出误差，k 不改变任何结果
+ *   （bitwise 相同——本身就是教学点）。rd=1 时 ancilla 3/4、ops 与 R108 逐位一致。
+ *
  * 三块画布：
  *   #qecCircuit  5 比特线路（3 数据 + 2 ancilla；phys 用教学视图 + ε 标记）
  *   #qecCurve    P_L(p) 双对数：iid = MC 点 + 3p²−2p³ 解析 + 阈值 p=1/2；
@@ -28,7 +38,7 @@
  * _queueTimer 类定时器在 deactivate 统一清理。CSS 原样（选择器全 id 锚定，
  * mode 间 DOM 不同屏共存，无串台）。
  * ========================================================================== */
-import { QEC_DEFAULTS, QEC_CODES, QEC_NOISE, QEC_SPECTRA, qecTrial, qecStream, qecEnsemble, qecSweep, qecLogicalRate, qecThreshold, qecSyndromeTable, qecCircuit, qecExactPL, qecFaultSurvey } from '../physics/qec.js';
+import { QEC_DEFAULTS, QEC_CODES, QEC_NOISE, QEC_SPECTRA, qecTrial, qecStream, qecEnsemble, qecSweep, qecLogicalRate, qecThreshold, qecSyndromeTable, qecCircuit, qecExactPL, qecFaultSurvey, qecNormRd, qecVoteErr } from '../physics/qec.js';
 import { mulberry32 } from '../physics/qcircuit.js';
 import { LiveDriver } from './live.js';
 
@@ -113,6 +123,8 @@ export class QecApp {
       noise: str('noise', 'iid', v => v === 'iid' || v === 'gate' || v === 'phys'),
       spectrum: str('spectrum', 'depolar', v => v === 'depolar' || v === 'x' || v === 'z'),
       noisyPhase: str('noisyPhase', 'extract', v => v === 'extract' || v === 'all'),
+      /* ---- R109 读出表决重复数（URL: rd；1/3/5，非法值归一到 1） ---- */
+      rd: qecNormRd(q.has('rd') ? parseFloat(q.get('rd')) : 1),
       /* ---- R108 物理通道（URL: t1/t2/tg/pd/re/peq，与 qcircuit 线路页同名同义） ---- */
       phys: {
         t1: num('t1', 3000), t2: num('t2', 2000), tg: num('tg', 10),
@@ -174,6 +186,12 @@ export class QecApp {
             <button data-np="all">全程</button>
           </div>
         </div>
+        <div class="grp">读出表决 k（R109）</div>
+        <div class="btns g3">
+          <button data-rd="1" title="每位稳定子测 1 次（R108 行为；ε_k=ε）">k=1</button>
+          <button data-rd="3" title="每位稳定子测 3 次取多数：ε→3ε²−2ε³；只纠经典读出翻转，不救数据错误，提取门机会 ×3">k=3</button>
+          <button data-rd="5" title="每位稳定子测 5 次取多数：ε→10ε³−15ε⁴+6ε⁵；代价同比例上升">k=5</button>
+        </div>
         <div id="qePhysWrap">
           <div class="row"><label>T₁ 弛豫</label><input type="range" id="qeT1" min="200" max="6000" step="100" title="能量弛豫时间（与 t_g 同单位）；每门 γ=1−e^(−tg/T₁)，peq&gt;0 时按 p_eq 分配为 |1⟩→|0⟩ 与 |0⟩→|1⟩"><output id="qeT1O">—</output></div>
           <div class="row"><label>T₂ 退相位</label><input type="range" id="qeT2" min="200" max="6000" step="100" title="退相位时间；每门 λ=1−e^(−tg/T₂)，等效为以 λ/2 概率施加 Z"><output id="qeT2O">—</output></div>
@@ -225,7 +243,9 @@ export class QecApp {
         </div>
         <div id="hPhysStats" style="display:none">
           <div class="hrow"><span>P_L 底座（p→0）</span><span id="hFloor">—</span></div>
+          <div class="hrow"><span>表决后 ε_k</span><span id="hVote">—</span></div>
           <div class="hrow"><span>读出翻转/试验</span><span id="hFlip">—</span></div>
+          <div class="hrow" id="hBitErrRow" style="display:none"><span>表决后错位/试验</span><span id="hBitErr">—</span></div>
           <div class="hrow"><span>通道跳变/试验</span><span id="hJump">—</span></div>
           <div class="hrow"><span>γ / λ / ε（每门）</span><span id="hChan">—</span></div>
         </div>
@@ -254,6 +274,9 @@ export class QecApp {
     }
     for (const b of this.modeRoot.querySelectorAll('#qePanel button[data-np]')){
       this.on(b, 'click', () => this.setNoisyPhase(b.dataset.np));
+    }
+    for (const b of this.modeRoot.querySelectorAll('#qePanel button[data-rd]')){
+      this.on(b, 'click', () => this.setRd(parseInt(b.dataset.rd, 10)));
     }
     this.on(this.q('#qeP'), 'input', e => { this.state.p = parseFloat(e.target.value); this.recompute(); this.syncPanel(); });
     this.on(this.q('#qeTrials'), 'input', e => { this.state.trials = parseInt(e.target.value, 10); this.recompute(); this.syncPanel(); });
@@ -302,6 +325,7 @@ export class QecApp {
     return {
       code: this.state.code, p: this.state.p, trials: this.state.trials, seed: this.state.seed,
       noise: this.state.noise, spectrum: this.state.spectrum, noisyPhase: this.state.noisyPhase,
+      rd: this.state.rd,
       t1: this.state.phys.t1, t2: this.state.phys.t2, tg: this.state.phys.tg,
       pd: this.state.phys.pd, re: this.state.phys.re, peq: this.state.phys.peq,
     };
@@ -320,12 +344,14 @@ export class QecApp {
     if (this.live && this.live.playing){ this.live.sync(); this.ens = null; }
     else this.ens = qecEnsemble(this.cfg());
     this.rollOnce();
-    const key = this.state.code + '|' + this.state.noise + '|' + this.state.spectrum + '|' + this.state.noisyPhase + '|' + this.state.trials;
+    /* R109：rd 进曲线缓存键——线路结构（ancilla 数/测量数/门机会）随它变 */
+    const key = this.state.code + '|' + this.state.noise + '|' + this.state.spectrum + '|' + this.state.noisyPhase + '|' + this.state.trials + '|' + qecNormRd(this.state.rd);
     if (key !== this._curveKey){
       /* gate 模式的 p 网格显式给到 0.55：数值阈值 ≈0.5（PLexact(1/2)≡1/2，
          单谱精确 / 退极化 ~1e-4 偏移），默认网格只到 0.3 会落在根之外 */
       const sweepCfg = {
         code: this.state.code, noise: this.state.noise, spectrum: this.state.spectrum, noisyPhase: this.state.noisyPhase,
+        rd: this.state.rd,
         trials: Math.max(600, Math.round(this.state.trials / 3)), seed: 101, sweepTrials: 600,
       };
       if (this.state.noise === 'gate'){
@@ -426,6 +452,14 @@ export class QecApp {
     this._curveKey = '';
     this.syncPanel(); this.recompute(); this.renderHint();
   }
+  /* R109：读出表决重复数（1/3/5；归一后与现值相同则空转） */
+  setRd(k){
+    const v = qecNormRd(k);
+    if (v === this.state.rd) return;
+    this.state.rd = v;
+    this._curveKey = '';
+    this.syncPanel(); this.recompute(); this.renderHint();
+  }
   setP(v){ this.state.p = v; this.syncPanel(); this.recompute(); }
   setTrials(n){ this.state.trials = n; this.syncPanel(); this.recompute(); }
   reseed(s){ this.state.seed = s; this._rng = null; this.recompute(); }
@@ -445,6 +479,7 @@ export class QecApp {
     for (const b of this.modeRoot.querySelectorAll('#qePanel button[data-n]')) b.classList.toggle('on', b.dataset.n === s.noise);
     for (const b of this.modeRoot.querySelectorAll('#qePanel button[data-sp]')) b.classList.toggle('on', b.dataset.sp === s.spectrum);
     for (const b of this.modeRoot.querySelectorAll('#qePanel button[data-np]')) b.classList.toggle('on', b.dataset.np === s.noisyPhase);
+    for (const b of this.modeRoot.querySelectorAll('#qePanel button[data-rd]')) b.classList.toggle('on', parseInt(b.dataset.rd, 10) === qecNormRd(s.rd));
     const wrap = this.q('#qeSpWrap');
     if (wrap) wrap.classList.toggle('off', s.noise !== 'gate');
     const npw = this.q('#qeNpWrap');
@@ -483,6 +518,18 @@ export class QecApp {
             ' · T₂=' + s.phys.t2 + ' · t_g=' + s.phys.tg + ' · p_d=' + s.phys.pd +
             ' · ε=' + s.phys.re + ' · p_eq=' + s.phys.peq +
             '（γ=1−e^(−tg/T₁)、λ=1−e^(−tg/T₂)；γ=0 时 DP 有精确解，γ>0 非 Pauli 无解只出 MC）。'
+          : '') +
+        /* R109：k>1 时附表决说明（按口径分别讲清「有什么用/没什么用」） */
+        (qecNormRd(s.rd) > 1
+          ? '<br><span style="color:var(--cyan);font-weight:600">读出表决 k=' + qecNormRd(s.rd) + '</span> 每位稳定子测 ' +
+            qecNormRd(s.rd) + ' 次（fresh ancilla）取多数' +
+            (s.noise === 'phys'
+              ? '：ε→ε_k=' + repEx(qecVoteErr(qecNormRd(s.rd), s.phys.re), 2) +
+                '——只纠正经典读出翻转，数据错误每次给出相同综合征、多数原样重现（救不回）；'
+              : s.noise === 'gate'
+                ? '：门级读出无误差，表决不改变综合征，但每次重复都新增提取门——噪声机会 M ×' + qecNormRd(s.rd) + '；'
+                : '：静态口径没有读出误差，表决不改变任何综合征与修正（ ensemble 的 MC 样本因测量抽样序略变，分布不变）；') +
+            '每次重复都是新的综合征提取，代价随 k 上升（表决不免费）。'
           : '');
     }
   }
@@ -547,7 +594,17 @@ export class QecApp {
       } else if (s.noise === 'phys'){
         /* R108：底座 / 读出翻转 / 通道跳变 / 每门速率摘要 */
         set('hFloor', this._floor ? (this._floor.exact ? '' : '≈') + repNf(this._floor.v, 4) : '—');
-        set('hFlip', repNf(e.meanFlips, 4) + '（' + e.byFlip.map(v => (100 * v / e.trials).toFixed(1) + '%').join('/') + '）');
+        /* R109：多数表决后的有效读出误差 ε_k（k=rd；k=1 时 ≡ ε） */
+        const rdv = qecNormRd(s.rd);
+        set('hVote', 'k=' + rdv + ' → ' + repEx(qecVoteErr(rdv, s.phys.re), 2));
+        /* k=1：原始逐次翻转直方图（R108 口径）；k>1：均值 + 总位数（2rd 位原始），
+           表决后错位分解另起一行（byBitErr 恰 3 项，不被 2rd+1 项挤爆） */
+        set('hFlip', rdv > 1
+          ? repNf(e.meanFlips, 4) + '（共 ' + (2 * rdv) + ' 位）'
+          : repNf(e.meanFlips, 4) + '（' + e.byFlip.map(v => (100 * v / e.trials).toFixed(1) + '%').join('/') + '）');
+        const ber = this.q('#hBitErrRow');
+        if (ber) ber.style.display = rdv > 1 ? '' : 'none';
+        if (rdv > 1) set('hBitErr', repNf(e.meanBitErr, 4) + '（' + e.byBitErr.map(v => (100 * v / e.trials).toFixed(1) + '%').join('/') + '）');
         set('hJump', repNf(e.meanJumps, 4));
         const g = 1 - Math.exp(-s.phys.tg / Math.max(1e-9, s.phys.t1));
         const l = 1 - Math.exp(-s.phys.tg / Math.max(1e-9, s.phys.t2));
@@ -588,6 +645,9 @@ export class QecApp {
 
     /* 列定义：[标签, 类型, 参数] */
     /* phase 名显式挂在每一列上（首版用三元表达式推名字，条件写错 ⟹ 标注乱序） */
+    /* R109：综合段按 rd 展开——每位稳定子 rd 次重复（cnot/cnot/meas）+ 表决列；
+       rd=1 时 ancilla 3/4、列序列与 R108 逐列相同（零回归）。 */
+    const rd = qecNormRd(s.rd);
     const cols = [
       { t: 'prep', label: 'P', q: 0, ph: '制备' },
       { t: 'cnot', a: 0, b: 1, ph: '编码' },
@@ -595,20 +655,28 @@ export class QecApp {
     ];
     if (isPhase) cols.push({ t: 'h3', ph: '编码' });
     cols.push({ t: 'noise', ph: '噪声' });
-    cols.push({ t: 'cnot', a: 0, b: 3, ph: '综合' }, { t: 'cnot', a: 1, b: 3, ph: '综合' }, { t: 'meas', q: 3, ph: '综合' });
-    cols.push({ t: 'cnot', a: 1, b: 4, ph: '综合' }, { t: 'cnot', a: 2, b: 4, ph: '综合' }, { t: 'meas', q: 4, ph: '综合' });
+    for (let rp = 0; rp < rd; rp++){
+      cols.push({ t: 'cnot', a: 0, b: 3 + rp, ph: '综合' }, { t: 'cnot', a: 1, b: 3 + rp, ph: '综合' },
+        { t: 'meas', q: 3 + rp, ph: '综合', stab: 0, rep: rp });
+    }
+    for (let rp = 0; rp < rd; rp++){
+      cols.push({ t: 'cnot', a: 1, b: 3 + rd + rp, ph: '综合' }, { t: 'cnot', a: 2, b: 3 + rd + rp, ph: '综合' },
+        { t: 'meas', q: 3 + rd + rp, ph: '综合', stab: 1, rep: rp });
+    }
+    if (rd > 1) cols.push({ t: 'vote', ph: '表决' });
     cols.push({ t: 'fix', ph: '修正' });
     if (isPhase) cols.push({ t: 'h3', ph: '解码' });
     cols.push({ t: 'cnot', a: 0, b: 1, ph: '解码' }, { t: 'cnot', a: 0, b: 2, ph: '解码' });
     const N = cols.length;
 
     const padL = 40 * dpr, padR = 12 * dpr, padT = 26 * dpr, padB = 22 * dpr;
-    const rows = 5;
+    const rows = 3 + 2 * rd;
     const rowH = (H - padT - padB) / rows;
     const yOf = q => padT + (q + 0.5) * rowH;
     const colW = (W - padL - padR) / N;
     const xOf = i => padL + (i + 0.5) * colW;
-    const labels = ['q0', 'q1', 'q2', 'a0', 'a1'];
+    const labels = ['q0', 'q1', 'q2'];
+    for (let i = 0; i < 2 * rd; i++) labels.push('a' + i);
 
     /* 导线 */
     g.strokeStyle = 'rgba(120,160,220,.28)'; g.lineWidth = 1 * dpr;
@@ -689,6 +757,20 @@ export class QecApp {
         }
         g.fillStyle = 'rgba(148,163,184,.8)'; g.font = (9 * dpr) + 'px ui-monospace,monospace';
         g.textAlign = 'center'; g.fillText(s.noise === 'phys' ? '存储错误 p' : '噪声 p', cx, yOf(0) - size / 2 - 7 * dpr);
+      } else if (col.t === 'vote'){
+        /* R109：多数表决盒——跨全部 ancilla 行的竖框，标注本次试验的表决结果 */
+        const y0v = yOf(3), y1v = yOf(rows - 1);
+        g.strokeStyle = 'rgba(251,191,36,.9)'; g.lineWidth = 1.3 * dpr;
+        g.beginPath(); g.roundRect(cx - size / 2, y0v, size, y1v - y0v, 4 * dpr); g.stroke();
+        g.fillStyle = 'rgba(4,8,16,.78)'; g.fill();
+        g.fillStyle = 'rgba(251,191,36,.95)'; g.font = (10 * dpr) + 'px ui-monospace,monospace';
+        g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.fillText('vote', cx, (y0v + y1v) / 2);
+        if (t && t.synVoted){
+          g.font = (9 * dpr) + 'px ui-monospace,monospace';
+          g.fillText(t.synVoted.join(''), cx, (y0v + y1v) / 2 + 12 * dpr);
+        }
+        g.textBaseline = 'alphabetic';
       } else if (col.t === 'fix'){
         if (fixQ >= 0){
           box(cx, yOf(fixQ), size, isPhase ? 'Z' : 'X', 'rgba(251,191,36,.95)');
@@ -718,11 +800,16 @@ export class QecApp {
         segStart = i;
       }
     }
-    /* R108 phys：标题 + 图例（底部，避开顶部阶段标注） */
+    /* R108 phys：标题 + 图例（底部，避开顶部阶段标注）；R109：注明 k */
     if (s.noise === 'phys'){
       g.fillStyle = 'rgba(226,232,240,.9)'; g.font = (10.5 * dpr) + 'px ui-monospace,monospace';
       g.textAlign = 'left'; g.textBaseline = 'alphabetic';
-      g.fillText('物理通道线路（R108 · 轨迹采样：红=注入故障 / 琥珀 ε=读出翻转）', 8 * dpr, H - 7 * dpr);
+      g.fillText('物理通道线路（R109 · k=' + rd + ' 次重复表决：红=注入故障 / 琥珀 ε=读出翻转）', 8 * dpr, H - 7 * dpr);
+    } else if (rd > 1){
+      /* iid 口径无读出误差：重复表决不改变综合征/修正——明示以防误读 */
+      g.fillStyle = 'rgba(148,163,184,.75)'; g.font = (9.5 * dpr) + 'px ui-monospace,monospace';
+      g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+      g.fillText('k=' + rd + ' 次重复表决（静态口径无读出误差：综合征每次相同，统计分布不变）', 8 * dpr, H - 7 * dpr);
     }
   }
 
@@ -730,7 +817,8 @@ export class QecApp {
   /* 单一数据源：列 = physics/qec.js qecCircuit().ops（与试验 / 故障枚举同一条
      线路，不再页面侧重定义）。静态 noise 标记在门级模式无实体，跳过。本次
      试验注入的故障（trial.faults = [{gate,q,t}]，gate 即 ops 下标）以红字
-     标在对应门列的比特线上方。 */
+     标在对应门列的比特线上方。
+     R109：ancilla 数随 rd 变（nq=3+2rd 行；rd=1 时 5 行、标签与 R108 相同）。 */
   drawCircuitGate(g, W, H, dpr, t){
     const s = this.state;
     const circ = qecCircuit(s.code, this.cfg());
@@ -746,12 +834,13 @@ export class QecApp {
     const N = cols.length;
 
     const padL = 40 * dpr, padR = 12 * dpr, padT = 26 * dpr, padB = 22 * dpr;
-    const rows = 5;
+    const rows = circ.nq;
     const rowH = (H - padT - padB) / rows;
     const yOf = q => padT + (q + 0.5) * rowH;
     const colW = (W - padL - padR) / N;
     const xOf = i => padL + (i + 0.5) * colW;
-    const labels = ['q0', 'q1', 'q2', 'a0', 'a1'];
+    const labels = ['q0', 'q1', 'q2'];
+    for (let i = 0; i < rows - 3; i++) labels.push('a' + i);
 
     /* 导线 */
     g.strokeStyle = 'rgba(120,160,220,.28)'; g.lineWidth = 1 * dpr;
@@ -1083,14 +1172,15 @@ export class QecApp {
       g.beginPath(); g.arc(x, y, 3 * dpr, 0, 6.2832); g.fill();
     }
 
-    /* P_L 底座（琥珀横虚线）：p→0 的极限，与 p 无关的误差地板 */
+    /* P_L 底座（琥珀横虚线）：p→0 的极限，与 p 无关的误差地板。
+       R109：标注 k——底座随表决次数走（p=0 时精确 = ε_k(1−ε_k)） */
     if (this._floor && this._floor.v > yMin){
       const yf = Y(this._floor.v);
       g.strokeStyle = 'rgba(251,191,36,.8)'; g.setLineDash([5 * dpr, 4 * dpr]); g.lineWidth = 1.2 * dpr;
       g.beginPath(); g.moveTo(x0, yf); g.lineTo(x1, yf); g.stroke(); g.setLineDash([]);
       g.fillStyle = 'rgba(251,191,36,.95)'; g.font = (9 * dpr) + 'px ui-monospace,monospace';
       g.textAlign = 'left';
-      g.fillText('底座 P_L(0)' + (this._floor.exact ? '=' : '≈') + this._floor.v.toExponential(1), x0 + 4 * dpr, yf - 4 * dpr);
+      g.fillText('底座 P_L(0)·k=' + qecNormRd(this.state.rd) + (this._floor.exact ? '=' : '≈') + this._floor.v.toExponential(1), x0 + 4 * dpr, yf - 4 * dpr);
     }
 
     /* P_L=p 交点（DP 可得时由 recompute 二分算出） */
@@ -1191,16 +1281,27 @@ export class QecApp {
 
   /* ---------- R108 综合征读出翻转分解（phys）：0/1/2 位被翻 × 纠对/逻辑错误 ---------- */
   /* SPAM 的直接可视化：读出误差不污染量子态，只翻经典综合征位——被翻的试验里
-     修正查表用错综合，单错不再必纠。ε=0 时全部质量落在「0 翻转」柱。 */
+     修正查表用错综合，单错不再必纠。ε=0 时全部质量落在「0 翻转」柱。
+     R109：k>1 时改画**表决后**错位分解（0/1/2 个稳定子表决位错）——voting 的
+     直接度量（byBitErr 恰 3 项）；原始逐次翻转（byFlip，2k+1 项）在 HUD hFlip 行。 */
   drawHistPhys(g, W, H, dpr, e){
+    const s = this.state;
+    const rd = qecNormRd(s.rd);
+    const voted = rd > 1;
+    const bars = voted
+      ? [
+          { lab: '0 错位', tot: e.byBitErr[0], bad: e.byBitErrL[0] },
+          { lab: '1 错位', tot: e.byBitErr[1], bad: e.byBitErrL[1] },
+          { lab: '2 错位', tot: e.byBitErr[2], bad: e.byBitErrL[2] },
+        ]
+      : [
+          { lab: '0 翻转', tot: e.byFlip[0], bad: e.byFlipL[0] },
+          { lab: '1 翻转', tot: e.byFlip[1], bad: e.byFlipL[1] },
+          { lab: '2 翻转', tot: e.byFlip[2], bad: e.byFlipL[2] },
+        ];
     const padL = 42 * dpr, padR = 14 * dpr, padT = 28 * dpr, padB = 34 * dpr;
     const x0 = padL, x1 = W - padR, y0 = padT, y1 = H - padB;
     const n = e.trials;
-    const bars = [
-      { lab: '0 翻转', tot: e.byFlip[0], bad: e.byFlipL[0] },
-      { lab: '1 翻转', tot: e.byFlip[1], bad: e.byFlipL[1] },
-      { lab: '2 翻转', tot: e.byFlip[2], bad: e.byFlipL[2] },
-    ];
     const maxC = Math.max(1, ...bars.map(b => b.tot));
     const bw = (x1 - x0) / bars.length;
     const Y = v => y1 - (v / maxC) * (y1 - y0);
@@ -1240,15 +1341,16 @@ export class QecApp {
       }
     }
 
-    /* 标题 + 图例 + 口径注记 */
+    /* 标题 + 图例 + 口径注记（R109：k>1 时切到表决后错位口径） */
     g.fillStyle = 'rgba(226,232,240,.9)'; g.font = (10.5 * dpr) + 'px ui-monospace,monospace';
     g.textAlign = 'left'; g.textBaseline = 'alphabetic';
-    g.fillText('综合征读出翻转分解（' + n + ' 次试验 · ε=' + this.state.phys.re + '）', 8 * dpr, 15 * dpr);
+    g.fillText((voted ? '综合征表决后错位分解' : '综合征读出翻转分解') +
+      '（' + n + ' 次试验 · ε=' + s.phys.re + ' · k=' + rd + '）', 8 * dpr, 15 * dpr);
     g.font = (9.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'right';
     g.fillStyle = 'rgba(103,232,249,.9)'; g.fillText('纠回', x1 - 46 * dpr, 15 * dpr);
     g.fillStyle = 'rgba(248,113,113,.95)'; g.fillText('逻辑错误', x1 - 8 * dpr, 15 * dpr);
     g.fillStyle = 'rgba(148,163,184,.6)'; g.textAlign = 'left';
-    g.fillText('翻转位 = 综合征记录 ≠ 真实（量子态不受污染）', 8 * dpr, H - 7 * dpr);
+    g.fillText(voted ? '错位 = 表决位 ≠ 真实多数（量子态不受污染）' : '翻转位 = 综合征记录 ≠ 真实（量子态不受污染）', 8 * dpr, H - 7 * dpr);
   }
 
   /* ---------- 结局分解（门级）：上排码空间五分类，下排解码后三分类 ---------- */
@@ -1330,6 +1432,10 @@ export class QecApp {
           flips: t.flips ? t.flips.slice() : null,
           frameOK: t.frameOK != null ? t.frameOK : null,
           clsDec: t.clsDec != null ? t.clsDec : null,
+          /* R109：表决后综合征 / 表决错位（voted ≠ trueMj）/ 重复数 */
+          synVoted: t.synVoted ? t.synVoted.slice() : null,
+          bitErr: t.bitErr ? t.bitErr.slice() : null,
+          rd: qecNormRd(t.rd != null ? t.rd : self.state.rd),
         } : null;
       },
       ensemble: () => self.ens ? {
@@ -1347,6 +1453,10 @@ export class QecApp {
         meanFlips: self.ens.meanFlips, meanJumps: self.ens.meanJumps,
         frameMiss: self.ens.frameMiss, noFrame: self.ens.noFrame,
         physParams: self.ens.physParams, floor: self._floor,
+        /* R109：表决后错位分解（0/1/2 稳定子位错）+ 重复数 */
+        rd: qecNormRd(self.ens.rd != null ? self.ens.rd : self.state.rd),
+        byBitErr: self.ens.byBitErr.slice(), byBitErrL: self.ens.byBitErrL.slice(),
+        meanBitErr: self.ens.meanBitErr,
       } : null,
       curve: () => self.curve ? {
         p: self.curve.p.slice(), PL: self.curve.PL.slice(), PLexact: self.curve.PLexact.slice(),
@@ -1362,6 +1472,8 @@ export class QecApp {
       setNoise: n => { self.setNoise(n); self.drawAll(); },
       setSpectrum: sp => { self.setSpectrum(sp); self.drawAll(); },
       setNoisyPhase: np => { self.setNoisyPhase(np); self.drawAll(); },
+      /* R109：读出表决重复数（1/3/5） */
+      setRd: k => { self.setRd(k); self.drawAll(); },
       /* R108：phys 参数直驱（真值概率，非 ×10⁻³ 刻度；测试/调试用） */
       setPhys: (k, v) => {
         if (!['t1', 't2', 'tg', 'pd', 're', 'peq'].includes(k)) return;
@@ -1384,6 +1496,8 @@ export class QecApp {
         return {
           errors: t.errors.slice(), syn: t.syn.slice(), fixQ: t.fixQ, F: t.F, logicalError: t.logicalError,
           faults: t.faults ? t.faults.slice() : [], cls: t.cls, noise: t.noise,
+          /* R109：表决后综合征 / 重复数（iid 的 rd 不变性逐位对账用） */
+          synVoted: t.synVoted.slice(), rd: qecNormRd(t.rd != null ? t.rd : self.state.rd),
         };
       },
       navLinks: () => Array.from(document.querySelectorAll('.qtop a')).map(a => a.getAttribute('href')),
