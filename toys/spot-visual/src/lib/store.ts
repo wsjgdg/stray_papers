@@ -31,6 +31,8 @@ interface AppStore {
   setSpots: (spots: Spot[]) => void;
   appendSpots: (spots: Spot[]) => void;
   updateSpotImages: (updates: { id: string; image: string }[]) => void;
+  /** 按 id 批量更新图片来源标注（配合 updateSpotImages 使用） */
+  updateSpotImageSources: (updates: { id: string; source?: string }[]) => void;
   toggleFavorite: (id: string) => void;
   setActiveView: (view: ViewType) => void;
   setSelectedSpot: (spot: Spot | null) => void;
@@ -103,6 +105,17 @@ export const useAppStore = create<AppStore>()(
           return {
             spots: s.spots.map((sp) =>
               map.has(sp.id) ? { ...sp, image: map.get(sp.id)! } : sp,
+            ),
+          };
+        });
+      },
+      updateSpotImageSources: (updates) => {
+        if (updates.length === 0) return;
+        set((s) => {
+          const map = new Map(updates.map((u) => [u.id, u.source]));
+          return {
+            spots: s.spots.map((sp) =>
+              map.has(sp.id) ? { ...sp, imageSource: map.get(sp.id) } : sp,
             ),
           };
         });

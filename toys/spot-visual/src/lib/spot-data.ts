@@ -4,6 +4,8 @@ export interface Spot {
   name: string;
   image: string;
   photos?: string[];
+  /** 图片来源标注：osm | unsplash | pexels | pool（详情弹窗展示，数据诚实性） */
+  imageSource?: string;
   address: string;
   facilities: string[];
   projects: string[];

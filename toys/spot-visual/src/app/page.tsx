@@ -121,6 +121,77 @@ const getCategoryIcon = (cat: string) => {
   return <Comp className="w-3.5 h-3.5" />;
 };
 
+/* ═══════ 共享配图流程：为缺图景点按分类拉图（OSM 探索与 JSON 导入共用） ═══════ */
+async function fillSpotImages(list: Spot[]): Promise<void> {
+  const needImages = list.filter((s) => !s.image);
+  if (needImages.length === 0) return;
+
+  // 按分类分组，批量请求 API（search-photo 每分类 1 次上游请求，游标去重）
+  const byCategory = new Map<string, Spot[]>();
+  needImages.forEach((spot) => {
+    const cat = spot.category || "其他";
+    const arr = byCategory.get(cat) || [];
+    arr.push(spot);
+    byCategory.set(cat, arr);
+  });
+
+  const updates: { id: string; image: string; source?: string }[] = [];
+  let noApiKeys = false;
+  await Promise.allSettled(
+    Array.from(byCategory.entries()).map(async ([cat, items]) => {
+      try {
+        const res = await fetch(
+          withSharecode(
+            `/api/search-photo?q=${encodeURIComponent(cat)}&n=${items.length}`,
+          ),
+        );
+        if (!res.ok) throw new Error(`API ${res.status}`);
+        const data = await res.json();
+
+        if (data.error === "NO_API_KEYS") {
+          noApiKeys = true;
+          items.forEach((item) => {
+            const fallback = getCategoryImageUrl(item.category);
+            if (fallback)
+              updates.push({ id: item.id, image: fallback, source: "pool" });
+          });
+          return;
+        }
+
+        const results = data.results || [];
+        items.forEach((item, i) => {
+          if (results[i] && results[i].url) {
+            const url = results[i].url;
+            updates.push({ id: item.id, image: url, source: data.source });
+            // 自学习缓存：把 API 拉到的真实 URL 写入本地缓存，下次降级优先复用
+            cachePhotoForCategory(cat, url);
+          } else {
+            const fallback = getCategoryImageUrl(cat);
+            if (fallback)
+              updates.push({ id: item.id, image: fallback, source: "pool" });
+          }
+        });
+      } catch {
+        items.forEach((item) => {
+          const fallback = getCategoryImageUrl(item.category);
+          if (fallback)
+            updates.push({ id: item.id, image: fallback, source: "pool" });
+        });
+      }
+    }),
+  );
+
+  if (noApiKeys) {
+    console.warn("[景点览胜] 图片 API 未配置密钥，已降级使用本地图片池");
+  }
+  if (updates.length > 0) {
+    useAppStore
+      .getState()
+      .updateSpotImages(updates.map(({ id, image }) => ({ id, image })));
+    useAppStore.getState().updateSpotImageSources(updates);
+  }
+}
+
 /* ═══════ 图片组件（分类主题占位） ═══════ */
 function SpotImage({
   src,
@@ -133,8 +204,23 @@ function SpotImage({
   className?: string;
   category?: string;
 }) {
-  const [err, setErr] = useState(false);
-  const noImage = !src || err;
+  // 二级降级：原图失效 → 本地分类池 → 渐变占位
+  const [stage, setStage] = useState<"primary" | "pool" | "gradient">(
+    "primary",
+  );
+  const poolSrc = useMemo(
+    () => getCategoryImageUrl(category) ?? "",
+    [category],
+  );
+  const [prevSrc, setPrevSrc] = useState(src);
+  if (src !== prevSrc) {
+    setStage("primary");
+    setPrevSrc(src);
+  }
+  const err = stage === "gradient";
+  const effectiveSrc =
+    stage === "primary" ? src : stage === "pool" ? poolSrc : "";
+  const noImage = !effectiveSrc;
   if (noImage) {
     const theme = CATEGORY_THEME[category] || {
       from: "#F3F4F6",
@@ -159,10 +245,16 @@ function SpotImage({
   }
   return (
     <img
-      src={src}
+      src={effectiveSrc}
       alt={alt}
       className={`object-cover ${className}`}
-      onError={() => setErr(true)}
+      onError={() =>
+        setStage(
+          stage === "primary" && poolSrc && poolSrc !== src
+            ? "pool"
+            : "gradient",
+        )
+      }
       loading="lazy"
     />
   );
@@ -559,6 +651,13 @@ function SpotList({
   );
 }
 
+const IMAGE_SOURCE_LABEL: Record<string, string> = {
+  osm: "OSM 社区实拍",
+  unsplash: "Unsplash",
+  pexels: "Pexels",
+  pool: "预置图库",
+};
+
 /* ═══════ 详情弹窗（无重叠关闭按钮 + 多图） ═══════ */
 function SpotDetailDialog() {
   const {
@@ -706,6 +805,14 @@ function SpotDetailDialog() {
               <MapPin className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
               <span className="text-sm text-gray-600">{spot.address}</span>
             </div>
+            {/* ═══ 图源标注（数据诚实性：说明这张图是谁提供的） ═══ */}
+            {spot.image && spot.imageSource && (
+              <p className="text-[11px] text-gray-400">
+                图片来源：
+                {IMAGE_SOURCE_LABEL[spot.imageSource] ?? spot.imageSource}
+                （失效时自动降级预置图库）
+              </p>
+            )}
             {/* ═══ 跨模块联动：到中国味道看当地代表菜 ═══ */}
             {provinceHit && (
               <Link
@@ -967,6 +1074,8 @@ function SpotsView() {
         setSpots(data.spots);
         setActiveCategory("全部");
         setSearchQuery("");
+        // 配图：优先 OSM 自带实拍图，缺图景点按分类拉图（共享流程，失败降级本地池）
+        await fillSpotImages(data.spots);
         setOsmMsg({
           type: "ok",
           text: `已加载 ${data.spots.length} 个「${c}」实时景点 · 数据源 OpenStreetMap（ODbL）`,
@@ -1096,80 +1205,8 @@ function SpotsView() {
           useAppStore.getState().appendSpots(unique);
           setImporting(true);
 
-          // 找出需要拉取图片的景点（image 为空）
-          const needImages = unique
-            .map((s, i) => ({ spot: s, idx: i }))
-            .filter((x) => !x.spot.image);
-
-          if (needImages.length > 0) {
-            // 按分类分组，批量请求 API
-            const byCategory = new Map<string, typeof needImages>();
-            needImages.forEach((item) => {
-              const cat = item.spot.category || "其他";
-              const arr = byCategory.get(cat) || [];
-              arr.push(item);
-              byCategory.set(cat, arr);
-            });
-
-            // 对每个分类批量请求图片
-            const updates: { id: string; image: string }[] = [];
-            let noApiKeys = false;
-            await Promise.allSettled(
-              Array.from(byCategory.entries()).map(async ([cat, items]) => {
-                try {
-                  const res = await fetch(
-                    withSharecode(
-                      `/api/search-photo?q=${encodeURIComponent(cat)}&n=${items.length}`,
-                    ),
-                  );
-                  if (!res.ok) throw new Error(`API ${res.status}`);
-                  const data = await res.json();
-
-                  // 检测 API Key 未配置
-                  if (data.error === "NO_API_KEYS") {
-                    noApiKeys = true;
-                    items.forEach((item) => {
-                      const fallback = getCategoryImageUrl(item.spot.category);
-                      if (fallback)
-                        updates.push({ id: item.spot.id, image: fallback });
-                    });
-                    return;
-                  }
-
-                  const results = data.results || [];
-                  items.forEach((item, i) => {
-                    if (results[i] && results[i].url) {
-                      const url = results[i].url;
-                      updates.push({ id: item.spot.id, image: url });
-                      // 保留：自学习缓存机制，把 API 拉到的真实 URL 写入本地缓存，下次降级可优先复用
-                      cachePhotoForCategory(cat, url);
-                    } else {
-                      const fallback = getCategoryImageUrl(cat);
-                      if (fallback)
-                        updates.push({ id: item.spot.id, image: fallback });
-                    }
-                  });
-                } catch {
-                  items.forEach((item) => {
-                    const fallback = getCategoryImageUrl(item.spot.category);
-                    if (fallback)
-                      updates.push({ id: item.spot.id, image: fallback });
-                  });
-                }
-              }),
-            );
-
-            if (noApiKeys) {
-              console.warn(
-                "[景点览胜] 图片 API 未配置密钥，已降级使用本地图片池",
-              );
-            }
-
-            // 保留：精准更新 store 中对应景点的图片，避免全量替换和强制刷新页面
-            if (updates.length > 0) {
-              useAppStore.getState().updateSpotImages(updates);
-            }
-          }
+          // 配图：按分类批量拉图（共享流程，OSM 探索同样复用）
+          await fillSpotImages(unique);
 
           setImporting(false);
 

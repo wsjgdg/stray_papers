@@ -135,11 +135,11 @@
 
 | # | 内容 | 状态 |
 |---|---|---|
-| 1 | OSM 路由提取 `image` / `image:0-3` 直链标签 → 景点实拍图（Wikimedia 域名跳过：README 实测国内不可达） | 待做 |
-| 2 | 把 JSON 导入的按分类配图流程抽成共享函数 `fillSpotImages`，OSM 探索成功后复用（search-photo API 每分类 1 次上游请求拿 30 张去重图，API 不可用降级本地池） | 待做 |
-| 3 | SpotImage 二级降级：原图 404 → 本地分类池 → 渐变占位（原来是直接跳渐变） | 待做 |
-| 4 | 图源标注：Spot 增加 `imageSource`（osm/unsplash/pexels/pool），详情弹窗小字展示，与项目数据诚实性风格一致 | 待做 |
-| 5 | README 图源说明表同步更新 | 待做 |
+| 1 | OSM 路由提取 `image` / `image:0-3` 直链标签 → 景点实拍图（Wikimedia 域名跳过：README 实测国内不可达） | 已完成 |
+| 2 | 把 JSON 导入的按分类配图流程抽成共享函数 `fillSpotImages`，OSM 探索成功后复用（search-photo API 每分类 1 次上游请求拿 30 张去重图，API 不可用降级本地池） | 已完成 |
+| 3 | SpotImage 二级降级：原图 404 → 本地分类池 → 渐变占位（原来是直接跳渐变） | 已完成 |
+| 4 | 图源标注：Spot 增加 `imageSource`（osm/unsplash/pexels/pool），详情弹窗小字展示，与项目数据诚实性风格一致 | 已完成：store 配套 updateSpotImageSources |
+| 5 | README 图源说明表同步更新 | 已完成：四级降级 → 五级来源链路 |
 
 ## 食物成分表 PDF 提取调研（2026-10-24 夜）
 
