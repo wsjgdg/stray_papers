@@ -85,12 +85,26 @@ for (const r of rows) {
 let repo = [];
 try {
   const csv = fs.readFileSync('.cache/cfcd.csv', 'utf8').replace(/^\uFEFF/, '');
-  const lines = csv.split('\n');
-  const head = lines[0].split(',');
+  // 注意：CSV 里食物名带逗号（如「腊肉（生，fat 49g）」），必须按引号解析
+  const splitLine = (line) => {
+    const out = [];
+    let cur = '';
+    let q = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (q && line[i + 1] === '"') { cur += '"'; i++; } else q = !q;
+      } else if (ch === ',' && !q) { out.push(cur); cur = ''; } else cur += ch;
+    }
+    out.push(cur);
+    return out;
+  };
+  const lines = csv.split('\n').filter(Boolean);
+  const head = splitLine(lines[0]);
   const iCode = head.indexOf('foodCode');
   const iNa = head.indexOf('Na');
   repo = lines.slice(1).map((l) => {
-    const c = l.split(',');
+    const c = splitLine(l);
     return { code: c[iCode], na: norm(c[iNa]) };
   });
 } catch {
