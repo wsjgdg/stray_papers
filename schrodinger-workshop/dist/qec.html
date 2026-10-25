@@ -1106,6 +1106,7 @@ function qcNewClassical(nbits){ return new Uint8Array(nbits); }
  *     cbit 0 = +1 本征值、1 = −1 本征值。 */
 function qcMeasureQubit(s, q, rng, basis = 'z'){
   if (basis !== 'z' && basis !== 'x' && basis !== 'y') throw new Error('unknown measure basis ' + basis);
+  if (!Number.isInteger(q) || q < 0 || q >= s.n) throw new Error('measure qubit out of range: ' + q);   /* R106：与联合测量同口径（此前单比特测量静默接受越界 q，返回恒 0 的假测量） */
   const pre = basis === 'x' ? ['h'] : basis === 'y' ? ['sdg', 'h'] : [];
   const post = basis === 'x' ? ['h'] : basis === 'y' ? ['h', 's'] : [];
   for (const g of pre) qcApply(s, { op: g, q });

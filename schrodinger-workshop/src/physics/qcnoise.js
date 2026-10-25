@@ -37,9 +37,14 @@
  *   与 R77/R80 同口径 ⟹ 线路页可直接演示 **ESD（纠缠猝死）**：Bell 在双侧退极化
  *   k 步后 C = max(0, (3λ^{2k}−1)/2) 在**有限 k** 精确归零（T₁/T₂ 只是渐近衰减，
  *   γ<1 时 C 恒 >0）——这是退极化独有的签名。
- * 诚实限制：① **测量无读出误差**（理想投影）；② 无非马尔可夫记忆、无串扰、无
- *   泄漏/热激发（T₁ 只写 |1⟩→|0⟩）；③ 经典前馈 cond 的门噪声语义 = 内部门真实
- *   执行才衰减（未触发不衰减）。
+ * R106 增补读出误差（SPAM 半边）：量子态**仍按理想投影坍缩**（读出误差不污染 ρ），
+ *   但**记录的经典位**以概率 ε 独立翻转（每位一次 Bernoulli 抽样）——「读出误报」
+ *   口径；与「赋值误差」（连坍缩子空间一起翻）不同，后者本模型不取。ε 钳到
+ *   [0, 1/2]（>1/2 无物理意义：等价于确定性报反的补事件）。cond 前馈按**记录位**
+ *   决策 ⟹ 传态修正用错位 ⟹ 保真度掉到 ~(1−ε)²（球平均 1−4ε/3+2ε²/3）。
+ * 诚实限制：① 读出误差是**经典位翻转**（量子态按理想投影坍缩，无「赋值误差」）；
+ *   ② 无非马尔可夫记忆、无串扰、无泄漏/热激发（T₁ 只写 |1⟩→|0⟩）；③ 经典前馈
+ *   cond 的门噪声语义 = 内部门真实执行才衰减（未触发不衰减）。
  * ========================================================================== */
 import { QC_UNARY, qcRotation, mulberry32, jacobiReal, QC_JOINT_PREP, qcJointK } from './qcircuit.js';
 
@@ -234,14 +239,16 @@ export function qcnDepolar(rho, q, p){
 /* ---------- 噪声参数 ---------- */
 /* t1,t2,tg 任意正数（同一单位）；γ=1−e^{−tg/t1}、λ=1−e^{−tg/t2}。
    t2eff = 1/(1/t2 + 1/(2t1))：T₁ 本身贡献的横向衰减（T₂ ≤ 2T₁ 自动满足）。 */
-export function qcnNoiseParams(t1, t2, tg, pd = 0){
+export function qcnNoiseParams(t1, t2, tg, pd = 0, re = 0){
   const T1 = Math.max(1e-9, t1), T2 = Math.max(1e-9, t2), TG = Math.max(0, tg);
   const pdep = Math.min(0.75, Math.max(0, Number.isFinite(pd) ? pd : 0));
+  const eps = Math.min(0.5, Math.max(0, Number.isFinite(re) ? re : 0));  /* R106：读出误差钳 [0,1/2] */
   return {
     gamma: 1 - Math.exp(-TG / T1),
     lambda: 1 - Math.exp(-TG / T2),
     pdep,
     ldep: 1 - 4 * pdep / 3,           /* 退极化的 Bloch 缩放因子（R77/R80 同口径） */
+    eps,                              /* R106：每位测量记录独立翻转的概率 */
     t2eff: 1 / (1 / T2 + 1 / (2 * T1)),
   };
 }
@@ -268,6 +275,7 @@ export function qcnMeasureZ(rho, q, rng){
 /* 单比特测量（R100 同款「旋转-测量-旋回」，旋转走密度路径） */
 export function qcnMeasureQubit(rho, q, rng, basis = 'z'){
   if (basis !== 'z' && basis !== 'x' && basis !== 'y') throw new Error('unknown measure basis ' + basis);
+  if (!Number.isInteger(q) || q < 0 || q >= rho.n) throw new Error('measure qubit out of range: ' + q);   /* R106：与纯路径/联合测量同口径 */
   const pre = basis === 'x' ? [{ op: 'h', q }] : basis === 'y' ? [{ op: 'sdg', q }, { op: 'h', q }] : [];
   const post = basis === 'x' ? [{ op: 'h', q }] : basis === 'y' ? [{ op: 'h', q }, { op: 's', q }] : [];
   for (const g of pre) qcnApplyGate(rho, g);
@@ -295,7 +303,18 @@ export function qcnMeasureJoint(rho, qubits, rng, basis = 'bell'){
   return outcomes;
 }
 
-/* ---------- 执行（镜像 qcExec；noise = {gamma, lambda} | null） ---------- */
+/* ---------- 读出误差（R106） ---------- */
+/* 经典位翻转：每位独立地以概率 ε 翻转**记录值**（量子态已在上一层按理想投影
+   坍缩，不受影响）。ε=0 / 负数 / NaN ⟹ 原样返回且**不消耗随机数**（零回归：
+   与 R105 路径的随机流逐位一致）。 */
+export function qcnFlipBits(bits, eps, rng){
+  if (!(eps > 0)) return bits;
+  const out = bits.slice();
+  for (let i = 0; i < out.length; i++) if (rng() < eps) out[i] ^= 1;
+  return out;
+}
+
+/* ---------- 执行（镜像 qcExec；noise = {gamma, lambda, pdep, eps} | null） ---------- */
 function qcnNoiseAfter(rho, g, noise){
   if (!noise) return;
   const { gamma, lambda, pdep } = noise;
@@ -308,14 +327,17 @@ function qcnNoiseAfter(rho, g, noise){
 }
 export function qcnExec(rho, op, cres, rng, noise = null){
   if (op.op === 'measure'){
+    const eps = noise ? noise.eps : 0;
     if (op.qubits){
-      const bits = qcnMeasureJoint(rho, op.qubits, rng, op.basis || 'bell');
+      const trueBits = qcnMeasureJoint(rho, op.qubits, rng, op.basis || 'bell');
+      const bits = qcnFlipBits(trueBits, eps, rng);      /* R106：记录位可翻，态不翻 */
       if (cres && op.cbit != null) for (let i = 0; i < bits.length; i++) cres[op.cbit + i] = bits[i];
-      return { kind: 'measure', qubits: op.qubits.slice(), cbit: op.cbit, bits, basis: op.basis || 'bell', joint: true };
+      return { kind: 'measure', qubits: op.qubits.slice(), cbit: op.cbit, bits, trueBits, basis: op.basis || 'bell', joint: true };
     }
-    const bit = qcnMeasureQubit(rho, op.q, rng, op.basis || 'z');
+    const trueBit = qcnMeasureQubit(rho, op.q, rng, op.basis || 'z');
+    const bit = qcnFlipBits([trueBit], eps, rng)[0];
     if (cres && op.cbit != null) cres[op.cbit] = bit;
-    return { kind: 'measure', q: op.q, cbit: op.cbit, bit, basis: op.basis || 'z' };
+    return { kind: 'measure', q: op.q, cbit: op.cbit, bit, trueBit, basis: op.basis || 'z' };
   }
   if (op.op === 'cond'){
     const on = cres ? !!cres[op.cbit] : false;
