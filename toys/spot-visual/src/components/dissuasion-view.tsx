@@ -50,6 +50,7 @@ function DissuasionCard({
   onVote: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
+  const voted = useAppStore((st) => st.hasVotedDissuasion(record.id));
   const timeStr = new Date(record.timestamp).toLocaleDateString("zh-CN", {
     month: "short",
     day: "numeric",
@@ -118,9 +119,17 @@ function DissuasionCard({
           </div>
           <button
             onClick={() => onVote(record.id)}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-50 hover:bg-emerald-50 transition-colors text-xs"
+            disabled={voted}
+            title={voted ? "本会话已投过票" : "觉得这条提醒有用，点个赞"}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-colors ${
+              voted
+                ? "bg-emerald-100 text-emerald-700 cursor-default"
+                : "bg-gray-50 hover:bg-emerald-50"
+            }`}
           >
-            <ThumbsUp className="w-3 h-3" />
+            <ThumbsUp
+              className={`w-3 h-3 ${voted ? "fill-emerald-600" : ""}`}
+            />
             <span className="font-medium">{record.voteCount}</span>
           </button>
         </div>
