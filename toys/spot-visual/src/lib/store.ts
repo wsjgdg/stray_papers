@@ -6,6 +6,7 @@ export type ViewType =
   | "spots"
   | "network"
   | "favorites"
+  | "trip"
   | "personality"
   | "budget"
   | "deterrent"
@@ -44,6 +45,13 @@ interface AppStore {
   setCustomPrice: (key: string, price: number) => void;
   clearCustomPrices: () => void;
 
+  // ═══ 行程单（有序景点 id 序列，持久化） ═══
+  trip: string[];
+  addToTrip: (id: string) => void;
+  removeFromTrip: (id: string) => void;
+  moveTripSpot: (id: string, dir: -1 | 1) => void;
+  clearTrip: () => void;
+
   // ═══ 体力沙盘状态（不持久化，仅会话内有效） ═══
   staminaBudget: number; // 用户体力预算上限
   activeSpotOrder: string[]; // 沙盘中拖拽排序后的景点 ID 序列
@@ -81,6 +89,7 @@ export const useAppStore = create<AppStore>()(
               spots.some((sp) => k.startsWith(`${sp.id}::`)),
             ),
           ),
+          trip: s.trip.filter((id) => spots.some((sp) => sp.id === id)),
         })),
       appendSpots: (newSpots) =>
         set((s) => ({ spots: [...s.spots, ...newSpots] })),
@@ -115,6 +124,7 @@ export const useAppStore = create<AppStore>()(
           favorites: s.favorites.filter((id) =>
             sampleSpots.some((sp) => sp.id === id),
           ),
+          trip: s.trip.filter((id) => sampleSpots.some((sp) => sp.id === id)),
         })),
       clearAllSpots: () =>
         set({
@@ -123,6 +133,7 @@ export const useAppStore = create<AppStore>()(
           searchQuery: "",
           favorites: [],
           customPrices: {},
+          trip: [],
         }),
 
       // ═══ 用户改价 ═══
@@ -130,6 +141,23 @@ export const useAppStore = create<AppStore>()(
       setCustomPrice: (key, price) =>
         set((s) => ({ customPrices: { ...s.customPrices, [key]: price } })),
       clearCustomPrices: () => set({ customPrices: {} }),
+
+      // ═══ 行程单 ═══
+      trip: [],
+      addToTrip: (id) =>
+        set((s) => (s.trip.includes(id) ? s : { trip: [...s.trip, id] })),
+      removeFromTrip: (id) =>
+        set((s) => ({ trip: s.trip.filter((t) => t !== id) })),
+      moveTripSpot: (id, dir) =>
+        set((s) => {
+          const idx = s.trip.indexOf(id);
+          const to = idx + dir;
+          if (idx === -1 || to < 0 || to >= s.trip.length) return s;
+          const trip = [...s.trip];
+          [trip[idx], trip[to]] = [trip[to], trip[idx]];
+          return { trip };
+        }),
+      clearTrip: () => set({ trip: [] }),
 
       // ═══ 体力沙盘状态 ═══
       staminaBudget: 100,
@@ -165,6 +193,7 @@ export const useAppStore = create<AppStore>()(
         spots: s.spots,
         dissuasionRecords: s.dissuasionRecords,
         customPrices: s.customPrices,
+        trip: s.trip,
       }),
     },
   ),

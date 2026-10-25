@@ -36,6 +36,7 @@ import {
   Thermometer,
   BookX, // 新增：体力沙盘、PTSI、劝退日记图标
   Navigation,
+  Route,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,6 +67,9 @@ import { withSharecode } from "@/lib/share-link";
 import dynamic from "next/dynamic";
 
 const NetworkView = dynamic(() => import("@/components/network-view"), {
+  ssr: false,
+});
+const TripView = dynamic(() => import("@/components/trip-view"), {
   ssr: false,
 });
 const DeterrentView = dynamic(() => import("@/components/deterrent-view"), {
@@ -175,6 +179,11 @@ const NAV_ITEMS: { key: ViewType; label: string; icon: React.ReactNode }[] = [
     icon: <Heart className="w-4.5 h-4.5" />,
   },
   {
+    key: "trip",
+    label: "行程单",
+    icon: <Route className="w-4.5 h-4.5" />,
+  },
+  {
     key: "personality",
     label: "旅人测试",
     icon: <SparklesIcon className="w-4.5 h-4.5" />,
@@ -219,7 +228,7 @@ function Sidebar({
   collapsed: boolean;
   onToggle: () => void;
 }) {
-  const { activeView, setActiveView, spots, favorites } = useAppStore();
+  const { activeView, setActiveView, spots, favorites, trip } = useAppStore();
   return (
     <aside
       className={`hidden md:flex flex-col border-r border-gray-200/80 bg-white transition-all duration-300 ${collapsed ? "w-16" : "w-52"}`}
@@ -242,9 +251,11 @@ function Sidebar({
           const badge =
             item.key === "favorites" && favorites.length > 0
               ? favorites.length
-              : item.key === "spots"
-                ? spots.length
-                : 0;
+              : item.key === "trip" && trip.length > 0
+                ? trip.length
+                : item.key === "spots"
+                  ? spots.length
+                  : 0;
           return (
             <button
               key={item.key}
@@ -556,6 +567,9 @@ function SpotDetailDialog() {
     setActiveView,
     spots,
     dissuasionRecords,
+    trip,
+    addToTrip,
+    removeFromTrip,
   } = useAppStore();
   const [photoIdx, setPhotoIdx] = useState(0);
   const [showDissuasionEditor, setShowDissuasionEditor] = useState(false);
@@ -800,6 +814,22 @@ function SpotDetailDialog() {
                 </div>
               </div>
             )}
+            {/* ═══ 行程单：加入/移出 ═══ */}
+            <button
+              onClick={() =>
+                trip.includes(spot.id)
+                  ? removeFromTrip(spot.id)
+                  : addToTrip(spot.id)
+              }
+              className={`w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-bold transition-colors border ${
+                trip.includes(spot.id)
+                  ? "bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700"
+                  : "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100"
+              }`}
+            >
+              <Route className="w-4 h-4" />
+              {trip.includes(spot.id) ? "已在行程中 · 点击移出" : "加入行程"}
+            </button>
             {/* ═══ D3.5：劝退入口 ═══ */}
             <Separator />
             <div className="flex gap-2">
@@ -1409,6 +1439,7 @@ export default function Home() {
                   </div>
                 )}
                 {activeView === "favorites" && <FavoritesView />}
+                {activeView === "trip" && <TripView />}
                 {/* 修复：补全缺失的视图路由 */}
                 {activeView === "personality" && <PersonalityView />}
                 {activeView === "budget" && <BudgetView />}

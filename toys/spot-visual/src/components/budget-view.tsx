@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
+  Route,
   Calculator,
   TrendingUp,
   Crown,
@@ -14,110 +15,11 @@ import {
   Feather,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
-import { getStaminaCost, getProjectStaminaFactor } from "@/lib/spot-data";
-
-/* ═══ 项目模拟价格（元/次） ═══ */
-const PROJECT_PRICES: Record<string, number> = {
-  天门山玻璃栈道: 32,
-  百龙天梯: 72,
-  金鞭溪徒步: 0,
-  袁家界观景台: 15,
-  天子山云海: 0,
-  太和殿参观: 60,
-  珍宝馆: 10,
-  钟表馆: 10,
-  御花园漫步: 0,
-  数字故宫体验: 40,
-  创极速光轮: 80,
-  "翱翔·飞越地平线": 90,
-  加勒比海盗: 60,
-  七个小矮人矿山车: 70,
-  奇幻童话城堡: 50,
-  "488米户外观景台": 150,
-  极速云霄跳楼机: 60,
-  摩天轮: 80,
-  珠江夜游: 120,
-  沙滩漫步: 0,
-  潜水体验: 280,
-  帆船出海: 200,
-  摩托艇: 180,
-  海边瑜伽: 0,
-  迎客松打卡: 0,
-  光明顶日出: 0,
-  西海大峡谷: 25,
-  飞来石: 0,
-  云谷寺徒步: 0,
-  四方街夜游: 0,
-  木府参观: 45,
-  纳西古乐欣赏: 160,
-  黑龙潭公园: 0,
-  束河古镇: 0,
-  少林功夫表演: 80,
-  塔林参观: 0,
-  达摩洞朝拜: 0,
-  武术体验课: 120,
-  嵩山游览: 0,
-  五花海: 0,
-  珍珠滩瀑布: 0,
-  诺日朗瀑布: 0,
-  长海: 0,
-  镜海倒影: 0,
-  北八楼登顶: 0,
-  南长城徒步: 0,
-  长城夜景: 40,
-  好汉坡打卡: 0,
-  熊乐园: 50,
-  鲸鲨馆: 180,
-  白鲸剧场: 120,
-  海豚剧场: 100,
-  鹦鹉过山车: 90,
-  超级激流: 70,
-  日光岩登顶: 0,
-  菽庄花园: 30,
-  皓月园: 0,
-  风琴博物馆: 15,
-  环岛漫步: 0,
-};
-
-/* ═══ 关键词 → 价格推断 ═══ */
-const KEYWORD_PRICES: Record<string, number> = {
-  玻璃: 40,
-  索道: 80,
-  缆车: 80,
-  电瓶车: 30,
-  游船: 120,
-  快艇: 180,
-  潜水: 280,
-  漂流: 150,
-  骑马: 100,
-  滑翔: 300,
-  蹦极: 200,
-  跳伞: 400,
-  温泉: 100,
-  表演: 100,
-  演出: 120,
-  博物馆: 30,
-  展览: 20,
-  体验: 60,
-  夜游: 80,
-  观光车: 25,
-  小火车: 30,
-  秋千: 10,
-  攀岩: 80,
-  射箭: 50,
-  划船: 60,
-  自行车: 40,
-  帐篷: 80,
-  露营: 100,
-};
-
-function guessPrice(project: string): number {
-  if (PROJECT_PRICES[project] !== undefined) return PROJECT_PRICES[project];
-  for (const [kw, price] of Object.entries(KEYWORD_PRICES)) {
-    if (project.includes(kw)) return price;
-  }
-  return 30; // 默认
-}
+import {
+  getStaminaCost,
+  getProjectStaminaFactor,
+  guessPrice,
+} from "@/lib/spot-data";
 
 /* ═══ 三档预算倍率 ═══ */
 const BUDGET_TIERS = [
@@ -595,6 +497,26 @@ export default function BudgetView() {
             </button>
           )}
         </div>
+
+        {/* ═══ 行程单作用域提示 ═══ */}
+        {trip.length > 0 && (
+          <div className="flex items-center gap-2 mb-4 px-3.5 py-2.5 rounded-xl bg-emerald-50/70 border border-emerald-100">
+            <Route className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="text-xs text-emerald-800 flex-1">
+              {effectiveScope === "trip"
+                ? `已按行程单 ${trip.length} 站计算，未入行程的景点不参与预算`
+                : "当前按全部景点计算"}
+            </span>
+            <button
+              onClick={() =>
+                setScope(effectiveScope === "trip" ? "all" : "trip")
+              }
+              className="text-xs font-bold text-emerald-700 hover:text-emerald-900 shrink-0"
+            >
+              {effectiveScope === "trip" ? "改用全部景点" : "改按行程单"}
+            </button>
+          </div>
+        )}
 
         {/* ═══ 金额汇总卡 ═══ */}
         <motion.div
