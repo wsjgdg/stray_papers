@@ -43,6 +43,44 @@ const ROWS = [
     note: "432 张本地打包。出处见 public/dishes/SOURCES.md。",
   },
   {
+    layer: "景点览胜（内置示例）",
+    source: "本项目整理的 12 个代表性景区公开信息",
+    license: "—",
+    fields: "名称、地址、分类、设施、推荐项目、经纬度、体力成本标签",
+    note: "仅作演示基底；描述为基于公开资料的自行整理，非权威出处。",
+  },
+  {
+    layer: "景点览胜（实时探索）",
+    source: "OpenStreetMap（Nominatim 地理编码 + Overpass 兴趣点查询）",
+    license: "ODbL（© OpenStreetMap 贡献者）",
+    fields: "POI 名称、坐标、分类推断、设施标签、image 标签实拍图",
+    note: "由服务端代理请求（30 分钟缓存）。社区数据质量参差，名称/分类可能缺失；Wikimedia 域名图片因国内不可达被排除。",
+  },
+  {
+    layer: "7 日出行窗口 / 行程体检（天气）",
+    source: "Open-Meteo 免费预报 API",
+    license: "CC BY 4.0",
+    fields: "逐日紫外线峰值、最高/最低气温、降水概率",
+    note: "服务端代理（/api/weather，0.5° 网格缓存 30 分钟），客户端零外链。PTSI 为本项目自研口径（UV + 身体条件 + 拥挤度），非气象行业标准指数。",
+  },
+  {
+    layer: "景点图片",
+    source:
+      "多级链路：OSM image 标签 → Unsplash API → Pexels API → 本地预置包（Bing 抓取，域名降权 + 人工终检）→ 渐变占位",
+    license:
+      "Unsplash License / Pexels License / Bing 抓取图版权归原作者，仅作演示",
+    fields: "—",
+    note: "详情弹窗逐张标注来源（估/改价口径同理）。菜品 432 张出处见 public/dishes/SOURCES.md；内置景点离线包见 public/spots/_candidates/_report.json。",
+  },
+  {
+    layer: "劝退指南 / PTSI / 体力账本（算法口径）",
+    source: "本项目自研",
+    license: "—",
+    fields:
+      "PTSI 0–140 三分项、劝退结论球、体力成本 0–100（按分类默认 + 项目系数）",
+    note: "自评性质，仅供出行决策参考，非安全建议；体力账本当前为内置示例路线（5.5km），未接入真实景点海拔。",
+  },
+  {
     layer: "地图边界",
     source: "DataV GeoAtlas；台湾 20 县市取自 GeoJSON.cn",
     license: "公开使用",

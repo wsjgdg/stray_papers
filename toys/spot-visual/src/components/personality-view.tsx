@@ -448,7 +448,7 @@ function PersonalityCard({
    旅人人格测试主页面
    ═══════════════════════════════════════════════════ */
 export default function PersonalityView() {
-  const { spots, favorites } = useAppStore();
+  const { spots, favorites, trip } = useAppStore();
   const [phase, setPhase] = useState<"intro" | "cards" | "result">("intro");
   const [revealedCount, setRevealedCount] = useState(0);
   const [cardThemeIdx] = useState(() =>
@@ -457,7 +457,9 @@ export default function PersonalityView() {
 
   // 计算收藏景点的分类分布
   const analysis = useMemo(() => {
-    const favSpots = spots.filter((s) => favorites.includes(s.id));
+    // 分析输入 = 收藏 ∪ 行程（有行程没收藏的用户也能测）
+    const pool = new Set([...favorites, ...trip]);
+    const favSpots = spots.filter((s) => pool.has(s.id));
     if (favSpots.length === 0) return null;
 
     // 按 trait 汇总
@@ -539,7 +541,7 @@ export default function PersonalityView() {
   }, []);
 
   // ═══ 空状态 ═══
-  if (favorites.length === 0) {
+  if (favorites.length === 0 && trip.length === 0) {
     return (
       <div className="min-h-full flex flex-col items-center justify-center px-6 text-center">
         <motion.div
@@ -592,8 +594,8 @@ export default function PersonalityView() {
           transition={{ delay: 0.4 }}
           className="text-sm text-gray-500 text-center mb-2 max-w-xs"
         >
-          基于你收藏的{" "}
-          <span className="font-bold text-gray-700">{favorites.length}</span>{" "}
+          基于你收藏与行程的{" "}
+          <span className="font-bold text-gray-700">{analysis!.favCount}</span>{" "}
           个景点
         </motion.p>
         <motion.p
@@ -677,7 +679,7 @@ export default function PersonalityView() {
           advice={analysis.persona.advice}
           traits={analysis.top}
           themeIdx={cardThemeIdx}
-          favCount={analysis.favCount}
+          favCount={analysis!.favCount}
         />
 
         {/* 底部操作 */}
