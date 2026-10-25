@@ -6,10 +6,10 @@
     "semantic_hash": "96a8ee5d1f63082ab183ac7a86e03e5e"
   },
   "package.json": {
-    "mtime": 1792905717.9176645,
-    "seen": 1792906458.7110777,
-    "ast_hash": "2a32fc36683e890944137ae42612ed6f",
-    "semantic_hash": "2a32fc36683e890944137ae42612ed6f"
+    "mtime": 1792907717.3357313,
+    "seen": 1792908777.746048,
+    "ast_hash": "098fe61b3ceb0d38d5e9b4a685bfbe27",
+    "semantic_hash": "098fe61b3ceb0d38d5e9b4a685bfbe27"
   },
   "postcss.config.mjs": {
     "mtime": 1792743011.737146,
@@ -168,10 +168,10 @@
     "semantic_hash": "ea80a2e9c2c43f92ea815865071df355"
   },
   "src/lib/spot-data.ts": {
-    "mtime": 1792906192.484451,
-    "seen": 1792906458.7112944,
-    "ast_hash": "d1424f7f6e615d4bd776bad7f1f678b2",
-    "semantic_hash": "d1424f7f6e615d4bd776bad7f1f678b2"
+    "mtime": 1792908090.198261,
+    "seen": 1792908777.7463887,
+    "ast_hash": "33176c02c582e8926fd0aa216ada2052",
+    "semantic_hash": "33176c02c582e8926fd0aa216ada2052"
   },
   "src/lib/stamina-calculator.ts": {
     "mtime": 1792743011.818911,
@@ -180,10 +180,10 @@
     "semantic_hash": "bb50e436a899a0ebf9bd3c12c2bc36cc"
   },
   "src/lib/store.ts": {
-    "mtime": 1792906239.155404,
-    "seen": 1792906458.711297,
-    "ast_hash": "6ef6afe2687c38f631cbd9ed38802004",
-    "semantic_hash": "6ef6afe2687c38f631cbd9ed38802004"
+    "mtime": 1792908027.9265256,
+    "seen": 1792908777.746396,
+    "ast_hash": "5e684173517726728f54f95f820e5698",
+    "semantic_hash": "5e684173517726728f54f95f820e5698"
   },
   "src/lib/utils.ts": {
     "mtime": 1792743011.822909,
@@ -564,16 +564,16 @@
     "semantic_hash": "815277002dc43aba292137e52121dfb5"
   },
   "src/app/gaokao/page.tsx": {
-    "mtime": 1792906457.4155352,
-    "seen": 1792906458.7112124,
-    "ast_hash": "dcb4b13d0a177eb30933946489d21862",
-    "semantic_hash": "dcb4b13d0a177eb30933946489d21862"
+    "mtime": 1792908044.5811832,
+    "seen": 1792908777.7462468,
+    "ast_hash": "d50f3a7fdfc416cd51ac6937ecf26d62",
+    "semantic_hash": "d50f3a7fdfc416cd51ac6937ecf26d62"
   },
   "src/app/sources/page.tsx": {
-    "mtime": 1792905717.9673147,
-    "seen": 1792906458.7112174,
-    "ast_hash": "1617cc39bc1df0c8a6e3416d38d9dbc9",
-    "semantic_hash": "1617cc39bc1df0c8a6e3416d38d9dbc9"
+    "mtime": 1792908044.5841997,
+    "seen": 1792908777.7462537,
+    "ast_hash": "62fc0c09d578af63067636033e8060d8",
+    "semantic_hash": "62fc0c09d578af63067636033e8060d8"
   },
   "src/components/food/dish-visual.tsx": {
     "mtime": 1792757117.811399,
@@ -642,8 +642,8 @@
     "semantic_hash": "1a982127f8de5a11a39a1e554bf4f20f"
   },
   "src/lib/dish-photos.generated.ts": {
-    "mtime": 1792906306.120262,
-    "seen": 1792906458.7112725,
+    "mtime": 1792908274.1738844,
+    "seen": 1792908777.746355,
     "ast_hash": "75858d26e48f46b6106bdac424af892c",
     "semantic_hash": "75858d26e48f46b6106bdac424af892c"
   },
@@ -672,16 +672,16 @@
     "semantic_hash": "1edec9399b830c8a65eef9b35d161469"
   },
   "src/lib/gaokao-data.ts": {
-    "mtime": 1792906303.4838657,
-    "seen": 1792906458.7112794,
-    "ast_hash": "0ade0697496886cec0d8d28bb65f5bb0",
-    "semantic_hash": "0ade0697496886cec0d8d28bb65f5bb0"
+    "mtime": 1792908044.590168,
+    "seen": 1792908777.7463663,
+    "ast_hash": "90d12c8ea104bfed46e51093b1b3bfd7",
+    "semantic_hash": "90d12c8ea104bfed46e51093b1b3bfd7"
   },
   "src/lib/gaokao.ts": {
-    "mtime": 1792906265.9469655,
-    "seen": 1792906458.7112823,
-    "ast_hash": "fa025c4341b84e5a23fb03d8a99776fb",
-    "semantic_hash": "fa025c4341b84e5a23fb03d8a99776fb"
+    "mtime": 1792907463.188384,
+    "seen": 1792908777.746372,
+    "ast_hash": "d35e57948e802b502eaf56f04484b68d",
+    "semantic_hash": "d35e57948e802b502eaf56f04484b68d"
   },
   "src/lib/ingredient-city.generated.ts": {
     "mtime": 1792769887.5372784,
@@ -720,10 +720,10 @@
     "semantic_hash": "54740f9b6e0c7c62f6e640732690230a"
   },
   "README.md": {
-    "mtime": 1792906268.427216,
-    "seen": 1792906458.7113097,
-    "ast_hash": "6c57018f2a7835052695df17093a6067",
-    "semantic_hash": "6c57018f2a7835052695df17093a6067"
+    "mtime": 1792908256.2280774,
+    "seen": 1792908777.7464137,
+    "ast_hash": "141dd7f06984b84f6dd4e5ebb113ed1b",
+    "semantic_hash": "141dd7f06984b84f6dd4e5ebb113ed1b"
   },
   "docs/nutrition-sources.md": {
     "mtime": 1792767081.8743887,
@@ -774,10 +774,10 @@
     "semantic_hash": "a9b03494151fe90e5decd2405400e106"
   },
   "worklog.md": {
-    "mtime": 1792906280.8622658,
-    "seen": 1792906458.7113223,
-    "ast_hash": "e4a657c0c3f625d5d6769489e647d023",
-    "semantic_hash": "e4a657c0c3f625d5d6769489e647d023"
+    "mtime": 1792908256.2017927,
+    "seen": 1792908777.7464385,
+    "ast_hash": "6730cc9cc33619492ff2b18a8722fd14",
+    "semantic_hash": "6730cc9cc33619492ff2b18a8722fd14"
   },
   "public/dishes/\u4e00\u7bd3\u6cb9\u6c34\u997a.webp": {
     "mtime": 1792801600.9680724,
@@ -3432,10 +3432,10 @@
     "semantic_hash": "daf088cea1346a12602d994df09c89da"
   },
   "src/components/trip-view.tsx": {
-    "mtime": 1792905506.968111,
-    "seen": 1792906458.711253,
-    "ast_hash": "7e5aae390f51fea234ab80440949d4b4",
-    "semantic_hash": "7e5aae390f51fea234ab80440949d4b4"
+    "mtime": 1792908225.808287,
+    "seen": 1792908777.746317,
+    "ast_hash": "7d5cd4d08791d10198433d588cdb8546",
+    "semantic_hash": "7d5cd4d08791d10198433d588cdb8546"
   },
   "src/lib/trip-card.ts": {
     "mtime": 1792905506.9783678,
@@ -3444,10 +3444,10 @@
     "semantic_hash": "3901a684a1b8725cf624700259c166b9"
   },
   "public/data/gaokao-2025.json": {
-    "mtime": 1792905717.9345517,
-    "seen": 1792906458.7110865,
-    "ast_hash": "0435f18eec099c57fa9638dc637f900f",
-    "semantic_hash": "0435f18eec099c57fa9638dc637f900f"
+    "mtime": 1792908580.1075797,
+    "seen": 1792908777.7460604,
+    "ast_hash": "73b28649ff26caedf84f0a295c2ff852",
+    "semantic_hash": "73b28649ff26caedf84f0a295c2ff852"
   },
   "scripts/alias-candidates.py": {
     "mtime": 1792905717.9414294,
@@ -3456,10 +3456,10 @@
     "semantic_hash": "a36ff8c8ddc6e8b3a9472b80df0a8e38"
   },
   "scripts/fetch-gaokao-data.mjs": {
-    "mtime": 1792905717.9414294,
-    "seen": 1792906458.7111757,
-    "ast_hash": "ac02cc6c05a8dc788444727bf0895443",
-    "semantic_hash": "ac02cc6c05a8dc788444727bf0895443"
+    "mtime": 1792908512.2760992,
+    "seen": 1792908777.7461972,
+    "ast_hash": "493163fa5db1246b0bce21e1ffccb4ce",
+    "semantic_hash": "493163fa5db1246b0bce21e1ffccb4ce"
   },
   "src/lib/gaokao-share-card.ts": {
     "mtime": 1792905717.9816716,
@@ -3468,15 +3468,627 @@
     "semantic_hash": "b4296b6ac760edf7ee0cd438f5d641bf"
   },
   "public/data/gaokao-enrich.json": {
-    "mtime": 1792906179.0506046,
-    "seen": 1792906458.711091,
+    "mtime": 1792906692.7340817,
+    "seen": 1792908777.7460654,
     "ast_hash": "8713ceda90285f4f13e1a78a89e74088",
     "semantic_hash": "8713ceda90285f4f13e1a78a89e74088"
   },
   "scripts/fetch-gaokao-enrich.mjs": {
-    "mtime": 1792906172.5289562,
-    "seen": 1792906458.7111778,
-    "ast_hash": "287c5ab4bd40a4cab506a941c3e85bd4",
-    "semantic_hash": "287c5ab4bd40a4cab506a941c3e85bd4"
+    "mtime": 1792906692.7340817,
+    "seen": 1792908777.7461996,
+    "ast_hash": "d656f0d350d119272afc98c5ebd0beae",
+    "semantic_hash": "d656f0d350d119272afc98c5ebd0beae"
+  },
+  "scripts/build-spot-photos.mjs": {
+    "mtime": 1792907128.0235376,
+    "seen": 1792908777.746175,
+    "ast_hash": "37739d5094536fe083514aa3554e3057",
+    "semantic_hash": "37739d5094536fe083514aa3554e3057"
+  },
+  "scripts/fetch-category-pool.mjs": {
+    "mtime": 1792907472.8302426,
+    "seen": 1792908777.746186,
+    "ast_hash": "ff3ce75b67c255b36d60a6482992ae6e",
+    "semantic_hash": "ff3ce75b67c255b36d60a6482992ae6e"
+  },
+  "scripts/fetch-spot-photos-bing.mjs": {
+    "mtime": 1792906993.8798127,
+    "seen": 1792908777.7462018,
+    "ast_hash": "4f03a00b40c0be781db994209c64f882",
+    "semantic_hash": "4f03a00b40c0be781db994209c64f882"
+  },
+  "src/lib/category-pool.generated.ts": {
+    "mtime": 1792907653.488691,
+    "seen": 1792908777.7463398,
+    "ast_hash": "7877f0e739f3c6266649c27a254a0fcb",
+    "semantic_hash": "7877f0e739f3c6266649c27a254a0fcb"
+  },
+  "src/lib/spot-photos.generated.ts": {
+    "mtime": 1792907127.9675026,
+    "seen": 1792908777.7463915,
+    "ast_hash": "a0e1f5d646a1956a2268ece8a19e1a86",
+    "semantic_hash": "a0e1f5d646a1956a2268ece8a19e1a86"
+  },
+  "public/spots/pool/photo-1438786657495-640937046d18.webp": {
+    "mtime": 1792907586.222,
+    "seen": 1792908777.747647,
+    "ast_hash": "0a97bf25c90a48220470efb6ebcfa1db",
+    "semantic_hash": "0a97bf25c90a48220470efb6ebcfa1db"
+  },
+  "public/spots/pool/photo-1456613820599-bfe244172af5.webp": {
+    "mtime": 1792907576.012,
+    "seen": 1792908777.747649,
+    "ast_hash": "5cd38dfd7914d1065b875d30d3865b3e",
+    "semantic_hash": "5cd38dfd7914d1065b875d30d3865b3e"
+  },
+  "public/spots/pool/photo-1458022799175-1eb17cf09d90.webp": {
+    "mtime": 1792907498.394,
+    "seen": 1792908777.7476504,
+    "ast_hash": "e3329bdc1c9a125c90967bb7e6c76990",
+    "semantic_hash": "e3329bdc1c9a125c90967bb7e6c76990"
+  },
+  "public/spots/pool/photo-1464822759023-fed622ff2c3b.webp": {
+    "mtime": 1792907584.728,
+    "seen": 1792908777.7476513,
+    "ast_hash": "ce592de3458bed0b028863fad0123ce6",
+    "semantic_hash": "ce592de3458bed0b028863fad0123ce6"
+  },
+  "public/spots/pool/photo-1469474968028-56623f02e42e.webp": {
+    "mtime": 1792907588.791,
+    "seen": 1792908777.747653,
+    "ast_hash": "bde1273ef5921aff2976aa4e2d0fb8d6",
+    "semantic_hash": "bde1273ef5921aff2976aa4e2d0fb8d6"
+  },
+  "public/spots/pool/photo-1471110338536-858caa3dbe45.webp": {
+    "mtime": 1792907570.343,
+    "seen": 1792908777.747655,
+    "ast_hash": "d7ae328bd319f3119d781f943c0170c1",
+    "semantic_hash": "d7ae328bd319f3119d781f943c0170c1"
+  },
+  "public/spots/pool/photo-1487506878145-e78516feade7.webp": {
+    "mtime": 1792907514.353,
+    "seen": 1792908777.7476563,
+    "ast_hash": "be56e74759de7f0b1887c2a506ea6482",
+    "semantic_hash": "be56e74759de7f0b1887c2a506ea6482"
+  },
+  "public/spots/pool/photo-1501785888041-af3ef285b470.webp": {
+    "mtime": 1792907587.764,
+    "seen": 1792908777.7476575,
+    "ast_hash": "71e7d714f7313bbab19c88c6d052d5cd",
+    "semantic_hash": "71e7d714f7313bbab19c88c6d052d5cd"
+  },
+  "public/spots/pool/photo-1502136969935-8d8eef54d77b.webp": {
+    "mtime": 1792907504.056,
+    "seen": 1792908777.747659,
+    "ast_hash": "0b62f19c4fe1ce74698c570a713e663d",
+    "semantic_hash": "0b62f19c4fe1ce74698c570a713e663d"
+  },
+  "public/spots/pool/photo-1505617483630-e5a543eaaa86.webp": {
+    "mtime": 1792907521.367,
+    "seen": 1792908777.7476604,
+    "ast_hash": "39c027e44158789792c3e749fff97bce",
+    "semantic_hash": "39c027e44158789792c3e749fff97bce"
+  },
+  "public/spots/pool/photo-1506159094651-959dec66fac6.webp": {
+    "mtime": 1792907572.781,
+    "seen": 1792908777.7476618,
+    "ast_hash": "5fce268a12d01618866159eb5101d01d",
+    "semantic_hash": "5fce268a12d01618866159eb5101d01d"
+  },
+  "public/spots/pool/photo-1506744038136-46273834b3fb.webp": {
+    "mtime": 1792907589.803,
+    "seen": 1792908777.747663,
+    "ast_hash": "f50a6964faa132bf9348130bf4680c25",
+    "semantic_hash": "f50a6964faa132bf9348130bf4680c25"
+  },
+  "public/spots/pool/photo-1506781961370-37a89d6b3095.webp": {
+    "mtime": 1792907566.585,
+    "seen": 1792908777.747664,
+    "ast_hash": "a4c2da1cba6e0e5ddbbf56394d6356f7",
+    "semantic_hash": "a4c2da1cba6e0e5ddbbf56394d6356f7"
+  },
+  "public/spots/pool/photo-1512102917795-4edc80a0aa63.webp": {
+    "mtime": 1792907494.925,
+    "seen": 1792908777.7476654,
+    "ast_hash": "e817bf8f896f8ac7d658122fc3c7dc2a",
+    "semantic_hash": "e817bf8f896f8ac7d658122fc3c7dc2a"
+  },
+  "public/spots/pool/photo-1514461835410-ddd29ff89d14.webp": {
+    "mtime": 1792907496.021,
+    "seen": 1792908777.7476664,
+    "ast_hash": "e25e47893e701dadc1c20cfa7fde46ad",
+    "semantic_hash": "e25e47893e701dadc1c20cfa7fde46ad"
+  },
+  "public/spots/pool/photo-1522787345986-d5c7885a889e.webp": {
+    "mtime": 1792907497.136,
+    "seen": 1792908777.7476678,
+    "ast_hash": "0c777b031ca09b5a1ffda72618391442",
+    "semantic_hash": "0c777b031ca09b5a1ffda72618391442"
+  },
+  "public/spots/pool/photo-1530634082454-f57b7d567b25.webp": {
+    "mtime": 1792907554.603,
+    "seen": 1792908777.7476687,
+    "ast_hash": "a22ee551d82285673fe5718ab08d65c3",
+    "semantic_hash": "a22ee551d82285673fe5718ab08d65c3"
+  },
+  "public/spots/pool/photo-1543160058-bb08f2f22c21.webp": {
+    "mtime": 1792907556.104,
+    "seen": 1792908777.7476704,
+    "ast_hash": "4b3b9055e5e05d219fd32f7ce4b2a323",
+    "semantic_hash": "4b3b9055e5e05d219fd32f7ce4b2a323"
+  },
+  "public/spots/pool/photo-1545324053-41b04f1a8e8a.webp": {
+    "mtime": 1792907571.589,
+    "seen": 1792908777.747672,
+    "ast_hash": "f49d3edf669584ede5c472180c0839ee",
+    "semantic_hash": "f49d3edf669584ede5c472180c0839ee"
+  },
+  "public/spots/pool/photo-1552912470-ee2e96439539.webp": {
+    "mtime": 1792907565.498,
+    "seen": 1792908777.747673,
+    "ast_hash": "a465fe835d25acb48cc3991cd599cb05",
+    "semantic_hash": "a465fe835d25acb48cc3991cd599cb05"
+  },
+  "public/spots/pool/photo-1554793000-245d3a3c2a51.webp": {
+    "mtime": 1792907513.186,
+    "seen": 1792908777.7476745,
+    "ast_hash": "8baff5b98d64a532737680caacf99091",
+    "semantic_hash": "8baff5b98d64a532737680caacf99091"
+  },
+  "public/spots/pool/photo-1558469070-b0bb906830a2.webp": {
+    "mtime": 1792907532.524,
+    "seen": 1792908777.747676,
+    "ast_hash": "77bcf3bec19fbb349580e5f83d19722a",
+    "semantic_hash": "77bcf3bec19fbb349580e5f83d19722a"
+  },
+  "public/spots/pool/photo-1562777578-3e432ed38f03.webp": {
+    "mtime": 1792907561.751,
+    "seen": 1792908777.747677,
+    "ast_hash": "c071c3bdd7db82e67b2087b8f3c7f014",
+    "semantic_hash": "c071c3bdd7db82e67b2087b8f3c7f014"
+  },
+  "public/spots/pool/photo-1567617849031-8655483b300b.webp": {
+    "mtime": 1792907510.646,
+    "seen": 1792908777.7476783,
+    "ast_hash": "ccb535d1cd82d3b0cd8868b6fc66afe0",
+    "semantic_hash": "ccb535d1cd82d3b0cd8868b6fc66afe0"
+  },
+  "public/spots/pool/photo-1575642158817-5bc47aea404f.webp": {
+    "mtime": 1792907560.549,
+    "seen": 1792908777.7476795,
+    "ast_hash": "d89930fbb0020b6c483c0c52e8edbd86",
+    "semantic_hash": "d89930fbb0020b6c483c0c52e8edbd86"
+  },
+  "public/spots/pool/photo-1580355275559-10c832e123f1.webp": {
+    "mtime": 1792907557.644,
+    "seen": 1792908777.7476811,
+    "ast_hash": "a412c3cdabc1e999b52fe86f53d76a39",
+    "semantic_hash": "a412c3cdabc1e999b52fe86f53d76a39"
+  },
+  "public/spots/pool/photo-1583200698551-6b032ba0f19f.webp": {
+    "mtime": 1792907564.487,
+    "seen": 1792908777.7476823,
+    "ast_hash": "b7dc679d27cebe2d3392cd3e9e36609f",
+    "semantic_hash": "b7dc679d27cebe2d3392cd3e9e36609f"
+  },
+  "public/spots/pool/photo-1583606317098-8926d58c73c6.webp": {
+    "mtime": 1792907533.878,
+    "seen": 1792908777.7476838,
+    "ast_hash": "d7ef8fab29dcc2a6ff340c36463714e0",
+    "semantic_hash": "d7ef8fab29dcc2a6ff340c36463714e0"
+  },
+  "public/spots/pool/photo-1596905738125-a6b51b1bdbb6.webp": {
+    "mtime": 1792907490.169,
+    "seen": 1792908777.747685,
+    "ast_hash": "0a7c90f48cb1ea0d2ec22488d0f12b38",
+    "semantic_hash": "0a7c90f48cb1ea0d2ec22488d0f12b38"
+  },
+  "public/spots/pool/photo-1598439473183-42c9301db5dc.webp": {
+    "mtime": 1792907483.413,
+    "seen": 1792908777.747686,
+    "ast_hash": "6ce62bd93fb2d8fb3f77e816dac6b4eb",
+    "semantic_hash": "6ce62bd93fb2d8fb3f77e816dac6b4eb"
+  },
+  "public/spots/pool/photo-1603102859961-64b17d43580d.webp": {
+    "mtime": 1792907574.987,
+    "seen": 1792908777.7476869,
+    "ast_hash": "99d1aa8b246c9d64c159db220e0c0888",
+    "semantic_hash": "99d1aa8b246c9d64c159db220e0c0888"
+  },
+  "public/spots/pool/photo-1603893964388-18a64012afea.webp": {
+    "mtime": 1792907541.559,
+    "seen": 1792908777.747688,
+    "ast_hash": "483a97249fd2d3f198c5cdb646177c6b",
+    "semantic_hash": "483a97249fd2d3f198c5cdb646177c6b"
+  },
+  "public/spots/pool/photo-1605096048662-5ab61695a122.webp": {
+    "mtime": 1792907543.022,
+    "seen": 1792908777.7476892,
+    "ast_hash": "7c423f009436e19e4215de310acae669",
+    "semantic_hash": "7c423f009436e19e4215de310acae669"
+  },
+  "public/spots/pool/photo-1607429289025-ee36ac310746.webp": {
+    "mtime": 1792907582.211,
+    "seen": 1792908777.7476904,
+    "ast_hash": "55499cefa82c2fbc490d867dd9e5847a",
+    "semantic_hash": "55499cefa82c2fbc490d867dd9e5847a"
+  },
+  "public/spots/pool/photo-1610432151528-67e398f52d0a.webp": {
+    "mtime": 1792907583.319,
+    "seen": 1792908777.7476916,
+    "ast_hash": "38ea1dec5ab294bae002d992d9fc70e9",
+    "semantic_hash": "38ea1dec5ab294bae002d992d9fc70e9"
+  },
+  "public/spots/pool/photo-1611144222869-ca3d1bafa89c.webp": {
+    "mtime": 1792907544.405,
+    "seen": 1792908777.7476928,
+    "ast_hash": "d0d29b9c8c96a9df50ec8fba89bb7f74",
+    "semantic_hash": "d0d29b9c8c96a9df50ec8fba89bb7f74"
+  },
+  "public/spots/pool/photo-1611946022552-d2ca5ffba186.webp": {
+    "mtime": 1792907524.899,
+    "seen": 1792908777.747694,
+    "ast_hash": "8176b368f09d2a3dc0a30da100ee0e22",
+    "semantic_hash": "8176b368f09d2a3dc0a30da100ee0e22"
+  },
+  "public/spots/pool/photo-1613546167482-b3280d75f796.webp": {
+    "mtime": 1792907509.52,
+    "seen": 1792908777.7476952,
+    "ast_hash": "8bfe7549ea921ac032045cb4d04a7c7a",
+    "semantic_hash": "8bfe7549ea921ac032045cb4d04a7c7a"
+  },
+  "public/spots/pool/photo-1613587905169-736ffb75de9e.webp": {
+    "mtime": 1792907536.187,
+    "seen": 1792908777.7476966,
+    "ast_hash": "5693e0ae87170b6abbda48700e8860f7",
+    "semantic_hash": "5693e0ae87170b6abbda48700e8860f7"
+  },
+  "public/spots/pool/photo-1615134732800-ca7ef7a3388c.webp": {
+    "mtime": 1792907485.303,
+    "seen": 1792908777.7476985,
+    "ast_hash": "ca90406b1e7b2ea178c9b87e1e89a0ab",
+    "semantic_hash": "ca90406b1e7b2ea178c9b87e1e89a0ab"
+  },
+  "public/spots/pool/photo-1615493749624-7a97d4b18fe6.webp": {
+    "mtime": 1792907506.279,
+    "seen": 1792908777.7477,
+    "ast_hash": "a3a40590d9269ab8f7cd35dc9b803012",
+    "semantic_hash": "a3a40590d9269ab8f7cd35dc9b803012"
+  },
+  "public/spots/pool/photo-1615632778185-48e15a6f68bf.webp": {
+    "mtime": 1792907577.037,
+    "seen": 1792908777.7477014,
+    "ast_hash": "f759cd4b25d2860e7ea2562cd87bfc21",
+    "semantic_hash": "f759cd4b25d2860e7ea2562cd87bfc21"
+  },
+  "public/spots/pool/photo-1616794448732-17b953353db0.webp": {
+    "mtime": 1792907540.218,
+    "seen": 1792908777.7477026,
+    "ast_hash": "af8af1d0dacf6915dd7f6a226e75b7ed",
+    "semantic_hash": "af8af1d0dacf6915dd7f6a226e75b7ed"
+  },
+  "public/spots/pool/photo-1617371067811-6f7535979874.webp": {
+    "mtime": 1792907525.948,
+    "seen": 1792908777.7477036,
+    "ast_hash": "c775fb1742682ad3b9439a8ab036d495",
+    "semantic_hash": "c775fb1742682ad3b9439a8ab036d495"
+  },
+  "public/spots/pool/photo-1627035983655-0ceec61bb733.webp": {
+    "mtime": 1792907505.065,
+    "seen": 1792908777.7477045,
+    "ast_hash": "db14efd1eba7f939728c52094507ebcd",
+    "semantic_hash": "db14efd1eba7f939728c52094507ebcd"
+  },
+  "public/spots/pool/photo-1628324716243-0c9c29971a58.webp": {
+    "mtime": 1792907567.807,
+    "seen": 1792908777.747706,
+    "ast_hash": "0e9ef877375485e4bfa90520e7db0245",
+    "semantic_hash": "0e9ef877375485e4bfa90520e7db0245"
+  },
+  "public/spots/pool/photo-1628620843425-75da163c80f2.webp": {
+    "mtime": 1792907493.855,
+    "seen": 1792908777.7477071,
+    "ast_hash": "51beaaf7c6dfb534b74c4edb007f2292",
+    "semantic_hash": "51beaaf7c6dfb534b74c4edb007f2292"
+  },
+  "public/spots/pool/photo-1630562392473-83a289d6155f.webp": {
+    "mtime": 1792907539.072,
+    "seen": 1792908777.747709,
+    "ast_hash": "b792cef03243547221fc24be08a33b69",
+    "semantic_hash": "b792cef03243547221fc24be08a33b69"
+  },
+  "public/spots/pool/photo-1631535152690-ba1a85229136.webp": {
+    "mtime": 1792907527.338,
+    "seen": 1792908777.74771,
+    "ast_hash": "badd9129d097c3900cd818292c3f6481",
+    "semantic_hash": "badd9129d097c3900cd818292c3f6481"
+  },
+  "public/spots/pool/photo-1636834620871-d22004dd9e07.webp": {
+    "mtime": 1792907517.835,
+    "seen": 1792908777.747711,
+    "ast_hash": "da5e41b8a50ed3371f5df99d81ff256e",
+    "semantic_hash": "da5e41b8a50ed3371f5df99d81ff256e"
+  },
+  "public/spots/pool/photo-1649523217385-f27a01e148dc.webp": {
+    "mtime": 1792907501.239,
+    "seen": 1792908777.747712,
+    "ast_hash": "9bf3ff5469f97dbf6d429e8a0d4f952a",
+    "semantic_hash": "9bf3ff5469f97dbf6d429e8a0d4f952a"
+  },
+  "public/spots/pool/photo-1650970366119-34cb82f8b4c1.webp": {
+    "mtime": 1792907523.725,
+    "seen": 1792908777.747713,
+    "ast_hash": "bb01c5442f7268c2b5a5e8a6d93a8549",
+    "semantic_hash": "bb01c5442f7268c2b5a5e8a6d93a8549"
+  },
+  "public/spots/pool/photo-1653931565039-c500acbb31d2.webp": {
+    "mtime": 1792907546.253,
+    "seen": 1792908777.7477143,
+    "ast_hash": "5ed4d7dcb3bcf06b15bd658711dde58d",
+    "semantic_hash": "5ed4d7dcb3bcf06b15bd658711dde58d"
+  },
+  "public/spots/pool/photo-1658056366953-e2e93b1c1099.webp": {
+    "mtime": 1792907487.717,
+    "seen": 1792908777.7477155,
+    "ast_hash": "12bb0793ea66624d954242d59bbdcf03",
+    "semantic_hash": "12bb0793ea66624d954242d59bbdcf03"
+  },
+  "public/spots/pool/photo-1660486358484-975da44dc68e.webp": {
+    "mtime": 1792907529.827,
+    "seen": 1792908777.7477167,
+    "ast_hash": "2bed3e6ded5de3e58dcd15cafdc1367a",
+    "semantic_hash": "2bed3e6ded5de3e58dcd15cafdc1367a"
+  },
+  "public/spots/pool/photo-1660486358746-8bc9f2a94496.webp": {
+    "mtime": 1792907531.691,
+    "seen": 1792908777.7477176,
+    "ast_hash": "87329920c4519904de91967ca85ce154",
+    "semantic_hash": "87329920c4519904de91967ca85ce154"
+  },
+  "public/spots/pool/photo-1660486360130-02ec33fa1ccb.webp": {
+    "mtime": 1792907530.685,
+    "seen": 1792908777.7477186,
+    "ast_hash": "f58e31b0a2fb7858480ac18994efa21c",
+    "semantic_hash": "f58e31b0a2fb7858480ac18994efa21c"
+  },
+  "public/spots/pool/photo-1661901697097-ed11697502f4.webp": {
+    "mtime": 1792907537.845,
+    "seen": 1792908777.7477198,
+    "ast_hash": "02942b15354edfa61b5289fc87d5a0c3",
+    "semantic_hash": "02942b15354edfa61b5289fc87d5a0c3"
+  },
+  "public/spots/pool/photo-1664604655363-f6050b3ca4d8.webp": {
+    "mtime": 1792907488.844,
+    "seen": 1792908777.7477212,
+    "ast_hash": "fbc0e6d4f584db41d6ed89364bac084c",
+    "semantic_hash": "fbc0e6d4f584db41d6ed89364bac084c"
+  },
+  "public/spots/pool/photo-1664648853617-127a94346600.webp": {
+    "mtime": 1792907535.042,
+    "seen": 1792908777.7477224,
+    "ast_hash": "29061f481e99bddef4fb7fb584319e66",
+    "semantic_hash": "29061f481e99bddef4fb7fb584319e66"
+  },
+  "public/spots/pool/photo-1667831083048-4ddd6a8cd4db.webp": {
+    "mtime": 1792907547.451,
+    "seen": 1792908777.7477236,
+    "ast_hash": "a6ed8ad4c027f7df3ac52fa856317613",
+    "semantic_hash": "a6ed8ad4c027f7df3ac52fa856317613"
+  },
+  "public/spots/pool/photo-1669570083880-0d9cb0ad1dea.webp": {
+    "mtime": 1792907508.343,
+    "seen": 1792908777.7477245,
+    "ast_hash": "0b74f0b7f7ef49af0965169a5090152a",
+    "semantic_hash": "0b74f0b7f7ef49af0965169a5090152a"
+  },
+  "public/spots/pool/photo-1683041132892-0fe990b3afc3.webp": {
+    "mtime": 1792907486.461,
+    "seen": 1792908777.7477255,
+    "ast_hash": "0fff918f97fd1157ec85a987fa158e8e",
+    "semantic_hash": "0fff918f97fd1157ec85a987fa158e8e"
+  },
+  "public/spots/pool/photo-1683041134049-28843fae8c1f.webp": {
+    "mtime": 1792907515.3,
+    "seen": 1792908777.7477267,
+    "ast_hash": "f98402ff0214236aef63794d249f4ee2",
+    "semantic_hash": "f98402ff0214236aef63794d249f4ee2"
+  },
+  "public/spots/pool/photo-1697455621145-c688d7558143.webp": {
+    "mtime": 1792907499.79,
+    "seen": 1792908777.7477276,
+    "ast_hash": "14386a1c5988e3513f469a7743a72204",
+    "semantic_hash": "14386a1c5988e3513f469a7743a72204"
+  },
+  "public/spots/pool/photo-1700148676800-a12f8a016deb.webp": {
+    "mtime": 1792907491.58,
+    "seen": 1792908777.7477288,
+    "ast_hash": "ee008e3faf8915e55feec2f470ff2445",
+    "semantic_hash": "ee008e3faf8915e55feec2f470ff2445"
+  },
+  "public/spots/pool/photo-1701785924585-d2b4bc6a66cf.webp": {
+    "mtime": 1792907528.912,
+    "seen": 1792908777.74773,
+    "ast_hash": "fe9fd8b1a53024664363850e557fe023",
+    "semantic_hash": "fe9fd8b1a53024664363850e557fe023"
+  },
+  "public/spots/pool/photo-1707112244220-6cc774e9ac15.webp": {
+    "mtime": 1792907511.946,
+    "seen": 1792908777.7477312,
+    "ast_hash": "9135cc1b5ca98770cba929deed6a371d",
+    "semantic_hash": "9135cc1b5ca98770cba929deed6a371d"
+  },
+  "public/spots/pool/photo-1711127498984-84bea628db02.webp": {
+    "mtime": 1792907574.08,
+    "seen": 1792908777.7477326,
+    "ast_hash": "e7ea4a998ed4630d5910853348f6e9f5",
+    "semantic_hash": "e7ea4a998ed4630d5910853348f6e9f5"
+  },
+  "public/spots/pool/photo-1713346643669-ab7793501846.webp": {
+    "mtime": 1792907559.324,
+    "seen": 1792908777.747734,
+    "ast_hash": "d13560c759e921dea64cace2d7ab3f7e",
+    "semantic_hash": "d13560c759e921dea64cace2d7ab3f7e"
+  },
+  "public/spots/pool/photo-1718942900361-d01a1ee8d077.webp": {
+    "mtime": 1792907569.062,
+    "seen": 1792908777.7477348,
+    "ast_hash": "9bac10424f2033cceac42bb022591a53",
+    "semantic_hash": "9bac10424f2033cceac42bb022591a53"
+  },
+  "public/spots/pool/photo-1732808460864-b8e5eb489a52.webp": {
+    "mtime": 1792907492.635,
+    "seen": 1792908777.7477362,
+    "ast_hash": "6a9a8797baeb24e98167cfec1b95a594",
+    "semantic_hash": "6a9a8797baeb24e98167cfec1b95a594"
+  },
+  "public/spots/pool/photo-1740203493443-b17b8d904405.webp": {
+    "mtime": 1792907563.168,
+    "seen": 1792908777.7477376,
+    "ast_hash": "c8f7df43e874980653a3e9f092c97dbe",
+    "semantic_hash": "c8f7df43e874980653a3e9f092c97dbe"
+  },
+  "public/spots/pool/photo-1760115338751-cc810cb0a591.webp": {
+    "mtime": 1792907579.805,
+    "seen": 1792908777.7477386,
+    "ast_hash": "c5a546ff5ec61d11242fa93808726061",
+    "semantic_hash": "c5a546ff5ec61d11242fa93808726061"
+  },
+  "public/spots/pool/photo-1761242606389-0a45db29fdee.webp": {
+    "mtime": 1792907507.286,
+    "seen": 1792908777.7477403,
+    "ast_hash": "aa82c7cbcb3641d42ec7b63a88f89340",
+    "semantic_hash": "aa82c7cbcb3641d42ec7b63a88f89340"
+  },
+  "public/spots/pool/photo-1761552505189-3933cea126f7.webp": {
+    "mtime": 1792907550.122,
+    "seen": 1792908777.7477412,
+    "ast_hash": "975b5dd3fdb9914ecde5529e58c76bf5",
+    "semantic_hash": "975b5dd3fdb9914ecde5529e58c76bf5"
+  },
+  "public/spots/pool/photo-1761727946659-27115be461ed.webp": {
+    "mtime": 1792907522.6,
+    "seen": 1792908777.7477422,
+    "ast_hash": "8bee54ccba7ebf63a79595154a91156a",
+    "semantic_hash": "8bee54ccba7ebf63a79595154a91156a"
+  },
+  "public/spots/pool/photo-1762996770562-ffce7254c4cc.webp": {
+    "mtime": 1792907553.314,
+    "seen": 1792908777.7477436,
+    "ast_hash": "53921116cf5482bc1b603a1890fcf270",
+    "semantic_hash": "53921116cf5482bc1b603a1890fcf270"
+  },
+  "public/spots/pool/photo-1764067522124-b51d909061a6.webp": {
+    "mtime": 1792907578.367,
+    "seen": 1792908777.7477443,
+    "ast_hash": "48e9f0471f0a221bc35693d08de84bc3",
+    "semantic_hash": "48e9f0471f0a221bc35693d08de84bc3"
+  },
+  "public/spots/pool/photo-1766337996174-d6766b8ce932.webp": {
+    "mtime": 1792907548.736,
+    "seen": 1792908777.7477453,
+    "ast_hash": "991d0d80056407af3389225ef852bfda",
+    "semantic_hash": "991d0d80056407af3389225ef852bfda"
+  },
+  "public/spots/pool/photo-1771945031979-55fa29dd9716.webp": {
+    "mtime": 1792907516.334,
+    "seen": 1792908777.7477467,
+    "ast_hash": "ac43a9b39e8418d8efec0a202a7960a2",
+    "semantic_hash": "ac43a9b39e8418d8efec0a202a7960a2"
+  },
+  "public/spots/pool/photo-1773852031792-fbb826750ded.webp": {
+    "mtime": 1792907519.17,
+    "seen": 1792908777.747748,
+    "ast_hash": "c2f1ec3c454c1fb72b63712cba774e36",
+    "semantic_hash": "c2f1ec3c454c1fb72b63712cba774e36"
+  },
+  "public/spots/pool/photo-1774050021466-369013ca33ef.webp": {
+    "mtime": 1792907580.988,
+    "seen": 1792908777.747749,
+    "ast_hash": "58209de989fc0533805c934be37db39e",
+    "semantic_hash": "58209de989fc0533805c934be37db39e"
+  },
+  "public/spots/pool/photo-1777245144514-7ed23da44abb.webp": {
+    "mtime": 1792907502.954,
+    "seen": 1792908777.74775,
+    "ast_hash": "de1667007808d17f53ad1525d201a6ba",
+    "semantic_hash": "de1667007808d17f53ad1525d201a6ba"
+  },
+  "public/spots/pool/photo-1783441113959-945f3774a320.webp": {
+    "mtime": 1792907551.985,
+    "seen": 1792908777.7477515,
+    "ast_hash": "e93ad64fa785836c209b2251201ec94e",
+    "semantic_hash": "e93ad64fa785836c209b2251201ec94e"
+  },
+  "public/spots/\u4e09\u4e9a\u4e9a\u9f99\u6e7e.webp": {
+    "mtime": 1792907119.602,
+    "seen": 1792908777.7477531,
+    "ast_hash": "71d576fc102b845ab55519fd78715814",
+    "semantic_hash": "71d576fc102b845ab55519fd78715814"
+  },
+  "public/spots/\u4e0a\u6d77\u8fea\u58eb\u5c3c\u4e50\u56ed.webp": {
+    "mtime": 1792907119.72,
+    "seen": 1792908777.7477546,
+    "ast_hash": "55afeefdad6efe3e9d9a9ca655c75b2b",
+    "semantic_hash": "55afeefdad6efe3e9d9a9ca655c75b2b"
+  },
+  "public/spots/\u4e3d\u6c5f\u53e4\u57ce.webp": {
+    "mtime": 1792907119.477,
+    "seen": 1792908777.7477558,
+    "ast_hash": "cde96c8bab6d2f30566df8cd96e5a527",
+    "semantic_hash": "cde96c8bab6d2f30566df8cd96e5a527"
+  },
+  "public/spots/\u4e5d\u5be8\u6c9f\u98ce\u666f\u533a.webp": {
+    "mtime": 1792907119.336,
+    "seen": 1792908777.7477572,
+    "ast_hash": "a43e3127c0092f7fe87d2e40c9b73e72",
+    "semantic_hash": "a43e3127c0092f7fe87d2e40c9b73e72"
+  },
+  "public/spots/\u5c11\u6797\u5bfa.webp": {
+    "mtime": 1792907119.885,
+    "seen": 1792908777.7477586,
+    "ast_hash": "4267f7a3a8b13472127f3a61cbb6c2e3",
+    "semantic_hash": "4267f7a3a8b13472127f3a61cbb6c2e3"
+  },
+  "public/spots/\u5e7f\u5dde\u5854.webp": {
+    "mtime": 1792907119.067,
+    "seen": 1792908777.7477598,
+    "ast_hash": "cb451a9dee9336a0fdb1cce7b4e7bd44",
+    "semantic_hash": "cb451a9dee9336a0fdb1cce7b4e7bd44"
+  },
+  "public/spots/\u5f20\u5bb6\u754c\u56fd\u5bb6\u68ee\u6797\u516c\u56ed.webp": {
+    "mtime": 1792907120.064,
+    "seen": 1792908777.7477612,
+    "ast_hash": "1a205ad5367e1ee020b326849199603a",
+    "semantic_hash": "1a205ad5367e1ee020b326849199603a"
+  },
+  "public/spots/\u6545\u5bab\u535a\u7269\u9662.webp": {
+    "mtime": 1792907118.922,
+    "seen": 1792908777.7477624,
+    "ast_hash": "0f4bc18e7cb8ec3d6b08b0abda3bb8aa",
+    "semantic_hash": "0f4bc18e7cb8ec3d6b08b0abda3bb8aa"
+  },
+  "public/spots/\u957f\u57ce\u00b7\u516b\u8fbe\u5cad.webp": {
+    "mtime": 1792907120.217,
+    "seen": 1792908777.7477639,
+    "ast_hash": "cb0f1e8c0d1a119d6ef2e6b7e341eb08",
+    "semantic_hash": "cb0f1e8c0d1a119d6ef2e6b7e341eb08"
+  },
+  "public/spots/\u957f\u9686\u6d77\u6d0b\u738b\u56fd.webp": {
+    "mtime": 1792907120.358,
+    "seen": 1792908777.7477653,
+    "ast_hash": "a14fda0c908e4e9ce6f5f536080401c0",
+    "semantic_hash": "a14fda0c908e4e9ce6f5f536080401c0"
+  },
+  "public/spots/\u9ec4\u5c71\u98ce\u666f\u533a.webp": {
+    "mtime": 1792907119.201,
+    "seen": 1792908777.7477667,
+    "ast_hash": "52d83ada9a45634407e0496da8379f33",
+    "semantic_hash": "52d83ada9a45634407e0496da8379f33"
+  },
+  "public/spots/\u9f13\u6d6a\u5c7f.webp": {
+    "mtime": 1792907118.694,
+    "seen": 1792908777.7477682,
+    "ast_hash": "170bda839d53f3b73ac666cd8e2b18c4",
+    "semantic_hash": "170bda839d53f3b73ac666cd8e2b18c4"
   }
 }
