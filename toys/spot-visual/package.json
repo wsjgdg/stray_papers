@@ -19,7 +19,8 @@
     "spots": "node scripts/build-spot-photos.mjs",
     "spots:fetch": "node scripts/fetch-spot-photos-bing.mjs",
     "pool:fetch": "node scripts/fetch-category-pool.mjs",
-    "geo:centers": "node scripts/gen-city-centers.mjs"
+    "geo:centers": "node scripts/gen-city-centers.mjs",
+    "pois:photos": "node scripts/download-poi-photos.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",

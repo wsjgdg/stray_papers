@@ -1250,13 +1250,14 @@ export const PACKLIST_UNIVERSAL = [
 // 城市探索的 chips 是这个库的过滤器；POI 图片由浏览器直连高德 CDN，不占服务器出网。
 import { CITY_POI_PACKS, type CityPoi } from "./city-pois.generated";
 import { POI_DESCRIPTIONS } from "./poi-descriptions";
+import { POI_PHOTOS } from "./poi-photos.generated";
 
 export function cityPoiToSpot(city: string, p: CityPoi, index: number): Spot {
   const short = city.replace(/市$/, "");
   return {
     id: `poi-${short}-${index}`,
     name: p.name,
-    image: p.image,
+    image: POI_PHOTOS[`${city}::${p.name}`] ?? p.image,
     photos: p.photos?.length ? p.photos : undefined,
     rating: p.rating,
     imageSource: p.image ? "amap" : undefined,
