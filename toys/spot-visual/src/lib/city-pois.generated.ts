@@ -9,6 +9,7 @@ export interface CityPoi {
   category: string;
   rating?: number;
   image: string;
+  photos: string[];
 }
 
 export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
@@ -20,7 +21,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.903182,
       "category": "城市地标",
       "rating": 4.9,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/fab72424-5643-4c14-9486-ae1c8475eab7.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/fab72424-5643-4c14-9486-ae1c8475eab7.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/fab72424-5643-4c14-9486-ae1c8475eab7.jpg",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/51705f12-6b79-4c6a-a0a6-462008c22043.jpg",
+        "http://store.is.autonavi.com/showpic/6c22735ae72cfab207adae0fa74b3a75"
+      ]
     },
     {
       "name": "故宫博物院",
@@ -29,7 +35,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.917839,
       "category": "历史人文",
       "rating": 4.9,
-      "image": "http://store.is.autonavi.com/showpic/2f968490d105bb2741e17f90b85c6b79"
+      "image": "http://store.is.autonavi.com/showpic/2f968490d105bb2741e17f90b85c6b79",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/2f968490d105bb2741e17f90b85c6b79",
+        "https://store.is.autonavi.com/showpic/6d5c04810f7f86f20000008174096217?type=pic",
+        "https://store.is.autonavi.com/showpic/5b11f8221d1de73e0d1b16967c78b6de"
+      ]
     },
     {
       "name": "天坛公园",
@@ -38,7 +49,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.881913,
       "category": "城市地标",
       "rating": 4.9,
-      "image": "http://store.is.autonavi.com/showpic/d7027a05ce598752d0bf69423d80ac94"
+      "image": "http://store.is.autonavi.com/showpic/d7027a05ce598752d0bf69423d80ac94",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d7027a05ce598752d0bf69423d80ac94",
+        "https://store.is.autonavi.com/showpic/f4614ff24b2389370000008247376398?type=pic",
+        "https://store.is.autonavi.com/showpic/3249fd791ffa120ecb3b9590688623f9"
+      ]
     },
     {
       "name": "景山公园",
@@ -47,7 +63,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.925875,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/10eb01af2fd301e54e50d42ea636ccef"
+      "image": "http://store.is.autonavi.com/showpic/10eb01af2fd301e54e50d42ea636ccef",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/10eb01af2fd301e54e50d42ea636ccef",
+        "http://store.is.autonavi.com/showpic/f26ea189993c113b5535715fa145b746",
+        "http://store.is.autonavi.com/showpic/7f5ec8b99eab51bcde3749b389da6b55"
+      ]
     },
     {
       "name": "北海公园",
@@ -56,7 +77,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.928775,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/68a92863a790f69d2221f7c53906c8c2"
+      "image": "http://store.is.autonavi.com/showpic/68a92863a790f69d2221f7c53906c8c2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/68a92863a790f69d2221f7c53906c8c2",
+        "http://store.is.autonavi.com/showpic/cde94b02af66721b49f43e75628a0430",
+        "http://store.is.autonavi.com/showpic/56c62f9ae4b90f99306d84fb4b35e7a8"
+      ]
     },
     {
       "name": "南锣鼓巷",
@@ -65,7 +91,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.937182,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/6aa94c24640267a56c22af0b9629030a"
+      "image": "http://store.is.autonavi.com/showpic/6aa94c24640267a56c22af0b9629030a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6aa94c24640267a56c22af0b9629030a",
+        "http://store.is.autonavi.com/showpic/53c8b2cdc8d87ccf9d2fdd12e63a2a62",
+        "http://store.is.autonavi.com/showpic/bfd0a35a95439a2edf26084d07b62714"
+      ]
     },
     {
       "name": "什刹海",
@@ -74,7 +105,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.941893,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/dd97c0390e296f47a20b72063ec86990"
+      "image": "http://store.is.autonavi.com/showpic/dd97c0390e296f47a20b72063ec86990",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/dd97c0390e296f47a20b72063ec86990",
+        "http://store.is.autonavi.com/showpic/a996834a98e84fd852162b2551c374f0",
+        "https://store.is.autonavi.com/showpic/36c1aa5b48b91daa4e7676bb51fa8527"
+      ]
     },
     {
       "name": "雍和宫",
@@ -83,7 +119,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.947239,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/9b9abb2a9fff0b6491230aa4435f7ad5"
+      "image": "http://store.is.autonavi.com/showpic/9b9abb2a9fff0b6491230aa4435f7ad5",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9b9abb2a9fff0b6491230aa4435f7ad5",
+        "http://store.is.autonavi.com/showpic/6b397bbbd188c6087361de3fbe525b73",
+        "http://store.is.autonavi.com/showpic/8e4cf6648c9841a7436195794798e884"
+      ]
     },
     {
       "name": "恭王府博物馆",
@@ -92,7 +133,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.937222,
       "category": "历史人文",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/e242ed1956e6d775a8912cfd3934169b"
+      "image": "http://store.is.autonavi.com/showpic/e242ed1956e6d775a8912cfd3934169b",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e242ed1956e6d775a8912cfd3934169b",
+        "http://store.is.autonavi.com/showpic/9ef81776a4ba02ace199ad2c66f661ba",
+        "https://store.is.autonavi.com/showpic/0ee6849bfab9b2d91ce95d0b36a5d451"
+      ]
     },
     {
       "name": "地坛公园",
@@ -101,7 +147,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.953777,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/35d828cfa010668501e398f5bfa6c6f5"
+      "image": "http://store.is.autonavi.com/showpic/35d828cfa010668501e398f5bfa6c6f5",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/35d828cfa010668501e398f5bfa6c6f5",
+        "http://store.is.autonavi.com/showpic/c2fab07aee729768431c8aa3fe583193",
+        "http://store.is.autonavi.com/showpic/0eba905720aa6e5c74d51a1888af1e90"
+      ]
     },
     {
       "name": "鼓楼",
@@ -110,7 +161,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.940781,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://aos-comment.amap.com/B0FFFS33G2/comment/14c2494a939addd2acd2f86c90e71e21_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0FFFS33G2/comment/14c2494a939addd2acd2f86c90e71e21_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFFS33G2/comment/14c2494a939addd2acd2f86c90e71e21_2048_2048_80.jpg",
+        "http://store.is.autonavi.com/showpic/0db044048039fb59db0f94b60048497b",
+        "http://store.is.autonavi.com/showpic/9465942f716652e67bb20f0e4c207e15"
+      ]
     },
     {
       "name": "敕建火德真君庙",
@@ -119,7 +175,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.937013,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "https://aos-comment.amap.com/B0FFFAK3R4/headerImg/51b8e06b1e346842b1011973e4b1bd20_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0FFFAK3R4/headerImg/51b8e06b1e346842b1011973e4b1bd20_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFFAK3R4/headerImg/51b8e06b1e346842b1011973e4b1bd20_2048_2048_80.jpg",
+        "http://store.is.autonavi.com/showpic/4d65708d870a530cf89a287d82c1340d",
+        "http://store.is.autonavi.com/showpic/c8ae9938cc86af8918a15e3c0f3ad0ba"
+      ]
     },
     {
       "name": "人民英雄纪念碑",
@@ -128,7 +189,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.904632,
       "category": "历史人文",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/989902a88a6f3631fd6ce662e9b159ef"
+      "image": "http://store.is.autonavi.com/showpic/989902a88a6f3631fd6ce662e9b159ef",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/989902a88a6f3631fd6ce662e9b159ef",
+        "http://store.is.autonavi.com/showpic/5fbc44454b36f24a9f9807b9a3e3c0ae",
+        "http://store.is.autonavi.com/showpic/f440b3fd67064810584a0d48d2112414"
+      ]
     },
     {
       "name": "白云观",
@@ -137,7 +203,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.901266,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/d804291e9b9d981135dbab1a8d7020ea"
+      "image": "http://store.is.autonavi.com/showpic/d804291e9b9d981135dbab1a8d7020ea",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d804291e9b9d981135dbab1a8d7020ea",
+        "http://store.is.autonavi.com/showpic/3fc28ed5e4e85431fd93362ff8a1d357",
+        "https://aos-comment.amap.com/B000A146AD/comment/5fb61aa2610a6f254042b97ea9a70f5c_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "朝阳公园",
@@ -146,7 +217,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.944093,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/a8c963699fbff4f4b4c8fbf4040810ff"
+      "image": "http://store.is.autonavi.com/showpic/a8c963699fbff4f4b4c8fbf4040810ff",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a8c963699fbff4f4b4c8fbf4040810ff",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/fbbe28e6-edcf-47ac-bd1e-d2923d7c23b3.jpg",
+        "http://store.is.autonavi.com/showpic/389893719f8a8778ca2692e786a53551"
+      ]
     },
     {
       "name": "中山公园",
@@ -155,7 +231,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.910707,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/4d1216ff3ef92137912db31aaacd3c5f"
+      "image": "http://store.is.autonavi.com/showpic/4d1216ff3ef92137912db31aaacd3c5f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/4d1216ff3ef92137912db31aaacd3c5f",
+        "http://store.is.autonavi.com/showpic/8456aec2327c026f940c81b400ddb44d",
+        "http://store.is.autonavi.com/showpic/d712c5194b3096b8f24c7ee2116a5e6c"
+      ]
     },
     {
       "name": "太庙",
@@ -164,7 +245,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.911374,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/3029a20076593ba33b5ebbdcfea7e569"
+      "image": "http://store.is.autonavi.com/showpic/3029a20076593ba33b5ebbdcfea7e569",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/3029a20076593ba33b5ebbdcfea7e569",
+        "http://store.is.autonavi.com/showpic/93e66606c9603106cd4948202ec9dea9",
+        "http://store.is.autonavi.com/showpic/3fb022eae396cd6d29bb8b85a6b89e89"
+      ]
     },
     {
       "name": "日坛公园",
@@ -173,7 +259,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.915538,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B000A7C9EW/headerImg/2689d175eadaa46f36c454184edf55a2_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B000A7C9EW/headerImg/2689d175eadaa46f36c454184edf55a2_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B000A7C9EW/headerImg/2689d175eadaa46f36c454184edf55a2_2048_2048_80.jpg",
+        "http://store.is.autonavi.com/showpic/047e8b4bff0cbc440a7f8a288a8fe5e2",
+        "http://store.is.autonavi.com/showpic/c1347d21f35383e06568f5392e92404d"
+      ]
     },
     {
       "name": "正阳门箭楼",
@@ -182,7 +273,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.899368,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0FFG6VF81/comment/DA78968C_0D8E_49B9_BE8C_471A2E557A21_L0_001_1770_2002_1772540780701_64357495.jpg"
+      "image": "https://aos-comment.amap.com/B0FFG6VF81/comment/DA78968C_0D8E_49B9_BE8C_471A2E557A21_L0_001_1770_2002_1772540780701_64357495.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFG6VF81/comment/DA78968C_0D8E_49B9_BE8C_471A2E557A21_L0_001_1770_2002_1772540780701_64357495.jpg",
+        "https://aos-comment.amap.com/B0FFG6VF81/comment/content_media_external_file_1000049555_ss__1770363622025_56510683.jpg",
+        "https://store.is.autonavi.com/showpic/83258b4fdd271fd20000003038544916?type=pic"
+      ]
     },
     {
       "name": "陶然亭公园",
@@ -191,7 +287,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.874496,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/fbd8cdec8bcb57bc6379137a55e99f44"
+      "image": "http://store.is.autonavi.com/showpic/fbd8cdec8bcb57bc6379137a55e99f44",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/fbd8cdec8bcb57bc6379137a55e99f44",
+        "http://store.is.autonavi.com/showpic/db751bcde6c0345545aefa2a4cb1a999",
+        "http://store.is.autonavi.com/showpic/8f5c69aa00ceaae92d253c4d74c40358"
+      ]
     },
     {
       "name": "北京明城墙遗址公园",
@@ -200,7 +301,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.901264,
       "category": "历史人文",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/7675ecadbda243d9b4da460bc59d4466"
+      "image": "http://store.is.autonavi.com/showpic/7675ecadbda243d9b4da460bc59d4466",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/7675ecadbda243d9b4da460bc59d4466",
+        "http://store.is.autonavi.com/showpic/2e6b773d0b1a0f1b0ad130d43a7bc66b",
+        "http://store.is.autonavi.com/showpic/99b43c75d876aedddfbfd78db5406401"
+      ]
     },
     {
       "name": "龙潭公园",
@@ -209,7 +315,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.879792,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/3fe8133ec9274fe7c8a3afa38d1ae710"
+      "image": "http://store.is.autonavi.com/showpic/3fe8133ec9274fe7c8a3afa38d1ae710",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/3fe8133ec9274fe7c8a3afa38d1ae710",
+        "http://store.is.autonavi.com/showpic/455764cab4dea88b0ace7902b0f78efc",
+        "http://store.is.autonavi.com/showpic/eba7f64c0c54e72f89715872ce0504df"
+      ]
     },
     {
       "name": "龙潭中湖公园",
@@ -218,7 +329,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.876755,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/e28b4684acd7bcdaa43f8a169e66816b"
+      "image": "http://store.is.autonavi.com/showpic/e28b4684acd7bcdaa43f8a169e66816b",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e28b4684acd7bcdaa43f8a169e66816b",
+        "http://store.is.autonavi.com/showpic/2bda2cc0de77798a2e0cf9e4ef4e22a1",
+        "http://store.is.autonavi.com/showpic/dec4d3200cf23f76a613e92940fae8fe"
+      ]
     },
     {
       "name": "妙应寺白塔",
@@ -227,7 +343,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.925652,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B000A7H0F3/headerImg/8f2e4cdc8da36608701d974c0dff68a9_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B000A7H0F3/headerImg/8f2e4cdc8da36608701d974c0dff68a9_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B000A7H0F3/headerImg/8f2e4cdc8da36608701d974c0dff68a9_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B000A7H0F3/headerImg/336f408bf0dbaad3bfb98ac755187128_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B000A7H0F3/headerImg/a3dfca833c9286f2e3041a79c37179ad_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "国子监",
@@ -236,7 +357,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.946777,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/e89fcb6fb60308f82af54c79941d0ea4"
+      "image": "http://store.is.autonavi.com/showpic/e89fcb6fb60308f82af54c79941d0ea4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e89fcb6fb60308f82af54c79941d0ea4",
+        "http://store.is.autonavi.com/showpic/d6c9a486ae33218b070fb51b01d02aad",
+        "http://store.is.autonavi.com/showpic/1139c50a0e28099dd683f6c7eea5430a"
+      ]
     },
     {
       "name": "先农坛",
@@ -245,7 +371,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.876929,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/db91a6c9cbe30198d9307d517bcbd3de"
+      "image": "http://store.is.autonavi.com/showpic/db91a6c9cbe30198d9307d517bcbd3de",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/db91a6c9cbe30198d9307d517bcbd3de",
+        "https://store.is.autonavi.com/showpic/0e4477e499b07a510000003003560129?type=pic",
+        "https://aos-comment.amap.com/B000A7CLPF/comment/content_media_external_file_42946_ss__1772342108549_52453154.jpg"
+      ]
     },
     {
       "name": "北京鲁迅博物馆",
@@ -254,7 +385,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.925693,
       "category": "历史人文",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/a128d0ca6e36c51d0000002906652365?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/a128d0ca6e36c51d0000002906652365?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/a128d0ca6e36c51d0000002906652365?type=pic",
+        "http://store.is.autonavi.com/showpic/1387bc3957cd8da015704569c3477dc1",
+        "https://aos-comment.amap.com/B000A3BE77/comment/a7501b65f91bb381964e349b882f7009_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "后海公园",
@@ -263,7 +399,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.942143,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/b88b6adecae77f1bf939442365f72aa7"
+      "image": "http://store.is.autonavi.com/showpic/b88b6adecae77f1bf939442365f72aa7",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b88b6adecae77f1bf939442365f72aa7",
+        "http://store.is.autonavi.com/showpic/f9b927369aabe6ac4d6d309b56b34bf3",
+        "http://store.is.autonavi.com/showpic/e820a8d43967276da121a21e5e5ec662"
+      ]
     },
     {
       "name": "团结湖公园",
@@ -272,7 +413,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.925741,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B000A6B2AE/comment/74d73435502f5dc1b9c92dafa1b580af_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B000A6B2AE/comment/74d73435502f5dc1b9c92dafa1b580af_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B000A6B2AE/comment/74d73435502f5dc1b9c92dafa1b580af_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B000A6B2AE/comment/622b8e900870624df03786fa2f0fe869_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B000A6B2AE/comment/7e0c0fa7e33e11847c446409eb0002cd_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "大观园",
@@ -281,7 +427,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.871365,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/5de13765a6f39116508eeb7002dcaab5"
+      "image": "http://store.is.autonavi.com/showpic/5de13765a6f39116508eeb7002dcaab5",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5de13765a6f39116508eeb7002dcaab5",
+        "http://store.is.autonavi.com/showpic/d61b98a50de2dd0474242e1cf2bf927a",
+        "http://store.is.autonavi.com/showpic/26add06880e0bdcab67faca3ae42915c"
+      ]
     },
     {
       "name": "北京动物园",
@@ -290,7 +441,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.942105,
       "category": "主题乐园",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/8703169dc2eba03a5d9d7eaa38f570ad"
+      "image": "http://store.is.autonavi.com/showpic/8703169dc2eba03a5d9d7eaa38f570ad",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8703169dc2eba03a5d9d7eaa38f570ad",
+        "http://store.is.autonavi.com/showpic/4b15958afae912df9810236030bcb0ce",
+        "http://store.is.autonavi.com/showpic/4a1a43c22a0425072b33fd086a9e38e1"
+      ]
     },
     {
       "name": "东单公园",
@@ -299,7 +455,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.904917,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/de85bb2be102e61fcfaf1044e464c89d"
+      "image": "http://store.is.autonavi.com/showpic/de85bb2be102e61fcfaf1044e464c89d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/de85bb2be102e61fcfaf1044e464c89d",
+        "http://store.is.autonavi.com/showpic/789c24cca3a4237b60c3941543d28f76",
+        "http://store.is.autonavi.com/showpic/7eba4699dbf94b0ff3ec766dbc44ad54"
+      ]
     },
     {
       "name": "天主教北京总教区王府井天主堂东堂",
@@ -308,7 +469,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.917288,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/dd0edf5877af3b6043645204a08bdf34"
+      "image": "http://store.is.autonavi.com/showpic/dd0edf5877af3b6043645204a08bdf34",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/dd0edf5877af3b6043645204a08bdf34",
+        "http://store.is.autonavi.com/showpic/21a7abd7ca8a300e416fe1883d99110b",
+        "http://store.is.autonavi.com/showpic/c0ebe3ad32cab17f5370af2b08a95266"
+      ]
     },
     {
       "name": "月坛公园",
@@ -317,7 +483,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.916424,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/d82abea0-df69-4a8e-a901-2278bd6db29a.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/d82abea0-df69-4a8e-a901-2278bd6db29a.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/d82abea0-df69-4a8e-a901-2278bd6db29a.jpg",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/1babe3fe-5669-4322-b8e5-71cf964049e5.jpg",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/af140bc7-2d3b-4d2b-af82-fc30835ac366.jpg"
+      ]
     },
     {
       "name": "银锭桥",
@@ -326,7 +497,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.938999,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/ac82dc570761ae150d54fcfe3faa1349"
+      "image": "http://store.is.autonavi.com/showpic/ac82dc570761ae150d54fcfe3faa1349",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ac82dc570761ae150d54fcfe3faa1349",
+        "http://store.is.autonavi.com/showpic/e87f9f9d38a1a9bc83788cb04623cf69",
+        "http://store.is.autonavi.com/showpic/7d6e8c5da546acc3739050ee08851703"
+      ]
     },
     {
       "name": "东岳庙",
@@ -335,7 +511,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.924932,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/52d66fe98e170a6aa80c9efae2e3245e"
+      "image": "http://store.is.autonavi.com/showpic/52d66fe98e170a6aa80c9efae2e3245e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/52d66fe98e170a6aa80c9efae2e3245e",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/c1680e6d-a179-4046-9ff8-331b52d1e7a3.jpg",
+        "http://store.is.autonavi.com/showpic/cc42bbb356e81732176f10ece4ff312c"
+      ]
     },
     {
       "name": "北京历代帝王庙",
@@ -344,7 +525,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.924802,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/ee176e91364c1189ad574fa9af309f51"
+      "image": "https://store.is.autonavi.com/showpic/ee176e91364c1189ad574fa9af309f51",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/ee176e91364c1189ad574fa9af309f51",
+        "https://aos-comment.amap.com/B000A7CALJ/comment/content_media_external_images_media_1000256781_ss__1769166885077_48916935.jpg",
+        "https://store.is.autonavi.com/showpic/a7d464d72ff829f90000002544346307?type=pic"
+      ]
     },
     {
       "name": "毛主席纪念堂",
@@ -353,7 +539,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.902517,
       "category": "历史人文",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/67f80db8806f358b501c3ca920fede2d"
+      "image": "http://store.is.autonavi.com/showpic/67f80db8806f358b501c3ca920fede2d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/67f80db8806f358b501c3ca920fede2d",
+        "http://store.is.autonavi.com/showpic/033ecf056a9ecc489f7b64b55e82c36d",
+        "http://store.is.autonavi.com/showpic/1b088b8aaac674ce4774cbab27a9a026"
+      ]
     },
     {
       "name": "老舍故居",
@@ -362,7 +553,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.91863,
       "category": "历史人文",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/0b61549839072a8bcbc0527240937ac9"
+      "image": "http://store.is.autonavi.com/showpic/0b61549839072a8bcbc0527240937ac9",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0b61549839072a8bcbc0527240937ac9",
+        "http://store.is.autonavi.com/showpic/2157a1efc5c181bbb1057b88d79bbba2",
+        "https://store.is.autonavi.com/showpic/b5d20c30ca8d3892ef3ebd2008f4f745"
+      ]
     },
     {
       "name": "正阳门城楼",
@@ -371,7 +567,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.900583,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0FFH05QQ3/comment/content_media_external_file_171869_ss__1764943857082_21444716.jpg"
+      "image": "https://aos-comment.amap.com/B0FFH05QQ3/comment/content_media_external_file_171869_ss__1764943857082_21444716.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFH05QQ3/comment/content_media_external_file_171869_ss__1764943857082_21444716.jpg",
+        "https://aos-comment.amap.com/B0FFH05QQ3/comment/content_media_external_file_1000060386_ss__1763370538853_88029696.jpg",
+        "https://store.is.autonavi.com/showpic/69183e09e03b243e0000008323610816?type=pic"
+      ]
     },
     {
       "name": "普度寺遗址",
@@ -380,7 +581,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.913437,
       "category": "历史人文",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/a774837612c751504e96e563e6042fce"
+      "image": "https://store.is.autonavi.com/showpic/a774837612c751504e96e563e6042fce",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/a774837612c751504e96e563e6042fce",
+        "https://store.is.autonavi.com/showpic/b1155d61c326b3720000000711806553?type=pic",
+        "https://aos-comment.amap.com/B000A7YE6D/comment/content_media_external_file_100001407_1770383413097_87752934.jpg"
+      ]
     },
     {
       "name": "北京东交民巷使馆建筑群",
@@ -389,7 +595,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.901299,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/e64b6d1fa4f1b56d29157da3e6d74988"
+      "image": "http://store.is.autonavi.com/showpic/e64b6d1fa4f1b56d29157da3e6d74988",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e64b6d1fa4f1b56d29157da3e6d74988",
+        "https://aos-comment.amap.com/B000A84ZLN/comment/content_media_external_file_1000022791_ss__1747732135484_58880764.jpg",
+        "https://aos-comment.amap.com/B000A84ZLN/comment/content_media_external_images_media_1000024333_ss__1730173477328_08365203.jpg"
+      ]
     },
     {
       "name": "菖蒲河公园",
@@ -398,7 +609,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.908566,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/c8a5f760bee1a46a0000002999066832?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/c8a5f760bee1a46a0000002999066832?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/c8a5f760bee1a46a0000002999066832?type=pic",
+        "https://store.is.autonavi.com/showpic/d78ea4ed845465bb7773102c22c54df5",
+        "https://store.is.autonavi.com/showpic/185a0c20cc1b30d40000003810748466?type=pic"
+      ]
     },
     {
       "name": "纪晓岚故居",
@@ -407,7 +623,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.890058,
       "category": "历史人文",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/838627ce1ca1fef7069b400a1f7322a2"
+      "image": "http://store.is.autonavi.com/showpic/838627ce1ca1fef7069b400a1f7322a2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/838627ce1ca1fef7069b400a1f7322a2",
+        "http://store.is.autonavi.com/showpic/4986dcdc4b82b23b144726347394a5a3",
+        "http://store.is.autonavi.com/showpic/d67552d22c5f5d747e887700838eb7ee"
+      ]
     },
     {
       "name": "北京基督教会崇文门堂",
@@ -416,7 +637,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.902964,
       "category": "宗教寺庙",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/53b37486a310a21470ae0eae"
+      "image": "http://store.is.autonavi.com/showpic/53b37486a310a21470ae0eae",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/53b37486a310a21470ae0eae",
+        "https://aos-comment.amap.com/B000A10142/comment/content_media_external_file_100001118_1766622641095_57263353.jpg",
+        "https://store.is.autonavi.com/showpic/0f0a353fd27094500000005778414944?type=pic"
+      ]
     },
     {
       "name": "皇城根遗址公园",
@@ -425,7 +651,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.923378,
       "category": "历史人文",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B000A7VRNI/comment/content_media_external_file_100001878_1766635575468_25664681.jpg"
+      "image": "https://aos-comment.amap.com/B000A7VRNI/comment/content_media_external_file_100001878_1766635575468_25664681.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B000A7VRNI/comment/content_media_external_file_100001878_1766635575468_25664681.jpg",
+        "https://aos-comment.amap.com/B000A7VRNI/comment/a73bd787c3af9f0fe10d89fb3bed855e_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/7383978b29af0d8c0000005382640826?type=pic"
+      ]
     },
     {
       "name": "北大红楼",
@@ -434,7 +665,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.92471,
       "category": "历史人文",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/c7782cf55d7393472b79ffbd33472a3f"
+      "image": "http://store.is.autonavi.com/showpic/c7782cf55d7393472b79ffbd33472a3f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c7782cf55d7393472b79ffbd33472a3f",
+        "https://aos-comment.amap.com/B000A7HRB1/headerImg/f2542bd8fded65c6a8d764ccc9d3bf33_2048_2048_80.jpg",
+        "http://store.is.autonavi.com/showpic/c0d8468cc442936d48fe5a0d38efd669"
+      ]
     },
     {
       "name": "王府井地下佛像",
@@ -443,7 +679,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.91374,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0LBRSGX65/comment/content_media_external_file_14805_ss__1765729696442_70648522.jpg"
+      "image": "https://aos-comment.amap.com/B0LBRSGX65/comment/content_media_external_file_14805_ss__1765729696442_70648522.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0LBRSGX65/comment/content_media_external_file_14805_ss__1765729696442_70648522.jpg",
+        "https://store.is.autonavi.com/showpic/c822978e7344245e0000003002864337?type=pic",
+        "https://aos-comment.amap.com/B0LBRSGX65/comment/0CF7F4C5_0514_4585_9C17_38E019C41F86_L0_001_1500_200_1768443113316_13762736.jpg"
+      ]
     },
     {
       "name": "西城楼观旗点",
@@ -452,7 +693,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.907843,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/e34d6d91137a33130000007989096898?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/e34d6d91137a33130000007989096898?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/e34d6d91137a33130000007989096898?type=pic",
+        "https://store.is.autonavi.com/showpic/28cbcb8b1f10f7400000003082510256?type=pic",
+        "https://aos-comment.amap.com/B0LU7H0POO/comment/20260314-5aebe778e6bdf56e97a7d780-4IXLKzVN73n5fDn8k2sSzn.jpg"
+      ]
     },
     {
       "name": "陈独秀旧居",
@@ -461,7 +707,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.917353,
       "category": "历史人文",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/98225ad4af9949181618ace96b79ac15"
+      "image": "http://store.is.autonavi.com/showpic/98225ad4af9949181618ace96b79ac15",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/98225ad4af9949181618ace96b79ac15",
+        "https://store.is.autonavi.com/showpic/a177a5dcf5a117350000008582468500?type=pic",
+        "https://store.is.autonavi.com/showpic/c86e46b29692eaa50000003026068814?type=pic"
+      ]
     },
     {
       "name": "天安门",
@@ -469,7 +720,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lng": 116.397463,
       "lat": 39.909187,
       "category": "城市地标",
-      "image": "http://store.is.autonavi.com/showpic/17a36a737908810a310387c7d53e878a"
+      "image": "http://store.is.autonavi.com/showpic/17a36a737908810a310387c7d53e878a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/17a36a737908810a310387c7d53e878a",
+        "https://store.is.autonavi.com/showpic/43f9af27600e28080000002581096441",
+        "https://store.is.autonavi.com/showpic/4968b0ceab641b2f0000000663330205"
+      ]
     }
   ],
   "上海": [
@@ -480,7 +736,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.233516,
       "category": "自然风光",
       "rating": 4.9,
-      "image": "http://store.is.autonavi.com/showpic/b9c402b7d34ea98654cc915e567761dd"
+      "image": "http://store.is.autonavi.com/showpic/b9c402b7d34ea98654cc915e567761dd",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b9c402b7d34ea98654cc915e567761dd",
+        "http://store.is.autonavi.com/showpic/979602e27511b1d60f296d840bcfdbb6",
+        "http://store.is.autonavi.com/showpic/619751b016fe3cb5c1c90b9a771ca444"
+      ]
     },
     {
       "name": "龙华寺",
@@ -489,7 +750,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.175174,
       "category": "宗教寺庙",
       "rating": 4.9,
-      "image": "http://store.is.autonavi.com/showpic/b6ea7de3def130dc93884d08f080d2fb"
+      "image": "http://store.is.autonavi.com/showpic/b6ea7de3def130dc93884d08f080d2fb",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b6ea7de3def130dc93884d08f080d2fb",
+        "http://store.is.autonavi.com/showpic/359312a379d73b785a67a0bf94fb960c",
+        "http://store.is.autonavi.com/showpic/0e4e60ca8dfe04051da3ff5ac5e58d1d"
+      ]
     },
     {
       "name": "上海豫园",
@@ -498,7 +764,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.227714,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/faeb0264854cd82fbb315cb2ccacea0f"
+      "image": "http://store.is.autonavi.com/showpic/faeb0264854cd82fbb315cb2ccacea0f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/faeb0264854cd82fbb315cb2ccacea0f",
+        "http://store.is.autonavi.com/showpic/a1ae7c02fc36b06b55307525ce4d692c",
+        "http://store.is.autonavi.com/showpic/64f950cea19a60bbca1cdfa056a0d2a1"
+      ]
     },
     {
       "name": "东方明珠广播电视塔",
@@ -507,7 +778,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.239703,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/797bc3a3aa5722ea6c6f867929f80777"
+      "image": "http://store.is.autonavi.com/showpic/797bc3a3aa5722ea6c6f867929f80777",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/797bc3a3aa5722ea6c6f867929f80777",
+        "http://store.is.autonavi.com/showpic/311209b13c3e95d3772b13db68a1f50c",
+        "http://store.is.autonavi.com/showpic/3f1c20fe363c2ed628733393c0f9d7c0"
+      ]
     },
     {
       "name": "上海四行仓库抗战纪念馆",
@@ -516,7 +792,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.24034,
       "category": "历史人文",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/226114beba3c4dd97642941abbb9f441"
+      "image": "http://store.is.autonavi.com/showpic/226114beba3c4dd97642941abbb9f441",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/226114beba3c4dd97642941abbb9f441",
+        "https://store.is.autonavi.com/showpic/096d04c38dcf5f8cb9636c732f7018ae",
+        "https://store.is.autonavi.com/showpic/ecf51d073e378c0715d51b045076132d"
+      ]
     },
     {
       "name": "上海城隍庙",
@@ -525,7 +806,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.225879,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/518f824f343115a063effa52ea4cb224"
+      "image": "http://store.is.autonavi.com/showpic/518f824f343115a063effa52ea4cb224",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/518f824f343115a063effa52ea4cb224",
+        "https://store.is.autonavi.com/showpic/636e52104f3c58480000003740658114?type=pic",
+        "https://store.is.autonavi.com/showpic/d1b1efe1163e74140000006901326517?type=pic"
+      ]
     },
     {
       "name": "LV巨轮",
@@ -534,7 +820,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.229952,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/f5d99ef1973665280000003082546650?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/f5d99ef1973665280000003082546650?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/f5d99ef1973665280000003082546650?type=pic",
+        "https://store.is.autonavi.com/showpic/14701728f91b3f7e0000003761162393?type=pic",
+        "https://store.is.autonavi.com/showpic/581229b93b3717e30000005277104900?type=pic"
+      ]
     },
     {
       "name": "静安寺",
@@ -543,7 +834,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.223505,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/9a0edf88a3c25c8021ebb17015aa4f0d"
+      "image": "http://store.is.autonavi.com/showpic/9a0edf88a3c25c8021ebb17015aa4f0d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9a0edf88a3c25c8021ebb17015aa4f0d",
+        "http://store.is.autonavi.com/showpic/73fd7a96d0d6e87c3eea22b79802326f",
+        "http://store.is.autonavi.com/showpic/f9d30fef14b38483f4eb9b42e177445f"
+      ]
     },
     {
       "name": "万国建筑博览群",
@@ -552,7 +848,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.237208,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/5425a40d871dbce6ddc238eb4148f733"
+      "image": "http://store.is.autonavi.com/showpic/5425a40d871dbce6ddc238eb4148f733",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5425a40d871dbce6ddc238eb4148f733",
+        "https://store.is.autonavi.com/showpic/2cb448170dc8dc870000003059516727?type=pic",
+        "https://store.is.autonavi.com/showpic/bcebcae76726a5680000003059510641?type=pic"
+      ]
     },
     {
       "name": "外滩观景台",
@@ -561,7 +862,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.237247,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/e7fe95ad7095765e0000003132982815?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/e7fe95ad7095765e0000003132982815?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/e7fe95ad7095765e0000003132982815?type=pic",
+        "https://store.is.autonavi.com/showpic/9d3a64c39d96f4950000003096754971?type=pic",
+        "https://store.is.autonavi.com/showpic/446311ea1d78d5d40000002888082752?type=pic"
+      ]
     },
     {
       "name": "外白渡桥",
@@ -570,7 +876,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.242896,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/6aa582046c50fe69487a790a1ce148f6"
+      "image": "http://store.is.autonavi.com/showpic/6aa582046c50fe69487a790a1ce148f6",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6aa582046c50fe69487a790a1ce148f6",
+        "https://aos-comment.amap.com/B00155IL1T/comment/content_media_external_file_1000060705_ss__1767771514047_30384589.jpg",
+        "https://store.is.autonavi.com/showpic/164ed5d3f1e9b0630000000731882181?type=pic"
+      ]
     },
     {
       "name": "北外滩滨江绿地",
@@ -579,7 +890,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.247461,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/cd445fd979c025600000002885414611?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/cd445fd979c025600000002885414611?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/cd445fd979c025600000002885414611?type=pic",
+        "https://store.is.autonavi.com/showpic/3db9db9672905b980000002885438069?type=pic",
+        "https://store.is.autonavi.com/showpic/cfb5fb74ac2f8fa30000002885424286?type=pic"
+      ]
     },
     {
       "name": "上海文化广场",
@@ -588,7 +904,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.211941,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/5fac94fa0f08b805134f62f38f9ad684"
+      "image": "http://store.is.autonavi.com/showpic/5fac94fa0f08b805134f62f38f9ad684",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5fac94fa0f08b805134f62f38f9ad684",
+        "https://store.is.autonavi.com/showpic/a3722859c510947a0000002424968355",
+        "https://store.is.autonavi.com/showpic/622ba16bfdf725da0000002899302016?type=pic"
+      ]
     },
     {
       "name": "玉佛禅寺",
@@ -597,7 +918,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.241445,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/3ba9025d10ef8e719af571297f73290e"
+      "image": "http://store.is.autonavi.com/showpic/3ba9025d10ef8e719af571297f73290e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/3ba9025d10ef8e719af571297f73290e",
+        "https://store.is.autonavi.com/showpic/d11cf5e48d9a48070000001044844813?type=pic",
+        "https://store.is.autonavi.com/showpic/4974f8f991209c2e0000003362062609?type=pic"
+      ]
     },
     {
       "name": "陆家嘴三件套打卡位",
@@ -606,7 +932,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.234452,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/3d25f24ade119e740000008573140705?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/3d25f24ade119e740000008573140705?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/3d25f24ade119e740000008573140705?type=pic",
+        "https://store.is.autonavi.com/showpic/717082a5c808d9ef0000003034828777?type=pic",
+        "https://store.is.autonavi.com/showpic/deb53e63b0dfb0240000003089918613?type=pic"
+      ]
     },
     {
       "name": "武康路历史文化名街",
@@ -615,7 +946,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.207255,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/ce64704d0142f3b80000005020116499?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/ce64704d0142f3b80000005020116499?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/ce64704d0142f3b80000005020116499?type=pic",
+        "https://store.is.autonavi.com/showpic/864c288abedf29f25d080dafd298c8a3",
+        "https://store.is.autonavi.com/showpic/f0a17fbd3d7c609534d68978a04ebbdd"
+      ]
     },
     {
       "name": "世博文化公园",
@@ -624,7 +960,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.179629,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/5b9f5deb28ea396b209398b86dbfe204"
+      "image": "http://store.is.autonavi.com/showpic/5b9f5deb28ea396b209398b86dbfe204",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5b9f5deb28ea396b209398b86dbfe204",
+        "http://store.is.autonavi.com/showpic/a2360c5f7e5e3536456e28de345d8e13",
+        "http://store.is.autonavi.com/showpic/fbd2e61fa2844a6479bca3ea15931303"
+      ]
     },
     {
       "name": "上海人民广场",
@@ -633,7 +974,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.228827,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/c72fc9218b08df7779b6db7d5f1e2707"
+      "image": "http://store.is.autonavi.com/showpic/c72fc9218b08df7779b6db7d5f1e2707",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c72fc9218b08df7779b6db7d5f1e2707",
+        "http://store.is.autonavi.com/showpic/aae501f47afc0c430118b3c85595ad9b",
+        "http://store.is.autonavi.com/showpic/97290903c9ffc03e0ad6fc9ad9c4711b"
+      ]
     },
     {
       "name": "静安雕塑公园",
@@ -642,7 +988,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.234819,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/9629a5ef50d76515c6a9f5086c5c0201"
+      "image": "http://store.is.autonavi.com/showpic/9629a5ef50d76515c6a9f5086c5c0201",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9629a5ef50d76515c6a9f5086c5c0201",
+        "http://store.is.autonavi.com/showpic/44f3427c88250db35d0befb4f44835a2",
+        "http://store.is.autonavi.com/showpic/bd9176c463746a5a895d506c53073bfc"
+      ]
     },
     {
       "name": "中共一大纪念馆一大广场",
@@ -651,7 +1002,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.220104,
       "category": "历史人文",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/34068593a8fe0ee7688b013a6595a483"
+      "image": "https://store.is.autonavi.com/showpic/34068593a8fe0ee7688b013a6595a483",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/34068593a8fe0ee7688b013a6595a483",
+        "https://store.is.autonavi.com/showpic/05a7361a7de9f0f60000003731596121?type=pic",
+        "https://store.is.autonavi.com/showpic/f2133c1aea4495c60000000739312866?type=pic"
+      ]
     },
     {
       "name": "乍浦路桥",
@@ -660,7 +1016,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.243871,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/3418a1cfea0c12c45e84b34c63924aae"
+      "image": "http://store.is.autonavi.com/showpic/3418a1cfea0c12c45e84b34c63924aae",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/3418a1cfea0c12c45e84b34c63924aae",
+        "https://store.is.autonavi.com/showpic/1a1b75bb9ae1fa230000003101536609?type=pic",
+        "https://store.is.autonavi.com/showpic/4175ebddb1e81d5489229069bb983351"
+      ]
     },
     {
       "name": "北外滩国客中心",
@@ -669,7 +1030,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.247719,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0FFG8YEO4/comment/content_media_external_images_media_1000045046_ss__1767426987530_12494017.jpg"
+      "image": "https://aos-comment.amap.com/B0FFG8YEO4/comment/content_media_external_images_media_1000045046_ss__1767426987530_12494017.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFG8YEO4/comment/content_media_external_images_media_1000045046_ss__1767426987530_12494017.jpg",
+        "https://store.is.autonavi.com/showpic/caa822fda64e12700000003781378186?type=pic",
+        "https://aos-comment.amap.com/B0FFG8YEO4/comment/35E61811_8DFC_44BA_84DD_83DC22DDA201_L0_001_2000_168_1749194089212_31959907.jpg"
+      ]
     },
     {
       "name": "上海海洋水族馆",
@@ -678,7 +1044,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.240777,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/ab677ee553ce7f280000003172952652?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/ab677ee553ce7f280000003172952652?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/ab677ee553ce7f280000003172952652?type=pic",
+        "https://store.is.autonavi.com/showpic/34ad0058a25c63c00000007248382031?type=pic",
+        "https://store.is.autonavi.com/showpic/5cc9f0ed45f149bb0000004766680120?type=pic"
+      ]
     },
     {
       "name": "日落长廊",
@@ -687,7 +1058,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.238035,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/b4b4af90474b7ed00000003297360018?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/b4b4af90474b7ed00000003297360018?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/b4b4af90474b7ed00000003297360018?type=pic",
+        "https://aos-comment.amap.com/B0KRJH4RZ7/comment/content_media_external_file_100003341_1769425212406_99865765.jpg",
+        "https://aos-comment.amap.com/B0KRJH4RZ7/comment/content_media_external_file_1000102916_ss__1765465790783_50220364.jpg"
+      ]
     },
     {
       "name": "北外滩滨江绿地小巨蛋",
@@ -696,7 +1072,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.246664,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/854b1ce3a36a10f60000003082548893"
+      "image": "https://store.is.autonavi.com/showpic/854b1ce3a36a10f60000003082548893",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/854b1ce3a36a10f60000003082548893",
+        "https://store.is.autonavi.com/showpic/cd677d8d6018a28c0000000755190874?type=pic",
+        "https://store.is.autonavi.com/showpic/8d8237558eed570f0000001068524222?type=pic"
+      ]
     },
     {
       "name": "陆家嘴中心绿地",
@@ -705,7 +1086,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.237985,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/42e1694d7bd801b10000001997088659?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/42e1694d7bd801b10000001997088659?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/42e1694d7bd801b10000001997088659?type=pic",
+        "https://aos-comment.amap.com/B00155L3X0/comment/EDF84E45_8923_44DF_B1E4_188685A57B95_L0_001_1500_200_1772013877854_86634136.jpg",
+        "https://aos-comment.amap.com/B00155L3X0/comment/5CB39F0F_D894_4A08_A144_B0ED47BB1873_L0_001_1500_200_1772013877906_82604486.jpg"
+      ]
     },
     {
       "name": "滨江大道",
@@ -714,7 +1100,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.2367,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/97b7e23d8e817b4b7bd2e4f886cf72f8"
+      "image": "http://store.is.autonavi.com/showpic/97b7e23d8e817b4b7bd2e4f886cf72f8",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/97b7e23d8e817b4b7bd2e4f886cf72f8",
+        "http://store.is.autonavi.com/showpic/fd5de1e0b6e2f487d5752c42d6e6013f",
+        "https://aos-comment.amap.com/B001533722/comment/20260321-d51600cd8fec72add2cf50c3-8FSletqhNDGAC4yNCoEwRD.jpg"
+      ]
     },
     {
       "name": "东方明珠旅游码头",
@@ -723,7 +1114,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.240659,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/d9e6d9f1fc9dbd842e776ae10a782c12"
+      "image": "http://store.is.autonavi.com/showpic/d9e6d9f1fc9dbd842e776ae10a782c12",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d9e6d9f1fc9dbd842e776ae10a782c12",
+        "https://aos-comment.amap.com/B00151E2D4/comment/A808F75E_3D01_4A42_A381_B1601F374E7F_L0_001_1080_144_1769254526467_82611947.jpg",
+        "https://aos-comment.amap.com/B00151E2D4/comment/57E59C49_AC4B_4CB2_8453_2398737F61A9_L0_001_1728_108_1770188853000_89061477.jpg"
+      ]
     },
     {
       "name": "上海M50创意园",
@@ -732,7 +1128,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.248101,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/d5629eec602d9a5e043a377d648fabe6"
+      "image": "http://store.is.autonavi.com/showpic/d5629eec602d9a5e043a377d648fabe6",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d5629eec602d9a5e043a377d648fabe6",
+        "http://store.is.autonavi.com/showpic/8ad1d73a96e84be262dedba40f5e0ffc",
+        "http://store.is.autonavi.com/showpic/19f6d07e8bcd96f1c4204c673acbcd4b"
+      ]
     },
     {
       "name": "1933老场坊",
@@ -741,7 +1142,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.254559,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/6a976ce1765588fe56d1bbc21c1fa0e2"
+      "image": "http://store.is.autonavi.com/showpic/6a976ce1765588fe56d1bbc21c1fa0e2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6a976ce1765588fe56d1bbc21c1fa0e2",
+        "http://store.is.autonavi.com/showpic/849bb4bd142050d0b2a15bda69e62795",
+        "http://store.is.autonavi.com/showpic/4ac59e5a2102860183e49c5759ac6f0e"
+      ]
     },
     {
       "name": "上海鲁迅公园",
@@ -750,7 +1156,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.271766,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/5fb18d502abdeace149c3ef9c0e9f38c"
+      "image": "http://store.is.autonavi.com/showpic/5fb18d502abdeace149c3ef9c0e9f38c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5fb18d502abdeace149c3ef9c0e9f38c",
+        "http://store.is.autonavi.com/showpic/552f6ab0bf4251b807c01e9a6d1aeb35",
+        "http://store.is.autonavi.com/showpic/310dcf94be7d0be501cad23865b0a13a"
+      ]
     },
     {
       "name": "上海市人民英雄纪念塔",
@@ -759,7 +1170,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.242287,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/a5c19e3471500b2f583b10352b0471ec"
+      "image": "https://store.is.autonavi.com/showpic/a5c19e3471500b2f583b10352b0471ec",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/a5c19e3471500b2f583b10352b0471ec",
+        "https://store.is.autonavi.com/showpic/1611b51f004e0079ef5caf1396f5de3f",
+        "https://store.is.autonavi.com/showpic/71d9c740b34ed9fa55443543bd4c55e8"
+      ]
     },
     {
       "name": "白云观",
@@ -768,7 +1184,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.224904,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/c99f80c723eabfe9c0fd0b4593ceee2c"
+      "image": "http://store.is.autonavi.com/showpic/c99f80c723eabfe9c0fd0b4593ceee2c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c99f80c723eabfe9c0fd0b4593ceee2c",
+        "https://store.is.autonavi.com/showpic/e1fd0d2703cb0fb42c27d415959235d6",
+        "https://aos-comment.amap.com/B0015179D2/comment/content_media_external_file_100001031_1766371457312_93101462.jpg"
+      ]
     },
     {
       "name": "徐家汇公园",
@@ -777,7 +1198,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.197401,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/9ed04432-0422-4617-b33a-ca5e72b19849.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/9ed04432-0422-4617-b33a-ca5e72b19849.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/9ed04432-0422-4617-b33a-ca5e72b19849.jpg",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/69eada58-8da2-43cc-b77b-b38caa185c97.jpg",
+        "http://store.is.autonavi.com/showpic/6842381643b284e0894e1f4416e44638"
+      ]
     },
     {
       "name": "上海徐家汇源",
@@ -786,7 +1212,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.195898,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/3dd3b0e2adf65bf7ae787e910eb9b569"
+      "image": "http://store.is.autonavi.com/showpic/3dd3b0e2adf65bf7ae787e910eb9b569",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/3dd3b0e2adf65bf7ae787e910eb9b569",
+        "http://store.is.autonavi.com/showpic/a986248c4250735f1ff9293ad2433555",
+        "https://store.is.autonavi.com/showpic/874bd09fc9e008d80000005431754954?type=pic"
+      ]
     },
     {
       "name": "中山公园",
@@ -795,7 +1226,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.221611,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/981392fa62b86fe2211b83338084bdd2"
+      "image": "http://store.is.autonavi.com/showpic/981392fa62b86fe2211b83338084bdd2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/981392fa62b86fe2211b83338084bdd2",
+        "http://store.is.autonavi.com/showpic/94a298d9f65a83dfbc92e57278075466",
+        "http://store.is.autonavi.com/showpic/88522bbc8cc0f50b3fe0cb2565cb10c7"
+      ]
     },
     {
       "name": "上海千古情景区",
@@ -804,7 +1240,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.186476,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/bae6c339b646147a31994bb11a42e551"
+      "image": "http://store.is.autonavi.com/showpic/bae6c339b646147a31994bb11a42e551",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/bae6c339b646147a31994bb11a42e551",
+        "http://store.is.autonavi.com/showpic/2b41b081403bf3f951225c8680176b91",
+        "http://store.is.autonavi.com/showpic/fb9b1d51a5a28bb59ba625cf4bc302c3"
+      ]
     },
     {
       "name": "上海世博园",
@@ -813,7 +1254,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.186881,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/3985bbdec46a1fa30000004917576285?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/3985bbdec46a1fa30000004917576285?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/3985bbdec46a1fa30000004917576285?type=pic",
+        "https://aos-comment.amap.com/B0FFJGWFDS/comment/20260315-a81346ecff76398f0486a4ea-5MDYwhnOsp39mdHDS62rmt.jpg",
+        "https://aos-comment.amap.com/B0FFHVUP1A/comment/F59C4507_F9E3_4AC0_9E96_373D3F0617CC_L0_001_2000_150_1762388129249_74204748.jpg"
+      ]
     },
     {
       "name": "北外滩航海公园",
@@ -822,7 +1268,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.247298,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0J2X7U8HX/comment/DD0C1C02_1A02_4827_B273_7D2D2CF43BF2_L0_001_2016_151_1766888296602_48293912.jpg"
+      "image": "https://aos-comment.amap.com/B0J2X7U8HX/comment/DD0C1C02_1A02_4827_B273_7D2D2CF43BF2_L0_001_2016_151_1766888296602_48293912.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0J2X7U8HX/comment/DD0C1C02_1A02_4827_B273_7D2D2CF43BF2_L0_001_2016_151_1766888296602_48293912.jpg",
+        "https://store.is.autonavi.com/showpic/5be0bb0ada272f650000002268984672?type=pic",
+        "https://aos-comment.amap.com/B0J2X7U8HX/comment/20260218-8ea63e91abba29c69149a8af-3Ok503uFp0I5yDYz2zRFzH.jpg"
+      ]
     },
     {
       "name": "上海和平公园",
@@ -831,7 +1282,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.270697,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/8a3cc2bcdfa5a8830000003091100345?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/8a3cc2bcdfa5a8830000003091100345?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/8a3cc2bcdfa5a8830000003091100345?type=pic",
+        "https://aos-comment.amap.com/B001510563/comment/20260311-1d20fd880c6ce71f9242b80f-3TDOBDMGc1k5unofn1wIb4.jpg",
+        "https://store.is.autonavi.com/showpic/84f57b0ab300bcda0000000715238829?type=pic"
+      ]
     },
     {
       "name": "上海之巅观光厅",
@@ -840,7 +1296,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.233487,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/ed34eefd59d0b88c7a3218270299d83d"
+      "image": "http://store.is.autonavi.com/showpic/ed34eefd59d0b88c7a3218270299d83d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ed34eefd59d0b88c7a3218270299d83d",
+        "http://store.is.autonavi.com/showpic/c3f105818d926abc8bb903d4024cd31d",
+        "http://store.is.autonavi.com/showpic/59b42bc0845572268b9545c2fdab50a1"
+      ]
     },
     {
       "name": "上海大宁公园",
@@ -849,7 +1310,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.275776,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/6fc154d0b07f5b587a7ca7d5ee0b03f2"
+      "image": "http://store.is.autonavi.com/showpic/6fc154d0b07f5b587a7ca7d5ee0b03f2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6fc154d0b07f5b587a7ca7d5ee0b03f2",
+        "http://store.is.autonavi.com/showpic/619bf8a927a1155c78e59d182f10bd8e",
+        "https://store.is.autonavi.com/showpic/9799fd5ef22d2c0b0000002232542876?type=pic"
+      ]
     },
     {
       "name": "天主教上海教区徐家汇圣依纳爵主教座堂(不对外开放)",
@@ -858,7 +1324,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.191164,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/a355bd790ec26a04030443d0fea1ed7d"
+      "image": "http://store.is.autonavi.com/showpic/a355bd790ec26a04030443d0fea1ed7d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a355bd790ec26a04030443d0fea1ed7d",
+        "https://store.is.autonavi.com/showpic/6c1f573d995c00220000005120104516?type=pic",
+        "https://store.is.autonavi.com/showpic/3ee9023624c25b710000003598848414?type=pic"
+      ]
     },
     {
       "name": "延中广场公园",
@@ -867,7 +1338,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.225564,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0FFG188OL/comment/content_media_external_images_media_1000034090_ss__1734181001977_90946062.jpg"
+      "image": "https://aos-comment.amap.com/B0FFG188OL/comment/content_media_external_images_media_1000034090_ss__1734181001977_90946062.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFG188OL/comment/content_media_external_images_media_1000034090_ss__1734181001977_90946062.jpg",
+        "https://aos-comment.amap.com/B0FFG188OL/comment/content_media_external_file_1000066934_ss__1760774280666_26442094.jpg",
+        "https://store.is.autonavi.com/showpic/7da623e2039443b3ea93bade30e7ea98"
+      ]
     },
     {
       "name": "辅德里公园",
@@ -876,7 +1352,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.224808,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B00155HNA3/comment/content_media_external_file_16922_ss__1765857440685_37762411.jpg"
+      "image": "https://aos-comment.amap.com/B00155HNA3/comment/content_media_external_file_16922_ss__1765857440685_37762411.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B00155HNA3/comment/content_media_external_file_16922_ss__1765857440685_37762411.jpg",
+        "https://aos-comment.amap.com/B00155HNA3/comment/96B4D765_27D9_46C2_9B98_75357C2CB8ED_L0_001_1080_144_1773045160445_20933084.jpg",
+        "https://aos-comment.amap.com/B00155HNA3/comment/content_media_external_images_media_1000018297_ss__1764931382005_38953536.jpg"
+      ]
     },
     {
       "name": "静安公园",
@@ -885,7 +1366,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.222035,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/9f163cbdcc18dd2073898147862023ad"
+      "image": "http://store.is.autonavi.com/showpic/9f163cbdcc18dd2073898147862023ad",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9f163cbdcc18dd2073898147862023ad",
+        "http://store.is.autonavi.com/showpic/e816679d27683fb0d10f7449b45f5105",
+        "http://store.is.autonavi.com/showpic/2a84ae624033d669e212c5a53b1c5d00"
+      ]
     },
     {
       "name": "南京路世纪广场",
@@ -894,7 +1380,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.235308,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/b676a7466c8b45b12fce05277054a2eb"
+      "image": "http://store.is.autonavi.com/showpic/b676a7466c8b45b12fce05277054a2eb",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b676a7466c8b45b12fce05277054a2eb",
+        "https://aos-comment.amap.com/B0FFF6XTM4/comment/20260303-50af1cb28ca08c2b2d10f13d-AcjzPjRVXK76cN5yNlYygK.jpg",
+        "https://aos-comment.amap.com/B0FFF6XTM4/comment/file_media_Photo_8588_IMG_1756284195_8348_IMG_20250827_164135_jpg_ss_2.jpg"
+      ]
     },
     {
       "name": "外滩金牛广场",
@@ -903,7 +1394,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.235581,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0FFGBDZTS/comment/028e0697d41f36e1d2ac983164e3caf9_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0FFGBDZTS/comment/028e0697d41f36e1d2ac983164e3caf9_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFGBDZTS/comment/028e0697d41f36e1d2ac983164e3caf9_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/40173fda6ad2c3470000002938192166?type=pic",
+        "https://aos-comment.amap.com/B0FFGBDZTS/comment/content_media_external_file_100000525_1763350025805_71672996.jpg"
+      ]
     },
     {
       "name": "滨江公园",
@@ -912,7 +1408,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.236204,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/c965910812fdf9f1502052f4fc1ce24a"
+      "image": "http://store.is.autonavi.com/showpic/c965910812fdf9f1502052f4fc1ce24a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c965910812fdf9f1502052f4fc1ce24a",
+        "https://aos-comment.amap.com/B00155KUMJ/comment/dc5f991aa53850b515a5f2dd29e38e45_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/ac4cee47f4d5b2040000002378434776?type=pic"
+      ]
     },
     {
       "name": "金茂大厦88层观光厅",
@@ -921,7 +1422,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.235315,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/86b8548a658590a3a4da36fdd552c2a9"
+      "image": "http://store.is.autonavi.com/showpic/86b8548a658590a3a4da36fdd552c2a9",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/86b8548a658590a3a4da36fdd552c2a9",
+        "http://store.is.autonavi.com/showpic/4db9abbb7d29932bed843678402172c0",
+        "http://store.is.autonavi.com/showpic/e6e9e49fe821aefdddcfae628fbdee8e"
+      ]
     },
     {
       "name": "上海环球金融中心观光厅",
@@ -930,7 +1436,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.234415,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/c0e85574dbb16ed30000002431546095?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/c0e85574dbb16ed30000002431546095?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/c0e85574dbb16ed30000002431546095?type=pic",
+        "https://aos-comment.amap.com/B00155IR0X/comment/content_media_external_file_4681_1765927421689_06321412.jpg",
+        "https://aos-comment.amap.com/B00155IR0X/comment/content_media_external_file_7998_1745730370023_21942091.jpg"
+      ]
     },
     {
       "name": "太平桥公园",
@@ -939,7 +1450,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.219676,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/dddd31f1ef34cd1b0000006634628581?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/dddd31f1ef34cd1b0000006634628581?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/dddd31f1ef34cd1b0000006634628581?type=pic",
+        "https://aos-comment.amap.com/B00150C70A/comment/D56D71C7_11CC_45B8_BE42_7580362AFD32_L0_001_2000_1500_1747242213867_51103242.jpg",
+        "https://aos-comment.amap.com/B00150C70A/comment/content_media_external_file_1000018723_ss__1746440805615_30858719.jpg"
+      ]
     },
     {
       "name": "中国共产党代表团驻沪办事处纪念馆(周公馆)",
@@ -948,7 +1464,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.214194,
       "category": "历史人文",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/37def811075fc10dab4a07e5b2852e1d"
+      "image": "http://store.is.autonavi.com/showpic/37def811075fc10dab4a07e5b2852e1d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/37def811075fc10dab4a07e5b2852e1d",
+        "http://store.is.autonavi.com/showpic/a197070a186768a5f2437517e6b5073a",
+        "https://store.is.autonavi.com/showpic/2c445eade8c4d3905f483489bd2ada43"
+      ]
     },
     {
       "name": "上海宋庆龄故居纪念馆",
@@ -957,7 +1478,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.204017,
       "category": "历史人文",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/6346c6a78ef8412f7b117dd997f8d160"
+      "image": "http://store.is.autonavi.com/showpic/6346c6a78ef8412f7b117dd997f8d160",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6346c6a78ef8412f7b117dd997f8d160",
+        "http://store.is.autonavi.com/showpic/6af41340c04b69dba781bd499c49122d",
+        "http://store.is.autonavi.com/showpic/d97fca89333a2f5e979ac466e9cfaf16"
+      ]
     },
     {
       "name": "上海毛泽东旧居陈列馆",
@@ -966,7 +1492,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.226303,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/d0c3ff9047c654b39c523616d7062371"
+      "image": "http://store.is.autonavi.com/showpic/d0c3ff9047c654b39c523616d7062371",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d0c3ff9047c654b39c523616d7062371",
+        "http://store.is.autonavi.com/showpic/3774e5a9f6471f66c9c723c62e324ed5",
+        "http://store.is.autonavi.com/showpic/c8be4c291fa1520b51548cd53c5c9b4b"
+      ]
     },
     {
       "name": "福州路文化街",
@@ -975,7 +1506,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.233826,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B00155M168/comment/content_media_external_file_58254_ss__1759120262767_10474554.jpg"
+      "image": "https://aos-comment.amap.com/B00155M168/comment/content_media_external_file_58254_ss__1759120262767_10474554.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B00155M168/comment/content_media_external_file_58254_ss__1759120262767_10474554.jpg",
+        "https://store.is.autonavi.com/showpic/b731b2885e089cc9f71118e57d4834da",
+        "https://aos-comment.amap.com/B00155M168/comment/B771A6EC_D19B_47FC_892A_98C5D956CC9D_L0_001_1500_200_1764117431368_14177634.jpg"
+      ]
     },
     {
       "name": "中共四大纪念馆",
@@ -984,7 +1520,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.254995,
       "category": "历史人文",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/2efc2acf9b868aa4a2611eef44ec0010"
+      "image": "http://store.is.autonavi.com/showpic/2efc2acf9b868aa4a2611eef44ec0010",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/2efc2acf9b868aa4a2611eef44ec0010",
+        "http://store.is.autonavi.com/showpic/1c151e9d18ee0668dd05ebe51db4e1a7",
+        "https://store.is.autonavi.com/showpic/c2394a30b3323b1e8cbd607b8063f752"
+      ]
     },
     {
       "name": "大韩民国临时政府旧址",
@@ -993,7 +1534,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.217351,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/722fcc0c87e134266df465c1448fb20d"
+      "image": "http://store.is.autonavi.com/showpic/722fcc0c87e134266df465c1448fb20d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/722fcc0c87e134266df465c1448fb20d",
+        "http://store.is.autonavi.com/showpic/aae616eebf70a98f5cdd80cc2cad72d2",
+        "https://store.is.autonavi.com/showpic/8b19412df362cf643c098efbe3583ba5"
+      ]
     },
     {
       "name": "苏河湾亲水平台",
@@ -1002,7 +1548,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.241588,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/comment/content_service__1772282685736_44479557_1772282705045_12125323.jpg"
+      "image": "https://aos-comment.amap.com/comment/content_service__1772282685736_44479557_1772282705045_12125323.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/comment/content_service__1772282685736_44479557_1772282705045_12125323.jpg",
+        "https://store.is.autonavi.com/showpic/0e4e6b1ac87ef52e0000003072108380?type=pic",
+        "https://aos-comment.amap.com/comment/content_service__1772282685741_96512202_1772282705045_30644438.jpg"
+      ]
     },
     {
       "name": "黄浦公园",
@@ -1011,7 +1562,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.24176,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0JBFLZSCS/comment/177038065128_1770380658591_98809415.jpg"
+      "image": "https://aos-comment.amap.com/B0JBFLZSCS/comment/177038065128_1770380658591_98809415.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0JBFLZSCS/comment/177038065128_1770380658591_98809415.jpg",
+        "https://aos-comment.amap.com/B0JBFLZSCS/comment/ED49A081_C02F_4C99_BC80_DD05F466C77B_L0_001_828_1097_1766305304808_15728659.jpg",
+        "https://aos-comment.amap.com/B0JBFLZSCS/comment/f87104f0a1558698e55c416a253d264b_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "黄浦江游览",
@@ -1020,7 +1576,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.227636,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/7e7b76c7083493fcc41009dc641caf53"
+      "image": "http://store.is.autonavi.com/showpic/7e7b76c7083493fcc41009dc641caf53",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/7e7b76c7083493fcc41009dc641caf53",
+        "https://store.is.autonavi.com/showpic/d14ce02c0f2633020000002701892749?type=pic",
+        "https://store.is.autonavi.com/showpic/c343914a851bc6f40651ca7d1464b8ff"
+      ]
     },
     {
       "name": "四川北路公园",
@@ -1029,7 +1590,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.254871,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/8476ce2fa2df42e379d4fd1afd37055f"
+      "image": "http://store.is.autonavi.com/showpic/8476ce2fa2df42e379d4fd1afd37055f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8476ce2fa2df42e379d4fd1afd37055f",
+        "http://store.is.autonavi.com/showpic/e6603322f2e5927987698baa4b974706",
+        "https://store.is.autonavi.com/showpic/74847a3947afefac0000000723224195?type=pic"
+      ]
     },
     {
       "name": "中国共产党第一次全国代表大会纪念馆",
@@ -1038,7 +1604,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.219809,
       "category": "历史人文",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/f6ad4a2e6873635a0000003100550226"
+      "image": "https://store.is.autonavi.com/showpic/f6ad4a2e6873635a0000003100550226",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/f6ad4a2e6873635a0000003100550226",
+        "https://store.is.autonavi.com/showpic/2adbf1cbca4512940000003119188657",
+        "https://store.is.autonavi.com/showpic/aca0502eb0fc1cc50000003119190493"
+      ]
     },
     {
       "name": "上海孙中山故居纪念馆",
@@ -1047,7 +1618,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.216109,
       "category": "历史人文",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/7e2934dc390a85d90000007552284817"
+      "image": "https://store.is.autonavi.com/showpic/7e2934dc390a85d90000007552284817",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/7e2934dc390a85d90000007552284817",
+        "https://store.is.autonavi.com/showpic/6e9c4681ee1bb33410838084cdf454dd",
+        "https://store.is.autonavi.com/showpic/11c552337aa60a19aaeb91efc98cece3"
+      ]
     },
     {
       "name": "法租界会审公廨旧址(不对外开放)",
@@ -1056,7 +1632,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.209888,
       "category": "历史人文",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/072f97cadbac208bf33f30579db2e7cc"
+      "image": "https://store.is.autonavi.com/showpic/072f97cadbac208bf33f30579db2e7cc",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/072f97cadbac208bf33f30579db2e7cc",
+        "https://store.is.autonavi.com/showpic/dd2806674443b4ed4123d2cb3d70086a",
+        "https://store.is.autonavi.com/showpic/d935c2838f0a2ab7f6314cf2bbc91558"
+      ]
     },
     {
       "name": "蝴蝶湾花园",
@@ -1065,7 +1646,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.237714,
       "category": "自然风光",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/a97b4abc57a3da540000009101918915?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/a97b4abc57a3da540000009101918915?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/a97b4abc57a3da540000009101918915?type=pic",
+        "https://aos-comment.amap.com/B00155KJKK/comment/290AF112_5680_41F8_9DA4_F77CA5D045E2_L0_001_960_64_1763118925512_42628867.jpg",
+        "https://store.is.autonavi.com/showpic/e73e5e710accd4640000009101922867?type=pic"
+      ]
     }
   ],
   "广州": [
@@ -1076,7 +1662,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.128824,
       "category": "历史人文",
       "rating": 5,
-      "image": "http://store.is.autonavi.com/showpic/8364dc2f5310e32090a01257b0b15594"
+      "image": "http://store.is.autonavi.com/showpic/8364dc2f5310e32090a01257b0b15594",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8364dc2f5310e32090a01257b0b15594",
+        "http://store.is.autonavi.com/showpic/ad24a11cb9843952bb76cc894fc9c7e9",
+        "http://store.is.autonavi.com/showpic/4e2bbf7acefcbf131deb53877fc063f5"
+      ]
     },
     {
       "name": "陈家祠堂",
@@ -1085,7 +1676,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.126692,
       "category": "城市地标",
       "rating": 4.9,
-      "image": "http://store.is.autonavi.com/showpic/c7d75e7e2eddcfff75643f40e6aa8572"
+      "image": "http://store.is.autonavi.com/showpic/c7d75e7e2eddcfff75643f40e6aa8572",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c7d75e7e2eddcfff75643f40e6aa8572",
+        "http://store.is.autonavi.com/showpic/da9a8666c1ed5a5c9ca4abf44a7c7f1b",
+        "http://store.is.autonavi.com/showpic/e0b4f1ceb6e597539a740e10ee68b796"
+      ]
     },
     {
       "name": "越秀公园",
@@ -1094,7 +1690,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.140096,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/eab86347c2bec4ec7bfbc0a018153f3e"
+      "image": "http://store.is.autonavi.com/showpic/eab86347c2bec4ec7bfbc0a018153f3e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/eab86347c2bec4ec7bfbc0a018153f3e",
+        "http://store.is.autonavi.com/showpic/69714ab65134025e3a74f26263e3bdfc",
+        "http://store.is.autonavi.com/showpic/e0557710b4c445efed236cb0adf1f3d8"
+      ]
     },
     {
       "name": "大佛寺",
@@ -1103,7 +1704,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.122373,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/ad177c465494176bdc95bfe918f21bf6"
+      "image": "http://store.is.autonavi.com/showpic/ad177c465494176bdc95bfe918f21bf6",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ad177c465494176bdc95bfe918f21bf6",
+        "https://store.is.autonavi.com/showpic/3f1e47401c3be0170000007736398773?type=pic",
+        "https://store.is.autonavi.com/showpic/3720189b75a1e1a10000003189664537?type=pic"
+      ]
     },
     {
       "name": "三元宫",
@@ -1112,7 +1718,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.134993,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/23f13d68113eec5e1b56e50ff821ae6d"
+      "image": "https://store.is.autonavi.com/showpic/23f13d68113eec5e1b56e50ff821ae6d",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/23f13d68113eec5e1b56e50ff821ae6d",
+        "https://store.is.autonavi.com/showpic/d4a57e5c356b47bb0000002980722865?type=pic",
+        "https://store.is.autonavi.com/showpic/2fb2f0897a03785a4aa4f04281b9a296"
+      ]
     },
     {
       "name": "中山纪念堂",
@@ -1121,7 +1732,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.13286,
       "category": "历史人文",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/efed73451c8d51ac68de1dd1b1719381"
+      "image": "https://store.is.autonavi.com/showpic/efed73451c8d51ac68de1dd1b1719381",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/efed73451c8d51ac68de1dd1b1719381",
+        "https://store.is.autonavi.com/showpic/c2a98f5140c4ada80cd09ca53d035ddd",
+        "https://store.is.autonavi.com/showpic/68ecc193916cc071b26e8298f69db274"
+      ]
     },
     {
       "name": "沙面岛",
@@ -1130,7 +1746,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.106802,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/91dcee6b7c96761aab55616e493b7013"
+      "image": "http://store.is.autonavi.com/showpic/91dcee6b7c96761aab55616e493b7013",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/91dcee6b7c96761aab55616e493b7013",
+        "https://aos-comment.amap.com/B0FFFAJYVI/comment/content_media_external_file_196256_1767444427544_78275475.jpg",
+        "http://store.is.autonavi.com/showpic/0cb21e46a456d38dabb614ed05a3e0fa"
+      ]
     },
     {
       "name": "永庆坊",
@@ -1139,7 +1760,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.114821,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/c35f6718-0f3b-4469-a7a0-830bee44d9c9.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/c35f6718-0f3b-4469-a7a0-830bee44d9c9.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/c35f6718-0f3b-4469-a7a0-830bee44d9c9.jpg",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/cb082144-68c6-40f1-bbc1-64d082c6b868.jpg",
+        "https://aos-comment.amap.com/B0FFHK3TWH/headerImg/37bfcf875a83a69d53ea90b2c9387eab_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "广州塔",
@@ -1148,7 +1774,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.106428,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/d5b56df50d024cbd33e4e1a16f77d419"
+      "image": "http://store.is.autonavi.com/showpic/d5b56df50d024cbd33e4e1a16f77d419",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d5b56df50d024cbd33e4e1a16f77d419",
+        "http://store.is.autonavi.com/showpic/548caf7e81c63a843faae5d1a9be968c",
+        "http://store.is.autonavi.com/showpic/d4bb7a5b77ff1de082bb50452c61657c"
+      ]
     },
     {
       "name": "广州市白云山风景名胜区",
@@ -1157,7 +1788,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.180245,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/18806769bd40794b77f7fb90252373b1"
+      "image": "http://store.is.autonavi.com/showpic/18806769bd40794b77f7fb90252373b1",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/18806769bd40794b77f7fb90252373b1",
+        "http://store.is.autonavi.com/showpic/4aad6963a2e51a189760f8650c6fb7a7",
+        "http://store.is.autonavi.com/showpic/855e28d2d318eef81b475c3ff599953b"
+      ]
     },
     {
       "name": "花城广场",
@@ -1166,7 +1802,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.120498,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/0176207431517bc8db31402bc63cadff"
+      "image": "http://store.is.autonavi.com/showpic/0176207431517bc8db31402bc63cadff",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0176207431517bc8db31402bc63cadff",
+        "http://store.is.autonavi.com/showpic/a9b236425328482c07bb5d57d3339fcc",
+        "http://store.is.autonavi.com/showpic/7790473e617544fec77945f2cda8fec3"
+      ]
     },
     {
       "name": "光孝寺",
@@ -1175,7 +1816,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.129347,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/b4f16c0904bd126141868b995da4183a"
+      "image": "http://store.is.autonavi.com/showpic/b4f16c0904bd126141868b995da4183a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b4f16c0904bd126141868b995da4183a",
+        "http://store.is.autonavi.com/showpic/36402d9c369d786bae03b31d531d400c",
+        "http://store.is.autonavi.com/showpic/50643d13c0075b76e1091fe55b7b9013"
+      ]
     },
     {
       "name": "流花湖公园",
@@ -1184,7 +1830,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.137289,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/60105afc745e8f81369909b72c506dd4"
+      "image": "http://store.is.autonavi.com/showpic/60105afc745e8f81369909b72c506dd4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/60105afc745e8f81369909b72c506dd4",
+        "http://store.is.autonavi.com/showpic/da048bd3189c8412df108c963a8d5fdc",
+        "http://store.is.autonavi.com/showpic/d83490e2833a8b768784c3a77f5a2691"
+      ]
     },
     {
       "name": "广州兰圃",
@@ -1193,7 +1844,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.143731,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/08675d1e3b4b9f38af9fbf3f581f84a8"
+      "image": "http://store.is.autonavi.com/showpic/08675d1e3b4b9f38af9fbf3f581f84a8",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/08675d1e3b4b9f38af9fbf3f581f84a8",
+        "https://store.is.autonavi.com/showpic/ae9003d2210cd1d20000002770648704?type=pic",
+        "https://store.is.autonavi.com/showpic/b2e011bf0ce760b00000002995316474?type=pic"
+      ]
     },
     {
       "name": "珠江夜游(天字码头)",
@@ -1202,7 +1858,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.114704,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/e5347614796b3d425d60a8528db6ea5d"
+      "image": "http://store.is.autonavi.com/showpic/e5347614796b3d425d60a8528db6ea5d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e5347614796b3d425d60a8528db6ea5d",
+        "http://store.is.autonavi.com/showpic/f572bd239037ea9c2c77e37170db3f2f",
+        "http://store.is.autonavi.com/showpic/7ead4c96460660511ac1d3d8432db353"
+      ]
     },
     {
       "name": "六榕寺",
@@ -1211,7 +1872,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.127887,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/a5af71c60b302a5d99248f74cf27af78"
+      "image": "http://store.is.autonavi.com/showpic/a5af71c60b302a5d99248f74cf27af78",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a5af71c60b302a5d99248f74cf27af78",
+        "http://store.is.autonavi.com/showpic/1a42be93d2a057088da4d00dae300561",
+        "http://store.is.autonavi.com/showpic/c954ad32fb5a1be755ef12c263b2eb58"
+      ]
     },
     {
       "name": "五羊雕像",
@@ -1220,7 +1886,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.138021,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/72ca990c37c72a6e1bab954f06e32791"
+      "image": "http://store.is.autonavi.com/showpic/72ca990c37c72a6e1bab954f06e32791",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/72ca990c37c72a6e1bab954f06e32791",
+        "https://store.is.autonavi.com/showpic/0510a6ccf223b4920000000756756966?type=pic",
+        "https://store.is.autonavi.com/showpic/3006a60d2ce00d940000003135378067?type=pic"
+      ]
     },
     {
       "name": "麓湖公园",
@@ -1229,7 +1900,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.151091,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/f26a735edd19d06b27a5c790f30df01d"
+      "image": "http://store.is.autonavi.com/showpic/f26a735edd19d06b27a5c790f30df01d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/f26a735edd19d06b27a5c790f30df01d",
+        "http://store.is.autonavi.com/showpic/d051a41e2b6d8e683ded4e16fdab5566",
+        "https://store.is.autonavi.com/showpic/27ca9685bd7f620e0000002615330131?type=pic"
+      ]
     },
     {
       "name": "广州动物园",
@@ -1238,7 +1914,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.140884,
       "category": "主题乐园",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/9fd2e592e0dec3bffe2a043f004764c0"
+      "image": "http://store.is.autonavi.com/showpic/9fd2e592e0dec3bffe2a043f004764c0",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9fd2e592e0dec3bffe2a043f004764c0",
+        "https://aos-comment.amap.com/B00140UEO1/comment/A983FFF0_7646_45EA_B20A_04BDEBCFD285_L0_001_1512_201_1767143999761_66977664.jpg",
+        "http://store.is.autonavi.com/showpic/434b282dfe2068bde70198b6c0c77147"
+      ]
     },
     {
       "name": "东山湖公园",
@@ -1247,7 +1928,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.115193,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/5aa0d552b30e7b2f91200c6c912b78a7"
+      "image": "http://store.is.autonavi.com/showpic/5aa0d552b30e7b2f91200c6c912b78a7",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5aa0d552b30e7b2f91200c6c912b78a7",
+        "http://store.is.autonavi.com/showpic/478e94923b8209d9784db666e6be8328",
+        "https://store.is.autonavi.com/showpic/4ee468b9afb1c13d0000003009074976?type=pic"
+      ]
     },
     {
       "name": "珠江夜游(大沙头码头)",
@@ -1256,7 +1942,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.112517,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/56bf4658fbacbfee93df33d0e86333ac"
+      "image": "http://store.is.autonavi.com/showpic/56bf4658fbacbfee93df33d0e86333ac",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/56bf4658fbacbfee93df33d0e86333ac",
+        "http://store.is.autonavi.com/showpic/479ffd27dbf9f78a61a1f872106b2934",
+        "http://store.is.autonavi.com/showpic/9002100334bbfa853178c5eeb05a9e93"
+      ]
     },
     {
       "name": "荔湾湖公园",
@@ -1265,7 +1956,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.121297,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/6eb459b3048578a0da767432f1e8f93e"
+      "image": "http://store.is.autonavi.com/showpic/6eb459b3048578a0da767432f1e8f93e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6eb459b3048578a0da767432f1e8f93e",
+        "http://store.is.autonavi.com/showpic/b53ee101633100c679c81eda6d32a03a",
+        "http://store.is.autonavi.com/showpic/c380969323432bdbc1db3cf052d81715"
+      ]
     },
     {
       "name": "云台花园",
@@ -1274,7 +1970,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.158093,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/1ce6c3cdc5aa3b7c9c88386a31456fa7"
+      "image": "http://store.is.autonavi.com/showpic/1ce6c3cdc5aa3b7c9c88386a31456fa7",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/1ce6c3cdc5aa3b7c9c88386a31456fa7",
+        "http://store.is.autonavi.com/showpic/ce38d54a2df770212a562c67da365e22",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/0c2dd224-0f5a-4ea2-9749-34dbd650464c.jpg"
+      ]
     },
     {
       "name": "爱心树",
@@ -1283,7 +1984,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.118246,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/f38ee145ec02efaf0000003128834163?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/f38ee145ec02efaf0000003128834163?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/f38ee145ec02efaf0000003128834163?type=pic",
+        "https://aos-comment.amap.com/B0L6HHFGEW/comment/17A853DC_2DCB_439F_8F03_735F28A9D631_L0_001_1500_200_1768520971234_22354575.jpg",
+        "https://store.is.autonavi.com/showpic/d0d80ae66c018530d187e4237927fc04"
+      ]
     },
     {
       "name": "二沙岛",
@@ -1292,7 +1998,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.10998,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/9a5caaa20c00eda85572b15999af6af3"
+      "image": "http://store.is.autonavi.com/showpic/9a5caaa20c00eda85572b15999af6af3",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9a5caaa20c00eda85572b15999af6af3",
+        "http://store.is.autonavi.com/showpic/8dfac40e7eebaa32a0dff684a8555eb7",
+        "http://store.is.autonavi.com/showpic/a94dc4d390d47a54ebb9700af8f7874d"
+      ]
     },
     {
       "name": "仁威祖庙",
@@ -1301,7 +2012,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.123294,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/4f363a356bff51580613ae0095dd5bf9"
+      "image": "http://store.is.autonavi.com/showpic/4f363a356bff51580613ae0095dd5bf9",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/4f363a356bff51580613ae0095dd5bf9",
+        "https://store.is.autonavi.com/showpic/db8134370dbe2413fcbf7ecf3c0e71f5",
+        "https://aos-comment.amap.com/B00140UFCU/comment/20260228-a76ac252dcd864c3bf7a25ea-6vRohtlqyFIAL5WrWBR0rl.jpg"
+      ]
     },
     {
       "name": "广州市儿童公园",
@@ -1310,7 +2026,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.184345,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/8e890520f300ae1ec334a8a9436a33cc"
+      "image": "http://store.is.autonavi.com/showpic/8e890520f300ae1ec334a8a9436a33cc",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8e890520f300ae1ec334a8a9436a33cc",
+        "https://aos-comment.amap.com/B0FFF54QS9/comment/331D1E68_9116_46F2_A9EC_243506324D88_L0_001_1440_110_1766072484368_13887476.jpg",
+        "https://aos-comment.amap.com/B0FFF54QS9/comment/9114E2CF_309B_4853_AAD5_7D1A4C474088_L0_001_1280_83_1765465793239_96284256.jpg"
+      ]
     },
     {
       "name": "海心桥",
@@ -1319,7 +2040,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.107118,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/a77e2ac53b3bb95e5bba84e89c7a31ec"
+      "image": "http://store.is.autonavi.com/showpic/a77e2ac53b3bb95e5bba84e89c7a31ec",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a77e2ac53b3bb95e5bba84e89c7a31ec",
+        "https://store.is.autonavi.com/showpic/66f719340bfd385e0000002925068487?type=pic",
+        "https://store.is.autonavi.com/showpic/dc4d1338aa5878bc028597536cae6651"
+      ]
     },
     {
       "name": "沙面公园",
@@ -1328,7 +2054,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.105666,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/3438767c5ef9ee75897653951fdd1a39"
+      "image": "http://store.is.autonavi.com/showpic/3438767c5ef9ee75897653951fdd1a39",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/3438767c5ef9ee75897653951fdd1a39",
+        "http://store.is.autonavi.com/showpic/559a3b53a310b38d66d33fd4",
+        "http://store.is.autonavi.com/showpic/8c739ce43cf02dd4b4169c111e1ee8f6"
+      ]
     },
     {
       "name": "上步牌坊",
@@ -1337,7 +2068,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.169581,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/b3243af91d747b930000005368184184?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/b3243af91d747b930000005368184184?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/b3243af91d747b930000005368184184?type=pic",
+        "https://aos-comment.amap.com/B0FFFDPL25/comment/20260311-0493e064066f40b0bb6de4b9-AVwcMC1Azc98Tf8qFMDarE.jpg",
+        "https://store.is.autonavi.com/showpic/06ed0cd5d183498c0000002861330661?type=pic"
+      ]
     },
     {
       "name": "黄大仙祠",
@@ -1346,7 +2082,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.095568,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/ce7edc67f4835df554043226af3d76cc"
+      "image": "http://store.is.autonavi.com/showpic/ce7edc67f4835df554043226af3d76cc",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ce7edc67f4835df554043226af3d76cc",
+        "http://store.is.autonavi.com/showpic/135299ea73eb204665372000336706d2",
+        "https://store.is.autonavi.com/showpic/2a021012838c4ce50000001277506362?type=pic"
+      ]
     },
     {
       "name": "广州文化公园",
@@ -1355,7 +2096,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.109669,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/ca7b3b7de8991bc00000008204928126?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/ca7b3b7de8991bc00000008204928126?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/ca7b3b7de8991bc00000008204928126?type=pic",
+        "https://store.is.autonavi.com/showpic/72a459d86fc5a70efcbdc7fb0e167dc5",
+        "https://store.is.autonavi.com/showpic/1dd81b9081928d86c01eca141fa42ae0"
+      ]
     },
     {
       "name": "人民公园",
@@ -1364,7 +2110,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.127159,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B00140UFEV/comment/9E3FE384_726E_4920_BEF4_853DE47086C2_L0_001_1125_150_1767361418762_54292952.jpg"
+      "image": "https://aos-comment.amap.com/B00140UFEV/comment/9E3FE384_726E_4920_BEF4_853DE47086C2_L0_001_1125_150_1767361418762_54292952.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B00140UFEV/comment/9E3FE384_726E_4920_BEF4_853DE47086C2_L0_001_1125_150_1767361418762_54292952.jpg",
+        "https://aos-comment.amap.com/B00140UFEV/comment/content_media_external_file_528_ss__1769571166317_38981466.jpg",
+        "https://store.is.autonavi.com/showpic/9960aecd38639fcc0000004032912829?type=pic"
+      ]
     },
     {
       "name": "黄花岗公园",
@@ -1373,7 +2124,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.139692,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/54b83afdef45a9c9c8837d9d7ce6a4ac"
+      "image": "http://store.is.autonavi.com/showpic/54b83afdef45a9c9c8837d9d7ce6a4ac",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/54b83afdef45a9c9c8837d9d7ce6a4ac",
+        "https://aos-comment.amap.com/B00140UETI/comment/20260309-fb5a52a40cae41786b667a55-1Ov29J6oegn9SxuDu3RNPy.jpg",
+        "https://aos-comment.amap.com/B00140UETI/comment/content_media_external_file_147_1766145897283_56018047.jpg"
+      ]
     },
     {
       "name": "城隍庙",
@@ -1382,7 +2138,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.126213,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/c2f9fdb66816f099924b1a0784494bbc"
+      "image": "http://store.is.autonavi.com/showpic/c2f9fdb66816f099924b1a0784494bbc",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c2f9fdb66816f099924b1a0784494bbc",
+        "https://aos-comment.amap.com/B00140WBEX/comment/content_media_external_file_100000183_1767171189634_46714043.jpg",
+        "https://store.is.autonavi.com/showpic/5076c17496365dcb655635d9198f85c8"
+      ]
     },
     {
       "name": "五仙古观",
@@ -1391,7 +2152,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.120649,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/55accd51a310a084c90fe6e4"
+      "image": "http://store.is.autonavi.com/showpic/55accd51a310a084c90fe6e4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/55accd51a310a084c90fe6e4",
+        "https://aos-comment.amap.com/B00140UG8Y/comment/content_media_external_file_233175_ss__1767111656430_91312563.jpg",
+        "https://aos-comment.amap.com/B00140UG8Y/comment/content_media_external_file_1000286747_ss__1769519379137_27914595.jpg"
+      ]
     },
     {
       "name": "荔枝湾",
@@ -1400,7 +2166,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.116029,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/200a6cece287d41dc5281ae299e0aa11"
+      "image": "http://store.is.autonavi.com/showpic/200a6cece287d41dc5281ae299e0aa11",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/200a6cece287d41dc5281ae299e0aa11",
+        "http://store.is.autonavi.com/showpic/cb01d48e107818360afa94e5a0771599",
+        "http://store.is.autonavi.com/showpic/1270f3a89bd143b7d18cc7756c4d7a5b"
+      ]
     },
     {
       "name": "新河浦历史文化街区",
@@ -1409,7 +2180,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.120275,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/comment/content_service__1771689100695_40702933_1771689120847_68448207.jpg"
+      "image": "https://aos-comment.amap.com/comment/content_service__1771689100695_40702933_1771689120847_68448207.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/comment/content_service__1771689100695_40702933_1771689120847_68448207.jpg",
+        "https://aos-comment.amap.com/B0IBSSLU04/comment/1295639b6ca3b6108b51d1d3e9b9dae6_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/eed51f5ac7c311bd0000005622628809?type=pic"
+      ]
     },
     {
       "name": "广州雕塑公园",
@@ -1418,7 +2194,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.148849,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/28a9e59f4bd77ed4f4cfdfa59a1ce9e1"
+      "image": "http://store.is.autonavi.com/showpic/28a9e59f4bd77ed4f4cfdfa59a1ce9e1",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/28a9e59f4bd77ed4f4cfdfa59a1ce9e1",
+        "http://store.is.autonavi.com/showpic/befc0119810ef2cadf4beb9bb3ccc872",
+        "http://store.is.autonavi.com/showpic/ae08c3dacde0e520c51dbd37f1502689"
+      ]
     },
     {
       "name": "月亮桥",
@@ -1427,7 +2208,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.116005,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/02813c278c8536540000002702218388?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/02813c278c8536540000002702218388?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/02813c278c8536540000002702218388?type=pic",
+        "https://store.is.autonavi.com/showpic/587479c761b9acbf0000002702446172?type=pic",
+        "https://store.is.autonavi.com/showpic/6da82447962dda0a0000002702202450?type=pic"
+      ]
     },
     {
       "name": "怀圣清真寺",
@@ -1436,7 +2222,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.12283,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/15a6f7e936747bc230fbaf0c6c3455eb"
+      "image": "https://store.is.autonavi.com/showpic/15a6f7e936747bc230fbaf0c6c3455eb",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/15a6f7e936747bc230fbaf0c6c3455eb",
+        "https://store.is.autonavi.com/showpic/8eccecad53bb8ffe2c758a6477e69ff0",
+        "https://aos-comment.amap.com/B00140TBG8/headerImg/HeadImage_1766398099605_87776747.jpg"
+      ]
     },
     {
       "name": "晓港公园",
@@ -1445,7 +2236,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.096631,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/0de25a69d900a6a60000003534300982?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/0de25a69d900a6a60000003534300982?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/0de25a69d900a6a60000003534300982?type=pic",
+        "https://store.is.autonavi.com/showpic/7375963aba8863a00000003084096872?type=pic",
+        "https://store.is.autonavi.com/showpic/cbf189ffcc92e7720000000952154125?type=pic"
+      ]
     },
     {
       "name": "广州海洋馆",
@@ -1454,7 +2250,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.14373,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/650d14a1c53b09a9c02715661a07b8dc"
+      "image": "http://store.is.autonavi.com/showpic/650d14a1c53b09a9c02715661a07b8dc",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/650d14a1c53b09a9c02715661a07b8dc",
+        "https://store.is.autonavi.com/showpic/4a6496f0177152ae0000002744880397?type=pic",
+        "https://store.is.autonavi.com/showpic/a7a7b1db22c944800000004869750101?type=pic"
+      ]
     },
     {
       "name": "聚芳园",
@@ -1463,7 +2264,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.150573,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B00140UES8/comment/content_media_external_file_169253_ss__1760235098057_00309008.jpg"
+      "image": "https://aos-comment.amap.com/B00140UES8/comment/content_media_external_file_169253_ss__1760235098057_00309008.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B00140UES8/comment/content_media_external_file_169253_ss__1760235098057_00309008.jpg",
+        "https://aos-comment.amap.com/B00140UES8/comment/FE77032D_99EA_45D0_9DBE_D3C42A8D5054_L0_001_1502_200_1767083397183_52106938.jpg",
+        "https://aos-comment.amap.com/B00140UES8/comment/c955a5c9c5948a12ae5eb4ba5d070a58_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "先贤清真寺",
@@ -1472,7 +2278,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.145722,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B00141I8BS/comment/BC3B95FE_40A1_4365_BB6C_7A59573263B8_L0_001_1080_192_1768028806888_09977227.jpg"
+      "image": "https://aos-comment.amap.com/B00141I8BS/comment/BC3B95FE_40A1_4365_BB6C_7A59573263B8_L0_001_1080_192_1768028806888_09977227.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B00141I8BS/comment/BC3B95FE_40A1_4365_BB6C_7A59573263B8_L0_001_1080_192_1768028806888_09977227.jpg",
+        "https://store.is.autonavi.com/showpic/d1f24d4ac50d40160000008647308486?type=pic",
+        "https://store.is.autonavi.com/showpic/425d5ad3eb8d85a80000000966700690?type=pic"
+      ]
     },
     {
       "name": "海幢寺",
@@ -1481,7 +2292,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.105279,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/bc5f5dd39ba80aadad9ad7f8b2e25807"
+      "image": "http://store.is.autonavi.com/showpic/bc5f5dd39ba80aadad9ad7f8b2e25807",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/bc5f5dd39ba80aadad9ad7f8b2e25807",
+        "https://aos-comment.amap.com/B00140DR5O/headerImg/content_media_external_images_media_126202_1657096164155_c89b2d9e.jpg",
+        "https://aos-comment.amap.com/B00140DR5O/headerImg/content_media_external_images_media_112034_1657096164156_13895283.jpg"
+      ]
     },
     {
       "name": "天主教广州教区露德圣母堂",
@@ -1490,7 +2306,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.107332,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/eabf1835a402ee525ff82edf41b0cd6b"
+      "image": "https://store.is.autonavi.com/showpic/eabf1835a402ee525ff82edf41b0cd6b",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/eabf1835a402ee525ff82edf41b0cd6b",
+        "https://aos-comment.amap.com/B00140CG67/comment/content_media_external_file_100004737_1765532650711_53305435.jpg",
+        "https://aos-comment.amap.com/B00140CG67/comment/EEC3071B_AC67_44DE_8AA7_BA02478502A0_L0_001_750_56_1770623493920_90242248.jpg"
+      ]
     },
     {
       "name": "西关大屋",
@@ -1499,7 +2320,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.119664,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/126e4a58cdc5b2e08db7ba29b1c07bb2"
+      "image": "http://store.is.autonavi.com/showpic/126e4a58cdc5b2e08db7ba29b1c07bb2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/126e4a58cdc5b2e08db7ba29b1c07bb2",
+        "https://aos-comment.amap.com/B00141OK6G/comment/content_media_external_images_media_100011346_1732019280408_31343856.jpg",
+        "https://aos-comment.amap.com/B00141OK6G/comment/c13bb332ca486a98699fe5f8d37f1850_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "华林禅寺",
@@ -1508,7 +2334,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.116415,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/8333636fe727f932a7cb4f3599773de4"
+      "image": "http://store.is.autonavi.com/showpic/8333636fe727f932a7cb4f3599773de4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8333636fe727f932a7cb4f3599773de4",
+        "http://store.is.autonavi.com/showpic/a1e0f0c2dfff19f9d2e3cdf799f0fab4",
+        "http://store.is.autonavi.com/showpic/126e220dc35fb8b8ec99616fedaa1c9d"
+      ]
     },
     {
       "name": "正佳极地海洋世界",
@@ -1517,7 +2348,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.132143,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/eabb1cfbbbc8601810da57ea641200e3"
+      "image": "http://store.is.autonavi.com/showpic/eabb1cfbbbc8601810da57ea641200e3",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/eabb1cfbbbc8601810da57ea641200e3",
+        "https://aos-comment.amap.com/B00141V5TB/comment/7DC7022E_2ADA_4F5D_B905_A37BA637758B_L0_001_2000_150_1764764844505_93379735.jpg",
+        "http://store.is.autonavi.com/showpic/900d4fb3bb60b029ec21f08dcece27fe"
+      ]
     },
     {
       "name": "白云山索道",
@@ -1526,7 +2362,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.155909,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B00140SFYB/comment/content_media_external_file_100005580_1765598870328_69948738.jpg"
+      "image": "https://aos-comment.amap.com/B00140SFYB/comment/content_media_external_file_100005580_1765598870328_69948738.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B00140SFYB/comment/content_media_external_file_100005580_1765598870328_69948738.jpg",
+        "https://store.is.autonavi.com/showpic/d742f17598852e0a0000002588072396?type=pic",
+        "https://aos-comment.amap.com/B00140SFYB/comment/content_media_external_file_1000007040_ss__1750757202062_47010704.jpg"
+      ]
     },
     {
       "name": "广州非遗街区(永庆坊)",
@@ -1535,7 +2376,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.114794,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0KRM7WWCL/comment/content_media_external_images_media_1000029710_ss__1771141979080_39624077.jpg"
+      "image": "https://aos-comment.amap.com/B0KRM7WWCL/comment/content_media_external_images_media_1000029710_ss__1771141979080_39624077.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0KRM7WWCL/comment/content_media_external_images_media_1000029710_ss__1771141979080_39624077.jpg",
+        "https://aos-comment.amap.com/B0KRM7WWCL/comment/3EB7AAD5_9BA7_4636_89C0_88F689071D97_L0_001_2048_153_1773366758262_68508149.jpg",
+        "https://aos-comment.amap.com/B0KRM7WWCL/comment/content_media_external_file_1000060590_ss__1766103135878_79230407.jpg"
+      ]
     },
     {
       "name": "珠江夜游(西堤码头)",
@@ -1544,7 +2390,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.107096,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/1b4428ce9b52d3fbc90983a1a3cfe233"
+      "image": "http://store.is.autonavi.com/showpic/1b4428ce9b52d3fbc90983a1a3cfe233",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/1b4428ce9b52d3fbc90983a1a3cfe233",
+        "http://store.is.autonavi.com/showpic/71f27159aa2257b815f8ad9440f8df1d",
+        "http://store.is.autonavi.com/showpic/64967193256e8ecf352d6d7cd6c5e33c"
+      ]
     },
     {
       "name": "孙中山大元帅府纪念馆",
@@ -1553,7 +2404,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.110011,
       "category": "历史人文",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/7a61897d537e51408b6e27b7b8228a78"
+      "image": "http://store.is.autonavi.com/showpic/7a61897d537e51408b6e27b7b8228a78",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/7a61897d537e51408b6e27b7b8228a78",
+        "http://store.is.autonavi.com/showpic/7ea8a2851c3f53c0aef2ed97efc1045a",
+        "https://store.is.autonavi.com/showpic/66706cefa91515e791774891dc7b25ff"
+      ]
     },
     {
       "name": "彩虹桥",
@@ -1562,7 +2418,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.133399,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/f20340604d62eb820000003383508772?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/f20340604d62eb820000003383508772?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/f20340604d62eb820000003383508772?type=pic",
+        "https://aos-comment.amap.com/B0FFK7J97Z/comment/content_media_external_file_100005517_1765248938380_65106843.jpg",
+        "https://aos-comment.amap.com/B0FFK7J97Z/comment/96ffe20667df78bfc8be31e2a0d26aae_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "千年古道遗址",
@@ -1571,7 +2432,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.124873,
       "category": "历史人文",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/184492bf3ba217940000003367334184?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/184492bf3ba217940000003367334184?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/184492bf3ba217940000003367334184?type=pic",
+        "https://aos-comment.amap.com/B00140T1AY/comment/7863db94b0f02042b9d767f4e7ba419a_2048_2048_80.jpg",
+        "http://store.is.autonavi.com/showpic/abd42336beb7426f880f454f73bcdfee"
+      ]
     },
     {
       "name": "多宝路历史文化街区",
@@ -1580,7 +2446,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.116324,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/f1d9f56b2d71b4f983866bc193b8f8a0"
+      "image": "https://store.is.autonavi.com/showpic/f1d9f56b2d71b4f983866bc193b8f8a0",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/f1d9f56b2d71b4f983866bc193b8f8a0",
+        "https://store.is.autonavi.com/showpic/0eb855cb7e2aaee50000003085260774?type=pic",
+        "https://store.is.autonavi.com/showpic/3976b981cdd4a93c0000003594392347?type=pic"
+      ]
     },
     {
       "name": "云道",
@@ -1589,7 +2460,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.141455,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0FFMD3XJ7/comment/C0A90D83_0867_45CA_A5AD_49359A432372_L0_001_IMG_9832.HEIC"
+      "image": "https://aos-comment.amap.com/B0FFMD3XJ7/comment/C0A90D83_0867_45CA_A5AD_49359A432372_L0_001_IMG_9832.HEIC",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFMD3XJ7/comment/C0A90D83_0867_45CA_A5AD_49359A432372_L0_001_IMG_9832.HEIC",
+        "https://aos-comment.amap.com/B0FFMD3XJ7/comment/e843a3717319bb24492e23417ee13201_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFMD3XJ7/comment/content_media_external_file_1000039282_ss__1767953850056_20497737.jpg"
+      ]
     },
     {
       "name": "广州鲁迅纪念馆",
@@ -1598,7 +2474,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.123933,
       "category": "历史人文",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/511ef9d4fc7f331aaf2b24e9392e64d1"
+      "image": "http://store.is.autonavi.com/showpic/511ef9d4fc7f331aaf2b24e9392e64d1",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/511ef9d4fc7f331aaf2b24e9392e64d1",
+        "https://store.is.autonavi.com/showpic/2f7ca5846c61b47c0000003362688908",
+        "https://store.is.autonavi.com/showpic/edb5032d51f980f11be975c46f1d2ac3"
+      ]
     },
     {
       "name": "广州起义纪念馆",
@@ -1607,7 +2488,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.124357,
       "category": "历史人文",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/f26e47b84a2f0da3e8eecd61b1f9ebf5"
+      "image": "http://store.is.autonavi.com/showpic/f26e47b84a2f0da3e8eecd61b1f9ebf5",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/f26e47b84a2f0da3e8eecd61b1f9ebf5",
+        "https://store.is.autonavi.com/showpic/5cfb4b03b4f734561a716f33569ac55d",
+        "https://store.is.autonavi.com/showpic/ac5b7a7ae09f53280000003241928016?type=pic"
+      ]
     },
     {
       "name": "毛泽东同志主办农民运动讲习所旧址纪念馆",
@@ -1616,7 +2502,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.127547,
       "category": "历史人文",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/59972b640e7bae06f271f2fd3c17e2d8"
+      "image": "http://store.is.autonavi.com/showpic/59972b640e7bae06f271f2fd3c17e2d8",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/59972b640e7bae06f271f2fd3c17e2d8",
+        "http://store.is.autonavi.com/showpic/d9b278fdd8d37cfc8c544f5c5de40e50",
+        "https://store.is.autonavi.com/showpic/c6359b0a076b295c0000006129192849"
+      ]
     },
     {
       "name": "人民南历史文化街区",
@@ -1625,7 +2516,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.110993,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0IUOZ6ITQ/comment/content_media_external_file_100001109_1754056128097_31967953.jpg"
+      "image": "https://aos-comment.amap.com/B0IUOZ6ITQ/comment/content_media_external_file_100001109_1754056128097_31967953.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0IUOZ6ITQ/comment/content_media_external_file_100001109_1754056128097_31967953.jpg",
+        "https://aos-comment.amap.com/B0IUOZ6ITQ/comment/content_media_external_images_media_1000004311_ss__1734182311635_33451245.jpg",
+        "https://aos-comment.amap.com/B0IUOZ6ITQ/comment/0df6b2c306fee48e8e6e60a6c4250c10_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "中共三大会址纪念馆",
@@ -1634,7 +2530,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.118943,
       "category": "历史人文",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/20de1a6b7f45799706753116d1a364d4"
+      "image": "http://store.is.autonavi.com/showpic/20de1a6b7f45799706753116d1a364d4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/20de1a6b7f45799706753116d1a364d4",
+        "http://store.is.autonavi.com/showpic/7892af9742184aa1d8b682724fc69238",
+        "https://aos-comment.amap.com/B0FFM9UK7Q/comment/f9963ea9e6f12defa0c121eec8e74283_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "中山纪念碑",
@@ -1643,7 +2544,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.135674,
       "category": "历史人文",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/3c33bd75e4de86444d6f99a33a570492"
+      "image": "http://store.is.autonavi.com/showpic/3c33bd75e4de86444d6f99a33a570492",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/3c33bd75e4de86444d6f99a33a570492",
+        "https://store.is.autonavi.com/showpic/69b224df547807f8a7e8004404e87f2b",
+        "https://store.is.autonavi.com/showpic/f96d4074c078ef09f265239b1ce53b7a"
+      ]
     },
     {
       "name": "韩国园",
@@ -1652,7 +2558,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.141075,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B00141V596/comment/2c25f83dcdc95a6aef0e9b8131632332_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B00141V596/comment/2c25f83dcdc95a6aef0e9b8131632332_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B00141V596/comment/2c25f83dcdc95a6aef0e9b8131632332_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/206f609f865865f80000002347298863?type=pic",
+        "https://store.is.autonavi.com/showpic/87255ff251e8c15f0000001492818374?type=pic"
+      ]
     },
     {
       "name": "耀华大街历史文化街区",
@@ -1661,7 +2572,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.119068,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/8d1448de6ffde2dc0000003021298673?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/8d1448de6ffde2dc0000003021298673?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/8d1448de6ffde2dc0000003021298673?type=pic",
+        "https://store.is.autonavi.com/showpic/0c6c34d2a715884b0000002464442558?type=pic",
+        "https://store.is.autonavi.com/showpic/7efd632468e8e1d90000002740966501?type=pic"
+      ]
     },
     {
       "name": "华侨新村历史文化街区",
@@ -1670,7 +2586,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 23.138023,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/b891da034608a9525a4c259526e1bf74"
+      "image": "https://store.is.autonavi.com/showpic/b891da034608a9525a4c259526e1bf74",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/b891da034608a9525a4c259526e1bf74",
+        "https://aos-comment.amap.com/B0IUZ58KV4/comment/42D71106_9E71_40B8_8004_B29E1205849E_L0_001_1320_176_1772288053989_21114912.jpg",
+        "https://aos-comment.amap.com/B0IUZ58KV4/comment/content_media_external_images_media_1000018823_ss__1766014464745_63760093.jpg"
+      ]
     }
   ],
   "深圳": [
@@ -1681,7 +2602,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.518968,
       "category": "自然风光",
       "rating": 4.9,
-      "image": "https://store.is.autonavi.com/showpic/01097aeb2341fba5245e9211d7268f0d"
+      "image": "https://store.is.autonavi.com/showpic/01097aeb2341fba5245e9211d7268f0d",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/01097aeb2341fba5245e9211d7268f0d",
+        "https://store.is.autonavi.com/showpic/48d1d71acae0e2be0000008555784059?type=pic",
+        "https://store.is.autonavi.com/showpic/9ad208cfd0a610fa0000007324822979?type=pic"
+      ]
     },
     {
       "name": "深圳人才公园",
@@ -1690,7 +2616,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.511353,
       "category": "城市地标",
       "rating": 4.9,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/af939d04-6c9f-4a67-a47b-8f47cdf18725.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/af939d04-6c9f-4a67-a47b-8f47cdf18725.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/af939d04-6c9f-4a67-a47b-8f47cdf18725.jpg",
+        "http://store.is.autonavi.com/showpic/d8a38a5ebe1bd2872e8caae7543e1b6e",
+        "https://store.is.autonavi.com/showpic/9dda85e4698965137442710c32e5f034"
+      ]
     },
     {
       "name": "莲花山公园",
@@ -1699,7 +2630,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.553594,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/c59ff16b-a30e-40d4-8c83-58d0514c17db.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/c59ff16b-a30e-40d4-8c83-58d0514c17db.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/c59ff16b-a30e-40d4-8c83-58d0514c17db.jpg",
+        "http://store.is.autonavi.com/showpic/cc42a9755d8652f18fc1379d95657db4",
+        "http://store.is.autonavi.com/showpic/3b6de362479d72aeaabbce6f017d09bb"
+      ]
     },
     {
       "name": "深圳世界之窗",
@@ -1708,7 +2644,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.534662,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/69a69293b76f898ade20f230c00c9502"
+      "image": "http://store.is.autonavi.com/showpic/69a69293b76f898ade20f230c00c9502",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/69a69293b76f898ade20f230c00c9502",
+        "https://aos-comment.amap.com/B02F37V2O5/headerImg/603AB0AC_1D2C_495A_913C_15FE5150073C_L0_001_4032_3024__1656761134704_c42d0148.jpg",
+        "http://store.is.autonavi.com/showpic/67df4ca03f1f25484b353ec03af1f695"
+      ]
     },
     {
       "name": "华侨城欢乐海岸",
@@ -1717,7 +2658,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.523405,
       "category": "主题乐园",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/8a02b44b665a6d905a1cc9f7730641d3"
+      "image": "http://store.is.autonavi.com/showpic/8a02b44b665a6d905a1cc9f7730641d3",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8a02b44b665a6d905a1cc9f7730641d3",
+        "https://store.is.autonavi.com/showpic/75c18078d260c3dc0000002308854272?type=pic",
+        "http://store.is.autonavi.com/showpic/868ed028b5425bee2aa4bc70e9c79f82"
+      ]
     },
     {
       "name": "欢乐港湾",
@@ -1726,7 +2672,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.544558,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/539cd587-d337-4302-ae57-71f1be22d1c6.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/539cd587-d337-4302-ae57-71f1be22d1c6.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/539cd587-d337-4302-ae57-71f1be22d1c6.jpg",
+        "http://store.is.autonavi.com/showpic/8a9d657f517ea6a0e782da33b9116570",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/a5905c97-5fbc-478b-9585-fbea8ef9c4ad.jpg"
+      ]
     },
     {
       "name": "深圳中心公园",
@@ -1735,7 +2686,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.542341,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/d551f4ff852098f1d95ce49932a1fa64"
+      "image": "http://store.is.autonavi.com/showpic/d551f4ff852098f1d95ce49932a1fa64",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d551f4ff852098f1d95ce49932a1fa64",
+        "http://store.is.autonavi.com/showpic/9d5c95e9e03b76fc407d44d02d7fec70",
+        "http://store.is.autonavi.com/showpic/4a57251e5e2b6c0b6c28471a62920b84"
+      ]
     },
     {
       "name": "笔架山公园",
@@ -1744,7 +2700,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.562893,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/4c030655e69d88b3bbb8876df2bb9991"
+      "image": "http://store.is.autonavi.com/showpic/4c030655e69d88b3bbb8876df2bb9991",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/4c030655e69d88b3bbb8876df2bb9991",
+        "https://store.is.autonavi.com/showpic/6b15106561d63cde0000003040328614?type=pic",
+        "https://store.is.autonavi.com/showpic/f5e2ce385536773d0000003173588638?type=pic"
+      ]
     },
     {
       "name": "香蜜公园",
@@ -1753,7 +2714,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.54664,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/67a6f704bff6baeffb087fbc989585b0"
+      "image": "http://store.is.autonavi.com/showpic/67a6f704bff6baeffb087fbc989585b0",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/67a6f704bff6baeffb087fbc989585b0",
+        "https://store.is.autonavi.com/showpic/d1587f0b4ebb664b0000003004722173?type=pic",
+        "https://store.is.autonavi.com/showpic/b26aa89a3e67492e0000000666900087?type=pic"
+      ]
     },
     {
       "name": "莲花山公园山顶广场",
@@ -1762,7 +2728,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.553186,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0FFH0LIRP/comment/124cd537b007c721d4760e86b9fa6aa9_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0FFH0LIRP/comment/124cd537b007c721d4760e86b9fa6aa9_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFH0LIRP/comment/124cd537b007c721d4760e86b9fa6aa9_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFH0LIRP/comment/1B6349AE_A401_45D3_88BD_007ED69D5FF2_L0_001_1134_201_1770980099183_95126243.jpg",
+        "https://aos-comment.amap.com/B0FFH0LIRP/comment/474B1442_3DD3_4320_AC46_F65E0FD2EDA4_L0_001_1500_200_1769323508168_16968471.jpg"
+      ]
     },
     {
       "name": "深圳华侨城旅游度假区",
@@ -1771,7 +2742,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.531366,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B02F37U4VE/comment/content_media_external_images_media_100002511_1740312735444_30805358.jpg"
+      "image": "https://aos-comment.amap.com/B02F37U4VE/comment/content_media_external_images_media_100002511_1740312735444_30805358.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B02F37U4VE/comment/content_media_external_images_media_100002511_1740312735444_30805358.jpg",
+        "https://aos-comment.amap.com/B02F37U4VE/comment/42859FE4_1DF2_4476_B47F_F165AC629243_L0_001_1242_809_1739452809248_42314676.jpg",
+        "https://aos-comment.amap.com/B02F37U4VE/comment/content_media_external_images_media_1000066520_ss__1731734831854_74329866.jpg"
+      ]
     },
     {
       "name": "荔枝公园",
@@ -1780,7 +2756,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.545539,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/0e8df9b0630ce924e76f3ccc20ef383a"
+      "image": "http://store.is.autonavi.com/showpic/0e8df9b0630ce924e76f3ccc20ef383a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0e8df9b0630ce924e76f3ccc20ef383a",
+        "http://store.is.autonavi.com/showpic/93780420be63ed7b341f1e51eb9706f8",
+        "https://store.is.autonavi.com/showpic/ef404511c7aa05080000003004656875?type=pic"
+      ]
     },
     {
       "name": "沙嘴牌坊",
@@ -1789,7 +2770,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.519551,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/2f6cc4b6aa3e0a09c63bcc18af7b8f63"
+      "image": "https://store.is.autonavi.com/showpic/2f6cc4b6aa3e0a09c63bcc18af7b8f63",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/2f6cc4b6aa3e0a09c63bcc18af7b8f63",
+        "https://aos-comment.amap.com/B0K61COD0U/comment/content_media_external_file_340_1773371979368_66198679.jpg",
+        "https://store.is.autonavi.com/showpic/ec8749dd3feec6e10000003116368586?type=pic"
+      ]
     },
     {
       "name": "深圳国际园林花卉博览园",
@@ -1798,7 +2784,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.537601,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/b2fb6614e7ce02b865ee9f8751c699a8"
+      "image": "http://store.is.autonavi.com/showpic/b2fb6614e7ce02b865ee9f8751c699a8",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b2fb6614e7ce02b865ee9f8751c699a8",
+        "http://store.is.autonavi.com/showpic/e4f0d705179d17ea590867a43fe12674",
+        "https://store.is.autonavi.com/showpic/dab6f74d3ea974940000002882728531?type=pic"
+      ]
     },
     {
       "name": "深圳平安金融中心云际观光层",
@@ -1807,7 +2798,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.533744,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/7f2023f09303ee4e0000001927386319?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/7f2023f09303ee4e0000001927386319?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/7f2023f09303ee4e0000001927386319?type=pic",
+        "https://aos-comment.amap.com/B0FFK7OXTF/comment/18586668_D41E_444E_A7F4_4110CC757054_L0_001_1536_204_1763509934759_60707702.jpg",
+        "https://aos-comment.amap.com/B0FFK7OXTF/comment/content_media_external_images_media_2482_1740961056043_01070527.jpg"
+      ]
     },
     {
       "name": "红树林海滨生态公园",
@@ -1816,7 +2812,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.522076,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/8089f5f1ad13fcd73727b4805353a5e7"
+      "image": "http://store.is.autonavi.com/showpic/8089f5f1ad13fcd73727b4805353a5e7",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8089f5f1ad13fcd73727b4805353a5e7",
+        "https://store.is.autonavi.com/showpic/1793d6c2eb2b96890000003083418232?type=pic",
+        "https://aos-comment.amap.com/B02F37U9RJ/comment/content_media_external_file_100000617_1767540424064_86465153.jpg"
+      ]
     },
     {
       "name": "洪湖公园",
@@ -1825,7 +2826,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.565811,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/4164b4f1-1df2-4851-9a00-a641e639bbc2.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/4164b4f1-1df2-4851-9a00-a641e639bbc2.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/4164b4f1-1df2-4851-9a00-a641e639bbc2.jpg",
+        "http://store.is.autonavi.com/showpic/55e01be0ebac3680bada07bc70b1f09c",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/01eda292-d322-4713-b565-d3df77c6275c.jpg"
+      ]
     },
     {
       "name": "塘朗山公园",
@@ -1834,7 +2840,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.571178,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/9a618459a623aba7bd29f33ff35fa608"
+      "image": "http://store.is.autonavi.com/showpic/9a618459a623aba7bd29f33ff35fa608",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9a618459a623aba7bd29f33ff35fa608",
+        "https://aos-comment.amap.com/B02F37U63X/comment/%5B2025-12-02-03-55-19%5DE29FD35C-66D6-46AE-A029-71E3BA071CA_1764618927458_39428788.jpg",
+        "http://store.is.autonavi.com/showpic/a4fc2fec45b837d44673bf431891d2fe"
+      ]
     },
     {
       "name": "锦绣中华民俗村",
@@ -1843,7 +2854,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.530907,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/139d215b52c31f62b039501a68598c9e"
+      "image": "http://store.is.autonavi.com/showpic/139d215b52c31f62b039501a68598c9e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/139d215b52c31f62b039501a68598c9e",
+        "http://store.is.autonavi.com/showpic/423ff6ad1d51ef22d9a61a7b35c6abb2",
+        "http://store.is.autonavi.com/showpic/d250d6421b9c6a49e37ab5e6776fb8cc"
+      ]
     },
     {
       "name": "福田海滨生态体育公园",
@@ -1852,7 +2868,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.529292,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/49b8e0d38dde1b66e0cee8351bded689"
+      "image": "http://store.is.autonavi.com/showpic/49b8e0d38dde1b66e0cee8351bded689",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/49b8e0d38dde1b66e0cee8351bded689",
+        "https://store.is.autonavi.com/showpic/4a5c5409cbc372e50000002599576846?type=pic",
+        "https://aos-comment.amap.com/B0H1Y5WI4R/comment/EAA9749C_487D_4284_82AA_2306A89A702C_L0_001_1983_1280_1732574621577_53447912.jpg"
+      ]
     },
     {
       "name": "白石龙音乐主题公园",
@@ -1861,7 +2882,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.597179,
       "category": "主题乐园",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/0157b5ca9fde658d0000003137426481?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/0157b5ca9fde658d0000003137426481?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/0157b5ca9fde658d0000003137426481?type=pic",
+        "https://aos-comment.amap.com/B0FFH0ZH1A/comment/4D99582C_27C9_4FF0_8A0C_F911549B4A5B_L0_001_1440_175_1769537201904_03689072.jpg",
+        "https://store.is.autonavi.com/showpic/3c997627412fe5ea0000003318414221?type=pic"
+      ]
     },
     {
       "name": "人民公园",
@@ -1870,7 +2896,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.553189,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/c5cbf7a1130a0fd50000001744466133?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/c5cbf7a1130a0fd50000001744466133?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/c5cbf7a1130a0fd50000001744466133?type=pic",
+        "https://store.is.autonavi.com/showpic/b2dc5aa2b2a16f400000000671604580",
+        "https://aos-comment.amap.com/B02F3002EE/comment/content_media_external_file_100002064_1773068720771_57550143.jpg"
+      ]
     },
     {
       "name": "梅拉尼亚小镇",
@@ -1879,7 +2910,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.536391,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/8e5af5ae7571a4eb0000003376204568?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/8e5af5ae7571a4eb0000003376204568?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/8e5af5ae7571a4eb0000003376204568?type=pic",
+        "https://store.is.autonavi.com/showpic/226be09e6baef81a0000003764236383?type=pic",
+        "https://store.is.autonavi.com/showpic/de2892895c0526430000003170698283?type=pic"
+      ]
     },
     {
       "name": "深云文体公园",
@@ -1888,7 +2924,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.564925,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/12b4555e4781f5060000003297026839?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/12b4555e4781f5060000003297026839?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/12b4555e4781f5060000003297026839?type=pic",
+        "https://aos-comment.amap.com/B0FFKKZE38/comment/EB131927_8785_43F9_B4A1_12BC730D1191_L0_001_1500_2000_1734190510933_48451915.jpg",
+        "https://store.is.autonavi.com/showpic/8f95081828bc01083d7932c93ffdd2c4"
+      ]
     },
     {
       "name": "广东梧桐山风景名胜区",
@@ -1897,7 +2938,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.577706,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/5f7558413670366d7d5ed79ce615028e"
+      "image": "http://store.is.autonavi.com/showpic/5f7558413670366d7d5ed79ce615028e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5f7558413670366d7d5ed79ce615028e",
+        "http://store.is.autonavi.com/showpic/7020fc7cbbfd6b4c01b4b5849cfc18ee",
+        "http://store.is.autonavi.com/showpic/1d17ed470f5641feccaf26a1c4e1a712"
+      ]
     },
     {
       "name": "甘坑古镇",
@@ -1906,7 +2952,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.656694,
       "category": "古镇村落",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/ba20927b6c0bf9fa68ae28be7aef4be2"
+      "image": "http://store.is.autonavi.com/showpic/ba20927b6c0bf9fa68ae28be7aef4be2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ba20927b6c0bf9fa68ae28be7aef4be2",
+        "http://store.is.autonavi.com/showpic/eb801b1b532a71fcffa988a871ea49ad",
+        "http://store.is.autonavi.com/showpic/0cb76e4c6e40cff9bf530f0f746b8f23"
+      ]
     },
     {
       "name": "深圳仙湖植物园",
@@ -1915,7 +2966,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.576476,
       "category": "主题乐园",
       "rating": 4.7,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/987cbe66-21d6-4af7-bdfe-beabeeea45d0.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/987cbe66-21d6-4af7-bdfe-beabeeea45d0.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/987cbe66-21d6-4af7-bdfe-beabeeea45d0.jpg",
+        "http://store.is.autonavi.com/showpic/37685665effe0b01c32f864b27084ee7",
+        "https://store.is.autonavi.com/showpic/a4295e79961136a60000005013424977?type=pic"
+      ]
     },
     {
       "name": "东湖公园",
@@ -1924,7 +2980,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.562453,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/9d65fb3aaeceb8baa5ef4cf5a0fb6dd5"
+      "image": "http://store.is.autonavi.com/showpic/9d65fb3aaeceb8baa5ef4cf5a0fb6dd5",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9d65fb3aaeceb8baa5ef4cf5a0fb6dd5",
+        "http://store.is.autonavi.com/showpic/d1e573363523516f15c3ba2dbac15a68",
+        "https://aos-comment.amap.com/B02F38TGNT/comment/content_media_external_file_100001728_1767409861095_91101979.jpg"
+      ]
     },
     {
       "name": "深圳野生动物园",
@@ -1933,7 +2994,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.596039,
       "category": "主题乐园",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/95599e16ac0b793edf57277fff4f0437"
+      "image": "http://store.is.autonavi.com/showpic/95599e16ac0b793edf57277fff4f0437",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/95599e16ac0b793edf57277fff4f0437",
+        "https://aos-comment.amap.com/B02F37V7IB/headerImg/a93537442b4e3ee2c9f4b1f337075608_2048_2048_80.jpg",
+        "http://store.is.autonavi.com/showpic/1a37aa3dc2eb24602617f620fc03a2a9"
+      ]
     },
     {
       "name": "阳台山森林公园",
@@ -1942,7 +3008,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.651479,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/8e060c50-049a-4ee2-b0c7-7c4d132c481a.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/8e060c50-049a-4ee2-b0c7-7c4d132c481a.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/8e060c50-049a-4ee2-b0c7-7c4d132c481a.jpg",
+        "http://store.is.autonavi.com/showpic/e8761f5b649a864833122722123ed71a",
+        "https://store.is.autonavi.com/showpic/0ab81ebc970c758d4c3e0eb657c27aea"
+      ]
     },
     {
       "name": "深圳湾文化广场",
@@ -1951,7 +3022,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.511935,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/e4b011188f6d2464fe5c00adc8d52e8e"
+      "image": "http://store.is.autonavi.com/showpic/e4b011188f6d2464fe5c00adc8d52e8e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e4b011188f6d2464fe5c00adc8d52e8e",
+        "https://aos-comment.amap.com/B0HBKSP9FS/comment/content_media_external_file_1000044007_ss__1771907801037_73409134.jpg",
+        "https://store.is.autonavi.com/showpic/7db4e53c9bf0a85b0000005833006945?type=pic"
+      ]
     },
     {
       "name": "笔架山体育公园",
@@ -1960,7 +3036,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.559359,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0JR6AJJ42/comment/c24f4d76bcc2ee2d2dc7b699fb7ec78e_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0JR6AJJ42/comment/c24f4d76bcc2ee2d2dc7b699fb7ec78e_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0JR6AJJ42/comment/c24f4d76bcc2ee2d2dc7b699fb7ec78e_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/47a853d291504618bc13f2116664332b",
+        "https://aos-comment.amap.com/B0JR6AJJ42/comment/38a9b09f93b4bc47edf18ed04a0be414_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "莲花山公园风筝广场",
@@ -1969,7 +3050,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.549422,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/87375890cf4b25fe174e152c11bf7144"
+      "image": "http://store.is.autonavi.com/showpic/87375890cf4b25fe174e152c11bf7144",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/87375890cf4b25fe174e152c11bf7144",
+        "http://store.is.autonavi.com/showpic/89ec11ba34dceeb508fcd9ac02ef0467",
+        "https://aos-comment.amap.com/B02F38OXYB/comment/06b66c0c52e88c307b3e1a476227f3ef_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "皇岗公园",
@@ -1978,7 +3064,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.517921,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/f18e92b422e1f74ff108654d5b81406c"
+      "image": "http://store.is.autonavi.com/showpic/f18e92b422e1f74ff108654d5b81406c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/f18e92b422e1f74ff108654d5b81406c",
+        "https://aos-comment.amap.com/B02F305FCR/comment/content_media_external_file_14717_ss__1764822206229_67445476.jpg",
+        "https://aos-comment.amap.com/B02F305FCR/comment/content_media_external_file_650090_ss__1766241447336_30325229.jpg"
+      ]
     },
     {
       "name": "福田红树林生态公园",
@@ -1987,7 +3078,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.509273,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/4ffe75b8-3da2-4068-9915-56f63517d877.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/4ffe75b8-3da2-4068-9915-56f63517d877.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/4ffe75b8-3da2-4068-9915-56f63517d877.jpg",
+        "https://aos-comment.amap.com/B0FFGJP58W/comment/7273C64B_8349_4658_82A6_829AB2D61224_L0_001_2016_1512_1733045315585_09686203.jpg",
+        "https://aos-comment.amap.com/B0FFGJP58W/comment/abdf43d9-f310-49e6-a3fb-4884105c5582.png"
+      ]
     },
     {
       "name": "水围文化广场",
@@ -1996,7 +3092,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.52162,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/a5633519e1117f42e53e0d6d549c0140"
+      "image": "http://store.is.autonavi.com/showpic/a5633519e1117f42e53e0d6d549c0140",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a5633519e1117f42e53e0d6d549c0140",
+        "http://store.is.autonavi.com/showpic/86fbf7c25429cf5889d1963e5ae7cabc",
+        "https://aos-comment.amap.com/B02F37TJOS/comment/221bafe155f658aa567634bcba6be51e_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "下沙文化广场",
@@ -2005,7 +3106,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.525873,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/60c3e8c178ca2cf1e13b4cff2627cad6"
+      "image": "https://store.is.autonavi.com/showpic/60c3e8c178ca2cf1e13b4cff2627cad6",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/60c3e8c178ca2cf1e13b4cff2627cad6",
+        "https://aos-comment.amap.com/B02F38PGIY/comment/33a22725b5109cf893c303178bfce535_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B02F38PGIY/comment/content_media_external_file_8070_1746197090127_69957686.jpg"
+      ]
     },
     {
       "name": "福田红树林自然保护区",
@@ -2014,7 +3120,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.519196,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B02F38IHDS/comment/content_media_external_file_100000230_1748915871117_18178464.jpg"
+      "image": "https://aos-comment.amap.com/B02F38IHDS/comment/content_media_external_file_100000230_1748915871117_18178464.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B02F38IHDS/comment/content_media_external_file_100000230_1748915871117_18178464.jpg",
+        "https://store.is.autonavi.com/showpic/652b92a67d8726970000003027054512?type=pic",
+        "https://aos-comment.amap.com/B02F38IHDS/comment/9D700543_3E34_4D03_8B0E_5A9F0A9DA54F_L0_001_1179_52_1767069650159_98947965.jpg"
+      ]
     },
     {
       "name": "香蜜湖·四季花谷",
@@ -2023,7 +3134,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.543261,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0H0SS1K44/comment/content_media_external_file_1000024259_ss__1768047660367_06907956.jpg"
+      "image": "https://aos-comment.amap.com/B0H0SS1K44/comment/content_media_external_file_1000024259_ss__1768047660367_06907956.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0H0SS1K44/comment/content_media_external_file_1000024259_ss__1768047660367_06907956.jpg",
+        "https://aos-comment.amap.com/B0H0SS1K44/comment/4aa19d790600caf93e02d0b3f7348395_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0H0SS1K44/comment/90783A85_3131_4A97_B150_A73A07D85A5E_L0_001_2000_150_1762763481752_43050133.jpg"
+      ]
     },
     {
       "name": "银湖山郊野公园",
@@ -2032,7 +3148,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.593584,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/93dfabc9f368534b2787dfe9232ab386"
+      "image": "http://store.is.autonavi.com/showpic/93dfabc9f368534b2787dfe9232ab386",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/93dfabc9f368534b2787dfe9232ab386",
+        "http://store.is.autonavi.com/showpic/b8311f16db3f29eca5028955f2b25ad2",
+        "http://store.is.autonavi.com/showpic/db5aac477f188c99b0e6e6756e39685b"
+      ]
     },
     {
       "name": "深圳市清真寺",
@@ -2041,7 +3162,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.567936,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/78894d7157e3c1f40f891467ec636aa5"
+      "image": "http://store.is.autonavi.com/showpic/78894d7157e3c1f40f891467ec636aa5",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/78894d7157e3c1f40f891467ec636aa5",
+        "https://aos-comment.amap.com/B02F37TI6S/comment/content_media_external_file_341_1773372656348_16265559.jpg",
+        "https://aos-comment.amap.com/B02F37TI6S/comment/content_media_external_file_341_1773372656350_75678037.jpg"
+      ]
     },
     {
       "name": "燕晗山郊野公园",
@@ -2050,7 +3176,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.540817,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/1cc7044ac831a33f0000000757024547?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/1cc7044ac831a33f0000000757024547?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/1cc7044ac831a33f0000000757024547?type=pic",
+        "https://aos-comment.amap.com/B02F37TRLI/comment/059a98a9e090854811f030a2f38a63b1_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B02F37TRLI/comment/D3EFE74F_5409_4CE9_8359_EE9436160CD0_L0_001_1320_94_1767603272827_59152418.jpg"
+      ]
     },
     {
       "name": "节日大道节日广场",
@@ -2059,7 +3190,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.535481,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0JDARCNF1/comment/content_media_external_file_1000013917_ss__1771511483172_88552375.jpg"
+      "image": "https://aos-comment.amap.com/B0JDARCNF1/comment/content_media_external_file_1000013917_ss__1771511483172_88552375.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0JDARCNF1/comment/content_media_external_file_1000013917_ss__1771511483172_88552375.jpg",
+        "https://store.is.autonavi.com/showpic/e099094a1204cddb1e78fcb11e1fb8c8",
+        "https://store.is.autonavi.com/showpic/2a8a231f14d6a6510000003121056315?type=pic"
+      ]
     },
     {
       "name": "深圳中心公园A区",
@@ -2068,7 +3204,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.532232,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0K64MOV5F/comment/C1DF173D_A3C8_459E_83A6_4896B81C698D_L0_001_2008_150_1765784234119_38452486.jpg"
+      "image": "https://aos-comment.amap.com/B0K64MOV5F/comment/C1DF173D_A3C8_459E_83A6_4896B81C698D_L0_001_2008_150_1765784234119_38452486.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0K64MOV5F/comment/C1DF173D_A3C8_459E_83A6_4896B81C698D_L0_001_2008_150_1765784234119_38452486.jpg",
+        "https://aos-comment.amap.com/B0K64MOV5F/comment/content_media_external_file_489416_ss__1754927511385_88284791.jpg",
+        "https://store.is.autonavi.com/showpic/f7eb9f6c6d65c36c0000002527508327?type=pic"
+      ]
     },
     {
       "name": "莲花湖",
@@ -2077,7 +3218,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.551452,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0FFG9L0NR/comment/content_media_external_file_1001781953_ss__1766563666873_28217294.jpg"
+      "image": "https://aos-comment.amap.com/B0FFG9L0NR/comment/content_media_external_file_1001781953_ss__1766563666873_28217294.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFG9L0NR/comment/content_media_external_file_1001781953_ss__1766563666873_28217294.jpg",
+        "https://aos-comment.amap.com/B0FFG9L0NR/comment/FA8EFCEE_357A_49F6_A244_D69D79DDDA0D_L0_001_2000_150_1765753787186_94482733.jpg",
+        "https://aos-comment.amap.com/B0FFG9L0NR/comment/content_media_external_file_242227_ss__1769943669614_45647613.jpg"
+      ]
     },
     {
       "name": "儿童公园",
@@ -2086,7 +3232,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.553991,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/420f5716f0df8bf10000005183618393?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/420f5716f0df8bf10000005183618393?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/420f5716f0df8bf10000005183618393?type=pic",
+        "https://store.is.autonavi.com/showpic/cf3086e1cb7b73b80000005060640413?type=pic",
+        "https://aos-comment.amap.com/B02F37RKRH/comment/58b87fa0fe9ea800a3afc4a6e2ff69c7_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "向日葵公园",
@@ -2095,7 +3246,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.537448,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0FFIV0L73/comment/F77EFF7A_9159_47EA_BCCB_C72C52D5AAC7_L0_001_1284_154_1772426765508_27872317.jpg"
+      "image": "https://aos-comment.amap.com/B0FFIV0L73/comment/F77EFF7A_9159_47EA_BCCB_C72C52D5AAC7_L0_001_1284_154_1772426765508_27872317.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFIV0L73/comment/F77EFF7A_9159_47EA_BCCB_C72C52D5AAC7_L0_001_1284_154_1772426765508_27872317.jpg",
+        "https://aos-comment.amap.com/B0FFIV0L73/comment/content_media_external_file_1000127540_ss__1764398951937_43096417.jpg",
+        "https://aos-comment.amap.com/B0FFIV0L73/comment/202512_22-12013_1766376097560_44077524.jpg"
+      ]
     },
     {
       "name": "基督教深圳堂",
@@ -2104,7 +3260,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.568339,
       "category": "宗教寺庙",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/ff229f54b6b56cdf18f0821a4f35b456"
+      "image": "http://store.is.autonavi.com/showpic/ff229f54b6b56cdf18f0821a4f35b456",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ff229f54b6b56cdf18f0821a4f35b456",
+        "https://aos-comment.amap.com/B02F3006FD/comment/6D8B9983_7B17_4936_93DA_79C916BEEDBA_L0_001_1500_200_1758204806377_65284158.jpg",
+        "https://store.is.autonavi.com/showpic/4600b965ce2c7cb60000000858422002"
+      ]
     },
     {
       "name": "梅林水库",
@@ -2113,7 +3274,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.570584,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0FFGDLR0T/comment/F2DCA7A3_09AF_47FA_9D1C_6C842726C807_L0_001_1920_1920_1759712977080_64186329.jpg"
+      "image": "https://aos-comment.amap.com/B0FFGDLR0T/comment/F2DCA7A3_09AF_47FA_9D1C_6C842726C807_L0_001_1920_1920_1759712977080_64186329.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFGDLR0T/comment/F2DCA7A3_09AF_47FA_9D1C_6C842726C807_L0_001_1920_1920_1759712977080_64186329.jpg",
+        "https://store.is.autonavi.com/showpic/ce4c87f7284697d40000002309516820?type=pic",
+        "https://aos-comment.amap.com/B0FFGDLR0T/comment/8cb3fd02a6293f08086554ecab5d00cb_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "椰林沙池",
@@ -2122,7 +3288,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.521877,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/d139f2031d70f0430000002775554212?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/d139f2031d70f0430000002775554212?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/d139f2031d70f0430000002775554212?type=pic",
+        "https://store.is.autonavi.com/showpic/907311cb25aa7a200000002775460775?type=pic",
+        "https://store.is.autonavi.com/showpic/8beb5c24fc89f0c10000005690472783?type=pic"
+      ]
     },
     {
       "name": "梅林公园",
@@ -2131,7 +3302,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.570769,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/529d3f269d6560390000002934296474?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/529d3f269d6560390000002934296474?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/529d3f269d6560390000002934296474?type=pic",
+        "https://aos-comment.amap.com/B0FFL6FEG5/comment/content_media_external_file_1000134478_ss__1765960787579_36191879.jpg",
+        "https://store.is.autonavi.com/showpic/34fd9357ac197e2f0000001281570530?type=pic"
+      ]
     },
     {
       "name": "皇岗牌坊",
@@ -2140,7 +3316,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.524958,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/0482f521d9d1c3350000003061626174?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/0482f521d9d1c3350000003061626174?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/0482f521d9d1c3350000003061626174?type=pic",
+        "https://aos-comment.amap.com/B0LG0R6HPY/comment/content_media_external_file_338_1773369183473_61817315.jpg",
+        "https://store.is.autonavi.com/showpic/e2fd8d3b30d8308a0000002116560419?type=pic"
+      ]
     },
     {
       "name": "深圳梅林山郊野径",
@@ -2149,7 +3330,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.575973,
       "category": "自然风光",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/2162d62fb3fa8fae0000002369480099?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/2162d62fb3fa8fae0000002369480099?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/2162d62fb3fa8fae0000002369480099?type=pic",
+        "https://aos-comment.amap.com/B0G3AXJ1UG/comment/content_media_external_file_1000016203_ss__1766611433147_08616502.jpg",
+        "https://aos-comment.amap.com/B0G3AXJ1UG/comment/52ea65f0133bb4b188efb9d7bcdffa15_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "市民中心公园",
@@ -2158,7 +3344,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.541321,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B0I13DT85A/comment/408845B1_1D13_4ADC_A61F_50B7CA69EB2B_L0_001_1108_77_1765338956561_70873957.jpg"
+      "image": "https://aos-comment.amap.com/B0I13DT85A/comment/408845B1_1D13_4ADC_A61F_50B7CA69EB2B_L0_001_1108_77_1765338956561_70873957.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0I13DT85A/comment/408845B1_1D13_4ADC_A61F_50B7CA69EB2B_L0_001_1108_77_1765338956561_70873957.jpg",
+        "https://aos-comment.amap.com/B0I13DT85A/comment/content_media_external_images_media_100001907_1734053206286_08870828.jpg",
+        "https://aos-comment.amap.com/B0I13DT85A/comment/3FC7FB42_BFD5_4D0D_BF1D_AD5A555FE962_L0_001_1080_192_1765339008967_65198762.jpg"
+      ]
     },
     {
       "name": "小平铜像广场",
@@ -2167,7 +3358,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.553232,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B0KUFC8TJH/comment/content_media_external_images_media_1000167083_ss__1739117267649_53858663.jpg"
+      "image": "https://aos-comment.amap.com/B0KUFC8TJH/comment/content_media_external_images_media_1000167083_ss__1739117267649_53858663.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0KUFC8TJH/comment/content_media_external_images_media_1000167083_ss__1739117267649_53858663.jpg",
+        "https://aos-comment.amap.com/B0KUFC8TJH/comment/content_media_external_images_media_1000167055_ss__1739117267647_74854614.jpg",
+        "https://aos-comment.amap.com/B0KUFC8TJH/comment/content_media_external_images_media_1000167100_ss__1739117267649_97204255.jpg"
+      ]
     },
     {
       "name": "上梅林文体公园",
@@ -2176,7 +3372,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.56751,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B02F37TIXQ/comment/content_media_external_file_603909_ss__1750399458713_37507229.jpg"
+      "image": "https://aos-comment.amap.com/B02F37TIXQ/comment/content_media_external_file_603909_ss__1750399458713_37507229.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B02F37TIXQ/comment/content_media_external_file_603909_ss__1750399458713_37507229.jpg",
+        "https://aos-comment.amap.com/B02F37TIXQ/comment/content_media_external_file_603926_ss__1750399458800_11666083.jpg",
+        "https://store.is.autonavi.com/showpic/0b4c77155f8b04f40000000967640674?type=pic"
+      ]
     },
     {
       "name": "景蜜公园",
@@ -2185,7 +3386,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.556901,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/comment/content_service_1ce574cdfba2414061edb882e7340c71_1768587492937_09550719.jpg"
+      "image": "https://aos-comment.amap.com/comment/content_service_1ce574cdfba2414061edb882e7340c71_1768587492937_09550719.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/comment/content_service_1ce574cdfba2414061edb882e7340c71_1768587492937_09550719.jpg",
+        "https://aos-comment.amap.com/B02F38TACO/comment/content_media_external_file_1000043475_ss__1763803753207_64484423.jpg",
+        "https://store.is.autonavi.com/showpic/af05c81e01f5822f0000003200706568?type=pic"
+      ]
     },
     {
       "name": "梅林山公园",
@@ -2194,7 +3400,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.562528,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/ede85f520e3a637caa8c811460945dab"
+      "image": "http://store.is.autonavi.com/showpic/ede85f520e3a637caa8c811460945dab",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ede85f520e3a637caa8c811460945dab",
+        "http://store.is.autonavi.com/showpic/133adbe161aaa1cc8593ae86bc25ca71",
+        "https://aos-comment.amap.com/B0H6S72DHA/comment/49ff2218d9ca1d678002620bb6200f46_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "新洲文化广场",
@@ -2203,7 +3414,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.521761,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/2c14f82d083f396efca4094ccf8c2f42"
+      "image": "http://store.is.autonavi.com/showpic/2c14f82d083f396efca4094ccf8c2f42",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/2c14f82d083f396efca4094ccf8c2f42",
+        "https://store.is.autonavi.com/showpic/7f5a7574eedc20a1429b43d5000dc7ec",
+        "https://store.is.autonavi.com/showpic/f172053541f322680000003036356415?type=pic"
+      ]
     },
     {
       "name": "石厦大榕树",
@@ -2212,7 +3428,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 22.521277,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/79b7c2279b29e6f40000001281492098?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/79b7c2279b29e6f40000001281492098?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/79b7c2279b29e6f40000001281492098?type=pic",
+        "https://store.is.autonavi.com/showpic/98c7ea0d2a09664a0000001281472393?type=pic",
+        "https://store.is.autonavi.com/showpic/8595fb6e3df4251566d8b5c694e71773"
+      ]
     }
   ],
   "杭州": [
@@ -2223,7 +3444,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.222692,
       "category": "自然风光",
       "rating": 4.9,
-      "image": "https://store.is.autonavi.com/showpic/78e3e7b400e9290d0000003670488183"
+      "image": "https://store.is.autonavi.com/showpic/78e3e7b400e9290d0000003670488183",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/78e3e7b400e9290d0000003670488183",
+        "http://store.is.autonavi.com/showpic/d7a717ff724702f42595f6a3f09c6aba",
+        "https://store.is.autonavi.com/showpic/cbfcd936353743108182141fbeddffe3"
+      ]
     },
     {
       "name": "雷峰塔景区",
@@ -2232,7 +3458,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.230934,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/58fbc3bf5460862ef2056ae1aa053754"
+      "image": "http://store.is.autonavi.com/showpic/58fbc3bf5460862ef2056ae1aa053754",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/58fbc3bf5460862ef2056ae1aa053754",
+        "http://store.is.autonavi.com/showpic/df5fc383b00d7a4ac2948df8abbb9094",
+        "http://store.is.autonavi.com/showpic/066347d344b0cb6c8c5e305627524037"
+      ]
     },
     {
       "name": "西湖文化广场",
@@ -2241,7 +3472,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.276652,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/a92803e8906575768c2436d05ae704ab"
+      "image": "http://store.is.autonavi.com/showpic/a92803e8906575768c2436d05ae704ab",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a92803e8906575768c2436d05ae704ab",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/e3dbdc0a-c31b-404f-aab5-43788f9d10e2.jpg",
+        "http://store.is.autonavi.com/showpic/7a739c6e0826173f21aaaef0bec713c7"
+      ]
     },
     {
       "name": "西溪国家湿地公园",
@@ -2250,7 +3486,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.255079,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/ee8ba4fd213aa0ee5605e41415921500"
+      "image": "http://store.is.autonavi.com/showpic/ee8ba4fd213aa0ee5605e41415921500",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ee8ba4fd213aa0ee5605e41415921500",
+        "http://store.is.autonavi.com/showpic/5723d86c8f567ebcbe763c66cb8258f6",
+        "http://store.is.autonavi.com/showpic/fae72ff9341884ff26f2c1102f20a2ab"
+      ]
     },
     {
       "name": "灵隐寺",
@@ -2259,7 +3500,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.240826,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/4aa0a6a1b6ee72c9833441f363cbb43a"
+      "image": "http://store.is.autonavi.com/showpic/4aa0a6a1b6ee72c9833441f363cbb43a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/4aa0a6a1b6ee72c9833441f363cbb43a",
+        "http://store.is.autonavi.com/showpic/c7cccce2249dbb7aa013ee0b06888e9d",
+        "http://store.is.autonavi.com/showpic/69e2dbe5322886d53ed57057e9ab5514"
+      ]
     },
     {
       "name": "杭州植物园",
@@ -2268,7 +3514,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.25291,
       "category": "主题乐园",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/cd40a50a625f3772ba2bbc115422ae5a"
+      "image": "http://store.is.autonavi.com/showpic/cd40a50a625f3772ba2bbc115422ae5a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/cd40a50a625f3772ba2bbc115422ae5a",
+        "http://store.is.autonavi.com/showpic/e29859ae9a1be77e84eb86d56f7ff4d2",
+        "http://store.is.autonavi.com/showpic/f207a7316fd5da51239a570d8f484158"
+      ]
     },
     {
       "name": "钱江世纪公园",
@@ -2277,7 +3528,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.244685,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/59beb1e9-9cda-4cd4-8c44-d3b51d9aff36.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/59beb1e9-9cda-4cd4-8c44-d3b51d9aff36.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/59beb1e9-9cda-4cd4-8c44-d3b51d9aff36.jpg",
+        "https://store.is.autonavi.com/showpic/011e50b6f2cea54f0000002794642462?type=pic",
+        "https://store.is.autonavi.com/showpic/accf4e68cc364b8a0000003013492560?type=pic"
+      ]
     },
     {
       "name": "清河坊历史文化特色街区",
@@ -2286,7 +3542,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.239827,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/e7a956f2beba64afa31364a6858dac82"
+      "image": "http://store.is.autonavi.com/showpic/e7a956f2beba64afa31364a6858dac82",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e7a956f2beba64afa31364a6858dac82",
+        "http://store.is.autonavi.com/showpic/fc632a87a09703d2de4492829fbbc3b5",
+        "http://store.is.autonavi.com/showpic/dd9e27c45d8b1904a4ab57989a34cf0a"
+      ]
     },
     {
       "name": "胡雪岩旧居",
@@ -2295,7 +3556,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.237273,
       "category": "历史人文",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/b326d6f2fc14213945e5925cbe65491d"
+      "image": "http://store.is.autonavi.com/showpic/b326d6f2fc14213945e5925cbe65491d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b326d6f2fc14213945e5925cbe65491d",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/5ef7df70-b49e-47d8-9507-12f5ac4d50c5.JPG",
+        "http://store.is.autonavi.com/showpic/94adba298a0358aafb5f0b94799429eb"
+      ]
     },
     {
       "name": "鼓楼",
@@ -2304,7 +3570,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.237994,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/b29ed6b0ca70505ed3d5b78283f17244"
+      "image": "http://store.is.autonavi.com/showpic/b29ed6b0ca70505ed3d5b78283f17244",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b29ed6b0ca70505ed3d5b78283f17244",
+        "http://store.is.autonavi.com/showpic/a457a0263e486269e7eb24e3a083494e",
+        "http://store.is.autonavi.com/showpic/bea2db3d860370f8cd2ce16bfbef197f"
+      ]
     },
     {
       "name": "杭州基督教会崇一堂",
@@ -2313,7 +3584,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.259353,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/a1e5c5393aac49b86aa10948b299c766"
+      "image": "http://store.is.autonavi.com/showpic/a1e5c5393aac49b86aa10948b299c766",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a1e5c5393aac49b86aa10948b299c766",
+        "https://aos-comment.amap.com/B023B065OH/comment/content_media_external_file_104496_ss__1763288502291_49861923.jpg",
+        "https://aos-comment.amap.com/B023B065OH/comment/40F64B2B_21CF_459D_AC16_2BD017655296_L0_001_1500_200_1763081372481_27031344.jpg"
+      ]
     },
     {
       "name": "武林广场",
@@ -2322,7 +3598,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.271001,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B023B02841/comment/content_media_external_file_31047_ss__1768351903981_07139456.jpg"
+      "image": "https://aos-comment.amap.com/B023B02841/comment/content_media_external_file_31047_ss__1768351903981_07139456.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B023B02841/comment/content_media_external_file_31047_ss__1768351903981_07139456.jpg",
+        "https://aos-comment.amap.com/B023B02841/comment/FA61774B_B266_468D_B2BD_D1816276C43B_L0_001_1500_200_1768577480515_66433207.jpg",
+        "https://store.is.autonavi.com/showpic/dbc675aaeab2226b0000003550190162?type=pic"
+      ]
     },
     {
       "name": "西湖天地",
@@ -2331,7 +3612,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.247034,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/e9219d541e22397ff3306be9f4f6301b"
+      "image": "http://store.is.autonavi.com/showpic/e9219d541e22397ff3306be9f4f6301b",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e9219d541e22397ff3306be9f4f6301b",
+        "https://aos-comment.amap.com/B023B082T5/comment/176795553253_1767955555541_35958687.jpg",
+        "https://aos-comment.amap.com/B023B082T5/comment/176795556782_1767955568806_69757646.jpg"
+      ]
     },
     {
       "name": "河坊街景区",
@@ -2340,7 +3626,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.240584,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/fbcad6ebec8f902b0000006068412509?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/fbcad6ebec8f902b0000006068412509?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/fbcad6ebec8f902b0000006068412509?type=pic",
+        "https://store.is.autonavi.com/showpic/ef46aeef6ab09fe10000002979244354?type=pic",
+        "http://store.is.autonavi.com/showpic/ead52b96b9d0bff8ca2f1fe0d57eade3"
+      ]
     },
     {
       "name": "杭州钱塘江夜游(滨江码头)",
@@ -2349,7 +3640,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.211689,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/0b1eca846c2a60140df5ac17b3b57e8e"
+      "image": "http://store.is.autonavi.com/showpic/0b1eca846c2a60140df5ac17b3b57e8e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0b1eca846c2a60140df5ac17b3b57e8e",
+        "http://store.is.autonavi.com/showpic/0d21cbf57787a557c6d9d11c07a731cc",
+        "http://store.is.autonavi.com/showpic/1aaad476ec4d19d3d871103b2734468b"
+      ]
     },
     {
       "name": "晓霞弄",
@@ -2358,7 +3654,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.237603,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/b7801f517b1d4d8a0000002450624725?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/b7801f517b1d4d8a0000002450624725?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/b7801f517b1d4d8a0000002450624725?type=pic",
+        "https://store.is.autonavi.com/showpic/fde0d48f0f99f2860000003055910484?type=pic",
+        "https://store.is.autonavi.com/showpic/018c597cffd39d950000002233652487?type=pic"
+      ]
     },
     {
       "name": "北山街历史文化街区",
@@ -2367,7 +3668,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.259216,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/2822be4285d32c9a0000003344888198?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/2822be4285d32c9a0000003344888198?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/2822be4285d32c9a0000003344888198?type=pic",
+        "https://store.is.autonavi.com/showpic/7ad1d6ec724f00a40000007513280021?type=pic",
+        "https://aos-comment.amap.com/B0FFHU2BPX/comment/content_media_external_file_100003714_1766629391740_09835078.jpg"
+      ]
     },
     {
       "name": "杭州西湖风景名胜区宝石山",
@@ -2376,7 +3682,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.259804,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/00ed729f44f8613ee1ecdb93d10370f4"
+      "image": "http://store.is.autonavi.com/showpic/00ed729f44f8613ee1ecdb93d10370f4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/00ed729f44f8613ee1ecdb93d10370f4",
+        "http://store.is.autonavi.com/showpic/7db7ba81102cc6c24cdf178294cd0860",
+        "http://store.is.autonavi.com/showpic/92931e6a88a450b077cddb570aa76035"
+      ]
     },
     {
       "name": "飞来峰",
@@ -2385,7 +3696,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.239119,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/439cd2ebb79899f4b2cc53e60e061515"
+      "image": "http://store.is.autonavi.com/showpic/439cd2ebb79899f4b2cc53e60e061515",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/439cd2ebb79899f4b2cc53e60e061515",
+        "http://store.is.autonavi.com/showpic/37bf504afd01036f593e3f8366148cf3",
+        "http://store.is.autonavi.com/showpic/6cde398733f81c0268265499b09b0989"
+      ]
     },
     {
       "name": "杭州动物园",
@@ -2394,7 +3710,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.212281,
       "category": "主题乐园",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/41ba8c0ea11375651e405e81de8665d4"
+      "image": "http://store.is.autonavi.com/showpic/41ba8c0ea11375651e405e81de8665d4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/41ba8c0ea11375651e405e81de8665d4",
+        "http://store.is.autonavi.com/showpic/3281aeb2134173bebd618612b91c7d6c",
+        "http://store.is.autonavi.com/showpic/515abf09a028ce767afc5db551c56ea1"
+      ]
     },
     {
       "name": "八卦田遗址公园",
@@ -2403,7 +3724,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.211211,
       "category": "历史人文",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/e4e9fa3464f422cb7359b066bad70056"
+      "image": "http://store.is.autonavi.com/showpic/e4e9fa3464f422cb7359b066bad70056",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e4e9fa3464f422cb7359b066bad70056",
+        "http://store.is.autonavi.com/showpic/8F1FD837109741A19D71A74364E1E973",
+        "https://store.is.autonavi.com/showpic/9dab1b6eb3c01e520000002442640672?type=pic"
+      ]
     },
     {
       "name": "虎跑公园",
@@ -2412,7 +3738,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.208087,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/806ddeb10e5d81026f9a380b153686f0"
+      "image": "http://store.is.autonavi.com/showpic/806ddeb10e5d81026f9a380b153686f0",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/806ddeb10e5d81026f9a380b153686f0",
+        "http://store.is.autonavi.com/showpic/64221359470ab89bf1994cb7f0c32df6",
+        "http://store.is.autonavi.com/showpic/7137b9d90ed98fe2cf77cd3b2cbd43d2"
+      ]
     },
     {
       "name": "京杭大运河杭州景区",
@@ -2421,7 +3752,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.302955,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/0e552ff17cf852fb94b0e9fb4a006389"
+      "image": "http://store.is.autonavi.com/showpic/0e552ff17cf852fb94b0e9fb4a006389",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0e552ff17cf852fb94b0e9fb4a006389",
+        "http://store.is.autonavi.com/showpic/ac0cb0e5138dd97944baf1d120808cc9",
+        "http://store.is.autonavi.com/showpic/6dc74cb7c8d30bb1ba582b56a0180f08"
+      ]
     },
     {
       "name": "大兜路历史文化街区",
@@ -2430,7 +3766,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.300095,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B023B0BDGD/headerImg/95a508e405feaeb765f3fa91a214cf05_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B023B0BDGD/headerImg/95a508e405feaeb765f3fa91a214cf05_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B023B0BDGD/headerImg/95a508e405feaeb765f3fa91a214cf05_2048_2048_80.jpg",
+        "http://store.is.autonavi.com/showpic/f5fea6f98e630e55709173e2143a0358",
+        "http://store.is.autonavi.com/showpic/f43f7af27973f17cfe46143e13d01b42"
+      ]
     },
     {
       "name": "凤凰寺",
@@ -2439,7 +3780,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.245453,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/8726ee1159f471b13469c0574124d950"
+      "image": "http://store.is.autonavi.com/showpic/8726ee1159f471b13469c0574124d950",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8726ee1159f471b13469c0574124d950",
+        "http://store.is.autonavi.com/showpic/5ecd355adaec11778e4052745c3d3f97",
+        "https://aos-comment.amap.com/B023B03HC5/comment/99CBF5A1_1519_44C4_80C0_07346705C7A1_L0_001_2000_150_1771433095756_09074667.jpg"
+      ]
     },
     {
       "name": "香积寺",
@@ -2448,7 +3794,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.298666,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/61f75f20c3c9f4807c561b4e76088b31"
+      "image": "http://store.is.autonavi.com/showpic/61f75f20c3c9f4807c561b4e76088b31",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/61f75f20c3c9f4807c561b4e76088b31",
+        "http://store.is.autonavi.com/showpic/37233a268ed77f117ba0d7803af36086",
+        "https://store.is.autonavi.com/showpic/32af46af316661590000008520600528?type=pic"
+      ]
     },
     {
       "name": "钱江新城灯光秀",
@@ -2457,7 +3808,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.244481,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/c5141729-8737-49ff-92e2-4ad9fdc0669d.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/c5141729-8737-49ff-92e2-4ad9fdc0669d.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/c5141729-8737-49ff-92e2-4ad9fdc0669d.jpg",
+        "https://aos-comment.amap.com/B0FFHKQ7F5/comment/content_media_external_file_100022624_1760142365045_35222503.jpg",
+        "https://aos-comment.amap.com/B0FFHKQ7F5/comment/1e943e58801cb5e2726d7214c327df3d_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "五柳巷历史街区",
@@ -2466,7 +3822,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.242162,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/86a18cfb032e58530262ce8824bb98f7"
+      "image": "http://store.is.autonavi.com/showpic/86a18cfb032e58530262ce8824bb98f7",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/86a18cfb032e58530262ce8824bb98f7",
+        "https://aos-comment.amap.com/B0FFFA3PD5/comment/content_media_external_file_24812_ss__1773240057191_82226664.jpg",
+        "https://aos-comment.amap.com/B0FFFA3PD5/comment/content_media_external_images_media_1000040544_ss__1769682215520_20169106.jpg"
+      ]
     },
     {
       "name": "吴山景区",
@@ -2475,7 +3836,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.23412,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/9be47b84fb5dd43bfb4f3238cea21871"
+      "image": "http://store.is.autonavi.com/showpic/9be47b84fb5dd43bfb4f3238cea21871",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9be47b84fb5dd43bfb4f3238cea21871",
+        "http://store.is.autonavi.com/showpic/09994ee5f41df9880b2ce2f9c0406dad",
+        "http://store.is.autonavi.com/showpic/a01274740faa41c58731620f68468364"
+      ]
     },
     {
       "name": "CBD公园",
@@ -2484,7 +3850,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.237933,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/c731b6acb1391086cbb0485de8b40c27"
+      "image": "http://store.is.autonavi.com/showpic/c731b6acb1391086cbb0485de8b40c27",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c731b6acb1391086cbb0485de8b40c27",
+        "https://aos-comment.amap.com/B023B0BIO8/comment/47710da4752f70c5a995d810ebdc124a_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B023B0BIO8/comment/997ddf011710e2fea817be080b8b5f3f_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "杭州Do都城",
@@ -2493,7 +3864,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.247996,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/ffef5e490f60c8a062a45c30503b8d0c"
+      "image": "http://store.is.autonavi.com/showpic/ffef5e490f60c8a062a45c30503b8d0c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ffef5e490f60c8a062a45c30503b8d0c",
+        "http://store.is.autonavi.com/showpic/381324a5a25948c2bb3d8dedf4e40b80",
+        "http://store.is.autonavi.com/showpic/5c9fa47d84d58b488af3ac4768384b05"
+      ]
     },
     {
       "name": "江和美海洋公园",
@@ -2502,7 +3878,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.268541,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/10ee68fa08660d93523809d274559fb2"
+      "image": "http://store.is.autonavi.com/showpic/10ee68fa08660d93523809d274559fb2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/10ee68fa08660d93523809d274559fb2",
+        "http://store.is.autonavi.com/showpic/3c80f6efa97e76fb7cb36aa489c4ec4c?operate=original&query_type=oss&operate_gif=1",
+        "https://aos-comment.amap.com/B0FFH0LYNK/comment/content_media_external_file_100004067_1764166425800_40862973.jpg"
+      ]
     },
     {
       "name": "柳浪闻莺御碑亭",
@@ -2511,7 +3892,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.243663,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0FFKQAV7C/comment/content_media_external_file_100005315_1769908641389_82696506.jpg"
+      "image": "https://aos-comment.amap.com/B0FFKQAV7C/comment/content_media_external_file_100005315_1769908641389_82696506.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFKQAV7C/comment/content_media_external_file_100005315_1769908641389_82696506.jpg",
+        "https://aos-comment.amap.com/B0FFKQAV7C/comment/0BA4AC9A_8966_43F6_A970_70DCF19BA2B3_L0_001_1440_192_1759714341423_41101598.jpg",
+        "https://aos-comment.amap.com/B0FFKQAV7C/comment/content_media_external_images_media_32757_ss__1766194191338_66199845.jpg"
+      ]
     },
     {
       "name": "雷峰塔景区雷峰塔",
@@ -2520,7 +3906,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.231612,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/b3fab88e884496f6e8c6e98c80ce918a"
+      "image": "http://store.is.autonavi.com/showpic/b3fab88e884496f6e8c6e98c80ce918a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b3fab88e884496f6e8c6e98c80ce918a",
+        "http://store.is.autonavi.com/showpic/c605f5f942191a9d0fd6f0165d73564a",
+        "https://store.is.autonavi.com/showpic/91a7bfbc7d4054f324368e1be2bae765"
+      ]
     },
     {
       "name": "白蛇飞渡桥",
@@ -2529,7 +3920,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.229403,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/5e87ae2a7c28af610000002707174862?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/5e87ae2a7c28af610000002707174862?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/5e87ae2a7c28af610000002707174862?type=pic",
+        "https://aos-comment.amap.com/B0J2KD90UG/comment/content_media_external_file_1000031204_ss__1761992287723_62874655.jpg",
+        "https://aos-comment.amap.com/B0J2KD90UG/comment/20e1c6dd4d82f25286cd79c8a47596d9_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "积义亭",
@@ -2538,7 +3934,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.231169,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B023B1D0EX/comment/content_media_external_file_54195_ss__1766674560543_79410635.jpg"
+      "image": "https://aos-comment.amap.com/B023B1D0EX/comment/content_media_external_file_54195_ss__1766674560543_79410635.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B023B1D0EX/comment/content_media_external_file_54195_ss__1766674560543_79410635.jpg",
+        "https://aos-comment.amap.com/B023B1D0EX/comment/content_media_external_file_314908_ss__1754634000657_57421762.jpg",
+        "https://store.is.autonavi.com/showpic/dc8469185894fee50000007344522767?type=pic"
+      ]
     },
     {
       "name": "城市阳台江堤步道",
@@ -2547,7 +3948,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.24515,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/cd01475f2c06b37c0000002340870957?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/cd01475f2c06b37c0000002340870957?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/cd01475f2c06b37c0000002340870957?type=pic",
+        "https://aos-comment.amap.com/B0HB399RBD/comment/content_media_external_file_456940_ss__1768388726602_67965251.jpg",
+        "https://store.is.autonavi.com/showpic/8d1399ff52580b2f0000002340880718?type=pic"
+      ]
     },
     {
       "name": "十五奎巷历史文化街区",
@@ -2556,7 +3962,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.237422,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0FFH6HE4P/comment/3E71011C_447D_458A_B6B4_F075F3012E16_L0_001_1500_200_1749899064793_55024257.jpg"
+      "image": "https://aos-comment.amap.com/B0FFH6HE4P/comment/3E71011C_447D_458A_B6B4_F075F3012E16_L0_001_1500_200_1749899064793_55024257.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFH6HE4P/comment/3E71011C_447D_458A_B6B4_F075F3012E16_L0_001_1500_200_1749899064793_55024257.jpg",
+        "https://aos-comment.amap.com/B0FFH6HE4P/comment/content_media_external_file_100003716_1766629911523_35065326.jpg",
+        "https://aos-comment.amap.com/B0FFH6NJOW/comment/content_media_external_images_media_1000054303_ss__1726921008692_79273285.jpg"
+      ]
     },
     {
       "name": "杭州奥体中心码头",
@@ -2565,7 +3976,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.229235,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0FFKK6B26/comment/8DAB7952_D18C_43DF_A0C5_07681835E541_L0_001_2000_112_1764073104398_76318314.jpg"
+      "image": "https://aos-comment.amap.com/B0FFKK6B26/comment/8DAB7952_D18C_43DF_A0C5_07681835E541_L0_001_2000_112_1764073104398_76318314.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFKK6B26/comment/8DAB7952_D18C_43DF_A0C5_07681835E541_L0_001_2000_112_1764073104398_76318314.jpg",
+        "https://aos-comment.amap.com/B0FFKK6B26/comment/374DB09E_244E_4877_9207_17D2DBD9AF0B_L0_001_2000_150_1765615702993_41690899.jpg",
+        "https://aos-comment.amap.com/B0FFKK6B26/comment/D36A5203_83AD_4964_92DC_32D7E82AEE36_L0_001_2000_150_1764393505557_38842821.jpg"
+      ]
     },
     {
       "name": "浙江革命烈士纪念馆",
@@ -2574,7 +3990,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.230586,
       "category": "历史人文",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/0cccb735fb104d860000009290472564"
+      "image": "https://store.is.autonavi.com/showpic/0cccb735fb104d860000009290472564",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/0cccb735fb104d860000009290472564",
+        "https://store.is.autonavi.com/showpic/ad4fb6a0105a95080000007576326329",
+        "https://store.is.autonavi.com/showpic/9fef8af4bcccad536470d31621fd1a51"
+      ]
     },
     {
       "name": "浙金广场",
@@ -2583,7 +4004,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.265292,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/cd6b4275dd2baa33639ea40bbc6b2e42"
+      "image": "http://store.is.autonavi.com/showpic/cd6b4275dd2baa33639ea40bbc6b2e42",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/cd6b4275dd2baa33639ea40bbc6b2e42",
+        "https://store.is.autonavi.com/showpic/da0acf88ddfa15811cee4ad4658147e7",
+        "http://store.is.autonavi.com/showpic/e01b71c86cd4388f9ef3ba20ceed13d8"
+      ]
     },
     {
       "name": "断桥残雪碑亭",
@@ -2592,7 +4018,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.259153,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/a80d7ced7c5ef46d0000007370680786"
+      "image": "https://store.is.autonavi.com/showpic/a80d7ced7c5ef46d0000007370680786",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/a80d7ced7c5ef46d0000007370680786",
+        "https://store.is.autonavi.com/showpic/aebe6dd01e55a3f40000007370694293",
+        "https://store.is.autonavi.com/showpic/390f01e6d8ec87d40000006992114156?type=pic"
+      ]
     },
     {
       "name": "杭州清真寺",
@@ -2601,7 +4032,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.274373,
       "category": "宗教寺庙",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B023B1DHZL/comment/176623067029_1766230684874_29850009.jpg"
+      "image": "https://aos-comment.amap.com/B023B1DHZL/comment/176623067029_1766230684874_29850009.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B023B1DHZL/comment/176623067029_1766230684874_29850009.jpg",
+        "https://aos-comment.amap.com/B023B1DHZL/comment/3EE290A7_AD9F_4EDE_BA89_BC01F696C7AD_L0_001_1206_141_1766292815422_27573726.jpg",
+        "https://aos-comment.amap.com/B023B1DHZL/comment/86191582c675061fcf4533ce268cdce1_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "艺术望江台",
@@ -2610,7 +4046,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.213378,
       "category": "自然风光",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0I2GUKTI5/comment/A2D680C8_981F_43DF_A162_68E97CEB5DA0_L0_001_2000_150_1771333605953_99766465.jpg"
+      "image": "https://aos-comment.amap.com/B0I2GUKTI5/comment/A2D680C8_981F_43DF_A162_68E97CEB5DA0_L0_001_2000_150_1771333605953_99766465.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0I2GUKTI5/comment/A2D680C8_981F_43DF_A162_68E97CEB5DA0_L0_001_2000_150_1771333605953_99766465.jpg",
+        "https://store.is.autonavi.com/showpic/f2146938d767b8bc0000005508216872?type=pic",
+        "https://store.is.autonavi.com/showpic/12602dbfd0e79c660000003408428681?type=pic"
+      ]
     },
     {
       "name": "左岸万国花园",
@@ -2619,7 +4060,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.21889,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/a13a450525f3326c32452ec8f850d498"
+      "image": "https://store.is.autonavi.com/showpic/a13a450525f3326c32452ec8f850d498",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/a13a450525f3326c32452ec8f850d498",
+        "https://store.is.autonavi.com/showpic/1c6b24a8d686e7dbf3b0762702fc48d0",
+        "https://aos-comment.amap.com/B023B1AVVP/comment/EE0C0B9A_E02D_45EE_89FE_417CACC7B405_L0_001_1500_200_1764911793457_21157565.jpg"
+      ]
     },
     {
       "name": "世纪花园",
@@ -2628,7 +4074,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.248649,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B023B09YVJ/comment/329e52aea9273d35983cdbfe57296306_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B023B09YVJ/comment/329e52aea9273d35983cdbfe57296306_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B023B09YVJ/comment/329e52aea9273d35983cdbfe57296306_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B023B09YVJ/comment/content_media_external_images_media_42421_ss__1739524503805_73088688.jpg",
+        "https://aos-comment.amap.com/B023B09YVJ/comment/content_media_external_file_1000039222_ss__1763959322849_00399882.jpg"
+      ]
     },
     {
       "name": "钱学森故居",
@@ -2637,7 +4088,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.252066,
       "category": "历史人文",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/ce2d455ccc01dbdb49b9734d946cc520"
+      "image": "http://store.is.autonavi.com/showpic/ce2d455ccc01dbdb49b9734d946cc520",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ce2d455ccc01dbdb49b9734d946cc520",
+        "http://store.is.autonavi.com/showpic/7f10d889f66efb451d855d2354d6b1c9",
+        "https://aos-comment.amap.com/B023B16CMZ/comment/content_media_external_file_136248_ss__1752555207840_93583231.jpg"
+      ]
     }
   ],
   "南京": [
@@ -2648,7 +4104,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.044228,
       "category": "城市地标",
       "rating": 4.9,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/21acde57-d540-4737-974a-11b6c69d23de.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/21acde57-d540-4737-974a-11b6c69d23de.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/21acde57-d540-4737-974a-11b6c69d23de.jpg",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/9de05734-5535-4a28-b267-6034209ee871.jpg",
+        "http://store.is.autonavi.com/showpic/012a55c80fb8e55d85789ac1198bf526"
+      ]
     },
     {
       "name": "南京梧桐大道(陵园路)",
@@ -2657,7 +4118,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.04605,
       "category": "历史人文",
       "rating": 4.9,
-      "image": "https://store.is.autonavi.com/showpic/413affea1c1fdccd0000009292336249?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/413affea1c1fdccd0000009292336249?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/413affea1c1fdccd0000009292336249?type=pic",
+        "https://store.is.autonavi.com/showpic/8c42ed3529ec3f720000007826160754?type=pic",
+        "https://store.is.autonavi.com/showpic/85cf94f1aa381d960000009292332367?type=pic"
+      ]
     },
     {
       "name": "中山陵景区",
@@ -2666,7 +4132,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.054508,
       "category": "历史人文",
       "rating": 4.9,
-      "image": "http://store.is.autonavi.com/showpic/46bf800a21c42453ff756fc2b77c710f"
+      "image": "http://store.is.autonavi.com/showpic/46bf800a21c42453ff756fc2b77c710f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/46bf800a21c42453ff756fc2b77c710f",
+        "http://store.is.autonavi.com/showpic/8ba66129d88f0dd017a3c5e6f2f4e44b",
+        "http://store.is.autonavi.com/showpic/0f1a841f2ea9298054e7e23643d4ea73"
+      ]
     },
     {
       "name": "古鸡鸣寺",
@@ -2675,7 +4146,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.061061,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/query_pic?id=st653d2760-3b45-47e5-ad2c-7a027aea5997&user=search&operate=original"
+      "image": "http://store.is.autonavi.com/query_pic?id=st653d2760-3b45-47e5-ad2c-7a027aea5997&user=search&operate=original",
+      "photos": [
+        "http://store.is.autonavi.com/query_pic?id=st653d2760-3b45-47e5-ad2c-7a027aea5997&user=search&operate=original",
+        "http://store.is.autonavi.com/showpic/392f72eea97dc58c8dc90151327ddfbe",
+        "http://store.is.autonavi.com/showpic/de3f56d049b7c23411b5adaa1671767a"
+      ]
     },
     {
       "name": "玄武湖景区",
@@ -2684,7 +4160,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.069455,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/ff2f4114639e0110ae96ae76ad0c0287"
+      "image": "http://store.is.autonavi.com/showpic/ff2f4114639e0110ae96ae76ad0c0287",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ff2f4114639e0110ae96ae76ad0c0287",
+        "http://store.is.autonavi.com/showpic/f52c2a2a5be2b1dfbc1460b30b04f3a9",
+        "http://store.is.autonavi.com/showpic/fa838fd59de75010e6c0709b39b2cffd"
+      ]
     },
     {
       "name": "夫子庙秦淮风光带",
@@ -2693,7 +4174,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.020699,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/9e64a8689c6b079d5f0b86a354274188"
+      "image": "http://store.is.autonavi.com/showpic/9e64a8689c6b079d5f0b86a354274188",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9e64a8689c6b079d5f0b86a354274188",
+        "http://store.is.autonavi.com/showpic/5e0203384b6c4d48db6282aee6e5b606",
+        "http://store.is.autonavi.com/showpic/bf334b66e0cace5f9ee9ca5f55e0b91c"
+      ]
     },
     {
       "name": "明孝陵景区",
@@ -2702,7 +4188,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.051926,
       "category": "历史人文",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/a9d8eb4d58561ffda8bb4ff08c8a4d2c"
+      "image": "http://store.is.autonavi.com/showpic/a9d8eb4d58561ffda8bb4ff08c8a4d2c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a9d8eb4d58561ffda8bb4ff08c8a4d2c",
+        "http://store.is.autonavi.com/showpic/3ea075662d58c7aa5ae221511543ce34",
+        "http://store.is.autonavi.com/showpic/5e0180074458603796c2c0b37efb83d6"
+      ]
     },
     {
       "name": "南京夫子庙",
@@ -2711,7 +4202,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.02066,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/8fd02cf1c04a8a5a91e32a5354d7a023"
+      "image": "http://store.is.autonavi.com/showpic/8fd02cf1c04a8a5a91e32a5354d7a023",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8fd02cf1c04a8a5a91e32a5354d7a023",
+        "http://store.is.autonavi.com/showpic/d7376c3ebfc72313f868c4674f0c10ca",
+        "http://store.is.autonavi.com/showpic/de5059419440e30111295da839c959a2"
+      ]
     },
     {
       "name": "玄武湖景区情侣园",
@@ -2720,7 +4216,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.07004,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/530151b4f1816cfaea51b0b6c4a78577"
+      "image": "http://store.is.autonavi.com/showpic/530151b4f1816cfaea51b0b6c4a78577",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/530151b4f1816cfaea51b0b6c4a78577",
+        "http://store.is.autonavi.com/showpic/1e331dd87cb795b8c0071da5e50de578",
+        "http://store.is.autonavi.com/showpic/b1cd8ca07e1fca5a83f0aa681ebadb46"
+      ]
     },
     {
       "name": "红山森林动物园",
@@ -2729,7 +4230,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.091808,
       "category": "主题乐园",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/b3ffaac9ba7ae8c5b15ef439a76ed5e0"
+      "image": "http://store.is.autonavi.com/showpic/b3ffaac9ba7ae8c5b15ef439a76ed5e0",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b3ffaac9ba7ae8c5b15ef439a76ed5e0",
+        "http://store.is.autonavi.com/showpic/e374b77330d8eb1b55c92b9aafa33bba",
+        "http://store.is.autonavi.com/showpic/f90bf981d9548be229a545084ec9dd5f"
+      ]
     },
     {
       "name": "钟山风景名胜区",
@@ -2738,7 +4244,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.064908,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/72c44f5fd1da65af6128fdae808d237d"
+      "image": "http://store.is.autonavi.com/showpic/72c44f5fd1da65af6128fdae808d237d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/72c44f5fd1da65af6128fdae808d237d",
+        "http://store.is.autonavi.com/showpic/16bf469886e45372a46f121735e9a9e1",
+        "http://store.is.autonavi.com/showpic/d10eb1ccc73542b33bef1611fdc9e3a8"
+      ]
     },
     {
       "name": "老门东",
@@ -2747,7 +4258,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.011604,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/69e7ca3e4d0357955c61d1ec1682a587"
+      "image": "http://store.is.autonavi.com/showpic/69e7ca3e4d0357955c61d1ec1682a587",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/69e7ca3e4d0357955c61d1ec1682a587",
+        "http://store.is.autonavi.com/showpic/593ecf40b029c8c88039bc0440c62156",
+        "http://store.is.autonavi.com/showpic/aa99d0326fcfba214c97f6d3e81cabed"
+      ]
     },
     {
       "name": "秦淮河",
@@ -2756,7 +4272,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.021196,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/2b5070db544281e34500647f99447487"
+      "image": "http://store.is.autonavi.com/showpic/2b5070db544281e34500647f99447487",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/2b5070db544281e34500647f99447487",
+        "http://store.is.autonavi.com/showpic/7da27fe5390b54e0394d5ffd09793e7d",
+        "http://store.is.autonavi.com/showpic/7f6dbb05d99c2cbbf9a098d62b62491d"
+      ]
     },
     {
       "name": "南京利济巷慰安所旧址陈列馆",
@@ -2765,7 +4286,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.038984,
       "category": "历史人文",
       "rating": 4.8,
-      "image": "https://aos-comment.amap.com/B0FFIWL1DU/comment/353036790d8bac02bcbc8c84bbac1ecf_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0FFIWL1DU/comment/353036790d8bac02bcbc8c84bbac1ecf_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFIWL1DU/comment/353036790d8bac02bcbc8c84bbac1ecf_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFIWL1DU/comment/C8C64130_DF1A_49AA_B9DD_5EC315345B43_L0_001_2000_133_1756561752962_90960026.jpg",
+        "https://aos-comment.amap.com/B0FFIWL1DU/comment/content_media_external_images_media_1000117905_ss__1730909536082_19079895.jpg"
+      ]
     },
     {
       "name": "南京城墙景区(神策门至太平门)",
@@ -2774,7 +4300,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.062723,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/3f3d96e6d764c94fde7bf324bd47edf8"
+      "image": "http://store.is.autonavi.com/showpic/3f3d96e6d764c94fde7bf324bd47edf8",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/3f3d96e6d764c94fde7bf324bd47edf8",
+        "http://store.is.autonavi.com/showpic/d7a8b47f883de403e91ff3387649ee1e",
+        "http://store.is.autonavi.com/showpic/bb3b84077d0e02d3fa1e505b12175d5c"
+      ]
     },
     {
       "name": "毗卢寺",
@@ -2783,7 +4314,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.042875,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/76c882347a5c3ed20000005548612239?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/76c882347a5c3ed20000005548612239?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/76c882347a5c3ed20000005548612239?type=pic",
+        "https://aos-comment.amap.com/B00190AZ4L/comment/FEAA3C9A_129B_4A73_8B8B_58637B4AC625_L0_001_1126_200_1770776044647_37780526.jpg",
+        "https://store.is.autonavi.com/showpic/555ea05662639b630000000978148754?type=pic"
+      ]
     },
     {
       "name": "白马公园",
@@ -2792,7 +4328,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.060725,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/bb742e585e9dd8a4df84e6cfcb55b305"
+      "image": "http://store.is.autonavi.com/showpic/bb742e585e9dd8a4df84e6cfcb55b305",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/bb742e585e9dd8a4df84e6cfcb55b305",
+        "http://store.is.autonavi.com/showpic/1ee72faf741762e8063d9d6f56acc321",
+        "http://store.is.autonavi.com/showpic/5e473bff2d4b8794abbbc4680e08024b"
+      ]
     },
     {
       "name": "瞻园",
@@ -2801,7 +4342,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.021034,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/3a5a2d6f6ad2612b8c9f42587d61b56f"
+      "image": "http://store.is.autonavi.com/showpic/3a5a2d6f6ad2612b8c9f42587d61b56f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/3a5a2d6f6ad2612b8c9f42587d61b56f",
+        "http://store.is.autonavi.com/showpic/105b72eda1b46de4bb8a9489c37de915",
+        "http://store.is.autonavi.com/showpic/99e677a177e2e2fe88dfabf752afa9fc"
+      ]
     },
     {
       "name": "太阳宫广场",
@@ -2810,7 +4356,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.064285,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/2f58d9e3e90ac7740000003033662318?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/2f58d9e3e90ac7740000003033662318?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/2f58d9e3e90ac7740000003033662318?type=pic",
+        "https://aos-comment.amap.com/B001912D6Z/comment/96A7A792_CC3F_4E3A_848F_644B5DEA3D31_L0_001_2016_151_1764407837321_86494537.jpg",
+        "https://store.is.autonavi.com/showpic/c8aabf1f8036123a0000002391006387?type=pic"
+      ]
     },
     {
       "name": "南京明故宫遗址公园",
@@ -2819,7 +4370,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.04145,
       "category": "历史人文",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/0bf83f1c17d271f93541f994a19d1f93"
+      "image": "http://store.is.autonavi.com/showpic/0bf83f1c17d271f93541f994a19d1f93",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0bf83f1c17d271f93541f994a19d1f93",
+        "http://store.is.autonavi.com/showpic/e0c742d1ebc7f9f66e942464d6f20829",
+        "http://store.is.autonavi.com/showpic/5ebcaf096c00f22a206766b918dafe7b"
+      ]
     },
     {
       "name": "朝天宫",
@@ -2828,7 +4384,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.034344,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/96c1349ad96bd7e8cbb427cf991991c0"
+      "image": "http://store.is.autonavi.com/showpic/96c1349ad96bd7e8cbb427cf991991c0",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/96c1349ad96bd7e8cbb427cf991991c0",
+        "http://store.is.autonavi.com/showpic/27444c9790ad9ddc68b5b1d7cf8fcc50",
+        "http://store.is.autonavi.com/showpic/7372aebde41b3551b05fe063e74ce2f9"
+      ]
     },
     {
       "name": "南京中山植物园",
@@ -2837,7 +4398,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.0554,
       "category": "主题乐园",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/2069bca7503d20091d2e90f3f6d44b70"
+      "image": "http://store.is.autonavi.com/showpic/2069bca7503d20091d2e90f3f6d44b70",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/2069bca7503d20091d2e90f3f6d44b70",
+        "http://store.is.autonavi.com/showpic/7f33d5b163e310be9788a83ee55f2231",
+        "http://store.is.autonavi.com/showpic/0ce8183eabadba44c4b275a21c598693"
+      ]
     },
     {
       "name": "侵华日军南京大屠杀遇难同胞纪念馆",
@@ -2846,7 +4412,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.035217,
       "category": "历史人文",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/5bece6e3e3e4e0203fe0f2962394a46d"
+      "image": "http://store.is.autonavi.com/showpic/5bece6e3e3e4e0203fe0f2962394a46d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5bece6e3e3e4e0203fe0f2962394a46d",
+        "http://store.is.autonavi.com/showpic/d2f67f0758f4efb5379786f13e850d67",
+        "http://store.is.autonavi.com/showpic/d8f6f9f39a9fc0c5b52d5377027f88a0"
+      ]
     },
     {
       "name": "颐和路歪脖子树",
@@ -2855,7 +4426,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.064034,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0L3AAQ0U2/comment/content_media_external_file_209995_ss__1762354209675_68744394.jpg"
+      "image": "https://aos-comment.amap.com/B0L3AAQ0U2/comment/content_media_external_file_209995_ss__1762354209675_68744394.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0L3AAQ0U2/comment/content_media_external_file_209995_ss__1762354209675_68744394.jpg",
+        "https://aos-comment.amap.com/B0L3AAQ0U2/comment/F5629252_C9F2_439B_8352_5F9532E2BFE2_L0_001_1500_200_1768589039347_64875396.jpg",
+        "https://store.is.autonavi.com/showpic/06793a86bfd7c59f0000002472850754?type=pic"
+      ]
     },
     {
       "name": "灵谷景区",
@@ -2864,7 +4440,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.056287,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/7bf878289d62d1490000003075454886?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/7bf878289d62d1490000003075454886?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/7bf878289d62d1490000003075454886?type=pic",
+        "https://store.is.autonavi.com/showpic/f1f6c38f0d234b5d0000007347926542?type=pic",
+        "http://store.is.autonavi.com/showpic/423a86c77b2f103bf889c96b74646320"
+      ]
     },
     {
       "name": "莫愁湖公园",
@@ -2873,7 +4454,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.03383,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/23b14a7a89abc66d00fcdda4266105af"
+      "image": "http://store.is.autonavi.com/showpic/23b14a7a89abc66d00fcdda4266105af",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/23b14a7a89abc66d00fcdda4266105af",
+        "http://store.is.autonavi.com/showpic/e535104f4a94986e88f459a9385a180e",
+        "http://store.is.autonavi.com/showpic/f5e9a31bd41bb02d1c80b1e561c6255e"
+      ]
     },
     {
       "name": "美龄宫",
@@ -2882,7 +4468,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.045458,
       "category": "历史人文",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/96b770335df1cbccbde50d714594dd78"
+      "image": "http://store.is.autonavi.com/showpic/96b770335df1cbccbde50d714594dd78",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/96b770335df1cbccbde50d714594dd78",
+        "http://store.is.autonavi.com/showpic/fb5849c58bbeb09f1865e8eb0195c54b",
+        "http://store.is.autonavi.com/showpic/01bb0156b162f26d19b3e949ed79de9a"
+      ]
     },
     {
       "name": "梧桐大道九号网红打卡圣地",
@@ -2891,7 +4482,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.046231,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/1880fd2eba8d9bb70000004017518352?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/1880fd2eba8d9bb70000004017518352?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/1880fd2eba8d9bb70000004017518352?type=pic",
+        "https://aos-comment.amap.com/B0LDO50G83/comment/_1771413957579_52524434.jpg",
+        "https://store.is.autonavi.com/showpic/97850673f6d99a3c0000003073098208?type=pic"
+      ]
     },
     {
       "name": "钟山风景名胜区中山陵景区音乐台",
@@ -2900,7 +4496,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.055096,
       "category": "历史人文",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/5f6f0991725450e2b8303b86403ffae2"
+      "image": "http://store.is.autonavi.com/showpic/5f6f0991725450e2b8303b86403ffae2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5f6f0991725450e2b8303b86403ffae2",
+        "http://store.is.autonavi.com/showpic/70aecbe8c67383556e40f4b447759ab4",
+        "http://store.is.autonavi.com/showpic/6921ae7aa673aef0f3254295a516ab4a"
+      ]
     },
     {
       "name": "中华门",
@@ -2909,7 +4510,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.0128,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/c6fc8d9abde53360671e66f795dd6408"
+      "image": "http://store.is.autonavi.com/showpic/c6fc8d9abde53360671e66f795dd6408",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c6fc8d9abde53360671e66f795dd6408",
+        "http://store.is.autonavi.com/showpic/e94ea08e141c471b51e6c013251de283",
+        "http://store.is.autonavi.com/showpic/d01ed623ad7bee9b488b220dfa0768fd"
+      ]
     },
     {
       "name": "大报恩寺遗址景区",
@@ -2918,7 +4524,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.009204,
       "category": "历史人文",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/d1c9d26e111f4cef7ed60a51bb365847"
+      "image": "http://store.is.autonavi.com/showpic/d1c9d26e111f4cef7ed60a51bb365847",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d1c9d26e111f4cef7ed60a51bb365847",
+        "http://store.is.autonavi.com/showpic/263e131792d95c676bae3ee158dc67f9",
+        "http://store.is.autonavi.com/showpic/841194e69d2da587d4f4032d6516c27f"
+      ]
     },
     {
       "name": "阅江楼景区",
@@ -2927,7 +4538,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.094477,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/08e96edd825b7e3ff3c19c360e96f032"
+      "image": "http://store.is.autonavi.com/showpic/08e96edd825b7e3ff3c19c360e96f032",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/08e96edd825b7e3ff3c19c360e96f032",
+        "http://store.is.autonavi.com/showpic/0297f0e9ee762f315e28531115babaeb",
+        "http://store.is.autonavi.com/showpic/d38f8772fd7f7ff398475cb07e7ee6dc"
+      ]
     },
     {
       "name": "白鹭洲公园",
@@ -2936,7 +4552,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.017888,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/80cceddb4c70d1da790ace3073e2ff2f"
+      "image": "http://store.is.autonavi.com/showpic/80cceddb4c70d1da790ace3073e2ff2f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/80cceddb4c70d1da790ace3073e2ff2f",
+        "http://store.is.autonavi.com/showpic/0604aae300305e9845c09ee74a4623bf",
+        "http://store.is.autonavi.com/showpic/172382c505c4394bbf67980553d13d1a"
+      ]
     },
     {
       "name": "中国科举博物馆(江南贡院)",
@@ -2945,7 +4566,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.020795,
       "category": "历史人文",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/f5bea28c1ade934769756aaa80cdf653"
+      "image": "http://store.is.autonavi.com/showpic/f5bea28c1ade934769756aaa80cdf653",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/f5bea28c1ade934769756aaa80cdf653",
+        "http://store.is.autonavi.com/showpic/c207dca9335440c79de03c63068f387b",
+        "http://store.is.autonavi.com/showpic/d396c7c7135b01db1a93636d1f8104a0"
+      ]
     },
     {
       "name": "南京雨花台风景区",
@@ -2954,7 +4580,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.997896,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/d687af8d581468362bf8f5e2b234fd94"
+      "image": "http://store.is.autonavi.com/showpic/d687af8d581468362bf8f5e2b234fd94",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d687af8d581468362bf8f5e2b234fd94",
+        "https://store.is.autonavi.com/showpic/3378e529be8047af0000005873172614?type=pic",
+        "https://store.is.autonavi.com/showpic/759a87c2ccc15de5bd769e6dae6b22a8"
+      ]
     },
     {
       "name": "灵谷寺",
@@ -2963,7 +4594,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.055286,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/30398af21636202303342b514bf2502c"
+      "image": "http://store.is.autonavi.com/showpic/30398af21636202303342b514bf2502c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/30398af21636202303342b514bf2502c",
+        "http://store.is.autonavi.com/showpic/44333cee104a6028521aa715038fb534",
+        "http://store.is.autonavi.com/showpic/5a7f0164922d4b49be052d8b2488754c"
+      ]
     },
     {
       "name": "梅花山",
@@ -2972,7 +4608,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.050478,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/4e99e065e55d54ce135c73528b139c70"
+      "image": "http://store.is.autonavi.com/showpic/4e99e065e55d54ce135c73528b139c70",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/4e99e065e55d54ce135c73528b139c70",
+        "http://store.is.autonavi.com/showpic/0e4c80e161a563fecffd36e3291a4147",
+        "http://store.is.autonavi.com/showpic/7a943c642b4b50d358f0cc2dcfc47d2a"
+      ]
     },
     {
       "name": "南京城墙台城景区",
@@ -2981,7 +4622,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.061269,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/dadf8a3efc38fd2d0000003052528444?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/dadf8a3efc38fd2d0000003052528444?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/dadf8a3efc38fd2d0000003052528444?type=pic",
+        "https://store.is.autonavi.com/showpic/c0a3ebef971009c60000004614438914?type=pic",
+        "https://aos-comment.amap.com/B0FFHB821F/comment/369D972B_01AA_41E5_AC6E_A6C5FEECD1D1_L0_001_1536_204_1770982473465_30129183.jpg"
+      ]
     },
     {
       "name": "中共代表团梅园新村纪念馆",
@@ -2990,7 +4636,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.042379,
       "category": "历史人文",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/4d7a89b05e0157190000004692278846"
+      "image": "https://store.is.autonavi.com/showpic/4d7a89b05e0157190000004692278846",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/4d7a89b05e0157190000004692278846",
+        "http://store.is.autonavi.com/showpic/1f09b293f2faf957a7a28f7574c9f7a2",
+        "https://store.is.autonavi.com/showpic/65efd07669943376b53ad9a501f716b8"
+      ]
     },
     {
       "name": "鼓楼公园",
@@ -2999,7 +4650,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.058688,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/a7b9d629323732a227a936bb4ca0b610"
+      "image": "http://store.is.autonavi.com/showpic/a7b9d629323732a227a936bb4ca0b610",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a7b9d629323732a227a936bb4ca0b610",
+        "http://store.is.autonavi.com/showpic/2d97ae2359ca94b4d9e8c686ad25748b",
+        "https://aos-comment.amap.com/B001905178/comment/content_media_external_file_255737_ss__1765764308884_91442608.jpg"
+      ]
     },
     {
       "name": "颐和路历史文化街区",
@@ -3008,7 +4664,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.063949,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0LBSDSACJ/comment/0479652D_37CE_46FF_93D8_462D283DA3FB_L0_001_1080_81_1761486680138_70689744.jpg"
+      "image": "https://aos-comment.amap.com/B0LBSDSACJ/comment/0479652D_37CE_46FF_93D8_462D283DA3FB_L0_001_1080_81_1761486680138_70689744.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0LBSDSACJ/comment/0479652D_37CE_46FF_93D8_462D283DA3FB_L0_001_1080_81_1761486680138_70689744.jpg",
+        "https://aos-comment.amap.com/B0LBSDSACJ/comment/content_media_external_images_media_1000040408_ss__1762964170233_74939372.jpg",
+        "https://aos-comment.amap.com/B0LBSDSACJ/comment/content_media_external_file_18193_ss__1759370945709_80923435.jpg"
+      ]
     },
     {
       "name": "玄武湖景区十里长堤",
@@ -3017,7 +4678,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.064937,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0FFG4QV41/comment/content_media_external_file_558574_ss__1754576560334_35543863.jpg"
+      "image": "https://aos-comment.amap.com/B0FFG4QV41/comment/content_media_external_file_558574_ss__1754576560334_35543863.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFG4QV41/comment/content_media_external_file_558574_ss__1754576560334_35543863.jpg",
+        "https://store.is.autonavi.com/showpic/5e60e2692626b95f0000003083602733?type=pic",
+        "https://aos-comment.amap.com/B0FFG4QV41/comment/2d2153472785955c3d1c9a77f3083de4_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "南京海底世界",
@@ -3026,7 +4692,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.053785,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/4bf7a5623a3336855b3a88b84a67e230"
+      "image": "http://store.is.autonavi.com/showpic/4bf7a5623a3336855b3a88b84a67e230",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/4bf7a5623a3336855b3a88b84a67e230",
+        "http://store.is.autonavi.com/showpic/dd680d5474645c6e49da8bdb11f1f1d2",
+        "http://store.is.autonavi.com/showpic/fcf0b62ab071c14f45fdda08a4d3d0dc"
+      ]
     },
     {
       "name": "乌龙潭公园",
@@ -3035,7 +4706,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.046112,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B001905179/comment/content_media_external_file_652_1749178288728_44625563.jpg"
+      "image": "https://aos-comment.amap.com/B001905179/comment/content_media_external_file_652_1749178288728_44625563.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001905179/comment/content_media_external_file_652_1749178288728_44625563.jpg",
+        "https://store.is.autonavi.com/showpic/ac45dd359eedf8870000002349396991?type=pic",
+        "https://aos-comment.amap.com/B001905179/comment/content_media_external_file_1000008435_ss__1766832133135_54821259.jpg"
+      ]
     },
     {
       "name": "颐和路12号民国建筑",
@@ -3044,7 +4720,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.064198,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/comment/content_service__1771853121784_33523059_1771853328518_15728456.jpg"
+      "image": "https://aos-comment.amap.com/comment/content_service__1771853121784_33523059_1771853328518_15728456.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/comment/content_service__1771853121784_33523059_1771853328518_15728456.jpg",
+        "https://aos-comment.amap.com/B0KKSU0VR1/comment/94103849_D64D_435B_8215_56B4F797A0E3_L0_001_1500_200_1772177012267_71987195.jpg",
+        "https://aos-comment.amap.com/B0KKSU0VR1/comment/content_media_external_file_200652_1771425828333_06563247.jpg"
+      ]
     },
     {
       "name": "琵琶湖公园",
@@ -3053,7 +4734,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.054082,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/cf488aacc75d14050000003135236030?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/cf488aacc75d14050000003135236030?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/cf488aacc75d14050000003135236030?type=pic",
+        "https://store.is.autonavi.com/showpic/833d2586ea4b7fff0000002874970724?type=pic",
+        "https://aos-comment.amap.com/B0FFFAPZYQ/comment/content_media_external_images_media_6349_ss__1726306178061_52763781.jpg"
+      ]
     },
     {
       "name": "基督教江苏路堂",
@@ -3062,7 +4748,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.064326,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/91363b0cae83aeda0000003467314130?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/91363b0cae83aeda0000003467314130?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/91363b0cae83aeda0000003467314130?type=pic",
+        "https://aos-comment.amap.com/B001906PB9/comment/710B8189_2CDD_4734_A2C6_B64A90D5C8A8_L0_001_1340_200_1748048696772_29777146.jpg",
+        "https://store.is.autonavi.com/showpic/ab7309304896f3740000003467316105?type=pic"
+      ]
     },
     {
       "name": "红山动物园南门新区",
@@ -3071,7 +4762,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.089895,
       "category": "主题乐园",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/060c6e29566a67fe0000002882628238?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/060c6e29566a67fe0000002882628238?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/060c6e29566a67fe0000002882628238?type=pic",
+        "https://aos-comment.amap.com/B0L3D754UU/comment/content_media_external_file_1000110133_ss__1766319749298_61204319.jpg",
+        "https://aos-comment.amap.com/B0L3D754UU/comment/content_media_external_file_1000022703_ss__1767258859618_37715487.jpg"
+      ]
     },
     {
       "name": "南京国防园",
@@ -3080,7 +4776,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.051368,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/fc50b9fa8893af18cffb2eb4d76b14a2"
+      "image": "http://store.is.autonavi.com/showpic/fc50b9fa8893af18cffb2eb4d76b14a2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/fc50b9fa8893af18cffb2eb4d76b14a2",
+        "http://store.is.autonavi.com/showpic/02f4efe0c0254e900a384a756c783bcf",
+        "http://store.is.autonavi.com/showpic/3a38b41ecf52e4d2d3f9c54caf3fd89c"
+      ]
     },
     {
       "name": "头陀岭景区",
@@ -3089,7 +4790,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.06674,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/54f7d03ea310a67e40c4c4cc"
+      "image": "http://store.is.autonavi.com/showpic/54f7d03ea310a67e40c4c4cc",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/54f7d03ea310a67e40c4c4cc",
+        "https://aos-comment.amap.com/B001909G89/comment/content_media_external_file_1000077158_ss__1754281234789_12811497.jpg",
+        "https://aos-comment.amap.com/B001909G89/comment/95536531_A339_47E9_A97E_164ED4322F42_L0_001_1721_93_1768201354189_34691114.jpg"
+      ]
     },
     {
       "name": "梧桐大道网红桥",
@@ -3098,7 +4804,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.046231,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/72ba9c7d6eab0cb70000003175512437?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/72ba9c7d6eab0cb70000003175512437?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/72ba9c7d6eab0cb70000003175512437?type=pic",
+        "https://store.is.autonavi.com/showpic/81af587735b9058b0000003107646204?type=pic",
+        "https://store.is.autonavi.com/showpic/3dbad46316426c120000009002132813?type=pic"
+      ]
     },
     {
       "name": "月牙湖公园",
@@ -3107,7 +4818,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.030173,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/3f0ded6840fe1b57bdbaaafa23bf8e49"
+      "image": "https://store.is.autonavi.com/showpic/3f0ded6840fe1b57bdbaaafa23bf8e49",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/3f0ded6840fe1b57bdbaaafa23bf8e49",
+        "https://aos-comment.amap.com/B00190BC3R/comment/4DE5F748_F880_43BF_80F7_7E2C46684F65_L0_001_1179_87_1769584900469_16686513.jpg",
+        "https://aos-comment.amap.com/B00190BC3R/comment/content_media_external_images_media_1000007883_ss__1761387216910_35082392.jpg"
+      ]
     },
     {
       "name": "九华山公园",
@@ -3116,7 +4832,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.059806,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/e472ba22aa3480d7a5e7080eabee3b75"
+      "image": "http://store.is.autonavi.com/showpic/e472ba22aa3480d7a5e7080eabee3b75",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e472ba22aa3480d7a5e7080eabee3b75",
+        "https://aos-comment.amap.com/B00190001A/comment/content_media_external_file_1000021563_ss__1764479506859_82915021.jpg",
+        "https://aos-comment.amap.com/B00190001A/comment/f638d71420672ac8ef1460cf5a0ce9ed_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "明城墙公园",
@@ -3125,7 +4846,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.069164,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B00190B5GX/comment/2FA496E3_4A3B_4025_82AD_B617EF455ABC_L0_001_851_113_1764865326341_73677255.jpg"
+      "image": "https://aos-comment.amap.com/B00190B5GX/comment/2FA496E3_4A3B_4025_82AD_B617EF455ABC_L0_001_851_113_1764865326341_73677255.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B00190B5GX/comment/2FA496E3_4A3B_4025_82AD_B617EF455ABC_L0_001_851_113_1764865326341_73677255.jpg",
+        "https://aos-comment.amap.com/B00190B5GX/comment/content_media_external_file_1000105999_ss__1768797842223_61235765.jpg",
+        "https://aos-comment.amap.com/B00190B5GX/comment/0a51855bd02d09fb4d387ee317a6ed75_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "神策门公园",
@@ -3134,7 +4860,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.088919,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/43359df0cecdfc560000002368694813?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/43359df0cecdfc560000002368694813?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/43359df0cecdfc560000002368694813?type=pic",
+        "https://aos-comment.amap.com/B001904615/comment/b98dbd016aa06f243e764908baac3dd9_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/5a58271a58d47abb0000000669560418?type=pic"
+      ]
     },
     {
       "name": "南京十朝文化园",
@@ -3143,7 +4874,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.044986,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0FFFS03HE/comment/content_media_external_file_4099_1764463467039_88528643.jpg"
+      "image": "https://aos-comment.amap.com/B0FFFS03HE/comment/content_media_external_file_4099_1764463467039_88528643.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFFS03HE/comment/content_media_external_file_4099_1764463467039_88528643.jpg",
+        "https://aos-comment.amap.com/B0FFFS03HE/comment/9b8ec692f4cae0cc8d3cd972ec736ef2_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFFS03HE/comment/20260311-3cc7baa7907f3dfc020902cc-9G4v2dcQmLYATXH2dw6c4y.jpg"
+      ]
     },
     {
       "name": "北极阁公园",
@@ -3152,7 +4888,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.059699,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/c52ec8645af7f3600000002353854076"
+      "image": "https://store.is.autonavi.com/showpic/c52ec8645af7f3600000002353854076",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/c52ec8645af7f3600000002353854076",
+        "https://store.is.autonavi.com/showpic/73ce33cec2b15d829912684ca0d0a62c",
+        "https://store.is.autonavi.com/showpic/0a315a619d4740460000001398804247?type=pic"
+      ]
     },
     {
       "name": "西安门遗址公园",
@@ -3161,7 +4902,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.038938,
       "category": "历史人文",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B00190YOD7/comment/28121C02_A0B5_4BD8_982B_F16829DB3AC1_L0_001_1500_2002_1742510469452_55275209.jpg"
+      "image": "https://aos-comment.amap.com/B00190YOD7/comment/28121C02_A0B5_4BD8_982B_F16829DB3AC1_L0_001_1500_2002_1742510469452_55275209.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B00190YOD7/comment/28121C02_A0B5_4BD8_982B_F16829DB3AC1_L0_001_1500_2002_1742510469452_55275209.jpg",
+        "https://aos-comment.amap.com/B00190YOD7/comment/7A4EE05E_2A79_4D05_987A_8AF1503552CC_L0_001_2048_1534_1742712541210_95999083.jpg",
+        "https://aos-comment.amap.com/B00190YOD7/comment/BB97FDDD_CB64_437D_A114_28BDB850DAE9_L0_001_2000_150_1766745820524_35108509.jpg"
+      ]
     },
     {
       "name": "大钟亭公园",
@@ -3170,7 +4916,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.060425,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/0adb6205004233a50000003141936786?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/0adb6205004233a50000003141936786?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/0adb6205004233a50000003141936786?type=pic",
+        "https://aos-comment.amap.com/B00190BBWV/comment/46560e8d47c71baac19deddc132c481f_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/dbc62be51940cab20000001512122897"
+      ]
     },
     {
       "name": "梅花谷公园",
@@ -3179,7 +4930,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.045256,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/ad101255f4d99af17992bdf85f34e302"
+      "image": "https://store.is.autonavi.com/showpic/ad101255f4d99af17992bdf85f34e302",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/ad101255f4d99af17992bdf85f34e302",
+        "https://aos-comment.amap.com/B001906YDM/comment/6d64ede458417c51a2f810a33adbfb91_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B001906YDM/comment/bede81633adc38b9f811fd3b77f6c23a_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "环洲",
@@ -3188,7 +4944,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.074352,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/c69cdef5e65f0a5e3ca84d4bfe07dd57"
+      "image": "http://store.is.autonavi.com/showpic/c69cdef5e65f0a5e3ca84d4bfe07dd57",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c69cdef5e65f0a5e3ca84d4bfe07dd57",
+        "http://store.is.autonavi.com/showpic/2e556072f67f4a6fc01ad7cb0ab729c5",
+        "https://store.is.autonavi.com/showpic/16a17eb1a614c9640000000742690827?type=pic"
+      ]
     },
     {
       "name": "光环花园",
@@ -3197,7 +4958,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.010333,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/bbef0c42b27bc1e50000003141812227?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/bbef0c42b27bc1e50000003141812227?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/bbef0c42b27bc1e50000003141812227?type=pic",
+        "https://store.is.autonavi.com/showpic/5b1ef68cff165f24c4afcfdb9014ac1c",
+        "https://aos-comment.amap.com/B0LDC7TQCA/comment/CD3158C8_867D_44CD_8F18_5D12AC9A3D3D_L0_001_1500_200_1758843136598_34587053.jpg"
+      ]
     },
     {
       "name": "台菱桥",
@@ -3206,7 +4972,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.062953,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B001914ZAA/comment/11010A89_8056_48D3_BA2C_3EADD00932F1_L0_001_1536_204_1763722612426_37403766.jpg"
+      "image": "https://aos-comment.amap.com/B001914ZAA/comment/11010A89_8056_48D3_BA2C_3EADD00932F1_L0_001_1536_204_1763722612426_37403766.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001914ZAA/comment/11010A89_8056_48D3_BA2C_3EADD00932F1_L0_001_1536_204_1763722612426_37403766.jpg",
+        "https://aos-comment.amap.com/B001914ZAA/comment/content_media_external_images_media_109764_ss__1741933472955_89811658.jpg",
+        "https://aos-comment.amap.com/B001914ZAA/comment/45b36a21b34fdc34101e5eaf3dd1aff4_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "大行宫市民广场",
@@ -3215,7 +4986,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 32.041819,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/1e4df95727ef2f58e9700c27e616f818"
+      "image": "https://store.is.autonavi.com/showpic/1e4df95727ef2f58e9700c27e616f818",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/1e4df95727ef2f58e9700c27e616f818",
+        "https://aos-comment.amap.com/B00190BA7A/comment/content_media_external_file_100005279_1767706618694_42404666.jpg",
+        "https://store.is.autonavi.com/showpic/a374d82ae3b2ab568a0962d4be958991"
+      ]
     }
   ],
   "苏州": [
@@ -3226,7 +5002,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.314823,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/63e8233a2e515e644879a65528cb440f"
+      "image": "http://store.is.autonavi.com/showpic/63e8233a2e515e644879a65528cb440f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/63e8233a2e515e644879a65528cb440f",
+        "http://store.is.autonavi.com/showpic/e7c9e484f6df6691458cd1e1e87481e3",
+        "https://store.is.autonavi.com/showpic/3181e78ed0f3b3240000005492894125?type=pic"
+      ]
     },
     {
       "name": "七里山塘景区",
@@ -3235,7 +5016,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.317059,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/3ad4167680bb72c570faeb1df76c21bb"
+      "image": "http://store.is.autonavi.com/showpic/3ad4167680bb72c570faeb1df76c21bb",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/3ad4167680bb72c570faeb1df76c21bb",
+        "http://store.is.autonavi.com/showpic/7d399e4c1563b2f95b35f24161d4a670",
+        "http://store.is.autonavi.com/showpic/639b18708bbbc94f02bbc1b8afa35b7d"
+      ]
     },
     {
       "name": "留园",
@@ -3244,7 +5030,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.315369,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/9a023735af5bae8759d1ad0ddeaf45d3"
+      "image": "http://store.is.autonavi.com/showpic/9a023735af5bae8759d1ad0ddeaf45d3",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9a023735af5bae8759d1ad0ddeaf45d3",
+        "http://store.is.autonavi.com/showpic/e5701b5b4f8cd37f85810f2427ccfa80",
+        "http://store.is.autonavi.com/showpic/989b9e0cda8852e646c357fe02b42bfa"
+      ]
     },
     {
       "name": "平江路",
@@ -3253,7 +5044,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.313969,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/5b8d0cdca4174cc7a052a5e06035975f"
+      "image": "http://store.is.autonavi.com/showpic/5b8d0cdca4174cc7a052a5e06035975f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5b8d0cdca4174cc7a052a5e06035975f",
+        "http://store.is.autonavi.com/showpic/d0e55356d0974366ba01f5679f944e4e",
+        "http://store.is.autonavi.com/showpic/45e2f18b552c02c91a1ffa8c47c199b6"
+      ]
     },
     {
       "name": "虎丘山风景区",
@@ -3262,7 +5058,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.334584,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/d814aa2aaf63b6199d4701ca3194ab6b"
+      "image": "http://store.is.autonavi.com/showpic/d814aa2aaf63b6199d4701ca3194ab6b",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d814aa2aaf63b6199d4701ca3194ab6b",
+        "http://store.is.autonavi.com/showpic/eaa0d676a6edd79462f91c9f7c9fe829",
+        "http://store.is.autonavi.com/showpic/9801ec2f6e51bd0bd75d36e072262a9c"
+      ]
     },
     {
       "name": "拙政园",
@@ -3271,7 +5072,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.324194,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/72263ebfa1dfbeefe0269400e6ba822f"
+      "image": "http://store.is.autonavi.com/showpic/72263ebfa1dfbeefe0269400e6ba822f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/72263ebfa1dfbeefe0269400e6ba822f",
+        "http://store.is.autonavi.com/showpic/ede1a1405804de918a4a852ad43c6e9a",
+        "http://store.is.autonavi.com/showpic/19da5ec8f95f8999c2eb98c4004afadd"
+      ]
     },
     {
       "name": "狮子林",
@@ -3280,7 +5086,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.321068,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/392c0cfd704012a9e49c534b960d81a9"
+      "image": "http://store.is.autonavi.com/showpic/392c0cfd704012a9e49c534b960d81a9",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/392c0cfd704012a9e49c534b960d81a9",
+        "http://store.is.autonavi.com/showpic/0ae6b46f9d5b4acd1082904a8e3d85ab",
+        "http://store.is.autonavi.com/showpic/256b59c1286f6b2f618b93130e609908"
+      ]
     },
     {
       "name": "金鸡湖景区",
@@ -3289,7 +5100,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.310263,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/7c0932d199ea2c0e3409a4c4f5a19bbb"
+      "image": "http://store.is.autonavi.com/showpic/7c0932d199ea2c0e3409a4c4f5a19bbb",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/7c0932d199ea2c0e3409a4c4f5a19bbb",
+        "http://store.is.autonavi.com/showpic/979585065796c38882ca5cbc4dd59fc1",
+        "http://store.is.autonavi.com/showpic/1ce3543c8d2b3520e907eb243b412651"
+      ]
     },
     {
       "name": "寒山寺",
@@ -3298,7 +5114,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.310469,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/ab02d6e508f2e4e59213947d3d0034cd"
+      "image": "http://store.is.autonavi.com/showpic/ab02d6e508f2e4e59213947d3d0034cd",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ab02d6e508f2e4e59213947d3d0034cd",
+        "http://store.is.autonavi.com/showpic/466c3783113718e157b3f3876fab1fd1",
+        "http://store.is.autonavi.com/showpic/92b0dc346f20a961cf5dc3a9f7f2be3f"
+      ]
     },
     {
       "name": "苏州市枫桥风景名胜区",
@@ -3307,7 +5128,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.309475,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/19e297d085fa38816cce1c9966b26f94"
+      "image": "http://store.is.autonavi.com/showpic/19e297d085fa38816cce1c9966b26f94",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/19e297d085fa38816cce1c9966b26f94",
+        "https://store.is.autonavi.com/showpic/537a5e14352c8d6a0000002120068674?type=pic",
+        "https://store.is.autonavi.com/showpic/70ac64afe0ad5eca0000005552026857?type=pic"
+      ]
     },
     {
       "name": "艺圃",
@@ -3316,7 +5142,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.313026,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/59c5139becf14a9df6d3edd6eb7790e2"
+      "image": "http://store.is.autonavi.com/showpic/59c5139becf14a9df6d3edd6eb7790e2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/59c5139becf14a9df6d3edd6eb7790e2",
+        "http://store.is.autonavi.com/showpic/6fd1daf2aaf87a8df51beaa6f4cd0ac7",
+        "http://store.is.autonavi.com/showpic/fdf5020c6ce7fd9325d69a4c1a96ab07"
+      ]
     },
     {
       "name": "七里山塘千年古街",
@@ -3325,7 +5156,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.314609,
       "category": "古镇村落",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/6b0f9d7956fa32950000002232848688?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/6b0f9d7956fa32950000002232848688?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/6b0f9d7956fa32950000002232848688?type=pic",
+        "https://aos-comment.amap.com/B0LRAZ09OW/comment/content_media_external_file_79792_ss__1764063654567_35739449.jpg",
+        "https://store.is.autonavi.com/showpic/740f422a3a1179b60000003077008465?type=pic"
+      ]
     },
     {
       "name": "沧浪亭",
@@ -3334,7 +5170,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.294656,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/17535937050f57a33639c524e3fda30d"
+      "image": "http://store.is.autonavi.com/showpic/17535937050f57a33639c524e3fda30d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/17535937050f57a33639c524e3fda30d",
+        "http://store.is.autonavi.com/showpic/fea402310dc612bcf7d6d2fbb7bb9a44",
+        "http://store.is.autonavi.com/showpic/327d5d3e941a67f1bb192cca556d91b8"
+      ]
     },
     {
       "name": "狮山文化广场",
@@ -3343,7 +5184,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.290714,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/eb07e446eb86ed06c590a11eafe26111"
+      "image": "http://store.is.autonavi.com/showpic/eb07e446eb86ed06c590a11eafe26111",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/eb07e446eb86ed06c590a11eafe26111",
+        "https://aos-comment.amap.com/B0IRSUAWPW/comment/FEE4DEBC_2E40_4BEC_A8EE_78A2F78C9FF2_L0_001_2016_113_1766484279249_52086072.jpg",
+        "https://aos-comment.amap.com/B0IRSUAWPW/comment/84C02979_3DFA_46D0_8EC8_2E0818D3CD3D_L0_001_2000_150_1764033575090_91833497.jpg"
+      ]
     },
     {
       "name": "怡园",
@@ -3352,7 +5198,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.307521,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/b62af6f3b833ac6b15041dfbf5bd9410"
+      "image": "http://store.is.autonavi.com/showpic/b62af6f3b833ac6b15041dfbf5bd9410",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b62af6f3b833ac6b15041dfbf5bd9410",
+        "http://store.is.autonavi.com/showpic/bc53039aff2e6f9f62d3229ae0346437",
+        "http://store.is.autonavi.com/showpic/ff112748481b4d9faf7f7998fe23d6b1"
+      ]
     },
     {
       "name": "苏州桃花坞历史文化片区",
@@ -3361,7 +5212,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.322761,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/90c2498619cfd51f0000002746462565?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/90c2498619cfd51f0000002746462565?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/90c2498619cfd51f0000002746462565?type=pic",
+        "https://aos-comment.amap.com/B0FFLBV73B/comment/3A8594C0_6C5D_40D6_8E48_11E0C7D3DF88_L0_001_1460_200_1767313919885_33908116.jpg",
+        "https://store.is.autonavi.com/showpic/732254a49891143c0000001251966811?type=pic"
+      ]
     },
     {
       "name": "网师园",
@@ -3370,7 +5226,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.298075,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/b9bec5c0095bb4ca969d8e0236573c4e"
+      "image": "http://store.is.autonavi.com/showpic/b9bec5c0095bb4ca969d8e0236573c4e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b9bec5c0095bb4ca969d8e0236573c4e",
+        "http://store.is.autonavi.com/showpic/dd86625d5d748459777d360ed01b1198",
+        "http://store.is.autonavi.com/showpic/baedf9f507f4415548f081d2751e6d00"
+      ]
     },
     {
       "name": "苏州市桂花公园",
@@ -3379,7 +5240,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.291563,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/ec436e72a765cf3616a2745fd7b46d4d"
+      "image": "http://store.is.autonavi.com/showpic/ec436e72a765cf3616a2745fd7b46d4d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ec436e72a765cf3616a2745fd7b46d4d",
+        "http://store.is.autonavi.com/showpic/4964ee555997fae2403f5a78d43a325f",
+        "https://aos-comment.amap.com/B020001ACA/comment/BFE4F30B_8FB5_4214_9842_FED4CA5C4B59_L0_001_800_32_1761752854779_54025022.jpg"
+      ]
     },
     {
       "name": "石湖景区",
@@ -3388,7 +5254,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.242582,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/6d37f43bcaab259382c15d103fa8dd01"
+      "image": "https://store.is.autonavi.com/showpic/6d37f43bcaab259382c15d103fa8dd01",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/6d37f43bcaab259382c15d103fa8dd01",
+        "https://store.is.autonavi.com/showpic/4f3158eab6fbac7068222dcb3ed8d4d2",
+        "https://store.is.autonavi.com/showpic/d7ab3a9c1fd326e697f3efac5c2b24aa"
+      ]
     },
     {
       "name": "耦园",
@@ -3397,7 +5268,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.31623,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/83c1fec2d0aa02d4a72eed4b08cebda4"
+      "image": "http://store.is.autonavi.com/showpic/83c1fec2d0aa02d4a72eed4b08cebda4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/83c1fec2d0aa02d4a72eed4b08cebda4",
+        "http://store.is.autonavi.com/showpic/4a27ad37ea787dbeaa9386ba11d030fc",
+        "http://store.is.autonavi.com/showpic/930a6444fb52445ddb352f30c41873a3"
+      ]
     },
     {
       "name": "东园",
@@ -3406,7 +5282,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.320822,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/a13a9b4aac25b83fd256bf01f3be3636"
+      "image": "http://store.is.autonavi.com/showpic/a13a9b4aac25b83fd256bf01f3be3636",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a13a9b4aac25b83fd256bf01f3be3636",
+        "http://store.is.autonavi.com/showpic/1c2e3d4408d290da96d0b7ee9c331c86",
+        "http://store.is.autonavi.com/showpic/6cdeac8879f44f1148f67b4b1a98dc28"
+      ]
     },
     {
       "name": "苏州上方山国家森林公园",
@@ -3415,7 +5296,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.245575,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/8dd791e40e56f33e7d526b6b72c39b38"
+      "image": "http://store.is.autonavi.com/showpic/8dd791e40e56f33e7d526b6b72c39b38",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8dd791e40e56f33e7d526b6b72c39b38",
+        "http://store.is.autonavi.com/showpic/b13a65283ef2e9743ee7eec84c928374",
+        "http://store.is.autonavi.com/showpic/dd5a21824ead63d0197c407b8a08dad8"
+      ]
     },
     {
       "name": "虎丘湿地公园",
@@ -3424,7 +5310,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.365051,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/e9bdf4060a1798d978e7d7c64b442dd9"
+      "image": "http://store.is.autonavi.com/showpic/e9bdf4060a1798d978e7d7c64b442dd9",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e9bdf4060a1798d978e7d7c64b442dd9",
+        "http://store.is.autonavi.com/showpic/0fc3365ed60b4e9fbe236fa070f07253",
+        "http://store.is.autonavi.com/showpic/4276abcdb0e11181da6f11a0d81efe90"
+      ]
     },
     {
       "name": "天平山风景名胜区",
@@ -3433,7 +5324,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.287304,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/3b31a1da6c60f20ebaade4c4e29a3d1d"
+      "image": "http://store.is.autonavi.com/showpic/3b31a1da6c60f20ebaade4c4e29a3d1d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/3b31a1da6c60f20ebaade4c4e29a3d1d",
+        "http://store.is.autonavi.com/showpic/18dcba5160e2b377924b7ca1b5f25d3c",
+        "http://store.is.autonavi.com/showpic/aef5c95cfd21951aeb987ad89cdada0f"
+      ]
     },
     {
       "name": "木渎古镇",
@@ -3442,7 +5338,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.2524,
       "category": "古镇村落",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/1050c6ebefc831b23782a0b12e59b043"
+      "image": "http://store.is.autonavi.com/showpic/1050c6ebefc831b23782a0b12e59b043",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/1050c6ebefc831b23782a0b12e59b043",
+        "http://store.is.autonavi.com/showpic/284db2c4ca2662e24814c8bb4df53d76",
+        "http://store.is.autonavi.com/showpic/8f7e829c521a5a49cfc0f54785e5051b"
+      ]
     },
     {
       "name": "阳澄湖半岛旅游度假",
@@ -3451,7 +5352,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.351117,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/a2eafa6810c4675ea105dee86737132c"
+      "image": "http://store.is.autonavi.com/showpic/a2eafa6810c4675ea105dee86737132c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a2eafa6810c4675ea105dee86737132c",
+        "http://store.is.autonavi.com/showpic/1f43e246dd73a1d05ecac62575f477d6",
+        "http://store.is.autonavi.com/showpic/62e4657a98dda22111d6160dcadf679f"
+      ]
     },
     {
       "name": "灵岩山景区",
@@ -3460,7 +5366,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.264014,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/a9d7a1b43a964408b1553d9916085c91"
+      "image": "http://store.is.autonavi.com/showpic/a9d7a1b43a964408b1553d9916085c91",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a9d7a1b43a964408b1553d9916085c91",
+        "http://store.is.autonavi.com/showpic/a1c1f0ec7d1df34d4a9ad68247319265",
+        "http://store.is.autonavi.com/showpic/67d40d919ccb8e242208f21d12480244"
+      ]
     },
     {
       "name": "旺山景区",
@@ -3469,7 +5380,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.215651,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/a6bfe5fd0667cf97ee2b0a32abf148bc"
+      "image": "http://store.is.autonavi.com/showpic/a6bfe5fd0667cf97ee2b0a32abf148bc",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a6bfe5fd0667cf97ee2b0a32abf148bc",
+        "https://aos-comment.amap.com/B020017EP4/comment/177315437130_1773154462922_24480423.jpg",
+        "https://store.is.autonavi.com/showpic/495769099252056a0000002666658857?type=pic"
+      ]
     },
     {
       "name": "苏州市运河体育公园",
@@ -3478,7 +5394,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.299497,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B020005FEQ/comment/a330d38317be2ab9e99558b70aae23ac_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B020005FEQ/comment/a330d38317be2ab9e99558b70aae23ac_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B020005FEQ/comment/a330d38317be2ab9e99558b70aae23ac_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B020005FEQ/comment/content_media_external_file_100010828_1769952554580_89956933.jpg",
+        "https://aos-comment.amap.com/B020005FEQ/comment/483486ac-95a4-41b5-8dfe-23b067d74784.png"
+      ]
     },
     {
       "name": "山塘街白居易码头游船",
@@ -3487,7 +5408,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.315316,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0IB27T8N8/comment/content_media_external_images_media_32341_ss__1770364782234_22124808.jpg"
+      "image": "https://aos-comment.amap.com/B0IB27T8N8/comment/content_media_external_images_media_32341_ss__1770364782234_22124808.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0IB27T8N8/comment/content_media_external_images_media_32341_ss__1770364782234_22124808.jpg",
+        "https://aos-comment.amap.com/B0IB27T8N8/comment/content_media_external_file_29882_ss__1765514941511_55712979.jpg",
+        "https://aos-comment.amap.com/B0IB27T8N8/comment/content_media_external_file_29918_ss__1765514970621_84259715.jpg"
+      ]
     },
     {
       "name": "阊门遗址",
@@ -3496,7 +5422,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.315116,
       "category": "历史人文",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/268ce569f53ea89dfc99f49a59e5ebff"
+      "image": "https://store.is.autonavi.com/showpic/268ce569f53ea89dfc99f49a59e5ebff",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/268ce569f53ea89dfc99f49a59e5ebff",
+        "https://aos-comment.amap.com/B0FFFVO892/comment/content_media_external_images_media_100002827_1766649744280_71100722.jpg",
+        "https://aos-comment.amap.com/B0FFFVO892/comment/20260206-c416747d1c4155617668d8ce-Ap85g0tzDC77mZuoajw8jK.jpg"
+      ]
     },
     {
       "name": "狮山公园",
@@ -3505,7 +5436,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.293849,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0K6K5WO4Z/comment/CBE53E50_9A7A_49F7_9EC3_C2B3F73DAAB4_L0_001_1080_144_1763746582634_52178267.jpg"
+      "image": "https://aos-comment.amap.com/B0K6K5WO4Z/comment/CBE53E50_9A7A_49F7_9EC3_C2B3F73DAAB4_L0_001_1080_144_1763746582634_52178267.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0K6K5WO4Z/comment/CBE53E50_9A7A_49F7_9EC3_C2B3F73DAAB4_L0_001_1080_144_1763746582634_52178267.jpg",
+        "https://aos-comment.amap.com/B0K6K5WO4Z/comment/A0DD3882_1CDA_4541_9795_940D18ABD72E_L0_001_2000_1500_1736671952416_19340035.jpg",
+        "https://aos-comment.amap.com/B0K6K5WO4Z/comment/content_media_external_file_135656_ss__1767150810036_12679141.jpg"
+      ]
     },
     {
       "name": "荷花市集",
@@ -3514,7 +5450,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.3177,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/8568c6d1e64e28ae0000003069730116?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/8568c6d1e64e28ae0000003069730116?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/8568c6d1e64e28ae0000003069730116?type=pic",
+        "https://aos-comment.amap.com/B0LRGSTV42/comment/content_media_external_file_4953_ss__1759027668785_38040584.jpg",
+        "https://aos-comment.amap.com/B0LRGSTV42/comment/692CE477_BEBD_4D31_9304_FFEE885F74DB_L0_001_1440_177_1762958547456_50820766.jpg"
+      ]
     },
     {
       "name": "苏州公园",
@@ -3523,7 +5464,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.304485,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/1a44bea145fc29f30c8fdb48cb401c03"
+      "image": "http://store.is.autonavi.com/showpic/1a44bea145fc29f30c8fdb48cb401c03",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/1a44bea145fc29f30c8fdb48cb401c03",
+        "https://aos-comment.amap.com/B020005F4M/comment/content_media_external_file_100011929_1772970293144_16477998.jpg",
+        "https://aos-comment.amap.com/B020005F4M/comment/177219827920_1772198289082_19497674.jpg"
+      ]
     },
     {
       "name": "报恩寺塔",
@@ -3532,7 +5478,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.32235,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/94a3c11d3f9d7b6a961cb15fb99e95d3"
+      "image": "http://store.is.autonavi.com/showpic/94a3c11d3f9d7b6a961cb15fb99e95d3",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/94a3c11d3f9d7b6a961cb15fb99e95d3",
+        "http://store.is.autonavi.com/showpic/22333998837c11ce73cc282fe2b07b56",
+        "http://store.is.autonavi.com/showpic/4af3fbc66ecabd805810b6a5fdd269d1"
+      ]
     },
     {
       "name": "虎丘塔",
@@ -3541,7 +5492,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.335827,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/5EA4505DBB6143EB92D2D585549C4E2D"
+      "image": "http://store.is.autonavi.com/showpic/5EA4505DBB6143EB92D2D585549C4E2D",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5EA4505DBB6143EB92D2D585549C4E2D",
+        "http://store.is.autonavi.com/showpic/1f48417025875bd111b9afcba42a3ed6",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/dbd92d64-8045-46bc-acf8-472eda9e0bdf.jpg"
+      ]
     },
     {
       "name": "苏州文庙",
@@ -3550,7 +5506,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.295298,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/47b2cf7dff1e7d7a4db5a2b7c386b00e"
+      "image": "http://store.is.autonavi.com/showpic/47b2cf7dff1e7d7a4db5a2b7c386b00e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/47b2cf7dff1e7d7a4db5a2b7c386b00e",
+        "https://store.is.autonavi.com/showpic/8fb3c4e2929e58340000002557952502?type=pic",
+        "https://store.is.autonavi.com/showpic/a62f1b74c80fc8b20000002879876435?type=pic"
+      ]
     },
     {
       "name": "何山公园",
@@ -3559,7 +5520,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.30257,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/9b831806fbb5a85e0000002927972425?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/9b831806fbb5a85e0000002927972425?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/9b831806fbb5a85e0000002927972425?type=pic",
+        "https://aos-comment.amap.com/B020001MZ6/comment/content_media_external_file_1000043690_ss__1762708749809_72422414.jpg",
+        "https://aos-comment.amap.com/B020001MZ6/comment/976C812B_EC96_4E94_81DD_2586E87A6883_L0_001_2142_2142_1732858747719_53215033.jpg"
+      ]
     },
     {
       "name": "玄妙观",
@@ -3568,7 +5534,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.31196,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B020007L51/comment/177164516445_1771645225690_71821104.jpg"
+      "image": "https://aos-comment.amap.com/B020007L51/comment/177164516445_1771645225690_71821104.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B020007L51/comment/177164516445_1771645225690_71821104.jpg",
+        "https://aos-comment.amap.com/B020007L51/comment/CAE2CF82_AA6F_42A1_AC75_EC70B088B01A_L0_001_2000_150_1771577970755_40102494.jpg",
+        "https://store.is.autonavi.com/showpic/74a1458092e67c860000000752138764?type=pic"
+      ]
     },
     {
       "name": "上方山森林动物世界",
@@ -3577,7 +5548,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.238321,
       "category": "主题乐园",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/3b32b5ceffa430014c256a1744ffdb38"
+      "image": "http://store.is.autonavi.com/showpic/3b32b5ceffa430014c256a1744ffdb38",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/3b32b5ceffa430014c256a1744ffdb38",
+        "http://store.is.autonavi.com/showpic/0e4e734bdf52f25fb36ca55f0c6c1776",
+        "http://store.is.autonavi.com/showpic/db1020a062ba0195621b5df6c7b95627"
+      ]
     },
     {
       "name": "曲园",
@@ -3586,7 +5562,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.30958,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/effdfd26-ed4f-4ef1-8d24-15a0b9095131.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/effdfd26-ed4f-4ef1-8d24-15a0b9095131.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/effdfd26-ed4f-4ef1-8d24-15a0b9095131.jpg",
+        "https://aos-comment.amap.com/B02000IQYY/comment/2B800EA9_7892_4782_B0FE_26DFE43817AA_L0_001_1179_157_1772757170481_38767924.jpg",
+        "https://aos-comment.amap.com/B02000IQYY/comment/content_media_external_file_36992_1771131253570_42052377.jpg"
+      ]
     },
     {
       "name": "城隍庙",
@@ -3595,7 +5576,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.311501,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B020001270/comment/F0FD059C_F358_4185_9742_AEA444F4A883_L0_001_1436_176_1772280025057_01555822.jpg"
+      "image": "https://aos-comment.amap.com/B020001270/comment/F0FD059C_F358_4185_9742_AEA444F4A883_L0_001_1436_176_1772280025057_01555822.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B020001270/comment/F0FD059C_F358_4185_9742_AEA444F4A883_L0_001_1436_176_1772280025057_01555822.jpg",
+        "https://store.is.autonavi.com/showpic/28db4da083de66f20000009238624454?type=pic",
+        "http://store.is.autonavi.com/showpic/8e600181a11910c05cfbb8bb965a0cd9"
+      ]
     },
     {
       "name": "柴园",
@@ -3604,7 +5590,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.300712,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0FFGWLXWM/comment/177315494386_1773154945498_39905509.jpg"
+      "image": "https://aos-comment.amap.com/B0FFGWLXWM/comment/177315494386_1773154945498_39905509.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFGWLXWM/comment/177315494386_1773154945498_39905509.jpg",
+        "https://aos-comment.amap.com/B0FFGWLXWM/comment/content_media_external_file_19628_ss__1768289605781_18471063.jpg",
+        "https://store.is.autonavi.com/showpic/26bf2789db645b090000005877410893?type=pic"
+      ]
     },
     {
       "name": "可园",
@@ -3613,7 +5604,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.295432,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/37f3373a9157d5c703e0589059a9dfe4"
+      "image": "http://store.is.autonavi.com/showpic/37f3373a9157d5c703e0589059a9dfe4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/37f3373a9157d5c703e0589059a9dfe4",
+        "http://store.is.autonavi.com/showpic/81090ccea789323049447dc0d67bf995",
+        "http://store.is.autonavi.com/showpic/08ca57f42442b42281ead45cadf48146"
+      ]
     },
     {
       "name": "无界美罗小奢中心",
@@ -3622,7 +5618,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.327628,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/0d5c660e50276fdc0000003144954909?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/0d5c660e50276fdc0000003144954909?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/0d5c660e50276fdc0000003144954909?type=pic",
+        "https://store.is.autonavi.com/showpic/f4e8085f7cfa436e0000007843918433?type=pic",
+        "https://aos-comment.amap.com/B0K6S551DK/comment/2e35e92250780bcfd25475c5adcd25d3_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "新区公园",
@@ -3631,7 +5632,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.302275,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/470d603f-6404-47d5-9b23-82fe6a72d5a9.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/470d603f-6404-47d5-9b23-82fe6a72d5a9.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/470d603f-6404-47d5-9b23-82fe6a72d5a9.jpg",
+        "https://aos-comment.amap.com/B020007K3D/comment/file_media_Photo_6644_IMG_1770881521_6328_IMG_20260212_153020_cb77fa98-c36e-4fd4-b7a4-c9d006988679_jpe_1770881486416_71179672.jpg",
+        "https://aos-comment.amap.com/B020007K3D/comment/content_media_external_images_media_100003384_1735023412705_69662924.jpg"
+      ]
     },
     {
       "name": "苏州御窑遗址园",
@@ -3640,7 +5646,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.361302,
       "category": "历史人文",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0FFH44QS1/comment/20260306-c416747d1c4155617668d8ce-cyIg9tzPhg7VYhgBl90uu.jpg"
+      "image": "https://aos-comment.amap.com/B0FFH44QS1/comment/20260306-c416747d1c4155617668d8ce-cyIg9tzPhg7VYhgBl90uu.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFH44QS1/comment/20260306-c416747d1c4155617668d8ce-cyIg9tzPhg7VYhgBl90uu.jpg",
+        "http://store.is.autonavi.com/showpic/f03a701a4ac3982ef971b634c447615c",
+        "http://store.is.autonavi.com/showpic/b3ca4f9bbf33381173425cdc920d2cd5"
+      ]
     },
     {
       "name": "双塔",
@@ -3649,7 +5660,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.306689,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/01b744a9f23e033f81a3556fa1b69d3e"
+      "image": "http://store.is.autonavi.com/showpic/01b744a9f23e033f81a3556fa1b69d3e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/01b744a9f23e033f81a3556fa1b69d3e",
+        "https://aos-comment.amap.com/B02000IVIZ/comment/content_media_external_file_20558_ss__1769833491282_15602883.jpg",
+        "https://aos-comment.amap.com/B02000IVIZ/comment/content_media_external_file_100003033_1765601613111_48903455.jpg"
+      ]
     },
     {
       "name": "定慧寺",
@@ -3658,7 +5674,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.307083,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/e4e775b9ced3047e6865c2bf8ad7199b"
+      "image": "http://store.is.autonavi.com/showpic/e4e775b9ced3047e6865c2bf8ad7199b",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e4e775b9ced3047e6865c2bf8ad7199b",
+        "https://aos-comment.amap.com/3fcc0901ec080920e7da09c1/comment/content_service__1773209509282_57070861_1773209574399_38831896.jpg",
+        "https://aos-comment.amap.com/B020006R6M/comment/content_media_external_file_1000682485_ss__1764585411179_42526556.jpg"
+      ]
     },
     {
       "name": "白塔公园",
@@ -3667,7 +5688,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.317517,
       "category": "宗教寺庙",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/2ce464ac8b56a4afae9f2153c7b80b1d"
+      "image": "http://store.is.autonavi.com/showpic/2ce464ac8b56a4afae9f2153c7b80b1d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/2ce464ac8b56a4afae9f2153c7b80b1d",
+        "https://store.is.autonavi.com/showpic/4f30712aa104ece10000008894702010?type=pic",
+        "https://aos-comment.amap.com/B02000ICGL/comment/3B4FC007_D179_4F14_9EF3_A1D667AF690B_L0_001_1500_200_1765096969726_28710291.jpg"
+      ]
     },
     {
       "name": "环秀山庄",
@@ -3676,7 +5702,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.310945,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/413bbaca8aa08d2eff9600dcaf913dd6"
+      "image": "http://store.is.autonavi.com/showpic/413bbaca8aa08d2eff9600dcaf913dd6",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/413bbaca8aa08d2eff9600dcaf913dd6",
+        "http://store.is.autonavi.com/showpic/dac3d3e50da1144ca6ffa96dc3978896",
+        "http://store.is.autonavi.com/showpic/d40ceaf7b7a7d56e0bdd2a405042c23e"
+      ]
     },
     {
       "name": "苏州古运河",
@@ -3685,7 +5716,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.29172,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/25634c379f1641e67ba0d747bb29f5c5"
+      "image": "http://store.is.autonavi.com/showpic/25634c379f1641e67ba0d747bb29f5c5",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/25634c379f1641e67ba0d747bb29f5c5",
+        "http://store.is.autonavi.com/showpic/4c76689cdd0c6805c2240aed8d687700",
+        "http://store.is.autonavi.com/showpic/9fb96bc45177772e87a4225f7432c6d4"
+      ]
     },
     {
       "name": "太平坊清真寺",
@@ -3694,7 +5730,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.311341,
       "category": "宗教寺庙",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B02000IU6A/comment/content_media_external_file_4542_ss__1751649522786_54932138.jpg"
+      "image": "https://aos-comment.amap.com/B02000IU6A/comment/content_media_external_file_4542_ss__1751649522786_54932138.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B02000IU6A/comment/content_media_external_file_4542_ss__1751649522786_54932138.jpg",
+        "https://aos-comment.amap.com/B02000IU6A/comment/4B0A6213_58CF_427D_BEDB_E1176247C579_L0_001_1638_200_1767403550668_99091562.jpg",
+        "https://aos-comment.amap.com/B02000IU6A/comment/content_media_external_file_4539_ss__1751649522781_88588034.jpg"
+      ]
     },
     {
       "name": "江苏按察使署旧址",
@@ -3703,7 +5744,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.300856,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B02000IRDW/comment/content_media_external_images_media_316012_ss__1730813244396_69063115.jpg"
+      "image": "https://aos-comment.amap.com/B02000IRDW/comment/content_media_external_images_media_316012_ss__1730813244396_69063115.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B02000IRDW/comment/content_media_external_images_media_316012_ss__1730813244396_69063115.jpg",
+        "https://store.is.autonavi.com/showpic/5d51f9c9ba777d0a0000002751354697?type=pic",
+        "https://store.is.autonavi.com/showpic/ae4ffad6066a4e0b0000008161804164?type=pic"
+      ]
     },
     {
       "name": "三香广场",
@@ -3712,7 +5758,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.297827,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/4eeb02f5719a356fe28e6c8de507edd5"
+      "image": "http://store.is.autonavi.com/showpic/4eeb02f5719a356fe28e6c8de507edd5",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/4eeb02f5719a356fe28e6c8de507edd5",
+        "https://aos-comment.amap.com/B0FFF3A0LK/comment/content_media_external_images_media_100003007_1735285190255_31992684.jpg",
+        "http://store.is.autonavi.com/showpic/d35742ff6eee5aaa5f4dd6a87db5b6c4"
+      ]
     },
     {
       "name": "五峰园",
@@ -3721,7 +5772,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.317127,
       "category": "自然风光",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0200184FZ/comment/content_media_external_file_19970_ss__1768352073986_09723292.jpg"
+      "image": "https://aos-comment.amap.com/B0200184FZ/comment/content_media_external_file_19970_ss__1768352073986_09723292.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0200184FZ/comment/content_media_external_file_19970_ss__1768352073986_09723292.jpg",
+        "https://store.is.autonavi.com/showpic/cf04072733e482c242c9fb4203da4d22",
+        "https://store.is.autonavi.com/showpic/ed7709f90a7760e111ae5aa8158722e3"
+      ]
     },
     {
       "name": "报恩寺",
@@ -3730,7 +5786,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.322737,
       "category": "历史人文",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/838eb331653b6e06699d4a1b9f16637c"
+      "image": "https://store.is.autonavi.com/showpic/838eb331653b6e06699d4a1b9f16637c",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/838eb331653b6e06699d4a1b9f16637c",
+        "https://store.is.autonavi.com/showpic/73eb052007c0fb960000002976508312?type=pic",
+        "https://store.is.autonavi.com/showpic/98aeeb419bc5d5ea8ff75208c141fc37"
+      ]
     },
     {
       "name": "唐寅园",
@@ -3739,7 +5800,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.277372,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/04700926787236aa824e583d03e05e73"
+      "image": "http://store.is.autonavi.com/showpic/04700926787236aa824e583d03e05e73",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/04700926787236aa824e583d03e05e73",
+        "http://store.is.autonavi.com/showpic/1c0f6889d8ed4e7f0d7ee2fa2efe9aa7",
+        "http://store.is.autonavi.com/showpic/0b9bfe7d1c081a9174b6f44704740cbd"
+      ]
     },
     {
       "name": "天狮公园",
@@ -3748,7 +5814,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.294113,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B02001HPE4/comment/content_media_external_file_100008841_1766937081069_51855391.jpg"
+      "image": "https://aos-comment.amap.com/B02001HPE4/comment/content_media_external_file_100008841_1766937081069_51855391.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B02001HPE4/comment/content_media_external_file_100008841_1766937081069_51855391.jpg",
+        "https://aos-comment.amap.com/B02001HPE4/comment/content_media_external_images_media_100002740_1738337752043_17730125.jpg",
+        "https://aos-comment.amap.com/B02001HPE4/comment/content_media_external_images_media_100002741_1738337752043_09638646.jpg"
+      ]
     },
     {
       "name": "索山公园",
@@ -3757,7 +5828,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.291767,
       "category": "自然风光",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B02000JWAU/comment/9af5b499ed90b4170e776ba18cf3f635_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B02000JWAU/comment/9af5b499ed90b4170e776ba18cf3f635_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B02000JWAU/comment/9af5b499ed90b4170e776ba18cf3f635_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/0dbf99bfd5b5f2f20000003172702585?type=pic",
+        "https://aos-comment.amap.com/B02000JWAU/comment/92f6ba8ae009bd5fff1fe0ee99196a28_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "姑苏网红墙",
@@ -3766,7 +5842,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.310685,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B0KRNSGFMH/comment/content_media_external_images_media_1000037973_ss__1772512258034_92372616.jpg"
+      "image": "https://aos-comment.amap.com/B0KRNSGFMH/comment/content_media_external_images_media_1000037973_ss__1772512258034_92372616.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0KRNSGFMH/comment/content_media_external_images_media_1000037973_ss__1772512258034_92372616.jpg",
+        "https://aos-comment.amap.com/B0KRNSGFMH/comment/content_media_external_file_100016530_1762580661189_07016101.jpg",
+        "https://store.is.autonavi.com/showpic/b275bbcd25b41cd00000002415310331?type=pic"
+      ]
     },
     {
       "name": "胥门",
@@ -3775,7 +5856,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.297378,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/e73885a50ce391f10000006897180274?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/e73885a50ce391f10000006897180274?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/e73885a50ce391f10000006897180274?type=pic",
+        "https://store.is.autonavi.com/showpic/9893f69ab7b8a4fb0000004161434741?type=pic",
+        "https://aos-comment.amap.com/B02000IDMO/comment/7A103252_6593_4689_8EC6_030127188305_L0_001_1437_108_1773136799926_63645363.jpg"
+      ]
     },
     {
       "name": "广济公园",
@@ -3784,7 +5870,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 31.316217,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B02000HQZD/comment/1C7AE96A_8C8F_40B0_A047_8CC00AD54226_L0_001_1500_200_1773328075103_33450637.jpg"
+      "image": "https://aos-comment.amap.com/B02000HQZD/comment/1C7AE96A_8C8F_40B0_A047_8CC00AD54226_L0_001_1500_200_1773328075103_33450637.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B02000HQZD/comment/1C7AE96A_8C8F_40B0_A047_8CC00AD54226_L0_001_1500_200_1773328075103_33450637.jpg",
+        "https://aos-comment.amap.com/B02000HQZD/comment/content_media_external_file_1000066752_ss__1765028818045_12728902.jpg",
+        "https://aos-comment.amap.com/B02000HQZD/comment/16AA0632_1202_42CD_B6EB_9606AEE69FED_L0_001_1500_200_1773328075107_00357989.jpg"
+      ]
     }
   ],
   "成都": [
@@ -3795,7 +5886,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.557844,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/f8551c9093ae77f52ec1f624def23892"
+      "image": "http://store.is.autonavi.com/showpic/f8551c9093ae77f52ec1f624def23892",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/f8551c9093ae77f52ec1f624def23892",
+        "http://store.is.autonavi.com/showpic/ec8850f1accca577673a103b5261bf79",
+        "http://store.is.autonavi.com/showpic/ae61857d6d22448dc13a4e9c2c576c79"
+      ]
     },
     {
       "name": "人民公园",
@@ -3804,7 +5900,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.65699,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://aos-comment.amap.com/B001C7X8QA/comment/content_media_external_file_100003153_1767367568289_40288788.jpg"
+      "image": "https://aos-comment.amap.com/B001C7X8QA/comment/content_media_external_file_100003153_1767367568289_40288788.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001C7X8QA/comment/content_media_external_file_100003153_1767367568289_40288788.jpg",
+        "https://aos-comment.amap.com/B001C7X8QA/comment/57CB8B05_1E45_4134_9A2D_865DBEEE553B_L0_001_1179_86_1766480459732_07341334.jpg",
+        "https://aos-comment.amap.com/B001C7X8QA/comment/1F5D05D1_071C_45F4_B86C_1DE32DB1151A_L0_001_1206_120_1767139271327_64300218.jpg"
+      ]
     },
     {
       "name": "宽窄巷子景区",
@@ -3813,7 +5914,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.663869,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/5c32db1d32a823c00000008361414873?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/5c32db1d32a823c00000008361414873?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/5c32db1d32a823c00000008361414873?type=pic",
+        "https://store.is.autonavi.com/showpic/8ff1cd47593e169a8d6ddd44500a8004",
+        "https://store.is.autonavi.com/showpic/6f993a00bbf5fbe30000007746700643?type=pic"
+      ]
     },
     {
       "name": "东郊记忆",
@@ -3822,7 +5928,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.668697,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://aos-comment.amap.com/B001C8NUD2/comment/content_media_external_file_1000018078_ss__1766945941519_25102748.jpg"
+      "image": "https://aos-comment.amap.com/B001C8NUD2/comment/content_media_external_file_1000018078_ss__1766945941519_25102748.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001C8NUD2/comment/content_media_external_file_1000018078_ss__1766945941519_25102748.jpg",
+        "http://store.is.autonavi.com/showpic/ba1c78ab21106091a7027c75c0335830",
+        "https://aos-comment.amap.com/comment/content_service_b8aac0586f8c618e139dadc65ee889df_1767443600980_63303145.jpg"
+      ]
     },
     {
       "name": "锦里古街",
@@ -3831,7 +5942,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.645994,
       "category": "古镇村落",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/d474b5c8c8e429854cf808e1445bc15e"
+      "image": "http://store.is.autonavi.com/showpic/d474b5c8c8e429854cf808e1445bc15e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d474b5c8c8e429854cf808e1445bc15e",
+        "http://store.is.autonavi.com/showpic/fa2f82b05e0bdf05626cd4bb7f3ffe50",
+        "http://store.is.autonavi.com/showpic/05afef84c3ef348eb593611b79a1783e"
+      ]
     },
     {
       "name": "文殊院",
@@ -3840,7 +5956,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.675418,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/5651e33f9486e7100862d905161aa4b1"
+      "image": "http://store.is.autonavi.com/showpic/5651e33f9486e7100862d905161aa4b1",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5651e33f9486e7100862d905161aa4b1",
+        "http://store.is.autonavi.com/showpic/fe9557ac4c7d8d363fad3392868b2ed6",
+        "http://store.is.autonavi.com/showpic/13ae8501a205f8e5ad365c6fee04a3b0"
+      ]
     },
     {
       "name": "成都大熊猫繁育研究基地",
@@ -3849,7 +5970,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.740573,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://aos-comment.amap.com/B001C7WE5S/comment/content_media_external_file_40545_1767501720604_43994986.jpg"
+      "image": "https://aos-comment.amap.com/B001C7WE5S/comment/content_media_external_file_40545_1767501720604_43994986.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001C7WE5S/comment/content_media_external_file_40545_1767501720604_43994986.jpg",
+        "https://aos-comment.amap.com/B001C7WE5S/comment/D9A52A3A_A680_4447_9647_0C0069242BF2_L0_001_1500_200_1767303057334_10874921.jpg",
+        "http://store.is.autonavi.com/showpic/f8c5d8db0b8aa5fbbd3cd63202204c26"
+      ]
     },
     {
       "name": "天府艺术公园",
@@ -3858,7 +5984,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.711411,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/a88fe706eaf899500000002647320571"
+      "image": "https://store.is.autonavi.com/showpic/a88fe706eaf899500000002647320571",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/a88fe706eaf899500000002647320571",
+        "https://store.is.autonavi.com/showpic/f436c09ed4efd6366a4abaa4576782e8",
+        "https://store.is.autonavi.com/showpic/71a37f3987eda7a40000003172806874?type=pic"
+      ]
     },
     {
       "name": "交子公园",
@@ -3867,7 +5998,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.582568,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/f1a60da1-1b90-4f04-bdff-819ab95e8a48.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/f1a60da1-1b90-4f04-bdff-819ab95e8a48.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/f1a60da1-1b90-4f04-bdff-819ab95e8a48.jpg",
+        "https://store.is.autonavi.com/showpic/740333de65738bbd0000002861802313?type=pic",
+        "https://store.is.autonavi.com/showpic/9dc7ea98943c99120000002779374746?type=pic"
+      ]
     },
     {
       "name": "双子塔夜景打卡点",
@@ -3876,7 +6012,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.582369,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0K2D9EUZC/comment/20260313-f7a8e508486ebc612a06d026-9ZaORXyAfm48lqQUKX81bx.jpg"
+      "image": "https://aos-comment.amap.com/B0K2D9EUZC/comment/20260313-f7a8e508486ebc612a06d026-9ZaORXyAfm48lqQUKX81bx.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0K2D9EUZC/comment/20260313-f7a8e508486ebc612a06d026-9ZaORXyAfm48lqQUKX81bx.jpg",
+        "https://aos-comment.amap.com/B0K2D9EUZC/comment/20260322-bbaa8f56a722d0e681cffc0e-wuEnyALv5s8yJNxywJBKE.jpg",
+        "https://store.is.autonavi.com/showpic/936040b773bdf1b80000003129018762?type=pic"
+      ]
     },
     {
       "name": "大源中央公园",
@@ -3885,7 +6026,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.549059,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B001C8OPDK/comment/23FE4588_05F0_47E2_A409_BB0D53794C0E_L0_001_2000_112_1764935247402_73757332.jpg"
+      "image": "https://aos-comment.amap.com/B001C8OPDK/comment/23FE4588_05F0_47E2_A409_BB0D53794C0E_L0_001_2000_112_1764935247402_73757332.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001C8OPDK/comment/23FE4588_05F0_47E2_A409_BB0D53794C0E_L0_001_2000_112_1764935247402_73757332.jpg",
+        "https://aos-comment.amap.com/B001C8OPDK/comment/content_media_external_images_media_1000054681_ss__1769516193310_93483846.jpg",
+        "https://aos-comment.amap.com/B001C8OPDK/comment/2933F682_B9B6_4FD1_A9BD_97740E0FA0F4_L0_001_2000_112_1764935247407_26341313.jpg"
+      ]
     },
     {
       "name": "东湖公园",
@@ -3894,7 +6040,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.616051,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/a8c6165a50c73841b5eb7e62747c2fa9"
+      "image": "http://store.is.autonavi.com/showpic/a8c6165a50c73841b5eb7e62747c2fa9",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a8c6165a50c73841b5eb7e62747c2fa9",
+        "http://store.is.autonavi.com/showpic/4103adb15b85f6b99ecbcf5e0b287b04",
+        "http://store.is.autonavi.com/showpic/de5230f577b6163e60769671a7708dd0"
+      ]
     },
     {
       "name": "望江楼公园",
@@ -3903,7 +6054,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.629277,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/910ec7d0a46baac93ccef6a0d71ff17d"
+      "image": "http://store.is.autonavi.com/showpic/910ec7d0a46baac93ccef6a0d71ff17d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/910ec7d0a46baac93ccef6a0d71ff17d",
+        "http://store.is.autonavi.com/showpic/13ac42b178fbad7e89925f94eef6cf0c",
+        "http://store.is.autonavi.com/showpic/5b07c78f700d027b01dda11745ad167e"
+      ]
     },
     {
       "name": "白鹭湾湿地公园",
@@ -3912,7 +6068,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.568151,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/2384da1c163937371586a3db2d74cbff"
+      "image": "http://store.is.autonavi.com/showpic/2384da1c163937371586a3db2d74cbff",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/2384da1c163937371586a3db2d74cbff",
+        "https://store.is.autonavi.com/showpic/32ac236c2d4d55f20000003039816619?type=pic",
+        "https://aos-comment.amap.com/B0FFF3AE8H/comment/9568040E_78B1_43A5_8E18_573D1EEC0601_L0_001_1500_200_1771668800175_00475333.jpg"
+      ]
     },
     {
       "name": "安顺廊桥",
@@ -3921,7 +6082,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.641325,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/1813efbac9b98469295896d23f10622c"
+      "image": "http://store.is.autonavi.com/showpic/1813efbac9b98469295896d23f10622c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/1813efbac9b98469295896d23f10622c",
+        "https://store.is.autonavi.com/showpic/a8f24ebefff259f80000003573656041?type=pic",
+        "https://store.is.autonavi.com/showpic/c9d898a95ee274a40000002871550888?type=pic"
+      ]
     },
     {
       "name": "海合安成都极地海洋公园",
@@ -3930,7 +6096,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.49487,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/17b1c8b487740cf8557e1ef3b335f514"
+      "image": "http://store.is.autonavi.com/showpic/17b1c8b487740cf8557e1ef3b335f514",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/17b1c8b487740cf8557e1ef3b335f514",
+        "http://store.is.autonavi.com/showpic/5fbc55eb1d2f8f849d6a960cbf199eed",
+        "http://store.is.autonavi.com/showpic/7db13fdadfd5ac7181cd8dfe620ebbb2"
+      ]
     },
     {
       "name": "塔子山公园",
@@ -3939,7 +6110,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.6344,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/0449cbbbd176eee66612f24f72a2a824"
+      "image": "http://store.is.autonavi.com/showpic/0449cbbbd176eee66612f24f72a2a824",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0449cbbbd176eee66612f24f72a2a824",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/dbcef529-c0a9-498d-89a5-2a1d20af7574.jpg",
+        "http://store.is.autonavi.com/showpic/44c57be97c16ad9e982521435989bf4a"
+      ]
     },
     {
       "name": "春熙路IFS爬墙大熊猫打卡点",
@@ -3948,7 +6124,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.655441,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/8843df3b0e8b13b00000002881192001?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/8843df3b0e8b13b00000002881192001?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/8843df3b0e8b13b00000002881192001?type=pic",
+        "https://store.is.autonavi.com/showpic/17a6686d8ba9ea640000002744856904?type=pic",
+        "https://store.is.autonavi.com/showpic/c51e1ea2b33490910000004439084071?type=pic"
+      ]
     },
     {
       "name": "大慈寺",
@@ -3957,7 +6138,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.654243,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/5fa3898c347ba4e69fcf0e5648589af3"
+      "image": "http://store.is.autonavi.com/showpic/5fa3898c347ba4e69fcf0e5648589af3",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5fa3898c347ba4e69fcf0e5648589af3",
+        "https://store.is.autonavi.com/showpic/c0396de5924d1f2e0000002796116673?type=pic",
+        "https://store.is.autonavi.com/showpic/d3515c28de4a70b60000008098768550?type=pic"
+      ]
     },
     {
       "name": "青羊宫",
@@ -3966,7 +6152,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.661542,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/3a705c47a0dccba3e7eb61b7b6599084"
+      "image": "http://store.is.autonavi.com/showpic/3a705c47a0dccba3e7eb61b7b6599084",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/3a705c47a0dccba3e7eb61b7b6599084",
+        "https://comment-oss-online.oss-cn-wulanchabu.aliyuncs.com/B001C04CFE/headerImg/content_media_external_images_media_852165_1654615078169_2c07f209.jpg",
+        "https://comment-oss-online.oss-cn-wulanchabu.aliyuncs.com/B001C04CFE/headerImg/content_media_external_images_media_852166_1654615078169_a0c1b8e8.jpg"
+      ]
     },
     {
       "name": "浣花溪公园",
@@ -3975,7 +6166,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.657467,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/36939d51bb4264f5f38ce5b548396e4a"
+      "image": "http://store.is.autonavi.com/showpic/36939d51bb4264f5f38ce5b548396e4a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/36939d51bb4264f5f38ce5b548396e4a",
+        "http://store.is.autonavi.com/showpic/fb908ef6d72e2bedacd7dd0183d15e4b",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/8302d34c-b6b9-4061-a156-f2f3ae1b8334.jpg"
+      ]
     },
     {
       "name": "成都动物园",
@@ -3984,7 +6180,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.710131,
       "category": "主题乐园",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/12868c6b4e5a3d9a3095f554e990c174"
+      "image": "http://store.is.autonavi.com/showpic/12868c6b4e5a3d9a3095f554e990c174",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/12868c6b4e5a3d9a3095f554e990c174",
+        "http://store.is.autonavi.com/showpic/27ef83d3e3330ecc7d2fbd0ab7cfe77a",
+        "http://store.is.autonavi.com/showpic/f1fc780b6fe3335791bef7055ea59cb6"
+      ]
     },
     {
       "name": "青龙湖湿地公园",
@@ -3993,7 +6194,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.646345,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/fa37fa100ddad216bedeee9c896cce9c"
+      "image": "http://store.is.autonavi.com/showpic/fa37fa100ddad216bedeee9c896cce9c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/fa37fa100ddad216bedeee9c896cce9c",
+        "http://store.is.autonavi.com/showpic/5c0a6aee0b4d0da9256835e999fb391d",
+        "http://store.is.autonavi.com/showpic/b218609531fb7678377d5b3a5aead351"
+      ]
     },
     {
       "name": "麓湖水城景区",
@@ -4002,7 +6208,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.458829,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/b2f73cab702075d61be98b3a033d7bb6"
+      "image": "http://store.is.autonavi.com/showpic/b2f73cab702075d61be98b3a033d7bb6",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b2f73cab702075d61be98b3a033d7bb6",
+        "http://store.is.autonavi.com/showpic/5112213ecbb878973104e80a10f4b7ff",
+        "http://store.is.autonavi.com/showpic/a11e9b593e5d7208da59c3b603a86030"
+      ]
     },
     {
       "name": "百花潭公园",
@@ -4011,7 +6222,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.656117,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/426b558552b51bd89e09a6d86a3cc8fa"
+      "image": "http://store.is.autonavi.com/showpic/426b558552b51bd89e09a6d86a3cc8fa",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/426b558552b51bd89e09a6d86a3cc8fa",
+        "http://store.is.autonavi.com/showpic/53ade87f82f31d8a81fcb2b89a308c56",
+        "http://store.is.autonavi.com/showpic/5faddb826a888e949abd1a77b237aab6"
+      ]
     },
     {
       "name": "文殊坊",
@@ -4020,7 +6236,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.67338,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/2d9356d9941ab69e1bf191438e8e09c2"
+      "image": "http://store.is.autonavi.com/showpic/2d9356d9941ab69e1bf191438e8e09c2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/2d9356d9941ab69e1bf191438e8e09c2",
+        "http://store.is.autonavi.com/showpic/7dd7296dd16d4d3bf16bece2b99ca9d4",
+        "http://store.is.autonavi.com/showpic/14a2fc2f018b8a7e69361812d3d2cc08"
+      ]
     },
     {
       "name": "桂溪生态公园",
@@ -4029,7 +6250,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.563054,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/30335d74c329f63f44ccb6c6ce2857c5"
+      "image": "http://store.is.autonavi.com/showpic/30335d74c329f63f44ccb6c6ce2857c5",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/30335d74c329f63f44ccb6c6ce2857c5",
+        "http://store.is.autonavi.com/showpic/b532473e8a171d2be2c59d451244e694",
+        "http://store.is.autonavi.com/showpic/552d7946d471caf69ddf9f342ce6c9d7"
+      ]
     },
     {
       "name": "锦城公园",
@@ -4038,7 +6264,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.570449,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/22a2d13da7efae462333f9b9e732488b"
+      "image": "http://store.is.autonavi.com/showpic/22a2d13da7efae462333f9b9e732488b",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/22a2d13da7efae462333f9b9e732488b",
+        "http://store.is.autonavi.com/showpic/a761b27b813f7300f0c4e97d16f3d048",
+        "http://store.is.autonavi.com/showpic/ee8a61dc928e28887c7483323bca0ae5"
+      ]
     },
     {
       "name": "九叶莲桥",
@@ -4047,7 +6278,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.582484,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/5e39d31bd63ef5380000004276980557?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/5e39d31bd63ef5380000004276980557?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/5e39d31bd63ef5380000004276980557?type=pic",
+        "https://store.is.autonavi.com/showpic/b643d65966de1b8b0000004276984543?type=pic",
+        "http://store.is.autonavi.com/showpic/dfcbeaab063e7173180e7fc7c2759e23"
+      ]
     },
     {
       "name": "天府绿道",
@@ -4056,7 +6292,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.56275,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0JDDUTR9Y/comment/content_media_external_images_media_1000090295_ss__1728123306162_72423315.jpg"
+      "image": "https://aos-comment.amap.com/B0JDDUTR9Y/comment/content_media_external_images_media_1000090295_ss__1728123306162_72423315.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0JDDUTR9Y/comment/content_media_external_images_media_1000090295_ss__1728123306162_72423315.jpg",
+        "https://store.is.autonavi.com/showpic/ba9f36c7bc2b635b0000002452384572?type=pic",
+        "https://store.is.autonavi.com/showpic/63b3ba64bfe8a17a0000006109868302?type=pic"
+      ]
     },
     {
       "name": "交子之环",
@@ -4065,7 +6306,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.581982,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/1b106e0b4266735e0000002347818074?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/1b106e0b4266735e0000002347818074?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/1b106e0b4266735e0000002347818074?type=pic",
+        "https://store.is.autonavi.com/showpic/0733eee505cc4f8b0000002347766766?type=pic",
+        "https://aos-comment.amap.com/B0H2OPC916/comment/content_media_external_images_media_1000029453_ss__1732026031702_61927808.jpg"
+      ]
     },
     {
       "name": "中和湿地公园",
@@ -4074,7 +6320,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.565879,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/c898d6da9efd69d5eff3bfc6ab5100cf"
+      "image": "http://store.is.autonavi.com/showpic/c898d6da9efd69d5eff3bfc6ab5100cf",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c898d6da9efd69d5eff3bfc6ab5100cf",
+        "https://aos-comment.amap.com/B0FFL812HL/comment/A1CEA1C3_E44B_4369_8FDF_B21FCEFA1203_L0_001_1284_95_1744450685357_66612084.jpg",
+        "https://aos-comment.amap.com/B0FFL812HL/comment/content_media_external_images_media_1000074569_ss__1732183207088_38354449.jpg"
+      ]
     },
     {
       "name": "铁像寺",
@@ -4083,7 +6334,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.557092,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/1a07e9b917f0103f37eed6fcdca0e35f"
+      "image": "http://store.is.autonavi.com/showpic/1a07e9b917f0103f37eed6fcdca0e35f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/1a07e9b917f0103f37eed6fcdca0e35f",
+        "https://store.is.autonavi.com/showpic/9b8df99be46f5c540000003776464360?type=pic",
+        "https://aos-comment.amap.com/B001C05319/comment/content_media_external_images_media_1000121183_ss__1764295517837_99309282.jpg"
+      ]
     },
     {
       "name": "锦城湖2号湖区",
@@ -4092,7 +6348,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.574282,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0FFH9V82Y/comment/77518e5ad1b8681c446174ab77c5e814_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0FFH9V82Y/comment/77518e5ad1b8681c446174ab77c5e814_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFH9V82Y/comment/77518e5ad1b8681c446174ab77c5e814_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFH9V82Y/comment/9dc76102b3a0e53e2000809dc6b1710e_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFH9V82Y/comment/content_media_external_file_100005651_1750527782784_28993622.jpg"
+      ]
     },
     {
       "name": "成都江滩公园",
@@ -4101,7 +6362,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.555514,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/7673f458c7378eeeb68d0ac6eff6db98"
+      "image": "http://store.is.autonavi.com/showpic/7673f458c7378eeeb68d0ac6eff6db98",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/7673f458c7378eeeb68d0ac6eff6db98",
+        "http://store.is.autonavi.com/showpic/462315938c343c95975303b3928d901e",
+        "http://store.is.autonavi.com/showpic/4581a81dbd7eca86804a82d005d6e6fc"
+      ]
     },
     {
       "name": "江家艺苑",
@@ -4110,7 +6376,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.575931,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/b9504e2b3dbed4aa0000003299860747?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/b9504e2b3dbed4aa0000003299860747?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/b9504e2b3dbed4aa0000003299860747?type=pic",
+        "http://store.is.autonavi.com/showpic/c4a88c51138637212c2f2e4024744e7f",
+        "https://store.is.autonavi.com/showpic/9f7e59399fa7b5c60000009289986178?type=pic"
+      ]
     },
     {
       "name": "幸福梅林",
@@ -4119,7 +6390,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.584398,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/7bcb4982fd5b6fc8e120d935a6a56e55"
+      "image": "http://store.is.autonavi.com/showpic/7bcb4982fd5b6fc8e120d935a6a56e55",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/7bcb4982fd5b6fc8e120d935a6a56e55",
+        "https://store.is.autonavi.com/showpic/8f9f222fd5a7383e0000003184886617?type=pic",
+        "https://store.is.autonavi.com/showpic/25323b2e9640f38b0000000712844849?type=pic"
+      ]
     },
     {
       "name": "锦江体育公园",
@@ -4128,7 +6404,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.59777,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B001C7YD1J/comment/177064681394_1770646822590_89151582.jpg"
+      "image": "https://aos-comment.amap.com/B001C7YD1J/comment/177064681394_1770646822590_89151582.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001C7YD1J/comment/177064681394_1770646822590_89151582.jpg",
+        "https://aos-comment.amap.com/B001C7YD1J/comment/0AAA5930_FE54_4431_ABBA_9635671F6044_L0_001_2016_1512_1731672497744_89226316.jpg",
+        "https://store.is.autonavi.com/showpic/a56f51a390f0333baa2261c3f05cb953"
+      ]
     },
     {
       "name": "南湖公园",
@@ -4137,7 +6418,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.499433,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/ce6191be556f4777f974282b3fc4f0dc"
+      "image": "http://store.is.autonavi.com/showpic/ce6191be556f4777f974282b3fc4f0dc",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ce6191be556f4777f974282b3fc4f0dc",
+        "https://aos-comment.amap.com/B0FFFODZ7F/comment/3FEF8F79_9103_4E4D_BDA1_CD21EA8A291F_L0_001_1179_165_1764290679773_76427353.jpg",
+        "http://store.is.autonavi.com/showpic/a14792d3344f611bd12ca80918c80b1d"
+      ]
     },
     {
       "name": "天府芙蓉园",
@@ -4146,7 +6432,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.591603,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/b61c5a4ab8f64d3e8f93abf05f54d401"
+      "image": "http://store.is.autonavi.com/showpic/b61c5a4ab8f64d3e8f93abf05f54d401",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b61c5a4ab8f64d3e8f93abf05f54d401",
+        "http://store.is.autonavi.com/showpic/49b017c00a88ae9200fd16922be3825c",
+        "http://store.is.autonavi.com/showpic/0e3ddc7eea47fc40c47a3da4b16730ab"
+      ]
     },
     {
       "name": "三圣花乡旅游区",
@@ -4155,7 +6446,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.58648,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/e7037ce9a4738873d5b40918956a42d8"
+      "image": "http://store.is.autonavi.com/showpic/e7037ce9a4738873d5b40918956a42d8",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e7037ce9a4738873d5b40918956a42d8",
+        "http://store.is.autonavi.com/showpic/f60373a507f8362964e30ab8e76bb68c",
+        "http://store.is.autonavi.com/showpic/34c35376f280ed02c7cb5143b527f951"
+      ]
     },
     {
       "name": "东安湖国际旅游度假区",
@@ -4164,7 +6460,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.590282,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/caabc8b17ebf838ffd4a4667407ffb2f"
+      "image": "http://store.is.autonavi.com/showpic/caabc8b17ebf838ffd4a4667407ffb2f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/caabc8b17ebf838ffd4a4667407ffb2f",
+        "http://store.is.autonavi.com/showpic/4f8d0a2130f17cbbab51d65f59ec5d67",
+        "https://aos-comment.amap.com/B0JB35F6ED/comment/content_media_external_file_100002817_1773595975041_69423877.jpg"
+      ]
     },
     {
       "name": "新川之心公园东区",
@@ -4173,7 +6474,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.512035,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/54be3a95a257f9acde40a68c65877e7c"
+      "image": "https://store.is.autonavi.com/showpic/54be3a95a257f9acde40a68c65877e7c",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/54be3a95a257f9acde40a68c65877e7c",
+        "https://aos-comment.amap.com/B0GUMH732X/comment/content_media_external_file_2379_1758870619895_82790575.jpg",
+        "https://store.is.autonavi.com/showpic/97e4f5efa50c7c4a0000006861660098?type=pic"
+      ]
     },
     {
       "name": "锦里",
@@ -4182,7 +6488,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.644979,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/810ed7c9740bcc140000002882100382?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/810ed7c9740bcc140000002882100382?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/810ed7c9740bcc140000002882100382?type=pic",
+        "https://store.is.autonavi.com/showpic/b0e7aa39e36c6ff50000006164088601?type=pic",
+        "https://store.is.autonavi.com/showpic/d2655b8025dd4be10000003573768593?type=pic"
+      ]
     },
     {
       "name": "国际非物质文化遗产博览园",
@@ -4191,7 +6502,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.666557,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/1399bd7418b96514afdf972c69c0fb10"
+      "image": "http://store.is.autonavi.com/showpic/1399bd7418b96514afdf972c69c0fb10",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/1399bd7418b96514afdf972c69c0fb10",
+        "http://store.is.autonavi.com/showpic/b3c7a6888583225db822ef4ad4905510",
+        "http://store.is.autonavi.com/showpic/954e8014e564b774b3d7d0ee793f8b1f"
+      ]
     },
     {
       "name": "合江亭",
@@ -4200,7 +6516,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.642929,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/529098588035a4d66c1984c32958c2ac"
+      "image": "http://store.is.autonavi.com/showpic/529098588035a4d66c1984c32958c2ac",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/529098588035a4d66c1984c32958c2ac",
+        "http://store.is.autonavi.com/showpic/85068472eb393033d1249cf697a3acde",
+        "https://store.is.autonavi.com/showpic/09a3381656f630380000002755860792?type=pic"
+      ]
     },
     {
       "name": "桂溪生态公园西区",
@@ -4209,7 +6530,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.562903,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/a65dff0be48710930000002418732090?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/a65dff0be48710930000002418732090?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/a65dff0be48710930000002418732090?type=pic",
+        "https://aos-comment.amap.com/B0FFI3DJZT/comment/BE3D92A2_4BCD_4D44_8FCA_4C40B72C8DC2_L0_001_2048_153_1760161885089_73194978.jpg",
+        "https://aos-comment.amap.com/B0FFI3DJZT/comment/057D9781_D958_4857_9382_C775AAB5E7A7_L0_001_2048_153_1760161885090_66205558.jpg"
+      ]
     },
     {
       "name": "新川之心公园",
@@ -4218,7 +6544,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.512549,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0FFK89JNN/comment/content_media_external_file_65128_ss__1762146265022_58033663.jpg"
+      "image": "https://aos-comment.amap.com/B0FFK89JNN/comment/content_media_external_file_65128_ss__1762146265022_58033663.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFK89JNN/comment/content_media_external_file_65128_ss__1762146265022_58033663.jpg",
+        "https://store.is.autonavi.com/showpic/a95a0be25b013c9f0000002861942147?type=pic",
+        "https://store.is.autonavi.com/showpic/588a264b5b5fef880a1945f7a986b81d"
+      ]
     },
     {
       "name": "江滩苍鹭乐园",
@@ -4227,7 +6558,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.553297,
       "category": "主题乐园",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/c720e4bca28fbf7d0000000717864068?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/c720e4bca28fbf7d0000000717864068?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/c720e4bca28fbf7d0000000717864068?type=pic",
+        "https://store.is.autonavi.com/showpic/60ecdf4e555e684e0000005488400795?type=pic",
+        "https://store.is.autonavi.com/showpic/fe88e95e4c4b11620000000717812715?type=pic"
+      ]
     },
     {
       "name": "三圣花乡·花乡农居",
@@ -4236,7 +6572,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.583761,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/eff692d53798741918546b1e21c25b9e"
+      "image": "http://store.is.autonavi.com/showpic/eff692d53798741918546b1e21c25b9e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/eff692d53798741918546b1e21c25b9e",
+        "http://s-pic.oss-cn-beijing.aliyuncs.com/desensitize/images/publish/8677d03d37850059afc69d838740fada.jpg",
+        "http://store.is.autonavi.com/showpic/9d2449e4e2de1b7103d16953d2623cfb"
+      ]
     },
     {
       "name": "簇锦公园",
@@ -4245,7 +6586,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.609288,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/6792ee01cfe7e5ad7c2f351714190ee2"
+      "image": "http://store.is.autonavi.com/showpic/6792ee01cfe7e5ad7c2f351714190ee2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6792ee01cfe7e5ad7c2f351714190ee2",
+        "http://store.is.autonavi.com/showpic/97b6b6bad9d5defd09587beccbb74f71",
+        "https://aos-comment.amap.com/B001C7UJY2/comment/content_media_external_file_100010303_1772718043149_44047065.jpg"
+      ]
     },
     {
       "name": "双流空港花田",
@@ -4254,7 +6600,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.503254,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/d395fae19ea110d987df57636ae08c37"
+      "image": "http://store.is.autonavi.com/showpic/d395fae19ea110d987df57636ae08c37",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d395fae19ea110d987df57636ae08c37",
+        "http://store.is.autonavi.com/showpic/ca634a30b4cee5582b53072983d38e02",
+        "http://store.is.autonavi.com/showpic/b21e61b9a5d386a264488b5f7c60b42f"
+      ]
     },
     {
       "name": "锦城湖4号公园",
@@ -4263,7 +6614,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.565324,
       "category": "自然风光",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/3f18e2c07eeea6f70000002251732332?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/3f18e2c07eeea6f70000002251732332?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/3f18e2c07eeea6f70000002251732332?type=pic",
+        "https://aos-comment.amap.com/B0FFGAZRYB/comment/D9AFD44B_2010_403E_98D6_000C8B1F8233_L0_001_2000_1126_1742922379048_82264956.jpg",
+        "https://store.is.autonavi.com/showpic/0709a2e629b955ba0000002875098862?type=pic"
+      ]
     },
     {
       "name": "锦江公园",
@@ -4272,7 +6628,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.588508,
       "category": "自然风光",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0HU1ABMSW/comment/content_media_external_images_media_100000856_1757274557263_11256248.jpg"
+      "image": "https://aos-comment.amap.com/B0HU1ABMSW/comment/content_media_external_images_media_100000856_1757274557263_11256248.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0HU1ABMSW/comment/content_media_external_images_media_100000856_1757274557263_11256248.jpg",
+        "https://aos-comment.amap.com/B0HU1ABMSW/comment/3121A121_895A_472B_9271_A2DF78CFE4C0_L0_001_2000_150_1767003797948_55122251.jpg",
+        "https://store.is.autonavi.com/showpic/0e048496b5f27fa30000002266404191?type=pic"
+      ]
     },
     {
       "name": "近慈寺",
@@ -4281,7 +6642,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.574105,
       "category": "宗教寺庙",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/8b043408810f0fe077455adb03c82534"
+      "image": "http://store.is.autonavi.com/showpic/8b043408810f0fe077455adb03c82534",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8b043408810f0fe077455adb03c82534",
+        "http://store.is.autonavi.com/showpic/de2bb8334d1b5ca414612afe5378a562",
+        "https://aos-comment.amap.com/B001C808ES/comment/content_media_external_images_media_116213_ss__1767149090897_78172341.jpg"
+      ]
     },
     {
       "name": "基督教光音堂",
@@ -4290,7 +6656,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.56084,
       "category": "宗教寺庙",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/19830a744da27c093c12aa03934eea36"
+      "image": "http://store.is.autonavi.com/showpic/19830a744da27c093c12aa03934eea36",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/19830a744da27c093c12aa03934eea36",
+        "https://store.is.autonavi.com/showpic/3201a8ec8979769a0000002588742519?type=pic",
+        "https://store.is.autonavi.com/showpic/92fac59cb0b3ff55fe5e09d49169d365"
+      ]
     },
     {
       "name": "玉林四巷爱转角文创街区",
@@ -4299,7 +6670,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.628406,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/dbb61f2bd292e11d3bae1573172f7375"
+      "image": "https://store.is.autonavi.com/showpic/dbb61f2bd292e11d3bae1573172f7375",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/dbb61f2bd292e11d3bae1573172f7375",
+        "https://store.is.autonavi.com/showpic/c79ea5ad119eb3210000000950188462?type=pic",
+        "https://aos-comment.amap.com/B0FFLPTZWO/comment/content_media_external_file_34368_ss__1765992440126_43959805.jpg"
+      ]
     },
     {
       "name": "桂溪生态公园东区",
@@ -4308,7 +6684,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.563249,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/default_poi/comment/aa49e8310b7ac7d79709286ab9bf0735_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/default_poi/comment/aa49e8310b7ac7d79709286ab9bf0735_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/default_poi/comment/aa49e8310b7ac7d79709286ab9bf0735_2048_2048_80.jpg",
+        "http://store.is.autonavi.com/showpic/fb7c2712c4e0b3b596973535e4a24bdd",
+        "https://aos-comment.amap.com/default_poi/comment/f50313fa67b06d33db5e758f425b5912_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "成都环城绿道0公里",
@@ -4317,7 +6698,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.564775,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/d204b57ab898ceb80000002509646538?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/d204b57ab898ceb80000002509646538?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/d204b57ab898ceb80000002509646538?type=pic",
+        "https://aos-comment.amap.com/B0MGHSTE6T/comment/20260318-8b3c7c2b22dbb2419a3abf08-7EnbO62w1Fc8jTyYoLmu54.jpg",
+        "https://store.is.autonavi.com/showpic/12c4ef004c986f4e0000002466830721?type=pic"
+      ]
     },
     {
       "name": "桂龙公园",
@@ -4326,7 +6712,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.54433,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/7ac5604a7c39645f0000002790832596?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/7ac5604a7c39645f0000002790832596?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/7ac5604a7c39645f0000002790832596?type=pic",
+        "https://aos-comment.amap.com/B001C8RGGT/comment/content_media_external_file_32194_ss__1744713664581_48632263.jpg",
+        "https://aos-comment.amap.com/B001C8RGGT/comment/81da2e1d38b4afcc7c82f2cfe5a763f1_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "月牙湖",
@@ -4335,7 +6726,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.557341,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B0FFI3Z26N/comment/00BC4B11_2131_4656_BBE5_D003A1AED955_L0_001_2000_1500_1742028527249_56302736.jpg"
+      "image": "https://aos-comment.amap.com/B0FFI3Z26N/comment/00BC4B11_2131_4656_BBE5_D003A1AED955_L0_001_2000_1500_1742028527249_56302736.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFI3Z26N/comment/00BC4B11_2131_4656_BBE5_D003A1AED955_L0_001_2000_1500_1742028527249_56302736.jpg",
+        "https://store.is.autonavi.com/showpic/e0ac8affb9dc871c0000003034404753?type=pic",
+        "https://store.is.autonavi.com/showpic/637be7ca748a486b0000002266382332?type=pic"
+      ]
     },
     {
       "name": "和平社区广场",
@@ -4344,7 +6740,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.603539,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/24ed755c6f9f04939c0f00c674e8cecb"
+      "image": "http://store.is.autonavi.com/showpic/24ed755c6f9f04939c0f00c674e8cecb",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/24ed755c6f9f04939c0f00c674e8cecb",
+        "https://aos-comment.amap.com/B001C7Y8P2/comment/9368EACA_BE41_4572_A7E6_41D4677D52C4_L0_001_1500_200_1760951037756_07270008.jpg",
+        "https://store.is.autonavi.com/showpic/d21a3ba564e71c3f0000002806740934?type=pic"
+      ]
     },
     {
       "name": "沙河东篱翠湖公园",
@@ -4353,7 +6754,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.608022,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/92b5a0a69b14e07e9c496d79058b1acf"
+      "image": "http://store.is.autonavi.com/showpic/92b5a0a69b14e07e9c496d79058b1acf",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/92b5a0a69b14e07e9c496d79058b1acf",
+        "https://aos-comment.amap.com/B001C7WGDH/comment/20260321-b482ae4bac4ab5c4e2fc502e-4ep9zJRBB1q7dAJXuIlIoL.jpg",
+        "https://aos-comment.amap.com/B001C7WGDH/comment/93b1b596e176b4c1ddcf30f00f2dcb81_2048_2048_80.jpg"
+      ]
     }
   ],
   "重庆": [
@@ -4364,7 +6770,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.551553,
       "category": "历史人文",
       "rating": 5,
-      "image": "http://store.is.autonavi.com/showpic/d1dfccfe9a813238529a3850d8ce66eb"
+      "image": "http://store.is.autonavi.com/showpic/d1dfccfe9a813238529a3850d8ce66eb",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d1dfccfe9a813238529a3850d8ce66eb",
+        "http://store.is.autonavi.com/showpic/d62ef5275689f926a4fc30994a8eb650",
+        "http://store.is.autonavi.com/showpic/2568f604017314f1de41d26badb3cf94"
+      ]
     },
     {
       "name": "洪崖洞民俗风貌区",
@@ -4373,7 +6784,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.562204,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/d69a8d621edd4c1fc967029ac5011785"
+      "image": "http://store.is.autonavi.com/showpic/d69a8d621edd4c1fc967029ac5011785",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d69a8d621edd4c1fc967029ac5011785",
+        "http://store.is.autonavi.com/showpic/b8524c74749d6e6147994eba24c363a7",
+        "http://store.is.autonavi.com/showpic/dddae7ed2d49555495a7aa59588e02ae"
+      ]
     },
     {
       "name": "重庆十八梯传统风貌区",
@@ -4382,7 +6798,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.551015,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/429b434f68baaba575ad82e5fe2996df"
+      "image": "https://store.is.autonavi.com/showpic/429b434f68baaba575ad82e5fe2996df",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/429b434f68baaba575ad82e5fe2996df",
+        "https://store.is.autonavi.com/showpic/51932965c11047d20000008778768872?type=pic",
+        "https://store.is.autonavi.com/showpic/04d965468e521ed70000006590108731?type=pic"
+      ]
     },
     {
       "name": "洪崖洞夜景观景台",
@@ -4391,7 +6812,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.562321,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/487d06ec44b68db80000007209488682?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/487d06ec44b68db80000007209488682?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/487d06ec44b68db80000007209488682?type=pic",
+        "https://store.is.autonavi.com/showpic/385b6b363e320c6b28a3e0086c0ddf33",
+        "https://store.is.autonavi.com/showpic/eb3e3cd5bba81d800000005114524093?type=pic"
+      ]
     },
     {
       "name": "魁星楼",
@@ -4400,7 +6826,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.560258,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/a97076f9e4979abd0000003334668049?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/a97076f9e4979abd0000003334668049?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/a97076f9e4979abd0000003334668049?type=pic",
+        "https://store.is.autonavi.com/showpic/b4492e453dc53e88110991f5c9349e6b",
+        "https://store.is.autonavi.com/showpic/e1845491b4a71a190000004806582652?type=pic"
+      ]
     },
     {
       "name": "人民解放纪念碑",
@@ -4409,7 +6840,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.557204,
       "category": "历史人文",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/3e5c41cec40e35e5675a47a7a326b3f4"
+      "image": "http://store.is.autonavi.com/showpic/3e5c41cec40e35e5675a47a7a326b3f4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/3e5c41cec40e35e5675a47a7a326b3f4",
+        "https://store.is.autonavi.com/showpic/054816f1340960e40000000610556346",
+        "https://aos-comment.amap.com/B00170L5D4/comment/content_media_external_images_media_69145_ss__1770795366533_75710879.jpg"
+      ]
     },
     {
       "name": "江北嘴江滩公园",
@@ -4418,7 +6854,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.567497,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/77575fb3b2158c500000004867882273?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/77575fb3b2158c500000004867882273?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/77575fb3b2158c500000004867882273?type=pic",
+        "https://store.is.autonavi.com/showpic/9e6fed108bc102b00000004739752162?type=pic",
+        "https://store.is.autonavi.com/showpic/a10066b46d4fed950000003140964531?type=pic"
+      ]
     },
     {
       "name": "周公馆",
@@ -4427,7 +6868,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.565389,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/d3d9a8a1136ca0c60000001940190254?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/d3d9a8a1136ca0c60000001940190254?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/d3d9a8a1136ca0c60000001940190254?type=pic",
+        "https://store.is.autonavi.com/showpic/2147fe8087f328b30000002861106195?type=pic",
+        "https://store.is.autonavi.com/showpic/d2835da5e4c42cf70000003059538348?type=pic"
+      ]
     },
     {
       "name": "下浩里",
@@ -4436,7 +6882,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.557588,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/3354fe1f3af12f11452e337ccd006bbd"
+      "image": "https://store.is.autonavi.com/showpic/3354fe1f3af12f11452e337ccd006bbd",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/3354fe1f3af12f11452e337ccd006bbd",
+        "https://store.is.autonavi.com/showpic/98ea08dc92ef4eab0000006724418880?type=pic",
+        "https://store.is.autonavi.com/showpic/c222657bb0224985f10c4396fd727690"
+      ]
     },
     {
       "name": "龙门浩老街",
@@ -4445,7 +6896,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.555993,
       "category": "古镇村落",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/9b0c06113f448dfe0000003171130248?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/9b0c06113f448dfe0000003171130248?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/9b0c06113f448dfe0000003171130248?type=pic",
+        "https://store.is.autonavi.com/showpic/9f48ef3051af6e480000006263992602?type=pic",
+        "https://store.is.autonavi.com/showpic/d35b4615e8e8357b0000003135042588?type=pic"
+      ]
     },
     {
       "name": "鹅岭公园",
@@ -4454,7 +6910,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.549688,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/e0c2074eb112d71ff3db00d166c5e4e8"
+      "image": "http://store.is.autonavi.com/showpic/e0c2074eb112d71ff3db00d166c5e4e8",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e0c2074eb112d71ff3db00d166c5e4e8",
+        "http://store.is.autonavi.com/showpic/23a635a9a38e3c804c1cb7540c623f28",
+        "https://store.is.autonavi.com/showpic/d8c73a8b259847ee0000003296216104?type=pic"
+      ]
     },
     {
       "name": "罗汉寺",
@@ -4463,7 +6924,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.559756,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/738782e7bc8d1c9e0000003772096173?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/738782e7bc8d1c9e0000003772096173?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/738782e7bc8d1c9e0000003772096173?type=pic",
+        "https://store.is.autonavi.com/showpic/d7d9bda0468b8f130000004532532694?type=pic",
+        "https://store.is.autonavi.com/showpic/018c2dca2c92da9a0000007335360873?type=pic"
+      ]
     },
     {
       "name": "十八梯观景台",
@@ -4472,7 +6938,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.552407,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0LDGAD2XG/comment/52998F9B_3AFB_4142_8373_42E192F61AAF_L0_001_1500_200_1770308098003_04968638.jpg"
+      "image": "https://aos-comment.amap.com/B0LDGAD2XG/comment/52998F9B_3AFB_4142_8373_42E192F61AAF_L0_001_1500_200_1770308098003_04968638.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0LDGAD2XG/comment/52998F9B_3AFB_4142_8373_42E192F61AAF_L0_001_1500_200_1770308098003_04968638.jpg",
+        "https://store.is.autonavi.com/showpic/c65dc8c2539901400000002438614114?type=pic",
+        "https://store.is.autonavi.com/showpic/1f43d5e839b6a5720000002262624627?type=pic"
+      ]
     },
     {
       "name": "我在重庆大屏",
@@ -4481,7 +6952,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.576559,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/6bc70e959e558ac94251626f4d9a2628"
+      "image": "https://store.is.autonavi.com/showpic/6bc70e959e558ac94251626f4d9a2628",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/6bc70e959e558ac94251626f4d9a2628",
+        "https://store.is.autonavi.com/showpic/0df1713ac0048592ceea47c764747a85",
+        "https://store.is.autonavi.com/showpic/2dbdd85b84371a1c0000004356522866?type=pic"
+      ]
     },
     {
       "name": "重庆长江索道",
@@ -4490,7 +6966,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.553272,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/16df69e9d7e0d24e361b93c9694209cd"
+      "image": "http://store.is.autonavi.com/showpic/16df69e9d7e0d24e361b93c9694209cd",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/16df69e9d7e0d24e361b93c9694209cd",
+        "http://store.is.autonavi.com/showpic/3fe140318e5d3c87c6c418d4d929fa22",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/ce1a038d-7a6d-46ed-aeca-c97e1101e57d.jpg"
+      ]
     },
     {
       "name": "戴家巷崖壁步道",
@@ -4499,7 +6980,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.561696,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/4bfa0803733133340000005046516728?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/4bfa0803733133340000005046516728?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/4bfa0803733133340000005046516728?type=pic",
+        "https://store.is.autonavi.com/showpic/187fd2e28a21160f0000002531616831?type=pic",
+        "https://store.is.autonavi.com/showpic/2aff1fa3bcfba8330000003044266886?type=pic"
+      ]
     },
     {
       "name": "长嘉汇弹子石老街",
@@ -4508,7 +6994,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.579709,
       "category": "古镇村落",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/61d46fc3a0ae5f57a17f395bfa250493"
+      "image": "http://store.is.autonavi.com/showpic/61d46fc3a0ae5f57a17f395bfa250493",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/61d46fc3a0ae5f57a17f395bfa250493",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/e3e41d21-dfc2-4817-a6da-4fe76299bdc7.jpg",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/086c0cf4-a32c-47af-94e8-47759b6b8976.jpg"
+      ]
     },
     {
       "name": "湖广会馆",
@@ -4517,7 +7008,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.557921,
       "category": "历史人文",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/b44117b134ac7b1d6dabee5d837c7642"
+      "image": "http://store.is.autonavi.com/showpic/b44117b134ac7b1d6dabee5d837c7642",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b44117b134ac7b1d6dabee5d837c7642",
+        "http://store.is.autonavi.com/showpic/46d2175646549329ebd5e0c8b1ff5398",
+        "http://store.is.autonavi.com/showpic/f9e331a43c654ce51fa7d167a5c4d2c3"
+      ]
     },
     {
       "name": "重庆云端之眼观景台",
@@ -4526,7 +7022,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.557267,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/5c26bbac8bb8b4b3c30bcf2208dfeddc"
+      "image": "http://store.is.autonavi.com/showpic/5c26bbac8bb8b4b3c30bcf2208dfeddc",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5c26bbac8bb8b4b3c30bcf2208dfeddc",
+        "http://store.is.autonavi.com/showpic/76456808f03a79ff82a60d210b8ddc2c",
+        "http://store.is.autonavi.com/showpic/d40f960b27ac3eb9e72f80aed70dc5d9"
+      ]
     },
     {
       "name": "鸿恩寺森林公园",
@@ -4535,7 +7036,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.568621,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/1540454edbdb7c2ef00ac985a361cd5b"
+      "image": "http://store.is.autonavi.com/showpic/1540454edbdb7c2ef00ac985a361cd5b",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/1540454edbdb7c2ef00ac985a361cd5b",
+        "https://aos-comment.amap.com/B001786RF6/comment/176675184165_1766751842931_19077424.jpg",
+        "https://aos-comment.amap.com/B001786RF6/comment/content_media_external_file_1000023718_ss__1767542813696_38462835.jpg"
+      ]
     },
     {
       "name": "马鞍山堂里",
@@ -4544,7 +7050,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.559965,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0FFJUF87Z/comment/56CD5C27_2E48_40C1_BDAA_3F08AB6692DE_L0_001_1170_131_1772176690018_93453511.jpg"
+      "image": "https://aos-comment.amap.com/B0FFJUF87Z/comment/56CD5C27_2E48_40C1_BDAA_3F08AB6692DE_L0_001_1170_131_1772176690018_93453511.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFJUF87Z/comment/56CD5C27_2E48_40C1_BDAA_3F08AB6692DE_L0_001_1170_131_1772176690018_93453511.jpg",
+        "https://store.is.autonavi.com/showpic/dcebb58469e6487a0000002338216639?type=pic",
+        "https://aos-comment.amap.com/B0FFJUF87Z/comment/content_media_external_file_1000009421_ss__1760460021608_88004995.jpg"
+      ]
     },
     {
       "name": "重庆长江索道北站",
@@ -4553,7 +7064,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.557845,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/comment/content_service__1771670730369_77486654_1771670766046_51406467.jpg"
+      "image": "https://aos-comment.amap.com/comment/content_service__1771670730369_77486654_1771670766046_51406467.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/comment/content_service__1771670730369_77486654_1771670766046_51406467.jpg",
+        "https://aos-comment.amap.com/B0FFKC768W/comment/CF860762_331B_46AE_B6F6_4ADA6B5B6183_L0_001_2000_150_1763788780229_28919158.jpg",
+        "https://aos-comment.amap.com/B0FFKC768W/comment/content_media_external_file_100004929_1761483361956_82174567.jpg"
+      ]
     },
     {
       "name": "两江小渡",
@@ -4562,7 +7078,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.562407,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0H0T7PE92/comment/content_media_external_file_100015889_1772322035457_29938779.jpg"
+      "image": "https://aos-comment.amap.com/B0H0T7PE92/comment/content_media_external_file_100015889_1772322035457_29938779.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0H0T7PE92/comment/content_media_external_file_100015889_1772322035457_29938779.jpg",
+        "https://aos-comment.amap.com/B0H0T7PE92/comment/3A2D4150_A79D_427C_A0E8_A2A4B2DA7759_L0_001_2016_113_1771655428131_26104702.jpg",
+        "https://aos-comment.amap.com/B0H0T7PE92/comment/5FD8F7F8_9051_41AD_AFF1_A5F678CC2BAE_L0_001_1438_81_1764320209456_12271774.jpg"
+      ]
     },
     {
       "name": "萤火虫港湾猫猫主题公园",
@@ -4571,7 +7092,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.52926,
       "category": "主题乐园",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/f313eb22643919ff0000002595372535?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/f313eb22643919ff0000002595372535?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/f313eb22643919ff0000002595372535?type=pic",
+        "https://store.is.autonavi.com/showpic/26cf67b97884c23b0000003377272438?type=pic",
+        "https://store.is.autonavi.com/showpic/6e206f32470d54810000002739448418?type=pic"
+      ]
     },
     {
       "name": "山城巷传统风貌区",
@@ -4580,7 +7106,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.550114,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0FFK7WOXJ/headerImg/36d4b3f7ebccf9a76170d035338642a8_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0FFK7WOXJ/headerImg/36d4b3f7ebccf9a76170d035338642a8_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFK7WOXJ/headerImg/36d4b3f7ebccf9a76170d035338642a8_2048_2048_80.jpg",
+        "http://store.is.autonavi.com/showpic/dca1d9ef694efe774a50d10ff2bf0037",
+        "https://store.is.autonavi.com/showpic/606c8c3fecb45d670000004620034026?type=pic"
+      ]
     },
     {
       "name": "老君洞道观",
@@ -4589,7 +7120,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.542263,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/19632ee5a811c14891aa4b7a51c1657a"
+      "image": "http://store.is.autonavi.com/showpic/19632ee5a811c14891aa4b7a51c1657a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/19632ee5a811c14891aa4b7a51c1657a",
+        "http://store.is.autonavi.com/showpic/0fa0f56889307a91af4fa7e7d905566f",
+        "https://store.is.autonavi.com/showpic/8b70b0ebd2acf3070000009211228991?type=pic"
+      ]
     },
     {
       "name": "南滨路钟楼",
@@ -4598,7 +7134,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.572515,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0HBYXIRBB/comment/769D053F_5367_45BA_86EE_2FCE679BFDF2_L0_001_1996_199_1763196013082_96408092.jpg"
+      "image": "https://aos-comment.amap.com/B0HBYXIRBB/comment/769D053F_5367_45BA_86EE_2FCE679BFDF2_L0_001_1996_199_1763196013082_96408092.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0HBYXIRBB/comment/769D053F_5367_45BA_86EE_2FCE679BFDF2_L0_001_1996_199_1763196013082_96408092.jpg",
+        "https://aos-comment.amap.com/comment/20260307-f4d54bc6e86cef145308f38f-Ajm2PVHjtn48gBlp7AzqS8.jpg",
+        "https://store.is.autonavi.com/showpic/f548e8fe5c868fb60000008046042329?type=pic"
+      ]
     },
     {
       "name": "重庆南山风景区",
@@ -4607,7 +7148,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.557991,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/db371613f7f4d16650995ca4f48fc6c1"
+      "image": "http://store.is.autonavi.com/showpic/db371613f7f4d16650995ca4f48fc6c1",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/db371613f7f4d16650995ca4f48fc6c1",
+        "http://store.is.autonavi.com/showpic/833e9b48ee7fe333942bace76dd54036",
+        "https://store.is.autonavi.com/showpic/dc937748282819150000003134516274?type=pic"
+      ]
     },
     {
       "name": "天之椒子",
@@ -4616,7 +7162,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.574983,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/e0242b3b858a362c0000006703394452?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/e0242b3b858a362c0000006703394452?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/e0242b3b858a362c0000006703394452?type=pic",
+        "https://aos-comment.amap.com/B0KB9C59YX/comment/content_media_external_file_8537_ss__1760257258244_44925695.jpg",
+        "https://aos-comment.amap.com/B0KB9C59YX/comment/content_media_external_file_100002275_1756514182854_60383555.jpg"
+      ]
     },
     {
       "name": "黄桷垭老街",
@@ -4625,7 +7176,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.537306,
       "category": "古镇村落",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/64c9653dd4cd2b564b43f7ce98aca70e"
+      "image": "https://store.is.autonavi.com/showpic/64c9653dd4cd2b564b43f7ce98aca70e",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/64c9653dd4cd2b564b43f7ce98aca70e",
+        "https://store.is.autonavi.com/showpic/59a042aed1893d500000000968030609?type=pic",
+        "https://store.is.autonavi.com/showpic/c27e031e5557ac540000002940996950?type=pic"
+      ]
     },
     {
       "name": "重庆动物园",
@@ -4634,7 +7190,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.504023,
       "category": "主题乐园",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/09de14668d0efa3d8dd189ed267d87b7"
+      "image": "http://store.is.autonavi.com/showpic/09de14668d0efa3d8dd189ed267d87b7",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/09de14668d0efa3d8dd189ed267d87b7",
+        "http://store.is.autonavi.com/showpic/4a1433843d587ec6fa2c1cd51ee0fb00",
+        "http://store.is.autonavi.com/showpic/4d16eddad8616fb0808b7199bbf1f546"
+      ]
     },
     {
       "name": "磁器口古镇",
@@ -4643,7 +7204,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.581184,
       "category": "古镇村落",
       "rating": 4.7,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/0563885f-17e8-4b9a-b97f-ce1e60360f19.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/0563885f-17e8-4b9a-b97f-ce1e60360f19.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/0563885f-17e8-4b9a-b97f-ce1e60360f19.jpg",
+        "https://aos-comment.amap.com/B00170IFE4/headerImg/29433e01190f6478f1177e6ca16d17ce_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B00170IFE4/headerImg/770ffdfe9bb66b332cfd2a2f3bb50d48_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "龙头寺公园",
@@ -4652,7 +7218,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.588196,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/85322766a889ac423916009c2c66cc08"
+      "image": "http://store.is.autonavi.com/showpic/85322766a889ac423916009c2c66cc08",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/85322766a889ac423916009c2c66cc08",
+        "https://store.is.autonavi.com/showpic/4f39e868fd40b9530000002416716573?type=pic",
+        "https://store.is.autonavi.com/showpic/ae2069f3bd3824880000002300930361?type=pic"
+      ]
     },
     {
       "name": "鹅岭栈桥",
@@ -4661,7 +7232,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.548684,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/3b4e6c009295b1f00000002269398001?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/3b4e6c009295b1f00000002269398001?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/3b4e6c009295b1f00000002269398001?type=pic",
+        "https://store.is.autonavi.com/showpic/429a006616c836590000002467450631?type=pic",
+        "https://aos-comment.amap.com/B0L3A1X06S/comment/content_media_external_file_49090_1770981000772_09776888.jpg"
+      ]
     },
     {
       "name": "通远门段城门及城墙",
@@ -4670,7 +7246,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.555454,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/7fb66401987c12d90000008326808216?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/7fb66401987c12d90000008326808216?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/7fb66401987c12d90000008326808216?type=pic",
+        "https://aos-comment.amap.com/B001783S3R/comment/6248e33e0ae0da8807bee4b4d1e484e1_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B001783S3R/comment/content_media_external_file_4720_1760757486899_66558366.jpg"
+      ]
     },
     {
       "name": "桂园",
@@ -4679,7 +7260,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.562864,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/bb8a37bfd8d0599b865220bc099abc24"
+      "image": "https://store.is.autonavi.com/showpic/bb8a37bfd8d0599b865220bc099abc24",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/bb8a37bfd8d0599b865220bc099abc24",
+        "https://aos-comment.amap.com/B00170A0Q5/comment/0BEC3282_01CC_4214_BAF3_2EC213B1AAB5_L0_001_2016_151_1763046930913_82125715.jpg",
+        "https://aos-comment.amap.com/B00170A0Q5/comment/content_media_external_file_42290_ss__1745124810593_06854305.jpg"
+      ]
     },
     {
       "name": "重庆大轰炸遗址群“六·五”隧道惨案遗址",
@@ -4688,7 +7274,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.553863,
       "category": "历史人文",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/c91d59922e9a0c0e80fe814b896b2fef"
+      "image": "http://store.is.autonavi.com/showpic/c91d59922e9a0c0e80fe814b896b2fef",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c91d59922e9a0c0e80fe814b896b2fef",
+        "https://store.is.autonavi.com/showpic/4afb657265185a32c4176abcccc9d485",
+        "https://aos-comment.amap.com/B001702FA6/comment/content_media_external_images_media_100001089_1731421430098_96025231.jpg"
+      ]
     },
     {
       "name": "江北a~台",
@@ -4697,7 +7288,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.556639,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0LGBR5UKN/comment/content_media_external_file_207797_ss__1767538759409_48787912.jpg"
+      "image": "https://aos-comment.amap.com/B0LGBR5UKN/comment/content_media_external_file_207797_ss__1767538759409_48787912.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0LGBR5UKN/comment/content_media_external_file_207797_ss__1767538759409_48787912.jpg",
+        "https://store.is.autonavi.com/showpic/045f57fcbf63a8880000003109430673?type=pic",
+        "https://aos-comment.amap.com/B0LGBR5UKN/comment/0C79D41F_6959_4DAE_BA00_47EBA0A5F4E7_L0_001_1500_200_1760067341027_21330398.jpg"
+      ]
     },
     {
       "name": "曾家岩临崖步道",
@@ -4706,7 +7302,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.56526,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0J6S74FAL/comment/content_media_external_file_1000189772_ss__1760024342913_65867103.jpg"
+      "image": "https://aos-comment.amap.com/B0J6S74FAL/comment/content_media_external_file_1000189772_ss__1760024342913_65867103.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0J6S74FAL/comment/content_media_external_file_1000189772_ss__1760024342913_65867103.jpg",
+        "https://aos-comment.amap.com/B0J6S74FAL/comment/d6654a692b1919731428148d37cb26bf_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0J6S74FAL/comment/F1C5BEEF_1A8F_4406_B992_5798B9BDB6EF_L0_001_1500_200_1764640405910_07284798.jpg"
+      ]
     },
     {
       "name": "观音桥步行街中心广场",
@@ -4715,7 +7316,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.574384,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/df3f1d8b057890da0000002895534124?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/df3f1d8b057890da0000002895534124?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/df3f1d8b057890da0000002895534124?type=pic",
+        "https://store.is.autonavi.com/showpic/dfe8ca7aa980be480000002416454892?type=pic",
+        "https://store.is.autonavi.com/showpic/4a1c1e9c07b746310000003198780029?type=pic"
+      ]
     },
     {
       "name": "人民公园",
@@ -4724,7 +7330,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.555152,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B001706G5Q/comment/57290ac1012cff430cdc0afe8b2e699a_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B001706G5Q/comment/57290ac1012cff430cdc0afe8b2e699a_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001706G5Q/comment/57290ac1012cff430cdc0afe8b2e699a_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B001706G5Q/comment/795627343e1ae9838471c2ef42431ffb_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B001706G5Q/comment/36aa3f38ee4af932c2048a2a562b2d4a_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "南山一棵树景区",
@@ -4733,7 +7344,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.545316,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0FFGAMI8G/comment/34B6CF01_E49C_4A7C_81AF_732571BBD83B_L0_001_1170_154_1766394585852_36077043.jpg"
+      "image": "https://aos-comment.amap.com/B0FFGAMI8G/comment/34B6CF01_E49C_4A7C_81AF_732571BBD83B_L0_001_1170_154_1766394585852_36077043.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFGAMI8G/comment/34B6CF01_E49C_4A7C_81AF_732571BBD83B_L0_001_1170_154_1766394585852_36077043.jpg",
+        "https://aos-comment.amap.com/B0FFGAMI8G/headerImg/0A261BE7_F0BA_4215_809F_BAA8DB65436F_L0_001_IMG_0300_1659882165807_bd817f48.JPG",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/7c011f0e-17f3-40e5-85ee-cdc239f7d415.jpg"
+      ]
     },
     {
       "name": "重庆欢乐海底世界",
@@ -4742,7 +7358,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.550802,
       "category": "主题乐园",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/6f0be3d99b124f00d3c8c8293cec87cb"
+      "image": "http://store.is.autonavi.com/showpic/6f0be3d99b124f00d3c8c8293cec87cb",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6f0be3d99b124f00d3c8c8293cec87cb",
+        "http://store.is.autonavi.com/showpic/2237567d2ab2aff5f7a56a90c9600374",
+        "http://store.is.autonavi.com/showpic/b9204f8ee9c4919a05be6540d0d1bcd2"
+      ]
     },
     {
       "name": "临江门",
@@ -4751,7 +7372,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.559336,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0JG47DSQI/comment/content_media_external_file_100001275_1767919560109_19233814.jpg"
+      "image": "https://aos-comment.amap.com/B0JG47DSQI/comment/content_media_external_file_100001275_1767919560109_19233814.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0JG47DSQI/comment/content_media_external_file_100001275_1767919560109_19233814.jpg",
+        "http://store.is.autonavi.com/showpic/014fbe8ec68f68b1318a17a17aee1cd2",
+        "https://aos-comment.amap.com/B0JG47DSQI/comment/081A6019_CFDC_4CFC_85FF_605E10719763_L0_001_1253_88_1765663092493_09917613.jpg"
+      ]
     },
     {
       "name": "重庆开埠遗址公园",
@@ -4760,7 +7386,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.551026,
       "category": "历史人文",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B001786RNG/comment/d262150815d1f5b5e3d14725f9c8aa7c_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B001786RNG/comment/d262150815d1f5b5e3d14725f9c8aa7c_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001786RNG/comment/d262150815d1f5b5e3d14725f9c8aa7c_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/95add1f8e93240f70000003079492795?type=pic",
+        "https://aos-comment.amap.com/B0H247NHZG/comment/content_media_external_images_media_1000124446_ss__1766161530934_16347502.jpg"
+      ]
     },
     {
       "name": "中山四路历史文化街区",
@@ -4769,7 +7400,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.561194,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0H3NH14G7/comment/20260316-bbb1f0964e555172e85b6e3e-4SXJ22Cjf7G6WWgenhdfUy.jpg"
+      "image": "https://aos-comment.amap.com/B0H3NH14G7/comment/20260316-bbb1f0964e555172e85b6e3e-4SXJ22Cjf7G6WWgenhdfUy.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0H3NH14G7/comment/20260316-bbb1f0964e555172e85b6e3e-4SXJ22Cjf7G6WWgenhdfUy.jpg",
+        "https://aos-comment.amap.com/B0H3NH14G7/comment/474650bf60206fc426f622b3fc9e42b5_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0H3NH14G7/comment/content_media_external_file_11624_ss__1763371947355_60245902.jpg"
+      ]
     },
     {
       "name": "半山崖线",
@@ -4778,7 +7414,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.545296,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/1dc5c17cf5ef14a50000002400364687?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/1dc5c17cf5ef14a50000002400364687?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/1dc5c17cf5ef14a50000002400364687?type=pic",
+        "https://aos-comment.amap.com/B0JUPSV7JH/comment/content_media_external_file_8602_1773182648919_65432391.jpg",
+        "https://store.is.autonavi.com/showpic/365846ccd289cf4b0000002976924137?type=pic"
+      ]
     },
     {
       "name": "下浩里观景打卡平台",
@@ -4787,7 +7428,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.558323,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/1b09ac0f5bb002be0000003175462965?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/1b09ac0f5bb002be0000003175462965?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/1b09ac0f5bb002be0000003175462965?type=pic",
+        "https://store.is.autonavi.com/showpic/5ade79e05c726ef00000002361070079?type=pic",
+        "https://aos-comment.amap.com/B0LKLC8PKW/comment/content_media_external_file_56777_ss__1769659885337_22106723.jpg"
+      ]
     },
     {
       "name": "瞰胜楼",
@@ -4796,7 +7442,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.549905,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0FFIFQ1BU/comment/9a0937b3b4e7c06b8eb868f0e17f1035_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0FFIFQ1BU/comment/9a0937b3b4e7c06b8eb868f0e17f1035_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFIFQ1BU/comment/9a0937b3b4e7c06b8eb868f0e17f1035_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/d0d609a43b53fd5b0000000973428534?type=pic",
+        "https://aos-comment.amap.com/B0FFIFQ1BU/comment/content_media_external_images_media_100006336_1742956407202_64114353.jpg"
+      ]
     },
     {
       "name": "星光68广场Starry Ocean星光海底世界",
@@ -4805,7 +7456,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.579155,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/0b67cea930558e564c5f62556bbb62fb"
+      "image": "https://store.is.autonavi.com/showpic/0b67cea930558e564c5f62556bbb62fb",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/0b67cea930558e564c5f62556bbb62fb",
+        "https://store.is.autonavi.com/showpic/ad3db5f32ae725120000003154022053?type=pic",
+        "https://aos-comment.amap.com/B0H15ATRLL/comment/content_media_external_file_7619_ss__1767255973005_79236762.jpg"
+      ]
     },
     {
       "name": "海棠烟雨公园",
@@ -4814,7 +7470,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.545065,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B001703557/comment/content_media_external_file_119063_ss__1767249871744_15740377.jpg"
+      "image": "https://aos-comment.amap.com/B001703557/comment/content_media_external_file_119063_ss__1767249871744_15740377.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001703557/comment/content_media_external_file_119063_ss__1767249871744_15740377.jpg",
+        "https://aos-comment.amap.com/B001703557/comment/content_media_external_file_1282_1766932083791_43011193.jpg",
+        "https://aos-comment.amap.com/B001703557/comment/bc0e1d4e36716d80dc8e78dd15e7c88a_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "慈云寺",
@@ -4823,7 +7484,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.565846,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B001703BAD/comment/content_media_external_file_1000040984_ss__1763534331208_52947087.jpg"
+      "image": "https://aos-comment.amap.com/B001703BAD/comment/content_media_external_file_1000040984_ss__1763534331208_52947087.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001703BAD/comment/content_media_external_file_1000040984_ss__1763534331208_52947087.jpg",
+        "https://store.is.autonavi.com/showpic/e76afb0406107a080000000981306709?type=pic",
+        "https://aos-comment.amap.com/B001703BAD/comment/content_media_external_file_1000044063_ss__1751158079927_62007221.jpg"
+      ]
     },
     {
       "name": "相国寺滨江公园",
@@ -4832,7 +7498,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.555378,
       "category": "宗教寺庙",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0KUFCPXIE/comment/dd5cbe6d37ac168165f7860199d2c662_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0KUFCPXIE/comment/dd5cbe6d37ac168165f7860199d2c662_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0KUFCPXIE/comment/dd5cbe6d37ac168165f7860199d2c662_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0KUFCPXIE/comment/13912f340c2462490be8e8cd9a3df8a5_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0KUFCPXIE/comment/af3e556426b05f18e21b928ad8d93025_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "嘉陵公园",
@@ -4841,7 +7512,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.57343,
       "category": "历史人文",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/d474b43b55b372de323666fff2230339"
+      "image": "http://store.is.autonavi.com/showpic/d474b43b55b372de323666fff2230339",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d474b43b55b372de323666fff2230339",
+        "http://store.is.autonavi.com/showpic/bfaefba1a441dea7fa02a18f206f50bd",
+        "https://aos-comment.amap.com/B001702336/comment/content_media_external_images_media_412_ss__1750447362742_83400298.jpg"
+      ]
     },
     {
       "name": "嘉陵江石滩",
@@ -4850,7 +7526,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.567251,
       "category": "历史人文",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0KUFCRULD/comment/content_media_external_file_100000876_1750906841935_43735004.jpg"
+      "image": "https://aos-comment.amap.com/B0KUFCRULD/comment/content_media_external_file_100000876_1750906841935_43735004.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0KUFCRULD/comment/content_media_external_file_100000876_1750906841935_43735004.jpg",
+        "https://aos-comment.amap.com/B0KUFCRULD/comment/5312D7B0_4198_444D_A7B2_659AFF3A00D0_L0_001_1284_1700_1730526747338_76941165.jpg",
+        "https://aos-comment.amap.com/B0KUFCRULD/comment/content_media_external_images_media_1000084600_ss__1746937848896_70292517.jpg"
+      ]
     },
     {
       "name": "八路军重庆办事处旧址",
@@ -4859,7 +7540,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.565301,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/ab1ab917981cf0b90da69e1e66db0038"
+      "image": "http://store.is.autonavi.com/showpic/ab1ab917981cf0b90da69e1e66db0038",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ab1ab917981cf0b90da69e1e66db0038",
+        "https://store.is.autonavi.com/showpic/0e71e29c3aef88ed155ca843020ac5c6",
+        "https://store.is.autonavi.com/showpic/9a997a41053256b65609b99a7ab6a63d"
+      ]
     },
     {
       "name": "仁爱堂",
@@ -4868,7 +7554,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.550715,
       "category": "宗教寺庙",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0FFG9MYE2/comment/content_media_external_file_1000050627_ss__1755197659789_93697292.jpg"
+      "image": "https://aos-comment.amap.com/B0FFG9MYE2/comment/content_media_external_file_1000050627_ss__1755197659789_93697292.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFG9MYE2/comment/content_media_external_file_1000050627_ss__1755197659789_93697292.jpg",
+        "https://aos-comment.amap.com/B0FFG9MYE2/comment/content_media_external_images_media_1000125374_ss__1767917795707_91616778.jpg",
+        "https://aos-comment.amap.com/default_poi/comment/content_media_external_images_media_1000133378_ss__1747380317512_73491371.jpg"
+      ]
     },
     {
       "name": "重庆海昌海洋馆",
@@ -4877,7 +7568,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.577277,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/0193403b4d3976d20000001314356327?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/0193403b4d3976d20000001314356327?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/0193403b4d3976d20000001314356327?type=pic",
+        "https://store.is.autonavi.com/showpic/d92e2b498337c0580000003329644740?type=pic",
+        "https://store.is.autonavi.com/showpic/9a0af47f303a10060000002312628074?type=pic"
+      ]
     },
     {
       "name": "龙头寺",
@@ -4886,7 +7582,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.591628,
       "category": "宗教寺庙",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/29b494627fb84e650000003136222256?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/29b494627fb84e650000003136222256?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/29b494627fb84e650000003136222256?type=pic",
+        "https://aos-comment.amap.com/B0FFF6XREZ/comment/B7564499_933F_44FB_8A23_79F4ADBC1049_L0_001_1290_100_1769438411120_56950539.jpg",
+        "https://aos-comment.amap.com/B0FFF6XREZ/comment/content_media_external_file_1000032404_ss__1746071688948_76439843.jpg"
+      ]
     },
     {
       "name": "通远门城墙遗址公园",
@@ -4895,7 +7596,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.555908,
       "category": "历史人文",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B00178763W/comment/9b00e28e4d3dba1335ae5eb648618126_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B00178763W/comment/9b00e28e4d3dba1335ae5eb648618126_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B00178763W/comment/9b00e28e4d3dba1335ae5eb648618126_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/b5cf5e3601da3c300000003021460002?type=pic",
+        "https://aos-comment.amap.com/B00178763W/comment/IMG_20250504_185414_tem_1746356074518_16501266.jpg"
+      ]
     },
     {
       "name": "观音桥商圈都市旅游区",
@@ -4904,7 +7610,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.573039,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0FFFFJGW4/comment/20260323-ec34f43703e7b9ce960b9204-8zvnMdj1amg6Wdmg2CXuEJ.jpg"
+      "image": "https://aos-comment.amap.com/B0FFFFJGW4/comment/20260323-ec34f43703e7b9ce960b9204-8zvnMdj1amg6Wdmg2CXuEJ.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFFFJGW4/comment/20260323-ec34f43703e7b9ce960b9204-8zvnMdj1amg6Wdmg2CXuEJ.jpg",
+        "https://aos-comment.amap.com/B0FFFFJGW4/comment/79d52c97f42e3e4c50cb48ee9cb6b091_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFFFJGW4/comment/032D1E84_1C5C_414E_8C70_7C1D4D6697EC_L0_001_2000_150_1764423555434_39776541.jpg"
+      ]
     },
     {
       "name": "时光里枣子岚垭步道(名仕城店)",
@@ -4913,7 +7624,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.556262,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0LA7HVITT/comment/176546147442_1765461492925_27123449.jpg"
+      "image": "https://aos-comment.amap.com/B0LA7HVITT/comment/176546147442_1765461492925_27123449.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0LA7HVITT/comment/176546147442_1765461492925_27123449.jpg",
+        "https://store.is.autonavi.com/showpic/f1896cb09765e30389575b9e7a956557",
+        "https://aos-comment.amap.com/B0LA7HVITT/comment/content_media_external_file_1000004686_ss__1766818768381_75088517.jpg"
+      ]
     },
     {
       "name": "大唐广场",
@@ -4922,7 +7638,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.559742,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B00170L70V/comment/176549736081_1765497389349_58521128.jpg"
+      "image": "https://aos-comment.amap.com/B00170L70V/comment/176549736081_1765497389349_58521128.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B00170L70V/comment/176549736081_1765497389349_58521128.jpg",
+        "https://aos-comment.amap.com/B00170L70V/comment/176549736639_1765497389350_09655993.jpg",
+        "https://store.is.autonavi.com/showpic/97298909df2872af0000001474404250?type=pic"
+      ]
     },
     {
       "name": "新华日报营业部旧址",
@@ -4931,7 +7652,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.557775,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/161247914cf03aa10000002437140636?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/161247914cf03aa10000002437140636?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/161247914cf03aa10000002437140636?type=pic",
+        "https://store.is.autonavi.com/showpic/70a563350b9b57740000000960500389?type=pic",
+        "https://aos-comment.amap.com/B0FFFWQNBC/comment/2ed467b27c4891e14f86fd3b8995ad7f_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "天主教重庆总教区若瑟堂主教座堂天主堂",
@@ -4940,7 +7666,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.557604,
       "category": "宗教寺庙",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/4c50c3ee6aa53fa33fbdbd520b14e0c8"
+      "image": "http://store.is.autonavi.com/showpic/4c50c3ee6aa53fa33fbdbd520b14e0c8",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/4c50c3ee6aa53fa33fbdbd520b14e0c8",
+        "https://aos-comment.amap.com/B001785J57/comment/content_media_external_file_113576_ss__1765342052997_27706258.jpg",
+        "https://store.is.autonavi.com/showpic/2e7d4f14fdda972c0000003598814158?type=pic"
+      ]
     },
     {
       "name": "重庆儿童公园",
@@ -4949,7 +7680,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.573309,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/f64ab3ec97cfae63eeadf901f9a9b62c"
+      "image": "http://store.is.autonavi.com/showpic/f64ab3ec97cfae63eeadf901f9a9b62c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/f64ab3ec97cfae63eeadf901f9a9b62c",
+        "http://store.is.autonavi.com/showpic/4421be7463633048172935ede6a4f2ff",
+        "https://aos-comment.amap.com/B00178VS0E/comment/AD8304BC_58B7_4916_BF52_988562DEBE3A_L0_001_1320_96_1768744742088_04745208.jpg"
+      ]
     },
     {
       "name": "重庆市江北嘴中央商务区中央公园",
@@ -4958,7 +7694,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.572204,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B00178VQJK/comment/C8EA5A03_8D00_4ADC_886F_0CF177C5DF9B_L0_001_2000_150_1763285255857_93842997.jpg"
+      "image": "https://aos-comment.amap.com/B00178VQJK/comment/C8EA5A03_8D00_4ADC_886F_0CF177C5DF9B_L0_001_2000_150_1763285255857_93842997.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B00178VQJK/comment/C8EA5A03_8D00_4ADC_886F_0CF177C5DF9B_L0_001_2000_150_1763285255857_93842997.jpg",
+        "https://aos-comment.amap.com/B00178VQJK/comment/content_media_external_images_media_174007_1657678617567_28d04a3e.jpg",
+        "https://aos-comment.amap.com/B00178VQJK/comment/content_media_external_images_media_100000563_1727595194544_30051037.jpg"
+      ]
     },
     {
       "name": "滨江公园",
@@ -4967,7 +7708,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 29.549223,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/6ef96cfdc1b81090b13faf755221bf04"
+      "image": "https://store.is.autonavi.com/showpic/6ef96cfdc1b81090b13faf755221bf04",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/6ef96cfdc1b81090b13faf755221bf04",
+        "https://store.is.autonavi.com/showpic/cee10e310df147a30000000624172261",
+        "https://aos-comment.amap.com/B0LBYHIO08/comment/content_media_external_file_100000664_1767744058349_81215044.jpg"
+      ]
     }
   ],
   "西安": [
@@ -4978,7 +7724,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.25943,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/3b525983-7154-4c03-9423-6683ecfef221.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/3b525983-7154-4c03-9423-6683ecfef221.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/3b525983-7154-4c03-9423-6683ecfef221.jpg",
+        "http://store.is.autonavi.com/showpic/ac2ed4de49dc97fe83bf7b5cd008a38b",
+        "https://store.is.autonavi.com/showpic/cae1878a9b386a60d8d0260652544890"
+      ]
     },
     {
       "name": "广仁寺",
@@ -4987,7 +7738,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.274555,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/c09b518f33c17363603a346f2e054ff7"
+      "image": "http://store.is.autonavi.com/showpic/c09b518f33c17363603a346f2e054ff7",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c09b518f33c17363603a346f2e054ff7",
+        "http://store.is.autonavi.com/showpic/42afb749d29921f5a542f2f4f56328ff",
+        "http://store.is.autonavi.com/showpic/75390ab15e85dce08953f2949a0d2d28"
+      ]
     },
     {
       "name": "大唐不夜城",
@@ -4996,7 +7752,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.213866,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/f90b753858943d71771aec94e12fa93c"
+      "image": "http://store.is.autonavi.com/showpic/f90b753858943d71771aec94e12fa93c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/f90b753858943d71771aec94e12fa93c",
+        "http://store.is.autonavi.com/showpic/c65cb3c266a4d568b67cf50fb7705af3",
+        "https://store.is.autonavi.com/showpic/df918c048942db0e3b1a5ae421f0805e"
+      ]
     },
     {
       "name": "西安城墙",
@@ -5005,7 +7766,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.251891,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/f858d7753932ea21d02a7990a5bec413"
+      "image": "http://store.is.autonavi.com/showpic/f858d7753932ea21d02a7990a5bec413",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/f858d7753932ea21d02a7990a5bec413",
+        "http://store.is.autonavi.com/showpic/2e1e31967ad8581b8721203e322980cf",
+        "http://store.is.autonavi.com/showpic/68757b6cc3e1ab435e83e35150572c94"
+      ]
     },
     {
       "name": "西安鼓楼",
@@ -5014,7 +7780,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.260206,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/6a0ee775f907dbd566bc65d211e8bd07"
+      "image": "http://store.is.autonavi.com/showpic/6a0ee775f907dbd566bc65d211e8bd07",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6a0ee775f907dbd566bc65d211e8bd07",
+        "http://store.is.autonavi.com/showpic/14b3471974cd21c8f2f867d25ac44c20",
+        "http://store.is.autonavi.com/showpic/3af50e24b9969cfe7361485c940e3175"
+      ]
     },
     {
       "name": "兴庆宫公园",
@@ -5023,7 +7794,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.253821,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/2884acc88bb3f8725c514f8422a75b60"
+      "image": "http://store.is.autonavi.com/showpic/2884acc88bb3f8725c514f8422a75b60",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/2884acc88bb3f8725c514f8422a75b60",
+        "http://store.is.autonavi.com/showpic/55921f64d388e72807fb22b57be6e26f",
+        "https://store.is.autonavi.com/showpic/2837c0c0a5b54b3e0a51de5fa5308563"
+      ]
     },
     {
       "name": "西安博物院",
@@ -5032,7 +7808,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.238589,
       "category": "历史人文",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/79db7fd7451da35ee939cb797c8f22e9"
+      "image": "http://store.is.autonavi.com/showpic/79db7fd7451da35ee939cb797c8f22e9",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/79db7fd7451da35ee939cb797c8f22e9",
+        "http://store.is.autonavi.com/showpic/cf8dfe78fc744751c8df581401c2264b",
+        "http://store.is.autonavi.com/showpic/9202d90c717b42509292a1431cdf82fe"
+      ]
     },
     {
       "name": "大兴善寺",
@@ -5041,7 +7822,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.227081,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/238a416376a52babe31adf7bd0d76990"
+      "image": "http://store.is.autonavi.com/showpic/238a416376a52babe31adf7bd0d76990",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/238a416376a52babe31adf7bd0d76990",
+        "https://store.is.autonavi.com/showpic/70ee711d5af99e930000002254870976",
+        "https://store.is.autonavi.com/showpic/f1e3385d8e924f7c0000002447946068"
+      ]
     },
     {
       "name": "西安城市运动公园",
@@ -5050,7 +7836,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.344373,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/dd4f9f57fdc51b278c87f09d5e7d83ff"
+      "image": "http://store.is.autonavi.com/showpic/dd4f9f57fdc51b278c87f09d5e7d83ff",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/dd4f9f57fdc51b278c87f09d5e7d83ff",
+        "http://store.is.autonavi.com/showpic/47fd6e3d2fcede4c07b3338ac7863aaf",
+        "http://store.is.autonavi.com/showpic/e0c7d9c65c3368b394850cda9fe9cb23"
+      ]
     },
     {
       "name": "汉城湖旅游风景区",
@@ -5059,7 +7850,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.298276,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/c0c6ad84e859c52ad08083e45e78150c"
+      "image": "http://store.is.autonavi.com/showpic/c0c6ad84e859c52ad08083e45e78150c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c0c6ad84e859c52ad08083e45e78150c",
+        "http://store.is.autonavi.com/showpic/da2e3e996bdbed7d6001bd5dfc133fef",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/d018217d-4e78-4b97-89d8-7bfbe1f7c9cb.jpg"
+      ]
     },
     {
       "name": "西安城墙·碑林历史文化景区",
@@ -5068,7 +7864,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.263783,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/fd5d8d2f6119b42db7f76bf0b2e2c99f"
+      "image": "https://store.is.autonavi.com/showpic/fd5d8d2f6119b42db7f76bf0b2e2c99f",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/fd5d8d2f6119b42db7f76bf0b2e2c99f",
+        "https://store.is.autonavi.com/showpic/cba09c08160dbe3e0000008327878195?type=pic",
+        "https://store.is.autonavi.com/showpic/eca1263c402a58830000002802690972?type=pic"
+      ]
     },
     {
       "name": "华夏文旅海洋公园",
@@ -5077,7 +7878,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.351688,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/6fc473886c60010fd7cc7edd927a5ea3"
+      "image": "http://store.is.autonavi.com/showpic/6fc473886c60010fd7cc7edd927a5ea3",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6fc473886c60010fd7cc7edd927a5ea3",
+        "http://store.is.autonavi.com/showpic/00ceb777f037ab966755004290e732bf",
+        "http://store.is.autonavi.com/showpic/ce6b3d32ce98d690aa89f7157ddffb70"
+      ]
     },
     {
       "name": "西安后海",
@@ -5086,7 +7892,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.342591,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/5a9269b5e1f8cead0000004869114911?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/5a9269b5e1f8cead0000004869114911?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/5a9269b5e1f8cead0000004869114911?type=pic",
+        "https://aos-comment.amap.com/B0LRAS0B6V/comment/98D1EA12_B749_4A72_94E9_99DB8EB533AF_L0_001_1168_150_1769535453066_63046935.jpg",
+        "https://aos-comment.amap.com/B0LRAS0B6V/comment/file_media_Photo_982_IMG_1757746033_982_IMG_20250330_175340_jpg_ss__1768802104935_80429076.jpg"
+      ]
     },
     {
       "name": "汉长安城未央宫国家考古遗址公园",
@@ -5095,7 +7906,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.302854,
       "category": "历史人文",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/7dedc70adc899c410000004663568100?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/7dedc70adc899c410000004663568100?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/7dedc70adc899c410000004663568100?type=pic",
+        "https://store.is.autonavi.com/showpic/db0873b2b469ba948ac8a36c43282fef",
+        "https://store.is.autonavi.com/showpic/ee073b39707749af0000003981336229?type=pic"
+      ]
     },
     {
       "name": "AR浐灞后海观景平台",
@@ -5104,7 +7920,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.338791,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/f625c1716ca27511173511a6f0f659f7"
+      "image": "http://store.is.autonavi.com/showpic/f625c1716ca27511173511a6f0f659f7",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/f625c1716ca27511173511a6f0f659f7",
+        "https://store.is.autonavi.com/showpic/7f4f41f764b88ea20000002739240763?type=pic",
+        "https://aos-comment.amap.com/B0FFK9RKSF/comment/20260311-3d14d43e126aa1c0078029aa-75PHShlB51i963YGJdwgLJ.jpg"
+      ]
     },
     {
       "name": "西安湖",
@@ -5113,7 +7934,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.393063,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/cb714af7-3482-43ab-8c4b-a8cd8bece98e.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/cb714af7-3482-43ab-8c4b-a8cd8bece98e.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/cb714af7-3482-43ab-8c4b-a8cd8bece98e.jpg",
+        "https://aos-comment.amap.com/B0FFGZ6HTT/comment/content_media_external_file_227_1764601803331_73358801.jpg",
+        "https://store.is.autonavi.com/showpic/201a39110aadef310000003089878184?type=pic"
+      ]
     },
     {
       "name": "大慈恩寺",
@@ -5122,7 +7948,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.217954,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/7fe93a8ea8185c31fb0e79711fa3ad6a"
+      "image": "http://store.is.autonavi.com/showpic/7fe93a8ea8185c31fb0e79711fa3ad6a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/7fe93a8ea8185c31fb0e79711fa3ad6a",
+        "http://store.is.autonavi.com/showpic/cdb115e63076a8e5ba1069cb09f7eca8",
+        "http://store.is.autonavi.com/showpic/2dce6ff53fca0956d562dbe487e30f31"
+      ]
     },
     {
       "name": "西安世博园",
@@ -5131,7 +7962,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.322669,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/41f6dcd3aa46677d41676ca75e5e1d1c"
+      "image": "http://store.is.autonavi.com/showpic/41f6dcd3aa46677d41676ca75e5e1d1c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/41f6dcd3aa46677d41676ca75e5e1d1c",
+        "http://store.is.autonavi.com/showpic/be892db3faac547d0e44919f80479990",
+        "http://store.is.autonavi.com/showpic/8d83c6d397ab372d484a71a55aca7959"
+      ]
     },
     {
       "name": "西安浐灞国家湿地公园",
@@ -5140,7 +7976,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.419974,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/e7c4009a5af09ee78a47e74332562c11"
+      "image": "http://store.is.autonavi.com/showpic/e7c4009a5af09ee78a47e74332562c11",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e7c4009a5af09ee78a47e74332562c11",
+        "http://store.is.autonavi.com/showpic/e4543d53ed081c20803389c072ab30b9",
+        "http://store.is.autonavi.com/showpic/cbda1d3ac0f9c82434744c7e02564bc5"
+      ]
     },
     {
       "name": "大唐西市",
@@ -5149,7 +7990,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.246363,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/6fb8c7b6354b705e891a17cf873d34f4"
+      "image": "http://store.is.autonavi.com/showpic/6fb8c7b6354b705e891a17cf873d34f4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6fb8c7b6354b705e891a17cf873d34f4",
+        "http://store.is.autonavi.com/showpic/05baae3852bb97eac3fd77f1224c9277",
+        "http://store.is.autonavi.com/showpic/0e7d489269b731f3a846a2be3977f8f0"
+      ]
     },
     {
       "name": "小雁塔",
@@ -5158,7 +8004,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.239195,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/cf0b424e61f5ab9a7c40c4dd0a410758"
+      "image": "http://store.is.autonavi.com/showpic/cf0b424e61f5ab9a7c40c4dd0a410758",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/cf0b424e61f5ab9a7c40c4dd0a410758",
+        "http://store.is.autonavi.com/showpic/7490ef39e96d35e0884c3d4eed459991",
+        "http://store.is.autonavi.com/showpic/070c97f55be9f9829a77638a3c526785"
+      ]
     },
     {
       "name": "桃花潭",
@@ -5167,7 +8018,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.304089,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/778cf0513c08a9420000003094650583?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/778cf0513c08a9420000003094650583?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/778cf0513c08a9420000003094650583?type=pic",
+        "https://store.is.autonavi.com/showpic/eabfe4a3323ec1d80000000741806587?type=pic",
+        "https://store.is.autonavi.com/showpic/aba048e8fb7c52bc0000003777968467?type=pic"
+      ]
     },
     {
       "name": "西安千古情",
@@ -5176,7 +8032,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.319449,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/82e9ced4ad6416a2971376d0588b50e9"
+      "image": "http://store.is.autonavi.com/showpic/82e9ced4ad6416a2971376d0588b50e9",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/82e9ced4ad6416a2971376d0588b50e9",
+        "http://store.is.autonavi.com/showpic/786d5a2f99ea1721b6f7168d61014ca3",
+        "http://store.is.autonavi.com/showpic/0048eb8f5527a317f0d8f8612de733d8"
+      ]
     },
     {
       "name": "敕建万寿八仙宫",
@@ -5185,7 +8046,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.265098,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/b7b3dbe6b7b83e34ee31c4565cf9952d"
+      "image": "http://store.is.autonavi.com/showpic/b7b3dbe6b7b83e34ee31c4565cf9952d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b7b3dbe6b7b83e34ee31c4565cf9952d",
+        "https://store.is.autonavi.com/showpic/e2dec270869d24290000002255460620?type=pic",
+        "https://store.is.autonavi.com/showpic/a57dbf4d8dde97160000003006474903?type=pic"
+      ]
     },
     {
       "name": "湘子庙",
@@ -5194,7 +8060,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.252795,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/1fad8d6dcd60e51725914cb9c352ddbb"
+      "image": "http://store.is.autonavi.com/showpic/1fad8d6dcd60e51725914cb9c352ddbb",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/1fad8d6dcd60e51725914cb9c352ddbb",
+        "http://store.is.autonavi.com/showpic/0ec085697d67d4ee447b91a8316023d1",
+        "https://store.is.autonavi.com/showpic/677c63104d278ab75b63c0562edf4eba"
+      ]
     },
     {
       "name": "大雁塔北广场",
@@ -5203,7 +8074,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.220998,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/6ed073d1838a18cfd5aba59cd89c8ee1"
+      "image": "http://store.is.autonavi.com/showpic/6ed073d1838a18cfd5aba59cd89c8ee1",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6ed073d1838a18cfd5aba59cd89c8ee1",
+        "http://store.is.autonavi.com/showpic/afdbd5b0b39217f23df16b873f2ae4c7",
+        "http://store.is.autonavi.com/showpic/9873d74e3870304010aae5a29906dc92"
+      ]
     },
     {
       "name": "丰庆公园",
@@ -5212,7 +8088,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.247838,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/b60156949e70fe10c2104996e9ad19bf"
+      "image": "http://store.is.autonavi.com/showpic/b60156949e70fe10c2104996e9ad19bf",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b60156949e70fe10c2104996e9ad19bf",
+        "http://store.is.autonavi.com/showpic/fc6d88211e551c90af9f54e154d323db",
+        "http://store.is.autonavi.com/showpic/5dd23b846861fb25bf3340f1674091e2"
+      ]
     },
     {
       "name": "曲江池遗址公园",
@@ -5221,7 +8102,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.20216,
       "category": "历史人文",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/2360f70b424625c90b901b107a170420"
+      "image": "http://store.is.autonavi.com/showpic/2360f70b424625c90b901b107a170420",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/2360f70b424625c90b901b107a170420",
+        "http://store.is.autonavi.com/showpic/52c05f972d82f4a39528cfdb8a4cb191",
+        "http://store.is.autonavi.com/showpic/09286d132e2e52b046c6272aa248610d"
+      ]
     },
     {
       "name": "大雁塔南广场",
@@ -5230,7 +8116,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.215872,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/0c998dee43c5680b5ae7ce3c9055fc22"
+      "image": "http://store.is.autonavi.com/showpic/0c998dee43c5680b5ae7ce3c9055fc22",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0c998dee43c5680b5ae7ce3c9055fc22",
+        "https://store.is.autonavi.com/showpic/473b8b163d83733528534899896352dd",
+        "https://aos-comment.amap.com/B001D12PCJ/comment/content_media_external_images_media_1000026990_ss__1767599022422_19084706.jpg"
+      ]
     },
     {
       "name": "西安城墙(含光门)",
@@ -5239,7 +8130,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.251693,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/3E5EB374BB244BB6BBE85C7DE3E25C94"
+      "image": "https://store.is.autonavi.com/showpic/3E5EB374BB244BB6BBE85C7DE3E25C94",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/3E5EB374BB244BB6BBE85C7DE3E25C94",
+        "https://store.is.autonavi.com/showpic/21D8A0A38BC044779337E18AB8444D85",
+        "https://store.is.autonavi.com/showpic/CA04B33ADDFF4605BCB205F082850CFC"
+      ]
     },
     {
       "name": "昆明池·七夕公园",
@@ -5248,7 +8144,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.209154,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/1b8e3f57d3d4913f6df505cce7296654"
+      "image": "http://store.is.autonavi.com/showpic/1b8e3f57d3d4913f6df505cce7296654",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/1b8e3f57d3d4913f6df505cce7296654",
+        "http://store.is.autonavi.com/showpic/271a24ad4edaed03912e8282b3406f11",
+        "http://store.is.autonavi.com/showpic/69f5d93f3d09967071fd5ea94093d24b"
+      ]
     },
     {
       "name": "大明宫国家遗址公园",
@@ -5257,7 +8158,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.292586,
       "category": "历史人文",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/b8e2ab87ada50a64f4697ca58c527097"
+      "image": "http://store.is.autonavi.com/showpic/b8e2ab87ada50a64f4697ca58c527097",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b8e2ab87ada50a64f4697ca58c527097",
+        "http://store.is.autonavi.com/showpic/f46a48e6df9855daa5a3bd9522fb7b77",
+        "http://store.is.autonavi.com/showpic/d39d883b57deb9595d36d7f9ccd0e2b8"
+      ]
     },
     {
       "name": "红旗铁路公园",
@@ -5266,7 +8172,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.3182,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0KDXZZEHJ/comment/content_media_external_file_1000093264_ss__1767188109634_59745377.jpg"
+      "image": "https://aos-comment.amap.com/B0KDXZZEHJ/comment/content_media_external_file_1000093264_ss__1767188109634_59745377.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0KDXZZEHJ/comment/content_media_external_file_1000093264_ss__1767188109634_59745377.jpg",
+        "https://store.is.autonavi.com/showpic/875020e1eae7da2e0000002983800332?type=pic",
+        "https://store.is.autonavi.com/showpic/09c0feeb0762d2810000002751066182?type=pic"
+      ]
     },
     {
       "name": "华夏文旅西安度假区",
@@ -5275,7 +8186,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.350956,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/726e38dfe648235a2d87e237ca3bd99b"
+      "image": "http://store.is.autonavi.com/showpic/726e38dfe648235a2d87e237ca3bd99b",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/726e38dfe648235a2d87e237ca3bd99b",
+        "http://store.is.autonavi.com/showpic/1f8c07baeb8efd3dd46a79ec6da07542",
+        "http://store.is.autonavi.com/showpic/745a88f607752e214fbf8965f915c4ce"
+      ]
     },
     {
       "name": "文景山公园",
@@ -5284,7 +8200,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.384763,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0FFHCUZ5Q/comment/bae980ab01fb0b168af3df3a801ce5ac_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0FFHCUZ5Q/comment/bae980ab01fb0b168af3df3a801ce5ac_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFHCUZ5Q/comment/bae980ab01fb0b168af3df3a801ce5ac_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFHCUZ5Q/comment/2ee33c078d19c1577904396fd0159ad3_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFHCUZ5Q/comment/content_media_external_file_570_1762316707030_69596329.jpg"
+      ]
     },
     {
       "name": "大唐芙蓉园",
@@ -5293,7 +8214,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.212717,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/40F18EC737C4455F8B85235F262C6124"
+      "image": "https://store.is.autonavi.com/showpic/40F18EC737C4455F8B85235F262C6124",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/40F18EC737C4455F8B85235F262C6124",
+        "http://store.is.autonavi.com/showpic/9a7e0a30c7fd906c074e298cf5c424e9",
+        "https://store.is.autonavi.com/showpic/7CC2F5A188C64CDCB662EF5095ED6DBA"
+      ]
     },
     {
       "name": "莲湖公园",
@@ -5302,7 +8228,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.268806,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B001D00CCF/comment/20260322-0fad33839a61f69cf757e494-5gurRoBK78X8IRByYfW3XM.jpg"
+      "image": "https://aos-comment.amap.com/B001D00CCF/comment/20260322-0fad33839a61f69cf757e494-5gurRoBK78X8IRByYfW3XM.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001D00CCF/comment/20260322-0fad33839a61f69cf757e494-5gurRoBK78X8IRByYfW3XM.jpg",
+        "https://aos-comment.amap.com/B001D00CCF/comment/%5B2026-02-09-14-09-35%5D56723BE7-556F-48A9-905C-F1BFF46D381_1770617375978_67021226.jpg",
+        "https://store.is.autonavi.com/showpic/672e687ed6a6b71c0000005389384002?type=pic"
+      ]
     },
     {
       "name": "大明宫国家遗址公园丹凤门",
@@ -5311,7 +8242,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.281314,
       "category": "历史人文",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B001D0X51I/comment/IMG_20240921_151645_tem_1726903298533_89674394.jpg"
+      "image": "https://aos-comment.amap.com/B001D0X51I/comment/IMG_20240921_151645_tem_1726903298533_89674394.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001D0X51I/comment/IMG_20240921_151645_tem_1726903298533_89674394.jpg",
+        "https://store.is.autonavi.com/showpic/70bda30f86b9cda50000002444148298?type=pic",
+        "https://aos-comment.amap.com/B001D0X51I/comment/8603BC3E_4617_4BD1_8D88_7CF434ED3593_L0_001_1536_204_1747797754428_02576296.jpg"
+      ]
     },
     {
       "name": "高家大院",
@@ -5320,7 +8256,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.26283,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/4b579228b1b7b93f2000ee2686bc9612"
+      "image": "http://store.is.autonavi.com/showpic/4b579228b1b7b93f2000ee2686bc9612",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/4b579228b1b7b93f2000ee2686bc9612",
+        "http://store.is.autonavi.com/showpic/384dd0fb8e4a78d07b330a97be182079",
+        "http://store.is.autonavi.com/showpic/723208d0ce3073a47fc0572cdc4b1dbc"
+      ]
     },
     {
       "name": "西安城墙安远门",
@@ -5329,7 +8270,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.275821,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0GD3H1EO6/comment/content_media_external_file_10874_ss__1764054616382_34007445.jpg"
+      "image": "https://aos-comment.amap.com/B0GD3H1EO6/comment/content_media_external_file_10874_ss__1764054616382_34007445.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0GD3H1EO6/comment/content_media_external_file_10874_ss__1764054616382_34007445.jpg",
+        "https://store.is.autonavi.com/showpic/09254a9b822f38490000003040292977?type=pic",
+        "https://aos-comment.amap.com/B0GD3H1EO6/comment/d8dddc27aac41a2dc144f110005de6b8_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "长乐公园",
@@ -5338,7 +8284,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.261831,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/d3247b6cc7d21e6004fab36ca21e4925"
+      "image": "http://store.is.autonavi.com/showpic/d3247b6cc7d21e6004fab36ca21e4925",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d3247b6cc7d21e6004fab36ca21e4925",
+        "http://store.is.autonavi.com/showpic/6042a7bbb59421532cf90e42fe39ca9e",
+        "http://store.is.autonavi.com/showpic/48e54ad97e2e3777cdf0b74fa8271696"
+      ]
     },
     {
       "name": "紫薇湖",
@@ -5347,7 +8298,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.390899,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/3b682db9-7e3f-482a-beac-24924b7880f6.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/3b682db9-7e3f-482a-beac-24924b7880f6.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/3b682db9-7e3f-482a-beac-24924b7880f6.jpg",
+        "https://aos-comment.amap.com/B0FFGZWSLO/comment/9ce58c488e2e856cfdd2ed8f8ea9165b_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFGZWSLO/comment/0dd0a2b0e43de3f297ddb44f4538f1c2_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "中亚公园",
@@ -5356,7 +8312,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.332375,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/c9ef5d2b218313d00000002991872495?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/c9ef5d2b218313d00000002991872495?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/c9ef5d2b218313d00000002991872495?type=pic",
+        "https://store.is.autonavi.com/showpic/81dc9c79dbcae34d0000000714330746?type=pic",
+        "https://store.is.autonavi.com/showpic/986be7b8840ef0180000000714348197?type=pic"
+      ]
     },
     {
       "name": "都城隍庙",
@@ -5365,7 +8326,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.261045,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/d7c815e146a3ef5d57dbc5e2b18f5be4"
+      "image": "http://store.is.autonavi.com/showpic/d7c815e146a3ef5d57dbc5e2b18f5be4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d7c815e146a3ef5d57dbc5e2b18f5be4",
+        "https://store.is.autonavi.com/showpic/b5b9d08c3a1f2e18444f24d2ed2386ed",
+        "https://store.is.autonavi.com/showpic/df3250bc599b3f800000007326698613?type=pic"
+      ]
     },
     {
       "name": "西安幸福林带公园",
@@ -5374,7 +8340,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.263989,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/f3cb291246df28f10000003006150809?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/f3cb291246df28f10000003006150809?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/f3cb291246df28f10000003006150809?type=pic",
+        "https://aos-comment.amap.com/B0FFLJ3GLX/comment/content_media_external_file_100000746_1766289541666_25216542.jpg",
+        "https://aos-comment.amap.com/B0FFLJ3GLX/comment/78D57B63_F79B_4CD6_8B33_F28C2DAC2AE9_L0_001_1179_881_1737525639730_67258588.jpg"
+      ]
     },
     {
       "name": "西安化觉巷清真大寺",
@@ -5383,7 +8354,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.261806,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/6e54d5316d72db1298ffca984d3a36aa"
+      "image": "http://store.is.autonavi.com/showpic/6e54d5316d72db1298ffca984d3a36aa",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6e54d5316d72db1298ffca984d3a36aa",
+        "http://store.is.autonavi.com/showpic/403385994041da53c396bca1e6040eaf",
+        "http://store.is.autonavi.com/showpic/5075e1bc4243a45f70df454d8050e9a0"
+      ]
     },
     {
       "name": "西安渭河城市运动公园",
@@ -5392,7 +8368,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.383692,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/8291a17d238748ecf2ca271edd8a19d7"
+      "image": "http://store.is.autonavi.com/showpic/8291a17d238748ecf2ca271edd8a19d7",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8291a17d238748ecf2ca271edd8a19d7",
+        "https://aos-comment.amap.com/B001D0WT6P/comment/5B42A228_B029_44BF_B38D_449E9BDD136B_L0_001_1179_771_1766913324338_75706494.jpg",
+        "https://aos-comment.amap.com/B001D0WT6P/comment/F4E1107F_C2F6_4447_8F1B_CC1285193186_L0_001_1179_1482_1766913324339_71639604.jpg"
+      ]
     },
     {
       "name": "西安植物园",
@@ -5401,7 +8382,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.209403,
       "category": "主题乐园",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/63287d9e0332ba7098d07a8945b8130e"
+      "image": "http://store.is.autonavi.com/showpic/63287d9e0332ba7098d07a8945b8130e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/63287d9e0332ba7098d07a8945b8130e",
+        "https://aos-comment.amap.com/B0FFHWS5KV/headerImg/c4b2dd61654e4831db62a94ccbd0015d_2048_2048_80.jpg",
+        "http://store.is.autonavi.com/showpic/83833b94d6f31e726906c5bd04689658"
+      ]
     },
     {
       "name": "开元公园",
@@ -5410,7 +8396,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.349642,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0FFHWM1GE/comment/%5B2025-11-13-19-29-33%5DA44B8526-86FF-47F2-8540-431D45543DE_1763033373752_43758369.jpg"
+      "image": "https://aos-comment.amap.com/B0FFHWM1GE/comment/%5B2025-11-13-19-29-33%5DA44B8526-86FF-47F2-8540-431D45543DE_1763033373752_43758369.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFHWM1GE/comment/%5B2025-11-13-19-29-33%5DA44B8526-86FF-47F2-8540-431D45543DE_1763033373752_43758369.jpg",
+        "https://store.is.autonavi.com/showpic/ab23daf16d3276100000000975266326?type=pic",
+        "https://store.is.autonavi.com/showpic/d1d39fa2c4d683e10000002775384309?type=pic"
+      ]
     },
     {
       "name": "文景公园",
@@ -5419,7 +8410,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.321528,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/f5621ec8372d923452a228e22c2fb0c9"
+      "image": "http://store.is.autonavi.com/showpic/f5621ec8372d923452a228e22c2fb0c9",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/f5621ec8372d923452a228e22c2fb0c9",
+        "https://aos-comment.amap.com/B001D087A9/comment/%5B2025-12-08-09-39-40%5DE917063A-2E7D-4C2F-80C4-719FC78CF92_1765157986936_76254646.jpg",
+        "https://store.is.autonavi.com/showpic/74b1f061de4199140000002984128707?type=pic"
+      ]
     },
     {
       "name": "西安华夏城",
@@ -5428,7 +8424,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.351395,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/4a85311ce19e9a2a0000007412970222?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/4a85311ce19e9a2a0000007412970222?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/4a85311ce19e9a2a0000007412970222?type=pic",
+        "https://store.is.autonavi.com/showpic/6433d6ecdd3269970000007311636640?type=pic",
+        "https://store.is.autonavi.com/showpic/7c0ae0da7f8bfa3c0000007607418867?type=pic"
+      ]
     },
     {
       "name": "革命公园",
@@ -5437,7 +8438,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.271471,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/73009e05e2c9a11f90b9d8c4e1b4b46f"
+      "image": "http://store.is.autonavi.com/showpic/73009e05e2c9a11f90b9d8c4e1b4b46f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/73009e05e2c9a11f90b9d8c4e1b4b46f",
+        "http://store.is.autonavi.com/showpic/315a230aaa16525e2e7286c77ce8fcc7",
+        "http://store.is.autonavi.com/showpic/da045e166917682d39ece97295b9ff18"
+      ]
     },
     {
       "name": "汉城湖旅游风景区大风阁",
@@ -5446,7 +8452,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.29883,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/6791c6095fb912890000000735454430?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/6791c6095fb912890000000735454430?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/6791c6095fb912890000000735454430?type=pic",
+        "https://aos-comment.amap.com/B0FFFGUVKW/comment/388c16bc327ca8310c9e5d466a7fe5c4_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFFGUVKW/comment/6ddf12c506609c3a666446b10aef1e00_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "西安事变纪念馆",
@@ -5455,7 +8466,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.257313,
       "category": "历史人文",
       "rating": 4.5,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/2cd9faa4-ed78-4ddb-b21e-1359c55f15b5.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/2cd9faa4-ed78-4ddb-b21e-1359c55f15b5.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/2cd9faa4-ed78-4ddb-b21e-1359c55f15b5.jpg",
+        "https://store.is.autonavi.com/showpic/2300663edc7c56910000002384914184?type=pic",
+        "https://store.is.autonavi.com/showpic/902f05e0bd7be8d887343aa425a1a0d7"
+      ]
     },
     {
       "name": "曲江海洋极地公园",
@@ -5464,7 +8480,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.21524,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/9f4df0637272aad4eba28275845e93c6"
+      "image": "http://store.is.autonavi.com/showpic/9f4df0637272aad4eba28275845e93c6",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9f4df0637272aad4eba28275845e93c6",
+        "http://store.is.autonavi.com/showpic/f700fb72ab84330ac59ec171047c2294?operate=original&query_type=oss&operate_gif=1",
+        "https://store.is.autonavi.com/showpic/5a89b5c9f7521d6a0000003140576384?type=pic"
+      ]
     },
     {
       "name": "反重力瀑布",
@@ -5473,7 +8494,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.316701,
       "category": "自然风光",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0LDMM6OK1/comment/176432378575_1764323797010_47219397.jpg"
+      "image": "https://aos-comment.amap.com/B0LDMM6OK1/comment/176432378575_1764323797010_47219397.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0LDMM6OK1/comment/176432378575_1764323797010_47219397.jpg",
+        "https://aos-comment.amap.com/B0LDMM6OK1/comment/176420094372_1764200947216_98417905.jpg",
+        "https://aos-comment.amap.com/B0LDMM6OK1/comment/5064F600_99C0_4514_8422_3F7DE6AB090C_L0_001_1170_167_1760588064006_57655579.jpg"
+      ]
     },
     {
       "name": "八路军西安办事处纪念馆",
@@ -5482,7 +8508,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.273134,
       "category": "历史人文",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/7d3811122ba5ace863ab9e255d4a4972"
+      "image": "http://store.is.autonavi.com/showpic/7d3811122ba5ace863ab9e255d4a4972",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/7d3811122ba5ace863ab9e255d4a4972",
+        "http://store.is.autonavi.com/showpic/9885e4cad669aeaaf55455294c3ca340",
+        "http://store.is.autonavi.com/showpic/baaf61fa4f440831b200e59b361630cd"
+      ]
     },
     {
       "name": "城市中央公园",
@@ -5491,7 +8522,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.369759,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/a4fb034921cca37b0000002854928149?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/a4fb034921cca37b0000002854928149?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/a4fb034921cca37b0000002854928149?type=pic",
+        "https://store.is.autonavi.com/showpic/298b0bf3988e07e80000002855018202?type=pic",
+        "https://store.is.autonavi.com/showpic/7e10988d5261770d0000008096112250?type=pic"
+      ]
     },
     {
       "name": "汉清明门广场",
@@ -5500,7 +8536,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.32871,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B001D0W252/comment/7AB1A454_1670_4D5F_97A8_252D0BA0A3FB_L0_001_1290_971_1733323737562_23446358.jpg"
+      "image": "https://aos-comment.amap.com/B001D0W252/comment/7AB1A454_1670_4D5F_97A8_252D0BA0A3FB_L0_001_1290_971_1733323737562_23446358.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001D0W252/comment/7AB1A454_1670_4D5F_97A8_252D0BA0A3FB_L0_001_1290_971_1733323737562_23446358.jpg",
+        "https://store.is.autonavi.com/showpic/fa76f87cb4adff98a9cde656e034bb8b",
+        "https://store.is.autonavi.com/showpic/2d1b25a67b594eed0000002303818418?type=pic"
+      ]
     },
     {
       "name": "西安事变纪念馆(青年路)",
@@ -5508,7 +8549,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lng": 108.939817,
       "lat": 34.271536,
       "category": "历史人文",
-      "image": "http://store.is.autonavi.com/showpic/fbc57c89ced9f1851a5e942f23faebce"
+      "image": "http://store.is.autonavi.com/showpic/fbc57c89ced9f1851a5e942f23faebce",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/fbc57c89ced9f1851a5e942f23faebce",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/486bbcba-1c10-4f76-878e-a86a329c237f.jpg",
+        "https://store.is.autonavi.com/showpic/a2183b7735f23e9b0000001071908584"
+      ]
     }
   ],
   "洛阳": [
@@ -5519,7 +8565,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.676011,
       "category": "城市地标",
       "rating": 4.9,
-      "image": "https://store.is.autonavi.com/showpic/dc08d3cfaa0513ff0000008544642230?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/dc08d3cfaa0513ff0000008544642230?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/dc08d3cfaa0513ff0000008544642230?type=pic",
+        "https://store.is.autonavi.com/showpic/be45ceefbd0902360000008544626919?type=pic",
+        "https://store.is.autonavi.com/showpic/425e473ae3d77288f17f8945eca9f142"
+      ]
     },
     {
       "name": "龙门石窟",
@@ -5528,7 +8579,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.558727,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/90fc4281626b617c1fc0d347e782bfd0"
+      "image": "http://store.is.autonavi.com/showpic/90fc4281626b617c1fc0d347e782bfd0",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/90fc4281626b617c1fc0d347e782bfd0",
+        "https://aos-comment.amap.com/B017B00X4D/comment/content_media_external_file_1000025984_ss__1766842954599_93051509.jpg",
+        "http://store.is.autonavi.com/showpic/6a0c360aaf9bc273a827380fdd27874e"
+      ]
     },
     {
       "name": "洛邑古城",
@@ -5537,7 +8593,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.680541,
       "category": "古镇村落",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/ad61ea36704a704aa44573a73680ec4e"
+      "image": "http://store.is.autonavi.com/showpic/ad61ea36704a704aa44573a73680ec4e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ad61ea36704a704aa44573a73680ec4e",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/3bd0f0e4-7e3b-44ec-b5af-db4fa74990ce.jpg",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/90a36a28-5dd3-496e-ba26-610d6f9bb3e4.jpg"
+      ]
     },
     {
       "name": "白马寺",
@@ -5546,7 +8607,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.721828,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/06cf4e5b9f5086fa9f6cd70dffc7651c"
+      "image": "http://store.is.autonavi.com/showpic/06cf4e5b9f5086fa9f6cd70dffc7651c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/06cf4e5b9f5086fa9f6cd70dffc7651c",
+        "http://store.is.autonavi.com/showpic/d6412cae9ba3bd5d50eb761f50eecda0",
+        "http://store.is.autonavi.com/showpic/87c6bf7fdee7fc88ae9e24f163eb5864"
+      ]
     },
     {
       "name": "隋唐城遗址植物园",
@@ -5555,7 +8621,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.635398,
       "category": "历史人文",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/be161a7abef1c495b8b82ef132b28c15"
+      "image": "http://store.is.autonavi.com/showpic/be161a7abef1c495b8b82ef132b28c15",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/be161a7abef1c495b8b82ef132b28c15",
+        "http://store.is.autonavi.com/showpic/cbcec979827baae94646d25146948d1d",
+        "http://store.is.autonavi.com/showpic/74ef4ec0e70a2f93d4031d0e18fb8206"
+      ]
     },
     {
       "name": "从政坊游园",
@@ -5564,7 +8635,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.634196,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/906f70445a1ef3ea0000003202226814?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/906f70445a1ef3ea0000003202226814?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/906f70445a1ef3ea0000003202226814?type=pic",
+        "https://aos-comment.amap.com/B0G0DY5IZX/comment/177216685493_1772166859180_34702972.jpg",
+        "https://store.is.autonavi.com/showpic/f921fbf0a1388fcae63c1b2253dcbd68"
+      ]
     },
     {
       "name": "关林景区",
@@ -5573,7 +8649,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.607419,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/60a4850c009e371eb1a440ce7162a336"
+      "image": "http://store.is.autonavi.com/showpic/60a4850c009e371eb1a440ce7162a336",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/60a4850c009e371eb1a440ce7162a336",
+        "http://store.is.autonavi.com/showpic/f5b16daa94d6d15611ab530020ac5c9e",
+        "https://aos-comment.amap.com/B017B01ONY/headerImg/content_media_external_images_media_471808_1657249097936_8d5cf261.jpg"
+      ]
     },
     {
       "name": "隋唐洛阳城国家遗址公园",
@@ -5582,7 +8663,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.679369,
       "category": "历史人文",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/8544705d1d7005f961ae71d29d701cbf"
+      "image": "http://store.is.autonavi.com/showpic/8544705d1d7005f961ae71d29d701cbf",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8544705d1d7005f961ae71d29d701cbf",
+        "http://store.is.autonavi.com/showpic/391e873734f8ded77cde63acf185f054",
+        "http://store.is.autonavi.com/showpic/634cef822105d31408d63b8f1079225f"
+      ]
     },
     {
       "name": "王城公园",
@@ -5591,7 +8677,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.666822,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/84d952a9775b4b5f0214606ec419f1a7"
+      "image": "http://store.is.autonavi.com/showpic/84d952a9775b4b5f0214606ec419f1a7",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/84d952a9775b4b5f0214606ec419f1a7",
+        "http://store.is.autonavi.com/showpic/028f7db3a4ee1c82c589cba22e19a8c0",
+        "http://store.is.autonavi.com/showpic/7828b0c48b5aec4fe5276c9a08274ca1"
+      ]
     },
     {
       "name": "洛阳城市阳台",
@@ -5600,7 +8691,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.66115,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0JRLS7LG4/comment/content_media_external_file_139657_1769485692282_11375563.jpg"
+      "image": "https://aos-comment.amap.com/B0JRLS7LG4/comment/content_media_external_file_139657_1769485692282_11375563.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0JRLS7LG4/comment/content_media_external_file_139657_1769485692282_11375563.jpg",
+        "https://aos-comment.amap.com/B0JRLS7LG4/comment/content_media_external_images_media_1000004846_ss__1770387878699_36879605.jpg",
+        "https://aos-comment.amap.com/B0JRLS7LG4/comment/content_media_external_file_100002749_1759403304148_34618634.jpg"
+      ]
     },
     {
       "name": "丽景门景区",
@@ -5609,7 +8705,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.680899,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/7107807455eccc1a4099f5f57513ba96"
+      "image": "http://store.is.autonavi.com/showpic/7107807455eccc1a4099f5f57513ba96",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/7107807455eccc1a4099f5f57513ba96",
+        "http://store.is.autonavi.com/showpic/9ed9ce57f273d9df013de37cbb176574",
+        "http://store.is.autonavi.com/showpic/f9da886a26c7f502b364a4637cb40477"
+      ]
     },
     {
       "name": "隋唐洛阳城九洲池遗址",
@@ -5618,7 +8719,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.681749,
       "category": "历史人文",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/77fc78d1d83f48ddc05f4ac21d286f96"
+      "image": "http://store.is.autonavi.com/showpic/77fc78d1d83f48ddc05f4ac21d286f96",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/77fc78d1d83f48ddc05f4ac21d286f96",
+        "http://store.is.autonavi.com/showpic/3333d5410f4e22f1056577efe97ca476",
+        "http://store.is.autonavi.com/showpic/307f5fbce1f0af692e37d5807e22778f"
+      ]
     },
     {
       "name": "明堂天堂景区",
@@ -5627,7 +8733,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.680653,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/59fa93a6c4f694410000003358666916?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/59fa93a6c4f694410000003358666916?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/59fa93a6c4f694410000003358666916?type=pic",
+        "https://store.is.autonavi.com/showpic/43d95b0d7c858c070000004442486929?type=pic",
+        "https://store.is.autonavi.com/showpic/57e116a80a98521d0000003060246588?type=pic"
+      ]
     },
     {
       "name": "西苑公园",
@@ -5636,7 +8747,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.65077,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/01ba5c07c6bd0041b28c384aeee509c0"
+      "image": "http://store.is.autonavi.com/showpic/01ba5c07c6bd0041b28c384aeee509c0",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/01ba5c07c6bd0041b28c384aeee509c0",
+        "http://store.is.autonavi.com/showpic/51d3c33433b03c2b438878ab21b0e999",
+        "https://aos-comment.amap.com/B017B01I1B/comment/7D8966DC_E6E6_42B8_BD5D_2F62C55A510E_L0_001_1080_144_1770456230756_97488808.jpg"
+      ]
     },
     {
       "name": "应天门南广场",
@@ -5645,7 +8761,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.675328,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0FFLK0W1Z/comment/B9F2E487_E16C_4EDA_9AC7_DAD5EE8D4377_L0_001_1536_204_1757468300085_93173015.jpg"
+      "image": "https://aos-comment.amap.com/B0FFLK0W1Z/comment/B9F2E487_E16C_4EDA_9AC7_DAD5EE8D4377_L0_001_1536_204_1757468300085_93173015.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFLK0W1Z/comment/B9F2E487_E16C_4EDA_9AC7_DAD5EE8D4377_L0_001_1536_204_1757468300085_93173015.jpg",
+        "https://aos-comment.amap.com/B0FFLK0W1Z/comment/content_media_external_images_media_1000001770_ss__1740101062448_25377915.jpg",
+        "https://store.is.autonavi.com/showpic/5c8d0dd86305f6a30000008847338974?type=pic"
+      ]
     },
     {
       "name": "魏坡·新序",
@@ -5654,7 +8775,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.75681,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/3c9d437196dd51880000002439940617?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/3c9d437196dd51880000002439940617?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/3c9d437196dd51880000002439940617?type=pic",
+        "https://store.is.autonavi.com/showpic/3443ea9494576fa60000002990752905?type=pic",
+        "https://store.is.autonavi.com/showpic/66d2fc80567b23be4b91de1c255dfeb8"
+      ]
     },
     {
       "name": "神都十三坊",
@@ -5663,7 +8789,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.629233,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/ff9bbf64ed3b24cc0000004808748106?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/ff9bbf64ed3b24cc0000004808748106?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/ff9bbf64ed3b24cc0000004808748106?type=pic",
+        "https://aos-comment.amap.com/B0KD5UXNKQ/comment/content_media_external_file_100008495_1764636195599_67169394.jpg",
+        "https://aos-comment.amap.com/B0KD5UXNKQ/comment/29435A25_A07A_4906_9501_97B83CD408B1_L0_001_2000_150_1764375447168_77314985.jpg"
+      ]
     },
     {
       "name": "定鼎门南广场",
@@ -5672,7 +8803,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.629784,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0FFIZGOTC/comment/content_media_external_images_media_1000015677_ss__1745828780592_51672477.jpg"
+      "image": "https://aos-comment.amap.com/B0FFIZGOTC/comment/content_media_external_images_media_1000015677_ss__1745828780592_51672477.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFIZGOTC/comment/content_media_external_images_media_1000015677_ss__1745828780592_51672477.jpg",
+        "https://aos-comment.amap.com/B0FFIZGOTC/comment/d4ff0ceef0db38ccad6a4807dda2cc43_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFIZGOTC/comment/99cecf2e3c754c9dd0ad7ffba8fdc23e_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "洛阳大河荟",
@@ -5681,7 +8817,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.59337,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/c2db744db6372fe879e60d0f1cf0efda"
+      "image": "http://store.is.autonavi.com/showpic/c2db744db6372fe879e60d0f1cf0efda",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c2db744db6372fe879e60d0f1cf0efda",
+        "http://store.is.autonavi.com/showpic/0d3284157a16f3512d2ac3f5da812595",
+        "http://store.is.autonavi.com/showpic/38a2c685ffe71e8906c2e622c5da0381"
+      ]
     },
     {
       "name": "文博体育公园",
@@ -5690,7 +8831,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.644295,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/63d8f76d-748f-4b5c-be9c-bffc03243250.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/63d8f76d-748f-4b5c-be9c-bffc03243250.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/63d8f76d-748f-4b5c-be9c-bffc03243250.jpg",
+        "https://aos-comment.amap.com/B0FFJP5LF8/comment/content_media_external_images_media_1000161945_ss__1763727998937_71686694.jpg",
+        "https://aos-comment.amap.com/B0FFJP5LF8/comment/content_media_external_images_media_100001865_1740279221772_51571695.jpg"
+      ]
     },
     {
       "name": "洛浦公园",
@@ -5699,7 +8845,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.63269,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/d10f0e944a638b08e31f083cd87e6255"
+      "image": "http://store.is.autonavi.com/showpic/d10f0e944a638b08e31f083cd87e6255",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d10f0e944a638b08e31f083cd87e6255",
+        "http://store.is.autonavi.com/showpic/fb7f92769d1b6205e17d03b6c8c67ffa",
+        "http://store.is.autonavi.com/showpic/ceac809f70af8be7a44bd2c76a921bed"
+      ]
     },
     {
       "name": "关林庙",
@@ -5708,7 +8859,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.607602,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0L0RU5TAB/comment/20260322-c483e8328ba7edb839bbbb88-6D63SqttPpB9SWsX6AjOUu.jpg"
+      "image": "https://aos-comment.amap.com/B0L0RU5TAB/comment/20260322-c483e8328ba7edb839bbbb88-6D63SqttPpB9SWsX6AjOUu.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0L0RU5TAB/comment/20260322-c483e8328ba7edb839bbbb88-6D63SqttPpB9SWsX6AjOUu.jpg",
+        "https://store.is.autonavi.com/showpic/b54439c0a15afa280000002603440312?type=pic",
+        "https://aos-comment.amap.com/B0L0RU5TAB/comment/content_media_external_file_1000027692_ss__1768963024464_65134875.jpg"
+      ]
     },
     {
       "name": "洛阳龙门海洋馆",
@@ -5717,7 +8873,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.591869,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/b10d04307b4642a4af696542c45f7f27"
+      "image": "http://store.is.autonavi.com/showpic/b10d04307b4642a4af696542c45f7f27",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b10d04307b4642a4af696542c45f7f27",
+        "http://store.is.autonavi.com/showpic/5daaa61592b758addcf40a073c6422f6",
+        "http://store.is.autonavi.com/showpic/727b343d7d368db45a6fe06a4fad7afa"
+      ]
     },
     {
       "name": "上阳宫文化园",
@@ -5726,7 +8887,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.645919,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/5a1beaad4a336619ee026e6041354edb"
+      "image": "http://store.is.autonavi.com/showpic/5a1beaad4a336619ee026e6041354edb",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5a1beaad4a336619ee026e6041354edb",
+        "http://store.is.autonavi.com/showpic/2752e2142c0a9d20cde96e58d3dc8c07",
+        "http://store.is.autonavi.com/showpic/1cd9d04b033a2f9854b041163c9d587b"
+      ]
     },
     {
       "name": "伊水游园",
@@ -5735,7 +8901,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.608817,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/40405221-e612-4a1a-ba09-2420318891c2.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/40405221-e612-4a1a-ba09-2420318891c2.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/40405221-e612-4a1a-ba09-2420318891c2.jpg",
+        "https://aos-comment.amap.com/B0FFKCC0R8/comment/content_media_external_file_76503_ss__1765715242196_77241518.jpg",
+        "https://aos-comment.amap.com/B0FFKCC0R8/comment/content_media_external_images_media_1000070345_ss__1744009784679_40817693.jpg"
+      ]
     },
     {
       "name": "周山森林公园",
@@ -5744,7 +8915,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.624946,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/7a05711e3de5579739a82f0b43f5e81e"
+      "image": "http://store.is.autonavi.com/showpic/7a05711e3de5579739a82f0b43f5e81e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/7a05711e3de5579739a82f0b43f5e81e",
+        "https://aos-comment.amap.com/B017B0OMG7/comment/176429509304_1764295098078_42142363.jpg",
+        "https://store.is.autonavi.com/showpic/d8620e7d947f2d9f7a7b3492f142fa8f"
+      ]
     },
     {
       "name": "牡丹广场",
@@ -5753,7 +8929,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.656708,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/af55a1e2b4b1fc735b28ac749680d00b"
+      "image": "http://store.is.autonavi.com/showpic/af55a1e2b4b1fc735b28ac749680d00b",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/af55a1e2b4b1fc735b28ac749680d00b",
+        "http://store.is.autonavi.com/showpic/5fb575489e56f8c4fba310d018dd0547",
+        "http://store.is.autonavi.com/showpic/e344cd378f89e9b64fc1b6048ed781b5"
+      ]
     },
     {
       "name": "洛神公园",
@@ -5762,7 +8943,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.671068,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0FFHHCXVS/comment/c43b83badb90b869173dbdf36ed99bac_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0FFHHCXVS/comment/c43b83badb90b869173dbdf36ed99bac_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFHHCXVS/comment/c43b83badb90b869173dbdf36ed99bac_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/9178e48a8998045f0000002353450080",
+        "https://aos-comment.amap.com/B0FFHHCXVS/comment/121762348e222f7efb0df3ae8560ef6e_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "牡丹博物馆",
@@ -5771,7 +8957,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.576175,
       "category": "历史人文",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/06a4636aa5bcdb2a755a67e1c7c95c1a"
+      "image": "http://store.is.autonavi.com/showpic/06a4636aa5bcdb2a755a67e1c7c95c1a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/06a4636aa5bcdb2a755a67e1c7c95c1a",
+        "http://store.is.autonavi.com/showpic/3110b58ffb62828f3d84c12331419174",
+        "http://store.is.autonavi.com/showpic/7fe851ca25e8d03bc69aaa02966b79dd"
+      ]
     },
     {
       "name": "伊滨中央公园",
@@ -5780,7 +8971,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.60191,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0I39M0D2I/comment/content_media_external_file_1000010231_ss__1764667174293_58842293.jpg"
+      "image": "https://aos-comment.amap.com/B0I39M0D2I/comment/content_media_external_file_1000010231_ss__1764667174293_58842293.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0I39M0D2I/comment/content_media_external_file_1000010231_ss__1764667174293_58842293.jpg",
+        "https://store.is.autonavi.com/showpic/4c6c6378bde32dd80000001498540685",
+        "https://aos-comment.amap.com/B0I39M0D2I/comment/content_media_external_file_1000071022_ss__1748090600648_72282413.jpg"
+      ]
     },
     {
       "name": "洛阳市王城动物园",
@@ -5789,7 +8985,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.668079,
       "category": "主题乐园",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/457aef7f0274d42c0000003528950899?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/457aef7f0274d42c0000003528950899?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/457aef7f0274d42c0000003528950899?type=pic",
+        "https://store.is.autonavi.com/showpic/cb439a92a865594f4374ea9bccf71f1e",
+        "https://aos-comment.amap.com/B017B01H5U/comment/content_media_external_file_34014_ss__1763388531707_53769157.jpg"
+      ]
     },
     {
       "name": "洛阳凤翔温泉旅游区",
@@ -5798,7 +8999,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.553238,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/19cced306221eb296ace123730696cc4"
+      "image": "http://store.is.autonavi.com/showpic/19cced306221eb296ace123730696cc4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/19cced306221eb296ace123730696cc4",
+        "http://store.is.autonavi.com/showpic/de1ebb7fec9de658bbee648b61a99104",
+        "http://store.is.autonavi.com/showpic/6f580fc97bd33b3d5dd55096c65d70f2"
+      ]
     },
     {
       "name": "九龙鼎",
@@ -5807,7 +9013,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.682477,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/d3c3beb3d7f3dd470000003137616746?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/d3c3beb3d7f3dd470000003137616746?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/d3c3beb3d7f3dd470000003137616746?type=pic",
+        "https://aos-comment.amap.com/B017B0PZO2/comment/e1dca478e725dfdca33f11fd2507b11a_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/414acd79b8b0a7790000002897824088?type=pic"
+      ]
     },
     {
       "name": "朱樱塔",
@@ -5816,7 +9027,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.672238,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/a762f6d62dbfe61f0000000739458935?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/a762f6d62dbfe61f0000000739458935?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/a762f6d62dbfe61f0000000739458935?type=pic",
+        "https://aos-comment.amap.com/B0FFHEU2VX/comment/content_media_external_file_2092_1772427705387_29289812.jpg",
+        "https://aos-comment.amap.com/B0FFHEU2VX/comment/1ccf0efc43520e50e86a6aa43a08aea5_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "南山牡丹文化园",
@@ -5825,7 +9041,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.579578,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/3c89ae3c10e2638fa21d74ea1b9b729d"
+      "image": "http://store.is.autonavi.com/showpic/3c89ae3c10e2638fa21d74ea1b9b729d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/3c89ae3c10e2638fa21d74ea1b9b729d",
+        "https://aos-comment.amap.com/B0HABMOSLH/comment/df5d31a552e2575feda9c951efbf842a_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0HABMOSLH/comment/content_media_external_images_media_1000063710_ss__1737108540300_35354553.jpg"
+      ]
     },
     {
       "name": "鼓楼",
@@ -5834,7 +9055,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.682758,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/996b78ec9e4261d8571619a8c02458d3"
+      "image": "http://store.is.autonavi.com/showpic/996b78ec9e4261d8571619a8c02458d3",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/996b78ec9e4261d8571619a8c02458d3",
+        "https://store.is.autonavi.com/showpic/2d63672b3e0310a40000000976282407?type=pic",
+        "https://aos-comment.amap.com/B017B01ZFG/comment/content_media_external_file_1000001971_ss__1754358871848_36628073.jpg"
+      ]
     },
     {
       "name": "万安山旅游度假区",
@@ -5843,7 +9069,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.517003,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/917e8481b3e65e769c55ea5d73b6a4d7"
+      "image": "http://store.is.autonavi.com/showpic/917e8481b3e65e769c55ea5d73b6a4d7",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/917e8481b3e65e769c55ea5d73b6a4d7",
+        "http://store.is.autonavi.com/showpic/557e39f6f32b0309fd9bb510f1c8690c",
+        "http://store.is.autonavi.com/showpic/f8ea0e1ee476efbddfabd0dacfdea844"
+      ]
     },
     {
       "name": "兴洛湖公园",
@@ -5852,7 +9083,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.603179,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/995059318c98e77b0000005485630616?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/995059318c98e77b0000005485630616?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/995059318c98e77b0000005485630616?type=pic",
+        "https://aos-comment.amap.com/B0FFJ4A5JF/comment/content_media_external_file_2248_ss__1764231769294_57005643.jpg",
+        "https://aos-comment.amap.com/B0FFJ4A5JF/comment/317bd9a72e7a2f7bec6497831890af4e_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "伊水游园唐韵段",
@@ -5861,7 +9097,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.57911,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/8b5a3d98-44b1-4d8a-853d-33cbd46a5380.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/8b5a3d98-44b1-4d8a-853d-33cbd46a5380.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/8b5a3d98-44b1-4d8a-853d-33cbd46a5380.jpg",
+        "https://aos-comment.amap.com/B0FFMFAOQ1/comment/1ed623c286adcbc00cfd8e5b5a91ca3c_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFMFAOQ1/comment/190f5f1ca01b138dcf410b99470319ea_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "龙门石窟四方亭",
@@ -5870,7 +9111,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.565623,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/663199b63e3f8c1e0000002989042710?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/663199b63e3f8c1e0000002989042710?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/663199b63e3f8c1e0000002989042710?type=pic",
+        "https://store.is.autonavi.com/showpic/7bf9e26dc5f0bc120000002989116338?type=pic",
+        "https://store.is.autonavi.com/showpic/d3c62779d81843390000002904964771?type=pic"
+      ]
     },
     {
       "name": "洛阳文峰塔",
@@ -5879,7 +9125,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.679837,
       "category": "宗教寺庙",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/ac980e11047a56730000003385390588?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/ac980e11047a56730000003385390588?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/ac980e11047a56730000003385390588?type=pic",
+        "http://store.is.autonavi.com/showpic/b9890a8fe4cde82556328a3c4a9cb7d2",
+        "https://store.is.autonavi.com/showpic/fb7f50da97d6279b0000002901478787?type=pic"
+      ]
     },
     {
       "name": "香山寺",
@@ -5888,7 +9139,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.554569,
       "category": "宗教寺庙",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/df3e1f1e251d90c2a5e9e8a5dc2c65e4"
+      "image": "http://store.is.autonavi.com/showpic/df3e1f1e251d90c2a5e9e8a5dc2c65e4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/df3e1f1e251d90c2a5e9e8a5dc2c65e4",
+        "http://store.is.autonavi.com/showpic/a5be77b3706f07b370407d3464208611",
+        "https://aos-comment.amap.com/B017B00C56/comment/content_media_external_file_100008451_1763126598955_85829669.jpg"
+      ]
     },
     {
       "name": "体育公园",
@@ -5897,7 +9153,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.620466,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B017B01HYF/comment/content_media_external_file_143548_1771906470494_51562669.jpg"
+      "image": "https://aos-comment.amap.com/B017B01HYF/comment/content_media_external_file_143548_1771906470494_51562669.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B017B01HYF/comment/content_media_external_file_143548_1771906470494_51562669.jpg",
+        "https://aos-comment.amap.com/B017B01HYF/comment/content_media_external_images_media_14636193_ss_2_1687411357610_70ba6267.jpg",
+        "https://store.is.autonavi.com/showpic/64b92dc130ba61560000008650830341"
+      ]
     },
     {
       "name": "隋唐洛阳城明堂遗址",
@@ -5906,7 +9167,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.680429,
       "category": "历史人文",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/137759d0d1e4d10b96ce3373904cd055"
+      "image": "http://store.is.autonavi.com/showpic/137759d0d1e4d10b96ce3373904cd055",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/137759d0d1e4d10b96ce3373904cd055",
+        "http://store.is.autonavi.com/showpic/2eed960d1bddc19550945076530b242c",
+        "http://store.is.autonavi.com/showpic/27416e17df0d833357742efec31fa3a8"
+      ]
     },
     {
       "name": "天女散花",
@@ -5915,7 +9181,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.68004,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/53c7176af561eab60000006075858286?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/53c7176af561eab60000006075858286?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/53c7176af561eab60000006075858286?type=pic",
+        "https://store.is.autonavi.com/showpic/87e48defad06e0e10000009029710928?type=pic",
+        "https://store.is.autonavi.com/showpic/e625fae1e3f0b46f0000003077440093?type=pic"
+      ]
     },
     {
       "name": "伊水游园求是段",
@@ -5924,7 +9195,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.613639,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0H2JUUW9O/comment/60A2636D_8A86_48D7_9E33_10893BD15597_L0_001_1080_143_1762931112545_45104133.jpg"
+      "image": "https://aos-comment.amap.com/B0H2JUUW9O/comment/60A2636D_8A86_48D7_9E33_10893BD15597_L0_001_1080_143_1762931112545_45104133.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0H2JUUW9O/comment/60A2636D_8A86_48D7_9E33_10893BD15597_L0_001_1080_143_1762931112545_45104133.jpg",
+        "https://aos-comment.amap.com/B0H2JUUW9O/comment/371e224e2d4f362f09e46329c5d5d4be_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/f8ce2b4f17a9b69e0000002420834458?type=pic"
+      ]
     },
     {
       "name": "开元湖健康主题公园",
@@ -5933,7 +9209,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.617594,
       "category": "主题乐园",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/efea01bdc253c82b0000004601130104?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/efea01bdc253c82b0000004601130104?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/efea01bdc253c82b0000004601130104?type=pic",
+        "https://store.is.autonavi.com/showpic/f96042a5494a4b9b0000002093692153?type=pic",
+        "https://aos-comment.amap.com/B0FFGXBMMI/comment/64e9ec53d2a621733534b156cdd79bf7_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "开元湖音乐喷泉",
@@ -5942,7 +9223,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.617427,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B0FFFA0BMA/comment/90011dffcd457e073dfbfe7c5f3b5cbf_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0FFFA0BMA/comment/90011dffcd457e073dfbfe7c5f3b5cbf_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFFA0BMA/comment/90011dffcd457e073dfbfe7c5f3b5cbf_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFFA0BMA/comment/81ab3be425540188281d8b5798f98e88_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFFA0BMA/comment/content_media_external_file_1000091079_ss__1765940492000_76911248.jpg"
+      ]
     },
     {
       "name": "牡丹宫",
@@ -5951,7 +9237,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.641791,
       "category": "宗教寺庙",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/1e08b96885a79ef52e5cd3a56151f572"
+      "image": "http://store.is.autonavi.com/showpic/1e08b96885a79ef52e5cd3a56151f572",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/1e08b96885a79ef52e5cd3a56151f572",
+        "https://store.is.autonavi.com/showpic/7111e97e1acfbacb73053a3f8fa853af",
+        "http://store.is.autonavi.com/showpic/08e6514cb48c4338ab1ba7b20cd5cf17"
+      ]
     },
     {
       "name": "瀍壑朱樱",
@@ -5960,7 +9251,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.672636,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/7f1e75ab9ad6e1e2a942d5fed3c03cab"
+      "image": "http://store.is.autonavi.com/showpic/7f1e75ab9ad6e1e2a942d5fed3c03cab",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/7f1e75ab9ad6e1e2a942d5fed3c03cab",
+        "https://store.is.autonavi.com/showpic/177ce54663bb47b60000003033692202?type=pic",
+        "https://store.is.autonavi.com/showpic/8209c3870d8ca1250000000728022215?type=pic"
+      ]
     },
     {
       "name": "瀛洲桥湿地公园",
@@ -5969,7 +9265,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.603907,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B0FFLCHZOD/comment/176907616190_1769076167340_27521734.jpg"
+      "image": "https://aos-comment.amap.com/B0FFLCHZOD/comment/176907616190_1769076167340_27521734.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFLCHZOD/comment/176907616190_1769076167340_27521734.jpg",
+        "https://aos-comment.amap.com/B0FFLCHZOD/comment/a6ed431cb045c37e6036d67ad9e6b46b_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFLCHZOD/comment/176907613771_1769076167336_55185815.jpg"
+      ]
     },
     {
       "name": "白居易墓园",
@@ -5978,7 +9279,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 34.558195,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/f8d36ba79d24f0380000003592978060?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/f8d36ba79d24f0380000003592978060?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/f8d36ba79d24f0380000003592978060?type=pic",
+        "https://aos-comment.amap.com/B0FFKXKW13/comment/ae44766fa07be5b797f1cb6221746ca5_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFKXKW13/comment/cfa34baf89fa913f0840a3cf490dc834_2048_2048_80.jpg"
+      ]
     }
   ],
   "武汉": [
@@ -5989,7 +9295,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.582745,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/fcfae46f63779f0d0000004117814170?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/fcfae46f63779f0d0000004117814170?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/fcfae46f63779f0d0000004117814170?type=pic",
+        "https://store.is.autonavi.com/showpic/e990cdd64e551fa4dd9d17f4a70b42f1",
+        "https://store.is.autonavi.com/showpic/f3c1c6dbe2f5a81dfb1e07b3a71e19f5"
+      ]
     },
     {
       "name": "解放公园",
@@ -5998,7 +9309,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.608418,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/26df2710cce6431b87dc915dc09e83f6"
+      "image": "http://store.is.autonavi.com/showpic/26df2710cce6431b87dc915dc09e83f6",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/26df2710cce6431b87dc915dc09e83f6",
+        "http://store.is.autonavi.com/showpic/ec9d8ab5daf9990a9844e12029916556",
+        "http://store.is.autonavi.com/showpic/342d282bbbab649be52cb457ea150f19"
+      ]
     },
     {
       "name": "黄鹤楼",
@@ -6007,7 +9323,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.544649,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/42b23731ef5018c23ad9ff611e78747d"
+      "image": "http://store.is.autonavi.com/showpic/42b23731ef5018c23ad9ff611e78747d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/42b23731ef5018c23ad9ff611e78747d",
+        "http://store.is.autonavi.com/showpic/916ce2fc4fb250131e44ebd56c888fbf",
+        "http://store.is.autonavi.com/showpic/c7998c0d9c0515c8c78143cdf7617c12"
+      ]
     },
     {
       "name": "纵横体育公园",
@@ -6016,7 +9337,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.60107,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/955bec3c4b038defc8aebccb35fa511a"
+      "image": "https://store.is.autonavi.com/showpic/955bec3c4b038defc8aebccb35fa511a",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/955bec3c4b038defc8aebccb35fa511a",
+        "https://store.is.autonavi.com/showpic/695b76686092794b0000005452490599?type=pic",
+        "https://store.is.autonavi.com/showpic/7e01d533140003220000005452546376?type=pic"
+      ]
     },
     {
       "name": "东湖生态旅游风景区",
@@ -6025,7 +9351,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.549509,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/26d4b69f28d4a5261dcc0e4086333452"
+      "image": "http://store.is.autonavi.com/showpic/26d4b69f28d4a5261dcc0e4086333452",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/26d4b69f28d4a5261dcc0e4086333452",
+        "http://store.is.autonavi.com/showpic/78f1a01143257890d61346845947eb28",
+        "http://store.is.autonavi.com/showpic/abf65937962774e0a4226e499c26cbb5"
+      ]
     },
     {
       "name": "巴公房子",
@@ -6034,7 +9365,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.586141,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/0dec781a18a2301c0000003905610564?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/0dec781a18a2301c0000003905610564?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/0dec781a18a2301c0000003905610564?type=pic",
+        "https://store.is.autonavi.com/showpic/9fef1ab35f223a5a0000004348100379?type=pic",
+        "https://store.is.autonavi.com/showpic/25f3ec5bc2220cd50000006858690967?type=pic"
+      ]
     },
     {
       "name": "武昌江滩",
@@ -6043,7 +9379,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.588254,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/6daf2dc8454d1d4f9d7f79df6bec190f"
+      "image": "http://store.is.autonavi.com/showpic/6daf2dc8454d1d4f9d7f79df6bec190f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6daf2dc8454d1d4f9d7f79df6bec190f",
+        "http://store.is.autonavi.com/showpic/693c8c3db3780b15d2a4c7ec2de3c238",
+        "http://store.is.autonavi.com/showpic/79f52873d3a00f225646bf6d5af27cf7"
+      ]
     },
     {
       "name": "江汉关大楼",
@@ -6052,7 +9393,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.576071,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/dec69d0e2b01ebc00000002830902268?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/dec69d0e2b01ebc00000002830902268?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/dec69d0e2b01ebc00000002830902268?type=pic",
+        "https://store.is.autonavi.com/showpic/53e003ab268028940000001900314108?type=pic",
+        "https://aos-comment.amap.com/B0FFGJA77F/comment/content_media_external_file_24862_ss__1771679170401_83106354.jpg"
+      ]
     },
     {
       "name": "武汉江滩",
@@ -6061,7 +9407,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.585612,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0FFIPHJND/comment/content_media_external_file_100008819_1765209084222_10960687.jpg"
+      "image": "https://aos-comment.amap.com/B0FFIPHJND/comment/content_media_external_file_100008819_1765209084222_10960687.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFIPHJND/comment/content_media_external_file_100008819_1765209084222_10960687.jpg",
+        "https://store.is.autonavi.com/showpic/a309a29f844b3a390000003666352641?type=pic",
+        "https://aos-comment.amap.com/B0FFIPHJND/comment/content_media_external_file_1000120192_ss__1765936155969_57629423.jpg"
+      ]
     },
     {
       "name": "中山公园",
@@ -6070,7 +9421,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.58665,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/d327e65598c673fc415d6aa4784bfc35"
+      "image": "http://store.is.autonavi.com/showpic/d327e65598c673fc415d6aa4784bfc35",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d327e65598c673fc415d6aa4784bfc35",
+        "http://store.is.autonavi.com/showpic/08051e1d5ebae22e13b6ddb4c728489a",
+        "http://store.is.autonavi.com/showpic/9408517efda1d32087f6a706ef41d51f"
+      ]
     },
     {
       "name": "黄鹤楼公园",
@@ -6079,7 +9435,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.542529,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/22cbbe3f04476d779a154637a4de5006"
+      "image": "http://store.is.autonavi.com/showpic/22cbbe3f04476d779a154637a4de5006",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/22cbbe3f04476d779a154637a4de5006",
+        "http://store.is.autonavi.com/showpic/d549e9fc3fc7b25c79b7771350beabbd",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/d06fad7a-6583-4860-be66-083c3770c4ac.jpeg"
+      ]
     },
     {
       "name": "江汉关钟楼",
@@ -6088,7 +9449,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.576294,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/159e5f51526c78590000002738992706?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/159e5f51526c78590000002738992706?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/159e5f51526c78590000002738992706?type=pic",
+        "https://store.is.autonavi.com/showpic/06e0df6816e2db3f0000002858966731?type=pic",
+        "https://store.is.autonavi.com/showpic/53b4e0c99c90b7870000007840512537?type=pic"
+      ]
     },
     {
       "name": "昙华林",
@@ -6097,7 +9463,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.55194,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/c795cc743c0ea600824f70edebec1d10"
+      "image": "http://store.is.autonavi.com/showpic/c795cc743c0ea600824f70edebec1d10",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c795cc743c0ea600824f70edebec1d10",
+        "https://store.is.autonavi.com/showpic/1db553c3421671610000004846094502",
+        "https://store.is.autonavi.com/showpic/c0f54eeef977ca190d49d8a2b056ba66"
+      ]
     },
     {
       "name": "铁机路江滩灯塔",
@@ -6106,7 +9477,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.607527,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/410ecba610da2fab0000000732598577?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/410ecba610da2fab0000000732598577?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/410ecba610da2fab0000000732598577?type=pic",
+        "https://store.is.autonavi.com/showpic/155881756ab587cd0000003324792170?type=pic",
+        "https://store.is.autonavi.com/showpic/26d046d3039eae150000003142148512?type=pic"
+      ]
     },
     {
       "name": "龟山风景区",
@@ -6115,7 +9491,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.555045,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/694ece340e0bc3580000005487486068?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/694ece340e0bc3580000005487486068?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/694ece340e0bc3580000005487486068?type=pic",
+        "https://store.is.autonavi.com/showpic/5024980d468a46a70000002536254187?type=pic",
+        "https://store.is.autonavi.com/showpic/a4e3028c73d2fcb90000008016148750?type=pic"
+      ]
     },
     {
       "name": "晴川阁",
@@ -6124,7 +9505,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.555551,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/e2496036-c586-44f0-aa43-1e492b85ded2.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/e2496036-c586-44f0-aa43-1e492b85ded2.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/e2496036-c586-44f0-aa43-1e492b85ded2.jpg",
+        "http://store.is.autonavi.com/showpic/abb976b537da5f0ebf34882a31d0ddbf",
+        "http://store.is.autonavi.com/showpic/3d0b45b0d39e8d153bfd2dfd1cba2b10"
+      ]
     },
     {
       "name": "沙湖公园",
@@ -6133,7 +9519,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.572224,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/f732e398-e0f6-4d7b-b3dd-fd2743541941.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/f732e398-e0f6-4d7b-b3dd-fd2743541941.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/f732e398-e0f6-4d7b-b3dd-fd2743541941.jpg",
+        "https://aos-comment.amap.com/B001B1C9CL/comment/20260320-9b0cd17d082ff1158a5f7c2a-8YqtEyQTgm5AdVYspXe66P.jpg",
+        "https://store.is.autonavi.com/showpic/249bf30a960c5c640000002748596690?type=pic"
+      ]
     },
     {
       "name": "武汉观光游船(中华路1号码头)",
@@ -6142,7 +9533,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.550512,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/10ae45ae65ad805d8bb0e0484ac95eeb"
+      "image": "http://store.is.autonavi.com/showpic/10ae45ae65ad805d8bb0e0484ac95eeb",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/10ae45ae65ad805d8bb0e0484ac95eeb",
+        "http://store.is.autonavi.com/showpic/373fc9d9e3799751bc6a1255dd6e69ae",
+        "http://store.is.autonavi.com/showpic/53d3312a3ca7e16a173f3aaea64cffd5"
+      ]
     },
     {
       "name": "中共中央机关旧址",
@@ -6151,7 +9547,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.587918,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/503fdd629602d744006bb768794abcc9"
+      "image": "http://store.is.autonavi.com/showpic/503fdd629602d744006bb768794abcc9",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/503fdd629602d744006bb768794abcc9",
+        "https://store.is.autonavi.com/showpic/dafdce5f3c70ea730000003371186771",
+        "https://store.is.autonavi.com/showpic/450d0b3040255034d5a104f590bf8606"
+      ]
     },
     {
       "name": "汉阳江滩",
@@ -6160,7 +9561,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.547316,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B001B0INQD/comment/content_media_external_file_1000014428_ss__1759804863013_07525075.jpg"
+      "image": "https://aos-comment.amap.com/B001B0INQD/comment/content_media_external_file_1000014428_ss__1759804863013_07525075.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001B0INQD/comment/content_media_external_file_1000014428_ss__1759804863013_07525075.jpg",
+        "https://aos-comment.amap.com/B001B0INQD/comment/content_media_external_file_100000865_1762170313494_23248326.jpg",
+        "https://aos-comment.amap.com/B001B0INQD/comment/%5B2025-12-07-18-05-35%5D126C9F2B-C30F-4F46-817D-4E7EBCB15E2_1765101958142_20441367.jpg"
+      ]
     },
     {
       "name": "长春观",
@@ -6169,7 +9575,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.54022,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/143168c0d69f0fcb3494c7890b7c9106"
+      "image": "http://store.is.autonavi.com/showpic/143168c0d69f0fcb3494c7890b7c9106",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/143168c0d69f0fcb3494c7890b7c9106",
+        "https://store.is.autonavi.com/showpic/7d3476740b5698650000000960098081?type=pic",
+        "https://store.is.autonavi.com/showpic/332748f6ccaa637e0000002239534865?type=pic"
+      ]
     },
     {
       "name": "洪山广场",
@@ -6178,7 +9589,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.545068,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/fe18693b3d69502851cff6a90ad676cf"
+      "image": "http://store.is.autonavi.com/showpic/fe18693b3d69502851cff6a90ad676cf",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/fe18693b3d69502851cff6a90ad676cf",
+        "https://aos-comment.amap.com/B001B19J3D/comment/content_media_external_file_468_1760834210731_13924767.jpg",
+        "https://aos-comment.amap.com/B001B19J3D/comment/content_media_external_file_468_1760834210732_77658026.jpg"
+      ]
     },
     {
       "name": "归元禅寺",
@@ -6187,7 +9603,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.545268,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/e05f2c0f18d7b6cad935de562d67b749"
+      "image": "http://store.is.autonavi.com/showpic/e05f2c0f18d7b6cad935de562d67b749",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e05f2c0f18d7b6cad935de562d67b749",
+        "https://aos-comment.amap.com/B001B0IZ9W/comment/content_media_external_file_100000530_1767059562672_81058694.jpg",
+        "https://aos-comment.amap.com/B001B0IZ9W/comment/content_media_external_file_100002663_1768900716772_07798755.jpg"
+      ]
     },
     {
       "name": "东湖绿道",
@@ -6196,7 +9617,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.574625,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/c2f018681ab2bb1b332a31145d726b3e"
+      "image": "http://store.is.autonavi.com/showpic/c2f018681ab2bb1b332a31145d726b3e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c2f018681ab2bb1b332a31145d726b3e",
+        "http://store.is.autonavi.com/showpic/80b4d69ac42db15149aa8a0f27722675",
+        "http://store.is.autonavi.com/showpic/3cfcbc79c085e5bac01a14714025068b"
+      ]
     },
     {
       "name": "东湖听涛景区",
@@ -6205,7 +9631,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.564713,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/e3dd6f1c3d2b8339e352e8d696065981"
+      "image": "http://store.is.autonavi.com/showpic/e3dd6f1c3d2b8339e352e8d696065981",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e3dd6f1c3d2b8339e352e8d696065981",
+        "http://store.is.autonavi.com/showpic/d0d19b0a873770842f07f01e686fc80c",
+        "http://store.is.autonavi.com/showpic/555f7bac417a0c391a0db7d3c33cd137"
+      ]
     },
     {
       "name": "西北湖公园",
@@ -6214,7 +9645,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.598098,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/82038df54c19327c0000002361738664?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/82038df54c19327c0000002361738664?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/82038df54c19327c0000002361738664?type=pic",
+        "https://aos-comment.amap.com/B0KUC5Z2U4/comment/20260319-42cc7f74766f8dccb335055d-353CuLHjep36Zuil4LXEep.jpg",
+        "https://aos-comment.amap.com/comment/content_service__1770373693361_38468426_1770373715288_27503384.jpg"
+      ]
     },
     {
       "name": "东湖生态旅游风景区梨园",
@@ -6223,7 +9659,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.571885,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0FFHFEAL3/comment/content_media_external_file_1000048834_ss__1769400852242_08317363.jpg"
+      "image": "https://aos-comment.amap.com/B0FFHFEAL3/comment/content_media_external_file_1000048834_ss__1769400852242_08317363.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFHFEAL3/comment/content_media_external_file_1000048834_ss__1769400852242_08317363.jpg",
+        "https://aos-comment.amap.com/B0FFHFEAL3/comment/017FF3EF_4B45_4065_92D4_A8ABB6941D65_L0_001_1170_80_1766144132608_13515025.jpg",
+        "https://store.is.autonavi.com/showpic/349eed179f04ae080000003330330955?type=pic"
+      ]
     },
     {
       "name": "沙湖公园C区",
@@ -6232,7 +9673,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.557673,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/f8e2f41ea24d810345301ef86ac1653e"
+      "image": "https://store.is.autonavi.com/showpic/f8e2f41ea24d810345301ef86ac1653e",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/f8e2f41ea24d810345301ef86ac1653e",
+        "https://store.is.autonavi.com/showpic/64218bc888e3d7d40000002533440125?type=pic",
+        "https://aos-comment.amap.com/B0FFK4UPJL/comment/content_media_external_file_1000056655_ss__1765465348101_67947686.jpg"
+      ]
     },
     {
       "name": "武汉长江大桥观景台",
@@ -6241,7 +9687,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.547325,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/711f0ba8dfaaab480000006117776973?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/711f0ba8dfaaab480000006117776973?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/711f0ba8dfaaab480000006117776973?type=pic",
+        "https://store.is.autonavi.com/showpic/1543c5bf7128452f0000008254090134",
+        "https://store.is.autonavi.com/showpic/a7d77a27d8f57a940000002909284275?type=pic"
+      ]
     },
     {
       "name": "汉阳门武昌里",
@@ -6250,7 +9701,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.547757,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0K1HSMKN3/comment/content_media_external_file_1000029544_ss__1766552021067_11558502.jpg"
+      "image": "https://aos-comment.amap.com/B0K1HSMKN3/comment/content_media_external_file_1000029544_ss__1766552021067_11558502.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0K1HSMKN3/comment/content_media_external_file_1000029544_ss__1766552021067_11558502.jpg",
+        "https://aos-comment.amap.com/B0K1HSMKN3/comment/38C6DAAE_E906_4881_92E1_EB5CA736B639_L0_001_1440_108_1766446716675_72648069.jpg",
+        "https://store.is.autonavi.com/showpic/67a62568b21a8e4d9dce2df93be1893d"
+      ]
     },
     {
       "name": "鹦鹉洲汉阳桥梁主题公园",
@@ -6259,7 +9715,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.535954,
       "category": "主题乐园",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/50c53d1f08d674d15cae6c10ed293dc7"
+      "image": "http://store.is.autonavi.com/showpic/50c53d1f08d674d15cae6c10ed293dc7",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/50c53d1f08d674d15cae6c10ed293dc7",
+        "https://store.is.autonavi.com/showpic/95762c9fdb822aef0000003135056198?type=pic",
+        "https://store.is.autonavi.com/showpic/ea5054a9ffefcdf70000000728606109?type=pic"
+      ]
     },
     {
       "name": "紫阳公园",
@@ -6268,7 +9729,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.529997,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/1d7ef37bace1a58a55b154ab145bd29a"
+      "image": "https://store.is.autonavi.com/showpic/1d7ef37bace1a58a55b154ab145bd29a",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/1d7ef37bace1a58a55b154ab145bd29a",
+        "https://aos-comment.amap.com/B001B08C1J/comment/1D640EA3_CBC0_464D_803D_F9BE29DD3E13_L0_001_1320_71_1772191154110_38263078.jpg",
+        "https://store.is.autonavi.com/showpic/1e87ea0a643a2d6a0000003039358521?type=pic"
+      ]
     },
     {
       "name": "武汉动物园",
@@ -6277,7 +9743,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.541448,
       "category": "主题乐园",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/188b59f27a892caf0a2b082398d647bf"
+      "image": "http://store.is.autonavi.com/showpic/188b59f27a892caf0a2b082398d647bf",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/188b59f27a892caf0a2b082398d647bf",
+        "https://store.is.autonavi.com/showpic/f242fd04d33cfb0c0000003301258490?type=pic",
+        "http://store.is.autonavi.com/showpic/e5a6e5e431477d926d750b2bd37f02ae"
+      ]
     },
     {
       "name": "汉口江滩2期",
@@ -6286,7 +9757,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.599736,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B001B0II5Z/comment/content_media_external_images_media_1000032566_ss__1746371429409_67163762.jpg"
+      "image": "https://aos-comment.amap.com/B001B0II5Z/comment/content_media_external_images_media_1000032566_ss__1746371429409_67163762.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001B0II5Z/comment/content_media_external_images_media_1000032566_ss__1746371429409_67163762.jpg",
+        "https://aos-comment.amap.com/B001B0II5Z/comment/content_media_external_file_10813_1764792837920_00097517.jpg",
+        "https://aos-comment.amap.com/B001B0II5Z/comment/content_media_external_images_media_1000006258_ss__1726361253473_12688416.jpg"
+      ]
     },
     {
       "name": "平和打包厂旧址",
@@ -6295,7 +9771,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.582585,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/68cc4941ead983c6f2b37e3d678721b1"
+      "image": "http://store.is.autonavi.com/showpic/68cc4941ead983c6f2b37e3d678721b1",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/68cc4941ead983c6f2b37e3d678721b1",
+        "http://store.is.autonavi.com/showpic/b667555cd4c3bea1c5f0cf6b1a1fab1c",
+        "http://store.is.autonavi.com/showpic/2eafc684994c3a67c86e0694da492709"
+      ]
     },
     {
       "name": "汉口江滩三阳广场",
@@ -6304,7 +9785,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.595627,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B001B1FOKC/comment/%5B2025-12-11-22-37-13%5D3D5AC4BC-7254-49DE-907F-F1B48315598_1765463834776_10160586.jpg"
+      "image": "https://aos-comment.amap.com/B001B1FOKC/comment/%5B2025-12-11-22-37-13%5D3D5AC4BC-7254-49DE-907F-F1B48315598_1765463834776_10160586.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001B1FOKC/comment/%5B2025-12-11-22-37-13%5D3D5AC4BC-7254-49DE-907F-F1B48315598_1765463834776_10160586.jpg",
+        "https://store.is.autonavi.com/showpic/d4454adf3784ab890000000727892027?type=pic",
+        "https://aos-comment.amap.com/B001B1FOKC/comment/content_media_external_file_1000135037_ss__1763877188044_55450603.jpg"
+      ]
     },
     {
       "name": "宝岛公园",
@@ -6313,7 +9799,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.597736,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/d9e21515422aa9f4be83006e9c0aee7c"
+      "image": "http://store.is.autonavi.com/showpic/d9e21515422aa9f4be83006e9c0aee7c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d9e21515422aa9f4be83006e9c0aee7c",
+        "http://store.is.autonavi.com/showpic/e42f5f20750cfc359488e6aaffefad42",
+        "https://aos-comment.amap.com/comment/content_service__1770909598699_98029469_1770909692177_78969069.jpg"
+      ]
     },
     {
       "name": "汉口水塔",
@@ -6322,7 +9813,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.579094,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B001B18OIZ/comment/30BBD730_DB85_4221_8EA9_C67BB5E9AA96_L0_001_1179_81_1756774976898_13330196.jpg"
+      "image": "https://aos-comment.amap.com/B001B18OIZ/comment/30BBD730_DB85_4221_8EA9_C67BB5E9AA96_L0_001_1179_81_1756774976898_13330196.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001B18OIZ/comment/30BBD730_DB85_4221_8EA9_C67BB5E9AA96_L0_001_1179_81_1756774976898_13330196.jpg",
+        "https://aos-comment.amap.com/B001B18OIZ/comment/bf925e2777c8d68c7d11e2b5bfb145e5_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/467cc2dc36e513910000004251126649"
+      ]
     },
     {
       "name": "四美塘文化公园",
@@ -6331,7 +9827,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.598548,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0J3LH81C7/comment/6A51428D_0447_48C0_9F94_67C472A9241C_L0_001_1440_177_1757573622180_79228915.jpg"
+      "image": "https://aos-comment.amap.com/B0J3LH81C7/comment/6A51428D_0447_48C0_9F94_67C472A9241C_L0_001_1440_177_1757573622180_79228915.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0J3LH81C7/comment/6A51428D_0447_48C0_9F94_67C472A9241C_L0_001_1440_177_1757573622180_79228915.jpg",
+        "https://aos-comment.amap.com/B0J3LH81C7/comment/content_media_external_file_4321_1766595602093_24665994.jpg",
+        "https://aos-comment.amap.com/B0J3LH81C7/comment/content_media_external_images_media_100017771_1742891777473_92112873.jpg"
+      ]
     },
     {
       "name": "长江荣耀号游船",
@@ -6340,7 +9841,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.580278,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/811b0df814207d9b2d75963df96b27b0"
+      "image": "http://store.is.autonavi.com/showpic/811b0df814207d9b2d75963df96b27b0",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/811b0df814207d9b2d75963df96b27b0",
+        "https://store.is.autonavi.com/showpic/f69d05a631bed3c1f5a4202954275587",
+        "https://store.is.autonavi.com/showpic/7f5901e15259d6c1442f3be0b63a6fea"
+      ]
     },
     {
       "name": "古琴台",
@@ -6349,7 +9855,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.554339,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/75f5a9f9ad32386fd72e7313daa561c8"
+      "image": "http://store.is.autonavi.com/showpic/75f5a9f9ad32386fd72e7313daa561c8",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/75f5a9f9ad32386fd72e7313daa561c8",
+        "http://store.is.autonavi.com/showpic/c158af43394ba3148cfcb06d62ba721b",
+        "http://store.is.autonavi.com/showpic/585eb1c0dd804e78f3b3f0574726fe4c"
+      ]
     },
     {
       "name": "龟山电视塔",
@@ -6358,7 +9869,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.555545,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/ca3a713a0f9f18b4a235232021255ca0"
+      "image": "http://store.is.autonavi.com/showpic/ca3a713a0f9f18b4a235232021255ca0",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ca3a713a0f9f18b4a235232021255ca0",
+        "https://store.is.autonavi.com/showpic/949f3d3159d1d5980000008276298711?type=pic",
+        "https://aos-comment.amap.com/B001B0J038/comment/content_media_external_images_media_3412_1733028133036_89445462.jpg"
+      ]
     },
     {
       "name": "后襄河公园",
@@ -6367,7 +9883,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.609113,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/504de2cf58e5cc0a65d803ce2c0d024a"
+      "image": "http://store.is.autonavi.com/showpic/504de2cf58e5cc0a65d803ce2c0d024a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/504de2cf58e5cc0a65d803ce2c0d024a",
+        "https://aos-comment.amap.com/B001B15SE2/comment/content_media_external_file_1000116140_ss__1749088703068_82600397.jpg",
+        "https://aos-comment.amap.com/B001B15SE2/comment/content_media_external_file_100009369_1757299832265_53536054.jpg"
+      ]
     },
     {
       "name": "首义公园",
@@ -6376,7 +9897,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.541877,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B001B0JOYC/comment/content_media_external_file_100001348_1768912331453_97572088.jpg"
+      "image": "https://aos-comment.amap.com/B001B0JOYC/comment/content_media_external_file_100001348_1768912331453_97572088.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001B0JOYC/comment/content_media_external_file_100001348_1768912331453_97572088.jpg",
+        "https://store.is.autonavi.com/showpic/954342970a55b5a20000002644344553?type=pic",
+        "https://store.is.autonavi.com/showpic/d8b1e4f27c5997030000003376460330?type=pic"
+      ]
     },
     {
       "name": "东湖海洋乐园",
@@ -6385,7 +9911,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.574117,
       "category": "主题乐园",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/497675223f102399e66462c6a4b20890"
+      "image": "http://store.is.autonavi.com/showpic/497675223f102399e66462c6a4b20890",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/497675223f102399e66462c6a4b20890",
+        "http://store.is.autonavi.com/showpic/87a56c2f14435817ea5d6eec380c0e60",
+        "http://store.is.autonavi.com/showpic/38f22d3598bfa5f97ccee7c3ddb25b33"
+      ]
     },
     {
       "name": "宋庆龄汉口旧居纪念馆",
@@ -6394,7 +9925,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.586486,
       "category": "历史人文",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/2aa3cc98f824ef7cb5b0e9d7a6e62d0d"
+      "image": "https://store.is.autonavi.com/showpic/2aa3cc98f824ef7cb5b0e9d7a6e62d0d",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/2aa3cc98f824ef7cb5b0e9d7a6e62d0d",
+        "https://store.is.autonavi.com/showpic/fd074a1209b89bab0000006227300569?type=pic",
+        "https://store.is.autonavi.com/showpic/d187128a05a7b0187eaf14d65e768642"
+      ]
     },
     {
       "name": "汉口江滩3期",
@@ -6403,7 +9939,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.618756,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B001B0I1CR/comment/content_media_external_images_media_125631_ss__1734408161759_12524366.jpg"
+      "image": "https://aos-comment.amap.com/B001B0I1CR/comment/content_media_external_images_media_125631_ss__1734408161759_12524366.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001B0I1CR/comment/content_media_external_images_media_125631_ss__1734408161759_12524366.jpg",
+        "https://aos-comment.amap.com/B001B0I1CR/comment/20260314-2d5ed4a714e24e1e062b96c7-2Uk1NxAy3Tz5jxq03iUxfz.jpg",
+        "https://aos-comment.amap.com/B001B0I1CR/comment/content_media_external_images_media_125633_ss__1734408161758_79369984.jpg"
+      ]
     },
     {
       "name": "船长9号游船",
@@ -6412,7 +9953,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.580274,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/4e4e6ba1b975a893344355d100ecf695"
+      "image": "http://store.is.autonavi.com/showpic/4e4e6ba1b975a893344355d100ecf695",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/4e4e6ba1b975a893344355d100ecf695",
+        "http://store.is.autonavi.com/showpic/c063b31990559437f2ab710d23751f0b",
+        "http://store.is.autonavi.com/showpic/4b65f81035b157e5c5f70b26880b4036"
+      ]
     },
     {
       "name": "古琴号游船",
@@ -6421,7 +9967,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.577742,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/eba7acdc5261d37d0000008277980329?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/eba7acdc5261d37d0000008277980329?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/eba7acdc5261d37d0000008277980329?type=pic",
+        "https://store.is.autonavi.com/showpic/a829e263ecb725320000003000174351?type=pic",
+        "https://store.is.autonavi.com/showpic/a87d4673059d47c00000008277982311?type=pic"
+      ]
     },
     {
       "name": "汉口东正教堂",
@@ -6430,7 +9981,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.584019,
       "category": "宗教寺庙",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0JRG5387F/comment/content_media_external_file_1000044813_ss__1760677418817_13251836.jpg"
+      "image": "https://aos-comment.amap.com/B0JRG5387F/comment/content_media_external_file_1000044813_ss__1760677418817_13251836.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0JRG5387F/comment/content_media_external_file_1000044813_ss__1760677418817_13251836.jpg",
+        "https://aos-comment.amap.com/comment/20260325-856f97f26b5360baca89b06b-AZy3bijQ6hS6rX3of343OQ.jpg",
+        "https://aos-comment.amap.com/B0JRG5387F/comment/542E6B77_D0CB_4AF0_AB16_FE19EA6C42CC_L0_001_1170_151_1763507319960_75346383.jpg"
+      ]
     },
     {
       "name": "洪山公园",
@@ -6439,7 +9995,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.534081,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B001B0IZVM/comment/85ccd3d0fdc0dcae499253ac32a26f39_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B001B0IZVM/comment/85ccd3d0fdc0dcae499253ac32a26f39_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001B0IZVM/comment/85ccd3d0fdc0dcae499253ac32a26f39_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B001B0IZVM/comment/5809f439e9e2dabc44edead817a05fbc_2048_2048_80.jpg",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/478c9610-f047-4118-ac4e-5f4cd1771462.jpg"
+      ]
     },
     {
       "name": "詹天佑故居",
@@ -6448,7 +10009,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.585126,
       "category": "历史人文",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/9054952a6cddf4498f428ef77d41c5a6"
+      "image": "http://store.is.autonavi.com/showpic/9054952a6cddf4498f428ef77d41c5a6",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9054952a6cddf4498f428ef77d41c5a6",
+        "https://store.is.autonavi.com/showpic/473d70c80d08a5140000003086862213?type=pic",
+        "https://store.is.autonavi.com/showpic/98a106096c56c22d0ae36e73c4377cc0"
+      ]
     },
     {
       "name": "大禹神话园",
@@ -6457,7 +10023,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.555904,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/6d652f2531fb9173fe85507c962aaf23"
+      "image": "http://store.is.autonavi.com/showpic/6d652f2531fb9173fe85507c962aaf23",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6d652f2531fb9173fe85507c962aaf23",
+        "https://aos-comment.amap.com/B001B0J03A/comment/4de3c5242e91fbfd5c636e6921c98ba6_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B001B0J03A/comment/876E8400_D40D_444E_9487_313D32122515_L0_001_2016_113_1764503763373_95860717.jpg"
+      ]
     },
     {
       "name": "帽子树",
@@ -6466,7 +10037,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.599292,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/f64a3691916323d606001619ba01844f"
+      "image": "https://store.is.autonavi.com/showpic/f64a3691916323d606001619ba01844f",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/f64a3691916323d606001619ba01844f",
+        "https://store.is.autonavi.com/showpic/b4d10a06159a320a0000003087432627?type=pic",
+        "https://aos-comment.amap.com/B0K2Z75H0J/comment/content_media_external_file_1000090344_ss__1766822127551_75884562.jpg"
+      ]
     },
     {
       "name": "江滩月亮湾景观区",
@@ -6475,7 +10051,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.587649,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B001B0IWJ7/comment/2026-03-22-16-41-02%2B2E7DBF63-EDEC-4DCB-A814-B721F021C12_1774168901689_32388469.jpg"
+      "image": "https://aos-comment.amap.com/B001B0IWJ7/comment/2026-03-22-16-41-02%2B2E7DBF63-EDEC-4DCB-A814-B721F021C12_1774168901689_32388469.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001B0IWJ7/comment/2026-03-22-16-41-02%2B2E7DBF63-EDEC-4DCB-A814-B721F021C12_1774168901689_32388469.jpg",
+        "https://store.is.autonavi.com/showpic/75a4636f29f456170000000701332784?type=pic",
+        "https://aos-comment.amap.com/B001B0IWJ7/comment/D626C77B_8396_4167_ACB6_C6A37078B8D2_L0_001_2000_150_1758014530989_35762903.jpg"
+      ]
     },
     {
       "name": "八路军武汉办事处旧址纪念馆",
@@ -6484,7 +10065,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.606152,
       "category": "历史人文",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/d98831576b9b25266f530ac11f54749e"
+      "image": "http://store.is.autonavi.com/showpic/d98831576b9b25266f530ac11f54749e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d98831576b9b25266f530ac11f54749e",
+        "https://store.is.autonavi.com/showpic/8612e84e5110a070d664298a5caa1fd4",
+        "https://store.is.autonavi.com/showpic/5d59b8fc4c207cf10dc8e5d7ed56ad5a"
+      ]
     },
     {
       "name": "龙王庙公园",
@@ -6493,7 +10079,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.567042,
       "category": "宗教寺庙",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/9a41496d68523760b02e6af826860d5a"
+      "image": "http://store.is.autonavi.com/showpic/9a41496d68523760b02e6af826860d5a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9a41496d68523760b02e6af826860d5a",
+        "http://store.is.autonavi.com/showpic/e6a6bfd560f2a4a0a7a1b5ec9a931385",
+        "https://aos-comment.amap.com/B001B0J07O/comment/173001719703_1730017301651_43612066.jpg"
+      ]
     },
     {
       "name": "天主教汉口总教区上海路主教座堂天主堂",
@@ -6502,7 +10093,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 30.580235,
       "category": "宗教寺庙",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B001B0IO00/comment/%5B2025-09-06-00-47-11%5D5FFE5F18-EB10-467B-A2A8-4EB8D0A4B96_1757090832745_35943684.jpg"
+      "image": "https://aos-comment.amap.com/B001B0IO00/comment/%5B2025-09-06-00-47-11%5D5FFE5F18-EB10-467B-A2A8-4EB8D0A4B96_1757090832745_35943684.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001B0IO00/comment/%5B2025-09-06-00-47-11%5D5FFE5F18-EB10-467B-A2A8-4EB8D0A4B96_1757090832745_35943684.jpg",
+        "https://aos-comment.amap.com/B001B0IO00/comment/202509_05-15111_1757056281506_32989741.jpg",
+        "https://store.is.autonavi.com/showpic/c35e37b0453ed8006a8b79c97851abe2"
+      ]
     }
   ],
   "长沙": [
@@ -6513,7 +10109,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.196505,
       "category": "城市地标",
       "rating": 4.9,
-      "image": "https://store.is.autonavi.com/showpic/2dec1ebcb5a424130000009073370594?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/2dec1ebcb5a424130000009073370594?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/2dec1ebcb5a424130000009073370594?type=pic",
+        "https://store.is.autonavi.com/showpic/56cd7cc24f796a46f9ee890fb411b0ec",
+        "https://store.is.autonavi.com/showpic/55e361329013a0c40729f6c0aaa2e11b"
+      ]
     },
     {
       "name": "五一广场",
@@ -6522,7 +10123,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.1965,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/28eea7a8787e27d80000006434078888?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/28eea7a8787e27d80000006434078888?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/28eea7a8787e27d80000006434078888?type=pic",
+        "https://store.is.autonavi.com/showpic/84ee0f3a3b43eb2bce107df2eb174ea2",
+        "http://store.is.autonavi.com/showpic/e577b4119b8c7b6188f3e082a153d342"
+      ]
     },
     {
       "name": "岳麓山风景名胜区",
@@ -6531,7 +10137,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.183601,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/6550dbaf306de76e79234b355c664346"
+      "image": "http://store.is.autonavi.com/showpic/6550dbaf306de76e79234b355c664346",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6550dbaf306de76e79234b355c664346",
+        "http://store.is.autonavi.com/showpic/8ae07fa2a24a3534bb95f8f3517b50e2",
+        "http://store.is.autonavi.com/showpic/027249d30cdcb69d9119af95e5f35896"
+      ]
     },
     {
       "name": "潮宗街区",
@@ -6540,7 +10151,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.202487,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/1443a7e81d9772b32a74cbb6213c894a"
+      "image": "http://store.is.autonavi.com/showpic/1443a7e81d9772b32a74cbb6213c894a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/1443a7e81d9772b32a74cbb6213c894a",
+        "https://store.is.autonavi.com/showpic/a3b3e544a72de3d60000005095222894?type=pic",
+        "https://store.is.autonavi.com/showpic/8e68c08a7233a24a0000007899688308?type=pic"
+      ]
     },
     {
       "name": "太平老街历史文化街区",
@@ -6549,7 +10165,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.193573,
       "category": "古镇村落",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/7d7dc5535c45fe0653b85fc35627518c"
+      "image": "http://store.is.autonavi.com/showpic/7d7dc5535c45fe0653b85fc35627518c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/7d7dc5535c45fe0653b85fc35627518c",
+        "http://store.is.autonavi.com/showpic/2739bd01ac8ffa6fd4e8b162309adf9d",
+        "https://store.is.autonavi.com/showpic/d6cf659fc2279d000000003754150696?type=pic"
+      ]
     },
     {
       "name": "橘子洲头",
@@ -6558,7 +10179,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.18683,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/9543826f47de68b90000003062916059?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/9543826f47de68b90000003062916059?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/9543826f47de68b90000003062916059?type=pic",
+        "https://store.is.autonavi.com/showpic/1adc958b908c34850000007117670900?type=pic",
+        "https://store.is.autonavi.com/showpic/c4f38839750a91080000003057310513?type=pic"
+      ]
     },
     {
       "name": "杜甫江阁",
@@ -6567,7 +10193,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.184442,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/1edd67cf6e7a414fff4080f0c17cd674"
+      "image": "http://store.is.autonavi.com/showpic/1edd67cf6e7a414fff4080f0c17cd674",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/1edd67cf6e7a414fff4080f0c17cd674",
+        "http://store.is.autonavi.com/showpic/4937ed9622db55f5065405f347b0f29e",
+        "http://store.is.autonavi.com/showpic/944e373659d158d7ba2103fac77463e4"
+      ]
     },
     {
       "name": "岳麓书院",
@@ -6576,7 +10207,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.180397,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/229ac17e89cf0ac66e747253b0f05110"
+      "image": "http://store.is.autonavi.com/showpic/229ac17e89cf0ac66e747253b0f05110",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/229ac17e89cf0ac66e747253b0f05110",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/cc07110e-e554-4599-bc44-b0721dbb510f.jpg",
+        "https://store.is.autonavi.com/showpic/37d718cb859c76e90000003576304378?type=pic"
+      ]
     },
     {
       "name": "湖南烈士公园",
@@ -6585,7 +10221,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.209521,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "https://aos-comment.amap.com/B02DB0TWXG/comment/f08389c45644270bc71bbdce7428e3ab_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B02DB0TWXG/comment/f08389c45644270bc71bbdce7428e3ab_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B02DB0TWXG/comment/f08389c45644270bc71bbdce7428e3ab_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/56bff2149e75c3c5853f988069c3146a",
+        "https://store.is.autonavi.com/showpic/99e00cf4268f03050000002344924837?type=pic"
+      ]
     },
     {
       "name": "恰同学少年广场",
@@ -6594,7 +10235,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.164342,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/e2a992a808bad4330000003803556461?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/e2a992a808bad4330000003803556461?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/e2a992a808bad4330000003803556461?type=pic",
+        "https://store.is.autonavi.com/showpic/583c1351c3cbe1ee0000003699710515?type=pic",
+        "https://store.is.autonavi.com/showpic/2f010827bf3838f60000003673364401?type=pic"
+      ]
     },
     {
       "name": "zoolung zoolung动物主题乐园(海信广场长沙店)",
@@ -6603,7 +10249,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.189798,
       "category": "主题乐园",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/b3e407401da9e5f4db7259a6def962ad"
+      "image": "http://store.is.autonavi.com/showpic/b3e407401da9e5f4db7259a6def962ad",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b3e407401da9e5f4db7259a6def962ad",
+        "http://store.is.autonavi.com/showpic/6f5151ced51611cdca18fc645203d8be",
+        "http://store.is.autonavi.com/showpic/9f572cff9c74d86085b86e273cfd631b"
+      ]
     },
     {
       "name": "湖南松雅湖国家湿地公园",
@@ -6612,7 +10263,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.270452,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/e60778eb204785f8b15e017c5a0ccb74"
+      "image": "http://store.is.autonavi.com/showpic/e60778eb204785f8b15e017c5a0ccb74",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e60778eb204785f8b15e017c5a0ccb74",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/d5aa27aa-a49b-4f02-abd3-3131f60c0ca6.jpg",
+        "http://store.is.autonavi.com/showpic/70cc6fb76d2089513163e5bc3a250c11"
+      ]
     },
     {
       "name": "咸嘉湖景区",
@@ -6621,7 +10277,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.209154,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/6d564b73-59fd-4dd6-9838-df21984852f9.jpeg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/6d564b73-59fd-4dd6-9838-df21984852f9.jpeg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/6d564b73-59fd-4dd6-9838-df21984852f9.jpeg",
+        "http://store.is.autonavi.com/showpic/a56565e43e5079783ba23543385ec30e",
+        "http://store.is.autonavi.com/showpic/8e4b6f8235235d3966cc165e8db4806d"
+      ]
     },
     {
       "name": "古开福寺",
@@ -6630,7 +10291,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.224436,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/25be092f0858fbff54461575928812d7"
+      "image": "http://store.is.autonavi.com/showpic/25be092f0858fbff54461575928812d7",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/25be092f0858fbff54461575928812d7",
+        "http://store.is.autonavi.com/showpic/de0e47dad56299c713193bdc5cdc9cab",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/a4f0a06a-80ba-470d-b1e3-abe9d652abf2.jpg"
+      ]
     },
     {
       "name": "梅溪湖公园",
@@ -6639,7 +10305,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.19284,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/0a49b3ca633bd0b0e1aaaabc53f6e4f4"
+      "image": "http://store.is.autonavi.com/showpic/0a49b3ca633bd0b0e1aaaabc53f6e4f4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0a49b3ca633bd0b0e1aaaabc53f6e4f4",
+        "http://store.is.autonavi.com/showpic/5dab978f266027e8e917614b13eb1474",
+        "https://store.is.autonavi.com/showpic/b097f3d538e2178e0000003034040095?type=pic"
+      ]
     },
     {
       "name": "东方红广场",
@@ -6648,7 +10319,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.179428,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/722e59a7d31d3d190000003145270516?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/722e59a7d31d3d190000003145270516?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/722e59a7d31d3d190000003145270516?type=pic",
+        "https://aos-comment.amap.com/comment/content_service__1769496199731_48474517_1769496271616_99241129.jpg",
+        "https://aos-comment.amap.com/B02DB0TH84/comment/content_media_external_file_1000134468_ss__1759944472159_46846485.jpg"
+      ]
     },
     {
       "name": "毛泽东青年艺术雕塑",
@@ -6657,7 +10333,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.167602,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/e005aac63d2bd4abb4cb8a140cf4e38b"
+      "image": "http://store.is.autonavi.com/showpic/e005aac63d2bd4abb4cb8a140cf4e38b",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e005aac63d2bd4abb4cb8a140cf4e38b",
+        "http://store.is.autonavi.com/showpic/edba8b84309598a3c299a002f6a1678d",
+        "https://store.is.autonavi.com/showpic/972495073ac9828f0000003114708969"
+      ]
     },
     {
       "name": "后湖设计创意园区",
@@ -6666,7 +10347,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.160951,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/f9c13153b1b10df0830d81c1f3d4a323"
+      "image": "http://store.is.autonavi.com/showpic/f9c13153b1b10df0830d81c1f3d4a323",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/f9c13153b1b10df0830d81c1f3d4a323",
+        "https://store.is.autonavi.com/showpic/772fecbb58cb6ae80000002749542267?type=pic",
+        "https://store.is.autonavi.com/showpic/a72b584af2eaa90cfbdfc68e1eab45ad"
+      ]
     },
     {
       "name": "桃花岭景区",
@@ -6675,7 +10361,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.174134,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/fead4b14111a5cd000b2a8d3a6fc7e92"
+      "image": "http://store.is.autonavi.com/showpic/fead4b14111a5cd000b2a8d3a6fc7e92",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/fead4b14111a5cd000b2a8d3a6fc7e92",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/9c3d5a95-d608-4f58-b6c5-6ba543b19988.jpg",
+        "https://aos-comment.amap.com/B0FFF0JR5S/comment/content_media_external_file_5592_1772668632559_10160385.jpg"
+      ]
     },
     {
       "name": "谷山宝宁寺",
@@ -6684,7 +10375,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.261439,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0FFH57TPA/comment/content_media_external_file_100005016_1769671222247_42959505.jpg"
+      "image": "https://aos-comment.amap.com/B0FFH57TPA/comment/content_media_external_file_100005016_1769671222247_42959505.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFH57TPA/comment/content_media_external_file_100005016_1769671222247_42959505.jpg",
+        "https://aos-comment.amap.com/B0FFH57TPA/comment/F86EF306_AA38_489A_B570_6B2F52D824EB_L0_001_1500_200_1766830611472_46683087.jpg",
+        "https://aos-comment.amap.com/B0FFH57TPA/comment/content_media_external_file_1000011510_ss__1760511355150_13512752.jpg"
+      ]
     },
     {
       "name": "月亮岛",
@@ -6693,7 +10389,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.299704,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/289b770073d2fc4e2ef35122d0c8c6a4"
+      "image": "http://store.is.autonavi.com/showpic/289b770073d2fc4e2ef35122d0c8c6a4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/289b770073d2fc4e2ef35122d0c8c6a4",
+        "https://store.is.autonavi.com/showpic/724d011585230d220000000962960219?type=pic",
+        "https://store.is.autonavi.com/showpic/62f645dbdf8a2ae60000006132402796?type=pic"
+      ]
     },
     {
       "name": "尖山湖公园",
@@ -6702,7 +10403,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.238768,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/7810423594274284f182a7e426e8ac9f"
+      "image": "http://store.is.autonavi.com/showpic/7810423594274284f182a7e426e8ac9f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/7810423594274284f182a7e426e8ac9f",
+        "http://store.is.autonavi.com/showpic/9c521031a0049c1d13aa98f5f073ef6f",
+        "https://store.is.autonavi.com/showpic/e2b14eb376fcb06c91c60d5bb7ab3b99"
+      ]
     },
     {
       "name": "长沙湘江海洋王国",
@@ -6711,7 +10417,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.078916,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/1e84d7a865ebe2d5c622e1c7a0ba40e0"
+      "image": "http://store.is.autonavi.com/showpic/1e84d7a865ebe2d5c622e1c7a0ba40e0",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/1e84d7a865ebe2d5c622e1c7a0ba40e0",
+        "http://store.is.autonavi.com/showpic/e1b1652eb3ec2fe1585ef7f3c5893805",
+        "http://store.is.autonavi.com/showpic/82f0830f3cc1f78421733ca15d4afe32"
+      ]
     },
     {
       "name": "鸭嘴公园",
@@ -6720,7 +10431,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.220504,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/cd3d4c86ddff5f7d1695b758f5c16fea"
+      "image": "http://store.is.autonavi.com/showpic/cd3d4c86ddff5f7d1695b758f5c16fea",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/cd3d4c86ddff5f7d1695b758f5c16fea",
+        "https://store.is.autonavi.com/showpic/f680a5a62b2c55130000001744494298?type=pic",
+        "https://aos-comment.amap.com/B0IAAS5MWU/comment/content_media_external_file_100001514_1757839857128_22617093.jpg"
+      ]
     },
     {
       "name": "洋湖国家湿地公园",
@@ -6729,7 +10445,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.125855,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/d04434335d9c96305c700febe58143ef"
+      "image": "http://store.is.autonavi.com/showpic/d04434335d9c96305c700febe58143ef",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d04434335d9c96305c700febe58143ef",
+        "http://store.is.autonavi.com/showpic/c91d3e8dbdbfbdaf0727662c93ceb981",
+        "https://store.is.autonavi.com/showpic/fdfe105787d93fed0000003099598822?type=pic"
+      ]
     },
     {
       "name": "南郊公园",
@@ -6738,7 +10459,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.140944,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/f11d471563dd92eeed1b333e81821b08"
+      "image": "http://store.is.autonavi.com/showpic/f11d471563dd92eeed1b333e81821b08",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/f11d471563dd92eeed1b333e81821b08",
+        "http://store.is.autonavi.com/showpic/9903ea9e9be6199dd99e4b3c0a3c9fe1",
+        "http://store.is.autonavi.com/showpic/1a34dd0c011d87afb144c2281d7ce618"
+      ]
     },
     {
       "name": "月湖公园",
@@ -6747,7 +10473,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.237564,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/6f357532e6e95d97ff770195215b83c8"
+      "image": "http://store.is.autonavi.com/showpic/6f357532e6e95d97ff770195215b83c8",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6f357532e6e95d97ff770195215b83c8",
+        "http://store.is.autonavi.com/showpic/1402aaf22b4c78ce14ae2fbad96c4a1b",
+        "http://store.is.autonavi.com/showpic/8d64c7bfebb2c90dc009968260cd3c0d"
+      ]
     },
     {
       "name": "长沙世界之窗",
@@ -6756,7 +10487,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.236708,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/90c13ba4b45b513c20cf6d3cc7820ab4"
+      "image": "http://store.is.autonavi.com/showpic/90c13ba4b45b513c20cf6d3cc7820ab4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/90c13ba4b45b513c20cf6d3cc7820ab4",
+        "https://aos-comment.amap.com/B02DB068W5/comment/EF7ED005_C758_4DF3_9414_F21667286D54_L0_001_2000_150_1767263098390_58656832.jpg",
+        "http://store.is.autonavi.com/showpic/a47eaf35e74a5c8c053e8f625083b62b"
+      ]
     },
     {
       "name": "大泽湖近自然湿地公园",
@@ -6765,7 +10501,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.317922,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/235544ab9be29f570000005676402049?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/235544ab9be29f570000005676402049?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/235544ab9be29f570000005676402049?type=pic",
+        "https://store.is.autonavi.com/showpic/ccb714eca313c5060000006322080362?type=pic",
+        "https://aos-comment.amap.com/B0IKFC8BUJ/comment/2CB5F2E1_9248_465A_875B_106F266CE4B2_L0_001_1534_204_1773484756434_90009522.jpg"
+      ]
     },
     {
       "name": "长沙市望月公园",
@@ -6774,7 +10515,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.211557,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/c2a488a69205c1739f79c8dfc5d39740"
+      "image": "http://store.is.autonavi.com/showpic/c2a488a69205c1739f79c8dfc5d39740",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c2a488a69205c1739f79c8dfc5d39740",
+        "https://store.is.autonavi.com/showpic/7412c098d85f96370000000850272158?type=pic",
+        "https://store.is.autonavi.com/showpic/892000c71b513e060000000728234294?type=pic"
+      ]
     },
     {
       "name": "天心阁",
@@ -6783,7 +10529,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.184754,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/94b3d43e2f96f0ab6fc5e649e1258b75"
+      "image": "http://store.is.autonavi.com/showpic/94b3d43e2f96f0ab6fc5e649e1258b75",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/94b3d43e2f96f0ab6fc5e649e1258b75",
+        "http://store.is.autonavi.com/showpic/5719c9b1434535c110491010ae47d5f1",
+        "http://store.is.autonavi.com/showpic/a94247d6112145ec635b0fd687a32b9b"
+      ]
     },
     {
       "name": "麓谷公园",
@@ -6792,7 +10543,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.213885,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B02DB06633/comment/175279557675_1752795578286_78407278.jpg"
+      "image": "https://aos-comment.amap.com/B02DB06633/comment/175279557675_1752795578286_78407278.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B02DB06633/comment/175279557675_1752795578286_78407278.jpg",
+        "https://aos-comment.amap.com/B02DB06633/comment/175279557018_1752795578285_61829968.jpg",
+        "https://aos-comment.amap.com/B02DB06633/comment/content_media_external_file_116203_ss__1768264097530_62723125.jpg"
+      ]
     },
     {
       "name": "云麓宫",
@@ -6801,7 +10557,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.177348,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0FFFP9QA9/comment/content_media_external_file_100000891_1770187173049_64702994.jpg"
+      "image": "https://aos-comment.amap.com/B0FFFP9QA9/comment/content_media_external_file_100000891_1770187173049_64702994.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFFP9QA9/comment/content_media_external_file_100000891_1770187173049_64702994.jpg",
+        "https://aos-comment.amap.com/B0FFFP9QA9/comment/content_media_external_file_1000016277_ss__1758610850560_27528048.jpg",
+        "https://aos-comment.amap.com/B0FFFP9QA9/comment/content_media_external_images_media_97080_1658055348287_143eb498.jpg"
+      ]
     },
     {
       "name": "三馆一厅旅游码头",
@@ -6810,7 +10571,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.243205,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/2a8e06fd9059547907ebbad21bdf5300"
+      "image": "http://store.is.autonavi.com/showpic/2a8e06fd9059547907ebbad21bdf5300",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/2a8e06fd9059547907ebbad21bdf5300",
+        "http://store.is.autonavi.com/showpic/5493f2ad5e7fea26c7bf2df6b7fc2d9b",
+        "http://store.is.autonavi.com/showpic/a33694a32575f5d75543d4d6a2e86a7d"
+      ]
     },
     {
       "name": "古麓山寺",
@@ -6819,7 +10585,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.180301,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/7022ff2f63cd255b0fdb8a97827e3bf4"
+      "image": "http://store.is.autonavi.com/showpic/7022ff2f63cd255b0fdb8a97827e3bf4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/7022ff2f63cd255b0fdb8a97827e3bf4",
+        "https://aos-comment.amap.com/B02DB0699V/comment/20260315-6f025ecf3d8058e433844bf7-8kyNUnrdLrU64sWEJ16CHq.jpg",
+        "https://aos-comment.amap.com/B02DB0699V/comment/content_media_external_file_1000001460_ss__1762645017131_73984165.jpg"
+      ]
     },
     {
       "name": "橘子洲头碑",
@@ -6828,7 +10599,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.169592,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/0e97ca496cd8d0520000000718252400?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/0e97ca496cd8d0520000000718252400?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/0e97ca496cd8d0520000000718252400?type=pic",
+        "https://aos-comment.amap.com/B0FFFAGIKO/comment/CA32900D_BB28_4EF2_A2DF_0A24DEE0440D_L0_001_2000_150_1763418863659_43881736.jpg",
+        "https://aos-comment.amap.com/B0FFFAGIKO/comment/content_media_external_file_1000027493_ss__1758969263318_66269722.jpg"
+      ]
     },
     {
       "name": "白沙古井",
@@ -6837,7 +10613,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.179063,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B02DB0URIF/comment/content_media_external_images_media_293_1732353462338_93542556.jpg"
+      "image": "https://aos-comment.amap.com/B02DB0URIF/comment/content_media_external_images_media_293_1732353462338_93542556.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B02DB0URIF/comment/content_media_external_images_media_293_1732353462338_93542556.jpg",
+        "https://aos-comment.amap.com/B02DB0URIF/comment/content_media_external_images_media_100006062_1729350500540_29789295.jpg",
+        "https://aos-comment.amap.com/B02DB0URIF/comment/5342e7fbb00987acc248c889916b005d_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "大王山国际旅游度假区",
@@ -6846,7 +10627,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.086337,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/2b1fc1b722fd2c9f5846e42b86658013"
+      "image": "http://store.is.autonavi.com/showpic/2b1fc1b722fd2c9f5846e42b86658013",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/2b1fc1b722fd2c9f5846e42b86658013",
+        "https://aos-comment.amap.com/B0FFFDZFZ5/comment/content_media_external_file_40913_1772771200008_68570225.jpg",
+        "https://store.is.autonavi.com/showpic/89ef77afffe9338a0000003295882960?type=pic"
+      ]
     },
     {
       "name": "观光长廊",
@@ -6855,7 +10641,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.183633,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B02DB06DVZ/comment/content_media_external_images_media_1000179758_ss__1743497161663_97745004.jpg"
+      "image": "https://aos-comment.amap.com/B02DB06DVZ/comment/content_media_external_images_media_1000179758_ss__1743497161663_97745004.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B02DB06DVZ/comment/content_media_external_images_media_1000179758_ss__1743497161663_97745004.jpg",
+        "https://store.is.autonavi.com/showpic/a04d12f58f80daef0000002702666199?type=pic",
+        "https://aos-comment.amap.com/B02DB06DVZ/comment/content_media_external_images_media_7976_ss__1737112734208_09524524.jpg"
+      ]
     },
     {
       "name": "梅溪海洋公园(步步高·梅溪新天地店)",
@@ -6864,7 +10655,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.198953,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/a50b22a63b1c5c2460941eff2b17a399"
+      "image": "http://store.is.autonavi.com/showpic/a50b22a63b1c5c2460941eff2b17a399",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a50b22a63b1c5c2460941eff2b17a399",
+        "https://store.is.autonavi.com/showpic/c7cb36cdc541ce830000002996294094?type=pic",
+        "https://store.is.autonavi.com/showpic/b047a40fc27114960000002984992417?type=pic"
+      ]
     },
     {
       "name": "长沙园林生态园",
@@ -6873,7 +10669,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.296139,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/22144d26c693b9f78b5b1bfeb29dd3f3"
+      "image": "http://store.is.autonavi.com/showpic/22144d26c693b9f78b5b1bfeb29dd3f3",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/22144d26c693b9f78b5b1bfeb29dd3f3",
+        "http://store.is.autonavi.com/showpic/2bdcced282a74abb09358e3a2dc40df0",
+        "http://store.is.autonavi.com/showpic/892fd48e1d9ae78d48c364b1b1ea3ae1"
+      ]
     },
     {
       "name": "北辰滨江公园",
@@ -6882,7 +10683,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.233716,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/fa25ccb7-1f7a-4db1-95d4-ea2d8cb93231.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/fa25ccb7-1f7a-4db1-95d4-ea2d8cb93231.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/fa25ccb7-1f7a-4db1-95d4-ea2d8cb93231.jpg",
+        "https://aos-comment.amap.com/B0FFHMGU4B/comment/content_media_external_file_1000030046_ss__1746808595095_93755473.jpg",
+        "https://aos-comment.amap.com/B0FFHMGU4B/comment/8AD94CFC_DA2C_4B59_A730_BC05FB0EE7C1_L0_001_1500_200_1765427485336_14715964.jpg"
+      ]
     },
     {
       "name": "黄兴铜像",
@@ -6891,7 +10697,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.191268,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/d436fad36f3dc3670000008095672514?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/d436fad36f3dc3670000008095672514?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/d436fad36f3dc3670000008095672514?type=pic",
+        "https://store.is.autonavi.com/showpic/0148e76f98f5650c0000004304110017?type=pic",
+        "https://store.is.autonavi.com/showpic/51be0fd6dc21ba2d0000002520258680"
+      ]
     },
     {
       "name": "梅溪湖城市岛",
@@ -6900,7 +10711,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.181974,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/fa9fd6cf-96ce-4dac-a0b8-bcbfbc8361fa.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/fa9fd6cf-96ce-4dac-a0b8-bcbfbc8361fa.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/fa9fd6cf-96ce-4dac-a0b8-bcbfbc8361fa.jpg",
+        "https://aos-comment.amap.com/B0FFH2EUIH/comment/content_media_external_file_100012017_1772711522100_93232706.jpg",
+        "https://aos-comment.amap.com/B0FFH2EUIH/comment/content_media_external_file_100012017_1772711522094_61613547.jpg"
+      ]
     },
     {
       "name": "望城谷山体育公园",
@@ -6909,7 +10725,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.274564,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/21f32e8619111e052f31489f62b519ff"
+      "image": "http://store.is.autonavi.com/showpic/21f32e8619111e052f31489f62b519ff",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/21f32e8619111e052f31489f62b519ff",
+        "http://store.is.autonavi.com/showpic/fe48506b249ca0e5c129f160e7b87561",
+        "https://aos-comment.amap.com/B0FFGIDILP/comment/content_media_external_file_407_1763606165614_62395251.jpg"
+      ]
     },
     {
       "name": "银星湾公园",
@@ -6918,7 +10739,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.284697,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/03262a98-ad14-4094-aa3e-50fc0d1ca7de.JPG"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/03262a98-ad14-4094-aa3e-50fc0d1ca7de.JPG",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/03262a98-ad14-4094-aa3e-50fc0d1ca7de.JPG",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/c22c4b5e-e0dd-446c-a0ee-27b1642020dc.jpg",
+        "http://store.is.autonavi.com/showpic/a064099783166c52031a3636951fe580"
+      ]
     },
     {
       "name": "望江亭",
@@ -6927,7 +10753,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.166012,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/0b9d4742696eec543f5bb16a2c307e86"
+      "image": "http://store.is.autonavi.com/showpic/0b9d4742696eec543f5bb16a2c307e86",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0b9d4742696eec543f5bb16a2c307e86",
+        "http://store.is.autonavi.com/showpic/3560eec8015c9a514677e31e711c5d47",
+        "https://store.is.autonavi.com/showpic/3b19db9f0b3c0a880000002420234891?type=pic"
+      ]
     },
     {
       "name": "秀峰山公园",
@@ -6936,7 +10767,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.291024,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/3d694cfa3ec23e1c2775e02d11d75284"
+      "image": "http://store.is.autonavi.com/showpic/3d694cfa3ec23e1c2775e02d11d75284",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/3d694cfa3ec23e1c2775e02d11d75284",
+        "https://aos-comment.amap.com/B02DB0TQZC/comment/60443975_BA46_47B0_BB42_DFE52AFAF4CB_L0_001_2016_151_1768177416966_26303078.jpg",
+        "https://aos-comment.amap.com/comment/content_service__1769223191383_41105796_1769223255588_51537473.jpg"
+      ]
     },
     {
       "name": "八方公园",
@@ -6945,7 +10781,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.236836,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0FFGRKGDD/headerImg/8fa6133fb8e149f7c94c0793a172f176_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0FFGRKGDD/headerImg/8fa6133fb8e149f7c94c0793a172f176_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFGRKGDD/headerImg/8fa6133fb8e149f7c94c0793a172f176_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFGRKGDD/comment/content_media_external_file_1000403249_ss__1761375179425_56864995.jpg",
+        "https://aos-comment.amap.com/B0FFGRKGDD/comment/384492a1c41c2caa0cccacbc88d2c99f_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "浏阳河风光带(开福区段)",
@@ -6954,7 +10795,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.241299,
       "category": "自然风光",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0FFKCFV27/comment/0C37B118_393C_4C86_8DE4_3B3A3FBE3AF8_L0_001_1500_200_1764568677191_25946399.jpg"
+      "image": "https://aos-comment.amap.com/B0FFKCFV27/comment/0C37B118_393C_4C86_8DE4_3B3A3FBE3AF8_L0_001_1500_200_1764568677191_25946399.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFKCFV27/comment/0C37B118_393C_4C86_8DE4_3B3A3FBE3AF8_L0_001_1500_200_1764568677191_25946399.jpg",
+        "https://aos-comment.amap.com/B0FFF4GK4K/comment/F9DC1700_B308_4A40_9FC1_3894D919D576_L0_001_1500_200_1764462725201_33534599.jpg",
+        "https://store.is.autonavi.com/showpic/da21f6c3fcc187f30000007794422275"
+      ]
     },
     {
       "name": "杜鹃广场",
@@ -6963,7 +10809,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.226855,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/4dc23a96d9d8d81e0000000975708601?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/4dc23a96d9d8d81e0000000975708601?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/4dc23a96d9d8d81e0000000975708601?type=pic",
+        "https://aos-comment.amap.com/B02DB068ZI/comment/file_media_Photo_9135_IMG_1774333733_6339_IMG_20260324_142713_jpg_ss__1774344085331_06166735.jpg",
+        "https://aos-comment.amap.com/07eeb6e680422fb46de1aac5/comment/content_service__1773389133053_60457127_1773389157530_83665959.jpg"
+      ]
     },
     {
       "name": "橘子洲小火车",
@@ -6972,7 +10823,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.194611,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0LG3H8KTB/comment/content_media_external_file_1000034595_ss__1758935166578_25326928.jpg"
+      "image": "https://aos-comment.amap.com/B0LG3H8KTB/comment/content_media_external_file_1000034595_ss__1758935166578_25326928.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0LG3H8KTB/comment/content_media_external_file_1000034595_ss__1758935166578_25326928.jpg",
+        "https://store.is.autonavi.com/showpic/ec862d8ae9f33e42d129515a0e3b5956",
+        "https://store.is.autonavi.com/showpic/2144cf9fa6ad501b5b2c5826ef32240e"
+      ]
     },
     {
       "name": "湖南金融中心",
@@ -6981,7 +10837,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.241445,
       "category": "自然风光",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0FFIOVN0F/comment/%5B2025-12-17-10-29-16%5D34F64716-A0CA-41DE-ABCC-1E492A1290E_1765938556808_51613191.jpg"
+      "image": "https://aos-comment.amap.com/B0FFIOVN0F/comment/%5B2025-12-17-10-29-16%5D34F64716-A0CA-41DE-ABCC-1E492A1290E_1765938556808_51613191.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFIOVN0F/comment/%5B2025-12-17-10-29-16%5D34F64716-A0CA-41DE-ABCC-1E492A1290E_1765938556808_51613191.jpg",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/7998aa1e-91a5-47d7-8bd9-c8d1a6d8dfda.jpg",
+        "https://aos-comment.amap.com/B0FFIOVN0F/comment/c4281c283b5642c0c858c97b2c4599fd_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "肖劲光故居",
@@ -6990,7 +10851,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.172351,
       "category": "历史人文",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0FFFDU02J/comment/5D59945F_2C31_4C67_8919_2F7EDA1E2815_L0_001_1500_200_1753894605809_57953841.jpg"
+      "image": "https://aos-comment.amap.com/B0FFFDU02J/comment/5D59945F_2C31_4C67_8919_2F7EDA1E2815_L0_001_1500_200_1753894605809_57953841.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFFDU02J/comment/5D59945F_2C31_4C67_8919_2F7EDA1E2815_L0_001_1500_200_1753894605809_57953841.jpg",
+        "https://store.is.autonavi.com/showpic/4d7970c869a9cf25c4002f7f7b308c8c",
+        "https://store.is.autonavi.com/showpic/e5f1da82f79f9f48fca6b8cff4bfac78"
+      ]
     },
     {
       "name": "毛泽东与第一师范纪念馆",
@@ -6999,7 +10865,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.176088,
       "category": "历史人文",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/5f43a9ce2fe35aed84c2242d640d5a23"
+      "image": "https://store.is.autonavi.com/showpic/5f43a9ce2fe35aed84c2242d640d5a23",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/5f43a9ce2fe35aed84c2242d640d5a23",
+        "https://store.is.autonavi.com/showpic/d43d4f652050dc26e7564099fb57c409",
+        "https://store.is.autonavi.com/showpic/289d37599b7d0234b5d8d758ef3a9a1f"
+      ]
     },
     {
       "name": "自卑亭",
@@ -7008,7 +10879,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.179677,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/a010aaced339bddf0000002452270070?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/a010aaced339bddf0000002452270070?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/a010aaced339bddf0000002452270070?type=pic",
+        "https://aos-comment.amap.com/B0FFH6Z715/comment/content_media_external_images_media_1000017627_ss__1729089119219_82259242.jpg",
+        "https://aos-comment.amap.com/B0FFH6Z715/comment/content_media_external_file_1000034565_ss__1762912878838_15646065.jpg"
+      ]
     },
     {
       "name": "岳麓书院(北门)",
@@ -7017,7 +10893,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.180608,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0L2CAH2E5/comment/content_media_external_file_29742_ss__1773329286084_84420363.jpg"
+      "image": "https://aos-comment.amap.com/B0L2CAH2E5/comment/content_media_external_file_29742_ss__1773329286084_84420363.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0L2CAH2E5/comment/content_media_external_file_29742_ss__1773329286084_84420363.jpg",
+        "https://aos-comment.amap.com/B0L2CAH2E5/comment/content_media_external_file_56464_ss__1760150595271_51129696.jpg",
+        "https://aos-comment.amap.com/B0L2CAH2E5/comment/content_media_external_file_4555_ss__1760096426860_71600574.jpg"
+      ]
     },
     {
       "name": "潇湘风光带",
@@ -7026,7 +10907,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.253068,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B0FFK8MGAO/comment/content_media_external_images_media_7523_ss__1734241208844_90425177.jpg"
+      "image": "https://aos-comment.amap.com/B0FFK8MGAO/comment/content_media_external_images_media_7523_ss__1734241208844_90425177.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFK8MGAO/comment/content_media_external_images_media_7523_ss__1734241208844_90425177.jpg",
+        "https://aos-comment.amap.com/B0FFK8MGAO/comment/0517617D_6306_4A6D_839F_0A519FFBC24B_L0_001_1427_176_1767677598687_00926958.jpg",
+        "https://store.is.autonavi.com/showpic/85dd6a6097d265e00000000661878631?type=pic"
+      ]
     },
     {
       "name": "新民学会成立会旧址",
@@ -7035,7 +10921,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.193448,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B02DB068Y9/headerImg/e9bc4168841bc2160f4898959d12579e_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B02DB068Y9/headerImg/e9bc4168841bc2160f4898959d12579e_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B02DB068Y9/headerImg/e9bc4168841bc2160f4898959d12579e_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/f181fb92483562420000002327428085?type=pic",
+        "https://store.is.autonavi.com/showpic/c7a49a92ab12f77d3277c0600bf3e961"
+      ]
     },
     {
       "name": "马王堆汉墓",
@@ -7044,7 +10935,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.205482,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B02DB0TONC/comment/content_media_external_file_100010921_1767654704700_34848043.jpg"
+      "image": "https://aos-comment.amap.com/B02DB0TONC/comment/content_media_external_file_100010921_1767654704700_34848043.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B02DB0TONC/comment/content_media_external_file_100010921_1767654704700_34848043.jpg",
+        "https://store.is.autonavi.com/showpic/7a91b64d26634b840000001281890965?type=pic",
+        "https://store.is.autonavi.com/showpic/dd2ba2ebca5cb1f60000002882096363?type=pic"
+      ]
     },
     {
       "name": "马栏山月湖文创小镇",
@@ -7053,7 +10949,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.235788,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B0FFLGLBB0/comment/content_media_external_file_9039_1772027276162_01329305.jpg"
+      "image": "https://aos-comment.amap.com/B0FFLGLBB0/comment/content_media_external_file_9039_1772027276162_01329305.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFLGLBB0/comment/content_media_external_file_9039_1772027276162_01329305.jpg",
+        "https://store.is.autonavi.com/showpic/31575e49986c04e47d0cf692ccb6313c",
+        "https://store.is.autonavi.com/showpic/07a1b710843e533e9916677ace8ce5a7"
+      ]
     },
     {
       "name": "老长沙北站",
@@ -7062,7 +10963,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.224135,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B0J07MGR8V/comment/177036216747_1770362176188_89928441.jpg"
+      "image": "https://aos-comment.amap.com/B0J07MGR8V/comment/177036216747_1770362176188_89928441.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0J07MGR8V/comment/177036216747_1770362176188_89928441.jpg",
+        "https://aos-comment.amap.com/B0J07MGR8V/comment/177036217505_1770362176192_23160024.jpg",
+        "https://aos-comment.amap.com/B0J07MGR8V/comment/content_media_external_file_100001767_1768115308347_36526899.jpg"
+      ]
     },
     {
       "name": "湖南雷锋纪念馆",
@@ -7071,7 +10977,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.203913,
       "category": "历史人文",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/ead16e2a57bd49f5278ac009a7996fc3"
+      "image": "http://store.is.autonavi.com/showpic/ead16e2a57bd49f5278ac009a7996fc3",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ead16e2a57bd49f5278ac009a7996fc3",
+        "http://store.is.autonavi.com/showpic/e842f7370e900aec8dc10be356585b4b",
+        "https://aos-comment.amap.com/B02DB05TQB/comment/content_media_external_file_100008713_1770392966798_86270638.jpg"
+      ]
     },
     {
       "name": "湘江游轮(橘子洲码头)",
@@ -7080,7 +10991,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 28.184053,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/a58c7431a4f9824e1dec1de754c7b737"
+      "image": "http://store.is.autonavi.com/showpic/a58c7431a4f9824e1dec1de754c7b737",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a58c7431a4f9824e1dec1de754c7b737",
+        "https://store.is.autonavi.com/showpic/08341dfeed67461e65ea761661f3ef8e",
+        "https://store.is.autonavi.com/showpic/56318d1a801a4af3eba941f3066612bf"
+      ]
     }
   ],
   "厦门": [
@@ -7091,7 +11007,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.444695,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/05b0e6e576cf50058e6e2fad7e7dacdc"
+      "image": "http://store.is.autonavi.com/showpic/05b0e6e576cf50058e6e2fad7e7dacdc",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/05b0e6e576cf50058e6e2fad7e7dacdc",
+        "http://store.is.autonavi.com/showpic/d411b5a583400f0ca631ec86a065cde9",
+        "http://store.is.autonavi.com/showpic/f229741322203db59de5072af5aaf67a"
+      ]
     },
     {
       "name": "厦门园林植物园",
@@ -7100,7 +11021,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.447728,
       "category": "主题乐园",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/a63581fcb3adda672d35f22d835504a4"
+      "image": "http://store.is.autonavi.com/showpic/a63581fcb3adda672d35f22d835504a4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a63581fcb3adda672d35f22d835504a4",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/353fd799-d49f-4143-a336-159dbc25aa92.jpg",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/ed733c33-908c-45df-8ddd-1fc1d9c31b3c.jpg"
+      ]
     },
     {
       "name": "南普陀寺",
@@ -7109,7 +11035,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.442641,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/d9523753748f0cf2e26af8e5bffc8f89"
+      "image": "http://store.is.autonavi.com/showpic/d9523753748f0cf2e26af8e5bffc8f89",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d9523753748f0cf2e26af8e5bffc8f89",
+        "http://store.is.autonavi.com/showpic/128a28e0d1d381c2125a913fa41d3aa6",
+        "http://store.is.autonavi.com/showpic/e503f4151fe16b89430942532103ad17"
+      ]
     },
     {
       "name": "鼓浪屿管风琴艺术中心",
@@ -7118,7 +11049,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.448408,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/df28cc37535a49d3a9b847bca796f49b"
+      "image": "http://store.is.autonavi.com/showpic/df28cc37535a49d3a9b847bca796f49b",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/df28cc37535a49d3a9b847bca796f49b",
+        "http://store.is.autonavi.com/showpic/fc5f4924653c422db284ebb7f0fc0035",
+        "http://store.is.autonavi.com/showpic/56564e37d4e34bd980641fa08d67abc3"
+      ]
     },
     {
       "name": "菽庄花园",
@@ -7127,7 +11063,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.439035,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/2803f14f-f6ae-4987-abfb-501a4ec20ae0.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/2803f14f-f6ae-4987-abfb-501a4ec20ae0.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/2803f14f-f6ae-4987-abfb-501a4ec20ae0.jpg",
+        "http://store.is.autonavi.com/showpic/c9bf4cee493a9a50136dc82d057904d3",
+        "http://store.is.autonavi.com/showpic/1b92de7aa57b43d4b040637196d33fe8"
+      ]
     },
     {
       "name": "黄厝海滩",
@@ -7136,7 +11077,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.442614,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/e23f8bcd0ebf066f16e9240bf6da3b1e"
+      "image": "http://store.is.autonavi.com/showpic/e23f8bcd0ebf066f16e9240bf6da3b1e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e23f8bcd0ebf066f16e9240bf6da3b1e",
+        "https://store.is.autonavi.com/showpic/031295df024ec71c0000003463656008?type=pic",
+        "https://store.is.autonavi.com/showpic/fe3735136a722cd90000008591052774?type=pic"
+      ]
     },
     {
       "name": "一国两制沙滩",
@@ -7145,7 +11091,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.442638,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/867c38d81ed7411d0000003061826187?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/867c38d81ed7411d0000003061826187?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/867c38d81ed7411d0000003061826187?type=pic",
+        "https://store.is.autonavi.com/showpic/2af2d2fd1ed22eb03c6e725cf868526c",
+        "https://store.is.autonavi.com/showpic/c4e7ce9b64d3d1110000000729146715?type=pic"
+      ]
     },
     {
       "name": "厦门山海健康步道",
@@ -7154,7 +11105,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.481175,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0FFLPCW7Y/comment/3AD1C7C8_ECF1_4C07_866C_7BC409880B7A_L0_001_1075_127_1772335033821_40943785.jpg"
+      "image": "https://aos-comment.amap.com/B0FFLPCW7Y/comment/3AD1C7C8_ECF1_4C07_866C_7BC409880B7A_L0_001_1075_127_1772335033821_40943785.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFLPCW7Y/comment/3AD1C7C8_ECF1_4C07_866C_7BC409880B7A_L0_001_1075_127_1772335033821_40943785.jpg",
+        "https://store.is.autonavi.com/showpic/2b0cd1a7f6d364b70000007154012815?type=pic",
+        "https://aos-comment.amap.com/B0FFLPCW7Y/comment/content_media_external_file_1000009536_ss__1769093559275_74931586.jpg"
+      ]
     },
     {
       "name": "海湾公园",
@@ -7163,7 +11119,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.473095,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/569c7d3ba310f5f3ce15f6a2"
+      "image": "http://store.is.autonavi.com/showpic/569c7d3ba310f5f3ce15f6a2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/569c7d3ba310f5f3ce15f6a2",
+        "http://store.is.autonavi.com/showpic/62bd6ddbaf1a47ad07059131cc43e355",
+        "http://store.is.autonavi.com/showpic/299d707609802952167e134f898c28f0"
+      ]
     },
     {
       "name": "厦门白鹭洲公园",
@@ -7172,7 +11133,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.473704,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/e3b43131e698a548d65a7d674af1bc44"
+      "image": "http://store.is.autonavi.com/showpic/e3b43131e698a548d65a7d674af1bc44",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e3b43131e698a548d65a7d674af1bc44",
+        "http://store.is.autonavi.com/showpic/dd72e7d3256116cfbdf18d17e4e7ca97",
+        "http://store.is.autonavi.com/showpic/c64bab785712ad8b61ded77f19b3f97a"
+      ]
     },
     {
       "name": "钟鼓索道",
@@ -7181,7 +11147,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.452775,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/9a778367f29b86187b200e1706b62c55"
+      "image": "http://store.is.autonavi.com/showpic/9a778367f29b86187b200e1706b62c55",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9a778367f29b86187b200e1706b62c55",
+        "http://store.is.autonavi.com/showpic/60e1faf667ebda0296412305f7b02e62",
+        "http://store.is.autonavi.com/showpic/ac4a81c6efb8407db770605fa4c278f0"
+      ]
     },
     {
       "name": "沙坡尾",
@@ -7190,7 +11161,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.439087,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/d5ba955f30174c820000002744494529?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/d5ba955f30174c820000002744494529?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/d5ba955f30174c820000002744494529?type=pic",
+        "https://store.is.autonavi.com/showpic/3b6189af5445d1c20000002746296611?type=pic",
+        "https://store.is.autonavi.com/showpic/e374bd618fd9be4e0000001783310681?type=pic"
+      ]
     },
     {
       "name": "厦门世茂双子塔",
@@ -7199,7 +11175,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.435612,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/7f3c841e057d6e0e0000003051528370?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/7f3c841e057d6e0e0000003051528370?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/7f3c841e057d6e0e0000003051528370?type=pic",
+        "https://store.is.autonavi.com/showpic/24edab1ec768f4c70000000663410800",
+        "https://store.is.autonavi.com/showpic/9c3d8eea8233ae3a0000002738932038?type=pic"
+      ]
     },
     {
       "name": "海沧湾公园",
@@ -7208,7 +11189,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.48805,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B025004OAI/comment/content_media_external_images_media_129781_ss__1733293071513_83937473.jpg"
+      "image": "https://aos-comment.amap.com/B025004OAI/comment/content_media_external_images_media_129781_ss__1733293071513_83937473.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B025004OAI/comment/content_media_external_images_media_129781_ss__1733293071513_83937473.jpg",
+        "https://store.is.autonavi.com/showpic/956f42ba8bb3394d0000003105246615",
+        "https://store.is.autonavi.com/showpic/43728659fa57bd89d6f1ccfe4d1700ff"
+      ]
     },
     {
       "name": "日光岩",
@@ -7217,7 +11203,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.441312,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/2077c187e5f945d28ae69f1267a94836"
+      "image": "http://store.is.autonavi.com/showpic/2077c187e5f945d28ae69f1267a94836",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/2077c187e5f945d28ae69f1267a94836",
+        "http://store.is.autonavi.com/showpic/0136bf4aceb54640bd66b41cc6bebfd1",
+        "http://store.is.autonavi.com/showpic/03e0a58ea2252d7e657a386555d5afeb"
+      ]
     },
     {
       "name": "八卦楼",
@@ -7226,7 +11217,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.447422,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/8ab30eb76039669bded5a5dd65a071a3"
+      "image": "http://store.is.autonavi.com/showpic/8ab30eb76039669bded5a5dd65a071a3",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8ab30eb76039669bded5a5dd65a071a3",
+        "http://store.is.autonavi.com/showpic/e8f6921227a45c8a2a30c342bdd7f146",
+        "http://store.is.autonavi.com/showpic/0c6082a6147d4bd7511bd91176fe1f8a"
+      ]
     },
     {
       "name": "清水宫",
@@ -7235,7 +11231,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.528825,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/dcb3f5d2eabfa8920000003128308172?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/dcb3f5d2eabfa8920000003128308172?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/dcb3f5d2eabfa8920000003128308172?type=pic",
+        "https://store.is.autonavi.com/showpic/d80da7b39455bcde0000003026914780?type=pic",
+        "https://store.is.autonavi.com/showpic/02ab7203e65b31140000003093932136?type=pic"
+      ]
     },
     {
       "name": "海滨公园",
@@ -7244,7 +11245,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.456357,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0HRKRH4X0/comment/content_media_external_file_100001430_1765876091737_46553445.jpg"
+      "image": "https://aos-comment.amap.com/B0HRKRH4X0/comment/content_media_external_file_100001430_1765876091737_46553445.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0HRKRH4X0/comment/content_media_external_file_100001430_1765876091737_46553445.jpg",
+        "https://aos-comment.amap.com/B0HRKRH4X0/comment/content_media_external_file_43035_ss__1763704538696_20660896.jpg",
+        "https://aos-comment.amap.com/B0HRKRH4X0/comment/content_media_external_file_1000009496_ss__1758783818620_38089811.jpg"
+      ]
     },
     {
       "name": "上李水库公园",
@@ -7253,7 +11259,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.443876,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/2e86047d59f8682035c42379bd582b6d"
+      "image": "http://store.is.autonavi.com/showpic/2e86047d59f8682035c42379bd582b6d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/2e86047d59f8682035c42379bd582b6d",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/2532dee5-cb62-40c5-bcdd-1e7408e4ac4f.jpg",
+        "https://store.is.autonavi.com/showpic/fa0b060fcf55f8240000002587244028?type=pic"
+      ]
     },
     {
       "name": "胡里山炮台",
@@ -7262,7 +11273,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.429475,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/82ef7e11e1d17a132a0b5fcba9a8bada"
+      "image": "http://store.is.autonavi.com/showpic/82ef7e11e1d17a132a0b5fcba9a8bada",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/82ef7e11e1d17a132a0b5fcba9a8bada",
+        "http://store.is.autonavi.com/showpic/b25b404c8207645b32d1b426e0b6df70",
+        "http://store.is.autonavi.com/showpic/cf691346cc486f51b171d96223f3b78c"
+      ]
     },
     {
       "name": "港仔后海滨沙滩",
@@ -7271,7 +11287,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.439277,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/10e395baf852ed602a0a1c14777e613f"
+      "image": "http://store.is.autonavi.com/showpic/10e395baf852ed602a0a1c14777e613f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/10e395baf852ed602a0a1c14777e613f",
+        "http://store.is.autonavi.com/showpic/2f175d8775fc522b91eab8442ac6a2ae",
+        "https://store.is.autonavi.com/showpic/aa8a479d7288acf00000008077180790?type=pic"
+      ]
     },
     {
       "name": "十里长堤",
@@ -7280,7 +11301,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.563722,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/723c4e7b89d539430ff5fe2e683d6fcc"
+      "image": "http://store.is.autonavi.com/showpic/723c4e7b89d539430ff5fe2e683d6fcc",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/723c4e7b89d539430ff5fe2e683d6fcc",
+        "https://store.is.autonavi.com/showpic/aec161e60cdd7ca90000004242218643?type=pic",
+        "https://store.is.autonavi.com/showpic/d00bcbb1a0f8d3680000003282466839?type=pic"
+      ]
     },
     {
       "name": "珍珠湾沙滩",
@@ -7289,7 +11315,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.426045,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/93c36fe3f37704bc0000002702904353?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/93c36fe3f37704bc0000002702904353?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/93c36fe3f37704bc0000002702904353?type=pic",
+        "https://aos-comment.amap.com/B0KGSHIA0P/comment/FCFB47D8_44BE_4FDB_BC72_46DB53944A29_L0_001_2000_112_1762648419986_30425285.jpg",
+        "https://store.is.autonavi.com/showpic/d230adc7e2f2ab980000004198986676?type=pic"
+      ]
     },
     {
       "name": "黄厝沙滩日出广场",
@@ -7298,7 +11329,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.43362,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0JK25QI8N/comment/FAE4FCAE_1A69_4D0F_B76A_B5C64758CE0C_L0_001_2048_153_1766114689434_00069809.jpg"
+      "image": "https://aos-comment.amap.com/B0JK25QI8N/comment/FAE4FCAE_1A69_4D0F_B76A_B5C64758CE0C_L0_001_2048_153_1766114689434_00069809.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0JK25QI8N/comment/FAE4FCAE_1A69_4D0F_B76A_B5C64758CE0C_L0_001_2048_153_1766114689434_00069809.jpg",
+        "https://store.is.autonavi.com/showpic/62ee8b4abfb41d3a0000003114368669?type=pic",
+        "https://aos-comment.amap.com/B0JK25QI8N/comment/3C72FAB6_2FA2_4221_931E_B0007A31D688_L0_001_1126_200_1765585806822_05048904.jpg"
+      ]
     },
     {
       "name": "厦门园林博览苑",
@@ -7307,7 +11343,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.582621,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/6a235677c00ade778ee6016a21756255"
+      "image": "http://store.is.autonavi.com/showpic/6a235677c00ade778ee6016a21756255",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6a235677c00ade778ee6016a21756255",
+        "http://store.is.autonavi.com/showpic/2e05a65ace828f3d0d734ca6f0dc0ab7",
+        "http://store.is.autonavi.com/showpic/23aa21072cb1a69ed7140f925556a19d"
+      ]
     },
     {
       "name": "筼筜湖",
@@ -7316,7 +11357,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.475764,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B02500V28J/comment/%5B2026-01-12-15-44-15%5D8DBAF634-DCD5-479F-86EB-4079EFE4A52_1768203857758_54913349.jpg"
+      "image": "https://aos-comment.amap.com/B02500V28J/comment/%5B2026-01-12-15-44-15%5D8DBAF634-DCD5-479F-86EB-4079EFE4A52_1768203857758_54913349.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B02500V28J/comment/%5B2026-01-12-15-44-15%5D8DBAF634-DCD5-479F-86EB-4079EFE4A52_1768203857758_54913349.jpg",
+        "https://aos-comment.amap.com/B02500V28J/comment/content_media_external_file_22292_1768529368173_06390228.jpg",
+        "https://aos-comment.amap.com/B02500V28J/comment/98ba5af2af113a9753dd4ee558307504_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "厦门屿见闽南主题景区",
@@ -7325,7 +11371,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.482369,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/4840b17781e03bfb0000002995770960?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/4840b17781e03bfb0000002995770960?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/4840b17781e03bfb0000002995770960?type=pic",
+        "https://store.is.autonavi.com/showpic/cac038633e2f3c590000000673634269?type=pic",
+        "https://store.is.autonavi.com/showpic/47d7dfc5e5b72f0c0000007406230922?type=pic"
+      ]
     },
     {
       "name": "狐尾山公园",
@@ -7334,7 +11385,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.483896,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/14d95463cfb73c1167919e4bcd9acba0"
+      "image": "http://store.is.autonavi.com/showpic/14d95463cfb73c1167919e4bcd9acba0",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/14d95463cfb73c1167919e4bcd9acba0",
+        "http://store.is.autonavi.com/showpic/507a63581cf1d1d9da789f2bd93557d5",
+        "http://store.is.autonavi.com/showpic/5a41eb5daa6b5051415d1b80afdf604c"
+      ]
     },
     {
       "name": "南湖公园",
@@ -7343,7 +11399,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.478255,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/a0f9a3628c2d93cd4c753a812c5712b2"
+      "image": "http://store.is.autonavi.com/showpic/a0f9a3628c2d93cd4c753a812c5712b2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a0f9a3628c2d93cd4c753a812c5712b2",
+        "https://aos-comment.amap.com/B0250043NC/comment/content_media_external_file_1000043606_ss__1768784792591_40751193.jpg",
+        "https://aos-comment.amap.com/B0250043NC/comment/content_media_external_file_1000043657_ss__1768784792581_50967735.jpg"
+      ]
     },
     {
       "name": "钢琴码头",
@@ -7352,7 +11413,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.446325,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/c851dbd985868bc30000000736524345?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/c851dbd985868bc30000000736524345?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/c851dbd985868bc30000000736524345?type=pic",
+        "https://aos-comment.amap.com/B0FFFS3STT/comment/content_media_external_images_media_23555_ss__1738568525421_62614251.jpg",
+        "https://aos-comment.amap.com/B0FFFS3STT/comment/content_media_external_images_media_23598_ss__1738568525423_66254366.jpg"
+      ]
     },
     {
       "name": "厦门海上明珠塔",
@@ -7361,7 +11427,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.482075,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/0c2da98c0668aaec65eb0410ab1a2234"
+      "image": "http://store.is.autonavi.com/showpic/0c2da98c0668aaec65eb0410ab1a2234",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0c2da98c0668aaec65eb0410ab1a2234",
+        "http://store.is.autonavi.com/showpic/325b8fd7b00bfdbda5cf04fc3a8de5c5",
+        "https://aos-comment.amap.com/B0FFFFXYTM/comment/CF5175CF_5950_46E3_BE05_9EBCB53E9CB4_L0_001_1500_200_1747969925590_88657858.jpg"
+      ]
     },
     {
       "name": "湖里公园",
@@ -7370,7 +11441,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.504475,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/d755b0545378b02772877fec1760977b"
+      "image": "http://store.is.autonavi.com/showpic/d755b0545378b02772877fec1760977b",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d755b0545378b02772877fec1760977b",
+        "http://store.is.autonavi.com/showpic/b09cdd3e74ec51752b451924bef089fe",
+        "http://store.is.autonavi.com/showpic/7583fb942cd9c454bb5cff1ff4d33730"
+      ]
     },
     {
       "name": "金榜公园",
@@ -7379,7 +11455,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.462593,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/260a46c2b468f1b72a1739737e7c3c77"
+      "image": "http://store.is.autonavi.com/showpic/260a46c2b468f1b72a1739737e7c3c77",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/260a46c2b468f1b72a1739737e7c3c77",
+        "https://aos-comment.amap.com/B025000E32/comment/CA33BB5A_87F4_42D2_9C9D_51735D941872_L0_001_1500_2000_1728439992012_88020564.jpg",
+        "https://aos-comment.amap.com/B025000E32/comment/176252199970_1762522026642_61120972.jpg"
+      ]
     },
     {
       "name": "郑成功巨型石雕像",
@@ -7388,7 +11469,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.441288,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B02500SK3O/comment/content_media_external_file_1000010210_ss__1753455180873_35521469.jpg"
+      "image": "https://aos-comment.amap.com/B02500SK3O/comment/content_media_external_file_1000010210_ss__1753455180873_35521469.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B02500SK3O/comment/content_media_external_file_1000010210_ss__1753455180873_35521469.jpg",
+        "http://store.is.autonavi.com/showpic/39d2e5cf907fcaaf51b1b8d1802eb597",
+        "https://aos-comment.amap.com/B02500SK3O/comment/29B452FA_983E_4BCF_BF37_41CCE4FF5273_L0_001_1500_200_1764223770803_98631873.jpg"
+      ]
     },
     {
       "name": "厦门市动物园",
@@ -7397,7 +11483,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.460466,
       "category": "主题乐园",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B02500SK5R/comment/d6dd53e542d337cd128c2e9c3d54487a_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B02500SK5R/comment/d6dd53e542d337cd128c2e9c3d54487a_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B02500SK5R/comment/d6dd53e542d337cd128c2e9c3d54487a_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B02500SK5R/comment/content_media_external_file_1000017823_ss__1759053801951_51191315.jpg",
+        "https://aos-comment.amap.com/B02500SK5R/comment/content_media_external_file_1000017822_ss__1759053801950_87497137.jpg"
+      ]
     },
     {
       "name": "厦门五一广场",
@@ -7406,7 +11497,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.490664,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/c1e71e75b0c8428b0000002979208280?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/c1e71e75b0c8428b0000002979208280?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/c1e71e75b0c8428b0000002979208280?type=pic",
+        "https://store.is.autonavi.com/showpic/f70a8d70fe4332e90000007480084037?type=pic",
+        "https://aos-comment.amap.com/B025004CYN/comment/f6fe94b85343b32bb2a4ea16782ad2c0_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "雨林世界",
@@ -7415,7 +11511,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.449714,
       "category": "主题乐园",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/870ad757c874d6180000008806174993?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/870ad757c874d6180000008806174993?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/870ad757c874d6180000008806174993?type=pic",
+        "https://aos-comment.amap.com/B02500THQ3/comment/content_media_external_images_media_1000063482_ss__1763404955199_74296892.jpg",
+        "https://store.is.autonavi.com/showpic/6341f330ab0408360000002270216682?type=pic"
+      ]
     },
     {
       "name": "惠和石文化园",
@@ -7424,7 +11525,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.487245,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/887b476213af697c0d19ee062472950d"
+      "image": "http://store.is.autonavi.com/showpic/887b476213af697c0d19ee062472950d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/887b476213af697c0d19ee062472950d",
+        "http://store.is.autonavi.com/showpic/651d1fe3388b736a94205c5d2a1ca675",
+        "http://store.is.autonavi.com/showpic/2e76ea4d60862f2f510b126d5c8f8c41"
+      ]
     },
     {
       "name": "忠仑公园",
@@ -7433,7 +11539,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.483488,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/91805ee1ade066c3795eeb70818feff6"
+      "image": "http://store.is.autonavi.com/showpic/91805ee1ade066c3795eeb70818feff6",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/91805ee1ade066c3795eeb70818feff6",
+        "http://store.is.autonavi.com/showpic/42a295b4ed725f16457582514d62effb",
+        "http://store.is.autonavi.com/showpic/a39029a58bb4e11e703928639fede9f8"
+      ]
     },
     {
       "name": "鼓浪石",
@@ -7442,7 +11553,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.441826,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/29779252ed8941208af88a4d55518564"
+      "image": "http://store.is.autonavi.com/showpic/29779252ed8941208af88a4d55518564",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/29779252ed8941208af88a4d55518564",
+        "https://aos-comment.amap.com/B0FFF9U11K/comment/1E1A6EBC_0210_45D7_AE9F_3EE01548E862_L0_001_1502_200_1759290192731_22669698.jpg",
+        "https://aos-comment.amap.com/B0FFF9U11K/comment/20260221-2ef4656def7c10d8bf3e8e4a-7zICSyDcvwr9I8keRvZ7Kr.jpg"
+      ]
     },
     {
       "name": "观音寺",
@@ -7451,7 +11567,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.503154,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/56e09e724425560eb0c1f319ef9d4bae"
+      "image": "http://store.is.autonavi.com/showpic/56e09e724425560eb0c1f319ef9d4bae",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/56e09e724425560eb0c1f319ef9d4bae",
+        "https://store.is.autonavi.com/showpic/ec83ff871c3492200000008472204639?type=pic",
+        "https://aos-comment.amap.com/B0250043LG/comment/content_media_external_file_1000070145_ss__1768033202468_69184047.jpg"
+      ]
     },
     {
       "name": "飞机打卡点",
@@ -7460,7 +11581,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.531667,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/7577a3ff5bb007630000005010646462?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/7577a3ff5bb007630000005010646462?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/7577a3ff5bb007630000005010646462?type=pic",
+        "https://store.is.autonavi.com/showpic/5a930ca71e34d0360000002605794449?type=pic",
+        "https://aos-comment.amap.com/B0L36CAILV/comment/DAE6CD04_1D97_49D9_94C0_43E04A05A407_L0_001_1290_106_1772890856925_29385597.jpg"
+      ]
     },
     {
       "name": "沙坡尾彩虹墙",
@@ -7469,7 +11595,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.438075,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0K1NSFY4U/comment/B89F8849_8D9D_4F6A_B7F9_F9E3D28CF48A_L0_001_1500_200_1771115599665_42026351.jpg"
+      "image": "https://aos-comment.amap.com/B0K1NSFY4U/comment/B89F8849_8D9D_4F6A_B7F9_F9E3D28CF48A_L0_001_1500_200_1771115599665_42026351.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0K1NSFY4U/comment/B89F8849_8D9D_4F6A_B7F9_F9E3D28CF48A_L0_001_1500_200_1771115599665_42026351.jpg",
+        "https://aos-comment.amap.com/B0K1NSFY4U/comment/2DA70034_E0EF_494A_AA1F_E19EDFAC8CE8_L0_001_1920_128_1754182852091_98093061.jpg",
+        "https://aos-comment.amap.com/B0K1NSFY4U/comment/content_media_external_file_25032_ss__1765427537519_19820799.jpg"
+      ]
     },
     {
       "name": "集美鳌园景区",
@@ -7478,7 +11609,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.568005,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/fd70622b7c1908630000006414642976?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/fd70622b7c1908630000006414642976?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/fd70622b7c1908630000006414642976?type=pic",
+        "https://aos-comment.amap.com/B0FFJAXMBV/comment/20260321-1b882dcd09dc4e84cbd4eacf-2Cifa5bCa4C7qfN0HGabYd.jpg",
+        "http://store.is.autonavi.com/showpic/a7fe019206f3635926ef744df3fef3ed"
+      ]
     },
     {
       "name": "万石山国家重点风景名胜区",
@@ -7487,7 +11623,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.453702,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/c27c85fd57efd21a0000002996082577?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/c27c85fd57efd21a0000002996082577?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/c27c85fd57efd21a0000002996082577?type=pic",
+        "https://store.is.autonavi.com/showpic/f41f2f38d98a656e0000002627594726?type=pic",
+        "https://aos-comment.amap.com/B0FFFZ5L0I/comment/content_media_external_images_media_100001124_1733200540016_43218161.jpg"
+      ]
     },
     {
       "name": "厦门海趣海洋世界",
@@ -7496,7 +11637,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.489414,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/f3c6e68fb37e31050000002750302148?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/f3c6e68fb37e31050000002750302148?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/f3c6e68fb37e31050000002750302148?type=pic",
+        "https://store.is.autonavi.com/showpic/4df10636143452160000003023220946?type=pic",
+        "https://store.is.autonavi.com/showpic/0bac7628606326a70000003008394494?type=pic"
+      ]
     },
     {
       "name": "莲花公园",
@@ -7505,7 +11651,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.485598,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0250033BH/comment/20260317-bd9a0e25fb7ae6f397aa8b81-7GXeGVQBhde8Adc76MXaCu.jpg"
+      "image": "https://aos-comment.amap.com/B0250033BH/comment/20260317-bd9a0e25fb7ae6f397aa8b81-7GXeGVQBhde8Adc76MXaCu.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0250033BH/comment/20260317-bd9a0e25fb7ae6f397aa8b81-7GXeGVQBhde8Adc76MXaCu.jpg",
+        "https://store.is.autonavi.com/showpic/93e9014a04f04bfd0000003037524114",
+        "https://aos-comment.amap.com/B0250033BH/comment/aa3c4f7500a55dba6c20a035144ab54f_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "联发东南天地",
@@ -7514,7 +11665,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.51232,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/0f88e6a074a95b55372ce63fc21870c9"
+      "image": "http://store.is.autonavi.com/showpic/0f88e6a074a95b55372ce63fc21870c9",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0f88e6a074a95b55372ce63fc21870c9",
+        "https://aos-comment.amap.com/B0FFK4GBY3/comment/content_media_external_images_media_264347_ss__1764495317445_94755051.jpg",
+        "https://store.is.autonavi.com/showpic/a9ecb0ab51408fdd0000003173586269"
+      ]
     },
     {
       "name": "仙岳山",
@@ -7523,7 +11679,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.496651,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0HKKDH9XQ/comment/content_media_external_file_100001546_1766552171084_72490909.jpg"
+      "image": "https://aos-comment.amap.com/B0HKKDH9XQ/comment/content_media_external_file_100001546_1766552171084_72490909.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0HKKDH9XQ/comment/content_media_external_file_100001546_1766552171084_72490909.jpg",
+        "https://aos-comment.amap.com/B0HKKDH9XQ/comment/20260323-13dc99a56acda95cc0cc05cf-5m1qOvD0W0xAwLy1blvjIw.jpg",
+        "https://aos-comment.amap.com/B0HKKDH9XQ/comment/E1DCD9B9_2E72_4C91_8C79_DE27A61AF184_L0_001_2000_150_1765011934226_01011984.jpg"
+      ]
     },
     {
       "name": "屿见厦门海上游(鹭江夜游)",
@@ -7532,7 +11693,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.450051,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/79f85d93f127a9aad8172a5bd07650ff"
+      "image": "http://store.is.autonavi.com/showpic/79f85d93f127a9aad8172a5bd07650ff",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/79f85d93f127a9aad8172a5bd07650ff",
+        "http://store.is.autonavi.com/showpic/261613e3f213d9cee0144a0900c5c30c",
+        "http://store.is.autonavi.com/showpic/cf18dcee4bb5fc8ac0093449337e84be"
+      ]
     },
     {
       "name": "石头皮山公园",
@@ -7541,7 +11707,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.510682,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/0be0b16a1fabc5836fa5c2469b4a8d48"
+      "image": "https://store.is.autonavi.com/showpic/0be0b16a1fabc5836fa5c2469b4a8d48",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/0be0b16a1fabc5836fa5c2469b4a8d48",
+        "https://aos-comment.amap.com/B0JBDMY5LD/comment/content_media_external_images_media_201002_ss__1744637651661_64719071.jpg",
+        "https://aos-comment.amap.com/B0JBDMY5LD/comment/af9885a4-ae1d-40b6-9141-b084385b0182.png"
+      ]
     },
     {
       "name": "怪坡",
@@ -7550,7 +11721,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.453042,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/185a49d4ebc9540b97dd327da760b2e6"
+      "image": "https://store.is.autonavi.com/showpic/185a49d4ebc9540b97dd327da760b2e6",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/185a49d4ebc9540b97dd327da760b2e6",
+        "https://aos-comment.amap.com/B02500QDST/comment/content_media_external_images_media_100001876_1731766768343_09137436.jpg",
+        "https://aos-comment.amap.com/B02500QDST/comment/dad54e883fda86e7dec1009a5e7130c0_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "铁路文化公园",
@@ -7559,7 +11735,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.445089,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/cc4a149be9bf6f7da0b8e5af8bdd4554"
+      "image": "http://store.is.autonavi.com/showpic/cc4a149be9bf6f7da0b8e5af8bdd4554",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/cc4a149be9bf6f7da0b8e5af8bdd4554",
+        "http://store.is.autonavi.com/showpic/a899392839e7862bf23b009794ee08a6",
+        "https://aos-comment.amap.com/B02500S5YS/comment/177331970740_1773319708591_37278761.jpg"
+      ]
     },
     {
       "name": "轮渡广场",
@@ -7568,7 +11749,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.45488,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0FFFP3OIC/comment/DA37554D_A349_4430_9BBA_6E05DE809A35_L0_001_1996_199_1770864292568_31396716.jpg"
+      "image": "https://aos-comment.amap.com/B0FFFP3OIC/comment/DA37554D_A349_4430_9BBA_6E05DE809A35_L0_001_1996_199_1770864292568_31396716.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFFP3OIC/comment/DA37554D_A349_4430_9BBA_6E05DE809A35_L0_001_1996_199_1770864292568_31396716.jpg",
+        "https://aos-comment.amap.com/B0FFFP3OIC/comment/content_media_external_images_media_811223_ss__1765440743663_86649244.jpg",
+        "https://store.is.autonavi.com/showpic/6f10908582eb4cc90000003296586113?type=pic"
+      ]
     },
     {
       "name": "厦门市郑成功纪念馆",
@@ -7577,7 +11763,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.44269,
       "category": "历史人文",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/6cada1873dbc0ea9171723626fab36f3"
+      "image": "http://store.is.autonavi.com/showpic/6cada1873dbc0ea9171723626fab36f3",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6cada1873dbc0ea9171723626fab36f3",
+        "http://store.is.autonavi.com/showpic/a83ad9dacf2f4fe486436ec358012b92",
+        "https://aos-comment.amap.com/B0250043JS/comment/content_media_external_file_1000111968_ss__1767581347161_22334916.jpg"
+      ]
     },
     {
       "name": "汇丰银行公馆旧址",
@@ -7586,7 +11777,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.448668,
       "category": "历史人文",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/9870ae2afb3a449989f7673545d01304"
+      "image": "http://store.is.autonavi.com/showpic/9870ae2afb3a449989f7673545d01304",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9870ae2afb3a449989f7673545d01304",
+        "https://aos-comment.amap.com/B0FFF077D3/comment/0e9c8ad5d1a939df7d9ab2f0f2ac2e20_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFF077D3/comment/content_media_external_file_1000005269_ss__1763988708263_97239264.jpg"
+      ]
     },
     {
       "name": "虎溪禅寺",
@@ -7595,7 +11791,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.449809,
       "category": "宗教寺庙",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/6a20957310e482b50000002337436523?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/6a20957310e482b50000002337436523?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/6a20957310e482b50000002337436523?type=pic",
+        "https://aos-comment.amap.com/B025003ZRT/comment/content_media_external_file_1000223251_ss__1751799046313_98298127.jpg",
+        "https://aos-comment.amap.com/B025003ZRT/comment/content_media_external_file_1000223243_ss__1751799046290_40039796.jpg"
+      ]
     },
     {
       "name": "街心公园(龙头路)",
@@ -7604,7 +11805,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.444523,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/b9c77ef78b6f503757d33031f6ced732"
+      "image": "http://store.is.autonavi.com/showpic/b9c77ef78b6f503757d33031f6ced732",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b9c77ef78b6f503757d33031f6ced732",
+        "https://store.is.autonavi.com/showpic/6c23891dbf0560080000003305240591?type=pic",
+        "https://store.is.autonavi.com/showpic/bd816c50a87001cf0000003305238587?type=pic"
+      ]
     },
     {
       "name": "牛头山公园",
@@ -7613,7 +11819,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.492542,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B0LBMCQ795/comment/176914414363_1769144156200_32481389.jpg"
+      "image": "https://aos-comment.amap.com/B0LBMCQ795/comment/176914414363_1769144156200_32481389.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0LBMCQ795/comment/176914414363_1769144156200_32481389.jpg",
+        "https://store.is.autonavi.com/showpic/3715d0f8b0089d1f0000007263780037?type=pic",
+        "https://store.is.autonavi.com/showpic/21d96e5591115a350000003037218753?type=pic"
+      ]
     },
     {
       "name": "厦门经济特区纪念馆",
@@ -7621,7 +11832,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lng": 118.097351,
       "lat": 24.509006,
       "category": "历史人文",
-      "image": "http://store.is.autonavi.com/showpic/9ae9d49e5929e9b5ecfd05b6dc27a662"
+      "image": "http://store.is.autonavi.com/showpic/9ae9d49e5929e9b5ecfd05b6dc27a662",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9ae9d49e5929e9b5ecfd05b6dc27a662",
+        "https://store.is.autonavi.com/showpic/c943b16ee4bb4f59a84952a447845ae4",
+        "https://store.is.autonavi.com/showpic/bb3a4dd469d96e9eab9850928026dd61"
+      ]
     }
   ],
   "青岛": [
@@ -7632,7 +11848,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.053625,
       "category": "城市地标",
       "rating": 4.9,
-      "image": "http://store.is.autonavi.com/showpic/056214c266e0ba5a6a873c873f5b0de2"
+      "image": "http://store.is.autonavi.com/showpic/056214c266e0ba5a6a873c873f5b0de2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/056214c266e0ba5a6a873c873f5b0de2",
+        "http://store.is.autonavi.com/showpic/4dfd6a11cf801e55b7cb79c9b4659768",
+        "http://store.is.autonavi.com/showpic/21362128d9ba17344fb05777f503f7e5"
+      ]
     },
     {
       "name": "信号山公园",
@@ -7641,7 +11862,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.066446,
       "category": "自然风光",
       "rating": 4.9,
-      "image": "http://store.is.autonavi.com/showpic/e723b2cf18254ae6b3417f87c53d403f"
+      "image": "http://store.is.autonavi.com/showpic/e723b2cf18254ae6b3417f87c53d403f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e723b2cf18254ae6b3417f87c53d403f",
+        "http://store.is.autonavi.com/showpic/5545e870256df2e9ea579f38dc831ebf",
+        "http://store.is.autonavi.com/showpic/cb87905926a6cce853bd02c8d5081829"
+      ]
     },
     {
       "name": "五四广场",
@@ -7650,7 +11876,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.06274,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/9df7c968c410f9be369ec14e659953a6"
+      "image": "http://store.is.autonavi.com/showpic/9df7c968c410f9be369ec14e659953a6",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9df7c968c410f9be369ec14e659953a6",
+        "http://store.is.autonavi.com/showpic/677d97580ff59416812a8f11bb143509",
+        "http://store.is.autonavi.com/showpic/435bdf3ae634874819e0bee8014a8bad"
+      ]
     },
     {
       "name": "奥林匹克帆船中心·奥帆海洋文化旅游区",
@@ -7659,7 +11890,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.054643,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/643c53648074778d55cec12eacd883eb"
+      "image": "http://store.is.autonavi.com/showpic/643c53648074778d55cec12eacd883eb",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/643c53648074778d55cec12eacd883eb",
+        "http://store.is.autonavi.com/showpic/a3207c3194d78ebec1c103129bbc689a",
+        "http://store.is.autonavi.com/showpic/08cb8a814568fbea10080328848424d7"
+      ]
     },
     {
       "name": "情人坝",
@@ -7668,7 +11904,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.052388,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/5dbadb513ac779625aeb82303381888c"
+      "image": "http://store.is.autonavi.com/showpic/5dbadb513ac779625aeb82303381888c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5dbadb513ac779625aeb82303381888c",
+        "https://store.is.autonavi.com/showpic/df07d947fd571d80f93cda85a8333305",
+        "https://store.is.autonavi.com/showpic/945b5a80cb9eb1640000002598666497?type=pic"
+      ]
     },
     {
       "name": "青岛中山公园",
@@ -7677,7 +11918,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.064394,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/01c04893dd182d07faa61a401523e32a"
+      "image": "http://store.is.autonavi.com/showpic/01c04893dd182d07faa61a401523e32a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/01c04893dd182d07faa61a401523e32a",
+        "http://store.is.autonavi.com/showpic/daca8bf457cb32d32f68a7faef83d4ad",
+        "http://store.is.autonavi.com/showpic/617dbff4a1c9a296244071ad0604422c"
+      ]
     },
     {
       "name": "栈桥景区",
@@ -7686,7 +11932,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.061736,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/43c52933c1769faa59b8ace73c85844d"
+      "image": "http://store.is.autonavi.com/showpic/43c52933c1769faa59b8ace73c85844d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/43c52933c1769faa59b8ace73c85844d",
+        "http://store.is.autonavi.com/showpic/53aa7310429af525b8d77a8d93e9c9b9",
+        "https://store.is.autonavi.com/showpic/638b4b649ab03cab0000008408984387?type=pic"
+      ]
     },
     {
       "name": "宫崎骏漫画街",
@@ -7695,7 +11946,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.063232,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/051a130e2d1cd4ef0000005555314112?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/051a130e2d1cd4ef0000005555314112?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/051a130e2d1cd4ef0000005555314112?type=pic",
+        "https://store.is.autonavi.com/showpic/fdb5bd16850dba530000004099934886?type=pic",
+        "https://store.is.autonavi.com/showpic/a19f83becad2e95f0000005596878175?type=pic"
+      ]
     },
     {
       "name": "海之恋Park",
@@ -7704,7 +11960,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.065361,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/e070ca9a0ad299680000003794450185?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/e070ca9a0ad299680000003794450185?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/e070ca9a0ad299680000003794450185?type=pic",
+        "https://store.is.autonavi.com/showpic/2e418c272b5a44330000007308790293?type=pic",
+        "https://store.is.autonavi.com/showpic/4216aec21e33b3ec0000007543050684?type=pic"
+      ]
     },
     {
       "name": "天主教青岛教区圣弥厄尔主教座堂天主堂",
@@ -7713,7 +11974,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.068143,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/101c2e253fdc709c736a160d7eddddc1"
+      "image": "http://store.is.autonavi.com/showpic/101c2e253fdc709c736a160d7eddddc1",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/101c2e253fdc709c736a160d7eddddc1",
+        "http://store.is.autonavi.com/showpic/4394a678c6295ff54c0d82761a79bf92",
+        "http://store.is.autonavi.com/showpic/fdf680c8a2685b18d929b57478702ecf"
+      ]
     },
     {
       "name": "小青岛公园",
@@ -7722,7 +11988,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.053098,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/16216bab9dd8c48f6b501950b91e73b7"
+      "image": "http://store.is.autonavi.com/showpic/16216bab9dd8c48f6b501950b91e73b7",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/16216bab9dd8c48f6b501950b91e73b7",
+        "http://store.is.autonavi.com/showpic/2d18762cab66b3fd080d9e867da7cc14",
+        "http://store.is.autonavi.com/showpic/c28c4a9251d206a30bb0bbf5012a7a42"
+      ]
     },
     {
       "name": "中国雕塑院·青岛雕塑园",
@@ -7731,7 +12002,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.079683,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/e3f267064f816e12684fc6629773cef2"
+      "image": "http://store.is.autonavi.com/showpic/e3f267064f816e12684fc6629773cef2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e3f267064f816e12684fc6629773cef2",
+        "https://store.is.autonavi.com/showpic/0e451a6ab03482210000008754526816?type=pic",
+        "https://aos-comment.amap.com/B0FFL6A8VQ/headerImg/dd65947142b3cab444fc8f96d8f8f3e7_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "金沙滩",
@@ -7740,7 +12016,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 35.95721,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/238e1abdded498b06b8e0dfe007d4191"
+      "image": "http://store.is.autonavi.com/showpic/238e1abdded498b06b8e0dfe007d4191",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/238e1abdded498b06b8e0dfe007d4191",
+        "http://store.is.autonavi.com/showpic/84e1d8934fd6d6ea3e0d711bc07e85b3",
+        "https://store.is.autonavi.com/showpic/659df6088a86ddce0000007611672917?type=pic"
+      ]
     },
     {
       "name": "青岛奥帆海洋文化旅游区",
@@ -7749,7 +12030,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.060279,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/589fe91b87c2d0a90000003280696798?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/589fe91b87c2d0a90000003280696798?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/589fe91b87c2d0a90000003280696798?type=pic",
+        "https://aos-comment.amap.com/B0IRFH663O/comment/B2C837BE_E887_4B6C_AB02_99C4677EE68F_L0_001_1500_200_1768354307396_29693509.jpg",
+        "https://store.is.autonavi.com/showpic/014f047bf239f3e60000000719492668?type=pic"
+      ]
     },
     {
       "name": "青岛湛山寺",
@@ -7758,7 +12044,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.064978,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/ae11cb6189245d56e45af5af6afc06f3"
+      "image": "http://store.is.autonavi.com/showpic/ae11cb6189245d56e45af5af6afc06f3",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ae11cb6189245d56e45af5af6afc06f3",
+        "http://store.is.autonavi.com/showpic/874fb4ab8283c8a489fedd49f01d0779",
+        "https://store.is.autonavi.com/showpic/6d21092f9df0d0c30000003282620564?type=pic"
+      ]
     },
     {
       "name": "青岛太平角公园",
@@ -7767,7 +12058,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.053038,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/3fac93d0e7d38a7e96e044c66ea2b596"
+      "image": "http://store.is.autonavi.com/showpic/3fac93d0e7d38a7e96e044c66ea2b596",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/3fac93d0e7d38a7e96e044c66ea2b596",
+        "http://store.is.autonavi.com/showpic/cec2b2edaaeeb2fd0bd96c0bdbda2071",
+        "https://store.is.autonavi.com/showpic/fe7c1ba0ef8b4f7e0000002881056653?type=pic"
+      ]
     },
     {
       "name": "青岛市音乐广场",
@@ -7776,7 +12072,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.058383,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/6afa52f99da1043a0000003368510397?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/6afa52f99da1043a0000003368510397?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/6afa52f99da1043a0000003368510397?type=pic",
+        "https://aos-comment.amap.com/B021402990/comment/4eed6bb112d78d105ac57135c275b7bd_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B021402990/comment/edb59983e9d5444ef9b080225a1f2ed2_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "青岛动物园",
@@ -7785,7 +12086,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.069562,
       "category": "主题乐园",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/351f4a8e4aa9b51e5c6a47553620091d"
+      "image": "http://store.is.autonavi.com/showpic/351f4a8e4aa9b51e5c6a47553620091d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/351f4a8e4aa9b51e5c6a47553620091d",
+        "http://store.is.autonavi.com/showpic/ff08bbc0c979992e7ebc8ecc321fabd1",
+        "http://store.is.autonavi.com/showpic/e059424960576a2b441dc688ae27c999"
+      ]
     },
     {
       "name": "青岛海底世界",
@@ -7794,7 +12100,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.057077,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/98f74cab28ab90db1ec7c80af88d91b3"
+      "image": "http://store.is.autonavi.com/showpic/98f74cab28ab90db1ec7c80af88d91b3",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/98f74cab28ab90db1ec7c80af88d91b3",
+        "https://store.is.autonavi.com/showpic/88a4241f722ada250000003280858982?type=pic",
+        "https://store.is.autonavi.com/showpic/5a29c9bdba082b6aa34233a5f3d54635"
+      ]
     },
     {
       "name": "花石楼",
@@ -7803,7 +12114,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.050238,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/249951f44aaa1fc74e1b0049006a1fa8"
+      "image": "http://store.is.autonavi.com/showpic/249951f44aaa1fc74e1b0049006a1fa8",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/249951f44aaa1fc74e1b0049006a1fa8",
+        "https://aos-comment.amap.com/B0214024B3/comment/content_media_external_file_1000042688_ss__1769700157902_74658612.jpg",
+        "https://aos-comment.amap.com/B0214024B3/comment/B904F4C2_69EA_4D65_86E0_39B4C0E7522B_L0_001_2016_151_1766638067231_67561557.jpg"
+      ]
     },
     {
       "name": "银海大世界",
@@ -7812,7 +12128,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.057818,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/comment/content_service__1773018599175_13198744_1773018621481_65292071.jpg"
+      "image": "https://aos-comment.amap.com/comment/content_service__1773018599175_13198744_1773018621481_65292071.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/comment/content_service__1773018599175_13198744_1773018621481_65292071.jpg",
+        "https://store.is.autonavi.com/showpic/b23f4fa4a5ddd3f30000003455404840?type=pic",
+        "https://aos-comment.amap.com/B0FFF9W8HQ/comment/982E56C7_8242_4FD4_B563_102E90497875_L0_001_1568_200_1761868876971_57495866.jpg"
+      ]
     },
     {
       "name": "中山公园太平山观光索道",
@@ -7821,7 +12142,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.067958,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/486cb93b0d893ed968da1ef22f1e86e2"
+      "image": "http://store.is.autonavi.com/showpic/486cb93b0d893ed968da1ef22f1e86e2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/486cb93b0d893ed968da1ef22f1e86e2",
+        "http://store.is.autonavi.com/showpic/dc61587ba3f1cdce5dc3a5532163293f",
+        "http://store.is.autonavi.com/showpic/c7cb8b3175a3e12ab224a417370eeed7"
+      ]
     },
     {
       "name": "奥帆帆码头",
@@ -7830,7 +12156,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.059595,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0GRYZSVLP/comment/content_media_external_file_1000067372_ss__1758417241789_51806865.jpg"
+      "image": "https://aos-comment.amap.com/B0GRYZSVLP/comment/content_media_external_file_1000067372_ss__1758417241789_51806865.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0GRYZSVLP/comment/content_media_external_file_1000067372_ss__1758417241789_51806865.jpg",
+        "https://store.is.autonavi.com/showpic/069a194c382aec870000002243888704?type=pic",
+        "https://aos-comment.amap.com/B0GRYZSVLP/comment/B7E2C2E0_7488_4F38_878A_3115369E315A_L0_001_2000_133_1760087476456_60468897.jpg"
+      ]
     },
     {
       "name": "青岛网红墙",
@@ -7839,7 +12170,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.061402,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/d8132fbe07631d655179810404adf2d1"
+      "image": "http://store.is.autonavi.com/showpic/d8132fbe07631d655179810404adf2d1",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d8132fbe07631d655179810404adf2d1",
+        "https://store.is.autonavi.com/showpic/04edde33a33ffaeb0000000968924865?type=pic",
+        "https://store.is.autonavi.com/showpic/5e60e2a05940e10d0000003385218931?type=pic"
+      ]
     },
     {
       "name": "海合安·青岛极地海洋公园",
@@ -7848,7 +12184,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.069211,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/2a14808b6d5ed703fe1d1ebc779bd949"
+      "image": "http://store.is.autonavi.com/showpic/2a14808b6d5ed703fe1d1ebc779bd949",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/2a14808b6d5ed703fe1d1ebc779bd949",
+        "http://store.is.autonavi.com/showpic/3fc1f3575850faed43f68d62b42a10be",
+        "http://store.is.autonavi.com/showpic/5cb84dedb5c28aaa4509e8aa0da4758a"
+      ]
     },
     {
       "name": "浮山森林公园",
@@ -7857,7 +12198,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.08929,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/9e297384378ae5a4e92522ce656c94a8"
+      "image": "http://store.is.autonavi.com/showpic/9e297384378ae5a4e92522ce656c94a8",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9e297384378ae5a4e92522ce656c94a8",
+        "http://store.is.autonavi.com/showpic/0a3eca2cdb8b1b275121a4fcb7faa2fa",
+        "https://store.is.autonavi.com/showpic/a1ba17e76407b07f6f48ee9e26630f50"
+      ]
     },
     {
       "name": "青岛德国总督楼旧址博物馆",
@@ -7866,7 +12212,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.064939,
       "category": "历史人文",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/0282a6e82da5b7ddd196319ec5b14a10"
+      "image": "http://store.is.autonavi.com/showpic/0282a6e82da5b7ddd196319ec5b14a10",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0282a6e82da5b7ddd196319ec5b14a10",
+        "http://store.is.autonavi.com/showpic/53fc7bddae2340e649cf614723e99f6b",
+        "http://store.is.autonavi.com/showpic/1eb98b558f2fc836c4ee8e34ea9b5c5f"
+      ]
     },
     {
       "name": "孤独的树",
@@ -7875,7 +12226,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.052909,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0K2PAAUAQ/comment/5c6bd41e-6f60-4a6e-944d-c397291671bf.png"
+      "image": "https://aos-comment.amap.com/B0K2PAAUAQ/comment/5c6bd41e-6f60-4a6e-944d-c397291671bf.png",
+      "photos": [
+        "https://aos-comment.amap.com/B0K2PAAUAQ/comment/5c6bd41e-6f60-4a6e-944d-c397291671bf.png",
+        "https://store.is.autonavi.com/showpic/520a76cc446c995d0000002609138196?type=pic",
+        "https://aos-comment.amap.com/B0K2PAAUAQ/comment/content_media_external_file_100001069_1767326342600_78791221.jpg"
+      ]
     },
     {
       "name": "青岛观音寺",
@@ -7884,7 +12240,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.093459,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0FFFPRAJF/comment/content_media_external_file_10773_ss__1767405405296_16909875.jpg"
+      "image": "https://aos-comment.amap.com/B0FFFPRAJF/comment/content_media_external_file_10773_ss__1767405405296_16909875.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFFPRAJF/comment/content_media_external_file_10773_ss__1767405405296_16909875.jpg",
+        "https://aos-comment.amap.com/B0FFFPRAJF/comment/content_media_external_file_100006011_1765466204296_73676212.jpg",
+        "https://store.is.autonavi.com/showpic/7a9e727b90631fe60000000959430612?type=pic"
+      ]
     },
     {
       "name": "青小园小麦岛入口东园",
@@ -7893,7 +12254,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.058557,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0KRODTMF7/comment/D703A36B_3589_4F0C_9ED2_DD0954AD9AB8_L0_001_2016_151_1762930271278_42283879.jpg"
+      "image": "https://aos-comment.amap.com/B0KRODTMF7/comment/D703A36B_3589_4F0C_9ED2_DD0954AD9AB8_L0_001_2016_151_1762930271278_42283879.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0KRODTMF7/comment/D703A36B_3589_4F0C_9ED2_DD0954AD9AB8_L0_001_2016_151_1762930271278_42283879.jpg",
+        "https://aos-comment.amap.com/comment/content_service__1771081062903_21241061_1771081139562_41221497.jpg",
+        "https://aos-comment.amap.com/B0KRODTMF7/comment/839110d33877b23a03b7813f50fb7b73_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "青岛北岭山森林公园",
@@ -7902,7 +12268,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.119684,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/834f1cc8e4cc86c8ce785263e47aeb81"
+      "image": "https://store.is.autonavi.com/showpic/834f1cc8e4cc86c8ce785263e47aeb81",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/834f1cc8e4cc86c8ce785263e47aeb81",
+        "https://aos-comment.amap.com/B02140WQFG/comment/0914083D_D091_4A25_BBBB_593F4B88CBB9_L0_001_1179_108_1767886232803_46019206.jpg",
+        "https://aos-comment.amap.com/B02140WQFG/comment/content_media_external_file_100005469_1767699086469_30778658.jpg"
+      ]
     },
     {
       "name": "上街里·三江里",
@@ -7911,7 +12282,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.070141,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0FFJQPWYK/comment/content_media_external_file_1000091822_ss__1773161476574_91151354.jpg"
+      "image": "https://aos-comment.amap.com/B0FFJQPWYK/comment/content_media_external_file_1000091822_ss__1773161476574_91151354.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFJQPWYK/comment/content_media_external_file_1000091822_ss__1773161476574_91151354.jpg",
+        "https://aos-comment.amap.com/B0FFJQPWYK/comment/content_media_external_file_163236_ss__1771311246055_81864382.jpg",
+        "https://aos-comment.amap.com/B0FFJQPWYK/comment/%5B2025-12-25-00-46-20%5DB35178B5-2D98-40AD-86F2-1E2FF0A05EE_1766594782203_46046957.jpg"
+      ]
     },
     {
       "name": "青岛电视塔",
@@ -7920,7 +12296,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.06907,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/b996b5b7-2459-4871-a373-4ebbfd8f7b82.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/b996b5b7-2459-4871-a373-4ebbfd8f7b82.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/b996b5b7-2459-4871-a373-4ebbfd8f7b82.jpg",
+        "http://store.is.autonavi.com/showpic/566e00e91e7c238469887eae4e6319b0",
+        "https://aos-comment.amap.com/B0214068JZ/comment/D4E84745_5D3A_457C_A1DD_92B6DD16A4FC_L0_001_1500_200_1765784832880_67531441.jpg"
+      ]
     },
     {
       "name": "汇泉广场",
@@ -7929,7 +12310,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.058387,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/61811091f9b02beab05f7b1f09e8b350"
+      "image": "http://store.is.autonavi.com/showpic/61811091f9b02beab05f7b1f09e8b350",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/61811091f9b02beab05f7b1f09e8b350",
+        "http://store.is.autonavi.com/showpic/58fb0cffdd1269d8f2f234fd8e9bd49c",
+        "http://store.is.autonavi.com/showpic/3186b34ca600fb6e8c49a5a6cd2df63a"
+      ]
     },
     {
       "name": "青岛市植物园",
@@ -7938,7 +12324,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.061495,
       "category": "主题乐园",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/343bd63fe9c7b6969a6510b4272f3d45"
+      "image": "http://store.is.autonavi.com/showpic/343bd63fe9c7b6969a6510b4272f3d45",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/343bd63fe9c7b6969a6510b4272f3d45",
+        "http://store.is.autonavi.com/showpic/5389f54e4ffd7fbc9fe1738c1d981647",
+        "http://store.is.autonavi.com/showpic/e42143fcbf9d08f47728a897f695d581"
+      ]
     },
     {
       "name": "燕岛山公园",
@@ -7947,7 +12338,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.053777,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0HRGA76S9/comment/a9f306dfcd677b8012d35ff9a30a23eb_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0HRGA76S9/comment/a9f306dfcd677b8012d35ff9a30a23eb_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0HRGA76S9/comment/a9f306dfcd677b8012d35ff9a30a23eb_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0HRGA76S9/comment/content_media_external_file_7708_ss__1756625954330_27187656.jpg",
+        "https://store.is.autonavi.com/showpic/b4ad41033e1e6497c44beb2e87aac9b9"
+      ]
     },
     {
       "name": "观海木栈道",
@@ -7956,7 +12352,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.054297,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/00c70140d67f30e50000002826016523?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/00c70140d67f30e50000002826016523?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/00c70140d67f30e50000002826016523?type=pic",
+        "https://store.is.autonavi.com/showpic/1d5b1fed33b79c4e0000000708528069",
+        "https://store.is.autonavi.com/showpic/bf90d260738a668f0000003764628428?type=pic"
+      ]
     },
     {
       "name": "燕儿山网红洞",
@@ -7965,7 +12366,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.059136,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0I1PPGX42/comment/1eabac50abf370701ea07b08d8d18fca_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0I1PPGX42/comment/1eabac50abf370701ea07b08d8d18fca_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0I1PPGX42/comment/1eabac50abf370701ea07b08d8d18fca_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/80d563dc85d889b10000001941316893?type=pic",
+        "https://aos-comment.amap.com/B0I1PPGX42/comment/85d6c5b8a79325308af57061acb8ebe6_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "观象山公园",
@@ -7974,7 +12380,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.070221,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B021401765/comment/30F99B35_10FA_4547_9443_2228A88B9421_L0_001_1284_149_1765953765697_76740415.jpg"
+      "image": "https://aos-comment.amap.com/B021401765/comment/30F99B35_10FA_4547_9443_2228A88B9421_L0_001_1284_149_1765953765697_76740415.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B021401765/comment/30F99B35_10FA_4547_9443_2228A88B9421_L0_001_1284_149_1765953765697_76740415.jpg",
+        "https://aos-comment.amap.com/B021401765/comment/content_media_external_images_media_2168_1742604593815_07975572.jpg",
+        "https://aos-comment.amap.com/B021401765/comment/b441b66626a9409a15a5ed96595b87d9_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "云上艺术中心",
@@ -7983,7 +12394,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.056742,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/9fa21ee97d5766960000000714266440?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/9fa21ee97d5766960000000714266440?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/9fa21ee97d5766960000000714266440?type=pic",
+        "https://aos-comment.amap.com/B0HRY5F2V0/comment/EF01B466_8097_4215_A0EC_F4F57D08A210_L0_001_2080_156_1759227844388_38481997.jpg",
+        "https://aos-comment.amap.com/B0HRY5F2V0/comment/BBFBBCB1_C7D6_4141_943D_B672ED514B6E_L0_001_1500_200_1761012434239_75630004.jpg"
+      ]
     },
     {
       "name": "百花苑",
@@ -7992,7 +12408,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.0657,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/e56895c1be65f860b33cf9d669f75a4a"
+      "image": "http://store.is.autonavi.com/showpic/e56895c1be65f860b33cf9d669f75a4a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e56895c1be65f860b33cf9d669f75a4a",
+        "http://store.is.autonavi.com/showpic/8eb4af2cd50a8e51e6d60915734133d5",
+        "http://store.is.autonavi.com/showpic/e2c75aff3748664d4ebf2d068f488d9b"
+      ]
     },
     {
       "name": "孤独的树(不对外开放)",
@@ -8001,7 +12422,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.054469,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0KGT77TFN/comment/content_media_external_file_1000004444_ss__1749290631794_18112343.jpg"
+      "image": "https://aos-comment.amap.com/B0KGT77TFN/comment/content_media_external_file_1000004444_ss__1749290631794_18112343.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0KGT77TFN/comment/content_media_external_file_1000004444_ss__1749290631794_18112343.jpg",
+        "https://aos-comment.amap.com/B0KGT77TFN/comment/EA0ABD7C_9011_4DF1_B1A5_5F6AB48D9481_L0_001_1599_204_1757939952353_23707589.jpg",
+        "https://aos-comment.amap.com/B0KGT77TFN/comment/45ce1283-0bbe-422c-9dc1-0be6ca24f5c8.png"
+      ]
     },
     {
       "name": "青岛清真寺",
@@ -8010,7 +12436,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.097677,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B021407TLK/comment/0195CED4_997E_4D7D_827F_D79BA2291E17_L0_001_1126_200_1767276850870_88156528.jpg"
+      "image": "https://aos-comment.amap.com/B021407TLK/comment/0195CED4_997E_4D7D_827F_D79BA2291E17_L0_001_1126_200_1767276850870_88156528.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B021407TLK/comment/0195CED4_997E_4D7D_827F_D79BA2291E17_L0_001_1126_200_1767276850870_88156528.jpg",
+        "https://store.is.autonavi.com/showpic/7b5e4242f6a37b460000000952372584?type=pic",
+        "https://store.is.autonavi.com/showpic/e18360bb674e194d21c45b4bad0f3b68"
+      ]
     },
     {
       "name": "七观台风景点",
@@ -8019,7 +12450,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.083245,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0HDYAQ0PR/comment/%5B2025-12-26-09-35-06%5D34698833-B39B-4F3F-9513-8172157D1B6_1766712907586_22032628.jpg"
+      "image": "https://aos-comment.amap.com/B0HDYAQ0PR/comment/%5B2025-12-26-09-35-06%5D34698833-B39B-4F3F-9513-8172157D1B6_1766712907586_22032628.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0HDYAQ0PR/comment/%5B2025-12-26-09-35-06%5D34698833-B39B-4F3F-9513-8172157D1B6_1766712907586_22032628.jpg",
+        "https://aos-comment.amap.com/B0HDYAQ0PR/comment/7B5297FC_B465_4C4B_9991_55A989583A21_L0_001_2000_133_1745770176947_92022659.jpg",
+        "https://store.is.autonavi.com/showpic/d4bb43ee59ccef680000002248970911?type=pic"
+      ]
     },
     {
       "name": "青岛基督教堂",
@@ -8028,7 +12464,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.065159,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/4cc5e18de1afc7ae0000000691846228?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/4cc5e18de1afc7ae0000000691846228?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/4cc5e18de1afc7ae0000000691846228?type=pic",
+        "https://store.is.autonavi.com/showpic/1cbdac16fa83b5500000000691816886?type=pic",
+        "https://aos-comment.amap.com/B021401783/comment/content_media_external_file_1000094154_ss__1755707231744_34597689.jpg"
+      ]
     },
     {
       "name": "海云庵",
@@ -8037,7 +12478,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.111425,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/e364609c1459c01e0000003047038567?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/e364609c1459c01e0000003047038567?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/e364609c1459c01e0000003047038567?type=pic",
+        "https://aos-comment.amap.com/B021400A04/comment/content_media_external_file_100001437_1773459191331_68240205.jpg",
+        "https://aos-comment.amap.com/B021400A04/comment/%5B2025-12-04-11-52-46%5D1329406B-A936-4799-84ED-B40459B9AF9_1764820369576_35227358.jpg"
+      ]
     },
     {
       "name": "远洋广场",
@@ -8046,7 +12492,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.065139,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0GKPYV9HR/comment/98071b7358f180358e49cc0b69a26139_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0GKPYV9HR/comment/98071b7358f180358e49cc0b69a26139_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0GKPYV9HR/comment/98071b7358f180358e49cc0b69a26139_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0GKPYV9HR/comment/63c0d72b5cf81276d958e122f128c801_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/b04366c02c3cadcc0000003113340959?type=pic"
+      ]
     },
     {
       "name": "青岛山一战遗址公园",
@@ -8055,7 +12506,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.069595,
       "category": "历史人文",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/6cd839363b06027ec59d9e7e6775703f"
+      "image": "http://store.is.autonavi.com/showpic/6cd839363b06027ec59d9e7e6775703f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6cd839363b06027ec59d9e7e6775703f",
+        "http://store.is.autonavi.com/showpic/e6fc8f654305d9ab30eb8f9a32b34c68",
+        "http://store.is.autonavi.com/showpic/937ed6da57dd5a0f8a97d3e0a4ec5552"
+      ]
     },
     {
       "name": "祈福灯塔",
@@ -8064,7 +12520,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.052805,
       "category": "宗教寺庙",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0KUFCYVGK/comment/content_media_external_images_media_1000022952_ss__1767412976428_47239069.jpg"
+      "image": "https://aos-comment.amap.com/B0KUFCYVGK/comment/content_media_external_images_media_1000022952_ss__1767412976428_47239069.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0KUFCYVGK/comment/content_media_external_images_media_1000022952_ss__1767412976428_47239069.jpg",
+        "https://store.is.autonavi.com/showpic/714aadd5013010b80000002731674514?type=pic",
+        "https://aos-comment.amap.com/comment/20260309-31951971c2ccfbe0acb7a444-fTaa8jyult8k6IzxL4pgf.jpg"
+      ]
     },
     {
       "name": "比利时领事馆旧址",
@@ -8073,7 +12534,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.050459,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B02140YTCK/comment/8aa60e2294f4be358b97638c9367d9aa_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B02140YTCK/comment/8aa60e2294f4be358b97638c9367d9aa_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B02140YTCK/comment/8aa60e2294f4be358b97638c9367d9aa_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B02140YTCK/comment/85758e930c933f9135178f33b90c241d_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B02140YTCK/comment/2f0f05dca2c54762f406424261a04153_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "青岛市海泊河公园",
@@ -8082,7 +12548,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.095879,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/0539033f94cbc250e85ad3c38ddc3264"
+      "image": "https://store.is.autonavi.com/showpic/0539033f94cbc250e85ad3c38ddc3264",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/0539033f94cbc250e85ad3c38ddc3264",
+        "https://aos-comment.amap.com/B021405MCK/comment/84d85d01c55f78a5cf8b2b075dbd7ac7_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B021405MCK/comment/content_media_external_file_27519_ss__1765798559884_85292547.jpg"
+      ]
     },
     {
       "name": "太平山",
@@ -8091,7 +12562,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.065367,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0FFGPP67O/comment/173563497910_1735635064448_14917963.jpg"
+      "image": "https://aos-comment.amap.com/B0FFGPP67O/comment/173563497910_1735635064448_14917963.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFGPP67O/comment/173563497910_1735635064448_14917963.jpg",
+        "https://store.is.autonavi.com/showpic/4fdf75502615a1ff0000002897662798?type=pic",
+        "https://store.is.autonavi.com/showpic/282a8593687db1440000002897660859?type=pic"
+      ]
     },
     {
       "name": "凤凰岛旅游度假区",
@@ -8100,7 +12576,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 35.955992,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/40be91f2e96b2e4d0000006287104286?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/40be91f2e96b2e4d0000006287104286?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/40be91f2e96b2e4d0000006287104286?type=pic",
+        "http://store.is.autonavi.com/showpic/620ecf22701b67f08df1841a8bc63bc9",
+        "https://store.is.autonavi.com/showpic/9c7d0dc2dfabba440000002882824042?type=pic"
+      ]
     },
     {
       "name": "胶澳总督府旧址",
@@ -8109,7 +12590,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.064927,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B021409425/comment/b4b3cbfcb80d01e44a9e7ad06ace2222_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B021409425/comment/b4b3cbfcb80d01e44a9e7ad06ace2222_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B021409425/comment/b4b3cbfcb80d01e44a9e7ad06ace2222_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B021409425/comment/content_media_external_file_61438_ss__1763672807271_46612566.jpg",
+        "https://store.is.autonavi.com/showpic/57359d86608ae094357ab018021170af"
+      ]
     },
     {
       "name": "榉林公园",
@@ -8118,7 +12604,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.070487,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0214024BB/comment/content_media_external_file_100001745_1769652336923_32601917.jpg"
+      "image": "https://aos-comment.amap.com/B0214024BB/comment/content_media_external_file_100001745_1769652336923_32601917.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0214024BB/comment/content_media_external_file_100001745_1769652336923_32601917.jpg",
+        "https://aos-comment.amap.com/B0214024BB/comment/content_media_external_file_1000021864_ss__1747389778975_35105268.jpg",
+        "https://aos-comment.amap.com/B0214024BB/comment/content_media_external_file_1000039231_ss__1764384750628_42904326.jpg"
+      ]
     },
     {
       "name": "海趣园",
@@ -8127,7 +12618,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.058278,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/388cb8fe722ab6c90000003392364023?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/388cb8fe722ab6c90000003392364023?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/388cb8fe722ab6c90000003392364023?type=pic",
+        "https://aos-comment.amap.com/B021406QH8/comment/content_media_external_file_100006749_1764893435443_59932891.jpg",
+        "https://store.is.autonavi.com/showpic/431140f59b035dc10000001814314273?type=pic"
+      ]
     },
     {
       "name": "假日海滩",
@@ -8136,7 +12632,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.055542,
       "category": "自然风光",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/0ab2204c038c5e28169a6b4aa784d6b1"
+      "image": "https://store.is.autonavi.com/showpic/0ab2204c038c5e28169a6b4aa784d6b1",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/0ab2204c038c5e28169a6b4aa784d6b1",
+        "https://aos-comment.amap.com/B0FFHUE4WT/comment/29c804bffd7a119a3203544790133546_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFHUE4WT/comment/CB7E0DF8_C69A_4E6F_889E_7AEA1A276EB1_L0_001_2000_130_1756347031099_57988347.jpg"
+      ]
     },
     {
       "name": "燕岛秋潮",
@@ -8145,7 +12646,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.052325,
       "category": "自然风光",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0FFFFBRMR/comment/F21AFEDD_F2E1_47BF_AFFB_9DC226A5FEBD_L0_001_2016_151_1766636045205_87054364.jpg"
+      "image": "https://aos-comment.amap.com/B0FFFFBRMR/comment/F21AFEDD_F2E1_47BF_AFFB_9DC226A5FEBD_L0_001_2016_151_1766636045205_87054364.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFFFBRMR/comment/F21AFEDD_F2E1_47BF_AFFB_9DC226A5FEBD_L0_001_2016_151_1766636045205_87054364.jpg",
+        "https://store.is.autonavi.com/showpic/8bd10f348daf23590000005527758696?type=pic",
+        "https://aos-comment.amap.com/B0FFFFBRMR/comment/F28D8411_9397_41AB_8188_0AF5C3FB8B2B_L0_001_1500_200_1766636045205_36816462.jpg"
+      ]
     },
     {
       "name": "康有为故居纪念馆",
@@ -8154,7 +12660,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.059884,
       "category": "历史人文",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/7cb103fdd02f5f58d5e941a1010522f4"
+      "image": "http://store.is.autonavi.com/showpic/7cb103fdd02f5f58d5e941a1010522f4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/7cb103fdd02f5f58d5e941a1010522f4",
+        "http://store.is.autonavi.com/showpic/990af99f98899aab49c478f05620898e",
+        "https://store.is.autonavi.com/showpic/0afd7d232322e0170000004968398658?type=pic"
+      ]
     },
     {
       "name": "太平山中央公园",
@@ -8163,7 +12674,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.067606,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/d04c0c03f1dfc659abfb07eee62c95a4"
+      "image": "http://store.is.autonavi.com/showpic/d04c0c03f1dfc659abfb07eee62c95a4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d04c0c03f1dfc659abfb07eee62c95a4",
+        "https://aos-comment.amap.com/B0IRYZ9JWT/comment/content_media_external_file_100033743_1750412992232_76642144.jpg",
+        "https://aos-comment.amap.com/B0IRYZ9JWT/comment/20260323-9a6e82ae7c95df6e5692d984-14mtmnA5w3s6llR81m2Ae7.jpg"
+      ]
     },
     {
       "name": "浮山湾",
@@ -8172,7 +12688,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.057803,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/30d43c13940058cc0000002742968607?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/30d43c13940058cc0000002742968607?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/30d43c13940058cc0000002742968607?type=pic",
+        "https://aos-comment.amap.com/B0HGO7W9AB/comment/80656fb4f5a79e6f0593b255d8ded6f8_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0HGO7W9AB/comment/5a601d0c2aa69084574085a188a6dd11_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "青岛市革命烈士纪念馆",
@@ -8181,7 +12702,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.066579,
       "category": "历史人文",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/4c42dee08810cb814ce190dd9ce07cbf"
+      "image": "http://store.is.autonavi.com/showpic/4c42dee08810cb814ce190dd9ce07cbf",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/4c42dee08810cb814ce190dd9ce07cbf",
+        "http://store.is.autonavi.com/showpic/ac6f46584b8bea00090e466876c65d47",
+        "https://store.is.autonavi.com/showpic/3929d0901f706d3d3362854779eab868"
+      ]
     },
     {
       "name": "青岛山炮台遗址",
@@ -8190,7 +12716,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.069374,
       "category": "历史人文",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/3ab71c86f121908a0f5338af3b3c2336"
+      "image": "http://store.is.autonavi.com/showpic/3ab71c86f121908a0f5338af3b3c2336",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/3ab71c86f121908a0f5338af3b3c2336",
+        "http://store.is.autonavi.com/showpic/099b1c3b8576c193c2bbeaad5428c4fb",
+        "http://store.is.autonavi.com/showpic/12247c847a776ff9134cbe61a21677a2"
+      ]
     },
     {
       "name": "中国水准零点景区",
@@ -8199,7 +12730,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.055614,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/cf22f49e676c2fd6a9a2b9d848adda15"
+      "image": "http://store.is.autonavi.com/showpic/cf22f49e676c2fd6a9a2b9d848adda15",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/cf22f49e676c2fd6a9a2b9d848adda15",
+        "http://store.is.autonavi.com/showpic/eb92468dba29ddb7293d3dd14e7a00b5",
+        "http://store.is.autonavi.com/showpic/c3403e50135ecfb988c8cf604da49f82"
+      ]
     },
     {
       "name": "彩虹桥(滨海步行道)",
@@ -8208,7 +12744,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.060502,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B0FFGSLLSO/comment/7c4e65909759165c719551460475ab5f_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0FFGSLLSO/comment/7c4e65909759165c719551460475ab5f_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFGSLLSO/comment/7c4e65909759165c719551460475ab5f_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/bce657e763afdff60000002343156216?type=pic",
+        "https://aos-comment.amap.com/B0FFGSLLSO/comment/content_media_external_file_1000005524_ss__1767367135992_01950109.jpg"
+      ]
     },
     {
       "name": "八大湖公园",
@@ -8217,7 +12758,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 36.079107,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/2ef0842d9734189948b6cfcfec3263de"
+      "image": "http://store.is.autonavi.com/showpic/2ef0842d9734189948b6cfcfec3263de",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/2ef0842d9734189948b6cfcfec3263de",
+        "http://store.is.autonavi.com/showpic/576cc91d7ac63a76f16ebd2d",
+        "http://store.is.autonavi.com/showpic/4c2c5ec4d286e418242ab02af65d9510"
+      ]
     }
   ],
   "大连": [
@@ -8228,7 +12774,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.882006,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/9f2114e9da02d622118e1e0ca3a21908"
+      "image": "http://store.is.autonavi.com/showpic/9f2114e9da02d622118e1e0ca3a21908",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9f2114e9da02d622118e1e0ca3a21908",
+        "http://store.is.autonavi.com/showpic/3152a989c0037366b2e1ed26736c4d14",
+        "http://store.is.autonavi.com/showpic/a84954c549fa313a7bd5b764e48fdb80"
+      ]
     },
     {
       "name": "银沙滩公园",
@@ -8237,7 +12788,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.869242,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/b026d5a6b094cb792060aa8ebfaaa46b"
+      "image": "http://store.is.autonavi.com/showpic/b026d5a6b094cb792060aa8ebfaaa46b",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b026d5a6b094cb792060aa8ebfaaa46b",
+        "https://store.is.autonavi.com/showpic/3d4284c4db57133c0000003295470942?type=pic",
+        "https://store.is.autonavi.com/showpic/8546b96dbc41e32d0000003092548917"
+      ]
     },
     {
       "name": "东港音乐喷泉广场",
@@ -8246,7 +12802,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.930747,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/3442f551-1b7d-43bc-a252-cdef57de4a54.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/3442f551-1b7d-43bc-a252-cdef57de4a54.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/3442f551-1b7d-43bc-a252-cdef57de4a54.jpg",
+        "http://store.is.autonavi.com/showpic/0fcded2ea439cce736f26eaf129d35ec",
+        "http://store.is.autonavi.com/showpic/5ba3325f92c2f53c99844c6857a44490"
+      ]
     },
     {
       "name": "跨海大桥观景点",
@@ -8255,7 +12816,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.872273,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/70b3645d93e24eff0000002369488023?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/70b3645d93e24eff0000002369488023?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/70b3645d93e24eff0000002369488023?type=pic",
+        "https://store.is.autonavi.com/showpic/161529d70534f5600000002325838034?type=pic",
+        "https://store.is.autonavi.com/showpic/8b212d526df6b5870000002557834793?type=pic"
+      ]
     },
     {
       "name": "付家庄公园",
@@ -8264,7 +12830,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.865243,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/3d80915fd06621b70000002980170256?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/3d80915fd06621b70000002980170256?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/3d80915fd06621b70000002980170256?type=pic",
+        "https://store.is.autonavi.com/showpic/03cac953175f4e4e0000003418764760?type=pic",
+        "https://store.is.autonavi.com/showpic/7f9e6abe75ca7ec00000003116050022?type=pic"
+      ]
     },
     {
       "name": "海昌·东方水城",
@@ -8273,7 +12844,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.92402,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/3f0b8299ab5981c128fce6c04be3a864"
+      "image": "http://store.is.autonavi.com/showpic/3f0b8299ab5981c128fce6c04be3a864",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/3f0b8299ab5981c128fce6c04be3a864",
+        "http://store.is.autonavi.com/showpic/1ab4e0ee0e115ce8e454901b2ff8b015",
+        "http://store.is.autonavi.com/showpic/1d131afaaa1627433e8def2acffbe44c"
+      ]
     },
     {
       "name": "亲海栈道",
@@ -8282,7 +12858,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.863899,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "https://aos-comment.amap.com/B0KGUS0G55/comment/0E4DE951_6DEA_45D3_9FAD_19786503A31F_L0_001_1439_93_1767068354005_31749114.jpg"
+      "image": "https://aos-comment.amap.com/B0KGUS0G55/comment/0E4DE951_6DEA_45D3_9FAD_19786503A31F_L0_001_1439_93_1767068354005_31749114.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0KGUS0G55/comment/0E4DE951_6DEA_45D3_9FAD_19786503A31F_L0_001_1439_93_1767068354005_31749114.jpg",
+        "https://aos-comment.amap.com/B0KGUS0G55/comment/content_media_external_file_1000041989_ss__1763221596880_48647154.jpg",
+        "https://aos-comment.amap.com/B0KGUS0G55/comment/20260316-7e5f399eb9257540911a134b-6tLE4qcmx9bAGh1k9GlgOK.jpg"
+      ]
     },
     {
       "name": "劳动公园",
@@ -8291,7 +12872,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.911792,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/11f1ea1f590a942ba7849e4a3ed79699"
+      "image": "http://store.is.autonavi.com/showpic/11f1ea1f590a942ba7849e4a3ed79699",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/11f1ea1f590a942ba7849e4a3ed79699",
+        "http://store.is.autonavi.com/showpic/27ca42a3076da6242777132b6653f44e",
+        "http://store.is.autonavi.com/showpic/cda229b95a87de0a513fc2ebeda39f2f"
+      ]
     },
     {
       "name": "大连森林动物园",
@@ -8300,7 +12886,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.882789,
       "category": "主题乐园",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B019B0332D/comment/BA9307FB_8B34_4081_9505_A0C32679B090_L0_001_1290_92_1768211856135_88831284.jpg"
+      "image": "https://aos-comment.amap.com/B019B0332D/comment/BA9307FB_8B34_4081_9505_A0C32679B090_L0_001_1290_92_1768211856135_88831284.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B019B0332D/comment/BA9307FB_8B34_4081_9505_A0C32679B090_L0_001_1290_92_1768211856135_88831284.jpg",
+        "http://store.is.autonavi.com/showpic/a2dc50d48de0bfd17db67112459fad53",
+        "https://aos-comment.amap.com/B019B0332D/comment/content_media_external_file_1764_1766627559014_48169553.jpg"
+      ]
     },
     {
       "name": "民主广场",
@@ -8309,7 +12900,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.926391,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B019B07MRN/comment/21276B59_1F11_4DDB_B4B5_019747AF9424_L0_001_1365_204_1767691182033_42461378.jpg"
+      "image": "https://aos-comment.amap.com/B019B07MRN/comment/21276B59_1F11_4DDB_B4B5_019747AF9424_L0_001_1365_204_1767691182033_42461378.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B019B07MRN/comment/21276B59_1F11_4DDB_B4B5_019747AF9424_L0_001_1365_204_1767691182033_42461378.jpg",
+        "https://store.is.autonavi.com/showpic/f9781ceea9fb2ebd0000002994370123?type=pic",
+        "https://store.is.autonavi.com/showpic/1788034231c0e78028fd708f4949963d"
+      ]
     },
     {
       "name": "儿童公园",
@@ -8318,7 +12914,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.915627,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/77fa1f5cfea4cfe30000002982110836?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/77fa1f5cfea4cfe30000002982110836?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/77fa1f5cfea4cfe30000002982110836?type=pic",
+        "https://store.is.autonavi.com/showpic/f1eda1edd65ac7780000003300020728",
+        "https://aos-comment.amap.com/comment/20260312-1f45f71cf8eb4d71803a5f34-7H8OuqeVnrK6oRECmcrwif.jpg"
+      ]
     },
     {
       "name": "大连老虎滩海洋公园",
@@ -8327,7 +12928,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.878386,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/debaa17e1c52d66d0000003478086778?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/debaa17e1c52d66d0000003478086778?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/debaa17e1c52d66d0000003478086778?type=pic",
+        "https://store.is.autonavi.com/showpic/e23ab20b8668d02e0a35b862da0c1521",
+        "https://store.is.autonavi.com/showpic/b3418f614716037c0000003998586876?type=pic"
+      ]
     },
     {
       "name": "白云雁水健身公园",
@@ -8336,7 +12942,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.888043,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/4009adcbd23726000000003174352634?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/4009adcbd23726000000003174352634?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/4009adcbd23726000000003174352634?type=pic",
+        "https://aos-comment.amap.com/B0FFHKGGR9/comment/content_media_external_file_1000047562_ss__1763555284398_29126639.jpg",
+        "https://store.is.autonavi.com/showpic/bac07f44fff74e050000003133940816?type=pic"
+      ]
     },
     {
       "name": "大连圣亚海洋世界",
@@ -8345,7 +12956,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.87811,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/1041df00a47208685d807643852605c8"
+      "image": "http://store.is.autonavi.com/showpic/1041df00a47208685d807643852605c8",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/1041df00a47208685d807643852605c8",
+        "http://store.is.autonavi.com/showpic/12c7e26ed9b8564b52fe5d3f9e040d64",
+        "http://store.is.autonavi.com/showpic/c45c9b006937aaa7f65f177faf6c365c"
+      ]
     },
     {
       "name": "梭鱼湾滨海体育公园",
@@ -8354,7 +12970,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.951368,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/c21b3ed11417e3c3067e834ca7df723e"
+      "image": "http://store.is.autonavi.com/showpic/c21b3ed11417e3c3067e834ca7df723e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c21b3ed11417e3c3067e834ca7df723e",
+        "https://aos-comment.amap.com/B0FFFAFBAQ/comment/content_media_external_file_1000051772_ss__1764818368304_17799524.jpg",
+        "https://store.is.autonavi.com/showpic/2d33c85df41d34e30000000964298382?type=pic"
+      ]
     },
     {
       "name": "大连百年纪念城雕",
@@ -8363,7 +12984,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.876558,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/7bb0783fc18df8d50000000714664553?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/7bb0783fc18df8d50000000714664553?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/7bb0783fc18df8d50000000714664553?type=pic",
+        "https://aos-comment.amap.com/comment/content_service_c100781f884bfaa37b99931b27a216c1_1768135633843_38182985.jpg",
+        "https://aos-comment.amap.com/comment/content_service__1772251810857_43293687_1772251824201_84656467.jpg"
+      ]
     },
     {
       "name": "小付家庄海滩",
@@ -8372,7 +12998,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.863488,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0G3AZBJP0/comment/9262E56C_395F_4D3C_B505_434E022A0BE1_L0_001_1500_200_1753711263265_23780039.jpg"
+      "image": "https://aos-comment.amap.com/B0G3AZBJP0/comment/9262E56C_395F_4D3C_B505_434E022A0BE1_L0_001_1500_200_1753711263265_23780039.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0G3AZBJP0/comment/9262E56C_395F_4D3C_B505_434E022A0BE1_L0_001_1500_200_1753711263265_23780039.jpg",
+        "https://store.is.autonavi.com/showpic/8440033c865fc08a0000003576420892?type=pic",
+        "https://store.is.autonavi.com/showpic/20ed49e0c8cfad950000002806672358?type=pic"
+      ]
     },
     {
       "name": "港东五街打卡点",
@@ -8381,7 +13012,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.914848,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0K1D1JQX2/comment/9f56de41-945b-40c5-ab0b-c261ed30a8c0.png"
+      "image": "https://aos-comment.amap.com/B0K1D1JQX2/comment/9f56de41-945b-40c5-ab0b-c261ed30a8c0.png",
+      "photos": [
+        "https://aos-comment.amap.com/B0K1D1JQX2/comment/9f56de41-945b-40c5-ab0b-c261ed30a8c0.png",
+        "https://store.is.autonavi.com/showpic/4fa38e5caa82eb930000000726314612?type=pic",
+        "https://store.is.autonavi.com/showpic/68ae0a2d5a35ed230000002661956990?type=pic"
+      ]
     },
     {
       "name": "渔人码头",
@@ -8390,7 +13026,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.87445,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/16802281af1395b8cc48ee68428dcc10"
+      "image": "http://store.is.autonavi.com/showpic/16802281af1395b8cc48ee68428dcc10",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/16802281af1395b8cc48ee68428dcc10",
+        "http://store.is.autonavi.com/showpic/90470756480e28d8529f6f7ee9c9f7a8",
+        "http://store.is.autonavi.com/showpic/64d4e05efc7bb00f7ffc5322e33e1ffa"
+      ]
     },
     {
       "name": "黑石礁公园",
@@ -8399,7 +13040,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.869587,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/03790b3fe14440900000002858198937?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/03790b3fe14440900000002858198937?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/03790b3fe14440900000002858198937?type=pic",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/b5920b81-57fe-4c77-ba46-74bf9e827304.jpg",
+        "https://store.is.autonavi.com/showpic/7256caf5d984b4aa0000007232166917?type=pic"
+      ]
     },
     {
       "name": "海之韵公园",
@@ -8408,7 +13054,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.892604,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/6edb392b5206ba5c632928a3bef435f5"
+      "image": "http://store.is.autonavi.com/showpic/6edb392b5206ba5c632928a3bef435f5",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6edb392b5206ba5c632928a3bef435f5",
+        "https://store.is.autonavi.com/showpic/dd480ec34414cec90000003359826771?type=pic",
+        "https://store.is.autonavi.com/showpic/4f6c2b5d76a7cf730000007826756409?type=pic"
+      ]
     },
     {
       "name": "棒棰岛风景区",
@@ -8417,7 +13068,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.882274,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/8f671ce23af826a42f0814dc8fcb324b"
+      "image": "http://store.is.autonavi.com/showpic/8f671ce23af826a42f0814dc8fcb324b",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8f671ce23af826a42f0814dc8fcb324b",
+        "http://store.is.autonavi.com/showpic/6f5cd0d87124f4b682ccba97472e1c33",
+        "http://store.is.autonavi.com/showpic/75e77d1cb2f757f1614785517d0b60d7"
+      ]
     },
     {
       "name": "海纳百川大连国际雕塑公园",
@@ -8426,7 +13082,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.859794,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/aea157c7e7b54b950000005782864067?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/aea157c7e7b54b950000005782864067?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/aea157c7e7b54b950000005782864067?type=pic",
+        "https://store.is.autonavi.com/showpic/23d0a70d79af74fa9e18d6a8283f8f6d",
+        "https://aos-comment.amap.com/comment/content_service__1770440027583_95351802_1770440182057_48957098.jpg"
+      ]
     },
     {
       "name": "七贤岭森林公园",
@@ -8435,7 +13096,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.848275,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/8278f161efa443f3791622dd77020ba0"
+      "image": "http://store.is.autonavi.com/showpic/8278f161efa443f3791622dd77020ba0",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8278f161efa443f3791622dd77020ba0",
+        "https://store.is.autonavi.com/showpic/928ad041276dd6200000003293556367?type=pic",
+        "https://aos-comment.amap.com/comment/content_service__1772768288088_22733352_1772768363541_04428716.jpg"
+      ]
     },
     {
       "name": "横山寺",
@@ -8444,7 +13110,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.883389,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/558e5bf096908c1b41e74031339e97da"
+      "image": "http://store.is.autonavi.com/showpic/558e5bf096908c1b41e74031339e97da",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/558e5bf096908c1b41e74031339e97da",
+        "http://store.is.autonavi.com/showpic/1106dc0d60baa95943473930c40cb0bb",
+        "https://store.is.autonavi.com/showpic/59290b4e7b8b43010000000973222379?type=pic"
+      ]
     },
     {
       "name": "白云山山体公园",
@@ -8453,7 +13124,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.897143,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/6ad417b0c9f83d260000002890316948?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/6ad417b0c9f83d260000002890316948?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/6ad417b0c9f83d260000002890316948?type=pic",
+        "https://aos-comment.amap.com/B0FFHVNYDR/comment/7824F164_6B51_4462_B5B2_9ABF26D12849_L0_001_2000_150_1767616724744_46959633.jpg",
+        "https://aos-comment.amap.com/B0FFHVNYDR/comment/B5D940D2_35E1_48CC_B271_ADAFB871FE4B_L0_001_1320_166_1765582443157_73114857.jpg"
+      ]
     },
     {
       "name": "五一广场",
@@ -8462,7 +13138,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.917765,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B019B0ALMW/comment/content_media_external_file_167610_1766507160423_93481474.jpg"
+      "image": "https://aos-comment.amap.com/B019B0ALMW/comment/content_media_external_file_167610_1766507160423_93481474.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B019B0ALMW/comment/content_media_external_file_167610_1766507160423_93481474.jpg",
+        "https://aos-comment.amap.com/B019B0ALMW/comment/content_media_external_file_100001356_1753059083125_53426984.jpg",
+        "https://store.is.autonavi.com/showpic/8588c6b5a96d288e3dc7fb2209bd5498"
+      ]
     },
     {
       "name": "金沙滩",
@@ -8471,7 +13152,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.87491,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0FFIL6Z33/comment/393CD68F_82A7_4569_837D_B4E2B1398CDC_L0_001_1500_200_1765198019578_45282895.jpg"
+      "image": "https://aos-comment.amap.com/B0FFIL6Z33/comment/393CD68F_82A7_4569_837D_B4E2B1398CDC_L0_001_1500_200_1765198019578_45282895.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFIL6Z33/comment/393CD68F_82A7_4569_837D_B4E2B1398CDC_L0_001_1500_200_1765198019578_45282895.jpg",
+        "https://aos-comment.amap.com/B0FFIL6Z33/comment/content_media_external_file_3444_1767607104965_95534254.jpg",
+        "https://aos-comment.amap.com/B0FFIL6Z33/comment/FF710244_D463_4993_85BE_43CF02226F64_L0_001_2000_150_1767416479408_33637313.jpg"
+      ]
     },
     {
       "name": "五四广场",
@@ -8480,7 +13166,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.913633,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/740d664332861f62dfdae84d308900ab"
+      "image": "http://store.is.autonavi.com/showpic/740d664332861f62dfdae84d308900ab",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/740d664332861f62dfdae84d308900ab",
+        "https://store.is.autonavi.com/showpic/fc7073fca24293ae9a5253e54fe9ac8a",
+        "https://aos-comment.amap.com/B019B0AN3R/comment/content_media_external_file_53698_ss__1764603340375_58775896.jpg"
+      ]
     },
     {
       "name": "大连老虎滩海洋公园极地馆",
@@ -8489,7 +13180,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.878242,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/2eb42275e91f16bfd3a7d32ff7589db5"
+      "image": "http://store.is.autonavi.com/showpic/2eb42275e91f16bfd3a7d32ff7589db5",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/2eb42275e91f16bfd3a7d32ff7589db5",
+        "http://store.is.autonavi.com/showpic/9614c5ef941b3f37f0e492293a7b67aa",
+        "http://store.is.autonavi.com/showpic/72d57affcd1d3f6096cc3d7a075b672f"
+      ]
     },
     {
       "name": "滨海路西段木栈道",
@@ -8498,7 +13194,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.875925,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0FFGWO58K/comment/content_media_external_file_1000058165_ss__1771472641042_93400779.jpg"
+      "image": "https://aos-comment.amap.com/B0FFGWO58K/comment/content_media_external_file_1000058165_ss__1771472641042_93400779.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFGWO58K/comment/content_media_external_file_1000058165_ss__1771472641042_93400779.jpg",
+        "https://aos-comment.amap.com/B0FFGWO58K/comment/18582359ebc635ed5e3bd555edaf9fa4_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFGWO58K/comment/b880ec0dd63bc5282f410c26b8fdbd01_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "小岗海滩",
@@ -8507,7 +13208,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.863117,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/bc9ee11eb004e78f0000006980038940?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/bc9ee11eb004e78f0000006980038940?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/bc9ee11eb004e78f0000006980038940?type=pic",
+        "https://store.is.autonavi.com/showpic/b4df1809952306400000003293362433?type=pic",
+        "https://store.is.autonavi.com/showpic/265767cc6e09d7460000006430396562?type=pic"
+      ]
     },
     {
       "name": "富国公园",
@@ -8516,7 +13222,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.891398,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/2543aed69f1741051936594048f20f8d"
+      "image": "https://store.is.autonavi.com/showpic/2543aed69f1741051936594048f20f8d",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/2543aed69f1741051936594048f20f8d",
+        "https://aos-comment.amap.com/default_poi/comment/content_media_external_file_100004543_1745447211591_93932313.jpg",
+        "http://store.is.autonavi.com/showpic/b0e9c606c5ac9de99d1cd0217d026859"
+      ]
     },
     {
       "name": "银沙滩浴场",
@@ -8525,7 +13236,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.868401,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/54271355471efa8a0000003060990733?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/54271355471efa8a0000003060990733?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/54271355471efa8a0000003060990733?type=pic",
+        "https://aos-comment.amap.com/B0IDUU6O04/comment/090e5453-9b24-4da8-a2eb-6fdbe011480d.png",
+        "https://aos-comment.amap.com/B0IDUU6O04/comment/content_media_external_file_1000009871_ss__1759545876699_38823256.jpg"
+      ]
     },
     {
       "name": "蟹子湾公园",
@@ -8534,7 +13250,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.987596,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/9b5174a9-0eb7-4450-afe0-a48ffde53be3.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/9b5174a9-0eb7-4450-afe0-a48ffde53be3.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/9b5174a9-0eb7-4450-afe0-a48ffde53be3.jpg",
+        "https://aos-comment.amap.com/B0FFLC0CIW/comment/65F5B47B_E8B9_483E_946B_E289F987F802_L0_001_2000_150_1762339928115_68273554.jpg",
+        "https://aos-comment.amap.com/B0FFLC0CIW/comment/content_media_external_file_100002327_1768017484025_29072501.jpg"
+      ]
     },
     {
       "name": "夏家河子海滨景区",
@@ -8543,7 +13264,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 39.028997,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/556910f359913cfb884ec67899693bb1"
+      "image": "http://store.is.autonavi.com/showpic/556910f359913cfb884ec67899693bb1",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/556910f359913cfb884ec67899693bb1",
+        "https://store.is.autonavi.com/showpic/dc519781a30a54160000002873188618?type=pic",
+        "https://store.is.autonavi.com/showpic/9ec23dc4a2b25d5e0000003096978649?type=pic"
+      ]
     },
     {
       "name": "数码广场",
@@ -8552,7 +13278,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.884091,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B019B01AEF/comment/E047300F_3FB8_40C3_A8AF_D7554101A1F4_L0_001_1500_200_1768283233859_01969463.jpg"
+      "image": "https://aos-comment.amap.com/B019B01AEF/comment/E047300F_3FB8_40C3_A8AF_D7554101A1F4_L0_001_1500_200_1768283233859_01969463.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B019B01AEF/comment/E047300F_3FB8_40C3_A8AF_D7554101A1F4_L0_001_1500_200_1768283233859_01969463.jpg",
+        "https://store.is.autonavi.com/showpic/b4ebc07e3517e9fd3ce8fd67f09e9035",
+        "https://aos-comment.amap.com/B019B01AEF/comment/file_media_Photo_990_IMG_1765584407_985_IMG_985_jp_1765584366646_69806636.jpg"
+      ]
     },
     {
       "name": "大连横山公园",
@@ -8561,7 +13292,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.875708,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/87892b2a9818826d62fd0f73183b1257"
+      "image": "http://store.is.autonavi.com/showpic/87892b2a9818826d62fd0f73183b1257",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/87892b2a9818826d62fd0f73183b1257",
+        "https://aos-comment.amap.com/B0FFI98PEI/comment/8d1d47468079c8abbb3712f76da796f1_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFI98PEI/comment/f405a8c82e7ec80a7eef25022ce3f0ce_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "仰望公园",
@@ -8570,7 +13306,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.96492,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0K3451YVQ/comment/content_media_external_file_100003282_1764318639332_03143029.jpg"
+      "image": "https://aos-comment.amap.com/B0K3451YVQ/comment/content_media_external_file_100003282_1764318639332_03143029.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0K3451YVQ/comment/content_media_external_file_100003282_1764318639332_03143029.jpg",
+        "https://aos-comment.amap.com/B0K3451YVQ/comment/content_media_external_images_media_1000226653_ss__1729052361909_92998072.jpg",
+        "https://aos-comment.amap.com/B0K3451YVQ/comment/content_media_external_file_100005299_1764984995898_94627894.jpg"
+      ]
     },
     {
       "name": "松山寺",
@@ -8579,7 +13320,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.910968,
       "category": "宗教寺庙",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/dc328f93c2bd59cd0000000974606530?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/dc328f93c2bd59cd0000000974606530?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/dc328f93c2bd59cd0000000974606530?type=pic",
+        "https://aos-comment.amap.com/B019B0AOZ3/comment/content_media_external_file_100006547_1760577179848_97806715.jpg",
+        "https://store.is.autonavi.com/showpic/1f9fa74884c216e55af3a00fb20a21cd"
+      ]
     },
     {
       "name": "富国公园最高观景台",
@@ -8588,7 +13334,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.893072,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/default_poi/comment/edbbfac7a5bc58c9e14b33a7b7abd8c2_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/default_poi/comment/edbbfac7a5bc58c9e14b33a7b7abd8c2_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/default_poi/comment/edbbfac7a5bc58c9e14b33a7b7abd8c2_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/c7a0579d0e446dc84d65e3c0e3796d7c",
+        "https://aos-comment.amap.com/B0G0ZRYTGT/comment/38E3C288_39BD_4AB9_B0E3_13037D3A57D6_L0_001_2016_151_1749690148781_37944283.jpg"
+      ]
     },
     {
       "name": "金家街公园",
@@ -8597,7 +13348,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.9702,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B019B0AOXG/comment/e5cd318a-e55c-461d-83ee-1e19d70dc2f5.png"
+      "image": "https://aos-comment.amap.com/B019B0AOXG/comment/e5cd318a-e55c-461d-83ee-1e19d70dc2f5.png",
+      "photos": [
+        "https://aos-comment.amap.com/B019B0AOXG/comment/e5cd318a-e55c-461d-83ee-1e19d70dc2f5.png",
+        "https://aos-comment.amap.com/B019B0AOXG/comment/714162149626a43502ea9d959a245b4a_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B019B0AOXG/comment/4e2234c66ef7c4ed540512862f19cef7_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "爱墙广场",
@@ -8606,7 +13362,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.925054,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/54164fd2efe5d02b0000002683322240?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/54164fd2efe5d02b0000002683322240?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/54164fd2efe5d02b0000002683322240?type=pic",
+        "https://store.is.autonavi.com/showpic/9bc1b5e7cb3b98630000003042310601?type=pic",
+        "https://aos-comment.amap.com/B0KDLDRGQG/comment/3CFD0AA5_B356_4B00_8162_0AD1B7FE04C4_L0_001_1500_200_1757737376983_08042279.jpg"
+      ]
     },
     {
       "name": "秀月湾",
@@ -8615,7 +13376,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.863077,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/default_poi/comment/content_media_external_images_media_100004363_1743373006039_28783147.jpg"
+      "image": "https://aos-comment.amap.com/default_poi/comment/content_media_external_images_media_100004363_1743373006039_28783147.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/default_poi/comment/content_media_external_images_media_100004363_1743373006039_28783147.jpg",
+        "https://store.is.autonavi.com/showpic/08c7c6329c6ba4490000002824396412?type=pic",
+        "https://aos-comment.amap.com/B0KANZWFTH/comment/content_media_external_images_media_1000038757_ss_2_1757310463233_9e994316.jpg"
+      ]
     },
     {
       "name": "鼎山公园",
@@ -8624,7 +13390,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.952036,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/b765dd9bfa5764850000003078674993?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/b765dd9bfa5764850000003078674993?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/b765dd9bfa5764850000003078674993?type=pic",
+        "https://aos-comment.amap.com/B019B0C3J0/comment/content_media_external_file_100008815_1764976597923_15861497.jpg",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/12f898ba-c697-485d-bd3a-d363aae6ba62.jpg"
+      ]
     },
     {
       "name": "鸟语林",
@@ -8633,7 +13404,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.869814,
       "category": "主题乐园",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/3e1ee1a71202dbb20000003141950147?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/3e1ee1a71202dbb20000003141950147?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/3e1ee1a71202dbb20000003141950147?type=pic",
+        "https://aos-comment.amap.com/B019B0AP1W/comment/e7b8029d761f4d3f63eadebb42da6ecf_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B019B0AP1W/comment/content_media_external_file_1000040682_ss__1771057615591_04718935.jpg"
+      ]
     },
     {
       "name": "东方水城·圣马可广场",
@@ -8642,7 +13418,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.924409,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0FFK8848K/comment/content_media_external_images_media_41391_ss__1760053635924_21517262.jpg"
+      "image": "https://aos-comment.amap.com/B0FFK8848K/comment/content_media_external_images_media_41391_ss__1760053635924_21517262.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFK8848K/comment/content_media_external_images_media_41391_ss__1760053635924_21517262.jpg",
+        "https://aos-comment.amap.com/B0FFK8848K/comment/f07f44b0ed79316294ba6b9b8223d234_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/52a38cb4fdc389b20000003067216517?type=pic"
+      ]
     },
     {
       "name": "甘井子公园",
@@ -8651,7 +13432,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.975277,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/e8484b0e981632b738a0428d69430c3d"
+      "image": "http://store.is.autonavi.com/showpic/e8484b0e981632b738a0428d69430c3d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e8484b0e981632b738a0428d69430c3d",
+        "https://aos-comment.amap.com/default_poi/comment/content_media_external_images_media_100001047_1748210644648_92599285.jpg",
+        "https://aos-comment.amap.com/B019B086MI/comment/f26ec94f8ef2983110ca72a49b3a8ffb_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "最佳拍摄点观景亭",
@@ -8660,7 +13446,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.871863,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/b3d6e87f8a04a93f0000003061026679?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/b3d6e87f8a04a93f0000003061026679?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/b3d6e87f8a04a93f0000003061026679?type=pic",
+        "https://store.is.autonavi.com/showpic/2bab7e2fdeb807a80000003101706944?type=pic",
+        "https://aos-comment.amap.com/B0MBRLRDPX/comment/8D7B7144_2DC9_4AA8_9413_520697007DE5_L0_001_1996_199_1773383654374_66262033.jpg"
+      ]
     },
     {
       "name": "广播电视塔",
@@ -8669,7 +13460,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.906054,
       "category": "宗教寺庙",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/2b9e5217dc88d62c0000003004594308?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/2b9e5217dc88d62c0000003004594308?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/2b9e5217dc88d62c0000003004594308?type=pic",
+        "https://store.is.autonavi.com/showpic/28109cefc57cb06f0000000976432504?type=pic",
+        "https://aos-comment.amap.com/B0FFGPUZDH/comment/content_media_external_images_media_1000149780_ss__1732976531645_00043734.jpg"
+      ]
     },
     {
       "name": "华乐广场",
@@ -8678,7 +13474,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.913878,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B019B08ZM5/comment/file_media_Photo_10598_IMG_1767929315_10428_IMG_10428_jp_1767929241474_17650066.jpg"
+      "image": "https://aos-comment.amap.com/B019B08ZM5/comment/file_media_Photo_10598_IMG_1767929315_10428_IMG_10428_jp_1767929241474_17650066.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B019B08ZM5/comment/file_media_Photo_10598_IMG_1767929315_10428_IMG_10428_jp_1767929241474_17650066.jpg",
+        "https://aos-comment.amap.com/B019B08ZM5/comment/5c74b18f1fe159b008fe49cefe736e5b_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/c03132811aed886f3de97d11/comment/content_service__1772763621452_33538856_1772763679208_23586355.jpg"
+      ]
     },
     {
       "name": "漫游星海",
@@ -8687,7 +13488,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.876679,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/9ef8ab4073e0572ea51e2bbe14529c7d"
+      "image": "https://store.is.autonavi.com/showpic/9ef8ab4073e0572ea51e2bbe14529c7d",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/9ef8ab4073e0572ea51e2bbe14529c7d",
+        "https://store.is.autonavi.com/showpic/f598586425371ebd0000003028488372?type=pic",
+        "https://store.is.autonavi.com/showpic/419719f6eb5a33e10000001375222972?type=pic"
+      ]
     },
     {
       "name": "基督教北京街教堂",
@@ -8696,7 +13502,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.91935,
       "category": "宗教寺庙",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B0FFH0IN7S/comment/content_media_external_images_media_1000005100_ss__1746697380620_10406317.jpg"
+      "image": "https://aos-comment.amap.com/B0FFH0IN7S/comment/content_media_external_images_media_1000005100_ss__1746697380620_10406317.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFH0IN7S/comment/content_media_external_images_media_1000005100_ss__1746697380620_10406317.jpg",
+        "https://aos-comment.amap.com/B0FFH0IN7S/comment/content_media_external_images_media_1000005099_ss__1746697380624_91062889.jpg",
+        "https://aos-comment.amap.com/B0FFH0IN7S/comment/content_media_external_images_media_1000005102_ss__1746697380639_50564054.jpg"
+      ]
     },
     {
       "name": "白云鹿鸣",
@@ -8705,7 +13516,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.887486,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/1c1a7196b46c947f0000002414104244?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/1c1a7196b46c947f0000002414104244?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/1c1a7196b46c947f0000002414104244?type=pic",
+        "https://aos-comment.amap.com/B0LALCOOJQ/comment/E19047C8_A79A_4B44_B704_E91705D00D4D_L0_001_2000_150_1767241305880_99308408.jpg",
+        "https://aos-comment.amap.com/B0LALCOOJQ/comment/392EFA53_BEAD_4F21_9EDC_9F19C027DBEA_L0_001_1179_154_1764632350400_66827869.jpg"
+      ]
     },
     {
       "name": "英雄纪念公园",
@@ -8714,7 +13530,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.89943,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/5a8fdebac3c97a9b2cd38dacd48277ac"
+      "image": "http://store.is.autonavi.com/showpic/5a8fdebac3c97a9b2cd38dacd48277ac",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5a8fdebac3c97a9b2cd38dacd48277ac",
+        "https://store.is.autonavi.com/showpic/3d52eef45ebfc7db0000002739712737",
+        "https://aos-comment.amap.com/B019B0AF8K/comment/content_media_external_file_1000017079_ss__1760866443812_09767356.jpg"
+      ]
     },
     {
       "name": "金沙坪景区",
@@ -8723,7 +13544,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.867777,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B019B0AP1C/comment/content_media_external_file_3719_1769440433080_95681206.jpg"
+      "image": "https://aos-comment.amap.com/B019B0AP1C/comment/content_media_external_file_3719_1769440433080_95681206.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B019B0AP1C/comment/content_media_external_file_3719_1769440433080_95681206.jpg",
+        "https://store.is.autonavi.com/showpic/1cd51b08d6f650890000005718934743?type=pic",
+        "https://aos-comment.amap.com/B019B0AP1C/comment/425A4255_DEC3_425C_A57C_D25DCE4474E7_L0_001_2000_150_1767514247058_96323566.jpg"
+      ]
     },
     {
       "name": "傅家庄公共海滩",
@@ -8732,7 +13558,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 38.865051,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/47a3406c249d90fea2fdb0b6f88b26ad"
+      "image": "https://store.is.autonavi.com/showpic/47a3406c249d90fea2fdb0b6f88b26ad",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/47a3406c249d90fea2fdb0b6f88b26ad",
+        "http://store.is.autonavi.com/showpic/db0350bf0d61d4ea2d5265de3cf8fc46",
+        "http://store.is.autonavi.com/showpic/a7f39cc4125489d67b7fcf41a0f6af15"
+      ]
     },
     {
       "name": "纳须弥",
@@ -8740,7 +13571,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lng": 121.571865,
       "lat": 38.95778,
       "category": "城市地标",
-      "image": "https://store.is.autonavi.com/showpic/a08e246d950f56ee0000000779546662?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/a08e246d950f56ee0000000779546662?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/a08e246d950f56ee0000000779546662?type=pic",
+        "https://store.is.autonavi.com/showpic/4c815b98703d8b830000000976164118?type=pic",
+        "https://aos-comment.amap.com/B0L0Z5ER8C/comment/content_media_external_file_100002970_1768648492864_97009887.jpg"
+      ]
     }
   ],
   "昆明": [
@@ -8751,7 +13587,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.822016,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/1bb94ebaebe415f2f33083a167c24b7e"
+      "image": "http://store.is.autonavi.com/showpic/1bb94ebaebe415f2f33083a167c24b7e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/1bb94ebaebe415f2f33083a167c24b7e",
+        "https://store.is.autonavi.com/showpic/92461d0af96b1b900000005760586567?type=pic",
+        "https://store.is.autonavi.com/showpic/c78ceea98fe4c23b0000004633708053?type=pic"
+      ]
     },
     {
       "name": "滇池",
@@ -8760,7 +13601,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.912656,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/6598448af0604a9b337201c78a73054c"
+      "image": "http://store.is.autonavi.com/showpic/6598448af0604a9b337201c78a73054c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6598448af0604a9b337201c78a73054c",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/0c12a293-a334-4450-99b7-e548c7c9ec0d.jpg",
+        "http://store.is.autonavi.com/showpic/8bdb2fb845c1cfc9a2b44353e9208a0c"
+      ]
     },
     {
       "name": "滇池海埂公园",
@@ -8769,7 +13615,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.958925,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/d1c193da-0798-4a4a-993c-15ac85397613.jpeg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/d1c193da-0798-4a4a-993c-15ac85397613.jpeg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/d1c193da-0798-4a4a-993c-15ac85397613.jpeg",
+        "http://store.is.autonavi.com/showpic/2732412c2f2728ffe46adf6de695a368",
+        "https://aos-comment.amap.com/B036702E39/headerImg/764b39a73a31c8b07cae7fff5db5fa6f_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "海洪湿地",
@@ -8778,7 +13629,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.954465,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/eaefb6f6-2810-4308-ab86-1b8bde2cd462.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/eaefb6f6-2810-4308-ab86-1b8bde2cd462.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/eaefb6f6-2810-4308-ab86-1b8bde2cd462.jpg",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/695eada6-35e9-4141-9fd9-373c5dd4c9d0.jpg",
+        "https://store.is.autonavi.com/showpic/c994629b00ed25a60000003370348501?type=pic"
+      ]
     },
     {
       "name": "海埂大坝",
@@ -8787,7 +13643,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.973588,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/30c937944ab36cece8b994a47093b0a1"
+      "image": "http://store.is.autonavi.com/showpic/30c937944ab36cece8b994a47093b0a1",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/30c937944ab36cece8b994a47093b0a1",
+        "http://store.is.autonavi.com/showpic/984a22297d48db43bd74d61162f8a6b5",
+        "http://store.is.autonavi.com/showpic/e9dfeed86875e6a0d8a7c0c0b73b5479"
+      ]
     },
     {
       "name": "斗南七彩花海",
@@ -8796,7 +13657,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.892304,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/ed24483a6a81742f0000000740378342?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/ed24483a6a81742f0000000740378342?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/ed24483a6a81742f0000000740378342?type=pic",
+        "https://store.is.autonavi.com/showpic/5ac8a0b7a9b4b7940000001804002268?type=pic",
+        "https://store.is.autonavi.com/showpic/5a25cb563dca411a0000005218134903?type=pic"
+      ]
     },
     {
       "name": "官渡古镇",
@@ -8805,7 +13671,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.955125,
       "category": "古镇村落",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/cae1ea2b8b81be8f0000003810200794"
+      "image": "https://store.is.autonavi.com/showpic/cae1ea2b8b81be8f0000003810200794",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/cae1ea2b8b81be8f0000003810200794",
+        "https://store.is.autonavi.com/showpic/89354baaf820d11d0000005233610541?type=pic",
+        "https://store.is.autonavi.com/showpic/148a181e751651330000003833788337?type=pic"
+      ]
     },
     {
       "name": "昆明海晏村网红沙滩",
@@ -8814,7 +13685,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.807657,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0H2L55DMX/headerImg/ac6d9c66af0821e42db2a3bc95a7ff10_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0H2L55DMX/headerImg/ac6d9c66af0821e42db2a3bc95a7ff10_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0H2L55DMX/headerImg/ac6d9c66af0821e42db2a3bc95a7ff10_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/69af2eac388edb420000003379962344?type=pic",
+        "https://store.is.autonavi.com/showpic/811439b933611e8d0000003138354624?type=pic"
+      ]
     },
     {
       "name": "潘祥记梦橙花园",
@@ -8823,7 +13699,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.829907,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/9279347082360ef40000005595052246?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/9279347082360ef40000005595052246?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/9279347082360ef40000005595052246?type=pic",
+        "https://store.is.autonavi.com/showpic/bbf80e1781ab1ad90000002349164114?type=pic",
+        "https://store.is.autonavi.com/showpic/3ef3bd72241307187024eed1a6d5cd91"
+      ]
     },
     {
       "name": "白鹿森林",
@@ -8832,7 +13713,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.038462,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0JKK7A4PG/comment/56C2474A_F744_4CD7_81EA_18B836BDD7C6_L0_001_1439_170_1767868308823_38312964.jpg"
+      "image": "https://aos-comment.amap.com/B0JKK7A4PG/comment/56C2474A_F744_4CD7_81EA_18B836BDD7C6_L0_001_1439_170_1767868308823_38312964.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0JKK7A4PG/comment/56C2474A_F744_4CD7_81EA_18B836BDD7C6_L0_001_1439_170_1767868308823_38312964.jpg",
+        "http://store.is.autonavi.com/showpic/7436edc21a345b774ec0ee0beb9c8e78",
+        "http://store.is.autonavi.com/showpic/762bf3c33f0fb35493d5b400a68aa06f"
+      ]
     },
     {
       "name": "大观公园",
@@ -8841,7 +13727,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.021825,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/91ae105e4b5e4c5372c2bc3873e8a90a"
+      "image": "http://store.is.autonavi.com/showpic/91ae105e4b5e4c5372c2bc3873e8a90a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/91ae105e4b5e4c5372c2bc3873e8a90a",
+        "http://store.is.autonavi.com/showpic/62806e53b0303680ef9bd727f3071917",
+        "http://store.is.autonavi.com/showpic/ad6919c87135951c9fe23197c93407fe"
+      ]
     },
     {
       "name": "西山风景区",
@@ -8850,7 +13741,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.964622,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/ffe50e18ecc3314225c876b0717ef923"
+      "image": "http://store.is.autonavi.com/showpic/ffe50e18ecc3314225c876b0717ef923",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ffe50e18ecc3314225c876b0717ef923",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/74587781-fe87-40c3-8227-1b4f81d05384.jpg",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/68c08e6c-36b5-4903-8e98-531fefc058ce.jpg"
+      ]
     },
     {
       "name": "盘龙寺",
@@ -8859,7 +13755,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.696364,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/072531fea47ca4e861d89c4b5d38d569"
+      "image": "http://store.is.autonavi.com/showpic/072531fea47ca4e861d89c4b5d38d569",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/072531fea47ca4e861d89c4b5d38d569",
+        "https://aos-comment.amap.com/B036702F16/comment/content_media_external_file_2814972_ss__1758443411476_97821498.jpg",
+        "https://store.is.autonavi.com/showpic/2751f161d20ff2160000007465518174?type=pic"
+      ]
     },
     {
       "name": "大观楼",
@@ -8868,7 +13769,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.024196,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/e4dc0bdde09c57daa6dac91b11236b23"
+      "image": "http://store.is.autonavi.com/showpic/e4dc0bdde09c57daa6dac91b11236b23",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e4dc0bdde09c57daa6dac91b11236b23",
+        "http://store.is.autonavi.com/showpic/aaab23ee9a974f4981f35434adb131b7",
+        "https://store.is.autonavi.com/showpic/0e8640a5e606cc1d0000003188962762?type=pic"
+      ]
     },
     {
       "name": "昆明滇池索道",
@@ -8877,7 +13783,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.960033,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/7d490e924a433566d4fc77dd38da2755"
+      "image": "http://store.is.autonavi.com/showpic/7d490e924a433566d4fc77dd38da2755",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/7d490e924a433566d4fc77dd38da2755",
+        "https://store.is.autonavi.com/showpic/93fe2d7d2bb8d7720000002873602480?type=pic",
+        "https://aos-comment.amap.com/B03670V6D1/comment/content_media_external_file_100007898_1772101205277_31594175.jpg"
+      ]
     },
     {
       "name": "金殿风景名胜区",
@@ -8886,7 +13797,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.08447,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/85fde1e6646ab23189a0616765bd537c"
+      "image": "http://store.is.autonavi.com/showpic/85fde1e6646ab23189a0616765bd537c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/85fde1e6646ab23189a0616765bd537c",
+        "http://store.is.autonavi.com/showpic/5c4162aa4555586dbe49b87ef0402e9a",
+        "http://store.is.autonavi.com/showpic/619ff43a012714287b5d59cea68df5bd"
+      ]
     },
     {
       "name": "昆明老街记忆",
@@ -8895,7 +13811,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.038029,
       "category": "古镇村落",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0LG1ZT1MU/comment/content_media_external_file_1000061691_ss__1767418061418_48429418.jpg"
+      "image": "https://aos-comment.amap.com/B0LG1ZT1MU/comment/content_media_external_file_1000061691_ss__1767418061418_48429418.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0LG1ZT1MU/comment/content_media_external_file_1000061691_ss__1767418061418_48429418.jpg",
+        "https://aos-comment.amap.com/B0LG1ZT1MU/comment/content_media_external_file_1000045380_ss__1758071446003_09764123.jpg",
+        "https://aos-comment.amap.com/B0LG1ZT1MU/comment/content_media_external_file_1000030701_ss__1762923601296_71477312.jpg"
+      ]
     },
     {
       "name": "洛龙公园",
@@ -8904,7 +13825,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.89031,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/390048bc4d253664ee1ad668e4ff3171"
+      "image": "http://store.is.autonavi.com/showpic/390048bc4d253664ee1ad668e4ff3171",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/390048bc4d253664ee1ad668e4ff3171",
+        "https://store.is.autonavi.com/showpic/6d5a1eca8e167a690000004425564689?type=pic",
+        "https://aos-comment.amap.com/B036707VK2/comment/content_media_external_file_853_1763912834152_33908507.jpg"
+      ]
     },
     {
       "name": "斗南湿地公园",
@@ -8913,7 +13839,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.893031,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/94034732-58a9-4da3-aed7-c8319b9856e0.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/94034732-58a9-4da3-aed7-c8319b9856e0.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/94034732-58a9-4da3-aed7-c8319b9856e0.jpg",
+        "https://store.is.autonavi.com/showpic/d1b39f7ef62343660000003380010934?type=pic",
+        "https://store.is.autonavi.com/showpic/0ea775293a1e66170000003810762078?type=pic"
+      ]
     },
     {
       "name": "昆明海趣花都海洋世界",
@@ -8922,7 +13853,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.902063,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/80fe9bcbb2274c536953b884907ce278"
+      "image": "http://store.is.autonavi.com/showpic/80fe9bcbb2274c536953b884907ce278",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/80fe9bcbb2274c536953b884907ce278",
+        "https://store.is.autonavi.com/showpic/5d3bcbbaf19b27d40000002742018549?type=pic",
+        "https://aos-comment.amap.com/B0K1PUCD8J/comment/content_media_external_file_1000008747_ss__1767916368768_85342942.jpg"
+      ]
     },
     {
       "name": "王官湿地公园",
@@ -8931,7 +13867,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.89937,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/e729e6ccd2e02d840000002485678088?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/e729e6ccd2e02d840000002485678088?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/e729e6ccd2e02d840000002485678088?type=pic",
+        "https://aos-comment.amap.com/B0FFH71TMI/comment/content_media_external_file_1000029313_ss__1769681699765_36871766.jpg",
+        "https://aos-comment.amap.com/B0FFH71TMI/comment/content_media_external_file_1000055397_ss__1770105559753_67926955.jpg"
+      ]
     },
     {
       "name": "七彩云南古滇度假区",
@@ -8940,7 +13881,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.771455,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/548e0ff906310bca0000003771720451?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/548e0ff906310bca0000003771720451?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/548e0ff906310bca0000003771720451?type=pic",
+        "http://store.is.autonavi.com/showpic/caf015aa546a4ad80927c610d0a62082",
+        "http://store.is.autonavi.com/showpic/54f957d1e62468c7f38997f3d4cc9ad6"
+      ]
     },
     {
       "name": "昆明老街",
@@ -8949,7 +13895,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.040725,
       "category": "古镇村落",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/af9d95cc001dec5a0000007886338494?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/af9d95cc001dec5a0000007886338494?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/af9d95cc001dec5a0000007886338494?type=pic",
+        "https://store.is.autonavi.com/showpic/6968f5bcfa087d7a0000008725484092?type=pic",
+        "https://store.is.autonavi.com/showpic/b0a8023e6b619ddd0000008626126141?type=pic"
+      ]
     },
     {
       "name": "阳宗海风景区",
@@ -8958,7 +13909,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.9552,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/36a3fe0a5c0d6e181b1c8a810165daff"
+      "image": "http://store.is.autonavi.com/showpic/36a3fe0a5c0d6e181b1c8a810165daff",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/36a3fe0a5c0d6e181b1c8a810165daff",
+        "http://store.is.autonavi.com/showpic/9474eeafbb57cb337de02149ae2f6d1a",
+        "https://aos-comment.amap.com/B0367030D1/comment/content_media_external_file_16970515_ss__1754747843367_40753346.jpg"
+      ]
     },
     {
       "name": "昆明动物园",
@@ -8967,7 +13923,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.053686,
       "category": "主题乐园",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/9f962f0c059701572a7feede88e8da11"
+      "image": "http://store.is.autonavi.com/showpic/9f962f0c059701572a7feede88e8da11",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9f962f0c059701572a7feede88e8da11",
+        "http://store.is.autonavi.com/showpic/7cf142bb0c8050cef48a8b2e7d9f935d",
+        "http://store.is.autonavi.com/showpic/e47eb15ee07b55237ba10ba818b80d48"
+      ]
     },
     {
       "name": "云南陆军讲武堂历史博物馆",
@@ -8976,7 +13937,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.047875,
       "category": "历史人文",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/d46dc12b391df53062fc718070993a9c"
+      "image": "http://store.is.autonavi.com/showpic/d46dc12b391df53062fc718070993a9c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d46dc12b391df53062fc718070993a9c",
+        "https://store.is.autonavi.com/showpic/c317891c959bd02e0000001156330867?type=pic",
+        "https://aos-comment.amap.com/B036708CSU/comment/59284ff1e90b169e3705ae561ce037b1_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "小人国主题公园",
@@ -8985,7 +13951,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.851662,
       "category": "主题乐园",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/888b410b15c469f47a6465a035d4f24c"
+      "image": "http://store.is.autonavi.com/showpic/888b410b15c469f47a6465a035d4f24c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/888b410b15c469f47a6465a035d4f24c",
+        "http://store.is.autonavi.com/showpic/5b51f9678082b4f8b115cd0a0f61ff5c",
+        "http://store.is.autonavi.com/showpic/ac0dbb96494ee99547a9cf9d2c9a61a7"
+      ]
     },
     {
       "name": "昆明融创滇池后海",
@@ -8994,7 +13965,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.015763,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/1eff2091-c1ad-4edb-b55e-081f4ab8b379.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/1eff2091-c1ad-4edb-b55e-081f4ab8b379.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/1eff2091-c1ad-4edb-b55e-081f4ab8b379.jpg",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/6bd4948c-2deb-4e22-b452-457d7cedb74b.jpg",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/5bc6965e-1bc9-4a8d-b2dc-d206bf4c7976.jpg"
+      ]
     },
     {
       "name": "昙华寺公园",
@@ -9003,7 +13979,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.046281,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/830c1316fb3538bf0000002258934059?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/830c1316fb3538bf0000002258934059?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/830c1316fb3538bf0000002258934059?type=pic",
+        "https://aos-comment.amap.com/B036702C4F/comment/B63920CD_AA92_4626_BCA3_535E9CEB908D_L0_001_1170_153_1772096652495_61024531.jpg",
+        "https://aos-comment.amap.com/comment/content_service__1768990457835_12126256_1768990459410_83798576.jpg"
+      ]
     },
     {
       "name": "东风广场",
@@ -9012,7 +13993,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.037003,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0KDA9HJCD/comment/202511_12-14132_1762928014276_99483105.jpg"
+      "image": "https://aos-comment.amap.com/B0KDA9HJCD/comment/202511_12-14132_1762928014276_99483105.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0KDA9HJCD/comment/202511_12-14132_1762928014276_99483105.jpg",
+        "https://store.is.autonavi.com/showpic/876800c8f21534500000004978066158?type=pic",
+        "https://aos-comment.amap.com/B0KDA9HJCD/comment/content_media_external_images_media_76668_ss__1766999523326_38525133.jpg"
+      ]
     },
     {
       "name": "云南野生动物园",
@@ -9021,7 +14007,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.096415,
       "category": "主题乐园",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/ba6f5d78b142fc4c40985db0012abfd4"
+      "image": "http://store.is.autonavi.com/showpic/ba6f5d78b142fc4c40985db0012abfd4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ba6f5d78b142fc4c40985db0012abfd4",
+        "http://store.is.autonavi.com/showpic/0e464045fe2ab4c816968bca17b06bf4",
+        "http://store.is.autonavi.com/showpic/53ac77a81f29bde12ae8d8a7e7a23e3c"
+      ]
     },
     {
       "name": "滇池海鸥观景点",
@@ -9030,7 +14021,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.975135,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0J0VHX1FR/comment/content_media_external_file_1000002723_ss__1766942708592_57761434.jpg"
+      "image": "https://aos-comment.amap.com/B0J0VHX1FR/comment/content_media_external_file_1000002723_ss__1766942708592_57761434.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0J0VHX1FR/comment/content_media_external_file_1000002723_ss__1766942708592_57761434.jpg",
+        "https://aos-comment.amap.com/B0J0VHX1FR/comment/content_media_external_file_64157_ss__1764143553552_34342424.jpg",
+        "https://aos-comment.amap.com/B0J0VHX1FR/comment/content_media_external_file_92599_ss__1764189161120_43629337.jpg"
+      ]
     },
     {
       "name": "白龙潭公园",
@@ -9039,7 +14035,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.878244,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0GUX19R9Z/comment/content_media_external_file_100002779_1756872502327_73433322.jpg"
+      "image": "https://aos-comment.amap.com/B0GUX19R9Z/comment/content_media_external_file_100002779_1756872502327_73433322.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0GUX19R9Z/comment/content_media_external_file_100002779_1756872502327_73433322.jpg",
+        "https://aos-comment.amap.com/B0GUX19R9Z/comment/27BCFC80_C6E8_4208_B316_C4872BD115C8_L0_001_2000_150_1766031464684_01143641.jpg",
+        "https://aos-comment.amap.com/B0GUX19R9Z/comment/content_media_external_file_1000046996_ss__1765012640732_63768961.jpg"
+      ]
     },
     {
       "name": "昆明呈贡区城中心广场",
@@ -9048,7 +14049,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.888339,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/a819aca8b23f4ad38fcdcf8dcb8dd834"
+      "image": "http://store.is.autonavi.com/showpic/a819aca8b23f4ad38fcdcf8dcb8dd834",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a819aca8b23f4ad38fcdcf8dcb8dd834",
+        "https://aos-comment.amap.com/B0FFF4IGYS/comment/9357D748_BB0F_4A51_9D37_747F87CB7C41_L0_001_909_1836_1726791127545_98244321.jpg",
+        "https://aos-comment.amap.com/B0FFF4IGYS/comment/571297C5_5EC3_4769_9C07_9A777F6F0666_L0_001_IMG_356_1728274357899_91678316.jpg"
+      ]
     },
     {
       "name": "昆明卧龙古渔村",
@@ -9057,7 +14063,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.856505,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/8131f3ba5325002c0000004921794608?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/8131f3ba5325002c0000004921794608?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/8131f3ba5325002c0000004921794608?type=pic",
+        "https://aos-comment.amap.com/B0G0DS8H7L/comment/content_media_external_file_100000379_1757316190793_44727142.jpg",
+        "https://store.is.autonavi.com/showpic/08e48c2104aaa4dc0000009292166190?type=pic"
+      ]
     },
     {
       "name": "巫家坝中央公园",
@@ -9066,7 +14077,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.975968,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/d0dbab1fd566a9520000008479334021?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/d0dbab1fd566a9520000008479334021?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/d0dbab1fd566a9520000008479334021?type=pic",
+        "https://store.is.autonavi.com/showpic/2c9d4b3de725b3f20000005114292566?type=pic",
+        "https://aos-comment.amap.com/B0L06CN9UR/comment/42B8814D_30CD_4519_BA79_D5562C92BB1F_L0_001_1179_99_1768401046142_74975451.jpg"
+      ]
     },
     {
       "name": "滇池绿道草之桥",
@@ -9075,7 +14091,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.846885,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0L62UFMRQ/comment/content_media_external_file_1000129342_ss__1761474066527_33399423.jpg"
+      "image": "https://aos-comment.amap.com/B0L62UFMRQ/comment/content_media_external_file_1000129342_ss__1761474066527_33399423.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0L62UFMRQ/comment/content_media_external_file_1000129342_ss__1761474066527_33399423.jpg",
+        "https://aos-comment.amap.com/B0L62UFMRQ/comment/B99740CB_3C57_434D_9907_B9639032537C_L0_001_2000_150_1755645897597_76391607.jpg",
+        "https://aos-comment.amap.com/B0L62UFMRQ/comment/content_media_external_file_1234946_ss__1768197634138_06627798.jpg"
+      ]
     },
     {
       "name": "云南民族村",
@@ -9084,7 +14105,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.96606,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/7e25b703a2a0a3ffb5b2b6dd9485d14c"
+      "image": "http://store.is.autonavi.com/showpic/7e25b703a2a0a3ffb5b2b6dd9485d14c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/7e25b703a2a0a3ffb5b2b6dd9485d14c",
+        "https://aos-comment.amap.com/B036706Y83/comment/B1484C2A_9B1B_46C8_BB8F_61685D8CD2E2_L0_001_2000_150_1768013697993_47290266.jpg",
+        "http://store.is.autonavi.com/showpic/6940e9d6516cf882c84d71eca8af77a4"
+      ]
     },
     {
       "name": "望春风",
@@ -9093,7 +14119,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.916979,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0L6KUP1BF/comment/C3367D17_C1EF_4356_9E28_4B21DA141566_L0_001_1179_133_1774150729878_38138128.jpg"
+      "image": "https://aos-comment.amap.com/B0L6KUP1BF/comment/C3367D17_C1EF_4356_9E28_4B21DA141566_L0_001_1179_133_1774150729878_38138128.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0L6KUP1BF/comment/C3367D17_C1EF_4356_9E28_4B21DA141566_L0_001_1179_133_1774150729878_38138128.jpg",
+        "https://aos-comment.amap.com/B0L6KUP1BF/comment/content_media_external_file_1000000534_ss__1772773121298_09413375.jpg",
+        "https://store.is.autonavi.com/showpic/db81a27a62c139ca0000005724450982?type=pic"
+      ]
     },
     {
       "name": "海晏古渔村",
@@ -9102,7 +14133,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.809664,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/8021c8d8578b12d90000007655872009?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/8021c8d8578b12d90000007655872009?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/8021c8d8578b12d90000007655872009?type=pic",
+        "https://store.is.autonavi.com/showpic/13f787e97e4d30b1177e3c76bab1f5d4",
+        "https://store.is.autonavi.com/showpic/1e3aee5633e0d1f60000004952690027?type=pic"
+      ]
     },
     {
       "name": "金碧广场",
@@ -9111,7 +14147,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.033234,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/79202ada9c0548b50000006485472463?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/79202ada9c0548b50000006485472463?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/79202ada9c0548b50000006485472463?type=pic",
+        "https://aos-comment.amap.com/B03670246F/comment/A09371A8_CF55_443B_AB41_32CF8FA23C26_L0_001_1500_200_1767342667067_87938729.jpg",
+        "https://aos-comment.amap.com/B03670246F/comment/cf10b7028a76aea0cb1c727a7a2a0b44_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "万溪冲登山步道",
@@ -9120,7 +14161,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.812745,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/18e214aab366efe60000009035858624?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/18e214aab366efe60000009035858624?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/18e214aab366efe60000009035858624?type=pic",
+        "https://aos-comment.amap.com/B0J3NCU3SV/comment/5468c7e0722a7525f16e4120903838b1_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/81c24cbd477de5ab0000003754914189?type=pic"
+      ]
     },
     {
       "name": "花之城",
@@ -9129,7 +14175,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.05415,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/59f3418543b73eeab73257f5df0857b7"
+      "image": "http://store.is.autonavi.com/showpic/59f3418543b73eeab73257f5df0857b7",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/59f3418543b73eeab73257f5df0857b7",
+        "http://store.is.autonavi.com/showpic/36a496671863f95ecf42d20b7403b8bb",
+        "http://store.is.autonavi.com/showpic/cb254325acd11f47bcb398e5df75d0b7"
+      ]
     },
     {
       "name": "古滇精品湿地公园",
@@ -9138,7 +14189,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.772794,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/9ba900725e383b06d65293aeedafde57"
+      "image": "http://store.is.autonavi.com/showpic/9ba900725e383b06d65293aeedafde57",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9ba900725e383b06d65293aeedafde57",
+        "https://store.is.autonavi.com/showpic/4daed74bb4df96270000003053566728?type=pic",
+        "http://store.is.autonavi.com/showpic/9f23322dd7591f0e878cb7a5d81f8633"
+      ]
     },
     {
       "name": "俊发·西亮塘湿地公园",
@@ -9147,7 +14203,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.93576,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/32c3af7aa72ca734780ff387c273a7c3"
+      "image": "http://store.is.autonavi.com/showpic/32c3af7aa72ca734780ff387c273a7c3",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/32c3af7aa72ca734780ff387c273a7c3",
+        "http://store.is.autonavi.com/showpic/e05de1be5b82c75f3ed7b9532633c3b4",
+        "https://aos-comment.amap.com/B03670Y8X0/comment/ab557887e89d5da23d8a7a420c936149_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "昆明大渔公园",
@@ -9156,7 +14217,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.828564,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/3a223a4875c9332a0000002386726257?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/3a223a4875c9332a0000002386726257?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/3a223a4875c9332a0000002386726257?type=pic",
+        "https://aos-comment.amap.com/B0FFFENDPV/comment/4595CCB7_F777_461E_82CE_5A86D3787792_L0_001_2016_1512_1730088434799_76221722.jpg",
+        "http://store.is.autonavi.com/showpic/1b809707df4cf67be303b3c9674d1630"
+      ]
     },
     {
       "name": "滇池绿道水之桥",
@@ -9165,7 +14231,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.865544,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0L62UCUBK/comment/file_media_Photo_38239_IMG_1765783742_36687_IMG_20251215_152722_jpg_ss__1765804053666_98934297.jpg"
+      "image": "https://aos-comment.amap.com/B0L62UCUBK/comment/file_media_Photo_38239_IMG_1765783742_36687_IMG_20251215_152722_jpg_ss__1765804053666_98934297.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0L62UCUBK/comment/file_media_Photo_38239_IMG_1765783742_36687_IMG_20251215_152722_jpg_ss__1765804053666_98934297.jpg",
+        "https://store.is.autonavi.com/showpic/129ecb86c87d3d740000002848384643?type=pic",
+        "https://aos-comment.amap.com/B0L62UCUBK/comment/064CF011_BC31_4993_98D5_F2E614CBC6DA_L0_001_2016_113_1763272617871_12362334.jpg"
+      ]
     },
     {
       "name": "鲜花童话文旅城",
@@ -9174,7 +14245,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.892142,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0LAPZDII0/comment/content_media_external_file_100000813_1766768071294_39521452.jpg"
+      "image": "https://aos-comment.amap.com/B0LAPZDII0/comment/content_media_external_file_100000813_1766768071294_39521452.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0LAPZDII0/comment/content_media_external_file_100000813_1766768071294_39521452.jpg",
+        "https://aos-comment.amap.com/B0LAPZDII0/comment/20260309-cd380b53a9e31c602d5b2c40-Ljbhjf7sXh6nnFfkND5ag.jpg",
+        "https://aos-comment.amap.com/B0LAPZDII0/comment/177270090727_1772700907825_83708206.jpg"
+      ]
     },
     {
       "name": "世界园艺博览园",
@@ -9183,7 +14259,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.07516,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/d27bf1642c47a8b90217ccc569df93a1"
+      "image": "http://store.is.autonavi.com/showpic/d27bf1642c47a8b90217ccc569df93a1",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d27bf1642c47a8b90217ccc569df93a1",
+        "http://store.is.autonavi.com/showpic/8acd88192a85c1dbe6403ade48adf215",
+        "http://store.is.autonavi.com/showpic/3f0d2658b8860277b927e3329834ac8a"
+      ]
     },
     {
       "name": "昙华寺",
@@ -9192,7 +14273,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.045225,
       "category": "宗教寺庙",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/e437a26d661c9b110000003903520483?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/e437a26d661c9b110000003903520483?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/e437a26d661c9b110000003903520483?type=pic",
+        "https://store.is.autonavi.com/showpic/15d3f95ef679c9820000002531320296?type=pic",
+        "https://store.is.autonavi.com/showpic/1e4e663d37f6c5540000002829088956?type=pic"
+      ]
     },
     {
       "name": "沐春湖公园",
@@ -9201,7 +14287,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.872437,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B0K6ARUNZN/comment/D7AB2A73_5FEA_4070_BAB7_92D9323FAF47_L0_001_562_69_1769481087493_01384569.jpg"
+      "image": "https://aos-comment.amap.com/B0K6ARUNZN/comment/D7AB2A73_5FEA_4070_BAB7_92D9323FAF47_L0_001_562_69_1769481087493_01384569.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0K6ARUNZN/comment/D7AB2A73_5FEA_4070_BAB7_92D9323FAF47_L0_001_562_69_1769481087493_01384569.jpg",
+        "https://store.is.autonavi.com/showpic/7a7112b137d424d80000003006424893?type=pic",
+        "https://aos-comment.amap.com/B0K6ARUNZN/comment/92CA86A7_94BE_4226_AF7E_4E317BDA69EC_L0_001_2016_151_1755510576470_57381976.jpg"
+      ]
     },
     {
       "name": "回龙村环湖湿地公园",
@@ -9210,7 +14301,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 24.909356,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/5ebeff6ee6d12fe70000003113372970?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/5ebeff6ee6d12fe70000003113372970?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/5ebeff6ee6d12fe70000003113372970?type=pic",
+        "https://store.is.autonavi.com/showpic/9a7fa567729a21b60000002890260261?type=pic",
+        "https://store.is.autonavi.com/showpic/95da0a28c386635b0000002890220877?type=pic"
+      ]
     }
   ],
   "桂林": [
@@ -9221,7 +14317,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.267579,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/85083b528216d28f25499ea8872ef850"
+      "image": "http://store.is.autonavi.com/showpic/85083b528216d28f25499ea8872ef850",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/85083b528216d28f25499ea8872ef850",
+        "http://store.is.autonavi.com/showpic/879a7a11a18fcfb54a32beed23e37280",
+        "http://store.is.autonavi.com/showpic/471edb1ee65919926066d5d9d74792aa"
+      ]
     },
     {
       "name": "日月双塔文化公园",
@@ -9230,7 +14331,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.270937,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/8d9ab59d63688dce056b519ae964427a"
+      "image": "http://store.is.autonavi.com/showpic/8d9ab59d63688dce056b519ae964427a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8d9ab59d63688dce056b519ae964427a",
+        "http://store.is.autonavi.com/showpic/1e8c861c153ef26a595dfd59b21072fa",
+        "https://store.is.autonavi.com/showpic/b554dd5d3b5ae0de0000003588176966?type=pic"
+      ]
     },
     {
       "name": "独秀峰·王城景区",
@@ -9239,7 +14345,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.281648,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/897a529e69c80f2d6790c91210dab316"
+      "image": "http://store.is.autonavi.com/showpic/897a529e69c80f2d6790c91210dab316",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/897a529e69c80f2d6790c91210dab316",
+        "http://store.is.autonavi.com/showpic/aac7ee85019298d8d7f50a1cee0db37b",
+        "http://store.is.autonavi.com/showpic/27ca8c8cc95cb20155a7ae5cf5650a0d"
+      ]
     },
     {
       "name": "桂林山水甲天下",
@@ -9248,7 +14359,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.283144,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/8a756200f431b6377efeff2066d55d74"
+      "image": "http://store.is.autonavi.com/showpic/8a756200f431b6377efeff2066d55d74",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8a756200f431b6377efeff2066d55d74",
+        "https://store.is.autonavi.com/showpic/7fa7e7786442aabac33687a8ca785755",
+        "https://store.is.autonavi.com/showpic/0b1a26e3efd1975f0000000643384111"
+      ]
     },
     {
       "name": "桂林市两江四湖景区",
@@ -9257,7 +14373,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.27269,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/0ad72477a50f83fb1d6e786e20b3c7c9"
+      "image": "http://store.is.autonavi.com/showpic/0ad72477a50f83fb1d6e786e20b3c7c9",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0ad72477a50f83fb1d6e786e20b3c7c9",
+        "http://store.is.autonavi.com/showpic/b1986a20ef98f5ea860a21b9efe3fe77",
+        "http://store.is.autonavi.com/showpic/4890b9ad018cb5da5645a7485b77944d"
+      ]
     },
     {
       "name": "东西巷",
@@ -9266,7 +14387,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.278717,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/35c2043e9cb19e2bb3e6efc54aea73f5"
+      "image": "http://store.is.autonavi.com/showpic/35c2043e9cb19e2bb3e6efc54aea73f5",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/35c2043e9cb19e2bb3e6efc54aea73f5",
+        "http://store.is.autonavi.com/showpic/355c03858ffddc7ed62a04bbdccc5152",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/b9a5b8ab-7984-4fdc-9a58-e81ce7b041b4.jpg"
+      ]
     },
     {
       "name": "穿山景区",
@@ -9275,7 +14401,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.251983,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/79a00f7b2ddd5db0f8885de7436b3d47"
+      "image": "http://store.is.autonavi.com/showpic/79a00f7b2ddd5db0f8885de7436b3d47",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/79a00f7b2ddd5db0f8885de7436b3d47",
+        "http://store.is.autonavi.com/showpic/df8ea6b96a76d0adeba3741e566be0d7",
+        "http://store.is.autonavi.com/showpic/7a366a1ed87476be0e46454d6903785c"
+      ]
     },
     {
       "name": "信昌·桂海晴岚景区",
@@ -9284,7 +14415,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.265909,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/b48a5da8dbfd524cdcc3edd1f4777428"
+      "image": "http://store.is.autonavi.com/showpic/b48a5da8dbfd524cdcc3edd1f4777428",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b48a5da8dbfd524cdcc3edd1f4777428",
+        "http://store.is.autonavi.com/showpic/9115d2a54a9df330c4252abaf908dea9",
+        "http://store.is.autonavi.com/showpic/4ccb3a013c334d64b227f07ddceb6604"
+      ]
     },
     {
       "name": "漓江景区",
@@ -9293,7 +14429,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.147445,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/6f7c4694ee69fd6d5c2c3cd8f374c1a1"
+      "image": "http://store.is.autonavi.com/showpic/6f7c4694ee69fd6d5c2c3cd8f374c1a1",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6f7c4694ee69fd6d5c2c3cd8f374c1a1",
+        "http://store.is.autonavi.com/showpic/1c2cd1169885aa439d2ae9ca8d2c706c",
+        "http://store.is.autonavi.com/showpic/8f608dfe92f7413d352205f03d16a843"
+      ]
     },
     {
       "name": "桂林市山水公园",
@@ -9302,7 +14443,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.240125,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0FFFOZR8C/comment/content_media_external_file_1000057982_ss__1766156215690_93881344.jpg"
+      "image": "https://aos-comment.amap.com/B0FFFOZR8C/comment/content_media_external_file_1000057982_ss__1766156215690_93881344.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFFOZR8C/comment/content_media_external_file_1000057982_ss__1766156215690_93881344.jpg",
+        "https://aos-comment.amap.com/B0FFFOZR8C/comment/content_media_external_file_100011090_1762387646128_99698687.jpg",
+        "https://store.is.autonavi.com/showpic/cd9555d3476b2bd9079ff21caed5eeec"
+      ]
     },
     {
       "name": "叠彩山",
@@ -9311,7 +14457,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.289934,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/aa4f497ac00fd0038fa3a7b403080ef8"
+      "image": "http://store.is.autonavi.com/showpic/aa4f497ac00fd0038fa3a7b403080ef8",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/aa4f497ac00fd0038fa3a7b403080ef8",
+        "http://store.is.autonavi.com/showpic/cbf0b838207547e06de4b01e70edd4e1",
+        "http://store.is.autonavi.com/showpic/a513a19c1e96be95f191b483054bbc94"
+      ]
     },
     {
       "name": "南溪山公园",
@@ -9320,7 +14471,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.249575,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/17a453388dfae578f3aca16a9e706d2f"
+      "image": "http://store.is.autonavi.com/showpic/17a453388dfae578f3aca16a9e706d2f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/17a453388dfae578f3aca16a9e706d2f",
+        "http://store.is.autonavi.com/showpic/56f661119e8210dbe1bd45f2d7b90226",
+        "http://store.is.autonavi.com/showpic/568c948ba49ae01b89a77a66962fce12"
+      ]
     },
     {
       "name": "日月双塔",
@@ -9329,7 +14485,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.27142,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0H2P5OU3A/comment/content_media_external_file_5535_1766477014791_49028215.jpg"
+      "image": "https://aos-comment.amap.com/B0H2P5OU3A/comment/content_media_external_file_5535_1766477014791_49028215.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0H2P5OU3A/comment/content_media_external_file_5535_1766477014791_49028215.jpg",
+        "https://store.is.autonavi.com/showpic/c9909d4b1d8ccbbb0000003122876849?type=pic",
+        "https://aos-comment.amap.com/B0H2P5OU3A/comment/content_media_external_file_1000023882_ss__1768884652210_99854717.jpg"
+      ]
     },
     {
       "name": "芦笛岩",
@@ -9338,7 +14499,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.309942,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/d9bed94effa350fede311ba76e0df014"
+      "image": "http://store.is.autonavi.com/showpic/d9bed94effa350fede311ba76e0df014",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d9bed94effa350fede311ba76e0df014",
+        "http://store.is.autonavi.com/showpic/066cc40e51a726bd4d3078a35f3796c2",
+        "http://store.is.autonavi.com/showpic/b45090932b3e3ce6421975f4e052bfb7"
+      ]
     },
     {
       "name": "桂林尧山景区",
@@ -9347,7 +14513,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.289384,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/2e05644650d5ef3d0000004027286739?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/2e05644650d5ef3d0000004027286739?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/2e05644650d5ef3d0000004027286739?type=pic",
+        "http://store.is.autonavi.com/showpic/efabbc9057ab6baaf24a2caa326140df",
+        "https://store.is.autonavi.com/showpic/246e461383aac9ed0000002444466482?type=pic"
+      ]
     },
     {
       "name": "象鼻山观景台",
@@ -9356,7 +14527,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.266674,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0FFHJBEQH/comment/a56ce1958b8c5155cd1b2e657bdb1706_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0FFHJBEQH/comment/a56ce1958b8c5155cd1b2e657bdb1706_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFHJBEQH/comment/a56ce1958b8c5155cd1b2e657bdb1706_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFHJBEQH/comment/20260313-69628856d5f8520a71970969-1oCx9XLdVH68rX443Noyll.jpg",
+        "https://store.is.autonavi.com/showpic/3a507f48a23745750000002396618836?type=pic"
+      ]
     },
     {
       "name": "象鼻山渔人码头",
@@ -9365,7 +14541,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.271556,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0FFJH27UR/comment/content_media_external_file_1000060901_ss__1758708081876_54564068.jpg"
+      "image": "https://aos-comment.amap.com/B0FFJH27UR/comment/content_media_external_file_1000060901_ss__1758708081876_54564068.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFJH27UR/comment/content_media_external_file_1000060901_ss__1758708081876_54564068.jpg",
+        "https://aos-comment.amap.com/B0FFJH27UR/comment/A54BC1A0_46A6_47EA_957D_F903337405FC_L0_001_2016_151_1753430202483_06376379.jpg",
+        "https://aos-comment.amap.com/B0FFJH27UR/comment/1D484B03_F5E4_4904_B28D_4A12ACEC40E4_L0_001_2048_153_1763374650453_18190916.jpg"
+      ]
     },
     {
       "name": "甲天下广场",
@@ -9374,7 +14555,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.261138,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/0cc60032d87866e16c93a3cc57c077ed"
+      "image": "http://store.is.autonavi.com/showpic/0cc60032d87866e16c93a3cc57c077ed",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0cc60032d87866e16c93a3cc57c077ed",
+        "https://store.is.autonavi.com/showpic/eaaa668bb622b4ee7b1fd6b009dcb357",
+        "https://aos-comment.amap.com/B03050W8OE/comment/F2498E50_578F_4FEF_967C_8F3C9A2C7F36_L0_001_2000_114_1767596696795_96665266.jpg"
+      ]
     },
     {
       "name": "李宗仁官邸",
@@ -9383,7 +14569,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.271641,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/967332589153712743dd1860f81ba324"
+      "image": "http://store.is.autonavi.com/showpic/967332589153712743dd1860f81ba324",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/967332589153712743dd1860f81ba324",
+        "http://store.is.autonavi.com/showpic/41766fcc2522bf6c0b1e4b9c7f7c46fc",
+        "http://store.is.autonavi.com/showpic/909874363ce58d906a344d9549149bc0"
+      ]
     },
     {
       "name": "伏波山景区",
@@ -9392,7 +14583,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.283391,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/ddef6f879cddbc70a9aa0521bb40a980"
+      "image": "http://store.is.autonavi.com/showpic/ddef6f879cddbc70a9aa0521bb40a980",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ddef6f879cddbc70a9aa0521bb40a980",
+        "http://store.is.autonavi.com/showpic/198d5309630bbe051bbfd72c4e843b2c",
+        "http://store.is.autonavi.com/showpic/beb19682e7d4e8d9a3aa2df86a95e441"
+      ]
     },
     {
       "name": "大圩古镇",
@@ -9401,7 +14597,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.181553,
       "category": "古镇村落",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/e0d6d9de93b0d64f70773191a1c1ef10"
+      "image": "http://store.is.autonavi.com/showpic/e0d6d9de93b0d64f70773191a1c1ef10",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e0d6d9de93b0d64f70773191a1c1ef10",
+        "https://store.is.autonavi.com/showpic/172d6dde8e78383e0000002875956154?type=pic",
+        "https://aos-comment.amap.com/B0FFG6RK2W/comment/content_media_external_file_100000703_1767680791040_20036757.jpg"
+      ]
     },
     {
       "name": "漓江三星游船(磨盘山客运港)",
@@ -9410,7 +14611,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.146957,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/888d2529965f56296993dbae14bc8e70"
+      "image": "http://store.is.autonavi.com/showpic/888d2529965f56296993dbae14bc8e70",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/888d2529965f56296993dbae14bc8e70",
+        "http://store.is.autonavi.com/showpic/9393b1c3eabae0a60f46642de8a96fb6",
+        "http://store.is.autonavi.com/showpic/8a4dd24bbeba6b7609996c26215a5a48"
+      ]
     },
     {
       "name": "桂林飞虎队遗址公园",
@@ -9419,7 +14625,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.21391,
       "category": "历史人文",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0FFFWHXIW/comment/content_media_external_images_media_1000042497_ss__1740133076725_46084467.jpg"
+      "image": "https://aos-comment.amap.com/B0FFFWHXIW/comment/content_media_external_images_media_1000042497_ss__1740133076725_46084467.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFFWHXIW/comment/content_media_external_images_media_1000042497_ss__1740133076725_46084467.jpg",
+        "https://store.is.autonavi.com/showpic/a28b085bc5309f8b8e1f7d69cb60cd9d",
+        "https://aos-comment.amap.com/B0FFFWHXIW/comment/content_media_external_file_1000038475_ss__1751609103034_92412857.jpg"
+      ]
     },
     {
       "name": "广西桂林国家森林公园",
@@ -9428,7 +14639,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.22388,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/e6a1e3de9cb6e3a462791af5043446a5"
+      "image": "http://store.is.autonavi.com/showpic/e6a1e3de9cb6e3a462791af5043446a5",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e6a1e3de9cb6e3a462791af5043446a5",
+        "http://store.is.autonavi.com/showpic/db5d50b9d48debddfebac5ca56422d0b",
+        "https://store.is.autonavi.com/showpic/83b7b936a56e006e0000004069850954?type=pic"
+      ]
     },
     {
       "name": "七星景区",
@@ -9437,7 +14653,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.271824,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/5590e1d0aa4c39d3f6b7d70401fee544"
+      "image": "http://store.is.autonavi.com/showpic/5590e1d0aa4c39d3f6b7d70401fee544",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5590e1d0aa4c39d3f6b7d70401fee544",
+        "http://store.is.autonavi.com/showpic/9f08230c779d7c963c392fba30ac31bb",
+        "http://store.is.autonavi.com/showpic/73ddb49385c8671ea553d1ce5606b6d4"
+      ]
     },
     {
       "name": "芦笛景区",
@@ -9446,7 +14667,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.30994,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/7cf3b67b35c3dc55d9e0fcc26e393f77"
+      "image": "http://store.is.autonavi.com/showpic/7cf3b67b35c3dc55d9e0fcc26e393f77",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/7cf3b67b35c3dc55d9e0fcc26e393f77",
+        "https://aos-comment.amap.com/B03050VG4W/comment/content_media_external_file_8978_ss__1759019115952_46673872.jpg",
+        "https://aos-comment.amap.com/B03050VG4W/comment/content_media_external_file_100019008_1765463716429_23876159.jpg"
+      ]
     },
     {
       "name": "桂林园林植物园",
@@ -9455,7 +14681,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.252968,
       "category": "主题乐园",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/6f8b0bb9696f14fa5361c57694db248b"
+      "image": "http://store.is.autonavi.com/showpic/6f8b0bb9696f14fa5361c57694db248b",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6f8b0bb9696f14fa5361c57694db248b",
+        "https://aos-comment.amap.com/B030502B70/comment/content_media_external_images_media_209622_1659539383444_e7a18af1.jpg",
+        "https://aos-comment.amap.com/B030502B70/comment/content_media_external_images_media_209624_1659539383445_eed52828.jpg"
+      ]
     },
     {
       "name": "桂花公社景区",
@@ -9464,7 +14695,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.28008,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/4d6d498e77ed757558f85fd6cf62f0e8"
+      "image": "https://store.is.autonavi.com/showpic/4d6d498e77ed757558f85fd6cf62f0e8",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/4d6d498e77ed757558f85fd6cf62f0e8",
+        "http://store.is.autonavi.com/showpic/223b2fb24150fcd2136ec6dd3352ba6c",
+        "https://aos-comment.amap.com/B0HKN7RLX9/comment/b5152aa28743c26f28d4d7c8a91a08bf_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "虞山公园",
@@ -9473,7 +14709,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.298976,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/5486d3c3e6f4a296f935305b0b366a31"
+      "image": "http://store.is.autonavi.com/showpic/5486d3c3e6f4a296f935305b0b366a31",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5486d3c3e6f4a296f935305b0b366a31",
+        "http://store.is.autonavi.com/showpic/b757580818b878f6e1ffb5d54972a7e1",
+        "http://store.is.autonavi.com/showpic/5bd9db4496c198e28da6bd223cf63f79"
+      ]
     },
     {
       "name": "鲁家村",
@@ -9482,7 +14723,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.29578,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B03050X3MQ/comment/20260312-6e36bb35f7ca4a967cf05732-3c6pPA8Jtfd7EfLhk5URT5.jpg"
+      "image": "https://aos-comment.amap.com/B03050X3MQ/comment/20260312-6e36bb35f7ca4a967cf05732-3c6pPA8Jtfd7EfLhk5URT5.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B03050X3MQ/comment/20260312-6e36bb35f7ca4a967cf05732-3c6pPA8Jtfd7EfLhk5URT5.jpg",
+        "https://aos-comment.amap.com/B03050X3MQ/comment/112096DA_FAC7_4118_A53D_32BE89C221FD_L0_001_1500_200_1768450072902_18220153.jpg",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/efcc815b-e7f4-4382-a1d3-9eaff9ab616e.jpg"
+      ]
     },
     {
       "name": "古南门",
@@ -9491,7 +14737,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.276145,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B030509429/comment/6C81324E_193F_4F64_A87E_5AB849624A2B_L0_001_2133_1600_1726466442968_23185036.jpg"
+      "image": "https://aos-comment.amap.com/B030509429/comment/6C81324E_193F_4F64_A87E_5AB849624A2B_L0_001_2133_1600_1726466442968_23185036.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B030509429/comment/6C81324E_193F_4F64_A87E_5AB849624A2B_L0_001_2133_1600_1726466442968_23185036.jpg",
+        "https://aos-comment.amap.com/B030509429/comment/content_media_external_file_1000021562_ss__1763287998610_40304141.jpg",
+        "https://aos-comment.amap.com/B030509429/comment/ad36238b5ce8b1ae3d7585449d614065_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "永宁广场",
@@ -9500,7 +14751,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.342317,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/7e8ccefb694bbbc30000002408754781?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/7e8ccefb694bbbc30000002408754781?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/7e8ccefb694bbbc30000002408754781?type=pic",
+        "https://store.is.autonavi.com/showpic/48192ff5787d713a98458e37d22367d9",
+        "https://aos-comment.amap.com/B0FFITQ7RC/comment/1e1823c031fef8c34907b372c5d92271_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "第一观景台",
@@ -9509,7 +14765,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.268447,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0FFG1Q6G1/comment/content_media_external_file_18111_ss__1761878918222_30377133.jpg"
+      "image": "https://aos-comment.amap.com/B0FFG1Q6G1/comment/content_media_external_file_18111_ss__1761878918222_30377133.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFG1Q6G1/comment/content_media_external_file_18111_ss__1761878918222_30377133.jpg",
+        "https://aos-comment.amap.com/B0FFG1Q6G1/comment/content_media_external_file_18124_ss__1761878918269_33393537.jpg",
+        "https://store.is.autonavi.com/showpic/27a2adb0cc90cd8c0000000853284682?type=pic"
+      ]
     },
     {
       "name": "东西巷牌坊",
@@ -9518,7 +14779,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.278334,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0FFJO1PRH/comment/content_media_external_file_9479_ss__1764817754643_94761646.jpg"
+      "image": "https://aos-comment.amap.com/B0FFJO1PRH/comment/content_media_external_file_9479_ss__1764817754643_94761646.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFJO1PRH/comment/content_media_external_file_9479_ss__1764817754643_94761646.jpg",
+        "https://store.is.autonavi.com/showpic/5482dd18ae5d7b950000000725832992?type=pic",
+        "https://aos-comment.amap.com/B0FFJO1PRH/comment/content_media_external_file_1000070643_ss__1770545336447_15630132.jpg"
+      ]
     },
     {
       "name": "会仙玻璃田",
@@ -9527,7 +14793,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.047258,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0FFIXEZTI/comment/b34870e28c628a7ddd261d8e6de36e4f_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0FFIXEZTI/comment/b34870e28c628a7ddd261d8e6de36e4f_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFIXEZTI/comment/b34870e28c628a7ddd261d8e6de36e4f_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFIXEZTI/comment/40FEBA4B_FCE6_4CEC_9982_395D1BCAC6AE_L0_001_2000_150_1763336354779_87868007.jpg",
+        "https://store.is.autonavi.com/showpic/7cf9051fa9f9b8c20000000719748759?type=pic"
+      ]
     },
     {
       "name": "桂林园博园",
@@ -9536,7 +14807,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.063473,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/e3fa3d59a13a615c775fb87f03f844cd"
+      "image": "http://store.is.autonavi.com/showpic/e3fa3d59a13a615c775fb87f03f844cd",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e3fa3d59a13a615c775fb87f03f844cd",
+        "http://store.is.autonavi.com/showpic/f6a66bee5577429acc19b3cfc42e6a10",
+        "http://store.is.autonavi.com/showpic/e6b3eed65873c03f603f5cf9026dd2a0"
+      ]
     },
     {
       "name": "市民广场",
@@ -9545,7 +14821,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.231778,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B0FFGY2NVH/comment/fba2ee4de0b0a7f076371f4aee9cb039_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0FFGY2NVH/comment/fba2ee4de0b0a7f076371f4aee9cb039_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFGY2NVH/comment/fba2ee4de0b0a7f076371f4aee9cb039_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/e0c835b51a6e0e880000002374902729",
+        "https://aos-comment.amap.com/B0FFGY2NVH/comment/ef4580c9b5fc26a66da7508e1fb88d30_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "状元桥",
@@ -9554,7 +14835,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.166018,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/c31afa46f3a7535e0000003422354651?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/c31afa46f3a7535e0000003422354651?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/c31afa46f3a7535e0000003422354651?type=pic",
+        "https://aos-comment.amap.com/B0FFLCWFSE/comment/bd784d6b7323b9cfe0ae43306bc2f92d_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFLCWFSE/comment/content_media_external_file_117753_ss__1756907436554_05891987.jpg"
+      ]
     },
     {
       "name": "李宗仁故居",
@@ -9563,7 +14849,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.168265,
       "category": "历史人文",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/7e260e0c79ff4fa1b1a455ef63171f3b"
+      "image": "https://store.is.autonavi.com/showpic/7e260e0c79ff4fa1b1a455ef63171f3b",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/7e260e0c79ff4fa1b1a455ef63171f3b",
+        "https://store.is.autonavi.com/showpic/c7deae8ea5210ae60000004013776496?type=pic",
+        "https://store.is.autonavi.com/showpic/a6bbd4835032da5e0000003046134318"
+      ]
     },
     {
       "name": "桂林动物园",
@@ -9572,7 +14863,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.269052,
       "category": "主题乐园",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/738f4412eff8e17ae1f0d138f240a4ef"
+      "image": "http://store.is.autonavi.com/showpic/738f4412eff8e17ae1f0d138f240a4ef",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/738f4412eff8e17ae1f0d138f240a4ef",
+        "http://store.is.autonavi.com/showpic/70972b39edbd3bd2807b1990bd4112a3",
+        "http://store.is.autonavi.com/showpic/9f54904b4eb284579df9f063fc3707d4"
+      ]
     },
     {
       "name": "桂林融创封神幻境演艺城",
@@ -9581,7 +14877,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.051683,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/0e5364fd6e98ab69440feac9308e7b19"
+      "image": "http://store.is.autonavi.com/showpic/0e5364fd6e98ab69440feac9308e7b19",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0e5364fd6e98ab69440feac9308e7b19",
+        "http://store.is.autonavi.com/showpic/a221806bf2d65085e12dc07fc1d08f03",
+        "http://store.is.autonavi.com/showpic/b54657addf924682b7b678155277186a"
+      ]
     },
     {
       "name": "东山奇峰观景台",
@@ -9590,7 +14891,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.169431,
       "category": "自然风光",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/6fe6762d053630470000001272550451"
+      "image": "https://store.is.autonavi.com/showpic/6fe6762d053630470000001272550451",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/6fe6762d053630470000001272550451",
+        "https://store.is.autonavi.com/showpic/94692111a3594b970000002442852864?type=pic",
+        "https://store.is.autonavi.com/showpic/4301c1f01388b55a0000009178602072?type=pic"
+      ]
     },
     {
       "name": "雁山园",
@@ -9599,7 +14905,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.077682,
       "category": "自然风光",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B030507TU3/comment/d312da0d3bb6f2be5f1a88cd6c1d53b3_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B030507TU3/comment/d312da0d3bb6f2be5f1a88cd6c1d53b3_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B030507TU3/comment/d312da0d3bb6f2be5f1a88cd6c1d53b3_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B030507TU3/comment/A4ABD4E7_AE6E_4FF6_A7C2_75D959104A4D_L0_001_1134_201_1763887372769_10464153.jpg",
+        "https://aos-comment.amap.com/B030507TU3/comment/content_media_external_file_100004784_1769850491259_90791192.jpg"
+      ]
     },
     {
       "name": "刘三姐大观园",
@@ -9608,7 +14919,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.280555,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/05efef937e6e0689e436f04708ad5ba7"
+      "image": "http://store.is.autonavi.com/showpic/05efef937e6e0689e436f04708ad5ba7",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/05efef937e6e0689e436f04708ad5ba7",
+        "http://store.is.autonavi.com/showpic/b831c35fadee5817639e9c1638cc447b",
+        "http://store.is.autonavi.com/showpic/f3ef18c9f67576aa71f13dd0bbe61665"
+      ]
     },
     {
       "name": "空港花田",
@@ -9617,7 +14933,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.202636,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/3b4ea701e68c8dd90000008882146742?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/3b4ea701e68c8dd90000008882146742?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/3b4ea701e68c8dd90000008882146742?type=pic",
+        "https://store.is.autonavi.com/showpic/4d5a1a17912d02770000008882148555?type=pic",
+        "https://store.is.autonavi.com/showpic/aed72128184a71ec48fa69b6cff6fa2f"
+      ]
     },
     {
       "name": "甑皮岩国家考古遗址公园",
@@ -9626,7 +14947,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.212676,
       "category": "历史人文",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/c27082dad4d7230d0000003778210064?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/c27082dad4d7230d0000003778210064?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/c27082dad4d7230d0000003778210064?type=pic",
+        "https://store.is.autonavi.com/showpic/fe8b4b866f43bf1c0000003778192806?type=pic",
+        "https://store.is.autonavi.com/showpic/d3e5512ee19b502e5646f68fc2427c94"
+      ]
     },
     {
       "name": "下月山古道",
@@ -9635,7 +14961,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.174113,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B0K01OH5UJ/comment/content_media_external_file_1000079033_ss__1766888278553_20108675.jpg"
+      "image": "https://aos-comment.amap.com/B0K01OH5UJ/comment/content_media_external_file_1000079033_ss__1766888278553_20108675.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0K01OH5UJ/comment/content_media_external_file_1000079033_ss__1766888278553_20108675.jpg",
+        "https://store.is.autonavi.com/showpic/6f0d794243e7817c8f7c79b6a1f945e9",
+        "https://aos-comment.amap.com/B0K01OH5UJ/comment/content_media_external_images_media_1000045954_ss__1758334088860_85960255.jpg"
+      ]
     },
     {
       "name": "八路军桂林办事处纪念馆",
@@ -9644,7 +14975,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.286915,
       "category": "历史人文",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/3a223a972c4bfa1cf19f16e8a7670249"
+      "image": "https://store.is.autonavi.com/showpic/3a223a972c4bfa1cf19f16e8a7670249",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/3a223a972c4bfa1cf19f16e8a7670249",
+        "https://store.is.autonavi.com/showpic/f01a17c0ab01b9ecc360074142fb5579",
+        "https://store.is.autonavi.com/showpic/2f4e09c8c5854af9394736634c2df90b"
+      ]
     },
     {
       "name": "穿北亭登山口",
@@ -9653,7 +14989,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.253422,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/03ffd034ce5fa6670000000736792463?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/03ffd034ce5fa6670000000736792463?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/03ffd034ce5fa6670000000736792463?type=pic",
+        "https://aos-comment.amap.com/B0FFG1Q8VH/comment/content_media_external_file_1000008305_ss__1745129791068_80334121.jpg",
+        "https://store.is.autonavi.com/showpic/1e08d83b058774e9636c042705fa57d6"
+      ]
     },
     {
       "name": "桂林山水甲天下(文化景观园)",
@@ -9662,7 +15003,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.249981,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B0JRRRXA5Y/comment/content_media_external_file_1000015723_ss__1773465356890_96493941.jpg"
+      "image": "https://aos-comment.amap.com/B0JRRRXA5Y/comment/content_media_external_file_1000015723_ss__1773465356890_96493941.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0JRRRXA5Y/comment/content_media_external_file_1000015723_ss__1773465356890_96493941.jpg",
+        "https://store.is.autonavi.com/showpic/5604b4d5d201177fb9dc8b37a4b69429",
+        "https://store.is.autonavi.com/showpic/cf498f150b5d8569892d1e819170f4da"
+      ]
     },
     {
       "name": "七星公园七星岩洞",
@@ -9671,7 +15017,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.275195,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B0FFH2GVVG/comment/content_media_external_file_1000060195_ss__1763915610339_58638072.jpg"
+      "image": "https://aos-comment.amap.com/B0FFH2GVVG/comment/content_media_external_file_1000060195_ss__1763915610339_58638072.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFH2GVVG/comment/content_media_external_file_1000060195_ss__1763915610339_58638072.jpg",
+        "https://aos-comment.amap.com/B0FFH2GVVG/comment/bf4ca41dfa86e73ad767573b00a71b47_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/4590c505ad6c8a3b103dfc68fca9dd01"
+      ]
     },
     {
       "name": "能仁禅寺",
@@ -9680,7 +15031,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.279533,
       "category": "宗教寺庙",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/78c6c7f3b7d376eff8142c3fd0a34f2c"
+      "image": "http://store.is.autonavi.com/showpic/78c6c7f3b7d376eff8142c3fd0a34f2c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/78c6c7f3b7d376eff8142c3fd0a34f2c",
+        "https://aos-comment.amap.com/B030507EP5/comment/content_media_external_file_1000035131_ss__1769672811653_72759932.jpg",
+        "https://aos-comment.amap.com/B030507EP5/comment/content_media_external_file_1000179798_ss__1751530312718_65866421.jpg"
+      ]
     },
     {
       "name": "上寨村露营滩",
@@ -9689,7 +15045,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 25.279727,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/991d12393003841b0e624a3e1ed27de0"
+      "image": "https://store.is.autonavi.com/showpic/991d12393003841b0e624a3e1ed27de0",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/991d12393003841b0e624a3e1ed27de0",
+        "https://store.is.autonavi.com/showpic/2d16e44fc3bc60f27a3138475be8d436",
+        "https://store.is.autonavi.com/showpic/2da15641916fba440000002365934269"
+      ]
     }
   ],
   "三亚": [
@@ -9700,7 +15061,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.22082,
       "category": "城市地标",
       "rating": 4.9,
-      "image": "http://store.is.autonavi.com/showpic/d13e9b08dd3a19359b1102934dc08782"
+      "image": "http://store.is.autonavi.com/showpic/d13e9b08dd3a19359b1102934dc08782",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d13e9b08dd3a19359b1102934dc08782",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/39681614-448b-49a2-82cd-296f2c020fb8.jpg",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/ce5c7ea1-d85e-444a-8809-7eade65cc73c.jpg"
+      ]
     },
     {
       "name": "鹿回头风景区",
@@ -9709,7 +15075,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.225639,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/5e741e3870348298407cc04bf881b99b"
+      "image": "http://store.is.autonavi.com/showpic/5e741e3870348298407cc04bf881b99b",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5e741e3870348298407cc04bf881b99b",
+        "http://store.is.autonavi.com/showpic/a7188fdacd7748c0acbc3c2b42b462af",
+        "http://store.is.autonavi.com/showpic/f994dcf1956dc801c97bc1550ea569ed"
+      ]
     },
     {
       "name": "亚龙湾国家旅游度假区",
@@ -9718,7 +15089,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.235582,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/a8a27a93-ae69-4bd2-97cf-5f92f4a07119.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/a8a27a93-ae69-4bd2-97cf-5f92f4a07119.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/a8a27a93-ae69-4bd2-97cf-5f92f4a07119.jpg",
+        "http://store.is.autonavi.com/showpic/a8e7ad9fc117e1a9fe1542b24b5f6bf3",
+        "http://store.is.autonavi.com/showpic/549c3095e062f8299a1fe2c03199a114"
+      ]
     },
     {
       "name": "三亚西岛海洋文化旅游区",
@@ -9727,7 +15103,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.237774,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/6453bbab078771ef2a5cf9837f0be30b"
+      "image": "http://store.is.autonavi.com/showpic/6453bbab078771ef2a5cf9837f0be30b",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6453bbab078771ef2a5cf9837f0be30b",
+        "http://store.is.autonavi.com/showpic/96a23ce5d0a01a2226a4b1d54a3054db",
+        "http://store.is.autonavi.com/showpic/9dae35d6cfb57490a31070d34b64d7e6"
+      ]
     },
     {
       "name": "天涯海角游览区",
@@ -9736,7 +15117,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.294988,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/a73b1b6e8914654c9b83d5a8d0518a3b"
+      "image": "http://store.is.autonavi.com/showpic/a73b1b6e8914654c9b83d5a8d0518a3b",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a73b1b6e8914654c9b83d5a8d0518a3b",
+        "http://store.is.autonavi.com/showpic/65efc845a5e74bef054e7cdf355ba26e",
+        "http://store.is.autonavi.com/showpic/ada6fa24ad7689b82012b8a55aa28f28"
+      ]
     },
     {
       "name": "亚龙湾海滩",
@@ -9745,7 +15131,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.229188,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/4705f28749a0275a0000003133224363?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/4705f28749a0275a0000003133224363?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/4705f28749a0275a0000003133224363?type=pic",
+        "https://store.is.autonavi.com/showpic/d74fc8a3d4fee18b0000003481920370?type=pic",
+        "https://aos-comment.amap.com/B0FFM0MGNM/comment/content_media_external_images_media_170111_ss__1770437865538_84550493.jpg"
+      ]
     },
     {
       "name": "蜈支洲岛旅游风景区",
@@ -9754,7 +15145,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.310381,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "https://store.is.autonavi.com/showpic/FB987A825D3C460684E009C9487D6AB8"
+      "image": "https://store.is.autonavi.com/showpic/FB987A825D3C460684E009C9487D6AB8",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/FB987A825D3C460684E009C9487D6AB8",
+        "https://store.is.autonavi.com/showpic/AF4F70C2B59B45238C0F0A873B71820B",
+        "http://store.is.autonavi.com/showpic/3a39d7dc2ba95d0b3ccaed4fd1a4810c"
+      ]
     },
     {
       "name": "南山文化旅游区南山海上观音",
@@ -9763,7 +15159,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.290676,
       "category": "自然风光",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/beb7e6fd54534dfa94a833bb17b84338"
+      "image": "http://store.is.autonavi.com/showpic/beb7e6fd54534dfa94a833bb17b84338",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/beb7e6fd54534dfa94a833bb17b84338",
+        "http://store.is.autonavi.com/showpic/58af228d54380ccf31fec3e232759a6b",
+        "http://store.is.autonavi.com/showpic/45d171d466a56146826dd96e3e5d8868"
+      ]
     },
     {
       "name": "海月广场",
@@ -9772,7 +15173,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.259085,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/b3ddf37de3181e38102cde74d6a56a42"
+      "image": "http://store.is.autonavi.com/showpic/b3ddf37de3181e38102cde74d6a56a42",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b3ddf37de3181e38102cde74d6a56a42",
+        "https://aos-comment.amap.com/B03830MO5B/comment/content_media_external_file_73556_ss__1767682333384_26240172.jpg",
+        "https://aos-comment.amap.com/B03830MO5B/comment/CD19EEF5_B690_4402_83EF_00BDBB18EC09_L0_001_2016_113_1767505303351_65631253.jpg"
+      ]
     },
     {
       "name": "临春岭森林公园",
@@ -9781,7 +15187,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.260389,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/f79039acdf3693d54f2666b492eb6448"
+      "image": "https://store.is.autonavi.com/showpic/f79039acdf3693d54f2666b492eb6448",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/f79039acdf3693d54f2666b492eb6448",
+        "https://store.is.autonavi.com/showpic/31c80f0be5debce00000009291958622?type=pic",
+        "https://aos-comment.amap.com/B0FFFGZYT1/comment/content_media_external_file_100008105_1763340680708_81962306.jpg"
+      ]
     },
     {
       "name": "凤凰岛桥头公园",
@@ -9790,7 +15201,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.24604,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/a7fd89e47025ac4f0000003776132286?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/a7fd89e47025ac4f0000003776132286?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/a7fd89e47025ac4f0000003776132286?type=pic",
+        "https://store.is.autonavi.com/showpic/44f1f9c79a7d66e30000002688960733?type=pic",
+        "https://store.is.autonavi.com/showpic/87cc29ef1f5002320000004869870516?type=pic"
+      ]
     },
     {
       "name": "三亚千古情景区",
@@ -9799,7 +15215,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.291009,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/86d53a0556e65ebfffcd96ca5f7d58bd"
+      "image": "http://store.is.autonavi.com/showpic/86d53a0556e65ebfffcd96ca5f7d58bd",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/86d53a0556e65ebfffcd96ca5f7d58bd",
+        "http://store.is.autonavi.com/showpic/dc936aa6679d44923d24166e40d6dc13",
+        "http://store.is.autonavi.com/showpic/55cb53eb896b7c9154afadcf01d485a0"
+      ]
     },
     {
       "name": "大东海广场",
@@ -9808,7 +15229,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.221866,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/9ac5480b479b5dc50c4541f40c87dc6c"
+      "image": "http://store.is.autonavi.com/showpic/9ac5480b479b5dc50c4541f40c87dc6c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9ac5480b479b5dc50c4541f40c87dc6c",
+        "http://store.is.autonavi.com/showpic/c317d77f36d72e5493ad591377df814a",
+        "https://aos-comment.amap.com/B0383004F5/comment/content_media_external_file_100005411_1763688838143_70991732.jpg"
+      ]
     },
     {
       "name": "小东海",
@@ -9817,7 +15243,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.208582,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/332e0e6183b6018218b506a77c229d07"
+      "image": "http://store.is.autonavi.com/showpic/332e0e6183b6018218b506a77c229d07",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/332e0e6183b6018218b506a77c229d07",
+        "https://aos-comment.amap.com/B03830MO65/comment/content_media_external_images_media_100014142_1765869352104_70888357.jpg",
+        "http://store.is.autonavi.com/showpic/863a36fb328f2486cc02a65af7e1294b"
+      ]
     },
     {
       "name": "小东海海滩",
@@ -9826,7 +15257,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.205106,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0J0UAYE9T/comment/content_media_external_file_99711_ss__1759189871396_74663293.jpg"
+      "image": "https://aos-comment.amap.com/B0J0UAYE9T/comment/content_media_external_file_99711_ss__1759189871396_74663293.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0J0UAYE9T/comment/content_media_external_file_99711_ss__1759189871396_74663293.jpg",
+        "https://store.is.autonavi.com/showpic/049de7e3a353e9b10000003135960727?type=pic",
+        "https://aos-comment.amap.com/B0J0UAYE9T/comment/6C27CAD1_2414_45AF_A811_8433861F3BD5_L0_001_2000_150_1760774904156_81566755.jpg"
+      ]
     },
     {
       "name": "亚龙湾热带天堂森林公园",
@@ -9835,7 +15271,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.253643,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/09e822ba5b1a7ab5423832a38980476c"
+      "image": "http://store.is.autonavi.com/showpic/09e822ba5b1a7ab5423832a38980476c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/09e822ba5b1a7ab5423832a38980476c",
+        "http://store.is.autonavi.com/showpic/361e7f674e3ba5556bb7c59cb45d447f",
+        "http://store.is.autonavi.com/showpic/375092290421aaedbf90f969eb6d081d"
+      ]
     },
     {
       "name": "后海村",
@@ -9844,7 +15285,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.272223,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/7a39e1ae245859480833b5fa03c5d216"
+      "image": "http://store.is.autonavi.com/showpic/7a39e1ae245859480833b5fa03c5d216",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/7a39e1ae245859480833b5fa03c5d216",
+        "http://store.is.autonavi.com/showpic/6471fa2089dd463d4d3e9a27e8c7675c",
+        "http://store.is.autonavi.com/showpic/5ac11e81542a5751e4ecc2c8536bfe8f"
+      ]
     },
     {
       "name": "三亚亚特兰蒂斯景区",
@@ -9853,7 +15299,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.355462,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/7da935f250c380ee0000003140408415?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/7da935f250c380ee0000003140408415?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/7da935f250c380ee0000003140408415?type=pic",
+        "https://store.is.autonavi.com/showpic/4648d7885cb5ce630000006572212658?type=pic",
+        "http://store.is.autonavi.com/showpic/1b82f63a287c04f9adbfb71ff7d80ee6"
+      ]
     },
     {
       "name": "海棠广场",
@@ -9862,7 +15313,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.316091,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/4aa363846f00088d8545498749062c86"
+      "image": "http://store.is.autonavi.com/showpic/4aa363846f00088d8545498749062c86",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/4aa363846f00088d8545498749062c86",
+        "http://store.is.autonavi.com/showpic/c50d7f3aba20aeb61f0fa18b39b19c2f",
+        "http://store.is.autonavi.com/showpic/49f90bb3b2ad1b74514e7007e6ea7cc0"
+      ]
     },
     {
       "name": "三亚南山文化旅游区",
@@ -9871,7 +15327,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.298366,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/4e6f68323f2bc80f42d4939a250b6258"
+      "image": "http://store.is.autonavi.com/showpic/4e6f68323f2bc80f42d4939a250b6258",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/4e6f68323f2bc80f42d4939a250b6258",
+        "http://store.is.autonavi.com/showpic/9f18a5d269b26d6f59a3ad018169c41e",
+        "http://store.is.autonavi.com/showpic/4af42fd013e559f29ecbc2c241487b82"
+      ]
     },
     {
       "name": "三亚·中交凤凰岛",
@@ -9880,7 +15341,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.240317,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B03830MONV/comment/0F175754_85B6_4AC5_A575_020B40FA2464_L0_001_1706_127_1769436180772_88835605.jpg"
+      "image": "https://aos-comment.amap.com/B03830MONV/comment/0F175754_85B6_4AC5_A575_020B40FA2464_L0_001_1706_127_1769436180772_88835605.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B03830MONV/comment/0F175754_85B6_4AC5_A575_020B40FA2464_L0_001_1706_127_1769436180772_88835605.jpg",
+        "http://store.is.autonavi.com/showpic/07f18ec1b9cb5ccdae0a30dd4a9527f6",
+        "https://aos-comment.amap.com/B03830MONV/comment/content_media_external_images_media_100005524_1739131530758_12314454.jpg"
+      ]
     },
     {
       "name": "三亚凤凰岭海誓山盟景区",
@@ -9889,7 +15355,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.256983,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/6ceaecd8cd655a5587ac78a84f6dbe12"
+      "image": "http://store.is.autonavi.com/showpic/6ceaecd8cd655a5587ac78a84f6dbe12",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6ceaecd8cd655a5587ac78a84f6dbe12",
+        "http://store.is.autonavi.com/showpic/cd732ac9baa7bda49571edac42c604a4",
+        "http://store.is.autonavi.com/showpic/c3e8bf95da901d30105f89d5e76010db"
+      ]
     },
     {
       "name": "海虹广场",
@@ -9898,7 +15369,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.287009,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/cabcb9ada5ab2d620000002685512181?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/cabcb9ada5ab2d620000002685512181?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/cabcb9ada5ab2d620000002685512181?type=pic",
+        "https://aos-comment.amap.com/comment/content_service__1770445694353_41938548_1770445712593_06116663.jpg",
+        "http://store.is.autonavi.com/showpic/e707a09ef450c36e428a60ded8b220c9"
+      ]
     },
     {
       "name": "牛王岭",
@@ -9907,7 +15383,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.226203,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/63118812fd95bd7deae196d340daccb6"
+      "image": "http://store.is.autonavi.com/showpic/63118812fd95bd7deae196d340daccb6",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/63118812fd95bd7deae196d340daccb6",
+        "https://aos-comment.amap.com/B0FFFAN3JX/comment/9C2EEF13_18D0_4AF2_995A_7AFB40D34D5E_L0_001_1500_200_1758040603925_02631472.jpg",
+        "https://aos-comment.amap.com/B0FFFAN3JX/comment/content_media_external_file_1000059786_ss__1764246429283_68741452.jpg"
+      ]
     },
     {
       "name": "后海湾",
@@ -9916,7 +15397,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.27048,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/98304cce176c39788c441fd46890bd12"
+      "image": "http://store.is.autonavi.com/showpic/98304cce176c39788c441fd46890bd12",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/98304cce176c39788c441fd46890bd12",
+        "http://store.is.autonavi.com/showpic/5a2945d11ae245d0dbc8d4e00416debc",
+        "http://store.is.autonavi.com/showpic/1099d7d483dfe64bc9427e94a345c78e"
+      ]
     },
     {
       "name": "亚特兰蒂斯失落的空间水族馆",
@@ -9925,7 +15411,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.356474,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/212673c4ab1f63ce818abf0dc7e97e7d"
+      "image": "http://store.is.autonavi.com/showpic/212673c4ab1f63ce818abf0dc7e97e7d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/212673c4ab1f63ce818abf0dc7e97e7d",
+        "http://store.is.autonavi.com/showpic/17e134d65fc19fb212755e128f3f0b4d",
+        "http://store.is.autonavi.com/showpic/299f3b50f5cfe9506001086a4df6d072"
+      ]
     },
     {
       "name": "城市乐园",
@@ -9934,7 +15425,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.256069,
       "category": "主题乐园",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/585d17bbe19c82560000000859164509?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/585d17bbe19c82560000000859164509?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/585d17bbe19c82560000000859164509?type=pic",
+        "https://aos-comment.amap.com/comment/content_service__1769470202695_50871249_1769470396401_32015486.jpg",
+        "https://aos-comment.amap.com/B038300352/comment/content_media_external_file_583_ss__1771853059592_49409238.jpg"
+      ]
     },
     {
       "name": "情人湾",
@@ -9943,7 +15439,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.215126,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/fb6ae58f07e54f5e204b09387b13ea2a"
+      "image": "http://store.is.autonavi.com/showpic/fb6ae58f07e54f5e204b09387b13ea2a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/fb6ae58f07e54f5e204b09387b13ea2a",
+        "https://aos-comment.amap.com/B0H6VDG3WH/comment/content_media_external_file_187237_ss__1768271943214_20401729.jpg",
+        "https://aos-comment.amap.com/B0H6VDG3WH/comment/content_media_external_file_1000098146_ss__1757686870835_78414577.jpg"
+      ]
     },
     {
       "name": "三亚东岸湿地公园",
@@ -9952,7 +15453,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.284365,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0FFH2GI88/comment/B2AB5CAB_F611_4471_B6A7_7985F5EDF70C_L0_001_2000_150_1770454736765_71509854.jpg"
+      "image": "https://aos-comment.amap.com/B0FFH2GI88/comment/B2AB5CAB_F611_4471_B6A7_7985F5EDF70C_L0_001_2000_150_1770454736765_71509854.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFH2GI88/comment/B2AB5CAB_F611_4471_B6A7_7985F5EDF70C_L0_001_2000_150_1770454736765_71509854.jpg",
+        "https://store.is.autonavi.com/showpic/ddc39706208cdcf8d668f6a4be0c4666",
+        "https://aos-comment.amap.com/B0FFH2GI88/comment/72d2b922b994b1b07eb467204a3fc30b_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "红树林生态公园",
@@ -9961,7 +15467,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.271294,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0FFHJA6FL/comment/20260313-01b675e909c81cfe269829ad-7dDMV0kzWAf8Gllo5hG47V.jpg"
+      "image": "https://aos-comment.amap.com/B0FFHJA6FL/comment/20260313-01b675e909c81cfe269829ad-7dDMV0kzWAf8Gllo5hG47V.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFHJA6FL/comment/20260313-01b675e909c81cfe269829ad-7dDMV0kzWAf8Gllo5hG47V.jpg",
+        "https://aos-comment.amap.com/B0FFHJA6FL/comment/content_media_external_file_1001060640_ss__1771145042612_36590655.jpg",
+        "https://store.is.autonavi.com/showpic/d2e7a041eefa41bb0000000752064658?type=pic"
+      ]
     },
     {
       "name": "南开清真寺",
@@ -9970,7 +15481,8 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.286584,
       "category": "宗教寺庙",
       "rating": 4.5,
-      "image": ""
+      "image": "",
+      "photos": []
     },
     {
       "name": "三亚红色娘子军景区",
@@ -9979,7 +15491,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.336152,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/8274a5c8a54afa868b3075b5e9c332b2"
+      "image": "http://store.is.autonavi.com/showpic/8274a5c8a54afa868b3075b5e9c332b2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8274a5c8a54afa868b3075b5e9c332b2",
+        "https://store.is.autonavi.com/showpic/36176263ea6f737b0000004181616462?type=pic",
+        "https://aos-comment.amap.com/B0FFITKFES/comment/content_media_external_file_366291_1767623705010_09073975.jpg"
+      ]
     },
     {
       "name": "亚龙湾海底世界",
@@ -9988,7 +15505,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.23307,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/344348f88aa766d576e185a70a939837?operate=original&query_type=oss&operate_gif=1"
+      "image": "http://store.is.autonavi.com/showpic/344348f88aa766d576e185a70a939837?operate=original&query_type=oss&operate_gif=1",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/344348f88aa766d576e185a70a939837?operate=original&query_type=oss&operate_gif=1",
+        "http://store.is.autonavi.com/showpic/c44346e6ed2af1390d3ce6356a818392",
+        "https://aos-comment.amap.com/B0383004FL/comment/53f93362d46a040334a10f6d26f06d9a_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "亚龙湾中心广场",
@@ -9997,7 +15519,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.231001,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/5c16f2a067dac740130988de8e9ae68f"
+      "image": "http://store.is.autonavi.com/showpic/5c16f2a067dac740130988de8e9ae68f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5c16f2a067dac740130988de8e9ae68f",
+        "https://store.is.autonavi.com/showpic/d201e4626a657b770000004167974472?type=pic",
+        "https://store.is.autonavi.com/showpic/70c4ffe0847cf2f40000004167970506?type=pic"
+      ]
     },
     {
       "name": "西岛渔村",
@@ -10006,7 +15533,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.236954,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0J3VU7U07/comment/F00517F4_4684_4105_83B6_7E897D421374_L0_001_1500_200_1768534095953_98550184.jpg"
+      "image": "https://aos-comment.amap.com/B0J3VU7U07/comment/F00517F4_4684_4105_83B6_7E897D421374_L0_001_1500_200_1768534095953_98550184.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0J3VU7U07/comment/F00517F4_4684_4105_83B6_7E897D421374_L0_001_1500_200_1768534095953_98550184.jpg",
+        "https://aos-comment.amap.com/B0J3VU7U07/comment/D8A86AA0_12B6_4409_B526_0FEEF3B9B73D_L0_001_1920_1080_1741512017444_12049048.jpg",
+        "https://aos-comment.amap.com/comment/content_service__1772796684016_86717357_1772796694544_04053752.jpg"
+      ]
     },
     {
       "name": "三亚市赶海游玩中心",
@@ -10015,7 +15547,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.2076,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://store.is.autonavi.com/showpic/566716bd2040ed93c05ef6604ce9a4db"
+      "image": "https://store.is.autonavi.com/showpic/566716bd2040ed93c05ef6604ce9a4db",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/566716bd2040ed93c05ef6604ce9a4db",
+        "http://store.is.autonavi.com/showpic/0161b9c3bebda88429bec09ae8cea95f",
+        "https://store.is.autonavi.com/showpic/5986c4799b769bbb0000006882436779?type=pic"
+      ]
     },
     {
       "name": "海滨浴场",
@@ -10024,7 +15561,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.24326,
       "category": "海滨度假",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0KRN1FCFD/comment/content_media_external_file_1000097849_ss__1753926270143_62826218.jpg"
+      "image": "https://aos-comment.amap.com/B0KRN1FCFD/comment/content_media_external_file_1000097849_ss__1753926270143_62826218.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0KRN1FCFD/comment/content_media_external_file_1000097849_ss__1753926270143_62826218.jpg",
+        "https://store.is.autonavi.com/showpic/666c994158f0bb4d0000002355200628?type=pic",
+        "https://store.is.autonavi.com/showpic/ebb1c5b110e83a4a0000003389052243?type=pic"
+      ]
     },
     {
       "name": "情人桥",
@@ -10033,7 +15575,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.244978,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/a5d74fa0-f2d1-4934-9cb0-1f7d684481d5.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/a5d74fa0-f2d1-4934-9cb0-1f7d684481d5.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/a5d74fa0-f2d1-4934-9cb0-1f7d684481d5.jpg",
+        "https://aos-comment.amap.com/B0FFHKNC3J/comment/content_media_external_images_media_61677_ss__1734434388044_08415253.jpg",
+        "https://store.is.autonavi.com/showpic/9444b07e0370a0eb0000001219668502?type=pic"
+      ]
     },
     {
       "name": "萍水沙滩",
@@ -10042,7 +15589,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.255224,
       "category": "自然风光",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/0d7e0dcc151e3fa37c1b7c90c260b09a"
+      "image": "http://store.is.autonavi.com/showpic/0d7e0dcc151e3fa37c1b7c90c260b09a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0d7e0dcc151e3fa37c1b7c90c260b09a",
+        "http://store.is.autonavi.com/showpic/f52e03f149fe9ad63c42a895b34d8237",
+        "https://aos-comment.amap.com/B0FFITG659/comment/61C847D0_02BE_481A_B5C2_45F4594F774A_L0_001_1124_200_1770976496008_48441237.jpg"
+      ]
     },
     {
       "name": "三亚市丰兴隆党群主题公园",
@@ -10051,7 +15603,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.261727,
       "category": "主题乐园",
       "rating": 4.4,
-      "image": "http://store.is.autonavi.com/showpic/fc9612db1b2900154dd7fdc638d66903"
+      "image": "http://store.is.autonavi.com/showpic/fc9612db1b2900154dd7fdc638d66903",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/fc9612db1b2900154dd7fdc638d66903",
+        "https://store.is.autonavi.com/showpic/1646ae97e2cb7694a9368f4217b37ff6",
+        "https://comment-oss-online.oss-cn-wulanchabu.aliyuncs.com/B0FFH2LTO9/headerImg/content_media_external_images_media_68542_1654846240986_1a70a3c8.jpg"
+      ]
     },
     {
       "name": "鸿洲时代广场",
@@ -10060,7 +15617,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.231743,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://aos-comment.amap.com/B03830NKIQ/comment/content_media_external_file_56302_ss__1770737269824_89075704.jpg"
+      "image": "https://aos-comment.amap.com/B03830NKIQ/comment/content_media_external_file_56302_ss__1770737269824_89075704.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B03830NKIQ/comment/content_media_external_file_56302_ss__1770737269824_89075704.jpg",
+        "https://aos-comment.amap.com/B03830NKIQ/comment/d7b459b1d5747813d4dca93d1e15ddc4_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B03830NKIQ/comment/content_media_external_file_56303_ss__1770737269822_75772712.jpg"
+      ]
     },
     {
       "name": "三亚水稻国家公园",
@@ -10069,7 +15631,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.320021,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/e83f1113924e15000000003080620674?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/e83f1113924e15000000003080620674?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/e83f1113924e15000000003080620674?type=pic",
+        "https://store.is.autonavi.com/showpic/a103b63bbe3a4a840000007840912302?type=pic",
+        "https://aos-comment.amap.com/B0FFHMCS2T/comment/content_media_external_file_1000015393_ss__1769690342083_33388499.jpg"
+      ]
     },
     {
       "name": "珊瑚墙打卡点",
@@ -10078,7 +15645,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.242358,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/fa407d495be3a3600000006184952077?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/fa407d495be3a3600000006184952077?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/fa407d495be3a3600000006184952077?type=pic",
+        "https://store.is.autonavi.com/showpic/8be9bcf94cf211f30000003389086123?type=pic",
+        "https://store.is.autonavi.com/showpic/b900aa70c9fe80fb0000003298882751?type=pic"
+      ]
     },
     {
       "name": "鹿回头滨河公园",
@@ -10087,7 +15659,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.23001,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B0FFJ5FY2T/comment/668024f9a5028b92288f7c945263e090_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0FFJ5FY2T/comment/668024f9a5028b92288f7c945263e090_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFJ5FY2T/comment/668024f9a5028b92288f7c945263e090_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFJ5FY2T/comment/c8ac4e8c2c233ba9ed8aeb208f6ebb05_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFJ5FY2T/comment/59524dd302938e04b0277cb3ff43329e_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "明月广场",
@@ -10096,7 +15673,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.220241,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/abbe06847b60e8bebfac83a62d2e3fc8"
+      "image": "https://store.is.autonavi.com/showpic/abbe06847b60e8bebfac83a62d2e3fc8",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/abbe06847b60e8bebfac83a62d2e3fc8",
+        "http://store.is.autonavi.com/showpic/b5a780048eb29135cfbb1af31e2a4d41",
+        "http://store.is.autonavi.com/showpic/631f1a9b293a934f2cce1ec0c34c662e"
+      ]
     },
     {
       "name": "鹿回头雕像",
@@ -10105,7 +15687,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.225451,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B0FFGA4V1M/comment/content_media_external_file_1000074092_ss__1770725655128_83478837.jpg"
+      "image": "https://aos-comment.amap.com/B0FFGA4V1M/comment/content_media_external_file_1000074092_ss__1770725655128_83478837.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFGA4V1M/comment/content_media_external_file_1000074092_ss__1770725655128_83478837.jpg",
+        "https://aos-comment.amap.com/B0FFGA4V1M/comment/content_media_external_images_media_7405_ss__1738632963961_32748213.jpg",
+        "https://aos-comment.amap.com/B0FFGA4V1M/comment/content_media_external_images_media_17342_ss__1738163776893_88539982.jpg"
+      ]
     },
     {
       "name": "亚马逊丛林水乐园",
@@ -10114,7 +15701,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.285425,
       "category": "主题乐园",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/0ec4be5d27c0c7e56c53db4e5d544e3d"
+      "image": "http://store.is.autonavi.com/showpic/0ec4be5d27c0c7e56c53db4e5d544e3d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0ec4be5d27c0c7e56c53db4e5d544e3d",
+        "http://store.is.autonavi.com/showpic/79e3dbd9b7bf5060e6d412c3b03003e1",
+        "http://store.is.autonavi.com/showpic/114dc3f0f14358c53e37785cce656fc2"
+      ]
     },
     {
       "name": "南海龙王神洲庙",
@@ -10123,7 +15715,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.231633,
       "category": "宗教寺庙",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/06243b597cbd2dd40000002677498473"
+      "image": "https://store.is.autonavi.com/showpic/06243b597cbd2dd40000002677498473",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/06243b597cbd2dd40000002677498473",
+        "https://store.is.autonavi.com/showpic/d67e6b2f1306a1dd0000002677470622",
+        "https://aos-comment.amap.com/B0GUT5HOCO/comment/content_media_external_file_1000094258_ss__1765251917748_96000022.jpg"
+      ]
     },
     {
       "name": "抱坡溪湿地公园",
@@ -10132,7 +15729,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.295257,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/99e91579f77f1fdd0000003098374777?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/99e91579f77f1fdd0000003098374777?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/99e91579f77f1fdd0000003098374777?type=pic",
+        "https://aos-comment.amap.com/B0FFKAYVO9/comment/ce2a4844f1d6a7cbe8700bb2f6bec389_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFKAYVO9/comment/content_media_external_file_149294_ss__1765350377285_08297556.jpg"
+      ]
     },
     {
       "name": "国光豪生沙滩",
@@ -10141,7 +15743,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 18.28661,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B0FFHJ46HB/comment/content_media_external_file_2389_1764985197525_91375696.jpg"
+      "image": "https://aos-comment.amap.com/B0FFHJ46HB/comment/content_media_external_file_2389_1764985197525_91375696.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFHJ46HB/comment/content_media_external_file_2389_1764985197525_91375696.jpg",
+        "https://store.is.autonavi.com/showpic/abd4e32030adc6d80000002966504895?type=pic",
+        "https://store.is.autonavi.com/showpic/d9adaae7cdfc7c4d0000002966526288?type=pic"
+      ]
     }
   ],
   "哈尔滨": [
@@ -10152,7 +15759,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.765849,
       "category": "历史人文",
       "rating": 5,
-      "image": "https://store.is.autonavi.com/showpic/cfa3b5d442ff8b0b6a470a9172171e36"
+      "image": "https://store.is.autonavi.com/showpic/cfa3b5d442ff8b0b6a470a9172171e36",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/cfa3b5d442ff8b0b6a470a9172171e36",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/a1338ba6-2bc0-41f8-8cee-c28ab549ff60.jpg",
+        "https://store.is.autonavi.com/showpic/c9c7e0e59e76cb9dd645e1cd5b0e72ab"
+      ]
     },
     {
       "name": "圣·索菲亚教堂",
@@ -10161,7 +15773,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.770125,
       "category": "宗教寺庙",
       "rating": 4.9,
-      "image": "http://store.is.autonavi.com/showpic/9017b04f94476397a6d48ddb8ca75b5a"
+      "image": "http://store.is.autonavi.com/showpic/9017b04f94476397a6d48ddb8ca75b5a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9017b04f94476397a6d48ddb8ca75b5a",
+        "http://store.is.autonavi.com/showpic/5d7fe39384ff71e80d23297d9179272d",
+        "http://store.is.autonavi.com/showpic/f18f663e0c7eaafd0918d259df85c725"
+      ]
     },
     {
       "name": "东北虎林园",
@@ -10170,7 +15787,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.817483,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/bd6da177a9b75316e41dee48a9733307"
+      "image": "http://store.is.autonavi.com/showpic/bd6da177a9b75316e41dee48a9733307",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/bd6da177a9b75316e41dee48a9733307",
+        "http://store.is.autonavi.com/showpic/8d8123fa04ffa52a1908810472c11b14",
+        "http://store.is.autonavi.com/showpic/5e6c93599ae7da17ff6afe17d1a5fcee"
+      ]
     },
     {
       "name": "哈尔滨市人民防洪胜利纪念塔",
@@ -10179,7 +15801,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.780654,
       "category": "宗教寺庙",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/8ff9f37eaf0c1f16e9dee5a8f8f76000"
+      "image": "http://store.is.autonavi.com/showpic/8ff9f37eaf0c1f16e9dee5a8f8f76000",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8ff9f37eaf0c1f16e9dee5a8f8f76000",
+        "http://store.is.autonavi.com/showpic/7076fa8ad81d75184a098afa8f2c6f46",
+        "http://store.is.autonavi.com/showpic/975e5187ff651490e44a49187c200ce5"
+      ]
     },
     {
       "name": "索菲亚广场",
@@ -10188,7 +15815,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.770624,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/cc10eec0fbe8c0e0432fbd800c6d013d"
+      "image": "http://store.is.autonavi.com/showpic/cc10eec0fbe8c0e0432fbd800c6d013d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/cc10eec0fbe8c0e0432fbd800c6d013d",
+        "http://store.is.autonavi.com/showpic/7d1501bc744188618b39591797815c35",
+        "http://store.is.autonavi.com/showpic/22d7f2596d41a741adb604604c36ccda"
+      ]
     },
     {
       "name": "中华巴洛克历史文化街区",
@@ -10197,7 +15829,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.781791,
       "category": "城市地标",
       "rating": 4.8,
-      "image": "http://store.is.autonavi.com/showpic/14a688744931748e3744df368b16b074"
+      "image": "http://store.is.autonavi.com/showpic/14a688744931748e3744df368b16b074",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/14a688744931748e3744df368b16b074",
+        "http://store.is.autonavi.com/showpic/95b03517b925cfac434eb03cb64bf380",
+        "http://store.is.autonavi.com/showpic/0b6ef1abdb421fb5aed9764595ca389b"
+      ]
     },
     {
       "name": "侵华日军第七三一部队遗址",
@@ -10206,7 +15843,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.609676,
       "category": "历史人文",
       "rating": 4.8,
-      "image": "https://aos-comment.amap.com/B01C30J40L/comment/content_media_external_file_79197_ss__1757770521172_94579897.jpg"
+      "image": "https://aos-comment.amap.com/B01C30J40L/comment/content_media_external_file_79197_ss__1757770521172_94579897.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B01C30J40L/comment/content_media_external_file_79197_ss__1757770521172_94579897.jpg",
+        "https://store.is.autonavi.com/showpic/09b11c75b8940b159b4e57f09dc81409",
+        "https://aos-comment.amap.com/B01C30J40L/comment/CD964894_C222_4915_B278_777DB2DC5EB3_L0_001_2000_150_1760090201162_68018833.jpg"
+      ]
     },
     {
       "name": "哈尔滨融创乐园",
@@ -10215,7 +15857,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.806609,
       "category": "主题乐园",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/query_pic?id=stc6773d8b-34af-4089-83d0-3063184c4555&operate=original"
+      "image": "http://store.is.autonavi.com/query_pic?id=stc6773d8b-34af-4089-83d0-3063184c4555&operate=original",
+      "photos": [
+        "http://store.is.autonavi.com/query_pic?id=stc6773d8b-34af-4089-83d0-3063184c4555&operate=original",
+        "http://store.is.autonavi.com/showpic/cacacca5d4f6bd52b91fdfb53d09bfc8",
+        "http://store.is.autonavi.com/showpic/6ced6faf1e4d0dc7c469212122c337bf"
+      ]
     },
     {
       "name": "哈尔滨冰雪大世界",
@@ -10224,7 +15871,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.775823,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/fc1e9e702c4dfe42ad76e428fcc9a623"
+      "image": "http://store.is.autonavi.com/showpic/fc1e9e702c4dfe42ad76e428fcc9a623",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/fc1e9e702c4dfe42ad76e428fcc9a623",
+        "http://store.is.autonavi.com/showpic/e779c7eea389e6bedd3535c9c42a8b1e",
+        "https://store.is.autonavi.com/showpic/af544c64f8486bba0000004736876352?type=pic"
+      ]
     },
     {
       "name": "太阳岛风景区",
@@ -10233,7 +15885,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.791584,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/047b38e5d58349b5af2785b2a206f7a2"
+      "image": "http://store.is.autonavi.com/showpic/047b38e5d58349b5af2785b2a206f7a2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/047b38e5d58349b5af2785b2a206f7a2",
+        "http://store.is.autonavi.com/showpic/bce0028549389bacb683b9c6bdc3012c",
+        "http://store.is.autonavi.com/showpic/000d226aa7c0615eac61789d8cf4e8dc"
+      ]
     },
     {
       "name": "哈尔滨极地公园",
@@ -10242,7 +15899,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.785251,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/ddb05852a859f07ef4e2d31f559df52d"
+      "image": "http://store.is.autonavi.com/showpic/ddb05852a859f07ef4e2d31f559df52d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ddb05852a859f07ef4e2d31f559df52d",
+        "http://store.is.autonavi.com/showpic/2e87f235c86ad9bf6e666f7a50bce050",
+        "http://store.is.autonavi.com/showpic/c117557732ec79725f09d1c897ea2525"
+      ]
     },
     {
       "name": "哈尔滨极地公园·极地馆",
@@ -10251,7 +15913,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.784741,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/0caf0161dc73f0239d23b2a629ff8406"
+      "image": "http://store.is.autonavi.com/showpic/0caf0161dc73f0239d23b2a629ff8406",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0caf0161dc73f0239d23b2a629ff8406",
+        "http://store.is.autonavi.com/showpic/3d726b574eb635234d1b6fbbbe5e3b2f",
+        "http://store.is.autonavi.com/showpic/34b9c6e4c14705a09ba6540184651c71"
+      ]
     },
     {
       "name": "哈尔滨防洪纪念塔广场",
@@ -10260,7 +15927,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.780655,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/8ad85d93a5ee125290753e71e8ab4aaa"
+      "image": "http://store.is.autonavi.com/showpic/8ad85d93a5ee125290753e71e8ab4aaa",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8ad85d93a5ee125290753e71e8ab4aaa",
+        "https://store.is.autonavi.com/showpic/f03fef409f447b490000005007442108?type=pic",
+        "https://store.is.autonavi.com/showpic/92baf3c932dcf75d0000002647560330?type=pic"
+      ]
     },
     {
       "name": "哈尔滨音乐公园",
@@ -10269,7 +15941,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.749011,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/5b4c5e3e3b00f73d0000002952526731?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/5b4c5e3e3b00f73d0000002952526731?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/5b4c5e3e3b00f73d0000002952526731?type=pic",
+        "https://store.is.autonavi.com/showpic/5c7ec1b660ccd2670000007853422853?type=pic",
+        "https://store.is.autonavi.com/showpic/33a688e60b1bda1a0000005630282286?type=pic"
+      ]
     },
     {
       "name": "斯大林公园",
@@ -10278,7 +15955,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.779383,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/9d4a7fd71506609bb10409400d0ce74a"
+      "image": "http://store.is.autonavi.com/showpic/9d4a7fd71506609bb10409400d0ce74a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9d4a7fd71506609bb10409400d0ce74a",
+        "http://store.is.autonavi.com/showpic/003e7f5691f24901ba9a70819ce929b9",
+        "http://store.is.autonavi.com/showpic/321902fb6c50b272eb9dc72e878c3676"
+      ]
     },
     {
       "name": "音乐长廊",
@@ -10287,7 +15969,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.750571,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/d3a9c19e9f93ae6ec05227ee5a3c4c26"
+      "image": "http://store.is.autonavi.com/showpic/d3a9c19e9f93ae6ec05227ee5a3c4c26",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d3a9c19e9f93ae6ec05227ee5a3c4c26",
+        "http://store.is.autonavi.com/showpic/fb3621986e8de2df807417d9214e4acf",
+        "https://store.is.autonavi.com/showpic/38457264727225450000003911664675?type=pic"
+      ]
     },
     {
       "name": "江上城堡观光索道",
@@ -10296,7 +15983,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.7779,
       "category": "自然风光",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/1906ed1a76fae9d20e85c8983c4e78ea"
+      "image": "http://store.is.autonavi.com/showpic/1906ed1a76fae9d20e85c8983c4e78ea",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/1906ed1a76fae9d20e85c8983c4e78ea",
+        "http://store.is.autonavi.com/showpic/11af06d45d6690523adf4421cfd977f2",
+        "http://store.is.autonavi.com/showpic/1dd5739154239db0c11a653ab50935e4"
+      ]
     },
     {
       "name": "哈尔滨市兆麟公园",
@@ -10305,7 +15997,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.777327,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/c98cc1719dcc988c70eb1b5215d69741"
+      "image": "http://store.is.autonavi.com/showpic/c98cc1719dcc988c70eb1b5215d69741",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c98cc1719dcc988c70eb1b5215d69741",
+        "http://store.is.autonavi.com/showpic/dc7137a1f19741045b22f4716c2ccc44",
+        "http://store.is.autonavi.com/showpic/1af4ed58728330270f2ba6c0d5f1120e"
+      ]
     },
     {
       "name": "中东铁路桥",
@@ -10314,7 +16011,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.784205,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/2e2ef68e0cef0fa70000003136422306?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/2e2ef68e0cef0fa70000003136422306?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/2e2ef68e0cef0fa70000003136422306?type=pic",
+        "https://aos-comment.amap.com/B0JAG99RMG/comment/8617A8E0_4619_4951_89C2_F532E943C71D_L0_001_1500_200_1773736304152_73252182.jpg",
+        "https://aos-comment.amap.com/B0JAG99RMG/comment/5485AC60_F9D5_49D6_B453_9DDF3F01A0B5_L0_001_1500_200_1773736304122_94587825.jpg"
+      ]
     },
     {
       "name": "极乐寺",
@@ -10323,7 +16025,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.777559,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/0013f1f561ce9cf391da4f561317a514"
+      "image": "http://store.is.autonavi.com/showpic/0013f1f561ce9cf391da4f561317a514",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0013f1f561ce9cf391da4f561317a514",
+        "http://store.is.autonavi.com/showpic/2ba114d7de08167d7b68ac0dbcca6d8e",
+        "http://store.is.autonavi.com/showpic/4c5494c60b33083fe49f4ddb13583749"
+      ]
     },
     {
       "name": "龙塔",
@@ -10332,7 +16039,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.748517,
       "category": "宗教寺庙",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/0f56cd9891f754a2b1c645a98e28c194"
+      "image": "http://store.is.autonavi.com/showpic/0f56cd9891f754a2b1c645a98e28c194",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0f56cd9891f754a2b1c645a98e28c194",
+        "http://store.is.autonavi.com/showpic/108625c6538c44725b0ca6d1226fd920",
+        "http://store.is.autonavi.com/showpic/17d4019c8b708167ab517b0e2584c589"
+      ]
     },
     {
       "name": "波塞冬海底世界",
@@ -10341,7 +16053,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.883709,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/ffd2a165786df30c1f5a704bd2f7145d"
+      "image": "http://store.is.autonavi.com/showpic/ffd2a165786df30c1f5a704bd2f7145d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ffd2a165786df30c1f5a704bd2f7145d",
+        "http://store.is.autonavi.com/showpic/7d28c1c941305c47a9755a532ec8982e",
+        "http://store.is.autonavi.com/showpic/f81ed67fdc012b88417988140f97a783"
+      ]
     },
     {
       "name": "梅金肖克百年庭院",
@@ -10350,7 +16067,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.769931,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://aos-comment.amap.com/B0J2SRTURY/comment/93EEBD80_EE3D_4D6F_8638_649CF8448527_L0_001_1500_200_1768833637557_82374091.jpg"
+      "image": "https://aos-comment.amap.com/B0J2SRTURY/comment/93EEBD80_EE3D_4D6F_8638_649CF8448527_L0_001_1500_200_1768833637557_82374091.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0J2SRTURY/comment/93EEBD80_EE3D_4D6F_8638_649CF8448527_L0_001_1500_200_1768833637557_82374091.jpg",
+        "https://aos-comment.amap.com/B0J2SRTURY/comment/20260310-4247e9bd1a07cf345d15753e-1MNAdRM1C3E62mFkDotmuZ.jpg",
+        "https://aos-comment.amap.com/B0J2SRTURY/comment/BF45995C_25DE_41A2_9270_75E77BE933C1_L0_001_1439_176_1768661010569_36156943.jpg"
+      ]
     },
     {
       "name": "中东铁路桥头堡",
@@ -10359,7 +16081,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.783708,
       "category": "城市地标",
       "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/f1fd7ef4b2336c650000005140780906?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/f1fd7ef4b2336c650000005140780906?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/f1fd7ef4b2336c650000005140780906?type=pic",
+        "https://aos-comment.amap.com/B0FFLATWA5/comment/content_media_external_file_59263_ss__1764411064764_46140339.jpg",
+        "https://aos-comment.amap.com/B0FFLATWA5/comment/2f6cafe50ba833161eb9ab518627bcbe_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "哈尔滨融创文旅城",
@@ -10368,7 +16095,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.807403,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/0d8456eeb37185d785909d9c56bc1b84"
+      "image": "http://store.is.autonavi.com/showpic/0d8456eeb37185d785909d9c56bc1b84",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0d8456eeb37185d785909d9c56bc1b84",
+        "http://store.is.autonavi.com/showpic/0890194318318e94d51bbe1191018b30",
+        "http://store.is.autonavi.com/showpic/34133369be22276ef70a94a9d14fbd93"
+      ]
     },
     {
       "name": "枫叶小镇温泉度假村",
@@ -10377,7 +16109,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.825901,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/8fac3c20a2764af00c0d5686861419ff"
+      "image": "http://store.is.autonavi.com/showpic/8fac3c20a2764af00c0d5686861419ff",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8fac3c20a2764af00c0d5686861419ff",
+        "http://store.is.autonavi.com/showpic/4eedeedbfcfd06beb241a8cab69b0a17",
+        "http://store.is.autonavi.com/showpic/4b5468ea72da8f8c0b7f5265d592a3e8"
+      ]
     },
     {
       "name": "太阳岛绿色运动公园",
@@ -10386,7 +16123,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.772225,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/ccf5e7a930603b0be08bc7f85e0ae44b"
+      "image": "https://store.is.autonavi.com/showpic/ccf5e7a930603b0be08bc7f85e0ae44b",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/ccf5e7a930603b0be08bc7f85e0ae44b",
+        "https://aos-comment.amap.com/B0K0OUNM7X/comment/2E10D3BE_A01F_43F3_9208_3F8546F7265C_L0_001_1134_201_1758195974493_59931744.jpg",
+        "https://aos-comment.amap.com/B0K0OUNM7X/comment/content_media_external_file_13594_ss__1752548783168_16484262.jpg"
+      ]
     },
     {
       "name": "太阳岛大熊猫馆",
@@ -10395,7 +16137,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.78877,
       "category": "主题乐园",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/4dad4016055aba160000008125166122?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/4dad4016055aba160000008125166122?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/4dad4016055aba160000008125166122?type=pic",
+        "https://store.is.autonavi.com/showpic/0f849e35ef0485620000003028894171?type=pic",
+        "https://store.is.autonavi.com/showpic/f7cda4cf1abeb7ea0000002743430220?type=pic"
+      ]
     },
     {
       "name": "人民广场",
@@ -10404,7 +16151,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.77365,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B01C317V8R/comment/DC4F385A_4A15_4FFE_970A_741684951EDA_L0_001_1206_114_1765726256181_67743154.jpg"
+      "image": "https://aos-comment.amap.com/B01C317V8R/comment/DC4F385A_4A15_4FFE_970A_741684951EDA_L0_001_1206_114_1765726256181_67743154.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B01C317V8R/comment/DC4F385A_4A15_4FFE_970A_741684951EDA_L0_001_1206_114_1765726256181_67743154.jpg",
+        "https://aos-comment.amap.com/B01C317V8R/comment/content_media_external_file_100000061_1762663494170_81182176.jpg",
+        "https://store.is.autonavi.com/showpic/540f9d2481562bca0000002334254946?type=pic"
+      ]
     },
     {
       "name": "摩洛哥蓝色小镇",
@@ -10413,7 +16165,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.78434,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0LU29WXS8/comment/content_media_external_file_10713_ss__1766761303832_21615074.jpg"
+      "image": "https://aos-comment.amap.com/B0LU29WXS8/comment/content_media_external_file_10713_ss__1766761303832_21615074.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0LU29WXS8/comment/content_media_external_file_10713_ss__1766761303832_21615074.jpg",
+        "https://aos-comment.amap.com/B0LU29WXS8/comment/content_media_external_file_1000007174_ss__1759792911725_71919676.jpg",
+        "https://aos-comment.amap.com/B0LU29WXS8/comment/content_media_external_file_11267_ss__1761993481035_67141987.jpg"
+      ]
     },
     {
       "name": "九站公园",
@@ -10422,7 +16179,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.770097,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/ed4b57ab0d41aef30b26fecb7d00d825"
+      "image": "http://store.is.autonavi.com/showpic/ed4b57ab0d41aef30b26fecb7d00d825",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/ed4b57ab0d41aef30b26fecb7d00d825",
+        "https://aos-comment.amap.com/B01C3059DJ/comment/dd3e0e961ebb9704e4dcfb6720864d57_2048_2048_80.jpg",
+        "http://store.is.autonavi.com/showpic/d460f87fb73acce311eea34cd09bb29a"
+      ]
     },
     {
       "name": "丁香公园",
@@ -10431,7 +16193,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.743329,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://store.is.autonavi.com/showpic/8ab5f772f940cbd70000002301484538?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/8ab5f772f940cbd70000002301484538?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/8ab5f772f940cbd70000002301484538?type=pic",
+        "https://aos-comment.amap.com/B01C31AYXG/comment/86F64C54_0B89_40E0_9738_C3447A388487_L0_001_1170_113_1762220855021_51427726.jpg",
+        "https://store.is.autonavi.com/showpic/348672e79635384ab1fc0d0ed50b7dfe"
+      ]
     },
     {
       "name": "哈尔滨极地公园·海洋馆",
@@ -10440,7 +16207,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.78509,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/c38ecf87aa81a3959ea42db61ca2c212"
+      "image": "http://store.is.autonavi.com/showpic/c38ecf87aa81a3959ea42db61ca2c212",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c38ecf87aa81a3959ea42db61ca2c212",
+        "http://store.is.autonavi.com/showpic/e62eaf340bc493da0b8e9482fef6d909",
+        "http://store.is.autonavi.com/showpic/cd83e1fbc91ae200fe03cb036343266d"
+      ]
     },
     {
       "name": "巧克力城堡观光索道",
@@ -10449,7 +16221,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.785496,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0LDL7T7VL/comment/46A21293_9E57_403E_8A1B_764731ECEEFC_L0_001_1513_2017_1756339525598_29451844.jpg"
+      "image": "https://aos-comment.amap.com/B0LDL7T7VL/comment/46A21293_9E57_403E_8A1B_764731ECEEFC_L0_001_1513_2017_1756339525598_29451844.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0LDL7T7VL/comment/46A21293_9E57_403E_8A1B_764731ECEEFC_L0_001_1513_2017_1756339525598_29451844.jpg",
+        "https://aos-comment.amap.com/B0LDL7T7VL/comment/20260304-045ebd5fcec4696df7e7aa3c-61BEFJVeQE99YcGVD8aYu1.jpg",
+        "https://aos-comment.amap.com/B0LDL7T7VL/comment/content_media_external_file_1000144967_ss__1763692626022_42506116.jpg"
+      ]
     },
     {
       "name": "世界欢乐城",
@@ -10458,7 +16235,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.881365,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/118b83f9-5c12-4322-9191-c17ed8534d4a.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/118b83f9-5c12-4322-9191-c17ed8534d4a.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/118b83f9-5c12-4322-9191-c17ed8534d4a.jpg",
+        "https://aos-comment.amap.com/B0FFHVTJDI/comment/176503375832_1765033759861_48378489.jpg",
+        "https://aos-comment.amap.com/B0FFHVTJDI/comment/content_media_external_file_100007296_1773422406615_87266123.jpg"
+      ]
     },
     {
       "name": "体育公园",
@@ -10467,7 +16249,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.735431,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/comment/content_service__1772339786608_00360655_1772339904284_45383978.jpg"
+      "image": "https://aos-comment.amap.com/comment/content_service__1772339786608_00360655_1772339904284_45383978.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/comment/content_service__1772339786608_00360655_1772339904284_45383978.jpg",
+        "https://aos-comment.amap.com/B01C317DC5/comment/content_media_external_file_100001627_1769644089447_74863488.jpg",
+        "https://aos-comment.amap.com/B01C317DC5/comment/content_media_external_file_1000020406_ss__1773226060580_77835833.jpg"
+      ]
     },
     {
       "name": "外滩雪人码头",
@@ -10476,7 +16263,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.753376,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0H6B5EAGU/comment/176821299812_1768213004445_02563477.jpg"
+      "image": "https://aos-comment.amap.com/B0H6B5EAGU/comment/176821299812_1768213004445_02563477.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0H6B5EAGU/comment/176821299812_1768213004445_02563477.jpg",
+        "https://aos-comment.amap.com/B0H6B5EAGU/comment/content_media_external_file_4835_1767009081965_57857404.jpg",
+        "https://aos-comment.amap.com/B0H6B5EAGU/comment/7e3e7139f289568f8b2bc04870eb6e21_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "清真寺",
@@ -10485,7 +16277,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.78737,
       "category": "宗教寺庙",
       "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B0FFIAXBX3/headerImg/1392d9a1fc13fef58b7260b874407b97_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0FFIAXBX3/headerImg/1392d9a1fc13fef58b7260b874407b97_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFIAXBX3/headerImg/1392d9a1fc13fef58b7260b874407b97_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFIAXBX3/comment/176014730281_1760147304268_50140228.jpg",
+        "https://aos-comment.amap.com/B0FFIAXBX3/comment/content_media_external_file_1000011241_ss__1766723047349_21517028.jpg"
+      ]
     },
     {
       "name": "中国亭园",
@@ -10494,7 +16291,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.718922,
       "category": "城市地标",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/953b230af142b2ab0a77b79d3a0f4aac"
+      "image": "http://store.is.autonavi.com/showpic/953b230af142b2ab0a77b79d3a0f4aac",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/953b230af142b2ab0a77b79d3a0f4aac",
+        "https://store.is.autonavi.com/showpic/02dbe73f0519e00254ca0becab1f1def",
+        "https://store.is.autonavi.com/showpic/e9786baa01b87193fa6719fdaf278e79"
+      ]
     },
     {
       "name": "黛秀湖公园",
@@ -10503,7 +16305,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.702559,
       "category": "自然风光",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/4845598fb360d02d473ede4b66264cab"
+      "image": "http://store.is.autonavi.com/showpic/4845598fb360d02d473ede4b66264cab",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/4845598fb360d02d473ede4b66264cab",
+        "http://store.is.autonavi.com/showpic/c67b82582cb74f6cb551465f2bbd23e4",
+        "http://store.is.autonavi.com/showpic/cbb6355ff9858af634cf0f309129aa4b"
+      ]
     },
     {
       "name": "哈尔滨文化公园",
@@ -10512,7 +16319,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.780506,
       "category": "主题乐园",
       "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/5c42406f665d26d2479e1369d53710c1"
+      "image": "http://store.is.autonavi.com/showpic/5c42406f665d26d2479e1369d53710c1",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5c42406f665d26d2479e1369d53710c1",
+        "http://store.is.autonavi.com/showpic/dc6a10960fd46f9440086442bba26d2e",
+        "http://store.is.autonavi.com/showpic/ea4b4b8a8919ce903bff5afe63084012"
+      ]
     },
     {
       "name": "太阳岛风景区俄罗斯风情小镇",
@@ -10521,7 +16333,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.787604,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/e6ac8f200ea84976fb1a30f5402c9d3e"
+      "image": "http://store.is.autonavi.com/showpic/e6ac8f200ea84976fb1a30f5402c9d3e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e6ac8f200ea84976fb1a30f5402c9d3e",
+        "http://store.is.autonavi.com/showpic/be4776e7c8d4493d23956858389f5cfc",
+        "http://store.is.autonavi.com/showpic/335133f2bcbe4ac9a05a30ea66f2091d"
+      ]
     },
     {
       "name": "太阳岛鹿苑",
@@ -10530,7 +16347,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.792281,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "http://store.is.autonavi.com/showpic/3a27a908da9147b2a136ca7c1b58a49a"
+      "image": "http://store.is.autonavi.com/showpic/3a27a908da9147b2a136ca7c1b58a49a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/3a27a908da9147b2a136ca7c1b58a49a",
+        "https://aos-comment.amap.com/B01C319GTQ/comment/content_media_external_file_1000092335_ss__1760760397536_05924645.jpg",
+        "https://aos-comment.amap.com/B01C319GTQ/comment/F1614EE4_76C3_47F8_B2DB_F869B3B4C727_L0_001_1290_168_1758935102931_74416412.jpg"
+      ]
     },
     {
       "name": "黑龙江哈尔滨阿勒锦岛国家湿地公园",
@@ -10539,7 +16361,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.806681,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/661c2249-be62-4aad-a198-df140459dc59.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/661c2249-be62-4aad-a198-df140459dc59.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/661c2249-be62-4aad-a198-df140459dc59.jpg",
+        "https://aos-comment.amap.com/B0FFGLQWEL/comment/content_media_external_file_100013230_1758065932022_36661369.jpg",
+        "https://aos-comment.amap.com/B0FFGLQWEL/comment/9f57e891e3e244287db15df1080fc5c6_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "天恒山",
@@ -10548,7 +16375,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.790891,
       "category": "自然风光",
       "rating": 4.5,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/aaad2d3a-0eed-450a-b6f2-18e9207472f8.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/aaad2d3a-0eed-450a-b6f2-18e9207472f8.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/aaad2d3a-0eed-450a-b6f2-18e9207472f8.jpg",
+        "https://aos-comment.amap.com/B0FFH95Z50/comment/233930AC_4EE9_4DF8_B832_DF5CE2C5B7DF_L0_001_721_128_1762239240017_68013331.jpg",
+        "https://aos-comment.amap.com/B0FFH95Z50/comment/177340828386_1773408369352_69252081.jpg"
+      ]
     },
     {
       "name": "音乐主题广场",
@@ -10557,7 +16389,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.749015,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0FFFWE6KX/comment/70FA2E04_11D3_4810_B32C_DF11B5BF32A3_L0_001_2000_1125_1736832490659_21856547.jpg"
+      "image": "https://aos-comment.amap.com/B0FFFWE6KX/comment/70FA2E04_11D3_4810_B32C_DF11B5BF32A3_L0_001_2000_1125_1736832490659_21856547.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFFWE6KX/comment/70FA2E04_11D3_4810_B32C_DF11B5BF32A3_L0_001_2000_1125_1736832490659_21856547.jpg",
+        "https://aos-comment.amap.com/B0FFFWE6KX/comment/b3106c4e3cac9f5b5e8cdbec1cce8c65_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/8de8f97efa6531930000006413046869?type=pic"
+      ]
     },
     {
       "name": "雨阳公园",
@@ -10566,7 +16403,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.722301,
       "category": "城市地标",
       "rating": 4.5,
-      "image": "https://aos-comment.amap.com/B0FFFFLK9X/comment/d9962901d9b56366cd9c8dd45c75f3ef_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0FFFFLK9X/comment/d9962901d9b56366cd9c8dd45c75f3ef_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFFFLK9X/comment/d9962901d9b56366cd9c8dd45c75f3ef_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/2dd8abf3a8aebabf0000003570168789?type=pic",
+        "http://store.is.autonavi.com/showpic/411015afcecdf39f14dfbec2701f5648"
+      ]
     },
     {
       "name": "哈尔滨市政府广场",
@@ -10575,7 +16417,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.800794,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "https://store.is.autonavi.com/showpic/5346101558b95e4ccd110ccb5a45a2d8"
+      "image": "https://store.is.autonavi.com/showpic/5346101558b95e4ccd110ccb5a45a2d8",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/5346101558b95e4ccd110ccb5a45a2d8",
+        "https://aos-comment.amap.com/B0FFIXFANY/comment/23CC3B2D_D07E_469E_85C6_53DB721E6431_L0_001_2000_150_1762844399829_76837299.jpg",
+        "https://aos-comment.amap.com/B0FFIXFANY/comment/b2adb1b61684405fbbf2bcaab551ecb3_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "哈尔滨文化中心公园",
@@ -10584,7 +16431,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.813034,
       "category": "城市地标",
       "rating": 4.4,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/7d5306df-f4e8-4a68-9503-db058472e558.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/7d5306df-f4e8-4a68-9503-db058472e558.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/7d5306df-f4e8-4a68-9503-db058472e558.jpg",
+        "https://store.is.autonavi.com/showpic/05ecc6eab601c9a20000005307694146?type=pic",
+        "https://store.is.autonavi.com/showpic/feb741bc066e4b38ab1e56882e050fd0"
+      ]
     },
     {
       "name": "一湖三岛",
@@ -10593,7 +16445,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.793768,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/59ff484a-295a-463f-811f-f99a0a636f3b.jpg"
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/59ff484a-295a-463f-811f-f99a0a636f3b.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/59ff484a-295a-463f-811f-f99a0a636f3b.jpg",
+        "https://aos-comment.amap.com/B0FFGXZODU/comment/9CE9DCFF_7345_4081_8F59_297457E0CA19_L0_001_3024_4032__1655888444045_5b1dd8eb.jpg",
+        "https://aos-comment.amap.com/B0FFGXZODU/comment/content_media_external_images_media_3305_1655951585180_b33af888.jpg"
+      ]
     },
     {
       "name": "中东铁路公园(江南段)",
@@ -10602,7 +16459,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.781334,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "http://store.is.autonavi.com/showpic/52ad1537a9a4a158eaa8652490551bf8"
+      "image": "http://store.is.autonavi.com/showpic/52ad1537a9a4a158eaa8652490551bf8",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/52ad1537a9a4a158eaa8652490551bf8",
+        "https://aos-comment.amap.com/B0FFH89K3B/comment/content_media_external_file_2628806_ss__1759458687022_85609585.jpg",
+        "https://store.is.autonavi.com/showpic/d0e3e5c3863ec30b6cdef9c73f904c2f"
+      ]
     },
     {
       "name": "太阳石广场",
@@ -10611,7 +16473,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.785725,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B0HA5HLU59/comment/80CC1068_BBC1_4F21_8339_C9ACB13E35A5_L0_001_2016_151_1763251929664_65961068.jpg"
+      "image": "https://aos-comment.amap.com/B0HA5HLU59/comment/80CC1068_BBC1_4F21_8339_C9ACB13E35A5_L0_001_2016_151_1763251929664_65961068.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0HA5HLU59/comment/80CC1068_BBC1_4F21_8339_C9ACB13E35A5_L0_001_2016_151_1763251929664_65961068.jpg",
+        "https://aos-comment.amap.com/B0HA5HLU59/comment/content_media_external_file_27502_ss__1762043024680_35793699.jpg",
+        "https://aos-comment.amap.com/B0HA5HLU59/comment/content_media_external_file_27508_ss__1762043024682_55088868.jpg"
+      ]
     },
     {
       "name": "水阁云天",
@@ -10620,7 +16487,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.791488,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/09fd0b6b133422680000008023626127?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/09fd0b6b133422680000008023626127?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/09fd0b6b133422680000008023626127?type=pic",
+        "https://aos-comment.amap.com/B01C30K062/comment/content_media_external_file_1000109490_ss__1754486684620_07160653.jpg",
+        "http://store.is.autonavi.com/showpic/ef6e591503181760b5b6275efb9936fc"
+      ]
     },
     {
       "name": "金河公园",
@@ -10629,7 +16501,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.738878,
       "category": "自然风光",
       "rating": 4.3,
-      "image": "https://aos-comment.amap.com/B0FFHYGHUK/comment/cbf24df38c04f8a5d2412955a034775a_2048_2048_80.jpg"
+      "image": "https://aos-comment.amap.com/B0FFHYGHUK/comment/cbf24df38c04f8a5d2412955a034775a_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFHYGHUK/comment/cbf24df38c04f8a5d2412955a034775a_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/927a19c7673cece60000007833014814?type=pic",
+        "https://aos-comment.amap.com/B0FFHYGHUK/comment/b0185fcbc21b8aa6f9859c6199e6f6d0_2048_2048_80.jpg"
+      ]
     },
     {
       "name": "圣清观",
@@ -10638,7 +16515,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.790881,
       "category": "宗教寺庙",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/b4ac0661fad50d1a32eb394a4912ec24"
+      "image": "https://store.is.autonavi.com/showpic/b4ac0661fad50d1a32eb394a4912ec24",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/b4ac0661fad50d1a32eb394a4912ec24",
+        "https://store.is.autonavi.com/showpic/242e36706bfea3fb0000003690414051?type=pic",
+        "https://aos-comment.amap.com/B0FFI5RK75/comment/content_media_external_file_6464_1766359700304_27126009.jpg"
+      ]
     },
     {
       "name": "顾乡公园",
@@ -10647,7 +16529,12 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       "lat": 45.75268,
       "category": "城市地标",
       "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/ebc7e4a75da397e00000002542240639?type=pic"
+      "image": "https://store.is.autonavi.com/showpic/ebc7e4a75da397e00000002542240639?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/ebc7e4a75da397e00000002542240639?type=pic",
+        "https://store.is.autonavi.com/showpic/d72658a219df74da0000002950904308?type=pic",
+        "https://aos-comment.amap.com/B01C30K39Q/comment/c1110a6ee6a0e1f1375f13000e31ea41_2048_2048_80.jpg"
+      ]
     }
   ]
 };

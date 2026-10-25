@@ -101,6 +101,12 @@ for (const city of CITIES) {
         category: inferCategory(p.type, p.name),
         rating: rating(p) || undefined,
         image: p.photos?.find((x) => x.url)?.url || "",
+        // 多图：第一张做封面（image），整组进详情相册
+        photos:
+          (p.photos ?? [])
+            .map((x) => x.url)
+            .filter(Boolean)
+            .slice(0, 3) ?? [],
       };
     });
   if (pois.length > 0) {
@@ -123,6 +129,7 @@ export interface CityPoi {
   category: string;
   rating?: number;
   image: string;
+  photos: string[];
 }
 
 export const CITY_POI_PACKS: Record<string, CityPoi[]> = ${JSON.stringify(packs, null, 2)};

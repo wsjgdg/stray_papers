@@ -6,7 +6,9 @@ export interface Spot {
   name: string;
   image: string;
   photos?: string[];
-  /** 图片来源标注：osm | unsplash | pexels | pool（详情弹窗展示，数据诚实性） */
+  /** 高德评分（0-5，仅城市包 POI 有） */
+  rating?: number;
+  /** 图片来源标注：osm | unsplash | pexels | pool | amap（详情弹窗展示，数据诚实性） */
   imageSource?: string;
   address: string;
   facilities: string[];
@@ -1247,6 +1249,7 @@ export const PACKLIST_UNIVERSAL = [
 // ═══ 统一库：手工精选（全字段）在前 + 城市包 POI（同名跳过，保手工版） ═══
 // 城市探索的 chips 是这个库的过滤器；POI 图片由浏览器直连高德 CDN，不占服务器出网。
 import { CITY_POI_PACKS, type CityPoi } from "./city-pois.generated";
+import { POI_DESCRIPTIONS } from "./poi-descriptions";
 
 export function cityPoiToSpot(city: string, p: CityPoi, index: number): Spot {
   const short = city.replace(/市$/, "");
@@ -1254,12 +1257,16 @@ export function cityPoiToSpot(city: string, p: CityPoi, index: number): Spot {
     id: `poi-${short}-${index}`,
     name: p.name,
     image: p.image,
+    photos: p.photos?.length ? p.photos : undefined,
+    rating: p.rating,
     imageSource: p.image ? "amap" : undefined,
     address: p.address || `${city}（高德 POI）`,
     facilities: [],
     projects: [],
     category: p.category,
-    description: `来自高德地图 POI${p.rating ? ` · 评分 ${p.rating}` : ""}。数据为构建时打包，信息以景区公示为准。`,
+    description:
+      POI_DESCRIPTIONS[`${city}::${p.name}`] ??
+      "来自高德地图 POI（构建时打包）。信息以景区公示为准。",
     location: { lat: p.lat, lng: p.lng },
   };
 }

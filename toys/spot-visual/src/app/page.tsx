@@ -529,6 +529,12 @@ function SpotGrid({
                     <div className="flex items-center gap-1 text-xs text-gray-400 mb-2">
                       <MapPin className="w-3 h-3 shrink-0" />
                       <span className="truncate">{spot.address}</span>
+                      {spot.rating && (
+                        <span className="flex items-center gap-0.5 text-amber-500 shrink-0">
+                          <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                          {spot.rating.toFixed(1)}
+                        </span>
+                      )}
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {spot.projects.slice(0, 3).map((p) => (
@@ -619,6 +625,12 @@ function SpotList({
                     <div className="flex items-center gap-1 text-xs text-gray-400 mb-2">
                       <MapPin className="w-3 h-3 shrink-0" />
                       <span className="truncate">{spot.address}</span>
+                      {spot.rating && (
+                        <span className="flex items-center gap-0.5 text-amber-500 shrink-0">
+                          <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                          {spot.rating.toFixed(1)}
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-gray-500 line-clamp-2 mb-2">
                       {spot.description}
@@ -815,6 +827,15 @@ function SpotDetailDialog() {
               <MapPin className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
               <span className="text-sm text-gray-600">{spot.address}</span>
             </div>
+            {spot.rating && (
+              <p className="flex items-center gap-1 text-sm text-amber-600 font-bold">
+                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                {spot.rating.toFixed(1)}
+                <span className="text-[11px] font-normal text-gray-400">
+                  高德用户评分
+                </span>
+              </p>
+            )}
             {/* ═══ 图源标注（数据诚实性：说明这张图是谁提供的） ═══ */}
             {spot.image && spot.imageSource && (
               <p className="text-[11px] text-gray-400">
