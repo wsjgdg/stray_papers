@@ -464,20 +464,19 @@ export default function GaoKaoPage() {
           levelText,
           rank: s.rank,
           planCount: a.planCount,
-          symbolSize: active ? 22 : out ? 8 : 14,
+          symbolSize: active ? 22 : out ? 9 : 14,
           itemStyle: {
             color: out
-              ? "#CBD5E1"
+              ? "#94A3B8"
               : colorMode === "tier"
                 ? TIER_COLOR[tier]
                 : levelColor(s),
-            opacity: out ? 0.75 : 1,
+            opacity: out ? 0.95 : 1,
             borderColor: active ? "#0F172A" : "#ffffff",
-            borderWidth: active ? 2.5 : 1.2,
+            borderWidth: active ? 2.5 : out ? 0.8 : 1.2,
             shadowBlur: out ? 0 : 5,
             shadowColor: "rgba(15,23,42,0.28)",
           },
-          zlevel: out ? 1 : 2,
         };
       })
       .filter(Boolean);
@@ -808,7 +807,7 @@ export default function GaoKaoPage() {
               保 {counts.safe}
             </span>
             <span className="inline-flex items-center gap-1 text-gray-400">
-              <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+              <span className="w-2.5 h-2.5 rounded-full bg-slate-400" />
               区间外 {counts.out}
             </span>
           </div>
@@ -1003,7 +1002,7 @@ export default function GaoKaoPage() {
                       label: TIER_LABEL[t],
                       color: TIER_COLOR[t],
                     })),
-                    { label: "区间外", color: "#CBD5E1" },
+                    { label: "区间外", color: "#94A3B8" },
                   ].map(({ label, color }) => (
                     <span
                       key={label}

@@ -132,19 +132,46 @@ export default function ChinaMap({
     } else if (
       nextMap &&
       prevGeo?.map === nextMap &&
-      (prevGeo.zoom != null || prevGeo.center != null) &&
       option.geo &&
       !Array.isArray(option.geo)
     ) {
+      // 只回灌有效值：把 null/NaN 的 center 写回 option 会污染 geo
+      // 坐标换算，导致 scatter-on-geo 的全部点位静默消失（曾在线上翻车）。
       const geo = option.geo as Record<string, unknown>;
-      if (geo.zoom == null && geo.center == null) {
-        next = {
-          ...option,
-          geo: { ...geo, zoom: prevGeo.zoom, center: prevGeo.center },
-        } as EChartsOption;
-      }
+      const patch: Record<string, unknown> = {};
+      const roamed =
+        (typeof prevGeo.zoom === "number" &&
+          Number.isFinite(prevGeo.zoom) &&
+          prevGeo.zoom !== 1) ||
+        (Array.isArray(prevGeo.center) &&
+          prevGeo.center.every(
+            (v) => typeof v === "number" && Number.isFinite(v),
+          ));
+      // 只在用户真实漫游过（zoom≠1 或有有效 center）时回灌；
+      // 默认态注入 zoom:1 同样会扰动 scatter-on-geo 投影。
+      if (
+        roamed &&
+        typeof prevGeo.zoom === "number" &&
+        Number.isFinite(prevGeo.zoom) &&
+        geo.zoom == null
+      )
+        patch.zoom = prevGeo.zoom;
+      if (
+        roamed &&
+        Array.isArray(prevGeo.center) &&
+        prevGeo.center.every(
+          (v) => typeof v === "number" && Number.isFinite(v),
+        ) &&
+        geo.center == null
+      )
+        patch.center = prevGeo.center;
+      if (Object.keys(patch).length)
+        next = { ...option, geo: { ...geo, ...patch } } as EChartsOption;
     }
-    chart.setOption(next, { notMerge: true });
+    // 入场动画在部分 webview 中 rAF 不推进，符号会永久停在 scale=0
+    // （表现为有地图无点位），统一关闭。
+    const noAnim = { animation: false, ...(next as object) } as EChartsOption;
+    chart.setOption(noAnim, { notMerge: true });
   }, [option, maps]);
 
   return (
