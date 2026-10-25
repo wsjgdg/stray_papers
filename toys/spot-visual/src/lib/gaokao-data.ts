@@ -123,7 +123,18 @@ function buildIndexes(data: RealDataset) {
       admIndex.set(
         `${prov}|${cat}`,
         cd.adm.map(
-          ([code, , batch, minScore, minRank, , , planCount, scoreDelta, planDelta]) => ({
+          ([
+            code,
+            ,
+            batch,
+            minScore,
+            minRank,
+            ,
+            ,
+            planCount,
+            scoreDelta,
+            planDelta,
+          ]) => ({
             schoolCode: code,
             prov,
             year: data.year,
@@ -300,4 +311,67 @@ export function rankForScore(prov: string, cat: string, score: number): number {
   const curve = curveIndex.get(`${prov}|${cat}`);
   if (!curve) return 0;
   return rankFromCurve(curve, score);
+}
+
+// ── 历史投档线（按省懒加载，public/data/gaokao-history/{slug}.json） ──
+
+export interface HistoryDataset {
+  v: number;
+  year: number;
+  years: number[];
+  cats: Record<string, Record<string, (number | null)[]>>;
+}
+
+// 招生省中文名 → 数据文件 slug（与 scripts/fetch-gaokao-data.mjs 的 SLUGS 对应）
+const PROV_SLUG: Record<string, string> = {
+  安徽: "anhui",
+  北京: "beijing",
+  重庆: "chongqing",
+  福建: "fujian",
+  甘肃: "gansu",
+  广东: "guangdong",
+  广西: "guangxi",
+  贵州: "guizhou",
+  海南: "hainan",
+  河北: "hebei",
+  黑龙江: "heilongjiang",
+  河南: "henan",
+  湖北: "hubei",
+  湖南: "hunan",
+  江苏: "jiangsu",
+  江西: "jiangxi",
+  吉林: "jilin",
+  辽宁: "liaoning",
+  内蒙古: "neimenggu",
+  宁夏: "ningxia",
+  陕西: "shaanxi",
+  山东: "shandong",
+  上海: "shanghai",
+  四川: "sichuan",
+  天津: "tianjin",
+  新疆: "xinjiang",
+  云南: "yunnan",
+  浙江: "zhejiang",
+};
+
+const historyCache = new Map<string, HistoryDataset>();
+
+/** 拉取某省近四年投档线历史（内存缓存；无数据/加载失败返回 null） */
+export async function fetchHistory(
+  prov: string,
+): Promise<HistoryDataset | null> {
+  const cached = historyCache.get(prov);
+  if (cached) return cached;
+  const slug = PROV_SLUG[prov];
+  if (!slug) return null;
+  try {
+    const r = await fetch(`/data/gaokao-history/${slug}.json`);
+    if (!r.ok) return null;
+    const d = (await r.json()) as HistoryDataset;
+    if (!d?.cats) return null;
+    historyCache.set(prov, d);
+    return d;
+  } catch {
+    return null;
+  }
 }
