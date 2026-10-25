@@ -101,10 +101,10 @@ tsconfig.json                       # TypeScript 配置（@/* → src/*）
 | 0b | OSM 实拍图 | 实时探索时直接采用 OSM `image` 标签的直链照片（Wikimedia 域名除外，国内不可达） |
 | 1 | Unsplash API | 按分类英文关键词搜索，每分类游标去重，可获取数百张不重复照片 |
 | 2 | Pexels API | Unsplash 失败时自动降级 |
-| 3 | 本地图片池 | 每分类 8 张预置 Unsplash URL（`spot-data.ts` 中的 `CATEGORY_PHOTOS`） |
+| 3 | 本地图片池 | 每分类 8 张，**已离线打包**为 `public/spots/pool/*.webp`（`npm run pool:fetch` 下载生成），断网可用 |
 | 4 | 渐变占位 | 以上全部耗尽/失效时显示分类主题色 + emoji |
 
-`npm run spots:fetch`（Bing 抓候选）→ 人工过目 `public/spots/_candidates/_contact-sheet.jpg` → `npm run spots`（选图压缩 + 生成清单）即可扩充离线包。
+分类池离线包用 `npm run pool:fetch` 生成；景点离线包用 `npm run spots:fetch`（Bing 抓候选）→ 人工过目 `public/spots/_candidates/_contact-sheet.jpg` → `npm run spots`（选图压缩 + 生成清单）即可扩充离线包。
 
 OSM 实时探索与 JSON 导入共用同一套配图流程（`fillSpotImages`）：优先保留 OSM 自带实拍图，
 缺图景点按分类批量拉图；任意来源的图片 404 时，前端按 分类池 → 渐变 的顺序二级降级。

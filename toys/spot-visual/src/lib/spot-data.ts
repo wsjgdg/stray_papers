@@ -1,4 +1,5 @@
 import { SPOT_PHOTOS } from "./spot-photos.generated";
+import { POOL_LOCAL } from "./category-pool.generated";
 // ═══ 景点数据类型 ═══
 export interface Spot {
   id: string;
@@ -312,7 +313,7 @@ const CATEGORY_PHOTOS: Record<string, string[]> = {
 };
 
 // 通用风景图（未知分类时使用）
-const FALLBACK_PHOTOS = [
+let FALLBACK_PHOTOS = [
   "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&h=500&fit=crop&q=80",
   "https://images.unsplash.com/photo-1438786657495-640937046d18?w=800&h=500&fit=crop&q=80",
   "https://images.unsplash.com/photo-1598439473183-42c9301db5dc?w=800&h=500&fit=crop&q=80",
@@ -320,8 +321,15 @@ const FALLBACK_PHOTOS = [
   "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&h=500&fit=crop&q=80",
   "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&h=500&fit=crop&q=80",
   "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&h=500&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1470071459604-3b5ec3a7b628?w=800&h=500&fit=crop&q=80",
 ];
+
+// ═══ 分类池离线化：加载时把远程 URL 就地替换为本地 webp（npm run pool:fetch 生成）。
+// 找不到本地副本的 URL（如新增未下载）保持远程原样，由 SpotImage 降级链兜底。 ═══
+const toLocalPool = (url: string): string => POOL_LOCAL[url] ?? url;
+for (const cat of Object.keys(CATEGORY_PHOTOS)) {
+  CATEGORY_PHOTOS[cat] = CATEGORY_PHOTOS[cat].map(toLocalPool);
+}
+FALLBACK_PHOTOS = FALLBACK_PHOTOS.map(toLocalPool);
 
 // ═══ 按分类追踪已用索引，确保同分类内不重复分配 ═══
 const _usedIndices: Map<string, Set<number>> = new Map();

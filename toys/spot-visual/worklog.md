@@ -153,6 +153,7 @@
 | 3 | 压缩 webp（640px/q78，仿 compress-dish-photos）→ `public/spots/` | 已完成：12 张共约 800KB |
 | 4 | `build-spot-photos.mjs` 生成 `spot-photos.generated.ts`，sampleSpots 图改本地优先、远程池兜底 | 已完成：`npm run spots` / `npm run spots:fetch` |
 | 5 | build 验证 + README 图源表补「内置离线包」一级 | 已完成 |
+| 6 | （终检通过后追加）分类池 `CATEGORY_PHOTOS`/`FALLBACK_PHOTOS` 共 104 张远程 URL 也离线化：`fetch-category-pool.mjs` 下载转 webp → `category-pool.generated.ts` 映射，加载时就地替换，整条无 key 降级链完全离线 | 已完成：剔除 1 张 CDN 已 404 的死图后 85/85 全部离线化，约 4.8MB；无 key 降级链现已完全离线 |
 
 ## 食物成分表 PDF 提取调研（2026-10-24 夜）
 

@@ -16,7 +16,8 @@
     "photos:sheet": "node scripts/make-contact-sheet.mjs",
     "gaokao": "node scripts/fetch-gaokao-data.mjs",
     "spots": "node scripts/build-spot-photos.mjs",
-    "spots:fetch": "node scripts/fetch-spot-photos-bing.mjs"
+    "spots:fetch": "node scripts/fetch-spot-photos-bing.mjs",
+    "pool:fetch": "node scripts/fetch-category-pool.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",
