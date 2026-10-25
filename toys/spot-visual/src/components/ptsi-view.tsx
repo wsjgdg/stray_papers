@@ -55,11 +55,17 @@ const VERDICT_STYLE: Record<
 };
 
 /* ═══ 当前时刻PTSI ═══ */
-function CurrentPTSI({ conditions }: { conditions: string[] }) {
+function CurrentPTSI({
+  conditions,
+  crowdMinutes = 0,
+}: {
+  conditions: string[];
+  crowdMinutes?: number;
+}) {
   const now = new Date();
   const hour = now.getHours();
   const uv = getUVByHour(hour);
-  const ptsi = calcPTSI(uv, conditions, 0);
+  const ptsi = calcPTSI(uv, conditions, crowdMinutes);
   const vs = VERDICT_STYLE[ptsi.verdict];
 
   return (
@@ -93,6 +99,27 @@ function CurrentPTSI({ conditions }: { conditions: string[] }) {
               : "不宜出行"}
         </span>
       </div>
+      {/* 三分项扣分明细：让 100 = 无扣分 一目了然 */}
+      <div className="text-left text-xs bg-gray-50 rounded-xl p-3 mb-3 space-y-1">
+        <div className="flex justify-between">
+          <span className="text-gray-500">紫外线扣分（当前 UV 估算 {uv}）</span>
+          <span className="font-bold text-gray-700">-{ptsi.uvScore}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-gray-500">身体条件扣分</span>
+          <span className="font-bold text-gray-700">-{ptsi.bodyScore}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-gray-500">
+            拥挤扣分（排队约 {crowdMinutes} 分钟）
+          </span>
+          <span className="font-bold text-gray-700">-{ptsi.crowdScore}</span>
+        </div>
+        <div className="flex justify-between pt-1 border-t border-gray-200">
+          <span className="text-gray-500">100 - 扣分合计</span>
+          <span className="font-bold text-gray-900">{ptsi.score}</span>
+        </div>
+      </div>
       {ptsi.reasons.length > 0 && (
         <div className="text-xs text-gray-500 space-y-1">
           {ptsi.reasons.map((r, i) => (
@@ -100,6 +127,11 @@ function CurrentPTSI({ conditions }: { conditions: string[] }) {
           ))}
         </div>
       )}
+      <p className="text-[10px] text-gray-400 mt-3 leading-relaxed">
+        UV
+        为按时段估算曲线（非实时预报）；身体条件来自你的勾选；拥挤度来自下方滑杆。
+        想看真实预报，用下方「7 日出行窗口」（Open-Meteo 实况 API）。
+      </p>
     </div>
   );
 }
@@ -312,6 +344,8 @@ function SpotRanking({ conditions }: { conditions: string[] }) {
    ═══════════════════════════════════════════════════ */
 export default function PTSIView() {
   const [conditions, setConditions] = useState<string[]>([]);
+  // 拥挤度（预计排队分钟数）：三分项中唯一没有自动数据源的一项，交给用户估
+  const [crowdMinutes, setCrowdMinutes] = useState(0);
 
   const toggleCondition = useCallback((id: string) => {
     setConditions((prev) =>
@@ -362,6 +396,34 @@ export default function PTSIView() {
               </button>
             ))}
           </div>
+
+          {/* 拥挤度滑杆：预计排队分钟数（0-180） */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-semibold text-gray-600">
+                预计排队时长
+              </span>
+              <span className="text-xs font-bold text-gray-800">
+                {crowdMinutes} 分钟
+              </span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={180}
+              step={10}
+              value={crowdMinutes}
+              onChange={(e) => setCrowdMinutes(Number(e.target.value))}
+              className="w-full accent-rose-500"
+            />
+            <div className="flex justify-between text-[10px] text-gray-400 mt-0.5">
+              <span>不用排</span>
+              <span>30</span>
+              <span>60</span>
+              <span>120</span>
+              <span>180+</span>
+            </div>
+          </div>
         </div>
 
         {/* 7 日出行窗口（真实天气预报 + PTSI 逐日评分） */}
@@ -370,7 +432,7 @@ export default function PTSIView() {
         {/* 当前PTSI + 24h曲线 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
           <div className="md:col-span-1">
-            <CurrentPTSI conditions={conditions} />
+            <CurrentPTSI conditions={conditions} crowdMinutes={crowdMinutes} />
           </div>
           <div className="md:col-span-2 bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
             <div className="flex items-center gap-1.5 mb-3">

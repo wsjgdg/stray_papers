@@ -1894,20 +1894,6 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       ]
     },
     {
-      "name": "麓湖公园",
-      "address": "广东省广州市越秀区登峰街道云山南路白云山风景区",
-      "lng": 113.281794,
-      "lat": 23.151091,
-      "category": "自然风光",
-      "rating": 4.7,
-      "image": "http://store.is.autonavi.com/showpic/f26a735edd19d06b27a5c790f30df01d",
-      "photos": [
-        "http://store.is.autonavi.com/showpic/f26a735edd19d06b27a5c790f30df01d",
-        "http://store.is.autonavi.com/showpic/d051a41e2b6d8e683ded4e16fdab5566",
-        "https://store.is.autonavi.com/showpic/27ca9685bd7f620e0000002615330131?type=pic"
-      ]
-    },
-    {
       "name": "广州动物园",
       "address": "广东省广州市越秀区先烈中路120号",
       "lng": 113.305342,
@@ -1919,6 +1905,20 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
         "http://store.is.autonavi.com/showpic/9fd2e592e0dec3bffe2a043f004764c0",
         "https://aos-comment.amap.com/B00140UEO1/comment/A983FFF0_7646_45EA_B20A_04BDEBCFD285_L0_001_1512_201_1767143999761_66977664.jpg",
         "http://store.is.autonavi.com/showpic/434b282dfe2068bde70198b6c0c77147"
+      ]
+    },
+    {
+      "name": "麓湖公园",
+      "address": "广东省广州市越秀区登峰街道云山南路白云山风景区",
+      "lng": 113.281794,
+      "lat": 23.151091,
+      "category": "自然风光",
+      "rating": 4.7,
+      "image": "http://store.is.autonavi.com/showpic/f26a735edd19d06b27a5c790f30df01d",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/f26a735edd19d06b27a5c790f30df01d",
+        "http://store.is.autonavi.com/showpic/d051a41e2b6d8e683ded4e16fdab5566",
+        "https://store.is.autonavi.com/showpic/27ca9685bd7f620e0000002615330131?type=pic"
       ]
     },
     {
@@ -8320,20 +8320,6 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       ]
     },
     {
-      "name": "都城隍庙",
-      "address": "陕西省西安市莲湖区西大街129号",
-      "lng": 108.937359,
-      "lat": 34.261045,
-      "category": "宗教寺庙",
-      "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/d7c815e146a3ef5d57dbc5e2b18f5be4",
-      "photos": [
-        "http://store.is.autonavi.com/showpic/d7c815e146a3ef5d57dbc5e2b18f5be4",
-        "https://store.is.autonavi.com/showpic/b5b9d08c3a1f2e18444f24d2ed2386ed",
-        "https://store.is.autonavi.com/showpic/df3250bc599b3f800000007326698613?type=pic"
-      ]
-    },
-    {
       "name": "西安幸福林带公园",
       "address": "陕西省西安市新城区万寿北路58号",
       "lng": 109.015219,
@@ -8345,6 +8331,20 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
         "https://store.is.autonavi.com/showpic/f3cb291246df28f10000003006150809?type=pic",
         "https://aos-comment.amap.com/B0FFLJ3GLX/comment/content_media_external_file_100000746_1766289541666_25216542.jpg",
         "https://aos-comment.amap.com/B0FFLJ3GLX/comment/78D57B63_F79B_4CD6_8B33_F28C2DAC2AE9_L0_001_1179_881_1737525639730_67258588.jpg"
+      ]
+    },
+    {
+      "name": "都城隍庙",
+      "address": "陕西省西安市莲湖区西大街129号",
+      "lng": 108.937359,
+      "lat": 34.261045,
+      "category": "宗教寺庙",
+      "rating": 4.6,
+      "image": "http://store.is.autonavi.com/showpic/d7c815e146a3ef5d57dbc5e2b18f5be4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d7c815e146a3ef5d57dbc5e2b18f5be4",
+        "https://store.is.autonavi.com/showpic/b5b9d08c3a1f2e18444f24d2ed2386ed",
+        "https://store.is.autonavi.com/showpic/df3250bc599b3f800000007326698613?type=pic"
       ]
     },
     {
@@ -9485,20 +9485,6 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       ]
     },
     {
-      "name": "龟山风景区",
-      "address": "湖北省武汉市汉阳区晴川街道龟山北路5号",
-      "lng": 114.275707,
-      "lat": 30.555045,
-      "category": "自然风光",
-      "rating": 4.7,
-      "image": "https://store.is.autonavi.com/showpic/694ece340e0bc3580000005487486068?type=pic",
-      "photos": [
-        "https://store.is.autonavi.com/showpic/694ece340e0bc3580000005487486068?type=pic",
-        "https://store.is.autonavi.com/showpic/5024980d468a46a70000002536254187?type=pic",
-        "https://store.is.autonavi.com/showpic/a4e3028c73d2fcb90000008016148750?type=pic"
-      ]
-    },
-    {
       "name": "晴川阁",
       "address": "湖北省武汉市汉阳区洗马长街86号",
       "lng": 114.284786,
@@ -9510,6 +9496,20 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
         "http://aos-cdn-image.amap.com/sns/ugccomment/e2496036-c586-44f0-aa43-1e492b85ded2.jpg",
         "http://store.is.autonavi.com/showpic/abb976b537da5f0ebf34882a31d0ddbf",
         "http://store.is.autonavi.com/showpic/3d0b45b0d39e8d153bfd2dfd1cba2b10"
+      ]
+    },
+    {
+      "name": "龟山风景区",
+      "address": "湖北省武汉市汉阳区晴川街道龟山北路5号",
+      "lng": 114.275707,
+      "lat": 30.555045,
+      "category": "自然风光",
+      "rating": 4.7,
+      "image": "https://store.is.autonavi.com/showpic/694ece340e0bc3580000005487486068?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/694ece340e0bc3580000005487486068?type=pic",
+        "https://store.is.autonavi.com/showpic/5024980d468a46a70000002536254187?type=pic",
+        "https://store.is.autonavi.com/showpic/a4e3028c73d2fcb90000008016148750?type=pic"
       ]
     },
     {
@@ -9807,20 +9807,6 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       ]
     },
     {
-      "name": "汉口水塔",
-      "address": "湖北省武汉市江汉区前进五路2附4号(江汉路地铁站G口步行80米)",
-      "lng": 114.290124,
-      "lat": 30.579094,
-      "category": "宗教寺庙",
-      "rating": 4.6,
-      "image": "https://aos-comment.amap.com/B001B18OIZ/comment/30BBD730_DB85_4221_8EA9_C67BB5E9AA96_L0_001_1179_81_1756774976898_13330196.jpg",
-      "photos": [
-        "https://aos-comment.amap.com/B001B18OIZ/comment/30BBD730_DB85_4221_8EA9_C67BB5E9AA96_L0_001_1179_81_1756774976898_13330196.jpg",
-        "https://aos-comment.amap.com/B001B18OIZ/comment/bf925e2777c8d68c7d11e2b5bfb145e5_2048_2048_80.jpg",
-        "https://store.is.autonavi.com/showpic/467cc2dc36e513910000004251126649"
-      ]
-    },
-    {
       "name": "四美塘文化公园",
       "address": "湖北省武汉市武昌区粤汉路8号",
       "lng": 114.335097,
@@ -9832,6 +9818,20 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
         "https://aos-comment.amap.com/B0J3LH81C7/comment/6A51428D_0447_48C0_9F94_67C472A9241C_L0_001_1440_177_1757573622180_79228915.jpg",
         "https://aos-comment.amap.com/B0J3LH81C7/comment/content_media_external_file_4321_1766595602093_24665994.jpg",
         "https://aos-comment.amap.com/B0J3LH81C7/comment/content_media_external_images_media_100017771_1742891777473_92112873.jpg"
+      ]
+    },
+    {
+      "name": "汉口水塔",
+      "address": "湖北省武汉市江汉区前进五路2附4号(江汉路地铁站G口步行80米)",
+      "lng": 114.290124,
+      "lat": 30.579094,
+      "category": "宗教寺庙",
+      "rating": 4.6,
+      "image": "https://aos-comment.amap.com/B001B18OIZ/comment/30BBD730_DB85_4221_8EA9_C67BB5E9AA96_L0_001_1179_81_1756774976898_13330196.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B001B18OIZ/comment/30BBD730_DB85_4221_8EA9_C67BB5E9AA96_L0_001_1179_81_1756774976898_13330196.jpg",
+        "https://aos-comment.amap.com/B001B18OIZ/comment/bf925e2777c8d68c7d11e2b5bfb145e5_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/467cc2dc36e513910000004251126649"
       ]
     },
     {
@@ -12402,20 +12402,6 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       ]
     },
     {
-      "name": "百花苑",
-      "address": "山东省青岛市市南区八大关街道八大关街道延安一路55号",
-      "lng": 120.345011,
-      "lat": 36.0657,
-      "category": "城市地标",
-      "rating": 4.6,
-      "image": "http://store.is.autonavi.com/showpic/e56895c1be65f860b33cf9d669f75a4a",
-      "photos": [
-        "http://store.is.autonavi.com/showpic/e56895c1be65f860b33cf9d669f75a4a",
-        "http://store.is.autonavi.com/showpic/8eb4af2cd50a8e51e6d60915734133d5",
-        "http://store.is.autonavi.com/showpic/e2c75aff3748664d4ebf2d068f488d9b"
-      ]
-    },
-    {
       "name": "孤独的树(不对外开放)",
       "address": "山东省青岛市市南区琴屿路与滨海绿道交叉口西100米",
       "lng": 120.330968,
@@ -12427,6 +12413,20 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
         "https://aos-comment.amap.com/B0KGT77TFN/comment/content_media_external_file_1000004444_ss__1749290631794_18112343.jpg",
         "https://aos-comment.amap.com/B0KGT77TFN/comment/EA0ABD7C_9011_4DF1_B1A5_5F6AB48D9481_L0_001_1599_204_1757939952353_23707589.jpg",
         "https://aos-comment.amap.com/B0KGT77TFN/comment/45ce1283-0bbe-422c-9dc1-0be6ca24f5c8.png"
+      ]
+    },
+    {
+      "name": "百花苑",
+      "address": "山东省青岛市市南区八大关街道八大关街道延安一路55号",
+      "lng": 120.345011,
+      "lat": 36.0657,
+      "category": "城市地标",
+      "rating": 4.6,
+      "image": "http://store.is.autonavi.com/showpic/e56895c1be65f860b33cf9d669f75a4a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e56895c1be65f860b33cf9d669f75a4a",
+        "http://store.is.autonavi.com/showpic/8eb4af2cd50a8e51e6d60915734133d5",
+        "http://store.is.autonavi.com/showpic/e2c75aff3748664d4ebf2d068f488d9b"
       ]
     },
     {
@@ -14941,20 +14941,6 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
       ]
     },
     {
-      "name": "甑皮岩国家考古遗址公园",
-      "address": "广西壮族自治区桂林市象山区平山街道甑皮岩路26号",
-      "lng": 110.284048,
-      "lat": 25.212676,
-      "category": "历史人文",
-      "rating": 4.3,
-      "image": "https://store.is.autonavi.com/showpic/c27082dad4d7230d0000003778210064?type=pic",
-      "photos": [
-        "https://store.is.autonavi.com/showpic/c27082dad4d7230d0000003778210064?type=pic",
-        "https://store.is.autonavi.com/showpic/fe8b4b866f43bf1c0000003778192806?type=pic",
-        "https://store.is.autonavi.com/showpic/d3e5512ee19b502e5646f68fc2427c94"
-      ]
-    },
-    {
       "name": "下月山古道",
       "address": "广西壮族自治区桂林市象山区",
       "lng": 110.263806,
@@ -14966,6 +14952,20 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
         "https://aos-comment.amap.com/B0K01OH5UJ/comment/content_media_external_file_1000079033_ss__1766888278553_20108675.jpg",
         "https://store.is.autonavi.com/showpic/6f0d794243e7817c8f7c79b6a1f945e9",
         "https://aos-comment.amap.com/B0K01OH5UJ/comment/content_media_external_images_media_1000045954_ss__1758334088860_85960255.jpg"
+      ]
+    },
+    {
+      "name": "甑皮岩国家考古遗址公园",
+      "address": "广西壮族自治区桂林市象山区平山街道甑皮岩路26号",
+      "lng": 110.284048,
+      "lat": 25.212676,
+      "category": "历史人文",
+      "rating": 4.3,
+      "image": "https://store.is.autonavi.com/showpic/c27082dad4d7230d0000003778210064?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/c27082dad4d7230d0000003778210064?type=pic",
+        "https://store.is.autonavi.com/showpic/fe8b4b866f43bf1c0000003778192806?type=pic",
+        "https://store.is.autonavi.com/showpic/d3e5512ee19b502e5646f68fc2427c94"
       ]
     },
     {
@@ -16534,6 +16534,2497 @@ export const CITY_POI_PACKS: Record<string, CityPoi[]> = {
         "https://store.is.autonavi.com/showpic/ebc7e4a75da397e00000002542240639?type=pic",
         "https://store.is.autonavi.com/showpic/d72658a219df74da0000002950904308?type=pic",
         "https://aos-comment.amap.com/B01C30K39Q/comment/c1110a6ee6a0e1f1375f13000e31ea41_2048_2048_80.jpg"
+      ]
+    }
+  ],
+  "拉萨": [
+    {
+      "name": "布达拉宫",
+      "address": "西藏自治区拉萨市城关区北京中路35号",
+      "lng": 91.118463,
+      "lat": 29.654471,
+      "category": "城市地标",
+      "rating": 4.9,
+      "image": "http://store.is.autonavi.com/showpic/abc43f4373ca7c3cd59e884283c31051",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/abc43f4373ca7c3cd59e884283c31051",
+        "http://store.is.autonavi.com/showpic/9e29ebc1fbe5bb29f2fc83aa17bdb71d",
+        "http://store.is.autonavi.com/showpic/c3e5ab3969cc820a3deef36bca70ea7b"
+      ]
+    },
+    {
+      "name": "大昭寺",
+      "address": "西藏自治区拉萨市城关区八廓西街2号",
+      "lng": 91.132802,
+      "lat": 29.650209,
+      "category": "宗教寺庙",
+      "rating": 4.8,
+      "image": "http://store.is.autonavi.com/showpic/df5a8b4a1a882cedaebee0a32f516e7c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/df5a8b4a1a882cedaebee0a32f516e7c",
+        "http://store.is.autonavi.com/showpic/4d8cea6f56858f38e4a7247d37d83a7f",
+        "http://store.is.autonavi.com/showpic/7f02d79802c5cf3d86762e0bcd7b31b2"
+      ]
+    },
+    {
+      "name": "扎基寺",
+      "address": "西藏自治区拉萨市城关区扎基东路(司法厅扎基退休小区对面)",
+      "lng": 91.142104,
+      "lat": 29.674025,
+      "category": "宗教寺庙",
+      "rating": 4.8,
+      "image": "https://store.is.autonavi.com/showpic/2e560a72f556cb2e0000002820964390?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/2e560a72f556cb2e0000002820964390?type=pic",
+        "https://store.is.autonavi.com/showpic/9f50fdaf8f4b0dcc0000001602380193?type=pic",
+        "https://store.is.autonavi.com/showpic/2ff9aa6dcfff31970000004366326730?type=pic"
+      ]
+    },
+    {
+      "name": "布达拉宫广场",
+      "address": "西藏自治区拉萨市城关区北京东路167号",
+      "lng": 91.118222,
+      "lat": 29.651264,
+      "category": "城市地标",
+      "rating": 4.8,
+      "image": "http://store.is.autonavi.com/showpic/2f2fe76fded54484a753f3f9435b9846",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/2f2fe76fded54484a753f3f9435b9846",
+        "http://store.is.autonavi.com/showpic/eb1b318599bff5942d050e6e042239bf",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/8e3d94da-a7cf-44dd-894e-06527ed2b2a5.jpg"
+      ]
+    },
+    {
+      "name": "色拉寺",
+      "address": "西藏自治区拉萨市城关区色拉路1号",
+      "lng": 91.134823,
+      "lat": 29.695223,
+      "category": "宗教寺庙",
+      "rating": 4.7,
+      "image": "https://store.is.autonavi.com/showpic/9af4f39f9a54f8d20000003466890971?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/9af4f39f9a54f8d20000003466890971?type=pic",
+        "https://store.is.autonavi.com/showpic/cdb947777a42c7840000007995868098?type=pic",
+        "https://store.is.autonavi.com/showpic/d5e1fde10c86709d0000003081744083?type=pic"
+      ]
+    },
+    {
+      "name": "药王山观景台",
+      "address": "西藏自治区拉萨市城关区罗布林卡路2号",
+      "lng": 91.115081,
+      "lat": 29.652221,
+      "category": "自然风光",
+      "rating": 4.7,
+      "image": "https://aos-comment.amap.com/B0FFFYEJZD/comment/%5B2025-12-07-10-23-54%5D8BD7C8E4-5A3A-409F-AEA8-1CEC28F4C54_1765074237442_19073318.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFFYEJZD/comment/%5B2025-12-07-10-23-54%5D8BD7C8E4-5A3A-409F-AEA8-1CEC28F4C54_1765074237442_19073318.jpg",
+        "https://aos-comment.amap.com/B0FFFYEJZD/comment/36062438_5936_4018_9FED_2AF3D9326FDD_L0_001_2000_150_1758966278199_12190324.jpg",
+        "https://aos-comment.amap.com/B0FFFYEJZD/comment/AB346F2C_9344_440C_8D7E_5C570CB5DAA8_L0_001_2000_150_1763004176765_59501992.jpg"
+      ]
+    },
+    {
+      "name": "南山公园",
+      "address": "西藏自治区拉萨市城关区川藏公路",
+      "lng": 91.118424,
+      "lat": 29.63312,
+      "category": "自然风光",
+      "rating": 4.7,
+      "image": "https://store.is.autonavi.com/showpic/f023c5f163dcc3e336877fae454d5221",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/f023c5f163dcc3e336877fae454d5221",
+        "https://store.is.autonavi.com/showpic/5675ee227e3b78d60000003327508585?type=pic",
+        "https://store.is.autonavi.com/showpic/7aae70afa2d49d5a0000002634328471"
+      ]
+    },
+    {
+      "name": "罗布林卡",
+      "address": "西藏自治区拉萨市城关区罗堆东路",
+      "lng": 91.092479,
+      "lat": 29.651619,
+      "category": "城市地标",
+      "rating": 4.7,
+      "image": "http://store.is.autonavi.com/showpic/6795bf614b062fbbcd95c1c1f17d03a7",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6795bf614b062fbbcd95c1c1f17d03a7",
+        "http://store.is.autonavi.com/showpic/12297e331439ac7ee0030097f2f04bbc",
+        "http://store.is.autonavi.com/showpic/29b0ea9d90010a7616658806138c2eef"
+      ]
+    },
+    {
+      "name": "哲蚌寺",
+      "address": "西藏自治区拉萨市城关区北京西路276号(西郊根培乌孜山下)",
+      "lng": 91.049889,
+      "lat": 29.673206,
+      "category": "宗教寺庙",
+      "rating": 4.7,
+      "image": "http://store.is.autonavi.com/showpic/928935f92625f21c61dc40ef3e64f67a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/928935f92625f21c61dc40ef3e64f67a",
+        "http://store.is.autonavi.com/showpic/c2d28383a6f34f0bd902892b8d286c79",
+        "http://store.is.autonavi.com/showpic/b192cee341ae7c70e31bc49ac5084630"
+      ]
+    },
+    {
+      "name": "小昭寺",
+      "address": "西藏自治区拉萨市城关区吉崩岗街道大昭寺向北500米",
+      "lng": 91.131961,
+      "lat": 29.655917,
+      "category": "宗教寺庙",
+      "rating": 4.6,
+      "image": "http://store.is.autonavi.com/showpic/6560417de51f5a5e44f62a333e3359c4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6560417de51f5a5e44f62a333e3359c4",
+        "http://store.is.autonavi.com/showpic/779ddbbc967ad3bce52198e0827b5c99",
+        "http://store.is.autonavi.com/showpic/fbd723d550dffe6e44abcb6c326264e3"
+      ]
+    },
+    {
+      "name": "西藏拉萨清真大寺",
+      "address": "西藏自治区拉萨市城关区东孜苏路6号",
+      "lng": 91.138358,
+      "lat": 29.648046,
+      "category": "宗教寺庙",
+      "rating": 4.6,
+      "image": "https://store.is.autonavi.com/showpic/76bdab9d421012650000009231488014?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/76bdab9d421012650000009231488014?type=pic",
+        "https://aos-comment.amap.com/B037B02FV2/comment/FB3A1A7C_707F_4A76_911B_5C29BEA53C2F_L0_001_1500_200_1763385099919_39477633.jpg",
+        "https://store.is.autonavi.com/showpic/3644a7c52b4df9440000004081390026?type=pic"
+      ]
+    },
+    {
+      "name": "拉萨山庄网红S弯",
+      "address": "西藏自治区拉萨市城关区达瓦路e区",
+      "lng": 91.148328,
+      "lat": 29.627896,
+      "category": "自然风光",
+      "rating": 4.6,
+      "image": "https://store.is.autonavi.com/showpic/ca3b39473617ed681671d5c88d1f9e5a",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/ca3b39473617ed681671d5c88d1f9e5a",
+        "https://store.is.autonavi.com/showpic/7f37ef015bd59aad0000002398836006?type=pic",
+        "https://aos-comment.amap.com/B0LA3UF1HL/comment/content_media_external_file_100002149_1761624792182_58266407.jpg"
+      ]
+    },
+    {
+      "name": "拉鲁湿地国家级自然保护区",
+      "address": "西藏自治区拉萨市城关区当热西路50号",
+      "lng": 91.094631,
+      "lat": 29.670962,
+      "category": "城市地标",
+      "rating": 4.6,
+      "image": "https://aos-comment.amap.com/B037B022TL/comment/8FD7A2E4_9206_418D_9C31_23BA36EB83F4_L0_001_1136_56_1772793886269_45745749.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B037B022TL/comment/8FD7A2E4_9206_418D_9C31_23BA36EB83F4_L0_001_1136_56_1772793886269_45745749.jpg",
+        "http://store.is.autonavi.com/showpic/edee1b57337a9a4360d9ec5c64ea567b",
+        "https://store.is.autonavi.com/showpic/8c17f189aa005c300000008075888961?type=pic"
+      ]
+    },
+    {
+      "name": "千佛崖",
+      "address": "西藏自治区拉萨市城关区德吉南路与罗布林卡路交叉口东南320米",
+      "lng": 91.108173,
+      "lat": 29.648321,
+      "category": "城市地标",
+      "rating": 4.6,
+      "image": "https://aos-comment.amap.com/B0FFKZFJSP/comment/content_media_external_file_1000201310_ss__1759721084464_91957444.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFKZFJSP/comment/content_media_external_file_1000201310_ss__1759721084464_91957444.jpg",
+        "https://aos-comment.amap.com/B0FFKZFJSP/comment/content_media_external_file_1000147355_ss__1757765579561_52103087.jpg",
+        "https://store.is.autonavi.com/showpic/c7e8f579fc2181930000003038876645?type=pic"
+      ]
+    },
+    {
+      "name": "扎叶巴寺",
+      "address": "西藏自治区拉萨市达孜区",
+      "lng": 91.280024,
+      "lat": 29.742659,
+      "category": "宗教寺庙",
+      "rating": 4.6,
+      "image": "https://aos-comment.amap.com/B037B023IV/comment/content_media_external_file_1000014303_ss__1767172606666_93284346.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B037B023IV/comment/content_media_external_file_1000014303_ss__1767172606666_93284346.jpg",
+        "https://aos-comment.amap.com/B037B023IV/comment/%5B2025-09-24-12-40-10%5D7469EE93-EB34-42E7-87B0-74E02F88B2D_1758688821998_92980729.jpg",
+        "http://store.is.autonavi.com/showpic/9fb0ab1faed29a196120271ded9e5ce9"
+      ]
+    },
+    {
+      "name": "团结公园",
+      "address": "西藏自治区拉萨市城关区罗布林卡路6-附9号",
+      "lng": 91.111987,
+      "lat": 29.651972,
+      "category": "城市地标",
+      "rating": 4.5,
+      "image": "https://store.is.autonavi.com/showpic/5ff93d76e2b75e880000002883450261?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/5ff93d76e2b75e880000002883450261?type=pic",
+        "https://aos-comment.amap.com/B0L165S6H1/comment/content_media_external_file_1000036778_ss__1756107500363_21542163.jpg",
+        "https://aos-comment.amap.com/B0L165S6H1/comment/70931EFD_5848_4832_A899_752D92334AC2_L0_001_2000_150_1758770024172_97623304.jpg"
+      ]
+    },
+    {
+      "name": "天堂草原",
+      "address": "西藏自治区拉萨市城关区蔡公堂乡慈觉林沟(次角林)",
+      "lng": 91.158163,
+      "lat": 29.589633,
+      "category": "自然风光",
+      "rating": 4.4,
+      "image": "https://aos-comment.amap.com/B0FFK2R0H2/comment/file_media_Photo_1546_IMG_1756361658_1726_IMG_20250828_141238_jpg_ss_3.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFK2R0H2/comment/file_media_Photo_1546_IMG_1756361658_1726_IMG_20250828_141238_jpg_ss_3.jpg",
+        "https://aos-comment.amap.com/B0FFK2R0H2/comment/content_media_external_file_1000049520_ss__1759075307178_98683258.jpg",
+        "https://store.is.autonavi.com/showpic/d923052321f9c0bc0000005123336914?type=pic"
+      ]
+    },
+    {
+      "name": "敏珠林寺藏香",
+      "address": "西藏自治区拉萨市城关区八廓街步行街",
+      "lng": 91.134151,
+      "lat": 29.650883,
+      "category": "宗教寺庙",
+      "rating": 4.4,
+      "image": "https://aos-comment.amap.com/B037B0OK6E/comment/2117BA8F_8FB4_45E8_A2F2_123CC482227B_L0_001_1500_200_1757818264610_61847645.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B037B0OK6E/comment/2117BA8F_8FB4_45E8_A2F2_123CC482227B_L0_001_1500_200_1757818264610_61847645.jpg",
+        "https://store.is.autonavi.com/showpic/aa173992bd8b912c0000003106286351?type=pic",
+        "https://aos-comment.amap.com/B037B0OK6E/comment/content_media_external_file_1000026891_ss__1767283135411_04202365.jpg"
+      ]
+    },
+    {
+      "name": "拉萨市中华文化公园",
+      "address": "西藏自治区拉萨市城关区拉萨河两岸",
+      "lng": 91.057143,
+      "lat": 29.630776,
+      "category": "城市地标",
+      "rating": 4.4,
+      "image": "https://store.is.autonavi.com/showpic/caa81cf1b5dae79aa5fad9a668aa6637",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/caa81cf1b5dae79aa5fad9a668aa6637",
+        "https://store.is.autonavi.com/showpic/f90619f322a5b4230000005548662451?type=pic",
+        "https://aos-comment.amap.com/B0H10HVY44/comment/6ee473e2ff4dc679b4fbaa9d5e5e2907_2048_2048_80.jpg"
+      ]
+    },
+    {
+      "name": "帕邦喀",
+      "address": "西藏自治区拉萨市城关区娘热乡娘热街道北部色拉寺后山",
+      "lng": 91.118805,
+      "lat": 29.716672,
+      "category": "宗教寺庙",
+      "rating": 4.4,
+      "image": "https://store.is.autonavi.com/showpic/ada58d05f4db46ef0000003199948874",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/ada58d05f4db46ef0000003199948874",
+        "https://store.is.autonavi.com/showpic/f6b517806d66280fc918f1e3dec53b3f",
+        "https://store.is.autonavi.com/showpic/ed49eb157327ef530000005548630635?type=pic"
+      ]
+    },
+    {
+      "name": "太阳岛",
+      "address": "西藏自治区拉萨市城关区环岛南路与阳岛路交叉口西北40米",
+      "lng": 91.117425,
+      "lat": 29.640775,
+      "category": "自然风光",
+      "rating": 4.3,
+      "image": "",
+      "photos": []
+    },
+    {
+      "name": "丹杰林寺",
+      "address": "西藏自治区拉萨市城关区丹杰林巷",
+      "lng": 91.130488,
+      "lat": 29.651302,
+      "category": "宗教寺庙",
+      "rating": 4.3,
+      "image": "http://store.is.autonavi.com/showpic/becde79029464075097d36ed523a1ea9",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/becde79029464075097d36ed523a1ea9",
+        "https://aos-comment.amap.com/B0FFFTWCNX/comment/content_media_external_file_69660_ss__1756626655826_54929608.jpg",
+        "https://aos-comment.amap.com/B0FFFTWCNX/comment/content_media_external_file_6965_1756626655829_17259982.jpg"
+      ]
+    },
+    {
+      "name": "功德林寺",
+      "address": "西藏自治区拉萨市城关区公德林街道德吉中路13号",
+      "lng": 91.10858,
+      "lat": 29.653572,
+      "category": "宗教寺庙",
+      "rating": 4.3,
+      "image": "https://aos-comment.amap.com/B0FFFXMY86/comment/content_media_external_file_1000012494_ss__1761041797944_57254543.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFFXMY86/comment/content_media_external_file_1000012494_ss__1761041797944_57254543.jpg",
+        "http://store.is.autonavi.com/showpic/a791c605fd508f93fb48c2dfe211c7de",
+        "https://aos-comment.amap.com/B0FFFXMY86/comment/file_media_Photo_4205_IMG_1757570964_4103_IMG_20250911_140744_jpg_ss_3.jpg"
+      ]
+    },
+    {
+      "name": "滨河体育公园",
+      "address": "西藏自治区拉萨市堆龙德庆区柳梧街道南环路辅路与金融路交叉口东北120米",
+      "lng": 91.099948,
+      "lat": 29.638532,
+      "category": "自然风光",
+      "rating": 4.3,
+      "image": "https://store.is.autonavi.com/showpic/d05fe410959bc6df0000002957138452?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/d05fe410959bc6df0000002957138452?type=pic",
+        "https://aos-comment.amap.com/B0FFMC9O8C/comment/content_media_external_images_media_55495_ss__1768523807786_36472291.jpg",
+        "http://store.is.autonavi.com/showpic/35e6abeefaaac1f61ded6ca525af3211"
+      ]
+    },
+    {
+      "name": "达扎寺",
+      "address": "西藏自治区拉萨市堆龙德庆区嘉玛路",
+      "lng": 90.976543,
+      "lat": 29.614983,
+      "category": "宗教寺庙",
+      "rating": 4.3,
+      "image": "https://aos-comment.amap.com/B0FFH8FKN4/headerImg/170217dfca524d2eb74dddda7ddf457e_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFH8FKN4/headerImg/170217dfca524d2eb74dddda7ddf457e_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/92f9e20155ea3af10000005548656306?type=pic",
+        "https://aos-comment.amap.com/B0FFH8FKN4/comment/content_media_external_images_media_100003511_1751660600060_25189416.jpg"
+      ]
+    },
+    {
+      "name": "大昭圣泉",
+      "address": "西藏自治区拉萨市城关区丹杰林路与北京东路交叉口东南20米",
+      "lng": 91.131658,
+      "lat": 29.652708,
+      "category": "自然风光",
+      "rating": 4.3,
+      "image": "https://aos-comment.amap.com/B0FFM16MG7/comment/content_media_external_images_media_1000265773_ss__1768186378673_32480145.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFM16MG7/comment/content_media_external_images_media_1000265773_ss__1768186378673_32480145.jpg",
+        "https://store.is.autonavi.com/showpic/ff9607434a108cdebef3507f7d5077ce"
+      ]
+    },
+    {
+      "name": "卓吉岭·云顶秘境",
+      "address": "西藏自治区拉萨市城关区阿猫传媒南侧120米",
+      "lng": 91.153996,
+      "lat": 29.599801,
+      "category": "自然风光",
+      "rating": 4.3,
+      "image": "",
+      "photos": []
+    }
+  ],
+  "张家界": [
+    {
+      "name": "张家界国家森林公园",
+      "address": "湖南省张家界市武陵源区金鞭路279号",
+      "lng": 110.46945,
+      "lat": 29.353896,
+      "category": "自然风光",
+      "rating": 4.9,
+      "image": "http://store.is.autonavi.com/showpic/77ad479478f6b6cc6f9ea4a59bbfa689",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/77ad479478f6b6cc6f9ea4a59bbfa689",
+        "http://store.is.autonavi.com/showpic/9dca6025c249adec8184e3f2d372baef",
+        "http://store.is.autonavi.com/showpic/5bd1aacbf146c79480103f2174b2942b"
+      ]
+    },
+    {
+      "name": "天门山国家森林公园",
+      "address": "湖南省张家界市永定区天门路",
+      "lng": 110.478686,
+      "lat": 29.032962,
+      "category": "自然风光",
+      "rating": 4.8,
+      "image": "http://store.is.autonavi.com/showpic/e39ba2232cb87477187620e8ad0f006e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e39ba2232cb87477187620e8ad0f006e",
+        "http://store.is.autonavi.com/showpic/21534f0f941c1292362845ac9c37be9c",
+        "http://store.is.autonavi.com/showpic/d8a1d619f6d62e72f80da636b19d2634"
+      ]
+    },
+    {
+      "name": "七十二奇楼景区",
+      "address": "湖南省张家界市永定区武陵山大道1号",
+      "lng": 110.456638,
+      "lat": 29.144342,
+      "category": "城市地标",
+      "rating": 4.7,
+      "image": "https://store.is.autonavi.com/showpic/0eaac4a53224dae50000007651106349?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/0eaac4a53224dae50000007651106349?type=pic",
+        "https://store.is.autonavi.com/showpic/aeafcdadbf596eefb173bea622b744ad",
+        "https://store.is.autonavi.com/showpic/5dea6a3e95b5060d0000007513874268?type=pic"
+      ]
+    },
+    {
+      "name": "武陵源风景名胜区",
+      "address": "湖南省张家界市武陵源区军地坪",
+      "lng": 110.46944,
+      "lat": 29.353888,
+      "category": "历史人文",
+      "rating": 4.7,
+      "image": "http://store.is.autonavi.com/showpic/47733fafccc9446d857bdb3bc4c2e75b",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/47733fafccc9446d857bdb3bc4c2e75b",
+        "http://store.is.autonavi.com/showpic/3c70f65859dd42b99cc0c18fc0dec94b",
+        "http://store.is.autonavi.com/showpic/6303a19cb2b825857520d455bc28f3f1"
+      ]
+    },
+    {
+      "name": "黄龙洞景区",
+      "address": "湖南省张家界市武陵源区索溪峪镇河口村",
+      "lng": 110.614919,
+      "lat": 29.361874,
+      "category": "城市地标",
+      "rating": 4.7,
+      "image": "http://store.is.autonavi.com/showpic/51020518193bd96ccee8da006d6515b7",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/51020518193bd96ccee8da006d6515b7",
+        "http://store.is.autonavi.com/showpic/1051990c233e8bea5c91f13bf3539f21",
+        "http://store.is.autonavi.com/showpic/738f8c5f3ad27bad612d66ccf586f370"
+      ]
+    },
+    {
+      "name": "七星山风景区",
+      "address": "湖南省张家界市永定区天门山镇东南边",
+      "lng": 110.466858,
+      "lat": 29.021263,
+      "category": "自然风光",
+      "rating": 4.6,
+      "image": "http://store.is.autonavi.com/showpic/b0e83f0f7c18eb534694c4d564ae29a8",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b0e83f0f7c18eb534694c4d564ae29a8",
+        "https://aos-comment.amap.com/B0FFM1KZMB/comment/content_media_external_file_594_1760429532607_85571257.jpg",
+        "https://store.is.autonavi.com/showpic/8fcf5980b7db0cbc0000008731578777?type=pic"
+      ]
+    },
+    {
+      "name": "张家界千古情景区",
+      "address": "湖南省张家界市武陵源区喻家嘴街道朝阳路与文丰路交叉口",
+      "lng": 110.57256,
+      "lat": 29.346869,
+      "category": "城市地标",
+      "rating": 4.6,
+      "image": "http://store.is.autonavi.com/showpic/99a35ee961c4ed19a93dfb521afd1d32",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/99a35ee961c4ed19a93dfb521afd1d32",
+        "https://aos-comment.amap.com/B0FFKES8PQ/comment/ae1c29dbf90c6526be0d5d39a56367af_2048_2048_80.jpg",
+        "http://store.is.autonavi.com/showpic/355d17d532d3c6d8eff2a2e8705ffcb2"
+      ]
+    },
+    {
+      "name": "天子山风景区",
+      "address": "湖南省张家界市武陵源区军地坪武陵源风景名胜区西北部",
+      "lng": 110.443813,
+      "lat": 29.401558,
+      "category": "自然风光",
+      "rating": 4.6,
+      "image": "https://aos-comment.amap.com/B02E80MWZH/comment/4c2f9820e690dc2c692bdc985e3c2580_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B02E80MWZH/comment/4c2f9820e690dc2c692bdc985e3c2580_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/0185faf8fa8ec59c9a7ffd404d2bb821",
+        "https://aos-comment.amap.com/B02E80MWZH/comment/120564abeb2547ab7ab0bfb828061541_2048_2048_80.jpg"
+      ]
+    },
+    {
+      "name": "湘西府",
+      "address": "湖南省张家界市武陵源区高云路",
+      "lng": 110.541607,
+      "lat": 29.346339,
+      "category": "城市地标",
+      "rating": 4.6,
+      "image": "https://store.is.autonavi.com/showpic/65803648921509a40000009294912039?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/65803648921509a40000009294912039?type=pic",
+        "https://store.is.autonavi.com/showpic/842d16e45298a87a0000002508344102?type=pic",
+        "https://aos-comment.amap.com/B0LR3SCVI5/comment/file_media_Photo_1245_IMG_1771314229_940_IMG_20260217_154209_jpg_ss__1771328260140_08904883.jpg"
+      ]
+    },
+    {
+      "name": "大庸古城",
+      "address": "湖南省张家界市永定区滨河路老南门口(步行街附近)",
+      "lng": 110.48509,
+      "lat": 29.120155,
+      "category": "古镇村落",
+      "rating": 4.5,
+      "image": "https://store.is.autonavi.com/showpic/a68ca2127d8999de0000007590464732",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/a68ca2127d8999de0000007590464732",
+        "https://aos-comment.amap.com/B0FFLBF16M/comment/content_media_external_file_1000002132_ss__1752496996638_20162314.jpg",
+        "https://store.is.autonavi.com/showpic/fb9bc618c0760d50665b5dd848f9aad1"
+      ]
+    },
+    {
+      "name": "宝峰湖风景区",
+      "address": "湖南省张家界市武陵源区宝峰路",
+      "lng": 110.542465,
+      "lat": 29.318776,
+      "category": "自然风光",
+      "rating": 4.5,
+      "image": "https://aos-comment.amap.com/B02E800EDV/comment/f71d6aea79f8bd1b57a7991d1e05239a_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B02E800EDV/comment/f71d6aea79f8bd1b57a7991d1e05239a_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B02E800EDV/comment/AC86D7BD_28AD_49C1_A329_C536403BC33B_L0_001_900_120_1745673147594_50815303.jpg",
+        "https://aos-comment.amap.com/B02E800EDV/comment/6702ea7de163cea42390031560b06b4b_2048_2048_80.jpg"
+      ]
+    },
+    {
+      "name": "十里画廊",
+      "address": "湖南省张家界市武陵源区索溪峪自然保护区",
+      "lng": 110.483406,
+      "lat": 29.370488,
+      "category": "城市地标",
+      "rating": 4.5,
+      "image": "http://store.is.autonavi.com/showpic/32262adfdbb25844ede2755741475e48",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/32262adfdbb25844ede2755741475e48",
+        "http://store.is.autonavi.com/showpic/477db3f07b058f57093428774ee0b309",
+        "http://store.is.autonavi.com/showpic/aac6b901758c60cbcc723d2c41e42044"
+      ]
+    },
+    {
+      "name": "张家界冰雪世界",
+      "address": "湖南省张家界市慈利县014县道",
+      "lng": 110.711855,
+      "lat": 29.259905,
+      "category": "城市地标",
+      "rating": 4.5,
+      "image": "https://store.is.autonavi.com/showpic/29cdc37cae2e947a902a5221235312aa",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/29cdc37cae2e947a902a5221235312aa",
+        "https://aos-comment.amap.com/B0FFH2UBYQ/comment/af4d966cc5fcc0182cee8c5d4f249e34_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/8c782719d8efde750000003391074104?type=pic"
+      ]
+    },
+    {
+      "name": "大庸桥公园",
+      "address": "湖南省张家界市永定区子午路东",
+      "lng": 110.458098,
+      "lat": 29.1322,
+      "category": "城市地标",
+      "rating": 4.4,
+      "image": "https://aos-comment.amap.com/B02E800EFW/comment/content_media_external_images_media_100042230_1747904719855_82845692.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B02E800EFW/comment/content_media_external_images_media_100042230_1747904719855_82845692.jpg",
+        "https://aos-comment.amap.com/B02E800EFW/comment/35b4c6c4b94c8f7aa9d12010b26ee238_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/479ded159097983ca07466dcaf19023a"
+      ]
+    },
+    {
+      "name": "天门山鬼谷峡洞风景区",
+      "address": "湖南省张家界市永定区官黎坪天门山国家森林公园",
+      "lng": 110.48166,
+      "lat": 29.099453,
+      "category": "自然风光",
+      "rating": 4.4,
+      "image": "https://aos-comment.amap.com/B0FFFDBLCR/comment/70c79924972ee474e64ee690a4f5cad9_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFFDBLCR/comment/70c79924972ee474e64ee690a4f5cad9_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFFDBLCR/comment/0558BD62_A859_42E6_AF0E_56CB627ACB5D_L0_001_2016_1512_1744441980224_00958902.jpg",
+        "https://aos-comment.amap.com/B0FFFDBLCR/comment/4aec8168711809e6ceba31154304214d_2048_2048_80.jpg"
+      ]
+    },
+    {
+      "name": "天门山国家森林公园C线索道",
+      "address": "湖南省张家界市永定区国家电网汽车充电站(张家界天门山充电站)东北侧",
+      "lng": 110.474969,
+      "lat": 29.070565,
+      "category": "自然风光",
+      "rating": 4.4,
+      "image": "https://store.is.autonavi.com/showpic/a914ba3252b3ff360000003712530452?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/a914ba3252b3ff360000003712530452?type=pic",
+        "https://store.is.autonavi.com/showpic/86cb7e8386a970970000009295064620?type=pic",
+        "https://store.is.autonavi.com/showpic/08c9a28efe288a980000003712540142?type=pic"
+      ]
+    },
+    {
+      "name": "黄中宫",
+      "address": "湖南省张家界市慈利县许家坊土家族乡金仙山村5组",
+      "lng": 110.601236,
+      "lat": 29.264648,
+      "category": "宗教寺庙",
+      "rating": 4.4,
+      "image": "https://aos-comment.amap.com/B0FFIIHMM7/comment/D36A18E7_A078_4373_9181_713B18A92464_L0_001_1500_200_1747642345484_52618088.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFIIHMM7/comment/D36A18E7_A078_4373_9181_713B18A92464_L0_001_1500_200_1747642345484_52618088.jpg",
+        "https://aos-comment.amap.com/B0FFIIHMM7/comment/content_media_external_file_608_1760584751456_26761611.jpg",
+        "https://store.is.autonavi.com/showpic/1ebb7fe0d8868c7e0000005978862027?type=pic"
+      ]
+    },
+    {
+      "name": "水绕四门",
+      "address": "湖南省张家界市武陵源区武陵源景区中心,张家界国家森林公园的东大门,索溪峪风景区的西大门",
+      "lng": 110.469887,
+      "lat": 29.34271,
+      "category": "城市地标",
+      "rating": 4.4,
+      "image": "http://store.is.autonavi.com/showpic/b0d7dc4578c2487c3699eca37e290430",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b0d7dc4578c2487c3699eca37e290430",
+        "https://store.is.autonavi.com/showpic/1230fd3dde09fa5e0000002968438771?type=pic",
+        "https://store.is.autonavi.com/showpic/0b96962b91378e360000007054296686?type=pic"
+      ]
+    },
+    {
+      "name": "杨家界风景区",
+      "address": "湖南省张家界市武陵源区军地坪武陵源风景名胜区内(西侧)",
+      "lng": 110.416627,
+      "lat": 29.361077,
+      "category": "城市地标",
+      "rating": 4.4,
+      "image": "http://store.is.autonavi.com/showpic/6c7a42602a437d358a9c7a0380f30dcf",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6c7a42602a437d358a9c7a0380f30dcf",
+        "http://store.is.autonavi.com/showpic/a0b480ea82a33faa00fe547b67bb9a46",
+        "https://aos-comment.amap.com/B02E80MNH8/comment/03c820179ccb9477dc5ff244e1cd9c12_2048_2048_80.jpg"
+      ]
+    },
+    {
+      "name": "百龙天梯",
+      "address": "湖南省张家界市武陵源区水绕四门袁家界村",
+      "lng": 110.467411,
+      "lat": 29.349406,
+      "category": "城市地标",
+      "rating": 4.4,
+      "image": "http://store.is.autonavi.com/showpic/e173e3a78e9b9e330999b611038165a6",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e173e3a78e9b9e330999b611038165a6",
+        "http://store.is.autonavi.com/showpic/813ef093719c4d77556e7f5e872a55f6",
+        "http://store.is.autonavi.com/showpic/c29604411ba1c4dcb9b32a54df776b64"
+      ]
+    },
+    {
+      "name": "天下第一桥",
+      "address": "湖南省张家界市武陵源区锣鼓塔街道锣鼓塔街道武陵源风景名胜区内(西侧)",
+      "lng": 110.438253,
+      "lat": 29.344899,
+      "category": "城市地标",
+      "rating": 4.4,
+      "image": "http://store.is.autonavi.com/showpic/04baae5ae8964b0729b3fd10a47da0e5",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/04baae5ae8964b0729b3fd10a47da0e5",
+        "https://aos-comment.amap.com/B0FFHB8WZU/comment/content_media_external_images_media_17632_ss__1737610332781_04268079.jpg",
+        "https://aos-comment.amap.com/B0FFHB8WZU/comment/E3FF07E8_D03A_42F8_8FB2_A35AFCB75CDF_L0_001_1500_200_1772600382833_55105233.jpg"
+      ]
+    },
+    {
+      "name": "乾坤柱(阿凡达悬浮山)",
+      "address": "湖南省张家界市武陵源区锣鼓塔街道金鞭路279号张家界国家森林公园",
+      "lng": 110.441856,
+      "lat": 29.343373,
+      "category": "自然风光",
+      "rating": 4.4,
+      "image": "https://aos-comment.amap.com/B0FFF33RQB/comment/7B131FE7_9255_479B_B87B_17191684ED1F_L0_001_1500_200_1763516494257_76972935.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFF33RQB/comment/7B131FE7_9255_479B_B87B_17191684ED1F_L0_001_1500_200_1763516494257_76972935.jpg",
+        "https://aos-comment.amap.com/B0FFF33RQB/comment/content_media_external_file_1000037994_ss__1757638127725_60413133.jpg",
+        "http://store.is.autonavi.com/showpic/65872afc500da66aa229091978c4aa43"
+      ]
+    }
+  ],
+  "黄山": [
+    {
+      "name": "黎阳in巷",
+      "address": "安徽省黄山市屯溪区黎阳老街昱新路2号(文峰桥,屯溪一中)",
+      "lng": 118.298723,
+      "lat": 29.70628,
+      "category": "城市地标",
+      "rating": 4.7,
+      "image": "https://aos-comment.amap.com/B0FFFJW6DF/comment/20260324-52e7c8212cb026907ea7fe0c-6XlKY1Wjnwz9VJXDInPHjX.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFFJW6DF/comment/20260324-52e7c8212cb026907ea7fe0c-6XlKY1Wjnwz9VJXDInPHjX.jpg",
+        "https://aos-comment.amap.com/B0FFFJW6DF/comment/D3F373BE_8142_4B59_BED7_6221CFD54D7E_L0_001_1440_87_1768532038686_50100543.jpg",
+        "https://store.is.autonavi.com/showpic/15e0d9cf4b5f44730000003181036280?type=pic"
+      ]
+    },
+    {
+      "name": "唐模景区",
+      "address": "安徽省黄山市徽州区潜口镇唐模村潜唐路1号",
+      "lng": 118.336109,
+      "lat": 29.868462,
+      "category": "城市地标",
+      "rating": 4.7,
+      "image": "http://store.is.autonavi.com/showpic/a0ad194ce215fa5f92e69002cd3a8d37",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a0ad194ce215fa5f92e69002cd3a8d37",
+        "http://store.is.autonavi.com/showpic/52b69cf4181367bca5111e738440f0d3",
+        "http://store.is.autonavi.com/showpic/ebdc43820724504f52df24f4ca70fd5a"
+      ]
+    },
+    {
+      "name": "徽州古城",
+      "address": "安徽省黄山市歙县徽州路93号",
+      "lng": 118.436772,
+      "lat": 29.86602,
+      "category": "古镇村落",
+      "rating": 4.7,
+      "image": "http://store.is.autonavi.com/showpic/a76b7ef1d036826b54970501818f69fa",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a76b7ef1d036826b54970501818f69fa",
+        "http://store.is.autonavi.com/showpic/0e4a75d8b0dc931c083da377b2f59f4e",
+        "http://store.is.autonavi.com/showpic/2504f971a0ea9707a027486448e886a2"
+      ]
+    },
+    {
+      "name": "西溪南古村落",
+      "address": "安徽省黄山市徽州区和尚棚20-3",
+      "lng": 118.286,
+      "lat": 29.837556,
+      "category": "古镇村落",
+      "rating": 4.7,
+      "image": "https://store.is.autonavi.com/showpic/088e485b269d52ab0000006741388064?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/088e485b269d52ab0000006741388064?type=pic",
+        "https://store.is.autonavi.com/showpic/b25ffe6d30520eb1e49ec09aee0c65d7",
+        "https://store.is.autonavi.com/showpic/81018239dda960849046ec915256d20f"
+      ]
+    },
+    {
+      "name": "呈坎",
+      "address": "安徽省黄山市徽州区宝纶路78号",
+      "lng": 118.280803,
+      "lat": 29.914335,
+      "category": "城市地标",
+      "rating": 4.7,
+      "image": "http://store.is.autonavi.com/showpic/83e1ae431da74932dad8fa9944f9b1f2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/83e1ae431da74932dad8fa9944f9b1f2",
+        "http://store.is.autonavi.com/showpic/6dc7f4b9f185ab4f07bd19d478e5c059",
+        "http://store.is.autonavi.com/showpic/97ece29e5b39c4c0d1d15a424fd8dd84"
+      ]
+    },
+    {
+      "name": "齐云山度假区",
+      "address": "安徽省黄山市休宁县齐云山镇",
+      "lng": 118.036434,
+      "lat": 29.809262,
+      "category": "自然风光",
+      "rating": 4.7,
+      "image": "http://store.is.autonavi.com/showpic/c0f4ac577c146c75c5eebbd9ef7b2ed4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c0f4ac577c146c75c5eebbd9ef7b2ed4",
+        "http://store.is.autonavi.com/showpic/3215c2e557fe16a5fb49c0102ec7dbe2",
+        "http://store.is.autonavi.com/showpic/7314e5e85f8c30c81bea191878a9661e"
+      ]
+    },
+    {
+      "name": "潜口民宅博物馆",
+      "address": "安徽省黄山市徽州区潜口村潜黄路1号",
+      "lng": 118.295003,
+      "lat": 29.868707,
+      "category": "历史人文",
+      "rating": 4.6,
+      "image": "https://store.is.autonavi.com/showpic/c6c3bc3b4fef2f010000002586884120?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/c6c3bc3b4fef2f010000002586884120?type=pic",
+        "https://store.is.autonavi.com/showpic/34a324910a8f61030000002232402175?type=pic",
+        "http://store.is.autonavi.com/showpic/87f9e42626ae0e7ae5a515f14be7e1e1"
+      ]
+    },
+    {
+      "name": "徽州古城渔梁坝和渔梁古镇",
+      "address": "安徽省黄山市歙县徽城镇渔梁村",
+      "lng": 118.44968,
+      "lat": 29.857473,
+      "category": "古镇村落",
+      "rating": 4.6,
+      "image": "https://store.is.autonavi.com/showpic/02ae661220ef3ac80000008165852331?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/02ae661220ef3ac80000008165852331?type=pic",
+        "https://aos-comment.amap.com/B0FFHCYREB/comment/content_media_external_images_media_1000095746_ss__1735098320349_73706028.jpg",
+        "https://aos-comment.amap.com/B0FFHCYREB/comment/content_media_external_file_1000055164_ss__1768136116695_88637035.jpg"
+      ]
+    },
+    {
+      "name": "渔梁坝",
+      "address": "安徽省黄山市歙县徽城镇东南1.5公里渔梁村",
+      "lng": 118.448628,
+      "lat": 29.85649,
+      "category": "城市地标",
+      "rating": 4.6,
+      "image": "http://store.is.autonavi.com/showpic/aafa9aca297b66b203f11defb084d643",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/aafa9aca297b66b203f11defb084d643",
+        "https://store.is.autonavi.com/showpic/cb34af555377abe97bcfda071624805d",
+        "https://store.is.autonavi.com/showpic/ff136758abcfa2970000000906780590?type=pic"
+      ]
+    },
+    {
+      "name": "徽商大宅院",
+      "address": "安徽省黄山市歙县富资小区平安路38号",
+      "lng": 118.427769,
+      "lat": 29.870368,
+      "category": "城市地标",
+      "rating": 4.6,
+      "image": "http://store.is.autonavi.com/showpic/8f6d18c6cda6a643708b8441aac841f4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8f6d18c6cda6a643708b8441aac841f4",
+        "http://store.is.autonavi.com/showpic/67ac4d8c3087ff6d0b17f19a1292d022",
+        "http://store.is.autonavi.com/showpic/e57fa6273313d7fcfb05899c1916d963"
+      ]
+    },
+    {
+      "name": "新安江山水画廊风景区",
+      "address": "安徽省黄山市歙县深渡镇黄山大道",
+      "lng": 118.618285,
+      "lat": 29.862743,
+      "category": "自然风光",
+      "rating": 4.6,
+      "image": "http://store.is.autonavi.com/showpic/94429a19244341b25ee647cf14325890",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/94429a19244341b25ee647cf14325890",
+        "http://store.is.autonavi.com/showpic/cce089bacab8fe0b937334efaa74aa7b",
+        "http://store.is.autonavi.com/showpic/86eac676d582226fd0098904ace3c123"
+      ]
+    },
+    {
+      "name": "花山世界·花山谜窟",
+      "address": "安徽省黄山市屯溪区花山路",
+      "lng": 118.389064,
+      "lat": 29.744594,
+      "category": "自然风光",
+      "rating": 4.5,
+      "image": "http://store.is.autonavi.com/showpic/13781148991b22904cdfbf29b0228d1f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/13781148991b22904cdfbf29b0228d1f",
+        "http://store.is.autonavi.com/showpic/b53e31478ebd886201e7ca053364ebf1",
+        "http://store.is.autonavi.com/showpic/bfe431969c2078f1568229e0a233bc53"
+      ]
+    },
+    {
+      "name": "古徽州文化旅游区",
+      "address": "安徽省黄山市歙县徽城镇徽州路与西街交叉口",
+      "lng": 118.436137,
+      "lat": 29.862792,
+      "category": "城市地标",
+      "rating": 4.5,
+      "image": "https://aos-comment.amap.com/B0FFI7G6RK/comment/content_media_external_file_55008_ss__1759801775798_01521657.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFI7G6RK/comment/content_media_external_file_55008_ss__1759801775798_01521657.jpg",
+        "https://store.is.autonavi.com/showpic/5fa90963c630e1470000000586000354",
+        "https://aos-comment.amap.com/B0FFI7G6RK/comment/20260318-a77ea53ffc97c7e78e0d3443-6cnHasXAYkqAm0LPOWHMS2.jpg"
+      ]
+    },
+    {
+      "name": "新徽天地醉温泉旅游度假区",
+      "address": "安徽省黄山市屯溪区花山路与前园南路交叉口北1200米",
+      "lng": 118.348443,
+      "lat": 29.713497,
+      "category": "自然风光",
+      "rating": 4.5,
+      "image": "http://store.is.autonavi.com/showpic/6b77ff368dd89ec75afb911829862f67",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6b77ff368dd89ec75afb911829862f67",
+        "http://store.is.autonavi.com/showpic/05c580d993d4e976548aa26c47ccad35",
+        "https://aos-comment.amap.com/B0K62Z0Y81/comment/content_media_external_images_media_100003068_1737415654344_58283855.jpg"
+      ]
+    },
+    {
+      "name": "棠樾牌坊群",
+      "address": "安徽省黄山市歙县郑村镇棠樾村东大道",
+      "lng": 118.369059,
+      "lat": 29.866924,
+      "category": "城市地标",
+      "rating": 4.5,
+      "image": "https://store.is.autonavi.com/showpic/b50e64b21505614a0000003360476653?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/b50e64b21505614a0000003360476653?type=pic",
+        "https://store.is.autonavi.com/showpic/a00f71598c5f912a0000002401822210?type=pic",
+        "https://aos-comment.amap.com/B022F004MK/comment/A2038E70_48C9_444D_8E4D_D39288354C89_L0_001_1917_128_1748780082053_07136203.jpg"
+      ]
+    },
+    {
+      "name": "长陔岭观景台",
+      "address": "安徽省黄山市歙县001县道",
+      "lng": 118.509708,
+      "lat": 29.658368,
+      "category": "自然风光",
+      "rating": 4.5,
+      "image": "https://store.is.autonavi.com/showpic/c97a345c184f2bbc0000005950818772?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/c97a345c184f2bbc0000005950818772?type=pic",
+        "https://store.is.autonavi.com/showpic/825aac7c8e5451b60000000981548807?type=pic",
+        "https://aos-comment.amap.com/B0LG4UER8W/comment/09D9D605_B734_4A2C_9FDF_39DE4354C626_L0_001_1440_108_1763700711524_02584523.jpg"
+      ]
+    },
+    {
+      "name": "呈坎八卦门",
+      "address": "安徽省黄山市徽州区宝纶路113号",
+      "lng": 118.281671,
+      "lat": 29.915638,
+      "category": "城市地标",
+      "rating": 4.5,
+      "image": "https://store.is.autonavi.com/showpic/7026c7416f9a90a90000002343922634?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/7026c7416f9a90a90000002343922634?type=pic",
+        "https://aos-comment.amap.com/B0LAASMLLC/comment/content_media_external_file_1000006600_ss__1759822123358_88555152.jpg",
+        "https://aos-comment.amap.com/B0LAASMLLC/comment/content_media_external_file_100006612_1764291731466_98050443.jpg"
+      ]
+    },
+    {
+      "name": "许村",
+      "address": "安徽省黄山市歙县许村高阳路1号",
+      "lng": 118.325654,
+      "lat": 29.991062,
+      "category": "城市地标",
+      "rating": 4.5,
+      "image": "https://aos-comment.amap.com/B022F00F2X/comment/content_media_external_file_3373_1758878909577_33100292.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B022F00F2X/comment/content_media_external_file_3373_1758878909577_33100292.jpg",
+        "https://aos-comment.amap.com/B022F00F2X/comment/content_media_external_file_19125_1772947949901_67383414.jpg",
+        "https://aos-comment.amap.com/B022F00F2X/comment/content_media_external_file_19125_1772947949916_69833596.jpg"
+      ]
+    },
+    {
+      "name": "戴震公园",
+      "address": "安徽省黄山市屯溪区新安北路45号",
+      "lng": 118.305744,
+      "lat": 29.71295,
+      "category": "城市地标",
+      "rating": 4.4,
+      "image": "https://aos-comment.amap.com/B022F001XV/comment/content_media_external_file_21882_ss__1763044715721_97507005.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B022F001XV/comment/content_media_external_file_21882_ss__1763044715721_97507005.jpg",
+        "https://aos-comment.amap.com/B022F001XV/comment/F642E43D_6812_469F_BB3B_001D4B19B9D2_L0_001_2000_150_1761823019115_56373107.jpg",
+        "https://aos-comment.amap.com/B022F001XV/comment/6bea25c4ccb966805e92e1b5b8a8f149_2048_2048_80.jpg"
+      ]
+    },
+    {
+      "name": "岩寺镇新四军军部旧址",
+      "address": "安徽省黄山市徽州区滨河南路39号",
+      "lng": 118.336073,
+      "lat": 29.820539,
+      "category": "历史人文",
+      "rating": 4.4,
+      "image": "https://store.is.autonavi.com/showpic/e010825594025467c829cf446a5c4e9f",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/e010825594025467c829cf446a5c4e9f",
+        "https://store.is.autonavi.com/showpic/5e5b1c38331438979efa7873760209e4",
+        "https://store.is.autonavi.com/showpic/5ca2fe277f1c4b748bdb7e4b377072f4"
+      ]
+    },
+    {
+      "name": "徽州大峡谷",
+      "address": "安徽省黄山市休宁县源芳乡渔林村源白公路",
+      "lng": 118.337939,
+      "lat": 29.584304,
+      "category": "自然风光",
+      "rating": 4.4,
+      "image": "http://store.is.autonavi.com/showpic/d5e59750eff6ac14f6e428a218d1488c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d5e59750eff6ac14f6e428a218d1488c",
+        "http://store.is.autonavi.com/showpic/1f26190171da71f6b9439bd255639f8b",
+        "http://store.is.autonavi.com/showpic/794e18ec73e456dbf1c6b089888b73e0"
+      ]
+    },
+    {
+      "name": "鬲山寺",
+      "address": "安徽省黄山市屯溪区黎阳镇鬲山",
+      "lng": 118.266499,
+      "lat": 29.663866,
+      "category": "宗教寺庙",
+      "rating": 4.4,
+      "image": "https://store.is.autonavi.com/showpic/61af20d3fdfa17a20000003301074606?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/61af20d3fdfa17a20000003301074606?type=pic",
+        "https://store.is.autonavi.com/showpic/7e2ed184325b9b0f0000003140240273?type=pic",
+        "https://store.is.autonavi.com/showpic/adf24c466495069a0000003140226726?type=pic"
+      ]
+    },
+    {
+      "name": "白际岭观景台",
+      "address": "安徽省黄山市休宁县源白公路",
+      "lng": 118.396486,
+      "lat": 29.554301,
+      "category": "自然风光",
+      "rating": 4.4,
+      "image": "https://store.is.autonavi.com/showpic/a6208133d52ffe360f4db7082f46a428",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/a6208133d52ffe360f4db7082f46a428",
+        "https://store.is.autonavi.com/showpic/747a3a08267edb1d10ea9fd8a18e2597",
+        "https://store.is.autonavi.com/showpic/1a2b2de0432b304e0000002338986145?type=pic"
+      ]
+    },
+    {
+      "name": "黄毛瀑布",
+      "address": "安徽省黄山市歙县飞瀑农庄东南侧90米",
+      "lng": 118.488346,
+      "lat": 29.668793,
+      "category": "自然风光",
+      "rating": 4.4,
+      "image": "https://store.is.autonavi.com/showpic/d4a1756cf412e8030000002351402464?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/d4a1756cf412e8030000002351402464?type=pic",
+        "https://store.is.autonavi.com/showpic/4015fd5d088410d5d95af0a2290c7d5d",
+        "https://store.is.autonavi.com/showpic/5545e22e429c83591fab8f934d6392d9"
+      ]
+    },
+    {
+      "name": "许国石坊",
+      "address": "安徽省黄山市歙县徽城镇徽州古城中和街与打箍井街交口",
+      "lng": 118.435944,
+      "lat": 29.865284,
+      "category": "城市地标",
+      "rating": 4.4,
+      "image": "https://aos-comment.amap.com/B0HBRB3DFL/comment/1ccd87f2a8942cb39b72e2984dab2074_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0HBRB3DFL/comment/1ccd87f2a8942cb39b72e2984dab2074_2048_2048_80.jpg",
+        "http://store.is.autonavi.com/showpic/908399545df8735f11ff6192d79aebe8",
+        "https://store.is.autonavi.com/showpic/63eb9c84a1b303850000003182978343?type=pic"
+      ]
+    },
+    {
+      "name": "灵山景区古建筑群",
+      "address": "安徽省黄山市徽州区043乡道附近",
+      "lng": 118.319046,
+      "lat": 29.917546,
+      "category": "自然风光",
+      "rating": 4.4,
+      "image": "https://aos-comment.amap.com/B0FFIFDZNB/comment/file_media_Photo_2268_IMG_1756258280_2056_IMG_20250827_092940_jpg_ss__1762224184663_75590045.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFIFDZNB/comment/file_media_Photo_2268_IMG_1756258280_2056_IMG_20250827_092940_jpg_ss__1762224184663_75590045.jpg",
+        "https://aos-comment.amap.com/B0FFIFDZNB/comment/20260304-738cd87b1ca38389ac68f75e-1hU3of1nFSNAgpQg6y2slw.jpg",
+        "https://aos-comment.amap.com/B0FFIFDZNB/comment/08EF76C6_9987_4285_A18A_5887FFF9209E_L0_001_1500_200_1752562652526_31637711.jpg"
+      ]
+    },
+    {
+      "name": "黄山市新安江滨水旅游景区",
+      "address": "安徽省黄山市屯溪区屯光镇瑶里路8号(世纪广场下行2000米)",
+      "lng": 118.356287,
+      "lat": 29.729205,
+      "category": "自然风光",
+      "rating": 4.3,
+      "image": "http://store.is.autonavi.com/showpic/c97f988e8e3e268a0f3e3d9a28631085",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c97f988e8e3e268a0f3e3d9a28631085",
+        "http://store.is.autonavi.com/showpic/ba3eb2688a6fe2050c9aa97e62b7c775",
+        "http://store.is.autonavi.com/showpic/563a780363aac4b5ad1bfa0fb5204d90"
+      ]
+    },
+    {
+      "name": "江心洲广场",
+      "address": "安徽省黄山市屯溪区新安大道16号",
+      "lng": 118.314375,
+      "lat": 29.705045,
+      "category": "自然风光",
+      "rating": 4.3,
+      "image": "https://store.is.autonavi.com/showpic/bbe4d2e848652ed615e90aebf854b8c4",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/bbe4d2e848652ed615e90aebf854b8c4",
+        "https://aos-comment.amap.com/B022F0021V/comment/d0037e43492cd61c870b873fd295462d_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B022F0021V/comment/content_media_external_images_media_9432_ss__1765436346209_56480776.jpg"
+      ]
+    },
+    {
+      "name": "徽州府衙",
+      "address": "安徽省黄山市歙县徽城镇徽州古城南门入口",
+      "lng": 118.434838,
+      "lat": 29.865721,
+      "category": "城市地标",
+      "rating": 4.3,
+      "image": "https://aos-comment.amap.com/B0JBP994WQ/comment/content_media_external_images_media_1000012101_ss__1769426240617_42936635.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0JBP994WQ/comment/content_media_external_images_media_1000012101_ss__1769426240617_42936635.jpg",
+        "https://aos-comment.amap.com/B0JBP994WQ/comment/content_media_external_images_media_1000026767_ss__1728637121438_71015064.jpg",
+        "https://store.is.autonavi.com/showpic/3f5ddd579f9b8e9f0000002262722455?type=pic"
+      ]
+    },
+    {
+      "name": "中共皖南特区委员会旧址",
+      "address": "安徽省黄山市屯溪区老街69号",
+      "lng": 118.304013,
+      "lat": 29.708562,
+      "category": "城市地标",
+      "image": "https://store.is.autonavi.com/showpic/1effdce0ac6d169d0000007623060549?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/1effdce0ac6d169d0000007623060549?type=pic",
+        "https://aos-comment.amap.com/B022F0MNB0/comment/6aab2a55d85bee71b3dd9682e41d8fcb_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/813d0dc8643568000000002461384894?type=pic"
+      ]
+    }
+  ],
+  "乐山": [
+    {
+      "name": "乐山大佛",
+      "address": "四川省乐山市市中区凌云路2435号",
+      "lng": 103.771388,
+      "lat": 29.544099,
+      "category": "自然风光",
+      "rating": 4.8,
+      "image": "http://store.is.autonavi.com/showpic/34c06899361414f774a884d9739ffdc8",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/34c06899361414f774a884d9739ffdc8",
+        "http://store.is.autonavi.com/showpic/d20a7475856c7f1718ebf2e98e0550ce",
+        "https://aos-comment.amap.com/B034100387/comment/E7B1D1E6_AFA0_45FC_81BD_3A4D56DED141_L0_001_1290_169_1766627374203_01765208.jpg"
+      ]
+    },
+    {
+      "name": "东方佛都",
+      "address": "四川省乐山市市中区凌云路362号",
+      "lng": 103.776567,
+      "lat": 29.538966,
+      "category": "城市地标",
+      "rating": 4.7,
+      "image": "https://store.is.autonavi.com/showpic/65c1ac3224a5fdb80000009199210786?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/65c1ac3224a5fdb80000009199210786?type=pic",
+        "https://store.is.autonavi.com/showpic/800e15ea9379c5b10000008729556098?type=pic",
+        "https://store.is.autonavi.com/showpic/91d975e7d0d4c4010000008164124698?type=pic"
+      ]
+    },
+    {
+      "name": "苏稽古镇",
+      "address": "四川省乐山市市中区",
+      "lng": 103.668488,
+      "lat": 29.587398,
+      "category": "古镇村落",
+      "rating": 4.7,
+      "image": "http://store.is.autonavi.com/showpic/5be3cad4364047cc2796e0ce575c44e7",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5be3cad4364047cc2796e0ce575c44e7",
+        "http://store.is.autonavi.com/showpic/d9826d8ece00bd40cc2c229414f28af1",
+        "https://store.is.autonavi.com/showpic/2b46f63ae1ea63fe0000003771942480?type=pic"
+      ]
+    },
+    {
+      "name": "大佛禅院",
+      "address": "四川省乐山市峨眉山市佛光南路274号",
+      "lng": 103.491217,
+      "lat": 29.5889,
+      "category": "城市地标",
+      "rating": 4.7,
+      "image": "http://store.is.autonavi.com/showpic/6fdad198bea510101f33b267ede26faf",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6fdad198bea510101f33b267ede26faf",
+        "http://store.is.autonavi.com/showpic/12401cd993ddded5ffb4e0ec05ab9eb1",
+        "https://store.is.autonavi.com/showpic/8ea65b38a3581b820000003092584369?type=pic"
+      ]
+    },
+    {
+      "name": "报国寺",
+      "address": "四川省乐山市峨眉山市黄湾镇景区路林区派出所旁边",
+      "lng": 103.443027,
+      "lat": 29.568009,
+      "category": "宗教寺庙",
+      "rating": 4.7,
+      "image": "http://store.is.autonavi.com/showpic/820c708fb8ee7fccd7cd5e9d45c54763",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/820c708fb8ee7fccd7cd5e9d45c54763",
+        "https://aos-comment.amap.com/B034100381/comment/content_media_external_file_1000186814_ss__1772864872159_01079392.jpg",
+        "https://aos-comment.amap.com/B034100381/comment/content_media_external_file_1000019212_ss__1769230290082_15865405.jpg"
+      ]
+    },
+    {
+      "name": "滨江公园",
+      "address": "四川省乐山市市中区滨江路南段与较场坝街交叉口东100米",
+      "lng": 103.768507,
+      "lat": 29.550131,
+      "category": "自然风光",
+      "rating": 4.6,
+      "image": "https://store.is.autonavi.com/showpic/b1074f81c685c9d60000004264808399?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/b1074f81c685c9d60000004264808399?type=pic",
+        "https://aos-comment.amap.com/B0HGL5P4L6/comment/content_media_external_file_8079_ss__1759392943493_38607178.jpg",
+        "https://store.is.autonavi.com/showpic/b53540cea7b01f4f0000003316024507?type=pic"
+      ]
+    },
+    {
+      "name": "海棠公园",
+      "address": "四川省乐山市市中区海棠路520号",
+      "lng": 103.763154,
+      "lat": 29.555643,
+      "category": "城市地标",
+      "rating": 4.6,
+      "image": "https://store.is.autonavi.com/showpic/cd5c9e41a32790090000005215130388?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/cd5c9e41a32790090000005215130388?type=pic",
+        "https://store.is.autonavi.com/showpic/db7974763d61d1eb0000002417452391?type=pic",
+        "https://store.is.autonavi.com/showpic/e97637dd80f86e730000004866078337?type=pic"
+      ]
+    },
+    {
+      "name": "乌尤寺",
+      "address": "四川省乐山市市中区大佛街道凌云路2435号乐山大佛内(南侧)",
+      "lng": 103.772065,
+      "lat": 29.537188,
+      "category": "宗教寺庙",
+      "rating": 4.6,
+      "image": "http://store.is.autonavi.com/showpic/3cf54059d5ca7d0b0c7ea6dcab89a2c6",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/3cf54059d5ca7d0b0c7ea6dcab89a2c6",
+        "http://store.is.autonavi.com/showpic/3db2731270f158ef75a3dc6994b25665",
+        "http://store.is.autonavi.com/showpic/fb656ad86710098cc9715b2e784c8344"
+      ]
+    },
+    {
+      "name": "绿心公园",
+      "address": "四川省乐山市市中区海棠路520号",
+      "lng": 103.741564,
+      "lat": 29.579294,
+      "category": "城市地标",
+      "rating": 4.6,
+      "image": "https://aos-comment.amap.com/B0FFH8LWG0/comment/64f8323eea3227a5d43c7c0f0cb3ce21_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFH8LWG0/comment/64f8323eea3227a5d43c7c0f0cb3ce21_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFH8LWG0/comment/content_media_external_file_1000007278_ss__1762390573886_63171311.jpg",
+        "https://store.is.autonavi.com/showpic/d871c97412ce378b0000000670982162?type=pic"
+      ]
+    },
+    {
+      "name": "乐山广场",
+      "address": "四川省乐山市市中区嘉州大道611号",
+      "lng": 103.744522,
+      "lat": 29.587925,
+      "category": "自然风光",
+      "rating": 4.6,
+      "image": "https://store.is.autonavi.com/showpic/1e69ae5a4fc4c8730000003101160928?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/1e69ae5a4fc4c8730000003101160928?type=pic",
+        "https://aos-comment.amap.com/B034101HXW/comment/content_media_external_file_762209_ss__1772234682281_28036704.jpg",
+        "https://aos-comment.amap.com/B034101HXW/comment/20260321-2d299df59fa3dda739b39eed-4PZe8Bi3ScJ8el72S5wdwr.jpg"
+      ]
+    },
+    {
+      "name": "罗城古镇",
+      "address": "四川省乐山市犍为县船形街32号",
+      "lng": 104.030536,
+      "lat": 29.382785,
+      "category": "古镇村落",
+      "rating": 4.6,
+      "image": "http://store.is.autonavi.com/showpic/2967bb3d4c0c693c01c76e634f4f1f73",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/2967bb3d4c0c693c01c76e634f4f1f73",
+        "https://store.is.autonavi.com/showpic/23d667df423f8d190000004268234796?type=pic",
+        "https://store.is.autonavi.com/showpic/616956142eeda2f7ed9a187f2a150b51"
+      ]
+    },
+    {
+      "name": "峨秀湖公园",
+      "address": "四川省乐山市峨眉山市名山路南段辅路附近",
+      "lng": 103.460728,
+      "lat": 29.564972,
+      "category": "自然风光",
+      "rating": 4.6,
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/7b5e32ab-c2d6-4230-8e91-50bd71c10310.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/7b5e32ab-c2d6-4230-8e91-50bd71c10310.jpg",
+        "https://store.is.autonavi.com/showpic/8fd7064a64386f200000000970876226?type=pic",
+        "https://aos-comment.amap.com/B0FFG0OZ9C/comment/content_media_external_file_1000039450_ss__1765697161476_69904688.jpg"
+      ]
+    },
+    {
+      "name": "嘉定坊",
+      "address": "四川省乐山市市中区龙泓路1866号",
+      "lng": 103.773524,
+      "lat": 29.558856,
+      "category": "城市地标",
+      "rating": 4.5,
+      "image": "https://aos-comment.amap.com/B03410PFDO/comment/F340B4EB_39D0_4BF6_B759_EC6A27151116_L0_001_2000_112_1768144798674_97226597.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B03410PFDO/comment/F340B4EB_39D0_4BF6_B759_EC6A27151116_L0_001_2000_112_1768144798674_97226597.jpg",
+        "https://aos-comment.amap.com/B03410PFDO/comment/DE3FB44C_C57D_477F_BF91_4B8B65656835_L0_001_1080_143_1770959161114_02509596.jpg",
+        "http://store.is.autonavi.com/showpic/c0bb39c2a5fc4e34ac77f98b4363c445"
+      ]
+    },
+    {
+      "name": "乐山文庙",
+      "address": "四川省乐山市市中区月咡塘街56号",
+      "lng": 103.7615,
+      "lat": 29.558702,
+      "category": "宗教寺庙",
+      "rating": 4.5,
+      "image": "https://store.is.autonavi.com/showpic/5309bb6410785d620000002156182709?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/5309bb6410785d620000002156182709?type=pic",
+        "https://aos-comment.amap.com/B0FFGF3T3G/comment/content_media_external_file_1000030533_ss__1759421657926_57217596.jpg",
+        "https://aos-comment.amap.com/B0FFGF3T3G/comment/88BD2774_60F0_467D_8634_308D8274F153_L0_001_1439_173_1770740341399_44704869.jpg"
+      ]
+    },
+    {
+      "name": "观佛楼",
+      "address": "四川省乐山市市中区滨江路南段99号",
+      "lng": 103.769172,
+      "lat": 29.551829,
+      "category": "城市地标",
+      "rating": 4.5,
+      "image": "http://store.is.autonavi.com/showpic/5577f4e1a3103f4075f26079",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5577f4e1a3103f4075f26079",
+        "https://aos-comment.amap.com/B0FFF4UME7/comment/97D26FF7_F910_4E14_95FE_AA3A44FDE172_L0_001_2016_151_1761036909043_08576137.jpg",
+        "https://store.is.autonavi.com/showpic/47fb40ba825cfa740000003139492385?type=pic"
+      ]
+    },
+    {
+      "name": "新广场鸽子屋",
+      "address": "四川省乐山市市中区白云街与凤凰路南段交叉口西160米",
+      "lng": 103.743421,
+      "lat": 29.586075,
+      "category": "城市地标",
+      "rating": 4.5,
+      "image": "https://aos-comment.amap.com/B0K17RQ1Y8/comment/6B5CCD16_BF6B_4F23_8E33_83E8C194A4AF_L0_001_1500_200_1769147467466_56815775.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0K17RQ1Y8/comment/6B5CCD16_BF6B_4F23_8E33_83E8C194A4AF_L0_001_1500_200_1769147467466_56815775.jpg",
+        "https://store.is.autonavi.com/showpic/3ef306301b56176d0000000685796221?type=pic",
+        "https://aos-comment.amap.com/B0K17RQ1Y8/comment/content_media_external_images_media_1000020485_ss__1745484003285_83827238.jpg"
+      ]
+    },
+    {
+      "name": "太白亭",
+      "address": "四川省乐山市市中区青关路",
+      "lng": 103.765111,
+      "lat": 29.672832,
+      "category": "城市地标",
+      "rating": 4.5,
+      "image": "https://store.is.autonavi.com/showpic/c5f07341f053f7200000002379080171",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/c5f07341f053f7200000002379080171",
+        "https://store.is.autonavi.com/showpic/ee48347f351b9f4d0000004264798069?type=pic",
+        "https://store.is.autonavi.com/showpic/53ce931293133f560000004027416095?type=pic"
+      ]
+    },
+    {
+      "name": "金鹰山庄",
+      "address": "四川省乐山市市中区乐夹路89号",
+      "lng": 103.710411,
+      "lat": 29.618621,
+      "category": "自然风光",
+      "rating": 4.5,
+      "image": "http://store.is.autonavi.com/showpic/c6c09992ceeb0c07ffdedcd1114a3ba3",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c6c09992ceeb0c07ffdedcd1114a3ba3",
+        "http://store.is.autonavi.com/showpic/b3ae08a295813964bf7ce1b278af94f7",
+        "https://store.is.autonavi.com/showpic/4f4e048a9b3278d42e85caad4dd74fcc"
+      ]
+    },
+    {
+      "name": "峨秀湖旅游度假区",
+      "address": "四川省乐山市峨眉山市峨眉山秀湖大道",
+      "lng": 103.469791,
+      "lat": 29.577945,
+      "category": "自然风光",
+      "rating": 4.5,
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/448693b4-c00a-40e5-ac1b-92fa22210a08.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/448693b4-c00a-40e5-ac1b-92fa22210a08.jpg",
+        "http://store.is.autonavi.com/showpic/085c500697d420ede5c94f6a15b9aa39",
+        "http://store.is.autonavi.com/showpic/7f90c82d10a638c3efafa02295475b17"
+      ]
+    },
+    {
+      "name": "罗目古镇",
+      "address": "四川省乐山市峨眉山市罗目镇103省道与正兴街交叉口西南240米",
+      "lng": 103.458117,
+      "lat": 29.514483,
+      "category": "古镇村落",
+      "rating": 4.5,
+      "image": "https://aos-comment.amap.com/B0FFFYVPH5/comment/content_media_external_file_1000001436_ss__1753771335103_18666865.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFFYVPH5/comment/content_media_external_file_1000001436_ss__1753771335103_18666865.jpg",
+        "https://aos-comment.amap.com/B0FFFYVPH5/comment/%5B2024-10-26-19-12-34%5D5F98A6E7-77E3-4A6B-AAD0-66351A46E39_1729941186685_72745593.jpg",
+        "https://aos-comment.amap.com/B0FFFYVPH5/comment/content_media_external_images_media_42306_ss__1737187723190_76254106.jpg"
+      ]
+    },
+    {
+      "name": "乌木珍品文化博物苑",
+      "address": "四川省乐山市市中区苏稽镇乐峨路西段768号",
+      "lng": 103.656154,
+      "lat": 29.585926,
+      "category": "城市地标",
+      "rating": 4.4,
+      "image": "http://store.is.autonavi.com/showpic/e1441e364bcd443185159f8d8a514fbd",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/e1441e364bcd443185159f8d8a514fbd",
+        "http://store.is.autonavi.com/showpic/f87649d25d00f8a4ead7a64f1ac034ab",
+        "http://store.is.autonavi.com/showpic/5027465a2514c7efc7d1ed2b864dc5d6"
+      ]
+    },
+    {
+      "name": "菩提山公园",
+      "address": "四川省乐山市五通桥区竹根镇文化路2302号",
+      "lng": 103.82415,
+      "lat": 29.407902,
+      "category": "自然风光",
+      "rating": 4.4,
+      "image": "http://store.is.autonavi.com/showpic/77a3bd7e1f7309e0289deb46838abb5f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/77a3bd7e1f7309e0289deb46838abb5f",
+        "https://aos-comment.amap.com/B034100379/comment/content_media_external_file_1000053957_ss__1761033222712_34049564.jpg",
+        "https://aos-comment.amap.com/B034100379/comment/content_media_external_file_147485_ss__1744710518514_66695236.jpg"
+      ]
+    },
+    {
+      "name": "沫若广场",
+      "address": "四川省乐山市市中区县街139号",
+      "lng": 103.759832,
+      "lat": 29.554947,
+      "category": "城市地标",
+      "rating": 4.3,
+      "image": "https://store.is.autonavi.com/showpic/953b4c4c37937a82da9b5c5cd171a90e",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/953b4c4c37937a82da9b5c5cd171a90e",
+        "https://store.is.autonavi.com/showpic/ebb06752b091da740000003309488866?type=pic",
+        "https://store.is.autonavi.com/showpic/d459e7930fbf57143eee781ed8c6b4fd"
+      ]
+    },
+    {
+      "name": "鱼咡湾公园",
+      "address": "四川省乐山市市中区海棠路626号",
+      "lng": 103.753325,
+      "lat": 29.564766,
+      "category": "自然风光",
+      "rating": 4.3,
+      "image": "https://aos-comment.amap.com/B0FFG8YOOX/comment/content_media_external_file_1000011788_ss__1744459739575_15206185.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFG8YOOX/comment/content_media_external_file_1000011788_ss__1744459739575_15206185.jpg",
+        "https://store.is.autonavi.com/showpic/1228be0e3a790c6d0000000597620114",
+        "https://store.is.autonavi.com/showpic/f24e3e60ddfbf06d0000002417278993?type=pic"
+      ]
+    },
+    {
+      "name": "乐山大佛文化广场",
+      "address": "四川省乐山市市中区碧山路与龙泓路交汇处西南200米",
+      "lng": 103.773769,
+      "lat": 29.562966,
+      "category": "自然风光",
+      "rating": 4.3,
+      "image": "https://store.is.autonavi.com/showpic/f9bfb4763df8de080000002897196116?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/f9bfb4763df8de080000002897196116?type=pic",
+        "https://store.is.autonavi.com/showpic/b9919f03905fb9cd0000003445126831?type=pic",
+        "https://aos-comment.amap.com/B0HGRZN7H2/comment/content_media_external_file_842407_ss__1745726756927_60287853.jpg"
+      ]
+    },
+    {
+      "name": "紫霞宫",
+      "address": "四川省乐山市市中区通江街道碧山路717号",
+      "lng": 103.783333,
+      "lat": 29.57985,
+      "category": "城市地标",
+      "rating": 4.3,
+      "image": "http://store.is.autonavi.com/showpic/bddcb54db2adb6fe4a39f84e305e59d8",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/bddcb54db2adb6fe4a39f84e305e59d8",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/97038afa-a1ea-4f1c-9aa3-da6589783f8f.jpg",
+        "https://aos-comment.amap.com/B034102S75/comment/c3c9b18784f1a220ae8787b0a46f9ab6_2048_2048_80.jpg"
+      ]
+    },
+    {
+      "name": "滟澜洲喷泉广场",
+      "address": "四川省乐山市市中区嘉州新城滟澜洲东北(青江路南段东)",
+      "lng": 103.710914,
+      "lat": 29.557081,
+      "category": "自然风光",
+      "rating": 4.3,
+      "image": "https://aos-comment.amap.com/B0FFGY1V2Q/comment/8199001f13e4e107911ea211414ad050_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFGY1V2Q/comment/8199001f13e4e107911ea211414ad050_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/2405b32f58fc9a5e7c33832d20a262a8",
+        "http://store.is.autonavi.com/showpic/2a24efe005c4178c4781b25e48b4d1ec"
+      ]
+    },
+    {
+      "name": "佛光广场",
+      "address": "四川省乐山市峨眉山市佛光广场环岛与名山南路交叉口东北20米",
+      "lng": 103.483152,
+      "lat": 29.599017,
+      "category": "城市地标",
+      "rating": 4.3,
+      "image": "https://aos-comment.amap.com/B034101HUS/comment/content_media_external_file_365674_ss__1770374853488_07235185.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B034101HUS/comment/content_media_external_file_365674_ss__1770374853488_07235185.jpg",
+        "https://aos-comment.amap.com/B034101HUS/comment/content_media_external_file_644178_ss__1760258850988_68604516.jpg",
+        "https://store.is.autonavi.com/showpic/d409490cb5457c080000007915780165?type=pic"
+      ]
+    }
+  ],
+  "酒泉": [
+    {
+      "name": "西汉酒泉胜迹",
+      "address": "甘肃省酒泉市肃州区公园路100号",
+      "lng": 98.533515,
+      "lat": 39.746878,
+      "category": "自然风光",
+      "rating": 4.6,
+      "image": "https://store.is.autonavi.com/showpic/236037cfdb0c67240000007646856503?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/236037cfdb0c67240000007646856503?type=pic",
+        "https://store.is.autonavi.com/showpic/f979206fe1b3292c0000003199170178?type=pic",
+        "https://store.is.autonavi.com/showpic/39a2692add1858000000007802446536?type=pic"
+      ]
+    },
+    {
+      "name": "中国金塔沙漠胡杨林景区",
+      "address": "甘肃省酒泉市金塔县金塔镇",
+      "lng": 98.827804,
+      "lat": 40.033276,
+      "category": "宗教寺庙",
+      "rating": 4.6,
+      "image": "http://store.is.autonavi.com/showpic/81162a8163ecd77cca95ccbf95c93304",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/81162a8163ecd77cca95ccbf95c93304",
+        "http://store.is.autonavi.com/showpic/c53073743e701ec503b19b2989eea13f",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/5f7c24f9-16db-416d-be6b-7cbab520983d.jpg"
+      ]
+    },
+    {
+      "name": "玉湖公园",
+      "address": "甘肃省酒泉市肃州区酒泉经济技术开发区金河大桥旁",
+      "lng": 98.442475,
+      "lat": 39.740299,
+      "category": "自然风光",
+      "rating": 4.4,
+      "image": "http://store.is.autonavi.com/showpic/57598b2832e98c8ca475595ca78634a0",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/57598b2832e98c8ca475595ca78634a0",
+        "https://store.is.autonavi.com/showpic/e58a9a0cfb02ca150000002252498771?type=pic",
+        "https://store.is.autonavi.com/showpic/f9804d4833cdcaba3d48c787bfdc22c0"
+      ]
+    },
+    {
+      "name": "酒泉天马湖景区",
+      "address": "甘肃省酒泉市肃州区泉湖镇永久村酒四路",
+      "lng": 98.547323,
+      "lat": 39.737477,
+      "category": "自然风光",
+      "rating": 4.4,
+      "image": "https://store.is.autonavi.com/showpic/91dab79937f3e1370000002889484077?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/91dab79937f3e1370000002889484077?type=pic",
+        "https://store.is.autonavi.com/showpic/e7304174477266620000003096242913?type=pic",
+        "https://store.is.autonavi.com/showpic/309f520796412d510000003593794850"
+      ]
+    },
+    {
+      "name": "北郊公园",
+      "address": "甘肃省酒泉市肃州区酒银路1公里处",
+      "lng": 98.521444,
+      "lat": 39.762472,
+      "category": "城市地标",
+      "rating": 4.3,
+      "image": "https://store.is.autonavi.com/showpic/4159970c9a8461920000002744440999?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/4159970c9a8461920000002744440999?type=pic",
+        "https://store.is.autonavi.com/showpic/842f57f5e5f9b2000000002752852491?type=pic",
+        "https://store.is.autonavi.com/showpic/d8c003eaf95d17ac0000003096230357?type=pic"
+      ]
+    }
+  ],
+  "嘉兴": [
+    {
+      "name": "乌镇风景区",
+      "address": "浙江省嘉兴市桐乡市石佛南路18号",
+      "lng": 120.486216,
+      "lat": 30.749024,
+      "category": "城市地标",
+      "rating": 4.9,
+      "image": "http://store.is.autonavi.com/showpic/60bcf8e04c9a3afe44d1ccadbf4877ef",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/60bcf8e04c9a3afe44d1ccadbf4877ef",
+        "http://store.is.autonavi.com/showpic/1083d6cc6f769c8c2381587c1e89aae8",
+        "http://store.is.autonavi.com/showpic/1f0688e6bb12fd82276c392aa837dcf6"
+      ]
+    },
+    {
+      "name": "嘉兴南湖旅游区",
+      "address": "浙江省嘉兴市南湖区南溪西路1号",
+      "lng": 120.753137,
+      "lat": 30.753681,
+      "category": "自然风光",
+      "rating": 4.8,
+      "image": "http://store.is.autonavi.com/showpic/5d0af50b145ffa6a4cc8242164b3b77a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5d0af50b145ffa6a4cc8242164b3b77a",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/bb2994e7-b3db-4fab-9879-eea4ba682388.jpg",
+        "http://store.is.autonavi.com/showpic/c55c610edcb51937f9309e4ba4e77176"
+      ]
+    },
+    {
+      "name": "南湖红船",
+      "address": "浙江省嘉兴市南湖区海盐塘路188号嘉兴市南湖旅游区南湖湖心岛内",
+      "lng": 120.760741,
+      "lat": 30.755014,
+      "category": "自然风光",
+      "rating": 4.7,
+      "image": "https://store.is.autonavi.com/showpic/9b1dad4520a1f8020000003575338396?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/9b1dad4520a1f8020000003575338396?type=pic",
+        "https://aos-comment.amap.com/B0FFGM2OEX/comment/content_media_external_file_443810_ss__1766206336782_21401521.jpg",
+        "https://aos-comment.amap.com/B0FFGM2OEX/comment/content_media_external_images_media_1000023514_ss__1769078324177_10395031.jpg"
+      ]
+    },
+    {
+      "name": "南湖革命纪念馆",
+      "address": "浙江省嘉兴市南湖区烟雨路186号",
+      "lng": 120.761837,
+      "lat": 30.747719,
+      "category": "历史人文",
+      "rating": 4.7,
+      "image": "https://store.is.autonavi.com/showpic/da0ff9bc49f4cc93722d618ce5f378c0",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/da0ff9bc49f4cc93722d618ce5f378c0",
+        "https://store.is.autonavi.com/showpic/dedf3ca2824682be0000002317466121?type=pic",
+        "https://store.is.autonavi.com/showpic/c8adb1b17dc677700000002854050806"
+      ]
+    },
+    {
+      "name": "月河历史街区",
+      "address": "浙江省嘉兴市南湖区禾兴街道建国北路22号",
+      "lng": 120.749976,
+      "lat": 30.770826,
+      "category": "自然风光",
+      "rating": 4.7,
+      "image": "http://store.is.autonavi.com/showpic/8ff95a83a001c1e02716009f52abb91c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8ff95a83a001c1e02716009f52abb91c",
+        "https://store.is.autonavi.com/showpic/33fc7d5880c3dc030000008570558805?type=pic",
+        "https://store.is.autonavi.com/showpic/da998c89ab6665432a7058af6072248e"
+      ]
+    },
+    {
+      "name": "嘉兴子城遗址公园",
+      "address": "浙江省嘉兴市南湖区府前街65号",
+      "lng": 120.752925,
+      "lat": 30.76021,
+      "category": "历史人文",
+      "rating": 4.7,
+      "image": "http://store.is.autonavi.com/showpic/5bb70e553affb6283dd00f1822ab067f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/5bb70e553affb6283dd00f1822ab067f",
+        "https://store.is.autonavi.com/showpic/7841f912e98e442c0000002478848471?type=pic",
+        "https://store.is.autonavi.com/showpic/5a6d28e3ee5b7a320000001397046116?type=pic"
+      ]
+    },
+    {
+      "name": "中央公园",
+      "address": "浙江省嘉兴市南湖区纺工路中央公园(富民路口)",
+      "lng": 120.767679,
+      "lat": 30.729147,
+      "category": "城市地标",
+      "rating": 4.7,
+      "image": "https://store.is.autonavi.com/showpic/7a172a6d96aad18ba7f542afeb308c83",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/7a172a6d96aad18ba7f542afeb308c83",
+        "https://aos-comment.amap.com/B023D0QCCO/comment/5AEF678D_2EA7_44F0_A234_D16B4F0C8FD3_L0_001_2000_150_1761724752879_44222007.jpg",
+        "https://aos-comment.amap.com/B023D0QCCO/comment/content_media_external_images_media_1000119923_ss__1770291592606_44576462.jpg"
+      ]
+    },
+    {
+      "name": "嘉兴植物园",
+      "address": "浙江省嘉兴市南湖区纺工路长水路口西侧",
+      "lng": 120.768245,
+      "lat": 30.715728,
+      "category": "主题乐园",
+      "rating": 4.7,
+      "image": "http://store.is.autonavi.com/showpic/df294b8de0168ad3618d630aeb5616f5",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/df294b8de0168ad3618d630aeb5616f5",
+        "https://aos-comment.amap.com/B023D042YV/comment/362BFD50_1FBC_41EC_B361_95E9C0B73ABC_L0_001_2000_150_1766108791768_76161133.jpg",
+        "https://aos-comment.amap.com/B023D042YV/comment/AFEFB130_3AB6_4CC4_9169_AD24B436EB06_L0_001_1080_183_1770796476599_57948387.jpg"
+      ]
+    },
+    {
+      "name": "濮院时尚古镇",
+      "address": "浙江省嘉兴市桐乡市濮院镇濮川大街233号",
+      "lng": 120.632671,
+      "lat": 30.683528,
+      "category": "古镇村落",
+      "rating": 4.7,
+      "image": "http://store.is.autonavi.com/showpic/d4ed66a81aba19b14cc2ef2c4a3653f4",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d4ed66a81aba19b14cc2ef2c4a3653f4",
+        "https://store.is.autonavi.com/showpic/92aae5bfd6d645950000004460238500?type=pic",
+        "https://store.is.autonavi.com/showpic/da1f353bc80f5da40000008124164586?type=pic"
+      ]
+    },
+    {
+      "name": "桐乡凤凰湖",
+      "address": "浙江省嘉兴市桐乡市梧桐街道濮院大道浮石桥西南",
+      "lng": 120.588647,
+      "lat": 30.64263,
+      "category": "自然风光",
+      "rating": 4.7,
+      "image": "https://aos-comment.amap.com/B0FFG7804V/comment/A8BCD6FE_753B_497D_9D33_4FF618266010_L0_001_2000_1500_1732966050165_35437279.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFG7804V/comment/A8BCD6FE_753B_497D_9D33_4FF618266010_L0_001_2000_1500_1732966050165_35437279.jpg",
+        "http://store.is.autonavi.com/showpic/a44eece80ccd64f36f0c3f74e74d6ef7",
+        "https://aos-comment.amap.com/B0FFG7804V/comment/content_media_external_file_100001358_1747984162788_05203735.jpg"
+      ]
+    },
+    {
+      "name": "西塘古镇",
+      "address": "浙江省嘉兴市嘉善县西塘镇南苑路258号",
+      "lng": 120.893704,
+      "lat": 30.942938,
+      "category": "古镇村落",
+      "rating": 4.7,
+      "image": "http://store.is.autonavi.com/showpic/a144ebb7c9009ab356c91e3dec3329bb",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a144ebb7c9009ab356c91e3dec3329bb",
+        "http://store.is.autonavi.com/showpic/2435a137998e01c3922fd3a72b85589d",
+        "http://store.is.autonavi.com/showpic/986af7d63b11effa24b5b29bd98919e8"
+      ]
+    },
+    {
+      "name": "乌镇西栅景区",
+      "address": "浙江省嘉兴市桐乡市石佛南路18号",
+      "lng": 120.484263,
+      "lat": 30.75027,
+      "category": "城市地标",
+      "rating": 4.7,
+      "image": "http://store.is.autonavi.com/showpic/4b67afbc2a499100ea4aa6c8f2922718",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/4b67afbc2a499100ea4aa6c8f2922718",
+        "http://store.is.autonavi.com/showpic/0d3db572be90f3481eabf93ca86ec7aa",
+        "http://store.is.autonavi.com/showpic/a2c066207271d2aae1bc2c5567e03f04"
+      ]
+    },
+    {
+      "name": "壕股塔院",
+      "address": "浙江省嘉兴市南湖区南溪西路1号嘉兴南湖旅游区",
+      "lng": 120.753209,
+      "lat": 30.753848,
+      "category": "宗教寺庙",
+      "rating": 4.6,
+      "image": "https://store.is.autonavi.com/showpic/5350b552b836acbb0000002730062583?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/5350b552b836acbb0000002730062583?type=pic",
+        "https://aos-comment.amap.com/B0FFKH69MA/comment/content_media_external_file_111547_ss__1760684084285_29863354.jpg",
+        "https://store.is.autonavi.com/showpic/3f4f1e383089466d0000000971394260?type=pic"
+      ]
+    },
+    {
+      "name": "勺园",
+      "address": "浙江省嘉兴市南湖区南溪西路1号嘉兴市南湖旅游区内",
+      "lng": 120.76203,
+      "lat": 30.750163,
+      "category": "城市地标",
+      "rating": 4.6,
+      "image": "https://aos-comment.amap.com/B0FFFFCPX4/comment/CDE1D2C7_BA8D_4E14_9ADE_F5914AB600B0_L0_001_1080_144_1757120130850_59189895.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFFFCPX4/comment/CDE1D2C7_BA8D_4E14_9ADE_F5914AB600B0_L0_001_1080_144_1757120130850_59189895.jpg",
+        "https://aos-comment.amap.com/B0FFFFCPX4/comment/4A792850_18DD_44DB_ACBC_C0B159642BF3_L0_001_1122_150_1768568640705_46702262.jpg",
+        "https://store.is.autonavi.com/showpic/a78742b1c34ebd1c0000003111212019?type=pic"
+      ]
+    },
+    {
+      "name": "烟雨楼",
+      "address": "浙江省嘉兴市南湖区南湖街道南溪路1号嘉兴市南湖旅游区内(东侧)",
+      "lng": 120.760189,
+      "lat": 30.755202,
+      "category": "城市地标",
+      "rating": 4.6,
+      "image": "http://store.is.autonavi.com/showpic/4d6778f99866d088c5d2e54a609ea4af",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/4d6778f99866d088c5d2e54a609ea4af",
+        "https://aos-comment.amap.com/B023D02TM2/comment/35962B8A_976D_4BFD_92EF_11D950B81847_L0_001_1536_204_1766822626993_99832534.jpg",
+        "https://aos-comment.amap.com/B023D02TM2/comment/40D71AFE_963D_4F7A_AD04_427D4B674168_L0_001_1500_200_1767671811485_00937776.jpg"
+      ]
+    },
+    {
+      "name": "姚家荡公园",
+      "address": "浙江省嘉兴市南湖区创新路",
+      "lng": 120.7352,
+      "lat": 30.725498,
+      "category": "城市地标",
+      "rating": 4.6,
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/6bc01562-2737-4a2c-80f2-338ff521106a.jpeg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/6bc01562-2737-4a2c-80f2-338ff521106a.jpeg",
+        "https://store.is.autonavi.com/showpic/f4a504efcb56642e0000004754320783?type=pic",
+        "https://aos-comment.amap.com/B0FFG9ET8P/comment/d2c2e1066e62871a208ce769cb2326e0_2048_2048_80.jpg"
+      ]
+    },
+    {
+      "name": "秀湖公园",
+      "address": "浙江省嘉兴市秀洲区成秀路355号",
+      "lng": 120.687489,
+      "lat": 30.771076,
+      "category": "自然风光",
+      "rating": 4.6,
+      "image": "https://store.is.autonavi.com/showpic/5490bf2b26aa29bc0000003369574728?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/5490bf2b26aa29bc0000003369574728?type=pic",
+        "https://store.is.autonavi.com/showpic/503f10ca62b5858a0000002268732659?type=pic",
+        "https://aos-comment.amap.com/B0FFH0T1CJ/comment/content_media_external_file_92657_ss__1762418264183_61955788.jpg"
+      ]
+    },
+    {
+      "name": "湘家荡旅游度假区",
+      "address": "浙江省嘉兴市南湖区灵湖东路与富民路交叉口",
+      "lng": 120.821442,
+      "lat": 30.7975,
+      "category": "城市地标",
+      "rating": 4.6,
+      "image": "https://store.is.autonavi.com/showpic/813260f7f7e20c810000002402848551?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/813260f7f7e20c810000002402848551?type=pic",
+        "https://aos-comment.amap.com/B023D02TMT/comment/402570C8_D94E_414A_BFF9_F36455D6CC92_L0_001_2000_150_1764979837746_81742468.jpg",
+        "https://aos-comment.amap.com/B023D02TMT/comment/1867d229431ac8ac00e2428be1f52f80_2048_2048_80.jpg"
+      ]
+    },
+    {
+      "name": "穆湖森林公园",
+      "address": "浙江省嘉兴市秀洲区昌盛北路",
+      "lng": 120.749406,
+      "lat": 30.792387,
+      "category": "自然风光",
+      "rating": 4.6,
+      "image": "http://store.is.autonavi.com/showpic/c201cff238c5be1df37b9983dff2088e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c201cff238c5be1df37b9983dff2088e",
+        "https://aos-comment.amap.com/B0FFF3SQHK/comment/c703715b9ce386fc54a1af1847feff9e_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/d1e46d88a727337c0000000969052958?type=pic"
+      ]
+    },
+    {
+      "name": "新塍古镇",
+      "address": "浙江省嘉兴市秀洲区新塍镇蓬莱路385号",
+      "lng": 120.614669,
+      "lat": 30.794806,
+      "category": "古镇村落",
+      "rating": 4.6,
+      "image": "https://store.is.autonavi.com/showpic/a8142e27a2da1c2a0000002392830241?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/a8142e27a2da1c2a0000002392830241?type=pic",
+        "https://store.is.autonavi.com/showpic/5dde13230954bd350000002390534318?type=pic",
+        "https://aos-comment.amap.com/B0FFIBDA3N/comment/253B5114_D383_4DB2_A706_89B5951CA657_L0_001_2000_150_1759806897397_07579694.jpg"
+      ]
+    },
+    {
+      "name": "嘉兴海底世界海洋馆",
+      "address": "浙江省嘉兴市秀洲区洪兴路1766号下沉广场B1层(麦当劳旁)",
+      "lng": 120.709611,
+      "lat": 30.763108,
+      "category": "城市地标",
+      "rating": 4.6,
+      "image": "http://store.is.autonavi.com/showpic/f7b5072ad30bd3b5576d75101c2f2943",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/f7b5072ad30bd3b5576d75101c2f2943",
+        "https://store.is.autonavi.com/showpic/97cf4f64f17f40a10000007803018980?type=pic",
+        "https://store.is.autonavi.com/showpic/f62ec97265cf3f77c39958526522f1e0"
+      ]
+    },
+    {
+      "name": "沈荡古镇",
+      "address": "浙江省嘉兴市海盐县永庆西路与盐百线交叉口东南380米",
+      "lng": 120.823051,
+      "lat": 30.572724,
+      "category": "古镇村落",
+      "rating": 4.6,
+      "image": "https://store.is.autonavi.com/showpic/f20f959ce35eff2f0000006961162554?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/f20f959ce35eff2f0000006961162554?type=pic",
+        "https://store.is.autonavi.com/showpic/60b417a0f12716ec0000007253254032?type=pic",
+        "https://store.is.autonavi.com/showpic/d6ced8434c2611780000003524266432?type=pic"
+      ]
+    },
+    {
+      "name": "梅花洲景区",
+      "address": "浙江省嘉兴市南湖区三星路10号",
+      "lng": 120.851894,
+      "lat": 30.669386,
+      "category": "城市地标",
+      "rating": 4.6,
+      "image": "http://store.is.autonavi.com/showpic/0d6db47c4ce02cdd5d36d7bad475048a",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0d6db47c4ce02cdd5d36d7bad475048a",
+        "https://aos-comment.amap.com/B023D03OFF/comment/4BDA0EFB_7108_4F86_88DB_30AE1F9F5994_L0_001_1179_153_1757288684338_46101374.jpg",
+        "https://aos-comment.amap.com/B023D03OFF/comment/content_media_external_file_1170_1768520256139_94285082.jpg"
+      ]
+    },
+    {
+      "name": "琵琶岛·自然野ALOKA ISLAND",
+      "address": "浙江省嘉兴市秀洲区新镇路56号",
+      "lng": 120.742317,
+      "lat": 30.891824,
+      "category": "自然风光",
+      "rating": 4.6,
+      "image": "https://store.is.autonavi.com/showpic/415420df9fba72de0000002461396943?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/415420df9fba72de0000002461396943?type=pic",
+        "https://store.is.autonavi.com/showpic/7f64832c2f4fa6620000002365692660?type=pic",
+        "https://aos-comment.amap.com/B0KA7L0E52/comment/5859EAE5_FAAD_4A6A_B435_597281CFBE87_L0_001_2000_150_1772955203510_35036204.jpg"
+      ]
+    },
+    {
+      "name": "西南湖生态公园",
+      "address": "浙江省嘉兴市南湖区南溪西路1号嘉兴南湖旅游区(西南角)",
+      "lng": 120.747843,
+      "lat": 30.743542,
+      "category": "自然风光",
+      "rating": 4.5,
+      "image": "https://store.is.autonavi.com/showpic/65529c723dcc1cd70000003423400657?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/65529c723dcc1cd70000003423400657?type=pic",
+        "https://store.is.autonavi.com/showpic/640e160c36df7a9baa19d322fec6ce8b",
+        "https://store.is.autonavi.com/showpic/ed7e13460c52060f8c73f55cb29a5051"
+      ]
+    },
+    {
+      "name": "放鹤洲",
+      "address": "浙江省嘉兴市南湖区放鹤洲路342号",
+      "lng": 120.744225,
+      "lat": 30.74487,
+      "category": "城市地标",
+      "rating": 4.5,
+      "image": "https://aos-comment.amap.com/B023D015XL/comment/eea3c270c7e69ed0b75cc7bcf942ab3d_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B023D015XL/comment/eea3c270c7e69ed0b75cc7bcf942ab3d_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/02248d8c1a35bf13f9088b5967459761",
+        "https://aos-comment.amap.com/B023D015XL/comment/2b289f78f29085d7c62023c869f4eefc_2048_2048_80.jpg"
+      ]
+    },
+    {
+      "name": "洪波公园",
+      "address": "浙江省嘉兴市秀洲区中环西路1635-1613号附近",
+      "lng": 120.728819,
+      "lat": 30.771177,
+      "category": "城市地标",
+      "rating": 4.5,
+      "image": "http://store.is.autonavi.com/showpic/0626ffd1156f44e947478611a63c2dd1",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/0626ffd1156f44e947478611a63c2dd1",
+        "https://aos-comment.amap.com/B023D02TN8/comment/content_media_external_images_media_59236_1657941874941_75c7c61f.jpg",
+        "https://aos-comment.amap.com/B0FFI94IQO/comment/A80BA405_CF86_4D1E_9C01_670EFA7160D0_L0_001_1440_92_1765554688903_40428677.jpg"
+      ]
+    },
+    {
+      "name": "槜李湖公园",
+      "address": "浙江省嘉兴市南湖区万兴路与亚欧路交叉口东南340米",
+      "lng": 120.821527,
+      "lat": 30.714278,
+      "category": "自然风光",
+      "rating": 4.5,
+      "image": "https://store.is.autonavi.com/showpic/63730001502ef1580000002396598600?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/63730001502ef1580000002396598600?type=pic",
+        "https://store.is.autonavi.com/showpic/aadd76e972f510500000002351338668",
+        "https://store.is.autonavi.com/showpic/85a518eacccaf4190000002000364184?type=pic"
+      ]
+    },
+    {
+      "name": "华章·银杏天鹅湖",
+      "address": "浙江省嘉兴市秀洲区车家港路1号",
+      "lng": 120.756465,
+      "lat": 30.833538,
+      "category": "自然风光",
+      "rating": 4.5,
+      "image": "http://aos-cdn-image.amap.com/sns/ugccomment/5f2e3cf8-89fa-42b3-9be4-486493c5fe08.jpg",
+      "photos": [
+        "http://aos-cdn-image.amap.com/sns/ugccomment/5f2e3cf8-89fa-42b3-9be4-486493c5fe08.jpg",
+        "https://aos-comment.amap.com/B0FFJQ5KIP/comment/content_media_external_file_122212_ss__1764769908576_92761968.jpg",
+        "https://aos-comment.amap.com/B0FFJQ5KIP/comment/content_media_external_file_100002746_1765463610060_90862884.jpg"
+      ]
+    },
+    {
+      "name": "秦湖公园",
+      "address": "浙江省嘉兴市南湖区百川路与庆丰路交叉口西320米",
+      "lng": 120.79818,
+      "lat": 30.694886,
+      "category": "自然风光",
+      "rating": 4.5,
+      "image": "https://aos-comment.amap.com/comment/content_service_b8a551f903e25ed47e14ceb6f0bf35c9_1767432816841_02834819.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/comment/content_service_b8a551f903e25ed47e14ceb6f0bf35c9_1767432816841_02834819.jpg",
+        "https://store.is.autonavi.com/showpic/27ba893b0eb76271c6c8886a557dbafd",
+        "https://aos-comment.amap.com/B0FFKBUAJ9/comment/content_media_external_images_media_155622_1731481026134_42319215.jpg"
+      ]
+    },
+    {
+      "name": "秀洲公园",
+      "address": "浙江省嘉兴市秀洲区中山西路831号",
+      "lng": 120.70927,
+      "lat": 30.759167,
+      "category": "城市地标",
+      "rating": 4.5,
+      "image": "https://aos-comment.amap.com/B023D009ZO/comment/IMG2025092815310_1759056470787_96554513.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B023D009ZO/comment/IMG2025092815310_1759056470787_96554513.jpg",
+        "https://aos-comment.amap.com/B023D009ZO/comment/e7a3289eb1c0304cbc1b89812a640d00_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/fabff77a62e6927b38fdb63f8cda6d82"
+      ]
+    },
+    {
+      "name": "湖心岛",
+      "address": "浙江省嘉兴市南湖区海盐塘路188号(近南溪西路)嘉兴市南湖旅游区内(东北角)",
+      "lng": 120.760255,
+      "lat": 30.755329,
+      "category": "自然风光",
+      "rating": 4.4,
+      "image": "https://store.is.autonavi.com/showpic/af2c3bff2ce889d10000006194206018?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/af2c3bff2ce889d10000006194206018?type=pic",
+        "https://store.is.autonavi.com/showpic/56d9c061f0342f30065b2a41795c3436",
+        "https://aos-comment.amap.com/B023D02BGD/comment/content_media_external_images_media_30689_ss__1762228544025_13997067.jpg"
+      ]
+    },
+    {
+      "name": "嘉兴市南湖旅游区伍相祠",
+      "address": "浙江省嘉兴市南湖区南溪西路1号嘉兴南湖旅游区(东北角)",
+      "lng": 120.753877,
+      "lat": 30.754152,
+      "category": "宗教寺庙",
+      "rating": 4.4,
+      "image": "https://store.is.autonavi.com/showpic/61913134f41f52ae7fa6e4c291689ff9",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/61913134f41f52ae7fa6e4c291689ff9",
+        "https://store.is.autonavi.com/showpic/84042de2a218f00a0000002449368060?type=pic",
+        "http://aos-cdn-image.amap.com/sns/ugccomment/cb1d7573-7c5f-442a-bc31-5f1dfacb725b.jpeg"
+      ]
+    },
+    {
+      "name": "凌公塘文化主题公园",
+      "address": "浙江省嘉兴市南湖区凌公塘路1676号",
+      "lng": 120.792025,
+      "lat": 30.745574,
+      "category": "主题乐园",
+      "rating": 4.4,
+      "image": "http://store.is.autonavi.com/showpic/6ebb43e0964724cfa2d10b113b9e743c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/6ebb43e0964724cfa2d10b113b9e743c",
+        "http://store.is.autonavi.com/showpic/4137fc25a46161eea1d1bf572e46e9b3",
+        "https://aos-comment.amap.com/B023D02XJI/comment/95d7ac2c7f0e06056532f6385013c1b0_2048_2048_80.jpg"
+      ]
+    },
+    {
+      "name": "人民公园",
+      "address": "浙江省嘉兴市南湖区城东路158号",
+      "lng": 120.760735,
+      "lat": 30.765602,
+      "category": "城市地标",
+      "rating": 4.4,
+      "image": "http://store.is.autonavi.com/showpic/1d842e0c6541bcbaf4a560de9e8d1a22",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/1d842e0c6541bcbaf4a560de9e8d1a22",
+        "https://aos-comment.amap.com/B023D02TEX/comment/1fb5dfb29a1feea7706b7ec91555b832_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/5e932174453e000d0000002993290378?type=pic"
+      ]
+    },
+    {
+      "name": "觉海寺",
+      "address": "浙江省嘉兴市南湖区斜西街435号",
+      "lng": 120.746392,
+      "lat": 30.759029,
+      "category": "宗教寺庙",
+      "rating": 4.4,
+      "image": "http://store.is.autonavi.com/showpic/d545fd16d6e07ada135e906de6c37fc3",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/d545fd16d6e07ada135e906de6c37fc3",
+        "https://store.is.autonavi.com/showpic/eb312b0e9abc4932fbc3f52766acf271",
+        "https://store.is.autonavi.com/showpic/c26b5f0db49f25880000003488900148?type=pic"
+      ]
+    },
+    {
+      "name": "湘家荡森林公园",
+      "address": "浙江省嘉兴市南湖区三环东路",
+      "lng": 120.795876,
+      "lat": 30.778342,
+      "category": "自然风光",
+      "rating": 4.4,
+      "image": "https://aos-comment.amap.com/B0FFJP0Z6D/comment/9ce18822216d39b7c55a384d3cb2e1b6_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFJP0Z6D/comment/9ce18822216d39b7c55a384d3cb2e1b6_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFJP0Z6D/comment/content_media_external_images_media_226096_1665246763932_c002b4e8.jpg",
+        "https://store.is.autonavi.com/showpic/ec1cd46a19a7ab440000000641528691"
+      ]
+    },
+    {
+      "name": "圆通古寺",
+      "address": "浙江省嘉兴市秀洲区昌盛东路1666号",
+      "lng": 120.783775,
+      "lat": 30.800067,
+      "category": "宗教寺庙",
+      "rating": 4.4,
+      "image": "https://store.is.autonavi.com/showpic/467a70720747d4b4d634d366062bafc7",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/467a70720747d4b4d634d366062bafc7",
+        "https://store.is.autonavi.com/showpic/dbc0c21d05f191574c08c2f854734062",
+        "http://store.is.autonavi.com/showpic/a93dfaeca2c581cdf010180e93fef3ea"
+      ]
+    },
+    {
+      "name": "嘉兴南湖市民广场",
+      "address": "浙江省嘉兴市南湖区广场路与迎宾大道交叉口东南100米",
+      "lng": 120.755456,
+      "lat": 30.74425,
+      "category": "自然风光",
+      "rating": 4.3,
+      "image": "http://store.is.autonavi.com/showpic/da4f532b627c91504075414e7d029ba2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/da4f532b627c91504075414e7d029ba2",
+        "http://store.is.autonavi.com/showpic/55151ba6a31025d444f3cc9e",
+        "http://store.is.autonavi.com/showpic/55151ba6a31025d444f3cca0"
+      ]
+    },
+    {
+      "name": "揽秀园",
+      "address": "浙江省嘉兴市南湖区南溪西路1号嘉兴南湖旅游区",
+      "lng": 120.753513,
+      "lat": 30.752884,
+      "category": "城市地标",
+      "rating": 4.3,
+      "image": "https://store.is.autonavi.com/showpic/c37861a202e9092be6d0829063b9378f",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/c37861a202e9092be6d0829063b9378f",
+        "https://store.is.autonavi.com/showpic/1a18fa970356bf353fab5f7f0e26fc9d",
+        "http://store.is.autonavi.com/showpic/825fd0dbeedea3f1c08e43c4fada27f0"
+      ]
+    },
+    {
+      "name": "运河文化公园",
+      "address": "浙江省嘉兴市南湖区杭州塘绿道与龙腾路交叉口东北200米",
+      "lng": 120.721664,
+      "lat": 30.753819,
+      "category": "自然风光",
+      "rating": 4.3,
+      "image": "https://aos-comment.amap.com/B0FFGO308Q/comment/3CD73ED7_CE00_4852_BD29_BD4BC85CD00A_L0_001_1500_200_1757399658740_57320473.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFGO308Q/comment/3CD73ED7_CE00_4852_BD29_BD4BC85CD00A_L0_001_1500_200_1757399658740_57320473.jpg",
+        "https://aos-comment.amap.com/B0FFGO308Q/comment/5ff6331b78bde81b25bf564d3824cb33_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFGO308Q/comment/4f06a9ed00943793caf583d36681e6e6_2048_2048_80.jpg"
+      ]
+    },
+    {
+      "name": "双溪湖公园",
+      "address": "浙江省嘉兴市南湖区五环洞路与康宁路交叉口西北240米",
+      "lng": 120.793009,
+      "lat": 30.708214,
+      "category": "自然风光",
+      "rating": 4.3,
+      "image": "https://store.is.autonavi.com/showpic/5c07a2f8cc6160a80000002896254055?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/5c07a2f8cc6160a80000002896254055?type=pic",
+        "https://store.is.autonavi.com/showpic/9cc8720e2c561fc20000003388668550?type=pic",
+        "https://store.is.autonavi.com/showpic/14e925c3407f87710000003388652869?type=pic"
+      ]
+    },
+    {
+      "name": "清真寺",
+      "address": "浙江省嘉兴市南湖区环城东路469号",
+      "lng": 120.75833,
+      "lat": 30.760988,
+      "category": "宗教寺庙",
+      "rating": 4.3,
+      "image": "http://store.is.autonavi.com/showpic/8c4efc8a6e90c989639d73ba79b5bb6f",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/8c4efc8a6e90c989639d73ba79b5bb6f",
+        "http://store.is.autonavi.com/showpic/c6a0e9e122810745e625a74a141f3684",
+        "https://store.is.autonavi.com/showpic/0d9a839c8805dc670000008130654628?type=pic"
+      ]
+    },
+    {
+      "name": "血印禅寺",
+      "address": "浙江省嘉兴市南湖区三塔路547号",
+      "lng": 120.73369,
+      "lat": 30.753797,
+      "category": "宗教寺庙",
+      "rating": 4.3,
+      "image": "https://store.is.autonavi.com/showpic/e079daf56bdc809b48f659533d046425",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/e079daf56bdc809b48f659533d046425",
+        "https://aos-comment.amap.com/B023D01J3H/comment/content_media_external_file_1000036133_ss__1755316963917_69429082.jpg",
+        "https://store.is.autonavi.com/showpic/6ae2f31c6c1175350000003493042429?type=pic"
+      ]
+    },
+    {
+      "name": "马家浜考古遗址公园",
+      "address": "浙江省嘉兴市南湖区马家浜路与圣堂路交叉口南320米",
+      "lng": 120.705335,
+      "lat": 30.702344,
+      "category": "历史人文",
+      "rating": 4.3,
+      "image": "https://store.is.autonavi.com/showpic/db79c109072edbec0000000732906653?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/db79c109072edbec0000000732906653?type=pic",
+        "https://store.is.autonavi.com/showpic/2d45aae204e4b9ee2df6c5564bc55705",
+        "https://aos-comment.amap.com/B0GDRHC3VD/comment/6a7b0ec8c83a78ee9826043693649a2d_2048_2048_80.jpg"
+      ]
+    },
+    {
+      "name": "南湖革命纪念馆(老馆)",
+      "address": "浙江省嘉兴市南湖区南湖路64号",
+      "lng": 120.761577,
+      "lat": 30.75806,
+      "category": "历史人文",
+      "image": "https://aos-comment.amap.com/default_poi/comment/content_media_external_file_1000409558_ss__1743479625943_32417933.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/default_poi/comment/content_media_external_file_1000409558_ss__1743479625943_32417933.jpg",
+        "https://store.is.autonavi.com/showpic/3fdb6800c90325890000002477334661",
+        "https://store.is.autonavi.com/showpic/500481aec873a54f3eaec03be48f6ef7"
+      ]
+    },
+    {
+      "name": "嘉兴革命烈士陵园",
+      "address": "浙江省嘉兴市南湖区南溪西路1号嘉兴南湖旅游区(东南角)",
+      "lng": 120.757176,
+      "lat": 30.749407,
+      "category": "历史人文",
+      "image": "http://store.is.autonavi.com/showpic/b4f764cc9bebc7ee3d4ba089819edb27",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/b4f764cc9bebc7ee3d4ba089819edb27",
+        "https://store.is.autonavi.com/showpic/19e88ccef6216d2652cdcbf0ca4b110b",
+        "https://store.is.autonavi.com/showpic/c40fdc3685be13661343d96bfb8b0077"
+      ]
+    }
+  ],
+  "晋中": [
+    {
+      "name": "榆次老城",
+      "address": "山西省晋中市榆次区府兴路225号",
+      "lng": 112.750195,
+      "lat": 37.677346,
+      "category": "城市地标",
+      "rating": 4.7,
+      "image": "http://store.is.autonavi.com/showpic/021d4102491464fc95f19fd71dacbf77",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/021d4102491464fc95f19fd71dacbf77",
+        "http://store.is.autonavi.com/showpic/3b3bbdb4c268b864fa69bf5cb411c1df",
+        "http://store.is.autonavi.com/showpic/cb56b5557a429b79916e1250c7b2e3c5"
+      ]
+    },
+    {
+      "name": "百草坡森林植物园",
+      "address": "山西省晋中市榆次区安宁东街东首",
+      "lng": 112.789481,
+      "lat": 37.704748,
+      "category": "主题乐园",
+      "rating": 4.6,
+      "image": "http://store.is.autonavi.com/showpic/29f0934004f266bf8f9aeda1ed12c1ff",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/29f0934004f266bf8f9aeda1ed12c1ff",
+        "https://aos-comment.amap.com/B0FFG901SQ/comment/content_media_external_images_media_1000010123_ss__1728994857588_80909768.jpg",
+        "https://aos-comment.amap.com/B0FFG901SQ/comment/content_media_external_file_100007699_1769497745955_99441146.jpg"
+      ]
+    },
+    {
+      "name": "玉湖公园",
+      "address": "山西省晋中市榆次区校园路",
+      "lng": 112.747974,
+      "lat": 37.713234,
+      "category": "自然风光",
+      "rating": 4.6,
+      "image": "https://store.is.autonavi.com/showpic/c0777797a0f0431b0000003047448370?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/c0777797a0f0431b0000003047448370?type=pic",
+        "https://aos-comment.amap.com/B016200RYK/comment/57287b2c3d12ca6e9b2e2d5714c91e79_2048_2048_80.jpg",
+        "https://store.is.autonavi.com/showpic/3db4620ac278a353affcb0dfd9829de0"
+      ]
+    },
+    {
+      "name": "常家庄园",
+      "address": "山西省晋中市榆次区914县道",
+      "lng": 112.638027,
+      "lat": 37.543525,
+      "category": "城市地标",
+      "rating": 4.6,
+      "image": "http://store.is.autonavi.com/showpic/80d45f86394b505a2b3fcfc59af1e2a3",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/80d45f86394b505a2b3fcfc59af1e2a3",
+        "http://store.is.autonavi.com/showpic/56360278d83c764cd4e7680fc74eb209",
+        "https://aos-comment.amap.com/B016200BJX/comment/content_media_external_file_100001163_1768317108063_78021059.jpg"
+      ]
+    },
+    {
+      "name": "潇河莲花湾",
+      "address": "山西省晋中市榆次区锦东大道潇河文艺小镇",
+      "lng": 112.781586,
+      "lat": 37.675795,
+      "category": "自然风光",
+      "rating": 4.5,
+      "image": "https://aos-comment.amap.com/B0GR9SPMGZ/comment/content_media_external_file_1000016072_ss__1772718627756_82931977.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0GR9SPMGZ/comment/content_media_external_file_1000016072_ss__1772718627756_82931977.jpg",
+        "https://aos-comment.amap.com/B0GR9SPMGZ/comment/621ba94b3ecad4c9997de7df64a1d038_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0GR9SPMGZ/comment/b831679f6e17e9f5a3b2c7c606eefafc_2048_2048_80.jpg"
+      ]
+    },
+    {
+      "name": "潇河湿地公园",
+      "address": "山西省晋中市榆次区潇河莲花湾(西南角)",
+      "lng": 112.743255,
+      "lat": 37.649703,
+      "category": "自然风光",
+      "rating": 4.5,
+      "image": "https://store.is.autonavi.com/showpic/5d9255ec4fb1205b0000003047474471?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/5d9255ec4fb1205b0000003047474471?type=pic",
+        "https://store.is.autonavi.com/showpic/7499fb2341feb38f0000002355978873?type=pic",
+        "https://aos-comment.amap.com/B01620ND9B/comment/9ddafc52d84abc8f745fe77283511639_2048_2048_80.jpg"
+      ]
+    },
+    {
+      "name": "晋·财神小镇",
+      "address": "山西省晋中市榆次区乌金山镇长风东街东延五龙生态森林公园内",
+      "lng": 112.693797,
+      "lat": 37.830924,
+      "category": "城市地标",
+      "rating": 4.5,
+      "image": "http://store.is.autonavi.com/showpic/a5f49398265aa44ac297a3a82f84781c",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a5f49398265aa44ac297a3a82f84781c",
+        "http://store.is.autonavi.com/showpic/c979385efc58fc759fa5f21f76261b0c",
+        "http://store.is.autonavi.com/showpic/588937ef4d4f68235f1c818d508253de"
+      ]
+    },
+    {
+      "name": "后沟古村景区",
+      "address": "山西省晋中市榆次区东赵乡019乡道后沟村(近古村落售票处)",
+      "lng": 112.911255,
+      "lat": 37.75367,
+      "category": "古镇村落",
+      "rating": 4.5,
+      "image": "http://store.is.autonavi.com/showpic/a25b0a3a64660df5ed2836a1d94a2af6",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/a25b0a3a64660df5ed2836a1d94a2af6",
+        "http://store.is.autonavi.com/showpic/4f4bb2f9b3a120ac7323ed4227c380dd",
+        "http://store.is.autonavi.com/showpic/632f3851ae176387466d70391eca4880"
+      ]
+    },
+    {
+      "name": "深蓝海世界",
+      "address": "山西省晋中市榆次区安宁街道定阳路居然之家新城里负一层",
+      "lng": 112.729306,
+      "lat": 37.732721,
+      "category": "城市地标",
+      "rating": 4.4,
+      "image": "https://store.is.autonavi.com/showpic/d90eb11ef2963f520000003598738700?type=pic",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/d90eb11ef2963f520000003598738700?type=pic",
+        "https://store.is.autonavi.com/showpic/051d37498686590b0000006065112932?type=pic",
+        "https://store.is.autonavi.com/showpic/2b3be41365ed0f5c0000003618690178?type=pic"
+      ]
+    },
+    {
+      "name": "使赵门楼",
+      "address": "山西省晋中市榆次区使赵街与汇通北路交叉口西60米",
+      "lng": 112.713073,
+      "lat": 37.70755,
+      "category": "城市地标",
+      "rating": 4.4,
+      "image": "https://aos-comment.amap.com/B0LGGR0VR0/comment/file_media_Photo_2284_IMG_1765193430_2057_IMG_2057_jp_1765193427566_52225114.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0LGGR0VR0/comment/file_media_Photo_2284_IMG_1765193430_2057_IMG_2057_jp_1765193427566_52225114.jpg",
+        "https://store.is.autonavi.com/showpic/982d73f39b33d0fd8f54474d76d310b7",
+        "https://store.is.autonavi.com/showpic/ed85bae46df8ce960000003076500485?type=pic"
+      ]
+    },
+    {
+      "name": "晋中明乐农业生态庄园",
+      "address": "山西省晋中市榆次区修文镇西白村",
+      "lng": 112.678183,
+      "lat": 37.578625,
+      "category": "城市地标",
+      "rating": 4.4,
+      "image": "https://aos-comment.amap.com/B01620N9AP/comment/2bb617e48be40b11b77a9d37ebb96623_2048_2048_80.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B01620N9AP/comment/2bb617e48be40b11b77a9d37ebb96623_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B01620N9AP/comment/d7f5fa33f31e5862e2c7cc37c87c2d8a_2048_2048_80.jpg",
+        "http://store.is.autonavi.com/showpic/133a3ff35f6b803901eafab0fa686516"
+      ]
+    },
+    {
+      "name": "榆次文化广场",
+      "address": "山西省晋中市榆次区顺城街文化中心",
+      "lng": 112.748093,
+      "lat": 37.68394,
+      "category": "城市地标",
+      "rating": 4.3,
+      "image": "https://aos-comment.amap.com/B0FFHPZKDV/comment/EE30D7C0_7099_4779_A35B_636726642D9F_L0_001_1170_113_1767453620930_99352309.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFHPZKDV/comment/EE30D7C0_7099_4779_A35B_636726642D9F_L0_001_1170_113_1767453620930_99352309.jpg",
+        "https://store.is.autonavi.com/showpic/eb8e1ba1fc7b9373059b2745d7b8ef5c",
+        "https://aos-comment.amap.com/B0FFHPZKDV/comment/361835C4_445C_4378_A012_60BEEF6092B6_L0_001_1170_131_1767453620929_88374777.jpg"
+      ]
+    },
+    {
+      "name": "潇河动物园",
+      "address": "山西省晋中市榆次区汇通南路601号",
+      "lng": 112.738701,
+      "lat": 37.648323,
+      "category": "主题乐园",
+      "rating": 4.3,
+      "image": "https://store.is.autonavi.com/showpic/244570cb046ea3391304da3322f15dba",
+      "photos": [
+        "https://store.is.autonavi.com/showpic/244570cb046ea3391304da3322f15dba",
+        "https://store.is.autonavi.com/showpic/eff01883effae6e30000007947632594?type=pic",
+        "https://store.is.autonavi.com/showpic/e8122b8d2f17475b0000000966582174?type=pic"
+      ]
+    },
+    {
+      "name": "社火公园",
+      "address": "山西省晋中市榆次区迎宾西街晋商广场南侧",
+      "lng": 112.712649,
+      "lat": 37.694578,
+      "category": "城市地标",
+      "rating": 4.3,
+      "image": "http://store.is.autonavi.com/showpic/9b71c80851f80e41af77d4b3b3768337",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/9b71c80851f80e41af77d4b3b3768337",
+        "http://store.is.autonavi.com/showpic/3b6e37ea2349554b963b2c33ffc7f976",
+        "http://store.is.autonavi.com/showpic/da9e23ce411c9d6b25f88323ed4ed6d0"
+      ]
+    },
+    {
+      "name": "九龙国际文化生态旅游园区",
+      "address": "山西省晋中市榆次区乌金山镇河口村",
+      "lng": 112.680708,
+      "lat": 37.792759,
+      "category": "城市地标",
+      "rating": 4.3,
+      "image": "http://store.is.autonavi.com/showpic/c42e0ffb8da5c2a7118fa2f696843ed2",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c42e0ffb8da5c2a7118fa2f696843ed2",
+        "http://store.is.autonavi.com/showpic/71327a57e91b732d280eed5c7f24e672",
+        "https://aos-comment.amap.com/B015F0IRSZ/comment/f37833a31423ed6032782d99a8792ff0_2048_2048_80.jpg"
+      ]
+    },
+    {
+      "name": "龙湖体育公园",
+      "address": "山西省晋中市榆次区箕城路与龙湖西大街交叉口东220米",
+      "lng": 112.6893,
+      "lat": 37.71488,
+      "category": "自然风光",
+      "rating": 4.3,
+      "image": "https://aos-comment.amap.com/B0FFG4G5AU/comment/content_media_external_file_100003455_1758049608552_12288963.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0FFG4G5AU/comment/content_media_external_file_100003455_1758049608552_12288963.jpg",
+        "https://store.is.autonavi.com/showpic/0eadb9ba775fdbca0000003120600698?type=pic",
+        "https://store.is.autonavi.com/showpic/92821b658d7fce7a0000003381754708?type=pic"
+      ]
+    },
+    {
+      "name": "学府生态绿地公园",
+      "address": "山西省晋中市榆次区乌金路与文华街交叉口西北",
+      "lng": 112.699371,
+      "lat": 37.74035,
+      "category": "城市地标",
+      "rating": 4.3,
+      "image": "https://aos-comment.amap.com/B0G3Z7TTVZ/comment/content_media_external_images_media_100001634_1729603993514_72593613.jpg",
+      "photos": [
+        "https://aos-comment.amap.com/B0G3Z7TTVZ/comment/content_media_external_images_media_100001634_1729603993514_72593613.jpg",
+        "https://store.is.autonavi.com/showpic/378052cd2d38906d0000002393352207?type=pic",
+        "https://aos-comment.amap.com/B0G3Z7TTVZ/comment/content_media_external_images_media_100001634_1729603993514_36875179.jpg"
+      ]
+    },
+    {
+      "name": "清泰园广昭寺",
+      "address": "山西省晋中市榆次区",
+      "lng": 112.776249,
+      "lat": 37.756187,
+      "category": "宗教寺庙",
+      "rating": 4.3,
+      "image": "http://store.is.autonavi.com/showpic/c1063c7a7138a1b3323d0002266f4a8e",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/c1063c7a7138a1b3323d0002266f4a8e",
+        "https://aos-comment.amap.com/B0FFHJB350/headerImg/11ed1fe2adfb55e1a67237e09a58b0a9_2048_2048_80.jpg",
+        "https://aos-comment.amap.com/B0FFHJB350/comment/content_media_external_file_1000079823_ss__1752579529201_92632756.jpg"
+      ]
+    },
+    {
+      "name": "晋中市烈士陵园",
+      "address": "山西省晋中市榆次区",
+      "lng": 112.839147,
+      "lat": 37.637068,
+      "category": "历史人文",
+      "image": "http://store.is.autonavi.com/showpic/616a5b92440a8704156d855ead1159ba",
+      "photos": [
+        "http://store.is.autonavi.com/showpic/616a5b92440a8704156d855ead1159ba"
       ]
     }
   ]
