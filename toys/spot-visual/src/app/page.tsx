@@ -925,6 +925,15 @@ function SpotsView() {
   const exploreOsm = useCallback(async () => {
     const c = city.trim();
     if (!c || osmLoading) return;
+    // 换城会整体替换当前景点集（收藏/行程/改价同步清理），先确认
+    if (
+      spots.length > 0 &&
+      !window.confirm(
+        `实时探索将替换当前 ${spots.length} 个景点（收藏与行程中引用它们的条目会被清理），继续？`,
+      )
+    ) {
+      return;
+    }
     setOsmLoading(true);
     setOsmMsg(null);
     try {
@@ -951,7 +960,7 @@ function SpotsView() {
     } finally {
       setOsmLoading(false);
     }
-  }, [city, osmLoading, setSpots, setActiveCategory, setSearchQuery]);
+  }, [city, osmLoading, spots, setSpots, setActiveCategory, setSearchQuery]);
 
   const allCategories = useMemo(() => {
     const cats = new Set(spots.map((s) => s.category));

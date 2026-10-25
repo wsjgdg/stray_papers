@@ -4,9 +4,19 @@
 // D3.1: 劝退日记主视图
 // 用户浏览和筛选已记录的劝退日记
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookX, Plus, Trash2, ThumbsUp, Filter, Search, X } from "lucide-react";
+import {
+  BookX,
+  Plus,
+  Trash2,
+  ThumbsUp,
+  Filter,
+  Search,
+  X,
+  Download,
+  Upload,
+} from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { DISSUASION_TAGS, type DissuasionRecord } from "@/lib/spot-data";
 import DissuasionEditor from "./dissuasion-editor";
@@ -129,9 +139,81 @@ export default function DissuasionView() {
     removeDissuasionRecord,
     voteDissuasionRecord,
   } = useAppStore();
+  const importInputRef = useRef<HTMLInputElement>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterTag, setFilterTag] = useState<string | null>(null);
+  // ═══ JSON 导入/导出：与景点导入对称，让翻车记录可迁移、可分享 ═══
+  const exportRecords = () => {
+    if (dissuasionRecords.length === 0) return;
+    const blob = new Blob([JSON.stringify(dissuasionRecords, null, 2)], {
+      type: "application/json",
+    });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `翻车日记-${dissuasionRecords.length}条.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  const importRecords = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const raw = JSON.parse(ev.target?.result as string);
+        const arr: unknown[] = Array.isArray(raw)
+          ? raw
+          : Array.isArray((raw as { records?: unknown }).records)
+            ? (raw as { records: unknown[] }).records
+            : [];
+        const existing = new Set(
+          useAppStore.getState().dissuasionRecords.map((r) => r.id),
+        );
+        let added = 0;
+        for (const item of arr) {
+          const r = item as Partial<DissuasionRecord>;
+          if (
+            !r ||
+            typeof r !== "object" ||
+            !r.spotName ||
+            !Array.isArray(r.tags)
+          )
+            continue;
+          const record: DissuasionRecord = {
+            id:
+              typeof r.id === "string" && !existing.has(r.id)
+                ? r.id
+                : `diss-imp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            spotId: r.spotId ?? "",
+            spotName: r.spotName,
+            timestamp:
+              typeof r.timestamp === "number" ? r.timestamp : Date.now(),
+            tags: r.tags,
+            timePeriod: r.timePeriod ?? "正午",
+            bodyConditions: Array.isArray(r.bodyConditions)
+              ? r.bodyConditions
+              : [],
+            comment: r.comment ?? "",
+            voteCount: typeof r.voteCount === "number" ? r.voteCount : 0,
+          };
+          if (!existing.has(record.id)) {
+            existing.add(record.id);
+            addDissuasionRecord(record);
+            added += 1;
+          }
+        }
+        alert(
+          added > 0 ? `成功导入 ${added} 条翻车记录` : "没有可导入的新记录",
+        );
+      } catch {
+        alert("JSON 解析失败，请检查文件格式");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
 
   // 过滤和搜索
   const filtered = useMemo(() => {
@@ -197,6 +279,28 @@ export default function DissuasionView() {
               </button>
             )}
           </div>
+          <button
+            onClick={exportRecords}
+            disabled={dissuasionRecords.length === 0}
+            title="导出 JSON"
+            className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 text-gray-500 hover:text-gray-700 disabled:opacity-40 transition-colors"
+          >
+            <Download className="w-4 h-4" />
+          </button>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={importRecords}
+          />
+          <button
+            onClick={() => importInputRef.current?.click()}
+            title="导入 JSON"
+            className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <Upload className="w-4 h-4" />
+          </button>
           <button
             onClick={() => setShowEditor(true)}
             className="flex items-center gap-1.5 px-4 h-10 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white text-sm font-bold shadow-lg hover:shadow-xl transition-shadow"
