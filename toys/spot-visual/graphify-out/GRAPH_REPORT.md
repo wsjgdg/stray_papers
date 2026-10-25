@@ -1,11 +1,11 @@
 # Graph Report - spot-visual  (2026-10-25)
 
 ## Corpus Check
-- 34 files · ~0 words
+- 33 files · ~0 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 853 nodes · 1257 edges · 64 communities (50 shown, 14 thin omitted)
+- 865 nodes · 1269 edges · 64 communities (50 shown, 14 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 20 edges (avg confidence: 0.84)
 - Token cost: 0 input · 0 output
 
@@ -76,8 +76,8 @@
 1. `cn()` - 25 edges
 2. `useAppStore` - 22 edges
 3. `compilerOptions` - 17 edges
-4. `scripts` - 16 edges
-5. `GaoKaoPage()` - 16 edges
+4. `GaoKaoPage()` - 16 edges
+5. `scripts` - 16 edges
 6. `景点览胜平台（Next.js 单页应用）` - 12 edges
 7. `calcPTSI()` - 11 edges
 8. `getStaminaCost()` - 10 edges
@@ -112,15 +112,15 @@
 
 ### Community 0 - "Community 0"
 Cohesion: 0.05
-Nodes (60): FoodPage(), heatColor(), REGION_COLORS, REGION_ORDER, DishVisual(), DishVisualProps, TASTE_COLOR, DishCompare() (+52 more)
+Nodes (59): FoodPage(), heatColor(), REGION_COLORS, REGION_ORDER, DishVisual(), DishVisualProps, TASTE_COLOR, DishCompare() (+51 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.06
 Nodes (56): CompareTable(), FilterKey, FILTERS, GaoKaoPage(), jitter(), LEVEL_COLOR, LEVEL_LEGEND, levelColor() (+48 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.07
-Nodes (33): DeterrentView, FitnessView, BAD_REVIEWS, ConclusionButton(), CONDITIONS, DeterrentView(), Dial(), REASON_TEMPLATES (+25 more)
+Cohesion: 0.06
+Nodes (42): FitnessView, StaminaSandboxView, SpotBudgetCard(), BAD_REVIEWS, ConclusionButton(), CONDITIONS, DeterrentView(), Dial() (+34 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.05
@@ -136,107 +136,107 @@ Nodes (35): class-variance-authority, clsx, echarts, framer-motion, lucide-react
 
 ### Community 6 - "Community 6"
 Cohesion: 0.10
-Nodes (28): Bounds, Box, cache, CityFeature, CityGeo, cityMapName(), computeView(), fetchCityGeo() (+20 more)
+Nodes (29): Bounds, Box, cache, CityFeature, CityGeo, cityMapName(), computeView(), fetchCityGeo() (+21 more)
 
 ### Community 7 - "Community 7"
+Cohesion: 0.11
+Nodes (19): metadata, MODULES, TopNav(), Badge(), badgeVariants, Button(), buttonVariants, Dialog() (+11 more)
+
+### Community 8 - "Community 8"
 Cohesion: 0.07
 Nodes (28): dom, dom.iterable, esnext, .next/dev/types/**/*.ts, next-env.d.ts, .next/types/**/*.ts, node_modules, **/*.ts (+20 more)
 
-### Community 8 - "Community 8"
-Cohesion: 0.12
-Nodes (17): metadata, MODULES, TopNav(), Badge(), badgeVariants, Dialog(), DialogContent(), DialogDescription() (+9 more)
-
 ### Community 9 - "Community 9"
-Cohesion: 0.15
-Nodes (17): GET(), POST(), PTSIView, DayRow, VERDICT_STYLE, WEEKDAYS, CONDITIONS, CurrentPTSI() (+9 more)
-
-### Community 10 - "Community 10"
 Cohesion: 0.10
 Nodes (19): POOL_LOCAL, cachePhotoForCategory(), CATEGORY_COLORS, CATEGORY_PHOTOS, CATEGORY_STAMINA_DEFAULT, CATEGORY_THEME, DEFAULT_CATEGORIES, FALLBACK_PHOTOS (+11 more)
 
-### Community 11 - "Community 11"
+### Community 10 - "Community 10"
 Cohesion: 0.14
 Nodes (21): 营养库只覆盖 7 道菜的原因, FDC 已对上条目表（北京烤鸭 2706141、锅包肉 2706401 等 7 道）, 消费调研未纳入（无公开数据集）, Scoville 与蔗糖相对甜度量表（辣/甜端点参照）, 口味雷达（钠/糖/辣/酸/香/鲜多维度）, USDA FoodData Central（FDC，口味雷达钠/糖数据源）, 《中国食物成分表 标准版 第 6 版》（杨月欣主编，北京大学医学出版社）, docs/nutrition-todo.csv（带 BOM 回填清单） (+13 more)
 
+### Community 11 - "Community 11"
+Cohesion: 0.11
+Nodes (12): DeterrentView, fillSpotImages(), getCategoryIcon(), ICON_MAP, IMAGE_SOURCE_LABEL, NAV_ITEMS, SpotDetailDialog(), SpotGrid() (+4 more)
+
 ### Community 12 - "Community 12"
-Cohesion: 0.12
-Nodes (11): fillSpotImages(), getCategoryIcon(), ICON_MAP, IMAGE_SOURCE_LABEL, NAV_ITEMS, SpotDetailDialog(), SpotGrid(), SpotsView() (+3 more)
+Cohesion: 0.20
+Nodes (14): GET(), POST(), PTSIView, CONDITIONS, CurrentPTSI(), getPeriodLabel(), PERIOD_LABELS, SpotRanking() (+6 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.20
-Nodes (13): BudgetView, StaminaSandboxView, BUDGET_TIERS, BudgetView(), SpotBudgetCard(), calcExperienceScore(), ScatterPoint, StaminaSandboxView() (+5 more)
+Cohesion: 0.19
+Nodes (15): DissuasionEditor, DissuasionView, BODY_CONDITIONS, DissuasionEditor(), TIME_PERIODS, DissuasionCard(), DissuasionView(), getTagStyle() (+7 more)
 
 ### Community 14 - "Community 14"
+Cohesion: 0.15
+Nodes (10): BudgetView, TripView, BUDGET_TIERS, BudgetView(), CATEGORY_PACKLIST, guessPrice(), PACKLIST_UNIVERSAL, downloadTripCard() (+2 more)
+
+### Community 15 - "Community 15"
 Cohesion: 0.18
 Nodes (14): ChinaMap(), ChinaMapProps, mapNameOf(), MapRegistration, registerChina(), registeredMaps, CHINA_GEO, CHINA_MAP_NAME (+6 more)
 
-### Community 15 - "Community 15"
+### Community 16 - "Community 16"
 Cohesion: 0.14
 Nodes (11): body, byLength, credits, DISH_DIR, dishes, entries, files, index (+3 more)
 
-### Community 16 - "Community 16"
+### Community 17 - "Community 17"
 Cohesion: 0.16
 Nodes (12): args, bingImages(), curl(), DOMAIN_SCORE, domainScore(), OUT_DIR, PER, report (+4 more)
 
-### Community 17 - "Community 17"
+### Community 18 - "Community 18"
 Cohesion: 0.18
 Nodes (11): args, bingImages(), curl(), dishes, DOMAIN_SCORE, domainScore(), OUT_DIR, PER (+3 more)
 
-### Community 18 - "Community 18"
+### Community 19 - "Community 19"
 Cohesion: 0.21
 Nodes (10): curl(), curlJson(), dishes, extractImages(), getBaiduToken(), ONLY, OUT_DIR, report (+2 more)
 
-### Community 19 - "Community 19"
+### Community 20 - "Community 20"
 Cohesion: 0.15
 Nodes (6): ONLY_PROV, out, provs, SLUGS, stats, YEAR
 
-### Community 20 - "Community 20"
+### Community 21 - "Community 21"
 Cohesion: 0.21
 Nodes (12): 出行装备清单（README）, 分天规划（README）, 行程单升级为「计划」（README 行程闭环）, 整条行程 7 日体检（README）, Open-Meteo 天气代理（/api/weather）, PTSI（逐日紫外线出行指数）, 体力预算自动分天（100/天）, 体力沙盘 (+4 more)
 
-### Community 21 - "Community 21"
-Cohesion: 0.27
-Nodes (10): DissuasionEditor, DissuasionView, BODY_CONDITIONS, DissuasionEditor(), TIME_PERIODS, DissuasionCard(), DissuasionView(), getTagStyle() (+2 more)
-
 ### Community 22 - "Community 22"
-Cohesion: 0.24
-Nodes (10): NetworkView, DISTRICT_LINE_COLORS, getDistrictColor(), NetworkView(), SevenDayWindow(), Button(), buttonVariants, getCategoryColor() (+2 more)
-
-### Community 23 - "Community 23"
-Cohesion: 0.21
-Nodes (7): TripView, CATEGORY_PACKLIST, guessPrice(), PACKLIST_UNIVERSAL, downloadTripCard(), TripCardInput, TripCardSpot
-
-### Community 24 - "Community 24"
 Cohesion: 0.20
 Nodes (9): args, CUSTOM, DOMAIN_SCORE, googleImages(), OUT_DIR, PER, report, scoreHost() (+1 more)
 
-### Community 25 - "Community 25"
+### Community 23 - "Community 23"
 Cohesion: 0.18
 Nodes (6): args, H, OUT_DIR, PER, report, seen
 
-### Community 26 - "Community 26"
+### Community 24 - "Community 24"
+Cohesion: 0.18
+Nodes (4): ONLY_PROV, SLUGS, stats, YEAR
+
+### Community 25 - "Community 25"
 Cohesion: 0.18
 Nodes (8): CACHE, dishes, EN, FORCE, NUT, PREFER, src, stopReason
 
-### Community 27 - "Community 27"
+### Community 26 - "Community 26"
 Cohesion: 0.18
 Nodes (9): byProv, cities, csv, FDC_DISHES, header, provinces, provSrc, rows (+1 more)
 
-### Community 28 - "Community 28"
+### Community 27 - "Community 27"
 Cohesion: 0.31
 Nodes (10): buildDescription(), buildFacilities(), cache, extractOsmImages(), geocode(), GET(), inferCategory(), mapElement() (+2 more)
 
-### Community 29 - "Community 29"
+### Community 28 - "Community 28"
 Cohesion: 0.22
 Nodes (6): bcur, evals, head, lines, out, unis
 
-### Community 30 - "Community 30"
+### Community 29 - "Community 29"
 Cohesion: 0.22
 Nodes (7): byCode, diffs, merged, repo, repoNa, rows, write
 
-### Community 31 - "Community 31"
+### Community 30 - "Community 30"
 Cohesion: 0.31
 Nodes (8): cache, CacheEntry, CATEGORY_KEYWORDS, fetchPexels(), fetchUnsplash(), GET(), getNextPhoto(), usedUrls
+
+### Community 31 - "Community 31"
+Cohesion: 0.31
+Nodes (8): NetworkView, DISTRICT_LINE_COLORS, getDistrictColor(), NetSpot, NetworkView(), getCategoryColor(), getDistrict(), Spot
 
 ### Community 32 - "Community 32"
 Cohesion: 0.22
@@ -267,16 +267,16 @@ Cohesion: 0.25
 Nodes (7): doc, n, out, page, pageNo, pm, scale
 
 ### Community 39 - "Community 39"
-Cohesion: 0.32
-Nodes (7): NetSpot, DissuasionRecord, sampleSpots, Spot, AppStore, ViewType, votedDissuasion
-
-### Community 40 - "Community 40"
 Cohesion: 0.33
 Nodes (6): CAND_DIR, GEN_FILE, main(), OUT_DIR, PREFERRED, score()
 
-### Community 41 - "Community 41"
+### Community 40 - "Community 40"
 Cohesion: 0.29
 Nodes (5): GEN_FILE, map, OUT_DIR, SRC, urls
+
+### Community 41 - "Community 41"
+Cohesion: 0.33
+Nodes (5): DayRow, SevenDayWindow(), VERDICT_STYLE, WEEKDAYS, parseCoords()
 
 ### Community 42 - "Community 42"
 Cohesion: 0.33
@@ -299,24 +299,24 @@ Cohesion: 0.50
 Nodes (3): app, handle, port
 
 ## Knowledge Gaps
-- **352 isolated node(s):** `Props`, `TasteScatterProps`, `DishImpact`, `DishPhoto`, `DishSodium` (+347 more)
+- **356 isolated node(s):** `Props`, `DishImpact`, `DishPhoto`, `DishSodium`, `TasteDimension` (+351 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **14 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `PROVINCE_FOODS` connect `Community 0` to `Community 12`?**
+- **Why does `PROVINCE_FOODS` connect `Community 0` to `Community 11`?**
   _High betweenness centrality (0.021) - this node is a cross-community bridge._
-- **Why does `withSharecode()` connect `Community 6` to `Community 12`?**
+- **Why does `withSharecode()` connect `Community 6` to `Community 11`?**
   _High betweenness centrality (0.016) - this node is a cross-community bridge._
-- **Why does `cn()` connect `Community 8` to `Community 0`, `Community 22`?**
+- **Why does `cn()` connect `Community 7` to `Community 0`?**
   _High betweenness centrality (0.014) - this node is a cross-community bridge._
-- **What connects `Props`, `TasteScatterProps`, `DishImpact` to the rest of the system?**
-  _352 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `Props`, `DishImpact`, `DishPhoto` to the rest of the system?**
+  _356 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.05081081081081081 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05009009009009009 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
   _Cohesion score 0.05952380952380952 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.06509803921568627 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05734767025089606 - nodes in this community are weakly interconnected._

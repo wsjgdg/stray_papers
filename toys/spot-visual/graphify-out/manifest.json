@@ -594,16 +594,16 @@
     "semantic_hash": "f727e93d814892f96112ef89e0e6ef27"
   },
   "src/components/food/taste-scatter.tsx": {
-    "mtime": 1792769179.487686,
-    "seen": 1792896026.61797,
-    "ast_hash": "72817fefcce9325d32688c80b02f6eb1",
-    "semantic_hash": "72817fefcce9325d32688c80b02f6eb1"
+    "mtime": 1792910587.196262,
+    "seen": 1792910673.1800265,
+    "ast_hash": "0191cb3e9431083ffd63d694c4c72e25",
+    "semantic_hash": "0191cb3e9431083ffd63d694c4c72e25"
   },
   "src/components/map/china-map.tsx": {
-    "mtime": 1792756961.2557623,
-    "seen": 1792896026.617971,
-    "ast_hash": "3dc04260d413cdfe280544e8fa3ca275",
-    "semantic_hash": "3dc04260d413cdfe280544e8fa3ca275"
+    "mtime": 1792910587.1330998,
+    "seen": 1792910673.1800308,
+    "ast_hash": "a002621e89467e7037cb67d1e682aab9",
+    "semantic_hash": "a002621e89467e7037cb67d1e682aab9"
   },
   "src/components/top-nav.tsx": {
     "mtime": 1792809289.7067063,
@@ -642,8 +642,8 @@
     "semantic_hash": "1a982127f8de5a11a39a1e554bf4f20f"
   },
   "src/lib/dish-photos.generated.ts": {
-    "mtime": 1792909531.2752502,
-    "seen": 1792909596.2639139,
+    "mtime": 1792910627.0733721,
+    "seen": 1792910673.1801152,
     "ast_hash": "75858d26e48f46b6106bdac424af892c",
     "semantic_hash": "75858d26e48f46b6106bdac424af892c"
   },
@@ -774,10 +774,10 @@
     "semantic_hash": "a9b03494151fe90e5decd2405400e106"
   },
   "worklog.md": {
-    "mtime": 1792909513.033813,
-    "seen": 1792909596.264031,
-    "ast_hash": "1a8fc132dd6b0db0e1794c9fbba6b27d",
-    "semantic_hash": "1a8fc132dd6b0db0e1794c9fbba6b27d"
+    "mtime": 1792910645.5325918,
+    "seen": 1792910673.180238,
+    "ast_hash": "7718cdb60c55300bba5d4121c206c6ff",
+    "semantic_hash": "7718cdb60c55300bba5d4121c206c6ff"
   },
   "public/dishes/\u4e00\u7bd3\u6cb9\u6c34\u997a.webp": {
     "mtime": 1792801600.9680724,
@@ -4258,5 +4258,185 @@
     "seen": 1792909596.2634845,
     "ast_hash": "ad61a1f55f5d9295031867d8be6b2620",
     "semantic_hash": "ad61a1f55f5d9295031867d8be6b2620"
+  },
+  "public/data/gaokao-major/anhui.json": {
+    "mtime": 1792910635.374007,
+    "seen": 1792910673.1796234,
+    "ast_hash": "8cfa9851c1656d2b5bf23f21622f4fec",
+    "semantic_hash": "8cfa9851c1656d2b5bf23f21622f4fec"
+  },
+  "public/data/gaokao-major/beijing.json": {
+    "mtime": 1792910636.0901425,
+    "seen": 1792910673.17963,
+    "ast_hash": "92ab4089323f644139deb3eaa03797b1",
+    "semantic_hash": "92ab4089323f644139deb3eaa03797b1"
+  },
+  "public/data/gaokao-major/chongqing.json": {
+    "mtime": 1792910637.2444255,
+    "seen": 1792910673.1796331,
+    "ast_hash": "c41f32edc9d713b30e0472f17c9ee41b",
+    "semantic_hash": "c41f32edc9d713b30e0472f17c9ee41b"
+  },
+  "public/data/gaokao-major/fujian.json": {
+    "mtime": 1792910638.1226895,
+    "seen": 1792910673.1796365,
+    "ast_hash": "d6ed57f6f90091b98a28bf8becfd6df4",
+    "semantic_hash": "d6ed57f6f90091b98a28bf8becfd6df4"
+  },
+  "public/data/gaokao-major/gansu.json": {
+    "mtime": 1792910639.0107765,
+    "seen": 1792910673.1796398,
+    "ast_hash": "20791d69720f9391f840e69c061e99ee",
+    "semantic_hash": "20791d69720f9391f840e69c061e99ee"
+  },
+  "public/data/gaokao-major/guangdong.json": {
+    "mtime": 1792910640.0048144,
+    "seen": 1792910673.1796427,
+    "ast_hash": "cbf92831cd5eae7e39132b49d0e4096c",
+    "semantic_hash": "cbf92831cd5eae7e39132b49d0e4096c"
+  },
+  "public/data/gaokao-major/guangxi.json": {
+    "mtime": 1792910641.0371208,
+    "seen": 1792910673.1796455,
+    "ast_hash": "543ac629d93a5ffd9ac81350ed041489",
+    "semantic_hash": "543ac629d93a5ffd9ac81350ed041489"
+  },
+  "public/data/gaokao-major/guizhou.json": {
+    "mtime": 1792910642.6142986,
+    "seen": 1792910673.179649,
+    "ast_hash": "4a745bea6d34ffd1fe6fbb4f0747a288",
+    "semantic_hash": "4a745bea6d34ffd1fe6fbb4f0747a288"
+  },
+  "public/data/gaokao-major/hainan.json": {
+    "mtime": 1792910643.4816613,
+    "seen": 1792910673.1796532,
+    "ast_hash": "fa8a219964022725d8569e06487f3507",
+    "semantic_hash": "fa8a219964022725d8569e06487f3507"
+  },
+  "public/data/gaokao-major/hebei.json": {
+    "mtime": 1792910645.24912,
+    "seen": 1792910673.1796567,
+    "ast_hash": "14e90b2399ea4b036428478309f2bb21",
+    "semantic_hash": "14e90b2399ea4b036428478309f2bb21"
+  },
+  "public/data/gaokao-major/heilongjiang.json": {
+    "mtime": 1792910646.1683016,
+    "seen": 1792910673.1796603,
+    "ast_hash": "fda379949cadbbf772aedfe919c1a1a0",
+    "semantic_hash": "fda379949cadbbf772aedfe919c1a1a0"
+  },
+  "public/data/gaokao-major/henan.json": {
+    "mtime": 1792910646.4552915,
+    "seen": 1792910673.1796646,
+    "ast_hash": "c314a217c37e372732ce88f3fc8e66b5",
+    "semantic_hash": "c314a217c37e372732ce88f3fc8e66b5"
+  },
+  "public/data/gaokao-major/hubei.json": {
+    "mtime": 1792910647.35928,
+    "seen": 1792910673.1796682,
+    "ast_hash": "5ae64c510ccdeec7f27a7b1350f22264",
+    "semantic_hash": "5ae64c510ccdeec7f27a7b1350f22264"
+  },
+  "public/data/gaokao-major/hunan.json": {
+    "mtime": 1792910648.3734908,
+    "seen": 1792910673.1796722,
+    "ast_hash": "6b65b62d24a0d02ba846af3fa9733f5e",
+    "semantic_hash": "6b65b62d24a0d02ba846af3fa9733f5e"
+  },
+  "public/data/gaokao-major/jiangsu.json": {
+    "mtime": 1792910649.478438,
+    "seen": 1792910673.1796758,
+    "ast_hash": "40f2d01ecd2c0e0f20a90ff2d6d672ae",
+    "semantic_hash": "40f2d01ecd2c0e0f20a90ff2d6d672ae"
+  },
+  "public/data/gaokao-major/jiangxi.json": {
+    "mtime": 1792910650.3524306,
+    "seen": 1792910673.1796803,
+    "ast_hash": "e933a419c5c0551c8755b4cacd3f0778",
+    "semantic_hash": "e933a419c5c0551c8755b4cacd3f0778"
+  },
+  "public/data/gaokao-major/jilin.json": {
+    "mtime": 1792910651.8604522,
+    "seen": 1792910673.179683,
+    "ast_hash": "3b9497f0120d6d39dc8ff2a739fdcd85",
+    "semantic_hash": "3b9497f0120d6d39dc8ff2a739fdcd85"
+  },
+  "public/data/gaokao-major/liaoning.json": {
+    "mtime": 1792910652.9076622,
+    "seen": 1792910673.1796858,
+    "ast_hash": "b0ca1a336c59acb96ba94cc0b7977b2c",
+    "semantic_hash": "b0ca1a336c59acb96ba94cc0b7977b2c"
+  },
+  "public/data/gaokao-major/neimenggu.json": {
+    "mtime": 1792910653.9889674,
+    "seen": 1792910673.1796882,
+    "ast_hash": "0fe3c3431cec9e5461775caee910d4ff",
+    "semantic_hash": "0fe3c3431cec9e5461775caee910d4ff"
+  },
+  "public/data/gaokao-major/ningxia.json": {
+    "mtime": 1792910654.918707,
+    "seen": 1792910673.179691,
+    "ast_hash": "389bb4c9c9c7334e50a08181bc86fca3",
+    "semantic_hash": "389bb4c9c9c7334e50a08181bc86fca3"
+  },
+  "public/data/gaokao-major/shaanxi.json": {
+    "mtime": 1792910655.7588348,
+    "seen": 1792910673.179694,
+    "ast_hash": "8308a8cdf905f809c5525a7bf3a9fee4",
+    "semantic_hash": "8308a8cdf905f809c5525a7bf3a9fee4"
+  },
+  "public/data/gaokao-major/shandong.json": {
+    "mtime": 1792910657.5212603,
+    "seen": 1792910673.1796997,
+    "ast_hash": "4816226cde442464be32706237e963e1",
+    "semantic_hash": "4816226cde442464be32706237e963e1"
+  },
+  "public/data/gaokao-major/shanghai.json": {
+    "mtime": 1792910658.294582,
+    "seen": 1792910673.1797032,
+    "ast_hash": "8254af3b9b2f843d30ba2bc554066e0d",
+    "semantic_hash": "8254af3b9b2f843d30ba2bc554066e0d"
+  },
+  "public/data/gaokao-major/sichuan.json": {
+    "mtime": 1792910659.2861898,
+    "seen": 1792910673.179706,
+    "ast_hash": "e24ed72f52714290b59881c417d9258b",
+    "semantic_hash": "e24ed72f52714290b59881c417d9258b"
+  },
+  "public/data/gaokao-major/tianjin.json": {
+    "mtime": 1792910660.0996742,
+    "seen": 1792910673.1797087,
+    "ast_hash": "cc142bcba91edabfcf116995469aa5b1",
+    "semantic_hash": "cc142bcba91edabfcf116995469aa5b1"
+  },
+  "public/data/gaokao-major/xinjiang.json": {
+    "mtime": 1792910661.1711884,
+    "seen": 1792910673.1797113,
+    "ast_hash": "e754ad041a981241fa907216007c800c",
+    "semantic_hash": "e754ad041a981241fa907216007c800c"
+  },
+  "public/data/gaokao-major/yunnan.json": {
+    "mtime": 1792910662.0639508,
+    "seen": 1792910673.179714,
+    "ast_hash": "c82d25b2cfb3ca4edaf5f9571bd5958e",
+    "semantic_hash": "c82d25b2cfb3ca4edaf5f9571bd5958e"
+  },
+  "public/data/gaokao-major/zhejiang.json": {
+    "mtime": 1792910663.25476,
+    "seen": 1792910673.1797163,
+    "ast_hash": "11f024984be9a3365c5df5f7302b4078",
+    "semantic_hash": "11f024984be9a3365c5df5f7302b4078"
+  },
+  "scripts/fetch-gaokao-major.mjs": {
+    "mtime": 1792910624.2543354,
+    "seen": 1792910673.179897,
+    "ast_hash": "7584b3589d3c2af77902fc0818116800",
+    "semantic_hash": "7584b3589d3c2af77902fc0818116800"
+  },
+  "src/lib/echarts-core.ts": {
+    "mtime": 1792910570.0078442,
+    "seen": 1792910673.1801221,
+    "ast_hash": "e4a206337198cf09dcab4ac6d5deae1c",
+    "semantic_hash": "e4a206337198cf09dcab4ac6d5deae1c"
   }
 }
