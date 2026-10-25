@@ -141,6 +141,19 @@
 | 4 | 图源标注：Spot 增加 `imageSource`（osm/unsplash/pexels/pool），详情弹窗小字展示，与项目数据诚实性风格一致 | 已完成：store 配套 updateSpotImageSources |
 | 5 | README 图源说明表同步更新 | 已完成：四级降级 → 五级来源链路 |
 
+## 九轮：内置景点离线图包（2026-10-25）
+
+八轮评估的落地：sampleSpots 12 张卡全是 Unsplash 远程 URL，断网/无 key 演示时全部
+开天窗。移植菜品端验证过的 Bing 抓图管线（免 API key）做离线 webp 包。
+
+| # | 内容 | 状态 |
+|---|---|---|
+| 1 | 移植 `fetch-dish-photos-bing.mjs` → `fetch-spot-photos-bing.mjs`（搜索词、域名降权表换成景点口径） | 待做 |
+| 2 | 抓 12 个 sampleSpots 候选图 + 人工过目（候选出 `public/spots/_candidates/`） | 待做 |
+| 3 | 压缩 webp（640px/q78，仿 compress-dish-photos）→ `public/spots/` | 待做 |
+| 4 | `build-spot-photos.mjs` 生成 `spot-photos.generated.ts`，sampleSpots 图改本地优先、远程池兜底 | 待做 |
+| 5 | build 验证 + README 图源表补「内置离线包」一级 | 待做 |
+
 ## 食物成分表 PDF 提取调研（2026-10-24 夜）
 
 ### 结论：不做全书提取，仓库数据已够
