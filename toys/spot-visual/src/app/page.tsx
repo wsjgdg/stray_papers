@@ -62,6 +62,7 @@ import {
   parseCoords,
   haversineKm,
   DISSUASION_TAGS,
+  getPinyinKeys,
 } from "@/lib/spot-data"; // 保留：cachePhotoForCategory 缓存机制
 import { withSharecode } from "@/lib/share-link";
 import { PROVINCE_FOODS } from "@/lib/food-data";
@@ -1029,7 +1030,13 @@ function SpotsView() {
         s.address.toLowerCase().includes(q) ||
         s.description.toLowerCase().includes(q) ||
         s.facilities.some((f) => f.toLowerCase().includes(q)) ||
-        s.projects.some((p) => p.toLowerCase().includes(q));
+        s.projects.some((p) => p.toLowerCase().includes(q)) ||
+        // 拼音匹配：支持全拼（bj）与首字母（gdg）检索景点名
+        (/^[a-z]+$/i.test(q) &&
+          (() => {
+            const py = getPinyinKeys(s.name);
+            return py.full.includes(q) || py.initials.includes(q);
+          })());
       return mc && mq;
     });
     // 离我最近：按用户定位排序，无坐标的景点排最后
@@ -1241,7 +1248,7 @@ function SpotsView() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <Input
-          placeholder="搜索景点名称、地址、介绍、设施、项目..."
+          placeholder="搜索名称、地址、介绍、设施、项目，支持拼音（如 gmgy / guangongyu）..."
           className="pl-10 pr-10 h-11 bg-white border-gray-200 text-sm"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}

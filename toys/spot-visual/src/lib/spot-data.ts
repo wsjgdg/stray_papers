@@ -890,3 +890,31 @@ export function guessPrice(project: string): number {
   }
   return 30; // 默认
 }
+
+// ═══ 拼音索引（搜索用）：全拼 + 首字母，均去声调、小写；按名称缓存 ═══
+import { pinyin } from "pinyin-pro";
+
+const pinyinCache = new Map<string, { full: string; initials: string }>();
+
+export function getPinyinKeys(name: string): {
+  full: string;
+  initials: string;
+} {
+  let v = pinyinCache.get(name);
+  if (!v) {
+    v = {
+      full: pinyin(name, {
+        pattern: "pinyin",
+        toneType: "none",
+        type: "array",
+      }).join(""),
+      initials: pinyin(name, {
+        pattern: "first",
+        toneType: "none",
+        type: "array",
+      }).join(""),
+    };
+    pinyinCache.set(name, v);
+  }
+  return v;
+}
