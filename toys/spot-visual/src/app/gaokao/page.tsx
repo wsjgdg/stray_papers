@@ -347,6 +347,19 @@ export default function GaoKaoPage() {
     setSelectedName(null);
   };
 
+  // 顶部搜索联动专业：校名命中不足时拉专业数据补结果
+  useEffect(() => {
+    if (!ready || !prov || majors) return;
+    const q = query.trim();
+    if (!q) return;
+    let alive = true;
+    fetchMajors(prov).then((m) => alive && setMajors(m));
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, prov, query.trim().length > 0]);
+
   // ── 分数防抖：输入框即时响应，地图/清单等重计算延迟 150ms ──
   const [scoreDelayed, setScoreDelayed] = useState(score);
   useEffect(() => {
@@ -516,39 +529,6 @@ export default function GaoKaoPage() {
     [ready, scoreDelayed, prov, cat, filter, enriched, batchGroup],
   );
 
-  // ── 院校搜索（限当前省·科类的投档线名单） ──
-  const searchResults = useMemo(() => {
-    const q = query.trim();
-    if (!q || !ready) return [];
-    const out: {
-      name: string;
-      minScore: number;
-      tier: Tier | "none";
-      rank?: string;
-    }[] = [];
-    for (const a of admissionsFor(prov, cat, batchGroup)) {
-      if (!a.schoolName.includes(q)) continue;
-      const s = getSchool(a.schoolName);
-      out.push({
-        name: a.schoolName,
-        minScore: a.minScore,
-        tier: tierOf(scoreDelayed - a.minScore),
-        rank: s?.rank,
-      });
-      if (out.length >= 8) break;
-    }
-    return out;
-  }, [query, ready, prov, cat, batchGroup, scoreDelayed]);
-
-  const sortList = (list: RecommendItemT[]) => {
-    const arr = [...list];
-    if (sortKey === "rank")
-      arr.sort((a, b) => (a.rankNum ?? 9999) - (b.rankNum ?? 9999));
-    else if (sortKey === "score")
-      arr.sort((a, b) => b.admission.minScore - a.admission.minScore);
-    return arr;
-  };
-
   // ── 专业级录取数据（按省懒加载，展开详情面板时取） ──
   const [majors, setMajors] = useState<MajorDataset | null>(null);
   const [majorsOpen, setMajorsOpen] = useState(false);
@@ -562,6 +542,60 @@ export default function GaoKaoPage() {
       alive = false;
     };
   }, [ready, majorsOpen, prov, view]);
+
+  // ── 院校搜索（限当前省·科类的投档线名单） ──
+  const searchResults = useMemo(() => {
+    const q = query.trim();
+    if (!q || !ready) return [];
+    const out: {
+      name: string;
+      minScore: number;
+      tier: Tier | "none";
+      rank?: string;
+      isMajor?: boolean;
+      majorName?: string;
+    }[] = [];
+    for (const a of admissionsFor(prov, cat, batchGroup)) {
+      if (!a.schoolName.includes(q)) continue;
+      const s = getSchool(a.schoolName);
+      out.push({
+        name: a.schoolName,
+        minScore: a.minScore,
+        tier: tierOf(scoreDelayed - a.minScore),
+        rank: s?.rank,
+      });
+      if (out.length >= 8) break;
+    }
+    // 专业名命中（如「智能」）：数据未加载时由 effect 触发拉取
+    if (majors && out.length < 8) {
+      const kw = q;
+      const catData = majors.cats[cat] ?? {};
+      outer: for (const [uni, rows] of Object.entries(catData)) {
+        for (const r of rows) {
+          if (!r[1].includes(kw)) continue;
+          out.push({
+            name: uni,
+            minScore: r[3],
+            tier: tierOf(scoreDelayed - r[3]),
+            isMajor: true,
+            majorName: r[1],
+          });
+          if (out.length >= 8) break outer;
+          break; // 每校只取一个匹配专业
+        }
+      }
+    }
+    return out;
+  }, [query, ready, prov, cat, batchGroup, scoreDelayed, majors]);
+
+  const sortList = (list: RecommendItemT[]) => {
+    const arr = [...list];
+    if (sortKey === "rank")
+      arr.sort((a, b) => (a.rankNum ?? 9999) - (b.rankNum ?? 9999));
+    else if (sortKey === "score")
+      arr.sort((a, b) => b.admission.minScore - a.admission.minScore);
+    return arr;
+  };
 
   // ── 历史投档线（按省懒加载，用于详情面板趋势图） ──
   const [history, setHistory] = useState<HistoryDataset | null>(null);
@@ -703,7 +737,7 @@ export default function GaoKaoPage() {
         <p className="text-sm text-gray-500">
           输入分数估算位次；院校点位按冲稳保着色，点击查看详情。
           <span className="text-gray-400">
-            （{dataYear()} 年 · {provinces.length} 省市 · 覆盖高校{" "}
+            （{dataYear()} 年（数据集最新）· {provinces.length} 省市 · 覆盖高校{" "}
             {uniqueSchoolCount} 所 · GaokaoCompass 非官方数据）
           </span>
         </p>
@@ -878,7 +912,7 @@ export default function GaoKaoPage() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="搜索本省院校，如 郑州大学"
+            placeholder="搜院校或专业，如 郑州大学 / 智能"
             className="w-full h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none"
           />
           {query.trim() && (
@@ -886,17 +920,28 @@ export default function GaoKaoPage() {
               {searchResults.length ? (
                 searchResults.map((r) => (
                   <button
-                    key={r.name}
+                    key={r.name + (r.majorName ?? "")}
                     onClick={() => {
                       setSelectedName(r.name);
+                      if (r.isMajor) setMajorsOpen(true);
                       setQuery("");
                       setView("map");
                     }}
                     className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-indigo-50 transition-colors"
                   >
+                    {r.isMajor ? (
+                      <span className="text-[10px] px-1 rounded bg-emerald-50 text-emerald-600 border border-emerald-100 shrink-0">
+                        专业
+                      </span>
+                    ) : null}
                     <span className="font-medium text-gray-900 truncate">
-                      {r.name}
+                      {r.isMajor ? r.majorName : r.name}
                     </span>
+                    {r.isMajor && (
+                      <span className="text-xs text-gray-400 truncate">
+                        {r.name}
+                      </span>
+                    )}
                     {r.rank && (
                       <span className="text-[10px] px-1 rounded bg-indigo-50 text-indigo-600 border border-indigo-100 shrink-0">
                         软科{r.rank}
@@ -917,7 +962,7 @@ export default function GaoKaoPage() {
                 ))
               ) : (
                 <div className="px-3 py-2.5 text-xs text-gray-400">
-                  当前省份·科类下没有匹配的院校
+                  当前省份·科类下没有匹配的院校或专业
                 </div>
               )}
             </div>
@@ -938,15 +983,28 @@ export default function GaoKaoPage() {
             {label}
           </button>
         ))}
-        {batchGroup !== "benke" && (
-          <span className="text-amber-500 ml-1">
-            {batchGroup === "tiqian"
-              ? "提前批含军警/公费师范等，录取多需政审体检面试"
-              : batchGroup === "zhuanxiang"
-                ? "专项计划面向农村户籍等特定资格考生"
-                : "专科批；冲稳保区间基于你的本科分数会大量超出区间"}
-          </span>
-        )}
+        {batchGroup !== "benke" &&
+          admissionsFor(prov, cat, batchGroup).length === 0 && (
+            <span className="text-amber-500 ml-1">
+              该省没有独立的
+              {batchGroup === "tiqian"
+                ? "提前"
+                : batchGroup === "zhuanxiang"
+                  ? "专项计划"
+                  : "专科"}
+              批次（相关计划多并入其他批次），换省或切回本科批查看
+            </span>
+          )}
+        {batchGroup !== "benke" &&
+          admissionsFor(prov, cat, batchGroup).length > 0 && (
+            <span className="text-amber-500 ml-1">
+              {batchGroup === "tiqian"
+                ? "提前批含军警/公费师范等，录取多需政审体检面试"
+                : batchGroup === "zhuanxiang"
+                  ? "专项计划面向农村户籍等特定资格考生"
+                  : "专科批；冲稳保区间基于你的本科分数会大量超出区间"}
+            </span>
+          )}
       </div>
 
       {/* 院校筛选 + 清单排序 */}
