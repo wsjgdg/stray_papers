@@ -256,6 +256,8 @@
 | 1 | 地理编码本地化：`gen-city-centers.mjs` 从 public/geo 生成全国城市中心表 → `/api/osm` 查表优先（零网络零延迟），未命中再走省级中心 → Nominatim 兜底（超时缩到 5s） | 已完成：495 城 / 857 键 |
 | 2 | 示例库 12 → 30：补 18 个知名景区（覆盖山岳/古镇/历史人文/海滨/主题乐园等），走 Bing 管线扩离线图包 | 已完成：18 张新图全白名单好源（携程×10 等），30 张终检拼图 `_contact-sheet.jpg` |
 
+**终局定位（对照 docs/deploy.md 线上实测）**：线上容器 `/api/osm` 与 `/api/weather` 双双 fetch failed（页面本身 200 正常），而 `/api/search-photo` 返回 NO_API_KEYS（线上未配图库 key，其错误文案还是老的 Vercel 版）。结论：**WorkBuddy 托管容器无外网出口**，实时探索与 7 日天气在线上不可用是环境事实。出路二选一：① 找托管平台给应用开出网白名单（overpass-api.de / overpass.osm.ch / api.open-meteo.com / images.unsplash.com / api.pexels.com）；② 维持离线形态（已完整：30 景点 + 本地图 + 随便看看 + 装备清单）。
+
 **追加发现（E2E 验证）**：geocode 本地化后仍 fetch failed → 进一步实测发现 Overpass **主站 interpreter POST 也被阻断**（status 端点通是假阳性），三个镜像（kumi/osm.ch/private.coffee）要么超时要么恒返空。已改 `/api/osm` 为多端点降级（主站 → osm.ch），部署到有国际出口的环境即可用；本机网络下实时探索确认不可用（网络事实，非代码问题），示例库扩充正是对离线场景的回应。
 
 ## 七轮（2026-10-25）：志愿探索接入真实数据
