@@ -1,6 +1,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { Spot, sampleSpots, type DissuasionRecord } from "./spot-data";
+import {
+  Spot,
+  sampleSpots,
+  LIBRARY_SPOTS,
+  type DissuasionRecord,
+} from "./spot-data";
 
 export type ViewType =
   | "spots"
@@ -76,7 +81,7 @@ interface AppStore {
 export const useAppStore = create<AppStore>()(
   persist(
     (set, get) => ({
-      spots: sampleSpots,
+      spots: LIBRARY_SPOTS,
       favorites: [],
       activeView: "spots" as ViewType,
       selectedSpot: null,
@@ -137,15 +142,16 @@ export const useAppStore = create<AppStore>()(
       setSearchQuery: (q) => set({ searchQuery: q }),
       setActiveCategory: (c) => set({ activeCategory: c }),
       setViewMode: (m) => set({ viewMode: m }),
+      // 恢复完整库（手工精选 + 城市包），保留仍指向库内条目的收藏/行程
       resetSpots: () =>
         set((s) => ({
-          spots: sampleSpots,
+          spots: LIBRARY_SPOTS,
           activeCategory: "全部",
           searchQuery: "",
           favorites: s.favorites.filter((id) =>
-            sampleSpots.some((sp) => sp.id === id),
+            LIBRARY_SPOTS.some((sp) => sp.id === id),
           ),
-          trip: s.trip.filter((id) => sampleSpots.some((sp) => sp.id === id)),
+          trip: s.trip.filter((id) => LIBRARY_SPOTS.some((sp) => sp.id === id)),
         })),
       clearAllSpots: () =>
         set({
@@ -237,6 +243,33 @@ export const useAppStore = create<AppStore>()(
     }),
     {
       name: "spot-app",
+      version: 2,
+      // v1 → v2：spots 从「内置30条/替换结果」升级为统一库（手工精选 + 城市包）。
+      // 用户自定义导入的条目（非旧内置 id）原样保留；指向已弃 id 的收藏/行程清理。
+      migrate: (state, version) => {
+        if (version < 2 && state && typeof state === "object") {
+          const st = state as {
+            spots?: Spot[];
+            favorites?: string[];
+            trip?: string[];
+          };
+          // 旧内置 id 用精确集合判断（用户 JSON 可能自带纯数字 id，不能按格式误杀）
+          const legacyIds = new Set(sampleSpots.map((sp) => sp.id));
+          const isLegacyBuiltin = (s: Spot) =>
+            legacyIds.has(s.id) ||
+            s.id.startsWith("poi-") ||
+            s.id.startsWith("osm-");
+          const custom = (st.spots ?? []).filter((s) => !isLegacyBuiltin(s));
+          const valid = new Set([
+            ...LIBRARY_SPOTS.map((s) => s.id),
+            ...custom.map((s) => s.id),
+          ]);
+          st.spots = [...LIBRARY_SPOTS, ...custom];
+          st.favorites = (st.favorites ?? []).filter((id) => valid.has(id));
+          st.trip = (st.trip ?? []).filter((id) => valid.has(id));
+        }
+        return state as never;
+      },
       partialize: (s) => ({
         favorites: s.favorites,
         spots: s.spots,

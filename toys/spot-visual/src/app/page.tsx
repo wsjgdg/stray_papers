@@ -67,7 +67,7 @@ import {
 } from "@/lib/spot-data"; // 保留：cachePhotoForCategory 缓存机制
 import { withSharecode } from "@/lib/share-link";
 import { PROVINCE_FOODS } from "@/lib/food-data";
-import { CITY_POI_PACKS, type CityPoi } from "@/lib/city-pois.generated";
+import { CITY_POI_PACKS } from "@/lib/city-pois.generated";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 
@@ -1098,82 +1098,42 @@ function SpotsView() {
     }
   }, [city, osmLoading, spots, setSpots, setActiveCategory, setSearchQuery]);
 
-  // 城市包 POI → Spot（高德自带图片由浏览器直连 autonavi CDN，不占容器出网）
-  const poiToSpot = useCallback((c: string, p: CityPoi, i: number): Spot => {
-    const short = c.replace(/市$/, "");
-    return {
-      id: `poi-${short}-${i}`,
-      name: p.name,
-      image: p.image,
-      imageSource: p.image ? "amap" : undefined,
-      address: p.address || `${c}（高德 POI）`,
-      facilities: [],
-      projects: [],
-      category: p.category,
-      description: `来自高德地图 POI${p.rating ? ` · 评分 ${p.rating}` : ""}。数据为构建时打包，信息以景区公示为准。`,
-      location: { lat: p.lat, lng: p.lng },
-    };
-  }, []);
-
-  // 热门城市 chips：烘好的城市包优先，附带库内精选城市
+  // 热门城市 chips：城市包城市 + 手工精选城市（去重）
   const HOT_CITIES = useMemo(
     () => [
-      ...Object.keys(CITY_POI_PACKS).slice(0, 10),
-      "拉萨",
-      "张家界",
-      "黄山",
-      "乐山",
-      "酒泉",
-      "嘉兴",
-      "晋中",
+      ...new Set([
+        ...Object.keys(CITY_POI_PACKS),
+        "拉萨",
+        "张家界",
+        "黄山",
+        "乐山",
+        "酒泉",
+        "嘉兴",
+        "晋中",
+      ]),
     ],
     [],
   );
-  const libCitySpots = useCallback((c: string) => {
-    const short = c.replace(/市$/, "");
-    return sampleSpots.filter((s) => s.address.includes(short));
-  }, []);
 
-  const loadCity = useCallback(
-    (raw: string) => {
-      const c = raw.trim().replace(/市$/, "") || raw.trim();
-      if (!c) return;
-      const pack = CITY_POI_PACKS[c] ?? CITY_POI_PACKS[raw.trim()];
-      if (pack) {
-        if (!confirmReplace()) return;
-        setSpots(pack.map((p, i) => poiToSpot(c, p, i)));
-        setActiveCategory("全部");
-        setSearchQuery("");
-        setOsmMsg({
-          type: "ok",
-          text: `已加载「${c}」城市包：${pack.length} 个景点 · 高德 POI 构建时打包（图片直连高德 CDN）`,
-        });
-        return;
-      }
-      const lib = libCitySpots(c);
-      if (lib.length > 0) {
-        if (!confirmReplace()) return;
-        setSpots(lib);
-        setActiveCategory("全部");
-        setSearchQuery("");
-        setOsmMsg({
-          type: "ok",
-          text: `库内精选「${c}」：${lib.length} 个景点（内置数据，含完整介绍与离线图）`,
-        });
-        return;
-      }
+  // ═══ 城市过滤：chips/输入框都是库的过滤器，不再替换 spots（收藏/行程/改价永不丢失） ═══
+  const [cityFilter, setCityFilter] = useState<string | null>(null);
+
+  const handleCityExplore = useCallback(() => {
+    const c = city.trim().replace(/市$/, "");
+    if (!c) return;
+    // 库内有该城市 → 过滤视图；没有 → 实时通道兜底（部分环境不可用）
+    const hit = spots.some((s) => s.address.includes(c));
+    if (hit) {
+      setCityFilter(c);
+      setOsmMsg({
+        type: "ok",
+        text: `已筛选「${c}」的景点（收藏与行程不受影响）`,
+      });
+    } else {
+      setCityFilter(null);
       exploreOsm();
-    },
-    [
-      confirmReplace,
-      setSpots,
-      setActiveCategory,
-      setSearchQuery,
-      poiToSpot,
-      libCitySpots,
-      exploreOsm,
-    ],
-  );
+    }
+  }, [city, spots, exploreOsm]);
 
   // ═══ 随便看看：实时探索不可用（离线/限流）时，从景点库随机抽一个直接看 ═══
   const randomBrowse = useCallback(() => {
@@ -1225,6 +1185,7 @@ function SpotsView() {
 
   const filteredSpots = useMemo(() => {
     const list = spots.filter((s) => {
+      const cc = !cityFilter || s.address.includes(cityFilter);
       const mc = activeCategory === "全部" || s.category === activeCategory;
       const q = searchQuery.toLowerCase();
       const mq =
@@ -1240,7 +1201,7 @@ function SpotsView() {
             const py = getPinyinKeys(s.name);
             return py.full.includes(q) || py.initials.includes(q);
           })());
-      return mc && mq;
+      return cc && mc && mq;
     });
     // 离我最近：按用户定位排序，无坐标的景点排最后
     if (userLoc) {
@@ -1254,7 +1215,7 @@ function SpotsView() {
       });
     }
     return list;
-  }, [spots, activeCategory, searchQuery, userLoc]);
+  }, [spots, activeCategory, searchQuery, userLoc, cityFilter]);
 
   const handleImport = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1339,11 +1300,8 @@ function SpotsView() {
             {HOT_CITIES.map((hc) => (
               <button
                 key={hc}
-                onClick={() => {
-                  setCity(hc);
-                  loadCity(hc);
-                }}
-                className="px-2.5 py-1 rounded-full text-[11px] font-medium border bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 transition-colors"
+                onClick={() => setCityFilter(cityFilter === hc ? null : hc)}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${cityFilter === hc ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50"}`}
               >
                 {hc}
               </button>
@@ -1376,7 +1334,7 @@ function SpotsView() {
             size="sm"
             className="gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
             disabled={osmLoading}
-            onClick={() => loadCity(city)}
+            onClick={handleCityExplore}
           >
             {osmLoading ? (
               <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
@@ -1394,8 +1352,8 @@ function SpotsView() {
           </p>
         )}
         <p className="text-[11px] text-gray-400 mt-2 leading-relaxed">
-          20 个热门城市已内置数据包（高德 POI，构建时打包，图片直连高德
-          CDN）；库内精选城市含完整介绍与离线图；其余城市回落实时通道（部分环境不可用）。
+          库内共 27 城约 1200 个景点（高德 POI 构建时打包 +
+          手工精选）。点城市即过滤，收藏与行程不受影响；库外城市尝试实时通道。
         </p>
       </div>
 
@@ -1467,7 +1425,7 @@ function SpotsView() {
               className="gap-1.5 text-xs text-gray-500"
               onClick={useAppStore.getState().resetSpots}
             >
-              恢复示例
+              恢复完整库
             </Button>
           )}
           {spots.length > 0 && (
@@ -1513,14 +1471,32 @@ function SpotsView() {
         <span className="font-semibold text-gray-900">
           {filteredSpots.length}
         </span>{" "}
-        个景点{activeCategory !== "全部" && <span> · {activeCategory}</span>}
+        个景点{cityFilter && <span> · {cityFilter}</span>}
+        {activeCategory !== "全部" && <span> · {activeCategory}</span>}
         {searchQuery && <span> · &ldquo;{searchQuery}&rdquo;</span>}
+        {cityFilter && (
+          <button
+            onClick={() => setCityFilter(null)}
+            className="ml-1 text-emerald-600 hover:underline"
+          >
+            清除
+          </button>
+        )}
       </p>
       {/* Content */}
       {filteredSpots.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <MapPin className="w-12 h-12 text-gray-300 mb-4" />
           <p className="text-gray-500 mb-4">没有找到匹配的景点</p>
+          {cityFilter && (
+            <Button
+              variant="outline"
+              onClick={() => setCityFilter(null)}
+              className="gap-2 mb-2"
+            >
+              清除城市筛选（{cityFilter}）
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={() => fileInputRef.current?.click()}

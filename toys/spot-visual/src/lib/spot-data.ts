@@ -1243,3 +1243,31 @@ export const PACKLIST_UNIVERSAL = [
   "饮用水",
   "常用药品",
 ];
+
+// ═══ 统一库：手工精选（全字段）在前 + 城市包 POI（同名跳过，保手工版） ═══
+// 城市探索的 chips 是这个库的过滤器；POI 图片由浏览器直连高德 CDN，不占服务器出网。
+import { CITY_POI_PACKS, type CityPoi } from "./city-pois.generated";
+
+export function cityPoiToSpot(city: string, p: CityPoi, index: number): Spot {
+  const short = city.replace(/市$/, "");
+  return {
+    id: `poi-${short}-${index}`,
+    name: p.name,
+    image: p.image,
+    imageSource: p.image ? "amap" : undefined,
+    address: p.address || `${city}（高德 POI）`,
+    facilities: [],
+    projects: [],
+    category: p.category,
+    description: `来自高德地图 POI${p.rating ? ` · 评分 ${p.rating}` : ""}。数据为构建时打包，信息以景区公示为准。`,
+    location: { lat: p.lat, lng: p.lng },
+  };
+}
+
+export const LIBRARY_SPOTS: Spot[] = (() => {
+  const manualNames = new Set(sampleSpots.map((s) => s.name));
+  const pois = Object.entries(CITY_POI_PACKS)
+    .flatMap(([city, list]) => list.map((p, i) => cityPoiToSpot(city, p, i)))
+    .filter((s) => !manualNames.has(s.name));
+  return [...sampleSpots, ...pois];
+})();

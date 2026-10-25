@@ -27,7 +27,9 @@ const CITIES = [
   "北京", "上海", "广州", "深圳", "杭州", "南京", "苏州", "成都", "重庆", "西安",
   "洛阳", "武汉", "长沙", "厦门", "青岛", "大连", "昆明", "桂林", "三亚", "哈尔滨",
 ];
-const PER_CITY = 15;
+// 「较大景点」判据（不按数量截断）：有评分且 ≥ 4.0，或带官方图（高德只给重点 POI 配图）。
+// 小游园/无名绿地无评分无图，自然滤除；每城拉 3 页 75 候选再过滤，实际收敛在 20-40 条。
+const PAGES = 3;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // type 字符串 → 项目分类（对齐 spot-data 的分类体系）
@@ -57,11 +59,11 @@ let total = 0;
 
 for (const city of CITIES) {
   const collected = new Map(); // name -> poi
-  for (let page = 1; page <= 2 && collected.size < PER_CITY + 10; page++) {
+  for (let page = 1; page <= PAGES; page++) {
     const url =
       `https://restapi.amap.com/v3/place/text?key=${KEY}` +
       `&keywords=景点&types=110000&city=${encodeURIComponent(city)}&citylimit=true` +
-      `&offset=25&page=${page}&extensions=base`;
+      `&offset=25&page=${page}&extensions=all`;
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
       const j = await res.json();
@@ -81,9 +83,14 @@ for (const city of CITIES) {
     await sleep(350); // 免费配额 3 QPS
   }
   const rating = (p) => Number(p.biz_ext?.rating) || 0;
+  // 较大景点：主条目（高德子 POI 命名带 "-"，如「西湖-柳浪闻莺」，主条目已入库则弃子）
+  // 且评分 ≥ 4.3；无评分但有官方图的官方点（如天安门）保留
+  const isMajor = (p) =>
+    !p.name.includes("-") &&
+    (rating(p) >= 4.3 || (!rating(p) && (p.photos ?? []).some((x) => x.url)));
   const pois = [...collected.values()]
+    .filter(isMajor)
     .sort((a, b) => rating(b) - rating(a))
-    .slice(0, PER_CITY)
     .map((p) => {
       const [lng, lat] = p.location.split(",").map(Number);
       return {
