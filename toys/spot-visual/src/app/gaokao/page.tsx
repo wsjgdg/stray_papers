@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   GraduationCap,
@@ -159,6 +159,8 @@ export default function GaoKaoPage() {
   const [selectedName, setSelectedName] = useState<string | null>(null);
   const [batchGroup, setBatchGroup] = useState<BatchGroup>("benke");
   const [batchesLoading, setBatchesLoading] = useState(false);
+  const batchesYearRef = useRef<number | null>(null);
+  const enrichRawRef = useRef<unknown>(null);
   const [year, setYear] = useState<number>(() => {
     try {
       const sp = new URLSearchParams(window.location.search);
@@ -169,7 +171,6 @@ export default function GaoKaoPage() {
     } catch {}
     return 2026;
   });
-  const batchesYearRef = { current: null as number | null };
   const [view, setView] = useState<
     "map" | "list" | "compare" | "major" | "wish"
   >("map");
@@ -260,7 +261,6 @@ export default function GaoKaoPage() {
   );
 
   // ── 加载数据文件（按年份；增强数据可选且与年份无关，缓存后重放） ──
-  const enrichRawRef = { current: null as unknown };
   useEffect(() => {
     let alive = true;
     setDataState("loading");
@@ -585,15 +585,21 @@ export default function GaoKaoPage() {
   const [majors, setMajors] = useState<MajorDataset | null>(null);
   const [majorsOpen, setMajorsOpen] = useState(false);
   useEffect(() => {
-    if (!ready || !prov || (!majorsOpen && view !== "major" && view !== "wish"))
-      return;
+    if (
+      !ready ||
+      !prov ||
+      (!majorsOpen && view !== "major" && view !== "wish") ||
+      (year !== 2025 && view !== "major")
+    )
+      return; // 2025 文件作专业目录：2026 仅专业反查视图加载（推荐/检索入口）
     let alive = true;
     setMajors(null);
     fetchMajors(prov).then((m) => alive && setMajors(m));
     return () => {
       alive = false;
     };
-  }, [ready, majorsOpen, prov, view]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, majorsOpen, prov, view, year]);
 
   // ── 院校搜索（限当前省·科类的投档线名单） ──
   const searchResults = useMemo(() => {
@@ -1720,7 +1726,7 @@ export default function GaoKaoPage() {
           cat={cat}
           score={scoreDelayed}
           year={year}
-          hasMajors={year === 2025}
+          hasMajors={!!majors}
           onOpen={(code) => {
             setSelectedName(code);
             setMajorsOpen(true);
@@ -2180,6 +2186,12 @@ function MajorSearch({
   return (
     <div className="bg-white rounded-2xl border border-gray-200">
       <div className="p-4 border-b border-gray-100">
+        {year !== 2025 && hasMajors && (
+          <p className="mb-2 text-[11px] text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-2.5 py-1.5">
+            {year} 年专业级数据未覆盖：以下基于 2025
+            年专业目录（专业设置基本稳定），分数线为 2025 年口径。
+          </p>
+        )}
         <div className="flex items-center gap-2">
           <Search className="w-4 h-4 text-indigo-500 shrink-0" />
           <input
@@ -2191,7 +2203,9 @@ function MajorSearch({
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           {hasMajors && (
-            <span className="text-[11px] text-gray-400">试试：</span>
+            <span className="text-[11px] text-gray-400">
+              {year === 2025 ? "试试：" : "试试（2025 目录）："}
+            </span>
           )}
           {chips.map((c) => (
             <button
@@ -2222,8 +2236,7 @@ function MajorSearch({
       </div>
       {!hasMajors ? (
         <div className="py-14 text-center text-sm text-gray-400">
-          {year} 年暂无专业级数据源（{year} 为院校·专业组口径），切换到 2025
-          年可按专业反查
+          正在加载专业目录（2025 年口径）…
         </div>
       ) : !kw ? (
         <div className="py-14 text-center text-sm text-gray-400">
@@ -2241,6 +2254,9 @@ function MajorSearch({
         <>
           <div className="px-4 py-2 text-[11px] text-gray-400 bg-gray-50 border-b border-gray-100">
             {results.length} 所院校开设相关专业
+            {year !== 2025 && (
+              <span className="text-amber-500">（2025 年数据）</span>
+            )}
           </div>
           <ul className="divide-y divide-gray-50 max-h-[600px] overflow-y-auto">
             {results.slice(0, 60).map(({ uni, hits, best }) => {
