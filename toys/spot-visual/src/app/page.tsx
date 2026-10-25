@@ -1435,6 +1435,18 @@ function FavoritesView() {
     () => spots.filter((s) => favorites.includes(s.id)),
     [spots, favorites],
   );
+  const [favCat, setFavCat] = useState("全部");
+  const favCats = useMemo(() => {
+    const cats = new Set(favSpots.map((s) => s.category));
+    return ["全部", ...Array.from(cats)];
+  }, [favSpots]);
+  const shownFavs = useMemo(
+    () =>
+      favCat === "全部"
+        ? favSpots
+        : favSpots.filter((s) => s.category === favCat),
+    [favSpots, favCat],
+  );
   if (favSpots.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -1466,13 +1478,35 @@ function FavoritesView() {
           variant="outline"
           size="sm"
           className="gap-1.5 text-xs"
-          onClick={() => favSpots.forEach((s) => addToTrip(s.id))}
+          onClick={() => shownFavs.forEach((s) => addToTrip(s.id))}
         >
           <Route className="w-3.5 h-3.5" />
-          全部加入行程
+          {favCat === "全部" ? "全部加入行程" : "本类加入行程"}
         </Button>
       </div>
-      <SpotGrid spots={favSpots} onSelect={setSelectedSpot} />
+      {favCats.length > 2 && (
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          {favCats.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setFavCat(cat)}
+              className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                favCat === cat
+                  ? "bg-gray-900 text-white border-gray-900"
+                  : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+              }`}
+            >
+              {cat}
+              <span className="ml-1 text-[10px] opacity-60">
+                {cat === "全部"
+                  ? favSpots.length
+                  : favSpots.filter((x) => x.category === cat).length}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+      <SpotGrid spots={shownFavs} onSelect={setSelectedSpot} />
     </div>
   );
 }
