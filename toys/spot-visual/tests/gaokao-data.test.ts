@@ -37,6 +37,8 @@ const fixture: RealDataset = {
       历史类: {
         adm: [
           ["A1", "甲大学", "本科批", 610, 8000, "北京", 3, null, null, null],
+          // 该科类无一分一段：位次只能保持未知
+          ["A9", "己学院", "本科批", 580, 0, "河南", 0, null, null, null],
         ],
       },
     },
@@ -85,13 +87,32 @@ describe("loadFullDataset + 读取接口", () => {
     expect(a2.planDelta).toBe(-20);
     expect(a2.scoreDelta).toBeUndefined();
   });
-  it("rank=0 的院校行保留且 minRank 为 0（位次未知）", () => {
+  it("原表位次为 0 时按一分一段反推，并标记 rankDerived", () => {
     const a4 = admissionsFor("河南", "物理类").find(
       (r) => r.schoolCode === "A4",
     );
     expect(a4).toBeDefined();
     expect(a4!.minScore).toBe(560);
-    expect(a4!.minRank).toBe(0);
+    // 560 分落在 600(10000) 与 500(50000) 之间 → 线性插值
+    expect(a4!.minRank).toBe(26000);
+    expect(a4!.rankDerived).toBe(true);
+  });
+
+  it("原表有位次时不标记 rankDerived", () => {
+    const a1 = admissionsFor("河南", "物理类").find(
+      (r) => r.schoolCode === "A1",
+    );
+    expect(a1!.minRank).toBe(5000);
+    expect(a1!.rankDerived).toBe(false);
+  });
+
+  it("没有一分一段的科类，位次保持未知（不瞎猜）", () => {
+    const a9 = admissionsFor("河南", "历史类").find(
+      (r) => r.schoolCode === "A9",
+    );
+    expect(a9).toBeDefined();
+    expect(a9!.minRank).toBe(0);
+    expect(a9!.rankDerived).toBe(false);
   });
 
   it("controlLine", () => {
@@ -270,7 +291,9 @@ describe("loadBatchesDataset 批次组", () => {
     expect(zk).toHaveLength(1);
     expect(zk[0].schoolName).toBe("黄河水利职业技术学院");
     expect(zk[0].group).toBe("zhuanke");
-    expect(zk[0].minRank).toBe(0);
+    // 420 分低于夹具曲线的低端（500 分/5 万人），按表尾累计位次兜底
+    expect(zk[0].minRank).toBe(50000);
+    expect(zk[0].rankDerived).toBe(true);
     expect(admissionsFor("河南", "物理类", "tiqian")[0].schoolName).toBe(
       "国防科技大学",
     );

@@ -75,6 +75,7 @@ export interface Admission {
   batch: string;
   minScore: number;
   minRank: number;
+  rankDerived?: boolean; // 位次由一分一段表按投档最低分反推（原表无位次列）
   planCount?: number; // 该校在该省该科类的本科招生计划人数（专业组合计）
   scoreDelta?: number; // 投档线同比（2025 - 2024，正=涨分）
   planDelta?: number; // 招生计划同比（正=扩招）
@@ -195,6 +196,7 @@ function clearRuntime() {
   curveIndex = new Map();
   loadedProvinces.clear();
   pkgCache.clear();
+  batchIndex = new Map(); // 批次文件按年区分，换年必须清空
 }
 
 /** 把一个省的投档线并入索引（不做清空，支持逐省累加） */
@@ -204,6 +206,10 @@ function indexProvince(
   year: number,
 ) {
   for (const [cat, cd] of Object.entries(cats)) {
+    // 先登记一分一段：下面要用它补投档表的位次
+    const curve = cd.curve ?? [];
+    if (curve.length) curveIndex.set(`${prov}|${cat}`, curve);
+
     admIndex.set(
       `${prov}|${cat}`,
       (cd.adm ?? []).map(
@@ -227,14 +233,18 @@ function indexProvince(
           cat,
           batch,
           minScore,
-          minRank,
+          // 部分省份（2026 年北京/湖南/湖北/江苏/河北等 14 省）的投档表
+          // 根本没有位次列，整列为 0。有官方一分一段时按分数反推，
+          // 否则同分去向、位次对比、分享卡全部为空。
+          minRank:
+            minRank || (curve.length ? rankFromCurve(curve, minScore) : 0),
+          rankDerived: !minRank && curve.length > 0,
           planCount: planCount ?? undefined,
           scoreDelta: scoreDelta ?? undefined,
           planDelta: planDelta ?? undefined,
         }),
       ),
     );
-    if (cd.curve?.length) curveIndex.set(`${prov}|${cat}`, cd.curve);
     for (const [code, name, , , , loc, flags] of cd.adm ?? []) {
       // 招生代码跨省冲突（实测 1.4 万处），院校全局键 = 校名
       if (!schoolIndex.has(name))
@@ -249,6 +259,9 @@ function indexProvince(
         });
     }
   }
+  // 批次数据可能已先一步载入（用户直接点「专科批」），此时用刚到的
+  // 一分一段把该省的位次补齐，保证结果与加载顺序无关。
+  if (batchIndex.size) backfillBatchRanks(prov);
 }
 
 /** 载入某年份的省份清单（几 KB）。换年份会自动清空上一年的数据。 */
@@ -445,6 +458,31 @@ export interface BatchesDataset {
 
 let batchIndex = new Map<string, Admission[]>(); // `prov|group|cat`
 
+/**
+ * 位次缺失时按一分一段反推。返回 0 表示该省该科类也没有一分一段，
+ * 此时宁可留空也不编造。
+ */
+function derivedRank(prov: string, cat: string, minScore: number): number {
+  const curve = curveIndex.get(`${prov}|${cat}`);
+  return curve?.length ? rankFromCurve(curve, minScore) : 0;
+}
+
+/** 给已经载入的批次数据补位次（批次文件与省包加载顺序不固定） */
+function backfillBatchRanks(prov: string) {
+  const prefix = `${prov}|`;
+  for (const [key, list] of batchIndex) {
+    if (!key.startsWith(prefix)) continue;
+    for (const a of list) {
+      if (a.minRank) continue;
+      const r = derivedRank(a.prov, a.cat, a.minScore);
+      if (r) {
+        a.minRank = r;
+        a.rankDerived = true;
+      }
+    }
+  }
+}
+
 /** 合并批次文件（提前批/专项/专科），并补全院校画像 */
 export function loadBatchesDataset(data: BatchesDataset): boolean {
   if (!data || typeof data !== "object" || !data.provs) return false;
@@ -455,17 +493,21 @@ export function loadBatchesDataset(data: BatchesDataset): boolean {
         const rows = (cd.adm ?? []) as AdmRow[];
         batchIndex.set(
           `${prov}|${group}|${cat}`,
-          rows.map(([code, name, batch, minScore, minRank]) => ({
-            schoolCode: code,
-            schoolName: name,
-            group: group as BatchGroup,
-            prov,
-            year: data.year,
-            cat,
-            batch,
-            minScore,
-            minRank,
-          })),
+          rows.map(([code, name, batch, minScore, minRank]) => {
+            const derived = minRank ? 0 : derivedRank(prov, cat, minScore);
+            return {
+              schoolCode: code,
+              schoolName: name,
+              group: group as BatchGroup,
+              prov,
+              year: data.year,
+              cat,
+              batch,
+              minScore,
+              minRank: minRank || derived,
+              rankDerived: !minRank && derived > 0,
+            };
+          }),
         );
         for (const [code, name, , , , loc, flags] of rows) {
           if (!schoolIndex.has(name))

@@ -22,6 +22,7 @@ export function CompareTable({
     {
       minScore: number;
       minRank: number;
+      rankDerived?: boolean;
       batch: string;
       planCount?: number;
       scoreDelta?: number;
@@ -211,7 +212,14 @@ export function CompareTable({
               <td key={name} className={td}>
                 {adm ? (
                   adm.minRank ? (
-                    adm.minRank.toLocaleString()
+                    <>
+                      {adm.rankDerived && (
+                        <span title="该省投档表未公布位次，由一分一段表反推">
+                          ≈
+                        </span>
+                      )}
+                      {adm.minRank.toLocaleString()}
+                    </>
                   ) : (
                     "—"
                   )

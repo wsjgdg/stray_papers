@@ -296,7 +296,12 @@ export default function GaoKaoPage() {
 
   // indexReady = 省份清单（几 KB）就绪；provReady = 当前省数据包就绪。
   // 页面骨架只等清单，切省/切年都在已挂载的页面上换数据，不再整页重挂。
-  const indexReady = dataState === "ready";
+  //
+  // 注意：清单就绪还必须校验「运行时清单年份 == 当前年份」。切年时新清单是
+  // 异步 fetch 的，而本轮的阶段二 effect 会先跑——此时运行时仍是旧年数据，
+  // isProvinceLoaded() 会误判为已加载并直接 return，导致省包始终不重新拉取。
+  const [indexYear, setIndexYear] = useState<number | null>(null);
+  const indexReady = dataState === "ready" && indexYear === year;
   const [provReady, setProvReady] = useState(false);
   const ready = indexReady && provReady; // 所有数据派生 memo 的门槛
   selectedNameRef.value = selectedName;
@@ -340,10 +345,12 @@ export default function GaoKaoPage() {
     resetBatches();
     batchesYearRef.current = null;
     setProvReady(false);
+    setIndexYear(null); // 新清单到达前，旧年数据一律视为未就绪
 
     const cachedIdx = cachedIndex(year);
     if (cachedIdx && loadIndex(cachedIdx)) {
       setDataState("ready");
+      setIndexYear(year);
       setSwitching(false);
       applyEnrich();
       return () => {
@@ -364,6 +371,7 @@ export default function GaoKaoPage() {
           rememberIndex(year, idx);
           loadedOnceRef.current = true;
           setDataState("ready");
+          setIndexYear(year);
           setSwitching(false);
           applyEnrich();
         } else {
@@ -585,11 +593,11 @@ export default function GaoKaoPage() {
 
   const userRank = useMemo(
     () => (ready ? rankForScore(prov, cat, score) : 0),
-    [ready, prov, cat, score],
+    [ready, prov, cat, score, year],
   );
   const ctrl = useMemo(
     () => (ready ? controlLine(prov, cat) : undefined),
-    [ready, prov, cat],
+    [ready, prov, cat, year],
   );
   const curve = useMemo(
     () => (ready ? curveFor(prov, cat) : []),
@@ -602,6 +610,7 @@ export default function GaoKaoPage() {
       {
         minScore: number;
         minRank: number;
+        rankDerived?: boolean;
         batch: string;
         planCount?: number;
         scoreDelta?: number;
@@ -613,13 +622,14 @@ export default function GaoKaoPage() {
       m.set(a.schoolName, {
         minScore: a.minScore,
         minRank: a.minRank,
+        rankDerived: a.rankDerived,
         batch: a.batch,
         planCount: a.planCount,
         scoreDelta: a.scoreDelta,
         planDelta: a.planDelta,
       });
     return m;
-  }, [ready, prov, cat, batchGroup]);
+  }, [ready, prov, cat, batchGroup, year]);
 
   // 地图画当前省·科类·批次的全部招生院校：区间内按冲稳保着色，
   // 区间外（分数够不着/高出太多）以灰色小点保留显示。
@@ -694,6 +704,7 @@ export default function GaoKaoPage() {
       name: string;
       minScore: number;
       minRank: number;
+      rankDerived?: boolean;
       planCount: number;
     }[] = [];
     for (const a of admissionsFor(prov, cat, batchGroup)) {
@@ -702,6 +713,7 @@ export default function GaoKaoPage() {
           name: a.schoolName,
           minScore: a.minScore,
           minRank: a.minRank,
+          rankDerived: a.rankDerived,
           planCount: a.planCount ?? 0,
         });
       }
@@ -1180,8 +1192,8 @@ export default function GaoKaoPage() {
                     }}
                     title={
                       r.planCount > 0
-                        ? `计划招生 ${r.planCount} 人 · 最低位次 ${r.minRank}`
-                        : `最低位次 ${r.minRank}`
+                        ? `计划招生 ${r.planCount} 人 · 最低位次 ${r.rankDerived ? "≈" : ""}${r.minRank}`
+                        : `最低位次 ${r.rankDerived ? "≈" : ""}${r.minRank}`
                     }
                     className="text-[11px] px-2 py-0.5 rounded-full bg-white border border-indigo-100 text-indigo-600 hover:bg-indigo-50 transition-colors"
                   >
@@ -1607,9 +1619,26 @@ export default function GaoKaoPage() {
                     )}
                   </div>
                   <div className="rounded-xl border border-gray-200 p-3">
-                    <div className="text-xs text-gray-400">最低位次</div>
+                    <div className="text-xs text-gray-400">
+                      最低位次
+                      {selAdm.rankDerived && (
+                        <span
+                          className="ml-1 text-amber-500"
+                          title="该省投档表未公布位次，此处由一分一段表按投档最低分反推"
+                        >
+                          估算
+                        </span>
+                      )}
+                    </div>
                     <div className="text-lg font-bold text-gray-900">
-                      {selAdm.minRank ? selAdm.minRank.toLocaleString() : "—"}
+                      {selAdm.minRank ? (
+                        <>
+                          {selAdm.rankDerived && "≈"}
+                          {selAdm.minRank.toLocaleString()}
+                        </>
+                      ) : (
+                        "—"
+                      )}
                     </div>
                   </div>
                   <div className="rounded-xl border border-gray-200 p-3 col-span-2">
@@ -1895,7 +1924,8 @@ export default function GaoKaoPage() {
                             <span className="text-xs text-gray-400 ml-auto hidden sm:inline">
                               {item.schoolProv} · 位次{" "}
                               {item.admission.minRank
-                                ? item.admission.minRank.toLocaleString()
+                                ? (item.admission.rankDerived ? "≈" : "") +
+                                  item.admission.minRank.toLocaleString()
                                 : "—"}
                               {item.planCount != null
                                 ? ` · 招${item.planCount}人`
@@ -1904,7 +1934,8 @@ export default function GaoKaoPage() {
                             <span className="w-full text-[11px] text-gray-400 sm:hidden">
                               {item.schoolProv} · 位次{" "}
                               {item.admission.minRank
-                                ? item.admission.minRank.toLocaleString()
+                                ? (item.admission.rankDerived ? "≈" : "") +
+                                  item.admission.minRank.toLocaleString()
                                 : "—"}
                               {item.planCount != null
                                 ? ` · 招${item.planCount}人`
@@ -1968,8 +1999,15 @@ export default function GaoKaoPage() {
                 )}
                 <p className="w-full text-xs text-gray-400">
                   投档线 {selAdm.minScore} · 位次{" "}
-                  {selAdm.minRank ? selAdm.minRank.toLocaleString() : "—"} ·
-                  已在地图上标出，切到「院校地图」查看。
+                  {selAdm.minRank ? (
+                    <>
+                      {selAdm.rankDerived && "≈"}
+                      {selAdm.minRank.toLocaleString()}
+                    </>
+                  ) : (
+                    "—"
+                  )}{" "}
+                  · 已在地图上标出，切到「院校地图」查看。
                 </p>
               </div>
             ) : (
@@ -2115,14 +2153,17 @@ export default function GaoKaoPage() {
       <div className="mt-6 flex gap-2 items-start text-[11px] text-gray-400 bg-gray-50 border border-gray-200 rounded-xl p-3 leading-relaxed">
         <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
         <span>
-          本页投档线与一分一段来自{" "}
-          <b className="text-gray-500">GaokaoCompass</b>（{dataSource()}）{year}{" "}
-          年数据， 为第三方整理的
+          本页 {year} 年投档线来自{" "}
+          <b className="text-gray-500">{dataSource()}</b>
+          ，一分一段表与本科线来自掌上高考公开静态数据；均为第三方整理的
           <strong className="text-gray-500">非官方数据</strong>
-          ，按院校专业组最低分归并；院校排名与层次标签来自软科中国大学排名，
+          ，投档线按院校专业组最低分归并；院校排名与层次标签来自软科中国大学排名，
           学科评估为教育部学位中心第四轮（2017）结果；均仅供演示与参考，
-          正式填报请以省级教育考试院官方数据为准。位次由一分一段表线性插值估算。
-          地图为 DataV 省级矢量边界（含台湾、南海诸岛），非在线地图服务。
+          正式填报请以省级教育考试院官方数据为准。
+          部分省份投档表不公布位次，此类位次由一分一段表按投档最低分反推（标
+          <span className="text-amber-500">≈</span>
+          ）；其余位次同样是按分数线性插值估算。 地图为 DataV
+          省级矢量边界（含台湾、南海诸岛），非在线地图服务。
         </span>
       </div>
     </div>
