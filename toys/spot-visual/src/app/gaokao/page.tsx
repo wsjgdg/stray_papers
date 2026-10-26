@@ -41,7 +41,10 @@ import {
   fetchMajors,
   getSchool,
   isBatchesLoaded,
-  batchesUrlFor,
+  provinceBatchesUrlFor,
+  isProvinceBatchesLoaded,
+  cachedProvinceBatches,
+  loadProvinceBatches,
   cachedIndex,
   rememberIndex,
   indexUrlFor,
@@ -52,7 +55,6 @@ import {
   loadIndex,
   totalSchools,
   resetBatches,
-  loadBatchesDataset,
   type MajorDataset,
   type MajorRow,
   loadEnrichDataset,
@@ -179,8 +181,9 @@ export default function GaoKaoPage() {
   const [score, setScore] = useState(600);
   const [selectedName, setSelectedName] = useState<string | null>(null);
   const [batchGroup, setBatchGroup] = useState<BatchGroup>("benke");
+  // 批次包是命令式载入的（不在 React 数据流里），用版本号触发派生 memo 重算
+  const [batchesRev, setBatchesRev] = useState(0);
   const [batchesLoading, setBatchesLoading] = useState(false);
-  const batchesYearRef = useRef<number | null>(null);
   const enrichRawRef = useRef<unknown>(null);
   const loadedOnceRef = useRef(false); // 首次数据就绪后，切年份不再整页打回骨架
   const [switching, setSwitching] = useState(false); // 年份切换中（保持旧视图可交互）
@@ -343,7 +346,6 @@ export default function GaoKaoPage() {
   useEffect(() => {
     let alive = true;
     resetBatches();
-    batchesYearRef.current = null;
     setProvReady(false);
     setIndexYear(null); // 新清单到达前，旧年数据一律视为未就绪
 
@@ -508,28 +510,53 @@ export default function GaoKaoPage() {
     setEnriched(false);
   };
 
-  // ── 批次切换：非本科批首次切换时懒加载批次文件 ──
-  const switchBatch = async (g: BatchGroup) => {
-    if (g === batchGroup || batchesLoading) return;
-    if (g !== "benke" && batchesYearRef.current !== year) {
+  // ── 批次包懒加载：按省拉取（单省 5~30KB gzip），命中内存缓存零请求 ──
+  const batchesInflight = useRef(new Set<string>());
+  const loadBatchesFor = useCallback(
+    async (g: BatchGroup, p: string, y: number) => {
+      if (g === "benke" || !p) return;
+      const key = `${y}|${p}`;
+      // switchBatch 与下面的 effect 可能同时触发，这里做并发去重
+      if (isProvinceBatchesLoaded(y, p) || batchesInflight.current.has(key))
+        return;
+      batchesInflight.current.add(key);
       setBatchesLoading(true);
       try {
-        const r = await fetch(withSharecode(batchesUrlFor(year)));
-        if (r.ok) {
-          resetBatches();
-          loadBatchesDataset(await r.json());
-          batchesYearRef.current = year;
+        const hit = cachedProvinceBatches(y, p);
+        if (hit) {
+          loadProvinceBatches(hit);
+        } else {
+          const r = await fetch(withSharecode(provinceBatchesUrlFor(y, p)));
+          if (r.ok) loadProvinceBatches(await r.json());
         }
-      } catch {}
-      setBatchesLoading(false);
-    }
+        setBatchesRev((v) => v + 1); // 命令式载入，靠版本号驱动 memo 重算
+      } catch {
+        // 该省无批次数据：保持空态，不阻塞切换
+      } finally {
+        batchesInflight.current.delete(key);
+        setBatchesLoading(false);
+      }
+    },
+    [],
+  );
+
+  const switchBatch = async (g: BatchGroup) => {
+    if (g === batchGroup || batchesLoading) return;
     setBatchGroup(g);
     setSelectedName(null);
+    await loadBatchesFor(g, prov, year);
   };
 
-  // 顶部搜索联动专业：校名命中不足时拉专业数据补结果（专业数据仅 2025）
+  // 已在非本科批时换省/换年：自动补载该省该年的批次包
   useEffect(() => {
-    if (!ready || !prov || majors || year !== 2025) return;
+    if (batchGroup === "benke" || !ready || !prov) return;
+    void loadBatchesFor(batchGroup, prov, year);
+  }, [batchGroup, prov, year, ready, loadBatchesFor]);
+
+  // 顶部搜索联动专业：校名命中不足时拉专业数据补结果
+  // 专业目录只有 2025 版，2026 也复用（搜索命中专业名仍有价值），口径在结果里标注
+  useEffect(() => {
+    if (!ready || !prov || majors) return;
     const q = query.trim();
     if (!q) return;
     let alive = true;
@@ -629,7 +656,7 @@ export default function GaoKaoPage() {
         planDelta: a.planDelta,
       });
     return m;
-  }, [ready, prov, cat, batchGroup, year]);
+  }, [ready, prov, cat, batchGroup, year, batchesRev]);
 
   // 地图画当前省·科类·批次的全部招生院校：区间内按冲稳保着色，
   // 区间外（分数够不着/高出太多）以灰色小点保留显示。
@@ -690,6 +717,7 @@ export default function GaoKaoPage() {
     colorMode,
     filter,
     enriched,
+    batchesRev,
   ]);
 
   // ── 同分去向：你的位次 ±15% 范围内录取的院校 ──
@@ -724,7 +752,7 @@ export default function GaoKaoPage() {
         Math.abs(a.minRank - userRank) - Math.abs(b.minRank - userRank),
     );
     return out;
-  }, [ready, userRank, prov, cat, batchGroup]);
+  }, [ready, userRank, prov, cat, batchGroup, batchesRev]);
 
   const counts = useMemo(() => {
     const c: Record<Tier, number> = { reach: 0, match: 0, safe: 0 };
@@ -753,7 +781,7 @@ export default function GaoKaoPage() {
     if (batchGroup === "zhuanxiang")
       return "专项计划面向农村户籍等特定资格考生";
     return "专科批；冲稳保区间基于你的本科分数会大量超出区间";
-  }, [batchGroup, prov, cat]);
+  }, [batchGroup, prov, cat, batchesRev]);
 
   const rec = useMemo(
     () =>
@@ -766,23 +794,27 @@ export default function GaoKaoPage() {
             batchGroup,
           )
         : null,
-    [ready, scoreDelayed, prov, cat, filter, enriched, batchGroup],
+    [ready, scoreDelayed, prov, cat, filter, enriched, batchGroup, batchesRev],
   );
 
-  // ── 专业级录取数据（按省懒加载，展开详情面板时取） ──
+  // ── 专业级录取数据（按省懒加载，展开详情面板 / 反查 / 志愿表时取） ──
+  // 数据集只有 2025 年版本，2026 年沿用该目录并在界面明示口径（专业设置稳定，
+  // 但分数线是 2025 的）。此前 2026 被硬性拦截，导致详情面板永远停在
+  // 「正在加载专业数据…」——那是死状态，比标注口径更糟。
   const [majors, setMajors] = useState<MajorDataset | null>(null);
+  const [majorsTried, setMajorsTried] = useState(false);
   const [majorsOpen, setMajorsOpen] = useState(false);
   useEffect(() => {
-    if (
-      !ready ||
-      !prov ||
-      (!majorsOpen && view !== "major" && view !== "wish") ||
-      (year !== 2025 && view !== "major")
-    )
-      return; // 2025 文件作专业目录：2026 仅专业反查视图加载（推荐/检索入口）
+    if (!ready || !prov) return;
+    if (!majorsOpen && view !== "major" && view !== "wish") return;
     let alive = true;
     setMajors(null);
-    fetchMajors(prov).then((m) => alive && setMajors(m));
+    setMajorsTried(false);
+    fetchMajors(prov).then((m) => {
+      if (!alive) return;
+      setMajors(m);
+      setMajorsTried(true);
+    });
     return () => {
       alive = false;
     };
@@ -832,7 +864,7 @@ export default function GaoKaoPage() {
       }
     }
     return out;
-  }, [query, ready, prov, cat, batchGroup, scoreDelayed, majors]);
+  }, [query, ready, prov, cat, batchGroup, scoreDelayed, majors, batchesRev]);
 
   const sortList = (list: RecommendItemT[]) => {
     const arr = [...list];
@@ -1055,7 +1087,11 @@ export default function GaoKaoPage() {
           <span className="text-gray-400">
             （{year} 年数据{year === GAOKAO_YEARS[0] ? "（最新）" : ""} ·{" "}
             {provinces.length} 省市 · 覆盖高校 {uniqueSchoolCount} 所 ·
-            GaokaoCompass 非官方数据）
+            非官方数据 ·{" "}
+            <a href="/sources" className="underline hover:text-gray-500">
+              数据来源
+            </a>
+            ）
           </span>
         </p>
       </div>
@@ -1715,7 +1751,9 @@ export default function GaoKaoPage() {
                               if (majors == null)
                                 return (
                                   <div className="px-3 py-4 text-xs text-gray-400">
-                                    正在加载专业数据…
+                                    {majorsTried
+                                      ? "该省暂无专业级数据（专业目录仅覆盖部分省份）"
+                                      : "正在加载专业数据…"}
                                   </div>
                                 );
                               if (!rows?.length)
@@ -1735,6 +1773,14 @@ export default function GaoKaoPage() {
                                       {cleared}
                                     </b>{" "}
                                     个 · 按最低分排序
+                                    {year !== 2025 && (
+                                      <span
+                                        className="ml-1 text-amber-500"
+                                        title="专业级投档线目前只有 2025 年版本"
+                                      >
+                                        （专业目录与分数线为 2025 年口径）
+                                      </span>
+                                    )}
                                   </div>
                                   <ul className="max-h-72 overflow-y-auto divide-y divide-gray-50">
                                     {rows.map((r, i) => {
@@ -2153,16 +2199,16 @@ export default function GaoKaoPage() {
       <div className="mt-6 flex gap-2 items-start text-[11px] text-gray-400 bg-gray-50 border border-gray-200 rounded-xl p-3 leading-relaxed">
         <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
         <span>
-          本页 {year} 年投档线来自{" "}
-          <b className="text-gray-500">{dataSource()}</b>
-          ，一分一段表与本科线来自掌上高考公开静态数据；均为第三方整理的
+          本页 {year} 年数据来自 <b className="text-gray-500">{dataSource()}</b>
+          ，均为第三方整理的
           <strong className="text-gray-500">非官方数据</strong>
-          ，投档线按院校专业组最低分归并；院校排名与层次标签来自软科中国大学排名，
+          ；投档线按院校专业组最低分归并；院校排名与层次标签来自软科中国大学排名，
           学科评估为教育部学位中心第四轮（2017）结果；均仅供演示与参考，
           正式填报请以省级教育考试院官方数据为准。
           部分省份投档表不公布位次，此类位次由一分一段表按投档最低分反推（标
           <span className="text-amber-500">≈</span>
-          ）；其余位次同样是按分数线性插值估算。 地图为 DataV
+          ）；其余位次同样是按分数线性插值估算。专业级数据仅有 2025 年版本（2026
+          年无公开数据源），「专业反查」会明示所用口径。 地图为 DataV
           省级矢量边界（含台湾、南海诸岛），非在线地图服务。
         </span>
       </div>

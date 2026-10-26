@@ -25,6 +25,16 @@ export function batchesUrlFor(year: number): string {
   return `/data/gaokao-${year}-batches.json`;
 }
 
+/**
+ * 单省批次包（5~30KB gzip）：专科/提前批/专项。
+ * 单体批次文件 1.6MB（265KB gzip），切一次「专科批」要解析 1.9 万行，
+ * 实测 2.6s 且网络只占 0.44s，所以按省拆开。
+ */
+export function provinceBatchesUrlFor(year: number, prov: string): string {
+  const slug = PROV_SLUG[prov] ?? encodeURIComponent(prov);
+  return `/data/gaokao/${year}/b/${slug}.json`;
+}
+
 /** 省份清单（1~3KB）：下拉框与统计口径的来源 */
 export function indexUrlFor(year: number): string {
   return `/data/gaokao/${year}/index.json`;
@@ -197,6 +207,8 @@ function clearRuntime() {
   loadedProvinces.clear();
   pkgCache.clear();
   batchIndex = new Map(); // 批次文件按年区分，换年必须清空
+  loadedBatchProvinces.clear();
+  batchPkgCache.clear();
 }
 
 /** 把一个省的投档线并入索引（不做清空，支持逐省累加） */
@@ -457,6 +469,8 @@ export interface BatchesDataset {
 }
 
 let batchIndex = new Map<string, Admission[]>(); // `prov|group|cat`
+const loadedBatchProvinces = new Set<string>(); // `${year}|${prov}`
+const batchPkgCache = new Map<string, ProvinceBatchesPackage>(); // 同上键
 
 /**
  * 位次缺失时按一分一段反推。返回 0 表示该省该科类也没有一分一段，
@@ -483,49 +497,93 @@ function backfillBatchRanks(prov: string) {
   }
 }
 
-/** 合并批次文件（提前批/专项/专科），并补全院校画像 */
-export function loadBatchesDataset(data: BatchesDataset): boolean {
-  if (!data || typeof data !== "object" || !data.provs) return false;
-  batchIndex = new Map();
-  for (const [prov, groups] of Object.entries(data.provs)) {
-    for (const [group, cats] of Object.entries(groups)) {
-      for (const [cat, cd] of Object.entries(cats)) {
-        const rows = (cd.adm ?? []) as AdmRow[];
-        batchIndex.set(
-          `${prov}|${group}|${cat}`,
-          rows.map(([code, name, batch, minScore, minRank]) => {
-            const derived = minRank ? 0 : derivedRank(prov, cat, minScore);
-            return {
-              schoolCode: code,
-              schoolName: name,
-              group: group as BatchGroup,
-              prov,
-              year: data.year,
-              cat,
-              batch,
-              minScore,
-              minRank: minRank || derived,
-              rankDerived: !minRank && derived > 0,
-            };
-          }),
-        );
-        for (const [code, name, , , , loc, flags] of rows) {
-          if (!schoolIndex.has(name))
-            schoolIndex.set(name, {
-              code,
-              name,
-              prov: loc,
-              is985: (flags & 1) !== 0,
-              is211: (flags & 2) !== 0,
-              isDFC:
-                (flags & 1) !== 0 || (flags & 2) !== 0 || DFC_EXTRA.has(name),
-              isPrivate: (flags & 4) !== 0,
-            });
-        }
+/** 把一批「组 → 科类 → adm」并进批次索引（支持逐省累加） */
+function indexBatches(
+  prov: string,
+  groups: Record<string, Record<string, RealCatData>>,
+  year: number,
+) {
+  for (const [group, cats] of Object.entries(groups)) {
+    for (const [cat, cd] of Object.entries(cats)) {
+      const rows = (cd.adm ?? []) as AdmRow[];
+      batchIndex.set(
+        `${prov}|${group}|${cat}`,
+        rows.map(([code, name, batch, minScore, minRank]) => {
+          const derived = minRank ? 0 : derivedRank(prov, cat, minScore);
+          return {
+            schoolCode: code,
+            schoolName: name,
+            group: group as BatchGroup,
+            prov,
+            year,
+            cat,
+            batch,
+            minScore,
+            minRank: minRank || derived,
+            rankDerived: !minRank && derived > 0,
+          };
+        }),
+      );
+      for (const [code, name, , , , loc, flags] of rows) {
+        if (!schoolIndex.has(name))
+          schoolIndex.set(name, {
+            code,
+            name,
+            prov: loc,
+            is985: (flags & 1) !== 0,
+            is211: (flags & 2) !== 0,
+            isDFC:
+              (flags & 1) !== 0 || (flags & 2) !== 0 || DFC_EXTRA.has(name),
+            isPrivate: (flags & 4) !== 0,
+          });
       }
     }
   }
+}
+
+/** 合并整份批次文件（兜底/测试用；线上走 loadProvinceBatches 按省加载） */
+export function loadBatchesDataset(data: BatchesDataset): boolean {
+  if (!data || typeof data !== "object" || !data.provs) return false;
+  batchIndex = new Map();
+  loadedBatchProvinces.clear();
+  for (const [prov, groups] of Object.entries(data.provs)) {
+    indexBatches(prov, groups, data.year);
+    loadedBatchProvinces.add(`${data.year}|${prov}`);
+  }
   return true;
+}
+
+/** 单省批次包（懒加载文件结构） */
+export interface ProvinceBatchesPackage {
+  v: number;
+  year: number;
+  prov: string;
+  groups: Record<string, Record<string, RealCatData>>;
+}
+
+/** 合并单省批次包，不触碰其他省的数据 */
+export function loadProvinceBatches(pkg: ProvinceBatchesPackage): boolean {
+  if (!pkg || typeof pkg !== "object" || !pkg.groups) return false;
+  if (!REAL || pkg.year !== REAL.year) return false;
+  const key = `${pkg.year}|${pkg.prov}`;
+  if (loadedBatchProvinces.has(key)) return true;
+  indexBatches(pkg.prov, pkg.groups, pkg.year);
+  loadedBatchProvinces.add(key);
+  batchPkgCache.set(key, pkg);
+  return true;
+}
+
+/** 该省该年批次数据是否已载入 */
+export function isProvinceBatchesLoaded(year: number, prov: string): boolean {
+  return loadedBatchProvinces.has(`${year}|${prov}`);
+}
+
+/** 已下载过的批次包（切回该省零请求） */
+export function cachedProvinceBatches(
+  year: number,
+  prov: string,
+): ProvinceBatchesPackage | null {
+  return batchPkgCache.get(`${year}|${prov}`) ?? null;
 }
 
 export function isBatchesLoaded(): boolean {
@@ -535,6 +593,8 @@ export function isBatchesLoaded(): boolean {
 /** 切换数据年份时清空批次索引，强制按新年份重新懒加载 */
 export function resetBatches(): void {
   batchIndex = new Map();
+  loadedBatchProvinces.clear();
+  batchPkgCache.clear();
 }
 
 export function admissionsFor(
@@ -616,6 +676,7 @@ const PROV_SLUG: Record<string, string> = {
   辽宁: "liaoning",
   内蒙古: "neimenggu",
   宁夏: "ningxia",
+  青海: "qinghai",
   陕西: "shaanxi",
   山东: "shandong",
   上海: "shanghai",

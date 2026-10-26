@@ -7,8 +7,10 @@ import {
   controlLine,
   curveFor,
   getSchool,
+  isProvinceBatchesLoaded,
   isProvinceLoaded,
   loadIndex,
+  loadProvinceBatches,
   loadProvincePackage,
   rankForScore,
   totalSchools,
@@ -110,5 +112,43 @@ describe("分省数据包（真实产物）", () => {
       }
     }
     expect(missing).toEqual([]);
+  });
+});
+
+describe("批次按省拆分（真实产物）", () => {
+  const index = read("gaokao/2026/index.json");
+  const hunan = read("gaokao/2026/b/hunan.json");
+  const whole = read("gaokao-2026-batches.json");
+
+  it("单省批次包可独立载入，且行数与原单体文件一致", () => {
+    loadIndex(index);
+    expect(isProvinceBatchesLoaded(2026, "湖南")).toBe(false);
+    expect(loadProvinceBatches(hunan)).toBe(true);
+    expect(isProvinceBatchesLoaded(2026, "湖南")).toBe(true);
+
+    const rows = admissionsFor("湖南", "物理类", "zhuanke");
+    const expected = (whole.provs["湖南"]?.zhuanke?.["物理类"]?.adm ?? [])
+      .length;
+    expect(expected).toBeGreaterThan(0);
+    expect(rows.length).toBe(expected);
+    expect(rows[0].group).toBe("zhuanke");
+  });
+
+  it("批次包之间互不污染：未载入的省仍为空", () => {
+    expect(admissionsFor("广东", "物理类", "zhuanke").length).toBe(0);
+    loadProvinceBatches(read("gaokao/2026/b/guangdong.json"));
+    expect(admissionsFor("广东", "物理类", "zhuanke").length).toBeGreaterThan(
+      0,
+    );
+    expect(admissionsFor("湖南", "物理类", "zhuanke").length).toBeGreaterThan(
+      0,
+    );
+  });
+
+  it("批次位次同样由一分一段反推（不依赖加载顺序）", () => {
+    loadProvincePackage(read("gaokao/2026/hunan.json"));
+    const rows = admissionsFor("湖南", "物理类", "zhuanke");
+    expect(rows.some((r) => r.minRank > 0)).toBe(true);
+    expect(rows.every((r) => r.minRank === 0 || r.rankDerived)).toBe(true);
   });
 });
