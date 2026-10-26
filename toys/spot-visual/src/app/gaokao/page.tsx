@@ -369,8 +369,16 @@ export default function GaoKaoPage() {
   }, [year]);
 
   // ── 空闲时预取另一年份：切年份时直接命中缓存 ──
+  // 省流量/弱网不预取：另一年份 ~410KB(gzip)，别和用户真正要看的内容抢带宽。
   useEffect(() => {
     if (!ready) return;
+    const conn = (
+      navigator as Navigator & {
+        connection?: { saveData?: boolean; effectiveType?: string };
+      }
+    ).connection;
+    if (conn?.saveData) return;
+    if (conn?.effectiveType && /2g|slow-2g|3g/.test(conn.effectiveType)) return;
     const other = GAOKAO_YEARS.find((y) => y !== year);
     if (!other || cachedDataset(other)) return;
     const id = setTimeout(() => {
