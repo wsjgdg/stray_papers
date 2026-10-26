@@ -69,7 +69,7 @@
  * _queueTimer 类定时器在 deactivate 统一清理。CSS 原样（选择器全 id 锚定，
  * mode 间 DOM 不同屏共存，无串台）。
  * ========================================================================== */
-import { QEC_DEFAULTS, QEC_CODES, QEC_NOISE, QEC_SPECTRA, qecTrial, qecStream, qecEnsemble, qecSweep, qecLogicalRate, qecLogicalRateLab, qecThreshold, qecSyndromeTable, qecCircuit, qecExactPL, qecFaultSurvey, qecNormRd, qecNormN, qecVoteErr, qecUncodedSpec, qecUncodedRate, qecUncodedThreshold, qecDpOverBudget } from '../physics/qec.js';
+import { QEC_DEFAULTS, QEC_CODES, QEC_NOISE, QEC_SPECTRA, qecTrial, qecStream, qecEnsemble, qecSweep, qecLogicalRate, qecLogicalRateLab, qecThreshold, qecSyndromeTable, qecCircuit, qecExactPL, qecFaultSurvey, qecNormRd, qecNormN, qecVoteErr, qecUncodedSpec, qecUncodedRate, qecUncodedThreshold, qecDpOverBudget, qecDpHeavy, qecDpStates } from '../physics/qec.js';
 import { mulberry32 } from '../physics/qcircuit.js';
 import { LiveDriver } from './live.js';
 
@@ -448,15 +448,22 @@ export class QecApp {
       /* gate 模式的 p 网格显式给到 0.55：数值阈值 ≈0.5（PLexact(1/2)≡1/2，
          单谱精确 / 退极化 ~1e-4 偏移），默认网格只到 0.3 会落在根之外 */
       /* R110：n=5·rd≥3（nq=17，~19ms/试验）重配置——扫描点数 12→6、每点样本
-         900/600→120，一次重扫 ~14s（其余口径逐位保持 R108/R109 不变） */
+         900/600→120，一次重扫 ~14s（其余口径逐位保持 R108/R109 不变）。
+         R113：**门分支的 DP 才是门级扫描的真实成本**（n=7·rd=1 的 nq=13 不算
+         重配置、态矢 MC 很快，但它的 DP 是 5.3s/点 ⟹ 18 点 = 95s，比 n=5·rd=3
+         的 6 点 54s 还慢）⟹ 点数改由 `qecDpHeavy` 定：DP 状态数 ≥2^17 ⟹ 6 点。
+         n=3/5·rd=1（≤2^15）逐位不变；n=9 门级 DP 超预算 ⟹ qecDpStates 仍 ≥2^17
+         ⟹ 也是 6 点（每点只跑 MC，快）。 */
       const hv = this.heavy();
+      const dpHv = qecDpHeavy(this.cfg());
+      const fewPts = hv || dpHv;
       const sweepCfg = {
         code: this.state.code, noise: this.state.noise, spectrum: this.state.spectrum, noisyPhase: this.state.noisyPhase,
         rd: this.state.rd, n: this.state.n,
         trials: hv ? 120 : Math.max(600, Math.round(this.state.trials / 3)), seed: 101, sweepTrials: hv ? 120 : 600,
       };
       if (this.state.noise === 'gate'){
-        sweepCfg.ps = Array.from({ length: hv ? 6 : 18 }, (_, i) => 0.002 * Math.pow(0.55 / 0.002, i / (hv ? 5 : 17)));
+        sweepCfg.ps = Array.from({ length: fewPts ? 6 : 18 }, (_, i) => 0.002 * Math.pow(0.55 / 0.002, i / (fewPts ? 5 : 17)));
       } else if (this.state.noise === 'phys'){
         /* R108：phys 复用 iid 的 12 点网格（0.002…0.5），MC 900 次/点；
            物理参数随面板走（γ/λ>0 时 PLexact=NaN，曲线只画 MC） */
@@ -707,10 +714,19 @@ export class QecApp {
           ? '<br><span style="color:var(--amber);font-weight:600">样本上限</span> nq=' + this.nqOf() + ' ⟹ 态矢 2^' + this.nqOf() +
             '，每试验 ~19ms：样本数封顶 ' + this.trialsMax() + '、扫描 6 点（统计精度让位于响应速度，直方图标题显示真实样本数）。'
           : '') +
+        /* R113：DP 能跑但每点很贵（n=7·rd=1：2^21 状态 / 5.3s）⟹ 扫描降到 6 点。
+           注意它**不是**重配置（nq=13 的态矢 MC 很快）——贵的是精确解不是 MC，
+           两条降级线独立触发、可同时出现。 */
+        (!qecDpOverBudget(this.cfg()) && qecDpHeavy(this.cfg())
+          ? '<br><span style="color:var(--amber);font-weight:600">精确解偏贵</span> n=' + N + '·k=' + qecNormRd(s.rd) +
+            ' 的门分支让精确解状态空间到 ~' + (qecDpStates(this.cfg()) / 1e6).toFixed(1) + '×10⁶（每点数秒）⟹ ' +
+            '扫描从 18 点降到 6 点；精确解本身仍然零统计误差（与 MC 4σ 内一致）。'
+          : '') +
         /* R112：DP 状态空间超预算 ⟹ PLexact=NaN，曲线只剩 MC（诚实降级） */
         (qecDpOverBudget(this.cfg())
           ? '<br><span style="color:var(--amber);font-weight:600">DP 超预算</span> n=' + N + '·k=' + qecNormRd(s.rd) +
-            ' 的门分支把 DP-over-frames 状态空间推到 ~10⁸（实测 Map 爆容量）⟹ 精确解不跑，' +
+            ' 的门分支把 DP-over-frames 状态空间推到 ~' + (qecDpStates(this.cfg()) / 1e6).toFixed(0) + '×10⁶' +
+            '（n=9 实测 122s 后 Map 爆容量）⟹ 精确解不跑，' +
             'P_L 精确行不画、HUD 显示「—」；MC 曲线与统计口径不受影响（4σ 内与 DP 一致的口径见 pot 套件）。'
           : '');
     }

@@ -1185,20 +1185,34 @@ export function qecSweep(cfg = {}){
   return out;
 }
 
-/* R112：DP-over-frames 状态空间预算。末态键 = 数据帧（x/z 各 n 位 ⟹ ≤2^{2n}）
+/* R112/R113：DP-over-frames 状态空间预算。末态键 = 数据帧（x/z 各 n 位 ⟹ ≤2^{2n}）
    × 投票字段（nStab·VB 位 ⟹ ≤2^{(n−1)·VB}），门分支（gate / phys·pd>0·λ>0）
    下真实状态数逼近这个上界（ancilla 帧位测后即弃，只余 ±1 个在测 ancilla 的
-   2 位 ⟹ 额外 ×4）。实测（ depolar、extract 段）：
-     n=3 rd≤5 ⟹ ≤2^14 状态 / 毫秒级 · n=5 rd=1 ⟹ 2^16 / 126ms
-     n=5 rd=3 ⟹ 2^20 ≈ 10⁶ / 8.9s（R110 已 shipping 的重配置行为，保留）
-     n=7 rd=1 ⟹ 2^22 ≈ 4×10⁶ / 5.0s · n=9 rd=1 ⟹ 2^28 ≈ 3×10⁸
-       ⟹ 实测 122s 后 Map maximum size exceeded（RangeError，页面直接崩）
-   ⟹ 预算外**不跑**、直接返 NaN（与 γ>0 同一诚实口径：页面显示「无精确解，
-   仅 MC」）。iid / phys 无门分支（pd=λ=0）不乘门分支熵 ⟹ 状态数 ≈2^n×投票，
+   2 位 ⟹ 额外 ×2）。
+   ⚠ R113：R112 首版把在测 ancilla 的余位按 ×4 估，与实测不符——**实测峰值
+   一律是 2^{2n}·2^{(n−1)VB}·2**（dbg113 逐步插桩，depolar / extract 段）：
+
+     n=3 rd=1 ⟹ 2^9   = 512       / 毫秒级      （旧估 2^10）
+     n=5 rd=1 ⟹ 2^15   = 32768     / 123ms       （旧估 2^16）
+     n=5 rd=3 ⟹ 786432 ≈ 0.75·2^20 / 9.0s        （旧估 2^20，略低估 1.5×）
+     n=7 rd=1 ⟹ 2^21   = 2097152   / 5.3s        （旧估 2^22 ⟹ 被 1.2e6 误杀）
+     n=9 rd=1 ⟹ ~2^27                            ⟹ 122s 后 Map maximum size
+                                                    exceeded（页面崩，真崩）
+
+   ⟹ R113 把因子改成 ×2 并把 cap 提到 2.5e6：**n=7·rd=1 门级恢复精确解**
+   （2.1e6 < 2.5e6，5.3s），n=9（1.3e8）与 n=5·rd=5（8.4e6）仍拒。
+   估算本身有 ±1.5× 误差 ⟹ 除前置估算外再加**运行时硬顶**（每步检查
+   dist.size，超 cap 立即返 NaN）：估算偏乐观也不会重演「122s 后崩页」。
+   iid / phys 无门分支（pd=λ=0）不乘门分支熵 ⟹ 状态数 ≈2^n×投票，
    n=9 也只有 7ms（实测），不受本预算约束。 */
-export const QEC_DP_STATE_CAP = 1.2e6;
-/* 状态空间上界（0 = 无门分支，不受预算约束；Infinity = 结构性不可能——调用方
-   会先被 qecExec 的 nq>18 守卫拦下，DP 本身不走态矢） */
+export const QEC_DP_STATE_CAP = 2.5e6;
+/* R113：DP「每点很贵」阈值（不是预算——只用来决定扫描点数：昂贵的配置少扫
+   几点）。n=7·rd=1 门级 nq=13 **不算重配置**（态矢 MC 很快），但它的 DP 是
+   5.3s/点 ⟹ 18 点扫描 = 95s，比 n=5·rd=3（重配置、6 点、54s）还慢。真正的
+   驱动量是 DP 状态数，不是 nq ⟹ 单独设一个阈值 2^17（n=5·rd=1 的 2^15 恰好
+   在其下，18 点不变；n=5·rd=3 与 n=7·rd=1 在其上，降到 6 点）。 */
+export const QEC_DP_HEAVY = 1 << 17;
+/* 状态空间上界（0 = 无门分支，不受预算约束） */
 export function qecDpStates(cfg = {}){
   const c = { ...QEC_DEFAULTS, ...cfg };
   const circ = qecCircuit(c.code, c);
@@ -1212,11 +1226,16 @@ export function qecDpStates(cfg = {}){
   }
   if (!branching) return 0;
   const VB = Math.max(1, Math.ceil(Math.log2(rd + 1)));
-  return Math.pow(2, 2 * circ.n) * Math.pow(2, (circ.n - 1) * VB) * 4;
+  return Math.pow(2, 2 * circ.n) * Math.pow(2, (circ.n - 1) * VB) * 2;
 }
 export function qecDpOverBudget(cfg = {}){
   const est = qecDpStates(cfg);
   return est > QEC_DP_STATE_CAP;
+}
+/* R113：扫描点数降级判据（与预算无关：超预算 ⟹ NaN 根本不跑；本函数针对
+   「能跑但每点很贵」的配置） */
+export function qecDpHeavy(cfg = {}){
+  return qecDpStates(cfg) >= QEC_DP_HEAVY;
 }
 
 /* ============================================================================
@@ -1289,6 +1308,10 @@ export function qecExactPL(cfg = {}){
   let dist = new Map([[keyOf(0, 0, 0), 1]]);
   const add = (m, k, v) => m.set(k, (m.get(k) || 0) + v);
   for (const o of circ.ops){
+    /* R113：运行时硬顶。前置估算有 ±1.5× 误差（实测 n=5·rd=3 低估 1.5×），
+       这道闸是「绝不重演 n=9 的 122s 后 Map 爆容量崩页」的最后保险：中途
+       超容量立即放弃、返 NaN（页面转「仅 MC」，与预算外同一诚实口径）。 */
+    if (dist.size > QEC_DP_STATE_CAP) return NaN;
     if (o.op === 'noise'){
       if (gate) continue;                    /* 门级模式：没有静态块（phys 保留） */
       /* i.i.d./phys：逐数据比特独立以 p 施加 spec.err */
