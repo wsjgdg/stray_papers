@@ -5,7 +5,7 @@ import { WishTable } from "./views/wishtable";
 import { TrendSpark } from "./views/trendspark";
 import { ScoreDistCurve, AdmitProbSignal } from "./views/scoredistcurve";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   GraduationCap,
@@ -32,7 +32,6 @@ import {
   GAOKAO_ENRICH_URL,
   GAOKAO_YEARS,
   activeProvinces,
-  activeSchools,
   admissionsFor,
   controlLine,
   curveFor,
@@ -43,15 +42,20 @@ import {
   getSchool,
   isBatchesLoaded,
   batchesUrlFor,
-  cachedDataset,
-  rememberDataset,
-  dataUrlFor,
+  cachedIndex,
+  rememberIndex,
+  indexUrlFor,
+  provinceUrlFor,
+  isProvinceLoaded,
+  cachedProvincePackage,
+  loadProvincePackage,
+  loadIndex,
+  totalSchools,
   resetBatches,
   loadBatchesDataset,
   type MajorDataset,
   type MajorRow,
   loadEnrichDataset,
-  loadFullDataset,
   type BatchGroup,
   type HistoryDataset,
   rankForScore,
@@ -290,45 +294,55 @@ export default function GaoKaoPage() {
       (w) => w.name === name && w.group === group && w.major === major,
     );
 
-  const ready = dataState === "ready";
+  // indexReady = 省份清单（几 KB）就绪；provReady = 当前省数据包就绪。
+  // 页面骨架只等清单，切省/切年都在已挂载的页面上换数据，不再整页重挂。
+  const indexReady = dataState === "ready";
+  const [provReady, setProvReady] = useState(false);
+  const ready = indexReady && provReady; // 所有数据派生 memo 的门槛
   selectedNameRef.value = selectedName;
-  const provinces = useMemo(() => (ready ? activeProvinces() : []), [ready]);
-  const schools = useMemo(() => (ready ? activeSchools() : []), [ready]);
-  // 去重院校数：同一高校在各省有独立招生代码，schools 按代码计数会重复
+  const provinces = useMemo(
+    () => (indexReady ? activeProvinces() : []),
+    [indexReady, year],
+  );
   const uniqueSchoolCount = useMemo(
-    () => new Set(schools.map((s) => s.name)).size,
-    [schools],
+    () => (indexReady ? totalSchools() : 0),
+    [indexReady, year],
   );
 
-  // ── 加载数据文件（按年份；增强数据可选且与年份无关，缓存后重放） ──
-  // 切换年份不再把整页打回骨架：已有数据时页面保持可交互，只打「切换中」标记；
-  // 命中内存缓存则同步切换，连网络都不用等。
+  // 增强数据（软科排名/学科评估）：与年份无关，只拉一次；每次新增省数据后重放，
+  // 因为 loadEnrichDataset 只覆盖"当时已存在"的院校。
+  const enrichLoadingRef = useRef(false);
+  const applyEnrich = useCallback(() => {
+    if (enrichRawRef.current) {
+      loadEnrichDataset(enrichRawRef.current as never);
+      setEnriched(true);
+      return;
+    }
+    if (enrichLoadingRef.current) return;
+    enrichLoadingRef.current = true;
+    fetch(withSharecode(GAOKAO_ENRICH_URL))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((e) => {
+        if (e) {
+          enrichRawRef.current = e;
+          if (loadEnrichDataset(e)) setEnriched(true);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        enrichLoadingRef.current = false;
+      });
+  }, []);
+
+  // ── 阶段一：年份清单（1~3KB）──
   useEffect(() => {
     let alive = true;
-    const applyEnrich = () => {
-      if (enrichRawRef.current) {
-        loadEnrichDataset(enrichRawRef.current as never);
-        setEnriched(true);
-        return;
-      }
-      fetch(withSharecode(GAOKAO_ENRICH_URL))
-        .then((r) => (r.ok ? r.json() : null))
-        .then((e) => {
-          if (alive && e) {
-            enrichRawRef.current = e;
-            if (loadEnrichDataset(e)) setEnriched(true);
-          }
-        })
-        .catch(() => {});
-    };
-
     resetBatches();
     batchesYearRef.current = null;
+    setProvReady(false);
 
-    // 注意：增强数据必须在 loadFullDataset 之后应用——两者都写 schoolIndex，
-    // 先增强再重建会被后者的 rebuild 覆盖掉 985/211/软科排名。
-    const cached = cachedDataset(year);
-    if (cached && loadFullDataset(cached)) {
+    const cachedIdx = cachedIndex(year);
+    if (cachedIdx && loadIndex(cachedIdx)) {
       setDataState("ready");
       setSwitching(false);
       applyEnrich();
@@ -340,14 +354,14 @@ export default function GaoKaoPage() {
     if (loadedOnceRef.current) setSwitching(true);
     else setDataState("loading");
 
-    fetch(withSharecode(dataUrlFor(year)))
+    fetch(withSharecode(indexUrlFor(year)))
       .then((r) =>
         r.ok ? r.json() : Promise.reject(new Error(String(r.status))),
       )
-      .then((d) => {
+      .then((idx) => {
         if (!alive) return;
-        if (loadFullDataset(d)) {
-          rememberDataset(year, d);
+        if (loadIndex(idx)) {
+          rememberIndex(year, idx);
           loadedOnceRef.current = true;
           setDataState("ready");
           setSwitching(false);
@@ -368,33 +382,44 @@ export default function GaoKaoPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [year]);
 
-  // ── 空闲时预取另一年份：切年份时直接命中缓存 ──
-  // 省流量/弱网不预取：另一年份 ~410KB(gzip)，别和用户真正要看的内容抢带宽。
+  // ── 阶段二：当前省数据包（按需，命中缓存零请求）──
   useEffect(() => {
-    if (!ready) return;
-    const conn = (
-      navigator as Navigator & {
-        connection?: { saveData?: boolean; effectiveType?: string };
-      }
-    ).connection;
-    if (conn?.saveData) return;
-    if (conn?.effectiveType && /2g|slow-2g|3g/.test(conn.effectiveType)) return;
-    const other = GAOKAO_YEARS.find((y) => y !== year);
-    if (!other || cachedDataset(other)) return;
-    const id = setTimeout(() => {
-      fetch(withSharecode(dataUrlFor(other)))
-        .then((r) => (r.ok ? r.json() : null))
-        .then((d) => {
-          if (d?.provs) rememberDataset(other, d);
-        })
-        .catch(() => {});
-    }, 1500);
-    return () => clearTimeout(id);
-  }, [ready, year]);
+    if (!indexReady || !prov) return;
+    let alive = true;
+    if (isProvinceLoaded(prov)) {
+      setProvReady(true);
+      return;
+    }
+    const pkg = cachedProvincePackage(year, prov);
+    if (pkg && loadProvincePackage(pkg)) {
+      applyEnrich();
+      setProvReady(true);
+      return;
+    }
+    setProvReady(false);
+    fetch(withSharecode(provinceUrlFor(year, prov)))
+      .then((r) =>
+        r.ok ? r.json() : Promise.reject(new Error(String(r.status))),
+      )
+      .then((data) => {
+        if (!alive) return;
+        if (loadProvincePackage(data)) applyEnrich();
+        setProvReady(true); // 失败也放行，页面退化为空态而不是卡死
+      })
+      .catch(() => {
+        if (alive) setProvReady(true);
+      });
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [indexReady, year, prov]);
 
-  // ── 数据就绪后还原位置：URL 参数 > localStorage > 默认 ──
+  // ── 清单就绪后还原位置：URL 参数 > localStorage > 默认 ──
+  // 注意门槛是 indexReady 而不是 ready：ready 依赖 prov，prov 又要靠这里还原，
+  // 用 ready 会形成死锁（永远不选省、永远不加载省数据包）。
   useEffect(() => {
-    if (!ready) return;
+    if (!indexReady) return;
     const provs = activeProvinces();
     if (!provs.length) {
       setDataState("fail");
@@ -425,7 +450,7 @@ export default function GaoKaoPage() {
     setProv(hit.name);
     setCat(cats.includes(c) ? c : cats[0]);
     if (Number.isFinite(s) && s >= 200 && s <= 750) setScore(Math.round(s));
-  }, [ready]);
+  }, [indexReady]);
 
   // ── 位置变化：同步 URL + localStorage ──
   useEffect(() => {
@@ -1299,6 +1324,14 @@ export default function GaoKaoPage() {
           )}
         </div>
       </div>
+
+      {/* 省数据包加载提示：页面已挂载，只有数据区在等 */}
+      {indexReady && !provReady && (
+        <div className="mb-3 inline-flex items-center gap-2 text-xs text-indigo-500">
+          <span className="w-3 h-3 rounded-full border-2 border-indigo-200 border-t-indigo-500 animate-spin" />
+          正在加载 {prov} 的投档线…
+        </div>
+      )}
 
       {/* 批次切换（年份已上移到输入卡片，属同级筛选条件） */}
       <div className="mb-3 flex flex-wrap items-center gap-1.5 text-xs">

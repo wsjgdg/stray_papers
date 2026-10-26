@@ -37,10 +37,10 @@ const MODULES = [
   },
 ];
 
-// 悬停预热：目标页首屏依赖的静态数据先下载进浏览器缓存，
-// 点击进入时不再等 410KB 的投档线数据集（首次冷边缘可达数十秒）。
+// 悬停预热：目标页首屏依赖的静态数据先下载进浏览器缓存。
+// 分省投放后投档线按需拉取，这里只预热「年份清单 + 软科增强」这两个小文件。
 const WARM_URLS: Record<string, string[]> = {
-  "/gaokao": ["/data/gaokao-2026.json", "/data/gaokao-enrich.json"],
+  "/gaokao": ["/data/gaokao/2026/index.json", "/data/gaokao-enrich.json"],
 };
 
 const warmed = new Set<string>();

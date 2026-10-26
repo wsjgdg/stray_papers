@@ -25,17 +25,26 @@ export function batchesUrlFor(year: number): string {
   return `/data/gaokao-${year}-batches.json`;
 }
 
-// ── 年份数据集缓存 ──
-// 每个年份的原始 JSON ~2.4MB（gzip 后 ~410KB），重新下载是年份切换「整页闪一下」
-// 的根因。这里按年份缓存已解析对象，切回已加载过的年份走同步路径，零请求。
-const datasetCache = new Map<number, RealDataset>();
-
-export function cachedDataset(year: number): RealDataset | null {
-  return datasetCache.get(year) ?? null;
+/** 省份清单（1~3KB）：下拉框与统计口径的来源 */
+export function indexUrlFor(year: number): string {
+  return `/data/gaokao/${year}/index.json`;
 }
 
-export function rememberDataset(year: number, data: RealDataset) {
-  datasetCache.set(year, data);
+/** 单省数据包（15~60KB gzip）：只含该省全部科类的投档线与一分一段 */
+export function provinceUrlFor(year: number, prov: string): string {
+  const slug = PROV_SLUG[prov] ?? encodeURIComponent(prov);
+  return `/data/gaokao/${year}/${slug}.json`;
+}
+
+// ── 年份清单缓存 ──
+const indexCache = new Map<number, GaokaoIndex>();
+
+export function cachedIndex(year: number): GaokaoIndex | null {
+  return indexCache.get(year) ?? null;
+}
+
+export function rememberIndex(year: number, idx: GaokaoIndex) {
+  indexCache.set(year, idx);
 }
 export const GAOKAO_ENRICH_URL = "/data/gaokao-enrich.json";
 
@@ -144,71 +153,165 @@ const DFC_EXTRA = new Set([
 ]);
 
 // ── 运行时数据与索引 ──
+// 数据按省拆分投放（public/data/gaokao/{year}/{slug}.json）：
+//   INDEX  省份/科类清单（1~3KB），决定下拉框与统计口径
+//   REAL   当前年份的聚合视图，按访问过的省份逐步填充
+// 索引表只增不减：用户翻过的省份留在内存里，回切零成本。
 let REAL: RealDataset | null = null;
+let INDEX: GaokaoIndex | null = null;
 let schoolIndex = new Map<string, School>();
 let admIndex = new Map<string, Admission[]>(); // "prov|cat" → 投档线列表
 let curveIndex = new Map<string, [number, number][]>(); // "prov|cat" → 一分一段
+const loadedProvinces = new Set<string>(); // `${year}|${prov}`
+const pkgCache = new Map<string, ProvincePackage>();
 
-function buildIndexes(data: RealDataset) {
+/** 单省清单：只含控制线与行数，不含具体投档线 */
+export interface GaokaoIndex {
+  v: number;
+  year: number;
+  src: string;
+  provs: Record<
+    string,
+    { cats: Record<string, { ctrl?: number; rows: number }> }
+  >;
+  totalRows: number;
+  totalSchools: number;
+}
+
+/** 单省数据包（一个省的全部科类） */
+export interface ProvincePackage {
+  v: number;
+  year: number;
+  src: string;
+  prov: string;
+  cats: Record<string, RealCatData>;
+}
+
+function clearRuntime() {
+  REAL = null;
+  INDEX = null;
   schoolIndex = new Map();
   admIndex = new Map();
   curveIndex = new Map();
-  for (const [prov, cats] of Object.entries(data.provs)) {
-    for (const [cat, cd] of Object.entries(cats)) {
-      admIndex.set(
-        `${prov}|${cat}`,
-        cd.adm.map(
-          ([
-            code,
-            name,
-            batch,
-            minScore,
-            minRank,
-            ,
-            ,
-            planCount,
-            scoreDelta,
-            planDelta,
-          ]) => ({
-            schoolCode: code,
-            schoolName: name,
-            group: "benke" as const,
-            prov,
-            year: data.year,
-            cat,
-            batch,
-            minScore,
-            minRank,
-            planCount: planCount ?? undefined,
-            scoreDelta: scoreDelta ?? undefined,
-            planDelta: planDelta ?? undefined,
-          }),
-        ),
-      );
-      if (cd.curve?.length) curveIndex.set(`${prov}|${cat}`, cd.curve);
-      for (const [code, name, , , , loc, flags] of cd.adm) {
-        // 招生代码跨省冲突（实测 1.4 万处），院校全局键 = 校名
-        if (!schoolIndex.has(name))
-          schoolIndex.set(name, {
-            code,
-            name,
-            prov: loc,
-            is985: (flags & 1) !== 0,
-            is211: (flags & 2) !== 0,
-            isDFC:
-              (flags & 1) !== 0 || (flags & 2) !== 0 || DFC_EXTRA.has(name),
-            isPrivate: (flags & 4) !== 0,
-          });
-      }
+  loadedProvinces.clear();
+  pkgCache.clear();
+}
+
+/** 把一个省的投档线并入索引（不做清空，支持逐省累加） */
+function indexProvince(
+  prov: string,
+  cats: Record<string, RealCatData>,
+  year: number,
+) {
+  for (const [cat, cd] of Object.entries(cats)) {
+    admIndex.set(
+      `${prov}|${cat}`,
+      (cd.adm ?? []).map(
+        ([
+          code,
+          name,
+          batch,
+          minScore,
+          minRank,
+          ,
+          ,
+          planCount,
+          scoreDelta,
+          planDelta,
+        ]) => ({
+          schoolCode: code,
+          schoolName: name,
+          group: "benke" as const,
+          prov,
+          year,
+          cat,
+          batch,
+          minScore,
+          minRank,
+          planCount: planCount ?? undefined,
+          scoreDelta: scoreDelta ?? undefined,
+          planDelta: planDelta ?? undefined,
+        }),
+      ),
+    );
+    if (cd.curve?.length) curveIndex.set(`${prov}|${cat}`, cd.curve);
+    for (const [code, name, , , , loc, flags] of cd.adm ?? []) {
+      // 招生代码跨省冲突（实测 1.4 万处），院校全局键 = 校名
+      if (!schoolIndex.has(name))
+        schoolIndex.set(name, {
+          code,
+          name,
+          prov: loc,
+          is985: (flags & 1) !== 0,
+          is211: (flags & 2) !== 0,
+          isDFC: (flags & 1) !== 0 || (flags & 2) !== 0 || DFC_EXTRA.has(name),
+          isPrivate: (flags & 4) !== 0,
+        });
     }
   }
 }
 
-/** 页面挂载后载入生成的 JSON；结构非法返回 false */
+/** 载入某年份的省份清单（几 KB）。换年份会自动清空上一年的数据。 */
+export function loadIndex(idx: GaokaoIndex): boolean {
+  if (!idx || typeof idx !== "object" || !idx.provs) return false;
+  if (INDEX?.year !== idx.year) clearRuntime();
+  INDEX = idx;
+  if (!REAL) REAL = { v: idx.v, year: idx.year, src: idx.src, provs: {} };
+  return true;
+}
+
+/** 该省数据是否已就绪 */
+export function isProvinceLoaded(prov: string): boolean {
+  return !!REAL && loadedProvinces.has(`${REAL.year}|${prov}`);
+}
+
+/** 已下载过的省数据包（再次切换直接复用，零请求） */
+export function cachedProvincePackage(
+  year: number,
+  prov: string,
+): ProvincePackage | null {
+  return pkgCache.get(`${year}|${prov}`) ?? null;
+}
+
+/** 合并单省数据包到运行时索引 */
+export function loadProvincePackage(pkg: ProvincePackage): boolean {
+  if (!pkg || typeof pkg !== "object" || !pkg.cats) return false;
+  if (!REAL || pkg.year !== REAL.year) return false;
+  const key = `${pkg.year}|${pkg.prov}`;
+  if (loadedProvinces.has(key)) return true;
+  indexProvince(pkg.prov, pkg.cats, pkg.year);
+  REAL.provs[pkg.prov] = pkg.cats;
+  loadedProvinces.add(key);
+  pkgCache.set(key, pkg);
+  return true;
+}
+
+/** 整份数据集一次性载入（测试与兜底用）；结构非法返回 false */
 export function loadFullDataset(data: RealDataset): boolean {
   if (!data || typeof data !== "object" || !data.provs) return false;
+  clearRuntime();
   REAL = data;
-  buildIndexes(data);
+  const provs: GaokaoIndex["provs"] = {};
+  let totalRows = 0;
+  const names = new Set<string>();
+  for (const [prov, cats] of Object.entries(data.provs)) {
+    indexProvince(prov, cats, data.year);
+    loadedProvinces.add(`${data.year}|${prov}`);
+    provs[prov] = { cats: {} };
+    for (const [cat, cd] of Object.entries(cats)) {
+      provs[prov].cats[cat] = { ctrl: cd.ctrl, rows: cd.adm?.length ?? 0 };
+      totalRows += cd.adm?.length ?? 0;
+      for (const row of cd.adm ?? []) names.add(row[1]);
+    }
+  }
+  INDEX = {
+    v: data.v,
+    year: data.year,
+    src: data.src,
+    provs,
+    totalRows,
+    totalSchools: names.size,
+  };
   return true;
 }
 
@@ -289,21 +392,39 @@ export function isRealData(): boolean {
 }
 
 export function dataYear(): number | null {
-  return REAL?.year ?? null;
+  return INDEX?.year ?? REAL?.year ?? null;
 }
 
 export function dataSource(): string {
-  return REAL?.src ?? "";
+  return INDEX?.src ?? REAL?.src ?? "";
 }
 
 // ── 读取接口（数据就绪前返回空值） ──
 
 export function activeProvinces(): { name: string; cats: string[] }[] {
+  // 优先用年份清单：分省投放时 REAL.provs 只含已下载的省，
+  // 下拉框必须展示全部可选省份。
+  if (INDEX) {
+    return Object.entries(INDEX.provs).map(([name, v]) => ({
+      name,
+      cats: Object.keys(v.cats),
+    }));
+  }
   if (!REAL) return [];
   return Object.entries(REAL.provs).map(([name, cats]) => ({
     name,
     cats: Object.keys(cats),
   }));
+}
+
+/** 该年份覆盖的院校总数（来自清单，未下载省份也计入） */
+export function totalSchools(): number {
+  return INDEX?.totalSchools ?? schoolIndex.size;
+}
+
+/** 该年份的投档线总行数（来自清单） */
+export function totalRows(): number {
+  return INDEX?.totalRows ?? 0;
 }
 
 export function activeSchools(): School[] {
@@ -456,6 +577,8 @@ const PROV_SLUG: Record<string, string> = {
   陕西: "shaanxi",
   山东: "shandong",
   上海: "shanghai",
+  山西: "shanxi",
+  西藏: "xizang",
   四川: "sichuan",
   天津: "tianjin",
   新疆: "xinjiang",
