@@ -14,7 +14,12 @@ import {
   MarkLineComponent,
   MarkPointComponent,
 } from "echarts/components";
-import { CanvasRenderer } from "echarts/renderers";
+// 两种渲染器都注册：
+// - canvas：口味图谱等静态散点图（绘制一次不再变化，canvas 更省 DOM）
+// - svg：中国地图。地图 roam 时 canvas 需要把 2.5 万个顶点逐帧重新
+//   rebuildPath + fill/stroke（实测 p50 21ms/帧、拖动明显掉帧）；
+//   SVG 只要给外层 <g> 写一次 transform，几何本身不重绘。
+import { CanvasRenderer, SVGRenderer } from "echarts/renderers";
 
 echarts.use([
   MapChart,
@@ -29,6 +34,7 @@ echarts.use([
   MarkLineComponent,
   MarkPointComponent,
   CanvasRenderer,
+  SVGRenderer,
 ]);
 
 export default echarts;
