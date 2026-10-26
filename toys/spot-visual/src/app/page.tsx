@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -65,6 +65,7 @@ import {
   DISSUASION_TAGS,
   getPinyinKeys,
 } from "@/lib/spot-data"; // 保留：cachePhotoForCategory 缓存机制
+import { loadPoiPhotos, peekPoiPhotos } from "@/lib/poi-photos";
 import { withSharecode } from "@/lib/share-link";
 import { PROVINCE_FOODS } from "@/lib/food-data";
 import { CITY_POI_PACKS } from "@/lib/city-pois.generated";
@@ -698,7 +699,29 @@ function SpotDetailDialog() {
   const [photoIdx, setPhotoIdx] = useState(0);
   const [showDissuasionEditor, setShowDissuasionEditor] = useState(false);
   const spot = selectedSpot;
-  const allPhotos = spot ? [spot.image, ...(spot.photos || [])] : [];
+  // 城市包 POI 的相册多图不在主包里（见 lib/poi-photos.ts），打开弹窗时才拉。
+  // 拉取失败/未就绪时只显示封面，不阻塞弹窗。
+  const [extraPhotos, setExtraPhotos] = useState<string[]>([]);
+  const photosKey = spot?.photosKey;
+  useEffect(() => {
+    if (!photosKey) {
+      setExtraPhotos([]);
+      return;
+    }
+    let alive = true;
+    setExtraPhotos(peekPoiPhotos(photosKey) ?? []);
+    loadPoiPhotos().then((m) => {
+      if (alive) setExtraPhotos(m[photosKey] ?? []);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [photosKey]);
+  const allPhotos = spot
+    ? [spot.image, ...(spot.photos || []), ...extraPhotos].filter(
+        (p, i, arr) => p && arr.indexOf(p) === i,
+      )
+    : [];
 
   // Reset photo index when spot changes
   const [prevId, setPrevId] = useState<string | null>(null);
