@@ -5,8 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "tsc --noEmit && npm run build:deploy",
-    "build:deploy": "next build && node scripts/build-dish-manifest.mjs && node scripts/inject-sharecode.mjs",
-    "start": "npm run build:deploy && node server.mjs",
+    "build:deploy": "next build && node scripts/build-dish-manifest.mjs && node scripts/inject-sharecode.mjs && node scripts/mark-built.mjs",
+    "start": "node scripts/start-prod.mjs",
+    "start:force": "npm run build:deploy && node server.mjs",
     "sharecode": "node scripts/inject-sharecode.mjs",
     "lint": "next lint",
     "photos": "node scripts/build-dish-manifest.mjs",

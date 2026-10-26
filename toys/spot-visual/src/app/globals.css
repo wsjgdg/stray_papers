@@ -158,3 +158,109 @@
 :root {
   --nav-h: 52px;
 }
+
+/* ════════════════════════════════════════════════════════════════
+   启动动画 —— 用 body 的伪元素做，纯 CSS，不占任何 DOM 节点
+   ────────────────────────────────────────────────────────────────
+   为什么不用 React 组件：试过两版（客户端组件 + useState 定时器、
+   服务端组件纯 CSS），都被 React 的渲染流程吃掉——响应里能查到类名，
+   但 DOM 里始终没有这个节点。伪元素由浏览器直接按样式表绘制，
+   跟 React 无关，绝不会被水合流程摘掉。
+   时间轴：0.25s 淡入 → 保持到 1.1s → 1.6s 完全淡出并隐藏。
+   （内容其实早就在下面渲染好了，这层只盖住首屏那几百毫秒的空档）
+   ════════════════════════════════════════════════════════════════ */
+@keyframes boot-ring {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+@keyframes boot-pulse {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes boot-layer {
+  0%,
+  12% {
+    opacity: 0;
+  }
+  35%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+body::before {
+  content: "🧭  华夏探索 · 正在载入三张地图…";
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 96px;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  color: #94a3b8;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 55%, #ecfdf5 100%);
+  animation: boot-layer 1.6s ease-in-out forwards;
+  pointer-events: none;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 46px;
+  height: 46px;
+  margin: -34px 0 0 -23px;
+  border-radius: 9999px;
+  border: 3px solid #d1fae5;
+  border-top-color: #10b981;
+  animation:
+    boot-ring 0.9s linear infinite,
+    boot-layer 1.6s ease-in-out forwards;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::after {
+    animation: boot-layer 0.8s ease-in-out forwards;
+  }
+}
+
+/* 骨架屏流光（数据加载态） */
+@keyframes skeleton-sheen {
+  100% {
+    transform: translateX(100%);
+  }
+}
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #eef2f6;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.75),
+    transparent
+  );
+  animation: skeleton-sheen 1.4s ease-in-out infinite;
+}
