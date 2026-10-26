@@ -131,6 +131,15 @@ const ROWS = [
     note: "第三方商业排名，代表性有限，排名≠办学质量全部。合并进志愿探索详情面板与筛选。",
   },
   {
+    layer: "志愿探索（院校地图坐标）",
+    source:
+      "掌上高考公开静态数据 school/list_v2.json（院校所在省市）+ 仓库内 DataV 地级边界中心点",
+    license: "第三方整理的非官方静态数据；DataV GeoAtlas 边界",
+    fields:
+      "586 所院校中 569 所的坐标（地级市精度；北京/上海/天津/重庆取市辖区中心）；经 scripts/fetch-school-coords.mjs 生成 src/lib/school-coords.generated.ts",
+    note: "掌上高考的院校信息只有 city_id / county_id，不含经纬度，本项目也未接入任何地图 API 或高德 key，因此不做门牌级地理编码 —— 坐标精度为地级市，直辖市为市辖区。同一点上的院校在地图上按小圆环展开，圆环位置本身不代表真实校园位置，只用于「这所院校大概在哪」的空间感知。17 所院校（如中国石油大学、绍兴文理学院）在掌上高考院校库里同名歧义或缺失，回落到省份中心点。",
+  },
+  {
     layer: "志愿探索（学科实力）",
     source:
       "教育部学位与研究生教育发展中心 第四轮学科评估（2017 公布；经 GitHub Johnnydaszhu/2017ChinaUniversityDisciplineAssessment 转录）",

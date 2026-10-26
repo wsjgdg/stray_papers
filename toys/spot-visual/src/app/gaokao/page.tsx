@@ -72,6 +72,9 @@ import { withSharecode } from "@/lib/share-link";
 // 注意：坐标必须从 china-centers 取（纯字面量）。
 // 若从 china-geo 取，会顺着它的顶层进口把 582KB 的 china.json 打进本页首屏包。
 import { PROVINCE_CENTERS } from "@/lib/china-centers";
+// 院校级坐标（地级市/市辖区精度），由 scripts/fetch-school-coords.mjs 生成。
+// 之前所有院校都画在省会中心点上，同省几十所挤成一坨。
+import { SCHOOL_COORDS } from "@/lib/school-coords.generated";
 import dynamic from "next/dynamic";
 import type { ChinaMapProps } from "@/components/map/china-map";
 
@@ -162,13 +165,12 @@ function tierOf(gap: number): Tier | "none" {
   return "none";
 }
 
-function jitter(code: string): [number, number] {
+/** 名字 → 稳定相位（0-360），用于环形散布时错开不同城市的环 */
+function hashHue(code: string): number {
   let h = 0;
   for (let i = 0; i < code.length; i++)
-    h = (h * 31 + code.charCodeAt(i)) % 100000;
-  const dx = ((h % 100) / 100 - 0.5) * 1.1;
-  const dy = ((((h / 100) | 0) % 100) / 100 - 0.5) * 1.1;
-  return [dx, dy];
+    h = (h * 31 + code.charCodeAt(i)) % 36000;
+  return h % 360;
 }
 
 function levelColor(s: {
@@ -681,16 +683,47 @@ export default function GaoKaoPage() {
   // 区间外（分数够不着/高出太多）以灰色小点保留显示。
   const points = useMemo(() => {
     if (!ready) return [];
-    return admissionsFor(prov, cat, batchGroup)
+    const rows = admissionsFor(prov, cat, batchGroup)
       .map((a) => {
         const s = getSchool(a.schoolName);
         if (!s) return null;
         if (!matchFilter(s, filter)) return null;
-        const center = PROVINCE_CENTERS[s.prov];
+        // 坐标优先级：院校级（地级市/市辖区精度）> 省份中心点。
+        // 早先所有院校都画在省会中心点上，同省几十所挤成一坨，看着像坐标坏了。
+        const center = SCHOOL_COORDS[s.name] ?? PROVINCE_CENTERS[s.prov];
         if (!center) return null;
+        return { a, s, center };
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null);
+
+    // 同一点上的院校做环形散布：k 个点排成一圈，半径随 k 增长但受控，
+    // 既不会叠成一个点，也不会超出该市的实际范围太多。
+    const perPoint = new Map<string, number>();
+    for (const { center } of rows) {
+      const k = `${center[0]},${center[1]}`;
+      perPoint.set(k, (perPoint.get(k) ?? 0) + 1);
+    }
+    const cursor = new Map<string, number>();
+
+    return rows
+      .map(({ a, s, center }) => {
+        const key = `${center[0]},${center[1]}`;
+        const total = perPoint.get(key) ?? 1;
+        const idx = cursor.get(key) ?? 0;
+        cursor.set(key, idx + 1);
+        // 单点不动；多点用小圆环。半径 ~0.05°×√k（≈5km×√k），再叠加一点
+        // 名字哈希的相位，避免不同城市的环长得一模一样。
+        let dx = 0;
+        let dy = 0;
+        if (total > 1) {
+          const phase = (hashHue(s.name) / 360) * Math.PI * 2;
+          const ang = phase + (idx / total) * Math.PI * 2;
+          const r = 0.05 * Math.sqrt(total);
+          dx = Math.cos(ang) * r;
+          dy = Math.sin(ang) * r;
+        }
         const gap = scoreDelayed - a.minScore;
         const tier = tierOf(gap);
-        const [dx, dy] = jitter(s.name);
         const active = s.name === selectedName;
         const levelText = s.is985
           ? "985"
@@ -724,7 +757,6 @@ export default function GaoKaoPage() {
           },
         };
       })
-      .filter((x): x is NonNullable<typeof x> => x !== null)
       .sort((a, b) => pointPriority(a) - pointPriority(b));
   }, [
     ready,
@@ -1528,6 +1560,9 @@ export default function GaoKaoPage() {
               </button>
               <span className="text-[10px] text-gray-400 bg-white/80 rounded px-1.5 py-0.5">
                 滚轮缩放 {MAP_ZOOM_MIN}×–{MAP_ZOOM_MAX}× / 拖拽 · 点省份切换
+              </span>
+              <span className="text-[10px] text-gray-400 bg-white/80 rounded px-1.5 py-0.5">
+                点位精确到地级市
               </span>
             </div>
           </section>
