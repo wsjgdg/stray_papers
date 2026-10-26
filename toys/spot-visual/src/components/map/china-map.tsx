@@ -48,6 +48,11 @@ export interface ChinaMapProps {
   maxZoom?: number;
   /** 递增即复位视野（回到初始全景，丢弃用户缩放/平移） */
   resetSignal?: number;
+  /**
+   * 缩放倍数变化回调（仅缩放手势触发，平移不触发）。
+   * 供上层按「缩放档位」调整图层聚合粒度，例如把挨得太近的散点合并成气泡。
+   */
+  onZoomChange?: (zoom: number) => void;
 }
 
 /**
@@ -65,6 +70,7 @@ export default function ChinaMap({
   minZoom,
   maxZoom,
   resetSignal,
+  onZoomChange,
 }: ChinaMapProps) {
   const elRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<echarts.ECharts | null>(null);
@@ -72,6 +78,8 @@ export default function ChinaMap({
   cbRef.current = onSelect;
   const zoomRef = useRef({ min: minZoom, max: maxZoom });
   zoomRef.current = { min: minZoom, max: maxZoom };
+  const zoomCbRef = useRef(onZoomChange);
+  zoomCbRef.current = onZoomChange;
   const optionRef = useRef(option);
   optionRef.current = option;
   const resetSeen = useRef(resetSignal);
@@ -86,6 +94,7 @@ export default function ChinaMap({
       { animation: false, ...(optionRef.current as object) } as EChartsOption,
       { notMerge: true },
     );
+    zoomCbRef.current?.(1);
   }, [resetSignal]);
 
   useEffect(() => {
@@ -139,6 +148,15 @@ export default function ChinaMap({
       else chart.setOption({ series: [{ zoom: fixed }] });
     };
 
+    // 缩放档位变化时通知外部（用于图层聚合粒度），频次由 level 去重控制
+    const reportZoom = () => {
+      const cb = zoomCbRef.current;
+      if (!cb) return;
+      const { geo: geoZoom, series: seriesZoom } = readZoom();
+      const cur = typeof geoZoom === "number" ? geoZoom : seriesZoom;
+      if (typeof cur === "number" && Number.isFinite(cur)) cb(cur);
+    };
+
     let roamRaf = 0;
     const onRoam = (payload?: unknown) => {
       const p = payload as { zoom?: number } | undefined;
@@ -147,6 +165,7 @@ export default function ChinaMap({
       if (roamRaf) return;
       roamRaf = requestAnimationFrame(() => {
         roamRaf = 0;
+        reportZoom();
         clampZoom();
       });
     };

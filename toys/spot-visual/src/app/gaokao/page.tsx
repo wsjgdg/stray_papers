@@ -135,6 +135,15 @@ type ViewKey = (typeof VIEWS)[number];
 const MAP_ZOOM_MIN = 1;
 const MAP_ZOOM_MAX = 16;
 
+// 地图聚合网格边长（经纬度），索引 = 缩放档位（1×→2×→4×→8×→16×）。
+//
+// 注意这里是「每档 ÷4」而不是 ÷2：气泡的像素大小基本固定，而放大一倍后每度
+// 占的像素也翻倍——若网格只缩小一半，气泡在屏幕上仍然一样挤。÷4 才能让
+// 格子占的像素随缩放减半，真正把气泡拆开。
+// 4×（0.2°≈20km）时基本做到「一市一泡」；再往里拆已经到坐标精度上限
+// （院校坐标只到地级市），不会更细。
+const MAP_CELLS = [3.2, 0.8, 0.2, 0.05, 0.0125];
+
 // 院校层次着色（地图第二种着色模式）
 const LEVEL_COLOR = {
   is985: "#DC2626",
@@ -150,27 +159,11 @@ const LEVEL_LEGEND: [keyof typeof LEVEL_COLOR, string][] = [
 ];
 
 // 绘制优先级：区间外垫底，保→稳→冲依次抬高，选中置顶（后画者覆盖先画者）
-function pointPriority(p: { tier: Tier | "none"; schoolName: string }): number {
-  const t = p.tier;
-  const base = t === "none" ? 0 : t === "safe" ? 1 : t === "match" ? 2 : 3;
-  return p.schoolName === selectedNameRef.value ? 10 : base;
-}
-// 供排序函数读取当前选中（避免 points memo 依赖抖动）
-const selectedNameRef = { value: null as string | null };
-
 function tierOf(gap: number): Tier | "none" {
   if (gap >= -18 && gap <= 0) return "reach";
   if (gap > 0 && gap <= 22) return "match";
   if (gap > 22 && gap <= 55) return "safe";
   return "none";
-}
-
-/** 名字 → 稳定相位（0-360），用于环形散布时错开不同城市的环 */
-function hashHue(code: string): number {
-  let h = 0;
-  for (let i = 0; i < code.length; i++)
-    h = (h * 31 + code.charCodeAt(i)) % 36000;
-  return h % 360;
 }
 
 function levelColor(s: {
@@ -225,6 +218,10 @@ export default function GaoKaoPage() {
   const [sameRankOpen, setSameRankOpen] = useState(false); // 同分去向展开全部
   const [colorMode, setColorMode] = useState<"tier" | "level">("tier");
   const [mapReset, setMapReset] = useState(0); // 地图复位视野信号
+  // 地图缩放档位：0=1×、1=2×…4=16×。只在地图通知的档位真的变化时才 setState，
+  // 避免缩放手势每帧触发 React 重渲染。
+  const [mapZoomLevel, setMapZoomLevel] = useState(0);
+  const [bucketKey, setBucketKey] = useState<string | null>(null); // 点开的聚合气泡
 
   // 视图 → URL（replaceState，不新增历史栈；地图为默认值时不写参数）
   // 首次挂载先把 URL 里的 ?view= 应用到状态，之后才单向回写，避免互相覆盖。
@@ -328,7 +325,7 @@ export default function GaoKaoPage() {
   const indexReady = dataState === "ready" && indexYear === year;
   const [provReady, setProvReady] = useState(false);
   const ready = indexReady && provReady; // 所有数据派生 memo 的门槛
-  selectedNameRef.value = selectedName;
+
   const provinces = useMemo(
     () => (indexReady ? activeProvinces() : []),
     [indexReady, year],
@@ -679,97 +676,177 @@ export default function GaoKaoPage() {
     return m;
   }, [ready, prov, cat, batchGroup, year, batchesRev]);
 
-  // 地图画当前省·科类·批次的全部招生院校：区间内按冲稳保着色，
-  // 区间外（分数够不着/高出太多）以灰色小点保留显示。
-  const points = useMemo(() => {
+  // 地图画当前省·科类·批次的全部招生院校。
+  //
+  // 为什么是「聚合气泡」而不是一个个点：我们的坐标精度只到地级市（直辖市为
+  // 市辖区），同一座城市几十所院校本来就是同一个位置。之前用小圆环把它们摊开，
+  // 既仍然重叠，又等于伪造了位置。现在按网格聚合成气泡——一个格一个点，
+  // 大小 = 格内院校数，格内只有 1 所时才是真正的院校点位；
+  // 缩放越大网格越细，气泡自动裂开（见 MAP_CELLS）。
+  const buckets = useMemo(() => {
     if (!ready) return [];
-    const rows = admissionsFor(prov, cat, batchGroup)
-      .map((a) => {
-        const s = getSchool(a.schoolName);
-        if (!s) return null;
-        if (!matchFilter(s, filter)) return null;
-        // 坐标优先级：院校级（地级市/市辖区精度）> 省份中心点。
-        // 早先所有院校都画在省会中心点上，同省几十所挤成一坨，看着像坐标坏了。
-        const center = SCHOOL_COORDS[s.name] ?? PROVINCE_CENTERS[s.prov];
-        if (!center) return null;
-        return { a, s, center };
-      })
-      .filter((x): x is NonNullable<typeof x> => x !== null);
+    const cell = MAP_CELLS[Math.min(mapZoomLevel, MAP_CELLS.length - 1)];
+    type Acc = {
+      key: string;
+      sx: number;
+      sy: number;
+      count: number;
+      tierCount: Record<Tier | "none", number>;
+      levelCount: Record<string, number>;
+      provCount: Record<string, number>;
+      names: { name: string; gap: number; tier: Tier | "none" }[];
+    };
+    const acc = new Map<string, Acc>();
 
-    // 同一点上的院校做环形散布：k 个点排成一圈，半径随 k 增长但受控，
-    // 既不会叠成一个点，也不会超出该市的实际范围太多。
-    const perPoint = new Map<string, number>();
-    for (const { center } of rows) {
-      const k = `${center[0]},${center[1]}`;
-      perPoint.set(k, (perPoint.get(k) ?? 0) + 1);
+    for (const a of admissionsFor(prov, cat, batchGroup)) {
+      const s = getSchool(a.schoolName);
+      if (!s) continue;
+      if (!matchFilter(s, filter)) continue;
+      // 坐标优先级：院校级（地级市/市辖区）> 省份中心点
+      const center = SCHOOL_COORDS[s.name] ?? PROVINCE_CENTERS[s.prov];
+      if (!center) continue;
+      const key = `${Math.floor(center[0] / cell)}|${Math.floor(center[1] / cell)}`;
+      let e = acc.get(key);
+      if (!e) {
+        e = {
+          key,
+          sx: 0,
+          sy: 0,
+          count: 0,
+          tierCount: { reach: 0, match: 0, safe: 0, none: 0 },
+          levelCount: {},
+          provCount: {},
+          names: [],
+        };
+        acc.set(key, e);
+      }
+      const gap = scoreDelayed - a.minScore;
+      const tier = tierOf(gap);
+      const lv: keyof typeof LEVEL_COLOR = s.is985
+        ? "is985"
+        : s.is211
+          ? "is211"
+          : s.isDFC
+            ? "isDFC"
+            : "normal";
+      e.sx += center[0];
+      e.sy += center[1];
+      e.count++;
+      e.tierCount[tier]++;
+      e.levelCount[lv] = (e.levelCount[lv] ?? 0) + 1;
+      e.provCount[s.prov] = (e.provCount[s.prov] ?? 0) + 1;
+      e.names.push({ name: s.name, gap, tier });
     }
-    const cursor = new Map<string, number>();
 
-    return rows
-      .map(({ a, s, center }) => {
-        const key = `${center[0]},${center[1]}`;
-        const total = perPoint.get(key) ?? 1;
-        const idx = cursor.get(key) ?? 0;
-        cursor.set(key, idx + 1);
-        // 单点不动；多点用小圆环。半径 ~0.05°×√k（≈5km×√k），再叠加一点
-        // 名字哈希的相位，避免不同城市的环长得一模一样。
-        let dx = 0;
-        let dy = 0;
-        if (total > 1) {
-          const phase = (hashHue(s.name) / 360) * Math.PI * 2;
-          const ang = phase + (idx / total) * Math.PI * 2;
-          const r = 0.05 * Math.sqrt(total);
-          dx = Math.cos(ang) * r;
-          dy = Math.sin(ang) * r;
-        }
-        const gap = scoreDelayed - a.minScore;
-        const tier = tierOf(gap);
-        const active = s.name === selectedName;
-        const levelText = s.is985
-          ? "985"
-          : s.is211
-            ? "211"
-            : s.isDFC
-              ? "双一流"
-              : "其他";
-        const out = tier === "none";
+    const topKey = (m: Record<string, number>) =>
+      Object.entries(m).sort((x, y) => y[1] - x[1])[0]?.[0];
+
+    return [...acc.values()]
+      .map((e) => {
+        // 气泡配色规则：只在「有分差可用」的院校里取主导档位。
+        // 一个气泡里往往九成都是分数够不着的院校，若按全量取众数，整张图会退化
+        // 成一片灰色（区间外）；改成「这里面谁够得着、以哪档为主」才有信息量。
+        const inRange =
+          e.tierCount.reach + e.tierCount.match + e.tierCount.safe;
+        const tier: Tier | "none" =
+          inRange === 0
+            ? "none"
+            : (
+                [
+                  ["reach", e.tierCount.reach],
+                  ["match", e.tierCount.match],
+                  ["safe", e.tierCount.safe],
+                ] as [Tier, number][]
+              ).sort((x, y) => y[1] - x[1])[0][0];
+        // 层次取「最高档」而不是众数：一眼看出这附近有没有 985/211
+        const LEVEL_RANK: Record<keyof typeof LEVEL_COLOR, number> = {
+          is985: 3,
+          is211: 2,
+          isDFC: 1,
+          normal: 0,
+        };
+        const level =
+          (Object.keys(e.levelCount) as (keyof typeof LEVEL_COLOR)[]).sort(
+            (x, y) => LEVEL_RANK[y] - LEVEL_RANK[x],
+          )[0] ?? "normal";
         return {
-          name: s.name,
-          value: [center[0] + dx, center[1] + dy] as [number, number],
-          schoolName: s.name,
-          gap,
+          key: e.key,
+          center: [e.sx / e.count, e.sy / e.count] as [number, number],
+          count: e.count,
           tier,
-          levelText,
-          rank: s.rank,
-          planCount: a.planCount,
-          symbolSize: active ? 22 : out ? 9 : 14,
-          itemStyle: {
-            color: out
-              ? "#94A3B8"
-              : colorMode === "tier"
-                ? TIER_COLOR[tier]
-                : levelColor(s),
-            opacity: out ? 0.95 : 1,
-            borderColor: active ? "#0F172A" : "#ffffff",
-            borderWidth: active ? 2.5 : out ? 0.8 : 1.2,
-            shadowBlur: out ? 0 : 5,
-            shadowColor: "rgba(15,23,42,0.28)",
-          },
+          /** 气泡内最高院校层次（用于「院校层次」着色模式） */
+          level,
+          prov: topKey(e.provCount) ?? "",
+          inRange,
+          names: e.names.sort((a, b) => a.gap - b.gap),
         };
       })
-      .sort((a, b) => pointPriority(a) - pointPriority(b));
+      .sort((a, b) => a.count - b.count);
   }, [
     ready,
     prov,
     cat,
     batchGroup,
     scoreDelayed,
-    selectedName,
-    colorMode,
     filter,
     enriched,
     batchesRev,
+    mapZoomLevel,
   ]);
+
+  const points = useMemo(
+    () =>
+      buckets.map((b) => {
+        const single = b.count === 1;
+        const out = b.tier === "none";
+        const active = single && b.names[0]?.name === selectedName;
+        // 面积随数量增长，但用对数压缩，避免一个 200 所的巨泡吃掉整张图
+        const size = single
+          ? active
+            ? 22
+            : out
+              ? 9
+              : 14
+          : Math.min(46, 10 + 5.2 * Math.log2(b.count));
+        const color =
+          colorMode === "tier"
+            ? out
+              ? "#94A3B8"
+              : TIER_COLOR[b.tier as Tier]
+            : (LEVEL_COLOR[b.level] ?? "#94A3B8");
+        return {
+          name: single ? b.names[0].name : `${b.prov} · ${b.count} 所`,
+          value: b.center,
+          bucketKey: b.key,
+          count: b.count,
+          schoolName: single ? b.names[0].name : undefined,
+          symbolSize: size,
+          label: {
+            show: !single,
+            position: "inside" as const,
+            formatter: String(b.count),
+            color: "#ffffff",
+            fontSize: b.count >= 100 ? 9 : 10,
+            fontWeight: 700,
+          },
+          itemStyle: {
+            color,
+            opacity: single && out ? 0.95 : 1,
+            borderColor: active ? "#0F172A" : "#ffffff",
+            borderWidth: active ? 2.5 : single ? (out ? 0.8 : 1.2) : 1.6,
+            shadowBlur: single && out ? 0 : 6,
+            shadowColor: "rgba(15,23,42,0.28)",
+          },
+        };
+      }),
+    [buckets, colorMode, selectedName],
+  );
+
+  /** 当前点开的聚合气泡（count > 1 时才用），null = 未选中 */
+  const activeBucket = useMemo(
+    () => buckets.find((b) => b.key === bucketKey) ?? null,
+    [buckets, bucketKey],
+  );
 
   // ── 同分去向：你的位次 ±15% 范围内录取的院校 ──
   // 无「报考热度」原始数据，用招生计划数（planCount）作代理：
@@ -805,15 +882,18 @@ export default function GaoKaoPage() {
     return out;
   }, [ready, userRank, prov, cat, batchGroup, batchesRev]);
 
+  // 图例计数按「院校」而不是按「气泡」统计（一个气泡里可能几十所）
   const counts = useMemo(() => {
     const c: Record<Tier, number> = { reach: 0, match: 0, safe: 0 };
     let out = 0;
-    for (const p of points as any[]) {
-      if (p.tier === "none") out++;
-      else c[p.tier as Tier]++;
+    for (const b of buckets) {
+      for (const n of b.names) {
+        if (n.tier === "none") out++;
+        else c[n.tier as Tier]++;
+      }
     }
     return { ...c, out };
-  }, [points]);
+  }, [buckets]);
 
   // 批次提示：原文很长，收进 ⓘ 的 title，避免每次换省都把控件带挤到换行
   const batchHint = useMemo(() => {
@@ -1073,11 +1153,34 @@ export default function GaoKaoPage() {
     };
   }, [points, colorMode]);
 
+  // 地图缩放 → 聚合档位。只在档位（1×/2×/4×/8×/16×）真的跨界时才 setState。
+  const handleMapZoom = useCallback((z: number) => {
+    const lv = Math.max(
+      0,
+      Math.min(MAP_CELLS.length - 1, Math.round(Math.log2(Math.max(1, z)))),
+    );
+    setMapZoomLevel((prev) => (prev === lv ? prev : lv));
+  }, []);
+
   const onSelect = (p: any) => {
-    if (p?.seriesType === "scatter" && p?.data?.schoolName) {
-      setSelectedName(
-        p.data.schoolName === selectedName ? null : p.data.schoolName,
-      );
+    // 聚合气泡：格内多于 1 所 → 右侧列出这批院校；只有 1 所 → 直接看详情
+    if (p?.seriesType === "scatter" && p?.data?.bucketKey) {
+      const data = p.data as {
+        bucketKey: string;
+        count: number;
+        schoolName?: string;
+      };
+      if (data.count > 1) {
+        setBucketKey((prev) =>
+          prev === data.bucketKey ? null : data.bucketKey,
+        );
+        setSelectedName(null);
+      } else if (data.schoolName) {
+        setSelectedName(
+          data.schoolName === selectedName ? null : data.schoolName,
+        );
+        setBucketKey(null);
+      }
       return;
     }
     // geo 区域点击：切换招生省份
@@ -1098,11 +1201,25 @@ export default function GaoKaoPage() {
   const selTier = selAdm ? tierOf(selGap) : "none";
 
   if (dataState === "loading") {
+    // 骨架屏而不是一个转圈：数据包按省懒加载，先给出「页面长什么样」的预期，
+    // 比空白 + spinner 更不像卡死。
     return (
-      <div className="max-w-[1400px] mx-auto px-4 py-6">
-        <div className="bg-white rounded-2xl border border-gray-200 h-[420px] flex flex-col items-center justify-center gap-3 text-gray-400">
-          <div className="w-8 h-8 rounded-full border-2 border-gray-200 border-t-indigo-500 animate-spin" />
-          <p className="text-sm">正在加载 {year} 年投档线数据…</p>
+      <div className="max-w-[1400px] mx-auto px-4 py-6 space-y-4">
+        <div className="flex items-center gap-2 text-sm text-gray-400">
+          <div className="w-4 h-4 rounded-full border-2 border-gray-200 border-t-indigo-500 animate-spin" />
+          正在加载 {year} 年投档线数据…
+        </div>
+        <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="skeleton h-10 rounded-lg" />
+            ))}
+          </div>
+          <div className="skeleton h-24 rounded-xl" />
+        </div>
+        <div className="grid lg:grid-cols-[1fr_380px] gap-5">
+          <div className="skeleton h-[420px] rounded-2xl" />
+          <div className="skeleton h-[300px] rounded-2xl" />
         </div>
       </div>
     );
@@ -1506,6 +1623,7 @@ export default function GaoKaoPage() {
               minZoom={MAP_ZOOM_MIN}
               maxZoom={MAP_ZOOM_MAX}
               resetSignal={mapReset}
+              onZoomChange={handleMapZoom}
             />
             <div className="absolute left-3 bottom-3 flex flex-wrap gap-2 bg-white/85 backdrop-blur-sm rounded-lg border border-gray-200 px-2.5 py-2">
               {colorMode === "tier"
@@ -1551,7 +1669,11 @@ export default function GaoKaoPage() {
                 {colorMode === "tier" ? "冲稳保" : "院校层次"}着色
               </button>
               <button
-                onClick={() => setMapReset((n) => n + 1)}
+                onClick={() => {
+                  setMapReset((n) => n + 1);
+                  setBucketKey(null);
+                  setSelectedName(null);
+                }}
                 title="回到中国全景（缩放 1×、居中）"
                 className="flex items-center gap-1 text-[11px] font-medium text-gray-600 bg-white/85 backdrop-blur-sm rounded-lg border border-gray-200 px-2 py-1 hover:bg-gray-50 transition-colors"
               >
@@ -1562,7 +1684,7 @@ export default function GaoKaoPage() {
                 滚轮缩放 {MAP_ZOOM_MIN}×–{MAP_ZOOM_MAX}× / 拖拽 · 点省份切换
               </span>
               <span className="text-[10px] text-gray-400 bg-white/80 rounded px-1.5 py-0.5">
-                点位精确到地级市
+                地级市聚合 · 放大可拆开
               </span>
             </div>
           </section>
@@ -1894,15 +2016,73 @@ export default function GaoKaoPage() {
                   selGap={selGap}
                 />
               </motion.div>
+            ) : activeBucket ? (
+              /* 聚合气泡：格内院校清单 */
+              <motion.div
+                key={activeBucket.key}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="flex items-start gap-2 mb-1">
+                  <h2 className="text-lg font-bold text-gray-900">
+                    {activeBucket.prov} · {activeBucket.count} 所院校
+                  </h2>
+                  <button
+                    onClick={() => setBucketKey(null)}
+                    className="ml-auto text-[11px] text-gray-400 hover:text-gray-600"
+                  >
+                    关闭
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 mb-3 leading-relaxed">
+                  这些院校在同一块网格里（当前缩放档位），不是同一个校园。
+                  放大地图可以继续把它们拆开。
+                </p>
+                <ul className="space-y-1 max-h-[420px] overflow-y-auto pr-1">
+                  {activeBucket.names.slice(0, 60).map((n) => (
+                    <li key={n.name}>
+                      <button
+                        onClick={() => setSelectedName(n.name)}
+                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                      >
+                        <span
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{
+                            backgroundColor:
+                              n.tier === "none"
+                                ? "#94A3B8"
+                                : TIER_COLOR[n.tier as Tier],
+                          }}
+                        />
+                        <span className="text-xs text-gray-700 truncate">
+                          {n.name}
+                        </span>
+                        <span className="ml-auto text-[11px] text-gray-400 shrink-0">
+                          {n.tier === "none"
+                            ? ""
+                            : n.gap <= 0
+                              ? `差 ${-n.gap}`
+                              : `超 ${n.gap}`}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                {activeBucket.names.length > 60 && (
+                  <p className="text-[11px] text-gray-400 mt-2">
+                    仅显示前 60 所，其余请放大或切到「冲稳保清单」
+                  </p>
+                )}
+              </motion.div>
             ) : (
               <div className="text-center py-10">
                 <SchoolIcon className="w-10 h-10 text-gray-300 mx-auto mb-3" />
                 <p className="text-sm font-medium text-gray-600 mb-1">
-                  点击地图上的院校点位
+                  点击地图上的气泡查看该地院校
                 </p>
                 <p className="text-xs text-gray-400 leading-relaxed">
-                  点位按「冲 / 稳 /
-                  保」着色，右侧显示投档线与位次详情；完整清单请切到「冲稳保清单」。
+                  气泡里的数字是这附近的院校数量，点开可看清单；单个点位点开是
+                  该院校的投档线详情。完整清单请切到「冲稳保清单」。
                 </p>
                 <div className="mt-5 space-y-2 text-left">
                   {TIERS.map((t) => (
