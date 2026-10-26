@@ -42,6 +42,10 @@ export interface ChinaMapProps {
   maps?: MapRegistration[];
   className?: string;
   height?: string | number;
+  /** 缩放下限：1 = 初始全景，不传则不限制 */
+  minZoom?: number;
+  /** 缩放上限：不传则不限制 */
+  maxZoom?: number;
 }
 
 /**
@@ -56,11 +60,15 @@ export default function ChinaMap({
   maps,
   className,
   height = "100%",
+  minZoom,
+  maxZoom,
 }: ChinaMapProps) {
   const elRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<echarts.ECharts | null>(null);
   const cbRef = useRef(onSelect);
   cbRef.current = onSelect;
+  const zoomRef = useRef({ min: minZoom, max: maxZoom });
+  zoomRef.current = { min: minZoom, max: maxZoom };
 
   useEffect(() => {
     if (!elRef.current) return;
@@ -72,11 +80,35 @@ export default function ChinaMap({
     chart.setOption(option);
     const handler = (p: any) => cbRef.current?.(p);
     chart.on("click", handler);
+    // 缩放边界：ECharts 的 roam 没有内置 min/max，越界后把钳制值写回。
+    // 只在越界时写，避免每帧 setOption 打断惯性动画。
+    const clampZoom = () => {
+      const { min, max } = zoomRef.current;
+      if (min == null && max == null) return;
+      const lo = min ?? 0;
+      const hi = max ?? 64;
+      const opt = chart.getOption() as {
+        geo?: Array<{ zoom?: number }>;
+        series?: Array<{ map?: string; zoom?: number }>;
+      };
+      const geoZoom = Array.isArray(opt.geo) ? opt.geo[0]?.zoom : undefined;
+      const seriesZoom = opt.series?.find(
+        (s) => typeof s?.map === "string",
+      )?.zoom;
+      const cur = typeof geoZoom === "number" ? geoZoom : seriesZoom;
+      if (typeof cur !== "number" || (cur >= lo && cur <= hi)) return;
+      const fixed = Math.min(hi, Math.max(lo, cur));
+      if (typeof geoZoom === "number")
+        chart.setOption({ geo: { zoom: fixed } });
+      else chart.setOption({ series: [{ zoom: fixed }] });
+    };
+    chart.on("georoam", clampZoom);
     const ro = new ResizeObserver(() => chart.resize());
     ro.observe(elRef.current);
     return () => {
       ro.disconnect();
       chart.off("click", handler);
+      chart.off("georoam", clampZoom);
       chart.dispose();
       chartRef.current = null;
     };

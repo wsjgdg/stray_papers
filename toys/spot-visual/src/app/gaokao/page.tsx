@@ -97,6 +97,12 @@ const TIER_LABEL: Record<Tier, string> = {
 };
 const TIERS: Tier[] = ["reach", "match", "safe"];
 
+// 地图缩放边界（倍率相对「中国全景」初始视野）：
+// 下限 1 = 不允许缩到比全景更小（否则地图缩成一块豆腐）；
+// 上限 8 ≈ 上海/北京这类小省级行政区填满 560px 视口，再放大只会看到空白。
+const MAP_ZOOM_MIN = 1;
+const MAP_ZOOM_MAX = 8;
+
 // 院校层次着色（地图第二种着色模式）
 const LEVEL_COLOR = {
   is985: "#DC2626",
@@ -737,7 +743,7 @@ export default function GaoKaoPage() {
       score,
       rank: userRank,
       ctrl,
-      year: dataYear() ?? 2025,
+      year,
       counts,
     });
   };
@@ -850,15 +856,16 @@ export default function GaoKaoPage() {
         <p className="text-sm text-gray-500">
           输入分数估算位次；院校点位按冲稳保着色，点击查看详情。
           <span className="text-gray-400">
-            （{dataYear()} 年（数据集最新）· {provinces.length} 省市 · 覆盖高校{" "}
-            {uniqueSchoolCount} 所 · GaokaoCompass 非官方数据）
+            （{year} 年数据{year === GAOKAO_YEARS[0] ? "（最新）" : ""} ·{" "}
+            {provinces.length} 省市 · 覆盖高校 {uniqueSchoolCount} 所 ·
+            GaokaoCompass 非官方数据）
           </span>
         </p>
       </div>
 
       {/* 输入卡片 */}
       <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 shadow-sm mb-5">
-        <div className="grid sm:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <label className="block">
             <span className="text-xs font-medium text-gray-500">招生省份</span>
             <select
@@ -896,7 +903,7 @@ export default function GaoKaoPage() {
           </label>
           <label className="block">
             <span className="text-xs font-medium text-gray-500">
-              高考分数（{dataYear()}）
+              高考分数（{year}）
             </span>
             <input
               type="number"
@@ -907,6 +914,30 @@ export default function GaoKaoPage() {
               className="mt-1 w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none"
             />
           </label>
+          {/* 数据年份：与省份/科类/分数同级，切换即换整套投档线与一分一段 */}
+          <div className="block">
+            <span className="text-xs font-medium text-gray-500">数据年份</span>
+            <div className="mt-1 flex h-10 items-center gap-1 rounded-lg border border-gray-200 bg-white px-1">
+              {GAOKAO_YEARS.map((y) => (
+                <button
+                  key={y}
+                  onClick={() => switchYear(y)}
+                  className={`flex-1 h-8 rounded-md text-sm font-medium transition-colors ${
+                    year === y
+                      ? "bg-gray-900 text-white"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  {y}
+                  {y === GAOKAO_YEARS[0] && (
+                    <span className="ml-0.5 text-[9px] align-top opacity-80">
+                      最新
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-4 bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3">
           <div className="flex items-center gap-2">
@@ -1135,22 +1166,8 @@ export default function GaoKaoPage() {
         </div>
       </div>
 
-      {/* 年份 + 批次切换 */}
+      {/* 批次切换（年份已上移到输入卡片，属同级筛选条件） */}
       <div className="mb-3 flex flex-wrap items-center gap-1.5 text-xs">
-        <span className="text-gray-400 mr-1">年份</span>
-        {GAOKAO_YEARS.map((y) => (
-          <button
-            key={y}
-            onClick={() => switchYear(y)}
-            className={`px-2.5 py-1 rounded-full border transition-colors ${year === y ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"}`}
-          >
-            {y}
-            {y === GAOKAO_YEARS[0] && (
-              <span className="ml-1 text-[9px] align-top">最新</span>
-            )}
-          </button>
-        ))}
-        <span className="text-gray-200 mx-1">|</span>
         <span className="text-gray-400 mr-1">批次</span>
         {BATCH_GROUPS.map(({ key, label }) => (
           <button
@@ -1184,41 +1201,43 @@ export default function GaoKaoPage() {
                   : "专科批；冲稳保区间基于你的本科分数会大量超出区间"}
             </span>
           )}
-      </div>
-
-      {/* 院校筛选 + 清单排序 */}
-      <div className="mb-3 flex flex-wrap items-center gap-1.5 text-xs">
-        <span className="text-gray-400 mr-1">筛选</span>
-        {FILTERS.map(([k, label]) => (
-          <button
-            key={k}
-            onClick={() => setFilter(k)}
-            className={`px-2.5 py-1 rounded-full border transition-colors ${filter === k ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-gray-600 border-gray-200 hover:border-indigo-300"}`}
-          >
-            {label}
-          </button>
-        ))}
-        <span className="text-gray-300 mx-1">|</span>
-        <span className="text-gray-400 mr-1">清单排序</span>
-        {(
-          [
-            ["gap", "按分差"],
-            ["rank", "按排名"],
-            ["score", "按投档线"],
-          ] as const
-        ).map(([k, label]) => (
-          <button
-            key={k}
-            onClick={() => setSortKey(k)}
-            className={`px-2.5 py-1 rounded-full border transition-colors ${sortKey === k ? "bg-gray-800 text-white border-gray-800" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"}`}
-          >
-            {label}
-          </button>
-        ))}
-        {enriched && (
-          <span className="text-gray-400 ml-1 hidden sm:inline">
-            含软科排名 · 学科评估 · 官方层次标签
-          </span>
+        {/* 筛选/排序只影响地图与清单，其余视图不渲染，省一条横向控件带 */}
+        {(view === "map" || view === "list") && (
+          <>
+            <span className="text-gray-200 mx-1">|</span>
+            <span className="text-gray-400 mr-1">筛选</span>
+            {FILTERS.map(([k, label]) => (
+              <button
+                key={k}
+                onClick={() => setFilter(k)}
+                className={`px-2.5 py-1 rounded-full border transition-colors ${filter === k ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-gray-600 border-gray-200 hover:border-indigo-300"}`}
+              >
+                {label}
+              </button>
+            ))}
+            <span className="text-gray-300 mx-1">|</span>
+            <span className="text-gray-400 mr-1">排序</span>
+            {(
+              [
+                ["gap", "按分差"],
+                ["rank", "按排名"],
+                ["score", "按投档线"],
+              ] as const
+            ).map(([k, label]) => (
+              <button
+                key={k}
+                onClick={() => setSortKey(k)}
+                className={`px-2.5 py-1 rounded-full border transition-colors ${sortKey === k ? "bg-gray-800 text-white border-gray-800" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"}`}
+              >
+                {label}
+              </button>
+            ))}
+            {enriched && (
+              <span className="text-gray-400 ml-1 hidden sm:inline">
+                含软科排名 · 学科评估 · 官方层次标签
+              </span>
+            )}
+          </>
         )}
       </div>
 
@@ -1231,6 +1250,8 @@ export default function GaoKaoPage() {
               onSelect={onSelect}
               height={isMobile ? 380 : 560}
               className="w-full"
+              minZoom={MAP_ZOOM_MIN}
+              maxZoom={MAP_ZOOM_MAX}
             />
             <div className="absolute left-3 bottom-3 flex flex-wrap gap-2 bg-white/85 backdrop-blur-sm rounded-lg border border-gray-200 px-2.5 py-2">
               {colorMode === "tier"
@@ -1276,7 +1297,7 @@ export default function GaoKaoPage() {
                 {colorMode === "tier" ? "冲稳保" : "院校层次"}着色
               </button>
               <span className="text-[10px] text-gray-400 bg-white/80 rounded px-1.5 py-0.5">
-                可滚轮缩放 / 拖拽
+                滚轮缩放 {MAP_ZOOM_MIN}×–{MAP_ZOOM_MAX}× / 拖拽 · 点省份切换
               </span>
             </div>
           </section>
@@ -1861,8 +1882,8 @@ export default function GaoKaoPage() {
         <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
         <span>
           本页投档线与一分一段来自{" "}
-          <b className="text-gray-500">GaokaoCompass</b>（{dataSource()}）
-          {dataYear()} 年数据， 为第三方整理的
+          <b className="text-gray-500">GaokaoCompass</b>（{dataSource()}）{year}{" "}
+          年数据， 为第三方整理的
           <strong className="text-gray-500">非官方数据</strong>
           ，按院校专业组最低分归并；院校排名与层次标签来自软科中国大学排名，
           学科评估为教育部学位中心第四轮（2017）结果；均仅供演示与参考，
