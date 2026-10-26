@@ -5092,6 +5092,9 @@ class QecApp {
     this.ens = null;
     this.curve = null;
     this.svy = null;      /* 门级：一阶故障枚举（c₁） */
+    /* R114：曲线缓存（键 = 影响 sweep 的全部输入；sweep 一次的代价很高：
+       n=5·rd=3 ≈54s、n=7·rd=1 ≈32s ⟹ 切回旧配置直接复用）。FIFO，≤24 条。 */
+    this._curveCache = new Map();
     this._thr = null;     /* 门级：数值交点（PLexact(p)=p 的首个根；R86 旧基线口径） */
     this._thrU = null;    /* R111：公平基线交点（PLexact(p)=P_un(p)；同机会数裸传） */
     this._floor = null;   /* R108 phys：P_L 底座（p→0；DP 精确或 MC） */
@@ -5354,8 +5357,24 @@ class QecApp {
     /* R109：rd 进曲线缓存键——线路结构（ancilla 数/测量数/门机会）随它变。
        R110：n 同样进键（数据比特数/稳定子数随它变）；trials 位用 effTrials
        （重配置下已封顶——拖动样本数滑块不触发重扫，只重跑全批）。 */
-    const key = this.state.code + '|' + this.state.noise + '|' + this.state.spectrum + '|' + this.state.noisyPhase + '|' + qecNormN(this.state.n) + '|' + this.effTrials() + '|' + qecNormRd(this.state.rd);
+    const key = this.state.code + '|' + this.state.noise + '|' + this.state.spectrum + '|' + this.state.noisyPhase + '|' + qecNormN(this.state.n) + '|' + this.effTrials() + '|' + qecNormRd(this.state.rd) +
+      /* R114：phys 六参数必须进键——sweepCfg 里 Object.assign(sweepCfg, state.phys)，
+         改任一个滑块都得重扫（滑块回调原本靠 `this._curveKey=''` 强制重算；一旦
+         引入缓存，键不含 phys 就会命中**过期**曲线 ⟹ 一并收进键）。 */
+      (this.state.noise === 'phys'
+        ? '|' + ['t1', 't2', 'tg', 'pd', 're', 'peq'].map(k => this.state.phys[k]).join(',')
+        : '');
     if (key !== this._curveKey){
+      /* R114：曲线缓存。一次门级重扫很贵（n=5·rd=3 ≈54s、n=7·rd=1 ≈32s），
+         而切回旧配置（码/谱/注错范围/n/k/样本数/phys 参数）时 sweep 的输入
+         完全相同 ⟹ 结果可复用。sweep 的 p 网格与 state.p 无关（内部生成），
+         故拖 p 滑块不失效（与既有 `_curveKey` 同口径）。FIFO 淘汰，上限 24 条。 */
+      const cached = this._curveCache.get(key);
+      if (cached){
+        this.curve = cached.curve; this.svy = cached.svy;
+        this._thr = cached.thr; this._thrU = cached.thrU; this._floor = cached.floor;
+        this._curveKey = key;
+      } else {
       /* gate 模式的 p 网格显式给到 0.55：数值阈值 ≈0.5（PLexact(1/2)≡1/2，
          单谱精确 / 退极化 ~1e-4 偏移），默认网格只到 0.3 会落在根之外 */
       /* R110：n=5·rd≥3（nq=17，~19ms/试验）重配置——扫描点数 12→6、每点样本
@@ -5404,6 +5423,11 @@ class QecApp {
         this._thr = null;
         this._thrU = null;
         this._floor = null;
+      }
+        this._curveCache.set(key, {
+          curve: this.curve, svy: this.svy, thr: this._thr, thrU: this._thrU, floor: this._floor,
+        });
+        if (this._curveCache.size > 24) this._curveCache.delete(this._curveCache.keys().next().value);
       }
     }
     this.renderHud();
@@ -5637,8 +5661,16 @@ class QecApp {
         (qecDpOverBudget(this.cfg())
           ? '<br><span style="color:var(--amber);font-weight:600">DP 超预算</span> n=' + N + '·k=' + qecNormRd(s.rd) +
             ' 的门分支把 DP-over-frames 状态空间推到 ~' + (qecDpStates(this.cfg()) / 1e6).toFixed(0) + '×10⁶' +
-            '（n=9 实测 122s 后 Map 爆容量）⟹ 精确解不跑，' +
-            'P_L 精确行不画、HUD 显示「—」；MC 曲线与统计口径不受影响（4σ 内与 DP 一致的口径见 pot 套件）。'
+            '（n=9 实测 122s 后 Map 爆容量；R113 实测 Map 上限 1.68e7 < 键空间 6.7e7 ⟹ **结构性不可能**，' +
+            '不是优化能解决的）⟹ 精确解不跑，' +
+            'P_L 精确行不画、HUD 显示「—」；MC 曲线与统计口径不受影响（4σ 内与 DP 一致的口径见 pot 套件）。' +
+            /* R114：精确解拿不到，但一阶系数拿得到（故障枚举走另一条路径，不受 DP 预算约束）
+               ⟹ 曲线上补一条 p≤0.01 的一阶解析虚线（零统计误差，标注有效域） */
+            (this.svy && Number.isFinite(this.svy.c1)
+              ? ' 曲线另给**一阶解析** P_L≈' + repNf(this.svy.c1, 2) + 'p（青虚，只画到 p≲0.005——' +
+                '与有精确解的档位对账：c₁p 在 p=0.01 偏高 4%（n=3）/9%（n=5）/14%（n=7），' +
+                'p=0.05 偏高 22%/51%/84%，**偏离随 n 单调增大** ⟹ n=9 更差，故不向外延伸）。'
+              : '')
           : '');
     }
   }
@@ -6253,6 +6285,18 @@ class QecApp {
        PLexact=NaN——过滤掉（与 drawCurvePhys 同口径），图例改注「超预算」 */
     const dpPts = sw.p.map((p, i) => [p, sw.PLexact[i]]).filter(([, v]) => Number.isFinite(v));
     if (dpPts.length > 1) line(dpPts, 'rgba(103,232,249,.9)', null, 1.8);
+    /* R114：DP 拒跑（n=9 门级，键空间 6.7e7 > Map 上限 1.68e7 ⟹ 结构性不可行）
+       时补一条**零统计误差**的一阶解析 y=c₁p（青虚）。c₁ 由故障枚举给出——
+       它走的是**另一条路径**（逐个门×比特×Pauli 强制故障 + qecExec），不受
+       DP 预算约束，n=9 也只要 ~0.2s（实测 c₁=18.67）。
+       ⚠ 一阶只在小 p 成立，且**偏离随 n 增大**（与有 DP 的档位对账：c₁p/DP 在
+       p=0.01 时 n=3 偏高 4.2%、n=5 偏高 9.1%、n=7 偏高 14.2%，p=0.05 时 22%/
+       51%/84%）⟹ 无 DP 可对的 n=9 只会更差，故**只画到 p ≤ 0.005**（估计偏高
+       ~10%），并在图例里标注有效域（不把近似画成精确）。 */
+    const c1 = this.svy && Number.isFinite(this.svy.c1) ? this.svy.c1 : null;
+    const c1Pts = (dpPts.length > 1 || c1 == null) ? [] :
+      ref.map(([p]) => [p, c1 * p]).filter(([p, v]) => p <= 0.005 && v >= yMin && v <= yMax);
+    if (c1Pts.length > 1) line(c1Pts, 'rgba(103,232,249,.55)', [3, 3], 1.4);
 
     /* R111 未编码公平基线 P_un（橙实）：裸传 1 个比特、同样 M 个错误机会。
        与 P_L 同 x 轴同判据 ⟹ 「编码是否有益」= P_L 是否落在它下面。 */
@@ -6292,12 +6336,15 @@ class QecApp {
     g.fillStyle = 'rgba(226,232,240,.9)'; g.font = (10.5 * dpr) + 'px ui-monospace,monospace';
     g.textAlign = 'left'; g.textBaseline = 'alphabetic';
     g.fillText('P_L vs p（门级 · n=' + qecNormN(this.state.n) + ' · k=' + qecNormRd(this.state.rd) + ' · ' +
-      (dpPts.length > 1 ? 'DP 精确 + MC' : 'DP 超预算，仅 MC') + '）', 8 * dpr, 15 * dpr);
+      (dpPts.length > 1 ? 'DP 精确 + MC' : (c1Pts.length > 1 ? '一阶 c₁p + MC' : 'DP 超预算，仅 MC')) + '）', 8 * dpr, 15 * dpr);
     g.font = (9.5 * dpr) + 'px ui-monospace,monospace';
     g.textAlign = 'right';
-    /* R112：DP 拒跑时青图例改琥珀注记（与曲线实体对应，不挂羊头） */
+    /* R112/R114：DP 拒跑时青图例改琥珀注记（与曲线实体对应，不挂羊头）；
+       一阶解析可用时改注「c₁p（p≲0.01）」——标注有效域，不冒充精确解 */
     if (dpPts.length > 1){
       g.fillStyle = 'rgba(103,232,249,.9)'; g.fillText('DP 精确', x1 - 56 * dpr, 15 * dpr);
+    } else if (c1Pts.length > 1){
+      g.fillStyle = 'rgba(103,232,249,.75)'; g.fillText('c₁p（p≲0.005）', x1 - 104 * dpr, 15 * dpr);
     } else {
       g.fillStyle = 'rgba(251,191,36,.95)'; g.fillText('DP 超预算', x1 - 78 * dpr, 15 * dpr);
     }
@@ -6691,6 +6738,8 @@ class QecApp {
       },
       table: () => qecSyndromeTable(qecNormN(self.state.n)),
       setCode: c => { self.setCode(c); self.drawAll(); },
+      /* R114：曲线缓存条数（≤24，FIFO）——调试/测试用，验证切回旧配置是否命中 */
+      cacheSize: () => self._curveCache.size,
       /* R110/R112：码长（3/5/7/9）；nq>18 时 rd 自动降到合法档（n=5：5→3；n=7/9：→1） */
       setN: v => { self.setN(v); self.drawAll(); },
       setP: v => { self.setP(v); self.drawAll(); },
