@@ -12,6 +12,7 @@ import {
   Database,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { withSharecode } from "@/lib/share-link";
 
 const MODULES = [
   { href: "/", label: "景点览胜", icon: MapPin, desc: "探索全国精选景点" },
@@ -35,6 +36,22 @@ const MODULES = [
     desc: "出处与覆盖边界",
   },
 ];
+
+// 悬停预热：目标页首屏依赖的静态数据先下载进浏览器缓存，
+// 点击进入时不再等 410KB 的投档线数据集（首次冷边缘可达数十秒）。
+const WARM_URLS: Record<string, string[]> = {
+  "/gaokao": ["/data/gaokao-2026.json", "/data/gaokao-enrich.json"],
+};
+
+const warmed = new Set<string>();
+
+function warm(target: string) {
+  for (const url of WARM_URLS[target] ?? []) {
+    if (warmed.has(url)) continue;
+    warmed.add(url);
+    fetch(withSharecode(url)).catch(() => warmed.delete(url));
+  }
+}
 
 export function TopNav() {
   const pathname = usePathname();
@@ -64,6 +81,8 @@ export function TopNav() {
             <Link
               key={m.href}
               href={withQuery(m.href)}
+              onMouseEnter={() => warm(m.href)}
+              onFocus={() => warm(m.href)}
               className={cn(
                 "relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
                 active

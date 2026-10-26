@@ -43,6 +43,8 @@ import {
   getSchool,
   isBatchesLoaded,
   batchesUrlFor,
+  cachedDataset,
+  rememberDataset,
   dataUrlFor,
   resetBatches,
   loadBatchesDataset,
@@ -61,8 +63,6 @@ import {
   type RecommendItem as RecommendItemT,
 } from "@/lib/gaokao";
 import { withSharecode } from "@/lib/share-link";
-import { downloadGaokaoShareCard } from "@/lib/gaokao-share-card";
-import { downloadWishCard } from "@/lib/wish-card";
 import { PROVINCE_CENTERS } from "@/lib/china-geo";
 import ChinaMap from "@/components/map/china-map";
 
@@ -105,7 +105,7 @@ type ViewKey = (typeof VIEWS)[number];
 // 下限 1 = 不允许缩到比全景更小（否则地图缩成一块豆腐）；
 // 上限 8 ≈ 上海/北京这类小省级行政区填满 560px 视口，再放大只会看到空白。
 const MAP_ZOOM_MIN = 1;
-const MAP_ZOOM_MAX = 8;
+const MAP_ZOOM_MAX = 16;
 
 // 院校层次着色（地图第二种着色模式）
 const LEVEL_COLOR = {
@@ -178,6 +178,8 @@ export default function GaoKaoPage() {
   const [batchesLoading, setBatchesLoading] = useState(false);
   const batchesYearRef = useRef<number | null>(null);
   const enrichRawRef = useRef<unknown>(null);
+  const loadedOnceRef = useRef(false); // 首次数据就绪后，切年份不再整页打回骨架
+  const [switching, setSwitching] = useState(false); // 年份切换中（保持旧视图可交互）
   const [year, setYear] = useState<number>(() => {
     try {
       const sp = new URLSearchParams(window.location.search);
@@ -299,40 +301,88 @@ export default function GaoKaoPage() {
   );
 
   // ── 加载数据文件（按年份；增强数据可选且与年份无关，缓存后重放） ──
+  // 切换年份不再把整页打回骨架：已有数据时页面保持可交互，只打「切换中」标记；
+  // 命中内存缓存则同步切换，连网络都不用等。
   useEffect(() => {
     let alive = true;
-    setDataState("loading");
+    const applyEnrich = () => {
+      if (enrichRawRef.current) {
+        loadEnrichDataset(enrichRawRef.current as never);
+        setEnriched(true);
+        return;
+      }
+      fetch(withSharecode(GAOKAO_ENRICH_URL))
+        .then((r) => (r.ok ? r.json() : null))
+        .then((e) => {
+          if (alive && e) {
+            enrichRawRef.current = e;
+            if (loadEnrichDataset(e)) setEnriched(true);
+          }
+        })
+        .catch(() => {});
+    };
+
     resetBatches();
     batchesYearRef.current = null;
+
+    // 注意：增强数据必须在 loadFullDataset 之后应用——两者都写 schoolIndex，
+    // 先增强再重建会被后者的 rebuild 覆盖掉 985/211/软科排名。
+    const cached = cachedDataset(year);
+    if (cached && loadFullDataset(cached)) {
+      setDataState("ready");
+      setSwitching(false);
+      applyEnrich();
+      return () => {
+        alive = false;
+      };
+    }
+
+    if (loadedOnceRef.current) setSwitching(true);
+    else setDataState("loading");
+
     fetch(withSharecode(dataUrlFor(year)))
       .then((r) =>
         r.ok ? r.json() : Promise.reject(new Error(String(r.status))),
       )
       .then((d) => {
-        if (alive && loadFullDataset(d)) {
+        if (!alive) return;
+        if (loadFullDataset(d)) {
+          rememberDataset(year, d);
+          loadedOnceRef.current = true;
           setDataState("ready");
-          if (enrichRawRef.current) {
-            loadEnrichDataset(enrichRawRef.current as never);
-            setEnriched(true);
-          } else {
-            fetch(withSharecode(GAOKAO_ENRICH_URL))
-              .then((r) => (r.ok ? r.json() : null))
-              .then((e) => {
-                if (alive && e) {
-                  enrichRawRef.current = e;
-                  if (loadEnrichDataset(e)) setEnriched(true);
-                }
-              })
-              .catch(() => {});
-          }
-        } else if (alive) setDataState("fail");
+          setSwitching(false);
+          applyEnrich();
+        } else {
+          setDataState("fail");
+          setSwitching(false);
+        }
       })
-      .catch(() => alive && setDataState("fail"));
+      .catch(() => {
+        if (!alive) return;
+        setDataState("fail");
+        setSwitching(false);
+      });
     return () => {
       alive = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [year]);
+
+  // ── 空闲时预取另一年份：切年份时直接命中缓存 ──
+  useEffect(() => {
+    if (!ready) return;
+    const other = GAOKAO_YEARS.find((y) => y !== year);
+    if (!other || cachedDataset(other)) return;
+    const id = setTimeout(() => {
+      fetch(withSharecode(dataUrlFor(other)))
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (d?.provs) rememberDataset(other, d);
+        })
+        .catch(() => {});
+    }, 1500);
+    return () => clearTimeout(id);
+  }, [ready, year]);
 
   // ── 数据就绪后还原位置：URL 参数 > localStorage > 默认 ──
   useEffect(() => {
@@ -829,8 +879,10 @@ export default function GaoKaoPage() {
       .catch(() => {});
   };
 
-  const exportCard = () => {
-    downloadGaokaoShareCard({
+  // 分享卡绘制 + 二维码只在点击时按需加载，不占首屏 bundle
+  const exportCard = async () => {
+    const { downloadGaokaoShareCard } = await import("@/lib/gaokao-share-card");
+    await downloadGaokaoShareCard({
       prov,
       cat,
       score,
@@ -922,7 +974,7 @@ export default function GaoKaoPage() {
       <div className="max-w-[1400px] mx-auto px-4 py-6">
         <div className="bg-white rounded-2xl border border-gray-200 h-[420px] flex flex-col items-center justify-center gap-3 text-gray-400">
           <div className="w-8 h-8 rounded-full border-2 border-gray-200 border-t-indigo-500 animate-spin" />
-          <p className="text-sm">正在加载 {dataYear() ?? 2025} 年投档线数据…</p>
+          <p className="text-sm">正在加载 {year} 年投档线数据…</p>
         </div>
       </div>
     );
@@ -1016,7 +1068,14 @@ export default function GaoKaoPage() {
           </label>
           {/* 数据年份：与省份/科类/分数同级，切换即换整套投档线与一分一段 */}
           <div className="block">
-            <span className="text-xs font-medium text-gray-500">数据年份</span>
+            <span className="text-xs font-medium text-gray-500">
+              数据年份
+              {switching && (
+                <span className="ml-1 text-indigo-500 font-normal">
+                  切换中…
+                </span>
+              )}
+            </span>
             <div className="mt-1 flex h-10 items-center gap-1 rounded-lg border border-gray-200 bg-white px-1">
               {GAOKAO_YEARS.map((y) => (
                 <button

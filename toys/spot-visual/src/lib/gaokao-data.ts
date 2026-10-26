@@ -24,6 +24,19 @@ export function dataUrlFor(year: number): string {
 export function batchesUrlFor(year: number): string {
   return `/data/gaokao-${year}-batches.json`;
 }
+
+// ── 年份数据集缓存 ──
+// 每个年份的原始 JSON ~2.4MB（gzip 后 ~410KB），重新下载是年份切换「整页闪一下」
+// 的根因。这里按年份缓存已解析对象，切回已加载过的年份走同步路径，零请求。
+const datasetCache = new Map<number, RealDataset>();
+
+export function cachedDataset(year: number): RealDataset | null {
+  return datasetCache.get(year) ?? null;
+}
+
+export function rememberDataset(year: number, data: RealDataset) {
+  datasetCache.set(year, data);
+}
 export const GAOKAO_ENRICH_URL = "/data/gaokao-enrich.json";
 
 export interface School {

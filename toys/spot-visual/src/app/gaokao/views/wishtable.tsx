@@ -4,7 +4,6 @@ import { useState } from "react";
 import { ClipboardList, Check, Share2, Plus, Download } from "lucide-react";
 import { getSchool, type MajorDataset } from "@/lib/gaokao-data";
 import { tierOf, TIER_COLOR, TIER_LABEL, type Tier } from "./shared";
-import { downloadWishCard } from "@/lib/wish-card";
 
 interface WishItem {
   name: string;
@@ -49,7 +48,8 @@ export function WishTable({
   onOpen: (code: string) => void;
 }) {
   const [copied, setCopied] = useState(false);
-  const exportImage = () => {
+  const exportImage = async () => {
+    const { downloadWishCard } = await import("@/lib/wish-card");
     const rows = items.map((w) => {
       const school = getSchool(w.name);
       const row = majors?.cats[cat]?.[w.name]?.find(
