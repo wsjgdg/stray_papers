@@ -154,9 +154,10 @@ import { qcnFlipBits, qcnNoiseParams } from './qcnoise.js';
 
 export const QEC_DEFAULTS = {
   code: 'bitflip',        /* bitflip | phaseflip */
-  /* R110：码长 n（码距 d=n；3 = R78 口径 / 5 = d=5 纠 2 个数据错）。稳定子数
-     = n−1，ancilla 数 = (n−1)·rd，nq = n + (n−1)·rd。 */
-  n: 3,                   /* 3 | 5（其余值归一到 3） */
+  /* R110/R112：码长 n（码距 d=n；3 = R78 口径 / 5 = d=5 纠 2 个 / 7 = d=7 纠 3 个
+     / 9 = d=9 纠 4 个数据错）。稳定子数 = n−1，ancilla 数 = (n−1)·rd，
+     nq = n + (n−1)·rd（n=9·rd=1 与 n=5·rd=3 同为 nq=17 重配置）。 */
+  n: 3,                   /* 3 | 5 | 7 | 9（其余值归一到 3） */
   p: 0.05,
   /* 逻辑初态 Ry(θ)Rz(φ)|0⟩ = cos(θ/2)|0⟩ + e^{iφ}sin(θ/2)|1⟩。
      默认取 **|+i⟩**（θ=π/2, φ=π/2）而不是 |+⟩：X_L|+⟩=|+⟩，逻辑 X 错误在 |+⟩ 上
@@ -202,19 +203,22 @@ export const QEC_CODES = {
   bitflip: {
     label: '比特翻转码',
     err: 'x', fix: 'x', stab: 'z',
-    text: '把 α|0⟩+β|1⟩ 编成 α|0…0⟩+β|1…1⟩（n=3 或 5），每个物理比特以概率 p 翻 **X**。n−1 个稳定子 ZᵢZᵢ₊₁ 的综合唯一确定「哪些比特翻了」（最小权重解码：综合征的一致修正模式只有前缀模式与其全局补集两个，取轻的——n=3 时 10→q0、11→q1、01→q2、00→不动）。n=3（d=3）**单错必纠、双错必错**：P_L = 3p²(1−p)+p³ = 3p²−2p³；n=5（d=5）**≤2 错必纠、≥3 错必错**：P_L = 10p³−15p⁴+6p⁵——同 p 下高阶项被压掉，但稳定子从 2 个增到 4 个，读出误差暴露面也翻倍（p=0 底座 ≈(n−1)/2·ε_k）。',
+    text: '把 α|0⟩+β|1⟩ 编成 α|0…0⟩+β|1…1⟩（n=3、5、7 或 9），每个物理比特以概率 p 翻 **X**。n−1 个稳定子 ZᵢZᵢ₊₁ 的综合唯一确定「哪些比特翻了」（最小权重解码：综合征的一致修正模式只有前缀模式与其全局补集两个，取轻的——n=3 时 10→q0、11→q1、01→q2、00→不动）。n=3（d=3）**单错必纠、双错必错**：P_L = 3p²−2p³；n=5（d=5）**≤2 错必纠、≥3 错必错**：P_L = 10p³−15p⁴+6p⁵；n=7/9 同理（≤3/≤4 错必纠，P_L = 35p⁴−84p⁵+70p⁶−20p⁷ / 126p⁵−420p⁶+540p⁷−315p⁸+70p⁹）——同 p 下高阶项被逐个压掉，但稳定子从 2 个增到 n−1 个，读出误差暴露面同步放大（p=0 底座 ≈(n−1)/2·ε_k）。',
   },
   phaseflip: {
     label: '相位翻转码',
     err: 'z', fix: 'z', stab: 'x',
-    text: '同一个码在 **H 基**下的对偶：错误换成 **Z**（相位翻转），稳定子换成 XᵢXᵢ₊₁（用 ancilla 做 H–CNOT(a→d)–H 后测量）。综合与修正的逻辑完全同构（n=3 时 P_L 也是 3p²−2p³，n=5 时 10p³−15p⁴+6p⁵）。注意它**完全不管 X 错误**——单个 Z 错能纠，一个 X 错就直接毁掉相位信息。这就是为什么真正的通用纠错要把两个码串起来（Shor 9 比特码 = 3×3），本轮只做重复码这一层。',
+    text: '同一个码在 **H 基**下的对偶：错误换成 **Z**（相位翻转），稳定子换成 XᵢXᵢ₊₁（用 ancilla 做 H–CNOT(a→d)–H 后测量）。综合与修正的逻辑完全同构（n=3 时 P_L 也是 3p²−2p³，n=5/7/9 时分别是 10p³−15p⁴+6p⁵ / 35p⁴−84p⁵+70p⁶−20p⁷ / 126p⁵−420p⁶+540p⁷−315p⁸+70p⁹）。注意它**完全不管 X 错误**——单个 Z 错能纠，一个 X 错就直接毁掉相位信息。这就是为什么真正的通用纠错要把两个码串起来（Shor 9 比特码 = 3×3），本轮只做重复码这一层。',
   },
 };
 
-/* R110：码长归一（页面/URL 只暴露 3/5；非法值归一到 3） */
+/* R110/R112：码长归一（页面/URL 只暴露 3/5/7/9；非法值归一到 3）。
+   n=7（d=7，t=3）与 n=9（d=9，t=4）在 R112 接入：解码器是 O(n) 前缀构造，
+   本就支持任意 n；代价是 nq = n+(n−1)·rd 涨到 13/17（态矢 2^13 / 2^17）——
+   由 qecExec 的 nq>18 守卫与页面的性能预算共同约束（见 qecNormN 调用方）。 */
 export function qecNormN(n){
   const k = Math.round(Number(n));
-  return k === 5 ? 5 : 3;
+  return (k === 5 || k === 7 || k === 9) ? k : 3;
 }
 
 /* 错误位置数组 → n−1 个稳定子的本征值（0 = +1，1 = −1）
@@ -366,11 +370,15 @@ const QEC_STAB_SPAN = (() => {
       const pair = 0b11 << i;
       gens.push(code === 'phaseflip' ? { xm: pair, zm: 0 } : { xm: 0, zm: pair });
     }
+    /* R112：键基 = 2^N（x/z 掩码各宽 N 位）。旧口径 x*32+z 只在 n≤5 时单射——
+       n=7 起掩码宽 6+ 位，不同 (x,z) 撞同键（实测 {x:1,z:1}=Y₀ 撞上稳定子
+       {x:0,z:33}⟹ 单 Y 错被误判 perfect）。x·2^N+z ≤ 2^18（n=9）整数精确。 */
+    const P2 = 1 << N;
     set = new Set();
     for (let m = 0; m < (1 << gens.length); m++){
       let x = 0, z = 0;
       for (let b = 0; b < gens.length; b++) if (m & (1 << b)){ x ^= gens[b].xm; z ^= gens[b].zm; }
-      set.add(x * 32 + z);
+      set.add(x * P2 + z);
     }
     cache.set(key, set);
     return set;
@@ -384,14 +392,16 @@ function qecLogicSet(code, n){
     ? [{ xm: full, zm: 0 }, { xm: 0, zm: full }, { xm: full, zm: full }]
     : [{ xm: full, zm: 0 }, { xm: 0, zm: 1 }, { xm: full, zm: 1 }];
 }
-/* 帧陪集：0 = ∈S（perfect）· 1/2/3 = X_L/Z_L/Y_L 陪集（logic）· −1 = ∉N(S) */
+/* 帧陪集：0 = ∈S（perfect）· 1/2/3 = X_L/Z_L/Y_L 陪集（logic）· −1 = ∉N(S)
+   R112：键 = x·2^N+z（与 QEC_STAB_SPAN 同基；n=9 ⟹ ≤2^18 精确）。 */
 export function qecFrameCoset(code, fr, n = 3){
   if (!fr.x && !fr.z) return 0;
   const span = QEC_STAB_SPAN.get(code, n);
-  if (span.has(fr.x * 32 + fr.z)) return 0;
+  const P2 = 1 << qecNormN(n);
+  if (span.has(fr.x * P2 + fr.z)) return 0;
   const L = qecLogicSet(code, n);
   for (let i = 0; i < 3; i++){
-    if (span.has((fr.x ^ L[i].xm) * 32 + (fr.z ^ L[i].zm))) return i + 1;
+    if (span.has((fr.x ^ L[i].xm) * P2 + (fr.z ^ L[i].zm))) return i + 1;
   }
   return -1;
 }
@@ -400,9 +410,10 @@ export function qecFrameCoset(code, fr, n = 3){
 export function qecFrameWeight(code, fr, n = 3){
   const span = QEC_STAB_SPAN.get(code, n);
   const m = (1 << qecNormN(n)) - 1;
+  const P2 = m + 1;
   let best = popc((fr.x | fr.z) & m);
   for (const k of span){
-    const x = (k / 32) | 0, z = k % 32;
+    const x = (k / P2) | 0, z = k % P2;
     const w = popc(((fr.x ^ x) | (fr.z ^ z)) & m);
     if (w < best) best = w;
   }
@@ -1068,7 +1079,9 @@ export function qecEnsemble(cfg = {}){
 
 /* 解析：P_L = Σ_{w>t} C(n,w)·p^w·(1−p)^{n−w}，t=(n−1)/2（最小权重解码下
    权重 >t 的数据错误必致逻辑错误——补集更轻、解码器修错边）。
-   n=3 ⟹ 3p²(1−p)+p³ = 3p²−2p³ · n=5 ⟹ 10p³−15p⁴+6p⁵（与 ε_5 同形）。 */
+   n=3 ⟹ 3p²(1−p)+p³ = 3p²−2p³ · n=5 ⟹ 10p³−15p⁴+6p⁵（与 ε_5 同形）·
+   n=7 ⟹ 35p⁴−84p⁵+70p⁶−20p⁷ · n=9 ⟹ 126p⁵−420p⁶+540p⁷−315p⁸+70p⁹
+   （可读标签由 qecLogicalRateLab 程序展开，不手抄）。 */
 export function qecLogicalRate(p, n = 3){
   const N = qecNormN(n);
   const t = (N - 1) / 2;
@@ -1083,6 +1096,34 @@ export function qecLogicalRate(p, n = 3){
 /* 阈值：P_L(p) = p ⟹ p = 1/2（P_L(1/2)=Σ_{w>t}C(n,w)/2ⁿ = 1/2——奇数 n 的
    二项尾率恒等式；另一根 p=1 是退化解） */
 export function qecThreshold(){ return 0.5; }
+
+/* R112：解析式的可读标签（面板/HUD/图例用）——由 qecLogicalRate 的系数**程序
+   展开**（不手抄，防抄错）：
+   n=3 ⟹ 3p²−2p³ · n=5 ⟹ 10p³−15p⁴+6p⁵
+   n=7 ⟹ 35p⁴−84p⁵+70p⁶−20p⁷ · n=9 ⟹ 126p⁵−420p⁶+540p⁷−315p⁸+70p⁹ */
+export function qecLogicalRateLab(n = 3){
+  const N = qecNormN(n);
+  const t = (N - 1) / 2;
+  const coef = new Array(N + 1).fill(0);
+  for (let w = t + 1; w <= N; w++){
+    let binom = 1;
+    for (let i = 0; i < w; i++) binom = binom * (N - i) / (i + 1);
+    /* p^w(1−p)^{N−w} = Σ_j C(N−w,j)·(−1)^j·p^{w+j} */
+    for (let j = 0; j <= N - w; j++){
+      let b2 = 1;
+      for (let i = 0; i < j; i++) b2 = b2 * (N - w - i) / (i + 1);
+      coef[w + j] += binom * b2 * (j % 2 ? -1 : 1);
+    }
+  }
+  const SUP = ['⁰', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹'];
+  const parts = [];
+  for (let k = t + 1; k <= N; k++){
+    const v = coef[k];
+    if (!v) continue;
+    parts.push((v < 0 ? '−' : parts.length ? '+' : '') + Math.abs(v) + 'p' + SUP[k]);
+  }
+  return parts.join('');
+}
 
 /* R109：读出表决重复数归一（页面/URL 只暴露 1/3/5；非法值归一到 1） */
 export function qecNormRd(rd){
@@ -1144,6 +1185,40 @@ export function qecSweep(cfg = {}){
   return out;
 }
 
+/* R112：DP-over-frames 状态空间预算。末态键 = 数据帧（x/z 各 n 位 ⟹ ≤2^{2n}）
+   × 投票字段（nStab·VB 位 ⟹ ≤2^{(n−1)·VB}），门分支（gate / phys·pd>0·λ>0）
+   下真实状态数逼近这个上界（ancilla 帧位测后即弃，只余 ±1 个在测 ancilla 的
+   2 位 ⟹ 额外 ×4）。实测（ depolar、extract 段）：
+     n=3 rd≤5 ⟹ ≤2^14 状态 / 毫秒级 · n=5 rd=1 ⟹ 2^16 / 126ms
+     n=5 rd=3 ⟹ 2^20 ≈ 10⁶ / 8.9s（R110 已 shipping 的重配置行为，保留）
+     n=7 rd=1 ⟹ 2^22 ≈ 4×10⁶ / 5.0s · n=9 rd=1 ⟹ 2^28 ≈ 3×10⁸
+       ⟹ 实测 122s 后 Map maximum size exceeded（RangeError，页面直接崩）
+   ⟹ 预算外**不跑**、直接返 NaN（与 γ>0 同一诚实口径：页面显示「无精确解，
+   仅 MC」）。iid / phys 无门分支（pd=λ=0）不乘门分支熵 ⟹ 状态数 ≈2^n×投票，
+   n=9 也只有 7ms（实测），不受本预算约束。 */
+export const QEC_DP_STATE_CAP = 1.2e6;
+/* 状态空间上界（0 = 无门分支，不受预算约束；Infinity = 结构性不可能——调用方
+   会先被 qecExec 的 nq>18 守卫拦下，DP 本身不走态矢） */
+export function qecDpStates(cfg = {}){
+  const c = { ...QEC_DEFAULTS, ...cfg };
+  const circ = qecCircuit(c.code, c);
+  const rd = qecNormRd(c.rd);
+  const gate = c.noise === 'gate', phys = c.noise === 'phys';
+  let branching = false;
+  if (gate) branching = c.p > 0;
+  if (phys){
+    const np = qcnNoiseParams(c.t1, c.t2, c.tg, c.pd, c.re, c.peq);
+    branching = np.pdep > 0 || np.lambda > 0;
+  }
+  if (!branching) return 0;
+  const VB = Math.max(1, Math.ceil(Math.log2(rd + 1)));
+  return Math.pow(2, 2 * circ.n) * Math.pow(2, (circ.n - 1) * VB) * 4;
+}
+export function qecDpOverBudget(cfg = {}){
+  const est = qecDpStates(cfg);
+  return est > QEC_DP_STATE_CAP;
+}
+
 /* ============================================================================
  * DP-over-frames 精确解：P_L(p) 的精确多项式（零统计误差）
  *
@@ -1179,6 +1254,9 @@ export function qecExactPL(cfg = {}){
   /* R108：phys 的物理参数（守卫 + 门分支率 + 读出翻转率） */
   const np = phys ? qcnNoiseParams(c.t1, c.t2, c.tg, c.pd, c.re, c.peq) : null;
   if (phys && np.gamma > 0) return NaN;   /* 振幅阻尼/热激发非 Pauli：无精确解（λ 有 Z 分支，仍精确） */
+  /* R112：DP 状态空间预算守卫（n=9·门分支 ⟹ ~3×10⁸ 状态，实测 Map 爆容量）。
+     预算外直接 NaN——与 γ>0 同一诚实口径，页面转「仅 MC」。 */
+  if (qecDpOverBudget(c)) return NaN;
   const eps = phys ? np.eps : 0;
   const W = gate ? qecSpecW(c.spectrum) : qecSpecW('depolar');   /* phys 门通道恒退极化谱 */
   const gateP = gate ? Math.max(0, Math.min(1, c.p)) : (phys ? np.pdep : 0);
