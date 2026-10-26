@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { PROVINCE_CENTERS } from "@/lib/china-geo";
+import { PROVINCE_CENTERS } from "@/lib/china-centers";
 import { CITY_CENTERS } from "@/lib/city-centers.generated";
 
 // ════════════════════════════════════════════════════════════════════

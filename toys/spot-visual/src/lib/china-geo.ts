@@ -44,27 +44,11 @@ export const CHINA_GEO = (() => {
   return g;
 })();
 
-// 省份中心（简称 → [lng, lat]），取自 geojson properties.center，供散点定位
-export const PROVINCE_CENTERS: Record<string, [number, number]> = (() => {
-  const m: Record<string, [number, number]> = {};
-  for (const f of raw.features) {
-    const full = f.properties?.name;
-    if (!full) continue;
-    const s = shortName(full);
-    const c = f.properties?.center || f.properties?.centroid;
-    if (Array.isArray(c) && c.length >= 2) m[s] = [Number(c[0]), Number(c[1])];
-  }
-  return m;
-})();
+// 省份中心（简称 → [lng, lat]），供散点定位。
+// 实现在 china-centers.ts（纯字面量，不含 GeoJSON）。这里只做再导出以兼容旧引用；
+// 新代码请直接 import from '@/lib/china-centers'，否则会把本文件的 582KB GeoJSON 一起拽进来。
+export { PROVINCE_CENTERS } from './china-centers';
 
 // 省份简称 → adcode（用于按需加载 /geo/{adcode}.json 的市级边界）
-export const PROVINCE_ADCODE: Record<string, number> = (() => {
-  const m: Record<string, number> = {};
-  for (const f of raw.features) {
-    const full = f.properties?.name;
-    const code = f.properties?.adcode;
-    if (!full || typeof code !== 'number') continue;
-    m[shortName(full)] = code;
-  }
-  return m;
-})();
+// 实现在 china-adcodes.ts（纯字面量，不含 GeoJSON）。这里只做再导出以兼容旧引用。
+export { PROVINCE_ADCODE } from './china-adcodes';

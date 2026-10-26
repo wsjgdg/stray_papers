@@ -69,8 +69,27 @@ import {
   type RecommendItem as RecommendItemT,
 } from "@/lib/gaokao";
 import { withSharecode } from "@/lib/share-link";
-import { PROVINCE_CENTERS } from "@/lib/china-geo";
-import ChinaMap from "@/components/map/china-map";
+// 注意：坐标必须从 china-centers 取（纯字面量）。
+// 若从 china-geo 取，会顺着它的顶层进口把 582KB 的 china.json 打进本页首屏包。
+import { PROVINCE_CENTERS } from "@/lib/china-centers";
+import dynamic from "next/dynamic";
+import type { ChinaMapProps } from "@/components/map/china-map";
+
+// 地图是重资产：ECharts 按需核心(~500KB) + 全国 GeoJSON(582KB)。
+// 用 next/dynamic 拆成独立 chunk，首屏（列表/分数线/排名）不再为看不见的地图付费；
+// 切到「地图」页签时才拉取，且只在客户端渲染（echarts 依赖 DOM）。
+const ChinaMap = dynamic<ChinaMapProps>(
+  () => import("@/components/map/china-map"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-[380px] lg:h-[560px] flex flex-col items-center justify-center gap-3 bg-gray-50 text-gray-400">
+        <div className="w-8 h-8 rounded-full border-2 border-gray-200 border-t-emerald-500 animate-spin" />
+        <span className="text-xs">正在加载全国院校地图…</span>
+      </div>
+    ),
+  },
+);
 
 type Tier = "reach" | "match" | "safe";
 
@@ -2096,6 +2115,7 @@ export default function GaoKaoPage() {
           score={scoreDelayed}
           year={year}
           hasMajors={!!majors}
+          majorsTried={majorsTried}
           onOpen={(code) => {
             setSelectedName(code);
             setMajorsOpen(true);

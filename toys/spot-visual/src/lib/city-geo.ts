@@ -15,7 +15,9 @@
 //   只是不在初始视野内，由调用方给出提示。
 // ════════════════════════════════════════════════════════════════════════
 
-import { PROVINCE_ADCODE } from './china-geo';
+// 注意：必须从 china-adcodes 取（纯字面量）。若从 china-geo 取，会把该文件顶层的
+// 582KB 全国 GeoJSON 一并打进本模块的调用方 bundle（/food 首屏曾因此变重）。
+import { PROVINCE_ADCODE } from './china-adcodes';
 import { cityLabel } from './food-city';
 import { withSharecode } from './share-link';
 
