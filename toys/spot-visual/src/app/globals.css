@@ -132,14 +132,29 @@
 
 /* 打印：去掉装饰，保留内容 */
 @media print {
-  header, .no-print { display: none !important; }
-  body { background: #fff !important; }
-  .shadow-sm, .rounded-2xl { box-shadow: none !important; }
-  a::after { content: ''; }
+  header,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+  }
+  .shadow-sm,
+  .rounded-2xl {
+    box-shadow: none !important;
+  }
+  a::after {
+    content: "";
+  }
 }
 
 /* 键盘焦点环（无障碍） */
 :focus-visible {
   outline: 2px solid #059669;
   outline-offset: 2px;
+}
+
+/* 顶部导航高度：sticky 元素据此计算偏移，避免改导航高度后各处硬编码失效 */
+:root {
+  --nav-h: 52px;
 }

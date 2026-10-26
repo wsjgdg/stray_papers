@@ -19,6 +19,7 @@ import {
   Check,
   Download,
   Palette,
+  RotateCcw,
   Heart,
   Scale,
   Search,
@@ -96,6 +97,9 @@ const TIER_LABEL: Record<Tier, string> = {
   safe: "保一保",
 };
 const TIERS: Tier[] = ["reach", "match", "safe"];
+
+const VIEWS = ["map", "list", "compare", "major", "wish"] as const;
+type ViewKey = (typeof VIEWS)[number];
 
 // 地图缩放边界（倍率相对「中国全景」初始视野）：
 // 下限 1 = 不允许缩到比全景更小（否则地图缩成一块豆腐）；
@@ -184,12 +188,32 @@ export default function GaoKaoPage() {
     } catch {}
     return 2026;
   });
-  const [view, setView] = useState<
-    "map" | "list" | "compare" | "major" | "wish"
-  >("map");
+  // 视图与 URL 双向对齐：?view=compare 可分享、可前进后退
+  // 初值固定 map，避免 SSR 与 hydration 首帧不一致；URL 值在挂载 effect 里补。
+  const [view, setView] = useState<ViewKey>("map");
   const [shortlist, setShortlist] = useState<string[]>([]);
   const [sameRankOpen, setSameRankOpen] = useState(false); // 同分去向展开全部
   const [colorMode, setColorMode] = useState<"tier" | "level">("tier");
+  const [mapReset, setMapReset] = useState(0); // 地图复位视野信号
+
+  // 视图 → URL（replaceState，不新增历史栈；地图为默认值时不写参数）
+  // 首次挂载先把 URL 里的 ?view= 应用到状态，之后才单向回写，避免互相覆盖。
+  const urlViewApplied = useRef(false);
+  useEffect(() => {
+    if (!urlViewApplied.current) {
+      urlViewApplied.current = true;
+      const v = new URLSearchParams(window.location.search).get("view");
+      if (v && v !== view && VIEWS.includes(v as ViewKey)) {
+        setView(v as ViewKey);
+        return;
+      }
+    }
+    const u = new URL(window.location.href);
+    if (u.searchParams.get("view") === (view === "map" ? null : view)) return;
+    if (view === "map") u.searchParams.delete("view");
+    else u.searchParams.set("view", view);
+    window.history.replaceState(null, "", u.toString());
+  }, [view]);
   const [isMobile, setIsMobile] = useState(false);
   const [copied, setCopied] = useState(false);
   const [filter, setFilter] = useState<FilterKey>("all");
@@ -617,6 +641,25 @@ export default function GaoKaoPage() {
     return { ...c, out };
   }, [points]);
 
+  // 批次提示：原文很长，收进 ⓘ 的 title，避免每次换省都把控件带挤到换行
+  const batchHint = useMemo(() => {
+    if (batchGroup === "benke") return "";
+    const isEmpty = admissionsFor(prov, cat, batchGroup).length === 0;
+    const name =
+      batchGroup === "tiqian"
+        ? "提前"
+        : batchGroup === "zhuanxiang"
+          ? "专项计划"
+          : "专科";
+    if (isEmpty)
+      return `该省没有独立的${name}批次（相关计划多并入其他批次），换省或切回本科批查看`;
+    if (batchGroup === "tiqian")
+      return "提前批含军警/公费师范等，录取多需政审体检面试";
+    if (batchGroup === "zhuanxiang")
+      return "专项计划面向农村户籍等特定资格考生";
+    return "专科批；冲稳保区间基于你的本科分数会大量超出区间";
+  }, [batchGroup, prov, cat]);
+
   const rec = useMemo(
     () =>
       ready
@@ -721,10 +764,60 @@ export default function GaoKaoPage() {
   const [shareUrl, setShareUrl] = useState("");
   useEffect(() => {
     setShareUrl(window.location.href);
-  }, [prov, cat, score]);
-  const shareText = `我在「志愿探索」查了 ${prov}·${cat} ${score} 分（位次约 ${
-    userRank ? `#${userRank.toLocaleString()}` : "未知"
-  }）：冲 ${counts.reach} / 稳 ${counts.match} / 保 ${counts.safe} 所。${shareUrl}`;
+  }, [prov, cat, score, year, view]);
+
+  // 位次百分位分母：一分一段表最后一档即该科类考生总人数
+  const totalRank = useMemo(() => {
+    const last = curve[curve.length - 1];
+    return Array.isArray(last) ? last[1] : 0;
+  }, [curve]);
+
+  // 三档各取分差最接近的一所，供分享卡「三档最近的一所」
+  const cardPicks = useMemo(() => {
+    if (!rec) return [];
+    const out: {
+      tier: "reach" | "match" | "safe";
+      name: string;
+      minScore: number;
+      gap: number;
+    }[] = [];
+    for (const tier of ["reach", "match", "safe"] as const) {
+      const first = rec[tier][0];
+      if (first)
+        out.push({
+          tier,
+          name: first.schoolName,
+          minScore: first.admission.minScore,
+          gap: first.gap,
+        });
+    }
+    return out;
+  }, [rec, enriched]);
+
+  const shareText = (() => {
+    const parts: string[] = [];
+    const rankText = userRank ? `#${userRank.toLocaleString()}` : "未知";
+    parts.push(
+      `我在「志愿探索」查了 ${year} 年 ${prov}·${cat} ${score} 分（位次约 ${rankText}）：冲 ${counts.reach} / 稳 ${counts.match} / 保 ${counts.safe} 所。`,
+    );
+    if (cardPicks.length) {
+      parts.push(
+        `最接近的一所：${cardPicks
+          .map((p) => `${TIER_LABEL[p.tier]} ${p.name}（投档 ${p.minScore}）`)
+          .join("；")}。`,
+      );
+    }
+    if (sameRankSchools.length) {
+      parts.push(
+        `同分去向：${sameRankSchools
+          .slice(0, 3)
+          .map((s) => s.name)
+          .join("、")} 等 ${sameRankSchools.length} 所。`,
+      );
+    }
+    parts.push(`${shareUrl}  #WorkBuddy #1024程序员节`);
+    return parts.join("\n");
+  })();
 
   const copyShare = () => {
     navigator.clipboard
@@ -745,6 +838,13 @@ export default function GaoKaoPage() {
       ctrl,
       year,
       counts,
+      totalRank,
+      picks: cardPicks,
+      sameRank: sameRankSchools.slice(0, 3).map((s) => ({
+        name: s.name,
+        minScore: s.minScore,
+        planCount: s.planCount,
+      })),
     });
   };
 
@@ -975,7 +1075,7 @@ export default function GaoKaoPage() {
                 和你同分的考生去了哪里？（{sameRankSchools.length}{" "}
                 所院校在你的位次附近录取，按招生计划数排序）
               </summary>
-              <div className="mt-2 flex flex-wrap gap-1.5">
+              <div className="mt-2 flex flex-wrap gap-1.5 max-h-44 overflow-y-auto pr-1">
                 {(sameRankOpen
                   ? sameRankSchools
                   : sameRankSchools.slice(0, 12)
@@ -1041,39 +1141,6 @@ export default function GaoKaoPage() {
               区间外 {counts.out}
             </span>
           </div>
-        </div>
-      </div>
-
-      {/* 分享（双视图共用） */}
-      <div className="mb-5 rounded-2xl border border-gray-200 bg-white p-4 grid gap-3 sm:grid-cols-[1fr_210px] sm:items-end">
-        <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-3">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 mb-1">
-            <Share2 className="w-3.5 h-3.5 text-indigo-500" /> 分享卡 ·
-            #WorkBuddy #1024程序员节
-          </div>
-          <pre className="text-[11px] text-gray-500 whitespace-pre-wrap font-sans leading-relaxed max-h-[72px] overflow-y-auto">
-            {shareText}
-          </pre>
-        </div>
-        <div className="grid gap-2">
-          <button
-            onClick={copyShare}
-            className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-indigo-50 text-indigo-700 text-sm font-semibold hover:bg-indigo-100 transition-colors border border-indigo-200"
-          >
-            {copied ? (
-              <Check className="w-4 h-4" />
-            ) : (
-              <Share2 className="w-4 h-4" />
-            )}
-            {copied ? "已复制分享文案" : "复制分享文案"}
-          </button>
-          <button
-            onClick={exportCard}
-            className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-colors border border-gray-300"
-          >
-            <Download className="w-4 h-4" />
-            导出分享卡图片
-          </button>
         </div>
       </div>
 
@@ -1179,28 +1246,15 @@ export default function GaoKaoPage() {
             {label}
           </button>
         ))}
-        {batchGroup !== "benke" &&
-          admissionsFor(prov, cat, batchGroup).length === 0 && (
-            <span className="text-amber-500 ml-1">
-              该省没有独立的
-              {batchGroup === "tiqian"
-                ? "提前"
-                : batchGroup === "zhuanxiang"
-                  ? "专项计划"
-                  : "专科"}
-              批次（相关计划多并入其他批次），换省或切回本科批查看
-            </span>
-          )}
-        {batchGroup !== "benke" &&
-          admissionsFor(prov, cat, batchGroup).length > 0 && (
-            <span className="text-amber-500 ml-1">
-              {batchGroup === "tiqian"
-                ? "提前批含军警/公费师范等，录取多需政审体检面试"
-                : batchGroup === "zhuanxiang"
-                  ? "专项计划面向农村户籍等特定资格考生"
-                  : "专科批；冲稳保区间基于你的本科分数会大量超出区间"}
-            </span>
-          )}
+        {batchHint && (
+          <span
+            className="ml-1 inline-flex items-center gap-1 text-amber-500 cursor-help"
+            title={batchHint}
+          >
+            <AlertTriangle className="w-3.5 h-3.5" />
+            批次说明
+          </span>
+        )}
         {/* 筛选/排序只影响地图与清单，其余视图不渲染，省一条横向控件带 */}
         {(view === "map" || view === "list") && (
           <>
@@ -1252,6 +1306,7 @@ export default function GaoKaoPage() {
               className="w-full"
               minZoom={MAP_ZOOM_MIN}
               maxZoom={MAP_ZOOM_MAX}
+              resetSignal={mapReset}
             />
             <div className="absolute left-3 bottom-3 flex flex-wrap gap-2 bg-white/85 backdrop-blur-sm rounded-lg border border-gray-200 px-2.5 py-2">
               {colorMode === "tier"
@@ -1296,6 +1351,14 @@ export default function GaoKaoPage() {
                 <Palette className="w-3 h-3" />
                 {colorMode === "tier" ? "冲稳保" : "院校层次"}着色
               </button>
+              <button
+                onClick={() => setMapReset((n) => n + 1)}
+                title="回到中国全景（缩放 1×、居中）"
+                className="flex items-center gap-1 text-[11px] font-medium text-gray-600 bg-white/85 backdrop-blur-sm rounded-lg border border-gray-200 px-2 py-1 hover:bg-gray-50 transition-colors"
+              >
+                <RotateCcw className="w-3 h-3" />
+                复位视野
+              </button>
               <span className="text-[10px] text-gray-400 bg-white/80 rounded px-1.5 py-0.5">
                 滚轮缩放 {MAP_ZOOM_MIN}×–{MAP_ZOOM_MAX}× / 拖拽 · 点省份切换
               </span>
@@ -1303,7 +1366,7 @@ export default function GaoKaoPage() {
           </section>
 
           {/* 详情面板 */}
-          <aside className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm lg:sticky lg:top-[68px]">
+          <aside className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm lg:sticky lg:top-[calc(var(--nav-h,52px)+12px)]">
             {selSchool && selAdm ? (
               <motion.div
                 key={selSchool.name}
@@ -1782,7 +1845,7 @@ export default function GaoKaoPage() {
           </div>
 
           {/* 清单视图的详情面板 */}
-          <aside className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm lg:sticky lg:top-[68px]">
+          <aside className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm lg:sticky lg:top-[calc(var(--nav-h,52px)+12px)]">
             {selSchool && selAdm ? (
               <div className="flex items-center gap-2 flex-wrap mb-2">
                 <h2 className="text-lg font-bold text-gray-900">
@@ -1877,6 +1940,77 @@ export default function GaoKaoPage() {
           }}
         />
       )}
+
+      {/* 分享卡：放在页尾——用户看完结果才有分享动机 */}
+      <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
+        <div className="flex items-center gap-1.5 text-sm font-semibold text-gray-800">
+          <Share2 className="w-4 h-4 text-indigo-500" /> 分享你的结果
+          <span className="text-xs font-normal text-gray-400">
+            #WorkBuddy #1024程序员节
+          </span>
+        </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_210px] sm:items-start">
+          <div>
+            <pre className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-3 text-[11px] text-gray-500 whitespace-pre-wrap font-sans leading-relaxed max-h-[120px] overflow-y-auto">
+              {shareText}
+            </pre>
+            <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] text-gray-500">
+              <span className="px-2 py-0.5 rounded-full bg-gray-50 border border-gray-200">
+                卡片含：省·科类 / 分数·位次
+              </span>
+              {ctrl != null && (
+                <span className="px-2 py-0.5 rounded-full bg-gray-50 border border-gray-200">
+                  {score - ctrl >= 0
+                    ? `超本科线 ${score - ctrl} 分`
+                    : `本科线下 ${ctrl - score} 分`}
+                </span>
+              )}
+              {totalRank > 0 && userRank > 0 && (
+                <span className="px-2 py-0.5 rounded-full bg-gray-50 border border-gray-200">
+                  位次前{" "}
+                  {((userRank / totalRank) * 100).toFixed(
+                    userRank / totalRank < 0.01 ? 2 : 1,
+                  )}
+                  %
+                </span>
+              )}
+              {cardPicks.length > 0 && (
+                <span className="px-2 py-0.5 rounded-full bg-gray-50 border border-gray-200">
+                  三档最近院校 {cardPicks.length} 所
+                </span>
+              )}
+              {sameRankSchools.length > 0 && (
+                <span className="px-2 py-0.5 rounded-full bg-gray-50 border border-gray-200">
+                  同分去向 {Math.min(3, sameRankSchools.length)} 所
+                </span>
+              )}
+              <span className="px-2 py-0.5 rounded-full bg-gray-50 border border-gray-200">
+                扫码回本页
+              </span>
+            </div>
+          </div>
+          <div className="grid gap-2">
+            <button
+              onClick={copyShare}
+              className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-indigo-50 text-indigo-700 text-sm font-semibold hover:bg-indigo-100 transition-colors border border-indigo-200"
+            >
+              {copied ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                <Share2 className="w-4 h-4" />
+              )}
+              {copied ? "已复制分享文案" : "复制分享文案"}
+            </button>
+            <button
+              onClick={exportCard}
+              className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-colors border border-gray-300"
+            >
+              <Download className="w-4 h-4" />
+              导出分享卡图片
+            </button>
+          </div>
+        </div>
+      </div>
 
       <div className="mt-6 flex gap-2 items-start text-[11px] text-gray-400 bg-gray-50 border border-gray-200 rounded-xl p-3 leading-relaxed">
         <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />

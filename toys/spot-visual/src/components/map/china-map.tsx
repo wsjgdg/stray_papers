@@ -46,6 +46,8 @@ export interface ChinaMapProps {
   minZoom?: number;
   /** 缩放上限：不传则不限制 */
   maxZoom?: number;
+  /** 递增即复位视野（回到初始全景，丢弃用户缩放/平移） */
+  resetSignal?: number;
 }
 
 /**
@@ -62,6 +64,7 @@ export default function ChinaMap({
   height = "100%",
   minZoom,
   maxZoom,
+  resetSignal,
 }: ChinaMapProps) {
   const elRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<echarts.ECharts | null>(null);
@@ -69,6 +72,21 @@ export default function ChinaMap({
   cbRef.current = onSelect;
   const zoomRef = useRef({ min: minZoom, max: maxZoom });
   zoomRef.current = { min: minZoom, max: maxZoom };
+  const optionRef = useRef(option);
+  optionRef.current = option;
+  const resetSeen = useRef(resetSignal);
+
+  // 复位视野：用 notMerge 重放原始 option，不再回灌已漫游的 zoom/center
+  useEffect(() => {
+    if (resetSignal === undefined || resetSignal === resetSeen.current) return;
+    resetSeen.current = resetSignal;
+    const chart = chartRef.current;
+    if (!chart) return;
+    chart.setOption(
+      { animation: false, ...(optionRef.current as object) } as EChartsOption,
+      { notMerge: true },
+    );
+  }, [resetSignal]);
 
   useEffect(() => {
     if (!elRef.current) return;
