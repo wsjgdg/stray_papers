@@ -1,90 +1,52 @@
 /**
  * 生产启动器：能复用已有构建就绝不再构建一次。
  *
- * 为什么需要：部署沙箱上传的是**源码**（不含 .next），startCmd 里带 build 就意味着
- * 每次冷启动都要把整个 Next 项目重编译一遍——本机实测干净构建 17.3s，这 17s 全在
- * 用户等待里。但沙箱的磁盘通常是持久的：只要 `.next` 还在，且没有源码比它更新，
- * 就没有任何理由重建。
+ * 为什么需要：部署沙箱上传的是**源码**（不含 .next），startCmd 里带 build 意味着
+ * 每次冷启动都要把整个 Next 项目重编译一遍——本机实测干净构建 12.6s，这段时间
+ * 用户只能干等。而沙箱磁盘通常是持久的：只要 `.next` 还在、且源码内容没变，
+ * 就没必要重建（实测降回 0.9s）。
  *
- * 判断规则：
- *   1) `.next/BUILD_ID` 与 `.next/server` 都存在；
- *   2) `src/`、`public/data/`、`next.config.ts`、`package.json` 里最新的 mtime
- *      不晚于 `.next/.build-stamp`（构建收尾戳，见 scripts/mark-built.mjs）。
- *      不用 BUILD_ID 的 mtime：Next 在构建早期就写了它，会误判源码更新。
- * 两条都满足 → 直接 node server.mjs；否则跑一次 build:deploy。
+ * 判定一律用**内容哈希**（scripts/lib/source-hash.mjs），不用 mtime：
+ * 平台上传源码会保留原始时间戳，旧 .next 的 mtime 常常比新源码还新，
+ * 按时间判断会把新代码误判成「无需重建」，直接端出旧页面（已踩过）。
  *
- * 任何异常都保守回退到「重新构建」，宁可慢也不端出过期构建。
+ * 任何异常都保守回退到「重新构建」——宁可慢，也不端出过期构建。
  */
 import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { sourceHash } from "./lib/source-hash.mjs";
 
 const BUILD_ID = path.join(".next", "BUILD_ID");
 const STAMP = path.join(".next", ".build-stamp");
-const WATCH = [
-  "src",
-  path.join("public", "data"),
-  "next.config.ts",
-  "package.json",
-];
-
-// 构建自己会写的文件，mtime 不能当作「源码变过」的证据
-const IGNORE_RE =
-  /(\.generated\.ts$|^public[\\/]data[\\/]|^src[\\/]lib[\\/].*\.generated\.)/;
-
-/** 递归取最新 mtime（毫秒）；目录不存在则忽略 */
-function newestMtime(target) {
-  let newest = 0;
-  let newestPath = "";
-  const walk = (p) => {
-    if (IGNORE_RE.test(p.replace(/\\/g, "/").replace(/^\.\//, ""))) return;
-    let st;
-    try {
-      st = fs.statSync(p);
-    } catch {
-      return;
-    }
-    if (st.isDirectory()) {
-      for (const name of fs.readdirSync(p)) walk(path.join(p, name));
-    } else if (st.mtimeMs > newest) {
-      newest = st.mtimeMs;
-      newestPath = p;
-    }
-  };
-  walk(target);
-  return { newest, newestPath };
-}
 
 function buildIsFresh() {
   if (
     !fs.existsSync(BUILD_ID) ||
+    !fs.existsSync(STAMP) ||
     !fs.existsSync(path.join(".next", "server"))
   ) {
-    return { fresh: false, why: "缺少 .next 构建产物" };
+    return { fresh: false, why: "缺少 .next 构建产物或构建戳" };
   }
-  const builtAt = fs.statSync(BUILD_ID).mtimeMs;
-  let newest = 0;
-  let newestFile = "";
-  for (const target of WATCH) {
-    const { newest: m, newestPath } = newestMtime(target);
-    if (m > newest) {
-      newest = m;
-      newestFile = newestPath || target;
-    }
+  let stamp;
+  try {
+    stamp = JSON.parse(fs.readFileSync(STAMP, "utf8"));
+  } catch {
+    return { fresh: false, why: "构建戳损坏" };
   }
-  // 4s 容差：构建过程中写入的文件与收尾戳常常只差几十毫秒，早先 2s 容差
-  // 仍会偶发误判成「源码更新」，导致每次冷启动都白重建一遍。
-  if (newest > builtAt + 4000) {
-    return { fresh: false, why: `${newestFile} 比构建产物新` };
+  if (!stamp?.hash) return { fresh: false, why: "构建戳里没有源码指纹" };
+  const { hash } = sourceHash();
+  if (hash !== stamp.hash) {
+    return { fresh: false, why: `源码已变化（${stamp.hash} → ${hash}）` };
   }
-  return { fresh: true, builtAt };
+  return { fresh: true, at: stamp.iso };
 }
 
 const state = buildIsFresh();
 if (state.fresh) {
-  console.log("[start] 复用已有构建，跳过 next build");
+  console.log(`[start] 复用已有构建（${state.at}），跳过 next build`);
 } else {
-  console.log(`[start] 需要重新构建：${state.why ?? "未知"}`);
+  console.log(`[start] 需要重新构建：${state.why}`);
   const t0 = Date.now();
   const r = spawnSync("npm", ["run", "build:deploy"], {
     stdio: "inherit",

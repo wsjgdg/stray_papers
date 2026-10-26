@@ -1,14 +1,23 @@
 /**
- * 构建收尾：写一个「构建完成」时间戳，供 scripts/start-prod.mjs 判断能否跳过重建。
+ * 构建收尾：把「构建完成时刻 + 源码内容指纹」写进 .next/.build-stamp，
+ * 供 scripts/start-prod.mjs 判断下次冷启动能否跳过重建。
  *
- * 为什么不直接用 .next/BUILD_ID 的 mtime：Next 在构建**早期**就写了 BUILD_ID，
- * 之后还有编译产物落盘，实测 BUILD_ID 会比部分源码文件的 mtime 还早一两秒，
- * 导致「源码比构建新」的误判（每次冷启动都白重建一遍）。
- * 这个戳是 build:deploy 的最后一步写的，最能代表「构建完成时刻」。
+ * 为什么不能用 .next/BUILD_ID 的 mtime：
+ *   1) Next 在构建**早期**就写了 BUILD_ID，之后还有产物落盘，mtime 早于部分源码；
+ *   2) 平台上传源码常保留原始时间戳，沙箱里旧的 .next 反而"更新"，
+ *      会被误判成可复用，线上就跑旧代码（这次真踩到了）。
+ * 所以判定一律以内容哈希为准。
  */
 import fs from "node:fs";
+import { sourceHash } from "./lib/source-hash.mjs";
 
-const stamp = { at: Date.now(), iso: new Date().toISOString() };
+const { hash, count } = sourceHash();
+const stamp = {
+  at: Date.now(),
+  iso: new Date().toISOString(),
+  hash,
+  files: count,
+};
 fs.mkdirSync(".next", { recursive: true });
 fs.writeFileSync(".next/.build-stamp", JSON.stringify(stamp), "utf8");
-console.log(`[build] 完成于 ${stamp.iso}`);
+console.log(`[build] 完成于 ${stamp.iso}，源码指纹 ${hash}（${count} 个文件）`);
