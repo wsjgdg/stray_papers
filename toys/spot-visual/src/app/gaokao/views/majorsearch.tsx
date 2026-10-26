@@ -26,6 +26,7 @@ export function MajorSearch({
   score,
   year,
   hasMajors,
+  majorsTried,
   onOpen,
   onAddWish,
   hasWish,
@@ -38,6 +39,8 @@ export function MajorSearch({
   score: number;
   year: number;
   hasMajors: boolean; // 专业级数据仅 2025
+  /** 已尝试拉取过专业数据（用于区分「加载中」与「本省无数据」） */
+  majorsTried: boolean;
   onOpen: (name: string) => void;
   onAddWish: (w: WishItem) => void;
   hasWish: (name: string, group: string, major: string) => boolean;
@@ -151,9 +154,18 @@ export function MajorSearch({
           + 把该系最易达的专业加入志愿表。
         </p>
       </div>
-      {!hasMajors ? (
+      {!hasMajors && !majorsTried ? (
         <div className="py-14 text-center text-sm text-gray-400">
           正在加载专业目录（2025 年口径）…
+        </div>
+      ) : !hasMajors ? (
+        <div className="py-14 px-8 text-center text-sm text-gray-400 leading-relaxed">
+          {prov}暂无专业级投档数据
+          <br />
+          <span className="text-[11px] text-gray-300">
+            专业级数据集仅覆盖 28 个省份（缺山西 / 青海 /
+            西藏等）。院校级投档与一分一段不受影响。
+          </span>
         </div>
       ) : !kw ? (
         <div className="py-14 text-center text-sm text-gray-400">
