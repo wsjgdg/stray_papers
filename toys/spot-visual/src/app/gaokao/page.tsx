@@ -49,6 +49,7 @@ import {
   rememberIndex,
   indexUrlFor,
   provinceUrlFor,
+  rememberProvincePackage,
   isProvinceLoaded,
   cachedProvincePackage,
   loadProvincePackage,
@@ -325,6 +326,32 @@ export default function GaoKaoPage() {
   const indexReady = dataState === "ready" && indexYear === year;
   const [provReady, setProvReady] = useState(false);
   const ready = indexReady && provReady; // 所有数据派生 memo 的门槛
+
+  // 闲时预热另一个年份：年份清单 1~3KB + 当前省的包 15~60KB。
+  // 切年是本地最常用的操作，预热之后切换基本零等待，也顺带消掉中间的骨架闪烁。
+  useEffect(() => {
+    if (!ready) return;
+    const other = GAOKAO_YEARS.find((y) => y !== year);
+    if (!other) return;
+    const t = setTimeout(() => {
+      void (async () => {
+        try {
+          if (!cachedIndex(other)) {
+            const r = await fetch(withSharecode(indexUrlFor(other)));
+            if (r.ok) rememberIndex(other, await r.json());
+          }
+          if (prov && !cachedProvincePackage(other, prov)) {
+            const r2 = await fetch(withSharecode(provinceUrlFor(other, prov)));
+            if (r2.ok) rememberProvincePackage(other, prov, await r2.json());
+          }
+        } catch {
+          // 预热失败无所谓：真切换时还会重新拉
+        }
+      })();
+    }, 1500);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, year, prov]);
 
   const provinces = useMemo(
     () => (indexReady ? activeProvinces() : []),
@@ -640,6 +667,17 @@ export default function GaoKaoPage() {
     () => (ready ? rankForScore(prov, cat, score) : 0),
     [ready, prov, cat, score, year],
   );
+
+  // 一分一段 / 位次的三态。之前只有「有」和「没有」两态，切年瞬间 ready=false
+  // 会被当成「没有」，于是先闪一句「该科类暂无一分一段表」再跳回正常值。
+  const rankState: "loading" | "empty" | "ok" =
+    dataState === "fail"
+      ? "empty"
+      : !ready
+        ? "loading"
+        : userRank
+          ? "ok"
+          : "empty";
   const ctrl = useMemo(
     () => (ready ? controlLine(prov, cat) : undefined),
     [ready, prov, cat, year],
@@ -1354,20 +1392,40 @@ export default function GaoKaoPage() {
               <div className="text-xs text-indigo-500">
                 你的预估位次（{prov}·{cat}）
               </div>
-              <div className="text-2xl font-bold text-indigo-700">
-                {userRank
-                  ? `#${userRank.toLocaleString()}`
-                  : "该科类暂无一分一段表"}
-              </div>
-              <ScoreDistCurve
-                curve={curve}
-                score={scoreDelayed}
-                rank={userRank}
-                ctrl={ctrl}
-              />
+              {rankState === "loading" ? (
+                // 切年瞬间：给同高的骨架，别用「暂无」误导，也别让高度跳动
+                <div className="h-8 flex items-center">
+                  <div className="skeleton h-6 w-28 rounded" />
+                </div>
+              ) : (
+                <div className="text-2xl font-bold text-indigo-700">
+                  {rankState === "ok"
+                    ? `#${userRank.toLocaleString()}`
+                    : "该科类暂无一分一段表"}
+                </div>
+              )}
+              {rankState === "loading" ? (
+                <div className="mt-1 flex items-center gap-2">
+                  <div className="skeleton h-9 w-[130px] rounded" />
+                  <span className="text-[10px] text-gray-400">
+                    正在加载 {year} 年一分一段…
+                  </span>
+                </div>
+              ) : (
+                <ScoreDistCurve
+                  curve={curve}
+                  score={scoreDelayed}
+                  rank={userRank}
+                  ctrl={ctrl}
+                />
+              )}
             </div>
           </div>
-          {ctrl != null && (
+          {rankState === "loading" ? (
+            <div className="text-xs text-gray-400 flex items-center gap-2">
+              <div className="skeleton h-3 w-24 rounded" />
+            </div>
+          ) : ctrl != null ? (
             <div className="text-xs text-gray-500">
               本科线 <b className="text-gray-700">{ctrl}</b>
               <span className="text-gray-400">
@@ -1375,7 +1433,7 @@ export default function GaoKaoPage() {
                 {score - ctrl} 分）
               </span>
             </div>
-          )}
+          ) : null}
           {/* 同分去向 */}
           {ready && sameRankSchools.length > 0 && (
             <details className="w-full mt-2">
@@ -1451,6 +1509,15 @@ export default function GaoKaoPage() {
           </div>
         </div>
       </div>
+
+      {/* 切年/切省进行中：明确告诉用户「在换数据」，而不是让内容先塌成空态 */}
+      {switching && !ready && (
+        <div className="mb-3 flex items-center gap-2 text-xs text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2">
+          <div className="w-3.5 h-3.5 rounded-full border-2 border-indigo-200 border-t-indigo-500 animate-spin" />
+          正在载入 {year} 年 {prov || ""} 数据…
+          <span className="text-indigo-300">下方位次/分数线同步更新</span>
+        </div>
+      )}
 
       {/* 地图 / 清单切换 + 院校搜索 */}
       <div className="mb-3 flex flex-wrap items-center gap-2">

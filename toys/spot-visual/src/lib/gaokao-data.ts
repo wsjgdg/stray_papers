@@ -298,6 +298,21 @@ export function cachedProvincePackage(
   return pkgCache.get(`${year}|${prov}`) ?? null;
 }
 
+/**
+ * 预热用：把某个年份的省包放进缓存，但**不动运行时**。
+ *
+ * 和 loadProvincePackage 的区别：后者要求 pkg.year === 当前运行时年份（会直接
+ * 合并进索引）。预热未来才会切换到的年份时，运行时还是旧年份，必须只入缓存。
+ */
+export function rememberProvincePackage(
+  year: number,
+  prov: string,
+  pkg: ProvincePackage,
+): void {
+  if (!pkg || typeof pkg !== "object" || !pkg.cats) return;
+  pkgCache.set(`${year}|${prov}`, pkg);
+}
+
 /** 合并单省数据包到运行时索引 */
 export function loadProvincePackage(pkg: ProvincePackage): boolean {
   if (!pkg || typeof pkg !== "object" || !pkg.cats) return false;
