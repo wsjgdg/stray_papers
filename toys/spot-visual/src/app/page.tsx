@@ -29,6 +29,7 @@ import {
   UtensilsCrossed,
   Bike,
   Globe,
+  Compass,
   Clock,
   AlertTriangle,
   Activity,
@@ -828,6 +829,19 @@ function SpotDetailDialog() {
       .slice(0, 4);
   }, [spots, selectedSpot]);
 
+  // ═══ 同城推荐：统一库里同城的其它景点（大城市包下最多 6 个） ═══
+  const sameCitySpots = useMemo(() => {
+    if (!selectedSpot) return [];
+    const addr = selectedSpot.address;
+    // 城市名 = 地址里第一个「市/州/盟」前的区段（如 杭州市/苏州/兴安盟）
+    const m = addr.match(/^(.*?(?:市|州|盟))/);
+    const city = m ? m[1] : "";
+    if (!city || city.length < 2) return [];
+    return spots
+      .filter((s) => s.id !== selectedSpot.id && s.address.includes(city))
+      .slice(0, 6);
+  }, [spots, selectedSpot]);
+
   // ═══ 跨模块联动：地址命中省份时，给「看代表菜」deep link ═══
   const provinceHit = useMemo(() => {
     const addr = selectedSpot?.address ?? "";
@@ -963,6 +977,26 @@ function SpotDetailDialog() {
                   高德用户评分
                 </span>
               </p>
+            )}
+            {/* ═══ 同城推荐：库内同城的其它景点 ═══ */}
+            {sameCitySpots.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-1.5">
+                  <Compass className="w-3.5 h-3.5" />
+                  同城更多
+                </h4>
+                <div className="flex flex-wrap gap-1.5">
+                  {sameCitySpots.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => setSelectedSpot(s)}
+                      className="px-2.5 py-1 rounded-full bg-sky-50 border border-sky-100 text-[11px] font-medium text-sky-700 hover:bg-sky-100 transition-colors"
+                    >
+                      {s.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
             {/* ═══ 图源标注（数据诚实性：说明这张图是谁提供的） ═══ */}
             {spot.image && spot.imageSource && (
