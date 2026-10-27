@@ -43,12 +43,16 @@
  *   · nq = n+(n−1)·rd：n=7 只容 rd=1（nq=13，~0.9ms/试，与 R109 的 k=5 同档）；
  *     n=9 只容 rd=1（nq=17，~18ms/试，与 n=5·k=3 同档重配置降级）。其余 (n,rd)
  *     组合 nq>18 ⟹ 面板禁用 + setN/setRd 自动降档（态矢 2^nq 超 qecExec 上限）。
- *   · 综合表行数 2^n 爆炸（n=9 ⟹ 512 行）⟹ 面板展示封顶 40 行 + 「其余从略」注记
- *     （完整表经 debug handle / pot 测试穷举）。
- *   · DP-over-frames 精确解有**状态空间预算**（QEC_DP_STATE_CAP ≈ 1.2×10⁶）：
- *     n=9·门分支 ⟹ ~3×10⁸ 状态（实测 122s 后 Map 爆容量 RangeError）⟹ qecExactPL
- *     预算外直接返 NaN，页面照 γ>0 的诚实口径显示「DP 超预算，仅 MC」。iid 与
- *     phys·pd=λ=0 不乘门分支熵 ⟹ n=9 也只要毫秒级（实测 7ms），不受限。
+ *   · 综合表行数 2^n 爆炸（n=9 的 w≤5 共 382 行）⟹ **R115 按权重分组折叠 + 过滤框**：
+ *     完整表全部进 DOM、按层展开即可看到每一行（n≤5 仍走 R78 起的扁平 7/26 行
+ *     路径，逐字不变）。
+ *   · DP-over-frames 精确解有**状态空间预算**（R113：QEC_DP_STATE_CAP = 2.5×10⁶，
+ *     估算式 2^{2n}·2^{(n−1)·VB}·2 由逐步插桩实测校准）：
+ *     n=9·门分支 ⟹ 1.34×10⁸ 状态（实测 122s 后 Map 爆容量 RangeError；R114 实测
+ *     Map 上限 1.68e7 < 键空间 6.71e7 ⟹ 结构性不可能）⟹ qecExactPL 预算外直接返
+ *     NaN，页面照 γ>0 的诚实口径显示「DP 超预算，仅 MC」，并补一阶 c₁p（p≲0.005）。
+ *     n=7·rd=1（2.1e6，5.2s）在预算内。iid 与 phys·pd=λ=0 不乘门分支熵 ⟹ n=9 也
+ *     只要毫秒级（实测 7ms），不受限。
  *   · 修一个 n≥7 才暴露的真 bug：帧陪集打包键旧口径 x*32+z 在掩码宽于 5 位时
  *     撞键（n=7 的 {x:1,z:1}=Y₀ 撞上稳定子 {x:0,z:33}⟹ 单 Y 错被误判 perfect）
  *     ⟹ 改 x·2^N+z（≤2^18 精确；n≤5 逐位不变）。
@@ -131,6 +135,23 @@ const QEC_CSS = `
     scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #qeHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
   #qeDiag{position:fixed;left:-9999px}
+  /* R115：综合表分组折叠（n=7/9 的 w≤t+1 共 99/382 行，R112 起封顶 40 行 ⟹
+     完整表不可达）。按错误权重分 details 组 + 过滤框，不改 DOM 行文本格式
+     （n≤5 仍走扁平旧路径，逐字不变）。
+     ⚠ 本块是 JS 模板字面量：注释里**不能出现反引号**（会提前闭合字符串——
+     本轮首版就踩了这个坑，整页 ReferenceError: details is not defined）。 */
+  #qeTabTools{display:flex;gap:5px;margin:0 0 4px}
+  #qeTabFilter{flex:1;min-width:0;font-family:var(--mono);font-size:9.5px;padding:2px 5px;
+    background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:4px;color:var(--txt)}
+  #qeTabToggle{font-size:9.5px;padding:2px 6px;white-space:nowrap}
+  #qeTable details{margin:0}
+  #qeTable summary{cursor:pointer;color:var(--txt);opacity:.75;font-size:10px;padding:1px 0;
+    list-style:none;display:flex;gap:4px;align-items:baseline}
+  #qeTable summary::-webkit-details-marker{display:none}
+  #qeTable summary::before{content:'▸';font-size:8px;opacity:.7}
+  #qeTable details[open] summary::before{content:'▾'}
+  #qeTable details[open] summary{color:var(--cyan);opacity:1}
+  #qeTable .qtr{white-space:nowrap;padding-left:9px}
   @media (max-width:1180px){#qeStage{width:calc(100vw - 60px)}#qeHint{display:none}}
 `;
 
@@ -181,6 +202,7 @@ export class QecApp {
     this.ens = null;
     this.curve = null;
     this.svy = null;      /* 门级：一阶故障枚举（c₁） */
+    this._tabFilter = ''; /* R115：综合表过滤词（重渲染后回填，n≤5 走扁平路径用不到） */
     /* R114：曲线缓存（键 = 影响 sweep 的全部输入；sweep 一次的代价很高：
        n=5·rd=3 ≈54s、n=7·rd=1 ≈32s ⟹ 切回旧配置直接复用）。FIFO，≤24 条。 */
     this._curveCache = new Map();
@@ -771,24 +793,76 @@ export class QecApp {
     const fixSym = (QEC_CODES[s.code] || QEC_CODES.bitflip).fix.toUpperCase();
     const rows = qecSyndromeTable(N);
     /* 行序 = 权重升序（表内已排好）。展示「可纠层 + 首个失败层」：n=3 ⟹ w≤2
-       （与 R78 七行基线逐行一致）；n=5 ⟹ w≤3（16 行 ✓ + 10 行 ✗）。
-       R112：n=7/9 的行数 2^n 爆炸（w≤t+1 共 99/382 行）⟹ 面板展示封顶 40 行
-       + 「其余从略」注记（完整表经 debug handle `table()` / pot 测试穷举）。 */
-    const MAXROWS = 40;
+       （与 R78 七行基线逐行一致）；n=5 ⟹ w≤3（16 行 ✓ + 10 行 ✗）。 */
     const shown = rows.filter(r => r.errors.length <= t + 1);
-    const txt = shown.slice(0, MAXROWS)
-      .map(r => {
-        const e = r.errors.length ? '[' + r.errors.join(',') + ']' : '无错';
-        return e + ' → ' + r.syn.join('') + ' → ' +
-          (r.fixQs.length ? r.fixQs.map(q => fixSym + q).join(' ') : '不动') + (r.ok ? ' ✓' : ' ✗');
-      }).join('<br>');
-    const el = this.q('#qeTable');
-    if (el) el.innerHTML = txt +
-      (shown.length > MAXROWS
-        ? '<br><span style="color:var(--amber)">…其余 ' + (shown.length - MAXROWS) + ' 行从略（权重 ≤' + (t + 1) + ' 共 ' + shown.length + ' 行）</span>'
-        : '') +
-      '<br><span style="color:var(--amber)">' +
+    const fmt = r => {
+      const e = r.errors.length ? '[' + r.errors.join(',') + ']' : '无错';
+      return e + ' → ' + r.syn.join('') + ' → ' +
+        (r.fixQs.length ? r.fixQs.map(q => fixSym + q).join(' ') : '不动') + (r.ok ? ' ✓' : ' ✗');
+    };
+    const note = '<span style="color:var(--amber)">' +
       (N === 3 ? '双错必 ✗（综合指向第三个）' : '≥' + (t + 1) + ' 错必 ✗（最小权重解码修到更重的模式上）') + '</span>';
+    const el = this.q('#qeTable');
+    if (!el) return;
+    /* n≤5（7 / 26 行）走 R78 起的扁平路径，逐字不变（cdp110 A4/A5、F3 基线） */
+    const MAXROWS = 40;
+    if (shown.length <= MAXROWS){
+      el.innerHTML = shown.map(fmt).join('<br>') + '<br>' + note;
+      return;
+    }
+    /* R115：n=7/9（w≤t+1 共 99 / 382 行）⟹ **按权重分组折叠 + 过滤框**。
+       完整表全部进 DOM（按权重展开即可看到每一行），不再「封顶 40 其余从略」——
+       分组后单屏默认只摊开 w=0/1（8 行），面板高度与旧版持平。 */
+    const groups = [];
+    for (let w = 0; w <= t + 1; w++){
+      const rs = shown.filter(r => r.errors.length === w);
+      const good = rs.filter(r => r.ok).length;
+      groups.push({ w, rs, good, bad: rs.length - good });
+    }
+    const openW = 1;   /* 默认展开 w≤1（教学上最关键的两层：无错 + 单错全纠） */
+    el.innerHTML =
+      '<div id="qeTabTools">' +
+        '<input id="qeTabFilter" placeholder="过滤：错误位 / 综合征 / 修正（如 1,3 或 0110）" ' +
+          'title="子串匹配整行文本（错误位串、综合征、修正位）；留空显示全部。过滤只切显示，不重建表格">' +
+        '<button id="qeTabToggle" title="展开/折叠全部权重层">全部展开</button>' +
+      '</div>' +
+      groups.map(g =>
+        '<details data-w="' + g.w + '"' + (g.w <= openW ? ' open' : '') + '>' +
+          '<summary>w=' + g.w + ' · ' + g.rs.length + ' 行 · ✓' + g.good + (g.bad ? ' ✗' + g.bad : '') + '</summary>' +
+          g.rs.map(r => '<div class="qtr" data-k="' + fmt(r) + '">' + fmt(r) + '</div>').join('') +
+        '</details>').join('') +
+      '<div style="margin-top:3px">' + note + '</div>';
+    const inp = this.q('#qeTabFilter');
+    const tog = this.q('#qeTabToggle');
+    const dl = el.querySelectorAll('details');
+    if (tog) tog.onclick = () => {
+      const open = tog.dataset.open !== '1';
+      tog.dataset.open = open ? '1' : '0';
+      tog.textContent = open ? '全部折叠' : '全部展开';
+      dl.forEach(d => { d.open = open; });
+    };
+    if (inp){
+      inp.value = this._tabFilter || '';
+      const apply = () => {
+        const q = (inp.value || '').trim();
+        this._tabFilter = inp.value || '';
+        dl.forEach(d => {
+          let vis = 0;
+          d.querySelectorAll('.qtr').forEach(r => {
+            const hit = !q || r.dataset.k.indexOf(q) >= 0;
+            r.style.display = hit ? '' : 'none';
+            if (hit) vis++;
+          });
+          /* 过滤时强制展开命中组（否则命中行藏在折叠组里等于没搜到）；
+             清空过滤则**恢复默认展开**（w≤1），否则停在过滤留下的展开态；
+             空组整组隐藏，避免留一堆空 summary */
+          d.style.display = vis ? '' : 'none';
+          d.open = q ? vis > 0 : Number(d.dataset.w) <= openW;
+        });
+      };
+      inp.oninput = apply;
+      if (this._tabFilter) apply();   /* 重渲染后保留过滤词 */
+    }
   }
 
   renderHud(){
@@ -1827,6 +1901,44 @@ export class QecApp {
       },
       table: () => qecSyndromeTable(qecNormN(self.state.n)),
       setCode: c => { self.setCode(c); self.drawAll(); },
+      /* R115：综合表分组视图的**可断言**投影——组数、每组行数、DOM 里的实际行数
+         （应等于 w≤t+1 的总行数 99/382 ⟹ 完整表可达）、默认展开的组、以及
+         过滤后可见行数（过滤只切 display，不重建 DOM）。 */
+      tabView: () => {
+        const el = self.q('#qeTable');
+        if (!el) return null;
+        const dl = Array.from(el.querySelectorAll('details'));
+        /* ⚠ 折叠的 <details> 里子元素**既不是** display:none **也没有**空 offsetParent
+           （Chrome 走 ::details-content 的 content-visibility，实测子元素
+           offsetParent=ASIDE、getClientRects().length=1、height=16.3px——全是撒谎的，
+           只有 checkVisibility() 说真话）⟹ 显式判定：组必须 open 且自身/组都没被
+           过滤隐藏。实测布局本身是对的（n=7：全折叠 154px / 默认 284px /
+           全展开 1764px），错的只是这个计数。 */
+        const visRow = r => {
+          const d = r.closest('details');
+          if (d && (!d.open || getComputedStyle(d).display === 'none')) return false;
+          return getComputedStyle(r).display !== 'none';
+        };
+        return {
+          grouped: dl.length > 0,
+          groups: dl.length,
+          rowsInDom: el.querySelectorAll('.qtr').length,
+          visRows: Array.from(el.querySelectorAll('.qtr')).filter(visRow).length,
+          open: dl.filter(d => d.open).map(d => Number(d.dataset.w)),
+          visGroups: dl.filter(d => getComputedStyle(d).display !== 'none').length,
+          summaries: dl.map(d => d.querySelector('summary').textContent),
+          hasTools: !!self.q('#qeTabFilter') && !!self.q('#qeTabToggle'),
+          filter: (self._tabFilter || ''),
+        };
+      },
+      /* R115：置过滤词（等价于在框里打字后派发 input 事件） */
+      setTabFilter: v => {
+        const inp = self.q('#qeTabFilter');
+        if (!inp) return false;
+        inp.value = v == null ? '' : String(v);
+        inp.dispatchEvent(new Event('input'));
+        return true;
+      },
       /* R114：曲线缓存条数（≤24，FIFO）——调试/测试用，验证切回旧配置是否命中 */
       cacheSize: () => self._curveCache.size,
       /* R110/R112：码长（3/5/7/9）；nq>18 时 rd 自动降到合法档（n=5：5→3；n=7/9：→1） */
