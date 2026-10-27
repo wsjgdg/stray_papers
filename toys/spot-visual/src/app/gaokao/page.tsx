@@ -1621,7 +1621,7 @@ export default function GaoKaoPage() {
         <div
           role="tablist"
           aria-label="志愿探索视图"
-          className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5 text-sm"
+          className="inline-flex max-w-full overflow-x-auto rounded-lg border border-gray-200 bg-white p-0.5 text-sm [scrollbar-width:none]"
           onKeyDown={(e) => {
             // 键盘切换：←/→ 在页签间移动（无障碍要求，鼠标之外的入口）
             if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
@@ -1652,7 +1652,7 @@ export default function GaoKaoPage() {
               aria-selected={view === v}
               tabIndex={view === v ? 0 : -1}
               onClick={() => setView(v)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-colors ${view === v ? "bg-indigo-50 text-indigo-700 border border-indigo-200" : "text-gray-500 hover:text-gray-800"}`}
+              className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-colors ${view === v ? "bg-indigo-50 text-indigo-700 border border-indigo-200" : "text-gray-500 hover:text-gray-800"}`}
             >
               <Icon className="w-4 h-4" />
               {label}
@@ -2580,7 +2580,7 @@ export default function GaoKaoPage() {
         </div>
         <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_210px] sm:items-start">
           <div>
-            <pre className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-3 text-[11px] text-gray-500 whitespace-pre-wrap font-sans leading-relaxed max-h-[120px] overflow-y-auto">
+            <pre className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-3 text-[11px] text-gray-500 whitespace-pre-wrap break-words font-sans leading-relaxed max-h-[120px] overflow-auto">
               {shareText}
             </pre>
             <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] text-gray-500">

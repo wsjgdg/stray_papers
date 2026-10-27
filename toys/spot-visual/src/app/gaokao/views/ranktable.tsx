@@ -146,7 +146,7 @@ export function RankTable({
           </div>
         </div>
 
-        <div className="max-h-[520px] overflow-y-auto">
+        <div className="max-h-[520px] overflow-auto">
           <table className="w-full border-collapse text-sm">
             <thead className="sticky top-0 z-10 bg-gray-50/95 backdrop-blur-sm">
               <tr className="text-[11px] text-gray-500">
