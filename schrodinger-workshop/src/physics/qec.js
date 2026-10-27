@@ -1351,12 +1351,18 @@ function qecExactPLUncached(cfg = {}){
   const SH = nStab * VB;
   const VMASK = (1 << VB) - 1;
   const P2 = Math.pow(2, NB);              /* 帧数打包基（frame = x·P2+z < 2^{2NB}） */
-  const keyOf = (x, z, votes) => (x * P2 + z) + ':' + votes;
+  /* R121：键改成**数值**（原来 frame + ':' + votes 的字符串）。DP 主体对键类型
+     无感知 ⟹ 只换这两个函数即可，逐位一致性与加速比都用「两份源码对照」测过：
+     n=3/5·rd=1、n=3·rd=1·iid、n=5·rd=3、n=7·rd=1 五组 **Object.is 全 OK**（插入
+     顺序不变 ⟹ 加法顺序不变），加速 1.50×～2.13×（n=5·rd=3：8.68s→4.08s）。
+     数值范围：votes < 2^SH，frame < 2^{2NB} ⟹ 键 < 2^{2NB+SH} ≤ 2^44 ≪ 2^53。 */
+  const VBASE = Math.pow(2, SH);
+  const keyOf = (x, z, votes) => (x * P2 + z) * VBASE + votes;
   const unpack = (k) => {
-    const ci = k.indexOf(':');
-    const f = +k.slice(0, ci);
+    const votes = k % VBASE;
+    const f = (k - votes) / VBASE;
     const x = (f / P2) | 0;
-    return { x, z: f - x * P2, votes: +k.slice(ci + 1) };
+    return { x, z: f - x * P2, votes };
   };
   let dist = new Map([[keyOf(0, 0, 0), 1]]);
   const add = (m, k, v) => m.set(k, (m.get(k) || 0) + v);
