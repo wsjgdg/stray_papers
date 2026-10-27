@@ -1204,6 +1204,11 @@ function SpotsView() {
     null,
   );
   const [locating, setLocating] = useState(false);
+
+  // ═══ 分页渲染：1200+ 卡片一次性渲染会拖慢首屏，先渲染 60 张，滚动到底自动加载 ═══
+  const PAGE_SIZE = 60;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
   const toggleNearbySort = useCallback(() => {
     if (userLoc) {
       setUserLoc(null);
@@ -1260,6 +1265,27 @@ function SpotsView() {
     }
     return list;
   }, [spots, activeCategory, searchQuery, userLoc, cityFilter]);
+
+  // 筛选条件变化时重置分页
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [spots, activeCategory, searchQuery, cityFilter, userLoc]);
+
+  // 哨兵进入视口 → 加载下一页
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((v) => Math.min(v + PAGE_SIZE, filteredSpots.length));
+        }
+      },
+      { rootMargin: "600px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [filteredSpots.length, visibleCount]);
 
   const handleImport = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1551,9 +1577,24 @@ function SpotsView() {
           </Button>
         </div>
       ) : viewMode === "grid" ? (
-        <SpotGrid spots={filteredSpots} onSelect={setSelectedSpot} />
+        <SpotGrid
+          spots={filteredSpots.slice(0, visibleCount)}
+          onSelect={setSelectedSpot}
+        />
       ) : (
-        <SpotList spots={filteredSpots} onSelect={setSelectedSpot} />
+        <SpotList
+          spots={filteredSpots.slice(0, visibleCount)}
+          onSelect={setSelectedSpot}
+        />
+      )}
+      {/* 无限加载哨兵：进入视口再渲染下一页，首屏只挂 60 张卡片 */}
+      {visibleCount < filteredSpots.length && (
+        <div
+          ref={sentinelRef}
+          className="py-8 text-center text-xs text-gray-400"
+        >
+          正在加载更多景点…（{visibleCount}/{filteredSpots.length}）
+        </div>
       )}
     </div>
   );
