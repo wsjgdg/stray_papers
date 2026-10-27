@@ -145,7 +145,7 @@ function ScatterChart({
             key={p.id}
             initial={{ opacity: 0, scale: 0 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: i * 0.03, type: "spring" }}
+            transition={{ delay: Math.min(i * 0.02, 1.2), type: "spring" }}
           >
             <circle
               cx={cx}
@@ -204,23 +204,41 @@ export default function StaminaSandboxView() {
     return budget;
   }, [budget, setStaminaBudget]);
 
-  // 默认顺序：沙盘手动排序 > 行程单顺序 > 数据集顺序
+  // 沙盘作用域：行程单优先；无行程时用精选池（高德评分前 400）——3000 条全量进曲线无意义
+  const poolSpots = useMemo(() => {
+    if (trip.length > 0) {
+      const ts = trip
+        .map((id) => spots.find((s) => s.id === id))
+        .filter(Boolean) as typeof spots;
+      if (ts.length > 0) return ts;
+    }
+    return [...spots]
+      .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
+      .slice(0, 400);
+  }, [spots, trip]);
+
+  // 默认顺序：沙盘手动排序（限池内）> 行程单顺序 > 池顺序
   const order = useMemo(() => {
-    if (activeSpotOrder.length > 0) return activeSpotOrder;
+    if (activeSpotOrder.length > 0) {
+      const inPool = activeSpotOrder.filter((id) =>
+        poolSpots.some((s) => s.id === id),
+      );
+      if (inPool.length > 0) return inPool;
+    }
     if (trip.length > 0) return trip;
-    return spots.map((s) => s.id);
-  }, [spots, activeSpotOrder, trip]);
+    return poolSpots.map((s) => s.id);
+  }, [poolSpots, activeSpotOrder, trip]);
 
   // 计算体力曲线
   const curve = useMemo(
-    () => calcStaminaCurve(spots, order, budget),
-    [spots, order, budget],
+    () => calcStaminaCurve(poolSpots, order, budget),
+    [poolSpots, order, budget],
   );
 
   // 散点图数据
   const scatterData: ScatterPoint[] = useMemo(
     () =>
-      spots.map((s) => {
+      poolSpots.map((s) => {
         const stamina = getStaminaCost(s);
         const experience = calcExperienceScore(s.name);
         return {
@@ -229,10 +247,10 @@ export default function StaminaSandboxView() {
           stamina,
           experience,
           efficiency: stamina > 0 ? experience / stamina : 0,
-          selected: order.includes(s.id),
+          selected: trip.includes(s.id),
         };
       }),
-    [spots, order],
+    [poolSpots, trip],
   );
 
   // 是否超预算
@@ -399,6 +417,11 @@ export default function StaminaSandboxView() {
             <span className="text-[10px] text-gray-400 ml-auto">
               拖拽调整（后续实现）
             </span>
+            {trip.length === 0 && (
+              <span className="text-[10px] text-gray-400">
+                未选行程：默认按高德评分取前 400 个景点进入沙盘
+              </span>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             {order.map((id, i) => {

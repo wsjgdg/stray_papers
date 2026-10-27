@@ -280,8 +280,15 @@ function HourlyChart({ conditions }: { conditions: string[] }) {
 function SpotRanking({ conditions }: { conditions: string[] }) {
   const { spots } = useAppStore();
   const ranking = useMemo(() => {
-    const results = calcPTSIForSpots(spots, conditions);
-    return results.sort((a, b) => b.ptsi.score - a.ptsi.score);
+    // 只排有高德评分的精选池：UV/条件对全库同分，无评分的 1637 条会把 top10 变成随机抽样
+    const pool = spots.filter((s) => s.rating);
+    const ratingOf = new Map(pool.map((s) => [s.name, s.rating]));
+    const results = calcPTSIForSpots(pool, conditions);
+    return results.sort(
+      (a, b) =>
+        b.ptsi.score - a.ptsi.score ||
+        (ratingOf.get(b.name) ?? 0) - (ratingOf.get(a.name) ?? 0),
+    );
   }, [spots, conditions]);
 
   return (
@@ -290,6 +297,9 @@ function SpotRanking({ conditions }: { conditions: string[] }) {
         <TrendingUp className="w-4 h-4 text-gray-500" />
         <span className="text-sm font-semibold text-gray-700">
           景点适宜度排行
+        </span>
+        <span className="text-[10px] text-gray-400 ml-auto">
+          仅统计有高德评分的精选景点
         </span>
       </div>
       <div className="space-y-2">
