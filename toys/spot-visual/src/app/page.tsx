@@ -518,13 +518,20 @@ function SpotGrid({
                       eager={i < 6}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                    <Badge
-                      variant="outline"
-                      className={`absolute top-3 left-3 ${getCategoryColor(spot.category)}`}
-                    >
-                      {getCategoryIcon(spot.category)}
-                      <span className="ml-1">{spot.category}</span>
-                    </Badge>
+                    <div className="absolute top-3 left-3 flex items-center gap-1">
+                      <Badge
+                        variant="outline"
+                        className={`${getCategoryColor(spot.category)}`}
+                      >
+                        {getCategoryIcon(spot.category)}
+                        <span className="ml-1">{spot.category}</span>
+                      </Badge>
+                      {(spot.level === "5A" || spot.level === "4A") && (
+                        <span className="px-1.5 py-0.5 rounded-md bg-amber-400/90 text-white text-[10px] font-black shadow-sm">
+                          {spot.level}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="p-4">
                     <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-emerald-700 transition-colors truncate">
@@ -631,6 +638,11 @@ function SpotList({
                       >
                         {spot.category}
                       </Badge>
+                      {(spot.level === "5A" || spot.level === "4A") && (
+                        <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-amber-400/90 text-white text-[10px] font-black">
+                          {spot.level}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-1 text-xs text-gray-400 mb-2">
                       <MapPin className="w-3 h-3 shrink-0" />
