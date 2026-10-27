@@ -2193,6 +2193,18 @@ R121/R122 把容器层抠到头了（字符串键 → 数值键 2×；自写键�
 | A | 重配置降低 `sweepTrials`（120 → 60） | n=9 减半（13.5s→7s）；n=5·rd=3 省 ~7s | **统计精度下降**（p=0.5 处 σ 4%→6%），必须在图例标注 |
 | B | 有精确解时**跳过** MC 点（只画 DP 曲线） | n=7 省 15%、n=5·rd=3 省 39% | 丢掉「MC 与精确解一致」的现场证据 |
 | C | Web Worker 并行跑各点 | 理论上 ~核数倍 | 工程量大，需处理取消与内存 |
+
+**C 已否决（R125，先查前提再动手）**：两条硬约束，都不是工程努力能绕的——
+
+1. **dist 是单文件**。`build:standalone` 是自带的 mini-bundler（删除 import 行、脱掉
+   `export` 帽），把所有模块拼成**一个** `dist/qec.html`；实测 dist 里 `Worker(` 出现
+   **0 次**，也**没有** `sweep-worker.js` 这个文件 ⟹ `new Worker(new URL('./sweep-worker.js',
+   import.meta.url))` 在 dist 里指向不存在的文件。
+2. **`file://` 下 Worker 被浏览器禁止**。`dist/qec.html` 的卖点是「双击直开」，而 Chrome
+   在 `file://` 下不允许创建 Worker（跨源限制），Blob Worker 也一样受限。
+
+若真要并行，必须先放弃「单文件 + file:// 直开」这条产品约束（改成多文件产物 + 起本地
+服务），那是产品决策不是优化 ⟹ 与 A/B 同列，**记录在此不再试**。
 | D | 自适应网格（先 3 点、在交点附近加密） | 2× 左右 | 曲线点数变化，需重写点数相关的断言 |
 
 **D 已开工（R124，第一步）**：`qecSweepPlan` 现在带 `refine(rows, m)`——先找
