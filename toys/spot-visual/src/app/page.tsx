@@ -770,6 +770,8 @@ function SpotDetailDialog() {
     removeFromTrip,
   } = useAppStore();
   const [photoIdx, setPhotoIdx] = useState(0);
+  // 图片查看器：null = 关闭；数字 = 当前查看的相册下标
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [showDissuasionEditor, setShowDissuasionEditor] = useState(false);
   const spot = selectedSpot;
   // 城市包 POI 的相册多图不在主包里（见 lib/poi-photos.ts），打开弹窗时才拉。
@@ -868,12 +870,18 @@ function SpotDetailDialog() {
       >
         {/* Photo gallery */}
         <div className="relative w-full h-56 sm:h-72 overflow-hidden bg-gray-100">
-          <SpotImage
-            src={allPhotos[photoIdx] || spot.image}
-            alt={spot.name}
-            category={spot.category}
-            className="w-full h-full"
-          />
+          <div
+            className="w-full h-full cursor-zoom-in"
+            onClick={() => setLightboxIdx(photoIdx)}
+            title="点击放大查看"
+          >
+            <SpotImage
+              src={allPhotos[photoIdx] || spot.image}
+              alt={spot.name}
+              category={spot.category}
+              className="w-full h-full"
+            />
+          </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           {/* Close button (only one) */}
           <button
@@ -1214,6 +1222,14 @@ function SpotDetailDialog() {
             </div>
           </div>
         </ScrollArea>
+        {lightboxIdx !== null && (
+          <Lightbox
+            photos={allPhotos}
+            index={Math.min(lightboxIdx, allPhotos.length - 1)}
+            onIndex={(i) => setLightboxIdx(i)}
+            onClose={() => setLightboxIdx(null)}
+          />
+        )}
       </DialogContent>
       {/* ═══ D3.5：劝退日记编辑器（从详情弹窗发起，预填当前景点） ═══ */}
       {showDissuasionEditor && (
@@ -1229,6 +1245,76 @@ function SpotDetailDialog() {
         />
       )}
     </Dialog>
+  );
+}
+
+/* ═══════ 图片查看器：全屏遮罩，左右切换，Esc/点击关闭（capture 拦截避免连带关弹窗） ═══════ */
+function Lightbox({
+  photos,
+  index,
+  onIndex,
+  onClose,
+}: {
+  photos: string[];
+  index: number;
+  onIndex: (i: number) => void;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      e.stopPropagation();
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft")
+        onIndex((index - 1 + photos.length) % photos.length);
+      if (e.key === "ArrowRight") onIndex((index + 1) % photos.length);
+    };
+    document.addEventListener("keydown", handler, true);
+    return () => document.removeEventListener("keydown", handler, true);
+  }, [index, photos.length, onIndex, onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[80] bg-black/95 flex items-center justify-center"
+      onClick={onClose}
+    >
+      <img
+        src={photos[index]}
+        alt={`放大查看 ${index + 1}`}
+        className="max-w-[94vw] max-h-[92vh] object-contain select-none"
+        onClick={(e) => e.stopPropagation()}
+      />
+      {photos.length > 1 && (
+        <>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onIndex((index - 1 + photos.length) % photos.length);
+            }}
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onIndex((index + 1) % photos.length);
+            }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
+          <span className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/80 text-xs bg-black/40 rounded-full px-3 py-1">
+            {index + 1} / {photos.length}
+          </span>
+        </>
+      )}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
+      >
+        <X className="w-5 h-5" />
+      </button>
+    </div>
   );
 }
 
