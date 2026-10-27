@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Image as ImageIcon,
+  FileText,
   TreePine,
   Landmark,
   Sparkles,
@@ -488,7 +489,7 @@ function SpotGrid({
   spots: Spot[];
   onSelect: (s: Spot) => void;
 }) {
-  const { favorites, toggleFavorite } = useAppStore();
+  const { favorites, toggleFavorite, spotNotes } = useAppStore();
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
       <AnimatePresence mode="popLayout">
@@ -528,6 +529,9 @@ function SpotGrid({
                   <div className="p-4">
                     <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-emerald-700 transition-colors truncate">
                       {spot.name}
+                      {spotNotes[spot.id] && (
+                        <FileText className="w-3 h-3 text-amber-500 inline ml-1 -mt-0.5" />
+                      )}
                     </h3>
                     <div className="flex items-center gap-1 text-xs text-gray-400 mb-2">
                       <MapPin className="w-3 h-3 shrink-0" />
@@ -584,7 +588,7 @@ function SpotList({
   spots: Spot[];
   onSelect: (s: Spot) => void;
 }) {
-  const { favorites, toggleFavorite } = useAppStore();
+  const { favorites, toggleFavorite, spotNotes } = useAppStore();
   return (
     <div className="space-y-3">
       <AnimatePresence mode="popLayout">
@@ -617,6 +621,9 @@ function SpotList({
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-gray-900 truncate group-hover:text-emerald-700 transition-colors">
                         {spot.name}
+                        {spotNotes[spot.id] && (
+                          <FileText className="w-3 h-3 text-amber-500 inline ml-1 -mt-0.5" />
+                        )}
                       </h3>
                       <Badge
                         variant="outline"
@@ -683,6 +690,54 @@ const IMAGE_SOURCE_LABEL: Record<string, string> = {
   pool: "预置图库",
 };
 
+/* ═══════ 我的备注编辑器（随输入即时保存到 localStorage） ═══════ */
+function SpotNoteEditor({
+  spotId,
+  value,
+  onSave,
+}: {
+  spotId: string;
+  value: string;
+  onSave: (v: string) => void;
+}) {
+  const [draft, setDraft] = useState(value);
+  const [saved, setSaved] = useState(false);
+  const [prevId, setPrevId] = useState(spotId);
+  if (spotId !== prevId) {
+    setPrevId(spotId);
+    setDraft(value);
+    setSaved(false);
+  }
+  return (
+    <div>
+      <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-1.5">
+        <FileText className="w-3.5 h-3.5" />
+        我的备注
+        {saved && (
+          <span className="text-[10px] text-emerald-600 font-normal">
+            已保存 ✓
+          </span>
+        )}
+      </h4>
+      <textarea
+        value={draft}
+        onChange={(e) => {
+          setDraft(e.target.value);
+          setSaved(false);
+        }}
+        onBlur={() => {
+          onSave(draft);
+          if (draft.trim()) setSaved(true);
+        }}
+        maxLength={300}
+        rows={2}
+        placeholder="自己的备忘：开放时间核实、同行人约定、门票价格…（仅本机可见）"
+        className="w-full px-3 py-2 text-sm bg-amber-50/50 border border-amber-100 rounded-xl outline-none focus:border-amber-300 resize-none placeholder:text-gray-300"
+      />
+    </div>
+  );
+}
+
 /* ═══════ 详情弹窗（无重叠关闭按钮 + 多图） ═══════ */
 function SpotDetailDialog() {
   const {
@@ -696,6 +751,8 @@ function SpotDetailDialog() {
     dissuasionRecords,
     trip,
     addToTrip,
+    spotNotes,
+    setSpotNote,
     removeFromTrip,
   } = useAppStore();
   const [photoIdx, setPhotoIdx] = useState(0);
@@ -1053,6 +1110,12 @@ function SpotDetailDialog() {
                 日出行窗口：本周哪天去最合适 →
               </button>
             )}
+            {/* ═══ 我的备注（本地持久化，仅自己可见） ═══ */}
+            <SpotNoteEditor
+              spotId={spot.id}
+              value={spotNotes[spot.id] ?? ""}
+              onSave={(v) => setSpotNote(spot.id, v)}
+            />
             {/* ═══ 行程单：加入/移出 ═══ */}
             <button
               onClick={() =>

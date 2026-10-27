@@ -52,6 +52,10 @@ interface AppStore {
   setCustomPrice: (key: string, price: number) => void;
   clearCustomPrices: () => void;
 
+  // ═══ 我的备注（详情页，持久化；key = spotId） ═══
+  spotNotes: Record<string, string>;
+  setSpotNote: (id: string, note: string) => void;
+
   // ═══ 行程单（有序景点 id 序列，持久化） ═══
   trip: string[];
   tripDaySplit: number[]; // 分天分段点（每段的结束索引，升序不含末段）
@@ -169,6 +173,16 @@ export const useAppStore = create<AppStore>()(
         set((s) => ({ customPrices: { ...s.customPrices, [key]: price } })),
       clearCustomPrices: () => set({ customPrices: {} }),
 
+      // ═══ 我的备注 ═══
+      spotNotes: {},
+      setSpotNote: (id, note) =>
+        set((s) => {
+          const next = { ...s.spotNotes };
+          if (note.trim()) next[id] = note.trim();
+          else delete next[id];
+          return { spotNotes: next };
+        }),
+
       // ═══ 行程单 ═══
       trip: [],
       tripDaySplit: [],
@@ -275,6 +289,7 @@ export const useAppStore = create<AppStore>()(
         spots: s.spots,
         dissuasionRecords: s.dissuasionRecords,
         customPrices: s.customPrices,
+        spotNotes: s.spotNotes,
         trip: s.trip,
         // 记住上次浏览的视图，刷新后原地恢复（对齐 food 页行为）
         activeView: s.activeView,

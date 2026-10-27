@@ -66,6 +66,127 @@ function fmtMin(min: number): string {
   return m ? `${h} 小时 ${m} 分` : `${h} 小时`;
 }
 
+/* ═══ 行程地理草图：按天着色的编号点位 + 顺序连线（自适配缩放；线为游玩顺序，非真实道路） ═══ */
+const DAY_COLORS = [
+  "#0d9488",
+  "#f59e0b",
+  "#8b5cf6",
+  "#ec4899",
+  "#3b82f6",
+  "#ef4444",
+  "#22c55e",
+];
+
+function TripMap({ days }: { days: Spot[][] }) {
+  const points = useMemo(
+    () =>
+      days.flatMap((day, di) =>
+        day
+          .map((s, i) => ({ spot: s, day: di, coords: parseCoords(s) }))
+          .filter((x) => x.coords !== null)
+          .map((x) => ({
+            ...x,
+            coords: x.coords as { lat: number; lng: number },
+          })),
+      ),
+    [days],
+  );
+  if (points.length < 2) return null;
+
+  const W = 640;
+  const H = 300;
+  const PAD = 36;
+  const lats = points.map((p) => p.coords.lat);
+  const lngs = points.map((p) => p.coords.lng);
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  const minLng = Math.min(...lngs);
+  const maxLng = Math.max(...lngs);
+  const spanLng = Math.max(maxLng - minLng, 1e-4);
+  const spanLat = Math.max(maxLat - minLat, 1e-4);
+  const scale = Math.min((W - PAD * 2) / spanLng, (H - PAD * 2) / spanLat);
+  const cx = (minLng + maxLng) / 2;
+  const cy = (minLat + maxLat) / 2;
+  const px = (lng: number) => W / 2 + (lng - cx) * scale;
+  const py = (lat: number) => H / 2 - (lat - cy) * scale;
+  const dayColor = (d: number) => DAY_COLORS[d % DAY_COLORS.length];
+
+  return (
+    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-5">
+      <div className="flex items-center gap-1.5 mb-2">
+        <MapPin className="w-4 h-4 text-teal-600" />
+        <span className="text-sm font-semibold text-gray-700">
+          行程地理草图
+        </span>
+        <span className="text-[10px] text-gray-400 ml-auto">
+          线为游玩顺序（非真实道路），点色 = 所属天
+        </span>
+      </div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full rounded-xl bg-teal-50/50 border border-gray-100"
+      >
+        {days.map((_, d) => {
+          const pts = points.filter((p) => p.day === d);
+          if (pts.length < 2) return null;
+          const path = pts
+            .map((p) => `${px(p.coords.lng)},${py(p.coords.lat)}`)
+            .join(" ");
+          return (
+            <polyline
+              key={`line-${d}`}
+              points={path}
+              fill="none"
+              stroke={dayColor(d)}
+              strokeWidth={2}
+              strokeDasharray="6 4"
+              opacity={0.8}
+            />
+          );
+        })}
+        {points.map((p, i) => (
+          <g key={`${p.spot.id}-${i}`}>
+            <circle
+              cx={px(p.coords.lng)}
+              cy={py(p.coords.lat)}
+              r={11}
+              fill="white"
+              stroke={dayColor(p.day)}
+              strokeWidth={2.5}
+            />
+            <text
+              x={px(p.coords.lng)}
+              y={py(p.coords.lat) + 4}
+              textAnchor="middle"
+              fontSize={10}
+              fontWeight="700"
+              fill={dayColor(p.day)}
+            >
+              {i + 1}
+            </text>
+          </g>
+        ))}
+      </svg>
+      {days.length > 1 && (
+        <div className="flex flex-wrap gap-2 mt-2">
+          {days.map((_, d) => (
+            <span
+              key={d}
+              className="flex items-center gap-1 text-[10px] text-gray-500"
+            >
+              <span
+                className="inline-block w-2.5 h-2.5 rounded-full"
+                style={{ background: dayColor(d) }}
+              />
+              第 {d + 1} 天
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ═══ 行程级 7 日体检：行程内带坐标景点逐日平均 UV → PTSI ═══ */
 function TripWeather({ spots }: { spots: Spot[] }) {
   const geoSpots = useMemo(
@@ -542,6 +663,9 @@ export default function TripView() {
             </button>
           </div>
         )}
+
+        {/* 行程地理草图 */}
+        <TripMap days={days} />
 
         {/* 行程级 7 日体检 */}
         <TripWeather spots={tripSpots} />
