@@ -1514,7 +1514,7 @@ extract 的缓升段回退承诺失败（bitflip/z/extract @0.52 回退 −1.5e-
 仅 X/仅 Z」+「注错相位 仅提取段/全程」三组按钮（i.i.d. 下后两组置灰）；HUD 按口径切分区——
 i.i.d. 显示 0/1/2/3 错计数，门级显示**机会数 M**、平均注入故障、结局五分类、解码后三分类、
 **c₁**；曲线在门级下走 18 点几何网格（0.002→0.55，比 i.i.d. 的 12 点多覆盖到交点之外）并
-叠加 DP 精确折线。入口仍是 `qec.html` → `dist/qec.html`（742.5 KB）。
+叠加 DP 精确折线。入口仍是 `qec.html` → `dist/qec.html`（741.9 KB）。
 
 **验证**：pot86 **23/23**（A iid 零回归 7 组 / B gate MC↔DP 4σ 36 组 / C DP↔故障枚举系数
 互校 + M·sites 锚 / D 不变量与故障结构 / E 确定性 10 病例 / F 交点延续性 / G 极值·钳制·
@@ -3099,7 +3099,7 @@ schrodinger-workshop/
     ├── paths.html                构建产物：路径页单文件版（86.8 KB，file:// 直开）
     ├── qcircuit.html             构建产物：线路页单文件版（155.0 KB，file:// 直开）
     ├── noise.html                构建产物：噪声页单文件版（129.7 KB，file:// 直开）
-    ├── qec.html                  构建产物：纠错页单文件版（742.5 KB，file:// 直开）
+    ├── qec.html                  构建产物：纠错页单文件版（741.9 KB，file:// 直开）
     ├── shor.html                 构建产物：Shor 码跳转存根（→ qec.html?mode=shor，<1 KB）
     ├── gatenoise.html            构建产物：门噪声跳转存根（→ qec.html?mode=gate，<1 KB）
     ├── flag.html                 构建产物：综合提取容错跳转存根（→ qec.html?mode=flag，<1 KB）
