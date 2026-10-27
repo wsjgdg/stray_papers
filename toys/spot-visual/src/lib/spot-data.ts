@@ -499,6 +499,20 @@ export function haversineKm(
 }
 
 // ═══ 提取区域 ═══
+/**
+ * 从地址里取城市名（带「市」）。用于城市维度筛选与计数。
+ *
+ * 兼容三种写法：
+ *   「北京市东城区…」→ 北京市
+ *   「浙江省杭州市西湖区…」→ 杭州市（跳过省名）
+ *   「杭州市…」→ 杭州市
+ * 取不到时回退到前 4 个字符，宁可粗糙也不要返回空串。
+ */
+export function getCity(address: string): string {
+  const m = address.match(/([^\s省市]{1,4}市)/);
+  return m ? m[1] : address.slice(0, 4);
+}
+
 export function getDistrict(address: string): string {
   const m = address.match(/(.{2,6}市)(.{2,4}[区县市])/);
   return m ? m[0] : address.slice(0, 8) || "未知区域";

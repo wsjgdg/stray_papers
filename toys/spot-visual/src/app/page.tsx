@@ -58,6 +58,7 @@ import {
   CATEGORY_THEME,
   parseImportedSpots,
   sampleSpots,
+  LIBRARY_SPOTS,
   getCategoryImageUrl,
   cachePhotoForCategory,
   parseCoords,
@@ -1159,6 +1160,16 @@ function SpotsView() {
     [],
   );
 
+  // 每个城市在库内的景点数：chips 上直接显示，避免点进去发现是空的
+  const cityCounts = useMemo(() => {
+    const c: Record<string, number> = {};
+    for (const hc of HOT_CITIES) {
+      c[hc] = spots.reduce((n, s) => (s.address.includes(hc) ? n + 1 : n), 0);
+    }
+    return c;
+  }, [spots, HOT_CITIES]);
+  const [citiesExpanded, setCitiesExpanded] = useState(false);
+
   // ═══ 城市过滤：chips/输入框都是库的过滤器，不再替换 spots（收藏/行程/改价永不丢失） ═══
   const [cityFilter, setCityFilter] = useState<string | null>(null);
 
@@ -1199,6 +1210,12 @@ function SpotsView() {
     return c;
   }, [spots]);
 
+  // ═══ 排序：默认（库顺序）/ 评分 / 名称 / 距离 ═══
+  // 距离依赖定位，userLoc 为空时自动回退默认顺序，不报错。
+  const [sortMode, setSortMode] = useState<
+    "default" | "rating" | "name" | "distance"
+  >("default");
+
   // ═══ 离我最近排序（geolocation，拒绝授权优雅降级） ═══
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(
     null,
@@ -1212,6 +1229,7 @@ function SpotsView() {
   const toggleNearbySort = useCallback(() => {
     if (userLoc) {
       setUserLoc(null);
+      setSortMode((m) => (m === "distance" ? "default" : m));
       return;
     }
     if (!navigator.geolocation) {
@@ -1222,6 +1240,7 @@ function SpotsView() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setSortMode("distance");
         setLocating(false);
       },
       () => {
@@ -1252,8 +1271,19 @@ function SpotsView() {
           })());
       return cc && mc && mq;
     });
-    // 离我最近：按用户定位排序，无坐标的景点排最后
-    if (userLoc) {
+    if (sortMode === "name") {
+      return [...list].sort((a, b) => a.name.localeCompare(b.name, "zh"));
+    }
+    if (sortMode === "rating") {
+      // 无评分的沉底，同分按名称稳定排序
+      return [...list].sort(
+        (a, b) =>
+          (b.rating ?? -1) - (a.rating ?? -1) ||
+          a.name.localeCompare(b.name, "zh"),
+      );
+    }
+    // 距离：无坐标的景点排最后；没定位就是默认顺序
+    if (sortMode === "distance" && userLoc) {
       return [...list].sort((a, b) => {
         const ca = parseCoords(a);
         const cb = parseCoords(b);
@@ -1264,7 +1294,7 @@ function SpotsView() {
       });
     }
     return list;
-  }, [spots, activeCategory, searchQuery, userLoc, cityFilter]);
+  }, [spots, activeCategory, searchQuery, userLoc, cityFilter, sortMode]);
 
   // 筛选条件变化时重置分页
   useEffect(() => {
@@ -1362,20 +1392,41 @@ function SpotsView() {
             城市探索
           </span>
           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
-            20 城数据包已内置 · 零外链
+            {Object.keys(CITY_POI_PACKS).length} 城数据包已内置 · 零外链
           </span>
         </div>
         <div className="flex gap-2">
           <div className="flex flex-wrap gap-1.5 mb-2.5">
-            {HOT_CITIES.map((hc) => (
+            {(citiesExpanded ? HOT_CITIES : HOT_CITIES.slice(0, 12)).map(
+              (hc) => {
+                const n = cityCounts[hc] ?? 0;
+                const on = cityFilter === hc;
+                return (
+                  <button
+                    key={hc}
+                    onClick={() => setCityFilter(on ? null : hc)}
+                    aria-pressed={on}
+                    title={n ? `${hc} · ${n} 个景点` : `${hc} · 库内无匹配`}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${on ? "bg-emerald-600 text-white border-emerald-600" : n === 0 ? "bg-white text-gray-400 border-gray-200 hover:bg-gray-50" : "bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50"}`}
+                  >
+                    {hc}
+                    <span
+                      className={`ml-1 text-[10px] ${on ? "text-white/70" : "text-gray-400"}`}
+                    >
+                      {n}
+                    </span>
+                  </button>
+                );
+              },
+            )}
+            {HOT_CITIES.length > 12 && (
               <button
-                key={hc}
-                onClick={() => setCityFilter(cityFilter === hc ? null : hc)}
-                className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${cityFilter === hc ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50"}`}
+                onClick={() => setCitiesExpanded((v) => !v)}
+                className="px-2.5 py-1 rounded-full text-[11px] font-medium border border-dashed border-emerald-300 text-emerald-600 hover:bg-emerald-50 transition-colors"
               >
-                {hc}
+                {citiesExpanded ? "收起" : `展开全部 ${HOT_CITIES.length} 城`}
               </button>
-            ))}
+            )}
           </div>
           <div className="relative flex-1">
             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -1422,8 +1473,9 @@ function SpotsView() {
           </p>
         )}
         <p className="text-[11px] text-gray-400 mt-2 leading-relaxed">
-          库内共 27 城约 1200 个景点（高德 POI 构建时打包 +
-          手工精选）。点城市即过滤，收藏与行程不受影响；库外城市尝试实时通道。
+          库内共 {Object.keys(CITY_POI_PACKS).length} 城 {LIBRARY_SPOTS.length}{" "}
+          个景点（高德 POI 构建时打包 + 手工精选）。点城市即过滤，
+          收藏与行程不受影响；库外城市尝试实时通道。
         </p>
       </div>
 
@@ -1508,7 +1560,25 @@ function SpotsView() {
               清空全部
             </Button>
           )}
-          {/* 离我最近排序开关（geolocation，拒绝授权优雅降级） */}
+          <label className="flex items-center gap-1 text-xs text-gray-500">
+            <span className="hidden sm:inline">排序</span>
+            <select
+              value={sortMode}
+              onChange={(e) =>
+                setSortMode(
+                  e.target.value as "default" | "rating" | "name" | "distance",
+                )
+              }
+              title="评分排序用的是高德用户评分（无评价数，5.0 也可能是极少评价）"
+              className="h-8 rounded-lg border border-gray-200 bg-white px-1.5 text-xs text-gray-700 outline-none focus:border-emerald-400"
+            >
+              <option value="default">默认</option>
+              <option value="rating">评分最高</option>
+              <option value="distance">离我最近</option>
+              <option value="name">名称</option>
+            </select>
+          </label>
+          {/* 离我最近：定位快捷方式（等同把排序切到「离我最近」） */}
           <Button
             variant="outline"
             size="sm"
