@@ -863,6 +863,16 @@ function SpotDetailDialog() {
                 </span>
               </p>
             )}
+            {spot.level && (
+              <p className="flex items-center gap-1.5">
+                <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-700 border border-amber-200 text-xs font-black tracking-wide">
+                  {spot.level} 级景区
+                </span>
+                <span className="text-[11px] text-gray-400">
+                  2023 年全国 A 级景区名录
+                </span>
+              </p>
+            )}
             {spot.rating && (
               <p className="flex items-center gap-1 text-sm text-amber-600 font-bold">
                 <Star className="w-4 h-4 fill-amber-400 text-amber-400" />

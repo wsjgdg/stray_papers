@@ -13,6 +13,8 @@ export interface Spot {
   rating?: number;
   /** 开放时间（高德 biz_ext.opentime2，95% 填充） */
   openTime?: string;
+  /** 景区等级（5A/4A/3A，来源 2023 全国 A 级景区名录） */
+  level?: string;
   /** 图片来源标注：osm | unsplash | pexels | pool | amap（详情弹窗展示，数据诚实性） */
   imageSource?: string;
   address: string;
@@ -1270,6 +1272,7 @@ export const PACKLIST_UNIVERSAL = [
 import { CITY_POI_PACKS, type CityPoi } from "./city-pois.generated";
 import { POI_DESCRIPTIONS } from "./poi-descriptions";
 import { POI_PHOTOS } from "./poi-photos.generated";
+import { SCENIC_LEVELS, EXTRA_SCENICS } from "./scenic-enrich.generated";
 
 export function cityPoiToSpot(city: string, p: CityPoi, index: number): Spot {
   const short = city.replace(/市$/, "");
@@ -1281,6 +1284,7 @@ export function cityPoiToSpot(city: string, p: CityPoi, index: number): Spot {
     photosKey: `${city}::${p.name}`,
     rating: p.rating,
     openTime: p.openTime,
+    level: SCENIC_LEVELS[`${city}::${p.name}`],
     imageSource: p.image ? "amap" : undefined,
     address: p.address || `${city}（高德 POI）`,
     facilities: [],
@@ -1293,10 +1297,40 @@ export function cityPoiToSpot(city: string, p: CityPoi, index: number): Spot {
   };
 }
 
+// A 级名录反哺景点的粗分类（与 fetch-city-pois 的推断口径一致）
+function inferScenicCategory(name: string): string {
+  const n = name;
+  if (/博物馆|纪念馆|文物|古迹|遗址|陵|故居|会馆|宫殿/.test(n))
+    return "历史人文";
+  if (/寺|庙|观$|庵|塔|教堂|清真/.test(n)) return "宗教寺庙";
+  if (/古镇|古城|古村|老街|古街/.test(n)) return "古镇村落";
+  if (/乐园|游乐|主题公园|影城/.test(n)) return "主题乐园";
+  if (/山|峰|岭|湖|江|河|瀑布|峡谷|溶洞|森林|草原|泉|滩|湾|岛/.test(n))
+    return "自然风光";
+  return "城市地标";
+}
+
 export const LIBRARY_SPOTS: Spot[] = (() => {
   const manualNames = new Set(sampleSpots.map((s) => s.name));
   const pois = Object.entries(CITY_POI_PACKS)
     .flatMap(([city, list]) => list.map((p, i) => cityPoiToSpot(city, p, i)))
     .filter((s) => !manualNames.has(s.name));
-  return [...sampleSpots, ...pois];
+  // A 级名录反向补充：库内没有的 3A+ 景区（骨架条目：等级+坐标，图走分类池降级）
+  const known = new Set([...manualNames, ...pois.map((s) => s.name)]);
+  const extras = EXTRA_SCENICS.filter((e) => !known.has(e.name)).map(
+    (e, i) =>
+      ({
+        id: `scenic-${e.city}-${i}`,
+        name: e.name,
+        image: "",
+        address: e.address || `${e.city}（A级景区名录）`,
+        facilities: [],
+        projects: [],
+        category: inferScenicCategory(e.name),
+        level: e.level,
+        description: `国家${e.level}级景区（2023 年全国 A 级景区名录）。详细信息以景区公示为准。`,
+        location: { lat: e.lat, lng: e.lng },
+      }) as Spot,
+  );
+  return [...sampleSpots, ...pois, ...extras];
 })();
