@@ -29,6 +29,7 @@ import {
   UtensilsCrossed,
   Bike,
   Globe,
+  Phone,
   Compass,
   Clock,
   AlertTriangle,
@@ -944,6 +945,18 @@ function SpotDetailDialog() {
                     （高德收录，出行前请再核实）
                   </span>
                 </span>
+              </p>
+            )}
+            {spot.tel && (
+              <p className="flex items-center gap-1.5 text-sm text-gray-600">
+                <Phone className="w-4 h-4 text-emerald-500 shrink-0" />
+                <a
+                  href={`tel:${spot.tel.replace(/[^\d+]/g, "")}`}
+                  className="hover:text-emerald-700 hover:underline"
+                >
+                  {spot.tel}
+                </a>
+                <span className="text-[11px] text-gray-400">（高德收录）</span>
               </p>
             )}
             {spot.reservation && (

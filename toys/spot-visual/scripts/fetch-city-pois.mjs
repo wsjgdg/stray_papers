@@ -111,6 +111,7 @@ for (const city of CITIES) {
         category: inferCategory(p.type, p.name),
         rating: rating(p) || undefined,
         openTime: (Array.isArray(p.biz_ext?.opentime2) ? "" : String(p.biz_ext?.opentime2 || "").trim()) || undefined,
+        tel: (Array.isArray(p.tel) ? "" : String(p.tel || "").trim()) || undefined,
         image,
       };
     });
@@ -137,6 +138,7 @@ export interface CityPoi {
   category: string;
   rating?: number;
   openTime?: string;
+  tel?: string;
   image: string;
 }
 

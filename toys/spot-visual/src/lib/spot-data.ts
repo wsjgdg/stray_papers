@@ -13,6 +13,8 @@ export interface Spot {
   rating?: number;
   /** 开放时间（高德 biz_ext.opentime2，95% 填充） */
   openTime?: string;
+  /** 景区电话（高德 POI，55% 填充） */
+  tel?: string;
   /** 景区等级（5A/4A/3A，来源 2023 全国 A 级景区名录） */
   level?: string;
   /** 预约提示（仅标注有预约制/实名限流的景点） */
@@ -1292,6 +1294,7 @@ export function cityPoiToSpot(city: string, p: CityPoi, index: number): Spot {
     photosKey: `${city}::${p.name}`,
     rating: p.rating,
     openTime: p.openTime,
+    tel: p.tel,
     level: SCENIC_LEVELS[`${city}::${p.name}`],
     reservation: RESERVATION_NOTES[p.name],
     imageSource: p.image ? "amap" : undefined,
