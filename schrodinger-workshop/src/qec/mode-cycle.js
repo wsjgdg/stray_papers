@@ -17,6 +17,7 @@
  * ========================================================================== */
 import { NAV_HREFS } from '../core/nav.js';
 import { FS_KINDS, fsCircuit, fsFirstOrder, fsStream, fsEnsemble, fsRun, cyInterception, cySweepCycles } from '../physics/flagsynd.js';
+import { qecGenericCsv, downloadText } from './export.js';
 import { LiveDriver } from './live.js';
 
 const CY_CSS = `
@@ -155,6 +156,13 @@ export class CycleApp {
           <button id="cyRun">跑 MC + 扫描</button>
           <button id="cyOnce">单次试验</button>
         </div>
+        <div class="grp">导出（R119 · 带可复现元数据头）</div>
+        <div class="btns">
+          <button id="cyExpSweep" title="周期数扫描：每点的周期数 T / 逻辑错误率 P_L / 平均故障数">扫描 CSV</button>
+          <button id="cyExpMc" title="当前配置的 MC 结果与电路统计（单行）+ 元数据头：适合把一组「结论数字」贴进表里">结论 CSV</button>
+        </div>
+        <div id="cyExpMsg" style="font-family:var(--mono);font-size:9.5px;color:var(--dim);margin:2px 0 3px"></div>
+
         <div class="note">拦截率用<b>精确单故障枚举</b>：逻辑门上的每个单故障位点，
           看它最后是「被后续 EC 纠回」还是「直达逻辑错误」。门后有 EC 与门在末尾的对照，
           就是「循环 EC 有什么用」的直答。</div>
@@ -212,6 +220,10 @@ export class CycleApp {
     this.on(trIn, 'change', () => this.compute());
     this.on(this.q('#cyRun'), 'click', () => this.compute());
     this.on(this.q('#cyOnce'), 'click', () => { this.once(); this.renderHud(); this.drawAll(); });
+
+    /* ---- R119 导出（同一套 export.js：元数据头/转义/缺失值口径与重复码页一致） ---- */
+    this.on(this.q('#cyExpSweep'), 'click', () => this.exportData('sweep'));
+    this.on(this.q('#cyExpMc'), 'click', () => this.exportData('mc'));
 
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
@@ -553,11 +565,87 @@ export class CycleApp {
 
   drawAll(){ this.drawFlow(); this.drawCurve(); this.drawGate(); }
 
+  /* ---- R119 导出 ---- */
+  _expMeta(){
+    const st = this.state;
+    return {
+      product: '循环 EC（重复码 + 逻辑门）',
+      extra: [
+        'kind=' + st.kind + '  logic=' + st.logic + '  decode=' + st.decode,
+        'rounds=' + st.T + '  p=' + st.p + '  trials=' + st.trials + '  seed=' + st.seed,
+      ],
+      generated: new Date().toISOString(),
+    };
+  }
+  _exportText(kind){
+    const meta = this._expMeta();
+    if (kind === 'sweep'){
+      const sw = this.sw;
+      if (!sw) return null;
+      const rows = sw.T.map((T, i) => ({ T, pl: sw.PL[i], f: sw.faults[i] }));
+      return {
+        name: 'cycle-sweep.csv',
+        text: qecGenericCsv([
+          { k: 'T', n: 'rounds', num: true },
+          { k: 'pl', n: 'P_L', num: true },
+          { k: 'f', n: 'mean_faults', num: true },
+        ], rows, { ...meta, title: '周期数扫描导出' }),
+        rows: rows.length,
+      };
+    }
+    const mc = this.mc;
+    if (!mc) return null;
+    const st = (this.fo && this.fo.stats) || fsCircuit(this.state.kind, this.cfg()).stats;
+    /* 列与 circuitStats 的真实字段对齐（stats 里没有 M/opps，别凭空写） */
+    const rows = [{
+      PL: mc.PL, logic: mc.logic, trials: mc.trials, discard: mc.discard,
+      noGood: mc.noGoodRate, meanFaults: mc.meanFaults,
+      nq: st.nq, data: st.data, anc: st.ancillas,
+      gates: st.gates, cnots: st.cnots, singles: st.singles, meas: st.meas,
+      rounds: st.rounds, cycles: st.cycles, logicGates: st.logicGates,
+    }];
+    return {
+      name: 'cycle-summary.csv',
+      text: qecGenericCsv([
+        { k: 'PL', n: 'P_L', num: true },
+        { k: 'logic', n: 'logical_errors', num: true },
+        { k: 'trials', n: 'trials', num: true },
+        { k: 'discard', n: 'discarded', num: true },
+        { k: 'noGood', n: 'no_good_rate', num: true },
+        { k: 'meanFaults', n: 'mean_faults', num: true },
+        { k: 'nq', n: 'qubits_total', num: true },
+        { k: 'data', n: 'data_qubits', num: true },
+        { k: 'anc', n: 'ancillas', num: true },
+        { k: 'gates', n: 'gates', num: true },
+        { k: 'cnots', n: 'cnots', num: true },
+        { k: 'singles', n: 'single_qubit_gates', num: true },
+        { k: 'meas', n: 'measurements', num: true },
+        { k: 'rounds', n: 'rounds', num: true },
+        { k: 'cycles', n: 'cycles', num: true },
+        { k: 'logicGates', n: 'logic_gates', num: true },
+      ], rows, { ...meta, title: '当前配置结论导出' }),
+      rows: rows.length,
+    };
+  }
+  exportData(kind){
+    const out = this._exportText(kind);
+    const msg = this.q('#cyExpMsg');
+    if (!out){
+      if (msg) msg.textContent = '先点「跑 MC + 扫描」，再导出';
+      return null;
+    }
+    downloadText(out.name, out.text);
+    if (msg) msg.textContent = '已导出 ' + out.name + '（' + out.rows + ' 行 + 元数据头）';
+    return out;
+  }
+
   debugHandle(){
     const self = this;
     return {
       get state(){ return self.state; },
       kinds: () => cyKINDS.map(k => ({ k, label: FS_KINDS[k].label })),
+      /* R119：导出（与按钮同一份字符串） */
+      exportText: kind => { const o = self._exportText(kind); return o ? { name: o.name, text: o.text, rows: o.rows } : null; },
       logics: () => cyLOGICS.map(l => ({ k: l.k, name: l.name })),
       navLinks: () => NAV_HREFS,
       data: () => ({

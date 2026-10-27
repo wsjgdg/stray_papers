@@ -73,7 +73,7 @@
  * _queueTimer 类定时器在 deactivate 统一清理。CSS 原样（选择器全 id 锚定，
  * mode 间 DOM 不同屏共存，无串台）。
  * ========================================================================== */
-import { QEC_DEFAULTS, QEC_CODES, QEC_NOISE, QEC_SPECTRA, qecTrial, qecStream, qecEnsemble, qecSweep, qecLogicalRate, qecLogicalRateLab, qecThreshold, qecSyndromeTable, qecCircuit, qecExactPL, qecFaultSurvey, qecNormRd, qecNormN, qecVoteErr, qecUncodedSpec, qecUncodedRate, qecUncodedThreshold, qecDpOverBudget, qecDpHeavy, qecDpStates } from '../physics/qec.js';
+import { QEC_DEFAULTS, QEC_CODES, QEC_NOISE, QEC_SPECTRA, qecTrial, qecStream, qecEnsemble, qecSweep, qecSweepPlan, qecDpCacheStats, qecLogicalRate, qecLogicalRateLab, qecThreshold, qecSyndromeTable, qecCircuit, qecExactPL, qecFaultSurvey, qecNormRd, qecNormN, qecVoteErr, qecUncodedSpec, qecUncodedRate, qecUncodedThreshold, qecDpOverBudget, qecDpHeavy, qecDpStates } from '../physics/qec.js';
 import { mulberry32 } from '../physics/qcircuit.js';
 import { qecCurveCsv, qecTableCsv, qecTableMd, qecExportName } from './export.js';
 import { LiveDriver } from './live.js';
@@ -204,6 +204,8 @@ export class QecApp {
     this.curve = null;
     this.svy = null;      /* 门级：一阶故障枚举（c₁） */
     this._tabFilter = ''; /* R115：综合表过滤词（重渲染后回填，n≤5 走扁平路径用不到） */
+    this._sweepTok = 0;   /* R117：逐点扫描的取消令牌（换配置/离开模式即作废） */
+    this._sweepProg = null;
     /* R114：曲线缓存（键 = 影响 sweep 的全部输入；sweep 一次的代价很高：
        n=5·rd=3 ≈54s、n=7·rd=1 ≈32s ⟹ 切回旧配置直接复用）。FIFO，≤24 条。 */
     this._curveCache = new Map();
@@ -220,6 +222,7 @@ export class QecApp {
     clearTimeout(this._pDebounce); clearTimeout(this._trDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     clearTimeout(this._physDeb);   /* R108：phys 滑块防抖（切 mode 不泄漏） */
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
+    this._sweepTok++;                     /* R117：停掉在途的逐点扫描（否则离开 mode 后还在算） */
     this._ro?.disconnect();
     this.live?.dispose();                 /* R98 P2：停 rAF 播放环（切 mode 零泄漏） */
     for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
@@ -300,6 +303,7 @@ export class QecApp {
           <button id="qeExpMd" title="同一份综合表的 Markdown 版（贴进笔记/PR 用）">表 MD</button>
         </div>
         <div id="qeExpMsg" style="font-family:var(--mono);font-size:9.5px;color:var(--dim);margin:2px 0 3px"></div>
+        <div class="btns"><button id="qeExpUrl" title="把当前全部配置（码/码长/表决数/噪声/谱/注错范围/p/样本数/seed/physics 六参数）编码成链接；打开即还原。与 CSV 互补：一个给人点，一个给机器读">复制快照链接</button><button id="qeExpUrlOpen" title="在新标签页打开这份快照（= 用当前配置重开一次，可用来验证链接是否真的还原了状态）">验证快照</button></div>
 
         <div class="grp">综合表</div>
         <div id="qeTable" style="font-family:var(--mono);font-size:10.5px;color:var(--dim);line-height:1.55"></div>
@@ -412,6 +416,8 @@ export class QecApp {
     this.on(this.q('#qeExpCurve'), 'click', () => this.exportData('curve'));
     this.on(this.q('#qeExpTable'), 'click', () => this.exportData('table'));
     this.on(this.q('#qeExpMd'), 'click', () => this.exportData('md'));
+    this.on(this.q('#qeExpUrl'), 'click', () => this.copySnapshot());
+    this.on(this.q('#qeExpUrlOpen'), 'click', () => { window.open(this._snapshotUrl(), '_blank'); });
 
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
@@ -529,30 +535,32 @@ export class QecApp {
         /* iid 重配置：qecSweep 默认 12 点网格同样减半（每点样本已由 trials=120 定） */
         sweepCfg.ps = Array.from({ length: 6 }, (_, i) => 0.002 * Math.pow(0.5 / 0.002, i / 5));
       }
-      this.curve = qecSweep(sweepCfg);
-      this._curveKey = key;
-      if (this.state.noise === 'gate'){
-        /* c₁：一阶故障枚举（p 无关，随 code/spectrum/noisyPhase 变） */
-        this.svy = qecFaultSurvey(this.cfg(), 1);
-        this._thr = this.gateThreshold();
-        /* R111：公平基线（同机会数裸传）下的交点 */
-        this._thrU = qecUncodedThreshold(this.cfg());
-      } else if (this.state.noise === 'phys'){
-        this.svy = null;
-        /* PLexact 曲线与 y=p 的首个交点（γ=λ=0 时 DP 可得；NaN 时返回 null） */
-        this._thr = this.gateThreshold();
-        this._thrU = qecUncodedThreshold(this.cfg());
-        this._floor = this.physFloor();
-      } else {
-        this.svy = null;
-        this._thr = null;
-        this._thrU = null;
-        this._floor = null;
-      }
+      /* R117：**逐点**扫描（不再一次同步跑完）。收尾逻辑放进 finish 回调，
+         等最后一个点落地才跑（阈值要读整条曲线）。 */
+      this._sweepStream(sweepCfg, key, () => {
+        if (this.state.noise === 'gate'){
+          /* c₁：一阶故障枚举（p 无关，随 code/spectrum/noisyPhase 变） */
+          this.svy = qecFaultSurvey(this.cfg(), 1);
+          this._thr = this.gateThreshold();
+          /* R111：公平基线（同机会数裸传）下的交点 */
+          this._thrU = qecUncodedThreshold(this.cfg());
+        } else if (this.state.noise === 'phys'){
+          this.svy = null;
+          /* PLexact 曲线与 y=p 的首个交点（γ=λ=0 时 DP 可得；NaN 时返回 null） */
+          this._thr = this.gateThreshold();
+          this._thrU = qecUncodedThreshold(this.cfg());
+          this._floor = this.physFloor();
+        } else {
+          this.svy = null;
+          this._thr = null;
+          this._thrU = null;
+          this._floor = null;
+        }
         this._curveCache.set(key, {
           curve: this.curve, svy: this.svy, thr: this._thr, thrU: this._thrU, floor: this._floor,
         });
         if (this._curveCache.size > 24) this._curveCache.delete(this._curveCache.keys().next().value);
+      });
       }
     }
     this.renderHud();
@@ -723,6 +731,12 @@ export class QecApp {
     if (b) b.textContent = P.label;
     if (sp){
       sp.innerHTML = repMdLite(P.text) +
+        /* R117：逐点扫描进度（首点 ~9s 可见；旧版是 54s 黑屏后一次蹦出） */
+        (this._sweepProg
+          ? '<hr style="border:none;border-top:1px solid var(--line);margin:6px 0">' +
+            '<span style="color:var(--amber);font-weight:600">扫描中 ' + this._sweepProg.i + '/' + this._sweepProg.n +
+            '</span> 逐点绘制（每点 ' + (qecDpHeavy(this.cfg()) ? '~5–9s' : '<0.1s') + '），界面可继续操作'
+          : '') +
         '<hr style="border:none;border-top:1px solid var(--line);margin:6px 0">' +
         '<span style="color:var(--cyan);font-weight:600">' + QEC_NOISE[s.noise].label + '</span> ' + QEC_NOISE[s.noise].desc +
         (s.noise === 'gate'
@@ -848,6 +862,51 @@ export class QecApp {
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => { try { URL.revokeObjectURL(url); } catch (e) {} }, 2000);
   }
+  /* ---- R117 快照链接：把 state 编码成「打开即还原」的 URL ----
+     参数集**只写对当前噪声模式有意义的项**（iid 不写 spectrum/noisyPhase、
+     非 phys 不写六个物理参数）——链接要能读，不是把 state 全倒出来。
+     顺序固定（便于 diff 与测试）；p/trials/seed 必写，否则复现不了那条曲线。 */
+  _snapshotUrl(){
+    const s = this.state, N = qecNormN(s.n), rd = qecNormRd(s.rd);
+    const q = new URLSearchParams();
+    q.set('mode', 'rep');
+    q.set('code', s.code);
+    q.set('n', String(N));
+    q.set('rd', String(rd));
+    q.set('noise', s.noise);
+    if (s.noise === 'gate' || s.noise === 'phys'){
+      q.set('spectrum', s.spectrum);
+      q.set('noisyPhase', s.noisyPhase);
+    }
+    q.set('p', String(s.p));
+    q.set('trials', String(this.effTrials()));
+    q.set('seed', String(s.seed));
+    if (s.noise === 'phys'){
+      for (const k of ['t1', 't2', 'tg', 'pd', 're', 'peq']) q.set(k, String(s.phys[k]));
+    }
+    return location.origin + location.pathname + '?' + q.toString();
+  }
+  copySnapshot(){
+    const url = this._snapshotUrl();
+    const msg = this.q('#qeExpMsg');
+    const done = ok => {
+      if (!msg) return;
+      msg.innerHTML = ok
+        ? '已复制快照链接（' + url.length + ' 字符）<br><span style="color:var(--cyan);word-break:break-all">' + url + '</span>'
+        : '剪贴板不可用，请手动复制：<br><span style="color:var(--cyan);word-break:break-all">' + url + '</span>';
+    };
+    /* navigator.clipboard 只在安全上下文可用（http://127.0.0.1 算），但无头
+       浏览器/权限拒绝时会抛 ⟹ **必须给降级路径**，不能假装复制成功 */
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(url).then(() => done(true), () => done(false));
+        return url;
+      }
+    } catch (e) {}
+    done(false);
+    return url;
+  }
+
   exportData(kind){
     const out = this._exportText(kind);
     const msg = this.q('#qeExpMsg');
@@ -858,6 +917,44 @@ export class QecApp {
     this._download(out.name, out.text);
     if (msg) msg.textContent = '已导出 ' + out.name + '（' + out.rows + ' 行数据 + 元数据头）';
     return out;
+  }
+
+  /* ---- R117 逐点扫描 ----
+     实测成本构成（gate 扫描）：n=5·rd=3 每点 9.1s × 6 点 = 54s；n=7·rd=1 每点
+     5.3s × 6 点 = 32s。同步跑完 = 主线程冻死一分钟、零进度、无法中断。
+     改成「算一点 → 画一点 → setTimeout 让出主线程」：
+       · 首点在 ~9s 可见（而不是 54s 后一次蹦出来），曲线随扫描长出来；
+       · 界面全程可交互（滑块/按钮不卡）；
+       · 换配置立刻作废旧令牌，旧扫描自然停下（不会两个扫描抢 this.curve）。
+     `_curveKey` **先置位**：同一配置的重复调用直接跳过（不会重开一轮）。 */
+  _sweepStream(sweepCfg, key, finish){
+    const plan = qecSweepPlan(sweepCfg);
+    const tok = ++this._sweepTok;
+    /* 派生量（阈值 / 底座 / 一阶系数）在扫描期间**先清空**：它们要读整条曲线，
+       扫描没跑完就还是上一配置的数。留着旧值比显示「—」更糟——用户会把旧数
+       当成新配置的结果（cdp110 D4 就是这样抓到的：k=1→k=3 后底座没变）。 */
+    this.svy = null; this._thr = null; this._thrU = null; this._floor = null;
+    this.curve = { p: [], PL: [], PLexact: [], Pun: [], noise: plan.noise, spectrum: plan.spectrum, noisyPhase: plan.noisyPhase };
+    this._curveKey = key;
+    this._sweepProg = { i: 0, n: plan.length };
+    const tick = () => {
+      if (tok !== this._sweepTok){ return; }        /* 已被新扫描/离开模式作废 */
+      const i = this._sweepProg ? this._sweepProg.i : plan.length;
+      if (i >= plan.length){
+        this._sweepProg = null;
+        finish();
+        this.renderHud(); this.drawAll(); this.renderHint();
+        return;
+      }
+      const r = plan.step(i);
+      this.curve.p.push(r.p); this.curve.PL.push(r.PL);
+      this.curve.PLexact.push(r.PLexact); this.curve.Pun.push(r.Pun);
+      if (this._sweepProg) this._sweepProg.i = i + 1;
+      if (this.curve.p.length >= 2) this.drawCurve();   /* 1 点时画不出折线 */
+      this.renderHint();
+      setTimeout(tick, 0);
+    };
+    setTimeout(tick, 0);
   }
 
   renderTable(){
@@ -2018,6 +2115,11 @@ export class QecApp {
       /* R116：导出内容（与按钮下载的是**同一份**字符串：单源，测试才有意义） */
       exportText: kind => self._exportText(kind),
       exportMeta: () => self._expMeta(),
+      /* R117：快照链接（与「复制快照链接」按钮同源） */
+      snapshotUrl: () => self._snapshotUrl(),
+      /* R117：逐点扫描进度（null = 已完成）+ DP 记忆化命中统计 */
+      sweepProg: () => (self._sweepProg ? { ...self._sweepProg } : null),
+      dpCache: () => qecDpCacheStats(),
       /* R110/R112：码长（3/5/7/9）；nq>18 时 rd 自动降到合法档（n=5：5→3；n=7/9：→1） */
       setN: v => { self.setN(v); self.drawAll(); },
       setP: v => { self.setP(v); self.drawAll(); },

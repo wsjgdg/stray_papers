@@ -52,16 +52,21 @@ export function qecCodeMeta(code){
 /* 元数据头：固定键序（测试可逐行对账；也让 diff 干净） */
 function metaLines(meta = {}){
   const L = [];
-  L.push('# schrodinger-workshop · qec 重复码 · ' + (meta.title || '数据导出'));
+  L.push('# schrodinger-workshop · ' + (meta.product || 'qec 重复码') + ' · ' + (meta.title || '数据导出'));
   if (meta.generated) L.push('# generated=' + meta.generated);
-  const cm = qecCodeMeta(meta.code);
-  L.push('# code=' + (meta.code || 'bitflip') + '（' + cm.label + '）');
-  L.push('# noise=' + (meta.noise || 'iid'));
+  /* 只在调用方真的给了才写：Shor / 循环 EC 没有「bitflip 码」「iid」这些字段，
+     无条件补默认值会让头说谎（首版就给 Shor 的导出写上了 code=bitflip）。 */
+  if (meta.code){
+    const cm = qecCodeMeta(meta.code);
+    L.push('# code=' + meta.code + '（' + cm.label + '）');
+  }
+  if (meta.noise) L.push('# noise=' + meta.noise);
   if (meta.noise === 'gate' || meta.noise === 'phys'){
     L.push('# spectrum=' + (meta.spectrum || 'depolar') + '  noisyPhase=' + (meta.noisyPhase || 'extract'));
   }
-  L.push('# n=' + meta.n + '  rd=' + meta.rd + '  d=' + meta.n + '  t=' + ((meta.n - 1) / 2) +
+  if (meta.n != null) L.push('# n=' + meta.n + '  rd=' + meta.rd + '  d=' + meta.n + '  t=' + ((meta.n - 1) / 2) +
          '  nq=' + (meta.nq != null ? meta.nq : (meta.n + (meta.n - 1) * meta.rd)));
+  if (meta.extra) for (const line of meta.extra) L.push('# ' + line);
   if (meta.trials != null) L.push('# trials=' + meta.trials + (meta.seed != null ? '  seed=' + meta.seed : ''));
   if (meta.noise === 'phys' && meta.phys){
     const p = meta.phys;
@@ -150,4 +155,32 @@ export function qecExportName(kind, meta = {}){
   const code = meta.code || 'bitflip';
   return 'qec-' + tag + '-n' + meta.n + (kind === 'curve' ? '-k' + meta.rd + '-' + noise : '') +
     '-' + code + '.' + ext;
+}
+
+/* ---------------- 通用表构造器（Shor / 循环 EC 复用，R119） ----------------
+   columns = [{ k: 键, n: 列名, num: true|false }]；rows = 对象数组或数组。
+   数值列走 qecCsvNum（缺失值留空），文本列走 qecCsvCell（RFC4180 转义）。
+   为什么不用 JSON：JSON 不是表格工具能直接吃的，而这里的读者是 pandas/R/Excel。 */
+export function qecGenericCsv(columns = [], rows = [], meta = {}){
+  const L = metaLines(meta);
+  L.push('# columns: ' + columns.map(c => c.n).join(','));
+  L.push(columns.map(c => c.n).join(','));
+  for (const r of rows){
+    const cells = columns.map((c, i) => {
+      const v = Array.isArray(r) ? r[i] : r[c.k];
+      return c.num ? qecCsvNum(v) : qecCsvCell(v);
+    });
+    L.push(cells.join(','));
+  }
+  return L.join('\n') + '\n';
+}
+
+/* 浏览器下载（Node 侧不调用；集中在这里免得每个 mode 各写一遍） */
+export function downloadText(name, text){
+  const blob = new Blob([text], { type: 'text/' + (/\.md$/.test(name) ? 'markdown' : 'csv') + ';charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.style.display = 'none';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => { try { URL.revokeObjectURL(url); } catch (e) {} }, 2000);
 }

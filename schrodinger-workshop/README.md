@@ -1514,7 +1514,7 @@ extract 的缓升段回退承诺失败（bitflip/z/extract @0.52 回退 −1.5e-
 仅 X/仅 Z」+「注错相位 仅提取段/全程」三组按钮（i.i.d. 下后两组置灰）；HUD 按口径切分区——
 i.i.d. 显示 0/1/2/3 错计数，门级显示**机会数 M**、平均注入故障、结局五分类、解码后三分类、
 **c₁**；曲线在门级下走 18 点几何网格（0.002→0.55，比 i.i.d. 的 12 点多覆盖到交点之外）并
-叠加 DP 精确折线。入口仍是 `qec.html` → `dist/qec.html`（714.0 KB）。
+叠加 DP 精确折线。入口仍是 `qec.html` → `dist/qec.html`（731.1 KB）。
 
 **验证**：pot86 **23/23**（A iid 零回归 7 组 / B gate MC↔DP 4σ 36 组 / C DP↔故障枚举系数
 互校 + M·sites 锚 / D 不变量与故障结构 / E 确定性 10 病例 / F 交点延续性 / G 极值·钳制·
@@ -2011,6 +2011,57 @@ n=7/9 的综合表要展示「可纠层 + 首个失败层」，共 **99 / 382 �
 **真实下载已验证**（不是只建个 blob）：cdp116 用 CDP `Browser.setDownloadBehavior`
 把下载目录指到临时目录、点按钮、等文件落盘，再断言「落盘文件名 = 导出名」
 「落盘内容长度 = `exportText()` 返回的字符串」——断言的和用户拿到的是**同一份**。
+
+#### 快照链接 / 逐点扫描 / Shor·循环 EC 导出（R117）
+
+**① 快照链接。** 「复制快照链接」把当前配置编码成 `?mode=rep&code=…&n=…&rd=…&noise=…&p=…&trials=…&seed=…`
+（gate/phys 再加谱与注错范围，phys 再加六个物理参数），打开即还原。只写**对该噪声
+模式有意义**的参数——iid 不写 `spectrum`，非 phys 不写 `t1/t2/tg/pd/re/peq`；链接要
+能读，不是把 state 倒出来。与 CSV 互补：一个给人点，一个给机器读。
+
+`navigator.clipboard` 在无头浏览器/权限拒绝时会抛 ⟹ **必须有降级路径**：写入面板
+下方可选中复制的文本，并明说「剪贴板不可用」，不假装成功。
+
+**② 逐点扫描（`qecSweepPlan` + `step(i)`）。** 之前一次门级重扫是同步跑完的：
+n=7·rd=1 实测**主线程冻结 105s**、零进度、无法中断。现在拆成
+「算一点 → 画一点 → `setTimeout` 让出主线程」：
+
+| 指标 | 改造前 | 改造后（n=7·rd=1 门级，6 点） |
+|---|---|---|
+| 首点可见 | 105s（全部算完才画） | **5.4s** |
+| 界面可交互 | 否（冻结 105s） | 是 |
+| 进度反馈 | 无 | `扫描中 i/6` |
+| 末值 | 105s | 105s（总计算量不变） |
+
+换配置立刻作废旧令牌，旧扫描自然停止（不会两个扫描抢 `this.curve`）。
+**派生量（阈值 / 底座 / 一阶系数）在扫描开始时先清空**：它们要读整条曲线，扫描
+没跑完就还是上一配置的数——留着旧值比显示「—」更糟（`cdp110 D4` 就是这样抓到的：
+k=1→k=3 后底座显示没变）。
+
+**③ DP 记忆化。** DP 只依赖「电路 + 噪声参数 + p」，**与 trials 无关**，而 trials 在
+`_curveKey` 里 ⟹ 拖样本数滑块会触发整轮重扫。加了按「DP 真正读到的字段」作键的
+记忆化（256 条 FIFO）后：
+
+- 拖样本数重扫：**miss 一个不增**（实测 hit 8→41、miss 25 恒定）；
+- 还顺手揭出一个隐藏的重复计算：`qecEnsemble` 内部**也**调 `qecExactPL`（它返回的
+  `PLexact` 要）⟹ 每个扫描点原本跑**两遍**完整 DP，记忆化让第二遍免费。
+
+实测（Node，6 点扫描）：n=5·rd=3 **70.7s**（6 次唯一 DP + 6 次命中，单点 ≈11.8s）、
+n=7·rd=1 **30.9s**（单点 ≈5.15s）。预算外/γ>0 的 NaN **不进缓存**（每次直接返回，
+不占名额）。
+
+**④ Shor / 循环 EC 接同一套导出。** `export.js` 增加通用构造器 `qecGenericCsv(columns, rows, meta)`：
+
+| 页面 | 导出 | 内容 |
+|---|---|---|
+| Shor 9 | 扫描 CSV | `p, P_L_exact, P_L_MC` |
+| Shor 9 | 故障调查 CSV | 每个（门 × 比特 × Pauli）位点：`gate_index, qubit, gate_op, phase, pauli, coset, fatal, syndrome`，头里带 `M / sites / c1 / fatal` |
+| 循环 EC | 扫描 CSV | `rounds, P_L, mean_faults` |
+| 循环 EC | 结论 CSV | 单行 `P_L … qubits_total, data_qubits, ancillas, gates, cnots, rounds, cycles, logic_gates` |
+
+元数据头改用**各自产品的词**（`Shor 9 比特码` / `循环 EC（重复码 + 逻辑门）`），
+`code=/noise=` 行只在调用方真的给了才写——首版无条件补默认值，结果给 Shor 的导出
+写上了 `code=bitflip`（Shor 页根本没有这个字段）。
 
 #### 门噪声接进 Shor 码（同页扩展 `shor.html`）
 
@@ -2965,7 +3016,7 @@ schrodinger-workshop/
     ├── paths.html                构建产物：路径页单文件版（86.8 KB，file:// 直开）
     ├── qcircuit.html             构建产物：线路页单文件版（155.0 KB，file:// 直开）
     ├── noise.html                构建产物：噪声页单文件版（129.7 KB，file:// 直开）
-    ├── qec.html                  构建产物：纠错页单文件版（714.0 KB，file:// 直开）
+    ├── qec.html                  构建产物：纠错页单文件版（731.1 KB，file:// 直开）
     ├── shor.html                 构建产物：Shor 码跳转存根（→ qec.html?mode=shor，<1 KB）
     ├── gatenoise.html            构建产物：门噪声跳转存根（→ qec.html?mode=gate，<1 KB）
     ├── flag.html                 构建产物：综合提取容错跳转存根（→ qec.html?mode=flag，<1 KB）

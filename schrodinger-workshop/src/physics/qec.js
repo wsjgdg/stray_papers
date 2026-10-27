@@ -1155,35 +1155,55 @@ export function qecMajority(bits){
 }
 
 /* 扫描：对一组 p 各跑一批（页面曲线用；pot78 用大 trials）。
-   gate 模式追加 DP-over-frames 精确曲线（PLexact 列），MC 点照常。 */
-export function qecSweep(cfg = {}){
+   gate 模式追加 DP-over-frames 精确曲线（PLexact 列），MC 点照常。
+
+   R117：拆成 `qecSweepPlan` + 逐点 `step(i)`。目的有二：
+     1) 页面可以**逐点绘制**（n=5·rd=3 的一次 6 点扫描 = 6 × 9.1s ≈ 54s，同步跑
+        会把主线程冻住整整一分钟、期间连进度都没有）；
+     2) 每个点算完立刻可复用（DP 记忆化见 qecExactPL），中断/改样本数不重算。
+   `qecSweep` 保留为同步包装（pot 套件与导出仍用它），行为与拆分前**逐位一致**。 */
+export function qecSweepPlan(cfg = {}){
   const c = { ...QEC_DEFAULTS, ...cfg };
   const gate = c.noise === 'gate';
   const phys = c.noise === 'phys';
   const ps = c.ps || (gate
     ? Array.from({ length: 16 }, (_, i) => 0.002 * Math.pow(0.3 / 0.002, i / 15))
     : [0.002, 0.005, 0.01, 0.02, 0.04, 0.07, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5]);
-  const out = { p: [], PL: [], PLexact: [], Pun: [], noise: c.noise, spectrum: c.spectrum, noisyPhase: c.noisyPhase };
-  for (const p of ps){
-    out.p.push(p);
-    out.Pun.push(p);
+  const step = i => {
+    const p = ps[i];
+    const row = { p, PL: NaN, PLexact: NaN, Pun: p };
     if (gate){
-      out.PLexact.push(qecExactPL({ ...c, p }));
-      const e = qecEnsemble({ ...c, p, trials: c.sweepTrials || 1200 });
-      out.PL.push(e.PL);
+      row.PLexact = qecExactPL({ ...c, p });
+      row.PL = qecEnsemble({ ...c, p, trials: c.sweepTrials || 1200 }).PL;
     } else if (phys){
       /* R108：DP 精确（γ/λ>0 时 NaN）+ MC（密度矩阵，默认 900 次/点） */
-      out.PLexact.push(qecExactPL({ ...c, p }));
-      const e = qecEnsemble({ ...c, p, trials: c.sweepTrials || 900 });
-      out.PL.push(e.PL);
+      row.PLexact = qecExactPL({ ...c, p });
+      row.PL = qecEnsemble({ ...c, p, trials: c.sweepTrials || 900 }).PL;
     } else {
       const e = qecEnsemble({ ...c, p });
-      out.PL.push(e.PL);
-      out.PLexact.push(e.PLexact);
+      row.PL = e.PL; row.PLexact = e.PLexact;
     }
+    return row;
+  };
+  return {
+    ps, step, length: ps.length,
+    noise: c.noise, spectrum: c.spectrum, noisyPhase: c.noisyPhase, cfg: c,
+  };
+}
+
+export function qecSweep(cfg = {}){
+  const plan = qecSweepPlan(cfg);
+  const out = { p: [], PL: [], PLexact: [], Pun: [], noise: plan.noise, spectrum: plan.spectrum, noisyPhase: plan.noisyPhase };
+  for (let i = 0; i < plan.length; i++){
+    const r = plan.step(i);
+    out.p.push(r.p);
+    out.Pun.push(r.Pun);
+    out.PLexact.push(r.PLexact);
+    out.PL.push(r.PL);
   }
   return out;
 }
+
 
 /* R112/R113：DP-over-frames 状态空间预算。末态键 = 数据帧（x/z 各 n 位 ⟹ ≤2^{2n}）
    × 投票字段（nStab·VB 位 ⟹ ≤2^{(n−1)·VB}），门分支（gate / phys·pd>0·λ>0）
@@ -1261,7 +1281,40 @@ export function qecDpHeavy(cfg = {}){
  *   累加投票计数」，修正分支按计数 >rd/2 表决。rd=1 时计数 ≡ 记录位，与 R108
  *   逐位一致；表决后有效读出误差 ε_k 由 DP 自然给出（p=0 时精确 = ε_k(1−ε_k)）。
  * ========================================================================== */
+/* R117：DP 结果记忆化。DP 只依赖「电路 + 噪声参数 + p」，**与 trials 无关** ——
+   而 trials 在 `_curveKey` 里 ⟹ 拖样本数滑块会触发整轮重扫。对 n=7·rd=1（6 点 ×
+   5.3s ≈ 32s）这是纯浪费：DP 一分不变，只有 MC 需要重跑。
+   键取「DP 真正读到的全部字段」，显式列出而不是 JSON.stringify(cfg)——后者会把
+   trials/sweepTrials/seed 这些无关字段混进来，缓存直接失效。
+   只缓存有限值：预算守卫/γ>0 的 NaN 是立刻返回的，缓存它们没有收益。 */
+const QEC_DP_MEMO = new Map();
+const QEC_DP_MEMO_MAX = 256;
+const QEC_DP_STATS = { hit: 0, miss: 0 };
+function qecDpKey(c){
+  return [
+    c.code, qecNormN(c.n), qecNormRd(c.rd), c.noise, c.spectrum, c.noisyPhase,
+    Math.max(0, Math.min(1, c.p)), c.theta, c.phase,
+    c.t1, c.t2, c.tg, c.pd, c.re, c.peq,
+  ].join('|');
+}
+export function qecDpCacheStats(){ return { size: QEC_DP_MEMO.size, hit: QEC_DP_STATS.hit, miss: QEC_DP_STATS.miss }; }
+export function qecDpCacheClear(){ QEC_DP_MEMO.clear(); QEC_DP_STATS.hit = 0; QEC_DP_STATS.miss = 0; }
+
 export function qecExactPL(cfg = {}){
+  const c = { ...QEC_DEFAULTS, ...cfg };
+  const key = qecDpKey(c);
+  const hit = QEC_DP_MEMO.get(key);
+  if (hit !== undefined){ QEC_DP_STATS.hit++; return hit; }
+  QEC_DP_STATS.miss++;
+  const v = qecExactPLUncached(c);
+  if (Number.isFinite(v)){
+    QEC_DP_MEMO.set(key, v);
+    if (QEC_DP_MEMO.size > QEC_DP_MEMO_MAX) QEC_DP_MEMO.delete(QEC_DP_MEMO.keys().next().value);
+  }
+  return v;
+}
+
+function qecExactPLUncached(cfg = {}){
   const c = { ...QEC_DEFAULTS, ...cfg };
   const circ = qecCircuit(c.code, c);
   const gate = c.noise === 'gate';

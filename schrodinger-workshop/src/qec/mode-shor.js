@@ -11,8 +11,9 @@
  * 与 R78 qec 页的差异： ancilla 顺序复用（10 比特态矢，单次 0.2ms）；
  * 曲线用**精确**值（穷举与 p 无关），MC 只标当前 p 一点。
  * ========================================================================== */
-import { SHOR_STABS, SHOR_LOGICALS, shorTrial, shorStream, shorEnsemble, shorSweep, shorExactPL, repPLexact, shorCrossover, shorDecode, shorSyndromeOf, shorCoset, shorTableStats, shorDistance, shorWeight2Stats, SHOR_STAB_COUNT, shorFaultSurvey, shorCircuitStats } from '../physics/shor.js';
+import { SHOR_STABS, SHOR_LOGICALS, shorTrial, shorStream, shorEnsemble, shorSweep, shorExactPL, repPLexact, shorCrossover, shorDecode, shorSyndromeOf, shorCoset, shorTableStats, shorDistance, shorWeight2Stats, SHOR_STAB_COUNT, shorFaultSurvey, shorCircuitStats, SHOR_ANC } from '../physics/shor.js';
 import { mulberry32 } from '../physics/qcircuit.js';
+import { qecGenericCsv, downloadText } from './export.js';
 import { LiveDriver } from './live.js';
 
 const SHOR_CSS = `
@@ -157,6 +158,13 @@ export class ShorApp {
         </div>
         <div class="row"><label>样本数</label><input type="range" id="shTrials" min="500" max="8000" step="500"><output id="shTrialsO">—</output></div>
 
+        <div class="grp">导出（R119 · 带可复现元数据头）</div>
+        <div class="btns">
+          <button id="shExpCurve" title="P_L(p) 扫描点：p / 精确（DP）/ MC。无精确解的点留空（不是 0）">扫描 CSV</button>
+          <button id="shExpSurvey" title="一阶故障调查全表：每个（门 × 比特 × Pauli）位点单独注入 ⟹ 是否致命 + 落到的陪集 + 综合征">故障调查 CSV</button>
+        </div>
+        <div id="shExpMsg" style="font-family:var(--mono);font-size:9.5px;color:var(--dim);margin:2px 0 3px"></div>
+
         <div class="grp">指定错误注入（演示）</div>
         <div class="btns g5" id="shQbtns"></div>
         <div class="btns g3" id="shTbtns"></div>
@@ -276,6 +284,10 @@ export class ShorApp {
       this.state.seed = (this.state.seed * 1103515245 + 12345) % 2147483647;
       this.recompute();
     });
+
+    /* ---- R119 导出（与重复码页同一套 export.js：元数据头/转义/缺失值口径一致） ---- */
+    this.on(this.q('#shExpCurve'), 'click', () => this.exportData('curve'));
+    this.on(this.q('#shExpSurvey'), 'click', () => this.exportData('survey'));
 
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
@@ -851,6 +863,71 @@ export class ShorApp {
   }
 
   /* ---------- 调试句柄 ---------- */
+  /* ---- R119 导出 ----
+     Shor 9 比特码没有「码长 n / 表决数 rd」这些字段 ⟹ 元数据头改用 extra 行写它
+     自己的配置（d=3、9 比特、谱、注错相位、p、样本数、seed），不套重复码的词。 */
+  _expMeta(){
+    const s = this.state;
+    return {
+      product: 'Shor 9 比特码',
+      noise: 'gate',
+      extra: [
+        'code=Shor [[9,1,3]]（9 比特 · 外相位层 3 块 × 内比特层 3 比特）',
+        'd=3  t=1  比特数=9  ancilla=' + SHOR_ANC,
+        'spectrum=' + s.spectrum + '  noisyPhase=' + s.noisyPhase,
+        'p=' + s.p + '  trials=' + s.trials + '  seed=' + s.seed,
+      ],
+      generated: new Date().toISOString(),
+    };
+  }
+  _exportText(kind){
+    const meta = this._expMeta();
+    if (kind === 'curve'){
+      const sw = this.sweep;
+      if (!sw) return null;
+      const rows = sw.p.map((p, i) => ({ p, pe: sw.PLexact[i], pl: sw.PL[i] }));
+      return {
+        name: 'shor-curve.csv',
+        text: qecGenericCsv([
+          { k: 'p', n: 'p', num: true },
+          { k: 'pe', n: 'P_L_exact', num: true },
+          { k: 'pl', n: 'P_L_MC', num: true },
+        ], rows, { ...meta, title: 'P_L(p) 扫描导出' }),
+        rows: rows.length,
+      };
+    }
+    /* 不缓存：rows 依赖 spectrum（x/y/z 三类 vs 单类）与 noisyPhase，缓存键容易写漏 */
+    const sv = shorFaultSurvey(this.cfg(), 1);
+    const rows = sv.rows.map(r => ({ ...r }));
+    return {
+      name: 'shor-fault-survey.csv',
+      text: qecGenericCsv([
+        { k: 'gate', n: 'gate_index', num: true },
+        { k: 'q', n: 'qubit', num: true },
+        { k: 'op', n: 'gate_op', num: false },
+        { k: 'ph', n: 'phase', num: false },
+        { k: 't', n: 'pauli', num: false },
+        { k: 'coset', n: 'coset', num: true },
+        { k: 'fatal', n: 'fatal', num: true },
+        { k: 'syn', n: 'syndrome', num: false },
+      ], rows, { ...meta, title: '一阶故障调查导出',
+        extra: [...meta.extra, 'M=' + sv.M + '（错误机会数） sites=' + sv.sites,
+          'c1=' + sv.c1 + '（致命率一阶系数） fatal=' + sv.fatal + '/' + sv.total] }),
+      rows: rows.length,
+    };
+  }
+  exportData(kind){
+    const out = this._exportText(kind);
+    const msg = this.q('#shExpMsg');
+    if (!out){
+      if (msg) msg.textContent = '扫描尚未完成，稍后再试';
+      return null;
+    }
+    downloadText(out.name, out.text);
+    if (msg) msg.textContent = '已导出 ' + out.name + '（' + out.rows + ' 行 + 元数据头）';
+    return out;
+  }
+
   debugHandle(){
     const self = this;
     return {
@@ -890,6 +967,8 @@ export class ShorApp {
       setSpectrum: v => { self.state.spectrum = v; self.modeChanged(); },
       setNoisyPhase: v => { self.state.noisyPhase = v; self.modeChanged(); },
       table: () => shorTableStats(),
+      /* R119：导出（与按钮同一份字符串） */
+      exportText: kind => { const o = self._exportText(kind); return o ? { name: o.name, text: o.text, rows: o.rows } : null; },
       distance: () => shorDistance(),
       weight2: () => shorWeight2Stats(),
       logicals: () => SHOR_LOGICALS.map(L => ({ ...L })),
