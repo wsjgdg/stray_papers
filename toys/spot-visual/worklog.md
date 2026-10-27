@@ -457,6 +457,16 @@ A 级接入后等级只在详情弹窗里——浏览场景（卡片）看不到
 点击主图放大 → 全屏黑底遮罩（z-80 盖过弹窗）、左右箭头/键盘 ←→ 切换、Esc 关闭
 （capture 阶段拦截，避免连带关闭详情弹窗）、页码显示、点击遮罩关闭。
 
+## 三十六轮：景点网络拖动帧性能（2026-10-28）
+
+transform 每帧变化导致 3000 节点的 SVG 内层（区域连线 + 点位 ≈ 9000 元素）整帧重渲染，
+拖动/缩放必卡。SVG 内层提取为 `NetworkLayer`（React.memo）：
+
+- 节点坐标已预计算（sx/sy），内容不依赖 transform.x/y——拖动帧 memo 直接跳过重渲染；
+- 标签门控改传 `labelMode` 布尔（仅缩放跨过 2.2 阈值时翻转一次）；
+- 点击 handler 经 `spotClickRef` 固定身份转发（handler 依赖 transform，不能直接进 memo props）；
+- hoveredId/setHoveredId 走 props（hover 触发的重渲染频率可接受）。
+
 ## 七轮（2026-10-25）：志愿探索接入真实数据
 
 | 项目 | 状态 |
