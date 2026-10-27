@@ -1514,7 +1514,7 @@ extract 的缓升段回退承诺失败（bitflip/z/extract @0.52 回退 −1.5e-
 仅 X/仅 Z」+「注错相位 仅提取段/全程」三组按钮（i.i.d. 下后两组置灰）；HUD 按口径切分区——
 i.i.d. 显示 0/1/2/3 错计数，门级显示**机会数 M**、平均注入故障、结局五分类、解码后三分类、
 **c₁**；曲线在门级下走 18 点几何网格（0.002→0.55，比 i.i.d. 的 12 点多覆盖到交点之外）并
-叠加 DP 精确折线。入口仍是 `qec.html` → `dist/qec.html`（703.4 KB）。
+叠加 DP 精确折线。入口仍是 `qec.html` → `dist/qec.html`（714.0 KB）。
 
 **验证**：pot86 **23/23**（A iid 零回归 7 组 / B gate MC↔DP 4σ 36 组 / C DP↔故障枚举系数
 互校 + M·sites 锚 / D 不变量与故障结构 / E 确定性 10 病例 / F 交点延续性 / G 极值·钳制·
@@ -1973,6 +1973,44 @@ n=7/9 的综合表要展示「可纠层 + 首个失败层」，共 **99 / 382 �
    `rects=1`、`height=16.3px`，全都在撒谎）——只有 `checkVisibility()` 说真话。
    调试句柄改为显式判定「组 open 且组/行都没被过滤隐藏」。**布局本身是对的**
    （全折叠 154px / 默认 284px / 全展开 1764px 实测），错的只是那个计数。
+
+#### 数据导出：曲线 CSV / 综合表 CSV / 综合表 Markdown（R116）
+
+沙盒里的数只能看不能带走，是「实验室」缺的最后一块。`src/qec/export.js` 是**纯字符串
+构造器**（不碰 DOM，Node 里可直接 import 做断言），三个导出都带元数据头。
+
+**三条设计原则（都是「导出」最容易做错的地方）**：
+
+1. **元数据头必带全** —— 文件单看就能复现：`code / noise / spectrum / noisyPhase /
+   n / rd / d / t / nq / trials / seed`，phys 模式再加**六个物理参数**
+   （`t1 t2 tg pd re peq`）。半年后拿到一个 CSV 不该靠回忆 URL 才知道它是哪组参数。
+   同配置重复导出**逐字相同**（表头无时间戳以外的变量），可直接 `diff`。
+2. **CSV 按 RFC4180 转义** —— 含逗号/引号/换行的字段加引号、内部引号翻倍。
+   错误位用**空格**分隔（`0 1`）而不是逗号，避免被当成列分隔。
+3. **缺失值写空字段，绝不写 `NaN`** —— 空白在 pandas/R 里是缺失值，`NaN` 是**字符串**
+   ⟹ 整列 dtype 从 float 掉成 object。DP 超预算的点（无精确解）必须让下游看到
+   「没有数」，**不能伪装成 0**。
+
+| 导出 | 文件名 | 列 |
+|---|---|---|
+| 曲线 CSV | `qec-curve-n7-k1-gate-bitflip.csv` | `p, P_L_exact, P_L_MC, P_L_analytic, P_un` |
+| 表 CSV | `qec-table-n9-bitflip.csv` | `weight, error_bits, syndrome, fix, ok`（`ok` 是 0/1） |
+| 表 MD | `qec-table-n9-bitflip.md` | 同上的 Markdown 版（综合征用反引号包住） |
+
+- **表导出永远是完整表**（w≤t+1：n=9 ⟹ 382 行），与页面的折叠/过滤状态**无关**——
+  导出半张表比不导出更糟。
+- **`analytic` / `dp` 只写进曲线**：它们描述的是 P_L 的解析式与精确解状态，挂在
+  解码表头上是噪音。`dp=n/a` 时整行不写（无信息量的行不写）。
+- 文件名只依赖配置、**不带时间戳**（同配置重复导出 → 同名，方便覆盖与比对）；必带
+  `code`，否则 bitflip / phaseflip 会互相覆盖。
+
+**一个真 bug（pot116 A7 抓出）**：`qecCsvNum` 原本只判 `Number.isFinite(Number(v))`
+—— 而 `Number(null) === 0`、`Number('') === 0` ⟹ **「没有值」被写成 0**，正是这条
+原则要防的「伪造零」。改为先判 `v == null || v === ''` 再转数。
+
+**真实下载已验证**（不是只建个 blob）：cdp116 用 CDP `Browser.setDownloadBehavior`
+把下载目录指到临时目录、点按钮、等文件落盘，再断言「落盘文件名 = 导出名」
+「落盘内容长度 = `exportText()` 返回的字符串」——断言的和用户拿到的是**同一份**。
 
 #### 门噪声接进 Shor 码（同页扩展 `shor.html`）
 
@@ -2927,7 +2965,7 @@ schrodinger-workshop/
     ├── paths.html                构建产物：路径页单文件版（86.8 KB，file:// 直开）
     ├── qcircuit.html             构建产物：线路页单文件版（155.0 KB，file:// 直开）
     ├── noise.html                构建产物：噪声页单文件版（129.7 KB，file:// 直开）
-    ├── qec.html                  构建产物：纠错页单文件版（703.4 KB，file:// 直开）
+    ├── qec.html                  构建产物：纠错页单文件版（714.0 KB，file:// 直开）
     ├── shor.html                 构建产物：Shor 码跳转存根（→ qec.html?mode=shor，<1 KB）
     ├── gatenoise.html            构建产物：门噪声跳转存根（→ qec.html?mode=gate，<1 KB）
     ├── flag.html                 构建产物：综合提取容错跳转存根（→ qec.html?mode=flag，<1 KB）

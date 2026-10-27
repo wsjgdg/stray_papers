@@ -22,6 +22,7 @@
       src/physics/gatenoise.js
       src/physics/qcnoise.js
       src/physics/qec.js
+      src/qec/export.js
       src/qec/live.js
       src/qec/mode-rep.js
       src/physics/shor.js
@@ -4763,6 +4764,161 @@ function qecUncodedThreshold(cfg = {}, lo = 1e-4, hi = 0.6){
   return 0.5 * (a + b);
 }
 
+/* ===== src/qec/export.js ===== */
+/* export.js — qec 页数据导出（R116）
+ *
+ * 纯字符串构造器，**不碰 DOM**（Node 里可直接 import 做 pot 套件）。
+ *
+ * 三条设计原则（都是「导出」这件事最容易做错的地方）：
+ *
+ *   1) **元数据头必带全**：文件单看就能复现——码/噪声谱/注错范围/n/k/样本数/
+ *      seed/解析式/DP 状态全在 `#` 头里。否则用户半年后拿到一个 CSV，不知道
+ *      它是哪组参数跑出来的（页面 URL 早忘了）。
+ *   2) **CSV 按 RFC4180 转义**：字段里有逗号/引号/换行就加引号、内部引号翻倍。
+ *      「错误位 = 0,1」这种值天然含逗号，不转义会把两列挤成一列。
+ *   3) **NaN/Infinity 写成空字段**，不写 "NaN"。空白在 pandas/R 里是缺失值，
+ *      而 "NaN" 是**字符串** ⟹ 整列 dtype 从 float 掉成 object（最常见的导出坑）。
+ *      y 值缺失（DP 超预算）必须能被下游识别成「没有数」，不能伪装成 0。
+ *
+ * 数值一律用 `String(v)`：JS 的最短往返表示（round-trip exact），既不会因
+ * toFixed 丢精度，也不会写出 "0.30000000000000004" 之外的噪声。
+ */
+
+/* RFC4180 单元转义 */
+function qecCsvCell(v){
+  if (v == null) return '';
+  const s = String(v);
+  return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+/* 数值 / 缺失值：有限值走 String（往返精确），非有限写空字段。
+   ⚠ `Number(null) === 0`、`Number('') === 0` —— 不加前置判断就会把「没有值」
+   写成 0，正是本模块要防的「伪造零」。首版漏了这一步，pot116 A7 抓出。 */
+function qecCsvNum(v){
+  if (v == null || v === '') return '';
+  const n = Number(v);
+  return Number.isFinite(n) ? String(n) : '';
+}
+
+/* DP 状态 → 人类可读标签（与页面的降级口径一致，不夸大） */
+function qecDpLabel(d){
+  if (d === 'exact') return 'exact';
+  if (d === 'over' || d === 'over-budget') return 'over-budget（未计算，y 列为空）';
+  return 'n/a';
+}
+
+const TAGS = {
+  bitflip: { fix: 'X', label: '比特翻转码（X 型错误）' },
+  phaseflip: { fix: 'Z', label: '相位翻转码（Z 型错误）' },
+};
+function qecCodeMeta(code){
+  const c = TAGS[code] || TAGS.bitflip;
+  return { fix: c.fix, label: c.label };
+}
+
+/* 元数据头：固定键序（测试可逐行对账；也让 diff 干净） */
+function metaLines(meta = {}){
+  const L = [];
+  L.push('# schrodinger-workshop · qec 重复码 · ' + (meta.title || '数据导出'));
+  if (meta.generated) L.push('# generated=' + meta.generated);
+  const cm = qecCodeMeta(meta.code);
+  L.push('# code=' + (meta.code || 'bitflip') + '（' + cm.label + '）');
+  L.push('# noise=' + (meta.noise || 'iid'));
+  if (meta.noise === 'gate' || meta.noise === 'phys'){
+    L.push('# spectrum=' + (meta.spectrum || 'depolar') + '  noisyPhase=' + (meta.noisyPhase || 'extract'));
+  }
+  L.push('# n=' + meta.n + '  rd=' + meta.rd + '  d=' + meta.n + '  t=' + ((meta.n - 1) / 2) +
+         '  nq=' + (meta.nq != null ? meta.nq : (meta.n + (meta.n - 1) * meta.rd)));
+  if (meta.trials != null) L.push('# trials=' + meta.trials + (meta.seed != null ? '  seed=' + meta.seed : ''));
+  if (meta.noise === 'phys' && meta.phys){
+    const p = meta.phys;
+    L.push('# phys: t1=' + p.t1 + ' t2=' + p.t2 + ' tg=' + p.tg + ' pd=' + p.pd + ' re=' + p.re + ' peq=' + p.peq);
+  }
+  /* analytic / dp 描述的是**曲线**（P_L 的解析式与精确解状态），与「解码表」无关 ——
+     表导出时由调用方置空，避免头上挂一个读者看不懂的 126p⁵−… */
+  if (meta.analytic) L.push('# analytic=' + meta.analytic);
+  if (meta.dp && meta.dp !== 'n/a') L.push('# dp=' + qecDpLabel(meta.dp));
+  if (meta.note) L.push('# note=' + meta.note);
+  return L;
+}
+
+/* ---------------- 曲线 CSV ---------------- */
+/* sweep 形状 = qecSweep() 的返回：{ p[], PL[], PLexact[], noise, spectrum, noisyPhase } */
+function qecCurveCsv(sweep = {}, meta = {}){
+  const p = sweep.p || [];
+  const analytic = meta.analyticFn || null;
+  const L = metaLines({ ...meta, title: 'P_L(p) 曲线导出' });
+  L.push('# columns: p,P_L_exact,P_L_MC,P_L_analytic,P_un');
+  L.push('# P_L_exact 空白 ⟹ 该点无精确解（DP 超预算 / γ>0 非 Pauli），不是 0');
+  L.push('p,P_L_exact,P_L_MC,P_L_analytic,P_un');
+  for (let i = 0; i < p.length; i++){
+    const exact = (sweep.PLexact || [])[i];
+    const mc = (sweep.PL || [])[i];
+    const un = (sweep.Pun || [])[i];
+    L.push([
+      qecCsvNum(p[i]),
+      qecCsvNum(exact),
+      qecCsvNum(mc),
+      analytic ? qecCsvNum(analytic(p[i])) : '',
+      qecCsvNum(un),
+    ].join(','));
+  }
+  return L.join('\n') + '\n';
+}
+
+/* ---------------- 综合表 CSV / Markdown ---------------- */
+/* rows 形状 = qecSyndromeTable(n) 的元素：{ errors[], syn[], fixQs[], ok } */
+function qecTableCsv(rows = [], meta = {}){
+  const fix = qecCodeMeta(meta.code).fix;
+  const t = (meta.n - 1) / 2;
+  const L = metaLines({
+    ...meta, analytic: null, dp: null, title: '综合征解码表导出',
+    note: '权重 ≤' + (t + 1) + '（可纠 t=' + t + ' 层 + 首个失败层）· 修正符号 ' + fix,
+  });
+  L.push('# columns: weight,error_bits,syndrome,fix,ok');
+  L.push('weight,error_bits,syndrome,fix,ok');
+  for (const r of rows){
+    L.push([
+      String(r.errors.length),
+      qecCsvCell(r.errors.join(' ')),          /* 空格分隔，避免逗号被当成列分隔 */
+      qecCsvCell(r.syn.join('')),
+      qecCsvCell(r.fixQs.length ? r.fixQs.map(q => fix + q).join(' ') : 'none'),
+      r.ok ? '1' : '0',
+    ].join(','));
+  }
+  return L.join('\n') + '\n';
+}
+
+function qecTableMd(rows = [], meta = {}){
+  const fix = qecCodeMeta(meta.code).fix;
+  const t = (meta.n - 1) / 2;
+  const L = metaLines({
+    ...meta, analytic: null, dp: null, title: '综合征解码表（Markdown）',
+    note: '权重 ≤' + (t + 1) + ' · 修正符号 ' + fix,
+  });
+  L.push('');
+  L.push('| 权重 | 错误位 | 综合征 | 修正 | 判定 |');
+  L.push('| --- | --- | --- | --- | --- |');
+  for (const r of rows){
+    L.push('| ' + r.errors.length + ' | ' + (r.errors.length ? r.errors.join(' ') : '无错') +
+      ' | `' + r.syn.join('') + '` | ' +
+      (r.fixQs.length ? r.fixQs.map(q => fix + q).join(' ') : '不动') + ' | ' +
+      (r.ok ? '✓' : '✗') + ' |');
+  }
+  return L.join('\n') + '\n';
+}
+
+/* 文件名：只依赖配置，不带时间戳（同一配置重复导出 → 同名，方便覆盖与比对）。
+   必带 code：bitflip / phaseflip 的曲线与表内容不同，不区分会互相覆盖。 */
+function qecExportName(kind, meta = {}){
+  const ext = kind === 'md' ? 'md' : 'csv';
+  const noise = meta.noise || 'iid';
+  const tag = kind === 'curve' ? 'curve' : 'table';
+  const code = meta.code || 'bitflip';
+  return 'qec-' + tag + '-n' + meta.n + (kind === 'curve' ? '-k' + meta.rd + '-' + noise : '') +
+    '-' + code + '.' + ext;
+}
+
 /* ===== src/qec/live.js ===== */
 /* ============================================================================
  * live.js（R98 P2 新建）— 共享 LiveDriver：一次性 MC 批 → rAF 分帧演出
@@ -5203,6 +5359,14 @@ class QecApp {
         </div>
         <div class="row"><label>样本数</label><input type="range" id="qeTrials" min="500" max="20000" step="500"><output id="qeTrialsO">—</output></div>
 
+        <div class="grp">导出（R116 · 带可复现元数据头）</div>
+        <div class="btns g3">
+          <button id="qeExpCurve" title="曲线当前扫描点全量导出：p / P_L 精确 / P_L MC / 解析 / 未编码基线。无精确解的点留空（不是 0）">曲线 CSV</button>
+          <button id="qeExpTable" title="综合表全量（w≤t+1，不受页面折叠影响）导出，含权重/错误位/综合征/修正/判定">表 CSV</button>
+          <button id="qeExpMd" title="同一份综合表的 Markdown 版（贴进笔记/PR 用）">表 MD</button>
+        </div>
+        <div id="qeExpMsg" style="font-family:var(--mono);font-size:9.5px;color:var(--dim);margin:2px 0 3px"></div>
+
         <div class="grp">综合表</div>
         <div id="qeTable" style="font-family:var(--mono);font-size:10.5px;color:var(--dim);line-height:1.55"></div>
       </aside>
@@ -5309,6 +5473,11 @@ class QecApp {
       this.state.seed = (this.state.seed * 1103515245 + 12345) % 2147483647;
       this.recompute();
     });
+
+    /* ---- R116 导出：曲线 CSV / 综合表 CSV / 综合表 Markdown ---- */
+    this.on(this.q('#qeExpCurve'), 'click', () => this.exportData('curve'));
+    this.on(this.q('#qeExpTable'), 'click', () => this.exportData('table'));
+    this.on(this.q('#qeExpMd'), 'click', () => this.exportData('md'));
 
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
@@ -5695,6 +5864,66 @@ class QecApp {
               : '')
           : '');
     }
+  }
+
+  /* ---- R116 导出 ----
+     单一真源：`_exportText()` 同时供「下载」与「调试句柄」用，避免测试校验的
+     是一份、用户拿到的是另一份。元数据头必须能把文件单独还原成可复现的配置
+     （用户半年后不该靠回忆 URL 才知道这堆数是哪组参数跑出来的）。 */
+  _expMeta(){
+    const s = this.state, N = qecNormN(s.n), rd = qecNormRd(s.rd);
+    const sw = this.curve;
+    let dp = 'n/a';
+    if (s.noise === 'gate' || s.noise === 'phys'){
+      const anyFinite = sw && sw.PLexact && sw.PLexact.some(v => Number.isFinite(v));
+      dp = anyFinite ? 'exact' : (qecDpOverBudget(this.cfg()) ? 'over' : 'n/a');
+    }
+    return {
+      code: s.code, noise: s.noise, spectrum: s.spectrum, noisyPhase: s.noisyPhase,
+      n: N, rd, nq: this.nqFor(N, rd), trials: this.effTrials(), seed: s.seed,
+      phys: s.noise === 'phys' ? { ...s.phys } : null,
+      analytic: s.noise === 'iid' ? qecLogicalRateLab(N) : null,
+      dp,
+      generated: new Date().toISOString(),
+    };
+  }
+  _exportText(kind){
+    const meta = this._expMeta();
+    if (kind === 'curve'){
+      if (!this.curve) return null;
+      return {
+        name: qecExportName('curve', meta),
+        text: qecCurveCsv(this.curve, { ...meta, analyticFn: p => qecLogicalRate(p, meta.n) }),
+        rows: this.curve.p.length,
+      };
+    }
+    const t = (meta.n - 1) / 2;
+    /* 导出**完整**表（w≤t+1），与页面折叠/过滤状态无关——导出半张表比不导出更糟 */
+    const rows = qecSyndromeTable(meta.n).filter(r => r.errors.length <= t + 1);
+    return {
+      name: qecExportName(kind === 'md' ? 'md' : 'table', meta),
+      text: kind === 'md' ? qecTableMd(rows, meta) : qecTableCsv(rows, meta),
+      rows: rows.length,
+    };
+  }
+  _download(name, text){
+    const blob = new Blob([text], { type: 'text/' + (/\.md$/.test(name) ? 'markdown' : 'csv') + ';charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name; a.style.display = 'none';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => { try { URL.revokeObjectURL(url); } catch (e) {} }, 2000);
+  }
+  exportData(kind){
+    const out = this._exportText(kind);
+    const msg = this.q('#qeExpMsg');
+    if (!out){
+      if (msg) msg.textContent = '曲线尚未计算完成，稍后再试';
+      return null;
+    }
+    this._download(out.name, out.text);
+    if (msg) msg.textContent = '已导出 ' + out.name + '（' + out.rows + ' 行数据 + 元数据头）';
+    return out;
   }
 
   renderTable(){
@@ -6852,6 +7081,9 @@ class QecApp {
       },
       /* R114：曲线缓存条数（≤24，FIFO）——调试/测试用，验证切回旧配置是否命中 */
       cacheSize: () => self._curveCache.size,
+      /* R116：导出内容（与按钮下载的是**同一份**字符串：单源，测试才有意义） */
+      exportText: kind => self._exportText(kind),
+      exportMeta: () => self._expMeta(),
       /* R110/R112：码长（3/5/7/9）；nq>18 时 rd 自动降到合法档（n=5：5→3；n=7/9：→1） */
       setN: v => { self.setN(v); self.drawAll(); },
       setP: v => { self.setP(v); self.drawAll(); },

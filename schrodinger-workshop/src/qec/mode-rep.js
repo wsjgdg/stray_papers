@@ -75,6 +75,7 @@
  * ========================================================================== */
 import { QEC_DEFAULTS, QEC_CODES, QEC_NOISE, QEC_SPECTRA, qecTrial, qecStream, qecEnsemble, qecSweep, qecLogicalRate, qecLogicalRateLab, qecThreshold, qecSyndromeTable, qecCircuit, qecExactPL, qecFaultSurvey, qecNormRd, qecNormN, qecVoteErr, qecUncodedSpec, qecUncodedRate, qecUncodedThreshold, qecDpOverBudget, qecDpHeavy, qecDpStates } from '../physics/qec.js';
 import { mulberry32 } from '../physics/qcircuit.js';
+import { qecCurveCsv, qecTableCsv, qecTableMd, qecExportName } from './export.js';
 import { LiveDriver } from './live.js';
 
 const QEC_CSS = `
@@ -292,6 +293,14 @@ export class QecApp {
         </div>
         <div class="row"><label>样本数</label><input type="range" id="qeTrials" min="500" max="20000" step="500"><output id="qeTrialsO">—</output></div>
 
+        <div class="grp">导出（R116 · 带可复现元数据头）</div>
+        <div class="btns g3">
+          <button id="qeExpCurve" title="曲线当前扫描点全量导出：p / P_L 精确 / P_L MC / 解析 / 未编码基线。无精确解的点留空（不是 0）">曲线 CSV</button>
+          <button id="qeExpTable" title="综合表全量（w≤t+1，不受页面折叠影响）导出，含权重/错误位/综合征/修正/判定">表 CSV</button>
+          <button id="qeExpMd" title="同一份综合表的 Markdown 版（贴进笔记/PR 用）">表 MD</button>
+        </div>
+        <div id="qeExpMsg" style="font-family:var(--mono);font-size:9.5px;color:var(--dim);margin:2px 0 3px"></div>
+
         <div class="grp">综合表</div>
         <div id="qeTable" style="font-family:var(--mono);font-size:10.5px;color:var(--dim);line-height:1.55"></div>
       </aside>
@@ -398,6 +407,11 @@ export class QecApp {
       this.state.seed = (this.state.seed * 1103515245 + 12345) % 2147483647;
       this.recompute();
     });
+
+    /* ---- R116 导出：曲线 CSV / 综合表 CSV / 综合表 Markdown ---- */
+    this.on(this.q('#qeExpCurve'), 'click', () => this.exportData('curve'));
+    this.on(this.q('#qeExpTable'), 'click', () => this.exportData('table'));
+    this.on(this.q('#qeExpMd'), 'click', () => this.exportData('md'));
 
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
@@ -784,6 +798,66 @@ export class QecApp {
               : '')
           : '');
     }
+  }
+
+  /* ---- R116 导出 ----
+     单一真源：`_exportText()` 同时供「下载」与「调试句柄」用，避免测试校验的
+     是一份、用户拿到的是另一份。元数据头必须能把文件单独还原成可复现的配置
+     （用户半年后不该靠回忆 URL 才知道这堆数是哪组参数跑出来的）。 */
+  _expMeta(){
+    const s = this.state, N = qecNormN(s.n), rd = qecNormRd(s.rd);
+    const sw = this.curve;
+    let dp = 'n/a';
+    if (s.noise === 'gate' || s.noise === 'phys'){
+      const anyFinite = sw && sw.PLexact && sw.PLexact.some(v => Number.isFinite(v));
+      dp = anyFinite ? 'exact' : (qecDpOverBudget(this.cfg()) ? 'over' : 'n/a');
+    }
+    return {
+      code: s.code, noise: s.noise, spectrum: s.spectrum, noisyPhase: s.noisyPhase,
+      n: N, rd, nq: this.nqFor(N, rd), trials: this.effTrials(), seed: s.seed,
+      phys: s.noise === 'phys' ? { ...s.phys } : null,
+      analytic: s.noise === 'iid' ? qecLogicalRateLab(N) : null,
+      dp,
+      generated: new Date().toISOString(),
+    };
+  }
+  _exportText(kind){
+    const meta = this._expMeta();
+    if (kind === 'curve'){
+      if (!this.curve) return null;
+      return {
+        name: qecExportName('curve', meta),
+        text: qecCurveCsv(this.curve, { ...meta, analyticFn: p => qecLogicalRate(p, meta.n) }),
+        rows: this.curve.p.length,
+      };
+    }
+    const t = (meta.n - 1) / 2;
+    /* 导出**完整**表（w≤t+1），与页面折叠/过滤状态无关——导出半张表比不导出更糟 */
+    const rows = qecSyndromeTable(meta.n).filter(r => r.errors.length <= t + 1);
+    return {
+      name: qecExportName(kind === 'md' ? 'md' : 'table', meta),
+      text: kind === 'md' ? qecTableMd(rows, meta) : qecTableCsv(rows, meta),
+      rows: rows.length,
+    };
+  }
+  _download(name, text){
+    const blob = new Blob([text], { type: 'text/' + (/\.md$/.test(name) ? 'markdown' : 'csv') + ';charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name; a.style.display = 'none';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => { try { URL.revokeObjectURL(url); } catch (e) {} }, 2000);
+  }
+  exportData(kind){
+    const out = this._exportText(kind);
+    const msg = this.q('#qeExpMsg');
+    if (!out){
+      if (msg) msg.textContent = '曲线尚未计算完成，稍后再试';
+      return null;
+    }
+    this._download(out.name, out.text);
+    if (msg) msg.textContent = '已导出 ' + out.name + '（' + out.rows + ' 行数据 + 元数据头）';
+    return out;
   }
 
   renderTable(){
@@ -1941,6 +2015,9 @@ export class QecApp {
       },
       /* R114：曲线缓存条数（≤24，FIFO）——调试/测试用，验证切回旧配置是否命中 */
       cacheSize: () => self._curveCache.size,
+      /* R116：导出内容（与按钮下载的是**同一份**字符串：单源，测试才有意义） */
+      exportText: kind => self._exportText(kind),
+      exportMeta: () => self._expMeta(),
       /* R110/R112：码长（3/5/7/9）；nq>18 时 rd 自动降到合法档（n=5：5→3；n=7/9：→1） */
       setN: v => { self.setN(v); self.drawAll(); },
       setP: v => { self.setP(v); self.drawAll(); },
