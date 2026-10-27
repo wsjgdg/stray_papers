@@ -350,7 +350,9 @@ export default function NetworkView() {
               const lineColor = districtColorMap[spot.district] || '#34D399';
               const heat = heatCounts[spot.id] || 0;
               const heatIntensity = showHeatmap && heat > 0 ? heat / maxHeat : 0;
-              return (
+              const isImportant =
+              spot.level === '5A' || spot.level === '4A' || (spot.rating ?? 0) >= 4.6;
+            return (
                 <g key={spot.id} className="spot-bubble" style={{ cursor: 'pointer' }}
                   onClick={(e) => { e.stopPropagation(); handleSpotClick(spot); }}
                   onMouseEnter={() => setHoveredId(spot.id)} onMouseLeave={() => setHoveredId(null)}>
@@ -363,8 +365,8 @@ export default function NetworkView() {
                   <circle cx={spot.sx} cy={spot.sy} r={r}
                     fill={heatIntensity > 0 ? `rgba(239,68,68,${0.3 + heatIntensity * 0.5})` : (isCentered ? '#059669' : lineColor)}
                     opacity={heatIntensity > 0 ? 1 : (isCentered ? 0.9 : 0.75)}
-                    stroke={heatIntensity > 0 ? '#DC2626' : (isCentered ? '#047857' : 'white')}
-                    strokeWidth={isCentered ? 2 : 1.5} />
+                    stroke={heatIntensity > 0 ? '#DC2626' : (isCentered ? '#047857' : spot.level === '5A' ? '#D97706' : 'white')}
+                    strokeWidth={isCentered ? 2 : spot.level === '5A' ? 2 : 1.5} />
                   {/* 劝退记录数角标 */}
                   {heat > 0 && (
                     <g style={{ pointerEvents: 'none' }}>
@@ -372,12 +374,14 @@ export default function NetworkView() {
                       <text x={spot.sx + r - 2} y={spot.sy - r + 5} textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">{heat}</text>
                     </g>
                   )}
-                  {/* Label */}
-                  <text x={spot.sx} y={spot.sy - r - 4} textAnchor="middle" fontSize="10"
-                    fill={isCentered ? '#065F46' : '#374151'} fontWeight={isCentered ? 600 : 400}
-                    style={{ pointerEvents: 'none' }}>
-                    {spot.name.length > 6 ? spot.name.slice(0, 6) + '…' : spot.name}
-                  </text>
+                  {/* Label：3000 节点下只显示重点景点（5A/4A/高分）或放大后的全部 */}
+                  {(isImportant || transform.scale >= 2.2) && (
+                    <text x={spot.sx} y={spot.sy - r - 4} textAnchor="middle" fontSize="10"
+                      fill={isCentered ? '#065F46' : '#374151'} fontWeight={isCentered || spot.level === '5A' ? 600 : 400}
+                      style={{ pointerEvents: 'none' }}>
+                      {spot.name.length > 6 ? spot.name.slice(0, 6) + '…' : spot.name}
+                    </text>
+                  )}
                 </g>
               );
             })}
