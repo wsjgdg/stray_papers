@@ -11,6 +11,8 @@ export interface Spot {
   photosKey?: string;
   /** 高德评分（0-5，仅城市包 POI 有） */
   rating?: number;
+  /** 开放时间（高德 biz_ext.opentime2，95% 填充） */
+  openTime?: string;
   /** 图片来源标注：osm | unsplash | pexels | pool | amap（详情弹窗展示，数据诚实性） */
   imageSource?: string;
   address: string;
@@ -1278,6 +1280,7 @@ export function cityPoiToSpot(city: string, p: CityPoi, index: number): Spot {
     // 相册多图不再内联在主包里（见 lib/poi-photos.ts），只留取数用的键
     photosKey: `${city}::${p.name}`,
     rating: p.rating,
+    openTime: p.openTime,
     imageSource: p.image ? "amap" : undefined,
     address: p.address || `${city}（高德 POI）`,
     facilities: [],

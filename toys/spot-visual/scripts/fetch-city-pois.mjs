@@ -110,6 +110,7 @@ for (const city of CITIES) {
         lat,
         category: inferCategory(p.type, p.name),
         rating: rating(p) || undefined,
+        openTime: (Array.isArray(p.biz_ext?.opentime2) ? "" : String(p.biz_ext?.opentime2 || "").trim()) || undefined,
         image,
       };
     });
@@ -135,6 +136,7 @@ export interface CityPoi {
   lat: number;
   category: string;
   rating?: number;
+  openTime?: string;
   image: string;
 }
 

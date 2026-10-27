@@ -28,6 +28,7 @@ import {
   UtensilsCrossed,
   Bike,
   Globe,
+  Clock,
   AlertTriangle,
   Activity,
   Sparkles as SparklesIcon,
@@ -851,6 +852,17 @@ function SpotDetailDialog() {
               <MapPin className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
               <span className="text-sm text-gray-600">{spot.address}</span>
             </div>
+            {spot.openTime && (
+              <p className="flex items-start gap-1.5 text-sm text-gray-600">
+                <Clock className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                <span>
+                  {spot.openTime}
+                  <span className="text-[11px] text-gray-400 ml-1">
+                    （高德收录，出行前请再核实）
+                  </span>
+                </span>
+              </p>
+            )}
             {spot.rating && (
               <p className="flex items-center gap-1 text-sm text-amber-600 font-bold">
                 <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
