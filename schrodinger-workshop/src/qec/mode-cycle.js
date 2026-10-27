@@ -162,6 +162,7 @@ export class CycleApp {
           <button id="cyExpMc" title="当前配置的 MC 结果与电路统计（单行）+ 元数据头：适合把一组「结论数字」贴进表里">结论 CSV</button>
         </div>
         <div id="cyExpMsg" style="font-family:var(--mono);font-size:9.5px;color:var(--dim);margin:2px 0 3px"></div>
+        <div class="btns"><button id="cyExpUrl" title="把当前配置（码型 / 周期数 / 轮数 / 逻辑门 / 解码器 / p / 样本数 / seed）编码成链接，打开即还原">复制快照链接</button><button id="cyExpUrlOpen" title="在新标签页打开这份快照（用来验证链接真的还原了状态）">验证快照</button></div>
 
         <div class="note">拦截率用<b>精确单故障枚举</b>：逻辑门上的每个单故障位点，
           看它最后是「被后续 EC 纠回」还是「直达逻辑错误」。门后有 EC 与门在末尾的对照，
@@ -224,6 +225,8 @@ export class CycleApp {
     /* ---- R119 导出（同一套 export.js：元数据头/转义/缺失值口径与重复码页一致） ---- */
     this.on(this.q('#cyExpSweep'), 'click', () => this.exportData('sweep'));
     this.on(this.q('#cyExpMc'), 'click', () => this.exportData('mc'));
+    this.on(this.q('#cyExpUrl'), 'click', () => this.copySnapshot());
+    this.on(this.q('#cyExpUrlOpen'), 'click', () => { window.open(this._snapshotUrl(), '_blank'); });
 
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
@@ -627,6 +630,36 @@ export class CycleApp {
       rows: rows.length,
     };
   }
+  /* R118：快照链接 */
+  _snapshotUrl(){
+    const s = this.state;
+    const q = new URLSearchParams();
+    q.set('mode', 'cycle');
+    q.set('kind', s.kind);
+    q.set('cycles', String(s.cycles));
+    q.set('rounds', String(s.rounds));
+    q.set('logic', s.logic);
+    q.set('decode', s.decode);
+    q.set('noisyLogic', s.noisyLogic ? '1' : '0');
+    q.set('p', String(s.p));
+    q.set('trials', String(s.trials));
+    q.set('seed', String(s.seed));
+    return location.origin + location.pathname + '?' + q.toString();
+  }
+  copySnapshot(){
+    const url = this._snapshotUrl(), msg = this.q('#cyExpMsg');
+    const done = ok => { if (msg) msg.innerHTML = (ok ? '已复制快照链接' : '剪贴板不可用，请手动复制') +
+      '<br><span style="color:var(--cyan);word-break:break-all">' + url + '</span>'; };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(url).then(() => done(true), () => done(false));
+        return url;
+      }
+    } catch (e) {}
+    done(false);
+    return url;
+  }
+
   exportData(kind){
     const out = this._exportText(kind);
     const msg = this.q('#cyExpMsg');
@@ -646,6 +679,7 @@ export class CycleApp {
       kinds: () => cyKINDS.map(k => ({ k, label: FS_KINDS[k].label })),
       /* R119：导出（与按钮同一份字符串） */
       exportText: kind => { const o = self._exportText(kind); return o ? { name: o.name, text: o.text, rows: o.rows } : null; },
+      snapshotUrl: () => self._snapshotUrl(),
       logics: () => cyLOGICS.map(l => ({ k: l.k, name: l.name })),
       navLinks: () => NAV_HREFS,
       data: () => ({

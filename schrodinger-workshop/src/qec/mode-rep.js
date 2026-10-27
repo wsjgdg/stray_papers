@@ -206,6 +206,10 @@ export class QecApp {
     this._tabFilter = ''; /* R115：综合表过滤词（重渲染后回填，n≤5 走扁平路径用不到） */
     this._sweepTok = 0;   /* R117：逐点扫描的取消令牌（换配置/离开模式即作废） */
     this._sweepProg = null;
+    /* R118：**单点**缓存。R114 的 _curveCache 只存整轮跑完的结果 ⟹ 扫到 4/6 被
+       打断就全丢。按 (整轮键, 点序号) 存每点结果，回到同一配置时直接续算。
+       键含整轮键（已含 effTrials/seed）⟹ MC 也有身份，不会张冠李戴。 */
+    this._ptCache = new Map();
     /* R114：曲线缓存（键 = 影响 sweep 的全部输入；sweep 一次的代价很高：
        n=5·rd=3 ≈54s、n=7·rd=1 ≈32s ⟹ 切回旧配置直接复用）。FIFO，≤24 条。 */
     this._curveCache = new Map();
@@ -937,6 +941,7 @@ export class QecApp {
     this.curve = { p: [], PL: [], PLexact: [], Pun: [], noise: plan.noise, spectrum: plan.spectrum, noisyPhase: plan.noisyPhase };
     this._curveKey = key;
     this._sweepProg = { i: 0, n: plan.length };
+    const tk = i => key + '#' + i;
     const tick = () => {
       if (tok !== this._sweepTok){ return; }        /* 已被新扫描/离开模式作废 */
       const i = this._sweepProg ? this._sweepProg.i : plan.length;
@@ -946,13 +951,20 @@ export class QecApp {
         this.renderHud(); this.drawAll(); this.renderHint();
         return;
       }
-      const r = plan.step(i);
+      /* R118：命中单点缓存 ⟹ 不重算（被打断后回到同一配置，已算的点直接续上）。
+         命中时**不让出主线程**（可以直接连跑完），miss 才算一个、让一次。 */
+      const memo = this._ptCache.get(tk(i));
+      const r = memo || plan.step(i);
+      if (!memo){
+        this._ptCache.set(tk(i), r);
+        if (this._ptCache.size > 512) this._ptCache.delete(this._ptCache.keys().next().value);
+      }
       this.curve.p.push(r.p); this.curve.PL.push(r.PL);
       this.curve.PLexact.push(r.PLexact); this.curve.Pun.push(r.Pun);
       if (this._sweepProg) this._sweepProg.i = i + 1;
       if (this.curve.p.length >= 2) this.drawCurve();   /* 1 点时画不出折线 */
       this.renderHint();
-      setTimeout(tick, 0);
+      if (memo) tick(); else setTimeout(tick, 0);
     };
     setTimeout(tick, 0);
   }
@@ -2120,6 +2132,9 @@ export class QecApp {
       /* R117：逐点扫描进度（null = 已完成）+ DP 记忆化命中统计 */
       sweepProg: () => (self._sweepProg ? { ...self._sweepProg } : null),
       dpCache: () => qecDpCacheStats(),
+      /* R118：单点缓存条数（断点续算用）+ 当前整轮键（诊断为什么没命中） */
+      ptCacheSize: () => self._ptCache.size,
+      sweepKey: () => self._curveKey,
       /* R110/R112：码长（3/5/7/9）；nq>18 时 rd 自动降到合法档（n=5：5→3；n=7/9：→1） */
       setN: v => { self.setN(v); self.drawAll(); },
       setP: v => { self.setP(v); self.drawAll(); },

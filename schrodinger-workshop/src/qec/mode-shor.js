@@ -164,6 +164,7 @@ export class ShorApp {
           <button id="shExpSurvey" title="一阶故障调查全表：每个（门 × 比特 × Pauli）位点单独注入 ⟹ 是否致命 + 落到的陪集 + 综合征">故障调查 CSV</button>
         </div>
         <div id="shExpMsg" style="font-family:var(--mono);font-size:9.5px;color:var(--dim);margin:2px 0 3px"></div>
+        <div class="btns"><button id="shExpUrl" title="把当前配置（p / 谱 / 注错相位 / 样本数 / seed / 噪声模式）编码成链接，打开即还原">复制快照链接</button><button id="shExpUrlOpen" title="在新标签页打开这份快照（用来验证链接真的还原了状态）">验证快照</button></div>
 
         <div class="grp">指定错误注入（演示）</div>
         <div class="btns g5" id="shQbtns"></div>
@@ -288,6 +289,8 @@ export class ShorApp {
     /* ---- R119 导出（与重复码页同一套 export.js：元数据头/转义/缺失值口径一致） ---- */
     this.on(this.q('#shExpCurve'), 'click', () => this.exportData('curve'));
     this.on(this.q('#shExpSurvey'), 'click', () => this.exportData('survey'));
+    this.on(this.q('#shExpUrl'), 'click', () => this.copySnapshot());
+    this.on(this.q('#shExpUrlOpen'), 'click', () => { window.open(this._snapshotUrl(), '_blank'); });
 
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
@@ -916,6 +919,37 @@ export class ShorApp {
       rows: rows.length,
     };
   }
+  /* R118：快照链接（与导出同一套「只写有意义的参数」口径） */
+  _snapshotUrl(){
+    const s = this.state;
+    const q = new URLSearchParams();
+    q.set('mode', 'shor');
+    q.set('noise', s.noise);
+    if (s.noise === 'gate'){
+      q.set('spectrum', s.spectrum);
+      q.set('noisyPhase', s.noisyPhase);
+    }
+    q.set('p', String(s.p));
+    q.set('theta', String(s.theta));
+    q.set('phase', String(s.phase));
+    q.set('trials', String(s.trials));
+    q.set('seed', String(s.seed));
+    return location.origin + location.pathname + '?' + q.toString();
+  }
+  copySnapshot(){
+    const url = this._snapshotUrl(), msg = this.q('#shExpMsg');
+    const done = ok => { if (msg) msg.innerHTML = (ok ? '已复制快照链接' : '剪贴板不可用，请手动复制') +
+      '<br><span style="color:var(--cyan);word-break:break-all">' + url + '</span>'; };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(url).then(() => done(true), () => done(false));
+        return url;
+      }
+    } catch (e) {}
+    done(false);
+    return url;
+  }
+
   exportData(kind){
     const out = this._exportText(kind);
     const msg = this.q('#shExpMsg');
@@ -969,6 +1003,7 @@ export class ShorApp {
       table: () => shorTableStats(),
       /* R119：导出（与按钮同一份字符串） */
       exportText: kind => { const o = self._exportText(kind); return o ? { name: o.name, text: o.text, rows: o.rows } : null; },
+      snapshotUrl: () => self._snapshotUrl(),
       distance: () => shorDistance(),
       weight2: () => shorWeight2Stats(),
       logicals: () => SHOR_LOGICALS.map(L => ({ ...L })),
