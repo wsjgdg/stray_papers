@@ -2,6 +2,7 @@
 import { CompareTable } from "./views/comparetable";
 import { MajorSearch } from "./views/majorsearch";
 import { WishTable } from "./views/wishtable";
+import { RankTable } from "./views/ranktable";
 import { TrendSpark } from "./views/trendspark";
 import { ScoreDistCurve, AdmitProbSignal } from "./views/scoredistcurve";
 
@@ -25,6 +26,7 @@ import {
   Search,
   Plus,
   ClipboardList,
+  BarChart3,
 } from "lucide-react";
 import type { EChartsOption } from "echarts";
 import {
@@ -50,6 +52,8 @@ import {
   indexUrlFor,
   provinceUrlFor,
   rememberProvincePackage,
+  cachedCurveFor,
+  scoreFromRank,
   isProvinceLoaded,
   cachedProvincePackage,
   loadProvincePackage,
@@ -127,7 +131,7 @@ const TIER_LABEL: Record<Tier, string> = {
 };
 const TIERS: Tier[] = ["reach", "match", "safe"];
 
-const VIEWS = ["map", "list", "compare", "major", "wish"] as const;
+const VIEWS = ["map", "list", "rank", "compare", "major", "wish"] as const;
 type ViewKey = (typeof VIEWS)[number];
 
 // 地图缩放边界（倍率相对「中国全景」初始视野）：
@@ -223,6 +227,9 @@ export default function GaoKaoPage() {
   // 避免缩放手势每帧触发 React 重渲染。
   const [mapZoomLevel, setMapZoomLevel] = useState(0);
   const [bucketKey, setBucketKey] = useState<string | null>(null); // 点开的聚合气泡
+  // 预热（另一年份省包）完成后 +1：cachedCurveFor 读的是模块级缓存，
+  // 不是 React state，必须有个信号让等位分重新算一次。
+  const [prefetchRev, setPrefetchRev] = useState(0);
 
   // 视图 → URL（replaceState，不新增历史栈；地图为默认值时不写参数）
   // 首次挂载先把 URL 里的 ?view= 应用到状态，之后才单向回写，避免互相覆盖。
@@ -344,6 +351,8 @@ export default function GaoKaoPage() {
             const r2 = await fetch(withSharecode(provinceUrlFor(other, prov)));
             if (r2.ok) rememberProvincePackage(other, prov, await r2.json());
           }
+          // 缓存是模块级的，不是 React state —— 必须给个信号让等位分重算一次
+          setPrefetchRev((v) => v + 1);
         } catch {
           // 预热失败无所谓：真切换时还会重新拉
         }
@@ -668,16 +677,18 @@ export default function GaoKaoPage() {
     [ready, prov, cat, score, year],
   );
 
-  // 一分一段 / 位次的三态。之前只有「有」和「没有」两态，切年瞬间 ready=false
-  // 会被当成「没有」，于是先闪一句「该科类暂无一分一段表」再跳回正常值。
-  const rankState: "loading" | "empty" | "ok" =
-    dataState === "fail"
-      ? "empty"
-      : !ready
-        ? "loading"
-        : userRank
-          ? "ok"
-          : "empty";
+  // ── 跨年等位分：你的位次 → 另一年份的一分一段里同一位次对应的分数 ──
+  // 分数不能跨年直接比（难度、人数每年都变），位次可以。
+  // 另一年的省包由上面的空闲预热放进 pkgCache，这里只读缓存、不切运行时。
+  const equiv = useMemo(() => {
+    if (!ready || !userRank) return null;
+    const other = GAOKAO_YEARS.find((y) => y !== year);
+    if (!other) return null;
+    const c = cachedCurveFor(other, prov, cat);
+    if (!c) return null;
+    const s = scoreFromRank(c, userRank);
+    return s == null ? null : { year: other, score: s };
+  }, [ready, userRank, year, prov, cat, prefetchRev]);
   const ctrl = useMemo(
     () => (ready ? controlLine(prov, cat) : undefined),
     [ready, prov, cat, year],
@@ -1238,6 +1249,39 @@ export default function GaoKaoPage() {
   const selGap = selAdm ? score - selAdm.minScore : 0;
   const selTier = selAdm ? tierOf(selGap) : "none";
 
+  // ── 本省数据画像：这一组（省·科类·批次）到底有什么、缺什么 ──
+  // 缺口不写清楚，用户会把「没数据」误当成「没希望」。
+  const footprint = useMemo(() => {
+    if (!ready) return null;
+    const rows = admissionsFor(prov, cat, batchGroup);
+    const known = rows.filter((r) => r.minRank > 0);
+    const derived = known.filter((r) => r.rankDerived).length;
+    return {
+      schools: rows.length,
+      rankKnown: known.length,
+      derivedRatio: known.length
+        ? Math.round((derived / known.length) * 100)
+        : 0,
+      hasCurve: curve.length > 0,
+      hasCtrl: ctrl != null,
+      hasMajors: !!majors,
+      batches: BATCH_GROUPS.filter(
+        (g) => admissionsFor(prov, cat, g.key).length > 0,
+      ),
+    };
+  }, [ready, prov, cat, batchGroup, curve, ctrl, majors, batchesRev, year]);
+
+  // 一分一段 / 位次的三态。之前只有「有」和「没有」两态，切年瞬间 ready=false
+  // 会被当成「没有」，于是先闪一句「该科类暂无一分一段表」再跳回正常值。
+  const rankState: "loading" | "empty" | "ok" =
+    dataState === "fail"
+      ? "empty"
+      : !ready
+        ? "loading"
+        : userRank
+          ? "ok"
+          : "empty";
+
   if (dataState === "loading") {
     // 骨架屏而不是一个转圈：数据包按省懒加载，先给出「页面长什么样」的预期，
     // 比空白 + spinner 更不像卡死。
@@ -1398,7 +1442,10 @@ export default function GaoKaoPage() {
                   <div className="skeleton h-6 w-28 rounded" />
                 </div>
               ) : (
-                <div className="text-2xl font-bold text-indigo-700">
+                <div
+                  className="text-2xl font-bold text-indigo-700"
+                  aria-live="polite"
+                >
                   {rankState === "ok"
                     ? `#${userRank.toLocaleString()}`
                     : "该科类暂无一分一段表"}
@@ -1434,6 +1481,16 @@ export default function GaoKaoPage() {
               </span>
             </div>
           ) : null}
+          {equiv && (
+            <div className="text-xs text-gray-500">
+              <span className="text-gray-400">{equiv.year} 年等位分</span>
+              <b className="text-emerald-700 ml-1">{equiv.score}</b>
+              <span className="text-gray-400">
+                {" "}
+                分（同一位次 #{userRank.toLocaleString()}）
+              </span>
+            </div>
+          )}
           {/* 同分去向 */}
           {ready && sameRankSchools.length > 0 && (
             <details className="w-full mt-2">
@@ -1510,6 +1567,46 @@ export default function GaoKaoPage() {
         </div>
       </div>
 
+      {/* 本组数据画像：有什么、缺什么，一次说清 */}
+      {footprint && (
+        <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-500">
+          <span className="text-gray-400">本组数据</span>
+          <span className="text-gray-700 font-medium">
+            {footprint.schools} 所院校
+          </span>
+          <span
+            className={footprint.hasCurve ? "" : "text-amber-600"}
+            title="决定位次、等位分是否可用"
+          >
+            {footprint.hasCurve ? "一分一段 ✓" : "缺一分一段"}
+          </span>
+          <span
+            className={footprint.hasCtrl ? "" : "text-amber-600"}
+            title="决定分差口径是否可用"
+          >
+            {footprint.hasCtrl ? "省控线 ✓" : "缺省控线"}
+          </span>
+          <span
+            className={footprint.derivedRatio > 50 ? "text-amber-600" : ""}
+            title="该省投档表未公布位次时，由一分一段反推的比例"
+          >
+            {footprint.derivedRatio > 0
+              ? `位次推算 ${footprint.derivedRatio}%`
+              : "位次为原表"}
+          </span>
+          <span className={footprint.hasMajors ? "" : "text-gray-400"}>
+            {footprint.hasMajors ? "专业级 ✓" : "无专业级"}
+          </span>
+          <span className="text-gray-300">|</span>
+          <span className="text-gray-400">
+            批次：
+            {footprint.batches.length
+              ? footprint.batches.map((g) => g.label).join(" · ")
+              : "仅本科批"}
+          </span>
+        </div>
+      )}
+
       {/* 切年/切省进行中：明确告诉用户「在换数据」，而不是让内容先塌成空态 */}
       {switching && !ready && (
         <div className="mb-3 flex items-center gap-2 text-xs text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2">
@@ -1521,11 +1618,28 @@ export default function GaoKaoPage() {
 
       {/* 地图 / 清单切换 + 院校搜索 */}
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5 text-sm">
+        <div
+          role="tablist"
+          aria-label="志愿探索视图"
+          className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5 text-sm"
+          onKeyDown={(e) => {
+            // 键盘切换：←/→ 在页签间移动（无障碍要求，鼠标之外的入口）
+            if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+            e.preventDefault();
+            const i = VIEWS.indexOf(view);
+            const n = VIEWS.length;
+            const next = VIEWS[(i + (e.key === "ArrowRight" ? 1 : n - 1)) % n];
+            setView(next);
+            requestAnimationFrame(() =>
+              document.getElementById(`gaokao-tab-${next}`)?.focus(),
+            );
+          }}
+        >
           {(
             [
               ["map", MapIcon, "院校地图", 0],
               ["list", ListFilter, "冲稳保清单", 0],
+              ["rank", BarChart3, "一分一段", 0],
               ["compare", Scale, "对比", shortlist.length],
               ["major", Search, "专业反查", 0],
               ["wish", ClipboardList, "志愿表", wishlist.length],
@@ -1533,6 +1647,10 @@ export default function GaoKaoPage() {
           ).map(([v, Icon, label, n]) => (
             <button
               key={v}
+              id={`gaokao-tab-${v}`}
+              role="tab"
+              aria-selected={view === v}
+              tabIndex={view === v ? 0 : -1}
               onClick={() => setView(v)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-colors ${view === v ? "bg-indigo-50 text-indigo-700 border border-indigo-200" : "text-gray-500 hover:text-gray-800"}`}
             >
@@ -2371,6 +2489,29 @@ export default function GaoKaoPage() {
             )}
           </aside>
         </div>
+      ) : view === "rank" ? (
+        /* 完整一分一段表 */
+        rankState === "loading" ? (
+          <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-3">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="skeleton h-16 rounded-xl" />
+              ))}
+            </div>
+            <div className="skeleton h-[420px] rounded-xl" />
+          </div>
+        ) : (
+          <RankTable
+            curve={curve}
+            ctrl={ctrl}
+            score={scoreDelayed}
+            rank={userRank}
+            prov={prov}
+            cat={cat}
+            year={year}
+            equiv={equiv}
+          />
+        )
       ) : view === "compare" ? (
         /* 对比视图 */
         <CompareTable
@@ -2380,6 +2521,8 @@ export default function GaoKaoPage() {
           prov={prov}
           cat={cat}
           score={scoreDelayed}
+          rank={userRank}
+          majors={majors}
           onRemove={toggleShort}
           onLocate={(name) => {
             setSelectedName(name);

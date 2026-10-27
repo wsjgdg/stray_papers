@@ -660,6 +660,40 @@ export function curveFor(prov: string, cat: string): [number, number][] {
   return curveIndex.get(`${prov}|${cat}`) ?? [];
 }
 
+/**
+ * 从「已缓存但未载入运行时」的省包里取某科类曲线。
+ *
+ * 用途：跨年等位分换算需要另一年份的一分一段，但运行时一次只装一个年份
+ * （loadProvincePackage 会校验 pkg.year === 运行时年份）。这里只读缓存副本。
+ */
+export function cachedCurveFor(
+  year: number,
+  prov: string,
+  cat: string,
+): [number, number][] | null {
+  const pkg = pkgCache.get(`${year}|${prov}`);
+  const curve = pkg?.cats?.[cat]?.curve;
+  return curve && curve.length ? curve : null;
+}
+
+/**
+ * 位次 → 分数（一分一段反查）。
+ *
+ * 曲线按分数降序、累计位次递增；给定位次取「第一个累计位次 ≥ rank 的分数档」，
+ * 也就是该位次能落到的最高分。位次超出表尾时返回表尾分数。
+ */
+export function scoreFromRank(
+  curve: [number, number][],
+  rank: number,
+): number | null {
+  if (!curve.length || !rank) return null;
+  if (rank <= curve[0][1]) return curve[0][0];
+  for (let i = 0; i < curve.length; i++) {
+    if (curve[i][1] >= rank) return curve[i][0];
+  }
+  return curve[curve.length - 1][0];
+}
+
 // ── 历史投档线（按省懒加载，public/data/gaokao-history/{slug}.json） ──
 
 export interface HistoryDataset {
