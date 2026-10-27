@@ -28,6 +28,7 @@ import { useAppStore } from "@/lib/store";
 import {
   getStaminaCost,
   guessPrice,
+  haversineKm,
   parseCoords,
   CATEGORY_PACKLIST,
   PACKLIST_UNIVERSAL,
@@ -37,6 +38,33 @@ import { calcPTSI } from "@/lib/ptsi-calculator";
 import { downloadTripCard } from "@/lib/trip-card";
 
 const PACKLIST_KEY = "trip-packlist-checked";
+
+/**
+ * 两点通勤估算。
+ *
+ * 为什么只给「估算」：项目不接路径规划 API，只能拿经纬度做球面直线距离。
+ * 城市路网绕行系数取 1.35（经验值），车速市区 35km/h、长途 65km/h。
+ * 数字用于判断「一天跑不跑得完」，不能当导航用时。地铁/步行差异更大，
+ * 所以界面上写「约」，并在汇总处标注口径。
+ */
+const ROAD_FACTOR = 1.35;
+function commute(a: Spot, b: Spot): { km: number; min: number } | null {
+  const ca = parseCoords(a);
+  const cb = parseCoords(b);
+  if (!ca || !cb) return null;
+  const straight = haversineKm(ca, cb);
+  if (!Number.isFinite(straight)) return null;
+  const km = straight * ROAD_FACTOR;
+  const speed = km > 30 ? 65 : 35;
+  return { km, min: Math.max(1, Math.round((km / speed) * 60)) };
+}
+
+function fmtMin(min: number): string {
+  if (min < 60) return `${min} 分钟`;
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return m ? `${h} 小时 ${m} 分` : `${h} 小时`;
+}
 
 /* ═══ 行程级 7 日体检：行程内带坐标景点逐日平均 UV → PTSI ═══ */
 function TripWeather({ spots }: { spots: Spot[] }) {
@@ -302,6 +330,33 @@ export default function TripView() {
     return out;
   }, [tripSpots, tripDaySplit]);
 
+  // 每天的移动距离与车程：给「一天跑不跑得完」一个客观依据
+  const dayTravel = useMemo(
+    () =>
+      days.map((day) => {
+        let km = 0;
+        let min = 0;
+        let legs = 0;
+        for (let i = 0; i < day.length - 1; i++) {
+          const c = commute(day[i], day[i + 1]);
+          if (!c) continue;
+          km += c.km;
+          min += c.min;
+          legs++;
+        }
+        return { km, min, legs };
+      }),
+    [days],
+  );
+  const travelTotal = useMemo(
+    () =>
+      dayTravel.reduce(
+        (acc, d) => ({ km: acc.km + d.km, min: acc.min + d.min }),
+        { km: 0, min: 0 },
+      ),
+    [dayTravel],
+  );
+
   // 自动分天：贪心按体力预算（100/天）分段
   const autoSplit = () => {
     const splits: number[] = [];
@@ -329,6 +384,9 @@ export default function TripView() {
         }),
       ]),
       "",
+      travelTotal.km > 0
+        ? `移动合计：约 ${travelTotal.km.toFixed(1)} km · 车程约 ${fmtMin(travelTotal.min)}（估算）`
+        : "",
       `估算合计：约¥${estBudget} · 体力合计：${estStamina}`,
       "价格为按项目名推断的估算值，实际以景区公示为准",
       "—— 景点览胜 · 华夏探索",
@@ -407,7 +465,7 @@ export default function TripView() {
 
         {/* 汇总卡 */}
         <div className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl p-5 mb-5 text-white shadow-lg">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
             <div>
               <Compass className="w-4 h-4 mx-auto mb-1 opacity-80" />
               <div className="text-2xl font-black">{tripSpots.length}</div>
@@ -430,7 +488,26 @@ export default function TripView() {
               <div className="text-2xl font-black">{estStamina}</div>
               <div className="text-white/70 text-[11px]">体力合计</div>
             </div>
+            <div title="直线距离 ×1.35 绕行系数；市区 35km/h、长途 65km/h">
+              <Route className="w-4 h-4 mx-auto mb-1 opacity-80" />
+              <div className="text-2xl font-black">
+                {travelTotal.km > 0 ? travelTotal.km.toFixed(0) : "—"}
+                {travelTotal.km > 0 && (
+                  <span className="text-xs font-bold opacity-80 ml-0.5">
+                    km
+                  </span>
+                )}
+              </div>
+              <div className="text-white/70 text-[11px]">
+                移动
+                {travelTotal.min > 0 && ` · 约${fmtMin(travelTotal.min)}`}
+              </div>
+            </div>
           </div>
+          <p className="mt-2 text-[10px] text-white/60 text-center">
+            距离与车程为估算（直线距离 ×1.35
+            路网系数），只用于判断一天够不够跑，不能当导航
+          </p>
         </div>
 
         {/* 导出 */}
@@ -523,6 +600,12 @@ export default function TripView() {
                         体力 {dayStamina}
                         {over && " · 超预算"}
                       </span>
+                      {dayTravel[d]?.legs > 0 && (
+                        <span title="按直线距离 ×1.35 绕行系数、市区 35km/h 估算">
+                          {dayTravel[d].km.toFixed(1)} km · 车程{" "}
+                          {fmtMin(dayTravel[d].min)}
+                        </span>
+                      )}
                     </span>
                     {tripDaySplit[d] !== undefined && (
                       <button
@@ -541,6 +624,19 @@ export default function TripView() {
                     const isSplit = tripDaySplit.includes(i);
                     return (
                       <div key={s.id}>
+                        {di > 0 &&
+                          (() => {
+                            const c = commute(day[di - 1], s);
+                            if (!c) return null;
+                            return (
+                              <div className="flex items-center gap-1.5 pl-6 py-1 text-[11px] text-gray-400">
+                                <span className="w-px h-3 bg-gray-200" />
+                                <span>
+                                  约 {c.km.toFixed(1)} km · 车程 {fmtMin(c.min)}
+                                </span>
+                              </div>
+                            );
+                          })()}
                         <motion.div
                           layout
                           initial={{ opacity: 0, y: 10 }}
