@@ -1276,7 +1276,11 @@ export const PACKLIST_UNIVERSAL = [
 import { CITY_POI_PACKS, type CityPoi } from "./city-pois.generated";
 import { POI_DESCRIPTIONS, RESERVATION_NOTES } from "./poi-descriptions";
 import { POI_PHOTOS } from "./poi-photos.generated";
-import { SCENIC_LEVELS, EXTRA_SCENICS } from "./scenic-enrich.generated";
+import {
+  SCENIC_LEVELS,
+  EXTRA_SCENICS,
+  MANUAL_SCENIC_LEVELS,
+} from "./scenic-enrich.generated";
 
 export function cityPoiToSpot(city: string, p: CityPoi, index: number): Spot {
   const short = city.replace(/市$/, "");
@@ -1337,5 +1341,10 @@ export const LIBRARY_SPOTS: Spot[] = (() => {
         location: { lat: e.lat, lng: e.lng },
       }) as Spot,
   );
-  return [...sampleSpots, ...pois, ...extras];
+  // 手工景点补等级（名录精确匹配 + 人工确认）
+  const manualWithLevel = sampleSpots.map((s) => ({
+    ...s,
+    level: MANUAL_SCENIC_LEVELS[s.name] ?? s.level,
+  }));
+  return [...manualWithLevel, ...pois, ...extras];
 })();
