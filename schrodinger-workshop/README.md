@@ -2205,6 +2205,20 @@ R121/R122 把容器层抠到头了（字符串键 → 数值键 2×；自写键�
 
 若真要并行，必须先放弃「单文件 + file:// 直开」这条产品约束（改成多文件产物 + 起本地
 服务），那是产品决策不是优化 ⟹ 与 A/B 同列，**记录在此不再试**。
+
+**但 Worker 路径本身已建好（R126）**：新增 `src/qec/sweep-worker.js`（协议：`{id,cfg}` →
+逐点回传 `{i,n,row}` → `{done}`；`{cancel:true}` 作废在途；NaN 转 `null` 因为 CDP
+`returnByValue` 不过 NaN），页面侧 `_sweepStart` 优先派发给 Worker，**创建失败 / 报错 /
+4s 无首点一律回退主线程**（回退路径就是已验证的 `_sweepStream`）。实测：src 通道确实跑在
+Worker 上、数值正确、零异常；dist 单文件下自动回退，行为与之前完全一致。
+
+⚠ **默认关闭**（`_useWorker = false`）：worker 目前只跑粗扫、**没接 R124 的两阶段补点**
+⟹ 重档会从 6 点退化成 4 点。等补点移植进 worker 再打开。
+
+⚠ **一个真坑**：首版用 `new Worker(new URL('./sweep-worker.js', import.meta.url))` ——
+`build:standalone` 把模块拼进**非 module** 的 `<script>`，`import.meta` 在那里是
+**语法错误**（解析期就挂，try/catch 救不了）⟹ dist 整页白掉。改用相对页面的字面量路径后
+正常（src 可取到、dist 取不到则回退）。
 | D | 自适应网格（先 3 点、在交点附近加密） | 2× 左右 | 曲线点数变化，需重写点数相关的断言 |
 
 **D 已开工（R124，第一步）**：`qecSweepPlan` 现在带 `refine(rows, m)`——先找

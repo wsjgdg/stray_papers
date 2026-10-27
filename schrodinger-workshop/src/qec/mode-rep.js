@@ -206,6 +206,10 @@ export class QecApp {
     this.svy = null;      /* 门级：一阶故障枚举（c₁） */
     this._tabFilter = ''; /* R115：综合表过滤词（重渲染后回填，n≤5 走扁平路径用不到） */
     this._sweepTok = 0;   /* R117：逐点扫描的取消令牌（换配置/离开模式即作废） */
+    /* R126：并行扫描**默认关闭**。Worker 路径本身已跑通（src 通道实测可用、数值与
+       主线程一致），但它目前只跑粗扫、**没接 R124 的两阶段补点** ⟹ 重档会从 6 点
+       退化成 4 点（曲线变差）。先关闭，等补点移植进 worker 再打开。 */
+    this._useWorker = false;
     this._sweepProg = null;
     /* R118：**单点**缓存。R114 的 _curveCache 只存整轮跑完的结果 ⟹ 扫到 4/6 被
        打断就全丢。按 (整轮键, 点序号) 存每点结果，回到同一配置时直接续算。
@@ -228,6 +232,7 @@ export class QecApp {
     clearTimeout(this._physDeb);   /* R108：phys 滑块防抖（切 mode 不泄漏） */
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._sweepTok++;                     /* R117：停掉在途的逐点扫描（否则离开 mode 后还在算） */
+    try { this._worker && this._worker.postMessage({ cancel: true }); } catch (e) {}   /* R126：也停掉 worker */
     this._ro?.disconnect();
     this.live?.dispose();                 /* R98 P2：停 rAF 播放环（切 mode 零泄漏） */
     for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
@@ -550,7 +555,7 @@ export class QecApp {
       }
       /* R117：**逐点**扫描（不再一次同步跑完）。收尾逻辑放进 finish 回调，
          等最后一个点落地才跑（阈值要读整条曲线）。 */
-      this._sweepStream(sweepCfg, key, () => {
+      this._sweepStart(sweepCfg, key, () => {
         if (this.state.noise === 'gate'){
           /* c₁：一阶故障枚举（p 无关，随 code/spectrum/noisyPhase 变） */
           this.svy = qecFaultSurvey(this.cfg(), 1);
@@ -951,6 +956,70 @@ export class QecApp {
        · 界面全程可交互（滑块/按钮不卡）；
        · 换配置立刻作废旧令牌，旧扫描自然停下（不会两个扫描抢 this.curve）。
      `_curveKey` **先置位**：同一配置的重复调用直接跳过（不会重开一轮）。 */
+  /* ---- R126 并行扫描入口 ----
+     优先派给 Worker；**任何**一步不对（创建失败 / 报错 / 4s 内没有首点 / 单文件
+     dist 或 file:// 下不可用）就立即回退主线程——回退路径就是 R117 起已验证的
+     `_sweepStream`，行为与未启用并行时完全一致。 */
+  _sweepStart(sweepCfg, key, finish){
+    if (this._useWorker === false){ this._sweepStream(sweepCfg, key, finish); return; }
+    if (this._sweepWorker(sweepCfg, key, finish)) return;   /* 派发成功 */
+    this._useWorker = false;                                /* 以后不再试 */
+    this._sweepStream(sweepCfg, key, finish);
+  }
+  _sweepWorker(sweepCfg, key, finish){
+    try {
+      if (!this._worker){
+        if (typeof Worker === 'undefined') return false;
+        /* ⚠ 不能用 import.meta.url：build:standalone 把模块拼进一个**非 module** 的
+   <script>，`import.meta` 在那里是**语法错误**（解析期就挂，try/catch 救不了）。
+   改用相对当前页面的字面量路径：src 通道能取到，dist 通道取不到 ⟹ onerror/超时回退。 */
+      this._worker = new Worker('src/qec/sweep-worker.js', { type: 'module' });
+      }
+      const tok = ++this._sweepTok;
+      const w = this._worker;
+      w.onmessage = e => {
+        const m = e.data || {};
+        if (!m || m.id !== this._wId) return;
+        if (m.error){ this._useWorker = false; clearTimeout(this._wTmo); this._sweepStream(sweepCfg, key, finish); return; }
+        clearTimeout(this._wTmo);
+        if (m.done){
+          this._sweepProg = null;
+          finish();
+          this.renderHud(); this.drawAll(); this.renderHint();
+          return;
+        }
+        if (!this._sweepProg || tok !== this._sweepTok) return;
+        const r = { p: m.row.p, PL: m.row.PL, PLexact: (m.row.PLexact === null ? NaN : m.row.PLexact), Pun: m.row.Pun };
+        this._ptCache.set(key + '#' + this._sweepProg.i, r);
+        this.curve.p.push(r.p); this.curve.PL.push(r.PL);
+        this.curve.PLexact.push(r.PLexact); this.curve.Pun.push(r.Pun);
+        this._sweepProg.i = this._sweepProg.i + 1;
+        this._sweepProg.n = m.n;
+        if (this.curve.p.length >= 2) this.drawCurve();
+        this.renderHint();
+      };
+      w.onerror = () => { this._useWorker = false; clearTimeout(this._wTmo); this._sweepStream(sweepCfg, key, finish); };
+      /* 与主路径一致：先清空派生量，再开始 */
+      this.svy = null; this._thr = null; this._thrU = null; this._floor = null;
+      this.curve = { p: [], PL: [], PLexact: [], Pun: [],
+        noise: sweepCfg.noise, spectrum: sweepCfg.spectrum, noisyPhase: sweepCfg.noisyPhase };
+      this._curveKey = key;
+      this._sweepProg = { i: 0, n: (sweepCfg.ps || []).length || 6 };
+      this._wId = (this._wId || 0) + 1;
+      w.postMessage({ id: this._wId, cfg: sweepCfg });
+      /* 4s 内没收到首点 ⟹ 判定不可用，回退 */
+      clearTimeout(this._wTmo);
+      this._wTmo = setTimeout(() => {
+        if (this._sweepProg && this._sweepProg.i === 0){
+          this._useWorker = false; this._sweepStream(sweepCfg, key, finish);
+        }
+      }, 4000);
+      return true;
+    } catch (err){
+      return false;
+    }
+  }
+
   _sweepStream(sweepCfg, key, finish){
     const plan = qecSweepPlan(sweepCfg);
     const tok = ++this._sweepTok;
@@ -2223,6 +2292,7 @@ export class QecApp {
         dpStates: qecDpStates(self.cfg()), dpOver: qecDpOverBudget(self.cfg()), dpHeavy: qecDpHeavy(self.cfg()),
         dpCache: qecDpCacheStats(), ptCache: self._ptCache.size,
         sweeping: !!self._sweepProg,
+        worker: (self._useWorker === false ? 'off' : 'worker'),
         c1: (self.svy && Number.isFinite(self.svy.c1)) ? self.svy.c1 : null,
       }),
       /* R118：单点缓存条数（断点续算用）+ 当前整轮键（诊断为什么没命中） */
