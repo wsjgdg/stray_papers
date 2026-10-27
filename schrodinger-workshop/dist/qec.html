@@ -5762,7 +5762,12 @@ class QecApp {
         trials: hv ? 120 : Math.max(600, Math.round(this.state.trials / 3)), seed: 101, sweepTrials: hv ? 120 : 600,
       };
       if (this.state.noise === 'gate'){
-        sweepCfg.ps = Array.from({ length: fewPts ? 6 : 18 }, (_, i) => 0.002 * Math.pow(0.55 / 0.002, i / (fewPts ? 5 : 17)));
+        /* R124：重档从「6 点均匀」改成「4 点粗扫 + 2 点自适应补点」——**总数仍是 6**
+           ⟹ 点数相关断言不用改，但交点附近有 3 倍密度（原 2 点变 4 点）。
+           轻档（18 点）保持原样：它够密，自适应没有意义。 */
+        const adh = !!fewPts;
+        sweepCfg.ps = Array.from({ length: adh ? 4 : 18 }, (_, i) => 0.002 * Math.pow(0.55 / 0.002, i / (adh ? 3 : 17)));
+        if (adh) sweepCfg.adaptive = true;
       } else if (this.state.noise === 'phys'){
         /* R108：phys 复用 iid 的 12 点网格（0.002…0.5），MC 900 次/点；
            物理参数随面板走（γ/λ>0 时 PLexact=NaN，曲线只画 MC） */
@@ -6187,10 +6192,45 @@ class QecApp {
     this._curveKey = key;
     this._sweepProg = { i: 0, n: plan.length };
     const tk = i => key + '#' + i;
+    /* R124 两阶段状态 */
+    const adaptive = !!sweepCfg.adaptive && plan.length >= 3;
+    let refined = false, extraPlan = null;
+    const rows = [];
     const tick = () => {
       if (tok !== this._sweepTok){ return; }        /* 已被新扫描/离开模式作废 */
       const i = this._sweepProg ? this._sweepProg.i : plan.length;
       if (i >= plan.length){
+        /* R124 两阶段：粗扫（4 点）跑完 ⟹ 用 refine 补 2 点继续跑；补点按 **p 升序
+           插入**曲线数组，否则折线会在对数轴上折回去。两阶段都跑完才 finish。 */
+        if (adaptive && !refined){
+          refined = true;
+          const more = plan.refine(rows, 2);
+          if (more.length){
+            extraPlan = qecSweepPlan({ ...sweepCfg, ps: more });
+            if (this._sweepProg) this._sweepProg.n = plan.length + more.length;
+            setTimeout(tick, 0);
+            return;
+          }
+        }
+        if (extraPlan){
+          const j = i - plan.length;
+          if (j < extraPlan.length){
+            const memoX = this._ptCache.get(tk('x' + j));
+            const rX = memoX || extraPlan.step(j);
+            if (!memoX){
+              this._ptCache.set(tk('x' + j), rX);
+              if (this._ptCache.size > 512) this._ptCache.delete(this._ptCache.keys().next().value);
+            }
+            let at = this.curve.p.length;
+            for (let t = 0; t < this.curve.p.length; t++) if (this.curve.p[t] > rX.p){ at = t; break; }
+            this.curve.p.splice(at, 0, rX.p); this.curve.PL.splice(at, 0, rX.PL);
+            this.curve.PLexact.splice(at, 0, rX.PLexact); this.curve.Pun.splice(at, 0, rX.Pun);
+            if (this._sweepProg){ this._sweepProg.i = i + 1; }
+            this.drawCurve(); this.renderHint();
+            setTimeout(tick, 0);
+            return;
+          }
+        }
         this._sweepProg = null;
         finish();
         this.renderHud(); this.drawAll(); this.renderHint();
@@ -6204,6 +6244,7 @@ class QecApp {
         this._ptCache.set(tk(i), r);
         if (this._ptCache.size > 512) this._ptCache.delete(this._ptCache.keys().next().value);
       }
+      rows.push(r);
       this.curve.p.push(r.p); this.curve.PL.push(r.PL);
       this.curve.PLexact.push(r.PLexact); this.curve.Pun.push(r.Pun);
       if (this._sweepProg) this._sweepProg.i = i + 1;
