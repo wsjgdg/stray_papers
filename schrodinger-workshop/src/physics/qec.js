@@ -1185,10 +1185,41 @@ export function qecSweepPlan(cfg = {}){
     }
     return row;
   };
-  return {
+  const plan = {
     ps, step, length: ps.length,
     noise: c.noise, spectrum: c.spectrum, noisyPhase: c.noisyPhase, cfg: c,
   };
+  /* R124：自适应补点。默认**不启用**——`qecSweep` 与既有调用一条不变（pot 套件的
+     逐位断言靠这个保证）。调用方拿到粗扫结果后调 refine(rows, m)：
+       1) 先找 P_L(精确/或 MC) 与 y=p 的**交点区间**（变号处）；
+       2) 找不到（整段同向）就退到「相邻变化最大的区间」；
+       3) 在该区间内按**几何插值**补 m 个点（对数轴上均匀）。
+     用几何插值是因为扫描网格本身是对数的（0.002…0.55）。 */
+  plan.refine = (rows = [], m = 2) => {
+    const rs = rows.filter(r => Number.isFinite(r.p));
+    if (rs.length < 2 || !(m > 0)) return [];
+    const f = r => {
+      const v = Number.isFinite(r.PLexact) ? r.PLexact : r.PL;
+      return Number.isFinite(v) ? v - r.p : NaN;
+    };
+    let lo = null, hi = null;
+    for (let i = 1; i < rs.length; i++){
+      const fa = f(rs[i - 1]), fb = f(rs[i]);
+      if (Number.isFinite(fa) && Number.isFinite(fb) && fa * fb <= 0){ lo = rs[i - 1].p; hi = rs[i].p; break; }
+    }
+    if (lo == null){
+      let best = -Infinity;
+      for (let i = 1; i < rs.length; i++){
+        const d = Math.abs((rs[i].PLexact ?? rs[i].PL) - (rs[i - 1].PLexact ?? rs[i - 1].PL));
+        if (Number.isFinite(d) && d > best){ best = d; lo = rs[i - 1].p; hi = rs[i].p; }
+      }
+    }
+    if (!(lo > 0) || !(hi > lo)) return [];
+    const out = [];
+    for (let k = 1; k <= m; k++) out.push(Math.exp(Math.log(lo) + (Math.log(hi) - Math.log(lo)) * k / (m + 1)));
+    return out;
+  };
+  return plan;
 }
 
 export function qecSweep(cfg = {}){
