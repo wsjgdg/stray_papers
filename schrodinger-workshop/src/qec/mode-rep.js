@@ -206,10 +206,9 @@ export class QecApp {
     this.svy = null;      /* 门级：一阶故障枚举（c₁） */
     this._tabFilter = ''; /* R115：综合表过滤词（重渲染后回填，n≤5 走扁平路径用不到） */
     this._sweepTok = 0;   /* R117：逐点扫描的取消令牌（换配置/离开模式即作废） */
-    /* R126：并行扫描**默认关闭**。Worker 路径本身已跑通（src 通道实测可用、数值与
-       主线程一致），但它目前只跑粗扫、**没接 R124 的两阶段补点** ⟹ 重档会从 6 点
-       退化成 4 点（曲线变差）。先关闭，等补点移植进 worker 再打开。 */
-    this._useWorker = false;
+    /* R126：并行扫描。初始为 true（能建 Worker 就用）；任一环节失败会永久置 false
+       并回退主线程。补点（R124 两阶段）已在 worker 路径内实现，见 _sweepWorker。 */
+    this._useWorker = true;
     this._sweepProg = null;
     /* R118：**单点**缓存。R114 的 _curveCache 只存整轮跑完的结果 ⟹ 扫到 4/6 被
        打断就全丢。按 (整轮键, 点序号) 存每点结果，回到同一配置时直接续算。
@@ -983,6 +982,18 @@ export class QecApp {
         if (m.error){ this._useWorker = false; clearTimeout(this._wTmo); this._sweepStream(sweepCfg, key, finish); return; }
         clearTimeout(this._wTmo);
         if (m.done){
+          /* R126：补点与主线程**同口径**——粗扫完再发一轮 refine 补点（R124）。
+             补点那轮 adaptive=false，避免无限补下去。 */
+          if (sweepCfg.adaptive && !this._wRefined && this.curve.p.length >= 2){
+            this._wRefined = true;
+            const rows = this.curve.p.map((pp, i) => ({ p: pp, PL: this.curve.PL[i], PLexact: this.curve.PLexact[i] }));
+            const more = qecSweepPlan(sweepCfg).refine(rows, 2);
+            if (more.length){
+              this._sweepProg.n = this.curve.p.length + more.length;
+              w.postMessage({ id: this._wId, cfg: { ...sweepCfg, ps: more, adaptive: false } });
+              return;
+            }
+          }
           this._sweepProg = null;
           finish();
           this.renderHud(); this.drawAll(); this.renderHint();
@@ -991,10 +1002,15 @@ export class QecApp {
         if (!this._sweepProg || tok !== this._sweepTok) return;
         const r = { p: m.row.p, PL: m.row.PL, PLexact: (m.row.PLexact === null ? NaN : m.row.PLexact), Pun: m.row.Pun };
         this._ptCache.set(key + '#' + this._sweepProg.i, r);
-        this.curve.p.push(r.p); this.curve.PL.push(r.PL);
-        this.curve.PLexact.push(r.PLexact); this.curve.Pun.push(r.Pun);
+        /* 与主路径一致：按 p 升序插入（补点的 p 落在粗扫区间内，直接 push 会折回） */
+        let at = this.curve.p.length;
+        for (let t = 0; t < this.curve.p.length; t++) if (this.curve.p[t] > r.p){ at = t; break; }
+        this.curve.p.splice(at, 0, r.p); this.curve.PL.splice(at, 0, r.PL);
+        this.curve.PLexact.splice(at, 0, r.PLexact); this.curve.Pun.splice(at, 0, r.Pun);
         this._sweepProg.i = this._sweepProg.i + 1;
-        this._sweepProg.n = m.n;
+        /* ⚠ 补点轮的 m.n 是**补点计划的长度（2）**，不是总数——拿它覆盖会让进度显示
+           成「5/2」。总数由派发补点时算好，这里只在粗扫轮更新。 */
+        if (!this._wRefined) this._sweepProg.n = m.n;
         if (this.curve.p.length >= 2) this.drawCurve();
         this.renderHint();
       };
@@ -1006,6 +1022,7 @@ export class QecApp {
       this._curveKey = key;
       this._sweepProg = { i: 0, n: (sweepCfg.ps || []).length || 6 };
       this._wId = (this._wId || 0) + 1;
+      this._wRefined = false;
       w.postMessage({ id: this._wId, cfg: sweepCfg });
       /* 4s 内没收到首点 ⟹ 判定不可用，回退 */
       clearTimeout(this._wTmo);

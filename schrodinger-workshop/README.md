@@ -2212,8 +2212,12 @@ R121/R122 把容器层抠到头了（字符串键 → 数值键 2×；自写键�
 4s 无首点一律回退主线程**（回退路径就是已验证的 `_sweepStream`）。实测：src 通道确实跑在
 Worker 上、数值正确、零异常；dist 单文件下自动回退，行为与之前完全一致。
 
-⚠ **默认关闭**（`_useWorker = false`）：worker 目前只跑粗扫、**没接 R124 的两阶段补点**
-⟹ 重档会从 6 点退化成 4 点。等补点移植进 worker 再打开。
+**补点已移植，并行已打开**：worker 在粗扫 `done` 后再发一轮 `refine(rows,2)` 补点
+（`adaptive:false` 防无限补），补点按 **p 升序插入**曲线数组。实测 src 通道 6 点升序、
+精确解全有限、零异常；dist 单文件自动回退主线程、18 点升序、零异常。
+
+一个移植期才暴露的 bug：补点轮回传的 `m.n` 是**补点计划的长度（2）**，拿它覆盖
+进度分母会显示「扫描中 5/2」⟹ 只在粗扫轮更新总数。
 
 ⚠ **一个真坑**：首版用 `new Worker(new URL('./sweep-worker.js', import.meta.url))` ——
 `build:standalone` 把模块拼进**非 module** 的 `<script>`，`import.meta` 在那里是
