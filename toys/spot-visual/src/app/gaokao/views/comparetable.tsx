@@ -1,7 +1,12 @@
 "use client";
 
 import { Heart, Scale } from "lucide-react";
-import { getSchool, type School, type HistoryDataset } from "@/lib/gaokao-data";
+import {
+  getSchool,
+  type School,
+  type HistoryDataset,
+  type MajorDataset,
+} from "@/lib/gaokao-data";
 import { tierOf, TIER_COLOR, TIER_LABEL, type Tier } from "./shared";
 import { TrendSpark } from "./trendspark";
 
@@ -13,6 +18,8 @@ export function CompareTable({
   prov,
   cat,
   score,
+  rank,
+  majors,
   onRemove,
   onLocate,
 }: {
@@ -32,6 +39,10 @@ export function CompareTable({
   prov: string;
   cat: string;
   score: number;
+  /** 你的位次（「位次差」行用；缺失时该行显示 —） */
+  rank?: number;
+  /** 专业级数据（「专业组维度」行用；未载入时降级为 —） */
+  majors?: MajorDataset | null;
   history?: HistoryDataset | null;
   onRemove: (code: string) => void;
   onLocate: (code: string) => void;
@@ -228,6 +239,66 @@ export function CompareTable({
                 )}
               </td>
             ))}
+          </tr>
+          <tr className="border-b border-gray-50">
+            <td className={td + " text-gray-400 text-xs"}>
+              位次差（你 vs 最低位次）
+            </td>
+            {cols.map(({ name, adm }) => {
+              if (!adm?.minRank || !rank)
+                return (
+                  <td key={name} className={td}>
+                    <span className="text-gray-300">—</span>
+                  </td>
+                );
+              // 位次差比分数差更稳：跨年分数不可比，位次可比
+              const d = rank - adm.minRank;
+              return (
+                <td
+                  key={name}
+                  className={td + " tabular-nums"}
+                  style={{
+                    color: d <= 0 ? "#047857" : "#B45309",
+                  }}
+                >
+                  {d <= 0 ? "领先 " : "落后 "}
+                  {Math.abs(d).toLocaleString()}
+                  <span className="text-[11px] font-normal text-gray-400 ml-1">
+                    名
+                  </span>
+                </td>
+              );
+            })}
+          </tr>
+          <tr className="border-b border-gray-50">
+            <td className={td + " text-gray-400 text-xs"}>
+              专业组（组数 / 分数区间）
+            </td>
+            {cols.map(({ name }) => {
+              const rows = majors?.cats[cat]?.[name];
+              if (!rows?.length)
+                return (
+                  <td key={name} className={td}>
+                    <span className="text-gray-300">—</span>
+                  </td>
+                );
+              const groups = new Set(rows.map((r) => r[0]));
+              const scores = rows
+                .map((r) => r[3])
+                .filter((v): v is number => typeof v === "number" && v > 0);
+              const lo = scores.length ? Math.min(...scores) : null;
+              const hi = scores.length ? Math.max(...scores) : null;
+              return (
+                <td key={name} className={td}>
+                  {groups.size} 组
+                  {lo != null && hi != null && (
+                    <span className="text-[11px] text-gray-400 ml-1">
+                      {lo === hi ? `${lo} 分` : `${lo}–${hi} 分`}
+                    </span>
+                  )}
+                </td>
+              );
+            })}
           </tr>
           <tr className="border-b border-gray-50">
             <td className={td + " text-gray-400 text-xs"}>

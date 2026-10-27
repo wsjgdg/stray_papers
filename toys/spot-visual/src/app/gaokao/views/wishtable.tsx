@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { ClipboardList, Check, Share2, Plus, Download } from "lucide-react";
 import { getSchool, type MajorDataset } from "@/lib/gaokao-data";
 import { tierOf, TIER_COLOR, TIER_LABEL, type Tier } from "./shared";
+import { wishLimitFor, WISH_UNIT_LABEL } from "@/lib/wish-limits";
 
 interface WishItem {
   name: string;
@@ -106,6 +107,8 @@ export function WishTable({
     return { ...c, total: items.length, actionable, warnings };
   }, [items, admByName, majors, cat, score]);
 
+  const limit = wishLimitFor(prov);
+
   const exportImage = async () => {
     const { downloadWishCard } = await import("@/lib/wish-card");
     const rows = items.map((w) => {
@@ -150,8 +153,14 @@ export function WishTable({
       <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-gray-100">
         <ClipboardList className="w-4 h-4 text-indigo-500 shrink-0" />
         <h3 className="text-sm font-bold text-gray-800">
-          我的志愿表（{items.length}）
+          我的志愿表（{items.length}
+          {limit ? ` / ${limit.max}` : ""}）
         </h3>
+        {limit && (
+          <span className="text-[11px] text-gray-400">
+            {WISH_UNIT_LABEL[limit.unit]} · {prov}本科批上限 {limit.max} 个
+          </span>
+        )}
         {items.length > 0 && (
           <>
             <button
@@ -218,6 +227,12 @@ export function WishTable({
             <span className="text-gray-300">|</span>
             <span className="text-gray-400">共 {ladder.total} 个志愿</span>
           </div>
+          {limit && items.length > limit.max && (
+            <p className="text-[11px] leading-relaxed text-rose-600">
+              ⚠ 已超出 {prov} 本科批上限（{items.length} / {limit.max} 个
+              {WISH_UNIT_LABEL[limit.unit]}），实际填报系统会截断。
+            </p>
+          )}
           {ladder.warnings.map((w) => (
             <p
               key={w.text}
