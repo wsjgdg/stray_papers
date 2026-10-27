@@ -1364,6 +1364,9 @@ function SpotsView() {
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(
     null,
   );
+
+  // ═══ 等级快速过滤：只看 5A / 4A（null = 不过滤） ═══
+  const [levelFilter, setLevelFilter] = useState<"5A" | "4A" | null>(null);
   const [locating, setLocating] = useState(false);
 
   // ═══ 分页渲染：1200+ 卡片一次性渲染会拖慢首屏，先渲染 60 张，滚动到底自动加载 ═══
@@ -1398,6 +1401,7 @@ function SpotsView() {
   const filteredSpots = useMemo(() => {
     const list = spots.filter((s) => {
       const cc = !cityFilter || s.address.includes(cityFilter);
+      const lc = !levelFilter || s.level === levelFilter;
       const mc = activeCategory === "全部" || s.category === activeCategory;
       const q = searchQuery.toLowerCase();
       const mq =
@@ -1413,7 +1417,7 @@ function SpotsView() {
             const py = getPinyinKeys(s.name);
             return py.full.includes(q) || py.initials.includes(q);
           })());
-      return cc && mc && mq;
+      return cc && lc && mc && mq;
     });
     if (sortMode === "name") {
       return [...list].sort((a, b) => a.name.localeCompare(b.name, "zh"));
@@ -1438,12 +1442,20 @@ function SpotsView() {
       });
     }
     return list;
-  }, [spots, activeCategory, searchQuery, userLoc, cityFilter, sortMode]);
+  }, [
+    spots,
+    activeCategory,
+    searchQuery,
+    userLoc,
+    cityFilter,
+    sortMode,
+    levelFilter,
+  ]);
 
   // 筛选条件变化时重置分页
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [spots, activeCategory, searchQuery, cityFilter, userLoc]);
+  }, [spots, activeCategory, searchQuery, cityFilter, userLoc, levelFilter]);
 
   // 哨兵进入视口 → 加载下一页
   useEffect(() => {
@@ -1704,6 +1716,23 @@ function SpotsView() {
               清空全部
             </Button>
           )}
+          {/* 等级快速过滤：只看 5A / 4A */}
+          <div className="flex items-center gap-1">
+            {(["5A", "4A"] as const).map((lv) => (
+              <button
+                key={lv}
+                onClick={() => setLevelFilter(levelFilter === lv ? null : lv)}
+                title={`只看 ${lv} 级景区`}
+                className={`px-2 py-1.5 rounded-lg text-xs font-black border transition-colors ${
+                  levelFilter === lv
+                    ? "bg-amber-400 text-white border-amber-400"
+                    : "bg-white text-amber-600 border-amber-200 hover:bg-amber-50"
+                }`}
+              >
+                {lv}
+              </button>
+            ))}
+          </div>
           <label className="flex items-center gap-1 text-xs text-gray-500">
             <span className="hidden sm:inline">排序</span>
             <select
@@ -1755,9 +1784,18 @@ function SpotsView() {
         <span className="font-semibold text-gray-900">
           {filteredSpots.length}
         </span>{" "}
-        个景点{cityFilter && <span> · {cityFilter}</span>}
+        个景点{levelFilter && <span> · {levelFilter}</span>}
+        {cityFilter && <span> · {cityFilter}</span>}
         {activeCategory !== "全部" && <span> · {activeCategory}</span>}
         {searchQuery && <span> · &ldquo;{searchQuery}&rdquo;</span>}
+        {levelFilter && (
+          <button
+            onClick={() => setLevelFilter(null)}
+            className="ml-1 text-amber-600 hover:underline"
+          >
+            清除{levelFilter}
+          </button>
+        )}
         {cityFilter && (
           <button
             onClick={() => setCityFilter(null)}
