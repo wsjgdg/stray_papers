@@ -75,7 +75,7 @@
  * ========================================================================== */
 import { QEC_DEFAULTS, QEC_CODES, QEC_NOISE, QEC_SPECTRA, qecTrial, qecStream, qecEnsemble, qecSweep, qecSweepPlan, qecDpCacheStats, qecLogicalRate, qecLogicalRateLab, qecThreshold, qecSyndromeTable, qecCircuit, qecExactPL, qecFaultSurvey, qecNormRd, qecNormN, qecVoteErr, qecUncodedSpec, qecUncodedRate, qecUncodedThreshold, qecDpOverBudget, qecDpHeavy, qecDpStates } from '../physics/qec.js';
 import { mulberry32 } from '../physics/qcircuit.js';
-import { qecCurveCsv, qecTableCsv, qecTableMd, qecExportName } from './export.js';
+import { qecCurveCsv, qecTableCsv, qecTableMd, qecExportName, encodeShort, mergeShort } from './export.js';
 import { LiveDriver } from './live.js';
 
 const QEC_CSS = `
@@ -165,7 +165,8 @@ export class QecApp {
     this.shell = shell;
     this.modeRoot = shell.modeRoot;
     this._listeners = [];
-    const q = new URLSearchParams(location.search);
+    /* R119：?s=1~rep~... 是位置码本短链；先并入再按原键读，坏串自动回落原 query */
+    const q = mergeShort(new URLSearchParams(location.search));
     const num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
     const str = (k, d, ok) => { const v = q.get(k); return ok(v) ? v : d; };
     this.state = {
@@ -890,8 +891,19 @@ export class QecApp {
     }
     return location.origin + location.pathname + '?' + q.toString();
   }
+  /* R119：短链（码本见 export.js）。长链仍在 _snapshotUrl()，两者并列显示 */
+  _shortUrl(){
+    const s = this.state, N = qecNormN(s.n), rd = qecNormRd(s.rd);
+    const tok = encodeShort('rep', {
+      code: s.code, n: N, rd, noise: s.noise,
+      spectrum: (s.noise === 'iid' ? null : s.spectrum),
+      noisyPhase: (s.noise === 'iid' ? null : s.noisyPhase),
+      p: s.p, trials: this.effTrials(), seed: s.seed,
+    });
+    return location.origin + location.pathname + '?mode=rep&s=' + tok;
+  }
   copySnapshot(){
-    const url = this._snapshotUrl();
+    const url = this._shortUrl();
     const msg = this.q('#qeExpMsg');
     const done = ok => {
       if (!msg) return;
@@ -2129,6 +2141,7 @@ export class QecApp {
       exportMeta: () => self._expMeta(),
       /* R117：快照链接（与「复制快照链接」按钮同源） */
       snapshotUrl: () => self._snapshotUrl(),
+      shortUrl: () => self._shortUrl(),
       /* R117：逐点扫描进度（null = 已完成）+ DP 记忆化命中统计 */
       sweepProg: () => (self._sweepProg ? { ...self._sweepProg } : null),
       dpCache: () => qecDpCacheStats(),

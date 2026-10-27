@@ -13,7 +13,7 @@
  * ========================================================================== */
 import { SHOR_STABS, SHOR_LOGICALS, shorTrial, shorStream, shorEnsemble, shorSweep, shorExactPL, repPLexact, shorCrossover, shorDecode, shorSyndromeOf, shorCoset, shorTableStats, shorDistance, shorWeight2Stats, SHOR_STAB_COUNT, shorFaultSurvey, shorCircuitStats, SHOR_ANC } from '../physics/shor.js';
 import { mulberry32 } from '../physics/qcircuit.js';
-import { qecGenericCsv, downloadText } from './export.js';
+import { qecGenericCsv, downloadText, encodeShort, mergeShort } from './export.js';
 import { LiveDriver } from './live.js';
 
 const SHOR_CSS = `
@@ -81,7 +81,8 @@ export class ShorApp {
     this.shell = shell;
     this.modeRoot = shell.modeRoot;
     this._listeners = [];
-    const q = new URLSearchParams(location.search);
+    /* R119：?s=1~<mode>~... 位置码本短链；坏串自动回落原 query */
+    const q = mergeShort(new URLSearchParams(location.search));
     const num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
     /* R87 三键（与 R86 同款校验：非法值回落默认 ⟹ 零回归） */
     const str = (k, d, ok) => (q.has(k) && ok(q.get(k)) ? q.get(k) : d);
@@ -936,8 +937,17 @@ export class ShorApp {
     q.set('seed', String(s.seed));
     return location.origin + location.pathname + '?' + q.toString();
   }
+  _shortUrl(){
+    const s = this.state;
+    const tok = encodeShort('shor', {
+      noise: s.noise, spectrum: (s.noise === 'iid' ? null : s.spectrum),
+      noisyPhase: (s.noise === 'iid' ? null : s.noisyPhase),
+      p: s.p, theta: s.theta, phase: s.phase, trials: s.trials, seed: s.seed,
+    });
+    return location.origin + location.pathname + '?mode=shor&s=' + tok;
+  }
   copySnapshot(){
-    const url = this._snapshotUrl(), msg = this.q('#shExpMsg');
+    const url = this._shortUrl(), msg = this.q('#shExpMsg');
     const done = ok => { if (msg) msg.innerHTML = (ok ? '已复制快照链接' : '剪贴板不可用，请手动复制') +
       '<br><span style="color:var(--cyan);word-break:break-all">' + url + '</span>'; };
     try {
@@ -1004,6 +1014,7 @@ export class ShorApp {
       /* R119：导出（与按钮同一份字符串） */
       exportText: kind => { const o = self._exportText(kind); return o ? { name: o.name, text: o.text, rows: o.rows } : null; },
       snapshotUrl: () => self._snapshotUrl(),
+      shortUrl: () => self._shortUrl(),
       distance: () => shorDistance(),
       weight2: () => shorWeight2Stats(),
       logicals: () => SHOR_LOGICALS.map(L => ({ ...L })),

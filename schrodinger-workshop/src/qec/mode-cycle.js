@@ -17,7 +17,7 @@
  * ========================================================================== */
 import { NAV_HREFS } from '../core/nav.js';
 import { FS_KINDS, fsCircuit, fsFirstOrder, fsStream, fsEnsemble, fsRun, cyInterception, cySweepCycles } from '../physics/flagsynd.js';
-import { qecGenericCsv, downloadText } from './export.js';
+import { qecGenericCsv, downloadText, encodeShort, mergeShort } from './export.js';
 import { LiveDriver } from './live.js';
 
 const CY_CSS = `
@@ -91,7 +91,8 @@ export class CycleApp {
     this.shell = shell;
     this.modeRoot = shell.modeRoot;
     this._listeners = [];
-    const q = new URLSearchParams(location.search);
+    /* R119：?s=1~<mode>~... 位置码本短链；坏串自动回落原 query */
+    const q = mergeShort(new URLSearchParams(location.search));
     const num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
     const str = (k, d) => (q.has(k) ? q.get(k) : d);
     this.state = {
@@ -646,8 +647,17 @@ export class CycleApp {
     q.set('seed', String(s.seed));
     return location.origin + location.pathname + '?' + q.toString();
   }
+  _shortUrl(){
+    const s = this.state;
+    const tok = encodeShort('cycle', {
+      kind: s.kind, cycles: s.cycles, rounds: s.rounds, logic: s.logic,
+      decode: s.decode, noisyLogic: s.noisyLogic ? 1 : 0,
+      p: s.p, trials: s.trials, seed: s.seed,
+    });
+    return location.origin + location.pathname + '?mode=cycle&s=' + tok;
+  }
   copySnapshot(){
-    const url = this._snapshotUrl(), msg = this.q('#cyExpMsg');
+    const url = this._shortUrl(), msg = this.q('#cyExpMsg');
     const done = ok => { if (msg) msg.innerHTML = (ok ? '已复制快照链接' : '剪贴板不可用，请手动复制') +
       '<br><span style="color:var(--cyan);word-break:break-all">' + url + '</span>'; };
     try {
@@ -680,6 +690,7 @@ export class CycleApp {
       /* R119：导出（与按钮同一份字符串） */
       exportText: kind => { const o = self._exportText(kind); return o ? { name: o.name, text: o.text, rows: o.rows } : null; },
       snapshotUrl: () => self._snapshotUrl(),
+      shortUrl: () => self._shortUrl(),
       logics: () => cyLOGICS.map(l => ({ k: l.k, name: l.name })),
       navLinks: () => NAV_HREFS,
       data: () => ({

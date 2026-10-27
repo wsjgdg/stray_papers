@@ -184,3 +184,44 @@ export function downloadText(name, text){
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => { try { URL.revokeObjectURL(url); } catch (e) {} }, 2000);
 }
+
+/* ---------------- R119：位置码本短链接 ----------------
+   长 query 94~120 字符（键名占一半），贴进聊天很难读。**不能用 base64**：JSON+base64
+   实测把 94 字符变成 208（键名全变成可见负载），是负收益。
+   改用位置码本：固定键序、只写值、`~` 分隔（值里不会出现 `~`，且数字的小数点安全）。
+     ?s=1~rep~bitflip~7~1~gate~depolar~extract~0.04~1200~42      ← 45 字符
+   首段是**版本号**：加字段必须升版本（1→2），旧链接仍按旧序解；解不出来返回 null，
+   调用方回落到原始 query（坏链接不能让页面白掉）。空串 = 该参数缺席。 */
+const QEC_CODEBOOK = {
+  1: {
+    rep: ['code', 'n', 'rd', 'noise', 'spectrum', 'noisyPhase', 'p', 'trials', 'seed'],
+    shor: ['noise', 'spectrum', 'noisyPhase', 'p', 'theta', 'phase', 'trials', 'seed'],
+    cycle: ['kind', 'cycles', 'rounds', 'logic', 'decode', 'noisyLogic', 'p', 'trials', 'seed'],
+  },
+};
+export const QEC_CODEBOOK_V = 1;
+export function encodeShort(mode, obj = {}){
+  const keys = (QEC_CODEBOOK[QEC_CODEBOOK_V] || {})[mode];
+  if (!keys) return null;
+  const vals = keys.map(k => (obj[k] == null ? '' : String(obj[k])));
+  return [QEC_CODEBOOK_V, mode, ...vals].join('~');
+}
+export function decodeShort(s){
+  const parts = String(s || '').split('~');
+  if (parts.length < 2) return null;
+  const v = Number(parts[0]);
+  const book = QEC_CODEBOOK[v];
+  if (!book || !book[parts[1]]) return null;
+  const out = { mode: parts[1] };
+  book[parts[1]].forEach((k, i) => { const raw = parts[i + 2]; if (raw !== '' && raw != null) out[k] = raw; });
+  return out;
+}
+/* 把 `?s=` 解出来的键并进既有 URLSearchParams（缺席的键不覆盖） */
+export function mergeShort(q){
+  const s = q.get('s');
+  if (!s) return q;
+  const d = decodeShort(s);
+  if (!d) return q;
+  for (const [k, v] of Object.entries(d)) if (k !== 'mode' && !q.has(k)) q.set(k, v);
+  return q;
+}

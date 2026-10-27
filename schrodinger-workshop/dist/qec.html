@@ -5005,6 +5005,47 @@ function downloadText(name, text){
   setTimeout(() => { try { URL.revokeObjectURL(url); } catch (e) {} }, 2000);
 }
 
+/* ---------------- R119：位置码本短链接 ----------------
+   长 query 94~120 字符（键名占一半），贴进聊天很难读。**不能用 base64**：JSON+base64
+   实测把 94 字符变成 208（键名全变成可见负载），是负收益。
+   改用位置码本：固定键序、只写值、`~` 分隔（值里不会出现 `~`，且数字的小数点安全）。
+     ?s=1~rep~bitflip~7~1~gate~depolar~extract~0.04~1200~42      ← 45 字符
+   首段是**版本号**：加字段必须升版本（1→2），旧链接仍按旧序解；解不出来返回 null，
+   调用方回落到原始 query（坏链接不能让页面白掉）。空串 = 该参数缺席。 */
+const QEC_CODEBOOK = {
+  1: {
+    rep: ['code', 'n', 'rd', 'noise', 'spectrum', 'noisyPhase', 'p', 'trials', 'seed'],
+    shor: ['noise', 'spectrum', 'noisyPhase', 'p', 'theta', 'phase', 'trials', 'seed'],
+    cycle: ['kind', 'cycles', 'rounds', 'logic', 'decode', 'noisyLogic', 'p', 'trials', 'seed'],
+  },
+};
+const QEC_CODEBOOK_V = 1;
+function encodeShort(mode, obj = {}){
+  const keys = (QEC_CODEBOOK[QEC_CODEBOOK_V] || {})[mode];
+  if (!keys) return null;
+  const vals = keys.map(k => (obj[k] == null ? '' : String(obj[k])));
+  return [QEC_CODEBOOK_V, mode, ...vals].join('~');
+}
+function decodeShort(s){
+  const parts = String(s || '').split('~');
+  if (parts.length < 2) return null;
+  const v = Number(parts[0]);
+  const book = QEC_CODEBOOK[v];
+  if (!book || !book[parts[1]]) return null;
+  const out = { mode: parts[1] };
+  book[parts[1]].forEach((k, i) => { const raw = parts[i + 2]; if (raw !== '' && raw != null) out[k] = raw; });
+  return out;
+}
+/* 把 `?s=` 解出来的键并进既有 URLSearchParams（缺席的键不覆盖） */
+function mergeShort(q){
+  const s = q.get('s');
+  if (!s) return q;
+  const d = decodeShort(s);
+  if (!d) return q;
+  for (const [k, v] of Object.entries(d)) if (k !== 'mode' && !q.has(k)) q.set(k, v);
+  return q;
+}
+
 /* ===== src/qec/live.js ===== */
 /* ============================================================================
  * live.js（R98 P2 新建）— 共享 LiveDriver：一次性 MC 批 → rAF 分帧演出
@@ -5317,7 +5358,8 @@ class QecApp {
     this.shell = shell;
     this.modeRoot = shell.modeRoot;
     this._listeners = [];
-    const q = new URLSearchParams(location.search);
+    /* R119：?s=1~rep~... 是位置码本短链；先并入再按原键读，坏串自动回落原 query */
+    const q = mergeShort(new URLSearchParams(location.search));
     const num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
     const str = (k, d, ok) => { const v = q.get(k); return ok(v) ? v : d; };
     this.state = {
@@ -6042,8 +6084,19 @@ class QecApp {
     }
     return location.origin + location.pathname + '?' + q.toString();
   }
+  /* R119：短链（码本见 export.js）。长链仍在 _snapshotUrl()，两者并列显示 */
+  _shortUrl(){
+    const s = this.state, N = qecNormN(s.n), rd = qecNormRd(s.rd);
+    const tok = encodeShort('rep', {
+      code: s.code, n: N, rd, noise: s.noise,
+      spectrum: (s.noise === 'iid' ? null : s.spectrum),
+      noisyPhase: (s.noise === 'iid' ? null : s.noisyPhase),
+      p: s.p, trials: this.effTrials(), seed: s.seed,
+    });
+    return location.origin + location.pathname + '?mode=rep&s=' + tok;
+  }
   copySnapshot(){
-    const url = this._snapshotUrl();
+    const url = this._shortUrl();
     const msg = this.q('#qeExpMsg');
     const done = ok => {
       if (!msg) return;
@@ -7281,6 +7334,7 @@ class QecApp {
       exportMeta: () => self._expMeta(),
       /* R117：快照链接（与「复制快照链接」按钮同源） */
       snapshotUrl: () => self._snapshotUrl(),
+      shortUrl: () => self._shortUrl(),
       /* R117：逐点扫描进度（null = 已完成）+ DP 记忆化命中统计 */
       sweepProg: () => (self._sweepProg ? { ...self._sweepProg } : null),
       dpCache: () => qecDpCacheStats(),
@@ -8249,7 +8303,8 @@ class ShorApp {
     this.shell = shell;
     this.modeRoot = shell.modeRoot;
     this._listeners = [];
-    const q = new URLSearchParams(location.search);
+    /* R119：?s=1~<mode>~... 位置码本短链；坏串自动回落原 query */
+    const q = mergeShort(new URLSearchParams(location.search));
     const num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
     /* R87 三键（与 R86 同款校验：非法值回落默认 ⟹ 零回归） */
     const str = (k, d, ok) => (q.has(k) && ok(q.get(k)) ? q.get(k) : d);
@@ -9104,8 +9159,17 @@ class ShorApp {
     q.set('seed', String(s.seed));
     return location.origin + location.pathname + '?' + q.toString();
   }
+  _shortUrl(){
+    const s = this.state;
+    const tok = encodeShort('shor', {
+      noise: s.noise, spectrum: (s.noise === 'iid' ? null : s.spectrum),
+      noisyPhase: (s.noise === 'iid' ? null : s.noisyPhase),
+      p: s.p, theta: s.theta, phase: s.phase, trials: s.trials, seed: s.seed,
+    });
+    return location.origin + location.pathname + '?mode=shor&s=' + tok;
+  }
   copySnapshot(){
-    const url = this._snapshotUrl(), msg = this.q('#shExpMsg');
+    const url = this._shortUrl(), msg = this.q('#shExpMsg');
     const done = ok => { if (msg) msg.innerHTML = (ok ? '已复制快照链接' : '剪贴板不可用，请手动复制') +
       '<br><span style="color:var(--cyan);word-break:break-all">' + url + '</span>'; };
     try {
@@ -9172,6 +9236,7 @@ class ShorApp {
       /* R119：导出（与按钮同一份字符串） */
       exportText: kind => { const o = self._exportText(kind); return o ? { name: o.name, text: o.text, rows: o.rows } : null; },
       snapshotUrl: () => self._snapshotUrl(),
+      shortUrl: () => self._shortUrl(),
       distance: () => shorDistance(),
       weight2: () => shorWeight2Stats(),
       logicals: () => SHOR_LOGICALS.map(L => ({ ...L })),
@@ -12320,7 +12385,8 @@ class CycleApp {
     this.shell = shell;
     this.modeRoot = shell.modeRoot;
     this._listeners = [];
-    const q = new URLSearchParams(location.search);
+    /* R119：?s=1~<mode>~... 位置码本短链；坏串自动回落原 query */
+    const q = mergeShort(new URLSearchParams(location.search));
     const num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
     const str = (k, d) => (q.has(k) ? q.get(k) : d);
     this.state = {
@@ -12875,8 +12941,17 @@ class CycleApp {
     q.set('seed', String(s.seed));
     return location.origin + location.pathname + '?' + q.toString();
   }
+  _shortUrl(){
+    const s = this.state;
+    const tok = encodeShort('cycle', {
+      kind: s.kind, cycles: s.cycles, rounds: s.rounds, logic: s.logic,
+      decode: s.decode, noisyLogic: s.noisyLogic ? 1 : 0,
+      p: s.p, trials: s.trials, seed: s.seed,
+    });
+    return location.origin + location.pathname + '?mode=cycle&s=' + tok;
+  }
   copySnapshot(){
-    const url = this._snapshotUrl(), msg = this.q('#cyExpMsg');
+    const url = this._shortUrl(), msg = this.q('#cyExpMsg');
     const done = ok => { if (msg) msg.innerHTML = (ok ? '已复制快照链接' : '剪贴板不可用，请手动复制') +
       '<br><span style="color:var(--cyan);word-break:break-all">' + url + '</span>'; };
     try {
@@ -12909,6 +12984,7 @@ class CycleApp {
       /* R119：导出（与按钮同一份字符串） */
       exportText: kind => { const o = self._exportText(kind); return o ? { name: o.name, text: o.text, rows: o.rows } : null; },
       snapshotUrl: () => self._snapshotUrl(),
+      shortUrl: () => self._shortUrl(),
       logics: () => cyLOGICS.map(l => ({ k: l.k, name: l.name })),
       navLinks: () => NAV_HREFS,
       data: () => ({
