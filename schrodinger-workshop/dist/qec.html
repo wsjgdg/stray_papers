@@ -5501,6 +5501,9 @@ class QecApp {
           <button id="qeExpMd" title="同一份综合表的 Markdown 版（贴进笔记/PR 用）">表 MD</button>
         </div>
         <div id="qeExpMsg" style="font-family:var(--mono);font-size:9.5px;color:var(--dim);margin:2px 0 3px"></div>
+
+        <div class="grp">诊断（R120）</div>
+        <div id="qeDiagBox" style="font-family:var(--mono);font-size:9.5px;color:var(--dim);line-height:1.5"></div>
         <div class="btns"><button id="qeExpUrl" title="把当前全部配置（码/码长/表决数/噪声/谱/注错范围/p/样本数/seed/physics 六参数）编码成链接；打开即还原。与 CSV 互补：一个给人点，一个给机器读">复制快照链接</button><button id="qeExpUrlOpen" title="在新标签页打开这份快照（= 用当前配置重开一次，可用来验证链接是否真的还原了状态）">验证快照</button></div>
 
         <div class="grp">综合表</div>
@@ -6174,7 +6177,33 @@ class QecApp {
     setTimeout(tick, 0);
   }
 
+  /* ---- R120 诊断面板 ----
+     把散在各处的运行时读数集中到面板：为什么这条曲线没精确解、为什么扫这么慢、
+     缓存有没有生效——现场排查不用再开控制台打调试句柄。只**读数**，不改状态。
+     ⚠ 挂在 renderTable() 里调用：它是最稳定的渲染入口（挂载/换码/换码长/换表决
+     都会走到），保证面板永远是最新的（本轮首版想插在 renderHud 末尾，锚点定位失败）。 */
+  renderDiag(){
+    const el = this.q('#qeDiagBox');
+    if (!el) return;
+    const N = qecNormN(this.state.n), rd = qecNormRd(this.state.rd), nq = this.nqFor(N, rd);
+    const st = qecDpStates(this.cfg());
+    const over = qecDpOverBudget(this.cfg()), hdp = qecDpHeavy(this.cfg());
+    const dc = qecDpCacheStats(), sw = this._sweepProg;
+    const c1 = this.svy && Number.isFinite(this.svy.c1) ? this.svy.c1.toFixed(3) : '—';
+    const bold = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b style="color:var(--amber)">$1</b>');
+    el.innerHTML = [
+      ['配置', 'n=' + N + ' k=' + rd + ' d=' + N + ' t=' + ((N - 1) / 2) + ' nq=' + nq + (this.heavy() ? '（重配置）' : '')],
+      ['DP 状态', st === 0 ? '0（无门分支，不受预算约束）' : st.toExponential(2) + ' · ' +
+        (over ? '**超预算** ⟹ 无精确解（仅 MC）' : '在预算内 ⟹ 有精确解') + (hdp ? ' · 扫描降到 6 点' : '')],
+      ['DP 缓存', dc.size + ' 条 · 命中 ' + dc.hit + ' / 未命中 ' + dc.miss],
+      ['单点缓存', this._ptCache.size + ' 条（断点续算用）'],
+      ['扫描', sw ? '进行中 ' + sw.i + '/' + sw.n : '已完成'],
+      ['一阶 c₁', c1],
+    ].map(([k, v]) => '<div><span style="color:var(--txt)">' + k + '</span> ' + bold(v) + '</div>').join('');
+  }
+
   renderTable(){
+    this.renderDiag();
     const s = this.state;
     const N = qecNormN(s.n);
     const t = (N - 1) / 2;   /* 可纠正个数：n=3 ⟹ 1；n=5 ⟹ 2；n=7 ⟹ 3；n=9 ⟹ 4 */
@@ -7338,6 +7367,16 @@ class QecApp {
       /* R117：逐点扫描进度（null = 已完成）+ DP 记忆化命中统计 */
       sweepProg: () => (self._sweepProg ? { ...self._sweepProg } : null),
       dpCache: () => qecDpCacheStats(),
+      /* R120：诊断面板的**结构化**版（与面板同源，测试可断言） */
+      diag: () => ({
+        n: qecNormN(self.state.n), rd: qecNormRd(self.state.rd),
+        nq: self.nqFor(qecNormN(self.state.n), qecNormRd(self.state.rd)),
+        heavy: self.heavy(),
+        dpStates: qecDpStates(self.cfg()), dpOver: qecDpOverBudget(self.cfg()), dpHeavy: qecDpHeavy(self.cfg()),
+        dpCache: qecDpCacheStats(), ptCache: self._ptCache.size,
+        sweeping: !!self._sweepProg,
+        c1: (self.svy && Number.isFinite(self.svy.c1)) ? self.svy.c1 : null,
+      }),
       /* R118：单点缓存条数（断点续算用）+ 当前整轮键（诊断为什么没命中） */
       ptCacheSize: () => self._ptCache.size,
       sweepKey: () => self._curveKey,
