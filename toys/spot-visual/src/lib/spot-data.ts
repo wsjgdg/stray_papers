@@ -755,6 +755,7 @@ export const sampleSpots: Spot[] = [
   {
     id: "9",
     name: "九寨沟风景区",
+    reservation: RESERVATION_NOTES["九寨沟风景区"],
     image: SPOT_PHOTOS["九寨沟风景区"] ?? getCategoryImageUrl("自然风光", 1),
     address: "四川省阿坝藏族羌族自治州九寨沟县",
     facilities: ["观光车", "栈道", "餐厅", "环保厕所", "氧气站", "纪念品店"],

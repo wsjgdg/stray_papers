@@ -1434,11 +1434,6 @@ function SpotsView() {
   }, [city, spots, exploreOsm]);
 
   // ═══ 随便看看：实时探索不可用（离线/限流）时，从景点库随机抽一个直接看 ═══
-  const randomBrowse = useCallback(() => {
-    const pool = spots.length > 0 ? spots : sampleSpots;
-    const pick = pool[Math.floor(Math.random() * pool.length)];
-    setSelectedSpot(pick);
-  }, [spots, setSelectedSpot]);
 
   const allCategories = useMemo(() => {
     const cats = new Set(spots.map((s) => s.category));
@@ -1555,6 +1550,18 @@ function SpotsView() {
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
   }, [spots, activeCategory, searchQuery, cityFilter, userLoc, levelFilter]);
+
+  const randomBrowse = useCallback(() => {
+    // 尊重当前筛选：有过滤结果时从过滤池随机，否则全库
+    const pool =
+      filteredSpots.length > 0
+        ? filteredSpots
+        : spots.length > 0
+          ? spots
+          : sampleSpots;
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    setSelectedSpot(pick);
+  }, [filteredSpots, spots, setSelectedSpot]);
 
   // 哨兵进入视口 → 加载下一页
   useEffect(() => {
