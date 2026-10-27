@@ -15,6 +15,8 @@ export interface Spot {
   openTime?: string;
   /** 景区等级（5A/4A/3A，来源 2023 全国 A 级景区名录） */
   level?: string;
+  /** 预约提示（仅标注有预约制/实名限流的景点） */
+  reservation?: string;
   /** 图片来源标注：osm | unsplash | pexels | pool | amap（详情弹窗展示，数据诚实性） */
   imageSource?: string;
   address: string;
@@ -824,6 +826,7 @@ export const sampleSpots: Spot[] = [
   {
     id: "13",
     name: "秦始皇兵马俑博物馆",
+    reservation: RESERVATION_NOTES["秦始皇兵马俑博物馆"],
     image:
       SPOT_PHOTOS["秦始皇兵马俑博物馆"] ?? getCategoryImageUrl("历史人文", 1),
     address: "陕西省西安市临潼区秦陵路",
@@ -883,6 +886,7 @@ export const sampleSpots: Spot[] = [
   {
     id: "16",
     name: "华山风景区",
+    reservation: RESERVATION_NOTES["黄山风景区"],
     image: SPOT_PHOTOS["华山风景区"] ?? getCategoryImageUrl("山岳景区", 1),
     address: "陕西省渭南市华阴市玉泉路",
     facilities: ["索道", "游客中心", "山顶住宿", "医疗点", "装备租赁"],
@@ -1270,7 +1274,7 @@ export const PACKLIST_UNIVERSAL = [
 // ═══ 统一库：手工精选（全字段）在前 + 城市包 POI（同名跳过，保手工版） ═══
 // 城市探索的 chips 是这个库的过滤器；POI 图片由浏览器直连高德 CDN，不占服务器出网。
 import { CITY_POI_PACKS, type CityPoi } from "./city-pois.generated";
-import { POI_DESCRIPTIONS } from "./poi-descriptions";
+import { POI_DESCRIPTIONS, RESERVATION_NOTES } from "./poi-descriptions";
 import { POI_PHOTOS } from "./poi-photos.generated";
 import { SCENIC_LEVELS, EXTRA_SCENICS } from "./scenic-enrich.generated";
 
@@ -1285,6 +1289,7 @@ export function cityPoiToSpot(city: string, p: CityPoi, index: number): Spot {
     rating: p.rating,
     openTime: p.openTime,
     level: SCENIC_LEVELS[`${city}::${p.name}`],
+    reservation: RESERVATION_NOTES[p.name],
     imageSource: p.image ? "amap" : undefined,
     address: p.address || `${city}（高德 POI）`,
     facilities: [],

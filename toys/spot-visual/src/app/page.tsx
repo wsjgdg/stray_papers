@@ -863,6 +863,19 @@ function SpotDetailDialog() {
                 </span>
               </p>
             )}
+            {spot.reservation && (
+              <div className="flex items-start gap-2 px-3.5 py-2.5 rounded-xl bg-rose-50 border border-rose-200">
+                <AlertTriangle className="w-4 h-4 text-rose-500 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-bold text-rose-700">
+                    需要提前预约
+                  </p>
+                  <p className="text-xs text-rose-600 leading-relaxed mt-0.5">
+                    {spot.reservation}
+                  </p>
+                </div>
+              </div>
+            )}
             {spot.level && (
               <p className="flex items-center gap-1.5">
                 <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-700 border border-amber-200 text-xs font-black tracking-wide">
