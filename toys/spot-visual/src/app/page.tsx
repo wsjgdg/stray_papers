@@ -14,6 +14,7 @@ import {
   Copy,
   History,
   Scale,
+  ArrowUp,
   User,
   Share2,
   Menu,
@@ -2724,6 +2725,16 @@ export default function Home() {
   const { activeView } = useAppStore();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
+  // 返回顶部：主内容是 overflow-y-auto 容器（不是 window），监听其滚动
+  const mainScrollRef = useRef<HTMLDivElement>(null);
+  const [showTop, setShowTop] = useState(false);
+  useEffect(() => {
+    const el = mainScrollRef.current;
+    if (!el) return;
+    const h = () => setShowTop(el.scrollTop > 600);
+    el.addEventListener("scroll", h, { passive: true });
+    return () => el.removeEventListener("scroll", h);
+  }, []);
 
   return (
     <div className="min-h-[calc(100vh-52px)] flex flex-col bg-gray-50/50">
@@ -2746,7 +2757,7 @@ export default function Home() {
               </div>
             </div>
             {/* Content area */}
-            <div className="flex-1 overflow-y-auto">
+            <div ref={mainScrollRef} className="flex-1 overflow-y-auto">
               <div
                 className={`${activeView === "network" ? "" : "max-w-7xl mx-auto"} p-4 sm:p-6 lg:p-8`}
               >
@@ -2782,6 +2793,17 @@ export default function Home() {
       </footer>
       <SpotDetailDialog />
       <CompareBar />
+      {showTop && (
+        <button
+          onClick={() =>
+            mainScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" })
+          }
+          title="返回顶部"
+          className="fixed bottom-20 right-5 z-40 w-11 h-11 rounded-full bg-white/95 border border-gray-200 shadow-lg flex items-center justify-center text-gray-500 hover:text-emerald-600 hover:border-emerald-200 transition-colors"
+        >
+          <ArrowUp className="w-5 h-5" />
+        </button>
+      )}
     </div>
   );
 }
