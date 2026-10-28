@@ -2333,13 +2333,22 @@ function SpotsView() {
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <MapPin className="w-12 h-12 text-gray-300 mb-4" />
           <p className="text-gray-500 mb-4">没有找到匹配的景点</p>
-          {cityFilter && (
+          {(searchQuery ||
+            activeCategory !== "全部" ||
+            levelFilter ||
+            cityFilter) && (
             <Button
               variant="outline"
-              onClick={() => setCityFilter(null)}
+              onClick={() => {
+                setSearchQuery("");
+                setActiveCategory("全部");
+                setLevelFilter(null);
+                setCityFilter(null);
+              }}
               className="gap-2 mb-2"
             >
-              清除城市筛选（{cityFilter}）
+              <X className="w-4 h-4" />
+              一键清空全部筛选
             </Button>
           )}
           <Button
