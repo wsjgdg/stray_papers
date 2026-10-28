@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7f4">
+  <meta name="description" content="A self-contained visual playground for learning algorithms and data structures, one step at a time.">
+  <title>Algorithm Lab — Learn by watching</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='11' fill='%2334675c'/%3E%3Cpath d='M12 11v18M20 16v13M28 7v22' stroke='%23d6eca8' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="model.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.3"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1.3"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1.3"/><rect x="14" y="14" width="6.5" height="6.5" rx="1.3"/></symbol>
+    <symbol id="i-playground" viewBox="0 0 24 24"><path d="M5 19V9m5 10V4m5 15v-7m5 7V7"/><path d="M3 20h19"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 6.5C9.5 4.8 6.8 4.6 3.5 5.3v13c3.3-.7 6-.4 8.5 1.2m0-13c2.5-1.7 5.2-1.9 8.5-1.2v13c-3.3-.7-6-.4-8.5 1.2m0-13v13"/></symbol>
+    <symbol id="i-sort" viewBox="0 0 24 24"><path d="M4 19V8m5 11V4m5 15v-7m5 7V7M2.5 20h19"/></symbol>
+    <symbol id="i-path" viewBox="0 0 24 24"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/><path d="M6 9v5a4 4 0 0 0 4 4h5M15 6h6M18 3v6"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5.5 5.5M8 10.5h5"/></symbol>
+    <symbol id="i-stack" viewBox="0 0 24 24"><path d="m12 3 8 4-8 4-8-4 8-4ZM4 11l8 4 8-4M4 15l8 4 8-4"/></symbol>
+    <symbol id="i-recursion" viewBox="0 0 24 24"><path d="M12 4v6M6 20v-4a6 6 0 0 1 6-6 6 6 0 0 1 6 6v4"/><circle cx="12" cy="4" r="2"/><circle cx="6" cy="20" r="2"/><circle cx="18" cy="20" r="2"/></symbol>
+    <symbol id="i-hash" viewBox="0 0 24 24"><path d="M9 3 6 21M18 3l-3 18M3 9h18M2 15h18"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4 11a8 8 0 1 1 2 6M4 4v7h7"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 19 19 5M7 5h12v12"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 10.5v5.5M12 7.4v.2"/></symbol>
+  </svg>
+
+  <div class="app-shell">
+    <div class="sidebar-scrim" id="sidebar-scrim" hidden></div>
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+      <div class="brand">
+        <a href="#top" class="brand-link"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M11 11v18M20 16v13M29 7v22"/></svg></span><span class="brand-words"><strong>algorithm lab<span>.</span></strong><small>THE VISUAL PLAYGROUND</small></span></a>
+        <button class="mobile-close icon-button" id="menu-close" aria-label="Close navigation"><svg><use href="#i-close"/></svg></button>
+      </div>
+      <div class="sidebar-inner">
+        <div class="nav-group"><p class="nav-caption">THE PLAYGROUND</p><nav class="main-nav" aria-label="Page sections"><a href="#top"><svg><use href="#i-grid"/></svg><span>Overview</span></a><a href="#sandbox" class="nav-current"><svg><use href="#i-playground"/></svg><span>Visual sandbox</span><span class="nav-dot"></span></a><a href="#field-notes"><svg><use href="#i-book"/></svg><span>Field notes</span></a></nav></div>
+        <div class="nav-group topic-group"><p class="nav-caption">EXPLORE CONCEPTS <span>06</span></p><nav class="topic-nav" aria-label="Choose a concept">
+          <button type="button" class="topic-nav-button is-active" data-topic="sorting" aria-pressed="true"><span class="topic-icon sorting-icon"><svg><use href="#i-sort"/></svg></span><span>Sorting</span><small>01</small></button>
+          <button type="button" class="topic-nav-button" data-topic="pathfinding" aria-pressed="false"><span class="topic-icon pathfinding-icon"><svg><use href="#i-path"/></svg></span><span>Pathfinding</span><small>02</small></button>
+          <button type="button" class="topic-nav-button" data-topic="binary" aria-pressed="false"><span class="topic-icon binary-icon"><svg><use href="#i-search"/></svg></span><span>Binary search</span><small>03</small></button>
+          <button type="button" class="topic-nav-button" data-topic="linear" aria-pressed="false"><span class="topic-icon linear-icon"><svg><use href="#i-stack"/></svg></span><span>Stacks &amp; queues</span><small>04</small></button>
+          <button type="button" class="topic-nav-button" data-topic="recursion" aria-pressed="false"><span class="topic-icon recursion-icon"><svg><use href="#i-recursion"/></svg></span><span>Recursion</span><small>05</small></button>
+          <button type="button" class="topic-nav-button" data-topic="hashing" aria-pressed="false"><span class="topic-icon hashing-icon"><svg><use href="#i-hash"/></svg></span><span>Hash tables</span><small>06</small></button>
+        </nav></div>
+      </div>
+      <div class="sidebar-bottom"><div class="sidebar-note"><div class="note-top"><span>✳</span><span>A NOTE FOR LEARNERS</span></div><p>Big ideas start<br>with <em>small steps.</em></p><div class="note-divider"></div><small>Take your time. Try things. <span>↗</span></small></div><div class="sidebar-foot"><span class="status-dot"></span> MADE FOR CURIOUS MINDS <span>✳</span></div></div>
+    </aside>
+
+    <div class="main-column" id="top">
+      <header class="topbar"><div class="topbar-left"><button class="mobile-menu icon-button" id="menu-open" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar"><svg><use href="#i-menu"/></svg></button><span class="mobile-wordmark">algorithm lab<span>.</span></span><span class="crumb-muted">THE ALGORITHM LAB</span><span class="crumb-slash">/</span><span class="crumb-current">Playground</span></div><div class="topbar-right"><span class="topbar-status"><i></i> EVERYTHING RUNS LOCALLY</span><a href="#collection" class="topbar-link">Explore concepts <svg><use href="#i-arrow"/></svg></a></div></header>
+      <main class="content">
+        <section class="hero" aria-labelledby="page-title"><div class="hero-copy"><div class="hero-kicker"><span class="kicker-spark">✳</span> A LITTLE LAB FOR BIG IDEAS <span class="kicker-line"></span> <span class="kicker-edition">EST. FOR CURIOSITY</span></div><h1 id="page-title">Think it through. <em>See it happen.</em></h1><p>Algorithms don’t have to be abstract. Slow them down, change the rules, and discover how they work—one step at a time.</p></div><div class="hero-aside" aria-label="Six concepts, endless discoveries"><svg class="hero-art" viewBox="0 0 110 100" aria-hidden="true"><rect x="13" y="55" width="12" height="27" rx="5"/><rect x="32" y="37" width="12" height="45" rx="5"/><rect x="51" y="48" width="12" height="34" rx="5"/><rect x="70" y="19" width="12" height="63" rx="5"/><path d="M7 87h85M88 25l7 7 9-12"/></svg><div class="hero-aside-copy"><span>LEARN BY DOING,</span><strong>one small step<br><em>at a time.</em></strong><small>06 CONCEPTS &nbsp; / &nbsp; ENDLESS CURIOSITY</small></div></div></section>
+
+        <section id="sandbox" class="sandbox-section" aria-labelledby="sandbox-heading">
+          <div class="section-heading sandbox-heading"><div><div class="section-kicker"><span>01</span> / LEARN BY DOING</div><h2 id="sandbox-heading">The visual sandbox<span class="heading-dot">.</span></h2></div><div class="topic-picker"><label for="topic-select">CHOOSE A CONCEPT</label><div class="select-wrap"><select id="topic-select" aria-label="Choose a concept"><option value="sorting">Sorting</option><option value="pathfinding">Pathfinding</option><option value="binary">Binary search</option><option value="linear">Stacks &amp; queues</option><option value="recursion">Recursion</option><option value="hashing">Hash tables</option></select></div></div></div>
+          <article class="lab-card" aria-labelledby="lab-title">
+            <div class="lab-header"><div class="lab-heading-wrap"><span class="lab-heading-icon sorting-icon" id="lab-icon"><svg><use href="#i-sort"/></svg></span><div><div class="lab-overline" id="lab-overline">CONCEPT 01 <span> / </span> SORTING</div><h3 id="lab-title">How do things get into order?</h3></div></div><div class="lab-header-actions"><span class="interactive-badge"><i></i> INTERACTIVE</span><button type="button" class="reset-button" id="reset-button"><svg><use href="#i-reset"/></svg><span>Reset</span></button></div></div>
+            <div class="lab-body"><div class="experiment-column"><div class="scene" id="scene"><canvas id="experiment-canvas" role="img" aria-label="A visual representation of an unsorted array of numbers."></canvas><div class="scene-topline"><span><i></i> <span id="scene-label">BUBBLE SORT</span></span><span id="step-indicator">STEP 00 / 00</span></div><div class="scene-bottomline"><span id="scene-hint">Watch neighbors compare and swap</span><span id="scene-status">READY TO EXPLORE</span></div></div><div class="control-surface" id="control-surface"></div></div>
+              <div class="insight-panel"><div class="panel-overline"><span>THE KNOWLEDGE POINT</span><span id="topic-fraction">01 / 06</span></div><h3 id="insight-title">Order, one swap at a time.</h3><p class="insight-copy" id="insight-copy"></p><div class="metrics" id="metrics"></div><div class="complexity" id="complexity"></div><div class="try-box"><span class="try-icon">✳</span><div><span class="try-label" id="message-label">WHAT'S HAPPENING</span><p id="live-message" aria-live="polite"></p></div></div><a href="#field-notes" class="notes-link"><span>Read the field notes</span><svg><use href="#i-arrow"/></svg></a></div>
+            </div>
+          </article>
+          <p class="sandbox-footnote"><svg><use href="#i-info"/></svg> The visualizations show simplified teaching examples. Use Step to follow every decision.</p>
+        </section>
+
+        <section class="collection-section" id="collection" aria-labelledby="collection-heading"><div class="section-heading collection-heading"><div><div class="section-kicker"><span>02</span> / FOLLOW YOUR CURIOSITY</div><h2 id="collection-heading">Six ideas to play with<span class="heading-dot">.</span></h2><p>Choose a concept, make a change, and see what happens next.</p></div><span class="collection-count"><span>✳</span> 06 INTERACTIVE CONCEPTS</span></div>
+          <div class="topic-cards">
+            <button class="topic-card" type="button" data-topic="sorting"><div class="card-art art-sorting"><span class="art-index">01 / 06</span><span class="art-tag">ORDERING</span><svg viewBox="0 0 320 124" aria-hidden="true"><rect x="60" y="68" width="19" height="28" rx="5"/><rect x="88" y="41" width="19" height="55" rx="5"/><rect x="116" y="56" width="19" height="40" rx="5"/><rect x="144" y="31" width="19" height="65" rx="5"/><rect x="172" y="51" width="19" height="45" rx="5"/><rect x="200" y="22" width="19" height="74" rx="5"/><rect x="228" y="39" width="19" height="57" rx="5"/><path d="M49 102h210"/></svg></div><div class="card-content"><span class="card-category">COMPARISONS &amp; SWAPS</span><h3>Sorting</h3><p>Turn a jumble of values into an ordered list.</p><span class="card-cta">Explore this concept <span>↗</span></span></div></button>
+            <button class="topic-card" type="button" data-topic="pathfinding"><div class="card-art art-path"><span class="art-index">02 / 06</span><span class="art-tag">GRAPH SEARCH</span><svg viewBox="0 0 320 124" aria-hidden="true"><path d="M74 31h168M74 52h168M74 73h168M74 94h168M74 31v63M102 31v63M130 31v63M158 31v63M186 31v63M214 31v63M242 31v63"/><path class="art-accent" d="M88 42h28v42h56V63h56"/><circle cx="88" cy="42" r="5"/><circle cx="228" cy="63" r="5"/></svg></div><div class="card-content"><span class="card-category">FRONTIERS &amp; ROUTES</span><h3>Pathfinding</h3><p>Find your way through a world of possibilities.</p><span class="card-cta">Explore this concept <span>↗</span></span></div></button>
+            <button class="topic-card" type="button" data-topic="binary"><div class="card-art art-binary"><span class="art-index">03 / 06</span><span class="art-tag">SEARCHING</span><svg viewBox="0 0 320 124" aria-hidden="true"><rect x="40" y="52" width="34" height="34" rx="5"/><rect x="81" y="52" width="34" height="34" rx="5"/><rect x="122" y="52" width="34" height="34" rx="5"/><rect x="163" y="52" width="34" height="34" rx="5"/><rect x="204" y="52" width="34" height="34" rx="5"/><rect x="245" y="52" width="34" height="34" rx="5"/><path class="art-accent" d="M180 33v12m-5-5 5 5 5-5"/><circle cx="180" cy="69" r="4"/></svg></div><div class="card-content"><span class="card-category">DIVIDE &amp; CONQUER</span><h3>Binary search</h3><p>Cut the search space in half, again and again.</p><span class="card-cta">Explore this concept <span>↗</span></span></div></button>
+            <button class="topic-card" type="button" data-topic="linear"><div class="card-art art-linear"><span class="art-index">04 / 06</span><span class="art-tag">DATA STRUCTURES</span><svg viewBox="0 0 320 124" aria-hidden="true"><rect x="115" y="70" width="90" height="18" rx="4"/><rect x="115" y="49" width="90" height="18" rx="4"/><rect x="115" y="28" width="90" height="18" rx="4"/><path class="art-accent" d="M160 15v-7m-5 5 5-5 5 5M96 31h-9v55h9"/></svg></div><div class="card-content"><span class="card-category">FIRST IN, LAST OUT</span><h3>Stacks &amp; queues</h3><p>See how the order of removal changes everything.</p><span class="card-cta">Explore this concept <span>↗</span></span></div></button>
+            <button class="topic-card" type="button" data-topic="recursion"><div class="card-art art-recursion"><span class="art-index">05 / 06</span><span class="art-tag">PROBLEM SOLVING</span><svg viewBox="0 0 320 124" aria-hidden="true"><path d="M160 27v22M160 49l-52 27M160 49l52 27M108 76l-25 22M108 76l25 22M212 76l-25 22M212 76l25 22"/><circle cx="160" cy="27" r="7"/><circle cx="108" cy="76" r="6"/><circle cx="212" cy="76" r="6"/><circle cx="83" cy="98" r="4"/><circle cx="133" cy="98" r="4"/><circle cx="187" cy="98" r="4"/><circle cx="237" cy="98" r="4"/></svg></div><div class="card-content"><span class="card-category">CALLS &amp; BASE CASES</span><h3>Recursion</h3><p>Break a problem down into smaller versions of itself.</p><span class="card-cta">Explore this concept <span>↗</span></span></div></button>
+            <button class="topic-card" type="button" data-topic="hashing"><div class="card-art art-hashing"><span class="art-index">06 / 06</span><span class="art-tag">FAST LOOKUPS</span><svg viewBox="0 0 320 124" aria-hidden="true"><rect x="59" y="43" width="34" height="39" rx="5"/><rect x="100" y="43" width="34" height="39" rx="5"/><rect x="141" y="43" width="34" height="39" rx="5"/><rect x="182" y="43" width="34" height="39" rx="5"/><rect x="223" y="43" width="34" height="39" rx="5"/><path class="art-accent" d="M158 25v12m-5-5 5 5 5-5M197 62h6m-3-3v6"/></svg></div><div class="card-content"><span class="card-category">KEYS &amp; COLLISIONS</span><h3>Hash tables</h3><p>Turn a key into a place—and handle collisions.</p><span class="card-cta">Explore this concept <span>↗</span></span></div></button>
+          </div>
+        </section>
+        <section class="field-notes-section" id="field-notes" aria-labelledby="notes-heading"><div class="notes-intro"><div class="section-kicker"><span>03</span> / THE FIELD NOTES</div><h2 id="notes-heading">A little more <em>context.</em></h2><p>The idea behind the experiment, in plain language.</p><span class="notes-current" id="notes-current">CURRENTLY READING &nbsp; / &nbsp; SORTING</span></div><div class="notes-grid"><article><span>01 / THE PRINCIPLE</span><h3 id="note-one-title"></h3><p id="note-one"></p></article><article><span>02 / TRY IT YOURSELF</span><h3 id="note-two-title"></h3><p id="note-two"></p></article><article><span>03 / THE BIGGER PICTURE</span><h3 id="note-three-title"></h3><p id="note-three"></p></article></div></section>
+        <section class="closing"><div><span class="closing-star">✳</span><p>There’s no rush.<br><em>That’s how learning works.</em></p></div><div><strong>PLAY, PAUSE, AND WONDER.</strong><small>Everything in this playground runs in your browser.<br>No sign-in, no installation, no outside services.</small></div><a href="#sandbox">Back to the sandbox ↑</a></section>
+        <footer class="page-footer"><span>✳ &nbsp; ALGORITHM LAB / A VISUAL PLAYGROUND</span><span>MADE FOR THE ENDLESSLY CURIOUS</span><a href="#top">BACK TO TOP ↑</a></footer>
+      </main>
+    </div>
+  </div>
+  <noscript><div class="no-script">The visual sandbox needs JavaScript. Please enable it to run the experiments.</div></noscript>
+</body>
+</html>
