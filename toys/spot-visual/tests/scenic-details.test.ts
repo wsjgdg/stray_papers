@@ -23,6 +23,8 @@ describe("scenic details propagation", () => {
       if (d.tel) expect(s.tel, `${s.name} 电话未携带`).toBe(d.tel);
       if (d.openTime)
         expect(s.openTime, `${s.name} 开放时间未携带`).toBe(d.openTime);
+      if (d.rating)
+        expect(s.rating, `${s.name} 评分未携带`).toBe(Number(d.rating));
     }
   });
 

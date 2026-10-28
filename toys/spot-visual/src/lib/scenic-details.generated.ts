@@ -4,6 +4,7 @@ export interface ScenicDetail {
   tel: string;
   openTime: string;
   image: string;
+  rating: string;
   match: number;
 }
 
@@ -13,12 +14,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "06:00-17:30（17:00停售停检）",
     image:
       "http://store.is.autonavi.com/showpic/67fedede4e30d83372fe0f94533ad06b",
+    rating: "",
     match: 1,
   },
   慕田峪长城: {
     tel: "010-61626849",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   圆明园遗址公园: {
@@ -26,6 +29,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "04月01日至10月31日 06:00-21:00 售票时间:07:00-19:00 停止售票:19:00 停止入场:19:00；11月01日至03月31日 06:30-19:30 售票时间:07:00-17:30 停止售票:17:30 停止入场:17:30",
     image: "http://store.is.autonavi.com/showpic/54f84ceca310a67e40c4ec07",
+    rating: "",
     match: 1,
   },
   颐和园: {
@@ -34,6 +38,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "4月至10月 周二至周日 08:00-18:00；1月至3月,11月至12月 周二至周日 08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/2e64ad60b8693be6da0cb527bd7b0579",
+    rating: "",
     match: 0.99,
   },
   北京市奥林匹克公园: {
@@ -41,6 +46,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 05:00-22:00",
     image:
       "https://store.is.autonavi.com/showpic/c6cfc0fac2a567d70000002997552091",
+    rating: "",
     match: 0.89,
   },
   十三陵: {
@@ -48,6 +54,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "04/01-10/08 08:30-18:00开放；10/09-03/31 08:30-17:00开放",
     image:
       "https://store.is.autonavi.com/showpic/4b84bd3ced90559d0000002099140460?type=pic",
+    rating: "",
     match: 1,
   },
   "天津古文化街旅游区（津门故里）": {
@@ -55,6 +62,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/78b23fea5c9f5f330000003852996008?type=pic",
+    rating: "",
     match: 1,
   },
   西柏坡景区: {
@@ -62,6 +70,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-17:00",
     image:
       "https://store.is.autonavi.com/showpic/0608a1c67e1998189a6b3ff98f00b976",
+    rating: "",
     match: 1,
   },
   承德市滦平县金山岭长城景区: {
@@ -70,6 +79,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 05:00-17:30 最晚进入16:00；4月至10月 周一至周日 04:30-18:00 最晚进入17:00；景区东门入园时间:08:30，停止入园:15:30，东五眼楼开门时间:09:00，东五眼楼关闭时间:16:30；",
     image:
       "http://store.is.autonavi.com/showpic/9378580842a2f51a4f00a78cad8b13b5",
+    rating: "",
     match: 0.96,
   },
   山海关景区: {
@@ -77,12 +87,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0LKMA4HYU/comment/0C13322F_C2C9_409E_8438_3AFACE16FFC3_L0_001_1119_191_1768380287884_63089496.jpg",
+    rating: "",
     match: 1,
   },
   清东陵: {
     tel: "0315-6940888",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   野三坡景区: {
@@ -90,6 +102,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-19:00",
     image:
       "https://store.is.autonavi.com/showpic/43b7b1ec309b25060000003036610500?type=pic",
+    rating: "",
     match: 0.96,
   },
   白石山景区: {
@@ -97,6 +110,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/1cea6c21bad0a8e5055e83b0b674083a",
+    rating: "",
     match: 1,
   },
   清西陵景区: {
@@ -104,12 +118,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "4月1日至10月31日(夏令时) 08:00-17:30开放；11月1日至3月31日(冬令时) 08:30-17:00开放, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.98,
   },
   白洋淀景区: {
     tel: "",
     openTime: "周一至周日 08:00-18:00",
     image: "",
+    rating: "",
     match: 0.97,
   },
   涉县娲皇宫: {
@@ -117,6 +133,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/f0b9200d3e45e1b29a133b8472c74cd4",
+    rating: "",
     match: 0.6,
   },
   槟榔谷黎苗文化旅游区: {
@@ -124,12 +141,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/7FA635772E0E47A587302BB09AF32E86",
+    rating: "",
     match: 0.99,
   },
   海南呀诺达雨林文化旅游区: {
     tel: "",
     openTime: "周一至周日 08:30-18:00",
     image: "",
+    rating: "",
     match: 0.75,
   },
   海南分界洲岛旅游区: {
@@ -137,6 +156,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-22:00",
     image:
       "https://store.is.autonavi.com/showpic/94238E5282CE42B8A860CF78C9B65EC1",
+    rating: "",
     match: 0.83,
   },
   云冈石窟: {
@@ -144,6 +164,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/9cc62bd406784184d9b00bad58f9164a",
+    rating: "",
     match: 1,
   },
   忻州市五台山风景名胜区: {
@@ -151,6 +172,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/60db764dd61cc7eb48e8e5565dcd376c",
+    rating: "",
     match: 1,
   },
   平遥古城景区: {
@@ -159,6 +181,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "01-01至10-09 周一至周日 00:00-24:00；10-10至12-31 周一至周日 08:00-17:30 最晚进入17:15；自10月10日起，平遥古城景区执行冬季运营时间:各景点（含双林寺、镇国寺）开放时间调整为:8:00—17:30，各景点闭馆前15分钟停止检票，当日最晚购票时间为17:00。 2026年10月1日起，平遥古城城墙部分段落开展日常保养维护工程，本次修缮范围为南门城墙云路以东段、北门城墙以东段。为保障游客人身安全，确保修缮工作顺利推进，修缮期间上述路段暂停对游客开放通行、参观。恢复开放时间另行通知。",
     image:
       "http://store.is.autonavi.com/showpic/6766ebd3c75bac8f1968394b263be1fd",
+    rating: "",
     match: 1,
   },
   太行山八泉峡景区: {
@@ -166,6 +189,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0H6FS2PSI/comment/58fe0138f5696fe38fd1a259349c90a6_2048_2048_80.jpg",
+    rating: "",
     match: 0.98,
   },
   洪洞大槐树寻根祭祖园: {
@@ -173,6 +197,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/08900fe29e7108ec452a484eb8c13600",
+    rating: "",
     match: 1,
   },
   乡宁县云丘山景区: {
@@ -181,6 +206,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 08:00-18:00 最晚进入16:30；4月至10月 周一至周日 08:00-19:00 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/c2c2b3e760214b9e2b63c2107e90ad07",
+    rating: "",
     match: 1,
   },
   响沙湾旅游景区: {
@@ -188,6 +214,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/0ed442798de5425844e45614cd881047",
+    rating: "",
     match: 0.59,
   },
   成吉思汗陵陵游区: {
@@ -195,6 +222,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "10月8日至4月30日 08:00-17:30,5月1日至10月7日 08:00-18:30",
     image:
       "http://store.is.autonavi.com/showpic/257d7f6309d32c9ecd6fe547b7e61ddb",
+    rating: "",
     match: 0.71,
   },
   阿斯哈图石林景区: {
@@ -203,6 +231,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "08:00-17:30 最晚进入17:30如遇恶劣天气,景区可能临时闭园或更改当天开放时间。请关注出行当天天气情况,如不确定可在出行前拨打景区电话咨询。具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/3e57137c742c5584366b5f9d11763418",
+    rating: "",
     match: 0.64,
   },
   胡杨林景区: {
@@ -210,6 +239,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-19:30",
     image:
       "http://store.is.autonavi.com/showpic/005aa23fdfdaf3bdd92f13b93028bfc2",
+    rating: "",
     match: 1,
   },
   长春伪满皇宫博物院: {
@@ -218,6 +248,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "08-07至09-06 周一至周四 08:30-17:30 最晚进入16:30；08-07至09-06 周五至周日 08:30-18:30 最晚进入17:30；09-07至09-24 周一至周日 08:30-17:30 最晚进入16:30；09-25至10-02 周一至周日 08:30-19:00 最晚进入17:40；10-03至10-06 周一至周日 08:10-19:00 最晚进入17:40；10-07至10-07 周一至周日 08:30-19:00 最晚进入17:40；10-08至12-31 周一至周日 08:30-17:30 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/3955330b3436bdd66c41383d04c6e981",
+    rating: "",
     match: 1,
   },
   长春净月潭景区: {
@@ -225,6 +256,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/7b0fbb1726b78d21aca0aefcb19d8c76",
+    rating: "",
     match: 0.92,
   },
   长春世界雕塑园: {
@@ -233,6 +265,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1/1-12/31 05:00–22:00开放；国庆节 09:00–20:00开放 最晚售票19:00；展馆参观时间 1、周一到周五9.00-16.30 2、周六到周日9.00-21.00",
     image:
       "http://store.is.autonavi.com/showpic/7d52334b1d9bc51bec20169599aa09e6",
+    rating: "",
     match: 1,
   },
   高句丽文物古迹旅游景区: {
@@ -240,6 +273,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B01B30MDWI/comment/content_media_external_images_media_4905975_ss__1731668309885_96033368.jpg",
+    rating: "",
     match: 1,
   },
   长白山景区: {
@@ -247,12 +281,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:30 最晚进入13:00",
     image:
       "http://store.is.autonavi.com/showpic/fd89a7115ee6102258de85019055638c",
+    rating: "",
     match: 1,
   },
   六鼎山文化旅游区: {
     tel: "",
     openTime: "3月4日-12月31日 08:00-17:00",
     image: "",
+    rating: "",
     match: 0.98,
   },
   汤旺河林海奇石景区: {
@@ -260,6 +296,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "05月01日至10月07日 周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/5764fe6bb051eba7b10b7323fbf95c33",
+    rating: "",
     match: 1,
   },
   五大连池风景区: {
@@ -267,6 +304,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/8d9ba04b410fd39c01b6f0060f98141c",
+    rating: "",
     match: 1,
   },
   上海野生动物园: {
@@ -275,6 +313,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "2月-6月，9月平日，10月8日-11月30日（常规）:9:00-17:00，16:00停止检票,车入区、水域探秘运行时间:9:15-16:30 ；夜公园:7-8月，9月双休日、节假日，国庆期间:9:00-21:00,19:30停止检票；车入区运行时间:9:15-20:30，水域探秘运行时间: 9:15-19:00；12月-1月:9:00-16:30，15:30停止检票；车入区、水域探秘运行时间:9:15-16:00，具体以现场为准",
     image:
       "http://store.is.autonavi.com/showpic/ab0d73779e656b4479a6e95d00eaa90f",
+    rating: "",
     match: 1,
   },
   上海科技馆: {
@@ -282,12 +321,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/be6fa24537bdc19c0000002944006222?type=pic",
+    rating: "",
     match: 1,
   },
   乌镇景区: {
     tel: "",
     openTime: "周一至周日 09:00-22:00",
     image: "",
+    rating: "",
     match: 1,
   },
   湖州市南浔古镇景区: {
@@ -295,6 +336,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-21:30",
     image:
       "https://store.is.autonavi.com/showpic/05db17f5cb961ef6f1bb5f140ed99a96",
+    rating: "",
     match: 0.57,
   },
   南浔古镇景区: {
@@ -302,6 +344,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-21:30",
     image:
       "https://store.is.autonavi.com/showpic/05db17f5cb961ef6f1bb5f140ed99a96",
+    rating: "",
     match: 1,
   },
   淳安县千岛湖风景区: {
@@ -309,6 +352,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/99da33edca7e4fbd0000005518934350?type=pic",
+    rating: "",
     match: 0.82,
   },
   杭州西湖景区: {
@@ -316,12 +360,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/78e3e7b400e9290d0000003670488183",
+    rating: "",
     match: 1,
   },
   西溪湿地公园景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   溪口滕头旅游景区: {
@@ -329,6 +375,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/ff2e6dcf13141b0ee1439b13ee2f1de2",
+    rating: "",
     match: 0.86,
   },
   "天一阁·月湖景区": {
@@ -336,6 +383,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00；具体营业状态以当天开放情况为准",
     image:
       "https://store.is.autonavi.com/showpic/f12a3e75996343670000003147306642?type=pic",
+    rating: "",
     match: 1,
   },
   "溪口—滕头景区": {
@@ -343,6 +391,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/17e55521713ab3d8d54bc92da52029cb",
+    rating: "",
     match: 0.8,
   },
   衢州开化根宫佛国文化旅游区: {
@@ -350,6 +399,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/50d492adcbc45c7081db6a2c90f721e0",
+    rating: "",
     match: 0.67,
   },
   根宫佛国文化旅游区: {
@@ -357,6 +407,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/50d492adcbc45c7081db6a2c90f721e0",
+    rating: "",
     match: 1,
   },
   "鲁迅故里.沈园景区(鲁迅故里）": {
@@ -365,6 +416,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一 8:30-17:00(16:30停止预约,16:45停止入园)；周二至周日 8:30-21:00(20:00停止预约,20:30停止入园)；黄金周,小长假 8:30-22:30(21:30停止预约)",
     image:
       "http://store.is.autonavi.com/showpic/47f4c118a1671ef0e98d5b338aea08bb",
+    rating: "",
     match: 1,
   },
   "鲁迅故里.沈园景区（沈园景区）": {
@@ -373,6 +425,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一 08:30-17:00 最晚进入16:45；周二至周日 08:30-21:00 最晚进入20:30；黄金周、小长假:8:30-22:30 22:00停止入园",
     image:
       "http://store.is.autonavi.com/showpic/f2e3457434fa7df53c2e7a1ce84383e8",
+    rating: "",
     match: 0.57,
   },
   "绍兴鲁迅故里·沈园景区": {
@@ -380,18 +433,21 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/a22fd39ca035558256b575531541cd5c",
+    rating: "",
     match: 0.66,
   },
   神仙居景区: {
     tel: "0576-87038686",
     openTime: "周一至周日 07:00-17:00",
     image: "",
+    rating: "",
     match: 0.99,
   },
   天台山风景名胜区: {
     tel: "",
     openTime: "08:00-16:00 最晚进入16:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 1,
   },
   横店影视城5A级景区: {
@@ -399,6 +455,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/7b55281e01a73bbb475e66b9cb4cb5f8",
+    rating: "",
     match: 0.94,
   },
   肥西三河古镇: {
@@ -406,12 +463,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/4ad15ffed5322d9f228b1c500e2e1272",
+    rating: "",
     match: 0.65,
   },
   八里河旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   天堂寨景区: {
@@ -419,12 +478,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/9f94d29f47abd7a537d2dff98d28045b",
+    rating: "",
     match: 0.99,
   },
   万佛湖景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   方特旅游区: {
@@ -433,6 +494,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05-01至05-05 周一至周二,周六至周日 09:00-18:00；05-06至05-15 周一至周五 09:30-17:30；05-06至05-15 周六至周日 09:30-18:00；05-16至05-31 周一至周五 09:30-17:30；05-16至05-31 周六至周日 09:30-20:30",
     image:
       "https://store.is.autonavi.com/showpic/04cd82032011520dac538f42dda17907",
+    rating: "",
     match: 0.94,
   },
   绩溪龙川景区: {
@@ -440,6 +502,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/12c797909a8f57355b100e9363ab152f",
+    rating: "",
     match: 1,
   },
   九华山景区: {
@@ -447,6 +510,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/73bc9ae78f4c50ca8643ddc746bb8d90",
+    rating: "",
     match: 1,
   },
   黄山景区: {
@@ -454,6 +518,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:30-17:10",
     image:
       "https://store.is.autonavi.com/showpic/9c9a86b299636a570000000971430935?type=pic",
+    rating: "",
     match: 0.98,
   },
   武夷山市风景名胜区: {
@@ -461,6 +526,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/c017ea969120f15b7d63470ff1087e34",
+    rating: "",
     match: 1,
   },
   "福建土楼（永定）旅游景区": {
@@ -468,6 +534,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "https://aos-comment.amap.com/B02550ON8H/comment/edfb2446ed6b75d5b972d368c2303a54_2048_2048_80.jpg",
+    rating: "",
     match: 0.64,
   },
   "福建土楼（南靖）旅游景区": {
@@ -475,6 +542,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30；具体营业状态以当天开放情况为准",
     image:
       "http://store.is.autonavi.com/showpic/f9a728884bd5c9d837ac231542bf5bc6",
+    rating: "",
     match: 0.67,
   },
   "宁德市屏南县白水洋·鸳鸯溪旅游区": {
@@ -483,6 +551,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "04-01至10-24 周一至周日 07:30-16:00；10-25至03-31 周一至周日 08:00-15:30",
     image:
       "http://store.is.autonavi.com/showpic/da09e338abd7e6f6dd2bb9a308ef78bb",
+    rating: "",
     match: 0.99,
   },
   福州市三坊七巷历史文化街区景区: {
@@ -490,6 +559,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-22:00",
     image:
       "http://store.is.autonavi.com/showpic/9e8b3ddc5b9f3492f6a9632cc4c4530a",
+    rating: "",
     match: 0.99,
   },
   莆田市湄洲岛妈祖文化旅游区: {
@@ -497,6 +567,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-21:00",
     image:
       "https://store.is.autonavi.com/showpic/81f3b88e669196ea6bcd94dee2dd8c81",
+    rating: "",
     match: 0.68,
   },
   江西省景德镇市古窑民俗博览区: {
@@ -504,6 +575,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/18f1f512efb97ae41d7c4c19b239856d",
+    rating: "",
     match: 0.71,
   },
   江西省南昌市滕王阁旅游区: {
@@ -512,6 +584,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至9月 周一至周日 08:00-22:00 最晚进入21:00；景区分场次入园，请按选择的入园时间段内检票入园。 重大活动日期开放时间请参考官方通知 10-01至10-01 周一至周日 08:00-15:00；10-02至12-31 周一至周日 08:00-22:00 最晚进入21:00；景区分场次入园，请按选择的入园时间段内检票入园。 重大活动日期开放时间请参考官方通知",
     image:
       "http://store.is.autonavi.com/showpic/38e62fd572d642c9eedf5dd117109f36",
+    rating: "",
     match: 1,
   },
   天下第一泉: {
@@ -519,12 +592,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/634af966b48ea23e83c1eacb9329f65f",
+    rating: "",
     match: 1,
   },
   台儿庄古城景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   黄河口生态旅游区: {
@@ -533,6 +608,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "夏季(5月1日-9月30日):08:30-17:00；冬季(国庆节后-次年4月30日):08:30-16:30具体时间以官方公告为准",
     image:
       "http://store.is.autonavi.com/showpic/92c6f744bb86976d12179ac307b7a76c",
+    rating: "",
     match: 0.99,
   },
   青州古城旅游区: {
@@ -541,6 +617,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "00:00-24:00,阜财门、偶园闭园时间为21:00,其他古城小景点闭园时间为17:30",
     image:
       "http://store.is.autonavi.com/showpic/20247c527cb36f417310b42f91b57e68",
+    rating: "",
     match: 1,
   },
   "济宁市曲阜明故城（三孔）旅游区": {
@@ -548,6 +625,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/e6b4c499af7625848e96260d3afd54a9",
+    rating: "",
     match: 0.99,
   },
   泰山景区: {
@@ -555,6 +633,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B021A0019A/comment/2f7e03acf04c5eadf366b87614a4d38d_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   威海市刘公岛景区: {
@@ -562,6 +641,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "7:30-17:30，16:00停止入园",
     image:
       "http://store.is.autonavi.com/showpic/a92991b5cde628656b99f7ca1c64de40",
+    rating: "",
     match: 1,
   },
   威海华夏城景区: {
@@ -570,6 +650,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "9月22日-10月6日:8:00-17:30,停止售/检票:17:00,10月7日起:8:00-17:00,停止售/检票16:30 ",
     image:
       "http://store.is.autonavi.com/showpic/bf5728fc4eb7de8a0bf021ea80c63bae",
+    rating: "",
     match: 1,
   },
   沂蒙山旅游区: {
@@ -577,6 +658,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-16:30",
     image:
       "http://store.is.autonavi.com/showpic/2bce9dfb7de8b16cf29c4f79f6367302",
+    rating: "",
     match: 1,
   },
   少林景区: {
@@ -584,6 +666,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFFP1MWC/comment/dfe9d539832f98b4ee2f1a841545a356_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   清明上河园: {
@@ -591,18 +674,21 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-22:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/6c2fd23c-b435-4ae7-afc4-f562a87ce832.jpg",
+    rating: "",
     match: 1,
   },
   龙潭大峡谷: {
     tel: "0379-69721188",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   洛阳白云山景区: {
     tel: "0379-66590004",
     openTime: "周一至周日 08:00-17:30",
     image: "",
+    rating: "",
     match: 1,
   },
   老君山风景区: {
@@ -610,6 +696,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFKN56QR/comment/content_media_external_images_media_1000091186_ss__1738808307513_93566657.jpg",
+    rating: "",
     match: 0.99,
   },
   鸡冠洞景区: {
@@ -617,6 +704,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/f5d7436e73e175c721f2ca127bc96c70",
+    rating: "",
     match: 1,
   },
   尧山景区: {
@@ -624,6 +712,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B0FFKH6F1W/comment/content_media_external_file_100002297_1772776123471_90657959.jpg",
+    rating: "",
     match: 0.98,
   },
   "老界岭—恐龙遗迹园景区": {
@@ -631,12 +720,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-15:30",
     image:
       "http://store.is.autonavi.com/showpic/3ba545ea012be5f6e479339f022bb0df",
+    rating: "",
     match: 0.96,
   },
   嵖岈山风景区: {
     tel: "0396-4779888",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   屈原故里文化旅游区: {
@@ -644,6 +735,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-17:00,2026年2月16日闭园",
     image:
       "http://store.is.autonavi.com/showpic/0547aa0c926bd231c493db2280f7bb10",
+    rating: "",
     match: 1,
   },
   三峡人家景区: {
@@ -651,6 +743,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/282b308ca5c3849c84fa40b1cf9facd4",
+    rating: "",
     match: 0.99,
   },
   宜昌市三峡大瀑布旅游区: {
@@ -658,6 +751,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "8:00-16:30(停止售票时间)",
     image:
       "http://store.is.autonavi.com/showpic/eaa5da3f24ff39c204a85a6dbba8f710",
+    rating: "",
     match: 0.95,
   },
   武当山风景区: {
@@ -665,24 +759,28 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-17:30 最晚进入17:30",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/c0393da4-6dc9-452f-b580-7be6202f1adf.jpg",
+    rating: "",
     match: 0.99,
   },
   咸宁市赤壁古战场景区: {
     tel: "0715-5788888",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.62,
   },
   恩施州神农溪纤夫文化旅游区: {
     tel: "",
     openTime: "09:00-14:30, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.64,
   },
   恩施大峡谷景区: {
     tel: "",
     openTime: "05月12日至11月30日 ��08:00-16:00 停止售票:15:00 停止入场:16:00",
     image: "",
+    rating: "",
     match: 0.99,
   },
   恩施州利川腾龙洞景区: {
@@ -691,6 +789,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:30-17:30 最晚进入15:50；2月12日(腊月二十五)-3月3日(正月十五)期间演出时间为:歌舞:11:10-16:00；激光:10:20-15:00；2月18日起8:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/24c009312ae8aefd4b16f8eebf8a57b8",
+    rating: "",
     match: 0.87,
   },
   佛山市长鹿旅游休博园: {
@@ -699,6 +798,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周五:9:30-18:00；周六9:30-19:00；周日:9:30-18:30；（实际闭园时间以景区当天公布为准）",
     image:
       "http://store.is.autonavi.com/showpic/bde0c454d02b1e147940f2d732b2ca99",
+    rating: "",
     match: 1,
   },
   梅州市雁南飞茶田景区: {
@@ -706,6 +806,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/eec80a51998afeeb79bd20c3e9c04d11",
+    rating: "",
     match: 0.62,
   },
   惠州市罗浮山景区: {
@@ -713,6 +814,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "景区 07:00-18:00 ,纪念馆和索道, 07:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/a41f29cdb2fa87f1cbf1358ea43461ae",
+    rating: "",
     match: 1,
   },
   中山市孙中山故里旅游区: {
@@ -720,6 +822,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/40a2b27a6b5c288f0000003226458688?type=pic",
+    rating: "",
     match: 0.83,
   },
   江门市开平碉楼文化旅游区: {
@@ -727,6 +830,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "09:00-17:30,2026年2月16日09:00-14:00",
     image:
       "http://store.is.autonavi.com/showpic/2f4725fe74b6f92a4cf8a1c7c841e731",
+    rating: "",
     match: 1,
   },
   阳江市海陵岛大角湾海上丝路旅游区: {
@@ -734,6 +838,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "9:30-17:30,最迟入园16:45",
     image:
       "http://store.is.autonavi.com/showpic/fe61dc506d79d82002812087922f11be",
+    rating: "",
     match: 0.97,
   },
   北海涠洲岛南湾鳄鱼山景区: {
@@ -742,6 +847,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-18:00 最晚进入18:00；航班时间参考所购船票，节假日或天气情况等原因，航班时间会有变动，以实际下单后接收通知为准。",
     image:
       "http://store.is.autonavi.com/showpic/e4e83b76bdd42ed8a2b65f5ade9fa568",
+    rating: "",
     match: 1,
   },
   德天跨国瀑布景区: {
@@ -749,6 +855,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/33a0ecbd61db3dca9e85f8f350faebc3",
+    rating: "",
     match: 1,
   },
   山岔湾景区: {
@@ -756,6 +863,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFG9EA77/comment/75b877509227702dd9bc21233acdef4b_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   大小洞天旅游区: {
@@ -763,6 +871,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/81829786a89d893cdad00bf39b76b780",
+    rating: "",
     match: 0.99,
   },
   重庆大足石刻景区: {
@@ -771,12 +880,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "08:30-18:00 最晚进入16:10停止售票:16:00 停止入园:16:10, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/c8e2978724fc3b0ad6f222d428e0a3fb",
+    rating: "",
     match: 1,
   },
   "重庆武隆喀斯特旅游区（天生三桥·仙女山·芙蓉洞）": {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.71,
   },
   重庆万盛黑山谷景区: {
@@ -784,12 +895,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/3a4b4673-c9b3-422e-b057-364ae58d2d94.jpg",
+    rating: "",
     match: 0.63,
   },
   重庆江津四面山景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.68,
   },
   重庆云阳龙缸景区: {
@@ -797,6 +910,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "夏令:08:00-18:30,15:30停止入场；冬令:08:30-17:30,15:00停止入场",
     image:
       "http://store.is.autonavi.com/showpic/d2af73ac129de09e649ee72a0045b655",
+    rating: "",
     match: 0.96,
   },
   重庆彭水阿依河景区: {
@@ -805,6 +919,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05-01至10-07 周一至周日 08:30-18:00 最晚进入16:30；10-08至04-30 周一至周日 09:00-17:30 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/036912540a3e0f2fe64d1d29e5f926db",
+    rating: "",
     match: 1,
   },
   "重庆奉节白帝城——瞿塘峡景区": {
@@ -813,6 +928,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 07:40-19:00 最晚进入17:30；停止售票:17:00 停止入场:17:30",
     image:
       "https://store.is.autonavi.com/showpic/9ce0418bf12e654b0000002439832038?type=pic",
+    rating: "",
     match: 0.91,
   },
   "青城山--都江堰旅游景区": {
@@ -821,6 +937,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "03-02至10-31 周一至周日 08:00-18:00 最晚进入17:30；11-01至03-01 周一至周日 08:00-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/31fab45390b5932dfa51a67dbf8548f4",
+    rating: "",
     match: 0.97,
   },
   安仁古镇景区: {
@@ -828,6 +945,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/85b4ab6cb35e4f2e225abea68265a62d",
+    rating: "",
     match: 1,
   },
   峨眉山风景名胜区: {
@@ -835,6 +953,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:30-18:00；最早入园时间按日出时间会有所调整",
     image:
       "https://store.is.autonavi.com/showpic/c975b76a12d919eb0000003935616203?type=pic",
+    rating: "",
     match: 0.98,
   },
   九寨沟风景名胜区: {
@@ -843,6 +962,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "04-01至11-15 周一至周日 08:00-18:00 最晚进入14:00；11-16至03-31 周一至周日 08:30-18:00 最晚进入14:00",
     image:
       "http://store.is.autonavi.com/showpic/ec73257a74bd2193e4612a0c54ee87e1",
+    rating: "",
     match: 1,
   },
   黄龙国家级风景名胜区: {
@@ -850,6 +970,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B0L0H5QMR7/comment/663C03C7_43B5_4D01_AB56_582D88CA7B27_L0_001_2000_150_1767831557061_33087973.jpg",
+    rating: "",
     match: 0.98,
   },
   北川羌城旅游区: {
@@ -857,6 +978,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/42747fcd66737f19e384bd8d70fca280",
+    rating: "",
     match: 1,
   },
   邓小平故里旅游区: {
@@ -864,6 +986,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://store.is.autonavi.com/showpic/3d215d5bec10ebcfa172bfdfcb4ed5c8",
+    rating: "",
     match: 1,
   },
   阆中古城: {
@@ -871,12 +994,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/62427ec7463d73c6540f9c8e6cbc23a0",
+    rating: "",
     match: 1,
   },
   朱德故里景区: {
     tel: "0817-7555022",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   泸定海螺沟冰川森林公园: {
@@ -885,6 +1010,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "5月1日至10月9日:售票、入园时间07:00-15:00,闭园时间18:00；10月10日至次年4月30日:售票、入园时间08:00-14:00,闭园时间17:00",
     image:
       "http://store.is.autonavi.com/showpic/da714454fae7efa0f58ca3cd034c9df1",
+    rating: "",
     match: 1,
   },
   甘孜州稻城亚丁景区: {
@@ -893,6 +1019,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "4月15日-11月30日 07:00-16:40； 12月1日-4月12日 08:20-15:50； 劳动节、端午节、国庆节 06:00-16:40",
     image:
       "http://store.is.autonavi.com/showpic/65ee9dc936fee3df9e76411098c6c6cc",
+    rating: "",
     match: 0.86,
   },
   碧峰峡旅游景区: {
@@ -900,12 +1027,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "4月1日-10月8日 周一至周四 08:30-16:00 停止入园:16:00 周日 08:30-16:00 停止入园:16:00 周五至周六 08:30-16:30 停止入园:16:30；10月9日-3月31日 周一至周五 09:00-15:40 周六至周日 09:00-16:00",
     image: "",
+    rating: "",
     match: 0.59,
   },
   安顺市黄果树旅游景区: {
     tel: "",
     openTime: "周一至周日 07:30-17:30",
     image: "",
+    rating: "",
     match: 0.61,
   },
   安顺市龙宫旅游景区: {
@@ -914,12 +1043,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "每年4月1日至10月30日:07:00-18:00开放(17:00停止售票，17:00停止入园) ,每年10月31日至次年3月31日:08:30-16:30(16:30停止售票，16:30停止入园))",
     image:
       "http://store.is.autonavi.com/showpic/ce22cebcac89d912aa6be1f37786f95b",
+    rating: "",
     match: 0.95,
   },
   毕节市百里杜鹃景区: {
     tel: "0857-4666999",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.71,
   },
   黔东南州镇远古城旅游景区: {
@@ -927,6 +1058,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/0a9a936e-7490-4c5b-b791-352360bfff24.jpg",
+    rating: "",
     match: 1,
   },
   昆明市石林风景名胜区: {
@@ -934,6 +1066,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/912066c3023facc606936b63ef9c82e2",
+    rating: "",
     match: 1,
   },
   丽江玉龙雪山景区: {
@@ -941,6 +1074,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/decf12aef42d733c0000002444198608?type=pic",
+    rating: "",
     match: 0.6,
   },
   丽江古城景区: {
@@ -948,12 +1082,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/c39a77b9d318f5809f0a975d0971a8ef",
+    rating: "",
     match: 1,
   },
   大理崇圣寺三塔文化旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.78,
   },
   中国科学院西双版纳热带植物园景区: {
@@ -961,6 +1097,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0G0RK8S25/comment/d44dcc32142c3beaee7eead50ee06fbf_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   迪庆香格里拉普达措景区: {
@@ -968,6 +1105,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/7e1ddf544ceb7bb1ece9c6795589a53e",
+    rating: "",
     match: 0.72,
   },
   腾冲火山热海旅游区: {
@@ -975,6 +1113,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/3331bb17965ce37a0c85e95d82b38c6f",
+    rating: "",
     match: 0.67,
   },
   普者黑旅游景区: {
@@ -982,6 +1121,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/3f98e1eb112f4bdd8b1769f5c768a500",
+    rating: "",
     match: 0.98,
   },
   扎什伦布寺景区: {
@@ -989,6 +1129,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-13:00,15:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/eaf2ab7e747a5e10a2c3157237080c84",
+    rating: "",
     match: 1,
   },
   巴松措风景旅游区: {
@@ -996,6 +1137,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-18:30",
     image:
       "http://store.is.autonavi.com/showpic/5cf852159a40e956aa76b02bd2de213f",
+    rating: "",
     match: 0.95,
   },
   秦始皇帝陵博物院: {
@@ -1003,6 +1145,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://aos-comment.amap.com/B0FFGLV3OI/comment/B2491FEC_5879_457B_85A8_963CAEB91529_L0_001_2000_112_1766113179076_90687142.jpg",
+    rating: "",
     match: 0.99,
   },
   陕西华清宫文化旅游景区: {
@@ -1011,6 +1154,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "10-19至12-31 周一至周日 07:30-17:30 最晚进入17:10；《长恨歌》演出于华清宫闭园后开演(具体开演实际参考当天演出场次)，届时除长恨歌演出区域外其余华清宫景区部分无法游览；骊山索道开放时间:08:00-18:00（04/01-10/31）、08:30-17:00（11/01-03/31）",
     image:
       "http://store.is.autonavi.com/showpic/c1efff5e304ae265cded3a64ac6a4dc5",
+    rating: "",
     match: 0.98,
   },
   法门文化景区: {
@@ -1018,6 +1162,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/f0aa8d3c49180a2dbcd8703ea2a05c84",
+    rating: "",
     match: 1,
   },
   太白山旅游景区: {
@@ -1025,6 +1170,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/fd0e078e2590f5460000003281654181?type=pic",
+    rating: "",
     match: 0.55,
   },
   华山景区: {
@@ -1033,12 +1179,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 00:00-24:00；华山西峰索道、北峰索道运营时间: 2026年10月1日—2026年10月7日期间，华山景区乘索进山（游客中心检票）入园时间:6:00-16:00；步行登山（华山门检票）:24小时开放；索道运营时间:6:00-16:00（上行） 6:00-20:00（下行）。 冬季12月1日-2月28日08:00-18:00，索道上山入园检票时间08:00-16:00； 旺季3月1日-11月30日07:00-19:00，索道上山入园检票时间07:00-16:00； 步行登山全天24小时开放。",
     image:
       "http://store.is.autonavi.com/showpic/51279a07d6da0f46ddd4a11183d9c1bc",
+    rating: "",
     match: 0.98,
   },
   黄帝陵景区: {
     tel: "0911-5215325",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   "延安革命纪念地景区（宝塔山景区）": {
@@ -1046,6 +1194,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/3d767249743f0c8e0000003132640057?type=pic",
+    rating: "",
     match: 0.93,
   },
   "延安革命纪念地景区（杨家岭革命旧址）": {
@@ -1053,6 +1202,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/3d767249743f0c8e0000003132640057?type=pic",
+    rating: "",
     match: 0.96,
   },
   "延安革命纪念地景区（延安革命纪念馆）": {
@@ -1060,6 +1210,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/3d767249743f0c8e0000003132640057?type=pic",
+    rating: "",
     match: 1,
   },
   "延安革命纪念地景区（中共中央西北局旧址）": {
@@ -1067,6 +1218,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/3d767249743f0c8e0000003132640057?type=pic",
+    rating: "",
     match: 0.91,
   },
   金丝峡景区: {
@@ -1074,6 +1226,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/6BCCC8BBEB114C10A62F84DC8A885EC7",
+    rating: "",
     match: 1,
   },
   嘉峪关文物景区: {
@@ -1082,6 +1235,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05-01至10-31 周一至周日 08:30-18:00；11-01至04-30 周一至周日 09:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/B2671FD785C54D2899CC6E004883A90E",
+    rating: "",
     match: 1,
   },
   张掖七彩丹霞景区: {
@@ -1089,6 +1243,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/22ff2b1cdac11a530000002355808669?type=pic",
+    rating: "",
     match: 0.98,
   },
   麦积山景区: {
@@ -1096,6 +1251,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "1月至3月,11月至12月 09:00-17:00 最晚进入16:30；4月至10月 08:30-18:00 最晚进入16:30；【石窟开放时间】旺季:08:30-17:30淡季:09:00-17:00(16:30停止售票),【景区内观光车运营时间】08:30-18:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.99,
   },
   塔尔寺旅游区: {
@@ -1103,6 +1259,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/d4d3853c957830ed0000000806866491?type=pic",
+    rating: "",
     match: 1,
   },
   互助土族故土园旅游区: {
@@ -1110,12 +1267,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00 最晚进入18:00",
     image:
       "http://store.is.autonavi.com/showpic/fb6af511f5ff05ffc7ea7fa49dcdc808",
+    rating: "",
     match: 1,
   },
   海北州阿咪东索景区: {
     tel: "",
     openTime: "周一至周日 08:30-18:00",
     image: "",
+    rating: "",
     match: 0.57,
   },
   镇北堡西部影城: {
@@ -1124,6 +1283,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "4月16日至10月15日 08:00-18:00 最晚进入18:00；10月16日至4月15日 09:00-17:00 最晚进入17:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/b550cf2e1fcf7bcce75df728b288bcae",
+    rating: "",
     match: 1,
   },
   水洞沟旅游区: {
@@ -1131,12 +1291,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "10月20日-3月31日:9:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/b82517cba19c42bc0b3e24a5c1271305",
+    rating: "",
     match: 0.98,
   },
   沙湖旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   沙坡头景区: {
@@ -1144,6 +1306,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-19:00",
     image:
       "https://store.is.autonavi.com/showpic/ef4f77374e3d789ea7680cf0f91e13d0",
+    rating: "",
     match: 0.99,
   },
   喀纳斯景区: {
@@ -1151,6 +1314,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/01d30c23c6fda3d60000005774400665",
+    rating: "",
     match: 0.97,
   },
   世界魔鬼城景区: {
@@ -1158,6 +1322,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "周一至周日 08:30-21:00 最晚进入21:00；21:00停止售票，21:00停止入园",
     image: "",
+    rating: "",
     match: 1,
   },
   乌鲁木齐天山大峡谷: {
@@ -1165,6 +1330,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "5月至10月 09:00-19:00 最晚进入18:00；1月至4月,11月至12月 10:00-18:30 最晚进入17:30, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 1,
   },
   葡萄沟景区: {
@@ -1172,6 +1338,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-19:30；19:30停止售票",
     image:
       "https://store.is.autonavi.com/showpic/a45b9e4b4de636d49dcf5819ef478d32",
+    rating: "",
     match: 0.97,
   },
   "博斯腾湖景区（大河口）": {
@@ -1179,6 +1346,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-19:30 最晚进入18:30",
     image:
       "http://store.is.autonavi.com/showpic/6ea37a95d0f0d4ab065d402745e984dd",
+    rating: "",
     match: 0.91,
   },
   喀什古城景区: {
@@ -1186,6 +1354,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/d4ffc6fe052ab9889b239d72ed30cde1",
+    rating: "",
     match: 1,
   },
   帕米尔旅游区: {
@@ -1193,6 +1362,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "9:00-20:00",
     image:
       "http://store.is.autonavi.com/showpic/64550f7c1316155910aa47878cef7fbf",
+    rating: "",
     match: 1,
   },
   南通市濠河景区: {
@@ -1200,12 +1370,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B02010VJO3/comment/26fff1e9cd5ef137dc9b491bd4db8334_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   常州市中国春秋淹城旅游区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.67,
   },
   扬州瘦西湖风景区: {
@@ -1213,6 +1385,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:30-18:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/a3a2a4e053352232bd5e7e9c39a402b1",
+    rating: "",
     match: 0.57,
   },
   无锡市太湖鼋头渚景区: {
@@ -1220,6 +1393,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/default_poi/comment/80cef26bf39dd8ead7c30c0bbd631dcb_2048_2048_80.jpg",
+    rating: "",
     match: 0.56,
   },
   无锡市惠山古镇景区: {
@@ -1228,6 +1402,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "2月17日至12月31日 周一至周五 08:00-17:00开放；2月17日至12月31日 周六至周日 08:00-17:30开放 说明:景区内的免费区域开放。具体开放时间以现场公示为准",
     image:
       "https://aos-comment.amap.com/B0FFKTPHZB/comment/a1676278-b03e-40a8-80af-6f91b9972431.png",
+    rating: "",
     match: 1,
   },
   淮安市周恩来故里旅游景区: {
@@ -1235,6 +1410,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一关闭(节假日除外),周二至周日 09:00-17:30",
     image:
       "https://aos-comment.amap.com/B0FFIC937L/comment/BD98350B_BC61_4A85_AEB2_A2EF0090DC78_L0_001_1126_200_1745800280742_40054053.jpg",
+    rating: "",
     match: 1,
   },
   盐城市大丰中华麋鹿园景区: {
@@ -1242,6 +1418,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "1/1-12/31 08:30–17:00开放 最晚进入17:00；劳动节 08:00–17:30开放",
     image:
       "http://store.is.autonavi.com/showpic/93b7549971a44bec289b53b29b460a69",
+    rating: "",
     match: 1,
   },
   "苏州市沙家浜·虞山尚湖旅游区": {
@@ -1249,6 +1426,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:00",
     image:
       "http://store.is.autonavi.com/showpic/b678205a8aa1cf8152811c9dc1f7b793",
+    rating: "",
     match: 0.92,
   },
   苏州市同里古镇景区: {
@@ -1257,6 +1435,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "08:00-17:15, 17:15后同里古镇各子景点闭园,街道免费开放。具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/8d799807a51e9de2bd4dce3158d082af",
+    rating: "",
     match: 0.86,
   },
   苏州市周庄古镇景区: {
@@ -1264,6 +1443,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-21:00",
     image:
       "http://store.is.autonavi.com/showpic/c25463f31b94e681d96182971e40d73d",
+    rating: "",
     match: 1,
   },
   连云港市花果山风景区: {
@@ -1272,12 +1452,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "旺季（3 月 1 日 - 11 月 30 日）:7:00-18:00（17:00 停止售票、停止入园）,淡季（12 月 1 日 - 次年 2 月 28 日）:8:00-17:00（16:00 停止售票、停止入园）；(数据来源:江苏省文旅厅公共服务平台苏心游)",
     image:
       "http://store.is.autonavi.com/showpic/a0f81f96b5e843b48da1515975fa68ab",
+    rating: "",
     match: 1,
   },
   镇江市句容茅山风景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.57,
   },
   "镇江市金山·焦山·北固山景区": {
@@ -1285,6 +1467,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日:8:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/af297ba21bbea35389e546d6a80a8ed6",
+    rating: "",
     match: 0.9,
   },
   辽宁省大连市金石滩景区: {
@@ -1292,12 +1475,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/8ee870b6cf12ffb21d0eff66d4efa2b5",
+    rating: "",
     match: 0.56,
   },
   本溪水洞景区: {
     tel: "024-44891160",
     openTime: "周一至周日 08:30-16:00",
     image: "",
+    rating: "",
     match: 1,
   },
   南岳衡山旅游区: {
@@ -1305,6 +1490,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B02DE030LJ/comment/664cdb9cb5c6ef5ac4fe4c8d3719b76e_2048_2048_80.jpg",
+    rating: "",
     match: 0.98,
   },
   "岳阳楼-君山岛旅游区": {
@@ -1313,12 +1499,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,10月至12月 周一至周日 07:30-18:00 最晚进入17:30；5月至9月 周一至周日 07:00-18:30 最晚进入18:00",
     image:
       "http://store.is.autonavi.com/showpic/f299406b064eddc2902be11dcfe37c0a",
+    rating: "",
     match: 0.91,
   },
   "长沙市岳麓山-橘子洲旅游区": {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.59,
   },
   长沙市花明楼景区: {
@@ -1327,6 +1515,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 09:00-17:00 最晚进入16:30；周一生平陈列馆、工运专题馆、文保中心闭馆，其余景点正常开放",
     image:
       "http://store.is.autonavi.com/showpic/d55c7b1b771dd67a762454452907c265",
+    rating: "",
     match: 0.94,
   },
   株洲市炎帝陵景区: {
@@ -1334,6 +1523,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "冬令时: 08:00-17:00,夏令时, 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/4060d8161a2168254b584f3fd8c7f1b1",
+    rating: "",
     match: 1,
   },
   天津盘山风景名胜区: {
@@ -1341,12 +1531,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/0d1f0cce7a8236c2b8bfbcbf918d421a",
+    rating: "",
     match: 0.99,
   },
   承德避暑山庄及周围寺庙景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.8,
   },
   神农架生态旅游区: {
@@ -1354,12 +1546,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/26cfe19b1db11085647789982f93f4e7",
+    rating: "",
     match: 0.63,
   },
   忻州市代县雁门关风景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.62,
   },
   绵山景区: {
@@ -1367,6 +1561,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B016200J0V/comment/content_media_external_images_media_100001164_1739076459354_50908613.jpg",
+    rating: "",
     match: 0.92,
   },
   皇城相府: {
@@ -1374,6 +1569,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/54ceef98f5b6c1dc0000002702862465",
+    rating: "",
     match: 1,
   },
   满洲里市中俄边境旅游区: {
@@ -1381,12 +1577,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0J09UTC3R/comment/3527bb30c6c1a265ccb38aca5c5821f4_2048_2048_80.jpg",
+    rating: "",
     match: 0.79,
   },
   牡丹江镜泊湖风景名胜区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.65,
   },
   漠河市北极村景区: {
@@ -1394,6 +1592,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/46d6de81ca64397191e48f860f6d383d",
+    rating: "",
     match: 0.96,
   },
   浙江省嘉兴市桐乡市乌镇景区: {
@@ -1401,6 +1600,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-22:00",
     image:
       "http://store.is.autonavi.com/showpic/60bcf8e04c9a3afe44d1ccadbf4877ef",
+    rating: "",
     match: 0.99,
   },
   温州市雁荡山风景旅游管委会: {
@@ -1408,6 +1608,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "6月至9月 周一至周日 08:30-12:00，14:30-18:00；1月至5月，10月至12月 周一至周日 08:30-12:00，14:00-17:30",
     image: "",
+    rating: "",
     match: 1,
   },
   舟山市普陀山风景名胜区管理委会: {
@@ -1415,18 +1616,21 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周五 08:30-12:00，14:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/5e38f6b67423e7f2c5b68e1081f1dab2",
+    rating: "",
     match: 0.7,
   },
   龙岩市古田旅游区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.99,
   },
   三明市泰宁风景旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.57,
   },
   宁德市福鼎太姥山风景区: {
@@ -1434,6 +1638,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/1b0e3a42149682405dbca19c2422e1b4",
+    rating: "",
     match: 0.99,
   },
   江西省九江市庐山风景名胜区: {
@@ -1441,12 +1646,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/c0f70961bf42cadd25b91854c33af6e9",
+    rating: "",
     match: 0.57,
   },
   江西省上饶市江湾景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.97,
   },
   江西省鹰潭市龙虎山景区: {
@@ -1454,6 +1661,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/5fd98859ad9ee95c8b332b4c1c85f512",
+    rating: "",
     match: 0.67,
   },
   "江西省瑞金市“共和国”摇篮旅游区": {
@@ -1461,6 +1669,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B031D03A98/comment/content_media_external_images_media_100000876_1744514795997_65006124.jpg",
+    rating: "",
     match: 1,
   },
   江西省宜春市明月山旅游区: {
@@ -1468,12 +1677,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFM7H2Z1/comment/E6219A3B_0D01_4B14_B8A4_81E951F9C27C_L0_001_2016_151_1768038669672_59499737.jpg",
+    rating: "",
     match: 0.91,
   },
   江西省抚州市资溪大觉山景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   崂山风景区: {
@@ -1481,12 +1692,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/036131b67e878d0303f14bd46bea809f",
+    rating: "",
     match: 0.97,
   },
   烟台市龙口南山景区: {
     tel: "",
     openTime: "周一至周日 09:00-17:00",
     image: "",
+    rating: "",
     match: 0.55,
   },
   微山湖旅游区: {
@@ -1494,6 +1707,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:30-19:00",
     image:
       "https://aos-comment.amap.com/B0FFFRHAPI/headerImg/40ce8116bfa69270ac253019fc625ca3_2048_2048_80.jpg",
+    rating: "",
     match: 0.94,
   },
   永城市芒砀山旅游景区: {
@@ -1502,24 +1716,28 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,10月至12月 周一至周日 08:30-17:00；4月至9月 周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/abcdb2cc097cbb7ee8fc5c4135211b19",
+    rating: "",
     match: 0.93,
   },
   "黄陂木兰文化生态旅游区（木兰山）": {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.93,
   },
   "黄陂木兰文化生态旅游区（木兰草原）": {
     tel: "",
     openTime: "00:00-24:00旅游区内各景区的开放时间不周一,详情请以景区公示为准",
     image: "",
+    rating: "",
     match: 0.62,
   },
   "黄陂木兰文化生态旅游区（木兰云雾山）": {
     tel: "",
     openTime: "周一至周日 08:30-17:30",
     image: "",
+    rating: "",
     match: 0.59,
   },
   三峡大坝: {
@@ -1527,18 +1745,21 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/43211e32f1f12b888ed8cec01a6dd8b4",
+    rating: "",
     match: 0.89,
   },
   宜昌市长阳清江画廊景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.94,
   },
   广州市长隆旅游度假区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.66,
   },
   深圳市观澜湖休闲度假区: {
@@ -1546,12 +1767,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/b80d80a8a29d728775012701204e1714",
+    rating: "",
     match: 0.85,
   },
   肇庆市星湖旅游景区: {
     tel: "0758-2220172;0758-2222944",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.85,
   },
   都安民族博物馆: {
@@ -1560,6 +1783,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "候开放,(节假日除外),周二、周三、周四、周五、周六、周日:09:00-12:00(11:30停止入馆),14:30-18:00(17:30停止入馆)",
     image:
       "https://store.is.autonavi.com/showpic/e9165dd06b29923baeaab810bb6da5c1",
+    rating: "",
     match: 0.98,
   },
   重庆酉阳桃花源景区: {
@@ -1567,12 +1791,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入17:30；太古洞最晚入洞时间:17:00",
     image:
       "http://store.is.autonavi.com/showpic/50722ae0f4ebe0d866a01f835007aea5",
+    rating: "",
     match: 0.98,
   },
   重庆南川金佛山景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.67,
   },
   重庆黔江濯水景区: {
@@ -1580,12 +1806,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/35ce02d95da2e77bc72b6783ada6929f",
+    rating: "",
     match: 0.99,
   },
   汶川特别旅游区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.98,
   },
   剑门蜀道剑门关旅游景区: {
@@ -1593,6 +1821,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-18:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/2f11debbde3a50c20000002436864710?type=pic",
+    rating: "",
     match: 0.9,
   },
   贵阳市花溪青岩古镇景区: {
@@ -1601,6 +1830,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "08:10-22:00；景区内文物参观开放时间为:08:30-17:00,2026年春节期间 09:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/5fff66f0746fa365d19d9e1385638995",
+    rating: "",
     match: 0.99,
   },
   遵义市赤水丹霞旅游区: {
@@ -1608,6 +1838,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/06650301b7ca63bcfccea4b91c11cf6e",
+    rating: "",
     match: 0.73,
   },
   铜仁市江口梵净山生态旅游景区: {
@@ -1616,6 +1847,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "3月1日至10月31日 07:00-15:00；11月1日至2月28日 08:00-15:00；春节 07:00-15:00；梵净山旅游区东线(江口县方向)常规入园时间: 08:00-15:00；西线(印江县方向)常规入园时间: 08:00-13:00；线上开始售票时间: 每日07:30。【节假日入园、售票时间请以公告内容、景区现场为准。】",
     image:
       "http://store.is.autonavi.com/showpic/232ec6edc2ba61737e13607faf1c5686",
+    rating: "",
     match: 0.8,
   },
   雅鲁藏布大峡谷景区: {
@@ -1623,12 +1855,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/b17d842957e69baf0000000952090187?type=pic",
+    rating: "",
     match: 0.98,
   },
   "延安革命纪念地景区（枣园革命旧址）": {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.91,
   },
   国家重点风景名胜区崆峒山: {
@@ -1636,6 +1870,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/2D404AAE6460445DAD8393E5F9E000A0",
+    rating: "",
     match: 0.96,
   },
   永靖县炳灵寺世界文化遗产旅游: {
@@ -1643,6 +1878,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://aos-comment.amap.com/B0JBO7UV4M/comment/f593e63303c6f1cfa9115946c653df09_2048_2048_80.jpg",
+    rating: "",
     match: 0.7,
   },
   青海湖景区: {
@@ -1650,6 +1886,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/46db851736f9469c3bc74eeb74c1a1eb",
+    rating: "",
     match: 0.99,
   },
   伊犁哈萨克自治州那拉提旅游风景区: {
@@ -1657,6 +1894,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/3e2bd75a654e3af161a58c8c4a27a0eb",
+    rating: "",
     match: 0.74,
   },
   喀拉峻景区: {
@@ -1664,6 +1902,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-22:00",
     image:
       "https://aos-comment.amap.com/B0LGCMR0WC/comment/523825D1_724A_44D7_B377_F785D528FE72_L0_001_1336_200_1756340908784_53750315.jpg",
+    rating: "",
     match: 1,
   },
   赛里木湖风景名胜区: {
@@ -1671,24 +1910,28 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/196f4fab60a9ee135dd20cc19a8f975a",
+    rating: "",
     match: 1,
   },
   可可托海景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   天山天池风景区: {
     tel: "0994-3222555",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.95,
   },
   巴音布鲁克景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.98,
   },
   泽普县金湖杨景区: {
@@ -1696,12 +1939,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B03E60MXOX/comment/content_media_external_images_media_4203_1736968113496_41856969.jpg",
+    rating: "",
     match: 1,
   },
   常州市环球恐龙城休闲旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.68,
   },
   徐州市云龙湖景区: {
@@ -1709,6 +1954,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/d969acff17726dcc28ecf5400b74cae5",
+    rating: "",
     match: 0.99,
   },
   无锡灵山景区: {
@@ -1716,6 +1962,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/ad0dd876c661b63e1b296daf2e1aae8d",
+    rating: "",
     match: 0.99,
   },
   中央电视台无锡影视基地三国水浒景区: {
@@ -1723,6 +1970,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/d68a804a79953f320f628acb7bbb871c",
+    rating: "",
     match: 0.99,
   },
   泰州姜堰溱湖旅游景区: {
@@ -1730,6 +1978,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/1cadb0eae57c14db3397ad9e785fde11",
+    rating: "",
     match: 1,
   },
   "沈阳市植物园（沈阳世博园）": {
@@ -1737,6 +1986,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://store.is.autonavi.com/showpic/1e15b38e4330efe80000008204100055?type=pic",
+    rating: "",
     match: 0.82,
   },
   辽宁千山景区: {
@@ -1744,12 +1994,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "12月31日-3月31日:8:00-16:00",
     image:
       "http://store.is.autonavi.com/showpic/537f41cd75e1aade540058dece53eeb8",
+    rating: "",
     match: 0.96,
   },
   盘锦红海滩国家风景廊道景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.82,
   },
   湘潭市韶山旅游区: {
@@ -1757,6 +2009,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/c08199be95e0fd48999464c6be70a67a",
+    rating: "",
     match: 0.98,
   },
   新宁崀山旅游区: {
@@ -1764,6 +2017,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/59546d9f0abd85fbc0a12b5006abeabd",
+    rating: "",
     match: 0.99,
   },
   常德市桃花源旅游区: {
@@ -1771,6 +2025,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/6a8609a56960a794c6af2ad7dd1aa790",
+    rating: "",
     match: 0.99,
   },
   中国园林博物馆: {
@@ -1778,6 +2033,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0KUFCVNE7/comment/content_media_external_images_media_1000010554_ss__1772716371393_65864538.jpg",
+    rating: "",
     match: 1,
   },
   北京世园公园: {
@@ -1785,6 +2041,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/9df9bd989ce224c81155aa24fedb8a5d",
+    rating: "",
     match: 0.8,
   },
   北京市房山区周口店遗址景区: {
@@ -1793,12 +2050,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "4月1日-10月9日09:00-16:30,16:00停止入场；10月10日-次年2月10日09:00-16:00,15:30停止入场；2月11日-2月12日10:00-16:00,15:50停止入场；2月13日-2月17日09:00-16:00,15:50停止入场；2月18日-3月31日09:00-16:00,15:30停止入场",
     image:
       "https://store.is.autonavi.com/showpic/3c53f06b3bb466750000003060728416?type=pic",
+    rating: "",
     match: 0.63,
   },
   野鸭湖景区: {
     tel: "010-69131458",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   国家植物园: {
@@ -1806,6 +2065,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/0ae4c3c719ae4ec063f8cf12d4988cc0",
+    rating: "",
     match: 1,
   },
   凤凰岭自然风景区: {
@@ -1813,6 +2073,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/7d5142796877c73e0000000965934772",
+    rating: "",
     match: 0.99,
   },
   世界公园: {
@@ -1820,6 +2081,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "03月13日至12月31日 09:00-17:00 停止售票:16:40 停止入场:16:50",
     image:
       "http://store.is.autonavi.com/showpic/1f9bc17aca2b1a2ee75592009189f8a7",
+    rating: "",
     match: 1,
   },
   雁栖湖旅游区: {
@@ -1828,12 +2090,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "03-07至10-16 周一至周日 08:30-17:00 最晚进入16:30；10-17至10-18 周一至周日 全天关闭；10-19至10-31 周一至周日 08:30-17:00 最晚进入16:30；以上日期周末及法定节假日闭园时间以现场广播通知为准。",
     image:
       "http://store.is.autonavi.com/showpic/b74c9651cb786288ca490896298a63e1",
+    rating: "",
     match: 0.99,
   },
   京东石林峡风景区: {
     tel: "010-60987678",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   八达岭水关长城景区: {
@@ -1842,6 +2106,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "4月1日-10月31日:09:00-16:30；11月1日-次年3月31日:09:00-16:00(停售停检)；",
     image:
       "http://store.is.autonavi.com/showpic/d79a0409d352988b9a5e0397e34eeca2",
+    rating: "",
     match: 0.99,
   },
   司马台长城景区: {
@@ -1850,6 +2115,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "5月1日-10月31场08:30-17:00；17:30-22:00,11月1日-4月30场08:30-17:00；17:30-21:00",
     image:
       "https://store.is.autonavi.com/showpic/F0A952B9A8C84EC89FA395F616AF803B",
+    rating: "",
     match: 0.99,
   },
   中国人民抗日战争纪念馆: {
@@ -1857,6 +2123,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/a78ed8d8-cc2b-41a3-9498-0fe3ad2771db.jpg",
+    rating: "",
     match: 1,
   },
   石花洞: {
@@ -1864,12 +2131,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-15:30",
     image:
       "https://aos-comment.amap.com/B0FFHZQROP/comment/72e553514dd76f41ae2692475d30841f_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   金海湖风景区: {
     tel: "",
     openTime: "08:30-17:30, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.96,
   },
   玉渊潭公园: {
@@ -1877,6 +2146,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFI8EQO1/comment/45ecf0e20336dafc76401576904aa7fc_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   北京黄花城水长城旅游区: {
@@ -1885,6 +2155,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "11月1日-3月15日 08:30-16:30开放 最晚进入16:30；3月16日-10月31日 周一至周五 08:30-17:00开放 周六 08:00-18:00开放 周日 08:00-17:00开放；清明节,劳动节,端午节,中秋节,国庆节 08:00-18:00开放；节假日最后一天:08:00-17:00 ；具体开放时间以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/cb175be74bbf404593bee8b9858f5725",
+    rating: "",
     match: 1,
   },
   戒台寺: {
@@ -1893,6 +2164,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "春夏季 全年 08:30–17:00开放 最晚进入16:30；秋冬季 全年 08:30–16:30开放 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/8c6fa70d565f5c1d2327a837cd6c7db3",
+    rating: "",
     match: 1,
   },
   龙潭公园: {
@@ -1900,6 +2172,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:00-22:00",
     image:
       "http://store.is.autonavi.com/showpic/7c598c7bd9ebcf3cd3007509f31523e1",
+    rating: "",
     match: 0.99,
   },
   青龙峡旅游度假区: {
@@ -1907,12 +2180,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "03月13日至11月30日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/df739a4d948cb0eb0000002989348932?type=pic",
+    rating: "",
     match: 0.98,
   },
   黑龙潭旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   龙庆峡旅游区: {
@@ -1920,6 +2195,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/c38cab6d8944eb71a28190eed5d62be0",
+    rating: "",
     match: 1,
   },
   北京海洋馆: {
@@ -1927,6 +2203,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "4月1日至10月31日09:00-17:30，11月1日至次年3月31日10:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/b42778094e38bf98d84de2eb996f6622",
+    rating: "",
     match: 1,
   },
   中国紫檀博物馆: {
@@ -1934,12 +2211,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/db0858665477b63e8bfe22ecaea46ac7",
+    rating: "",
     match: 1,
   },
   北京顺义国际鲜花港: {
     tel: "",
     openTime: "周一至周日 08:30-18:30 最晚进入18:00",
     image: "",
+    rating: "",
     match: 0.78,
   },
   小汤山现代农业示范园区: {
@@ -1947,6 +2226,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0KRK9CH82/comment/202603_08-13452_1772948756062_72529429.jpg",
+    rating: "",
     match: 0.8,
   },
   北京园博园: {
@@ -1954,6 +2234,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/a57c73dd9ab0e771dee73ba305f28497",
+    rating: "",
     match: 1,
   },
   谷山村景区: {
@@ -1961,6 +2242,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/cb2b7bb6-4b37-4dae-a0d3-943e82350ddc.jpg",
+    rating: "",
     match: 1,
   },
   乐多港假日广场: {
@@ -1968,6 +2250,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-21:30",
     image:
       "https://aos-comment.amap.com/B000AAEA4K/comment/content_media_external_file_34617_1768832399069_71161092.jpg",
+    rating: "",
     match: 1,
   },
   龙脉温泉度假村: {
@@ -1975,6 +2258,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-21:00",
     image:
       "http://store.is.autonavi.com/showpic/7c8e925fbc5b3cf0690c389f63dda4bf",
+    rating: "",
     match: 1,
   },
   北京十渡风景名胜区: {
@@ -1982,12 +2266,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:00",
     image:
       "http://store.is.autonavi.com/showpic/ca9171ba15f1ebac24be1956aef70cee",
+    rating: "",
     match: 0.98,
   },
   八大处公园: {
     tel: "",
     openTime: "周一至周日 06:00-17:30",
     image: "http://store.is.autonavi.com/showpic/55007895a3106319af8d1715",
+    rating: "",
     match: 1,
   },
   八奇洞景区: {
@@ -1995,6 +2281,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/2f8672b1394a5b9c77de302e833acedf",
+    rating: "",
     match: 0.99,
   },
   银山塔林风景区: {
@@ -2002,6 +2289,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "04/01-10/31 08:00-18:00开放；11/01-03/31 08:00-17:00开放",
     image:
       "http://store.is.autonavi.com/showpic/e8829abfa03a49110e02a60b64ce0a8b",
+    rating: "",
     match: 1,
   },
   居庸关长城: {
@@ -2010,12 +2298,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "03-16至10-07 周一至周日 06:30-18:00 最晚进入17:30；10-08至03-15 周一至周日 08:30-17:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/dd5c2afa93948ef00c565b9b1da61e19",
+    rating: "",
     match: 1,
   },
   圣莲山旅游度假区: {
     tel: "4008087179",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.75,
   },
   云居寺: {
@@ -2023,6 +2313,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-16:00 最晚进入15:30",
     image:
       "http://store.is.autonavi.com/showpic/244d524511a9bf176eb9e47b5a4ceef7",
+    rating: "",
     match: 1,
   },
   红螺寺: {
@@ -2031,6 +2322,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1/1-12/31 08:30–17:30开放 最晚售票16:00 最晚进入16:00；中秋节,国庆节 08:00–18:00开放 最晚售票16:30",
     image:
       "http://store.is.autonavi.com/showpic/6139d8e291fca143f406dd2d8bd262f3",
+    rating: "",
     match: 1,
   },
   中央广播电视塔: {
@@ -2038,6 +2330,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:30-22:00 最晚进入21:30, 具体开放时间以现场公示为准",
     image:
       "https://aos-comment.amap.com/B0FFIGHM7V/comment/content_media_external_file_17204829_ss__1760951507128_47777623.jpg",
+    rating: "",
     match: 0.71,
   },
   南宫旅游景区: {
@@ -2045,6 +2338,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00；具体开放时间以现场公示为准",
     image:
       "http://store.is.autonavi.com/showpic/50fe0740e108e8d4cb4676dfc8d677e5",
+    rating: "",
     match: 1,
   },
   中国航空博物馆: {
@@ -2053,6 +2347,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "元旦节,春节,清明节,劳动节,端午节,中秋节,国庆节 09:00-17:00开放；全年 周二至周日 09:00-17:00开放全年 周一 不开放, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/486906164994af260000009206030056?type=pic",
+    rating: "",
     match: 1,
   },
   京东大峡谷旅游区: {
@@ -2060,6 +2355,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/8645a048-0ac7-431e-b247-371f4bd9b517.jpg",
+    rating: "",
     match: 0.98,
   },
   香山公园: {
@@ -2068,6 +2364,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "04-01至11-15 周一至周日 06:00-19:30 最晚进入18:30；11-16至03-31 周一至周日 06:00-19:00 最晚进入18:00",
     image:
       "http://store.is.autonavi.com/showpic/8c0562707d8b7fbe6e541ac0c682133f",
+    rating: "",
     match: 1,
   },
   潭柘寺: {
@@ -2075,6 +2372,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:30 最晚进入16:30",
     image:
       "https://store.is.autonavi.com/showpic/60e7f3679cef81e14cd569e12b3879cb",
+    rating: "",
     match: 0.99,
   },
   北京欢乐谷: {
@@ -2082,6 +2380,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "4月30日至6月21日 09:30-22:00， 6月22日至8月30日 09:00-22:00",
     image:
       "http://store.is.autonavi.com/showpic/2ebddd061c4000832b9c0fa901198ca2",
+    rating: "",
     match: 0.98,
   },
   北京汽车博物馆: {
@@ -2089,6 +2388,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/a584f8a0787dd3b259458b7b88ee19ca",
+    rating: "",
     match: 1,
   },
   延庆百里山水画廊景区: {
@@ -2097,6 +2397,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "淡季:4月1日-4月30日/10月11日-11月中旬(停业时间以公示为准)9:30-16:00,15:30停止检票,旺季:5月1日-10月10日:9:00-17:00,16:30停止检票；",
     image:
       "http://store.is.autonavi.com/showpic/9afd7083cf322bf153cf2ec760d1f7a1",
+    rating: "",
     match: 1,
   },
   北宫国家森林公园: {
@@ -2104,6 +2405,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/1995a817e2b5892fc9cbd115f3ce373b",
+    rating: "",
     match: 0.98,
   },
   紫竹院公园: {
@@ -2111,30 +2413,35 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/4993b443b00c60c70000001876704416?type=pic",
+    rating: "",
     match: 1,
   },
   北京奥林匹克水上公园: {
     tel: "",
     openTime: "周一至周四 09:30-18:00；周五至周日 09:30-21:00",
     image: "",
+    rating: "",
     match: 0.79,
   },
   石景山游乐园: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   世界葡萄博览中心景区: {
     tel: "",
     openTime: "09:00-16:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.72,
   },
   北京张裕爱斐堡国际酒庄: {
     tel: "010-89089999",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   天津周恩来邓颖超纪念馆: {
@@ -2142,6 +2449,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/0bdf7d2e-fccc-4365-b2fb-2c62dcaa8681.jpg",
+    rating: "",
     match: 1,
   },
   "精武门·中华武林园": {
@@ -2149,12 +2457,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/150401eebe6f53f20f43e5346fb78826",
+    rating: "",
     match: 1,
   },
   天津市蓟州区梨木台景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.96,
   },
   天津欢乐谷景区: {
@@ -2162,6 +2472,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFGRCLVU/comment/21287705271a25a805a2a2976bad0d2a_2048_2048_80.jpg",
+    rating: "",
     match: 0.98,
   },
   天津方特欢乐世界景区: {
@@ -2170,12 +2481,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "10月1日-10月7日:9:30-21:00；10月8日-10月9日:9:30-17:30；10月10日-11月1日:9:30-21:00",
     image:
       "http://store.is.autonavi.com/showpic/2dbb01a8bdbd5307a1d93b1d79802fd1",
+    rating: "",
     match: 1,
   },
   蓟州溶洞: {
     tel: "",
     openTime: "08:00-18:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 1,
   },
   天津蓟州区独乐寺景区: {
@@ -2184,6 +2497,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "10-08至10-31 周一至周日 08:00-17:30 最晚进入17:00；11-01至03-15 周一至周日 08:00-17:00 最晚进入16:30,03-16至04-30 周一至周日 08:00-17:30 最晚进入17:00；05-01至10-07 周一至周日 08:00-18:00 最晚进入17:30；",
     image:
       "http://store.is.autonavi.com/showpic/ef3f4b0d1378cb220b23884f478bf972",
+    rating: "",
     match: 1,
   },
   天津水上公园景区: {
@@ -2191,6 +2505,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/fe52d46058d732f87c9b318c06f15c7a",
+    rating: "",
     match: 1,
   },
   天津泰达航母主题公园景区: {
@@ -2198,6 +2513,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFFPUF0X/comment/2EC70A34_EC81_4109_96D5_4E02177B0FBB_L0_001_2016_151_1752139393712_92444114.jpg",
+    rating: "",
     match: 0.99,
   },
   大沽口炮台遗址博物馆景区: {
@@ -2205,6 +2521,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周二至周日 09:00-16:30,16点停止售票，节假日以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/86ac88715f9ee9e6866c3019d672d0f0",
+    rating: "",
     match: 1,
   },
   天津海昌极地海洋公园景区: {
@@ -2213,6 +2530,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "10月08日至10月31日: 09:00-17:00 最晚进入16:30, 具体开放时间以现场公示为准；9月25日至10月07日:09:00-20:30 最晚进入20:00",
     image:
       "http://store.is.autonavi.com/showpic/403ad2a3c4d2d16789ff2021cc0386c5",
+    rating: "",
     match: 1,
   },
   五大道文化旅游区: {
@@ -2220,6 +2538,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/3138223e49d8298d3b62d0b2105acc6b",
+    rating: "",
     match: 1,
   },
   水高庄园景区: {
@@ -2227,6 +2546,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-17:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/baaf56fc7e4ee0cc664776035b72e33a",
+    rating: "",
     match: 1,
   },
   萨马兰奇纪念馆景区: {
@@ -2234,6 +2554,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/12e80ea81309a10e18a01aad653667a6",
+    rating: "",
     match: 0.97,
   },
   国家海洋博物馆景区: {
@@ -2241,12 +2562,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "周二至周日 09:00-17:00 最晚进入16:30；停止入场:16:30 06-01至06-01 周一至周日 09:00-17:00 最晚进入16:30；停止入场:16:30",
     image: "",
+    rating: "",
     match: 0.87,
   },
   天津热带植物观光园景区: {
     tel: "022-27948011",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 1,
   },
   石家大院景区: {
@@ -2254,6 +2577,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://aos-comment.amap.com/B0FFI6MD84/comment/202511_01-14315_1761978722815_26029514.jpg",
+    rating: "",
     match: 1,
   },
   平津战役纪念馆景区: {
@@ -2261,6 +2585,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/3e541e098d1f5f81bbe113eea3784bb7",
+    rating: "",
     match: 1,
   },
   天山海世界米立方水上乐园: {
@@ -2268,12 +2593,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一 全天关闭；周二至周日 10:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/0a047f14f40b38d926469dbcfbbe72cd",
+    rating: "",
     match: 0.67,
   },
   天津东疆湾景区: {
     tel: "",
     openTime: "08:30-19:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 1,
   },
   天津南湖绿博园景区: {
@@ -2281,6 +2608,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/d50a1489644e8d81ba9cce06d81e1aa2",
+    rating: "",
     match: 0.71,
   },
   郭家沟景区: {
@@ -2288,6 +2616,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-18:00 最晚进入17:30",
     image:
       "https://aos-comment.amap.com/B0FFF375D1/comment/content_media_external_file_1000073297_ss__1745549508031_90552956.jpg",
+    rating: "",
     match: 1,
   },
   天津天塔湖风景区: {
@@ -2295,6 +2624,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-22:00",
     image:
       "http://store.is.autonavi.com/showpic/be05aa107b2a21ec1d6c6e70c4756057",
+    rating: "",
     match: 1,
   },
   天士力大健康城景区: {
@@ -2302,6 +2632,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00；具体营业状态以当天开放情况为准。",
     image:
       "http://store.is.autonavi.com/showpic/35b4117786042c3343c7abeadfbfce18",
+    rating: "",
     match: 0.95,
   },
   仁爱团泊湖国际休闲博览园景区: {
@@ -2309,6 +2640,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-21:00 最晚进入20:30",
     image:
       "https://store.is.autonavi.com/showpic/53c2be0bd615b9ce0000002638406348?type=pic",
+    rating: "",
     match: 1,
   },
   天津光合谷旅游度假区: {
@@ -2317,6 +2649,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周五 09:00-17:00开放（16:00停止售票，16:00停止入园）；周六至周日 09:00-17:00开放（16:30停止售票，16:30停止入园）；法定节假日 09:00-17:00开放（16:30停止售票，16:30停止入园）；具体开放时间以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/f67734b796c1c8881a93be5b8c792254",
+    rating: "",
     match: 1,
   },
   杨柳青庄园景区: {
@@ -2324,6 +2657,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/85759950f9aa0fc7cf8a4be838022c2a",
+    rating: "",
     match: 1,
   },
   天津市金街文化旅游区: {
@@ -2331,6 +2665,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-22:00",
     image:
       "https://store.is.autonavi.com/showpic/0385201cd99c3ed00000009208744446?type=pic",
+    rating: "",
     match: 0.85,
   },
   驼梁景区: {
@@ -2339,6 +2674,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 08:00-17:30；4月至10月 周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/0522215fef62cc2a6c89ed2c1ce50989",
+    rating: "",
     match: 0.99,
   },
   平山县天桂山风景名胜区: {
@@ -2346,6 +2682,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "04月10日至12月31日 08:00-18:00 停止入场:17:00",
     image:
       "http://store.is.autonavi.com/showpic/e0a3a21d4fd5e1214085419b4b6d6be5",
+    rating: "",
     match: 0.57,
   },
   佛光山景区: {
@@ -2353,6 +2690,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "1月1日-12月31日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/dd2cfc7fcb508fbe12d59c122662d004",
+    rating: "",
     match: 0.97,
   },
   平山县黑山大峡谷景区: {
@@ -2360,6 +2698,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "04-30至12-31 周一至周日 08:00-17:00 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/480b56d0180f1735aa21f6537aa15186",
+    rating: "",
     match: 0.98,
   },
   东方巨龟苑: {
@@ -2367,6 +2706,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://comment-oss-online.oss-cn-wulanchabu.aliyuncs.com/B0FFIBAJG2/comment/content_media_external_images_media_84635.jpg",
+    rating: "",
     match: 1,
   },
   白鹿温泉景区: {
@@ -2375,6 +2715,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "01-01至09-24 周一至周日 10:00-22:30；09-25至09-27 周一至周日 09:00-23:00；09-28至09-30 周一至周日 10:00-22:30；10-01至10-06 周一至周日 09:00-23:00；10-07至12-31 周一至周日 10:00-22:30",
     image:
       "http://store.is.autonavi.com/showpic/46ac6174aba9e405bcee8eeb0fc24641",
+    rating: "",
     match: 1,
   },
   平山县紫云山景区: {
@@ -2382,6 +2723,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:30",
     image:
       "https://store.is.autonavi.com/showpic/7136edc729e0eb0f11a006975ef64a3b",
+    rating: "",
     match: 0.92,
   },
   灵寿县水泉溪自然风景区: {
@@ -2389,6 +2731,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:00",
     image:
       "http://store.is.autonavi.com/showpic/fab432d3b268bd2164f7fac4f0de2bd4",
+    rating: "",
     match: 1,
   },
   秋山风景区: {
@@ -2396,12 +2739,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/7809ef766ad1ff3f007853df4704b894",
+    rating: "",
     match: 0.99,
   },
   五岳寨风景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   国御温泉度假小镇: {
@@ -2409,6 +2754,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周四，周日 09:00-22:00；周五至周六 09:00-23:00",
     image:
       "http://store.is.autonavi.com/showpic/8499a266ed49dac10df403868db41109",
+    rating: "",
     match: 0.99,
   },
   赵州桥景区: {
@@ -2417,6 +2763,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "08:30-17:30；18:30-22:00 最晚进入22:00夜游项目收费,场最晚入园时间17:30, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/d439dd6fec3aa61d7b1eb62406f1dc4e",
+    rating: "",
     match: 1,
   },
   抱犊寨风景区: {
@@ -2424,6 +2771,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "1月至3月,11月至12月 周一至周日 08:30-17:00 最晚进入16:00；4月至10月 周一至周日 08:30-17:30 最晚进入16:30",
     image: "",
+    rating: "",
     match: 1,
   },
   华北军区烈士陵园: {
@@ -2431,6 +2779,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:00-22:00；停止入场:22:00",
     image:
       "https://store.is.autonavi.com/showpic/dfd2d482c37573f50000008396830403?type=pic",
+    rating: "",
     match: 0.99,
   },
   棋盘山景区: {
@@ -2438,6 +2787,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/82afc4e91f2c4960021a8df9e108a493",
+    rating: "",
     match: 0.96,
   },
   正定隆兴寺: {
@@ -2445,6 +2795,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/f09847d19f726d4ebf84301c69f3030c",
+    rating: "",
     match: 1,
   },
   正定荣国府: {
@@ -2452,12 +2803,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-21:30 最晚进入21:00",
     image:
       "http://store.is.autonavi.com/showpic/b09f97b8c3f7b7bf2c7f41069746c2a9",
+    rating: "",
     match: 1,
   },
   天山海世界: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   承德市隆化县董存瑞纪念馆: {
@@ -2465,6 +2818,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-11:30,13:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/c5a569eaf9bee2c8b5515fbce7ed4b09",
+    rating: "",
     match: 0.96,
   },
   承德市兴隆县兴隆山景区: {
@@ -2473,6 +2827,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "08:00-17:30；接驳车08:30-17:30,索道 09:00-17:00,观光电梯 09:30-16:00",
     image:
       "http://store.is.autonavi.com/showpic/dcf3ab74aead1eb6064d0777d088488a",
+    rating: "",
     match: 0.71,
   },
   角山景区: {
@@ -2480,6 +2835,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-17:30",
     image:
       "https://store.is.autonavi.com/showpic/a39dba81682d1d8a0000003374160098?type=pic",
+    rating: "",
     match: 1,
   },
   长寿山景区: {
@@ -2488,6 +2844,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "7月至8月 周一至周日 07:00-17:30 最晚进入17:00；9月 周一至周日 07:30-17:30 最晚进入17:00 10-01至10-07 周一至周日 06:30-17:30 最晚进入17:00；10-08至11-01 周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/402e46e9430f1524396fda796cb96d66",
+    rating: "",
     match: 1,
   },
   乐岛海洋王国: {
@@ -2495,6 +2852,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "10:00-14:30 / 16:00",
     image:
       "https://aos-comment.amap.com/B0FFK0N3V4/comment/content_media_external_images_media_1000060661_ss__1756302071054_16270946.jpg",
+    rating: "",
     match: 0.97,
   },
   鸽子窝公园: {
@@ -2503,6 +2861,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 06:40-19:00，2026年2月17日 05:50-19:00, 2月18日至2月23日 06:40-19:00",
     image:
       "http://store.is.autonavi.com/showpic/3296cb437391022ceca941606cffb89b",
+    rating: "",
     match: 1,
   },
   集发农业梦想王国: {
@@ -2511,6 +2870,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "11月至12月 周六至周日 09:00-16:30 最晚进入15:30 09-03至09-30 周一 全天关闭；09-03至09-30 周二至周日 09:00-17:00 最晚进入16:00；10-01至10-07 周一至周日 09:00-17:00 最晚进入16:00；10-08至10-10 周一至周日 全天关闭；10-11至10-11 周一 全天关闭；10-11至10-11 周二至周日 09:00-17:00 最晚进入16:00；10-12至12-31 周一至周五 全天关闭；10-19至10-31 周六至周日 08:30-17:00 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/03f90d4ed698916b04cde825e691e40c",
+    rating: "",
     match: 1,
   },
   秦皇岛野生动物园: {
@@ -2518,6 +2878,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/4d841579ca02c2572db01b5d02ccefca",
+    rating: "",
     match: 1,
   },
   碧螺塔海上酒吧公园: {
@@ -2525,6 +2886,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日:04:00-22:00,中秋、国庆节假日:04:00-23:00",
     image:
       "http://store.is.autonavi.com/showpic/3a3cbe46ac372b3fb46b1ec11dced07b",
+    rating: "",
     match: 1,
   },
   联峰山公园: {
@@ -2533,6 +2895,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至6月,9月至12月 周一至周日 07:00-17:00 最晚进入17:00；7月至8月 周一至周日 05:30-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/316145d8d99c47883dd569330c1d156b",
+    rating: "",
     match: 1,
   },
   秦皇求仙入海处景区: {
@@ -2540,6 +2903,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/e5e2cad500b2d7c437246ba15908b9d3",
+    rating: "",
     match: 1,
   },
   新澳海底世界: {
@@ -2547,12 +2911,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:40-17:30",
     image:
       "http://store.is.autonavi.com/showpic/95b54c4b8bcab2fc4c01c604baa50289",
+    rating: "",
     match: 1,
   },
   华夏庄园景区: {
     tel: "0335-7169888",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   秦皇岛市南戴河国际娱乐中心: {
@@ -2561,6 +2927,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "9月1日至9月24日 09:00-17:30(17:00停止入园)；9月25日至9月30日 周一至周四 09:00-17:30(17:00停止入园)；9月25日至9月30日 周五至周日 08:30-18:00(17:00停止入园)；10月1日至10月7日 08:30-18:00(17:00停止入园)；具体开放时间以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/cd25160ff0f3897d14f387d48628c816",
+    rating: "",
     match: 0.99,
   },
   河北省秦皇岛市抚宁区冰塘峪长城风情大峡谷景区: {
@@ -2569,6 +2936,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 08:30-17:00 最晚进入16:00；4月至10月 周一至周日 08:00-17:30 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/9cae4233c1f5273c8b6c7a77faee7b42",
+    rating: "",
     match: 0.98,
   },
   祖山景区: {
@@ -2576,6 +2944,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-17:00 最晚进入15:00, 具体开放时间以现场公示为准",
     image:
       "https://aos-comment.amap.com/B0GRSSBP4T/comment/f6ddf398f2b13029862eaa293640070e_2048_2048_80.jpg",
+    rating: "",
     match: 0.95,
   },
   渔岛海洋温泉景区: {
@@ -2583,12 +2952,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-20:30",
     image:
       "http://store.is.autonavi.com/showpic/eaceb2c4f3cb73ad656d381fff1ef3f0",
+    rating: "",
     match: 1,
   },
   遵化市万佛园景区: {
     tel: "0315-6948585",
     openTime: "周一至周日 08:30-16:30",
     image: "",
+    rating: "",
     match: 0.99,
   },
   迁西县青山关景区: {
@@ -2596,12 +2967,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:45-17:00",
     image:
       "http://store.is.autonavi.com/showpic/ec1638431e75b553f18ae9913289f496",
+    rating: "",
     match: 1,
   },
   唐山市南湖景区: {
     tel: "0315-2032666",
     openTime: "周一至周日 10:00-21:00",
     image: "",
+    rating: "",
     match: 0.79,
   },
   曹妃甸湿地景区: {
@@ -2609,6 +2982,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/49d8c13259ea17920000007594790506?type=pic",
+    rating: "",
     match: 0.92,
   },
   开滦国家矿山公园: {
@@ -2617,6 +2991,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一 不开放(法定节假日除外)；周二至周日 08:30-17:30(最晚售票16:30 最晚进入16:30)",
     image:
       "https://store.is.autonavi.com/showpic/c49c3e792c3206aa0000004723296313?type=pic",
+    rating: "",
     match: 1,
   },
   唐津运河生态旅游度假景区: {
@@ -2624,6 +2999,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-18:00 最晚进入18:00具体营业状态以当天开放情况为准",
     image:
       "https://store.is.autonavi.com/showpic/7abe9103ed28003bd045ae12fe97d60a",
+    rating: "",
     match: 1,
   },
   迁安市山叶口景区: {
@@ -2631,6 +3007,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入16:30",
     image:
       "https://aos-comment.amap.com/B013B0S0L5/comment/content_media_external_file_1000075796_ss__1755757627591_25787128.jpg",
+    rating: "",
     match: 0.98,
   },
   滦州古城景区: {
@@ -2638,6 +3015,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/3a18f55b5ef8ec4e640508f2ee467b8b",
+    rating: "",
     match: 1,
   },
   迁安市白羊峪长城旅游区: {
@@ -2646,12 +3024,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "01-01至07-01 周一至周日 08:30-17:00 最晚进入16:00；07-02至07-02 周一至周日 全天关闭；07-03至12-31 周一至周日 08:30-17:00 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/8c3acadf0d73327d4c6103756d0593e6",
+    rating: "",
     match: 0.97,
   },
   迁西县龙井关长城漂流景区: {
     tel: "0315-5999335",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.9,
   },
   遵化尚禾源旅游景区: {
@@ -2659,6 +3039,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFHHOL0J/comment/content_media_external_file_1000075852_ss__1755844710863_19838654.jpg",
+    rating: "",
     match: 0.71,
   },
   曹妃甸多玛乐园景区: {
@@ -2667,6 +3048,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "4月至6月,9月至10月 周一至周日 09:00-17:00；7月至8月 周一至周日 09:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/e983165491d792d821a9a47742c95896",
+    rating: "",
     match: 0.99,
   },
   易县狼牙山风景区: {
@@ -2674,6 +3056,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:00",
     image:
       "https://store.is.autonavi.com/showpic/e7838c23a7eb672a0000008070358426",
+    rating: "",
     match: 0.6,
   },
   易水湖景区: {
@@ -2681,6 +3064,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "10月7日6:30-16:30,10月8日起营业时间8:00-16:00",
     image:
       "http://store.is.autonavi.com/showpic/ac2917dd3f6a97733c00464e67a0cd1f",
+    rating: "",
     match: 0.99,
   },
   曲阳北岳庙景区: {
@@ -2688,12 +3072,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://aos-comment.amap.com/B013800ZHU/comment/content_media_external_file_1000042694_ss__1767508188669_93127212.jpg",
+    rating: "",
     match: 1,
   },
   虎山风景区: {
     tel: "0312-4252155",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.98,
   },
   满城汉墓景区: {
@@ -2702,12 +3088,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "10月8日至次年4月30日: 08:30-17:00；5月1日至10月7日: 08:30-17:30, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/243885199d2c0093f26618e40b889840",
+    rating: "",
     match: 0.99,
   },
   奥润顺达节能门窗工业旅游景区: {
     tel: "",
     openTime: "周一至周日 09:00-17:00 最晚进入16:00",
     image: "",
+    rating: "",
     match: 0.98,
   },
   白沟新城和道国际箱包城旅游景区: {
@@ -2715,6 +3103,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/9ed577cebf369da411399f743a1b952e",
+    rating: "",
     match: 0.88,
   },
   鱼谷洞景区: {
@@ -2722,6 +3111,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/1cdd99096d5ad561fd770cbd276dce03",
+    rating: "",
     match: 1,
   },
   晋察冀边区革命纪念馆: {
@@ -2729,6 +3119,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/63d53f131050c7f60000000979266248?type=pic",
+    rating: "",
     match: 1,
   },
   直隶总督署博物馆: {
@@ -2737,6 +3128,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "03/15-11/14 周二–周日 08:30–18:00开放 最晚进入17:30；11/15-03/14 周二–周日 09:00–17:00开放 最晚进入16:30；1/1-12/31 周一 全天不开放；中秋节,国庆节 08:30–18:30开放 最晚进入18:00；9月份夜游时间:每周六19:00~21:00（20:30停止入馆），中秋节期间周五加演一场。",
     image:
       "http://store.is.autonavi.com/showpic/22d93b7ffc8da1c92f59168ec0fc61ef",
+    rating: "",
     match: 1,
   },
   刘伶醉景区: {
@@ -2745,6 +3137,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,10月至12月 周一至周日 08:00-11:30,13:30-17:00；5月至9月 周一至周日 08:00-11:30,14:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/595d6753e6fbe35c038397c7703d0595",
+    rating: "",
     match: 0.94,
   },
   阜平天生桥景区: {
@@ -2752,6 +3145,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0IUAS0911/comment/content_media_external_images_media_131067_ss__1726292992870_66924214.jpg",
+    rating: "",
     match: 0.98,
   },
   阜平县云花溪谷景区: {
@@ -2759,6 +3153,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/ca3a667e0e10ace320098234c7e82a60",
+    rating: "",
     match: 1,
   },
   唐县潭瀑峡景区: {
@@ -2767,6 +3162,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "01-01至08-10 周一至周日 08:00-17:00 最晚进入17:00；08-11至08-12 周一至周日 全天关闭；08-13至12-31 周一至周日 08:00-17:00 最晚进入17:00",
     image:
       "https://aos-comment.amap.com/B0FFGRR1P6/comment/content_media_external_images_media_57088_1658066986885_411fb118.jpg",
+    rating: "",
     match: 0.99,
   },
   丛台区丛台公园: {
@@ -2774,6 +3170,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 05:30-22:00",
     image:
       "http://store.is.autonavi.com/showpic/8c7c7dbf01fe2cfefaba3311821453d4",
+    rating: "",
     match: 1,
   },
   武安市东山文化博艺园: {
@@ -2781,6 +3178,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/bae76586a5d560b90000003568602634?type=pic",
+    rating: "",
     match: 0.99,
   },
   峰峰矿区响堂山风景名胜区: {
@@ -2789,6 +3187,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-17:30,17:30停止售票,17:30停止检票,18:00石窟区、数字展示中心关闭；18:30闭园",
     image:
       "https://store.is.autonavi.com/showpic/313abb9e3aa510a7eae0ea0dd7c5fba4",
+    rating: "",
     match: 1,
   },
   丛台区赵苑公园: {
@@ -2796,6 +3195,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/228e66bac480f06a7fcf30968118c874",
+    rating: "",
     match: 1,
   },
   邯山区晋冀鲁豫革命纪念园: {
@@ -2803,6 +3203,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/7031b5b057d55233eb1e502f393d691f",
+    rating: "",
     match: 0.66,
   },
   馆陶县粮画小镇旅游景区: {
@@ -2810,6 +3211,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-20:00",
     image:
       "https://aos-comment.amap.com/B0FFH2BPIA/comment/content_media_external_file_1000005742_ss__1762333562155_22410724.jpg",
+    rating: "",
     match: 0.99,
   },
   肥乡区丛台酒苑景区: {
@@ -2817,6 +3219,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入17:00",
     image:
       "https://aos-comment.amap.com/B0FFG8QJ9B/comment/content_media_external_file_100008365_1759926603785_26433351.jpg",
+    rating: "",
     match: 1,
   },
   武安市古武当山旅游景区: {
@@ -2824,6 +3227,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "8:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/a44172947fc6c57d729b48d71b3571a1",
+    rating: "",
     match: 1,
   },
   广平县赵王印象城景区: {
@@ -2831,6 +3235,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00 最晚进入18:00",
     image:
       "https://aos-comment.amap.com/B0FFJKW4QL/comment/B8D39254_4EFA_4FA2_AB06_E827060C067D_L0_001_2048_153_1747383450856_18129565.jpg",
+    rating: "",
     match: 1,
   },
   万龙滑雪场景区: {
@@ -2838,6 +3243,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:00,18:30-21:30",
     image:
       "http://store.is.autonavi.com/showpic/6f1cc854c90cc9538390b46121a4db6b",
+    rating: "",
     match: 1,
   },
   黄龙山庄景区: {
@@ -2845,6 +3251,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/6f902b6d21bb6a23860edb732ff743e8",
+    rating: "",
     match: 0.99,
   },
   安家沟生态旅游区: {
@@ -2852,6 +3259,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/275b2c5fe59dd897469a6c59ccd3585a",
+    rating: "",
     match: 1,
   },
   大境门景区: {
@@ -2859,6 +3267,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/fe2ece6ce4bad56d0000007493050978?type=pic",
+    rating: "",
     match: 1,
   },
   赤城温泉度假村景区: {
@@ -2866,6 +3275,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-22:00",
     image:
       "http://store.is.autonavi.com/showpic/266b5fd83b6e68178e16d06726fb9a6d",
+    rating: "",
     match: 0.99,
   },
   沽水福源度假村景区: {
@@ -2873,6 +3283,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/78c4e464f558887694536288396a3337",
+    rating: "",
     match: 1,
   },
   滦河神韵风景区: {
@@ -2880,6 +3291,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "5月1日至10月8日 周一至周日 07:00-19:00",
     image:
       "http://store.is.autonavi.com/showpic/91a6f47ccfb105ab3fd6a13d472d1233",
+    rating: "",
     match: 0.99,
   },
   鸡鸣山风景旅游区: {
@@ -2887,6 +3299,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:30",
     image:
       "https://store.is.autonavi.com/showpic/25b3477c380b28100000002100502019?type=pic",
+    rating: "",
     match: 1,
   },
   黄帝城遗址文化旅游区: {
@@ -2894,12 +3307,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://aos-comment.amap.com/B0HAGSVZE9/comment/00a8f85b201c48b755225e45dd5fb892_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   富龙四季小镇景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.97,
   },
   "桑干河大峡谷·飞瀑峡景区": {
@@ -2907,6 +3322,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/313505c56657bef684d5c59270cfae18",
+    rating: "",
     match: 0.99,
   },
   中信国安第一城: {
@@ -2914,6 +3330,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "09:30-21:00(20:00停止售票,停止入园)",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/0aa972ee-683a-4abd-b586-15a53584d11d.jpg",
+    rating: "",
     match: 1,
   },
   金丰农科园: {
@@ -2921,6 +3338,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/7ac3e7b5f07790d1158d6950d8b62de4",
+    rating: "",
     match: 1,
   },
   吴桥杂技大世界: {
@@ -2929,6 +3347,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "08:30-17:30,2026-2-16至 2026-2-23 08:00-21:00, 具体开放时间以现场公示为准",
     image:
       "https://aos-comment.amap.com/B0FFLNRBRA/comment/448E1ED6_3FFF_49D7_8BE5_4C9D54E97007_L0_001_1500_200_1772587973431_43027007.jpg",
+    rating: "",
     match: 1,
   },
   东光铁佛寺: {
@@ -2936,6 +3355,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00；全年开放",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/6474895d-7ce2-4ae5-aec0-f81b6c22bccb.jpg",
+    rating: "",
     match: 1,
   },
   河间府署: {
@@ -2943,6 +3363,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入16:45",
     image:
       "http://store.is.autonavi.com/showpic/67bebd9271f50018cd0f86cb6b897c67",
+    rating: "",
     match: 1,
   },
   南大港湿地: {
@@ -2950,6 +3371,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://aos-comment.amap.com/B013D00QFW/comment/867CEE94_5B4B_4E5F_A84E_F6687F94FCC5_L0_001_1206_143_1758121645090_62101444.jpg",
+    rating: "",
     match: 1,
   },
   衡水湖景区: {
@@ -2957,6 +3379,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://store.is.autonavi.com/showpic/30be73e1b4491f9f6fbf01dda96f31cb",
+    rating: "",
     match: 0.99,
   },
   闾里古镇: {
@@ -2964,6 +3387,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFH70EWR/comment/content_media_external_file_100012354_1747917215575_74449925.jpg",
+    rating: "",
     match: 1,
   },
   武强年画博物馆: {
@@ -2971,6 +3395,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一 全天关闭；周二至周日 08:30-12:00,14:30-17:30",
     image:
       "https://store.is.autonavi.com/showpic/7673c3a76d19fa4a0000000906172912?type=pic",
+    rating: "",
     match: 1,
   },
   周窝音乐小镇景区: {
@@ -2978,6 +3403,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFI9Y64X/comment/content_media_external_file_1000049347_ss__1759892795833_32819638.jpg",
+    rating: "",
     match: 1,
   },
   崆山白云洞旅游区: {
@@ -2985,6 +3411,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/28f96591ba2514d7ff06751ebcf732ea",
+    rating: "",
     match: 0.99,
   },
   内丘扁鹊庙景区: {
@@ -2993,6 +3420,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:30-17:30；景区开放时间变更频繁，出行前请咨询景区。 8:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/196793016eca08ef3a8de3c17ed16721",
+    rating: "",
     match: 1,
   },
   云梦山景区: {
@@ -3000,6 +3428,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/0ab766609dc845224376247c8c26ae68",
+    rating: "",
     match: 1,
   },
   紫金山景区: {
@@ -3008,6 +3437,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:30-17:30；3月1日-10月31日8:30-18:30；11月1日-次年2月28日8:00-17:00。",
     image:
       "http://store.is.autonavi.com/showpic/276ae9ee7f5816643ce95a150c65637a",
+    rating: "",
     match: 1,
   },
   邢台大峡谷景区: {
@@ -3016,6 +3446,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-17:00 最晚进入16:00；具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/e5b3b3f5a598c1b2ffcb24cfd7993b4f",
+    rating: "",
     match: 0.91,
   },
   九龙峡自然风光旅游区: {
@@ -3023,6 +3454,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B013F0MQPI/comment/a16b359319518049b778ac07a750ac7f_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   天梯山景区: {
@@ -3030,12 +3462,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:00",
     image:
       "https://store.is.autonavi.com/showpic/3ab061a1e33018d9b80023a786dbc0a4",
+    rating: "",
     match: 1,
   },
   邢台前南峪生态旅游区: {
     tel: "0319-2782398",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.69,
   },
   内丘县邢窑文化旅游区: {
@@ -3043,6 +3477,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/2217b49ea556bf52fbe4fa4877e7b34a",
+    rating: "",
     match: 0.98,
   },
   南和农业嘉年华: {
@@ -3050,6 +3485,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:00",
     image:
       "https://aos-comment.amap.com/B0FFIFDLHY/comment/7d0b3210f9e07beab3919bba676c214d_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   临城县岐山湖景区: {
@@ -3057,6 +3493,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/dfc1ee2ed5069dfe04b56670132b3c2f",
+    rating: "",
     match: 1,
   },
   济源市黄河三峡景区: {
@@ -3064,6 +3501,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "全年 08:00-18:00开放、游船常规开船时间:11:00-14:00,16:00,此信息仅供参考,有问题可咨询景区",
     image: "",
+    rating: "",
     match: 0.56,
   },
   "济源市小沟背·银河峡景区": {
@@ -3071,6 +3509,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/e9468fe8a75712c35737b4eb953234a3",
+    rating: "",
     match: 0.58,
   },
   天门市茶圣故里园景区: {
@@ -3078,6 +3517,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0H39HRZCP/comment/e32f8c5b8975cdd5f4ae3a50fd791b24_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   神农架天燕景区: {
@@ -3086,6 +3526,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "04-01至10-07 周一至周日 07:30-17:30 最晚进入17:30；10-08至03-31 周一至周日 08:00-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/04d8da0746b07512469238597c9ac4d1",
+    rating: "",
     match: 0.94,
   },
   神农架红坪景区: {
@@ -3093,12 +3534,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/2942cdacaff2a847b9569580769bd15e",
+    rating: "",
     match: 1,
   },
   七仙岭温泉国家森林公园: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   海南文笔峰盘古文化旅游区: {
@@ -3106,6 +3549,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入17:30",
     image:
       "https://aos-comment.amap.com/B0FFFR4Q9Q/comment/fb1984addab57c10f159433333864be4_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   南湾猴岛生态旅游区: {
@@ -3113,12 +3557,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:20 最晚进入16:50",
     image:
       "https://aos-comment.amap.com/B0FFM61IL4/comment/07b9720c2860f06ef1c97b487815833d_2048_2048_80.jpg",
+    rating: "",
     match: 0.93,
   },
   博鳌亚洲论坛永久会址景区: {
     tel: "0898-62691509",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   东山岭文化旅游区: {
@@ -3126,6 +3572,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-17:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/1e98ea1548d4fae7f8326f32445b6800",
+    rating: "",
     match: 0.97,
   },
   兴隆热带植物园: {
@@ -3133,6 +3580,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/99a5c1ff9c20b9dfe683d1cb51029b3e",
+    rating: "",
     match: 1,
   },
   海南百花岭热带雨林文化旅游区: {
@@ -3140,6 +3588,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-18:00,最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/5bb11c63890a0fa539597ae9414fd569",
+    rating: "",
     match: 1,
   },
   海南铜鼓岭景区: {
@@ -3148,12 +3597,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 09:00-18:00 最晚进入17:30；1、购买单门票的步行游客最晚入园与停止售票时间为15:30； 2、购买含车套票游客最晚入园与停止售票时间为17:30；",
     image:
       "http://store.is.autonavi.com/showpic/cd178ad330ec5f68df312a6374860e45",
+    rating: "",
     match: 0.88,
   },
   屯昌梦幻香山旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.63,
   },
   宋氏祖居景区: {
@@ -3161,6 +3612,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30 最晚进入17:10",
     image:
       "http://store.is.autonavi.com/showpic/cb893db51213ea2590e056c2cc445ff5",
+    rating: "",
     match: 1,
   },
   海南解放公园: {
@@ -3168,6 +3620,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/1a9dae7ccfd3fa1e0000000593064058",
+    rating: "",
     match: 1,
   },
   五指山革命根据地纪念园: {
@@ -3175,6 +3628,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一关闭(法定节假日除外),周二至周日 08:30-12:00；14:30-17:30",
     image:
       "https://store.is.autonavi.com/showpic/590eeca03108a6c8b494a503c805d1a3",
+    rating: "",
     match: 1,
   },
   晋祠博物馆: {
@@ -3182,6 +3636,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "https://aos-comment.amap.com/B0FFGX75RI/comment/BF9AB240_955E_4E89_B628_9A6B27D02F38_L0_001_1500_200_1763179159055_24790354.jpg",
+    rating: "",
     match: 1,
   },
   汾河景区: {
@@ -3189,6 +3644,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-23:00",
     image:
       "http://store.is.autonavi.com/showpic/bf4e1a8c096e437d00d4ff456863ea78",
+    rating: "",
     match: 1,
   },
   东湖醋园: {
@@ -3196,6 +3652,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/df747da8334a0ce841573f3fb6f7ebad",
+    rating: "",
     match: 1,
   },
   太原动物园: {
@@ -3203,6 +3660,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/a2eeaecc8ad8af98274b2ed26974053e",
+    rating: "",
     match: 1,
   },
   太原市森林公园: {
@@ -3210,6 +3668,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-23:00",
     image:
       "http://store.is.autonavi.com/showpic/ffb60d640cd183f10c051d7456c0c2f6",
+    rating: "",
     match: 1,
   },
   宝源老醋坊: {
@@ -3218,6 +3677,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "02-16至10-31 周一至周日 08:00-18:00 最晚进入18:00；11-01至02-15 周一至周日 08:00-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/5a3fec88c1a510a023d25bcfa54b1cff",
+    rating: "",
     match: 1,
   },
   恒山悬空寺: {
@@ -3226,6 +3686,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "5月1日至9月30日 08:00-18:00开放；10月1日至10月31日 08:00-17:00开放；11月1日至次年2月28日 08:00-16:30开放；3月1日至4月30日 08:00-17:00开放；国家法定节假日及旅游高峰期,售,停票时间依景区客流量情况制定为准。",
     image:
       "http://store.is.autonavi.com/showpic/5bf8752acc094b9ecd65ae18483f9e8c",
+    rating: "",
     match: 1,
   },
   大同华严寺: {
@@ -3234,6 +3695,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:30-17:30；17:00停止检票,2026年2月17日至2月24日 08:00-18:30；18:00停止检票",
     image:
       "http://store.is.autonavi.com/showpic/939b0b8a9038edc7b5fca4b284d92ebf",
+    rating: "",
     match: 1,
   },
   晋华宫矿井下游景区: {
@@ -3241,6 +3703,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/a9109eb974eac105a5a9941360e45889",
+    rating: "",
     match: 0.93,
   },
   大同方特欢乐世界景区: {
@@ -3249,6 +3712,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "全年 09:30-17:30；9月17日-9月24日 09:30-21:00；9月25日-10月7日 09:30-21:00；10月8日-10月15日 10:00-17:00；10月16日-11月15日 周一至周四 10:00-17:00,周五至周日 10:00-21:00；具体开放时间以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/f1088c53a4b3650bfa8fa5c874044cd4",
+    rating: "",
     match: 1,
   },
   大同魏都水世界: {
@@ -3256,6 +3720,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/8e6524bbbb22471e29ca1fce65de2a1c?operate=original&query_type=oss&operate_gif=1",
+    rating: "",
     match: 1,
   },
   李二口长城景区: {
@@ -3263,6 +3728,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/4108573d9629f2f1f955abcb2ef01bc8",
+    rating: "",
     match: 0.98,
   },
   平型关大捷纪念馆: {
@@ -3270,6 +3736,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/81aab1b7ae2c9dca1472bf5eb16e5a10",
+    rating: "",
     match: 1,
   },
   应县木塔: {
@@ -3277,6 +3744,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-20:00",
     image:
       "https://store.is.autonavi.com/showpic/39761db33dfb3bc50000002897034608?type=pic",
+    rating: "",
     match: 0.99,
   },
   金沙滩生态旅游区: {
@@ -3284,6 +3752,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "01月31日至12月31日 08:30-18:30 停止入园:17:30",
     image:
       "https://store.is.autonavi.com/showpic/11705812c0b84cac0000003301460857?type=pic",
+    rating: "",
     match: 1,
   },
   崇福寺景区: {
@@ -3292,6 +3761,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月1日-7月19日 与 9月1日-12月31日 09:00-17:00开放 最晚进入16:40；7月20日-8月31日 (暑期) 09:00-18:00开放 最晚进入17:45；劳动节 09:00-18:00开放 最晚进入17:45；具体开放时间以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/90a3e6ee3cd9a2ff4f570c4b8bc5cbcd",
+    rating: "",
     match: 1,
   },
   忻州市宁武万年冰洞旅游区: {
@@ -3299,6 +3769,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/ba03eb46c3d4a7c53f0dbff204539c0b",
+    rating: "",
     match: 1,
   },
   忻州市宁武汾河源头旅游区: {
@@ -3306,6 +3777,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "03-20至12-31 周一至周日 07:30-19:00",
     image:
       "http://store.is.autonavi.com/showpic/bf53925c4ce9f60a3c6d5d0c841fe4af",
+    rating: "",
     match: 1,
   },
   忻州市忻府区禹王洞景区: {
@@ -3314,6 +3786,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 08:00-17:30；4月至10月 周一至周日 08:00-18:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/e97231e50c2d69574f6ed47a968dc273",
+    rating: "",
     match: 0.97,
   },
   忻州滹源景区: {
@@ -3321,6 +3794,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00；停止入场:17:00",
     image:
       "https://aos-comment.amap.com/B0FFIGGUTI/headerImg/content_media_external_images_media_1141111_1658155377724_6cffedb8.jpg",
+    rating: "",
     match: 0.96,
   },
   忻州市原平市天涯山: {
@@ -3328,6 +3802,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B015E0N3P7/comment/176723663140_1767236632298_77611719.jpg",
+    rating: "",
     match: 0.99,
   },
   忻府区忻州古城: {
@@ -3335,6 +3810,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00，商户营业时间:8:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/539af3d4376d0dac9a00d4946c1bfcdb",
+    rating: "",
     match: 1,
   },
   乌金山国家森林公园: {
@@ -3342,6 +3818,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-19:30",
     image:
       "http://store.is.autonavi.com/showpic/b162cf85d1fcf97842ce3df81ddf0fbb",
+    rating: "",
     match: 0.59,
   },
   太行龙泉旅游区: {
@@ -3349,6 +3826,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "5月至11月 周一至周日 08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/86bbc3bb778fe992a61ba26f948a1385",
+    rating: "",
     match: 0.94,
   },
   麻田八路军总部纪念馆: {
@@ -3356,6 +3834,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/998e5d385f8aa12fe83801f7f8b0a643",
+    rating: "",
     match: 1,
   },
   红崖峡谷景区: {
@@ -3363,12 +3842,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/8c7ee0a0c6510dfabf97e0178499b204",
+    rating: "",
     match: 1,
   },
   石膏山风景区: {
     tel: "",
     openTime: "08:30, 17:00停止售票:16:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 1,
   },
   张壁古堡景区: {
@@ -3377,6 +3858,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-17:50开放 最晚进入17:45；劳动节 08:00-21:30开放 最晚进入20:50；具体开放时间以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/4f85f8b85066a9f41b37c530d80f0e27",
+    rating: "",
     match: 1,
   },
   平遥县双林寺彩塑艺术馆: {
@@ -3384,6 +3866,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入17:15",
     image:
       "https://store.is.autonavi.com/showpic/aa94f67094e20a730000002639202343?type=pic",
+    rating: "",
     match: 1,
   },
   平遥县镇国寺管理处: {
@@ -3392,18 +3875,21 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月1日至4月3010月9日至12月31日 08:00-17:30 最晚进入17:15；5月1日至10月7日 08:00-18:30 最晚进入18:15, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/41fbefe21dd13c4fc9acfff6daca1176",
+    rating: "",
     match: 1,
   },
   大寨景区: {
     tel: "",
     openTime: "周一至周日 09:00-17:00",
     image: "",
+    rating: "",
     match: 0.96,
   },
   小西沟: {
     tel: "",
     openTime: "周一至周日 08:00-22:00",
     image: "",
+    rating: "",
     match: 0.98,
   },
   大汖温泉: {
@@ -3411,6 +3897,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-21:00",
     image:
       "http://store.is.autonavi.com/showpic/b3a660f418f220921367d52df191313e",
+    rating: "",
     match: 0.99,
   },
   娘子关: {
@@ -3418,12 +3905,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/7059968316e732ee8a691a8e9ed3a108",
+    rating: "",
     match: 1,
   },
   桃林沟: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.98,
   },
   翠枫山: {
@@ -3431,12 +3920,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-16:30",
     image:
       "http://store.is.autonavi.com/showpic/31105d752427d76adf7d44f645b42cfb",
+    rating: "",
     match: 1,
   },
   方山县北武当山风景名胜区: {
     tel: "0358-6071789",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.64,
   },
   汾阳汾酒文化景区: {
@@ -3444,6 +3935,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFHUI5JR/comment/301dc530b9e4634fc1cfc9ec61712d5a_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   汾阳市贾家庄文化生态旅游区: {
@@ -3451,12 +3943,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-12:00,14:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/98c9398423195fe80000007202088554?type=pic",
+    rating: "",
     match: 0.97,
   },
   交城县卦山景区: {
     tel: "0358-3512728",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.8,
   },
   交城县玄中寺景区: {
@@ -3464,6 +3958,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-16:00 最晚进入15:30",
     image:
       "http://store.is.autonavi.com/showpic/b774e1e1911be3d30bdd667b1e6560f8",
+    rating: "",
     match: 1,
   },
   孝义三皇庙景区: {
@@ -3472,6 +3967,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 08:30-17:30；4月至10月 周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/52a53ef216d068420ae34149a23c033c",
+    rating: "",
     match: 1,
   },
   临县义居寺景区: {
@@ -3479,6 +3975,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B016600GWX/comment/4b68ad54f1edc6fe52cb167533634ba6_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   太行山大峡谷景区: {
@@ -3486,6 +3983,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周日至周六:08:00-18:30",
     image:
       "http://store.is.autonavi.com/showpic/68782692ffb1845319d813f307ba9fc4",
+    rating: "",
     match: 0.99,
   },
   洗耳河景区: {
@@ -3493,6 +3991,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:10-16:50",
     image:
       "http://store.is.autonavi.com/showpic/85b22b74c0a32cbff378b1694b55118b",
+    rating: "",
     match: 0.94,
   },
   欢乐太行谷: {
@@ -3501,6 +4000,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "9月至12月 周一至周日 10:00-18:00 最晚进入17:00；不夜城开放项目:摩天轮，疯狂老鼠，大摆锤，海盗船，高空飞翔，摇头飞椅。 海洋馆开放项目:旋转木马，儿童爬山车，魔术自行车，果虫滑车，碰碰车，转转杯。 01-01至07-14 周一至周日 10:00-18:00 最晚进入17:00；07-15至08-31 周一至周四 10:00-21:00 最晚进入20:30；07-15至08-31 周五至周日 10:00-22:00 最晚进入21:30；不夜城开放项目:摩天轮，疯狂老鼠，大摆锤，海盗船，高空飞翔，摇头飞椅。 海洋馆开放项目:旋转木马，儿童爬山车，魔术自行车，果虫滑车，碰碰车，转转杯。",
     image:
       "http://store.is.autonavi.com/showpic/718e1443e238a5d895067381b88b9f0f",
+    rating: "",
     match: 1,
   },
   太行水乡: {
@@ -3508,6 +4008,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:30",
     image:
       "http://store.is.autonavi.com/showpic/db5c4838cd10fe93e194b5026051b5d5",
+    rating: "",
     match: 0.97,
   },
   振兴小镇: {
@@ -3515,6 +4016,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/56b62a84324dfebbcb62607035d92002",
+    rating: "",
     match: 1,
   },
   通天峡景区: {
@@ -3522,6 +4024,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:30-17:00 最晚进入16:00,2026年春节期间 08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/93b92b0fe4140715c6894c2ff17ae0a0",
+    rating: "",
     match: 1,
   },
   天脊山景区: {
@@ -3529,6 +4032,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-19:00 最晚进入18:00",
     image:
       "http://store.is.autonavi.com/showpic/e6126fed2196ed6db712d4615794e561",
+    rating: "",
     match: 0.93,
   },
   黄崖洞文化旅游区: {
@@ -3536,6 +4040,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0163001D9/headerImg/780fce06754b640c1363d513e7695a65_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   八路军太行纪念馆: {
@@ -3543,12 +4048,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/da0f2da34c551081c9f5977a73d7c2c8",
+    rating: "",
     match: 1,
   },
   八路军文化园: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   太行龙洞: {
@@ -3556,12 +4063,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/da6fb1e15a0e978af4d65649cbbb2af6",
+    rating: "",
     match: 0.75,
   },
   珏山景区: {
     tel: "0356-3959754",
     openTime: "周一至周日 09:00-17:00 最晚进入16:30",
     image: "",
+    rating: "",
     match: 0.99,
   },
   郭峪古城: {
@@ -3569,6 +4078,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/2a4dbc79ac4296590000002702844863",
+    rating: "",
     match: 1,
   },
   蟒河景区: {
@@ -3577,12 +4087,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "03-01至09-29 周一至周日 08:00-18:00 最晚进入16:00；09-30至12-31 周一至周日 08:30-16:30",
     image:
       "http://store.is.autonavi.com/showpic/96221e4a2d043612354bf6ed30c7afa1",
+    rating: "",
     match: 0.96,
   },
   王莽岭景区: {
     tel: "0356-6878600",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   历山景区: {
@@ -3590,6 +4102,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/f2049b9e52338b800000004614338554?type=pic",
+    rating: "",
     match: 0.93,
   },
   柳氏民居景区: {
@@ -3597,6 +4110,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "https://aos-comment.amap.com/B0164000O8/comment/4d8838612e8f606373902781d8367df7_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   司徒小镇景区: {
@@ -3604,6 +4118,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:50；千年铁魂开始前10分钟停止入园",
     image:
       "http://store.is.autonavi.com/showpic/a9c9e36a97ff4f763c3ae5b6f6fb3796",
+    rating: "",
     match: 1,
   },
   海会书院: {
@@ -3611,6 +4126,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入17:00",
     image:
       "https://aos-comment.amap.com/B0FFG1DNKL/comment/%5B2026-02-08-13-42-11%5DD7724DC3-6CDA-438A-B683-C723DFF7FCE_1770529332471_31919136.jpg",
+    rating: "",
     match: 1,
   },
   "尧庙-华门景区": {
@@ -3619,6 +4135,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05-01至10-07 周一至周日 08:00-18:30 最晚进入18:00；10-08至04-30 周一至周日 08:00-18:00 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/eb6d5070c622e60a9a173d8394d901d5",
+    rating: "",
     match: 1,
   },
   黄河壶口瀑布风景名胜区: {
@@ -3626,6 +4143,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "8:00-17:00,17:00停止检票入园",
     image:
       "http://store.is.autonavi.com/showpic/290af965692021ab067d2e94b1eb1032",
+    rating: "",
     match: 0.94,
   },
   隰县小西天景区: {
@@ -3633,6 +4151,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/2277ee7f03a59ec600ec3f1c5718e449",
+    rating: "",
     match: 1,
   },
   蒲县柏山东岳庙: {
@@ -3640,6 +4159,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "冬令时 全年 08:30–17:30开放；夏令时 全年 08:30–18:00开放",
     image:
       "https://store.is.autonavi.com/showpic/3f17cb7ac162655c65eb817341f0f1fa",
+    rating: "",
     match: 1,
   },
   彭真故居纪念馆: {
@@ -3647,12 +4167,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/ed14cb04d0a809944edd615135238b28",
+    rating: "",
     match: 1,
   },
   临汾人祖山景区: {
     tel: "",
     openTime: "周一至周日 07:00-18:00",
     image: "",
+    rating: "",
     match: 0.6,
   },
   永和县黄河乾坤湾景区: {
@@ -3660,6 +4182,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "https://aos-comment.amap.com/B0FFJOQSWR/comment/content_media_external_file_1000035302_ss__1749948981260_80896709.jpg",
+    rating: "",
     match: 0.87,
   },
   襄汾县荷花小镇旅游景区: {
@@ -3667,6 +4190,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-19:00",
     image:
       "http://store.is.autonavi.com/showpic/10aa79fd0d561005f9eb74740486ece6",
+    rating: "",
     match: 1,
   },
   解州关帝庙: {
@@ -3675,6 +4199,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "4月1日-10月31日:08:00-18:00,17:50停止入场；11月1日-次年3月31日:09:00-17:00,17:00停止入场",
     image:
       "https://store.is.autonavi.com/showpic/b73eacd355314e380000006900078752?type=pic",
+    rating: "",
     match: 1,
   },
   山西省永乐宫壁画艺术博物馆: {
@@ -3683,6 +4208,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 09:00-17:00 最晚进入16:30；4月至10月 周一至周日 08:00-18:00 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/6066bc06439081d046c8e41b1d859487",
+    rating: "",
     match: 0.99,
   },
   李家大院: {
@@ -3691,12 +4217,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 09:00-17:00 最晚进入16:30 停止入场:16:30；4月至10月 周一至周日 08:00-18:00 最晚进入17:30 停止入场:17:30",
     image:
       "https://store.is.autonavi.com/showpic/a5b03079780d9f140000002895840777",
+    rating: "",
     match: 1,
   },
   运城盐湖: {
     tel: "0359-2023600",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.73,
   },
   历山风景区: {
@@ -3704,6 +4232,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-19:00；16:00停止入场",
     image:
       "http://store.is.autonavi.com/showpic/c1dde518cd35f7323235b04e4aa52055",
+    rating: "",
     match: 0.88,
   },
   运城市永济鹳雀楼: {
@@ -3711,6 +4240,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-22:00；20:30停止售、检票",
     image:
       "https://store.is.autonavi.com/showpic/ea68b11de88760bf0000008029284205?type=pic",
+    rating: "",
     match: 1,
   },
   永济五老峰风景名胜区: {
@@ -3718,6 +4248,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入18:00",
     image:
       "http://store.is.autonavi.com/showpic/a7e3faac95003a13ea8389489528380d",
+    rating: "",
     match: 1,
   },
   普救寺旅游区: {
@@ -3725,6 +4256,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "8:30-19:00(18:30停止入园)",
     image:
       "http://store.is.autonavi.com/showpic/ccc6fc4bf123d5dca84f5ef24f6234fe",
+    rating: "",
     match: 1,
   },
   神潭大峡谷: {
@@ -3732,6 +4264,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-21:00",
     image:
       "https://store.is.autonavi.com/showpic/09f8aafa5803e3850000003089438886?type=pic",
+    rating: "",
     match: 1,
   },
   圣天湖: {
@@ -3739,12 +4272,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/114b2ab2c37928a8533c94876a374155",
+    rating: "",
     match: 0.95,
   },
   舜帝陵: {
     tel: "0359-8812984",
     openTime: "周一至周日 09:00-16:30",
     image: "",
+    rating: "",
     match: 0.99,
   },
   昭君博物院: {
@@ -3752,6 +4287,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一,周三至周日 09:00-17:00 最晚进入16:45",
     image:
       "https://aos-comment.amap.com/B0FFK7W051/comment/content_media_external_file_1000562713_ss__1762412021072_03073792.jpg",
+    rating: "",
     match: 1,
   },
   蒙牛工业旅游景区: {
@@ -3759,6 +4295,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:10-17:00 最晚进入16:00",
     image:
       "https://store.is.autonavi.com/showpic/500d8fcceb9d9e790000003775544492?type=pic",
+    rating: "",
     match: 1,
   },
   "伊利・乳都科技示范园": {
@@ -3766,6 +4303,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-16:00",
     image:
       "https://aos-comment.amap.com/B01D70RDZ7/headerImg/91e84e34189ed2dda4380bdbd791c827_2048_2048_80.jpg",
+    rating: "",
     match: 0.9,
   },
   神泉生态旅游景区: {
@@ -3773,6 +4311,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/a60b6ba73db252520023bb7a224d742a",
+    rating: "",
     match: 0.99,
   },
   大青山太伟运动休闲度假村: {
@@ -3780,6 +4319,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "1月至3月,11月至12月 周一至周日 09:00-17:30,18:00-21:30",
     image:
       "https://aos-comment.amap.com/B01D701ISF/comment/content_media_external_file_1000012153_ss__1763768636308_63035781.jpg",
+    rating: "",
     match: 0.98,
   },
   内蒙古博物院: {
@@ -3788,6 +4328,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "全年 周二至周日 09:00-17:00开放(16:30停止入园)全年 周 不开放、闭馆(国家法定节假日除外)",
     image:
       "https://store.is.autonavi.com/showpic/c33d7de3292553470000003509222348?type=pic",
+    rating: "",
     match: 0.94,
   },
   大召历史文化旅游区: {
@@ -3795,6 +4336,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/3cc7baa7907f3dfc020902cc/comment/content_service__1773190371484_37318127_1773190440760_95734696.jpg",
+    rating: "",
     match: 0.99,
   },
   蒙亮民族风情园: {
@@ -3802,6 +4344,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-20:00",
     image:
       "https://aos-comment.amap.com/B0FFIWPZQW/comment/content_media_external_file_9479_ss__1755861211746_75398094.jpg",
+    rating: "",
     match: 1,
   },
   "蒙草·草博园": {
@@ -3809,6 +4352,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "https://aos-comment.amap.com/B0FFL79BVY/comment/content_media_external_file_3530_1766238266175_74746878.jpg",
+    rating: "",
     match: 0.8,
   },
   老牛坡红色文化旅游区: {
@@ -3816,6 +4360,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/32953b613eed2b3dd55aa3f0665c1a47",
+    rating: "",
     match: 1,
   },
   乌兰夫故居红色文化旅游区: {
@@ -3823,6 +4368,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/0d91af9093b9386af8f222100e3ddf70",
+    rating: "",
     match: 1,
   },
   黄河麦野谷生态休闲旅游区: {
@@ -3830,6 +4376,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-19:00",
     image:
       "https://aos-comment.amap.com/B0FFKPG84Y/comment/content_media_external_images_media_374186_ss__1732860254921_19286872.jpg",
+    rating: "",
     match: 0.99,
   },
   包头市固阳县春坤山生态旅游景区: {
@@ -3837,6 +4384,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/74df604fb6e20445e16c3804c050bd08",
+    rating: "",
     match: 0.98,
   },
   包头市花舞人间旅游景区: {
@@ -3844,6 +4392,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周五 09:00-18:00；周六至周日 08:30-19:00",
     image:
       "https://store.is.autonavi.com/showpic/4aa20476caedcd160000002595972285?type=pic",
+    rating: "",
     match: 0.65,
   },
   包头市青山区北方兵器城景区: {
@@ -3852,6 +4401,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,10月至12月 周一至周日 08:00-18:00；5月至9月 周一至周日 08:00-19:00 最晚进入18:30",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/c9c4f036-8355-4421-8734-bc5942c6e229.jpg",
+    rating: "",
     match: 1,
   },
   包头市九原区梅力更自然生态风景区: {
@@ -3859,6 +4409,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周五 08:30-17:00；周六至周日 09:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/51ce6f3eb5a23ed30000002767190555?type=pic",
+    rating: "",
     match: 1,
   },
   达茂旗诗画草原旅游景区: {
@@ -3866,6 +4417,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/978f0b499c43f9ee0000004945790132?type=pic",
+    rating: "",
     match: 0.99,
   },
   蒙根花万通生态旅游区: {
@@ -3873,6 +4425,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/76469f7fce470ef5816f5d7d13b4171c",
+    rating: "",
     match: 0.66,
   },
   恩格贝旅游区: {
@@ -3880,6 +4433,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/940949ec5017a564834e0a109a3eaa98",
+    rating: "",
     match: 1,
   },
   鄂尔多斯草原旅游区: {
@@ -3887,6 +4441,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/13299040be15917b004bd8db5a7f5c5b",
+    rating: "",
     match: 0.99,
   },
   七星湖旅游区: {
@@ -3894,6 +4449,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:30-17:30, 具体开放时间以现场公示为准",
     image:
       "https://aos-comment.amap.com/B0KRM727FF/comment/content_media_external_images_media_100007457_1733509685128_87281466.jpg",
+    rating: "",
     match: 0.94,
   },
   萨拉乌苏旅游区: {
@@ -3901,6 +4457,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/33ef016cbc6c48b06637b6573e1c2045",
+    rating: "",
     match: 1,
   },
   康巴什旅游区: {
@@ -3908,6 +4465,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/1a3ad206773c07c61597ff70d6d93317",
+    rating: "",
     match: 1,
   },
   准格尔召旅游区: {
@@ -3915,6 +4473,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/0a712fac25c62aca37eb69b2420d029b",
+    rating: "",
     match: 0.99,
   },
   水镜湖休闲度假旅游区: {
@@ -3922,6 +4481,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-19:00 最晚进入18:30",
     image:
       "https://aos-comment.amap.com/B01DD164TO/comment/content_media_external_images_media_1000050451_ss__1730031706184_14161615.jpg",
+    rating: "",
     match: 1,
   },
   准格尔黄河大峡谷旅游区: {
@@ -3929,6 +4489,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://store.is.autonavi.com/showpic/1927000ca091df9a88b3d06b6ae247ee",
+    rating: "",
     match: 1,
   },
   大沙头生态文化旅游区: {
@@ -3936,6 +4497,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-19:00",
     image:
       "https://store.is.autonavi.com/showpic/26ef42920a6151e60000009208616074?type=pic",
+    rating: "",
     match: 0.99,
   },
   东联动漫城: {
@@ -3943,6 +4505,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/4fccc714e4ace8ccc9905e7d415d7bc8",
+    rating: "",
     match: 0.6,
   },
   鄂尔多斯野生动物园: {
@@ -3951,6 +4514,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "夏令时 08:30-18:00开放 最晚进入16:30；冬令时 08:30-17:30开放 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/d2de7721f3f18955aa7d5676247af3fb",
+    rating: "",
     match: 1,
   },
   黄河三盛公国家水利风景区: {
@@ -3958,6 +4522,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "04月01日-10月31日 08:30-18:00",
     image:
       "https://aos-comment.amap.com/B01DD0HZEF/comment/fb594af0783a7072c4a97fec5d87c07c_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   世界反法西斯战争海拉尔纪念园: {
@@ -3965,6 +4530,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/a0d46463a9ee02dee94dee352c9870cc",
+    rating: "",
     match: 1,
   },
   莫尔道嘎国家森林公园: {
@@ -3972,6 +4538,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/66eb99165c30187301473bffb6ebe1ac",
+    rating: "",
     match: 0.98,
   },
   金帐汗旅游部落旅游区: {
@@ -3979,12 +4546,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/d43f5d47d8db9babe3375b9954bcc0ba",
+    rating: "",
     match: 0.71,
   },
   布苏里北疆军事文化旅游区: {
     tel: "",
     openTime: "08:30-17:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.95,
   },
   额尔古纳湿地景区: {
@@ -3992,6 +4561,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "9:00-16:30，16:00停止售票",
     image:
       "http://store.is.autonavi.com/showpic/d570ed86f5043b3920a418fe7c4b057e",
+    rating: "",
     match: 0.98,
   },
   达尔滨湖国家森林公园: {
@@ -3999,6 +4569,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/ce69cb8d89e83e29db038c44cb22df05",
+    rating: "",
     match: 0.97,
   },
   白桦林景区: {
@@ -4006,6 +4577,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/dfc0afc2ec7e42550000003275968509",
+    rating: "",
     match: 1,
   },
   额尔古纳国家湿地公园: {
@@ -4013,6 +4585,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:20-16:30",
     image:
       "http://store.is.autonavi.com/showpic/8e35fa69b2c4920c0d867d9dc52bdccb",
+    rating: "",
     match: 1,
   },
   拓跋鲜卑历史文化园: {
@@ -4021,6 +4594,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至5月,11月至12月 周一至周日 09:00-16:00 最晚进入15:00；6月至10月 周一至周日 09:00-17:00 最晚进入16:00",
     image:
       "https://store.is.autonavi.com/showpic/b94a743371f59ced0000003202190507?type=pic",
+    rating: "",
     match: 1,
   },
   额尔古纳市乌兰山景区: {
@@ -4028,6 +4602,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/390aa13837a38455b8f34e6f445a1c2f",
+    rating: "",
     match: 0.73,
   },
   阿尔山海神圣泉旅游度假区: {
@@ -4035,12 +4610,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-24:00",
     image:
       "http://store.is.autonavi.com/showpic/f8bd72b7ac324ac13af2c12f536c676a",
+    rating: "",
     match: 1,
   },
   成吉思汗庙景区: {
     tel: "",
     openTime: "周一至周日 08:30-17:30 最晚进入17:20",
     image: "",
+    rating: "",
     match: 0.99,
   },
   天骄天骏生态旅游度假区: {
@@ -4048,6 +4625,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://store.is.autonavi.com/showpic/2a123473ac3ccbdc0000006383936567?type=pic",
+    rating: "",
     match: 0.96,
   },
   敖包相会可汗山草原旅游区: {
@@ -4055,6 +4633,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-21:00",
     image:
       "https://store.is.autonavi.com/showpic/4bdc390b2bd391ce0000006624366331?type=pic",
+    rating: "",
     match: 0.97,
   },
   通辽大青沟国家级自然保护区: {
@@ -4062,6 +4641,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-19:00",
     image:
       "http://store.is.autonavi.com/showpic/2276d6626a42a08fd25ea7fd50a655da",
+    rating: "",
     match: 0.91,
   },
   库伦旗三大寺景区: {
@@ -4069,6 +4649,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/35675488d95c56b55426868e05b4cdef",
+    rating: "",
     match: 0.83,
   },
   通辽市哈民考古遗址公园: {
@@ -4076,6 +4657,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-16:30",
     image:
       "https://aos-comment.amap.com/B0FFH0U569/comment/content_media_external_file_685591_ss__1748914797947_59608187.jpg",
+    rating: "",
     match: 0.73,
   },
   美林谷滑雪场: {
@@ -4083,6 +4665,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00,滑雪场09:00-16:30",
     image:
       "http://store.is.autonavi.com/showpic/b4f3e4d3aad3110c213497ba4ad80416",
+    rating: "",
     match: 0.97,
   },
   道须沟生态旅游区: {
@@ -4090,6 +4673,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/4aec9fe859be615ff3394ad1d0616420",
+    rating: "",
     match: 0.99,
   },
   玉龙沙湖旅游区: {
@@ -4097,6 +4681,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:15",
     image:
       "http://store.is.autonavi.com/showpic/1e256b58a6945b2dfdd8a5414790ddb7",
+    rating: "",
     match: 0.97,
   },
   召庙景区: {
@@ -4104,6 +4689,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://aos-comment.amap.com/B01DC0I732/comment/7EE45B2B_F833_4FDB_8A95_DD6A5C6271D1_L0_001_1500_200_1749065263393_24676515.jpg",
+    rating: "",
     match: 0.99,
   },
   紫蒙湖景区: {
@@ -4111,6 +4697,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/c7fe4f23b8f3d9e40000003092292346?type=pic",
+    rating: "",
     match: 0.99,
   },
   锡林郭勒盟西乌珠穆沁旗蒙古汗城旅游景区: {
@@ -4119,6 +4706,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "5月20日至9月10日 07:00-22:00；9月11日至5月19日 关闭,节假日以官方通知为准",
     image:
       "https://store.is.autonavi.com/showpic/442b639259ce02570000005447062377?type=pic",
+    rating: "",
     match: 1,
   },
   锡林郭勒盟太仆寺旗御马苑旅游景区: {
@@ -4126,6 +4714,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00；具体营业状态以当天开放情况为准",
     image:
       "http://store.is.autonavi.com/showpic/4a197d3fd7b5acd205389fb99136cf8f",
+    rating: "",
     match: 0.97,
   },
   锡林郭勒盟西乌珠穆沁旗乌兰五台旅游景区: {
@@ -4133,6 +4722,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B01DF0HYLE/comment/722dc3b036356c649939414f25443ed0_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   中国马都核心区文化生态旅游区: {
@@ -4140,12 +4730,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-19:00",
     image:
       "https://aos-comment.amap.com/B0FFGAKXK3/comment/content_media_external_file_2744_1764643549668_90793726.jpg",
+    rating: "",
     match: 0.99,
   },
   多伦湖景区: {
     tel: "",
     openTime: "周一至周日 08:30-16:30",
     image: "",
+    rating: "",
     match: 0.99,
   },
   二连浩特市国门旅游景区: {
@@ -4154,6 +4746,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "5月1日至10月7日:08:30-17:30,10月8日至4月30日:09:00-17:00,2026-02-16至2026-02-18全天关闭",
     image:
       "http://store.is.autonavi.com/showpic/b44661b699c6108206a3642b9d7d0ae0",
+    rating: "",
     match: 0.61,
   },
   二连浩特市国家地质公园景区: {
@@ -4162,6 +4755,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "5月1日至10月7日:08:30-17:30,10月8日至4月30日:09:00-17:00,2026-02-16至2026-02-18全天关闭",
     image:
       "http://store.is.autonavi.com/showpic/b44661b699c6108206a3642b9d7d0ae0",
+    rating: "",
     match: 0.65,
   },
   集宁战役红色纪念园: {
@@ -4169,6 +4763,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/1d3503a3010f6cf12873f907d12f5307",
+    rating: "",
     match: 0.99,
   },
   辉腾锡勒黄花沟草原旅游区: {
@@ -4176,6 +4771,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/939cd323bf1b98d1987e17da581e5126",
+    rating: "",
     match: 0.87,
   },
   格根塔拉草原旅游中心: {
@@ -4183,6 +4779,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/4e5b1e542c1624ad3200f6476cdd80cb",
+    rating: "",
     match: 1,
   },
   岱海旅游度假区: {
@@ -4190,6 +4787,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-18:30",
     image:
       "http://store.is.autonavi.com/showpic/bf13f6793920f7a1edc0d38c61183c3a",
+    rating: "",
     match: 0.66,
   },
   林胡古塞旅游区: {
@@ -4197,6 +4795,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/a604ca1bcdc1515b0000003634120780?type=pic",
+    rating: "",
     match: 0.99,
   },
   察尔湖旅游区: {
@@ -4204,6 +4803,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/1de69465ff76f5f50000003609374670",
+    rating: "",
     match: 0.99,
   },
   苏木山旅游区: {
@@ -4211,6 +4811,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFL8LRJP/comment/content_media_external_file_28809_ss__1753052710850_03491223.jpg",
+    rating: "",
     match: 0.96,
   },
   阿拉善左旗腾格里沙漠月亮湖景区: {
@@ -4218,6 +4819,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/e1390d458d897ab50000001496406721?type=pic",
+    rating: "",
     match: 1,
   },
   阿拉善左旗腾格里沙漠天鹅湖旅游风景区: {
@@ -4225,6 +4827,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:30",
     image:
       "http://store.is.autonavi.com/showpic/1591c750b32e118d5bc753cb7e1383c5",
+    rating: "",
     match: 1,
   },
   阿拉善左旗定远营古城景区: {
@@ -4232,6 +4835,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFHR3O77/comment/content_media_external_file_100007307_1759754912552_74401334.jpg",
+    rating: "",
     match: 0.97,
   },
   阿拉善左旗通湖草原旅游区: {
@@ -4239,6 +4843,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "年11月1日至次年3月31日 08:30-17:30, 具体开放时间以现场公示为准；年4月1日至10月31日 08:30-20:40(20:00停止入园)",
     image: "",
+    rating: "",
     match: 1,
   },
   阿拉善左旗金沙堡地生态旅游区: {
@@ -4246,6 +4851,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "4月至8月 周一至周日 08:00-18:00；9月至12月,1月至3月 周一至周日 08:30-17:30",
     image: "",
+    rating: "",
     match: 0.97,
   },
   额济纳旗大漠胡杨景区: {
@@ -4253,6 +4859,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/870280de6b1d6ab1146a3fa96d26d14f",
+    rating: "",
     match: 0.62,
   },
   黄河河套文化旅游区: {
@@ -4260,6 +4867,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00；具体营业状态以当天开放情况为准",
     image:
       "https://store.is.autonavi.com/showpic/b0d4ad0dfa9fbcea4a487156f994a288",
+    rating: "",
     match: 0.97,
   },
   内蒙古五原抗战纪念园: {
@@ -4267,6 +4875,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/3e484600288b5848dc176d5875d0e86c",
+    rating: "",
     match: 0.63,
   },
   金沙湾生态旅游景区: {
@@ -4274,6 +4883,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:30",
     image:
       "https://store.is.autonavi.com/showpic/5e024541aafc698a0000003096186265?type=pic",
+    rating: "",
     match: 1,
   },
   乌海湖休闲度假旅游区: {
@@ -4281,6 +4891,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:50-19:00",
     image:
       "https://store.is.autonavi.com/showpic/2cba24ab71a92c230000003083936026?type=pic",
+    rating: "",
     match: 1,
   },
   御龙温泉度假村: {
@@ -4288,6 +4899,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/e8e7e895868509a60914722506b97489",
+    rating: "",
     match: 0.56,
   },
   孔子文化园: {
@@ -4295,6 +4907,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/3fe9fd73cea388550000002633532259?type=pic",
+    rating: "",
     match: 1,
   },
   关东文化园: {
@@ -4302,6 +4915,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/8cff2774b42ee75ab326d0324b58f563",
+    rating: "",
     match: 1,
   },
   北湖国家湿地公园: {
@@ -4309,6 +4923,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-20:00 最晚进入19:00",
     image:
       "https://store.is.autonavi.com/showpic/1a82897f73de5b630000002256654264?type=pic",
+    rating: "",
     match: 1,
   },
   庙香山休闲旅游度假区: {
@@ -4316,6 +4931,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/dc8cd2df64f28bacaa996d94684068a8",
+    rating: "",
     match: 0.92,
   },
   农业博览园: {
@@ -4323,6 +4939,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/060d7a7fc8cbe90a0000003025522214?type=pic",
+    rating: "",
     match: 0.97,
   },
   东北民族民俗馆: {
@@ -4330,6 +4947,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周三至周日 09:00-16:00 最晚进入15:00",
     image:
       "https://store.is.autonavi.com/showpic/2d12b0d9840a0c790000007975234031?type=pic",
+    rating: "",
     match: 0.83,
   },
   动植物公园: {
@@ -4338,6 +4956,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:30-16:30,16:30-21:00 最晚进入20:30；日场票为动物观赏票时间:08:30-16:30，16:30后动物场馆闭馆，必须出馆。日场票最晚入园时间16:00，夜场最晚入园时间20:30。",
     image:
       "http://store.is.autonavi.com/showpic/f8906c9052b5c3236a72c45080a5cfba",
+    rating: "",
     match: 1,
   },
   长影旧址博物馆: {
@@ -4345,6 +4964,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "9:00-19:00；洗印车间:冬季:9:00-16:30；夏季:9:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/3a07486e1e1f9ca90000007069488112?type=pic",
+    rating: "",
     match: 1,
   },
   莲花岛影视休闲文化园: {
@@ -4352,6 +4972,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周五 08:30-18:30；周六至周日 08:30-19:30",
     image:
       "https://store.is.autonavi.com/showpic/9b28f2f57e48a9200000000720134401?type=pic",
+    rating: "",
     match: 0.99,
   },
   辽金时代文化园: {
@@ -4359,6 +4980,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:30",
     image:
       "https://store.is.autonavi.com/showpic/22e94e38cd4a7fac0000002255624566?type=pic",
+    rating: "",
     match: 0.99,
   },
   长春天定山旅游度假小镇景区: {
@@ -4366,6 +4988,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/8647dc0c5e638b14dcf29779d463f228",
+    rating: "",
     match: 0.92,
   },
   长春国信南山温泉旅游景区: {
@@ -4374,6 +4997,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:30-21:00；温泉区檀医馆及室外温泉区域营业时间: 周一至周五10:00-19:00 周六周日及节假日8:30-21:00",
     image:
       "http://store.is.autonavi.com/showpic/715b4eb1446e160f852f4a42c9ba71ff",
+    rating: "",
     match: 1,
   },
   松花湖风景名胜区: {
@@ -4381,6 +5005,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/f03613db1273d158a20a4fc18b341ebe",
+    rating: "",
     match: 0.99,
   },
   北大湖滑雪场度假区: {
@@ -4388,6 +5013,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-16:30",
     image:
       "http://store.is.autonavi.com/showpic/33a8d8fc6138a100dcc3a57db9f0083c",
+    rating: "",
     match: 0.8,
   },
   拉法山国家森林公园: {
@@ -4396,6 +5022,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月1日至4月19日 周一至周日 08:00-15:00；4月20日至10月31日 周一至周日 08:00-15:30；11月至12月 周一至周日 08:00-15:00",
     image:
       "http://store.is.autonavi.com/showpic/f77dfa856ed3dbb1e99a942c4f269179",
+    rating: "",
     match: 1,
   },
   北山风景区: {
@@ -4403,6 +5030,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0LKBCU1WD/comment/content_media_external_file_100005044_1768788549777_88583622.jpg",
+    rating: "",
     match: 1,
   },
   圣鑫葡萄酒庄园: {
@@ -4410,6 +5038,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/0b3a6a03776951520000007841084761?type=pic",
+    rating: "",
     match: 1,
   },
   吉林市博物馆: {
@@ -4417,6 +5046,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B01B0039OQ/comment/content_media_external_file_6118_1767748980358_41721654.jpg",
+    rating: "",
     match: 0.96,
   },
   朱雀山国家森林公园: {
@@ -4425,6 +5055,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "04月27日至10月10日 周一至周日 00:00-24:00；具体开放时间以官方通知为准",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/14538e28-555a-400d-b54c-c2bc586c188f.jpg",
+    rating: "",
     match: 1,
   },
   红石国家森林公园: {
@@ -4432,6 +5063,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/c0cb2afaad7b6dc302c22fa6184e8e9e",
+    rating: "",
     match: 1,
   },
   金珠花海度假区: {
@@ -4439,6 +5071,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/4ab9cf70cf35f678a5935955416f2575",
+    rating: "",
     match: 0.9,
   },
   四平战役纪念馆: {
@@ -4446,6 +5079,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/2e97bb7e3627df2f0f90e238d8551463",
+    rating: "",
     match: 1,
   },
   东北沦陷时期辽源矿工墓陈列馆: {
@@ -4453,6 +5087,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周二至周日 08:30-16:00",
     image:
       "https://aos-comment.amap.com/B01B5007FL/comment/content_media_external_images_media_1000433782_ss__1748519824462_41641103.jpg",
+    rating: "",
     match: 1,
   },
   道路交通安全体验公园: {
@@ -4460,6 +5095,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/5775b991cbbc0f11b52ea6bcf6dd482f",
+    rating: "",
     match: 1,
   },
   大泉源酒业历史文化景区: {
@@ -4467,6 +5103,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:00",
     image:
       "http://store.is.autonavi.com/showpic/200eac3e0e8341f4690cf5f8a6ff6b23",
+    rating: "",
     match: 1,
   },
   五女峰森林旅游区: {
@@ -4474,6 +5111,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/c3171d286c6e25bae6495f62a3d210f2",
+    rating: "",
     match: 0.59,
   },
   吉林龙湾景区: {
@@ -4481,6 +5119,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/159a8ac070b6a99ef4180bf6ee4c83ef",
+    rating: "",
     match: 0.93,
   },
   佟佳江旅游度假区: {
@@ -4488,6 +5127,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/2c3d2b053b80da13bac03bb2915a2c91",
+    rating: "",
     match: 0.66,
   },
   罗通山风景旅游区: {
@@ -4495,6 +5135,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/4300ac4ce5567a0ffc5a4dc0ed2b514d",
+    rating: "",
     match: 0.57,
   },
   鸡冠山风景区: {
@@ -4502,6 +5143,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入15:00",
     image:
       "http://store.is.autonavi.com/showpic/f0455140450e1dbe57a1a8124cf45beb",
+    rating: "",
     match: 1,
   },
   海龙湖景区: {
@@ -4509,6 +5151,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00；具体各项目开放时间以现场为准",
     image:
       "https://aos-comment.amap.com/B0FFJMEIRN/comment/content_media_external_file_1000287733_ss__1760582895721_34042167.jpg",
+    rating: "",
     match: 1,
   },
   露水河国家森林公园: {
@@ -4517,12 +5160,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-18:30；内部游玩项目开放时间不同，具体营业状态以当天开放情况为准",
     image:
       "https://store.is.autonavi.com/showpic/70cf451d286e0df50000008033752754?type=pic",
+    rating: "",
     match: 1,
   },
   松江河国家森林公园: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 1,
   },
   望天鹅风景区: {
@@ -4530,6 +5175,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-14:30,15:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/d7b35ff3e16e604f0000009198850369?type=pic",
+    rating: "",
     match: 0.96,
   },
   四保临江纪念馆: {
@@ -4537,6 +5183,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/725bf145-f88f-47ff-9aac-250583274905.jpeg",
+    rating: "",
     match: 1,
   },
   长白山讷殷古城: {
@@ -4544,6 +5191,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:00 最晚进入15:30",
     image:
       "http://store.is.autonavi.com/showpic/143f063a63b848c6f87e8ac5a4ada8d5",
+    rating: "",
     match: 1,
   },
   莫莫格国家自然保护区: {
@@ -4551,6 +5199,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "04月21日至10月20日 08:30-16:30 停止入园:16:30；10月21日至04月20日 09:00-16:00 停止入园:16:00",
     image: "",
+    rating: "",
     match: 0.89,
   },
   向海国家级自然保护区: {
@@ -4558,6 +5207,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/7cb37697b2b5d1a80000002896052634?type=pic",
+    rating: "",
     match: 1,
   },
   查干浩特旅游度假区: {
@@ -4565,6 +5215,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFIOBXPK/comment/339BD8A5_A0ED_4114_A2A3_391C6E4BE39F_L0_001_1206_142_1757610344204_18463883.jpg",
+    rating: "",
     match: 0.85,
   },
   嫩江湾国家湿地公园: {
@@ -4572,6 +5223,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/b9ec93edc7139df9d9bd00b3df2018f5",
+    rating: "",
     match: 0.56,
   },
   长白山峡谷浮石林景区: {
@@ -4580,6 +5232,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至5月,10月至12月 周一至周日 08:30-15:30；6月至9月 周一至周日 08:30-17:30",
     image:
       "https://aos-comment.amap.com/B0FFF4NYYQ/comment/20260321-7e06dd8654d13ee174a3a047-3zwfrHMnOV5AanBkkH6Kpd.jpg",
+    rating: "",
     match: 1,
   },
   龙顺雪山飞湖景区: {
@@ -4587,6 +5240,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/c3b7474c6a92d629216ab96999fcd7a7",
+    rating: "",
     match: 0.99,
   },
   大戏台河景区: {
@@ -4594,6 +5248,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-04:00",
     image:
       "http://store.is.autonavi.com/showpic/29ee73632f7dd65b92c2be2e9241fc9a",
+    rating: "",
     match: 0.94,
   },
   大关东文化园: {
@@ -4601,12 +5256,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-16:00",
     image:
       "http://store.is.autonavi.com/showpic/094720774231031e12e62eb2eb2aa218",
+    rating: "",
     match: 1,
   },
   魔界风景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.98,
   },
   长白山历史文化园: {
@@ -4614,6 +5271,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-17:00 最晚进入16:30, 具体开放时间以现场公示为准",
     image:
       "http://store.is.autonavi.com/showpic/cee33bfb0ef4b01343865f741673155e",
+    rating: "",
     match: 1,
   },
   大石头亚光湖国家湿地公园: {
@@ -4621,6 +5279,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:00",
     image:
       "https://aos-comment.amap.com/B0FFHQLTIL/comment/658f8ee3bbeb3923280e1c7f4cfd9ebb_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   青龙渔业景区: {
@@ -4629,30 +5288,35 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-17:00 最晚进入16:30；具体营业状态以当天开放情况为准",
     image:
       "https://aos-comment.amap.com/B0FFLB85IS/comment/9f53cc59553dd17bbbc88159f9cbae73_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   亚布力滑雪旅游度假区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.76,
   },
   二龙山风景区: {
     tel: "0451-55993704",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.98,
   },
   英杰风景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   森工平山旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   哈尔滨北方森林动物园: {
@@ -4660,6 +5324,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:00 最晚进入14:30",
     image:
       "http://store.is.autonavi.com/showpic/8da5c6a558911dd0282ac4d3a7476718",
+    rating: "",
     match: 1,
   },
   金龙山国际旅游度假区: {
@@ -4667,12 +5332,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:00",
     image:
       "https://store.is.autonavi.com/showpic/ef836939118e59ec0000004097304525?type=pic",
+    rating: "",
     match: 1,
   },
   融创乐园: {
     tel: "",
     openTime: "06月25日至08月31日 09:30-21:00 停止售票:19:00 停止入园:20:30",
     image: "",
+    rating: "",
     match: 0.99,
   },
   红豆杉景区: {
@@ -4680,6 +5347,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/f94e39a8e812436062b901f83ea8ee2a",
+    rating: "",
     match: 0.99,
   },
   伏尔加庄园: {
@@ -4687,6 +5355,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-16:30",
     image:
       "http://store.is.autonavi.com/showpic/9909b315a56a85ae1f6ad35107a2ee02",
+    rating: "",
     match: 1,
   },
   白渔泡湿地公园: {
@@ -4694,6 +5363,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/16856bbafb3456b30000004804714308?type=pic",
+    rating: "",
     match: 0.99,
   },
   牡丹江市宁安渤海上京龙泉府遗址旅游景区: {
@@ -4702,6 +5372,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:30-17:00 最晚进入16:00 04-10至04-10 周一至周日 全天关闭",
     image:
       "https://store.is.autonavi.com/showpic/11636fe2d22724298ee969ed16460002",
+    rating: "",
     match: 1,
   },
   雪乡旅游区: {
@@ -4709,6 +5380,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFGFAAA2/comment/content_media_external_file_1000003980_ss__1767517845530_27263153.jpg",
+    rating: "",
     match: 0.99,
   },
   牡丹江东宁要塞遗址: {
@@ -4716,6 +5388,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:15-16:00 最晚进入15:45；15:45停止入内",
     image:
       "https://aos-comment.amap.com/B01C501OY1/comment/content_media_external_file_1000032838_ss__1759070201749_21497351.jpg",
+    rating: "",
     match: 1,
   },
   牡丹江横道东北虎林园: {
@@ -4723,12 +5396,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "8:00-17:00，最晚进入时间16:00",
     image:
       "http://store.is.autonavi.com/showpic/e48d4e84cf38a072074d27a0e9e47413",
+    rating: "",
     match: 0.7,
   },
   牡丹江市三道关国家森林公园旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.89,
   },
   牡丹江市海林亿龙水上风情园: {
@@ -4736,6 +5411,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-19:00",
     image:
       "http://store.is.autonavi.com/showpic/aeb91f59510efcb748a5abe284d1cb9e",
+    rating: "",
     match: 0.97,
   },
   牡丹江市海林横道河子俄罗斯风情小镇旅游区: {
@@ -4743,6 +5419,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:30-17:30",
     image:
       "https://aos-comment.amap.com/B0H1OASBH1/comment/content_media_external_images_media_58881_1660037556507_f51a7cf8.jpg",
+    rating: "",
     match: 1,
   },
   北大荒书法长廊文化中心: {
@@ -4750,6 +5427,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/a864dd8aac7573f00f6d61f8a777bf44",
+    rating: "",
     match: 0.63,
   },
   密山市铁西森林公园: {
@@ -4757,6 +5435,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:30",
     image:
       "https://aos-comment.amap.com/B0FFHF1R3G/comment/file_media_Photo_1019_IMG_1759630994_945_IMG_20251005_102134_jpg_ss_2.jpg",
+    rating: "",
     match: 0.86,
   },
   黑龙江省农垦当壁镇兴凯湖旅游度假区: {
@@ -4764,12 +5443,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/95470d49f37f19fa0000004255326637?type=pic",
+    rating: "",
     match: 1,
   },
   伊春市九峰山养心谷景区: {
     tel: "",
     openTime: "周一至周日 08:00-17:00",
     image: "",
+    rating: "",
     match: 0.66,
   },
   北安市庆华军工遗址旅游区: {
@@ -4777,6 +5458,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周二至周日 08:00-11:00,14:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/8675ea7085da691420ae17e44c0510c2",
+    rating: "",
     match: 1,
   },
   寒温带植物园: {
@@ -4784,6 +5466,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/10f453d094eda6ec0000008157358543?type=pic",
+    rating: "",
     match: 1,
   },
   碾子山旅游区: {
@@ -4791,6 +5474,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-21:00",
     image:
       "http://store.is.autonavi.com/showpic/16f6f09516331afdefc69f38baf63844",
+    rating: "",
     match: 0.96,
   },
   泰湖国家湿地公园: {
@@ -4798,6 +5482,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFKXIWZS/comment/content_media_external_images_media_219417_ss__1756748579666_56993955.jpg",
+    rating: "",
     match: 1,
   },
   水师森林温泉度假区: {
@@ -4805,6 +5490,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-21:00",
     image:
       "https://store.is.autonavi.com/showpic/cb554f3b6283f7f60000002998016976?type=pic",
+    rating: "",
     match: 0.99,
   },
   齐齐哈尔市龙沙公园景区: {
@@ -4812,6 +5498,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/6a9ab84c93e05a830000002984160419?type=pic",
+    rating: "",
     match: 1,
   },
   齐齐哈尔龙沙动植物园: {
@@ -4820,6 +5507,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 09:00-16:00 最晚进入15:00；4月至10月 周一至周日 09:00-17:00 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/398b180e27c2c9112995aedaad393254",
+    rating: "",
     match: 0.99,
   },
   明月岛景区: {
@@ -4827,6 +5515,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B01C400E0D/comment/44EB7271_3EA3_44ED_B690_3C05B9ABE797_L0_001_2000_150_1752900103363_43890739.jpg",
+    rating: "",
     match: 0.99,
   },
   富锦市国家湿地公园: {
@@ -4834,6 +5523,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/5078dc2f2d83e0110000002989850918?type=pic",
+    rating: "",
     match: 0.8,
   },
   佳木斯市郊区敖其湾赫哲族旅游区: {
@@ -4841,6 +5531,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "https://aos-comment.amap.com/B01C60MQ0N/comment/content_media_external_file_1365_1761810967092_04451811.jpg",
+    rating: "",
     match: 1,
   },
   同江市三江口生态旅游区: {
@@ -4848,6 +5539,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/44ccee8c79f47a2bcf29725030f29ca3",
+    rating: "",
     match: 0.99,
   },
   同江市街津口赫哲旅游度假区: {
@@ -4855,6 +5547,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/6c0555430a2d517d0000003598346264?type=pic",
+    rating: "",
     match: 0.86,
   },
   黑瞎子岛旅游区: {
@@ -4863,6 +5556,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "10-16至04-25 周一至周日 08:30-15:00 最晚进入14:00；冬季:黑瞎子岛旅游区湿地公园、东极宝塔院内、探秘野熊园正常对游客开放，东极宝塔塔内、野熊园观熊台冬季不对外开放。",
     image:
       "https://store.is.autonavi.com/showpic/c8fd469861d2e6840000009272576732?type=pic",
+    rating: "",
     match: 1,
   },
   铁人王进喜纪念馆景区: {
@@ -4870,6 +5564,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFIAXPPA/comment/content_media_external_file_270_1767158846804_67840826.jpg",
+    rating: "",
     match: 0.99,
   },
   大庆赛车小镇: {
@@ -4877,6 +5572,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-22:00",
     image:
       "https://store.is.autonavi.com/showpic/5adaaf58cafd37110000008705132568?type=pic",
+    rating: "",
     match: 0.98,
   },
   大庆石油馆: {
@@ -4885,12 +5581,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周二,周四至周日 09:00-16:30；周三 全天关闭；1、每日两场免费讲解:09:00、14:00 2、每日两场4D电影《石油梦想》:09:15、14:15 3、每日两场主题电影:09:30、14:30",
     image:
       "https://aos-comment.amap.com/B0FFFA8CMH/comment/content_media_external_file_132654_ss__1752711637023_26235902.jpg",
+    rating: "",
     match: 1,
   },
   大庆市阿木塔蒙古风情岛旅游景区: {
     tel: "",
     openTime: "08:00-17:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 1,
   },
   大庆连环湖温泉景区: {
@@ -4898,12 +5596,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/0479f10f3968e8e804e8fdd3c1a151c8",
+    rating: "",
     match: 0.99,
   },
   大庆市黑龙江伊利乳业工业旅游景区: {
     tel: "0459-3490410;0459-3490461",
     openTime: "周一至周日 09:00-21:00",
     image: "",
+    rating: "",
     match: 0.84,
   },
   大庆市北国温泉养生休闲广场: {
@@ -4911,18 +5611,21 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-22:00 最晚进入21:00",
     image:
       "https://aos-comment.amap.com/B0FFFPJFWK/comment/cca1648598acb07337972e1b52999dee_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   鹤岗市清源湖旅游景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.62,
   },
   鹤岗森林公园景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.95,
   },
   上海余山国家森林公园: {
@@ -4931,6 +5634,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05-01至10-07周一至周日08:30- 17:00；10-08至04-30周一至周日08:30-16:30（16:00停止入园)",
     image:
       "http://store.is.autonavi.com/showpic/438a2eb1c762b59eb94f8830a7447157",
+    rating: "",
     match: 0.83,
   },
   东平国家森林公园: {
@@ -4939,6 +5643,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "01-01至07-23 周一至周日 08:30-16:30 最晚进入16:30；07-24至07-24 周一至周日 08:30-20:30 最晚进入20:00；07-25至12-31 周一至周日 08:30-16:30 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/fd4e4355716ec75087326b01456c0f0d",
+    rating: "",
     match: 1,
   },
   上海动物园: {
@@ -4946,6 +5651,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/b61ca9d1298e702a3d27f9dde7412e74",
+    rating: "",
     match: 1,
   },
   上海世纪公园: {
@@ -4953,6 +5659,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/cf673112-ca06-4486-8c2d-7939c26b417e.jpg",
+    rating: "",
     match: 1,
   },
   上海共青森林公园: {
@@ -4960,6 +5667,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 05:00-18:00",
     image:
       "https://aos-comment.amap.com/B0015211C2/comment/content_media_external_file_100014729_1768725812623_04672394.jpg",
+    rating: "",
     match: 1,
   },
   朱家角古镇: {
@@ -4967,6 +5675,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFFT7UHB/comment/content_media_external_file_1000268836_ss__1770519941681_59233683.jpg",
+    rating: "",
     match: 1,
   },
   上海古猗园: {
@@ -4975,6 +5684,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至2月,12月 周一至周日 06:00-19:00；3月至11月 周一至周日 05:30-19:30；(一)3月—11月 南门开放时间 7:00—18:30 北门开放时间 5:30—19:30 (二)12月—2月 南门开放时间 7:00—19:00 北门开放时间 6:00—17:00",
     image:
       "http://store.is.autonavi.com/showpic/4bf8b7cdae117bd09777d427ea628112",
+    rating: "",
     match: 1,
   },
   上海方塔园: {
@@ -4983,6 +5693,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "01-01至07-11 周一至周日 06:00-17:00 最晚进入16:30；07-12至07-12 周一至周日 全天关闭；07-13至12-31 周一至周日 06:00-17:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/cb6530ce37ec01ccb4f7dba530581fe1",
+    rating: "",
     match: 1,
   },
   枫泾古镇: {
@@ -4991,12 +5702,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周三至周六 00:00-24:00 01-01至08-08 周一至周二,周日 00:00-24:00；08-09至08-11 周一至周二,周日 全天关闭；08-12至12-31 周一至周二,周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/924d4457566df799fb7101b190ea8791",
+    rating: "",
     match: 1,
   },
   锦江乐园: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   碧海金沙景区: {
@@ -5005,12 +5718,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "4月18日至6月26日:8:30-17:00,16:00停止入场；6月27日至9月6日:08:30-21:00,19:30停止入场；9月7日至12月31日:08:30-17:00 16:00停止入场；补充说明:6月27日至9月6日为泳期,9月7日至次年6月26日为非泳期。 景区会因天气、修整等不定因素做经营时间的调整。以上信息仅供参考，具体以景区当日实际公示信息为准",
     image:
       "http://store.is.autonavi.com/showpic/04acfb003ec74cdba0fde514943a643e",
+    rating: "",
     match: 1,
   },
   上海鲜花港: {
     tel: "021-58295858",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.8,
   },
   上海月湖雕塑公园: {
@@ -5018,6 +5733,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0H3TROFSD/comment/content_media_external_file_1000231134_ss__1770381959249_26552754.jpg",
+    rating: "",
     match: 0.99,
   },
   上海嘉定州桥: {
@@ -5025,6 +5741,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/e0f486172137d91cc2da79d1f0e48715",
+    rating: "",
     match: 0.67,
   },
   上海都市菜园景区: {
@@ -5032,6 +5749,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/d17bd760-31e6-4c60-bfd7-d9428610b949.jpg",
+    rating: "",
     match: 1,
   },
   前卫生态村: {
@@ -5039,6 +5757,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/a825588d5ad0af4d5e6b51cbb36d68c1",
+    rating: "",
     match: 0.99,
   },
   上海海湾国家森林公园: {
@@ -5047,6 +5766,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周五 08:30-16:30 最晚进入15:30 01-01至10-23 周六至周日 08:30-16:30 最晚进入15:30；10-24至10-25 周六至周日 全天关闭；10-26至12-31 周六至周日 08:30-16:30 最晚进入15:30",
     image:
       "http://store.is.autonavi.com/showpic/9dfdfc95593b566748ef9171cf43bf28",
+    rating: "",
     match: 1,
   },
   中国航海博物馆: {
@@ -5055,6 +5775,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "国庆节 周二至周日:09:30-16:00开放(15:30停止入园)全年 周一 不开放；全年 周二–周日 周二至周日:09:30-16:00开放(15:30停止入园节假日除外)",
     image:
       "https://aos-comment.amap.com/B0FFJRRURL/comment/7391db9532a21bd15092e1ead6341d5d_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   上海欢乐谷: {
@@ -5063,6 +5784,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "9月12日-11月15日:周一至周四:09:30-21:30；周五至周日:09:30-22:00；10月23日-10月29日:09:30-23:00；10月30日-11月1日:09:30-23:30；",
     image:
       "http://store.is.autonavi.com/showpic/8e3e4fa5f850dc050d238fae192df376",
+    rating: "",
     match: 1,
   },
   上海植物园: {
@@ -5071,6 +5793,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,11月至12月 周一至周日 06:00-17:00；5月至10月 周一至周日 06:00-18:00；1号门（龙吴路1111号）:11月～次年4月7:00-17:00，5月～10月7:00-18:00； 3号门（百色路940号）、4号门（罗城路151号）:11月～次年4月6:00-17:00，5月～10月6:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/49b1e751e924ad56ff08a7a3b69a5b5a",
+    rating: "",
     match: 1,
   },
   上海东林寺景区: {
@@ -5078,6 +5801,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/02c4fe7c2d6cd16bab24853415ea0d42",
+    rating: "",
     match: 0.6,
   },
   上海顾村公园景区: {
@@ -5085,6 +5809,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/4d9b8339a36207110000002473882848?type=pic",
+    rating: "",
     match: 0.66,
   },
   上海辰山植物园: {
@@ -5093,6 +5818,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "3月1日-10月31日 08:00-17:30开放（17:00停止入园）；11月1日-次年2月28日 08:00-17:00开放（16:30停止入园）；具体开放时间以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/2cbc3106369b1924616bca5307d90d5c",
+    rating: "",
     match: 1,
   },
   上海炮台湾景区: {
@@ -5100,6 +5826,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B0G399RWR4/comment/fa1d79506c5d7c5c5e3ad71404f15bfe_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   上海宝山国际民间艺术博览馆景区: {
@@ -5108,6 +5835,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周二-周日 09:00-16:00开放（15:30停止入园）；周一 不开放(法定节假日除外)；具体开放时间以官方通知为准",
     image:
       "https://store.is.autonavi.com/showpic/1f3d51a9c1b846530000000702086034?type=pic",
+    rating: "",
     match: 1,
   },
   上海汽车博览公园: {
@@ -5115,6 +5843,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:00-21:00",
     image:
       "http://store.is.autonavi.com/showpic/7a7024026d2a3d5cd43b0b042fbc1551",
+    rating: "",
     match: 1,
   },
   上海闻道园: {
@@ -5122,6 +5851,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "09:00-17:00最晚进入16:30,2026年2月14日至2026年3月3日关闭, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.6,
   },
   上海江南三民文化村景区: {
@@ -5130,6 +5860,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "01-01至07-10 周一至周日 08:30-16:30 最晚进入16:00；07-11至07-12 周一至周日 全天关闭；07-13至12-31 周一至周日 08:30-16:30 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/1aa0a2c8fb9ba4180b624019d3d7afea",
+    rating: "",
     match: 1,
   },
   上海召稼楼景区: {
@@ -5137,6 +5868,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "1月1日-12月31日 08:30-16:30",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/012d877f-fa11-429e-9283-0336af8355cf.jpg",
+    rating: "",
     match: 0.6,
   },
   上海国际赛车场旅游景区: {
@@ -5145,6 +5877,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "10月1日-10月7日 10:00-17:00开放（16:00停止入园）；周一 不开放；周二–周日 09:00-17:00开放（16:00停止入园）；每天开放场次10:00、11:00、13:00、14:00、15:00、16:00，最后一批游客入场时间为16:00；具体开放时间以官方通知为准",
     image:
       "https://aos-comment.amap.com/B0FFIXYMDQ/comment/20260317-c849950d607a2070a591a4fe-27pQXqhGDen8rJBcvROkKz.jpg",
+    rating: "",
     match: 1,
   },
   上海联怡枇杷乐园: {
@@ -5152,6 +5885,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:30-13:00,16:30-20:00",
     image:
       "http://store.is.autonavi.com/showpic/a4bce81b0adabec28473ed16fc137b93",
+    rating: "",
     match: 1,
   },
   上海金山嘴渔村: {
@@ -5160,6 +5894,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 09:00-16:30 最晚进入16:00；1月21日 周一至周日 09:00-14:00；1月22日-1月24日 周一至周日 09:00-15:00；1月25日-1月27日 周一至周日 09:00-16:00；具体开放时间以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/3cfb5be83f81608328885804d4eab6c0",
+    rating: "",
     match: 0.99,
   },
   上海东滩湿地公园: {
@@ -5167,6 +5902,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一 全天关闭；周二至周日 08:30-17:00(16:00停止入园)",
     image:
       "http://store.is.autonavi.com/showpic/e5e84dd0f949cc8c91c86d2df317784f",
+    rating: "",
     match: 1,
   },
   上海长兴岛郊野公园: {
@@ -5174,12 +5910,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/f9d51782cd74db13694d30c3e004dc53",
+    rating: "",
     match: 1,
   },
   比斯特上海购物村景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   上海浦江郊野公园景区: {
@@ -5188,6 +5926,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:30-18:30 最晚进入18:00；补充说明:奇迹花园区(3月6日-6月8日花展期间收费)，开放时间:8:30-18:30 活力森林区免费开放，开放时间:8:30-18:30 柳鹭田园区免费开放，开放时间8:30-18:30 滨江漫步区及森林游憩区全天开放 以上信息仅供参考，具体以当日实际公示信息为准",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/25b0a3d6-760d-40b3-b0f9-56e2f000beaf.jpg",
+    rating: "",
     match: 1,
   },
   上海张马景区: {
@@ -5195,6 +5934,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0H0RZAR3B/comment/176657449619_1766574502057_81623876.jpg",
+    rating: "",
     match: 0.99,
   },
   上海海昌海洋公园: {
@@ -5202,6 +5942,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-17:30",
     image:
       "https://store.is.autonavi.com/showpic/f81e4c5d5ad1b9220000006153066771?type=pic",
+    rating: "",
     match: 0.99,
   },
   上海闵行文化公园: {
@@ -5209,6 +5950,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/a3f2da534ee2127e9e5e1730274eb86a",
+    rating: "",
     match: 0.99,
   },
   上海七宝古镇: {
@@ -5216,6 +5958,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/2229cb4ecdc1907b7d6542ae106cd81b",
+    rating: "",
     match: 0.99,
   },
   上海醉白池公园: {
@@ -5223,6 +5966,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/6262633f941d9ac96e65c777e32590f9",
+    rating: "",
     match: 1,
   },
   上海高家庄生态园: {
@@ -5230,6 +5974,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-16:30",
     image:
       "http://store.is.autonavi.com/showpic/df2342dfcfba9511411af0959b7c55d6",
+    rating: "",
     match: 0.99,
   },
   上海犹太难民纪念馆: {
@@ -5237,6 +5982,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/369ef04ac73dcd16ca83beaaedf9f131",
+    rating: "",
     match: 1,
   },
   浙江省嘉兴市海盐县绮园景区: {
@@ -5244,6 +5990,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/7e11ac246b52028d0000004710434718",
+    rating: "",
     match: 1,
   },
   "碧云花海·十里水乡景区": {
@@ -5251,6 +5998,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-16:00",
     image:
       "https://store.is.autonavi.com/showpic/cee78283ad54c2b707e7e1ef2cbc4d31",
+    rating: "",
     match: 0.98,
   },
   浙江省嘉兴市海宁市海宁中国皮革城景区: {
@@ -5258,6 +6006,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/60c3916d62efa17d951f4e77c8f421a2",
+    rating: "",
     match: 1,
   },
   东湖景区: {
@@ -5265,6 +6014,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/86d5492ce0bc109b0000002985330135",
+    rating: "",
     match: 0.99,
   },
   海宁盐官观潮景区: {
@@ -5272,6 +6022,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0GDRXE0YP/comment/content_media_external_file_8369_ss__1755043042275_65024286.jpg",
+    rating: "",
     match: 0.67,
   },
   海宁中国皮革城: {
@@ -5279,12 +6030,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/60c3916d62efa17d951f4e77c8f421a2",
+    rating: "",
     match: 1,
   },
   古镇西塘景区: {
     tel: "0573-84567890",
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 1,
   },
   歌斐颂巧克力小镇: {
@@ -5292,6 +6045,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "09:00-16:30",
     image:
       "http://store.is.autonavi.com/showpic/9266a0f8f1200e23f88db85099333642",
+    rating: "",
     match: 1,
   },
   盐官观潮景区: {
@@ -5299,6 +6053,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "00:00-24:00；1. 日场馆:城隍庙、陈阁老宅、周五土庙、海神庙、金庸书院、孔庙学宫、王国维故居 08:30-17:30。2. 馆:警察署、裕丰酱园、郑晓沧故居 08:30-20:30。3.主题乐园:小星球调 10:00-20:30。具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.99,
   },
   嘉兴云澜湾温泉景区: {
@@ -5306,12 +6061,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 12:00-22:00",
     image:
       "https://aos-comment.amap.com/B0FFH0606H/headerImg/7d359a486555a2b784b7b438c7e3e266_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   南北湖风景区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.99,
   },
   下渚湖湿地风景区: {
@@ -5319,6 +6076,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:00",
     image:
       "https://store.is.autonavi.com/showpic/be1d83a7573ccd830000003587406471?type=pic",
+    rating: "",
     match: 0.96,
   },
   仙山湖景区: {
@@ -5326,6 +6084,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:00 最晚进入15:00",
     image:
       "https://store.is.autonavi.com/showpic/f087fc8fa45f68540000007269068458?type=pic",
+    rating: "",
     match: 0.99,
   },
   浙江省湖州市安吉县中国竹子博览园: {
@@ -5333,6 +6092,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "8:00-16:30,16:00停止入园",
     image:
       "http://store.is.autonavi.com/showpic/b32c1fdf72d881a2038232873a05a7b5",
+    rating: "",
     match: 1,
   },
   "浙江省湖州市安吉县杭州Hello Kitty乐园": {
@@ -5340,6 +6100,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "9月1日-12月31日 10:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/939f833b4d86612b53e67cbb232b77ec",
+    rating: "",
     match: 0.61,
   },
   浙江省湖州市长兴县金钉子远古世界景区: {
@@ -5347,6 +6108,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:00",
     image:
       "http://store.is.autonavi.com/showpic/c648e6ce4e4202f140371661499e8860",
+    rating: "",
     match: 0.56,
   },
   庾村景区: {
@@ -5354,6 +6116,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/169a42bdbe68726555e9038ae022a569",
+    rating: "",
     match: 0.99,
   },
   安吉浪漫山川景区: {
@@ -5361,6 +6124,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/28d6086ea5b408c42739aa7ff91863dc",
+    rating: "",
     match: 0.99,
   },
   湖州原乡小镇景区: {
@@ -5368,6 +6132,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/b0e95ecf0430c62e371449a853ef2ff7",
+    rating: "",
     match: 0.97,
   },
   莫干山风景名胜区: {
@@ -5375,6 +6140,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/c1d2c83b272aabcc0000003000120038",
+    rating: "",
     match: 1,
   },
   湖州市菰城景区: {
@@ -5382,6 +6148,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:00",
     image:
       "https://aos-comment.amap.com/B0KUBRU5V1/comment/content_media_external_images_media_18323_ss__1764740910467_41780832.jpg",
+    rating: "",
     match: 0.89,
   },
   中国扬子鳄村: {
@@ -5389,6 +6156,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:30",
     image:
       "http://store.is.autonavi.com/showpic/b4eb8dba602a00a26280b55737ed8231",
+    rating: "",
     match: 1,
   },
   地理信息小镇景区: {
@@ -5396,24 +6164,28 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFKDXCNH/headerImg/d84eee7dcbc1e38d1e4c3960b5867bac_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   安吉竹子博览园: {
     tel: "0572-5338988",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.71,
   },
   湖州太湖旅游度假区: {
     tel: "0572-2159552",
     openTime: "周一至周日 10:00-22:00",
     image: "",
+    rating: "",
     match: 0.98,
   },
   中南百草原景区: {
     tel: "0572-5023456",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   德清下渚湖湿地风景区: {
@@ -5422,6 +6194,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "5月8日至10月31日(夏令时) 08:00-16:30开放；11月1日至5月7日(冬令时) 08:30-16:00开放, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/1263b490b36d95ab0000001787538111?type=pic",
+    rating: "",
     match: 0.71,
   },
   仙山湖国家湿地公园: {
@@ -5429,6 +6202,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:00 最晚进入15:00",
     image:
       "https://store.is.autonavi.com/showpic/f087fc8fa45f68540000007269068458?type=pic",
+    rating: "",
     match: 0.96,
   },
   长兴金钉子远古世界景区: {
@@ -5436,6 +6210,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:00",
     image:
       "http://store.is.autonavi.com/showpic/c648e6ce4e4202f140371661499e8860",
+    rating: "",
     match: 0.97,
   },
   杭州湘湖跨湖桥景区: {
@@ -5443,12 +6218,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/1fe66bfa66ea3edd1f83bac47e4fc1dc",
+    rating: "",
     match: 0.67,
   },
   超山风景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   杭州双溪漂流景区: {
@@ -5456,12 +6233,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "09月01日至10月08日 10:00-16:00",
     image:
       "http://store.is.autonavi.com/showpic/a583e11ca7e2535cee336818e8117072",
+    rating: "",
     match: 0.66,
   },
   浙江省杭州市萧山区杭州长乔极地海洋公园景区: {
     tel: "0571-82609191",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.59,
   },
   千岛湖石林景区: {
@@ -5469,6 +6248,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/9e747c7364b3861b3daeeb2711c6b673",
+    rating: "",
     match: 0.99,
   },
   杭州东方文化园: {
@@ -5476,6 +6256,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "全年 07:30-17:00开放 最晚进入16:30；国庆节 07:30-21:00开放 最晚进入20:30, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.71,
   },
   "运河·塘栖古镇景区": {
@@ -5483,6 +6264,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/02f5cb91767bd1e2b24371490650a61e",
+    rating: "",
     match: 1,
   },
   浙江省杭州市建德市大慈岩景区: {
@@ -5491,12 +6273,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-16:00 最晚进入16:00；五一、十一等节假日或特殊情况开放时间视各景区实际情况另行调整。",
     image:
       "http://store.is.autonavi.com/showpic/c1d8576c2cf6d1c963927957b1b60378",
+    rating: "",
     match: 1,
   },
   下姜村景区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 1,
   },
   浙江省杭州市萧山区杭州乐园景区: {
@@ -5505,6 +6289,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周五(含10月10日)10:00-17:00,周六9:30-18:00,周日9:30-17:00,具体开放时间以官方通知为准；杭州乐园2026年奇遇狂欢节活动期间特殊营业时间:10月24日-10月25日9:30-21:00（游乐设备21点关闭）；10月26日-10月29日10:00-21:00（游乐设备21点关闭）；10月30日10:00-24:00（游乐设备21点关闭）；10月31日9:30-24:00（游乐设备21点关闭）；11月1日9:30-22:00（游乐设备21点关闭）",
     image:
       "http://store.is.autonavi.com/showpic/b519ba338fc82ed408ad5ec9de64b8a2",
+    rating: "",
     match: 1,
   },
   新沙岛景区: {
@@ -5512,12 +6297,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/33681c71148de32e750bd8cc3f5794cd",
+    rating: "",
     match: 0.98,
   },
   杭州野生动物世界: {
     tel: "0571-58971111",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   临安市太湖源景区: {
@@ -5525,6 +6312,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:00",
     image:
       "http://store.is.autonavi.com/showpic/558a7eba1014da38abe712adb5ea1017",
+    rating: "",
     match: 0.96,
   },
   杭州宋城景区: {
@@ -5532,6 +6320,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "9:30-21:00",
     image:
       "http://store.is.autonavi.com/showpic/6be59a70cda31670d57c425e7238debd",
+    rating: "",
     match: 1,
   },
   建德航空小镇景区: {
@@ -5539,6 +6328,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/f008aae5d36b3c50e065de53ab785709",
+    rating: "",
     match: 0.98,
   },
   柳溪江: {
@@ -5546,6 +6336,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:30 02-16至02-16 周一至周日 全天关闭",
     image:
       "https://store.is.autonavi.com/showpic/2f4253b55f06c2c3125581b824b52d78",
+    rating: "",
     match: 0.99,
   },
   杭州临安太湖源景区: {
@@ -5553,6 +6344,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:00",
     image:
       "http://store.is.autonavi.com/showpic/558a7eba1014da38abe712adb5ea1017",
+    rating: "",
     match: 0.96,
   },
   严子陵钓台: {
@@ -5560,6 +6352,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:00 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/5893d52706fc3548e7ce0a348ac26c9d",
+    rating: "",
     match: 1,
   },
   大明山景区: {
@@ -5567,12 +6360,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/60f0c8f418aa831b31c7d81cece48d3d",
+    rating: "",
     match: 0.99,
   },
   良渚博物院: {
     tel: "",
     openTime: "周一至周日 09:00-17:00",
     image: "",
+    rating: "",
     match: 1,
   },
   大明山: {
@@ -5580,6 +6375,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/60f0c8f418aa831b31c7d81cece48d3d",
+    rating: "",
     match: 0.98,
   },
   浪石金滩: {
@@ -5588,6 +6384,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至2月,12月 周一至周日 09:00-21:00；6月至8月 周一至周日 08:00-21:00",
     image:
       "http://store.is.autonavi.com/showpic/b94475fceac76d810e11f7adb443afbb",
+    rating: "",
     match: 1,
   },
   浙江省杭州市桐庐县浪石金滩景区: {
@@ -5596,12 +6393,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至2月,12月 周一至周日 09:00-21:00；6月至8月 周一至周日 08:00-21:00",
     image:
       "http://store.is.autonavi.com/showpic/b94475fceac76d810e11f7adb443afbb",
+    rating: "",
     match: 1,
   },
   杭州龙门古镇景区: {
     tel: "0571-63507877",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.67,
   },
   杭州皋亭山景区: {
@@ -5609,6 +6408,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/02343b8da3c0ad9737359a004d3c6d94",
+    rating: "",
     match: 1,
   },
   湘湖景区: {
@@ -5616,6 +6416,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/663a35969b9da1b8d44afbac74fc7dc9",
+    rating: "",
     match: 1,
   },
   临安河桥古镇旅游区: {
@@ -5623,6 +6424,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/fb772c849fb1239bc2296219bce16b3f",
+    rating: "",
     match: 0.92,
   },
   黄公望隐居地景区: {
@@ -5631,6 +6433,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至9月 周一 全天关闭；1月至4月,10月至12月 周二至周日 08:30-16:30 最晚进入16:30；5月至9月 周二至周日 08:30-18:00 最晚进入17:30 10-01至10-07 周一至周日 08:30-17:30；10-08至12-31 周一 全天关闭；10-08至12-31 周二至周日 08:30-16:30 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/5aea34cdda322be935e58cdfd435be81",
+    rating: "",
     match: 1,
   },
   龙坞茶镇景区: {
@@ -5638,6 +6441,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFKVAA0U/comment/content_media_external_file_1000003826_ss__1744849492667_16838378.jpg",
+    rating: "",
     match: 0.9,
   },
   富阳市龙门古镇: {
@@ -5645,6 +6449,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:30 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/f1531010053c2f051d2091c07ccad675",
+    rating: "",
     match: 1,
   },
   "京杭大运河·杭州": {
@@ -5652,6 +6457,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/f87044b1420cd6fc53da771c5f556988",
+    rating: "",
     match: 0.85,
   },
   瑶琳仙境: {
@@ -5660,6 +6466,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "4月28日-6月30日 08:30-16:30（16:30停止入园）；7月1日-8月31日 08:30-16:30（16:30停止入园）；9月1日-次年4月27日 08:30-16:00（16:00停止入园）；10月1日-10月7日 08:30-17:00；具体开放时间以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/155ec38c9e871d386fe14a45971e91b3",
+    rating: "",
     match: 1,
   },
   浙江省杭州市桐庐县严子陵钓台景区: {
@@ -5667,6 +6474,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:00 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/5893d52706fc3548e7ce0a348ac26c9d",
+    rating: "",
     match: 0.97,
   },
   杭州梦想小镇景区: {
@@ -5674,6 +6482,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/2e6cc4461de7b753147aad53b314f5a0",
+    rating: "",
     match: 0.97,
   },
   浙江省宁波市鄞州区宁波海洋世界: {
@@ -5681,6 +6490,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:15 最晚进入16:15",
     image:
       "http://store.is.autonavi.com/showpic/90962fc50fd75deceeaf379e301b0f4b?operate=original&query_type=oss&operate_gif=1",
+    rating: "",
     match: 1,
   },
   浙江省宁波市宁海县伍山石窟景区: {
@@ -5688,12 +6498,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:30；具体营业状态以当天开放情况为准",
     image:
       "https://aos-comment.amap.com/B023E05C1Z/comment/4742E057_F1E1_4B01_B185_494C7242B391_L0_001_2000_150_1755257531613_97132184.jpg",
+    rating: "",
     match: 1,
   },
   宁波镇海招宝山旅游风景区: {
     tel: "4008825990",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.55,
   },
   梁祝文化园: {
@@ -5702,6 +6514,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 08:00-16:30 最晚进入16:00；4月至10月 周一至周日 08:00-17:00 最晚进入16:30；水乐园周五周六周日营业时间10:00-21:00",
     image:
       "http://store.is.autonavi.com/showpic/45079a39f7a96d819ce4a2cb351ca196",
+    rating: "",
     match: 1,
   },
   宁波老外滩: {
@@ -5709,6 +6522,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/9b0dc21eaba3b7b6041823b9a07ebd29",
+    rating: "",
     match: 1,
   },
   象山石浦渔港古城旅游发展有限公司: {
@@ -5716,6 +6530,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "10月8日起8:00-16:30",
     image:
       "http://store.is.autonavi.com/showpic/359c803fbd3a3a2ca8a6a1959fae4965",
+    rating: "",
     match: 1,
   },
   天宫庄园景区: {
@@ -5724,6 +6539,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "7月31日-10月7日:日场:08:00-16:30开放,16:00停止检票；夜游:17:30-22:30开放, 22:00停止检票",
     image:
       "http://store.is.autonavi.com/showpic/126726383fedf7c43decda013979dcd0",
+    rating: "",
     match: 1,
   },
   宁波九龙湖旅游度假区: {
@@ -5731,6 +6547,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:30",
     image:
       "https://aos-comment.amap.com/B0FFKJ1IZ3/comment/file_media_Photo_2105_IMG_1757402850_1728_IMG_20250909_152550_jpg_ss_2.jpg",
+    rating: "",
     match: 1,
   },
   宁波海洋世界: {
@@ -5738,12 +6555,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:15 最晚进入16:15",
     image:
       "http://store.is.autonavi.com/showpic/90962fc50fd75deceeaf379e301b0f4b?operate=original&query_type=oss&operate_gif=1",
+    rating: "",
     match: 1,
   },
   宁波郑氏十七房景区: {
     tel: "0574-86251717",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.71,
   },
   宁海县森林温泉旅游区: {
@@ -5751,6 +6570,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 13:00-21:30",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/e1a434fe-298a-4453-a197-70d5402443d7.jpg",
+    rating: "",
     match: 0.86,
   },
   东钱湖马山休闲旅游区: {
@@ -5758,6 +6578,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 05-01至05-05 周一至周日 08:30-17:00",
     image:
       "https://aos-comment.amap.com/B0IG6CF3VX/comment/9A648C88_E6C8_4DFC_A324_47B9360FABB6_L0_001_1500_200_1768568860820_64775669.jpg",
+    rating: "",
     match: 0.92,
   },
   宁波市天一阁博物馆: {
@@ -5765,6 +6586,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "https://aos-comment.amap.com/B0FFKJUQF3/comment/f271f2e8434e897d9d996f16b3995f6e_2048_2048_80.jpg",
+    rating: "",
     match: 0.56,
   },
   宁波慈城古县城景区: {
@@ -5773,6 +6595,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 00:00-24:00；慈城古县城内收费景点营业时间:08:30-16:50(16:30入口关闭，出口开放至16:50) 慈城古县城免费街区全天候24小时开放，21:00熄观赏灯，请安排好游玩时间 除台风等不可抗力影响而暂停营业外，周末及节假日均正常营业",
     image:
       "http://store.is.autonavi.com/showpic/3338cbf10309d7f9e6334436f22e6174",
+    rating: "",
     match: 1,
   },
   天下玉苑: {
@@ -5781,6 +6604,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-16:30；10月至次年4月30日8:00-16.30；5月-9月7.30-16.30",
     image:
       "http://store.is.autonavi.com/showpic/5d28427dae72d1ba578b4b4db0030f39",
+    rating: "",
     match: 1,
   },
   丹山赤水: {
@@ -5789,6 +6613,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,12月 周一至周日 08:30-16:30；4月至11月 周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/81759059aaf699b87b1a3df97976131d",
+    rating: "",
     match: 0.9,
   },
   宁波五龙潭风景名胜区: {
@@ -5797,6 +6622,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 08:30-16:00 最晚进入15:30；4月至10月 周一至周日 08:30-16:30 最晚进入16:00 02-16至02-16 周一至周日 08:30-15:00；02-17至02-17 周一至周日 09:30-16:00",
     image:
       "http://store.is.autonavi.com/showpic/84b668f44b46c0ba92668c75b0c5b913",
+    rating: "",
     match: 1,
   },
   海天一洲景区: {
@@ -5805,6 +6631,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "3月1日-5月31日 周一至周日 08:00-18:30；6月1日-10月15日 周一至周日 08:00-19:00；10月16日-次年2月28日(29日) 周一至周日 08:30-18:00；营业时间结束前30分钟停止入园,如遇节假日或恶劣天气,具体开放时间以官方通知为准",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/bff801fa-b4d2-42ab-927a-c08cdef1a2bd.jpg",
+    rating: "",
     match: 1,
   },
   浙江省宁波市江北区慈城古县城景区: {
@@ -5813,6 +6640,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 00:00-24:00；慈城古县城内收费景点营业时间:08:30-16:50(16:30入口关闭，出口开放至16:50) 慈城古县城免费街区全天候24小时开放，21:00熄观赏灯，请安排好游玩时间 除台风等不可抗力影响而暂停营业外，周末及节假日均正常营业",
     image:
       "http://store.is.autonavi.com/showpic/3338cbf10309d7f9e6334436f22e6174",
+    rating: "",
     match: 1,
   },
   宁波松兰山旅游度假区: {
@@ -5821,12 +6649,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05月01日至10月31日 08:00-20:30；11月01日至04月30日 08:30-16:30 中秋节08:00-20:30 国庆节08:00-20:30",
     image:
       "https://store.is.autonavi.com/showpic/564edba2bef6d4340000003091220859?type=pic",
+    rating: "",
     match: 1,
   },
   宁波伍山石窟景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   达蓬山旅游度假区: {
@@ -5834,6 +6664,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/0b8b048b5179da51a91b957ed52d6fcb",
+    rating: "",
     match: 0.98,
   },
   浙江省宁波市余姚市丹山赤水景区: {
@@ -5842,6 +6673,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,9月至12月 周一至周日 08:30-16:30 最晚进入16:00；4月至8月 周一至周日 08:00-17:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/a12d5fd5f75996871acf221da81272d1",
+    rating: "",
     match: 1,
   },
   浙江省宁波市东钱湖旅游度假区马山休闲旅游景区: {
@@ -5849,6 +6681,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 05-01至05-05 周一至周日 08:30-17:00",
     image:
       "https://aos-comment.amap.com/B0IG6CF3VX/comment/9A648C88_E6C8_4DFC_A324_47B9360FABB6_L0_001_1500_200_1768568860820_64775669.jpg",
+    rating: "",
     match: 0.97,
   },
   "浙江省宁波市余姚市浙东”四明山“抗日根据地旧址群景区": {
@@ -5857,12 +6690,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:30-16:30 最晚进入16:15；具体营业状态以当天开放情况为准。",
     image:
       "http://store.is.autonavi.com/showpic/880f1b6dc0e737414b7e63189233df50",
+    rating: "",
     match: 0.59,
   },
   宁波雅戈尔动物园景区: {
     tel: "0574-88378378",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.62,
   },
   浙江省宁波市象山县象山影视城景区: {
@@ -5871,6 +6706,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "2月24日-7月3日 08:45-16:00开放（15:30停止入园）；7月4日-8月31日 08:45-21:30开放（20:00停止入园）；9月1日-12月31日 08:45-16:30开放（16:00停止入园）；夜场营业时间:15:30-21:30，20:00停止检票；具体开放时间以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/fe6ea4e618a8403bb0ecb8d46f22d7e3",
+    rating: "",
     match: 1,
   },
   黄贤森林公园景区: {
@@ -5878,6 +6714,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:30 最晚进入16:15",
     image:
       "http://store.is.autonavi.com/showpic/1791b31244382cdeb9fa2809a44bcbad",
+    rating: "",
     match: 1,
   },
   宁波天宫庄园休闲旅游区: {
@@ -5886,6 +6723,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "7月31日-10月7日:日场:08:00-16:30开放,16:00停止检票；夜游:17:30-22:30开放, 22:00停止检票",
     image:
       "http://store.is.autonavi.com/showpic/126726383fedf7c43decda013979dcd0",
+    rating: "",
     match: 0.99,
   },
   前童古镇: {
@@ -5893,6 +6731,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "10月1日至4月30日(冬令时) 08:00-16:30开放；5月1日至9月30日(夏令时) 08:00-17:00开放 说明:景区冬令时和夏令时的具体月份定义视年天气变化调整(冬令时约10月-4月,夏令时约5月-9月,此范围仅供参考),具体以景区官方发布为准",
     image: "",
+    rating: "",
     match: 1,
   },
   宁波雅戈尔动物园: {
@@ -5900,6 +6739,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "5月至10月 周一至周日 08:30-16:30 最晚进入15:30；11月至12月,1月至4月 周一至周日 09:00-16:30 最晚进入15:30",
     image: "",
+    rating: "",
     match: 1,
   },
   浙江省宁波市余姚市天下玉苑风景区: {
@@ -5908,6 +6748,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-16:30；10月至次年4月30日8:00-16.30；5月-9月7.30-16.30",
     image:
       "http://store.is.autonavi.com/showpic/5d28427dae72d1ba578b4b4db0030f39",
+    rating: "",
     match: 1,
   },
   老外滩景区: {
@@ -5915,6 +6756,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/5009c39e979f9c8b0000002367518841?type=pic",
+    rating: "",
     match: 1,
   },
   石浦渔港古城景区: {
@@ -5922,6 +6764,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/390d4186-41f0-47a0-8ca5-00609c63321a.jpg",
+    rating: "",
     match: 1,
   },
   石浦中国渔村景区: {
@@ -5929,6 +6772,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "7:30-17:00；嘉年华营业时间:8:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/590464422b2baa30967b52cff6e2860b",
+    rating: "",
     match: 0.67,
   },
   九峰山景区: {
@@ -5936,6 +6780,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:00 最晚进入16:00；台风、暴雪等特殊情况除外",
     image:
       "http://store.is.autonavi.com/showpic/8bc57308b11bdd9af333c23d06884261",
+    rating: "",
     match: 0.98,
   },
   温州乐园有限公司: {
@@ -5944,6 +6789,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "01-01至07-08 周一至周日 09:00-21:30 最晚进入20:30；07-09至07-09 周一至周日 09:00-18:00；07-10至08-31 周一至周日 09:00-21:30 最晚进入20:30；09-01至10-07 周一至周日 09:00-18:00；10-08至10-09 周一至周日 09:00-17:00 最晚进入16:00；10-10至11-08 周一至周日 09:00-22:00 最晚进入20:30；11-09至12-31 周一至周日 09:00-17:00 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/7198679e5e6d5bff74e60170ec7d2e80",
+    rating: "",
     match: 1,
   },
   浙江省温州市瓯海区茶山镇温州乐园: {
@@ -5952,6 +6798,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "01-01至07-08 周一至周日 09:00-21:30 最晚进入20:30；07-09至07-09 周一至周日 09:00-18:00；07-10至08-31 周一至周日 09:00-21:30 最晚进入20:30；09-01至10-07 周一至周日 09:00-18:00；10-08至10-09 周一至周日 09:00-17:00 最晚进入16:00；10-10至11-08 周一至周日 09:00-22:00 最晚进入20:30；11-09至12-31 周一至周日 09:00-17:00 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/7198679e5e6d5bff74e60170ec7d2e80",
+    rating: "",
     match: 1,
   },
   浙江省温州市文成县龙麒源景区: {
@@ -5959,6 +6806,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-15:30",
     image:
       "http://store.is.autonavi.com/showpic/367913003963333493f120009679a3dd",
+    rating: "",
     match: 1,
   },
   氡泉景区: {
@@ -5966,6 +6814,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B024104077/comment/062a0021cbf2d459e3cbea9f109ffc9c_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   江心屿景区: {
@@ -5973,6 +6822,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/262c3d55d976f4300000002450068935?type=pic",
+    rating: "",
     match: 1,
   },
   泰顺廊桥文化园: {
@@ -5980,6 +6830,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/6e8a5854e6499b53007540fa1d826d5a",
+    rating: "",
     match: 1,
   },
   温州南塘文化旅游区: {
@@ -5987,6 +6838,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/a6d252f810a7b1424cb3889917cc72a3",
+    rating: "",
     match: 1,
   },
   寨寮溪风景名胜区: {
@@ -5994,6 +6846,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:30",
     image:
       "http://store.is.autonavi.com/showpic/dce1e7a7a61c60a6c140999a4ce3c3a6",
+    rating: "",
     match: 0.92,
   },
   寨寮溪风景区: {
@@ -6001,6 +6854,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:30",
     image:
       "https://store.is.autonavi.com/showpic/ac791f7d48fc1e4b0000003768906717?type=pic",
+    rating: "",
     match: 1,
   },
   铜铃山国家森林公园: {
@@ -6008,6 +6862,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "8:30-15:00",
     image:
       "http://store.is.autonavi.com/showpic/e3f54634298be486affd83bac6caf83f",
+    rating: "",
     match: 0.6,
   },
   洞头景区: {
@@ -6016,6 +6871,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "00:00-24:00景区内各景点的不周一,出行前请查询对应景点的。具体开放时间以现场公示为准",
     image:
       "http://store.is.autonavi.com/showpic/8ff8f9b15f7f9f2092ba397a05df35bc",
+    rating: "",
     match: 0.98,
   },
   龙麒源景区: {
@@ -6023,6 +6879,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-15:30",
     image:
       "http://store.is.autonavi.com/showpic/367913003963333493f120009679a3dd",
+    rating: "",
     match: 1,
   },
   "洞头半屏山-仙叠岩（同心小镇）": {
@@ -6031,6 +6888,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 00:00-24:00；景区内各景点的营业时间不一，出行前请查询对应景点的营业时间。",
     image:
       "https://store.is.autonavi.com/showpic/c18b7caf2a4369410000007061710444?type=pic",
+    rating: "",
     match: 0.96,
   },
   浮盖山景区: {
@@ -6038,12 +6896,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入16:00",
     image:
       "https://store.is.autonavi.com/showpic/666a795b9c57b94bec00638fe832e072",
+    rating: "",
     match: 0.99,
   },
   龙游石窟: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   浙江省衢州市衢江区天脊龙门景区: {
@@ -6051,6 +6911,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:30 最晚进入16:30",
     image:
       "https://aos-comment.amap.com/B023A0IFX8/comment/176665570418_1766655705182_10777966.jpg",
+    rating: "",
     match: 0.99,
   },
   清漾景区: {
@@ -6058,6 +6919,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFF3B7JD/comment/BF4B6C93_FB16_4C54_9653_25DE275008B8_L0_001_2000_112_1754640772320_06466817.jpg",
+    rating: "",
     match: 1,
   },
   衢州七彩长虹景区: {
@@ -6065,6 +6927,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "冬08:00-17:00；夏08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/8c69d0a0d0e9828b8e890e6510555286",
+    rating: "",
     match: 0.61,
   },
   浙江省衢州市衢江区药王山景区: {
@@ -6072,6 +6935,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:30 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/e0068e5ade9b752ad34d436933dee717",
+    rating: "",
     match: 0.99,
   },
   衢州开化古田山风景旅游区: {
@@ -6080,6 +6944,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,11月至12月 周一至周日 08:30-16:00；5月至10月 周一至周日 08:00-16:30",
     image:
       "http://store.is.autonavi.com/showpic/eb4d1b70648aa221fcc18b014759d65f",
+    rating: "",
     match: 1,
   },
   廿八都景区: {
@@ -6087,6 +6952,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/324dccac4f2a4d308bc5cee7053d8e6c",
+    rating: "",
     match: 1,
   },
   民居苑景区: {
@@ -6094,6 +6960,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:30 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/50ac0c4747d1ecad93a9a74579a4adb4",
+    rating: "",
     match: 1,
   },
   龙天红木小镇景区: {
@@ -6102,12 +6969,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至9月 周一至周日 14:00-21:00 最晚进入20:00 10-01至10-07 周一至周日 10:00-21:30 最晚进入20:30；10-08至12-31 周一至周日 14:00-21:00 最晚进入20:00",
     image:
       "https://store.is.autonavi.com/showpic/5f50ef4840c632510000002739392228?type=pic",
+    rating: "",
     match: 0.65,
   },
   梅树底景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   古田山风景旅游区: {
@@ -6116,6 +6985,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,11月至12月 周一至周日 08:30-16:00；5月至10月 周一至周日 08:00-16:30",
     image:
       "http://store.is.autonavi.com/showpic/eb4d1b70648aa221fcc18b014759d65f",
+    rating: "",
     match: 0.9,
   },
   七彩长虹景区: {
@@ -6123,6 +6993,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "冬08:00-17:00；夏08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/8c69d0a0d0e9828b8e890e6510555286",
+    rating: "",
     match: 0.91,
   },
   江郎山景区: {
@@ -6130,6 +7001,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入16:00",
     image:
       "https://aos-comment.amap.com/B0FFGB4LKM/comment/05c520b2de98ec38b686be75d9e47dd9_2048_2048_80.jpg",
+    rating: "",
     match: 0.94,
   },
   三衢石林景区: {
@@ -6137,12 +7009,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:30 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/6bd1cf9cefc1eca64e7c289c0fc013f0",
+    rating: "",
     match: 1,
   },
   桃源七里景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.98,
   },
   龙游民居苑: {
@@ -6150,6 +7024,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:30 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/50ac0c4747d1ecad93a9a74579a4adb4",
+    rating: "",
     match: 1,
   },
   仙霞关景区: {
@@ -6157,12 +7032,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入16:30",
     image:
       "https://store.is.autonavi.com/showpic/dce9b72706cac3ee0000002347288962?type=pic",
+    rating: "",
     match: 1,
   },
   龙游石窟旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   药王山景区: {
@@ -6170,6 +7047,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:30-16:30 最晚进入16:30, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/1767146caf072e97a1b58203f901f28a",
+    rating: "",
     match: 0.99,
   },
   天脊龙门景区: {
@@ -6177,6 +7055,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:30 最晚进入16:30",
     image:
       "https://aos-comment.amap.com/B023A0IFX8/comment/176665570418_1766655705182_10777966.jpg",
+    rating: "",
     match: 0.99,
   },
   三衢石林风景区: {
@@ -6184,6 +7063,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:30 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/6bd1cf9cefc1eca64e7c289c0fc013f0",
+    rating: "",
     match: 1,
   },
   诸暨市珍珠小镇景区: {
@@ -6191,6 +7071,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/452db985ce827a170000003392340591?type=pic",
+    rating: "",
     match: 0.99,
   },
   五泄风景区: {
@@ -6198,6 +7079,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFK3280B/comment/content_media_external_file_8441_ss__1772434829425_25657269.jpg",
+    rating: "",
     match: 1,
   },
   大佛寺文化旅游区: {
@@ -6205,6 +7087,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/3b0c36573a7748a1b6af2bc4d104cf4e",
+    rating: "",
     match: 0.8,
   },
   浙江省绍兴市柯桥区安昌古镇景区: {
@@ -6213,6 +7096,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "6月至9月 周一至周日 08:30-17:00；1月至5月,10月至12月 周一至周日 08:30-16:30,2026-02-16,08:00-16:00,2026-02-17至2026-02-23,08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/444b55160c894c988fcae0d78bfc1774",
+    rating: "",
     match: 1,
   },
   浙江省绍兴市柯桥区绍兴乔波冰雪世界旅游区: {
@@ -6221,6 +7105,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月1日-2月28日 09:00-21:00开放；3月1日-6月30日 周一-周四 09:00-18:00开放；3月1日-6月30日 周五-周日 09:00-20:00开放；7月1日-8月31日 09:00-21:00开放；9月1日-12月31日 周一-周四 09:00-18:00开放；9月1日-12月31日 周五-周日 09:00-20:00开放；1月-2月,7月-8月夜场时间 周一至周日 17:00-21:00 3月-6月,9月-12月夜场时间 周五至周日及法定节假日 16:00-20:00；劳动节,清明节,端午节,中秋节,国庆节 09:00-20:00开放；具体营业状态以当天开放情况为准",
     image:
       "http://store.is.autonavi.com/showpic/73e3204fd3f45cbf217788ee71379383",
+    rating: "",
     match: 1,
   },
   绍兴乔波冰雪世界体育发展有限公司: {
@@ -6229,6 +7114,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月1日-2月28日 09:00-21:00开放；3月1日-6月30日 周一-周四 09:00-18:00开放；3月1日-6月30日 周五-周日 09:00-20:00开放；7月1日-8月31日 09:00-21:00开放；9月1日-12月31日 周一-周四 09:00-18:00开放；9月1日-12月31日 周五-周日 09:00-20:00开放；1月-2月,7月-8月夜场时间 周一至周日 17:00-21:00 3月-6月,9月-12月夜场时间 周五至周日及法定节假日 16:00-20:00；劳动节,清明节,端午节,中秋节,国庆节 09:00-20:00开放；具体营业状态以当天开放情况为准",
     image:
       "http://store.is.autonavi.com/showpic/73e3204fd3f45cbf217788ee71379383",
+    rating: "",
     match: 1,
   },
   绍兴东方山水乐园: {
@@ -6237,6 +7123,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "9月-11月 周一到周五 10:00-16:30；周六-周日 09:30-17:00；中秋节,国庆节 09:30-21:00；具体开放时间以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/62fb06b0ef78d5f7b1e1455152854b6e",
+    rating: "",
     match: 0.98,
   },
   浙江省绍兴市上虞区中华孝德园: {
@@ -6244,6 +7131,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:30",
     image:
       "https://aos-comment.amap.com/B0FFF02FE0/comment/6136606D_A4D8_4640_A9CE_0A94AFBCA9A2_L0_001_1500_2000__1687395586361_a59e1927.jpg",
+    rating: "",
     match: 0.99,
   },
   浙江省绍兴市诸暨市米果果小镇景区: {
@@ -6251,6 +7139,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B0FFH04EHO/comment/content_media_external_images_media_3988_1656082297289_a9d74418.jpg",
+    rating: "",
     match: 0.98,
   },
   浙江省绍兴市上虞区覆卮山景区: {
@@ -6258,6 +7147,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/2194e0eaa5f79ac80000007382530624?type=pic",
+    rating: "",
     match: 0.75,
   },
   柯岩风景区: {
@@ -6265,12 +7155,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/ee6e9e47b20d690c0000008999810804?type=pic",
+    rating: "",
     match: 0.99,
   },
   桃花岛旅游景区: {
     tel: "0580-6063668",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.57,
   },
   舟山桃花岛风景旅游区: {
@@ -6278,6 +7170,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B0FFG2CD58/comment/c3608524bc77180f23af7908c2b03b65_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   沈家门渔港小镇景区: {
@@ -6285,6 +7178,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-11:30,14:00-16:30",
     image:
       "http://store.is.autonavi.com/showpic/67703ae940c9abc6dc4ae6527710758f",
+    rating: "",
     match: 0.99,
   },
   永安溪休闲绿道: {
@@ -6292,6 +7186,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/2addf6495287224a28cc1c5f068ad70b",
+    rating: "",
     match: 1,
   },
   浙江省台州市天台县后岸乡居旅游: {
@@ -6299,6 +7194,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-19:30",
     image:
       "https://store.is.autonavi.com/showpic/d8d6077e326933520000002475466347?type=pic",
+    rating: "",
     match: 0.99,
   },
   方山景区: {
@@ -6307,6 +7203,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "5月至9月 周一至周日 06:00-17:00；10月至12月,1月至4月 周一至周日 06:30-16:30",
     image:
       "https://store.is.autonavi.com/showpic/c3c75317f46b21f2eba139ea63a74f48",
+    rating: "",
     match: 0.99,
   },
   浙江省台州市三门县蛇蟠岛景区: {
@@ -6315,6 +7212,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "5月至12月 周一至周日 08:00-16:30 最晚进入16:30；景区内各景点开放时间详见景区现场公示",
     image:
       "http://store.is.autonavi.com/showpic/961318f152f2d74372722047a3190542",
+    rating: "",
     match: 1,
   },
   长屿硐天旅游区: {
@@ -6322,6 +7220,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-17:00",
     image:
       "https://store.is.autonavi.com/showpic/35537e63781aaff70000002285190941",
+    rating: "",
     match: 0.93,
   },
   天台后岸乡居旅游景区: {
@@ -6329,6 +7228,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-19:30",
     image:
       "https://store.is.autonavi.com/showpic/d8d6077e326933520000002475466347?type=pic",
+    rating: "",
     match: 0.99,
   },
   浙江省台州市玉环市大鹿岛景区: {
@@ -6336,6 +7236,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/f4919218c16822100000003690854674?type=pic",
+    rating: "",
     match: 1,
   },
   浙江省台州市仙居县永安溪休闲绿道景区: {
@@ -6343,12 +7244,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/2addf6495287224a28cc1c5f068ad70b",
+    rating: "",
     match: 0.56,
   },
   浙江省台州市玉环市漩门湾观光农业园景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.61,
   },
   浙江省台州市椒江区台州海洋世界: {
@@ -6357,6 +7260,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "01-01至09-24 周一至周五 09:00-16:30 最晚进入16:30；01-01至09-24 周六至周日 09:00-17:00 最晚进入17:00；09-25至09-27 周一至周日 09:00-17:00；09-28至09-30 周一至周五 09:00-16:30 最晚进入16:30；09-28至09-30 周六至周日 09:00-17:00 最晚进入17:00；10-01至10-07 周一至周日 08:30-17:30；10-08至12-31 周一至周五 09:00-16:30 最晚进入16:30；10-08至12-31 周六至周日 09:00-17:00 最晚进入17:00",
     image:
       "https://aos-comment.amap.com/B024002XRK/comment/content_media_external_images_media_1000042169_ss__1754704998841_51623413.jpg",
+    rating: "",
     match: 1,
   },
   仙居氧吧小镇景区: {
@@ -6364,12 +7268,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/a74e1211a427d757b26fa12024a44ec8",
+    rating: "",
     match: 0.8,
   },
   长屿硐天: {
     tel: "",
     openTime: "周一至周日 08:00-16:30",
     image: "",
+    rating: "",
     match: 0.99,
   },
   台州海洋世界: {
@@ -6378,12 +7284,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "01-01至09-24 周一至周五 09:00-16:30 最晚进入16:30；01-01至09-24 周六至周日 09:00-17:00 最晚进入17:00；09-25至09-27 周一至周日 09:00-17:00；09-28至09-30 周一至周五 09:00-16:30 最晚进入16:30；09-28至09-30 周六至周日 09:00-17:00 最晚进入17:00；10-01至10-07 周一至周日 08:30-17:30；10-08至12-31 周一至周五 09:00-16:30 最晚进入16:30；10-08至12-31 周六至周日 09:00-17:00 最晚进入17:00",
     image:
       "https://aos-comment.amap.com/B024002XRK/comment/content_media_external_images_media_1000042169_ss__1754704998841_51623413.jpg",
+    rating: "",
     match: 1,
   },
   东阳中国木雕城: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.7,
   },
   浙江省金华市东阳市花园村景区: {
@@ -6391,12 +7299,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入16:30；最晚入园时间17:00",
     image:
       "http://store.is.autonavi.com/showpic/aac165d8af5b2d89db770432d64a0441",
+    rating: "",
     match: 1,
   },
   浦江仙华山风景区: {
     tel: "0579-84228005",
     openTime: "08:30-17:00 最晚进入16:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.59,
   },
   浙江省金华市东阳市横店镇明清民居博览城: {
@@ -6405,6 +7315,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "5月至9月 周一至周日 08:00-16:30 最晚进入16:30；10月至12月,1月至4月 周一至周日 08:30-16:30 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/74d47876c030cb43b38c6eb670326ca2",
+    rating: "",
     match: 0.56,
   },
   诸葛八卦村旅游区: {
@@ -6413,6 +7324,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 08:00-16:30 最晚进入16:00；4月至10月 周一至周日 07:30-17:00 最晚进入16:30；诸葛后裔祭祖:农历四月十四（春祭）、农历八月廿八（秋祭），具体安排以景区公告为准",
     image:
       "http://store.is.autonavi.com/showpic/863b6f5d1e20680621fd7decbcf26fd8",
+    rating: "",
     match: 0.99,
   },
   武义清水湾景区: {
@@ -6420,6 +7332,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B02430HTH8/comment/898A7BCD_77FC_4400_8F9A_C2378DA4A89D_L0_001_750_340_1733820935132_00203594.jpg",
+    rating: "",
     match: 0.6,
   },
   横店红色旅游城: {
@@ -6427,30 +7340,35 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/bbc89dae5a2ac5c7eaaf148953629ef0",
+    rating: "",
     match: 1,
   },
   牛头山国家森林公园: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   锦林佛手文化园: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   横店明清民居博览城: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   义乌国际商贸城购物旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.97,
   },
   武义大红岩景区: {
@@ -6459,24 +7377,28 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05-01至10-07 周一至周日 07:30-16:30 最晚进入16:00；10-08至04-30 周一至周日 08:00-16:00 最晚进入15:30",
     image:
       "https://aos-comment.amap.com/B02430HXZJ/comment/A56499C6_3308_4B30_81B5_97FBED88C93A_L0_001_2000_1334_1726580390010_13747157.jpg",
+    rating: "",
     match: 0.6,
   },
   牛头山景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   东阳中国木雕城景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.7,
   },
   金华双龙风景旅游区: {
     tel: "",
     openTime: "周一至周日 08:00-17:10",
     image: "",
+    rating: "",
     match: 0.96,
   },
   磐安百杖潭景区: {
@@ -6484,6 +7406,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/205c6aa70dc67de053d38be0384f6158",
+    rating: "",
     match: 0.6,
   },
   横店华夏文化园: {
@@ -6491,6 +7414,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-16:00",
     image:
       "http://store.is.autonavi.com/showpic/18fd59645b3688fa35843324aa00948c",
+    rating: "",
     match: 1,
   },
   婺州古城景区: {
@@ -6498,6 +7422,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFKQWD7C/comment/content_media_external_file_100009126_1769357165724_86414067.jpg",
+    rating: "",
     match: 1,
   },
   磐安夹溪十八涡景区: {
@@ -6505,6 +7430,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/d83fa54afdd9eea74ad9100286de439e",
+    rating: "",
     match: 0.99,
   },
   浙江省金华市磐安县十八涡景区: {
@@ -6512,18 +7438,21 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/d83fa54afdd9eea74ad9100286de439e",
+    rating: "",
     match: 0.99,
   },
   仙华山景区: {
     tel: "0579-84228005",
     openTime: "08:30-17:00 最晚进入16:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.98,
   },
   浙江省丽水市遂昌县神龙飞瀑景区: {
     tel: "0578-8366000",
     openTime: "周一至周日 08:00-16:30",
     image: "",
+    rating: "",
     match: 0.99,
   },
   大木山茶园景区: {
@@ -6531,6 +7460,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/a1d5630bdab9f4b349f0d3166b5b79bb",
+    rating: "",
     match: 0.98,
   },
   "浙江龙泉中国青瓷小镇.披云青瓷文化园景区": {
@@ -6538,6 +7468,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/22ceb0dc77ac8c22570a4749ae94a16a",
+    rating: "",
     match: 1,
   },
   云和梯田景区: {
@@ -6546,6 +7477,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "3月16日至11月15日 08:00-17:00；11月16日至3月15日 08:00-16:30国庆假期具体开放时间以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/fb467ecc9a36976bceeafabd6c4b2f00",
+    rating: "",
     match: 1,
   },
   浙江省丽水市松阳县松阳双童山景区: {
@@ -6553,6 +7485,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "4月至12月 周一至周日 08:30-17:00 最晚进入16:00",
     image:
       "https://aos-comment.amap.com/B0FFK0LV20/comment/content_media_external_images_media_61803_1729176379428_42936038.jpg",
+    rating: "",
     match: 1,
   },
   南尖岩景区: {
@@ -6560,6 +7493,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:30-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/d2cc872e9eb231b1ab7eea61c240563a",
+    rating: "",
     match: 0.92,
   },
   中国畲乡之窗: {
@@ -6567,6 +7501,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/674e9878134876c30b0a31caf2cd4acb",
+    rating: "",
     match: 0.67,
   },
   仙都景区: {
@@ -6574,6 +7509,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/16be11725f2eefa9fc6443a04fc9134a",
+    rating: "",
     match: 0.99,
   },
   丽水东西岩风景区: {
@@ -6582,6 +7518,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "冬令时 10月01日至04月30日 08:00-16:30；夏令时 05月01日至09月30日 08:00-17:30 停止入场:17:30",
     image:
       "https://aos-comment.amap.com/B0LR9BPIKE/comment/8A06A1B5_52D3_4131_B2BC_5946399658F3_L0_001_1500_200_1760496680621_25651814.jpg",
+    rating: "",
     match: 0.59,
   },
   浙江省丽水市遂昌县千佛山景区: {
@@ -6590,6 +7527,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 08:30-17:00 最晚进入16:00；4月至10月 周一至周日 08:00-18:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/b687dc57be4c98862edf11b765b04866",
+    rating: "",
     match: 1,
   },
   青田中国石雕文化旅游区: {
@@ -6597,6 +7535,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B0FFF0DP46/comment/3A53D65B_13EB_4E80_9060_01C10895ECA6_L0_001_2000_150_1753507162322_94630362.jpg",
+    rating: "",
     match: 0.91,
   },
   松阴溪景区: {
@@ -6604,6 +7543,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/b880b4abcd7748b59af3c2f85623c9d6",
+    rating: "",
     match: 0.99,
   },
   "中国青瓷小镇·披云青瓷文化园": {
@@ -6611,6 +7551,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/22ceb0dc77ac8c22570a4749ae94a16a",
+    rating: "",
     match: 1,
   },
   青田石门洞景区: {
@@ -6618,6 +7559,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/a3981551a031ef0b304efc04957f539c",
+    rating: "",
     match: 0.6,
   },
   云和湖仙宫景区: {
@@ -6625,12 +7567,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:30 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/c5996cb9f45265c53c0f7107f9d40da2",
+    rating: "",
     match: 0.99,
   },
   浙江省丽水市遂昌县遂昌金矿国家矿山公园景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.56,
   },
   松阳大木山茶园: {
@@ -6638,6 +7582,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/a1d5630bdab9f4b349f0d3166b5b79bb",
+    rating: "",
     match: 0.98,
   },
   浙江省丽水市庆元县百山祖景区: {
@@ -6646,6 +7591,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05-01至10-14 周一至周日 08:00-17:00 最晚进入16:30；10-15至04-30 周一至周日 08:30-16:30 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/d52a96316def3250d81977a9b276de03",
+    rating: "",
     match: 0.88,
   },
   浙江省丽水市遂昌县南尖岩景区: {
@@ -6653,12 +7599,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:30-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/d2cc872e9eb231b1ab7eea61c240563a",
+    rating: "",
     match: 0.92,
   },
   神龙谷景区: {
     tel: "0578-8366000",
     openTime: "周一至周日 08:00-16:30",
     image: "",
+    rating: "",
     match: 0.66,
   },
   龙泉山度假区: {
@@ -6666,6 +7614,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://aos-comment.amap.com/B0G0AZSPJY/headerImg/fbd08299478dc3e4e679dba3076e84bb_2048_2048_80.jpg",
+    rating: "",
     match: 0.9,
   },
   箬寮原始林景区: {
@@ -6673,6 +7622,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/0b9d9082fa2d11211a4c29d5b47e83f5",
+    rating: "",
     match: 0.97,
   },
   古堰画乡: {
@@ -6680,6 +7630,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-20:30",
     image:
       "https://store.is.autonavi.com/showpic/fe5ae98abe8a7eeb0000002450584742?type=pic",
+    rating: "",
     match: 0.99,
   },
   浙江省丽水市景宁畲族自治县畲乡之窗景区: {
@@ -6687,6 +7638,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/674e9878134876c30b0a31caf2cd4acb",
+    rating: "",
     match: 1,
   },
   百山祖景区: {
@@ -6694,6 +7646,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "05月01日-10月7日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/6329c72139720a010000000569188632",
+    rating: "",
     match: 0.94,
   },
   合肥野生动物园: {
@@ -6701,6 +7654,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/b8dd5ca94462b1e00000003179414599?type=pic",
+    rating: "",
     match: 1,
   },
   合肥植物园: {
@@ -6708,6 +7662,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/5c740c59-70dc-46a5-98c5-2047f0390eae.jpg",
+    rating: "",
     match: 1,
   },
   渡江战役总前委旧址: {
@@ -6715,6 +7670,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/98bf9a0d56c77b64cc305337790998f6",
+    rating: "",
     match: 1,
   },
   合肥紫蓬山国家森林公园: {
@@ -6722,12 +7678,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/bae38bce4e94ff920000005618838673?type=pic",
+    rating: "",
     match: 0.68,
   },
   合肥三国遗址公园: {
     tel: "0551-63823052",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   元一双凤湖国际旅游度假区: {
@@ -6735,6 +7693,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/c31c1d0944bfc173ba9b8a5418d2e89b",
+    rating: "",
     match: 1,
   },
   合肥包公园: {
@@ -6743,6 +7702,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,10月至12月 周一至周日 09:00-17:00 最晚进入16:30；5月至9月 周一至周日 09:00-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/82f427dd5004b5b952fe733242a6a6e5",
+    rating: "",
     match: 1,
   },
   安徽徽园景区: {
@@ -6750,6 +7710,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/a0f0c74790b1701d7cac12afe9b79f5b",
+    rating: "",
     match: 1,
   },
   巢湖姥山岛景区: {
@@ -6757,6 +7718,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/0c82424fc84bc7c42223a5f43d0c0683",
+    rating: "",
     match: 1,
   },
   合肥李鸿章故居陈列馆: {
@@ -6764,6 +7726,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-16:30",
     image:
       "https://store.is.autonavi.com/showpic/224cd340192b2ed674275d47096a892b",
+    rating: "",
     match: 0.8,
   },
   紫微洞景区: {
@@ -6771,6 +7734,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:00",
     image:
       "https://aos-comment.amap.com/B0FFMEO1W3/headerImg/b4f7228282c35d9ed6309be2cff516ec_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   庐阳区三十岗乡生态农业旅游区: {
@@ -6778,6 +7742,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/cc377b976ab9af800000001514714724?type=pic",
+    rating: "",
     match: 0.88,
   },
   长临古街景区: {
@@ -6785,6 +7750,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-22:00",
     image:
       "https://store.is.autonavi.com/showpic/220665383f1e23140000003047768606?type=pic",
+    rating: "",
     match: 0.92,
   },
   相山景区: {
@@ -6792,12 +7758,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/0cef420db4f1c9bc0000003785124883?type=pic",
+    rating: "",
     match: 1,
   },
   四季榴园景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   南湖景区: {
@@ -6805,6 +7773,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0H6LYD4HC/comment/8577fe55098e240f4186c927b3d0b9d8_2048_2048_80.jpg",
+    rating: "",
     match: 0.98,
   },
   安徽古井酒文化博览园: {
@@ -6812,6 +7781,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:30-17:30, 具体开放时间以现场公示为准",
     image:
       "http://store.is.autonavi.com/showpic/6411e802867b05bbc6166b169eb20227",
+    rating: "",
     match: 1,
   },
   亳州博物馆景区: {
@@ -6819,6 +7789,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFG1J3KZ/comment/FAE3BA18_03F9_4CB9_8C6B_5248C27A6489_L0_001_2000_112_1757149427782_38383141.jpg",
+    rating: "",
     match: 0.6,
   },
   涡阳天静宫景区: {
@@ -6826,6 +7797,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/a23d11b765c5af58c8afa8a4938d8344",
+    rating: "",
     match: 0.57,
   },
   亳州市曹操地下运兵道景区: {
@@ -6834,6 +7806,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "04-21至10-19 周一至周日 08:30-18:00 最晚进入17:30；10-20至04-20 周一至周日 09:00-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/74ed784276413f3698afcb14ba7b733f",
+    rating: "",
     match: 1,
   },
   亳州市南京巷钱庄景区: {
@@ -6842,6 +7815,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "04-21至10-19 周一至周日 08:30-18:00 最晚进入18:00；10-20至04-20 周一至周日 09:00-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/878c90e3ad70da2c87492f7f9eb23d76",
+    rating: "",
     match: 0.96,
   },
   萧县皇藏峪国家森林公园: {
@@ -6849,12 +7823,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00；停止入场:17:00",
     image:
       "https://store.is.autonavi.com/showpic/7bcd882da5e6a2e20000001172056562",
+    rating: "",
     match: 0.71,
   },
   灵璧现代农业博览园: {
     tel: "",
     openTime: "周一至周日 08:00-17:30",
     image: "",
+    rating: "",
     match: 0.99,
   },
   宿州新汴河景区: {
@@ -6862,6 +7838,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "https://aos-comment.amap.com/B0FFH9GKCS/comment/20260320-52a9167532e466b99e28b23d-2pmIgtNYXdXA8Fr62HOamY.jpg",
+    rating: "",
     match: 0.98,
   },
   蚌埠市禾泉农庄景区: {
@@ -6869,6 +7846,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/f376c4beef69b52594cc2bf95be6d8d7",
+    rating: "",
     match: 0.86,
   },
   蚌埠市龙子湖景区: {
@@ -6877,6 +7855,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 00:00-24:00；如无特殊情况，景区照常开放，具体营业状态以当天开放情况为准",
     image:
       "https://store.is.autonavi.com/showpic/23f3b80ec1006f0d0000003021626388?type=pic",
+    rating: "",
     match: 0.99,
   },
   迪沟旅游区: {
@@ -6884,6 +7863,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-16:30",
     image:
       "https://store.is.autonavi.com/showpic/348871e23a0217740000003029156817?type=pic",
+    rating: "",
     match: 0.98,
   },
   阜阳生态乐园: {
@@ -6891,6 +7871,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "9:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/107363342140d01ecd75e532206fcf40",
+    rating: "",
     match: 1,
   },
   八公山旅游景区: {
@@ -6898,12 +7879,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-17:30 最晚进入17:00,2026年春节期间正常营业",
     image:
       "http://store.is.autonavi.com/showpic/b7bb02ea057783a6e8213c6a4e3d7dbb",
+    rating: "",
     match: 0.6,
   },
   龙湖景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.97,
   },
   焦岗湖影视城: {
@@ -6911,6 +7894,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/2dc34e94f40a06492b544a3afaff2bbd",
+    rating: "",
     match: 1,
   },
   天宝双遗文化园: {
@@ -6918,6 +7902,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/ba7f1ca2cdf199210000004007836504?type=pic",
+    rating: "",
     match: 1,
   },
   安徽省琅琊山国家森林公园: {
@@ -6925,6 +7910,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/6b69d51c52a1a5d945d6c8de7316b7ce",
+    rating: "",
     match: 0.97,
   },
   凤阳县狼巷迷谷景区: {
@@ -6933,6 +7919,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 08:00-16:30 最晚进入16:30；4月至10月 周一至周日 08:00-18:30 最晚进入16:30",
     image:
       "https://aos-comment.amap.com/B022600D28/comment/content_media_external_file_100042919_1756687088977_75912476.jpg",
+    rating: "",
     match: 0.99,
   },
   凤阳县小岗村乡村旅游区: {
@@ -6940,6 +7927,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-12:00,13:30-17:00",
     image:
       "https://store.is.autonavi.com/showpic/09c06faa5e6785a40000002379310538?type=pic",
+    rating: "",
     match: 0.99,
   },
   红军广场景区: {
@@ -6947,6 +7935,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/bc7e18931f1a70f3a81accdf65d9fa46",
+    rating: "",
     match: 1,
   },
   佛子岭景区: {
@@ -6954,6 +7943,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/128d3470013a9971a70d3f1d59d74066",
+    rating: "",
     match: 1,
   },
   独山革命旧址群: {
@@ -6961,6 +7951,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/66aae0f014856b38d1726cb65405ff2d",
+    rating: "",
     match: 0.97,
   },
   燕子河大峡谷景区: {
@@ -6968,6 +7959,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入15:30",
     image:
       "http://store.is.autonavi.com/showpic/f77790591a833732d5d35b4d68a32d37",
+    rating: "",
     match: 0.99,
   },
   南岳山景区: {
@@ -6975,6 +7967,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-21:00",
     image:
       "http://store.is.autonavi.com/showpic/13417e5144d26e32c6cb2a06afb88dca",
+    rating: "",
     match: 0.99,
   },
   横排头景区: {
@@ -6982,6 +7975,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:30-11:30；13:30-17:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/ef6ca8ee0e355f5e0000008265360401?type=pic",
+    rating: "",
     match: 0.91,
   },
   临淮岗景区: {
@@ -6990,6 +7984,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:30-17:00 最晚进入17:00；每周五、六、日晚18:00-22:00开放夜场灯光秀",
     image:
       "http://store.is.autonavi.com/showpic/82ca1a65c1d3ee5eb64b66dafde55760",
+    rating: "",
     match: 0.95,
   },
   大别山石窟景区: {
@@ -6997,18 +7992,21 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/f3e97decacc444aa69e2d9ce1487caa7",
+    rating: "",
     match: 0.97,
   },
   东石笋景区: {
     tel: "",
     openTime: "周一至周日 08:00-17:30",
     image: "",
+    rating: "",
     match: 0.98,
   },
   悠然南山度假区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.96,
   },
   梅山水库景区: {
@@ -7017,6 +8015,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "5月至9月 周一至周日 07:00-18:00；10月至12月,1月至4月 周一至周日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/61fd138f969f37885e62a855fad06ef5",
+    rating: "",
     match: 0.99,
   },
   皖西大裂谷景区: {
@@ -7024,12 +8023,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-17:30 最晚进入16:30",
     image:
       "https://store.is.autonavi.com/showpic/1e9f3c47101966e44ac35b9a0d8b1757",
+    rating: "",
     match: 0.95,
   },
   铜锣寨景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.67,
   },
   九公寨景区: {
@@ -7037,12 +8038,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/b2c46c4d60c4cd00ee2f360edb97c379",
+    rating: "",
     match: 0.98,
   },
   皖西博物馆: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   悠然蓝溪文化旅游度假景区: {
@@ -7050,6 +8053,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/db3086b520ca74d88340749020cfaea2",
+    rating: "",
     match: 0.66,
   },
   小南京乡村旅游扶贫示范区: {
@@ -7057,12 +8061,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/0ae682bbe3b5f8f8bb5aa6e0bbf0d6bb",
+    rating: "",
     match: 0.96,
   },
   响洪甸水库景区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.98,
   },
   大别山玉博园景区: {
@@ -7070,6 +8076,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFFZT2TP/comment/043B8F50_5C82_4583_8150_F6991C68582D_L0_001_1179_86_1756831060435_56126691.jpg",
+    rating: "",
     match: 0.99,
   },
   大别山风情谷景区: {
@@ -7077,6 +8084,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/96b21ddf54d77de8a429f20d8ea832b4",
+    rating: "",
     match: 0.99,
   },
   梦幻海洋大世界景区: {
@@ -7084,12 +8092,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/482d4451e72c75f778ad574ffe7b6fe5",
+    rating: "",
     match: 1,
   },
   采石矶景区: {
     tel: "0555-2101058",
     openTime: "周一至周日 08:30-17:30",
     image: "",
+    rating: "",
     match: 1,
   },
   "鸡笼山-半月湖景区": {
@@ -7097,6 +8107,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/5bfa371013af3ad10000002690274842?type=pic",
+    rating: "",
     match: 0.99,
   },
   香泉旅游区: {
@@ -7104,6 +8115,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-23:00 最晚进入23:00",
     image:
       "https://aos-comment.amap.com/B0FFFPEDRV/comment/DB0A5D30_0004_4BAA_8851_3010C98D1ED6_L0_001_1179_157_1768015493615_61947375.jpg",
+    rating: "",
     match: 0.98,
   },
   诗城人家景区: {
@@ -7111,12 +8123,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "03-01至10-31 周一至周日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/ccd4f8cd8f8a7de1c610e437faed8d3e",
+    rating: "",
     match: 0.96,
   },
   濮塘景区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 1,
   },
   芜湖陶辛水韵景区: {
@@ -7124,6 +8138,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入17:00",
     image:
       "https://store.is.autonavi.com/showpic/3ec3304d78650567eec0e6a800c8ba6c",
+    rating: "",
     match: 0.99,
   },
   丫山花海石林景区: {
@@ -7131,6 +8146,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/cca374280eba87f512c79e2ecf898ea2",
+    rating: "",
     match: 0.99,
   },
   大浦乡村世界: {
@@ -7138,6 +8154,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08-24至10-31 周一至周日 08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/302ae5048a3aea561c2c25e8f0cf8d6c",
+    rating: "",
     match: 0.98,
   },
   王稼祥纪念园: {
@@ -7145,6 +8162,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周二至周六 08:30-16:30 最晚进入16:15",
     image:
       "http://store.is.autonavi.com/showpic/5d7ff8f0feb8d0d9357ef9b9b6f06eaa",
+    rating: "",
     match: 1,
   },
   鸠兹景区: {
@@ -7152,6 +8170,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B02290I4GB/comment/E2FB8F89_FE4A_4D5B_B6CB_EC284C8E5F44_L0_001_1080_144_1761626308073_16183267.jpg",
+    rating: "",
     match: 1,
   },
   鸠兹古镇景区: {
@@ -7159,6 +8178,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/c5ddae0c8b46f65db5f43d049fdcca53",
+    rating: "",
     match: 0.99,
   },
   浮山景区: {
@@ -7166,6 +8186,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/comment/content_service__1771305826973_35716072_1771305835243_41016105.jpg",
+    rating: "",
     match: 0.98,
   },
   天井湖景区: {
@@ -7173,12 +8194,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/0df02fe46fffd118a6e5776dd37917bd",
+    rating: "",
     match: 1,
   },
   永泉旅游度假区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   凤凰山景区: {
@@ -7187,6 +8210,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "07-06至09-30 周一至周日 08:00-21:00 最晚进入20:30；10-01至07-05 周一至周日 08:00-17:30 最晚进入17:00",
     image:
       "https://aos-comment.amap.com/B0232017RV/comment/content_media_external_images_media_1000076329_ss__1743912880123_45071337.jpg",
+    rating: "",
     match: 0.99,
   },
   大通古镇景区: {
@@ -7194,6 +8218,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://store.is.autonavi.com/showpic/9888779af540cc70d873afe75f913901",
+    rating: "",
     match: 0.98,
   },
   太湖县花亭湖景区: {
@@ -7202,12 +8227,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05-01至10-07 周一至周日 08:00-17:30 最晚进入17:00；10-08至04-30 周一至周日 08:00-17:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/0e2c7426b453ab875ac889813e087875",
+    rating: "",
     match: 0.58,
   },
   太湖五千年文博园景区: {
     tel: "4001009996",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.75,
   },
   大龙山乌龙溪景区: {
@@ -7216,12 +8243,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-17:00开放（17:00停止售票）；元旦节,春节,清明节,劳动节,端午节,中秋节,国庆节,情人节,元宵节,妇女节,五四青年节,父亲节,母亲节,建党节,建军节,七夕,中元节,教师节,重阳节,感恩节,平安夜,圣诞节,腊八节,除夕 08:00-17:30开放；具体开放时间以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/8aad82d6d0bc166be2ee702acb055a2d",
+    rating: "",
     match: 0.97,
   },
   菱湖景区: {
     tel: "0556-5365263",
     openTime: "周一至周日 00:00-24:00",
     image: "http://store.is.autonavi.com/showpic/55689482a31024fc84093a0e",
+    rating: "",
     match: 0.99,
   },
   独秀园景区: {
@@ -7229,6 +8258,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B022C02F5W/comment/content_media_external_file_1000252943_ss__1765001099361_96843246.jpg",
+    rating: "",
     match: 0.99,
   },
   桐城嬉子湖生态景区: {
@@ -7236,6 +8266,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/6ada2f3085819cbfaf62d6f40882d9eb",
+    rating: "",
     match: 0.89,
   },
   桐城孔城老街: {
@@ -7243,6 +8274,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-21:00 最晚进入18:00",
     image:
       "http://store.is.autonavi.com/showpic/31c425add9332617c5554c08423847f8",
+    rating: "",
     match: 1,
   },
   宿松白崖寨景区: {
@@ -7250,6 +8282,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/701c041c63742efcd2ab5cf1e0b2c0d0",
+    rating: "",
     match: 0.98,
   },
   明堂山景区: {
@@ -7258,6 +8291,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 08:30-17:00；4月至10月 周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/519c5d545f0d9edcafe0cb2836ba5e48",
+    rating: "",
     match: 0.95,
   },
   岳西天峡景区: {
@@ -7265,6 +8299,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/cb52e0bb1d6d00dc3ad1774413b16f12",
+    rating: "",
     match: 0.91,
   },
   大别山彩虹瀑布旅游景区: {
@@ -7273,6 +8308,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05-01至10-07 周一至周日 08:00-17:30 最晚进入16:30；10-08至04-30 周一至周日 08:00-17:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/7241576d77ac7a2bb3c1f9579e77f940",
+    rating: "",
     match: 0.99,
   },
   潜山山谷流泉文化园景区: {
@@ -7280,6 +8316,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-18:00",
     image:
       "https://store.is.autonavi.com/showpic/d698513791698eea0000007848612657?type=pic",
+    rating: "",
     match: 1,
   },
   潜山县天龙关景区: {
@@ -7287,6 +8324,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/2f3bb878a4e69be75c12f5b879c7026b",
+    rating: "",
     match: 1,
   },
   潜山县皖光苑旅游景区: {
@@ -7294,6 +8332,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B022C0SAEO/comment/content_media_external_file_1000049279_ss__1758353197634_91987494.jpg",
+    rating: "",
     match: 0.62,
   },
   广德太极洞景区: {
@@ -7301,6 +8340,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "6月1日-8月31日 08:00-16:30",
     image:
       "https://aos-comment.amap.com/B0HRSGPZ92/comment/62a5563d8b1b24bbd15627f4cc91a3a1_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   宁国恩龙世界木屋村: {
@@ -7308,6 +8348,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/d06f8b845606707a0000002377336165?type=pic",
+    rating: "",
     match: 0.99,
   },
   泾县新四军军部旧址纪念馆: {
@@ -7315,12 +8356,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/7f6b185dc3849c78a1a8aa31fc7d63f4",
+    rating: "",
     match: 0.97,
   },
   泾县桃花潭景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.6,
   },
   绩溪县鄣山大峡谷景区: {
@@ -7328,6 +8371,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:30 最晚进入16:00",
     image:
       "https://store.is.autonavi.com/showpic/8f3c76d5569b3b5d0000003001674092?type=pic",
+    rating: "",
     match: 1,
   },
   绩溪县太极湖村景区: {
@@ -7335,6 +8379,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/7f8e57a49d9989e4ae998f633c13cf98",
+    rating: "",
     match: 0.71,
   },
   旌德县江村景区: {
@@ -7342,6 +8387,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B023300JSX/comment/88F864D0_A839_4521_9386_BB514B651360_L0_001_2000_1500_1730788949708_13111421.jpg",
+    rating: "",
     match: 1,
   },
   宣州区龙泉洞景区: {
@@ -7349,6 +8395,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/36357813f8d6a8b2a37519cd5004782b",
+    rating: "",
     match: 1,
   },
   泾县黄田景区: {
@@ -7356,6 +8403,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B02330NSWF/comment/content_media_external_file_1000044422_ss__1764414068137_14570387.jpg",
+    rating: "",
     match: 1,
   },
   旌德县朱旺景区: {
@@ -7363,6 +8411,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/9d910adfb808ea835713b85e41c91d40",
+    rating: "",
     match: 1,
   },
   泾县宣纸文化园: {
@@ -7371,6 +8420,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "03-16至11-15 周一至周日 08:00-17:30 最晚进入16:30；11-16至03-15 周一至周日 08:30-16:30 最晚进入15:30",
     image:
       "https://store.is.autonavi.com/showpic/dfae903713af03a20000003068258712?type=pic",
+    rating: "",
     match: 0.71,
   },
   九子岩景区: {
@@ -7378,6 +8428,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/48c9aa3241d9b1e1bc6a5b73b0613942",
+    rating: "",
     match: 1,
   },
   杏花村旅游区: {
@@ -7385,6 +8436,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/497b1b2312a29be934d6be0edf1b0db9",
+    rating: "",
     match: 1,
   },
   牯牛降景区: {
@@ -7392,6 +8444,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-17:00, 具体开放时间以现场公示为准",
     image:
       "http://store.is.autonavi.com/showpic/29afd6e2120961c8036faaf07baa8e02",
+    rating: "",
     match: 1,
   },
   怪潭景区: {
@@ -7399,6 +8452,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/16af23b63d03bc45861954ff21e9d5a6",
+    rating: "",
     match: 1,
   },
   蓬莱仙洞旅游景区: {
@@ -7406,6 +8460,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "10月8日-12月31日:8:00-17:00,最晚入园时间16:30",
     image:
       "http://store.is.autonavi.com/showpic/66f3021d84aaf140ba1988aadaef039a",
+    rating: "",
     match: 0.99,
   },
   秋浦河旅游景区: {
@@ -7413,6 +8468,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/d05ca25520cbcfcc2a4b8ab2ec8d3d6b",
+    rating: "",
     match: 0.98,
   },
   大愿文化园景区: {
@@ -7420,6 +8476,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/554891d601d859e8fd26dd298b02f3f6",
+    rating: "",
     match: 0.99,
   },
   鱼龙洞景区: {
@@ -7427,12 +8484,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一-周日 8:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/9412844dc69eb1227573c69386cc5e3a",
+    rating: "",
     match: 1,
   },
   石台县仙寓山景区: {
     tel: "",
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.83,
   },
   龙源旅游度假区: {
@@ -7440,12 +8499,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://aos-comment.amap.com/B0FFGB3OOH/comment/content_media_external_file_216003_1769183883341_54369308.jpg",
+    rating: "",
     match: 0.99,
   },
   九华神龙谷景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.96,
   },
   东黄山度假区: {
@@ -7453,6 +8514,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00；全天开放",
     image:
       "https://store.is.autonavi.com/showpic/d34f323f281373ff4146fa6b3bbea826",
+    rating: "",
     match: 1,
   },
   太平湖景区: {
@@ -7460,6 +8522,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "开园时间 8:00-17:30；日常游船时间:上午9:30，下午14:00",
     image:
       "http://store.is.autonavi.com/showpic/0a472f6dd9dafb5c7d212682695352bf",
+    rating: "",
     match: 1,
   },
   九龙瀑景区: {
@@ -7468,6 +8531,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "3月5日-11月30日:周一至周五:07:00-17:10；周六至周日及小长假06:30-17:40；12月1日-3月4日(含周六至周日及小长假):08:00-16:40, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/db629d8991dc6ed99e85b8f7926cca24",
+    rating: "",
     match: 1,
   },
   新安江山水画廊景区: {
@@ -7475,6 +8539,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-15:30",
     image:
       "https://aos-comment.amap.com/B0IRZAYX36/comment/20260318-3fa2bf52ebc500ea0d442867-9OBO8kSZDG16rM6ZjgzmeD.jpg",
+    rating: "",
     match: 0.9,
   },
   雄村景区: {
@@ -7483,12 +8548,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,11月至12月 周一至周日 08:00-16:30 最晚进入16:30；5月至10月 周一至周日 08:00-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/1650662d7389ae6a2ded1aa0378998cd",
+    rating: "",
     match: 1,
   },
   齐云山景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   南屏景区: {
@@ -7496,6 +8563,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-18:00",
     image:
       "https://store.is.autonavi.com/showpic/ef2c0ee32bb8f90e0000004233274871?type=pic",
+    rating: "",
     match: 0.99,
   },
   芙蓉谷景区: {
@@ -7503,6 +8571,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/54acfc0e7c862ecc6e2a0a46cfb3144a",
+    rating: "",
     match: 1,
   },
   丰乐湖景区: {
@@ -7510,6 +8579,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFF475CH/comment/bec65dabf6998663962030094e261553_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   打鼓岭景区: {
@@ -7517,6 +8587,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/866a0441bee5b102885d7f1e7c745da6",
+    rating: "",
     match: 1,
   },
   休宁古城岩景区: {
@@ -7524,6 +8595,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/e2f6f916-f2f2-48eb-aa9b-4a3132b81ac8.jpg",
+    rating: "",
     match: 0.99,
   },
   历溪景区: {
@@ -7531,6 +8603,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-17:00 最晚进入17:00",
     image:
       "https://aos-comment.amap.com/B022F00RPI/comment/EED7A2C1_9B8E_4F15_9ECE_AE084C9D2904_L0_001_2001_102_1769959685629_79191933.jpg",
+    rating: "",
     match: 0.99,
   },
   屏山景区: {
@@ -7538,6 +8611,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 05-01至05-05 周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B022F00F4D/comment/1ed5489233b3f6e8259036daae69afae_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   祥源祁红产业文化博览园: {
@@ -7545,6 +8619,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://store.is.autonavi.com/showpic/5afa57c6f613f74e0000000590250918",
+    rating: "",
     match: 1,
   },
   厦门天竺山森林公园: {
@@ -7552,6 +8627,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "1月至5月,11月至12月 08:30-17:30 最晚进入17:30, 具体开放时间以现场公示为准；6月至10月 08:30-18:00 最晚进入18:00",
     image: "",
+    rating: "",
     match: 0.6,
   },
   厦门市园林博览苑: {
@@ -7559,12 +8635,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/5dbb4a248dc6de359c65a593c9ff1820",
+    rating: "",
     match: 0.87,
   },
   厦门市北辰山旅游景区: {
     tel: "0592-7232155",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.62,
   },
   厦门方特梦幻王国: {
@@ -7573,6 +8651,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "10月1日-10月7日:9:30-21:00；10月8日-10月15日:周一-周五:10:00-17:30；周六-周日 10:00-18:00；10月16日-11月15日:10:00-2100",
     image:
       "http://store.is.autonavi.com/showpic/75652a322d636c09cd237ff8122dbb99",
+    rating: "",
     match: 1,
   },
   厦门老院子景区: {
@@ -7580,6 +8659,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-21:30",
     image:
       "http://store.is.autonavi.com/showpic/722ecf59c494f47cca84e5a35c91b262",
+    rating: "",
     match: 1,
   },
   南平市武夷山大安源生态旅游区: {
@@ -7588,6 +8668,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "夏令时 1/1-12/31(夏令时) 07:30–17:00开放 最晚进入17:00；冬令时 1/1-12/31(冬令时) 08:00–16:30开放 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/bb00259f05c26b0c357b161e64f0cb84",
+    rating: "",
     match: 0.91,
   },
   南平市顺昌华阳山旅游景区: {
@@ -7595,6 +8676,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/681a37f395110278a410fdefe4dc7969",
+    rating: "",
     match: 1,
   },
   南平市溪源峡谷旅游区: {
@@ -7602,6 +8684,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "5月1日-10月7日 06:00-21:00",
     image:
       "https://store.is.autonavi.com/showpic/d7056ad79b6482c70000003295518402?type=pic",
+    rating: "",
     match: 0.56,
   },
   邵武天成奇峡旅游区: {
@@ -7609,6 +8692,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/23fc59254e7475d106fdcfe92096292a",
+    rating: "",
     match: 1,
   },
   南平市邵武云灵山旅游景区: {
@@ -7616,6 +8700,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/2a35d976e04c32d0260774c3f01223ae",
+    rating: "",
     match: 0.99,
   },
   南平武夷山茶博园: {
@@ -7623,6 +8708,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/333564887e65296191f7c68cd5e55b8f",
+    rating: "",
     match: 0.62,
   },
   南平邵武和平古镇景区: {
@@ -7630,6 +8716,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/ea8b6300a0912b1afa56b8202b64d6ad",
+    rating: "",
     match: 0.99,
   },
   "建阳（卧龙湾）武夷花花世界景区": {
@@ -7637,6 +8724,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://aos-comment.amap.com/B0FFHQSFZ2/comment/2fb5b35da868e08c281b6edb7df7699c_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   南平浦城县中国包酒文化博览园景区: {
@@ -7644,6 +8732,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFG8WXXN/comment/D9E2924E_1B05_4F66_A15A_17354DBD8000_L0_001_IMG_422_1754387295740_39562453.jpg",
+    rating: "",
     match: 0.64,
   },
   邵武金坑红色旅游景区: {
@@ -7651,6 +8740,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/04f0130be2c2a5ee1385412642fd07d3",
+    rating: "",
     match: 1,
   },
   顺昌洋口红色旅游小镇: {
@@ -7658,6 +8748,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/0da12ef3b35aa1da639f3fd0a82d4549",
+    rating: "",
     match: 1,
   },
   松溪梅口埠旅游景区: {
@@ -7665,6 +8756,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-20:00",
     image:
       "https://store.is.autonavi.com/showpic/d54063d0d06f5cc30000003775886341?type=pic",
+    rating: "",
     match: 0.97,
   },
   龙岩市龙硿洞风景名胜区: {
@@ -7673,6 +8765,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,11月至12月 周一至周日 09:00-17:00 最晚进入17:00；5月至10月 周一至周日 08:45-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/a8641c02ab97b22cc53689387a885250",
+    rating: "",
     match: 1,
   },
   龙岩市长汀红色旧址群旅游区: {
@@ -7680,6 +8773,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一 全天关闭；周二至周日 08:00-12:00,15:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFF03BAY/comment/52dd752dccbc477844d109fd91e9156e_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   连城天一温泉旅游区: {
@@ -7688,6 +8782,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至9月 周一至周日 14:00-22:30 最晚进入21:30 10-01至10-06 周一至周日 10:00-22:30 最晚进入21:30；10-07至12-31 周一至周日 14:00-22:30 最晚进入21:30",
     image:
       "http://store.is.autonavi.com/showpic/2512a46a97dc93893be76d5d80da740b",
+    rating: "",
     match: 0.99,
   },
   武平县梁野山景区: {
@@ -7696,6 +8791,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,10月至12月 周一至周日 08:00-17:30 最晚进入16:30；5月至9月 周一至周日 08:00-18:00 最晚进入17:00",
     image:
       "https://aos-comment.amap.com/B0FFFDQZOK/comment/content_media_external_images_media_39879_ss__1767419414619_94535623.jpg",
+    rating: "",
     match: 1,
   },
   龙岩天子生态旅游区: {
@@ -7704,6 +8800,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1/1-12/31 12:00–22:00开放；元旦节,春节,清明节,劳动节,端午节,中秋节,国庆节 10:00–22:00开放；水乐园营业时间:12:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/8ed6389e4d4e2debf921a6ce60f9caba",
+    rating: "",
     match: 0.66,
   },
   武平县狮岩景区: {
@@ -7712,6 +8809,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "08:00-17:30(冬季) 08:00-18:00(夏季),2026年5月1日至2026年5月5日 08:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/e3065540aeabf26a0000005022022102?type=pic",
+    rating: "",
     match: 1,
   },
   长汀汀江国家湿地公园: {
@@ -7719,6 +8817,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://store.is.autonavi.com/showpic/74678ccd1a70bf50b691d52efe433db6",
+    rating: "",
     match: 0.99,
   },
   东山风动石景区: {
@@ -7727,6 +8826,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "06/01-10/08 07:00–18:30开放 最晚进入18:30；10/09-05/31 07:30–18:00开放 最晚进入18:00；劳动节 07:00–18:30开放",
     image:
       "http://store.is.autonavi.com/showpic/71161c0898e64ab3e1f7db9dc7f2654a",
+    rating: "",
     match: 1,
   },
   漳浦天福茶博物院景区: {
@@ -7734,6 +8834,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/b057513242fedac54d2b347ff3488c32",
+    rating: "",
     match: 0.75,
   },
   漳州东南花都花博园景区: {
@@ -7741,12 +8842,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/560c88dc93848448a850bcec6d082ed3",
+    rating: "",
     match: 0.95,
   },
   漳州平和三平风景区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.6,
   },
   漳州滨海火山自然生态风景区: {
@@ -7754,6 +8857,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/7d1f661225c1643b7b746bfd264eb896",
+    rating: "",
     match: 0.79,
   },
   漳州市云霄县金汤湾旅游区: {
@@ -7761,6 +8865,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/959f9b916a3cd89106c44d5b781e6c06",
+    rating: "",
     match: 1,
   },
   "漳州市福建土楼（华安）旅游区": {
@@ -7768,6 +8873,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "周一至周日 08:30-17:30 2026-05-01至2026-05-05 周一至周日 08:30-17:30",
     image: "",
+    rating: "",
     match: 0.55,
   },
   漳州市东山马銮湾景区: {
@@ -7775,6 +8881,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00；但晚上海滨浴场无法游泳",
     image:
       "http://store.is.autonavi.com/showpic/5a8754b93cf9152f8c0ea430cc1b4cbf",
+    rating: "",
     match: 1,
   },
   漳州市平和县高峰谷景区: {
@@ -7782,6 +8889,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://aos-comment.amap.com/B0FFIWBTH0/comment/%5B2026-02-28-07-07-12%5D3C7E8F15-285F-472A-BDFD-CBA0E22E484_1772233655466_19619525.jpg",
+    rating: "",
     match: 1,
   },
   永安桃源洞旅游区: {
@@ -7789,6 +8897,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/2969777f8328f05c39e85ba44195e862",
+    rating: "",
     match: 0.6,
   },
   三明格氏栲国家森林公园: {
@@ -7796,6 +8905,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入16:30",
     image:
       "https://store.is.autonavi.com/showpic/8e527ecce2cc39720000003502000235?type=pic",
+    rating: "",
     match: 0.86,
   },
   三明瑞云山旅游区: {
@@ -7803,6 +8913,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/f9c33f23d8f058f70000005624848627?type=pic",
+    rating: "",
     match: 1,
   },
   三明市将乐玉华洞景区: {
@@ -7810,6 +8921,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "8:15-16:30",
     image:
       "http://store.is.autonavi.com/showpic/9f4168ff863bc4a68b8349e1f2a2f7a2",
+    rating: "",
     match: 1,
   },
   宁化客家祖地: {
@@ -7817,6 +8929,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://aos-comment.amap.com/B025602JPG/comment/content_media_external_file_1000034907_ss__1759846706827_24926767.jpg",
+    rating: "",
     match: 0.99,
   },
   三明市清流天芳悦潭生态旅游区: {
@@ -7824,6 +8937,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周五 14:00-22:00；周六至周日 12:00-22:00",
     image:
       "http://store.is.autonavi.com/showpic/2719c20ad50ba49bf06cbe03bb07ff19",
+    rating: "",
     match: 0.99,
   },
   三明泰宁明清园: {
@@ -7831,6 +8945,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "8:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/64c19772f7c06e5503d11cd1dd8af065",
+    rating: "",
     match: 1,
   },
   三明尤溪县侠天下景区: {
@@ -7838,6 +8953,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/37ef57e05b4b2e8c96dc335db40734ee",
+    rating: "",
     match: 0.98,
   },
   尤溪朱子文化园景区: {
@@ -7845,6 +8961,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/60739ee29902b6070000002288818164?type=pic",
+    rating: "",
     match: 1,
   },
   尤溪桂峰古村落景区: {
@@ -7852,6 +8969,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFJ3703U/comment/content_media_external_file_100001204_1757005690747_98059988.jpg",
+    rating: "",
     match: 1,
   },
   "大田大仙峰·茶美人景区": {
@@ -7859,6 +8977,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入17:00",
     image:
       "https://store.is.autonavi.com/showpic/2a49446cc23311670000003107828773?type=pic",
+    rating: "",
     match: 0.99,
   },
   尤溪九阜山景区: {
@@ -7866,12 +8985,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/a6f3fcc85a82c3c66c516d35addafa15",
+    rating: "",
     match: 0.57,
   },
   三明万寿岩文旅小镇景区: {
     tel: "",
     openTime: "周二至周日 08:30-16:30",
     image: "",
+    rating: "",
     match: 1,
   },
   永安安贞堡景区: {
@@ -7879,12 +9000,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/38e847c0-bc07-49fc-b584-bcde3dc21831.png",
+    rating: "",
     match: 0.99,
   },
   尤溪古溪星河休闲旅游度假区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.87,
   },
   明溪滴水岩红色旅游景区: {
@@ -7892,6 +9015,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://store.is.autonavi.com/showpic/903be9d8b24bc5bd0000007803006285?type=pic",
+    rating: "",
     match: 0.94,
   },
   泰宁九龙潭生态旅游区: {
@@ -7899,6 +9023,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-15:30,18:50-20:00",
     image:
       "http://store.is.autonavi.com/showpic/af67a1943d3d2c57f3ec02c84df03e61",
+    rating: "",
     match: 1,
   },
   宁化天鹅洞景区: {
@@ -7907,12 +9032,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 08:30-16:30；4月至10月 周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/5f4083abd916734e0000003385292242?type=pic",
+    rating: "",
     match: 0.59,
   },
   宁德福安白云山: {
     tel: "",
     openTime: "周一至周日 08:00-18:00",
     image: "",
+    rating: "",
     match: 0.7,
   },
   柘荣县鸳鸯草场景区: {
@@ -7921,6 +9048,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05/01-10/31 08:30-19:30开放；11/01-04/30 08:30-17:00开放； 说明:下雨天气为8:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/e9f3d20941dcdc11d5e9b7c3913a0a04",
+    rating: "",
     match: 1,
   },
   泉州开元寺: {
@@ -7928,6 +9056,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "06:30-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/cd969185dd291ef88a48b72f39d357a2",
+    rating: "",
     match: 1,
   },
   安溪清水岩旅游区: {
@@ -7935,6 +9064,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFHU5OR3/comment/7BB052BB_AF55_4842_ACFB_A038F504E936_L0_001_1500_200_1756842692937_72398723.jpg",
+    rating: "",
     match: 0.6,
   },
   永春牛姆林生态旅游区: {
@@ -7942,6 +9072,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/7e04d8ffe6e844090bbd660a3d53ea3a",
+    rating: "",
     match: 1,
   },
   惠安崇武古城风景区: {
@@ -7949,6 +9080,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-18:00",
     image:
       "https://store.is.autonavi.com/showpic/71d56d562005d773a723590c182d7a74",
+    rating: "",
     match: 0.67,
   },
   泉州市德化石牛山景区: {
@@ -7957,6 +9089,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "11月1日至次年3月31日 08:30-17:00开放(13:15停止售票,13:30停止入园)；4月1日至10月31日 08:30-15:00开放(14:30停止售票,15:00停止入园)；全程售票时间:08:00-13:45；全程检票时间:08:00-14:00；半程售票时间:13:45-14:45；半程检票时间:13:45-15:00；具体开放时间以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/b11dc9944b340e0953f3e42f7d7f1ae7",
+    rating: "",
     match: 0.99,
   },
   晋江市五店市传统文化旅游区: {
@@ -7964,6 +9097,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFFTS9G2/comment/content_media_external_file_91458_ss__1767614482473_12832949.jpg",
+    rating: "",
     match: 0.78,
   },
   "泉州安平桥（五里桥）景区": {
@@ -7971,6 +9105,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/76aa2aad31871c16004415250caa308f",
+    rating: "",
     match: 1,
   },
   永春北溪文苑旅游区: {
@@ -7978,6 +9113,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/7488c3f5296b58877ae2265d858d45ba",
+    rating: "",
     match: 0.98,
   },
   石狮宝盖山景区: {
@@ -7985,12 +9121,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFL0QH3K/comment/c06b85d37248a9b0ab9475b9fe8edd39_2048_2048_80.jpg",
+    rating: "",
     match: 0.97,
   },
   "福州国家森林公园景区（福州植物园）": {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   永泰青云山风景名胜区: {
@@ -7998,6 +9136,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:00 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/dc8ae9be5e7338cff72611cc99270c73",
+    rating: "",
     match: 1,
   },
   福清市石竹山风景名胜区: {
@@ -8005,12 +9144,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/4630785884be840262297f98e32637d8",
+    rating: "",
     match: 0.83,
   },
   福州市永泰天门山景区: {
     tel: "",
     openTime: "08:00-16:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.62,
   },
   福州永泰云顶景区: {
@@ -8018,12 +9159,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/92551e3c31d2e175096d1ea7407f6908",
+    rating: "",
     match: 0.67,
   },
   福州罗源湾海洋世界旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.98,
   },
   永泰百漈沟生态旅游景区: {
@@ -8032,6 +9175,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-16:30 最晚进入16:00；节假日正常开放；信息仅供参考，具体开放时间以景区当天披露为准",
     image:
       "http://store.is.autonavi.com/showpic/d1aea580834639ddfe71c87231798e42",
+    rating: "",
     match: 1,
   },
   永泰欧乐堡海洋世界: {
@@ -8039,12 +9183,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周五 09:00-17:30；周六至周日 09:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/4881ca7fd1157cc579e85db8acf38211?operate=original&query_type=oss&operate_gif=1",
+    rating: "",
     match: 0.78,
   },
   福清市瑞岩山景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   福建长乐闽江河口国家湿地公园: {
@@ -8052,6 +9198,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFH1C8CF/comment/20260320-ec74b7a20f0b288c800503ca-5H1g7XZTBW28qnKJhx3syo.jpg",
+    rating: "",
     match: 0.59,
   },
   莆田市莆田工艺美术城: {
@@ -8059,6 +9206,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00；具体营业状态以当天开放情况为准",
     image:
       "https://aos-comment.amap.com/B0FFI2SGJ5/comment/0cfbe0deadc1f2ab839b64086669fb77_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   莆田市仙游县九鲤湖旅游区: {
@@ -8066,6 +9214,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/4888a4e2a31d79443d8a167d5e006824",
+    rating: "",
     match: 1,
   },
   莆田市瑞云山风景区: {
@@ -8074,6 +9223,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-17:00 最晚进入16:30；具体营业状态以当天开放情况为准",
     image:
       "http://store.is.autonavi.com/showpic/7427bb580383a192967472394abb756b",
+    rating: "",
     match: 0.99,
   },
   仙游县菜溪岩风景区: {
@@ -8081,6 +9231,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/c6ffa36025b4d868b0dc928e70576c40",
+    rating: "",
     match: 0.99,
   },
   莆田绶溪公园景区: {
@@ -8088,6 +9239,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/d50bcf39950c40174b4c5a0ea62fbe68",
+    rating: "",
     match: 1,
   },
   江西省九江市庐山西海风景名胜区: {
@@ -8096,6 +9248,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-18:00 最晚进入15:20；庐山西海风景名胜区内各景点营业时间可参考各个景点页面信息",
     image:
       "http://store.is.autonavi.com/showpic/7c29090fd2177a8acc2ab4152ebf96f4",
+    rating: "",
     match: 1,
   },
   江西省九江市中华贤母园景区: {
@@ -8103,6 +9256,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/526375321864f8ea41405390fc73373f",
+    rating: "",
     match: 1,
   },
   江西省吉安市庐陵文化生态园景区: {
@@ -8110,6 +9264,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-22:00",
     image:
       "http://store.is.autonavi.com/showpic/c7d74758f6ca58278512371553d74fd4",
+    rating: "",
     match: 1,
   },
   江西省吉安市钓源古村景区: {
@@ -8117,6 +9272,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B031C008WY/comment/content_media_external_file_7679_ss__1760167760908_41544354.jpg",
+    rating: "",
     match: 1,
   },
   江西省吉安市陂下古村景区: {
@@ -8124,6 +9280,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/845d5211c5c3c4c13a6ccf9129272f9f",
+    rating: "",
     match: 1,
   },
   江西省吉安市燕坊古村景区: {
@@ -8131,6 +9288,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B031C0P6HJ/comment/20260321-5afbf5ad96d45db76c8c761d-3qnMopLXvXy5cQCTQXREIM.jpg",
+    rating: "",
     match: 1,
   },
   江西省上饶市大鄣山卧龙谷: {
@@ -8138,6 +9296,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周五 08:00-18:00；周六至周日 07:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/f18e83ea8084d17b81fde36e4df4dcb8",
+    rating: "",
     match: 1,
   },
   江西省上饶市汪口景区: {
@@ -8145,6 +9304,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-18:00 最晚进入18:00",
     image:
       "http://store.is.autonavi.com/showpic/4823406cc994648857e9a5cf04072a0d",
+    rating: "",
     match: 1,
   },
   江西省上饶市灵岩风景区: {
@@ -8152,6 +9312,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B03190R0LC/comment/6571387e974482a85c8811dba3e062f5_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   江西省上饶市熹园景区: {
@@ -8159,6 +9320,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "https://aos-comment.amap.com/B0FFF064YA/comment/62b9f07c63ee40fbd962b5066b672878_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   江西省上饶市葛仙山景区: {
@@ -8166,6 +9328,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0K2JS5N9K/comment/content_media_external_file_1000040688_ss__1748745695637_06720185.jpg",
+    rating: "",
     match: 0.55,
   },
   江西省上饶市鹅湖书院景区: {
@@ -8173,6 +9336,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/4bf4f6db8cc601970000003033522572?type=pic",
+    rating: "",
     match: 1,
   },
   江西省上饶市玉帘瀑布景区: {
@@ -8180,6 +9344,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入17:30",
     image:
       "https://store.is.autonavi.com/showpic/c72fd631673e04280000001447634862?type=pic",
+    rating: "",
     match: 0.96,
   },
   江西省上饶市鄱阳湖大草原景区: {
@@ -8187,6 +9352,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-16:00",
     image:
       "http://store.is.autonavi.com/showpic/b22ffa9ab454204bf92f0ebd00bff7f1",
+    rating: "",
     match: 1,
   },
   江西省上饶市上饶集中营: {
@@ -8194,6 +9360,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/14330da910cacff9ca88ee8ae6a4140e",
+    rating: "",
     match: 1,
   },
   江西省上饶市怀玉山景区: {
@@ -8201,6 +9368,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/2f245410d3615e6d27d412aeb773758c",
+    rating: "",
     match: 0.99,
   },
   江西省上饶市忠义文化园景区: {
@@ -8209,6 +9377,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,11月至12月 周一至周日 08:30-17:00；5月至10月 周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/1b566c442e63d6329cf96e018ecbe7c6",
+    rating: "",
     match: 1,
   },
   江西省上饶市七里街景区: {
@@ -8216,6 +9385,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFG3CR7Z/comment/content_media_external_file_12159_1773462103763_31721906.jpg",
+    rating: "",
     match: 0.99,
   },
   江西省景德镇市洪岩仙境风景区: {
@@ -8224,6 +9394,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,11月至12月 周一至周日 08:30-16:30；5月至10月 周一至周日 08:30-18:00 最晚进入18:00；18:00停止入园",
     image:
       "https://store.is.autonavi.com/showpic/d3e31fe73db715f80000009208082257?type=pic",
+    rating: "",
     match: 1,
   },
   江西省景德镇市江西怪石林景区: {
@@ -8231,6 +9402,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/a221ae668c734fd4674ba588479b33ca",
+    rating: "",
     match: 1,
   },
   江西省景德镇市皇窑景区: {
@@ -8239,6 +9411,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,11月至12月 周一至周日 08:30-17:00 最晚进入16:30；5月至10月 周一至周日 08:00-17:30 最晚进入17:00",
     image:
       "https://store.is.autonavi.com/showpic/383eec012677d6b20000000967006214?type=pic",
+    rating: "",
     match: 1,
   },
   江西省景德镇市御窑厂国家考古遗址公园景区: {
@@ -8246,6 +9419,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-21:00",
     image:
       "http://store.is.autonavi.com/showpic/2b0530828a7863971969b05c3ef6607c",
+    rating: "",
     match: 0.99,
   },
   江西省赣州市通天岩风景名胜区: {
@@ -8254,6 +9428,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,10月至12月 周一至周日 08:30-17:30 最晚进入17:00 停止入场:17:00；5月至9月 周一至周日 08:00-18:00 停止售票:17:30",
     image:
       "https://store.is.autonavi.com/showpic/ccb66af0379d302ec88e5a97a693eae9",
+    rating: "",
     match: 0.55,
   },
   江西省赣州市客家文化城: {
@@ -8261,6 +9436,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B031D004XC/comment/AF63C681_25BD_4EB9_818D_417C69F6FF87_L0_001_2000_120_1759372450371_54900448.jpg",
+    rating: "",
     match: 1,
   },
   江西省赣州市汉仙岩景区: {
@@ -8268,6 +9444,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/d357777727125de145b9e05e31e08470",
+    rating: "",
     match: 0.91,
   },
   江西省赣州市阳明湖景区: {
@@ -8275,12 +9452,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30 最晚进入16:30",
     image:
       "https://aos-comment.amap.com/B0FFJE09A6/headerImg/6dccf19f743d0c90359a6ffa07601c8c_2048_2048_80.jpg",
+    rating: "",
     match: 0.95,
   },
   江西省赣州市兴国苏区干部好作风纪念园: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.77,
   },
   江西省赣州市罗汉岩景区: {
@@ -8288,6 +9467,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/848cce6d20c69f950926b32eaf037dba",
+    rating: "",
     match: 0.98,
   },
   江西省赣州市东生围景区: {
@@ -8295,6 +9475,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/11f4e56700afb358c92e8821fbb5659c",
+    rating: "",
     match: 1,
   },
   江西省赣州市雅溪古村景区: {
@@ -8302,6 +9483,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/651ad754a4fcf56c0000009290560578?type=pic",
+    rating: "",
     match: 1,
   },
   江西省赣州市中国赣南脐橙产业园景区: {
@@ -8309,6 +9491,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://store.is.autonavi.com/showpic/6e140203fa19039d0000003129118182?type=pic",
+    rating: "",
     match: 0.98,
   },
   江西省宜春市明月山天沐温泉度假区: {
@@ -8316,6 +9499,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周五 13:00-23:00；周六至周日 10:30-23:00",
     image:
       "http://store.is.autonavi.com/showpic/625dce6229245879657ae02217ec4497",
+    rating: "",
     match: 0.97,
   },
   江西省宜春市宜春禅都文化博览园: {
@@ -8323,6 +9507,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://store.is.autonavi.com/showpic/9d5ccfa20fa4de1b0000006407326752?type=pic",
+    rating: "",
     match: 0.98,
   },
   江西省宜春市中国古海养生旅游度假区: {
@@ -8330,6 +9515,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-21:30",
     image:
       "http://store.is.autonavi.com/showpic/bb075c6eb14e5eb36f2f40f9f70c8df7",
+    rating: "",
     match: 1,
   },
   江西省宜春市閤皂山景区: {
@@ -8337,6 +9523,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-17:00, 具体开放时间以现场公示为准",
     image:
       "http://store.is.autonavi.com/showpic/1d9130509d40874c1143486e2877bf4d",
+    rating: "",
     match: 0.9,
   },
   江西省宜春市铜鼓秋收起义纪念地: {
@@ -8344,6 +9531,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/25410c050966226645eb74c98bb8495f",
+    rating: "",
     match: 1,
   },
   江西省宜春市万载恒晖艺术农业景区: {
@@ -8351,6 +9539,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B0FFGK9PZ6/comment/becec12d7ce37b3bf8c94e592ef8f946_2048_2048_80.jpg",
+    rating: "",
     match: 0.97,
   },
   江西省宜春市五谷村丛林酒博园景区: {
@@ -8358,6 +9547,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "https://aos-comment.amap.com/B0FFGWIJDH/comment/43f2557c9b05d8b91844f1a75d2bf8f7_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   江西省宜春市天柱峰景区: {
@@ -8365,6 +9555,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/e70a87070f8168320dc48b1c779c6b97",
+    rating: "",
     match: 0.95,
   },
   江西省宜春市万载古城景区: {
@@ -8373,6 +9564,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 00:00-24:00；历史文化馆，宗祠文化馆，国学文化馆三个展馆开发时间:08:30-12:00、12:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/2a79bda143d2fc661b5d11a87f291975",
+    rating: "",
     match: 1,
   },
   江西省宜春市宜春花博园景区: {
@@ -8380,6 +9572,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "1月1日-12月31日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/902da25403500410346dcc39e9ce83bc",
+    rating: "",
     match: 0.99,
   },
   江西省宜春市蜂窝农场景区: {
@@ -8387,6 +9580,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-23:00",
     image:
       "http://store.is.autonavi.com/showpic/8822a9714c81a13485e60e8d7107e13a",
+    rating: "",
     match: 0.99,
   },
   江西省抚州市名人雕塑园景区: {
@@ -8394,6 +9588,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/e02085cad432a721b43c7802ac2ebe71",
+    rating: "",
     match: 0.64,
   },
   江西省抚州市梦湖景区: {
@@ -8401,6 +9596,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:00-19:00；18:30停止入场",
     image:
       "https://store.is.autonavi.com/showpic/d8dfaccca231a5540000002769054473?type=pic",
+    rating: "",
     match: 0.98,
   },
   江西省抚州市南丰桔产业集聚区: {
@@ -8408,6 +9604,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/72418eeec542c8b706bf5683c8de79fa",
+    rating: "",
     match: 1,
   },
   江西省抚州市曹山景区: {
@@ -8415,6 +9612,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://aos-comment.amap.com/B0FFK40J6M/comment/content_media_external_images_media_100001248_1738899245878_02298207.jpg",
+    rating: "",
     match: 1,
   },
   江西省抚州市中国莲花景区: {
@@ -8422,6 +9620,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "年7月至8月 05:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/3e0d0da46190c9c2011331551370bc92",
+    rating: "",
     match: 1,
   },
   江西省抚州市黎川古城景区: {
@@ -8429,6 +9628,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00；具体营业状态以当天开放情况为准",
     image:
       "http://store.is.autonavi.com/showpic/a8728ad8895617341db344ac665836f0",
+    rating: "",
     match: 1,
   },
   江西省抚州市三翁花园: {
@@ -8436,6 +9636,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://aos-comment.amap.com/B0FFH8B5FB/comment/20260316-1a82bb7ffff12f7e7dd5da5d-5gC0DI6t2s8AgZVcZWA1eF.jpg",
+    rating: "",
     match: 0.98,
   },
   江西省抚州市临川灵谷峰: {
@@ -8443,6 +9644,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/bd1878146002332f027460578fa0e5a0",
+    rating: "",
     match: 0.99,
   },
   江西省抚州市文昌里景区: {
@@ -8450,6 +9652,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/b6d2f4b098e0d6911f292bc169d36876",
+    rating: "",
     match: 0.6,
   },
   江西省南昌市天香园景区: {
@@ -8457,6 +9660,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/8fd93f822c9529fa202087dece8e37b9",
+    rating: "",
     match: 1,
   },
   江西省南昌市八一起义纪念馆: {
@@ -8464,12 +9668,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/43fafd9ef178c7aa891a0712879289a2",
+    rating: "",
     match: 0.69,
   },
   江西省南昌市梅岭狮子峰景区: {
     tel: "",
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.99,
   },
   江西省南昌市凤凰沟景区: {
@@ -8477,6 +9683,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/9127d5910a26c89ba28c39a62cc6bfc9",
+    rating: "",
     match: 0.66,
   },
   江西省南昌市新四军军部旧址陈列馆: {
@@ -8485,6 +9692,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一 全天关闭；1月至6月,9月至12月 周二至周日 09:00-17:00 最晚进入16:30；7月至8月 周二至周日 09:00-18:00 最晚进入17:30",
     image:
       "https://store.is.autonavi.com/showpic/0ce7b7ee973649590000002946322844",
+    rating: "",
     match: 0.73,
   },
   江西省南昌市梅岭竹海明珠景区: {
@@ -8492,6 +9700,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://store.is.autonavi.com/showpic/29dfd2f96e9bffa80000003139776175?type=pic",
+    rating: "",
     match: 1,
   },
   江西省南昌市溪霞怪石岭生态公园: {
@@ -8500,6 +9709,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-17:00；夏季夜游开放情况由当天天气决定，夜游时间17:00-20:30",
     image:
       "http://store.is.autonavi.com/showpic/e2f606153515ed969eb4218ea33fc9b4",
+    rating: "",
     match: 1,
   },
   江西省南昌市安义古村群景区: {
@@ -8508,6 +9718,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "夏令时 全年 08:30–17:30开放 最晚进入17:30；冬令时 全年 08:30–17:00开放 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/68f6f6cfe96b37d29197c27c528cf0f9",
+    rating: "",
     match: 0.99,
   },
   江西省南昌市李渡元代烧酒作坊遗址景区: {
@@ -8515,6 +9726,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-12:00,14:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/fd769bb89f1a3c4463e7ad54e272f9c1",
+    rating: "",
     match: 0.97,
   },
   江西省安源路矿工人运动纪念馆: {
@@ -8522,12 +9734,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/84bfe4f2add6b6c48323285d9d8b32e7",
+    rating: "",
     match: 1,
   },
   江西省萍乡市杨岐山景区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.58,
   },
   江西省新余市昌坊度假村景区: {
@@ -8535,6 +9749,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://aos-comment.amap.com/B03160M44O/comment/99078ee885f329fc39cdfed07acbf1bc_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   江西省新余市中国洞都景区: {
@@ -8542,6 +9757,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "冬令时 08:30-17:00开放；夏令时 08:30-17:30开放",
     image:
       "http://store.is.autonavi.com/showpic/f60d526c4d98e2b571e67a421d058229",
+    rating: "",
     match: 1,
   },
   济南千佛山风景名胜区: {
@@ -8550,6 +9766,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 05:00-22:30；【重点说明】 （1）客服电话咨询时间8:30-17:00 （2）早6:30之前/晚18:00之后可免费入园 （3）灵官殿、财神殿、三清观观音园、鲁班祠、舜祠、福寿宫、三圣殿关闭时间:16:30 （4）兴国禅寺关闭时间:17:00 （5）滑道/索道（上行、下行）使用时间: 9:00-16:30 （6）四窟万像售票时间 周一至周五:8:30——17:30 周六周日:8:30——18:30 （节假日适当延长售票时间，最晚游览结束时间顺延一小时）",
     image:
       "http://store.is.autonavi.com/showpic/f3e117745d342789ac6757a87b569001",
+    rating: "",
     match: 1,
   },
   济南方特东方神画主题乐园: {
@@ -8558,6 +9775,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "10月1日-10月7日:9:00-21:00；10月8日-16日:周一-周五:10:00-17:00；周六-周日:10:00-17:30；10月17日-18日:10:00-21:00；10月19日-22日:10:00-17:00；10月23日-25日:10:00-21:00；10月26日-29日:10:00-17:00；10月30-11月1日:10:00-21:00；11月2日-5日:10:00-17:00；11月6日-10日:10:00-21:00",
     image:
       "http://store.is.autonavi.com/showpic/ec714d42465377ff2a7fe7a734d6e5ef",
+    rating: "",
     match: 1,
   },
   济南国际园博园: {
@@ -8565,6 +9783,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:00-21:00 最晚进入21:00；21:00清园",
     image:
       "http://store.is.autonavi.com/showpic/315c7c447fab6159e953cb29c4774646",
+    rating: "",
     match: 1,
   },
   济南野生动物世界: {
@@ -8572,12 +9791,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "周一至周五 08:30-17:30 最晚进入16:00；周六至周日 08:30-18:00 最晚进入16:30",
     image: "",
+    rating: "",
     match: 0.99,
   },
   百脉泉公园: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.6,
   },
   济南植物园: {
@@ -8585,6 +9806,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFIZM4S7/comment/cc6296477e547ec6338666d5285f7e31_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   房干生态景区: {
@@ -8592,6 +9814,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/74c9c508608129dc24e1693152a38165",
+    rating: "",
     match: 1,
   },
   红叶谷生态文化旅游区: {
@@ -8599,6 +9822,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-17:00",
     image:
       "https://store.is.autonavi.com/showpic/8b3cfe3117bd241e0000008504472889?type=pic",
+    rating: "",
     match: 1,
   },
   九如山瀑布群风景区: {
@@ -8606,6 +9830,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:30",
     image:
       "https://aos-comment.amap.com/B0FFG2HYSA/comment/2A4FDF2B_239A_47F8_828B_C5DB37DB8E52_L0_001_2000_150_1766305414467_68895131.jpg",
+    rating: "",
     match: 0.92,
   },
   百脉泉酒文化旅游区: {
@@ -8613,6 +9838,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/455a1822e84ab7082a1eb19c18f1054c",
+    rating: "",
     match: 1,
   },
   "印象济南·泉世界旅游景区": {
@@ -8620,6 +9846,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-20:00",
     image:
       "https://store.is.autonavi.com/showpic/db88f728807489280000005051618558?type=pic",
+    rating: "",
     match: 1,
   },
   石老人观光园: {
@@ -8627,6 +9854,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0HRVL3WGA/comment/D38397C0_9F07_40F8_A2AD_D499C4CDA257_L0_001_1500_200_1771588975873_66676212.jpg",
+    rating: "",
     match: 0.99,
   },
   青岛奥林匹克雕塑文化园: {
@@ -8634,6 +9862,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/fa686f9b4362340278b4bceaa731e70c",
+    rating: "",
     match: 1,
   },
   方特梦幻王国: {
@@ -8642,6 +9871,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "10月1日-10月7日:9:30-21:00；10月8日-10月15日:10:00-17:00；10月16日-10月18日:10:00-21:00；10月19日-10月22日:10:00-17:00；10月23日-10月25日:10:00-21:00；10月26日-10月29日:10:00-17:00；10月30日-11月1日:10:00-21:00",
     image:
       "http://store.is.autonavi.com/showpic/ab18e44a2d6dd345539fc063ab8a1b59",
+    rating: "",
     match: 0.99,
   },
   大珠山风景名胜区: {
@@ -8649,6 +9879,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/1e260c8de8d08b7fcfd312b37a6d504e",
+    rating: "",
     match: 1,
   },
   琅琊台风景区: {
@@ -8656,24 +9887,28 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:30-17:30 最晚进入16:30, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/a286d319cc7446bb0a88c39ce1560c7f",
+    rating: "",
     match: 0.99,
   },
   珠山国家森林公园: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   青岛森林野生动物世界: {
     tel: "0532-86835555",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   藏马山景区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.99,
   },
   天泰温泉度假区: {
@@ -8682,6 +9917,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周二-周日 09:30-21:30开放（20:30停止入园）；周一 14:00-21:30开放（20:30停止入园）；4月4日-4月6日 09:30-21:30开放（20:30停止入园）、每周一 09:00-14:00 封馆维护不开放。 若周一 逢法定休息日，检修维护顺延至假期结束后的第一个工作日上午 09:00-14:00；具体开放时间以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/d629e30a3e9ce5331e426030f1c9cdc9",
+    rating: "",
     match: 1,
   },
   少海风景区: {
@@ -8689,6 +9925,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/bbe5b28aee04c035b455e4ebeacc61a5",
+    rating: "",
     match: 1,
   },
   茶山风景区: {
@@ -8696,6 +9933,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/ff8fe3ecd5b16fd92d2807377e6a45a9",
+    rating: "",
     match: 1,
   },
   枣庄抱犊崮国家森林公园: {
@@ -8703,6 +9941,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:30",
     image:
       "http://store.is.autonavi.com/showpic/cf2fb75c0a1878c25e3bfb0227ccddd0",
+    rating: "",
     match: 0.71,
   },
   枣庄冠世榴园风景区: {
@@ -8710,6 +9949,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/5d253609e74d64807401543c70ed39c5",
+    rating: "",
     match: 1,
   },
   滕州微山湖湿地红荷景区: {
@@ -8718,6 +9958,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 09:00-16:30 最晚进入16:30；4月至10月 周一至周日 08:30-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/f18dbb40c8177e8c1f812042c2610e75",
+    rating: "",
     match: 0.78,
   },
   台儿庄大战纪念馆景区: {
@@ -8725,6 +9966,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/2f7ec4d174566ba5efce7277e92d7a32",
+    rating: "",
     match: 1,
   },
   枣庄市山亭汉诺庄园景区: {
@@ -8732,6 +9974,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/7a1a82de1461ba92916b741f8c7fc2b3",
+    rating: "",
     match: 1,
   },
   枣庄仙坛山旅游区: {
@@ -8739,6 +9982,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFGEZQKJ/comment/content_media_external_file_100006296_1756678151782_79157027.jpg",
+    rating: "",
     match: 0.98,
   },
   翼云石头部落旅游区: {
@@ -8746,6 +9990,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/d3f7ec4f-2740-4c48-8f21-24ae9e67f734.jpg",
+    rating: "",
     match: 1,
   },
   铁道游击队景区: {
@@ -8753,6 +9998,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "09:00-18:00(17:00停止入园)；周一没有演出是免费入园的",
     image:
       "http://store.is.autonavi.com/showpic/a22a529ae0aa6160553aa753254e9088",
+    rating: "",
     match: 1,
   },
   天宁寺文化旅游区: {
@@ -8761,6 +10007,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "5月1日至10月1日 08:00-18:00,10月2日至12月31日 08:00-17:00；1月1日至4月30日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B02220OK2G/comment/content_media_external_file_1000001991_ss__1759825266603_28899957.jpg",
+    rating: "",
     match: 1,
   },
   揽翠湖旅游度假区: {
@@ -8768,6 +10015,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:30-18:00(夏季旺季), 08:30-17:30(冬季淡季)",
     image:
       "http://store.is.autonavi.com/showpic/de145d9b74987b63c10a7c1ae42371ca",
+    rating: "",
     match: 1,
   },
   黄河三角洲动物园: {
@@ -8776,6 +10024,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,12月 周一至周日 09:00-17:30 最晚进入16:00；4月至6月,9月 周一至周日 08:30-18:00 最晚进入16:30；7月至8月 周一至周日 08:30-16:30,16:30-20:30 最晚进入16:30；10月至11月 周一至周日 08:30-17:30 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/3cf0d0114c1a36f190806047751c37bf",
+    rating: "",
     match: 1,
   },
   孤岛槐树林温泉旅游区: {
@@ -8783,6 +10032,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-20:30",
     image:
       "http://store.is.autonavi.com/showpic/72b9f3c339783cb99c7e6604b33b5395",
+    rating: "",
     match: 0.98,
   },
   河口区鸣翠湖湿地风景区: {
@@ -8790,12 +10040,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/6fb1c1a413dfaac10000002456156935?type=pic",
+    rating: "",
     match: 0.88,
   },
   蓬莱海洋极地世界: {
     tel: "0535-5927999",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 1,
   },
   牟氏庄园: {
@@ -8804,6 +10056,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05-01至10-07 周一至周日 08:00-17:30 最晚进入17:30；10-08至04-30 周一至周日 08:00-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/9af38335488ac3c050ecc9aabcb155eb",
+    rating: "",
     match: 1,
   },
   养马岛旅游度假区: {
@@ -8811,6 +10064,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周五 08:30-12:00，14:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/04008044ae6d8a5238371391b528e07c",
+    rating: "",
     match: 1,
   },
   烟台山景区: {
@@ -8818,6 +10072,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-21:00 最晚进入21:00",
     image:
       "http://store.is.autonavi.com/showpic/ea84d61b44f4cbf398a19098f4341046",
+    rating: "",
     match: 1,
   },
   烟台张裕国际葡萄酒城: {
@@ -8825,6 +10080,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:00 最晚进入15:00",
     image:
       "http://store.is.autonavi.com/showpic/40e0653156e4af644492bb50b04cbcda",
+    rating: "",
     match: 0.89,
   },
   君顶酒庄: {
@@ -8832,6 +10088,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B0FFFCXCBW/comment/adbea0cc075a4c02e2b93523c6b45761_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   海阳旅游度假区: {
@@ -8839,6 +10096,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-19:00",
     image:
       "http://store.is.autonavi.com/showpic/2a24bdf86d4a4173151a7f2085168ca3",
+    rating: "",
     match: 0.66,
   },
   招远罗山黄金文化旅游区: {
@@ -8847,6 +10105,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,10月至12月 周一至周日 08:00-16:30 最晚进入16:00；5月至9月 周一至周日 08:00-17:30 最晚进入16:40",
     image:
       "http://store.is.autonavi.com/showpic/4f8a6c9b3c6ae2b029b361fdf47ff0c2",
+    rating: "",
     match: 0.69,
   },
   烟台海昌渔人码头旅游景区: {
@@ -8854,6 +10113,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 11:00-13:30,17:00-21:00",
     image:
       "http://store.is.autonavi.com/showpic/aa949166d23ba72115282eace0d115cf",
+    rating: "",
     match: 0.99,
   },
   栖霞太虚宫景区: {
@@ -8862,6 +10122,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,10月至12月 周一至周日 08:00-17:00 最晚进入16:30；5月至9月 周一至周日 08:00-17:30 最晚进入17:00",
     image:
       "https://store.is.autonavi.com/showpic/d0e9d51f3dd509f01ac85bba53cc3847",
+    rating: "",
     match: 1,
   },
   烟台蓬莱欧乐堡梦幻世界: {
@@ -8869,6 +10130,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "9:00-16:30,最晚入园16:30",
     image:
       "http://store.is.autonavi.com/showpic/60277ffac744d29c8be346be324b1b39",
+    rating: "",
     match: 0.56,
   },
   长岛大黑山岛景区: {
@@ -8876,6 +10138,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "3月29日-10月31日:淡季8:00-17:00；旺季7:00-18:30",
     image:
       "http://store.is.autonavi.com/showpic/7e40e7ee41a25bcbb92b671d9f4c7c93",
+    rating: "",
     match: 1,
   },
   青州泰和山风景区: {
@@ -8883,6 +10146,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日:08:00-17:00 最晚进入16:00；",
     image:
       "http://store.is.autonavi.com/showpic/d755fcb4c514c8bc7f5ed91e1949d7a6",
+    rating: "",
     match: 0.98,
   },
   青州九龙峪景区: {
@@ -8890,6 +10154,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入16:30",
     image:
       "https://aos-comment.amap.com/B0KUFC8DNS/comment/EB6F52EB_605D_44CE_B95B_4DAF25BD8EAB_L0_001_2000_150_1757028923331_48918711.jpg",
+    rating: "",
     match: 0.59,
   },
   潍坊杨家埠民间艺术大观园景区: {
@@ -8897,12 +10162,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "04月04日至10月31日 08:30-18:00 停止售票:17:30 停止入场:17:30",
     image:
       "https://aos-comment.amap.com/B0FFIG6P1E/comment/828a9c21a55238f8e7a6aca6e379808e_2048_2048_80.jpg",
+    rating: "",
     match: 0.82,
   },
   安丘青云山民俗游乐园: {
     tel: "",
     openTime: "周一至周日 08:00-18:00",
     image: "",
+    rating: "",
     match: 0.8,
   },
   安丘景芝酒之城景区: {
@@ -8910,6 +10177,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B0FFF35Z8G/comment/5f45e594812ea2c21dc2a508e17561ef_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   潍坊市白浪绿洲湿地公园: {
@@ -8917,6 +10185,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/4fa0f63b8436cd600e3f9557c79610fa",
+    rating: "",
     match: 0.57,
   },
   潍坊金宝乐园: {
@@ -8924,6 +10193,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/0dfc866e367db55caf3f2bfe53d7bc1a",
+    rating: "",
     match: 1,
   },
   潍坊欢乐海沙滩景区: {
@@ -8931,6 +10201,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/e5c94a876b7e3b8589cef4fc8f8ecdb4",
+    rating: "",
     match: 0.99,
   },
   诸城恐龙博物馆: {
@@ -8938,6 +10209,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0GRNRC0G8/comment/content_media_external_file_113072_ss__1753282603706_08405505.jpg",
+    rating: "",
     match: 0.57,
   },
   诸城常山文化博物苑: {
@@ -8945,6 +10217,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/4b156b769a462f6a17a489f6de632654",
+    rating: "",
     match: 0.78,
   },
   诸城恐龙文化旅游区: {
@@ -8952,6 +10225,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/3736d827079645f23e4f59558ea08e21",
+    rating: "",
     match: 0.93,
   },
   寿光市蔬菜高科技示范园: {
@@ -8959,6 +10233,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/b566bf70f1a3a262684f90fe54198acb",
+    rating: "",
     match: 0.99,
   },
   寿光市林海生态博览园: {
@@ -8966,6 +10241,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/98548358265ba080c406c2b0ecde5c62",
+    rating: "",
     match: 0.9,
   },
   寿光三元朱村: {
@@ -8973,6 +10249,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B02180HSAU/comment/7c6747942d19460f68d23c27d54b4a32_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   "临朐县揽翠湖〔天沐〕温泉度假村": {
@@ -8980,6 +10257,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-22:00",
     image:
       "http://store.is.autonavi.com/showpic/f76a6f383165d9954d8376d35c291eff",
+    rating: "",
     match: 0.67,
   },
   潍坊十笏园文化街区: {
@@ -8987,6 +10265,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-16:30",
     image:
       "http://store.is.autonavi.com/showpic/769407cb10f2fb7f35969062be1883d9",
+    rating: "",
     match: 0.55,
   },
   昌邑青山秀水景区: {
@@ -8994,6 +10273,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/9a920318a9a6128075a53e0d8bae160e",
+    rating: "",
     match: 0.67,
   },
   诸城市动物园: {
@@ -9001,6 +10281,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/9a6cdf60df3704305f5fb291f4d685dc",
+    rating: "",
     match: 1,
   },
   临朐石门坊风景区: {
@@ -9008,6 +10289,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/71fab94cf463cb8c12c9197ecd8b345c",
+    rating: "",
     match: 0.58,
   },
   南池景区: {
@@ -9015,6 +10297,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image:
       "http://store.is.autonavi.com/showpic/86ee3dd6a7255262d3767e934ec444fb",
+    rating: "",
     match: 1,
   },
   孔子六艺城景区: {
@@ -9022,12 +10305,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/54b84d08701fcaac03e0814a6875209b",
+    rating: "",
     match: 1,
   },
   尼山孔庙及书院景区: {
     tel: "4006882323",
     openTime: "周一至周日 09:00-17:00",
     image: "",
+    rating: "",
     match: 1,
   },
   泗水滨景区: {
@@ -9035,12 +10320,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/71df43d9a6d2afd3e3b54c8bafa4230e",
+    rating: "",
     match: 1,
   },
   孟庙孟府旅游区: {
     tel: "0537-5221377",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   明鲁王陵旅游区: {
@@ -9048,6 +10335,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0K229DUGC/comment/AD342C95_BF2A_497A_927A_F67F2E13B629_L0_001_1500_2000_1743858274321_28806816.jpg",
+    rating: "",
     match: 0.98,
   },
   羊山古镇军事旅游区: {
@@ -9055,6 +10343,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-16:00",
     image:
       "http://store.is.autonavi.com/showpic/b237112f03d6f2167f93f23386d17d49",
+    rating: "",
     match: 1,
   },
   青山景区: {
@@ -9062,6 +10351,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://aos-comment.amap.com/B0FFGH7Y43/comment/content_media_external_file_100010188_1765615266648_28092801.jpg",
+    rating: "",
     match: 1,
   },
   莲花湖湿地: {
@@ -9069,6 +10359,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30 最晚进入17:00",
     image:
       "https://store.is.autonavi.com/showpic/6be6fdc718d0a186144395811aabe006",
+    rating: "",
     match: 0.99,
   },
   太白湖景区: {
@@ -9076,6 +10367,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/280a836974029e3137eb0f459d8cc57f",
+    rating: "",
     match: 0.99,
   },
   贾堌堆农家寨景区: {
@@ -9083,12 +10375,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00；具体营业状态以当天开放情况为准。",
     image:
       "http://store.is.autonavi.com/showpic/a5adab4253a5d9b30934ca0290588195",
+    rating: "",
     match: 1,
   },
   东平县东平湖景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.71,
   },
   泰山区泰山方特欢乐世界: {
@@ -9097,6 +10391,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "10月1日-10月7日:9:00-21:00；10月8日-10月16日、10月19日-10月23日、10月26日-10月30日、11月2日-11月6日、11月9日-11月13日:10:00-17:00；10月17日-10月18日、10月24日-10月25日、10月31日-11月1日、11月7日-11月8日、11月14日-11月15日:10:00-21:00",
     image:
       "http://store.is.autonavi.com/showpic/23ebefdeb7ee39fe52497458b7562974",
+    rating: "",
     match: 0.78,
   },
   岱岳区太阳部落景区: {
@@ -9104,6 +10399,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入15:00",
     image:
       "https://store.is.autonavi.com/showpic/137191252015612b05e1025a15819818",
+    rating: "",
     match: 0.57,
   },
   泰安市徂徕山汶河景区: {
@@ -9111,6 +10407,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/664ac2088747bc5cbd9f41f6a766a0e7",
+    rating: "",
     match: 1,
   },
   岱岳区天颐湖旅游度假区: {
@@ -9118,6 +10415,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/19fc44c7e109611b9cf7a22ae8ce34f4",
+    rating: "",
     match: 0.67,
   },
   肥城市春秋古镇景区: {
@@ -9125,6 +10423,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/fa3d6583a0ee3ea894515ab23d95b1ae",
+    rating: "",
     match: 1,
   },
   宁阳县复圣文化旅游区: {
@@ -9133,6 +10432,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 00:00-24:00；复圣文化旅游区全天开放，景区内部分场馆、商铺等营业时间各不相同，具体营业状态以当天开放情况为准。",
     image:
       "https://aos-comment.amap.com/B0FFG9AAVS/comment/content_media_external_file_100000510_1761774859344_29584944.jpg",
+    rating: "",
     match: 1,
   },
   东平县昆仑山景区: {
@@ -9141,6 +10441,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-18:00；景区受天气和人流量影响，开放时间不一，具体开放时间以景区现场公示为准。",
     image:
       "https://aos-comment.amap.com/B0FFHSGGR5/comment/29acc89465afb17fa6f3da0023c9fa47_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   荣成市成山头风景名胜区: {
@@ -9148,6 +10449,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/d95c8f9ee892dbb6c07e2b399e9e150a",
+    rating: "",
     match: 0.6,
   },
   天沐温泉度假区: {
@@ -9155,6 +10457,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B027714HXR/comment/89f208bafb37643903bbdafb054e8e96_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   汤泊温泉度假村: {
@@ -9162,6 +10465,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "09:00-18:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/b022f939e04e848f04a01c9c7b49c480",
+    rating: "",
     match: 0.57,
   },
   乳山银滩旅游度假区: {
@@ -9169,6 +10473,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/eb8e71eab88207d0dc5393d1001abd28",
+    rating: "",
     match: 0.58,
   },
   仙姑顶景区: {
@@ -9176,6 +10481,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:30 最晚进入15:30",
     image:
       "http://store.is.autonavi.com/showpic/ae5d690e903eebbd6b88ff8f97563eb7",
+    rating: "",
     match: 0.99,
   },
   林海湾旅游区: {
@@ -9183,6 +10489,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/7c27730cfa1bdc531f9b749f08367a4d",
+    rating: "",
     match: 1,
   },
   环翠楼公园: {
@@ -9190,6 +10497,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/2e7fed3b5b300774c11fa82719226870",
+    rating: "",
     match: 0.99,
   },
   威海乳山福如东海文化园: {
@@ -9197,6 +10505,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-17:30",
     image:
       "https://store.is.autonavi.com/showpic/291c3ab21fb1a3a60000003203042011?type=pic",
+    rating: "",
     match: 0.98,
   },
   威海里口山风景名胜区: {
@@ -9204,6 +10513,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B0FFF3NS3Q/comment/F67F5163_A26A_4254_A366_D843F9296611_L0_001_2000_150_1760846413427_77732361.jpg",
+    rating: "",
     match: 1,
   },
   平邑天宇自然博物馆旅游区: {
@@ -9211,12 +10521,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/5f1d318544ef6a948e40eb1bfa7a40a7",
+    rating: "",
     match: 0.78,
   },
   沂水雪山彩虹谷旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.71,
   },
   莒南山东省政府和八路军115师司令部旧址旅游区: {
@@ -9224,6 +10536,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "冬令时 10月01日至04月30日 08:30-16:30；夏令时 05月01日至09月30日 08:30-16:50",
     image: "",
+    rating: "",
     match: 0.89,
   },
   蒙阴孟良崮旅游区: {
@@ -9231,6 +10544,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/495374713d21d962479e3aaf148a342a",
+    rating: "",
     match: 0.79,
   },
   费县沂蒙云瀑洞天旅游区: {
@@ -9238,6 +10552,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/9ce436c39015cfbefc17ee8cd4356ebd",
+    rating: "",
     match: 1,
   },
   山东沂水天上王城景区: {
@@ -9245,6 +10560,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "9月11日-12月31日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/4213c36d0d63c260ea60818c77b9ff5c",
+    rating: "",
     match: 1,
   },
   沂南竹泉村旅游区: {
@@ -9252,6 +10568,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/5d632f68f771868c6bbe37e24e9409f7",
+    rating: "",
     match: 0.6,
   },
   沂水东方瑞海国际温泉度假村旅游区: {
@@ -9259,12 +10576,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B021B0BOD5/comment/565a3212ccc7810860fa3b4896c9d77a_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   临沂观唐温泉度假村旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   沂南沂蒙红色沂蒙影视基地旅游区: {
@@ -9272,6 +10591,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://aos-comment.amap.com/B0FFIPJ8W9/comment/content_media_external_file_1000015601_ss__1761146028932_79415693.jpg",
+    rating: "",
     match: 0.89,
   },
   临沂市动植物园旅游区: {
@@ -9279,6 +10599,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/2ec13b0a0599001e903af73b5f18ba0c",
+    rating: "",
     match: 0.86,
   },
   兰陵国家农业公园旅游区: {
@@ -9286,6 +10607,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/611ad8441c11cf4c6d8b2ef0be46b87b",
+    rating: "",
     match: 1,
   },
   临沂市科技馆旅游区: {
@@ -9293,6 +10615,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/e5ea1cd8a34d6a520000002908410952",
+    rating: "",
     match: 1,
   },
   沂南县红石寨旅游区: {
@@ -9300,6 +10623,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/1411e680236c26f2e8ffb6249d6dfba8",
+    rating: "",
     match: 0.67,
   },
   蒙阴县岱崮地貌旅游区: {
@@ -9307,6 +10631,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/c68255143cb59ef6ea86e4be64e49624",
+    rating: "",
     match: 0.55,
   },
   费县奇石城旅游区: {
@@ -9314,6 +10639,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/8c8888bc955b0aa3ee0afc4cefcb8846",
+    rating: "",
     match: 0.6,
   },
   平邑县九间棚景区: {
@@ -9321,6 +10647,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/7a6cfeedea081b37cff9165cd9d88783",
+    rating: "",
     match: 0.95,
   },
   无极鬼谷旅游区: {
@@ -9328,12 +10655,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/87b9ec5e6041fa2910b9dd5b9ff9f71b",
+    rating: "",
     match: 1,
   },
   中国陶瓷琉璃馆: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.66,
   },
   聊斋城景区: {
@@ -9341,6 +10670,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "09:00-21:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/e617d098172aaad00000002294022588",
+    rating: "",
     match: 1,
   },
   潭溪山旅游区: {
@@ -9348,6 +10678,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/504e575676033890ba4f738ed51d45fe",
+    rating: "",
     match: 1,
   },
   齐山风景区: {
@@ -9356,6 +10687,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周五 07:50-17:00 最晚进入16:00；周六至周日 07:20-17:00 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/8653077ee59fd9ca2be445b66ff530bf",
+    rating: "",
     match: 0.97,
   },
   原山国家森林公园: {
@@ -9363,6 +10695,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/e7d95f0f0c9c8508cb19b344974e42c3",
+    rating: "",
     match: 0.99,
   },
   开元溶洞: {
@@ -9370,6 +10703,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-17:30, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/3c061ac2ac4a16a6334781ac467b1481",
+    rating: "",
     match: 1,
   },
   博山陶瓷琉璃艺术中心: {
@@ -9378,6 +10712,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周二至周日 08:00-17:00 最晚进入16:30 01-01至10-04 周一 全天关闭；10-05至10-05 周一 08:00-17:00 最晚进入16:30；10-06至12-31 周一 全天关闭",
     image:
       "http://store.is.autonavi.com/showpic/19346c9e8dcadb89233c5fe351991af4",
+    rating: "",
     match: 1,
   },
   周村古商城: {
@@ -9385,6 +10720,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/101164e97422ed982ae1a812d89e6fa5",
+    rating: "",
     match: 1,
   },
   王渔洋故里景区: {
@@ -9393,6 +10729,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "10月至12月,1月至4月 周一至周日 08:30-16:30；5月至9月 周一至周日 08:30-17:00 05-01至05-05 周一至周日 08:30-17:00",
     image:
       "https://store.is.autonavi.com/showpic/cd98cc559bdcb1a40000003084652378?type=pic",
+    rating: "",
     match: 1,
   },
   国井酒文化博览园: {
@@ -9400,12 +10737,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFMD0FAW/comment/content_media_external_file_1000013523_ss__1764112348236_52714165.jpg",
+    rating: "",
     match: 0.9,
   },
   沂源鲁山溶洞群风景区: {
     tel: "0533-3680898",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   天鹅湖国际慢城景区: {
@@ -9413,6 +10752,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/3795c35902395eba77aa77f9fa451950",
+    rating: "",
     match: 0.94,
   },
   万平口海滨风景区: {
@@ -9420,6 +10760,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周五 09:00-18:00；周六至周日 09:00-20:00",
     image:
       "https://store.is.autonavi.com/showpic/0c17a53af52dc5790000002526634931?type=pic",
+    rating: "",
     match: 0.6,
   },
   刘家湾赶海园: {
@@ -9427,6 +10768,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/f12e67554b9c95562a87a0912b017ddd",
+    rating: "",
     match: 1,
   },
   龙门崮旅游度假区: {
@@ -9434,6 +10776,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/417df80e9d0391a99cc610bbd4fdcb42",
+    rating: "",
     match: 0.75,
   },
   浮来山风景区: {
@@ -9441,6 +10784,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/7d7e11ec516809a90bcbbe8631c52b52",
+    rating: "",
     match: 1,
   },
   大青山风景区: {
@@ -9448,12 +10792,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/b49589e9178328fd90498246b53cd5b6",
+    rating: "",
     match: 1,
   },
   黑虎山狩猎旅游区: {
     tel: "",
     openTime: "周一至周日 08:30-17:00",
     image: "",
+    rating: "",
     match: 1,
   },
   日照海滨国家森林公园: {
@@ -9461,12 +10807,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/88c5c6a3e038dacf7adb0a4a981ed6c2",
+    rating: "",
     match: 0.99,
   },
   日照海洋公园: {
     tel: "0633-8993666",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   德州市泉城海洋极地世界景区: {
@@ -9474,6 +10822,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00 最晚进入16:00",
     image:
       "https://store.is.autonavi.com/showpic/c39b78589387fa29a418b299a0ac472e",
+    rating: "",
     match: 0.73,
   },
   德州市泉城欧乐堡梦幻世界景区: {
@@ -9481,6 +10830,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "https://store.is.autonavi.com/showpic/8d5d8daeccc185a90000003127748186?type=pic",
+    rating: "",
     match: 0.75,
   },
   德州市庆云海岛金山寺景区: {
@@ -9488,6 +10838,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:00；具体营业状态以当天开放情况为准",
     image:
       "https://store.is.autonavi.com/showpic/6722e5ee1e9102dc0000002450432423?type=pic",
+    rating: "",
     match: 1,
   },
   乐陵千年枣林景区: {
@@ -9495,6 +10846,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/59a8905be0785408bba0344fc7b3f054",
+    rating: "",
     match: 0.58,
   },
   德州董子园: {
@@ -9502,6 +10854,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/94a4d3ac5dcbf7d4e3e995b01c1968c6",
+    rating: "",
     match: 0.57,
   },
   乐陵冀鲁边区革命纪念园: {
@@ -9509,6 +10862,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/31c4f47d1bc2a36a5359841c25b422c7",
+    rating: "",
     match: 0.82,
   },
   东昌湖旅游区: {
@@ -9516,6 +10870,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/2c2ae81185a7fb081268a37a230a0815",
+    rating: "",
     match: 1,
   },
   "天沐·江北水城温泉度假村": {
@@ -9523,6 +10878,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/ac4a376a6b136c1abf4048f65d1453c8",
+    rating: "",
     match: 0.67,
   },
   "景阳冈·狮子楼旅游区": {
@@ -9530,6 +10886,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "夏令时08:00-18:00；冬令时08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/d4154565c45341a7bc2cf836f9c5a8e0",
+    rating: "",
     match: 0.93,
   },
   东阿阿胶城: {
@@ -9537,6 +10894,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-21:00",
     image:
       "http://store.is.autonavi.com/showpic/9d373f30408aaf0003021fad13bff5eb",
+    rating: "",
     match: 0.75,
   },
   聊城市孔繁森纪念馆: {
@@ -9544,6 +10902,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/465a2900-f726-4efa-8bfe-3f3287c7fe76.jpeg",
+    rating: "",
     match: 0.67,
   },
   临清宛园: {
@@ -9551,6 +10910,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-17:30 最晚进入17:30,2026-02-17至2026-03-04,08:00-21:30",
     image:
       "http://store.is.autonavi.com/showpic/b045f7adfd9e0e704f9ca3dc0efbeb1d",
+    rating: "",
     match: 1,
   },
   滨州市杜受田故居: {
@@ -9558,6 +10918,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/255cecee773f5ee697927e9350a9d128",
+    rating: "",
     match: 1,
   },
   滨州孙武古城旅游区: {
@@ -9565,6 +10926,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/1c0d9b541dd549cb0710624da7c69e0d",
+    rating: "",
     match: 0.93,
   },
   鑫诚田园生态旅游区: {
@@ -9572,6 +10934,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/b7eddaf09372e51e78d16770e8cde528",
+    rating: "",
     match: 0.99,
   },
   水浒好汉城: {
@@ -9580,12 +10943,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周四 08:30-21:00；周五至周日 08:30-21:30 2026-05-01至2026-05-05 周一至周日 08:30-21:30",
     image:
       "https://aos-comment.amap.com/B0FFG98OE3/comment/27a3bf9e0434cc0659ac324d40fe5f80_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   "孙膑旅游城·亿城寺景区": {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.62,
   },
   曹州牡丹园景区: {
@@ -9593,6 +10958,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "04月01日-05月20日 08:00-21:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/4edb7e4c-418a-4ae8-a14e-5448f1a754cf.jpg",
+    rating: "",
     match: 1,
   },
   单县幵山景区: {
@@ -9600,6 +10966,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/da0a2ef152f122530000003121378323?type=pic",
+    rating: "",
     match: 1,
   },
   单县科技馆景区: {
@@ -9607,12 +10974,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/2d6dc8425f8fd91cea210e3785b3aa35",
+    rating: "",
     match: 0.57,
   },
   古柏渡飞黄旅游区: {
     tel: "0371-86572222",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.92,
   },
   古柏渡丰乐樱花园: {
@@ -9620,6 +10989,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/e7e50545c14e5b9feaf2fa0ce8772e6c",
+    rating: "",
     match: 0.98,
   },
   黄帝故里景区: {
@@ -9627,12 +10997,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/3f5a579702b969447f5dec91446e5905",
+    rating: "",
     match: 1,
   },
   新密伏羲大峡谷: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.71,
   },
   樱桃沟景区: {
@@ -9640,6 +11012,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/ca8257b0ef86a58c790e3f55db6c80dc",
+    rating: "",
     match: 1,
   },
   "郑州·中国绿化博览园": {
@@ -9648,6 +11021,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周五:09:00-19:00,18:00停止售票,周六至周日及节假日:09:00-22:00,停止售票21:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/db328fea60a0b0fd6d006bf61590d352",
+    rating: "",
     match: 0.9,
   },
   嵩阳书院景区: {
@@ -9655,6 +11029,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/2b2622a24b2edc145bd3f0bfa680481a",
+    rating: "",
     match: 0.93,
   },
   "中岳庙 景区": {
@@ -9662,6 +11037,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-17:00 最晚进入17:00",
     image:
       "https://store.is.autonavi.com/showpic/b6df0ac0cc78a3b50000008090428223?type=pic",
+    rating: "",
     match: 1,
   },
   观星台: {
@@ -9669,12 +11045,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/3cc7cf1c9e240d0c75e4529725b1dc0e",
+    rating: "",
     match: 1,
   },
   大熊山仙人谷景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   康百万庄园: {
@@ -9682,6 +11060,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "8:30-17:30,17:00停止入园",
     image:
       "http://store.is.autonavi.com/showpic/8174600752f56b758397ab156aed8c3c",
+    rating: "",
     match: 1,
   },
   竹林长寿山景区: {
@@ -9689,6 +11068,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFJIXJ8E/comment/20260301-b9d894324cb8caa6e685bc33-7OZf6JWeXtrALzljQkKWhK.jpg",
+    rating: "",
     match: 0.99,
   },
   杜甫故里: {
@@ -9696,6 +11076,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 9:00-17:30(17:00停止入园)",
     image:
       "http://store.is.autonavi.com/showpic/9fcda9c8eaf309f65a382e32318c5ce7",
+    rating: "",
     match: 1,
   },
   开封府: {
@@ -9703,6 +11084,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-22:00",
     image:
       "https://aos-comment.amap.com/B0FFK7ZLZ7/comment/content_media_external_images_media_1000002241_ss__1767107963571_23619672.jpg",
+    rating: "",
     match: 1,
   },
   开封龙亭公园: {
@@ -9710,6 +11092,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFG2HH69/comment/20260316-9a9d9ca7868226620ec6cc0c-4NTEwMa4yBx5mHFUOr6Jr5.jpg",
+    rating: "",
     match: 1,
   },
   大相国寺: {
@@ -9718,6 +11101,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "冬季 1/1-12/31(冬季) 08:00–17:30开放 最晚进入17:00；春秋季 1/1-12/31(春秋季) 08:00–18:00开放 最晚进入17:30；夏季 1/1-12/31(夏季) 08:00–18:30开放 最晚进入18:00",
     image:
       "http://store.is.autonavi.com/showpic/26c36b9dad0044767d255ff6a4630fb3",
+    rating: "",
     match: 1,
   },
   开封市铁塔公园: {
@@ -9725,6 +11109,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-21:00 最晚进入20:30",
     image:
       "http://store.is.autonavi.com/showpic/ccf6e9e47073f653236e76b2230562e2",
+    rating: "",
     match: 1,
   },
   中国翰园碑林: {
@@ -9732,6 +11117,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-21:30 最晚进入21:30",
     image:
       "http://store.is.autonavi.com/showpic/958c3697cc1e212c9330e4ca31e27bcf",
+    rating: "",
     match: 1,
   },
   天波杨府公园: {
@@ -9739,6 +11125,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-20:30",
     image:
       "http://store.is.autonavi.com/showpic/cf53cafb7327affdac06e9c6cdca2edb",
+    rating: "",
     match: 1,
   },
   朱仙镇启封故园: {
@@ -9746,6 +11133,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-22:00",
     image:
       "https://aos-comment.amap.com/B0FFJITVNK/comment/d8be1888032ce877defef1a46effa4eb_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   抱犊寨: {
@@ -9753,6 +11141,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/a750c92e4ed8d752b7b72d07f03946f3",
+    rating: "",
     match: 0.97,
   },
   养子沟: {
@@ -9760,6 +11149,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/8603fdb3f9420cc1aebcb4443ed984e0",
+    rating: "",
     match: 0.93,
   },
   伏牛山滑雪度假乐园: {
@@ -9767,6 +11157,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "日场:08:00-17:00,夜场:18:00-22:00",
     image:
       "https://aos-comment.amap.com/default_poi/comment/E68E9C26_E956_455C_88F9_C5AF5EF192EF_L0_001_1440_93_1765882737593_88849632.jpg",
+    rating: "",
     match: 0.75,
   },
   天河大峡谷: {
@@ -9774,12 +11165,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFGSFH77/comment/28d69a2e7c49c589e93cb7e32f93c692_2048_2048_80.jpg",
+    rating: "",
     match: 0.98,
   },
   栾川县竹海野生动物园: {
     tel: "",
     openTime: "08:00-16:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.87,
   },
   王府竹海景区: {
@@ -9787,12 +11180,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/cd933656061ae2aa0a6422874efded32",
+    rating: "",
     match: 0.97,
   },
   神灵寨风景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   西泰山: {
@@ -9800,6 +11195,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/2629fac742818ab6d2acd98b2ae580a2",
+    rating: "",
     match: 0.87,
   },
   恐龙谷漂流: {
@@ -9807,12 +11203,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-18:00, 具体开放时间以现场公示为准",
     image:
       "https://aos-comment.amap.com/B0FFGKD7RW/comment/59F0E16B_4D4A_4380_9EA1_0813CB89A8FC_L0_001_1179_98_1750173753914_72049567.jpg",
+    rating: "",
     match: 0.99,
   },
   木札岭: {
     tel: "",
     openTime: "08:00-18:00 最晚进入17:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.97,
   },
   天池山国家森林公园: {
@@ -9821,6 +11219,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1/1-3/31 全天不开放；4/1-11/14 08:00-22:00开放；11/15-12/31 全天不开放； 说明:每年封山期可能因气候原因有所调整，以当日电话咨询为准。",
     image:
       "http://store.is.autonavi.com/showpic/fbaa0004e5ec58d6167463319b473517",
+    rating: "",
     match: 0.93,
   },
   青要山景区: {
@@ -9828,6 +11227,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/45d5816b2a908c2e79c6386c986a612e",
+    rating: "",
     match: 0.95,
   },
   黛眉山景区: {
@@ -9836,6 +11236,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "08:00-18:00 最晚进入18:00根据不同的季节,时间有所调整, 具体开放时间以现场公示为准",
     image:
       "http://store.is.autonavi.com/showpic/886c9d9dac98d41eeee43e3de6d5459e",
+    rating: "",
     match: 0.98,
   },
   千唐志斋博物馆: {
@@ -9844,12 +11245,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周二至周日 09:00-17:00 (16:30停止入馆),周一全天关闭,法定节假日除外,2026年2月16日闭馆",
     image:
       "https://store.is.autonavi.com/showpic/0c018edc7b496574e3671bd582603b9e",
+    rating: "",
     match: 1,
   },
   小浪底: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   花果山景区: {
@@ -9857,6 +11260,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/b096f577c362d7b19368b147e8e34d3d",
+    rating: "",
     match: 0.98,
   },
   二程文化园: {
@@ -9864,24 +11268,28 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00 最晚进入17:30",
     image:
       "https://aos-comment.amap.com/B0FFIA7IPA/comment/a78e948bced5dcf8304f50b228ca0d76_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   中国国花园: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   中国薰衣草庄园: {
     tel: "0379-67676699",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   画眉谷: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   白龟湖国家城市湿地公园: {
@@ -9889,6 +11297,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-23:00",
     image:
       "https://store.is.autonavi.com/showpic/46848301a107fed90000001095692337?type=pic",
+    rating: "",
     match: 1,
   },
   二郎山景区: {
@@ -9896,6 +11305,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "1/1-12/31 08:00–18:00开放；劳动节 08:00–19:00开放",
     image:
       "http://store.is.autonavi.com/showpic/390d1040d7c89349391919744bb02177",
+    rating: "",
     match: 0.98,
   },
   灯台架景区: {
@@ -9903,6 +11313,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-19:00",
     image:
       "http://store.is.autonavi.com/showpic/09793aec24e4d9d08040afc09b2b4a07",
+    rating: "",
     match: 0.95,
   },
   祥龙谷景区: {
@@ -9910,12 +11321,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:30 最晚进入17:30",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/8763ff79-0f3d-401a-a0d6-24d5b3dab845.jpg",
+    rating: "",
     match: 1,
   },
   三苏园景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   平顶山市香山普门禅寺: {
@@ -9923,12 +11336,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/128f721160242c77c73eaf01fb6bb3ed",
+    rating: "",
     match: 0.66,
   },
   风穴寺景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   河南九峰山景区: {
@@ -9936,6 +11351,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://aos-comment.amap.com/B0FFL5K2RL/comment/fe9947d8a2a8ba9391fabe1f9ea4c4c2_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   新乡辉县万仙山风景区: {
@@ -9944,6 +11360,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "00:00-24:00；景区大巴车营运时间:08:00-18:00,2026年2月16日至2月23日 08:00-20:00",
     image:
       "http://store.is.autonavi.com/showpic/fd05c075ffb71637b88a6fe4d94aa3d7",
+    rating: "",
     match: 0.96,
   },
   新乡京华园景区: {
@@ -9951,6 +11368,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/d4c13805a73bc7d7a526b19e06dcf7d0",
+    rating: "",
     match: 1,
   },
   新乡市比干庙景区: {
@@ -9958,6 +11376,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/ef439d953f7748769607d78283ca07d1",
+    rating: "",
     match: 1,
   },
   新乡市潞王陵景区: {
@@ -9965,6 +11384,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/506dbedb085b59a985115126c5c0168d",
+    rating: "",
     match: 0.83,
   },
   辉县市轿顶山景区: {
@@ -9972,6 +11392,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/b29e60a6f2f235ddb13456eb1c59163a",
+    rating: "",
     match: 0.95,
   },
   卫辉市龙卧岩景区: {
@@ -9979,6 +11400,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "https://aos-comment.amap.com/B0FFG4Y7SR/comment/172932907452_1729329115414_97693836.jpg",
+    rating: "",
     match: 0.96,
   },
   新乡市凤湖景区: {
@@ -9986,6 +11408,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0JUFHTFIH/comment/content_media_external_images_media_1000021925_ss__1742089294699_75834803.jpg",
+    rating: "",
     match: 1,
   },
   南水北调天河公园: {
@@ -9993,12 +11416,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/16abe9433c7d0cb40000005906614216?type=pic",
+    rating: "",
     match: 1,
   },
   老家莫沟景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   陈家沟景区: {
@@ -10006,6 +11431,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFGCFBYU/comment/content_media_external_file_1000007482_ss__1759580302721_14435187.jpg",
+    rating: "",
     match: 0.99,
   },
   焦作影视城: {
@@ -10013,6 +11439,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/1c407ee4296360512e6d08030316e60b",
+    rating: "",
     match: 1,
   },
   圆融寺景区: {
@@ -10020,6 +11447,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-17:30, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/3cafc144eac3f9090a4394476359bca0",
+    rating: "",
     match: 1,
   },
   汤阴羑里城景区: {
@@ -10028,6 +11456,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05-01至10-07 周一至周日 08:10-18:00；10-08至04-30 周一至周日 08:10-17:30",
     image:
       "http://store.is.autonavi.com/showpic/a3f593db3982448b5eb97b8ab75849ef",
+    rating: "",
     match: 0.6,
   },
   安阳马氏庄园景区: {
@@ -10036,6 +11465,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05-01至10-07 周一至周日 08:30-17:30；10-08至04-30 周一至周日 08:30-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/dacb6e645233efd223f9f004c9e9b41c",
+    rating: "",
     match: 1,
   },
   林州市万泉湖风景区: {
@@ -10043,6 +11473,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-22:00",
     image:
       "http://store.is.autonavi.com/showpic/bc2d0787779da2a9529fdf38fe6330c8",
+    rating: "",
     match: 0.99,
   },
   林州中华古板栗公园: {
@@ -10050,6 +11481,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入18:00",
     image:
       "https://store.is.autonavi.com/showpic/dd89558bf59bf42c0000009231816946?type=pic",
+    rating: "",
     match: 1,
   },
   道口古镇: {
@@ -10057,18 +11489,21 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/82e9e15aa945473f0000008112848525?type=pic",
+    rating: "",
     match: 0.99,
   },
   宝天曼景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   内乡县衙博物馆: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   宝天曼峡谷漂流景区: {
@@ -10076,6 +11511,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:30-16:30",
     image:
       "http://store.is.autonavi.com/showpic/de506a891153932590a9ba75598d5f5b",
+    rating: "",
     match: 1,
   },
   云露山景区: {
@@ -10083,6 +11519,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "07:00-19:00, 具体开放时间以现场公示为准",
     image:
       "https://aos-comment.amap.com/B0FFLHJ0HJ/comment/8474ea2662d30f6eb8c1197338beafc7_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   中原二龙山风景区: {
@@ -10090,30 +11527,35 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入16:00",
     image:
       "https://aos-comment.amap.com/B0FFHP1SGM/comment/content_media_external_file_367072_ss__1748850196314_54041562.jpg",
+    rating: "",
     match: 1,
   },
   七峰山生态旅游区: {
     tel: "",
     openTime: "周一至周日 08:00-17:30",
     image: "",
+    rating: "",
     match: 0.99,
   },
   七十二潭景区: {
     tel: "",
     openTime: "周一至周日 08:00-17:00",
     image: "",
+    rating: "",
     match: 1,
   },
   方城德云山风情植物园: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   社旗县山陕会馆: {
     tel: "0377-67921873",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.86,
   },
   香严寺景区: {
@@ -10121,12 +11563,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/143be6595a89cf820abe22dba5d4b87c",
+    rating: "",
     match: 1,
   },
   南召宝天曼: {
     tel: "",
     openTime: "全年 08:30-17:30开放 说明:具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.96,
   },
   南阳五朵山景区: {
@@ -10134,12 +11578,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入17:30；若需上山最晚15:00入园",
     image:
       "http://store.is.autonavi.com/showpic/2361b5d4519bb170cb6a1f9ec53e1ea6",
+    rating: "",
     match: 0.6,
   },
   淮源风景名胜区: {
     tel: "",
     openTime: "08:00-17:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 1,
   },
   老君洞景区: {
@@ -10147,12 +11593,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/93ab4581b070fcb0a68bde54fcf828cf",
+    rating: "",
     match: 1,
   },
   龙潭沟景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.96,
   },
   国际玉城: {
@@ -10160,6 +11608,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-18:00",
     image:
       "https://aos-comment.amap.com/B01790R707/comment/content_media_external_file_1000148431_ss__1758358254114_71240755.jpg",
+    rating: "",
     match: 0.99,
   },
   花洲书院: {
@@ -10168,6 +11617,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "夏季 全年 08:30–18:00开放 最晚进入18:00；冬季 全年 08:30–17:30开放 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/5880b4c0e82c98e8437165cdcd38154d",
+    rating: "",
     match: 1,
   },
   竹沟革命纪念馆: {
@@ -10175,6 +11625,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/1bf18ae12a9aae9e6a7d59f1dba07c0d",
+    rating: "",
     match: 1,
   },
   金顶山景区: {
@@ -10182,12 +11633,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/d72cb03ce9db71aaa84cf4f4ca72e830",
+    rating: "",
     match: 1,
   },
   商丘古文化旅游区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.99,
   },
   商丘市日月湖景区: {
@@ -10195,6 +11648,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/d935c0a893f7ec5380faf65f02f44541",
+    rating: "",
     match: 1,
   },
   淮海战役陈官庄纪念馆景区: {
@@ -10202,6 +11656,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/0c095e2c5f05bcf5b42d9f66cf9b21dc",
+    rating: "",
     match: 0.98,
   },
   阿斗寨景区: {
@@ -10209,6 +11664,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/d0e7361ced9466aad0029281e2136ffc",
+    rating: "",
     match: 0.99,
   },
   五岩山旅游区: {
@@ -10216,6 +11672,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/61b90afa5939ed028d8d68a441774848",
+    rating: "",
     match: 1,
   },
   大伾山景区: {
@@ -10223,12 +11680,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/e58ab81529f22330397f2a5948d69d92",
+    rating: "",
     match: 1,
   },
   云梦山风景区: {
     tel: "0392-7728191",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   古灵山景区: {
@@ -10236,6 +11695,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-18:00",
     image:
       "https://aos-comment.amap.com/B0FFK02LBD/comment/7709e1cde046d70a970a871653a0744d_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   朝阳山景区: {
@@ -10243,6 +11703,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B0FFKGKB1N/comment/content_media_external_images_media_27928_ss__1732364147041_52535523.jpg",
+    rating: "",
     match: 1,
   },
   朝歌文化园: {
@@ -10250,6 +11711,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/2ad6be930f8939160000001022120890",
+    rating: "",
     match: 0.99,
   },
   濮上园: {
@@ -10257,6 +11719,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/e10a78ad88f93189151d30caf00e5c9f",
+    rating: "",
     match: 0.99,
   },
   濮阳市东北庄杂技文化园区: {
@@ -10264,6 +11727,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFIXQDQ0/comment/002f4f342f06a5d15b704e08828c05e8_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   戚城文物景区: {
@@ -10271,6 +11735,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/43272eb5e68fd59d70c26471b1638210",
+    rating: "",
     match: 0.99,
   },
   三门峡市虢国博物馆: {
@@ -10278,6 +11743,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/b6d40215f6500dc500f32034c54e8c76",
+    rating: "",
     match: 1,
   },
   天鹅湖国家城市湿地公园: {
@@ -10285,6 +11751,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B018E0NCH2/comment/91401C37_792A_49ED_8FC0_10DA2252C89C_L0_001_2000_112_1766565611105_67678783.jpg",
+    rating: "",
     match: 1,
   },
   黄河丹峡景区: {
@@ -10292,6 +11759,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/733dc89b815a722b461659c907b03aeb",
+    rating: "",
     match: 1,
   },
   陕州地坑院景区: {
@@ -10299,6 +11767,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:30",
     image:
       "https://store.is.autonavi.com/showpic/c727abf1e3ea45010000002358740742?type=pic",
+    rating: "",
     match: 1,
   },
   灵宝市函谷关历史文化旅游区: {
@@ -10306,6 +11775,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:30-18:00,17:30停止入园",
     image:
       "http://store.is.autonavi.com/showpic/6cdbbb49d2f8834c3ae53cdc22b7f8a2",
+    rating: "",
     match: 1,
   },
   卢氏县豫西大峡谷风景区: {
@@ -10313,12 +11783,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "夏令时 05月01日至09月30日 08:00-18:00；冬令时 10月01日至04月30日 08:30-17:00",
     image: "",
+    rating: "",
     match: 0.62,
   },
   鄢陵县建业绿色基地: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.66,
   },
   灞陵桥景区: {
@@ -10327,6 +11799,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05/01-10/07 08:00–18:00开放 最晚进入17:30；10/08-04/30 08:00–17:30开放 最晚进入17:00；春节 08:00–21:00开放",
     image:
       "http://store.is.autonavi.com/showpic/2b178cfb1be06508a860b8bd534bd8a1",
+    rating: "",
     match: 1,
   },
   鄢陵县唐韵生态旅游区: {
@@ -10334,12 +11807,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFIXZFKA/comment/content_media_external_file_1000176087_ss__1747653422282_16107536.jpg",
+    rating: "",
     match: 1,
   },
   鄢陵县五彩大地观光休闲旅游区: {
     tel: "",
     openTime: "08:00-17:30具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.72,
   },
   中国钧瓷文化园: {
@@ -10347,6 +11822,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "09:00-17:00,2026年春节期间 09:00-17:00",
     image:
       "https://aos-comment.amap.com/B0FFFSDFL1/comment/content_media_external_file_94068_1756480699376_21204312.jpg",
+    rating: "",
     match: 1,
   },
   禹州市神垕古镇景区: {
@@ -10354,6 +11830,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "夏季 08:30-21:30 冬季 08:30-21:00",
     image:
       "https://aos-comment.amap.com/B0FFIDVTMT/comment/content_media_external_file_1000059547_ss__1767106835051_26639224.jpg",
+    rating: "",
     match: 0.57,
   },
   鄢陵县中原花木博览园景区: {
@@ -10361,6 +11838,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/6de3f34317f7e6d7429bd35bc767132d",
+    rating: "",
     match: 0.7,
   },
   禹州市大鸿寨景区: {
@@ -10368,6 +11846,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/849e1089d651952af0d25fa00dd8fcbe",
+    rating: "",
     match: 0.97,
   },
   许慎文化园: {
@@ -10375,6 +11854,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/76d9fe7ec68fc2728314684d2cd2942b",
+    rating: "",
     match: 1,
   },
   沙澧河景区: {
@@ -10382,6 +11862,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B018B0ML63/comment/content_media_external_file_1000023400_ss__1764248583658_76748788.jpg",
+    rating: "",
     match: 1,
   },
   南街村景区: {
@@ -10389,6 +11870,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "07:30-17:30,2026-02-15至2026-03-04,07:30-22:00",
     image:
       "http://store.is.autonavi.com/showpic/f9f2a16137da51ea7f6d06b463d15852",
+    rating: "",
     match: 1,
   },
   神州鸟园景区: {
@@ -10396,6 +11878,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-22:00",
     image:
       "http://store.is.autonavi.com/showpic/f54add47775bfeddbffe7621a7b789fc",
+    rating: "",
     match: 1,
   },
   小商桥景区: {
@@ -10403,6 +11886,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:30-17:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/c98f7a1452acf1ba6ba02dbf208930e3",
+    rating: "",
     match: 1,
   },
   鸡公山风景区: {
@@ -10410,6 +11894,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-19:00 最晚进入17:30",
     image:
       "https://store.is.autonavi.com/showpic/e54156683a8fd73a0000003007008555",
+    rating: "",
     match: 0.99,
   },
   鸡公山桃花寨景区: {
@@ -10418,6 +11903,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-17:00 最晚进入17:00；具体营业状态以当天开放情况为准",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/5e026943-8219-4e58-94da-0fe9ab9df6c3.jpg",
+    rating: "",
     match: 1,
   },
   灵龙湖生态文化旅游区: {
@@ -10425,6 +11911,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFGY2A9W/comment/4F1F8247_F062_4A52_BB3B_9931DABE0769_L0_001_1080_72_1772690344214_22468236.jpg",
+    rating: "",
     match: 1,
   },
   大苏山国家森林公园: {
@@ -10432,6 +11919,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFIZ3YD7/comment/content_media_external_file_1000027104_ss__1772236355890_71322984.jpg",
+    rating: "",
     match: 0.95,
   },
   新县许世友将军故里景区: {
@@ -10439,6 +11927,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/8351334daf77b9b50000002862010329?type=pic",
+    rating: "",
     match: 1,
   },
   金兰山国家森林公园: {
@@ -10446,12 +11935,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/1818f13ed0121d1f499d98bcf99a7422",
+    rating: "",
     match: 0.98,
   },
   鄂豫皖苏区首府景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   大别山露营公园: {
@@ -10459,12 +11950,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入17:00",
     image:
       "https://store.is.autonavi.com/showpic/ebe0e7968620cd3f0000005739036548?type=pic",
+    rating: "",
     match: 0.97,
   },
   信阳市黄柏山国家森林公园: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.58,
   },
   "商城县金刚台（西河）生态旅游区": {
@@ -10472,6 +11965,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入16:00",
     image:
       "https://aos-comment.amap.com/B0FFI6XNXP/comment/adf29493e66376a8b4e95b08e8b365fa_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   河南西九华山景区: {
@@ -10480,12 +11974,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "冬令时 1/1-12/31(冬令时) 08:00–18:00开放 最晚进入17:30；夏令时 1/1-12/31(夏令时) 08:00–18:30开放 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/d5ea4d08c956b3a186440b35359e96c9",
+    rating: "",
     match: 0.92,
   },
   关帝庙: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   太昊陵: {
@@ -10493,6 +11989,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/78902844fe8f3b5fa9a079cb23c5d13c",
+    rating: "",
     match: 1,
   },
   老子故里旅游区: {
@@ -10500,6 +11997,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "夏季 全年 08:00–18:00开放；冬季 全年 08:00–17:00开放",
     image:
       "http://store.is.autonavi.com/showpic/e21fa926cdf3465f89f837236c092c6c",
+    rating: "",
     match: 1,
   },
   武汉中国科学院武汉植物园: {
@@ -10507,6 +12005,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/5b2a1818a13db2100000000747932258?type=pic",
+    rating: "",
     match: 1,
   },
   武汉市革命博物馆: {
@@ -10514,6 +12013,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/b50146f557cdea575801bc1eb68a5e00",
+    rating: "",
     match: 0.87,
   },
   武汉市海昌极地海洋世界景区: {
@@ -10521,6 +12021,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/d689f4ae40f4cce99e45e3e05b42b30f",
+    rating: "",
     match: 0.8,
   },
   黄陂区大余湾旅游区: {
@@ -10528,6 +12029,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/f3038b584e2f531ef29abee0d7fe92b3",
+    rating: "",
     match: 1,
   },
   黄陂姚家山景区: {
@@ -10535,6 +12037,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/451fa65ea21ed0e5156ad077aa30114c",
+    rating: "",
     match: 0.59,
   },
   蔡甸区金龙水寨景区: {
@@ -10542,18 +12045,21 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:30",
     image:
       "https://store.is.autonavi.com/showpic/a6d91d7a356fb9070b19ecd2c597c985",
+    rating: "",
     match: 0.55,
   },
   黄陂木兰胜天景区: {
     tel: "",
     openTime: "周一至周五 08:30-17:30；周六至周日 08:30-18:00",
     image: "",
+    rating: "",
     match: 0.64,
   },
   江夏中山舰旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.59,
   },
   黄陂区木兰花乡景区: {
@@ -10561,6 +12067,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-22:00",
     image:
       "http://store.is.autonavi.com/showpic/aeca649745f55d7e8cc72fe7c606613d",
+    rating: "",
     match: 0.71,
   },
   新洲区凤娃古寨景区: {
@@ -10568,6 +12075,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/728b504faed816143402982a88783ee3",
+    rating: "",
     match: 1,
   },
   武汉市黄陂区木兰水镇景区: {
@@ -10575,6 +12083,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/ff48b6e49f6120f942a9efa9eff04427",
+    rating: "",
     match: 0.98,
   },
   南漳春秋寨旅游区: {
@@ -10582,12 +12091,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "8:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/b2219c999fa90682194b038921bf99a2",
+    rating: "",
     match: 0.59,
   },
   保康尧治河旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.58,
   },
   保康县五道峡景区: {
@@ -10595,6 +12106,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/b94489edcdb8545ffa776514c0e04a06",
+    rating: "",
     match: 0.92,
   },
   保康九路寨生态旅游区: {
@@ -10602,6 +12114,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入15:00",
     image:
       "http://store.is.autonavi.com/showpic/adf5d6ed8fbf20f98606d4042a432f13",
+    rating: "",
     match: 0.98,
   },
   南漳香水河景区: {
@@ -10610,6 +12123,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "04-01至10-07 周一至周日 08:30-16:30 最晚进入16:30；10-08至03-31 周一至周日 08:30-16:00 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/7c9dc433f4df3f3879beb4fdb3646709",
+    rating: "",
     match: 0.96,
   },
   枣阳市白水寺景区: {
@@ -10617,6 +12131,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/84e64e41e3214093c08b5fd1320a9860",
+    rating: "",
     match: 0.81,
   },
   襄阳古城景区: {
@@ -10624,6 +12139,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/d96a0840ac341a1048b00cdae0048e93",
+    rating: "",
     match: 1,
   },
   谷城县堰河乡村旅游区: {
@@ -10631,6 +12147,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/50a0302639b311b44dfe65f8157078c2",
+    rating: "",
     match: 0.97,
   },
   西陵峡口景区: {
@@ -10639,6 +12156,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:30-17:30开放(16:00停止入园)；具体营业状态以当天开放情况为准",
     image:
       "https://store.is.autonavi.com/showpic/5ecede27196397a9ca50722f41d4957a",
+    rating: "",
     match: 0.9,
   },
   三游洞景区: {
@@ -10646,6 +12164,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "3月至12月 周一至周日 08:30-17:30 最晚进入16:30",
     image:
       "https://aos-comment.amap.com/B0H1VDQ5C6/comment/%5B2026-01-15-07-57-42%5D0F63E144-BA70-4AE8-9BAF-804A80CFFEA_1768435081696_75777924.jpg",
+    rating: "",
     match: 1,
   },
   车溪民俗旅游区: {
@@ -10654,6 +12173,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "9月3日-9月30日 周一 08:30-17:00开放（15:30停止售票，16:00停止入园）；周二-周日 08:30-21:30开放（20:00停止入园）、老街 10:00-17:00 日游演出时间:演出时间:上午场10:00，下午场14:30 夜游须知:18:00开始检票入园；具体开放时间以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/1ba0432f823f6c390a8d4f250c023455",
+    rating: "",
     match: 0.95,
   },
   宜昌市柴埠溪大峡谷景区: {
@@ -10662,12 +12182,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 09:00-17:00 最晚进入16:00；4月至10月 周一至周日 08:30-17:30 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/465aa82344b89457bde92a9b5cd579a5",
+    rating: "",
     match: 0.95,
   },
   宜昌九畹溪景区: {
     tel: "",
     openTime: "周一至周日 11:00-15:30",
     image: "",
+    rating: "",
     match: 0.9,
   },
   宜昌石牌要塞旅游区: {
@@ -10675,6 +12197,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/bcaf3304c9140bfc1e45d6e3203b1b31",
+    rating: "",
     match: 1,
   },
   宜昌市高岚朝天吼漂流景区: {
@@ -10683,6 +12206,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "8月27日至10月7日 白天漂流时间 11:30-15:30开放,白漂接待时间 11:30-15:30；洞漂,夜漂暂停接待,入园时间为参考时间,以当天实际为准.漂流景区受天气影响,如天气恶劣,建议出行前先行咨询景区天气,确认当日是否开漂,请携带身份证原件入园.",
     image:
       "http://store.is.autonavi.com/showpic/b0f7da792120e542d36461173d78d551",
+    rating: "",
     match: 0.93,
   },
   玉泉山风景名胜区: {
@@ -10690,6 +12214,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://aos-comment.amap.com/B02CD0QCYY/comment/file_media_Photo_1623_IMG_1749367274_1431_IMG_20250608_151934_jpg_ss_3.jpg",
+    rating: "",
     match: 0.99,
   },
   远安鸣凤山景区: {
@@ -10697,6 +12222,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/d3f451718c2bd8b278a5598568bdbfb1",
+    rating: "",
     match: 0.98,
   },
   "三峡湿地.杨守敬书院": {
@@ -10704,6 +12230,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/620efb39d56ebe82164430ecddfebcf6",
+    rating: "",
     match: 0.9,
   },
   宜昌三峡九凤谷景区: {
@@ -10711,6 +12238,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入16:00",
     image:
       "https://aos-comment.amap.com/B0FFFYIVMV/comment/content_media_external_file_1000035855_ss__1753681878825_10701458.jpg",
+    rating: "",
     match: 0.97,
   },
   宜都市清江天龙湾旅游度假区: {
@@ -10718,6 +12246,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/f99a5814d94b5f1b5b816331ce94d9da",
+    rating: "",
     match: 0.66,
   },
   远安县三峡龙隐谷生态旅游区: {
@@ -10725,12 +12254,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B0H33BPFRU/comment/content_media_external_images_media_100001285_1731210967137_83018172.jpg",
+    rating: "",
     match: 0.94,
   },
   宜昌博物馆: {
     tel: "0717-6450663",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.58,
   },
   宜都市青林休闲旅游区: {
@@ -10738,6 +12269,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/3ff70b82910f8e10bd57a5a8ea804d20",
+    rating: "",
     match: 0.55,
   },
   黄石市黄石国家矿山公园: {
@@ -10745,6 +12277,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0K69UQTGT/comment/A2E848B4_78B5_406C_82D0_A074C9EF95FE_L0_001_2016_1512_1739261076807_67711082.jpg",
+    rating: "",
     match: 0.89,
   },
   阳新县仙岛湖生态旅游景区: {
@@ -10752,6 +12285,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/0152e96bcb857c0ca7e17e55f26a5f39",
+    rating: "",
     match: 0.7,
   },
   "房县野人洞（谷）旅游区": {
@@ -10760,6 +12294,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,11月至12月 周一至周日 08:00-17:30 最晚进入17:30；5月至10月 周一至周日 08:00-18:00 最晚进入18:00",
     image:
       "http://store.is.autonavi.com/showpic/3a6aa8f3dad152aff039af0536a014b5",
+    rating: "",
     match: 1,
   },
   郧西龙潭河旅游区: {
@@ -10767,6 +12302,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/965277c52cb2c8e567af5423c70c6501",
+    rating: "",
     match: 0.95,
   },
   丹江口市太极峡景区: {
@@ -10774,6 +12310,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/6eba81d931f3cf6b831cf09a2e956fb9",
+    rating: "",
     match: 0.99,
   },
   郧西县天河旅游区: {
@@ -10781,6 +12318,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/46efb2ae477099c4a2984bbe4889fb18",
+    rating: "",
     match: 1,
   },
   郧县九龙瀑旅游区: {
@@ -10788,6 +12326,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/42018f8c66bf30b129e689546dc46229",
+    rating: "",
     match: 0.88,
   },
   十堰市人民公园: {
@@ -10795,6 +12334,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B02CF00600/comment/176170810538_1761708106340_16145083.jpg",
+    rating: "",
     match: 1,
   },
   武当山南神道旅游区: {
@@ -10802,6 +12342,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/b10e06c6f4e322d423aea0303c9dd4f9",
+    rating: "",
     match: 0.89,
   },
   郧县虎啸滩旅游区: {
@@ -10809,6 +12350,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/b55b94e8421238db371ad071e83d15cc",
+    rating: "",
     match: 0.99,
   },
   竹山县女娲山旅游区: {
@@ -10817,6 +12359,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,11月至12月 周一至周日 08:00-17:30 最晚进入17:30；5月至10月 周一至周日 08:00-18:00 最晚进入18:00；具体营业状态以当天开放情况为准",
     image:
       "https://store.is.autonavi.com/showpic/bdad1de392eda0a80000008499142960?type=pic",
+    rating: "",
     match: 0.94,
   },
   丹江口沧浪海旅游区: {
@@ -10824,6 +12367,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/727f0eec5d1db23ae628ca7513a8c03d",
+    rating: "",
     match: 1,
   },
   武当山快乐谷旅游区: {
@@ -10831,6 +12375,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "https://aos-comment.amap.com/B0FFG6J6VN/comment/e733c7906ec30cd5b618e8c4701dacb2_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   房县神农大峡谷景区: {
@@ -10839,6 +12384,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1/1-12/31 周一至周五 08:30-17:00开放；1/1-12/31 周六至周日 08:30-18:00开放 说明:具体营业状态以当天开放情况为准",
     image:
       "https://aos-comment.amap.com/B0G2D5NY25/comment/content_media_external_file_21821_ss__1762953426585_62942561.jpg",
+    rating: "",
     match: 1,
   },
   太和梅花谷旅游区: {
@@ -10846,6 +12392,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入17:30",
     image:
       "https://aos-comment.amap.com/B0FFMAIS4V/comment/23B160C8_1BB2_4CAF_B772_42FC06AF2023_L0_001_1500_200_1772685125787_84956384.jpg",
+    rating: "",
     match: 1,
   },
   荆州博物馆: {
@@ -10853,6 +12400,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://aos-comment.amap.com/B0KUBRMP3L/comment/content_media_external_images_media_1000146489_ss__1729327747526_02596688.jpg",
+    rating: "",
     match: 1,
   },
   荆州古城历史文化旅游区: {
@@ -10860,6 +12408,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/81f521a7a00cc1ebac22dc50aaf8bcad",
+    rating: "",
     match: 1,
   },
   松滋洈水旅游区: {
@@ -10867,6 +12416,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周五 08:30-17:30",
     image:
       "https://store.is.autonavi.com/showpic/34eb6a305021383e98dd8e7c4686a23b",
+    rating: "",
     match: 0.99,
   },
   荆州楚王车马阵景区: {
@@ -10875,6 +12425,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至2月,11月至12月 周一至周日 08:30-17:00 最晚进入16:00；3月至10月 周一至周日 08:30-17:30 最晚进入16:30；熊家冢出土文物陈列馆 开放时间: 09:00-16:30（16:00开始清馆）",
     image:
       "http://store.is.autonavi.com/showpic/67c35a4b855b64e363c8bfd082871628",
+    rating: "",
     match: 0.99,
   },
   洪湖市红色湘鄂西旅游区: {
@@ -10882,6 +12433,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-16:30",
     image:
       "http://store.is.autonavi.com/showpic/d7f7af70859677fdee0fe0adc2aaff6c",
+    rating: "",
     match: 1,
   },
   荆州海洋世界: {
@@ -10890,6 +12442,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 00:00-24:00；内部小景点开放时间不一，详情以景区公示为准。",
     image:
       "http://store.is.autonavi.com/showpic/66cd559091fd6981b4093c2c8aece4ff",
+    rating: "",
     match: 0.99,
   },
   荆州园博园景区: {
@@ -10897,6 +12450,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30 最晚进入17:00",
     image:
       "https://aos-comment.amap.com/B0FFKRZBP0/comment/1653b5e53552dadee41dd89d237c3f30_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   钟祥市黄仙洞景区: {
@@ -10905,6 +12459,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "08:30-17:30(16:00停止入园),2026年春节期间08:30-17:00(16:30停止入园)",
     image:
       "http://store.is.autonavi.com/showpic/1e25bd713e7327ee8e8fdd0e4b450283",
+    rating: "",
     match: 0.98,
   },
   荆门市绿林山景区: {
@@ -10912,6 +12467,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/ae8ec4901436d0afb5de99de190a6c5d",
+    rating: "",
     match: 1,
   },
   湖北省漳河景区: {
@@ -10919,6 +12475,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "8:30-17:30（入园时间8:30-17:00）",
     image:
       "http://store.is.autonavi.com/showpic/cf0b80bf1dbbae6da548aac86f566c03",
+    rating: "",
     match: 0.97,
   },
   钟祥市汇源农谷体验园: {
@@ -10927,6 +12484,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月 周一至周日 08:00-17:00 最晚进入16:00；5月至12月 周一至周日 08:00-17:30 最晚进入16:30",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/be4b2fb6-c455-4149-b493-65880503a265.jpg",
+    rating: "",
     match: 0.69,
   },
   荆门极客公园: {
@@ -10934,6 +12492,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "8:30-17:30（入园时间8:30-17:00）",
     image:
       "http://store.is.autonavi.com/showpic/7cdb646f528bcbf5bf747fb092dd4791",
+    rating: "",
     match: 0.6,
   },
   湖北莲花山旅游区: {
@@ -10941,6 +12500,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://store.is.autonavi.com/showpic/0a124483dff2a4ea0000002449414338?type=pic",
+    rating: "",
     match: 1,
   },
   鄂州西山风景区: {
@@ -10948,6 +12508,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/1a3ec6eb2d163495fc6c8c54c94f2782",
+    rating: "",
     match: 1,
   },
   鄂州市梁子岛生态旅游区: {
@@ -10956,6 +12517,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:30-17:30 最晚进入17:30；航运时刻表: 长岭-梁子岛（登岛时间） 9:30/11:30/14:30/17:30 梁子岛-长岭（离岛时间） 7:30/11:40/14:30/17:30",
     image:
       "http://store.is.autonavi.com/showpic/38110c450d6b212713360cbfa46f243f",
+    rating: "",
     match: 0.98,
   },
   鄂州市杏福园旅游区: {
@@ -10963,12 +12525,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/4803bc4b3be0c26b9a6dee004f7c8e6c",
+    rating: "",
     match: 0.98,
   },
   孝感市双峰山旅游度假区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.57,
   },
   孝感市孝昌县观音湖旅游度假区: {
@@ -10976,6 +12540,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/a16b7cc90f5ff6a40e91bdeed616992d",
+    rating: "",
     match: 0.9,
   },
   孝感市天紫湖生态度假区: {
@@ -10983,6 +12548,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00；以景区为准",
     image:
       "https://aos-comment.amap.com/B02C801JFH/comment/content_media_external_images_media_1000012110_ss__1738221234406_12727789.jpg",
+    rating: "",
     match: 0.99,
   },
   安陆白兆山李白文化旅游区: {
@@ -10990,6 +12556,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周五 08:00-18:30；周六至周日 08:00-20:30",
     image:
       "http://store.is.autonavi.com/showpic/d1804332eddc032fd3d7707b9e16a506",
+    rating: "",
     match: 1,
   },
   孝感金卉庄园景区: {
@@ -10997,6 +12564,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/94032bf4522ce35f52dd97bfa44fc4e0",
+    rating: "",
     match: 0.96,
   },
   大悟县中原军区旧址景区: {
@@ -11004,12 +12572,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 10-01至10-07 周一至周日 08:30-17:00",
     image:
       "https://aos-comment.amap.com/B02C80NAC8/comment/6d723e0428337a694a3a266489fb71f5_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   孝感市大悟县湖北十八潭生态旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   孝感汉川市天屿湖旅游区: {
@@ -11017,6 +12587,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "10月 周一至周日 14:00-23:00 最晚进入21:00",
     image:
       "http://store.is.autonavi.com/showpic/53d5da2cd261917a87fb0225d7dc54a9",
+    rating: "",
     match: 1,
   },
   红安县黄麻起义和鄂豫皖苏区纪念园: {
@@ -11024,6 +12595,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一全天关闭,周二至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/d612b9c8b2cc79de773ed90b59c9662f",
+    rating: "",
     match: 1,
   },
   浠水县三角山景区: {
@@ -11031,12 +12603,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/1adfe9d84926747efa1ce682bc4afecd",
+    rating: "",
     match: 0.95,
   },
   红安县李先念故居纪念园: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.7,
   },
   英山大别山南武当旅游区: {
@@ -11044,6 +12618,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入16:00",
     image:
       "https://aos-comment.amap.com/B0L6YU9BZT/comment/content_media_external_file_1000105117_ss__1754723661846_03028483.jpg",
+    rating: "",
     match: 0.74,
   },
   英山县桃花冲旅游度假区: {
@@ -11052,6 +12627,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 00:00-24:00；景区内免费景点全天开放，收费景点营业时间:09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/a41566ce09735ea0f47c9211bfcc5ce2",
+    rating: "",
     match: 0.55,
   },
   黄冈市东坡赤壁景区: {
@@ -11059,6 +12635,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/d528ccbe90ce5b541fc6d697b7363403",
+    rating: "",
     match: 0.99,
   },
   麻城市五脑山森林公园: {
@@ -11066,6 +12643,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-16:30",
     image:
       "https://aos-comment.amap.com/B0J1G55CN3/headerImg/2c1bffe1a9be74c0d5704df057e1ba6e_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   麻城市孝感乡文化园: {
@@ -11073,12 +12651,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:30-21:00",
     image:
       "https://aos-comment.amap.com/B0FFGAU0GX/comment/content_media_external_file_100005872_1772894527234_48148387.jpg",
+    rating: "",
     match: 0.88,
   },
   武穴市广济时光景区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.56,
   },
   黄梅五祖风景区: {
@@ -11086,6 +12666,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/1563bd29d17bac4d0e2e9c92163ba16b",
+    rating: "",
     match: 0.97,
   },
   英山县四季花海景区: {
@@ -11094,6 +12675,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05-01至10-07 周一至周日 08:00-18:00 最晚进入17:30；10-08至04-30 周一至周日 08:00-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/85c82c8f200e50daacaf73706d1e78fd",
+    rating: "",
     match: 1,
   },
   蕲春李山生态旅游区: {
@@ -11101,6 +12683,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/95a9099a209985121b4edf86f9a0cb25",
+    rating: "",
     match: 1,
   },
   通山九宫山景区: {
@@ -11108,6 +12691,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/2e2c1c73c9afa8a9e48d072a4e0aa349",
+    rating: "",
     match: 0.96,
   },
   龙佑赤壁温泉旅游度假区: {
@@ -11115,6 +12699,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-22:00 最晚进入21:30",
     image:
       "http://store.is.autonavi.com/showpic/8f23764f44732bf1b1d1dbd32fa1b991",
+    rating: "",
     match: 0.92,
   },
   通山县隐水洞景区: {
@@ -11122,6 +12707,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-16:30,2026年2月16日08:00-15:30",
     image:
       "http://store.is.autonavi.com/showpic/7c79dfcfadd552373ba19273eabba3b6",
+    rating: "",
     match: 0.79,
   },
   咸宁市楚天瑶池温泉度假村: {
@@ -11129,6 +12715,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 14:00-22:00",
     image:
       "https://aos-comment.amap.com/B0FFFQVHJN/comment/2eee38186e92e8b561c4f7d177e9c0bf_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   嘉鱼县山湖温泉景区: {
@@ -11136,6 +12723,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:00-23:00",
     image:
       "https://store.is.autonavi.com/showpic/9f2aa96acdd6bf250000003673578369?type=pic",
+    rating: "",
     match: 0.91,
   },
   咸宁市温泉谷度假区: {
@@ -11143,6 +12731,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 14:30-23:00",
     image:
       "http://store.is.autonavi.com/showpic/f69c326fc072844f4080be1ab64afaed",
+    rating: "",
     match: 0.83,
   },
   黄鹤楼森林美酒小镇: {
@@ -11150,6 +12739,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:30",
     image:
       "https://aos-comment.amap.com/B0FFJIBUOA/comment/content_media_external_file_50664_1747461422417_79112048.jpg",
+    rating: "",
     match: 0.99,
   },
   "崇阳县柃蜜小镇·白崖山景区": {
@@ -11157,6 +12747,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入16:00",
     image:
       "https://aos-comment.amap.com/B0FFI2DYAG/comment/2f5b83e47b864e83f747ba3e58de8050_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   "通城县药姑山·古瑶村景区": {
@@ -11164,12 +12755,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-22:00",
     image:
       "https://store.is.autonavi.com/showpic/46f6fbab539895350000002899452172?type=pic",
+    rating: "",
     match: 0.56,
   },
   随州市西游记公园: {
     tel: "0722-4828888",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.62,
   },
   随州市西游记漂流: {
@@ -11177,6 +12770,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "6月19日-8月18日:12:00-15:00(14:40停止入园)",
     image:
       "http://store.is.autonavi.com/showpic/6fd8fdb2b2c92850dc8556b0eedf7783?operate=original&query_type=oss&operate_gif=1",
+    rating: "",
     match: 0.96,
   },
   随州文化公园: {
@@ -11184,6 +12778,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-19:00",
     image:
       "https://aos-comment.amap.com/B0FFF3523V/comment/content_media_external_file_100007575_1765181849122_96292977.jpg",
+    rating: "",
     match: 1,
   },
   随州市大洪山景区: {
@@ -11191,12 +12786,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/ebbfc42499d76a447374d5defc896fd8",
+    rating: "",
     match: 0.64,
   },
   随州千年银杏谷景区: {
     tel: "",
     openTime: "08:30-17:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.7,
   },
   随县田王寨景区: {
@@ -11205,6 +12802,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "淡季 1/1-12/31(淡季) 08:30–17:00开放 最晚售票15:00；旺季 1/1-12/31(旺季) 08:00–17:30开放 最晚售票15:30",
     image:
       "https://aos-comment.amap.com/B0FFIJTPJJ/comment/%5B2026-03-05-09-38-56%5DE3E2CB77-DCB7-47C8-A306-106F83C7BA3_1772674777148_30568889.jpg",
+    rating: "",
     match: 0.94,
   },
   广水市高贵三潭景区: {
@@ -11212,6 +12810,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B02D20020C/comment/content_media_external_images_media_100002102_1729126606725_47827444.jpg",
+    rating: "",
     match: 1,
   },
   恩施州恩施土司城景区: {
@@ -11219,6 +12818,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-18:00",
     image:
       "https://store.is.autonavi.com/showpic/84ab747775316034f84a0949e8302cb7",
+    rating: "",
     match: 1,
   },
   恩施州梭布垭石林景区: {
@@ -11227,6 +12827,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "4月至10月 08:00-18:00 最晚进入16:30；1月至3月,11月至12月 08:30-17:00 最晚进入15:30, 具体开放时间以现场公示为准",
     image:
       "https://aos-comment.amap.com/B0FFLG3DFY/comment/5075BFD0_D4B6_4BD8_929E_4F0719D2ED05_L0_001_2016_151_1754793329946_71950768.jpg",
+    rating: "",
     match: 0.62,
   },
   恩施州利川龙船水乡景区: {
@@ -11234,6 +12835,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:20 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/89aba3f930b6b32962c7bcaa1cdfddae",
+    rating: "",
     match: 0.92,
   },
   恩施州巴人河生态旅游区: {
@@ -11242,6 +12844,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,10月至12月 周一至周日 09:00-17:30 最晚进入14:00；5月至9月 周一至周日 08:30-18:00 最晚进入15:30",
     image:
       "http://store.is.autonavi.com/showpic/7ffe9ae214f1d95df439b3b42ee780cd",
+    rating: "",
     match: 0.83,
   },
   恩施州利川大水井文化旅游区: {
@@ -11249,6 +12852,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://aos-comment.amap.com/B0FFJYFMK9/comment/2b9a1113324431e31aaff3fb62a74fb7_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   恩施州恩施市土家女儿城旅游区: {
@@ -11256,6 +12860,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/872913ca00e21bc3d6f672aea467b08f",
+    rating: "",
     match: 0.78,
   },
   恩施地心谷景区: {
@@ -11263,6 +12868,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "7:30-16:00",
     image:
       "http://store.is.autonavi.com/showpic/566aaeb4f2a8168049cb841fc9332a4b",
+    rating: "",
     match: 0.56,
   },
   恩施州来凤县仙佛寺景区: {
@@ -11270,6 +12876,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:00",
     image:
       "https://comment-oss-online.oss-cn-wulanchabu.aliyuncs.com/B0FFITYA1P/headerImg/374F8BFF_CFEB_427E_84CF_C3EDA121516B_L0_001_IMG_2262_1653134860783_13996b58.JPG",
+    rating: "",
     match: 1,
   },
   恩施州巴东县巫峡口景区: {
@@ -11278,6 +12885,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "07-21至09-10 周一至周日 08:30-19:00 最晚进入19:00；09-11至12-31 周一至周日 08:30-17:00 最晚进入17:00；为更好地满足游客游览需求，结合季节时长的变化，自2026年9月11日起，对景区营业时间、索道运营时间及窗口售票时间进行调整，公告如下: 景区营业时间为8:30-18:00 主游客中心售票时间:8:30-16:30 巫峡云巅售票时间:8:30-17:00 索道上站运营时间:8:30-18:00 温馨提示:如遇极端天气及其他特殊情况，景区营业时间另行通知；索道因检修停止运行，提前发布公告。",
     image:
       "https://store.is.autonavi.com/showpic/d61b65f63ea1e8b80000009311700219?type=pic",
+    rating: "",
     match: 0.91,
   },
   恩施州利川玉龙洞旅游区: {
@@ -11285,6 +12893,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/f7f289819d9c6cfaf2dbc056eb7b508e",
+    rating: "",
     match: 0.93,
   },
   恩施州宣恩县狮子关旅游区: {
@@ -11292,6 +12901,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/3e76b565cfa4ebf5249517b1580cf764",
+    rating: "",
     match: 0.99,
   },
   恩施州宣恩县仙山贡水旅游区: {
@@ -11299,6 +12909,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/d12a98ee322cf53b0000003902520548",
+    rating: "",
     match: 0.65,
   },
   广州市番禺莲花山旅游区: {
@@ -11306,6 +12917,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/01de201fb5d3c86a7cd748dbc9a871fd",
+    rating: "",
     match: 1,
   },
   广州市宝墨园: {
@@ -11313,6 +12925,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-19:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/02702c0273b03ec78dac88b74de5c524",
+    rating: "",
     match: 1,
   },
   广州从化碧水湾温泉度假村: {
@@ -11320,6 +12933,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-23:30",
     image:
       "http://store.is.autonavi.com/showpic/0c9a99cc9704ed781fd97d80a1d3fbd4",
+    rating: "",
     match: 1,
   },
   中国科学院华南植物园: {
@@ -11327,6 +12941,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/5a4052c4d5cc29c94f986f5e6e75b8a2",
+    rating: "",
     match: 0.6,
   },
   广州市广东科学中心: {
@@ -11335,6 +12950,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "06/01 09:30–17:00开放 最晚进入16:00；01/01-05/31 周一 全天不开放；06/02-12/31 周一 全天不开放；01/01-05/31 周二–周五 09:30–16:30开放 最晚进入16:00；06/02-12/31 周二–周五 09:30–16:30开放 最晚进入16:00；01/01-05/31 周六–周日 09:30–17:00开放 最晚进入16:00；06/02-12/31 周六–周日 09:30–17:00开放 最晚进入16:00；劳动节,端午节,中秋节,国庆节 09:30–17:00开放 最晚进入16:00；营业时间仅供参考，请以景区实际营业时间为准",
     image:
       "http://store.is.autonavi.com/showpic/9b7ca9aa2a1681670a4a42ec75abf383",
+    rating: "",
     match: 1,
   },
   广州九龙湖度假区: {
@@ -11342,6 +12958,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00；建议游玩时间09:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/a550d7ac50eb11786cab11a3bc8140b1",
+    rating: "",
     match: 0.6,
   },
   广州市石头记矿物园: {
@@ -11349,6 +12966,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00；餐厅营业时间:10:00-14:30，17:00-21:00。",
     image:
       "http://store.is.autonavi.com/showpic/6e538ff70c31cd458e99b72907bb9c53",
+    rating: "",
     match: 1,
   },
   广州市南海神庙景区: {
@@ -11356,6 +12974,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周二至周日 09:00-17:00 最晚进入16:30",
     image:
       "https://aos-comment.amap.com/B0FFHR3KFS/comment/63caabf2a1c5c436eff17ffb41eb8620_2048_2048_80.jpg",
+    rating: "",
     match: 0.57,
   },
   广东圆玄道观: {
@@ -11363,6 +12982,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00；17:00停止售票,18:00清场",
     image:
       "http://store.is.autonavi.com/showpic/f0c1b001637ecbf317ce44248f8ea8ca",
+    rating: "",
     match: 1,
   },
   广州市沙湾古镇景区: {
@@ -11370,6 +12990,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00；展览馆09:00-17:30, 具体开放时间以现场公示为准",
     image:
       "http://store.is.autonavi.com/showpic/f55b629dd22a40fda85c6f73a99d678a",
+    rating: "",
     match: 0.56,
   },
   深圳市青青世界旅游区: {
@@ -11378,6 +12999,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周五 08:30-17:30 最晚进入17:30；周六至周日 08:30-18:00 最晚进入17:30；周末及节假日08:30-18:00（17:30停止入园）",
     image:
       "http://store.is.autonavi.com/showpic/4b809ca693dde7863117d9d2c3026d88",
+    rating: "",
     match: 0.83,
   },
   深圳东部华侨城旅游度假区: {
@@ -11386,6 +13008,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周五 09:30-18:00开放（17:00停止售票，17:00停止入园）；周六至周日 09:00-18:00开放（17:00停止入园）；元旦节,春节,清明节,劳动节,端午节,中秋节,国庆节 09:00-18:00开放（17:00停止入园）；如遇节假日或大型活动,营业时间以当日开放情况为准",
     image:
       "http://store.is.autonavi.com/showpic/3de8d718ca9de653f37f64094b9bfc7c",
+    rating: "",
     match: 1,
   },
   深圳市光明农场大观园景区: {
@@ -11393,6 +13016,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/27093a47e20cfdd2ba0c8da4e4edf884",
+    rating: "",
     match: 1,
   },
   珠海市圆明新园: {
@@ -11401,6 +13025,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "01-01至10-21 周一至周日 09:00-17:30 最晚进入17:30；10-22至12-31 周一 09:00-17:30 最晚进入17:30；10-22至12-31 周二至周日 09:00-22:00 最晚进入20:30",
     image:
       "http://store.is.autonavi.com/showpic/970107199e889a482da57a505b1c9d99",
+    rating: "",
     match: 1,
   },
   珠海市御温泉渡假村景区: {
@@ -11408,6 +13033,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/defa48b1a9078be8b9c662323e6f9708",
+    rating: "",
     match: 1,
   },
   珠海市东澳岛旅游度假区: {
@@ -11415,6 +13041,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-20:00",
     image:
       "http://store.is.autonavi.com/showpic/2b31ac290af4dec39fa565e914902fcd",
+    rating: "",
     match: 0.99,
   },
   珠海市汤臣倍健透明工厂景区: {
@@ -11423,6 +13050,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "01-01至02-15 周一至周日 09:00-17:00 最晚进入16:00；02-16至02-19 周一至周日 全天关闭；02-20至12-31 周一至周日 09:00-17:00 最晚进入16:00",
     image:
       "https://store.is.autonavi.com/showpic/d8289b18a2295592b4faf9efbd99a6f4",
+    rating: "",
     match: 1,
   },
   汕头市中海度假村景区: {
@@ -11431,6 +13059,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "9月4日-9月30日:周一至周五:10:00-18:00,周六至周日:10:00-20:00具体以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/c540a73250d36be1caf3c4a44f125fcd",
+    rating: "",
     match: 1,
   },
   汕头南澳岛生态旅游区: {
@@ -11438,6 +13067,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/9cc5347c71fb3c7addad234b691acee2",
+    rating: "",
     match: 1,
   },
   汕头市澄海区莲华乡村旅游区: {
@@ -11445,6 +13075,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/66cde97bbe5b4a190000002288002561?type=pic",
+    rating: "",
     match: 0.96,
   },
   汕头市前美古村侨文化旅游区: {
@@ -11452,12 +13083,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/16a599cd0939eedcbab22ae01c4a26c6",
+    rating: "",
     match: 1,
   },
   佛山市三水荷花世界: {
     tel: "0757-87755303",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.66,
   },
   "佛山市（顺德区）陈村花卉世界": {
@@ -11465,6 +13098,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/a4ac1241c75362c1f46b31ce575ebde5",
+    rating: "",
     match: 1,
   },
   佛山市皂幕山旅游风景区: {
@@ -11472,6 +13106,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:00",
     image:
       "http://store.is.autonavi.com/showpic/fa81f1a0cec96736424dda8548e61b16",
+    rating: "",
     match: 1,
   },
   韶关市曹溪温泉假日度假村: {
@@ -11479,6 +13114,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0LKRZ61YI/comment/4C4D87CA_85AA_443F_9F69_DA06E496C716_L0_001_1284_170_1772205407732_94844118.jpg",
+    rating: "",
     match: 1,
   },
   韶关市广东大峡谷景区: {
@@ -11486,6 +13122,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/8a6dd1f1a31049be4a7d663ed8fabbcd",
+    rating: "",
     match: 0.96,
   },
   韶关市云门山生态文化旅游区: {
@@ -11494,6 +13131,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 09:00-18:00；云门山水上乐园开放时间:2026年7月13日-8月30日:周一至周四10:30-18:00；周五至周日10:30-19:00。 云门山水上冲关挑战赛时间:周一至周五15:00-17:30，周六日10:00-12:00、15:00-17:30。（到景区水上冲关报名处报名）。 景区民俗演出节目时间表（逢周一休息，大型节假日除外。适用于2025年）: 《瑶乡篝火晚会》:演出地点:瑶乡美食园；演出时间:19:40。 景区内项目表演时间: 海洋公园美人鱼剧场表演时间:11:00、13:00、14:00、15:00、16:00。 以上景区内各项演出表演时间及内容以景区实际公布为准。",
     image:
       "http://store.is.autonavi.com/showpic/aecdf6959c558b2daa094d638de2a2ef",
+    rating: "",
     match: 0.98,
   },
   "韶关市珠玑巷.梅关古道景区": {
@@ -11501,6 +13139,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-18:30 最晚进入18:00",
     image:
       "https://aos-comment.amap.com/B02EF0IATC/comment/content_media_external_file_59067_ss__1756460153275_52751762.jpg",
+    rating: "",
     match: 1,
   },
   韶关市东华山风景区: {
@@ -11508,6 +13147,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/fa9b742bb082a8af0000002998284395?type=pic",
+    rating: "",
     match: 0.96,
   },
   韶关市始兴县满堂客家大围景区: {
@@ -11515,6 +13155,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/b4c7080beee885aaded3277377340344",
+    rating: "",
     match: 1,
   },
   河源市万绿湖风景区: {
@@ -11523,6 +13164,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至5月,10月至12月 周一至周日 09:00-15:00；6月至9月 周一至周日 09:00-16:00",
     image:
       "http://store.is.autonavi.com/showpic/74f6d0900a57a3ad2fa82bbe4163cb73",
+    rating: "",
     match: 1,
   },
   河源市和平温泉之都旅游区: {
@@ -11530,6 +13172,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-24:00",
     image:
       "http://store.is.autonavi.com/showpic/606c48b8458f0a00350c210f5de37042",
+    rating: "",
     match: 1,
   },
   河源客天下水晶温泉国际旅游度假区: {
@@ -11537,6 +13180,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/2ddb2a16f5cc1888fa83a259da65e1c8",
+    rating: "",
     match: 0.66,
   },
   "中国河源·巴伐利亚庄园": {
@@ -11544,6 +13188,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/0eb1bcccf274e576583f64425e96f790",
+    rating: "",
     match: 0.64,
   },
   河源市恐龙文博园景区: {
@@ -11552,6 +13197,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一 不开放；周二-周日 09:00-17:30开放（17:00停止售票，17:00停止入园）4月7日 不开放；清明节,劳动节,端午节,中秋节,国庆节 09:00-17:30开放（17:00停止售票，17:00停止入园）；具体开放时间以官方通知为准",
     image:
       "https://store.is.autonavi.com/showpic/de905df07b60ce2f0000003026218557?type=pic",
+    rating: "",
     match: 0.88,
   },
   梅州市雁山湖国际花园度假村: {
@@ -11559,6 +13205,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://aos-comment.amap.com/B0FFJKKLKW/comment/4fdbb839e059eee07ccc1298b0a87f86_2048_2048_80.jpg",
+    rating: "",
     match: 0.98,
   },
   梅州市叶剑英纪念园: {
@@ -11566,6 +13213,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一 全天关闭；周二至周日 09:00-17:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/6e3c30989fc2cda8af587349827a98c7",
+    rating: "",
     match: 1,
   },
   梅州市长潭旅游区: {
@@ -11574,6 +13222,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 00:00-24:00 2026-02-17至2026-02-23 周一至周日 07:00-17:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/c530a33f-0248-47e7-8c5b-0a990775080e.jpg",
+    rating: "",
     match: 0.97,
   },
   梅州市百侯名镇旅游区: {
@@ -11581,6 +13230,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/e963805f50b8111fd232eb3000c127ab",
+    rating: "",
     match: 1,
   },
   梅州市熙和湾客乡文化产业园: {
@@ -11588,6 +13238,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00 最晚进入17:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/0d8a905e-b4d7-484d-8c8f-d71c5ce35907.jpg",
+    rating: "",
     match: 0.75,
   },
   梅州市张弼士故居旅游区: {
@@ -11595,18 +13246,21 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/16e572b9a1cebf180000001164086752?type=pic",
+    rating: "",
     match: 1,
   },
   惠州市南昆山大观园生态度假区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.72,
   },
   惠州市海滨温泉旅游度假区: {
     tel: "0752-8578718",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.87,
   },
   "惠州·巽寮国际滨海旅游度假区": {
@@ -11614,6 +13268,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/f1bcd2cf-211e-4320-8915-65291d405ade.jpg",
+    rating: "",
     match: 0.95,
   },
   "惠州五矿·哈施塔特旅游小镇": {
@@ -11622,6 +13277,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1/1-12/31 09:30–18:00开放 最晚进入18:00；劳动节 09:30–20:00开放 最晚进入20:00",
     image:
       "https://store.is.autonavi.com/showpic/1c52de3cd5b8233d0000003135004187?type=pic",
+    rating: "",
     match: 0.69,
   },
   惠州市大亚湾红树林城市湿地公园: {
@@ -11629,6 +13285,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/d8a0391c8df8e0370000001414078656?type=pic",
+    rating: "",
     match: 0.78,
   },
   汕尾市玄武山旅游区: {
@@ -11636,6 +13293,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-22:00 最晚进入21:30",
     image:
       "http://store.is.autonavi.com/showpic/cbb11f93936b3894ec31b659c4e9ea63",
+    rating: "",
     match: 1,
   },
   汕尾市凤山祖庙旅游区: {
@@ -11644,6 +13302,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "08:30-22:00 最晚进入22:001、景区常规闭园前 1 小时停止检票入园,请合理规划抵达时间。2、MR 秀项目需提前半小时现场预约场次,景区当日场次有余位时,可根据现场空位即时安排体验当日预约名额约满即止,无法加场。3、如遇恶劣天气、设备检修、活动管控等特殊情况,景区及 MR 秀场次会临时调整、暂停开放,最终营业与场次安排以景区现场公示为准。4、法定节假旺季客流高峰期景区会微调开闭园时段,出行前可参考平台实时通知。具体开放时间以现场公示为准",
     image:
       "http://store.is.autonavi.com/showpic/37a03b9b5c82404d8b23eb73dfd8294a",
+    rating: "",
     match: 0.57,
   },
   汕尾市海丰莲花山度假村: {
@@ -11651,6 +13310,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00；泳池开放时间:14:00-19:00 18:30停止入园",
     image:
       "http://store.is.autonavi.com/showpic/d521dee7f36b72058d834cbfba34c88b",
+    rating: "",
     match: 1,
   },
   汕尾红海湾旅游区: {
@@ -11658,6 +13318,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/75592ba55d549703e8f4b3aa28daf80b",
+    rating: "",
     match: 0.6,
   },
   东莞市松山湖生态景区: {
@@ -11665,6 +13326,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFFRR75I/comment/content_media_external_file_100004017_1761670904000_83579257.jpg",
+    rating: "",
     match: 0.97,
   },
   东莞市观音山国家森林公园: {
@@ -11672,6 +13334,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFHSMQHI/comment/9EDDCE60_50CC_4245_B516_FC4D19CAB655_L0_001_1500_200_1764596574229_14309417.jpg",
+    rating: "",
     match: 0.74,
   },
   东莞市香市动物园: {
@@ -11680,6 +13343,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周五 09:00-17:00 最晚进入17:00；1月至3月,11月至12月 周六至周日 08:30-17:00 最晚进入17:00；4月至10月 周一至周日 08:30-18:00 最晚进入17:00；【周一至周五】 综合表演:10:30,14:00 海洋动物表演:12:00,15:30 【周末及节假日】 综合表演、海洋动物表演:10:30,12:30,14:30,16:00",
     image:
       "http://store.is.autonavi.com/showpic/5ee082737177482338c0194aead6da21",
+    rating: "",
     match: 1,
   },
   东莞市展览馆: {
@@ -11687,6 +13351,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFHS5YSK/comment/content_media_external_file_100001293_1756783720639_24532314.jpg",
+    rating: "",
     match: 0.83,
   },
   东莞市可园博物馆景区: {
@@ -11694,6 +13359,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "https://aos-comment.amap.com/comment/content_service__1772103432377_60806094_1772103546834_43450877.jpg",
+    rating: "",
     match: 0.62,
   },
   江门市新会古兜温泉旅游度假村: {
@@ -11701,6 +13367,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/ec3b69b7bf9b735a91a73ec409119210",
+    rating: "",
     match: 0.6,
   },
   江门市锦江温泉旅游度假区: {
@@ -11709,6 +13376,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-24:00 最晚进入23:30；1、温泉冲浪开放时间:周一至周四:10:30、14:30、20:30、22:30、16:30、17:30、19:30、10:30、11:30；周五至周日:13:30、14:30、15:30、16:30、17:30、19:30、20:30、21:30、22:30（温泉冲浪每轮开放持续时间为15分钟） 2、温泉环流开放时间:周一至周四:10:30~22:30；周五至周日:10:00~22:30 3、养生园开放时间:周一至周日:08:00~23:00 4、鱼疗开放时间:周一至周日:09:00~23:00",
     image:
       "http://store.is.autonavi.com/showpic/0474ff1a7f4499bff26ec2c834421b88",
+    rating: "",
     match: 1,
   },
   江门市川岛旅游度假区: {
@@ -11717,6 +13385,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05-01至10-08 周一至周日 08:30-18:30；10-09至04-30 周一至周日 08:30-17:30；由于天气，航班时刻不固定，具体船票班次请咨询景区电话",
     image:
       "http://store.is.autonavi.com/showpic/ae26dff2b840c84009f7452da8cd6ea6",
+    rating: "",
     match: 1,
   },
   江门市那琴半岛地质海洋公园: {
@@ -11724,6 +13393,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-19:00 最晚进入18:00",
     image:
       "http://store.is.autonavi.com/showpic/db7b13d77e850cdd1cd25d69abe3ac5e",
+    rating: "",
     match: 0.99,
   },
   江门市恩平泉林黄金小镇休闲旅游区: {
@@ -11731,12 +13401,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/3ba2e2f303a0b38cb92742b771746492",
+    rating: "",
     match: 0.98,
   },
   阳江市凌霄岩风景区: {
     tel: "0662-7879126",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.83,
   },
   阳江市春湾风景区: {
@@ -11744,6 +13416,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/7aa958ae1485348f0000005326422556?type=pic",
+    rating: "",
     match: 1,
   },
   湛江湖光岩风景区: {
@@ -11752,6 +13425,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 07:30-18:00；4月至10月 周一至周日 07:00-18:30",
     image:
       "http://store.is.autonavi.com/showpic/e6c6bd25bceabdd14ce1fec134215ef6",
+    rating: "",
     match: 0.98,
   },
   湛江市金沙湾滨海休闲旅游区: {
@@ -11759,6 +13433,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFHYGYG4/comment/30C7FA92_D86B_4AD1_A895_ECAA1D08D2CD_L0_001_2000_150_1752636404357_81820763.jpg",
+    rating: "",
     match: 0.99,
   },
   湛江市茂德公鼓城度假区: {
@@ -11766,6 +13441,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-22:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/37386384-c088-432c-812c-7bff4efa8ac0.jpg",
+    rating: "",
     match: 1,
   },
   湛江市鼎龙湾国际海洋旅游区: {
@@ -11774,6 +13450,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 00:00-24:00；德萨斯水世界:2026年7月水世界营业时间调整如下: 2026年7-8月:营业时间:13:00-21:30；售票时间:12:30-20:20；停止入园时间:20:30。 海田汤泉:暂停营业。",
     image:
       "http://store.is.autonavi.com/showpic/91a295e2d6aef7fc8d65e0c4fc0a6fa7",
+    rating: "",
     match: 0.91,
   },
   茂名森林公园: {
@@ -11781,6 +13458,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/a769ca5b19189bcd46e048f9c518a249",
+    rating: "",
     match: 1,
   },
   茂名市电白御水古温泉度假区: {
@@ -11788,6 +13466,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/1c03988b047fa7479dc6f703402e8876",
+    rating: "",
     match: 0.99,
   },
   茂名市冼太夫人故里文化旅游景区: {
@@ -11795,6 +13474,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFGAVL82/comment/ef8ebb2623ba6b2470eaff34d239dd3d_2048_2048_80.jpg",
+    rating: "",
     match: 0.98,
   },
   "茂名市广垦（茂名）国家热带农业公园": {
@@ -11802,6 +13482,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/1cb16c53c01fefeca6ee153c8904beb4",
+    rating: "",
     match: 0.99,
   },
   茂名市信宜窦州古城景区: {
@@ -11809,6 +13490,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-20:00",
     image:
       "https://store.is.autonavi.com/showpic/cd658630bd11ad81386c16a3ede49bec",
+    rating: "",
     match: 0.99,
   },
   茂名市高州仙人洞旅游景区: {
@@ -11816,18 +13498,21 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/db2f99e2e135e9446da981bbcaca784c",
+    rating: "",
     match: 0.98,
   },
   肇庆市龙母祖庙景区: {
     tel: "0758-7619855",
     openTime: "周一至周日 07:00-17:30",
     image: "",
+    rating: "",
     match: 0.57,
   },
   肇庆市盘龙峡景区: {
     tel: "0758-7235038",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.66,
   },
   肇庆市德庆学宫景区: {
@@ -11835,6 +13520,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/923a2cec28ddce6ceaabec24f060fb84",
+    rating: "",
     match: 1,
   },
   肇庆市四会奇石河景区: {
@@ -11842,6 +13528,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/6d83a253a38f6258c39de35a902a34d1",
+    rating: "",
     match: 1,
   },
   清远市碧桂园假日半岛故乡里旅游度假区: {
@@ -11849,6 +13536,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/28ddbde2966bd6905c093d20faf83971",
+    rating: "",
     match: 0.99,
   },
   清远市黄腾峡生态旅游区: {
@@ -11857,6 +13545,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "10月 周一至周五 13:00-15:30；10月 周六至周日 12:00-16:00；11月 周一至周五 12:30-21:30；11月 周六至周日 09:00-21:30；景区营业时间【10.14-11.01】 黄腾峡10月营业时间: 10月周末（周六日）: 景区营业时间:09:00-21:30 漂流开放时间:12:00-16:00 10月平日（周一至周五）: 景区营业时间:12:30-21:30 漂流开放时间:13:00-15:30 （漂流项目提前30分钟停止售票） 黄腾峡11月营业时间: 11月周末（周六日）: 景区营业时间:09:00-21:30 漂流开放时间（11.01周日）:12:00-16:00 （漂流项目提前30分钟停止售票） 11月平日（周一至周五）: 景区营业时间:12:30-21:30",
     image:
       "http://store.is.autonavi.com/showpic/ee62d4cae8f0bb2b0f8cfe02ec5acef9",
+    rating: "",
     match: 0.87,
   },
   清远市新银盏温泉景区: {
@@ -11864,6 +13553,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0IR7Y53PD/comment/50b13a7a1564a17fe55b8a9fa723e3c0_2048_2048_80.jpg",
+    rating: "",
     match: 0.62,
   },
   清远市南岗千年瑶寨景区: {
@@ -11871,6 +13561,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/170c066a8707e5b20000002721248362?type=pic",
+    rating: "",
     match: 0.66,
   },
   清远市古龙峡生态旅游区: {
@@ -11879,6 +13570,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 09:00-17:00 最晚进入16:00；子项目开放时间请以景区现场公布为准",
     image:
       "http://store.is.autonavi.com/showpic/9a6122dd9be60c19d5d90cfeb003dbbb",
+    rating: "",
     match: 0.97,
   },
   潮州市韩文公祠: {
@@ -11887,6 +13579,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周二至周日 08:30-17:30 最晚进入17:00 ；周一 全天不开放(法定节假日除外)；具体开放时间以官方通知为准",
     image:
       "https://store.is.autonavi.com/showpic/f81e169291e7f9620000003789264849?type=pic",
+    rating: "",
     match: 1,
   },
   潮州市广济桥文物旅游景区: {
@@ -11895,6 +13588,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "02/20-10/31 周一-周五 10:00-17:00开放；02/20-10/31 周六-周日 09:00-17:00开放；11/01-01/31 周一-周五 10:00-16:00开放；11/01-01/31 周六-周日 09:00-16:00开放",
     image:
       "http://store.is.autonavi.com/showpic/3f97055e9623bf9a189a34c79eba0c05",
+    rating: "",
     match: 1,
   },
   潮州市东山湖度假村景区: {
@@ -11902,6 +13596,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B030000LF1/comment/20260311-b77ad69d67ba11285db9465e-6JA0rkxcpeI95xPMfwg2Il.jpg",
+    rating: "",
     match: 0.67,
   },
   揭阳市京明温泉度假村: {
@@ -11909,12 +13604,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/241f21987a0c8bb3bbf342a73d74070e",
+    rating: "",
     match: 1,
   },
   揭阳市阳美玉都旅游景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.75,
   },
   揭西黄满寨瀑布旅游区: {
@@ -11922,6 +13619,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "08:30-17:00 (最晚进入16:40)2026-02-16请咨询景区,2026-02-17至2026-02-22,08:30-17:30, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 1,
   },
   云浮市六祖故里旅游度假区: {
@@ -11929,6 +13627,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B02FE0N8P1/comment/content_media_external_file_100013009_1761366086519_13656338.jpg",
+    rating: "",
     match: 0.62,
   },
   云浮市翔顺金水台温泉小镇景区: {
@@ -11936,6 +13635,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-24:00",
     image:
       "https://aos-comment.amap.com/B0KUFC6Y2E/comment/4B332661_CD8A_43F2_92C3_AF3C228D9649_L0_001_1500_200_1767097583134_79793633.jpg",
+    rating: "",
     match: 0.75,
   },
   南宁嘉和城景区: {
@@ -11943,6 +13643,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/aa7ee27c0f7b431e9526e362bf0a17ba",
+    rating: "",
     match: 0.97,
   },
   南宁九曲湾温泉景区: {
@@ -11950,6 +13651,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-01:00",
     image:
       "https://store.is.autonavi.com/showpic/49cb002ade11d99b0000003055234616?type=pic",
+    rating: "",
     match: 0.99,
   },
   广西八桂田园: {
@@ -11957,6 +13659,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/ff081df87e550d1cfbdf5bf83e5bdacd",
+    rating: "",
     match: 0.99,
   },
   南宁市动物园: {
@@ -11965,6 +13668,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "8:30-17:30,最晚入园17:00；节假日:10月1日-7日:8:00-21:00,20:10停止检票",
     image:
       "http://store.is.autonavi.com/showpic/76fc45c50411c133147760e9215a8921",
+    rating: "",
     match: 0.83,
   },
   广西药用植物园: {
@@ -11972,6 +13676,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入18:00",
     image:
       "http://store.is.autonavi.com/showpic/536eb841def2948dcad416a2e7614051",
+    rating: "",
     match: 1,
   },
   南宁大明山风景旅游区: {
@@ -11979,6 +13684,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/75f6c5945f4c2b56818fc50798c4c4d3",
+    rating: "",
     match: 1,
   },
   广西民族博物馆: {
@@ -11986,6 +13692,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFF8DML3/comment/22a6c70860b3c91ec7242ad3c87d889e_2048_2048_80.jpg",
+    rating: "",
     match: 0.57,
   },
   南宁市乡村大世界景区: {
@@ -11993,12 +13700,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/84857c28be7ffed70000003010110676?type=pic",
+    rating: "",
     match: 1,
   },
   南宁市良凤江森林旅游区: {
     tel: "",
     openTime: "08:00-17:00 最晚进入17:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.61,
   },
   广西规划馆景区: {
@@ -12006,6 +13715,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周二至周日 09:00-16:00；节假日营业时间以官方通知为准",
     image:
       "https://aos-comment.amap.com/B03030UEH7/comment/file_media_Photo_3257_IMG_1752818721_2997_IMG_20250718_140341_jpg_ss_2.jpg",
+    rating: "",
     match: 1,
   },
   南宁市民歌湖景区: {
@@ -12013,6 +13723,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0LKY53TJP/comment/D2CEC953_AB70_446E_9536_BFE197E452BD_L0_001_2000_150_1766740139679_10436354.jpg",
+    rating: "",
     match: 0.83,
   },
   隆安县龙虎山旅游景区: {
@@ -12020,6 +13731,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/258f011bdf8480feace75e69dca93726",
+    rating: "",
     match: 0.89,
   },
   南宁市凤岭儿童公园: {
@@ -12027,6 +13739,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFF4L4IX/comment/content_media_external_file_100001553_1768280247648_24965089.jpg",
+    rating: "",
     match: 0.67,
   },
   南宁马山金伦洞景区: {
@@ -12034,6 +13747,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/3394523d65032f3b36c548b7cb81f91c",
+    rating: "",
     match: 0.99,
   },
   上林县金莲湖景区: {
@@ -12041,6 +13755,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/4d14a748e1c568989806f73799d3ec6e",
+    rating: "",
     match: 0.98,
   },
   南宁市人民公园: {
@@ -12048,6 +13763,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/26ef47a210ee53624d86bba662bfeb4f",
+    rating: "",
     match: 1,
   },
   南宁花花大世界景区: {
@@ -12055,6 +13771,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/702abc251c8988cbfe571537d9c12e7b",
+    rating: "",
     match: 0.98,
   },
   南宁昆仑关旅游风景区: {
@@ -12063,6 +13780,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 09:00-17:00；景区营业时间9:00-17:00 博物馆开放时间:9:00-16:30（周一闭馆，周二至周日开馆）",
     image:
       "http://store.is.autonavi.com/showpic/8eee2f15b233bf05e7032165267bffe1",
+    rating: "",
     match: 1,
   },
   南宁上林县大龙湖景区: {
@@ -12070,6 +13788,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00 最晚进入16:00",
     image:
       "https://aos-comment.amap.com/B03030VM43/comment/content_media_external_file_100001506_1770293862235_33411482.jpg",
+    rating: "",
     match: 0.91,
   },
   "水锦·顺庄": {
@@ -12077,12 +13796,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/b6b9537263cb3b82107f698c8afebf61",
+    rating: "",
     match: 0.8,
   },
   龙门水都景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.96,
   },
   南宁园博园景区: {
@@ -12090,12 +13811,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "5月1日-10月31日:9:00-18:00；11月30日-4月30日9:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/01a3b5fc1ebab0b64849c9409f830eef",
+    rating: "",
     match: 1,
   },
   南宁万达茂景区: {
     tel: "",
     openTime: "周一至周日 09:00-22:00",
     image: "",
+    rating: "",
     match: 1,
   },
   南宁金花茶公园: {
@@ -12103,6 +13826,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/8f7db7c24041ef2291ff8858d24147b1",
+    rating: "",
     match: 1,
   },
   广西百益上河城旅游景区: {
@@ -12110,6 +13834,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/70554f9d48e35118a6b0f47d65b3c812",
+    rating: "",
     match: 1,
   },
   邕宁区蒲津公园: {
@@ -12117,6 +13842,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:30",
     image:
       "https://aos-comment.amap.com/B03030TBN3/comment/B366AD43_6AB2_4A27_8B9F_8ED29E2AFD9A_L0_001_1290_957_1735153741279_97995505.jpg",
+    rating: "",
     match: 1,
   },
   南宁花雨湖生态休闲旅游区: {
@@ -12124,6 +13850,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/efdd64dc87f7220422291ff2af6bb276",
+    rating: "",
     match: 0.99,
   },
   古辣稻花香里旅游区: {
@@ -12131,6 +13858,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "https://aos-comment.amap.com/B0FFKZ2NZ8/comment/content_media_external_images_media_1000180748_ss__1727797463642_70295025.jpg",
+    rating: "",
     match: 0.98,
   },
   广西高峰森林公园: {
@@ -12138,6 +13866,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/a499f870549681bcb84e251cc83e2b97",
+    rating: "",
     match: 0.97,
   },
   上林县大庙江生态旅游景区: {
@@ -12145,6 +13874,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "https://aos-comment.amap.com/B0G2B795BU/comment/5ab7d4894f89e6f6f14712c1203362ce_2048_2048_80.jpg",
+    rating: "",
     match: 0.94,
   },
   五象湖公园: {
@@ -12152,6 +13882,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/7e2bec4e871eb53c0000003084330864?type=pic",
+    rating: "",
     match: 1,
   },
   顶蛳山田园风光区: {
@@ -12159,6 +13890,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "https://aos-comment.amap.com/B0FFIXPKSX/comment/a3c5d6e9e5e405bf277e36c620a00dab_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   北海海底世界: {
@@ -12167,6 +13899,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 09:00-18:00 最晚进入17:00；8月15日-8月16日 08:10-18:00；具体开放时间以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/5b8c3295982bdc98f00796b0f4790ebd",
+    rating: "",
     match: 1,
   },
   北海海洋之窗: {
@@ -12175,6 +13908,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "01-01至05-29 周一至周日 09:00-17:30 最晚进入17:30；05-30至06-01 周一至周日 08:30-18:00；06-02至12-31 周一至周日 09:00-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/16c544c23ea224915e99438fd30eecf7",
+    rating: "",
     match: 1,
   },
   北海老城景区: {
@@ -12182,6 +13916,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:30-21:30, 具体开放时间以现场公示为准",
     image:
       "http://store.is.autonavi.com/showpic/96d421d29ae341d1f8a3d34b35a88da8",
+    rating: "",
     match: 1,
   },
   北海园博园: {
@@ -12189,6 +13924,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/7157fc1a896b925be573313138486955",
+    rating: "",
     match: 0.99,
   },
   北海汉闾文化园: {
@@ -12196,6 +13932,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入16:30",
     image:
       "https://aos-comment.amap.com/B0FFHGKHN0/comment/48734A57_EB56_4FA2_ADEF_0CAC84665EB5_L0_001_2000_132_1773477560744_44953782.jpg",
+    rating: "",
     match: 0.99,
   },
   涠洲岛圣堂景区: {
@@ -12203,6 +13940,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/4fd9a0e8-dd65-463b-a27d-a04987b719c2.jpg",
+    rating: "",
     match: 0.96,
   },
   星岛湖景区: {
@@ -12210,6 +13948,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/f345e931826c2daa42a25d9a4df23553",
+    rating: "",
     match: 1,
   },
   月饼小镇: {
@@ -12217,6 +13956,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-22:30",
     image:
       "https://aos-comment.amap.com/B0FFIDNOAZ/comment/0EBE1D47_94BA_447C_8E48_9DE6BDC4BD19_L0_001_1500_200_1771947552168_12461888.jpg",
+    rating: "",
     match: 0.98,
   },
   高德古镇: {
@@ -12224,6 +13964,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/ae9661ddb543493d0000002997852587",
+    rating: "",
     match: 0.98,
   },
   桂平西山风景名胜区: {
@@ -12231,6 +13972,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00,庙宇08:00-16:30,2026年2月15日至2026年2月23日关闭",
     image:
       "http://store.is.autonavi.com/showpic/a8f57e0015e7d8066e0d0006879bba13",
+    rating: "",
     match: 1,
   },
   太平天国金田起义地址景区: {
@@ -12238,6 +13980,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/e3a7c2913ea2271eb85a63e81596ad01",
+    rating: "",
     match: 1,
   },
   桂平市西山泉旅游度假景区: {
@@ -12245,6 +13988,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0I2JL0SWY/comment/1997ef51f708fd8cd7496c43cd147f69_2048_2048_80.jpg",
+    rating: "",
     match: 0.81,
   },
   平南县龚州公园: {
@@ -12252,6 +13996,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/6f42cf20d87f62a30000002917598584?type=pic",
+    rating: "",
     match: 0.99,
   },
   北帝山旅游区: {
@@ -12259,6 +14004,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/75ca79243e05ad59066405da6b8732a5",
+    rating: "",
     match: 0.99,
   },
   贵港园博园: {
@@ -12266,6 +14012,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/45e904f1aed8203f0000003118100649?type=pic",
+    rating: "",
     match: 0.99,
   },
   荷美覃塘景区: {
@@ -12273,12 +14020,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-20:00",
     image:
       "http://store.is.autonavi.com/showpic/5a17fab4bd9afec04fcf8c6172745d81",
+    rating: "",
     match: 0.89,
   },
   大桂山国家森林公园: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   姑婆山景区: {
@@ -12286,6 +14035,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/6f8866f7ced5beea04bb50ffd1d32b5a",
+    rating: "",
     match: 0.88,
   },
   十八水景区: {
@@ -12294,6 +14044,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-18:00 最晚进入17:00；线上停止售票时间16:30，线下停止售票时间17:00",
     image:
       "http://store.is.autonavi.com/showpic/c46f4d08ef909d9a9369c32918ee752c",
+    rating: "",
     match: 1,
   },
   神仙湖景区: {
@@ -12301,6 +14052,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/76370e25c3e5e85e74e80fe550613f0e",
+    rating: "",
     match: 0.99,
   },
   神剑石林: {
@@ -12308,6 +14060,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://aos-comment.amap.com/B0FFKWVJ17/comment/content_media_external_file_100040254_1756911580703_75736127.jpg",
+    rating: "",
     match: 1,
   },
   黄姚古镇景区: {
@@ -12315,6 +14068,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/02eaa18c7bc091a50000002477118467?type=pic",
+    rating: "",
     match: 1,
   },
   桂江生态旅游景区: {
@@ -12322,6 +14076,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/69a6ee397d0de3bb0000002346024633?type=pic",
+    rating: "",
     match: 1,
   },
   武宣县八仙天池景区: {
@@ -12329,6 +14084,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周五 08:00-16:30；周六至周日 08:00-18:30",
     image:
       "https://store.is.autonavi.com/showpic/6fc1d5d819fc01770000000978802024?type=pic",
+    rating: "",
     match: 1,
   },
   忻城薰衣草庄园景区: {
@@ -12336,6 +14092,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00 最晚进入17:30",
     image:
       "https://store.is.autonavi.com/showpic/0ec6d09ba73b358a0000002360330434?type=pic",
+    rating: "",
     match: 0.99,
   },
   忻城莫土司衙署景区: {
@@ -12343,12 +14100,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/c1270377a945cd6eb5d24aaccf9dd33c",
+    rating: "",
     match: 0.99,
   },
   忻城县乐滩竹海景区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.96,
   },
   山水瑶城景区: {
@@ -12356,6 +14115,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/80bd3efe5ca7b6641b423b114bb9a57f",
+    rating: "",
     match: 1,
   },
   圣堂山景区: {
@@ -12363,6 +14123,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:00；下山末班车18:00。",
     image:
       "http://store.is.autonavi.com/showpic/b2ad750ffd55ee1fb7e1d36423aae99b",
+    rating: "",
     match: 1,
   },
   古沙沟景区: {
@@ -12370,6 +14131,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/2f23d8411626a455becf05d610aa8bd0",
+    rating: "",
     match: 0.98,
   },
   合山市国家矿山公园: {
@@ -12377,6 +14139,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://aos-comment.amap.com/B0FFFP46KV/comment/85B06B5D_04E3_44A1_8589_D95BD5E2BF5A_L0_001_2000_150_1769245756259_60706424.jpg",
+    rating: "",
     match: 0.87,
   },
   六万大山森林公园: {
@@ -12384,6 +14147,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFI7YGR4/headerImg/e0e7733b9b24a861e8fdb890ac5502d1_2048_2048_80.jpg",
+    rating: "",
     match: 0.95,
   },
   玉林市陆川谢鲁山庄风景名胜区: {
@@ -12391,6 +14155,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入18:00",
     image:
       "http://store.is.autonavi.com/showpic/f5bfe026318cebe6725520923945482b",
+    rating: "",
     match: 0.99,
   },
   玉林容县都峤山风景区: {
@@ -12398,6 +14163,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入17:30",
     image:
       "https://store.is.autonavi.com/showpic/d497285c9db02e050000003676874819?type=pic",
+    rating: "",
     match: 0.68,
   },
   "玉林容州·民国小镇": {
@@ -12405,6 +14171,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-22:00；21:30停止入场",
     image:
       "http://store.is.autonavi.com/showpic/17d25f4f612b74bbe359099e8d592b3d",
+    rating: "",
     match: 0.55,
   },
   大容山国家森林公园: {
@@ -12412,6 +14179,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/504da99985d0091218af58762ddb871b",
+    rating: "",
     match: 0.99,
   },
   广西铜石岭国际旅游度假区: {
@@ -12419,6 +14187,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/3e8c2eb3-f01c-4405-ae90-fc9441429f04.jpg",
+    rating: "",
     match: 0.99,
   },
   北流市会仙河公园: {
@@ -12426,6 +14195,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFFDUGL3/comment/8301ee46d319f83cfd7a5caa557a277f_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   大新县大阳幽谷景区: {
@@ -12433,6 +14203,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "07:30-22:20；17:30-22:20 , 具体开放时间以现场公示为准",
     image:
       "http://store.is.autonavi.com/showpic/2f78c0883278688d479bda968ccf8c93",
+    rating: "",
     match: 1,
   },
   崇左左江斜塔景区: {
@@ -12440,6 +14211,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/fe90dfd4980b45cfccd2ceee02e18fc0",
+    rating: "",
     match: 1,
   },
   "崇左石景林·园博园": {
@@ -12447,12 +14219,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFL0SQZE/comment/3861732375081722b06e7e995a331463_2048_2048_80.jpg",
+    rating: "",
     match: 0.62,
   },
   "国际·如意岛生态景区": {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.87,
   },
   龙州起义纪念馆: {
@@ -12460,6 +14234,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B06EB00236/comment/E4EE1509_762A_4226_8305_244BC16DDEA0_L0_001_2000_150_1749985419366_79363684.jpg",
+    rating: "",
     match: 1,
   },
   大新龙宫仙境景区: {
@@ -12467,6 +14242,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/1c6069daa0083308c9d959fd319d28a7",
+    rating: "",
     match: 1,
   },
   小连城: {
@@ -12474,6 +14250,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/d702e277ddccfb087b01d3dae1b47166",
+    rating: "",
     match: 0.99,
   },
   发现弄岗景区: {
@@ -12481,6 +14258,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/b68f945342255b470000002895250489?type=pic",
+    rating: "",
     match: 1,
   },
   崇左市凭祥红木文博城景区: {
@@ -12488,6 +14266,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFGWDIW5/comment/content_media_external_file_100004032_1767121580550_39910997.jpg",
+    rating: "",
     match: 1,
   },
   广西派阳山森林公园: {
@@ -12495,6 +14274,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/86a3cd85d6b406400000003148424737?type=pic",
+    rating: "",
     match: 1,
   },
   龙谷湾景区: {
@@ -12502,6 +14282,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周三至周日:10:00-18:00,周一-周二不开放(节假日周一二正常营业)",
     image:
       "http://store.is.autonavi.com/showpic/219a7e80e698950f448f64283daa3188",
+    rating: "",
     match: 0.99,
   },
   白云山: {
@@ -12509,6 +14290,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-18:00",
     image:
       "https://comment-oss-online.oss-cn-wulanchabu.aliyuncs.com/B0FFK177HP/comment/1647243854915_temp.jpg",
+    rating: "",
     match: 0.99,
   },
   中山公园: {
@@ -12516,6 +14298,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/6bde37c0052a25c50000003712998794?type=pic",
+    rating: "",
     match: 1,
   },
   梧州市玫瑰湖公园: {
@@ -12524,12 +14307,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 07:00-22:30 2026-05-01至2026-05-05 周一至周日 07:00-22:30",
     image:
       "https://aos-comment.amap.com/B030600KW8/comment/content_media_external_images_media_2199_ss__1735183654822_04447737.jpg",
+    rating: "",
     match: 0.99,
   },
   苍海旅游区: {
     tel: "",
     openTime: "08:00-22:30, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.88,
   },
   天龙顶山地公园: {
@@ -12537,6 +14322,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-16:30 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/926632801e41a4850e63e445a3f2f7da",
+    rating: "",
     match: 0.97,
   },
   石表山景区: {
@@ -12544,6 +14330,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/13a8eadebd821b4cd428d9ecb85e4525",
+    rating: "",
     match: 0.99,
   },
   永安王城景区: {
@@ -12551,6 +14338,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/6c3a16a9075f178cce6fd1bcee8ed9f9",
+    rating: "",
     match: 1,
   },
   长坪水韵瑶寨景区: {
@@ -12558,6 +14346,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入18:00",
     image:
       "https://aos-comment.amap.com/B0FFIC7X3K/comment/7ae8bbb4affd36b0606706d465c02e75_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   梁羽生公园: {
@@ -12565,6 +14354,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/7abe91d5a6471a10aca1415bb22cae93",
+    rating: "",
     match: 1,
   },
   夏宜醉美瑶乡景区: {
@@ -12572,6 +14362,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFL0YPAJ/headerImg/547ee2401501a82a5d8cf2f5f7f501bc_2048_2048_80.jpg",
+    rating: "",
     match: 0.98,
   },
   西炮台公园: {
@@ -12579,6 +14370,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0306004SO/comment/content_media_external_images_media_67000_ss__1728402239181_62560477.jpg",
+    rating: "",
     match: 1,
   },
   蝴蝶谷景区: {
@@ -12586,6 +14378,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://store.is.autonavi.com/showpic/43729eaeeac261ea0000008575512678?type=pic",
+    rating: "",
     match: 0.98,
   },
   钦州三娘湾景区: {
@@ -12594,6 +14387,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 00:00-24:00；观光车运营时间:8:00-19:00 满3000人将停止售票",
     image:
       "http://store.is.autonavi.com/showpic/7c9c597a65b8b3478a10de4f49f78da8",
+    rating: "",
     match: 0.98,
   },
   钦州刘冯故居景区: {
@@ -12601,12 +14395,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/5e766ff3a44c273cfa0236fb60190e3c",
+    rating: "",
     match: 0.92,
   },
   钦州八寨沟旅游景区: {
     tel: "0777-5788028",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.68,
   },
   钦州园博园景区: {
@@ -12614,6 +14410,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-21:00 最晚进入20:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/4d14909b-e338-4f54-9174-5c15b579a993.jpg",
+    rating: "",
     match: 0.99,
   },
   钦州市林湖森林公园: {
@@ -12621,6 +14418,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-19:00 最晚进入16:00",
     image:
       "https://aos-comment.amap.com/B0309001FH/comment/0989297B_7EE0_4B02_ADC6_3E5357DACBDA_L0_001_2000_1300_1741415771086_25248383.jpg",
+    rating: "",
     match: 1,
   },
   钦州市大芦古村文化生态旅游区: {
@@ -12628,6 +14426,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:30",
     image:
       "https://store.is.autonavi.com/showpic/2e611c07f92c07960000007843504035?type=pic",
+    rating: "",
     match: 1,
   },
   钦州市那雾山森林公园: {
@@ -12635,6 +14434,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入16:00",
     image:
       "https://aos-comment.amap.com/B0FFI7OJZ7/comment/content_media_external_file_100010024_1770365529870_66529447.jpg",
+    rating: "",
     match: 1,
   },
   钦州市浦北县大朗书院景区: {
@@ -12642,6 +14442,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00；具体营业状态以当天开放情况为准",
     image:
       "https://store.is.autonavi.com/showpic/59f745a23ce462930000003079222782?type=pic",
+    rating: "",
     match: 1,
   },
   钦州市钦北区碗窑梨花谷景区: {
@@ -12649,6 +14450,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00, 18:00停止入场时间:18:00(1月1日-12月31日)",
     image:
       "https://aos-comment.amap.com/B0FFG30KDN/comment/04677c94d23ee2d0af2fdfde95453d2f_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   北部湾大学景区: {
@@ -12656,6 +14458,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/5c306ea1e2f162460000003456642436?type=pic",
+    rating: "",
     match: 0.99,
   },
   三江侗天宫文化景区: {
@@ -12663,6 +14466,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-18:00 最晚进入17:30",
     image:
       "https://aos-comment.amap.com/B0H0CDW6TR/comment/02df9c6a74a756a8a4a00fd72144a0c8_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   融水雨卜苗寨景区: {
@@ -12670,6 +14474,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-20:00",
     image:
       "https://store.is.autonavi.com/showpic/9554393c0cc94d3a0000004693950021?type=pic",
+    rating: "",
     match: 1,
   },
   融水老子山景区: {
@@ -12677,6 +14482,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFF35QH0/comment/777b932f5c5569c4a409d4bd47132579_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   融水县田头苗寨景区: {
@@ -12684,6 +14490,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/1f7a9dc93fc47f05475e7d6dc71f502e",
+    rating: "",
     match: 0.99,
   },
   柳城县红马山景区: {
@@ -12691,6 +14498,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B03040PQJE/comment/1B922174_7F94_471E_ADB8_4326D3096B12_L0_001_1500_200_1751961841189_47564307.jpg",
+    rating: "",
     match: 1,
   },
   三江县冠洞景区: {
@@ -12698,6 +14506,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-19:00",
     image:
       "https://store.is.autonavi.com/showpic/1e69a4babda9c76e0a2787d9d0ab32a7",
+    rating: "",
     match: 0.99,
   },
   三江县产口景区: {
@@ -12705,6 +14514,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "https://comment-oss-online.oss-cn-wulanchabu.aliyuncs.com/B0FFHN3DW0/comment/content_media_external_images_media_13825_1650939090555_bf4861d8.jpg",
+    rating: "",
     match: 0.6,
   },
   桂林愚自乐园艺术园: {
@@ -12712,6 +14522,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/610639c4215e0cb6d8d457a77253457d",
+    rating: "",
     match: 1,
   },
   桂林在水一汸景区: {
@@ -12720,6 +14531,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "03/01:00-10:00/31(夏季)09:00-17:30；说明:夏季(3月-10月):09:00-17:30,冬季(11月-次年2月):09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/c63e82fbd19c52362f73afa4b8edad6c",
+    rating: "",
     match: 1,
   },
   桂林新区环城水系景区: {
@@ -12727,12 +14539,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/default_poi/comment/27B7ACFB_9A2E_4D01_B909_9FF49663714B_L0_001_2000_1500_1744706096201_43078216.jpg",
+    rating: "",
     match: 0.97,
   },
   桂林红溪景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   桂林世外桃源旅游区: {
@@ -12740,6 +14554,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/dab4c58ce2a795f26bd3b3902ca77f72",
+    rating: "",
     match: 1,
   },
   桂林黄沙秘境大峡谷景区: {
@@ -12747,6 +14562,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/da079eb6c38902d50000003598436221?type=pic",
+    rating: "",
     match: 0.92,
   },
   临桂十二滩漂流景区: {
@@ -12755,6 +14571,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "08-31至09-30 周一至周五 12:00-15:00；08-31至09-30 周六至周日 09:00-15:00；8月31至9月30日取票时间:周一至周五14:00，周六、周日为双漂9:30/14:00 以上时间为漂流取票截止时间，实际漂流开场时间大约推后30分钟左右。节假日及旺季根据人流量适当调整场次，具体请咨询景区客服。 【漂流场次说明】上述漂流场次为预期场次，现场实际漂流场次、时间可能会根据游客接待数量做出调整，以现场为准",
     image:
       "http://store.is.autonavi.com/showpic/132b148e37db3c244d1d3b4a99b6d8b6",
+    rating: "",
     match: 1,
   },
   枫和里文化旅游区: {
@@ -12762,6 +14579,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-22:00",
     image:
       "http://store.is.autonavi.com/showpic/9cf61016b398d5912a9cfb363f58aa40",
+    rating: "",
     match: 0.9,
   },
   "龙胜县白面瑶寨景区（红色景区）": {
@@ -12769,6 +14587,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/522e39e15add1bfbeb07e318fb8c63c3",
+    rating: "",
     match: 0.57,
   },
   瑶族文化村景区: {
@@ -12776,6 +14595,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/c84f5df962f468edbf71266a662fdc1b",
+    rating: "",
     match: 1,
   },
   灵川龙门瀑布景区: {
@@ -12783,6 +14603,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/26e2b470847e5772e956c9b5e42fb751",
+    rating: "",
     match: 1,
   },
   上思十万大山国家森林公园景区: {
@@ -12790,6 +14611,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/884686cbca7dcf160000003570600593?type=pic",
+    rating: "",
     match: 1,
   },
   防城港西湾旅游景区: {
@@ -12797,6 +14619,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/54787411373fb3060000006946528002?type=pic",
+    rating: "",
     match: 0.57,
   },
   上思县百鸟乐园景区: {
@@ -12805,6 +14628,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "06-01至10-07 周一至周日 08:00-18:00 最晚进入18:00；10-08至05-31 周一至周日 08:30-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/7ff3f522c0f3485c326023fbb209a245",
+    rating: "",
     match: 1,
   },
   东兴国门景区: {
@@ -12812,6 +14636,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/bd35ef281b890353c0950774af7eadfb",
+    rating: "",
     match: 1,
   },
   上思县十万大山布透温泉景区: {
@@ -12820,6 +14645,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:30-22:00 最晚进入21:00；温泉叠瀑每周四放水消毒清洗，不对外开放，其它温泉池正常运营。",
     image:
       "http://store.is.autonavi.com/showpic/267a578c97791765247e47b26d1e959c",
+    rating: "",
     match: 1,
   },
   东兴陈公馆景区: {
@@ -12827,6 +14653,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/a21075c4517b40005258275b4997a44c",
+    rating: "",
     match: 1,
   },
   防城港火山岛景区: {
@@ -12834,12 +14661,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:30",
     image:
       "http://store.is.autonavi.com/showpic/5404723cb8b3d11de1fbad9bec64d580",
+    rating: "",
     match: 1,
   },
   宜州市会仙山景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.83,
   },
   环江牛角寨瀑布群景区: {
@@ -12847,6 +14676,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:50",
     image:
       "http://store.is.autonavi.com/showpic/2a911d9df6c489f52d87f4859b08280c",
+    rating: "",
     match: 0.98,
   },
   环江木论喀斯特生态旅游景区: {
@@ -12854,6 +14684,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFI1RXJ4/comment/2698B427_46D6_4277_A819_7962AF721207_L0_001_1501_200_1770530612523_77266353.jpg",
+    rating: "",
     match: 1,
   },
   环江多彩毛南景区: {
@@ -12861,6 +14692,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0G2JSHVXC/comment/9c3826c325e5bbfb18c345e90a87d0f1_2048_2048_80.jpg",
+    rating: "",
     match: 0.66,
   },
   都安密洛陀文化公园: {
@@ -12868,6 +14700,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/cc6aee1b837c1f580000003594388910?type=pic",
+    rating: "",
     match: 1,
   },
   大化红水河百里风情画廊: {
@@ -12875,6 +14708,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/9f13d8d57f6f1bb70000004371902065?type=pic",
+    rating: "",
     match: 0.89,
   },
   南丹县铜江公园景区: {
@@ -12882,6 +14716,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/b81624594cc5122e0c7757f4c2426efa",
+    rating: "",
     match: 1,
   },
   河池宜州市古龙河漂流景区: {
@@ -12889,12 +14724,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-15:00",
     image:
       "http://store.is.autonavi.com/showpic/10bac82e6bba0299fce30c8628bcf9d3",
+    rating: "",
     match: 0.98,
   },
   大化水岸廊桥景区: {
     tel: "",
     openTime: "周一至周日 08:00-22:00",
     image: "",
+    rating: "",
     match: 0.88,
   },
   罗城青明山庄园景区: {
@@ -12902,6 +14739,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/8ed75843e32801410000003323194368",
+    rating: "",
     match: 0.97,
   },
   大化莲花山景区: {
@@ -12909,6 +14747,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/505aeded37249d389bd0f7d620112168",
+    rating: "",
     match: 0.6,
   },
   都安县八仙乐园景区: {
@@ -12916,6 +14755,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/57e4dcc34966fc81c0d82c09aa27dbc6",
+    rating: "",
     match: 1,
   },
   百色乐业大石围天坑群景区: {
@@ -12923,6 +14763,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/39970e85c7d66f4f506ead99c7cb91bd",
+    rating: "",
     match: 1,
   },
   乐业县龙云山故事小镇景区: {
@@ -12930,6 +14771,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFJZXRFI/comment/content_media_external_file_1000141226_ss__1771468472839_62324452.jpg",
+    rating: "",
     match: 0.7,
   },
   乐业县罗妹莲花洞景区: {
@@ -12938,6 +14780,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "夏令时 1/1-12/31(夏令时) 08:00–17:00开放；冬令时 1/1-12/31(冬令时) 08:30–17:00开放",
     image:
       "http://store.is.autonavi.com/showpic/2f6505ae7be3e9cebdb13fb8a686b32f",
+    rating: "",
     match: 1,
   },
   乐业布柳河仙人桥景区: {
@@ -12945,6 +14788,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0GUZRFEGM/comment/20177087c0a802c4a34a323fdd481b79_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   "乐业-凤山世界地质公园景区": {
@@ -12952,6 +14796,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/410bf227cf306c260000005293486109?type=pic",
+    rating: "",
     match: 1,
   },
   乐业县穿洞天坑景区: {
@@ -12959,6 +14804,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00；16:30停止入场",
     image:
       "https://aos-comment.amap.com/B0FFFY6P7I/comment/4e144d14087a86ddf1551218c21dfa54_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   百色西林县宫保府景区: {
@@ -12966,6 +14812,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/acb72d82b066c2440000000746824259?type=pic",
+    rating: "",
     match: 1,
   },
   田林县万吉山森林公园景区: {
@@ -12973,6 +14820,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/da788896cadd3c82501c5bbd767a96ba",
+    rating: "",
     match: 0.99,
   },
   凌云茶山金字塔景区: {
@@ -12980,6 +14828,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B0308006V7/comment/content_media_external_images_media_91513_ss_2_1661339485929_8ab6bc1a.jpg",
+    rating: "",
     match: 1,
   },
   靖西锦绣古镇景区: {
@@ -12987,6 +14836,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-21:00",
     image:
       "https://store.is.autonavi.com/showpic/eef3137613e3ef0b0000006898954182?type=pic",
+    rating: "",
     match: 0.92,
   },
   靖西小城故事景区: {
@@ -12994,6 +14844,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/b5de65ae7e64e9748fa1ca999ff22b2d",
+    rating: "",
     match: 0.66,
   },
   靖西市渠洋湖景区: {
@@ -13002,12 +14853,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-18:00；为保障游客体验,景区节假日延长营业时间,以现场公示为准",
     image:
       "http://store.is.autonavi.com/showpic/515231837800a3b8f7a05f8a11f6ac27",
+    rating: "",
     match: 0.99,
   },
   亚龙湾热带天堂森林旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.77,
   },
   海南热带野生动植物园: {
@@ -13016,6 +14869,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 09:00-18:00 最晚进入17:30；车行区开放时间:09:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/5ea24f455a36811545bf24c303bf39b7",
+    rating: "",
     match: 1,
   },
   海口假日海滩旅游区: {
@@ -13023,6 +14877,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-22:00",
     image:
       "http://store.is.autonavi.com/showpic/21be28b00bb31d4265a0d3bb2ea9a028",
+    rating: "",
     match: 1,
   },
   长影环球100奇幻乐园: {
@@ -13030,6 +14885,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周四 11:00-21:00；周五至周日 11:00-21:30",
     image:
       "http://store.is.autonavi.com/showpic/870ae2bf48397933ed3a9da5b20f7b68",
+    rating: "",
     match: 0.6,
   },
   海南莲花山文化景区: {
@@ -13037,6 +14893,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/8867a9bd3776f0cb92da5c180884641a",
+    rating: "",
     match: 1,
   },
   儋州东坡文化旅游区: {
@@ -13044,6 +14901,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:00",
     image:
       "https://aos-comment.amap.com/B0FFLJV61W/comment/65a68228274f08f35bad42d17c026567_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   重庆丰都名山风景区: {
@@ -13051,12 +14909,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/fbfe14e8af47c0070000002389080308?type=pic",
+    rating: "",
     match: 0.66,
   },
   重庆聂荣臻元帅陈列馆: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.8,
   },
   重庆忠县石宝寨: {
@@ -13065,6 +14925,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,11月至12月 周一至周日 09:00-17:00 最晚进入16:00；5月至10月 周一至周日 08:30-17:30 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/cc0b7a05c73af11ceff9718d875d703a",
+    rating: "",
     match: 1,
   },
   重庆缙云山景区: {
@@ -13072,6 +14933,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/65a583292bdba74d0000002775870954?type=pic",
+    rating: "",
     match: 0.98,
   },
   重庆北泉风景区: {
@@ -13079,6 +14941,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/b06d930dccb430e9b22a3c15650c12c0",
+    rating: "",
     match: 1,
   },
   重庆歌乐山烈士陵园: {
@@ -13086,6 +14949,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/f32c45d34423e987ebca34892be8927e",
+    rating: "",
     match: 0.99,
   },
   重庆南山植物园: {
@@ -13094,6 +14958,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 09:00-17:00；景区禁止宠物入园，给您带来不便，敬请谅解",
     image:
       "http://store.is.autonavi.com/showpic/0d66f662939501dcc4947e2e2e53c5d6",
+    rating: "",
     match: 1,
   },
   重庆乐和乐都景区: {
@@ -13101,6 +14966,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "周一至周五 09:30-17:00；周六至周日 09:30-17:30, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.59,
   },
   重庆丰都雪玉洞景区: {
@@ -13108,6 +14974,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/9277fbf1ad8913293d79faed10191b8d",
+    rating: "",
     match: 1,
   },
   重庆云阳张飞庙: {
@@ -13116,6 +14983,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05-01至10-07 周一至周日 08:00-18:00 最晚进入17:30；10-08至04-30 周一至周日 08:00-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/1c2350f1dde9de10f2d27199f39f919c",
+    rating: "",
     match: 1,
   },
   重庆统景温泉风景区: {
@@ -13124,6 +14992,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,10月至12月 周一至周日 09:00-23:30 最晚进入23:30；4月至9月 周一至周日 08:30-23:00 最晚进入23:00",
     image:
       "http://store.is.autonavi.com/showpic/de3f7781d42d112dba70abefa5183be7",
+    rating: "",
     match: 1,
   },
   重庆海兰云天温泉度假区: {
@@ -13131,6 +15000,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "住宿:00:00-24:00；温泉:11:00-23:00",
     image:
       "http://store.is.autonavi.com/showpic/77bec7e08f8c72b9d5e163d884d145ed",
+    rating: "",
     match: 0.99,
   },
   重庆石柱大风堡景区: {
@@ -13138,6 +15008,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/5fcce5afb88249d4dfa38fe896d4a9ba",
+    rating: "",
     match: 0.94,
   },
   重庆綦江古剑山风景区: {
@@ -13145,12 +15016,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/c7d638b11bec3a13d65cbe78a7aae194",
+    rating: "",
     match: 0.68,
   },
   重庆长寿湖旅游区: {
     tel: "023-40361888",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.59,
   },
   重庆开州刘伯承同志纪念馆: {
@@ -13158,6 +15031,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/908b6319a2407873dfa03aec826e26ad",
+    rating: "",
     match: 1,
   },
   重庆巫溪红池坝森林旅游景区: {
@@ -13165,6 +15039,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/57f1359f0a8c82dcf12e29329fd489e0",
+    rating: "",
     match: 0.97,
   },
   重庆白鹤梁水下博物馆景区: {
@@ -13173,6 +15048,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周二–周日 09:00-17:00开放（16:30停止售票，16:30停止入园）、周一闭馆(法定节假日和特殊情况除外)；10月1日-10月6日 09:00-18:00开放（17:30停止售票，17:30停止入园）；具体开放时间以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/392a6edf813b870c8d92f1577d9efc12",
+    rating: "",
     match: 0.97,
   },
   重庆永川茶山竹海旅游景区: {
@@ -13180,6 +15056,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/b6c293e6b52c7d5a5778532b9fe7e9fe",
+    rating: "",
     match: 0.6,
   },
   重庆合川钓鱼城景区: {
@@ -13187,18 +15064,21 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/282ef1d19a4b955f882876da8b68e513",
+    rating: "",
     match: 1,
   },
   重庆铁山坪森林公园: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 1,
   },
   重庆云阳三峡梯城景区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.75,
   },
   重庆园博园: {
@@ -13206,6 +15086,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://aos-comment.amap.com/B001791RP3/comment/c8ae84875622a30d339ff88529668b67_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   重庆潼南大佛寺: {
@@ -13213,6 +15094,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/8f108dcbfa117b1742c772cf530017ad",
+    rating: "",
     match: 0.71,
   },
   重庆涪陵武陵山大裂谷景区: {
@@ -13220,6 +15102,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:30-16:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/1e04864fb115b7280000000735430749?type=pic",
+    rating: "",
     match: 0.65,
   },
   重庆荣昌万灵古镇: {
@@ -13227,6 +15110,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/77953e15b4c4400e8cb916b37c347c7e",
+    rating: "",
     match: 1,
   },
   重庆合川涞滩古镇: {
@@ -13235,6 +15119,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,10月至12月 周一至周日 08:30-17:30 最晚进入17:00；5月至9月 周一至周日 08:00-18:00 最晚进入17:30",
     image:
       "https://aos-comment.amap.com/B001787TNA/comment/content_media_external_file_100004906_1761319105566_34998848.jpg",
+    rating: "",
     match: 1,
   },
   重庆涪陵武陵山国家森林公园: {
@@ -13242,6 +15127,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/bf489ab25a1688c2b873c0d66ab5a70d",
+    rating: "",
     match: 1,
   },
   "重庆涪陵大木花谷·林下花园景区": {
@@ -13249,6 +15135,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/3fd5ac4361a51aa68f4b4042f2aee8b6",
+    rating: "",
     match: 0.97,
   },
   重庆铜梁黄桷门奇彩梦园: {
@@ -13257,12 +15144,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "01-01至06-22 周一至周日 08:30-20:30；06-23至09-19 周一至周日 全天关闭；09-20至12-31 周一至周日 08:30-20:30",
     image:
       "http://store.is.autonavi.com/showpic/b05a4daf3b1979e701c2576e3f39e7a8",
+    rating: "",
     match: 1,
   },
   重庆巴南中泰天心佛文化旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.63,
   },
   重庆江津陈独秀旧居陈列馆: {
@@ -13270,6 +15159,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00,节假日营业时间以官方通知为准",
     image:
       "https://aos-comment.amap.com/default_poi/comment/285b00c20b78c6321bd02cd4dc213112_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   重庆城口亢谷景区: {
@@ -13277,6 +15167,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFH6XZIQ/comment/a656248fdbd1278043321fa81433726d_2048_2048_80.jpg",
+    rating: "",
     match: 0.96,
   },
   重庆彭水蚩尤九黎城景区: {
@@ -13284,6 +15175,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-17:00,17:30后免门票入园",
     image:
       "http://store.is.autonavi.com/showpic/f079ce7f95069d8bd1669a04fb8e4064",
+    rating: "",
     match: 1,
   },
   重庆石柱千野草场: {
@@ -13291,6 +15183,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "7月1日-9月30日开放；10月1日-次年6月30日08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/ed0024cae3f8bd4ba52f3c2abe72ca74",
+    rating: "",
     match: 0.85,
   },
   重庆黔江城市大峡谷景区: {
@@ -13299,6 +15192,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,10月至12月 周一至周日 08:30-16:30 最晚进入16:30；5月至9月 周一至周日 08:30-17:00 最晚进入17:00",
     image:
       "https://store.is.autonavi.com/showpic/db81e72eb84442600000003009640201?type=pic",
+    rating: "",
     match: 0.78,
   },
   重庆自然博物馆: {
@@ -13306,6 +15200,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFHDPS7C/comment/04892f0af9c842c83bfd96ececbe3ae0_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   重庆梁平滑石古寨: {
@@ -13314,6 +15209,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,10月至12月 周一至周日 09:00-18:00 最晚进入16:30；5月至9月 周一至周日 08:30-18:00",
     image:
       "https://store.is.autonavi.com/showpic/24cab7e60d6b1795512815f70c35c2d1",
+    rating: "",
     match: 1,
   },
   重庆黔江土家十三寨: {
@@ -13321,6 +15217,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/a77a284a-6511-46ea-a005-ca274cbe9d4b.jpg",
+    rating: "",
     match: 0.93,
   },
   重庆融汇温泉小镇: {
@@ -13328,6 +15225,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/4ed9e60fd22b5cde4261f024af4a3a9b",
+    rating: "",
     match: 1,
   },
   重庆市黔江神龟峡景区: {
@@ -13335,12 +15233,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:30",
     image:
       "https://aos-comment.amap.com/B0FFHO3MJY/comment/45163800aa28e3a00cdfb3ee51b30bae_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   重庆巫山文峰景区: {
     tel: "",
     openTime: "周一至周日 08:30-17:00",
     image: "",
+    rating: "",
     match: 0.97,
   },
   重庆黔江爱莉丝庄园景区: {
@@ -13348,12 +15248,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "https://aos-comment.amap.com/B0FFHUH1XE/comment/content_media_external_images_media_100000577_1727627693329_10632329.jpg",
+    rating: "",
     match: 1,
   },
   重庆秀山西街民俗文化景区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.74,
   },
   重庆市彭水乌江画廊景区: {
@@ -13362,6 +15264,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 09:00-17:30 最晚进入16:00；游船及项目开放时间请以现场为准",
     image:
       "http://store.is.autonavi.com/showpic/37c3bee3c1cc5b171c21fb67e2a8d9f7",
+    rating: "",
     match: 1,
   },
   重庆保税体验旅游景区: {
@@ -13369,6 +15272,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/89ad22b116db0bd55a5076e5707de86c",
+    rating: "",
     match: 0.98,
   },
   重庆丰都九重天景区: {
@@ -13376,6 +15280,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/6c795942405e16ec09443172d821005a",
+    rating: "",
     match: 1,
   },
   重庆抗战遗址博物馆: {
@@ -13383,6 +15288,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/413a0f44db3c7e41c92d2ba4953644aa",
+    rating: "",
     match: 1,
   },
   重庆建川博物馆: {
@@ -13390,12 +15296,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/c6e75d17cd0e00baa7ba3ca9b495694c",
+    rating: "",
     match: 1,
   },
   重庆鎏嘉码头景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.66,
   },
   重庆际华园景区: {
@@ -13403,6 +15311,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周四,周日 10:00-18:30；周五至周六 10:00-19:00",
     image:
       "http://store.is.autonavi.com/showpic/3dd21f454e0b48e2da94a4b1c99dfe19",
+    rating: "",
     match: 1,
   },
   重庆奉节龙桥河景区: {
@@ -13410,6 +15319,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B0IRYRDYUT/comment/content_media_external_file_100000032_1754234131176_40513006.jpg",
+    rating: "",
     match: 0.94,
   },
   重庆巫山博物馆: {
@@ -13417,12 +15327,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周二至周日 09:00-17:00 最晚进入16:30",
     image:
       "https://store.is.autonavi.com/showpic/07edabd73a6948170000002173710808",
+    rating: "",
     match: 0.71,
   },
   重庆欢乐谷景区: {
     tel: "",
     openTime: "周一至周日 09:00-21:00",
     image: "",
+    rating: "",
     match: 1,
   },
   重庆石柱万寿山景区: {
@@ -13430,6 +15342,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-17:30",
     image:
       "https://aos-comment.amap.com/B0FFKSC6FI/comment/f7395d4c81122f7e3e20c83a4ee3c4f9_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   重庆武隆龙水峡地缝: {
@@ -13438,6 +15351,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "09/01-04/30 08:30–16:30开放 最晚进入16:30；05/01-05/31 08:30–17:00开放 最晚进入17:00；06/01-08/31 08:00–17:00开放 最晚进入17:00；国庆节 08:00–17:00开放",
     image:
       "http://store.is.autonavi.com/showpic/ef16a76fec453ea320d8dc0a0b960a42",
+    rating: "",
     match: 0.78,
   },
   重庆垫江恺之峰旅游区: {
@@ -13445,6 +15359,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-22:00 最晚进入20:00",
     image:
       "http://store.is.autonavi.com/showpic/09983ee9f50c40a0f47442c68c6c4a8b",
+    rating: "",
     match: 0.99,
   },
   重庆铜梁玄天湖景区: {
@@ -13452,6 +15367,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/4c0dd0ddf3a16e5a0000007178608774?type=pic",
+    rating: "",
     match: 0.98,
   },
   重庆汉海海洋公园: {
@@ -13460,6 +15376,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "3月至11月 周一至周日 09:00-17:30 最晚进入17:00；12月,1月至2月 周一至周日 09:30-17:00 最晚进入16:30",
     image:
       "https://store.is.autonavi.com/showpic/b3aca8497676dee30000001371026025?type=pic",
+    rating: "",
     match: 0.57,
   },
   重庆石笋山景区: {
@@ -13467,6 +15384,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "https://store.is.autonavi.com/showpic/d43e7d088bb0d311a7224f7874ebf604",
+    rating: "",
     match: 0.6,
   },
   重庆江津会龙庄景区: {
@@ -13474,6 +15392,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/239396fb-e5ef-4279-8447-c3419a564794.jpg",
+    rating: "",
     match: 0.99,
   },
   重庆三峡移民纪念馆: {
@@ -13481,6 +15400,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/0a928e243eefa1f14c8a3a0a3beb23c7",
+    rating: "",
     match: 1,
   },
   重庆忠县白公祠文博景区: {
@@ -13488,6 +15408,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/961a991f35adfdf30000002442034544?type=pic",
+    rating: "",
     match: 1,
   },
   重庆江津中山古镇: {
@@ -13495,6 +15416,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00；具体营业状态以当天开放情况为准",
     image:
       "http://store.is.autonavi.com/showpic/ebdbd7f8dd1930d0e95649385d1e3a1f",
+    rating: "",
     match: 0.99,
   },
   重庆武隆芙蓉江: {
@@ -13503,6 +15425,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,9月至12月 周一至周日 08:30-16:30；5月 周一至周日 08:30-15:20；6月至8月 周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/dc311a04ed470ace06e0627fae8455e6",
+    rating: "",
     match: 0.87,
   },
   重庆奉节县青龙镇大窝景区: {
@@ -13510,6 +15433,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/0aad165b8c64eb492fffeab43f8693fe",
+    rating: "",
     match: 0.99,
   },
   重庆奉节县三峡原乡景区: {
@@ -13517,6 +15441,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:00",
     image:
       "https://aos-comment.amap.com/B0G2Z7HLKX/comment/content_media_external_images_media_2718393_ss_2_1660717477752_9a349228.jpg",
+    rating: "",
     match: 0.99,
   },
   重庆仙女山归原小镇: {
@@ -13524,6 +15449,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFHZU621/comment/content_media_external_file_100001731_1768870629945_06023568.jpg",
+    rating: "",
     match: 1,
   },
   重庆巴南南温泉旅游风景区: {
@@ -13531,6 +15457,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周四 13:00-22:00；周五至周日 10:00-22:00",
     image:
       "https://store.is.autonavi.com/showpic/035666b55b0c27ad0000003158204984?type=pic",
+    rating: "",
     match: 1,
   },
   重庆巴南融汇西流沱滨江旅游区: {
@@ -13538,6 +15465,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-22:00",
     image:
       "https://store.is.autonavi.com/showpic/9b03f9ff0ee12e170000009157236494?type=pic",
+    rating: "",
     match: 0.99,
   },
   重庆秀山洪安边城旅游区: {
@@ -13545,6 +15473,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/527d1622670851490000003776404222?type=pic",
+    rating: "",
     match: 1,
   },
   重庆巴南天坪山云林天乡景区: {
@@ -13552,6 +15481,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00 最晚进入18:00",
     image:
       "http://store.is.autonavi.com/showpic/a50ad4e28d4885427c30d69354a48302",
+    rating: "",
     match: 0.99,
   },
   大足香国公园: {
@@ -13559,6 +15489,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFLN09KL/comment/177221022952_1772210234416_52160095.jpg",
+    rating: "",
     match: 1,
   },
   南川神龙峡景区: {
@@ -13567,12 +15498,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至6月,9月至12月 周一至周五 08:30-17:30 最晚进入16:00；1月至6月,9月至12月 周六至周日 08:00-18:00 最晚进入16:30；7月至8月 周一至周日 08:00-18:00 最晚进入16:30；漂流15:30停止入园",
     image:
       "http://store.is.autonavi.com/showpic/4a2df8ba256ce86f7dae361109b9a22d",
+    rating: "",
     match: 0.97,
   },
   云阳环湖绿道旅游景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.96,
   },
   重庆巫溪灵巫洞景区: {
@@ -13580,6 +15513,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/2f340a7059be3e03cbb48d4c6c3c65e8",
+    rating: "",
     match: 1,
   },
   重庆酉阳叠石花谷景区: {
@@ -13588,6 +15522,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,11月至12月 周一至周日 08:30-18:00 最晚进入17:00；5月至10月 周一至周日 08:30-18:30 最晚进入17:00；实际开放时间会根据现场实际客流调整",
     image:
       "http://store.is.autonavi.com/showpic/a75461f155b10ac9651055ea710bcc8e",
+    rating: "",
     match: 1,
   },
   重庆酉阳松鼠丛林乐园: {
@@ -13595,6 +15530,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-16:00",
     image:
       "http://store.is.autonavi.com/showpic/4d5cdb2bfe11712b29f75275bd9e91d1",
+    rating: "",
     match: 0.99,
   },
   三圣花乡观光旅游区: {
@@ -13602,6 +15538,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/45d5758e364bb61f0f2495827a233328",
+    rating: "",
     match: 0.63,
   },
   洛带古镇: {
@@ -13610,6 +15547,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 00:00-24:00；博客楼冬季开闭馆时间9:00～18:00，夏季9:00～19:00",
     image:
       "http://store.is.autonavi.com/showpic/44457060236040337212c1acc0b34d2c",
+    rating: "",
     match: 1,
   },
   成都市宝光桂湖文化旅游区: {
@@ -13617,6 +15555,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFKEB4QG/comment/45165dcadd3d91b604633d0a1c46b16b_2048_2048_80.jpg",
+    rating: "",
     match: 0.67,
   },
   成都国色天乡乐园: {
@@ -13624,6 +15563,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "09:00-18:00,2026年春节期间 09:00-22:00",
     image:
       "http://store.is.autonavi.com/showpic/bd92a2dda669dde59879a58f83f20b59",
+    rating: "",
     match: 1,
   },
   邛崃市平乐古镇: {
@@ -13631,6 +15571,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-23:00",
     image:
       "http://store.is.autonavi.com/showpic/3f7569b551f1a96994a16ebb09e663e4",
+    rating: "",
     match: 0.57,
   },
   成都金沙遗址博物馆: {
@@ -13638,6 +15579,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "09:00-18:00,17:00停止售票周一闭馆(1、2、7、8月及法定节假日除外)",
     image:
       "https://aos-comment.amap.com/B0KB9M6J07/comment/content_media_external_images_media_64155_ss__1744104375740_23432633.jpg",
+    rating: "",
     match: 0.77,
   },
   成都欢乐谷: {
@@ -13645,6 +15587,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-21:30",
     image:
       "http://store.is.autonavi.com/showpic/ed783f4fe889725f00945a89b9622651",
+    rating: "",
     match: 1,
   },
   成都市西岭雪山景区: {
@@ -13652,6 +15595,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "09:00-17:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/9ac09106056cc7220000000977734373?type=pic",
+    rating: "",
     match: 0.57,
   },
   成都市花舞人间旅游景区: {
@@ -13659,12 +15603,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://aos-comment.amap.com/B0HRR1W7QO/comment/683700e288a55f821e0eac353a89f3b2_2048_2048_80.jpg",
+    rating: "",
     match: 0.97,
   },
   农科村景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   新场古镇: {
@@ -13672,6 +15618,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/0bc20122dfb9a0a2eafb0d654c7f52b4",
+    rating: "",
     match: 1,
   },
   国际非物质文化遗产博览园: {
@@ -13679,6 +15626,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-20:00",
     image:
       "http://store.is.autonavi.com/showpic/1399bd7418b96514afdf972c69c0fb10",
+    rating: "",
     match: 0.99,
   },
   望丛祠: {
@@ -13687,6 +15635,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05-01至10-07 周一至周日 08:00-20:00 最晚进入20:00；10-08至04-30 周一至周日 08:00-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/3ae0148750fd476a0ae527a63a4a0e54",
+    rating: "",
     match: 1,
   },
   五凤溪景区: {
@@ -13694,12 +15643,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image:
       "https://aos-comment.amap.com/B0KUFC9FZD/headerImg/HeadImage_1762594171981_48014817.jpg",
+    rating: "",
     match: 1,
   },
   石象湖景区: {
     tel: "028-88591888",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   白鹿音乐小镇: {
@@ -13707,12 +15658,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/4776c69b6a8ce5497301e3d0af1ec886",
+    rating: "",
     match: 0.97,
   },
   宝山旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.97,
   },
   成都市崇州元通古镇景区: {
@@ -13720,6 +15673,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/39c7d1cb9e847e8bc63c8694be997171",
+    rating: "",
     match: 0.99,
   },
   灌县古城: {
@@ -13727,6 +15681,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/0b9dd05d4f66d57f0000007997878634?type=pic",
+    rating: "",
     match: 0.99,
   },
   成都市锦门景区: {
@@ -13734,6 +15689,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/da2182e9c90a1d05d6d70324f57c1921",
+    rating: "",
     match: 1,
   },
   成都市双流区海滨城景区: {
@@ -13742,6 +15698,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "全年 09:00-21:00开放(20:00停止入园)、具体营业状态以当天开放情况为准",
     image:
       "https://aos-comment.amap.com/B0G3CS5QNI/comment/content_media_external_file_1000009963_ss__1762352575806_55998747.jpg",
+    rating: "",
     match: 0.55,
   },
   天艺浓园艺术博览园: {
@@ -13749,6 +15706,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-20:00",
     image:
       "https://store.is.autonavi.com/showpic/855b06fd5c2853710000002766524011?type=pic",
+    rating: "",
     match: 0.99,
   },
   幸福田园: {
@@ -13756,6 +15714,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/0e143c266132ea4d78b706682977fd26",
+    rating: "",
     match: 0.99,
   },
   成佳茶乡旅游景区: {
@@ -13763,6 +15722,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFIOBXL4/comment/047b72e63f00876787ef8f9c3a3f648a_2048_2048_80.jpg",
+    rating: "",
     match: 0.95,
   },
   三道堰青杠树景区: {
@@ -13770,6 +15730,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/d3771020c2cf0969b184b20fcabb2b6a",
+    rating: "",
     match: 0.89,
   },
   斑竹林: {
@@ -13777,6 +15738,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-20:00",
     image:
       "http://store.is.autonavi.com/showpic/04339df191834f69cc97a566f3019632",
+    rating: "",
     match: 0.99,
   },
   新都花香果居旅游景区: {
@@ -13784,6 +15746,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/5beb49d9f1619f327cf6db5c92fd368c",
+    rating: "",
     match: 1,
   },
   战旗村景区: {
@@ -13791,6 +15754,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/3f2e45201ebd419e082de2967d8dd981",
+    rating: "",
     match: 0.64,
   },
   成都市崇州市天府国际慢城景区: {
@@ -13798,6 +15762,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-17:00 最晚进入16:00",
     image:
       "https://store.is.autonavi.com/showpic/c86a9f7e1f3b87fe4bdc449cddd63c36",
+    rating: "",
     match: 0.96,
   },
   凤凰湖旅游景区: {
@@ -13805,12 +15770,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0KUBRTQLD/comment/content_media_external_images_media_81795_ss__1765089412708_75928498.jpg",
+    rating: "",
     match: 1,
   },
   丹景台旅游景区: {
     tel: "028-83885861",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.59,
   },
   夹江天福观光茶园: {
@@ -13818,6 +15785,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://aos-comment.amap.com/B0FFFTUHN6/comment/content_media_external_images_media_100003861_1734304024161_26178037.jpg",
+    rating: "",
     match: 1,
   },
   乐山市郭沫若故居: {
@@ -13825,6 +15793,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/e5b04ea87cb9b86958ed00673c64f54d",
+    rating: "",
     match: 0.87,
   },
   桃源山居旅游景区: {
@@ -13832,6 +15801,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B03410PBC0/comment/content_media_external_file_100005488_1764580481426_56669843.jpg",
+    rating: "",
     match: 1,
   },
   四川旅博天地: {
@@ -13839,6 +15809,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFIOBTDZ/comment/file_media_Photo_15120_IMG_1762232131_13462_IMG_20251104_125351_jpg_ss__1762558083404_75190158.jpg",
+    rating: "",
     match: 0.66,
   },
   农夫山泉峨眉山工业旅游区: {
@@ -13847,6 +15818,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至9月 周一至周日 09:00-15:00 最晚进入15:00 10-01至10-08 周一至周日 全天关闭；10-09至12-31 周一至周日 09:00-15:00",
     image:
       "https://store.is.autonavi.com/showpic/975e7c4009c699ea0000003837082726?type=pic",
+    rating: "",
     match: 0.99,
   },
   金口河区大渡河金口大峡谷旅游景区: {
@@ -13854,6 +15826,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/1b671584ca784f838f444ed83393ada9",
+    rating: "",
     match: 1,
   },
   沫若戏剧文创园景区: {
@@ -13861,6 +15834,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/c6398e1a2ce7f9910000002247848775",
+    rating: "",
     match: 1,
   },
   世界茉莉博览园: {
@@ -13868,6 +15842,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-15:30",
     image:
       "http://store.is.autonavi.com/showpic/4d58a628522245aaa8ecc9be54612324",
+    rating: "",
     match: 1,
   },
   四姑娘山风景名胜区: {
@@ -13875,6 +15850,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-14:30",
     image:
       "http://store.is.autonavi.com/showpic/91123968434bd43d41cbb304e70e7a22",
+    rating: "",
     match: 0.99,
   },
   达古冰川风景名胜区: {
@@ -13882,6 +15858,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/44d0481aeaf5af5488a6e8ad8fede26d",
+    rating: "",
     match: 1,
   },
   汶川大禹文化旅游区: {
@@ -13889,6 +15866,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFHF19V8/comment/b908eb702ef4b44424a36b1273c5c325_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   金川观音桥旅游景区: {
@@ -13896,6 +15874,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/96279ae40aec0c32f8ed39b0ea74509e",
+    rating: "",
     match: 0.98,
   },
   "叠溪--松坪沟景区": {
@@ -13903,6 +15882,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/1b70b135bd43ef942673a1896882ece4",
+    rating: "",
     match: 0.83,
   },
   卓克基土司官寨文化旅游景区: {
@@ -13911,6 +15891,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 09:00-17:30；4月至10月 周一至周日 08:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/1938302bafef34359023daeabbcc0c33",
+    rating: "",
     match: 1,
   },
   松潘县川主寺旅游景区: {
@@ -13918,6 +15899,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/d983ca6979692085244040f632966a06",
+    rating: "",
     match: 1,
   },
   茂县中国古羌城景区: {
@@ -13926,6 +15908,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-16:00 2026-05-01至2026-05-05 周一至周日 08:00-16:00",
     image:
       "https://aos-comment.amap.com/B0FFF6VQ1M/headerImg/1880153B_98DF_4DE8_835A_F5E09AE6E1E3_L0_001_IMG_2164_1657091084000_d978eb9c.HEIC",
+    rating: "",
     match: 1,
   },
   红原县月亮湾景区: {
@@ -13933,6 +15916,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-20:00",
     image:
       "http://store.is.autonavi.com/showpic/081f27fe89a537dba8b094f6e8adf26c",
+    rating: "",
     match: 0.97,
   },
   茂县坪头羌寨: {
@@ -13940,6 +15924,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/5af80deb0ba595236dc5c62a366e65d1",
+    rating: "",
     match: 1,
   },
   神座景区: {
@@ -13947,6 +15932,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/02559e4911a1ad590000003593984530?type=pic",
+    rating: "",
     match: 0.99,
   },
   理县鹧鸪山自然公园旅游景区: {
@@ -13954,6 +15940,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/a0fca76a7a607e12f8a60a1c7562196f",
+    rating: "",
     match: 1,
   },
   金川县世外梨园景区: {
@@ -13961,24 +15948,28 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/64b7576879f207b60000000720176778?type=pic",
+    rating: "",
     match: 0.57,
   },
   马尔康市柯盘天街文化旅游景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.97,
   },
   阿坝州壤塘县壤巴拉文化旅游景区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 1,
   },
   爱情海景区: {
     tel: "",
     openTime: "周一至周日 08:00-18:00",
     image: "",
+    rating: "",
     match: 1,
   },
   绵阳市江油窦圌山风景区: {
@@ -13986,6 +15977,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "09:00-16:00, 具体开放时间以现场公示为准",
     image:
       "https://comment-oss-online.oss-cn-wulanchabu.aliyuncs.com/B033003GZI/comment/content_media_external_images_media_1571009_1652665183147_41f3d178.jpg",
+    rating: "",
     match: 0.89,
   },
   九皇山: {
@@ -13993,6 +15985,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/481fde0c3cb38d94129f072be0d134a1",
+    rating: "",
     match: 1,
   },
   绵阳市平武报恩寺: {
@@ -14001,6 +15994,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "9月 周一至周日 08:30-17:30 最晚进入17:00；10月至12月 周一至周日 08:30-17:00 最晚进入16:30 01-01至04-01 周一至周日 08:30-17:00 最晚进入16:30；05-01至07-28 周一至周日 08:30-17:30 最晚进入17:00；07-29至08-31 周一至周日 08:30-18:30",
     image:
       "https://store.is.autonavi.com/showpic/625304ced8b7c6fc0000002324656046?type=pic",
+    rating: "",
     match: 1,
   },
   江油李白纪念馆景区: {
@@ -14008,12 +16002,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/74c3a8904716390014ac4953a842494d",
+    rating: "",
     match: 1,
   },
   绵阳市科技馆旅游景区: {
     tel: "",
     openTime: "周一至周日 09:30-17:30 最晚进入17:00",
     image: "",
+    rating: "",
     match: 1,
   },
   绵阳市江油李白故居旅游景区: {
@@ -14021,6 +16017,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/0e29ae2f3cb303ffb2257c280f20f8be",
+    rating: "",
     match: 0.98,
   },
   绵阳市北川维斯特农业休闲旅游区: {
@@ -14028,12 +16025,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/7303d393b5b29a132c0ad683f6c94763",
+    rating: "",
     match: 0.99,
   },
   寻龙山景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   江油百年好合爱情谷旅游景区: {
@@ -14041,6 +16040,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "03-06至12-31 周一至周日 09:00-16:00",
     image:
       "https://aos-comment.amap.com/B0FFMAHXHB/comment/58e61d60ae6ed861dc7e919ea6455ef6_2048_2048_80.jpg",
+    rating: "",
     match: 0.98,
   },
   "绵阳市越王楼·三江半岛景区": {
@@ -14048,6 +16048,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFLF6B18/comment/7F4740AE_B925_4F72_B54F_C93CC4EE6775_L0_001_1170_880_1731609510473_51507759.jpg",
+    rating: "",
     match: 0.69,
   },
   绵阳市罗浮山景区: {
@@ -14055,6 +16056,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:00",
     image:
       "https://aos-comment.amap.com/B0FFG6T4GT/comment/content_media_external_images_media_1000046555_ss__1728750660926_65291296.jpg",
+    rating: "",
     match: 1,
   },
   平武县印象梅林景区: {
@@ -14062,6 +16064,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://comment-oss-online.oss-cn-wulanchabu.aliyuncs.com/B0G29SN1O6/comment/content_media_external_images_media_1067848.jpg",
+    rating: "",
     match: 0.91,
   },
   中华洞天旅游景区: {
@@ -14069,6 +16072,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "10月08日至04月30日 09:00-17:00,05月01日至10月07日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/9cb65e227369e08446524a85db99a8ed",
+    rating: "",
     match: 1,
   },
   广安华蓥山旅游区: {
@@ -14076,6 +16080,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:00 最晚进入16:00；停止入园:16:00",
     image:
       "https://store.is.autonavi.com/showpic/5b4626376227d9080000000976190129",
+    rating: "",
     match: 0.6,
   },
   武胜县宝箴塞: {
@@ -14083,6 +16088,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "https://aos-comment.amap.com/B033A006LR/comment/content_media_external_file_100011345_1762522935307_00376636.jpg",
+    rating: "",
     match: 0.97,
   },
   神龙山巴人石头城: {
@@ -14091,6 +16097,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "冬季 全年 07:00–17:00开放 最晚进入16:30；夏季 全年 06:00–20:00开放 最晚进入19:30",
     image:
       "http://store.is.autonavi.com/showpic/52f3d3b5b9bcf382910deb4fc2b53c71",
+    rating: "",
     match: 0.96,
   },
   天意谷景区: {
@@ -14098,6 +16105,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "夏令07:30-17:30,冬令08:30-17:00,16:30停止入场",
     image:
       "https://aos-comment.amap.com/B0FFFABBVS/comment/E129AA2C_93B0_4901_B919_82FABE7500D0_L0_001_2000_150_1772604216131_10883244.jpg",
+    rating: "",
     match: 1,
   },
   五华山旅游区: {
@@ -14105,6 +16113,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/6dc9d5247239f681edb54f263aa7eaaa",
+    rating: "",
     match: 1,
   },
   南充市西山风景区: {
@@ -14113,6 +16122,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,10月至12月 周一至周日 08:30-17:30 最晚进入17:30；5月至9月 周一至周日 08:30-18:00 最晚进入18:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/62814884-ceb9-4e09-80a4-290bf16592e9.jpg",
+    rating: "",
     match: 0.99,
   },
   嘉陵第一桑梓风景区: {
@@ -14120,6 +16130,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image:
       "http://store.is.autonavi.com/showpic/819f7bc82ccdecf2258add19624686bf",
+    rating: "",
     match: 1,
   },
   阆中天宫院风水文化景区: {
@@ -14128,6 +16139,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:30-17:30；5月2日-10月31日9:00-17:00，11月1日-次年5月1日9:00-16:30",
     image:
       "http://store.is.autonavi.com/showpic/ca0b5ad9d249cacf9b98c79c029f2994",
+    rating: "",
     match: 0.98,
   },
   张澜故里旅游区: {
@@ -14135,6 +16147,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/d28f8f3e7f527432c80dd05cef4017da",
+    rating: "",
     match: 0.94,
   },
   南充市仪陇县德园景区: {
@@ -14142,12 +16155,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/6f50a38249ff0f7f0000004152806369?type=pic",
+    rating: "",
     match: 0.96,
   },
   南充市营山县进士文化旅游景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.96,
   },
   鹤鸣山旅游景区: {
@@ -14155,6 +16170,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFFEUHP1/comment/content_media_external_file_1000143209_ss__1760091998245_71346863.jpg",
+    rating: "",
     match: 1,
   },
   相如故城旅游景区: {
@@ -14162,6 +16178,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "https://store.is.autonavi.com/showpic/ff3c33c53cc8695d0000003030146358?type=pic",
+    rating: "",
     match: 0.88,
   },
   皇泽寺博物馆: {
@@ -14170,6 +16187,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至2月,11月至12月 周一至周日 08:30-17:30 最晚进入17:30；3月至10月 周一至周日 08:00-18:00 最晚进入18:00",
     image:
       "http://store.is.autonavi.com/showpic/d86aef6e1636bc652139f145666b79bc",
+    rating: "",
     match: 1,
   },
   广元市曾家山景区: {
@@ -14177,6 +16195,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/60e4cd9afa28fb7874479eb34979cb9e",
+    rating: "",
     match: 0.66,
   },
   广元市昭化古城: {
@@ -14184,6 +16203,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "00:00-24:00；昭化古城开放,古城内各景点夏季08:30-18:00；冬季08:30-17:30, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.57,
   },
   "苍溪红军渡·西武当山景区": {
@@ -14191,6 +16211,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-12:00,14:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/53fe02a19dd81ac672ff17efaec6ce0f",
+    rating: "",
     match: 1,
   },
   青川东河口地震遗址公园: {
@@ -14198,6 +16219,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-21:00",
     image:
       "http://store.is.autonavi.com/showpic/e0bc69ec553b380a5634cd18b0ec5b74",
+    rating: "",
     match: 1,
   },
   广元市明月峡景区: {
@@ -14206,6 +16228,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05-01至10-07 周一至周日 08:30-18:00 最晚进入18:00；10-08至04-30 周一至周日 08:30-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/70189ea4bf046b0ebbebaef0ad71720c",
+    rating: "",
     match: 1,
   },
   广元天曌山景区: {
@@ -14214,6 +16237,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05-01至10-07 周一至周日 08:30-17:00；10-08至04-30 周一至周日 08:30-16:30",
     image:
       "http://store.is.autonavi.com/showpic/0dbb2d104c50254b0cf0b6d9f6e5cbf6",
+    rating: "",
     match: 1,
   },
   广元市千佛崖石刻艺术博物馆: {
@@ -14221,6 +16245,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "3月至10月:08:00-18:00；11月至2月:08:30-17:30,2026年2月16日关闭",
     image:
       "http://store.is.autonavi.com/showpic/e08ddb8efac8af0b8c5b67db160f4a83",
+    rating: "",
     match: 1,
   },
   青溪古城: {
@@ -14228,6 +16253,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/46ce48a0b4884bc10000008005708653",
+    rating: "",
     match: 1,
   },
   龙门阁景区: {
@@ -14235,6 +16261,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://store.is.autonavi.com/showpic/ca6f66a75d8e57ae7157367a13257f76",
+    rating: "",
     match: 0.88,
   },
   广元水磨沟景区: {
@@ -14243,6 +16270,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 09:00-17:00；4月至10月 周一至周日 08:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/4c792bef8d1ad3188b867b6b20e42114",
+    rating: "",
     match: 1,
   },
   "苍溪·梨文化博览园": {
@@ -14250,6 +16278,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/2aa86a7687d57ce084d7b6c929cec8e0",
+    rating: "",
     match: 1,
   },
   广元市旺苍县木门景区: {
@@ -14257,6 +16286,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "https://aos-comment.amap.com/B0FFM4W2E4/comment/61fb03675ed8e6e2260851f74ce4c151_2048_2048_80.jpg",
+    rating: "",
     match: 0.98,
   },
   柏林古镇景区: {
@@ -14265,6 +16295,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "夏令时 全年 08:30–18:00开放 最晚进入17:00；冬令时 全年 09:00–18:00开放",
     image:
       "https://store.is.autonavi.com/showpic/32181ad6fe05f9240000002120196649?type=pic",
+    rating: "",
     match: 1,
   },
   甘孜州泸定桥旅游景区: {
@@ -14272,6 +16303,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/0fe3bfda3b56d8920000007510374818?type=pic",
+    rating: "",
     match: 0.98,
   },
   道孚县八美墨石公园景区: {
@@ -14279,6 +16311,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "09:00-17:30,2026年2月16日至2026年2月17日09:00-12:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/e51cfe5b-79d8-46c8-81e5-c93906e0ed07.jpg",
+    rating: "",
     match: 0.97,
   },
   石渠县真达神鹿谷旅游景区: {
@@ -14286,6 +16319,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/01bf1f4ba622d633d81ff0bdaa605f94",
+    rating: "",
     match: 1,
   },
   "理塘县勒通古镇-千户藏寨景区": {
@@ -14294,6 +16328,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05-01至10-11 周一至周日 08:30-17:30；10-12至04-30 周一至周日 09:00-17:30",
     image:
       "https://aos-comment.amap.com/B0FFL4XWOE/comment/5D10E360_30D0_4412_AD3D_5178ED44E7BD_L0_001_1126_200_1759147772166_19579664.jpg",
+    rating: "",
     match: 0.66,
   },
   道孚木雅噶达旅游景区: {
@@ -14301,6 +16336,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-21:00",
     image:
       "https://store.is.autonavi.com/showpic/5a1095b2521bfe8bcfa7eb6d9ae9c513",
+    rating: "",
     match: 0.96,
   },
   石渠县巴格嘛呢景区: {
@@ -14308,6 +16344,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFIQ5F93/comment/20260315-741ce2c4c445ffe272c32d97-2UWqOlk14wE5acJzWPAPWg.jpg",
+    rating: "",
     match: 1,
   },
   乡城县青德藏乡田园景区: {
@@ -14315,6 +16352,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/5fc7ae130f82bcd20000007785774635",
+    rating: "",
     match: 0.97,
   },
   甘孜州甘孜县格萨尔王城景区: {
@@ -14322,6 +16360,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-12:00,15:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/37d48c6906da62030000002982320246?type=pic",
+    rating: "",
     match: 1,
   },
   甘孜州德格县印经院景区: {
@@ -14329,6 +16368,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-11:30,14:00-16:30",
     image:
       "https://store.is.autonavi.com/showpic/abe1b90bd76696e80000004683846664?type=pic",
+    rating: "",
     match: 0.55,
   },
   道孚县亚拉雪山景区: {
@@ -14336,6 +16376,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入15:30",
     image:
       "http://store.is.autonavi.com/showpic/c6d4f5f6b1af75e6ec356d2f66bc955a",
+    rating: "",
     match: 0.92,
   },
   甘孜州色达县瓦须部落文化旅游景区: {
@@ -14343,6 +16384,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/comment/20260313-8b86a00c6de50b817b7bb559-5vqeFBfD3rT7Bb6iSCqu3w.jpg",
+    rating: "",
     match: 0.89,
   },
   甘孜州理塘县藏巴拉花海景区: {
@@ -14350,6 +16392,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0G3JU85M4/comment/C1DC7C42_9A81_447D_9A87_DC18178BE545_L0_001_2000_112_1758334660278_99883056.jpg",
+    rating: "",
     match: 1,
   },
   甘孜州巴塘县措普沟景区: {
@@ -14357,6 +16400,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入15:30",
     image:
       "https://store.is.autonavi.com/showpic/96ed89bfe43d19ff0000003134638353?type=pic",
+    rating: "",
     match: 1,
   },
   十八军窑洞群遗址景区: {
@@ -14364,6 +16408,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/aecefb9d1bf1b1335b7184efced2afcb",
+    rating: "",
     match: 0.77,
   },
   雅安市雨城区上里古镇: {
@@ -14371,6 +16416,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/c40200a837a1b9eb0000002357690972?type=pic",
+    rating: "",
     match: 0.98,
   },
   石棉县安顺场景区: {
@@ -14378,6 +16424,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/c60c595bf7496562b55eae1ac3f95618",
+    rating: "",
     match: 1,
   },
   熊猫古城景区: {
@@ -14385,6 +16432,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/8b0cf43ddf646fc7b31e452cefc2495b",
+    rating: "",
     match: 0.99,
   },
   金凤山景区: {
@@ -14392,6 +16440,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/a0875a8dc1b7cb700000005926426951?type=pic",
+    rating: "",
     match: 0.97,
   },
   荥经县云峰山景区: {
@@ -14399,6 +16448,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/cc52c5b19ee8125a0000003711196913?type=pic",
+    rating: "",
     match: 1,
   },
   "硗碛藏寨·神木垒景区": {
@@ -14406,6 +16456,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/ff7af8f939246db6c4634c4f947513f3",
+    rating: "",
     match: 1,
   },
   花海果乡旅游景区: {
@@ -14413,6 +16464,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFIOBWFA/comment/0411da0d31cd38fc10eeafb3db01f9f8_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   雅安周公山景区: {
@@ -14420,6 +16472,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/a26e40edffbe90530000003884856884?type=pic",
+    rating: "",
     match: 0.92,
   },
   芦山县龙门古镇旅游景区: {
@@ -14427,6 +16480,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFIOBWFB/comment/1096981c6122016fbd7a346b6af152fc_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   飞仙关旅游景区: {
@@ -14434,6 +16488,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/ade81fabdb2b56cb0000002423144345?type=pic",
+    rating: "",
     match: 0.94,
   },
   蜂桶寨邓池沟景区: {
@@ -14441,6 +16496,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://store.is.autonavi.com/showpic/38662848cb1621b357292a102a4e9207",
+    rating: "",
     match: 0.99,
   },
   灵关石城旅游景区: {
@@ -14448,6 +16504,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/e8f89e7fa702629132e24ff949f62c33",
+    rating: "",
     match: 0.97,
   },
   汉姜古城旅游景区: {
@@ -14455,6 +16512,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/8aa348f182a8b4ee1987fe08120bee58",
+    rating: "",
     match: 1,
   },
   龙苍沟叠翠溪景区: {
@@ -14463,6 +16521,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 08:30-16:30 最晚进入16:00；4月至10月 周一至周日 08:00-17:00 最晚进入16:30",
     image:
       "https://aos-comment.amap.com/B0FFKKU62Y/comment/374e1b2bd93c8b201a52a14eed095b9d_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   王岗坪景区: {
@@ -14470,6 +16529,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/8ec7d0e1e7f0252c3125cb036d9ee82b",
+    rating: "",
     match: 0.91,
   },
   严道古城旅游景区: {
@@ -14477,6 +16537,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/02e31321385de7a80000002343054234?type=pic",
+    rating: "",
     match: 1,
   },
   王坪旅游景区: {
@@ -14484,6 +16545,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "冬季 09:00-17:00； 09:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/aee28ccb340a48014a3da6b0e7c5c30a",
+    rating: "",
     match: 0.97,
   },
   米仓山国家森林公园: {
@@ -14491,6 +16553,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "春夏季 全年 08:00-18:00开放 最晚进入15:00；秋冬季 全年 09:00-17:00开放 最晚进入14:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.97,
   },
   巴中市诺水河景区: {
@@ -14499,12 +16562,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 08:30-16:30 最晚进入16:30；4月至10月 周一至周日 08:00-17:00 最晚进入17:00；4 月 1 号-10 月 31 号 单项目取票时间为 8:00-16:30 套票取票时间为 8:00-16:00 11 月 1 号-次年 3 月 31 号 单项目取票时间为 8:30-16:00 套票取票时间为 8:30-15:30",
     image:
       "http://store.is.autonavi.com/showpic/e0cca45d9ae9d52a4470254700a12f37",
+    rating: "",
     match: 0.98,
   },
   巴灵台旅游景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   驷马水乡旅游景区: {
@@ -14512,12 +16577,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/bfbd4ab3c38b6b1f37d8d434b719c4f1",
+    rating: "",
     match: 0.89,
   },
   南龛山景区: {
     tel: "",
     openTime: "周一至周日 08:30-17:00",
     image: "",
+    rating: "",
     match: 0.99,
   },
   空山天盆旅游景区: {
@@ -14525,6 +16592,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/40629dcd51a0fe4bf54f59d8ddf50e65",
+    rating: "",
     match: 0.63,
   },
   云顶茶乡: {
@@ -14532,6 +16600,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-18:30",
     image:
       "https://store.is.autonavi.com/showpic/e4b22001b52504850000004870856106?type=pic",
+    rating: "",
     match: 1,
   },
   山水化湖: {
@@ -14539,6 +16608,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFHSK4GW/comment/2cde8e82f0793364b8d511f774598e31_2048_2048_80.jpg",
+    rating: "",
     match: 0.98,
   },
   平昌南天门旅游景区: {
@@ -14546,6 +16616,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/79deef85a473f1c6925193cc9854af8c",
+    rating: "",
     match: 0.99,
   },
   巴中市白衣古镇旅游景区: {
@@ -14553,6 +16624,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "https://aos-comment.amap.com/B033B001L8/comment/59827b1c7976f547c9c7d13e7bf892c2_2048_2048_80.jpg",
+    rating: "",
     match: 0.93,
   },
   皇家山景区: {
@@ -14560,6 +16632,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/bc5edf33a994e716fa9fd04e0a84c6ce",
+    rating: "",
     match: 1,
   },
   恩阳区万寿养生谷旅游景区: {
@@ -14567,6 +16640,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/f2d3d9fd0e40bdc425fa9783b454377d",
+    rating: "",
     match: 0.98,
   },
   七彩佛龛景区: {
@@ -14574,6 +16648,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-24:00",
     image:
       "https://aos-comment.amap.com/B0I2S7PFJ0/comment/38b25568baad9db2d8fae49d4ef12a91_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   通江县唱歌石林旅游景区: {
@@ -14581,6 +16656,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFL8SF5Z/comment/f4f24219773cab11572ab4a66dbb1839_2048_2048_80.jpg",
+    rating: "",
     match: 0.95,
   },
   巴中市平昌县大石童话小镇旅游景区: {
@@ -14588,6 +16664,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/cb8f44e495abfd3d076dd05519571ffe",
+    rating: "",
     match: 0.98,
   },
   中国绵竹年画村景区: {
@@ -14595,6 +16672,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/9fbeaa2acb6f1c136233816df66cdd13",
+    rating: "",
     match: 1,
   },
   罗江白马关景区: {
@@ -14602,12 +16680,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/def7bbce33ba25fd0000003130872243?type=pic",
+    rating: "",
     match: 1,
   },
   金色清平景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.96,
   },
   孝泉大孝故里景区: {
@@ -14615,6 +16695,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/dcfa9cf27a2f15587c90dac1c31ef19f",
+    rating: "",
     match: 0.99,
   },
   自贡恐龙博物馆: {
@@ -14623,6 +16704,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:30-17:30 最晚进入17:00；停止售票:16:45 停止入场:17:00",
     image:
       "https://store.is.autonavi.com/showpic/1ee1fe2d945ef1b90000007411852645?type=pic",
+    rating: "",
     match: 1,
   },
   自贡市荣县大佛文化旅游区: {
@@ -14630,6 +16712,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/a3fa380593caedfddecde6e3f38cc142",
+    rating: "",
     match: 1,
   },
   自贡市燊海井景区: {
@@ -14637,6 +16720,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "11月1日-次年1月31日:8:30-17:00,2月1日-10月31日:8:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/93aa8bb745657290a8c36ba221ea3456",
+    rating: "",
     match: 1,
   },
   自贡市尖山风景区: {
@@ -14644,6 +16728,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/3b274beb490cc1b72be71d4163dd029b",
+    rating: "",
     match: 0.79,
   },
   "富顺文庙·西湖景区": {
@@ -14651,6 +16736,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/98c6ecb84005ece20000002427562508?type=pic",
+    rating: "",
     match: 1,
   },
   赵化古镇景区: {
@@ -14658,6 +16744,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-12:00,14:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/ac70b3799c6626aa0000002433796485?type=pic",
+    rating: "",
     match: 0.99,
   },
   中华彩灯大世界景区: {
@@ -14666,6 +16753,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "03-04至06-30 周一至周四,周日 17:00-22:30 最晚进入22:00 停止入园:22:00；03-04至06-30 周五至周六 17:00-23:00 最晚进入22:30 停止入园:22:30",
     image:
       "https://aos-comment.amap.com/B0KUFCQCD3/comment/177346301650_1773463021394_12770008.jpg",
+    rating: "",
     match: 0.71,
   },
   宜宾市蜀南竹海风景名胜区: {
@@ -14673,6 +16761,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B033F00GD8/comment/624091a080f6dd2f93f6fbdf2d177f71_2048_2048_80.jpg",
+    rating: "",
     match: 0.57,
   },
   兴文石海洞乡旅游区: {
@@ -14680,6 +16769,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/5faf94e33cd81194ea9f1e5c235e501b",
+    rating: "",
     match: 1,
   },
   夕佳山民居: {
@@ -14688,6 +16778,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周五 09:00-17:00 最晚进入16:30；周六至周日 08:30-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/597969afde10e71a4d6780f7be27fadd",
+    rating: "",
     match: 0.98,
   },
   宜宾市流杯池公园: {
@@ -14695,6 +16786,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B033F00GZC/comment/1a77a9d6b31f30ca4bcf81a1237b3110_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   南溪古街旅游景区: {
@@ -14702,6 +16794,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-21:00",
     image:
       "https://aos-comment.amap.com/B033F0NHI0/comment/e554e0fb01a268d1a94deb9c60158d28_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   五粮液旅游景区: {
@@ -14709,6 +16802,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-21:00",
     image:
       "https://aos-comment.amap.com/B0L365AAM1/comment/content_media_external_file_1000070778_ss__1760836610382_21289083.jpg",
+    rating: "",
     match: 0.56,
   },
   僰王山风景名胜区: {
@@ -14716,6 +16810,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "旺季:08:30-17:30, 具体开放时间以现场公示为准；淡季:09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/301dfa4b37b2b2ea5d661a48a97e6c0d",
+    rating: "",
     match: 0.94,
   },
   蜀南花海: {
@@ -14723,6 +16818,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:00",
     image:
       "https://aos-comment.amap.com/B0FFHWH7HO/comment/cca0060ece2b25bdf3758f74c220d577_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   兴文石菊古地旅游景区: {
@@ -14730,6 +16826,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "10月1日-12月31日 09:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFHJ3P2I/comment/D24F44EF_D718_4596_BDC1_7573CDE9B404_L0_001_2000_111_1770863484577_56183416.jpg",
+    rating: "",
     match: 1,
   },
   宜宾横江古镇景区: {
@@ -14737,6 +16834,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/88a17c6469bea86f0000005922006333?type=pic",
+    rating: "",
     match: 1,
   },
   宜宾市长宁县佛来山旅游景区: {
@@ -14744,6 +16842,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:30",
     image:
       "https://store.is.autonavi.com/showpic/ff2f1a2d64c992780000008646234009?type=pic",
+    rating: "",
     match: 0.98,
   },
   宜宾市兴文县僰人巨石阵景区: {
@@ -14751,6 +16850,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0GKKUXT7W/comment/f0b56349e77b19dcb3367d2751f5b059_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   翠屏山景区: {
@@ -14758,12 +16858,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/b0161628d04384980000002446004317?type=pic",
+    rating: "",
     match: 0.92,
   },
   遂宁市中国死海旅游度假区: {
     tel: "0825-6169188",
     openTime: "周一至周日 09:00-18:00",
     image: "",
+    rating: "",
     match: 0.62,
   },
   遂宁市中国观音故里旅游区: {
@@ -14771,6 +16873,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/2bd5debef25b9cbb4bdff48ad5df316b",
+    rating: "",
     match: 0.88,
   },
   遂宁市中华侏罗纪探秘旅游区: {
@@ -14778,6 +16881,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入16:30",
     image:
       "https://store.is.autonavi.com/showpic/6e30188d6a717583430a54d35c236a45",
+    rating: "",
     match: 0.7,
   },
   遂宁市龙凤古镇景区: {
@@ -14785,12 +16889,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00；温泉开放时间:10:00-23:00",
     image:
       "http://store.is.autonavi.com/showpic/064250b97ee2aa724b97fb389ec1aee6",
+    rating: "",
     match: 0.99,
   },
   子昂故里文化旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   观音湖湿地公园旅游景区: {
@@ -14798,6 +16904,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-22:00",
     image:
       "http://store.is.autonavi.com/showpic/13160a57fb7628d18ed1fc03781bf49b",
+    rating: "",
     match: 1,
   },
   遂宁市安居区七彩明珠景区: {
@@ -14805,6 +16912,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "https://aos-comment.amap.com/B0FFFHAV1V/comment/content_media_external_file_100016666_1763549023535_92075363.jpg",
+    rating: "",
     match: 0.96,
   },
   世界荷花博览园: {
@@ -14812,6 +16920,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFJY8BPX/comment/94b5a24e5aa27e47a259632d07a88060_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   海龙凯歌景区: {
@@ -14819,6 +16928,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/comment/content_service__1771735573462_49640807_1771735725846_05950026.jpg",
+    rating: "",
     match: 0.98,
   },
   高峰山景区: {
@@ -14826,6 +16936,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/6f9186070b510f192534116be4983188",
+    rating: "",
     match: 1,
   },
   西昌市邛海泸山风景名胜区: {
@@ -14833,6 +16944,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-20:30",
     image:
       "https://store.is.autonavi.com/showpic/f7f4b5f0b259b8edbd8ceefca1329da4",
+    rating: "",
     match: 0.97,
   },
   冕宁县灵山旅游景区: {
@@ -14840,6 +16952,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/959d5d880ec6b2d38e445b062212c433",
+    rating: "",
     match: 0.88,
   },
   凉山州普格县螺髻山旅游景区: {
@@ -14847,6 +16960,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入15:30",
     image:
       "http://store.is.autonavi.com/showpic/41a2edc00f7bbafaa1aaef836ce61aa2",
+    rating: "",
     match: 0.99,
   },
   会理古城旅游景区: {
@@ -14854,6 +16968,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/be009ed6bf6923db0000000738546173?type=pic",
+    rating: "",
     match: 1,
   },
   西昌安哈彝寨仙人洞: {
@@ -14861,12 +16976,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/dbfa6118ba5dc1b8aa1504fa0a555301",
+    rating: "",
     match: 0.95,
   },
   越西县文昌故里旅游景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.76,
   },
   宁南金钟山景区: {
@@ -14874,6 +16991,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFJMKJD3/comment/f717f7b062c8d64008df11e381eb264b_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   凯地里拉温泉旅游区: {
@@ -14881,6 +16999,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-22:30",
     image:
       "https://aos-comment.amap.com/B0FFH8BDCC/comment/content_media_external_images_media_30802.jpg",
+    rating: "",
     match: 1,
   },
   彝海景区: {
@@ -14888,6 +17007,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/f11840890568761051e16bee53d1e7e3",
+    rating: "",
     match: 1,
   },
   会理会议纪念地: {
@@ -14895,18 +17015,21 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/1591b2403d1e063b0000009093712471?type=pic",
+    rating: "",
     match: 1,
   },
   建昌古城景区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 1,
   },
   色拉尼布景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.94,
   },
   米易傈僳梯田景区: {
@@ -14914,6 +17037,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0LBC5C8DR/comment/content_media_external_file_100001978_1757228642318_58137333.jpg",
+    rating: "",
     match: 0.99,
   },
   迤沙拉景区: {
@@ -14921,6 +17045,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/0f4fc21c39b89486d070c31d55024407",
+    rating: "",
     match: 1,
   },
   泸州老窖旅游区: {
@@ -14928,6 +17053,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "09:00-17:00,最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/59dd11200646a3ed180f5f361061595e",
+    rating: "",
     match: 1,
   },
   黄荆老林旅游景区: {
@@ -14935,6 +17061,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "全年8:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/81acba537e402973116c3b95b9a4fdad",
+    rating: "",
     match: 1,
   },
   太平古镇景区: {
@@ -14942,6 +17069,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B033E0NJDK/comment/6589ABF7_7B4C_43A6_AE59_F666FFF16B7E_L0_001_1500_200_1754982316575_05383031.jpg",
+    rating: "",
     match: 1,
   },
   天仙硐旅游景区: {
@@ -14949,6 +17077,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/6594cdf1ad06e411f86944502a0fe8df",
+    rating: "",
     match: 0.88,
   },
   龙桥文化生态园: {
@@ -14956,6 +17085,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/2b469acd45eabb2e9393bfdb81ce49f1",
+    rating: "",
     match: 1,
   },
   尧坝古镇: {
@@ -14963,6 +17093,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/a398ea7f639a896e0000003113048537?type=pic",
+    rating: "",
     match: 1,
   },
   泸州市凤凰湖旅游景区: {
@@ -14970,6 +17101,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00；全天开放；乘船时间可提前电话咨询景区",
     image:
       "http://store.is.autonavi.com/showpic/7481ede2f0b90420ecb423617ce602eb",
+    rating: "",
     match: 0.95,
   },
   箭竹大黑洞景区: {
@@ -14978,12 +17110,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "4月至10月 周一至周日 09:00-18:30 最晚进入17:00 02-16至02-16 周一至周日 全天关闭；02-17至03-31 周一至周日 09:00-17:00；11-01至02-15 周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/b80495bfedf01b622cfd7868a9f29bf4",
+    rating: "",
     match: 1,
   },
   古郎景区: {
     tel: "",
     openTime: "周一至周日 08:30-17:30；售票时间:08:30-17:00 停止售票:17:00",
     image: "",
+    rating: "",
     match: 1,
   },
   泸州市叙永县中国沈酒庄景区: {
@@ -14991,6 +17125,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://store.is.autonavi.com/showpic/abc54c50964cc6550000002249898067?type=pic",
+    rating: "",
     match: 1,
   },
   三苏祠景区: {
@@ -14998,6 +17133,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "09:00-18:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/acf9f01719f99eb10000003082520361?type=pic",
+    rating: "",
     match: 0.88,
   },
   黑龙滩旅游景区: {
@@ -15005,6 +17141,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0J3G5C1JK/comment/B19A4999_E968_4181_B250_6FFBE6FEAA3E_L0_001_1080_192_1760342623676_39188699.jpg",
+    rating: "",
     match: 0.57,
   },
   江湾神木园: {
@@ -15012,6 +17149,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/1e1572f03e76a705debbc53dc1f03093",
+    rating: "",
     match: 1,
   },
   柳江古镇旅游景区: {
@@ -15019,6 +17157,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image:
       "http://store.is.autonavi.com/showpic/86154282e534cd59e9fbc2fc62692c02",
+    rating: "",
     match: 0.99,
   },
   国际竹艺城景区: {
@@ -15026,6 +17165,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/952d0285bd1184070000007864920574?type=pic",
+    rating: "",
     match: 0.97,
   },
   中国泡菜城景区: {
@@ -15033,6 +17173,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-21:00",
     image:
       "https://store.is.autonavi.com/showpic/b2190ca4833999a00000007368096231?type=pic",
+    rating: "",
     match: 1,
   },
   仁寿城市湿地公园: {
@@ -15040,6 +17181,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFGE921H/comment/content_media_external_file_100000361_1750079258261_84093437.jpg",
+    rating: "",
     match: 1,
   },
   彭祖山景区: {
@@ -15047,6 +17189,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://aos-comment.amap.com/default_poi/comment/content_media_external_file_176307_ss__1765341605267_31539575.jpg",
+    rating: "",
     match: 0.66,
   },
   老峨山旅游景区: {
@@ -15054,6 +17197,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/dba709265a5f23870000000738756498",
+    rating: "",
     match: 0.6,
   },
   资阳市陈毅故里景区: {
@@ -15061,6 +17205,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一关闭(法定节假日除外),周二至周日 09:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/05a535148caa7f5466c6d2fd8941f192",
+    rating: "",
     match: 0.99,
   },
   "资阳市安岳石刻·圆觉洞景区": {
@@ -15068,6 +17213,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "https://store.is.autonavi.com/showpic/e95fb47ca8df79ea0000002579052873?type=pic",
+    rating: "",
     match: 1,
   },
   宝森柠檬旅游区: {
@@ -15075,6 +17221,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/38a7bf6475b949e70000002398964768?type=pic",
+    rating: "",
     match: 0.97,
   },
   达州市宣汉县洋烈水乡景区: {
@@ -15082,6 +17229,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "https://aos-comment.amap.com/B0FFHU3TW4/comment/content_media_external_file_100014086_1769277566332_49389067.jpg",
+    rating: "",
     match: 1,
   },
   达州市宣汉县峨城山旅游景区: {
@@ -15089,6 +17237,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/4d486738-38e7-40c6-b7eb-6ae99a836df8.jpg",
+    rating: "",
     match: 1,
   },
   达州市万源八台山旅游景区: {
@@ -15097,6 +17246,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 00:00-24:00；游玩项目时间08:30-15:30 旺季为:1月、2月、3月、5月、7月、8月、10月、12月 淡季为:4月、6月、9月、11月",
     image:
       "http://store.is.autonavi.com/showpic/f4a19b1431790548d409c576ce4a32a4",
+    rating: "",
     match: 0.96,
   },
   通川区磐石月湖旅游景区: {
@@ -15104,6 +17254,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://aos-comment.amap.com/B0J1MHYBL1/headerImg/f408089d96a22a7ed6404c2d0ef40573_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   万源市红军公园旅游景区: {
@@ -15111,6 +17262,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/6380d1ddde11b1dbb492808e1644b3f2",
+    rating: "",
     match: 0.97,
   },
   达州市渠县文峰山文化旅游景区: {
@@ -15118,6 +17270,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "https://store.is.autonavi.com/showpic/aeda37d06bb0c106a6df9f677b5cad6d",
+    rating: "",
     match: 1,
   },
   神剑园景区: {
@@ -15125,6 +17278,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周二至周日 09:00-17:00,节假日以官方通知为准",
     image:
       "https://store.is.autonavi.com/showpic/fe7c1564feae24a40000000670316030?type=pic",
+    rating: "",
     match: 0.99,
   },
   渔人部落旅游景区: {
@@ -15133,6 +17287,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 09:00-18:00 10-01至10-07 周一至周日 08:00-14:00,16:30-20:30；14:00-16:30休息（有值班，可正常入园）",
     image:
       "https://store.is.autonavi.com/showpic/dfc177c9c47f71380000000876786351",
+    rating: "",
     match: 1,
   },
   金山景区: {
@@ -15140,6 +17295,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/62a9173a52f3a1efd1f05d9d8a91c192",
+    rating: "",
     match: 0.97,
   },
   内江大千园旅游景区: {
@@ -15147,6 +17303,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一 全天关闭；周二至周五 09:00-17:00；周六至周日 09:00-17:30",
     image:
       "https://aos-comment.amap.com/B07280NBV3/comment/81a708d88f46f2cada42542f8ed67e53_2048_2048_80.jpg",
+    rating: "",
     match: 0.98,
   },
   市中区黄鹤湖旅游区: {
@@ -15154,6 +17311,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/65dc4d12ccc6c6f91b8069d66fe8fee7",
+    rating: "",
     match: 0.99,
   },
   乐贤半岛旅游区: {
@@ -15161,6 +17319,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/e990c76d3bb6693ed8eef2f3a517bf51",
+    rating: "",
     match: 1,
   },
   内江市威远县石板河旅游区: {
@@ -15168,6 +17327,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-19:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/4712c327f024852869b03fe190f4fc7b",
+    rating: "",
     match: 0.89,
   },
   内江市资中县罗泉古镇旅游景区: {
@@ -15175,6 +17335,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/78b09f3117b5c06011dd2b4e316a3880",
+    rating: "",
     match: 1,
   },
   古佛顶旅游景区: {
@@ -15183,6 +17344,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:30-17:30 最晚进入17:00；具体营业状态以当天开放情况为准",
     image:
       "https://aos-comment.amap.com/B0IAVHHOSZ/comment/content_media_external_file_1000124361_ss__1758423240649_39235567.jpg",
+    rating: "",
     match: 0.93,
   },
   贵阳市白云泉湖公园景区: {
@@ -15190,6 +17352,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/5bab90d61c2687940000002444290763?type=pic",
+    rating: "",
     match: 0.99,
   },
   贵阳市息烽集中营革命历史纪念馆景区: {
@@ -15197,6 +17360,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/b9bffe8ef201131638f7b9d4dafcc4a2",
+    rating: "",
     match: 0.99,
   },
   贵阳市修文桃源河旅游景区: {
@@ -15204,6 +17368,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/698f1e85-4e93-43c9-adb4-e3b7114678d5.jpg",
+    rating: "",
     match: 0.94,
   },
   贵阳市乌当贵御温泉旅游景区: {
@@ -15211,6 +17376,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:00-02:00",
     image:
       "http://store.is.autonavi.com/showpic/10fab647ce0482782e3b232b6bac35cf",
+    rating: "",
     match: 1,
   },
   贵阳市开阳南江大峡谷景区: {
@@ -15219,12 +17385,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:30-17:00；漂流时间参考:08:30-17:00，漂流易受天气等影响，时间以现场为准",
     image:
       "http://store.is.autonavi.com/showpic/9c15f285bf107874316cf62ce54837a9",
+    rating: "",
     match: 0.93,
   },
   贵阳市修文森林野生动物园景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.75,
   },
   "贵阳市乌当羊昌·花画小镇旅游景区": {
@@ -15232,6 +17400,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周五 09:00-17:00；周六至周日 09:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/2c62d46e130139a0c317f39b3ac527a9",
+    rating: "",
     match: 1,
   },
   遵义市播州太阳坪景区: {
@@ -15239,6 +17408,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00 最晚进入17:00",
     image:
       "https://aos-comment.amap.com/B0FFIRV4VX/comment/%5B2026-02-24-10-57-31%5DF63C1AA1-76F0-47B1-875A-403AC5BBCF0_1771901880182_37035295.jpg",
+    rating: "",
     match: 0.61,
   },
   遵义市赤水丙安古镇景区: {
@@ -15246,6 +17416,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/8792fe977adec94e0000007497998091",
+    rating: "",
     match: 0.99,
   },
   遵义市绥阳清溪峡景区: {
@@ -15253,12 +17424,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入17:00；漂流最晚入园时间为15:00",
     image:
       "https://aos-comment.amap.com/B0FFG32VIU/comment/5a85816a539a8ad7c1f4bc30388d08a6_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   遵义市播州苟坝红色旅游景区: {
     tel: "",
     openTime: "周一至周日 08:30-17:30",
     image: "",
+    rating: "",
     match: 0.97,
   },
   遵义市正安桃花源记景区: {
@@ -15266,6 +17439,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFHUH7XR/comment/5fca85331da5b54fc8ad035a742a9c4f_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   遵义市汇川海龙屯旅游景区: {
@@ -15274,6 +17448,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 09:00-17:00 最晚进入16:00；4月至10月 周一至周日 08:30-18:00 最晚进入16:30",
     image:
       "https://store.is.autonavi.com/showpic/4e6d0cb2e9b12d6e0000009241822470?type=pic",
+    rating: "",
     match: 1,
   },
   遵义市桐梓杉坪旅游景区: {
@@ -15281,6 +17456,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/42f4ce645d82185840ff5faf9a893f0e",
+    rating: "",
     match: 1,
   },
   遵义市习水土城古镇景区: {
@@ -15288,6 +17464,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:30-17:30, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/bf925fd9269abc410000008175894843?type=pic",
+    rating: "",
     match: 0.66,
   },
   遵义市赤水四洞沟旅游景区: {
@@ -15296,6 +17473,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至2月,11月至12月 周一至周日 08:30-17:00 最晚进入17:00；3月至10月 周一至周日 08:00-17:30 最晚进入17:30；节假日开放游览时间根据情况另行调整",
     image:
       "http://store.is.autonavi.com/showpic/81024a8ea3d308ff34e61cc979fadc24",
+    rating: "",
     match: 0.94,
   },
   遵义市仁怀茅台酒镇旅游区: {
@@ -15304,6 +17482,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "09:00-16:30,2026年2月16日至2026年2月17日 09:00-13:30,2026年2月18日至2026年2月23日 09:00-15:30",
     image:
       "https://store.is.autonavi.com/showpic/3d293aad07032ead0000004082074252?type=pic",
+    rating: "",
     match: 1,
   },
   遵义市绥阳双河洞旅游景区: {
@@ -15311,6 +17490,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/c00a2674e766cccd0000000701474236?type=pic",
+    rating: "",
     match: 0.93,
   },
   遵义市习水中国丹霞谷旅游景区: {
@@ -15318,6 +17498,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/d5344d24-3a19-4e15-9e17-716a177df426.jpg",
+    rating: "",
     match: 0.94,
   },
   遵义市习水四渡赤水纪念馆景区: {
@@ -15325,6 +17506,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/e09a2ac5-c022-47cd-a86f-30e3cc77a720.jpg",
+    rating: "",
     match: 1,
   },
   遵义市凤冈茶海之心景区: {
@@ -15332,6 +17514,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周五 08:00-18:00；周六至周日 08:00-19:00",
     image:
       "https://store.is.autonavi.com/showpic/c4f27f51e1649c070000002502054322",
+    rating: "",
     match: 0.92,
   },
   遵义市仁怀中国酒文化城旅游景区: {
@@ -15340,6 +17523,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "09:00-16:30,2026年2月16日至2026年2月17日 09:00-13:30,2026年2月18日至2026年2月23日 09:00-15:30",
     image:
       "https://store.is.autonavi.com/showpic/3d293aad07032ead0000004082074252?type=pic",
+    rating: "",
     match: 0.61,
   },
   遵义市余庆飞龙寨景区: {
@@ -15347,6 +17531,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-16:30 最晚进入16:30",
     image:
       "https://store.is.autonavi.com/showpic/1eadc7cbc541dc910000004043668453?type=pic",
+    rating: "",
     match: 1,
   },
   遵义市红花岗遵义会议会址旅游景区: {
@@ -15355,12 +17540,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "01-01至07-12 周一 全天关闭；01-01至07-12 周二至周日 08:30-21:00 最晚进入20:30；07-13至08-31 周一至周日 08:30-21:00 最晚进入20:30；09-01至12-31 周一 全天关闭；09-01至12-31 周二至周日 08:30-21:00 最晚进入20:30",
     image:
       "https://aos-comment.amap.com/B0354006NC/comment/3a1a348013ddb6025ca6dab580668eb7_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   安顺市平坝塘约旅游景区: {
     tel: "",
     openTime: "周一至周日 09:00-18:00",
     image: "",
+    rating: "",
     match: 1,
   },
   安顺市平坝天龙屯堡旅游景区: {
@@ -15369,6 +17556,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "12月至2月 08:00-18:00,3月至11月 08:30-17:30, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/58d1e4719fa00ded1f7ea275bb0e4d3c",
+    rating: "",
     match: 0.72,
   },
   安顺市紫云格凸河户外休闲旅游景区: {
@@ -15376,6 +17564,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/0137ca81219adc308a6ce00fa859397b",
+    rating: "",
     match: 1,
   },
   安顺市镇宁夜郎洞景区: {
@@ -15384,12 +17573,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至2月,11月至12月 周一至周日 08:30-17:30 最晚进入17:00；3月至10月 周一至周日 08:30-18:00 最晚进入17:00",
     image:
       "https://aos-comment.amap.com/B035500719/comment/5FF57E13_1537_47A9_BE71_A96594748E15_L0_001_1206_153_1770460456298_72763197.jpg",
+    rating: "",
     match: 1,
   },
   六盘水市六枝瀑布源龙井布依风情景区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 1,
   },
   六盘水市水城百车河景区: {
@@ -15397,6 +17588,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/b6d595416624c7d90000003190296923?type=pic",
+    rating: "",
     match: 0.92,
   },
   六盘水市盘州乌蒙大草原景区: {
@@ -15404,6 +17596,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-20:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/8179935b-5529-44ef-b77b-550a0a35bbcb.jpg",
+    rating: "",
     match: 1,
   },
   六盘水市盘州娘娘山旅游景区: {
@@ -15411,6 +17604,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFGWKMPE/comment/fabffda82b98c31de373c55414d6e35b_2048_2048_80.jpg",
+    rating: "",
     match: 0.77,
   },
   六盘水市钟山韭菜坪旅游景区: {
@@ -15418,6 +17612,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/d9cdce8b2f8420da0e8a95b765975f7e",
+    rating: "",
     match: 0.99,
   },
   六盘水市盘州妥乐古银杏旅游景区: {
@@ -15425,6 +17620,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/eabdcfac2c0f143e5c8440b2b1d435ba",
+    rating: "",
     match: 0.97,
   },
   毕节市大方油杉河景区: {
@@ -15433,6 +17629,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "11月至12月 周一至周日 09:00-17:00 最晚进入16:00 01-01至10-07 周一至周日 09:00-17:00 最晚进入16:00；10-08至10-31 周一至周日 08:30-17:30 最晚进入16:30",
     image:
       "https://store.is.autonavi.com/showpic/7a632d60dba77b360000000726538761?type=pic",
+    rating: "",
     match: 0.96,
   },
   毕节市大方九洞天景区: {
@@ -15441,6 +17638,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "09:00-16:00,2026-02-17,09:30-16:30,2026-02-18至2026-02-23,08:30-16:30",
     image:
       "http://store.is.autonavi.com/showpic/00577aab93a76e2bbfdee4d84acf7e5d",
+    rating: "",
     match: 0.91,
   },
   毕节市金海湖旅游区: {
@@ -15448,6 +17646,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00；具体营业状态以当天开放情况为准",
     image:
       "https://aos-comment.amap.com/B0FFIR3PBQ/comment/81B78251_CBD0_4D86_8EDB_860BEB390ADB_L0_001_847_79_1755962066978_48285146.jpg",
+    rating: "",
     match: 0.96,
   },
   毕节市赫章阿西里西韭菜坪旅游景区: {
@@ -15456,6 +17655,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 09:00-17:00；9月8日-9月30日 08:00-18:00开放（17:00停止售票，17:00停止入园）；具体开放时间以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/1740d7008e2341063354e1709ddd9a61",
+    rating: "",
     match: 1,
   },
   铜仁市碧江大明边城旅游景区: {
@@ -15463,6 +17663,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/f38dd2530475943f52684d9b23403978",
+    rating: "",
     match: 0.88,
   },
   铜仁市石阡夜郎古泉旅游景区: {
@@ -15471,6 +17672,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 00:00-24:00 2026-02-17至2026-02-23 周一至周日 08:00-23:00",
     image:
       "https://store.is.autonavi.com/showpic/97925151f8be5289d2fab776ef065aee",
+    rating: "",
     match: 0.97,
   },
   铜仁市思南石林旅游景区: {
@@ -15478,12 +17680,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/9e42662424af59796e9634a778f03671",
+    rating: "",
     match: 0.98,
   },
   铜仁市松桃苗王城旅游景区: {
     tel: "",
     openTime: "周一至周日 08:00-18:00",
     image: "",
+    rating: "",
     match: 1,
   },
   黔东南州麻江蓝莓生态旅游区: {
@@ -15491,6 +17695,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/f246ce0524d5d71c0000003136430699",
+    rating: "",
     match: 0.93,
   },
   黔东南州锦屏隆里古城旅游景区: {
@@ -15498,6 +17703,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B035700416/comment/content_media_external_file_614_1770295941419_16992314.jpg",
+    rating: "",
     match: 0.9,
   },
   黔东南州凯里云谷田园生态农业旅游区: {
@@ -15505,6 +17711,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/d214b8344433bcfdc2ba66f9edb35801",
+    rating: "",
     match: 0.56,
   },
   黔东南州雷山西江千户苗寨景区: {
@@ -15513,6 +17720,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "淡季(11月1日-次年3月31日):07:30-24:00；旺季(4月1日-10月31日):07:00-01:00；春节期间按照旺季运营时间执行",
     image:
       "http://store.is.autonavi.com/showpic/767a27e7d0fe9089affed7eb907fcf1e",
+    rating: "",
     match: 1,
   },
   黔南州龙里油画大草原旅游区: {
@@ -15521,6 +17729,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至10月 周一至周日 08:30-18:00 最晚进入17:00；景区项目截至时间到17:30",
     image:
       "http://store.is.autonavi.com/showpic/89e75f256139370fb2a5a4ed63bdfa1d",
+    rating: "",
     match: 0.95,
   },
   黔南州惠水好花红乡村旅游区: {
@@ -15528,6 +17737,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/6635d4b0dafe2d730000008713560109?type=pic",
+    rating: "",
     match: 0.96,
   },
   "黔南州都匀茶文化影视小镇景区（秦汉影视城）": {
@@ -15535,12 +17745,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:30",
     image:
       "https://aos-comment.amap.com/B0KUBRT3AU/comment/content_media_external_images_media_1000012846_ss__1768299776336_51329838.jpg",
+    rating: "",
     match: 1,
   },
   黔南州平塘中国天眼景区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.67,
   },
   福泉古城文化旅游景区: {
@@ -15548,6 +17760,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://store.is.autonavi.com/showpic/d0f08e1a126885817169bf248b36f9de",
+    rating: "",
     match: 0.97,
   },
   黔南州龙里中铁双龙镇巫山峡谷旅游区: {
@@ -15555,6 +17768,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/e5f47cfb2382a30e6b2e39c7f95d6590",
+    rating: "",
     match: 0.99,
   },
   黔南州都匀杉木湖景区: {
@@ -15563,12 +17777,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周五 08:30-17:00 最晚进入17:00；周六至周日 08:30-17:30 最晚进入17:30",
     image:
       "https://aos-comment.amap.com/B0FFGLVHGU/comment/72495C17_19A0_4037_9EF3_6F5652094EE9_L0_001_1170_87_1760899228672_71413228.jpg",
+    rating: "",
     match: 0.98,
   },
   黔南州瓮安草塘千年古邑旅游区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   "黔南州平塘掌布“藏字石”景区": {
@@ -15576,6 +17792,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/comment/20260314-e010e0ead2bcd5e2d5df5e21-2grSSEN3JO494yvq3NkjPf.jpg",
+    rating: "",
     match: 0.97,
   },
   黔南州荔波瑶山古寨景区: {
@@ -15583,6 +17800,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFF2U5NW/comment/1A52A794_BDB1_48C1_B26C_2D30AE3478A6_L0_001_1500_2000_1739086832759_95167524.jpg",
+    rating: "",
     match: 1,
   },
   黔西南州普安茶文化生态旅游景区: {
@@ -15590,6 +17808,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0I3USO3M3/headerImg/84179d2250a408c0927a9405dfec806c_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   黔西南州安龙招堤旅游景区: {
@@ -15597,6 +17816,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-20:00；具体营业状态以当天开放情况为准。",
     image:
       "https://aos-comment.amap.com/B035B002O1/comment/ddf680c793be9b971b5bc37c73a677c9_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   黔西南州兴义马岭河峡谷景区: {
@@ -15605,6 +17825,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "03/01-10/31 08:00–17:30开放 最晚进入17:30；11/01-02/28 08:30–17:00开放 最晚售票17:00 最晚进入17:00；国庆节 07:30–18:30开放 最晚进入18:30",
     image:
       "https://aos-comment.amap.com/B0FFL5AXI8/comment/content_media_external_images_media_1000138055_ss__1734855903457_50406399.jpg",
+    rating: "",
     match: 0.87,
   },
   黔西南州兴义万峰林景区: {
@@ -15613,6 +17834,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "11月1日-2月28日:8:30-17:30,17:00停止检票入园,3月1日-10月31日:8:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/d9ca1938ac2b43b27798710dbeb83c88",
+    rating: "",
     match: 0.99,
   },
   九乡风景名胜区: {
@@ -15620,6 +17842,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-17:30 停止售票:17:30 停止入场:17:30",
     image:
       "https://store.is.autonavi.com/showpic/ab3270b7fbdbf5f60000000560214012",
+    rating: "",
     match: 0.99,
   },
   云南野生动物园景区: {
@@ -15628,12 +17851,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "01-01至02-15 周一至周日 09:00-18:00 最晚进入16:30；02-16至02-16 周一至周日 09:00-14:00 最晚进入11:40；02-17至12-31 周一至周日 09:00-18:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/ba6f5d78b142fc4c40985db0012abfd4",
+    rating: "",
     match: 0.99,
   },
   昆明轿子山景区: {
     tel: "",
     openTime: "周一至周日 08:30-17:30 最晚进入15:00",
     image: "",
+    rating: "",
     match: 0.59,
   },
   昆明青龙峡景区: {
@@ -15642,6 +17867,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周五 09:00-17:00 最晚进入16:30；周六至周日 09:00-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/0eec91c15e15661d2578558d0bf60b86",
+    rating: "",
     match: 0.92,
   },
   昆明玉龙湾景区: {
@@ -15649,12 +17875,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "09:00-18:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/503264d853fae7cb0000008588362979?type=pic",
+    rating: "",
     match: 0.6,
   },
   丽江束河古镇景区: {
     tel: "0888-5174835",
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.67,
   },
   丽江黑龙潭景区: {
@@ -15662,6 +17890,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "夏令07:00-20:00,冬令07:00-21:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/701cc1de0da65dcd5453a7003389bd1d",
+    rating: "",
     match: 0.6,
   },
   丽江泸沽湖摩梭文化旅游区: {
@@ -15669,6 +17898,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0G0ACV2B2/comment/20452240_AD2C_4E48_98A5_19D8FE902108_L0_001_1170_154_1769206744316_73839432.jpg",
+    rating: "",
     match: 0.91,
   },
   丽江观音峡景区: {
@@ -15676,6 +17906,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/698e19c4d76e15b196e478bfd8edc03f",
+    rating: "",
     match: 0.6,
   },
   丽江东巴谷景区: {
@@ -15683,6 +17914,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://aos-comment.amap.com/B0378008F8/comment/content_media_external_file_238266_ss__1769572326774_68159299.jpg",
+    rating: "",
     match: 1,
   },
   大理南诏风情岛景区: {
@@ -15690,6 +17922,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/55f4037a529dc9a828df24dc39e4212c",
+    rating: "",
     match: 1,
   },
   "剑川石宝山·沙溪古镇景区": {
@@ -15697,6 +17930,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入16:20",
     image:
       "http://store.is.autonavi.com/showpic/2691efe5482118f4ccd8f98d414290ca",
+    rating: "",
     match: 0.97,
   },
   大理古城景区: {
@@ -15704,6 +17938,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/6f58f6d8603c8ef98b2b0754c8d3c01a",
+    rating: "",
     match: 1,
   },
   大理蝴蝶泉景区: {
@@ -15711,6 +17946,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/2d4353766b2c0ff1576dde2412bfa9e5",
+    rating: "",
     match: 1,
   },
   "剑川千狮山(满贤林)景区": {
@@ -15718,6 +17954,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:20",
     image:
       "http://store.is.autonavi.com/showpic/10f24afa3bea04b48674f39134014b78",
+    rating: "",
     match: 0.59,
   },
   大理海洋世界景区: {
@@ -15725,6 +17962,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/fc7a2232f965971daf9c7c0d3ce32294",
+    rating: "",
     match: 1,
   },
   大理天龙八部影视城景区: {
@@ -15732,6 +17970,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-20:30 最晚进入18:30",
     image:
       "http://store.is.autonavi.com/showpic/11e6715739090d4fa97fb248aa2324b8",
+    rating: "",
     match: 1,
   },
   西双版纳傣族园景区: {
@@ -15739,6 +17978,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/41fd9e8c8cd6fbc79c69277e3e2068c1",
+    rating: "",
     match: 1,
   },
   西双版纳热带花卉园景区: {
@@ -15746,12 +17986,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B0LKX5NSLF/comment/content_media_external_file_1000019100_ss__1769227913316_10426355.jpg",
+    rating: "",
     match: 1,
   },
   西双版纳望天树景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.91,
   },
   西双版纳勐泐文化旅游区: {
@@ -15760,6 +18002,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-17:30,18:00-21:30；自2025年11月24日起，象之心和机甲大象演出场次时间调整，具体如下: 1.象之心每日3场，时间为:11:30 14:00 15:30 2.机甲大象巡游每日6场，时间为:10:00 10:50（带演员） 11:50 13:30 15:00（带演员） 16:30 如遇特殊情况以景区当天安排时间为准",
     image:
       "http://store.is.autonavi.com/showpic/6370007e93ef945aea7812a4139560f6",
+    rating: "",
     match: 1,
   },
   告庄西双景景区: {
@@ -15767,6 +18010,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/072284f47e09fe20d2b2ea1c05ee78f6",
+    rating: "",
     match: 1,
   },
   西双版纳勐景来景区: {
@@ -15774,12 +18018,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/6893a7a398dcc8850000002745714206?type=pic",
+    rating: "",
     match: 1,
   },
   西双版纳融创乐园景区: {
     tel: "0691-8999679",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   西双版纳勐远仙境景区: {
@@ -15787,6 +18033,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/c9421fde73bf6a680d7a5d4e91ff93d6",
+    rating: "",
     match: 1,
   },
   迪庆梅里雪山景区: {
@@ -15794,6 +18041,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B03770LQ30/comment/AE2BDF39_FE19_4A95_B3CC_C2489C90D6F7_L0_001_1500_2000_1740690995044_57315163.jpg",
+    rating: "",
     match: 0.67,
   },
   迪庆虎跳峡景区: {
@@ -15801,6 +18049,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入18:00",
     image:
       "https://aos-comment.amap.com/B0FFM9U0IQ/comment/b18b60295526478eea70953fa398bc84_2048_2048_80.jpg",
+    rating: "",
     match: 0.58,
   },
   迪庆香格里拉松赞林景区: {
@@ -15808,6 +18057,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/b88fca40cda5258ae3e4351ec543da6b",
+    rating: "",
     match: 1,
   },
   香格里拉蓝月山谷旅游区: {
@@ -15815,6 +18065,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:00",
     image:
       "https://aos-comment.amap.com/B0FFLHYZIX/comment/177036408736_1770364099259_07951924.jpg",
+    rating: "",
     match: 0.89,
   },
   "迪庆香格里拉大峡谷·巴拉格宗景区": {
@@ -15822,6 +18073,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:30",
     image:
       "https://store.is.autonavi.com/showpic/14db2247836038cf0000003062980403",
+    rating: "",
     match: 0.72,
   },
   腾冲和顺古镇景区: {
@@ -15829,6 +18081,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00；商铺的:07:30-22:00",
     image:
       "http://store.is.autonavi.com/showpic/6e866ba23ade1018fbe2d32726d18b89",
+    rating: "",
     match: 0.99,
   },
   腾冲杜鹃王古木文化博览园景区: {
@@ -15836,6 +18089,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-19:30",
     image:
       "https://store.is.autonavi.com/showpic/3bfc75ba6e850caf0000004479822569?type=pic",
+    rating: "",
     match: 1,
   },
   青华海国家湿地公园景区: {
@@ -15843,6 +18097,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/2531a218d2109e800000002821318300?type=pic",
+    rating: "",
     match: 0.99,
   },
   昌宁右甸河田园生态旅游区: {
@@ -15850,6 +18105,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-22:00",
     image:
       "https://store.is.autonavi.com/showpic/cf39a3b2380e49560000000579256550",
+    rating: "",
     match: 1,
   },
   "腾冲滇西抗战纪念馆(国殇墓园)景区": {
@@ -15857,6 +18113,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/ba79bcfc8d98b00d2d44253b2ada00e9",
+    rating: "",
     match: 1,
   },
   腾冲北海湿地景区: {
@@ -15864,6 +18121,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-19:00 最晚进入18:30",
     image:
       "http://store.is.autonavi.com/showpic/66a30873d75ba16b5db116e9cbb63b76",
+    rating: "",
     match: 0.99,
   },
   腾冲原乡栖花岭景区: {
@@ -15871,6 +18129,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-18:30",
     image:
       "https://aos-comment.amap.com/B0FFKOYJYJ/comment/5B0215B2_7D63_41C4_9A1E_0090CD1654F8_L0_001_2016_151_1753266643249_39836653.jpg",
+    rating: "",
     match: 1,
   },
   腾冲清水中寨司莫拉佤族村: {
@@ -15878,6 +18137,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0GD7Z9Y28/comment/A2642B38_AAA9_451E_939A_5123D709534F_L0_001_1500_200_1762558804981_91258733.jpg",
+    rating: "",
     match: 1,
   },
   文山州英雄老山圣地景区: {
@@ -15885,12 +18145,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/0cda1802b692505b0000002655982296",
+    rating: "",
     match: 0.97,
   },
   广南县西洋江大峡谷旅游景区: {
     tel: "0876-5966099",
     openTime: "1月1日-12月31日 09:00-18:00",
     image: "",
+    rating: "",
     match: 1,
   },
   昭通水富西部大峡谷景区: {
@@ -15898,6 +18160,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-23:00",
     image:
       "http://store.is.autonavi.com/showpic/424001972e931850ec9e06985625bd33",
+    rating: "",
     match: 1,
   },
   大关黄连河景区: {
@@ -15905,6 +18168,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/746fddfa101fd41ac8b0efd3b97d9178",
+    rating: "",
     match: 0.98,
   },
   陆良彩色沙林景区: {
@@ -15912,12 +18176,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00 最晚进入17:00",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/49d559c7-3713-4fcf-a9d1-3d9cba86768f.jpg",
+    rating: "",
     match: 1,
   },
   罗平九龙瀑布群风景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.81,
   },
   沾益县珠江源旅游景区: {
@@ -15925,6 +18191,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周五 09:00-17:30；周六至周日 08:30-17:30",
     image:
       "https://aos-comment.amap.com/B036A00P2N/comment/680b285fb1f9ff56c69de3355b0f1eb2_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   曲靖会泽大海草山景区: {
@@ -15932,6 +18199,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/6526100929db1d8315fe5b8f2fece41b",
+    rating: "",
     match: 0.99,
   },
   曲靖师宗菌子山景区: {
@@ -15939,6 +18207,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:30",
     image:
       "https://aos-comment.amap.com/B036A009QB/comment/F0DD99AB_55F5_4AD6_B676_987EBFC6616A_L0_001_828_1071_1738395673664_21840642.jpg",
+    rating: "",
     match: 1,
   },
   罗平县鲁布革三峡景区: {
@@ -15946,6 +18215,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/56d82a11b7bd6b130000004578520627?type=pic",
+    rating: "",
     match: 1,
   },
   麒麟区麒麟水乡景区: {
@@ -15953,6 +18223,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:30；车船17:00关闭",
     image:
       "https://aos-comment.amap.com/B0FFI93CU2/headerImg/2ca3e76d342d9bc63fbf8cd6510ec6e8_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   麒麟区克依黑景区: {
@@ -15960,6 +18231,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入17:00",
     image:
       "https://store.is.autonavi.com/showpic/94468fb0ad3244a70000002108980323?type=pic",
+    rating: "",
     match: 0.99,
   },
   罗平县相石阶景区: {
@@ -15967,6 +18239,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/0827f270ac09f8982cc68215ce7bfb0f",
+    rating: "",
     match: 0.79,
   },
   云南马过河旅游景区: {
@@ -15974,6 +18247,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "https://aos-comment.amap.com/B036A00C9D/comment/content_media_external_images_media_29726_1730285369337_79633032.jpg",
+    rating: "",
     match: 1,
   },
   通海县秀山历史文化公园景区: {
@@ -15982,6 +18256,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "3月至10月 周一至周日 08:00-19:00；11月至12月,1月至2月 周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFM9U1ZN/comment/E5B3806A_C147_430C_AFBE_FD332CF9826E_L0_001_2000_150_1746426223301_71049407.jpg",
+    rating: "",
     match: 0.88,
   },
   玉溪映月潭休闲文化中心: {
@@ -15990,6 +18265,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 00:00-24:00；温泉12:00-23:00，文化中心内设不同项目，开放时间不同，详情可电话咨询。",
     image:
       "http://store.is.autonavi.com/showpic/3823fe8304102285ed20d9ae85a5c16d",
+    rating: "",
     match: 1,
   },
   玉溪新平磨盘山国家森林公园景区: {
@@ -15997,6 +18273,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/320336c75243a1aa37ed71fd949fa659",
+    rating: "",
     match: 1,
   },
   楚雄彝人古镇景区: {
@@ -16004,6 +18281,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/8a573dbd80888d22b162531e726a138d",
+    rating: "",
     match: 1,
   },
   武定县狮子山风景名胜区: {
@@ -16011,6 +18289,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入18:00",
     image:
       "https://store.is.autonavi.com/showpic/2fe707a37a0f7ae60000003132084591?type=pic",
+    rating: "",
     match: 1,
   },
   楚雄紫溪山景区: {
@@ -16018,6 +18297,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/edc2c05464de9af9bd478c355153156f",
+    rating: "",
     match: 0.76,
   },
   楚雄姚安县光禄古镇景区: {
@@ -16025,6 +18305,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B036E14G72/comment/592F57CD_8F38_4D26_A124_5888582CF40B_L0_001_1320_181_1766819353315_25358001.jpg",
+    rating: "",
     match: 1,
   },
   楚雄州元谋人世界公园景区: {
@@ -16032,6 +18313,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0G0PBA7Z2/comment/content_media_external_images_media_100004648_1729555245907_63963796.jpg",
+    rating: "",
     match: 0.89,
   },
   金山古镇旅游区: {
@@ -16039,6 +18321,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFJKHVMG/comment/content_media_external_images_media_1000089850_ss__1738598701467_74394605.jpg",
+    rating: "",
     match: 0.99,
   },
   禄丰黑井古镇旅游景区: {
@@ -16046,6 +18329,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/dc6e7d7d08252e587529081395a54e2f",
+    rating: "",
     match: 1,
   },
   十月太阳历文化园: {
@@ -16053,6 +18337,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/ea5c2d1cf1d803ab857d93302bb46bd7",
+    rating: "",
     match: 0.97,
   },
   泸西阿庐古洞景区: {
@@ -16060,6 +18345,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入16:45",
     image:
       "http://store.is.autonavi.com/showpic/16c7c56d4263a67849e4ed501266cfe7",
+    rating: "",
     match: 1,
   },
   建水县燕子洞风景区: {
@@ -16067,6 +18353,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/885ff6610b0e8fe5b891345457731ab6",
+    rating: "",
     match: 1,
   },
   建水文庙景区: {
@@ -16074,6 +18361,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:30 最晚进入18:30",
     image:
       "https://store.is.autonavi.com/showpic/5c54a3d9f97294cb0000002938538454?type=pic",
+    rating: "",
     match: 0.99,
   },
   红河建水朱家花园景区: {
@@ -16081,6 +18369,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-19:00 最晚进入19:00",
     image:
       "http://store.is.autonavi.com/showpic/6ace66b958cc9c020ec5df97a35a0c0d",
+    rating: "",
     match: 1,
   },
   红河元阳哈尼梯田景区: {
@@ -16088,6 +18377,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/e0235a6dc1755bfd2e2e21e8dfed6a70",
+    rating: "",
     match: 0.69,
   },
   红河弥勒湖泉生态园景区: {
@@ -16095,6 +18385,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/ab57875e6185b1980000002117182926?type=pic",
+    rating: "",
     match: 1,
   },
   建水学政考棚景区: {
@@ -16102,6 +18393,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-19:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/e881be78e4e2e5035173a671cc87c57b",
+    rating: "",
     match: 1,
   },
   开远凤凰生态公园景区: {
@@ -16109,6 +18401,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:00-22:00",
     image:
       "https://store.is.autonavi.com/showpic/ac57cd4b647afdfbf89875e6b223b3f1",
+    rating: "",
     match: 1,
   },
   石屏异龙湖湿地公园景区: {
@@ -16116,6 +18409,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/160fa5d54679b868ed8ff155663dc28c",
+    rating: "",
     match: 0.95,
   },
   弥勒东风韵景区: {
@@ -16123,6 +18417,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/7e757d800d1e248e0000003573834281?type=pic",
+    rating: "",
     match: 0.99,
   },
   弥勒锦屏山景区: {
@@ -16130,6 +18425,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFK856ZA/comment/content_media_external_file_1000009301_ss__1771554890536_64378115.jpg",
+    rating: "",
     match: 0.99,
   },
   弥勒太平湖森林小镇景区: {
@@ -16137,6 +18433,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://aos-comment.amap.com/B0FFLBG0RP/comment/6679C43C_653C_40E9_99D3_36D7AC1CC0B9_L0_001_1500_200_1760674129744_91975635.jpg",
+    rating: "",
     match: 1,
   },
   红河撒玛坝万亩梯田景区: {
@@ -16144,6 +18441,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/440393587f9666780f9990eb92ef504d",
+    rating: "",
     match: 1,
   },
   蒙自市碧色寨滇越铁路历史文化公园景区: {
@@ -16151,6 +18449,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-19:00",
     image:
       "http://store.is.autonavi.com/showpic/618d20f5a5d82a47952f6bc9f9f14249",
+    rating: "",
     match: 1,
   },
   中共云南一大会址查尼皮景区: {
@@ -16158,6 +18457,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/69a2dfe924ec7696342afe5aae85aaa2",
+    rating: "",
     match: 0.72,
   },
   屏边滴水苗城景区: {
@@ -16165,6 +18465,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFITFRMF/comment/ad258e3314b6d0d3eadf23b4c52927be_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   普洱国家公园景区: {
@@ -16172,6 +18473,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00；16:00停止入园",
     image:
       "http://store.is.autonavi.com/showpic/8c3f0c98328257c2dc254768226ef96a",
+    rating: "",
     match: 0.98,
   },
   普洱墨江北回归线标志园景区: {
@@ -16180,6 +18482,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:30-18:30 最晚进入18:00；停止售票:17:30 停止入园:18:00",
     image:
       "https://store.is.autonavi.com/showpic/23fee561b7081139dad39010f58677d7",
+    rating: "",
     match: 0.82,
   },
   普洱天士力帝泊洱生物茶谷景区: {
@@ -16187,6 +18490,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/71cfc7e56f87a054b21dddb74f727efa",
+    rating: "",
     match: 0.98,
   },
   普洱市中华普洱茶博览苑景区: {
@@ -16194,6 +18498,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/fbeb4afce4b4a141db0603b23796f791",
+    rating: "",
     match: 1,
   },
   那柯里茶马驿站景区: {
@@ -16201,6 +18506,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/51251c2eb1d3b17aa84dc8561255968d",
+    rating: "",
     match: 1,
   },
   景迈山茶林文化景区: {
@@ -16208,6 +18514,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/34199e91b9a55d4726970c11fb4c7e33",
+    rating: "",
     match: 0.57,
   },
   澜沧县老达保景区: {
@@ -16215,6 +18522,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-21:00 最晚进入20:00；停止入场:20:00",
     image:
       "https://store.is.autonavi.com/showpic/38066d0f1bbf28a60000002460910304",
+    rating: "",
     match: 1,
   },
   景东县景东文庙: {
@@ -16222,6 +18530,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B036F0IFPM/comment/content_media_external_file_9191_ss__1766454441599_22111164.jpg",
+    rating: "",
     match: 1,
   },
   梁河南甸宣抚司署景区: {
@@ -16229,6 +18538,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入18:00",
     image:
       "https://aos-comment.amap.com/default_poi/comment/content_media_external_images_media_1000020090_ss__1744358557789_59916211.jpg",
+    rating: "",
     match: 1,
   },
   芒市勐巴娜西珍奇园景区: {
@@ -16236,6 +18546,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:30 最晚进入18:30",
     image:
       "http://store.is.autonavi.com/showpic/71fb2f40571a0399d69b5126737c0398",
+    rating: "",
     match: 1,
   },
   莫里热带雨林景区: {
@@ -16243,6 +18554,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-19:00 最晚进入18:00",
     image:
       "http://store.is.autonavi.com/showpic/3dbbcd662fa28d9b457cc9f4a53ce1bc",
+    rating: "",
     match: 1,
   },
   瑞丽一寨两国景区: {
@@ -16251,6 +18563,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "01-01至07-19 周一至周日 08:30-18:00 最晚进入18:00；07-20至08-31 周一至周日 08:30-18:00,18:30-22:00 最晚进入21:30；09-01至09-19 周一至周日 08:30-18:00 最晚进入18:00；09-20至12-31 周一至周日 08:30-22:30 最晚进入22:00；具体开放时间请咨询景区",
     image:
       "http://store.is.autonavi.com/showpic/5fd258842e39876686ea06e0ad2e2521",
+    rating: "",
     match: 1,
   },
   芒市傣族古镇: {
@@ -16258,6 +18571,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/a5771a66d89b9f780000003299856373?type=pic",
+    rating: "",
     match: 0.99,
   },
   临沧沧源葫芦小镇景区: {
@@ -16265,6 +18579,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/b7b46e8784a8ab580000000670722305?type=pic",
+    rating: "",
     match: 0.99,
   },
   沧源司岗里崖画谷景区: {
@@ -16272,6 +18587,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/c9d51d91daa8459c3285ea1261ecb3d1",
+    rating: "",
     match: 0.75,
   },
   班洪葫芦王地景区: {
@@ -16279,6 +18595,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "全年 09:00–17:30开放；国庆节 09:00–18:00开放",
     image:
       "https://aos-comment.amap.com/B0J60RF8UT/comment/content_media_external_file_1000034714_ss__1766568472965_14216254.jpg",
+    rating: "",
     match: 0.95,
   },
   西藏博物馆: {
@@ -16287,6 +18604,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一 全天关闭；1月至4月,11月至12月 周二至周日:10:00-17:30 最晚进入16:30；5月至10月 周二至周日 09:30-18:30 最晚进入17:30法定节假日无特殊情况正常开放,逢周一闭馆,节假其他重要活动等特殊情况将提前公告参观时间, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/08893cdce8fd23bd0000003384364111?type=pic",
+    rating: "",
     match: 1,
   },
   牦牛博物馆: {
@@ -16294,12 +18612,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周二至周日 10:30-16:30 10-01至10-07 周一至周日 10:30-16:30",
     image:
       "https://store.is.autonavi.com/showpic/77d6643e6713db6a0000003065272870?type=pic",
+    rating: "",
     match: 0.99,
   },
   文成公主藏文化风情园景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.95,
   },
   萨迦寺景区: {
@@ -16308,6 +18628,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,10月至12月 周一至周日 09:00-13:00,14:30-17:30；5月至9月 周一至周日 08:00-13:00,14:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/cd4856db58d9ce7bf4422f9093266a85",
+    rating: "",
     match: 0.99,
   },
   萨迦古城景区: {
@@ -16315,6 +18636,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/54f66d774fd872e103d4c8e71e2b5a4f",
+    rating: "",
     match: 0.98,
   },
   江孜宗山抗英遗址红色旅游景区: {
@@ -16322,6 +18644,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/b8250fa62297a5495b530b992fe057b8",
+    rating: "",
     match: 1,
   },
   卡定沟: {
@@ -16329,6 +18652,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-20:00",
     image:
       "https://aos-comment.amap.com/B0FFGANR6D/comment/20260316-fc2f6151cc84965ad202b162-ACdZ4nuqOCQ7Y75LLeYARY.jpg",
+    rating: "",
     match: 1,
   },
   世界柏树王园林景区: {
@@ -16336,6 +18660,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:30",
     image:
       "http://store.is.autonavi.com/showpic/70461c794f5845c9f42aa4b6bae4c2ed",
+    rating: "",
     match: 0.97,
   },
   南伊沟风景区: {
@@ -16343,6 +18668,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:30 最晚进入18:30",
     image:
       "http://store.is.autonavi.com/showpic/dc982599c87ad4739b4cd2510cf185ba",
+    rating: "",
     match: 1,
   },
   米堆冰川景区: {
@@ -16350,6 +18676,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/4d3d15e30d84d8640000003127264355?type=pic",
+    rating: "",
     match: 1,
   },
   鲁朗景区: {
@@ -16357,6 +18684,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/530ed7f5c7e638bb69e9269724339824",
+    rating: "",
     match: 1,
   },
   桑耶寺: {
@@ -16365,6 +18693,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:30-17:30 最晚进入17:30；具体营业状态以当天开放情况为准",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/9f869437-0e7c-4a54-903d-975b49d1c038.jpg",
+    rating: "",
     match: 1,
   },
   昌珠寺旅游景区: {
@@ -16372,12 +18701,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:30",
     image:
       "http://store.is.autonavi.com/showpic/29306eb38efc88d4fe90cb543d9d2416",
+    rating: "",
     match: 1,
   },
   玉麦自然人文景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.98,
   },
   神山圣湖景区: {
@@ -16385,6 +18716,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00；具体营业状态以当天开放情况为准",
     image:
       "https://store.is.autonavi.com/showpic/6237416ef62157fc714b66666c9f6ec8",
+    rating: "",
     match: 1,
   },
   陕西翠华山国家地质公园: {
@@ -16392,12 +18724,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00 最晚进入16:30",
     image:
       "https://store.is.autonavi.com/showpic/5fb9df8077d73cd00ecd4a3c5eab90ae",
+    rating: "",
     match: 0.98,
   },
   陕西太平国家森林公园: {
     tel: "",
     openTime: "周一至周日 08:30-17:00",
     image: "",
+    rating: "",
     match: 0.66,
   },
   西安秦岭野生动物园: {
@@ -16405,6 +18739,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/a73f8112838a2351c312bfd77bc237f5",
+    rating: "",
     match: 0.98,
   },
   朱雀国家森林公园: {
@@ -16412,6 +18747,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:00",
     image:
       "https://store.is.autonavi.com/showpic/9f4b39c9774802c7d2bc62b7492e53a2",
+    rating: "",
     match: 1,
   },
   西安汉城湖景区: {
@@ -16419,30 +18755,35 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:00-22:30",
     image:
       "https://store.is.autonavi.com/showpic/89a31113bcb1bd090000002367188432",
+    rating: "",
     match: 0.59,
   },
   西安关中民俗艺术博物院: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.82,
   },
   金龙峡风景区: {
     tel: "029-84973376",
     openTime: "周一至周日 08:30-18:00",
     image: "",
+    rating: "",
     match: 0.66,
   },
   白鹿原影视城: {
     tel: "029-82842666",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   王顺山国家森林公园: {
     tel: "029-82825070",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   西安半坡博物馆: {
@@ -16451,6 +18792,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至2月,12月 周一至周日 08:00-17:00 最晚进入16:30；3月至6月,9月至11月 周一至周日 08:00-17:30 最晚进入17:00；7月至8月 周一至周日 08:00-18:30 最晚进入18:00",
     image:
       "https://store.is.autonavi.com/showpic/189c3d34f7fbaaf9529fc9fa7435aca4",
+    rating: "",
     match: 1,
   },
   白鹿原白鹿仓: {
@@ -16459,6 +18801,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "夏季 1/1-12/31(夏季) 09:00–21:30开放；冬季 1/1-12/31(冬季) 09:00–20:00开放",
     image:
       "http://store.is.autonavi.com/showpic/4da6aeaf653149885a14e105880c7af0",
+    rating: "",
     match: 1,
   },
   陕西历史博物馆: {
@@ -16466,6 +18809,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-16:00",
     image:
       "https://store.is.autonavi.com/showpic/8243ad9b4baed3090000005673422520?type=pic",
+    rating: "",
     match: 1,
   },
   岐山周文化景区: {
@@ -16473,6 +18817,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "https://aos-comment.amap.com/B0IA55F13Z/comment/content_media_external_file_126415_ss__1766920507760_22858619.jpg",
+    rating: "",
     match: 0.87,
   },
   凤凰湖景区: {
@@ -16480,6 +18825,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/ae20b0173e94531d0000003301156670?type=pic",
+    rating: "",
     match: 1,
   },
   中华石鼓园: {
@@ -16487,6 +18833,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "09:00-16:30, 具体开放时间以现场公示为准",
     image:
       "http://store.is.autonavi.com/showpic/186345a74a356481421782bc9cf9f1c5",
+    rating: "",
     match: 1,
   },
   红河谷景区: {
@@ -16494,12 +18841,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "3月1日至9月30日 07:00-19:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/d01d9a28485a71900000003639136511",
+    rating: "",
     match: 0.99,
   },
   关山草原景区: {
     tel: "",
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.99,
   },
   青峰峡景区: {
@@ -16507,6 +18856,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "09:00-17:00, 具体开放时间以现场公示为准",
     image:
       "https://aos-comment.amap.com/comment/content_service__1772872188889_92010753_1772872213988_52610739.jpg",
+    rating: "",
     match: 1,
   },
   消灾寺景区: {
@@ -16514,6 +18864,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/e68a19dbe0fbbdcd5c3317190b2a6e85",
+    rating: "",
     match: 0.99,
   },
   龙门洞景区: {
@@ -16522,6 +18873,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,10月至12月 周一至周日 09:00-17:00；5月至9月 周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/dd869af5247dd15b0000002468616406?type=pic",
+    rating: "",
     match: 1,
   },
   九成宫景区: {
@@ -16529,6 +18881,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/2b9a788c66f393264d692c64811fbad9",
+    rating: "",
     match: 1,
   },
   金台太极源文化景区: {
@@ -16536,6 +18889,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFM61WCJ/comment/8C21037D_9C6A_41F0_B553_ACCD6F1F7C22_L0_001_1504_108_1763663458833_38864692.jpg",
+    rating: "",
     match: 1,
   },
   九龙山景区: {
@@ -16544,6 +18898,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-18:00 最晚进入16:00；以上为索道运营时间，步行下山不限出园时间",
     image:
       "http://store.is.autonavi.com/showpic/7cc69bd5f127cefd8af0cf81637f8e14",
+    rating: "",
     match: 1,
   },
   扶眉战役纪念馆: {
@@ -16551,6 +18906,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/c5b76ff2fa8f4a423e4d6b7faf9fd826",
+    rating: "",
     match: 1,
   },
   野河山景区: {
@@ -16558,6 +18914,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/63f68c1b260c07aecdd413e296e26a99",
+    rating: "",
     match: 0.99,
   },
   长乐塬抗战工业遗址: {
@@ -16566,6 +18923,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1/1-12/31 周一 全天不开放；1/1-12/31 周二–周日 09:00–17:00开放 最晚进入17:00；元旦节,春节,清明节,劳动节,端午节,中秋节,国庆节 09:00–17:00开放 最晚进入17:00",
     image:
       "https://aos-comment.amap.com/B0FFLN9XIP/headerImg/content_media_external_images_media_159837_1658049842417_af12680b.jpg",
+    rating: "",
     match: 1,
   },
   洽川景区: {
@@ -16573,18 +18931,21 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:30-18:00具体营业状态以当天开放情况为准",
     image:
       "https://aos-comment.amap.com/B0FFKIZN75/comment/ACB12417_3431_4950_A29F_77692D6B5BDA_L0_001_2133_160_1770401128650_07096458.jpg",
+    rating: "",
     match: 1,
   },
   林皋慢城旅游景区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.99,
   },
   尧头窑文化旅游生态园区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 1,
   },
   潼关古城: {
@@ -16592,12 +18953,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/66e8b331101925c80f1458536fd4f714",
+    rating: "",
     match: 1,
   },
   渭南桃花源景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   富平中华郡: {
@@ -16605,12 +18968,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-19:00",
     image:
       "http://store.is.autonavi.com/showpic/c63ed661a38df85e09dda7504884d424",
+    rating: "",
     match: 0.59,
   },
   少华山国家森林公园: {
     tel: "0913-4810160",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.98,
   },
   丰图义仓: {
@@ -16618,6 +18983,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/803d17db3a237a2c4ee44b48ae0adf90",
+    rating: "",
     match: 1,
   },
   渭华起义纪念馆: {
@@ -16625,6 +18991,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周二至周日 09:00-17:00,节假日以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/01bb3a060a60cebf64592f8cbb778a57",
+    rating: "",
     match: 1,
   },
   龙门钢铁景区: {
@@ -16632,6 +18999,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B0G3AK78ZU/comment/3CF5D8A7_DA04_488F_8280_0B0CD0DE1CF1_L0_001_781_608_1735214910787_68638316.jpg",
+    rating: "",
     match: 0.95,
   },
   司马迁景区: {
@@ -16640,6 +19008,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一-周五:8:00-17:30,17:00停止售票；周六-周日:8:00-18:00,17:30停止售票",
     image:
       "http://store.is.autonavi.com/showpic/b24af696a9d11d8ab5cbed29e6c781ff",
+    rating: "",
     match: 0.99,
   },
   韩城市博物馆: {
@@ -16647,18 +19016,21 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/29e2259d48a9f15c0000007941722059?type=pic",
+    rating: "",
     match: 1,
   },
   延川黄河乾坤湾景区: {
     tel: "0911-8335555",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.86,
   },
   黄陵国家森林公园景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   黄龙山景区: {
@@ -16666,6 +19038,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B0GRT9EX4F/comment/content_media_external_file_2895_1770799412029_95355493.jpg",
+    rating: "",
     match: 1,
   },
   吴起中央红军长征胜利纪念园景区: {
@@ -16673,6 +19046,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/278c69b0957ac2e330d035a8c1dbb7b8",
+    rating: "",
     match: 1,
   },
   宜川县秋林抗战纪念地景区: {
@@ -16680,6 +19054,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00 10-01至10-07 周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/6600b55a984583dc95d7208292dd7a2d",
+    rating: "",
     match: 0.89,
   },
   牛背梁景区: {
@@ -16687,12 +19062,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/ee8951718cca0cf70000007831484110?type=pic",
+    rating: "",
     match: 0.97,
   },
   柞水溶洞景区: {
     tel: "0914-4329208",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.97,
   },
   塔云山景区: {
@@ -16700,6 +19077,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:30 最晚进入16:30",
     image:
       "https://store.is.autonavi.com/showpic/982a79145e4db5ee0000007957624909?type=pic",
+    rating: "",
     match: 1,
   },
   丹江漂流景区: {
@@ -16707,6 +19085,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/a4c1fe0265cf905bd671e01bb653ab57",
+    rating: "",
     match: 1,
   },
   商於古道棣花文化旅游景区: {
@@ -16714,6 +19093,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/8e5690307eec5e1cbd3014956f047fcd",
+    rating: "",
     match: 0.78,
   },
   漫川古镇景区: {
@@ -16721,6 +19101,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/e591f4e00f7e7497820ecae499475a74",
+    rating: "",
     match: 0.99,
   },
   木王山景区: {
@@ -16728,6 +19109,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/536adc5798cf62f3e353f166f83d575f",
+    rating: "",
     match: 0.61,
   },
   金台山文化旅游景区: {
@@ -16735,6 +19117,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-22:00",
     image:
       "https://store.is.autonavi.com/showpic/5dae61743fda426d0000005548624067?type=pic",
+    rating: "",
     match: 0.97,
   },
   九天山风景区: {
@@ -16742,6 +19125,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/cdc2d61f3a1344d1667bb3df69083b1c",
+    rating: "",
     match: 0.99,
   },
   洛南音乐小镇景区: {
@@ -16749,12 +19133,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFHWRA4X/comment/content_media_external_images_media_100002303_1750441808805_48634496.jpg",
+    rating: "",
     match: 1,
   },
   江山景区: {
     tel: "",
     openTime: "周一至周日 00:00-24:00",
     image: "",
+    rating: "",
     match: 0.96,
   },
   天蓬山寨景区: {
@@ -16762,6 +19148,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-18:00,17:00停,止入园,2026年春节期间 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/c943c48c635b3cbf4c57b33ae8c2b294",
+    rating: "",
     match: 0.99,
   },
   阳城驿景区: {
@@ -16769,6 +19156,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/8a8814b177dabfc30e0f35e1675a9dce",
+    rating: "",
     match: 1,
   },
   乾陵博物馆: {
@@ -16777,12 +19165,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至2月,12月 周一至周日 08:30-17:30 最晚进入16:30；3月至11月 周一至周日 08:00-18:00 最晚进入17:00",
     image:
       "https://aos-comment.amap.com/B038E0010F/comment/10df001d434ee78d8848a5a1de4181a8_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   茂陵博物馆: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   马栏革命旧址: {
@@ -16790,6 +19180,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周二至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/a22227faf4e0d5339501741df3f9ed83",
+    rating: "",
     match: 0.66,
   },
   袁家村关中印象体验地: {
@@ -16797,6 +19188,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-20:00",
     image:
       "http://store.is.autonavi.com/showpic/edbcec95b77182da12d54fd5654c7caa",
+    rating: "",
     match: 1,
   },
   马嵬驿民俗文化体验园: {
@@ -16804,6 +19196,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 17:00-22:00；具体营业状态以当天开放情况为准。",
     image:
       "http://store.is.autonavi.com/showpic/4f7aef35ff8ef81df0cf79cd4735a4e9",
+    rating: "",
     match: 1,
   },
   郑国渠旅游景区: {
@@ -16811,6 +19204,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "https://store.is.autonavi.com/showpic/39e5102216fc1b330000006395882255",
+    rating: "",
     match: 0.58,
   },
   云集生态园: {
@@ -16818,6 +19212,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00 最晚进入09:00",
     image:
       "https://aos-comment.amap.com/B0FFLG02VC/comment/%5B2026-01-04-14-41-03%5D38CA0D48-7324-41CD-B79F-8C2E3A404E2_1767508864389_09206473.jpg",
+    rating: "",
     match: 0.96,
   },
   咸阳湖景区: {
@@ -16825,6 +19220,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/2b72d3a4e3db8f281c429ba115b79ead",
+    rating: "",
     match: 1,
   },
   陕西省铜川市印台区金锁关石林景区: {
@@ -16832,6 +19228,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-18:00 最晚进入16:30",
     image:
       "https://store.is.autonavi.com/showpic/4de43c1fd1a090e20000002614432037?type=pic",
+    rating: "",
     match: 1,
   },
   陕西省铜川市印台区陈炉古镇景区: {
@@ -16839,6 +19236,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/d0feb4ab335241632d78be227c3a3379",
+    rating: "",
     match: 1,
   },
   陕西省铜川市耀州区药王山景区: {
@@ -16846,6 +19244,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:30-17:30(17:00停止入园)",
     image:
       "https://aos-comment.amap.com/B0397001AZ/comment/content_media_external_file_100004250_1772496994245_52856277.jpg",
+    rating: "",
     match: 1,
   },
   陕西省铜川市宜君县动漫花溪谷景区: {
@@ -16853,6 +19252,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "https://store.is.autonavi.com/showpic/e09a3d4b3937aa380000000837256258?type=pic",
+    rating: "",
     match: 0.97,
   },
   陕西省铜川市耀州区溪山胜境风景区: {
@@ -16861,6 +19261,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至2月,12月 周一至周日 09:00-17:00 最晚进入16:00；3月至11月 周一至周日 09:00-17:30 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/a2770645aada18aa4eb279700e0dd13c",
+    rating: "",
     match: 1,
   },
   陕西省铜川市印台区玉华宫景区: {
@@ -16868,6 +19269,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/67a09e59568ee34b652f56e15f0d54e1",
+    rating: "",
     match: 0.95,
   },
   佳县白云山景区: {
@@ -16875,6 +19277,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00线下服务门店06:00多关闭",
     image:
       "http://store.is.autonavi.com/showpic/2be2ec2c115f26eb0a6b87c308eda839",
+    rating: "",
     match: 0.98,
   },
   红碱淖旅游景区: {
@@ -16882,6 +19285,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "8:00-17:00",
     image:
       "https://aos-comment.amap.com/B03900NAK6/comment/content_media_external_file_1000027920_ss__1761752316328_39534651.jpg",
+    rating: "",
     match: 0.99,
   },
   榆阳区黑龙潭景区: {
@@ -16889,6 +19293,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:00-19:30",
     image:
       "https://store.is.autonavi.com/showpic/632dff7623e148960000000725582411?type=pic",
+    rating: "",
     match: 1,
   },
   榆阳区圣都乐园: {
@@ -16896,6 +19301,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周五 15:30-22:00；周六至周日及节假日 10:00-22:00",
     image:
       "https://aos-comment.amap.com/B0FFGC78I4/comment/content_media_external_file_100000607_1750229955326_42117971.jpg",
+    rating: "",
     match: 1,
   },
   绥德县名州古城景区: {
@@ -16903,6 +19309,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/2b271bcb2247d419b012091dd9c4554d",
+    rating: "",
     match: 0.98,
   },
   武侯墓景区: {
@@ -16910,12 +19317,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/90ccd3624f399ff18ddad91df9609580",
+    rating: "",
     match: 0.98,
   },
   长青华阳景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.96,
   },
   黎坪景区: {
@@ -16924,6 +19333,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1/1-12/31 08:00–17:30开放 最晚售票16:00 最晚进入16:30；劳动节 08:00–18:00开放 最晚售票16:00",
     image:
       "http://store.is.autonavi.com/showpic/0f87d52773dcd42ec124fa5bc46245bb",
+    rating: "",
     match: 1,
   },
   武侯祠景区: {
@@ -16931,6 +19341,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30 最晚进入17:00",
     image:
       "https://store.is.autonavi.com/showpic/0a83e8cf8114d9a70000000881416785?type=pic",
+    rating: "",
     match: 1,
   },
   朱鹮梨园景区: {
@@ -16938,6 +19349,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/03e8ad8b457730b33ed811899362f68b",
+    rating: "",
     match: 0.99,
   },
   兴汉胜境景区: {
@@ -16945,6 +19357,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/cc4e2f6758887e95d10e58c92a4a91a6",
+    rating: "",
     match: 0.99,
   },
   龙头山景区: {
@@ -16952,6 +19365,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "https://aos-comment.amap.com/B0K03ZW3CI/comment/d8683b1c-cb45-4d57-8162-ef0fc1421145.png",
+    rating: "",
     match: 0.96,
   },
   汉江源景区: {
@@ -16959,6 +19373,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B0GRJHN84Q/comment/52d53c4c891a57e236602ffe6eb4465e_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   五龙洞景区: {
@@ -16967,6 +19382,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "09:00-16:00, 具体开放时间以现场公示为准, 2026年10月1日-2026年10月7日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFG4SYEY/comment/content_media_external_file_186538_1754491207198_17126684.jpg",
+    rating: "",
     match: 1,
   },
   熊猫谷景区: {
@@ -16975,6 +19391,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至2月,12月 周一至周日 08:30-17:30 最晚进入17:00 停止入园:17:00；3月至11月 周一至周日 08:00-18:00 最晚进入17:30 停止入园:17:30",
     image:
       "https://aos-comment.amap.com/B0GUDZPX2D/comment/172476F8_B51F_4155_A2A6_EC793BE1649E_L0_001_4032_302_1771921217485_65727354.jpg",
+    rating: "",
     match: 1,
   },
   骆家坝景区: {
@@ -16982,6 +19399,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/ad0f88fa4d5b0e3e0000003775720477?type=pic",
+    rating: "",
     match: 0.92,
   },
   张骞墓景区: {
@@ -16990,6 +19408,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "全年 周二–周日 09:00–17:00开放 最晚售票16:30 最晚进入16:30；全年 周一 全天不开放；元旦节,春节,清明节,劳动节,端午节,中秋节,国庆节 09:00–17:00开放 最晚售票16:30 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/97e859ca6085b6126f1e3f30ed5867d5",
+    rating: "",
     match: 1,
   },
   午子山景区: {
@@ -16997,6 +19416,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:00",
     image:
       "https://store.is.autonavi.com/showpic/371951b1568b871a0000000975740147?type=pic",
+    rating: "",
     match: 0.97,
   },
   汉江燕翔洞生态景区: {
@@ -17004,6 +19424,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "8:00-16:30（最晚入园时间16:00）",
     image:
       "http://store.is.autonavi.com/showpic/90c1d25bc01c4d2dc06dcba9d27fbf7c",
+    rating: "",
     match: 0.71,
   },
   瀛湖旅游景区: {
@@ -17011,6 +19432,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B0GR4AHFUB/comment/f1331e741770d371d6251870cd0d905b_2048_2048_80.jpg",
+    rating: "",
     match: 0.96,
   },
   中坝大峡谷景区: {
@@ -17019,6 +19441,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 08:30-17:30 最晚进入17:00；4月至10月 周一至周日 08:00-18:00 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/cd144266955518dbdc52c2b3b6e00510",
+    rating: "",
     match: 1,
   },
   天书峡景区: {
@@ -17026,6 +19449,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "5月至10月 周一至周日 08:00-17:00 最晚进入17:00",
     image:
       "https://aos-comment.amap.com/B0FFFZPM9T/comment/content_media_external_file_100001559_1755170108933_57020651.jpg",
+    rating: "",
     match: 1,
   },
   汉江石泉古城景区: {
@@ -17033,6 +19457,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/90e1ae6849f4d0fd0000002370138747?type=pic",
+    rating: "",
     match: 1,
   },
   安康高新秦巴文化生态旅游区: {
@@ -17040,6 +19465,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/ffa479f6b7e446513546e26c58b5a0cf",
+    rating: "",
     match: 1,
   },
   石泉鬼谷岭景区: {
@@ -17047,6 +19473,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:20-17:00",
     image:
       "http://store.is.autonavi.com/showpic/6d6298c611a1f8c2dfd8e4ffd58b7214",
+    rating: "",
     match: 0.97,
   },
   白河县天宝梯彩农园景区: {
@@ -17054,6 +19481,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/8a1a0715759d3e1ad061d77b602ace18",
+    rating: "",
     match: 1,
   },
   汉阴凤堰古梯田景区: {
@@ -17061,6 +19489,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/416be5978da11d4a0000002360482516",
+    rating: "",
     match: 0.71,
   },
   旬阳县蜀河古镇景区: {
@@ -17068,6 +19497,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00,部分参观08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/8c429fbd2b1f9a5f871e046a75d97dce",
+    rating: "",
     match: 1,
   },
   石泉雁山瀑布景区: {
@@ -17075,6 +19505,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-18:30",
     image:
       "http://store.is.autonavi.com/showpic/291e1d6e3faaaf00cb0385fa58ced001",
+    rating: "",
     match: 1,
   },
   东湖生态旅游景区: {
@@ -17082,6 +19513,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/0bbaf0a750bb49e10000004867494849?type=pic",
+    rating: "",
     match: 0.99,
   },
   紫轩葡萄酒庄园景区: {
@@ -17089,6 +19521,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/145736d4aef0ce01dc56c9f88df1e838",
+    rating: "",
     match: 0.96,
   },
   草圣故里文化产业园: {
@@ -17096,12 +19529,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/8b55b7412d115f9c79b59984a7ffdf47",
+    rating: "",
     match: 0.99,
   },
   酒泉生态文化博览园: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   阿克塞博罗转井影视基地: {
@@ -17110,6 +19545,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 08:00-19:00 最晚进入19:00；4月至10月 周一至周日 08:00-20:00 最晚进入20:00",
     image:
       "https://aos-comment.amap.com/B0FFMH38O2/comment/content_media_external_file_6255_ss__1760602579868_29086321.jpg",
+    rating: "",
     match: 1,
   },
   张掖大佛寺景区: {
@@ -17118,6 +19554,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05-01至10-09 周一至周日 08:00-18:30；10-10至04-30 周一至周日 08:30-18:00；暑期夜场延时至20:30停止售票",
     image:
       "http://store.is.autonavi.com/showpic/41155d29930ef7af12b9bf86d5e23ae6",
+    rating: "",
     match: 1,
   },
   张掖国家湿地公园: {
@@ -17125,6 +19562,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/3787ee6de10dff6be308f8b185470a26",
+    rating: "",
     match: 0.99,
   },
   高台县大湖湾文化旅游风景区: {
@@ -17132,6 +19570,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B03A813XEL/comment/172811839993_1728118408045_29554977.jpg",
+    rating: "",
     match: 0.96,
   },
   中国工农红军西路军纪念馆: {
@@ -17139,12 +19578,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/0b599d901120a7707c5d60f93f3179ef",
+    rating: "",
     match: 0.99,
   },
   山丹大佛寺旅游景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.7,
   },
   焉支山国家森林公园: {
@@ -17152,6 +19593,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/e79535137188525d1011344c070530dd",
+    rating: "",
     match: 0.94,
   },
   肃南裕固族民俗度假区: {
@@ -17159,6 +19601,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/fbece7bae515bfe5283847808e1842a2",
+    rating: "",
     match: 0.99,
   },
   马蹄寺旅游景区: {
@@ -17166,6 +19609,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/64f4eb8b37778b840000002702030518?type=pic",
+    rating: "",
     match: 0.93,
   },
   中华裕固风情走廊旅游景区: {
@@ -17173,6 +19617,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/46c41bcc0c2e22de04e4635427835335",
+    rating: "",
     match: 0.94,
   },
   祁丰文殊寺石窟群旅游景区: {
@@ -17180,6 +19625,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-11:00,14:30-17:00",
     image:
       "https://store.is.autonavi.com/showpic/b0a8c29c807f27490000003238378870?type=pic",
+    rating: "",
     match: 1,
   },
   冰沟丹霞景区: {
@@ -17187,6 +19633,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/716b911344651b51b0311168898e6d03",
+    rating: "",
     match: 0.9,
   },
   扁都口生态休闲旅游区: {
@@ -17194,6 +19641,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "5月1日至10月14日 08:00-18:00；10月15日-4月30日 闭园",
     image:
       "https://store.is.autonavi.com/showpic/24dc22d24c8433fe0000003909186937?type=pic",
+    rating: "",
     match: 0.97,
   },
   平山湖大峡谷: {
@@ -17202,6 +19650,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "营业时间:7:30；停票时间:基础游18:00停票（17:30以后不能下峡谷）；深度游停票时间:17:00；峡谷入口锁门时间:17:30,",
     image:
       "http://store.is.autonavi.com/showpic/60495b7d8fb120890296f74f0a4c6e40",
+    rating: "",
     match: 1,
   },
   临泽县流沙河景区: {
@@ -17209,6 +19658,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFJRHTRZ/comment/content_media_external_images_media_100001982_1746258157573_56711394.jpg",
+    rating: "",
     match: 1,
   },
   滨河九粮液文化旅游景区: {
@@ -17216,6 +19666,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/28f41999a6cc6c120000007933270097?type=pic",
+    rating: "",
     match: 1,
   },
   张掖市屋兰古镇旅游景区: {
@@ -17224,6 +19675,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1/1-12/31 周一至周四 10:00-18:00开放；1/1-12/31 周五至周日 10:00-22:00开放 说明:具体营业状态以当天开放情况为准",
     image:
       "https://store.is.autonavi.com/showpic/63933cf92dabb5df0000003364776581?type=pic",
+    rating: "",
     match: 0.97,
   },
   张掖国家沙漠体育公园景区: {
@@ -17231,6 +19683,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:40 最晚进入17:10",
     image:
       "https://aos-comment.amap.com/B0FFGZ13NJ/comment/f08a0b8176ed9d57309b723d1b4208f4_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   民乐现代丝路田园综合体旅游景区: {
@@ -17238,12 +19691,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "https://store.is.autonavi.com/showpic/648ee942d8a10881f0f5b007a5d06a97",
+    rating: "",
     match: 0.89,
   },
   武山水帘洞景区: {
     tel: "",
     openTime: "08:00-17:30 最晚进入17:30, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.96,
   },
   甘谷大像山景区: {
@@ -17251,6 +19706,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFG76WE0/comment/202602_14-12202_1771042853123_18107833.jpg",
+    rating: "",
     match: 0.6,
   },
   张家川县回乡风情园: {
@@ -17258,6 +19714,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/402d1340b0f383e3f6450559049fe771",
+    rating: "",
     match: 0.89,
   },
   秦州区伏羲庙景区: {
@@ -17265,6 +19722,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/05c583a831e5e67a6623fc6e91d74d83",
+    rating: "",
     match: 1,
   },
   秦州区南郭寺景区: {
@@ -17272,6 +19730,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入18:00",
     image:
       "http://store.is.autonavi.com/showpic/e8fc2a130b736a7b5e100e7ea765bc82",
+    rating: "",
     match: 1,
   },
   秦州区玉泉观景区: {
@@ -17279,6 +19738,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/9fe6c8aad0f864de0000002985146139?type=pic",
+    rating: "",
     match: 1,
   },
   崇信县龙泉寺景区: {
@@ -17286,6 +19746,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/1be0b96e9c7c6d6eb98092470730cfce",
+    rating: "",
     match: 1,
   },
   庄浪县云崖寺景区: {
@@ -17293,6 +19754,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/f9f34323c5643fb59f4c45aca8265fe1",
+    rating: "",
     match: 0.9,
   },
   灵台县古灵台荆山森林公园: {
@@ -17300,6 +19762,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00,2026年春节期间 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/e6ea1ce6a4e9d3f60000008032862150?type=pic",
+    rating: "",
     match: 1,
   },
   静宁县界石铺红军长征毛泽东旧居纪念馆: {
@@ -17307,6 +19770,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/5c1d10549a4f314024d21d453604d767",
+    rating: "",
     match: 0.72,
   },
   康乐县草长沟景区: {
@@ -17314,6 +19778,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/9de743ee058c3dfc0000003688862065?type=pic",
+    rating: "",
     match: 0.98,
   },
   康乐县胭脂湖景区: {
@@ -17321,6 +19786,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00；具体营业状态以当天开放情况为准",
     image:
       "https://store.is.autonavi.com/showpic/861f0158e133ea656d385d21c9538bac",
+    rating: "",
     match: 0.99,
   },
   和政县桦林万兽谷景区: {
@@ -17328,6 +19794,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://store.is.autonavi.com/showpic/68f8438ba8c0201c7c9b5df93de05eaf",
+    rating: "",
     match: 0.58,
   },
   和政县古动物化石博物馆: {
@@ -17335,6 +19802,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/05b2b00714a8e3b50000002362524957?type=pic",
+    rating: "",
     match: 0.79,
   },
   积石山县大墩峡景区: {
@@ -17343,6 +19811,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "10:00-18:00开放(17:00停止售票)、冬季亮灯时间18:00-22:00,具体营业状态以当天开放情况为准",
     image:
       "http://store.is.autonavi.com/showpic/46a4e7f58febb0fb797ec7249a6db653",
+    rating: "",
     match: 0.9,
   },
   临夏市八坊十三巷: {
@@ -17350,6 +19819,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 11:00-23:00",
     image:
       "http://store.is.autonavi.com/showpic/62665d1a4af9dbb3dd39d279cc7c8e42",
+    rating: "",
     match: 1,
   },
   和政县松鸣岩景区: {
@@ -17357,6 +19827,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/1f246f1ee706debc57c55cf62b6f3639",
+    rating: "",
     match: 1,
   },
   武都区万象洞旅游景区: {
@@ -17364,6 +19835,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/c8da9b60dfd8d97c29feeb4311e4c9fb",
+    rating: "",
     match: 1,
   },
   康县阳坝旅游景区: {
@@ -17371,6 +19843,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入18:00",
     image:
       "http://store.is.autonavi.com/showpic/8348369c2565f288fccdcc85235bd5f8",
+    rating: "",
     match: 0.65,
   },
   徽县金徽酒文化生态旅游景区: {
@@ -17378,6 +19851,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-16:00",
     image:
       "https://aos-comment.amap.com/B0FFG18WUH/comment/11b52b8d836d689ee3ce52dd95273e4c_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   康县花桥村旅游景区: {
@@ -17385,12 +19859,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFIOC2F0/comment/content_media_external_images_media_1000051708_ss__1750414434543_58303162.jpg",
+    rating: "",
     match: 1,
   },
   文县天池旅游景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.97,
   },
   徽县金徽矿业旅游景区: {
@@ -17398,6 +19874,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:30",
     image:
       "https://aos-comment.amap.com/B0FFHSQAFH/comment/88691AB7_511A_449A_AB9D_9B109B4028F5_L0_001_2016_151_1746101159662_28444329.jpg",
+    rating: "",
     match: 0.99,
   },
   康县王坝生态民俗旅游区: {
@@ -17405,6 +19882,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime:
       "周一至周日 09:00-17:00 最晚进入17:00；17:00停止售票，17:00停止入园",
     image: "",
+    rating: "",
     match: 0.99,
   },
   徽县花映三泉生态旅游景区: {
@@ -17412,6 +19890,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-20:00",
     image:
       "https://aos-comment.amap.com/B0HA353YGD/comment/705d85cd55529d8a8c3a3701cfcd5248_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   兰州水车博览园景区: {
@@ -17419,6 +19898,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/ee4a517e759bdd44397be925874e024b",
+    rating: "",
     match: 1,
   },
   榆中兴隆山景区: {
@@ -17426,6 +19906,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:00-17:00, 具体开放时间以现场公示为准",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/833fe7e1-f72b-4c53-b143-9ef34a9084f8.jpg",
+    rating: "",
     match: 0.56,
   },
   青城古镇景区: {
@@ -17434,6 +19915,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "6月至9月 周一至周日 08:30-18:00；1月至5月，10月至12月 周一至周日 09:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/d5d1a5f1e2e919a70000003300796358?type=pic",
+    rating: "",
     match: 1,
   },
   石佛沟景区: {
@@ -17441,6 +19923,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "https://store.is.autonavi.com/showpic/7304675156a05779fa6ecd6f47544099",
+    rating: "",
     match: 0.99,
   },
   西部恐龙水乐园: {
@@ -17449,6 +19932,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "6月至8月 周一至周五 11:00-19:00 最晚进入17:30；6月至8月 周六至周日 10:30-20:00 最晚进入17:30 12-01至03-01 周一至周五 11:00-21:30 最晚进入20:30",
     image:
       "http://store.is.autonavi.com/showpic/87d52a852d8a66252795626a7c23b930",
+    rating: "",
     match: 0.7,
   },
   白银市白银区大坪凤园花海旅游景区: {
@@ -17456,12 +19940,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "节假08:30-19:30；周一至周五|09:00-18:30",
     image:
       "https://store.is.autonavi.com/showpic/ab6c02bdc22c39210000008973394598?type=pic",
+    rating: "",
     match: 1,
   },
   景泰黄河石林旅游景区: {
     tel: "",
     openTime: "周一至周日 08:00-17:00",
     image: "",
+    rating: "",
     match: 0.73,
   },
   红军会宁会师旧址旅游景区: {
@@ -17469,12 +19955,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://store.is.autonavi.com/showpic/0d8efd83a865e96f8d10cf2260275166",
+    rating: "",
     match: 0.78,
   },
   紫金花城景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   金水湖景区: {
@@ -17482,12 +19970,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/8c346fc1e9407498b449583712bcf3a7",
+    rating: "",
     match: 0.89,
   },
   雷台景区: {
     tel: "",
     openTime: "09:00-18:00 最晚进入17:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.99,
   },
   文庙景区: {
@@ -17496,6 +19986,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-21:30 2026-05-01至2026-05-05 周一至周日 08:00-21:30",
     image:
       "https://store.is.autonavi.com/showpic/745930701c7b98e10000005185358250?type=pic",
+    rating: "",
     match: 1,
   },
   神州荒漠野生动物园: {
@@ -17503,6 +19994,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/5ee1eba0b6740247847cbbaedb470d5d",
+    rating: "",
     match: 1,
   },
   凉州白塔寺: {
@@ -17510,6 +20002,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/47b068d17618720a0000003092456701",
+    rating: "",
     match: 0.96,
   },
   沙漠公园: {
@@ -17517,6 +20010,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入18:00",
     image:
       "https://store.is.autonavi.com/showpic/e0784d9d64c62b0f0000003769146573?type=pic",
+    rating: "",
     match: 1,
   },
   红军西路军古浪战役纪念馆: {
@@ -17524,6 +20018,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0JUUSN859/comment/content_media_external_file_1020_1760331986930_65069531.jpg",
+    rating: "",
     match: 0.89,
   },
   天梯山石窟景区: {
@@ -17532,6 +20027,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "09:00-17:00,夏季08:30-17:30,国庆期间08:30-18:00,春节期间 09:00-17:30",
     image:
       "http://store.is.autonavi.com/showpic/9781cc2b52ddeb662306f4636b6dfa18",
+    rating: "",
     match: 1,
   },
   民勤沙井文化民俗旅游景区: {
@@ -17539,6 +20035,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0KRKU5IRY/comment/F38BBEBD_50C1_4A84_B584_1F158E7F6EA4_L0_001_2000_1500_1733557905526_24957357.jpg",
+    rating: "",
     match: 0.99,
   },
   庆阳市庆城县周祖陵景区: {
@@ -17547,6 +20044,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至2月,11月至12月 周一至周日 09:00-17:00；3月至10月 周一至周日 08:30-18:00 最晚进入17:30",
     image:
       "https://store.is.autonavi.com/showpic/ada5ea74b27bd99a0000008824720821?type=pic",
+    rating: "",
     match: 1,
   },
   庆阳市华池南梁红色旅游景区: {
@@ -17554,12 +20052,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFHR79K9/comment/content_media_external_file_1000038411_ss__1755811848068_75998935.jpg",
+    rating: "",
     match: 1,
   },
   庆阳庆城药王洞养生小镇景区: {
     tel: "",
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.7,
   },
   庆阳市西峰区龙栖谷旅游景区: {
@@ -17567,6 +20067,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/a31a6b181caeb03c814edecd440c5e20",
+    rating: "",
     match: 0.99,
   },
   庆阳市环县环州故城旅游景区: {
@@ -17574,6 +20075,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/6d276dd8aa1246a20000003498772816?type=pic",
+    rating: "",
     match: 0.99,
   },
   通渭榜罗镇革命遗址景区: {
@@ -17581,6 +20083,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B0H39AT8CY/comment/e14c16d866092546aaeab31cd3f5158c_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   定西市陇西县李家龙宫景区: {
@@ -17588,6 +20091,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://store.is.autonavi.com/showpic/f5cc1513aeb1687e0000002942182673?type=pic",
+    rating: "",
     match: 1,
   },
   定西市临洮县南屏山生态旅游景区: {
@@ -17595,6 +20099,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "https://aos-comment.amap.com/B0GD553OFW/comment/content_media_external_images_media_100013496_1740298479412_89963413.jpg",
+    rating: "",
     match: 0.97,
   },
   定西市渭源县渭河源景区: {
@@ -17603,6 +20108,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:30-17:30 最晚进入17:30；具体营业状态以当天开放情况为准",
     image:
       "http://store.is.autonavi.com/showpic/e2ba2f7f929dc4707c1d1554c10c5885",
+    rating: "",
     match: 1,
   },
   定西首阳山景区: {
@@ -17610,6 +20116,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://aos-comment.amap.com/B03A414NIB/headerImg/c14632d62ef8bdb94326a7abcc4def53_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   定西市岷县狼渡草原景区: {
@@ -17617,6 +20124,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-21:00",
     image:
       "http://store.is.autonavi.com/showpic/b1e17b31e862d7370034aef1045b12cb",
+    rating: "",
     match: 0.98,
   },
   舟曲县拉尕山景区: {
@@ -17624,6 +20132,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:30-18:00",
     image:
       "https://store.is.autonavi.com/showpic/10a4c7d53dbe4ccb0000003577006971?type=pic",
+    rating: "",
     match: 0.91,
   },
   碌曲县郎木寺景区: {
@@ -17631,6 +20140,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 04:30-22:00",
     image:
       "http://store.is.autonavi.com/showpic/769a3125fe0eb65a6049f8e9a115737d",
+    rating: "",
     match: 0.99,
   },
   碌曲县则岔石林景区: {
@@ -17639,6 +20149,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "4月至9月 周一至周日 08:00-20:00 最晚进入18:00；10月 周一至周日 08:30-19:30 最晚进入18:00",
     image:
       "https://store.is.autonavi.com/showpic/234ea35ccbeca44a0000003135590770?type=pic",
+    rating: "",
     match: 0.96,
   },
   玛曲县阿万仓湿地景区: {
@@ -17646,6 +20157,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:00",
     image:
       "https://store.is.autonavi.com/showpic/a865da9c47e3eb340000003137844430?type=pic",
+    rating: "",
     match: 1,
   },
   夏河县拉卜楞寺景区: {
@@ -17653,6 +20165,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/e364c6fa122756d70000002876394354?type=pic",
+    rating: "",
     match: 0.57,
   },
   迭部县腊子口景区: {
@@ -17660,6 +20173,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B03AD0LRSC/comment/content_media_external_file_31280_1769951471495_51729968.jpg",
+    rating: "",
     match: 1,
   },
   合作市当周草原景区: {
@@ -17667,18 +20181,21 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "夏季(6月至8月) 08:00-19:30冬季闭园",
     image:
       "https://aos-comment.amap.com/B03AD008JJ/comment/content_media_external_file_1000027980_ss__1754580108782_65434094.jpg",
+    rating: "",
     match: 0.99,
   },
   青海省博物馆: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.83,
   },
   湟源丹噶尔古城景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   西宁市青藏高原野生动物园: {
@@ -17686,6 +20203,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/119bb4a1556c1a5ebbbeec40d7e351ad",
+    rating: "",
     match: 0.75,
   },
   西宁市青海藏文化馆: {
@@ -17694,6 +20212,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "05/01-09/30 09:00–18:00开放 最晚进入17:30；10/01-12/31 09:00–17:30开放 最晚进入17:00；01/01-04/30 09:00–17:30开放 最晚进入17:00；元旦节,清明节,国庆节 09:00–17:30开放 最晚进入17:00；劳动节,端午节,中秋节 09:00–18:00开放 最晚进入17:30；春节 全天不开放",
     image:
       "http://store.is.autonavi.com/showpic/4616b2b9881a645b3efbe6902233f212",
+    rating: "",
     match: 1,
   },
   西宁市中国工农红军西路军纪念馆: {
@@ -17701,6 +20220,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/8a0c80983766168559a60dd53832a90d",
+    rating: "",
     match: 1,
   },
   西宁市力盟步行街文化旅游区: {
@@ -17708,6 +20228,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/d8938aa6e1c94d070000003089082474?type=pic",
+    rating: "",
     match: 1,
   },
   乡趣卡阳户外旅游度假景区: {
@@ -17715,6 +20236,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30；具体营业状态以当天开放情况为准",
     image:
       "https://store.is.autonavi.com/showpic/e125ecee8343a73382c62e79447b5405",
+    rating: "",
     match: 0.94,
   },
   日月山旅游区: {
@@ -17722,6 +20244,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFH25JIU/comment/content_media_external_file_144487_ss__1769487667593_24770538.jpg",
+    rating: "",
     match: 1,
   },
   西宁市体育公园: {
@@ -17729,6 +20252,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:00-22:00",
     image:
       "https://aos-comment.amap.com/B0FFG9Y32L/comment/content_media_external_file_1508_1761960555891_52523284.jpg",
+    rating: "",
     match: 1,
   },
   湟源县宗家沟文化旅游景区: {
@@ -17736,12 +20260,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/7d27312a-9319-4c2f-be6c-b32a1f65f86d.jpg",
+    rating: "",
     match: 0.98,
   },
   循化撒拉族绿色家园: {
     tel: "",
     openTime: "周一至周日 08:00-17:30",
     image: "",
+    rating: "",
     match: 0.78,
   },
   "平安驿·河湟民俗文化体验地": {
@@ -17749,6 +20275,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00；具体营业状态以当天开放情况为准",
     image:
       "https://aos-comment.amap.com/B0FFKZXLQJ/comment/content_media_external_file_50464_ss__1771928763816_77967693.jpg",
+    rating: "",
     match: 1,
   },
   民和喇家考古遗址公园: {
@@ -17756,6 +20283,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00 最晚进入17:30",
     image:
       "https://aos-comment.amap.com/B0GRL5LYIC/comment/81024a1fa2e91bdd51697c4d1ef615ad_2048_2048_80.jpg",
+    rating: "",
     match: 0.78,
   },
   "撒拉尔故里-民俗文化园": {
@@ -17763,6 +20291,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/857582555d7257ba67680bfe17e37f4e",
+    rating: "",
     match: 0.91,
   },
   民和七里花海景区: {
@@ -17770,6 +20299,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-18:00",
     image:
       "http://store.is.autonavi.com/showpic/f83d7e82aaf76c1abf474c5db15fa24f",
+    rating: "",
     match: 1,
   },
   门源百里油菜花海景区: {
@@ -17777,6 +20307,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-21:00",
     image:
       "https://store.is.autonavi.com/showpic/5599025b9ff2ee420000003315674704?type=pic",
+    rating: "",
     match: 1,
   },
   祁连风光旅游景区: {
@@ -17784,6 +20315,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/0fe9a19b5e44cc648c5c5f003d02c702",
+    rating: "",
     match: 0.95,
   },
   门源县祁连山生态牧场: {
@@ -17791,6 +20323,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/5a759ac6d8644e3d0000003052802668",
+    rating: "",
     match: 0.67,
   },
   贵德高原养生休闲度假区: {
@@ -17798,12 +20331,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/9d14ddfe8cb386f50b6330476ad871a3",
+    rating: "",
     match: 0.9,
   },
   龙羊峡旅游景区: {
     tel: "",
     openTime: "4月至10月 08:30-19:00 最晚进入19:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.59,
   },
   贵德县国家地质公园景区: {
@@ -17811,6 +20346,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-18:30 最晚进入17:30",
     image:
       "https://store.is.autonavi.com/showpic/4fc26e0cab90b7300000003273230062?type=pic",
+    rating: "",
     match: 0.79,
   },
   格尔木昆仑旅游区: {
@@ -17818,6 +20354,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:30 最晚进入16:30",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/e5fa718a-e72b-42ef-9060-8ab1fed1cf4a.jpg",
+    rating: "",
     match: 1,
   },
   茶卡盐湖景区: {
@@ -17825,6 +20362,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "5月至11月 07:20-21:30 最晚进入20:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/f7f98c5f8bf31557f65c7516210153c9",
+    rating: "",
     match: 0.88,
   },
   茶卡天空壹号景区: {
@@ -17832,6 +20370,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "9月1日-30日:7:30-20:30",
     image:
       "http://store.is.autonavi.com/showpic/4b77b3e18166ee2bc077b9b68105e115",
+    rating: "",
     match: 1,
   },
   热贡国家级历史文化名城旅游区: {
@@ -17839,6 +20378,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/fe84b179b4f1824f8f639583bd61f337",
+    rating: "",
     match: 1,
   },
   玉树称多拉布民俗村: {
@@ -17846,6 +20386,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/183b351f9e24769c82e58a737435d10e",
+    rating: "",
     match: 1,
   },
   黄沙古渡原生态旅游区: {
@@ -17854,6 +20395,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,10月至12月 周一至周日 09:00-17:30 最晚进入17:00；5月至9月 周一至周日 08:30-18:30 最晚进入18:00",
     image:
       "https://store.is.autonavi.com/showpic/67127a02dabab8e60000003183120883?type=pic",
+    rating: "",
     match: 0.97,
   },
   黄河军事文化博览园: {
@@ -17861,6 +20403,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/ea3f7f667c6677068ea6125b559f86a9",
+    rating: "",
     match: 1,
   },
   贺兰山岩画: {
@@ -17868,6 +20411,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "9月1日-10月31日 08:00-18:30",
     image:
       "https://store.is.autonavi.com/showpic/94c345b5aa2139550000003292856734?type=pic",
+    rating: "",
     match: 0.97,
   },
   西夏陵: {
@@ -17875,6 +20419,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/0d1fe87e08a349900000006885270853?type=pic",
+    rating: "",
     match: 0.64,
   },
   西夏风情园旅游景区: {
@@ -17882,6 +20427,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/97cd8459b47c5d347ba7e65101d57f7c",
+    rating: "",
     match: 0.98,
   },
   天山海世界景区: {
@@ -17889,12 +20435,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-21:00",
     image:
       "https://store.is.autonavi.com/showpic/1c41907897ba93af0000002565076249?type=pic",
+    rating: "",
     match: 0.99,
   },
   玉泉国际酒庄景区: {
     tel: "",
     openTime: "周一至周日 09:00-18:00",
     image: "",
+    rating: "",
     match: 1,
   },
   华夏奇石山文化旅游区: {
@@ -17903,6 +20451,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "冬令时 1/1-12/31(冬令时) 09:00–17:00开放 最晚售票16:50；夏令时 1/1-12/31(夏令时) 09:00–18:00开放 最晚售票17:40",
     image:
       "https://store.is.autonavi.com/showpic/b08f884afdd146350000002455302182?type=pic",
+    rating: "",
     match: 1,
   },
   黄河大峡谷旅游区: {
@@ -17910,12 +20459,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/66139c38f94d453c0000003076404895?type=pic",
+    rating: "",
     match: 0.98,
   },
   哈巴湖生态旅游区: {
     tel: "",
     openTime: "周一至周日 09:00-18:00",
     image: "",
+    rating: "",
     match: 0.99,
   },
   盐池革命历史纪念园: {
@@ -17923,6 +20474,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/79c7268f1173299b70d2732f8509c688",
+    rating: "",
     match: 0.71,
   },
   同心红军西征纪念园: {
@@ -17930,6 +20482,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://aos-cdn-image.amap.com/sns/ugccomment/a7bfd331-6b23-4499-a4cb-0be681071d3b.jpg",
+    rating: "",
     match: 0.74,
   },
   金沙岛景区: {
@@ -17938,6 +20491,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "04-01至10-07 周一至周日 08:00-18:00 最晚进入17:00；10-08至03-31 周一至周日 09:00-16:00 最晚进入16:00",
     image:
       "https://aos-comment.amap.com/B07A10M7WV/headerImg/content_media_external_images_media_67143_1658147557701_17ab87b8.jpg",
+    rating: "",
     match: 0.99,
   },
   寺口子风景区: {
@@ -17945,12 +20499,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/de0c0f9c242e723fb216858bbbdc0939",
+    rating: "",
     match: 0.66,
   },
   六盘山红军长征景区: {
     tel: "",
     openTime: "周一至周日 09:00-17:00",
     image: "",
+    rating: "",
     match: 0.99,
   },
   六盘山国家森林公园: {
@@ -17958,6 +20514,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "01-01至10-29 周一至周日 08:00-18:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/23eb9ead951a935431ef13aeacdb1a08",
+    rating: "",
     match: 1,
   },
   宁夏固原市博物馆: {
@@ -17965,6 +20522,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/30c2a676c22b88ad429c444e53209fad",
+    rating: "",
     match: 0.62,
   },
   将台堡红军长征会师纪念园: {
@@ -17972,6 +20530,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "https://store.is.autonavi.com/showpic/fb254ca1591d02230000009072942378?type=pic",
+    rating: "",
     match: 0.97,
   },
   喀赞其民俗旅游区: {
@@ -17979,6 +20538,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/a01a7b3c24626202990422c077f25586",
+    rating: "",
     match: 0.59,
   },
   伊犁河风景区: {
@@ -17986,12 +20546,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image:
       "https://aos-comment.amap.com/B0FFH71TG6/comment/content_media_external_images_media_369_1733470318813_73871737.jpg",
+    rating: "",
     match: 0.98,
   },
   野核桃沟景区: {
     tel: "",
     openTime: "周一至周日 10:00-20:00",
     image: "",
+    rating: "",
     match: 0.98,
   },
   惠远古城景区: {
@@ -17999,6 +20561,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-20:00",
     image:
       "https://aos-comment.amap.com/B0LR3CDXVU/comment/content_media_external_file_1000076971_ss__1764067228638_25667835.jpg",
+    rating: "",
     match: 0.99,
   },
   解忧公主薰衣草园: {
@@ -18007,6 +20570,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月 周一至周日 10:00-19:00 最晚进入18:00；4月至5月 周一至周日 09:30-19:30 最晚进入19:00；6月至8月 周一至周日 09:00-21:00 最晚进入20:30 09-01至10-08 周一至周日 09:30-20:00 最晚进入19:30；10-09至12-31 周一至周日 10:00-19:00 最晚进入18:00",
     image:
       "http://store.is.autonavi.com/showpic/8c0723dea9e5c9995db31ec7e6fc0451",
+    rating: "",
     match: 1,
   },
   大西沟中华福寿山: {
@@ -18014,6 +20578,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-19:30 最晚进入19:30",
     image:
       "https://aos-comment.amap.com/B0FFGSK4QI/comment/56b00658dca42300410debce34603aae_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   霍尔果斯中哈国际旅游区: {
@@ -18021,6 +20586,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/f67f32d028fbcf480000003079428468?type=pic",
+    rating: "",
     match: 1,
   },
   夏塔景区: {
@@ -18028,6 +20594,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "05月01日-10月07日 09:00-21:00",
     image:
       "https://store.is.autonavi.com/showpic/fa90323c2c9b23630000004648394772?type=pic",
+    rating: "",
     match: 0.97,
   },
   天马旅游文化园: {
@@ -18036,6 +20603,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 10:00-20:00；天马旅游文化园景区至湿地公园景区爱心桥实行限时单向通行管理，通行时段为 1. 10:00‑18:30（单向通行）:仅允许天马旅游文化园景区往湿地公园景区方向单向通行；2. 18:30‑20:30（双向通行）:开放天马旅游文化园景区与湿地公园景区双向通行。 表演时间:京时11:00开园仪式；京时13:00马术表演；京时15:00萌马过河；京时17:00马术表演。",
     image:
       "https://store.is.autonavi.com/showpic/ff9eb3611b6b239e0000003284486514?type=pic",
+    rating: "",
     match: 0.98,
   },
   昭苏县湿地公园: {
@@ -18043,6 +20611,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-19:00",
     image:
       "http://store.is.autonavi.com/showpic/3e30f6b1c41a67fe2c01068f6135f94c",
+    rating: "",
     match: 1,
   },
   锦绣园风景区: {
@@ -18050,6 +20619,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFL78V7X/comment/%5B2025-09-21-14-17-23%5DF2889BCA-3060-4E8E-A55E-581AD93B160_1758435445566_01396262.jpg",
+    rating: "",
     match: 1,
   },
   六星街景区: {
@@ -18057,6 +20627,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-14:00,16:00-20:00",
     image:
       "https://aos-comment.amap.com/B0FFL79F7Y/comment/content_media_external_file_1000283907_ss__1768976022177_93267473.jpg",
+    rating: "",
     match: 0.99,
   },
   八卦城景区: {
@@ -18064,6 +20635,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/31a461da30687fa23ad9133debb153aa",
+    rating: "",
     match: 1,
   },
   阿拉山口边境旅游区: {
@@ -18071,6 +20643,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-20:00",
     image:
       "https://store.is.autonavi.com/showpic/739290a63a9917fa0000005294662996?type=pic",
+    rating: "",
     match: 0.93,
   },
   温泉县圣泉景区: {
@@ -18078,6 +20651,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 12:00-24:00 最晚进入22:00",
     image:
       "https://store.is.autonavi.com/showpic/96a2b61ff5b2b81c0000003593320351?type=pic",
+    rating: "",
     match: 0.7,
   },
   温泉县鄂托克赛尔天泉景区: {
@@ -18085,6 +20659,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0HA4USZ9C/comment/content_media_external_file_513_1749551291411_34950497.jpg",
+    rating: "",
     match: 1,
   },
   博尔塔拉河旅游区: {
@@ -18092,6 +20667,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/8969d7d6b11add763ab03a1060421487",
+    rating: "",
     match: 0.75,
   },
   温泉河谷林景区: {
@@ -18099,6 +20675,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/cccce569201f0d8f0000002162554765?type=pic",
+    rating: "",
     match: 0.87,
   },
   五彩滩: {
@@ -18107,6 +20684,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "8:30-20:00,售票时间8:30-19:45,建议最晚进园20:00；网络取票时间:8:30-19:35",
     image:
       "http://store.is.autonavi.com/showpic/83805a7e820919c6ca9ece8d5bc7b83f",
+    rating: "",
     match: 0.99,
   },
   乌伦古湖景区: {
@@ -18114,6 +20692,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B038A0LPEO/comment/64e8a675c60a7d6cc4799a64af6914d5_2048_2048_80.jpg",
+    rating: "",
     match: 0.96,
   },
   国家矿山公园景区: {
@@ -18122,6 +20701,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,11月至12月 周一至周日 10:30-18:30；5月至10月 周一至周日 09:00-20:00 最晚进入20:00",
     image:
       "https://aos-comment.amap.com/B0FFH4V3BK/comment/1c94b0290dc900bbe70cb7cc76d0296a_2048_2048_80.jpg",
+    rating: "",
     match: 0.98,
   },
   滨河景区: {
@@ -18129,6 +20709,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFIW6JXX/comment/content_media_external_file_1000136653_ss__1764312006221_55545915.jpg",
+    rating: "",
     match: 1,
   },
   桦林公园: {
@@ -18136,6 +20717,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-22:00",
     image:
       "http://store.is.autonavi.com/showpic/8d00fde2e721b524b75b0bcb5e4d7c9e",
+    rating: "",
     match: 1,
   },
   中俄老码头风情街: {
@@ -18143,6 +20725,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/7a2c01ed092950271f547542d82ac71f",
+    rating: "",
     match: 0.98,
   },
   三道海子景区: {
@@ -18150,12 +20733,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0FFG9TQFI/comment/content_media_external_file_3711_1766491520691_76629363.jpg",
+    rating: "",
     match: 1,
   },
   克拉玛依河景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.98,
   },
   黑油山景区: {
@@ -18163,6 +20748,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "10-10至12-31 周一至周日 10:00-19:30",
     image:
       "http://store.is.autonavi.com/showpic/25c2d14fcf042280d9224e56c5705b22",
+    rating: "",
     match: 1,
   },
   独山子大峡谷景区: {
@@ -18171,6 +20757,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至6月,9月至12月 周一至周日 09:30-21:00,最晚进入20:30；7月至8月 周一至周日 09:30-20:30",
     image:
       "http://store.is.autonavi.com/showpic/cb0329322ee623384e80f609de64e688",
+    rating: "",
     match: 1,
   },
   新疆农业博览园: {
@@ -18178,6 +20765,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:30-18:00",
     image:
       "http://store.is.autonavi.com/showpic/8a06456c6a750b3cb2105bb1402f09f0",
+    rating: "",
     match: 1,
   },
   世纪园景区: {
@@ -18185,6 +20773,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/95e1ba144a5ee5eb0000003375234759?type=pic",
+    rating: "",
     match: 1,
   },
   江布拉克景区: {
@@ -18192,6 +20781,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-19:30",
     image:
       "http://store.is.autonavi.com/showpic/63820d18e36972ebe18bb6323d3de026",
+    rating: "",
     match: 1,
   },
   红光山景区: {
@@ -18199,6 +20789,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-19:00",
     image:
       "https://aos-comment.amap.com/B0IG75RGIS/comment/9A745333_3EB7_4208_9CAA_BBE866AE9463_L0_001_1279_170_1757016172072_76963176.jpg",
+    rating: "",
     match: 0.99,
   },
   新疆国际大巴扎景区: {
@@ -18206,6 +20797,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/0fbaa36d8ce8de891efb62590c367603",
+    rating: "",
     match: 1,
   },
   水磨沟风景区: {
@@ -18213,6 +20805,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B03DF0T1HB/comment/content_media_external_file_1000015219_ss__1763743656945_24450153.jpg",
+    rating: "",
     match: 0.99,
   },
   红山公园: {
@@ -18220,6 +20813,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-22:00",
     image:
       "http://store.is.autonavi.com/showpic/d6780a28eb0a58ceb88f4866eb256e4c",
+    rating: "",
     match: 1,
   },
   库木塔格沙漠风景名胜区: {
@@ -18228,6 +20822,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 10:00-19:30 最晚进入19:30；4月至10月 周一至周日 09:00-21:00 最晚进入21:00",
     image:
       "http://store.is.autonavi.com/showpic/8cb914f38e5a14d070be906e728ebd37",
+    rating: "",
     match: 1,
   },
   坎儿井游乐园: {
@@ -18235,6 +20830,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "9:30-19:30",
     image:
       "http://store.is.autonavi.com/showpic/6ad8dfd215dce6cbec06019c2105e31a",
+    rating: "",
     match: 0.79,
   },
   坎儿井民俗园: {
@@ -18242,6 +20838,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "9:30-19:30",
     image:
       "http://store.is.autonavi.com/showpic/70a79fb7d71b4abdf94718e2634b978e",
+    rating: "",
     match: 0.99,
   },
   大交河景区: {
@@ -18249,6 +20846,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "9:30-19:30",
     image:
       "https://aos-comment.amap.com/B0FFIDGIIK/comment/BD09C652_AF87_42B4_A453_9B0A8E9964B8_L0_001_2000_150_1770571449131_33947753.jpg",
+    rating: "",
     match: 0.66,
   },
   罗布人村寨景区: {
@@ -18256,6 +20854,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-18:30",
     image:
       "http://store.is.autonavi.com/showpic/ca4033645ae490e80cb330e4d56c0add",
+    rating: "",
     match: 0.97,
   },
   轮台县塔里木胡杨林公园: {
@@ -18263,12 +20862,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-19:30 最晚进入19:00",
     image:
       "http://store.is.autonavi.com/showpic/3faa616264546a26e898a190009315b3",
+    rating: "",
     match: 1,
   },
   天鹅河景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   黄庙景区: {
@@ -18276,6 +20877,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-19:30",
     image:
       "https://aos-comment.amap.com/B03E40023B/comment/content_media_external_file_100005745_1772084234936_82377425.jpg",
+    rating: "",
     match: 1,
   },
   霍拉山丝路古村: {
@@ -18284,6 +20886,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "3月 全天关闭； 09:00-21:30, 2026年10月1日-2026年10月7日 10:00-22:00",
     image:
       "https://aos-comment.amap.com/B0FFLASJ5F/comment/c190b10f9558a57ee99ac4bc280a3188_2048_2048_80.jpg",
+    rating: "",
     match: 0.98,
   },
   北山森林公园景区: {
@@ -18291,12 +20894,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFIAT6PR/comment/content_media_external_images_media_1000071074_ss_2_1699081712015_0615d768.jpg",
+    rating: "",
     match: 1,
   },
   巴州博物馆: {
     tel: "",
     openTime: "周一 全天关闭；周二至周日 10:00-18:00 最晚进入17:30",
     image: "",
+    rating: "",
     match: 0.99,
   },
   香妃园景区: {
@@ -18304,6 +20909,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "10:00-19:30",
     image:
       "http://store.is.autonavi.com/showpic/0b4ef221292643ec0240c6ce9dbb8f7e",
+    rating: "",
     match: 1,
   },
   南湖旅游度假区: {
@@ -18311,6 +20917,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image:
       "https://aos-comment.amap.com/B0J1NUKE04/comment/7BF1B5FF_800A_47A3_901F_2E703EAE3726_L0_001_2000_150_1754796133385_23345382.jpg",
+    rating: "",
     match: 0.96,
   },
   刀郎画乡: {
@@ -18318,6 +20925,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-20:00",
     image:
       "https://aos-comment.amap.com/B0FFKGKI88/comment/5ab7fc488532173abf734daa20e834b4_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   达瓦昆沙漠旅游风景区: {
@@ -18325,6 +20933,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/d7be23a2aff67d07c72cc301d23fde3f",
+    rating: "",
     match: 0.99,
   },
   花儿为什么这样红景区: {
@@ -18332,6 +20941,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-20:00",
     image:
       "https://store.is.autonavi.com/showpic/3833f1ff0d730d0371616a971854ac84",
+    rating: "",
     match: 0.95,
   },
   哈密王景区: {
@@ -18340,6 +20950,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "冬令时 全年 09:30–18:30开放 最晚进入18:30；夏令时 全年 09:30–20:00开放 最晚进入20:00；中秋节,国庆节 09:00–22:00开放",
     image:
       "http://store.is.autonavi.com/showpic/18401996c42ddb159e806d700a01760c",
+    rating: "",
     match: 1,
   },
   巴里坤湖景区: {
@@ -18347,6 +20958,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B0LRXU0R5E/comment/file_media_Photo_8602_IMG_1762150586_8249_IMG_20251103_141446_jpg_ss__1762152251006_05540825.jpg",
+    rating: "",
     match: 0.93,
   },
   巴里坤古城景区: {
@@ -18354,6 +20966,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "10:00-19:30(冬),10:00-20:00(夏)",
     image:
       "https://store.is.autonavi.com/showpic/1a95fed2fe28cf290000002903942333?type=pic",
+    rating: "",
     match: 1,
   },
   多浪河景区: {
@@ -18361,6 +20974,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/e34fb0c60f42e593cb255fc7e3fabb5c",
+    rating: "",
     match: 0.95,
   },
   国家湿地公园景区: {
@@ -18368,6 +20982,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-22:30",
     image:
       "https://aos-comment.amap.com/B0FFIK3N62/comment/content_media_external_file_161_1754023276292_77890902.jpg",
+    rating: "",
     match: 0.89,
   },
   "阿克苏地区文博院（博物馆）": {
@@ -18375,6 +20990,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周二至周日 10:00-19:30；周一 全天关闭",
     image:
       "https://store.is.autonavi.com/showpic/81b82f26bdbeb6290000000870328008?type=pic",
+    rating: "",
     match: 1,
   },
   库车王府: {
@@ -18383,6 +20999,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至4月,11月至12月 周一至周日 10:00-20:00；5月至6月 周一至周日 09:30-21:30；7月至8月 周一至周日 09:30-22:00 09-01至10-08 周一至周日 09:30-21:30；10-09至12-31 周一至周日 10:00-20:00；10-13至10-31 周一至周日 09:30-22:00",
     image:
       "http://store.is.autonavi.com/showpic/7fd6d199da3332fc2518fd93bde71285",
+    rating: "",
     match: 1,
   },
   天山神秘大峡谷: {
@@ -18391,6 +21008,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "年5月1日-10月10日 旺季 09:00-20:00开放(20:00停止入园)；年10月11日-次年4月30日 淡季 10:00-19:00开放(19:00停止入园)",
     image:
       "https://store.is.autonavi.com/showpic/1b64fb10f0376f81572dda4afb0cc54f",
+    rating: "",
     match: 1,
   },
   沙雁洲景区: {
@@ -18398,12 +21016,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-20:00 最晚进入19:00",
     image:
       "https://aos-comment.amap.com/B0FFLDYCNJ/comment/content_media_external_file_2776_1772453759898_12196033.jpg",
+    rating: "",
     match: 1,
   },
   沙漠花海景区: {
     tel: "",
     openTime: "10:00-20:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 1,
   },
   加依村景区: {
@@ -18411,6 +21031,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:30-18:30 最晚进入18:30",
     image:
       "http://store.is.autonavi.com/showpic/49bafe6c003855b4cfe5943f3d531176",
+    rating: "",
     match: 0.66,
   },
   康其湿地: {
@@ -18418,6 +21039,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFKYL4OX/comment/content_media_external_file_16511_ss__1760355374199_68186387.jpg",
+    rating: "",
     match: 0.93,
   },
   托木尔大峡谷景区: {
@@ -18425,6 +21047,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-20:00",
     image:
       "http://store.is.autonavi.com/showpic/048975387ebe5dbdf7fcbc2e048af2b4",
+    rating: "",
     match: 1,
   },
   柯柯牙纪念馆: {
@@ -18432,6 +21055,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/60d26a767140b282831ea53ea1925d6f",
+    rating: "",
     match: 1,
   },
   刀郎部落: {
@@ -18439,6 +21063,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "9:00-21:30",
     image:
       "http://store.is.autonavi.com/showpic/81a04989099fd281f50de256b166cb84",
+    rating: "",
     match: 1,
   },
   沙棘林旅游景区: {
@@ -18446,6 +21071,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:30-18:30",
     image:
       "https://aos-comment.amap.com/B0FFI52M81/comment/7402DE2B_00F8_4D22_8E05_68FBA2F8B643_L0_001_1500_2000_1728031685077_41836207.jpg",
+    rating: "",
     match: 0.94,
   },
   燕泉山景区: {
@@ -18453,6 +21079,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-19:30 最晚进入19:30",
     image:
       "https://aos-comment.amap.com/B03E50M8TV/comment/6ae28142830d1d8cb8a0386a39da0883_2048_2048_80.jpg",
+    rating: "",
     match: 0.97,
   },
   和田乌鲁瓦提风景区: {
@@ -18460,6 +21087,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-20:00",
     image:
       "https://store.is.autonavi.com/showpic/cd28205b345d50f40000003027684830?type=pic",
+    rating: "",
     match: 0.85,
   },
   策勒县达玛沟佛教文化遗址: {
@@ -18467,6 +21095,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-14:00，16:00-20:00",
     image:
       "https://store.is.autonavi.com/showpic/508d41e0c33a25fa7aeff67a8390bf44",
+    rating: "",
     match: 1,
   },
   团城景区: {
@@ -18474,6 +21103,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/d20fce818336e9ff0000003129194130?type=pic",
+    rating: "",
     match: 0.95,
   },
   墨玉老城景区: {
@@ -18481,6 +21111,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/73810cfa3c621484750c27dab933b34f",
+    rating: "",
     match: 1,
   },
   拉里昆国家湿地公园: {
@@ -18488,6 +21119,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 10:00-18:00",
     image:
       "https://aos-comment.amap.com/B0FFH0TWPE/comment/6ce2e038d59349e4e9fa63530caf251c_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   龙湖旅游区: {
@@ -18495,12 +21127,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B03870MBV3/comment/06c0ce04fd8f1a4782b798fdffe32012_2048_2048_80.jpg",
+    rating: "",
     match: 0.86,
   },
   "策勒县昆仑圣境（板兰格景区）": {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 1,
   },
   南京市牛首山文化旅游区: {
@@ -18509,6 +21143,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "08:30-17:30(16:30停止入园数据来源:江苏省文旅厅公共服务平台苏心游), 具体开放时间以现场公示为准",
     image:
       "https://aos-comment.amap.com/B0FFFFJJL7/comment/c807eed533270987faf61d2df6b2dd16_2048_2048_80.jpg",
+    rating: "",
     match: 0.87,
   },
   南京市汤山紫清湖旅游区: {
@@ -18516,6 +21151,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00 最晚进入15:30",
     image:
       "http://store.is.autonavi.com/showpic/0f93279fa6b9e1ceadbcbbe44e26a94c",
+    rating: "",
     match: 0.99,
   },
   南京市金牛湖景区: {
@@ -18524,6 +21160,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周五 08:30-17:30 最晚进入17:00；周六至周日 08:30-18:00 最晚进入17:00 05-01至05-03 周一至周日 08:00-20:30",
     image:
       "https://store.is.autonavi.com/showpic/d52f35d05b4e10a80000002903824149?type=pic",
+    rating: "",
     match: 0.83,
   },
   南京博物院: {
@@ -18531,6 +21168,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/0c44dacabc82df9a0000006823732292?type=pic",
+    rating: "",
     match: 1,
   },
   南京市珍珠泉风景区: {
@@ -18539,18 +21177,21 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周五 08:30-17:00 最晚进入16:00；周六至周日 08:30-17:30 最晚进入16:30",
     image:
       "https://store.is.autonavi.com/showpic/ffc7ccd232e65db06c3de200ce0b84d4",
+    rating: "",
     match: 0.83,
   },
   南京市科技馆: {
     tel: "",
     openTime: "周一至周日 09:00-17:00",
     image: "",
+    rating: "",
     match: 0.83,
   },
   "南京市明文化村（阳山碑材）景区": {
     tel: "025-84111108",
     openTime: "周一至周日 08:30-20:00",
     image: "",
+    rating: "",
     match: 0.86,
   },
   南京市平山森林公园: {
@@ -18558,6 +21199,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/8a0c1b730866bddead202c6aa9ca5c21",
+    rating: "",
     match: 0.8,
   },
   南通市洲际绿博园: {
@@ -18565,6 +21207,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/526fe422986cadf972eab6658d32521d",
+    rating: "",
     match: 0.99,
   },
   南通海安县江淮文化园景区: {
@@ -18572,6 +21215,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 16:00-22:00 最晚进入21:00",
     image:
       "https://store.is.autonavi.com/showpic/df00b7cedd47bebd0000002977550278?type=pic",
+    rating: "",
     match: 1,
   },
   南通市中国工农红军第十四军纪念馆景区: {
@@ -18579,6 +21223,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/13a6916e7c67172956f1bfe6ed8767d4",
+    rating: "",
     match: 1,
   },
   南通如皋市水绘园风景区: {
@@ -18586,12 +21231,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/ed5050de2a7b7225c9cedbb3fccd2956",
+    rating: "",
     match: 1,
   },
   南通如皋盆景大观景区: {
     tel: "",
     openTime: "周一至周日 09:30-16:30",
     image: "",
+    rating: "",
     match: 0.9,
   },
   宿迁市双沟酒文化旅游区: {
@@ -18600,6 +21247,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 08:00-18:00；因园区性质较为特殊，需由导游带队进入景区，因此购票散客均有固定发团时间，散客发团时间:上午（9:30、10:30)，下午(14:00、15:00、16:00) 以上信息仅供参考，具体以景区当日实际公示信息为准",
     image:
       "https://store.is.autonavi.com/showpic/50c12fde6cb654bd0000004864448506?type=pic",
+    rating: "",
     match: 1,
   },
   宿迁市龙王庙行宫景区: {
@@ -18607,6 +21255,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-17:30 最晚进入17:00",
     image:
       "https://aos-comment.amap.com/B020F01C01/comment/54f4e667230ad82592112d8ebb348a0e_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   宿迁市项王故里: {
@@ -18615,6 +21264,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至6月,10月至12月 周一至周日 09:00-17:30 最晚进入17:00；7月至9月 周一至周日 09:00-18:00 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/86476fd30f495093f98bb2603a3f3f36",
+    rating: "",
     match: 1,
   },
   宿迁市湖滨公园景区: {
@@ -18622,12 +21272,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30",
     image:
       "https://aos-comment.amap.com/B020F15CG1/comment/1143a0ad99628d37b6d25a54a8508a29_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   宿迁市雪枫公园: {
     tel: "0527-84246862",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.57,
   },
   常州溧阳市新四军江南指挥部纪念馆: {
@@ -18635,6 +21287,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/fddbbbc17a76ea51f8dfbeec4abbb732",
+    rating: "",
     match: 1,
   },
   常州市中华孝道园景区: {
@@ -18642,6 +21295,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:30",
     image:
       "https://store.is.autonavi.com/showpic/a60b850160cf5b500000004479814053?type=pic",
+    rating: "",
     match: 1,
   },
   常州市青枫公园: {
@@ -18649,6 +21303,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/ff5544cd38a0540b849f75a01bc2d7ee",
+    rating: "",
     match: 1,
   },
   常州市红梅公园: {
@@ -18656,6 +21311,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/9d25c47bc60f66a162f79a9fd0934f63",
+    rating: "",
     match: 1,
   },
   常州市天宁禅寺: {
@@ -18663,6 +21319,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/7d6ca2ebf2630f65b8f5a7ee3a4abf53",
+    rating: "",
     match: 1,
   },
   徐州市户部山古民居: {
@@ -18670,6 +21327,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "09:00-17:00,16:30停止入场",
     image:
       "https://store.is.autonavi.com/showpic/bc68c295d9c069680000000716592494?type=pic",
+    rating: "",
     match: 0.66,
   },
   徐州市悬水湖景区: {
@@ -18677,6 +21335,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/comment/content_service__1768689956781_73350725_1768689957865_06760237.jpg",
+    rating: "",
     match: 1,
   },
   徐州睢宁县水月禅寺景区: {
@@ -18684,6 +21343,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/d99437b32acf40cc3d63f4d8ee169359",
+    rating: "",
     match: 1,
   },
   徐州沛县微山湖千岛湿地景区: {
@@ -18691,6 +21351,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/ec6ec4bea0e65c520000002361380557?type=pic",
+    rating: "",
     match: 1,
   },
   徐州市大洞山景区: {
@@ -18698,6 +21359,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/65afc6bf252ebb3ad03e8c386e1eab38",
+    rating: "",
     match: 0.96,
   },
   徐州市蟠桃山景区: {
@@ -18705,6 +21367,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0H0JMTFTZ/comment/036EE281_C339_4A01_9DB0_62E090E73312_L0_001_1385_200_1752040773092_65409872.jpg",
+    rating: "",
     match: 0.97,
   },
   徐州市博物馆: {
@@ -18712,6 +21375,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周二至周日 10:00-19:00；节假日营业时间以官方通知为准",
     image:
       "https://store.is.autonavi.com/showpic/ff303eaa0e55c25bc838a3a616f278a7",
+    rating: "",
     match: 0.95,
   },
   徐州市新沂窑湾古镇旅游区: {
@@ -18719,6 +21383,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-21:00 最晚进入21:00",
     image:
       "http://store.is.autonavi.com/showpic/b968b3ba8b984d3681677cd6f8f56f27",
+    rating: "",
     match: 1,
   },
   徐州市汉文化景区: {
@@ -18727,6 +21392,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "5月至9月 周一至周日 08:30-17:30 最晚进入17:00；1月至4月,10月至12月 周一至周日 08:30-17:00 最晚进入16:30",
     image:
       "https://store.is.autonavi.com/showpic/b6268cb8591643010000001067802747?type=pic",
+    rating: "",
     match: 0.83,
   },
   徐州市淮海战役纪念塔: {
@@ -18734,6 +21400,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一全天关闭，周二至周日 09:00-16:15",
     image:
       "http://store.is.autonavi.com/showpic/66e05009a8a55e47e46c620c176c2080",
+    rating: "",
     match: 0.7,
   },
   扬州市运河三湾风景区: {
@@ -18741,6 +21408,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-18:00",
     image:
       "https://store.is.autonavi.com/showpic/6281a90b775cfb640000000726500743?type=pic",
+    rating: "",
     match: 0.57,
   },
   扬州市汉陵苑: {
@@ -18748,6 +21416,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:30-17:30 最晚进入17:00, 具体开放时间以现场公示为准",
     image:
       "https://aos-comment.amap.com/B020216HOH/comment/73b71453fad1124880e0beff1efbccc1_2048_2048_80.jpg",
+    rating: "",
     match: 0.83,
   },
   扬州市东关历史文化旅游区: {
@@ -18755,6 +21424,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-23:00",
     image:
       "https://store.is.autonavi.com/showpic/c4402d59a358c65a0000003372564853?type=pic",
+    rating: "",
     match: 1,
   },
   扬州市茱萸湾景区: {
@@ -18763,6 +21433,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 07:00-17:00 最晚进入16:45；具体开放时间以景区现场公示为准。",
     image:
       "https://aos-comment.amap.com/B020218EMO/comment/177032691344_1770326927009_12222501.jpg",
+    rating: "",
     match: 0.73,
   },
   扬州市邵伯古镇: {
@@ -18770,6 +21441,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/d3e37d2f0b946c710000002994522886?type=pic",
+    rating: "",
     match: 0.85,
   },
   扬州市个园: {
@@ -18777,6 +21449,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:15-17:30",
     image:
       "http://store.is.autonavi.com/showpic/f282a8ff0a9204c150aa8a49ea756c5a",
+    rating: "",
     match: 1,
   },
   扬州市大明寺: {
@@ -18784,6 +21457,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/5e24fad57bcc9d6111702f363e482a2f",
+    rating: "",
     match: 1,
   },
   仪征市捺山地质公园: {
@@ -18791,6 +21465,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "https://aos-comment.amap.com/B0FFJKV2BO/comment/7d277a092b2380ae2a76bb231a9dd941_2048_2048_80.jpg",
+    rating: "",
     match: 0.78,
   },
   高邮市抗日战争最后一役文化园: {
@@ -18798,6 +21473,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://store.is.autonavi.com/showpic/b7be013ea244c4064c2685e0e0140a6a",
+    rating: "",
     match: 0.67,
   },
   无锡市阖闾城遗址博物馆: {
@@ -18805,6 +21481,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/0c59ff61dec012cd8888a48891f27f2f",
+    rating: "",
     match: 0.98,
   },
   无锡市阳山桃花源景区: {
@@ -18812,6 +21489,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/a0702bd7b44e2857d957bba400c4d176",
+    rating: "",
     match: 0.62,
   },
   无锡市荡口古镇景区: {
@@ -18819,6 +21497,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/bd640b88b3270de64532fa754790f633",
+    rating: "",
     match: 1,
   },
   无锡市清名桥古运河景区: {
@@ -18826,6 +21505,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/2b51355c0bf9d10dc1de6f7f7a43060e",
+    rating: "",
     match: 0.99,
   },
   无锡市中华赏石园景区: {
@@ -18833,6 +21513,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00 最晚进入16:30",
     image:
       "http://store.is.autonavi.com/showpic/6fe58232ae4afbee7e6a7d86b75ebd6c",
+    rating: "",
     match: 1,
   },
   无锡宜兴市张公洞旅游景区: {
@@ -18840,12 +21521,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:30",
     image:
       "http://store.is.autonavi.com/showpic/8af31dee7868148e38ebf93f37b10fe3",
+    rating: "",
     match: 1,
   },
   无锡市鸿山泰伯景区: {
     tel: "0510-88580803",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.57,
   },
   无锡市南禅寺景区: {
@@ -18853,6 +21536,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-16:30",
     image:
       "http://store.is.autonavi.com/showpic/3ea2c95be005a2476c745dc9334abdd0",
+    rating: "",
     match: 1,
   },
   无锡博物院: {
@@ -18860,6 +21544,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/1959c894052a36c62a5787e659b294b1",
+    rating: "",
     match: 1,
   },
   无锡市东林书院: {
@@ -18867,6 +21552,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://aos-comment.amap.com/B01FE00UNY/comment/content_media_external_file_1000023288_ss__1773162835223_11253964.jpg",
+    rating: "",
     match: 1,
   },
   无锡宜兴市陶祖圣境景区: {
@@ -18874,6 +21560,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:30 最晚进入16:30",
     image:
       "https://aos-comment.amap.com/B01FE03EAI/comment/20260316-c98f615a54e23ffaea768b4d-5bLmETsUB7X7pce9iDXuYJ.jpg",
+    rating: "",
     match: 1,
   },
   无锡江阴市滨江要塞旅游区: {
@@ -18881,6 +21568,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "00:00-24:00, 具体开放时间以现场公示为准",
     image:
       "http://store.is.autonavi.com/showpic/9da5e7a3490161556b5dacf59ea0e34d",
+    rating: "",
     match: 0.62,
   },
   无锡江阴市江苏学政文化旅游区: {
@@ -18888,6 +21576,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/ca4240248a19a11c3c4773760508654e",
+    rating: "",
     match: 1,
   },
   无锡宜兴市竹海风景区: {
@@ -18896,6 +21585,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "冬令时 10月01日至04月30日 08:00-16:30 停止入场:16:00；夏令时 05月01日至09月30日 08:00-17:00 停止入场:16:00",
     image:
       "https://aos-comment.amap.com/B0FFJ2WUPP/comment/da0c6392-3998-4618-8f9c-141859f452ec.png",
+    rating: "",
     match: 0.57,
   },
   无锡宜兴市团氿风景区: {
@@ -18903,6 +21593,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:30-20:00",
     image:
       "https://aos-comment.amap.com/B01FE0J0VY/comment/a95809f894e7ed52d238c64d66da1116_2048_2048_80.jpg",
+    rating: "",
     match: 0.98,
   },
   无锡宜兴市龙背山森林公园: {
@@ -18910,6 +21601,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/820e911738851f1d0000003587406719?type=pic",
+    rating: "",
     match: 0.62,
   },
   无锡市薛福成故居: {
@@ -18917,6 +21609,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/6811282f871c3b2ef33d6299dbd25acd",
+    rating: "",
     match: 1,
   },
   泰州市高港口岸雕花楼景区: {
@@ -18924,6 +21617,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00 最晚进入16:30",
     image:
       "https://store.is.autonavi.com/showpic/949e175c5e373fb90000008091102660?type=pic",
+    rating: "",
     match: 1,
   },
   泰州市秋雪湖生态景区: {
@@ -18932,12 +21626,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 00:00-24:00；内部小景点开放时间各不相同，具体营业状态以当天开放情况为准。",
     image:
       "https://aos-comment.amap.com/B0FFFQXIVH/comment/9417691A_F1BD_41E0_9019_1330BD178FBF_L0_001_1280_82_1757421434761_12281425.jpg",
+    rating: "",
     match: 0.97,
   },
   泰州姜堰市古罗塘旅游文化景区: {
     tel: "",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.75,
   },
   "泰州兴化市郑板桥·范仲淹纪念馆": {
@@ -18945,12 +21641,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/7bfcfec8642e32c1cd167c0d6d88ebad",
+    rating: "",
     match: 1,
   },
   泰州市天德湖景区: {
     tel: "",
     openTime: "周一至周日 06:00-21:30",
     image: "",
+    rating: "",
     match: 0.91,
   },
   泰州市凤城河风景区: {
@@ -18958,6 +21656,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/e7d9138bb6cc8fc50000008269394516?type=pic",
+    rating: "",
     match: 0.67,
   },
   泰州泰兴市新四军黄桥战役纪念馆: {
@@ -18965,6 +21664,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/c5b1050118965ca30000006590884552",
+    rating: "",
     match: 1,
   },
   淮安市金湖水上森林: {
@@ -18973,6 +21673,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 08:30-17:00 最晚进入16:30；4月至10月 周一至周日 08:00-17:30 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/70d34c3a728d32b2093a5f12611a33cd",
+    rating: "",
     match: 0.94,
   },
   淮安市今世缘旅游景区: {
@@ -18981,6 +21682,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月 周一至周日 08:30-17:00 最晚进入16:00；4月至10月 周一至周日 08:30-17:30 最晚进入16:00；定点发团时间:上午9:30、10:30，下午14:30、15:30，定点发团免导服和观光车使用费用，游览前请来电咨询预约。",
     image:
       "https://aos-comment.amap.com/B0FFJLRMOP/comment/content_media_external_images_media_100001386_1730169383871_43674383.jpg",
+    rating: "",
     match: 0.99,
   },
   淮安市金湖荷花荡景区: {
@@ -18988,12 +21690,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/3bd7249bf70608424396417ed307c4fa",
+    rating: "",
     match: 1,
   },
   淮安市涟水县五岛湖旅游区: {
     tel: "",
     openTime: "周一至周日 08:00-18:00",
     image: "",
+    rating: "",
     match: 0.66,
   },
   淮安市洪泽湖古堰景区: {
@@ -19001,6 +21705,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "https://store.is.autonavi.com/showpic/6adf260fe68bb26f0000003689810728?type=pic",
+    rating: "",
     match: 0.87,
   },
   淮安市刘老庄连纪念园景区: {
@@ -19008,6 +21713,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://aos-comment.amap.com/B020504482/comment/content_media_external_file_1000004845_ss__1760573715468_47653671.jpg",
+    rating: "",
     match: 0.66,
   },
   淮安市里运河文化长廊景区: {
@@ -19016,6 +21722,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 00:00-24:00；内部各小景点开放时间不一:灯会:13:00 - 22:30；游船:9:00-21:00；三馆一楼（陈潘二公祠、吴公祠、斗姥宫、清江浦楼）+清江浦记忆馆:星期二至星期日开放 上午:09:00-11:00 下午:13:30-16:30   14:00--17:00（夏令时）",
     image:
       "http://store.is.autonavi.com/showpic/5d90398de663c75f9ea12132b5eb296b",
+    rating: "",
     match: 1,
   },
   淮安市吴承恩故居景区: {
@@ -19023,6 +21730,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/83827784b32911f69f54d5a360fa3ca7",
+    rating: "",
     match: 1,
   },
   淮安市中国漕运博物馆景区: {
@@ -19030,6 +21738,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:00",
     image:
       "https://aos-comment.amap.com/B0FFHMMAB4/comment/content_media_external_images_media_104804_ss__1766637156990_32563928.jpg",
+    rating: "",
     match: 0.7,
   },
   淮安市淮安府署景区: {
@@ -19037,6 +21746,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFF2INTS/comment/60e380f3-f2b5-4a29-bd36-cdbb10fe0a9b.png",
+    rating: "",
     match: 0.78,
   },
   淮安盱眙县黄花塘新四军军部纪念馆: {
@@ -19044,6 +21754,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/d2f38ecafacbc18e55e438beee098471",
+    rating: "",
     match: 1,
   },
   淮安市古淮河文化生态景区: {
@@ -19051,6 +21762,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B02050STUT/comment/b4db1eb233bebc9afa5edf8917503d4c_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   淮安盱眙县铁山寺国家森林公园: {
@@ -19058,6 +21770,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30",
     image:
       "http://store.is.autonavi.com/showpic/a9880b6fbb4bdc8d002f352a0f86b983",
+    rating: "",
     match: 0.97,
   },
   淮安市白马湖生态旅游景区: {
@@ -19066,6 +21779,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 09:30-17:00 最晚进入17:00；内部娱乐设施及项目开放时间不一，详情以景区现场公示为准。",
     image:
       "http://store.is.autonavi.com/showpic/cf84c3fc56760c7eed3188e7e8ebe234",
+    rating: "",
     match: 1,
   },
   淮安市明祖陵景区: {
@@ -19073,6 +21787,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/56be64e286593e389035455019fb7ee3",
+    rating: "",
     match: 0.93,
   },
   盐城市大丰梦幻迷宫: {
@@ -19080,6 +21795,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "全年 08:30–17:30开放；中秋节,国庆节 08:00–17:30开放",
     image:
       "https://aos-comment.amap.com/B0FFI7QICY/comment/7bbece6dfc3cb5806a085553232a5fd4_2048_2048_80.jpg",
+    rating: "",
     match: 0.99,
   },
   盐城市大丰中华水浒园: {
@@ -19087,6 +21803,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周二至周日 08:30-17:00, 周一 闭馆",
     image:
       "https://aos-comment.amap.com/B0FFFQ6YWU/comment/176855497980_1768554982807_16451819.jpg",
+    rating: "",
     match: 1,
   },
   盐城东台市安丰古镇: {
@@ -19094,6 +21811,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "http://store.is.autonavi.com/showpic/0efea6629a29d3f5843bc85206a5e2a3",
+    rating: "",
     match: 1,
   },
   盐城市九龙口景区: {
@@ -19101,6 +21819,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-18:00 最晚进入17:00",
     image:
       "http://store.is.autonavi.com/showpic/a07f161fea33af1850895cc5f6007bb7",
+    rating: "",
     match: 0.98,
   },
   盐城市大丰梅花湾景区: {
@@ -19108,6 +21827,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/f2d9b8f9f6b5f52595da5bb7b6d13421",
+    rating: "",
     match: 1,
   },
   盐城市丹顶鹤湿地生态旅游区: {
@@ -19116,6 +21836,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周五 08:30-17:00 最晚进入17:00；周六至周日 08:15-17:00 最晚进入17:00；开放区域:景区水禽湖、丹顶鹤救护繁育中心、亲水栈道等室外场所。景区室内景点（徐秀娟故居等）对外正常开放。",
     image:
       "http://store.is.autonavi.com/showpic/5fd4bcd11cba194d8dff5ae017f2ad71",
+    rating: "",
     match: 0.97,
   },
   盐城市大丰荷兰花海景区: {
@@ -19124,6 +21845,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "7月17日-8月23日 08:30-21:30开放（20:30停止入园）；2026年8月24日-2027年7月17日 08:30-17:00开放",
     image:
       "http://store.is.autonavi.com/showpic/9be1fe58b7addc2fbe04afe317c8d002",
+    rating: "",
     match: 1,
   },
   盐城东台市天仙缘景区: {
@@ -19131,6 +21853,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00 最晚进入16:30",
     image:
       "https://aos-comment.amap.com/B0HBGCDMD8/comment/f5a713bf81f9e45f5267f43a73a44e71_2048_2048_80.jpg",
+    rating: "",
     match: 0.62,
   },
   盐城市大丰上海知青纪念馆: {
@@ -19138,6 +21861,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/bb9787ca2c29fb8d88946e4f7b1afca3",
+    rating: "",
     match: 1,
   },
   盐城市射阳县息心寺景区: {
@@ -19146,6 +21870,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 07:00-18:00 最晚进入18:00；具体营业状态以当天开放情况为准",
     image:
       "http://store.is.autonavi.com/showpic/c8966644025f8b1deec25953a10723d2",
+    rating: "",
     match: 1,
   },
   盐城市阜宁金沙湖旅游景区: {
@@ -19153,6 +21878,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/81d049a3568c69b1dd1b397222eb59c1",
+    rating: "",
     match: 0.96,
   },
   盐城新四军纪念馆: {
@@ -19160,6 +21886,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/4256ab9347d4f246492c3ea26aef9804",
+    rating: "",
     match: 1,
   },
   苏州市大阳山国家森林公园: {
@@ -19168,6 +21895,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "01-01至07-07 周一至周日 09:00-16:30；07-08至10-06 周一至周日 09:00-17:00 最晚进入16:00；10-07至12-31 周一至周日 09:00-16:30 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/128d98a68e681f1cc2427c1d78cfc701",
+    rating: "",
     match: 0.75,
   },
   苏州湾黄金湖岸旅游区: {
@@ -19175,6 +21903,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "10:00-22:00, 具体开放时间以现场公示为准",
     image:
       "https://store.is.autonavi.com/showpic/11d4fc325f3d557e0000008977530947?type=pic",
+    rating: "",
     match: 0.99,
   },
   苏州常熟市梅李聚沙园景区: {
@@ -19182,6 +21911,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:00 最晚进入15:00",
     image:
       "http://store.is.autonavi.com/showpic/dc55cf5e2f69b8670240c2f27ab7d36c",
+    rating: "",
     match: 0.98,
   },
   苏州张家港市永联小镇景区: {
@@ -19189,6 +21919,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-19:30",
     image:
       "https://store.is.autonavi.com/showpic/ed03b520be7edcea0000002068414503?type=pic",
+    rating: "",
     match: 1,
   },
   苏州吴江市震泽古镇景区: {
@@ -19197,6 +21928,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周一至周日 00:00-24:00；古镇全天开放，古镇内子各景点开放时间08:30-16:30,最晚入园时间:16:00",
     image:
       "http://store.is.autonavi.com/showpic/da91ba807684611f310033c2bc651171",
+    rating: "",
     match: 0.99,
   },
   苏州张家港市香山景区: {
@@ -19204,6 +21936,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/b2421dcdb34b40bb293165c06849a1ac",
+    rating: "",
     match: 0.62,
   },
   苏州市中国刺绣艺术馆: {
@@ -19211,6 +21944,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-16:30 最晚进入16:00",
     image:
       "https://aos-comment.amap.com/B0200183SC/comment/content_media_external_file_218837_ss__1760700642957_04485252.jpg",
+    rating: "",
     match: 1,
   },
   苏州市上方山国家森林公园: {
@@ -19218,6 +21952,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/0a139b817f5353070000003331812500?type=pic",
+    rating: "",
     match: 0.84,
   },
   连云港市东海水晶文化旅游区: {
@@ -19225,6 +21960,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "08:30-18:00, 具体开放时间以现场公示为准",
     image:
       "https://aos-comment.amap.com/B0G2MKUPXP/comment/a373608d98858ffbcb1d94c7cd920350_2048_2048_80.jpg",
+    rating: "",
     match: 1,
   },
   连云港市桃花涧景区: {
@@ -19232,6 +21968,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:20 最晚进入17:20",
     image:
       "http://store.is.autonavi.com/showpic/b071d1b0e92fb1db3e1f7aca9d13ef66",
+    rating: "",
     match: 1,
   },
   连云港市海上云台山景区: {
@@ -19239,6 +21976,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://store.is.autonavi.com/showpic/e8f36ae92ee20ab18698c9cc1688d0a4",
+    rating: "",
     match: 0.62,
   },
   连云港市革命纪念馆景区: {
@@ -19246,6 +21984,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/5162832cb17d5eec0000004618710326",
+    rating: "",
     match: 1,
   },
   连云港市渔湾风景区: {
@@ -19253,6 +21992,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 06:30-18:00",
     image:
       "https://aos-comment.amap.com/B020601977/headerImg/300cd02a3e75d0c95ba9f2d23c1b039d_2048_2048_80.jpg",
+    rating: "",
     match: 0.83,
   },
   镇江市江苏茶博园: {
@@ -19260,6 +22000,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:30",
     image:
       "https://store.is.autonavi.com/showpic/6eaa28f0765cabca0000002984744071?type=pic",
+    rating: "",
     match: 0.99,
   },
   镇江市中国米芾书法公园: {
@@ -19267,6 +22008,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-17:00",
     image:
       "https://aos-comment.amap.com/B01FF0O74O/comment/file_media_Photo_8006_IMG_1771129840_7728_IMG_20260215_122900_jpg_ss__1771137542710_28610755.jpg",
+    rating: "",
     match: 0.99,
   },
   镇江市中国镇江醋文化博物馆: {
@@ -19274,6 +22016,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/efde12c9c172edabdd15467f6c71510e",
+    rating: "",
     match: 0.9,
   },
   镇江市西津渡历史文化街区: {
@@ -19281,6 +22024,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://aos-comment.amap.com/B0FFGF05LF/comment/content_media_external_images_media_1000017747_ss__1739849589483_57753505.jpg",
+    rating: "",
     match: 1,
   },
   镇江市博物馆: {
@@ -19288,12 +22032,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周二至周日 09:00-17:00",
     image:
       "https://store.is.autonavi.com/showpic/2e59bc8e6250937a0583cbf1d8a1bde2",
+    rating: "",
     match: 0.83,
   },
   中华寺景区: {
     tel: "",
     openTime: "周一至周日 08:00-15:00",
     image: "",
+    rating: "",
     match: 0.99,
   },
   "沈阳市北陵公园(清昭陵）": {
@@ -19302,6 +22048,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "1月至3月,11月至12月 周一至周日 05:00-21:00；4月至10月 周一至周日 05:00-21:30；淡季:（11月1日-3月31日） 北陵公园开放时间:5:00-21:00 北陵公园售票时间:8:00-16:00 清昭陵开放时间:8:30-16:30 清昭陵停止检票时间:16:00 旺季:（4月1日-10月31日） 北陵公园开放时间:5:00-21:30 北陵公园售票时间:7:00-17:00 清昭陵开放时间:7:30-17:30 清昭陵停止检票时间:17:00",
     image:
       "http://store.is.autonavi.com/showpic/7af25e92bdaa258591daa802c7bb462b",
+    rating: "",
     match: 1,
   },
   沈阳科学宫: {
@@ -19310,6 +22057,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周二至周日 09:00-16:00开放 最晚进入15:30 周一 全天不开放；6月1日 周一 09:00-16:00开放；元旦节,清明节,劳动节,端午节,中秋节,国庆节 09:00-16:00开放 最晚进入15:30；具体开放时间以官方通知为准",
     image:
       "https://store.is.autonavi.com/showpic/8c009b6a5d8a098f2a30baa8ab82ba8d",
+    rating: "",
     match: 1,
   },
   稻梦空间: {
@@ -19317,6 +22065,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周五 08:30-19:00；周六至周日 08:00-19:00",
     image:
       "https://store.is.autonavi.com/showpic/b160c3466da26bbc3870ce4cbf21211d",
+    rating: "",
     match: 0.99,
   },
   沈阳故宫: {
@@ -19324,6 +22073,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://aos-comment.amap.com/B0018169BG/comment/content_media_external_file_1000031488_ss__1765789031493_92824247.jpg",
+    rating: "",
     match: 1,
   },
   辽宁省大连市旅顺口区白玉山景区: {
@@ -19332,6 +22082,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "11月1日-次年3月31日 08:00-16:30开放；4月1日-6月30日 与 9月1日-10月31日 07:30-17:30开放；7月1日-8月31日 07:00-19:00开放；元旦节,春节,清明节,劳动节,端午节,中秋节,国庆节 07:30-18:30开放；具体开放时间以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/02f75c937604143683b51bc5c092aeb6",
+    rating: "",
     match: 1,
   },
   辽宁省大连市庄河市海王九岛旅游度假区: {
@@ -19339,6 +22090,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/08e77d0ce1b06f0f0000002461466564?type=pic",
+    rating: "",
     match: 0.97,
   },
   大连英歌石植物园: {
@@ -19346,6 +22098,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "04-01至11-15 周一至周日 07:30-17:30 最晚进入17:30",
     image:
       "http://store.is.autonavi.com/showpic/de970dc85109350fd2c3b66d658a9796",
+    rating: "",
     match: 1,
   },
   紫云花汐薰衣草庄园景区: {
@@ -19353,12 +22106,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:00",
     image:
       "http://store.is.autonavi.com/showpic/aac7351c49e540e264d15e84a083eb5e",
+    rating: "",
     match: 0.99,
   },
   鞍山市山水庄园度假旅游景区: {
     tel: "0412-6481111",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.67,
   },
   辽宁省鞍山市玉佛苑景区: {
@@ -19367,6 +22122,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "04-15至10-14 周一至周日 08:00-17:30 最晚进入17:00；10-15至04-14 周一至周日 08:00-16:30 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/1a73038869bfd30d94fd69f72aa745be",
+    rating: "",
     match: 0.99,
   },
   龙潭湾风景区: {
@@ -19374,6 +22130,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:30-16:30 最晚进入16:00",
     image:
       "http://store.is.autonavi.com/showpic/aba23c0ec156375bac88da20df0d5424",
+    rating: "",
     match: 0.94,
   },
   辽宁省鞍山市铁西区鞍钢博物馆景区: {
@@ -19382,6 +22139,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
       "周二-周日 09:00-16:00开放（15:30停止入园）； 周一 不开放；春节,清明节,劳动节,端午节,中秋节,国庆节 09:00-16:30开放（16:00停止入园）；元旦节 09:00-17:00开放（16:30停止入园）； 具体开放时间以官方通知为准",
     image:
       "http://store.is.autonavi.com/showpic/645f14de11d0bdae6e4a0ae20a76e267",
+    rating: "",
     match: 1,
   },
   辽宁省鞍山市汤岗子温泉旅游度假区: {
@@ -19389,6 +22147,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:10-15:00",
     image:
       "http://store.is.autonavi.com/showpic/66b1f84f5fad239d55643053a0ea98ab",
+    rating: "",
     match: 0.99,
   },
   辽宁省抚顺市望花区雷锋纪念馆景区: {
@@ -19396,12 +22155,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "http://store.is.autonavi.com/showpic/027683994a3a09bd0c5be21b390c8461",
+    rating: "",
     match: 1,
   },
   和睦森林公园: {
     tel: "024-55158588",
     openTime: "",
     image: "",
+    rating: "",
     match: 0.99,
   },
   红河峡谷漂流景区: {
@@ -19409,6 +22170,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-11:30",
     image:
       "https://store.is.autonavi.com/showpic/0727433b8bbfc3230000003069340924?type=pic",
+    rating: "",
     match: 1,
   },
   铁刹山风景区: {
@@ -19416,12 +22178,14 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:00",
     image:
       "https://aos-comment.amap.com/B0G2U60D6K/comment/content_media_external_file_17905_ss__1749590299592_06583131.jpg",
+    rating: "",
     match: 0.94,
   },
   五女山景区: {
     tel: "",
     openTime: "08:30-16:00, 具体开放时间以现场公示为准",
     image: "",
+    rating: "",
     match: 0.99,
   },
   抗美援朝纪念馆: {
@@ -19429,6 +22193,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "",
     image:
       "https://store.is.autonavi.com/showpic/b268cd724b9a1bc9b9227191b3db41d9",
+    rating: "",
     match: 1,
   },
   辽宁省丹东市东港市大鹿岛甲午海战古战场景区: {
@@ -19436,6 +22201,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 07:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/44fe89f20165e15e86cc3002aa5c03dd",
+    rating: "",
     match: 0.98,
   },
   辽宁省营口市盖州市万福赤山旅游景区: {
@@ -19443,6 +22209,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:00",
     image:
       "https://aos-comment.amap.com/B01A10HY0X/comment/6028E338_83D0_4AE0_9284_C3F12F67BDF2_L0_001_2000_1306_1731546401404_63056443.jpg",
+    rating: "",
     match: 0.97,
   },
   辽宁省营口市鲅鱼圈区月亮湖公园: {
@@ -19450,6 +22217,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "http://store.is.autonavi.com/showpic/6495df2917646f92180a803028b7369e",
+    rating: "",
     match: 1,
   },
   阜新宝地斯帕温泉度假区: {
@@ -19457,6 +22225,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:30-21:00",
     image:
       "https://aos-comment.amap.com/B0FFFWMJJM/comment/b34d4fca-c116-4209-9f25-6992a2687126.png",
+    rating: "",
     match: 0.97,
   },
   辽阳市广佑寺景区: {
@@ -19464,6 +22233,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-16:00",
     image:
       "https://store.is.autonavi.com/showpic/1808960111dda3fc0000006217624079?type=pic",
+    rating: "",
     match: 0.83,
   },
   辽阳市太子河历史文化风光带景区: {
@@ -19471,6 +22241,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 09:00-17:00",
     image:
       "https://aos-comment.amap.com/B0G2MBTZEE/comment/content_media_external_file_100004675_1767528825859_20901572.jpg",
+    rating: "",
     match: 0.92,
   },
   辽阳龙石风景旅游区: {
@@ -19478,6 +22249,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 00:00-24:00",
     image:
       "https://store.is.autonavi.com/showpic/bb5cce367fba31fd0000003202842217?type=pic",
+    rating: "",
     match: 1,
   },
   朝阳县千佛洞风景区: {
@@ -19485,6 +22257,7 @@ export const SCENIC_DETAILS: Record<string, ScenicDetail> = {
     openTime: "周一至周日 08:00-17:00",
     image:
       "http://store.is.autonavi.com/showpic/0cfb4aa34a5356bfc63a36e3a68ff9d9",
+    rating: "",
     match: 1,
   },
 };

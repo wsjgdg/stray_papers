@@ -1377,6 +1377,9 @@ export const LIBRARY_SPOTS: Spot[] = (() => {
       imageSource: SCENIC_DETAILS[e.name]?.image ? "amap" : undefined,
       openTime: SCENIC_DETAILS[e.name]?.openTime || undefined,
       tel: SCENIC_DETAILS[e.name]?.tel || undefined,
+      rating: SCENIC_DETAILS[e.name]?.rating
+        ? Number(SCENIC_DETAILS[e.name]!.rating)
+        : undefined,
       address: e.address || `${e.city}（A级景区名录）`,
       facilities: [],
       projects: [],

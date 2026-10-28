@@ -129,6 +129,7 @@ for (let pass = 0; pass < PASSES.length; pass++) {
         tel: p.tel || "",
         openTime: p.biz_ext?.opentime2 || p.biz_ext?.opentime || "",
         image: img.startsWith("http") ? img : "",
+        rating: p.biz_ext?.rating || "",
         match: Math.round(bestScore * 100) / 100,
       };
       hit++;
@@ -155,6 +156,7 @@ export interface ScenicDetail {
   tel: string;
   openTime: string;
   image: string;
+  rating: string;
   match: number;
 }
 
@@ -175,6 +177,7 @@ function flush() {
             tel: str(v.tel),
             openTime: str(v.openTime),
             image: str(v.image),
+            rating: str(v.rating),
             match: v.match,
           },
         ]),

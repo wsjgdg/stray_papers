@@ -2232,13 +2232,14 @@ function ProfileView() {
     customPrices,
     dissuasionRecords,
   } = useAppStore();
+  const restoreInputRef = useRef<HTMLInputElement>(null);
   const cats = useMemo(() => {
     const s = new Set(spots.map((sp) => sp.category));
     return s.size;
   }, [spots]);
   const tripDays = trip.length > 0 ? tripDaySplit.length + 1 : 0;
 
-  // 全量数据导出（收藏/行程/改价/翻车记录），跨设备迁移用
+  // 全量数据导出（收藏/行程/改价/翻车记录/备注），跨设备迁移用
   const exportData = () => {
     const state = useAppStore.getState();
     const payload = {
@@ -2247,6 +2248,7 @@ function ProfileView() {
       trip: state.trip,
       tripDaySplit: state.tripDaySplit,
       customPrices: state.customPrices,
+      spotNotes: state.spotNotes,
       dissuasionRecords: state.dissuasionRecords,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
@@ -2257,6 +2259,57 @@ function ProfileView() {
     a.download = `spot-visual-data-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
+  };
+
+  // 恢复备份：逐字段校验后合并（数组并集、对象覆盖、翻车记录按 id 去重）
+  const restoreData = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const d = JSON.parse(String(reader.result));
+        const arr = (v: unknown) => (Array.isArray(v) ? v : []);
+        const rec = (v: unknown) =>
+          v && typeof v === "object" && !Array.isArray(v)
+            ? (v as Record<string, unknown>)
+            : {};
+        const cur = useAppStore.getState();
+        // 翻车记录按 id 去重（备份在前，本地新记录在后）
+        const seenReviews = new Set(
+          arr(d.dissuasionRecords).map((r: any) => r?.id),
+        );
+        const mergedReviews = [
+          ...arr(d.dissuasionRecords),
+          ...cur.dissuasionRecords.filter((r) => !seenReviews.has(r.id)),
+        ];
+        useAppStore.setState({
+          favorites: Array.from(
+            new Set([...arr(d.favorites), ...cur.favorites]),
+          ).filter((id) => spots.some((s) => s.id === id)),
+          trip: Array.from(new Set([...arr(d.trip), ...cur.trip])).filter(
+            (id) => spots.some((s) => s.id === id),
+          ),
+          tripDaySplit: arr(d.tripDaySplit).length
+            ? (arr(d.tripDaySplit) as typeof cur.tripDaySplit)
+            : cur.tripDaySplit,
+          customPrices: {
+            ...rec(d.customPrices),
+            ...cur.customPrices,
+          } as typeof cur.customPrices,
+          spotNotes: {
+            ...rec(d.spotNotes),
+            ...cur.spotNotes,
+          } as typeof cur.spotNotes,
+          dissuasionRecords: mergedReviews as typeof cur.dissuasionRecords,
+        });
+        const n = arr(d.favorites).length + arr(d.trip).length;
+        window.alert(
+          `恢复完成：收藏/行程共并入 ${n} 条，翻车记录合并后 ${mergedReviews.length} 条。`,
+        );
+      } catch {
+        window.alert("恢复失败：文件不是有效的备份数据（应为导出的 JSON）。");
+      }
+    };
+    reader.readAsText(file);
   };
 
   const clearAllData = () => {
@@ -2341,12 +2394,29 @@ function ProfileView() {
             导出全部数据 (JSON)
           </button>
           <button
+            onClick={() => restoreInputRef.current?.click()}
+            className="flex-1 py-2.5 rounded-xl bg-amber-50 text-amber-700 text-xs font-bold hover:bg-amber-100 transition-colors"
+          >
+            恢复备份
+          </button>
+          <button
             onClick={clearAllData}
             className="flex-1 py-2.5 rounded-xl bg-red-50 text-red-600 text-xs font-bold hover:bg-red-100 transition-colors"
           >
             清空本地数据
           </button>
         </div>
+        <input
+          ref={restoreInputRef}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) restoreData(f);
+            e.target.value = "";
+          }}
+        />
       </div>
       <div className="bg-white rounded-xl border border-gray-200/80 p-5 space-y-3">
         <h3 className="font-semibold text-gray-900 text-sm">使用提示</h3>
