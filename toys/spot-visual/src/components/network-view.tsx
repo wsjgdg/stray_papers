@@ -201,7 +201,10 @@ export default function NetworkView() {
             </button>
           ))}
         </div>
-        <p className="text-[11px] text-gray-500 mt-1">
+        <p
+          className="text-[11px] text-gray-500 mt-1"
+          title="精选 = top400 本地图 + 手工 30 + 预约标注；全部 = 统一库全量（含 A 级名录）"
+        >
           {scope === "curated"
             ? `精选 ${visibleSpots.length}`
             : `全部 ${spots.length}`}{" "}
