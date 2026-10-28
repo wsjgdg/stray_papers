@@ -567,3 +567,352 @@ export function scWeightRepair(code, wmax, type = 'X'){
   for (let w = 1; w <= wmax && !worst; w++) rec(0, w);
   return worst;    // null ⟹ 全部权重 ≤ wmax 的错误都被纠回
 }
+
+/* ============================================================================
+ * 带噪测量口径（phenomenological）—— 时间维进匹配图
+ *
+ * code-capacity 口径假设综合征理想（诚实限制①）。把测量误差也算进来，匹配图必须
+ * 多一个**时间**维：
+ *   - 层 l（l = 0..R）是一次读出后的「探测事件」平面；R = **带噪**测量轮数，默认 R = d−1
+ *     （总共 d 次读出：d−1 次带噪 + 末次理想）⟹ d 个数据错误层、d−1 个测量错误层；
+ *   - 层内边 = 数据比特错误（带比特号，修正要用它）；层间 time 边 = 测量错误（不带比特）；
+ *   - 两条边界在**每一层各有一份**且**不跨层相连**：连起来会让链沿边界在时间上
+ *     瞬移（实测把逻辑错误率放大一个量级——0.018 → 0.18 那一档）；
+ *   - 剥叶时所有边界统一挂到一个合成根 ⟹ 等价于「每个缺陷各自选最近的边界」，
+ *     与二维 DP 的「边界可复用、但不许边界—边界配对」同义。
+ * 缺陷 = 相邻两轮综合征之差：D_l = syn(e_l) ⊕ m_{l+1} ⊕ m_l（m_0 = m_{R+1} = 0）。
+ * 于是「真值链」= 各层 e_l 的层内边 + 各轮 m_t 的 time 边，其边界正好是 D；
+ * 任何一条边界为 D 的链投影到空间就是一组合法的修正（残余综合征恒零，pot130 B 组）。
+ * 解码：边权取 −log 似然（层内 w_S = ln((1−p)/p)、层间 w_T = ln((1−q)/q)），
+ *   q=0 时 w_T = ∞ ⟹ 解码器退化成「逐层独立解码」（pot130 D 组的闭式对照）。
+ *   缺陷数 ≤ dpMax 走精确 DP，超出退贪心 + 2-opt（**回退率必须曝光**，与二维口径同规）。
+ * ========================================================================== */
+
+export const SC_PHEN = {
+  dpMax: 20,
+  /** 带噪测量口径的扫描点：交叉点在 0.01–0.03（q=0）到 0.02–0.03（q=p）之间 */
+  ps: [0.005, 0.0075, 0.01, 0.0125, 0.015, 0.02, 0.025, 0.03, 0.04, 0.05],
+  pMin: 0.004,
+  pMax: 0.06,
+};
+
+const SC_SPACE_CACHE = new Map();
+
+/**
+ * 时空匹配图（带缓存）。
+ * 节点 = l·(nS+2) + k：k < nS 是稳定子，k = nS / nS+1 是两条边界（各层各一份）。
+ * 边：层内 space（稳定子—稳定子）/ bnd（稳定子—边界），层间 time（同一稳定子）。
+ */
+export function scSpaceGraph(code, type, R){
+  if (!(R >= 0 && R === Math.round(R))) throw new Error('测量轮数必须是非负整数（收到 ' + R + '）');
+  const key = code.d + ':' + type + ':' + R;
+  if (SC_SPACE_CACHE.has(key)) return SC_SPACE_CACHE.get(key);
+  const g = type === 'X' ? code.xg : code.zg;
+  const nS = g.nS, nn = nS + 2, L = R + 1, V = L * nn;
+  const edges = [];
+  const id = (k, l) => l * nn + k;
+  const seen = new Set();
+  for (let u = 0; u < g.nodes; u++) for (const e of g.adj[u]){
+    const a = Math.min(u, e.to), b = Math.max(u, e.to);
+    const k2 = a + ',' + b + ',' + e.q;
+    if (seen.has(k2)) continue; seen.add(k2);
+    for (let l = 0; l < L; l++)
+      edges.push({ a: id(a, l), b: id(b, l), q: e.q, kind: b < nS ? 'space' : 'bnd' });
+  }
+  for (let l = 0; l + 1 < L; l++) for (let k = 0; k < nS; k++)
+    edges.push({ a: id(k, l), b: id(k, l + 1), q: -1, kind: 'time' });
+  const adj = Array.from({ length: V }, () => []);
+  edges.forEach((e, i) => { adj[e.a].push(i); adj[e.b].push(i); });
+  const grounds = [];
+  for (let l = 0; l < L; l++) for (let b = nS; b < nn; b++) grounds.push(id(b, l));
+  const isGround = new Uint8Array(V);
+  for (const gd of grounds) isGround[gd] = 1;
+  const gr = { d: code.d, type, R, nS, nn, L, V, edges, adj, grounds, isGround, id };
+  SC_SPACE_CACHE.set(key, gr);
+  return gr;
+}
+
+/** 时空图结构自检（页面 HUD 的「时空图」行 + Node 套件 A 组） */
+export function scSpaceVerify(d, R = Math.max(1, d - 1)){
+  const code = scBuild(d);
+  const out = { d, R, layers: R + 1, ok: true, notes: [] };
+  for (const type of ['X', 'Z']){
+    const gr = scSpaceGraph(code, type, R);
+    const nS = gr.nS, L = gr.L;
+    const nSpace = gr.edges.filter(e => e.kind === 'space').length;
+    const nBnd = gr.edges.filter(e => e.kind === 'bnd').length;
+    const nTime = gr.edges.filter(e => e.kind === 'time').length;
+    /* ① 计数：层内边 = 2D 图边数 × 层数；time 边 = nS × (L−1) */
+    const n2d = type === 'X' ? code.xg : code.zg;
+    let e2d = 0;
+    const seen = new Set();
+    for (let u = 0; u < n2d.nodes; u++) for (const e of n2d.adj[u]){
+      const a = Math.min(u, e.to), b = Math.max(u, e.to);
+      const k2 = a + ',' + b + ',' + e.q;
+      if (seen.has(k2)) continue; seen.add(k2); e2d++;
+    }
+    if (nSpace + nBnd !== e2d * L) out.notes.push(type + ' 层内边数 ≠ 2D 边数 × 层数');
+    if (nTime !== nS * (L - 1)) out.notes.push(type + ' time 边数 ≠ nS × (L−1)');
+    /* ② 每层都恰好有两条边界节点，且边界不跨层相连 */
+    if (gr.grounds.length !== 2 * L) out.notes.push(type + ' 边界节点数 ≠ 2 × 层数');
+    for (const gd of gr.grounds){
+      const deg = gr.adj[gd].map(i => gr.edges[i]);
+      if (deg.some(e => e.kind === 'time')) out.notes.push(type + ' 边界节点跨层相连');
+      if (!deg.length) out.notes.push(type + ' 边界节点孤立');
+    }
+    /* ③ 连通性（R ≥ 0 都要求整图连通：time 边把各层串起来） */
+    const seenV = new Uint8Array(gr.V); const q = [0]; seenV[0] = 1;
+    for (let h = 0; h < q.length; h++){
+      for (const ei of gr.adj[q[h]]){
+        const e = gr.edges[ei], v = e.a === q[h] ? e.b : e.a;
+        if (!seenV[v]){ seenV[v] = 1; q.push(v); }
+      }
+    }
+    if (q.length !== gr.V) out.notes.push(type + ' 时空图不连通（' + q.length + '/' + gr.V + '）');
+    /* ④ 每个稳定子节点既有层内边也有 time 边（R ≥ 1 时） */
+    if (R >= 1 && gr.adj[gr.id(0, 0)].every(i => gr.edges[i].kind !== 'time'))
+      out.notes.push(type + ' 稳定子缺 time 边');
+    /* ⑤ R = 0 时退化成 2D 图：节点数 = nS + 2，边数 = 2D 边数 */
+    if (R === 0 && gr.V !== nS + 2) out.notes.push(type + ' R=0 未退化到 2D 图');
+    out[type] = { V: gr.V, nS, space: nSpace, bnd: nBnd, time: nTime, e2d };
+  }
+  out.ok = out.notes.length === 0;
+  return out;
+}
+
+/** 加权最短路（Dijkstra，节点数 ≤ 200：朴素 O(V²) 足够）；地面节点只记距离不展开 */
+function scSpaceDij(gr, src, wS, wT){
+  const D = new Float64Array(gr.V).fill(Infinity);
+  const P = new Int32Array(gr.V).fill(-1);
+  const done = new Uint8Array(gr.V);
+  D[src] = 0;
+  for (;;){
+    let u = -1, best = Infinity;
+    for (let v = 0; v < gr.V; v++) if (!done[v] && D[v] < best){ best = D[v]; u = v; }
+    if (u < 0) break;
+    done[u] = 1;
+    if (gr.isGround[u]) continue;
+    for (const ei of gr.adj[u]){
+      const e = gr.edges[ei], v = e.a === u ? e.b : e.a;
+      const w = e.kind === 'time' ? wT : wS;
+      if (D[u] + w < D[v]){ D[v] = D[u] + w; P[v] = ei; }
+    }
+  }
+  return { D, P };
+}
+
+const scSpacePathQ = (gr, par, v, stop) => {
+  let m = 0n, cur = v, guard = 0;
+  while (cur !== stop){
+    const ei = par.P[cur];
+    if (ei < 0) throw new Error('时空路径回溯失败');
+    if (gr.edges[ei].q >= 0) m ^= 1n << BigInt(gr.edges[ei].q);
+    cur = gr.edges[ei].a === cur ? gr.edges[ei].b : gr.edges[ei].a;
+    if (++guard > 1e6) throw new Error('时空路径成环');
+  }
+  return m;
+};
+
+/** 时空匹配解码：DP（≤ dpMax）→ 贪心 + 2-opt。返回 {qubits, mode, cost, pairs} */
+export function scSpaceDecode(gr, defects, wS, wT, dpMax = SC_PHEN.dpMax){
+  const k = defects.length, G = gr.grounds;
+  if (!k) return { qubits: 0n, mode: 'none', cost: 0, pairs: 0 };
+  const dist = defects.map(d => scSpaceDij(gr, d, wS, wT));
+  const dd = defects.map((_, i) => defects.map((_, j) => dist[i].D[defects[j]]));
+  const dg = defects.map((_, i) => G.map(g => dist[i].D[g]));
+  const near = i => { let b = 0; for (let j = 1; j < G.length; j++) if (dg[i][j] < dg[i][b]) b = j; return b; };
+  let plan = null, mode = 'dp';
+  if (k <= dpMax){
+    const memo = new Map();
+    const solve = mask => {
+      if (mask === 0) return { cost: 0, plan: [] };
+      const hit = memo.get(mask); if (hit !== undefined) return hit;
+      const i = 31 - Math.clz32(mask & -mask);
+      let best = null;
+      for (let b = 0; b < G.length; b++){
+        const c = dg[i][b];
+        if (!Number.isFinite(c)) continue;
+        const r = solve(mask & ~(1 << i));
+        if (r && (best === null || c + r.cost < best.cost)) best = { cost: c + r.cost, plan: [[i, -1, b]].concat(r.plan) };
+      }
+      for (let j = i + 1; j < k; j++){
+        if (!(mask & (1 << j))) continue;
+        const c = dd[i][j];
+        if (!Number.isFinite(c)) continue;
+        const r = solve(mask & ~(1 << i) & ~(1 << j));
+        if (r && (best === null || c + r.cost < best.cost)) best = { cost: c + r.cost, plan: [[i, j, -1]].concat(r.plan) };
+      }
+      memo.set(mask, best);
+      return best;
+    };
+    const r = solve((1 << k) - 1);
+    if (r) plan = r.plan;
+  }
+  if (!plan){
+    mode = 'greedy';
+    let rem = defects.map((_, i) => i);
+    plan = [];
+    while (rem.length){
+      let bi = 0, bj = -1, bc = Infinity, bg = -1;
+      for (let a = 0; a < rem.length; a++){
+        for (let b = a + 1; b < rem.length; b++){
+          const c = dd[rem[a]][rem[b]];
+          if (c < bc){ bc = c; bi = a; bj = b; bg = -1; }
+        }
+        const g = near(rem[a]);
+        if (dg[rem[a]][g] < bc){ bc = dg[rem[a]][g]; bi = a; bj = -1; bg = g; }
+      }
+      plan.push([rem[bi], bj >= 0 ? rem[bj] : -1, bj >= 0 ? -1 : bg]);
+      rem = rem.filter((_, i) => i !== bi && i !== bj);
+    }
+    /* 2-opt：交叉互换 + 各自改接边界（与二维 matchPairs 兜底同一套动作） */
+    const cost = e => e[1] >= 0 ? dd[e[0]][e[1]] : dg[e[0]][e[2]];
+    for (let sweep = 0; sweep < 40; sweep++){
+      let improved = false;
+      for (let a = 0; a < plan.length; a++){
+        for (let b = a + 1; b < plan.length; b++){
+          const P = plan[a], Q = plan[b];
+          if (P[1] < 0 || Q[1] < 0) continue;
+          const old = cost(P) + cost(Q);
+          /* 只做交叉互换：两条配对 (P,Q) 重连成 (P.a,Q.a)+(P.b,Q.b) 或 (P.a,Q.b)+(P.b,Q.a)。
+             ⚠ 别再加「两条各自改接边界」这种动作——它会把 P.b / Q.b 直接丢掉，
+             产生的「计划」少配了两个缺陷（代价看着更低，实际是非法修正）；
+             单缺陷改接边界由下面那一趟单独处理。 */
+          const cands = [
+            [[P[0], Q[0], -1], [P[1], Q[1], -1]],
+            [[P[0], Q[1], -1], [P[1], Q[0], -1]],
+          ];
+          for (const [n1, n2] of cands){
+            if (n1[1] >= 0 && !Number.isFinite(dd[n1[0]][n1[1]])) continue;
+            if (n2[1] >= 0 && !Number.isFinite(dd[n2[0]][n2[1]])) continue;
+            if (cost(n1) + cost(n2) < old - 1e-12){ plan[a] = n1; plan[b] = n2; improved = true; break; }
+          }
+        }
+      }
+      for (let a = 0; a < plan.length; a++){
+        const [x, y] = plan[a];
+        if (y >= 0 && dg[x][near(x)] < dd[x][y]){ plan[a] = [x, -1, near(x)]; improved = true; }
+      }
+      if (!improved) break;
+    }
+  }
+  let qubits = 0n, cost = 0;
+  for (const [i, j, g] of plan){
+    if (j >= 0){ qubits ^= scSpacePathQ(gr, dist[i], defects[j], defects[i]); cost += dd[i][j]; }
+    else { qubits ^= scSpacePathQ(gr, dist[i], G[g], defects[i]); cost += dg[i][g]; }
+  }
+  return { qubits, mode, cost, pairs: plan.length };
+}
+
+/** 一层的独立数据错误（与 scTrial 同口径：noise='x' / 'depol'） */
+function scErrLayer(code, noise, p, rng){
+  let mx = 0n, mz = 0n;
+  for (let q = 0; q < code.n; q++){
+    const u = rng();
+    if (noise === 'x'){
+      if (u < p) mx |= 1n << BigInt(q);
+    } else {
+      const t = u * 3;
+      if (t < p) mx |= 1n << BigInt(q);
+      else if (t < 2 * p){ mx |= 1n << BigInt(q); mz |= 1n << BigInt(q); }
+      else if (t < 3 * p) mz |= 1n << BigInt(q);
+    }
+  }
+  return { mx, mz };
+}
+
+const scSynMask = (g, mask) => {
+  let s = 0;
+  g.stab.forEach((st, k) => { if ((pc(st.mask & mask)) & 1) s |= 1 << k; });
+  return s;
+};
+
+/**
+ * 单次带噪测量试验。cfg: { p, noise, q = p, rounds = d−1, dpMax }
+ * 返回两帧的错误 / 修正 / 残余 / 每层缺陷（画布用）/ 回退标志。
+ */
+export function scSpaceTrial(code, cfg, rng, grs){
+  const p = cfg.p, noise = cfg.noise === 'depol' ? 'depol' : 'x';
+  const q = cfg.q === undefined ? p : cfg.q;
+  const R = cfg.rounds === undefined ? Math.max(1, code.d - 1) : cfg.rounds;
+  const L = R + 1, nS = code.zg.nS, nn = nS + 2;
+  const wS = Math.log((1 - p) / p);
+  const wT = q <= 0 ? Infinity : Math.log((1 - q) / q);
+  const gX = grs && grs.X ? grs.X : scSpaceGraph(code, 'X', R);
+  const gZ = grs && grs.Z ? grs.Z : scSpaceGraph(code, 'Z', R);
+  const lay = [];
+  for (let l = 0; l < L; l++) lay.push(scErrLayer(code, noise, p, rng));
+  const out = {};
+  let anyFail = 0, fb = 0;
+  for (const type of ['X', 'Z']){
+    const g = type === 'X' ? code.xg : code.zg;
+    const dual = type === 'X' ? code.zl : code.xl;
+    const gr = type === 'X' ? gX : gZ;
+    const m = [0];
+    for (let t = 1; t <= R; t++){
+      let s = 0;
+      for (let k = 0; k < nS; k++) if (rng() < q) s |= 1 << k;
+      m[t] = s;
+    }
+    const defects = [], perLayer = [];
+    const defMask = [];
+    let tot = 0n;
+    for (let l = 0; l < L; l++){
+      const e = type === 'X' ? lay[l].mx : lay[l].mz;
+      tot ^= e;
+      let d = scSynMask(g, e);
+      if (l + 1 <= R) d ^= m[l + 1];
+      if (l >= 1) d ^= m[l];
+      perLayer.push(d); defMask.push(d);
+      for (let k = 0; k < nS; k++) if (d >> k & 1) defects.push(l * nn + k);
+    }
+    const dh = scSpaceDecode(gr, defects, wS, wT, cfg.dpMax);
+    const residual = tot ^ dh.qubits;
+    const cls = pc(residual & dual) & 1;
+    out[type] = {
+      cls, residual, corr: dh.qubits, k: defects.length, tot,
+      mode: dh.mode, cost: dh.cost, perLayer, errLayer: lay.map(x => type === 'X' ? x.mx : x.mz),
+      synAfter: scSynMask(g, residual),
+    };
+    if (dh.mode === 'greedy') fb = 1;
+    if (cls) anyFail = 1;
+  }
+  return {
+    fail: anyFail === 1, xfail: out.X.cls === 1, zfail: out.Z.cls === 1,
+    kx: out.X.k, kz: out.Z.k,
+    mx: lay.reduce((a, l) => a ^ l.mx, 0n), mz: lay.reduce((a, l) => a ^ l.mz, 0n),
+    corrX: out.X.corr, corrZ: out.Z.corr, resX: out.X.residual, resZ: out.Z.residual,
+    defX: out.X.perLayer, defZ: out.Z.perLayer,
+    errX: out.X.errLayer, errZ: out.Z.errLayer,
+    modeX: out.X.mode, modeZ: out.Z.mode,
+    badSyn: (out.X.synAfter | out.Z.synAfter) !== 0,
+    fallback: fb, R, rounds: R, q,
+  };
+}
+
+/** 带噪测量集合：P_L / 两帧分解 / 平均时空缺陷 / 回退率 / 残余综合征自检 */
+export function scSpaceEnsemble(code, cfg = {}){
+  const c = { p: 0.02, noise: 'x', trials: 600, seed: 7, q: undefined, rounds: undefined, dpMax: SC_PHEN.dpMax, ...cfg };
+  const R = c.rounds === undefined ? Math.max(1, code.d - 1) : c.rounds;
+  const grs = { X: scSpaceGraph(code, 'X', R), Z: scSpaceGraph(code, 'Z', R) };
+  const rng = mulberry32(c.seed);
+  const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  let fail = 0, xf = 0, zf = 0, bad = 0, ksum = 0, fbn = 0;
+  for (let i = 0; i < c.trials; i++){
+    const r = scSpaceTrial(code, c, rng, grs);
+    if (r.fail) fail++;
+    if (r.xfail) xf++;
+    if (r.zfail) zf++;
+    if (r.badSyn) bad++;
+    if (r.modeX === 'greedy') fbn++;
+    if (r.modeZ === 'greedy') fbn++;
+    ksum += r.kx + r.kz;
+  }
+  const N = c.trials, PL = fail / N;
+  return {
+    d: code.d, p: c.p, noise: c.noise, q: c.q === undefined ? c.p : c.q, rounds: R, layers: R + 1, trials: N,
+    PL, PLx: xf / N, PLz: zf / N, badSyn: bad / N, meanDefects: ksum / (2 * N), fallback: fbn / (2 * N),
+    ms: (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0,
+    sigma: Math.sqrt(Math.max(PL * (1 - PL), 1e-12) / N),
+  };
+}

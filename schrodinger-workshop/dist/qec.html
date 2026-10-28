@@ -15190,6 +15190,355 @@ function scWeightRepair(code, wmax, type = 'X'){
   return worst;    // null ⟹ 全部权重 ≤ wmax 的错误都被纠回
 }
 
+/* ============================================================================
+ * 带噪测量口径（phenomenological）—— 时间维进匹配图
+ *
+ * code-capacity 口径假设综合征理想（诚实限制①）。把测量误差也算进来，匹配图必须
+ * 多一个**时间**维：
+ *   - 层 l（l = 0..R）是一次读出后的「探测事件」平面；R = **带噪**测量轮数，默认 R = d−1
+ *     （总共 d 次读出：d−1 次带噪 + 末次理想）⟹ d 个数据错误层、d−1 个测量错误层；
+ *   - 层内边 = 数据比特错误（带比特号，修正要用它）；层间 time 边 = 测量错误（不带比特）；
+ *   - 两条边界在**每一层各有一份**且**不跨层相连**：连起来会让链沿边界在时间上
+ *     瞬移（实测把逻辑错误率放大一个量级——0.018 → 0.18 那一档）；
+ *   - 剥叶时所有边界统一挂到一个合成根 ⟹ 等价于「每个缺陷各自选最近的边界」，
+ *     与二维 DP 的「边界可复用、但不许边界—边界配对」同义。
+ * 缺陷 = 相邻两轮综合征之差：D_l = syn(e_l) ⊕ m_{l+1} ⊕ m_l（m_0 = m_{R+1} = 0）。
+ * 于是「真值链」= 各层 e_l 的层内边 + 各轮 m_t 的 time 边，其边界正好是 D；
+ * 任何一条边界为 D 的链投影到空间就是一组合法的修正（残余综合征恒零，pot130 B 组）。
+ * 解码：边权取 −log 似然（层内 w_S = ln((1−p)/p)、层间 w_T = ln((1−q)/q)），
+ *   q=0 时 w_T = ∞ ⟹ 解码器退化成「逐层独立解码」（pot130 D 组的闭式对照）。
+ *   缺陷数 ≤ dpMax 走精确 DP，超出退贪心 + 2-opt（**回退率必须曝光**，与二维口径同规）。
+ * ========================================================================== */
+
+const SC_PHEN = {
+  dpMax: 20,
+  /** 带噪测量口径的扫描点：交叉点在 0.01–0.03（q=0）到 0.02–0.03（q=p）之间 */
+  ps: [0.005, 0.0075, 0.01, 0.0125, 0.015, 0.02, 0.025, 0.03, 0.04, 0.05],
+  pMin: 0.004,
+  pMax: 0.06,
+};
+
+const SC_SPACE_CACHE = new Map();
+
+/**
+ * 时空匹配图（带缓存）。
+ * 节点 = l·(nS+2) + k：k < nS 是稳定子，k = nS / nS+1 是两条边界（各层各一份）。
+ * 边：层内 space（稳定子—稳定子）/ bnd（稳定子—边界），层间 time（同一稳定子）。
+ */
+function scSpaceGraph(code, type, R){
+  if (!(R >= 0 && R === Math.round(R))) throw new Error('测量轮数必须是非负整数（收到 ' + R + '）');
+  const key = code.d + ':' + type + ':' + R;
+  if (SC_SPACE_CACHE.has(key)) return SC_SPACE_CACHE.get(key);
+  const g = type === 'X' ? code.xg : code.zg;
+  const nS = g.nS, nn = nS + 2, L = R + 1, V = L * nn;
+  const edges = [];
+  const id = (k, l) => l * nn + k;
+  const seen = new Set();
+  for (let u = 0; u < g.nodes; u++) for (const e of g.adj[u]){
+    const a = Math.min(u, e.to), b = Math.max(u, e.to);
+    const k2 = a + ',' + b + ',' + e.q;
+    if (seen.has(k2)) continue; seen.add(k2);
+    for (let l = 0; l < L; l++)
+      edges.push({ a: id(a, l), b: id(b, l), q: e.q, kind: b < nS ? 'space' : 'bnd' });
+  }
+  for (let l = 0; l + 1 < L; l++) for (let k = 0; k < nS; k++)
+    edges.push({ a: id(k, l), b: id(k, l + 1), q: -1, kind: 'time' });
+  const adj = Array.from({ length: V }, () => []);
+  edges.forEach((e, i) => { adj[e.a].push(i); adj[e.b].push(i); });
+  const grounds = [];
+  for (let l = 0; l < L; l++) for (let b = nS; b < nn; b++) grounds.push(id(b, l));
+  const isGround = new Uint8Array(V);
+  for (const gd of grounds) isGround[gd] = 1;
+  const gr = { d: code.d, type, R, nS, nn, L, V, edges, adj, grounds, isGround, id };
+  SC_SPACE_CACHE.set(key, gr);
+  return gr;
+}
+
+/** 时空图结构自检（页面 HUD 的「时空图」行 + Node 套件 A 组） */
+function scSpaceVerify(d, R = Math.max(1, d - 1)){
+  const code = scBuild(d);
+  const out = { d, R, layers: R + 1, ok: true, notes: [] };
+  for (const type of ['X', 'Z']){
+    const gr = scSpaceGraph(code, type, R);
+    const nS = gr.nS, L = gr.L;
+    const nSpace = gr.edges.filter(e => e.kind === 'space').length;
+    const nBnd = gr.edges.filter(e => e.kind === 'bnd').length;
+    const nTime = gr.edges.filter(e => e.kind === 'time').length;
+    /* ① 计数：层内边 = 2D 图边数 × 层数；time 边 = nS × (L−1) */
+    const n2d = type === 'X' ? code.xg : code.zg;
+    let e2d = 0;
+    const seen = new Set();
+    for (let u = 0; u < n2d.nodes; u++) for (const e of n2d.adj[u]){
+      const a = Math.min(u, e.to), b = Math.max(u, e.to);
+      const k2 = a + ',' + b + ',' + e.q;
+      if (seen.has(k2)) continue; seen.add(k2); e2d++;
+    }
+    if (nSpace + nBnd !== e2d * L) out.notes.push(type + ' 层内边数 ≠ 2D 边数 × 层数');
+    if (nTime !== nS * (L - 1)) out.notes.push(type + ' time 边数 ≠ nS × (L−1)');
+    /* ② 每层都恰好有两条边界节点，且边界不跨层相连 */
+    if (gr.grounds.length !== 2 * L) out.notes.push(type + ' 边界节点数 ≠ 2 × 层数');
+    for (const gd of gr.grounds){
+      const deg = gr.adj[gd].map(i => gr.edges[i]);
+      if (deg.some(e => e.kind === 'time')) out.notes.push(type + ' 边界节点跨层相连');
+      if (!deg.length) out.notes.push(type + ' 边界节点孤立');
+    }
+    /* ③ 连通性（R ≥ 0 都要求整图连通：time 边把各层串起来） */
+    const seenV = new Uint8Array(gr.V); const q = [0]; seenV[0] = 1;
+    for (let h = 0; h < q.length; h++){
+      for (const ei of gr.adj[q[h]]){
+        const e = gr.edges[ei], v = e.a === q[h] ? e.b : e.a;
+        if (!seenV[v]){ seenV[v] = 1; q.push(v); }
+      }
+    }
+    if (q.length !== gr.V) out.notes.push(type + ' 时空图不连通（' + q.length + '/' + gr.V + '）');
+    /* ④ 每个稳定子节点既有层内边也有 time 边（R ≥ 1 时） */
+    if (R >= 1 && gr.adj[gr.id(0, 0)].every(i => gr.edges[i].kind !== 'time'))
+      out.notes.push(type + ' 稳定子缺 time 边');
+    /* ⑤ R = 0 时退化成 2D 图：节点数 = nS + 2，边数 = 2D 边数 */
+    if (R === 0 && gr.V !== nS + 2) out.notes.push(type + ' R=0 未退化到 2D 图');
+    out[type] = { V: gr.V, nS, space: nSpace, bnd: nBnd, time: nTime, e2d };
+  }
+  out.ok = out.notes.length === 0;
+  return out;
+}
+
+/** 加权最短路（Dijkstra，节点数 ≤ 200：朴素 O(V²) 足够）；地面节点只记距离不展开 */
+function scSpaceDij(gr, src, wS, wT){
+  const D = new Float64Array(gr.V).fill(Infinity);
+  const P = new Int32Array(gr.V).fill(-1);
+  const done = new Uint8Array(gr.V);
+  D[src] = 0;
+  for (;;){
+    let u = -1, best = Infinity;
+    for (let v = 0; v < gr.V; v++) if (!done[v] && D[v] < best){ best = D[v]; u = v; }
+    if (u < 0) break;
+    done[u] = 1;
+    if (gr.isGround[u]) continue;
+    for (const ei of gr.adj[u]){
+      const e = gr.edges[ei], v = e.a === u ? e.b : e.a;
+      const w = e.kind === 'time' ? wT : wS;
+      if (D[u] + w < D[v]){ D[v] = D[u] + w; P[v] = ei; }
+    }
+  }
+  return { D, P };
+}
+
+const scSpacePathQ = (gr, par, v, stop) => {
+  let m = 0n, cur = v, guard = 0;
+  while (cur !== stop){
+    const ei = par.P[cur];
+    if (ei < 0) throw new Error('时空路径回溯失败');
+    if (gr.edges[ei].q >= 0) m ^= 1n << BigInt(gr.edges[ei].q);
+    cur = gr.edges[ei].a === cur ? gr.edges[ei].b : gr.edges[ei].a;
+    if (++guard > 1e6) throw new Error('时空路径成环');
+  }
+  return m;
+};
+
+/** 时空匹配解码：DP（≤ dpMax）→ 贪心 + 2-opt。返回 {qubits, mode, cost, pairs} */
+function scSpaceDecode(gr, defects, wS, wT, dpMax = SC_PHEN.dpMax){
+  const k = defects.length, G = gr.grounds;
+  if (!k) return { qubits: 0n, mode: 'none', cost: 0, pairs: 0 };
+  const dist = defects.map(d => scSpaceDij(gr, d, wS, wT));
+  const dd = defects.map((_, i) => defects.map((_, j) => dist[i].D[defects[j]]));
+  const dg = defects.map((_, i) => G.map(g => dist[i].D[g]));
+  const near = i => { let b = 0; for (let j = 1; j < G.length; j++) if (dg[i][j] < dg[i][b]) b = j; return b; };
+  let plan = null, mode = 'dp';
+  if (k <= dpMax){
+    const memo = new Map();
+    const solve = mask => {
+      if (mask === 0) return { cost: 0, plan: [] };
+      const hit = memo.get(mask); if (hit !== undefined) return hit;
+      const i = 31 - Math.clz32(mask & -mask);
+      let best = null;
+      for (let b = 0; b < G.length; b++){
+        const c = dg[i][b];
+        if (!Number.isFinite(c)) continue;
+        const r = solve(mask & ~(1 << i));
+        if (r && (best === null || c + r.cost < best.cost)) best = { cost: c + r.cost, plan: [[i, -1, b]].concat(r.plan) };
+      }
+      for (let j = i + 1; j < k; j++){
+        if (!(mask & (1 << j))) continue;
+        const c = dd[i][j];
+        if (!Number.isFinite(c)) continue;
+        const r = solve(mask & ~(1 << i) & ~(1 << j));
+        if (r && (best === null || c + r.cost < best.cost)) best = { cost: c + r.cost, plan: [[i, j, -1]].concat(r.plan) };
+      }
+      memo.set(mask, best);
+      return best;
+    };
+    const r = solve((1 << k) - 1);
+    if (r) plan = r.plan;
+  }
+  if (!plan){
+    mode = 'greedy';
+    let rem = defects.map((_, i) => i);
+    plan = [];
+    while (rem.length){
+      let bi = 0, bj = -1, bc = Infinity, bg = -1;
+      for (let a = 0; a < rem.length; a++){
+        for (let b = a + 1; b < rem.length; b++){
+          const c = dd[rem[a]][rem[b]];
+          if (c < bc){ bc = c; bi = a; bj = b; bg = -1; }
+        }
+        const g = near(rem[a]);
+        if (dg[rem[a]][g] < bc){ bc = dg[rem[a]][g]; bi = a; bj = -1; bg = g; }
+      }
+      plan.push([rem[bi], bj >= 0 ? rem[bj] : -1, bj >= 0 ? -1 : bg]);
+      rem = rem.filter((_, i) => i !== bi && i !== bj);
+    }
+    /* 2-opt：交叉互换 + 各自改接边界（与二维 matchPairs 兜底同一套动作） */
+    const cost = e => e[1] >= 0 ? dd[e[0]][e[1]] : dg[e[0]][e[2]];
+    for (let sweep = 0; sweep < 40; sweep++){
+      let improved = false;
+      for (let a = 0; a < plan.length; a++){
+        for (let b = a + 1; b < plan.length; b++){
+          const P = plan[a], Q = plan[b];
+          if (P[1] < 0 || Q[1] < 0) continue;
+          const old = cost(P) + cost(Q);
+          /* 只做交叉互换：两条配对 (P,Q) 重连成 (P.a,Q.a)+(P.b,Q.b) 或 (P.a,Q.b)+(P.b,Q.a)。
+             ⚠ 别再加「两条各自改接边界」这种动作——它会把 P.b / Q.b 直接丢掉，
+             产生的「计划」少配了两个缺陷（代价看着更低，实际是非法修正）；
+             单缺陷改接边界由下面那一趟单独处理。 */
+          const cands = [
+            [[P[0], Q[0], -1], [P[1], Q[1], -1]],
+            [[P[0], Q[1], -1], [P[1], Q[0], -1]],
+          ];
+          for (const [n1, n2] of cands){
+            if (n1[1] >= 0 && !Number.isFinite(dd[n1[0]][n1[1]])) continue;
+            if (n2[1] >= 0 && !Number.isFinite(dd[n2[0]][n2[1]])) continue;
+            if (cost(n1) + cost(n2) < old - 1e-12){ plan[a] = n1; plan[b] = n2; improved = true; break; }
+          }
+        }
+      }
+      for (let a = 0; a < plan.length; a++){
+        const [x, y] = plan[a];
+        if (y >= 0 && dg[x][near(x)] < dd[x][y]){ plan[a] = [x, -1, near(x)]; improved = true; }
+      }
+      if (!improved) break;
+    }
+  }
+  let qubits = 0n, cost = 0;
+  for (const [i, j, g] of plan){
+    if (j >= 0){ qubits ^= scSpacePathQ(gr, dist[i], defects[j], defects[i]); cost += dd[i][j]; }
+    else { qubits ^= scSpacePathQ(gr, dist[i], G[g], defects[i]); cost += dg[i][g]; }
+  }
+  return { qubits, mode, cost, pairs: plan.length };
+}
+
+/** 一层的独立数据错误（与 scTrial 同口径：noise='x' / 'depol'） */
+function scErrLayer(code, noise, p, rng){
+  let mx = 0n, mz = 0n;
+  for (let q = 0; q < code.n; q++){
+    const u = rng();
+    if (noise === 'x'){
+      if (u < p) mx |= 1n << BigInt(q);
+    } else {
+      const t = u * 3;
+      if (t < p) mx |= 1n << BigInt(q);
+      else if (t < 2 * p){ mx |= 1n << BigInt(q); mz |= 1n << BigInt(q); }
+      else if (t < 3 * p) mz |= 1n << BigInt(q);
+    }
+  }
+  return { mx, mz };
+}
+
+const scSynMask = (g, mask) => {
+  let s = 0;
+  g.stab.forEach((st, k) => { if ((pc(st.mask & mask)) & 1) s |= 1 << k; });
+  return s;
+};
+
+/**
+ * 单次带噪测量试验。cfg: { p, noise, q = p, rounds = d−1, dpMax }
+ * 返回两帧的错误 / 修正 / 残余 / 每层缺陷（画布用）/ 回退标志。
+ */
+function scSpaceTrial(code, cfg, rng, grs){
+  const p = cfg.p, noise = cfg.noise === 'depol' ? 'depol' : 'x';
+  const q = cfg.q === undefined ? p : cfg.q;
+  const R = cfg.rounds === undefined ? Math.max(1, code.d - 1) : cfg.rounds;
+  const L = R + 1, nS = code.zg.nS, nn = nS + 2;
+  const wS = Math.log((1 - p) / p);
+  const wT = q <= 0 ? Infinity : Math.log((1 - q) / q);
+  const gX = grs && grs.X ? grs.X : scSpaceGraph(code, 'X', R);
+  const gZ = grs && grs.Z ? grs.Z : scSpaceGraph(code, 'Z', R);
+  const lay = [];
+  for (let l = 0; l < L; l++) lay.push(scErrLayer(code, noise, p, rng));
+  const out = {};
+  let anyFail = 0, fb = 0;
+  for (const type of ['X', 'Z']){
+    const g = type === 'X' ? code.xg : code.zg;
+    const dual = type === 'X' ? code.zl : code.xl;
+    const gr = type === 'X' ? gX : gZ;
+    const m = [0];
+    for (let t = 1; t <= R; t++){
+      let s = 0;
+      for (let k = 0; k < nS; k++) if (rng() < q) s |= 1 << k;
+      m[t] = s;
+    }
+    const defects = [], perLayer = [];
+    const defMask = [];
+    let tot = 0n;
+    for (let l = 0; l < L; l++){
+      const e = type === 'X' ? lay[l].mx : lay[l].mz;
+      tot ^= e;
+      let d = scSynMask(g, e);
+      if (l + 1 <= R) d ^= m[l + 1];
+      if (l >= 1) d ^= m[l];
+      perLayer.push(d); defMask.push(d);
+      for (let k = 0; k < nS; k++) if (d >> k & 1) defects.push(l * nn + k);
+    }
+    const dh = scSpaceDecode(gr, defects, wS, wT, cfg.dpMax);
+    const residual = tot ^ dh.qubits;
+    const cls = pc(residual & dual) & 1;
+    out[type] = {
+      cls, residual, corr: dh.qubits, k: defects.length, tot,
+      mode: dh.mode, cost: dh.cost, perLayer, errLayer: lay.map(x => type === 'X' ? x.mx : x.mz),
+      synAfter: scSynMask(g, residual),
+    };
+    if (dh.mode === 'greedy') fb = 1;
+    if (cls) anyFail = 1;
+  }
+  return {
+    fail: anyFail === 1, xfail: out.X.cls === 1, zfail: out.Z.cls === 1,
+    kx: out.X.k, kz: out.Z.k,
+    mx: lay.reduce((a, l) => a ^ l.mx, 0n), mz: lay.reduce((a, l) => a ^ l.mz, 0n),
+    corrX: out.X.corr, corrZ: out.Z.corr, resX: out.X.residual, resZ: out.Z.residual,
+    defX: out.X.perLayer, defZ: out.Z.perLayer,
+    errX: out.X.errLayer, errZ: out.Z.errLayer,
+    modeX: out.X.mode, modeZ: out.Z.mode,
+    badSyn: (out.X.synAfter | out.Z.synAfter) !== 0,
+    fallback: fb, R, rounds: R, q,
+  };
+}
+
+/** 带噪测量集合：P_L / 两帧分解 / 平均时空缺陷 / 回退率 / 残余综合征自检 */
+function scSpaceEnsemble(code, cfg = {}){
+  const c = { p: 0.02, noise: 'x', trials: 600, seed: 7, q: undefined, rounds: undefined, dpMax: SC_PHEN.dpMax, ...cfg };
+  const R = c.rounds === undefined ? Math.max(1, code.d - 1) : c.rounds;
+  const grs = { X: scSpaceGraph(code, 'X', R), Z: scSpaceGraph(code, 'Z', R) };
+  const rng = mulberry32(c.seed);
+  const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  let fail = 0, xf = 0, zf = 0, bad = 0, ksum = 0, fbn = 0;
+  for (let i = 0; i < c.trials; i++){
+    const r = scSpaceTrial(code, c, rng, grs);
+    if (r.fail) fail++;
+    if (r.xfail) xf++;
+    if (r.zfail) zf++;
+    if (r.badSyn) bad++;
+    if (r.modeX === 'greedy') fbn++;
+    if (r.modeZ === 'greedy') fbn++;
+    ksum += r.kx + r.kz;
+  }
+  const N = c.trials, PL = fail / N;
+  return {
+    d: code.d, p: c.p, noise: c.noise, q: c.q === undefined ? c.p : c.q, rounds: R, layers: R + 1, trials: N,
+    PL, PLx: xf / N, PLz: zf / N, badSyn: bad / N, meanDefects: ksum / (2 * N), fallback: fbn / (2 * N),
+    ms: (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0,
+    sigma: Math.sqrt(Math.max(PL * (1 - PL), 1e-12) / N),
+  };
+}
+
 /* ===== src/qec/mode-surf.js ===== */
 /* ============================================================================
  * mode-surf.js（QEC hub 第 8 模式，R128 新建）— 旋转表面码 [[d²,1,d]]
@@ -15284,6 +15633,12 @@ class SurfApp {
       p: Math.max(0.005, Math.min(0.25, num('p', 0.08))),
       trials: Math.max(200, Math.min(20000, Math.round(num('trials', 1500)))),
       seed: Math.round(num('seed', 7)),
+      /* meas='noisy' ⟹ 带噪测量（phenomenological）口径。
+         qR = q/p 只在引擎/调试层暴露：面板固定 q = p（标准取法）。
+         q=0 时解码退化成逐层独立、d3×d5 两条曲线在 0.05 以内不交叉（未分辨），
+         给旋钮反而误导，所以不上面板（README 里写明这条取舍）。 */
+      meas: q.get('meas') === 'noisy' ? 'noisy' : 'ideal',
+      qR: [0, 0.5, 1].includes(parseFloat(q.get('qr'))) ? parseFloat(q.get('qr')) : 1,
     };
     this.code = scBuild(this.state.d);
     this.trial = null;      /* 最近一次试验快照（码画布用） */
@@ -15315,6 +15670,9 @@ class SurfApp {
       <aside id="sfPanel" class="panel qpanel">
         <div class="grp">码距 d（n = d² 比特）</div>
         <div class="btns g3" id="sfDs"></div>
+
+        <div class="grp">噪声口径</div>
+        <div class="btns" id="sfMeas"></div>
 
         <div class="grp">错误谱（每比特）</div>
         <div class="btns" id="sfNoises"></div>
@@ -15349,6 +15707,7 @@ class SurfApp {
         <div class="hrow"><span>X / Z 帧分解</span><span id="hSplit">—</span></div>
         <div class="hrow"><span>平均缺陷数（单帧）</span><span id="hDef">—</span></div>
         <div class="hrow"><span>解码器</span><span id="hDec">—</span></div>
+        <div class="hrow" id="hSpaceRow"><span>时空匹配图</span><span id="hSpace">—</span></div>
         <hr>
         <div class="hrow"><span>交叉点 d3×d5 / d5×d7</span><span id="hCross">—</span></div>
         <div class="hrow"><span>领先幂次 α（p→0）</span><span id="hAlpha">—</span></div>
@@ -15358,7 +15717,10 @@ class SurfApp {
           （10.3% → 15.5% 的那个因子；相关解码可到 18.9%，本页不做）。
           <b>交叉点写「未分辨」就是没算出来</b>：两条曲线在该网格/样本数下没有显著的
           排序反转（σ ∝ 1/√N，d5×d7 要 N ≳ 12000 才分得开）。
-          <b>d=9 不上页面</b>：缺陷数超 DP 上限后回退率 ~26%，数字不再可信。</div>
+          <b>d=9 不上页面</b>：缺陷数超 DP 上限后回退率 ~26%，数字不再可信。
+          <b>带噪测量口径</b>固定 q = p、d−1 轮带噪 + 末轮理想读出；时空缺陷数随 d 涨得快，
+          d=7 的回退率过半 ⟹ 只上 d=3/5。它的 d3×d5 交叉 ≈0.023：默认 N=1500 判「未分辨」，
+          N ≳ 4000 才分得开（离线 N=8000 给 0.0231±0.0018）。</div>
       </aside>
 
       <div id="sfStage" class="qstage">
@@ -15384,6 +15746,11 @@ class SurfApp {
       v => { this.state.d = v; this.code = scBuild(v); this.runMc(); });
     mk(this.q('#sfNoises'), SC_NOISES.map(n => ({ v: n.k, label: n.name, title: n.desc })),
       v => { this.state.noise = v; this.runMc(); });
+    mk(this.q('#sfMeas'), [
+      { v: 'ideal', label: '单帧（码容量）', title: '综合征理想：一次读出，一张二维匹配图' },
+      { v: 'noisy', label: '带噪测量', title: 'phenomenological：每轮测量以 q 出错，时间维进匹配图' },
+    ], v => { this.state.meas = v; if (v === 'noisy' && this.state.d === 7) this.state.d = 5;
+      if (v === 'noisy') this.code = scBuild(this.state.d); this.runMc(); });
 
     this.on(this.q('#sfP'), 'input', e => {
       this.state.p = parseFloat(e.target.value);
@@ -15428,6 +15795,21 @@ class SurfApp {
       b.title = `n=${d * d} 比特，距离 ${d}`;
     }
     mark('#sfDs', s.d); mark('#sfNoises', s.noise);
+    mark('#sfMeas', s.meas);
+    /* 带噪测量口径只上 d=3/5：d=7 的时空缺陷数（k̄≈22）远超 DP 上限，回退率过半 */
+    const phen = s.meas === 'noisy';
+    for (const b of this.modeRoot.querySelectorAll('#sfDs button')){
+      const d = parseInt(b.dataset.v, 10);
+      b.disabled = phen && d === 7;
+      b.title = phen && d === 7
+        ? '带噪测量下 d=7 的时空缺陷数常超 DP 上限（回退率 >50%），数字不再可信'
+        : `n=${d * d} 比特，距离 ${d}`;
+    }
+    const exBtn = this.q('#sfExact');
+    if (exBtn){
+      exBtn.disabled = phen;
+      exBtn.title = phen ? '精确枚举只对单帧口径成立（带噪测量要从 4 层 × 2⁹ × 2⁴ 起枚举）' : '';
+    }
     const setv = (id, v) => { const e = this.q('#' + id); if (e) e.value = v; };
     setv('sfP', s.p); this.q('#sfPO').textContent = s.p.toFixed(3);
     setv('sfTrials', s.trials); this.q('#sfTrialsO').textContent = s.trials;
@@ -15441,7 +15823,9 @@ class SurfApp {
       '权重 4 与权重 2 的稳定子混排、两类边界分开，纠错靠「把综合征连起来」。' +
       '点「换一张码图」看错误（红）、综合征（亮框）、MWPM 修正链（蓝环）：' +
       '权重 ≤ t=⌊(d−1)/2⌋ 的错误必纠回，代价是**两条跨码链** = 逻辑错误（权重 d）。' +
-      '阈值不是某个 p 的绝对值，而是 **d=3/5/7 三条曲线的排序反转**。');
+      '阈值不是某个 p 的绝对值，而是 **d=3/5/7 三条曲线的排序反转**。' +
+      '**带噪测量**（phenomenological）把时间放进匹配图：每轮读出以 q=p 出错 ⟹ 探测事件在时空里成对，' +
+      '有限尺寸交叉从 ~9.5% 掉到 ~2.3%。画布下方那 2(d+1) 行点阵就是逐层的探测事件。');
   }
 
   /* ---------- 计算 ---------- */
@@ -15450,32 +15834,57 @@ class SurfApp {
     this.startSweep();
   }
 
+  /** 当前口径的试验配置（带噪测量：q = k·p、轮数 = d） */
+  phenCfg(extra){
+    const s = this.state;
+    return { p: s.p, noise: s.noise, q: this.phen ? s.qR * s.p : undefined, rounds: this.phen ? Math.max(1, s.d - 1) : 0, ...extra };
+  }
+
   /** 当前点 MC + 一张码图快照 */
   runMc(newSnap){
     const s = this.state;
     const code = this.code;
     const t0 = performance.now();
-    this.mc = scEnsemble(code, { p: s.p, noise: s.noise, trials: s.trials, seed: s.seed });
-    this.mc.ms = performance.now() - t0;
-    /* 码图快照：用「新种子」重抽一次单次试验（与 MC 同口径同 p） */
-    if (newSnap || !this.trial){
-      const rng = mulberry32((s.seed * 2654435761) % 2147483647);
-      this.trial = scTrial(code, { p: s.p, noise: s.noise }, rng);
+    if (this.phen){
+      this.mc = scSpaceEnsemble(code, { ...this.phenCfg(), trials: s.trials, seed: s.seed });
+      this.mc.ms = performance.now() - t0;
+      this.space = scSpaceVerify(s.d, Math.max(1, s.d - 1));
+      const rng = mulberry32(newSnap || !this.trial
+        ? (s.seed * 2654435761) % 2147483647 : (s.seed * 40503 + 17) % 2147483647);
+      this.trial = scSpaceTrial(code, this.phenCfg(), rng);
     } else {
-      this.trial = scTrial(code, { p: s.p, noise: s.noise }, mulberry32((s.seed * 40503 + 17) % 2147483647));
+      this.mc = scEnsemble(code, { p: s.p, noise: s.noise, trials: s.trials, seed: s.seed });
+      this.mc.ms = performance.now() - t0;
+      /* 码图快照：用「新种子」重抽一次单次试验（与 MC 同口径同 p） */
+      if (newSnap || !this.trial){
+        const rng = mulberry32((s.seed * 2654435761) % 2147483647);
+        this.trial = scTrial(code, { p: s.p, noise: s.noise }, rng);
+      } else {
+        this.trial = scTrial(code, { p: s.p, noise: s.noise }, mulberry32((s.seed * 40503 + 17) % 2147483647));
+      }
+      this.space = null;
     }
     this.verify = scVerify(s.d);
     this.renderHud();
     this.drawCode(); this.drawCurve(); this.drawDist();
   }
 
+  /** 当前口径的扫描网格 */
+  get grid(){
+    return this.phen
+      ? { ds: [3, 5], ps: SC_PHEN.ps, pMin: SC_PHEN.pMin, pMax: SC_PHEN.pMax, ticks: [0.005, 0.01, 0.02, 0.04] }
+      : { ds: SC_DISTANCES, ps: SC_PS, pMin: 0.005, pMax: 0.25, ticks: [0.01, 0.03, 0.1, 0.25] };
+  }
+  get phen(){ return this.state.meas === 'noisy'; }
+
   /** 分帧扫描：一次算一个 (d, p) 点，插一个 setTimeout 让出主线程 */
   startSweep(){
     const tok = ++this._sweepToken;
-    const s = this.state;
+    const s = this.state, G = this.grid;
     const jobs = [];
-    for (const d of SC_DISTANCES) for (const p of SC_PS) jobs.push({ d, p });
-    this.sweep = SC_DISTANCES.map(d => ({ d, rows: [] }));
+    for (const d of G.ds) for (const p of G.ps) jobs.push({ d, p });
+    this._gridN = jobs.length;
+    this.sweep = G.ds.map(d => ({ d, rows: [] }));
     this.cross = null; this.power = null;
     this._queueTimer = null;
     let i = 0;
@@ -15486,7 +15895,9 @@ class SurfApp {
         return;
       }
       const { d, p } = jobs[i];
-      const row = scEnsemble(scBuild(d), { p, noise: s.noise, trials: s.trials, seed: s.seed });
+      const row = this.phen
+        ? scSpaceEnsemble(scBuild(d), { p, noise: s.noise, q: s.qR * p, rounds: Math.max(1, d - 1), trials: s.trials, seed: s.seed })
+        : scEnsemble(scBuild(d), { p, noise: s.noise, trials: s.trials, seed: s.seed });
       const bucket = this.sweep.find(c => c.d === d);
       bucket.rows.push({ p, PL: row.PL, sigma: row.sigma, fallback: row.fallback, meanDefects: row.meanDefects });
       i++;
@@ -15514,6 +15925,11 @@ class SurfApp {
 
   runExact(){
     const s = this.state;
+    if (this.phen){
+      this.exact = { phen: true };
+      this.renderHud();
+      return;
+    }
     const btn = this.q('#sfExact');
     if (btn){ btn.disabled = true; btn.textContent = '枚举中…'; }
     setTimeout(() => {
@@ -15532,7 +15948,8 @@ class SurfApp {
   renderHud(){
     const s = this.state, v = this.verify, mc = this.mc;
     const set = (id, txt, cls) => { const el = this.q('#' + id); if (el){ el.textContent = txt; el.className = cls || ''; } };
-    set('hCfg', `${sfNoiseName[s.noise]} · d=${s.d} · p=${s.p.toFixed(3)} · N=${s.trials}`);
+    const phenTxt = this.phen ? ` · 带噪测量 q=p（${Math.max(1, s.d - 1)} 轮 + 理想读出，${s.d} 个数据层）` : '';
+    set('hCfg', `${sfNoiseName[s.noise]} · d=${s.d} · p=${s.p.toFixed(3)} · N=${s.trials}${phenTxt}`);
     if (v){
       set('hStruct', `${v.n} 比特 · |X|=${v.nX} · |Z|=${v.nZ} · k=${v.k} · 全对易=${v.commute ? '✓' : '✗'}`,
         (v.k === 1 && v.commute) ? 'ok' : 'warn');
@@ -15541,10 +15958,18 @@ class SurfApp {
     if (mc){
       set('hPL', `${sfFmt(mc.PL)}  (${Math.round(mc.PL * mc.trials)}/${mc.trials})`, 'big');
       set('hSplit', `${sfFmt(mc.PLx)} / ${sfFmt(mc.PLz)}`);
-      set('hDef', `${sfNF(mc.meanDefects, 2)} 个`);
-      set('hDec', `MWPM·DP · 回退 ${(mc.fallback * 100).toFixed(2)}% · ${sfNF(mc.ms, 1)}ms`,
+      set('hDef', `${sfNF(mc.meanDefects, 2)} 个${this.phen ? '（每帧·时空）' : ''}`);
+      const decName = this.phen ? '时空 MWPM' : 'MWPM·DP';
+      set('hDec', `${decName} · 回退 ${(mc.fallback * 100).toFixed(2)}% · ${sfNF(mc.ms, 1)}ms`,
         mc.fallback > 0.02 ? 'warn' : '');
     }
+    const spRow = this.q('#hSpaceRow');
+    if (spRow) spRow.style.display = this.phen ? '' : 'none';
+    if (this.phen && this.space){
+      const X = this.space.X;
+      set('hSpace', `${this.space.layers} 层 × ${X.nS + 2} 节点 · ${X.space + X.bnd + X.time} 边 · 自检${this.space.ok ? '✓' : '✗'}`,
+        this.space.ok ? 'ok' : 'warn');
+    } else set('hSpace', '—');
     if (this.cross){
       /* σ 大到位数无意义时（N 小 / 曲线贴得太近）不给三位小数：退回两位并标「≈」。
          阈值：σ_p > 0.03 ⟹ 交叉点只知道个量级（N=400 时 c57 常落在这档）。 */
@@ -15554,14 +15979,17 @@ class SurfApp {
       set('hCross', `${fmt(this.cross.c35, this.cross.s35)} / ${fmt(this.cross.c57, this.cross.s57)}`);
     } else set('hCross', '扫描中…');
     if (this.power){
-      set('hAlpha', SC_DISTANCES.map(d => `d${d}:${this.power[d] === null ? '—' : this.power[d].toFixed(2)}`).join('  '));
+      const dsA = this.phen ? [3, 5] : SC_DISTANCES;
+      set('hAlpha', dsA.map(d => `d${d}:${Number.isFinite(this.power[d]) ? this.power[d].toFixed(2) : '—'}`).join('  '));
     } else set('hAlpha', '扫描中…');
-    if (this.exact){
+    if (this.exact && this.exact.phen){
+      set('hExact', '带噪测量口径无精确枚举（4 层 × 2⁹ × 2⁴ 起步）');
+    } else if (this.exact){
       set('hExact', `p=${this.exact.p.toFixed(3)}：精确 ${sfFmt(this.exact.exact)} vs MC ${sfFmt(this.exact.mc)} ⟹ z=${sfNF(this.exact.z, 2)}σ`,
         this.exact.z <= 4 ? 'ok' : 'warn');
     } else set('hExact', '未跑（按按钮）');
     const done = this.sweep ? this.sweep.reduce((a, c) => a + c.rows.length, 0) : 0;
-    const total = SC_DISTANCES.length * SC_PS.length;
+    const total = this._gridN || (SC_DISTANCES.length * SC_PS.length);
     set('hProg', `${done}/${total} 点${done === total ? '（完成）' : '…'}`);
   }
 
@@ -15587,16 +16015,22 @@ class SurfApp {
     g.clearRect(0, 0, W, H);
     const s = this.state, code = this.code, d = s.d, n = code.n;
     g.textAlign = 'left';
+    const phen = this.phen;
     g.font = (11.5 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = sfC.txt + '.95)';
-    g.fillText(`旋转表面码 d=${d}：${n} 比特 · ${code.X.length}+${code.Z.length} 个稳定子 · k=1`, 10 * dpr, 16 * dpr);
+    g.fillText(`旋转表面码 d=${d}：${n} 比特 · ${code.X.length}+${code.Z.length} 个稳定子 · k=1`
+      + (phen ? ` · 带噪测量 ${Math.max(1, s.d - 1)} 轮 + 理想读出` : ''), 10 * dpr, 16 * dpr);
     g.font = (9 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = sfC.dim + '.85)';
-    g.fillText(`红点=错误 · 亮框=被点亮的综合征 · 蓝环=MWPM 修正 · 权重 ${d} 的横/竖链 = 逻辑（无法分辨）`, 10 * dpr, 29 * dpr);
+    g.fillText(phen
+      ? `红点=总错误 · 亮框=末层探测事件 · 蓝环=时空链的空间投影 · 下方 = 逐层探测事件`
+      : `红点=错误 · 亮框=被点亮的综合征 · 蓝环=MWPM 修正 · 权重 ${d} 的横/竖链 = 逻辑（无法分辨）`,
+    10 * dpr, 29 * dpr);
 
-    /* 网格几何：数据比特占 (d)×(d)，四周留一格给边界 */
+    /* 网格几何：数据比特占 (d)×(d)，四周留一格给边界；带噪测量时底部留出时空条 */
     const pad = 34 * dpr;
-    const avail = Math.min(W - 2 * pad, H - 2 * pad - 22 * dpr);
+    const stripH = phen ? Math.min(H * 0.30, 22 * dpr + 2 * (d + 1) * 8 * dpr) : 0;
+    const avail = Math.min(W - 2 * pad, H - 2 * pad - 22 * dpr - stripH);
     const step = avail / (d + 0.0);
     const ox = (W - step * (d - 1)) / 2, oy = 44 * dpr + (H - 44 * dpr - step * (d - 1)) / 2;
     const P = (r, cc) => ({ x: ox + cc * step, y: oy + r * step });
@@ -15665,8 +16099,14 @@ class SurfApp {
         g.lineTo(Math.min(...xs), Math.max(...ys));
         g.closePath(); g.stroke();
       };
-      code.Z.forEach(st => { if (pcOf(st.mask & t.mx) & 1) glow(st); });
-      code.X.forEach(st => { if (pcOf(st.mask & t.mz) & 1) glow(st); });
+      if (phen){
+        const dX = t.defX[d], dZ = t.defZ[d];        /* 末层探测事件 */
+        code.Z.forEach((st, k) => { if (dX >> k & 1) glow(st); });
+        code.X.forEach((st, k) => { if (dZ >> k & 1) glow(st); });
+      } else {
+        code.Z.forEach(st => { if (pcOf(st.mask & t.mx) & 1) glow(st); });
+        code.X.forEach(st => { if (pcOf(st.mask & t.mz) & 1) glow(st); });
+      }
     }
 
     /* 比特：小白点（画在稳定子之上、错误之下会更好，但为简洁统一放这里） */
@@ -15686,6 +16126,32 @@ class SurfApp {
         ? `本次试验：逻辑错误（${t.xfail ? 'X 帧' : ''}${t.xfail && t.zfail ? ' + ' : ''}${t.zfail ? 'Z 帧' : ''}）——缺陷 ${t.kx}/${t.kz}，修正链连通了两条边界`
         : `本次试验：已纠回 —— 缺陷 ${t.kx}/${t.kz}，修正链只连接相邻缺陷（或就近边界）`, 10 * dpr, H - 9 * dpr);
     }
+    if (phen && t) this.drawSpaceStrip(g, W, H, dpr, stripH, t);
+  }
+
+  /* 时空缺陷条：行 = 层（0..R），列 = 该帧的稳定子；上 X 帧、下 Z 帧 */
+  drawSpaceStrip(g, W, H, dpr, stripH, t){
+    const s = this.state, R = s.d, nS = this.code.zg.nS;
+    const x0 = 40 * dpr, x1 = W - 10 * dpr, cw = (x1 - x0) / nS;
+    const rows = 2 * (R + 1);
+    const top = H - stripH + 16 * dpr;
+    const rh = Math.min(9 * dpr, (stripH - 22 * dpr) / rows);
+    g.font = (8.5 * dpr) + 'px ui-monospace,monospace';
+    g.fillStyle = sfC.dim + '.85)';
+    g.fillText(`时空探测事件：行 = 层 l（0…${R}，末层 = 理想读出），列 = 稳定子`, 10 * dpr, H - stripH + 8 * dpr);
+    for (let l = 0; l <= R; l++){
+      for (const [frame, base] of [['X', 0], ['Z', R + 1]]){
+        const mask = frame === 'X' ? t.defX[l] : t.defZ[l];
+        for (let k = 0; k < nS; k++){
+          const cx = x0 + (k + 0.5) * cw, cy = top + (base + l + 0.5) * rh;
+          const on = (mask >> k) & 1;
+          g.fillStyle = on ? (frame === 'X' ? sfC.cyan + '.95)' : sfC.mag + '.95)') : sfC.wire + '.13)';
+          g.beginPath(); g.arc(cx, cy, Math.max(1.3 * dpr, rh * 0.33), 0, Math.PI * 2); g.fill();
+        }
+      }
+      g.fillStyle = sfC.dim + '.65)';
+      g.fillText('l' + l, 10 * dpr, top + (l + 0.62) * rh);
+    }
   }
 
   /* 画布 2：P_L(p) 双对数（三条曲线 + 基线 + 当前点 + 交叉点） */
@@ -15704,12 +16170,12 @@ class SurfApp {
     g.fillText('双对数 · 虚线 = 未编码基线 p（编码有益 ⟺ 曲线在它下方）', 10 * dpr, 27 * dpr);
 
     const L = 46 * dpr, Rr = W - 12 * dpr, T = 40 * dpr, B = H - 26 * dpr;
-    const pMin = 0.005, pMax = 0.25, yMin = 1e-5, yMax = 1;
+    const G = this.grid, pMin = G.pMin, pMax = G.pMax, yMin = 1e-5, yMax = 1;
     const X = p => L + (Math.log10(p) - Math.log10(pMin)) / (Math.log10(pMax) - Math.log10(pMin)) * (Rr - L);
     const Y = v => B - (Math.log10(Math.max(v, yMin)) - Math.log10(yMin)) / (Math.log10(yMax) - Math.log10(yMin)) * (B - T);
     /* 网格 */
     g.strokeStyle = sfC.wire + '.16)'; g.lineWidth = 1 * dpr;
-    for (const p of [0.01, 0.03, 0.1, 0.25]){
+    for (const p of G.ticks){
       g.beginPath(); g.moveTo(X(p), T); g.lineTo(X(p), B); g.stroke();
       g.fillStyle = sfC.dim + '.8)'; g.font = (8 * dpr) + 'px ui-monospace,monospace';
       g.fillText(p.toString(), X(p) - 6 * dpr, B + 12 * dpr);
@@ -15743,8 +16209,9 @@ class SurfApp {
         /* 图例（右上角一行，按 d 递增排开） */
         g.fillStyle = hue + '.95)';
         g.font = (8.6 * dpr) + 'px ui-monospace,monospace';
-        const li = SC_DISTANCES.indexOf(cur.d);
-        g.fillText('d=' + cur.d, Rr - (SC_DISTANCES.length - li) * 30 * dpr, T + 2 * dpr);
+        const ids = (this.sweep || []).map(c => c.d);
+        const li = ids.indexOf(cur.d);
+        g.fillText('d=' + cur.d, Rr - (ids.length - li) * 30 * dpr, T + 2 * dpr);
       }
     }
     /* 交叉点竖线 */
@@ -15810,7 +16277,7 @@ class SurfApp {
       g.fillStyle = sfC.dim + '.8)'; g.font = (8 * dpr) + 'px ui-monospace,monospace';
       g.fillText(v >= 0.01 ? v.toString() : v.toExponential(0), 8 * dpr, Y(v) + 3 * dpr);
     }
-    const ds = SC_DISTANCES;
+    const ds = this.phen ? [3, 5] : SC_DISTANCES;
     const slot = (Rr - L) / ds.length;
     const pts = [];
     for (let i = 0; i < ds.length; i++){
@@ -15876,6 +16343,7 @@ class SurfApp {
       },
       set(patch){
         Object.assign(self.state, patch || {});
+        if (self.state.meas === 'noisy' && self.state.d === 7) self.state.d = 5;
         self.code = scBuild(self.state.d);
         self.syncPanel(); self.runMc();
         return { ...self.state };
@@ -15887,6 +16355,10 @@ class SurfApp {
       runExact(){ self.runExact(); return true; },
       /* 诊断用：直接读引擎（不经 UI） */
       probe(d, cfg){ return scEnsemble(scBuild(d), cfg); },
+      space(d, cfg){ return scSpaceEnsemble(scBuild(d), cfg); },
+      spaceVerify(d, R){ return scSpaceVerify(d, R === undefined ? d : R); },
+      get phen(){ return self.phen; },
+      get grid(){ return self.grid; },
       structure(d){ return scVerify(d); },
       minLogical(d, type, wmax){ return scMinLogical(scBuild(d), type, wmax); },
       span(){ return { n: self.code.n, nX: self.code.X.length, nZ: self.code.Z.length }; },
