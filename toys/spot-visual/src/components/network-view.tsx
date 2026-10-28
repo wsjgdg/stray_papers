@@ -221,6 +221,21 @@ const NetworkLayer = memo(function NetworkLayer({
 
 export default function NetworkView() {
   const { spots, setSelectedSpot, dissuasionRecords } = useAppStore();
+
+  // ═══ 数据范围：默认只看精选层（有等级/评分/预约/实拍的景点），全量 3000 点会糊成噪点 ═══
+  const [scope, setScope] = useState<"curated" | "all">("curated");
+  const visibleSpots = useMemo(
+    () =>
+      scope === "all"
+        ? spots
+        : spots.filter(
+            (s) =>
+              /^\/spots\/pois\//.test(s.image || "") || // top400 本地图
+              /^\d+$/.test(s.id) || // 手工 30 条
+              !!s.reservation, // 需预约的重点景区
+          ),
+    [spots, scope],
+  );
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
@@ -273,7 +288,7 @@ export default function NetworkView() {
     minLng,
     maxLng,
   } = useMemo(() => {
-    const valid = spots
+    const valid = visibleSpots
       .map((s) => {
         const coords = parseCoords(s);
         return {
@@ -359,7 +374,7 @@ export default function NetworkView() {
       minLng,
       maxLng,
     };
-  }, [spots, viewW, viewH]);
+  }, [visibleSpots, viewW, viewH]);
 
   // Anti-overlap: nudge overlapping bubbles
   const finalSpots = useMemo(() => {
@@ -569,7 +584,7 @@ export default function NetworkView() {
     setCenteredId(null);
   }, [transform]);
 
-  if (spots.length === 0) {
+  if (visibleSpots.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-gray-400 text-sm">
         暂无景点数据，请先导入
@@ -662,8 +677,23 @@ export default function NetworkView() {
         </p>
       </div>
 
-      {/* Spot count */}
+      {/* 数据范围切换 + Spot count */}
       <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1.5 shadow-sm border border-gray-100">
+        <div className="flex items-center gap-1 mb-1.5">
+          {(["curated", "all"] as const).map((sc) => (
+            <button
+              key={sc}
+              onClick={() => setScope(sc)}
+              className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-colors ${
+                scope === sc
+                  ? "bg-emerald-600 text-white"
+                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+              }`}
+            >
+              {sc === "curated" ? "精选" : "全部"}
+            </button>
+          ))}
+        </div>
         <p className="text-xs text-gray-400">
           {finalSpots.length} 个景点 · {districts.length} 个区域
         </p>
