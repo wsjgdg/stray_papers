@@ -38,6 +38,12 @@ interface AppStore {
   compareIds: string[];
   toggleCompare: (id: string) => void;
   clearCompare: () => void;
+  /** 省份筛选（持久化：刷新后保持浏览上下文） */
+  cityFilter: string | null;
+  setCityFilter: (c: string | null) => void;
+  /** 等级筛选（持久化） */
+  levelFilter: "5A" | "4A" | null;
+  setLevelFilter: (lv: "5A" | "4A" | null) => void;
   searchQuery: string;
   activeCategory: string;
   viewMode: "grid" | "list";
@@ -108,6 +114,10 @@ export const useAppStore = create<AppStore>()(
           return { compareIds: [...s.compareIds, id].slice(-2) };
         }),
       clearCompare: () => set({ compareIds: [] }),
+      cityFilter: null,
+      setCityFilter: (c) => set({ cityFilter: c }),
+      levelFilter: null,
+      setLevelFilter: (lv) => set({ levelFilter: lv }),
       searchQuery: "",
       activeCategory: "全部",
       viewMode: "grid" as "grid" | "list",
@@ -326,6 +336,11 @@ export const useAppStore = create<AppStore>()(
         activeView: s.activeView,
         // 最近浏览（首页「继续浏览」横滑条）
         recentViews: s.recentViews,
+        // 筛选条件持久化：刷新/重开保持浏览上下文
+        searchQuery: s.searchQuery,
+        activeCategory: s.activeCategory,
+        cityFilter: s.cityFilter,
+        levelFilter: s.levelFilter,
       }),
     },
   ),

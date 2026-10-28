@@ -1777,7 +1777,9 @@ function SpotsView() {
   const [citiesExpanded, setCitiesExpanded] = useState(false);
 
   // ═══ 城市过滤：chips/输入框都是库的过滤器，不再替换 spots（收藏/行程/改价永不丢失） ═══
-  const [cityFilter, setCityFilter] = useState<string | null>(null);
+  // 筛选持久化：cityFilter/levelFilter/searchQuery/activeCategory 都在 store（partialize）
+  const cityFilter = useAppStore((s) => s.cityFilter);
+  const setCityFilter = useAppStore((s) => s.setCityFilter);
 
   const handleCityExplore = useCallback(() => {
     const c = city.trim().replace(/市$/, "");
@@ -1833,7 +1835,8 @@ function SpotsView() {
   );
 
   // ═══ 等级快速过滤：只看 5A / 4A（null = 不过滤） ═══
-  const [levelFilter, setLevelFilter] = useState<"5A" | "4A" | null>(null);
+  const levelFilter = useAppStore((s) => s.levelFilter);
+  const setLevelFilter = useAppStore((s) => s.setLevelFilter);
   const [locating, setLocating] = useState(false);
 
   // ═══ 分页渲染：1200+ 卡片一次性渲染会拖慢首屏，先渲染 60 张，滚动到底自动加载 ═══
