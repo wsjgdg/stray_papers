@@ -112,10 +112,21 @@ const spots = [...seg.matchAll(/name: "([^"]+)"/g)].map((m) => ({
   dish: m[1],
 }));
 let dishes = spots;
-if (args.length) dishes = dishes.filter((d) => args.includes(d.dish));
+if (args.length)
+  // args 直接作为抓图目标（支持任意景点名，如 5A 缺图名录条目），不再限于 sampleSpots
+  dishes = args.map((name) => ({ prov: "extra", dish: name }));
 
+// report 合并旧值 + 增量落盘：分批/中断重跑不丢历史，也不覆盖前批记录
+const REPORT_FILE = path.join(OUT_DIR, "_report.json");
 const seenHash = new Set();
-const report = [];
+const report = fs.existsSync(REPORT_FILE)
+  ? JSON.parse(fs.readFileSync(REPORT_FILE, "utf8"))
+  : [];
+for (const r of report) seenHash.add(r.image);
+
+function flushReport() {
+  fs.writeFileSync(REPORT_FILE, JSON.stringify(report, null, 2));
+}
 
 for (const { prov, dish } of dishes) {
   const already = fs.readdirSync(OUT_DIR).some((f) => f.startsWith(dish + "-"));
@@ -168,12 +179,12 @@ for (const { prov, dish } of dishes) {
     );
   }
   if (!saved) console.log("  ✗ 没有可用图");
+  if (report.length % 10 === 0) flushReport();
   await sleep(150);
 }
 
-fs.writeFileSync(
-  path.join(OUT_DIR, "_report.json"),
-  JSON.stringify(report, null, 2),
-);
+flushReport();
 console.log(`\n共 ${report.length} 张 → public/dishes/_candidates/`);
-console.log("挑好之后改名成「景点名.jpg」移到 public/spots/，再跑 npm run spots");
+console.log(
+  "挑好之后改名成「景点名.jpg」移到 public/spots/，再跑 npm run spots",
+);

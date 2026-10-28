@@ -557,6 +557,11 @@ function SpotGrid({
                           {spot.level}
                         </span>
                       )}
+                      {spot.reservation && (
+                        <span className="px-1.5 py-0.5 rounded-md bg-rose-500/90 text-white text-[10px] font-black shadow-sm">
+                          需预约
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="p-4">
@@ -669,6 +674,11 @@ function SpotList({
                           {spot.level}
                         </span>
                       )}
+                      {spot.reservation && (
+                        <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-rose-500/90 text-white text-[10px] font-black">
+                          需预约
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-1 text-xs text-gray-400 mb-2">
                       <MapPin className="w-3 h-3 shrink-0" />
@@ -722,6 +732,7 @@ function SpotList({
 
 const IMAGE_SOURCE_LABEL: Record<string, string> = {
   amap: "高德地图",
+  local: "离线图包",
   osm: "OSM 社区实拍",
   unsplash: "Unsplash",
   pexels: "Pexels",

@@ -1373,8 +1373,13 @@ export const LIBRARY_SPOTS: Spot[] = (() => {
       name: e.name,
       // 5A/4A 构建时经高德 around 搜索回填（见 scripts/fetch-scenic-details.mjs）：
       // 官方图 + 电话 + 开放时间；图不可达时 SpotImage 走本地分类池降级
-      image: SCENIC_DETAILS[e.name]?.image || "",
-      imageSource: SCENIC_DETAILS[e.name]?.image ? "amap" : undefined,
+      // 图优先级：本地离线图（bing 抓图管线）> 高德官方图 > 渐变占位
+      image: SPOT_PHOTOS[e.name] || SCENIC_DETAILS[e.name]?.image || "",
+      imageSource: SPOT_PHOTOS[e.name]
+        ? "local"
+        : SCENIC_DETAILS[e.name]?.image
+          ? "amap"
+          : undefined,
       openTime: SCENIC_DETAILS[e.name]?.openTime || undefined,
       tel: SCENIC_DETAILS[e.name]?.tel || undefined,
       rating: SCENIC_DETAILS[e.name]?.rating
