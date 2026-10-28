@@ -1,8 +1,9 @@
 "use client";
 
-// ═══ 景点地图：ECharts 中国地图 + 景点散点（学习 gaokao 的地图构建方式） ═══
-// 取代旧的 SVG 关系图：点位落在真实地理上下文里，缩放/漫游原生支持。
-// 数据范围：精选（top400 本地图 + 手工 + 预约 ≈ 430）/ 全部（3000）两级切换。
+// ═══ 景点地图：ECharts 中国地图 + 聚合气泡（学习 gaokao 的网格聚合模式） ═══
+// 相近景点按网格聚合为一个大点（大小 = 数量），缩放越大网格越细自动裂开；
+// 点聚合气泡 → 放大一级展开；单个点 → 进详情。
+// 渲染器用 canvas：数千散点 + 漫游下 SVG 逐帧重绘 DOM 会卡。
 
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
@@ -10,6 +11,9 @@ import { MapPin } from "lucide-react";
 import ChinaMap from "@/components/map/china-map";
 import { useAppStore } from "@/lib/store";
 import type { EChartsOption } from "echarts";
+
+// 聚合网格边长（经度度数），索引 = 缩放档位（1×→2×→4×→8×→16×→32×）
+const MAP_CELLS = [6.4, 1.6, 0.4, 0.1, 0.025, 0.006];
 
 const CAT_COLORS: Record<string, string> = {
   自然风光: "#10B981",
@@ -28,6 +32,7 @@ export default function NetworkView() {
 
   // 数据范围：默认精选（top400 本地图 + 手工 30 + 预约标注），全部 = 3000
   const [scope, setScope] = useState<"curated" | "all">("curated");
+  const [mapZoom, setMapZoom] = useState(1);
   const visibleSpots = useMemo(
     () =>
       scope === "all"
@@ -41,30 +46,83 @@ export default function NetworkView() {
     [spots, scope],
   );
 
+  // ═══ 网格聚合：缩放越大网格越细，气泡自动裂开（学习 gaokao MAP_CELLS） ═══
+  const cell =
+    MAP_CELLS[Math.min(Math.round(Math.log2(Math.max(1, mapZoom))), MAP_CELLS.length - 1)];
+  const buckets = useMemo(() => {
+    type Acc = {
+      key: string;
+      lng: number;
+      lat: number;
+      count: number;
+      catCount: Record<string, number>;
+      has5A: boolean;
+      ids: string[];
+    };
+    const acc = new Map<string, Acc>();
+    for (const s of visibleSpots) {
+      const loc = s.location as { lng?: number; lat?: number } | undefined;
+      if (!loc || typeof loc.lng !== "number" || typeof loc.lat !== "number")
+        continue;
+      const key = `${Math.floor(loc.lng / cell)}|${Math.floor(loc.lat / cell)}`;
+      let e = acc.get(key);
+      if (!e) {
+        e = { key, lng: 0, lat: 0, count: 0, catCount: {}, has5A: false, ids: [] };
+        acc.set(key, e);
+      }
+      e.lng += loc.lng;
+      e.lat += loc.lat;
+      e.count++;
+      if (s.level === "5A") e.has5A = true;
+      e.catCount[s.category] = (e.catCount[s.category] ?? 0) + 1;
+      e.ids.push(s.id);
+    }
+    return [...acc.values()].map((e) => {
+      const cat =
+        (Object.entries(e.catCount) as [string, number][]).sort(
+          (x, y) => y[1] - x[1],
+        )[0]?.[0] ?? "城市地标";
+      return {
+        key: e.key,
+        center: [e.lng / e.count, e.lat / e.count] as [number, number],
+        count: e.count,
+        cat,
+        has5A: e.has5A,
+        ids: e.ids,
+      };
+    });
+  }, [visibleSpots, cell]);
+
   const option = useMemo<EChartsOption>(() => {
-    const points = visibleSpots
-      .map((s) => {
-        const loc = s.location as { lng?: number; lat?: number } | undefined;
-        if (!loc || typeof loc.lng !== "number" || typeof loc.lat !== "number")
-          return null;
-        return {
-          name: s.name,
-          value: [loc.lng, loc.lat],
-          id: s.id,
-          level: s.level,
-          rating: s.rating,
-          cat: s.category,
-          itemStyle: {
-            color:
-              s.level === "5A"
-                ? "#F59E0B"
-                : CAT_COLORS[s.category] || "#6B7280",
-            borderColor: "#fff",
-            borderWidth: 1,
-          },
-        };
-      })
-      .filter(Boolean) as any[];
+    const points = buckets.map((b) => {
+      const single = b.count === 1;
+      const spot = single ? visibleSpots.find((s) => s.id === b.ids[0]) : null;
+      const size = single
+        ? spot?.level === "5A"
+          ? 16
+          : 11
+        : Math.min(46, 12 + 4.5 * Math.log2(b.count));
+      const color = single
+        ? spot?.level === "5A"
+          ? "#F59E0B"
+          : CAT_COLORS[spot?.category ?? ""] || "#6B7280"
+        : "#059669";
+      return {
+        name: single ? spot?.name : `${b.count} 个景点`,
+        value: b.center,
+        bucketKey: b.key,
+        count: b.count,
+        id: single ? b.ids[0] : null,
+        cat: single ? spot?.category : b.cat,
+        has5A: b.has5A,
+        itemStyle: {
+          color,
+          borderColor: b.has5A && !single ? "#F59E0B" : "#fff",
+          borderWidth: single ? 1 : 2,
+          opacity: single ? 0.85 : 0.9,
+        },
+      };
+    });
 
     return {
       tooltip: {
@@ -72,9 +130,9 @@ export default function NetworkView() {
         formatter: (p: any) => {
           const d = p.data;
           if (!d) return String(p.name ?? "");
-          const lv = d.level ? `<b>${d.level}</b> · ` : "";
-          const rate = d.rating ? ` · ★${d.rating}` : "";
-          return `<b>${d.name}</b>${lv}${rate}<br/>${d.cat ?? ""}`;
+          return d.count > 1
+            ? `<b>${d.count} 个景点</b>（含 5A：${d.has5A ? "是" : "否"}）<br/>点击放大展开`
+            : `<b>${d.name}</b>`;
         },
       },
       geo: {
@@ -82,6 +140,7 @@ export default function NetworkView() {
         roam: true,
         layoutCenter: ["50%", "52%"],
         layoutSize: "130%",
+        zoom: mapZoom,
         label: { show: false },
         itemStyle: {
           areaColor: "#E9EEF4",
@@ -97,26 +156,30 @@ export default function NetworkView() {
         {
           type: "scatter",
           coordinateSystem: "geo",
-          symbolSize: (val: unknown, params: any) =>
-            params.data?.level === "5A"
-              ? 16
-              : params.data?.level === "4A"
-                ? 13
-                : 10,
+          symbolSize: (val: unknown, params: any) => params.data?.size ?? 11,
           data: points,
-          emphasis: { scale: 1.4 },
+          emphasis: { scale: 1.2 },
           zlevel: 2,
-          progressive: 500,
+          progressive: 400,
         },
       ],
-    };
-  }, [visibleSpots]);
+    } as EChartsOption;
+  }, [buckets, visibleSpots, mapZoom]);
 
   const handleSelect = (p: any) => {
-    const id = p?.data?.id;
-    if (!id) return;
-    const spot = visibleSpots.find((s) => s.id === id);
+    const d = p?.data;
+    if (!d) return;
+    if (d.count > 1) {
+      // 聚合气泡 → 放大一级（网格变细自动裂开）
+      setMapZoom((z) => Math.min(z * 2, 32));
+      return;
+    }
+    const spot = visibleSpots.find((s) => s.id === d.id);
     if (spot) setSelectedSpot(spot);
+  };
+
+  const handleZoom = (z: number) => {
+    setMapZoom((prev) => (Math.abs(prev - z) > 0.01 ? z : prev));
   };
 
   return (
@@ -142,7 +205,7 @@ export default function NetworkView() {
           {scope === "curated"
             ? `精选 ${visibleSpots.length}`
             : `全部 ${spots.length}`}{" "}
-          个景点
+          个景点 · 聚合为 {buckets.length} 个点位
         </p>
       </div>
 
@@ -162,8 +225,8 @@ export default function NetworkView() {
             </span>
           ))}
           <span className="inline-flex items-center gap-1 text-[11px] text-gray-600">
-            <span className="w-3 h-3 rounded-full bg-amber-500" />
-            5A 景区
+            <span className="w-3.5 h-3.5 rounded-full bg-emerald-600" />
+            聚合气泡（点击放大）
           </span>
         </div>
       </div>
@@ -179,6 +242,8 @@ export default function NetworkView() {
           onSelect={handleSelect}
           height="100%"
           className="w-full"
+          renderer="canvas"
+          onZoomChange={handleZoom}
         />
       )}
     </div>

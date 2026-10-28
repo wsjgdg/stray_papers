@@ -48,6 +48,8 @@ export interface ChinaMapProps {
   maxZoom?: number;
   /** 递增即复位视野（回到初始全景，丢弃用户缩放/平移） */
   resetSignal?: number;
+  /** 渲染器：svg（默认，矢量清晰）| canvas（大散点量下拖动更流畅） */
+  renderer?: "svg" | "canvas";
   /**
    * 缩放倍数变化回调（仅缩放手势触发，平移不触发）。
    * 供上层按「缩放档位」调整图层聚合粒度，例如把挨得太近的散点合并成气泡。
@@ -71,6 +73,7 @@ export default function ChinaMap({
   maxZoom,
   resetSignal,
   onZoomChange,
+  renderer = "svg",
 }: ChinaMapProps) {
   const elRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<echarts.ECharts | null>(null);
@@ -105,7 +108,7 @@ export default function ChinaMap({
       // 不重绘 2.5 万个边界顶点。canvas 模式下拖动实测 p50 21ms/帧（≈47fps）
       // 且伴随长帧；换 SVG 后同样拖动稳定在 60fps 附近。
       // 顺带的好处：矢量边界在高 DPI 屏上不再模糊。
-      renderer: "svg",
+      renderer,
     });
     chartRef.current = chart;
     chart.setOption(option);
