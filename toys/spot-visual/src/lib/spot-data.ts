@@ -1281,7 +1281,11 @@ export const PACKLIST_UNIVERSAL = [
 // ═══ 统一库：手工精选（全字段）在前 + 城市包 POI（同名跳过，保手工版） ═══
 // 城市探索的 chips 是这个库的过滤器；POI 图片由浏览器直连高德 CDN，不占服务器出网。
 import { CITY_POI_PACKS, type CityPoi } from "./city-pois.generated";
-import { POI_DESCRIPTIONS, RESERVATION_NOTES } from "./poi-descriptions";
+import {
+  POI_DESCRIPTIONS,
+  RESERVATION_NOTES,
+  SCENIC_DESCRIPTIONS,
+} from "./poi-descriptions";
 import { POI_PHOTOS } from "./poi-photos.generated";
 import {
   SCENIC_LEVELS,
@@ -1415,7 +1419,10 @@ export const LIBRARY_SPOTS: Spot[] = (() => {
       level: e.level,
       reservation: RESERVATION_NOTES[e.name],
       // 事实句替代千篇一律占位：等级/位置/类别来自名录数据，同时改善描述搜索命中
-      description: `国家${e.level}级景区（2023 年全国 A 级景区名录），位于${where}，${SCENIC_CATEGORY_WORDS[category] ?? "属综合性景区"}。开放时间、门票与预约要求以景区公示为准。`,
+      // 人工描述（知名条目）优先，事实句模板兜底
+      description:
+        SCENIC_DESCRIPTIONS[e.name] ??
+        `国家${e.level}级景区（2023 年全国 A 级景区名录），位于${where}，${SCENIC_CATEGORY_WORDS[category] ?? "属综合性景区"}。开放时间、门票与预约要求以景区公示为准。`,
       location: { lat: e.lat, lng: e.lng },
     } as Spot;
   });

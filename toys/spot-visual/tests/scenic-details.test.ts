@@ -4,6 +4,7 @@
 import { describe, expect, it } from "vitest";
 import { LIBRARY_SPOTS } from "@/lib/spot-data";
 import { SCENIC_DETAILS } from "@/lib/scenic-details.generated";
+import { SCENIC_DESCRIPTIONS } from "@/lib/poi-descriptions";
 import { EXTRA_SCENICS } from "@/lib/scenic-enrich.generated";
 
 describe("scenic details propagation", () => {
@@ -33,5 +34,16 @@ describe("scenic details propagation", () => {
     const total5A = EXTRA_SCENICS.filter((e) => e.level === "5A").length;
     const withDetail = Object.keys(SCENIC_DETAILS).length;
     expect(withDetail).toBeGreaterThanOrEqual(total5A * 0.8);
+  });
+
+  it("人工描述表的每条都命中库条目并生效", () => {
+    const byName = new Map(LIBRARY_SPOTS.map((s) => [s.name, s]));
+    for (const [name, desc] of Object.entries(SCENIC_DESCRIPTIONS)) {
+      const s = byName.get(name);
+      expect(s, `SCENIC_DESCRIPTIONS 的「${name}」不在库中`).toBeTruthy();
+      expect(s!.description, `「${name}」的人工描述未生效（仍是模板句）`).toBe(
+        desc,
+      );
+    }
   });
 });

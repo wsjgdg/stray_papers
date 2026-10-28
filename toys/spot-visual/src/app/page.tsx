@@ -1585,6 +1585,25 @@ function CompareDialog({
         ),
     },
     { label: "地址", render: (s) => s.address },
+    {
+      label: "导航",
+      render: (s) => {
+        const c = parseCoords(s);
+        if (!c) return "—";
+        return (
+          <a
+            href={`https://uri.amap.com/marker?position=${c.lng.toFixed(6)},${c.lat.toFixed(6)}&name=${encodeURIComponent(s.name)}&src=spot-visual&callnative=1`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-colors"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Navigation className="w-3 h-3" />
+            高德导航
+          </a>
+        );
+      },
+    },
   ];
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
