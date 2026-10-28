@@ -24,6 +24,9 @@ export type ViewType =
 // 劝退记录投票去重（仅会话内有效，不持久化）
 const votedDissuasion = new Set<string>();
 
+// 统一库的 id 集合（迁移时区分「库条目」与「用户自定义导入」）
+const libIdSet = new Set(LIBRARY_SPOTS.map((s) => s.id));
+
 interface AppStore {
   spots: Spot[];
   favorites: string[];
@@ -257,32 +260,34 @@ export const useAppStore = create<AppStore>()(
     }),
     {
       name: "spot-app",
-      version: 2,
-      // v1 → v2：spots 从「内置30条/替换结果」升级为统一库（手工精选 + 城市包）。
-      // 用户自定义导入的条目（非旧内置 id）原样保留；指向已弃 id 的收藏/行程清理。
+      version: 3,
+      // 迁移策略：库条目（LIBRARY_SPOTS，随每次构建自动更新）始终以最新版覆盖，
+      // 用户自定义导入的条目（非库 id）原样保留；指向已弃 id 的收藏/行程清理。
+      // 这样全国化/后续扩库无需再升版本号即自动到达用户。
       migrate: (state, version) => {
-        if (version < 2 && state && typeof state === "object") {
-          const st = state as {
-            spots?: Spot[];
-            favorites?: string[];
-            trip?: string[];
-          };
-          // 旧内置 id 用精确集合判断（用户 JSON 可能自带纯数字 id，不能按格式误杀）
-          const legacyIds = new Set(sampleSpots.map((sp) => sp.id));
-          const isLegacyBuiltin = (s: Spot) =>
-            legacyIds.has(s.id) ||
-            s.id.startsWith("poi-") ||
-            s.id.startsWith("osm-");
-          const custom = (st.spots ?? []).filter((s) => !isLegacyBuiltin(s));
-          const valid = new Set([
-            ...LIBRARY_SPOTS.map((s) => s.id),
-            ...custom.map((s) => s.id),
-          ]);
-          st.spots = [...LIBRARY_SPOTS, ...custom];
-          st.favorites = (st.favorites ?? []).filter((id) => valid.has(id));
-          st.trip = (st.trip ?? []).filter((id) => valid.has(id));
-        }
-        return state as never;
+        const st = (state ?? {}) as {
+          spots?: Spot[];
+          favorites?: string[];
+          trip?: string[];
+        };
+        // 旧内置 id 用精确集合判断（用户 JSON 可能自带纯数字 id，不能按格式误杀）
+        const legacyIds = new Set(sampleSpots.map((sp) => sp.id));
+        const isBuiltinId = (id: string) =>
+          libIdSet.has(id) ||
+          legacyIds.has(id) ||
+          id.startsWith("poi-") ||
+          id.startsWith("osm-") ||
+          id.startsWith("scenic-");
+        const spots = Array.isArray(st.spots) ? st.spots : [];
+        const custom = spots.filter((s) => !isBuiltinId(s.id));
+        const valid = new Set([
+          ...LIBRARY_SPOTS.map((s) => s.id),
+          ...custom.map((s) => s.id),
+        ]);
+        st.spots = [...LIBRARY_SPOTS, ...custom];
+        st.favorites = (st.favorites ?? []).filter((id) => valid.has(id));
+        st.trip = (st.trip ?? []).filter((id) => valid.has(id));
+        return st as never;
       },
       partialize: (s) => ({
         favorites: s.favorites,
