@@ -40,6 +40,7 @@ import {
   Thermometer,
   BookX, // 新增：体力沙盘、PTSI、劝退日记图标
   Navigation,
+  Download,
   Route,
   Dices,
 } from "lucide-react";
@@ -2090,6 +2091,29 @@ function FavoritesView() {
         : favSpots.filter((s) => s.category === favCat),
     [favSpots, favCat],
   );
+  // 导出收藏清单为 txt（含等级/地址/开放时间/电话/高德导航链接），可直接发给别人
+  const exportList = useCallback(() => {
+    const lines = shownFavs.map((s, i) => {
+      const lv = s.level ? `【${s.level}】` : "";
+      const ot = s.openTime ? `｜开放 ${s.openTime}` : "";
+      const tel = s.tel ? `｜☎ ${s.tel}` : "";
+      const c = parseCoords(s);
+      const nav = c
+        ? `｜导航 https://uri.amap.com/marker?position=${c.lng.toFixed(6)},${c.lat.toFixed(6)}&name=${encodeURIComponent(s.name)}`
+        : "";
+      return `${i + 1}. ${lv}${s.name}（${s.address}）${ot}${tel}${nav}`;
+    });
+    const text =
+      `华夏探索 · 收藏清单（${shownFavs.length} 个景点）\n` +
+      `导出时间：${new Date().toLocaleString("zh-CN")}\n\n${lines.join("\n")}\n`;
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `收藏清单-${new Date().toISOString().slice(0, 10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [shownFavs]);
   if (favSpots.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -2125,6 +2149,16 @@ function FavoritesView() {
         >
           <Route className="w-3.5 h-3.5" />
           {favCat === "全部" ? "全部加入行程" : "本类加入行程"}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5 text-xs"
+          onClick={exportList}
+          title="下载 txt 清单：名称/等级/地址/开放时间/电话/导航链接"
+        >
+          <Download className="w-3.5 h-3.5" />
+          导出清单
         </Button>
       </div>
       {favCats.length > 2 && (

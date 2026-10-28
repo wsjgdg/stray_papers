@@ -13,14 +13,16 @@ describe("scenic details propagation", () => {
     expect(missed).toEqual([]);
   });
 
-  it("字段都携带到库条目（图/电话/开放时间）", () => {
-    const byName = new Map(LIBRARY_SPOTS.map((s) => [s.name, s]));
-    for (const [name, d] of Object.entries(SCENIC_DETAILS)) {
-      const s = byName.get(name)!;
-      if (d.image) expect(s.image, `${name} 图未携带`).toBe(d.image);
-      if (d.tel) expect(s.tel, `${name} 电话未携带`).toBe(d.tel);
+  it("字段都携带到库条目（图/电话/开放时间，仅 extras 条目）", () => {
+    // 同名景点可能以 POI 条目存在（本地照片/自己的 tel），不经本回填——只验 scenic- 侧
+    for (const s of LIBRARY_SPOTS) {
+      if (!s.id.startsWith("scenic-")) continue;
+      const d = SCENIC_DETAILS[s.name];
+      if (!d) continue;
+      if (d.image) expect(s.image, `${s.name} 图未携带`).toBe(d.image);
+      if (d.tel) expect(s.tel, `${s.name} 电话未携带`).toBe(d.tel);
       if (d.openTime)
-        expect(s.openTime, `${name} 开放时间未携带`).toBe(d.openTime);
+        expect(s.openTime, `${s.name} 开放时间未携带`).toBe(d.openTime);
     }
   });
 
