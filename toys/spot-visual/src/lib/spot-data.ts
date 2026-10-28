@@ -1288,6 +1288,7 @@ import {
   EXTRA_SCENICS,
   MANUAL_SCENIC_LEVELS,
 } from "./scenic-enrich.generated";
+import { SCENIC_DETAILS } from "./scenic-details.generated";
 
 export function cityPoiToSpot(city: string, p: CityPoi, index: number): Spot {
   const short = city.replace(/市$/, "");
@@ -1356,7 +1357,12 @@ export const LIBRARY_SPOTS: Spot[] = (() => {
         id: `scenic-${e.city}-${i}`,
         // 全国化：跨省同名景区保留（id 含城市不冲突），地址自带省份可被省份筛选命中
         name: e.name,
-        image: "",
+        // 5A/4A 构建时经高德 around 搜索回填（见 scripts/fetch-scenic-details.mjs）：
+        // 官方图 + 电话 + 开放时间；图不可达时 SpotImage 走本地分类池降级
+        image: SCENIC_DETAILS[e.name]?.image || "",
+        imageSource: SCENIC_DETAILS[e.name]?.image ? "amap" : undefined,
+        openTime: SCENIC_DETAILS[e.name]?.openTime || undefined,
+        tel: SCENIC_DETAILS[e.name]?.tel || undefined,
         address: e.address || `${e.city}（A级景区名录）`,
         facilities: [],
         projects: [],
