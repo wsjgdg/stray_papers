@@ -51,6 +51,7 @@ const PAGES = [
    （与 quantum-field.html 桩同款式），此处保证 dist 与根级口径一致——
    旧书签/外链（含 cdp 套件历史 URL）不 404，直接落对应 mode。 */
 const STUBS = [
+  ['surface.html', 'surf'],       /* R128：表面码（hub 第 8 模式）深链桩 */
   ['shor.html', 'shor'],
   ['gatenoise.html', 'gate'],
   ['flag.html', 'flag'],
@@ -62,7 +63,7 @@ const STUBS = [
 /* 跳转桩内容（根级/dist 同款）：meta refresh 直达 + 兜底链接（file:// 也跳） */
 function stubHtml(mode){
   const name = ({ shor: 'Shor 9 比特级联码', gate: '线路级门噪声', flag: '容错综合征提取',
-    rounds: '多轮提取', cycle: '循环 EC', family: '码族与真阈值' })[mode];
+    rounds: '多轮提取', cycle: '循环 EC', family: '码族与真阈值', surf: '旋转表面码' })[mode];
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>

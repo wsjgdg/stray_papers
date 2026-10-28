@@ -1,5 +1,5 @@
 /* ============================================================================
- * qechub.js（R98 新建）— QEC hub 壳：七模式单页 + 运行时切换
+ * qechub.js（R98 新建）— QEC hub 壳：单页 + 运行时切换（R98 七模式，R128 加表面码 = 8）
  *
  * 背景（R97 评估 → 用户指令「QEC 七页整合」）：qec/shor/gatenoise/flag/
  * rounds/cycle/family 七页壳同构（topbar/panel/hud/stage/hint 五段骨架），
@@ -31,8 +31,9 @@ import { FLAG_MODE } from './qec/mode-flag.js';
 import { ROUNDS_MODE } from './qec/mode-rounds.js';
 import { CYCLE_MODE } from './qec/mode-cycle.js';
 import { FAMILY_MODE } from './qec/mode-family.js';
+import { SURF_MODE } from './qec/mode-surf.js';
 
-const MODES = [REP_MODE, SHOR_MODE, GATE_MODE, FLAG_MODE, ROUNDS_MODE, CYCLE_MODE, FAMILY_MODE];
+const MODES = [REP_MODE, SHOR_MODE, GATE_MODE, FLAG_MODE, ROUNDS_MODE, CYCLE_MODE, FAMILY_MODE, SURF_MODE];
 const DEFAULT_MODE = 'rep';
 
 const HUB_CSS = `

@@ -4,12 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f1626'/%3E%3Ctext x='16' y='23' font-family='serif' font-size='22' fill='%2367e8f9' text-anchor='middle'%3E%CF%88%3C/text%3E%3C/svg%3E">
-<title>纠错工场 · 量子纠错七模式（薛定谔工场 R98）</title>
+<title>纠错工场 · 量子纠错八模式（薛定谔工场 R98，R128 加表面码）</title>
 </head>
 <body>
 <!-- 纯 CPU + 2D canvas（态矢 + ancilla 稳定子测量 + 经典前馈，无 WebGL）；
      ES 模块需经 HTTP 访问。单文件分发版由 scripts/build-standalone.mjs 生成到 dist/qec.html。
-     R98：七页整合为单页 hub——?mode=rep|shor|gate|flag|rounds|cycle|family 直达模式。 -->
+     R98：七页整合为单页 hub；R128 加第 8 模式表面码——
+     ?mode=rep|shor|gate|flag|rounds|cycle|family|surf 直达模式。 -->
 <script>
 /*! 薛定谔工场 · 单文件分发版（qec.html）— 由 scripts/build-standalone.mjs 自动生成，请勿手改。
     源码工程（ES 模块，课程站组件化用）：qec.html + src/
@@ -34,6 +35,8 @@
       src/qec/mode-cycle.js
       src/physics/codefamily.js
       src/qec/mode-family.js
+      src/physics/surfacecode.js
+      src/qec/mode-surf.js
       src/qechub.js
       src/qec-main.js
 */
@@ -508,7 +511,7 @@ const NAV_TITLES = {
   './paths.html': '费曼路径求和：路径族 / 相位 / 双缝条纹（R74）',
   './qcircuit.html': '小规模量子线路：Bell / GHZ / QFT / Grover（R75）',
   './noise.html': '开放量子系统：T₁ 弛豫 / T₂ 退相位 / 纠缠猝死（R77）',
-  './qec.html': '量子纠错 hub：重复码 / Shor 9 / 门噪声 / Flag / 多轮 / 循环 / 码族（R78–R85，R98 七页整合）',
+  './qec.html': '量子纠错 hub：重复码 / Shor 9 / 门噪声 / Flag / 多轮 / 循环 / 码族 / 表面码（R78–R85、R98 整合、R128 表面码）',
 };
 
 /** 生成子页顶栏导航 HTML；cur = 当前页 href（打 cur 高亮，自链也在——与 flag/rounds/cycle 一致）。
@@ -14391,9 +14394,1293 @@ class FamilyApp {
 /* ---- QEC hub mode 描述符（R98）：壳按 id/tab 建切换条；css 在 activate 时注入、deactivate 时移除 ---- */
 const FAMILY_MODE = { handle: '__fm', id: 'family', name: '码族', tab: '▦', css: FM_CSS, mount(shell){ const app = new FamilyApp(shell); app.activate(); return app; } };
 
+/* ===== src/physics/surfacecode.js ===== */
+/* ============================================================================
+ * surfacecode.js（R128 新建）— 旋转表面码（rotated surface code）[[d²,1,d]]
+ *
+ * 为什么开这一页（码族页 / family 页诚实限制 ③ 的原话）：
+ *   「表面码未做（d=3,5,7 表面码留待后续）」。family 页用**重复码族 + Steane
+ *   级联族**立住了「伪阈值 vs 真阈值」的判据，但那两类码都是**一维**结构
+ *   （重复码只查 X；Steane 是块状级联）。表面码是二维拓扑码：**权重 4 与
+ *   权重 2 的稳定子混排、两类边界分开**，纠错靠「把综合征连起来」而不是
+ *   「多数表决 / 查表」。这一页把这条路线补上。
+ *
+ * ---- 码的构造（本文件的唯一真源；printScLattice 可打印检查）----------
+ * 数据比特：(r,c)，0 ≤ r,c < d（n = d²）。
+ * 稳定子：以「单元」(i,j) 为中心，支撑 = 四角 ∩ 网格；i,j ∈ [-1, d-1]。
+ *   - 单元权重 1（四角只有一个在网格内）⟹ 不是稳定子（跳过）。
+ *   - 内部单元（0 ≤ i,j ≤ d-2）⟹ 权重 4。
+ *   - 边界单元（i 或 j = -1 / d-1）⟹ 权重 2。
+ *   类型由棋盘格 (i+j) mod 2 定：偶 = X，奇 = Z。
+ *   **边界额外规则**（不加这条就构造不出 [[d²,1,d]]——见下面的搜索记录）：
+ *     上/下边（i = -1 或 d-1）只保留 (i+j) 为**奇**的单元；
+ *     左/右边（j = -1 或 d-1）只保留 (i+j) 为**偶**的单元。
+ * 计数：内部单元 (d-1)² 个，按奇偶两类各 (d-1)²/2；边界每边保留 (d-1)/2 个
+ *   （四边共 2(d-1) 个，两类各 d-1）⟹ |X| = |Z| = (d-1)²/2 + (d-1)
+ *   = (d²-1)/2 ⟹ 稳定子总数 d²-1 = n-1 ⟹ k = 1。
+ *   权重谱只有 4 与 2：|X| 里权重 4 的 (d-1)²/2 个、权重 2 的 d-1 个。
+ * 逻辑：X_L = 顶行（d 个比特）、Z_L = 左列（d 个比特），权重都恰为 d。
+ *
+ * ---- 构造是怎么定下来的（诚实记录，避免下轮重走）----------------------
+ * 只看棋盘格奇偶（不加边界规则）时：d=3 得 12 个候选稳定子，其中 X/Z 交叠
+ * 为奇数的对子把 12 个单元连成一整块 ⟹ 任何合法配色都要求全部同型 ⟹ 不可能
+ * 同时有 X 和 Z。故必须按「边」区分奇偶。把四个边各两种取法（2^4 = 16 种）
+ * 全枚举后，只有两种配色同时满足 [commute ∧ k=1 ∧ 距离=d]，且互为 X↔Z 镜像；
+ * 本文件取其中一种（上/下保留奇数单元）。d=5 同款配色复现 [[25,1,5]]。
+ *
+ * ---- 噪声口径 -----------------------------------------------------------
+ * code-capacity（综合征测量理想，不注入测量错误）：与 family 页 meas=0 同口径。
+ *   noise='x'    每比特以 p 注入 X（bit-flip 信道；只解一种错误）。
+ *   noise='depol' 每比特 I 概率 1-p，X/Y/Z 各 p/3。
+ *                ⟹ X 分量概率 2p/3、Z 分量概率 2p/3（Y 同时给两帧）。
+ *   ⚠ 退极化下本页**分帧独立解码**（X 帧、Z 帧各解一次），丢掉 Y 的相关性
+ *   ⟹ 阈值落在 p ≈ 1.5 × 单帧阈值（正是文献 10.3% → 15.5% 的那个 1.5 因子）。
+ *   相关性解码（correlated matching）能推到 18.9%，本页**不做**（如实标注）。
+ *
+ * ---- 解码器：MWPM（最小权重完美匹配）-----------------------------------
+ * 匹配图（每种帧一张）：节点 = 对型稳定子 + 两个边界节点；边 = 数据比特
+ *   （比特属于 2 个对型稳定子 ⟹ 连这两点；只属于 1 个 ⟹ 连到它所在的边界）。
+ *   实测（d=3）左/右列比特只属 1 个 Z 稳定子 ⟹ X 帧在**左/右边界**终止；
+ *   上/下行比特只属 1 个 X 稳定子 ⟹ Z 帧在**上/下边界**终止。
+ * 权重：均匀 1（code-capacity 同款）；节点间距离 = BFS 步数（含边界节点）。
+ * 求解：缺陷数 k ≤ 14 用**位掩码 DP 精确解**（边界节点可被任意缺陷多次匹配，
+ *   标准做法）；k > 14 退回「贪心 + 2-opt」，并把回退率**报在 HUD 上**。
+ *   回退率在 d≤7、p≤0.15 的区间 ≤1%；d=9 在 p≳0.09 起就明显上升
+ *   ⟹ 本页只上 d=3/5/7，d=9 只在测试里用（如实标注）。
+ * 失败判据：修正后的残差 ∈ N(S)（构造保证综合征为 0）⟹ 只需看逻辑类：
+ *   X 帧残差与 Z_L 的交叠奇偶为 1 ⟹ 逻辑 X 错误；Z 帧对称。
+ *
+ * ---- 验证（Node 套件 pot128；逐条对应）--------------------------------
+ *   A 结构：d=3/5/7/9 的 n=d²、|X|=|Z|=(d²-1)/2、全对易、rank=n-1 ⟹ k=1、
+ *     逻辑 X/Z 权重 d、互不对易、不在稳定子 span 内、解码图强连通。
+ *   B 距离：穷举低权重（d=3/5 搜到 ≤d；d=7 搜到 ≤6）⟹ 不存在权重 < d 的逻辑。
+ *   C 解码最优性：d=3 全 512 个 X 帧错误模式（16 个可达综合征），解码修正的
+ *     权重 = 同综合征最小权重（0 次次优）；且 d=3 的 P_L 与「逐综合征最大
+ *     似然」解码**逐点相等**（差 0.0e+0）。
+ *   D 精确枚举：d=3 全 4⁹ 模式（退极化）/ 2⁹（仅 X）的 P_L 与 MC 在 4σ 内。
+ *   E 阈值：同 p 下 P_L 随 d 单调降（阈值下侧）/ 随 d 单调升（阈值上侧）——
+ *     两侧排序反转即阈值；交叉点带 σ（d3×d5 ≈0.095±0.010 / d5×d7 ≈0.090±0.005，
+ *     退极化 0.133±0.009 / 0.140±0.004），相邻两对的差落在 σ 内 ⟹ **不宣称
+ *     交叉点随 d 上移**（本尺寸不可分辨，见 README 物理结果④）。
+ *   F 单比特/双比特错误：d≥3 的单比特 Pauli 错误 100% 纠回；d≥5 的双比特
+ *     错误 100% 纠回（码距 t=⌊(d-1)/2⌋ 的直接后果）。
+ *   G 边界与确定性：p=0 ⟹ P_L=0；同种子逐位一致；不同种子在 4σ 内。
+ * ========================================================================== */
+
+
+/* ---------- 位运算：BigInt 掩码（d=9 ⟹ 81 比特，超出 number 安全位宽） ---------- */
+const pc = v => { let c = 0; while (v){ c += Number(v & 1n); v >>= 1n; } return c; };
+const bitLen = v => { let n = 0; while (v){ n++; v >>= 1n; } return n; };
+const toMask = arr => arr.reduce((m, q) => m | (1n << BigInt(q)), 0n);
+const has = (m, q) => ((m >> BigInt(q)) & 1n) === 1n;
+
+/* ---------- GF(2) 线性代数（pivot = 最高位；inSpan 必须用真正的行阶梯） ----------
+ * ⚠ 教训（本轮实测）：最早的 rankRows 只把新行按已有行的 pivot 消一次，
+ * 得到的基**不是**行阶梯 ⟹ inSpan 会误判（同样的输入换个插入顺序就得出
+ * 「权重 2 的逻辑」这种假结果）。改成 pivot 表 + 逐位回代后，d=3/5/7 的
+ * 距离搜索才稳定给出 d。线性代数不吃「差不多」。 */
+function makeBasis(rows){
+  const b = new Map();
+  for (let r of rows){
+    while (r){
+      const p = bitLen(r) - 1;
+      const x = b.get(p);
+      if (x === undefined){ b.set(p, r); break; }
+      r ^= x;
+    }
+  }
+  return b;
+}
+function inSpan(b, v){
+  while (v){
+    const p = bitLen(v) - 1;
+    const x = b.get(p);
+    if (x === undefined) return false;
+    v ^= x;
+  }
+  return true;
+}
+const basisRank = b => b.size;
+
+/* ---------- 码定义 ---------- */
+const SC_DISTANCES = [3, 5, 7];
+/** 引擎支持（测试用）到 d=9：n=81、|X|=|Z|=40、解码图节点 42。 */
+const SC_ALL_DISTANCES = [3, 5, 7, 9];
+const SC_NOISES = [
+  { k: 'x', name: '仅 X', desc: '每比特以 p 注入位翻转（单帧：只解一种错误；文献 d→∞ MWPM 渐近阈值 10.3%）' },
+  { k: 'depol', name: '退极化', desc: '每比特 X/Y/Z 各 p/3；分帧独立解码 ⟹ 阈值 ≈1.5×单帧（文献渐近 15.5%）' },
+];
+const SC_DEFAULTS = { d: 3, noise: 'x', p: 0.08, trials: 4000, seed: 7 };
+/** 扫描点：跨阈值两侧（实测交叉：仅 X 0.090–0.095±0.01，退极化 0.133–0.140±0.01）。 */
+const SC_PS = [0.02, 0.04, 0.06, 0.075, 0.09, 0.10, 0.11, 0.13, 0.16, 0.20];
+
+const SC_CACHE = new Map();
+
+/** 造码（带缓存）：返回 qubit / 稳定子 / 逻辑 / 两张解码图 */
+function scBuild(d){
+  if (!(d >= 3 && d % 2 === 1)) throw new Error('表面码距离必须是 ≥3 的奇数（收到 ' + d + '）');
+  if (SC_CACHE.has(d)) return SC_CACHE.get(d);
+  const n = d * d, X = [], Z = [];
+  for (let i = -1; i <= d - 1; i++){
+    for (let j = -1; j <= d - 1; j++){
+      const sup = [];
+      for (const [r, c] of [[i, j], [i, j + 1], [i + 1, j], [i + 1, j + 1]]){
+        if (r >= 0 && r < d && c >= 0 && c < d) sup.push(r * d + c);
+      }
+      if (sup.length < 2) continue;                       // 角单元（权重 1）不是稳定子
+      const par = ((i + j) % 2 + 2) % 2;
+      const side = (i === -1 ? 'T' : i === d - 1 ? 'B' : j === -1 ? 'L' : j === d - 1 ? 'R' : null);
+      if (side && par !== ((side === 'T' || side === 'B') ? 1 : 0)) continue;
+      const rec = { sup, mask: toMask(sup), w: sup.length, par, side, i, j };
+      (par === 0 ? X : Z).push(rec);
+    }
+  }
+  const code = { d, n, X, Z };
+  code.xl = toMask(Array.from({ length: d }, (_, c) => c));       // 顶行 = 逻辑 X
+  code.zl = toMask(Array.from({ length: d }, (_, r) => r * d));   // 左列 = 逻辑 Z
+  code.xg = scGraph(code, 'X');
+  code.zg = scGraph(code, 'Z');
+  SC_CACHE.set(d, code);
+  return code;
+}
+
+/** 匹配图：type='X' ⟹ 节点 = Z 稳定子 + {左,右} 边界；type='Z' ⟹ X 稳定子 + {上,下} */
+function scGraph(code, type){
+  const d = code.d, n = code.n;
+  const stab = type === 'X' ? code.Z : code.X;
+  const nS = stab.length, nodes = nS + 2;
+  const adj = Array.from({ length: nodes }, () => []);
+  const qStab = Array.from({ length: n }, () => []);
+  stab.forEach((s, k) => s.sup.forEach(q => qStab[q].push(k)));
+  for (let q = 0; q < n; q++){
+    const L = qStab[q], r = Math.floor(q / d), c = q % d;
+    if (L.length === 2){
+      adj[L[0]].push({ to: L[1], q }); adj[L[1]].push({ to: L[0], q });
+    } else if (L.length === 1){
+      const bi = type === 'X' ? (c === 0 ? nS : nS + 1) : (r === 0 ? nS : nS + 1);
+      adj[L[0]].push({ to: bi, q }); adj[bi].push({ to: L[0], q });
+    } else {
+      throw new Error('表面码构造异常：比特 ' + q + ' 不属于任何对型稳定子');
+    }
+  }
+  /* BFS 全源最短距离 + 父指针（回溯路径用；节点数 ≤ 42，全源很便宜） */
+  const dist = [], par = [];
+  for (let s = 0; s < nodes; s++){
+    const D = new Array(nodes).fill(Infinity), P = new Array(nodes).fill(-1), PQ = new Array(nodes).fill(-1);
+    D[s] = 0; const queue = [s];
+    for (let h = 0; h < queue.length; h++){
+      const u = queue[h];
+      for (const { to, q: qq } of adj[u]){
+        if (D[to] === Infinity){ D[to] = D[u] + 1; P[to] = u; PQ[to] = qq; queue.push(to); }
+      }
+    }
+    dist.push(D); par.push({ P, PQ });
+  }
+  return { nS, nodes, adj, dist, par, stab, type, qStab };
+}
+
+/** 路径上的比特掩码（从 a 的 BFS 树走到 b） */
+function pathMask(g, a, b){
+  const P = g.par[a]; let m = 0n, u = b, guard = 0;
+  while (u !== a){
+    const p = P.P[u];
+    if (p < 0) throw new Error('匹配图上不可达：' + a + ' → ' + b);
+    m |= 1n << BigInt(P.PQ[u]); u = p;
+    if (++guard > 1e6) throw new Error('路径回溯成环');
+  }
+  return m;
+}
+
+/* ---------- MWPM ---------- */
+const SC_CFG = { dpMax: 14 };
+
+function matchPairs(g, defects){
+  const k = defects.length, nS = g.nS, bA = nS, bB = nS + 1, D = g.dist;
+  if (k === 0) return { pairs: [], mode: 'none' };
+  if (k <= SC_CFG.dpMax){
+    const memo = new Map();
+    const solve = mask => {
+      if (mask === 0) return { cost: 0, plan: [] };
+      const cached = memo.get(mask);
+      if (cached !== undefined) return cached;
+      const i = Math.log2(mask & -mask) | 0;              // 取最低位缺陷
+      let best = null;
+      for (const b of [bA, bB]){                          // 缺陷 ← 边界（边界可被复用）
+        const c = D[defects[i]][b];
+        if (c < Infinity){
+          const r = solve(mask & ~(1 << i));
+          if (r && (best === null || c + r.cost < best.cost)) best = { cost: c + r.cost, plan: [{ a: defects[i], b }].concat(r.plan) };
+        }
+      }
+      for (let j = i + 1; j < k; j++){                    // 缺陷 ← 缺陷
+        if (!(mask & (1 << j))) continue;
+        const c = D[defects[i]][defects[j]];
+        if (c < Infinity){
+          const r = solve(mask & ~(1 << i) & ~(1 << j));
+          if (r && (best === null || c + r.cost < best.cost)) best = { cost: c + r.cost, plan: [{ a: defects[i], b: defects[j] }].concat(r.plan) };
+        }
+      }
+      memo.set(mask, best);
+      return best;
+    };
+    const r = solve((1 << k) - 1);
+    if (r) return { pairs: r.plan, mode: 'dp' };
+  }
+  /* 兜底：贪心（每次取全局最短可选边）+ 2-opt（交叉互换 / 单缺陷改边界 /
+   * 两个边界对并成缺陷对）。实测「纯贪心」比 DP 差 6–11σ，2-opt 只挽回一部分
+   * ⟹ 它只配当兜底，回退率必须曝光（HUD「回退」行 + pot128 H 组）。 */
+  let rem = defects.slice(), plan = [];
+  while (rem.length){
+    let bi = 0, bj = -1, bc = Infinity, bb = -1;
+    for (let i = 0; i < rem.length; i++){
+      for (let j = i + 1; j < rem.length; j++){
+        const c = D[rem[i]][rem[j]];
+        if (c < bc){ bc = c; bi = i; bj = j; bb = -1; }
+      }
+      for (const b of [bA, bB]){
+        const c = D[rem[i]][b];
+        if (c < bc){ bc = c; bi = i; bj = -1; bb = b; }
+      }
+    }
+    plan.push({ a: rem[bi], b: bj >= 0 ? rem[bj] : bb });
+    rem = rem.filter((_, i) => i !== bi && i !== bj);
+  }
+  const isB = x => x === bA || x === bB;
+  for (let sweep = 0; sweep < 40; sweep++){
+    let improved = false;
+    for (let i = 0; i < plan.length; i++){
+      for (let j = i + 1; j < plan.length; j++){
+        const A1 = plan[i].a, A2 = plan[i].b, B1 = plan[j].a, B2 = plan[j].b;
+        const old = D[A1][A2] + D[B1][B2];
+        for (const [x, y] of [[[A1, B1], [A2, B2]], [[A1, B2], [A2, B1]]]){
+          if (isB(x[0]) && isB(x[1])) continue;          // 边界—边界对无效
+          if (isB(y[0]) && isB(y[1])) continue;
+          const d1 = D[x[0]][x[1]], d2 = D[y[0]][y[1]];
+          if (!(d1 < Infinity && d2 < Infinity)) continue;
+          if (d1 + d2 < old){ plan[i] = { a: x[0], b: x[1] }; plan[j] = { a: y[0], b: y[1] }; improved = true; }
+        }
+      }
+    }
+    for (let i = 0; i < plan.length; i++){
+      const { a, b } = plan[i];
+      if (!isB(b)){
+        for (const nb of [bA, bB]) if (D[a][nb] < D[a][b]){ plan[i] = { a, b: nb }; improved = true; }
+      } else {
+        for (let j = i + 1; j < plan.length; j++){
+          const q = plan[j];
+          if (isB(q.b) && D[a][q.a] < D[a][b] + D[q.a][q.b]){ plan[i] = { a, b: q.a }; plan.splice(j, 1); improved = true; break; }
+        }
+      }
+    }
+    if (!improved) break;
+  }
+  return { pairs: plan, mode: 'greedy' };
+}
+
+/** 单帧解码：给定该帧错误掩码 → {corr, residual, cls, k, mode} */
+function scDecode(code, mask, type){
+  const g = type === 'X' ? code.xg : code.zg;
+  const defects = [];
+  g.stab.forEach((s, k) => { if (pc(s.mask & mask) & 1) defects.push(k); });
+  const dual = type === 'X' ? code.zl : code.xl;
+  if (!defects.length) return { corr: 0n, residual: mask, cls: pc(mask & dual) & 1, k: 0, mode: 'none' };
+  const { pairs, mode } = matchPairs(g, defects);
+  let corr = 0n;
+  for (const { a, b } of pairs) corr ^= pathMask(g, a, b);
+  const residual = mask ^ corr;
+  return { corr, residual, cls: pc(residual & dual) & 1, k: defects.length, mode };
+}
+
+/* ---------- 结构自检 ---------- */
+function scVerify(d){
+  const C = scBuild(d);
+  let commute = true;
+  for (const a of C.X) for (const b of C.Z) if (pc(a.mask & b.mask) & 1) commute = false;
+  const bAll = makeBasis([...C.X.map(c => c.mask), ...C.Z.map(c => c.mask)]);
+  const bX = makeBasis(C.X.map(c => c.mask));
+  const bZ = makeBasis(C.Z.map(c => c.mask));
+  const deg = stabs => { const a = new Array(C.n).fill(0); stabs.forEach(s => s.sup.forEach(q => a[q]++)); return a; };
+  const xd = deg(C.X), zd = deg(C.Z);
+  const rank = basisRank(bAll);
+  return {
+    d, n: C.n, nX: C.X.length, nZ: C.Z.length, commute, rank, k: C.n - rank,
+    xlWeight: pc(C.xl), zlWeight: pc(C.zl),
+    xlLogical: C.Z.every(c => (pc(c.mask & C.xl) & 1) === 0),
+    zlLogical: C.X.every(c => (pc(c.mask & C.zl) & 1) === 0),
+    anticommute: (pc(C.xl & C.zl) & 1) === 1,
+    xlInSpan: inSpan(bX, C.xl), zlInSpan: inSpan(bZ, C.zl),
+    weightHist: [0, 2, 4].reduce((o, w) => (o[w] = C.X.filter(c => c.w === w).length, o), {}),
+    minXdeg: Math.min(...xd), maxXdeg: Math.max(...xd),
+    minZdeg: Math.min(...zd), maxZdeg: Math.max(...zd),
+    graphConnected: [C.xg, C.zg].every(g => g.dist.every(row => row.every(v => v < Infinity))),
+  };
+}
+
+/** 最小权重逻辑搜索（独立于解码器；权重上限 wmax 之内找不到 ⟹ 距离 > wmax） */
+function scMinLogical(code, type, wmax){
+  const n = code.n, stabs = type === 'X' ? code.X : code.Z, other = type === 'X' ? code.Z : code.X;
+  const basis = makeBasis(stabs.map(c => c.mask));
+  const qsyn = Array.from({ length: n }, (_, q) => {
+    let s = 0n;
+    other.forEach((m, k) => { if (has(m.mask, q)) s |= 1n << BigInt(k); });
+    return s;
+  });
+  const comb = []; let hit = null;
+  const rec = (start, w) => {
+    if (hit) return;
+    if (w === 0){
+      let s = 0n, v = 0n;
+      for (const q of comb){ s ^= qsyn[q]; v |= 1n << BigInt(q); }
+      if (s === 0n && !inSpan(basis, v)) hit = { w: comb.length, v };
+      return;
+    }
+    for (let q = start; q < n; q++){ comb.push(q); rec(q + 1, w - 1); comb.pop(); }
+  };
+  for (let w = 1; w <= wmax && !hit; w++) rec(0, w);
+  return hit;
+}
+
+/* ---------- 采样与 MC ----------
+ * RNG 用 qcircuit.js 的 mulberry32（与 codefamily/qcircuit 同源）：
+ * ⚠ 不能在本文件重新定义——单文件 bundler 把所有模块拼进同一个 script 作用域，
+ * 重名会在 `node --check` 处直接 FAIL（本轮实测：multiply declared）。
+ * 依赖方向 qcircuit → surfacecode 与 codefamily 一致，无环。 */
+
+/** 单次试验：返回两帧的错误/修正/缺陷数与失败标志（页面画图用同一份数据） */
+function scTrial(code, cfg, rng){
+  const { p, noise } = cfg;
+  let mx = 0n, mz = 0n;
+  for (let q = 0; q < code.n; q++){
+    const u = rng();
+    if (noise === 'x'){
+      if (u < p) mx |= 1n << BigInt(q);
+    } else {
+      const t = u * 3;                       // X / Y / Z 各占 1/3，合计 p
+      if (t < p) mx |= 1n << BigInt(q);
+      else if (t < 2 * p){ mx |= 1n << BigInt(q); mz |= 1n << BigInt(q); }
+      else if (t < 3 * p) mz |= 1n << BigInt(q);
+    }
+  }
+  const rx = scDecode(code, mx, 'X'), rz = scDecode(code, mz, 'Z');
+  return {
+    fail: (rx.cls | rz.cls) === 1, xfail: rx.cls === 1, zfail: rz.cls === 1,
+    mx, mz, corrX: rx.corr, corrZ: rz.corr,
+    kx: rx.k, kz: rz.k, modeX: rx.mode, modeZ: rz.mode,
+    resX: rx.residual, resZ: rz.residual,
+  };
+}
+
+/** MC 集合：PL / 两帧分解 / 回退率 / 平均缺陷数 */
+function scEnsemble(code, cfg = {}){
+  const c = { p: 0.05, noise: 'depol', trials: 2000, seed: 7, ...cfg };
+  const rng = mulberry32(c.seed);
+  let fail = 0, xf = 0, zf = 0, fb = 0, ksum = 0;
+  for (let i = 0; i < c.trials; i++){
+    const r = scTrial(code, c, rng);
+    if (r.fail) fail++;
+    if (r.xfail) xf++;
+    if (r.zfail) zf++;
+    if (r.modeX === 'greedy' || r.modeZ === 'greedy') fb++;
+    ksum += r.kx + r.kz;
+  }
+  const N = c.trials;
+  return {
+    d: code.d, p: c.p, noise: c.noise, trials: N,
+    PL: fail / N, PLx: xf / N, PLz: zf / N,
+    fallback: fb / N, meanDefects: ksum / (2 * N),
+    sigma: Math.sqrt(Math.max(fail / N * (1 - fail / N), 1e-12) / N),
+  };
+}
+
+/** d=3 精确枚举（4⁹ = 262144 / 2⁹ = 512；d≥5 不可枚举，如实抛错） */
+function scExactPL(code, cfg = {}){
+  const { p, noise } = cfg, n = code.n;
+  if (n > 12) throw new Error('精确枚举只对 d=3（n=9）可行：4^9 = 262144，d=5 是 4^25');
+  const states = noise === 'x' ? 2 : 4, total = Math.pow(states, n);
+  let fail = 0, xf = 0, zf = 0, mass = 0;
+  for (let s = 0; s < total; s++){
+    let mx = 0n, mz = 0n, x = s, wt = 0;
+    for (let q = 0; q < n; q++){
+      const sym = x % states; x = (x - sym) / states;
+      if (noise === 'x'){ if (sym === 1){ mx |= 1n << BigInt(q); wt++; } }
+      else if (sym === 1){ mx |= 1n << BigInt(q); wt++; }
+      else if (sym === 2){ mx |= 1n << BigInt(q); mz |= 1n << BigInt(q); wt++; }
+      else if (sym === 3){ mz |= 1n << BigInt(q); wt++; }
+    }
+    const prob = Math.pow(p, wt) * Math.pow(1 - p, n - wt) * Math.pow(noise === 'x' ? 1 : 1 / 3, noise === 'x' ? 0 : wt);
+    const rx = scDecode(code, mx, 'X'), rz = scDecode(code, mz, 'Z');
+    if (rx.cls === 1) xf += prob;
+    if (rz.cls === 1) zf += prob;
+    if ((rx.cls | rz.cls) === 1) fail += prob;
+    mass += prob;
+  }
+  return { PL: fail, PLx: xf, PLz: zf, mass, trials: total };
+}
+
+/** d=3 的「逐综合征最大似然」解码 P_L（用于证明 MWPM 在 d=3 处不输 ML） */
+function scMLexact(code, p, type = 'X'){
+  const n = code.n;
+  if (n > 12) throw new Error('ML 枚举只对 d=3');
+  const g = type === 'X' ? code.xg : code.zg;
+  const synOf = m => { let s = 0; g.stab.forEach((st, k) => { if (pc(st.mask & m) & 1) s |= 1 << k; }); return s; };
+  const bySyn = new Map();
+  for (let s = 0; s < (1 << n); s++){
+    let m = 0n, wt = 0;
+    for (let q = 0; q < n; q++) if (s >> q & 1){ m |= 1n << BigInt(q); wt++; }
+    const prob = Math.pow(p, wt) * Math.pow(1 - p, n - wt);
+    const cls = scDecode(code, m, type).cls, key = synOf(m);
+    const cur = bySyn.get(key) || [0, 0];
+    cur[cls] += prob; bySyn.set(key, cur);
+  }
+  let fail = 0;
+  for (let s = 0; s < (1 << n); s++){
+    let m = 0n, wt = 0;
+    for (let q = 0; q < n; q++) if (s >> q & 1){ m |= 1n << BigInt(q); wt++; }
+    const prob = Math.pow(p, wt) * Math.pow(1 - p, n - wt);
+    const cls = scDecode(code, m, type).cls, [p0, p1] = bySyn.get(synOf(m));
+    if (cls !== (p1 >= p0 ? 1 : 0)) fail += prob;
+  }
+  return fail;
+}
+
+/** 曲线扫描（每个 d 一条 P_L(p)）；噪声口径共用 */
+function scSweep(cfg = {}){
+  const c = { noise: 'x', trials: 4000, seed: 7, ps: SC_PS, ds: SC_DISTANCES, ...cfg };
+  return c.ds.map(d => {
+    const code = scBuild(d);
+    const rows = c.ps.map(p => {
+      const r = scEnsemble(code, { p, noise: c.noise, trials: c.trials, seed: c.seed });
+      return { p, PL: r.PL, sigma: r.sigma, fallback: r.fallback, meanDefects: r.meanDefects };
+    });
+    return { d, rows };
+  });
+}
+
+/**
+ * 交叉点扫描（scCrossing / scCrossingCI 共用）：把两条曲线压成差值序列。
+ * 判据分两关，缺一不可：
+ *   ① 单点分辨：两端都要 PL > k·σ（σ = √(P(1-P)/N)，scEnsemble 给）。低 p 端 P_L
+ *      掉到 0 或几十个计数时，差值符号纯由 MC 噪声决定。
+ *   ② **排序反转**：交叉点低 p 侧必须存在一个「差值显著为正（A>B）」的点、
+ *      高 p 侧必须存在一个「差值显著为负（A<B）」的点（k·σ_f 判据，σ_f=√(σ_A²+σ_B²)），
+ *      或镜像。只过第 ① 关是不够的——本轮 jsdom 冒烟在 N=1500 上抓到 c57=0.0200：
+ *      两条曲线在低 p 端差别只有几十个计数，差值符号翻转一次就被当成交叉点。
+ *      第 ② 关要求「曲线确实从一侧换到了另一侧」，噪声翻转过不了。
+ * 有多个合格变号时取**最高 p 的那个**（低 p 端的假象已被两关挡住；真出现二次
+ * 交叉时，阈值意义的是高 p 那个）。
+ */
+function crossScan(a, b, k){
+  const n = Math.min(a.length, b.length), pts = [];
+  for (let i = 0; i < n; i++){
+    const A = a[i], B = b[i];
+    const sA = A.sigma === undefined ? 0 : A.sigma, sB = B.sigma === undefined ? 0 : B.sigma;
+    pts.push({ p: A.p, f: A.PL - B.PL, sf: Math.hypot(sA, sB), ok: A.PL > k * sA && B.PL > k * sB });
+  }
+  /** 低 p 侧（< i）有显著正、高 p 侧（≥ i）有显著负，或镜像 ⟹ 记为一次排序反转 */
+  const reversal = i => {
+    let loPos = false, loNeg = false, hiPos = false, hiNeg = false;
+    for (let j = 0; j < i; j++){
+      if (!pts[j].ok) continue;
+      if (pts[j].f > k * pts[j].sf) loPos = true;
+      if (pts[j].f < -k * pts[j].sf) loNeg = true;
+    }
+    for (let j = i; j < pts.length; j++){
+      if (!pts[j].ok) continue;
+      if (pts[j].f > k * pts[j].sf) hiPos = true;
+      if (pts[j].f < -k * pts[j].sf) hiNeg = true;
+    }
+    return (loPos && hiNeg) || (loNeg && hiPos);
+  };
+  return { pts, reversal, n };
+}
+
+/** 交叉点（线性插值）；统计上分不开时返回 null（页面显示「—」，不编数字） */
+function scCrossing(a, b, k = 3){
+  const { pts, reversal } = crossScan(a, b, k);
+  let best = null;
+  for (let i = 1; i < pts.length; i++){
+    if (!pts[i - 1].ok || !pts[i].ok || !reversal(i)) continue;
+    const f1 = pts[i - 1].f, f2 = pts[i].f;
+    if (f1 === 0){ best = pts[i - 1].p; continue; }
+    if (f1 * f2 < 0) best = pts[i - 1].p + (f1 / (f1 - f2)) * (pts[i].p - pts[i - 1].p);
+  }
+  return best;
+}
+
+/**
+ * 交叉点 + 不确定度：σ_p ≈ σ_f / |df/dp|（f = PL_A − PL_B，σ_f = √(σ_A²+σ_B²)）。
+ * 为什么必须给 σ：d=5×d=7 两条曲线在阈值附近贴得很近，交叉点的位置对 MC
+ * 噪声极敏感（页面默认网格 SC_PS 上实测：退极化 d5×d7 在 N=4000 给 0.113±0.008、
+ * N=12000 给 0.139±0.012；仅 X 在 N=1500/4000 直接判未分辨，N=12000 才给
+ * 0.097±0.011）——只写一个三位小数等于假装它有三位精度。页面 HUD 显示 p ± σ。
+ */
+function scCrossingCI(a, b, k = 3){
+  const { pts, reversal } = crossScan(a, b, k);
+  let best = null;
+  for (let i = 1; i < pts.length; i++){
+    if (!pts[i - 1].ok || !pts[i].ok || !reversal(i)) continue;
+    const f1 = pts[i - 1].f, f2 = pts[i].f;
+    if (f1 === 0){ best = { p: pts[i - 1].p, sigma: pts[i - 1].sf, i: i - 1 }; continue; }
+    if (f1 * f2 < 0){
+      const t = f1 / (f1 - f2);
+      const slope = Math.abs((f2 - f1) / (pts[i].p - pts[i - 1].p));
+      const sf = Math.max(pts[i - 1].sf, pts[i].sf);
+      best = { p: pts[i - 1].p + t * (pts[i].p - pts[i - 1].p), sigma: slope > 0 ? sf / slope : Infinity, i: i - 1 };
+    }
+  }
+  return best;
+}
+
+/** 领先幂次 α（P_L ~ C·p^α）：在最小两点上取对数斜率 */
+function scLeadingPower(rows){
+  const pts = rows.filter(r => r.PL > 0).slice(0, 3);
+  if (pts.length < 2) return null;
+  let sx = 0, sy = 0, sxx = 0, sxy = 0;
+  for (const r of pts){
+    const x = Math.log(r.p), y = Math.log(r.PL);
+    sx += x; sy += y; sxx += x * x; sxy += x * y;
+  }
+  const k = pts.length;
+  const den = k * sxx - sx * sx;
+  if (!den) return null;
+  return (k * sxy - sx * sy) / den;
+}
+
+/** 单比特 / 双比特 Pauli 错误的暴力纠错检查（d≥3 的 t=⌊(d-1)/2⌋ 直接后果） */
+function scWeightRepair(code, wmax, type = 'X'){
+  const n = code.n, comb = []; let worst = null;
+  const rec = (start, w) => {
+    if (worst) return;
+    if (w === 0){
+      let m = 0n;
+      for (const q of comb) m |= 1n << BigInt(q);
+      const r = scDecode(code, m, type);
+      if (r.cls) worst = { m, w: comb.length };
+      return;
+    }
+    for (let q = start; q < n; q++){ comb.push(q); rec(q + 1, w - 1); comb.pop(); }
+  };
+  for (let w = 1; w <= wmax && !worst; w++) rec(0, w);
+  return worst;    // null ⟹ 全部权重 ≤ wmax 的错误都被纠回
+}
+
+/* ===== src/qec/mode-surf.js ===== */
+/* ============================================================================
+ * mode-surf.js（QEC hub 第 8 模式，R128 新建）— 旋转表面码 [[d²,1,d]]
+ *
+ * 物理核心在 src/physics/surfacecode.js（pot128 81/81）。本页要把三件事画出来：
+ *   ① **二维拓扑码长什么样**：d×d 数据比特 + 权重 4/2 混排的 X/Z 稳定子、
+ *      两类边界分开（左右 = X 帧终止处，上下 = Z 帧终止处）。最近一次试验的
+ *      错误（红点）、综合征（亮起的稳定子）、MWPM 修正链（蓝环）直接叠在码上。
+ *   ② **阈值就是三条曲线的排序反转**：d=3/5/7 的 P_L(p) 双对数曲线 + 未编码
+ *      基线 p；阈值下侧 P_L 随 d 降、上侧随 d 升，交叉点即有限尺寸阈值。
+ *   ③ **距离抑制**：固定 p 看 P_L 随 d 的变化（阈值下侧指数掉、上侧反而涨）。
+ *
+ * 口径（与引擎头注一致，页面也照抄一行，避免"看着像就该对"）：
+ *   - code-capacity：综合征测量理想；噪声明细只有「仅 X」与「退极化」两档；
+ *   - 退极化**分帧独立解码** ⟹ 阈值 ≈ 1.5 × 单帧（10.3% → 15.5% 的那个因子）；
+ *   - 解码器 MWPM：缺陷数 ≤ 14 走精确 DP，超出退回贪心+2-opt ⟹ **回退率**
+ *     必须显示（HUD「解码器」行）；d=3/5/7、p ≤ 0.2 时回退率 ≤1%。
+ *   - d=3 可全枚举（4⁹ = 262144）⟹ 页面给一个「精确对账」按钮，把 MC 与
+ *     精确值按 4σ 对齐；d≥5 没有精确解（4²⁵），只能 MC。
+ * ========================================================================== */
+
+const SF_CSS = `
+  #sfPanel{top:108px;left:14px;width:254px;padding:13px;z-index:10;max-height:calc(100vh - 234px);
+    overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  #sfPanel .grp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--dim);
+    text-transform:uppercase;margin:10px 0 5px}
+  #sfPanel .row{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:11.5px}
+  #sfPanel .row label{color:var(--dim);min-width:34px}
+  #sfPanel input[type=range]{flex:1;height:3px;-webkit-appearance:none;background:rgba(120,160,220,.22);border-radius:2px}
+  #sfPanel input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;
+    border-radius:50%;background:var(--cyan);box-shadow:0 0 8px rgba(103,232,249,.7);cursor:pointer}
+  #sfPanel output{font-family:var(--mono);font-size:11px;color:var(--txt);min-width:46px;text-align:right}
+  #sfPanel .btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+  #sfPanel .btns.g3{grid-template-columns:repeat(3,1fr)}
+  #sfPanel button{font-family:var(--mono);font-size:10.5px;padding:5px 4px;border-radius:6px;cursor:pointer;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    background:rgba(103,232,249,.08);border:1px solid var(--line);color:var(--txt);transition:all .15s}
+  #sfPanel button:hover{border-color:rgba(103,232,249,.45);color:var(--cyan)}
+  #sfPanel button.on{background:rgba(103,232,249,.18);border-color:var(--cyan);color:var(--cyan)}
+  #sfPanel button:disabled{opacity:.45;cursor:default}
+  #sfPanel .note{font-size:9.5px;color:var(--dim);line-height:1.55;margin-top:8px}
+  #sfHud{top:108px;right:14px;padding:11px 13px;z-index:10;width:272px;font-family:var(--mono);
+    max-height:calc(100vh - 154px);overflow-y:auto;scrollbar-width:thin;
+    scrollbar-color:rgba(120,160,220,.25) transparent}
+  #sfHud .hrow{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:2.5px 0}
+  #sfHud .hrow span:first-child{color:var(--dim)}
+  #sfHud .hrow span:last-child{color:var(--txt);text-align:right}
+  #sfHud hr{border:none;border-top:1px solid var(--line);margin:6px 0}
+  #sfHud .big{font-size:13px}
+  #sfHud .warn{color:var(--red)}
+  #sfHud .ok{color:var(--green)}
+  #sfHud .cap{font-size:9.5px;color:var(--dim);line-height:1.5;margin-top:6px}
+  #sfHud .cap b{color:var(--amber);font-weight:600}
+  #sfStage{position:fixed;left:50%;top:calc(50% + 8px);transform:translate(-50%,-50%);z-index:5;
+    display:grid;grid-template-columns:1.05fr 1fr;grid-template-rows:1fr 1fr;gap:9px;
+    width:min(calc(100vw - 590px),1080px);height:min(80vh,660px)}
+  #sfCode{grid-row:1 / span 2}
+  #sfCode,#sfCurve,#sfDist{width:100%;height:100%;border:1px solid var(--line);border-radius:10px;
+    background:rgba(4,8,16,.55);display:block}
+  #sfHint{left:14px;bottom:14px;z-index:10;padding:9px 12px;width:254px;font-size:10px;
+    color:var(--dim);line-height:1.55;max-height:210px;overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  #sfHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
+  @media (max-width:1260px){#sfStage{width:calc(100vw - 40px)}#sfHint{display:none}}
+`;
+
+/* 站点 palette 字面量（canvas 里不能用 CSS 变量） */
+const sfC = {
+  cyan: 'rgba(103,232,249,', mag: 'rgba(240,171,252,', amber: 'rgba(251,191,36,',
+  red: 'rgba(248,113,113,', dim: 'rgba(154,167,189,', txt: 'rgba(230,237,243,',
+  wire: 'rgba(120,160,220,', green: 'rgba(74,222,128,', violet: 'rgba(167,139,250,',
+};
+const sfDCOL = { 3: sfC.cyan, 5: sfC.green, 7: sfC.amber };
+const sfNoiseName = { x: '仅 X（bit-flip）', depol: '退极化 X/Y/Z' };
+const sfFmt = v => !Number.isFinite(v) ? '—'
+  : (v === 0 ? '0' : (v >= 1e-3 ? v.toFixed(5) : v.toExponential(2)));
+const sfNF = (v, n = 2) => Number.isFinite(v) ? v.toFixed(n) : '—';
+const sfMdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+const pcOf = m => { let c = 0; while (m){ c += Number(m & 1n); m >>= 1n; } return c; };
+
+class SurfApp {
+  constructor(shell){
+    this.shell = shell;
+    this.modeRoot = shell.modeRoot;
+    this._listeners = [];
+    const q = new URLSearchParams(location.search);
+    const num = (k, d) => (q.has(k) && Number.isFinite(parseFloat(q.get(k))) ? parseFloat(q.get(k)) : d);
+    const dWanted = Math.round(num('d', 3));
+    this.state = {
+      d: SC_DISTANCES.includes(dWanted) ? dWanted : 3,
+      noise: SC_NOISES.some(n => n.k === q.get('noise')) ? q.get('noise') : 'x',
+      p: Math.max(0.005, Math.min(0.25, num('p', 0.08))),
+      trials: Math.max(200, Math.min(20000, Math.round(num('trials', 1500)))),
+      seed: Math.round(num('seed', 7)),
+    };
+    this.code = scBuild(this.state.d);
+    this.trial = null;      /* 最近一次试验快照（码画布用） */
+    this.mc = null;         /* 当前点 MC */
+    this.sweep = null;      /* [{d, rows:[{p,PL,sigma,fallback}]}] */
+    this.cross = null;      /* {c35, c57} */
+    this.power = null;      /* {3,5,7} 领先幂次 */
+    this.verify = null;     /* scVerify 结果（结构自检） */
+    this.exact = null;      /* d=3 精确值 + z */
+    this._sweepToken = 0;
+    this.cv = {};
+  }
+
+  q(sel){ return this.modeRoot.querySelector(sel); }
+  on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
+
+  deactivate(){
+    this._sweepToken++;                    /* 作废在途分帧扫描 */
+    clearTimeout(this._queueTimer);
+    this._ro?.disconnect();
+    this.live = null;
+    for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
+    this._listeners.length = 0;
+    this.modeRoot.replaceChildren();
+  }
+
+  activate(){
+    this.modeRoot.insertAdjacentHTML('beforeend', `
+      <aside id="sfPanel" class="panel qpanel">
+        <div class="grp">码距 d（n = d² 比特）</div>
+        <div class="btns g3" id="sfDs"></div>
+
+        <div class="grp">错误谱（每比特）</div>
+        <div class="btns" id="sfNoises"></div>
+
+        <div class="grp">每比特错误率 p</div>
+        <div class="row"><label>p</label><input type="range" id="sfP" min="0.005" max="0.25" step="0.005"><output id="sfPO">—</output></div>
+
+        <div class="grp">MC 样本数 N</div>
+        <div class="row"><label>N</label><input type="range" id="sfTrials" min="200" max="20000" step="200"><output id="sfTrialsO">—</output></div>
+
+        <div class="grp">实验</div>
+        <div class="btns g3">
+          <button id="sfRun">跑一次 MC</button>
+          <button id="sfSnap">换一张码图</button>
+          <button id="sfSeed">换种子</button>
+        </div>
+        <div class="btns" style="margin-top:6px">
+          <button id="sfScan">扫描 P_L(p)</button>
+          <button id="sfExact">d=3 精确对账</button>
+        </div>
+
+        <div class="note">曲线走 MC（每点 N 次抽样，分帧累加，不阻塞交互）；
+          d=3 的「精确对账」按 4⁹ = 262144 个错误模式全枚举，约 4–6s。</div>
+      </aside>
+
+      <aside id="sfHud" class="panel qhud">
+        <div class="hrow"><span>配置</span><span id="hCfg" class="big">—</span></div>
+        <div class="hrow"><span>结构自检</span><span id="hStruct">—</span></div>
+        <div class="hrow"><span>逻辑算符</span><span id="hLogic">—</span></div>
+        <hr>
+        <div class="hrow"><span>当前点 P_L</span><span id="hPL" class="big">—</span></div>
+        <div class="hrow"><span>X / Z 帧分解</span><span id="hSplit">—</span></div>
+        <div class="hrow"><span>平均缺陷数（单帧）</span><span id="hDef">—</span></div>
+        <div class="hrow"><span>解码器</span><span id="hDec">—</span></div>
+        <hr>
+        <div class="hrow"><span>交叉点 d3×d5 / d5×d7</span><span id="hCross">—</span></div>
+        <div class="hrow"><span>领先幂次 α（p→0）</span><span id="hAlpha">—</span></div>
+        <div class="hrow"><span>d=3 精确对账</span><span id="hExact">—</span></div>
+        <div class="hrow"><span>扫描进度</span><span id="hProg">—</span></div>
+        <div class="cap"><b>退极化是分帧独立解码</b>：丢掉 Y 的相关性 ⟹ 阈值 ≈ 1.5×单帧
+          （10.3% → 15.5% 的那个因子；相关解码可到 18.9%，本页不做）。
+          <b>交叉点写「未分辨」就是没算出来</b>：两条曲线在该网格/样本数下没有显著的
+          排序反转（σ ∝ 1/√N，d5×d7 要 N ≳ 12000 才分得开）。
+          <b>d=9 不上页面</b>：缺陷数超 DP 上限后回退率 ~26%，数字不再可信。</div>
+      </aside>
+
+      <div id="sfStage" class="qstage">
+        <canvas id="sfCode"></canvas>
+        <canvas id="sfCurve"></canvas>
+        <canvas id="sfDist"></canvas>
+      </div>
+
+      <div id="sfHint" class="panel qhint"><b>—</b><span></span></div>
+    `);
+    this.cv = { code: this.q('#sfCode'), curve: this.q('#sfCurve'), dist: this.q('#sfDist') };
+
+    const mk = (host, items, onPick) => {
+      for (const it of items){
+        const b = document.createElement('button');
+        b.textContent = it.label; b.dataset.v = String(it.v);
+        if (it.title) b.title = it.title;
+        this.on(b, 'click', () => { onPick(it.v); this.syncPanel(); });
+        host.appendChild(b);
+      }
+    };
+    mk(this.q('#sfDs'), SC_DISTANCES.map(d => ({ v: d, label: 'd=' + d, title: `n=${d * d} 比特，距离 ${d}` })),
+      v => { this.state.d = v; this.code = scBuild(v); this.runMc(); });
+    mk(this.q('#sfNoises'), SC_NOISES.map(n => ({ v: n.k, label: n.name, title: n.desc })),
+      v => { this.state.noise = v; this.runMc(); });
+
+    this.on(this.q('#sfP'), 'input', e => {
+      this.state.p = parseFloat(e.target.value);
+      this.syncPanel(); this.runMc();
+    });
+    this.on(this.q('#sfTrials'), 'input', e => {
+      this.state.trials = parseInt(e.target.value, 10);
+      this.syncPanel();
+    });
+    this.on(this.q('#sfRun'), 'click', () => this.runMc());
+    this.on(this.q('#sfSnap'), 'click', () => this.runMc(true));
+    this.on(this.q('#sfSeed'), 'click', () => {
+      this.state.seed = (this.state.seed * 1103515245 + 12345) % 2147483647;
+      this.runMc();
+    });
+    this.on(this.q('#sfScan'), 'click', () => this.startSweep());
+    this.on(this.q('#sfExact'), 'click', () => this.runExact());
+
+    this.on(window, 'resize', () => this.resize());
+    if (window.ResizeObserver){
+      const ro = new ResizeObserver(() => this.resize());
+      ro.observe(this.q('#sfStage'));
+      this._ro = ro;
+    }
+
+    this.verify = scVerify(this.state.d);
+    this.syncPanel();
+    this.renderHint();
+    this.resize();
+    this.computeAll();
+  }
+
+  /* ---------- 面板 / 提示 ---------- */
+  syncPanel(){
+    const s = this.state;
+    const mark = (host, v) => {
+      for (const b of this.modeRoot.querySelectorAll(host + ' button')) b.classList.toggle('on', b.dataset.v === String(v));
+    };
+    /* d 按钮在换 d 时要重建标题里的 n，故每次 sync 重算 title */
+    for (const b of this.modeRoot.querySelectorAll('#sfDs button')){
+      const d = parseInt(b.dataset.v, 10);
+      b.title = `n=${d * d} 比特，距离 ${d}`;
+    }
+    mark('#sfDs', s.d); mark('#sfNoises', s.noise);
+    const setv = (id, v) => { const e = this.q('#' + id); if (e) e.value = v; };
+    setv('sfP', s.p); this.q('#sfPO').textContent = s.p.toFixed(3);
+    setv('sfTrials', s.trials); this.q('#sfTrialsO').textContent = s.trials;
+  }
+
+  renderHint(){
+    const b = this.q('#sfHint b'), sp = this.q('#sfHint span');
+    if (b) b.textContent = '旋转表面码 [[d²,1,d]]';
+    if (sp) sp.innerHTML = sfMdLite(
+      '码族页的重复码/Steane 级联是**一维**结构（多数表决 / 查表）；表面码是**二维拓扑码**：' +
+      '权重 4 与权重 2 的稳定子混排、两类边界分开，纠错靠「把综合征连起来」。' +
+      '点「换一张码图」看错误（红）、综合征（亮框）、MWPM 修正链（蓝环）：' +
+      '权重 ≤ t=⌊(d−1)/2⌋ 的错误必纠回，代价是**两条跨码链** = 逻辑错误（权重 d）。' +
+      '阈值不是某个 p 的绝对值，而是 **d=3/5/7 三条曲线的排序反转**。');
+  }
+
+  /* ---------- 计算 ---------- */
+  computeAll(){
+    this.runMc();
+    this.startSweep();
+  }
+
+  /** 当前点 MC + 一张码图快照 */
+  runMc(newSnap){
+    const s = this.state;
+    const code = this.code;
+    const t0 = performance.now();
+    this.mc = scEnsemble(code, { p: s.p, noise: s.noise, trials: s.trials, seed: s.seed });
+    this.mc.ms = performance.now() - t0;
+    /* 码图快照：用「新种子」重抽一次单次试验（与 MC 同口径同 p） */
+    if (newSnap || !this.trial){
+      const rng = mulberry32((s.seed * 2654435761) % 2147483647);
+      this.trial = scTrial(code, { p: s.p, noise: s.noise }, rng);
+    } else {
+      this.trial = scTrial(code, { p: s.p, noise: s.noise }, mulberry32((s.seed * 40503 + 17) % 2147483647));
+    }
+    this.verify = scVerify(s.d);
+    this.renderHud();
+    this.drawCode(); this.drawCurve(); this.drawDist();
+  }
+
+  /** 分帧扫描：一次算一个 (d, p) 点，插一个 setTimeout 让出主线程 */
+  startSweep(){
+    const tok = ++this._sweepToken;
+    const s = this.state;
+    const jobs = [];
+    for (const d of SC_DISTANCES) for (const p of SC_PS) jobs.push({ d, p });
+    this.sweep = SC_DISTANCES.map(d => ({ d, rows: [] }));
+    this.cross = null; this.power = null;
+    this._queueTimer = null;
+    let i = 0;
+    const step = () => {
+      if (tok !== this._sweepToken) return;           /* 已切模式/重开扫描 */
+      if (i >= jobs.length){
+        this.finishSweep();
+        return;
+      }
+      const { d, p } = jobs[i];
+      const row = scEnsemble(scBuild(d), { p, noise: s.noise, trials: s.trials, seed: s.seed });
+      const bucket = this.sweep.find(c => c.d === d);
+      bucket.rows.push({ p, PL: row.PL, sigma: row.sigma, fallback: row.fallback, meanDefects: row.meanDefects });
+      i++;
+      this.renderHud();
+      this.drawCurve();
+      this._queueTimer = setTimeout(step, 0);
+    };
+    this.renderHud();
+    this._queueTimer = setTimeout(step, 20);
+  }
+
+  finishSweep(){
+    const [a, b, c] = this.sweep;
+    const i35 = a && b ? scCrossingCI(a.rows, b.rows) : null;
+    const i57 = b && c ? scCrossingCI(b.rows, c.rows) : null;
+    this.cross = {
+      c35: i35 ? i35.p : null, c57: i57 ? i57.p : null,
+      s35: i35 ? i35.sigma : null, s57: i57 ? i57.sigma : null,
+    };
+    this.power = {};
+    for (const cur of this.sweep) this.power[cur.d] = scLeadingPower(cur.rows);
+    this.renderHud();
+    this.drawCurve(); this.drawDist();
+  }
+
+  runExact(){
+    const s = this.state;
+    const btn = this.q('#sfExact');
+    if (btn){ btn.disabled = true; btn.textContent = '枚举中…'; }
+    setTimeout(() => {
+      const C3 = scBuild(3);
+      const t0 = performance.now();
+      const ex = scExactPL(C3, { p: s.p, noise: s.noise });
+      const mc = scEnsemble(C3, { p: s.p, noise: s.noise, trials: Math.max(s.trials, 4000), seed: s.seed });
+      const sig = Math.sqrt(Math.max(ex.PL * (1 - ex.PL), 1e-12) / mc.trials);
+      this.exact = { p: s.p, noise: s.noise, exact: ex.PL, mc: mc.PL, trials: mc.trials, z: Math.abs(mc.PL - ex.PL) / sig, ms: performance.now() - t0, mass: ex.mass };
+      if (btn){ btn.disabled = false; btn.textContent = 'd=3 精确对账'; }
+      this.renderHud();
+    }, 30);
+  }
+
+  /* ---------- HUD ---------- */
+  renderHud(){
+    const s = this.state, v = this.verify, mc = this.mc;
+    const set = (id, txt, cls) => { const el = this.q('#' + id); if (el){ el.textContent = txt; el.className = cls || ''; } };
+    set('hCfg', `${sfNoiseName[s.noise]} · d=${s.d} · p=${s.p.toFixed(3)} · N=${s.trials}`);
+    if (v){
+      set('hStruct', `${v.n} 比特 · |X|=${v.nX} · |Z|=${v.nZ} · k=${v.k} · 全对易=${v.commute ? '✓' : '✗'}`,
+        (v.k === 1 && v.commute) ? 'ok' : 'warn');
+      set('hLogic', `X_L 权重 ${v.xlWeight} · Z_L 权重 ${v.zlWeight} · 反对易=${v.anticommute ? '✓' : '✗'}`);
+    }
+    if (mc){
+      set('hPL', `${sfFmt(mc.PL)}  (${Math.round(mc.PL * mc.trials)}/${mc.trials})`, 'big');
+      set('hSplit', `${sfFmt(mc.PLx)} / ${sfFmt(mc.PLz)}`);
+      set('hDef', `${sfNF(mc.meanDefects, 2)} 个`);
+      set('hDec', `MWPM·DP · 回退 ${(mc.fallback * 100).toFixed(2)}% · ${sfNF(mc.ms, 1)}ms`,
+        mc.fallback > 0.02 ? 'warn' : '');
+    }
+    if (this.cross){
+      /* σ 大到位数无意义时（N 小 / 曲线贴得太近）不给三位小数：退回两位并标「≈」。
+         阈值：σ_p > 0.03 ⟹ 交叉点只知道个量级（N=400 时 c57 常落在这档）。 */
+      const fmt = (v, sg) => v === null ? '未分辨'
+        : !Number.isFinite(sg) ? v.toFixed(3)
+        : sg > 0.03 ? `≈${v.toFixed(2)}±${sg.toFixed(2)}` : `${v.toFixed(3)}±${sg.toFixed(3)}`;
+      set('hCross', `${fmt(this.cross.c35, this.cross.s35)} / ${fmt(this.cross.c57, this.cross.s57)}`);
+    } else set('hCross', '扫描中…');
+    if (this.power){
+      set('hAlpha', SC_DISTANCES.map(d => `d${d}:${this.power[d] === null ? '—' : this.power[d].toFixed(2)}`).join('  '));
+    } else set('hAlpha', '扫描中…');
+    if (this.exact){
+      set('hExact', `p=${this.exact.p.toFixed(3)}：精确 ${sfFmt(this.exact.exact)} vs MC ${sfFmt(this.exact.mc)} ⟹ z=${sfNF(this.exact.z, 2)}σ`,
+        this.exact.z <= 4 ? 'ok' : 'warn');
+    } else set('hExact', '未跑（按按钮）');
+    const done = this.sweep ? this.sweep.reduce((a, c) => a + c.rows.length, 0) : 0;
+    const total = SC_DISTANCES.length * SC_PS.length;
+    set('hProg', `${done}/${total} 点${done === total ? '（完成）' : '…'}`);
+  }
+
+  /* ---------- 画布 ---------- */
+  resize(){
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    for (const k of Object.keys(this.cv)){
+      const c = this.cv[k];
+      if (!c) continue;
+      const w = c.clientWidth, h = c.clientHeight;
+      if (!w || !h) continue;
+      c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
+    }
+    this.drawCode(); this.drawCurve(); this.drawDist();
+  }
+
+  /* 画布 1：码本身 + 错误 / 综合征 / 修正链 */
+  drawCode(){
+    const c = this.cv.code;
+    if (!c || !c.width) return;
+    const g = c.getContext('2d');
+    const W = c.width, H = c.height, dpr = W / c.clientWidth;
+    g.clearRect(0, 0, W, H);
+    const s = this.state, code = this.code, d = s.d, n = code.n;
+    g.textAlign = 'left';
+    g.font = (11.5 * dpr) + 'px ui-monospace,monospace';
+    g.fillStyle = sfC.txt + '.95)';
+    g.fillText(`旋转表面码 d=${d}：${n} 比特 · ${code.X.length}+${code.Z.length} 个稳定子 · k=1`, 10 * dpr, 16 * dpr);
+    g.font = (9 * dpr) + 'px ui-monospace,monospace';
+    g.fillStyle = sfC.dim + '.85)';
+    g.fillText(`红点=错误 · 亮框=被点亮的综合征 · 蓝环=MWPM 修正 · 权重 ${d} 的横/竖链 = 逻辑（无法分辨）`, 10 * dpr, 29 * dpr);
+
+    /* 网格几何：数据比特占 (d)×(d)，四周留一格给边界 */
+    const pad = 34 * dpr;
+    const avail = Math.min(W - 2 * pad, H - 2 * pad - 22 * dpr);
+    const step = avail / (d + 0.0);
+    const ox = (W - step * (d - 1)) / 2, oy = 44 * dpr + (H - 44 * dpr - step * (d - 1)) / 2;
+    const P = (r, cc) => ({ x: ox + cc * step, y: oy + r * step });
+
+    /* 稳定子：X（青）实心小方框、Z（绿）空心；支撑用四角细线围起来 */
+    const drawStab = (st, hue) => {
+      const pts = st.sup.map(q => P(Math.floor(q / d), q % d));
+      const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+      g.strokeStyle = hue + '.55)';
+      g.lineWidth = 1.1 * dpr;
+      g.beginPath();
+      g.moveTo(Math.min(...xs), Math.min(...ys));
+      g.lineTo(Math.max(...xs), Math.min(...ys));
+      g.lineTo(Math.max(...xs), Math.max(...ys));
+      g.lineTo(Math.min(...xs), Math.max(...ys));
+      g.closePath(); g.stroke();
+      const cx = xs.reduce((a, b) => a + b, 0) / pts.length;
+      const cy = ys.reduce((a, b) => a + b, 0) / pts.length;
+      const sz = Math.max(3.2 * dpr, step * 0.13);
+      g.fillStyle = hue + '.30)';
+      g.strokeStyle = hue + '.85)';
+      g.lineWidth = 1.2 * dpr;
+      g.beginPath(); g.rect(cx - sz, cy - sz, 2 * sz, 2 * sz); g.fill(); g.stroke();
+    };
+
+    /* 逻辑算符参考线：顶行（X_L）/ 左列（Z_L），虚线 */
+    const a0 = P(0, 0), a1 = P(0, d - 1), b0 = P(0, 0), b1 = P(d - 1, 0);
+    g.setLineDash([3 * dpr, 4 * dpr]);
+    g.strokeStyle = sfC.violet + '.40)'; g.lineWidth = 1.1 * dpr;
+    g.beginPath(); g.moveTo(a0.x, a0.y - 8 * dpr); g.lineTo(a1.x, a1.y - 8 * dpr); g.stroke();
+    g.beginPath(); g.moveTo(b0.x - 8 * dpr, b0.y); g.lineTo(b1.x - 8 * dpr, b1.y); g.stroke();
+    g.setLineDash([]);
+
+    for (const st of code.Z) drawStab(st, sfC.green);
+    for (const st of code.X) drawStab(st, sfC.cyan);
+
+    /* 错误 / 修正：先画修正环，再画错误点（错误在最上层） */
+    const t = this.trial;
+    if (t){
+      const drawMask = (mask, hue, ring) => {
+        for (let q = 0; q < n; q++){
+          if (!((mask >> BigInt(q)) & 1n)) continue;
+          const p = P(Math.floor(q / d), q % d);
+          if (ring){
+            g.strokeStyle = hue + '.95)'; g.lineWidth = 2 * dpr;
+            g.beginPath(); g.arc(p.x, p.y, Math.max(4.5 * dpr, step * 0.22), 0, Math.PI * 2); g.stroke();
+          } else {
+            g.fillStyle = hue + '.95)';
+            g.beginPath(); g.arc(p.x, p.y, Math.max(3.4 * dpr, step * 0.16), 0, Math.PI * 2); g.fill();
+          }
+        }
+      };
+      drawMask(t.corrX, sfC.cyan, true);
+      drawMask(t.corrZ, sfC.green, true);
+      drawMask(t.mx, sfC.red, false);
+      drawMask(t.mz, sfC.mag, false);
+      /* 综合征：把被点亮的稳定子描粗 */
+      const glow = st => {
+        const pts = st.sup.map(q => P(Math.floor(q / d), q % d));
+        const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+        g.strokeStyle = sfC.amber + '.95)'; g.lineWidth = 2.2 * dpr;
+        g.beginPath();
+        g.moveTo(Math.min(...xs), Math.min(...ys));
+        g.lineTo(Math.max(...xs), Math.min(...ys));
+        g.lineTo(Math.max(...xs), Math.max(...ys));
+        g.lineTo(Math.min(...xs), Math.max(...ys));
+        g.closePath(); g.stroke();
+      };
+      code.Z.forEach(st => { if (pcOf(st.mask & t.mx) & 1) glow(st); });
+      code.X.forEach(st => { if (pcOf(st.mask & t.mz) & 1) glow(st); });
+    }
+
+    /* 比特：小白点（画在稳定子之上、错误之下会更好，但为简洁统一放这里） */
+    g.fillStyle = 'rgba(8,14,26,.95)';
+    for (let r = 0; r < d; r++) for (let cc = 0; cc < d; cc++){
+      const p = P(r, cc);
+      g.beginPath(); g.arc(p.x, p.y, Math.max(1.8 * dpr, step * 0.07), 0, Math.PI * 2); g.fill();
+      g.strokeStyle = sfC.dim + '.55)'; g.lineWidth = 1 * dpr; g.stroke();
+    }
+
+    /* 结论行 */
+    if (t){
+      const bad = t.xfail || t.zfail;
+      g.font = (9.5 * dpr) + 'px ui-monospace,monospace';
+      g.fillStyle = bad ? sfC.red + '.95)' : sfC.green + '.95)';
+      g.fillText(bad
+        ? `本次试验：逻辑错误（${t.xfail ? 'X 帧' : ''}${t.xfail && t.zfail ? ' + ' : ''}${t.zfail ? 'Z 帧' : ''}）——缺陷 ${t.kx}/${t.kz}，修正链连通了两条边界`
+        : `本次试验：已纠回 —— 缺陷 ${t.kx}/${t.kz}，修正链只连接相邻缺陷（或就近边界）`, 10 * dpr, H - 9 * dpr);
+    }
+  }
+
+  /* 画布 2：P_L(p) 双对数（三条曲线 + 基线 + 当前点 + 交叉点） */
+  drawCurve(){
+    const c = this.cv.curve;
+    if (!c || !c.width) return;
+    const g = c.getContext('2d');
+    const W = c.width, H = c.height, dpr = W / c.clientWidth;
+    g.clearRect(0, 0, W, H);
+    g.textAlign = 'left';
+    g.font = (11 * dpr) + 'px ui-monospace,monospace';
+    g.fillStyle = sfC.txt + '.95)';
+    g.fillText('P_L(p)：阈值 = 三条曲线的排序反转', 10 * dpr, 15 * dpr);
+    g.font = (8.6 * dpr) + 'px ui-monospace,monospace';
+    g.fillStyle = sfC.dim + '.85)';
+    g.fillText('双对数 · 虚线 = 未编码基线 p（编码有益 ⟺ 曲线在它下方）', 10 * dpr, 27 * dpr);
+
+    const L = 46 * dpr, Rr = W - 12 * dpr, T = 40 * dpr, B = H - 26 * dpr;
+    const pMin = 0.005, pMax = 0.25, yMin = 1e-5, yMax = 1;
+    const X = p => L + (Math.log10(p) - Math.log10(pMin)) / (Math.log10(pMax) - Math.log10(pMin)) * (Rr - L);
+    const Y = v => B - (Math.log10(Math.max(v, yMin)) - Math.log10(yMin)) / (Math.log10(yMax) - Math.log10(yMin)) * (B - T);
+    /* 网格 */
+    g.strokeStyle = sfC.wire + '.16)'; g.lineWidth = 1 * dpr;
+    for (const p of [0.01, 0.03, 0.1, 0.25]){
+      g.beginPath(); g.moveTo(X(p), T); g.lineTo(X(p), B); g.stroke();
+      g.fillStyle = sfC.dim + '.8)'; g.font = (8 * dpr) + 'px ui-monospace,monospace';
+      g.fillText(p.toString(), X(p) - 6 * dpr, B + 12 * dpr);
+    }
+    for (const v of [1e-4, 1e-3, 1e-2, 1e-1, 1]){
+      g.beginPath(); g.moveTo(L, Y(v)); g.lineTo(Rr, Y(v)); g.stroke();
+      g.fillStyle = sfC.dim + '.8)'; g.font = (8 * dpr) + 'px ui-monospace,monospace';
+      g.fillText(v >= 0.01 ? v.toString() : v.toExponential(0), 8 * dpr, Y(v) + 3 * dpr);
+    }
+    /* 基线 p */
+    g.strokeStyle = sfC.dim + '.5)'; g.setLineDash([4 * dpr, 3 * dpr]); g.lineWidth = 1.2 * dpr;
+    g.beginPath(); g.moveTo(X(pMin), Y(pMin)); g.lineTo(X(Math.min(pMax, 1)), Y(Math.min(pMax, 1))); g.stroke();
+    g.setLineDash([]);
+
+    /* 曲线 */
+    if (this.sweep){
+      for (const cur of this.sweep){
+        if (!cur.rows.length) continue;
+        const hue = sfDCOL[cur.d] || sfC.cyan;
+        g.strokeStyle = hue + '.95)'; g.lineWidth = 1.8 * dpr;
+        g.beginPath();
+        cur.rows.slice().sort((a, b) => a.p - b.p).forEach((r, i) => {
+          const x = X(r.p), y = Y(r.PL);
+          if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+        });
+        g.stroke();
+        for (const r of cur.rows){
+          g.fillStyle = hue + '.9)';
+          g.beginPath(); g.arc(X(r.p), Y(r.PL), 2.1 * dpr, 0, Math.PI * 2); g.fill();
+        }
+        /* 图例（右上角一行，按 d 递增排开） */
+        g.fillStyle = hue + '.95)';
+        g.font = (8.6 * dpr) + 'px ui-monospace,monospace';
+        const li = SC_DISTANCES.indexOf(cur.d);
+        g.fillText('d=' + cur.d, Rr - (SC_DISTANCES.length - li) * 30 * dpr, T + 2 * dpr);
+      }
+    }
+    /* 交叉点竖线 */
+    if (this.cross){
+      const marks = [
+        { v: this.cross.c35, t: 'd3×d5' },
+        { v: this.cross.c57, t: 'd5×d7' },
+      ];
+      for (const m of marks){
+        if (m.v === null) continue;
+        g.strokeStyle = sfC.amber + '.55)'; g.setLineDash([2 * dpr, 3 * dpr]); g.lineWidth = 1.1 * dpr;
+        g.beginPath(); g.moveTo(X(m.v), T); g.lineTo(X(m.v), B); g.stroke();
+        g.setLineDash([]);
+        g.fillStyle = sfC.amber + '.9)';
+        g.font = (8 * dpr) + 'px ui-monospace,monospace';
+        g.fillText(m.t, X(m.v) - 14 * dpr, T - 4 * dpr + 12 * dpr);
+      }
+    }
+    /* 当前点（竖线 + 三条曲线上的实测点） */
+    const s = this.state;
+    g.strokeStyle = sfC.txt + '.35)'; g.lineWidth = 1 * dpr;
+    g.beginPath(); g.moveTo(X(s.p), T); g.lineTo(X(s.p), B); g.stroke();
+    if (this.sweep){
+      for (const cur of this.sweep){
+        const row = cur.rows.find(r => Math.abs(r.p - s.p) < 1e-9);
+        if (row){
+          g.fillStyle = (sfDCOL[cur.d] || sfC.cyan) + '.95)';
+          g.beginPath(); g.arc(X(row.p), Y(row.PL), 3.4 * dpr, 0, Math.PI * 2); g.fill();
+        }
+      }
+    }
+    if (this.mc){
+      g.strokeStyle = sfC.txt + '.95)'; g.lineWidth = 1.6 * dpr;
+      g.beginPath(); g.arc(X(s.p), Y(this.mc.PL), 4.2 * dpr, 0, Math.PI * 2); g.stroke();
+    }
+    g.fillStyle = sfC.dim + '.8)';
+    g.font = (8 * dpr) + 'px ui-monospace,monospace';
+    g.textAlign = 'right';
+    g.fillText('p →', Rr, B + 20 * dpr);
+    g.textAlign = 'left';
+  }
+
+  /* 画布 3：固定 p 下 P_L 随 d（距离抑制 / 反抑制） */
+  drawDist(){
+    const c = this.cv.dist;
+    if (!c || !c.width) return;
+    const g = c.getContext('2d');
+    const W = c.width, H = c.height, dpr = W / c.clientWidth;
+    g.clearRect(0, 0, W, H);
+    const s = this.state;
+    g.font = (11 * dpr) + 'px ui-monospace,monospace';
+    g.fillStyle = sfC.txt + '.95)';
+    g.fillText(`距离抑制：p=${s.p.toFixed(3)} 时 P_L 随 d 的走向`, 10 * dpr, 15 * dpr);
+    g.font = (8.6 * dpr) + 'px ui-monospace,monospace';
+    g.fillStyle = sfC.dim + '.85)';
+    g.fillText('阈值下侧随 d 指数掉（码越大约好）；阈值上侧反过来涨', 10 * dpr, 27 * dpr);
+
+    const L = 46 * dpr, Rr = W - 14 * dpr, T = 42 * dpr, B = H - 26 * dpr;
+    const Y = v => B - (Math.log10(Math.max(v, 1e-5)) - Math.log10(1e-5)) / 5 * (B - T);
+    g.strokeStyle = sfC.wire + '.16)'; g.lineWidth = 1 * dpr;
+    for (const v of [1e-4, 1e-3, 1e-2, 1e-1, 1]){
+      g.beginPath(); g.moveTo(L, Y(v)); g.lineTo(Rr, Y(v)); g.stroke();
+      g.fillStyle = sfC.dim + '.8)'; g.font = (8 * dpr) + 'px ui-monospace,monospace';
+      g.fillText(v >= 0.01 ? v.toString() : v.toExponential(0), 8 * dpr, Y(v) + 3 * dpr);
+    }
+    const ds = SC_DISTANCES;
+    const slot = (Rr - L) / ds.length;
+    const pts = [];
+    for (let i = 0; i < ds.length; i++){
+      const d = ds[i];
+      let row = null, fresh = false;
+      if (this.sweep){
+        const cur = this.sweep.find(x => x.d === d);
+        row = cur ? cur.rows.find(r => Math.abs(r.p - s.p) < 1e-9) : null;
+      }
+      if (!row && d === s.d && this.mc){ row = { PL: this.mc.PL }; fresh = true; }
+      const x = L + slot * (i + 0.5);
+      if (row){
+        pts.push({ x, y: Y(row.PL), d, fresh });
+      }
+      g.fillStyle = sfC.dim + '.85)';
+      g.font = (9 * dpr) + 'px ui-monospace,monospace';
+      g.textAlign = 'center';
+      g.fillText('d=' + d, x, B + 14 * dpr);
+      g.textAlign = 'left';
+    }
+    if (pts.length){
+      g.strokeStyle = sfC.violet + '.85)'; g.lineWidth = 1.8 * dpr;
+      g.beginPath();
+      pts.forEach((p, i) => { if (i === 0) g.moveTo(p.x, p.y); else g.lineTo(p.x, p.y); });
+      g.stroke();
+      for (const p of pts){
+        g.fillStyle = (sfDCOL[p.d] || sfC.cyan) + '.95)';
+        g.beginPath(); g.arc(p.x, p.y, (p.fresh ? 4.2 : 3) * dpr, 0, Math.PI * 2); g.fill();
+      }
+      /* 方向判读：末点低于首点 ⟹ 距离抑制 */
+      const trend = pts.length > 1 ? (pts[pts.length - 1].y > pts[0].y ? '反抑制（阈值上侧）' : '距离抑制（阈值下侧）') : '单点';
+      g.fillStyle = sfC.txt + '.85)';
+      g.font = (9 * dpr) + 'px ui-monospace,monospace';
+      g.textAlign = 'right'; g.fillText(trend, Rr, T + 2 * dpr); g.textAlign = 'left';
+    } else {
+      g.fillStyle = sfC.dim + '.85)';
+      g.font = (9 * dpr) + 'px ui-monospace,monospace';
+      g.fillText('该 p 不在扫描点上：跑「跑一次 MC」看当前 d，或拖动 p 到扫描点', L, (T + B) / 2);
+    }
+  }
+
+  /* ---------- 调试句柄（window.__sf，与既有模式同风） ---------- */
+  debugHandle(){
+    const self = this;
+    return {
+      get state(){ return { ...self.state }; },
+      get mc(){ return self.mc; },
+      get verify(){ return self.verify; },
+      get cross(){ return self.cross; },
+      get power(){ return self.power; },
+      get sweep(){ return self.sweep; },
+      get exact(){ return self.exact; },
+      get trial(){
+        const t = self.trial;
+        if (!t) return null;
+        const hex = m => m.toString(16);
+        return {
+          fail: t.fail, xfail: t.xfail, zfail: t.zfail, kx: t.kx, kz: t.kz,
+          mx: hex(t.mx), mz: hex(t.mz), corrX: hex(t.corrX), corrZ: hex(t.corrZ),
+          wErrX: Number(t.mx.toString(2).split('1').length - 1),
+          wCorrX: Number(t.corrX.toString(2).split('1').length - 1),
+        };
+      },
+      set(patch){
+        Object.assign(self.state, patch || {});
+        self.code = scBuild(self.state.d);
+        self.syncPanel(); self.runMc();
+        return { ...self.state };
+      },
+      snapshot(){
+        return { state: { ...self.state }, mc: self.mc, verify: self.verify, cross: self.cross };
+      },
+      runSweep(){ self.startSweep(); return true; },
+      runExact(){ self.runExact(); return true; },
+      /* 诊断用：直接读引擎（不经 UI） */
+      probe(d, cfg){ return scEnsemble(scBuild(d), cfg); },
+      structure(d){ return scVerify(d); },
+      minLogical(d, type, wmax){ return scMinLogical(scBuild(d), type, wmax); },
+      span(){ return { n: self.code.n, nX: self.code.X.length, nZ: self.code.Z.length }; },
+    };
+  }
+}
+
+/* ---------- hub 描述符（qechub.js 的 MODES 表按 id 排序） ---------- */
+const SURF_MODE = {
+  id: 'surf',
+  name: '表面码',
+  tab: '⬚',
+  handle: '__sf',
+  css: SF_CSS,
+  mount: shell => { const app = new SurfApp(shell); app.activate(); return app; },
+};
+
 /* ===== src/qechub.js ===== */
 /* ============================================================================
- * qechub.js（R98 新建）— QEC hub 壳：七模式单页 + 运行时切换
+ * qechub.js（R98 新建）— QEC hub 壳：单页 + 运行时切换（R98 七模式，R128 加表面码 = 8）
  *
  * 背景（R97 评估 → 用户指令「QEC 七页整合」）：qec/shor/gatenoise/flag/
  * rounds/cycle/family 七页壳同构（topbar/panel/hud/stage/hint 五段骨架），
@@ -14416,7 +15703,7 @@ const FAMILY_MODE = { handle: '__fm', id: 'family', name: '码族', tab: '▦', 
  *   app.activate() 已由描述符的 mount 调用；app.deactivate() 清定时器/监听/DOM。
  * ========================================================================== */
 
-const MODES = [REP_MODE, SHOR_MODE, GATE_MODE, FLAG_MODE, ROUNDS_MODE, CYCLE_MODE, FAMILY_MODE];
+const MODES = [REP_MODE, SHOR_MODE, GATE_MODE, FLAG_MODE, ROUNDS_MODE, CYCLE_MODE, FAMILY_MODE, SURF_MODE];
 const DEFAULT_MODE = 'rep';
 
 const HUB_CSS = `
@@ -14542,11 +15829,11 @@ class QecHub {
 }
 
 /* ===== src/qec-main.js ===== */
-/* 演示入口：R98 QEC hub 页（qec.html）——七模式单页（重复码/Shor/门噪声/Flag/多轮/循环/码族）。
+/* 演示入口：R98 QEC hub 页（qec.html）——八模式单页（重复码/Shor/门噪声/Flag/多轮/循环/码族/表面码）。
    课程站嵌入同理：
      import { QecHub } from './src/qechub.js';
      new QecHub(document.body).mount();
-   ?mode=shor&p=0.02 直达模式（七模式 id：rep/shor/gate/flag/rounds/cycle/family）。
+   ?mode=shor&p=0.02 直达模式（八模式 id：rep/shor/gate/flag/rounds/cycle/family/surf）。
 */
 
 new QecHub(document.body).mount();
