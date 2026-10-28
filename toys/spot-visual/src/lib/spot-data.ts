@@ -1347,14 +1347,16 @@ export const LIBRARY_SPOTS: Spot[] = (() => {
         projects: [],
         category: inferScenicCategory(e.name),
         level: e.level,
+        reservation: RESERVATION_NOTES[e.name],
         description: `国家${e.level}级景区（2023 年全国 A 级景区名录）。详细信息以景区公示为准。`,
         location: { lat: e.lat, lng: e.lng },
       }) as Spot,
   );
-  // 手工景点补等级（名录精确匹配 + 人工确认）
+  // 手工景点补等级 + 预约标注自动回填（只写显式的，避免每个条目手抄一遍）
   const manualWithLevel = sampleSpots.map((s) => ({
     ...s,
     level: MANUAL_SCENIC_LEVELS[s.name] ?? s.level,
+    reservation: s.reservation ?? RESERVATION_NOTES[s.name],
   }));
   return [...manualWithLevel, ...pois, ...extras];
 })();

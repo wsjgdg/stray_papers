@@ -73,7 +73,6 @@ import {
 import { loadPoiPhotos, peekPoiPhotos } from "@/lib/poi-photos";
 import { withSharecode } from "@/lib/share-link";
 import { PROVINCE_FOODS } from "@/lib/food-data";
-import { CITY_POI_PACKS } from "@/lib/city-pois.generated";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 
@@ -1726,7 +1725,7 @@ function SpotsView() {
             城市探索
           </span>
           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
-            {Object.keys(CITY_POI_PACKS).length} 城数据包已内置 · 零外链
+            全国库 {LIBRARY_SPOTS.length} 景点 · 零外链
           </span>
         </div>
         <div className="flex gap-2">
@@ -1807,8 +1806,8 @@ function SpotsView() {
           </p>
         )}
         <p className="text-[11px] text-gray-400 mt-2 leading-relaxed">
-          库内共 {Object.keys(CITY_POI_PACKS).length} 城 {LIBRARY_SPOTS.length}{" "}
-          个景点（高德 POI 构建时打包 + 手工精选）。点城市即过滤，
+          库内共 {LIBRARY_SPOTS.length} 个景点（手工精选 + 高德 POI + 2023 全国
+          A 级名录，构建时烘焙 · 零外链）。点省份即过滤，
           收藏与行程不受影响；库外城市尝试实时通道。
         </p>
       </div>
