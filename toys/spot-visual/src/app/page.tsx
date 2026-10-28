@@ -329,6 +329,14 @@ const NAV_ITEMS: { key: ViewType; label: string; icon: React.ReactNode }[] = [
   { key: "profile", label: "我的信息", icon: <User className="w-4.5 h-4.5" /> },
 ];
 
+// 相近视图分组（侧栏标题，纯视觉导航不改变 items）
+const NAV_GROUPS: { title: string; keys: ViewType[] }[] = [
+  { title: "探索", keys: ["spots", "network", "favorites"] },
+  { title: "规划", keys: ["trip", "budget", "stamina-sandbox", "fitness"] },
+  { title: "参考", keys: ["deterrent", "ptsi", "dissuasion", "personality"] },
+  { title: "我的", keys: ["profile"] },
+];
+
 function Sidebar({
   collapsed,
   onToggle,
@@ -352,40 +360,55 @@ function Sidebar({
           </span>
         )}
       </div>
-      {/* Nav */}
+      {/* Nav（按相近用途分组） */}
       <nav className="flex-1 py-3 px-2 space-y-1">
-        {NAV_ITEMS.map((item) => {
-          const active = activeView === item.key;
-          const badge =
-            item.key === "favorites" && favorites.length > 0
-              ? favorites.length
-              : item.key === "trip" && trip.length > 0
-                ? trip.length
-                : item.key === "spots"
-                  ? spots.length
-                  : 0;
-          return (
-            <button
-              key={item.key}
-              onClick={() => setActiveView(item.key)}
-              className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm font-medium transition-colors ${active ? "bg-emerald-50 text-emerald-700" : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"}`}
-            >
-              <span className={active ? "text-emerald-600" : "text-gray-400"}>
-                {item.icon}
-              </span>
-              {!collapsed && (
-                <span className="flex-1 text-left truncate">{item.label}</span>
-              )}
-              {!collapsed && badge > 0 && (
-                <span
-                  className={`text-[10px] px-1.5 rounded-full ${active ? "bg-emerald-200/60 text-emerald-800" : "bg-gray-100 text-gray-500"}`}
+        {NAV_GROUPS.map((group) => (
+          <div key={group.title} className="mb-1">
+            {!collapsed && (
+              <p className="px-2.5 pt-2 pb-1 text-[10px] font-bold text-gray-300 tracking-widest">
+                {group.title}
+              </p>
+            )}
+            {collapsed && <div className="h-px bg-gray-100 mx-2 my-1" />}
+            {group.keys.map((key) => {
+              const item = NAV_ITEMS.find((n) => n.key === key)!;
+              const active = activeView === item.key;
+              const badge =
+                item.key === "favorites" && favorites.length > 0
+                  ? favorites.length
+                  : item.key === "trip" && trip.length > 0
+                    ? trip.length
+                    : item.key === "spots"
+                      ? spots.length
+                      : 0;
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => setActiveView(item.key)}
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm font-medium transition-colors ${active ? "bg-emerald-50 text-emerald-700" : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"}`}
                 >
-                  {badge}
-                </span>
-              )}
-            </button>
-          );
-        })}
+                  <span
+                    className={active ? "text-emerald-600" : "text-gray-400"}
+                  >
+                    {item.icon}
+                  </span>
+                  {!collapsed && (
+                    <span className="flex-1 text-left truncate">
+                      {item.label}
+                    </span>
+                  )}
+                  {!collapsed && badge > 0 && (
+                    <span
+                      className={`text-[10px] px-1.5 rounded-full ${active ? "bg-emerald-200/60 text-emerald-800" : "bg-gray-100 text-gray-500"}`}
+                    >
+                      {badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        ))}
       </nav>
       {/* Toggle */}
       <button

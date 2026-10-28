@@ -992,9 +992,10 @@ function EmergencyButton() {
         ref={btnRef}
         maxDepth={8}
         onClick={handleClick}
-        className="w-full py-5 bg-gradient-to-r from-red-500 to-red-600 text-white text-xl font-bold rounded-2xl shadow-lg flex items-center justify-center"
-        style={{ minHeight: "8vh" }}
+        className="w-full py-4 bg-gradient-to-r from-rose-500 to-red-500 text-white text-base font-bold rounded-full shadow-xl shadow-rose-500/30 border border-white/40 flex items-center justify-center gap-2"
+        style={{ minHeight: "56px" }}
       >
+        <Footprints className="w-5 h-5" />
         我现在累了
       </PressureButton>
 
@@ -1450,9 +1451,11 @@ export default function FitnessView() {
         </div>
       </div>
 
-      {/* ═══ 紧急按钮 - 底部常驻 ═══ */}
-      <div className="fixed bottom-0 inset-x-0 p-4 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent">
-        <EmergencyButton />
+      {/* ═══ 紧急按钮 - 底部居中悬浮胶囊 ═══ */}
+      <div className="fixed bottom-5 inset-x-0 px-4 flex justify-center pointer-events-none">
+        <div className="pointer-events-auto w-full max-w-sm">
+          <EmergencyButton />
+        </div>
       </div>
 
       {/* 底部动作栏 */}

@@ -217,7 +217,8 @@ export default function StaminaSandboxView() {
       .slice(0, 400);
   }, [spots, trip]);
 
-  // 默认顺序：沙盘手动排序（限池内）> 行程单顺序 > 池顺序
+  // 默认顺序：沙盘手动排序 > 行程单顺序 > 贪心凑满一日预算
+  // （池内 400 条全塞进曲线是荒谬的——一天只走得完预算内的几个点）
   const order = useMemo(() => {
     if (activeSpotOrder.length > 0) {
       const inPool = activeSpotOrder.filter((id) =>
@@ -226,8 +227,16 @@ export default function StaminaSandboxView() {
       if (inPool.length > 0) return inPool;
     }
     if (trip.length > 0) return trip;
-    return poolSpots.map((s) => s.id);
-  }, [poolSpots, activeSpotOrder, trip]);
+    const ids: string[] = [];
+    let acc = 0;
+    for (const s of poolSpots) {
+      const cost = getStaminaCost(s);
+      if (acc + cost > budget) continue;
+      ids.push(s.id);
+      acc += cost;
+    }
+    return ids.length > 0 ? ids : poolSpots.slice(0, 3).map((s) => s.id);
+  }, [poolSpots, activeSpotOrder, trip, budget]);
 
   // 计算体力曲线
   const curve = useMemo(
