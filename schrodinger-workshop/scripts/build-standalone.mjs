@@ -119,16 +119,16 @@ function visit(file){
   order.push(file);
 }
 
-/* ---------- 3. 剥离子句 + 拼接（单页） ---------- */
-function bundlePage(htmlName, outName){
+/* ---------- 3. 剥离子句 + 拼接 ---------- */
+/* 拼一段经典脚本（页面注入 / Worker 产物共用）。返回 bundle 与本页是否调用了
+   injectResponsive（响应式守卫只在页面产物上生效）。 */
+function buildBundle(entry, outLabel, srcLabel){
   order.length = 0; state.clear(); warnings.length = 0;
-  const html = readFileSync(resolve(ROOT, htmlName), 'utf8');
-  const { tag, entry } = findEntry(html, htmlName);
   visit(entry);
 
   const parts = [];
-  parts.push(`/*! 薛定谔工场 · 单文件分发版（${outName}）— 由 scripts/build-standalone.mjs 自动生成，请勿手改。
-    源码工程（ES 模块，课程站组件化用）：${htmlName} + src/
+  parts.push(`/*! 薛定谔工场 · 单文件分发版（${outLabel}）— 由 scripts/build-standalone.mjs 自动生成，请勿手改。
+    源码工程（ES 模块，课程站组件化用）：${srcLabel || '（Worker 产物）'}
     模块拼接序（拓扑序，依赖在前）：`);
   for (const f of order) parts.push('      ' + relative(ROOT, f));
   parts.push('*/\n');
@@ -151,7 +151,7 @@ function bundlePage(htmlName, outName){
     }
     parts.push(`/* ===== ${relative(ROOT, file)} ===== */\n${out.join('\n').trim()}\n`);
   }
-  let bundle = parts.join('\n');
+  const bundle = parts.join('\n');
 
   /* ---------- 3.5 自校验：bundle 必须是合法 JS（node --check 只解析不执行） ---------- */
   const tmpJs = resolve(tmpdir(), 'qf-bundle-check.mjs');
@@ -159,19 +159,28 @@ function bundlePage(htmlName, outName){
   try {
     execFileSync(process.execPath, ['--check', tmpJs], { stdio: 'pipe' });
   } catch (e) {
-    fail(`${outName} bundle 语法自校验未过（疑似注释/字符串被误剥离）:\n` + (e.stderr || e.message));
+    fail(`${outLabel} bundle 语法自校验未过（疑似注释/字符串被误剥离）:\n` + (e.stderr || e.message));
   }
+  return { bundle, respCalled, modules: order.length, seq: order.map(f => relative(ROOT, f)) };
+}
 
-  /* ---------- 3.55 响应式接入守卫（R95 遗留项） ----------
-   * 13 页各自在 mount() 里调用 injectResponsive()——漏调一页即静默丢失全部
-   * 移动适配（R94 时序坑的同源风险：当时每页都要记得加 import + 调用）。
-   * 匹配规则：**独立成行的调用语句**（respCalled 在模块行扫描时收集）。
-   * 曾用 bundle 全文正则，被 responsive.js 自己的文档注释（含 "injectResponsive()"
-   * 字样）骗过——FAIL 路径实测抓到该假阴性，故改行级独立语句匹配（注释行/
-   * 行内注释均不匹配；代码约定即独立行调用）。 */
+/* ---------- 3.55 响应式接入守卫（R95 遗留项） ----------
+ * 13 页各自在 mount() 里调用 injectResponsive()——漏调一页即静默丢失全部
+ * 移动适配（R94 时序坑的同源风险：当时每页都要记得加 import + 调用）。
+ * 匹配规则：**独立成行的调用语句**（respCalled 在模块行扫描时收集）。
+ * 曾用 bundle 全文正则，被 responsive.js 自己的文档注释（含 "injectResponsive()"
+ * 字样）骗过——FAIL 路径实测抓到该假阴性，故改行级独立语句匹配（注释行/
+ * 行内注释均不匹配；代码约定即独立行调用）。
+ * ⚠ 只对**页面产物**生效：Worker 没有 DOM，不可能也不该调用它。 */
+
+function bundlePage(htmlName, outName){
+  const html = readFileSync(resolve(ROOT, htmlName), 'utf8');
+  const { tag, entry } = findEntry(html, htmlName);
+  const { bundle: b0, respCalled, modules, seq } = buildBundle(entry, outName, htmlName + ' + src/');
   if (!respCalled)
     fail(`${outName} 未调用 injectResponsive()（小屏适配将静默丢失）：请在 ${htmlName} 对应页面模块（src/*.js，非 -main 入口）的 mount() 接入`);
 
+  let bundle = b0;
   /* ---------- 3.6 dist 导航 href 重写（R91） ----------
    * PAGES 里改了名的页（index.html → quantum-field.html），其导航 href 必须跟着改：
    * nav.js 的 NAV 条目与 navLinksHtml 的自链过滤是同一份字面量，两处一起替换才自洽
@@ -201,12 +210,38 @@ function bundlePage(htmlName, outName){
   /* ⚠ 体积必须按 UTF-8 字节算（Buffer.byteLength）：JS 字符串 .length 是 UTF-16
    * 码元数，中文每字只计 1，日志曾一贯偏小 15–25%（R85 对账 dist 时发现）。 */
   console.log(`BUILD OK: dist/${outName} (${(Buffer.byteLength(out, 'utf8')/1024).toFixed(1)} KB)`);
-  console.log(`  模块 ${order.length} 个，拓扑序: ${order.map(f => relative(ROOT, f)).join(' → ')}`);
+  console.log(`  模块 ${modules} 个，拓扑序: ${seq.join(' → ')}`);
   if (nScript) console.log(`  注: 转义了 ${nScript} 处 </script> 字面量`);
   for (const w of warnings) console.log('  WARN: ' + w);
 }
 
+/* ---------- 3.W Worker 产物（R127） ----------
+ * Worker 必须是一个**独立可被 fetch 的 .js 文件**，没法塞进单页 HTML：
+ *   · 塞进 HTML 只能用 Blob URL，而 Blob Worker 在 file:// 下同样被禁；
+ *   · 单页产物里 `new Worker('…')` 的路径必须指向真实文件。
+ * 因此：单页 dist/qec.html **保持不变**（file:// 双击直开照旧），另外产一个
+ * dist/qec-sweep-worker.js；http 通道下页面能取到它 ⟹ 并行生效，file:// 下
+ * 取不到 ⟹ onerror 回退主线程（R126 已验证的回退路径）。
+ * 页面侧不注入 DOM ⟹ 响应式守卫对 Worker **不适用**（见 3.55 注释）。 */
+const WORKERS = [
+  ['src/qec/sweep-worker.js', 'qec-sweep-worker.js'],
+];
+
+function bundleWorker(entryRel, outName){
+  const entry = resolve(ROOT, entryRel);
+  const { bundle, modules, seq } = buildBundle(entry, outName, entryRel);
+  const distDir = resolve(ROOT, 'dist');
+  mkdirSync(distDir, { recursive: true });
+  writeFileSync(resolve(distDir, outName), bundle);
+  console.log(`WORKER OK: dist/${outName} (${(Buffer.byteLength(bundle, 'utf8')/1024).toFixed(1)} KB, ${modules} 模块)`);
+  console.log(`  拓扑序: ${seq.join(' → ')}`);
+  for (const w of warnings) console.log('  WARN: ' + w);
+}
+
 for (const [htmlName, outName] of PAGES) bundlePage(htmlName, outName);
+
+/* R127：Worker 产物（与单页产物并存，互不影响） */
+for (const [entryRel, outName] of WORKERS) bundleWorker(entryRel, outName);
 
 /* R98：dist 跳转桩（旧 QEC 六页名 → qec.html?mode=…） */
 for (const [stubName, mode] of STUBS){

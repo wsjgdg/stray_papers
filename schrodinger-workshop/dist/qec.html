@@ -6201,8 +6201,12 @@ class QecApp {
         if (typeof Worker === 'undefined') return false;
         /* ⚠ 不能用 import.meta.url：build:standalone 把模块拼进一个**非 module** 的
    <script>，`import.meta` 在那里是**语法错误**（解析期就挂，try/catch 救不了）。
-   改用相对当前页面的字面量路径：src 通道能取到，dist 通道取不到 ⟹ onerror/超时回退。 */
-      this._worker = new Worker('src/qec/sweep-worker.js', { type: 'module' });
+   只能用**相对当前页面的字面量路径**，且两个通道的产物名不同（R127）：
+     · src  通道（qec.html 在根）     ⟹ src/qec/sweep-worker.js（源模块直连）
+     · dist 通道（qec.html 在 dist/） ⟹ qec-sweep-worker.js（构建器产出的独立文件）
+   取不到（file:// 下必然取不到，浏览器禁 Worker）⟹ onerror/超时回退主线程。 */
+      const wUrl = /\/dist\//.test(location.pathname) ? 'qec-sweep-worker.js' : 'src/qec/sweep-worker.js';
+      this._worker = new Worker(wUrl, { type: 'module' });
       }
       const tok = ++this._sweepTok;
       const w = this._worker;

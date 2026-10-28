@@ -1514,7 +1514,7 @@ extract 的缓升段回退承诺失败（bitflip/z/extract @0.52 回退 −1.5e-
 仅 X/仅 Z」+「注错相位 仅提取段/全程」三组按钮（i.i.d. 下后两组置灰）；HUD 按口径切分区——
 i.i.d. 显示 0/1/2/3 错计数，门级显示**机会数 M**、平均注入故障、结局五分类、解码后三分类、
 **c₁**；曲线在门级下走 18 点几何网格（0.002→0.55，比 i.i.d. 的 12 点多覆盖到交点之外）并
-叠加 DP 精确折线。入口仍是 `qec.html` → `dist/qec.html`（745.4 KB）。
+叠加 DP 精确折线。入口仍是 `qec.html` → `dist/qec.html`（750.6 KB）。
 
 **验证**：pot86 **23/23**（A iid 零回归 7 组 / B gate MC↔DP 4σ 36 组 / C DP↔故障枚举系数
 互校 + M·sites 锚 / D 不变量与故障结构 / E 确定性 10 病例 / F 交点延续性 / G 极值·钳制·
@@ -2233,6 +2233,41 @@ Worker 上、数值正确、零异常；dist 单文件下自动回退，行为�
 
 **A 与 B 都是拿信息换时间**，属于产品取舍而非纯优化——先记录在此，动之前要明确的
 是「宁可慢也要看到 MC 点，还是宁可精度差一点也要快」。
+
+#### Worker 也产出到 dist：http 通道并行解锁（R127）
+
+R125 判的是「**单文件 + file://** 下 Worker 不可用」，不是「Worker 不可用」。R126 把
+Worker 建好了但只挂在 src 通道，**dist 走 http 时也回退主线程**——白白丢掉一次并行。
+R127 把这条补上：**不动单页产物**，另外产一个独立文件。
+
+| 通道 | R126 | **R127** |
+|---|---|---|
+| src（http） | Worker ✅ | Worker ✅ |
+| dist（http） | 回退主线程 ❌ | **Worker ✅** |
+| dist（file://，双击直开） | 回退 ✅ | 回退 ✅（浏览器禁 Worker，无解） |
+
+- 构建器 `scripts/build-standalone.mjs`：把「剥离 + 拼接 + `node --check`」抽成公共的
+  `buildBundle(entry)`，页面产物与 Worker 产物共用；新增 `WORKERS` 表 ⟹
+  `dist/qec-sweep-worker.js`（213.7 KB，6 模块：qcircuit → noise → gatenoise →
+  qcnoise → qec → sweep-worker）。**响应式守卫（`injectResponsive`）只对页面产物生效**
+  —— Worker 没有 DOM，不该也不可能调用它。
+- 页面侧按通道选路径：`/\/dist\//.test(location.pathname)` ⟹ `qec-sweep-worker.js`，
+  否则 `src/qec/sweep-worker.js`。仍**不能**用 `import.meta.url`（R126 已验证：单文件
+  产物里是解析期语法错误，整页白掉）。
+- `dist/qec.html` **仍是单文件**（内联 `<script>`，无外链 module）⟹ 双击直开不受影响。
+
+**一个真缺陷（pot127 C1 抓出）**：Worker 的循环原本是**同步**跑完的，而 Worker 只在
+消息队列空闲时才处理下一条消息 ⟹ `{cancel:true}` 排在整轮之后才被看到，**根本打断不了
+在途任务**（旧任务继续吃 CPU，而 cancel 的存在意义正是让它停）。改成逐点 `await` 让出 +
+每次继续前查 `dead` ⟹ 实测 cancel 能在第 1 点后停下（首版会跑满 3 点）。让出后还会出现
+「旧任务在跑时来了新任务」：既不能直接开跑（两个循环交错回传），也不能丢掉新任务（主线程
+在等它的 `done` ⟹ 扫描卡死）⟹ 置 `dead` 打断旧的、新任务进**单槽队列**、旧的退出后接着跑
+（pot127 C3 覆盖这条）。
+
+**验证**：pot127 新套件 **14/14** —— 不止查文件存在，而是用**假 `self` 把打好的 bundle
+真跑起来**并与源码 `qecSweepPlan` 逐位对账（p/PL/PLexact 三项，NaN 走 null）；浏览器
+**9/9**：src 与 dist-http 都 `worker=worker`、6 点升序、两通道精确解**逐位一致**，
+dist 走 `file://` 时回退且完好；回归 冒烟 14 · cdp113 16 · cdp114 18 · cdp117 34 全绿。
 
 #### 门噪声接进 Shor 码（同页扩展 `shor.html`）
 
@@ -3187,7 +3222,7 @@ schrodinger-workshop/
     ├── paths.html                构建产物：路径页单文件版（86.8 KB，file:// 直开）
     ├── qcircuit.html             构建产物：线路页单文件版（155.0 KB，file:// 直开）
     ├── noise.html                构建产物：噪声页单文件版（129.7 KB，file:// 直开）
-    ├── qec.html                  构建产物：纠错页单文件版（745.4 KB，file:// 直开）
+    ├── qec.html                  构建产物：纠错页单文件版（750.6 KB，file:// 直开）
     ├── shor.html                 构建产物：Shor 码跳转存根（→ qec.html?mode=shor，<1 KB）
     ├── gatenoise.html            构建产物：门噪声跳转存根（→ qec.html?mode=gate，<1 KB）
     ├── flag.html                 构建产物：综合提取容错跳转存根（→ qec.html?mode=flag，<1 KB）
