@@ -1832,27 +1832,87 @@ function SpotsView() {
         )}
       </div>
       {/* Category filters */}
-      <div className="flex items-center justify-between gap-4">
-        <ScrollArea className="flex-1 max-w-full">
-          <div className="flex items-center gap-2 pb-1">
-            {allCategories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 border ${activeCategory === cat ? "bg-gray-900 text-white border-gray-900 shadow-sm" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"}`}
+      <ScrollArea className="max-w-full">
+        <div className="flex items-center gap-2 pb-1">
+          {allCategories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 border ${activeCategory === cat ? "bg-gray-900 text-white border-gray-900 shadow-sm" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"}`}
+            >
+              {cat !== "全部" && getCategoryIcon(cat)}
+              {cat}
+              <span
+                className={`ml-0.5 text-[10px] ${activeCategory === cat ? "text-white/70" : "text-gray-400"}`}
               >
-                {cat !== "全部" && getCategoryIcon(cat)}
-                {cat}
-                <span
-                  className={`ml-0.5 text-[10px] ${activeCategory === cat ? "text-white/70" : "text-gray-400"}`}
-                >
-                  {categoryCounts[cat] || 0}
-                </span>
-              </button>
-            ))}
-          </div>
-        </ScrollArea>
-        <div className="flex items-center gap-2">
+                {categoryCounts[cat] || 0}
+              </span>
+            </button>
+          ))}
+        </div>
+      </ScrollArea>
+      {/* Toolbar：浏览控制（左）+ 数据操作（右），窄屏自动换行 */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-1">
+          {(["5A", "4A"] as const).map((lv) => (
+            <button
+              key={lv}
+              onClick={() => setLevelFilter(levelFilter === lv ? null : lv)}
+              title={`只看 ${lv} 级景区`}
+              className={`px-2 py-1.5 rounded-lg text-xs font-black border transition-colors ${
+                levelFilter === lv
+                  ? "bg-amber-400 text-white border-amber-400"
+                  : "bg-white text-amber-600 border-amber-200 hover:bg-amber-50"
+              }`}
+            >
+              {lv}
+            </button>
+          ))}
+        </div>
+        <label className="flex items-center gap-1 text-xs text-gray-500">
+          <span className="hidden sm:inline">排序</span>
+          <select
+            value={sortMode}
+            onChange={(e) =>
+              setSortMode(
+                e.target.value as "default" | "rating" | "name" | "distance",
+              )
+            }
+            title="评分排序用的是高德用户评分（无评价数，5.0 也可能是极少评价）"
+            className="h-8 rounded-lg border border-gray-200 bg-white px-1.5 text-xs text-gray-700 outline-none focus:border-emerald-400"
+          >
+            <option value="default">默认</option>
+            <option value="rating">评分最高</option>
+            <option value="distance">离我最近</option>
+            <option value="name">名称</option>
+          </select>
+        </label>
+        {/* 离我最近：定位快捷方式（等同把排序切到「离我最近」） */}
+        <Button
+          variant="outline"
+          size="sm"
+          className={`gap-1.5 text-xs ${userLoc ? "border-emerald-300 bg-emerald-50 text-emerald-700" : ""}`}
+          disabled={locating}
+          onClick={toggleNearbySort}
+        >
+          <Navigation className="w-3.5 h-3.5" />
+          {locating ? "定位中..." : userLoc ? "按距离排序中" : "离我最近"}
+        </Button>
+        <div className="hidden sm:flex items-center border border-gray-200 rounded-lg p-0.5 bg-white">
+          <button
+            onClick={() => setViewMode("grid")}
+            className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-gray-100 text-gray-900" : "text-gray-400"}`}
+          >
+            <LayoutGrid className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-gray-100 text-gray-900" : "text-gray-400"}`}
+          >
+            <List className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="sm:ml-auto flex flex-wrap items-center gap-2">
           <input
             ref={fileInputRef}
             type="file"
@@ -1894,66 +1954,6 @@ function SpotsView() {
               清空全部
             </Button>
           )}
-          {/* 等级快速过滤：只看 5A / 4A */}
-          <div className="flex items-center gap-1">
-            {(["5A", "4A"] as const).map((lv) => (
-              <button
-                key={lv}
-                onClick={() => setLevelFilter(levelFilter === lv ? null : lv)}
-                title={`只看 ${lv} 级景区`}
-                className={`px-2 py-1.5 rounded-lg text-xs font-black border transition-colors ${
-                  levelFilter === lv
-                    ? "bg-amber-400 text-white border-amber-400"
-                    : "bg-white text-amber-600 border-amber-200 hover:bg-amber-50"
-                }`}
-              >
-                {lv}
-              </button>
-            ))}
-          </div>
-          <label className="flex items-center gap-1 text-xs text-gray-500">
-            <span className="hidden sm:inline">排序</span>
-            <select
-              value={sortMode}
-              onChange={(e) =>
-                setSortMode(
-                  e.target.value as "default" | "rating" | "name" | "distance",
-                )
-              }
-              title="评分排序用的是高德用户评分（无评价数，5.0 也可能是极少评价）"
-              className="h-8 rounded-lg border border-gray-200 bg-white px-1.5 text-xs text-gray-700 outline-none focus:border-emerald-400"
-            >
-              <option value="default">默认</option>
-              <option value="rating">评分最高</option>
-              <option value="distance">离我最近</option>
-              <option value="name">名称</option>
-            </select>
-          </label>
-          {/* 离我最近：定位快捷方式（等同把排序切到「离我最近」） */}
-          <Button
-            variant="outline"
-            size="sm"
-            className={`gap-1.5 text-xs ${userLoc ? "border-emerald-300 bg-emerald-50 text-emerald-700" : ""}`}
-            disabled={locating}
-            onClick={toggleNearbySort}
-          >
-            <Navigation className="w-3.5 h-3.5" />
-            {locating ? "定位中..." : userLoc ? "按距离排序中" : "离我最近"}
-          </Button>
-          <div className="hidden sm:flex items-center border border-gray-200 rounded-lg p-0.5 bg-white">
-            <button
-              onClick={() => setViewMode("grid")}
-              className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-gray-100 text-gray-900" : "text-gray-400"}`}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode("list")}
-              className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-gray-100 text-gray-900" : "text-gray-400"}`}
-            >
-              <List className="w-4 h-4" />
-            </button>
-          </div>
         </div>
       </div>
       {/* Count */}

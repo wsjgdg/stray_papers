@@ -59,3 +59,4 @@ server.log
 # 抓图候选（待人工挑选，不入库）
 public/dishes/_candidates/
 public/spots/_candidates/
+.next-dev/

@@ -1,19 +1,19 @@
 "use client";
 
-// ═══ 景点地图：ECharts 中国地图 + 聚合气泡（学习 gaokao 的网格聚合模式） ═══
-// 相近景点按网格聚合为一个大点（大小 = 数量），缩放越大网格越细自动裂开；
-// 点聚合气泡 → 放大一级展开；单个点 → 进详情。
-// 渲染器用 canvas：数千散点 + 漫游下 SVG 逐帧重绘 DOM 会卡。
+// ═══ 景点网络：两级下潜地图（学习 /food 的「固定视图 + 点击下潜」模式） ═══
+// 全国级：固定视野（roam: false），每个省份一个聚合气泡 —— 位置 = 省会中心
+// （PROVINCE_CENTERS），大小 = 景点数对数缩放；点击气泡 / 省份区块 → 下潜。
+// 省级：按需加载该省市级矢量边界（loadCityGeo，内存缓存 + 并发去重），
+// 散点 = 省内景点真实坐标，点散点打开全局详情弹窗（详情由页面层渲染）。
+// 渲染器统一 canvas：省级散点可达数百，SVG 逐帧重建 DOM 会卡。
 
-import { useMemo, useState } from "react";
-import dynamic from "next/dynamic";
-import { MapPin } from "lucide-react";
-import ChinaMap from "@/components/map/china-map";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronLeft, Layers, Loader2, MapPin } from "lucide-react";
+import ChinaMap, { type MapRegistration } from "@/components/map/china-map";
+import { loadCityGeo, getCachedCityGeo, type CityGeo } from "@/lib/city-geo";
+import { PROVINCE_CENTERS } from "@/lib/china-geo";
 import { useAppStore } from "@/lib/store";
 import type { EChartsOption } from "echarts";
-
-// 聚合网格边长（经度度数），索引 = 缩放档位（1×→2×→4×→8×→16×→32×）
-const MAP_CELLS = [6.4, 1.6, 0.4, 0.1, 0.025, 0.006];
 
 const CAT_COLORS: Record<string, string> = {
   自然风光: "#10B981",
@@ -27,12 +27,25 @@ const CAT_COLORS: Record<string, string> = {
   轻运动: "#84CC16",
 };
 
+/** 5A 散点金色，与全国级气泡的 5A 描边同色 */
+const FIVE_A_COLOR = "#F59E0B";
+
+// 省名匹配：address 一律以省级全称开头（如「湖南省张家界市…」「北京市东城区…」），
+// 34 个简称互不为前缀，startsWith 逐个命中即可；直辖市（北京市…）归入自身。
+const PROVINCE_NAMES = Object.keys(PROVINCE_CENTERS);
+
+function provinceOf(address: string): string | null {
+  for (const prov of PROVINCE_NAMES) {
+    if (address.startsWith(prov)) return prov;
+  }
+  return null;
+}
+
 export default function NetworkView() {
   const { spots, setSelectedSpot } = useAppStore();
 
   // 数据范围：默认精选（top400 本地图 + 手工 30 + 预约标注），全部 = 3000
   const [scope, setScope] = useState<"curated" | "all">("curated");
-  const [mapZoom, setMapZoom] = useState(1);
   const visibleSpots = useMemo(
     () =>
       scope === "all"
@@ -46,101 +59,113 @@ export default function NetworkView() {
     [spots, scope],
   );
 
-  // ═══ 网格聚合：缩放越大网格越细，气泡自动裂开（学习 gaokao MAP_CELLS） ═══
-  const cell =
-    MAP_CELLS[Math.min(Math.round(Math.log2(Math.max(1, mapZoom))), MAP_CELLS.length - 1)];
-  const buckets = useMemo(() => {
-    type Acc = {
-      key: string;
-      lng: number;
-      lat: number;
-      count: number;
-      catCount: Record<string, number>;
-      has5A: boolean;
-      ids: string[];
-    };
-    const acc = new Map<string, Acc>();
-    for (const s of visibleSpots) {
-      const loc = s.location as { lng?: number; lat?: number } | undefined;
-      if (!loc || typeof loc.lng !== "number" || typeof loc.lat !== "number")
-        continue;
-      const key = `${Math.floor(loc.lng / cell)}|${Math.floor(loc.lat / cell)}`;
-      let e = acc.get(key);
-      if (!e) {
-        e = { key, lng: 0, lat: 0, count: 0, catCount: {}, has5A: false, ids: [] };
-        acc.set(key, e);
-      }
-      e.lng += loc.lng;
-      e.lat += loc.lat;
-      e.count++;
-      if (s.level === "5A") e.has5A = true;
-      e.catCount[s.category] = (e.catCount[s.category] ?? 0) + 1;
-      e.ids.push(s.id);
+  // ═══ 两级下潜：null = 全国视图，否则为省级简称（与 PROVINCE_ADCODE 同键） ═══
+  const [drill, setDrill] = useState<string | null>(null);
+  const [cityGeo, setCityGeo] = useState<CityGeo | null>(null);
+  const [cityLoading, setCityLoading] = useState(false);
+  const [cityErr, setCityErr] = useState<string | null>(null);
+
+  // 下潜后按需加载市级边界；缓存命中先渲染避免闪 loading（同 /food 下钻）
+  useEffect(() => {
+    if (!drill) {
+      setCityGeo(null);
+      setCityErr(null);
+      setCityLoading(false);
+      return;
     }
-    return [...acc.values()].map((e) => {
-      const cat =
-        (Object.entries(e.catCount) as [string, number][]).sort(
-          (x, y) => y[1] - x[1],
-        )[0]?.[0] ?? "城市地标";
-      return {
-        key: e.key,
-        center: [e.lng / e.count, e.lat / e.count] as [number, number],
-        count: e.count,
-        cat,
-        has5A: e.has5A,
-        ids: e.ids,
-      };
-    });
-  }, [visibleSpots, cell]);
+    let alive = true;
+    setCityGeo(getCachedCityGeo(drill) ?? null);
+    setCityErr(null);
+    setCityLoading(true);
+    loadCityGeo(drill)
+      .then((g) => {
+        if (alive) setCityGeo(g);
+      })
+      .catch((e: unknown) => {
+        if (!alive) return;
+        setCityGeo(null);
+        setCityErr(e instanceof Error ? e.message : "加载失败");
+      })
+      .finally(() => {
+        if (alive) setCityLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [drill]);
 
-  const option = useMemo<EChartsOption>(() => {
-    const points = buckets.map((b) => {
-      const single = b.count === 1;
-      const spot = single ? visibleSpots.find((s) => s.id === b.ids[0]) : null;
-      const size = single
-        ? spot?.level === "5A"
-          ? 16
-          : 11
-        : Math.min(46, 12 + 4.5 * Math.log2(b.count));
-      const color = single
-        ? spot?.level === "5A"
-          ? "#F59E0B"
-          : CAT_COLORS[spot?.category ?? ""] || "#6B7280"
-        : "#059669";
-      return {
-        name: single ? spot?.name : `${b.count} 个景点`,
-        value: b.center,
-        bucketKey: b.key,
-        count: b.count,
-        id: single ? b.ids[0] : null,
-        cat: single ? spot?.category : b.cat,
-        has5A: b.has5A,
-        itemStyle: {
-          color,
-          borderColor: b.has5A && !single ? "#F59E0B" : "#fff",
-          borderWidth: single ? 1 : 2,
-          opacity: single ? 0.85 : 0.9,
-        },
-      };
-    });
+  // ═══ 全国级聚合：省名 → 数量（位置用省会中心，无需散点坐标） ═══
+  const provinceAgg = useMemo(() => {
+    const counts = new Map<string, number>();
+    const fiveA = new Set<string>();
+    for (const s of visibleSpots) {
+      const prov = provinceOf(s.address);
+      if (!prov) continue;
+      counts.set(prov, (counts.get(prov) ?? 0) + 1);
+      if (s.level === "5A") fiveA.add(prov);
+    }
+    const max = Math.max(1, ...counts.values());
+    return [...counts.entries()]
+      .map(([prov, count]) => ({
+        prov,
+        count,
+        has5A: fiveA.has(prov),
+        center: PROVINCE_CENTERS[prov],
+        // 对数缩放：最少的省 14，最多的省 46
+        size:
+          max > 1
+            ? Math.min(
+                46,
+                Math.max(14, 14 + 32 * (Math.log(count) / Math.log(max))),
+              )
+            : 14,
+      }))
+      .sort((a, b) => b.count - a.count);
+  }, [visibleSpots]);
+  const matchedTotal = useMemo(
+    () => provinceAgg.reduce((sum, g) => sum + g.count, 0),
+    [provinceAgg],
+  );
 
+  // ═══ 省级散点：该省内带真实坐标的景点 ═══
+  const provinceSpots = useMemo(() => {
+    if (!drill) return [];
+    return visibleSpots.filter((s) => {
+      if (provinceOf(s.address) !== drill) return false;
+      const loc = s.location as { lng?: number; lat?: number } | undefined;
+      return typeof loc?.lng === "number" && typeof loc?.lat === "number";
+    });
+  }, [visibleSpots, drill]);
+
+  // ── 全国 option：固定视野 + 省份聚合气泡 ─────────────────
+  const nationalOption = useMemo<EChartsOption>(() => {
+    const points = provinceAgg.map((g) => ({
+      name: g.prov,
+      value: g.center,
+      prov: g.prov,
+      count: g.count,
+      size: g.size,
+      itemStyle: {
+        color: "#059669",
+        borderColor: g.has5A ? FIVE_A_COLOR : "#ffffff",
+        borderWidth: g.has5A ? 2 : 1,
+        opacity: 0.9,
+      },
+    }));
     return {
       tooltip: {
         trigger: "item",
         formatter: (p: any) => {
-          const d = p.data;
+          const d = p?.data;
           if (!d) return String(p.name ?? "");
-          return d.count > 1
-            ? `<b>${d.count} 个景点</b>（含 5A：${d.has5A ? "是" : "否"}）<br/>点击放大展开`
-            : `<b>${d.name}</b>`;
+          return `<b>${d.name}</b><br/>${d.count} 个景点 · 点击下潜`;
         },
       },
       geo: {
         map: "china-compliant",
-        roam: true,
+        roam: false, // 固定视图：点击下潜代替缩放漫游
         layoutCenter: ["50%", "52%"],
         layoutSize: "130%",
-        zoom: mapZoom,
         label: { show: false },
         itemStyle: {
           areaColor: "#E9EEF4",
@@ -156,36 +181,129 @@ export default function NetworkView() {
         {
           type: "scatter",
           coordinateSystem: "geo",
-          symbolSize: (val: unknown, params: any) => params.data?.size ?? 11,
+          symbolSize: (val: unknown, params: any) => params.data?.size ?? 14,
           data: points,
-          emphasis: { scale: 1.2 },
+          label: {
+            show: true,
+            position: "bottom",
+            distance: 3,
+            fontSize: 10,
+            color: "#334155",
+            textBorderColor: "#ffffff",
+            textBorderWidth: 2,
+            formatter: (p: any) =>
+              p?.data
+                ? `${p.data.name}\n${p.data.count} 个景点`
+                : String(p.name ?? ""),
+          },
+          emphasis: { scale: 1.15 },
           zlevel: 2,
-          progressive: 400,
         },
       ],
     } as EChartsOption;
-  }, [buckets, visibleSpots, mapZoom]);
+  }, [provinceAgg]);
 
+  // ── 省级 option：市级边界 + 真实坐标散点 ─────────────────
+  const provinceOption = useMemo<EChartsOption>(() => {
+    if (!cityGeo) return nationalOption;
+    const points = provinceSpots.map((s) => {
+      const loc = s.location as { lng: number; lat: number };
+      const is5A = s.level === "5A";
+      return {
+        name: s.name,
+        value: [loc.lng, loc.lat],
+        id: s.id,
+        size: is5A ? 14 : s.level === "4A" ? 12 : 9,
+        itemStyle: {
+          color: is5A ? FIVE_A_COLOR : (CAT_COLORS[s.category] ?? "#6B7280"),
+          borderColor: "#ffffff",
+          borderWidth: 1,
+          opacity: 0.9,
+        },
+      };
+    });
+    return {
+      tooltip: {
+        trigger: "item",
+        formatter: (p: any) => {
+          const d = p?.data;
+          if (!d) return String(p.name ?? "");
+          const spot = provinceSpots.find((s) => s.id === d.id);
+          const parts = [
+            spot?.level,
+            spot?.rating != null ? `评分 ${spot.rating}` : null,
+          ].filter(Boolean);
+          return `<b>${d.name}</b>${parts.length ? `<br/>${parts.join(" · ")}` : ""}<br/><span style="color:#059669">点击查看详情</span>`;
+        },
+      },
+      geo: {
+        map: cityGeo.mapName,
+        roam: false,
+        // 用剔除远海岛礁后的包围盒定初始视野（如海南三沙不压扁本岛）
+        boundingCoords: cityGeo.viewBounds,
+        layoutCenter: ["50%", "50%"],
+        layoutSize: "96%",
+        label: { show: false },
+        itemStyle: {
+          areaColor: "#E9EEF4",
+          borderColor: "#AFBCCD",
+          borderWidth: 0.7,
+        },
+        emphasis: {
+          itemStyle: { areaColor: "#DEE6F0" },
+          label: { show: false },
+        },
+      },
+      series: [
+        {
+          type: "scatter",
+          coordinateSystem: "geo",
+          symbolSize: (val: unknown, params: any) => params.data?.size ?? 9,
+          data: points,
+          emphasis: { scale: 1.3 },
+          zlevel: 2,
+          progressive: 600,
+        },
+      ],
+    } as EChartsOption;
+  }, [cityGeo, provinceSpots, nationalOption]);
+
+  // 市级地图按需注册（引用需稳定，避免 ChinaMap 反复 setOption）
+  const maps = useMemo<MapRegistration[]>(
+    () => (cityGeo ? [{ name: cityGeo.mapName, geo: cityGeo.geo }] : []),
+    [cityGeo],
+  );
+
+  const option = drill && cityGeo ? provinceOption : nationalOption;
+
+  // ── 点击：全国级下潜 / 省级进详情 ────────────────────────
   const handleSelect = (p: any) => {
-    const d = p?.data;
-    if (!d) return;
-    if (d.count > 1) {
-      // 聚合气泡 → 放大一级（网格变细自动裂开）
-      setMapZoom((z) => Math.min(z * 2, 32));
+    if (!drill) {
+      // 聚合气泡（data.prov）或省份区块（feature name 已归一为简称，与 PROVINCE_CENTERS 同键）
+      const prov =
+        p?.data?.prov ?? (p?.componentType === "geo" ? p?.name : null);
+      if (prov && PROVINCE_CENTERS[prov]) setDrill(prov);
       return;
     }
-    const spot = visibleSpots.find((s) => s.id === d.id);
-    if (spot) setSelectedSpot(spot);
-  };
-
-  const handleZoom = (z: number) => {
-    setMapZoom((prev) => (Math.abs(prev - z) > 0.01 ? z : prev));
+    const id = p?.data?.id;
+    if (!id) return; // 省级点市级区块不响应，只认散点
+    const spot = provinceSpots.find((s) => s.id === id);
+    if (spot) setSelectedSpot(spot); // 详情弹窗由页面全局渲染
   };
 
   return (
     <div className="relative w-full h-full bg-white rounded-xl overflow-hidden border border-gray-200/80">
-      {/* 数据范围切换 + 计数 */}
+      {/* 返回 + 数据范围切换 + 计数 */}
       <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-gray-100">
+        {drill && (
+          <button
+            onClick={() => setDrill(null)}
+            className="mb-1.5 inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
+          >
+            <ChevronLeft className="w-3 h-3" />
+            返回全国
+          </button>
+        )}
         <div className="flex items-center gap-1">
           {(["curated", "all"] as const).map((sc) => (
             <button
@@ -205,33 +323,42 @@ export default function NetworkView() {
           className="text-[11px] text-gray-500 mt-1"
           title="精选 = top400 本地图 + 手工 30 + 预约标注；全部 = 统一库全量（含 A 级名录）"
         >
-          {scope === "curated"
-            ? `精选 ${visibleSpots.length}`
-            : `全部 ${spots.length}`}{" "}
-          个景点 · 聚合为 {buckets.length} 个点位
+          {drill
+            ? `${drill} · ${provinceSpots.length} 个景点`
+            : `${provinceAgg.length} 省 · ${matchedTotal} 个景点`}
         </p>
       </div>
 
-      {/* 图例 */}
+      {/* 图例：全国级只有聚合气泡；省级按分类着色 */}
       <div className="absolute bottom-4 left-4 z-10 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-gray-100">
-        <div className="flex flex-wrap gap-x-3 gap-y-1 max-w-[320px]">
-          {Object.entries(CAT_COLORS).map(([cat, color]) => (
-            <span
-              key={cat}
-              className="inline-flex items-center gap-1 text-[11px] text-gray-600"
-            >
+        {drill ? (
+          <div className="flex flex-wrap gap-x-3 gap-y-1 max-w-[320px]">
+            {Object.entries(CAT_COLORS).map(([cat, color]) => (
               <span
-                className="w-2.5 h-2.5 rounded-full"
-                style={{ backgroundColor: color }}
+                key={cat}
+                className="inline-flex items-center gap-1 text-[11px] text-gray-600"
+              >
+                <span
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{ backgroundColor: color }}
+                />
+                {cat}
+              </span>
+            ))}
+            <span className="inline-flex items-center gap-1 text-[11px] text-gray-600">
+              <span
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: FIVE_A_COLOR }}
               />
-              {cat}
+              5A 景区
             </span>
-          ))}
-          <span className="inline-flex items-center gap-1 text-[11px] text-gray-600">
+          </div>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-600">
             <span className="w-3.5 h-3.5 rounded-full bg-emerald-600" />
-            聚合气泡（点击放大）
+            省份聚合气泡 · 越大景点越多 · 点击下潜
           </span>
-        </div>
+        )}
       </div>
 
       {visibleSpots.length === 0 ? (
@@ -243,11 +370,41 @@ export default function NetworkView() {
         <ChinaMap
           option={option}
           onSelect={handleSelect}
+          maps={maps}
           height="100%"
           className="w-full"
           renderer="canvas"
-          onZoomChange={handleZoom}
         />
+      )}
+
+      {/* 市级边界加载 / 失败遮罩 */}
+      {drill && (cityLoading || cityErr) && (
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-white/80 backdrop-blur-[2px] text-center px-6">
+          {cityLoading ? (
+            <>
+              <Loader2 className="w-6 h-6 text-emerald-600 animate-spin" />
+              <p className="text-sm text-gray-600">
+                正在加载 {drill} 市级边界…
+              </p>
+            </>
+          ) : (
+            <>
+              <Layers className="w-6 h-6 text-gray-400" />
+              <p className="text-sm font-medium text-gray-700">
+                {drill} 暂无市级矢量边界
+              </p>
+              <p className="text-xs text-gray-500 max-w-[280px] leading-relaxed">
+                {cityErr}
+              </p>
+              <button
+                onClick={() => setDrill(null)}
+                className="mt-1 text-xs font-medium text-emerald-700 underline"
+              >
+                返回全国视图
+              </button>
+            </>
+          )}
+        </div>
       )}
     </div>
   );
