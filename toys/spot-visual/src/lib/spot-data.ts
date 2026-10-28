@@ -1344,6 +1344,18 @@ function inferScenicCategory(name: string): string {
   return "城市地标";
 }
 
+// A 级骨架条目的事实性描述词组（只用名录字段，零编造）
+const SCENIC_CATEGORY_WORDS: Record<string, string> = {
+  自然风光: "以山水生态景观见长",
+  历史人文: "属历史文化类景点",
+  宗教寺庙: "属宗教文化场所",
+  古镇村落: "保存传统聚落风貌",
+  主题乐园: "属主题游乐景区",
+  海滨度假: "属滨海度假目的地",
+  轻运动: "适合户外轻运动",
+  城市地标: "属城市休闲地标",
+};
+
 export const LIBRARY_SPOTS: Spot[] = (() => {
   const manualNames = new Set(sampleSpots.map((s) => s.name));
   const pois = Object.entries(CITY_POI_PACKS)
@@ -1351,28 +1363,31 @@ export const LIBRARY_SPOTS: Spot[] = (() => {
     .filter((s) => !manualNames.has(s.name));
   // A 级名录反向补充：库内没有的 3A+ 景区（骨架条目：等级+坐标，图走分类池降级）
   const known = new Set([...manualNames, ...pois.map((s) => s.name)]);
-  const extras = EXTRA_SCENICS.filter((e) => !known.has(e.name)).map(
-    (e, i) =>
-      ({
-        id: `scenic-${e.city}-${i}`,
-        // 全国化：跨省同名景区保留（id 含城市不冲突），地址自带省份可被省份筛选命中
-        name: e.name,
-        // 5A/4A 构建时经高德 around 搜索回填（见 scripts/fetch-scenic-details.mjs）：
-        // 官方图 + 电话 + 开放时间；图不可达时 SpotImage 走本地分类池降级
-        image: SCENIC_DETAILS[e.name]?.image || "",
-        imageSource: SCENIC_DETAILS[e.name]?.image ? "amap" : undefined,
-        openTime: SCENIC_DETAILS[e.name]?.openTime || undefined,
-        tel: SCENIC_DETAILS[e.name]?.tel || undefined,
-        address: e.address || `${e.city}（A级景区名录）`,
-        facilities: [],
-        projects: [],
-        category: inferScenicCategory(e.name),
-        level: e.level,
-        reservation: RESERVATION_NOTES[e.name],
-        description: `国家${e.level}级景区（2023 年全国 A 级景区名录）。详细信息以景区公示为准。`,
-        location: { lat: e.lat, lng: e.lng },
-      }) as Spot,
-  );
+  const extras = EXTRA_SCENICS.filter((e) => !known.has(e.name)).map((e, i) => {
+    const category = inferScenicCategory(e.name);
+    // 直辖市 province===city，去重避免「北京北京」
+    const where = e.province === e.city ? e.province : `${e.province}${e.city}`;
+    return {
+      id: `scenic-${e.city}-${i}`,
+      // 全国化：跨省同名景区保留（id 含城市不冲突），地址自带省份可被省份筛选命中
+      name: e.name,
+      // 5A/4A 构建时经高德 around 搜索回填（见 scripts/fetch-scenic-details.mjs）：
+      // 官方图 + 电话 + 开放时间；图不可达时 SpotImage 走本地分类池降级
+      image: SCENIC_DETAILS[e.name]?.image || "",
+      imageSource: SCENIC_DETAILS[e.name]?.image ? "amap" : undefined,
+      openTime: SCENIC_DETAILS[e.name]?.openTime || undefined,
+      tel: SCENIC_DETAILS[e.name]?.tel || undefined,
+      address: e.address || `${e.city}（A级景区名录）`,
+      facilities: [],
+      projects: [],
+      category,
+      level: e.level,
+      reservation: RESERVATION_NOTES[e.name],
+      // 事实句替代千篇一律占位：等级/位置/类别来自名录数据，同时改善描述搜索命中
+      description: `国家${e.level}级景区（2023 年全国 A 级景区名录），位于${where}，${SCENIC_CATEGORY_WORDS[category] ?? "属综合性景区"}。开放时间、门票与预约要求以景区公示为准。`,
+      location: { lat: e.lat, lng: e.lng },
+    } as Spot;
+  });
   // 手工景点补等级 + 预约标注自动回填（只写显式的，避免每个条目手抄一遍）
   const manualWithLevel = sampleSpots.map((s) => ({
     ...s,

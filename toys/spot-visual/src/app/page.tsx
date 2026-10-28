@@ -11,6 +11,7 @@ import {
   LayoutGrid,
   List,
   Heart,
+  Copy,
   User,
   Share2,
   Menu,
@@ -796,6 +797,8 @@ function SpotDetailDialog() {
   // 图片查看器：null = 关闭；数字 = 当前查看的相册下标
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [showDissuasionEditor, setShowDissuasionEditor] = useState(false);
+  // 「分享」按钮复制后的瞬时反馈
+  const [copied, setCopied] = useState(false);
   const spot = selectedSpot;
   // 城市包 POI 的相册多图不在主包里（见 lib/poi-photos.ts），打开弹窗时才拉。
   // 拉取失败/未就绪时只显示封面，不阻塞弹窗。
@@ -881,6 +884,27 @@ function SpotDetailDialog() {
 
   if (!spot) return null;
   const isFav = favorites.includes(spot.id);
+  const spotCoords = parseCoords(spot);
+  const shareSpot = async () => {
+    const c = parseCoords(spot);
+    const nav = c
+      ? `\n导航：https://uri.amap.com/marker?position=${c.lng.toFixed(6)},${c.lat.toFixed(6)}&name=${encodeURIComponent(spot.name)}`
+      : "";
+    const text =
+      `【${spot.level ? `${spot.level} · ` : ""}${spot.name}】\n` +
+      `地址：${spot.address}\n` +
+      (spot.openTime ? `开放时间：${spot.openTime}\n` : "") +
+      (spot.tel ? `电话：${spot.tel}\n` : "") +
+      (spot.reservation ? `预约：${spot.reservation}\n` : "") +
+      `${nav}\n—— 来自「华夏探索」景点览胜`;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* 剪贴板不可用（非安全上下文），静默失败 */
+    }
+  };
 
   return (
     <Dialog
@@ -968,24 +992,34 @@ function SpotDetailDialog() {
               <span className="text-sm text-gray-600 flex-1">
                 {spot.address}
               </span>
-              {(() => {
-                const c = parseCoords(spot);
-                if (!c) return null;
-                const pos = `${c.lng.toFixed(6)},${c.lat.toFixed(6)}`;
-                return (
-                  <a
-                    href={`https://uri.amap.com/marker?position=${pos}&name=${encodeURIComponent(spot.name)}&src=spot-visual&callnative=1`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="在高德地图中查看并导航（免费链接，无需登录）"
-                    className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Navigation className="w-3 h-3" />
-                    导航
-                  </a>
-                );
-              })()}
+              {spotCoords && (
+                <a
+                  href={`https://uri.amap.com/marker?position=${spotCoords.lng.toFixed(6)},${spotCoords.lat.toFixed(6)}&name=${encodeURIComponent(spot.name)}&src=spot-visual&callnative=1`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="在高德地图中查看并导航（免费链接，无需登录）"
+                  className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Navigation className="w-3 h-3" />
+                  导航
+                </a>
+              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void shareSpot();
+                }}
+                title="复制景点信息（名称/地址/开放时间/电话/预约提示/导航链接）"
+                className={`shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold border transition-colors ${
+                  copied
+                    ? "text-white bg-emerald-600 border-emerald-600"
+                    : "text-gray-600 bg-gray-50 border-gray-200 hover:bg-gray-100"
+                }`}
+              >
+                <Copy className="w-3 h-3" />
+                {copied ? "已复制" : "分享"}
+              </button>
             </div>
             {spot.openTime && (
               <p className="flex items-start gap-1.5 text-sm text-gray-600">
