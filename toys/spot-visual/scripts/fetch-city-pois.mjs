@@ -112,6 +112,7 @@ for (const city of CITIES) {
         rating: rating(p) || undefined,
         openTime: (Array.isArray(p.biz_ext?.opentime2) ? "" : String(p.biz_ext?.opentime2 || "").trim()) || undefined,
         tel: (Array.isArray(p.tel) ? "" : String(p.tel || "").trim()) || undefined,
+        website: (Array.isArray(p.website) ? "" : String(p.website || "").trim()) || undefined,
         image,
       };
     });
@@ -139,6 +140,7 @@ export interface CityPoi {
   rating?: number;
   openTime?: string;
   tel?: string;
+  website?: string;
   image: string;
 }
 

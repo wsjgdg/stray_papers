@@ -978,6 +978,24 @@ function SpotDetailDialog() {
                 </span>
               </p>
             )}
+            {spot.website && (
+              <p className="flex items-center gap-1.5 text-sm text-gray-600">
+                <Globe className="w-4 h-4 text-emerald-500 shrink-0" />
+                <a
+                  href={withSharecode(
+                    spot.website.startsWith("http")
+                      ? spot.website
+                      : `https://${spot.website}`,
+                  )}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:text-emerald-700 hover:underline truncate"
+                >
+                  官网链接
+                </a>
+                <span className="text-[11px] text-gray-400">（高德收录）</span>
+              </p>
+            )}
             {spot.tel && (
               <p className="flex items-center gap-1.5 text-sm text-gray-600">
                 <Phone className="w-4 h-4 text-emerald-500 shrink-0" />
@@ -1013,6 +1031,15 @@ function SpotDetailDialog() {
                 </span>
               </p>
             )}
+            {!spot.tel &&
+              !spot.rating &&
+              (spot.level === "5A" || spot.level === "4A") && (
+                <p className="text-xs text-gray-400">
+                  建议游玩：{spot.level === "5A" ? "半天至一天" : "2-3 小时"}
+                  （按
+                  {spot.level} 级规模推断，仅供参考）
+                </p>
+              )}
             {spot.rating && (
               <p className="flex items-center gap-1 text-sm text-amber-600 font-bold">
                 <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
@@ -1410,30 +1437,52 @@ function SpotsView() {
   }, [city, osmLoading, spots, setSpots, setActiveCategory, setSearchQuery]);
 
   // 热门城市 chips：城市包城市 + 手工精选城市（去重）
-  const HOT_CITIES = useMemo(
-    () => [
-      ...new Set([
-        ...Object.keys(CITY_POI_PACKS),
-        "拉萨",
-        "张家界",
-        "黄山",
-        "乐山",
-        "酒泉",
-        "嘉兴",
-        "晋中",
-      ]),
-    ],
-    [],
-  );
+  // ═══ 全国化：chips 改为省份（31 省，覆盖全国库）；城市粒度走搜索框（匹配地址） ═══
+  const HOT_PROVINCES = useMemo(() => {
+    const PROVS = [
+      "北京",
+      "天津",
+      "河北",
+      "山西",
+      "内蒙古",
+      "辽宁",
+      "吉林",
+      "黑龙江",
+      "上海",
+      "江苏",
+      "浙江",
+      "安徽",
+      "福建",
+      "江西",
+      "山东",
+      "河南",
+      "湖北",
+      "湖南",
+      "广东",
+      "广西",
+      "海南",
+      "重庆",
+      "四川",
+      "贵州",
+      "云南",
+      "西藏",
+      "陕西",
+      "甘肃",
+      "青海",
+      "宁夏",
+      "新疆",
+    ];
+    return PROVS;
+  }, []);
 
-  // 每个城市在库内的景点数：chips 上直接显示，避免点进去发现是空的
+  // 每个省份在库内的景点数：chips 上直接显示，避免点进去发现是空的
   const cityCounts = useMemo(() => {
     const c: Record<string, number> = {};
-    for (const hc of HOT_CITIES) {
+    for (const hc of HOT_PROVINCES) {
       c[hc] = spots.reduce((n, s) => (s.address.includes(hc) ? n + 1 : n), 0);
     }
     return c;
-  }, [spots, HOT_CITIES]);
+  }, [spots, HOT_PROVINCES]);
   const [citiesExpanded, setCitiesExpanded] = useState(false);
 
   // ═══ 城市过滤：chips/输入框都是库的过滤器，不再替换 spots（收藏/行程/改价永不丢失） ═══
@@ -1682,7 +1731,7 @@ function SpotsView() {
         </div>
         <div className="flex gap-2">
           <div className="flex flex-wrap gap-1.5 mb-2.5">
-            {(citiesExpanded ? HOT_CITIES : HOT_CITIES.slice(0, 12)).map(
+            {(citiesExpanded ? HOT_PROVINCES : HOT_PROVINCES.slice(0, 12)).map(
               (hc) => {
                 const n = cityCounts[hc] ?? 0;
                 const on = cityFilter === hc;
@@ -1704,12 +1753,12 @@ function SpotsView() {
                 );
               },
             )}
-            {HOT_CITIES.length > 12 && (
+            {HOT_PROVINCES.length > 12 && (
               <button
                 onClick={() => setCitiesExpanded((v) => !v)}
                 className="px-2.5 py-1 rounded-full text-[11px] font-medium border border-dashed border-emerald-300 text-emerald-600 hover:bg-emerald-50 transition-colors"
               >
-                {citiesExpanded ? "收起" : `展开全部 ${HOT_CITIES.length} 城`}
+                {citiesExpanded ? "收起" : `展开全部省份`}
               </button>
             )}
           </div>

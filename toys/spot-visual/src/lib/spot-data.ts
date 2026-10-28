@@ -15,6 +15,8 @@ export interface Spot {
   openTime?: string;
   /** 景区电话（高德 POI，55% 填充） */
   tel?: string;
+  /** 官网（高德 POI，13% 填充） */
+  website?: string;
   /** 景区等级（5A/4A/3A，来源 2023 全国 A 级景区名录） */
   level?: string;
   /** 预约提示（仅标注有预约制/实名限流的景点） */
@@ -585,6 +587,7 @@ export const sampleSpots: Spot[] = [
   {
     id: "1",
     name: "张家界国家森林公园",
+    reservation: RESERVATION_NOTES["张家界国家森林公园"],
     image:
       SPOT_PHOTOS["张家界国家森林公园"] ?? getCategoryImageUrl("自然风光", 0),
     address: "湖南省张家界市武陵源区",
@@ -769,6 +772,7 @@ export const sampleSpots: Spot[] = [
   {
     id: "10",
     name: "长城·八达岭",
+    reservation: RESERVATION_NOTES["长城·八达岭"],
     image: SPOT_PHOTOS["长城·八达岭"] ?? getCategoryImageUrl("历史人文", 1),
     address: "北京市延庆区G6京藏高速58号出口",
     facilities: [
@@ -1296,6 +1300,7 @@ export function cityPoiToSpot(city: string, p: CityPoi, index: number): Spot {
     rating: p.rating,
     openTime: p.openTime,
     tel: p.tel,
+    website: p.website,
     level: SCENIC_LEVELS[`${city}::${p.name}`],
     reservation: RESERVATION_NOTES[p.name],
     imageSource: p.image ? "amap" : undefined,
@@ -1334,6 +1339,7 @@ export const LIBRARY_SPOTS: Spot[] = (() => {
     (e, i) =>
       ({
         id: `scenic-${e.city}-${i}`,
+        // 全国化：跨省同名景区保留（id 含城市不冲突），地址自带省份可被省份筛选命中
         name: e.name,
         image: "",
         address: e.address || `${e.city}（A级景区名录）`,

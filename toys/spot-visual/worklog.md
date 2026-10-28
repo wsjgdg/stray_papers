@@ -510,6 +510,18 @@ Elevation API（免费无 key，与 weather 同域名，线上出网已验证可
 数据契约：`MountainRoute { id, name, city, summary, distanceKm, elevationGain, maxElevation, durationHours, spots, profile: {km,ele}[], waypoints: {name,km,ele}[] }`。
 诚实边界：路径为「关键节点直线插值」，非 GPS 轨迹；距离按直线 ×1.25 绕行系数。
 
+## 四十一轮：全国化 + 三小件（2026-10-28）
+
+| # | 内容 | 结果 |
+|---|---|---|
+| 1 | **A 级名录全国化**：extras 从 27 城 3A+ 扩为全国 5A/4A（4621 条，5A×301/4A×4320），统一库 30 手工 + 1346 POI + 4621 extras ≈ **5997 条** | 完成 |
+| 2 | 城市 chips → **省份 chips**（31 省，带计数，全国规模适配；城市粒度走搜索框） | 完成 |
+| 3 | website 字段（高德 13%）→ 详情「官网链接」外链 | 完成 |
+| 4 | 预约标注 15 → 17（补八达岭长城实名购票、张家界森林公园分时段预约） | 完成 |
+| 5 | 游玩时长推断：5A 建议半天至一天 / 4A 建议 2-3 小时（无评分无 tel 的条目显示，标注「按等级规模推断」） | 完成 |
+
+network 视图「全部」模式现为 ~5900 散点，ECharts progressive 渲染可承载；默认仍为精选。
+
 ## 七轮（2026-10-25）：志愿探索接入真实数据
 
 | 项目 | 状态 |

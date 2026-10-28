@@ -55,11 +55,11 @@ for (const [city, list] of Object.entries(packs)) {
 // 反向补充：27 城中 3A+ 且未被匹配的景区
 const extras = [];
 const extraSeen = new Set();
+// 全国化：名录全部 5A/4A 入库（3A 及以下不入，避免无图无描述的占位卡泛滥）
 for (const [city, cand] of scenicByCity) {
-  if (!packs[city]) continue; // 只补已有城市包的城市
   for (const s of cand) {
     if (matchedScenic.has(s)) continue;
-    if (LEVEL_RANK[s.level] < 3) continue;
+    if (LEVEL_RANK[s.level] < 4) continue; // 只收 4A/5A
     const key = city + "::" + s.name;
     if (extraSeen.has(key)) continue;
     extraSeen.add(key);
@@ -67,6 +67,7 @@ for (const [city, cand] of scenicByCity) {
     extras.push({
       name: s.name,
       city,
+      province: s.province,
       address: [s.province === s.city ? "" : s.province, s.city, s.district, s.address]
         .filter(Boolean)
         .join(""),
@@ -118,6 +119,7 @@ export const SCENIC_LEVELS: Record<string, string> = ${JSON.stringify(poiLevels,
 export interface ExtraScenic {
   name: string;
   city: string;
+  province: string;
   address: string;
   lng: number;
   lat: number;
