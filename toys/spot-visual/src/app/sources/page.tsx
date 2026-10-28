@@ -103,6 +103,13 @@ const ROWS = [
     note: "只标注确定有预约制/实名限流的景点（故宫、莫高窟、布达拉宫、兵马俑等）；普通线上购票不标注，避免稀释警示。",
   },
   {
+    layer: "登山账本（真实山径高程）",
+    source: "Open-Meteo Elevation API（构建时沿路线关键节点插值采样）",
+    license: "CC BY 4.0",
+    fields: "海拔剖面（km-elevation）、累计路程（直线 ×1.25 绕行系数）、关键节点",
+    note: "路径为泰山/黄山/峨眉山/华山四条经典登山线的关键节点直线插值，非 GPS 轨迹；海拔为真实地形数据，节点坐标为近似值。",
+  },
+  {
     layer: "地图边界",
     source: "DataV GeoAtlas；台湾 20 县市取自 GeoJSON.cn",
     license: "公开使用",
