@@ -964,7 +964,27 @@ function SpotDetailDialog() {
           <div className="p-5 space-y-5">
             <div className="flex items-start gap-2">
               <MapPin className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
-              <span className="text-sm text-gray-600">{spot.address}</span>
+              <span className="text-sm text-gray-600 flex-1">
+                {spot.address}
+              </span>
+              {(() => {
+                const c = parseCoords(spot);
+                if (!c) return null;
+                const pos = `${c.lng.toFixed(6)},${c.lat.toFixed(6)}`;
+                return (
+                  <a
+                    href={`https://uri.amap.com/marker?position=${pos}&name=${encodeURIComponent(spot.name)}&src=spot-visual&callnative=1`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="在高德地图中查看并导航（免费链接，无需登录）"
+                    className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Navigation className="w-3 h-3" />
+                    导航
+                  </a>
+                );
+              })()}
             </div>
             {spot.openTime && (
               <p className="flex items-start gap-1.5 text-sm text-gray-600">
@@ -1519,6 +1539,16 @@ function SpotsView() {
     return c;
   }, [spots]);
 
+  // 等级 chips 计数（当前分类/搜索/省份过滤后的池）
+  const levelCounts = useMemo(() => {
+    const c: Record<string, number> = {};
+    spots.forEach((s) => {
+      if (s.level === "5A" || s.level === "4A")
+        c[s.level] = (c[s.level] || 0) + 1;
+    });
+    return c;
+  }, [spots]);
+
   // ═══ 排序：默认（库顺序）/ 评分 / 名称 / 距离 ═══
   // 距离依赖定位，userLoc 为空时自动回退默认顺序，不报错。
   const [sortMode, setSortMode] = useState<
@@ -1865,6 +1895,11 @@ function SpotsView() {
               }`}
             >
               {lv}
+              <span
+                className={`ml-0.5 text-[10px] font-medium ${levelFilter === lv ? "text-white/80" : "text-amber-400"}`}
+              >
+                {levelCounts[lv] || 0}
+              </span>
             </button>
           ))}
         </div>
