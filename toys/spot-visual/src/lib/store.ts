@@ -34,6 +34,10 @@ interface AppStore {
   selectedSpot: Spot | null;
   /** 最近浏览的景点 id（新→旧，去重，最多 12 条），首页横滑「继续浏览」用 */
   recentViews: string[];
+  /** 对比栏里的景点 id（最多 2 个，会话级不持久化） */
+  compareIds: string[];
+  toggleCompare: (id: string) => void;
+  clearCompare: () => void;
   searchQuery: string;
   activeCategory: string;
   viewMode: "grid" | "list";
@@ -95,6 +99,15 @@ export const useAppStore = create<AppStore>()(
       activeView: "spots" as ViewType,
       selectedSpot: null,
       recentViews: [],
+      compareIds: [],
+      toggleCompare: (id) =>
+        set((s) => {
+          if (s.compareIds.includes(id))
+            return { compareIds: s.compareIds.filter((c) => c !== id) };
+          // 已满 2 个时挤掉最早的，保持「最新选择」始终在场
+          return { compareIds: [...s.compareIds, id].slice(-2) };
+        }),
+      clearCompare: () => set({ compareIds: [] }),
       searchQuery: "",
       activeCategory: "全部",
       viewMode: "grid" as "grid" | "list",

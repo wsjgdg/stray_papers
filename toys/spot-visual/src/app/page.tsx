@@ -13,6 +13,7 @@ import {
   Heart,
   Copy,
   History,
+  Scale,
   User,
   Share2,
   Menu,
@@ -804,6 +805,8 @@ function SpotDetailDialog() {
     spotNotes,
     setSpotNote,
     removeFromTrip,
+    compareIds,
+    toggleCompare,
   } = useAppStore();
   const [photoIdx, setPhotoIdx] = useState(0);
   // 图片查看器：null = 关闭；数字 = 当前查看的相册下标
@@ -1315,6 +1318,22 @@ function SpotDetailDialog() {
               <Route className="w-4 h-4" />
               {trip.includes(spot.id) ? "已在行程中 · 点击移出" : "加入行程"}
             </button>
+            {/* ═══ 对比：加入/移出对比栏 ═══ */}
+            <button
+              onClick={() => toggleCompare(spot.id)}
+              className={`w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-bold transition-colors border ${
+                compareIds.includes(spot.id)
+                  ? "bg-sky-600 text-white border-sky-600 hover:bg-sky-700"
+                  : "bg-sky-50 text-sky-700 border-sky-100 hover:bg-sky-100"
+              }`}
+            >
+              <Scale className="w-4 h-4" />
+              {compareIds.includes(spot.id)
+                ? "已加入对比 · 点击移出"
+                : compareIds.length >= 2
+                  ? "替换对比第 1 个"
+                  : "加入对比"}
+            </button>
             {/* ═══ D3.5：劝退入口 ═══ */}
             <Separator />
             <div className="flex gap-2">
@@ -1431,6 +1450,211 @@ function Lightbox({
         <X className="w-5 h-5" />
       </button>
     </div>
+  );
+}
+
+/* ═══════ 对比栏：已选 <2 个时浮动在底部，凑满即可打开对比弹窗 ═══════ */
+function CompareBar() {
+  const { spots, compareIds, toggleCompare, clearCompare } = useAppStore();
+  const [open, setOpen] = useState(false);
+  const picked = compareIds
+    .map((id) => spots.find((s) => s.id === id))
+    .filter((s): s is (typeof spots)[number] => !!s);
+  if (!picked.length) return null;
+  return (
+    <>
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-gray-900/90 backdrop-blur-sm text-white rounded-full pl-4 pr-2 py-2 shadow-xl border border-white/10 max-w-[94vw]">
+        <Scale className="w-4 h-4 text-sky-300 shrink-0" />
+        <div className="flex items-center gap-2 overflow-hidden">
+          {picked.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => toggleCompare(s.id)}
+              title="点击移出"
+              className="flex items-center gap-1.5 text-xs bg-white/10 hover:bg-white/20 rounded-full pl-1 pr-2 py-1 shrink-0"
+            >
+              <span className="w-6 h-6 rounded-full overflow-hidden bg-gray-700 shrink-0">
+                {s.image ? (
+                  <img
+                    src={s.image}
+                    alt={s.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : null}
+              </span>
+              <span className="max-w-24 truncate">{s.name}</span>
+              <X className="w-3 h-3 opacity-60" />
+            </button>
+          ))}
+          {picked.length === 1 && (
+            <span className="text-xs text-white/50 shrink-0">
+              再选 1 个即可对比
+            </span>
+          )}
+        </div>
+        {picked.length === 2 && (
+          <button
+            onClick={() => setOpen(true)}
+            className="shrink-0 px-3 py-1.5 rounded-full bg-sky-500 hover:bg-sky-400 text-xs font-bold transition-colors"
+          >
+            对比
+          </button>
+        )}
+        <button
+          onClick={clearCompare}
+          title="清空对比"
+          className="shrink-0 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+      {open && picked.length === 2 && (
+        <CompareDialog
+          a={picked[0]}
+          b={picked[1]}
+          onClose={() => setOpen(false)}
+        />
+      )}
+    </>
+  );
+}
+
+/* ═══════ 对比弹窗：两景点并排（窄屏上下堆叠） ═══════ */
+function CompareDialog({
+  a,
+  b,
+  onClose,
+}: {
+  a: (typeof LIBRARY_SPOTS)[number];
+  b: (typeof LIBRARY_SPOTS)[number];
+  onClose: () => void;
+}) {
+  const ca = parseCoords(a);
+  const cb = parseCoords(b);
+  const dist = ca && cb ? haversineKm(ca, cb) : null;
+  const rows: { label: string; render: (s: typeof a) => React.ReactNode }[] = [
+    {
+      label: "等级",
+      render: (s) =>
+        s.level ? (
+          <span className="px-1.5 py-0.5 rounded-md bg-amber-400/90 text-white text-[10px] font-black">
+            {s.level}
+          </span>
+        ) : (
+          "—"
+        ),
+    },
+    {
+      label: "评分",
+      render: (s) =>
+        s.rating ? (
+          <span className="text-amber-600 font-bold">
+            ★ {s.rating.toFixed(1)}
+          </span>
+        ) : (
+          "—"
+        ),
+    },
+    { label: "分类", render: (s) => s.category },
+    {
+      label: "预约",
+      render: (s) =>
+        s.reservation ? (
+          <span className="text-rose-600 text-xs">{s.reservation}</span>
+        ) : (
+          "无需预约（未收录）"
+        ),
+    },
+    {
+      label: "开放时间",
+      render: (s) => s.openTime ?? "—",
+    },
+    {
+      label: "电话",
+      render: (s) =>
+        s.tel ? (
+          <a
+            href={`tel:${s.tel.replace(/[^\d+]/g, "")}`}
+            className="text-emerald-700 underline"
+          >
+            {s.tel}
+          </a>
+        ) : (
+          "—"
+        ),
+    },
+    { label: "地址", render: (s) => s.address },
+  ];
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-3xl w-[95vw] max-h-[88vh] overflow-y-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-[7rem_1fr_1fr] gap-x-3 gap-y-3 items-start">
+          <div />
+          {[a, b].map((s, i) => (
+            <div key={s.id} className={i === 0 ? "" : ""}>
+              <div className="h-28 rounded-xl overflow-hidden bg-gray-100 mb-1.5">
+                {s.image ? (
+                  <img
+                    src={s.image}
+                    alt={s.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  (() => {
+                    const theme = CATEGORY_THEME[a.category] || {
+                      from: "#F3F4F6",
+                      to: "#E5E7EB",
+                      icon: "📍",
+                    };
+                    return (
+                      <div
+                        className="w-full h-full flex items-center justify-center text-3xl"
+                        style={{
+                          background: `linear-gradient(135deg, ${theme.from}, ${theme.to})`,
+                        }}
+                      >
+                        {theme.icon}
+                      </div>
+                    );
+                  })()
+                )}
+              </div>
+              <p className="font-bold text-gray-900 text-sm leading-snug">
+                {s.name}
+              </p>
+            </div>
+          ))}
+          {rows.map((row) => (
+            <div key={row.label} className="contents">
+              <p className="text-xs text-gray-400 font-semibold pt-0.5">
+                {row.label}
+              </p>
+              {[a, b].map((s) => (
+                <p
+                  key={s.id}
+                  className="text-xs text-gray-700 leading-relaxed break-words"
+                >
+                  {row.render(s)}
+                </p>
+              ))}
+            </div>
+          ))}
+          {dist !== null && (
+            <>
+              <p className="text-xs text-gray-400 font-semibold pt-0.5">
+                直线距离
+              </p>
+              <p className="text-xs text-gray-700 font-bold sm:col-span-2">
+                两地相距约{" "}
+                {dist < 1
+                  ? `${Math.round(dist * 1000)} m`
+                  : `${dist.toFixed(1)} km`}
+              </p>
+            </>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -2545,6 +2769,7 @@ export default function Home() {
         </div>
       </footer>
       <SpotDetailDialog />
+      <CompareBar />
     </div>
   );
 }
