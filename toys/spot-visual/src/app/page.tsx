@@ -12,6 +12,7 @@ import {
   List,
   Heart,
   Copy,
+  History,
   User,
   Share2,
   Menu,
@@ -1447,6 +1448,7 @@ function SpotsView() {
     favorites,
     toggleFavorite,
     setSpots,
+    recentViews,
   } = useAppStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
@@ -1906,6 +1908,45 @@ function SpotsView() {
           </button>
         )}
       </div>
+      {/* ═══ 最近浏览：继续浏览横滑条（点开详情即记录，最多 12 个） ═══ */}
+      {recentViews.length > 0 &&
+        (() => {
+          const recents = recentViews
+            .map((id) => spots.find((s) => s.id === id))
+            .filter((s): s is (typeof spots)[number] => !!s);
+          if (!recents.length) return null;
+          return (
+            <div className="mb-4">
+              <p className="text-xs font-semibold text-gray-500 mb-2 flex items-center gap-1">
+                <History className="w-3.5 h-3.5" />
+                继续浏览
+              </p>
+              <ScrollArea className="max-w-full">
+                <div className="flex gap-2 pb-1">
+                  {recents.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => setSelectedSpot(s)}
+                      className="shrink-0 w-28 text-left group"
+                    >
+                      <div className="h-16 w-28 rounded-lg overflow-hidden bg-gray-100 mb-1">
+                        <SpotImage
+                          src={s.image}
+                          alt={s.name}
+                          category={s.category}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                      </div>
+                      <p className="text-[11px] text-gray-600 truncate group-hover:text-emerald-700">
+                        {s.name}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          );
+        })()}
       {/* Category filters */}
       <ScrollArea className="max-w-full">
         <div className="flex items-center gap-2 pb-1">

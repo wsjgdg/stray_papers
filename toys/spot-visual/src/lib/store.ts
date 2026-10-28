@@ -32,6 +32,8 @@ interface AppStore {
   favorites: string[];
   activeView: ViewType;
   selectedSpot: Spot | null;
+  /** 最近浏览的景点 id（新→旧，去重，最多 12 条），首页横滑「继续浏览」用 */
+  recentViews: string[];
   searchQuery: string;
   activeCategory: string;
   viewMode: "grid" | "list";
@@ -92,6 +94,7 @@ export const useAppStore = create<AppStore>()(
       favorites: [],
       activeView: "spots" as ViewType,
       selectedSpot: null,
+      recentViews: [],
       searchQuery: "",
       activeCategory: "全部",
       viewMode: "grid" as "grid" | "list",
@@ -145,7 +148,17 @@ export const useAppStore = create<AppStore>()(
             : [...s.favorites, id],
         })),
       setActiveView: (view) => set({ activeView: view }),
-      setSelectedSpot: (spot) => set({ selectedSpot: spot }),
+      setSelectedSpot: (spot) =>
+        set((s) => ({
+          selectedSpot: spot,
+          // 打开详情即记录最近浏览（置顶去重，封顶 12 条）
+          recentViews: spot
+            ? [spot.id, ...s.recentViews.filter((id) => id !== spot.id)].slice(
+                0,
+                12,
+              )
+            : s.recentViews,
+        })),
       setSearchQuery: (q) => set({ searchQuery: q }),
       setActiveCategory: (c) => set({ activeCategory: c }),
       setViewMode: (m) => set({ viewMode: m }),
@@ -298,6 +311,8 @@ export const useAppStore = create<AppStore>()(
         trip: s.trip,
         // 记住上次浏览的视图，刷新后原地恢复（对齐 food 页行为）
         activeView: s.activeView,
+        // 最近浏览（首页「继续浏览」横滑条）
+        recentViews: s.recentViews,
       }),
     },
   ),
