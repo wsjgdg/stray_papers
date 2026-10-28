@@ -1292,6 +1292,7 @@ import { SCENIC_DETAILS } from "./scenic-details.generated";
 
 export function cityPoiToSpot(city: string, p: CityPoi, index: number): Spot {
   const short = city.replace(/市$/, "");
+  const level = SCENIC_LEVELS[`${city}::${p.name}`];
   return {
     id: `poi-${short}-${index}`,
     name: p.name,
@@ -1302,7 +1303,7 @@ export function cityPoiToSpot(city: string, p: CityPoi, index: number): Spot {
     openTime: p.openTime,
     tel: p.tel,
     website: p.website,
-    level: SCENIC_LEVELS[`${city}::${p.name}`],
+    level,
     reservation: RESERVATION_NOTES[p.name],
     imageSource: p.image ? "amap" : undefined,
     address: p.address || `${city}（高德 POI）`,
@@ -1310,10 +1311,32 @@ export function cityPoiToSpot(city: string, p: CityPoi, index: number): Spot {
     projects: [],
     category: p.category,
     description:
-      POI_DESCRIPTIONS[`${city}::${p.name}`] ??
-      "来自高德地图 POI（构建时打包）。信息以景区公示为准。",
+      POI_DESCRIPTIONS[`${city}::${p.name}`] ?? poiPlaceholder(city, p, level),
     location: { lat: p.lat, lng: p.lng },
   };
+}
+
+// POI 事实句模板（替代千篇一律占位）：城市/类别/评分/等级/开放时间全部来自高德数据，零编造
+const POI_CATEGORY_WORDS: Record<string, string> = {
+  自然风光: "自然风光景点",
+  历史人文: "历史文化类景点",
+  宗教寺庙: "宗教寺庙",
+  古镇村落: "古镇村落",
+  主题乐园: "主题乐园",
+  城市地标: "城市地标",
+  海滨度假: "滨海度假地",
+  轻运动: "户外运动场所",
+  美食小吃: "美食街区",
+};
+function poiPlaceholder(city: string, p: CityPoi, level?: string): string {
+  const word = POI_CATEGORY_WORDS[p.category] ?? "热门景点";
+  const parts = [`${city}的${word}`];
+  if (p.rating) parts.push(`高德评分 ${p.rating.toFixed(1)}`);
+  if (level) parts.push(`国家${level}级景区`);
+  let text = parts.join("，") + "。";
+  if (p.openTime) text += `开放时间：${p.openTime}；`;
+  text += "信息以景区公示为准。";
+  return text;
 }
 
 // A 级名录反哺景点的粗分类（与 fetch-city-pois 的推断口径一致）
