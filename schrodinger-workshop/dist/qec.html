@@ -4182,32 +4182,75 @@ function qecMajority(bits){
         会把主线程冻住整整一分钟、期间连进度都没有）；
      2) 每个点算完立刻可复用（DP 记忆化见 qecExactPL），中断/改样本数不重算。
    `qecSweep` 保留为同步包装（pot 套件与导出仍用它），行为与拆分前**逐位一致**。 */
+/* R129：扫描策略（R123 记下的 A/B 两个候选，做成了运行时可选的开关）。
+ *
+ *   fastSweep   —— A：每点 MC 样本减半（120→60）。代价是统计精度：p=0.5 附近
+ *                  σ=√(P(1−P)/N) 由 ~4% 涨到 ~6%。实测只对「MC 占大头」的档位
+ *                  有意义（n=9 门级 −50%、n=5·rd=3 −18%）；n=7 的 MC 只占 4%，
+ *                  开它纯亏。
+ *   skipMcWhenExact —— B：有精确解（DP 有限）就不跑该点的 MC，PL 直接取精确值，
+ *                  并在行里标 `PLsrc='exact'`。省 37%（n=5·rd=3）/ 4%（n=7）。
+ *                  **信息代价**：曲线上少了「MC 与精确解重合」的现场证据 ⟹ 页面
+ *                  在扫描收尾时补一次**单点对账**（同一点跑 MC 与 DP，报 z/σ），
+ *                  用 1 个点换回证据（见 mode-rep 的 spotCheck）。
+ *
+ * 两个开关缺省都是 false ⟹ 与 R128 及之前**逐位一致**（pot 套件的逐位断言靠这个）。
+ * 页面把它们做成按钮，并把实测成本写进诊断面板：拿信息换时间是用户的决定，
+ * 不是引擎偷偷替用户做的决定。
+ */
+function qecSweepPolicy(cfg = {}){
+  const c = { ...QEC_DEFAULTS, ...cfg };
+  const gate = c.noise === 'gate';
+  const base = c.sweepTrials || (gate ? 1200 : 900);
+  const fast = !!c.fastSweep;
+  return {
+    fastSweep: fast,
+    skipMcWhenExact: !!c.skipMcWhenExact,
+    sweepTrials: base,
+    trialsMc: fast ? Math.max(40, Math.round(base / 2)) : base,
+  };
+}
+
 function qecSweepPlan(cfg = {}){
   const c = { ...QEC_DEFAULTS, ...cfg };
   const gate = c.noise === 'gate';
   const phys = c.noise === 'phys';
+  const pol = qecSweepPolicy(c);
   const ps = c.ps || (gate
     ? Array.from({ length: 16 }, (_, i) => 0.002 * Math.pow(0.3 / 0.002, i / 15))
     : [0.002, 0.005, 0.01, 0.02, 0.04, 0.07, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5]);
+  const now = () => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now());
   const step = i => {
     const p = ps[i];
-    const row = { p, PL: NaN, PLexact: NaN, Pun: p };
-    if (gate){
+    /* tExact/tMc：逐点成本（ms）。R123 的结论「最贵那档 DP 占 61%」原本只能靠
+       离线脚本量，现在页面的诊断面板能实时报同一件事。字段只增不改数。 */
+    const row = { p, PL: NaN, PLexact: NaN, Pun: p, PLsrc: 'mc', tExact: 0, tMc: 0 };
+    if (gate || phys){
+      const t0 = now();
+      /* gate：DP-over-frames；phys：DP 精确（γ/λ>0 时 NaN） */
       row.PLexact = qecExactPL({ ...c, p });
-      row.PL = qecEnsemble({ ...c, p, trials: c.sweepTrials || 1200 }).PL;
-    } else if (phys){
-      /* R108：DP 精确（γ/λ>0 时 NaN）+ MC（密度矩阵，默认 900 次/点） */
-      row.PLexact = qecExactPL({ ...c, p });
-      row.PL = qecEnsemble({ ...c, p, trials: c.sweepTrials || 900 }).PL;
+      row.tExact = now() - t0;
+      /* R129（策略 B）：有精确解且用户要求 ⟹ 不跑 MC，PL 直接取精确值 */
+      if (pol.skipMcWhenExact && Number.isFinite(row.PLexact)){
+        row.PL = row.PLexact; row.PLsrc = 'exact';
+        return row;
+      }
+      const t1 = now();
+      row.PL = qecEnsemble({ ...c, p, trials: pol.trialsMc }).PL;
+      row.tMc = now() - t1;
     } else {
+      /* iid：解析解本身就是精确的（qecEnsemble 顺带算），没有「省 MC」这回事 */
+      const t1 = now();
       const e = qecEnsemble({ ...c, p });
       row.PL = e.PL; row.PLexact = e.PLexact;
+      row.tMc = now() - t1;
     }
     return row;
   };
   const plan = {
     ps, step, length: ps.length,
     noise: c.noise, spectrum: c.spectrum, noisyPhase: c.noisyPhase, cfg: c,
+    policy: pol,
   };
   /* R124：自适应补点。默认**不启用**——`qecSweep` 与既有调用一条不变（pot 套件的
      逐位断言靠这个保证）。调用方拿到粗扫结果后调 refine(rows, m)：
@@ -5326,6 +5369,9 @@ const QEC_CSS = `
   #qePanel output{font-family:var(--mono);font-size:11px;color:var(--txt);min-width:40px;text-align:right}
   #qePanel .btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
   #qePanel .btns.g3{grid-template-columns:repeat(3,1fr)}
+  /* R129：策略按钮文案长（「快扫（样本减半）」/「有精确解跳过 MC」），两列容易挤 ⟹
+     单列铺满 + 行高放宽；面板宽 238px，实测单列 12px 字不折行 */
+  #qePanel .btns.scan1{grid-template-columns:1fr}
   #qePanel button{font-family:var(--mono);font-size:10.5px;padding:5px 4px;border-radius:6px;cursor:pointer;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     background:rgba(103,232,249,.08);border:1px solid var(--line);color:var(--txt);transition:all .15s}
@@ -5421,6 +5467,11 @@ class QecApp {
           n=9 ⟹ d=9（P_L=126p⁵−420p⁶+540p⁷−315p⁸+70p⁹）；稳定子 2→n−1 个、
           ancilla 数同步涨；n=7/9 只容 rd=1（nq>18 态矢超限，setN 自动降档） ---- */
       n: qecNormN(q.has('n') ? parseFloat(q.get('n')) : 3),
+      /* ---- R129 扫描策略（URL: fast=1 / skipmc=1）——R123 记下的 A/B 两个候选。
+          缺省**都关**：拿统计精度/证据换时间是用户的决定，不能让引擎替用户做
+          （两个开关关掉时与 R128 逐位一致，pot 套件的逐位断言靠这个）。 ---- */
+      fastScan: q.get('fast') === '1',
+      skipMc: q.get('skipmc') === '1',
       /* ---- R108 物理通道（URL: t1/t2/tg/pd/re/peq，与 qcircuit 线路页同名同义） ---- */
       phys: {
         t1: num('t1', 3000), t2: num('t2', 2000), tg: num('tg', 10),
@@ -5538,6 +5589,13 @@ class QecApp {
         </div>
         <div class="row"><label>样本数</label><input type="range" id="qeTrials" min="500" max="20000" step="500"><output id="qeTrialsO">—</output></div>
 
+        <div class="grp">扫描策略（拿信息换时间）</div>
+        <div class="btns scan1">
+          <button id="qeFastScan" title="A：每点 MC 样本减半（120→60 或 600→300）。省的是 MC 那一半时间；代价是 p=0.5 附近 σ 由 ~4% 涨到 ~6%（HUD 直接显示本配置的实测成本）">快扫（样本减半）</button>
+          <button id="qeSkipMc" title="B：该点有精确解（DP 有限）就不跑 MC，P_L 直接取精确值。省 4%（n=7）~37%（n=5·k=3）的时间；代价是曲线上少了 MC↔精确重合的现场证据——页面会在扫描收尾补一次单点对账，用 1 个点换回证据">有精确解跳过 MC</button>
+        </div>
+        <div id="qeScanMsg" style="font-family:var(--mono);font-size:9.5px;color:var(--dim);line-height:1.45;margin:2px 0 3px"></div>
+
         <div class="grp">导出（R116 · 带可复现元数据头）</div>
         <div class="btns g3">
           <button id="qeExpCurve" title="曲线当前扫描点全量导出：p / P_L 精确 / P_L MC / 解析 / 未编码基线。无精确解的点留空（不是 0）">曲线 CSV</button>
@@ -5594,6 +5652,12 @@ class QecApp {
           <div class="hrow" id="hBitErrRow" style="display:none"><span>表决后错位/试验</span><span id="hBitErr">—</span></div>
           <div class="hrow"><span>通道跳变/试验</span><span id="hJump">—</span></div>
           <div class="hrow"><span>γ / λ / ε（每门）</span><span id="hChan">—</span></div>
+        </div>
+        <div id="hScanStats" style="display:none">
+          <hr>
+          <div class="hrow"><span>扫描样本/点</span><span id="hScanN">—</span></div>
+          <div class="hrow"><span>扫描成本 DP/MC</span><span id="hScanCost">—</span></div>
+          <div class="hrow"><span>MC↔精确 对账</span><span id="hSpot">—</span></div>
         </div>
       </aside>
 
@@ -5656,6 +5720,11 @@ class QecApp {
       this.state.seed = (this.state.seed * 1103515245 + 12345) % 2147483647;
       this.recompute();
     });
+
+    /* R129：扫描策略开关（R123 的 A/B 两个候选）——改的是**下一轮扫描的输入**，
+       所以必须清曲线键重扫；同时废掉旧的实测成本与单点对账。 */
+    this.on(this.q('#qeFastScan'), 'click', () => this.setScanFlag('fastScan', !this.state.fastScan));
+    this.on(this.q('#qeSkipMc'), 'click', () => this.setScanFlag('skipMc', !this.state.skipMc));
 
     /* ---- R116 导出：曲线 CSV / 综合表 CSV / 综合表 Markdown ---- */
     this.on(this.q('#qeExpCurve'), 'click', () => this.exportData('curve'));
@@ -5734,6 +5803,9 @@ class QecApp {
        R110：n 同样进键（数据比特数/稳定子数随它变）；trials 位用 effTrials
        （重配置下已封顶——拖动样本数滑块不触发重扫，只重跑全批）。 */
     const key = this.state.code + '|' + this.state.noise + '|' + this.state.spectrum + '|' + this.state.noisyPhase + '|' + qecNormN(this.state.n) + '|' + this.effTrials() + '|' + qecNormRd(this.state.rd) +
+      /* R129：扫描策略进键——同一配置开/关快扫给出**不同的曲线**（样本数不同），
+         不进键就会命中上一种策略的缓存，把旧点画在新策略下。 */
+      (this.state.fastScan ? '|fast' : '') + (this.state.skipMc ? '|skipmc' : '') +
       /* R114：phys 六参数必须进键——sweepCfg 里 Object.assign(sweepCfg, state.phys)，
          改任一个滑块都得重扫（滑块回调原本靠 `this._curveKey=''` 强制重算；一旦
          引入缓存，键不含 phys 就会命中**过期**曲线 ⟹ 一并收进键）。 */
@@ -5749,6 +5821,9 @@ class QecApp {
       if (cached){
         this.curve = cached.curve; this.svy = cached.svy;
         this._thr = cached.thr; this._thrU = cached.thrU; this._floor = cached.floor;
+        /* R129：实测成本与单点对账也属于这条曲线的结果——不跟着回来就会把
+           另一条曲线的读数挂在这一条上（诊断面板说的必须是眼前这条）。 */
+        this._scanCost = cached.cost || null; this._spot = cached.spot || null;
         this._curveKey = key;
       } else {
       /* gate 模式的 p 网格显式给到 0.55：数值阈值 ≈0.5（PLexact(1/2)≡1/2，
@@ -5767,6 +5842,8 @@ class QecApp {
         code: this.state.code, noise: this.state.noise, spectrum: this.state.spectrum, noisyPhase: this.state.noisyPhase,
         rd: this.state.rd, n: this.state.n,
         trials: hv ? 120 : Math.max(600, Math.round(this.state.trials / 3)), seed: 101, sweepTrials: hv ? 120 : 600,
+        /* R129：策略透传给 qecSweepPlan（缺省 false ⟹ 与 R128 逐位一致） */
+        fastSweep: this.state.fastScan, skipMcWhenExact: this.state.skipMc,
       };
       if (this.state.noise === 'gate'){
         /* R124：重档从「6 点均匀」改成「4 点粗扫 + 2 点自适应补点」——**总数仍是 6**
@@ -5808,8 +5885,11 @@ class QecApp {
         }
         this._curveCache.set(key, {
           curve: this.curve, svy: this.svy, thr: this._thr, thrU: this._thrU, floor: this._floor,
+          cost: this._scanCost, spot: this._spot,
         });
         if (this._curveCache.size > 24) this._curveCache.delete(this._curveCache.keys().next().value);
+        /* R129：跳过 MC 的补偿——扫描收尾补一次单点对账（见 spotCheck） */
+        this.spotCheck(key);
       });
       }
     }
@@ -5915,6 +5995,16 @@ class QecApp {
   }
   setP(v){ this.state.p = v; this.syncPanel(); this.recompute(); }
   setTrials(n){ this.state.trials = n; this.syncPanel(); this.recompute(); }
+  /* R129：扫描策略开关。`_curveKey=''` 强制重扫（策略是两个扫描的输入）；实测成本
+     与单点对账随旧扫描一起作废（不把上一轮的读数挂在新策略上）。 */
+  setScanFlag(key, on){
+    const v = !!on;
+    if (this.state[key] === v) return;
+    this.state[key] = v;
+    this._curveKey = '';
+    this._scanCost = null; this._spot = null;
+    this.syncPanel(); this.recompute(); this.renderHint();
+  }
   reseed(s){ this.state.seed = s; this._rng = null; this.recompute(); }
 
   /* R98 P2：播放按钮文案/态（on 类 = 播放中） */
@@ -5947,6 +6037,21 @@ class QecApp {
         : (k === 1 ? '每位稳定子测 1 次（R108 行为；ε_k=ε）'
           : k === 3 ? '每位稳定子测 3 次取多数：ε→3ε²−2ε³；只纠经典读出翻转，不救数据错误，提取门机会 ×3'
           : '每位稳定子测 5 次取多数：ε→10ε³−15ε⁴+6ε⁵；代价同比例上升');
+    }
+    /* R129：扫描策略按钮 + 一行实测说明（成本只报**上一轮实测**，不报估计值） */
+    const fsc = this.q('#qeFastScan'), skm = this.q('#qeSkipMc');
+    if (fsc) fsc.classList.toggle('on', !!s.fastScan);
+    if (skm) skm.classList.toggle('on', !!s.skipMc);
+    const smsg = this.q('#qeScanMsg');
+    if (smsg){
+      const pol = this.scanPolicy();
+      const c = this._scanCost;
+      const bits = [
+        s.fastScan ? '快扫：每点 ' + pol.sweepTrials + '→' + pol.trialsMc + ' 样本（σ ×' + Math.sqrt(pol.sweepTrials / pol.trialsMc).toFixed(2) + '）' : '快扫：关（每点 ' + pol.sweepTrials + ' 样本）',
+        s.skipMc ? '跳过 MC：开（有精确解的点直接取精确值）' : '跳过 MC：关（每点都跑 MC）',
+      ];
+      if (c && c.n) bits.push('上轮实测 DP ' + (c.dp / 1000).toFixed(1) + 's / MC ' + (c.mc / 1000).toFixed(1) + 's' + (c.skipped ? '（跳 ' + c.skipped + ' 点）' : ''));
+      smsg.textContent = bits.join(' · ');
     }
     const wrap = this.q('#qeSpWrap');
     if (wrap) wrap.classList.toggle('off', s.noise !== 'gate');
@@ -6082,6 +6187,13 @@ class QecApp {
       phys: s.noise === 'phys' ? { ...s.phys } : null,
       analytic: s.noise === 'iid' ? qecLogicalRateLab(N) : null,
       dp,
+      /* R129：策略非缺省时补一行 `# scan=…`——否则拿到 CSV 的人会以为 P_L_MC 列
+         真的是 600 次抽样（它可能是精确值，也可能是半样本）。缺省（两个开关都关）
+         时不加这一行 ⟹ 与 R128 的导出**逐字节一致**。 */
+      extra: (s.fastScan || s.skipMc) ? ['scan=' + [
+        s.fastScan ? 'fast（每点 ' + this.scanPolicy().trialsMc + ' 样本，非 ' + this.scanPolicy().sweepTrials + '）' : null,
+        s.skipMc ? 'skip-MC（有精确解的点：P_L_MC 列 = 精确值，未跑 MC）' : null,
+      ].filter(Boolean).join(' + ')] : null,
       generated: new Date().toISOString(),
     };
   }
@@ -6134,6 +6246,10 @@ class QecApp {
     if (s.noise === 'phys'){
       for (const k of ['t1', 't2', 'tg', 'pd', 're', 'peq']) q.set(k, String(s.phys[k]));
     }
+    /* R129：扫描策略也是「配置」的一部分（同一条曲线不同样本数/不同 MC 有无），
+       必须进快照，否则「验证快照」验的不是同一个实验 */
+    if (s.fastScan) q.set('fast', '1');
+    if (s.skipMc) q.set('skipmc', '1');
     return location.origin + location.pathname + '?' + q.toString();
   }
   /* R119：短链（码本见 export.js）。长链仍在 _snapshotUrl()，两者并列显示 */
@@ -6145,7 +6261,10 @@ class QecApp {
       noisyPhase: (s.noise === 'iid' ? null : s.noisyPhase),
       p: s.p, trials: this.effTrials(), seed: s.seed,
     });
-    return location.origin + location.pathname + '?mode=rep&s=' + tok;
+    /* 策略不进码本（版本化码本一改旧短链就全废），改为并列的显式参数：
+       mergeShort 只补缺席键 ⟹ 显式 fast/skipmc 优先，短链照样还原策略 */
+    const extra = (s.fastScan ? '&fast=1' : '') + (s.skipMc ? '&skipmc=1' : '');
+    return location.origin + location.pathname + '?mode=rep&s=' + tok + extra;
   }
   copySnapshot(){
     const url = this._shortUrl();
@@ -6237,13 +6356,16 @@ class QecApp {
           return;
         }
         if (!this._sweepProg || tok !== this._sweepTok) return;
-        const r = { p: m.row.p, PL: m.row.PL, PLexact: (m.row.PLexact === null ? NaN : m.row.PLexact), Pun: m.row.Pun };
+        const r = { p: m.row.p, PL: m.row.PL, PLexact: (m.row.PLexact === null ? NaN : m.row.PLexact), Pun: m.row.Pun,
+          PLsrc: m.row.PLsrc || 'mc', tExact: m.row.tExact || 0, tMc: m.row.tMc || 0 };   /* R129 */
         this._ptCache.set(key + '#' + this._sweepProg.i, r);
+        this._accCost(r);
         /* 与主路径一致：按 p 升序插入（补点的 p 落在粗扫区间内，直接 push 会折回） */
         let at = this.curve.p.length;
         for (let t = 0; t < this.curve.p.length; t++) if (this.curve.p[t] > r.p){ at = t; break; }
         this.curve.p.splice(at, 0, r.p); this.curve.PL.splice(at, 0, r.PL);
         this.curve.PLexact.splice(at, 0, r.PLexact); this.curve.Pun.splice(at, 0, r.Pun);
+        this.curve.PLsrc.splice(at, 0, r.PLsrc);
         this._sweepProg.i = this._sweepProg.i + 1;
         /* ⚠ 补点轮的 m.n 是**补点计划的长度（2）**，不是总数——拿它覆盖会让进度显示
            成「5/2」。总数由派发补点时算好，这里只在粗扫轮更新。 */
@@ -6254,9 +6376,10 @@ class QecApp {
       w.onerror = () => { this._useWorker = false; clearTimeout(this._wTmo); this._sweepStream(sweepCfg, key, finish); };
       /* 与主路径一致：先清空派生量，再开始 */
       this.svy = null; this._thr = null; this._thrU = null; this._floor = null;
-      this.curve = { p: [], PL: [], PLexact: [], Pun: [],
+      this.curve = { p: [], PL: [], PLexact: [], Pun: [], PLsrc: [],
         noise: sweepCfg.noise, spectrum: sweepCfg.spectrum, noisyPhase: sweepCfg.noisyPhase };
       this._curveKey = key;
+      this._scanCost = { dp: 0, mc: 0, skipped: 0, n: 0 }; this._spot = null;   /* R129 */
       this._sweepProg = { i: 0, n: (sweepCfg.ps || []).length || 6 };
       this._wId = (this._wId || 0) + 1;
       this._wRefined = false;
@@ -6281,8 +6404,9 @@ class QecApp {
        扫描没跑完就还是上一配置的数。留着旧值比显示「—」更糟——用户会把旧数
        当成新配置的结果（cdp110 D4 就是这样抓到的：k=1→k=3 后底座没变）。 */
     this.svy = null; this._thr = null; this._thrU = null; this._floor = null;
-    this.curve = { p: [], PL: [], PLexact: [], Pun: [], noise: plan.noise, spectrum: plan.spectrum, noisyPhase: plan.noisyPhase };
+    this.curve = { p: [], PL: [], PLexact: [], Pun: [], PLsrc: [], noise: plan.noise, spectrum: plan.spectrum, noisyPhase: plan.noisyPhase };
     this._curveKey = key;
+    this._scanCost = { dp: 0, mc: 0, skipped: 0, n: 0 }; this._spot = null;   /* R129 */
     this._sweepProg = { i: 0, n: plan.length };
     const tk = i => key + '#' + i;
     /* R124 两阶段状态 */
@@ -6318,6 +6442,7 @@ class QecApp {
             for (let t = 0; t < this.curve.p.length; t++) if (this.curve.p[t] > rX.p){ at = t; break; }
             this.curve.p.splice(at, 0, rX.p); this.curve.PL.splice(at, 0, rX.PL);
             this.curve.PLexact.splice(at, 0, rX.PLexact); this.curve.Pun.splice(at, 0, rX.Pun);
+            this.curve.PLsrc.splice(at, 0, rX.PLsrc || 'mc'); this._accCost(rX);
             if (this._sweepProg){ this._sweepProg.i = i + 1; }
             this.drawCurve(); this.renderHint();
             setTimeout(tick, 0);
@@ -6340,12 +6465,94 @@ class QecApp {
       rows.push(r);
       this.curve.p.push(r.p); this.curve.PL.push(r.PL);
       this.curve.PLexact.push(r.PLexact); this.curve.Pun.push(r.Pun);
+      this.curve.PLsrc.push(r.PLsrc || 'mc'); this._accCost(r);
       if (this._sweepProg) this._sweepProg.i = i + 1;
       if (this.curve.p.length >= 2) this.drawCurve();   /* 1 点时画不出折线 */
       this.renderHint();
       if (memo) tick(); else setTimeout(tick, 0);
     };
     setTimeout(tick, 0);
+  }
+
+  /* ---- R129 扫描策略：成本记账 + 跳过 MC 的补偿对账 ----
+     先记一个**踩过的坑**（jsdom 套件 S9/S16 抓出）：一开始这里用 `this.cfg()` 算
+     策略，而 cfg() 里根本没有 `sweepTrials` ⟹ qecSweepPolicy 回落到缺省 1200，
+     于是 HUD 写着「快扫 1200→600」而扫描实际用的是 600→300（轻档）——**面板报的
+     样本数与真实样本数不一致**，正是本页最不该犯的错。现在统一走 scanPolicy()：
+     样本数按 sweep 的真实口径（重档 120 / phys 轻档 900 / 其余 600）取。 */
+  scanPolicy(){
+    const tri = this.heavy() ? 120 : (this.state.noise === 'phys' ? 900 : 600);
+    return qecSweepPolicy({ ...this.cfg(), sweepTrials: tri,
+      fastSweep: this.state.fastScan, skipMcWhenExact: this.state.skipMc });
+  }
+
+  /* R123 量清了「时间花在哪」：n=5·k=3 里 DP 61% / MC 39%，n=9 门级 100% MC，n=7 门级
+     MC 只占 4%。据此把两个候选做成开关（缺省关）：
+       A 快扫（样本减半）—— 只对 MC 占大头且每点很贵的档位有意义（实测 n=9 −50%、
+          n=5·k=3 −18%、n=7 −2%），代价是 σ 约 ×1.41（p=0.5 附近 4%→6%）。
+       B 有精确解跳过 MC —— n=5·k=3 −37%、n=7 −4%；代价是少了「MC↔精确重合」的现场
+          证据 ⟹ 收尾补一次**单点对账**（spotCheck），用 1 个点换回证据。
+     记账口径：`tExact`/`tMc` 来自 `qecSweepPlan.step` 的逐点计时（只加字段，不改数）。 */
+  _accCost(r){
+    if (!this._scanCost) this._scanCost = { dp: 0, mc: 0, skipped: 0, n: 0 };
+    const c = this._scanCost;
+    c.dp += r.tExact || 0; c.mc += r.tMc || 0; c.n++;
+    if (r.PLsrc === 'exact') c.skipped++;
+  }
+
+  /* 单点对账：取被跳过的点里最靠中间的那个，同一点跑一次 MC（样本数与扫描一致）
+     并与 DP 精确值比。**两套独立代码路径互证**（MC 走态矢采样，DP 走帧演算），
+     不是自证；z 用二项 σ=√(P(1−P)/N)。策略 B 关着时不做（本来就有点点 MC）。 */
+  spotCheck(key){
+    const c = this._scanCost, sw = this.curve;
+    if (!c || !c.skipped || !sw || !sw.PLsrc) return;
+    if (key !== this._curveKey) return;
+    const idx = sw.PLsrc.map((v, i) => (v === 'exact' ? i : -1)).filter(i => i >= 0);
+    if (!idx.length) return;
+    const i = idx[Math.floor(idx.length / 2)];
+    const p = sw.p[i], ex = sw.PLexact[i];
+    if (!Number.isFinite(ex)) return;
+    const tok = this._sweepTok;
+    const pol = this.scanPolicy();
+    /* ⚠ 用**流式**分帧跑（R117 的教训）：重档 n=5·k=3 的 120 次试验要 ~4.4s，
+       同步跑会把主线程连同界面一起冻住——而这段代码的存在意义只是补一个证据点。
+       分 8 帧跑完，每帧之间让出；换配置/离开模式时令牌对不上就直接停。 */
+    let st = null;
+    try { st = qecStream({ ...this.cfg(), p, trials: pol.trialsMc }); } catch (e){ return; }
+    const chunk = Math.max(1, Math.ceil(st.total / 8));
+    const pump = () => {
+      if (tok !== this._sweepTok || key !== this._curveKey) return;   /* 换了配置就别补了 */
+      /* ⚠ 末帧要**截断**到剩余数：ceil(300/8)=38，8 帧就是 304 次 ⟹ 会多抽 4 次，
+         于是「面板报 300 样本、实际抽了 304」——又一处面板与真实不符（cdp129 的
+         MC 值 42/304 暴露的）。这里显式截断，样本数严格等于 trialsMc。 */
+      try { st.step(Math.min(chunk, st.total - st.n)); } catch (e){ return; }
+      if (st.n < st.total){ setTimeout(pump, 0); return; }
+      let mc = null;
+      try { mc = st.result(); } catch (e){ return; }
+      const sig = Math.sqrt(Math.max(ex * (1 - ex), 1e-12) / pol.trialsMc);
+      this._spot = { p, ex, mc: mc.PL, z: sig > 0 ? Math.abs(mc.PL - ex) / sig : 0, n: pol.trialsMc };
+      this.renderScanHud(); this.renderHint();
+    };
+    setTimeout(pump, 0);
+  }
+
+  renderScanHud(){
+    const el = this.q('#hScanStats');
+    if (!el) return;
+    const s = this.state;
+    const show = s.noise === 'gate' || s.noise === 'phys';
+    el.style.display = show ? '' : 'none';
+    if (!show) return;
+    const set = (id, v) => { const e = this.q('#' + id); if (e) e.textContent = v; };
+    const pol = this.scanPolicy();
+    const c = this._scanCost, sp = this._spot;
+    set('hScanN', pol.trialsMc + (pol.fastSweep ? '（快扫 ' + pol.sweepTrials + '→' + pol.trialsMc + '）' : ''));
+    set('hScanCost', c && c.n
+      ? (c.dp / 1000).toFixed(1) + 's / ' + (c.mc / 1000).toFixed(1) + 's' + (c.skipped ? ' · 跳 ' + c.skipped + ' 点' : '')
+      : (this._sweepProg ? '扫描中…' : '—'));
+    set('hSpot', sp
+      ? 'p=' + sp.p.toFixed(4) + ' z=' + sp.z.toFixed(2) + 'σ'
+      : (c && c.skipped ? '补测中…' : '—'));
   }
 
   /* ---- R120 诊断面板 ----
@@ -6513,6 +6720,7 @@ class QecApp {
         set('hUn', bad ? '—（γ>0 非 Pauli 无解）' : repEx(un, 3));
         set('hRatioU', bad ? '—' : repNf(e.PL / un, 3) + (e.PL < un ? ' ↓编码有益' : ' ↑编码无益'));
       }
+      this.renderScanHud();   /* R129：扫描策略三行（只报实测成本） */
       const gi = this.q('#hGateStats'), ii = this.q('#hIidCounts'), pi = this.q('#hPhysStats');
       if (gi) gi.style.display = s.noise === 'gate' ? '' : 'none';
       if (ii) ii.style.display = s.noise === 'gate' ? 'none' : '';
@@ -7054,9 +7262,13 @@ class QecApp {
     const unPts = ref.map(([p]) => [p, qecUncodedRate({ ...this.cfg(), p })]);
     line(unPts, 'rgba(251,146,60,.9)', null, 1.6);
 
-    /* MC 点（mag） */
+    /* MC 点（mag）。R129：策略 B 下「有精确解的点」不跑 MC ⟹ 那里 PL 就是精确值，
+       再点一个紫点等于伪造 MC 证据 ⟹ **不画**，并在标题里报跳过几个点。 */
+    const srcs = sw.PLsrc || [];
+    const skips = srcs.reduce((a, v) => a + (v === 'exact' ? 1 : 0), 0);
     g.fillStyle = 'rgba(240,171,252,.95)';
     for (let i = 0; i < sw.p.length; i++){
+      if (srcs[i] === 'exact') continue;
       const x = X(sw.p[i]), y = Y(sw.PL[i]);
       g.beginPath(); g.arc(x, y, 3 * dpr, 0, 6.2832); g.fill();
     }
@@ -7087,7 +7299,8 @@ class QecApp {
     g.fillStyle = 'rgba(226,232,240,.9)'; g.font = (10.5 * dpr) + 'px ui-monospace,monospace';
     g.textAlign = 'left'; g.textBaseline = 'alphabetic';
     g.fillText('P_L vs p（门级 · n=' + qecNormN(this.state.n) + ' · k=' + qecNormRd(this.state.rd) + ' · ' +
-      (dpPts.length > 1 ? 'DP 精确 + MC' : (c1Pts.length > 1 ? '一阶 c₁p + MC' : 'DP 超预算，仅 MC')) + '）', 8 * dpr, 15 * dpr);
+      (dpPts.length > 1 ? 'DP 精确 + MC' : (c1Pts.length > 1 ? '一阶 c₁p + MC' : 'DP 超预算，仅 MC')) +
+      (skips ? ' · 跳过 MC ' + skips + ' 点' : '') + '）', 8 * dpr, 15 * dpr);
     g.font = (9.5 * dpr) + 'px ui-monospace,monospace';
     g.textAlign = 'right';
     /* R112/R114：DP 拒跑时青图例改琥珀注记（与曲线实体对应，不挂羊头）；
@@ -7171,9 +7384,12 @@ class QecApp {
     const unPts = ref.map(([p]) => [p, qecUncodedRate({ ...this.cfg(), p })]).filter(([, v]) => Number.isFinite(v));
     if (unPts.length > 1) line(unPts, 'rgba(251,146,60,.9)', null, 1.6);
 
-    /* MC 点（mag） */
+    /* MC 点（mag）。R129：跳过 MC 的点不画（见 drawCurveGate 同款注记） */
+    const srcsP = sw.PLsrc || [];
+    const skipsP = srcsP.reduce((a, v) => a + (v === 'exact' ? 1 : 0), 0);
     g.fillStyle = 'rgba(240,171,252,.95)';
     for (let i = 0; i < sw.p.length; i++){
+      if (srcsP[i] === 'exact') continue;
       const x = X(sw.p[i]), y = Y(sw.PL[i]);
       g.beginPath(); g.arc(x, y, 3 * dpr, 0, 6.2832); g.fill();
     }
@@ -7211,7 +7427,7 @@ class QecApp {
     /* 标题与图例 */
     g.fillStyle = 'rgba(226,232,240,.9)'; g.font = (10.5 * dpr) + 'px ui-monospace,monospace';
     g.textAlign = 'left'; g.textBaseline = 'alphabetic';
-    g.fillText('P_L vs p（物理通道 · MC + DP · n=' + N + '）', 8 * dpr, 15 * dpr);
+    g.fillText('P_L vs p（物理通道 · MC + DP · n=' + N + (skipsP ? ' · 跳过 MC ' + skipsP + ' 点' : '') + '）', 8 * dpr, 15 * dpr);
     g.font = (9.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'right';
     /* 理想标签变长（10p³−15p⁴+6p⁵ / 35p⁴−84p⁵+70p⁶−20p⁷ / 126p⁵−420p⁶+540p⁷−315p⁸+70p⁹）
        ⟹ 左列图例整体左移，防与 DP/MC 串位；n=3/5 保持 R108/R110 基线 */
@@ -7469,8 +7685,18 @@ class QecApp {
         byBitErr: self.ens.byBitErr.slice(), byBitErrL: self.ens.byBitErrL.slice(),
         meanBitErr: self.ens.meanBitErr,
       } : null,
+      /* R129：扫描策略的实测读数（成本拆分 / 跳过点数 / 单点对账）——诊断用 */
+      scan: () => ({
+        fastScan: self.state.fastScan, skipMc: self.state.skipMc,
+        policy: self.scanPolicy(),
+        cost: self._scanCost ? { ...self._scanCost } : null,
+        spot: self._spot ? { ...self._spot } : null,
+      }),
+      setScan: (fast, skip) => { self.setScanFlag('fastScan', fast); self.setScanFlag('skipMc', skip); return self.debugHandle().scan(); },
       curve: () => self.curve ? {
         p: self.curve.p.slice(), PL: self.curve.PL.slice(), PLexact: self.curve.PLexact.slice(),
+        /* R129：每点的 PL 来源（'mc' | 'exact'）——策略 B 下曲线不再「全是 MC 点」 */
+        PLsrc: (self.curve.PLsrc || []).slice(),
         noise: self.curve.noise, spectrum: self.curve.spectrum, noisyPhase: self.curve.noisyPhase,
         /* R86 旧口径（P_L = p 的交点，1 个机会的基线）——cdp86 契约字段，语义不变 */
         threshold: self._thr,

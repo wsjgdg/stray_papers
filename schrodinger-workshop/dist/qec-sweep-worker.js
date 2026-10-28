@@ -3660,32 +3660,75 @@ function qecMajority(bits){
         会把主线程冻住整整一分钟、期间连进度都没有）；
      2) 每个点算完立刻可复用（DP 记忆化见 qecExactPL），中断/改样本数不重算。
    `qecSweep` 保留为同步包装（pot 套件与导出仍用它），行为与拆分前**逐位一致**。 */
+/* R129：扫描策略（R123 记下的 A/B 两个候选，做成了运行时可选的开关）。
+ *
+ *   fastSweep   —— A：每点 MC 样本减半（120→60）。代价是统计精度：p=0.5 附近
+ *                  σ=√(P(1−P)/N) 由 ~4% 涨到 ~6%。实测只对「MC 占大头」的档位
+ *                  有意义（n=9 门级 −50%、n=5·rd=3 −18%）；n=7 的 MC 只占 4%，
+ *                  开它纯亏。
+ *   skipMcWhenExact —— B：有精确解（DP 有限）就不跑该点的 MC，PL 直接取精确值，
+ *                  并在行里标 `PLsrc='exact'`。省 37%（n=5·rd=3）/ 4%（n=7）。
+ *                  **信息代价**：曲线上少了「MC 与精确解重合」的现场证据 ⟹ 页面
+ *                  在扫描收尾时补一次**单点对账**（同一点跑 MC 与 DP，报 z/σ），
+ *                  用 1 个点换回证据（见 mode-rep 的 spotCheck）。
+ *
+ * 两个开关缺省都是 false ⟹ 与 R128 及之前**逐位一致**（pot 套件的逐位断言靠这个）。
+ * 页面把它们做成按钮，并把实测成本写进诊断面板：拿信息换时间是用户的决定，
+ * 不是引擎偷偷替用户做的决定。
+ */
+function qecSweepPolicy(cfg = {}){
+  const c = { ...QEC_DEFAULTS, ...cfg };
+  const gate = c.noise === 'gate';
+  const base = c.sweepTrials || (gate ? 1200 : 900);
+  const fast = !!c.fastSweep;
+  return {
+    fastSweep: fast,
+    skipMcWhenExact: !!c.skipMcWhenExact,
+    sweepTrials: base,
+    trialsMc: fast ? Math.max(40, Math.round(base / 2)) : base,
+  };
+}
+
 function qecSweepPlan(cfg = {}){
   const c = { ...QEC_DEFAULTS, ...cfg };
   const gate = c.noise === 'gate';
   const phys = c.noise === 'phys';
+  const pol = qecSweepPolicy(c);
   const ps = c.ps || (gate
     ? Array.from({ length: 16 }, (_, i) => 0.002 * Math.pow(0.3 / 0.002, i / 15))
     : [0.002, 0.005, 0.01, 0.02, 0.04, 0.07, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5]);
+  const now = () => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now());
   const step = i => {
     const p = ps[i];
-    const row = { p, PL: NaN, PLexact: NaN, Pun: p };
-    if (gate){
+    /* tExact/tMc：逐点成本（ms）。R123 的结论「最贵那档 DP 占 61%」原本只能靠
+       离线脚本量，现在页面的诊断面板能实时报同一件事。字段只增不改数。 */
+    const row = { p, PL: NaN, PLexact: NaN, Pun: p, PLsrc: 'mc', tExact: 0, tMc: 0 };
+    if (gate || phys){
+      const t0 = now();
+      /* gate：DP-over-frames；phys：DP 精确（γ/λ>0 时 NaN） */
       row.PLexact = qecExactPL({ ...c, p });
-      row.PL = qecEnsemble({ ...c, p, trials: c.sweepTrials || 1200 }).PL;
-    } else if (phys){
-      /* R108：DP 精确（γ/λ>0 时 NaN）+ MC（密度矩阵，默认 900 次/点） */
-      row.PLexact = qecExactPL({ ...c, p });
-      row.PL = qecEnsemble({ ...c, p, trials: c.sweepTrials || 900 }).PL;
+      row.tExact = now() - t0;
+      /* R129（策略 B）：有精确解且用户要求 ⟹ 不跑 MC，PL 直接取精确值 */
+      if (pol.skipMcWhenExact && Number.isFinite(row.PLexact)){
+        row.PL = row.PLexact; row.PLsrc = 'exact';
+        return row;
+      }
+      const t1 = now();
+      row.PL = qecEnsemble({ ...c, p, trials: pol.trialsMc }).PL;
+      row.tMc = now() - t1;
     } else {
+      /* iid：解析解本身就是精确的（qecEnsemble 顺带算），没有「省 MC」这回事 */
+      const t1 = now();
       const e = qecEnsemble({ ...c, p });
       row.PL = e.PL; row.PLexact = e.PLexact;
+      row.tMc = now() - t1;
     }
     return row;
   };
   const plan = {
     ps, step, length: ps.length,
     noise: c.noise, spectrum: c.spectrum, noisyPhase: c.noisyPhase, cfg: c,
+    policy: pol,
   };
   /* R124：自适应补点。默认**不启用**——`qecSweep` 与既有调用一条不变（pot 套件的
      逐位断言靠这个保证）。调用方拿到粗扫结果后调 refine(rows, m)：
@@ -4372,6 +4415,11 @@ async function run(m){
         p: r.p, PL: r.PL,
         PLexact: Number.isFinite(r.PLexact) ? r.PLexact : null,
         Pun: r.Pun,
+        /* R129：扫描策略的两项附注——PL 的来源（mc/exact）与逐点成本（ms）。
+           少了它们，主线程就无法区分「MC 点」与「跳过 MC 的精确点」，也不可能
+           在诊断面板里报 DP/MC 成本拆分。 */
+        PLsrc: r.PLsrc || 'mc',
+        tExact: r.tExact || 0, tMc: r.tMc || 0,
       } });
       await yield1();                 /* 让出 ⟹ cancel 才能被处理 */
       if (dead) return;               /* 被作废：不再发 done（主线程按 id 丢弃） */

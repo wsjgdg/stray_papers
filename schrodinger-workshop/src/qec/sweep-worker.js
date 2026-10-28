@@ -35,6 +35,11 @@ async function run(m){
         p: r.p, PL: r.PL,
         PLexact: Number.isFinite(r.PLexact) ? r.PLexact : null,
         Pun: r.Pun,
+        /* R129：扫描策略的两项附注——PL 的来源（mc/exact）与逐点成本（ms）。
+           少了它们，主线程就无法区分「MC 点」与「跳过 MC 的精确点」，也不可能
+           在诊断面板里报 DP/MC 成本拆分。 */
+        PLsrc: r.PLsrc || 'mc',
+        tExact: r.tExact || 0, tMc: r.tMc || 0,
       } });
       await yield1();                 /* 让出 ⟹ cancel 才能被处理 */
       if (dead) return;               /* 被作废：不再发 done（主线程按 id 丢弃） */
