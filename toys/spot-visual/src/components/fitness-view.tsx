@@ -20,7 +20,6 @@ import {
   X,
   Footprints,
   Activity,
-  Info,
 } from "lucide-react";
 import {
   useRatchetDrag,
@@ -35,68 +34,10 @@ import {
 } from "@/lib/shared-motion-store";
 import { PressureButton } from "@/components/shared/pressure-button";
 import { calcStaminaBudget } from "@/lib/stamina-calculator";
-
-/* ═══ 海拔数据（模拟全程路线） ═══ */
-const ELEVATION_DATA = [
-  { km: 0, alt: 420, type: "flat" as const },
-  { km: 0.3, alt: 435, type: "up" as const },
-  { km: 0.6, alt: 480, type: "up" as const },
-  { km: 0.9, alt: 520, type: "up" as const },
-  { km: 1.2, alt: 510, type: "down" as const },
-  { km: 1.5, alt: 470, type: "down" as const },
-  { km: 1.8, alt: 500, type: "up" as const },
-  { km: 2.1, alt: 560, type: "up" as const },
-  { km: 2.4, alt: 620, type: "up" as const },
-  { km: 2.7, alt: 610, type: "down" as const },
-  { km: 3.0, alt: 580, type: "flat" as const },
-  { km: 3.3, alt: 600, type: "up" as const },
-  { km: 3.6, alt: 680, type: "up" as const },
-  { km: 3.9, alt: 720, type: "up" as const },
-  { km: 4.2, alt: 690, type: "down" as const },
-  { km: 4.5, alt: 630, type: "down" as const },
-  { km: 4.8, alt: 580, type: "down" as const },
-  { km: 5.0, alt: 550, type: "down" as const },
-  { km: 5.3, alt: 500, type: "down" as const },
-  { km: 5.5, alt: 460, type: "down" as const },
-];
-
-/* ═══ 补给点数据 ═══ */
-const SUPPLY_POINTS = [
-  { km: 0, name: "入口", type: "entrance" as const },
-  {
-    km: 1.2,
-    name: "休息亭A",
-    type: "rest" as const,
-    hasToilet: true,
-    chairs: 6,
-    noise: 42,
-  },
-  {
-    km: 2.4,
-    name: "观景台",
-    type: "rest" as const,
-    hasToilet: true,
-    chairs: 4,
-    noise: 55,
-  },
-  {
-    km: 3.6,
-    name: "半山服务站",
-    type: "supply" as const,
-    hasToilet: true,
-    chairs: 12,
-    noise: 68,
-  },
-  {
-    km: 4.8,
-    name: "休息亭B",
-    type: "rest" as const,
-    hasToilet: false,
-    chairs: 3,
-    noise: 75,
-  },
-  { km: 5.5, name: "出口", type: "exit" as const },
-];
+import {
+  MOUNTAIN_ROUTES,
+  type MountainRoute,
+} from "@/lib/mountain-routes.generated";
 
 /* ═══ 体力模式选项 ═══ */
 const MOBILITY_OPTIONS = [
@@ -126,14 +67,35 @@ const MOBILITY_OPTIONS = [
   },
 ];
 
-/* ═══ 分段休息数据 ═══ */
-const SEGMENTS = [
-  { name: "入口→休息亭A", dist: 1.2, climb: 100, difficulty: "⭐⭐" },
-  { name: "休息亭A→观景台", dist: 1.2, climb: 150, difficulty: "⭐⭐⭐" },
-  { name: "观景台→半山站", dist: 1.2, climb: 160, difficulty: "⭐⭐⭐⭐" },
-  { name: "半山站→休息亭B", dist: 1.2, climb: -90, difficulty: "⭐⭐" },
-  { name: "休息亭B→出口", dist: 0.7, climb: -120, difficulty: "⭐" },
-];
+/* ═══ 分段休息数据 —— 由路线关键节点推导（距离/爬升/坡度难度） ═══ */
+function deriveSegments(waypoints: MountainRoute["waypoints"]) {
+  const segs: {
+    name: string;
+    dist: number;
+    climb: number;
+    difficulty: string;
+  }[] = [];
+  for (let i = 1; i < waypoints.length; i++) {
+    const a = waypoints[i - 1];
+    const b = waypoints[i];
+    const dist = Math.round((b.km - a.km) * 10) / 10;
+    const climb = Math.round(b.ele - a.ele);
+    const slope = dist > 0 ? climb / (dist * 1000) : 0;
+    const stars = climb <= 0 ? 1 : slope > 0.22 ? 4 : slope > 0.12 ? 3 : 2;
+    segs.push({
+      name: `${a.name}→${b.name}`,
+      dist,
+      climb,
+      difficulty: "⭐".repeat(stars),
+    });
+  }
+  return segs;
+}
+
+/* 数字格式化：最多 1 位小数，去掉尾随 0（7.4→"7.4"，6→"6"） */
+function fmtNum(n: number): string {
+  return String(Number(n.toFixed(1)));
+}
 
 /* ═══════════════════════════════════════════════════
    同行人头像组件 —— 弹簧依次弹入
@@ -292,14 +254,16 @@ function FlipNumber({ value, active }: { value: number; active: boolean }) {
 }
 
 /* ═══════════════════════════════════════════════════
-   海拔折线图 + 红色游标 —— 磁吸探测、陡坡高频震、补给点气泡、低体力残影
+   海拔折线图 + 红色游标 —— 磁吸探测、陡坡高频震、关键节点气泡、低体力残影
    ═══════════════════════════════════════════════════ */
 function ElevationChart({
+  route,
   cursorKm,
   onCursorChange,
   lineWidth,
   easyMode,
 }: {
+  route: MountainRoute;
   cursorKm: number;
   onCursorChange: (km: number) => void;
   lineWidth: number;
@@ -310,15 +274,17 @@ function ElevationChart({
     H = 200,
     PAD = 40;
 
-  const alts = ELEVATION_DATA.map((d) => d.alt);
+  const profile = route.profile;
+  const waypoints = route.waypoints;
+  const alts = profile.map((d) => d.ele);
   const maxAlt = Math.max(...alts);
   const minAlt = Math.min(...alts);
   const range = maxAlt - minAlt || 1;
-  const totalKm = ELEVATION_DATA[ELEVATION_DATA.length - 1].km;
+  const totalKm = profile[profile.length - 1].km;
 
-  const points = ELEVATION_DATA.map((d, i) => {
+  const points = profile.map((d, i) => {
     const x = PAD + (d.km / totalKm) * (W - PAD * 2);
-    const y = H - PAD - ((d.alt - minAlt) / range) * (H - PAD * 2);
+    const y = H - PAD - ((d.ele - minAlt) / range) * (H - PAD * 2);
     return { x, y, ...d };
   });
 
@@ -329,21 +295,21 @@ function ElevationChart({
   // 当前游标位置（受控）
   const cursorX = PAD + (cursorKm / totalKm) * (W - PAD * 2);
 
-  // ── 插值海拔：根据 km 在两个数据点之间线性插值（连续平滑，不会跳跃）──
+  // ── 插值海拔：根据 km 在两个采样点之间线性插值（连续平滑，不会跳跃）──
   const interpolateAlt = useCallback(
     (km: number): number => {
-      if (km <= ELEVATION_DATA[0].km) return ELEVATION_DATA[0].alt;
-      if (km >= totalKm) return ELEVATION_DATA[ELEVATION_DATA.length - 1].alt;
-      for (let i = 1; i < ELEVATION_DATA.length; i++) {
-        if (ELEVATION_DATA[i].km >= km) {
-          const prev = ELEVATION_DATA[i - 1];
-          const t = (km - prev.km) / (ELEVATION_DATA[i].km - prev.km);
-          return prev.alt + t * (ELEVATION_DATA[i].alt - prev.alt);
+      if (km <= profile[0].km) return profile[0].ele;
+      if (km >= totalKm) return profile[profile.length - 1].ele;
+      for (let i = 1; i < profile.length; i++) {
+        if (profile[i].km >= km) {
+          const prev = profile[i - 1];
+          const t = (km - prev.km) / (profile[i].km - prev.km);
+          return prev.ele + t * (profile[i].ele - prev.ele);
         }
       }
-      return ELEVATION_DATA[ELEVATION_DATA.length - 1].alt;
+      return profile[profile.length - 1].ele;
     },
-    [totalKm],
+    [profile, totalKm],
   );
 
   // 根据 km 求曲线上的 y 坐标（用于游标圆点贴合曲线）
@@ -360,23 +326,23 @@ function ElevationChart({
   // 计算体力数据
   // 已爬楼层：从起点海拔累计爬升（只计爬升，不计下降，下坡不算负数）
   let cumulativeClimb = 0;
-  for (let i = 1; i < ELEVATION_DATA.length; i++) {
-    if (ELEVATION_DATA[i].km > cursorKm) {
-      const prev = ELEVATION_DATA[i - 1];
-      const t = (cursorKm - prev.km) / (ELEVATION_DATA[i].km - prev.km);
-      const altHere = prev.alt + t * (ELEVATION_DATA[i].alt - prev.alt);
-      const delta = altHere - ELEVATION_DATA[i - 1].alt;
+  for (let i = 1; i < profile.length; i++) {
+    if (profile[i].km > cursorKm) {
+      const prev = profile[i - 1];
+      const t = (cursorKm - prev.km) / (profile[i].km - prev.km);
+      const altHere = prev.ele + t * (profile[i].ele - prev.ele);
+      const delta = altHere - profile[i - 1].ele;
       if (delta > 0) cumulativeClimb += delta;
       break;
     }
-    const delta = ELEVATION_DATA[i].alt - ELEVATION_DATA[i - 1].alt;
+    const delta = profile[i].ele - profile[i - 1].ele;
     if (delta > 0) cumulativeClimb += delta;
   }
   const climbedFloors = Math.max(0, Math.round(cumulativeClimb / 3.2)); // 1层 ≈ 3.2m，下坡不计入
   // 总爬升（全程累计正向爬升）
   let totalClimb = 0;
-  for (let i = 1; i < ELEVATION_DATA.length; i++) {
-    const d = ELEVATION_DATA[i].alt - ELEVATION_DATA[i - 1].alt;
+  for (let i = 1; i < profile.length; i++) {
+    const d = profile[i].ele - profile[i - 1].ele;
     if (d > 0) totalClimb += d;
   }
   // 剩余体力 = 100 - 已累计爬升占比，严格夹在 [0, 100]
@@ -387,16 +353,16 @@ function ElevationChart({
       Math.round(100 - (cumulativeClimb / Math.max(1, totalClimb)) * 100),
     ),
   );
-  const nextSupply = SUPPLY_POINTS.find((s) => s.km > cursorKm);
-  const distToSupply = nextSupply
-    ? ((nextSupply.km - cursorKm) * 1000).toFixed(0)
+  const nextWaypoint = waypoints.find((w) => w.km > cursorKm);
+  const distToWaypoint = nextWaypoint
+    ? ((nextWaypoint.km - cursorKm) * 1000).toFixed(0)
     : "0";
 
   // 坡度 > 10° 标记
   const steepSegments: { x1: number; x2: number }[] = [];
-  for (let i = 1; i < ELEVATION_DATA.length; i++) {
-    const dx = ELEVATION_DATA[i].km - ELEVATION_DATA[i - 1].km;
-    const dy = ELEVATION_DATA[i].alt - ELEVATION_DATA[i - 1].alt;
+  for (let i = 1; i < profile.length; i++) {
+    const dx = profile[i].km - profile[i - 1].km;
+    const dy = profile[i].ele - profile[i - 1].ele;
     const angle = Math.atan2(dy, dx * 1000) * (180 / Math.PI);
     if (Math.abs(angle) > 10) {
       steepSegments.push({ x1: points[i - 1].x, x2: points[i].x });
@@ -485,16 +451,25 @@ function ElevationChart({
     }
   }, [cursorX, steepSegments, cursorKm]);
 
-  // 补给点检测：游标经过时放大 + 气泡
+  // 关键节点检测：游标经过最近节点 200m 内时放大 + 气泡提示
   const [activeSupply, setActiveSupply] = useState<string | null>(null);
   useEffect(() => {
-    const supply = SUPPLY_POINTS.find((s) => Math.abs(s.km - cursorKm) < 0.08);
-    if (supply && activeSupply !== supply.name) {
-      setActiveSupply(supply.name);
+    let nearest: { name: string; km: number } | null = null;
+    let best = Infinity;
+    for (const w of waypoints) {
+      const d = Math.abs(w.km - cursorKm);
+      if (d < best) {
+        best = d;
+        nearest = w;
+      }
+    }
+    if (nearest && best < 0.2 && activeSupply !== nearest.name) {
+      setActiveSupply(nearest.name);
       const t = setTimeout(() => setActiveSupply(null), 2000);
       return () => clearTimeout(t);
     }
-  }, [cursorKm, activeSupply]);
+  }, [cursorKm, activeSupply, waypoints]);
+  const activeWp = waypoints.find((w) => w.name === activeSupply);
 
   // 低体力残影
   const showTrail = remaining < 30;
@@ -606,27 +581,24 @@ function ElevationChart({
           }}
         />
 
-        {/* 补给点标记 —— pointer-events:none 避免拖动时被选中 */}
-        {SUPPLY_POINTS.map((sp) => {
-          const x = PAD + (sp.km / totalKm) * (W - PAD * 2);
-          const pt = points.find((p) => Math.abs(p.km - sp.km) < 0.05);
-          const y = pt ? pt.y : H - PAD;
-          const isActive = activeSupply === sp.name;
+        {/* 关键节点标记 —— pointer-events:none 避免拖动时被选中 */}
+        {waypoints.map((wp, wpIdx) => {
+          const x = PAD + (wp.km / totalKm) * (W - PAD * 2);
+          const y = kmToY(wp.km);
+          const isActive = activeSupply === wp.name;
           return (
-            <g key={sp.name} style={{ pointerEvents: "none" }}>
+            <g key={wp.name} style={{ pointerEvents: "none" }}>
               <motion.circle
                 cx={x}
                 cy={y}
                 r={6}
                 fill="white"
                 stroke={
-                  sp.type === "supply"
-                    ? "#F59E0B"
-                    : sp.type === "entrance"
-                      ? "#22C55E"
-                      : sp.type === "exit"
-                        ? "#EF4444"
-                        : "#6B7280"
+                  wpIdx === 0
+                    ? "#22C55E"
+                    : wpIdx === waypoints.length - 1
+                      ? "#EF4444"
+                      : "#F59E0B"
                 }
                 strokeWidth={2}
                 animate={{ scale: isActive ? 1.5 : 1 }}
@@ -634,14 +606,14 @@ function ElevationChart({
               />
               <text
                 x={x}
-                y={y + 3}
+                y={y + 16}
                 textAnchor="middle"
                 fontSize="7"
                 fill="#374151"
                 fontWeight="bold"
                 style={{ pointerEvents: "none", userSelect: "none" }}
               >
-                {sp.hasToilet ? "🚻" : sp.type === "supply" ? "补给" : ""}
+                {wp.name}
               </text>
             </g>
           );
@@ -733,7 +705,7 @@ function ElevationChart({
           </>
         )}
 
-        {/* 补给点微型气泡 */}
+        {/* 关键节点微型气泡 */}
         {activeSupply && (
           <motion.g
             initial={{ scale: 0, opacity: 0 }}
@@ -742,9 +714,9 @@ function ElevationChart({
             transition={{ type: "spring", stiffness: 600, damping: 25 }}
           >
             <rect
-              x={renderCursorX - 50}
+              x={renderCursorX - 55}
               y={PAD - 30}
-              width={100}
+              width={110}
               height={24}
               rx={12}
               fill="#1F2937"
@@ -754,12 +726,12 @@ function ElevationChart({
               x={renderCursorX}
               y={PAD - 13}
               textAnchor="middle"
-              fontSize="10"
+              fontSize="9"
               fill="white"
               fontWeight="bold"
               style={{ pointerEvents: "none", userSelect: "none" }}
             >
-              {activeSupply}
+              {activeWp ? `${activeWp.name} · ${fmtNum(activeWp.km)}km` : ""}
             </text>
           </motion.g>
         )}
@@ -813,15 +785,15 @@ function ElevationChart({
           </div>
         </motion.div>
         <div
-          className={`bg-white rounded-xl border p-3 text-center ${Number(distToSupply) > 500 ? "border-red-200 animate-pulse" : "border-gray-200"}`}
+          className={`bg-white rounded-xl border p-3 text-center ${Number(distToWaypoint) > 500 ? "border-red-200 animate-pulse" : "border-gray-200"}`}
         >
           <div
-            className={`text-[28px] font-black leading-none ${Number(distToSupply) > 500 ? "text-red-500" : "text-blue-500"}`}
+            className={`text-[28px] font-black leading-none ${Number(distToWaypoint) > 500 ? "text-red-500" : "text-blue-500"}`}
           >
-            {distToSupply}
+            {distToWaypoint}
           </div>
           <div className="text-[11px] text-gray-500 mt-1 font-medium">
-            下个补给 (米)
+            下个节点 (米)
           </div>
         </div>
       </div>
@@ -1082,9 +1054,14 @@ export default function FitnessView() {
     我的老伴: string | null;
   }>({ 我: null, 我的老伴: null });
   const [sheetTarget, setSheetTarget] = useState<string | null>(null);
+  const [routeId, setRouteId] = useState(MOUNTAIN_ROUTES[0]?.id ?? "");
   const [cursorKm, setCursorKm] = useState(0);
   const [easyMode, setEasyMode] = useState(false);
   const [flipped, setFlipped] = useState(false);
+
+  // 选中路线驱动整页数据（默认第 1 条）
+  const route =
+    MOUNTAIN_ROUTES.find((r) => r.id === routeId) ?? MOUNTAIN_ROUTES[0];
 
   // 根据同行人中最"受限"的模式决定路线样式
   const effectiveMobility = useMemo(() => {
@@ -1114,10 +1091,22 @@ export default function FitnessView() {
     [staminaConditions],
   );
 
-  // 平路/下坡占比（轻松模式）
-  const totalSegs = ELEVATION_DATA.length - 1;
-  const flatSegs = ELEVATION_DATA.filter((d) => d.type === "flat").length;
-  const downSegs = ELEVATION_DATA.filter((d) => d.type === "down").length;
+  // 平路/下坡占比（轻松模式）——由路线剖面按坡度分类（|坡度|<2% 视为平路）
+  const slopeStats = useMemo(() => {
+    let flat = 0;
+    let down = 0;
+    for (let i = 1; i < route.profile.length; i++) {
+      const dKm = route.profile[i].km - route.profile[i - 1].km;
+      const dEle = route.profile[i].ele - route.profile[i - 1].ele;
+      const slope = dKm > 0 ? dEle / (dKm * 1000) : 0;
+      if (Math.abs(slope) < 0.02) flat++;
+      else if (dEle < 0) down++;
+    }
+    return { flat, down, total: Math.max(1, route.profile.length - 1) };
+  }, [route]);
+
+  // 分段休息数据：由关键节点推导
+  const routeSegments = useMemo(() => deriveSegments(route.waypoints), [route]);
 
   return (
     <div className="min-h-full bg-gray-50">
@@ -1135,12 +1124,32 @@ export default function FitnessView() {
           </div>
         </div>
 
-        {/* ═══ 示例数据声明（海拔/补给点为内置演示路线，暂未接入真实景点） ═══ */}
-        <div className="flex items-center gap-2 mb-5 px-3.5 py-2.5 rounded-xl bg-blue-50/70 border border-blue-100">
-          <Info className="w-4 h-4 text-blue-500 shrink-0" />
-          <p className="text-[11px] text-blue-700 leading-relaxed">
-            示例路线演示：当前的海拔剖面与补给点为内置数据（5.5km
-            示例山路），用于展示体力评估交互，暂未接入真实景点。
+        {/* ═══ 路线选择器（选中路线驱动整页数据） ═══ */}
+        <div className="flex gap-2 overflow-x-auto pb-1 mb-3">
+          {MOUNTAIN_ROUTES.map((r) => (
+            <motion.button
+              key={r.id}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => {
+                setRouteId(r.id);
+                setCursorKm(0);
+                vibrate(30);
+              }}
+              className={`shrink-0 px-3.5 py-2 rounded-full text-xs font-bold border transition-colors ${r.id === route.id ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-600/20" : "bg-white border-gray-200 text-gray-600 hover:border-blue-300"}`}
+            >
+              {r.name}
+            </motion.button>
+          ))}
+        </div>
+
+        {/* ═══ 路线简介 + 数据来源声明 ═══ */}
+        <div className="mb-5">
+          <p className="text-[11px] text-gray-500 leading-relaxed">
+            {route.city} · {route.summary}
+          </p>
+          <p className="text-[10px] text-gray-400 mt-1.5">
+            数据来源：Open-Meteo Elevation（构建时采样，90m 网格）·
+            峰顶海拔用官方公布值 · 路径为关键节点插值，曲线形状为真实地形
           </p>
         </div>
 
@@ -1228,6 +1237,7 @@ export default function FitnessView() {
             flipped={flipped}
             front={
               <ElevationChart
+                route={route}
                 cursorKm={cursorKm}
                 onCursorChange={setCursorKm}
                 lineWidth={lineConfig.lineW}
@@ -1235,13 +1245,16 @@ export default function FitnessView() {
               />
             }
             back={
-              <div className="space-y-3 py-4">
+              <div key={route.id} className="space-y-3 py-4">
                 {easyMode ? (
                   <>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-green-50 rounded-xl p-4 text-center">
                         <div className="text-3xl font-black text-green-600">
-                          {Math.round((flatSegs / totalSegs) * 100)}%
+                          {Math.round(
+                            (slopeStats.flat / slopeStats.total) * 100,
+                          )}
+                          %
                         </div>
                         <div className="text-xs text-gray-500 mt-1 font-medium">
                           平路占比
@@ -1249,7 +1262,10 @@ export default function FitnessView() {
                       </div>
                       <div className="bg-blue-50 rounded-xl p-4 text-center">
                         <div className="text-3xl font-black text-blue-600">
-                          {Math.round((downSegs / totalSegs) * 100)}%
+                          {Math.round(
+                            (slopeStats.down / slopeStats.total) * 100,
+                          )}
+                          %
                         </div>
                         <div className="text-xs text-gray-500 mt-1 font-medium">
                           下坡占比
@@ -1263,14 +1279,12 @@ export default function FitnessView() {
                     {/* 休息椅标注 */}
                     <div className="mt-4">
                       <div className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
-                        <Armchair className="w-4 h-4" /> 沿途休息点
+                        <Armchair className="w-4 h-4" /> 沿途关键节点
                       </div>
                       <div className="space-y-2">
-                        {SUPPLY_POINTS.filter(
-                          (s) => s.type === "rest" || s.type === "supply",
-                        ).map((sp) => (
+                        {route.waypoints.map((wp) => (
                           <div
-                            key={sp.name}
+                            key={wp.name}
                             className="flex items-center gap-3 bg-gray-50 rounded-xl p-3"
                           >
                             <motion.div
@@ -1289,11 +1303,10 @@ export default function FitnessView() {
                             </motion.div>
                             <div className="flex-1">
                               <div className="text-sm font-semibold text-gray-800">
-                                {sp.name}
+                                {wp.name}
                               </div>
                               <div className="text-xs text-gray-400">
-                                {sp.km}km · {sp.chairs}个座位 · {sp.noise}dB
-                                {sp.hasToilet ? " · 🚻" : ""}
+                                {fmtNum(wp.km)}km · 海拔 {Math.round(wp.ele)}m
                               </div>
                             </div>
                           </div>
@@ -1303,8 +1316,11 @@ export default function FitnessView() {
                   </>
                 ) : (
                   <div className="space-y-2.5">
-                    {SEGMENTS.map((seg, i) => {
-                      const pct = ((seg.dist / 5.5) * 100).toFixed(0);
+                    {routeSegments.map((seg, i) => {
+                      const pct = (
+                        (seg.dist / Math.max(0.1, route.distanceKm)) *
+                        100
+                      ).toFixed(0);
                       return (
                         <motion.div
                           key={i}
@@ -1414,25 +1430,25 @@ export default function FitnessView() {
           {[
             {
               label: "总路程",
-              value: "5.5km",
+              value: `${fmtNum(route.distanceKm)}km`,
               icon: Footprints,
               color: "text-blue-600",
             },
             {
               label: "总爬升",
-              value: "300m",
+              value: `${Math.round(route.elevationGain)}m`,
               icon: Mountain,
               color: "text-orange-500",
             },
             {
               label: "预计用时",
-              value: "2.5h",
+              value: `${fmtNum(route.durationHours)}h`,
               icon: Clock,
               color: "text-purple-500",
             },
             {
               label: "补给点",
-              value: "4个",
+              value: `${route.waypoints.length}个`,
               icon: MapPin,
               color: "text-emerald-600",
             },
