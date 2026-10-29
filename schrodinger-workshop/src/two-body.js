@@ -43,8 +43,10 @@ const TB_CSS = `
   #tbFieldWrap{position:relative}
   #tbField{display:block;width:var(--sz);height:var(--sz);border-radius:10px;touch-action:none}
   #tbN2{position:absolute;left:calc(100% + 5px);top:0;width:52px;height:var(--sz);display:block}
-  #tbN1{width:var(--sz);height:52px;display:block;cursor:crosshair}
-  #tbN2{cursor:crosshair}
+  #tbN1{width:var(--sz);height:52px;display:block;cursor:crosshair;touch-action:none}
+  #tbN2{cursor:crosshair;touch-action:none}
+  /* 叠加层：轨道虚线 + 势阱条带。pointer-events:none —— 所有拖拽都在 #tbField 上处理 */
+  #tbRails{position:absolute;left:0;top:0;width:var(--sz);height:var(--sz);pointer-events:none;border-radius:10px}
   .tbAxis{font-family:var(--mono);font-size:10.5px;color:var(--dim);position:fixed;z-index:6;pointer-events:none}
   #tbAxX{transform:translateX(-50%)}
   #tbAxY{transform:translateY(-50%) rotate(-90deg);transform-origin:center}
@@ -82,6 +84,9 @@ export class TwoBodyApp {
       xa: num('xa', NaN), xb: num('xb', NaN),
       substeps: Math.round(num('substeps', 6)), dt: num('dt', 0.08),
       mode: Math.round(num('mode', 0)), paused: q.get('paused') === '1',
+      /* 势阱刷：wells = [{x,w,v}] 共享 1D 轴上的高斯势；wellTool 是「拖拽 = 放/挪势阱」模式 */
+      wells: [], wellTool: q.get('welltool') === '1',
+      wellV: num('wellv', TB_COMMON.wellV),
       simTime: 0, frames: 0,
     };
     if (!TB_PRESETS[this.state.preset]) this.state.preset = 'cross';
@@ -137,6 +142,7 @@ export class TwoBodyApp {
       /* 初次加载沿用 URL 参数（不重置 g/eps/omega），但初态四旋钮要先钳制：
          走 applyInit ⟹ 面板显示的 σ/k₀/d/r₀ 与真正送进引擎的值逐位相同。 */
       this.applyInit();
+      this.syncWellHud();            /* 势阱 HUD / 势阱刷按钮文案与 state 对齐 */
       this.resize();
       requestAnimationFrame(this.frame);
     } catch (err){
@@ -191,11 +197,13 @@ export class TwoBodyApp {
     <div class="row"><label>可区分 ε</label><input type="range" id="rEps" min="0" max="0.6" step="0.02" value="0"><output id="oEps">0.00</output></div>
     <div class="row"><label>阱频 ω</label><input type="range" id="rOm" min="0.005" max="0.08" step="0.001" value="0.02"><output id="oOm">0.020</output></div>
     <div class="row"><label>积分子步</label><input type="range" id="rSub" min="1" max="16" step="1" value="6"><output id="oSub">6</output></div>
+    <div class="row"><label>势阱深 V₀</label><input type="range" id="rWellV" min="-8" max="8" step="0.5" value="-4"><output id="oWellV">-4.0</output></div>
   </div>
   <div class="sec"><h3>操作</h3><div class="grid2">
     <button id="tbPause">暂停</button><button id="tbStep">单步</button>
     <button id="tbReset">重置</button><button id="tbRelax">松弛</button>
-    <button id="tbMode" style="grid-column:1/3">显示：密度</button>
+    <button id="tbMode">显示：密度</button><button id="tbWell">势阱刷：关</button>
+    <button id="tbWellClear" style="grid-column:1/3">清空势阱</button>
   </div></div>
 </div>
 <div id="tbHud" class="panel qhud">
@@ -207,6 +215,7 @@ export class TwoBodyApp {
   <div class="hrow"><span>初态</span><span id="hInit">—</span></div>
   <div class="hrow"><span>轨道重叠 / HBT</span><span id="hOv">—</span></div>
   <div class="hrow"><span>边缘留白</span><span id="hFit">—</span></div>
+  <div class="hrow"><span>势阱</span><span id="hWells">0 个</span></div>
   <hr>
   <div class="hrow"><span>E（离散）</span><span id="hE">—</span></div>
   <div class="hrow"><span>t / 帧</span><span id="hT">—</span></div>
@@ -217,6 +226,7 @@ export class TwoBodyApp {
 <div id="tbStage" class="qstage">
   <div id="tbFieldWrap">
     <canvas id="tbField"></canvas>
+    <canvas id="tbRails"></canvas>
     <canvas id="tbN2"></canvas>
   </div>
   <canvas id="tbN1"></canvas>
@@ -242,6 +252,10 @@ export class TwoBodyApp {
     this.on(this.q('#tbReset'), 'click', () => this.resetWave());
     this.on(this.q('#tbRelax'), 'click', () => this.startRelax());
     this.on(this.q('#tbMode'), 'click', () => this.toggleMode());
+    this.on(this.q('#tbWell'), 'click', () => this.toggleWellTool());
+    this.on(this.q('#tbWellClear'), 'click', () => {
+      if (this.clearWells()) this.toast('已清空势阱');
+    });
     /* 滑块：g/eps/子步只改 uniform（即时生效，不重置演化）；ω 在 eigen 预设下
        改变解析初态 ⟹ 重发波包（保留其他参数），trap 预设下只改 uniform。 */
     const bind = (id, key, outId, fmt, after) => {
@@ -271,6 +285,8 @@ export class TwoBodyApp {
     bind('#rOm', 'omega', '#oOm', v => v.toFixed(3),
       () => { if (this.state.preset === 'eigen') this.loadPreset('eigen', this.state.stats, false); });
     bind('#rSub', 'substeps', '#oSub', v => String(v | 0));
+    /* 阱深：改的是「之后放的阱」，已放的阱保留原深度（免得拖滑块把全部阱一起改深） */
+    bind('#rWellV', 'wellV', '#oWellV', v => v.toFixed(1), () => this.syncWellHud());
     /* 沿轴点选：x₁ 条（下方，横）⟹ 粒子 1；x₂ 条（右侧，竖）⟹ 粒子 2。
        pointerdown 立即落点，按住拖动连续挪（与主页「拖拽发射」同手感）。 */
     const bindPick = (id, which, horiz) => {
@@ -284,7 +300,12 @@ export class TwoBodyApp {
           : 1 - (ev.clientY - r.top) / r.height;
         this.placeOrbit(which, t * this.state.L - 0.5);
       };
-      this.on(cv, 'pointerdown', ev => { ev.preventDefault(); dragging = true; pick(ev); });
+      this.on(cv, 'pointerdown', ev => {
+        ev.preventDefault();
+        dragging = true;
+        try { if (cv.setPointerCapture && ev.pointerId !== undefined) cv.setPointerCapture(ev.pointerId); } catch (_){}
+        pick(ev);
+      });
       this.on(cv, 'pointermove', ev => { if (dragging) pick(ev); });
       const stop = () => { dragging = false; };
       this.on(cv, 'pointerup', stop);
@@ -293,6 +314,88 @@ export class TwoBodyApp {
     };
     bindPick('#tbN1', 0, true);
     bindPick('#tbN2', 1, false);
+
+    /* ---------- 画布上的拖拽（这才是用户会去拖的地方）----------
+       两种模式：
+         ① 轨道模式（默认）：抓住 x₁ 竖虚线 ⟹ 挪粒子 1 的轨道；抓住 x₂ 横虚线 ⟹ 挪粒子 2。
+         ② 势阱刷模式：拖空白处新增势阱并立即拖到想要的位置；拖已有势阱 ⟹ 挪它；右键删。
+       抓取带按**屏幕像素**算（26px），不按 texel 算——否则网格一变手感全变。
+       按下即 setPointerCapture：拖到画布外也不会丢事件（首版没有它，指针一离开细条就断，
+       这正是「移不动」最可能的直接原因之一）。 */
+    const texelOf = ev => {
+      const r = this.q('#tbField').getBoundingClientRect();
+      if (!r.width || !r.height) return null;
+      return {
+        i: (ev.clientX - r.left) / r.width * this.state.L,
+        j: (1 - (ev.clientY - r.top) / r.height) * this.state.L,
+        px: this.state.L / r.width,
+      };
+    };
+    const capture = (el, ev) => {
+      try { if (el.setPointerCapture && ev.pointerId !== undefined) el.setPointerCapture(ev.pointerId); } catch (_){}
+    };
+    const field = this.q('#tbField');
+    this.on(field, 'pointerdown', ev => {
+      const t = texelOf(ev);
+      if (!t) return;
+      if (this.state.wellTool){
+        ev.preventDefault();
+        const near = this.nearestWell(t.i);
+        const tol = Math.max(TB_COMMON.wellW, 2.5 * t.px);
+        let idx;
+        if (near.idx >= 0 && near.dist <= tol){
+          idx = near.idx;
+        } else {
+          idx = this.addWell(t.i);
+          this.state.wells[idx].v = this.state.wellV;
+        }
+        this._drag = { kind: 'well', idx };
+      } else {
+        const o = tbOrbits(this.state.L, this.state.preset, this.initOpts());
+        if (TB_PRESETS[this.state.preset] && TB_PRESETS[this.state.preset].eigen){
+          this.toast('本征态没有「包心」可拖：先切到对穿或自由放置');
+          return;
+        }
+        const tol = 26 * t.px;
+        const di = Math.abs(t.i - o.xa), dj = Math.abs(t.j - o.xb);
+        if (Math.min(di, dj) > tol){
+          this.toast('抓住青色 x₁ / 琥珀 x₂ 虚线才能拖动轨道（或点「势阱刷」放势阱）');
+          return;
+        }
+        ev.preventDefault();
+        this._drag = { kind: 'orbit', which: di <= dj ? 0 : 1 };
+      }
+      capture(field, ev);
+      this._dragApply(t);
+      this.drawRails();
+    });
+    this.on(field, 'pointermove', ev => {
+      if (!this._drag) return;
+      const t = texelOf(ev);
+      if (t) { this._dragApply(t); }
+    });
+    const endDrag = ev => {
+      if (!this._drag) return;
+      this._drag = null;
+      try { if (field.releasePointerCapture && ev && ev.pointerId !== undefined) field.releasePointerCapture(ev.pointerId); } catch (_){}
+      this.drawRails();
+    };
+    this.on(field, 'pointerup', endDrag);
+    this.on(field, 'pointercancel', endDrag);
+    window.addEventListener('pointerup', endDrag);
+    /* 右键删势阱（势阱刷模式下） */
+    this.on(field, 'contextmenu', ev => {
+      if (!this.state.wellTool) return;
+      const t = texelOf(ev);
+      if (!t) return;
+      const near = this.nearestWell(t.i);
+      if (near.idx >= 0 && near.dist <= Math.max(TB_COMMON.wellW, 2.5 * t.px)){
+        ev.preventDefault();
+        this.removeWell(near.idx);
+        this.drawRails();
+        this.toast('已删除势阱');
+      }
+    });
 
     /* 悬停探针：报告 texel 坐标与 |ψ(i,j)|²、|ψ(j,i)|²（交换结构直接可见） */
     this.on(this.q('#tbField'), 'pointermove', ev => {
@@ -335,7 +438,8 @@ export class TwoBodyApp {
   /* 势场烘焙：签名变化才重算（拖滑块时每帧一次，O(L²) 加法，~10μs） */
   bakePot(){
     const L = this.state.L, P = this.params();
-    const sig = [this.state.preset, P.trap, P.omega, P.eps, P.g, L].join('|');
+    const wsig = (P.wells || []).map(w => w.x.toFixed(2) + ':' + w.v.toFixed(2)).join(',');
+    const sig = [this.state.preset, P.trap, P.omega, P.eps, P.g, L, wsig].join('|');
     if (sig === this._potSig) return false;
     const p1 = new Float64Array(L), p2 = new Float64Array(L);
     for (let i = 0; i < L; i++){ p1[i] = tbPot1(i, P); p2[i] = tbPot2(i, P); }
@@ -357,6 +461,8 @@ export class TwoBodyApp {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const sz = this.q('#tbField').clientWidth || 480;
     this.canvas.width = Math.round(sz * dpr); this.canvas.height = Math.round(sz * dpr);
+    const rails = this.q('#tbRails');
+    if (rails){ rails.width = Math.round(sz * dpr); rails.height = Math.round(sz * dpr); }
     const n1 = this.q('#tbN1'), n2 = this.q('#tbN2');
     n1.width = Math.round(sz * dpr); n1.height = Math.round(52 * dpr);
     n2.width = Math.round(52 * dpr); n2.height = Math.round(sz * dpr);
@@ -415,6 +521,7 @@ export class TwoBodyApp {
         ? '留白 < 0 ⟹ 波包 3σ 尾部已越过边界；CLAMP_TO_EDGE 会把它反射回来（诚实限制②）'
         : '两包中心到最近边界再减 3σ；>0 表示 3σ 尾部还在场内';
     } else if (hFit){ hFit.textContent = '—'; hFit.className = ''; }
+    this.syncWellHud();
     this.q('#tbHint').querySelector('b').textContent = pr.name;
     this.q('#tbHint').querySelector('span').innerHTML = pr.text;
     this.q('#tbMode').textContent = '显示：' + (this.state.mode ? '相位' : '密度');
@@ -426,6 +533,7 @@ export class TwoBodyApp {
       uK: 0.5, g: this.state.g, eps: this.state.eps, trap: pr.trap ? 1 : 0,
       omega: this.state.omega, bumpH: TB_COMMON.bumpH, bumpW: TB_COMMON.bumpW,
       vcap: TB_COMMON.vcap, xc: (L - 1) / 2, L,
+      wells: this.state.wells,
     };
   }
   /* resetParams=true 仅在点预设按钮时（切场景恢复该预设默认参数）；
@@ -483,6 +591,127 @@ export class TwoBodyApp {
       this.toast('波包太宽 / 间距太大：尾部被边界截断（留白 ' + info.margin.toFixed(1) + '）');
     }
     return info;
+  }
+  /* ---------- 势阱刷 ----------
+     势是**共享 1D 轴**上的可分离势：加一个阱 = 在 x₀ 处放一个高斯（v<0 阱 / v>0 垒），
+     粒子 1 看到 V₁(x₁)、粒子 2 看到 (1+ε)·V₁(x₂) ⟹ ε=0 时两支完全同形、[H,P]=0 不被破坏
+     （这正是本页不提供「自由 2D 涂抹」的原因：2D 涂抹必然让 V₁≠V₂、⟨P⟩ 无故漂移）。
+     画面上因此总是**成对**出现：竖条（x₁ = x₀）+ 横条（x₂ = x₀）。 */
+  addWell(x){
+    const L = this.state.L;
+    const xi = Math.min(L - 1, Math.max(0, x));
+    if (this.state.wells.length >= TB_COMMON.wellMax) this.state.wells.shift();
+    this.state.wells.push({ x: xi, w: TB_COMMON.wellW, v: this.state.wellV });
+    this.bakePot(); this.drawRails(); this.syncWellHud();
+    return this.state.wells.length - 1;
+  }
+  moveWell(k, x){
+    const w = this.state.wells[k];
+    if (!w) return false;
+    w.x = Math.min(this.state.L - 1, Math.max(0, x));
+    this.bakePot(); this.drawRails(); this.syncWellHud();
+    return true;
+  }
+  removeWell(k){
+    if (!this.state.wells[k]) return false;
+    this.state.wells.splice(k, 1);
+    this.bakePot(); this.drawRails(); this.syncWellHud();
+    return true;
+  }
+  clearWells(){
+    if (!this.state.wells.length) return false;
+    this.state.wells = [];
+    this.bakePot(); this.drawRails(); this.syncWellHud();
+    return true;
+  }
+  nearestWell(x){
+    let best = -1, bd = Infinity;
+    this.state.wells.forEach((w, k) => { const d = Math.abs(w.x - x); if (d < bd){ bd = d; best = k; } });
+    return { idx: best, dist: bd };
+  }
+  syncWellHud(){
+    const h = this.q('#hWells');
+    if (h) h.textContent = this.state.wells.length
+      ? `${this.state.wells.length} 个 · V₀=${this.state.wellV.toFixed(1)}`
+      : '0 个（点「势阱刷」后在画布上拖）';
+    const b = this.q('#tbWell');
+    if (b){ b.textContent = '势阱刷：' + (this.state.wellTool ? '开' : '关'); b.classList.toggle('on', !!this.state.wellTool); }
+  }
+  /* 叠加层：轨道虚线（可抓）+ 势阱条带。势场本身不在 GLSL 里画（shader 只画 |ψ|²/相位），
+     所以「看得见势」这件事必须由这一层负责。 */
+  drawRails(){
+    const cv = this.q('#tbRails');
+    if (!cv) return;
+    const ctx = cv.getContext('2d');
+    if (!ctx) return;
+    const W = cv.width, H = cv.height, L = this.state.L;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    ctx.clearRect(0, 0, W, H);
+    if (!W || !H) return;
+    const px = W / L;
+    /* 势阱：竖条 = 粒子 1 的 x₁ 轴，横条 = 粒子 2 的 x₂ 轴（y 向上） */
+    for (const w of this.state.wells){
+      const neg = w.v < 0;
+      const rgb = neg ? '56,189,248' : '251,191,36';
+      const a = Math.min(0.62, 0.16 + Math.abs(w.v) / 8 * 0.46);
+      const hw = Math.max(2 * dpr, w.w * px * 0.5);
+      const cx = (w.x + 0.5) * px;
+      const cy = H - (w.x + 0.5) * px;
+      ctx.fillStyle = `rgba(${rgb},${a})`;
+      ctx.fillRect(cx - hw, 0, 2 * hw, H);
+      ctx.fillRect(0, cy - hw, W, 2 * hw);
+      /* ε>0 时粒子 2 的势强 (1+ε) 倍：横条加一道描边如实标出不对称 */
+      if (this.state.eps > 1e-9){
+        ctx.strokeStyle = `rgba(${rgb},.9)`; ctx.lineWidth = 1.2 * dpr;
+        ctx.beginPath(); ctx.moveTo(0, cy - hw); ctx.lineTo(W, cy - hw);
+        ctx.moveTo(0, cy + hw); ctx.lineTo(W, cy + hw); ctx.stroke();
+      }
+    }
+    /* 轨道虚线（eigen 没有「包心」概念，不画） */
+    const pr = TB_PRESETS[this.state.preset];
+    if (pr && !pr.eigen){
+      const o = tbOrbits(L, this.state.preset, this.initOpts());
+      const vx = (o.xa + 0.5) * px, hy = H - (o.xb + 0.5) * px;
+      const hot = this._drag && this._drag.kind === 'orbit';
+      ctx.setLineDash([5 * dpr, 4 * dpr]);
+      ctx.lineWidth = 1.6 * dpr;
+      ctx.strokeStyle = hot ? 'rgba(103,232,249,1)' : 'rgba(103,232,249,.55)';
+      ctx.beginPath(); ctx.moveTo(vx, 0); ctx.lineTo(vx, H); ctx.stroke();
+      ctx.strokeStyle = hot ? 'rgba(251,191,36,1)' : 'rgba(251,191,36,.5)';
+      ctx.beginPath(); ctx.moveTo(0, hy); ctx.lineTo(W, hy); ctx.stroke();
+      ctx.setLineDash([]);
+      /* 抓取点：两条虚线与上下/左右边缘的交点画实心小圆（告诉用户「这里能抓」） */
+      const dot = (x, y, col) => {
+        ctx.fillStyle = col; ctx.beginPath();
+        ctx.arc(x, y, 4.2 * dpr, 0, Math.PI * 2); ctx.fill();
+      };
+      dot(vx, H - 7 * dpr, 'rgba(103,232,249,.95)');
+      dot(7 * dpr, hy, 'rgba(251,191,36,.95)');
+      ctx.font = `${10 * dpr}px monospace`;
+      ctx.fillStyle = 'rgba(103,232,249,.9)'; ctx.textAlign = 'center';
+      ctx.fillText('x₁', vx, H - 12 * dpr);
+      ctx.fillStyle = 'rgba(251,191,36,.9)'; ctx.textAlign = 'left';
+      ctx.fillText('x₂', 11 * dpr, hy - 7 * dpr);
+    }
+  }
+  /* 拖动的一步（pointerdown 与 pointermove 共用，所以「按下」就有反馈） */
+  _dragApply(t){
+    const d = this._drag;
+    if (!d) return false;
+    if (d.kind === 'well'){
+      this.moveWell(d.idx, t.i);
+      return true;
+    }
+    this.placeOrbit(d.which, d.which === 0 ? t.i : t.j);
+    return true;
+  }
+  toggleWellTool(){
+    this.state.wellTool = !this.state.wellTool;
+    this.syncWellHud();
+    this.q('#tbField').style.cursor = this.state.wellTool ? 'cell' : '';
+    this.toast(this.state.wellTool
+      ? '势阱刷：在画布上拖动放置势阱（右键删除，V₀ 滑块设深度）'
+      : '势阱刷已关：现在拖虚线可挪轨道');
   }
   /* 沿轴点选轨道：which=0 ⟹ 粒子 1（下方 x₁ 条），which=1 ⟹ 粒子 2（右侧 x₂ 条）。
      首次点选从**当前预设的两条轨道**接续（画面不跳），之后把预设切到「自由放置」。
@@ -610,6 +839,9 @@ export class TwoBodyApp {
     this.state.frames++;
   }
   stepFrames(n){
+    /* 单步路径也要重烘势场：否则「改了 ε/g/势阱但页面暂停着点单步」会用旧势
+       （rAF 循环会补烘，所以浏览器里通常看不出来；确定性路径不该依赖 rAF）。 */
+    this.bakePot();
     for (let i = 0; i < n; i++) this.evolveFrame();
     this.refreshMeasure();
   }
@@ -633,6 +865,7 @@ export class TwoBodyApp {
     const tgt = 0.9 / Math.max(m.peak, 1e-9);
     this._scale += (Math.min(Math.max(tgt, 1), 1e6) - this._scale) * 0.25;
     this.drawStrips(m.n1, m.n2);
+    this.drawRails();
     return m;
   }
   drawStrips(n1, n2){
@@ -788,6 +1021,14 @@ export class TwoBodyApp {
       initInfo: () => this._info || tbInitInfo(this.state.L, this.state.preset, this.initOpts()),
       /* 沿轴点选（与鼠标同一入口）：place(0|x, texel) ⟹ 自动切到「自由放置」 */
       place: (which, x) => this.placeOrbit(which, x),
+      /* 势阱：与画布拖拽同一条路径（cdp132 走这里，不再重写一套） */
+      wells: () => this.state.wells.map(w => ({ x: w.x, w: w.w, v: w.v })),
+      addWell: x => this.addWell(x),
+      moveWell: (k, x) => this.moveWell(k, x),
+      removeWell: k => this.removeWell(k),
+      clearWells: () => this.clearWells(),
+      wellTool: on => { if (!!on !== !!this.state.wellTool) this.toggleWellTool(); return this.state.wellTool; },
+      drag: () => this._drag,
       setInit: patch => { Object.assign(this.state, patch || {}); return this.applyInit(); },
       relaxNow: () => { const r = this.relaxSync(); return { iters: r.iters, energy: r.energy, residual: r.residual }; },
       /* 页内 CPU 镜像：从初态按当前参数跑 frames 帧，与 GPU 场逐 texel 对比
