@@ -27,7 +27,7 @@ import {
 import { useAppStore } from "@/lib/store";
 import {
   getStaminaCost,
-  guessPrice,
+  estimateSpotCost,
   haversineKm,
   parseCoords,
   CATEGORY_PACKLIST,
@@ -416,18 +416,11 @@ export default function TripView() {
     [trip, spots],
   );
 
-  // 估价口径与预算沙盘一致：用户改价优先，否则估算
-  const priceOf = (s: Spot, p: string) => {
-    const custom = customPrices[`${s.id}::${p}`];
-    return custom !== undefined ? custom : guessPrice(p);
-  };
+  // 估价口径与预算沙盘一致：门票（补录/收录/估算）+ 项目；主题乐园不叠加项目价
+  const costOf = (s: Spot) => estimateSpotCost(s, customPrices);
 
   const estBudget = useMemo(
-    () =>
-      tripSpots.reduce(
-        (sum, s) => sum + s.projects.reduce((ps, p) => ps + priceOf(s, p), 0),
-        0,
-      ),
+    () => tripSpots.reduce((sum, s) => sum + costOf(s), 0),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [tripSpots, customPrices],
   );
@@ -500,7 +493,7 @@ export default function TripView() {
         ...(days.length > 1 ? [`—— 第 ${d + 1} 天 ——`] : []),
         ...day.map((s) => {
           const gi = tripSpots.indexOf(s);
-          const est = s.projects.reduce((ps, p) => ps + priceOf(s, p), 0);
+          const est = costOf(s);
           return `${gi + 1}. ${s.name}\n   ${s.address}${s.projects.length ? `\n   项目：${s.projects.join("、")}` : ""}${est > 0 ? `\n   估算花费：约¥${est}` : ""}`;
         }),
       ]),
@@ -509,7 +502,7 @@ export default function TripView() {
         ? `移动合计：约 ${travelTotal.km.toFixed(1)} km · 车程约 ${fmtMin(travelTotal.min)}（估算）`
         : "",
       `估算合计：约¥${estBudget} · 体力合计：${estStamina}`,
-      "价格为按项目名推断的估算值，实际以景区公示为准",
+      "费用 = 门票（估/补录）+ 项目估算，实际以景区公示为准",
       "—— 景点览胜 · 华夏探索",
     ];
     navigator.clipboard
@@ -698,11 +691,7 @@ export default function TripView() {
         {/* 行程列表（按天分组） */}
         <div className="space-y-2">
           {days.map((day, d) => {
-            const dayBudget = day.reduce(
-              (sum, s) =>
-                sum + s.projects.reduce((ps, p) => ps + priceOf(s, p), 0),
-              0,
-            );
+            const dayBudget = day.reduce((sum, s) => sum + costOf(s), 0);
             const dayStamina = day.reduce(
               (sum, s) => sum + getStaminaCost(s),
               0,
@@ -781,13 +770,9 @@ export default function TripView() {
                             <p className="text-xs text-gray-400 truncate flex items-center gap-1">
                               <MapPin className="w-3 h-3 shrink-0" />
                               {s.address}
-                              {s.projects.length > 0 && (
+                              {costOf(s) > 0 && (
                                 <span className="text-emerald-600">
-                                  · 约¥
-                                  {s.projects.reduce(
-                                    (ps, p) => ps + priceOf(s, p),
-                                    0,
-                                  )}
+                                  · 约¥{costOf(s)}
                                 </span>
                               )}
                             </p>

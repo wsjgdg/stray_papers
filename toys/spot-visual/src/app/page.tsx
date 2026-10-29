@@ -47,6 +47,7 @@ import {
   Download,
   Route,
   Dices,
+  Ticket,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,6 +75,9 @@ import {
   haversineKm,
   DISSUASION_TAGS,
   getPinyinKeys,
+  quoteTicket,
+  TICKET_KEY,
+  LIBRARY_STATS,
 } from "@/lib/spot-data"; // 保留：cachePhotoForCategory 缓存机制
 import { loadPoiPhotos, peekPoiPhotos } from "@/lib/poi-photos";
 import { withSharecode } from "@/lib/share-link";
@@ -220,16 +224,24 @@ function SpotImage({
   eager?: boolean;
 }) {
   // 二级降级：原图失效 → 本地分类池 → 渐变占位
-  const [stage, setStage] = useState<"primary" | "pool" | "gradient">(
-    "primary",
-  );
   const poolSrc = useMemo(
     () => getCategoryImageUrl(category) ?? "",
     [category],
   );
+  // 关键：src 为空时直接落「分类池」，不要停在 primary。
+  // 否则 effectiveSrc 为空 → noImage 短路 → 1555 条无图景点永远是渐变占位，
+  // 而分类池其实有图可用。
+  const pickStage = (
+    s: string,
+    pool: string,
+  ): "primary" | "pool" | "gradient" =>
+    s ? "primary" : pool ? "pool" : "gradient";
+  const [stage, setStage] = useState<"primary" | "pool" | "gradient">(() =>
+    pickStage(src, poolSrc),
+  );
   const [prevSrc, setPrevSrc] = useState(src);
   if (src !== prevSrc) {
-    setStage("primary");
+    setStage(pickStage(src, poolSrc));
     setPrevSrc(src);
   }
   const err = stage === "gradient";
@@ -808,8 +820,14 @@ function SpotDetailDialog() {
     removeFromTrip,
     compareIds,
     toggleCompare,
+    customPrices,
+    setCustomPrice,
+    removeCustomPrice,
   } = useAppStore();
   const [photoIdx, setPhotoIdx] = useState(0);
+  // 门票补录：本地编辑态（确认为空则回退到估算/未收录）
+  const [ticketEditing, setTicketEditing] = useState(false);
+  const [ticketDraft, setTicketDraft] = useState("");
   // 图片查看器：null = 关闭；数字 = 当前查看的相册下标
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [showDissuasionEditor, setShowDissuasionEditor] = useState(false);
@@ -820,6 +838,24 @@ function SpotDetailDialog() {
   // 拉取失败/未就绪时只显示封面，不阻塞弹窗。
   const [extraPhotos, setExtraPhotos] = useState<string[]>([]);
   const photosKey = spot?.photosKey;
+  // 门票报价：补录 > 真实收录 > 等级/分类估算（界面标「估」）
+  const ticketQuote = spot
+    ? quoteTicket(spot, customPrices[`${spot.id}::${TICKET_KEY}`])
+    : null;
+  /** 提交门票补录：留空 = 撤销补录，回到估算 */
+  const commitTicket = () => {
+    if (!spot) return;
+    const raw = ticketDraft.trim();
+    const key = `${spot.id}::${TICKET_KEY}`;
+    setTicketEditing(false);
+    if (raw === "") {
+      removeCustomPrice(key);
+      return;
+    }
+    const num = Number(raw);
+    if (!Number.isFinite(num) || num < 0) return;
+    setCustomPrice(key, Math.round(num));
+  };
   useEffect(() => {
     if (!photosKey) {
       setExtraPhotos([]);
@@ -1048,6 +1084,95 @@ function SpotDetailDialog() {
                 </span>
               </p>
             )}
+            {/* ═══ 门票：已收录 / 估算 / 未收录 三态 + 手动补录 ═══ */}
+            <div className="flex items-start gap-1.5 text-sm text-gray-600">
+              <Ticket className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <span className="mr-1.5 text-[10px] px-1 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100 align-middle">
+                  门票
+                </span>
+                {ticketEditing ? (
+                  <span className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-gray-500">¥</span>
+                    <input
+                      autoFocus
+                      type="number"
+                      min={0}
+                      value={ticketDraft}
+                      onChange={(e) => setTicketDraft(e.target.value)}
+                      onBlur={commitTicket}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") commitTicket();
+                        if (e.key === "Escape") setTicketEditing(false);
+                      }}
+                      placeholder="实际票价"
+                      className="w-20 px-2 py-1 text-sm border border-emerald-300 rounded-lg outline-none"
+                    />
+                    <button
+                      onClick={commitTicket}
+                      className="text-[11px] font-bold text-white bg-emerald-600 px-2 py-1 rounded-lg"
+                    >
+                      保存
+                    </button>
+                    <button
+                      onClick={() => setTicketEditing(false)}
+                      className="text-[11px] text-gray-400"
+                    >
+                      取消
+                    </button>
+                    {ticketQuote?.source === "custom" && (
+                      <span className="text-[10px] text-gray-400">
+                        留空保存 = 恢复估算
+                      </span>
+                    )}
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setTicketDraft(
+                        ticketQuote?.source === "custom"
+                          ? String(ticketQuote.price ?? "")
+                          : "",
+                      );
+                      setTicketEditing(true);
+                    }}
+                    title="官方票价未收录；点击补录你了解的实际票价（仅本机保存）"
+                    className="text-left"
+                  >
+                    {ticketQuote && ticketQuote.price !== null ? (
+                      <>
+                        <span className="font-bold text-gray-800">
+                          ¥{ticketQuote.price}
+                        </span>
+                        <span
+                          className={`ml-1 text-[10px] px-1 py-0.5 rounded ${
+                            ticketQuote.source === "estimate"
+                              ? "bg-amber-50 text-amber-600 border border-amber-100"
+                              : "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                          }`}
+                        >
+                          {ticketQuote.source === "estimate"
+                            ? "估算"
+                            : ticketQuote.label}
+                        </span>
+                        <span className="ml-1 text-[11px] text-gray-400">
+                          {ticketQuote.source === "estimate"
+                            ? "官方票价未收录 · 点击补录"
+                            : "仅本机可见"}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="font-bold text-gray-400">未收录</span>
+                        <span className="ml-1 text-[11px] text-emerald-600">
+                          点击补录
+                        </span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
             {spot.website && (
               <p className="flex items-center gap-1.5 text-sm text-gray-600">
                 <Globe className="w-4 h-4 text-emerald-500 shrink-0" />
@@ -2133,9 +2258,10 @@ function SpotsView() {
           </p>
         )}
         <p className="text-[11px] text-gray-400 mt-2 leading-relaxed">
-          库内共 {LIBRARY_SPOTS.length} 个景点（手工精选 + 高德 POI + 2023 全国
-          A 级名录，构建时烘焙 · 零外链）。点省份即过滤，
-          收藏与行程不受影响；库外城市尝试实时通道。
+          库内共 {LIBRARY_STATS.total} 个景点（手工 {LIBRARY_STATS.manual} + 高德
+          POI {LIBRARY_STATS.cityPoi}（{LIBRARY_STATS.cityCount} 城）+ 2023 全国 A
+          级名录 {LIBRARY_STATS.extras}，构建时烘焙 · 零外链）。点省份即过滤，
+          收藏与行程不受影响；库外城市走实时通道（上游不稳定时自动回落到库内）。
         </p>
       </div>
 

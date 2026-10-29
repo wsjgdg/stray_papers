@@ -68,6 +68,8 @@ interface AppStore {
   // ═══ 用户改价（预算沙盘，持久化；key = `${spotId}::${project}`） ═══
   customPrices: Record<string, number>;
   setCustomPrice: (key: string, price: number) => void;
+  /** 撤销单条改价（如门票补录清空，回到估算） */
+  removeCustomPrice: (key: string) => void;
   clearCustomPrices: () => void;
 
   // ═══ 我的备注（详情页，持久化；key = spotId） ═══
@@ -226,6 +228,13 @@ export const useAppStore = create<AppStore>()(
       customPrices: {},
       setCustomPrice: (key, price) =>
         set((s) => ({ customPrices: { ...s.customPrices, [key]: price } })),
+      removeCustomPrice: (key) =>
+        set((s) => {
+          if (!(key in s.customPrices)) return s;
+          const next = { ...s.customPrices };
+          delete next[key];
+          return { customPrices: next };
+        }),
       clearCustomPrices: () => set({ customPrices: {} }),
 
       // ═══ 我的备注 ═══

@@ -21,6 +21,12 @@ export interface Spot {
   level?: string;
   /** 预约提示（仅标注有预约制/实名限流的景点） */
   reservation?: string;
+  /**
+   * 门票价格（元/人）。**字段留位**：当前数据源（高德 cost 填充 0.3%）拿不到，
+   * 恒为空，真实票价靠 quoteTicket 估算 + 用户手动补录。
+   * 将来接入票价数据源时直接回填此字段，UI 会自动标为「已收录」。
+   */
+  ticketPrice?: number;
   /** 图片来源标注：osm | unsplash | pexels | pool | amap（详情弹窗展示，数据诚实性） */
   imageSource?: string;
   address: string;
@@ -1227,6 +1233,93 @@ export function guessPrice(project: string): number {
   return 30; // 默认
 }
 
+/* ═══ 门票：价格来源三态 ═══
+ * 真实票价数据源缺失（高德 cost 填充 0.3%，不可用），因此票价分三态：
+ *   real     = spot.ticketPrice 有值（未来接数据源回填）
+ *   custom   = 用户在预算沙盘/详情页手动补录（localStorage）
+ *   estimate = 按 A 级等级 / 分类估算（界面必须标「估」）
+ * 估算只用「等级 → 分类」两个已 100% 填充的字段推导，不编造具体景区事实。
+ */
+export const TICKET_KEY = "__ticket__";
+
+/** 等级估算口径（元/人）：等级越高收费概率与价位越高 */
+export const TICKET_ESTIMATE_BY_LEVEL: Record<string, number> = {
+  "5A": 90,
+  "4A": 55,
+  "3A": 30,
+  "2A": 20,
+  "1A": 15,
+};
+
+/** 分类估算口径（无等级时的兜底）。
+ * 注意：城市地标不在此表 —— 地标/公园免费与收费差异极大，不做猜测，
+ * 直接落「未收录」由用户补录（诚实优先于填满）。
+ */
+export const TICKET_ESTIMATE_BY_CATEGORY: Record<string, number> = {
+  主题乐园: 180,
+  自然风光: 60,
+  自然风景: 60,
+  山岳景区: 80,
+  海滨度假: 40,
+  历史人文: 45,
+  历史文化: 45,
+  古镇村落: 40,
+  宗教寺庙: 25,
+  轻运动: 50,
+  美食小吃: 0,
+};
+
+export type TicketSource = "real" | "custom" | "estimate" | "unknown";
+
+export interface TicketQuote {
+  /** null = 未收录且无法估算 */
+  price: number | null;
+  source: TicketSource;
+  /** 展示用短标签 */
+  label: string;
+}
+
+/**
+ * 统一门票报价：手动补录 > 真实收录 > 等级估算 > 分类估算 > 未收录。
+ * @param custom 用户补录值（来自 store.customPrices[`${spot.id}::${TICKET_KEY}`]）
+ */
+export function quoteTicket(spot: Spot, custom?: number): TicketQuote {
+  if (typeof custom === "number" && Number.isFinite(custom) && custom >= 0) {
+    return { price: Math.round(custom), source: "custom", label: "已补录" };
+  }
+  if (typeof spot.ticketPrice === "number" && spot.ticketPrice >= 0) {
+    return { price: Math.round(spot.ticketPrice), source: "real", label: "已收录" };
+  }
+  const byLevel = spot.level ? TICKET_ESTIMATE_BY_LEVEL[spot.level] : undefined;
+  if (byLevel !== undefined) {
+    return { price: byLevel, source: "estimate", label: `按 ${spot.level} 估算` };
+  }
+  const byCat = TICKET_ESTIMATE_BY_CATEGORY[spot.category];
+  if (byCat !== undefined) {
+    return { price: byCat, source: "estimate", label: "按分类估算" };
+  }
+  return { price: null, source: "unknown", label: "未收录" };
+}
+
+/**
+ * 单个景点的花费估算 = 门票 + 可选项目。
+ * 主题乐园的门票通常已含游乐项目，不再叠加项目价，避免重复计算。
+ */
+export function estimateSpotCost(
+  spot: Spot,
+  customPrices: Record<string, number> = {},
+): number {
+  const ticket = quoteTicket(spot, customPrices[`${spot.id}::${TICKET_KEY}`]);
+  let sum = ticket.price ?? 0;
+  if (spot.category !== "主题乐园") {
+    sum += spot.projects.reduce(
+      (ps, p) => ps + (customPrices[`${spot.id}::${p}`] ?? guessPrice(p)),
+      0,
+    );
+  }
+  return sum;
+}
+
 // ═══ 拼音索引（搜索用）：全拼 + 首字母，均去声调、小写；按名称缓存 ═══
 import { pinyin } from "pinyin-pro";
 
@@ -1383,14 +1476,61 @@ const SCENIC_CATEGORY_WORDS: Record<string, string> = {
   城市地标: "属城市休闲地标",
 };
 
-export const LIBRARY_SPOTS: Spot[] = (() => {
+const _manualWithLevelSpots: Spot[] = buildManualSpots();
+const _cityPoiSpots: Spot[] = buildCityPoiSpots();
+const _extraScenicSpots: Spot[] = buildExtraScenicSpots(
+  new Set([
+    ..._manualWithLevelSpots.map((s) => s.name),
+    ..._cityPoiSpots.map((s) => s.name),
+  ]),
+);
+
+export const LIBRARY_SPOTS: Spot[] = [
+  ..._manualWithLevelSpots,
+  ..._cityPoiSpots,
+  ..._extraScenicSpots,
+];
+
+/** 库规模统计：页面/文档里的计数一律读这里，避免硬编码过期（曾出现「约 3000 条」vs 实际 5987） */
+export const LIBRARY_STATS = {
+  /** 统一库总数 */
+  total: LIBRARY_SPOTS.length,
+  /** 手工精选（唯一字段齐全的一批） */
+  manual: _manualWithLevelSpots.length,
+  /** 城市 POI 包条目（去重后） */
+  cityPoi: _cityPoiSpots.length,
+  /** A 级名录补充的骨架条目（去重后） */
+  extras: _extraScenicSpots.length,
+  /** 城市 POI 包覆盖的城市数 */
+  cityCount: Object.keys(CITY_POI_PACKS).length,
+  /** 全国 A 级名录总条数 */
+  scenicCatalogue: EXTRA_SCENICS.length,
+  /** 挂了等级的 POI 数（SCENIC_LEVELS 键数） */
+  levelMatched: Object.keys(SCENIC_LEVELS).length,
+  fiveA: LIBRARY_SPOTS.filter((s) => s.level === "5A").length,
+  fourA: LIBRARY_SPOTS.filter((s) => s.level === "4A").length,
+  /** 有 projects 的条目数（预算项目维度可用范围） */
+  withProjects: LIBRARY_SPOTS.filter((s) => s.projects.length > 0).length,
+};
+
+/* ═══ 分批构建（供 LIBRARY_SPOTS 与 LIBRARY_STATS 复用） ═══ */
+function buildManualSpots(): Spot[] {
+  return sampleSpots.map((s) => ({
+    ...s,
+    level: MANUAL_SCENIC_LEVELS[s.name] ?? s.level,
+    reservation: s.reservation ?? RESERVATION_NOTES[s.name],
+  }));
+}
+
+function buildCityPoiSpots(): Spot[] {
   const manualNames = new Set(sampleSpots.map((s) => s.name));
-  const pois = Object.entries(CITY_POI_PACKS)
+  return Object.entries(CITY_POI_PACKS)
     .flatMap(([city, list]) => list.map((p, i) => cityPoiToSpot(city, p, i)))
     .filter((s) => !manualNames.has(s.name));
-  // A 级名录反向补充：库内没有的 3A+ 景区（骨架条目：等级+坐标，图走分类池降级）
-  const known = new Set([...manualNames, ...pois.map((s) => s.name)]);
-  const extras = EXTRA_SCENICS.filter((e) => !known.has(e.name)).map((e, i) => {
+}
+
+function buildExtraScenicSpots(knownNames: Set<string>): Spot[] {
+  return EXTRA_SCENICS.filter((e) => !knownNames.has(e.name)).map((e, i) => {
     const category = inferScenicCategory(e.name);
     // 直辖市 province===city，去重避免「北京北京」
     const where = e.province === e.city ? e.province : `${e.province}${e.city}`;
@@ -1426,11 +1566,4 @@ export const LIBRARY_SPOTS: Spot[] = (() => {
       location: { lat: e.lat, lng: e.lng },
     } as Spot;
   });
-  // 手工景点补等级 + 预约标注自动回填（只写显式的，避免每个条目手抄一遍）
-  const manualWithLevel = sampleSpots.map((s) => ({
-    ...s,
-    level: MANUAL_SCENIC_LEVELS[s.name] ?? s.level,
-    reservation: s.reservation ?? RESERVATION_NOTES[s.name],
-  }));
-  return [...manualWithLevel, ...pois, ...extras];
-})();
+}

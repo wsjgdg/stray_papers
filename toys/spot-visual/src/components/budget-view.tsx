@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Route,
@@ -19,6 +19,9 @@ import {
   getStaminaCost,
   getProjectStaminaFactor,
   guessPrice,
+  quoteTicket,
+  TICKET_KEY,
+  type Spot,
 } from "@/lib/spot-data";
 
 /* ═══ 三档预算倍率 ═══ */
@@ -51,53 +54,50 @@ const BUDGET_TIERS = [
 
 /* ═══════════════════════════════════════════════════
    单个景点预算卡片
-   价格为按项目名推断的估算值；用户点击价格可改为实际票价（localStorage 持久化）
+   费用 = 门票（补录/估算/未收录）+ 可选项目估算；点击价格可改为实际值（localStorage 持久化）
    ═══════════════════════════════════════════════════ */
+export interface BudgetItem {
+  /** 改价用的键后缀：门票为 TICKET_KEY，项目为项目名 */
+  key: string;
+  name: string;
+  price: number;
+  /** 价格区间未知（如门票未收录），不计入合计，界面显示「未收录」 */
+  unknown?: boolean;
+  /** 是否门票行（改价时用固定键） */
+  isTicket?: boolean;
+}
+
 function SpotBudgetCard({
   spotId,
   name,
   category,
-  projects,
+  staminaCost,
+  items,
   onSubtotalChange,
   index,
-  getPrice,
   isCustom,
   setCustomPrice,
+  removeCustomPrice,
 }: {
   spotId: string;
   name: string;
   category: string;
-  projects: string[];
+  staminaCost: number;
+  items: BudgetItem[];
   onSubtotalChange: (spotId: string, subtotal: number) => void;
   index: number;
-  getPrice: (p: string) => number;
-  isCustom: (p: string) => boolean;
+  isCustom: (key: string) => boolean;
   setCustomPrice: (key: string, price: number) => void;
+  removeCustomPrice: (key: string) => void;
 }) {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [expanded, setExpanded] = useState(false);
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
   const [draft, setDraft] = useState("");
-  const staminaCost = getStaminaCost({
-    id: "",
-    name,
-    image: "",
-    address: "",
-    facilities: [],
-    projects,
-    category,
-    description: "",
-  });
-
-  const items = projects.map((p, i) => ({
-    name: p,
-    price: getPrice(p),
-    index: i,
-  }));
 
   const subtotalOf = (sel: Set<number>) =>
     items
-      .filter((it) => sel.has(it.index))
+      .filter((it, i) => sel.has(i) && !it.unknown)
       .reduce((sum, it) => sum + it.price, 0);
   const subtotal = subtotalOf(selected);
 
@@ -110,13 +110,27 @@ function SpotBudgetCard({
   };
 
   const commitPrice = (idx: number) => {
-    const item = items.find((it) => it.index === idx)!;
+    const item = items[idx];
+    if (!item) return;
     const num = Number(draft);
     setEditingIdx(null);
+    // 门票留空 = 撤销补录，回到估算
+    if (draft.trim() === "" && item.isTicket) {
+      removeCustomPrice(`${spotId}::${item.key}`);
+      if (selected.has(idx)) onSubtotalChange(spotId, subtotalOf(selected));
+      return;
+    }
     if (!Number.isFinite(num) || num < 0) return;
-    setCustomPrice(`${spotId}::${item.name}`, Math.round(num));
-    // 改价后若该项目已勾选，同步上报新小计
-    if (selected.has(idx)) onSubtotalChange(spotId, subtotalOf(selected));
+    setCustomPrice(`${spotId}::${item.key}`, Math.round(num));
+    // 改价后若该项目已勾选，同步上报新小计（用改后的价，避免上报旧值）
+    if (selected.has(idx)) {
+      let sum = 0;
+      items.forEach((it, i) => {
+        if (!selected.has(i)) return;
+        sum += i === idx ? Math.round(num) : it.price;
+      });
+      onSubtotalChange(spotId, sum);
+    }
   };
 
   return (
@@ -137,7 +151,7 @@ function SpotBudgetCard({
         <div className="flex-1 min-w-0">
           <h4 className="text-sm font-bold text-gray-900 truncate">{name}</h4>
           <p className="text-xs text-gray-400">
-            {category} · {projects.length} 个项目
+            {category} · {items.length} 项
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -181,15 +195,15 @@ function SpotBudgetCard({
             className="overflow-hidden"
           >
             <div className="px-4 pb-4 space-y-2">
-              {items.map((item) => {
-                const isSelected = selected.has(item.index);
-                const isFree = item.price === 0;
-                const custom = isCustom(item.name);
+              {items.map((item, idx) => {
+                const isSelected = selected.has(idx);
+                const isFree = item.price === 0 && !item.unknown;
+                const custom = isCustom(item.key);
                 return (
                   <motion.div
-                    key={item.index}
+                    key={item.key}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => toggleItem(item.index)}
+                    onClick={() => toggleItem(idx)}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border-2 transition-all text-left cursor-pointer select-none ${
                       isSelected
                         ? "border-emerald-400 bg-emerald-50"
@@ -213,7 +227,12 @@ function SpotBudgetCard({
                     <span
                       className={`flex-1 text-sm ${isSelected ? "text-gray-900 font-medium" : "text-gray-600"}`}
                     >
-                      {item.name}
+                      {item.isTicket && (
+                        <span className="mr-1 text-[10px] px-1 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100 align-middle">
+                          门票
+                        </span>
+                      )}
+                      {item.isTicket ? "大门票" : item.name}
                     </span>
 
                     {/* 价格（点击可改，估 = 关键词推断的估算值） */}
@@ -221,14 +240,14 @@ function SpotBudgetCard({
                       className="shrink-0"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      {editingIdx === item.index ? (
+                      {editingIdx === idx ? (
                         <input
                           autoFocus
                           value={draft}
                           onChange={(e) => setDraft(e.target.value)}
-                          onBlur={() => commitPrice(item.index)}
+                          onBlur={() => commitPrice(idx)}
                           onKeyDown={(e) => {
-                            if (e.key === "Enter") commitPrice(item.index);
+                            if (e.key === "Enter") commitPrice(idx);
                             if (e.key === "Escape") setEditingIdx(null);
                           }}
                           inputMode="decimal"
@@ -237,17 +256,25 @@ function SpotBudgetCard({
                       ) : (
                         <button
                           onClick={() => {
-                            setEditingIdx(item.index);
-                            setDraft(String(item.price));
+                            setEditingIdx(idx);
+                            setDraft(item.unknown ? "" : String(item.price));
                           }}
-                          title="点击改为实际票价"
-                          className={`text-sm font-bold ${isFree ? "text-green-500" : isSelected ? "text-emerald-600" : "text-gray-400"} hover:text-emerald-700 transition-colors`}
+                          title={
+                            item.unknown
+                              ? "官方票价未收录，点击补录实际票价"
+                              : "点击改为实际票价"
+                          }
+                          className={`text-sm font-bold ${item.unknown ? "text-gray-400" : isFree ? "text-green-500" : isSelected ? "text-emerald-600" : "text-gray-400"} hover:text-emerald-700 transition-colors`}
                         >
-                          {isFree ? "免费" : `¥${item.price}`}
+                          {item.unknown
+                            ? "未收录"
+                            : isFree
+                              ? "免费"
+                              : `¥${item.price}`}
                           <span
                             className={`ml-0.5 text-[9px] font-normal align-top ${custom ? "text-sky-500" : "opacity-50"}`}
                           >
-                            {custom ? "改" : "估"}
+                            {item.unknown ? "补" : custom ? "改" : "估"}
                           </span>
                         </button>
                       )}
@@ -261,7 +288,9 @@ function SpotBudgetCard({
                 <button
                   onClick={() => {
                     const newSet = new Set<number>(
-                      items.filter((it) => it.price > 0).map((it) => it.index),
+                      items
+                        .map((it, i) => (!it.unknown && it.price > 0 ? i : -1))
+                        .filter((i) => i >= 0),
                     );
                     setSelected(newSet);
                     onSubtotalChange(spotId, subtotalOf(newSet));
@@ -283,15 +312,20 @@ function SpotBudgetCard({
                 <button
                   onClick={() => {
                     const newSet = new Set<number>();
-                    items.forEach((it) => {
+                    items.forEach((it, i) => {
+                      // 门票是必付项，始终保留
+                      if (it.isTicket) {
+                        if (!it.unknown) newSet.add(i);
+                        return;
+                      }
                       const factor = getProjectStaminaFactor(it.name);
                       // factor ≤ 1.0 的项目默认可选（含漫步、参观、观景等省力项）
                       // factor ≤ 0.7 的缆车/索道类即使付费也保留（明显省力）
                       if (factor <= 0.7) {
-                        newSet.add(it.index);
-                      } else if (factor <= 1.0 && it.price === 0) {
+                        newSet.add(i);
+                      } else if (factor <= 1.0 && !it.unknown && it.price === 0) {
                         // 免费且非高体力的省力项
-                        newSet.add(it.index);
+                        newSet.add(i);
                       }
                     });
                     setSelected(newSet);
@@ -371,8 +405,14 @@ function BudgetBar({
    预算沙盘主页面
    ═══════════════════════════════════════════════════ */
 export default function BudgetView() {
-  const { spots, trip, customPrices, setCustomPrice, clearCustomPrices } =
-    useAppStore();
+  const {
+    spots,
+    trip,
+    customPrices,
+    setCustomPrice,
+    removeCustomPrice,
+    clearCustomPrices,
+  } = useAppStore();
 
   // 行程单优先：默认按行程单的景点计算，可切换回全部景点
   const [scope, setScope] = useState<"trip" | "all" | null>(null);
@@ -402,63 +442,89 @@ export default function BudgetView() {
     [customPrices],
   );
 
-  // 只显示有 projects 的景点（行程单作用域下只算行程内的站点）
+  // 全库可见：不再按 projects 过滤（库内 5987 条只有门票维度，过去被整库隐藏）
   const spotItems = useMemo(() => {
     const base =
       effectiveScope === "trip"
         ? spots.filter((s) => trip.includes(s.id))
         : spots;
-    return base.filter((s) => s.projects.length > 0);
+    return base;
   }, [spots, trip, effectiveScope]);
 
-  // 总预算数据
-  const maxPossible = useMemo(
-    () =>
-      spotItems.reduce(
-        (sum, s) =>
-          sum + s.projects.reduce((ps, p) => ps + priceOf(s.id, p), 0),
-        0,
-      ),
-    [spotItems, priceOf],
+  // 分页渲染：全库数千条一次挂载会卡，按批展示
+  const PAGE_SIZE = 30;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [effectiveScope]);
+  const visibleSpots = useMemo(
+    () => spotItems.slice(0, visibleCount),
+    [spotItems, visibleCount],
   );
 
-  // 价格分层统计
+  /** 单个景点的预算条目：门票（补录/收录/估算/未收录）+ 可选项目 */
+  const itemsOf = useCallback(
+    (s: Spot): BudgetItem[] => {
+      const q = quoteTicket(s, customPrices[`${s.id}::${TICKET_KEY}`]);
+      const list: BudgetItem[] = [
+        {
+          key: TICKET_KEY,
+          name: "门票",
+          price: q.price ?? 0,
+          unknown: q.price === null,
+          isTicket: true,
+        },
+      ];
+      for (const p of s.projects) {
+        list.push({ key: p, name: p, price: priceOf(s.id, p) });
+      }
+      return list;
+    },
+    [customPrices, priceOf],
+  );
+
+  // 满选总价：按当前可见范围统计（全库规模下用整个库会得到失真的大数）
+  const maxPossible = useMemo(
+    () =>
+      visibleSpots.reduce(
+        (sum, s) =>
+          sum +
+          itemsOf(s).reduce(
+            (ps, it) => ps + (it.unknown ? 0 : it.price),
+            0,
+          ),
+        0,
+      ),
+    [visibleSpots, itemsOf],
+  );
+
+  // 价格分层统计：门票 + 项目一起分档
   const priceLayers = useMemo(() => {
-    const free: string[] = [],
-      cheap: string[] = [],
-      mid: string[] = [],
-      pricey: string[] = [];
-    spotItems.forEach((s) => {
-      s.projects.forEach((p) => {
-        const price = priceOf(s.id, p);
-        if (price === 0) free.push(p);
-        else if (price <= 50) cheap.push(p);
-        else if (price <= 150) mid.push(p);
-        else pricey.push(p);
+    let free = 0,
+      cheap = 0,
+      mid = 0,
+      pricey = 0,
+      unknown = 0;
+    visibleSpots.forEach((s) => {
+      itemsOf(s).forEach((it) => {
+        if (it.unknown) {
+          unknown++;
+          return;
+        }
+        if (it.price === 0) free++;
+        else if (it.price <= 50) cheap++;
+        else if (it.price <= 150) mid++;
+        else pricey++;
       });
     });
     return [
-      { label: "免费项目", count: free.length, color: "#10B981", emoji: "🆓" },
-      {
-        label: "平价 (≤50)",
-        count: cheap.length,
-        color: "#3B82F6",
-        emoji: "💰",
-      },
-      {
-        label: "中档 (50-150)",
-        count: mid.length,
-        color: "#F59E0B",
-        emoji: "💎",
-      },
-      {
-        label: "高端 (>150)",
-        count: pricey.length,
-        color: "#EF4444",
-        emoji: "👑",
-      },
+      { label: "免费", count: free, color: "#10B981", emoji: "🆓" },
+      { label: "平价 (≤50)", count: cheap, color: "#3B82F6", emoji: "💰" },
+      { label: "中档 (50-150)", count: mid, color: "#F59E0B", emoji: "💎" },
+      { label: "高端 (>150)", count: pricey, color: "#EF4444", emoji: "👑" },
+      { label: "未收录", count: unknown, color: "#9CA3AF", emoji: "❔" },
     ];
-  }, [spotItems, priceOf]);
+  }, [visibleSpots, itemsOf]);
 
   if (spotItems.length === 0) {
     return (
@@ -474,7 +540,7 @@ export default function BudgetView() {
           暂无可预算的景点
         </h3>
         <p className="text-sm text-gray-500">
-          景点数据中需要有"推荐项目"才能模拟预算
+          先到「景点览胜」收藏或加入行程单，再回来模拟预算
         </p>
       </div>
     );
@@ -575,7 +641,7 @@ export default function BudgetView() {
         </div>
 
         {/* ═══ 价格分层 ═══ */}
-        <div className="grid grid-cols-4 gap-2 mb-5">
+        <div className="grid grid-cols-5 gap-2 mb-5">
           {priceLayers.map((layer) => (
             <div
               key={layer.label}
@@ -598,27 +664,40 @@ export default function BudgetView() {
         {/* ═══ 景点项目列表 ═══ */}
         <div className="flex items-center gap-1.5 mb-3">
           <Wallet className="w-4 h-4 text-gray-500" />
-          <span className="text-sm font-semibold text-gray-700">景点项目</span>
+          <span className="text-sm font-semibold text-gray-700">景点费用</span>
           <span className="text-[10px] text-gray-400 ml-auto">
-            点击展开勾选
+            {visibleSpots.length}/{spotItems.length} · 点击展开勾选
           </span>
         </div>
         <div className="space-y-3">
-          {spotItems.map((spot, i) => (
+          {visibleSpots.map((spot, i) => (
             <SpotBudgetCard
               key={spot.id}
               spotId={spot.id}
               name={spot.name}
               category={spot.category}
-              projects={spot.projects}
+              staminaCost={getStaminaCost(spot)}
+              items={itemsOf(spot)}
               onSubtotalChange={handleSubtotalChange}
               index={i}
-              getPrice={(p) => priceOf(spot.id, p)}
-              isCustom={(p) => isCustom(spot.id, p)}
+              isCustom={(key) => isCustom(spot.id, key)}
               setCustomPrice={setCustomPrice}
+              removeCustomPrice={removeCustomPrice}
             />
           ))}
         </div>
+        {visibleCount < spotItems.length && (
+          <button
+            onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
+            className="w-full mt-3 py-2.5 text-xs font-bold text-emerald-700 bg-emerald-50 rounded-xl hover:bg-emerald-100 transition-colors"
+          >
+            加载更多景点（还有 {spotItems.length - visibleCount} 条）
+          </button>
+        )}
+        <p className="mt-4 text-[11px] text-gray-400 leading-relaxed">
+          门票：官方票价未收录时按 A 级等级 / 分类估算（标「估」），
+          可点击价格补录实际票价（仅本机保存）。主题乐园门票通常已含游乐项目，不重复计价。
+        </p>
       </div>
     </div>
   );
