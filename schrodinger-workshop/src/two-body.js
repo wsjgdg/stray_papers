@@ -25,7 +25,7 @@ import { injectStyles } from './core/styles.js';
 import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
 import { createContext, createProgram, Quad, makeTarget } from './core/gl.js';
-import { TB_PRESETS, TB_COMMON, tbMakeWave, tbKdkStep, tbMeasure, tbRelax, tbPot1, tbPot2, tbMakeVArray, tbFieldHash, TB_FS_KICK, TB_FS_DRIFT, TB_FS_DRAW } from './physics/twobody.js';
+import { TB_PRESETS, TB_COMMON, tbMakeWave, tbInitParams, tbInitInfo, tbKdkStep, tbMeasure, tbRelax, tbPot1, tbPot2, tbMakeVArray, tbFieldHash, TB_FS_KICK, TB_FS_DRIFT, TB_FS_DRAW } from './physics/twobody.js';
 
 /* 页面布局（复用 styles.js 的 :root 变量与 reset；本块只管 two-body 专属结构） */
 const TB_CSS = `
@@ -35,6 +35,8 @@ const TB_CSS = `
   #tbHud .hrow{display:flex;justify-content:space-between;gap:12px;font-size:11.5px;padding:2.5px 0}
   #tbHud .hrow span:first-child{color:var(--dim)}
   #tbHud .hrow span:last-child{color:var(--txt)}
+  #tbHud .hrow span.warn{color:var(--amber)}
+  #tbPanel .note{font-size:9.5px;color:var(--dim);line-height:1.5;margin-top:6px}
   #tbHud hr{border:none;border-top:1px solid var(--line);margin:6px 0}
   #tbStage{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;
     display:flex;flex-direction:column;align-items:center;gap:5px;--sz:min(62vh,52vw)}
@@ -67,9 +69,14 @@ export class TwoBodyApp {
     const q = new URLSearchParams(location.search);
     const num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
     const L = Math.round(num('L', 128));
+    const preset0 = TB_PRESETS[q.get('preset')] ? q.get('preset') : 'cross';
+    const pr0 = TB_PRESETS[preset0];
     this.state = {
-      L, preset: q.get('preset') || 'cross', stats: q.get('stats') || 'boson',
+      L, preset: preset0, stats: q.get('stats') || 'boson',
       g: num('g', 0), eps: num('eps', 0), omega: num('omega', 0.02),
+      /* 初态四个旋钮：缺省跟预设，URL 可覆盖（越界由 tbInitParams 钳制） */
+      sigma: num('sigma', pr0.sigma), k0: num('k0', pr0.k0),
+      d: num('d', pr0.d), r0: num('r0', pr0.r0),
       substeps: Math.round(num('substeps', 6)), dt: num('dt', 0.08),
       mode: Math.round(num('mode', 0)), paused: q.get('paused') === '1',
       simTime: 0, frames: 0,
@@ -122,8 +129,9 @@ export class TwoBodyApp {
       this.initPrograms();
       this.initTargets();
       this.bindUI();
-      /* 初次加载沿用 URL 参数（不重置 g/eps/omega） */
-      this.loadPreset(this.state.preset, this.state.stats, false);
+      /* 初次加载沿用 URL 参数（不重置 g/eps/omega），但初态四旋钮要先钳制：
+         走 applyInit ⟹ 面板显示的 σ/k₀/d/r₀ 与真正送进引擎的值逐位相同。 */
+      this.applyInit();
       this.resize();
       requestAnimationFrame(this.frame);
     } catch (err){
@@ -166,6 +174,13 @@ export class TwoBodyApp {
   <div class="sec"><h3>统计（交换对称）</h3><div class="grid2">
     <button id="tbBoson" class="on">玻色子 +</button><button id="tbFermion">费米子 −</button>
   </div></div>
+  <div class="sec" id="tbInitSec"><h3>初态（波包）</h3>
+    <div class="row" id="rowSigma"><label>宽度 σ</label><input type="range" id="rSigma" min="1.5" max="21" step="0.1" value="6.5"><output id="oSigma">6.5</output></div>
+    <div class="row" id="rowK0"><label>动量 k₀</label><input type="range" id="rK0" min="0" max="0.8" step="0.01" value="0.25"><output id="oK0">0.25</output></div>
+    <div class="row" id="rowD"><label>间距 d</label><input type="range" id="rD" min="4" max="120" step="1" value="52"><output id="oD">52</output></div>
+    <div class="row" id="rowR0"><label>释放 r₀</label><input type="range" id="rR0" min="1" max="60" step="1" value="26"><output id="oR0">26</output></div>
+    <div class="note" id="tbInitNote">拖任一滑块 ⟹ 按当前统计重发波包（t 归零）；被钳制的量会写回滑块，面板不报假数。</div>
+  </div>
   <div class="sec"><h3>参数</h3>
     <div class="row"><label>接触 g</label><input type="range" id="rG" min="0" max="40" step="0.5" value="0"><output id="oG">0.0</output></div>
     <div class="row"><label>可区分 ε</label><input type="range" id="rEps" min="0" max="0.6" step="0.02" value="0"><output id="oEps">0.00</output></div>
@@ -184,6 +199,9 @@ export class TwoBodyApp {
   <div class="hrow"><span>对角质量</span><span id="hDiag">—</span></div>
   <div class="hrow"><span>对角峰值</span><span id="hDiagMax">—</span></div>
   <div class="hrow"><span>max|n₁−n₂|</span><span id="hDn">—</span></div>
+  <div class="hrow"><span>初态</span><span id="hInit">—</span></div>
+  <div class="hrow"><span>轨道重叠 / HBT</span><span id="hOv">—</span></div>
+  <div class="hrow"><span>边缘留白</span><span id="hFit">—</span></div>
   <hr>
   <div class="hrow"><span>E（离散）</span><span id="hE">—</span></div>
   <div class="hrow"><span>t / 帧</span><span id="hT">—</span></div>
@@ -229,6 +247,20 @@ export class TwoBodyApp {
         if (after) after();
       });
     };
+    /* 初态四旋钮：先过 tbInitParams 钳制，再写回 state/滑块，最后重发波包。
+       —— 面板显示的必须是**实际生效**的值（R129 的教训：面板报的数要与真实一致）。 */
+    const initBind = (id, key) => {
+      const el = this.q(id);
+      this.on(el, 'input', () => {
+        this.state[key] = parseFloat(el.value);
+        this.applyInit();
+      });
+    };
+    initBind('#rSigma', 'sigma');
+    initBind('#rK0', 'k0');
+    initBind('#rD', 'd');
+    initBind('#rR0', 'r0');
+
     bind('#rG', 'g', '#oG', v => v.toFixed(1));
     bind('#rEps', 'eps', '#oEps', v => v.toFixed(2));
     bind('#rOm', 'omega', '#oOm', v => v.toFixed(3),
@@ -320,6 +352,42 @@ export class TwoBodyApp {
     this.q('#rSub').value = this.state.substeps; this.q('#oSub').textContent = String(this.state.substeps);
     this.q('#rOm').disabled = !pr.trap;
     this.q('#rOm').style.opacity = pr.trap ? 1 : 0.4;
+    /* 初态四旋钮：按预设显隐（eigen 不用它们；k₀ 只对自由对穿有意义；
+       d 只对自由对穿、r₀ 只对阱中对穿） */
+    const show = (id, on) => { const el = this.q(id); if (el) el.style.display = on ? '' : 'none'; };
+    show('#rowSigma', !pr.eigen);
+    show('#rowK0', !pr.eigen && !pr.trap);
+    show('#rowD', !pr.eigen && !pr.trap);
+    show('#rowR0', !pr.eigen && !!pr.trap);
+    show('#tbInitNote', !pr.eigen);
+    if (!pr.eigen){
+      const L = this.state.L;
+      this.q('#rSigma').max = Math.max(1.5, (L - 1) / 6).toFixed(1);
+      this.q('#rD').max = String(Math.round((L - 1) - 3.0));
+      this.q('#rR0').max = String(Math.round((L - 1) / 2));
+      this.q('#rSigma').value = this.state.sigma; this.q('#oSigma').textContent = this.state.sigma.toFixed(1);
+      this.q('#rK0').value = this.state.k0; this.q('#oK0').textContent = this.state.k0.toFixed(2);
+      this.q('#rD').value = this.state.d; this.q('#oD').textContent = String(Math.round(this.state.d));
+      this.q('#rR0').value = this.state.r0; this.q('#oR0').textContent = String(Math.round(this.state.r0));
+    }
+    /* HUD：初态 / 轨道重叠 / 边缘留白（全部来自 tbInitInfo 同一份轨道） */
+    const info = tbInitInfo(this.state.L, this.state.preset, {
+      stats: this.state.stats, sigma: this.state.sigma, k0: this.state.k0,
+      d: this.state.d, r0: this.state.r0, omega: this.state.omega,
+    });
+    this._info = info;
+    const hInit = this.q('#hInit'), hOv = this.q('#hOv'), hFit = this.q('#hFit');
+    if (hInit) hInit.textContent = info.eigen
+      ? `本征态 · ω=${info.omega.toFixed(3)}`
+      : `σ=${info.sigma.toFixed(1)} · k₀=${info.ka.toFixed(2)} · ${pr.trap ? 'r₀' : 'd'}=${Math.round(info.sep)}`;
+    if (hOv) hOv.textContent = `${info.overlap < 1e-4 ? info.overlap.toExponential(1) : info.overlap.toFixed(4)} · HBT ${info.hbt.toFixed(3)}`;
+    if (hFit && info.margin !== null){
+      hFit.textContent = `${info.margin.toFixed(1)} px`;
+      hFit.className = info.margin < 0 ? 'warn' : '';
+      hFit.title = info.margin < 0
+        ? '留白 < 0 ⟹ 波包 3σ 尾部已越过边界；CLAMP_TO_EDGE 会把它反射回来（诚实限制②）'
+        : '两包中心到最近边界再减 3σ；>0 表示 3σ 尾部还在场内';
+    } else if (hFit){ hFit.textContent = '—'; hFit.className = ''; }
     this.q('#tbHint').querySelector('b').textContent = pr.name;
     this.q('#tbHint').querySelector('span').innerHTML = pr.text;
     this.q('#tbMode').textContent = '显示：' + (this.state.mode ? '相位' : '密度');
@@ -336,14 +404,21 @@ export class TwoBodyApp {
   /* resetParams=true 仅在点预设按钮时（切场景恢复该预设默认参数）；
      URL 初次加载 / 统计切换 / ω 拖动均保持当前参数。 */
   loadPreset(key, stats, resetParams = false){
-    const w = tbMakeWave(this.state.L, key, { stats, omega: this.state.omega });
+    const pr = TB_PRESETS[key] || TB_PRESETS.cross;
+    if (resetParams && !pr.eigen){
+      this.state.sigma = pr.sigma; this.state.k0 = pr.k0;
+      this.state.d = pr.d; this.state.r0 = pr.r0;
+    }
+    const w = tbMakeWave(this.state.L, key, {
+      stats, omega: this.state.omega,
+      sigma: this.state.sigma, k0: this.state.k0, d: this.state.d, r0: this.state.r0,
+    });
     if (w.norm < 1e-9){
       this.toast('泡利不相容：两个费米子不能占据同一单粒子态');
       return false;
     }
     this.state.preset = key; this.state.stats = stats;
     if (resetParams){
-      const pr = TB_PRESETS[key];
       this.state.g = pr.g; this.state.eps = pr.eps; this.state.omega = pr.omega;
     }
     this._init = { re: w.re, im: w.im };
@@ -353,6 +428,31 @@ export class TwoBodyApp {
     this.bakePot();
     this.refreshMeasure();
     return true;
+  }
+  /* 初态参数（σ/k₀/d/r₀）变更的统一入口：
+     ① 过 tbInitParams 钳制（越界就收进合法区间，绝不把越界值送进引擎）；
+     ② 写回 state 与滑块位置（面板不报假数）；
+     ③ 按当前统计重发波包（loadPreset 会同步面板 + 重烘势场 + 重新测量）；
+     ④ 留白 < 0 时如实告警（包尾被 CLAMP 边界切，这是限制不是 bug）。 */
+  applyInit(){
+    const L = this.state.L, key = this.state.preset;
+    const q = tbInitParams(L, key, {
+      sigma: this.state.sigma, k0: this.state.k0, d: this.state.d, r0: this.state.r0,
+      omega: this.state.omega,
+    });
+    if (!q.eigen){
+      this.state.sigma = q.sigma; this.state.k0 = q.k0;
+      this.state.d = q.d; this.state.r0 = q.r0;
+    }
+    const ok = this.loadPreset(key, this.state.stats, false);
+    const info = tbInitInfo(L, key, {
+      stats: this.state.stats, sigma: this.state.sigma, k0: this.state.k0,
+      d: this.state.d, r0: this.state.r0, omega: this.state.omega,
+    });
+    if (ok && info.margin !== null && info.margin < 0){
+      this.toast('波包太宽 / 间距太大：尾部被边界截断（留白 ' + info.margin.toFixed(1) + '）');
+    }
+    return info;
   }
   setStats(s){
     if (s === this.state.stats) return;
@@ -602,6 +702,11 @@ export class TwoBodyApp {
       step: (n = 1) => this.stepFrames(n),
       preset: k => this.loadPreset(k, this.state.stats, false),
       stats: s => this.setStats(s),
+      /* 初态旋钮：set 走与滑块同一条路径（钳制 → 重发 → 告警） */
+      initInfo: () => this._info || tbInitInfo(this.state.L, this.state.preset, {
+        stats: this.state.stats, sigma: this.state.sigma, k0: this.state.k0,
+        d: this.state.d, r0: this.state.r0, omega: this.state.omega }),
+      setInit: patch => { Object.assign(this.state, patch || {}); return this.applyInit(); },
       relaxNow: () => { const r = this.relaxSync(); return { iters: r.iters, energy: r.energy, residual: r.residual }; },
       /* 页内 CPU 镜像：从初态按当前参数跑 frames 帧，与 GPU 场逐 texel 对比
          （GPU float32 vs CPU float64；页内算完只回传摘要） */
