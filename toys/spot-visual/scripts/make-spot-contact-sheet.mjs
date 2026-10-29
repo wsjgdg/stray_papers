@@ -28,6 +28,8 @@ const arg = (k, d) => {
 const LIMIT = Number(arg("limit", "120"));
 const OFFSET = Number(arg("offset", "0"));
 const OUT = arg("out", "contact-sheet-recent");
+// 按名单出图：优先于 limit/offset（别名重抓的条目在报表里位置是旧的，靠偏移取不到）
+const NAMES_FILE = arg("names", "");
 
 const SPOT_DIR = path.resolve("public/spots");
 const REPORT = path.join(SPOT_DIR, "_candidates", "_report.json");
@@ -45,7 +47,16 @@ for (const r of report) {
   bySpot.set(r.dish, { name: r.dish, file: `spots/${r.dish}.webp`, host: r.host, page: r.purl, sizeKB: r.sizeKB });
 }
 const all = [...bySpot.values()];
-const picked = (OFFSET > 0 ? all.slice(-(OFFSET + LIMIT)) : all.slice(-LIMIT)).slice(0, LIMIT);
+const named = NAMES_FILE
+  ? fs
+      .readFileSync(NAMES_FILE, "utf8")
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((n) => bySpot.get(n))
+      .filter(Boolean)
+  : null;
+const picked = (named ?? all.slice(-(OFFSET + LIMIT))).slice(0, LIMIT);
 
 if (!picked.length) {
   console.error("没有可拼的图（先跑 npm run spots 烘焙）");
