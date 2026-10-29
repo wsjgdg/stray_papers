@@ -27,6 +27,7 @@ const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 const PER = Number(
   process.argv.find((a) => a.startsWith("--per="))?.split("=")[1] ?? 3,
 );
+const NO_SIZE_FILTER = process.argv.includes("--any-size");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0";
@@ -66,7 +67,10 @@ function curl(url, opts = {}) {
 /** 从 Bing 图片搜索页提取 murl / purl / title */
 function bingImages(spotName) {
   const q = encodeURIComponent(`${spotName} 风景 实拍`);
-  const url = `https://cn.bing.com/images/search?q=${q}&qft=+filterui:imagesize-large&form=IRFLTR`;
+  // 默认只搜大图（冷门景点在大图档里往往一条都没有）；--any-size 放开尺寸过滤，
+  // 配合 build-spot-photos.mjs 的 420px 退档，就能收下那些只有小图的条目。
+  const size = NO_SIZE_FILTER ? "" : "&qft=+filterui:imagesize-large";
+  const url = `https://cn.bing.com/images/search?q=${q}${size}&form=IRFLTR`;
   let html = "";
   try {
     html = curl(url);
