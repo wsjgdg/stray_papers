@@ -1294,11 +1294,19 @@ export function quoteTicket(spot: Spot, custom?: number): TicketQuote {
     return { price: Math.round(custom), source: "custom", label: "已补录" };
   }
   if (typeof spot.ticketPrice === "number" && spot.ticketPrice >= 0) {
-    return { price: Math.round(spot.ticketPrice), source: "real", label: "已收录" };
+    return {
+      price: Math.round(spot.ticketPrice),
+      source: "real",
+      label: "已收录",
+    };
   }
   const byLevel = spot.level ? TICKET_ESTIMATE_BY_LEVEL[spot.level] : undefined;
   if (byLevel !== undefined) {
-    return { price: byLevel, source: "estimate", label: `按 ${spot.level} 估算` };
+    return {
+      price: byLevel,
+      source: "estimate",
+      label: `按 ${spot.level} 估算`,
+    };
   }
   const byCat = TICKET_ESTIMATE_BY_CATEGORY[spot.category];
   if (byCat !== undefined) {
@@ -1392,7 +1400,12 @@ import {
   MANUAL_SCENIC_LEVELS,
 } from "./scenic-enrich.generated";
 import { SCENIC_DETAILS } from "./scenic-details.generated";
-import { SCENIC_RENAMES, SCENIC_DROPS, SCENIC_GEO_RENAMES, SCENIC_GEO_DROPS } from "./scenic-renames";
+import {
+  SCENIC_RENAMES,
+  SCENIC_DROPS,
+  SCENIC_GEO_RENAMES,
+  SCENIC_GEO_DROPS,
+} from "./scenic-renames";
 
 /** 名录里被清洗判定为重复/非景区的条目（公司名、管委会、长短名并存） */
 const SCENIC_DROP_SET = new Set(SCENIC_DROPS);
@@ -1424,7 +1437,11 @@ export function cityPoiToSpot(city: string, p: CityPoi, index: number): Spot {
     projects: [],
     category: p.category,
     description:
-      POI_DESCRIPTIONS[`${city}::${p.name}`] ?? poiPlaceholder(city, p, level),
+      // 描述链：城市包人工描述 → 外包描述（城市限定键 `城市::名`，防同名跨市串写，
+      // 如 北京/武汉 都有「中山公园」）→ 事实句模板。裸名键不给 POI（见 worklog 六十轮）。
+      POI_DESCRIPTIONS[`${city}::${p.name}`] ??
+      SCENIC_DESCRIPTIONS[`${city}::${p.name}`] ??
+      poiPlaceholder(city, p, level),
     location: { lat: p.lat, lng: p.lng },
   };
 }
