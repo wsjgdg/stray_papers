@@ -27,7 +27,7 @@
 import { injectStyles } from './core/styles.js';
 import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
-import { hbSector, hbSetField, hbProductFromPattern, hbMeasure, hbEnergy, hbEntropy, hbKrylovExp, hbBondCorr, hbNorm, HbGsTask, HB_PRESETS } from './physics/hubbard.js';
+import { hbSector, hbSetField, hbProductFromPattern, hbMeasure, hbEnergy, hbEntropy, hbEntropyAt, hbEntropyProfile, hbDensityCorr, hbMomentumDist, hbCorrelation, hbKrylovExp, hbBondCorr, hbNorm, HbGsTask, HB_PRESETS } from './physics/hubbard.js';
 
 /* 画面上 μ 的满量程（|μ|/t 到 6 就是满格高） */
 const MU_VIEW = 6;
@@ -37,6 +37,13 @@ const HB_TOOLS = [
   { k: 'erase', name: '擦除', tip: '点击清除该格的 μ' },
 ];
 
+/* 下方图表的四个视图（Phase 2）：时间轴只有一个视图，其余是「当前态」的观测量 */
+const HB_VIEWS = [
+  { k: 'Sx', name: 'S(x)', tip: '纠缠剖面：以切点 x 分开时左半的熵' },
+  { k: 'nk', name: 'n(k)', tip: '动量分布：k = 2πm/L，Σ_m n(k_m) = N' },
+  { k: 'nn', name: '⟨n n⟩', tip: '密度关联矩阵（暂停时刷新）' },
+  { k: 'St', name: 'S(t)', tip: '半链熵随时间（基态下退化为标尺）' },
+];
 const HB_CSS = `
   #hbPanel{top:74px;left:14px;width:232px;padding:13px;z-index:10;max-height:calc(100vh - 190px);overflow-y:auto;
     scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
@@ -46,12 +53,17 @@ const HB_CSS = `
   #hbHud .hrow span:last-child{color:var(--txt)}
   #hbHud hr{border:none;border-top:1px solid var(--line);margin:6px 0}
   #hbStage{position:fixed;left:50%;top:53%;transform:translate(-50%,-50%);z-index:5;
-    display:flex;flex-direction:column;align-items:center;gap:8px;--w:min(78vw,780px)}
+    display:flex;flex-direction:column;align-items:center;gap:6px;--w:min(78vw,780px)}
   #hbLadder{width:var(--w);height:300px;border:1px solid var(--line);border-radius:10px;background:rgba(4,8,16,.5);
     display:block;touch-action:none}
   #hbStage[data-tool="state"] #hbLadder{cursor:pointer}
   #hbStage[data-tool="field"] #hbLadder,#hbStage[data-tool="erase"] #hbLadder{cursor:crosshair}
   #hbChart{width:var(--w);height:170px;border:1px solid var(--line);border-radius:10px;background:rgba(4,8,16,.5);display:block}
+  #hbViews{display:flex;gap:5px;align-self:stretch;justify-content:flex-end;margin-bottom:-2px;
+    font-family:var(--mono);opacity:.92}
+  #hbViews button{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;padding:2px 8px;border-radius:6px;
+    background:rgba(9,16,30,.55);border:1px solid var(--line);color:var(--dim);cursor:pointer}
+  #hbViews button.on{color:var(--cyan);border-color:rgba(103,232,249,.55);background:rgba(103,232,249,.07)}
   #hbHint{left:14px;bottom:52px;z-index:10;padding:10px 14px;max-width:330px;font-size:11.5px;
     color:var(--dim);line-height:1.65;max-height:130px;overflow-y:auto;
     scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
@@ -87,10 +99,16 @@ export class HubbardApp {
       tool: q.get('tool') || 'state',
       muDepth: clamp(num('muD', 2), 0, MU_VIEW), muSign: q.get('sgn') === '+' ? 1 : -1,
       mu: null, pat: null, nUp: 0, nDn: 0,
+      view: 'Sx',
     };
     if (![8, 10].includes(this.state.L)) this.state.L = 8;
     if (!HB_TOOLS.some(t => t.k === this.state.tool)) this.state.tool = 'state';
     if (!HB_PRESETS[this.state.preset]) this.state.preset = 'mott';
+    if (!HB_VIEWS.some(v => v.k === this.state.view)) this.state.view = 'Sx';
+    /* Phase-2 观测量缓存：脏标记 + 渐进任务（S(x) 的 L=10 全扫 ~0.65s） */
+    this.probe = { sx: null, sxL: 0, nk: null, nn: null, rho: null, live: false };
+    this._dirty = { sx: true, nk: true, nn: true };
+    this.sxJob = null; this.sxMs = 0;
     this.state.mu = new Float64Array(this.state.L);
     this.state.pat = neelPattern(this.state.L);
     this._spec = this.readUrlSpec(q);
@@ -185,6 +203,7 @@ export class HubbardApp {
 </div>
 <div id="hbStage" class="qstage" data-tool="${this.state.tool}">
   <canvas id="hbLadder"></canvas>
+  <div id="hbViews">${HB_VIEWS.map(v => '<button data-view="' + v.k + '" title="' + v.tip + '">' + v.name + '</button>').join('')}</div>
   <canvas id="hbChart"></canvas>
 </div>
 <div id="hbHint" class="panel qhint"><b></b><span></span></div>
@@ -196,6 +215,8 @@ export class HubbardApp {
       this.on(b, 'click', () => this.setL(parseInt(b.dataset.L, 10))));
     this.container.querySelectorAll('[data-tool]').forEach(b =>
       this.on(b, 'click', () => this.setTool(b.dataset.tool)));
+    this.container.querySelectorAll('[data-view]').forEach(b =>
+      this.on(b, 'click', () => this.setView(b.dataset.view)));
   }
 
   bindUI(){
@@ -223,6 +244,7 @@ export class HubbardApp {
       const tag = (e.target && e.target.tagName) || '';
       if (/input|textarea|select/i.test(tag)) return;
       if (e.key === '1' || e.key === '2' || e.key === '3') this.setTool(HB_TOOLS[+e.key - 1].k);
+      else if (e.key >= '4' && e.key <= '7') this.setView(HB_VIEWS[+e.key - 4].k);
       else if (e.key === ' ') { e.preventDefault(); this.togglePause(); }
     });
     this.bindCanvas();
@@ -517,6 +539,86 @@ export class HubbardApp {
     }
   }
 
+  /* ---------- Phase-2 观测量：S(x) / n(k) / ⟨n_i n_j⟩ ----------
+     三个量都是「当前态的单帧泛函」，逐帧重算会吃掉帧率，所以：
+       · 演化未暂停 ⟹ 不重算，图右上角标「暂停后更新」（缓存的旧值仍可看）；
+       · 基态 / 暂停 ⟹ 按脏标记惰性重算。
+     S(x) 全扫 L=10 约 0.6s（边切点便宜、中心最贵），用**渐进任务**由外向内填，
+     每帧给 8ms 预算 ⟹ 剖面从两端长出来；n(k)（~100ms）与 ⟨nn⟩（~10ms）单次同步。 */
+  setView(k){
+    if (!HB_VIEWS.some(v => v.k === k)) return false;
+    this.state.view = k;
+    /* 演化中切过来：拍一次快照（用户动作触发，不放进逐帧路径） */
+    if (this.re && !this.probesLive() && k !== 'St') this.snapshotProbes();
+    this.syncPanel(); this.queueUrl(); this.draw();
+    return true;
+  }
+  invalidateProbes(){
+    this._dirty = { sx: true, nk: true, nn: true };
+    this.sxJob = null;
+  }
+  probesLive(){ return this.state.mode === 'gs' || this.state.paused; }
+  /* 由外向内：切点 x 与 L−x 的代价都 ∝ min(x,L−x)·…，所以先算便宜的两端 */
+  startSx(){
+    const L = this.state.L, order = [];
+    for (let d = 0; d <= (L >> 1); d++){
+      order.push(d); if (L - d !== d) order.push(L - d);
+    }
+    const out = new Float64Array(L + 1).fill(NaN);
+    /* 抓快照：演化中 this.re/im 每帧都是新数组，任务跨帧读会被换掉 */
+    this.sxJob = { order, k: 0, out, L, t0: performance.now(), re: this.re.slice(), im: this.im.slice() };
+    this.probe.sx = out; this.probe.sxL = L;
+  }
+  stepSx(budget = 8){
+    const j = this.sxJob; if (!j) return;
+    if (!this.re || j.L !== this.state.L){ this.sxJob = null; return; }
+    const t0 = performance.now();
+    while (j.k < j.order.length && performance.now() - t0 < budget){
+      const c = j.order[j.k++];
+      j.out[c] = (c <= 0 || c >= j.L) ? 0 : hbEntropyAt(this.sec, j.re, j.im, c).S;
+    }
+    this.probe.sx = j.out;
+    if (j.k >= j.order.length){
+      this.sxMs = performance.now() - j.t0;
+      this.sxJob = null; this._dirty.sx = false;
+    }
+  }
+  computeNk(){
+    const L = this.state.L;
+    const rho = hbCorrelation(this.sec, this.re, this.im);
+    const nk = new Float64Array(L);
+    for (let m = 0; m < L; m++) nk[m] = hbMomentumDist(rho, L, m);
+    this.probe.rho = rho; this.probe.nk = nk; this._dirty.nk = false;
+  }
+  computeNn(){
+    this.probe.nn = hbDensityCorr(this.sec, this.re, this.im); this._dirty.nn = false;
+  }
+  /* 演化中切视图用：单次快照（n(k) ~100ms、⟨nn⟩ ~10ms；S(x) 起渐进任务） */
+  snapshotProbes(){
+    if (!this.re) return;
+    const v = this.state.view;
+    if (v === 'nk') this.computeNk();
+    else if (v === 'nn') this.computeNn();
+    else if (v === 'Sx' && !this.sxJob) this.startSx();
+  }
+  ensureProbe(){
+    if (!this.re || !this.probesLive()) return;
+    const v = this.state.view;
+    if (v === 'Sx'){
+      if ((this._dirty.sx || (this.probe.sxL !== this.state.L)) && !this.sxJob) this.startSx();
+    } else if (v === 'nk' && this._dirty.nk) this.computeNk();
+    else if (v === 'nn' && this._dirty.nn) this.computeNn();
+  }
+  /* 同步算到底：导出与调试句柄用（L=10 约 0.75s，全部就绪） */
+  probeAll(){
+    if (!this.re) return null;
+    const L = this.state.L;
+    this.probe.sx = hbEntropyProfile(this.sec, this.re, this.im); this.probe.sxL = L;
+    this.computeNk(); this.computeNn();
+    this.sxJob = null; this._dirty = { sx: false, nk: false, nn: false };
+    return { sx: this.probe.sx, nk: this.probe.nk, nn: this.probe.nn };
+  }
+
   /* ---------- 演化 ---------- */
   evolveFrame(){
     const { dt, spf } = this.state;
@@ -538,6 +640,7 @@ export class HubbardApp {
   }
   measureAll(force){
     if (!this.re) return;
+    this.invalidateProbes();
     const m = hbMeasure(this.sec, this.re, this.im);
     this.m = m;
     this.E = hbEnergy(this.sec, this.re, this.im, 1, this.state.U);
@@ -719,6 +822,11 @@ export class HubbardApp {
     const W = cv.width, H = cv.height, dpr = W / (cv.clientWidth || W) || 1;
     ctx.clearRect(0, 0, W, H);
     const mono = px => `${px}px ui-monospace,monospace`;
+    this.ensureProbe();
+    const v = this.state.view;
+    if (v === 'Sx') return this.drawProbeSx(ctx, W, H, dpr, mono);
+    if (v === 'nk') return this.drawProbeNk(ctx, W, H, dpr, mono);
+    if (v === 'nn') return this.drawProbeNn(ctx, W, H, dpr, mono);
     const padL = 42 * dpr, padR = 14 * dpr, padT = 20 * dpr, padB = 26 * dpr;
     const x0 = padL, y0 = H - padB, w = W - padL - padR, h = H - padT - padB;
     ctx.textAlign = 'left';
@@ -784,6 +892,143 @@ export class HubbardApp {
     ctx.fillText('t（每帧 ' + this.state.spf * this.state.dt + ' t）', x0 + w - 108 * dpr, y0 + 16 * dpr);
   }
 
+  /* ---------- 三个观测视图 ---------- */
+  /* 图表通用抬头：标题 + 右上角状态（未暂停时提示数据是旧的） */
+  probeHead(ctx, dpr, mono, title, sub, W){
+    ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(154,167,189,.9)'; ctx.font = mono(10.5 * dpr);
+    ctx.fillText(title, 14 * dpr, 13 * dpr);
+    if (sub){
+      ctx.fillStyle = this.probesLive() ? 'rgba(154,167,189,.62)' : 'rgba(251,191,36,.75)';
+      ctx.font = mono(9.5 * dpr); ctx.textAlign = 'right';
+      ctx.fillText(sub, W - 14 * dpr, 13 * dpr);
+      ctx.textAlign = 'left';
+    }
+  }
+  /* S(x)：切点 x 处的左半熵。已算的点连线，未算的点跳过（渐进长出） */
+  drawProbeSx(ctx, W, H, dpr, mono){
+    const L = this.state.L;
+    const x0 = 44 * dpr, y0 = H - 26 * dpr, w = W - 44 * dpr - 16 * dpr, h = H - 22 * dpr - 26 * dpr;
+    const sx = (this.probe.sxL === L) ? this.probe.sx : null;
+    let sMax = 0.35;
+    if (sx) for (let i = 1; i < L; i++) if (Number.isFinite(sx[i])) sMax = Math.max(sMax, sx[i]);
+    sMax = Math.max(sMax * 1.18, Math.LN2 * 1.05);
+    const px = x => x0 + (x / L) * w, py = s => y0 - (s / sMax) * h;
+    this.probeHead(ctx, dpr, mono, `纠缠剖面 S(x) · 切点 x 左侧 ${'x'} 格（纵轴上限 ${sMax.toFixed(2)}）`,
+      this.probesLive() ? (this.sxJob ? `填充 ${this.sxJob.k}/${L + 1}` : (this.sxMs ? this.sxMs.toFixed(0) + ' ms' : '')) : '演化中 · 暂停后更新', W);
+    /* 轴 */
+    ctx.strokeStyle = 'rgba(120,160,220,.20)'; ctx.lineWidth = 1 * dpr;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0 + w, y0); ctx.stroke();
+    ctx.strokeStyle = 'rgba(120,160,220,.18)'; ctx.setLineDash([3 * dpr, 3 * dpr]);
+    ctx.beginPath(); ctx.moveTo(px(L >> 1), py(0)); ctx.lineTo(px(L >> 1), py(sMax * 0.86)); ctx.stroke();
+    ctx.setLineDash([]);
+    /* 曲线：只在连续已算点上连线 */
+    if (sx){
+      ctx.strokeStyle = 'rgba(103,232,249,.92)'; ctx.lineWidth = 1.6 * dpr;
+      ctx.beginPath();
+      let pen = false;
+      for (let x = 0; x <= L; x++){
+        if (!Number.isFinite(sx[x])){ pen = false; continue; }
+        const X = px(x), Y = py(sx[x]);
+        pen ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); pen = true;
+      }
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(103,232,249,.95)';
+      for (let x = 0; x <= L; x++){
+        if (!Number.isFinite(sx[x])) continue;
+        ctx.beginPath(); ctx.arc(px(x), py(sx[x]), 2.0 * dpr, 0, 6.2832); ctx.fill();
+      }
+      /* 半链读数：与 HUD 的 S 对齐（x=L/2） */
+      const half = sx[L >> 1];
+      if (Number.isFinite(half)){
+        ctx.fillStyle = 'rgba(230,237,243,.9)'; ctx.font = mono(10 * dpr);
+        ctx.textAlign = 'center';
+        ctx.fillText('S(L/2) = ' + half.toFixed(4), px(L >> 1), py(half) - 7 * dpr);
+        ctx.textAlign = 'left';
+      }
+    }
+    /* x 刻标 */
+    ctx.fillStyle = 'rgba(154,167,189,.55)'; ctx.font = mono(8.5 * dpr);
+    for (let x = 0; x <= L; x += (L > 8 ? 2 : 1)) ctx.fillText(String(x), px(x) - 2 * dpr, y0 + 12 * dpr);
+  }
+  /* n(k)：动量分布，k = 2πm/L；半满参考线 n = 1 */
+  drawProbeNk(ctx, W, H, dpr, mono){
+    const L = this.state.L;
+    const nk = (this.probe.nk && this.probe.nk.length === L) ? this.probe.nk : null;
+    const x0 = 44 * dpr, y0 = H - 26 * dpr, w = W - 44 * dpr - 16 * dpr, h = H - 22 * dpr - 26 * dpr;
+    let vMax = 1.2;
+    let sum = 0;
+    if (nk) for (const v of nk){ vMax = Math.max(vMax, v); sum += v; }
+    vMax = Math.max(vMax * 1.12, 1.15);
+    const bw = w / L;
+    const py = v => y0 - (v / vMax) * h;
+    this.probeHead(ctx, dpr, mono,
+      `动量分布 n(k) · k = 2πm/L${nk ? ' · Σ = ' + sum.toFixed(3) + '（= N↑+N↓）' : ''}`,
+      this.probesLive() ? (nk ? '' : '计算中…') : '演化中 · 暂停后更新', W);
+    ctx.strokeStyle = 'rgba(120,160,220,.20)'; ctx.lineWidth = 1 * dpr;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0 + w, y0); ctx.stroke();
+    /* n=1 参考线（半满、自旋简并时的平均占据） */
+    ctx.strokeStyle = 'rgba(120,160,220,.22)';
+    ctx.beginPath(); ctx.moveTo(x0, py(1)); ctx.lineTo(x0 + w, py(1)); ctx.stroke();
+    if (nk){
+      for (let m = 0; m < L; m++){
+        const v = Math.max(0, nk[m]);
+        const bx = x0 + m * bw + bw * 0.18, bwd = bw * 0.64;
+        /* 高于 1 的（占据多）用青色，低于 1 的（空穴）用暗青 —— 同一色相，靠明度区分 */
+        ctx.fillStyle = nk[m] >= 1 ? 'rgba(103,232,249,.82)' : 'rgba(96,178,250,.55)';
+        ctx.fillRect(bx, py(v), bwd, Math.max(1, y0 - py(v)));
+        ctx.fillStyle = 'rgba(230,237,243,.62)'; ctx.font = mono(8.5 * dpr); ctx.textAlign = 'center';
+        if (bw > 26 * dpr) ctx.fillText(v.toFixed(2), bx + bwd / 2, py(v) - 3 * dpr);
+        ctx.fillStyle = 'rgba(154,167,189,.55)'; ctx.font = mono(8.5 * dpr);
+        ctx.fillText(String(m), bx + bwd / 2, y0 + 12 * dpr);
+      }
+      ctx.textAlign = 'left';
+    }
+  }
+  /* ⟨n_i n_j⟩：矩阵热图（对角 = ⟨n_i²⟩ = n_i + 2⟨n↑n↓⟩ > n_i） */
+  drawProbeNn(ctx, W, H, dpr, mono){
+    const L = this.state.L;
+    const nn = (this.probe.nn && this.probe.nn.length === L * L) ? this.probe.nn : null;
+    let lo = 0, hi = 1, dLo = 1, dHi = 1;
+    if (nn){
+      lo = Infinity; hi = -Infinity; dLo = Infinity; dHi = -Infinity;
+      for (let i = 0; i < L; i++){
+        for (let j = 0; j < L; j++){
+          const v = nn[i * L + j];
+          if (i === j){ dLo = Math.min(dLo, v); dHi = Math.max(dHi, v); }
+          else { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+        }
+      }
+    }
+    const span = Math.max(1e-6, hi - lo);
+    this.probeHead(ctx, dpr, mono,
+      `密度关联 ⟨n_i n_j⟩${nn ? ` · 非对角 ${lo.toFixed(2)}…${hi.toFixed(2)} · 对角 ${dLo.toFixed(2)}…${dHi.toFixed(2)}（= n_i + 2⟨n↑n↓⟩）` : ''}`,
+      this.probesLive() ? (nn ? '' : '计算中…') : '演化中 · 暂停后更新', W);
+    const top = 22 * dpr, bot = 18 * dpr, side = 26 * dpr;
+    const g = Math.min((H - top - bot) / L, (W - side - 18 * dpr) / L);
+    const gx = W / 2 - (g * L) / 2, gy = top;
+    if (!nn) return;
+    for (let i = 0; i < L; i++){
+      for (let j = 0; j < L; j++){
+        /* 对角是另一个量（⟨n_i²⟩ ≈ n_i + 2⟨n↑n↓⟩），固定一档亮度免得把非对角压平 */
+        const v = nn[i * L + j];
+        const al = 0.10 + 0.58 * clamp((v - lo) / span, 0, 1);
+        ctx.fillStyle = i === j ? 'rgba(251,191,36,.20)' : `rgba(103,232,249,${al.toFixed(3)})`;
+        ctx.fillRect(gx + j * g + 0.5 * dpr, gy + i * g + 0.5 * dpr, g - 1 * dpr, g - 1 * dpr);
+      }
+    }
+    /* 对角描边（i=j 是 ⟨n_i²⟩，比 n_i 大一倍双占） */
+    ctx.strokeStyle = 'rgba(251,191,36,.55)'; ctx.lineWidth = 1 * dpr;
+    for (let i = 0; i < L; i++) ctx.strokeRect(gx + i * g + 1.5 * dpr, gy + i * g + 1.5 * dpr, g - 3 * dpr, g - 3 * dpr);
+    if (g > 15 * dpr){
+      ctx.fillStyle = 'rgba(154,167,189,.5)'; ctx.font = mono(8 * dpr); ctx.textAlign = 'center';
+      for (let i = 0; i < L; i++) ctx.fillText(String(i), gx + i * g + g / 2, H - 6 * dpr);
+      ctx.textAlign = 'right';
+      for (let i = 0; i < L; i++) ctx.fillText(String(i), gx - 5 * dpr, gy + i * g + g / 2 + 3 * dpr);
+      ctx.textAlign = 'left';
+    }
+  }
+
   /* ---------- 帧循环 ---------- */
   frame(){
     requestAnimationFrame(this.frame);
@@ -795,6 +1040,7 @@ export class HubbardApp {
       const f = this.q('#hFps'); if (f) f.textContent = String(this._fps);
     }
     this.advanceJobs();
+    if (this.sxJob) this.stepSx();
     if (this.state.mode === 'evo' && !this.state.paused && !this.job && this.re) this.evolveFrame();
     if (this.state.mode === 'evo' && !this.state.paused && !this.job && this.state.frames % 2 === 0) this.measureAll(false);
     this.draw();
@@ -805,6 +1051,7 @@ export class HubbardApp {
     this.container.querySelectorAll('[data-preset]').forEach(b => b.classList.toggle('on', b.dataset.preset === this.state.preset));
     this.container.querySelectorAll('[data-L]').forEach(b => b.classList.toggle('on', parseInt(b.dataset.L, 10) === this.state.L));
     this.container.querySelectorAll('[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === this.state.tool));
+    this.container.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('on', b.dataset.view === this.state.view));
     const gs = this.state.mode === 'gs';
     this.q('#hbModeGs').classList.toggle('on', gs);
     this.q('#hbModeEvo').classList.toggle('on', !gs);
@@ -839,6 +1086,7 @@ export class HubbardApp {
       pat: Array.from(this.state.pat),
       t: +this.state.t.toFixed(4),
       paused: !!this.state.paused,
+      view: this.state.view,
     };
   }
   queryFor(spec){
@@ -847,6 +1095,7 @@ export class HubbardApp {
     qs.set('mode', spec.mode);
     qs.set('pat', spec.pat.join(''));
     if (spec.mu.some(v => v !== 0)) qs.set('mu', spec.mu.map(v => String(+v.toFixed(3))).join(','));
+    if (spec.view && spec.view !== 'Sx') qs.set('view', spec.view);
     return qs.toString();
   }
   queueUrl(){
@@ -871,7 +1120,9 @@ export class HubbardApp {
     }
     if (patS && patS.length === len && /^[0-3]+$/.test(patS)) spec.pat = Array.from(patS, c => +c);
     if (q.get('mode') === 'evo' || q.get('mode') === 'gs') spec.mode = q.get('mode');
-    return (spec.mu || spec.pat || spec.mode) ? spec : null;
+    const vq = q.get('view');
+    if (vq && HB_VIEWS.some(v => v.k === vq)) spec.view = vq;
+    return (spec.mu || spec.pat || spec.mode || spec.view) ? spec : null;
   }
   /* 校验后再应用：任一非法字段整体拒绝（不半改状态） */
   applySpec(spec, opts = {}){
@@ -882,7 +1133,9 @@ export class HubbardApp {
     const pat = Array.isArray(spec.pat) && spec.pat.length === L && spec.pat.every(v => Number.isInteger(v) && v >= 0 && v <= 3)
       ? Int8Array.from(spec.pat) : null;
     const mode = spec.mode === 'evo' || spec.mode === 'gs' ? spec.mode : null;
-    if (!mu && !pat && !mode && !opts.fromUrl) return false;
+    const view = HB_VIEWS.some(v => v.k === spec.view) ? spec.view : null;
+    if (!mu && !pat && !mode && !view && !opts.fromUrl) return false;
+    if (view) this.state.view = view;
     if (L !== this.state.L){
       this.state.L = L;
       this.state.mu = new Float64Array(L);
@@ -921,6 +1174,19 @@ export class HubbardApp {
   }
   exportJson(){
     const spec = this.serialize();
+    /* 观测数据一并在导出里（L=10 需 ~0.75s；导出是显式动作，值得等） */
+    if (this.re){
+      const L = this.state.L;
+      const pr = this.probeAll();
+      spec.obs = {
+        S: +this.S.toFixed(9),
+        Sx: Array.from(pr.sx, v => (Number.isFinite(v) ? +v.toFixed(9) : null)),
+        nk: Array.from(pr.nk, v => +v.toFixed(9)),
+        nn: Array.from(pr.nn, v => +v.toFixed(9)),
+        nkSum: +Array.from(pr.nk).reduce((a, b) => a + b, 0).toFixed(9),
+        L,
+      };
+    }
     const txt = JSON.stringify(spec, null, 1);
     try {
       const blob = new Blob([txt], { type: 'application/json' });
@@ -997,6 +1263,19 @@ export class HubbardApp {
       query: () => this.queryFor(this.serialize()),
       siteAtX: x => this.siteAtX(x),
       view: () => ({ ...this._view }),
+      /* ---- Phase-2 观测量（cdp141 用） ---- */
+      setView: k => this.setView(k),
+      activeView: () => this.state.view,
+      probeNow: () => { const p = this.probeAll(); return { sx: Array.from(p.sx), nk: Array.from(p.nk), nn: Array.from(p.nn) }; },
+      probeState: () => ({
+        view: this.state.view, live: this.probesLive(), busy: !!this.sxJob,
+        progress: this.sxJob ? [this.sxJob.k, this.sxJob.order.length] : null,
+        sxMs: this.sxMs,
+        sx: this.probe.sxL === this.state.L && this.probe.sx ? Array.from(this.probe.sx) : null,
+        nk: this.probe.nk ? Array.from(this.probe.nk) : null,
+        nn: this.probe.nn ? Array.from(this.probe.nn) : null,
+        dirty: { ...this._dirty },
+      }),
       exportJson: () => this.exportJson(),
     };
   }
