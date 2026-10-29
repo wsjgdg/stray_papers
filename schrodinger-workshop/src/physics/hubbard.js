@@ -69,13 +69,19 @@ export function hbSector(L, Nup, Ndn){
     const mu = bu.masks[a];
     for (let b = 0; b < dd; b++) diagU[a * dd + b] = popcount(mu & bd.masks[b]);
   }
+  /* 【JW 符号】= 把 c_j 移到 c_i 位置时跨过的占据数：**严格介于 i 与 j 之间**的占据位。
+     旧版写「低于 min(i,j) 的占据数」——那是最近邻跃迁的等价写法（两者相差一个对角
+     规范变换 G，谱完全不变：pot140 用稠密低端谱逐项对账 worst 5e-15），但对任意 (i,j)
+     的 c†_i c_j 给出非物理符号：ρ_ij 不再正定（n(k) 出现负值）、J_i 随占据奇偶翻正负。
+     改用标准串后：自由费米子基态**精确等于** Slater 行列式（⟨·⟩=1.000000000000），
+     n(k) 恢复费米海形状（≥0、Σ=N）。三处 hopOne（扇区 / ρ / 键关联）必须同一约定。 */
   /* 每态跃迁（↑ 与 ↓）：先数再填（CSR 两遍） */
   const hopOne = (mask, i, j) => {
     const bi = 1 << i, bj = 1 << j;
     if (!(mask & bj) || (mask & bi)) return null;
-    const lo = Math.min(i, j);
-    const sign = (popcount(mask & (lo ? (1 << lo) - 1 : 0)) % 2) ? -1 : 1;
-    return [mask ^ bi ^ bj, sign];
+    const lo = Math.min(i, j), hi = Math.max(i, j);
+    const mid = ((1 << hi) - 1) ^ ((1 << (lo + 1)) - 1);
+    return [mask ^ bi ^ bj, (popcount(mask & mid) % 2) ? -1 : 1];
   };
   const offsets = new Int32Array(dim + 1);
   const tmp = [];   /* [stateIdx, target, sign] */
@@ -367,21 +373,25 @@ export function hbKrylovExp(sec, re, im, t, U, dt, m = 12){
   return { re: outR, im: outI };
 }
 
-/* ---------- 纠缠熵（半链，块对角 SVD；L 偶数） ----------
-   对 (k↑_L,k↓_L) 每个块：A[row=(lU,lD)][col=(rU,rD)]=ψ；
-   ρ=A A† → 实对称嵌入 [[Re,−Im],[Im,Re]]（本征值各二重）→ Jacobi；
-   取前 nL 个本征值（重复项自然成对，前 nL 即唯一谱）⟹ Σλ=1。 */
-export function hbEntropy(sec, re, im){
+/* ---------- 纠缠熵（任意切点，块对角 Schmidt 分解） ----------
+   切点 cut 把链分成左 cut 格 / 右 L−cut 格。对 (k↑_L,k↓_L) 每个块：
+   A[row=(lU,lD)][col=(rU,rD)]=ψ（Schmidt 矩阵），谱 = √(A A† 的本征值)。
+   复矩阵的实嵌入 [[Re,−Im],[Im,Re]] 让每个本征值出现**两次**（排序后隔一取）。
+   **取较小的一侧**：cut 偏离中心时对面块更小，AA† 与 A†A 非零谱相同 ⟹ 用
+   n=min(nL,nR) 的 Gram 矩阵，靠边切点由数百毫秒降到亚毫秒级（S(x) 剖面靠这条）。
+   cut=0 或 L 时有一侧为空 ⟹ S=0。 */
+export function hbEntropyAt(sec, re, im, cut){
   const { L, bu, bd, dd } = sec;
-  const half = L >> 1, lowMask = (1 << half) - 1;
+  if (!(cut > 0 && cut < L)) return { S: 0, spectrum: [], sum: 0 };
+  const lowMask = (1 << cut) - 1;
   const blocks = new Map();
   for (let a = 0; a < bu.dim; a++){
-    const mu = bu.masks[a], ml = mu & lowMask, mr = mu >> half;
+    const mu = bu.masks[a], ml = mu & lowMask, mr = mu >> cut;
     for (let b = 0; b < bd.dim; b++){
       const k = a * dd + b;
       const p = re[k] * re[k] + im[k] * im[k];
       if (p < 1e-28) continue;
-      const md = bd.masks[b], mdl = md & lowMask, mdr = md >> half;
+      const md = bd.masks[b], mdl = md & lowMask, mdr = md >> cut;
       const key = popcount(ml) + ',' + popcount(mdl);
       let blk = blocks.get(key);
       if (!blk){ blk = { lu: new Map(), ld: new Map(), ru: new Map(), rd: new Map(), entries: [] }; blocks.set(key, blk); }
@@ -404,15 +414,26 @@ export function hbEntropy(sec, re, im){
       Ar[blk.lu.get(ml) * Ld + blk.ld.get(mdl)][blk.ru.get(mr) * Rd + blk.rd.get(mdr)] = ar;
       Ai[blk.lu.get(ml) * Ld + blk.ld.get(mdl)][blk.ru.get(mr) * Rd + blk.rd.get(mdr)] = ai;
     }
-    const n2 = 2 * nL;
+    /* Gram 取较小一侧：nL ≤ nR 用 A A†（行×行），否则用 A†A（列×列）。
+       两者非零谱完全相同 ⟹ S 不变，cost 从 O(nL²·nR) 降到 O(n²·max(nL,nR))。 */
+    const left = nL <= nR;
+    const n = left ? nL : nR;
+    const n2 = 2 * n;
     const M = Array.from({ length: n2 }, () => new Float64Array(n2));
-    for (let i = 0; i < nL; i++) for (let j = 0; j < nL; j++){
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++){
       let rr = 0, ri = 0;
-      for (let c = 0; c < nR; c++){
-        rr += Ar[i][c] * Ar[j][c] + Ai[i][c] * Ai[j][c];
-        ri += Ai[i][c] * Ar[j][c] - Ar[i][c] * Ai[j][c];
+      if (left){
+        for (let c = 0; c < nR; c++){
+          rr += Ar[i][c] * Ar[j][c] + Ai[i][c] * Ai[j][c];
+          ri += Ai[i][c] * Ar[j][c] - Ar[i][c] * Ai[j][c];
+        }
+      } else {
+        for (let c = 0; c < nL; c++){
+          rr += Ar[c][i] * Ar[c][j] + Ai[c][i] * Ai[c][j];
+          ri += Ar[c][i] * Ai[c][j] - Ai[c][i] * Ar[c][j];
+        }
       }
-      M[i][j] = rr; M[i][j + nL] = -ri; M[i + nL][j] = ri; M[i + nL][j + nL] = rr;
+      M[i][j] = rr; M[i][j + n] = -ri; M[i + n][j] = ri; M[i + n][j + n] = rr;
     }
     const { val } = jacobiEigen(M, 40);
     /* 实嵌入 [[Re,−Im],[Im,Re]] 的本征值 = ρ 的每个本征值**各二重**（不是折半！
@@ -427,8 +448,69 @@ export function hbEntropy(sec, re, im){
   spectrum.sort((a, b) => b - a);
   return { S, spectrum: spectrum.slice(0, 12), sum: spectrum.reduce((a, b) => a + b, 0) };
 }
+/* 半链熵 = cut=L/2 的特例（L 偶数） */
+export function hbEntropy(sec, re, im){ return hbEntropyAt(sec, re, im, sec.L >> 1); }
+/* 整条剖面 S(x)：x=0 与 x=L 没有切分 ⟹ S=0。L=8 全扫 ~40ms、L=10 ~0.6s ⟹ 页面渐进填充 */
+export function hbEntropyProfile(sec, re, im){
+  const L = sec.L, out = new Float64Array(L + 1);
+  for (let c = 1; c < L; c++) out[c] = hbEntropyAt(sec, re, im, c).S;
+  return out;
+}
 
-/* ---------- 关联矩阵 C_ij = Σ_σ ⟨c†_{iσ} c_{jσ}⟩（复；对角 = n_i） ---------- */
+/* ---------- 密度关联 ⟨n_i n_j⟩（对角观测量，无需跳跃，O(dim·(N↑+N↓)²)） ----------
+   n_i = n_i↑+n_i↓ ∈ {0,1,2} ⟹ 对单个基底态 n_i n_j = cnt_i·cnt_j（i≠j），
+   多体效应全在求和权重里。注意 ⟨n_i²⟩ = n_i + 2⟨n_i↑n_i↓⟩ ≠ n_i（与单粒子 ρ_ii 的区别）。 */
+export function hbDensityCorr(sec, re, im){
+  const { L, bu, bd, dd } = sec;
+  const C = new Float64Array(L * L);
+  const cnt = new Int32Array(L);
+  for (let a = 0; a < bu.dim; a++){
+    const mu = bu.masks[a];
+    for (let b = 0; b < bd.dim; b++){
+      const k = a * dd + b;
+      const p = re[k] * re[k] + im[k] * im[k];
+      if (p < 1e-30) continue;
+      const md = bd.masks[b];
+      let nn = 0;
+      for (let i = 0; i < L; i++){
+        const c = ((mu >> i) & 1) + ((md >> i) & 1);
+        cnt[i] = c;
+        if (c) nn++;
+      }
+      for (let i = 0; i < L; i++){
+        const ci = cnt[i];
+        if (!ci) continue;
+        C[i * L + i] += p * ci * ci;
+        for (let j = i + 1; j < L; j++){
+          if (!cnt[j]) continue;
+          const v = p * ci * cnt[j];
+          C[i * L + j] += v; C[j * L + i] += v;
+        }
+      }
+      void nn;
+    }
+  }
+  return C;
+}
+
+/* ---------- 动量分布 n(k_m) = (1/L)Σ_ij e^{ik(i−j)}ρ_ij，k = 2πm/L ----------
+   求和规则 Σ_m n(k_m) = Σ_i ρ_ii = N（测试用这条钉归一）。 */
+export function hbMomentumDist(rho, L, m){
+  const { Cr, Ci } = rho;
+  const k = 2 * Math.PI * m / L;
+  let s = 0;
+  for (let i = 0; i < L; i++){
+    for (let j = 0; j < L; j++){
+      const th = k * (i - j), c = Math.cos(th), sn = Math.sin(th);
+      s += c * Cr[i][j] - sn * Ci[i][j];
+    }
+  }
+  return s / L;
+}
+
+/* ---------- 单粒子密度矩阵 ρ_ij = Σ_σ ⟨c†_{iσ} c_{jσ}⟩（复；对角 = n_i） ----------
+   约定：Cr/Ci 表示 ρ_ij = ⟨c†_i c_j⟩（**不是**转置），ρ† = ρ ⟹ Cr 对称、Ci 反对称；
+   pot140 用「独立实现参考值 + 厄米性 + U=0 自由费米子解析式」三重校验这条约定。 */
 export function hbCorrelation(sec, re, im){
   const { L, bu, bd, dd } = sec;
   const Cr = Array.from({ length: L }, () => new Float64Array(L));
@@ -436,9 +518,9 @@ export function hbCorrelation(sec, re, im){
   const hopOne = (mask, i, j) => {
     const bi = 1 << i, bj = 1 << j;
     if (!(mask & bj) || (mask & bi)) return null;
-    const lo = Math.min(i, j);
-    const sign = (popcount(mask & (lo ? (1 << lo) - 1 : 0)) % 2) ? -1 : 1;
-    return [mask ^ bi ^ bj, sign];
+    const lo = Math.min(i, j), hi = Math.max(i, j);
+    const mid = ((1 << hi) - 1) ^ ((1 << (lo + 1)) - 1);
+    return [mask ^ bi ^ bj, (popcount(mask & mid) % 2) ? -1 : 1];
   };
   for (let a = 0; a < bu.dim; a++){
     const mu = bu.masks[a];
@@ -509,9 +591,9 @@ export function hbBondCorr(sec, re, im, t){
   const hopOne = (mask, i, j) => {
     const bi = 1 << i, bj = 1 << j;
     if (!(mask & bj) || (mask & bi)) return null;
-    const lo = Math.min(i, j);
-    const sign = (popcount(mask & (lo ? (1 << lo) - 1 : 0)) % 2) ? -1 : 1;
-    return [mask ^ bi ^ bj, sign];
+    const lo = Math.min(i, j), hi = Math.max(i, j);
+    const mid = ((1 << hi) - 1) ^ ((1 << (lo + 1)) - 1);
+    return [mask ^ bi ^ bj, (popcount(mask & mid) % 2) ? -1 : 1];
   };
   for (let a = 0; a < bu.dim; a++){
     const mu = bu.masks[a];
