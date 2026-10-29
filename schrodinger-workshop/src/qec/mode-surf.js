@@ -107,10 +107,10 @@ export class SurfApp {
       p: Math.max(0.005, Math.min(0.25, num('p', 0.08))),
       trials: Math.max(200, Math.min(20000, Math.round(num('trials', 1500)))),
       seed: Math.round(num('seed', 7)),
-      /* meas='noisy' ⟹ 带噪测量（phenomenological）口径。
-         qR = q/p 只在引擎/调试层暴露：面板固定 q = p（标准取法）。
-         q=0 时解码退化成逐层独立、d3×d5 两条曲线在 0.05 以内不交叉（未分辨），
-         给旋钮反而误导，所以不上面板（README 里写明这条取舍）。 */
+      /* meas='noisy' ⟹ 带噪测量（phenomenological）口径。qR = q/p 是面板上的旋钮（R132）。
+         ⚠ 这里原来写着「q=0 时 d3×d5 在 0.05 以内不交叉（未分辨）⟹ 不给旋钮」——
+         那句话是**旧的两点变号判据**看不见交叉点造成的假象：换拟合口径重测，q=0 的
+         d3×d5 交叉在 0.043（四个种子 0.041–0.045，一个未解析），稳稳落在网格内。 */
       meas: q.get('meas') === 'noisy' ? 'noisy' : 'ideal',
       qR: [0, 0.5, 1].includes(parseFloat(q.get('qr'))) ? parseFloat(q.get('qr')) : 1,
     };
@@ -769,7 +769,7 @@ export class SurfApp {
     }
   }
 
-  /* 画布 2：P_L(p) 双对数（三条曲线 + 基线 + 当前点 + 交叉点） */
+  /* 画布 2：P_L(p) 双对数（单帧三条 / 带噪测量两条 + 基线 + 当前点 + 交叉点） */
   drawCurve(){
     const c = this.cv.curve;
     if (!c || !c.width) return;
@@ -779,7 +779,8 @@ export class SurfApp {
     g.textAlign = 'left';
     g.font = (11 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = sfC.txt + '.95)';
-    g.fillText('P_L(p)：阈值 = 三条曲线的排序反转', 10 * dpr, 15 * dpr);
+    const nCur = (this.sweep || []).length;
+    g.fillText(`P_L(p)：阈值 = ${nCur >= 3 ? '三条' : '两条'}曲线的排序反转`, 10 * dpr, 15 * dpr);
     g.font = (8.6 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = sfC.dim + '.85)';
     g.fillText('双对数 · 虚线 = 未编码基线 p（编码有益 ⟺ 曲线在它下方）', 10 * dpr, 27 * dpr);
