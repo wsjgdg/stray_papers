@@ -1693,6 +1693,8 @@ function SpotsView() {
     toggleFavorite,
     setSpots,
     recentViews,
+    recentSearches,
+    clearRecentSearches,
   } = useAppStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
@@ -2155,6 +2157,27 @@ function SpotsView() {
           </button>
         )}
       </div>
+      {/* ═══ 最近搜索：快捷重搜 chips（无激活搜索词时显示） ═══ */}
+      {!searchQuery && recentSearches.length > 0 && (
+        <div className="flex items-center gap-1.5 flex-wrap mt-2">
+          <span className="text-[11px] text-gray-400 shrink-0">最近搜索</span>
+          {recentSearches.map((t) => (
+            <button
+              key={t}
+              onClick={() => setSearchQuery(t)}
+              className="px-2 py-0.5 rounded-full text-[11px] text-gray-600 bg-gray-100 border border-gray-200 hover:bg-gray-200 transition-colors"
+            >
+              {t}
+            </button>
+          ))}
+          <button
+            onClick={clearRecentSearches}
+            className="text-[11px] text-gray-400 hover:text-rose-500 transition-colors"
+          >
+            清空
+          </button>
+        </div>
+      )}
       {/* ═══ 最近浏览：继续浏览横滑条（点开详情即记录，最多 12 个） ═══ */}
       {recentViews.length > 0 &&
         (() => {

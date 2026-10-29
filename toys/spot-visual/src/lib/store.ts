@@ -44,6 +44,9 @@ interface AppStore {
   /** 等级筛选（持久化） */
   levelFilter: "5A" | "4A" | null;
   setLevelFilter: (lv: "5A" | "4A" | null) => void;
+  /** 最近搜索词（新→旧，去重，最多 6 条），搜索框下快捷重搜 */
+  recentSearches: string[];
+  clearRecentSearches: () => void;
   searchQuery: string;
   activeCategory: string;
   viewMode: "grid" | "list";
@@ -105,6 +108,7 @@ export const useAppStore = create<AppStore>()(
       activeView: "spots" as ViewType,
       selectedSpot: null,
       recentViews: [],
+      recentSearches: [],
       compareIds: [],
       toggleCompare: (id) =>
         set((s) => {
@@ -182,7 +186,19 @@ export const useAppStore = create<AppStore>()(
               )
             : s.recentViews,
         })),
-      setSearchQuery: (q) => set({ searchQuery: q }),
+      setSearchQuery: (q) => {
+        const term = q.trim();
+        // 有效搜索词记入历史（置顶去重，封顶 6 条）
+        const recentSearches =
+          term.length >= 2
+            ? [term, ...get().recentSearches.filter((t) => t !== term)].slice(
+                0,
+                6,
+              )
+            : get().recentSearches;
+        set({ searchQuery: q, recentSearches });
+      },
+      clearRecentSearches: () => set({ recentSearches: [] }),
       setActiveCategory: (c) => set({ activeCategory: c }),
       setViewMode: (m) => set({ viewMode: m }),
       // 恢复完整库（手工精选 + 城市包），保留仍指向库内条目的收藏/行程
@@ -336,6 +352,8 @@ export const useAppStore = create<AppStore>()(
         activeView: s.activeView,
         // 最近浏览（首页「继续浏览」横滑条）
         recentViews: s.recentViews,
+        // 最近搜索词
+        recentSearches: s.recentSearches,
         // 筛选条件持久化：刷新/重开保持浏览上下文
         searchQuery: s.searchQuery,
         activeCategory: s.activeCategory,
