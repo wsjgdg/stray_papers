@@ -1362,7 +1362,8 @@ class TwoBodyApp {
       /* 初次加载沿用 URL 参数（不重置 g/eps/omega），但初态四旋钮要先钳制：
          走 applyInit ⟹ 面板显示的 σ/k₀/d/r₀ 与真正送进引擎的值逐位相同。 */
       this.applyInit();
-      this.syncWellHud();            /* 势阱 HUD / 势阱刷按钮文案与 state 对齐 */
+      this.syncWellHud();
+      this.syncBuildBadge();            /* 势阱 HUD / 势阱刷按钮文案与 state 对齐 */
       this.resize();
       requestAnimationFrame(this.frame);
     } catch (err){
@@ -1412,18 +1413,24 @@ class TwoBodyApp {
     <div class="row" id="rowR0"><label>释放 r₀</label><input type="range" id="rR0" min="1" max="60" step="1" value="26"><output id="oR0">26</output></div>
     <div class="note" id="tbInitNote">拖任一滑块 ⟹ 按当前统计重发波包（t 归零）；被钳制的量会写回滑块，面板不报假数。<br><b>在 x₁ / x₂ 边缘密度条上点一下</b>（或按住拖动）⟹ 给该粒子放轨道，自动切到「自由放置」。</div>
   </div>
+  <div class="sec" id="tbWellSec"><h3>势阱（共享 1D 轴）</h3>
+    <div class="row"><label>深度 V₀</label><input type="range" id="rWellV" min="-8" max="8" step="0.5" value="-4"><output id="oWellV">-4.0</output></div>
+    <div class="grid2" style="margin-top:6px">
+      <button id="tbWell" class="on" style="grid-column:1/3">势阱刷：关（点开后在画布上拖）</button>
+      <button id="tbWellClear" style="grid-column:1/3">清空势阱</button>
+    </div>
+    <div class="note">负 = 阱，正 = 垒；画面上成对出现：竖条给粒子 1、横条给粒子 2（ε=0 时两支相同 ⟹ ⟨P⟩ 仍守恒）。右键删单个。</div>
+  </div>
   <div class="sec"><h3>参数</h3>
     <div class="row"><label>接触 g</label><input type="range" id="rG" min="0" max="40" step="0.5" value="0"><output id="oG">0.0</output></div>
     <div class="row"><label>可区分 ε</label><input type="range" id="rEps" min="0" max="0.6" step="0.02" value="0"><output id="oEps">0.00</output></div>
     <div class="row"><label>阱频 ω</label><input type="range" id="rOm" min="0.005" max="0.08" step="0.001" value="0.02"><output id="oOm">0.020</output></div>
     <div class="row"><label>积分子步</label><input type="range" id="rSub" min="1" max="16" step="1" value="6"><output id="oSub">6</output></div>
-    <div class="row"><label>势阱深 V₀</label><input type="range" id="rWellV" min="-8" max="8" step="0.5" value="-4"><output id="oWellV">-4.0</output></div>
   </div>
   <div class="sec"><h3>操作</h3><div class="grid2">
     <button id="tbPause">暂停</button><button id="tbStep">单步</button>
     <button id="tbReset">重置</button><button id="tbRelax">松弛</button>
-    <button id="tbMode">显示：密度</button><button id="tbWell">势阱刷：关</button>
-    <button id="tbWellClear" style="grid-column:1/3">清空势阱</button>
+    <button id="tbMode" style="grid-column:1/3">显示：密度</button>
   </div></div>
 </div>
 <div id="tbHud" class="panel qhud">
@@ -1442,6 +1449,7 @@ class TwoBodyApp {
   <div class="hrow"><span>fps</span><span id="hFps">—</span></div>
   <hr>
   <div class="hrow"><span>探针 (x₁,x₂)</span><span id="hProbe">—</span></div>
+  <div class="hrow"><span>构建</span><span id="hBuild">—</span></div>
 </div>
 <div id="tbStage" class="qstage">
   <div id="tbFieldWrap">
@@ -1849,6 +1857,18 @@ class TwoBodyApp {
     this.state.wells.forEach((w, k) => { const d = Math.abs(w.x - x); if (d < bd){ bd = d; best = k; } });
     return { idx: best, dist: bd };
   }
+  /* 构建徽标：document.lastModified 在 no-store 下就是文件真实修改时间。
+     如果你看到的仍是旧时间，说明**页面本身还是旧的**（缓存/标签页没重载），不是功能没写。
+     同时把能力写成 body 的 data-* 标记，方便在控制台一行确认：
+       document.body.dataset.features  → "rails,wellbrush,pick" */
+  syncBuildBadge(){
+    const el = this.q('#hBuild');
+    const stamp = (document.lastModified || '').replace(/^\w{3} /, '').replace(/ GMT.*$/, '');
+    const feats = 'rails,wellbrush,pick';
+    document.body.dataset.features = feats;
+    document.body.dataset.tbBuild = stamp;
+    if (el) el.textContent = `${stamp} · 轨道✓ 势阱✓`;
+  }
   syncWellHud(){
     const h = this.q('#hWells');
     if (h) h.textContent = this.state.wells.length
@@ -1893,25 +1913,45 @@ class TwoBodyApp {
       const o = tbOrbits(L, this.state.preset, this.initOpts());
       const vx = (o.xa + 0.5) * px, hy = H - (o.xb + 0.5) * px;
       const hot = this._drag && this._drag.kind === 'orbit';
-      ctx.setLineDash([5 * dpr, 4 * dpr]);
-      ctx.lineWidth = 1.6 * dpr;
-      ctx.strokeStyle = hot ? 'rgba(103,232,249,1)' : 'rgba(103,232,249,.55)';
+      ctx.setLineDash([7 * dpr, 5 * dpr]);
+      ctx.lineWidth = 2.4 * dpr;
+      if ('shadowBlur' in ctx){ ctx.shadowBlur = 8 * dpr; ctx.shadowColor = 'rgba(103,232,249,.55)'; }
+      ctx.strokeStyle = hot ? 'rgba(103,232,249,1)' : 'rgba(103,232,249,.8)';
       ctx.beginPath(); ctx.moveTo(vx, 0); ctx.lineTo(vx, H); ctx.stroke();
-      ctx.strokeStyle = hot ? 'rgba(251,191,36,1)' : 'rgba(251,191,36,.5)';
+      if ('shadowBlur' in ctx){ ctx.shadowColor = 'rgba(251,191,36,.55)'; }
+      ctx.strokeStyle = hot ? 'rgba(251,191,36,1)' : 'rgba(251,191,36,.75)';
       ctx.beginPath(); ctx.moveTo(0, hy); ctx.lineTo(W, hy); ctx.stroke();
+      if ('shadowBlur' in ctx){ ctx.shadowBlur = 0; }
       ctx.setLineDash([]);
       /* 抓取点：两条虚线与上下/左右边缘的交点画实心小圆（告诉用户「这里能抓」） */
       const dot = (x, y, col) => {
         ctx.fillStyle = col; ctx.beginPath();
-        ctx.arc(x, y, 4.2 * dpr, 0, Math.PI * 2); ctx.fill();
+        ctx.arc(x, y, 5.2 * dpr, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(4,8,16,.75)'; ctx.lineWidth = 1.4 * dpr;
+        ctx.beginPath(); ctx.arc(x, y, 5.2 * dpr, 0, Math.PI * 2); ctx.stroke();
       };
       dot(vx, H - 7 * dpr, 'rgba(103,232,249,.95)');
       dot(7 * dpr, hy, 'rgba(251,191,36,.95)');
-      ctx.font = `${10 * dpr}px monospace`;
-      ctx.fillStyle = 'rgba(103,232,249,.9)'; ctx.textAlign = 'center';
+      ctx.font = `bold ${10 * dpr}px monospace`;
+      ctx.fillStyle = 'rgba(103,232,249,.95)'; ctx.textAlign = 'center';
       ctx.fillText('x₁', vx, H - 12 * dpr);
-      ctx.fillStyle = 'rgba(251,191,36,.9)'; ctx.textAlign = 'left';
+      ctx.fillStyle = 'rgba(251,191,36,.95)'; ctx.textAlign = 'left';
       ctx.fillText('x₂', 11 * dpr, hy - 7 * dpr);
+    }
+    /* 画布内图例：让「能拖什么、势阱刷在哪」在画面上可见（而不是只写在 README 里） */
+    {
+      const txt = this.state.wellTool
+        ? '势阱刷：开 · 在画布上拖动放/挪势阱（右键删）'
+        : '按住虚线拖轨道 · 左侧面板「势阱刷」可放势阱';
+      const fs = 10.5 * dpr;
+      ctx.font = `${fs}px monospace`;
+      const tw = (ctx.measureText ? ctx.measureText(txt).width : txt.length * fs * 0.6) || txt.length * fs * 0.6;
+      const pad = 5 * dpr, x = 8 * dpr, y = 8 * dpr;
+      ctx.fillStyle = 'rgba(4,8,16,.62)';
+      ctx.fillRect(x, y, tw + 2 * pad, fs + 2 * pad);
+      ctx.fillStyle = this.state.wellTool ? 'rgba(251,191,36,.95)' : 'rgba(148,180,220,.92)';
+      ctx.textAlign = 'left';
+      ctx.fillText(txt, x + pad, y + fs + pad * 0.55);
     }
   }
   /* 拖动的一步（pointerdown 与 pointermove 共用，所以「按下」就有反馈） */
