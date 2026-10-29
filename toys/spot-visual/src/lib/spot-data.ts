@@ -1275,7 +1275,8 @@ export const TICKET_ESTIMATE_BY_CATEGORY: Record<string, number> = {
   美食小吃: 0,
 };
 
-export type TicketSource = "real" | "custom" | "estimate" | "unknown";
+export type TicketSource =
+  "real" | "custom" | "profile" | "estimate" | "unknown";
 
 export interface TicketQuote {
   /** null = 未收录且无法估算 */
@@ -1286,12 +1287,20 @@ export interface TicketQuote {
 }
 
 /**
- * 统一门票报价：手动补录 > 真实收录 > 等级估算 > 分类估算 > 未收录。
+ * 统一门票报价：手动补录 > 档案收录（外包结构化字段）> 真实收录 > 等级估算 > 分类估算 > 未收录。
  * @param custom 用户补录值（来自 store.customPrices[`${spot.id}::${TICKET_KEY}`]）
  */
 export function quoteTicket(spot: Spot, custom?: number): TicketQuote {
   if (typeof custom === "number" && Number.isFinite(custom) && custom >= 0) {
     return { price: Math.round(custom), source: "custom", label: "已补录" };
+  }
+  const profile = SPOT_PROFILES[spot.id];
+  if (profile && typeof profile.ticketPeak === "number") {
+    return {
+      price: Math.round(profile.ticketPeak),
+      source: "profile",
+      label: profile.ticketPeak === 0 ? "免费" : "档案收录",
+    };
   }
   if (typeof spot.ticketPrice === "number" && spot.ticketPrice >= 0) {
     return {
@@ -1395,6 +1404,23 @@ import {
 } from "./poi-descriptions";
 import { POI_PHOTOS } from "./poi-photos.generated";
 import { OUTSOURCE_DESCRIPTIONS } from "./scenic-desc-outsource.generated";
+import { SPOT_PROFILES, type SpotProfile } from "./spot-profiles.generated";
+
+/** 景点档案（外包结构化字段），无档案返回 undefined */
+export function getSpotProfile(id: string): SpotProfile | undefined {
+  return SPOT_PROFILES[id];
+}
+
+/** 建议游玩时长（小时）：档案收录优先，按分类/等级兜底 */
+export function suggestedVisitHours(spot: Spot): number {
+  const p = SPOT_PROFILES[spot.id];
+  if (p && typeof p.suggestedHours === "number" && p.suggestedHours > 0)
+    return p.suggestedHours;
+  if (spot.category === "主题乐园") return 6;
+  if (spot.level === "5A") return 4;
+  if (spot.level === "4A") return 3;
+  return 2;
+}
 import {
   SCENIC_LEVELS,
   EXTRA_SCENICS,

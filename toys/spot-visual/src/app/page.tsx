@@ -76,6 +76,7 @@ import {
   DISSUASION_TAGS,
   getPinyinKeys,
   quoteTicket,
+  getSpotProfile,
   TICKET_KEY,
   LIBRARY_STATS,
 } from "@/lib/spot-data"; // 保留：cachePhotoForCategory 缓存机制
@@ -937,6 +938,7 @@ function SpotDetailDialog() {
   if (!spot) return null;
   const isFav = favorites.includes(spot.id);
   const spotCoords = parseCoords(spot);
+  const profile = getSpotProfile(spot.id);
   const shareSpot = async () => {
     const c = parseCoords(spot);
     const nav = c
@@ -1214,6 +1216,62 @@ function SpotDetailDialog() {
                     {spot.reservation}
                   </p>
                 </div>
+              </div>
+            )}
+            {/* ═══ 景点档案（外包结构化字段，有档案才显示） ═══ */}
+            {profile && (
+              <div className="rounded-xl border border-sky-100 bg-sky-50/60 p-3.5 space-y-1.5">
+                <p className="text-[11px] font-bold text-sky-800 flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  景点档案
+                  {profile.low && (
+                    <span className="text-[10px] font-normal text-gray-400">
+                      · 部分字段待核实
+                    </span>
+                  )}
+                </p>
+                {profile.suggestedHours != null && (
+                  <p className="text-xs text-gray-600">
+                    建议游玩：约 {profile.suggestedHours} 小时
+                  </p>
+                )}
+                {profile.bestMonths && (
+                  <p className="text-xs text-gray-600">
+                    最佳月份：{profile.bestMonths}
+                  </p>
+                )}
+                {!spot.openTime && profile.openHours && (
+                  <p className="text-xs text-gray-600">
+                    开放时间：{profile.openHours}
+                  </p>
+                )}
+                {(profile.nearestAirport || profile.nearestRail) && (
+                  <p className="text-xs text-gray-600">
+                    交通：
+                    {[profile.nearestAirport, profile.nearestRail]
+                      .filter(Boolean)
+                      .join(" · ")}
+                    {typeof profile.driveFromCityMin === "number" &&
+                      ` · 市区车程约 ${profile.driveFromCityMin} 分钟`}
+                  </p>
+                )}
+                {profile.notices && (
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    注意：{profile.notices}
+                  </p>
+                )}
+                {profile.accessibility && profile.accessibility.length > 0 && (
+                  <div className="flex flex-wrap gap-1 pt-0.5">
+                    {profile.accessibility.map((a) => (
+                      <span
+                        key={a}
+                        className="px-1.5 py-0.5 rounded-md bg-white border border-sky-200 text-[10px] text-sky-700"
+                      >
+                        {a}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
             {spot.level && (
@@ -2258,9 +2316,10 @@ function SpotsView() {
           </p>
         )}
         <p className="text-[11px] text-gray-400 mt-2 leading-relaxed">
-          库内共 {LIBRARY_STATS.total} 个景点（手工 {LIBRARY_STATS.manual} + 高德
-          POI {LIBRARY_STATS.cityPoi}（{LIBRARY_STATS.cityCount} 城）+ 2023 全国 A
-          级名录 {LIBRARY_STATS.extras}，构建时烘焙 · 零外链）。点省份即过滤，
+          库内共 {LIBRARY_STATS.total} 个景点（手工 {LIBRARY_STATS.manual} +
+          高德 POI {LIBRARY_STATS.cityPoi}（{LIBRARY_STATS.cityCount} 城）+ 2023
+          全国 A 级名录 {LIBRARY_STATS.extras}，构建时烘焙 ·
+          零外链）。点省份即过滤，
           收藏与行程不受影响；库外城市走实时通道（上游不稳定时自动回落到库内）。
         </p>
       </div>

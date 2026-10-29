@@ -30,6 +30,7 @@ import {
   estimateSpotCost,
   haversineKm,
   parseCoords,
+  suggestedVisitHours,
   CATEGORY_PACKLIST,
   PACKLIST_UNIVERSAL,
   type Spot,
@@ -458,7 +459,12 @@ export default function TripView() {
           min += c.min;
           legs++;
         }
-        return { km, min, legs };
+        // 游玩时长：档案收录优先，分类/等级兜底（每站累计）
+        const stayMin = day.reduce(
+          (acc, s) => acc + suggestedVisitHours(s) * 60,
+          0,
+        );
+        return { km, min, legs, stayMin };
       }),
     [days],
   );
@@ -717,6 +723,11 @@ export default function TripView() {
                         <span title="按直线距离 ×1.35 绕行系数、市区 35km/h 估算">
                           {dayTravel[d].km.toFixed(1)} km · 车程{" "}
                           {fmtMin(dayTravel[d].min)}
+                        </span>
+                      )}
+                      {dayTravel[d]?.stayMin > 0 && (
+                        <span title="各站建议游玩时长之和（档案收录优先）">
+                          · 游玩约 {fmtMin(dayTravel[d].stayMin)}
                         </span>
                       )}
                     </span>
