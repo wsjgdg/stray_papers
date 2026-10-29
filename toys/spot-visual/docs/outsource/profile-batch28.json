@@ -1,0 +1,808 @@
+{
+  "task": "景点档案结构化字段-批28（4A）",
+  "batch": 28,
+  "count": 100,
+  "mergeRule": "合入时以 id 为准，禁止按名字合并",
+  "items": [
+    {
+      "id": "scenic-赣州-1584",
+      "name": "汉仙岩景区",
+      "city": "江西赣州市会",
+      "level": "4A",
+      "address": "江西赣州市会昌县=A4780",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-赣州-1595",
+      "name": "南武当山景区",
+      "city": "江西赣州市龙",
+      "level": "4A",
+      "address": "江西赣州市龙南市=A4791",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-赣州-1587",
+      "name": "翠微峰景区",
+      "city": "江西赣州市宁",
+      "level": "4A",
+      "address": "江西赣州市宁都县=A4783",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-赣州-1591",
+      "name": "宁都小布镇景区",
+      "city": "江西赣州市宁",
+      "level": "4A",
+      "address": "江西赣州市宁都县=A4787",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-赣州-1596",
+      "name": "雅溪古村景区",
+      "city": "江西赣州市全",
+      "level": "4A",
+      "address": "江西赣州市全南县=A4792",
+      "category": "古镇村落"
+    },
+    {
+      "id": "scenic-赣州-1592",
+      "name": "罗汉岩景区",
+      "city": "江西赣州市瑞",
+      "level": "4A",
+      "address": "江西赣州市瑞金市=A4788",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-赣州-1588",
+      "name": "阳明湖景区",
+      "city": "江西赣州市上",
+      "level": "4A",
+      "address": "江西赣州市上犹县=A4784",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-赣州-1586",
+      "name": "通天寨景区",
+      "city": "江西赣州市石",
+      "level": "4A",
+      "address": "江西赣州市石城县=A4782",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-赣州-1597",
+      "name": "中国赣南脐橙产业园景区",
+      "city": "江西赣州市信",
+      "level": "4A",
+      "address": "江西赣州市信丰县=A4793",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-赣州-1589",
+      "name": "兴国苏区干部好作风纪念园",
+      "city": "江西赣州市兴",
+      "level": "4A",
+      "address": "江西赣州市兴国县=A4785",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-赣州-1582",
+      "name": "关西围屋景区",
+      "city": "江西赣州市于",
+      "level": "4A",
+      "address": "江西赣州市于都县=A4778",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-赣州-1590",
+      "name": "于都屏山旅游区",
+      "city": "江西赣州市于",
+      "level": "4A",
+      "address": "江西赣州市于都县=A4786",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-赣州-1577",
+      "name": "通天岩风景名胜区",
+      "city": "江西赣州市章",
+      "level": "4A",
+      "address": "江西赣州市章贡区=A4773",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-赣州-1593",
+      "name": "虔心小镇景区",
+      "city": "江西赣州市章",
+      "level": "4A",
+      "address": "江西赣州市章贡区=A4789",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-吉安-1519",
+      "name": "天祥景区",
+      "city": "江西吉安市=",
+      "level": "4A",
+      "address": "江西吉安市=A4847",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-吉安-1526",
+      "name": "羊狮幕景区",
+      "city": "江西吉安市=",
+      "level": "4A",
+      "address": "江西吉安市=A4854",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-吉安-1518",
+      "name": "渼陂古村景区",
+      "city": "江西吉安市吉",
+      "level": "4A",
+      "address": "江西吉安市吉安县=A4846",
+      "category": "古镇村落"
+    },
+    {
+      "id": "scenic-吉安-1525",
+      "name": "燕坊古村景区",
+      "city": "江西吉安市吉",
+      "level": "4A",
+      "address": "江西吉安市吉水县=A4853",
+      "category": "古镇村落"
+    },
+    {
+      "id": "scenic-吉安-1520",
+      "name": "庐陵文化生态园",
+      "city": "江西吉安市吉",
+      "level": "4A",
+      "address": "江西吉安市吉州区=A4848",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-吉安-1522",
+      "name": "钓源古村景区",
+      "city": "江西吉安市吉",
+      "level": "4A",
+      "address": "江西吉安市吉州区=A4850",
+      "category": "古镇村落"
+    },
+    {
+      "id": "scenic-吉安-1524",
+      "name": "吉州窑景区",
+      "city": "江西吉安市吉",
+      "level": "4A",
+      "address": "江西吉安市吉州区=A4852",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-吉安-1521",
+      "name": "青原山风景区",
+      "city": "江西吉安市青",
+      "level": "4A",
+      "address": "江西吉安市青原区=A4849",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-吉安-1523",
+      "name": "陂下古村景区",
+      "city": "江西吉安市青",
+      "level": "4A",
+      "address": "江西吉安市青原区=A4851",
+      "category": "古镇村落"
+    },
+    {
+      "id": "scenic-吉安-1528",
+      "name": "东固景区",
+      "city": "江西吉安市青",
+      "level": "4A",
+      "address": "江西吉安市青原区=A4856",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-吉安-1527",
+      "name": "田北农民画村景区",
+      "city": "江西吉安市万",
+      "level": "4A",
+      "address": "江西吉安市万安县=A4855",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-吉安-1529",
+      "name": "永新三湾景区",
+      "city": "江西吉安市永",
+      "level": "4A",
+      "address": "江西吉安市永新县=A4857",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-景德镇-1574",
+      "name": "江西直升机科技馆景区",
+      "city": "江西景德镇市",
+      "level": "4A",
+      "address": "江西景德镇市昌江区=A4763",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-景德镇-1568",
+      "name": "高岭·瑶里风景区",
+      "city": "江西景德镇市",
+      "level": "4A",
+      "address": "江西景德镇市浮梁县=A4757",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-景德镇-1569",
+      "name": "浮梁古县衙景区",
+      "city": "江西景德镇市",
+      "level": "4A",
+      "address": "江西景德镇市浮梁县=A4758",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-景德镇-1572",
+      "name": "皇窑景区",
+      "city": "江西景德镇市",
+      "level": "4A",
+      "address": "江西景德镇市浮梁县=A4761",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-景德镇-1570",
+      "name": "洪岩仙境风景区",
+      "city": "江西景德镇市",
+      "level": "4A",
+      "address": "江西景德镇市乐平市=A4759",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-景德镇-1571",
+      "name": "江西怪石林景区",
+      "city": "江西景德镇市",
+      "level": "4A",
+      "address": "江西景德镇市乐平市=A4760",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-景德镇-1573",
+      "name": "御窑厂国家考古遗址公园景区",
+      "city": "江西景德镇市",
+      "level": "4A",
+      "address": "江西景德镇市珠山区=A4762",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-景德镇-1575",
+      "name": "陶溪川文创街区",
+      "city": "江西景德镇市",
+      "level": "4A",
+      "address": "江西景德镇市珠山区=A4764",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-九江-1510",
+      "name": "中华贤母园景区",
+      "city": "江西九江市柴",
+      "level": "4A",
+      "address": "江西九江市柴桑区=A4750",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-九江-1513",
+      "name": "大千世界梦幻乐园",
+      "city": "江西九江市柴",
+      "level": "4A",
+      "address": "江西九江市柴桑区=A4753",
+      "category": "主题乐园"
+    },
+    {
+      "id": "scenic-九江-1505",
+      "name": "富华山景区",
+      "city": "江西九江市共",
+      "level": "4A",
+      "address": "江西九江市共青城市=A4745",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-九江-1504",
+      "name": "石钟山景区",
+      "city": "江西九江市湖",
+      "level": "4A",
+      "address": "江西九江市湖口县=A4744",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-九江-1515",
+      "name": "湖口台山景区",
+      "city": "江西九江市湖",
+      "level": "4A",
+      "address": "江西九江市湖口县=A4755",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-九江-1511",
+      "name": "九江南山景区",
+      "city": "江西九江市濂",
+      "level": "4A",
+      "address": "江西九江市濂溪区=A4751",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-九江-1514",
+      "name": "阳光照耀29度假景区",
+      "city": "江西九江市濂",
+      "level": "4A",
+      "address": "江西九江市濂溪区=A4754",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-九江-1501",
+      "name": "庐山龙湾温泉度假村（汤太宗）景区",
+      "city": "江西九江市庐",
+      "level": "4A",
+      "address": "江西九江市庐山市=A4741",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-九江-1502",
+      "name": "星子天沐温泉景区",
+      "city": "江西九江市庐",
+      "level": "4A",
+      "address": "江西九江市庐山市=A4742",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-九江-1509",
+      "name": "龙宫洞景区",
+      "city": "江西九江市彭",
+      "level": "4A",
+      "address": "江西九江市彭泽县=A4749",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-九江-1508",
+      "name": "山西海湾景区",
+      "city": "江西九江市武",
+      "level": "4A",
+      "address": "江西九江市武宁县=A4748",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-九江-1507",
+      "name": "南崖-马家洲景区",
+      "city": "江西九江市修",
+      "level": "4A",
+      "address": "江西九江市修水县=A4747",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-九江-1516",
+      "name": "东浒寨景区",
+      "city": "江西九江市修",
+      "level": "4A",
+      "address": "江西九江市修水县=A4756",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-九江-1512",
+      "name": "八里湖景区",
+      "city": "江西九江市浔",
+      "level": "4A",
+      "address": "江西九江市浔阳区=A4752",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-九江-1503",
+      "name": "庐山西海国际温泉度假村",
+      "city": "江西九江市永",
+      "level": "4A",
+      "address": "江西九江市永修县=A4743",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-九江-1506",
+      "name": "庐山西海风景名胜区",
+      "city": "江西九江市永",
+      "level": "4A",
+      "address": "江西九江市永修县=A4746",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南昌-1647",
+      "name": "安义古村群景区",
+      "city": "江西南昌市安",
+      "level": "4A",
+      "address": "江西南昌市安义县=A4738",
+      "category": "古镇村落"
+    },
+    {
+      "id": "scenic-南昌-1646",
+      "name": "绿地中心303观光厅",
+      "city": "江西南昌市东",
+      "level": "4A",
+      "address": "江西南昌市东湖区=A4737",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南昌-1648",
+      "name": "融创文化主题乐园景区",
+      "city": "江西南昌市东",
+      "level": "4A",
+      "address": "江西南昌市东湖区=A4739",
+      "category": "主题乐园"
+    },
+    {
+      "id": "scenic-南昌-1649",
+      "name": "李渡元代烧酒作坊遗址景区",
+      "city": "江西南昌市进",
+      "level": "4A",
+      "address": "江西南昌市进贤县=A4740",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-南昌-1641",
+      "name": "凤凰沟景区",
+      "city": "江西南昌市南",
+      "level": "4A",
+      "address": "江西南昌市南昌县=A4732",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南昌-1638",
+      "name": "天香园景区",
+      "city": "江西南昌市青",
+      "level": "4A",
+      "address": "江西南昌市青山湖区=A4729",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南昌-1640",
+      "name": "梅岭狮子峰景区",
+      "city": "江西南昌市湾",
+      "level": "4A",
+      "address": "江西南昌市湾里区=A4731",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南昌-1643",
+      "name": "梅岭竹海明珠景区",
+      "city": "江西南昌市湾",
+      "level": "4A",
+      "address": "江西南昌市湾里区=A4734",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南昌-1639",
+      "name": "八一起义纪念馆",
+      "city": "江西南昌市西",
+      "level": "4A",
+      "address": "江西南昌市西湖区=A4730",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-南昌-1642",
+      "name": "新四军军部旧址陈列馆",
+      "city": "江西南昌市西",
+      "level": "4A",
+      "address": "江西南昌市西湖区=A4733",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南昌-1644",
+      "name": "溪霞怪石岭生态公园",
+      "city": "江西南昌市新",
+      "level": "4A",
+      "address": "江西南昌市新建区=A4735",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南昌-1645",
+      "name": "梅岭洪崖丹井景区",
+      "city": "江西南昌市新",
+      "level": "4A",
+      "address": "江西南昌市新建区=A4736",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-萍乡-1651",
+      "name": "江西省安源路矿工人运动纪念馆",
+      "city": "江西萍乡市安",
+      "level": "4A",
+      "address": "江西萍乡市安源区=A4765",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-萍乡-1652",
+      "name": "荷花博览园景区",
+      "city": "江西萍乡市莲",
+      "level": "4A",
+      "address": "江西萍乡市莲花县=A4766",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-萍乡-1654",
+      "name": "芦溪仙凤三宝农业休闲观光园",
+      "city": "江西萍乡市芦",
+      "level": "4A",
+      "address": "江西萍乡市芦溪县=A4768",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-萍乡-1653",
+      "name": "杨岐山景区",
+      "city": "江西萍乡市上",
+      "level": "4A",
+      "address": "江西萍乡市上栗县=A4767",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1542",
+      "name": "翼天文化旅游城",
+      "city": "江西上饶市=",
+      "level": "4A",
+      "address": "江西上饶市=A4823",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1554",
+      "name": "红木文化创意产业园",
+      "city": "江西上饶市=",
+      "level": "4A",
+      "address": "江西上饶市=A4835",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1563",
+      "name": "大明花海景区",
+      "city": "江西上饶市=",
+      "level": "4A",
+      "address": "江西上饶市=A4844",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1541",
+      "name": "源头古村景区",
+      "city": "江西上饶市德",
+      "level": "4A",
+      "address": "江西上饶市德兴市=A4822",
+      "category": "古镇村落"
+    },
+    {
+      "id": "scenic-上饶-1551",
+      "name": "大茅山景区",
+      "city": "江西上饶市德",
+      "level": "4A",
+      "address": "江西上饶市德兴市=A4832",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1555",
+      "name": "铜钹山景区",
+      "city": "江西上饶市广",
+      "level": "4A",
+      "address": "江西上饶市广丰区=A4836",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1546",
+      "name": "上饶灵山风景名胜区",
+      "city": "江西上饶市广",
+      "level": "4A",
+      "address": "江西上饶市广信区=A4827",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1547",
+      "name": "灵山工匠小镇",
+      "city": "江西上饶市广",
+      "level": "4A",
+      "address": "江西上饶市广信区=A4828",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1548",
+      "name": "望仙峡谷小镇",
+      "city": "江西上饶市广",
+      "level": "4A",
+      "address": "江西上饶市广信区=A4829",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1559",
+      "name": "葛源景区",
+      "city": "江西上饶市横",
+      "level": "4A",
+      "address": "江西上饶市横峰县=A4840",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1556",
+      "name": "鄱阳湖鄱阳湿地旅游区",
+      "city": "江西上饶市鄱",
+      "level": "4A",
+      "address": "江西上饶市鄱阳县=A4837",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1557",
+      "name": "鄱阳湖大草原景区",
+      "city": "江西上饶市鄱",
+      "level": "4A",
+      "address": "江西上饶市鄱阳县=A4838",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1549",
+      "name": "葛仙山景区",
+      "city": "江西上饶市铅",
+      "level": "4A",
+      "address": "江西上饶市铅山县=A4830",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1550",
+      "name": "鹅湖书院景区",
+      "city": "江西上饶市铅",
+      "level": "4A",
+      "address": "江西上饶市铅山县=A4831",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1533",
+      "name": "李坑景区",
+      "city": "江西上饶市婺",
+      "level": "4A",
+      "address": "江西上饶市婺源县=A4814",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1534",
+      "name": "大鄣山卧龙谷",
+      "city": "江西上饶市婺",
+      "level": "4A",
+      "address": "江西上饶市婺源县=A4815",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1535",
+      "name": "思溪延村景区",
+      "city": "江西上饶市婺",
+      "level": "4A",
+      "address": "江西上饶市婺源县=A4816",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1536",
+      "name": "文公山景区",
+      "city": "江西上饶市婺",
+      "level": "4A",
+      "address": "江西上饶市婺源县=A4817",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1537",
+      "name": "汪口景区",
+      "city": "江西上饶市婺",
+      "level": "4A",
+      "address": "江西上饶市婺源县=A4818",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1538",
+      "name": "严田景区",
+      "city": "江西上饶市婺",
+      "level": "4A",
+      "address": "江西上饶市婺源县=A4819",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1539",
+      "name": "婺源灵岩风景区",
+      "city": "江西上饶市婺",
+      "level": "4A",
+      "address": "江西上饶市婺源县=A4820",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1540",
+      "name": "篁岭景区",
+      "city": "江西上饶市婺",
+      "level": "4A",
+      "address": "江西上饶市婺源县=A4821",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1543",
+      "name": "熹园景区",
+      "city": "江西上饶市婺",
+      "level": "4A",
+      "address": "江西上饶市婺源县=A4824",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1544",
+      "name": "五龙源景区",
+      "city": "江西上饶市婺",
+      "level": "4A",
+      "address": "江西上饶市婺源县=A4825",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1545",
+      "name": "婺源鸳鸯湖景区",
+      "city": "江西上饶市婺",
+      "level": "4A",
+      "address": "江西上饶市婺源县=A4826",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1560",
+      "name": "上饶集中营",
+      "city": "江西上饶市信",
+      "level": "4A",
+      "address": "江西上饶市信州区=A4841",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1562",
+      "name": "忠义文化园",
+      "city": "江西上饶市余",
+      "level": "4A",
+      "address": "江西上饶市余干县=A4843",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1552",
+      "name": "田园牧歌景区",
+      "city": "江西上饶市玉",
+      "level": "4A",
+      "address": "江西上饶市玉山县=A4833",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1553",
+      "name": "玉帘瀑布景区",
+      "city": "江西上饶市玉",
+      "level": "4A",
+      "address": "江西上饶市玉山县=A4834",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1558",
+      "name": "神农源风景名胜区",
+      "city": "江西上饶市玉",
+      "level": "4A",
+      "address": "江西上饶市玉山县=A4839",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1561",
+      "name": "怀玉山景区",
+      "city": "江西上饶市玉",
+      "level": "4A",
+      "address": "江西上饶市玉山县=A4842",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-上饶-1564",
+      "name": "七里街景区",
+      "city": "江西上饶市玉",
+      "level": "4A",
+      "address": "江西上饶市玉山县=A4845",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-新余-1657",
+      "name": "中国洞都景区",
+      "city": "江西新余市分",
+      "level": "4A",
+      "address": "江西新余市分宜县=A4771",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-新余-1655",
+      "name": "仙女湖风景名胜区",
+      "city": "江西新余市渝",
+      "level": "4A",
+      "address": "江西新余市渝水区=A4769",
+      "category": "自然风光"
+    }
+  ]
+}
