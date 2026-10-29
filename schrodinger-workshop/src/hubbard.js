@@ -92,6 +92,9 @@ const HB_CSS = `
     font-family:var(--mono);font-size:13px;color:var(--cyan);letter-spacing:.16em;opacity:0;transition:opacity .4s;
     text-shadow:0 0 18px rgba(103,232,249,.8);text-align:center;white-space:pre-line}
   #hbDiag{position:fixed;left:-9999px}
+  #hbErr{display:none;position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:30;max-width:min(90vw,760px);
+    padding:9px 14px;border-radius:8px;border:1px solid rgba(251,113,133,.5);background:rgba(60,10,18,.92);
+    color:#fecdd3;font:11.5px/1.5 var(--mono);white-space:pre-wrap}
   #hbPanel .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
   #hbPanel .grid3 button{padding:6px 2px;font-size:10.5px}
   #hbPanel .grid2 button.sm{font-size:10px;padding:5px 2px}
@@ -254,11 +257,15 @@ export class HubbardApp {
 </div>
 <div id="hbHint" class="panel qhint"><b></b><span></span></div>
 <div id="hbToast"></div>
-<div id="hbDiag"></div>`;
+<div id="hbDiag"></div>
+<div id="hbErr"></div>`;
     this.container.querySelectorAll('[data-preset]').forEach(b =>
       this.on(b, 'click', () => this.setPreset(b.dataset.preset)));
+    /* 【坑】HTML 属性名不区分大小写、进 DOM 一律小写：`data-L` 对应 `dataset.l`，
+       写 `b.dataset.L` 永远是 undefined ⟹ parseInt → NaN ⟹ setL 直接 return，
+       L 按钮点了没反应（cdp139 走的是 __hb.setL()，所以一直没暴露）。改读 getAttribute。 */
     this.container.querySelectorAll('[data-L]').forEach(b =>
-      this.on(b, 'click', () => this.setL(parseInt(b.dataset.L, 10))));
+      this.on(b, 'click', () => this.setL(parseInt(b.getAttribute('data-L'), 10))));
     this.container.querySelectorAll('[data-tool]').forEach(b =>
       this.on(b, 'click', () => this.setTool(b.dataset.tool)));
     this.container.querySelectorAll('[data-view]').forEach(b =>
@@ -529,6 +536,14 @@ export class HubbardApp {
       this.rebuildSector(up, dn);
     }
     this.state.pat = pat;
+    if (this.staticTier()){
+      /* L=12：设了占据也只是「换个扇区重新解基态」，不做逐帧演化 */
+      this.state.mode = 'gs';
+      this.resetTimeline();
+      this.startSolve();
+      this.syncPanel(); this.draw(); this.queueUrl();
+      return;
+    }
     /* 你指定的 Fock 态不可能同时是（含场）基态 ⟹ 自动进演化模式 */
     this.state.mode = 'evo';
     this.state.paused = false;
@@ -540,7 +555,14 @@ export class HubbardApp {
     this.syncPanel(); this.draw(); this.queueUrl();
   }
   resetPattern(){
+    if (this.staticTier()){ this.toast('L=12 静态档：只能解基态，不做态演化', 2400); return; }
+    /* 【坑】复位填充只改图案、不重建扇区：之前点过格点（粒子数变了）时，Néel 图案
+       与新扇区不匹配 ⟹ hbProductFromPattern 查不到基态索引、返回**全零向量** ⟹
+       占据箭头/n_i/图表全空（看着就是黑屏）。所以先按图案把扇区对齐。 */
     this.state.pat = neelPattern(this.state.L);
+    let up = 0, dn = 0;
+    for (const c of this.state.pat){ if (c & 1) up++; if (c & 2) dn++; }
+    if (up !== this.state.nUp || dn !== this.state.nDn) this.rebuildSector(up, dn);
     this.state.mode = 'evo';
     this.state.paused = false;
     const w = hbProductFromPattern(this.sec, this.state.pat);
@@ -556,6 +578,11 @@ export class HubbardApp {
     /* 新扇区是新对象：外场必须重新烘进去（旧 diagPot 随旧 sec 丢弃） */
     hbSetField(this.sec, this.hasField() ? this.state.mu : null);
     this.job = null; this.gapJob = null; this.gap = null;
+    /* 新扇区的维度/粒子数都变了：上一扇区的测量、观测量缓存、在飞的剖面任务全部作废，
+       否则 drawLadder 会拿旧长度的 nU[i]（undefined）去画，画面直接空掉。 */
+    this.m = null; this.bsig = null; this.S = 0; this.E = undefined;
+    this.sxJob = null; this.probe = { sx: null, sxL: 0, nk: null, nn: null, rho: null, live: false };
+    this._dirty = { sx: true, nk: true, nn: true };
     this.resetTimeline();
     this.q('#hGap').textContent = '—';
     this.q('#hDim').textContent = String(this.sec.dim);
@@ -662,21 +689,29 @@ export class HubbardApp {
     this._dirty = { sx: true, nk: true, nn: true };
     this.sxJob = null;
   }
-  probesLive(){ return this.state.mode === 'gs' || this.state.paused; }
+  /* 能否拿 this.re 去算观测量。除模式/暂停外还必须核对**维度**：
+     正在解新扇区的基态时，this.sec 已经换了，但 this.re 还是上一个扇区的旧向量，
+     拿去算 S(x)/n(k)/⟨nn⟩ 只会得到 NaN（dist139 就是这样把 NaN 送进 symEigVals 的）。 */
+  probeReady(){ return !!this.re && !!this.sec && this.re.length === this.sec.dim && !this.job; }
+  probesLive(){ return this.probeReady() && (this.state.mode === 'gs' || this.state.paused); }
   /* 由外向内：切点 x 与 L−x 的代价都 ∝ min(x,L−x)·…，所以先算便宜的两端 */
   startSx(){
+    if (!this.probeReady()) return;
     const L = this.state.L, order = [];
     for (let d = 0; d <= (L >> 1); d++){
       order.push(d); if (L - d !== d) order.push(L - d);
     }
     const out = new Float64Array(L + 1).fill(NaN);
     /* 抓快照：演化中 this.re/im 每帧都是新数组，任务跨帧读会被换掉 */
-    this.sxJob = { order, k: 0, out, L, t0: performance.now(), re: this.re.slice(), im: this.im.slice() };
+    this.sxJob = { order, k: 0, out, L, sec: this.sec, t0: performance.now(), re: this.re.slice(), im: this.im.slice() };
     this.probe.sx = out; this.probe.sxL = L;
   }
   stepSx(budget = 8){
     const j = this.sxJob; if (!j) return;
-    if (!this.re || j.L !== this.state.L){ this.sxJob = null; return; }
+    /* 扇区身份也校验：同 L 但粒子数变了（新 sec、新维度）时旧快照会读出 undefined → NaN */
+    if (!this.re || j.L !== this.state.L || j.sec !== this.sec || j.re.length !== this.sec.dim){
+      this.sxJob = null; return;
+    }
     const t0 = performance.now();
     while (j.k < j.order.length && performance.now() - t0 < budget){
       const c = j.order[j.k++];
@@ -689,6 +724,7 @@ export class HubbardApp {
     }
   }
   computeNk(){
+    if (!this.probeReady()) return;
     const L = this.state.L;
     const rho = hbCorrelation(this.sec, this.re, this.im);
     const nk = new Float64Array(L);
@@ -696,11 +732,12 @@ export class HubbardApp {
     this.probe.rho = rho; this.probe.nk = nk; this._dirty.nk = false;
   }
   computeNn(){
+    if (!this.probeReady()) return;
     this.probe.nn = hbDensityCorr(this.sec, this.re, this.im); this._dirty.nn = false;
   }
   /* 演化中切视图用：单次快照（n(k) ~100ms、⟨nn⟩ ~10ms；S(x) 起渐进任务） */
   snapshotProbes(){
-    if (!this.re) return;
+    if (!this.probeReady()) return;
     const v = this.state.view;
     if (v === 'nk') this.computeNk();
     else if (v === 'nn') this.computeNn();
@@ -716,7 +753,7 @@ export class HubbardApp {
   }
   /* 同步算到底：导出与调试句柄用（L=10 约 0.75s，全部就绪） */
   probeAll(){
-    if (!this.re) return null;
+    if (!this.probeReady()) return null;
     const L = this.state.L;
     this.probe.sx = hbEntropyProfile(this.sec, this.re, this.im); this.probe.sxL = L;
     this.computeNk(); this.computeNn();
@@ -900,6 +937,8 @@ export class HubbardApp {
   }
   measureAll(force){
     if (!this.re) return;
+    /* 维度不一致 = 态向量还是上一个扇区的：任何测量都会是 NaN，直接跳过（HUD 保留旧值） */
+    if (this.re.length !== this.sec.dim) return;
     this.invalidateProbes();
     const m = hbMeasure(this.sec, this.re, this.im);
     this.m = m;
@@ -1390,6 +1429,37 @@ export class HubbardApp {
   /* ---------- 帧循环 ---------- */
   frame(){
     requestAnimationFrame(this.frame);
+    if (this._dead) return;
+    try { this.frameBody(); this.clearError(); }
+    catch (e){
+      this._errCount = (this._errCount || 0) + 1;
+      this.reportError(e);
+      /* 连续出错就停下：否则每帧都清一次画布 ⟹ 用户只看到一块黑 */
+      if (this._errCount > 3) this._dead = true;
+    }
+  }
+  /* 连续几帧恢复正常就把横幅收掉（一次性的坏帧不该留个红条） */
+  clearError(){
+    if (this._title0 === undefined) this._title0 = document.title;
+    if (!this._errCount) return;
+    this._errCount--;
+    if (this._errCount > 0) return;
+    const box = this.q('#hbErr'); if (box){ box.style.display = 'none'; box.textContent = ''; }
+    if (this._title0 !== undefined) document.title = this._title0;
+  }
+  reportError(e){
+    const msg = (e && (e.stack || e.message)) || String(e);
+    console.error('[hubbard]', e);
+    const d = this.q('#hbDiag'); if (d) d.textContent = 'ERR ' + msg;
+    document.title = 'ERR ' + (e && e.message ? e.message : e);
+    const box = this.q('#hbErr');
+    if (box){
+      box.textContent = '页面出错（已停止重绘，避免整屏变黑）：' + (e && e.message ? e.message : e) +
+        '  —— 详细堆栈见控制台 / document.title';
+      box.style.display = 'block';
+    }
+  }
+  frameBody(){
     this._fpsFrames++;
     const now = performance.now();
     if (now - this._lastFpsT > 500){
@@ -1423,7 +1493,8 @@ export class HubbardApp {
 
   syncPanel(){
     this.container.querySelectorAll('[data-preset]').forEach(b => b.classList.toggle('on', b.dataset.preset === this.state.preset));
-    this.container.querySelectorAll('[data-L]').forEach(b => b.classList.toggle('on', parseInt(b.dataset.L, 10) === this.state.L));
+    this.container.querySelectorAll('[data-L]').forEach(b =>
+      b.classList.toggle('on', parseInt(b.getAttribute('data-L'), 10) === this.state.L));
     this.container.querySelectorAll('[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === this.state.tool));
     this.container.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('on', b.dataset.view === this.state.view));
     const gs = this.state.mode === 'gs';
@@ -1489,7 +1560,8 @@ export class HubbardApp {
   syncUrl(){
     try {
       const qs = this.queryFor(this.serialize());
-      history.replaceState(null, '', location.pathname + '?' + qs);
+      /* 用相对查询串：noise 少（jsdom 对「路径级」replaceState 会报 navigation 未实现） */
+      history.replaceState(null, '', '?' + qs);
     } catch (_){ /* file:// 下 replaceState 可能被拒，忽略 */ }
   }
   readUrlSpec(q){
@@ -1532,7 +1604,7 @@ export class HubbardApp {
     for (let i = 0; i < L; i++){ if (this.state.pat[i] & 1) up++; if (this.state.pat[i] & 2) dn++; }
     if (up !== this.state.nUp || dn !== this.state.nDn) this.rebuildSector(up, dn);
     hbSetField(this.sec, this.hasField() ? this.state.mu : null);
-    const md = mode || this.state.mode;
+    const md = (mode === 'evo' && this.staticTier()) ? 'gs' : (mode || this.state.mode);
     if (md === 'gs'){
       this.state.mode = 'gs';
       this.startSolve();
@@ -1559,9 +1631,9 @@ export class HubbardApp {
   exportJson(){
     const spec = this.serialize();
     /* 观测数据一并在导出里（L=10 需 ~0.75s；导出是显式动作，值得等） */
-    if (this.re){
+    const pr = this.re ? this.probeAll() : null;   /* 求解在飞/扇区不匹配时返回 null */
+    if (pr){
       const L = this.state.L;
-      const pr = this.probeAll();
       spec.obs = {
         S: +this.S.toFixed(9),
         Sx: Array.from(pr.sx, v => (Number.isFinite(v) ? +v.toFixed(9) : null)),

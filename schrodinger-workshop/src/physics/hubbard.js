@@ -166,6 +166,11 @@ export function hbProductFromPattern(sec, pattern){
     if (c & 1) up.push(i);
     if (c & 2) dn.push(i);
   }
+  /* 图案必须落在扇区里：粒子数不符时 bu.index 查不到（-1）⟹ 写进 re[-1] 被丢弃、
+     得到一个**全零向量**（画面上表现为「什么都没了」）。这里直接说清楚，不静默。 */
+  if (up.length !== sec.Nup || dn.length !== sec.Ndn){
+    throw new Error(`hbProductFromPattern: 图案粒子数 (${up.length},${dn.length}) 与扇区 (${sec.Nup},${sec.Ndn}) 不符`);
+  }
   const w = hbInitProduct(sec, up, dn);
   return Object.assign(w, { nUp: up.length, nDn: dn.length });
 }
@@ -458,6 +463,7 @@ export function symEigVals(Ain){
      只看 |d[m]|+|d[m+1]| 时，零本征值处的 dd=0 ⟹ 判据永真不成立（秩亏 Gram 会死循环到迭代上限）。 */
   let anorm = 0;
   for (let i = 0; i < n; i++) anorm = Math.max(anorm, Math.abs(d[i]), Math.abs(e[i]));
+  if (!Number.isFinite(anorm)) throw new Error('symEigVals: 矩阵含 NaN/Inf（多半是态向量与扇区不匹配）');
   const absTol = 1e-16 * (anorm || 1);
   for (let l = 0; l < n; l++){
     let iter = 0, m = l;
