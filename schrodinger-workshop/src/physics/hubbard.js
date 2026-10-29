@@ -83,28 +83,49 @@ export function hbSector(L, Nup, Ndn){
     const mid = ((1 << hi) - 1) ^ ((1 << (lo + 1)) - 1);
     return [mask ^ bi ^ bj, (popcount(mask & mid) % 2) ? -1 : 1];
   };
+  /* CSR 两遍构建：先数每态的跃迁数、再回填。
+     旧版用 tmp 数组收集 [stateIdx,target,sign] 三元组：L=12 半满要 push 1000 万个数组
+     （≈1 GB RSS、4.8 s）。两遍法把内存降到 targets+signs，构建也快一倍。 */
   const offsets = new Int32Array(dim + 1);
-  const tmp = [];   /* [stateIdx, target, sign] */
-  for (let a = 0; a < du; a++) for (let b = 0; b < dd; b++){
-    const k = a * dd + b;
-    const mu = bu.masks[a], md = bd.masks[b];
-    for (let s = 0; s < L - 1; s++){
-      /* 每个键要**两个方向**：hopOne(mask,i,j) 实现 c†_i c_j（j 占、i 空），
-         只写单向会让 H 非厄米（R73 首版即此：2 格点解析解全错、Lanczos NaN）。 */
-      for (const [i, j] of [[s, s + 1], [s + 1, s]]){
-        const hu = hopOne(mu, i, j);
-        if (hu){ tmp.push([k, bu.index[hu[0]] * dd + b, hu[1]]); }
-        const hd = hopOne(md, i, j);
-        if (hd){ tmp.push([k, a * dd + bd.index[hd[0]], hd[1]]); }
+  const bond = L - 1;
+  for (let a = 0; a < du; a++){
+    const mu = bu.masks[a];
+    for (let b = 0; b < dd; b++){
+      const k = a * dd + b, md = bd.masks[b];
+      let c = 0;
+      for (let s = 0; s < bond; s++){
+        const i0 = s, i1 = s + 1;
+        const b0 = 1 << i0, b1 = 1 << i1;
+        /* 方向 1：c†_{i0} c_{i1}（i1 占、i0 空） */
+        if ((mu & b1) && !(mu & b0)) c++;
+        if ((md & b1) && !(md & b0)) c++;
+        /* 方向 2：c†_{i1} c_{i0} */
+        if ((mu & b0) && !(mu & b1)) c++;
+        if ((md & b0) && !(md & b1)) c++;
+      }
+      offsets[k + 1] = c;
+    }
+  }
+  for (let k = 0; k < dim; k++) offsets[k + 1] += offsets[k];
+  const nnz = offsets[dim];
+  const targets = new Int32Array(nnz), signs = new Int8Array(nnz);
+  const cursor = Int32Array.from(offsets.subarray(0, dim));
+  for (let a = 0; a < du; a++){
+    const mu = bu.masks[a];
+    for (let b = 0; b < dd; b++){
+      const k = a * dd + b, md = bd.masks[b];
+      let p = cursor[k];
+      for (let s = 0; s < bond; s++){
+        for (let dir = 0; dir < 2; dir++){
+          const i = dir ? s + 1 : s, j = dir ? s : s + 1;
+          const hu = hopOne(mu, i, j);
+          if (hu){ targets[p] = bu.index[hu[0]] * dd + b; signs[p] = hu[1]; p++; }
+          const hd = hopOne(md, i, j);
+          if (hd){ targets[p] = a * dd + bd.index[hd[0]]; signs[p] = hd[1]; p++; }
+        }
       }
     }
   }
-  const nnz = tmp.length;
-  const targets = new Int32Array(nnz), signs = new Int8Array(nnz);
-  for (const [k, tg, sg] of tmp){ offsets[k + 1]++; }
-  for (let k = 0; k < dim; k++) offsets[k + 1] += offsets[k];
-  const cursor = Int32Array.from(offsets.subarray(0, dim));
-  for (const [k, tg, sg] of tmp){ targets[cursor[k]] = tg; signs[cursor[k]] = sg; cursor[k]++; }
   /* diagPot：外场 Σμ_i(n_i↑+n_i↓) 的对角量（hbSetField 填充，默认全零） */
   const diagPot = new Float64Array(dim);
   return { L, Nup, Ndn, du, dd, dim, bu, bd, diagU, diagPot, offsets, targets, signs, nnz };
@@ -246,7 +267,15 @@ export function jacobiEigen(Ain, maxSweep = 50){
 /* ---------- Lanczos 基态（分帧任务；全重正交） ---------- */
 export class HbGsTask {
   constructor(sec, t, U, opts = {}){
-    this.sec = sec; this.t = t; this.U = U; this.m = opts.m ?? 80;
+    this.sec = sec; this.t = t; this.U = U;
+    /* 内存上限：Lanczos 要存 m 个向量。H 实对称 + 实种子 ⟹ 整个 Krylov 基**恒为实**
+       （im≡0），所以只存实部（dim·8 字节）：L=12 的 dim=853776 每向量 6.5 MB，
+       m=100 才 650 MB；若按复数存，同样内存只够 m=52（U≥2 明显不收敛）。
+       按预算裁 m，并把裁掉的实情暴露给调用方（mMax / mCapped），页面 HUD 与残差一起显示。 */
+    const budget = (opts.maxMemMB ?? 640) * 1048576;
+    this.mMax = Math.max(8, Math.floor(budget / (sec.dim * 8)));
+    this.m = Math.min(opts.m ?? 80, this.mMax);
+    this.mCapped = this.m < (opts.m ?? 80);
     const dim = sec.dim;
     const re = new Float64Array(dim), im = new Float64Array(dim);
     let s = opts.seed ?? 12345;
@@ -254,6 +283,7 @@ export class HbGsTask {
     const nn = Math.sqrt(hbNorm(re, im));
     for (let k = 0; k < dim; k++) re[k] /= nn;
     this.re = re; this.im = im;
+    this.zeroI = new Float64Array(dim);      /* 实模式下的虚部占位（mb 缓冲，不参与运算） */
     this.V = []; this.alpha = []; this.beta = [];
     this.iter = 0; this.done = false; this.energy = NaN;
   }
@@ -261,8 +291,9 @@ export class HbGsTask {
     const { sec, t, U, m } = this;
     const dim = sec.dim;
     for (let it = 0; it < n && !this.done; it++){
+      /* 实模式：只存实部（虚部恒 0）。H 实数对称 ⟹ 这不是近似。 */
       const vr = this.iter === 0 ? Float64Array.from(this.re) : this._nextR;
-      const vi = this.iter === 0 ? Float64Array.from(this.im) : this._nextI;
+      const vi = this.zeroI;
       this.V.push([vr, vi]);
       /* w 必须**每步新分配**：若复用同一个缓冲，下一轮的 matvec 输出会覆盖
          上一轮存下的基向量（别名），多步调用时 beta 爆炸成 1e14/NaN——逐步
@@ -292,8 +323,8 @@ export class HbGsTask {
         this.done = true;
         this._extract();
       } else {
-        for (let k = 0; k < dim; k++){ wR[k] /= nb; wI[k] /= nb; }
-        this._nextR = wR; this._nextI = wI;
+        for (let k = 0; k < dim; k++){ wR[k] /= nb; }
+        this._nextR = wR; this._nextI = this.zeroI;
       }
     }
     return { iter: this.iter, done: this.done, energy: this.energy };
@@ -308,16 +339,17 @@ export class HbGsTask {
     for (let i = 1; i < m; i++) if (val[i] < val[imin]) imin = i;
     this.energy = val[imin];
     const dim = this.sec.dim;
-    const re = new Float64Array(dim), im = new Float64Array(dim);
+    const re = new Float64Array(dim);
     for (let j = 0; j < m; j++){
       const c = vec[j][imin];
       if (c === 0) continue;
-      const [vjR, vjI] = this.V[j];
-      for (let k = 0; k < dim; k++){ re[k] += c * vjR[k]; im[k] += c * vjI[k]; }
+      const vjR = this.V[j][0];
+      for (let k = 0; k < dim; k++) re[k] += c * vjR[k];
     }
-    const nn = Math.sqrt(hbNorm(re, im));
-    for (let k = 0; k < dim; k++){ re[k] /= nn; im[k] /= nn; }
-    this.re = re; this.im = im;
+    const nn = Math.sqrt(hbNorm(re, this.zeroI));
+    for (let k = 0; k < dim; k++) re[k] /= nn;
+    this.re = re;
+    this.im = new Float64Array(dim);      /* 实模式：虚部恒 0（下游仍拿到一个合法数组） */
   }
 }
 
@@ -371,6 +403,91 @@ export function hbKrylovExp(sec, re, im, t, U, dt, m = 12){
     }
   }
   return { re: outR, im: outI };
+}
+
+/* ---------- 对称矩阵**特征值**（Householder 三对角化 + 隐式 QL，O(n³/3)） ----------
+   熵只需要 Gram 的谱、不需要特征向量，所以走「只求值」路径：比 jacobiEigen（每个 sweep
+   都 O(n³)、要 40 个 sweep）快一到两个数量级——这是 L=12 静态档能做出来的前提
+   （n=400 的块从 21 s 降到秒级；L=10 中心切点 401 ms → 十几毫秒）。
+   算法：EISPACK tred2（不累积变换）+ tql2（不累积特征向量）。返回**未排序**的特征值。 */
+export function symEigVals(Ain){
+  const n = Ain.length;
+  const A = Array.from({ length: n }, (_, i) => Float64Array.from(Ain[i]));
+  const d = new Float64Array(n), e = new Float64Array(n);
+  const v = new Float64Array(n), w = new Float64Array(n);
+  /* Householder：逐列把次对角以下清零，相似变换 P A P 保持谱 */
+  for (let k = 0; k < n - 2; k++){
+    let norm = 0;
+    for (let i = k + 1; i < n; i++) norm += A[i][k] * A[i][k];
+    norm = Math.sqrt(norm);
+    d[k] = A[k][k];
+    if (norm === 0){ e[k] = 0; continue; }
+    const alpha = A[k + 1][k] >= 0 ? -norm : norm;
+    e[k] = alpha;
+    v.fill(0, k + 1, n);
+    v[k + 1] = 1;
+    const den = A[k + 1][k] - alpha;
+    for (let i = k + 2; i < n; i++) v[i] = A[i][k] / den;
+    let vv = 0;
+    for (let i = k + 1; i < n; i++) vv += v[i] * v[i];
+    for (let i = k + 1; i < n; i++){
+      let acc = 0;
+      const Ai = A[i];
+      for (let j = k + 1; j < n; j++) acc += Ai[j] * v[j];
+      w[i] = acc;
+    }
+    let vw = 0;
+    for (let i = k + 1; i < n; i++) vw += v[i] * w[i];
+    const c1 = 2 / vv, c2 = c1 * c1 * vw;
+    for (let i = k + 1; i < n; i++){
+      const vi = v[i], wi = w[i];
+      for (let j = i; j < n; j++){
+        const delta = c1 * (vi * w[j] + wi * v[j]) - c2 * vi * v[j];
+        const s2 = A[i][j] - delta;
+        A[i][j] = s2; A[j][i] = s2;
+      }
+    }
+  }
+  if (n >= 2){
+    d[n - 2] = A[n - 2][n - 2];
+    e[n - 2] = A[n - 1][n - 2];
+  }
+  d[n - 1] = A[n - 1][n - 1];
+  e[n - 1] = 0;
+  /* 隐式位移 QL（tql2，只求值）。deflation 判据必须带**矩阵量级**的绝对底：
+     只看 |d[m]|+|d[m+1]| 时，零本征值处的 dd=0 ⟹ 判据永真不成立（秩亏 Gram 会死循环到迭代上限）。 */
+  let anorm = 0;
+  for (let i = 0; i < n; i++) anorm = Math.max(anorm, Math.abs(d[i]), Math.abs(e[i]));
+  const absTol = 1e-16 * (anorm || 1);
+  for (let l = 0; l < n; l++){
+    let iter = 0, m = l;
+    for (;;){
+      for (m = l; m < n - 1; m++){
+        /* 相对判据 + 绝对底：Gram 是**秩亏**的（Schmidt 块的秩 ≤ 较小侧维数），
+           严格判据 |e|+dd===dd 在秩亏块上永不清零 ⟹ 会耗尽迭代次数。 */
+        const dd = Math.abs(d[m]) + Math.abs(d[m + 1]);
+        if (Math.abs(e[m]) <= 1e-16 * dd + absTol) break;
+      }
+      if (m === l) break;
+      if (iter++ === 200) throw new Error('symEigVals: 200 次 QL 迭代未收敛');
+      let g = (d[l + 1] - d[l]) / (2 * e[l]);
+      let r = Math.hypot(g, 1);
+      g = d[m] - d[l] + e[l] / (g + (g >= 0 ? Math.abs(r) : -Math.abs(r)));
+      let s = 1, c = 1, p = 0;
+      let broke = false;
+      for (let i = m - 1; i >= l; i--){
+        const f = s * e[i], b = c * e[i];
+        r = Math.hypot(f, g); e[i + 1] = r;
+        if (r === 0){ d[i + 1] -= p; e[m] = 0; broke = true; break; }
+        s = f / r; c = g / r; g = d[i + 1] - p;
+        r = (d[i] - g) * s + 2 * c * b;
+        p = s * r; d[i + 1] = g + p; g = c * r - b;
+      }
+      if (broke) continue;
+      d[l] -= p; e[l] = g; e[m] = 0;
+    }
+  }
+  return d;
 }
 
 /* ---------- 纠缠熵（任意切点，块对角 Schmidt 分解） ----------
@@ -435,8 +552,9 @@ export function hbEntropyAt(sec, re, im, cut){
       }
       M[i][j] = rr; M[i][j + n] = -ri; M[i + n][j] = ri; M[i + n][j + n] = rr;
     }
-    const { val } = jacobiEigen(M, 40);
-    /* 实嵌入 [[Re,−Im],[Im,Re]] 的本征值 = ρ 的每个本征值**各二重**（不是折半！
+    const val = symEigVals(M);
+    /* 只求特征值（不需要特征向量）⟹ symEigVals；实嵌入 [[Re,−Im],[Im,Re]] 的
+       本征值 = ρ 的每个本征值**各二重**（不是折半！
        首版 val/2 再取前 nL：乘积态会得 Σλ=0.5、S=0.347 而非 0）。排序后隔一取
        即得物理谱；物理简并（自旋 SU(2)）会给出 4 重，隔一后仍恰为 2 重 ✓。 */
     const vals = Array.from(val).sort((a, b) => b - a);
@@ -618,4 +736,141 @@ export function hbBondCorr(sec, re, im, t){
   }
   /* 关联 J 的符号约定：⟨c†_{i+1}c_i⟩ 的实部；乘 −t 即该键的动能贡献 */
   return out;
+}
+
+/* ---------- 残差 ‖Hψ − Eψ‖（收敛自检：L=12 静态档靠它说真话） ---------- */
+export function hbResidual(sec, re, im, t, U){
+  const dim = sec.dim;
+  const hr = new Float64Array(dim), hi = new Float64Array(dim);
+  hbMatvec(sec, re, im, hr, hi, t, U);
+  const E = hbEnergy(sec, re, im, t, U);
+  let s = 0;
+  for (let k = 0; k < dim; k++){
+    const dr = hr[k] - E * re[k], di = hi[k] - E * im[k];
+    s += dr * dr + di * di;
+  }
+  return Math.sqrt(s);
+}
+
+/* ---------- 淬变跑者：从乘积态出发按 exp(−iHt) 走，按时间采 S/D/E ----------
+   页面「从初态演化」与 U/t 扫描共用同一条代码路径（一处物理，不会被两套实现拉偏）。
+   `uOf(t)` 给协议用（U 随时间走）；`muOf(t)` 返回逐格 μ（也用于协议）。
+   采样开销：S 走 hbEntropy（L=8 一次 ~50ms、L=10 ~140ms、L=12 ~2.8s）⟹ 采样间隔
+   默认 0.5，L≥12 时调用方应把 sample 调大或关掉 S。 */
+export class HbQuenchRun {
+  constructor(sec, re, im, opts = {}){
+    this.sec = sec;
+    this.re = Float64Array.from(re); this.im = Float64Array.from(im);
+    this.t = opts.t ?? 1; this.dt = opts.dt ?? 0.1;
+    this.tMax = opts.tMax ?? 10; this.sample = opts.sample ?? 0.5;
+    this.U = opts.U ?? 4; this.uOf = opts.uOf || null; this.muOf = opts.muOf || null;
+    this.mK = opts.mKrylov ?? 10;
+    this.tcur = 0; this.nextT = this.sample; this.done = false;
+    this.records = []; this.uNow = this.U; this.steps = 0;
+    /* 先把 t=0 的初态记进去：淬变曲线必须包含起点（否则第一点已经是走了一步之后，
+       像「奈尔态 D(0)=0.13」这种读数会莫名其妙） */
+    this.records.push(this.measure());
+  }
+  step(n = 1){
+    for (let k = 0; k < n && !this.done; k++){
+      const U = this.uOf ? this.uOf(this.tcur) : this.U;
+      if (this.muOf) hbSetField(this.sec, this.muOf(this.tcur));
+      const o = hbKrylovExp(this.sec, this.re, this.im, this.t, U, this.dt, this.mK);
+      this.re = o.re; this.im = o.im;
+      this.tcur += this.dt; this.steps++; this.uNow = U;
+      if (this.tcur + 1e-9 >= this.nextT){
+        this.records.push(this.measure());
+        this.nextT += this.sample;
+      }
+      if (this.tcur >= this.tMax - 1e-9)this.done = true;
+    }
+    return { done: this.done, t: this.tcur, samples: this.records.length };
+  }
+  measure(){
+    const m = hbMeasure(this.sec, this.re, this.im);
+    return {
+      t: this.tcur, U: this.uNow, D: m.Dtot,
+      E: hbEnergy(this.sec, this.re, this.im, this.t, this.uNow),
+      S: hbEntropy(this.sec, this.re, this.im).S,
+    };
+  }
+}
+
+/* ---------- U/t 扫描：每个 U 先解基态（给 S_gs/D_gs），再从奈尔态淬变（给 S 饱和值/早窗斜率） ----------
+   分片执行（step(budgetMs)），页面在帧里推 ⟹ 扫描期间 UI 不冻。
+   诚实口径：早窗斜率 t≤L/3 的线性拟合（小系统很快饱和）；S_sat 取最后 25% 窗口均值。 */
+export class HbScanTask {
+  constructor(sec, opts = {}){
+    this.sec = sec;
+    this.Us = opts.Us ?? [0, 1, 2, 3, 4, 6, 8];
+    this.dt = opts.dt ?? 0.1;
+    this.tMax = opts.tMax ?? 10;
+    this.sample = opts.sample ?? 0.5;
+    this.mK = opts.mKrylov ?? 10;
+    this.gsM = opts.gsM ?? 60;
+    this.gsMaxMemMB = opts.gsMaxMemMB ?? 640;
+    this.idx = 0; this.phase = 'gs'; this.run = null; this.gs = null;
+    this.results = []; this.done = this.Us.length === 0; this.ms = 0;
+    this.pattern = opts.pattern || Int8Array.from({ length: sec.L }, (_, i) => (i % 2 === 0 ? 1 : 2));
+  }
+  get progress(){ return { idx: this.idx, n: this.Us.length, phase: this.phase, done: this.done }; }
+  step(budgetMs = 20){
+    const t0 = Date.now();
+    while (!this.done && Date.now() - t0 < budgetMs){
+      const U = this.Us[this.idx];
+      if (this.phase === 'gs'){
+        if (!this.gs){
+          this.gs = new HbGsTask(this.sec, 1, U, { m: this.gsM, maxMemMB: this.gsMaxMemMB });
+        }
+        this.gs.step(4);
+        if (this.gs.done){
+          const w = { re: this.gs.re, im: this.gs.im };
+          const mm = hbMeasure(this.sec, w.re, w.im);
+          this.gsVals = {
+            E: hbEnergy(this.sec, w.re, w.im, 1, U),
+            D: mm.Dtot,
+            S: hbEntropy(this.sec, w.re, w.im).S,
+            res: hbResidual(this.sec, w.re, w.im, 1, U),
+            m: this.gs.iter, mCapped: this.gs.mCapped,
+          };
+          const prod = hbProductFromPattern(this.sec, this.pattern);
+          this.run = new HbQuenchRun(this.sec, prod.re, prod.im,
+            { U, dt: this.dt, tMax: this.tMax, sample: this.sample, mKrylov: this.mK });
+          this.phase = 'quench';
+        }
+      } else {
+        this.run.step(1);
+        if (this.run.done){
+          this.results.push(this.reduce(U));
+          this.gs = null; this.run = null; this.phase = 'gs'; this.idx++;
+          if (this.idx >= this.Us.length) this.done = true;
+        }
+      }
+    }
+    return this.progress;
+  }
+  reduce(U){
+    const rec = this.run.records;
+    const L = this.sec.L;
+    const tMax = rec.length ? rec[rec.length - 1].t : 0;
+    const tail = rec.filter(r => r.t >= tMax * 0.75);
+    const Ssat = tail.reduce((a, r) => a + r.S, 0) / Math.max(1, tail.length);
+    const win = rec.filter(r => r.t <= L / 3);
+    let slope = 0;
+    if (win.length > 2){
+      const n = win.length;
+      const mx = win.reduce((a, r) => a + r.t, 0) / n, my = win.reduce((a, r) => a + r.S, 0) / n;
+      let sxy = 0, sxx = 0;
+      for (const r of win){ sxy += (r.t - mx) * (r.S - my); sxx += (r.t - mx) ** 2; }
+      slope = sxx > 0 ? sxy / sxx : 0;
+    }
+    return {
+      U, Ssat, slope,
+      D: rec.length ? rec[rec.length - 1].D : NaN,
+      E: rec.length ? rec[rec.length - 1].E : NaN,
+      curve: rec.map(r => [r.t, r.S]),
+      Sgs: this.gsVals.S, Dgs: this.gsVals.D, Egs: this.gsVals.E,
+      res: this.gsVals.res, m: this.gsVals.m, mCapped: this.gsVals.mCapped,
+    };
+  }
 }

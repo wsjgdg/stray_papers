@@ -27,7 +27,7 @@
 import { injectStyles } from './core/styles.js';
 import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
-import { hbSector, hbSetField, hbProductFromPattern, hbMeasure, hbEnergy, hbEntropy, hbEntropyAt, hbEntropyProfile, hbDensityCorr, hbMomentumDist, hbCorrelation, hbKrylovExp, hbBondCorr, hbNorm, HbGsTask, HB_PRESETS } from './physics/hubbard.js';
+import { hbSector, hbSetField, hbProductFromPattern, hbMeasure, hbEnergy, hbEntropy, hbEntropyAt, hbEntropyProfile, hbDensityCorr, hbMomentumDist, hbCorrelation, hbKrylovExp, hbBondCorr, hbNorm, hbResidual, HbGsTask, HbScanTask, HB_PRESETS } from './physics/hubbard.js';
 
 /* 画面上 μ 的满量程（|μ|/t 到 6 就是满格高） */
 const MU_VIEW = 6;
@@ -43,7 +43,21 @@ const HB_VIEWS = [
   { k: 'nk', name: 'n(k)', tip: '动量分布：k = 2πm/L，Σ_m n(k_m) = N' },
   { k: 'nn', name: '⟨n n⟩', tip: '密度关联矩阵（暂停时刷新）' },
   { k: 'St', name: 'S(t)', tip: '半链熵随时间（基态下退化为标尺）' },
+  { k: 'scan', name: 'U/t 扫描', tip: '扫 U/t：基态量 + 淬变后的熵饱和值/早窗斜率' },
 ];
+/* 扫描图上的四个纵轴量 */
+const HB_METRICS = [
+  { k: 'Ssat', name: 'S 饱和', get: r => r.Ssat, hint: '淬变末段（后 25% 窗）的半链熵均值' },
+  { k: 'slope', name: '斜率', get: r => r.slope, hint: '早窗 t ≤ L/3 的线性拟合 dS/dt' },
+  { k: 'Sgs', name: 'S_gs', get: r => r.Sgs, hint: '基态半链熵' },
+  { k: 'Dgs', name: 'D_gs', get: r => r.Dgs, hint: '基态双占 Σ⟨n↑n↓⟩' },
+];
+/* 协议：演化中按时间改 H（不是预设，是给 H 加一条时间表） */
+const HB_PROTOCOLS = {
+  uramp: { name: 'U 斜坡', tip: 'U/t 线性从 0 升到当前值，历时 T', T: 8 },
+  pulse: { name: '势阱脉冲', tip: '0 号格 μ=−A·sin²(πt/T)，T 后撤掉', T: 4, A: 4 },
+  push: { name: '势垒推动', tip: '一口移动的井把密度从左推到右，历时 T', T: 10, A: 4, w: 0.9 },
+};
 const HB_CSS = `
   #hbPanel{top:74px;left:14px;width:232px;padding:13px;z-index:10;max-height:calc(100vh - 190px);overflow-y:auto;
     scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
@@ -64,6 +78,12 @@ const HB_CSS = `
   #hbViews button{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;padding:2px 8px;border-radius:6px;
     background:rgba(9,16,30,.55);border:1px solid var(--line);color:var(--dim);cursor:pointer}
   #hbViews button.on{color:var(--cyan);border-color:rgba(103,232,249,.55);background:rgba(103,232,249,.07)}
+  #hbPanel .grid4{display:grid;grid-template-columns:repeat(2,1fr);gap:5px}
+  #hbPanel .grid4 button{font-size:10px;padding:5px 2px}
+  #hbScrubRow{display:flex;align-items:center;gap:6px;margin-top:4px}
+  #hbScrubRow input[type=range]{flex:1;min-width:0}
+  #hbScrubInfo{font-family:var(--mono);font-size:10px;color:var(--cyan);white-space:nowrap}
+  #hbScrubRow.off{opacity:.4;pointer-events:none}
   #hbHint{left:14px;bottom:52px;z-index:10;padding:10px 14px;max-width:330px;font-size:11.5px;
     color:var(--dim);line-height:1.65;max-height:130px;overflow-y:auto;
     scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
@@ -100,12 +120,18 @@ export class HubbardApp {
       muDepth: clamp(num('muD', 2), 0, MU_VIEW), muSign: q.get('sgn') === '+' ? 1 : -1,
       mu: null, pat: null, nUp: 0, nDn: 0,
       view: 'Sx',
+      Umax: 8,
     };
     if (![8, 10].includes(this.state.L)) this.state.L = 8;
     if (!HB_TOOLS.some(t => t.k === this.state.tool)) this.state.tool = 'state';
     if (!HB_PRESETS[this.state.preset]) this.state.preset = 'mott';
     if (!HB_VIEWS.some(v => v.k === this.state.view)) this.state.view = 'Sx';
     /* Phase-2 观测量缓存：脏标记 + 渐进任务（S(x) 的 L=10 全扫 ~0.65s） */
+    /* Phase-3：协议 / 时间轴检查点 / U 扫描 */
+    this.proto = null; this.protoSaved = null; this.protoStart = 0;
+    this.cps = []; this.cpNext = 0; this.scrubIdx = -1;
+    this.scan = null; this.scanRes = []; this.scanMetric = 'Ssat'; this.scanMs = 0;
+    this.residual = null;
     this.probe = { sx: null, sxL: 0, nk: null, nn: null, rho: null, live: false };
     this._dirty = { sx: true, nk: true, nn: true };
     this.sxJob = null; this.sxMs = 0;
@@ -172,8 +198,22 @@ export class HubbardApp {
     </div>
     <div class="row" style="margin-top:5px"><label>场</label><span id="hbFieldInfo">—</span></div>
   </div>
-  <div class="sec"><h3>格点</h3><div class="grid2">
-    <button data-L="8">L = 8</button><button data-L="10">L = 10</button>
+  <div class="sec"><h3>协议（演化中改 H）</h3><div class="grid3">
+    ${Object.keys(HB_PROTOCOLS).map(k => '<button data-proto="' + k + '" title="' + HB_PROTOCOLS[k].tip + '">' + HB_PROTOCOLS[k].name + '</button>').join('')}
+  </div>
+    <div class="grid2" style="margin-top:5px">
+      <button id="hbProtoStop" class="sm">停止协议</button><button id="hbProtoInfo" class="sm" disabled style="opacity:.75">—</button>
+    </div>
+  </div>
+  <div class="sec"><h3>U/t 扫描</h3>
+    <div class="grid2"><button id="hbScanRun">运行扫描</button><button id="hbScanStop" class="sm">中止</button></div>
+    <div class="grid4" style="margin-top:5px">
+      ${HB_METRICS.map(m => '<button data-metric="' + m.k + '" class="sm" title="' + m.hint + '">' + m.name + '</button>').join('')}
+    </div>
+    <div class="row" style="margin-top:5px"><label>U 上限</label><input type="range" id="rUmax" min="2" max="8" step="1" value="${this.state.Umax}"><output id="oUmax">${this.state.Umax}</output></div>
+  </div>
+  <div class="sec"><h3>格点</h3><div class="grid3">
+    <button data-L="8">L = 8</button><button data-L="10">L = 10</button><button data-L="12" class="sm">L = 12</button>
   </div></div>
   <div class="sec"><h3>参数</h3>
     <div class="row"><label>U / t</label><input type="range" id="rU" min="0" max="8" step="0.25" value="${this.state.U}"><output id="oU">${this.state.U.toFixed(2)}</output></div>
@@ -183,7 +223,10 @@ export class HubbardApp {
     <button id="hbPause">暂停</button><button id="hbStep">单步</button>
     <button id="hbReset">重置</button><button id="hbGap">算能隙</button>
     <button id="hbLink" class="sm">复制链接</button><button id="hbSave" class="sm">导出 JSON</button>
-  </div></div>
+  </div>
+    <div class="row" style="margin-top:5px"><label>时间轴</label><span id="hbScrubInfo">—</span></div>
+    <div id="hbScrubRow" class="off"><input type="range" id="hbScrub" min="0" max="0" step="1" value="0"></div>
+  </div>
 </div>
 <div id="hbHud" class="panel qhud">
   <div class="hrow"><span>模式</span><span id="hMode">—</span></div>
@@ -199,6 +242,9 @@ export class HubbardApp {
   <div class="hrow"><span>t / 帧</span><span id="hT">—</span></div>
   <div class="hrow"><span>电荷能隙 Δ</span><span id="hGap">—</span></div>
   <div class="hrow"><span>早窗斜率 dS/dt</span><span id="hSlope">—</span></div>
+  <div class="hrow"><span>残差 ‖Hψ−Eψ‖</span><span id="hRes">—</span></div>
+  <div class="hrow"><span>Lanczos m</span><span id="hM">—</span></div>
+  <div class="hrow"><span>协议 / 扫描</span><span id="hProto">—</span></div>
   <div class="hrow"><span>fps</span><span id="hFps">—</span></div>
 </div>
 <div id="hbStage" class="qstage" data-tool="${this.state.tool}">
@@ -239,12 +285,31 @@ export class HubbardApp {
     this.on(this.q('#hbGap'), 'click', () => this.startGap());
     this.on(this.q('#hbLink'), 'click', () => this.copyLink());
     this.on(this.q('#hbSave'), 'click', () => this.exportJson());
+    this.container.querySelectorAll('[data-proto]').forEach(b =>
+      this.on(b, 'click', () => this.startProtocol(b.dataset.proto)));
+    this.on(this.q('#hbProtoStop'), 'click', () => this.stopProtocol(true));
+    this.container.querySelectorAll('[data-metric]').forEach(b =>
+      this.on(b, 'click', () => { this.scanMetric = b.dataset.metric; this.syncPanel(); this.draw(); }));
+    this.on(this.q('#hbScanRun'), 'click', () => this.startScan());
+    this.on(this.q('#hbScanStop'), 'click', () => this.stopScan());
+    this.on(this.q('#rUmax'), 'input', () => {
+      this.state.Umax = parseFloat(this.q('#rUmax').value);
+      this.q('#oUmax').textContent = String(this.state.Umax);
+    });
+    this.on(this.q('#hbScrub'), 'input', () => this.scrubTo(parseInt(this.q('#hbScrub').value, 10)));
     this.on(window, 'resize', () => { this.resize(); this.draw(); });
     this.on(document, 'keydown', e => {
       const tag = (e.target && e.target.tagName) || '';
       if (/input|textarea|select/i.test(tag)) return;
       if (e.key === '1' || e.key === '2' || e.key === '3') this.setTool(HB_TOOLS[+e.key - 1].k);
-      else if (e.key >= '4' && e.key <= '7') this.setView(HB_VIEWS[+e.key - 4].k);
+      else if (e.key >= '4' && e.key <= '8') this.setView(HB_VIEWS[+e.key - 4].k);
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight'){
+        if (this.cps.length && this.state.mode === 'evo'){
+          e.preventDefault();
+          const d = e.key === 'ArrowLeft' ? -1 : 1;
+          this.scrubTo(clamp((this.scrubIdx < 0 ? this.cps.length - 1 : this.scrubIdx) + d, 0, this.cps.length - 1));
+        }
+      }
       else if (e.key === ' ') { e.preventDefault(); this.togglePause(); }
     });
     this.bindCanvas();
@@ -275,6 +340,26 @@ export class HubbardApp {
     });
     this.on(cv, 'pointerup', () => { if (this._paint){ this._paint = null; this.queueUrl(); this.draw(); } });
     this.on(cv, 'pointerleave', () => { this._hover = -1; this._paint = null; this.draw(); });
+    const ch = this.q('#hbChart');
+    if (ch){
+      this.on(ch, 'click', e => {
+        if (this.state.view !== 'scan') return;
+        const r = ch.getBoundingClientRect ? ch.getBoundingClientRect() : null;
+        const dpr = ch.width / (ch.clientWidth || ch.width) || 1;
+        this.scanPick((e.clientX - (r ? r.left : 0)) * dpr);
+      });
+      this.on(ch, 'pointermove', e => {
+        if (this.state.view !== 'scan' || !this.scanRes.length) return;
+        const r = ch.getBoundingClientRect ? ch.getBoundingClientRect() : null;
+        const dpr = ch.width / (ch.clientWidth || ch.width) || 1;
+        const W = ch.width, x0 = 46 * dpr, w = W - 46 * dpr - 18 * dpr;
+        const Umax = Math.max(2, this.state.Umax);
+        const U = clamp(((e.clientX - (r ? r.left : 0)) * dpr - x0) / w, 0, 1) * Umax;
+        let bi = -1, bd = Infinity;
+        this.scanRes.forEach((rr, i) => { const d = Math.abs(rr.U - U); if (d < bd){ bd = d; bi = i; } });
+        if (bi !== this._scanHover){ this._scanHover = bi; this.draw(); }
+      });
+    }
   }
   /* 指针 → 设备像素（jsdom 里 rect 宽为 0，退化为 1:1 设备坐标） */
   evX(e){
@@ -328,6 +413,10 @@ export class HubbardApp {
     this.draw();
   }
   applyMode(mode, opts = {}){
+    if (mode === 'evo' && this.staticTier()){
+      this.toast('L=12 静态档：不做实时演化（单步 Krylov ≈0.5 s）', 2600);
+      return;
+    }
     this.cancelSolve();
     if (mode === 'gs'){
       this.state.mode = 'gs';
@@ -339,6 +428,7 @@ export class HubbardApp {
       this.state.t = 0; this.state.frames = 0; this.hist = [];
       this.state.paused = opts.paused ?? false;
       this.job = null;
+      this.resetTimeline();
       this.measureAll(true);
     }
     this.syncPanel(); this.draw(); this.queueUrl();
@@ -372,10 +462,14 @@ export class HubbardApp {
   }
   setL(L){
     if (L === this.state.L) return;
+    if (![8, 10, 12].includes(L)) return;
+    this.stopProtocol(false);
     this.state.L = L;
+    if (L === 12) this.state.mode = 'gs';
     this.initPreset();
     this.queueUrl();
     if (L === 10) this.toast('L=10：扇区 63504 维，基态要算几秒', 1800);
+    if (L === 12) this.toast('L=12 静态档：853776 维，基态约 70 s（内存 ~1 GB），只解基态/看观测量', 3200);
   }
   togglePause(){
     if (this.state.mode !== 'evo') return;
@@ -462,6 +556,7 @@ export class HubbardApp {
     /* 新扇区是新对象：外场必须重新烘进去（旧 diagPot 随旧 sec 丢弃） */
     hbSetField(this.sec, this.hasField() ? this.state.mu : null);
     this.job = null; this.gapJob = null; this.gap = null;
+    this.resetTimeline();
     this.q('#hGap').textContent = '—';
     this.q('#hDim').textContent = String(this.sec.dim);
   }
@@ -473,7 +568,9 @@ export class HubbardApp {
     this.state.paused = true;
     this.q('#hbPause').textContent = '继续';
     this.msg = '基态求解中…';
-    this.job = { task: new HbGsTask(this.sec, 1, this.state.U, { m: this.sec.dim > 10000 ? 90 : 140 }), kind: 'gs' };
+    this.residual = null;
+    const m = this.sec.dim > 200000 ? 140 : (this.sec.dim > 10000 ? 90 : 140);
+    this.job = { task: new HbGsTask(this.sec, 1, this.state.U, { m, maxMemMB: 700 }), kind: 'gs' };
   }
   scheduleSolve(ms = 260){
     clearTimeout(this._solveTimer);
@@ -506,11 +603,19 @@ export class HubbardApp {
   }
   advanceJobs(){
     if (this.job){
-      const r = this.job.task.step(6);
+      /* 时间预算：L=12 单次 Lanczos 迭代 ~175ms，固定 step(6) 会冻 1s/帧 */
+      const t0 = performance.now();
+      let r;
+      do { r = this.job.task.step(1); } while (!r.done && performance.now() - t0 < 18);
+      const stEl = this.q('#hbStat');
+      if (stEl && !r.done) stEl.textContent = `解基态 ${this.job.task.iter}/${this.job.task.m}`;
       if (r.done){
         this.re = this.job.task.re; this.im = this.job.task.im;
+        this.gsM = this.job.task.m; this.gsMCapped = this.job.task.mCapped;
         this.job = null;
         this.msg = '';
+        this.residual = hbResidual(this.sec, this.re, this.im, 1, this.state.U);
+        this._sNeed = true;
         this.measureAll(true);
         this.state.paused = false;
         this.q('#hbPause').textContent = '暂停';
@@ -619,8 +724,162 @@ export class HubbardApp {
     return { sx: this.probe.sx, nk: this.probe.nk, nn: this.probe.nn };
   }
 
+  /* ---------- Phase-3：协议（演化中按时间表改 H） ----------
+     协议不是预设：它给 H 加一条时间表，逐帧改写 U 或 μ。「停止协议」会把协议开始前的
+     U/μ 复原（否则用户会以为参数被协议吃掉了）。 */
+  staticTier(){ return this.state.L >= 12; }
+  startProtocol(kind){
+    const P = HB_PROTOCOLS[kind];
+    if (!P) return;
+    if (this.staticTier()){ this.toast('L=12 静态档：不做实时演化（协议需要逐帧推进）', 2400); return; }
+    if (this.state.mode !== 'evo') this.applyMode('evo');
+    this.protoSaved = { U: this.state.U, mu: Float64Array.from(this.state.mu) };
+    this.proto = { kind, T: P.T, A: P.A ?? 0, w: P.w ?? 1, site: 0 };
+    this.protoStart = this.state.t;
+    this.state.paused = false;
+    this.q('#hbPause').textContent = '暂停';
+    this.toast(P.tip, 2400);
+    this.syncPanel(); this.draw();
+  }
+  stopProtocol(restore){
+    if (!this.proto) return;
+    this.proto = null;
+    if (restore && this.protoSaved){
+      this.state.U = this.protoSaved.U;
+      this.state.mu = Float64Array.from(this.protoSaved.mu);
+      hbSetField(this.sec, this.hasField() ? this.state.mu : null);
+      this.protoSaved = null;
+    }
+    this.syncPanel(); this.draw();
+  }
+  applyProtocol(){
+    const p = this.proto;
+    if (!p || this.state.paused || this.state.mode !== 'evo') return;
+    const L = this.state.L, tau = this.state.t - this.protoStart;
+    const f = clamp(tau / p.T, 0, 1);
+    if (p.kind === 'uramp'){
+      const U = (this.protoSaved ? this.protoSaved.U : this.state.U) * f;
+      this.state.U = U;
+      this.q('#rU').value = String(U);
+      this.q('#oU').textContent = U.toFixed(2);
+      this.q('#hU').textContent = U.toFixed(2);
+    } else if (p.kind === 'pulse'){
+      const a = f < 1 ? -p.A * Math.sin(Math.PI * f) ** 2 : 0;
+      const mu = new Float64Array(L);
+      mu[p.site] = a;
+      this.state.mu = mu;
+      hbSetField(this.sec, a === 0 ? null : mu);
+    } else if (p.kind === 'push'){
+      const x = 1 + (L - 2) * f;
+      const mu = new Float64Array(L);
+      for (let i = 0; i < L; i++) mu[i] = -p.A * Math.exp(-((i - x) ** 2) / (2 * p.w * p.w));
+      this.state.mu = mu;
+      hbSetField(this.sec, mu);
+    }
+    if (f >= 1) this.stopProtocol(true);
+    this.syncProtoInfo();
+  }
+  syncProtoInfo(){
+    const el = this.q('#hbProtoInfo');
+    if (!el) return;
+    if (!this.proto){ el.textContent = '—'; return; }
+    const P = HB_PROTOCOLS[this.proto.kind];
+    const f = clamp((this.state.t - this.protoStart) / this.proto.T, 0, 1);
+    el.textContent = `${P.name} ${(f * 100).toFixed(0)}%`;
+    el.classList.toggle('on', true);
+  }
+
+  /* ---------- Phase-3：时间轴检查点 + 拖动 ----------
+     每 CP_EVERY 个时间单位存一份态快照（环形缓冲，按内存预算定上限）⟹ 滑到任意已记录
+     时刻是**精确复现**（不是从 0 重算）；从某点继续则截断未来（分支）。 */
+  maxCp(){
+    if (!this.sec) return 8;
+    return clamp(Math.floor((24 * 1048576) / (this.sec.dim * 16)), 8, 120);
+  }
+  resetTimeline(){ this.cps = []; this.cpNext = 0; this.scrubIdx = -1; this.syncScrub(); }
+  pushCheckpoint(force){
+    if (!this.re || this.state.mode !== 'evo') return;
+    if (!force && this.state.t + 1e-9 < this.cpNext) return;
+    this.cpNext = this.state.t + 0.5;
+    this.cps.push({
+      t: this.state.t, re: Float64Array.from(this.re), im: Float64Array.from(this.im),
+      S: this.S, D: this.m ? this.m.Dtot : 0,
+    });
+    const max = this.maxCp();
+    while (this.cps.length > max) this.cps.shift();
+    this.scrubIdx = -1;
+    this.syncScrub();
+  }
+  scrubTo(i){
+    if (!this.cps.length) return;
+    i = clamp(i | 0, 0, this.cps.length - 1);
+    const cp = this.cps[i];
+    this.re = Float64Array.from(cp.re); this.im = Float64Array.from(cp.im);
+    this.state.t = cp.t;
+    this.state.frames = Math.round(cp.t / Math.max(1e-9, this.state.dt * this.state.spf));
+    this.state.paused = true;
+    this.cps.length = i + 1;
+    this.cpNext = cp.t + 0.5;
+    this.scrubIdx = i;
+    this.hist = this.hist.filter(pt => pt[0] <= cp.t + 1e-9);
+    this.measureAll(true);
+    this.syncPanel(); this.draw();
+  }
+  syncScrub(){
+    const row = this.q('#hbScrubRow'), inp = this.q('#hbScrub'), info = this.q('#hbScrubInfo');
+    if (!row || !inp || !info) return;
+    const n = this.cps.length;
+    const on = this.state.mode === 'evo' && n > 0;
+    row.classList.toggle('off', !on);
+    inp.max = String(Math.max(0, n - 1));
+    inp.value = String(this.scrubIdx >= 0 ? this.scrubIdx : Math.max(0, n - 1));
+    info.textContent = on
+      ? `${n} 帧 · t=${this.cps[this.scrubIdx >= 0 ? this.scrubIdx : n - 1].t.toFixed(2)}（←/→ 步进）`
+      : '演化中累积';
+  }
+
+  /* ---------- Phase-3：U/t 扫描（分片推进，UI 不冻） ---------- */
+  startScan(){
+    if (this.scan) return;
+    if (this.staticTier()){ this.toast('L=12 静态档不做扫描（每点基态 ~20 s）', 2400); return; }
+    if (this.hasField()){ this.toast('先清空场再扫描（扫描是「干净」Hubbard）', 2200); return; }
+    const Us = [];
+    for (let U = 0; U <= this.state.Umax + 1e-9; U += 2) Us.push(U);
+    /* L=8：m=140 让 U=6/8 的残差落到 1e-13（m=60 只有 2e-3，Lanczos 还没收敛）；
+       L≥10：单点成本高，降 m 并缩短窗，扫描仍能看出趋势（残差在图上逐点标出） */
+    const big = this.state.L >= 10;
+    this.scan = new HbScanTask(this.sec, {
+      Us, dt: 0.1, tMax: big ? 8 : 10, sample: 0.5,
+      gsM: big ? 100 : 140, mKrylov: 10,
+      pattern: Int8Array.from(this.state.pat),
+    });
+    this.scanRes = []; this.scanT0 = performance.now(); this.scanMsTotal = 0;
+    this.setView('scan');
+    this.toast(`扫描 ${Us.length} 个 U/t（L=${this.state.L}）…`, 1600);
+    this.syncPanel();
+  }
+  stopScan(){
+    if (!this.scan) return;
+    this.scan = null;
+    this.toast('扫描已中止', 1200);
+    this.syncPanel(); this.draw();
+  }
+  stepScan(){
+    const sc = this.scan;
+    if (!sc) return;
+    sc.step(18);
+    this.scanRes = sc.results.slice();
+    if (sc.done){
+      this.scanMsTotal = performance.now() - this.scanT0;
+      this.scan = null;
+      this.toast(`扫描完成：${this.scanRes.length} 点 · ${(this.scanMsTotal / 1000).toFixed(1)} s`, 2200);
+      this.syncPanel();
+    }
+  }
+
   /* ---------- 演化 ---------- */
   evolveFrame(){
+    if (this.staticTier()) return;          /* L=12：单步 Krylov ~0.5s，不进实时循环 */
     const { dt, spf } = this.state;
     for (let i = 0; i < spf; i++){
       const o = hbKrylovExp(this.sec, this.re, this.im, 1, this.state.U, dt, 12);
@@ -628,6 +887,7 @@ export class HubbardApp {
       this.state.t += dt;
     }
     this.state.frames++;
+    this.pushCheckpoint();
   }
   stepFrames(n){
     if (this.state.mode !== 'evo') return;
@@ -644,7 +904,21 @@ export class HubbardApp {
     const m = hbMeasure(this.sec, this.re, this.im);
     this.m = m;
     this.E = hbEnergy(this.sec, this.re, this.im, 1, this.state.U);
-    const ent = hbEntropy(this.sec, this.re, this.im);
+    /* 熵是最贵的一项（L=8 16ms / L=10 70ms / L=12 2.8s，随中心切点爆炸）。
+       L≥10 演化中按 250ms 节流（否则每两帧一次会把 8fps 拖到 2fps）；L=8 逐次算。
+       L=12 静态档只在「需要」时算（_sNeed 由求解完成/显式刷新置位）。 */
+    const now = performance.now();
+    let ent;
+    if (this.staticTier()){
+      ent = this._sNeed ? hbEntropy(this.sec, this.re, this.im) : { S: this.S || 0, spectrum: [], sum: 1 };
+      if (this._sNeed){ this._sNeed = false; this._sT = now; }
+    } else if (force || this.state.mode === 'gs' ||
+               now - (this._sT || 0) > (this.sec.dim > 20000 ? 250 : 0)){
+      ent = hbEntropy(this.sec, this.re, this.im);
+      this._sT = now;
+    } else {
+      ent = { S: this.S || 0, spectrum: [], sum: 1 };
+    }
     this.S = ent.S;
     if (this.state.mode === 'evo'){
       if (!this.hist.length || this.state.t - this.hist[this.hist.length - 1][0] > 1e-9)
@@ -653,13 +927,15 @@ export class HubbardApp {
     } else {
       this.hist = [[0, ent.S], [1, ent.S]];
     }
+    /* 演化态在 t=0 时先落一个检查点：否则「拖回最左」是第一步之后，不是初态 */
+    if (this.state.mode === 'evo' && !this.cps.length && this.state.t < 1e-9) this.pushCheckpoint(true);
     this.bsig = hbBondCorr(this.sec, this.re, this.im, 1);
     let fld = 0;
     for (let i = 0; i < this.state.L; i++) fld += this.state.mu[i] * m.nT[i];
     this.fieldE = fld;
     /* HUD */
     this.q('#hMode').textContent = this.state.mode === 'gs' ? '基态（H 变即重解）' : '演化';
-    this.q('#hDim').textContent = String(this.sec.dim);
+    this.q('#hDim').textContent = String(this.sec.dim) + (this.staticTier() ? ' · 静态档' : '');
     this.q('#hE').textContent = nf(this.E, 5);
     this.q('#hPot').textContent = this.hasField() ? nf(fld, 4) : '—';
     this.q('#hD').textContent = nf(m.Dtot, 4);
@@ -827,6 +1103,7 @@ export class HubbardApp {
     if (v === 'Sx') return this.drawProbeSx(ctx, W, H, dpr, mono);
     if (v === 'nk') return this.drawProbeNk(ctx, W, H, dpr, mono);
     if (v === 'nn') return this.drawProbeNn(ctx, W, H, dpr, mono);
+    if (v === 'scan') return this.drawScan(ctx, W, H, dpr, mono);
     const padL = 42 * dpr, padR = 14 * dpr, padT = 20 * dpr, padB = 26 * dpr;
     const x0 = padL, y0 = H - padB, w = W - padL - padR, h = H - padT - padB;
     ctx.textAlign = 'left';
@@ -1029,6 +1306,87 @@ export class HubbardApp {
     }
   }
 
+  /* ---------- U/t 扫描图：一个纵轴量 vs U/t，点可点选载入 ---------- */
+  drawScan(ctx, W, H, dpr, mono){
+    const res = this.scanRes;
+    const metric = HB_METRICS.find(m => m.k === this.scanMetric) || HB_METRICS[0];
+    const Umax = Math.max(2, this.state.Umax);
+    const x0 = 46 * dpr, y0 = H - 28 * dpr, w = W - 46 * dpr - 18 * dpr, h = H - 24 * dpr - 28 * dpr;
+    let vmin = Infinity, vmax = -Infinity;
+    for (const r of res){ const v = metric.get(r); if (Number.isFinite(v)){ vmin = Math.min(vmin, v); vmax = Math.max(vmax, v); } }
+    if (!res.length || !Number.isFinite(vmin)){ vmin = 0; vmax = 1; }
+    if (vmax - vmin < 1e-9) vmax = vmin + 1;
+    const padV = (vmax - vmin) * 0.14;
+    vmin -= padV; vmax += padV;
+    if (metric.k !== 'slope' && metric.k !== 'Ssat' && vmin > 0) vmin = 0;
+    const px = U => x0 + (U / Umax) * w;
+    const py = v => y0 - ((v - vmin) / (vmax - vmin)) * h;
+    const sc = this.scan;
+    const head = sc
+      ? `U/t 扫描中 ${sc.idx}/${sc.Us.length}（${sc.phase === 'gs' ? '解基态' : '淬变演化'}）· ${metric.name}`
+      : `U/t 扫描 · ${metric.name}${res.length ? ' · ' + res.length + ' 点 · ' + (this.scanMsTotal / 1000).toFixed(1) + ' s' : '（点「运行扫描」）'}`;
+    this.probeHead(ctx, dpr, mono, head,
+      sc ? '进度 ' + Math.round(100 * sc.idx / sc.Us.length) + '%' : (res.length ? '点图载入该 U' : ''),
+      W);
+    /* 轴 */
+    ctx.strokeStyle = 'rgba(120,160,220,.20)'; ctx.lineWidth = 1 * dpr;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0 + w, y0); ctx.stroke();
+    ctx.fillStyle = 'rgba(154,167,189,.55)'; ctx.font = mono(8.5 * dpr);
+    for (let U = 0; U <= Umax; U += (Umax > 6 ? 2 : 1)) ctx.fillText(String(U), px(U) - 2 * dpr, y0 + 12 * dpr);
+    ctx.textAlign = 'right';
+    ctx.fillText(vmax.toFixed(2), x0 - 5 * dpr, py(vmax) + 3 * dpr);
+    ctx.fillText(vmin.toFixed(2), x0 - 5 * dpr, py(vmin) + 3 * dpr);
+    ctx.textAlign = 'left';
+    if (!res.length) return;
+    /* 曲线 + 点 */
+    ctx.strokeStyle = 'rgba(103,232,249,.9)'; ctx.lineWidth = 1.6 * dpr;
+    ctx.beginPath();
+    res.forEach((r, i) => { const X = px(r.U), Y = py(metric.get(r)); i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
+    ctx.stroke();
+    for (const r of res){
+      const X = px(r.U), Y = py(metric.get(r));
+      ctx.fillStyle = 'rgba(103,232,249,.95)';
+      ctx.beginPath(); ctx.arc(X, Y, 2.4 * dpr, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = 'rgba(230,237,243,.75)'; ctx.font = mono(8.5 * dpr); ctx.textAlign = 'center';
+      ctx.fillText(metric.get(r).toFixed(3), X, Y - 6 * dpr);
+      ctx.fillStyle = 'rgba(154,167,189,.62)';
+      ctx.fillText('U=' + r.U, X, y0 + 22 * dpr);
+    }
+    ctx.textAlign = 'left';
+    if (this._scanHover != null){
+      const i = this._scanHover;
+      if (res[i]){
+        const X = px(res[i].U);
+        ctx.strokeStyle = 'rgba(251,191,36,.5)'; ctx.setLineDash([3 * dpr, 3 * dpr]);
+        ctx.beginPath(); ctx.moveTo(X, py(vmin)); ctx.lineTo(X, py(vmax)); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+  }
+
+  /* 扫描图上的点选：取最近的 U 载入（基态模式下直接重解） */
+  scanPick(x){
+    if (!this.scanRes.length) return;
+    const cv = this.q('#hbChart');
+    const W = cv.width, dpr = W / (cv.clientWidth || W) || 1;
+    const x0 = 46 * dpr, w = W - 46 * dpr - 18 * dpr;
+    const Umax = Math.max(2, this.state.Umax);
+    const U = clamp(((x - x0) / w) * Umax, 0, Umax);
+    let best = null, bd = Infinity;
+    for (const r of this.scanRes){
+      const d = Math.abs(r.U - U);
+      if (d < bd){ bd = d; best = r; }
+    }
+    if (!best) return;
+    this.state.U = best.U;
+    this.q('#rU').value = String(best.U);
+    this.q('#oU').textContent = best.U.toFixed(2);
+    this.q('#hU').textContent = best.U.toFixed(2);
+    if (this.state.mode === 'gs') this.startSolve(); else this.measureAll(true);
+    this.toast(`载入 U/t = ${best.U.toFixed(1)}`, 1200);
+    this.syncPanel(); this.draw();
+  }
+
   /* ---------- 帧循环 ---------- */
   frame(){
     requestAnimationFrame(this.frame);
@@ -1041,10 +1399,26 @@ export class HubbardApp {
     }
     this.advanceJobs();
     if (this.sxJob) this.stepSx();
-    if (this.state.mode === 'evo' && !this.state.paused && !this.job && this.re) this.evolveFrame();
+    if (this.scan) this.stepScan();
+    if (this.state.mode === 'evo' && !this.state.paused && !this.job && this.re){
+      this.applyProtocol();
+      this.evolveFrame();
+    }
     if (this.state.mode === 'evo' && !this.state.paused && !this.job && this.state.frames % 2 === 0) this.measureAll(false);
     this.draw();
     if (this.job){ const s = this.q('#hbStat'); if (s) s.textContent = this.msg; }
+  }
+
+  syncHudExtra(){
+    const set = (id, v) => { const el = this.q('#' + id); if (el) el.textContent = v; };
+    set('hRes', this.residual == null ? '—' : this.residual.toExponential(1));
+    set('hM', this.gsM ? `${this.gsM}${this.gsMCapped ? '（内存上限）' : ''}` : '—');
+    const bits = [];
+    if (this.proto) bits.push(HB_PROTOCOLS[this.proto.kind].name);
+    if (this.scan) bits.push(`扫描 ${this.scan.idx}/${this.scan.Us.length}`);
+    else if (this.scanRes.length) bits.push(`扫描 ${this.scanRes.length} 点`);
+    if (this.cps.length) bits.push(`${this.cps.length} 检查点`);
+    set('hProto', bits.length ? bits.join(' · ') : '—');
   }
 
   syncPanel(){
@@ -1069,6 +1443,15 @@ export class HubbardApp {
     this.q('#hbPause').textContent = this.state.paused ? '继续' : '暂停';
     this.q('#hbPause').style.opacity = gs ? 0.45 : 1;
     const st = this.q('#hbStage'); if (st) st.dataset.tool = this.state.tool;
+    this.container.querySelectorAll('[data-proto]').forEach(b =>
+      b.classList.toggle('on', !!this.proto && this.proto.kind === b.dataset.proto));
+    this.container.querySelectorAll('[data-metric]').forEach(b =>
+      b.classList.toggle('on', b.dataset.metric === this.scanMetric));
+    const sr = this.q('#hbScanRun');
+    if (sr) sr.textContent = this.scan ? '扫描中…' : '运行扫描';
+    this.syncProtoInfo();
+    this.syncScrub();
+    this.syncHudExtra();
   }
 
   /* ---------- 状态序列化 / URL / 导出 ---------- */
@@ -1087,6 +1470,7 @@ export class HubbardApp {
       t: +this.state.t.toFixed(4),
       paused: !!this.state.paused,
       view: this.state.view,
+      Umax: this.state.Umax,
     };
   }
   queryFor(spec){
@@ -1263,6 +1647,35 @@ export class HubbardApp {
       query: () => this.queryFor(this.serialize()),
       siteAtX: x => this.siteAtX(x),
       view: () => ({ ...this._view }),
+      /* ---- Phase-3：协议 / 时间轴 / 扫描 ---- */
+      startProtocol: k => this.startProtocol(k),
+      stopProtocol: r => this.stopProtocol(r),
+      proto: () => (this.proto ? { kind: this.proto.kind, T: this.proto.T, f: clamp((this.state.t - this.protoStart) / this.proto.T, 0, 1) } : null),
+      checkpoints: () => this.cps.map(c => ({ t: c.t, S: c.S, D: c.D })),
+      scrubTo: i => this.scrubTo(i),
+      scrubIdx: () => this.scrubIdx,
+      /* 确定性帧推进（测试用）：与 frame() 同一顺序（协议 → 演化 → 测量） */
+      tick: (n = 1) => {
+        for (let i = 0; i < n; i++){
+          if (this.state.mode === 'evo' && !this.state.paused && this.re){ this.applyProtocol(); this.evolveFrame(); }
+        }
+        this.measureAll(true); this.draw();
+        return this.state.t;
+      },
+      scanStart: () => this.startScan(),
+      scanStep: () => { const n0 = this.scanRes.length; this.stepScan(); return this.scanRes.length - n0; },
+      scanState: () => ({
+        running: !!this.scan, progress: this.scan ? { ...this.scan.progress } : null,
+        metric: this.scanMetric, ms: this.scanMsTotal,
+        rows: this.scanRes.map(r => ({
+          U: r.U, Ssat: r.Ssat, slope: r.slope, Sgs: r.Sgs, Dgs: r.Dgs, Egs: r.Egs,
+          m: r.m, res: r.res, D: r.D, curve: r.curve,
+        })),
+      }),
+      setMetric: k => { if (HB_METRICS.some(m => m.k === k)){ this.scanMetric = k; this.syncPanel(); this.draw(); } },
+      scanPick: x => this.scanPick(x),
+      staticTier: () => this.staticTier(),
+      residual: () => this.residual,
       /* ---- Phase-2 观测量（cdp141 用） ---- */
       setView: k => this.setView(k),
       activeView: () => this.state.view,
