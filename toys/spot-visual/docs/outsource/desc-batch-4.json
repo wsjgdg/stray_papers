@@ -1,0 +1,264 @@
+{
+  "meta": {
+    "batch": 4,
+    "of": 5,
+    "count": 51
+  },
+  "targets": [
+    {
+      "name": "三清山风景名胜区",
+      "province": "江西",
+      "city": "上饶"
+    },
+    {
+      "name": "武功山景区",
+      "province": "江西",
+      "city": "萍乡"
+    },
+    {
+      "name": "婺源江湾景区",
+      "province": "江西",
+      "city": "上饶"
+    },
+    {
+      "name": "本溪水洞景区",
+      "province": "辽宁",
+      "city": "本溪"
+    },
+    {
+      "name": "金石滩景区",
+      "province": "辽宁",
+      "city": "大连"
+    },
+    {
+      "name": "辽宁千山景区",
+      "province": "辽宁",
+      "city": "鞍山"
+    },
+    {
+      "name": "盘锦红海滩国家风景廊道景区",
+      "province": "辽宁",
+      "city": "盘锦"
+    },
+    {
+      "name": "沈阳市植物园（沈阳世博园）",
+      "province": "辽宁",
+      "city": "沈阳"
+    },
+    {
+      "name": "阿尔山一柴河旅游景区",
+      "province": "内蒙古",
+      "city": "兴安盟"
+    },
+    {
+      "name": "阿斯哈图石林景区",
+      "province": "内蒙古",
+      "city": "赤峰"
+    },
+    {
+      "name": "成吉思汗陵陵游区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯"
+    },
+    {
+      "name": "胡杨林景区",
+      "province": "内蒙古",
+      "city": "阿拉善盟"
+    },
+    {
+      "name": "响沙湾旅游景区",
+      "province": "内蒙古",
+      "city": "鄂尔多斯"
+    },
+    {
+      "name": "沙湖旅游区",
+      "province": "宁夏",
+      "city": "石嘴山"
+    },
+    {
+      "name": "沙坡头景区",
+      "province": "宁夏",
+      "city": "中卫"
+    },
+    {
+      "name": "水洞沟旅游区",
+      "province": "宁夏",
+      "city": "银川"
+    },
+    {
+      "name": "镇北堡西部影城",
+      "province": "宁夏",
+      "city": "银川"
+    },
+    {
+      "name": "海北州阿咪东索景区",
+      "province": "青海",
+      "city": "海北藏族自治州"
+    },
+    {
+      "name": "互助土族故土园旅游区",
+      "province": "青海",
+      "city": "海东"
+    },
+    {
+      "name": "黄河口生态旅游区",
+      "province": "山东",
+      "city": "东营"
+    },
+    {
+      "name": "蓬莱阁（三仙山·八仙过海）旅游区",
+      "province": "山东",
+      "city": "烟台"
+    },
+    {
+      "name": "青州古城旅游区",
+      "province": "山东",
+      "city": "潍坊"
+    },
+    {
+      "name": "台儿庄古城景区",
+      "province": "山东",
+      "city": "枣庄"
+    },
+    {
+      "name": "天下第一泉",
+      "province": "山东",
+      "city": "济南"
+    },
+    {
+      "name": "威海华夏城景区",
+      "province": "山东",
+      "city": "威海"
+    },
+    {
+      "name": "威海市刘公岛景区",
+      "province": "山东",
+      "city": "威海"
+    },
+    {
+      "name": "微山湖旅游区",
+      "province": "山东",
+      "city": "济宁"
+    },
+    {
+      "name": "烟台市龙口南山景区",
+      "province": "山东",
+      "city": "烟台"
+    },
+    {
+      "name": "沂蒙山旅游区",
+      "province": "山东",
+      "city": "临沂"
+    },
+    {
+      "name": "萤火虫水洞·地下大峡谷旅游区",
+      "province": "山东",
+      "city": "临沂"
+    },
+    {
+      "name": "洪洞大槐树寻根祭祖园",
+      "province": "山西",
+      "city": "临汾"
+    },
+    {
+      "name": "皇城相府",
+      "province": "山西",
+      "city": "晋城"
+    },
+    {
+      "name": "绵山景区",
+      "province": "山西",
+      "city": "晋中"
+    },
+    {
+      "name": "太行山八泉峡景区",
+      "province": "山西",
+      "city": "长治"
+    },
+    {
+      "name": "乡宁县云丘山景区",
+      "province": "山西",
+      "city": "临汾"
+    },
+    {
+      "name": "（宝塔山景区）",
+      "province": "陕西",
+      "city": "延安"
+    },
+    {
+      "name": "（延安革命纪念馆）",
+      "province": "陕西",
+      "city": "延安"
+    },
+    {
+      "name": "（杨家岭革命旧址）",
+      "province": "陕西",
+      "city": "延安"
+    },
+    {
+      "name": "（枣园革命旧址）",
+      "province": "陕西",
+      "city": "延安"
+    },
+    {
+      "name": "（中共中央西北局旧址）",
+      "province": "陕西",
+      "city": "延安"
+    },
+    {
+      "name": "法门文化景区",
+      "province": "陕西",
+      "city": "宝鸡"
+    },
+    {
+      "name": "黄帝陵景区",
+      "province": "陕西",
+      "city": "延安"
+    },
+    {
+      "name": "金丝峡景区",
+      "province": "陕西",
+      "city": "商洛"
+    },
+    {
+      "name": "陕西华清宫文化旅游景区",
+      "province": "陕西",
+      "city": "西安"
+    },
+    {
+      "name": "太白山旅游景区",
+      "province": "陕西",
+      "city": "宝鸡"
+    },
+    {
+      "name": "上海科技馆",
+      "province": "上海",
+      "city": "上海"
+    },
+    {
+      "name": "上海野生动物园",
+      "province": "上海",
+      "city": "上海"
+    },
+    {
+      "name": "安仁古镇景区",
+      "province": "四川",
+      "city": "成都"
+    },
+    {
+      "name": "巴中市光雾山景区",
+      "province": "四川",
+      "city": "巴中"
+    },
+    {
+      "name": "北川羌城旅游区",
+      "province": "四川",
+      "city": "绵阳"
+    },
+    {
+      "name": "碧峰峡旅游景区",
+      "province": "四川",
+      "city": "雅安"
+    }
+  ]
+}
