@@ -1534,10 +1534,14 @@ function buildExtraScenicSpots(knownNames: Set<string>): Spot[] {
     const category = inferScenicCategory(e.name);
     // 直辖市 province===city，去重避免「北京北京」
     const where = e.province === e.city ? e.province : `${e.province}${e.city}`;
+    // 名录里有名称夹带换行等控制字符的脏数据（如「重庆石柱西沱古镇\n景区」），压平后再展示；
+    // 只清控制字符、不动普通空格（空格可能是名称的一部分，且 SCENIC_DETAILS 的键按原名生成）。
+    // 取数键仍用 e.name（生成数据的键是原始名），避免照片/详情/描述失配。
+    const displayName = e.name.replace(/[\u0000-\u001f\u007f]+/g, "");
     return {
       id: `scenic-${e.city}-${i}`,
       // 全国化：跨省同名景区保留（id 含城市不冲突），地址自带省份可被省份筛选命中
-      name: e.name,
+      name: displayName,
       // 5A/4A 构建时经高德 around 搜索回填（见 scripts/fetch-scenic-details.mjs）：
       // 官方图 + 电话 + 开放时间；图不可达时 SpotImage 走本地分类池降级
       // 图优先级：本地离线图（bing 抓图管线）> 高德官方图 > 渐变占位
