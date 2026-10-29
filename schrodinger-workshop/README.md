@@ -69,7 +69,8 @@ open dist/family.html                   # 码族与真阈值：重复码族 / St
 open dist/surface.html                 # 旋转表面码 d=3/5/7（跳转桩 → qec.html?mode=surf）
 
 # 方式二：ES 模块版（需 HTTP，file:// 受模块 CORS 限制）
-python3 -m http.server 8765          # 或 npm start
+npm start                            # = node scripts/serve.mjs（改代码自动刷新，不发缓存）
+# 或 python3 -m http.server 8765      # 兜底：无热重载、且只发 Last-Modified ⟹ 浏览器可能复用旧模块
 # 访问 http://localhost:8765            （主页，顶栏三个入口进子页）
 # 或   http://localhost:8765/quantum-field.html   （主页别名深链，自动跳 index.html）
 # 或   http://localhost:8765/two-body.html
@@ -81,6 +82,14 @@ python3 -m http.server 8765          # 或 npm start
 # 或   http://localhost:8765/shor.html
 # 或   http://localhost:8765/qec.html?mode=surf   （表面码；surface.html 为深链桩）
 ```
+
+**开发服务器（`scripts/serve.mjs`，零依赖）**：`python3 -m http.server` 有两个坑——它**不发
+`Cache-Control`**（只有 `Last-Modified`，浏览器按启发式缓存 ⟹ 改完代码普通刷新还在跑旧 ES 模块，
+日志里能直接看到 `304`）且**没有热重载**。`npm start` 换成了自带的小服务器：所有响应
+`Cache-Control: no-store`（不可能再读到旧模块）、HTML 里注入 8 行客户端连 `/__reload` 的 SSE
+（任何源码或 `dist/` 改动 ⟹ 页面自动刷新，120 ms 去抖）、默认绑 `0.0.0.0:8765`、只读且防目录穿越
+（`--port/--bind/--no-reload` 可调）。**注意**：`dist/*.html` 是构建产物，改源码不会自动进单文件版，
+要重新 `npm run build:standalone`（重烘后若开着页面会自动刷新）。
 
 **环境要求**：支持 WebGL2 + `EXT_color_buffer_float` 的浏览器
 （Chrome/Edge 90+、Firefox 90+、Safari 16.4+）。无 WebGL2 时页面会明确报错而非白屏。
@@ -3438,10 +3447,11 @@ Evolve3D (n³ RG32F ping-pong ×sub×3 × n 层逐层 draw；积分器分流见�
 ```
 schrodinger-workshop/
 ├── index.html                    入口（thin：<script type="module" src="./src/main.js">）
-├── package.json                  {"type":"module", scripts: start / build:standalone}
+├── package.json                  {"type":"module", scripts: start（serve.mjs）/ build:standalone}
 ├── scripts/
-│   └── build-standalone.mjs      mini-bundler → dist/ 单文件（剥 import/export、
-│                                  拓扑序拼接、node --check 自校验、md5 可重复）
+│   ├── build-standalone.mjs      mini-bundler → dist/ 单文件（剥 import/export、
+│   │                              拓扑序拼接、node --check 自校验、md5 可重复）
+│   └── serve.mjs                 开发服务器：no-store 响应 + SSE 热重载（npm start）
 ├── src/
 │   ├── main.js                   演示入口：注册内核 → 按 ?kernel= 挂载 QuantumField
 │   ├── core/                     引擎（与物理完全无关）
@@ -3638,6 +3648,7 @@ new QuantumField('#qf', { kernel: 'schrodinger' }).mount();
 ### 单文件分发版构建
 
 ```bash
+npm start                     # = node scripts/serve.mjs（no-store + 热重载）
 npm run build:standalone      # = node scripts/build-standalone.mjs
 ```
 
