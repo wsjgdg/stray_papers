@@ -52,10 +52,28 @@ async function main() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
   const manifest = {};
   const skipped = [];
+
+  // 人工终检剔除名单：脚本只按域名/宽度筛，判断不了「这张图是不是这个景区」。
+  // 终检结果写进 _rejected.json（[{name, reason}]），烘焙时跳过并清掉旧图，
+  // 否则下一次重跑会把刚删掉的图从 _candidates 里又烘回来。
+  const REJECT_FILE = path.join(OUT_DIR, "_rejected.json");
+  const rejected = new Map(
+    (fs.existsSync(REJECT_FILE)
+      ? JSON.parse(fs.readFileSync(REJECT_FILE, "utf8"))
+      : []
+    ).map((r) => [r.name, r.reason ?? ""]),
+  );
+
   for (const [spot, items] of [...bySpot.entries()].sort((a, b) =>
     a[0].localeCompare(b[0], "zh"),
   )) {
     items.sort((a, b) => b.s - a.s);
+    if (rejected.has(spot)) {
+      const stale = path.join(OUT_DIR, `${spot}.webp`);
+      if (fs.existsSync(stale)) fs.unlinkSync(stale);
+      console.log(`✗ ${spot} 终检剔除（${rejected.get(spot) || "见 _rejected.json"}）`);
+      continue;
+    }
     let picked = null;
     for (const it of items) {
       const file = path.join(CAND_DIR, path.basename(it.file));
