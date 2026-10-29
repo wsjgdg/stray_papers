@@ -44,6 +44,17 @@ const MIME = {
   '.md': 'text/markdown; charset=utf-8',
 };
 
+/* 注入的构建横幅 + 热重载客户端。
+   横幅存在的意义：它由**服务器**注入，所以只要它出现，就证明「这份 HTML 是新取到的」；
+   如果用户看不到它，那就是 HTML 被缓存了（而不是功能没写）。 */
+const buildStamp = () => new Date().toISOString().replace('T', ' ').slice(0, 19);
+const BUILD_BANNER = (stamp) => `
+<div id="__serveBuild" data-build="${stamp}" style="position:fixed;right:10px;bottom:10px;z-index:99999;
+  font:10.5px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;color:#67e8f9;background:rgba(4,8,16,.72);
+  border:1px solid rgba(103,232,249,.35);border-radius:6px;padding:3px 7px;pointer-events:none;
+  letter-spacing:.04em">serve.mjs · ${stamp} · no-store</div>
+<script>window.__serveBuild = ${JSON.stringify(stamp)};</script>`;
+
 /* 注入的热重载客户端：SSE 断了会自己退避重连（EventSource 内建） */
 const RELOAD_CLIENT = `
 <script>
@@ -115,12 +126,20 @@ const server = http.createServer((req, res) => {
   if (!st || !st.isFile()) return send(res, 404, 'not found: ' + rel);
 
   const ext = path.extname(abs).toLowerCase();
+  /* 请求日志：判断「用户浏览器到底取到了什么」的唯一硬证据 */
+  if (ext === '.html' || ext === '.js' || ext === '.mjs' || ext === '.json'){
+    const who = req.socket.remoteAddress || '-';
+    const ua = String(req.headers['user-agent'] || '').slice(0, 24);
+    console.log(`[${new Date().toISOString().slice(11, 19)}] ${who} ${rel} ${ua}`);
+  }
   const type = MIME[ext] || 'application/octet-stream';
-  if (RELOAD && ext === '.html'){
+  if (ext === '.html'){
     let html = fs.readFileSync(abs, 'utf8');
+    const stamp = buildStamp();
+    const inject = BUILD_BANNER(stamp) + (RELOAD ? RELOAD_CLIENT : '');
     html = html.includes('</body>')
-      ? html.replace('</body>', RELOAD_CLIENT + '\n</body>')
-      : html + RELOAD_CLIENT;
+      ? html.replace('</body>', inject + '\n</body>')
+      : html + inject;
     return send(res, 200, html, { 'Content-Type': type, 'Content-Length': Buffer.byteLength(html) });
   }
   const buf = fs.readFileSync(abs);

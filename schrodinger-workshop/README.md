@@ -88,7 +88,10 @@ npm start                            # = node scripts/serve.mjs（改代码自�
 日志里能直接看到 `304`）且**没有热重载**。`npm start` 换成了自带的小服务器：所有响应
 `Cache-Control: no-store`（不可能再读到旧模块）、HTML 里注入 8 行客户端连 `/__reload` 的 SSE
 （任何源码或 `dist/` 改动 ⟹ 页面自动刷新，120 ms 去抖）、默认绑 `0.0.0.0:8765`、只读且防目录穿越
-（`--port/--bind/--no-reload` 可调）。**注意**：`dist/*.html` 是构建产物，改源码不会自动进单文件版，
+（`--port/--bind/--no-reload` 可调）。另外两件为了「别再猜」而加的东西：**每个 HTML 响应都由服务器
+注入右下角青色构建横幅**（`serve.mjs · 时间戳 · no-store`，同时给 `window.__serveBuild` 赋值）——
+它由服务器生成，所以**看到它才代表这份 HTML 是新取的**；看不到就是 HTML 被缓存了。以及**请求日志**
+（只记 `.html/.js/.mjs/.json`，带来源 IP 与 UA），出问题时可据此判断浏览器到底取到了哪一版。**注意**：`dist/*.html` 是构建产物，改源码不会自动进单文件版，
 要重新 `npm run build:standalone`（重烘后若开着页面会自动刷新）。
 
 **环境要求**：支持 WebGL2 + `EXT_color_buffer_float` 的浏览器
