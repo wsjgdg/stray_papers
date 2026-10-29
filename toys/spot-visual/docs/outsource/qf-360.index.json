@@ -1,0 +1,185 @@
+{
+  "count": 30,
+  "items": [
+    {
+      "no": 1,
+      "name": "青木川景区",
+      "webp": "spots/青木川景区.webp",
+      "host": "youimg1.c-ctrip.com"
+    },
+    {
+      "no": 2,
+      "name": "石门栈道景区",
+      "webp": "spots/石门栈道景区.webp",
+      "host": "photo.tuchong.com"
+    },
+    {
+      "no": 3,
+      "name": "栈道水世界景区",
+      "webp": "spots/栈道水世界景区.webp",
+      "host": "youimg1.c-ctrip.com"
+    },
+    {
+      "no": 4,
+      "name": "南宫山景区",
+      "webp": "spots/南宫山景区.webp",
+      "host": "pic4.zhimg.com"
+    },
+    {
+      "no": 5,
+      "name": "筒车湾休闲景区（停业）",
+      "webp": "spots/筒车湾休闲景区（停业）.webp",
+      "host": "youimg1.c-ctrip.com"
+    },
+    {
+      "no": 6,
+      "name": "双龙生态旅游景区",
+      "webp": "spots/双龙生态旅游景区.webp",
+      "host": "youimg1.c-ctrip.com"
+    },
+    {
+      "no": 7,
+      "name": "飞渡峡·黄安坝景区",
+      "webp": "spots/飞渡峡·黄安坝景区.webp",
+      "host": "dimg02.c-ctrip.com"
+    },
+    {
+      "no": 8,
+      "name": "方特欢乐世界景区",
+      "webp": "spots/方特欢乐世界景区.webp",
+      "host": "youimg1.c-ctrip.com"
+    },
+    {
+      "no": 9,
+      "name": "高台县月牙湖景区",
+      "webp": "spots/高台县月牙湖景区.webp",
+      "host": "youimg1.c-ctrip.com"
+    },
+    {
+      "no": 10,
+      "name": "山丹大佛寺旅游景区",
+      "webp": "spots/山丹大佛寺旅游景区.webp",
+      "host": "youimg1.c-ctrip.com"
+    },
+    {
+      "no": 11,
+      "name": "张掖市临泽县丹霞口文旅小镇景区",
+      "webp": "spots/张掖市临泽县丹霞口文旅小镇景区.webp",
+      "host": "youimg1.c-ctrip.com"
+    },
+    {
+      "no": 12,
+      "name": "张掖市甘州区甘泉红色历史文化旅游区",
+      "webp": "spots/张掖市甘州区甘泉红色历史文化旅游区.webp",
+      "host": "vip-public.people.com.cn"
+    },
+    {
+      "no": 13,
+      "name": "武山水帘洞景区",
+      "webp": "spots/武山水帘洞景区.webp",
+      "host": "gscn.com.cn"
+    },
+    {
+      "no": 14,
+      "name": "秦安县凤山景区",
+      "webp": "spots/秦安县凤山景区.webp",
+      "host": "tianshui.com.cn"
+    },
+    {
+      "no": 15,
+      "name": "青鹃山国际休闲旅游度假区",
+      "webp": "spots/青鹃山国际休闲旅游度假区.webp",
+      "host": "tianshui.com.cn"
+    },
+    {
+      "no": 16,
+      "name": "泾川县大云寺 ·王母宫大景区",
+      "webp": "spots/泾川县大云寺 ·王母宫大景区.webp",
+      "host": "youimg1.c-ctrip.com"
+    },
+    {
+      "no": 17,
+      "name": "和政县法台山景区",
+      "webp": "spots/和政县法台山景区.webp",
+      "host": "pic1.zhimg.com"
+    },
+    {
+      "no": 18,
+      "name": "永靖县刘家峡国际滑翔营地景区",
+      "webp": "spots/永靖县刘家峡国际滑翔营地景区.webp",
+      "host": "youimg1.c-ctrip.com"
+    },
+    {
+      "no": 19,
+      "name": "成县西峡颂旅游景区",
+      "webp": "spots/成县西峡颂旅游景区.webp",
+      "host": "dimg04.c-ctrip.com"
+    },
+    {
+      "no": 20,
+      "name": "西和县晚霞湖旅游景区",
+      "webp": "spots/西和县晚霞湖旅游景区.webp",
+      "host": "youimg1.c-ctrip.com"
+    },
+    {
+      "no": 21,
+      "name": "两当县云屏三峡旅游景区",
+      "webp": "spots/两当县云屏三峡旅游景区.webp",
+      "host": "youimg1.c-ctrip.com"
+    },
+    {
+      "no": 22,
+      "name": "两当兵变红色旅游景区",
+      "webp": "spots/两当兵变红色旅游景区.webp",
+      "host": "bkimg.cdn.bcebos.com"
+    },
+    {
+      "no": 23,
+      "name": "文县天池旅游景区",
+      "webp": "spots/文县天池旅游景区.webp",
+      "host": "youimg1.c-ctrip.com"
+    },
+    {
+      "no": 24,
+      "name": "宕昌县哈达铺红色旅游景区",
+      "webp": "spots/宕昌县哈达铺红色旅游景区.webp",
+      "host": "youimg1.c-ctrip.com"
+    },
+    {
+      "no": 25,
+      "name": "康县王坝生态民俗旅游区",
+      "webp": "spots/康县王坝生态民俗旅游区.webp",
+      "host": "vip-public.people.com.cn"
+    },
+    {
+      "no": 26,
+      "name": "康县岸门口古村康养旅游区",
+      "webp": "spots/康县岸门口古村康养旅游区.webp",
+      "host": "vip-public.people.com.cn"
+    },
+    {
+      "no": 27,
+      "name": "礼县秦文化博物馆旅游景区",
+      "webp": "spots/礼县秦文化博物馆旅游景区.webp",
+      "host": "pic2.zhimg.com"
+    },
+    {
+      "no": 28,
+      "name": "文县白马河民俗风情旅游景区",
+      "webp": "spots/文县白马河民俗风情旅游景区.webp",
+      "host": "pic3.zhimg.com"
+    },
+    {
+      "no": 29,
+      "name": "成县陈院生态园旅游景区",
+      "webp": "spots/成县陈院生态园旅游景区.webp",
+      "host": "vip-public.people.com.cn"
+    },
+    {
+      "no": 30,
+      "name": "白银市白银区黄河湿地景区",
+      "webp": "spots/白银市白银区黄河湿地景区.webp",
+      "host": "youimg1.c-ctrip.com"
+    }
+  ]
+}

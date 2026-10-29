@@ -69,7 +69,10 @@ async function main() {
   )) {
     items.sort((a, b) => b.s - a.s);
     if (rejected.has(spot)) {
-      const stale = path.join(OUT_DIR, `${spot}.webp`);
+      const stale = path.join(
+        OUT_DIR,
+        `${spot.replace(/[/\\:*?"<>|]/g, "-")}.webp`,
+      );
       if (fs.existsSync(stale)) fs.unlinkSync(stale);
       console.log(`✗ ${spot} 终检剔除（${rejected.get(spot) || "见 _rejected.json"}）`);
       continue;
@@ -99,12 +102,15 @@ async function main() {
       skipped.push(spot);
       continue;
     }
-    const out = path.join(OUT_DIR, `${spot}.webp`);
+    // 文件名安全化：名录里有「扬州市中国雕版印刷博物馆/扬州博物馆」这类带路径分隔符的名字，
+    // 直接当文件名会 ENOENT 中断整批。清单键保留原名，只把落盘名安全化。
+    const safeSpot = spot.replace(/[/\\:*?"<>|]/g, "-");
+    const out = path.join(OUT_DIR, `${safeSpot}.webp`);
     await sharp(picked.file)
       .resize({ width: 640, withoutEnlargement: true })
       .webp({ quality: 78 })
       .toFile(out);
-    manifest[spot] = `/spots/${encodeURIComponent(spot)}.webp`;
+    manifest[spot] = `/spots/${encodeURIComponent(safeSpot)}.webp`;
     console.log(
       `✓ ${spot} ← ${path.basename(picked.file)} (${picked.it.s}分, ${picked.it.image.slice(8, 50)}…)`,
     );
