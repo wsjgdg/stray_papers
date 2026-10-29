@@ -91,7 +91,12 @@ npm start                            # = node scripts/serve.mjs（改代码自�
 （`--port/--bind/--no-reload` 可调）。另外两件为了「别再猜」而加的东西：**每个 HTML 响应都由服务器
 注入右下角青色构建横幅**（`serve.mjs · 时间戳 · no-store`，同时给 `window.__serveBuild` 赋值）——
 它由服务器生成，所以**看到它才代表这份 HTML 是新取的**；看不到就是 HTML 被缓存了。以及**请求日志**
-（只记 `.html/.js/.mjs/.json`，带来源 IP 与 UA），出问题时可据此判断浏览器到底取到了哪一版。**注意**：`dist/*.html` 是构建产物，改源码不会自动进单文件版，
+（只记 `.html/.js/.mjs/.json`，带来源 IP 与 UA），出问题时可据此判断浏览器到底取到了哪一版。
+最关键的一招是**模块 URL 版本化**：服务器把 HTML 里的入口脚本、以及每个 JS 响应里**相对路径的
+`import`/`export` 说明符**都改写成带 `?v=<src 最大 mtime>`，代码一改版本号就变 ⟹ 整条模块链都是新 URL，
+浏览器手里那些**旧服务器遗留的缓存条目**（只有 `Last-Modified`、没有 `Cache-Control`，浏览器会按启发式
+直接复用、连请求都不发）再也命中不了。实测日志可以证实这一点：修好之前浏览器只请求 `/two-body.html`、
+**一条 JS 请求都没有**。**注意**：`dist/*.html` 是构建产物，改源码不会自动进单文件版，
 要重新 `npm run build:standalone`（重烘后若开着页面会自动刷新）。
 
 **环境要求**：支持 WebGL2 + `EXT_color_buffer_float` 的浏览器

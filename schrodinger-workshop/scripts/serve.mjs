@@ -29,6 +29,36 @@ const PORT = Number(argOf('port', process.env.PORT || 8765));
 const BIND = argOf('bind', '0.0.0.0');
 const RELOAD = !argv.includes('--no-reload');
 
+/* 源码版本号 = src/ 下全部 .js/.mjs 的最大 mtime（秒）。
+   用途：给页面里每个模块 URL（含 **模块内部的相对 import**）加 `?v=`，
+   这样浏览器根本不可能拿到旧模块——即使它手里有旧服务器留下的缓存条目
+   （那种条目没有 Cache-Control，只有 Last-Modified，浏览器会按启发式直接用，连请求都不发）。 */
+let SRC_VERSION = '0';
+const refreshVersion = () => {
+  let max = 0;
+  const walk = dir => {
+    let ents = [];
+    try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch (_){ return; }
+    for (const e of ents){
+      const p2 = path.join(dir, e.name);
+      if (e.isDirectory()){ if (e.name !== 'node_modules' && e.name !== '.git') walk(p2); continue; }
+      if (!/\.(m?js)$/.test(e.name)) continue;
+      try { max = Math.max(max, fs.statSync(p2).mtimeMs); } catch (_){}
+    }
+  };
+  walk(path.join(ROOT, 'src'));
+  walk(path.join(ROOT, 'scripts'));
+  SRC_VERSION = String(Math.floor(max / 1000));
+};
+refreshVersion();
+
+/* 把 JS 源码里**相对路径**的 import/export 说明符统一加 `?v=`。
+   只动 './' 与 '../' 开头、且以 .js/.mjs 结尾的字符串；其余原样。 */
+const versionModuleSpecifiers = src => src.replace(
+  /(\bfrom\s*|\bimport\s*\(?\s*)(['"])(\.\.?\/[^'"]+\.m?js)\2/g,
+  (m, pre, q, spec) => `${pre}${q}${spec}?v=${SRC_VERSION}${q}`
+);
+
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -81,6 +111,7 @@ if (RELOAD){
       const f = String(file);
       /* 忽略构建产物写盘的抖动与 node_modules：只对源码/页面改动触发 */
       if (f.includes('node_modules') || f.includes('.git') || f.endsWith('~')) return;
+      refreshVersion();                       /* 版本号跟着代码走：新 URL ⟹ 不可能命中旧缓存 */
       ping();                                 /* dist/ 重建也算改动：单文件版也要自动刷新 */
     });
   } catch (e){
@@ -136,17 +167,26 @@ const server = http.createServer((req, res) => {
   if (ext === '.html'){
     let html = fs.readFileSync(abs, 'utf8');
     const stamp = buildStamp();
+    /* 入口脚本/样式带 ?v=（HTML 里的相对路径） */
+    html = html.replace(/\b(src|href)=(["'])(\.\/?[^"']+\.(?:m?js|css))\2/g,
+      (m, attr, q, ur) => `${attr}=${q}${ur}?v=${SRC_VERSION}${q}`);
     const inject = BUILD_BANNER(stamp) + (RELOAD ? RELOAD_CLIENT : '');
     html = html.includes('</body>')
       ? html.replace('</body>', inject + '\n</body>')
       : html + inject;
     return send(res, 200, html, { 'Content-Type': type, 'Content-Length': Buffer.byteLength(html) });
   }
-  const buf = fs.readFileSync(abs);
+  let buf = fs.readFileSync(abs);
+  if (ext === '.js' || ext === '.mjs'){
+    /* 模块内部相对 import 也带 ?v= ⟹ 整条模块链都是新 URL，浏览器无从复用旧条目 */
+    const out = versionModuleSpecifiers(buf.toString('utf8'));
+    buf = Buffer.from(out, 'utf8');
+  }
   return send(res, 200, buf, { 'Content-Type': type, 'Content-Length': buf.length });
 });
 
 server.listen(PORT, BIND, () => {
   console.log(`[serve] http://${BIND}:${PORT}/  root=${ROOT}`);
   console.log(`[serve] Cache-Control: no-store（不会再有旧模块）· 热重载 ${RELOAD ? '开' : '关'}`);
+  console.log(`[serve] 源码版本 v=${SRC_VERSION}（模块 URL 自动带 ?v=，旧缓存条目不可能命中）`);
 });
