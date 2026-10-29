@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { LIBRARY_STATS } from "@/lib/spot-data";
 
 const ROWS = [
   {
@@ -93,7 +94,7 @@ const ROWS = [
       "2023 年全国 A 级景区数据集（AtomGit Universal-Tool/de21c，14844 条，GCJ02 坐标）",
     license: "仅供学习研究使用，严禁商业用途",
     fields: "景区等级、省市区、地址、GCJ02 坐标",
-    note: "285 个 POI 按名称+距离匹配挂等级；1637 个库内未覆盖的 3A+ 景区反向入库为骨架条目（等级+坐标，无图无描述，图走分类池降级）。统一库合计约 3000 条。",
+    note: `${LIBRARY_STATS.levelMatched} 个 POI 按名称+距离匹配挂等级；${LIBRARY_STATS.extras} 个库内未覆盖的 3A+ 景区反向入库为骨架条目（等级+坐标，无图无描述，图走分类池降级）。统一库合计 ${LIBRARY_STATS.total} 条（手工 ${LIBRARY_STATS.manual} + 城市 POI ${LIBRARY_STATS.cityPoi} + A 级名录 ${LIBRARY_STATS.extras}，覆盖 ${LIBRARY_STATS.cityCount} 城）。`,
   },
   {
     layer: "是否需预约",

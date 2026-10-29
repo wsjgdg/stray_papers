@@ -24,6 +24,18 @@ const UA =
 const cache = new Map<string, { ts: number; payload: unknown }>();
 const TTL = 1000 * 60 * 30; // 30 分钟
 
+// 熔断：Overpass 在当前部署环境不可达（实测 406 / 超时）。失败后冷却期内直接秒回，
+// 不再让每个请求都干等 4~8 秒（旧行为：9s 后才报错）。
+const DOWN_COOLDOWN = 1000 * 60 * 10; // 10 分钟
+let overpassDownUntil = 0;
+const downMessage = (msg: string, city: string) => ({
+  source: "unavailable",
+  message: `实时通道当前不可用（${msg}），已直接用内置景点库。稍后会自动重试，期间不再等待。`,
+  city,
+  count: 0,
+  spots: [],
+});
+
 interface OsmTag {
   [k: string]: string;
 }
@@ -236,11 +248,12 @@ out center tags ${limit};`;
         headers: {
           "User-Agent": UA,
           "Content-Type": "application/x-www-form-urlencoded",
+          Accept: "application/json",
         },
         body: "data=" + encodeURIComponent(q),
-        // 8s：镜像正常响应 ~2s；太短会掐死镜像上稍慢的正常查询，
-        // 太长则纯浪费（主站 ECONNREFUSED 是毫秒级失败，不拖累回退）
-        signal: AbortSignal.timeout(8000),
+        // 4.5s：正常镜像 ~2s；过短会掐死稍慢的正常查询，
+        // 过长则纯浪费（本部署环境实测不可达，靠熔断兜住）
+        signal: AbortSignal.timeout(4500),
       });
       if (!res.ok) throw new Error(`Overpass ${res.status}`);
       // Overpass 报错（语法/限流）返回 XML 错误页，res.json() 会抛
@@ -276,6 +289,13 @@ export async function GET(req: Request) {
   const cached = cache.get(key);
   if (cached && Date.now() - cached.ts < TTL) {
     return NextResponse.json({ ...(cached.payload as object), cached: true });
+  }
+
+  // 熔断期内秒回，不再让用户干等上游超时
+  if (Date.now() < overpassDownUntil) {
+    return NextResponse.json(downMessage("上游近期不可达，冷却中", city), {
+      headers: { "cache-control": "no-store" },
+    });
   }
 
   try {
@@ -319,15 +339,22 @@ export async function GET(req: Request) {
     const msg = err instanceof Error ? err.message : "unknown";
     // 分级提示：连接类失败 ≠ 城市无数据，不要误导用户换城市重试
     const connectivity =
-      /ECONNREFUSED|fetch failed|aborted|timeout|Overpass/i.test(msg);
-    return NextResponse.json({
-      source: "error",
-      message: connectivity
-        ? `当前部署环境暂时无法获取实时数据（Overpass 服务不可达：${msg}）。内置示例景点与「随便看看」不受影响。`
-        : `实时数据获取失败（${msg}），已保留内置示例景点。可尝试其他城市，或点「随便看看」。`,
-      city,
-      count: 0,
-      spots: [],
-    });
+      /ECONNREFUSED|fetch failed|aborted|timeout|Overpass|EAI_AGAIN|ENOTFOUND/i.test(
+        msg,
+      );
+    // 上游不可达才熔断；「城市查不到」这类业务错误不冷却
+    if (connectivity) overpassDownUntil = Date.now() + DOWN_COOLDOWN;
+    return NextResponse.json(
+      connectivity
+        ? downMessage(msg, city)
+        : {
+            source: "error",
+            message: `实时数据获取失败（${msg}），已保留内置景点库。可换个城市名试试，或直接浏览库内景点。`,
+            city,
+            count: 0,
+            spots: [],
+          },
+      { headers: { "cache-control": "no-store" } },
+    );
   }
 }

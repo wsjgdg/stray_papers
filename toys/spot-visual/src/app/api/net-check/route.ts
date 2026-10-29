@@ -1,4 +1,5 @@
 // 临时出网探测：确认部署沙箱能否直连外部服务，并找出可用的 Overpass 镜像。
+// 仅开发/诊断环境可用：生产默认 404，需显式 ALLOW_NET_CHECK=1 才放行。
 export const dynamic = 'force-dynamic';
 
 const TARGETS = [
@@ -55,6 +56,13 @@ async function count(url: string) {
 }
 
 export async function GET() {
+  // 生产环境默认关闭：这是诊断工具，不该对公网暴露
+  if (
+    process.env.NODE_ENV === 'production' &&
+    process.env.ALLOW_NET_CHECK !== '1'
+  ) {
+    return new Response('Not Found', { status: 404 });
+  }
   const results = await Promise.all(TARGETS.map((t) => probe(t.name, t.url)));
   const HK: [string, string, string, string] = ['22.2', '114.05', '22.4', '114.25'];
   const ZH: [string, string, string, string] = ['47.35', '8.5', '47.4', '8.6'];

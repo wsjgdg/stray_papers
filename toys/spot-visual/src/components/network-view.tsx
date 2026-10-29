@@ -44,7 +44,7 @@ function provinceOf(address: string): string | null {
 export default function NetworkView() {
   const { spots, setSelectedSpot } = useAppStore();
 
-  // 数据范围：默认精选（top400 本地图 + 手工 30 + 预约标注），全部 = 3000
+  // 数据范围：默认精选（top400 本地图 + 手工 30 + 预约标注），全部 = 统一库全量
   const [scope, setScope] = useState<"curated" | "all">("curated");
   const visibleSpots = useMemo(
     () =>
