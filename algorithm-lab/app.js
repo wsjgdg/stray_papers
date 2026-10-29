@@ -1,8 +1,12 @@
 (() => {
   'use strict';
   const M = window.AlgorithmModels;
+  const P = window.AlgorithmPractice;
+  const sound = (kind, value) => window.LabSound?.effect(kind, value);
   const $ = selector => document.querySelector(selector);
   const $$ = selector => Array.from(document.querySelectorAll(selector));
+  const setText = (node, value) => { const text = String(value); if (node.textContent !== text) node.textContent = text; };
+  const setAttr = (node, name, value) => { if (node.getAttribute(name) !== value) node.setAttribute(name, value); };
   const canvas = $('#experiment-canvas');
   const ctx = canvas.getContext('2d');
   const controls = $('#control-surface');
@@ -13,17 +17,28 @@
   const delays = [900, 600, 360, 190, 85];
   const escapeHTML = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 
+  const sortAlgorithms = {
+    bubble: { name: 'Bubble sort', time: 'O(n²)', space: 'O(1)', insight: 'Bubble sort compares neighbors and swaps them when they are out of order, moving larger values to the end.' },
+    selection: { name: 'Selection sort', time: 'O(n²)', space: 'O(1)', insight: 'Selection sort finds the smallest remaining value and moves it into the next position.' },
+    insertion: { name: 'Insertion sort', time: 'O(n²)', space: 'O(1)', insight: 'Insertion sort grows an ordered prefix by moving each new value into its place.' },
+    merge: { name: 'Merge sort', time: 'O(n log n)', space: 'O(n)', insight: 'Merge sort splits the array into smaller halves, then combines sorted halves using a temporary buffer.' }
+  };
+  const pathAlgorithms = {
+    bfs: { name: 'Breadth-first', scene: 'BREADTH-FIRST SEARCH', time: 'O(V + E)', guarantee: 'Shortest if found', insight: 'Breadth-first search uses a queue to explore in layers, finding a shortest route on this unweighted grid.' },
+    dfs: { name: 'Depth-first', scene: 'DEPTH-FIRST SEARCH', time: 'O(V + E)', guarantee: 'Not guaranteed', insight: 'Depth-first search uses a stack to follow one branch at a time. Its route is not necessarily the shortest.' },
+    astar: { name: 'A* search', scene: 'A* SEARCH', time: 'O((V + E) log V)', guarantee: 'Shortest if found', insight: 'A* chooses the smallest f = g + h: distance traveled plus a Manhattan-distance estimate to the goal.' }
+  };
   const topics = {
     sorting: {
       number: '01', name: 'Sorting', area: 'SORTING', icon: 'sort', title: 'How do things get into order?',
       insightTitle: 'Order, one decision at a time.',
       insight: 'Sorting algorithms transform a jumbled list into an ordered one by comparing values and rearranging them.',
-      hint: 'Amber = comparing · pale green = ordered',
+      hint: 'Amber = active · pale green = ordered',
       label: 'A bar chart of the values being sorted. Use Run or Step to follow the sorting algorithm.',
       notes: [
-        ['Put things in order', 'Sorting rearranges values into a chosen order. Bubble sort compares neighbors; selection sort repeatedly chooses a minimum; insertion sort grows an ordered prefix.'],
-        ['Watch the decisions', 'Use Step to see individual comparisons and swaps. Try a new array or a different algorithm and compare the counts. Reset returns to the same starting array.'],
-        ['What the numbers mean', 'For these implementations, worst-case time is O(n²) and the algorithms themselves use O(1) extra space. This teaching interface stores snapshots for playback, so its memory use is higher.']
+        ['Put things in order', 'Bubble sort compares neighbors; selection sort chooses a minimum; insertion sort grows an ordered prefix. Merge sort divides the array and combines sorted halves.'],
+        ['Watch the decisions', 'Use Step to follow comparisons, swaps, or merge buffers. Open the comparison to see how all four algorithms handle the same starting array.'],
+        ['What the numbers mean', 'The three swap-based sorts have O(n²) worst-case time and O(1) extra space. Merge sort uses O(n log n) time and O(n) extra space. Playback snapshots use additional memory.']
       ]
     },
     pathfinding: {
@@ -34,8 +49,8 @@
       label: 'A grid with a start, goal and editable walls. Click a cell to toggle a wall. With the grid focused, use arrow keys and Space to edit.',
       notes: [
         ['A grid is a graph', 'Treat each open cell as a vertex and each allowed move as an edge. The frontier holds discovered cells that still need to be explored.'],
-        ['Compare two searches', 'Breadth-first search (BFS) explores in layers using a queue. Depth-first search (DFS) follows a branch using a stack. Add walls, then step through each search.'],
-        ['Shortest is not automatic', 'On this unweighted grid, BFS finds a shortest path in number of moves. DFS can find a route but does not guarantee the shortest. Both core searches take O(V + E) time.']
+        ['Compare three searches', 'BFS explores in layers with a queue; DFS follows a branch with a stack; A* prioritizes cells using the distance traveled plus an estimate to the goal.'],
+        ['Shortest is not automatic', 'On this unweighted grid, BFS and A* find a shortest path. DFS does not guarantee one. A* uses Manhattan distance, which ignores walls and never overestimates the remaining moves.']
       ]
     },
     binary: {
@@ -93,6 +108,13 @@
     ['CAT', 'DOG', 'AB'].forEach(key => M.hashInsert(table, key));
     return table;
   }
+  function cloneHashTable(table) { return { slots: table.slots.map(slot => slot ? { ...slot } : null) }; }
+  function hashState(table, initialKey, message) {
+    return { table, initialTable: cloneHashTable(table), initialKey, initialMessage: message, last: null, message };
+  }
+  function linearState(mode, items, initialValue, message) {
+    return { mode, items: items.slice(), initialItems: items.slice(), initialValue, initialMessage: message, message, highlighted: false };
+  }
   const initialSort = M.shuffledValues(16, 17);
   const initialBinary = M.sortedValues(13, 23);
   const state = {
@@ -100,24 +122,36 @@
     sorting: { algorithm: 'bubble', size: 16, seed: 17, initial: initialSort, trace: M.sortTrace(initialSort, 'bubble'), index: 0 },
     pathfinding: { algorithm: 'bfs', walls: new Set(M.defaultWalls()), seed: 36, cursor: 38, trace: [], index: 0 },
     binary: { values: initialBinary, target: initialBinary[8], seed: 23, trace: [], index: 0 },
-    linear: { mode: 'stack', items: ['12', '24', '36'], message: 'Ready. Add a value, then see what comes out next.', highlighted: false },
-    recursion: { n: 5, trace: M.factorialTrace(5), index: 0 },
-    hashing: { table: seedHashTable(), last: null, message: 'AB is already in the table. Insert BA to see a collision.' }
+    linear: linearState('stack', ['12', '24', '36'], '48', 'Ready. Add a value, then see what comes out next.'),
+    recursion: { n: 5, trace: [], index: 0 },
+    hashing: hashState(seedHashTable(), 'BA', 'AB is already in the table. Insert BA to see a collision.')
   };
+  const practiceState = { indices: Object.fromEntries(P.topicOrder.map(topic => [topic, 0])), records: Object.create(null) };
+  // Only the most recent input is cached, so repeated selections do not retain old traces.
+  const comparisons = { sorting: { key: null, results: null }, pathfinding: { key: null, results: null } };
+  const readingsCache = { metrics: null, complexity: null };
   let timer = null;
   let viewport = { x: 0, y: 0, scale: 1 };
+  let backgroundCache = null, drawFrame = null;
   let gridFocused = false;
 
   function buildPathTrace() {
     const s = state.pathfinding;
     s.trace = M.pathTrace(M.GRID.cols, M.GRID.rows, [...s.walls], M.GRID.start, M.GRID.goal, s.algorithm);
     s.index = 0;
+    if (state.active === 'pathfinding') renderPathComparison();
   }
   function buildBinaryTrace() {
     const s = state.binary;
     s.trace = M.binaryTrace(s.values, s.target); s.index = 0;
   }
-  buildPathTrace(); buildBinaryTrace();
+  function ensureActiveTrace() {
+    if (state.active === 'pathfinding' && !state.pathfinding.trace.length) buildPathTrace();
+    else if (state.active === 'binary' && !state.binary.trace.length) buildBinaryTrace();
+    else if (state.active === 'recursion' && !state.recursion.trace.length) {
+      state.recursion.trace = M.factorialTrace(state.recursion.n); state.recursion.index = 0;
+    }
+  }
   function traceState() {
     return ['sorting', 'pathfinding', 'binary', 'recursion'].includes(state.active) ? state[state.active] : null;
   }
@@ -130,61 +164,84 @@
     return `<div class="complexity-heading"><span>${title}</span><span>AT A GLANCE</span></div><div class="complexity-values">${pills.map(([value, label]) => `<span class="complexity-pill">${escapeHTML(value)}<small>${escapeHTML(label)}</small></span>`).join('')}</div>`;
   }
   function playbackControls() {
-    return `<div class="action-row"><button type="button" class="control-button primary" id="run-button" data-action="run">▶ &nbsp; Run</button><button type="button" class="control-button" id="step-button" data-action="step">Step &nbsp; →|</button><div class="speed-control"><label for="speed">SPEED</label><input id="speed" type="range" min="1" max="5" step="1" value="${state.speed}" aria-valuetext="Speed ${state.speed} of 5"></div></div>`;
+    const trace = traceState();
+    return `<div class="action-row"><button type="button" class="control-button primary" id="run-button" data-action="run">▶ &nbsp; Run</button><button type="button" class="control-button" id="back-button" data-action="back" aria-label="Go back one step">← &nbsp; Back</button><button type="button" class="control-button" id="step-button" data-action="step">Step &nbsp; →|</button><div class="speed-control"><label for="speed">SPEED</label><input id="speed" type="range" min="1" max="5" step="1" value="${state.speed}" aria-valuetext="Speed ${state.speed} of 5"></div></div><div class="trace-timeline"><label for="trace-position">TIMELINE</label><input id="trace-position" type="range" min="0" max="${trace.trace.length - 1}" step="1" value="${trace.index}" aria-label="Visualization timeline"><output id="trace-position-label" for="trace-position"></output></div>`;
   }
   function options(items, selected) { return items.map(([value, label]) => `<option value="${value}"${value === selected ? ' selected' : ''}>${label}</option>`).join(''); }
   function renderControls() {
     if (state.active === 'sorting') {
       const s = state.sorting;
-      controls.innerHTML = `<div class="config-row"><label class="control-label" for="sort-algorithm">ALGORITHM</label><select class="control-select" id="sort-algorithm">${options([['bubble', 'Bubble sort'], ['selection', 'Selection sort'], ['insertion', 'Insertion sort']], s.algorithm)}</select><label class="control-label" for="sort-size">SIZE</label><select class="control-select" id="sort-size">${[8, 12, 16, 20].map(n => `<option value="${n}"${s.size === n ? ' selected' : ''}>${n} values</option>`).join('')}</select><span class="spacer"></span><button class="control-button" type="button" data-action="new-array">↻ &nbsp; New array</button></div>${playbackControls()}`;
+      controls.innerHTML = `<div class="config-row"><label class="control-label" for="sort-algorithm">ALGORITHM</label><select class="control-select" id="sort-algorithm">${options(Object.entries(sortAlgorithms).map(([key, info]) => [key, info.name]), s.algorithm)}</select><label class="control-label" for="sort-size">SIZE</label><select class="control-select" id="sort-size">${[4, 8, 12, 16, 20].map(n => `<option value="${n}"${s.size === n ? ' selected' : ''}>${n} values</option>`).join('')}</select><span class="spacer"></span><button class="control-button" type="button" data-action="new-array">↻ &nbsp; New array</button></div>${playbackControls()}<div class="merge-buffer" id="merge-buffer" role="group" aria-label="Temporary merge buffer" hidden><div class="merge-buffer-heading"><span>TEMPORARY BUFFER</span><span id="merge-range"></span></div><div class="merge-buffer-values" id="merge-buffer-values"></div><p>Values are copied back after the buffer is complete.</p></div>`;
     } else if (state.active === 'pathfinding') {
       const s = state.pathfinding;
-      controls.innerHTML = `<div class="grid-legend" aria-label="Grid colors: gray is a wall, teal is visited, light green is the frontier, and lime is the final path."><span><i class="legend-wall"></i>Wall</span><span><i class="legend-visited"></i>Visited</span><span><i class="legend-frontier"></i>Frontier</span><span><i class="legend-path"></i>Path</span></div><div class="config-row"><label class="control-label" for="path-algorithm">SEARCH</label><select class="control-select" id="path-algorithm">${options([['bfs', 'Breadth-first'], ['dfs', 'Depth-first']], s.algorithm)}</select><span class="spacer"></span><button class="control-button" type="button" data-action="clear-walls">Clear walls</button><button class="control-button" type="button" data-action="random-walls">Random walls</button></div>${playbackControls()}`;
+      controls.innerHTML = `<div class="grid-legend" aria-label="Grid colors: gray is a wall, teal is visited, light green is the frontier, amber is the current cell, and lime is the final path."><span><i class="legend-wall"></i>Wall</span><span><i class="legend-visited"></i>Visited</span><span><i class="legend-frontier"></i>Frontier</span><span><i class="legend-current"></i>Current</span><span><i class="legend-path"></i>Path</span></div><div class="config-row"><label class="control-label" for="path-algorithm">SEARCH</label><select class="control-select" id="path-algorithm">${options(Object.entries(pathAlgorithms).map(([key, info]) => [key, info.name]), s.algorithm)}</select><span class="spacer"></span><button class="control-button" type="button" data-action="clear-walls">Clear walls</button><button class="control-button" type="button" data-action="random-walls">Random walls</button></div>${playbackControls()}`;
     } else if (state.active === 'binary') {
       controls.innerHTML = `<div class="config-row"><label class="control-label" for="binary-target">FIND A VALUE</label><input class="control-input" id="binary-target" type="number" min="0" max="99" step="1" value="${state.binary.target}"><button class="control-button" type="button" data-action="set-target">Set target</button><span class="spacer"></span><button class="control-button" type="button" data-action="new-sorted">↻ &nbsp; New array</button></div>${playbackControls()}<p class="input-error" id="control-error" role="status"></p>`;
     } else if (state.active === 'linear') {
       const s = state.linear, stack = s.mode === 'stack';
-      controls.innerHTML = `<div class="config-row"><label class="control-label" for="linear-mode">STRUCTURE</label><select class="control-select" id="linear-mode">${options([['stack', 'Stack · LIFO'], ['queue', 'Queue · FIFO']], s.mode)}</select><span class="spacer"></span><span class="control-label">MAXIMUM 7 ITEMS</span></div><div class="action-row"><label class="control-label" for="linear-value">VALUE</label><input class="control-input" id="linear-value" maxlength="6" value="48" aria-label="Value to add"><button class="control-button primary" type="button" data-action="linear-add">${stack ? 'Push' : 'Enqueue'}</button><button class="control-button" type="button" data-action="linear-remove">${stack ? 'Pop' : 'Dequeue'}</button><button class="control-button" type="button" data-action="linear-peek">Peek</button></div><p class="input-error" id="control-error" role="status"></p>`;
+      controls.innerHTML = `<div class="config-row"><label class="control-label" for="linear-mode">STRUCTURE</label><select class="control-select" id="linear-mode">${options([['stack', 'Stack · LIFO'], ['queue', 'Queue · FIFO']], s.mode)}</select><span class="spacer"></span><span class="control-label">MAXIMUM 7 ITEMS</span></div><div class="action-row"><label class="control-label" for="linear-value">VALUE</label><input class="control-input" id="linear-value" maxlength="6" value="${escapeHTML(s.initialValue)}" aria-label="Value to add"><button class="control-button primary" type="button" data-action="linear-add">${stack ? 'Push' : 'Enqueue'}</button><button class="control-button" type="button" data-action="linear-remove">${stack ? 'Pop' : 'Dequeue'}</button><button class="control-button" type="button" data-action="linear-peek">Peek</button></div><p class="input-error" id="control-error" role="status"></p>`;
     } else if (state.active === 'recursion') {
       controls.innerHTML = `<div class="config-row"><label class="control-label" for="factorial-number">CALCULATE</label><select class="control-select" id="factorial-number">${Array.from({ length: 9 }, (_, n) => `<option value="${n}"${state.recursion.n === n ? ' selected' : ''}>${n}! (factorial)</option>`).join('')}</select><span class="spacer"></span><span class="control-label">BASE CASE: 0! = 1</span></div>${playbackControls()}`;
     } else {
-      controls.innerHTML = `<div class="config-row"><label class="control-label" for="hash-key">KEY</label><input class="control-input key-input" id="hash-key" maxlength="8" value="BA" aria-label="Key for the hash table"><span class="control-label">11 SLOTS · LINEAR PROBING</span></div><div class="action-row"><button class="control-button primary" type="button" data-action="hash-insert">Insert</button><button class="control-button" type="button" data-action="hash-find">Find</button><button class="control-button" type="button" data-action="hash-delete">Delete</button></div><p class="input-error" id="control-error" role="status"></p>`;
+      controls.innerHTML = `<div class="config-row"><label class="control-label" for="hash-key">KEY</label><input class="control-input key-input" id="hash-key" maxlength="8" value="${escapeHTML(state.hashing.initialKey)}" aria-label="Key for the hash table"><span class="control-label">11 SLOTS · LINEAR PROBING</span></div><div class="action-row"><button class="control-button primary" type="button" data-action="hash-insert">Insert</button><button class="control-button" type="button" data-action="hash-find">Find</button><button class="control-button" type="button" data-action="hash-delete">Delete</button></div><p class="input-error" id="control-error" role="status"></p>`;
     }
     updatePlaybackButtons();
   }
   function updatePlaybackButtons() {
-    const current = traceState(), run = $('#run-button'), step = $('#step-button');
-    if (!current || !run || !step) return;
-    const done = current.index >= current.trace.length - 1;
-    run.textContent = state.running ? 'Ⅱ  Pause' : done ? '↻  Replay' : '▶  Run';
-    run.setAttribute('aria-label', state.running ? 'Pause the visualization' : done ? 'Replay the visualization' : 'Run the visualization');
-    step.disabled = done || state.running;
+    const current = traceState(), run = $('#run-button'), step = $('#step-button'), back = $('#back-button'), timeline = $('#trace-position');
+    if (!current || !run || !step || !back || !timeline) return;
+    const last = current.trace.length - 1, done = current.index >= last;
+    setText(run, state.running ? 'Ⅱ  Pause' : done ? '↻  Replay' : '▶  Run');
+    setAttr(run, 'aria-label', state.running ? 'Pause the visualization' : done ? 'Replay the visualization' : 'Run the visualization');
+    const stepDisabled = done || state.running, backDisabled = current.index === 0 || state.running;
+    if (step.disabled !== stepDisabled) step.disabled = stepDisabled;
+    if (back.disabled !== backDisabled) back.disabled = backDisabled;
+    if (timeline.max !== String(last)) timeline.max = String(last);
+    if (timeline.value !== String(current.index)) timeline.value = String(current.index);
+    setAttr(timeline, 'aria-valuetext', `Step ${current.index} of ${last}`);
+    setText($('#trace-position-label'), `${current.index} / ${last}`);
+  }
+  function renderMergeBuffer(step, visible) {
+    const buffer = $('#merge-buffer');
+    if (!buffer) return;
+    if (buffer.hidden === visible) buffer.hidden = !visible;
+    if (!visible) return;
+    setText($('#merge-range'), step.range ? `POSITIONS ${step.range[0] + 1}–${step.range[1] + 1}` : 'NO ACTIVE MERGE');
+    const values = step.buffer.length
+      ? step.buffer.map(value => `<span>${escapeHTML(value)}</span>`).join('')
+      : '<span class="merge-buffer-empty">Empty</span>';
+    if ($('#merge-buffer-values').innerHTML !== values) $('#merge-buffer-values').innerHTML = values;
+  }
+  function renderAstarScore(step, visible) {
+    const panel = $('#astar-score');
+    if (panel.hidden === visible) panel.hidden = !visible;
+    if (!visible) return;
+    const scores = step.scores;
+    setText($('#astar-current'), scores ? `COL ${step.current % M.GRID.cols + 1} / ROW ${Math.floor(step.current / M.GRID.cols) + 1}` : step.done ? 'NO ROUTE' : 'NO CELL YET');
+    ['g', 'h', 'f'].forEach(key => setText($(`#astar-${key}`), scores ? scores[key] : '—'));
   }
   function renderReadings() {
     const topic = topics[state.active];
-    $('#insight-title').textContent = topic.insightTitle;
-    $('#insight-copy').textContent = topic.insight;
-    let metrics = '', details = '', message = '', status = '', scene = '';
+    renderAstarScore(state.active === 'pathfinding' ? currentStep() : null, state.active === 'pathfinding' && state.pathfinding.algorithm === 'astar');
+    setText($('#insight-title'), topic.insightTitle);
+    let insight = topic.insight, metrics = '', details = '', message = '', status = '', scene = '';
     if (state.active === 'sorting') {
-      const s = state.sorting, step = currentStep();
-      $('#insight-copy').textContent = {
-        bubble: 'Bubble sort compares neighbors and swaps them when they are out of order, moving larger values to the end.',
-        selection: 'Selection sort finds the smallest remaining value and moves it into the next position.',
-        insertion: 'Insertion sort grows an ordered prefix by moving each new value into its place.'
-      }[s.algorithm];
-      metrics = metric(step.comparisons, 'comparisons', 'values checked') + metric(step.swaps, 'swaps', 'positions changed');
-      details = complexity('ALGORITHM COST', [['O(n²)', 'WORST TIME'], ['O(1)', 'EXTRA SPACE']]);
+      const s = state.sorting, step = currentStep(), info = sortAlgorithms[s.algorithm], isMerge = s.algorithm === 'merge';
+      insight = info.insight;
+      metrics = metric(step.comparisons, 'comparisons', 'values checked') + (isMerge
+        ? metric(step.writes, 'array writes', 'copied back') : metric(step.swaps, 'swaps', 'positions changed'));
+      details = complexity('ALGORITHM COST', [[info.time, 'WORST TIME'], [info.space, 'EXTRA SPACE']]);
       message = step.message; status = step.done ? 'SORTED' : step.phase.toUpperCase();
-      scene = { bubble: 'BUBBLE SORT', selection: 'SELECTION SORT', insertion: 'INSERTION SORT' }[s.algorithm];
+      scene = info.name.toUpperCase();
+      setText($('#scene-hint'), isMerge ? 'Amber = active · buffer below' : topic.hint);
+      renderMergeBuffer(step, isMerge);
     } else if (state.active === 'pathfinding') {
-      const s = state.pathfinding, step = currentStep();
-      $('#insight-copy').textContent = s.algorithm === 'bfs'
-        ? 'Breadth-first search uses a queue to explore in layers, finding a shortest route on this unweighted grid.'
-        : 'Depth-first search uses a stack to follow one branch at a time. Its route is not necessarily the shortest.';
+      const s = state.pathfinding, step = currentStep(), info = pathAlgorithms[s.algorithm];
+      insight = info.insight;
       metrics = metric(step.visited.length, 'visited', 'cells explored') + metric(step.found ? step.path.length - 1 : '—', 'path length', 'moves');
-      details = complexity('SEARCH COST', [['O(V + E)', 'TIME'], ['O(V)', 'SPACE']]);
+      details = complexity('SEARCH COST', [[info.time, 'TIME'], ['O(V)', 'SPACE']]);
       message = step.message; status = step.done ? (step.found ? 'PATH FOUND' : 'NO ROUTE') : s.index === 0 ? 'READY' : 'EXPLORING';
-      scene = s.algorithm === 'bfs' ? 'BREADTH-FIRST SEARCH' : 'DEPTH-FIRST SEARCH';
+      scene = info.scene;
     } else if (state.active === 'binary') {
       const step = currentStep();
       metrics = metric(step.comparisons, 'comparisons', 'middle checks') + metric(Math.max(0, step.high - step.low + 1), 'candidates', 'in the range');
@@ -206,16 +263,77 @@
       details = complexity('LOOKUP COST', [['O(1)', 'EXPECTED*'], ['O(n)', 'WORST']]);
       message = s.message; status = s.last ? (s.last.status || 'LOOKUP').toUpperCase() : 'READY TO EXPLORE'; scene = 'HASH TABLE · LINEAR PROBING';
     }
-    $('#metrics').innerHTML = metrics;
-    $('#complexity').innerHTML = details;
-    $('#live-message').textContent = message;
-    $('#scene-label').textContent = scene;
-    $('#scene-status').textContent = status;
+    setText($('#insight-copy'), insight);
+    if (readingsCache.metrics !== metrics) { $('#metrics').innerHTML = metrics; readingsCache.metrics = metrics; }
+    if (readingsCache.complexity !== details) { $('#complexity').innerHTML = details; readingsCache.complexity = details; }
+    setText($('#live-message'), message);
+    setText($('#scene-label'), scene);
+    setText($('#scene-status'), status);
     const ts = traceState();
-    $('#step-indicator').textContent = ts ? `STEP ${String(ts.index).padStart(2, '0')} / ${String(ts.trace.length - 1).padStart(2, '0')}` : 'INTERACTIVE';
+    setText($('#step-indicator'), ts ? `STEP ${String(ts.index).padStart(2, '0')} / ${String(ts.trace.length - 1).padStart(2, '0')}` : 'INTERACTIVE');
+    updateCanvasDescription();
     updatePlaybackButtons();
   }
+  function updateCanvasDescription() {
+    const topic = topics[state.active];
+    let description = '';
+    if (state.active === 'sorting') {
+      const step = currentStep();
+      description = `Values from left to right: ${step.values.join(', ')}. ${step.active.length ? `Active positions: ${step.active.map(i => i + 1).join(', ')}.` : ''}`;
+      if (state.sorting.algorithm === 'merge') description += ` Temporary buffer: ${step.buffer.length ? step.buffer.join(', ') : 'empty'}.`;
+    } else if (state.active === 'binary') {
+      const step = currentStep();
+      const range = step.low <= step.high ? `Candidates run from position ${step.low + 1} to ${step.high + 1}.` : 'There are no remaining candidates.';
+      description = `Values: ${step.values.join(', ')}. Target: ${step.target}. ${range}`;
+    } else if (state.active === 'linear') {
+      const s = state.linear;
+      description = `${s.mode === 'stack' ? 'Bottom to top' : 'Front to back'}: ${s.items.length ? s.items.join(', ') : 'empty'}.`;
+    } else if (state.active === 'recursion') {
+      const step = currentStep();
+      description = `Call frames from oldest to newest: ${step.frames.length ? step.frames.map(n => `${n}!`).join(', ') : 'none'}. ${step.value === null ? '' : `Most recent return value: ${step.value}.`}`;
+    } else if (state.active === 'hashing') {
+      description = `Slots: ${state.hashing.table.slots.map((slot, i) => `${i}: ${!slot ? 'empty' : slot.deleted ? 'deleted' : slot.key}`).join('; ')}.`;
+    } else return; // The editable grid maintains its own focused-cell description.
+    setAttr(canvas, 'aria-label', `${topic.label} ${description}`.trim());
+  }
+  function renderComparison(opening = false) {
+    const panel = $('#sort-comparison');
+    panel.hidden = state.active !== 'sorting';
+    if (panel.hidden || (!panel.open && !opening)) return;
+    const s = state.sorting, cache = comparisons.sorting, key = JSON.stringify(s.initial);
+    if (cache.key !== key) { cache.results = M.compareSorts(s.initial); cache.key = key; }
+    if (cache.renderedKey === key && cache.renderedAlgorithm === s.algorithm) return;
+    setText($('#compare-input'), s.initial.join('  ·  '));
+    $('#compare-results').innerHTML = cache.results.map(result => {
+      const info = sortAlgorithms[result.algorithm], current = result.algorithm === s.algorithm;
+      return `<tr class="${current ? 'is-current' : ''}"><th scope="row"><button type="button" class="compare-algorithm" data-compare-algorithm="${result.algorithm}" aria-label="Explore ${escapeHTML(info.name)} in the sandbox">${escapeHTML(info.name)} <span aria-hidden="true">↗</span></button>${current ? '<small>CURRENT</small>' : ''}</th><td>${result.comparisons}</td><td>${result.writes}</td><td>${escapeHTML(info.time)}</td><td>${escapeHTML(info.space)}</td></tr>`;
+    }).join('');
+    cache.renderedKey = key; cache.renderedAlgorithm = s.algorithm;
+  }
+  function renderPathComparison(opening = false) {
+    const panel = $('#path-comparison');
+    panel.hidden = state.active !== 'pathfinding';
+    if (panel.hidden || (!panel.open && !opening)) return;
+    const s = state.pathfinding, walls = [...s.walls].sort((a, b) => a - b), count = walls.length;
+    const cache = comparisons.pathfinding, key = walls.join(',');
+    if (cache.key !== key) { cache.results = M.comparePaths(M.GRID.cols, M.GRID.rows, walls, M.GRID.start, M.GRID.goal); cache.key = key; }
+    if (cache.renderedKey === key && cache.renderedAlgorithm === s.algorithm) return;
+    setText($('#path-compare-input'), `${count} wall${count === 1 ? '' : 's'} · same start and goal · four-way movement`);
+    $('#path-compare-results').innerHTML = cache.results.map(result => {
+      const info = pathAlgorithms[result.algorithm], current = result.algorithm === s.algorithm;
+      return `<tr class="${current ? 'is-current' : ''}"><th scope="row"><button type="button" class="compare-algorithm" data-path-compare="${result.algorithm}" aria-label="Explore ${escapeHTML(info.name)} in the sandbox">${escapeHTML(info.name)} <span aria-hidden="true">↗</span></button>${current ? '<small>CURRENT</small>' : ''}</th><td>${result.visited}</td><td>${result.found ? `${result.length} moves` : 'No route'}</td><td>${escapeHTML(info.guarantee)}</td></tr>`;
+    }).join('');
+    cache.renderedKey = key; cache.renderedAlgorithm = s.algorithm;
+  }
+  // Prepare user-opened panels synchronously; toggle also covers programmatic opens.
+  for (const [id, render] of [['sort-comparison', renderComparison], ['path-comparison', renderPathComparison]]) {
+    const panel = $(`#${id}`);
+    panel.querySelector('summary').addEventListener('click', () => { if (!panel.open) render(true); });
+    panel.addEventListener('toggle', () => render());
+  }
+
   function renderTopic() {
+    ensureActiveTrace();
     const topic = topics[state.active];
     $('#topic-select').value = state.active;
     $$('.topic-nav-button').forEach(button => { const selected = button.dataset.topic === state.active; button.classList.toggle('is-active', selected); button.setAttribute('aria-pressed', String(selected)); });
@@ -231,9 +349,19 @@
     if (state.active === 'pathfinding') canvas.setAttribute('tabindex', '0'); else canvas.removeAttribute('tabindex');
     $('#notes-current').textContent = `CURRENTLY READING  /  ${topic.name.toUpperCase()}`;
     ['one', 'two', 'three'].forEach((key, i) => { $(`#note-${key}-title`).textContent = topic.notes[i][0]; $(`#note-${key}`).textContent = topic.notes[i][1]; });
-    renderControls(); renderReadings(); draw();
+    renderControls(); renderReadings(); renderPractice(); renderComparison(); renderPathComparison(); draw();
   }
 
+  function soundTrace() {
+    const trace = traceState(), frame = currentStep(); if (!trace || !frame) return;
+    if (frame.done) { sound(frame.found === false ? 'try' : 'success'); return; }
+    let value = trace.index;
+    if (state.active === 'sorting' && frame.active.length) value = frame.values[frame.active[0]];
+    else if (state.active === 'binary' && frame.mid !== null) value = frame.values[frame.mid];
+    else if (state.active === 'pathfinding' && frame.current !== null) value = frame.current;
+    else if (state.active === 'recursion' && frame.current !== null) value = frame.current;
+    sound('step', value);
+  }
   function stopPlayback() {
     if (timer !== null) clearTimeout(timer);
     timer = null; state.running = false; updatePlaybackButtons();
@@ -243,7 +371,7 @@
     const s = traceState();
     if (!state.running || !s || document.hidden) { stopPlayback(); return; }
     if (s.index < s.trace.length - 1) s.index++;
-    renderReadings(); draw();
+    renderReadings(); draw(); soundTrace();
     if (s.index >= s.trace.length - 1) stopPlayback();
     else timer = setTimeout(tick, delays[state.speed - 1]);
   }
@@ -266,8 +394,11 @@
     else if (state.active === 'pathfinding') state.pathfinding.index = 0;
     else if (state.active === 'binary') { state.binary.index = 0; $('#binary-target').value = state.binary.target; }
     else if (state.active === 'recursion') state.recursion.index = 0;
-    else if (state.active === 'linear') { Object.assign(state.linear, { items: ['12', '24', '36'], message: 'Ready. Add a value, then see what comes out next.', highlighted: false }); $('#linear-value').value = '48'; }
-    else { state.hashing = { table: seedHashTable(), last: null, message: 'AB is already in the table. Insert BA to see a collision.' }; $('#hash-key').value = 'BA'; }
+    else if (state.active === 'linear') {
+      const s = state.linear; s.items = s.initialItems.slice(); s.message = s.initialMessage; s.highlighted = false; $('#linear-value').value = s.initialValue;
+    } else {
+      const s = state.hashing; s.table = cloneHashTable(s.initialTable); s.last = null; s.message = s.initialMessage; $('#hash-key').value = s.initialKey;
+    }
     renderReadings(); draw();
     const error = $('#control-error'); if (error) error.textContent = '';
   }
@@ -280,13 +411,13 @@
   controls.addEventListener('change', event => {
     const input = event.target;
     if (input.id === 'sort-algorithm') {
-      state.sorting.algorithm = input.value; state.sorting.trace = M.sortTrace(state.sorting.initial, input.value); state.sorting.index = 0; rerenderTrace();
+      state.sorting.algorithm = input.value; state.sorting.trace = M.sortTrace(state.sorting.initial, input.value); state.sorting.index = 0; rerenderTrace(); renderComparison();
     } else if (input.id === 'sort-size') {
-      const s = state.sorting; s.size = Number(input.value); s.seed++; s.initial = M.shuffledValues(s.size, s.seed); s.trace = M.sortTrace(s.initial, s.algorithm); s.index = 0; rerenderTrace();
+      const s = state.sorting; s.size = Number(input.value); s.seed++; s.initial = M.shuffledValues(s.size, s.seed); s.trace = M.sortTrace(s.initial, s.algorithm); s.index = 0; rerenderTrace(); renderComparison();
     } else if (input.id === 'path-algorithm') {
       state.pathfinding.algorithm = input.value; buildPathTrace(); rerenderTrace();
     } else if (input.id === 'linear-mode') {
-      state.linear = { mode: input.value, items: ['12', '24', '36'], message: 'Mode changed. Add a value, then see what comes out next.', highlighted: false };
+      state.linear = linearState(input.value, ['12', '24', '36'], '48', 'Mode changed. Add a value, then see what comes out next.');
       renderControls(); $('#linear-mode').focus({ preventScroll: true }); renderReadings(); draw();
     } else if (input.id === 'factorial-number') {
       state.recursion.n = Number(input.value); state.recursion.trace = M.factorialTrace(state.recursion.n); state.recursion.index = 0; rerenderTrace();
@@ -296,6 +427,12 @@
     if (event.target.id === 'speed') {
       state.speed = Number(event.target.value); event.target.setAttribute('aria-valuetext', `Speed ${state.speed} of 5`);
       if (state.running) { clearTimeout(timer); timer = setTimeout(tick, delays[state.speed - 1]); }
+    } else if (event.target.id === 'trace-position') {
+      const current = traceState(), position = Number(event.target.value);
+      if (!current) return;
+      stopPlayback();
+      current.index = Math.max(0, Math.min(current.trace.length - 1, position));
+      renderReadings(); draw(); soundTrace();
     }
   });
   controls.addEventListener('keydown', event => {
@@ -308,9 +445,13 @@
     const button = event.target.closest('[data-action]'); if (!button) return;
     const action = button.dataset.action;
     if (action === 'run') { runPlayback(); return; }
-    if (action === 'step') { const s = traceState(); if (s && s.index < s.trace.length - 1) s.index++; renderReadings(); draw(); return; }
+    if (action === 'step' || action === 'back') {
+      const s = traceState();
+      if (s && !state.running) s.index = Math.max(0, Math.min(s.trace.length - 1, s.index + (action === 'step' ? 1 : -1)));
+      renderReadings(); draw(); soundTrace(); return;
+    }
     if (action === 'new-array') {
-      const s = state.sorting; s.seed++; s.initial = M.shuffledValues(s.size, s.seed); s.trace = M.sortTrace(s.initial, s.algorithm); s.index = 0; rerenderTrace(); return;
+      const s = state.sorting; s.seed++; s.initial = M.shuffledValues(s.size, s.seed); s.trace = M.sortTrace(s.initial, s.algorithm); s.index = 0; rerenderTrace(); renderComparison(); return;
     }
     if (action === 'clear-walls' || action === 'random-walls') {
       const s = state.pathfinding; s.walls = new Set(action === 'clear-walls' ? [] : M.randomWalls(++s.seed)); buildPathTrace(); rerenderTrace(); return;
@@ -331,7 +472,7 @@
         showError(''); result = M.linearAdd(s.items, value); s.highlighted = false;
       } else if (action === 'linear-remove') { showError(''); result = M.linearRemove(s.items, s.mode); s.highlighted = false; }
       else { showError(''); result = M.linearPeek(s.items, s.mode); s.highlighted = result.ok; }
-      s.message = result.message; renderReadings(); draw(); return;
+      s.message = result.message; renderReadings(); draw(); sound(result.ok ? 'edit' : 'try', s.items.length); return;
     }
     if (action.startsWith('hash-')) {
       const s = state.hashing, key = $('#hash-key').value.trim();
@@ -343,7 +484,146 @@
         const found = M.hashFind(s.table, key);
         result = { ...found, status: found.found ? 'found' : 'missing', message: found.found ? `Found ${key} in slot ${found.index}.` : `${key} is not in the table.` };
       }
-      s.last = result; s.message = result.message; renderReadings(); draw();
+      s.last = result; s.message = result.message; renderReadings(); draw(); sound(result.ok || result.found ? 'edit' : 'try', result.index);
+    }
+  });
+
+  $('#compare-results').addEventListener('click', event => {
+    const button = event.target.closest('[data-compare-algorithm]');
+    if (!button || !sortAlgorithms[button.dataset.compareAlgorithm]) return;
+    stopPlayback();
+    const s = state.sorting;
+    s.algorithm = button.dataset.compareAlgorithm; s.trace = M.sortTrace(s.initial, s.algorithm); s.index = 0;
+    $('#sort-algorithm').value = s.algorithm;
+    renderReadings(); renderComparison(); draw();
+    $('#sort-algorithm').focus({ preventScroll: true });
+    $('#sandbox').scrollIntoView({ behavior: reducedMotion.matches ? 'auto' : 'smooth', block: 'start' });
+  });
+
+  $('#path-compare-results').addEventListener('click', event => {
+    const button = event.target.closest('[data-path-compare]');
+    if (!button || !pathAlgorithms[button.dataset.pathCompare]) return;
+    stopPlayback();
+    state.pathfinding.algorithm = button.dataset.pathCompare; buildPathTrace();
+    $('#path-algorithm').value = state.pathfinding.algorithm;
+    renderReadings(); draw();
+    $('#path-algorithm').focus({ preventScroll: true });
+    $('#sandbox').scrollIntoView({ behavior: reducedMotion.matches ? 'auto' : 'smooth', block: 'start' });
+  });
+
+  // Practice records are intentionally session-only; reloading starts a fresh session.
+  function currentQuestion() { return P.questions[state.active][practiceState.indices[state.active]]; }
+  function practiceRecord(question) {
+    if (!practiceState.records[question.id]) practiceState.records[question.id] = { selected: null, solved: false, hint: false, feedback: '' };
+    return practiceState.records[question.id];
+  }
+  function renderPracticeFeedback(question, record) {
+    const feedback = $('#practice-feedback');
+    feedback.classList.toggle('is-correct', record.solved);
+    feedback.classList.toggle('is-error', !record.solved && !!record.feedback);
+    const message = record.solved ? `That’s right. ${question.explanation}`
+      : record.feedback === 'empty' ? 'Choose an answer first, then check your thinking.'
+        : record.feedback === 'wrong' ? 'Not quite. Try another answer, or open the hint.'
+          : 'Choose one answer, then check your thinking.';
+    if (feedback.textContent !== message) feedback.textContent = message;
+  }
+  function renderPractice() {
+    const question = currentQuestion(), record = practiceRecord(question), index = practiceState.indices[state.active], topic = topics[state.active];
+    $('#practice-topic-label').textContent = `${topic.number} / ${topic.name.toUpperCase()}`;
+    $('#practice-number').textContent = `CHALLENGE ${String(index + 1).padStart(2, '0')} / ${String(P.questions[state.active].length).padStart(2, '0')}`;
+    $('#practice-tag').textContent = question.tag;
+    if ($('#practice-prompt').textContent !== question.prompt) $('#practice-prompt').textContent = question.prompt;
+    $('#practice-context').textContent = question.context;
+    $('#practice-example-label').textContent = question.visualLabel;
+    $('#practice-tokens').innerHTML = question.visual.map(token => `<span class="practice-token">${escapeHTML(token)}</span>`).join('');
+    $('#practice-options').innerHTML = question.choices.map((choice, i) => `<label class="practice-option"><input type="radio" name="practice-answer" value="${i}"${record.selected === i ? ' checked' : ''}><span class="practice-option-content"><span class="practice-option-letter" aria-hidden="true">${String.fromCharCode(65 + i)}</span><span class="practice-option-text">${escapeHTML(choice)}</span><span class="practice-option-indicator" aria-hidden="true"></span></span></label>`).join('');
+    $('#practice-fieldset').disabled = record.solved;
+    $('#practice-submit').innerHTML = record.solved ? 'Practice again <span aria-hidden="true">↺</span>' : 'Check answer <span aria-hidden="true">↗</span>';
+    $('#practice-hint').hidden = !record.hint;
+    if ($('#practice-hint').textContent !== (record.hint ? question.hint : '')) $('#practice-hint').textContent = record.hint ? question.hint : '';
+    $('#practice-hint-button').setAttribute('aria-expanded', String(record.hint));
+    $('#practice-hint-button').textContent = record.hint ? '✳  Hide hint' : '✳  Need a hint?';
+    renderPracticeFeedback(question, record);
+    $$('.practice-topic').forEach(button => {
+      const selected = button.dataset.practiceTopic === state.active;
+      button.classList.toggle('is-active', selected); button.setAttribute('aria-pressed', String(selected));
+    });
+    $$('[data-practice-index]').forEach(button => {
+      const number = Number(button.dataset.practiceIndex), item = P.questions[state.active][number];
+      button.hidden = !item;
+      if (!item) return;
+      const solved = !!practiceState.records[item.id]?.solved, selected = number === index;
+      button.classList.toggle('is-current', selected); button.classList.toggle('is-solved', solved);
+      button.setAttribute('aria-pressed', String(selected));
+      button.setAttribute('aria-label', `${String(number + 1).padStart(2, '0')} — Challenge ${number + 1} of ${P.questions[state.active].length}${solved ? ', solved' : ''}`);
+    });
+    const solved = Object.values(practiceState.records).filter(item => item.solved).length;
+    $('#practice-count').innerHTML = `${solved} <small>/ ${P.totalQuestions} solved</small>`;
+    $('#practice-progress').setAttribute('aria-valuemax', String(P.totalQuestions));
+    $('#practice-progress').setAttribute('aria-valuenow', String(solved));
+    $('#practice-progress').setAttribute('aria-valuetext', `${solved} of ${P.totalQuestions} challenges solved this session`);
+    $('#practice-progress-fill').style.width = `${100 * solved / P.totalQuestions}%`;
+  }
+  function loadPracticeExample() {
+    const question = currentQuestion(), preset = question.preset;
+    stopPlayback();
+    if (state.active === 'sorting') {
+      const s = state.sorting;
+      s.algorithm = preset.algorithm; s.initial = preset.values.slice(); s.size = s.initial.length;
+      s.trace = M.sortTrace(s.initial, s.algorithm); s.index = 0;
+    } else if (state.active === 'pathfinding') {
+      const s = state.pathfinding;
+      s.algorithm = preset.algorithm; s.walls = new Set(preset.walls === 'default' ? M.defaultWalls() : preset.walls); s.cursor = 38;
+      buildPathTrace();
+    } else if (state.active === 'binary') {
+      state.binary.values = preset.values.slice(); state.binary.target = preset.target; buildBinaryTrace();
+    } else if (state.active === 'linear') {
+      state.linear = linearState(preset.mode, preset.items, preset.nextValue || '48', 'Challenge example loaded. Try the operations to check your prediction.');
+    } else if (state.active === 'recursion') {
+      state.recursion.n = preset.n; state.recursion.trace = M.factorialTrace(preset.n); state.recursion.index = 0;
+    } else if (state.active === 'hashing') {
+      const table = M.makeTable(11);
+      preset.insert.forEach(key => M.hashInsert(table, key));
+      (preset.delete || []).forEach(key => M.hashDelete(table, key));
+      state.hashing = hashState(table, preset.key, 'Challenge example loaded. Try the key to check your prediction.');
+    }
+    renderTopic();
+    $('#lab-title').focus({ preventScroll: true });
+    $('#sandbox').scrollIntoView({ behavior: reducedMotion.matches ? 'auto' : 'smooth', block: 'start' });
+  }
+  $$('.practice-topic').forEach(button => button.addEventListener('click', () => switchTopic(button.dataset.practiceTopic)));
+  $$('[data-practice-index]').forEach(button => button.addEventListener('click', () => {
+    practiceState.indices[state.active] = Number(button.dataset.practiceIndex); renderPractice();
+  }));
+  $('#practice-form').addEventListener('change', event => {
+    if (event.target.name !== 'practice-answer') return;
+    const question = currentQuestion(), record = practiceRecord(question);
+    record.selected = Number(event.target.value); record.feedback = '';
+    renderPracticeFeedback(question, record);
+  });
+  $('#practice-form').addEventListener('submit', event => {
+    event.preventDefault();
+    const question = currentQuestion(), record = practiceRecord(question);
+    const focusWasOnAnswer = document.activeElement?.name === 'practice-answer', wasSolved = record.solved;
+    if (record.solved) {
+      Object.assign(record, { selected: null, solved: false, hint: false, feedback: '' });
+    } else if (record.selected === null) record.feedback = 'empty';
+    else if (record.selected !== question.answer) record.feedback = 'wrong';
+    else { record.solved = true; record.feedback = ''; }
+    renderPractice();
+    if (!wasSolved) sound(record.solved ? 'success' : 'try');
+    if (focusWasOnAnswer) $('#practice-submit').focus({ preventScroll: true });
+  });
+  $('#practice-hint-button').addEventListener('click', () => {
+    const record = practiceRecord(currentQuestion()); record.hint = !record.hint; renderPractice();
+  });
+  $('#practice-load').addEventListener('click', loadPracticeExample);
+  $('#practice-next').addEventListener('click', () => {
+    const index = practiceState.indices[state.active];
+    if (index + 1 < P.questions[state.active].length) { practiceState.indices[state.active]++; renderPractice(); }
+    else {
+      const nextTopic = P.topicOrder[(P.topicOrder.indexOf(state.active) + 1) % P.topicOrder.length];
+      practiceState.indices[nextTopic] = 0; switchTopic(nextTopic);
     }
   });
 
@@ -369,27 +649,52 @@
   mobileNav.addEventListener('change', closeMenu); syncSidebar();
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopPlayback(); });
 
+  function paintBackground(target, width, height) {
+    const background = target.createLinearGradient(0, 0, width, height);
+    background.addColorStop(0, '#102c27'); background.addColorStop(.55, '#102923'); background.addColorStop(1, '#0c211e');
+    target.fillStyle = background; target.fillRect(0, 0, width, height);
+    const glow = target.createRadialGradient(width * .5, height * .45, 0, width * .5, height * .45, width * .58);
+    glow.addColorStop(0, 'rgba(63,126,92,.17)'); glow.addColorStop(1, 'rgba(11,31,27,0)'); target.fillStyle = glow; target.fillRect(0, 0, width, height);
+    target.strokeStyle = 'rgba(166,205,178,.05)'; target.lineWidth = .65;
+    for (let x = 0; x < width; x += 26) { target.beginPath(); target.moveTo(x, 0); target.lineTo(x, height); target.stroke(); }
+    for (let y = 0; y < height; y += 26) { target.beginPath(); target.moveTo(0, y); target.lineTo(width, y); target.stroke(); }
+  }
+  function cachedBackground(rect, width, height) {
+    if (backgroundCache && backgroundCache.width === width && backgroundCache.height === height && backgroundCache.cssWidth === rect.width && backgroundCache.cssHeight === rect.height) return backgroundCache.canvas;
+    const layer = backgroundCache ? backgroundCache.canvas : document.createElement('canvas');
+    layer.width = width; layer.height = height;
+    const layerContext = layer.getContext('2d');
+    if (!layerContext) return null;
+    layerContext.setTransform(width / rect.width, 0, 0, height / rect.height, 0, 0);
+    paintBackground(layerContext, rect.width, rect.height);
+    backgroundCache = { canvas: layer, width, height, cssWidth: rect.width, cssHeight: rect.height };
+    return layer;
+  }
+  function canvasViewport(rect) {
+    // Focus on compact diagrams on narrow screens; wide arrays and queues stay fully visible.
+    const zoomDiagram = rect.width < 500 && (state.active === 'pathfinding' || state.active === 'recursion' || (state.active === 'linear' && state.linear.mode === 'stack'));
+    const scale = Math.min(rect.width / (zoomDiagram ? 435 : WORLD.width), rect.height / (zoomDiagram ? 270 : WORLD.height));
+    return { x: (rect.width - WORLD.width * scale) / 2, y: (rect.height - WORLD.height * scale) / 2, scale };
+  }
   function prepareCanvas() {
     const rect = canvas.getBoundingClientRect();
     if (!rect.width || !rect.height || !ctx) return false;
     const dpr = Math.min(window.devicePixelRatio || 1, 2), width = Math.round(rect.width * dpr), height = Math.round(rect.height * dpr);
     if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
     ctx.setTransform(width / rect.width, 0, 0, height / rect.height, 0, 0);
-    const background = ctx.createLinearGradient(0, 0, rect.width, rect.height);
-    background.addColorStop(0, '#102c27'); background.addColorStop(.55, '#102923'); background.addColorStop(1, '#0c211e');
-    ctx.fillStyle = background; ctx.fillRect(0, 0, rect.width, rect.height);
-    const glow = ctx.createRadialGradient(rect.width * .5, rect.height * .45, 0, rect.width * .5, rect.height * .45, rect.width * .58);
-    glow.addColorStop(0, 'rgba(63,126,92,.17)'); glow.addColorStop(1, 'rgba(11,31,27,0)'); ctx.fillStyle = glow; ctx.fillRect(0, 0, rect.width, rect.height);
+    const background = cachedBackground(rect, width, height);
+    if (background) ctx.drawImage(background, 0, 0, rect.width, rect.height);
+    else paintBackground(ctx, rect.width, rect.height);
     ctx.strokeStyle = 'rgba(166,205,178,.05)'; ctx.lineWidth = .65;
-    for (let x = 0; x < rect.width; x += 26) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, rect.height); ctx.stroke(); }
-    for (let y = 0; y < rect.height; y += 26) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(rect.width, y); ctx.stroke(); }
-    // Enlarge the editable grid on narrow screens so individual cells remain tappable.
-    const zoomGrid = state.active === 'pathfinding' && rect.width < 500;
-    const scale = Math.min(rect.width / (zoomGrid ? 435 : WORLD.width), rect.height / (zoomGrid ? 270 : WORLD.height));
-    viewport = { x: (rect.width - WORLD.width * scale) / 2, y: (rect.height - WORLD.height * scale) / 2, scale };
-    ctx.save(); ctx.translate(viewport.x, viewport.y); ctx.scale(scale, scale); return true;
+    viewport = canvasViewport(rect);
+    ctx.save(); ctx.translate(viewport.x, viewport.y); ctx.scale(viewport.scale, viewport.scale); return true;
+  }
+  function scheduleDraw() {
+    if (drawFrame !== null) return;
+    drawFrame = requestAnimationFrame(() => { drawFrame = null; draw(); });
   }
   function draw() {
+    if (drawFrame !== null) { cancelAnimationFrame(drawFrame); drawFrame = null; }
     if (!prepareCanvas()) return;
     if (state.active === 'sorting') drawSorting();
     else if (state.active === 'pathfinding') drawPath();
@@ -434,7 +739,7 @@
       if (index === M.GRID.start) { fill = '#98d3ad'; stroke = '#d5edbd'; }
       if (index === M.GRID.goal) { fill = '#e2c887'; stroke = '#f1dca4'; }
       ctx.lineWidth = 1; roundRect(px, py, GRID_DRAW.cell, GRID_DRAW.cell, 4, fill, stroke);
-      if (index === M.GRID.start || index === M.GRID.goal) text(index === M.GRID.start ? 'S' : 'G', px + 13.5, py + 18, 11, '#173b2c', 'center', 700);
+      if (index === M.GRID.start || index === M.GRID.goal) text(index === M.GRID.start ? 'S' : 'G', px + 13.5, py + 18, Math.max(11, 8 / viewport.scale), '#173b2c', 'center', 700);
       if (gridFocused && index === s.cursor) { ctx.save(); ctx.setLineDash([3, 2]); ctx.lineWidth = 1.5; roundRect(px - 3, py - 3, GRID_DRAW.cell + 6, GRID_DRAW.cell + 6, 5, null, '#f2e4aa'); ctx.restore(); }
     }
   }
@@ -461,10 +766,10 @@
       ctx.lineWidth = 1; ctx.setLineDash([4, 5]); roundRect(x - 13, 45, 174, 204, 8, null, 'rgba(169,207,175,.28)'); ctx.setLineDash([]);
       for (let i = 0; i < items.length; i++) {
         const y = bottom - (i + 1) * (h + gap), active = s.highlighted && i === next;
-        roundRect(x, y, 148, h, 5, active ? '#d9c18a' : '#6aa788', active ? '#f0dda9' : '#9bceaa'); text(items[i], x + 74, y + 16, 11, active ? '#264333' : '#eff7dd', 'center', 700);
+        roundRect(x, y, 148, h, 5, active ? '#d9c18a' : '#6aa788', active ? '#f0dda9' : '#9bceaa'); text(items[i], x + 74, y + 16, Math.max(11, 8 / viewport.scale), active ? '#264333' : '#eff7dd', 'center', 700);
       }
-      text('TOP', 440, Math.max(59, bottom - (items.length + 1) * (h + gap) + 14), 10, '#b9d8b8', 'start', 700);
-      if (!items.length) text('EMPTY STACK', 337, 165, 11, '#a8c8aa');
+      text('TOP', 440, Math.max(59, bottom - (items.length + 1) * (h + gap) + 14), Math.max(10, 8 / viewport.scale), '#b9d8b8', 'start', 700);
+      if (!items.length) text('EMPTY STACK', 337, 165, Math.max(11, 8 / viewport.scale), '#a8c8aa');
     } else {
       const x0 = 76, y = 123, pitch = 79;
       items.forEach((value, i) => {
@@ -480,13 +785,13 @@
     ctx.lineWidth = 1; ctx.setLineDash([4, 5]); roundRect(x - 12, 43, 222, 205, 8, null, 'rgba(169,207,175,.28)'); ctx.setLineDash([]);
     frames.forEach((value, i) => {
       const y = bottom - (i + 1) * (h + gap), active = i === frames.length - 1;
-      roundRect(x, y, 198, h, 4, active ? '#d9c18a' : '#6aa788', active ? '#efdda8' : '#98cba8'); text(`factorial(${value})`, x + 99, y + 14, 10, active ? '#284536' : '#eff7dd', 'center', 700);
+      roundRect(x, y, 198, h, 4, active ? '#d9c18a' : '#6aa788', active ? '#efdda8' : '#98cba8'); text(`factorial(${value})`, x + 99, y + 14, Math.max(10, 8 / viewport.scale), active ? '#284536' : '#eff7dd', 'center', 700);
     });
     if (!frames.length) {
-      text(step.done ? 'ALL CALLS RETURNED' : 'THE CALL STACK IS EMPTY', 344, 125, 10, '#a8c8aa');
+      text(step.done ? 'ALL CALLS RETURNED' : 'THE CALL STACK IS EMPTY', 344, 125, Math.max(10, 8 / viewport.scale), '#a8c8aa');
       text(step.done ? `${state.recursion.n}! = ${step.value}` : `${state.recursion.n}!  →  smaller calls  →  0!`, 344, 153, 20, '#d4e9c5', 'center', 400, 'Instrument Serif');
     }
-    if (step.value !== null) text(`RETURN  ${step.value}`, 494, 153, 10, '#d4e5bd', 'start', 700);
+    if (step.value !== null) text(`RETURN  ${step.value}`, 565, 153, Math.max(10, 8 / viewport.scale), '#d4e5bd', 'right', 700);
   }
   function drawHashing() {
     const s = state.hashing, slots = s.table.slots, visited = new Set(s.last?.visited || []), selected = s.last?.index;
@@ -504,7 +809,10 @@
     text('SLOT INDEX', 350, 225, 9, '#a8c9ac', 'center', 700);
   }
 
-  function pointerWorld(event) { const rect = canvas.getBoundingClientRect(); return { x: (event.clientX - rect.left - viewport.x) / viewport.scale, y: (event.clientY - rect.top - viewport.y) / viewport.scale }; }
+  function pointerWorld(event) {
+    const rect = canvas.getBoundingClientRect(), currentViewport = canvasViewport(rect);
+    return { x: (event.clientX - rect.left - currentViewport.x) / currentViewport.scale, y: (event.clientY - rect.top - currentViewport.y) / currentViewport.scale };
+  }
   function toggleWall(index) {
     if (index < 0 || index >= M.GRID.cols * M.GRID.rows) return;
     if (index === M.GRID.start || index === M.GRID.goal) { $('#live-message').textContent = 'The start and goal stay fixed.'; return; }
@@ -512,7 +820,7 @@
     state.pathfinding.cursor = index;
     const x = index % M.GRID.cols, y = Math.floor(index / M.GRID.cols);
     canvas.setAttribute('aria-label', `${topics.pathfinding.label} Selected cell ${x + 1}, ${y + 1}${walls.has(index) ? ', wall' : ', open'}.`);
-    buildPathTrace(); rerenderTrace();
+    buildPathTrace(); rerenderTrace(); sound(walls.has(index) ? 'erase' : 'paint', M.GRID.rows - 1 - y);
     $('#live-message').textContent = `${walls.has(index) ? 'Added a wall' : 'Opened a cell'} at column ${x + 1}, row ${y + 1}. The search is ready to run.`;
   }
   canvas.addEventListener('pointerdown', event => {
@@ -538,7 +846,9 @@
     $('#live-message').textContent = `Selected column ${x + 1}, row ${y + 1}: ${kind}. Press Space to toggle an editable cell.`;
     draw();
   });
-  window.addEventListener('resize', draw);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+  // Coalesce resize bursts and redraw if the canvas container changes independently of the window.
+  window.addEventListener('resize', scheduleDraw);
+  if ('ResizeObserver' in window) new ResizeObserver(scheduleDraw).observe(canvas);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleDraw);
   renderTopic();
 })();

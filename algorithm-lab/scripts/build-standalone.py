@@ -20,7 +20,20 @@ css = re.sub(r"url\('(assets/fonts/[^']+\.woff2)'\)", embed_font, css)
 stylesheet = '<link rel="stylesheet" href="styles.css">'
 scripts = [
     '<script defer src="model.js"></script>',
+    '<script defer src="practice.js"></script>',
+    '<script defer src="studio-model.js"></script>',
+    '<script defer src="knapsack-model.js"></script>',
+    '<script defer src="more-model.js"></script>',
+    '<script defer src="garden-model.js"></script>',
+    '<script defer src="beat-model.js"></script>',
+    '<script defer src="sound-model.js"></script>',
+    '<script defer src="sound.js"></script>',
     '<script defer src="app.js"></script>',
+    '<script defer src="studio.js"></script>',
+    '<script defer src="knapsack.js"></script>',
+    '<script defer src="more.js"></script>',
+    '<script defer src="garden.js"></script>',
+    '<script defer src="beat.js"></script>',
 ]
 if stylesheet not in html or any(script not in html for script in scripts):
     raise RuntimeError("The source page no longer has the expected stylesheet/script tags")
@@ -31,7 +44,7 @@ for script in scripts:
     if not removed:
         raise RuntimeError(f"Expected a script tag on its own line: {script}")
 inline_scripts = []
-for name in ("model.js", "app.js"):
+for name in ("model.js", "practice.js", "studio-model.js", "knapsack-model.js", "more-model.js", "garden-model.js", "beat-model.js", "sound-model.js", "sound.js", "app.js", "studio.js", "knapsack.js", "more.js", "garden.js", "beat.js"):
     source = (ROOT / name).read_text(encoding="utf-8")
     if re.search(r"</script", source, re.IGNORECASE):
         raise RuntimeError(f"{name} contains a closing script tag and needs safe escaping")
