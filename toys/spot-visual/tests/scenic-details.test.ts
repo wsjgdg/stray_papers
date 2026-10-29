@@ -6,19 +6,34 @@ import { LIBRARY_SPOTS } from "@/lib/spot-data";
 import { SCENIC_DETAILS } from "@/lib/scenic-details.generated";
 import { SCENIC_DESCRIPTIONS } from "@/lib/poi-descriptions";
 import { EXTRA_SCENICS } from "@/lib/scenic-enrich.generated";
+import { SCENIC_DROPS } from "@/lib/scenic-renames";
 
 describe("scenic details propagation", () => {
-  it("SCENIC_DETAILS 每条都能命中库内同名景点", () => {
-    const byName = new Set(LIBRARY_SPOTS.map((s) => s.name));
-    const missed = Object.keys(SCENIC_DETAILS).filter((n) => !byName.has(n));
+  it("SCENIC_DETAILS 每条都能命中库内条目（按原始名录名，或已判删除）", () => {
+    // 生成数据按原始名录名建键，展示名经 SCENIC_RENAMES 清洗后可能不同，故用 sourceName 对应；
+    // 被清洗删除的条目（公司名/管委会/长短名并存）不再有对应景点，允许其键存在于 SCENIC_DROPS。
+    const known = new Set([
+      ...LIBRARY_SPOTS.flatMap(
+        (s) => [s.name, s.sourceName].filter(Boolean) as string[],
+      ),
+      ...SCENIC_DROPS,
+    ]);
+    const missed = Object.keys(SCENIC_DETAILS).filter((n) => !known.has(n));
     expect(missed).toEqual([]);
+  });
+
+  it("extras 条目都带 sourceName", () => {
+    const missing = LIBRARY_SPOTS.filter(
+      (s) => s.id.startsWith("scenic-") && !s.sourceName,
+    ).map((s) => s.name);
+    expect(missing).toEqual([]);
   });
 
   it("字段都携带到库条目（图/电话/开放时间，仅 extras 条目）", () => {
     // 同名景点可能以 POI 条目存在（本地照片/自己的 tel），不经本回填——只验 scenic- 侧
     for (const s of LIBRARY_SPOTS) {
       if (!s.id.startsWith("scenic-")) continue;
-      const d = SCENIC_DETAILS[s.name];
+      const d = SCENIC_DETAILS[s.sourceName ?? s.name];
       if (!d) continue;
       if (d.image) expect(s.image, `${s.name} 图未携带`).toBe(d.image);
       if (d.tel) expect(s.tel, `${s.name} 电话未携带`).toBe(d.tel);
