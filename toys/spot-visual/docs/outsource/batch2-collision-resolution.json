@@ -1,0 +1,131 @@
+{
+  "note": "针对批 2 的 12 个高危泛名（14 条源条目）的预判决议，可直接采用",
+  "decisions": [
+    {
+      "from": "浙江省台州市天台山景区",
+      "action": "drop",
+      "duplicateOf": "天台山风景名胜区",
+      "reason": "同市同级重复：库内已有 5A 浙江台州「天台山风景名胜区」",
+      "fromAddr": "浙江台州市天台县浙江省台州市天台县和",
+      "fromLevel": "5A",
+      "problems": []
+    },
+    {
+      "from": "江西省九江市南山景区",
+      "action": "rename",
+      "to": "九江南山景区",
+      "reason": "库内 11 条含「南山」，加城市限定避免泛名歧义",
+      "fromAddr": "江西九江市濂溪区=A4751",
+      "fromLevel": "4A",
+      "problems": []
+    },
+    {
+      "from": "江西省上饶市灵山风景名胜区",
+      "action": "rename",
+      "to": "上饶灵山风景名胜区",
+      "reason": "「灵山景区」已被辽宁葫芦岛占用，加城市限定",
+      "fromAddr": "江西上饶市广信区=A4827",
+      "fromLevel": "4A",
+      "problems": []
+    },
+    {
+      "from": "江西省上饶市灵山工匠小镇",
+      "action": "rename",
+      "to": "灵山工匠小镇",
+      "reason": "库内无同名，去行政前缀即可",
+      "fromAddr": "江西上饶市广信区=A4828",
+      "fromLevel": "4A",
+      "problems": []
+    },
+    {
+      "from": "浙江省金华市武义县清水湾景区",
+      "action": "drop",
+      "duplicateOf": "武义清水湾景区",
+      "reason": "同市同级重复：库内已有 4A 武义「武义清水湾景区」",
+      "fromAddr": "浙江金华市武义县浙江省金华市武义县温",
+      "fromLevel": "4A",
+      "problems": []
+    },
+    {
+      "from": "浙江省丽水市遂昌县千佛山景区",
+      "action": "rename",
+      "to": "遂昌千佛山景区",
+      "reason": "去行政前缀；库内无同名（另有公司名条目「遂昌千佛山景区有限公司」，应另行 drop）",
+      "fromAddr": "浙江丽水市遂昌县浙江省丽水市遂昌县石",
+      "fromLevel": "4A",
+      "problems": []
+    },
+    {
+      "from": "缙云县仙都黄龙景区开发有限公司",
+      "action": "drop",
+      "duplicateOf": "浙江省丽水市缙云县黄龙景区",
+      "reason": "公司名误入名录，同市同实体",
+      "fromAddr": "浙江丽水市缙云县浙江省丽水市缙云县五",
+      "fromLevel": "4A",
+      "problems": []
+    },
+    {
+      "from": "浙江省丽水市缙云县黄龙景区",
+      "action": "rename",
+      "to": "缙云黄龙景区",
+      "reason": "避开四川松潘 5A「黄龙国家级风景名胜区」与陕西「黄龙山景区」",
+      "fromAddr": "浙江丽水市缙云县浙江省丽水市缙云县五",
+      "fromLevel": "4A",
+      "problems": []
+    },
+    {
+      "from": "江西省九江市台山景区",
+      "action": "rename",
+      "to": "湖口台山景区",
+      "reason": "库内 17 条含「台山」，加县级限定（湖口县属九江）",
+      "fromAddr": "江西九江市湖口县=A4755",
+      "fromLevel": "4A",
+      "problems": []
+    },
+    {
+      "from": "江西省上饶市江湾景区",
+      "action": "rename",
+      "to": "婺源江湾景区",
+      "reason": "5A 婺源江湾，加县名避免与「嫩江湾」「江湾神木园」混淆",
+      "fromAddr": "江西上饶市婺源县=A4721",
+      "fromLevel": "5A",
+      "problems": []
+    },
+    {
+      "from": "江西省上饶市灵岩风景区",
+      "action": "rename",
+      "to": "婺源灵岩风景区",
+      "reason": "与济南「灵岩寺旅游区」区分",
+      "fromAddr": "江西上饶市婺源县=A4820",
+      "fromLevel": "4A",
+      "problems": []
+    },
+    {
+      "from": "江西省上饶市源头古村景区",
+      "action": "rename",
+      "to": "源头古村景区",
+      "reason": "库内唯一，去行政前缀即可",
+      "fromAddr": "江西上饶市德兴市=A4822",
+      "fromLevel": "4A",
+      "problems": []
+    },
+    {
+      "from": "江西省上饶市鸳鸯湖景区",
+      "action": "rename",
+      "to": "婺源鸳鸯湖景区",
+      "reason": "加县名，避免「鸳鸯湖」泛名",
+      "fromAddr": "江西上饶市婺源县=A4826",
+      "fromLevel": "4A",
+      "problems": []
+    },
+    {
+      "from": "浙江省金华市东阳市花园村景区",
+      "action": "rename",
+      "to": "东阳花园村景区",
+      "reason": "加县名，避免「花园村」泛名",
+      "fromAddr": "浙江金华市东阳市浙江省金华市东阳市花",
+      "fromLevel": "4A",
+      "problems": []
+    }
+  ]
+}
