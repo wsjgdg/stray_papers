@@ -1,7 +1,9 @@
 {
   "meta": {
     "count": 255,
-    "done": 42
+    "done": 93,
+    "remaining": 204,
+    "note": "前 51 条（批1）已完成，见 out-desc-batch1.json；剩余见 desc-batch-2..5.json"
   },
   "targets": [
     {
@@ -55,7 +57,7 @@
       "city": "北京"
     },
     {
-      "name": "（天生三桥·仙女山·芙蓉洞）",
+      "name": "武隆喀斯特旅游区",
       "province": "重庆",
       "city": "重庆"
     },
@@ -945,27 +947,27 @@
       "city": "临汾"
     },
     {
-      "name": "（宝塔山景区）",
+      "name": "延安宝塔山",
       "province": "陕西",
       "city": "延安"
     },
     {
-      "name": "（延安革命纪念馆）",
+      "name": "延安革命纪念馆",
       "province": "陕西",
       "city": "延安"
     },
     {
-      "name": "（杨家岭革命旧址）",
+      "name": "延安杨家岭革命旧址",
       "province": "陕西",
       "city": "延安"
     },
     {
-      "name": "（枣园革命旧址）",
+      "name": "延安枣园革命旧址",
       "province": "陕西",
       "city": "延安"
     },
     {
-      "name": "（中共中央西北局旧址）",
+      "name": "延安中共中央西北局旧址",
       "province": "陕西",
       "city": "延安"
     },
