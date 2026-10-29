@@ -72,6 +72,15 @@ export const TB_PRESETS = {
     d: 0, sigma: 6.5, k0: 0, r0: 26,
     text: '每个粒子受同一谐振子阱 V=½ω²(x−L/2)²（ω 滑块）。双包从 ±r₀ 静止释放：经典地各自荡向中心（首次相遇 t=π/2ω），**费米**在对角线处交换弹开，来回周期 π/ω（对角质量峰间距，pot72 E4 定量）。ε≠0 时粒子 2 的阱深 ×(1+ε) ⟹ 可区分 ⟹ ⟨P⟩ 不再守恒。初态两个旋钮：宽度 σ 与释放半径 r₀（改动即重发波包）；包太宽或 r₀ 太大时 HUD 的「边缘留白」转负——3σ 尾部已越界，CLAMP 边界会把它反射回来。',
   },
+  /* 自由放置：两条轨道由**用户沿轴点选**给出（x_a,k_a = +k₀；x_b,k_b = −k₀）。
+     页面在 x₁/x₂ 边缘密度条上点一下 ⟹ 切到本预设并重发对称化初态。
+     点选仍然只能给「一条高斯轨道」（中心 + 宽度 + 动量），不是主页那种任意绘制：
+     构型空间里的合法初态必须是对称化乘积——这条限制不因交互而消失。 */
+  custom: {
+    name: '自由放置', trap: 0, omega: 0.02, g: 0, eps: 0,
+    d: 52, sigma: 6.5, k0: 0.25, r0: 26, custom: 1,
+    text: '**沿轴点选轨道**：在下方 x₁ 条上点一下 ⟹ 粒子 1 的轨道中心；在右侧 x₂ 条上点一下 ⟹ 粒子 2 的轨道中心（按住拖动可连续挪）。两条轨道仍是**同宽高斯**、动量 ±k₀（面板滑块），随后**对称化**成两粒子初态——所以 ⟨P⟩ 依旧是 ±1，费米两条轨道完全重合时会被泡利不相容挡住（toast 拒绝加载）。点选自动切到本预设；切回别的预设会恢复该预设的默认初态。',
+  },
   /* 阱中本征态：解析 (0,0) 玻色基态 / (0,1) 费米第一激发；
      「松弛」按钮收敛到**离散**本征态（|ψ|² 冻结、整体相位以 E 旋转）。 */
   eigen: {
@@ -193,6 +202,20 @@ export function tbInitParams(L, presetKey, opts = {}){
   const xc = (L - 1) / 2;
   if (pr.eigen) return { eigen: true, omega: opts.omega ?? pr.omega, sigma: 0, k0: 0, d: 0, r0: 0 };
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  if (pr.custom){
+    /* 点选口径：中心限制在 [3σ+0.5, L−1−3σ−0.5]（整包留在场内），动量 ±k₀（k₀ 走同一套钳制）。
+       两个粒子共用 σ（页面只有一根宽度滑块）；位置各自独立。 */
+    const sigma = clamp(opts.sigma ?? pr.sigma, 1.5, Math.max(1.5, (L - 1) / 6));
+    const k0 = clamp(opts.k0 ?? pr.k0, 0, 1.5);
+    const lo = 3 * sigma + 0.5, hi = (L - 1) - 3 * sigma - 0.5;
+    const pos = (v, dflt) => clamp(Number.isFinite(v) ? v : dflt, Math.min(lo, hi), Math.max(lo, hi));
+    return {
+      custom: true, eigen: false, omega: opts.omega ?? pr.omega, sigma, k0, d: 0, r0: 0,
+      xa: pos(opts.xa, pr.customX ?? (xc - pr.d / 2)),
+      xb: pos(opts.xb, pr.customY ?? (xc + pr.d / 2)),
+      ka: +k0, kb: -k0,
+    };
+  }
   let sigma = clamp(opts.sigma ?? pr.sigma, 1.5, Math.max(1.5, (L - 1) / 6));
   /* 注：σ > (L−1)/8 时「d ≥ 2σ」与「3σ 尾部留白」无法同时满足 ⟹ margin 必然 < 0，
      页面 HUD 会如实标红（不禁用，让人看见边界截断的代价）。 */
@@ -218,8 +241,10 @@ export function tbOrbits(L, presetKey, opts = {}){
     const re = a => ({ re: Float64Array.from(a), im: new Float64Array(L) });
     return { ...q, na, nb, xa: xc, xb: xc, ka: 0, kb: 0, A: re(A), B: re(B) };
   }
-  const xa = pr.trap ? xc - q.r0 : xc - q.d / 2, xb = pr.trap ? xc + q.r0 : xc + q.d / 2;
-  const ka = pr.trap ? 0 : +q.k0, kb = pr.trap ? 0 : -q.k0;
+  const xa = q.custom ? q.xa : (pr.trap ? xc - q.r0 : xc - q.d / 2);
+  const xb = q.custom ? q.xb : (pr.trap ? xc + q.r0 : xc + q.d / 2);
+  const ka = q.custom ? q.ka : (pr.trap ? 0 : +q.k0);
+  const kb = q.custom ? q.kb : (pr.trap ? 0 : -q.k0);
   const arr = (x0, k) => {
     const o = { re: new Float64Array(L), im: new Float64Array(L) };
     for (let i = 0; i < L; i++){ const p = packet(i + 0.5, x0, k, q.sigma); o.re[i] = p.re; o.im[i] = p.im; }
@@ -256,7 +281,12 @@ export function tbInitInfo(L, presetKey, opts = {}){
     overlap, hbt: 2 / (1 + overlap), sep: Math.abs(o.xb - o.xa), margin: null,
   };
   if (!o.eigen){
-    out.margin = Math.min(o.xa, (L - 1) - o.xb) - 3 * o.sigma;
+    /* 对穿预设：左包离左边界、右包离右边界；自由放置（custom）两轨道各自独立，
+       取四支里的最小者——否则把两条轨道都放在右半场会得到一个假的「留白」。 */
+    out.margin = (o.custom
+      ? Math.min(o.xa, o.xb, (L - 1) - o.xa, (L - 1) - o.xb)
+      : Math.min(o.xa, (L - 1) - o.xb)) - 3 * o.sigma;
+    out.custom = !!o.custom;
   }
   return out;
 }

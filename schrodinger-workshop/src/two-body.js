@@ -25,7 +25,7 @@ import { injectStyles } from './core/styles.js';
 import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
 import { createContext, createProgram, Quad, makeTarget } from './core/gl.js';
-import { TB_PRESETS, TB_COMMON, tbMakeWave, tbInitParams, tbInitInfo, tbKdkStep, tbMeasure, tbRelax, tbPot1, tbPot2, tbMakeVArray, tbFieldHash, TB_FS_KICK, TB_FS_DRIFT, TB_FS_DRAW } from './physics/twobody.js';
+import { TB_PRESETS, TB_COMMON, tbMakeWave, tbInitParams, tbInitInfo, tbOrbits, tbKdkStep, tbMeasure, tbRelax, tbPot1, tbPot2, tbMakeVArray, tbFieldHash, TB_FS_KICK, TB_FS_DRIFT, TB_FS_DRAW } from './physics/twobody.js';
 
 /* 页面布局（复用 styles.js 的 :root 变量与 reset；本块只管 two-body 专属结构） */
 const TB_CSS = `
@@ -43,7 +43,8 @@ const TB_CSS = `
   #tbFieldWrap{position:relative}
   #tbField{display:block;width:var(--sz);height:var(--sz);border-radius:10px;touch-action:none}
   #tbN2{position:absolute;left:calc(100% + 5px);top:0;width:52px;height:var(--sz);display:block}
-  #tbN1{width:var(--sz);height:52px;display:block}
+  #tbN1{width:var(--sz);height:52px;display:block;cursor:crosshair}
+  #tbN2{cursor:crosshair}
   .tbAxis{font-family:var(--mono);font-size:10.5px;color:var(--dim);position:fixed;z-index:6;pointer-events:none}
   #tbAxX{transform:translateX(-50%)}
   #tbAxY{transform:translateY(-50%) rotate(-90deg);transform-origin:center}
@@ -77,12 +78,16 @@ export class TwoBodyApp {
       /* 初态四个旋钮：缺省跟预设，URL 可覆盖（越界由 tbInitParams 钳制） */
       sigma: num('sigma', pr0.sigma), k0: num('k0', pr0.k0),
       d: num('d', pr0.d), r0: num('r0', pr0.r0),
+      /* 自由放置（沿轴点选）的两条轨道中心；缺省摆成对穿预设的两个位置 */
+      xa: num('xa', NaN), xb: num('xb', NaN),
       substeps: Math.round(num('substeps', 6)), dt: num('dt', 0.08),
       mode: Math.round(num('mode', 0)), paused: q.get('paused') === '1',
       simTime: 0, frames: 0,
     };
     if (!TB_PRESETS[this.state.preset]) this.state.preset = 'cross';
     if (!['boson', 'fermion'].includes(this.state.stats)) this.state.stats = 'boson';
+    if (!Number.isFinite(this.state.xa)) this.state.xa = (L - 1) / 2 - TB_PRESETS.cross.d / 2;
+    if (!Number.isFinite(this.state.xb)) this.state.xb = (L - 1) / 2 + TB_PRESETS.cross.d / 2;
     this._scale = 400; this._nScale = 16; this._E = null; this._relax = null;
     this._field = null; this._m = null; this._baseNorm = null;
     this._listeners = []; this._uloc = new Map();
@@ -168,7 +173,7 @@ export class TwoBodyApp {
   ${navHtml('./two-body.html', '  ')}
 </div>
 <div id="tbPanel" class="panel qpanel">
-  <div class="sec"><h3>预设</h3><div class="grid3" id="tbPresets">
+  <div class="sec"><h3>预设</h3><div class="grid2" id="tbPresets">
     ${Object.keys(pr).map(k => '<button data-preset="' + k + '">' + pr[k].name + '</button>').join('')}
   </div></div>
   <div class="sec"><h3>统计（交换对称）</h3><div class="grid2">
@@ -179,7 +184,7 @@ export class TwoBodyApp {
     <div class="row" id="rowK0"><label>动量 k₀</label><input type="range" id="rK0" min="0" max="0.8" step="0.01" value="0.25"><output id="oK0">0.25</output></div>
     <div class="row" id="rowD"><label>间距 d</label><input type="range" id="rD" min="4" max="120" step="1" value="52"><output id="oD">52</output></div>
     <div class="row" id="rowR0"><label>释放 r₀</label><input type="range" id="rR0" min="1" max="60" step="1" value="26"><output id="oR0">26</output></div>
-    <div class="note" id="tbInitNote">拖任一滑块 ⟹ 按当前统计重发波包（t 归零）；被钳制的量会写回滑块，面板不报假数。</div>
+    <div class="note" id="tbInitNote">拖任一滑块 ⟹ 按当前统计重发波包（t 归零）；被钳制的量会写回滑块，面板不报假数。<br><b>在 x₁ / x₂ 边缘密度条上点一下</b>（或按住拖动）⟹ 给该粒子放轨道，自动切到「自由放置」。</div>
   </div>
   <div class="sec"><h3>参数</h3>
     <div class="row"><label>接触 g</label><input type="range" id="rG" min="0" max="40" step="0.5" value="0"><output id="oG">0.0</output></div>
@@ -266,6 +271,29 @@ export class TwoBodyApp {
     bind('#rOm', 'omega', '#oOm', v => v.toFixed(3),
       () => { if (this.state.preset === 'eigen') this.loadPreset('eigen', this.state.stats, false); });
     bind('#rSub', 'substeps', '#oSub', v => String(v | 0));
+    /* 沿轴点选：x₁ 条（下方，横）⟹ 粒子 1；x₂ 条（右侧，竖）⟹ 粒子 2。
+       pointerdown 立即落点，按住拖动连续挪（与主页「拖拽发射」同手感）。 */
+    const bindPick = (id, which, horiz) => {
+      const cv = this.q(id);
+      let dragging = false;
+      const pick = ev => {
+        const r = cv.getBoundingClientRect();
+        if (!r.width || !r.height) return;
+        const t = horiz
+          ? (ev.clientX - r.left) / r.width
+          : 1 - (ev.clientY - r.top) / r.height;
+        this.placeOrbit(which, t * this.state.L - 0.5);
+      };
+      this.on(cv, 'pointerdown', ev => { ev.preventDefault(); dragging = true; pick(ev); });
+      this.on(cv, 'pointermove', ev => { if (dragging) pick(ev); });
+      const stop = () => { dragging = false; };
+      this.on(cv, 'pointerup', stop);
+      this.on(cv, 'pointercancel', stop);
+      this.on(cv, 'pointerleave', stop);
+    };
+    bindPick('#tbN1', 0, true);
+    bindPick('#tbN2', 1, false);
+
     /* 悬停探针：报告 texel 坐标与 |ψ(i,j)|²、|ψ(j,i)|²（交换结构直接可见） */
     this.on(this.q('#tbField'), 'pointermove', ev => {
       if (!this._field) return;
@@ -356,9 +384,9 @@ export class TwoBodyApp {
        d 只对自由对穿、r₀ 只对阱中对穿） */
     const show = (id, on) => { const el = this.q(id); if (el) el.style.display = on ? '' : 'none'; };
     show('#rowSigma', !pr.eigen);
-    show('#rowK0', !pr.eigen && !pr.trap);
-    show('#rowD', !pr.eigen && !pr.trap);
-    show('#rowR0', !pr.eigen && !!pr.trap);
+    show('#rowK0', !pr.eigen && (!!pr.custom || !pr.trap));
+    show('#rowD', !pr.eigen && !pr.trap && !pr.custom);
+    show('#rowR0', !pr.eigen && !!pr.trap && !pr.custom);
     show('#tbInitNote', !pr.eigen);
     if (!pr.eigen){
       const L = this.state.L;
@@ -371,15 +399,14 @@ export class TwoBodyApp {
       this.q('#rR0').value = this.state.r0; this.q('#oR0').textContent = String(Math.round(this.state.r0));
     }
     /* HUD：初态 / 轨道重叠 / 边缘留白（全部来自 tbInitInfo 同一份轨道） */
-    const info = tbInitInfo(this.state.L, this.state.preset, {
-      stats: this.state.stats, sigma: this.state.sigma, k0: this.state.k0,
-      d: this.state.d, r0: this.state.r0, omega: this.state.omega,
-    });
+    const info = tbInitInfo(this.state.L, this.state.preset, this.initOpts());
     this._info = info;
     const hInit = this.q('#hInit'), hOv = this.q('#hOv'), hFit = this.q('#hFit');
     if (hInit) hInit.textContent = info.eigen
       ? `本征态 · ω=${info.omega.toFixed(3)}`
-      : `σ=${info.sigma.toFixed(1)} · k₀=${info.ka.toFixed(2)} · ${pr.trap ? 'r₀' : 'd'}=${Math.round(info.sep)}`;
+      : info.custom
+        ? `放置 x₁=${info.xa.toFixed(0)} · x₂=${info.xb.toFixed(0)} · σ=${info.sigma.toFixed(1)}`
+        : `σ=${info.sigma.toFixed(1)} · k₀=${info.ka.toFixed(2)} · ${pr.trap ? 'r₀' : 'd'}=${Math.round(info.sep)}`;
     if (hOv) hOv.textContent = `${info.overlap < 1e-4 ? info.overlap.toExponential(1) : info.overlap.toFixed(4)} · HBT ${info.hbt.toFixed(3)}`;
     if (hFit && info.margin !== null){
       hFit.textContent = `${info.margin.toFixed(1)} px`;
@@ -409,10 +436,7 @@ export class TwoBodyApp {
       this.state.sigma = pr.sigma; this.state.k0 = pr.k0;
       this.state.d = pr.d; this.state.r0 = pr.r0;
     }
-    const w = tbMakeWave(this.state.L, key, {
-      stats, omega: this.state.omega,
-      sigma: this.state.sigma, k0: this.state.k0, d: this.state.d, r0: this.state.r0,
-    });
+    const w = tbMakeWave(this.state.L, key, this.initOpts({ stats }));
     if (w.norm < 1e-9){
       this.toast('泡利不相容：两个费米子不能占据同一单粒子态');
       return false;
@@ -429,6 +453,17 @@ export class TwoBodyApp {
     this.refreshMeasure();
     return true;
   }
+  /* 初态参数对象（唯一一份）：重发 / HUD / 调试句柄都从这里取，避免手抄漏项。
+     custom 预设多两个位置字段（xa/xb），其它预设多传也无害（tbInitParams 只取认识的）。 */
+  initOpts(patch){
+    return {
+      stats: this.state.stats, omega: this.state.omega,
+      sigma: this.state.sigma, k0: this.state.k0,
+      d: this.state.d, r0: this.state.r0,
+      xa: this.state.xa, xb: this.state.xb,
+      ...(patch || {}),
+    };
+  }
   /* 初态参数（σ/k₀/d/r₀）变更的统一入口：
      ① 过 tbInitParams 钳制（越界就收进合法区间，绝不把越界值送进引擎）；
      ② 写回 state 与滑块位置（面板不报假数）；
@@ -436,23 +471,33 @@ export class TwoBodyApp {
      ④ 留白 < 0 时如实告警（包尾被 CLAMP 边界切，这是限制不是 bug）。 */
   applyInit(){
     const L = this.state.L, key = this.state.preset;
-    const q = tbInitParams(L, key, {
-      sigma: this.state.sigma, k0: this.state.k0, d: this.state.d, r0: this.state.r0,
-      omega: this.state.omega,
-    });
+    const q = tbInitParams(L, key, this.initOpts());
     if (!q.eigen){
       this.state.sigma = q.sigma; this.state.k0 = q.k0;
       this.state.d = q.d; this.state.r0 = q.r0;
+      if (q.custom){ this.state.xa = q.xa; this.state.xb = q.xb; }
     }
     const ok = this.loadPreset(key, this.state.stats, false);
-    const info = tbInitInfo(L, key, {
-      stats: this.state.stats, sigma: this.state.sigma, k0: this.state.k0,
-      d: this.state.d, r0: this.state.r0, omega: this.state.omega,
-    });
+    const info = tbInitInfo(L, key, this.initOpts());
     if (ok && info.margin !== null && info.margin < 0){
       this.toast('波包太宽 / 间距太大：尾部被边界截断（留白 ' + info.margin.toFixed(1) + '）');
     }
     return info;
+  }
+  /* 沿轴点选轨道：which=0 ⟹ 粒子 1（下方 x₁ 条），which=1 ⟹ 粒子 2（右侧 x₂ 条）。
+     首次点选从**当前预设的两条轨道**接续（画面不跳），之后把预设切到「自由放置」。
+     位置由 tbInitParams 钳到「整包留在场内」，所以这里不做第二次钳制。 */
+  placeOrbit(which, x){
+    const L = this.state.L;
+    if (!Number.isFinite(x)) return false;
+    if (this.state.preset !== 'custom'){
+      const o = tbOrbits(L, this.state.preset, this.initOpts());
+      this.state.xa = o.xa; this.state.xb = o.xb;
+      this.state.preset = 'custom';
+    }
+    if (which === 0) this.state.xa = x; else this.state.xb = x;
+    this.applyInit();
+    return true;
   }
   setStats(s){
     if (s === this.state.stats) return;
@@ -614,6 +659,43 @@ export class TwoBodyApp {
       if (horiz){ ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H); } else { ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2); }
       ctx.stroke();
     };
+    /* 轨道落点标记：自定义预设下两条轨道各自的位置 + 动量方向（箭头）。
+       —— 点选是「看不见落点」的交互就白搭，所以标记必须画在条上。 */
+    const mark = (cv, x, k, horiz) => {
+      const ctx = cv.getContext('2d');
+      const W = cv.width, H = cv.height, dpr2 = Math.min(window.devicePixelRatio || 1, 2);
+      const t = (x + 0.5) / this.state.L;
+      ctx.strokeStyle = 'rgba(251,191,36,.95)'; ctx.lineWidth = 1.2 * dpr2;
+      ctx.setLineDash([3 * dpr2, 3 * dpr2]);
+      ctx.beginPath();
+      if (horiz){ ctx.moveTo(t * W, 0); ctx.lineTo(t * W, H); } else { ctx.moveTo(0, (1 - t) * H); ctx.lineTo(W, (1 - t) * H); }
+      ctx.stroke();
+      ctx.setLineDash([]);
+      if (Math.abs(k) > 1e-9){
+        const fr = [255, 191, 36];
+        ctx.fillStyle = 'rgba(' + fr.join(',') + ',.95)';
+        ctx.beginPath();
+        if (horiz){
+          const y = H - 6 * dpr2, sgn = k > 0 ? 1 : -1;
+          ctx.moveTo(t * W + sgn * 7 * dpr2, y);
+          ctx.lineTo(t * W - sgn * 2 * dpr2, y - 4 * dpr2);
+          ctx.lineTo(t * W - sgn * 2 * dpr2, y + 4 * dpr2);
+        } else {
+          const xx = 6 * dpr2, sgn = k > 0 ? -1 : 1;      /* 竖直条：y 向上 = 位置增大 */
+          ctx.moveTo(xx, (1 - t) * H + sgn * 7 * dpr2);
+          ctx.lineTo(xx - 4 * dpr2, (1 - t) * H - sgn * 2 * dpr2);
+          ctx.lineTo(xx + 4 * dpr2, (1 - t) * H - sgn * 2 * dpr2);
+        }
+        ctx.closePath(); ctx.fill();
+      }
+    };
+    const st = this.state;
+    const showMark = st.preset === 'custom' || st.preset === 'cross' || st.preset === 'trap';
+    if (showMark){
+      const o = tbOrbits(st.L, st.preset, this.initOpts());
+      mark(this.q('#tbN1'), o.xa, o.ka, true);
+      mark(this.q('#tbN2'), o.xb, o.kb, false);
+    }
     draw(this.q('#tbN1'), n1, true);
     draw(this.q('#tbN2'), n2, false);
   }
@@ -703,9 +785,9 @@ export class TwoBodyApp {
       preset: k => this.loadPreset(k, this.state.stats, false),
       stats: s => this.setStats(s),
       /* 初态旋钮：set 走与滑块同一条路径（钳制 → 重发 → 告警） */
-      initInfo: () => this._info || tbInitInfo(this.state.L, this.state.preset, {
-        stats: this.state.stats, sigma: this.state.sigma, k0: this.state.k0,
-        d: this.state.d, r0: this.state.r0, omega: this.state.omega }),
+      initInfo: () => this._info || tbInitInfo(this.state.L, this.state.preset, this.initOpts()),
+      /* 沿轴点选（与鼠标同一入口）：place(0|x, texel) ⟹ 自动切到「自由放置」 */
+      place: (which, x) => this.placeOrbit(which, x),
       setInit: patch => { Object.assign(this.state, patch || {}); return this.applyInit(); },
       relaxNow: () => { const r = this.relaxSync(); return { iters: r.iters, energy: r.energy, residual: r.residual }; },
       /* 页内 CPU 镜像：从初态按当前参数跑 frames 帧，与 GPU 场逐 texel 对比
