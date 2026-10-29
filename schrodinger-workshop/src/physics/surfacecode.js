@@ -320,6 +320,155 @@ export function scVerify(d){
   };
 }
 
+/* ---------- 解码器审计：逐综合征最小权重 vs MWPM（R131） ----------------
+ * 诚实限制③ 的原话：「d ≥ 5 **未证**逐综合征最小权重：MWPM 最小化的是『匹配的
+ * 路径总长』，而两条路径重叠时 XOR 之后的实际修正更轻 ⟹ 非匹配型修正原则上可能
+ * 比 MWPM 更优。d=3 用穷举堵住（16/16），d≥5 只能做 ILP 或更高权重的穷举。」
+ *
+ * 本轮把它堵掉，用两条互不依赖的路径：
+ *   ① **综合征空间 BFS**：节点 = 综合征（2^|S| 个），边 = 单比特错误 ⟹ dist[S] 是
+ *      「任何修正」的最小权重（与解码器完全无关，含非匹配型修正）。逐 syndrome 再
+ *      跑一次 scDecode，比 pc(corr) 与 dist[S]：pc(corr) < dist[S] 不可能（corr 本身
+ *      就是同一 syndrome 的合法修正），故 pc(corr) > dist[S] ⟺ MWPM 次优。
+ *   ② **逻辑类退化 DP**：ex[S] 记「最小权重修正里哪些逻辑类存在」（位 1 = cls 0、
+ *      位 2 = cls 1）。两类并存 ⟹ 该 syndrome 上**任何**最小权重解码器都只能 50/50，
+ *      这是最小权重口径的**不可约**上限，不是解码器的锅。若全空间无退化，则
+ *      「达到最小权重」⟹「达到最大似然」（a priori 等概率下 ML 就是取更轻的类）。
+ * 状态数 2^|S| 决定可跑范围：d=3 ⟹ 16、d=5 ⟹ 4096（面板可跑，毫秒级）、
+ * d=7 ⟹ 2^24 = 16.7M（BFS 2.4s + 退化 DP 15s，只做离线全枚举，不上页面）。
+ */
+export const SC_AUDIT_MAX_NS = 12;      /* 2^12 = 4096：面板里最后一个能即时跑完的 d */
+
+/** 综合征空间 BFS（内部）：dist/dist 父指针/分层表 */
+function scSyndromeTable(code, type, opts = {}){
+  const g = type === 'X' ? code.xg : code.zg;
+  const nS = g.nS, n = code.n, N = 1 << nS;
+  const syn = new Int32Array(n);
+  for (let q = 0; q < n; q++){
+    let s = 0;
+    g.stab.forEach((st, k) => { if ((pc(st.mask & (1n << BigInt(q)))) & 1) s |= 1 << k; });
+    syn[q] = s;
+  }
+  const dist = new Int8Array(N).fill(-1);
+  const queue = new Int32Array(N);
+  const from = opts.parents ? new Int32Array(N).fill(-1) : null;
+  const fromQ = opts.parents ? new Int32Array(N).fill(-1) : null;
+  const byLayer = opts.layers ? [] : null;
+  dist[0] = 0; queue[0] = 0;
+  if (byLayer) byLayer[0] = [0];
+  let head = 0, tail = 1, maxW = 0;
+  while (head < tail){
+    const s = queue[head++], nd = dist[s] + 1;
+    for (let q = 0; q < n; q++){
+      const t = s ^ syn[q];
+      if (dist[t] < 0){
+        dist[t] = nd;
+        if (from){ from[t] = s; fromQ[t] = q; }
+        if (byLayer) (byLayer[nd] || (byLayer[nd] = [])).push(t);
+        queue[tail++] = t;
+        if (nd > maxW) maxW = nd;
+      }
+    }
+  }
+  if (byLayer) byLayer.length = maxW + 1;
+  return { g, type, nS, n, N, syn, dist, from, fromQ, byLayer, maxW, reachable: tail };
+}
+
+/** 最小权重修正的逻辑类退化（内部）：返回 ex 位掩码表 + 退化计数 */
+function scDegenTable(code, type, t){
+  const dual = type === 'X' ? code.zl : code.xl;
+  const inDual = new Uint8Array(t.n);
+  for (let q = 0; q < t.n; q++) inDual[q] = Number((dual >> BigInt(q)) & 1n);
+  const ex = new Uint8Array(t.N);
+  ex[0] = 1;
+  let degen = 0;
+  const byW = [];
+  for (let k = 1; k <= t.maxW; k++){
+    const layer = t.byLayer[k];
+    if (!layer) continue;
+    let cnt = 0;
+    for (let li = 0; li < layer.length; li++){
+      const s = layer[li];
+      let m = 0;
+      for (let q = 0; q < t.n; q++){
+        const u = s ^ t.syn[q];
+        if (t.dist[u] !== k - 1) continue;
+        const e = ex[u];
+        if (!e) continue;
+        m |= inDual[q] ? (e === 1 ? 2 : e === 2 ? 1 : e) : e;
+        if (m === 3) break;
+      }
+      ex[s] = m;
+      if (m === 3){ degen++; cnt++; }
+    }
+    if (cnt) byW.push([k, cnt]);
+  }
+  return { ex, degen, byW };
+}
+
+/**
+ * 逐综合征解码器审计（面板可跑：d=3/5）。同步执行，毫秒级。
+ * 返回 { d, nS, states, reachable, maxW, hist, tested, worse, maxGap, worst,
+ *        degen, degenByW, clsMix, ms }
+ */
+export function scOptAudit(d, type = 'both'){
+  const code = scBuild(d);
+  const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  const types = type === 'both' ? ['X', 'Z'] : [type];
+  const out = { d, type, nS: 0, states: 0, reachable: 0, maxW: 0, hist: [],
+    tested: 0, worse: 0, maxGap: 0, worst: null, degen: 0, degenByW: [], perType: {} };
+  for (const ty of types){
+    const t = scSyndromeTable(code, ty, { parents: true, layers: true });
+    if (t.nS > SC_AUDIT_MAX_NS) throw new Error(`综合征空间 2^${t.nS} 太大（面板审计上限 2^${SC_AUDIT_MAX_NS}）`);
+    const dg = scDegenTable(code, ty, t);
+    const hist = t.byLayer.map(L => (L ? L.length : 0));
+    let worse = 0, maxGap = 0, worst = null, tested = 0;
+    for (let S = 0; S < t.N; S++){
+      if (t.dist[S] < 0) continue;
+      let m = 0n, cur = S, guard = 0;
+      while (cur !== 0){
+        m ^= 1n << BigInt(t.fromQ[cur]); cur = t.from[cur];
+        if (++guard > 4096) throw new Error('综合征回溯成环');
+      }
+      const r = scDecode(code, m, ty);
+      const wd = pc(r.corr);
+      tested++;
+      if (wd > t.dist[S]){ worse++; if (wd - t.dist[S] > maxGap){ maxGap = wd - t.dist[S]; worst = { S, wmin: t.dist[S], wd }; } }
+    }
+    out.perType[ty] = { nS: t.nS, states: t.N, reachable: t.reachable, maxW: t.maxW, hist,
+      tested, worse, maxGap, worst, degen: dg.degen, degenByW: dg.byW };
+    out.nS = Math.max(out.nS, t.nS);
+    out.states += t.N; out.reachable += t.reachable;
+    out.maxW = Math.max(out.maxW, t.maxW);
+    out.tested += tested; out.worse += worse; out.degen += dg.degen;
+    if (maxGap > out.maxGap){ out.maxGap = maxGap; out.worst = { type: ty, ...worst }; }
+    if (dg.byW.length) out.degenByW.push([ty, dg.byW]);
+  }
+  out.ms = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0;
+  return out;
+}
+
+/**
+ * 退化全枚举（无解码，只有 BFS + DP）⟹ 支持到 d=7 的 2^24 空间（离线用）。
+ * 返回 { d, types: { X: { states, degen, byW, maxW, hist }, ... } }
+ */
+export function scDegenScan(d, type = 'both', opts = {}){
+  const code = scBuild(d);
+  const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  const out = { d, type, perType: {}, degen: 0, states: 0,
+    ms: 0 };
+  for (const ty of (type === 'both' ? ['X', 'Z'] : [type])){
+    const t = scSyndromeTable(code, ty, { parents: !!opts.parents, layers: true });
+    const dg = scDegenTable(code, ty, t);
+    out.perType[ty] = { nS: t.nS, states: t.N, reachable: t.reachable, maxW: t.maxW,
+      hist: t.byLayer.map(L => (L ? L.length : 0)), degen: dg.degen, byW: dg.byW };
+    out.degen += dg.degen;
+    out.states += t.N;
+  }
+  out.ms = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0;
+  return out;
+}
+
 /** 最小权重逻辑搜索（独立于解码器；权重上限 wmax 之内找不到 ⟹ 距离 > wmax） */
 export function scMinLogical(code, type, wmax){
   const n = code.n, stabs = type === 'X' ? code.X : code.Z, other = type === 'X' ? code.Z : code.X;
@@ -349,6 +498,22 @@ export function scMinLogical(code, type, wmax){
  * ⚠ 不能在本文件重新定义——单文件 bundler 把所有模块拼进同一个 script 作用域，
  * 重名会在 `node --check` 处直接 FAIL（本轮实测：multiply declared）。
  * 依赖方向 qcircuit → surfacecode 与 codefamily 一致，无环。 */
+
+/* 快照抽签的 RNG（R131）：用户种子 ⊕ salt 过一次 splitmix 风格混合再喂 mulberry32。
+ * 为什么需要它（两条实测缺陷，都是页面层面的）：
+ *   ① 原来「换一张码图」用固定表达式派生种子 ⟹ 点几次都出同一张图，按钮名不副实；
+ *   ② 种子 7 恰好落在 mulberry32 的弱起点（前 25 个输出最小 0.2279），而 d=5 只有
+ *      25 个比特、默认 p=0.08 ⟹ 默认视图永远零错误，红点与亮框一个都不亮。
+ * 混合哈希不改统计（零错误仍是概率 (1−p)^n 的合法样本），只把固定种子的倒霉起点打散，
+ * 并让 salt 真正推进抽签。 */
+export const scMix32 = z => {
+  z = (z + 0x9E3779B9) >>> 0;
+  z = Math.imul(z ^ (z >>> 16), 0x85EBCA6B) >>> 0;
+  z = Math.imul(z ^ (z >>> 13), 0xC2B2AE35) >>> 0;
+  return (z ^ (z >>> 16)) >>> 0;
+};
+export const scSnapSeed = (seed, salt) =>
+  scMix32((Math.round(seed) * 2654435761 + Math.round(salt) * 104729) >>> 0);
 
 /** 单次试验：返回两帧的错误/修正/缺陷数与失败标志（页面画图用同一份数据） */
 export function scTrial(code, cfg, rng){

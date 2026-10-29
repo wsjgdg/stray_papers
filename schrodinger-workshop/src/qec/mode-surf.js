@@ -19,6 +19,7 @@
  * ========================================================================== */
 import { scBuild, scVerify, scEnsemble, scTrial, scExactPL, scCrossing, scCrossingCI, scLeadingPower, scMinLogical, SC_DISTANCES, SC_NOISES, SC_PS } from '../physics/surfacecode.js';
 import { scSpaceGraph, scSpaceVerify, scSpaceEnsemble, scSpaceTrial, SC_PHEN } from '../physics/surfacecode.js';
+import { scOptAudit, scSnapSeed, SC_AUDIT_MAX_NS } from '../physics/surfacecode.js';
 import { mulberry32 } from '../physics/qcircuit.js';
 
 const SF_CSS = `
@@ -79,6 +80,10 @@ const sfFmt = v => !Number.isFinite(v) ? '—'
 const sfNF = (v, n = 2) => Number.isFinite(v) ? v.toFixed(n) : '—';
 const sfMdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
 const pcOf = m => { let c = 0; while (m){ c += Number(m & 1n); m >>= 1n; } return c; };
+const pc32 = v => { let c = 0; while (v){ c += v & 1; v >>>= 1; } return c; };
+/* 快照抽签的 RNG：抽签派生在引擎里（scSnapSeed，pot131 F 组可测），
+ * 这里只负责把它接到 mulberry32 上（见 surfacecode.js 的注释说明两条实测缺陷）。 */
+const sfSnapRng = (seed, salt) => mulberry32(scSnapSeed(seed, salt));
 
 export class SurfApp {
   constructor(shell){
@@ -109,6 +114,9 @@ export class SurfApp {
     this.power = null;      /* {3,5,7} 领先幂次 */
     this.verify = null;     /* scVerify 结果（结构自检） */
     this.exact = null;      /* d=3 精确值 + z */
+    this.audit = null;      /* 全综合征空间审计（R131）：次优/退化计数 */
+    this._auditToken = 0;   /* 审计异步令牌：换 d / 重跑都作废在途结果 */
+    this._snapSalt = 0;     /* 码图快照的抽签序号：每点一次「换一张码图」+1 */
     this._sweepToken = 0;
     this.cv = {};
   }
@@ -154,9 +162,16 @@ export class SurfApp {
           <button id="sfScan">扫描 P_L(p)</button>
           <button id="sfExact">d=3 精确对账</button>
         </div>
+        <div class="btns" style="margin-top:6px">
+          <button id="sfAudit">解码器审计</button>
+        </div>
 
         <div class="note">曲线走 MC（每点 N 次抽样，分帧累加，不阻塞交互）；
-          d=3 的「精确对账」按 4⁹ = 262144 个错误模式全枚举，约 4–6s。</div>
+          d=3 的「精确对账」按 4⁹ = 262144 个错误模式全枚举，约 4–6s。
+          「解码器审计」把当前 d 的**整个综合征空间**做 BFS（d=3 16 个、d=5 4096 个），
+          逐点比「MWPM 修正权重」与「精确最小权重」，并统计最小权重修正的逻辑类是否唯一
+          （两类并存 ⟹ 任何解码器在该点都只能 50/50，属不可约上限）；d=7 是 2²⁴ 个状态，
+          只在离线跑（README 记录：0 退化）。</div>
       </aside>
 
       <aside id="sfHud" class="panel qhud">
@@ -173,6 +188,7 @@ export class SurfApp {
         <div class="hrow"><span>交叉点 d3×d5 / d5×d7</span><span id="hCross">—</span></div>
         <div class="hrow"><span>领先幂次 α（p→0）</span><span id="hAlpha">—</span></div>
         <div class="hrow"><span>d=3 精确对账</span><span id="hExact">—</span></div>
+        <div class="hrow"><span>解码器审计（全枚举）</span><span id="hAudit">—</span></div>
         <div class="hrow"><span>扫描进度</span><span id="hProg">—</span></div>
         <div class="cap"><b>退极化是分帧独立解码</b>：丢掉 Y 的相关性 ⟹ 阈值 ≈ 1.5×单帧
           （10.3% → 15.5% 的那个因子；相关解码可到 18.9%，本页不做）。
@@ -204,7 +220,7 @@ export class SurfApp {
       }
     };
     mk(this.q('#sfDs'), SC_DISTANCES.map(d => ({ v: d, label: 'd=' + d, title: `n=${d * d} 比特，距离 ${d}` })),
-      v => { this.state.d = v; this.code = scBuild(v); this.runMc(); });
+      v => { this.state.d = v; this.code = scBuild(v); this.audit = null; this.runMc(); });
     mk(this.q('#sfNoises'), SC_NOISES.map(n => ({ v: n.k, label: n.name, title: n.desc })),
       v => { this.state.noise = v; this.runMc(); });
     mk(this.q('#sfMeas'), [
@@ -222,13 +238,14 @@ export class SurfApp {
       this.syncPanel();
     });
     this.on(this.q('#sfRun'), 'click', () => this.runMc());
-    this.on(this.q('#sfSnap'), 'click', () => this.runMc(true));
+    this.on(this.q('#sfSnap'), 'click', () => { this._snapSalt++; this.runMc(true); });
     this.on(this.q('#sfSeed'), 'click', () => {
       this.state.seed = (this.state.seed * 1103515245 + 12345) % 2147483647;
       this.runMc();
     });
     this.on(this.q('#sfScan'), 'click', () => this.startSweep());
     this.on(this.q('#sfExact'), 'click', () => this.runExact());
+    this.on(this.q('#sfAudit'), 'click', () => this.runAudit());
 
     this.on(window, 'resize', () => this.resize());
     if (window.ResizeObserver){
@@ -271,6 +288,15 @@ export class SurfApp {
       exBtn.disabled = phen;
       exBtn.title = phen ? '精确枚举只对单帧口径成立（带噪测量要从 4 层 × 2⁹ × 2⁴ 起枚举）' : '';
     }
+    /* 审计跑的是单帧解码器 scDecode 的整个综合征空间：d=7 是 2^24 个状态，面板上限 2^12 */
+    const auBtn = this.q('#sfAudit');
+    if (auBtn){
+      const tooBig = this.code.zg.nS > SC_AUDIT_MAX_NS;
+      auBtn.disabled = tooBig;
+      auBtn.title = tooBig
+        ? `d=${s.d} 的综合征空间是 2^${this.code.zg.nS}，超出面板审计上限 2^${SC_AUDIT_MAX_NS}（离线全枚举见 README：0 退化）`
+        : `全枚举 2^${this.code.zg.nS} 个综合征：逐点比 MWPM 权重与精确最小权重，并统计逻辑类是否唯一`;
+    }
     const setv = (id, v) => { const e = this.q('#' + id); if (e) e.value = v; };
     setv('sfP', s.p); this.q('#sfPO').textContent = s.p.toFixed(3);
     setv('sfTrials', s.trials); this.q('#sfTrialsO').textContent = s.trials;
@@ -310,19 +336,12 @@ export class SurfApp {
       this.mc = scSpaceEnsemble(code, { ...this.phenCfg(), trials: s.trials, seed: s.seed });
       this.mc.ms = performance.now() - t0;
       this.space = scSpaceVerify(s.d, Math.max(1, s.d - 1));
-      const rng = mulberry32(newSnap || !this.trial
-        ? (s.seed * 2654435761) % 2147483647 : (s.seed * 40503 + 17) % 2147483647);
-      this.trial = scSpaceTrial(code, this.phenCfg(), rng);
+      this.trial = scSpaceTrial(code, this.phenCfg(), sfSnapRng(s.seed, this._snapSalt));
     } else {
       this.mc = scEnsemble(code, { p: s.p, noise: s.noise, trials: s.trials, seed: s.seed });
       this.mc.ms = performance.now() - t0;
-      /* 码图快照：用「新种子」重抽一次单次试验（与 MC 同口径同 p） */
-      if (newSnap || !this.trial){
-        const rng = mulberry32((s.seed * 2654435761) % 2147483647);
-        this.trial = scTrial(code, { p: s.p, noise: s.noise }, rng);
-      } else {
-        this.trial = scTrial(code, { p: s.p, noise: s.noise }, mulberry32((s.seed * 40503 + 17) % 2147483647));
-      }
+      /* 码图快照：与 MC 同口径同 p 的单次试验（salt 由「换一张码图」推进） */
+      this.trial = scTrial(code, { p: s.p, noise: s.noise }, sfSnapRng(s.seed, this._snapSalt));
       this.space = null;
     }
     this.verify = scVerify(s.d);
@@ -405,6 +424,39 @@ export class SurfApp {
     }, 30);
   }
 
+  /**
+   * 解码器审计（R131）：把当前 d 的**整个综合征空间**做 BFS，逐点比
+   * 「MWPM 修正权重」与「精确最小权重」，并统计最小权重修正的逻辑类是否唯一。
+   * 这是把 README 诚实限制③（d≥5 未证逐综合征最小权重）变成可点击验证的入口。
+   */
+  runAudit(){
+    const s = this.state;
+    const tok = ++this._auditToken;
+    if (this.code.zg.nS > SC_AUDIT_MAX_NS){
+      this.audit = { skipped: true, nS: this.code.zg.nS };
+      this.renderHud();
+      return;
+    }
+    const btn = this.q('#sfAudit');
+    if (btn){ btn.disabled = true; btn.textContent = '审计中…'; }
+    setTimeout(() => {
+      /* 令牌变了（换 d / 又点了一次）⟹ 这次结果属于别的配置，直接丢弃，
+         既不写 audit 也不碰按钮 —— 否则会把旧 d 的「次优 0」挂在新 d 上。 */
+      if (tok !== this._auditToken) return;
+      let res;
+      try {
+        res = scOptAudit(s.d, 'both');
+      } catch (e){
+        res = { error: String(e && e.message || e) };
+      }
+      if (tok !== this._auditToken) return;
+      this.audit = res;
+      const b2 = this.q('#sfAudit');
+      if (b2){ b2.textContent = '解码器审计'; this.syncPanel(); }   /* disabled 交给 syncPanel 按当前 d 定 */
+      this.renderHud();
+    }, 30);
+  }
+
   /* ---------- HUD ---------- */
   renderHud(){
     const s = this.state, v = this.verify, mc = this.mc;
@@ -449,6 +501,17 @@ export class SurfApp {
       set('hExact', `p=${this.exact.p.toFixed(3)}：精确 ${sfFmt(this.exact.exact)} vs MC ${sfFmt(this.exact.mc)} ⟹ z=${sfNF(this.exact.z, 2)}σ`,
         this.exact.z <= 4 ? 'ok' : 'warn');
     } else set('hExact', '未跑（按按钮）');
+    /* 解码器审计：全枚举 ⟹ 数字是「确证」不是「估计」，措辞也要照实写 */
+    if (this.audit && this.audit.error){
+      set('hAudit', '审计失败：' + this.audit.error, 'warn');
+    } else if (this.audit && this.audit.skipped){
+      set('hAudit', `d=${s.d} 的 2^${this.audit.nS} 空间面板不枚举（离线：0 退化）`);
+    } else if (this.audit){
+      const a = this.audit;
+      const okDec = a.worse === 0 && a.degen === 0;
+      set('hAudit', `${a.tested} 综合征 · 次优 ${a.worse} · 退化 ${a.degen} · ${sfNF(a.ms, 0)}ms`,
+        okDec ? 'ok' : 'warn');
+    } else set('hAudit', '未跑（按按钮）');
     const done = this.sweep ? this.sweep.reduce((a, c) => a + c.rows.length, 0) : 0;
     const total = this._gridN || (SC_DISTANCES.length * SC_PS.length);
     set('hProg', `${done}/${total} 点${done === total ? '（完成）' : '…'}`);
@@ -487,6 +550,18 @@ export class SurfApp {
       ? `红点=总错误 · 亮框=末层探测事件 · 蓝环=时空链的空间投影 · 下方 = 逐层探测事件`
       : `红点=错误 · 亮框=被点亮的综合征 · 蓝环=MWPM 修正 · 权重 ${d} 的横/竖链 = 逻辑（无法分辨）`,
     10 * dpr, 29 * dpr);
+    /* 零错误快照如实标注（R131）：p 小 / n 小时「这张图一个红点都没有」是**合法样本**
+     * 而不是渲染失败——概率 (1−p)^n 常常两位数。不写清楚就会被当成 bug 或当成「无噪声」。 */
+    const tr0 = this.trial;
+    const zero = tr0 && (tr0.mx === 0n && tr0.mz === 0n) &&
+      (!phen || (tr0.kx === 0 && tr0.kz === 0));
+    if (zero){
+      const pz = Math.pow(1 - s.p, n);
+      g.fillStyle = sfC.amber + '.92)';
+      g.font = (9 * dpr) + 'px ui-monospace,monospace';
+      g.fillText(`本次快照恰好无错误（概率 (1−p)^${n} ≈ ${(pz * 100).toFixed(1)}%）· 按「换一张码图」再抽`,
+        10 * dpr, 41 * dpr);
+    }
 
     /* 网格几何：数据比特占 (d)×(d)，四周留一格给边界；带噪测量时底部留出时空条 */
     const pad = 34 * dpr;
@@ -795,17 +870,28 @@ export class SurfApp {
         const t = self.trial;
         if (!t) return null;
         const hex = m => m.toString(16);
-        return {
+        const w = m => Number(m.toString(2).split('1').length - 1);
+        const out = {
           fail: t.fail, xfail: t.xfail, zfail: t.zfail, kx: t.kx, kz: t.kz,
           mx: hex(t.mx), mz: hex(t.mz), corrX: hex(t.corrX), corrZ: hex(t.corrZ),
-          wErrX: Number(t.mx.toString(2).split('1').length - 1),
-          wCorrX: Number(t.corrX.toString(2).split('1').length - 1),
+          wErrX: w(t.mx), wCorrX: w(t.corrX),
         };
+        /* 带噪测量口径的字段（R131 补：R130 只落了引擎，句柄里读不到 R / badSyn / 逐层缺陷） */
+        if (t.R !== undefined){
+          out.R = t.R; out.q = t.q; out.runds = t.rounds;
+          out.badSyn = !!t.badSyn;
+          out.modeX = t.modeX; out.modeZ = t.modeZ;
+          out.defX = t.defX.slice(); out.defZ = t.defZ.slice();
+          out.kwX = out.defX.map(v => pc32(v));
+          out.kwZ = out.defZ.map(v => pc32(v));
+        }
+        return out;
       },
       set(patch){
         Object.assign(self.state, patch || {});
         if (self.state.meas === 'noisy' && self.state.d === 7) self.state.d = 5;
         self.code = scBuild(self.state.d);
+        self._auditToken++; self.audit = null;       /* 审计结果只对造它的 d 成立 */
         self.syncPanel(); self.runMc();
         return { ...self.state };
       },
@@ -814,6 +900,10 @@ export class SurfApp {
       },
       runSweep(){ self.startSweep(); return true; },
       runExact(){ self.runExact(); return true; },
+      get audit(){ return self.audit; },
+      get snapSalt(){ return self._snapSalt; },
+      runAudit(){ self.runAudit(); return true; },
+      optAudit(d, type){ return scOptAudit(d === undefined ? self.state.d : d, type || 'both'); },
       /* 诊断用：直接读引擎（不经 UI） */
       probe(d, cfg){ return scEnsemble(scBuild(d), cfg); },
       space(d, cfg){ return scSpaceEnsemble(scBuild(d), cfg); },
