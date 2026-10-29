@@ -7,1801 +7,2702 @@
       "name": "景山公园",
       "sourceName": null,
       "address": "北京市西城区景山西街44号",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-北京-3",
+      "city": "北京市西城区",
+      "mergeKey": "北京市西城区::景山公园"
     },
     {
       "name": "北海公园",
       "sourceName": null,
       "address": "北京市西城区文津街1号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-北京-4",
+      "city": "北京市西城区",
+      "mergeKey": "北京市西城区::北海公园"
     },
     {
       "name": "雍和宫",
       "sourceName": null,
       "address": "北京市东城区雍和宫大街28号(雍和宫地铁站F东南口步行250米)",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-北京-7",
+      "city": "北京市东城区",
+      "mergeKey": "北京市东城区::雍和宫"
     },
     {
       "name": "地坛公园",
       "sourceName": null,
       "address": "北京市东城区安定门外大街",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-北京-9",
+      "city": "北京市东城区",
+      "mergeKey": "北京市东城区::地坛公园"
     },
     {
       "name": "朝阳公园",
       "sourceName": null,
       "address": "北京市朝阳区朝阳公园南路1号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-北京-14",
+      "city": "北京市朝阳区",
+      "mergeKey": "北京市朝阳区::朝阳公园"
     },
     {
       "name": "中山公园",
       "sourceName": null,
       "address": "北京市东城区中华路4号(天安门西侧)",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-北京-15",
+      "city": "北京市东城区",
+      "mergeKey": "北京市东城区::中山公园"
     },
     {
       "name": "陶然亭公园",
       "sourceName": null,
       "address": "北京市西城区太平街19号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-北京-19",
+      "city": "北京市西城区",
+      "mergeKey": "北京市西城区::陶然亭公园"
     },
     {
       "name": "北京明城墙遗址公园",
       "sourceName": null,
       "address": "北京市东城区崇文门东大街9号",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "poi-北京-20",
+      "city": "北京市东城区",
+      "mergeKey": "北京市东城区::北京明城墙遗址公园"
     },
     {
       "name": "大观园",
       "sourceName": null,
       "address": "北京市西城区南菜园街12号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-北京-29",
+      "city": "北京市西城区",
+      "mergeKey": "北京市西城区::大观园"
     },
     {
       "name": "北京动物园",
       "sourceName": null,
       "address": "北京市西城区西直门外大街137号",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "poi-北京-30",
+      "city": "北京市西城区",
+      "mergeKey": "北京市西城区::北京动物园"
     },
     {
       "name": "龙华寺",
       "sourceName": null,
       "address": "上海市徐汇区龙华路2853号(近龙华西路)",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "poi-上海-1",
+      "city": "上海市徐汇区",
+      "mergeKey": "上海市徐汇区::龙华寺"
     },
     {
       "name": "上海豫园",
       "sourceName": null,
       "address": "上海市黄浦区福佑路168号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-上海-2",
+      "city": "上海市黄浦区",
+      "mergeKey": "上海市黄浦区::上海豫园"
     },
     {
       "name": "北外滩滨江绿地",
       "sourceName": null,
       "address": "上海市虹口区东大名路558-678",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-上海-11",
+      "city": "上海市虹口区",
+      "mergeKey": "上海市虹口区::北外滩滨江绿地"
     },
     {
       "name": "陆家嘴三件套打卡位",
       "sourceName": null,
       "address": "上海市浦东新区花园石桥路与东泰路交叉口西北20米",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-上海-14",
+      "city": "上海市浦东新",
+      "mergeKey": "上海市浦东新::陆家嘴三件套打卡位"
     },
     {
       "name": "武康路历史文化名街",
       "sourceName": null,
       "address": "上海市徐汇区上海市湖南路街道武康路与湖南路交叉口",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-上海-15",
+      "city": "上海市徐汇区",
+      "mergeKey": "上海市徐汇区::武康路历史文化名街"
     },
     {
       "name": "上海人民广场",
       "sourceName": null,
       "address": "上海市黄浦区人民大道185号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-上海-17",
+      "city": "上海市黄浦区",
+      "mergeKey": "上海市黄浦区::上海人民广场"
     },
     {
       "name": "上海海洋水族馆",
       "sourceName": null,
       "address": "上海市浦东新区陆家嘴环路1388号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-上海-22",
+      "city": "上海市浦东新",
+      "mergeKey": "上海市浦东新::上海海洋水族馆"
     },
     {
       "name": "上海徐家汇源",
       "sourceName": null,
       "address": "上海市徐汇区漕溪北路90号(徐家汇地铁站出入口步行110米)",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-上海-33",
+      "city": "上海市徐汇区",
+      "mergeKey": "上海市徐汇区::上海徐家汇源"
     },
     {
       "name": "上海之巅观光厅",
       "sourceName": null,
       "address": "上海市浦东新区银城中路501号上海中心大厦118层",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-上海-40",
+      "city": "上海市浦东新",
+      "mergeKey": "上海市浦东新::上海之巅观光厅"
     },
     {
       "name": "金茂大厦88层观光厅",
       "sourceName": null,
       "address": "上海市浦东新区世纪大道88号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-上海-49",
+      "city": "上海市浦东新",
+      "mergeKey": "上海市浦东新::金茂大厦88层观光厅"
     },
     {
       "name": "广州起义烈士陵园",
       "sourceName": null,
       "address": "广东省广州市越秀区中山二路92号",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "poi-广州-0",
+      "city": "广东省广州市",
+      "mergeKey": "广东省广州市::广州起义烈士陵园"
     },
     {
       "name": "陈家祠堂",
       "sourceName": null,
       "address": "广东省广州市荔湾区中山七路恩龙里34号(地铁1,8号线陈家祠站D出口步行110米)",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-广州-1",
+      "city": "广东省广州市",
+      "mergeKey": "广东省广州市::陈家祠堂"
     },
     {
       "name": "越秀公园",
       "sourceName": null,
       "address": "广东省广州市越秀区解放北路988号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-广州-2",
+      "city": "广东省广州市",
+      "mergeKey": "广东省广州市::越秀公园"
     },
     {
       "name": "大佛寺",
       "sourceName": null,
       "address": "广东省广州市越秀区惠新中街21号",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "poi-广州-3",
+      "city": "广东省广州市",
+      "mergeKey": "广东省广州市::大佛寺"
     },
     {
       "name": "三元宫",
       "sourceName": null,
       "address": "广东省广州市越秀区应元路11号(地铁2号线纪念堂站C出口步行140米)",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "poi-广州-4",
+      "city": "广东省广州市",
+      "mergeKey": "广东省广州市::三元宫"
     },
     {
       "name": "永庆坊",
       "sourceName": null,
       "address": "广东省广州市荔湾区恩宁路99号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-广州-7",
+      "city": "广东省广州市",
+      "mergeKey": "广东省广州市::永庆坊"
     },
     {
       "name": "五羊雕像",
       "sourceName": null,
       "address": "广东省广州市越秀区解放北路988号越秀公园内木壳岗上",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-广州-16",
+      "city": "广东省广州市",
+      "mergeKey": "广东省广州市::五羊雕像"
     },
     {
       "name": "广州动物园",
       "sourceName": null,
       "address": "广东省广州市越秀区先烈中路120号",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "poi-广州-18",
+      "city": "广东省广州市",
+      "mergeKey": "广东省广州市::广州动物园"
     },
     {
       "name": "黄花岗公园",
       "sourceName": null,
       "address": "广东省广州市越秀区先烈中路79号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-广州-33",
+      "city": "广东省广州市",
+      "mergeKey": "广东省广州市::黄花岗公园"
     },
     {
       "name": "正佳极地海洋世界",
       "sourceName": null,
       "address": "广东省广州市天河区天河路228号正佳广场2层2D126",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-广州-49",
+      "city": "广东省广州市",
+      "mergeKey": "广东省广州市::正佳极地海洋世界"
     },
     {
       "name": "深圳仙湖植物园",
       "sourceName": null,
       "address": "广东省深圳市罗湖区莲塘街道仙湖社区仙湖路160号",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "poi-深圳-26",
+      "city": "广东省深圳市",
+      "mergeKey": "广东省深圳市::深圳仙湖植物园"
     },
     {
       "name": "深圳野生动物园",
       "sourceName": null,
       "address": "广东省深圳市南山区西丽街道西丽路4066号",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "poi-深圳-28",
+      "city": "广东省深圳市",
+      "mergeKey": "广东省深圳市::深圳野生动物园"
     },
     {
       "name": "雷峰塔景区",
       "sourceName": null,
       "address": "浙江省杭州市西湖区南山路15号",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "poi-杭州-1",
+      "city": "浙江省杭州市",
+      "mergeKey": "浙江省杭州市::雷峰塔景区"
     },
     {
       "name": "清河坊历史文化特色街区",
       "sourceName": null,
       "address": "浙江省杭州市上城区河坊街180号",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-杭州-7",
+      "city": "浙江省杭州市",
+      "mergeKey": "浙江省杭州市::清河坊历史文化特色街区"
     },
     {
       "name": "胡雪岩旧居",
       "sourceName": null,
       "address": "浙江省杭州市上城区元宝街18号",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "poi-杭州-8",
+      "city": "浙江省杭州市",
+      "mergeKey": "浙江省杭州市::胡雪岩旧居"
     },
     {
       "name": "八卦田遗址公园",
       "sourceName": null,
       "address": "浙江省杭州市上城区南星街道南星街道虎玉路41号",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "poi-杭州-19",
+      "city": "浙江省杭州市",
+      "mergeKey": "浙江省杭州市::八卦田遗址公园"
     },
     {
       "name": "雷峰塔景区雷峰塔",
       "sourceName": null,
       "address": "浙江省杭州市西湖区南山路15号",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "poi-杭州-33",
+      "city": "浙江省杭州市",
+      "mergeKey": "浙江省杭州市::雷峰塔景区雷峰塔"
     },
     {
       "name": "总统府",
       "sourceName": null,
       "address": "江苏省南京市玄武区长江路292号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-南京-0",
+      "city": "江苏省南京市",
+      "mergeKey": "江苏省南京市::总统府"
     },
     {
       "name": "玄武湖景区",
       "sourceName": null,
       "address": "江苏省南京市玄武区玄武门路1号钟山风景名胜区西侧",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-南京-4",
+      "city": "江苏省南京市",
+      "mergeKey": "江苏省南京市::玄武湖景区"
     },
     {
       "name": "南京夫子庙",
       "sourceName": null,
       "address": "江苏省南京市秦淮区贡院街152号",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "poi-南京-8",
+      "city": "江苏省南京市",
+      "mergeKey": "江苏省南京市::南京夫子庙"
     },
     {
       "name": "红山森林动物园",
       "sourceName": null,
       "address": "江苏省南京市玄武区红山南路88号",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "poi-南京-9",
+      "city": "江苏省南京市",
+      "mergeKey": "江苏省南京市::红山森林动物园"
     },
     {
       "name": "毗卢寺",
       "sourceName": null,
       "address": "江苏省南京市玄武区汉府街4号(西安门地铁站2号口步行370米)",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "poi-南京-15",
+      "city": "江苏省南京市",
+      "mergeKey": "江苏省南京市::毗卢寺"
     },
     {
       "name": "朝天宫",
       "sourceName": null,
       "address": "江苏省南京市秦淮区朝天宫4号(朝天宫地铁站1号口步行210米)",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-南京-20",
+      "city": "江苏省南京市",
+      "mergeKey": "江苏省南京市::朝天宫"
     },
     {
       "name": "侵华日军南京大屠杀遇难同胞纪念馆",
       "sourceName": null,
       "address": "江苏省南京市建邺区水西门大街418号",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "poi-南京-22",
+      "city": "江苏省南京市",
+      "mergeKey": "江苏省南京市::侵华日军南京大屠杀遇难同胞纪念馆"
     },
     {
       "name": "颐和路歪脖子树",
       "sourceName": null,
       "address": "江苏省南京市鼓楼区颐和路与牯岭路交叉口东北80米",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-南京-23",
+      "city": "江苏省南京市",
+      "mergeKey": "江苏省南京市::颐和路歪脖子树"
     },
     {
       "name": "中华门",
       "sourceName": null,
       "address": "江苏省南京市秦淮区中华路",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-南京-29",
+      "city": "江苏省南京市",
+      "mergeKey": "江苏省南京市::中华门"
     },
     {
       "name": "阅江楼景区",
       "sourceName": null,
       "address": "江苏省南京市鼓楼区建宁路202号",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-南京-31",
+      "city": "江苏省南京市",
+      "mergeKey": "江苏省南京市::阅江楼景区"
     },
     {
       "name": "南京雨花台风景区",
       "sourceName": null,
       "address": "江苏省南京市雨花台区雨花路215号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-南京-34",
+      "city": "江苏省南京市",
+      "mergeKey": "江苏省南京市::南京雨花台风景区"
     },
     {
       "name": "七里山塘景区",
       "sourceName": null,
       "address": "江苏省苏州市姑苏区山塘街177号",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-苏州-1",
+      "city": "江苏省苏州市",
+      "mergeKey": "江苏省苏州市::七里山塘景区"
     },
     {
       "name": "狮子林",
       "sourceName": null,
       "address": "江苏省苏州市姑苏区园林路23号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-苏州-6",
+      "city": "江苏省苏州市",
+      "mergeKey": "江苏省苏州市::狮子林"
     },
     {
       "name": "寒山寺",
       "sourceName": null,
       "address": "江苏省苏州市姑苏区枫桥路16号",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "poi-苏州-8",
+      "city": "江苏省苏州市",
+      "mergeKey": "江苏省苏州市::寒山寺"
     },
     {
       "name": "七里山塘千年古街",
       "sourceName": null,
       "address": "江苏省苏州市姑苏区山塘街与上塘街交叉口西北20米",
-      "category": "古镇村落"
+      "category": "古镇村落",
+      "id": "poi-苏州-11",
+      "city": "江苏省苏州市",
+      "mergeKey": "江苏省苏州市::七里山塘千年古街"
     },
     {
       "name": "网师园",
       "sourceName": null,
       "address": "江苏省苏州市姑苏区带城桥路阔家头巷11号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-苏州-16",
+      "city": "江苏省苏州市",
+      "mergeKey": "江苏省苏州市::网师园"
     },
     {
       "name": "天平山风景名胜区",
       "sourceName": null,
       "address": "江苏省苏州市吴中区木渎镇灵天路",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-苏州-23",
+      "city": "江苏省苏州市",
+      "mergeKey": "江苏省苏州市::天平山风景名胜区"
     },
     {
       "name": "木渎古镇",
       "sourceName": null,
       "address": "江苏省苏州市吴中区木渎镇山塘街188号",
-      "category": "古镇村落"
+      "category": "古镇村落",
+      "id": "poi-苏州-24",
+      "city": "江苏省苏州市",
+      "mergeKey": "江苏省苏州市::木渎古镇"
     },
     {
       "name": "苏州御窑遗址园",
       "sourceName": null,
       "address": "江苏省苏州市相城区阳澄湖西路95号(御窑地铁站1号口步行100米)",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "poi-苏州-47",
+      "city": "江苏省苏州市",
+      "mergeKey": "江苏省苏州市::苏州御窑遗址园"
     },
     {
       "name": "东郊记忆",
       "sourceName": null,
       "address": "四川省成都市成华区跳蹬河街道建设南支路1号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-成都-2",
+      "city": "四川省成都市",
+      "mergeKey": "四川省成都市::东郊记忆"
     },
     {
       "name": "锦里古街",
       "sourceName": null,
       "address": "四川省成都市武侯区武侯祠大街231号附1号",
-      "category": "古镇村落"
+      "category": "古镇村落",
+      "id": "poi-成都-3",
+      "city": "四川省成都市",
+      "mergeKey": "四川省成都市::锦里古街"
     },
     {
       "name": "成都大熊猫繁育研究基地",
       "sourceName": null,
       "address": "四川省成都市成华区熊猫大道1375号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-成都-5",
+      "city": "四川省成都市",
+      "mergeKey": "四川省成都市::成都大熊猫繁育研究基地"
     },
     {
       "name": "海合安成都极地海洋公园",
       "sourceName": null,
       "address": "四川省成都市双流区天府新区海洋路68号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-成都-15",
+      "city": "四川省成都市",
+      "mergeKey": "四川省成都市::海合安成都极地海洋公园"
     },
     {
       "name": "浣花溪公园",
       "sourceName": null,
       "address": "四川省成都市青羊区草堂街道青华路9号(近杜甫草堂)",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-成都-20",
+      "city": "四川省成都市",
+      "mergeKey": "四川省成都市::浣花溪公园"
     },
     {
       "name": "麓湖水城景区",
       "sourceName": null,
       "address": "四川省成都市双流区天府新区麓湖中路西段988号",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-成都-23",
+      "city": "四川省成都市",
+      "mergeKey": "四川省成都市::麓湖水城景区"
     },
     {
       "name": "天府芙蓉园",
       "sourceName": null,
       "address": "四川省成都市武侯区簇马路一段69号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-成都-39",
+      "city": "四川省成都市",
+      "mergeKey": "四川省成都市::天府芙蓉园"
     },
     {
       "name": "红岩革命纪念馆",
       "sourceName": null,
       "address": "重庆市渝中区大石坝街道红岩村52号",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "poi-重庆-0",
+      "city": "重庆市渝中区",
+      "mergeKey": "重庆市渝中区::红岩革命纪念馆"
     },
     {
       "name": "洪崖洞民俗风貌区",
       "sourceName": null,
       "address": "重庆市渝中区嘉陵江滨江路88号(小什字地铁站9号口步行430米)",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-重庆-1",
+      "city": "重庆市渝中区",
+      "mergeKey": "重庆市渝中区::洪崖洞民俗风貌区"
     },
     {
       "name": "洪崖洞夜景观景台",
       "sourceName": null,
       "address": "重庆市渝中区沧白路88号洪崖洞民俗风貌区11层",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-重庆-3",
+      "city": "重庆市渝中区",
+      "mergeKey": "重庆市渝中区::洪崖洞夜景观景台"
     },
     {
       "name": "人民解放纪念碑",
       "sourceName": null,
       "address": "重庆市渝中区邹容路133号",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "poi-重庆-5",
+      "city": "重庆市渝中区",
+      "mergeKey": "重庆市渝中区::人民解放纪念碑"
     },
     {
       "name": "江北嘴江滩公园",
       "sourceName": null,
       "address": "重庆市两江新区金沙门路与桂花街交叉口东南120米",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-重庆-6",
+      "city": "重庆市两江新",
+      "mergeKey": "重庆市两江新::江北嘴江滩公园"
     },
     {
       "name": "周公馆",
       "sourceName": null,
       "address": "重庆市渝中区上清寺中山四路曾家岩50号(曾家岩地铁站2号口步行90米)",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-重庆-7",
+      "city": "重庆市渝中区",
+      "mergeKey": "重庆市渝中区::周公馆"
     },
     {
       "name": "我在重庆大屏",
       "sourceName": null,
       "address": "重庆市两江新区北城天街6号北城天街A馆1F层",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-重庆-14",
+      "city": "重庆市两江新",
+      "mergeKey": "重庆市两江新::我在重庆大屏"
     },
     {
       "name": "长嘉汇弹子石老街",
       "sourceName": null,
       "address": "重庆市南岸区泰昌路69号",
-      "category": "古镇村落"
+      "category": "古镇村落",
+      "id": "poi-重庆-15",
+      "city": "重庆市南岸区",
+      "mergeKey": "重庆市南岸区::长嘉汇弹子石老街"
     },
     {
       "name": "湖广会馆",
       "sourceName": null,
       "address": "重庆市渝中区长江滨江路芭蕉园1号",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "poi-重庆-17",
+      "city": "重庆市渝中区",
+      "mergeKey": "重庆市渝中区::湖广会馆"
     },
     {
       "name": "鸿恩寺森林公园",
       "sourceName": null,
       "address": "重庆市两江新区鸿恩路",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "poi-重庆-19",
+      "city": "重庆市两江新",
+      "mergeKey": "重庆市两江新::鸿恩寺森林公园"
     },
     {
       "name": "重庆南山风景区",
       "sourceName": null,
       "address": "重庆市南岸区南山公园路101号",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-重庆-26",
+      "city": "重庆市南岸区",
+      "mergeKey": "重庆市南岸区::重庆南山风景区"
     },
     {
       "name": "重庆动物园",
       "sourceName": null,
       "address": "重庆市九龙坡区西郊一村1号",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "poi-重庆-29",
+      "city": "重庆市九龙坡",
+      "mergeKey": "重庆市九龙坡::重庆动物园"
     },
     {
       "name": "磁器口古镇",
       "sourceName": null,
       "address": "重庆市沙坪坝区磁南街1号",
-      "category": "古镇村落"
+      "category": "古镇村落",
+      "id": "poi-重庆-30",
+      "city": "重庆市沙坪坝",
+      "mergeKey": "重庆市沙坪坝::磁器口古镇"
     },
     {
       "name": "马鞍山堂里",
       "sourceName": null,
       "address": "重庆市渝中区学田湾正街枣子垭正街交汇处(大礼堂地铁站1号口步行290米)",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-重庆-32",
+      "city": "重庆市渝中区",
+      "mergeKey": "重庆市渝中区::马鞍山堂里"
     },
     {
       "name": "桂园",
       "sourceName": null,
       "address": "重庆市渝中区上清寺中山四路65号(求精中学旁)",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-重庆-35",
+      "city": "重庆市渝中区",
+      "mergeKey": "重庆市渝中区::桂园"
     },
     {
       "name": "广仁寺",
       "sourceName": null,
       "address": "陕西省西安市莲湖区城墙西北角西北一路152号",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "poi-西安-1",
+      "city": "陕西省西安市",
+      "mergeKey": "陕西省西安市::广仁寺"
     },
     {
       "name": "西安博物院",
       "sourceName": null,
       "address": "陕西省西安市碑林区友谊西路72号",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "poi-西安-6",
+      "city": "陕西省西安市",
+      "mergeKey": "陕西省西安市::西安博物院"
     },
     {
       "name": "西安世博园",
       "sourceName": null,
       "address": "陕西省西安市灞桥区世博大道1号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-西安-16",
+      "city": "陕西省西安市",
+      "mergeKey": "陕西省西安市::西安世博园"
     },
     {
       "name": "西安浐灞国家湿地公园",
       "sourceName": null,
       "address": "陕西省西安市未央区启源三路1号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-西安-17",
+      "city": "陕西省西安市",
+      "mergeKey": "陕西省西安市::西安浐灞国家湿地公园"
     },
     {
       "name": "大唐西市",
       "sourceName": null,
       "address": "陕西省西安市莲湖区劳动南路118号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-西安-18",
+      "city": "陕西省西安市",
+      "mergeKey": "陕西省西安市::大唐西市"
     },
     {
       "name": "昆明池·七夕公园",
       "sourceName": null,
       "address": "陕西省西安市长安区昆明池七夕公园内",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-西安-29",
+      "city": "陕西省西安市",
+      "mergeKey": "陕西省西安市::昆明池·七夕公园"
     },
     {
       "name": "曲江海洋极地公园",
       "sourceName": null,
       "address": "陕西省西安市雁塔区曲江二路1号(北池头一路与芙蓉东路交叉口)",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-西安-54",
+      "city": "陕西省西安市",
+      "mergeKey": "陕西省西安市::曲江海洋极地公园"
     },
     {
       "name": "白马寺",
       "sourceName": null,
       "address": "河南省洛阳市瀍河回族区白马寺镇洛白路6号",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "poi-洛阳-3",
+      "city": "河南省洛阳市",
+      "mergeKey": "河南省洛阳市::白马寺"
     },
     {
       "name": "隋唐城遗址植物园",
       "sourceName": null,
       "address": "河南省洛阳市洛龙区王城大道281号",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "poi-洛阳-4",
+      "city": "河南省洛阳市",
+      "mergeKey": "河南省洛阳市::隋唐城遗址植物园"
     },
     {
       "name": "关林景区",
       "sourceName": null,
       "address": "河南省洛阳市洛龙区关林镇关林南街2号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-洛阳-6",
+      "city": "河南省洛阳市",
+      "mergeKey": "河南省洛阳市::关林景区"
     },
     {
       "name": "隋唐洛阳城国家遗址公园",
       "sourceName": null,
       "address": "河南省洛阳市老城区定鼎路与中州路交汇处(应天门地铁站C2口步行220米)",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "poi-洛阳-7",
+      "city": "河南省洛阳市",
+      "mergeKey": "河南省洛阳市::隋唐洛阳城国家遗址公园"
     },
     {
       "name": "洛阳凤翔温泉旅游区",
       "sourceName": null,
       "address": "河南省洛阳市洛龙区龙门街道张沟",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-洛阳-31",
+      "city": "河南省洛阳市",
+      "mergeKey": "河南省洛阳市::洛阳凤翔温泉旅游区"
     },
     {
       "name": "长春观",
       "sourceName": null,
       "address": "湖北省武汉市武昌区武珞路269号(近武昌大东门)",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "poi-武汉-20",
+      "city": "湖北省武汉市",
+      "mergeKey": "湖北省武汉市::长春观"
     },
     {
       "name": "后襄河公园",
       "sourceName": null,
       "address": "湖北省武汉市江汉区后襄河北路(近武汉博物馆)",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-武汉-42",
+      "city": "湖北省武汉市",
+      "mergeKey": "湖北省武汉市::后襄河公园"
     },
     {
       "name": "湖南烈士公园",
       "sourceName": null,
       "address": "湖南省长沙市开福区东风路22号",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-长沙-8",
+      "city": "湖南省长沙市",
+      "mergeKey": "湖南省长沙市::湖南烈士公园"
     },
     {
       "name": "长沙湘江海洋王国",
       "sourceName": null,
       "address": "湖南省长沙市岳麓区坪塘街道坪塘街道潭州大道二段207号",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-长沙-22",
+      "city": "湖南省长沙市",
+      "mergeKey": "湖南省长沙市::长沙湘江海洋王国"
     },
     {
       "name": "长沙世界之窗",
       "sourceName": null,
       "address": "湖南省长沙市开福区三一大道485号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-长沙-27",
+      "city": "湖南省长沙市",
+      "mergeKey": "湖南省长沙市::长沙世界之窗"
     },
     {
       "name": "天心阁",
       "sourceName": null,
       "address": "湖南省长沙市天心区天心路17号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-长沙-30",
+      "city": "湖南省长沙市",
+      "mergeKey": "湖南省长沙市::天心阁"
     },
     {
       "name": "三馆一厅旅游码头",
       "sourceName": null,
       "address": "湖南省长沙市开福区栖凤路滨江文化园4号门楼梯上面",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-长沙-33",
+      "city": "湖南省长沙市",
+      "mergeKey": "湖南省长沙市::三馆一厅旅游码头"
     },
     {
       "name": "湖南雷锋纪念馆",
       "sourceName": null,
       "address": "湖南省长沙市望城区雷锋街道正兴路42号",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "poi-长沙-61",
+      "city": "湖南省长沙市",
+      "mergeKey": "湖南省长沙市::湖南雷锋纪念馆"
     },
     {
       "name": "厦门园林植物园",
       "sourceName": null,
       "address": "福建省厦门市思明区虎园路25号",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "poi-厦门-1",
+      "city": "福建省厦门市",
+      "mergeKey": "福建省厦门市::厦门园林植物园"
     },
     {
       "name": "海滨公园",
       "sourceName": null,
       "address": "福建省厦门市思明区鹭江街道鹭江道",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-厦门-17",
+      "city": "福建省厦门市",
+      "mergeKey": "福建省厦门市::海滨公园"
     },
     {
       "name": "胡里山炮台",
       "sourceName": null,
       "address": "福建省厦门市思明区曾厝垵路2号",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-厦门-19",
+      "city": "福建省厦门市",
+      "mergeKey": "福建省厦门市::胡里山炮台"
     },
     {
       "name": "集美鳌园景区",
       "sourceName": null,
       "address": "福建省厦门市集美区鳌园路24号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-厦门-44",
+      "city": "福建省厦门市",
+      "mergeKey": "福建省厦门市::集美鳌园景区"
     },
     {
       "name": "奥林匹克帆船中心·奥帆海洋文化旅游区",
       "sourceName": null,
       "address": "山东省青岛市市南区澳门路86号奥帆中心",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-青岛-2",
+      "city": "山东省青岛市",
+      "mergeKey": "山东省青岛市::奥林匹克帆船中心·奥帆海洋文化旅游区"
     },
     {
       "name": "宫崎骏漫画街",
       "sourceName": null,
       "address": "山东省青岛市市南区龙江路与黄县路交叉口西南20米",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-青岛-7",
+      "city": "山东省青岛市",
+      "mergeKey": "山东省青岛市::宫崎骏漫画街"
     },
     {
       "name": "金沙滩",
       "sourceName": null,
       "address": "山东省青岛市黄岛区金沙滩路",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-青岛-12",
+      "city": "山东省青岛市",
+      "mergeKey": "山东省青岛市::金沙滩"
     },
     {
       "name": "青岛动物园",
       "sourceName": null,
       "address": "山东省青岛市市南区延安一路102号(近中山公园)",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "poi-青岛-17",
+      "city": "山东省青岛市",
+      "mergeKey": "山东省青岛市::青岛动物园"
     },
     {
       "name": "青岛海底世界",
       "sourceName": null,
       "address": "山东省青岛市市南区莱阳路2号",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-青岛-18",
+      "city": "山东省青岛市",
+      "mergeKey": "山东省青岛市::青岛海底世界"
     },
     {
       "name": "银海大世界",
       "sourceName": null,
       "address": "山东省青岛市市南区东海中路30号(近银都花园)",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-青岛-20",
+      "city": "山东省青岛市",
+      "mergeKey": "山东省青岛市::银海大世界"
     },
     {
       "name": "海合安·青岛极地海洋公园",
       "sourceName": null,
       "address": "山东省青岛市崂山区东海东路60号",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-青岛-25",
+      "city": "山东省青岛市",
+      "mergeKey": "山东省青岛市::海合安·青岛极地海洋公园"
     },
     {
       "name": "凤凰岛旅游度假区",
       "sourceName": null,
       "address": "山东省青岛市黄岛区长江中路1号",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-青岛-57",
+      "city": "山东省青岛市",
+      "mergeKey": "山东省青岛市::凤凰岛旅游度假区"
     },
     {
       "name": "大连森林动物园",
       "sourceName": null,
       "address": "辽宁省大连市西岗区迎春路60号",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "poi-大连-8",
+      "city": "辽宁省大连市",
+      "mergeKey": "辽宁省大连市::大连森林动物园"
     },
     {
       "name": "大连圣亚海洋世界",
       "sourceName": null,
       "address": "辽宁省大连市沙河口区中山路608-6-8号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-大连-13",
+      "city": "辽宁省大连市",
+      "mergeKey": "辽宁省大连市::大连圣亚海洋世界"
     },
     {
       "name": "黑石礁公园",
       "sourceName": null,
       "address": "辽宁省大连市沙河口区黑石礁街52号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-大连-19",
+      "city": "辽宁省大连市",
+      "mergeKey": "辽宁省大连市::黑石礁公园"
     },
     {
       "name": "大连横山公园",
       "sourceName": null,
       "address": "辽宁省大连市旅顺口区祥坛路1号",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-大连-35",
+      "city": "辽宁省大连市",
+      "mergeKey": "辽宁省大连市::大连横山公园"
     },
     {
       "name": "滇池",
       "sourceName": null,
       "address": "云南省昆明市官渡区滇池路1318号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-昆明-1",
+      "city": "云南省昆明市",
+      "mergeKey": "云南省昆明市::滇池"
     },
     {
       "name": "官渡古镇",
       "sourceName": null,
       "address": "云南省昆明市官渡区九转花街d1号",
-      "category": "古镇村落"
+      "category": "古镇村落",
+      "id": "poi-昆明-6",
+      "city": "云南省昆明市",
+      "mergeKey": "云南省昆明市::官渡古镇"
     },
     {
       "name": "大观公园",
       "sourceName": null,
       "address": "云南省昆明市西山区大观路284号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-昆明-10",
+      "city": "云南省昆明市",
+      "mergeKey": "云南省昆明市::大观公园"
     },
     {
       "name": "金殿风景名胜区",
       "sourceName": null,
       "address": "云南省昆明市盘龙区穿金路",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-昆明-14",
+      "city": "云南省昆明市",
+      "mergeKey": "云南省昆明市::金殿风景名胜区"
     },
     {
       "name": "云南陆军讲武堂历史博物馆",
       "sourceName": null,
       "address": "云南省昆明市五华区翠湖西路22号",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "poi-昆明-24",
+      "city": "云南省昆明市",
+      "mergeKey": "云南省昆明市::云南陆军讲武堂历史博物馆"
     },
     {
       "name": "云南民族村",
       "sourceName": null,
       "address": "云南省昆明市西山区滇池路1310号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-昆明-34",
+      "city": "云南省昆明市",
+      "mergeKey": "云南省昆明市::云南民族村"
     },
     {
       "name": "南溪山公园",
       "sourceName": null,
       "address": "广西壮族自治区桂林市象山区平山街道中山南路2号(近将军路)",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-桂林-11",
+      "city": "广西壮族自治",
+      "mergeKey": "广西壮族自治::南溪山公园"
     },
     {
       "name": "桂林飞虎队遗址公园",
       "sourceName": null,
       "address": "广西壮族自治区桂林市临桂区临桂镇飞虎路5号",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "poi-桂林-22",
+      "city": "广西壮族自治",
+      "mergeKey": "广西壮族自治::桂林飞虎队遗址公园"
     },
     {
       "name": "芦笛景区",
       "sourceName": null,
       "address": "广西壮族自治区桂林市秀峰区甲山街道芦笛路1号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-桂林-25",
+      "city": "广西壮族自治",
+      "mergeKey": "广西壮族自治::芦笛景区"
     },
     {
       "name": "桂花公社景区",
       "sourceName": null,
       "address": "广西壮族自治区桂林市秀峰区阳江路阳江苑西岭御景东北侧150米",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-桂林-28",
+      "city": "广西壮族自治",
+      "mergeKey": "广西壮族自治::桂花公社景区"
     },
     {
       "name": "刘三姐大观园",
       "sourceName": null,
       "address": "广西壮族自治区桂林市秀峰区桃花江路1号(近西山路)",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-桂林-43",
+      "city": "广西壮族自治",
+      "mergeKey": "广西壮族自治::刘三姐大观园"
     },
     {
       "name": "鹿回头风景区",
       "sourceName": null,
       "address": "海南省三亚市吉阳区鹿岭路",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-三亚-1",
+      "city": "海南省三亚市",
+      "mergeKey": "海南省三亚市::鹿回头风景区"
     },
     {
       "name": "三亚西岛海洋文化旅游区",
       "sourceName": null,
       "address": "海南省三亚市天涯区三亚湾路肖旗港码头",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-三亚-3",
+      "city": "海南省三亚市",
+      "mergeKey": "海南省三亚市::三亚西岛海洋文化旅游区"
     },
     {
       "name": "天涯海角游览区",
       "sourceName": null,
       "address": "海南省三亚市天涯区天涯镇马岭山麓",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-三亚-4",
+      "city": "海南省三亚市",
+      "mergeKey": "海南省三亚市::天涯海角游览区"
     },
     {
       "name": "圣·索菲亚教堂",
       "sourceName": null,
       "address": "黑龙江省哈尔滨市道里区透笼街129号",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "poi-哈尔滨-1",
+      "city": "黑龙江省哈尔",
+      "mergeKey": "黑龙江省哈尔::圣·索菲亚教堂"
     },
     {
       "name": "东北虎林园",
       "sourceName": null,
       "address": "黑龙江省哈尔滨市松北区松北街88号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-哈尔滨-2",
+      "city": "黑龙江省哈尔",
+      "mergeKey": "黑龙江省哈尔::东北虎林园"
     },
     {
       "name": "侵华日军第七三一部队遗址",
       "sourceName": null,
       "address": "黑龙江省哈尔滨市平房区新疆大街23号(地铁1号线新疆大街站2号出口东向300米)",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "poi-哈尔滨-6",
+      "city": "黑龙江省哈尔",
+      "mergeKey": "黑龙江省哈尔::侵华日军第七三一部队遗址"
     },
     {
       "name": "哈尔滨极地公园",
       "sourceName": null,
       "address": "黑龙江省哈尔滨市松北区太阳大道277号(太阳岛地铁站2号口步行140米)",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-哈尔滨-9",
+      "city": "黑龙江省哈尔",
+      "mergeKey": "黑龙江省哈尔::哈尔滨极地公园"
     },
     {
       "name": "龙塔",
       "sourceName": null,
       "address": "黑龙江省哈尔滨市南岗区长江路178号",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "poi-哈尔滨-19",
+      "city": "黑龙江省哈尔",
+      "mergeKey": "黑龙江省哈尔::龙塔"
     },
     {
       "name": "哈尔滨文化公园",
       "sourceName": null,
       "address": "黑龙江省哈尔滨市南岗区南通大街208号(近哈尔滨工程大学)",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "poi-哈尔滨-39",
+      "city": "黑龙江省哈尔",
+      "mergeKey": "黑龙江省哈尔::哈尔滨文化公园"
     },
     {
       "name": "罗布林卡",
       "sourceName": null,
       "address": "西藏自治区拉萨市城关区罗堆东路",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-拉萨-7",
+      "city": "西藏自治区拉",
+      "mergeKey": "西藏自治区拉::罗布林卡"
     },
     {
       "name": "哲蚌寺",
       "sourceName": null,
       "address": "西藏自治区拉萨市城关区北京西路276号(西郊根培乌孜山下)",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "poi-拉萨-8",
+      "city": "西藏自治区拉",
+      "mergeKey": "西藏自治区拉::哲蚌寺"
     },
     {
       "name": "黎阳in巷",
       "sourceName": null,
       "address": "安徽省黄山市屯溪区黎阳老街昱新路2号(文峰桥,屯溪一中)",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-黄山-0",
+      "city": "安徽省黄山市",
+      "mergeKey": "安徽省黄山市::黎阳in巷"
     },
     {
       "name": "花山世界·花山谜窟",
       "sourceName": null,
       "address": "安徽省黄山市屯溪区花山路",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-黄山-12",
+      "city": "安徽省黄山市",
+      "mergeKey": "安徽省黄山市::花山世界·花山谜窟"
     },
     {
       "name": "黄山市新安江滨水旅游景区",
       "sourceName": null,
       "address": "安徽省黄山市屯溪区屯光镇瑶里路8号(世纪广场下行2000米)",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-黄山-27",
+      "city": "安徽省黄山市",
+      "mergeKey": "安徽省黄山市::黄山市新安江滨水旅游景区"
     },
     {
       "name": "东方佛都",
       "sourceName": null,
       "address": "四川省乐山市市中区凌云路362号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-乐山-1",
+      "city": "四川省乐山市",
+      "mergeKey": "四川省乐山市::东方佛都"
     },
     {
       "name": "大佛禅院",
       "sourceName": null,
       "address": "四川省乐山市峨眉山市佛光南路274号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-乐山-3",
+      "city": "四川省乐山市",
+      "mergeKey": "四川省乐山市::大佛禅院"
     },
     {
       "name": "罗城古镇",
       "sourceName": null,
       "address": "四川省乐山市犍为县船形街32号",
-      "category": "古镇村落"
+      "category": "古镇村落",
+      "id": "poi-乐山-10",
+      "city": "四川省乐山市",
+      "mergeKey": "四川省乐山市::罗城古镇"
     },
     {
       "name": "乌木珍品文化博物苑",
       "sourceName": null,
       "address": "四川省乐山市市中区苏稽镇乐峨路西段768号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-乐山-18",
+      "city": "四川省乐山市",
+      "mergeKey": "四川省乐山市::乌木珍品文化博物苑"
     },
     {
       "name": "西汉酒泉胜迹",
       "sourceName": null,
       "address": "甘肃省酒泉市肃州区公园路100号",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "poi-酒泉-0",
+      "city": "甘肃省酒泉市",
+      "mergeKey": "甘肃省酒泉市::西汉酒泉胜迹"
     },
     {
       "name": "中国金塔沙漠胡杨林景区",
       "sourceName": null,
       "address": "甘肃省酒泉市金塔县金塔镇",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "poi-酒泉-1",
+      "city": "甘肃省酒泉市",
+      "mergeKey": "甘肃省酒泉市::中国金塔沙漠胡杨林景区"
     },
     {
       "name": "梅花洲景区",
       "sourceName": null,
       "address": "浙江省嘉兴市南湖区三星路10号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-嘉兴-22",
+      "city": "浙江省嘉兴市",
+      "mergeKey": "浙江省嘉兴市::梅花洲景区"
     },
     {
       "name": "榆次老城",
       "sourceName": null,
       "address": "山西省晋中市榆次区府兴路225号",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-晋中-0",
+      "city": "山西省晋中市",
+      "mergeKey": "山西省晋中市::榆次老城"
     },
     {
       "name": "常家庄园",
       "sourceName": null,
       "address": "山西省晋中市榆次区914县道",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "poi-晋中-3",
+      "city": "山西省晋中市",
+      "mergeKey": "山西省晋中市::常家庄园"
     },
     {
       "name": "后沟古村景区",
       "sourceName": null,
       "address": "山西省晋中市榆次区东赵乡019乡道后沟村(近古村落售票处)",
-      "category": "古镇村落"
+      "category": "古镇村落",
+      "id": "poi-晋中-7",
+      "city": "山西省晋中市",
+      "mergeKey": "山西省晋中市::后沟古村景区"
     },
     {
       "name": "通州大运河森林旅游区",
       "sourceName": "通州大运河森林旅游区",
       "address": "北京北京市通州区北京通州区北京市通州区通胡大街奥体公园通州大运河森林旅游区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-6",
+      "city": "北京北京市通",
+      "mergeKey": "通州大运河森林旅游区"
     },
     {
       "name": "中国园林博物馆",
       "sourceName": "中国园林博物馆",
       "address": "北京北京市丰台区北京丰台区北京市丰台区射击场路15号中国园林博物馆",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "scenic-北京-7",
+      "city": "北京北京市丰",
+      "mergeKey": "中国园林博物馆"
     },
     {
       "name": "北京世园公园",
       "sourceName": "北京世园公园",
       "address": "北京北京市延庆区北京延庆区北京市延庆区环湖南路北京世园公园",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-8",
+      "city": "北京北京市延",
+      "mergeKey": "北京世园公园"
     },
     {
       "name": "北京市房山区周口店遗址景区",
       "sourceName": "北京市房山区周口店遗址景区",
       "address": "北京北京市房山区北京房山区周口店大街1号北京市房山区周口店遗址景区",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "scenic-北京-9",
+      "city": "北京北京市房",
+      "mergeKey": "北京市房山区周口店遗址景区"
     },
     {
       "name": "野鸭湖景区",
       "sourceName": "野鸭湖景区",
       "address": "北京北京市延庆区北京延庆区康庄镇刘浩营村西野鸭湖景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-10",
+      "city": "北京北京市延",
+      "mergeKey": "野鸭湖景区"
     },
     {
       "name": "国家植物园",
       "sourceName": "国家植物园",
       "address": "北京北京市海淀区北京海淀区北京市植物园(卧佛寺)国家植物园",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-11",
+      "city": "北京北京市海",
+      "mergeKey": "国家植物园"
     },
     {
       "name": "凤凰岭自然风景区",
       "sourceName": "凤凰岭自然风景区",
       "address": "北京北京市海淀区北京海淀区苏家坨镇凤凰岭路19号凤凰岭自然风景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-12",
+      "city": "北京北京市海",
+      "mergeKey": "凤凰岭自然风景区"
     },
     {
       "name": "世界公园",
       "sourceName": "世界公园",
       "address": "北京北京市丰台区北京丰台区花乡大葆台158号世界公园",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "scenic-北京-13",
+      "city": "北京北京市丰",
+      "mergeKey": "世界公园"
     },
     {
       "name": "雁栖湖旅游区",
       "sourceName": "雁栖湖旅游区",
       "address": "北京北京市怀柔区北京怀柔区北京市怀柔区怀北镇雁水路3号雁栖湖旅游区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-14",
+      "city": "北京北京市怀",
+      "mergeKey": "雁栖湖旅游区"
     },
     {
       "name": "京东石林峡风景区",
       "sourceName": "京东石林峡风景区",
       "address": "北京北京市平谷区北京平谷区北京市平谷区雕窝村73号京东石林峡风景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-15",
+      "city": "北京北京市平",
+      "mergeKey": "京东石林峡风景区"
     },
     {
       "name": "八达岭水关长城景区",
       "sourceName": "八达岭水关长城景区",
       "address": "北京北京市延庆区北京延庆区八达岭镇石佛寺村八达岭水关长城景区",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "scenic-北京-16",
+      "city": "北京北京市延",
+      "mergeKey": "八达岭水关长城景区"
     },
     {
       "name": "司马台长城景区",
       "sourceName": "司马台长城景区",
       "address": "北京北京市密云区北京密云区古北口镇司马台村司马台长城景区",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "scenic-北京-17",
+      "city": "北京北京市密",
+      "mergeKey": "司马台长城景区"
     },
     {
       "name": "中国人民抗日战争纪念馆",
       "sourceName": "中国人民抗日战争纪念馆",
       "address": "北京北京市丰台区北京丰台区卢沟桥宛平城内街101号中国人民抗日战争纪念馆",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "scenic-北京-18",
+      "city": "北京北京市丰",
+      "mergeKey": "中国人民抗日战争纪念馆"
     },
     {
       "name": "石花洞",
       "sourceName": "石花洞",
       "address": "北京北京市房山区北京房山区北京市房山区河北镇南车营村石花洞",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-19",
+      "city": "北京北京市房",
+      "mergeKey": "石花洞"
     },
     {
       "name": "北京韩美林艺术馆",
       "sourceName": "北京韩美林艺术馆",
       "address": "北京北京市通州区北京通州区梨园镇九棵树东路68号北京韩美林艺术馆",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-20",
+      "city": "北京北京市通",
+      "mergeKey": "北京韩美林艺术馆"
     },
     {
       "name": "金海湖风景区",
       "sourceName": "金海湖风景区",
       "address": "北京北京市平谷区北京平谷区北京市平谷区金海湖镇金海湖景区坝前广场路1号金海湖风景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-21",
+      "city": "北京北京市平",
+      "mergeKey": "金海湖风景区"
     },
     {
       "name": "玉渊潭公园",
       "sourceName": "玉渊潭公园",
       "address": "北京北京市海淀区北京海淀区西三环中路10号玉渊潭公园",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-22",
+      "city": "北京北京市海",
+      "mergeKey": "玉渊潭公园"
     },
     {
       "name": "北京黄花城水长城旅游区",
       "sourceName": "北京黄花城水长城旅游区",
       "address": "北京北京市怀柔区北京怀柔区九渡河镇西水峪村16号北京黄花城水长城旅游区",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "scenic-北京-23",
+      "city": "北京北京市怀",
+      "mergeKey": "北京黄花城水长城旅游区"
     },
     {
       "name": "戒台寺",
       "sourceName": "戒台寺",
       "address": "北京北京市门头沟区北京门头沟区北京市门头沟永定镇戒台寺戒台寺",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "scenic-北京-24",
+      "city": "北京北京市门",
+      "mergeKey": "戒台寺"
     },
     {
       "name": "青龙峡旅游度假区",
       "sourceName": "青龙峡旅游度假区",
       "address": "北京北京市怀柔区北京怀柔区北京市怀柔区怀北镇大水峪村北500米青龙峡旅游度假区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-25",
+      "city": "北京北京市怀",
+      "mergeKey": "青龙峡旅游度假区"
     },
     {
       "name": "黑龙潭旅游区",
       "sourceName": "黑龙潭旅游区",
       "address": "北京北京市密云区北京密云区石城镇大关桥黑龙潭旅游区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-26",
+      "city": "北京北京市密",
+      "mergeKey": "黑龙潭旅游区"
     },
     {
       "name": "龙庆峡旅游区",
       "sourceName": "龙庆峡旅游区",
       "address": "北京北京市延庆区北京延庆区旧县镇古城村北龙庆峡旅游区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-27",
+      "city": "北京北京市延",
+      "mergeKey": "龙庆峡旅游区"
     },
     {
       "name": "北京丫髻山道教文化名胜区",
       "sourceName": "北京丫髻山道教文化名胜区",
       "address": "北京北京市平谷区北京平谷区北京市平谷区刘家店镇北吉山村北吉山大街临485号北京丫髻山道教文化名胜区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-28",
+      "city": "北京北京市平",
+      "mergeKey": "北京丫髻山道教文化名胜区"
     },
     {
       "name": "北京海洋馆",
       "sourceName": "北京海洋馆",
       "address": "北京北京市海淀区北京西城区北京市西城区西直门外大街137号49幢平房第一间北京海洋馆",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "scenic-北京-29",
+      "city": "北京北京市海",
+      "mergeKey": "北京海洋馆"
     },
     {
       "name": "中国紫檀博物馆",
       "sourceName": "中国紫檀博物馆",
       "address": "北京北京市朝阳区北京朝阳区北京市朝阳区建国路23号中国紫檀博物馆",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "scenic-北京-30",
+      "city": "北京北京市朝",
+      "mergeKey": "中国紫檀博物馆"
     },
     {
       "name": "北京顺义国际鲜花港",
       "sourceName": "北京顺义国际鲜花港",
       "address": "北京北京市顺义区北京顺义区北京市顺义区杨镇鲜花港南路9号(白马路北侧)北京顺义国际鲜花港",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-31",
+      "city": "北京北京市顺",
+      "mergeKey": "北京顺义国际鲜花港"
     },
     {
       "name": "绿野晴川野生动物园",
       "sourceName": "绿野晴川野生动物园",
       "address": "北京北京市大兴区北京大兴区榆垡镇万亩林绿野晴川野生动物园",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "scenic-北京-32",
+      "city": "北京北京市大",
+      "mergeKey": "绿野晴川野生动物园"
     },
     {
       "name": "仙居谷风景区",
       "sourceName": "仙居谷风景区",
       "address": "北京北京市密云区北京密云区密云区太师屯镇令公村甲一号仙居谷风景区",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-北京-33",
+      "city": "北京北京市密",
+      "mergeKey": "仙居谷风景区"
     },
     {
       "name": "小汤山现代农业示范园区",
       "sourceName": "小汤山现代农业示范园区",
       "address": "北京北京市昌平区北京昌平区北京市昌平区小汤山镇立汤路马坊小汤山现代农业示范园区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-34",
+      "city": "北京北京市昌",
+      "mergeKey": "小汤山现代农业示范园区"
     },
     {
       "name": "北京园博园",
       "sourceName": "北京园博园",
       "address": "北京北京市丰台区北京丰台区丰台区射击场路15号北京园博园",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-35",
+      "city": "北京北京市丰",
+      "mergeKey": "北京园博园"
     },
     {
       "name": "谷山村景区",
       "sourceName": "谷山村景区",
       "address": "北京北京市门头沟区北京门头沟区北京市门头沟区妙峰山镇谷山村景区谷山村景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-36",
+      "city": "北京北京市门",
+      "mergeKey": "谷山村景区"
     },
     {
       "name": "乐多港假日广场",
       "sourceName": "乐多港假日广场",
       "address": "北京北京市昌平区北京昌平区北京市昌平区城南街道邓庄村西(西关环岛西侧2公里)乐多港假日广场",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-北京-37",
+      "city": "北京北京市昌",
+      "mergeKey": "乐多港假日广场"
     },
     {
       "name": "龙脉温泉度假村",
       "sourceName": "龙脉温泉度假村",
       "address": "北京北京市昌平区北京昌平区北京市昌平区小汤山镇龙脉温泉度假村龙脉温泉度假村",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-38",
+      "city": "北京北京市昌",
+      "mergeKey": "龙脉温泉度假村"
     },
     {
       "name": "北京十渡风景名胜区",
       "sourceName": "北京十渡风景名胜区",
       "address": "北京北京市房山区北京房山区北京市房山区九渡大街9号北京十渡风景名胜区",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-北京-39",
+      "city": "北京北京市房",
+      "mergeKey": "北京十渡风景名胜区"
     },
     {
       "name": "八大处公园",
       "sourceName": "八大处公园",
       "address": "北京北京市石景山区北京石景山区北京市石景山区八大处路3号八大处公园",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-40",
+      "city": "北京北京市石",
+      "mergeKey": "八大处公园"
     },
     {
       "name": "八奇洞景区",
       "sourceName": "八奇洞景区",
       "address": "北京北京市门头沟区北京门头沟区北京市门头沟区潭柘寺镇八奇洞景区八奇洞景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-41",
+      "city": "北京北京市门",
+      "mergeKey": "八奇洞景区"
     },
     {
       "name": "银山塔林风景区",
       "sourceName": "银山塔林风景区",
       "address": "北京北京市昌平区北京昌平区北京市昌平区银山路1银山塔林风景区",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "scenic-北京-42",
+      "city": "北京北京市昌",
+      "mergeKey": "银山塔林风景区"
     },
     {
       "name": "居庸关长城",
       "sourceName": "居庸关长城",
       "address": "北京北京市昌平区北京昌平区南口镇居庸关村居庸关管理处居庸关长城",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "scenic-北京-43",
+      "city": "北京北京市昌",
+      "mergeKey": "居庸关长城"
     },
     {
       "name": "圣莲山旅游度假区",
       "sourceName": "圣莲山旅游度假区",
       "address": "北京北京市房山区北京房山区史家营乡柳林水村圣莲山旅游度假区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-44",
+      "city": "北京北京市房",
+      "mergeKey": "圣莲山旅游度假区"
     },
     {
       "name": "北京渔阳国际滑雪场景区",
       "sourceName": "北京渔阳国际滑雪场景区",
       "address": "北京北京市平谷区北京平谷区东高村镇大旺务村东688号北京渔阳国际滑雪场景区",
-      "category": "轻运动"
+      "category": "轻运动",
+      "id": "scenic-北京-45",
+      "city": "北京北京市平",
+      "mergeKey": "北京渔阳国际滑雪场景区"
     },
     {
       "name": "云居寺",
       "sourceName": "云居寺",
       "address": "北京北京市房山区北京房山区北京市房山区大石窝镇水头村云居寺",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "scenic-北京-46",
+      "city": "北京北京市房",
+      "mergeKey": "云居寺"
     },
     {
       "name": "红螺寺",
       "sourceName": "红螺寺",
       "address": "北京北京市怀柔区北京怀柔区北京市怀柔区怀柔镇红螺东路2号红螺寺",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "scenic-北京-47",
+      "city": "北京北京市怀",
+      "mergeKey": "红螺寺"
     },
     {
       "name": "中央广播电视塔",
       "sourceName": "中央广播电视塔",
       "address": "北京北京市海淀区北京海淀区西三环中路11号中央广播电视塔",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "scenic-北京-48",
+      "city": "北京北京市海",
+      "mergeKey": "中央广播电视塔"
     },
     {
       "name": "南宫旅游景区",
       "sourceName": "南宫旅游景区",
       "address": "北京北京市丰台区北京丰台区北京市丰台区王佐镇南宫南路1号南宫旅游景区",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-北京-49",
+      "city": "北京北京市丰",
+      "mergeKey": "南宫旅游景区"
     },
     {
       "name": "中国航空博物馆",
       "sourceName": "中国航空博物馆",
       "address": "北京北京市昌平区北京昌平区小汤山镇航空博物馆中国航空博物馆",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "scenic-北京-50",
+      "city": "北京北京市昌",
+      "mergeKey": "中国航空博物馆"
     },
     {
       "name": "京东大峡谷旅游区",
       "sourceName": "京东大峡谷旅游区",
       "address": "北京北京市平谷区北京平谷区山东庄镇鱼子山村京东大峡谷旅游区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-51",
+      "city": "北京北京市平",
+      "mergeKey": "京东大峡谷旅游区"
     },
     {
       "name": "香山公园",
       "sourceName": "香山公园",
       "address": "北京北京市海淀区北京海淀区香山公园买卖街40号香山公园",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-52",
+      "city": "北京北京市海",
+      "mergeKey": "香山公园"
     },
     {
       "name": "潭柘寺",
       "sourceName": "潭柘寺",
       "address": "北京北京市门头沟区北京门头沟区潭柘寺镇潭柘寺管理处潭柘寺",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "scenic-北京-53",
+      "city": "北京北京市门",
+      "mergeKey": "潭柘寺"
     },
     {
       "name": "北京欢乐谷",
       "sourceName": "北京欢乐谷",
       "address": "北京北京市朝阳区北京朝阳区东四环小武基北路北京欢乐谷",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "scenic-北京-54",
+      "city": "北京北京市朝",
+      "mergeKey": "北京欢乐谷"
     },
     {
       "name": "北京汽车博物馆",
       "sourceName": "北京汽车博物馆",
       "address": "北京北京市丰台区北京丰台区南四环西路126号北京汽车博物馆",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "scenic-北京-55",
+      "city": "北京北京市丰",
+      "mergeKey": "北京汽车博物馆"
     },
     {
       "name": "延庆百里山水画廊景区",
       "sourceName": "延庆百里山水画廊景区",
       "address": "北京北京市延庆区北京延庆区北京市延庆区千家店镇硅化木景区管理处大院内延庆百里山水画廊景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-56",
+      "city": "北京北京市延",
+      "mergeKey": "延庆百里山水画廊景区"
     },
     {
       "name": "北宫国家森林公园",
       "sourceName": "北宫国家森林公园",
       "address": "北京北京市丰台区北京丰台区长辛店镇大灰厂东路55号北宫国家森林公园",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-57",
+      "city": "北京北京市丰",
+      "mergeKey": "北宫国家森林公园"
     },
     {
       "name": "紫竹院公园",
       "sourceName": "紫竹院公园",
       "address": "北京北京市海淀区北京海淀区中关村南大街35号紫竹院公园",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-58",
+      "city": "北京北京市海",
+      "mergeKey": "紫竹院公园"
     },
     {
       "name": "首都博物馆",
       "sourceName": "首都博物馆",
       "address": "北京北京市西城区北京西城区北京市西城区复兴门外大街16号首都博物馆",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "scenic-北京-59",
+      "city": "北京北京市西",
+      "mergeKey": "首都博物馆"
     },
     {
       "name": "北京奥林匹克水上公园",
       "sourceName": "北京奥林匹克水上公园",
       "address": "北京北京市顺义区北京顺义区白马路19号北京奥林匹克水上公园",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-60",
+      "city": "北京北京市顺",
+      "mergeKey": "北京奥林匹克水上公园"
     },
     {
       "name": "石景山游乐园",
       "sourceName": "石景山游乐园",
       "address": "北京北京市石景山区北京石景山区石景山路25号石景山游乐园",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "scenic-北京-61",
+      "city": "北京北京市石",
+      "mergeKey": "石景山游乐园"
     },
     {
       "name": "北京天文馆",
       "sourceName": "北京天文馆",
       "address": "北京北京市西城区北京西城区西直门外大街138号北京天文馆",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-北京-62",
+      "city": "北京北京市西",
+      "mergeKey": "北京天文馆"
     },
     {
       "name": "世界葡萄博览中心景区",
       "sourceName": "世界葡萄博览中心景区",
       "address": "北京北京市延庆区北京延庆区北京市延庆区张山营镇下芦凤营村村南８００米世界葡萄博览中心景区",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-北京-63",
+      "city": "北京北京市延",
+      "mergeKey": "世界葡萄博览中心景区"
     },
     {
       "name": "北京张裕爱斐堡国际酒庄",
       "sourceName": "北京张裕爱斐堡国际酒庄",
       "address": "北京北京市密云区北京密云区北京市密云区巨各庄镇宁菜路与密三路交汇处东南侧北京张裕爱斐堡国际酒庄",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-北京-64",
+      "city": "北京北京市密",
+      "mergeKey": "北京张裕爱斐堡国际酒庄"
     },
     {
       "name": "天津海河意式风情区",
       "sourceName": "天津海河意式风情区",
       "address": "天津天津市河北区天津河北区进步道34号天津海河意式风情区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-天津-67",
+      "city": "天津天津市河",
+      "mergeKey": "天津海河意式风情区"
     },
     {
       "name": "天津周恩来邓颖超纪念馆",
       "sourceName": "天津周恩来邓颖超纪念馆",
       "address": "天津天津市南开区天津南开区水上公园西路9号天津周恩来邓颖超纪念馆",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "scenic-天津-68",
+      "city": "天津天津市南",
+      "mergeKey": "天津周恩来邓颖超纪念馆"
     },
     {
       "name": "精武门·中华武林园",
       "sourceName": "精武门·中华武林园",
       "address": "天津天津市西青区天津西青区精武镇小南河村精武门·中华武林园",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-天津-69",
+      "city": "天津天津市西",
+      "mergeKey": "精武门·中华武林园"
     },
     {
       "name": "天津市蓟州区梨木台景区",
       "sourceName": "天津市蓟州区梨木台景区",
       "address": "天津天津市蓟州区天津蓟州区下营镇梨木台天津市蓟州区梨木台景区",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-天津-70",
+      "city": "天津天津市蓟",
+      "mergeKey": "天津市蓟州区梨木台景区"
     },
     {
       "name": "天津欢乐谷景区",
       "sourceName": "天津欢乐谷景区",
       "address": "天津天津市东丽区天津东丽区东丽湖迎乐路1号天津欢乐谷景区",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "scenic-天津-71",
+      "city": "天津天津市东",
+      "mergeKey": "天津欢乐谷景区"
     },
     {
       "name": "天津方特欢乐世界景区",
       "sourceName": "天津方特欢乐世界景区",
       "address": "天津天津市滨海新区天津滨海新区中新生态城中生大道4888号天津方特欢乐世界景区",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "scenic-天津-72",
+      "city": "天津天津市滨",
+      "mergeKey": "天津方特欢乐世界景区"
     },
     {
       "name": "蓟州溶洞",
       "sourceName": "蓟州溶洞",
       "address": "天津天津市蓟州区天津蓟州区罗庄子镇洪水庄村北蓟州溶洞",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-天津-73",
+      "city": "天津天津市蓟",
+      "mergeKey": "蓟州溶洞"
     },
     {
       "name": "天津蓟州区独乐寺景区",
       "sourceName": "天津蓟州区独乐寺景区",
       "address": "天津天津市蓟州区天津蓟州区渔阳镇武定街41号天津蓟州区独乐寺景区",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "scenic-天津-74",
+      "city": "天津天津市蓟",
+      "mergeKey": "天津蓟州区独乐寺景区"
     },
     {
       "name": "天津水上公园景区",
       "sourceName": "天津水上公园景区",
       "address": "天津天津市南开区天津南开区水上公园路东路天津水上公园景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-天津-75",
+      "city": "天津天津市南",
+      "mergeKey": "天津水上公园景区"
     },
     {
       "name": "天津泰达航母主题公园景区",
       "sourceName": "天津泰达航母主题公园景区",
       "address": "天津天津市滨海新区天津滨海新区汉北路269号天津泰达航母主题公园景区",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "scenic-天津-76",
+      "city": "天津天津市滨",
+      "mergeKey": "天津泰达航母主题公园景区"
     },
     {
       "name": "大沽口炮台遗址博物馆景区",
       "sourceName": "大沽口炮台遗址博物馆景区",
       "address": "天津天津市滨海新区天津滨海新区塘沽东炮台路1号大沽口炮台遗址博物馆景区",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "scenic-天津-77",
+      "city": "天津天津市滨",
+      "mergeKey": "大沽口炮台遗址博物馆景区"
     },
     {
       "name": "天津海昌极地海洋公园景区",
       "sourceName": "天津海昌极地海洋公园景区",
       "address": "天津天津市滨海新区天津滨海新区响螺湾商务区61号天津海昌极地海洋公园景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-天津-78",
+      "city": "天津天津市滨",
+      "mergeKey": "天津海昌极地海洋公园景区"
     },
     {
       "name": "五大道文化旅游区",
       "sourceName": "五大道文化旅游区",
       "address": "天津天津市和平区天津和平区重庆道70号五大道文化旅游区",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-天津-79",
+      "city": "天津天津市和",
+      "mergeKey": "五大道文化旅游区"
     },
     {
       "name": "水高庄园景区",
       "sourceName": "水高庄园景区",
       "address": "天津天津市西青区天津西青区辛口镇水高庄村水高庄园景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-天津-80",
+      "city": "天津天津市西",
+      "mergeKey": "水高庄园景区"
     },
     {
       "name": "天津市河北区大悲禅院景区",
       "sourceName": "天津市河北区大悲禅院景区",
       "address": "天津天津市河北区天津河北区天纬路40号天津市河北区大悲禅院景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-天津-81",
+      "city": "天津天津市河",
+      "mergeKey": "天津市河北区大悲禅院景区"
     },
     {
       "name": "萨马兰奇纪念馆景区",
       "sourceName": "萨马兰奇纪念馆景区",
       "address": "天津天津市静海区天津静海区团泊新城健康产业园萨马兰奇纪念馆景区",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "scenic-天津-82",
+      "city": "天津天津市静",
+      "mergeKey": "萨马兰奇纪念馆景区"
     },
     {
       "name": "国家海洋博物馆景区",
       "sourceName": "国家海洋博物馆景区",
       "address": "天津天津市滨海新区天津滨海新区中心生态城海轩道377号国家海洋博物馆景区",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "scenic-天津-83",
+      "city": "天津天津市滨",
+      "mergeKey": "国家海洋博物馆景区"
     },
     {
       "name": "东丽湖恒大温泉旅游区",
       "sourceName": "东丽湖恒大温泉旅游区",
       "address": "天津天津市东丽区天津东丽区东丽湖旅游度假区东丽大道1037号东丽湖恒大温泉旅游区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-天津-84",
+      "city": "天津天津市东",
+      "mergeKey": "东丽湖恒大温泉旅游区"
     },
     {
       "name": "天津黄崖关长城风景游览区",
       "sourceName": "天津黄崖关长城风景游览区",
       "address": "天津天津市蓟州区天津蓟州区下营镇黄崖关村天津黄崖关长城风景游览区",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "scenic-天津-85",
+      "city": "天津天津市蓟",
+      "mergeKey": "天津黄崖关长城风景游览区"
     },
     {
       "name": "天津热带植物观光园景区",
       "sourceName": "天津热带植物观光园景区",
       "address": "天津天津市西青区天津西青区中北镇外环线七号桥天津热带植物观光园景区",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-天津-86",
+      "city": "天津天津市西",
+      "mergeKey": "天津热带植物观光园景区"
     },
     {
       "name": "石家大院景区",
       "sourceName": "石家大院景区",
       "address": "天津天津市西青区天津西青区杨柳青镇石家大院景区",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-天津-87",
+      "city": "天津天津市西",
+      "mergeKey": "石家大院景区"
     },
     {
       "name": "平津战役纪念馆景区",
       "sourceName": "平津战役纪念馆景区",
       "address": "天津天津市红桥区天津红桥区平津道8号平津战役纪念馆景区",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "scenic-天津-88",
+      "city": "天津天津市红",
+      "mergeKey": "平津战役纪念馆景区"
     },
     {
       "name": "天山海世界米立方水上乐园",
       "sourceName": "天山海世界米立方水上乐园",
       "address": "天津天津市津南区天津津南区小站镇天山路9号天山海世界米立方水上乐园",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "scenic-天津-89",
+      "city": "天津天津市津",
+      "mergeKey": "天山海世界米立方水上乐园"
     },
     {
       "name": "天津东疆湾景区",
       "sourceName": "天津东疆湾景区",
       "address": "天津天津市滨海新区天津滨海新区东疆保税区观澜路天津东疆湾景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-天津-90",
+      "city": "天津天津市滨",
+      "mergeKey": "天津东疆湾景区"
     },
     {
       "name": "天津南湖绿博园景区",
       "sourceName": "天津南湖绿博园景区",
       "address": "天津天津市武清区天津武清区下朱庄街天和路天津南湖绿博园景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-天津-91",
+      "city": "天津天津市武",
+      "mergeKey": "天津南湖绿博园景区"
     },
     {
       "name": "郭家沟景区",
       "sourceName": "郭家沟景区",
       "address": "天津天津市蓟州区天津蓟州区下营镇郭家沟村郭家沟景区",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-天津-92",
+      "city": "天津天津市蓟",
+      "mergeKey": "郭家沟景区"
     },
     {
       "name": "天津天塔湖风景区",
       "sourceName": "天津天塔湖风景区",
       "address": "天津天津市河西区天津河西区卫津南路1号天津天塔湖风景区",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "scenic-天津-93",
+      "city": "天津天津市河",
+      "mergeKey": "天津天塔湖风景区"
     },
     {
       "name": "天士力大健康城景区",
       "sourceName": "天士力大健康城景区",
       "address": "天津天津市北辰区天津北辰区普济河东道2号天士力大健康城景区",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-天津-94",
+      "city": "天津天津市北",
+      "mergeKey": "天士力大健康城景区"
     },
     {
       "name": "仁爱团泊湖国际休闲博览园景区",
       "sourceName": "仁爱团泊湖国际休闲博览园景区",
       "address": "天津天津市静海区天津静海区团泊镇地水路仁爱团泊湖国际休闲博览园景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-天津-95",
+      "city": "天津天津市静",
+      "mergeKey": "仁爱团泊湖国际休闲博览园景区"
     },
     {
       "name": "“天津之眼”摩天轮",
       "sourceName": "“天津之眼”摩天轮",
       "address": "天津天津市红桥区天津河北区李公祠大街与五马路交口永乐桥“天津之眼”摩天轮",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "scenic-天津-96",
+      "city": "天津天津市红",
+      "mergeKey": "“天津之眼”摩天轮"
     },
     {
       "name": "天津光合谷旅游度假区",
       "sourceName": "天津光合谷旅游度假区",
       "address": "天津天津市静海区天津静海区团泊镇津团路东侧天津光合谷旅游度假区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-天津-97",
+      "city": "天津天津市静",
+      "mergeKey": "天津光合谷旅游度假区"
     },
     {
       "name": "杨柳青庄园景区",
       "sourceName": "杨柳青庄园景区",
       "address": "天津天津市西青区天津西青区杨柳青镇津同路20号杨柳青庄园景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-天津-98",
+      "city": "天津天津市西",
+      "mergeKey": "杨柳青庄园景区"
     },
     {
       "name": "天津市金街文化旅游区",
       "sourceName": "天津市金街文化旅游区",
       "address": "天津天津市和平区天津和平区新华路177号天津市金街文化旅游区",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-天津-99",
+      "city": "天津天津市和",
+      "mergeKey": "天津市金街文化旅游区"
     },
     {
       "name": "驼梁景区",
       "sourceName": "驼梁景区",
       "address": "河北石家庄市平山县河北石家庄市平山县驼梁景区",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-石家庄-101",
+      "city": "河北石家庄市",
+      "mergeKey": "驼梁景区"
     },
     {
       "name": "平山县天桂山风景名胜区",
       "sourceName": "平山县天桂山风景名胜区",
       "address": "河北石家庄市平山县河北石家庄市平山县平山县天桂山风景名胜区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-石家庄-102",
+      "city": "河北石家庄市",
+      "mergeKey": "平山县天桂山风景名胜区"
     },
     {
       "name": "佛光山景区",
       "sourceName": "佛光山景区",
       "address": "河北石家庄市平山县河北石家庄市平山县佛光山景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-石家庄-103",
+      "city": "河北石家庄市",
+      "mergeKey": "佛光山景区"
     },
     {
       "name": "平山县黑山大峡谷景区",
       "sourceName": "平山县黑山大峡谷景区",
       "address": "河北石家庄市平山县河北石家庄市平山县平山县黑山大峡谷景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-石家庄-104",
+      "city": "河北石家庄市",
+      "mergeKey": "平山县黑山大峡谷景区"
     },
     {
       "name": "平山县沕沕水景区",
       "sourceName": "平山县沕沕水景区",
       "address": "河北石家庄市平山县河北石家庄市平山县平山县沕沕水景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-石家庄-105",
+      "city": "河北石家庄市",
+      "mergeKey": "平山县沕沕水景区"
     },
     {
       "name": "河北平山藤龙山",
       "sourceName": "河北平山藤龙山",
       "address": "河北石家庄市平山县河北石家庄市平山县河北平山藤龙山",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-石家庄-106",
+      "city": "河北石家庄市",
+      "mergeKey": "河北平山藤龙山"
     },
     {
       "name": "东方巨龟苑",
       "sourceName": "东方巨龟苑",
       "address": "河北石家庄市平山县河北石家庄市平山县东方巨龟苑",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-石家庄-107",
+      "city": "河北石家庄市",
+      "mergeKey": "东方巨龟苑"
     },
     {
       "name": "西苑温泉度假村",
       "sourceName": "西苑温泉度假村",
       "address": "河北石家庄市平山县河北石家庄市平山县西苑温泉度假村",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-石家庄-108",
+      "city": "河北石家庄市",
+      "mergeKey": "西苑温泉度假村"
     },
     {
       "name": "白鹿温泉景区",
       "sourceName": "白鹿温泉景区",
       "address": "河北石家庄市平山县河北石家庄市平山县白鹿温泉景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-石家庄-109",
+      "city": "河北石家庄市",
+      "mergeKey": "白鹿温泉景区"
     },
     {
       "name": "平山县紫云山景区",
       "sourceName": "平山县紫云山景区",
       "address": "河北石家庄市平山县河北石家庄市平山县平山县紫云山景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-石家庄-110",
+      "city": "河北石家庄市",
+      "mergeKey": "平山县紫云山景区"
     },
     {
       "name": "灵寿县水泉溪自然风景区",
       "sourceName": "灵寿县水泉溪自然风景区",
       "address": "河北石家庄市灵寿县河北石家庄市灵寿县灵寿县水泉溪自然风景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-石家庄-111",
+      "city": "河北石家庄市",
+      "mergeKey": "灵寿县水泉溪自然风景区"
     },
     {
       "name": "秋山风景区",
       "sourceName": "秋山风景区",
       "address": "河北石家庄市灵寿县河北石家庄市灵寿县秋山风景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-石家庄-112",
+      "city": "河北石家庄市",
+      "mergeKey": "秋山风景区"
     },
     {
       "name": "五岳寨风景区",
       "sourceName": "五岳寨风景区",
       "address": "河北石家庄市灵寿县河北石家庄市灵寿县五岳寨风景区",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-石家庄-113",
+      "city": "河北石家庄市",
+      "mergeKey": "五岳寨风景区"
     },
     {
       "name": "国御温泉度假小镇",
       "sourceName": "国御温泉度假小镇",
       "address": "河北石家庄市藁城区河北石家庄市藁城区国御温泉度假小镇",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-石家庄-114",
+      "city": "河北石家庄市",
+      "mergeKey": "国御温泉度假小镇"
     },
     {
       "name": "苍岩山景区",
       "sourceName": "苍岩山景区",
       "address": "河北石家庄市井陉县河北石家庄市井陉县苍岩山景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-石家庄-115",
+      "city": "河北石家庄市",
+      "mergeKey": "苍岩山景区"
     },
     {
       "name": "赵州桥景区",
       "sourceName": "赵州桥景区",
       "address": "河北石家庄市赵县河北石家庄市赵县赵州桥景区",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-石家庄-116",
+      "city": "河北石家庄市",
+      "mergeKey": "赵州桥景区"
     },
     {
       "name": "双凤山景区",
       "sourceName": "双凤山景区",
       "address": "河北石家庄市鹿泉区河北石家庄市鹿泉区双凤山景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-石家庄-117",
+      "city": "河北石家庄市",
+      "mergeKey": "双凤山景区"
     },
     {
       "name": "石家庄市君乐宝乳业工业旅游区",
       "sourceName": "石家庄市君乐宝乳业工业旅游区",
       "address": "河北石家庄市鹿泉区河北石家庄市鹿泉区石家庄市君乐宝乳业工业旅游区",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-石家庄-118",
+      "city": "河北石家庄市",
+      "mergeKey": "石家庄市君乐宝乳业工业旅游区"
     },
     {
       "name": "抱犊寨风景区",
       "sourceName": "抱犊寨风景区",
       "address": "河北石家庄市鹿泉区河北石家庄市鹿泉区抱犊寨风景区",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-石家庄-119",
+      "city": "河北石家庄市",
+      "mergeKey": "抱犊寨风景区"
     },
     {
       "name": "华北军区烈士陵园",
       "sourceName": "华北军区烈士陵园",
       "address": "河北石家庄市桥西区河北石家庄市桥西区华北军区烈士陵园",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "scenic-石家庄-120",
+      "city": "河北石家庄市",
+      "mergeKey": "华北军区烈士陵园"
     },
     {
       "name": "石家庄嶂石岩风景名胜区",
       "sourceName": "石家庄嶂石岩风景名胜区",
       "address": "河北石家庄市赞皇县河北石家庄市赞皇县石家庄嶂石岩风景名胜区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-石家庄-121",
+      "city": "河北石家庄市",
+      "mergeKey": "石家庄嶂石岩风景名胜区"
     },
     {
       "name": "棋盘山景区",
       "sourceName": "棋盘山景区",
       "address": "河北石家庄市赞皇县河北石家庄市赞皇县棋盘山景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-石家庄-122",
+      "city": "河北石家庄市",
+      "mergeKey": "棋盘山景区"
     },
     {
       "name": "正定隆兴寺",
       "sourceName": "正定隆兴寺",
       "address": "河北石家庄市正定县河北石家庄正定县正定隆兴寺",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "scenic-石家庄-123",
+      "city": "河北石家庄市",
+      "mergeKey": "正定隆兴寺"
     },
     {
       "name": "正定荣国府",
       "sourceName": "正定荣国府",
       "address": "河北石家庄市正定县河北石家庄市正定县正定荣国府",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-石家庄-124",
+      "city": "河北石家庄市",
+      "mergeKey": "正定荣国府"
     },
     {
       "name": "天山海世界",
       "sourceName": "天山海世界",
       "address": "河北石家庄市裕华区河北石家庄高新区天山海世界",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-石家庄-125",
+      "city": "河北石家庄市",
+      "mergeKey": "天山海世界"
     },
     {
       "name": "塞罕坝森林公园",
       "sourceName": "承德市围场县塞罕坝森林公园景区",
       "address": "河北承德市围场满族蒙古族自治县河北承德市围场县承德市围场县塞罕坝森林公园景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-承德-128",
+      "city": "河北承德市围",
+      "mergeKey": "塞罕坝森林公园"
     },
     {
       "name": "承德市丰宁县京北第一草原景区",
       "sourceName": "承德市丰宁县京北第一草原景区",
       "address": "河北承德市丰宁满族自治县河北承德市丰宁县承德市丰宁县京北第一草原景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-承德-129",
+      "city": "河北承德市丰",
+      "mergeKey": "承德市丰宁县京北第一草原景区"
     },
     {
       "name": "承德市御道口草原森林风景区",
       "sourceName": "承德市御道口草原森林风景区",
       "address": "河北承德市围场满族蒙古族自治县河北承德市御道口承德市御道口草原森林风景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-承德-130",
+      "city": "河北承德市围",
+      "mergeKey": "承德市御道口草原森林风景区"
     },
     {
       "name": "承德市双滦区双塔山景区",
       "sourceName": "承德市双滦区双塔山景区",
       "address": "河北承德市双滦区河北承德市双滦区承德市双滦区双塔山景区",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "scenic-承德-131",
+      "city": "河北承德市双",
+      "mergeKey": "承德市双滦区双塔山景区"
     },
     {
       "name": "承德市隆化县董存瑞纪念馆",
       "sourceName": "承德市隆化县董存瑞纪念馆",
       "address": "河北承德市隆化县河北承德市隆化县承德市隆化县董存瑞纪念馆",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "scenic-承德-132",
+      "city": "河北承德市隆",
+      "mergeKey": "承德市隆化县董存瑞纪念馆"
     },
     {
       "name": "承德市兴隆县兴隆溶洞景区",
       "sourceName": "承德市兴隆县兴隆溶洞景区",
       "address": "河北承德市兴隆县河北承德市兴隆县承德市兴隆县兴隆溶洞景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-承德-133",
+      "city": "河北承德市兴",
+      "mergeKey": "承德市兴隆县兴隆溶洞景区"
     },
     {
       "name": "承德市丰宁县大汗行宫旅游景区",
       "sourceName": "承德市丰宁县大汗行宫旅游景区",
       "address": "河北承德市丰宁满族自治县河北承德市丰宁县承德市丰宁县大汗行宫旅游景区",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-承德-134",
+      "city": "河北承德市丰",
+      "mergeKey": "承德市丰宁县大汗行宫旅游景区"
     },
     {
       "name": "承德市丰宁县马镇旅游区",
       "sourceName": "承德市丰宁县马镇旅游区",
       "address": "河北承德市丰宁满族自治县河北承德市丰宁县承德市丰宁县马镇旅游区",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-承德-135",
+      "city": "河北承德市丰",
+      "mergeKey": "承德市丰宁县马镇旅游区"
     },
     {
       "name": "山庄老酒文化产业园",
       "sourceName": "承德市平泉市山庄老酒文化产业园景区",
       "address": "河北承德市平泉市河北承德市平泉市承德市平泉市山庄老酒文化产业园景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-承德-136",
+      "city": "河北承德市平",
+      "mergeKey": "山庄老酒文化产业园"
     },
     {
       "name": "承德市兴隆县兴隆山景区",
       "sourceName": "承德市兴隆县兴隆山景区",
       "address": "河北承德市兴隆县河北承德市兴隆县承德市兴隆县兴隆山景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-承德-137",
+      "city": "河北承德市兴",
+      "mergeKey": "承德市兴隆县兴隆山景区"
     },
     {
       "name": "承德市丰宁县七彩森林景区",
       "sourceName": "承德市丰宁县七彩森林景区",
       "address": "河北承德市丰宁满族自治县河北承德市丰宁县承德市丰宁县七彩森林景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-承德-138",
+      "city": "河北承德市丰",
+      "mergeKey": "承德市丰宁县七彩森林景区"
     },
     {
       "name": "承德市磬锤峰森林公园景区",
       "sourceName": "承德市磬锤峰森林公园景区",
       "address": "河北承德市双桥区河北承德市双桥区承德市磬锤峰森林公园景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-承德-139",
+      "city": "河北承德市双",
+      "mergeKey": "承德市磬锤峰森林公园景区"
     },
     {
       "name": "鼎盛文化产业园景区",
       "sourceName": "鼎盛文化产业园景区",
       "address": "河北承德市双滦区河北承德市双滦鼎盛文化产业园景区",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-承德-140",
+      "city": "河北承德市双",
+      "mergeKey": "鼎盛文化产业园景区"
     },
     {
       "name": "角山景区",
       "sourceName": "角山景区",
       "address": "河北秦皇岛市山海关区河北秦皇岛市角山景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-秦皇岛-142",
+      "city": "河北秦皇岛市",
+      "mergeKey": "角山景区"
     },
     {
       "name": "长寿山景区",
       "sourceName": "长寿山景区",
       "address": "河北秦皇岛市山海关区河北秦皇岛市长寿山景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-秦皇岛-143",
+      "city": "河北秦皇岛市",
+      "mergeKey": "长寿山景区"
     },
     {
       "name": "乐岛海洋王国",
       "sourceName": "乐岛海洋王国",
       "address": "河北秦皇岛市山海关区河北秦皇岛市乐岛海洋王国",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-秦皇岛-144",
+      "city": "河北秦皇岛市",
+      "mergeKey": "乐岛海洋王国"
     },
     {
       "name": "鸽子窝公园",
       "sourceName": "鸽子窝公园",
       "address": "河北秦皇岛市北戴河区河北秦皇岛市鸽子窝公园",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-秦皇岛-145",
+      "city": "河北秦皇岛市",
+      "mergeKey": "鸽子窝公园"
     },
     {
       "name": "集发农业梦想王国",
       "sourceName": "集发农业梦想王国",
       "address": "河北秦皇岛市北戴河区河北秦皇岛市集发农业梦想王国",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-秦皇岛-146",
+      "city": "河北秦皇岛市",
+      "mergeKey": "集发农业梦想王国"
     },
     {
       "name": "秦皇岛野生动物园",
       "sourceName": "秦皇岛野生动物园",
       "address": "河北秦皇岛市北戴河区河北秦皇岛市秦皇岛野生动物园",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "scenic-秦皇岛-147",
+      "city": "河北秦皇岛市",
+      "mergeKey": "秦皇岛野生动物园"
     },
     {
       "name": "碧螺塔海上酒吧公园",
       "sourceName": "碧螺塔海上酒吧公园",
       "address": "河北秦皇岛市北戴河区河北秦皇岛市碧螺塔海上酒吧公园",
-      "category": "宗教寺庙"
+      "category": "宗教寺庙",
+      "id": "scenic-秦皇岛-148",
+      "city": "河北秦皇岛市",
+      "mergeKey": "碧螺塔海上酒吧公园"
     },
     {
       "name": "联峰山公园",
       "sourceName": "联峰山公园",
       "address": "河北秦皇岛市北戴河区河北秦皇岛市联峰山公园",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-秦皇岛-149",
+      "city": "河北秦皇岛市",
+      "mergeKey": "联峰山公园"
     },
     {
       "name": "秦皇求仙入海处景区",
       "sourceName": "秦皇求仙入海处景区",
       "address": "河北秦皇岛市海港区河北秦皇岛市秦皇求仙入海处景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-秦皇岛-150",
+      "city": "河北秦皇岛市",
+      "mergeKey": "秦皇求仙入海处景区"
     },
     {
       "name": "新澳海底世界",
       "sourceName": "新澳海底世界",
       "address": "河北秦皇岛市海港区河北秦皇岛市新澳海底世界",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-秦皇岛-151",
+      "city": "河北秦皇岛市",
+      "mergeKey": "新澳海底世界"
     },
     {
       "name": "昌黎县旅游滑沙活动中心",
       "sourceName": "昌黎县旅游滑沙活动中心",
       "address": "河北秦皇岛市昌黎县河北秦皇岛市昌黎县旅游滑沙活动中心",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-秦皇岛-152",
+      "city": "河北秦皇岛市",
+      "mergeKey": "昌黎县旅游滑沙活动中心"
     },
     {
       "name": "华夏庄园景区",
       "sourceName": "华夏庄园景区",
       "address": "河北秦皇岛市昌黎县河北秦皇岛市华夏庄园景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-秦皇岛-153",
+      "city": "河北秦皇岛市",
+      "mergeKey": "华夏庄园景区"
     },
     {
       "name": "秦皇岛市南戴河国际娱乐中心",
       "sourceName": "秦皇岛市南戴河国际娱乐中心",
       "address": "河北秦皇岛市抚宁区河北秦皇岛市秦皇岛市南戴河国际娱乐中心",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-秦皇岛-154",
+      "city": "河北秦皇岛市",
+      "mergeKey": "秦皇岛市南戴河国际娱乐中心"
     },
     {
       "name": "冰塘峪长城风情大峡谷景区",
       "sourceName": "河北省秦皇岛市抚宁区冰塘峪长城风情大峡谷景区",
       "address": "河北秦皇岛市抚宁区河北秦皇岛市河北省秦皇岛市抚宁区冰塘峪长城风情大峡谷景区",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "scenic-秦皇岛-155",
+      "city": "河北秦皇岛市",
+      "mergeKey": "冰塘峪长城风情大峡谷景区"
     },
     {
       "name": "祖山景区",
       "sourceName": "祖山景区",
       "address": "河北秦皇岛市青龙满族自治县河北秦皇岛市祖山景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-秦皇岛-156",
+      "city": "河北秦皇岛市",
+      "mergeKey": "祖山景区"
     },
     {
       "name": "渔岛海洋温泉景区",
       "sourceName": "渔岛海洋温泉景区",
       "address": "河北秦皇岛市昌黎县河北秦皇岛市渔岛海洋温泉景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-秦皇岛-157",
+      "city": "河北秦皇岛市",
+      "mergeKey": "渔岛海洋温泉景区"
     },
     {
       "name": "沙雕海洋乐园",
       "sourceName": "沙雕海洋乐园",
       "address": "河北秦皇岛市昌黎县河北秦皇岛市沙雕海洋乐园",
-      "category": "主题乐园"
+      "category": "主题乐园",
+      "id": "scenic-秦皇岛-158",
+      "city": "河北秦皇岛市",
+      "mergeKey": "沙雕海洋乐园"
     },
     {
       "name": "遵化市万佛园景区",
       "sourceName": "遵化市万佛园景区",
       "address": "河北唐山市遵化市河北唐山市遵化市遵化市万佛园景区",
-      "category": "城市地标"
+      "category": "城市地标",
+      "id": "scenic-唐山-160",
+      "city": "河北唐山市遵",
+      "mergeKey": "遵化市万佛园景区"
     },
     {
       "name": "乐亭县李大钊纪念馆及故居",
       "sourceName": "乐亭县李大钊纪念馆及故居",
       "address": "河北唐山市乐亭县河北唐山市乐亭县乐亭县李大钊纪念馆及故居",
-      "category": "历史人文"
+      "category": "历史人文",
+      "id": "scenic-唐山-161",
+      "city": "河北唐山市乐",
+      "mergeKey": "乐亭县李大钊纪念馆及故居"
     },
     {
       "name": "迁西县景忠山旅游区",
       "sourceName": "迁西县景忠山旅游区",
       "address": "河北唐山市迁西县河北河北省唐山市迁西县迁西县景忠山旅游区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-唐山-162",
+      "city": "河北唐山市迁",
+      "mergeKey": "迁西县景忠山旅游区"
     },
     {
       "name": "迁西县青山关景区",
       "sourceName": "迁西县青山关景区",
       "address": "河北唐山市迁西县河北河北省唐山市迁西县迁西县青山关景区",
-      "category": "自然风光"
+      "category": "自然风光",
+      "id": "scenic-唐山-163",
+      "city": "河北唐山市迁",
+      "mergeKey": "迁西县青山关景区"
     }
-  ]
+  ],
+  "mergeRule": "合入 SCENIC_DESCRIPTIONS 时：mergeKey 为「城市::名」的走城市限定键（POI 城市包条目），其余沿用裸名（名录 extras 条目）。裸名键永不用于 POI。"
 }

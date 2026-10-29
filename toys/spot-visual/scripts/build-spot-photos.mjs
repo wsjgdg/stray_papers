@@ -4,7 +4,7 @@
  * 选图规则（无人工介入时的确定性筛选，终检用 contact sheet）：
  *   1. 按 _report.json 的来源 URL 过滤：水印图库（千图/588ku/花瓣等）直接剔除；
  *   2. 白名单域名（携程/知乎/搜狐/新浪/新华网/太平洋电脑/中关村/本地宝/去哪儿/官网）优先；
- *   3. sharp 实测宽度 ≥ 600px；
+ *   3. sharp 实测宽度 ≥ 600px（冷门景区退档到 ≥ 420px，见下方 MIN_W_FALLBACK）；
  *   4. 每个景点取排序最优的一张，压成 640px/q78 webp → public/spots/<景点名>.webp；
  *   5. 生成 src/lib/spot-photos.generated.ts（景点名 → 本地路径）。
  *
@@ -74,18 +74,26 @@ async function main() {
       console.log(`✗ ${spot} 终检剔除（${rejected.get(spot) || "见 _rejected.json"}）`);
       continue;
     }
+    // 两档门槛：先找 ≥600px 的清晰图；都没有时退而接受 ≥420px
+    // （输出是 640px 卡片缩略图，420px 源轻微放大可接受，总比整条落渐变占位好；
+    //  2026-10-29 加：一批冷门 4A 景区全网只有 400–600px 的图，被单档 600 全数挡掉）
+    const MIN_W_STRICT = 600;
+    const MIN_W_FALLBACK = 420;
     let picked = null;
-    for (const it of items) {
-      const file = path.join(CAND_DIR, path.basename(it.file));
-      try {
-        const m = await sharp(file).metadata();
-        if ((m.width ?? 0) >= 600) {
-          picked = { it, file };
-          break;
+    for (const minW of [MIN_W_STRICT, MIN_W_FALLBACK]) {
+      for (const it of items) {
+        const file = path.join(CAND_DIR, path.basename(it.file));
+        try {
+          const m = await sharp(file).metadata();
+          if ((m.width ?? 0) >= minW) {
+            picked = { it, file };
+            break;
+          }
+        } catch {
+          /* unreadable, try next */
         }
-      } catch {
-        /* unreadable, try next */
       }
+      if (picked) break;
     }
     if (!picked) {
       skipped.push(spot);

@@ -162,7 +162,10 @@ for (const { prov, dish } of dishes) {
     seenHash.add(hash);
 
     const ext = isPng ? "png" : isWebp ? "webp" : "jpg";
-    const file = path.join(OUT_DIR, `${dish}-${saved + 1}.${ext}`);
+    // 文件名安全化：名录里有「扬州市中国雕版印刷博物馆/扬州博物馆」这类带路径分隔符的名字，
+    // 直接拿来做文件名会 ENOENT 并中断整批；报告里的 dish 仍保留原名（烘焙靠它回查）。
+    const safeDish = dish.replace(/[/\\:*?"<>|]/g, "-");
+    const file = path.join(OUT_DIR, `${safeDish}-${saved + 1}.${ext}`);
     fs.writeFileSync(file, buf);
     saved += 1;
     report.push({
