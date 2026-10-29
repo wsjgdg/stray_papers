@@ -700,6 +700,159 @@ export function scCrossingCI(a, b, k = 3){
   return best;
 }
 
+/* ==========================================================================
+ * 交叉点估计（R132）：从「相邻两点变号 + 3σ 门槛」换成「整条曲线的加权多项式拟合」
+ *
+ * 为什么换（都是实测，不是口味）：
+ *   ① 旧口径只在**一对相邻点**上工作：要求两端都满足 PL > 3σ 且符号反转。交叉点附近
+ *      恰恰是两条曲线贴得最近、PL 与 σ 同量级的地方，于是「阈值」最该被读出来的区域
+ *      反而最先被判成「未分辨」。标定（K=14 独立种子、N=3000、带噪测量 d3×d5）：
+ *      旧法只有 6/14 次给出数字，二次拟合 14/14。
+ *   ② 两点弦代替曲线：f(p) = P_A − P_B 在交叉点附近是**弯的**（先升后降），弦的零点
+ *      系统性偏小。实测同一标定下旧法均值 0.0225、线性拟合 0.0212（偏置 −5%）、
+ *      二次拟合 0.0222，参考值 0.0223 ⟹ 弯度必须进模型。
+ *   ③ σ 用回归协方差的 delta 法，而不是 σ_f/|两点斜率|：后者把**斜率自身的噪声**塞进
+ *      分母（噪声让斜率偶尔很陡 ⟹ σ 偶尔偏小），同一个量的误差棒质量不一致。
+ *      标定实测「经验离散度 / 报告 σ」= 1.16（带噪测量 d3×d5）、1.43（单帧 x d3×d5）：
+ *      回归 σ 略偏小（模型误差所致），故乘安全系数 SC_XFIT.safety = 1.4（取实测上限）。
+ *
+ * 保留 scCrossing / scCrossingCI 作为对照口径（README 的历史数字与 pot 的交叉验证都指着
+ * 它），页面改用 scCrossingFit。未分辨时返回具体原因，不再只给一个「—」。
+ * ========================================================================== */
+export const SC_XFIT = {
+  win: [5, 6, 7],       /* 候选窗口（点数）：二次拟合至少要 5 点（dof ≥ 2） */
+  winLin: [3, 4],       /* 点数不够时退化到直线 */
+  chiMax: 2.5,          /* χ²/dof 上限：模型明显不合就不能拿它的根当答案 */
+  slopeK: 3,            /* 根处斜率必须显著（|b| > k·σ_b） */
+  safety: 1.4,          /* 实测标定上限（1.16 / 1.43），见文件头注释 */
+};
+
+/** 加权最小二乘多项式拟合（法方程 + 高斯-约当，同时给出系数协方差） */
+function scWls(xs, ys, ws, deg){
+  const m = deg + 1;
+  const A = Array.from({ length: m }, () => new Array(m).fill(0));
+  const b = new Array(m).fill(0);
+  for (let i = 0; i < xs.length; i++){
+    const w = ws[i], x = xs[i];
+    const pw = [1];
+    for (let k = 1; k < 2 * m; k++) pw.push(pw[k - 1] * x);
+    for (let r = 0; r < m; r++){
+      b[r] += w * ys[i] * pw[r];
+      for (let c = 0; c < m; c++) A[r][c] += w * pw[r + c];
+    }
+  }
+  /* 增广矩阵求逆：右半段即 (AᵀWA)⁻¹，用来算根的方差 */
+  const M = A.map((row, i) => row.concat([b[i]]));
+  const inv = Array.from({ length: m }, (_, i) => Array.from({ length: m }, (_, j) => (i === j ? 1 : 0)));
+  for (let c = 0; c < m; c++){
+    let piv = c;
+    for (let r = c + 1; r < m; r++) if (Math.abs(M[r][c]) > Math.abs(M[piv][c])) piv = r;
+    if (!(Math.abs(M[piv][c]) > 1e-18)) return null;
+    if (piv !== c){
+      const t = M[piv]; M[piv] = M[c]; M[c] = t;
+      const t2 = inv[piv]; inv[piv] = inv[c]; inv[c] = t2;
+    }
+    const d = M[c][c];
+    for (let k = 0; k < m + 1; k++) M[c][k] /= d;
+    for (let k = 0; k < m; k++) inv[c][k] /= d;
+    for (let r = 0; r < m; r++){
+      if (r === c) continue;
+      const f = M[r][c];
+      if (!f) continue;
+      for (let k = 0; k < m + 1; k++) M[r][k] -= f * M[c][k];
+      for (let k = 0; k < m; k++) inv[r][k] -= f * inv[c][k];
+    }
+  }
+  const coef = M.map(row => row[m]);
+  const evalAt = x => coef.reduce((s, c, k) => s + c * Math.pow(x, k), 0);
+  let chi2 = 0;
+  for (let i = 0; i < xs.length; i++) chi2 += (ys[i] - evalAt(xs[i])) ** 2 * ws[i];
+  return { coef, cov: inv, chi2, dof: xs.length - m, evalAt };
+}
+
+/** 多项式在 x0 附近最近的那个实根（二次用求根公式，一次直接除） */
+function scRootNear(coef, x0){
+  const c0 = coef[0], c1 = coef[1], c2 = coef.length > 2 ? coef[2] : 0;
+  if (Math.abs(c2) < 1e-14) return Math.abs(c1) > 0 ? -c0 / c1 : null;
+  const disc = c1 * c1 - 4 * c2 * c0;
+  if (disc < 0) return null;
+  const sq = Math.sqrt(disc);
+  const r1 = (-c1 - sq) / (2 * c2), r2 = (-c1 + sq) / (2 * c2);
+  return Math.abs(r1 - x0) <= Math.abs(r2 - x0) ? r1 : r2;
+}
+
+/**
+ * 交叉点（拟合口径）。
+ * 返回 { ok, p, sigma, win, deg, chi2dof, slope, why }；
+ * ok=false 时 why ∈ 'no-sigma' | 'no-cross' | 'bad-fit' | 'no-root' | 'sign' | 'out-of-range'。
+ */
+export function scCrossingFit(a, b, opt = {}){
+  const o = { ...SC_XFIT, ...opt };
+  const n = Math.min(a.length, b.length), P = [];
+  for (let i = 0; i < n; i++){
+    const A = a[i], B = b[i];
+    const sA = A.sigma === undefined ? 0 : A.sigma, sB = B.sigma === undefined ? 0 : B.sigma;
+    if (!(sA > 0) || !(sB > 0)) return { ok: false, why: 'no-sigma' };
+    P.push({ p: A.p, f: A.PL - B.PL, s: Math.hypot(sA, sB) });
+  }
+  /* 变号点：与旧口径同取向（取最高 p 的那个）。两帧完全相同的退化情形（f 恒 0）
+     不是「在 0 处交叉」，而是没有可估的交叉点 —— 直接判 no-cross，别让拟合去解 0=0。 */
+  if (P.every(z => z.f === 0)) return { ok: false, why: 'no-cross' };
+  let ib = -1;
+  for (let i = 1; i < P.length; i++){
+    if (P[i - 1].f === 0){ ib = i - 1; continue; }
+    if (P[i - 1].f * P[i].f < 0) ib = i;
+  }
+  if (ib < 0) return { ok: false, why: 'no-cross' };
+
+  let best = null, why = '';
+  const tries = P.length >= 5 ? o.win : o.winLin;
+  for (const w of tries){
+    if (w > P.length || w < 3) continue;
+    let lo = ib - Math.floor(w / 2), hi = lo + w;
+    if (lo < 0){ lo = 0; hi = w; }
+    if (hi > P.length){ hi = P.length; lo = hi - w; }
+    const seg = P.slice(lo, hi);
+    if (seg.some(z => !(z.s > 0) || !Number.isFinite(z.f))) continue;
+    const deg = seg.length >= 5 ? 2 : 1;
+    const fit = scWls(seg.map(z => z.p), seg.map(z => z.f), seg.map(z => 1 / (z.s * z.s)), deg);
+    if (!fit || !(fit.dof > 0)) continue;
+    const chi2dof = fit.chi2 / fit.dof;
+    if (chi2dof > o.chiMax){ why = 'bad-fit'; continue; }
+    const x0 = scRootNear(fit.coef, P[ib].p);
+    if (x0 === null){ why = 'no-root'; continue; }
+    /* 根处斜率及其方差：slope = c1 + 2·c2·x0 */
+    const slope = fit.coef[1] + 2 * (fit.coef[2] || 0) * x0;
+    if (!(slope < 0)){ why = 'sign'; continue; }
+    /* 根的方差：把 c0 + c1·p + c2·p² 在根处对系数求偏导，g = [1, p*, p*²] */
+    const g = deg === 2 ? [1, x0, x0 * x0] : [1, x0];
+    let varp = 0;
+    for (let i2 = 0; i2 < g.length; i2++) for (let j2 = 0; j2 < g.length; j2++)
+      varp += (g[i2] / slope) * (g[j2] / slope) * fit.cov[i2][j2];
+    /* 斜率方差（g_slope = [0, 1, 2·x0]）：斜率不显著就不许报交叉点 */
+    const gs = deg === 2 ? [0, 1, 2 * x0] : [0, 1];
+    let varb = 0;
+    for (let i2 = 0; i2 < gs.length; i2++) for (let j2 = 0; j2 < gs.length; j2++)
+      varb += gs[i2] * gs[j2] * fit.cov[i2][j2];
+    if (!(Math.abs(slope) > o.slopeK * Math.sqrt(Math.max(varb, 0)))){ why = 'slope-ns'; continue; }
+    /* 拟合曲线必须在窗口内真的换边（左正右负），否则这个根可能是远处那一支 */
+    if (!(fit.evalAt(seg[0].p) > 0 && fit.evalAt(seg[seg.length - 1].p) < 0)){ why = 'no-reversal'; continue; }
+    const inRange = x0 >= P[0].p * 0.999 && x0 <= P[P.length - 1].p * 1.001;
+    if (!inRange){ why = 'out-of-range'; continue; }
+    const cand = {
+      ok: true, p: x0, win: w, deg, chi2dof, slope,
+      sigma: Math.sqrt(Math.max(varp, 0)) * o.safety * Math.sqrt(Math.max(1, chi2dof)),
+      why: 'ok',
+    };
+    if (!best || cand.sigma < best.sigma) best = cand;
+  }
+  return best || { ok: false, why: why || 'none' };
+}
+
+/** 扫描网格的每点独立种子（R132）：同一 seed 跑遍所有 p 会让整条曲线的 MC 误差正相关 */
+export const scGridSeed = (seed, d, i) =>
+  scMix32((Math.round(seed) * 2654435761 + Math.round(d) * 104729 + Math.round(i) * 40503) >>> 0);
+
 /** 领先幂次 α（P_L ~ C·p^α）：在最小两点上取对数斜率 */
 export function scLeadingPower(rows){
   const pts = rows.filter(r => r.PL > 0).slice(0, 3);
