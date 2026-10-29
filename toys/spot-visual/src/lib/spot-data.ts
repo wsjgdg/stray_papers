@@ -1394,6 +1394,7 @@ import {
   SCENIC_DESCRIPTIONS,
 } from "./poi-descriptions";
 import { POI_PHOTOS } from "./poi-photos.generated";
+import { OUTSOURCE_DESCRIPTIONS } from "./scenic-desc-outsource.generated";
 import {
   SCENIC_LEVELS,
   EXTRA_SCENICS,
@@ -1419,8 +1420,9 @@ const stripCtrl = (s: string) => s.replace(/[\u0000-\u001f\u007f]+/g, "");
 export function cityPoiToSpot(city: string, p: CityPoi, index: number): Spot {
   const short = city.replace(/市$/, "");
   const level = SCENIC_LEVELS[`${city}::${p.name}`];
+  const id = `poi-${short}-${index}`;
   return {
-    id: `poi-${short}-${index}`,
+    id,
     name: p.name,
     image: POI_PHOTOS[`${city}::${p.name}`] ?? p.image,
     // 相册多图不再内联在主包里（见 lib/poi-photos.ts），只留取数用的键
@@ -1438,9 +1440,11 @@ export function cityPoiToSpot(city: string, p: CityPoi, index: number): Spot {
     category: p.category,
     description:
       // 描述链：城市包人工描述 → 外包描述（城市限定键 `城市::名`，防同名跨市串写，
-      // 如 北京/武汉 都有「中山公园」）→ 事实句模板。裸名键不给 POI（见 worklog 六十轮）。
+      // 如 北京/武汉 都有「中山公园」）→ 外包按 id 落键（merge-out-desc 管线）→ 事实句模板。
+      // 裸名键不给 POI（见 worklog 六十轮）。
       POI_DESCRIPTIONS[`${city}::${p.name}`] ??
       SCENIC_DESCRIPTIONS[`${city}::${p.name}`] ??
+      OUTSOURCE_DESCRIPTIONS[id] ??
       poiPlaceholder(city, p, level),
     location: { lat: p.lat, lng: p.lng },
   };
@@ -1603,10 +1607,11 @@ function buildExtraScenicSpots(knownNames: Set<string>): Spot[] {
       level: e.level,
       reservation: RESERVATION_NOTES[e.name],
       // 事实句替代千篇一律占位：等级/位置/类别来自名录数据，同时改善描述搜索命中
-      // 人工描述（知名条目）优先，事实句模板兜底
+      // 人工描述（知名条目）优先，外包描述按 id 落键，事实句模板兜底
       description:
         SCENIC_DESCRIPTIONS[displayName] ??
         SCENIC_DESCRIPTIONS[e.name] ??
+        OUTSOURCE_DESCRIPTIONS[`scenic-${e.city}-${i}`] ??
         `国家${e.level}级景区（2023 年全国 A 级景区名录），位于${where}，${SCENIC_CATEGORY_WORDS[category] ?? "属综合性景区"}。开放时间、门票与预约要求以景区公示为准。`,
       location: { lat: e.lat, lng: e.lng },
     } as Spot;
