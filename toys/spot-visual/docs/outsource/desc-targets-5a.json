@@ -1,9 +1,9 @@
 {
   "meta": {
     "count": 255,
-    "done": 93,
-    "remaining": 204,
-    "note": "前 51 条（批1）已完成，见 out-desc-batch1.json；剩余见 desc-batch-2..5.json"
+    "done": 297,
+    "remaining": 0,
+    "note": "全部完成：42 条原有 + 255 条外包（批1 51 + 批2-4 204）"
   },
   "targets": [
     {
