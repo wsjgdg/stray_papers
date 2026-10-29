@@ -1392,10 +1392,14 @@ import {
   MANUAL_SCENIC_LEVELS,
 } from "./scenic-enrich.generated";
 import { SCENIC_DETAILS } from "./scenic-details.generated";
-import { SCENIC_RENAMES, SCENIC_DROPS } from "./scenic-renames";
+import { SCENIC_RENAMES, SCENIC_DROPS, SCENIC_GEO_RENAMES, SCENIC_GEO_DROPS } from "./scenic-renames";
 
 /** 名录里被清洗判定为重复/非景区的条目（公司名、管委会、长短名并存） */
 const SCENIC_DROP_SET = new Set(SCENIC_DROPS);
+/** 同名条目无法用名字区分，改用「省::市::名」定位 */
+const SCENIC_GEO_DROP_SET = new Set(SCENIC_GEO_DROPS);
+const geoKeyOf = (e: { province: string; city: string; name: string }) =>
+  `${e.province}::${e.city}::${e.name}`;
 /** 压掉名称里的控制字符（名录里出现过夹带换行的名称） */
 const stripCtrl = (s: string) => s.replace(/[\u0000-\u001f\u007f]+/g, "");
 
@@ -1543,14 +1547,19 @@ function buildCityPoiSpots(): Spot[] {
 
 function buildExtraScenicSpots(knownNames: Set<string>): Spot[] {
   return EXTRA_SCENICS.filter(
-    (e) => !knownNames.has(e.name) && !SCENIC_DROP_SET.has(e.name),
+    (e) =>
+      !knownNames.has(e.name) &&
+      !SCENIC_DROP_SET.has(e.name) &&
+      !SCENIC_GEO_DROP_SET.has(geoKeyOf(e)),
   ).map((e, i) => {
     const category = inferScenicCategory(e.name);
     // 直辖市 province===city，去重避免「北京北京」
     const where = e.province === e.city ? e.province : `${e.province}${e.city}`;
-    // 展示名：先套人工清洗映射（见 scripts/gen-scenic-renames.mjs），再压掉控制字符。
-    // 取数键仍用 e.name（照片/详情/描述的生成数据都按原始名录名建键）。
-    const displayName = stripCtrl(SCENIC_RENAMES[e.name] ?? e.name);
+    // 展示名：同名条目先按「省::市::名」查，再按名称查（见 scripts/gen-scenic-renames.mjs），
+    // 最后压掉控制字符。取数键仍用 e.name（照片/详情/描述的生成数据都按原始名录名建键）。
+    const displayName = stripCtrl(
+      SCENIC_GEO_RENAMES[geoKeyOf(e)] ?? SCENIC_RENAMES[e.name] ?? e.name,
+    );
     return {
       id: `scenic-${e.city}-${i}`,
       // 全国化：跨省同名景区保留（id 含城市不冲突），地址自带省份可被省份筛选命中

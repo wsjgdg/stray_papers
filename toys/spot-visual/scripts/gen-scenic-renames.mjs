@@ -18,6 +18,11 @@ const renames = new Map(
 );
 const drops = data.drops.map((d) => d.name);
 
+// 同名不同实体：名字相同无法用「名→名」区分，改用 省::市::名 键
+const same = data.sameNameFixes ?? { renames: [], drops: [] };
+const geoRenames = new Map(same.renames.map((r) => [r.key, r.to]));
+const geoDrops = same.drops.map((d) => d.key);
+
 // 防御：同一原名不得既改名又删除
 for (const n of drops) {
   if (renames.has(n)) throw new Error(`同时出现在 renames 与 drops：${n}`);
@@ -41,8 +46,24 @@ ${body}
 /** 重复/非景区条目（公司名、管委会、长短名并存），共 ${drops.length} 条 */
 export const SCENIC_DROPS: readonly string[] = ${JSON.stringify(drops, null, 2)} as const;
 
+/* ═══ 同名条目：键为「省::市::名」 ═══
+ * 全国同名景区靠名字区分不了（例：浙江天台山 5A / 四川邛崃天台山 4A 都叫「天台山风景名胜区」），
+ * 以及名录里成批错位的同名脏行（宁夏吴忠那 6 条实际都在固原），只能用带地域的键定位。 */
+
+/** 同名不同实体的规范名（${geoRenames.size} 条） */
+export const SCENIC_GEO_RENAMES: Record<string, string> = {
+${[...geoRenames.entries()]
+  .sort((a, b) => a[0].localeCompare(b[0], "zh"))
+  .map(([k, v]) => `  ${JSON.stringify(k)}: ${JSON.stringify(v)},`)
+  .join("\n")}
+};
+
+/** 同名脏行（名录错位/重复坐标），共 ${geoDrops.length} 条 */
+export const SCENIC_GEO_DROPS: readonly string[] = ${JSON.stringify(geoDrops, null, 2)} as const;
+
 export const SCENIC_RENAMES_COUNT = ${renames.size};
 export const SCENIC_DROPS_COUNT = ${drops.length};
+export const SCENIC_GEO_FIX_COUNT = ${geoRenames.size + geoDrops.length};
 `;
 
 fs.writeFileSync(OUT, ts, "utf8");
