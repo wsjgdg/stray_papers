@@ -84,6 +84,12 @@
 2. 每个 `from` 都能在 `remaining-dirty.json` 找到同名条目
 3. 每个 `duplicateOf` 都存在于 `reserved-names.txt`（或本批 `keeps`/`renames.from` 中）
 4. **每个 `to` 都不在 `reserved-names.txt` 中**（逐行比对），且本批内互不重复
+
+   ⚠️ **自匹配陷阱**：`reserved-names.txt` 是「改名之前」的库，因此**它里面包含本批的源条目自身**。
+   做撞名检查时必须先排除「本批所有 `from` / `drops.name`」，否则会把自己的源名当成「库内已有条目」。
+   批 3 曾因此误判 `辽宁省大连市大连博物馆` 是「完全重复行」（实际库里只有 1 条）。
+   正确做法：`候选池 = reserved-names.txt − 本批已处理名`。
+
 5. 干跑：把本批 renames/drops 应用到 `reserved-names.txt` 的 4577 行，**不得产生新的重名**
 6. 没有 `to` 是两三个字的泛名（除非确实唯一）
 7. 输出是纯 JSON、UTF-8、无 BOM、无 markdown 代码块
