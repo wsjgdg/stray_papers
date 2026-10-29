@@ -1314,6 +1314,7 @@ class TwoBodyApp {
     if (!Number.isFinite(this.state.xa)) this.state.xa = (L - 1) / 2 - TB_PRESETS.cross.d / 2;
     if (!Number.isFinite(this.state.xb)) this.state.xb = (L - 1) / 2 + TB_PRESETS.cross.d / 2;
     this._scale = 400; this._nScale = 16; this._E = null; this._relax = null;
+    this._mountT = typeof performance !== 'undefined' ? performance.now() : 0;
     this._field = null; this._m = null; this._baseNorm = null;
     this._listeners = []; this._uloc = new Map();
     this._fps = 0; this._fpsFrames = 0; this._lastFpsT = performance.now();
@@ -1416,10 +1417,10 @@ class TwoBodyApp {
   <div class="sec" id="tbWellSec"><h3>势阱（共享 1D 轴）</h3>
     <div class="row"><label>深度 V₀</label><input type="range" id="rWellV" min="-8" max="8" step="0.5" value="-4"><output id="oWellV">-4.0</output></div>
     <div class="grid2" style="margin-top:6px">
-      <button id="tbWell" class="on" style="grid-column:1/3">势阱刷：关（点开后在画布上拖）</button>
+      <button id="tbWell" style="grid-column:1/3">势阱刷：关</button>
       <button id="tbWellClear" style="grid-column:1/3">清空势阱</button>
     </div>
-    <div class="note">负 = 阱，正 = 垒；画面上成对出现：竖条给粒子 1、横条给粒子 2（ε=0 时两支相同 ⟹ ⟨P⟩ 仍守恒）。右键删单个。</div>
+    <div class="note">负 = 阱 · 正 = 垒 · 右键删。势在共享 1D 轴上，画面里成对出现（底边给 x₁、左边给 x₂）。</div>
   </div>
   <div class="sec"><h3>参数</h3>
     <div class="row"><label>接触 g</label><input type="range" id="rG" min="0" max="40" step="0.5" value="0"><output id="oG">0.0</output></div>
@@ -1587,7 +1588,7 @@ class TwoBodyApp {
         const tol = 26 * t.px;
         const di = Math.abs(t.i - o.xa), dj = Math.abs(t.j - o.xb);
         if (Math.min(di, dj) > tol){
-          this.toast('抓住青色 x₁ / 琥珀 x₂ 虚线才能拖动轨道（或点「势阱刷」放势阱）');
+          this.toast('拖边缘的小柄挪轨道 · 或用「势阱刷」放势阱');
           return;
         }
         ev.preventDefault();
@@ -1830,6 +1831,7 @@ class TwoBodyApp {
     const xi = Math.min(L - 1, Math.max(0, x));
     if (this.state.wells.length >= TB_COMMON.wellMax) this.state.wells.shift();
     this.state.wells.push({ x: xi, w: TB_COMMON.wellW, v: this.state.wellV });
+    this._drag = { kind: 'well', idx: this.state.wells.length - 1 };   /* 新放的阱立刻高亮可拖 */
     this.bakePot(); this.drawRails(); this.syncWellHud();
     return this.state.wells.length - 1;
   }
@@ -1879,6 +1881,12 @@ class TwoBodyApp {
   }
   /* 叠加层：轨道虚线（可抓）+ 势阱条带。势场本身不在 GLSL 里画（shader 只画 |ψ|²/相位），
      所以「看得见势」这件事必须由这一层负责。 */
+  /* ---------- 叠加层：轨道握把 + 势阱剖面 ----------
+     设计原则：**不挡波函数**。所以
+       · 轨道只用一根 1px 极淡虚线作「引导」，真正的手柄是贴着边缘的小圆角柄（看得见、好抓）；
+       · 势阱不再画成整条色块，而是 ①场内极淡的高斯渐变带 + ②贴在底边/左边的**势能剖面曲线**
+         （量子教材里 1D 势的标准画法），正为垒向上、负为阱向下，ε>0 时左边那条按 (1+ε) 画高；
+       · 引导提示只在**首次 9 秒**或**势阱刷打开时**出现，之后淡出，不长期占画面。 */
   drawRails(){
     const cv = this.q('#tbRails');
     if (!cv) return;
@@ -1889,69 +1897,170 @@ class TwoBodyApp {
     ctx.clearRect(0, 0, W, H);
     if (!W || !H) return;
     const px = W / L;
-    /* 势阱：竖条 = 粒子 1 的 x₁ 轴，横条 = 粒子 2 的 x₂ 轴（y 向上） */
-    for (const w of this.state.wells){
-      const neg = w.v < 0;
-      const rgb = neg ? '56,189,248' : '251,191,36';
-      const a = Math.min(0.62, 0.16 + Math.abs(w.v) / 8 * 0.46);
-      const hw = Math.max(2 * dpr, w.w * px * 0.5);
-      const cx = (w.x + 0.5) * px;
-      const cy = H - (w.x + 0.5) * px;
-      ctx.fillStyle = `rgba(${rgb},${a})`;
-      ctx.fillRect(cx - hw, 0, 2 * hw, H);
-      ctx.fillRect(0, cy - hw, W, 2 * hw);
-      /* ε>0 时粒子 2 的势强 (1+ε) 倍：横条加一道描边如实标出不对称 */
-      if (this.state.eps > 1e-9){
-        ctx.strokeStyle = `rgba(${rgb},.9)`; ctx.lineWidth = 1.2 * dpr;
-        ctx.beginPath(); ctx.moveTo(0, cy - hw); ctx.lineTo(W, cy - hw);
-        ctx.moveTo(0, cy + hw); ctx.lineTo(W, cy + hw); ctx.stroke();
+    const has = k => typeof ctx[k] === 'function';
+    const f = v => Math.round(v * 100) / 100;                 /* 少写字，减少 canvas 状态变更 */
+
+    /* 圆角矩形路径（不用 roundRect：老 Safari 没有） */
+    const rrect = (x, y, w, h, r) => {
+      const rr = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      if (has('arc')){
+        ctx.moveTo(x + rr, y);
+        ctx.arc(x + w - rr, y + rr, rr, -Math.PI / 2, 0);
+        ctx.arc(x + w - rr, y + h - rr, rr, 0, Math.PI / 2);
+        ctx.arc(x + rr, y + h - rr, rr, Math.PI / 2, Math.PI);
+        ctx.arc(x + rr, y + rr, rr, Math.PI, Math.PI * 1.5);
+        ctx.closePath();
+      } else {
+        ctx.rect(x, y, w, h);
       }
+    };
+    /* 带暗色描边的文字：叠在亮波函数上也读得清 */
+    const label = (txt, x, y, col, align = 'center', size = 9.5 * dpr) => {
+      ctx.font = `${f(size)}px ui-monospace,SFMono-Regular,Menlo,monospace`;
+      ctx.textAlign = align;
+      ctx.lineWidth = 3 * dpr;
+      ctx.strokeStyle = 'rgba(4,8,16,.82)';
+      if (has('strokeText')) ctx.strokeText(txt, x, y);
+      ctx.fillStyle = col;
+      ctx.fillText(txt, x, y);
+    };
+
+    /* ---------- ① 势阱：场内**不常驻**色带（会糊住波函数）；只在拖动/势阱刷时高亮 ---------- */
+    const wells = this.state.wells;
+    const hotWell = this._drag && this._drag.kind === 'well' ? this._drag.idx : -1;
+    if (wells.length){
+      wells.forEach((w, k) => {
+        const neg = w.v < 0;
+        const rgb = neg ? '96,178,250' : '250,190,96';
+        const sig = Math.max(2 * dpr, w.w * px * 0.85);
+        const hw = sig * 1.45;
+        const cx = (w.x + 0.5) * px, cy = H - (w.x + 0.5) * px;
+        /* 边缘刻度：顶边（x₁ 轴）与右边（x₂ 轴）各一个 7px 小刻度，给出位置而无色块 */
+        const tick = (col) => {
+          ctx.strokeStyle = `rgba(${rgb},.5)`;
+          ctx.lineWidth = 1.4 * dpr;
+          ctx.beginPath();
+          ctx.moveTo(cx, 0); ctx.lineTo(cx, 7 * dpr);
+          ctx.moveTo(W, cy); ctx.lineTo(W - 7 * dpr, cy);
+          ctx.stroke();
+        };
+        tick();
+        /* 高亮：正在拖这个阱（或势阱刷开着且是最后一个）时，才画一层柔和色带 */
+        const hot = k === hotWell || (this.state.wellTool && k === wells.length - 1);
+        if (hot){
+          const peak = Math.min(0.16, 0.06 + Math.abs(w.v) / 8 * 0.08);
+          const band = (x0, y0, x1, y1) => {
+            let g = null;
+            if (has('createLinearGradient')){
+              try { g = ctx.createLinearGradient(x0, y0, x1, y1); } catch (_){ g = null; }
+            }
+            if (g && typeof g.addColorStop === 'function'){
+              g.addColorStop(0, `rgba(${rgb},0)`);
+              g.addColorStop(0.5, `rgba(${rgb},${f(peak)})`);
+              g.addColorStop(1, `rgba(${rgb},0)`);
+              ctx.fillStyle = g;
+            } else ctx.fillStyle = `rgba(${rgb},${f(peak * 0.6)})`;
+          };
+          band(cx - hw, 0, cx + hw, 0);
+          ctx.fillRect(cx - hw, 0, 2 * hw, H);
+          band(0, cy - hw, 0, cy + hw);
+          ctx.fillRect(0, cy - hw, W, 2 * hw);
+        }
+        /* 深度小标：贴在带子顶端 / 右端（负=阱 冷色，正=垒 暖色） */
+        const tag = (neg ? '−' : '+') + Math.abs(w.v).toFixed(1);
+        label(tag, cx, 15 * dpr, `rgba(${rgb},.72)`, 'center', 8 * dpr);
+        label(tag, W - 10 * dpr, cy - 4 * dpr, `rgba(${rgb},.72)`, 'right', 8 * dpr);
+      });
+      /* ---------- ② 势能剖面：只在最外侧 24px 内画，作「教材式」提示 ---------- */
+      const inset = 24 * dpr;
+      let vmax = 1e-9;
+      for (const w of wells) vmax = Math.max(vmax, Math.abs(w.v));
+      const curve = (vertical, scale) => {
+        const N = 96;
+        const base = vertical ? inset : H - inset;       /* 基线：左边界 / 底边 */
+        const amp = inset - 5 * dpr;
+        ctx.beginPath();
+        for (let k = 0; k <= N; k++){
+          const t = k / N, pos = t * L;
+          let V = 0;
+          for (const q of wells){ const dd = pos - (q.x + 0.5); V += q.v * Math.exp(-(dd * dd) / (q.w * q.w)); }
+          const hgt = Math.max(-1, Math.min(1, (V * scale) / vmax)) * amp;
+          const along = vertical ? (H - t * H) : (t * W);
+          if (k) ctx.lineTo(vertical ? base + hgt : along, vertical ? along : base - hgt);
+          else ctx.moveTo(vertical ? base + hgt : along, vertical ? along : base - hgt);
+        }
+        ctx.strokeStyle = 'rgba(170,200,235,.5)';
+        ctx.lineWidth = 1.1 * dpr;
+        ctx.stroke();
+      };
+      curve(false, 1);                        /* V₁(x₁)：底边 */
+      curve(true, 1 + this.state.eps);        /* V₂(x₂)：左边（ε>0 时整支放大） */
+      /* 极淡基线，让剖面的零位可读 */
+      ctx.strokeStyle = 'rgba(150,180,215,.16)';
+      ctx.beginPath();
+      ctx.moveTo(0, H - inset); ctx.lineTo(W, H - inset);
+      ctx.moveTo(inset, 0); ctx.lineTo(inset, H);
+      ctx.stroke();
+      label('V(x₁)', W - 7 * dpr, H - inset - 4 * dpr, 'rgba(170,200,235,.55)', 'right', 8 * dpr);
+      label('V(x₂)', inset + 4 * dpr, 26 * dpr, 'rgba(170,200,235,.55)', 'left', 8 * dpr);
     }
-    /* 轨道虚线（eigen 没有「包心」概念，不画） */
+
+    /* ---------- ③ 轨道：极淡引导线 + 边缘圆角柄 ---------- */
     const pr = TB_PRESETS[this.state.preset];
     if (pr && !pr.eigen){
       const o = tbOrbits(L, this.state.preset, this.initOpts());
       const vx = (o.xa + 0.5) * px, hy = H - (o.xb + 0.5) * px;
-      const hot = this._drag && this._drag.kind === 'orbit';
-      ctx.setLineDash([7 * dpr, 5 * dpr]);
-      ctx.lineWidth = 2.4 * dpr;
-      if ('shadowBlur' in ctx){ ctx.shadowBlur = 8 * dpr; ctx.shadowColor = 'rgba(103,232,249,.55)'; }
-      ctx.strokeStyle = hot ? 'rgba(103,232,249,1)' : 'rgba(103,232,249,.8)';
+      const drag = this._drag && this._drag.kind === 'orbit' ? this._drag.which : -1;
+
+      /* 引导线：1px、点状、几乎透明；拖拽中才提亮 */
+      ctx.setLineDash([2 * dpr, 7 * dpr]);
+      ctx.lineWidth = 1 * dpr;
+      ctx.strokeStyle = drag === 0 ? 'rgba(125,225,245,.55)' : 'rgba(125,225,245,.20)';
       ctx.beginPath(); ctx.moveTo(vx, 0); ctx.lineTo(vx, H); ctx.stroke();
-      if ('shadowBlur' in ctx){ ctx.shadowColor = 'rgba(251,191,36,.55)'; }
-      ctx.strokeStyle = hot ? 'rgba(251,191,36,1)' : 'rgba(251,191,36,.75)';
+      ctx.strokeStyle = drag === 1 ? 'rgba(250,205,120,.55)' : 'rgba(250,205,120,.18)';
       ctx.beginPath(); ctx.moveTo(0, hy); ctx.lineTo(W, hy); ctx.stroke();
-      if ('shadowBlur' in ctx){ ctx.shadowBlur = 0; }
       ctx.setLineDash([]);
-      /* 抓取点：两条虚线与上下/左右边缘的交点画实心小圆（告诉用户「这里能抓」） */
-      const dot = (x, y, col) => {
-        ctx.fillStyle = col; ctx.beginPath();
-        ctx.arc(x, y, 5.2 * dpr, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = 'rgba(4,8,16,.75)'; ctx.lineWidth = 1.4 * dpr;
-        ctx.beginPath(); ctx.arc(x, y, 5.2 * dpr, 0, Math.PI * 2); ctx.stroke();
+
+      /* 手柄：x₁ 贴顶边（竖直柄），x₂ 贴右边（水平柄） */
+      const grip = (x, y, vertical, hot, rgb) => {
+        const long = (hot ? 30 : 24) * dpr, thin = 5 * dpr, r = 2.5 * dpr;
+        if ('shadowBlur' in ctx){ ctx.shadowBlur = 6 * dpr; ctx.shadowColor = `rgba(${rgb},.5)`; }
+        ctx.fillStyle = `rgba(${rgb},${hot ? 1 : 0.82})`;
+        if (vertical) rrect(x - long / 2, y, long, thin, r);
+        else rrect(x - thin, y - long / 2, thin, long, r);
+        ctx.fill();
+        if ('shadowBlur' in ctx) ctx.shadowBlur = 0;
       };
-      dot(vx, H - 7 * dpr, 'rgba(103,232,249,.95)');
-      dot(7 * dpr, hy, 'rgba(251,191,36,.95)');
-      ctx.font = `bold ${10 * dpr}px monospace`;
-      ctx.fillStyle = 'rgba(103,232,249,.95)'; ctx.textAlign = 'center';
-      ctx.fillText('x₁', vx, H - 12 * dpr);
-      ctx.fillStyle = 'rgba(251,191,36,.95)'; ctx.textAlign = 'left';
-      ctx.fillText('x₂', 11 * dpr, hy - 7 * dpr);
+      grip(vx, 3 * dpr, true, drag === 0, '125,225,245');
+      grip(W - 3 * dpr, hy, false, drag === 1, '250,205,120');
+
+      /* 标签：贴在手柄内侧，带暗底描边 */
+      label('x₁', vx, 20 * dpr, 'rgba(125,225,245,.9)');
+      label('x₂', W - 10 * dpr, hy + 14 * dpr, 'rgba(250,205,120,.9)', 'right');
     }
-    /* 画布内图例：让「能拖什么、势阱刷在哪」在画面上可见（而不是只写在 README 里） */
-    {
+
+    /* ---------- ④ 一次性的操作提示（9 秒后淡出；势阱刷开着时常驻） ---------- */
+    const age = (typeof performance !== 'undefined' ? performance.now() : 0) - (this._mountT || 0);
+    const fade = this.state.wellTool ? 1 : Math.max(0, Math.min(1, (9000 - age) / 1500));
+    if (fade > 0.02){
       const txt = this.state.wellTool
-        ? '势阱刷：开 · 在画布上拖动放/挪势阱（右键删）'
-        : '按住虚线拖轨道 · 左侧面板「势阱刷」可放势阱';
-      const fs = 10.5 * dpr;
-      ctx.font = `${fs}px monospace`;
-      const tw = (ctx.measureText ? ctx.measureText(txt).width : txt.length * fs * 0.6) || txt.length * fs * 0.6;
-      const pad = 5 * dpr, x = 8 * dpr, y = 8 * dpr;
-      ctx.fillStyle = 'rgba(4,8,16,.62)';
-      ctx.fillRect(x, y, tw + 2 * pad, fs + 2 * pad);
-      ctx.fillStyle = this.state.wellTool ? 'rgba(251,191,36,.95)' : 'rgba(148,180,220,.92)';
+        ? '势阱刷：拖动放阱 · 右键删'
+        : '拖边缘小柄挪轨道';
+      ctx.font = `${f(9.5 * dpr)}px ui-monospace,SFMono-Regular,Menlo,monospace`;
+      const tw = (ctx.measureText ? ctx.measureText(txt).width : txt.length * 5.7 * dpr) || txt.length * 5.7 * dpr;
+      const padX = 6 * dpr, padY = 3.5 * dpr;
+      const bh = 9.5 * dpr + 2 * padY;
+      const x = W - tw - 2 * padX - 8 * dpr;         /* 右上角：避开左下剖面与左上标签 */
+      const by = 8 * dpr;
+      ctx.globalAlpha = 0.9 * fade;
+      ctx.fillStyle = 'rgba(6,12,22,.55)';
+      rrect(x, by, tw + 2 * padX, bh, 5 * dpr);
+      ctx.fill();
+      ctx.fillStyle = this.state.wellTool ? 'rgba(250,205,120,.95)' : 'rgba(165,195,230,.92)';
       ctx.textAlign = 'left';
-      ctx.fillText(txt, x + pad, y + fs + pad * 0.55);
+      ctx.fillText(txt, x + padX, by + padY + 8 * dpr);
+      ctx.globalAlpha = 1;
     }
   }
   /* 拖动的一步（pointerdown 与 pointermove 共用，所以「按下」就有反馈） */
@@ -1970,8 +2079,8 @@ class TwoBodyApp {
     this.syncWellHud();
     this.q('#tbField').style.cursor = this.state.wellTool ? 'cell' : '';
     this.toast(this.state.wellTool
-      ? '势阱刷：在画布上拖动放置势阱（右键删除，V₀ 滑块设深度）'
-      : '势阱刷已关：现在拖虚线可挪轨道');
+      ? '势阱刷：拖动放阱 · 右键删'
+      : '势阱刷：关');
   }
   /* 沿轴点选轨道：which=0 ⟹ 粒子 1（下方 x₁ 条），which=1 ⟹ 粒子 2（右侧 x₂ 条）。
      首次点选从**当前预设的两条轨道**接续（画面不跳），之后把预设切到「自由放置」。
