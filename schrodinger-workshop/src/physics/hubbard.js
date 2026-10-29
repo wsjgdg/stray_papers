@@ -1,7 +1,13 @@
 /* ============================================================================
  * hubbard.js — R73 二次量子化：一维格点费米-哈伯德（固定粒子数基，纯 CPU）
  *
- *   H = −t Σ_{i,σ} (c†_{iσ} c_{i+1,σ} + h.c.) + U Σ_i n_{i↑} n_{i↓}
+ *   H = −t Σ_{i,σ} (c†_{iσ} c_{i+1,σ} + h.c.) + U Σ_i n_{i↑} n_{i↓} + Σ_i μ_i (n_{i↑}+n_{i↓})
+ *
+ * 【外场 μ_i】R139 加入：局域势**只进对角项**，不改变基与 CSR 跃迁表 ⟹ 画势时无
+ * 需重建扇区（重建 L=10 要 286ms，而 hbSetField 只要 1ms）。矩阵元
+ *   ⟨k|Σμ_i n_i|k⟩ = Σ_{i∈mask↑_a} μ_i + Σ_{i∈mask↓_b} μ_i = φ↑[a] + φ↓[b]
+ * 先按**单自旋扇区**算 φ（O(dim_spin·L)），再在双自旋索引上做一次加法（O(dim)），
+ * 避免 matvec 内循环里每次重算。均匀 μ 只平移能量：ψ 逐位不变、E→E+μN（pot139）。
  *
  * 【基与维度】自旋分部门：↑ 与 ↓ 各自固定粒子数 ⟹ 基 = C(L,N↑)·C(L,N↓)，
  * 而非 2^(2L)。每格每自旋占据数 0/1 —— **同自旋两费米子不能同格点**是基构造
@@ -32,7 +38,8 @@
  *      只适合离线），本页实际 L=8（4900）/L=10（63504）。README 里
  *      「L=20/N=10 ⟹ 184756」是**单自旋**估计，不适用双自旋。
  *   2. 开边界（跨边界绕行符号不在本轮）。
- *   3. 无 μ 项（固定粒子数扇区）。
+ *   3. 粒子数固定：μ_i 是**局域势**（每格一个，可在页面上涂），不是化学势——
+ *      没有 μN 项就不存在粒子数涨落。
  *   4. Krylov 截断 O(dt^{m+1})，pot73 与 Taylor 参考对账。
  * ========================================================================== */
 
@@ -92,14 +99,55 @@ export function hbSector(L, Nup, Ndn){
   for (let k = 0; k < dim; k++) offsets[k + 1] += offsets[k];
   const cursor = Int32Array.from(offsets.subarray(0, dim));
   for (const [k, tg, sg] of tmp){ targets[cursor[k]] = tg; signs[cursor[k]] = sg; cursor[k]++; }
-  return { L, Nup, Ndn, du, dd, dim, bu, bd, diagU, offsets, targets, signs, nnz };
+  /* diagPot：外场 Σμ_i(n_i↑+n_i↓) 的对角量（hbSetField 填充，默认全零） */
+  const diagPot = new Float64Array(dim);
+  return { L, Nup, Ndn, du, dd, dim, bu, bd, diagU, diagPot, offsets, targets, signs, nnz };
+}
+
+/* ---------- 外场：把 μ_i 烘进对角项 ----------
+   mu 可为 null（清场）或长度 L 的数组。**不重建跃迁表**，只重写 diagPot。 */
+export function hbSetField(sec, mu){
+  const { L, du, dd, diagPot, bu, bd } = sec;
+  if (!mu){
+    diagPot.fill(0); sec.field = null;
+    return diagPot;
+  }
+  if (mu.length !== L) throw new Error('hbSetField: mu 长度须为 L');
+  /* 单自旋扇区上的 φ = Σ_{i∈mask} μ_i：按位迭代，O(占据数) 而非 O(L) */
+  const phi = (basis, out) => {
+    for (let k = 0; k < basis.dim; k++){
+      let m = basis.masks[k], s = 0;
+      while (m){ const bit = m & -m; s += mu[31 - Math.clz32(bit)]; m ^= bit; }
+      out[k] = s;
+    }
+  };
+  const fu = new Float64Array(du), fd = new Float64Array(dd);
+  phi(bu, fu); phi(bd, fd);
+  for (let a = 0; a < du; a++){
+    const base = a * dd, va = fu[a];
+    for (let b = 0; b < dd; b++) diagPot[base + b] = va + fd[b];
+  }
+  sec.field = Float64Array.from(mu);
+  return diagPot;
+}
+
+/* 初态：按每格占据码（0=空 1=↑ 2=↓ 3=↑↓）建乘积态 */
+export function hbProductFromPattern(sec, pattern){
+  const up = [], dn = [];
+  for (let i = 0; i < sec.L; i++){
+    const c = pattern[i] | 0;
+    if (c & 1) up.push(i);
+    if (c & 2) dn.push(i);
+  }
+  const w = hbInitProduct(sec, up, dn);
+  return Object.assign(w, { nUp: up.length, nDn: dn.length });
 }
 
 /* ---------- H·ψ（re/im 分离；H 实对称 ⟹ 两通道同一算子） ---------- */
 export function hbMatvec(sec, re, im, outRe, outIm, t, U){
-  const { dim, offsets, targets, signs, diagU } = sec;
+  const { dim, offsets, targets, signs, diagU, diagPot } = sec;
   for (let k = 0; k < dim; k++){
-    const d = U * diagU[k];
+    const d = U * diagU[k] + diagPot[k];
     let sr = d * re[k], si = d * im[k];
     for (let p = offsets[k]; p < offsets[k + 1]; p++){
       const c = -t * signs[p], tg = targets[p];
@@ -128,6 +176,7 @@ export function hbEnergy(sec, re, im, t, U){
 export function hbMeasure(sec, re, im){
   const { L, bu, bd, dd } = sec;
   const nU = new Float64Array(L), nD = new Float64Array(L), nT = new Float64Array(L);
+  const dbl = new Float64Array(L);   /* 逐格 ⟨n_i↑ n_i↓⟩（与 Dtot 独立求和，可互校） */
   let Dtot = 0;
   for (let a = 0; a < bu.dim; a++){
     const mu = bu.masks[a];
@@ -136,15 +185,18 @@ export function hbMeasure(sec, re, im){
       const p = re[k] * re[k] + im[k] * im[k];
       if (p < 1e-30) continue;
       const md = bd.masks[b];
-      Dtot += p * popcount(mu & md);
+      const both = mu & md;
+      Dtot += p * popcount(both);
       for (let i = 0; i < L; i++){
         if (mu & (1 << i)) nU[i] += p;
         if (md & (1 << i)) nD[i] += p;
       }
+      let bm = both;   /* 双占逐格累加：只走同时被两自旋占据的位 */
+      while (bm){ const bit = bm & -bm; dbl[31 - Math.clz32(bit)] += p; bm ^= bit; }
     }
   }
   for (let i = 0; i < L; i++) nT[i] = nU[i] + nD[i];
-  return { nU, nD, nT, Dtot };
+  return { nU, nD, nT, dbl, Dtot };
 }
 
 /* ---------- 实对称 Jacobi 对角化（循环法，标准旋转；返回本征值/本征向量） ----------
