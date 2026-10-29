@@ -29,6 +29,12 @@ export interface Spot {
   ticketPrice?: number;
   /** 图片来源标注：osm | unsplash | pexels | pool | amap（详情弹窗展示，数据诚实性） */
   imageSource?: string;
+  /**
+   * A 级名录条目的**原始名录名**（未经 SCENIC_RENAMES 清洗）。
+   * 照片/详情/描述这些生成数据都按原始名建键，改名后靠它对上；
+   * 非名录条目（手工/POI）为 undefined。
+   */
+  sourceName?: string;
   address: string;
   facilities: string[];
   projects: string[];
@@ -1386,6 +1392,12 @@ import {
   MANUAL_SCENIC_LEVELS,
 } from "./scenic-enrich.generated";
 import { SCENIC_DETAILS } from "./scenic-details.generated";
+import { SCENIC_RENAMES, SCENIC_DROPS } from "./scenic-renames";
+
+/** 名录里被清洗判定为重复/非景区的条目（公司名、管委会、长短名并存） */
+const SCENIC_DROP_SET = new Set(SCENIC_DROPS);
+/** 压掉名称里的控制字符（名录里出现过夹带换行的名称） */
+const stripCtrl = (s: string) => s.replace(/[\u0000-\u001f\u007f]+/g, "");
 
 export function cityPoiToSpot(city: string, p: CityPoi, index: number): Spot {
   const short = city.replace(/市$/, "");
@@ -1530,18 +1542,20 @@ function buildCityPoiSpots(): Spot[] {
 }
 
 function buildExtraScenicSpots(knownNames: Set<string>): Spot[] {
-  return EXTRA_SCENICS.filter((e) => !knownNames.has(e.name)).map((e, i) => {
+  return EXTRA_SCENICS.filter(
+    (e) => !knownNames.has(e.name) && !SCENIC_DROP_SET.has(e.name),
+  ).map((e, i) => {
     const category = inferScenicCategory(e.name);
     // 直辖市 province===city，去重避免「北京北京」
     const where = e.province === e.city ? e.province : `${e.province}${e.city}`;
-    // 名录里有名称夹带换行等控制字符的脏数据（如「重庆石柱西沱古镇\n景区」），压平后再展示；
-    // 只清控制字符、不动普通空格（空格可能是名称的一部分，且 SCENIC_DETAILS 的键按原名生成）。
-    // 取数键仍用 e.name（生成数据的键是原始名），避免照片/详情/描述失配。
-    const displayName = e.name.replace(/[\u0000-\u001f\u007f]+/g, "");
+    // 展示名：先套人工清洗映射（见 scripts/gen-scenic-renames.mjs），再压掉控制字符。
+    // 取数键仍用 e.name（照片/详情/描述的生成数据都按原始名录名建键）。
+    const displayName = stripCtrl(SCENIC_RENAMES[e.name] ?? e.name);
     return {
       id: `scenic-${e.city}-${i}`,
       // 全国化：跨省同名景区保留（id 含城市不冲突），地址自带省份可被省份筛选命中
       name: displayName,
+      sourceName: e.name,
       // 5A/4A 构建时经高德 around 搜索回填（见 scripts/fetch-scenic-details.mjs）：
       // 官方图 + 电话 + 开放时间；图不可达时 SpotImage 走本地分类池降级
       // 图优先级：本地离线图（bing 抓图管线）> 高德官方图 > 渐变占位
@@ -1565,6 +1579,7 @@ function buildExtraScenicSpots(knownNames: Set<string>): Spot[] {
       // 事实句替代千篇一律占位：等级/位置/类别来自名录数据，同时改善描述搜索命中
       // 人工描述（知名条目）优先，事实句模板兜底
       description:
+        SCENIC_DESCRIPTIONS[displayName] ??
         SCENIC_DESCRIPTIONS[e.name] ??
         `国家${e.level}级景区（2023 年全国 A 级景区名录），位于${where}，${SCENIC_CATEGORY_WORDS[category] ?? "属综合性景区"}。开放时间、门票与预约要求以景区公示为准。`,
       location: { lat: e.lat, lng: e.lng },
