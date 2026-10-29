@@ -28,6 +28,7 @@ import { injectStyles } from './core/styles.js';
 import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
 import { hbSector, hbSetField, hbProductFromPattern, hbMeasure, hbEnergy, hbEntropy, hbEntropyAt, hbEntropyProfile, hbDensityCorr, hbMomentumDist, hbCorrelation, hbKrylovExp, hbBondCorr, hbNorm, hbResidual, HbGsTask, HbScanTask, HB_PRESETS } from './physics/hubbard.js';
+import { hbCamDefault, hbOrbit, hbZoom, hbProject, hbSitePositions, hbPick, hbDepthRange, PITCH_LIM, DIST_MIN, DIST_MAX } from './hubbard3d.js';
 
 /* 画面上 μ 的满量程（|μ|/t 到 6 就是满格高） */
 const MU_VIEW = 6;
@@ -37,6 +38,11 @@ const HB_TOOLS = [
   { k: 'erase', name: '擦除', tip: '点击清除该格的 μ' },
 ];
 
+/* 主画布的两种投影：2D 卡片式链 / 3D 透视（Phase 5） */
+const HB_PROJ = [
+  { k: '2d', name: '2D 卡片', tip: '卡片式链：每格 ↑/↓ 占据 + μ 色带 + J 色带' },
+  { k: '3d', name: '3D 透视', tip: '透视链：μ 沿出屏方向成刺，可旋转/缩放' },
+];
 /* 下方图表的四个视图（Phase 2）：时间轴只有一个视图，其余是「当前态」的观测量 */
 const HB_VIEWS = [
   { k: 'Sx', name: 'S(x)', tip: '纠缠剖面：以切点 x 分开时左半的熵' },
@@ -72,6 +78,7 @@ const HB_CSS = `
     display:block;touch-action:none}
   #hbStage[data-tool="state"] #hbLadder{cursor:pointer}
   #hbStage[data-tool="field"] #hbLadder,#hbStage[data-tool="erase"] #hbLadder{cursor:crosshair}
+  #hbStage[data-proj="3d"] #hbLadder{cursor:grab}
   #hbChart{width:var(--w);height:170px;border:1px solid var(--line);border-radius:10px;background:rgba(4,8,16,.5);display:block}
   #hbViews{display:flex;gap:5px;align-self:stretch;justify-content:flex-end;margin-bottom:-2px;
     font-family:var(--mono);opacity:.92}
@@ -123,12 +130,16 @@ export class HubbardApp {
       muDepth: clamp(num('muD', 2), 0, MU_VIEW), muSign: q.get('sgn') === '+' ? 1 : -1,
       mu: null, pat: null, nUp: 0, nDn: 0,
       view: 'Sx',
+      proj: q.get('proj') === '3d' ? '3d' : '2d',
       Umax: 8,
     };
     if (![8, 10].includes(this.state.L)) this.state.L = 8;
     if (!HB_TOOLS.some(t => t.k === this.state.tool)) this.state.tool = 'state';
     if (!HB_PRESETS[this.state.preset]) this.state.preset = 'mott';
     if (!HB_VIEWS.some(v => v.k === this.state.view)) this.state.view = 'Sx';
+    if (!HB_PROJ.some(v => v.k === this.state.proj)) this.state.proj = '2d';
+    this.cam = hbCamDefault();
+    this._sites3 = null; this._orbit = null; this._drawOrder3 = [];
     /* Phase-2 观测量缓存：脏标记 + 渐进任务（S(x) 的 L=10 全扫 ~0.65s） */
     /* Phase-3：协议 / 时间轴检查点 / U 扫描 */
     this.proto = null; this.protoSaved = null; this.protoStart = 0;
@@ -152,7 +163,7 @@ export class HubbardApp {
   }
 
   q(s){ return this.container.querySelector(s); }
-  on(t, type, fn){ if (!t) return; t.addEventListener(type, fn); this._listeners.push([t, type, fn]); }
+  on(t, type, fn, opts){ if (!t) return; t.addEventListener(type, fn, opts); this._listeners.push([t, type, fn, opts]); }
   toast(m, ms = 2000){
     const el = this.q('#hbToast'); if (!el) return;
     el.textContent = m; el.style.opacity = 1;
@@ -217,6 +228,9 @@ export class HubbardApp {
   </div>
   <div class="sec"><h3>格点</h3><div class="grid3">
     <button data-L="8">L = 8</button><button data-L="10">L = 10</button><button data-L="12" class="sm">L = 12</button>
+    </div>
+    <div class="grid2" style="margin-top:5px">
+    ${HB_PROJ.map(v => '<button data-proj="' + v.k + '" class="sm" title="' + v.tip + '">' + v.name + '</button>').join('')}
   </div></div>
   <div class="sec"><h3>参数</h3>
     <div class="row"><label>U / t</label><input type="range" id="rU" min="0" max="8" step="0.25" value="${this.state.U}"><output id="oU">${this.state.U.toFixed(2)}</output></div>
@@ -268,6 +282,8 @@ export class HubbardApp {
       this.on(b, 'click', () => this.setL(parseInt(b.getAttribute('data-L'), 10))));
     this.container.querySelectorAll('[data-tool]').forEach(b =>
       this.on(b, 'click', () => this.setTool(b.dataset.tool)));
+    this.container.querySelectorAll('[data-proj]').forEach(b =>
+      this.on(b, 'click', () => this.setProj(b.dataset.proj)));
     this.container.querySelectorAll('[data-view]').forEach(b =>
       this.on(b, 'click', () => this.setView(b.dataset.view)));
   }
@@ -310,6 +326,10 @@ export class HubbardApp {
       if (/input|textarea|select/i.test(tag)) return;
       if (e.key === '1' || e.key === '2' || e.key === '3') this.setTool(HB_TOOLS[+e.key - 1].k);
       else if (e.key >= '4' && e.key <= '8') this.setView(HB_VIEWS[+e.key - 4].k);
+      else if (e.key === '0') this.toggleProj();
+      else if (this.state.proj === '3d' && (e.key === 'r' || e.key === 'R')){
+        this.cam = hbCamDefault(); this.draw(); this.queueUrl();
+      }
       else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight'){
         if (this.cps.length && this.state.mode === 'evo'){
           e.preventDefault();
@@ -328,8 +348,15 @@ export class HubbardApp {
     if (!cv) return;
     this.on(cv, 'contextmenu', e => e.preventDefault());
     this.on(cv, 'pointerdown', e => {
-      const i = this.siteAtX(this.evX(e));
+      const i = this.pick(e);
       this._hover = i;
+      /* 3D：珠子之外（或按住 Shift / 中键）就是「转相机」——不必先切工具，画点选仍然可用 */
+      if (this.state.proj === '3d' && (i < 0 || e.shiftKey || e.button === 1)){
+        e.preventDefault();
+        this._paint = null;
+        this._orbit = { x: e.clientX, y: e.clientY };
+        return;
+      }
       if (i < 0) return;
       e.preventDefault();
       this._paint = { i };
@@ -337,7 +364,15 @@ export class HubbardApp {
       this.draw();
     });
     this.on(cv, 'pointermove', e => {
-      const i = this.siteAtX(this.evX(e));
+      if (this._orbit){
+        const dx = e.clientX - this._orbit.x, dy = e.clientY - this._orbit.y;
+        this._orbit = { x: e.clientX, y: e.clientY };
+        this.cam = hbOrbit(this.cam, dx, dy);
+        this._hover = -1;
+        this.draw();
+        return;
+      }
+      const i = this.pick(e);
       if (i !== this._hover){ this._hover = i; this.draw(); }
       if (this._paint && i >= 0 && i !== this._paint.i){
         this._paint.i = i;
@@ -345,8 +380,22 @@ export class HubbardApp {
         this.draw();
       }
     });
-    this.on(cv, 'pointerup', () => { if (this._paint){ this._paint = null; this.queueUrl(); this.draw(); } });
-    this.on(cv, 'pointerleave', () => { this._hover = -1; this._paint = null; this.draw(); });
+    this.on(cv, 'pointerup', () => {
+      const wasOrbit = !!this._orbit;
+      this._orbit = null;
+      if (this._paint || wasOrbit){ this._paint = null; this.queueUrl(); this.draw(); }
+    });
+    this.on(cv, 'pointerleave', () => { this._hover = -1; this._paint = null; this._orbit = null; this.draw(); });
+    this.on(cv, 'wheel', e => {
+      if (this.state.proj !== '3d') return;
+      e.preventDefault();
+      this.cam = hbZoom(this.cam, Math.exp((e.deltaY || 0) * 0.0012));
+      this.draw(); this.queueUrl();
+    }, { passive: false });
+    this.on(cv, 'dblclick', () => {
+      if (this.state.proj !== '3d') return;
+      this.cam = hbCamDefault(); this.draw(); this.queueUrl();
+    });
     const ch = this.q('#hbChart');
     if (ch){
       this.on(ch, 'click', e => {
@@ -374,6 +423,26 @@ export class HubbardApp {
     const r = cv.getBoundingClientRect ? cv.getBoundingClientRect() : null;
     if (r && r.width > 0) return (e.clientX - r.left) * (cv.width / r.width);
     return e.clientX;
+  }
+  /* 指针 → 设备像素（x,y）。jsdom 里 rect 宽为 0，退化为 1:1 设备坐标 */
+  evPt(e){
+    const cv = this.q('#hbLadder');
+    const r = cv.getBoundingClientRect ? cv.getBoundingClientRect() : null;
+    if (r && r.width > 0 && r.height > 0){
+      return { x: (e.clientX - r.left) * (cv.width / r.width), y: (e.clientY - r.top) * (cv.height / r.height) };
+    }
+    return { x: e.clientX, y: e.clientY };
+  }
+  /* 3D 拾取：用最近一次 draw 的珠子屏幕位置（几何在 hubbard3d.js，pot143 已对账） */
+  siteAtPt(pt){
+    const cv = this.q('#hbLadder');
+    if (!cv || !this._sites3 || !this._sites3.length) return -1;
+    const dpr = cv.width / (cv.clientWidth || cv.width) || 1;
+    const rad = Math.max(10 * dpr, 0.30 * this._sites3[0].k);
+    return hbPick(this.cam, cv.width, cv.height, hbSitePositions(this.state.L), pt.x, pt.y, rad);
+  }
+  pick(e){
+    return this.state.proj === '3d' ? this.siteAtPt(this.evPt(e)) : this.siteAtX(this.evX(e));
   }
   siteAtX(x){
     const L = this.state.L, cv = this.q('#hbLadder');
@@ -1015,6 +1084,7 @@ export class HubbardApp {
   drawLadder(){
     const cv = this.q('#hbLadder');
     if (!cv) return;
+    if (this.state.proj === '3d') return this.drawLadder3D(cv);
     const ctx = cv.getContext('2d');
     if (!ctx) return;
     const W = cv.width, H = cv.height;
@@ -1129,6 +1199,144 @@ export class HubbardApp {
     ctx.fillStyle = 'rgba(154,167,189,.42)';
     ctx.fillText('Π', 8 * dpr, nY + 3 * dpr);
   }
+  /* ---------- 3D 透视视图（Phase 5） ----------
+     几何全在 hubbard3d.js（pot143 用解析式对账相机基 / 透视 / 拾取），这里只按深度作画：
+       x = 链方向   y = 自旋（↑ +y / ↓ −y）   z = 局域势 μ（刺出链平面）
+     canvas 没有 z 缓冲，只能用画家算法（远 → 近）。 */
+  drawLadder3D(cv){
+    const ctx = cv.getContext('2d');
+    if (!ctx) return;
+    const W = cv.width, H = cv.height;
+    const dpr = W / (cv.clientWidth || W) || 1;
+    ctx.clearRect(0, 0, W, H);
+    const L = this.state.L, m = this.m;
+    const cam = this.cam || (this.cam = hbCamDefault());
+    const xs = hbSitePositions(L);
+    const P = (x, y, z) => hbProject(cam, W, H, { x, y, z });
+    const fog = hbDepthRange(cam, W, H, xs);
+    const mono = px => `${px}px ui-monospace,monospace`;
+    const SPIN = 0.78, BEAD = 0.175, MU_LEN = 1.15;
+    const S = xs.map(x => P(x, 0, 0));
+    this._sites3 = S.map((p, i) => ({ i, x: p.x, y: p.y, depth: p.depth, k: p.k, near: fog.nearness(p.depth) }));
+    const stepPx = L > 1 ? Math.hypot(S[1].x - S[0].x, S[1].y - S[0].y) : 999;
+    /* 标签跟着链走：用链在**屏幕**上的方向取法向，标号贴链下方、n_i 贴链上方。
+       取世界坐标偏移（比如固定 +y）在俯仰角大时会把标签甩到画面角落去。 */
+    const sdx = L > 1 ? S[L - 1].x - S[0].x : 1, sdy = L > 1 ? S[L - 1].y - S[0].y : 0;
+    const sl = Math.hypot(sdx, sdy) || 1;
+    const px = -sdy / sl, py = sdx / sl;         /* 屏幕法向（指向链的“上方”） */
+    const showN = stepPx >= 34 * dpr;
+    const rpx = (world, k) => Math.max(1, world * k);
+    const maxJ = this.bsig && this.bsig.length ? Math.max(1e-9, ...Array.from(this.bsig, Math.abs)) : 0;
+
+    const items = [];
+    const add = (depth, site, fn) => items.push({ depth, site, fn });
+
+    /* 链脊 + 键关联 |J_s|（正青负琥珀，与 2D 视图底部那条 J 带同义） */
+    for (let s = 0; s < L - 1; s++){
+      const a = S[s], b = S[s + 1];
+      const dep = (a.depth + b.depth) / 2 + 1e-6;
+      const nr = fog.nearness(dep);
+      add(dep, undefined, () => {
+        ctx.strokeStyle = `rgba(120,160,220,${(0.10 + 0.16 * nr).toFixed(3)})`;
+        ctx.lineWidth = Math.max(1, 1.1 * dpr * (0.7 + 0.6 * nr));
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        const j = this.bsig ? this.bsig[s] : 0;
+        if (!maxJ || Math.abs(j) < 1e-9) return;
+        const xm = (xs[s] + xs[s + 1]) / 2;
+        const hgt = Math.abs(j) / maxJ * 0.30 * (j >= 0 ? 1 : -1);
+        const q0 = P(xm, 0, 0), q1 = P(xm, hgt, 0);
+        ctx.strokeStyle = j >= 0 ? `rgba(103,232,249,${(0.30 + 0.40 * nr).toFixed(3)})`
+                                 : `rgba(251,191,36,${(0.30 + 0.40 * nr).toFixed(3)})`;
+        ctx.lineWidth = Math.max(1, 1.5 * dpr * (0.7 + 0.6 * nr));
+        ctx.beginPath(); ctx.moveTo(q0.x, q0.y); ctx.lineTo(q1.x, q1.y); ctx.stroke();
+      });
+    }
+
+    for (let i = 0; i < L; i++){
+      const p = S[i], nr = fog.nearness(p.depth);
+      const nu = m ? m.nU[i] : 0, nd = m ? m.nD[i] : 0, dbl = m ? m.dbl[i] : 0;
+      const mu = this.state.mu[i];
+      const hot = this._hover === i || (this._paint && this._paint.i === i);
+      /* μ 刺：沿 −z（μ<0 冷色）或 +z（μ>0 暖色）刺出链平面 */
+      if (Math.abs(mu) > 1e-9){
+        const zf = clamp(Math.abs(mu) / MU_VIEW, 0, 1) * MU_LEN;
+        const q = P(xs[i], 0, mu > 0 ? zf : -zf);
+        add(p.depth + 0.05, i, () => {
+          const base = mu < 0 ? 'rgba(96,178,250,' : 'rgba(250,190,96,';
+          const a = 0.22 + 0.42 * nr;
+          const ba = rpx(BEAD, p.k);
+          /* 背后的「势盘」：|μ| 越大盘越大（冷=井、暖=垒），任何视角都读得出来 */
+          ctx.fillStyle = base + (0.10 + 0.16 * nr).toFixed(3) + ')';
+          ctx.beginPath(); ctx.arc(p.x, p.y, ba * (1.75 + 1.30 * clamp(Math.abs(mu) / MU_VIEW, 0, 1)), 0, 6.2832); ctx.fill();
+          ctx.strokeStyle = base + (a * 0.85).toFixed(3) + ')';
+          ctx.beginPath(); ctx.arc(p.x, p.y, ba * (1.75 + 1.30 * clamp(Math.abs(mu) / MU_VIEW, 0, 1)), 0, 6.2832); ctx.stroke();
+          /* 沿 ±z 的刺 + 端点（侧看时是方向，正视时缩成一个点） */
+          ctx.strokeStyle = base + a.toFixed(3) + ')';
+          ctx.lineWidth = Math.max(1, 1.5 * dpr * (0.6 + 0.5 * nr));
+          ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
+          ctx.fillStyle = base + Math.min(1, a + 0.18).toFixed(3) + ')';
+          ctx.beginPath(); ctx.arc(q.x, q.y, rpx(0.075, q.k), 0, 6.2832); ctx.fill();
+        });
+      }
+      add(p.depth, i, () => {
+        const br = rpx(BEAD, p.k);
+        ctx.beginPath(); ctx.arc(p.x, p.y, br, 0, 6.2832);
+        ctx.fillStyle = `rgba(9,16,30,${(0.55 + 0.35 * nr).toFixed(3)})`; ctx.fill();
+        ctx.strokeStyle = hot ? 'rgba(103,232,249,.85)' : `rgba(120,160,220,${(0.20 + 0.28 * nr).toFixed(3)})`;
+        ctx.lineWidth = (hot ? 1.8 : 1.1) * dpr; ctx.stroke();
+        /* ↑ / ↓：长度 ∝ 该自旋的占据分数，透明度再乘深度雾 */
+        const arrow = (frac, dir, col) => {
+          const f = clamp(frac, 0, 1);
+          if (f < 0.02) return;
+          const tip = P(xs[i], dir * SPIN * f, 0);
+          const a = (0.35 + 0.65 * f) * (0.55 + 0.45 * nr);
+          const w = Math.max(1, 2.0 * dpr * (0.55 + 0.7 * nr));
+          ctx.strokeStyle = col + a.toFixed(3) + ')';
+          ctx.lineWidth = w;
+          ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(tip.x, tip.y); ctx.stroke();
+          const dx = tip.x - p.x, dy = tip.y - p.y, len = Math.hypot(dx, dy) || 1;
+          const ux = dx / len, uy = dy / len;
+          const hw = Math.max(2.2 * dpr, w * 2.2), hl = Math.min(len * 0.5, Math.max(4.5 * dpr, w * 4.5));
+          ctx.beginPath();
+          ctx.moveTo(tip.x, tip.y);
+          ctx.lineTo(tip.x - ux * hl - uy * hw, tip.y - uy * hl + ux * hw);
+          ctx.lineTo(tip.x - ux * hl + uy * hw, tip.y - uy * hl - ux * hw);
+          ctx.closePath();
+          ctx.fillStyle = col + Math.min(1, a + 0.2).toFixed(3) + ')';
+          ctx.fill();
+        };
+        arrow(nu, 1, 'rgba(103,232,249,');
+        arrow(nd, -1, 'rgba(240,171,252,');
+        /* 双占：套在珠子外的琥珀环（半径 ∝ ⟨n↑n↓⟩），只描边不填充，不挡箭头 */
+        if (dbl > 0.02){
+          ctx.strokeStyle = `rgba(251,191,36,${((0.25 + 0.5 * clamp(dbl, 0, 1)) * (0.55 + 0.45 * nr)).toFixed(3)})`;
+          ctx.lineWidth = 1.2 * dpr;
+          ctx.beginPath(); ctx.arc(p.x, p.y, br * (1.35 + 0.85 * clamp(dbl, 0, 1)), 0, 6.2832); ctx.stroke();
+        }
+        /* 标号 + n_i：沿屏幕法向贴在珠子两侧（格距太密时只留标号，免得糊成一团） */
+        ctx.textAlign = 'center'; ctx.font = mono(9.5 * dpr);
+        ctx.fillStyle = `rgba(154,167,189,${(0.45 + 0.45 * nr).toFixed(3)})`;
+        ctx.fillText(String(i), p.x - px * (br + 9 * dpr), p.y - py * (br + 9 * dpr) + 3 * dpr);
+        if (showN){
+          ctx.font = mono(10 * dpr);
+          ctx.fillStyle = `rgba(230,237,243,${(0.40 + 0.45 * nr).toFixed(3)})`;
+          ctx.fillText((nu + nd).toFixed(2), p.x + px * (br + 11 * dpr), p.y + py * (br + 11 * dpr));
+        }
+      });
+    }
+
+    items.sort((a, b) => b.depth - a.depth);
+    for (const it of items) it.fn();
+    this._drawOrder3 = items.filter(it => it.site !== undefined).map(it => it.site);
+
+    const tool = HB_TOOLS.find(t => t.k === this.state.tool) || HB_TOOLS[0];
+    ctx.textAlign = 'left';
+    ctx.font = mono(10.5 * dpr); ctx.fillStyle = 'rgba(154,167,189,.92)';
+    ctx.fillText(`3D 透视 · ${tool.tip}`, 10 * dpr, 15 * dpr);
+    ctx.font = mono(9.5 * dpr); ctx.fillStyle = 'rgba(154,167,189,.52)';
+    ctx.fillText('拖动空白处旋转 · 滚轮缩放 · 双击 / R 复位', 10 * dpr, 27 * dpr);
+  }
+
   drawChart(){
     const cv = this.q('#hbChart');
     if (!cv) return;
@@ -1426,6 +1634,20 @@ export class HubbardApp {
     this.syncPanel(); this.draw();
   }
 
+  /* ---------- 投影模式：2D 卡片 / 3D 透视 ---------- */
+  setProj(k, opts = {}){
+    if (!HB_PROJ.some(v => v.k === k)) return false;
+    if (k === this.state.proj) return false;
+    this.state.proj = k;
+    this._hover = -1; this._paint = null; this._orbit = null;
+    if (k === '3d') this.cam = this.cam || hbCamDefault();
+    this.syncPanel(); this.draw();
+    if (!opts.silent && k === '3d') this.toast('3D 透视：拖动空白处旋转 · 滚轮缩放 · 双击（或 R）复位', 2400);
+    this.queueUrl();
+    return true;
+  }
+  toggleProj(){ return this.setProj(this.state.proj === '3d' ? '2d' : '3d'); }
+
   /* ---------- 帧循环 ---------- */
   frame(){
     requestAnimationFrame(this.frame);
@@ -1497,6 +1719,8 @@ export class HubbardApp {
       b.classList.toggle('on', parseInt(b.getAttribute('data-L'), 10) === this.state.L));
     this.container.querySelectorAll('[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === this.state.tool));
     this.container.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('on', b.dataset.view === this.state.view));
+    this.container.querySelectorAll('[data-proj]').forEach(b => b.classList.toggle('on', b.dataset.proj === this.state.proj));
+    const stg = this.q('#hbStage'); if (stg) stg.dataset.proj = this.state.proj;
     const gs = this.state.mode === 'gs';
     this.q('#hbModeGs').classList.toggle('on', gs);
     this.q('#hbModeEvo').classList.toggle('on', !gs);
@@ -1541,6 +1765,8 @@ export class HubbardApp {
       t: +this.state.t.toFixed(4),
       paused: !!this.state.paused,
       view: this.state.view,
+      proj: this.state.proj,
+      cam: this.cam ? [+this.cam.yaw.toFixed(4), +this.cam.pitch.toFixed(4), +this.cam.dist.toFixed(3)] : null,
       Umax: this.state.Umax,
     };
   }
@@ -1551,6 +1777,11 @@ export class HubbardApp {
     qs.set('pat', spec.pat.join(''));
     if (spec.mu.some(v => v !== 0)) qs.set('mu', spec.mu.map(v => String(+v.toFixed(3))).join(','));
     if (spec.view && spec.view !== 'Sx') qs.set('view', spec.view);
+    /* 只有 3D 才写 proj/cam：2D 的链接保持原样（老书签、老测试都不受影响） */
+    if (spec.proj === '3d'){
+      qs.set('proj', '3d');
+      if (Array.isArray(spec.cam) && spec.cam.length === 3) qs.set('cam', spec.cam.join(','));
+    }
     return qs.toString();
   }
   queueUrl(){
@@ -1568,7 +1799,7 @@ export class HubbardApp {
     const L = Math.round(parseFloat(q.get('L') || '0'));
     const muS = q.get('mu'), patS = q.get('pat');
     if (!muS && !patS && !q.get('mode')) return null;
-    const len = [8, 10].includes(L) ? L : 8;
+    const len = [8, 10, 12].includes(L) ? L : 8;
     const spec = { L: len };
     if (muS){
       const arr = muS.split(',').map(Number);
@@ -1578,20 +1809,37 @@ export class HubbardApp {
     if (q.get('mode') === 'evo' || q.get('mode') === 'gs') spec.mode = q.get('mode');
     const vq = q.get('view');
     if (vq && HB_VIEWS.some(v => v.k === vq)) spec.view = vq;
-    return (spec.mu || spec.pat || spec.mode || spec.view) ? spec : null;
+    if (q.get('proj') === '3d'){
+      spec.proj = '3d';
+      const cs = (q.get('cam') || '').split(',').map(Number);
+      if (cs.length === 3 && cs.every(Number.isFinite)) spec.cam = cs;
+    }
+    return (spec.mu || spec.pat || spec.mode || spec.view || spec.proj) ? spec : null;
   }
   /* 校验后再应用：任一非法字段整体拒绝（不半改状态） */
   applySpec(spec, opts = {}){
     if (!spec || typeof spec !== 'object') return false;
-    const L = [8, 10].includes(spec.L | 0) ? (spec.L | 0) : this.state.L;
+    /* 3D 深链字段严格校验：proj 给了就必须是已知投影，cam 给了就必须是三个有限数。
+       相机错了就是错的深链 ⟹ 整份拒绝（与 mu/pat 的「长度不符就丢」不同：这里不做半改）。 */
+    if (spec.proj !== undefined && !HB_PROJ.some(v => v.k === spec.proj)) return false;
+    if (spec.cam !== undefined &&
+        !(Array.isArray(spec.cam) && spec.cam.length === 3 && spec.cam.every(Number.isFinite))) return false;
+    const L = [8, 10, 12].includes(spec.L | 0) ? (spec.L | 0) : this.state.L;
     const mu = Array.isArray(spec.mu) && spec.mu.length === L && spec.mu.every(v => Number.isFinite(v))
       ? Float64Array.from(spec.mu, v => clamp(v, -MU_VIEW, MU_VIEW)) : null;
     const pat = Array.isArray(spec.pat) && spec.pat.length === L && spec.pat.every(v => Number.isInteger(v) && v >= 0 && v <= 3)
       ? Int8Array.from(spec.pat) : null;
     const mode = spec.mode === 'evo' || spec.mode === 'gs' ? spec.mode : null;
     const view = HB_VIEWS.some(v => v.k === spec.view) ? spec.view : null;
-    if (!mu && !pat && !mode && !view && !opts.fromUrl) return false;
+    const proj = HB_PROJ.some(v => v.k === spec.proj) ? spec.proj : null;
+    /* 相机三元组：非有限数就整份丢掉（不半改），角度/距离按相机限制钳制 */
+    const cam = Array.isArray(spec.cam) && spec.cam.length === 3 && spec.cam.every(Number.isFinite)
+      ? { yaw: spec.cam[0], pitch: clamp(spec.cam[1], -PITCH_LIM, PITCH_LIM), dist: clamp(spec.cam[2], DIST_MIN, DIST_MAX) }
+      : null;
+    if (!mu && !pat && !mode && !view && !proj && !cam && !opts.fromUrl) return false;
     if (view) this.state.view = view;
+    if (proj) this.state.proj = proj;
+    if (cam) this.cam = cam;
     if (L !== this.state.L){
       this.state.L = L;
       this.state.mu = new Float64Array(L);
@@ -1719,6 +1967,20 @@ export class HubbardApp {
       query: () => this.queryFor(this.serialize()),
       siteAtX: x => this.siteAtX(x),
       view: () => ({ ...this._view }),
+      /* ---- Phase-5：3D 透视 ---- */
+      proj: () => this.state.proj,
+      setProj: k => this.setProj(k),
+      toggleProj: () => this.toggleProj(),
+      cam: () => ({ ...this.cam }),
+      setCam: c => { this.cam = { yaw: c.yaw, pitch: clamp(c.pitch, -PITCH_LIM, PITCH_LIM), dist: clamp(c.dist, DIST_MIN, DIST_MAX) }; this.draw(); this.queueUrl(); return { ...this.cam }; },
+      resetCam: () => { this.cam = hbCamDefault(); this.draw(); return { ...this.cam }; },
+      orbitBy: (dx, dy) => { this.cam = hbOrbit(this.cam, dx, dy); this.draw(); return { ...this.cam }; },
+      zoomBy: f => { this.cam = hbZoom(this.cam, f); this.draw(); return { ...this.cam }; },
+      /* 最近一次 draw 的珠子屏幕坐标 + 画家算法顺序（远→近） */
+      sites3: () => (this._sites3 ? this._sites3.map(s => ({ i: s.i, x: s.x, y: s.y, depth: s.depth, k: s.k })) : null),
+      drawOrder3: () => this._drawOrder3.slice(),
+      pickAt: (x, y) => this.siteAtPt({ x, y }),
+      hover: () => this._hover,
       /* ---- Phase-3：协议 / 时间轴 / 扫描 ---- */
       startProtocol: k => this.startProtocol(k),
       stopProtocol: r => this.stopProtocol(r),
