@@ -24,12 +24,16 @@ if (!file) {
 const items = JSON.parse(fs.readFileSync(file, "utf8"));
 const list = Array.isArray(items) ? items : items.descriptions ?? items.items ?? [];
 
-// 目标清单（只允许给它列出的名字写描述）
-const targetsFile = path.resolve("docs/outsource/desc-targets-5a.json");
+// 目标清单（只允许给它列出的名字写描述）；用 --targets=<file> 可切到别的批次清单
+const targetsFile = path.resolve(
+  process.argv.find((a) => a.startsWith("--targets="))?.split("=")[1] ??
+    "docs/outsource/desc-targets-5a.json",
+);
+const targetsRaw = fs.existsSync(targetsFile)
+  ? JSON.parse(fs.readFileSync(targetsFile, "utf8"))
+  : null;
 const allowed = new Set(
-  fs.existsSync(targetsFile)
-    ? JSON.parse(fs.readFileSync(targetsFile, "utf8")).targets.map((t) => t.name)
-    : [],
+  (targetsRaw?.targets ?? targetsRaw?.items ?? []).map((t) => t.name),
 );
 
 const MIN = 60;
