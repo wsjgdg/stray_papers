@@ -2039,6 +2039,15 @@ const QC_CSS = `
     background:rgba(251,191,36,.06);color:var(--txt);font:10px/1.55 var(--mono);min-height:32px}
   #qcMeasureResult .measureMain{color:#fbbf24;font-size:11px;font-weight:700}
   #qcMeasureResult .measureNote{color:var(--dim);margin-top:3px}
+  #qcMeasureResult .measureCompare{display:grid;gap:3px;margin-top:6px;padding-top:5px;border-top:1px solid rgba(120,160,220,.14)}
+  #qcMeasureResult .measureRow{display:grid;grid-template-columns:62px 1fr 40px;align-items:center;gap:5px;font-size:9px;color:var(--dim)}
+  #qcMeasureResult .measureRow strong{font-weight:500;text-align:right;color:var(--txt)}
+  #qcMeasureResult .measureTrack{height:5px;border-radius:4px;background:rgba(120,160,220,.14);overflow:hidden}
+  #qcMeasureResult .measureTrack i{display:block;height:100%;background:rgba(103,232,249,.75)}
+  #qcMeasureResult .measureRow.selected{color:var(--amber)}
+  #qcMeasureResult .measureRow.selected strong{color:var(--amber)}
+  #qcMeasureResult .measureRow.selected .measureTrack i{background:rgba(251,191,36,.95)}
+  #qcMeasureResult .measureAfter{color:#fbbf24;font-size:9px;margin-top:2px}
   #qcHud{top:74px;right:14px;padding:11px 13px;z-index:10;min-width:212px;font-family:var(--mono);
     max-height:calc(100vh - 148px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #qcHud .grp{font-size:10px;letter-spacing:.12em;color:var(--dim);margin:7px 0 4px}
@@ -2891,7 +2900,8 @@ class QCircuitApp {
         st.measured = null;
         const trueBit = result.trueBit ?? result.bit;
         const prob = pZ1 == null || trueBit == null ? null : (trueBit ? pZ1 : 1 - pZ1);
-        this.lastCircuitMeasurement = { index, gate, result, prob };
+        this.lastCircuitMeasurement = { index, gate, result, prob,
+          beforeP0: pZ1 == null ? null : 1 - pZ1, beforeP1: pZ1 };
       }
       st.step++;
     }
@@ -2915,7 +2925,8 @@ class QCircuitApp {
       const recordedBit = st.noise.on
         ? qcnFlipBits([trueBit], this.noiseParam ? this.noiseParam.eps : 0, rng)[0]
         : trueBit;
-      st.measured = { mode: 'qubit', q, bit: recordedBit, trueBit, prob, step: st.step };
+      st.measured = { mode: 'qubit', q, bit: recordedBit, trueBit, prob, step: st.step,
+        beforeP0: 1 - p1, beforeP1: p1 };
     } else if (st.noise.on){
       /* Born 规则 p(j)=ρ_jj 抽样 + 全寄存器投影。 */
       const idx = qcnSampleRho(this.rho, rng), prob = probs[idx];
@@ -2923,12 +2934,16 @@ class QCircuitApp {
       const trueBits = qcBits(idx, st.n), bits = [];
       for (let k = 0; k < st.n; k++) bits.push((idx >> k) & 1);
       const rec = qcnFlipBits(bits, this.noiseParam ? this.noiseParam.eps : 0, rng).slice().reverse().join('');
-      st.measured = { mode: 'register', idx, bits: rec, trueBits, prob, step: st.step };
+      st.measured = { mode: 'register', idx, bits: rec, trueBits, prob, step: st.step,
+        beforeBranches: Array.from(probs, (p, i) => ({ bits: qcBits(i, st.n), prob: p }))
+          .filter(x => x.prob > 1e-12).sort((a, b) => b.prob - a.prob).slice(0, 4) };
     } else {
       const idx = qcSample(this.psi, rng), prob = probs[idx];
       qcCollapse(this.psi, idx);
       const bits = qcBits(idx, st.n);
-      st.measured = { mode: 'register', idx, bits, trueBits: bits, prob, step: st.step };
+      st.measured = { mode: 'register', idx, bits, trueBits: bits, prob, step: st.step,
+        beforeBranches: Array.from(probs, (p, i) => ({ bits: qcBits(i, st.n), prob: p }))
+          .filter(x => x.prob > 1e-12).sort((a, b) => b.prob - a.prob).slice(0, 4) };
     }
     st.playing = false;
     this._needDraw = true;
@@ -2949,6 +2964,25 @@ class QCircuitApp {
     if (result.q != null) return `q${result.q}=${result.bit}`;
     if (Array.isArray(result.bits)) return result.bits.join('');
     return result.bit == null ? '已测量' : String(result.bit);
+  }
+
+  measurementCompareHtml(m){
+    const row = (label, prob, selected) => {
+      const pct = Math.max(0, Math.min(100, Number(prob) * 100));
+      return `<div class="measureRow${selected ? ' selected' : ''}"><span>${label}</span>` +
+        `<span class="measureTrack"><i style="width:${pct.toFixed(3)}%"></i></span><strong>${pct.toFixed(1)}%</strong></div>`;
+    };
+    if (m.mode === 'qubit' && Number.isFinite(m.beforeP0) && Number.isFinite(m.beforeP1)){
+      return `<div class="measureCompare"><div style="font-size:9px;color:var(--dim)">Z 基测前 Born 分支 → 坍缩后</div>` +
+        row(`q${m.q}=0`, m.beforeP0, m.trueBit === 0) + row(`q${m.q}=1`, m.beforeP1, m.trueBit === 1) +
+        `<div class="measureAfter">→ 测后只保留 q${m.q}=${m.trueBit} 分支（琥珀色）</div></div>`;
+    }
+    if (m.mode === 'register' && Array.isArray(m.beforeBranches)){
+      const rows = m.beforeBranches.map(b => row(`|${b.bits}⟩`, b.prob, b.bits === m.trueBits)).join('');
+      return `<div class="measureCompare"><div style="font-size:9px;color:var(--dim)">整尺测前主要 Born 分支（最多 4 个）</div>${rows}` +
+        `<div class="measureAfter">→ 测后只保留 |${m.trueBits}⟩（琥珀色）</div></div>`;
+    }
+    return '';
   }
 
   renderMeasurementResult(){
@@ -2974,7 +3008,9 @@ class QCircuitApp {
             : basis === 'z'
               ? '测量结果已写入经典寄存器；振幅图的琥珀色标记表示该 Z 分支。'
               : `已按 ${basis.toUpperCase()} 基投影并写入经典寄存器；结果见测量门与本卡。`;
-        el.innerHTML = `<div class="measureMain">${head}</div><div class="measureNote">${note}${recordedBit !== trueBit ? ' · 读出误差只翻转经典记录，态按真实结果坍缩。' : ''}</div>`;
+        const compare = basis === 'z' && result.q != null && Number.isFinite(last.beforeP0)
+          ? this.measurementCompareHtml({ mode: 'qubit', q: result.q, trueBit, beforeP0: last.beforeP0, beforeP1: last.beforeP1 }) : '';
+        el.innerHTML = `<div class="measureMain">${head}</div><div class="measureNote">${note}${recordedBit !== trueBit ? ' · 读出误差只翻转经典记录，态按真实结果坍缩。' : ''}</div>${compare}`;
         return;
       }
       const outcome = Array.isArray(result.bits) ? result.bits.join('') : String(result.bit ?? '');
@@ -2995,7 +3031,7 @@ class QCircuitApp {
         : m.prob > 1 - 1e-12
           ? `q${m.q} 测前已处于 |${m.trueBit}⟩ 本征态：结果确定，波函数不变；这是测量的物理结果。`
           : `只投影 q${m.q}；其余比特的条件态与相干保留。图中琥珀色标记表示测后仍占据的基态。`;
-      el.innerHTML = `<div class="measureMain">${head}</div><div class="measureNote">${note}${changedReadout ? ' · 读出误差翻转了经典记录，量子态仍按真实结果坍缩。' : ''}</div>`;
+      el.innerHTML = `<div class="measureMain">${head}</div><div class="measureNote">${note}${changedReadout ? ' · 读出误差翻转了经典记录，量子态仍按真实结果坍缩。' : ''}</div>${this.measurementCompareHtml(m)}`;
       return;
     }
     const changedReadout = m.bits !== m.trueBits;
@@ -3006,7 +3042,7 @@ class QCircuitApp {
       : m.prob > 1 - 1e-12
         ? `测前已是 Z 基本征态 |${m.trueBits}⟩：结果确定，因此振幅图可能不变。`
         : `全寄存器已投影到 |${m.trueBits}⟩；振幅图的琥珀色边框标出测后分支。`;
-    el.innerHTML = `<div class="measureMain">${head}</div><div class="measureNote">${note}${changedReadout ? ' · 读出误差只翻转记录位，不改变坍缩态。' : ''}</div>`;
+    el.innerHTML = `<div class="measureMain">${head}</div><div class="measureNote">${note}${changedReadout ? ' · 读出误差只翻转记录位，不改变坍缩态。' : ''}</div>${this.measurementCompareHtml(m)}`;
   }
 
   cancelShots(){

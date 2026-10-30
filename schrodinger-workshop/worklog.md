@@ -1633,6 +1633,20 @@ README 噪声页用法补充矩阵与曲线探针操作。
 
 ---
 
+## R167（2026-10-30）线路页 Z 测量的 Born 分支对照反馈
+
+### 完成项
+- [x] 测量结果卡新增测前→测后紧凑概率条：单 q 测量并列显示 q=0/1 的测前 Born 概率和实际投影分支；整尺测量列出测前概率最高的最多四个基态分支，并突出唯一存活的测后分支。
+- [x] 手动测量与线路内单比特 Z 测量共用可视化；已有振幅图琥珀色分支、高亮门结果和读出记录/真实投影分离语义保留，不在波函数画布上叠遮挡内容。
+- [x] README 更新线路页操作说明，新增 `scripts/verify-qc-measure-feedback.mjs` 独立回归。
+
+### 验证
+- `node scripts/verify-qc-measure-feedback.mjs`：单 q 50/50 测前分支→坍缩、Bell 整尺测量两条 Born 分支→单一存活态、线路内 Z 测量三条路径通过。
+- 回归开发时抓到 typed-array `.map()` 陷阱：`Float64Array.map` 无法返回对象，导致整尺测前分支列表为空；改用 `Array.from(..., mapper)` 后测试通过。
+- `node --check src/qcircuit.js`、测试脚本语法与 `git diff --check` 通过；standalone 全站构建成功，`dist/qcircuit.html` 214.7 KB。
+
+---
+
 ## R166（2026-10-30）旋转表面码故障签名解码与有效 idle 升级
 
 ### 完成项
