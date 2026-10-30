@@ -1,0 +1,28 @@
+{
+  "batch": 4,
+  "count": 300,
+  "low": 18,
+  "nameIssues": 0,
+  "sample": [
+    "scenic-台州-1106",
+    "scenic-宁波-955",
+    "scenic-丽水-1157",
+    "scenic-杭州-933",
+    "scenic-杭州-937",
+    "scenic-金华-1118",
+    "scenic-衢州-1043",
+    "scenic-温州-1026",
+    "scenic-舟山-1087",
+    "scenic-杭州-942",
+    "scenic-绍兴-1079",
+    "scenic-衢州-1058",
+    "scenic-衢州-1048",
+    "scenic-宁波-975",
+    "scenic-宁波-986",
+    "scenic-宁波-966",
+    "scenic-台州-1100",
+    "scenic-金华-1144",
+    "scenic-丽水-1153",
+    "scenic-舟山-1091"
+  ]
+}

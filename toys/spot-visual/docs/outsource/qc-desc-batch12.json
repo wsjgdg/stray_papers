@@ -1,0 +1,28 @@
+{
+  "batch": 12,
+  "count": 300,
+  "low": 0,
+  "nameIssues": 0,
+  "sample": [
+    "scenic-张掖-3733",
+    "scenic-商洛-3639",
+    "scenic-安康-3701",
+    "scenic-临沧-3523",
+    "scenic-临沧-3520",
+    "scenic-德宏傣族景颇族自治州-3512",
+    "scenic-张掖-3729",
+    "scenic-西安-3575",
+    "scenic-酒泉-3712",
+    "scenic-楚雄彝族自治州-3469",
+    "scenic-汉中-3672",
+    "scenic-汉中-3678",
+    "scenic-红河哈尼族彝族自治州-3487",
+    "scenic-安康-3697",
+    "scenic-张掖-3724",
+    "scenic-渭南-3595",
+    "scenic-商洛-3633",
+    "scenic-平凉-3757",
+    "scenic-拉萨-3530",
+    "scenic-宝鸡-3592"
+  ]
+}

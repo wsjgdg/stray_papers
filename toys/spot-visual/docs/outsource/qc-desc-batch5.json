@@ -1,0 +1,28 @@
+{
+  "batch": 5,
+  "count": 300,
+  "low": 0,
+  "nameIssues": 0,
+  "sample": [
+    "scenic-厦门-1385",
+    "scenic-宣城-1326",
+    "scenic-安庆-1305",
+    "scenic-泉州-1458",
+    "scenic-六安-1264",
+    "scenic-淮南-1234",
+    "scenic-龙岩-1403",
+    "scenic-池州-1342",
+    "scenic-上饶-1537",
+    "scenic-龙岩-1407",
+    "scenic-龙岩-1412",
+    "scenic-宿州-1221",
+    "scenic-吉安-1518",
+    "scenic-泉州-1471",
+    "scenic-六安-1259",
+    "scenic-宣城-1330",
+    "scenic-泉州-1462",
+    "scenic-泉州-1468",
+    "scenic-漳州-1428",
+    "scenic-芜湖-1277"
+  ]
+}

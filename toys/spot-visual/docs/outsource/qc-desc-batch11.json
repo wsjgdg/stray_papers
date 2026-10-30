@@ -1,0 +1,28 @@
+{
+  "batch": 11,
+  "count": 300,
+  "low": 0,
+  "nameIssues": 0,
+  "sample": [
+    "scenic-铜仁-3319",
+    "scenic-凉山彝族自治州-3167",
+    "scenic-贵阳-3246",
+    "scenic-达州-3209",
+    "scenic-曲靖-3454",
+    "scenic-遂宁-3142",
+    "scenic-黔东南苗族侗族自治州-3333",
+    "scenic-贵阳-3237",
+    "scenic-遵义-3274",
+    "scenic-黔西南布依族苗族自治州-3362",
+    "scenic-曲靖-3451",
+    "scenic-昭通-3444",
+    "scenic-达州-3215",
+    "scenic-保山-3426",
+    "scenic-泸州-3186",
+    "scenic-黔西南布依族苗族自治州-3361",
+    "scenic-达州-3204",
+    "scenic-遵义-3265",
+    "scenic-毕节-3311",
+    "scenic-黔南布依族苗族自治州-3351"
+  ]
+}

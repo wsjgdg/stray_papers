@@ -1,0 +1,28 @@
+{
+  "batch": 10,
+  "count": 300,
+  "low": 0,
+  "nameIssues": 0,
+  "sample": [
+    "scenic-巴中-3098",
+    "scenic-成都-2887",
+    "scenic-甘孜藏族自治州-3039",
+    "scenic-绵阳-2976",
+    "scenic-重庆-2875",
+    "scenic-宜宾-3126",
+    "scenic-成都-2913",
+    "scenic-广元-3031",
+    "scenic-重庆-2877",
+    "scenic-成都-2928",
+    "scenic-成都-2912",
+    "scenic-重庆-2880",
+    "scenic-重庆-2878",
+    "scenic-成都-2911",
+    "scenic-重庆-2852",
+    "scenic-阿坝藏族羌族自治州-2945",
+    "scenic-绵阳-2989",
+    "scenic-甘孜藏族自治州-3059",
+    "scenic-成都-2901",
+    "scenic-甘孜藏族自治州-3038"
+  ]
+}
