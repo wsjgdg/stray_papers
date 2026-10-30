@@ -31,7 +31,7 @@ const BUDGET_TIERS = [
     label: "穷游",
     icon: "🎒",
     color: "#10B981",
-    bg: "bg-emerald-50",
+    bg: "bg-emerald-50 dark:bg-emerald-500/10",
     multiplier: 0.6,
   },
   {
@@ -39,7 +39,7 @@ const BUDGET_TIERS = [
     label: "舒适",
     icon: "🏠",
     color: "#3B82F6",
-    bg: "bg-blue-50",
+    bg: "bg-blue-50 dark:bg-blue-500/10",
     multiplier: 1.0,
   },
   {
@@ -47,7 +47,7 @@ const BUDGET_TIERS = [
     label: "土豪",
     icon: "👑",
     color: "#F59E0B",
-    bg: "bg-amber-50",
+    bg: "bg-amber-50 dark:bg-amber-500/10",
     multiplier: 2.5,
   },
 ];
@@ -138,7 +138,7 @@ function SpotBudgetCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
+      className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden"
     >
       {/* 头部 */}
       <button
@@ -146,19 +146,21 @@ function SpotBudgetCard({
         className="w-full flex items-center gap-3 p-4 text-left"
       >
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center shrink-0">
-          <MapPin className="w-5 h-5 text-amber-600" />
+          <MapPin className="w-5 h-5 text-amber-600 dark:text-amber-400" />
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-bold text-gray-900 truncate">{name}</h4>
-          <p className="text-xs text-gray-400">
+          <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate">
+            {name}
+          </h4>
+          <p className="text-xs text-gray-400 dark:text-gray-500">
             {category} · {items.length} 项
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {/* ═══ 体力维度 ═══ */}
-          <div className="hidden sm:flex items-center gap-1 px-2 py-1 bg-amber-50 rounded-lg">
+          <div className="hidden sm:flex items-center gap-1 px-2 py-1 bg-amber-50 dark:bg-amber-500/10 rounded-lg">
             <Zap className="w-3 h-3 text-amber-500" />
-            <span className="text-xs font-bold text-amber-700">
+            <span className="text-xs font-bold text-amber-700 dark:text-amber-400">
               {staminaCost}
             </span>
           </div>
@@ -180,7 +182,7 @@ function SpotBudgetCard({
           animate={{ rotate: expanded ? 180 : 0 }}
           transition={{ duration: 0.2 }}
         >
-          <ChevronDown className="w-4 h-4 text-gray-400" />
+          <ChevronDown className="w-4 h-4 text-gray-400 dark:text-gray-500" />
         </motion.div>
       </button>
 
@@ -206,8 +208,8 @@ function SpotBudgetCard({
                     onClick={() => toggleItem(idx)}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border-2 transition-all text-left cursor-pointer select-none ${
                       isSelected
-                        ? "border-emerald-400 bg-emerald-50"
-                        : "border-gray-100 hover:border-gray-200"
+                        ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10"
+                        : "border-gray-100 dark:border-gray-800 hover:border-gray-200"
                     }`}
                   >
                     {/* 选择框 */}
@@ -215,7 +217,7 @@ function SpotBudgetCard({
                       className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
                         isSelected
                           ? "border-emerald-500 bg-emerald-500"
-                          : "border-gray-300"
+                          : "border-gray-300 dark:border-gray-600"
                       }`}
                     >
                       {isSelected && (
@@ -225,10 +227,10 @@ function SpotBudgetCard({
 
                     {/* 项目名 */}
                     <span
-                      className={`flex-1 text-sm ${isSelected ? "text-gray-900 font-medium" : "text-gray-600"}`}
+                      className={`flex-1 text-sm ${isSelected ? "text-gray-900 dark:text-gray-100 font-medium" : "text-gray-600 dark:text-gray-300"}`}
                     >
                       {item.isTicket && (
-                        <span className="mr-1 text-[10px] px-1 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100 align-middle">
+                        <span className="mr-1 text-[10px] px-1 py-0.5 rounded bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 align-middle">
                           门票
                         </span>
                       )}
@@ -264,7 +266,7 @@ function SpotBudgetCard({
                               ? "官方票价未收录，点击补录实际票价"
                               : "点击改为实际票价"
                           }
-                          className={`text-sm font-bold ${item.unknown ? "text-gray-400" : isFree ? "text-green-500" : isSelected ? "text-emerald-600" : "text-gray-400"} hover:text-emerald-700 transition-colors`}
+                          className={`text-sm font-bold ${item.unknown ? "text-gray-400 dark:text-gray-500" : isFree ? "text-green-500" : isSelected ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400 dark:text-gray-500"} hover:text-emerald-700 transition-colors`}
                         >
                           {item.unknown
                             ? "未收录"
@@ -295,7 +297,7 @@ function SpotBudgetCard({
                     setSelected(newSet);
                     onSubtotalChange(spotId, subtotalOf(newSet));
                   }}
-                  className="flex-1 py-2 text-xs font-bold text-emerald-600 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors"
+                  className="flex-1 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-500/10 transition-colors"
                 >
                   全选付费
                 </button>
@@ -304,7 +306,7 @@ function SpotBudgetCard({
                     setSelected(new Set());
                     onSubtotalChange(spotId, 0);
                   }}
-                  className="flex-1 py-2 text-xs font-bold text-gray-500 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="flex-1 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   全部取消
                 </button>
@@ -323,7 +325,11 @@ function SpotBudgetCard({
                       // factor ≤ 0.7 的缆车/索道类即使付费也保留（明显省力）
                       if (factor <= 0.7) {
                         newSet.add(i);
-                      } else if (factor <= 1.0 && !it.unknown && it.price === 0) {
+                      } else if (
+                        factor <= 1.0 &&
+                        !it.unknown &&
+                        it.price === 0
+                      ) {
                         // 免费且非高体力的省力项
                         newSet.add(i);
                       }
@@ -331,7 +337,7 @@ function SpotBudgetCard({
                     setSelected(newSet);
                     onSubtotalChange(spotId, subtotalOf(newSet));
                   }}
-                  className="flex-1 py-2 text-xs font-bold text-sky-600 bg-sky-50 rounded-lg hover:bg-sky-100 transition-colors flex items-center justify-center gap-1"
+                  className="flex-1 py-2 text-xs font-bold text-sky-600 bg-sky-50 dark:bg-sky-500/10 rounded-lg hover:bg-sky-100 transition-colors flex items-center justify-center gap-1"
                   title="保留低体力/省力项目，自动剔除徒步等高体力项"
                 >
                   <Feather className="w-3 h-3" />
@@ -371,7 +377,7 @@ function BudgetBar({
             <span className="text-lg shrink-0">{tier.icon}</span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-bold text-gray-700">
+                <span className="text-xs font-bold text-gray-700 dark:text-gray-200">
                   {tier.label}
                 </span>
                 <motion.span
@@ -489,10 +495,7 @@ export default function BudgetView() {
       visibleSpots.reduce(
         (sum, s) =>
           sum +
-          itemsOf(s).reduce(
-            (ps, it) => ps + (it.unknown ? 0 : it.price),
-            0,
-          ),
+          itemsOf(s).reduce((ps, it) => ps + (it.unknown ? 0 : it.price), 0),
         0,
       ),
     [visibleSpots, itemsOf],
@@ -536,10 +539,10 @@ export default function BudgetView() {
         >
           <Calculator className="w-10 h-10 text-amber-400" />
         </motion.div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">
+        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
           暂无可预算的景点
         </h3>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           先到「景点览胜」收藏或加入行程单，再回来模拟预算
         </p>
       </div>
@@ -547,7 +550,7 @@ export default function BudgetView() {
   }
 
   return (
-    <div className="min-h-full bg-gray-50/50">
+    <div className="min-h-full bg-gray-50 dark:bg-gray-900/50 dark:bg-gray-950/50">
       <div className="max-w-2xl mx-auto px-4 py-6 pb-8">
         {/* ═══ 标题 ═══ */}
         <div className="flex items-center gap-2 mb-5">
@@ -555,15 +558,17 @@ export default function BudgetView() {
             <Calculator className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900">预算沙盘</h2>
-            <p className="text-xs text-gray-500">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+              预算沙盘
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               勾选项目，实时模拟旅行花费 · 价格为估算值，点价格可改为实际票价
             </p>
           </div>
           {Object.keys(customPrices).length > 0 && (
             <button
               onClick={clearCustomPrices}
-              className="ml-auto text-xs font-bold text-sky-600 bg-sky-50 px-3 py-1.5 rounded-lg hover:bg-sky-100 transition-colors shrink-0"
+              className="ml-auto text-xs font-bold text-sky-600 bg-sky-50 dark:bg-sky-500/10 px-3 py-1.5 rounded-lg hover:bg-sky-100 transition-colors shrink-0"
               title="清除所有手动改价，恢复估算值"
             >
               重置改价 ({Object.keys(customPrices).length})
@@ -573,9 +578,9 @@ export default function BudgetView() {
 
         {/* ═══ 行程单作用域提示 ═══ */}
         {trip.length > 0 && (
-          <div className="flex items-center gap-2 mb-4 px-3.5 py-2.5 rounded-xl bg-emerald-50/70 border border-emerald-100">
-            <Route className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span className="text-xs text-emerald-800 flex-1">
+          <div className="flex items-center gap-2 mb-4 px-3.5 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10/70 border border-emerald-100 dark:border-emerald-500/20">
+            <Route className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span className="text-xs text-emerald-800 dark:text-emerald-300 flex-1">
               {effectiveScope === "trip"
                 ? `已按行程单 ${trip.length} 站计算，未入行程的景点不参与预算`
                 : "当前按全部景点计算"}
@@ -584,7 +589,7 @@ export default function BudgetView() {
               onClick={() =>
                 setScope(effectiveScope === "trip" ? "all" : "trip")
               }
-              className="text-xs font-bold text-emerald-700 hover:text-emerald-900 shrink-0"
+              className="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:text-emerald-900 shrink-0"
             >
               {effectiveScope === "trip" ? "改用全部景点" : "改按行程单"}
             </button>
@@ -627,13 +632,13 @@ export default function BudgetView() {
         </motion.div>
 
         {/* ═══ 三档预算对比 ═══ */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-5">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-5 mb-5">
           <div className="flex items-center gap-1.5 mb-4">
-            <TrendingUp className="w-4 h-4 text-gray-500" />
-            <span className="text-sm font-semibold text-gray-700">
+            <TrendingUp className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
               预算对比
             </span>
-            <span className="text-[10px] text-gray-400 ml-auto">
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">
               基于当前选择
             </span>
           </div>
@@ -645,7 +650,7 @@ export default function BudgetView() {
           {priceLayers.map((layer) => (
             <div
               key={layer.label}
-              className="bg-white rounded-xl border border-gray-100 p-2.5 text-center"
+              className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-2.5 text-center"
             >
               <div className="text-lg">{layer.emoji}</div>
               <div
@@ -654,7 +659,7 @@ export default function BudgetView() {
               >
                 {layer.count}
               </div>
-              <div className="text-[9px] text-gray-400 leading-tight">
+              <div className="text-[9px] text-gray-400 dark:text-gray-500 leading-tight">
                 {layer.label}
               </div>
             </div>
@@ -663,9 +668,11 @@ export default function BudgetView() {
 
         {/* ═══ 景点项目列表 ═══ */}
         <div className="flex items-center gap-1.5 mb-3">
-          <Wallet className="w-4 h-4 text-gray-500" />
-          <span className="text-sm font-semibold text-gray-700">景点费用</span>
-          <span className="text-[10px] text-gray-400 ml-auto">
+          <Wallet className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+          <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+            景点费用
+          </span>
+          <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">
             {visibleSpots.length}/{spotItems.length} · 点击展开勾选
           </span>
         </div>
@@ -689,12 +696,12 @@ export default function BudgetView() {
         {visibleCount < spotItems.length && (
           <button
             onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
-            className="w-full mt-3 py-2.5 text-xs font-bold text-emerald-700 bg-emerald-50 rounded-xl hover:bg-emerald-100 transition-colors"
+            className="w-full mt-3 py-2.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-500/10 transition-colors"
           >
             加载更多景点（还有 {spotItems.length - visibleCount} 条）
           </button>
         )}
-        <p className="mt-4 text-[11px] text-gray-400 leading-relaxed">
+        <p className="mt-4 text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed">
           门票：官方票价未收录时按 A 级等级 / 分类估算（标「估」），
           可点击价格补录实际票价（仅本机保存）。主题乐园门票通常已含游乐项目，不重复计价。
         </p>

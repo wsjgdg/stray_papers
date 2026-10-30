@@ -54,7 +54,7 @@ const MOBILITY_OPTIONS = [
     label: "需要搀扶",
     emoji: "🧑‍🤝‍🧑",
     tag: "慢行",
-    tagColor: "bg-amber-100 text-amber-700",
+    tagColor: "bg-amber-100 text-amber-700 dark:text-amber-400",
     lineW: 5,
   },
   {
@@ -62,7 +62,7 @@ const MOBILITY_OPTIONS = [
     label: "轮椅出行",
     emoji: "♿",
     tag: "轮椅",
-    tagColor: "bg-red-100 text-red-700",
+    tagColor: "bg-red-100 text-red-700 dark:text-red-400",
     lineW: 7,
   },
 ];
@@ -125,7 +125,7 @@ function CompanionAvatar({
           delay: index * 0.08,
         }}
         whileTap={{ scale: 0.92 }}
-        className="relative w-20 h-20 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden hover:border-emerald-400 transition-colors"
+        className="relative w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center overflow-hidden hover:border-emerald-400 transition-colors"
       >
         {option ? (
           <>
@@ -136,9 +136,9 @@ function CompanionAvatar({
           </>
         ) : (
           <>
-            <Users className="w-6 h-6 text-gray-400" />
-            <span className="absolute bottom-0 inset-x-0 h-5 bg-gray-200 flex items-center justify-center">
-              <span className="text-[9px] font-bold text-gray-500">
+            <Users className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+            <span className="absolute bottom-0 inset-x-0 h-5 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+              <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400">
                 {label}
               </span>
             </span>
@@ -193,11 +193,11 @@ function MobilitySheet({
             animate={{ y: 0 }}
             exit={{ y: 300 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-lg bg-white rounded-t-3xl shadow-2xl p-6 pb-8"
+            className="relative w-full max-w-lg bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl p-6 pb-8"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-5" />
-            <h3 className="text-base font-bold text-gray-900 mb-4">
+            <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 mb-4">
               选择出行方式
             </h3>
             <div className="space-y-2">
@@ -218,10 +218,10 @@ function MobilitySheet({
                     delay: i * 0.08,
                   }}
                   whileTap={{ scale: 0.96 }}
-                  className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border-2 transition-all ${current === opt.id ? "border-emerald-500 bg-emerald-50" : "border-gray-200 hover:border-gray-300"}`}
+                  className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border-2 transition-all ${current === opt.id ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10" : "border-gray-200 dark:border-gray-700 hover:border-gray-300"}`}
                 >
                   <span className="text-3xl">{opt.emoji}</span>
-                  <span className="text-sm font-semibold text-gray-800">
+                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
                     {opt.label}
                   </span>
                   <span
@@ -250,7 +250,11 @@ function MobilitySheet({
    ═══════════════════════════════════════════════════ */
 function FlipNumber({ value, active }: { value: number; active: boolean }) {
   const display = useCountUp(value, active, 600);
-  return <span className="font-black text-blue-600">{display}</span>;
+  return (
+    <span className="font-black text-blue-600 dark:text-blue-400">
+      {display}
+    </span>
+  );
 }
 
 /* ═══════════════════════════════════════════════════
@@ -754,7 +758,7 @@ function ElevationChart({
 
       {/* 底部数据卡片 —— select-none 防止拖拽时选中文字 */}
       <div className="grid grid-cols-3 gap-3 mt-4 select-none">
-        <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-3 text-center">
           <motion.div
             key={climbedFloors}
             initial={{ scale: 0.8 }}
@@ -764,13 +768,13 @@ function ElevationChart({
           >
             {climbedFloors}
           </motion.div>
-          <div className="text-[11px] text-gray-500 mt-1 font-medium">
+          <div className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 font-medium">
             已爬 (层楼)
           </div>
         </div>
         <motion.div
           key={`${remaining}-${heatActive}`}
-          className="bg-white rounded-xl border border-gray-200 p-3 text-center"
+          className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-3 text-center"
         >
           <motion.div
             initial={{ scale: 0.8 }}
@@ -780,19 +784,19 @@ function ElevationChart({
           >
             {remaining}%
           </motion.div>
-          <div className="text-[11px] text-gray-500 mt-1 font-medium">
+          <div className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 font-medium">
             {heatActive ? "高温预警" : "剩余体力"}
           </div>
         </motion.div>
         <div
-          className={`bg-white rounded-xl border p-3 text-center ${Number(distToWaypoint) > 500 ? "border-red-200 animate-pulse" : "border-gray-200"}`}
+          className={`bg-white dark:bg-gray-900 rounded-xl border p-3 text-center ${Number(distToWaypoint) > 500 ? "border-red-200 dark:border-red-500/30 animate-pulse" : "border-gray-200 dark:border-gray-700"}`}
         >
           <div
             className={`text-[28px] font-black leading-none ${Number(distToWaypoint) > 500 ? "text-red-500" : "text-blue-500"}`}
           >
             {distToWaypoint}
           </div>
-          <div className="text-[11px] text-gray-500 mt-1 font-medium">
+          <div className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 font-medium">
             下个节点 (米)
           </div>
         </div>
@@ -1109,7 +1113,7 @@ export default function FitnessView() {
   const routeSegments = useMemo(() => deriveSegments(route.waypoints), [route]);
 
   return (
-    <div className="min-h-full bg-gray-50">
+    <div className="min-h-full bg-gray-50 dark:bg-gray-900">
       <div className="max-w-2xl mx-auto px-4 py-6 pb-28">
         {/* ═══ 标题 ═══ */}
         <div className="flex items-center gap-2 mb-6">
@@ -1117,8 +1121,10 @@ export default function FitnessView() {
             <Mountain className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900">登山账本</h2>
-            <p className="text-xs text-gray-500">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+              登山账本
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               智能评估行程体力消耗，规划最优路线
             </p>
           </div>
@@ -1135,7 +1141,7 @@ export default function FitnessView() {
                 setCursorKm(0);
                 vibrate(30);
               }}
-              className={`shrink-0 px-3.5 py-2 rounded-full text-xs font-bold border transition-colors ${r.id === route.id ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-600/20" : "bg-white border-gray-200 text-gray-600 hover:border-blue-300"}`}
+              className={`shrink-0 px-3.5 py-2 rounded-full text-xs font-bold border transition-colors ${r.id === route.id ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-600/20" : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-blue-300"}`}
             >
               {r.name}
             </motion.button>
@@ -1144,20 +1150,22 @@ export default function FitnessView() {
 
         {/* ═══ 路线简介 + 数据来源声明 ═══ */}
         <div className="mb-5">
-          <p className="text-[11px] text-gray-500 leading-relaxed">
+          <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
             {route.city} · {route.summary}
           </p>
-          <p className="text-[10px] text-gray-400 mt-1.5">
+          <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5">
             数据来源：Open-Meteo Elevation（构建时采样，90m 网格）·
             峰顶海拔用官方公布值 · 路径为关键节点插值，曲线形状为真实地形
           </p>
         </div>
 
         {/* ═══ 同行人录入 ═══ */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-5">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800 mb-5">
           <div className="flex items-center gap-1.5 mb-4">
             <Users className="w-4 h-4 text-blue-500" />
-            <span className="text-sm font-semibold text-gray-700">同行人</span>
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+              同行人
+            </span>
           </div>
           <div className="flex justify-center gap-10">
             {Object.entries(companions).map(([name, mobility], idx) => (
@@ -1176,7 +1184,7 @@ export default function FitnessView() {
         <div className="flex items-center justify-center gap-3 mb-4">
           <button
             onClick={() => setFlipped(false)}
-            className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${!flipped ? "bg-gray-900 text-white shadow-lg" : "bg-gray-100 text-gray-500"}`}
+            className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${!flipped ? "bg-gray-900 text-white shadow-lg" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"}`}
           >
             🗺️ 全程路线
           </button>
@@ -1185,17 +1193,19 @@ export default function FitnessView() {
               setFlipped(true);
               vibrate(30);
             }}
-            className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${flipped ? "bg-gray-900 text-white shadow-lg" : "bg-gray-100 text-gray-500"}`}
+            className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${flipped ? "bg-gray-900 text-white shadow-lg" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"}`}
           >
             🪑 分段休息
           </button>
         </div>
 
         {/* ═══ 主内容区（3D翻转） ═══ */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-5">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 mb-5">
           {/* 缓震路线切换 */}
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-semibold text-gray-700">疲劳度</span>
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+              疲劳度
+            </span>
             <div className="flex flex-col items-center gap-0.5">
               <motion.button
                 whileTap={{ scale: 0.9 }}
@@ -1203,11 +1213,13 @@ export default function FitnessView() {
                   setEasyMode(true);
                   vibrate(30);
                 }}
-                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${easyMode ? "bg-emerald-100 text-emerald-600" : "bg-gray-100 text-gray-400"}`}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${easyMode ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400" : "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500"}`}
               >
                 <ChevronUp className="w-5 h-5" />
               </motion.button>
-              <span className="text-[9px] text-gray-400">省力</span>
+              <span className="text-[9px] text-gray-400 dark:text-gray-500">
+                省力
+              </span>
             </div>
             <div className="flex flex-col items-center gap-0.5">
               <motion.button
@@ -1216,17 +1228,19 @@ export default function FitnessView() {
                   setEasyMode(false);
                   vibrate(30);
                 }}
-                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${!easyMode ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-400"}`}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${!easyMode ? "bg-blue-100 text-blue-600 dark:text-blue-400" : "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500"}`}
               >
                 <ChevronDown className="w-5 h-5" />
               </motion.button>
-              <span className="text-[9px] text-gray-400">标准</span>
+              <span className="text-[9px] text-gray-400 dark:text-gray-500">
+                标准
+              </span>
             </div>
             {easyMode && (
               <motion.span
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full"
+                className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full"
               >
                 轻松模式
               </motion.span>
@@ -1256,36 +1270,36 @@ export default function FitnessView() {
                           )}
                           %
                         </div>
-                        <div className="text-xs text-gray-500 mt-1 font-medium">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
                           平路占比
                         </div>
                       </div>
-                      <div className="bg-blue-50 rounded-xl p-4 text-center">
-                        <div className="text-3xl font-black text-blue-600">
+                      <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-4 text-center">
+                        <div className="text-3xl font-black text-blue-600 dark:text-blue-400">
                           {Math.round(
                             (slopeStats.down / slopeStats.total) * 100,
                           )}
                           %
                         </div>
-                        <div className="text-xs text-gray-500 mt-1 font-medium">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
                           下坡占比
                         </div>
                       </div>
                     </div>
-                    <div className="text-center text-sm text-gray-400 mt-4">
+                    <div className="text-center text-sm text-gray-400 dark:text-gray-500 mt-4">
                       轻松模式已隐藏上坡数据
                     </div>
 
                     {/* 休息椅标注 */}
                     <div className="mt-4">
-                      <div className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
+                      <div className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-1.5">
                         <Armchair className="w-4 h-4" /> 沿途关键节点
                       </div>
                       <div className="space-y-2">
                         {route.waypoints.map((wp) => (
                           <div
                             key={wp.name}
-                            className="flex items-center gap-3 bg-gray-50 rounded-xl p-3"
+                            className="flex items-center gap-3 bg-gray-50 dark:bg-gray-900 rounded-xl p-3"
                           >
                             <motion.div
                               animate={{ scale: [1, 1.15] }}
@@ -1297,15 +1311,15 @@ export default function FitnessView() {
                                 repeat: Infinity,
                                 repeatDelay: 1,
                               }}
-                              className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0"
+                              className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center shrink-0"
                             >
-                              <Armchair className="w-4 h-4 text-emerald-600" />
+                              <Armchair className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                             </motion.div>
                             <div className="flex-1">
-                              <div className="text-sm font-semibold text-gray-800">
+                              <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
                                 {wp.name}
                               </div>
-                              <div className="text-xs text-gray-400">
+                              <div className="text-xs text-gray-400 dark:text-gray-500">
                                 {fmtNum(wp.km)}km · 海拔 {Math.round(wp.ele)}m
                               </div>
                             </div>
@@ -1327,17 +1341,17 @@ export default function FitnessView() {
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: i * 0.1 }}
-                          className="bg-gray-50 rounded-xl p-4"
+                          className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4"
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-bold text-gray-800">
+                            <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
                               {seg.name}
                             </span>
-                            <span className="text-xs text-gray-400">
+                            <span className="text-xs text-gray-400 dark:text-gray-500">
                               {seg.difficulty}
                             </span>
                           </div>
-                          <div className="flex gap-4 text-xs text-gray-500">
+                          <div className="flex gap-4 text-xs text-gray-500 dark:text-gray-400">
                             <span className="flex items-center gap-1">
                               <Route className="w-3 h-3" />{" "}
                               <FlipNumber value={seg.dist} active={!easyMode} />
@@ -1353,7 +1367,7 @@ export default function FitnessView() {
                               m
                             </span>
                           </div>
-                          <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="mt-2 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${pct}%` }}
@@ -1375,17 +1389,17 @@ export default function FitnessView() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`bg-white rounded-2xl border p-4 mb-4 ${staminaBudget < 50 ? "border-red-200 bg-red-50/40" : "border-gray-100"}`}
+          className={`bg-white dark:bg-gray-900 rounded-2xl border p-4 mb-4 ${staminaBudget < 50 ? "border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10/40" : "border-gray-100 dark:border-gray-800"}`}
         >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
               <Activity
                 className={`w-4 h-4 ${staminaBudget < 50 ? "text-red-500" : "text-emerald-500"}`}
               />
-              <span className="text-sm font-semibold text-gray-700">
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                 体力预算评估
               </span>
-              <span className="text-[10px] text-gray-400 ml-1">
+              <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-1">
                 基于同行人状态推断
               </span>
             </div>
@@ -1393,13 +1407,15 @@ export default function FitnessView() {
               key={staminaBudget}
               initial={{ scale: 1.2 }}
               animate={{ scale: 1 }}
-              className={`text-2xl font-black ${staminaBudget < 50 ? "text-red-500" : "text-emerald-600"}`}
+              className={`text-2xl font-black ${staminaBudget < 50 ? "text-red-500" : "text-emerald-600 dark:text-emerald-400"}`}
             >
               {staminaBudget}
-              <span className="text-xs text-gray-400">/100</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">
+                /100
+              </span>
             </motion.span>
           </div>
-          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${staminaBudget}%` }}
@@ -1412,7 +1428,7 @@ export default function FitnessView() {
               {staminaConditions.map((c) => (
                 <span
                   key={c}
-                  className="text-[10px] text-gray-500 px-1.5 py-0.5 bg-gray-100 rounded-full"
+                  className="text-[10px] text-gray-500 dark:text-gray-400 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full"
                 >
                   {c === "knee"
                     ? "🦵 膝盖"
@@ -1432,7 +1448,7 @@ export default function FitnessView() {
               label: "总路程",
               value: `${fmtNum(route.distanceKm)}km`,
               icon: Footprints,
-              color: "text-blue-600",
+              color: "text-blue-600 dark:text-blue-400",
             },
             {
               label: "总爬升",
@@ -1450,18 +1466,20 @@ export default function FitnessView() {
               label: "补给点",
               value: `${route.waypoints.length}个`,
               icon: MapPin,
-              color: "text-emerald-600",
+              color: "text-emerald-600 dark:text-emerald-400",
             },
           ].map((stat) => (
             <div
               key={stat.label}
-              className="bg-white rounded-xl border border-gray-100 p-3 text-center"
+              className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 p-3 text-center"
             >
               <stat.icon className={`w-4 h-4 ${stat.color} mx-auto mb-1`} />
               <div className={`text-base font-black ${stat.color}`}>
                 {stat.value}
               </div>
-              <div className="text-[10px] text-gray-400">{stat.label}</div>
+              <div className="text-[10px] text-gray-400 dark:text-gray-500">
+                {stat.label}
+              </div>
             </div>
           ))}
         </div>

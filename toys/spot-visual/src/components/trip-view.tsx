@@ -114,19 +114,19 @@ function TripMap({ days }: { days: Spot[][] }) {
   const dayColor = (d: number) => DAY_COLORS[d % DAY_COLORS.length];
 
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-5">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800 mb-5">
       <div className="flex items-center gap-1.5 mb-2">
         <MapPin className="w-4 h-4 text-teal-600" />
-        <span className="text-sm font-semibold text-gray-700">
+        <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
           行程地理草图
         </span>
-        <span className="text-[10px] text-gray-400 ml-auto">
+        <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">
           线为游玩顺序（非真实道路），点色 = 所属天
         </span>
       </div>
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        className="w-full rounded-xl bg-teal-50/50 border border-gray-100"
+        className="w-full rounded-xl bg-teal-50 dark:bg-teal-500/10/50 border border-gray-100 dark:border-gray-800"
       >
         {days.map((_, d) => {
           const pts = points.filter((p) => p.day === d);
@@ -174,7 +174,7 @@ function TripMap({ days }: { days: Spot[][] }) {
           {days.map((_, d) => (
             <span
               key={d}
-              className="flex items-center gap-1 text-[10px] text-gray-500"
+              className="flex items-center gap-1 text-[10px] text-gray-500 dark:text-gray-400"
             >
               <span
                 className="inline-block w-2.5 h-2.5 rounded-full"
@@ -260,25 +260,25 @@ function TripWeather({ spots }: { spots: Spot[] }) {
   const best = rows ? Math.max(...rows.map((r) => r.score)) : -1;
   const WEEKDAYS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
   const STYLE: Record<string, { text: string; bar: string }> = {
-    go: { text: "text-emerald-600", bar: "#10B981" },
-    caution: { text: "text-amber-600", bar: "#F59E0B" },
+    go: { text: "text-emerald-600 dark:text-emerald-400", bar: "#10B981" },
+    caution: { text: "text-amber-600 dark:text-amber-400", bar: "#F59E0B" },
     nogo: { text: "text-rose-500", bar: "#EF4444" },
   };
 
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-5">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800 mb-5">
       <div className="flex items-center gap-1.5 mb-3">
         <CalendarDays className="w-4 h-4 text-sky-500" />
-        <span className="text-sm font-semibold text-gray-700">
+        <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
           整条行程 · 7 日体检
         </span>
-        <span className="text-[10px] text-gray-400">
+        <span className="text-[10px] text-gray-400 dark:text-gray-500">
           {geoSpots.length} 站带坐标，逐日紫外线峰值取平均
         </span>
         <button
           onClick={load}
           disabled={loading}
-          className="ml-auto text-gray-400 hover:text-gray-600 disabled:opacity-40"
+          className="ml-auto text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-40"
           title="刷新"
         >
           <RefreshCw
@@ -297,20 +297,20 @@ function TripWeather({ spots }: { spots: Spot[] }) {
                 key={r.date}
                 className={`relative rounded-xl border p-1.5 text-center ${
                   r.score === best
-                    ? "border-emerald-300 bg-emerald-50/70"
-                    : "border-gray-100 bg-gray-50/50"
+                    ? "border-emerald-300 bg-emerald-50 dark:bg-emerald-500/10/70"
+                    : "border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 dark:bg-gray-950/50"
                 }`}
               >
                 {r.score === best && (
                   <Crown className="w-3 h-3 text-emerald-500 absolute -top-1.5 left-1/2 -translate-x-1/2" />
                 )}
-                <div className="text-[10px] text-gray-400 mt-1">
+                <div className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">
                   {i === 0 ? "今天" : WEEKDAYS[dt.getDay()]}
                 </div>
                 <div className={`text-sm font-black ${style.text}`}>
                   {r.score}
                 </div>
-                <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden my-1">
+                <div className="h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden my-1">
                   <div
                     className="h-full rounded-full"
                     style={{
@@ -360,11 +360,13 @@ function PackList({ spots }: { spots: Spot[] }) {
   const done = items.filter((i) => checked.has(i)).length;
 
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-5">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800 mb-5">
       <div className="flex items-center gap-1.5 mb-3">
         <Backpack className="w-4 h-4 text-amber-500" />
-        <span className="text-sm font-semibold text-gray-700">出行装备</span>
-        <span className="text-[10px] text-gray-400 ml-auto">
+        <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+          出行装备
+        </span>
+        <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">
           按行程分类推导 · {done}/{items.length} 已备
         </span>
       </div>
@@ -377,8 +379,8 @@ function PackList({ spots }: { spots: Spot[] }) {
               onClick={() => toggle(item)}
               className={`px-2.5 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                 on
-                  ? "bg-amber-50 border-amber-200 text-amber-700 line-through opacity-70"
-                  : "bg-white border-gray-200 text-gray-600 hover:border-amber-300"
+                  ? "bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-400 line-through opacity-70"
+                  : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-amber-300"
               }`}
             >
               {on ? "✓ " : ""}
@@ -555,25 +557,27 @@ export default function TripView() {
         <motion.div
           animate={{ y: [0, -8, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
-          className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center mb-6"
+          className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-100 dark:from-emerald-500/20 to-teal-100 dark:to-teal-500/20 flex items-center justify-center mb-6"
         >
           <Route className="w-10 h-10 text-emerald-500" />
         </motion.div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">行程单还是空的</h3>
-        <p className="text-sm text-gray-500 mb-6 max-w-xs">
+        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+          行程单还是空的
+        </h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-xs">
           在景点详情里点「加入行程」，就能把预算沙盘、体力沙盘和导出串成一条线
         </p>
         <div className="flex gap-2">
           <button
             onClick={() => setActiveView("spots")}
-            className="px-5 py-2.5 bg-emerald-50 text-emerald-700 rounded-xl text-sm font-bold hover:bg-emerald-100 transition-colors"
+            className="px-5 py-2.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-bold hover:bg-emerald-100 dark:hover:bg-emerald-500/10 transition-colors"
           >
             去挑景点
           </button>
           {addable.length > 0 && (
             <button
               onClick={() => setAdding(true)}
-              className="px-5 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-200 transition-colors"
+              className="px-5 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl text-sm font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
               直接添加 ({addable.length})
             </button>
@@ -584,7 +588,7 @@ export default function TripView() {
   }
 
   return (
-    <div className="min-h-full bg-gray-50/50">
+    <div className="min-h-full bg-gray-50 dark:bg-gray-900/50 dark:bg-gray-950/50">
       <div className="max-w-2xl mx-auto px-4 py-6 pb-28">
         {/* 标题 */}
         <div className="flex items-center gap-2 mb-5">
@@ -592,8 +596,10 @@ export default function TripView() {
             <Route className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900">行程单</h2>
-            <p className="text-xs text-gray-500">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+              行程单
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               {tripSpots.length} 站
               {days.length > 1 ? ` · ${days.length} 天` : ""} ·
               上下箭头调序，旗帜分天
@@ -668,7 +674,7 @@ export default function TripView() {
           <div className="flex gap-2 mb-5">
             <button
               onClick={exportText}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               <Copy className="w-4 h-4" />
               {copied ? "已复制 ✓" : "复制文本行程"}
@@ -711,10 +717,12 @@ export default function TripView() {
         {/* 分天工具条 */}
         {tripSpots.length > 2 && (
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs font-semibold text-gray-600">分天</span>
+            <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">
+              分天
+            </span>
             <button
               onClick={autoSplit}
-              className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg hover:bg-emerald-100 transition-colors"
+              className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-500/10 transition-colors"
               title="按每天体力预算 100 贪心分段"
             >
               ⚡ 按体力自动分天
@@ -722,7 +730,7 @@ export default function TripView() {
             {tripDaySplit.length > 0 && (
               <button
                 onClick={() => setTripDaySplit([])}
-                className="text-[11px] font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-lg hover:bg-gray-200 transition-colors"
+                className="text-[11px] font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
                 合并为一天
               </button>
@@ -743,13 +751,13 @@ export default function TripView() {
               <div key={`day-${d}`}>
                 {days.length > 1 && (
                   <div className="flex flex-wrap items-center gap-2 mb-2 mt-3">
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-teal-50 border border-teal-100">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-teal-50 dark:bg-teal-500/10 border border-teal-100">
                       <CalendarDays className="w-3.5 h-3.5 text-teal-600" />
                       <span className="text-xs font-black text-teal-700">
                         第 {d + 1} 天 · {day.length} 站
                       </span>
                     </div>
-                    <span className="text-[11px] text-gray-400 flex items-center gap-2">
+                    <span className="text-[11px] text-gray-400 dark:text-gray-500 flex items-center gap-2">
                       <span>¥{dayBudget.toLocaleString()}</span>
                       <span className={over ? "text-rose-500 font-bold" : ""}>
                         体力 {dayStamina}
@@ -770,7 +778,7 @@ export default function TripView() {
                     {tripDaySplit[d] !== undefined && (
                       <button
                         onClick={() => mergeTripDay(tripDaySplit[d])}
-                        className="ml-auto text-[10px] text-gray-400 hover:text-gray-600"
+                        className="ml-auto text-[10px] text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                         title="与上一天合并"
                       >
                         合并到昨天
@@ -790,14 +798,14 @@ export default function TripView() {
                             if (!c)
                               // 两站中至少一站缺坐标：明示「无法估算」，不让用户以为已算过
                               return (
-                                <div className="flex items-center gap-1.5 pl-6 py-1 text-[11px] text-gray-300">
-                                  <span className="w-px h-3 bg-gray-200" />
+                                <div className="flex items-center gap-1.5 pl-6 py-1 text-[11px] text-gray-300 dark:text-gray-600">
+                                  <span className="w-px h-3 bg-gray-200 dark:bg-gray-700" />
                                   <span>坐标缺失 · 无法估算此段车程</span>
                                 </div>
                               );
                             return (
-                              <div className="flex items-center gap-1.5 pl-6 py-1 text-[11px] text-gray-400">
-                                <span className="w-px h-3 bg-gray-200" />
+                              <div className="flex items-center gap-1.5 pl-6 py-1 text-[11px] text-gray-400 dark:text-gray-500">
+                                <span className="w-px h-3 bg-gray-200 dark:bg-gray-700" />
                                 <span>
                                   约 {c.km.toFixed(1)} km · 车程 {fmtMin(c.min)}
                                 </span>
@@ -809,23 +817,23 @@ export default function TripView() {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95 }}
-                          className="bg-white rounded-xl border border-gray-200/80 p-3 flex items-center gap-3"
+                          className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700/80 dark:border-gray-700 p-3 flex items-center gap-3"
                         >
-                          <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm font-black shrink-0">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-sm font-black shrink-0">
                             {i + 1}
                           </div>
                           <button
                             onClick={() => setSelectedSpot(s)}
                             className="flex-1 min-w-0 text-left"
                           >
-                            <h4 className="text-sm font-bold text-gray-900 truncate hover:text-emerald-700">
+                            <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate hover:text-emerald-700">
                               {s.name}
                             </h4>
-                            <p className="text-xs text-gray-400 truncate flex items-center gap-1">
+                            <p className="text-xs text-gray-400 dark:text-gray-500 truncate flex items-center gap-1">
                               <MapPin className="w-3 h-3 shrink-0" />
                               {s.address}
                               {costOf(s) > 0 && (
-                                <span className="text-emerald-600">
+                                <span className="text-emerald-600 dark:text-emerald-400">
                                   · 约¥{costOf(s)}
                                 </span>
                               )}
@@ -835,21 +843,21 @@ export default function TripView() {
                             <button
                               onClick={() => moveTripSpot(s.id, -1)}
                               disabled={i === 0}
-                              className="w-6 h-5 rounded bg-gray-50 text-gray-400 hover:text-gray-700 disabled:opacity-30 flex items-center justify-center"
+                              className="w-6 h-5 rounded bg-gray-50 dark:bg-gray-900 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-30 flex items-center justify-center"
                             >
                               <ChevronUp className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => moveTripSpot(s.id, 1)}
                               disabled={i === tripSpots.length - 1}
-                              className="w-6 h-5 rounded bg-gray-50 text-gray-400 hover:text-gray-700 disabled:opacity-30 flex items-center justify-center"
+                              className="w-6 h-5 rounded bg-gray-50 dark:bg-gray-900 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-30 flex items-center justify-center"
                             >
                               <ChevronDown className="w-3.5 h-3.5" />
                             </button>
                           </div>
                           <button
                             onClick={() => removeFromTrip(s.id)}
-                            className="w-8 h-8 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center shrink-0 transition-colors"
+                            className="w-8 h-8 rounded-lg text-gray-300 dark:text-gray-600 hover:text-red-500 hover:bg-red-50 flex items-center justify-center shrink-0 transition-colors"
                             title="移出行程"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -863,8 +871,8 @@ export default function TripView() {
                             }
                             className={`w-full flex items-center justify-center gap-1 py-1 my-0.5 rounded-lg text-[10px] font-bold transition-colors ${
                               isSplit
-                                ? "bg-teal-50 text-teal-700 border border-teal-100"
-                                : "text-gray-300 hover:text-teal-600 hover:bg-teal-50/50 border border-dashed border-transparent hover:border-teal-200"
+                                ? "bg-teal-50 dark:bg-teal-500/10 text-teal-700 border border-teal-100"
+                                : "text-gray-300 dark:text-gray-600 hover:text-teal-600 hover:bg-teal-50/50 border border-dashed border-transparent hover:border-teal-200"
                             }`}
                             title="在此处分天"
                           >
@@ -888,7 +896,7 @@ export default function TripView() {
           <div className="mt-6">
             <button
               onClick={() => setAdding((v) => !v)}
-              className="w-full py-2.5 rounded-xl border border-dashed border-gray-300 text-sm font-bold text-gray-500 hover:border-emerald-300 hover:text-emerald-600 transition-colors"
+              className="w-full py-2.5 rounded-xl border border-dashed border-gray-300 dark:border-gray-600 text-sm font-bold text-gray-500 dark:text-gray-400 hover:border-emerald-300 hover:text-emerald-600 transition-colors"
             >
               {adding
                 ? "收起添加列表"
@@ -903,10 +911,10 @@ export default function TripView() {
                       addToTrip(s.id);
                       if (addable.length === 1) setAdding(false);
                     }}
-                    className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 transition-colors flex items-center justify-between"
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-700 transition-colors flex items-center justify-between"
                   >
                     <span className="truncate">{s.name}</span>
-                    <span className="text-[10px] text-gray-400 shrink-0 ml-2">
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500 shrink-0 ml-2">
                       {s.category}
                     </span>
                   </button>

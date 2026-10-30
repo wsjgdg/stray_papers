@@ -68,8 +68,7 @@ export default function NetworkView() {
               /^\d+$/.test(s.id) || // 手工 30 条
               !!s.reservation, // 需预约的重点景区
           );
-    if (cityFilter)
-      list = list.filter((s) => s.address.includes(cityFilter));
+    if (cityFilter) list = list.filter((s) => s.address.includes(cityFilter));
     if (levelFilter) list = list.filter((s) => s.level === levelFilter);
     const q = searchQuery.trim().toLowerCase();
     if (q)
@@ -314,13 +313,13 @@ export default function NetworkView() {
   };
 
   return (
-    <div className="relative w-full h-full bg-white rounded-xl overflow-hidden border border-gray-200/80">
+    <div className="relative w-full h-full bg-white dark:bg-gray-900 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700/80 dark:border-gray-700">
       {/* 返回 + 数据范围切换 + 计数 */}
-      <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-gray-100">
+      <div className="absolute top-4 left-4 z-10 bg-white dark:bg-gray-900/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-gray-100 dark:border-gray-800">
         {drill && (
           <button
             onClick={() => setDrill(null)}
-            className="mb-1.5 inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
+            className="mb-1.5 inline-flex items-center gap-1 rounded-full border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/10 transition-colors"
           >
             <ChevronLeft className="w-3 h-3" />
             返回全国
@@ -334,7 +333,7 @@ export default function NetworkView() {
               className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-colors ${
                 scope === sc
                   ? "bg-emerald-600 text-white"
-                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
             >
               {sc === "curated" ? "精选" : "全部"}
@@ -342,7 +341,7 @@ export default function NetworkView() {
           ))}
         </div>
         <p
-          className="text-[11px] text-gray-500 mt-1"
+          className="text-[11px] text-gray-500 dark:text-gray-400 mt-1"
           title="精选 = top400 本地图 + 手工 30 + 预约标注；全部 = 统一库全量（含 A 级名录）"
         >
           {drill
@@ -351,12 +350,14 @@ export default function NetworkView() {
         </p>
         {coupled && (
           <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-            <span className="text-[10px] text-gray-400">联动筛选</span>
+            <span className="text-[10px] text-gray-400 dark:text-gray-500">
+              联动筛选
+            </span>
             {cityFilter && (
               <button
                 onClick={() => setCityFilter(null)}
                 title="点击清除"
-                className="px-1.5 py-0.5 rounded-md bg-sky-50 border border-sky-200 text-[10px] text-sky-700"
+                className="px-1.5 py-0.5 rounded-md bg-sky-50 dark:bg-sky-500/10 border border-sky-200 dark:border-sky-500/30 text-[10px] text-sky-700 dark:text-sky-400"
               >
                 {cityFilter} ×
               </button>
@@ -365,7 +366,7 @@ export default function NetworkView() {
               <button
                 onClick={() => setLevelFilter(null)}
                 title="点击清除"
-                className="px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-[10px] text-amber-700"
+                className="px-1.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-[10px] text-amber-700 dark:text-amber-400"
               >
                 {levelFilter} ×
               </button>
@@ -374,7 +375,7 @@ export default function NetworkView() {
               <button
                 onClick={() => setSearchQuery("")}
                 title="点击清除"
-                className="px-1.5 py-0.5 rounded-md bg-gray-100 border border-gray-200 text-[10px] text-gray-600"
+                className="px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-[10px] text-gray-600 dark:text-gray-300"
               >
                 「{searchQuery.trim()}」 ×
               </button>
@@ -384,13 +385,13 @@ export default function NetworkView() {
       </div>
 
       {/* 图例：全国级只有聚合气泡；省级按分类着色 */}
-      <div className="absolute bottom-4 left-4 z-10 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-gray-100">
+      <div className="absolute bottom-4 left-4 z-10 bg-white dark:bg-gray-900/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-gray-100 dark:border-gray-800">
         {drill ? (
           <div className="flex flex-wrap gap-x-3 gap-y-1 max-w-[320px]">
             {Object.entries(CAT_COLORS).map(([cat, color]) => (
               <span
                 key={cat}
-                className="inline-flex items-center gap-1 text-[11px] text-gray-600"
+                className="inline-flex items-center gap-1 text-[11px] text-gray-600 dark:text-gray-300"
               >
                 <span
                   className="w-2.5 h-2.5 rounded-full"
@@ -399,7 +400,7 @@ export default function NetworkView() {
                 {cat}
               </span>
             ))}
-            <span className="inline-flex items-center gap-1 text-[11px] text-gray-600">
+            <span className="inline-flex items-center gap-1 text-[11px] text-gray-600 dark:text-gray-300">
               <span
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: FIVE_A_COLOR }}
@@ -408,7 +409,7 @@ export default function NetworkView() {
             </span>
           </div>
         ) : (
-          <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-600">
+          <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-600 dark:text-gray-300">
             <span className="w-3.5 h-3.5 rounded-full bg-emerald-600" />
             省份聚合气泡 · 越大景点越多 · 点击下潜
           </span>
@@ -417,8 +418,10 @@ export default function NetworkView() {
 
       {visibleSpots.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-full text-center gap-3">
-          <MapPin className="w-12 h-12 text-gray-300" />
-          <p className="text-gray-500 text-sm">当前范围没有带坐标的景点</p>
+          <MapPin className="w-12 h-12 text-gray-300 dark:text-gray-600" />
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
+            当前范围没有带坐标的景点
+          </p>
         </div>
       ) : (
         <ChinaMap
@@ -433,26 +436,26 @@ export default function NetworkView() {
 
       {/* 市级边界加载 / 失败遮罩 */}
       {drill && (cityLoading || cityErr) && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-white/80 backdrop-blur-[2px] text-center px-6">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-white dark:bg-gray-900/80 dark:bg-gray-900/80 backdrop-blur-[2px] text-center px-6">
           {cityLoading ? (
             <>
-              <Loader2 className="w-6 h-6 text-emerald-600 animate-spin" />
-              <p className="text-sm text-gray-600">
+              <Loader2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400 animate-spin" />
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 正在加载 {drill} 市级边界…
               </p>
             </>
           ) : (
             <>
-              <Layers className="w-6 h-6 text-gray-400" />
-              <p className="text-sm font-medium text-gray-700">
+              <Layers className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
                 {drill} 暂无市级矢量边界
               </p>
-              <p className="text-xs text-gray-500 max-w-[280px] leading-relaxed">
+              <p className="text-xs text-gray-500 dark:text-gray-400 max-w-[280px] leading-relaxed">
                 {cityErr}
               </p>
               <button
                 onClick={() => setDrill(null)}
-                className="mt-1 text-xs font-medium text-emerald-700 underline"
+                className="mt-1 text-xs font-medium text-emerald-700 dark:text-emerald-400 underline"
               >
                 返回全国视图
               </button>

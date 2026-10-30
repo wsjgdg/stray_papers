@@ -49,9 +49,21 @@ const VERDICT_STYLE: Record<
   string,
   { bg: string; text: string; emoji: string }
 > = {
-  go: { bg: "bg-emerald-100", text: "text-emerald-700", emoji: "✅" },
-  caution: { bg: "bg-amber-100", text: "text-amber-700", emoji: "⚠️" },
-  nogo: { bg: "bg-red-100", text: "text-red-700", emoji: "🚫" },
+  go: {
+    bg: "bg-emerald-100 dark:bg-emerald-500/20",
+    text: "text-emerald-700 dark:text-emerald-400",
+    emoji: "✅",
+  },
+  caution: {
+    bg: "bg-amber-100",
+    text: "text-amber-700 dark:text-amber-400",
+    emoji: "⚠️",
+  },
+  nogo: {
+    bg: "bg-red-100",
+    text: "text-red-700 dark:text-red-400",
+    emoji: "🚫",
+  },
 };
 
 /* ═══ 当前时刻PTSI ═══ */
@@ -69,8 +81,8 @@ function CurrentPTSI({
   const vs = VERDICT_STYLE[ptsi.verdict];
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center">
-      <div className="text-xs text-gray-400 mb-1">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 text-center">
+      <div className="text-xs text-gray-400 dark:text-gray-500 mb-1">
         <Clock className="w-3 h-3 inline mr-1" />
         当前 · {hour}:00 · {getPeriodLabel(hour)}
       </div>
@@ -100,34 +112,46 @@ function CurrentPTSI({
         </span>
       </div>
       {/* 三分项扣分明细：让 100 = 无扣分 一目了然 */}
-      <div className="text-left text-xs bg-gray-50 rounded-xl p-3 mb-3 space-y-1">
+      <div className="text-left text-xs bg-gray-50 dark:bg-gray-900 rounded-xl p-3 mb-3 space-y-1">
         <div className="flex justify-between">
-          <span className="text-gray-500">紫外线扣分（当前 UV 估算 {uv}）</span>
-          <span className="font-bold text-gray-700">-{ptsi.uvScore}</span>
+          <span className="text-gray-500 dark:text-gray-400">
+            紫外线扣分（当前 UV 估算 {uv}）
+          </span>
+          <span className="font-bold text-gray-700 dark:text-gray-200">
+            -{ptsi.uvScore}
+          </span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-500">身体条件扣分</span>
-          <span className="font-bold text-gray-700">-{ptsi.bodyScore}</span>
+          <span className="text-gray-500 dark:text-gray-400">身体条件扣分</span>
+          <span className="font-bold text-gray-700 dark:text-gray-200">
+            -{ptsi.bodyScore}
+          </span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-500">
+          <span className="text-gray-500 dark:text-gray-400">
             拥挤扣分（排队约 {crowdMinutes} 分钟）
           </span>
-          <span className="font-bold text-gray-700">-{ptsi.crowdScore}</span>
+          <span className="font-bold text-gray-700 dark:text-gray-200">
+            -{ptsi.crowdScore}
+          </span>
         </div>
-        <div className="flex justify-between pt-1 border-t border-gray-200">
-          <span className="text-gray-500">100 - 扣分合计</span>
-          <span className="font-bold text-gray-900">{ptsi.score}</span>
+        <div className="flex justify-between pt-1 border-t border-gray-200 dark:border-gray-700">
+          <span className="text-gray-500 dark:text-gray-400">
+            100 - 扣分合计
+          </span>
+          <span className="font-bold text-gray-900 dark:text-gray-100">
+            {ptsi.score}
+          </span>
         </div>
       </div>
       {ptsi.reasons.length > 0 && (
-        <div className="text-xs text-gray-500 space-y-1">
+        <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
           {ptsi.reasons.map((r, i) => (
             <p key={i}>• {r}</p>
           ))}
         </div>
       )}
-      <p className="text-[10px] text-gray-400 mt-3 leading-relaxed">
+      <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-3 leading-relaxed">
         UV
         为按时段估算曲线（非实时预报）；身体条件来自你的勾选；拥挤度来自下方滑杆。
         想看真实预报，用下方「7 日出行窗口」（Open-Meteo 实况 API）。
@@ -292,13 +316,13 @@ function SpotRanking({ conditions }: { conditions: string[] }) {
   }, [spots, conditions]);
 
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800">
       <div className="flex items-center gap-1.5 mb-4">
-        <TrendingUp className="w-4 h-4 text-gray-500" />
-        <span className="text-sm font-semibold text-gray-700">
+        <TrendingUp className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+        <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
           景点适宜度排行
         </span>
-        <span className="text-[10px] text-gray-400 ml-auto">
+        <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">
           仅统计有高德评分的精选景点
         </span>
       </div>
@@ -308,14 +332,14 @@ function SpotRanking({ conditions }: { conditions: string[] }) {
           return (
             <div
               key={item.name}
-              className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-50"
+              className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800"
             >
               <span
-                className={`w-6 text-center font-bold text-sm ${i < 3 ? "text-amber-500" : "text-gray-400"}`}
+                className={`w-6 text-center font-bold text-sm ${i < 3 ? "text-amber-500" : "text-gray-400 dark:text-gray-500"}`}
               >
                 {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}
               </span>
-              <span className="flex-1 text-sm text-gray-700 truncate">
+              <span className="flex-1 text-sm text-gray-700 dark:text-gray-200 truncate">
                 {item.name}
               </span>
               <div className="flex items-center gap-2">
@@ -364,7 +388,7 @@ export default function PTSIView() {
   }, []);
 
   return (
-    <div className="min-h-full bg-gray-50/50">
+    <div className="min-h-full bg-gray-50 dark:bg-gray-900/50 dark:bg-gray-950/50">
       <div className="max-w-4xl mx-auto px-4 py-6 pb-8">
         {/* 标题 */}
         <div className="flex items-center gap-2 mb-6">
@@ -372,8 +396,10 @@ export default function PTSIView() {
             <Thermometer className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900">PTSI 出行指数</h2>
-            <p className="text-xs text-gray-500">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+              PTSI 出行指数
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               Personal Travel Suitability Index ·
               综合紫外线、身体条件、拥挤度评分
             </p>
@@ -381,13 +407,13 @@ export default function PTSIView() {
         </div>
 
         {/* 身体条件 */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-5">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800 mb-5">
           <div className="flex items-center gap-1.5 mb-3">
             <Heart className="w-4 h-4 text-rose-500" />
-            <span className="text-sm font-semibold text-gray-700">
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
               你的身体条件
             </span>
-            <span className="text-[10px] text-gray-400 ml-auto">
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">
               选中的条件会降低 PTSI 分数
             </span>
           </div>
@@ -398,8 +424,8 @@ export default function PTSIView() {
                 onClick={() => toggleCondition(c.id)}
                 className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
                   conditions.includes(c.id)
-                    ? "bg-rose-100 text-rose-700 ring-2 ring-rose-300"
-                    : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                    ? "bg-rose-100 text-rose-700 dark:text-rose-400 ring-2 ring-rose-300"
+                    : "bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
               >
                 {c.emoji} {c.label}
@@ -410,10 +436,10 @@ export default function PTSIView() {
           {/* 拥挤度滑杆：预计排队分钟数（0-180） */}
           <div className="mt-4">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-semibold text-gray-600">
+              <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">
                 预计排队时长
               </span>
-              <span className="text-xs font-bold text-gray-800">
+              <span className="text-xs font-bold text-gray-800 dark:text-gray-200">
                 {crowdMinutes} 分钟
               </span>
             </div>
@@ -426,7 +452,7 @@ export default function PTSIView() {
               onChange={(e) => setCrowdMinutes(Number(e.target.value))}
               className="w-full accent-rose-500"
             />
-            <div className="flex justify-between text-[10px] text-gray-400 mt-0.5">
+            <div className="flex justify-between text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">
               <span>不用排</span>
               <span>30</span>
               <span>60</span>
@@ -444,13 +470,13 @@ export default function PTSIView() {
           <div className="md:col-span-1">
             <CurrentPTSI conditions={conditions} crowdMinutes={crowdMinutes} />
           </div>
-          <div className="md:col-span-2 bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <div className="md:col-span-2 bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800">
             <div className="flex items-center gap-1.5 mb-3">
               <Sun className="w-4 h-4 text-amber-500" />
-              <span className="text-sm font-semibold text-gray-700">
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                 PTSI 日变化曲线
               </span>
-              <span className="text-[10px] text-gray-400 ml-auto">
+              <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">
                 浅色区 = 清晨/正午/黄昏
               </span>
             </div>

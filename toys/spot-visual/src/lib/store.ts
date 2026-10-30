@@ -64,7 +64,19 @@ interface AppStore {
   setViewMode: (m: "grid" | "list") => void;
   /** 排序模式（持久化：刷新后保持浏览上下文） */
   sortMode: "default" | "rating" | "name" | "distance" | "ticket";
-  setSortMode: (m: "default" | "rating" | "name" | "distance" | "ticket") => void;
+  setSortMode: (
+    m: "default" | "rating" | "name" | "distance" | "ticket",
+  ) => void;
+  /** 主题（持久化）：dark 类挂在 body 上，仅景点子树消费 dark: 变体 */
+  theme: "light" | "dark";
+  toggleTheme: () => void;
+  /** 收藏夹分组：文件夹列表 + 条目归属（spotId → folderId；不在表内 = 未分组） */
+  favGroups: { id: string; name: string }[];
+  favGroupOf: Record<string, string>;
+  createFavGroup: (name: string) => string;
+  renameFavGroup: (id: string, name: string) => void;
+  deleteFavGroup: (id: string) => void;
+  setFavGroup: (spotId: string, groupId: string | null) => void;
   resetSpots: () => void;
   clearAllSpots: () => void;
 
@@ -207,12 +219,43 @@ export const useAppStore = create<AppStore>()(
       setActiveCategory: (c) => set({ activeCategory: c }),
       setViewMode: (m) => set({ viewMode: m }),
       sortMode: "default" as
-        | "default"
-        | "rating"
-        | "name"
-        | "distance"
-        | "ticket",
+        "default" | "rating" | "name" | "distance" | "ticket",
       setSortMode: (m) => set({ sortMode: m }),
+      theme: "light" as "light" | "dark",
+      toggleTheme: () =>
+        set((s) => ({ theme: s.theme === "dark" ? "light" : "dark" })),
+      favGroups: [],
+      favGroupOf: {},
+      createFavGroup: (name) => {
+        const id = `fg-${Date.now().toString(36)}`;
+        set((s) => ({
+          favGroups: [...s.favGroups, { id, name: name.trim() || "新分组" }],
+        }));
+        return id;
+      },
+      renameFavGroup: (id, name) =>
+        set((s) => ({
+          favGroups: s.favGroups.map((g) =>
+            g.id === id ? { ...g, name: name.trim() || g.name } : g,
+          ),
+        })),
+      deleteFavGroup: (id) =>
+        set((s) => {
+          const favGroupOf = { ...s.favGroupOf };
+          for (const k of Object.keys(favGroupOf))
+            if (favGroupOf[k] === id) delete favGroupOf[k];
+          return {
+            favGroups: s.favGroups.filter((g) => g.id !== id),
+            favGroupOf,
+          };
+        }),
+      setFavGroup: (spotId, groupId) =>
+        set((s) => {
+          const favGroupOf = { ...s.favGroupOf };
+          if (groupId) favGroupOf[spotId] = groupId;
+          else delete favGroupOf[spotId];
+          return { favGroupOf };
+        }),
       // 恢复完整库（手工精选 + 城市包），保留仍指向库内条目的收藏/行程
       resetSpots: () =>
         set((s) => ({
@@ -386,6 +429,9 @@ export const useAppStore = create<AppStore>()(
         cityFilter: s.cityFilter,
         levelFilter: s.levelFilter,
         sortMode: s.sortMode,
+        theme: s.theme,
+        favGroups: s.favGroups,
+        favGroupOf: s.favGroupOf,
       }),
       // 每次 rehydration 都把库条目从 LIBRARY_SPOTS 重建（含版本不变时），
       // 保证扩库/字段升级自动到达用户；persisted 里的库条目副本直接丢弃。

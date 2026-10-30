@@ -15,6 +15,8 @@ import {
   History,
   Scale,
   ArrowUp,
+  Moon,
+  Sun,
   User,
   Share2,
   Menu,
@@ -265,7 +267,7 @@ function SpotImage({
       >
         <span className="text-3xl leading-none select-none">{theme.icon}</span>
         {category && (
-          <span className="text-[11px] font-medium text-gray-500 px-2 py-0.5 rounded-full bg-white/60 backdrop-blur-sm">
+          <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full bg-white dark:bg-gray-900/60 dark:bg-gray-900/60 backdrop-blur-sm">
             {category}
           </span>
         )}
@@ -365,15 +367,15 @@ function Sidebar({
   const { activeView, setActiveView, spots, favorites, trip } = useAppStore();
   return (
     <aside
-      className={`hidden md:flex flex-col border-r border-gray-200/80 bg-white transition-all duration-300 ${collapsed ? "w-16" : "w-52"}`}
+      className={`hidden md:flex flex-col border-r border-gray-200 dark:border-gray-700/80 dark:border-gray-700 bg-white dark:bg-gray-900 transition-all duration-300 ${collapsed ? "w-16" : "w-52"}`}
     >
       {/* Logo */}
-      <div className="h-16 flex items-center gap-2.5 px-4 border-b border-gray-100 shrink-0">
+      <div className="h-16 flex items-center gap-2.5 px-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0">
           <MapPin className="w-4.5 h-4.5 text-white" />
         </div>
         {!collapsed && (
-          <span className="font-bold text-gray-900 text-sm truncate">
+          <span className="font-bold text-gray-900 dark:text-gray-100 text-sm truncate">
             景点览胜
           </span>
         )}
@@ -383,11 +385,13 @@ function Sidebar({
         {NAV_GROUPS.map((group) => (
           <div key={group.title} className="mb-1">
             {!collapsed && (
-              <p className="px-2.5 pt-2 pb-1 text-[10px] font-bold text-gray-300 tracking-widest">
+              <p className="px-2.5 pt-2 pb-1 text-[10px] font-bold text-gray-300 dark:text-gray-600 tracking-widest">
                 {group.title}
               </p>
             )}
-            {collapsed && <div className="h-px bg-gray-100 mx-2 my-1" />}
+            {collapsed && (
+              <div className="h-px bg-gray-100 dark:bg-gray-800 mx-2 my-1" />
+            )}
             {group.keys.map((key) => {
               const item = NAV_ITEMS.find((n) => n.key === key)!;
               const active = activeView === item.key;
@@ -403,10 +407,14 @@ function Sidebar({
                 <button
                   key={item.key}
                   onClick={() => setActiveView(item.key)}
-                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm font-medium transition-colors ${active ? "bg-emerald-50 text-emerald-700" : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"}`}
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm font-medium transition-colors ${active ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200"}`}
                 >
                   <span
-                    className={active ? "text-emerald-600" : "text-gray-400"}
+                    className={
+                      active
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-gray-400 dark:text-gray-500"
+                    }
                   >
                     {item.icon}
                   </span>
@@ -417,7 +425,7 @@ function Sidebar({
                   )}
                   {!collapsed && badge > 0 && (
                     <span
-                      className={`text-[10px] px-1.5 rounded-full ${active ? "bg-emerald-200/60 text-emerald-800" : "bg-gray-100 text-gray-500"}`}
+                      className={`text-[10px] px-1.5 rounded-full ${active ? "bg-emerald-200/60 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"}`}
                     >
                       {badge}
                     </span>
@@ -428,18 +436,40 @@ function Sidebar({
           </div>
         ))}
       </nav>
-      {/* Toggle */}
-      <button
-        onClick={onToggle}
-        className="hidden md:flex items-center justify-center h-10 border-t border-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
-      >
-        {collapsed ? (
-          <ChevronRight className="w-4 h-4" />
-        ) : (
-          <ChevronLeft className="w-4 h-4" />
-        )}
-      </button>
+      {/* Toggle + 主题 */}
+      <div className="hidden md:flex border-t border-gray-100 dark:border-gray-800">
+        <ThemeToggle />
+        <button
+          onClick={onToggle}
+          className="flex-1 flex items-center justify-center h-10 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+        >
+          {collapsed ? (
+            <ChevronRight className="w-4 h-4" />
+          ) : (
+            <ChevronLeft className="w-4 h-4" />
+          )}
+        </button>
+      </div>
     </aside>
+  );
+}
+
+/* ═══════ 主题切换按钮（侧栏 footer 与移动端顶栏共用） ═══════ */
+function ThemeToggle({ className = "" }: { className?: string }) {
+  const { theme, toggleTheme } = useAppStore();
+  return (
+    <button
+      onClick={toggleTheme}
+      title={theme === "dark" ? "切换到亮色模式" : "切换到暗色模式"}
+      aria-label={theme === "dark" ? "切换到亮色模式" : "切换到暗色模式"}
+      className={`flex items-center justify-center h-10 text-gray-400 dark:text-gray-500 hover:text-emerald-600 transition-colors ${className}`}
+    >
+      {theme === "dark" ? (
+        <Sun className="w-4 h-4" />
+      ) : (
+        <Moon className="w-4 h-4" />
+      )}
+    </button>
   );
 }
 
@@ -449,14 +479,22 @@ function MobileHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
   const currentNav = NAV_ITEMS.find((n) => n.key === activeView);
   const tabsRef = useRef<HTMLDivElement>(null);
   return (
-    <header className="md:hidden sticky top-[52px] z-40 bg-white/80 backdrop-blur-md border-b border-gray-200/60">
+    <header className="md:hidden sticky top-[52px] z-40 bg-white dark:bg-gray-900/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700/60">
       <div className="flex items-center justify-between h-14 px-4">
-        <button onClick={onMenuOpen} className="p-1 text-gray-500">
-          <Menu className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-1">
+          <ThemeToggle className="p-1" />
+          <button
+            onClick={onMenuOpen}
+            className="p-1 text-gray-500 dark:text-gray-400"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        </div>
         <div className="flex items-center gap-2">
-          <span className="text-gray-400">{currentNav?.icon}</span>
-          <span className="font-semibold text-gray-900 text-sm">
+          <span className="text-gray-400 dark:text-gray-500">
+            {currentNav?.icon}
+          </span>
+          <span className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
             {currentNav?.label}
           </span>
         </div>
@@ -465,7 +503,7 @@ function MobileHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
       {/* Mobile nav tabs（横向滚动展示全部视图，与桌面侧栏对齐） */}
       <div
         ref={tabsRef}
-        className="flex border-t border-gray-100 overflow-x-auto scrollbar-hide"
+        className="flex border-t border-gray-100 dark:border-gray-800 overflow-x-auto scrollbar-hide"
       >
         {NAV_ITEMS.map((item) => {
           const active = activeView === item.key;
@@ -481,7 +519,7 @@ function MobileHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
                   });
               }}
               onClick={() => setActiveView(item.key)}
-              className={`flex-1 min-w-0 py-2 text-[11px] font-medium text-center transition-colors shrink-0 ${active ? "text-emerald-700 border-b-2 border-emerald-600" : "text-gray-400"}`}
+              className={`flex-1 min-w-0 py-2 text-[11px] font-medium text-center transition-colors shrink-0 ${active ? "text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-600" : "text-gray-400 dark:text-gray-500"}`}
             >
               <span className="block truncate px-0.5">{item.label}</span>
             </button>
@@ -503,13 +541,15 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
         initial={{ x: -260 }}
         animate={{ x: 0 }}
         exit={{ x: -260 }}
-        className="absolute left-0 top-0 bottom-0 w-60 bg-white shadow-xl p-4 pt-6"
+        className="absolute left-0 top-0 bottom-0 w-60 bg-white dark:bg-gray-900 shadow-xl p-4 pt-6"
       >
         <div className="flex items-center gap-2.5 mb-6 px-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
             <MapPin className="w-4.5 h-4.5 text-white" />
           </div>
-          <span className="font-bold text-gray-900 text-sm">景点览胜</span>
+          <span className="font-bold text-gray-900 dark:text-gray-100 text-sm">
+            景点览胜
+          </span>
         </div>
         <nav className="space-y-1">
           {NAV_ITEMS.map((item) => {
@@ -521,9 +561,15 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
                   setActiveView(item.key);
                   onClose();
                 }}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${active ? "bg-emerald-50 text-emerald-700" : "text-gray-500 hover:bg-gray-50"}`}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${active ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"}`}
               >
-                <span className={active ? "text-emerald-600" : "text-gray-400"}>
+                <span
+                  className={
+                    active
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-gray-400 dark:text-gray-500"
+                  }
+                >
                   {item.icon}
                 </span>
                 {item.label}
@@ -557,7 +603,7 @@ function Highlight({ text, query }: { text: string; query: string }) {
     parts.push(
       <mark
         key={k++}
-        className="bg-amber-200/80 text-gray-900 rounded-sm px-0.5"
+        className="bg-amber-200/80 dark:bg-amber-400/30 text-gray-900 dark:text-gray-100 rounded-sm px-0.5"
       >
         {text.slice(hit, hit + q.length)}
       </mark>,
@@ -571,10 +617,17 @@ function SpotGrid({
   spots,
   onSelect,
   query = "",
+  groups,
+  groupOf,
+  onAssignGroup,
 }: {
   spots: Spot[];
   onSelect: (s: Spot) => void;
   query?: string;
+  /** 收藏夹分组（仅在收藏页传入：卡片上显示归属移动控件） */
+  groups?: { id: string; name: string }[];
+  groupOf?: Record<string, string>;
+  onAssignGroup?: (spotId: string, groupId: string | null) => void;
 }) {
   const { favorites, toggleFavorite, spotNotes } = useAppStore();
   return (
@@ -591,7 +644,7 @@ function SpotGrid({
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.25 }}
             >
-              <div className="relative bg-white rounded-xl border border-gray-200/80 overflow-hidden shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-300 group">
+              <div className="relative bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700/80 dark:border-gray-700 overflow-hidden shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-300 group">
                 <button
                   onClick={() => onSelect(spot)}
                   className="w-full text-left"
@@ -626,13 +679,13 @@ function SpotGrid({
                     </div>
                   </div>
                   <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-emerald-700 transition-colors truncate">
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1 group-hover:text-emerald-700 transition-colors truncate">
                       <Highlight text={spot.name} query={query} />
                       {spotNotes[spot.id] && (
                         <FileText className="w-3 h-3 text-amber-500 inline ml-1 -mt-0.5" />
                       )}
                     </h3>
-                    <div className="flex items-center gap-1 text-xs text-gray-400 mb-2">
+                    <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 mb-2">
                       <MapPin className="w-3 h-3 shrink-0" />
                       <span className="truncate">{spot.address}</span>
                       {spot.rating && (
@@ -647,7 +700,7 @@ function SpotGrid({
                         return (
                           <span
                             title={`门票来源：${q.label}`}
-                            className="ml-auto shrink-0 text-emerald-600 font-bold"
+                            className="ml-auto shrink-0 text-emerald-600 dark:text-emerald-400 font-bold"
                           >
                             {q.price === 0
                               ? "免费"
@@ -660,15 +713,34 @@ function SpotGrid({
                       {spot.projects.slice(0, 3).map((p) => (
                         <span
                           key={p}
-                          className="px-2 py-0.5 bg-gray-50 rounded text-[11px] text-gray-500 border border-gray-100"
+                          className="px-2 py-0.5 bg-gray-50 dark:bg-gray-900 rounded text-[11px] text-gray-500 dark:text-gray-400 border border-gray-100 dark:border-gray-800"
                         >
                           {p}
                         </span>
                       ))}
                       {spot.projects.length > 3 && (
-                        <span className="px-2 py-0.5 text-[11px] text-gray-400">
+                        <span className="px-2 py-0.5 text-[11px] text-gray-400 dark:text-gray-500">
                           +{spot.projects.length - 3}
                         </span>
+                      )}
+                      {groups && onAssignGroup && (
+                        <select
+                          value={groupOf?.[spot.id] ?? ""}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => {
+                            onAssignGroup(spot.id, e.target.value || null);
+                            e.currentTarget.blur();
+                          }}
+                          title="移动到分组"
+                          className="ml-auto shrink-0 max-w-24 px-1.5 py-0.5 rounded-md text-[10px] text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 truncate"
+                        >
+                          <option value="">未分组</option>
+                          {groups.map((g) => (
+                            <option key={g.id} value={g.id}>
+                              {g.name}
+                            </option>
+                          ))}
+                        </select>
                       )}
                     </div>
                   </div>
@@ -678,10 +750,10 @@ function SpotGrid({
                     e.stopPropagation();
                     toggleFavorite(spot.id);
                   }}
-                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-sm"
+                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white dark:bg-gray-900/80 dark:bg-gray-900/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-sm"
                 >
                   <Heart
-                    className={`w-4 h-4 transition-colors ${isFav ? "fill-red-500 text-red-500" : "text-gray-400"}`}
+                    className={`w-4 h-4 transition-colors ${isFav ? "fill-red-500 text-red-500" : "text-gray-400 dark:text-gray-500"}`}
                   />
                 </button>
               </div>
@@ -698,10 +770,16 @@ function SpotList({
   spots,
   onSelect,
   query = "",
+  groups,
+  groupOf,
+  onAssignGroup,
 }: {
   spots: Spot[];
   onSelect: (s: Spot) => void;
   query?: string;
+  groups?: { id: string; name: string }[];
+  groupOf?: Record<string, string>;
+  onAssignGroup?: (spotId: string, groupId: string | null) => void;
 }) {
   const { favorites, toggleFavorite, spotNotes } = useAppStore();
   return (
@@ -718,7 +796,7 @@ function SpotList({
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="relative bg-white rounded-xl border border-gray-200/80 overflow-hidden shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-300 group flex">
+              <div className="relative bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700/80 dark:border-gray-700 overflow-hidden shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-300 group flex">
                 <button
                   onClick={() => onSelect(spot)}
                   className="flex flex-1 min-w-0 text-left"
@@ -734,7 +812,7 @@ function SpotList({
                   </div>
                   <div className="flex-1 p-4 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-gray-900 truncate group-hover:text-emerald-700 transition-colors">
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-emerald-700 transition-colors">
                         <Highlight text={spot.name} query={query} />
                         {spotNotes[spot.id] && (
                           <FileText className="w-3 h-3 text-amber-500 inline ml-1 -mt-0.5" />
@@ -757,7 +835,7 @@ function SpotList({
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-gray-400 mb-2">
+                    <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 mb-2">
                       <MapPin className="w-3 h-3 shrink-0" />
                       <span className="truncate">{spot.address}</span>
                       {spot.rating && (
@@ -772,27 +850,46 @@ function SpotList({
                         return (
                           <span
                             title={`门票来源：${q.label}`}
-                            className="ml-auto shrink-0 text-emerald-600 font-bold"
+                            className="shrink-0 text-emerald-600 dark:text-emerald-400 font-bold"
                           >
                             {q.price === 0 ? "免费" : `¥${q.price}`}
                           </span>
                         );
                       })()}
+                      {groups && onAssignGroup && (
+                        <select
+                          value={groupOf?.[spot.id] ?? ""}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => {
+                            onAssignGroup(spot.id, e.target.value || null);
+                            e.currentTarget.blur();
+                          }}
+                          title="移动到分组"
+                          className="ml-auto shrink-0 max-w-24 px-1.5 py-0.5 rounded-md text-[10px] text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 truncate"
+                        >
+                          <option value="">未分组</option>
+                          {groups.map((g) => (
+                            <option key={g.id} value={g.id}>
+                              {g.name}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </div>
-                    <p className="text-xs text-gray-500 line-clamp-2 mb-2">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-2">
                       {spot.description}
                     </p>
                     <div className="flex flex-wrap gap-1">
                       {spot.projects.slice(0, 4).map((p) => (
                         <span
                           key={p}
-                          className="px-2 py-0.5 bg-gray-50 rounded text-[11px] text-gray-500 border border-gray-100"
+                          className="px-2 py-0.5 bg-gray-50 dark:bg-gray-900 rounded text-[11px] text-gray-500 dark:text-gray-400 border border-gray-100 dark:border-gray-800"
                         >
                           {p}
                         </span>
                       ))}
                       {spot.projects.length > 4 && (
-                        <span className="text-[11px] text-gray-400">
+                        <span className="text-[11px] text-gray-400 dark:text-gray-500">
                           +{spot.projects.length - 4}
                         </span>
                       )}
@@ -804,10 +901,10 @@ function SpotList({
                     e.stopPropagation();
                     toggleFavorite(spot.id);
                   }}
-                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-sm"
+                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white dark:bg-gray-900/80 dark:bg-gray-900/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-sm"
                 >
                   <Heart
-                    className={`w-4 h-4 transition-colors ${isFav ? "fill-red-500 text-red-500" : "text-gray-400"}`}
+                    className={`w-4 h-4 transition-colors ${isFav ? "fill-red-500 text-red-500" : "text-gray-400 dark:text-gray-500"}`}
                   />
                 </button>
               </div>
@@ -848,11 +945,11 @@ function SpotNoteEditor({
   }
   return (
     <div>
-      <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-1.5">
+      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-1.5">
         <FileText className="w-3.5 h-3.5" />
         我的备注
         {saved && (
-          <span className="text-[10px] text-emerald-600 font-normal">
+          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-normal">
             已保存 ✓
           </span>
         )}
@@ -870,7 +967,7 @@ function SpotNoteEditor({
         maxLength={300}
         rows={2}
         placeholder="自己的备忘：开放时间核实、同行人约定、门票价格…（仅本机可见）"
-        className="w-full px-3 py-2 text-sm bg-amber-50/50 border border-amber-100 rounded-xl outline-none focus:border-amber-300 resize-none placeholder:text-gray-300"
+        className="w-full px-3 py-2 text-sm bg-amber-50 dark:bg-amber-500/10/50 border border-amber-100 dark:border-amber-500/20 rounded-xl outline-none focus:border-amber-300 resize-none placeholder:text-gray-300"
       />
     </div>
   );
@@ -1050,7 +1147,7 @@ function SpotDetailDialog() {
         className="max-w-2xl w-[95vw] max-h-[90vh] p-0 overflow-hidden gap-0"
       >
         {/* Photo gallery */}
-        <div className="relative w-full h-56 sm:h-72 overflow-hidden bg-gray-100">
+        <div className="relative w-full h-56 sm:h-72 overflow-hidden bg-gray-100 dark:bg-gray-800">
           <div
             className="w-full h-full cursor-zoom-in"
             onClick={() => setLightboxIdx(photoIdx)}
@@ -1122,8 +1219,8 @@ function SpotDetailDialog() {
         <ScrollArea className="max-h-[50vh]">
           <div className="p-5 space-y-5">
             <div className="flex items-start gap-2">
-              <MapPin className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
-              <span className="text-sm text-gray-600 flex-1">
+              <MapPin className="w-4 h-4 text-gray-400 dark:text-gray-500 mt-0.5 shrink-0" />
+              <span className="text-sm text-gray-600 dark:text-gray-300 flex-1">
                 {spot.address}
               </span>
               {spotCoords && (
@@ -1132,7 +1229,7 @@ function SpotDetailDialog() {
                   target="_blank"
                   rel="noopener noreferrer"
                   title="在高德地图中查看并导航（免费链接，无需登录）"
-                  className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-colors"
+                  className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/10 transition-colors"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <Navigation className="w-3 h-3" />
@@ -1148,7 +1245,7 @@ function SpotDetailDialog() {
                 className={`shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold border transition-colors ${
                   copied
                     ? "text-white bg-emerald-600 border-emerald-600"
-                    : "text-gray-600 bg-gray-50 border-gray-200 hover:bg-gray-100"
+                    : "text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
               >
                 <Copy className="w-3 h-3" />
@@ -1156,26 +1253,26 @@ function SpotDetailDialog() {
               </button>
             </div>
             {spot.openTime && (
-              <p className="flex items-start gap-1.5 text-sm text-gray-600">
+              <p className="flex items-start gap-1.5 text-sm text-gray-600 dark:text-gray-300">
                 <Clock className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
                 <span>
                   {spot.openTime}
-                  <span className="text-[11px] text-gray-400 ml-1">
+                  <span className="text-[11px] text-gray-400 dark:text-gray-500 ml-1">
                     （高德收录，出行前请再核实）
                   </span>
                 </span>
               </p>
             )}
             {/* ═══ 门票：已收录 / 估算 / 未收录 三态 + 手动补录 ═══ */}
-            <div className="flex items-start gap-1.5 text-sm text-gray-600">
+            <div className="flex items-start gap-1.5 text-sm text-gray-600 dark:text-gray-300">
               <Ticket className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
               <div className="min-w-0 flex-1">
-                <span className="mr-1.5 text-[10px] px-1 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100 align-middle">
+                <span className="mr-1.5 text-[10px] px-1 py-0.5 rounded bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 align-middle">
                   门票
                 </span>
                 {ticketEditing ? (
                   <span className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-gray-500">¥</span>
+                    <span className="text-gray-500 dark:text-gray-400">¥</span>
                     <input
                       autoFocus
                       type="number"
@@ -1198,12 +1295,12 @@ function SpotDetailDialog() {
                     </button>
                     <button
                       onClick={() => setTicketEditing(false)}
-                      className="text-[11px] text-gray-400"
+                      className="text-[11px] text-gray-400 dark:text-gray-500"
                     >
                       取消
                     </button>
                     {ticketQuote?.source === "custom" && (
-                      <span className="text-[10px] text-gray-400">
+                      <span className="text-[10px] text-gray-400 dark:text-gray-500">
                         留空保存 = 恢复估算
                       </span>
                     )}
@@ -1223,21 +1320,21 @@ function SpotDetailDialog() {
                   >
                     {ticketQuote && ticketQuote.price !== null ? (
                       <>
-                        <span className="font-bold text-gray-800">
+                        <span className="font-bold text-gray-800 dark:text-gray-200">
                           ¥{ticketQuote.price}
                         </span>
                         <span
                           className={`ml-1 text-[10px] px-1 py-0.5 rounded ${
                             ticketQuote.source === "estimate"
-                              ? "bg-amber-50 text-amber-600 border border-amber-100"
-                              : "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                              ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-500/20"
+                              : "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20"
                           }`}
                         >
                           {ticketQuote.source === "estimate"
                             ? "估算"
                             : ticketQuote.label}
                         </span>
-                        <span className="ml-1 text-[11px] text-gray-400">
+                        <span className="ml-1 text-[11px] text-gray-400 dark:text-gray-500">
                           {ticketQuote.source === "estimate"
                             ? "官方票价未收录 · 点击补录"
                             : "仅本机可见"}
@@ -1245,8 +1342,10 @@ function SpotDetailDialog() {
                       </>
                     ) : (
                       <>
-                        <span className="font-bold text-gray-400">未收录</span>
-                        <span className="ml-1 text-[11px] text-emerald-600">
+                        <span className="font-bold text-gray-400 dark:text-gray-500">
+                          未收录
+                        </span>
+                        <span className="ml-1 text-[11px] text-emerald-600 dark:text-emerald-400">
                           点击补录
                         </span>
                       </>
@@ -1256,7 +1355,7 @@ function SpotDetailDialog() {
               </div>
             </div>
             {spot.website && (
-              <p className="flex items-center gap-1.5 text-sm text-gray-600">
+              <p className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300">
                 <Globe className="w-4 h-4 text-emerald-500 shrink-0" />
                 <a
                   href={withSharecode(
@@ -1270,11 +1369,13 @@ function SpotDetailDialog() {
                 >
                   官网链接
                 </a>
-                <span className="text-[11px] text-gray-400">（高德收录）</span>
+                <span className="text-[11px] text-gray-400 dark:text-gray-500">
+                  （高德收录）
+                </span>
               </p>
             )}
             {spot.tel && (
-              <p className="flex items-center gap-1.5 text-sm text-gray-600">
+              <p className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300">
                 <Phone className="w-4 h-4 text-emerald-500 shrink-0" />
                 <a
                   href={`tel:${spot.tel.replace(/[^\d+]/g, "")}`}
@@ -1282,17 +1383,19 @@ function SpotDetailDialog() {
                 >
                   {spot.tel}
                 </a>
-                <span className="text-[11px] text-gray-400">（高德收录）</span>
+                <span className="text-[11px] text-gray-400 dark:text-gray-500">
+                  （高德收录）
+                </span>
               </p>
             )}
             {spot.reservation && (
-              <div className="flex items-start gap-2 px-3.5 py-2.5 rounded-xl bg-rose-50 border border-rose-200">
+              <div className="flex items-start gap-2 px-3.5 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30">
                 <AlertTriangle className="w-4 h-4 text-rose-500 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-bold text-rose-700">
+                  <p className="text-sm font-bold text-rose-700 dark:text-rose-400">
                     需要提前预约
                   </p>
-                  <p className="text-xs text-rose-600 leading-relaxed mt-0.5">
+                  <p className="text-xs text-rose-600 dark:text-rose-400 leading-relaxed mt-0.5">
                     {spot.reservation}
                   </p>
                 </div>
@@ -1300,33 +1403,33 @@ function SpotDetailDialog() {
             )}
             {/* ═══ 景点档案（外包结构化字段，有档案才显示） ═══ */}
             {profile && (
-              <div className="rounded-xl border border-sky-100 bg-sky-50/60 p-3.5 space-y-1.5">
-                <p className="text-[11px] font-bold text-sky-800 flex items-center gap-1">
+              <div className="rounded-xl border border-sky-100 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/10/60 dark:bg-sky-500/10 p-3.5 space-y-1.5">
+                <p className="text-[11px] font-bold text-sky-800 dark:text-sky-300 flex items-center gap-1">
                   <Sparkles className="w-3.5 h-3.5" />
                   景点档案
                   {profile.low && (
-                    <span className="text-[10px] font-normal text-gray-400">
+                    <span className="text-[10px] font-normal text-gray-400 dark:text-gray-500">
                       · 部分字段待核实
                     </span>
                   )}
                 </p>
                 {profile.suggestedHours != null && (
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-gray-600 dark:text-gray-300">
                     建议游玩：约 {profile.suggestedHours} 小时
                   </p>
                 )}
                 {profile.bestMonths && (
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-gray-600 dark:text-gray-300">
                     最佳月份：{profile.bestMonths}
                   </p>
                 )}
                 {!spot.openTime && profile.openHours && (
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-gray-600 dark:text-gray-300">
                     开放时间：{profile.openHours}
                   </p>
                 )}
                 {(profile.nearestAirport || profile.nearestRail) && (
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-gray-600 dark:text-gray-300">
                     交通：
                     {[profile.nearestAirport, profile.nearestRail]
                       .filter(Boolean)
@@ -1336,7 +1439,7 @@ function SpotDetailDialog() {
                   </p>
                 )}
                 {profile.notices && (
-                  <p className="text-xs text-gray-500 leading-relaxed">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
                     注意：{profile.notices}
                   </p>
                 )}
@@ -1345,7 +1448,7 @@ function SpotDetailDialog() {
                     {profile.accessibility.map((a) => (
                       <span
                         key={a}
-                        className="px-1.5 py-0.5 rounded-md bg-white border border-sky-200 text-[10px] text-sky-700"
+                        className="px-1.5 py-0.5 rounded-md bg-white dark:bg-gray-900 border border-sky-200 dark:border-sky-500/30 text-[10px] text-sky-700 dark:text-sky-400"
                       >
                         {a}
                       </span>
@@ -1356,10 +1459,10 @@ function SpotDetailDialog() {
             )}
             {spot.level && (
               <p className="flex items-center gap-1.5">
-                <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-700 border border-amber-200 text-xs font-black tracking-wide">
+                <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30 text-xs font-black tracking-wide">
                   {spot.level} 级景区
                 </span>
-                <span className="text-[11px] text-gray-400">
+                <span className="text-[11px] text-gray-400 dark:text-gray-500">
                   2023 年全国 A 级景区名录
                 </span>
               </p>
@@ -1367,17 +1470,17 @@ function SpotDetailDialog() {
             {!spot.tel &&
               !spot.rating &&
               (spot.level === "5A" || spot.level === "4A") && (
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-400 dark:text-gray-500">
                   建议游玩：{spot.level === "5A" ? "半天至一天" : "2-3 小时"}
                   （按
                   {spot.level} 级规模推断，仅供参考）
                 </p>
               )}
             {spot.rating && (
-              <p className="flex items-center gap-1 text-sm text-amber-600 font-bold">
+              <p className="flex items-center gap-1 text-sm text-amber-600 dark:text-amber-400 font-bold">
                 <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                 {spot.rating.toFixed(1)}
-                <span className="text-[11px] font-normal text-gray-400">
+                <span className="text-[11px] font-normal text-gray-400 dark:text-gray-500">
                   高德用户评分
                 </span>
               </p>
@@ -1385,7 +1488,7 @@ function SpotDetailDialog() {
             {/* ═══ 同城推荐：库内同城的其它景点 ═══ */}
             {sameCitySpots.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-1.5">
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-1.5">
                   <Compass className="w-3.5 h-3.5" />
                   同城更多
                 </h4>
@@ -1394,7 +1497,7 @@ function SpotDetailDialog() {
                     <button
                       key={s.id}
                       onClick={() => setSelectedSpot(s)}
-                      className="px-2.5 py-1 rounded-full bg-sky-50 border border-sky-100 text-[11px] font-medium text-sky-700 hover:bg-sky-100 transition-colors"
+                      className="px-2.5 py-1 rounded-full bg-sky-50 dark:bg-sky-500/10 border border-sky-100 dark:border-sky-500/20 text-[11px] font-medium text-sky-700 dark:text-sky-400 hover:bg-sky-100 transition-colors"
                     >
                       {s.name}
                     </button>
@@ -1404,7 +1507,7 @@ function SpotDetailDialog() {
             )}
             {/* ═══ 图源标注（数据诚实性：说明这张图是谁提供的） ═══ */}
             {spot.image && spot.imageSource && (
-              <p className="text-[11px] text-gray-400">
+              <p className="text-[11px] text-gray-400 dark:text-gray-500">
                 图片来源：
                 {IMAGE_SOURCE_LABEL[spot.imageSource] ?? spot.imageSource}
                 （失效时自动降级预置图库）
@@ -1416,7 +1519,7 @@ function SpotDetailDialog() {
                 href={withSharecode(
                   `/food?prov=${encodeURIComponent(provinceHit.name)}`,
                 )}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50 border border-amber-100 text-xs font-bold text-amber-700 hover:bg-amber-100 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-500/10 transition-colors"
               >
                 <UtensilsCrossed className="w-3.5 h-3.5 shrink-0" />
                 到「中国味道」看{provinceHit.name}代表菜：{provinceHit.dish} →
@@ -1425,7 +1528,7 @@ function SpotDetailDialog() {
             {/* Photo thumbnails */}
             {allPhotos.length > 1 && (
               <div>
-                <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-1.5">
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-1.5">
                   <ImageIcon className="w-3.5 h-3.5" />
                   图片 ({allPhotos.length})
                 </h4>
@@ -1448,22 +1551,22 @@ function SpotDetailDialog() {
               </div>
             )}
             <div>
-              <h4 className="text-sm font-semibold text-gray-900 mb-2">
+              <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
                 景点介绍
               </h4>
-              <p className="text-sm text-gray-600 leading-relaxed">
+              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
                 {spot.description}
               </p>
             </div>
             {/* ═══ 口碑前置：翻车记录数 + 高频标签 ═══ */}
             {spotReviews.length > 0 && (
-              <div className="rounded-xl border border-rose-100 bg-rose-50/70 p-3">
+              <div className="rounded-xl border border-rose-100 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/10/70 p-3">
                 <button
                   onClick={() => {
                     setSelectedSpot(null);
                     setActiveView("dissuasion");
                   }}
-                  className="flex items-center gap-1.5 text-sm font-semibold text-rose-700 mb-1.5 hover:text-rose-800"
+                  className="flex items-center gap-1.5 text-sm font-semibold text-rose-700 dark:text-rose-400 mb-1.5 hover:text-rose-800"
                 >
                   <BookX className="w-3.5 h-3.5" />
                   {spotReviews.length} 条翻车记录 · 点击查看
@@ -1476,7 +1579,7 @@ function SpotDetailDialog() {
                       return t ? (
                         <span
                           key={tagId}
-                          className="px-2 py-0.5 rounded-full bg-white text-[11px] text-rose-600 border border-rose-100"
+                          className="px-2 py-0.5 rounded-full bg-white dark:bg-gray-900 text-[11px] text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-500/20"
                         >
                           {t.emoji} {t.label}
                         </span>
@@ -1488,7 +1591,7 @@ function SpotDetailDialog() {
             {/* ═══ 就近串联：基于坐标的串联建议，点击直达 ═══ */}
             {nearbySpots.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-1.5">
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-1.5">
                   <Navigation className="w-3.5 h-3.5" />
                   就近串联
                 </h4>
@@ -1497,7 +1600,7 @@ function SpotDetailDialog() {
                     <button
                       key={s.id}
                       onClick={() => setSelectedSpot(s)}
-                      className="px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-[11px] font-medium text-emerald-700 hover:bg-emerald-100 transition-colors"
+                      className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 text-[11px] font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/10 transition-colors"
                     >
                       {s.name} ·{" "}
                       {km < 1
@@ -1511,14 +1614,14 @@ function SpotDetailDialog() {
             <Separator />
             {spot.facilities.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-gray-900 mb-2.5">
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2.5">
                   配套设施
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {spot.facilities.map((f) => (
                     <span
                       key={f}
-                      className="inline-flex items-center px-2.5 py-1 bg-gray-100 rounded-md text-xs text-gray-600"
+                      className="inline-flex items-center px-2.5 py-1 bg-gray-100 dark:bg-gray-800 rounded-md text-xs text-gray-600 dark:text-gray-300"
                     >
                       {f}
                     </span>
@@ -1528,14 +1631,14 @@ function SpotDetailDialog() {
             )}
             {spot.projects.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-gray-900 mb-2.5">
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2.5">
                   推荐项目
                 </h4>
                 <div className="space-y-2">
                   {spot.projects.map((p) => (
                     <div
                       key={p}
-                      className="flex items-center gap-2 text-sm text-gray-600"
+                      className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300"
                     >
                       <Star className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                       {p}
@@ -1554,7 +1657,7 @@ function SpotDetailDialog() {
                   setSelectedSpot(null);
                   setActiveView("ptsi");
                 }}
-                className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-sky-50 text-sky-700 text-sm font-bold hover:bg-sky-100 transition-colors border border-sky-100"
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-400 text-sm font-bold hover:bg-sky-100 transition-colors border border-sky-100 dark:border-sky-500/20"
               >
                 <Thermometer className="w-4 h-4" />看 7
                 日出行窗口：本周哪天去最合适 →
@@ -1576,7 +1679,7 @@ function SpotDetailDialog() {
               className={`w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-bold transition-colors border ${
                 trip.includes(spot.id)
                   ? "bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700"
-                  : "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100"
+                  : "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/10"
               }`}
             >
               <Route className="w-4 h-4" />
@@ -1588,7 +1691,7 @@ function SpotDetailDialog() {
               className={`w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-bold transition-colors border ${
                 compareIds.includes(spot.id)
                   ? "bg-sky-600 text-white border-sky-600 hover:bg-sky-700"
-                  : "bg-sky-50 text-sky-700 border-sky-100 hover:bg-sky-100"
+                  : "bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-100 dark:border-sky-500/20 hover:bg-sky-100"
               }`}
             >
               <Scale className="w-4 h-4" />
@@ -1603,7 +1706,7 @@ function SpotDetailDialog() {
             <div className="flex gap-2">
               <button
                 onClick={() => setShowDissuasionEditor(true)}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-rose-50 text-rose-600 text-sm font-bold hover:bg-rose-100 transition-colors border border-rose-100"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 text-sm font-bold hover:bg-rose-100 dark:hover:bg-rose-500/10 transition-colors border border-rose-100 dark:border-rose-500/20"
               >
                 <BookX className="w-4 h-4" />
                 举报翻车经历
@@ -1613,7 +1716,7 @@ function SpotDetailDialog() {
                   setSelectedSpot(null);
                   setActiveView("dissuasion");
                 }}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gray-50 text-gray-600 text-sm font-bold hover:bg-gray-100 transition-colors border border-gray-100"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-300 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-100 dark:border-gray-800"
               >
                 <BookX className="w-4 h-4" />
                 查看翻车日记
@@ -1689,7 +1792,7 @@ function Lightbox({
               e.stopPropagation();
               onIndex((index - 1 + photos.length) % photos.length);
             }}
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white dark:bg-gray-900/15 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
@@ -1698,7 +1801,7 @@ function Lightbox({
               e.stopPropagation();
               onIndex((index + 1) % photos.length);
             }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white dark:bg-gray-900/15 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
           >
             <ChevronRight className="w-6 h-6" />
           </button>
@@ -1709,7 +1812,7 @@ function Lightbox({
       )}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
+        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white dark:bg-gray-900/15 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
       >
         <X className="w-5 h-5" />
       </button>
@@ -1735,7 +1838,7 @@ function CompareBar() {
               key={s.id}
               onClick={() => toggleCompare(s.id)}
               title="点击移出"
-              className="flex items-center gap-1.5 text-xs bg-white/10 hover:bg-white/20 rounded-full pl-1 pr-2 py-1 shrink-0"
+              className="flex items-center gap-1.5 text-xs bg-white dark:bg-gray-900/10 hover:bg-white/20 rounded-full pl-1 pr-2 py-1 shrink-0"
             >
               <span className="w-6 h-6 rounded-full overflow-hidden bg-gray-700 shrink-0">
                 {s.image ? (
@@ -1767,7 +1870,7 @@ function CompareBar() {
         <button
           onClick={clearCompare}
           title="清空对比"
-          className="shrink-0 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
+          className="shrink-0 w-7 h-7 rounded-full bg-white dark:bg-gray-900/10 hover:bg-white/20 flex items-center justify-center"
         >
           <X className="w-3.5 h-3.5" />
         </button>
@@ -1812,7 +1915,7 @@ function CompareDialog({
       label: "评分",
       render: (s) =>
         s.rating ? (
-          <span className="text-amber-600 font-bold">
+          <span className="text-amber-600 dark:text-amber-400 font-bold">
             ★ {s.rating.toFixed(1)}
           </span>
         ) : (
@@ -1824,7 +1927,9 @@ function CompareDialog({
       label: "预约",
       render: (s) =>
         s.reservation ? (
-          <span className="text-rose-600 text-xs">{s.reservation}</span>
+          <span className="text-rose-600 dark:text-rose-400 text-xs">
+            {s.reservation}
+          </span>
         ) : (
           "无需预约（未收录）"
         ),
@@ -1839,7 +1944,7 @@ function CompareDialog({
         s.tel ? (
           <a
             href={`tel:${s.tel.replace(/[^\d+]/g, "")}`}
-            className="text-emerald-700 underline"
+            className="text-emerald-700 dark:text-emerald-400 underline"
           >
             {s.tel}
           </a>
@@ -1870,7 +1975,7 @@ function CompareDialog({
             href={`https://uri.amap.com/marker?position=${c.lng.toFixed(6)},${c.lat.toFixed(6)}&name=${encodeURIComponent(s.name)}&src=spot-visual&callnative=1`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-colors"
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/10 transition-colors"
             onClick={(e) => e.stopPropagation()}
           >
             <Navigation className="w-3 h-3" />
@@ -1887,7 +1992,7 @@ function CompareDialog({
           <div />
           {[a, b].map((s, i) => (
             <div key={s.id} className={i === 0 ? "" : ""}>
-              <div className="h-28 rounded-xl overflow-hidden bg-gray-100 mb-1.5">
+              <div className="h-28 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 mb-1.5">
                 {s.image ? (
                   <img
                     src={s.image}
@@ -1914,20 +2019,20 @@ function CompareDialog({
                   })()
                 )}
               </div>
-              <p className="font-bold text-gray-900 text-sm leading-snug">
+              <p className="font-bold text-gray-900 dark:text-gray-100 text-sm leading-snug">
                 {s.name}
               </p>
             </div>
           ))}
           {rows.map((row) => (
             <div key={row.label} className="contents">
-              <p className="text-xs text-gray-400 font-semibold pt-0.5">
+              <p className="text-xs text-gray-400 dark:text-gray-500 font-semibold pt-0.5">
                 {row.label}
               </p>
               {[a, b].map((s) => (
                 <p
                   key={s.id}
-                  className="text-xs text-gray-700 leading-relaxed break-words"
+                  className="text-xs text-gray-700 dark:text-gray-200 leading-relaxed break-words"
                 >
                   {row.render(s)}
                 </p>
@@ -1936,10 +2041,10 @@ function CompareDialog({
           ))}
           {dist !== null && (
             <>
-              <p className="text-xs text-gray-400 font-semibold pt-0.5">
+              <p className="text-xs text-gray-400 dark:text-gray-500 font-semibold pt-0.5">
                 直线距离
               </p>
-              <p className="text-xs text-gray-700 font-bold sm:col-span-2">
+              <p className="text-xs text-gray-700 dark:text-gray-200 font-bold sm:col-span-2">
                 两地相距约{" "}
                 {dist < 1
                   ? `${Math.round(dist * 1000)} m`
@@ -2352,13 +2457,13 @@ function SpotsView() {
   return (
     <div className="space-y-5">
       {/* 城市探索：城市包 → 库内精选 → 实时兜底 */}
-      <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+      <div className="rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10/60 dark:bg-emerald-500/10 p-4">
         <div className="flex items-center gap-2 mb-2.5">
-          <Globe className="w-4 h-4 text-emerald-600" />
-          <span className="text-sm font-semibold text-emerald-800">
+          <Globe className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
             城市探索
           </span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400">
             全国库 {LIBRARY_SPOTS.length} 景点 · 零外链
           </span>
         </div>
@@ -2374,11 +2479,11 @@ function SpotsView() {
                     onClick={() => setCityFilter(on ? null : hc)}
                     aria-pressed={on}
                     title={n ? `${hc} · ${n} 个景点` : `${hc} · 库内无匹配`}
-                    className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${on ? "bg-emerald-600 text-white border-emerald-600" : n === 0 ? "bg-white text-gray-400 border-gray-200 hover:bg-gray-50" : "bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50"}`}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${on ? "bg-emerald-600 text-white border-emerald-600" : n === 0 ? "bg-white dark:bg-gray-900 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800" : "bg-white dark:bg-gray-900 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"}`}
                   >
                     {hc}
                     <span
-                      className={`ml-1 text-[10px] ${on ? "text-white/70" : "text-gray-400"}`}
+                      className={`ml-1 text-[10px] ${on ? "text-white/70" : "text-gray-400 dark:text-gray-500"}`}
                     >
                       {n}
                     </span>
@@ -2389,14 +2494,14 @@ function SpotsView() {
             {HOT_PROVINCES.length > 12 && (
               <button
                 onClick={() => setCitiesExpanded((v) => !v)}
-                className="px-2.5 py-1 rounded-full text-[11px] font-medium border border-dashed border-emerald-300 text-emerald-600 hover:bg-emerald-50 transition-colors"
+                className="px-2.5 py-1 rounded-full text-[11px] font-medium border border-dashed border-emerald-300 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
               >
                 {citiesExpanded ? "收起" : `展开全部省份`}
               </button>
             )}
           </div>
           <div className="relative flex-1">
-            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
             <Input
               value={city}
               onChange={(e) => setCity(e.target.value)}
@@ -2404,13 +2509,13 @@ function SpotsView() {
                 if (e.key === "Enter") exploreOsm();
               }}
               placeholder="输入城市，如 苏州 / 洛阳 / 大连 / 哈尔滨"
-              className="pl-10 h-11 bg-white border-emerald-200 text-sm"
+              className="pl-10 h-11 bg-white dark:bg-gray-900 border-emerald-200 dark:border-emerald-500/30 text-sm"
             />
           </div>
           <Button
             variant="outline"
             size="sm"
-            className="gap-1.5 text-xs border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50"
+            className="gap-1.5 text-xs border-emerald-200 dark:border-emerald-500/30 bg-white dark:bg-gray-900 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
             onClick={randomBrowse}
             title="从景点库随机抽一个看看"
           >
@@ -2434,12 +2539,12 @@ function SpotsView() {
         </div>
         {osmMsg && (
           <p
-            className={`text-xs mt-2 ${osmMsg.type === "ok" ? "text-emerald-600" : "text-rose-500"}`}
+            className={`text-xs mt-2 ${osmMsg.type === "ok" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500"}`}
           >
             {osmMsg.text}
           </p>
         )}
-        <p className="text-[11px] text-gray-400 mt-2 leading-relaxed">
+        <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-2 leading-relaxed">
           库内共 {LIBRARY_STATS.total} 个景点（手工 {LIBRARY_STATS.manual} +
           高德 POI {LIBRARY_STATS.cityPoi}（{LIBRARY_STATS.cityCount} 城）+ 2023
           全国 A 级名录 {LIBRARY_STATS.extras}，构建时烘焙 ·
@@ -2450,17 +2555,17 @@ function SpotsView() {
 
       {/* Search + Import */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
         <Input
           placeholder="搜索名称、地址、介绍、设施、项目，支持拼音（如 gmgy / guangongyu）..."
-          className="pl-10 pr-10 h-11 bg-white border-gray-200 text-sm"
+          className="pl-10 pr-10 h-11 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-sm"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
         {searchQuery && (
           <button
             onClick={() => setSearchQuery("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
           >
             <X className="w-4 h-4" />
           </button>
@@ -2469,19 +2574,21 @@ function SpotsView() {
       {/* ═══ 最近搜索：快捷重搜 chips（无激活搜索词时显示） ═══ */}
       {!searchQuery && recentSearches.length > 0 && (
         <div className="flex items-center gap-1.5 flex-wrap mt-2">
-          <span className="text-[11px] text-gray-400 shrink-0">最近搜索</span>
+          <span className="text-[11px] text-gray-400 dark:text-gray-500 shrink-0">
+            最近搜索
+          </span>
           {recentSearches.map((t) => (
             <button
               key={t}
               onClick={() => setSearchQuery(t)}
-              className="px-2 py-0.5 rounded-full text-[11px] text-gray-600 bg-gray-100 border border-gray-200 hover:bg-gray-200 transition-colors"
+              className="px-2 py-0.5 rounded-full text-[11px] text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
               {t}
             </button>
           ))}
           <button
             onClick={clearRecentSearches}
-            className="text-[11px] text-gray-400 hover:text-rose-500 transition-colors"
+            className="text-[11px] text-gray-400 dark:text-gray-500 hover:text-rose-500 transition-colors"
           >
             清空
           </button>
@@ -2496,7 +2603,7 @@ function SpotsView() {
           if (!recents.length) return null;
           return (
             <div className="mb-4">
-              <p className="text-xs font-semibold text-gray-500 mb-2 flex items-center gap-1">
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1">
                 <History className="w-3.5 h-3.5" />
                 继续浏览
               </p>
@@ -2508,7 +2615,7 @@ function SpotsView() {
                       onClick={() => setSelectedSpot(s)}
                       className="shrink-0 w-28 text-left group"
                     >
-                      <div className="h-16 w-28 rounded-lg overflow-hidden bg-gray-100 mb-1">
+                      <div className="h-16 w-28 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 mb-1">
                         <SpotImage
                           src={s.image}
                           alt={s.name}
@@ -2516,7 +2623,7 @@ function SpotsView() {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
                       </div>
-                      <p className="text-[11px] text-gray-600 truncate group-hover:text-emerald-700">
+                      <p className="text-[11px] text-gray-600 dark:text-gray-300 truncate group-hover:text-emerald-700">
                         {s.name}
                       </p>
                     </button>
@@ -2533,12 +2640,12 @@ function SpotsView() {
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 border ${activeCategory === cat ? "bg-gray-900 text-white border-gray-900 shadow-sm" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"}`}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 border ${activeCategory === cat ? "bg-gray-900 text-white border-gray-900 shadow-sm" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"}`}
             >
               {cat !== "全部" && getCategoryIcon(cat)}
               {cat}
               <span
-                className={`ml-0.5 text-[10px] ${activeCategory === cat ? "text-white/70" : "text-gray-400"}`}
+                className={`ml-0.5 text-[10px] ${activeCategory === cat ? "text-white/70" : "text-gray-400 dark:text-gray-500"}`}
               >
                 {categoryCounts[cat] || 0}
               </span>
@@ -2557,7 +2664,7 @@ function SpotsView() {
               className={`px-2 py-1.5 rounded-lg text-xs font-black border transition-colors ${
                 levelFilter === lv
                   ? "bg-amber-400 text-white border-amber-400"
-                  : "bg-white text-amber-600 border-amber-200 hover:bg-amber-50"
+                  : "bg-white dark:bg-gray-900 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30 hover:bg-amber-50 dark:hover:bg-amber-500/10"
               }`}
             >
               {lv}
@@ -2569,7 +2676,7 @@ function SpotsView() {
             </button>
           ))}
         </div>
-        <label className="flex items-center gap-1 text-xs text-gray-500">
+        <label className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
           <span className="hidden sm:inline">排序</span>
           <select
             value={sortMode}
@@ -2579,7 +2686,7 @@ function SpotsView() {
               )
             }
             title="评分排序用的是高德用户评分（无评价数，5.0 也可能是极少评价）"
-            className="h-8 rounded-lg border border-gray-200 bg-white px-1.5 text-xs text-gray-700 outline-none focus:border-emerald-400"
+            className="h-8 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-1.5 text-xs text-gray-700 dark:text-gray-200 outline-none focus:border-emerald-400"
           >
             <option value="default">默认</option>
             <option value="rating">评分最高</option>
@@ -2592,23 +2699,23 @@ function SpotsView() {
         <Button
           variant="outline"
           size="sm"
-          className={`gap-1.5 text-xs ${userLoc ? "border-emerald-300 bg-emerald-50 text-emerald-700" : ""}`}
+          className={`gap-1.5 text-xs ${userLoc ? "border-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : ""}`}
           disabled={locating}
           onClick={toggleNearbySort}
         >
           <Navigation className="w-3.5 h-3.5" />
           {locating ? "定位中..." : userLoc ? "按距离排序中" : "离我最近"}
         </Button>
-        <div className="hidden sm:flex items-center border border-gray-200 rounded-lg p-0.5 bg-white">
+        <div className="hidden sm:flex items-center border border-gray-200 dark:border-gray-700 rounded-lg p-0.5 bg-white dark:bg-gray-900">
           <button
             onClick={() => setViewMode("grid")}
-            className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-gray-100 text-gray-900" : "text-gray-400"}`}
+            className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"}`}
           >
             <LayoutGrid className="w-4 h-4" />
           </button>
           <button
             onClick={() => setViewMode("list")}
-            className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-gray-100 text-gray-900" : "text-gray-400"}`}
+            className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"}`}
           >
             <List className="w-4 h-4" />
           </button>
@@ -2629,7 +2736,7 @@ function SpotsView() {
             onClick={() => fileInputRef.current?.click()}
           >
             {importing ? (
-              <span className="w-3.5 h-3.5 border-2 border-gray-300 border-t-emerald-500 rounded-full animate-spin" />
+              <span className="w-3.5 h-3.5 border-2 border-gray-300 dark:border-gray-600 border-t-emerald-500 rounded-full animate-spin" />
             ) : (
               <Upload className="w-3.5 h-3.5" />
             )}
@@ -2639,7 +2746,7 @@ function SpotsView() {
             <Button
               variant="ghost"
               size="sm"
-              className="gap-1.5 text-xs text-gray-500"
+              className="gap-1.5 text-xs text-gray-500 dark:text-gray-400"
               onClick={useAppStore.getState().resetSpots}
             >
               恢复完整库
@@ -2665,9 +2772,9 @@ function SpotsView() {
         </div>
       </div>
       {/* Count */}
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-gray-500 dark:text-gray-400">
         共{" "}
-        <span className="font-semibold text-gray-900">
+        <span className="font-semibold text-gray-900 dark:text-gray-100">
           {filteredSpots.length}
         </span>{" "}
         个景点{levelFilter && <span> · {levelFilter}</span>}
@@ -2677,7 +2784,7 @@ function SpotsView() {
         {levelFilter && (
           <button
             onClick={() => setLevelFilter(null)}
-            className="ml-1 text-amber-600 hover:underline"
+            className="ml-1 text-amber-600 dark:text-amber-400 hover:underline"
           >
             清除{levelFilter}
           </button>
@@ -2685,7 +2792,7 @@ function SpotsView() {
         {cityFilter && (
           <button
             onClick={() => setCityFilter(null)}
-            className="ml-1 text-emerald-600 hover:underline"
+            className="ml-1 text-emerald-600 dark:text-emerald-400 hover:underline"
           >
             清除
           </button>
@@ -2694,8 +2801,10 @@ function SpotsView() {
       {/* Content */}
       {filteredSpots.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
-          <MapPin className="w-12 h-12 text-gray-300 mb-4" />
-          <p className="text-gray-500 mb-4">没有找到匹配的景点</p>
+          <MapPin className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-4" />
+          <p className="text-gray-500 dark:text-gray-400 mb-4">
+            没有找到匹配的景点
+          </p>
           {(searchQuery ||
             activeCategory !== "全部" ||
             levelFilter ||
@@ -2740,7 +2849,7 @@ function SpotsView() {
       {visibleCount < filteredSpots.length && (
         <div
           ref={sentinelRef}
-          className="py-8 text-center text-xs text-gray-400"
+          className="py-8 text-center text-xs text-gray-400 dark:text-gray-500"
         >
           正在加载更多景点…（{visibleCount}/{filteredSpots.length}）
         </div>
@@ -2759,7 +2868,14 @@ function FavoritesView() {
     addToTrip,
     setActiveView,
     spotNotes,
+    favGroups,
+    favGroupOf,
+    createFavGroup,
+    deleteFavGroup,
+    setFavGroup,
   } = useAppStore();
+  // 分组筛选：null=全部，"__none"=未分组，其余=文件夹 id
+  const [favGroupFilter, setFavGroupFilter] = useState<string | null>(null);
   const favSpots = useMemo(
     () => spots.filter((s) => favorites.includes(s.id)),
     [spots, favorites],
@@ -2789,6 +2905,10 @@ function FavoritesView() {
         ? favSpots
         : favSpots.filter((s) => s.category === favCat);
     if (favLevel) list = list.filter((s) => s.level === favLevel);
+    if (favGroupFilter === "__none")
+      list = list.filter((s) => !favGroupOf[s.id]);
+    else if (favGroupFilter)
+      list = list.filter((s) => favGroupOf[s.id] === favGroupFilter);
     const q = favQuery.trim().toLowerCase();
     if (q)
       list = list.filter(
@@ -2833,9 +2953,11 @@ function FavoritesView() {
   if (favSpots.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
-        <Heart className="w-12 h-12 text-gray-300 mb-4" />
-        <p className="text-gray-500 font-medium mb-1">还没有收藏景点</p>
-        <p className="text-sm text-gray-400 mb-5">
+        <Heart className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-4" />
+        <p className="text-gray-500 dark:text-gray-400 font-medium mb-1">
+          还没有收藏景点
+        </p>
+        <p className="text-sm text-gray-400 dark:text-gray-500 mb-5">
           在「景点览胜」中点击爱心按钮收藏
         </p>
         <Button
@@ -2852,9 +2974,11 @@ function FavoritesView() {
   return (
     <div>
       <div className="flex items-center gap-3 mb-5">
-        <p className="text-sm text-gray-500 flex-1">
+        <p className="text-sm text-gray-500 dark:text-gray-400 flex-1">
           已收藏{" "}
-          <span className="font-semibold text-gray-900">{favSpots.length}</span>{" "}
+          <span className="font-semibold text-gray-900 dark:text-gray-100">
+            {favSpots.length}
+          </span>{" "}
           个景点
         </p>
         <Button
@@ -2877,6 +3001,73 @@ function FavoritesView() {
           导出清单
         </Button>
       </div>
+      {/* 收藏夹分组 */}
+      <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+        <button
+          onClick={() => setFavGroupFilter(null)}
+          className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+            favGroupFilter === null
+              ? "bg-emerald-600 text-white border-emerald-600"
+              : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700"
+          }`}
+        >
+          全部分组
+        </button>
+        <button
+          onClick={() =>
+            setFavGroupFilter(favGroupFilter === "__none" ? null : "__none")
+          }
+          className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+            favGroupFilter === "__none"
+              ? "bg-emerald-600 text-white border-emerald-600"
+              : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700"
+          }`}
+        >
+          未分组
+        </button>
+        {favGroups.map((g) => (
+          <span
+            key={g.id}
+            className={`inline-flex items-center rounded-full border transition-colors ${
+              favGroupFilter === g.id
+                ? "bg-emerald-600 text-white border-emerald-600"
+                : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700"
+            }`}
+          >
+            <button
+              onClick={() =>
+                setFavGroupFilter(favGroupFilter === g.id ? null : g.id)
+              }
+              className="px-2.5 py-1 text-xs font-medium"
+            >
+              {g.name}
+            </button>
+            <button
+              onClick={() => {
+                if (
+                  window.confirm(
+                    `删除分组「${g.name}」？其中的收藏会回到未分组。`,
+                  )
+                )
+                  deleteFavGroup(g.id);
+              }}
+              title="删除分组（收藏保留）"
+              className="pr-2 text-[10px] opacity-50 hover:text-rose-500"
+            >
+              ×
+            </button>
+          </span>
+        ))}
+        <button
+          onClick={() => {
+            const name = window.prompt("新分组名称：");
+            if (name && name.trim()) createFavGroup(name);
+          }}
+          className="px-2.5 py-1 rounded-full text-xs font-medium border border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-emerald-400 hover:text-emerald-600 transition-colors"
+        >
+          ＋ 新建分组
+        </button>
+      </div>
       {/* 等级快筛 */}
       <div className="flex items-center gap-1.5 mb-3">
         {(["5A", "4A"] as const).map((lv) => (
@@ -2886,7 +3077,7 @@ function FavoritesView() {
             className={`px-2 py-1 rounded-lg text-xs font-black border transition-colors ${
               favLevel === lv
                 ? "bg-amber-400 text-white border-amber-400"
-                : "bg-white text-amber-600 border-amber-200 hover:bg-amber-50"
+                : "bg-white dark:bg-gray-900 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30 hover:bg-amber-50 dark:hover:bg-amber-500/10"
             }`}
           >
             {lv}
@@ -2895,17 +3086,17 @@ function FavoritesView() {
       </div>
       {/* 搜索（名称+拼音）：收藏多了以后定位用 */}
       <div className="relative mb-3">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
         <Input
           placeholder="在收藏中搜索名称 / 拼音（如 gmgy）..."
-          className="pl-10 pr-10 h-10 bg-white border-gray-200 text-sm"
+          className="pl-10 pr-10 h-10 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-sm"
           value={favQuery}
           onChange={(e) => setFavQuery(e.target.value)}
         />
         {favQuery && (
           <button
             onClick={() => setFavQuery("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
           >
             <X className="w-4 h-4" />
           </button>
@@ -2920,7 +3111,7 @@ function FavoritesView() {
               className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                 favCat === cat
                   ? "bg-gray-900 text-white border-gray-900"
-                  : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                  : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300"
               }`}
             >
               {cat}
@@ -2933,7 +3124,13 @@ function FavoritesView() {
           ))}
         </div>
       )}
-      <SpotGrid spots={shownFavs} onSelect={setSelectedSpot} />
+      <SpotGrid
+        spots={shownFavs}
+        onSelect={setSelectedSpot}
+        groups={favGroups}
+        groupOf={favGroupOf}
+        onAssignGroup={setFavGroup}
+      />
     </div>
   );
 }
@@ -3044,25 +3241,39 @@ function ProfileView() {
 
   return (
     <div className="max-w-md mx-auto space-y-6">
-      <div className="bg-white rounded-xl border border-gray-200/80 p-6 text-center">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700/80 dark:border-gray-700 p-6 text-center">
         <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center mx-auto mb-4">
           <User className="w-8 h-8 text-white" />
         </div>
-        <h2 className="text-lg font-bold text-gray-900 mb-1">游客</h2>
-        <p className="text-sm text-gray-400">景点览胜 · 数据中心</p>
+        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
+          游客
+        </h2>
+        <p className="text-sm text-gray-400 dark:text-gray-500">
+          景点览胜 · 数据中心
+        </p>
       </div>
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "总景点", value: spots.length, color: "text-emerald-600" },
+          {
+            label: "总景点",
+            value: spots.length,
+            color: "text-emerald-600 dark:text-emerald-400",
+          },
           { label: "已收藏", value: favorites.length, color: "text-red-500" },
-          { label: "分类数", value: cats, color: "text-amber-600" },
+          {
+            label: "分类数",
+            value: cats,
+            color: "text-amber-600 dark:text-amber-400",
+          },
         ].map((stat) => (
           <div
             key={stat.label}
-            className="bg-white rounded-xl border border-gray-200/80 p-4 text-center"
+            className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700/80 dark:border-gray-700 p-4 text-center"
           >
             <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-            <p className="text-xs text-gray-400 mt-1">{stat.label}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+              {stat.label}
+            </p>
           </div>
         ))}
       </div>
@@ -3087,37 +3298,39 @@ function ProfileView() {
         ].map((stat) => (
           <div
             key={stat.label}
-            className="bg-white rounded-xl border border-gray-200/80 p-4 text-center"
+            className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700/80 dark:border-gray-700 p-4 text-center"
           >
             <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
               {stat.label}
               {stat.sub ? ` · ${stat.sub}` : ""}
             </p>
           </div>
         ))}
       </div>
-      <div className="bg-white rounded-xl border border-gray-200/80 p-5 space-y-3">
-        <h3 className="font-semibold text-gray-900 text-sm">数据管理</h3>
-        <p className="text-xs text-gray-400 leading-relaxed">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700/80 dark:border-gray-700 p-5 space-y-3">
+        <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
+          数据管理
+        </h3>
+        <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
           数据全部保存在浏览器本地（localStorage）。换设备前先导出备份。
         </p>
         <div className="flex gap-2">
           <button
             onClick={exportData}
-            className="flex-1 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold hover:bg-emerald-100 transition-colors"
+            className="flex-1 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-bold hover:bg-emerald-100 dark:hover:bg-emerald-500/10 transition-colors"
           >
             导出全部数据 (JSON)
           </button>
           <button
             onClick={() => restoreInputRef.current?.click()}
-            className="flex-1 py-2.5 rounded-xl bg-amber-50 text-amber-700 text-xs font-bold hover:bg-amber-100 transition-colors"
+            className="flex-1 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-bold hover:bg-amber-100 dark:hover:bg-amber-500/10 transition-colors"
           >
             恢复备份
           </button>
           <button
             onClick={clearAllData}
-            className="flex-1 py-2.5 rounded-xl bg-red-50 text-red-600 text-xs font-bold hover:bg-red-100 transition-colors"
+            className="flex-1 py-2.5 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-bold hover:bg-red-100 dark:hover:bg-red-500/10 transition-colors"
           >
             清空本地数据
           </button>
@@ -3134,9 +3347,11 @@ function ProfileView() {
           }}
         />
       </div>
-      <div className="bg-white rounded-xl border border-gray-200/80 p-5 space-y-3">
-        <h3 className="font-semibold text-gray-900 text-sm">使用提示</h3>
-        <div className="text-xs text-gray-500 space-y-2">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700/80 dark:border-gray-700 p-5 space-y-3">
+        <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
+          使用提示
+        </h3>
+        <div className="text-xs text-gray-500 dark:text-gray-400 space-y-2">
           <p>• 点击「导入 JSON」可加载自定义景点数据</p>
           <p>• JSON 支持多种字段格式，自动识别分类</p>
           <p>• 收藏、行程、改价、翻车记录刷新不丢失</p>
@@ -3149,7 +3364,11 @@ function ProfileView() {
 
 /* ═══════ 主页面 ═══════ */
 export default function Home() {
-  const { activeView } = useAppStore();
+  const { activeView, theme } = useAppStore();
+  useEffect(() => {
+    document.body.classList.toggle("dark", theme === "dark");
+    return () => document.body.classList.remove("dark");
+  }, [theme]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   // 返回顶部：主内容是 overflow-y-auto 容器（不是 window），监听其滚动
@@ -3164,7 +3383,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-[calc(100vh-52px)] flex flex-col bg-gray-50/50">
+    <div className="min-h-[calc(100vh-52px)] flex flex-col bg-gray-50 dark:bg-gray-900/50 dark:bg-gray-950/50">
       <div className="flex flex-1 min-h-0">
         <Sidebar
           collapsed={sidebarCollapsed}
@@ -3175,11 +3394,11 @@ export default function Home() {
         <main className="flex-1 min-w-0 overflow-hidden">
           <div className="h-full flex flex-col">
             {/* Desktop header bar */}
-            <div className="hidden md:flex items-center justify-between h-14 px-6 border-b border-gray-100 bg-white/50 shrink-0">
-              <h2 className="font-semibold text-gray-900 text-sm">
+            <div className="hidden md:flex items-center justify-between h-14 px-6 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900/50 dark:bg-gray-900/50 shrink-0">
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
                 {NAV_ITEMS.find((n) => n.key === activeView)?.label}
               </h2>
-              <div className="text-xs text-gray-400">
+              <div className="text-xs text-gray-400 dark:text-gray-500">
                 景点览胜 · 支持自定义 JSON 导入
               </div>
             </div>
@@ -3211,9 +3430,9 @@ export default function Home() {
         </main>
       </div>
       {/* Footer */}
-      <footer className="mt-auto border-t border-gray-100 bg-white/50 backdrop-blur-sm">
+      <footer className="mt-auto border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900/50 dark:bg-gray-900/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 text-center">
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-gray-400 dark:text-gray-500">
             景点览胜 · 支持自定义 JSON 数据导入
           </p>
         </div>
@@ -3226,7 +3445,7 @@ export default function Home() {
             mainScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" })
           }
           title="返回顶部"
-          className="fixed bottom-20 right-5 z-40 w-11 h-11 rounded-full bg-white/95 border border-gray-200 shadow-lg flex items-center justify-center text-gray-500 hover:text-emerald-600 hover:border-emerald-200 transition-colors"
+          className="fixed bottom-20 right-5 z-40 w-11 h-11 rounded-full bg-white dark:bg-gray-900/95 dark:bg-gray-900/95 border border-gray-200 dark:border-gray-700 shadow-lg flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-emerald-600 hover:border-emerald-200 transition-colors"
         >
           <ArrowUp className="w-5 h-5" />
         </button>

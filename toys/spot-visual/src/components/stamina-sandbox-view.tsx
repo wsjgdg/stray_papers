@@ -267,7 +267,7 @@ export default function StaminaSandboxView() {
   const overBudget = totalCost > budget;
 
   return (
-    <div className="min-h-full bg-gray-50/50">
+    <div className="min-h-full bg-gray-50 dark:bg-gray-900/50 dark:bg-gray-950/50">
       <div className="max-w-4xl mx-auto px-4 py-6 pb-8">
         {/* ═══ 标题 ═══ */}
         <div className="flex items-center gap-2 mb-6">
@@ -275,21 +275,23 @@ export default function StaminaSandboxView() {
             <Zap className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900">体力沙盘</h2>
-            <p className="text-xs text-gray-500">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+              体力沙盘
+            </h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               双轴优化引擎 · 平衡体力消耗与游览体验
             </p>
           </div>
         </div>
 
         {/* ═══ 身体条件设置 ═══ */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-5">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800 mb-5">
           <div className="flex items-center gap-1.5 mb-3">
             <Activity className="w-4 h-4 text-amber-500" />
-            <span className="text-sm font-semibold text-gray-700">
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
               身体条件
             </span>
-            <span className="text-[10px] text-gray-400 ml-auto">
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">
               每激活一项 -25% 体力上限
             </span>
           </div>
@@ -304,8 +306,8 @@ export default function StaminaSandboxView() {
                 onClick={() => toggleCondition(c.id)}
                 className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
                   conditions.includes(c.id)
-                    ? "bg-red-100 text-red-700 ring-2 ring-red-300"
-                    : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                    ? "bg-red-100 text-red-700 dark:text-red-400 ring-2 ring-red-300"
+                    : "bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
               >
                 {c.emoji} {c.label}
@@ -316,25 +318,33 @@ export default function StaminaSandboxView() {
 
         {/* ═══ 预算 vs 消耗 ═══ */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <div className="text-xs text-gray-400 mb-1">体力预算上限</div>
-            <div className="text-4xl font-black text-emerald-600">
-              {budget}
-              <span className="text-lg text-gray-400 ml-1">/ 100</span>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800">
+            <div className="text-xs text-gray-400 dark:text-gray-500 mb-1">
+              体力预算上限
             </div>
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="text-4xl font-black text-emerald-600 dark:text-emerald-400">
+              {budget}
+              <span className="text-lg text-gray-400 dark:text-gray-500 ml-1">
+                / 100
+              </span>
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               预算是基于身体条件的自动计算
             </div>
           </div>
           <div
-            className={`bg-white rounded-2xl p-5 shadow-sm border ${overBudget ? "border-red-300 bg-red-50" : "border-gray-100"}`}
+            className={`bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border ${overBudget ? "border-red-300 bg-red-50 dark:bg-red-500/10" : "border-gray-100 dark:border-gray-800"}`}
           >
-            <div className="text-xs text-gray-400 mb-1">当前行程消耗</div>
+            <div className="text-xs text-gray-400 dark:text-gray-500 mb-1">
+              当前行程消耗
+            </div>
             <div
-              className={`text-4xl font-black ${overBudget ? "text-red-600" : "text-blue-600"}`}
+              className={`text-4xl font-black ${overBudget ? "text-red-600 dark:text-red-400" : "text-blue-600 dark:text-blue-400"}`}
             >
               {totalCost}
-              <span className="text-lg text-gray-400 ml-1">/ {budget}</span>
+              <span className="text-lg text-gray-400 dark:text-gray-500 ml-1">
+                / {budget}
+              </span>
             </div>
             <div className="text-xs mt-1">
               {overBudget ? (
@@ -342,7 +352,7 @@ export default function StaminaSandboxView() {
                   ⚠️ 超出预算 {totalCost - budget} 点
                 </span>
               ) : (
-                <span className="text-emerald-600">
+                <span className="text-emerald-600 dark:text-emerald-400">
                   ✅ 预算充足，剩余 {budget - totalCost} 点
                 </span>
               )}
@@ -351,13 +361,13 @@ export default function StaminaSandboxView() {
         </div>
 
         {/* ═══ 双轴散点图 ═══ */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-5">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800 mb-5">
           <div className="flex items-center gap-1.5 mb-4">
-            <TrendingUp className="w-4 h-4 text-gray-500" />
-            <span className="text-sm font-semibold text-gray-700">
+            <TrendingUp className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
               双轴优化图
             </span>
-            <span className="text-[10px] text-gray-400 ml-auto">
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">
               绿色虚线 = 最优体验/体力比
             </span>
           </div>
@@ -367,13 +377,13 @@ export default function StaminaSandboxView() {
         </div>
 
         {/* ═══ 体力消耗曲线 ═══ */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-5">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800 mb-5">
           <div className="flex items-center gap-1.5 mb-4">
-            <ArrowUpDown className="w-4 h-4 text-gray-500" />
-            <span className="text-sm font-semibold text-gray-700">
+            <ArrowUpDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
               体力消耗曲线
             </span>
-            <span className="text-[10px] text-gray-400 ml-auto">
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">
               按游览顺序累计
             </span>
           </div>
@@ -382,13 +392,13 @@ export default function StaminaSandboxView() {
               const pct = budget > 0 ? (point.cumulative / budget) * 100 : 0;
               return (
                 <div key={i} className="flex items-center gap-3">
-                  <span className="text-xs text-gray-500 w-6 text-right">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 w-6 text-right">
                     {i + 1}
                   </span>
-                  <span className="text-xs text-gray-700 w-20 truncate">
+                  <span className="text-xs text-gray-700 dark:text-gray-200 w-20 truncate">
                     {point.spotName}
                   </span>
-                  <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="flex-1 h-5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${Math.min(pct, 100)}%` }}
@@ -402,11 +412,11 @@ export default function StaminaSandboxView() {
                       }`}
                     />
                   </div>
-                  <span className="text-xs font-bold text-gray-600 w-14 text-right">
+                  <span className="text-xs font-bold text-gray-600 dark:text-gray-300 w-14 text-right">
                     {point.cumulative}
                   </span>
                   <span
-                    className={`text-xs w-14 text-right ${point.remaining < 10 ? "text-red-500" : "text-gray-400"}`}
+                    className={`text-xs w-14 text-right ${point.remaining < 10 ? "text-red-500" : "text-gray-400 dark:text-gray-500"}`}
                   >
                     {point.remaining > 0 ? `剩${point.remaining}` : "已超"}
                   </span>
@@ -417,17 +427,17 @@ export default function StaminaSandboxView() {
         </div>
 
         {/* ═══ 项目排序（拖拽提示） ═══ */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-1.5 mb-3">
-            <Shuffle className="w-4 h-4 text-gray-500" />
-            <span className="text-sm font-semibold text-gray-700">
+            <Shuffle className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
               景点游览顺序
             </span>
-            <span className="text-[10px] text-gray-400 ml-auto">
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">
               拖拽调整（后续实现）
             </span>
             {trip.length === 0 && (
-              <span className="text-[10px] text-gray-400">
+              <span className="text-[10px] text-gray-400 dark:text-gray-500">
                 未选行程：默认按高德评分取前 400 个景点进入沙盘
               </span>
             )}
@@ -439,13 +449,15 @@ export default function StaminaSandboxView() {
               return (
                 <div
                   key={id}
-                  className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-xl border border-gray-200"
+                  className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700"
                 >
-                  <span className="text-xs font-bold text-gray-400">
+                  <span className="text-xs font-bold text-gray-400 dark:text-gray-500">
                     #{i + 1}
                   </span>
-                  <span className="text-sm text-gray-700">{spot.name}</span>
-                  <span className="text-xs text-amber-600 font-medium">
+                  <span className="text-sm text-gray-700 dark:text-gray-200">
+                    {spot.name}
+                  </span>
+                  <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
                     {getStaminaCost(spot)}点
                   </span>
                 </div>
