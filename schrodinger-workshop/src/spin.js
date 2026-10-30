@@ -190,6 +190,7 @@ export class SpinApp {
     <button id="spPause">暂停</button><button id="spStep">单步</button>
     <button id="spReset" class="sm">重置</button><button id="spLink" class="sm">复制链接</button>
     <button id="spSave" class="sm">导出 JSON</button><button id="spGap" class="sm">算能隙</button>
+    <button id="spToHubbard" class="sm" title="U≫t 的半满 Hubbard 带 ⟹ 超交换 J=4t²/U ⟹ 本页的 XXX 链；跳去哈伯德页看电荷自由度">↔ 哈伯德页</button>
   </div></div>
 </div>
 
@@ -261,6 +262,7 @@ export class SpinApp {
     this.on(this.q('#spLink'), 'click', () => this.copyLink());
     this.on(this.q('#spSave'), 'click', () => this.exportJson());
     this.on(this.q('#spGap'), 'click', () => this.startGap());
+    this.on(this.q('#spToHubbard'), 'click', () => this.toHubbard());
     this.on(window, 'resize', () => {
       const w = window.innerWidth || 0;
       if (w > 1200 || w <= 860) this.closeBand();
@@ -1080,6 +1082,19 @@ export class SpinApp {
     this.syncPanel(); this.draw();
     return true;
   }
+  /* ---------- 跨页：与哈伯德页的对应关系 ----------
+     半满 Hubbard 在 U≫t 下退化成本页：J_eff = 4t²/U（二阶微扰/超交换）。本页取 J=1，
+     所以「对照」时把 J=1 折算回一个足够大的 U（只作为入口，不声称等价于某一个 U）。 */
+  toHubbardUrl(){
+    const L = this.state.L <= 8 ? 8 : 10;
+    return './hubbard.html?' + new URLSearchParams({ L: String(L), U: '8', mode: 'gs' }).toString();
+  }
+  toHubbard(nav = true){
+    const url = this.toHubbardUrl();
+    if (nav){ try { location.href = url; } catch (_){ /* file:// 与测试环境忽略 */ } }
+    this.toast('强耦合对照：U≫t 时 J_eff = 4t²/U ⟹ 本页的 XXX 链', 2400);
+    return url;
+  }
   copyLink(){
     try {
       const qs = this.queryFor(this.serialize());
@@ -1165,6 +1180,8 @@ export class SpinApp {
       view3: () => ({ ...this._view }),
       hover: () => this._hover,
       band: which => this.toggleBand(which),
+      toHubbardUrl: () => this.toHubbardUrl(),
+      toHubbard: (nav = false) => this.toHubbard(nav),
       bandOpen: () => this.bandOpen(),
       spec: () => this.serialize(),
       query: () => this.queryFor(this.serialize()),

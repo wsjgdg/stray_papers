@@ -43,6 +43,11 @@
  *   4. Krylov 截断 O(dt^{m+1})，pot73 与 Taylor 参考对账。
  * ========================================================================== */
 
+import { EdLanczosTask, edKrylovExp } from './edbase.js';
+
+/* 稠密三对角的本征分解：Ritz 与 Krylov 共用（40 个 sweep 足够，见 _extract 注释） */
+const hbEig = T => jacobiEigen(T, 40);
+
 /* ---------- 基构造 ---------- */
 export function popcount(x){
   x = x - ((x >> 1) & 0x55555555);
@@ -270,144 +275,25 @@ export function jacobiEigen(Ain, maxSweep = 50){
 }
 
 /* ---------- Lanczos 基态（分帧任务；全重正交） ---------- */
-export class HbGsTask {
+/* 基态任务 = 公共 Lanczos 内核（edbase.js）+ 本页的 matvec / Ritz 解法。
+   参数与行为逐位保留：实模式（H 实对称 + 实种子 ⟹ Krylov 基虚部恒 0，只存实部，
+   内存减半 ⟹ L=12 同内存下 m 从 52 翻到 110）、**两遍 Gram–Schmidt**（Lanczos 基失
+   正交通常是小规模 ED 的头号精度杀手）、按内存预算裁 m 并暴露 mMax / mCapped。
+   公共内核另外给出 residual（多一次 matvec），页面与测试可直接读。 */
+export class HbGsTask extends EdLanczosTask {
   constructor(sec, t, U, opts = {}){
+    super(sec.dim, (re, im, outR, outI) => hbMatvec(sec, re, im, outR, outI, t, U),
+      { maxMemMB: 640, ...opts, fullOrtho: true, eig: hbEig });
     this.sec = sec; this.t = t; this.U = U;
-    /* 内存上限：Lanczos 要存 m 个向量。H 实对称 + 实种子 ⟹ 整个 Krylov 基**恒为实**
-       （im≡0），所以只存实部（dim·8 字节）：L=12 的 dim=853776 每向量 6.5 MB，
-       m=100 才 650 MB；若按复数存，同样内存只够 m=52（U≥2 明显不收敛）。
-       按预算裁 m，并把裁掉的实情暴露给调用方（mMax / mCapped），页面 HUD 与残差一起显示。 */
-    const budget = (opts.maxMemMB ?? 640) * 1048576;
-    this.mMax = Math.max(8, Math.floor(budget / (sec.dim * 8)));
-    this.m = Math.min(opts.m ?? 80, this.mMax);
-    this.mCapped = this.m < (opts.m ?? 80);
-    const dim = sec.dim;
-    const re = new Float64Array(dim), im = new Float64Array(dim);
-    let s = opts.seed ?? 12345;
-    for (let k = 0; k < dim; k++){ s = (s * 16807) % 2147483647; re[k] = (s / 2147483647) - 0.5; }
-    const nn = Math.sqrt(hbNorm(re, im));
-    for (let k = 0; k < dim; k++) re[k] /= nn;
-    this.re = re; this.im = im;
-    this.zeroI = new Float64Array(dim);      /* 实模式下的虚部占位（mb 缓冲，不参与运算） */
-    this.V = []; this.alpha = []; this.beta = [];
-    this.iter = 0; this.done = false; this.energy = NaN;
   }
-  step(n = 1){
-    const { sec, t, U, m } = this;
-    const dim = sec.dim;
-    for (let it = 0; it < n && !this.done; it++){
-      /* 实模式：只存实部（虚部恒 0）。H 实数对称 ⟹ 这不是近似。 */
-      const vr = this.iter === 0 ? Float64Array.from(this.re) : this._nextR;
-      const vi = this.zeroI;
-      this.V.push([vr, vi]);
-      /* w 必须**每步新分配**：若复用同一个缓冲，下一轮的 matvec 输出会覆盖
-         上一轮存下的基向量（别名），多步调用时 beta 爆炸成 1e14/NaN——逐步
-         调用因每次新建缓冲而掩盖（R73 首版即此）。 */
-      const wR = new Float64Array(dim), wI = new Float64Array(dim);
-      hbMatvec(sec, vr, vi, wR, wI, t, U);
-      const a = hbDot(vr, vi, wR, wI);
-      this.alpha.push(a);
-      const prev = this.V.length > 1 ? this.V[this.V.length - 2] : null;
-      const bprev = this.beta.length ? this.beta[this.beta.length - 1] : 0;
-      for (let k = 0; k < dim; k++){
-        wR[k] -= a * vr[k]; wI[k] -= a * vi[k];
-        if (prev){ wR[k] -= bprev * prev[0][k]; wI[k] -= bprev * prev[1][k]; }
-      }
-      /* 两遍 Gram–Schmidt（Lanczos 基失正交通常是小规模 ED 的头号精度杀手） */
-      for (let pass = 0; pass < 2; pass++){
-        for (const [vjR, vjI] of this.V){
-          const c = hbDot(vjR, vjI, wR, wI);
-          if (c === 0) continue;
-          for (let k = 0; k < dim; k++){ wR[k] -= c * vjR[k]; wI[k] -= c * vjI[k]; }
-        }
-      }
-      const nb = Math.sqrt(hbNorm(wR, wI));
-      this.beta.push(nb);
-      this.iter++;
-      if (nb < 1e-12 || this.iter >= m){
-        this.done = true;
-        this._extract();
-      } else {
-        for (let k = 0; k < dim; k++){ wR[k] /= nb; }
-        this._nextR = wR; this._nextI = this.zeroI;
-      }
-    }
-    return { iter: this.iter, done: this.done, energy: this.energy };
-  }
-  _extract(){
-    const m = this.alpha.length;
-    const T = [];
-    for (let i = 0; i < m; i++){ T.push(new Float64Array(m)); T[i][i] = this.alpha[i]; }
-    for (let i = 0; i + 1 < m; i++){ T[i][i + 1] = this.beta[i]; T[i + 1][i] = this.beta[i]; }
-    const { val, vec } = jacobiEigen(T, 40);
-    let imin = 0;
-    for (let i = 1; i < m; i++) if (val[i] < val[imin]) imin = i;
-    this.energy = val[imin];
-    const dim = this.sec.dim;
-    const re = new Float64Array(dim);
-    for (let j = 0; j < m; j++){
-      const c = vec[j][imin];
-      if (c === 0) continue;
-      const vjR = this.V[j][0];
-      for (let k = 0; k < dim; k++) re[k] += c * vjR[k];
-    }
-    const nn = Math.sqrt(hbNorm(re, this.zeroI));
-    for (let k = 0; k < dim; k++) re[k] /= nn;
-    this.re = re;
-    this.im = new Float64Array(dim);      /* 实模式：虚部恒 0（下游仍拿到一个合法数组） */
-  }
+  step(n = 1){ super.step(n); return { iter: this.iter, done: this.done, energy: this.energy }; }
 }
 
 /* ---------- Krylov 指数：exp(−iH·dt)ψ（m 步 Lanczos + 三对角本征分解） ---------- */
 export function hbKrylovExp(sec, re, im, t, U, dt, m = 12){
-  const dim = sec.dim;
-  const nrm = Math.sqrt(hbNorm(re, im));
-  if (nrm < 1e-300) return { re: Float64Array.from(re), im: Float64Array.from(im) };
-  let curR = Float64Array.from(re, v => v / nrm), curI = Float64Array.from(im, v => v / nrm);
-  const Vs = [], Ws = [], alpha = [], beta = [];
-  const tmpR = new Float64Array(dim), tmpI = new Float64Array(dim);
-  let steps = 0;
-  for (let j = 0; j < m; j++){
-    Vs.push(curR); Ws.push(curI);
-    hbMatvec(sec, curR, curI, tmpR, tmpI, t, U);
-    const a = hbDot(curR, curI, tmpR, tmpI);
-    alpha.push(a);
-    const prevR = j > 0 ? Vs[j - 1] : null, prevI = j > 0 ? Ws[j - 1] : null;
-    const bprev = beta.length ? beta[beta.length - 1] : 0;
-    for (let k = 0; k < dim; k++){
-      tmpR[k] -= a * curR[k]; tmpI[k] -= a * curI[k];
-      if (prevR){ tmpR[k] -= bprev * prevR[k]; tmpI[k] -= bprev * prevI[k]; }
-    }
-    const nb = Math.sqrt(hbNorm(tmpR, tmpI));
-    steps = j + 1;
-    if (nb < 1e-13) break;                 /* 不变子空间 */
-    beta.push(nb);
-    curR = new Float64Array(dim); curI = new Float64Array(dim);
-    for (let k = 0; k < dim; k++){ curR[k] = tmpR[k] / nb; curI[k] = tmpI[k] / nb; }
-  }
-  const T = [];
-  for (let i = 0; i < steps; i++){ T.push(new Float64Array(steps)); T[i][i] = alpha[i]; }
-  for (let i = 0; i + 1 < steps; i++){ T[i][i + 1] = beta[i]; T[i + 1][i] = beta[i]; }
-  const { val, vec } = jacobiEigen(T, 40);
-  /* c_j = Σ_k V[j][k]·V[0][k]·e^{−iλ_k dt}：V[0][k]=⟨u_k|v_0⟩ 是初态在第 k 个
-     本征矢上的投影——漏掉它系数不构成正交变换，范数会指数爆炸（R73 首版
-     50 步涨到 1e53，Taylor 对照 maxdiff 2.3）。 */
-  const cr = new Float64Array(steps), ci = new Float64Array(steps);
-  for (let k = 0; k < steps; k++){
-    const ph = -val[k] * dt, cp = Math.cos(ph), sp = Math.sin(ph);
-    const w0 = vec[0][k];
-    for (let j = 0; j < steps; j++){ const vjk = vec[j][k] * w0; cr[j] += vjk * cp; ci[j] += vjk * sp; }
-  }
-  const outR = new Float64Array(dim), outI = new Float64Array(dim);
-  for (let j = 0; j < steps; j++){
-    const wr = nrm * cr[j], wi = nrm * ci[j];
-    const vr = Vs[j], vi = Ws[j];
-    for (let k = 0; k < dim; k++){
-      outR[k] += wr * vr[k] - wi * vi[k];
-      outI[k] += wr * vi[k] + wi * vr[k];
-    }
-  }
-  return { re: outR, im: outI };
+  /* 实现搬进 edbase.js（与自旋链页共用）：归一化 → m 步三项递推 → 三对角本征分解 →
+     ψ' = Σ_j c_j V_j，c_j = Σ_k V[j][k]·V[0][k]·e^{−iλ_k dt}。 */
+  return edKrylovExp(sec.dim, (ar, ai, br, bi) => hbMatvec(sec, ar, ai, br, bi, t, U), re, im, dt, m, hbEig);
 }
 
 /* ---------- 对称矩阵**特征值**（Householder 三对角化 + 隐式 QL，O(n³/3)） ----------

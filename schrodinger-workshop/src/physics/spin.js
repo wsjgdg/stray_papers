@@ -23,6 +23,13 @@
  *   • 临界纠缠：开边界 XXX 半链熵 S ≈ (1/6)ln L + const（c=1）
  * ========================================================================== */
 
+import { EdLanczosTask, edGramEntropy, edKrylovExp } from './edbase.js';
+
+/* 稠密小矩阵的「只求特征值+特征向量」封装：Ritz 与 Krylov 都要它。
+   放在这里是因为两个模型各自的稠密解法不同（本页 spJacobi 是满 sweep 的
+   Jacobi，哈伯德页 jacobiEigen 的 sweep 上限是 40）。 */
+const spEig = T => { const r = spJacobi(T); return { val: r.values, vec: r.vectors }; };
+
 /* ---------- 基：固定 Sᶻ 扇区（L 位掩码，1 = ↑） ---------- */
 export function spPopcount(x){
   x = x - ((x >> 1) & 0x55555555);
@@ -262,38 +269,8 @@ export function spEntropyAt(sec, re, im, cut, symEigVals){
     const o = (mask & (nL - 1)) * nR + (mask >> cut);
     Ar[o] = re[k]; Ai[o] = im[k];
   }
-  return schmidtEntropy(Ar, Ai, nL, nR, symEigVals);
-}
-/* 系数矩阵 A（rows×cols，行主序）：Gram = A A†（rows≤cols）或 A†A（否则），
-   两者非零谱相同 ⟹ 取较小一侧，代价 O(n²·m)。复矩阵用实嵌入 [[Re,−Im],[Im,Re]]。 */
-function schmidtEntropy(Ar, Ai, rows, cols, symEigVals){
-  const byRow = rows <= cols;
-  const n = byRow ? rows : cols;
-  const m = byRow ? cols : rows;
-  const n2 = 2 * n;
-  const M = Array.from({ length: n2 }, () => new Float64Array(n2));
-  /* 行主序的步长恒为 cols（不是 m！m 在 byRow=false 时是**行数**） */
-  const at = (i, c) => (byRow ? i * cols + c : c * cols + i);
-  for (let i = 0; i < n; i++){
-    for (let j = i; j < n; j++){
-      let rr = 0, ri = 0;
-      for (let c = 0; c < m; c++){
-        const a = at(i, c), b = at(j, c);
-        rr += Ar[a] * Ar[b] + Ai[a] * Ai[b];
-        ri += Ai[a] * Ar[b] - Ar[a] * Ai[b];
-      }
-      M[i][j] = rr; M[i][j + n] = -ri; M[i + n][j] = ri; M[i + n][j + n] = rr;
-      M[j][i] = rr; M[j][i + n] = -ri; M[j + n][i] = ri; M[j + n][i + n] = rr;
-    }
-  }
-  const vals = Array.from(symEigVals(M)).sort((a, b) => b - a);
-  let S = 0;
-  const spectrum = [];
-  for (let i = 0; i < vals.length; i += 2){
-    const lam = vals[i];
-    if (lam > 1e-13){ S -= lam * Math.log(lam); spectrum.push(lam); }
-  }
-  return { S, spectrum: spectrum.slice(0, 12), sum: spectrum.reduce((a, b) => a + b, 0) };
+  /* 系数矩阵交给公共内核（edGramEntropy 就是这里原来的实现，见 edbase.js） */
+  return edGramEntropy(Ar, Ai, nL, nR, symEigVals);
 }
 export function spEntropy(sec, re, im, symEigVals){ return spEntropyAt(sec, re, im, sec.L >> 1, symEigVals); }
 export function spEntropyProfile(sec, re, im, symEigVals){
@@ -318,61 +295,11 @@ export function spStructureFactor(sec, zz){
   return out;
 }
 
-/* ---------- 演化：Krylov 指数 exp(−iH dt)ψ ---------- */
+/* ---------- 演化：Krylov 指数 exp(−iH dt)ψ ----------
+   实现搬进 edbase.js（与哈伯德页共用）：归一化 → m 步三项递推 → 三对角本征分解 →
+   ψ' = Σ_j c_j V_j。本页只提供 matvec 与稠密本征解法。 */
 export function spKrylovExp(sec, re, im, dt, m = 12){
-  const dim = sec.dim;
-  const Vr = [re], Vi = [im];
-  const ar = new Float64Array(dim), ai = new Float64Array(dim);
-  const alpha = [], beta = [];
-  spMatvec(sec, re, im, ar, ai);
-  alpha.push(spDot(re, im, ar, ai));                /* 实数（H 实对称 ⟹ Im=0） */
-  for (let j = 1; j < m; j++){
-    const pr = Vr[j - 1], pi = Vi[j - 1];
-    const b = alpha[j - 1];
-    let nr = ar.slice(), ni = ai.slice();
-    for (let k = 0; k < dim; k++){ nr[k] -= b * pr[k]; ni[k] -= b * pi[k]; }
-    if (j > 1){
-      const b2 = beta[j - 2];
-      const qr = Vr[j - 2], qi = Vi[j - 2];
-      for (let k = 0; k < dim; k++){ nr[k] -= b2 * qr[k]; ni[k] -= b2 * qi[k]; }
-    }
-    const nrm = Math.sqrt(spNorm(nr, ni));
-    if (!(nrm > 1e-14)) break;
-    beta.push(nrm);
-    for (let k = 0; k < dim; k++){ nr[k] /= nrm; ni[k] /= nrm; }
-    Vr.push(nr); Vi.push(ni);
-    spMatvec(sec, nr, ni, ar, ai);
-    alpha.push(spDot(nr, ni, ar, ai));
-  }
-  /* 小矩阵 (m×m) 的指数作用：先对 H_m 做 eigendecomposition（实对称） */
-  const n = alpha.length;
-  const Hm = Array.from({ length: n }, () => new Float64Array(n));
-  for (let i = 0; i < n; i++){
-    Hm[i][i] = alpha[i];
-    if (i + 1 < n){ Hm[i][i + 1] = beta[i]; Hm[i + 1][i] = beta[i]; }
-  }
-  const { values, vectors } = spJacobi(Hm);
-  /* ψ(t+dt) = Σ_i e^{−i λ_i dt} u_i (u_i·e_1) */
-  const outR = new Float64Array(dim), outI = new Float64Array(dim);
-  for (let i = 0; i < n; i++){
-    const c = vectors[0][i];                        /* ⟨u_i | e_1⟩ */
-    if (Math.abs(c) < 1e-18) continue;
-    const ph = -values[i] * dt;
-    const cr = Math.cos(ph) * c, ci = Math.sin(ph) * c;
-    for (let k = 0; k < n; k++){
-      const ur = vectors[k][i], ui = 0;             /* H_m 实对称 ⟹ 特征向量取实 */
-      const wr = cr * ur - ci * ui, wi = cr * ui + ci * ur;
-      outR[k] += wr; outI[k] += wi;
-    }
-  }
-  /* 回到全长向量：ψ' = Σ_k out_k V_k */
-  const fr = new Float64Array(dim), fi = new Float64Array(dim);
-  for (let k = 0; k < n; k++){
-    const cr = outR[k], ci = outI[k];
-    const vr = Vr[k], vi = Vi[k];
-    for (let q = 0; q < dim; q++){ fr[q] += cr * vr[q] - ci * vi[q]; fi[q] += cr * vi[q] + ci * vr[q]; }
-  }
-  return { re: fr, im: fi };
+  return edKrylovExp(sec.dim, (ar, ai, br, bi) => spMatvec(sec, ar, ai, br, bi), re, im, dt, m, spEig);
 }
 
 /* ---------- 稠密参考：spJacobi（L≤10 的整块对角化，测试与「精确谱」用） ---------- */
@@ -437,87 +364,16 @@ export function spDenseEig(sec){
 }
 
 /* ---------- 基态：Lanczos（实模式，按内存预算裁 m） ---------- */
-export class SpGsTask {
+/* 基态任务 = 公共 Lanczos + 本页的 matvec / Ritz 解法。
+   H 实对称 ⟹ Krylov 基虚部恒 0，公共内核只存实部；`fullOrtho` 关着（三项递推
+   已够：L=16 的残差仍在 1e-13），要比哈伯德页省 O(m²·dim)。 */
+export class SpGsTask extends EdLanczosTask {
   constructor(sec, opts = {}){
+    super(sec.dim, (re, im, outR, outI) => spMatvec(sec, re, im, outR, outI),
+      { ...opts, eig: spEig });
     this.sec = sec;
-    const budget = (opts.maxMemMB ?? 480) * 1048576;
-    this.mMax = Math.max(8, Math.floor(budget / (sec.dim * 8)));
-    this.m = Math.min(opts.m ?? 80, this.mMax);
-    this.mCapped = this.m < (opts.m ?? 80);
-    const dim = sec.dim;
-    const re = new Float64Array(dim), im = new Float64Array(dim);
-    let s = opts.seed ?? 12345;
-    for (let k = 0; k < dim; k++){ s = (s * 16807) % 2147483647; re[k] = (s / 2147483647) - 0.5; }
-    const nn = Math.sqrt(spNorm(re, im));
-    for (let k = 0; k < dim; k++) re[k] /= nn;
-    this.re = re; this.im = im;
-    this.V = []; this.alpha = []; this.beta = [];
-    this.iter = 0; this.done = false; this.energy = NaN;
   }
-  step(n = 1){
-    const { sec, V, alpha, beta } = this;
-    const dim = sec.dim;
-    for (let it = 0; it < n && !this.done; it++){
-      const pr = new Float64Array(dim), pi = new Float64Array(dim);
-      if (V.length === 0) V.push({ re: Float64Array.from(this.re), im: Float64Array.from(this.im) });
-      else V.push(this._nextR);
-      const cur = V[V.length - 1];
-      const ar = new Float64Array(dim), ai = new Float64Array(dim);
-      spMatvec(sec, cur.re, cur.im, ar, ai);
-      alpha.push(spDot(cur.re, cur.im, ar, ai));
-      for (let k = 0; k < dim; k++){
-        ar[k] -= alpha[alpha.length - 1] * cur.re[k];
-        ai[k] -= alpha[alpha.length - 1] * cur.im[k];
-        if (V.length > 1){
-          const pv = V[V.length - 2];
-          ar[k] -= beta[beta.length - 1] * pv.re[k];
-          ai[k] -= beta[beta.length - 1] * pv.im[k];
-        }
-      }
-      const nb = Math.sqrt(spNorm(ar, ai));
-      this.iter++;
-      if (nb < 1e-13 || this.iter >= this.m){
-        this.done = true;
-        break;
-      }
-      beta.push(nb);
-      const nr = new Float64Array(dim), ni = new Float64Array(dim);
-      for (let k = 0; k < dim; k++){ nr[k] = ar[k] / nb; ni[k] = ai[k] / nb; }
-      this._nextR = { re: nr, im: ni };
-    }
-    if (this.done) this._finish();
-    return this;
-  }
-  _ritz(alpha, beta){
-    const n = Math.min(alpha.length, beta.length + 1);
-    const A = Array.from({ length: n }, () => new Float64Array(n));
-    for (let i = 0; i < n; i++){
-      A[i][i] = alpha[i];
-      if (i + 1 < n){ A[i][i + 1] = beta[i]; A[i + 1][i] = beta[i]; }
-    }
-    return spJacobi(A);
-  }
-  _finish(){
-    const { V, alpha, beta, sec } = this;
-    const n = Math.min(alpha.length, V.length);
-    const { values, vectors } = this._ritz(alpha, beta);
-    /* 基态 = Ritz 向量（最小本征值对应的系数） */
-    const dim = sec.dim;
-    let best = 0;
-    for (let i = 1; i < values.length; i++) if (values[i] < values[best]) best = i;
-    const rr = new Float64Array(dim), ri = new Float64Array(dim);
-    for (let k = 0; k < n; k++){
-      const c = vectors[k][best];
-      if (Math.abs(c) < 1e-16) continue;
-      const v = V[k];
-      for (let q = 0; q < dim; q++){ rr[q] += c * v.re[q]; ri[q] += c * v.im[q]; }
-    }
-    const nn = Math.sqrt(spNorm(rr, ri)) || 1;
-    for (let q = 0; q < dim; q++){ rr[q] /= nn; ri[q] /= nn; }
-    this.re = rr; this.im = ri;
-    this.energy = spEnergy(sec, rr, ri);
-    this.residual = spResidual(sec, rr, ri, this.energy);
-  }
+  step(n = 1){ super.step(n); return this; }
 }
 
 /* ---------- 预设（页面用；纯数据） ---------- */
