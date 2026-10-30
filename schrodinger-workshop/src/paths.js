@@ -360,13 +360,19 @@ export class PathsApp {
       }
       if (drag) fromEvent(e);
     });
-    this.on(cv, 'pointerup', () => { this._orbit = null; drag = false; this.finishYGesture(); });
-    this.on(cv, 'pointercancel', () => { this._orbit = null; drag = false; this.finishYGesture(); });
+    this.on(cv, 'pointerup', () => {
+      const orbited = !!this._orbit; this._orbit = null; drag = false; this.finishYGesture();
+      if (orbited) this.syncCameraUrl();
+    });
+    this.on(cv, 'pointercancel', () => {
+      const orbited = !!this._orbit; this._orbit = null; drag = false; this.finishYGesture();
+      if (orbited) this.syncCameraUrl();
+    });
     this.on(cv, 'wheel', e => {
       if (this.state.proj !== '3d') return;
       e.preventDefault();
       this.cam = hbZoom(this.cam, Math.exp((e.deltaY || 0) * 0.0012));
-      this.cam.dist = clamp(this.cam.dist, 4.8, 16); this.drawMain();
+      this.cam.dist = clamp(this.cam.dist, 4.8, 16); this.drawMain(); this.syncCameraUrl();
     }, { passive: false });
     this.on(cv, 'dblclick', () => { if (this.state.proj === '3d') this.resetCam(); });
     this.on(window, 'keydown', e => {
@@ -380,14 +386,24 @@ export class PathsApp {
     });
   }
 
+  syncCameraUrl(){
+    const q = new URLSearchParams(location.search);
+    if (this.state.proj === '3d'){
+      q.set('proj', '3d');
+      q.set('cam', [this.cam.yaw, this.cam.pitch, this.cam.dist].map(v => (+v).toFixed(3)).join(','));
+    } else { q.delete('proj'); q.delete('cam'); }
+    const query = q.toString();
+    try { history.replaceState(history.state, '', location.pathname + (query ? '?' + query : '') + location.hash); }
+    catch (_){ /* file:// 环境不支持 History API 时仍保留当前相机 */ }
+  }
   setProj(proj){
     this.state.proj = proj === '3d' ? '3d' : '2d'; this._orbit = null;
     const stage = this.q('#pvStage'); if (stage) stage.dataset.proj = this.state.proj;
     const cv = this.q('#pvMain'); if (cv) cv.style.cursor = this.state.proj === '3d' ? 'grab' : 'crosshair';
-    this.syncPanel(); this._needDraw = true; this.drawMain();
+    this.syncPanel(); this._needDraw = true; this.drawMain(); this.syncCameraUrl();
     return this.state.proj;
   }
-  resetCam(){ this.cam = pathCamDefault(); this.drawMain(); return { ...this.cam }; }
+  resetCam(){ this.cam = pathCamDefault(); this.drawMain(); this.syncCameraUrl(); return { ...this.cam }; }
 
   applyPreset(name){
     const p = PI_PRESETS[name];
@@ -795,7 +811,10 @@ export class PathsApp {
     const g = cv.getContext('2d'), dpr = this.view.dpr || 1, W = cv.width, H = cv.height;
     g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H); g.scale(dpr, dpr);
     const w = W / dpr, h = H / dpr, c = this.cfg(), span = c.L1 + c.L2;
-    const sx = 4.8 / Math.max(1, span), laneMax = 0.92, eye = hbCamBasis(this.cam);
+    const slitValues = piSlits(c).slice().sort((a, b) => a - b), yReach = Math.max(this.view.yFov, Math.abs(this.state.Y),
+      ...slitValues.map(y => Math.abs(y) + c.w / 2), 1.5 * c.W, 1);
+    /* fit both longitudinal and transverse extents, preserving physical x:y aspect */
+    const sx = Math.min(4.8 / Math.max(1, span), 1.75 / yReach), laneMax = 0.92, eye = hbCamBasis(this.cam);
     const focal = hbFocal(w), { f, r, u } = eye;
     const project = p => {
       const dx = p.x - eye.eye.x, dy = p.y - eye.eye.y, dz = p.z - eye.eye.z;
@@ -805,23 +824,34 @@ export class PathsApp {
     };
     const world = (x, y, lane, t) => ({ x: (x - span / 2) * sx, y: y * sx,
       z: lane * 4 * Math.max(0, Math.min(1, t)) * (1 - Math.max(0, Math.min(1, t))) });
+    const slitCount = Math.max(1, slitValues.length), groupRange = laneMax * 0.68;
+    const groupGap = slitCount > 1 ? 2 * groupRange / (slitCount - 1) : 0;
+    const localHalf = slitCount > 1 ? Math.min(0.26, groupGap * 0.23) : laneMax * 0.42;
+    const totals = new Map(), seen = new Map();
+    for (const sample of this.samples) totals.set(sample.slit, (totals.get(sample.slit) || 0) + 1);
     const paths = [];
-    for (let i = 0; i < this.samples.length; i++){
-      const s = this.samples[i], lane = this.samples.length > 1
-        ? (2 * i / (this.samples.length - 1) - 1) * laneMax : 0;
+    for (const s of this.samples){
+      const si = Math.max(0, slitValues.findIndex(y => Math.abs(y - s.slit) < 1e-9));
+      const count = totals.get(s.slit) || 1, rank = seen.get(s.slit) || 0; seen.set(s.slit, rank + 1);
+      const group = slitCount > 1 ? -groupRange + groupGap * si : 0;
+      const local = count > 1 ? (2 * rank / (count - 1) - 1) * localHalf : 0;
+      const lane = group + local;
       const a = polyline(0, 0, c.L1, s.xi, s.seg1, 10);
       const b = polyline(c.L1, s.xi, span, this.state.Y, s.seg2, 12);
       const pts = [];
       for (const [x, y] of a) pts.push(project(world(x, y, lane, x / span)));
       for (let k = 1; k < b.length; k++) pts.push(project(world(b[k][0], b[k][1], lane, b[k][0] / span)));
       let depth = 0; for (const p of pts) depth += p.depth;
-      paths.push({ pts, depth: depth / Math.max(1, pts.length), phase: s.phase });
+      paths.push({ pts, depth: depth / Math.max(1, pts.length), phase: s.phase, slit: s.slit, lane });
     }
     paths.sort((a, b) => b.depth - a.depth);
+    const minDepth = paths.length ? Math.min(...paths.map(p => p.depth)) : 0;
+    const maxDepth = paths.length ? Math.max(...paths.map(p => p.depth)) : 0;
     for (const path of paths){
       const hue = ((path.phase / (2 * Math.PI)) % 1 + 1) % 1;
-      g.strokeStyle = 'hsla(' + Math.round(182 + hue * 128) + ',82%,65%,.34)';
-      g.lineWidth = 0.85; g.beginPath();
+      const near = 1 - (path.depth - minDepth) / Math.max(1e-9, maxDepth - minDepth);
+      g.strokeStyle = 'hsla(' + Math.round(182 + hue * 128) + ',82%,65%,' + (0.12 + 0.27 * near).toFixed(3) + ')';
+      g.lineWidth = 0.72 + 0.18 * near; g.beginPath();
       path.pts.forEach((p, k) => k ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y));
       g.stroke();
     }
@@ -829,7 +859,7 @@ export class PathsApp {
       const p = project(a), q = project(b);
       g.strokeStyle = color; g.lineWidth = width; g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.stroke();
     };
-    const yEdge = Math.max(1.15, this.view.yFov * sx), zEdge = laneMax * 1.08;
+    const yEdge = Math.max(1.15, yReach * sx * 1.08), zEdge = laneMax * 1.08;
     /* 仅画轻量线框，不用不透明墙面覆盖路径。 */
     for (const x of [-span / 2 * sx, span / 2 * sx]){
       line({ x, y: -yEdge, z: -zEdge }, { x, y: yEdge, z: -zEdge }, 'rgba(154,167,189,.26)');
@@ -853,8 +883,12 @@ export class PathsApp {
     const source = project(world(0, c.ys, 0, 0)), detector = project(world(span, this.state.Y, 0, 1));
     g.fillStyle = '#f87171'; g.beginPath(); g.arc(source.x, source.y, 3.2, 0, 6.2832); g.fill();
     g.fillStyle = '#d946ef'; g.beginPath(); g.arc(detector.x, detector.y, 3.2, 0, 6.2832); g.fill();
+    const laneGroups = slitValues.map(slit => {
+      const lanes = paths.filter(p => Math.abs(p.slit - slit) < 1e-9).map(p => p.lane);
+      return { slit, count: lanes.length, min: lanes.length ? Math.min(...lanes) : 0, max: lanes.length ? Math.max(...lanes) : 0 };
+    });
     this._3dDrawInfo = { paths: paths.length, vertices: paths.reduce((n, p) => n + p.pts.length, 0),
-      finite: paths.every(p => p.pts.every(q => Number.isFinite(q.x) && Number.isFinite(q.y) && Number.isFinite(q.depth))) };
+      groups: laneGroups.length, laneGroups, yReach, finite: paths.every(p => p.pts.every(q => Number.isFinite(q.x) && Number.isFinite(q.y) && Number.isFinite(q.depth))) };
   }
 
   drawSpiral(){
