@@ -62,6 +62,9 @@ interface AppStore {
   setSearchQuery: (q: string) => void;
   setActiveCategory: (c: string) => void;
   setViewMode: (m: "grid" | "list") => void;
+  /** 排序模式（持久化：刷新后保持浏览上下文） */
+  sortMode: "default" | "rating" | "name" | "distance" | "ticket";
+  setSortMode: (m: "default" | "rating" | "name" | "distance" | "ticket") => void;
   resetSpots: () => void;
   clearAllSpots: () => void;
 
@@ -203,6 +206,13 @@ export const useAppStore = create<AppStore>()(
       clearRecentSearches: () => set({ recentSearches: [] }),
       setActiveCategory: (c) => set({ activeCategory: c }),
       setViewMode: (m) => set({ viewMode: m }),
+      sortMode: "default" as
+        | "default"
+        | "rating"
+        | "name"
+        | "distance"
+        | "ticket",
+      setSortMode: (m) => set({ sortMode: m }),
       // 恢复完整库（手工精选 + 城市包），保留仍指向库内条目的收藏/行程
       resetSpots: () =>
         set((s) => ({
@@ -222,6 +232,11 @@ export const useAppStore = create<AppStore>()(
           favorites: [],
           customPrices: {},
           trip: [],
+          tripDaySplit: [],
+          recentViews: [],
+          recentSearches: [],
+          spotNotes: {},
+          dissuasionRecords: [],
         }),
 
       // ═══ 用户改价 ═══
@@ -350,9 +365,11 @@ export const useAppStore = create<AppStore>()(
         st.trip = (st.trip ?? []).filter((id) => valid.has(id));
         return st as never;
       },
+      // 库条目（5997 条）不进持久化——每次交互都全量序列化会卡输入；重hydration 时由
+      // merge 从 LIBRARY_SPOTS 重建，用户自定义条目（JSON 导入）原样保留。
       partialize: (s) => ({
         favorites: s.favorites,
-        spots: s.spots,
+        spots: s.spots.filter((x) => !libIdSet.has(x.id)),
         dissuasionRecords: s.dissuasionRecords,
         customPrices: s.customPrices,
         spotNotes: s.spotNotes,
@@ -368,7 +385,19 @@ export const useAppStore = create<AppStore>()(
         activeCategory: s.activeCategory,
         cityFilter: s.cityFilter,
         levelFilter: s.levelFilter,
+        sortMode: s.sortMode,
       }),
+      // 每次 rehydration 都把库条目从 LIBRARY_SPOTS 重建（含版本不变时），
+      // 保证扩库/字段升级自动到达用户；persisted 里的库条目副本直接丢弃。
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as typeof current & { spots?: Spot[] };
+        const custom = (p.spots ?? []).filter((x) => !libIdSet.has(x.id));
+        return {
+          ...current,
+          ...p,
+          spots: [...LIBRARY_SPOTS, ...custom],
+        };
+      },
     },
   ),
 );

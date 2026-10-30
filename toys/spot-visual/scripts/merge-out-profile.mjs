@@ -38,6 +38,13 @@ const ACCESSIBILITY_SET = new Set([
   "停车场",
 ]);
 
+/** 原子写入：先写临时文件再 rename，避免并行会话读到截断的中间态（VERIFY-FEEDBACK 避坑点 3） */
+function writeAtomic(file, text) {
+  const tmp = file + ".tmp";
+  fs.writeFileSync(tmp, text, "utf8");
+  fs.renameSync(tmp, file);
+}
+
 const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 if (!args.length) {
   console.error(
@@ -196,7 +203,7 @@ for (const file of args) {
   console.log(`✓ 批${m[0]}: ${out.items.length} 条验收通过并入`);
 }
 
-fs.writeFileSync(MERGED, JSON.stringify(merged, null, 2), "utf8");
+writeAtomic(MERGED, JSON.stringify(merged, null, 2));
 
 const body = Object.fromEntries(
   Object.entries(merged).map(([k, v]) => {
@@ -229,7 +236,7 @@ export interface SpotProfile {
 
 export const SPOT_PROFILES: Record<string, SpotProfile> = ${JSON.stringify(body, null, 2)};
 `;
-fs.writeFileSync(OUT_TS, outTs, "utf8");
+writeAtomic(OUT_TS, outTs);
 
 const lows = Object.values(merged).filter((v) => v.low).length;
 console.log(

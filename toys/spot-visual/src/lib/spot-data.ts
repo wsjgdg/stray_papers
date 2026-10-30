@@ -1411,6 +1411,9 @@ export function getSpotProfile(id: string): SpotProfile | undefined {
   return SPOT_PROFILES[id];
 }
 
+/** getSpotProfile 的短别名（指挥侧读取测试约定此名） */
+export const profileOf = getSpotProfile;
+
 /** 建议游玩时长（小时）：档案收录优先，按分类/等级兜底 */
 export function suggestedVisitHours(spot: Spot): number {
   const p = SPOT_PROFILES[spot.id];

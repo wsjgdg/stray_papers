@@ -26,6 +26,13 @@ const MAX = 110;
 const FORBIDDEN =
   /门票|票价|人均|性价比|开放时间|营业时间|闭园|售票|预约|限流|实名|抢票|电话|官网|二维码|最佳季节|建议游玩|打卡|必去|不虚此行/;
 
+/** 原子写入：先写临时文件再 rename，避免并行会话读到截断的中间态（VERIFY-FEEDBACK 避坑点 3） */
+function writeAtomic(file, text) {
+  const tmp = file + ".tmp";
+  fs.writeFileSync(tmp, text, "utf8");
+  fs.renameSync(tmp, file);
+}
+
 const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 if (!args.length) {
   console.error(
@@ -117,7 +124,7 @@ for (const file of args) {
 }
 
 // 累积存档
-fs.writeFileSync(MERGED, JSON.stringify(merged, null, 2), "utf8");
+writeAtomic(MERGED, JSON.stringify(merged, null, 2));
 
 // 生成读取表（键 = 库条目 id）
 const outGen = Object.fromEntries(
@@ -132,7 +139,7 @@ export const OUTSOURCE_DESCRIPTIONS: Record<string, string> = ${JSON.stringify(
   2,
 )};
 `;
-fs.writeFileSync(OUT_TS, banner, "utf8");
+writeAtomic(OUT_TS, banner);
 
 const lows = Object.values(merged).filter((v) => v.low).length;
 console.log(

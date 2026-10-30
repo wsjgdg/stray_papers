@@ -85,6 +85,13 @@ export async function downloadTripCard(input: TripCardInput) {
   g.fillStyle = "#065F46";
   g.font = "700 28px system-ui, sans-serif";
   g.fillText(`估算合计 约¥${estTotal}`, 48, y + 20);
+  // 截断提示：8 站以上的行程卡上不显示全部站点，明示而非静默丢弃
+  const omitted = input.spots.length - list.length;
+  if (omitted > 0) {
+    g.fillStyle = "#B91C1C";
+    g.font = "600 20px system-ui, sans-serif";
+    g.fillText(`+${omitted} 站未在卡上展示（共 ${input.spots.length} 站，详见行程单）`, 48, y + 56);
+  }
   g.fillStyle = "#78716C";
   g.font = "400 18px system-ui, sans-serif";
   g.fillText("价格为按项目名推断的估算值，实际以景区公示为准", 48, y + 52);

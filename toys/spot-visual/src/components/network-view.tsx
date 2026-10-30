@@ -42,12 +42,24 @@ function provinceOf(address: string): string | null {
 }
 
 export default function NetworkView() {
-  const { spots, setSelectedSpot } = useAppStore();
+  const {
+    spots,
+    setSelectedSpot,
+    cityFilter,
+    levelFilter,
+    searchQuery,
+    setCityFilter,
+    setLevelFilter,
+    setSearchQuery,
+  } = useAppStore();
 
   // 数据范围：默认精选（top400 本地图 + 手工 30 + 预约标注），全部 = 统一库全量
   const [scope, setScope] = useState<"curated" | "all">("curated");
-  const visibleSpots = useMemo(
-    () =>
+
+  // 联动主页面筛选（省份/等级/搜索持久化在 store）：切过来不再上下文断裂
+  const coupled = Boolean(cityFilter || levelFilter || searchQuery.trim());
+  const visibleSpots = useMemo(() => {
+    let list =
       scope === "all"
         ? spots
         : spots.filter(
@@ -55,9 +67,19 @@ export default function NetworkView() {
               /^\/spots\/pois\//.test(s.image || "") || // top400 本地图
               /^\d+$/.test(s.id) || // 手工 30 条
               !!s.reservation, // 需预约的重点景区
-          ),
-    [spots, scope],
-  );
+          );
+    if (cityFilter)
+      list = list.filter((s) => s.address.includes(cityFilter));
+    if (levelFilter) list = list.filter((s) => s.level === levelFilter);
+    const q = searchQuery.trim().toLowerCase();
+    if (q)
+      list = list.filter(
+        (s) =>
+          s.name.toLowerCase().includes(q) ||
+          s.address.toLowerCase().includes(q),
+      );
+    return list;
+  }, [spots, scope, cityFilter, levelFilter, searchQuery]);
 
   // ═══ 两级下潜：null = 全国视图，否则为省级简称（与 PROVINCE_ADCODE 同键） ═══
   const [drill, setDrill] = useState<string | null>(null);
@@ -327,6 +349,38 @@ export default function NetworkView() {
             ? `${drill} · ${provinceSpots.length} 个景点`
             : `${provinceAgg.length} 省 · ${matchedTotal} 个景点`}
         </p>
+        {coupled && (
+          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+            <span className="text-[10px] text-gray-400">联动筛选</span>
+            {cityFilter && (
+              <button
+                onClick={() => setCityFilter(null)}
+                title="点击清除"
+                className="px-1.5 py-0.5 rounded-md bg-sky-50 border border-sky-200 text-[10px] text-sky-700"
+              >
+                {cityFilter} ×
+              </button>
+            )}
+            {levelFilter && (
+              <button
+                onClick={() => setLevelFilter(null)}
+                title="点击清除"
+                className="px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-[10px] text-amber-700"
+              >
+                {levelFilter} ×
+              </button>
+            )}
+            {searchQuery.trim() && (
+              <button
+                onClick={() => setSearchQuery("")}
+                title="点击清除"
+                className="px-1.5 py-0.5 rounded-md bg-gray-100 border border-gray-200 text-[10px] text-gray-600"
+              >
+                「{searchQuery.trim()}」 ×
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 图例：全国级只有聚合气泡；省级按分类着色 */}

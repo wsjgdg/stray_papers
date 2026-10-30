@@ -76,6 +76,7 @@ import {
   DISSUASION_TAGS,
   getPinyinKeys,
   quoteTicket,
+  suggestedVisitHours,
   getSpotProfile,
   TICKET_KEY,
   LIBRARY_STATS,
@@ -446,6 +447,7 @@ function Sidebar({
 function MobileHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
   const { activeView, spots, favorites, setActiveView } = useAppStore();
   const currentNav = NAV_ITEMS.find((n) => n.key === activeView);
+  const tabsRef = useRef<HTMLDivElement>(null);
   return (
     <header className="md:hidden sticky top-[52px] z-40 bg-white/80 backdrop-blur-md border-b border-gray-200/60">
       <div className="flex items-center justify-between h-14 px-4">
@@ -461,12 +463,23 @@ function MobileHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
         <div className="w-7" />
       </div>
       {/* Mobile nav tabs（横向滚动展示全部视图，与桌面侧栏对齐） */}
-      <div className="flex border-t border-gray-100 overflow-x-auto scrollbar-hide">
+      <div
+        ref={tabsRef}
+        className="flex border-t border-gray-100 overflow-x-auto scrollbar-hide"
+      >
         {NAV_ITEMS.map((item) => {
           const active = activeView === item.key;
           return (
             <button
               key={item.key}
+              ref={(el) => {
+                if (active && el)
+                  el.scrollIntoView({
+                    behavior: "smooth",
+                    inline: "center",
+                    block: "nearest",
+                  });
+              }}
               onClick={() => setActiveView(item.key)}
               className={`flex-1 min-w-0 py-2 text-[11px] font-medium text-center transition-colors shrink-0 ${active ? "text-emerald-700 border-b-2 border-emerald-600" : "text-gray-400"}`}
             >
@@ -941,14 +954,20 @@ function SpotDetailDialog() {
   const profile = getSpotProfile(spot.id);
   const shareSpot = async () => {
     const c = parseCoords(spot);
+    const tq = quoteTicket(spot);
     const nav = c
       ? `\n导航：https://uri.amap.com/marker?position=${c.lng.toFixed(6)},${c.lat.toFixed(6)}&name=${encodeURIComponent(spot.name)}`
       : "";
     const text =
       `【${spot.level ? `${spot.level} · ` : ""}${spot.name}】\n` +
       `地址：${spot.address}\n` +
+      (tq.price != null
+        ? `门票：¥${tq.price}${tq.source === "estimate" ? "（估）" : ""}\n` : "") +
+      (spot.rating ? `评分：${spot.rating.toFixed(1)}\n` : "") +
       (spot.openTime ? `开放时间：${spot.openTime}\n` : "") +
       (spot.tel ? `电话：${spot.tel}\n` : "") +
+      (spot.tel ? `电话：${spot.tel}\n` : "") +
+      (spot.website ? `官网：${spot.website}\n` : "") +
       (spot.reservation ? `预约：${spot.reservation}\n` : "") +
       `${nav}\n—— 来自「华夏探索」景点览胜`;
     try {
@@ -1767,6 +1786,18 @@ function CompareDialog({
           "—"
         ),
     },
+    {
+      label: "门票",
+      render: (s) => {
+        const q = quoteTicket(s);
+        if (q.price == null) return "—";
+        return `¥${q.price}${q.source === "estimate" ? "（估）" : ""}`;
+      },
+    },
+    {
+      label: "建议游玩",
+      render: (s) => `${suggestedVisitHours(s)} 小时`,
+    },
     { label: "地址", render: (s) => s.address },
     {
       label: "导航",
@@ -1804,7 +1835,7 @@ function CompareDialog({
                   />
                 ) : (
                   (() => {
-                    const theme = CATEGORY_THEME[a.category] || {
+                    const theme = CATEGORY_THEME[s.category] || {
                       from: "#F3F4F6",
                       to: "#E5E7EB",
                       icon: "📍",
@@ -2010,29 +2041,52 @@ function SpotsView() {
     return ["全部", ...Array.from(cats)];
   }, [spots]);
 
+  // 计数用的中间池：只按省份+搜索过滤（不含分类/等级自身维度），
+  // 让分类/等级 chips 的数字随其它筛选联动，而不是恒显全国数
+  const countPool = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    return spots.filter((s) => {
+      if (cityFilter && !s.address.includes(cityFilter)) return false;
+      if (!q) return true;
+      if (
+        s.name.toLowerCase().includes(q) ||
+        s.address.toLowerCase().includes(q) ||
+        s.description.toLowerCase().includes(q)
+      )
+        return true;
+      return (
+        /^[a-z]+$/i.test(q) &&
+        (() => {
+          const py = getPinyinKeys(s.name);
+          return py.full.includes(q) || py.initials.includes(q);
+        })()
+      );
+    });
+  }, [spots, cityFilter, searchQuery]);
+
   const categoryCounts = useMemo(() => {
-    const c: Record<string, number> = { 全部: spots.length };
-    spots.forEach((s) => {
+    const c: Record<string, number> = { 全部: countPool.length };
+    countPool.forEach((s) => {
       c[s.category] = (c[s.category] || 0) + 1;
     });
     return c;
-  }, [spots]);
+  }, [countPool]);
 
-  // 等级 chips 计数（当前分类/搜索/省份过滤后的池）
+  // 等级 chips 计数（与分类计数同一中间池，随省份/搜索联动）
   const levelCounts = useMemo(() => {
     const c: Record<string, number> = {};
-    spots.forEach((s) => {
+    countPool.forEach((s) => {
       if (s.level === "5A" || s.level === "4A")
         c[s.level] = (c[s.level] || 0) + 1;
     });
     return c;
-  }, [spots]);
+  }, [countPool]);
 
   // ═══ 排序：默认（库顺序）/ 评分 / 名称 / 距离 ═══
   // 距离依赖定位，userLoc 为空时自动回退默认顺序，不报错。
-  const [sortMode, setSortMode] = useState<
-    "default" | "rating" | "name" | "distance"
-  >("default");
+  // 排序模式在 store（持久化）：刷新后保持排序上下文
+  const sortMode = useAppStore((st) => st.sortMode);
+  const setSortMode = useAppStore((st) => st.setSortMode);
 
   // ═══ 离我最近排序（geolocation，拒绝授权优雅降级） ═══
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(
@@ -2051,7 +2105,7 @@ function SpotsView() {
   const toggleNearbySort = useCallback(() => {
     if (userLoc) {
       setUserLoc(null);
-      setSortMode((m) => (m === "distance" ? "default" : m));
+      if (sortMode === "distance") setSortMode("default");
       return;
     }
     if (!navigator.geolocation) {
@@ -2071,7 +2125,7 @@ function SpotsView() {
       },
       { timeout: 8000 },
     );
-  }, [userLoc]);
+  }, [userLoc, sortMode, setSortMode]);
 
   const filteredSpots = useMemo(() => {
     const list = spots.filter((s) => {
@@ -2102,6 +2156,15 @@ function SpotsView() {
       return [...list].sort(
         (a, b) =>
           (b.rating ?? -1) - (a.rating ?? -1) ||
+          a.name.localeCompare(b.name, "zh"),
+      );
+    }
+    // 门票价：档案/补录/估算统一走 quoteTicket，未收录沉底
+    if (sortMode === "ticket") {
+      return [...list].sort(
+        (a, b) =>
+          (quoteTicket(a).price ?? Number.POSITIVE_INFINITY) -
+            (quoteTicket(b).price ?? Number.POSITIVE_INFINITY) ||
           a.name.localeCompare(b.name, "zh"),
       );
     }
@@ -2460,6 +2523,7 @@ function SpotsView() {
             <option value="default">默认</option>
             <option value="rating">评分最高</option>
             <option value="distance">离我最近</option>
+            <option value="ticket">门票价（低→高）</option>
             <option value="name">名称</option>
           </select>
         </label>
@@ -2525,7 +2589,14 @@ function SpotsView() {
               variant="ghost"
               size="sm"
               className="gap-1.5 text-xs text-red-400 hover:text-red-600"
-              onClick={useAppStore.getState().clearAllSpots}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "将清空全部景点数据（含收藏/行程/备注/翻车记录），不可恢复。确定？",
+                  )
+                )
+                  useAppStore.getState().clearAllSpots();
+              }}
             >
               清空全部
             </Button>
@@ -2624,34 +2695,52 @@ function FavoritesView() {
     toggleFavorite,
     addToTrip,
     setActiveView,
+    spotNotes,
   } = useAppStore();
   const favSpots = useMemo(
     () => spots.filter((s) => favorites.includes(s.id)),
     [spots, favorites],
   );
+  const [favQuery, setFavQuery] = useState("");
   const [favCat, setFavCat] = useState("全部");
   const favCats = useMemo(() => {
     const cats = new Set(favSpots.map((s) => s.category));
     return ["全部", ...Array.from(cats)];
   }, [favSpots]);
-  const shownFavs = useMemo(
-    () =>
+  const shownFavs = useMemo(() => {
+    let list =
       favCat === "全部"
         ? favSpots
-        : favSpots.filter((s) => s.category === favCat),
-    [favSpots, favCat],
-  );
+        : favSpots.filter((s) => s.category === favCat);
+    const q = favQuery.trim().toLowerCase();
+    if (q)
+      list = list.filter(
+        (s) =>
+          s.name.toLowerCase().includes(q) ||
+          (() => {
+            const py = getPinyinKeys(s.name);
+            return py.full.includes(q) || py.initials.includes(q);
+          })(),
+      );
+    return list;
+  }, [favSpots, favCat, favQuery]);
   // 导出收藏清单为 txt（含等级/地址/开放时间/电话/高德导航链接），可直接发给别人
   const exportList = useCallback(() => {
     const lines = shownFavs.map((s, i) => {
-      const lv = s.level ? `【${s.level}】` : "";
+      const lv = s.level ? `【${s.level}·${s.category}】` : `【${s.category}】`;
+      const tq = quoteTicket(s);
+      const tk =
+        tq.price != null
+          ? `｜门票 ¥${tq.price}${tq.source === "estimate" ? "（估）" : ""}`
+          : "";
+      const note = spotNotes[s.id] ? `｜备注 ${spotNotes[s.id]}` : "";
       const ot = s.openTime ? `｜开放 ${s.openTime}` : "";
       const tel = s.tel ? `｜☎ ${s.tel}` : "";
       const c = parseCoords(s);
       const nav = c
         ? `｜导航 https://uri.amap.com/marker?position=${c.lng.toFixed(6)},${c.lat.toFixed(6)}&name=${encodeURIComponent(s.name)}`
         : "";
-      return `${i + 1}. ${lv}${s.name}（${s.address}）${ot}${tel}${nav}`;
+      return `${i + 1}. ${lv}${s.name}（${s.address}）${tk}${ot}${tel}${note}${nav}`;
     });
     const text =
       `华夏探索 · 收藏清单（${shownFavs.length} 个景点）\n` +
@@ -2710,6 +2799,24 @@ function FavoritesView() {
           <Download className="w-3.5 h-3.5" />
           导出清单
         </Button>
+      </div>
+      {/* 搜索（名称+拼音）：收藏多了以后定位用 */}
+      <div className="relative mb-3">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Input
+          placeholder="在收藏中搜索名称 / 拼音（如 gmgy）..."
+          className="pl-10 pr-10 h-10 bg-white border-gray-200 text-sm"
+          value={favQuery}
+          onChange={(e) => setFavQuery(e.target.value)}
+        />
+        {favQuery && (
+          <button
+            onClick={() => setFavQuery("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
       {favCats.length > 2 && (
         <div className="flex flex-wrap gap-1.5 mb-4">

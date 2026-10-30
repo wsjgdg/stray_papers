@@ -23,6 +23,7 @@ import {
   Flag,
   Backpack,
   RefreshCw,
+  Clock,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import {
@@ -471,8 +472,8 @@ export default function TripView() {
   const travelTotal = useMemo(
     () =>
       dayTravel.reduce(
-        (acc, d) => ({ km: acc.km + d.km, min: acc.min + d.min }),
-        { km: 0, min: 0 },
+        (acc, d) => ({ km: acc.km + d.km, min: acc.min + d.min, stayMin: acc.stayMin + d.stayMin }),
+        { km: 0, min: 0, stayMin: 0 },
       ),
     [dayTravel],
   );
@@ -495,22 +496,41 @@ export default function TripView() {
     const lines = [
       `📍 我的行程单（${tripSpots.length} 站${days.length > 1 ? ` · ${days.length} 天` : ""}）`,
       "",
-      ...days.flatMap((day, d) => [
-        ...(days.length > 1 ? [`—— 第 ${d + 1} 天 ——`] : []),
-        ...day.map((s) => {
-          const gi = tripSpots.indexOf(s);
-          const est = costOf(s);
-          return `${gi + 1}. ${s.name}\n   ${s.address}${s.projects.length ? `\n   项目：${s.projects.join("、")}` : ""}${est > 0 ? `\n   估算花费：约¥${est}` : ""}`;
-        }),
-      ]),
+      ...days.flatMap((day, d) => {
+        const dayStat = dayTravel[d];
+        return [
+          ...(days.length > 1
+            ? [
+                `—— 第 ${d + 1} 天 ——` +
+                  (dayStat && (dayStat.stayMin > 0 || dayStat.min > 0)
+                    ? `（游玩约 ${fmtMin(dayStat.stayMin)}${
+                        dayStat.min > 0 ? ` · 车程约 ${fmtMin(dayStat.min)}` : ""
+                      }）`
+                    : ""),
+              ]
+            : []),
+          ...day.map((s) => {
+            const gi = tripSpots.indexOf(s);
+            const est = costOf(s);
+            const c = parseCoords(s);
+            const nav = c
+              ? `\n   导航 https://uri.amap.com/marker?position=${c.lng.toFixed(6)},${c.lat.toFixed(6)}&name=${encodeURIComponent(s.name)}`
+              : "";
+            return `${gi + 1}. ${s.name}\n   ${s.address}\n   游玩约 ${fmtMin(
+              suggestedVisitHours(s) * 60,
+            )}${nav}${s.projects.length ? `\n   项目：${s.projects.join("、")}` : ""}${est > 0 ? `\n   估算花费：约¥${est}` : ""}`;
+          }),
+        ];
+      }),
       "",
       travelTotal.km > 0
         ? `移动合计：约 ${travelTotal.km.toFixed(1)} km · 车程约 ${fmtMin(travelTotal.min)}（估算）`
         : "",
+      travelTotal.stayMin > 0 && `游玩合计：约 ${fmtMin(travelTotal.stayMin)}`,
       `估算合计：约¥${estBudget} · 体力合计：${estStamina}`,
       "费用 = 门票（估/补录）+ 项目估算，实际以景区公示为准",
       "—— 景点览胜 · 华夏探索",
-    ];
+    ].filter(Boolean);
     navigator.clipboard
       .writeText(lines.join("\n"))
       .then(() => {
@@ -585,7 +605,7 @@ export default function TripView() {
 
         {/* 汇总卡 */}
         <div className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl p-5 mb-5 text-white shadow-lg">
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-center">
             <div>
               <Compass className="w-4 h-4 mx-auto mb-1 opacity-80" />
               <div className="text-2xl font-black">{tripSpots.length}</div>
@@ -622,6 +642,13 @@ export default function TripView() {
                 移动
                 {travelTotal.min > 0 && ` · 约${fmtMin(travelTotal.min)}`}
               </div>
+            </div>
+            <div title="各站建议游玩时长之和（景点档案收录优先，分类/等级兜底）">
+              <Clock className="w-4 h-4 mx-auto mb-1 opacity-80" />
+              <div className="text-2xl font-black">
+                {travelTotal.stayMin > 0 ? fmtMin(travelTotal.stayMin) : "—"}
+              </div>
+              <div className="text-white/70 text-[11px]">游玩合计</div>
             </div>
           </div>
           <p className="mt-2 text-[10px] text-white/60 text-center">
@@ -751,7 +778,14 @@ export default function TripView() {
                         {di > 0 &&
                           (() => {
                             const c = commute(day[di - 1], s);
-                            if (!c) return null;
+                            if (!c)
+                              // 两站中至少一站缺坐标：明示「无法估算」，不让用户以为已算过
+                              return (
+                                <div className="flex items-center gap-1.5 pl-6 py-1 text-[11px] text-gray-300">
+                                  <span className="w-px h-3 bg-gray-200" />
+                                  <span>坐标缺失 · 无法估算此段车程</span>
+                                </div>
+                              );
                             return (
                               <div className="flex items-center gap-1.5 pl-6 py-1 text-[11px] text-gray-400">
                                 <span className="w-px h-3 bg-gray-200" />
