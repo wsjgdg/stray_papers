@@ -2,8 +2,8 @@
  * Each round measures stabilizers with fresh ancillas and explicit CNOT extraction.
  * Noise includes post-CNOT two-qubit depolarization, ancilla prep/readout faults,
  * and one effective data-idle depolarization location per data qubit per round.
- * A single-fault signature table handles unambiguous first-order signatures;
- * ambiguous/multi-fault cases fall back to marginal-weight spacetime MWPM.
+ * A paired X/Z single-fault signature table handles unambiguous first-order cases;
+ * ambiguous pairs may use safe per-frame signatures, then marginal-weight MWPM.
  * This is not a calibrated threshold model or a full scheduled idle/T1/T2 model.
  */
 import { mulberry32 } from './qcircuit.js';
@@ -194,11 +194,21 @@ function scCircuitIndexFault(map, signature, mask, logical){
   entry.mechanisms++;
   if (entry.logical !== logical) entry.ambiguous = true;
 }
+function scCircuitIndexJoint(map, signature, shot, logicalX, logicalZ){
+  let entry = map.get(signature);
+  if (!entry){
+    map.set(signature, { correctionX: shot.mx, correctionZ: shot.mz, logicalX, logicalZ,
+      ambiguous: false, mechanisms: 1 });
+    return;
+  }
+  entry.mechanisms++;
+  if (entry.logicalX !== logicalX || entry.logicalZ !== logicalZ) entry.ambiguous = true;
+}
 function scCircuitFaultTable(code, R){
   const key = `${code.d}:${R}`;
   if (SC_CIRCUIT_FAULT_CACHE.has(key)) return SC_CIRCUIT_FAULT_CACHE.get(key);
   const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
-  const X = new Map(), Z = new Map(), catalog = scCircuitFaultCatalog(code, R);
+  const X = new Map(), Z = new Map(), J = new Map(), catalog = scCircuitFaultCatalog(code, R);
   let silentLogicalX = 0, silentLogicalZ = 0;
   let lookupLogicalFailX = 0, lookupLogicalFailZ = 0;
   let lookupSyndromeFailX = 0, lookupSyndromeFailZ = 0;
@@ -212,6 +222,7 @@ function scCircuitFaultTable(code, R){
     if (shot.defZ.every(v => v === 0) && lz) silentLogicalZ++;
     scCircuitIndexFault(X, sx, shot.mx, lx);
     scCircuitIndexFault(Z, sz, shot.mz, lz);
+    scCircuitIndexJoint(J, `${sx}||${sz}`, shot, lx, lz);
     const ex = X.get(sx), ez = Z.get(sz);
     if (ex && !ex.ambiguous){
       const residual = shot.mx ^ ex.correction;
@@ -224,38 +235,35 @@ function scCircuitFaultTable(code, R){
       if (scCircuitSyndrome(code.xg, residual)) lookupSyndromeFailZ++;
     }
   }
-  const xEntries = [...X.values()], zEntries = [...Z.values()];
+  const xEntries = [...X.values()], zEntries = [...Z.values()], jEntries = [...J.values()];
   const xAmbiguous = xEntries.filter(v => v.ambiguous).length;
   const zAmbiguous = zEntries.filter(v => v.ambiguous).length;
   const xCovered = xEntries.filter(v => !v.ambiguous).reduce((n, v) => n + v.mechanisms, 0);
   const zCovered = zEntries.filter(v => !v.ambiguous).reduce((n, v) => n + v.mechanisms, 0);
-  let ambiguousFallbackX = 0, ambiguousFallbackZ = 0;
-  let ambiguousFallbackLogicalFailX = 0, ambiguousFallbackLogicalFailZ = 0;
-  let ambiguousFallbackSyndromeFailX = 0, ambiguousFallbackSyndromeFailZ = 0;
+  const jointAmbiguous = jEntries.filter(v => v.ambiguous).length;
+  const jointCovered = jEntries.filter(v => !v.ambiguous).reduce((n, v) => n + v.mechanisms, 0);
+  let jointLookupLogicalFailX = 0, jointLookupLogicalFailZ = 0;
+  let jointLookupSyndromeFailX = 0, jointLookupSyndromeFailZ = 0;
   for (const item of faultSignatures){
-    const ambX = X.get(item.sx)?.ambiguous, ambZ = Z.get(item.sz)?.ambiguous;
-    if (!ambX && !ambZ) continue;
-    const shot = scCircuitTrial(code, {
-      p: 0.001, rounds: R, forceFaults: [item.fault], decoder: 'mwpm',
-    }, () => 0.999);
-    if (ambX){
-      ambiguousFallbackX++;
-      if (shot.xfail) ambiguousFallbackLogicalFailX++;
-      if (scCircuitSyndrome(code.zg, shot.resX)) ambiguousFallbackSyndromeFailX++;
-    }
-    if (ambZ){
-      ambiguousFallbackZ++;
-      if (shot.zfail) ambiguousFallbackLogicalFailZ++;
-      if (scCircuitSyndrome(code.xg, shot.resZ)) ambiguousFallbackSyndromeFailZ++;
-    }
+    const entry = J.get(`${item.sx}||${item.sz}`);
+    if (!entry || entry.ambiguous) continue;
+    const shot = scCircuitTrial(code, { p: 0, rounds: R, forceFaults: [item.fault], skipLookup: true }, mulberry32(1));
+    const residualX = shot.mx ^ entry.correctionX, residualZ = shot.mz ^ entry.correctionZ;
+    if (scCircuitParity(residualX & code.zl)) jointLookupLogicalFailX++;
+    if (scCircuitParity(residualZ & code.xl)) jointLookupLogicalFailZ++;
+    if (scCircuitSyndrome(code.zg, residualX)) jointLookupSyndromeFailX++;
+    if (scCircuitSyndrome(code.xg, residualZ)) jointLookupSyndromeFailZ++;
   }
+  const jointFallbackFaults = faultSignatures
+    .filter(item => J.get(`${item.sx}||${item.sz}`)?.ambiguous)
+    .map(item => item.fault);
   const result = {
-    X, Z, locations: catalog.length, xSignatures: X.size, zSignatures: Z.size,
+    X, Z, J, jointFallbackFaults, locations: catalog.length, xSignatures: X.size, zSignatures: Z.size,
+    jointSignatures: J.size, jointAmbiguous, jointCovered,
+    jointLookupLogicalFailX, jointLookupLogicalFailZ,
+    jointLookupSyndromeFailX, jointLookupSyndromeFailZ,
     xAmbiguous, zAmbiguous, xCovered, zCovered,
     lookupLogicalFailX, lookupLogicalFailZ, lookupSyndromeFailX, lookupSyndromeFailZ,
-    ambiguousFallbackX, ambiguousFallbackZ,
-    ambiguousFallbackLogicalFailX, ambiguousFallbackLogicalFailZ,
-    ambiguousFallbackSyndromeFailX, ambiguousFallbackSyndromeFailZ,
     silentLogicalX, silentLogicalZ,
     ms: (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0,
   };
@@ -263,17 +271,36 @@ function scCircuitFaultTable(code, R){
   return result;
 }
 
+function scCircuitJointFallbackAudit(code, R, table){
+  let mechanisms = 0, xLookup = 0, zLookup = 0;
+  let logicalFailX = 0, logicalFailZ = 0, syndromeFailX = 0, syndromeFailZ = 0;
+  for (const fault of table.jointFallbackFaults){
+    mechanisms++;
+    const shot = scCircuitTrial(code, { p: 0.001, rounds: R, forceFaults: [fault] }, () => 0.999);
+    if (shot.lookupX) xLookup++;
+    if (shot.lookupZ) zLookup++;
+    if (shot.xfail) logicalFailX++;
+    if (shot.zfail) logicalFailZ++;
+    if (scCircuitSyndrome(code.zg, shot.resX)) syndromeFailX++;
+    if (scCircuitSyndrome(code.xg, shot.resZ)) syndromeFailZ++;
+  }
+  return { mechanisms, xLookup, zLookup, logicalFailX, logicalFailZ, syndromeFailX, syndromeFailZ };
+}
+
 export function scCircuitFaultAudit(code, rounds = code.d){
   const t = scCircuitFaultTable(code, rounds);
+  if (!t.jointFallbackAudit) t.jointFallbackAudit = scCircuitJointFallbackAudit(code, rounds, t);
+  const jf = t.jointFallbackAudit;
   return { d: code.d, rounds, locations: t.locations, xSignatures: t.xSignatures, zSignatures: t.zSignatures,
+    jointSignatures: t.jointSignatures, jointAmbiguous: t.jointAmbiguous, jointCovered: t.jointCovered,
+    jointLookupLogicalFailX: t.jointLookupLogicalFailX, jointLookupLogicalFailZ: t.jointLookupLogicalFailZ,
+    jointLookupSyndromeFailX: t.jointLookupSyndromeFailX, jointLookupSyndromeFailZ: t.jointLookupSyndromeFailZ,
+    jointFallbackMechanisms: jf.mechanisms, jointFallbackXLookup: jf.xLookup, jointFallbackZLookup: jf.zLookup,
+    jointFallbackLogicalFailX: jf.logicalFailX, jointFallbackLogicalFailZ: jf.logicalFailZ,
+    jointFallbackSyndromeFailX: jf.syndromeFailX, jointFallbackSyndromeFailZ: jf.syndromeFailZ,
     xAmbiguous: t.xAmbiguous, zAmbiguous: t.zAmbiguous, xCovered: t.xCovered, zCovered: t.zCovered,
     lookupLogicalFailX: t.lookupLogicalFailX, lookupLogicalFailZ: t.lookupLogicalFailZ,
     lookupSyndromeFailX: t.lookupSyndromeFailX, lookupSyndromeFailZ: t.lookupSyndromeFailZ,
-    ambiguousFallbackX: t.ambiguousFallbackX, ambiguousFallbackZ: t.ambiguousFallbackZ,
-    ambiguousFallbackLogicalFailX: t.ambiguousFallbackLogicalFailX,
-    ambiguousFallbackLogicalFailZ: t.ambiguousFallbackLogicalFailZ,
-    ambiguousFallbackSyndromeFailX: t.ambiguousFallbackSyndromeFailX,
-    ambiguousFallbackSyndromeFailZ: t.ambiguousFallbackSyndromeFailZ,
     silentLogicalX: t.silentLogicalX, silentLogicalZ: t.silentLogicalZ, ms: t.ms };
 }
 
@@ -296,10 +323,18 @@ export function scCircuitTrial(code, cfg = {}, rng = Math.random, grs){
   let corrX = x.corr, corrZ = z.corr, decoderX = 'mwpm', decoderZ = 'mwpm';
   if (!cfg.skipLookup && cfg.decoder !== 'mwpm'){
     const table = scCircuitFaultTable(code, R);
-    const ex = table.X.get(scCircuitSignature(x.perLayer));
-    const ez = table.Z.get(scCircuitSignature(z.perLayer));
-    if (ex && !ex.ambiguous){ corrX = ex.correction; decoderX = 'single-fault lookup'; }
-    if (ez && !ez.ambiguous){ corrZ = ez.correction; decoderZ = 'single-fault lookup'; }
+    const sx = scCircuitSignature(x.perLayer), sz = scCircuitSignature(z.perLayer);
+    const ej = table.J.get(`${sx}||${sz}`);
+    if (ej && !ej.ambiguous){
+      corrX = ej.correctionX; corrZ = ej.correctionZ;
+      decoderX = 'joint single-fault lookup'; decoderZ = 'joint single-fault lookup';
+    } else {
+      /* On an ambiguous/missing joint signature, retain any safe per-frame lookup;
+         only the unresolved frame(s) fall back to marginal-weight spacetime MWPM. */
+      const ex = table.X.get(sx), ez = table.Z.get(sz);
+      if (ex && !ex.ambiguous){ corrX = ex.correction; decoderX = 'single-frame lookup'; }
+      if (ez && !ez.ambiguous){ corrZ = ez.correction; decoderZ = 'single-frame lookup'; }
+    }
   }
   const resX = frame.x ^ corrX, resZ = frame.z ^ corrZ;
   const xfail = scCircuitParity(resX & code.zl), zfail = scCircuitParity(resZ & code.xl);
@@ -311,7 +346,7 @@ export function scCircuitTrial(code, cfg = {}, rng = Math.random, grs){
     fail: !!(xfail || zfail), xfail: !!xfail, zfail: !!zfail,
     mx: frame.x, mz: frame.z, corrX, corrZ, resX, resZ,
     kx: x.k, kz: z.k, modeX: decoderX, modeZ: decoderZ,
-    decoderX, decoderZ, lookupX: decoderX === 'single-fault lookup', lookupZ: decoderZ === 'single-fault lookup',
+    decoderX, decoderZ, lookupX: decoderX.includes('lookup'), lookupZ: decoderZ.includes('lookup'), jointLookup: decoderX === 'joint single-fault lookup' && decoderZ === 'joint single-fault lookup',
     defX: x.perLayer, defZ: z.perLayer,
     errX: [...rounds.map(r => r.deltaX), 0n], errZ: [...rounds.map(r => r.deltaZ), 0n],
     synRounds, rawSynX: rounds.map(r => r.synX), rawSynZ: rounds.map(r => r.synZ),

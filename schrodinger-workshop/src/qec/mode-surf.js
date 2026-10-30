@@ -539,8 +539,8 @@ export class SurfApp {
       else if (this.faultAudit.error) set('hFaultAudit', `失败：${this.faultAudit.error}`, 'warn');
       else {
         const a = this.faultAudit;
-        set('hFaultAudit', `${a.locations.toLocaleString()} 位点 · 覆盖 X/Z ${(100 * a.xCovered / a.locations).toFixed(1)}/${(100 * a.zCovered / a.locations).toFixed(1)}% · 歧义签名 ${a.xAmbiguous}/${a.zAmbiguous} · MWPM 歧义单故障逻辑失败 X/Z ${a.ambiguousFallbackLogicalFailX}/${a.ambiguousFallbackX}、${a.ambiguousFallbackLogicalFailZ}/${a.ambiguousFallbackZ}`,
-          a.xAmbiguous || a.zAmbiguous || a.lookupLogicalFailX || a.lookupLogicalFailZ || a.ambiguousFallbackLogicalFailX || a.ambiguousFallbackLogicalFailZ ? 'warn' : 'ok');
+        set('hFaultAudit', `${a.locations.toLocaleString()} 位点 · 联合签名 ${a.jointSignatures}（歧义 ${a.jointAmbiguous}）· 覆盖 ${(100 * a.jointCovered / a.locations).toFixed(1)}% · 歧义回退逻辑失败 X/Z ${a.jointFallbackLogicalFailX}/${a.jointFallbackMechanisms}、${a.jointFallbackLogicalFailZ}/${a.jointFallbackMechanisms}`,
+          a.jointAmbiguous || a.jointLookupLogicalFailX || a.jointLookupLogicalFailZ || a.jointFallbackLogicalFailX || a.jointFallbackLogicalFailZ ? 'warn' : 'ok');
       }
     }
     if (v){
@@ -562,7 +562,7 @@ export class SurfApp {
       set('hSplit', `${sfFmt(mc.PLx)} / ${sfFmt(mc.PLz)}`);
       set('hDef', `${sfNF(mc.meanDefects, 2)} 个${this.spacetime ? '（时空）' : ''}`);
       const decName = this.circuit
-        ? `单故障查表 ${(mc.lookupRate * 100).toFixed(1)}% → MWPM`
+        ? `X/Z 查表帧 ${(mc.lookupRate * 100).toFixed(1)}% + MWPM 兜底`
         : this.phen ? 'phenomenological 时空 MWPM' : '二维 MWPM·DP';
       set('hDec', `${decName} · 贪心兜底 ${(mc.fallback * 100).toFixed(2)}% · ${sfNF(mc.ms, 1)}ms`,
         mc.fallback > 0.02 ? 'warn' : '');

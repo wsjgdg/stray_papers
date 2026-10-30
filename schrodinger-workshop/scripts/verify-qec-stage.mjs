@@ -34,13 +34,17 @@ for (const d of [3, 5]){
   const code = scBuild(d);
   const audit = scCircuitFaultAudit(code);
   assert.ok(audit.locations > 0, `d=${d}: single-fault catalog must be nonempty`);
-  assert.ok(audit.xCovered > 0 && audit.zCovered > 0, `d=${d}: lookup must cover signatures in both frames`);
+  assert.ok(audit.xCovered > 0 && audit.zCovered > 0, `d=${d}: per-frame lookup must retain fallback coverage`);
+  assert.ok(audit.jointSignatures > 0 && audit.jointCovered > 0, `d=${d}: joint X/Z signature table must cover mechanisms`);
+  assert.equal(audit.jointCovered + audit.jointFallbackMechanisms, audit.locations, `d=${d}: joint catalog coverage must partition all mechanisms`);
+  assert.equal(audit.jointLookupLogicalFailX + audit.jointLookupLogicalFailZ, 0, `d=${d}: unambiguous joint lookup must preserve logical class`);
+  assert.equal(audit.jointLookupSyndromeFailX + audit.jointLookupSyndromeFailZ, 0, `d=${d}: unambiguous joint lookup must close final syndrome`);
   assert.equal(audit.lookupLogicalFailX + audit.lookupLogicalFailZ, 0, `d=${d}: unambiguous lookup must preserve logical class`);
   assert.equal(audit.lookupSyndromeFailX + audit.lookupSyndromeFailZ, 0, `d=${d}: unambiguous lookup must close final syndrome`);
   assert.equal(audit.silentLogicalX + audit.silentLogicalZ, 0, `d=${d}: no single fault may be logically silent`);
-  assert.equal(audit.ambiguousFallbackSyndromeFailX + audit.ambiguousFallbackSyndromeFailZ, 0, `d=${d}: MWPM fallback must close terminal syndrome`);
-  assert.ok(audit.xAmbiguous + audit.zAmbiguous > 0, `d=${d}: report ambiguous signatures instead of claiming full single-fault coverage`);
-  assert.ok(audit.ambiguousFallbackLogicalFailX + audit.ambiguousFallbackLogicalFailZ > 0, `d=${d}: audit must expose logical failures hidden in ambiguous-signature fallback`);
+  assert.equal(audit.jointFallbackSyndromeFailX + audit.jointFallbackSyndromeFailZ, 0, `d=${d}: joint ambiguity fallback must close terminal syndrome`);
+  assert.ok(audit.jointAmbiguous > 0, `d=${d}: joint signature collisions must be reported`);
+  assert.ok(audit.jointFallbackLogicalFailX + audit.jointFallbackLogicalFailZ > 0, `d=${d}: audit must expose residual logical failures in joint fallback`);
   const injected = scCircuitTrial(code, {
     p: 0.001, rounds: d,
     forceFaults: [{ round: 1, location: 'idle', q: Math.floor(d * d / 2), pauli: 'X' }],
@@ -49,7 +53,16 @@ for (const d of [3, 5]){
   assert.equal(injected.fail, false, `d=${d}: representative one-data-fault shot must correct`);
   assert.equal(injected.badSyn, false, `d=${d}: representative lookup must close syndrome`);
   assert.equal(injected.lookupX, true, `d=${d}: X-frame single fault must use signature lookup`);
-  console.log(`single-fault d=${d}: unambiguous X/Z=${audit.xCovered}/${audit.zCovered} of ${audit.locations}; signature ambiguity X/Z=${audit.xAmbiguous}/${audit.zAmbiguous}; MWPM fallback logical fails X/Z=${audit.ambiguousFallbackLogicalFailX}/${audit.ambiguousFallbackX},${audit.ambiguousFallbackLogicalFailZ}/${audit.ambiguousFallbackZ}`);
+  assert.equal(injected.jointLookup, true, `d=${d}: unambiguous paired syndrome must use joint lookup`);
+  // Keep a concrete counterexample visible: this prep hook is not fixed by the
+  // current ambiguous-signature fallback, despite a closed terminal syndrome.
+  const knownFailure = scCircuitTrial(code, {
+    p: 0.001, rounds: d,
+    forceFaults: [{ round: 1, location: 'prep', check: 'Z0', pauli: 'X' }],
+  }, () => 0.999);
+  assert.equal(knownFailure.badSyn, false, `d=${d}: known prep-hook case closes syndrome`);
+  assert.equal(knownFailure.fail, true, `d=${d}: known prep-hook logical failure remains an open FT defect`);
+  console.log(`single-fault d=${d}: joint coverage=${audit.jointCovered}/${audit.locations}; ambiguous signatures=${audit.jointAmbiguous}/${audit.jointSignatures}; unresolved logical failures X/Z=${audit.jointFallbackLogicalFailX}/${audit.jointFallbackMechanisms},${audit.jointFallbackLogicalFailZ}/${audit.jointFallbackMechanisms}; prep-hook counterexample reproducible`);
 }
 
 const zero = wilsonInterval(0, 100);
