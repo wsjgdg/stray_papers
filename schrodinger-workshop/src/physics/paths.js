@@ -1,5 +1,5 @@
 /* ============================================================================
- * paths.js — 费曼路径求和（自由传播 · N 缝 / AB 磁通 / 薄相位势垒）
+ * paths.js — 费曼路径求和（自由传播 · N 缝 / AB 磁通 / 有限高斯势）
  *
  * 单位制：m=1, ħ=1，且取「以 x 为参数、速度 v_x=1」⟹ 每段飞行时间 T=X。
  *   于是 p=mv=1、λ=2π/k=2π。所有相位都以这个单位制算，页面坐标即世界坐标。
@@ -41,9 +41,10 @@ export const PI_DEFAULTS = {
   openA: true, openB: true,
   /* 缝数：2 = 经典双缝（A/B 各自开关）；1 = 单缝置中；≥3 = 等间距光栅（全部开） */
   nslit: 2,
-  flux: 0,         /* AB 磁通 α=Φ/Φ₀（相邻缝相位差 2πα） */
-  barrier: 0,      /* 薄相位势垒峰值（弧度）；0 = 关闭 */
-  barrierWidth: 12,/* 薄相位屏横向高斯宽度 σ */
+  flux: 0,         /* AB 磁通 α=Φ/Φ₀（路径 Wilson 相位） */
+  barrier: 0,       /* 高斯势垒峰值 V₀；0 = 关闭 */
+  barrierWidth: 12, /* 横向高斯宽度 σy */
+  barrierXWidth: 12,/* 纵向传播宽度 σx */
   /* 哪条路信息强度 ε ∈ [0,1]：0 = 完全相干（幅度相加），1 = 完全可区分（强度相加）。
      **不进默认值表**（不写 eps: 0）：否则「没给 eps」与「eps=0」不可区分，
      旧口径 coherent:false 会被默认值吃掉。取值见 piEps。 */
@@ -66,20 +67,100 @@ export function piSegmentPhase(X, dy, amps){
 /* 直线路径的相对作用量 */
 export function piStraightPhase(X, dy){ return dy * dy / (2 * X); }
 
-/* Aharonov–Bohm 相位：相邻缝的绕行相位差为 2π Φ/Φ₀。以缝坐标/d
-   编码绕行数；N=2 的 ±d/2 两路相差正好 2πα。单路/ d=0 时只是全局相位。 */
-export function piABPhase(slit, cfg = {}){
-  const d = cfg.d ?? PI_DEFAULTS.d, flux = cfg.flux ?? PI_DEFAULTS.flux;
-  return flux && d > 1e-12 ? 2 * Math.PI * flux * slit / d : 0;
+/* 理想 AB 螺线管位于缝平面的一处开缝间隙。以每条路径的连续极角变化 Δθ
+   计算 Wilson 相位 φ_AB=−(Φ/Φ₀)Δθ；上下绕行的两路 Δθ 相差 2π，故相位差
+   正好是一个磁通量子的 2π。N 为奇数时选中心与上邻缝之间的间隙，偶数时选中央间隙。 */
+function piFluxTubeY(cfg){
+  const n = Math.max(1, Math.round(cfg.nslit ?? PI_DEFAULTS.nslit));
+  const d = cfg.d ?? PI_DEFAULTS.d;
+  return n > 2 && (n & 1) ? d / 2 : 0;
+}
+function unwrapNear(angle, ref){
+  while (angle - ref > Math.PI) angle -= 2 * Math.PI;
+  while (angle - ref < -Math.PI) angle += 2 * Math.PI;
+  return angle;
+}
+export function piABPhase(slit, cfg = {}, Y = 0){
+  const flux = cfg.flux ?? PI_DEFAULTS.flux;
+  if (!flux || (cfg.nslit ?? PI_DEFAULTS.nslit) === 1) return 0;
+  const yTube = piFluxTubeY(cfg), side = slit - yTube;
+  if (Math.abs(side) < 1e-12) return 0; /* 路径正穿过螺线管时该缝不可用 */
+  const x0 = cfg.L1 ?? PI_DEFAULTS.L1, x2 = cfg.L2 ?? PI_DEFAULTS.L2;
+  const ys = cfg.ys ?? PI_DEFAULTS.ys;
+  const mid = side > 0 ? Math.PI / 2 : -Math.PI / 2;
+  const theta0 = unwrapNear(Math.atan2(ys - yTube, -x0), mid);
+  const theta2 = unwrapNear(Math.atan2(Y - yTube, x2), mid);
+  return -flux * (theta2 - theta0);
 }
 
-/* 薄势垒（薄相位屏）近似：沿路径穿过 x=L₁ 的屏时乘
-   exp[-i φ₀ exp(-y²/(2σ²))]。它刻画弱反射/无反射极限下的相位延迟；
-   不把它冒充有限厚方势垒的反射/隧穿解。屏只依赖穿屏坐标 y，故仍可与两段自由传播因子化。 */
-export function piBarrierPhase(y, cfg = {}){
-  const sigma = Math.max(1e-9, cfg.barrierWidth || PI_DEFAULTS.barrierWidth);
-  const barrier = cfg.barrier || 0;
-  return barrier ? -barrier * Math.exp(-0.5 * (y / sigma) ** 2) : 0;
+/* 有限宽二维高斯标量势：V(x,y)=V₀ exp[-(x−x_b)²/(2σx²)−y²/(2σy²)]，
+   x_b 位于屏后自由传播段中点。逐条路径把 U=∫V(x,y(x))dx 加进作用量 S−U；
+   这是有限宽标量势的路径积分（不是一片相位屏），弱势时近似忽略反射，强势时
+   仍保留相位模型本身，不声称求出了矩形势垒的散射边界条件。 */
+const PI_GL16_X = [-0.9894009349916499,-0.9445750230732326,-0.8656312023878318,-0.7554044083550030,
+                   -0.6178762444026438,-0.4580167776572274,-0.2816035507792589,-0.09501250983763744,
+                    0.09501250983763744, 0.2816035507792589, 0.4580167776572274, 0.6178762444026438,
+                    0.7554044083550030, 0.8656312023878318, 0.9445750230732326, 0.9894009349916499];
+const PI_GL16_W = [0.027152459411754095,0.06225352393864789,0.09515851168249278,0.12462897125553387,
+                   0.14959598881657673,0.16915651939500254,0.1826034150449236,0.1894506104550685,
+                   0.1894506104550685,0.1826034150449236,0.16915651939500254,0.14959598881657673,
+                   0.12462897125553387,0.09515851168249278,0.06225352393864789,0.027152459411754095];
+export function piBarrierAction(X, xStart, ya, yb, amps, cfg = {}){
+  const V0 = cfg.barrier ?? 0;
+  if (!V0 || !(X > 0)) return 0;
+  const sx = Math.max(1e-6, cfg.barrierXWidth ?? PI_DEFAULTS.barrierXWidth);
+  const sy = Math.max(1e-6, cfg.barrierWidth ?? PI_DEFAULTS.barrierWidth);
+  const xb = (cfg.L1 ?? PI_DEFAULTS.L1) + (cfg.L2 ?? PI_DEFAULTS.L2) / 2;
+  const lo = Math.max(xStart, xb - 5 * sx), hi = Math.min(xStart + X, xb + 5 * sx);
+  if (!(hi > lo)) return 0;
+  const mid = (lo + hi) / 2, half = (hi - lo) / 2;
+  let action = 0;
+  for (let q = 0; q < PI_GL16_X.length; q++){
+    const x = mid + half * PI_GL16_X[q], t = (x - xStart) / X;
+    let y = ya + (yb - ya) * t;
+    for (let m = 0; m < amps.length; m++) y += amps[m] * Math.sin((m + 1) * Math.PI * t);
+    const dx = (x - xb) / sx, dy = y / sy;
+    action += PI_GL16_W[q] * Math.exp(-0.5 * (dx * dx + dy * dy));
+  }
+  return V0 * half * action;
+}
+
+/* 势垒存在时，端点会影响模态路径上的 ∫Vdt，不能再用 C(X) 的端点无关因式分解。
+   对第一弯曲模态作中点求积；若 modes=2，第二模态保留自由因子（不与 V 耦合）。
+   主求积阶数随 K 控件映射到 2–8，参照多两阶；无势垒时仍走原自由积分。 */
+function piBarrierOrder(c, reference = false){
+  const k = Math.max(2, Math.min(8, Math.round((c.K ?? PI_DEFAULTS.K) / 8)));
+  return reference ? Math.min(10, k + 2) : k;
+}
+const PI_POT_MODE2_CACHE = new Map();
+function piFreeMode2(X, cfg){
+  const key = X + '|' + (cfg.K ?? PI_DEFAULTS.K) + '|' + (cfg.W ?? PI_DEFAULTS.W);
+  let v = PI_POT_MODE2_CACHE.get(key);
+  if (!v){
+    v = piModeSum1D(X, 2, cfg);
+    if (PI_POT_MODE2_CACHE.size > 32) PI_POT_MODE2_CACHE.clear();
+    PI_POT_MODE2_CACHE.set(key, v);
+  }
+  return v;
+}
+function piPotentialSegmentSum(X, ya, yb, xStart, cfg, K, fixedA1 = null){
+  const modes = Math.max(1, Math.min(2, cfg.modes ?? PI_DEFAULTS.modes));
+  const n = 2 * K, W = cfg.W ?? PI_DEFAULTS.W;
+  const c1 = piModeCoef(X, 1), h1 = W / K;
+  const n1 = fixedA1 === null ? n : 1;
+  let re = 0, im = 0;
+  for (let i = 0; i < n1; i++){
+    const a1 = fixedA1 === null ? -W + (i + 0.5) * h1 : fixedA1;
+    const ph = piStraightPhase(X, yb - ya) + c1 * a1 * a1
+      - piBarrierAction(X, xStart, ya, yb, [a1], cfg);
+    re += Math.cos(ph); im += Math.sin(ph);
+  }
+  if (modes > 1){
+    const c2 = piFreeMode2(X, cfg);
+    const r = re * c2.re - im * c2.im, i = re * c2.im + im * c2.re;
+    re = r; im = i;
+  }
+  return { re, im };
 }
 
 /* ---------- 模态族的等权求和 ---------- */
@@ -187,6 +268,40 @@ export function piXiSamples(w, n){
   return out;
 }
 
+function piPotentialFirstCache(cfg, K){
+  const c = { ...PI_DEFAULTS, ...cfg }, slits = piSlits(c);
+  const xi = piXiSamples(c.w, Math.max(1, c.nxi | 0));
+  return slits.map(s => xi.map(dx => {
+    const x = s + dx;
+    return piPotentialSegmentSum(c.L1, c.ys, x, 0, c, K);
+  }));
+}
+function piPotentialAmplitudeAt(Y, cfg, K, firstCache = null){
+  const c = { ...PI_DEFAULTS, ...cfg };
+  const slits = piSlits(c);
+  const ni = piNxiFor(c.w, c.L2, Math.abs(Y), Math.max(1, c.nxi | 0));
+  const xi = piXiSamples(c.w, c.potentialNxiCap ? Math.min(ni, c.potentialNxiCap) : ni);
+  let re = 0, im = 0;
+  const per = [];
+  for (let si = 0; si < slits.length; si++){
+    const slit = slits[si];
+    let sr = 0, si2 = 0;
+    for (let qi = 0; qi < xi.length; qi++){
+      const dx = xi[qi], x = slit + dx;
+      const a = firstCache?.[si]?.[qi] || piPotentialSegmentSum(c.L1, c.ys, x, 0, c, K);
+      const b = piPotentialSegmentSum(c.L2, x, Y, c.L1, c, K);
+      let pr = a.re * b.re - a.im * b.im, pI = a.re * b.im + a.im * b.re;
+      const ph = piABPhase(slit, c, Y), cp = Math.cos(ph), sp = Math.sin(ph);
+      const tr = pr * cp - pI * sp, ti = pr * sp + pI * cp;
+      sr += tr; si2 += ti;
+    }
+    sr /= Math.max(1, xi.length); si2 /= Math.max(1, xi.length);
+    per.push({ slit, re: sr, im: si2, mag: Math.hypot(sr, si2) });
+    re += sr; im += si2;
+  }
+  return { raw: { re, im, mag: Math.hypot(re, im) }, per };
+}
+
 /* ---------- 探测点振幅 ---------- */
 /* 返回：
  *   raw   路径求和（未归一）
@@ -196,6 +311,11 @@ export function piXiSamples(w, n){
  */
 export function piAmpAt(Y, cfg = {}){
   const c = { ...PI_DEFAULTS, ...cfg };
+  if (c.barrier > 0){
+    const main = piPotentialAmplitudeAt(Y, c, piBarrierOrder(c));
+    const ref = piPotentialAmplitudeAt(Y, c, piBarrierOrder(c, true));
+    return { raw: main.raw, an: ref.raw, per: main.per };
+  }
   const C1 = piModeSum(c.L1, c), C2 = piModeSum(c.L2, c);
   const slits = piSlits(c);
   const xi = piXiSamples(c.w, piNxiFor(c.w, c.L2, Math.abs(Y), Math.max(1, c.nxi | 0)));
@@ -206,13 +326,13 @@ export function piAmpAt(Y, cfg = {}){
     for (const dx of xi){
       const x = s + dx;
       const ph = piStraightPhase(c.L1, x - c.ys) + piStraightPhase(c.L2, Y - x)
-        + piABPhase(s, c) + piBarrierPhase(x, c);
+        + piABPhase(s, c, Y);
       sr += Math.cos(ph); si += Math.sin(ph);
       const k1 = piAnalyticSegment(c.L1, x - c.ys), k2 = piAnalyticSegment(c.L2, Y - x);
-      /* (a+bi)(c+di) × thin-screen / AB phase */
+      /* 自由解析传播子乘以 AB Wilson 相位 */
       const kr = k1.re * k2.re - k1.im * k2.im;
       const ki = k1.re * k2.im + k1.im * k2.re;
-      const extra = piABPhase(s, c) + piBarrierPhase(x, c);
+      const extra = piABPhase(s, c, Y);
       ar += kr * Math.cos(extra) - ki * Math.sin(extra);
       ai += kr * Math.sin(extra) + ki * Math.cos(extra);
     }
@@ -255,10 +375,63 @@ export function piIntensity(Y, cfg = {}){
 }
 
 /* ---------- 剖面 ---------- */
-/* 用同一模态常数 C1·C2（已验证与显式逐路径求和一致到 1e-14），
-   所以 241 个探测点的剖面是 O(nY·nSlit·nxi) 而不是 O(nY·K²...) */
+function piPotentialProfile(c){
+  const needXi = piNxiFor(c.w, c.L2, c.yFov, Math.max(1, c.nxi | 0));
+  c = { ...c, nxi: c.potentialNxiCap ? Math.min(needXi, c.potentialNxiCap) : needXi };
+  const n = Math.min(c.nY | 0, c._potentialPreview ? 61 : 121), Ys = new Float64Array(n);
+  const cohArr = new Float64Array(n), incArr = new Float64Array(n);
+  const anCohArr = new Float64Array(n), anIncArr = new Float64Array(n);
+  const ymin = -c.yFov, ymax = c.yFov;
+  const kMain = piBarrierOrder(c), kRef = piBarrierOrder(c, true);
+  const firstMain = piPotentialFirstCache(c, kMain), firstRef = piPotentialFirstCache(c, kRef);
+  for (let k = 0; k < n; k++){
+    const Y = ymin + (ymax - ymin) * k / (n - 1); Ys[k] = Y;
+    const a = piPotentialAmplitudeAt(Y, c, kMain, firstMain);
+    cohArr[k] = a.raw.mag * a.raw.mag;
+    for (const p of a.per) incArr[k] += p.mag * p.mag;
+    /* 收敛参照隔点求一次，再在线性插值到显示网格；主曲线仍逐点求解。 */
+    if ((k & 1) === 0 || k === n - 1){
+      const b = piPotentialAmplitudeAt(Y, c, kRef, firstRef);
+      anCohArr[k] = b.raw.mag * b.raw.mag;
+      for (const p of b.per) anIncArr[k] += p.mag * p.mag;
+    }
+  }
+  for (let k = 1; k < n - 1; k += 2){
+    const k1 = Math.min(n - 1, k + 1), t = (k - (k - 1)) / Math.max(1, k1 - (k - 1));
+    anCohArr[k] = anCohArr[k - 1] * (1 - t) + anCohArr[k1] * t;
+    anIncArr[k] = anIncArr[k - 1] * (1 - t) + anIncArr[k1] * t;
+  }
+  const Ip = new Float64Array(n), Ia = new Float64Array(n), Ii = new Float64Array(n);
+  const e = piEps(c), mpC = Math.max(...cohArr), mpI = Math.max(...incArr);
+  const maC = Math.max(...anCohArr), maI = Math.max(...anIncArr);
+  for (let k = 0; k < n; k++){
+    const ch = mpC > 0 ? cohArr[k] / mpC : 0, ic = mpI > 0 ? incArr[k] / mpI : 0;
+    const ach = maC > 0 ? anCohArr[k] / maC : 0, aic = maI > 0 ? anIncArr[k] / maI : 0;
+    Ip[k] = (1 - e) * ch + e * ic;
+    Ia[k] = (1 - e) * ach + e * aic;
+    Ii[k] = incArr[k];
+  }
+  const mp = Math.max(...Ip), ma = Math.max(...Ia);
+  let sMin = Infinity, sMax = -Infinity, sSum = 0, nGood = 0;
+  for (let k = 0; k < n; k++) if (Ia[k] > 1e-30 * ma && Ip[k] > 1e-30 * mp){
+    const r = Ip[k] / Ia[k];
+    if (r < sMin) sMin = r;
+    if (r > sMax) sMax = r;
+    sSum += r; nGood++;
+  }
+  const sMean = sSum / Math.max(1, nGood);
+  return {
+    Y: Ys, path: Float64Array.from(Ip, v => v / Math.max(mp, 1e-300)),
+    an: Float64Array.from(Ia, v => v / Math.max(ma, 1e-300)), raw: Ip, iAn: Ia, incoh: Ii,
+    scale: { min: sMin, max: sMax, mean: sMean, spread: (sMax - sMin) / Math.max(sMean, 1e-300) },
+    maxPath: mp, maxAn: ma,
+  };
+}
+
+/* 用同一模态常数 C1·C2 的快速自由传播剖面；高斯势垒打开时改为有限模态路径积分。 */
 export function piProfile(cfg = {}){
   const c = { ...PI_DEFAULTS, ...cfg };
+  if (c.barrier > 0) return piPotentialProfile(c);
   const C1 = piModeSum(c.L1, c), C2 = piModeSum(c.L2, c);
   const slits = piSlits(c);
   const xi = piXiSamples(c.w, piNxiFor(c.w, c.L2, c.yFov, Math.max(1, c.nxi | 0)));
@@ -276,12 +449,12 @@ export function piProfile(cfg = {}){
       for (const dx of xi){
         const x = s + dx;
         const ph = piStraightPhase(c.L1, x - c.ys) + piStraightPhase(c.L2, Y - x)
-          + piABPhase(s, c) + piBarrierPhase(x, c);
+          + piABPhase(s, c, Y);
         sr += Math.cos(ph); si += Math.sin(ph);
         const k1 = piAnalyticSegment(c.L1, x - c.ys), k2 = piAnalyticSegment(c.L2, Y - x);
         const qr = k1.re * k2.re - k1.im * k2.im;
         const qi = k1.re * k2.im + k1.im * k2.re;
-        const extra = piABPhase(s, c) + piBarrierPhase(x, c);
+        const extra = piABPhase(s, c, Y);
         kr += qr * Math.cos(extra) - qi * Math.sin(extra);
         ki += qr * Math.sin(extra) + qi * Math.cos(extra);
       }
@@ -366,8 +539,12 @@ export function piPathSamples(Y, cfg = {}, nA = 7){
           const seg1 = [f1 * c.W];
           const seg2 = [f2 * c.W];
           if (c.modes > 1){ seg1.push(f2 * c.W / 2); seg2.push(f1 * c.W / 2); }
+          /* 势垒模式的数值振幅只耦合 a₁；a₂（双模态时）仍是自由因子，
+             因此路径颜色/相位也只把高斯 action 投影到各段的第一模态。 */
+          const barrierAction = piBarrierAction(c.L1, 0, c.ys, x, c.barrier > 0 ? [seg1[0]] : seg1, c)
+            + piBarrierAction(c.L2, c.L1, x, Y, c.barrier > 0 ? [seg2[0]] : seg2, c);
           const ph = piSegmentPhase(c.L1, x - c.ys, seg1) + piSegmentPhase(c.L2, Y - x, seg2)
-            + piABPhase(s, c) + piBarrierPhase(x, c);
+            + piABPhase(s, c, Y) - barrierAction;
           out.push({ slit: s, xi: x, seg1, seg2, phase: ph });
         }
       }
@@ -463,10 +640,10 @@ export function piFringes(prof){
 }
 
 export const PI_PRESETS = {
-  double: { name: '双缝', text: '两条缝各贡献一个振幅，路径族在此处**分岔**：同一探测点有两条「路径束」，它们的几何相位差 = k·δ（δ 为光程差）⟹ 明暗条纹。逐条路径看相位是乱的，但**沿每条缝**求和后只剩两个宏观振幅——这正是「路径求和 ⟹ 传播子」的可视化。', cfg: { openA: true, openB: true, coherent: true, nslit: 2, eps: 0, flux: 0, barrier: 0, barrierWidth: 12, d: 48, w: 8 } },
-  single: { name: '单缝', text: '关掉一条缝、并把留下的那条移到轴上（d=0 ⟹ 光束居中）：干涉消失，只剩**单缝衍射包络**（缝宽 w 的 sinc²），远场第一暗纹在 λL₂/w。这一步是「哪条路」信息的判据——只剩一条路时没有第二个振幅可加。', cfg: { openA: true, openB: false, coherent: true, nslit: 1, eps: 0, flux: 0, barrier: 0, barrierWidth: 12, d: 0, w: 20 } },
-  grating: { name: '光栅', text: '把缝从 2 条加到 N 条（等间距 d）：同一个探测点上有 N 个振幅相加，**主极大位置仍由 λL₂/d 定**，但每个主极大被压窄（宽度 ≈ λL₂/(N·d)），峰间冒出 N−2 个次极大。这就是「多缝 → 光栅」的全部物理，仍然是逐条路径相加，没有新规则。', cfg: { openA: true, openB: true, coherent: true, nslit: 6, eps: 0, flux: 0, barrier: 0, barrierWidth: 12, d: 16, w: 4 } },
-  incoherent: { name: '可区分', text: '两条缝都开，但**不做幅度相加**（强度相加——等价于「测量了粒子走哪条缝」）。条纹立刻消失，回到两个单缝包络的叠加。面板的「哪条路 ε」滑到 1 就是这件事：两条路变得可区分，干涉项归零。', cfg: { openA: true, openB: true, coherent: false, nslit: 2, eps: 1, flux: 0, barrier: 0, barrierWidth: 12, d: 48, w: 8 } },
+  double: { name: '双缝', text: '两条缝各贡献一个振幅，路径族在此处**分岔**：同一探测点有两条「路径束」，它们的几何相位差 = k·δ（δ 为光程差）⟹ 明暗条纹。逐条路径看相位是乱的，但**沿每条缝**求和后只剩两个宏观振幅——这正是「路径求和 ⟹ 传播子」的可视化。', cfg: { openA: true, openB: true, coherent: true, nslit: 2, eps: 0, flux: 0, barrier: 0, barrierWidth: 12, barrierXWidth: 12, d: 48, w: 8 } },
+  single: { name: '单缝', text: '关掉一条缝、并把留下的那条移到轴上（d=0 ⟹ 光束居中）：干涉消失，只剩**单缝衍射包络**（缝宽 w 的 sinc²），远场第一暗纹在 λL₂/w。这一步是「哪条路」信息的判据——只剩一条路时没有第二个振幅可加。', cfg: { openA: true, openB: false, coherent: true, nslit: 1, eps: 0, flux: 0, barrier: 0, barrierWidth: 12, barrierXWidth: 12, d: 0, w: 20 } },
+  grating: { name: '光栅', text: '把缝从 2 条加到 N 条（等间距 d）：同一个探测点上有 N 个振幅相加，**主极大位置仍由 λL₂/d 定**，但每个主极大被压窄（宽度 ≈ λL₂/(N·d)），峰间冒出 N−2 个次极大。这就是「多缝 → 光栅」的全部物理，仍然是逐条路径相加，没有新规则。', cfg: { openA: true, openB: true, coherent: true, nslit: 6, eps: 0, flux: 0, barrier: 0, barrierWidth: 12, barrierXWidth: 12, d: 16, w: 4 } },
+  incoherent: { name: '可区分', text: '两条缝都开，但**不做幅度相加**（强度相加——等价于「测量了粒子走哪条缝」）。条纹立刻消失，回到两个单缝包络的叠加。面板的「哪条路 ε」滑到 1 就是这件事：两条路变得可区分，干涉项归零。', cfg: { openA: true, openB: true, coherent: false, nslit: 2, eps: 1, flux: 0, barrier: 0, barrierWidth: 12, barrierXWidth: 12, d: 48, w: 8 } },
 };
 
 /* ---------- 可视化：一阶模态扫描的累积和（Cornu 型螺旋） ----------
@@ -504,10 +681,43 @@ export function piSpiral(X, opts = {}){
 
 /* 当前配置下的完整振幅 a₁ 累积：扫描第一段第一模态 a₁，其余自由度
    （第一段其余模态、第二段所有模态、缝宽 ξ 与全部开缝）按配置求和。
-   终点应与 piAmpAt(Y,cfg).raw 一致；N/d/w/L₁/L₂/Y/modes/AB 磁通/薄屏等变化都会改变曲线。
+   终点应与 piAmpAt(Y,cfg).raw 一致；N/d/w/L₁/L₂/Y/modes/AB 磁通/高斯势等变化都会改变曲线。
    ε 是强度混合而非路径相位，故不改变这条复振幅曲线（这是物理上的不变量）。 */
+function piPotentialSpiralStream(cfg){
+  const c = { ...PI_DEFAULTS, ...cfg }, K = piBarrierOrder(c), W = c.W;
+  const Y = Number.isFinite(c.Y) ? c.Y : 0;
+  const slits = piSlits(c);
+  const xi = piXiSamples(c.w, piNxiFor(c.w, c.L2, Math.abs(Y), Math.max(1, c.nxi | 0)));
+  const pts = [[0, 0]];
+  let re = 0, im = 0, n = 0;
+  const total = 2 * K, h = W / K;
+  function one(){
+    const a1 = -W + (n + 0.5) * h;
+    let dr = 0, di = 0;
+    for (const slit of slits){
+      let sr = 0, si = 0;
+      for (const dx of xi){
+        const x = slit + dx;
+        const a = piPotentialSegmentSum(c.L1, c.ys, x, 0, c, K, a1);
+        const b = piPotentialSegmentSum(c.L2, x, Y, c.L1, c, K);
+        const qr = a.re * b.re - a.im * b.im, qi = a.re * b.im + a.im * b.re;
+        const ph = piABPhase(slit, c, Y), cp = Math.cos(ph), sp = Math.sin(ph);
+        sr += qr * cp - qi * sp; si += qr * sp + qi * cp;
+      }
+      dr += sr / Math.max(1, xi.length); di += si / Math.max(1, xi.length);
+    }
+    re += dr; im += di; pts.push([re, im]); n++;
+  }
+  return {
+    get total(){ return total + 1; }, get n(){ return n + 1; },
+    step(count){ for (let k=0,m=Math.max(0,count|0); k<m&&n<total; k++) one(); },
+    result(){ return { pts, total:{ re, im, mag:Math.hypot(re,im) }, count:n, len:total, h }; },
+  };
+}
+
 export function piPathSpiralStream(cfg = {}){
   const c = { ...PI_DEFAULTS, ...cfg };
+  if (c.barrier > 0) return piPotentialSpiralStream(c);
   const K = Math.max(1, c.K | 0), W = c.W;
   const Y = Number.isFinite(c.Y) ? c.Y : 0;
   const slits = piSlits(c);
@@ -521,7 +731,7 @@ export function piPathSpiralStream(cfg = {}){
     for (const dx of xi){
       const x = slit + dx;
       const ph = piStraightPhase(c.L1, x - c.ys) + piStraightPhase(c.L2, Y - x)
-        + piABPhase(slit, c) + piBarrierPhase(x, c);
+        + piABPhase(slit, c, Y);
       baseRe += Math.cos(ph); baseIm += Math.sin(ph);
     }
   }

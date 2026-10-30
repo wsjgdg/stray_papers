@@ -113,8 +113,9 @@ export class PathsApp {
       L1: num('L1', PI_DEFAULTS.L1), L2: num('L2', PI_DEFAULTS.L2),
       d: num('d', pcfg.d ?? 48), w: num('w', pcfg.w ?? 8), W: num('W', 40),
       flux: clamp(num('flux', pcfg.flux ?? 0), 0, 1),
-      barrier: clamp(num('barrier', pcfg.barrier ?? 0), 0, 6.28),
+      barrier: clamp(num('barrier', pcfg.barrier ?? 0), 0, 0.2),
       barrierWidth: clamp(num('bw', pcfg.barrierWidth ?? 12), 4, 80),
+      barrierXWidth: clamp(num('bx', pcfg.barrierXWidth ?? 12), 4, 80),
       K: Math.round(num('K', PI_DEFAULTS.K)), modes: Math.round(num('modes', PI_DEFAULTS.modes)),
       nxi: Math.round(num('nxi', 7)), Y: num('Y', 0),
       openA: q.has('A') ? q.get('A') !== '0' : pcfg.openA,
@@ -148,7 +149,7 @@ export class PathsApp {
     const s = this.state;
     return {
       L1: s.L1, L2: s.L2, ys: 0, d: s.d, w: s.w,
-      flux: s.flux, barrier: s.barrier, barrierWidth: s.barrierWidth,
+      flux: s.flux, barrier: s.barrier, barrierWidth: s.barrierWidth, barrierXWidth: s.barrierXWidth,
       modes: s.modes, K: s.K, W: s.W,
       /* ξ 求积点数按跨缝相位步长自适应（piProfile 内部同一条公式）：页面必须
          用同一个有效值报「路径总数」，否则 HUD 少报 */
@@ -194,9 +195,10 @@ export class PathsApp {
         <div class="chk" style="margin-top:-2px"><span style="font-size:10.5px;color:var(--dim)">ε = 退相干份额：I=(1−ε)·相干 + ε·非相干（0 幅度相加 / 1 强度相加）</span></div>
         <div class="grp">路径相位 / 势垒</div>
         <div class="row"><label>AB 磁通 Φ/Φ₀</label><input type="range" id="pvFlux" min="0" max="1" step="0.05"><output id="pvFluxO">—</output></div>
-        <div class="row"><label>薄势垒 φ₀</label><input type="range" id="pvBarrier" min="0" max="6.28" step="0.1"><output id="pvBarrierO">—</output></div>
-        <div class="row"><label>屏宽 σ</label><input type="range" id="pvBW" min="4" max="80" step="2"><output id="pvBWO">—</output></div>
-        <div class="chk" style="margin-top:-2px"><span style="font-size:10.5px;color:var(--dim)">AB：相邻缝差 2πΦ/Φ₀；势垒为薄相位屏（非有限厚反射/隧穿）</span></div>
+        <div class="row"><label>高斯势垒 V₀</label><input type="range" id="pvBarrier" min="0" max="0.2" step="0.005"><output id="pvBarrierO">—</output></div>
+        <div class="row"><label>传播宽 σx</label><input type="range" id="pvBX" min="4" max="80" step="2"><output id="pvBXO">—</output></div>
+        <div class="row"><label>横向宽 σy</label><input type="range" id="pvBW" min="4" max="80" step="2"><output id="pvBWO">—</output></div>
+        <div class="chk" style="margin-top:-2px"><span style="font-size:10.5px;color:var(--dim)">AB：理想磁通管置于缝间，沿路累计 Wilson 相位；双缝相差 2πΦ/Φ₀。高斯势场沿路积分 −∫Vdt（非薄屏）</span></div>
         <div class="grp">路径族</div>
         <div class="row"><label>波折幅度</label><input type="range" id="pvAmp" min="0" max="46" step="1"><output id="pvAmpO">—</output></div>
         <div class="row"><label>每段样本</label><input type="range" id="pvK" min="8" max="120" step="4"><output id="pvKo">—</output></div>
@@ -235,10 +237,10 @@ export class PathsApp {
         <div class="hrow"><span>缝数 N · 可见度 V</span><span id="hNV">—</span></div>
         <div class="hrow"><span>主极大宽度 λL₂/(Nd)</span><span id="hGW">—</span></div>
         <div class="hrow"><span>AB 磁通 Φ/Φ₀</span><span id="hFlux">—</span></div>
-        <div class="hrow"><span>薄势垒相位 φ₀ / σ</span><span id="hBarrier">—</span></div>
+        <div class="hrow"><span>高斯势垒 V₀ / σx / σy</span><span id="hBarrier">—</span></div>
         <hr>
-        <div class="hrow"><span>路径和 vs 解析（归一）</span><span id="hRatio">—</span></div>
-        <div class="hrow"><span>比值起伏</span><span id="hSpread">—</span></div>
+        <div class="hrow"><span id="hRatioLabel">路径和 vs 解析（归一）</span><span id="hRatio">—</span></div>
+        <div class="hrow"><span id="hSpreadLabel">比值起伏</span><span id="hSpread">—</span></div>
         <div class="hrow"><span>FPS</span><span id="hFps">—</span></div>
       </aside>
 
@@ -287,7 +289,8 @@ export class PathsApp {
     slider('pvN', 'pvNo', 'nslit');
     slider('pvEps', 'pvEpso', 'eps', v => v.toFixed(2));
     slider('pvFlux', 'pvFluxO', 'flux', v => v.toFixed(2));
-    slider('pvBarrier', 'pvBarrierO', 'barrier', v => v.toFixed(2));
+    slider('pvBarrier', 'pvBarrierO', 'barrier', v => v.toFixed(3));
+    slider('pvBX', 'pvBXO', 'barrierXWidth');
     slider('pvBW', 'pvBWO', 'barrierWidth');
     slider('pvD', 'pvDo', 'd');
     slider('pvW', 'pvWo', 'w');
@@ -357,7 +360,8 @@ export class PathsApp {
     else if (k === 'nslit') this.state.nslit = clamp(Math.round(v), 1, 6);
     else if (k === 'eps') this.state.eps = clamp(v, 0, 1);
     else if (k === 'flux') this.state.flux = clamp(v, 0, 1);
-    else if (k === 'barrier') this.state.barrier = clamp(v, 0, 6.28);
+    else if (k === 'barrier') this.state.barrier = clamp(v, 0, 0.2);
+    else if (k === 'barrierXWidth') this.state.barrierXWidth = clamp(v, 4, 80);
     else if (k === 'barrierWidth') this.state.barrierWidth = clamp(v, 4, 80);
     else if (k === 'Y') this.state.Y = v;
     else this.state[k] = v;
@@ -559,7 +563,10 @@ export class PathsApp {
   recompute(){
     if (this._dirtyY && !this._dirty) return this.recomputeY();
     const c = this.cfg();
-    this.prof = piProfile(c);
+    const modelCfg = this._gestureActive
+      ? { ...c, K: Math.min(c.K, 24), nY: 61, potentialNxiCap: 8, _potentialPreview: true }
+      : c;
+    this.prof = piProfile(modelCfg);
     /* 仅用于画面的路径做确定性抽样：最多 480 条；物理求和不抽样。 */
     const nA = c.nslit >= 4 ? 5 : (c.nslit === 3 ? 7 : 9);
     this.samples = visualSamples(this.state.Y, c, nA);
@@ -615,9 +622,12 @@ export class PathsApp {
     const gw = piGratingWidth(c);
     set('hGW', Number.isFinite(gw) ? nf(gw, 2) : '—（单缝）');
     set('hFlux', c.flux.toFixed(2));
-    set('hBarrier', c.barrier.toFixed(2) + ' / ' + c.barrierWidth.toFixed(0));
+    set('hBarrier', c.barrier.toFixed(3) + ' / ' + c.barrierXWidth.toFixed(0) + ' / ' + c.barrierWidth.toFixed(0));
     let dev = 0;
     for (let k = 0; k < p.path.length; k++) dev = Math.max(dev, Math.abs(p.path[k] - p.an[k]));
+    const ratioLabel = this.q('#hRatioLabel'), spreadLabel = this.q('#hSpreadLabel');
+    if (ratioLabel) ratioLabel.textContent = c.barrier > 0 ? '路径积分 vs 高一阶参照' : '路径和 vs 解析（归一）';
+    if (spreadLabel) spreadLabel.textContent = c.barrier > 0 ? '收敛差异' : '比值起伏';
     set('hRatio', ex(dev, 1) + '（逐点最大）');
     set('hSpread', ex(s.spread, 1));
   }
@@ -784,7 +794,7 @@ export class PathsApp {
     g.clearRect(0, 0, W, H);
     g.scale(dpr, dpr);
     const w = W / dpr, h = H / dpr;
-    const padL = 8, padR = 8, padT = 16, padB = 15;
+    const padL = 8, padR = 8, padT = 10, padB = 10;
     const y0 = p.Y[0], y1 = p.Y[p.Y.length - 1];
     const X = Y => padL + (Y - y0) / (y1 - y0) * (w - padL - padR);
     const Yv = I => h - padB - Math.max(0, Math.min(1, I)) * (h - padT - padB);
@@ -816,12 +826,7 @@ export class PathsApp {
     g.beginPath(); g.moveTo(xc, padT - 5); g.lineTo(xc, h - padB); g.stroke();
     g.fillStyle = '#d946ef';
     g.beginPath(); g.arc(xc, Yv(this.stats.I), 2.6, 0, 6.2832); g.fill();
-    g.font = '9.5px ui-monospace,monospace'; g.textAlign = 'left';
-    g.fillStyle = 'rgba(154,167,189,.9)';
-    g.fillText('I(Y)：路径和（青）≡ 解析传播子（红虚）', 4, 11);
-    g.fillStyle = 'rgba(248,113,113,.85)'; g.textAlign = 'right';
-    const sp = piFringeSpacing(this.cfg());
-    g.fillText('间距 ' + (Number.isFinite(sp) ? sp.toFixed(1) : '—'), w - padR, h - 4);
+    /* 曲线含义与相邻参考差异在外置 HUD 中说明；不在图面叠加常驻图例。 */
   }
 
   frame(){
@@ -856,7 +861,8 @@ export class PathsApp {
     set('pvN', st.nslit); txt('pvNo', st.nslit);
     set('pvEps', st.eps); txt('pvEpso', st.eps.toFixed(2));
     set('pvFlux', st.flux); txt('pvFluxO', st.flux.toFixed(2));
-    set('pvBarrier', st.barrier); txt('pvBarrierO', st.barrier.toFixed(2));
+    set('pvBarrier', st.barrier); txt('pvBarrierO', st.barrier.toFixed(3));
+    set('pvBX', st.barrierXWidth); txt('pvBXO', st.barrierXWidth);
     set('pvBW', st.barrierWidth); txt('pvBWO', st.barrierWidth);
     set('pvD', st.d); txt('pvDo', st.d);
     set('pvW', st.w); txt('pvWo', st.w);
