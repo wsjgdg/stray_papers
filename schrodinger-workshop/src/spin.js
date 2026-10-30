@@ -43,7 +43,8 @@ const SP_CSS = `
 #spTop{display:flex;justify-content:space-between;align-items:baseline;gap:14px}
 #spTop .eq{font-family:var(--mono);font-size:11px;color:var(--dim)}
 #spStage{position:relative}
-#spStage canvas{display:block;width:100%;border-radius:10px;background:rgba(6,11,20,.55);border:1px solid rgba(120,160,220,.12)}
+#spStage canvas{display:block;width:100%;border:0;border-radius:10px;background:rgba(6,11,20,.55);
+  box-shadow:inset 0 0 0 1px rgba(120,160,220,.12)}  /* 边框用 inset 阴影：不占盒模型，位图 = CSS 盒 */
 #spLadder{margin-bottom:8px}
 #spPanel .grid2,#spPanel .grid3,#spPanel .grid4{display:grid;gap:5px}
 #spPanel .grid2{grid-template-columns:repeat(2,1fr)}
@@ -150,9 +151,20 @@ export class SpinApp {
     document.head.appendChild(st);
     this.buildDOM();
     this.bindUI();
-    this.resize();
+    this.layoutSize();
     this.initPreset();
     if (this._spec) this.applySpec(this._spec, { fromUrl: true });
+    /* 布局随时可能变（字体加载完、刻度带内联宽度生效、预览面板拖拽）：尺寸自检
+       在 draw() 里兜底，另外用 ResizeObserver 主动触发一次重排。 */
+    if (typeof ResizeObserver !== 'undefined' && this.q('#spStage')){
+      try {
+        this._ro = new ResizeObserver(() => { this.layoutSize(); this.draw(); });
+        this._ro.observe(this.q('#spStage'));
+      } catch (_){ this._ro = null; }
+    }
+    /* 兜底：没有 ResizeObserver 的环境（老浏览器/jsdom）靠 window.resize 重排 */
+    this._onWinResize = () => { this.layoutSize(); };
+    window.addEventListener('resize', this._onWinResize);
     requestAnimationFrame(this.frame);
     window.__sp = this.debugHandle();
     return this;
@@ -325,8 +337,9 @@ export class SpinApp {
     if (!cv) return -1;
     const W = cv.width || 0;
     if (!(W > 0)) return -1;
-    const dpr = W / (cv.clientWidth || W);
-    const pad = 40 * dpr, stepX = (W - 2 * pad) / Math.max(1, L - 1);
+    /* 与绘制共用同一份几何（_view 是画的时候存下的），避免两处各算一遍导致点歪 */
+    const pad = this._view ? this._view.pad : clamp(W * 0.045, 24, 64);
+    const stepX = this._view ? this._view.stepX : (W - 2 * pad) / Math.max(1, L - 1);
     const f = (x - pad) / stepX;
     if (!Number.isFinite(f)) return -1;
     if (f < -0.5 || f > L - 0.5) return -1;
@@ -769,19 +782,60 @@ export class SpinApp {
   }
 
   /* ---------- 绘图 ---------- */
-  resize(){
-    for (const id of ['spLadder', 'spChart']){
+  /* ---------- 画布尺寸：唯一真相在 JS 里 ----------
+     两个坑一次解决：
+     ① **模糊**：位图必须是 CSS 盒 × DPR，且 CSS 盒不能随窗口再变——否则浏览器把
+        位图拉伸显示（缩放 = 模糊）。这里每次布局都把 CSS 高度写死成 px、位图按
+        DPR 重算，并在 draw() 里自检（clientWidth 与位图/DPR 不符就重排一次）。
+     ② **挤压**：高度原来是写死的 268 / 178，宽屏上就是一条又宽又扁的带子。
+        改成随视口算（阶梯 34vh 夹在 200–380、图表 20vh 夹在 130–240），并在总高
+        超出可用高度时按比例一起缩，保证「两块画布 + 视图行」永远塞得进视口。 */
+  layoutSize(){
+    const vh = window.innerHeight || 800;
+    const stage = this.q('#spStage');
+    const dpr = window.devicePixelRatio || 1;
+    /* 宽度**只能**照抄舞台实测值（0 才是「还没排版」的回退）：若在这里加最小值，
+       窄容器下位图会比 CSS 盒宽 ⟹ 又被拉伸，而且自检每帧都判不一致（抖动）。 */
+    const rawW = (stage && stage.clientWidth) || 0;
+    const cssW = Math.round(rawW > 0 ? rawW : 720);
+    const room = vh - 116;                       /* 顶栏 48 + 底部 dock/hint 留白 */
+    let ladH = Math.round(Math.min(Math.max(vh * 0.34, 200), 380));
+    let chH = Math.round(Math.min(Math.max(vh * 0.20, 130), 240));
+    const gap = 44;                              /* 视图行 + flex gap */
+    if (ladH + chH + gap > room){
+      const k = Math.max(0.5, (room - gap) / (ladH + chH));
+      ladH = Math.max(140, Math.round(ladH * k));
+      chH = Math.max(96, Math.round(chH * k));
+    }
+    this._geo = { dpr, cssW, ladH, chH };
+    for (const [id, cssH] of [['spLadder', ladH], ['spChart', chH]]){
       const cv = this.q('#' + id);
       if (!cv) continue;
-      const dpr = window.devicePixelRatio || 1;
-      const w = cv.clientWidth || 720;
-      const h = id === 'spLadder' ? 268 : 178;
-      cv.width = Math.round(w * dpr);
-      cv.height = Math.round(h * dpr);
-      cv.style.height = h + 'px';
+      cv.width = Math.round(cssW * dpr);
+      cv.height = Math.round(cssH * dpr);
+      /* 宽高都钉成整数 px：CSS 盒与位图必须**逐像素对齐**，只要盒宽是小数
+         （56vw 之类）或含 1px 边框，浏览器就会把位图重采样 = 模糊。
+         sheet 态下舞台宽由内联 left/right 决定，ResizeObserver 会在它变化后重钉。 */
+      cv.style.width = cssW + 'px';
+      cv.style.height = cssH + 'px';
     }
   }
+  /* 自检：布局在窗口/刻度带/字体加载后都可能变，位图与 CSS 盒不一致就重排 */
+  syncCanvasSize(){
+    const cv = this.q('#spLadder');
+    if (!cv || !this._geo) return false;
+    const dpr = window.devicePixelRatio || 1;
+    /* 只比宽度与 DPR：高度是我们自己写进 inline style 的，宽度才是被 CSS（width:100%）
+       与容器共同决定的那个量——它一变，位图就被浏览器拉伸 = 模糊。 */
+    const cw = Math.round((cv.clientWidth || this._geo.cssW) * dpr);
+    if (cw === cv.width && dpr === this._geo.dpr) return false;
+    this.layoutSize();
+    return true;
+  }
+  resize(){ this.layoutSize(); }
   draw(){
+    if (!this._geo) this.layoutSize();
+    this.syncCanvasSize();
     this.drawLadder();
     this.drawChart();
   }
@@ -791,26 +845,29 @@ export class SpinApp {
     const ctx = cv.getContext('2d');
     if (!ctx) return;
     const W = cv.width, H = cv.height;
-    const dpr = W / (cv.clientWidth || W) || 1;
+    const dpr = (this._geo && this._geo.dpr) || (W / (cv.clientWidth || W)) || 1;
     ctx.clearRect(0, 0, W, H);
     const L = this.state.L;
-    const pad = 40 * dpr, stepX = (W - 2 * pad) / Math.max(1, L - 1);
+    const pad = clamp(W * 0.045, 24 * dpr, 64 * dpr);
+    const stepX = (W - 2 * pad) / Math.max(1, L - 1);
     const xOf = i => pad + i * stepX;
-    const midY = 104 * dpr;
-    const arrowH = 62 * dpr;
-    const jZero = 200 * dpr, jAmp = 16 * dpr;
-    const bZero = 246 * dpr, bAmp = 20 * dpr;
-    const idxY = H - 8 * dpr;
+    /* 竖直方向按 H 的比例分配：文字带 12%、箭头区 20%、J 带 74%、b 带 89%、序号 97%
+       —— 这样 200px 的矮画布与 380px 的高画布都不会「全挤在上半截」。 */
+    const midY = H * 0.36, arrowH = H * 0.20;
+    const jZero = H * 0.74, jAmp = H * 0.055;
+    const bZero = H * 0.89, bAmp = H * 0.06;
+    const idxY = H * 0.975;
+    const fs = clamp(H * 0.036, 8, 12);          /* 正文字号（CSS px，随高度走） */
     this._view = { pad, stepX, midY, arrowH, W, H, dpr };
     const m = this.m;
     const mono = px => `${px}px ui-monospace,monospace`;
 
     const tool = SP_TOOLS.find(t => t.k === this.state.tool) || SP_TOOLS[0];
     ctx.textAlign = 'left';
-    ctx.fillStyle = 'rgba(154,167,189,.92)'; ctx.font = mono(10.5 * dpr);
-    ctx.fillText(`自旋链 · ${tool.tip}`, 10 * dpr, 15 * dpr);
-    ctx.fillStyle = 'rgba(154,167,189,.55)'; ctx.font = mono(9.5 * dpr);
-    ctx.fillText(`Δ=${this.state.delta.toFixed(2)} · h=${this.state.h.toFixed(2)} · Sᶻ=${this.sec ? this.sec.Sz : '—'}`, 10 * dpr, 27 * dpr);
+    ctx.fillStyle = 'rgba(154,167,189,.92)'; ctx.font = mono(fs * dpr);
+    ctx.fillText(`自旋链 · ${tool.tip}`, 10 * dpr, H * 0.06);
+    ctx.fillStyle = 'rgba(154,167,189,.55)'; ctx.font = mono((fs - 1) * dpr);
+    ctx.fillText(`Δ=${this.state.delta.toFixed(2)} · h=${this.state.h.toFixed(2)} · Sᶻ=${this.sec ? this.sec.Sz : '—'}`, 10 * dpr, H * 0.105);
 
     /* 链脊 */
     ctx.strokeStyle = 'rgba(120,160,220,.14)'; ctx.lineWidth = 1 * dpr;
@@ -837,7 +894,7 @@ export class SpinApp {
       ctx.lineWidth = Math.max(1, 2.2 * dpr * (0.6 + 0.6 * f));
       ctx.beginPath(); ctx.moveTo(x, midY); ctx.lineTo(x, tipY); ctx.stroke();
       /* 箭头头部 */
-      const s = 5 * dpr;
+      const s = Math.max(4 * dpr, arrowH * 0.09);
       ctx.beginPath();
       if (up){ ctx.moveTo(x - s, tipY + s); ctx.lineTo(x, tipY); ctx.lineTo(x + s, tipY + s); }
       else { ctx.moveTo(x - s, tipY - s); ctx.lineTo(x, tipY); ctx.lineTo(x + s, tipY - s); }
@@ -845,14 +902,15 @@ export class SpinApp {
       ctx.fillStyle = `rgba(${col},${(0.45 + 0.5 * f).toFixed(3)})`; ctx.fill();
       /* 中心点 */
       ctx.fillStyle = 'rgba(9,16,30,.9)';
-      ctx.beginPath(); ctx.arc(x, midY, 2.6 * dpr, 0, 6.2832); ctx.fill();
+      const dot = Math.max(2.2 * dpr, H * 0.009);
+      ctx.beginPath(); ctx.arc(x, midY, dot, 0, 6.2832); ctx.fill();
       ctx.strokeStyle = `rgba(${col},.7)`; ctx.lineWidth = 1 * dpr;
-      ctx.beginPath(); ctx.arc(x, midY, 2.6 * dpr, 0, 6.2832); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, midY, dot, 0, 6.2832); ctx.stroke();
       /* ⟨S^z_i⟩ 读数 */
-      ctx.textAlign = 'center'; ctx.font = mono(9.5 * dpr);
+      ctx.textAlign = 'center'; ctx.font = mono((fs - 1) * dpr);
       ctx.fillStyle = 'rgba(230,237,243,.72)';
-      ctx.fillText(m ? sz.toFixed(2) : '—', x, up ? midY + arrowH + 14 * dpr : midY - arrowH - 6 * dpr);
-      ctx.fillStyle = 'rgba(154,167,189,.85)'; ctx.font = mono(10 * dpr);
+      ctx.fillText(m ? sz.toFixed(2) : '—', x, up ? midY + arrowH + fs * 1.5 * dpr : midY - arrowH - fs * 0.7 * dpr);
+      ctx.fillStyle = 'rgba(154,167,189,.85)'; ctx.font = mono(fs * dpr);
       ctx.fillText(String(i), x, idxY);
     }
 
@@ -864,8 +922,9 @@ export class SpinApp {
       for (let s = 0; s < L - 1; s++){
         const j = m.bond[s], mx = (xOf(s) + xOf(s + 1)) / 2;
         const h = Math.abs(j) / maxJ * jAmp;
+        const bw = Math.max(5 * dpr, stepX * 0.13);
         ctx.fillStyle = j <= 0 ? 'rgba(103,232,249,.62)' : 'rgba(251,191,36,.66)';
-        ctx.fillRect(mx - 4 * dpr, j <= 0 ? jZero : jZero - h, 8 * dpr, Math.max(h, 0.8 * dpr));
+        ctx.fillRect(mx - bw / 2, j <= 0 ? jZero : jZero - h, bw, Math.max(h, 0.8 * dpr));
       }
     }
     /* 局域场带 */
@@ -873,8 +932,9 @@ export class SpinApp {
       const bz = this.state.bz[i];
       if (bz === 0) continue;
       const h = clamp(Math.abs(bz) / B_VIEW, 0, 1) * bAmp;
+      const bw = Math.max(5 * dpr, stepX * 0.13);
       ctx.fillStyle = bz > 0 ? 'rgba(250,190,96,.72)' : 'rgba(96,178,250,.72)';
-      ctx.fillRect(xOf(i) - 4 * dpr, bz > 0 ? bZero - h : bZero, 8 * dpr, h);
+      ctx.fillRect(xOf(i) - bw / 2, bz > 0 ? bZero - h : bZero, bw, h);
     }
     ctx.strokeStyle = 'rgba(120,160,220,.16)'; ctx.lineWidth = 1 * dpr;
     ctx.beginPath(); ctx.moveTo(pad - 22 * dpr, bZero); ctx.lineTo(W - pad + 22 * dpr, bZero); ctx.stroke();
@@ -888,15 +948,18 @@ export class SpinApp {
     if (!cv) return;
     const ctx = cv.getContext('2d');
     if (!ctx) return;
-    const W = cv.width, H = cv.height, dpr = W / (cv.clientWidth || W) || 1;
+    const W = cv.width, H = cv.height;
+    const dpr = (this._geo && this._geo.dpr) || (W / (cv.clientWidth || W)) || 1;
     ctx.clearRect(0, 0, W, H);
-    const padL = 40 * dpr, padR = 16 * dpr, padT = 24 * dpr, padB = 26 * dpr;
+    const padL = clamp(W * 0.055, 26 * dpr, 60 * dpr), padR = 16 * dpr;
+    const padT = clamp(H * 0.16, 20 * dpr, 34 * dpr), padB = clamp(H * 0.17, 18 * dpr, 28 * dpr);
     const x0 = padL, y0 = H - padB, w = W - padL - padR, h = H - padT - padB;
     const mono = px => `${px}px ui-monospace,monospace`;
+    const cfs = clamp(H * 0.062, 8.5, 12);        /* 图表字号（随画布高） */
     const title = (t, sub = '') => {
-      ctx.textAlign = 'left'; ctx.font = mono(10.5 * dpr); ctx.fillStyle = 'rgba(154,167,189,.92)';
-      ctx.fillText(t, 12 * dpr, 13 * dpr);
-      if (sub){ ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(154,167,189,.55)'; ctx.font = mono(9.5 * dpr); ctx.fillText(sub, W - 12 * dpr, 13 * dpr); }
+      ctx.textAlign = 'left'; ctx.font = mono(cfs * dpr); ctx.fillStyle = 'rgba(154,167,189,.92)';
+      ctx.fillText(t, 12 * dpr, Math.max(13 * dpr, padT * 0.55));
+      if (sub){ ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(154,167,189,.55)'; ctx.font = mono((cfs - 1) * dpr); ctx.fillText(sub, W - 12 * dpr, 13 * dpr); }
     };
     const grid = (n = 4) => {
       ctx.strokeStyle = 'rgba(120,160,220,.10)'; ctx.lineWidth = 1 * dpr;
@@ -906,16 +969,18 @@ export class SpinApp {
       }
     };
     const v = this.state.view;
-    if (v === 'Sx') return this.drawSx(ctx, { x0, y0, w, h, dpr, mono, title, grid, W });
-    if (v === 'Sq') return this.drawSq(ctx, { x0, y0, w, h, dpr, mono, title, grid, W });
-    if (v === 'zz') return this.drawZZ(ctx, { x0, y0, w, h, dpr, mono, title, W, dpr2: dpr });
-    return this.drawSt(ctx, { x0, y0, w, h, dpr, mono, title, grid, W });
+    const geo = { x0, y0, w, h, dpr, mono, title, grid, W, cfs, padB };
+    if (v === 'Sx') return this.drawSx(ctx, geo);
+    if (v === 'Sq') return this.drawSq(ctx, geo);
+    if (v === 'zz') return this.drawZZ(ctx, geo);
+    return this.drawSt(ctx, geo);
   }
   drawSx(ctx, g){
-    const { x0, y0, w, h, dpr, mono, title, grid, W } = g;
+    const { x0, y0, w, h, dpr, mono, title, grid, W, cfs, padB } = g;
     const L = this.state.L;
     const prof = this._sxProf && this._sxProf.length === L + 1 ? this._sxProf : null;
-    title('半链/任意切点纠缠熵 S(x)', prof ? '' : '基态求解后填充');
+    /* 数值写在标题右侧的副标题里：原来压在曲线上（用户要求叠加物不得遮住画面） */
+    title('半链/任意切点纠缠熵 S(x)', prof ? `S(L/2) = ${prof[L >> 1].toFixed(4)}` : '基态求解后填充');
     grid(4);
     const maxS = Math.max(1, ...(prof ? Array.from(prof) : [1]));
     const px = i => x0 + w * i / Math.max(1, L);
@@ -930,18 +995,16 @@ export class SpinApp {
       ctx.stroke();
       ctx.fillStyle = 'rgba(103,232,249,.9)';
       for (let i = 0; i <= L; i++){ ctx.beginPath(); ctx.arc(px(i), py(prof[i]), 2.2 * dpr, 0, 6.2832); ctx.fill(); }
-      ctx.textAlign = 'left'; ctx.font = mono(9.5 * dpr); ctx.fillStyle = 'rgba(230,237,243,.8)';
-      ctx.fillText(`S(L/2) = ${prof[L >> 1].toFixed(4)}`, px(L >> 1) + 6 * dpr, py(prof[L >> 1]) - 6 * dpr);
     }
-    ctx.textAlign = 'center'; ctx.font = mono(9.5 * dpr); ctx.fillStyle = 'rgba(154,167,189,.7)';
-    for (let i = 0; i <= L; i += (L > 10 ? 2 : 1)) ctx.fillText(String(i), px(i), y0 + 13 * dpr);
+    ctx.textAlign = 'center'; ctx.font = mono((cfs - 1) * dpr); ctx.fillStyle = 'rgba(154,167,189,.7)';
+    for (let i = 0; i <= L; i += (L > 10 ? 2 : 1)) ctx.fillText(String(i), px(i), y0 + padB * 0.62);
     ctx.textAlign = 'right';
     ctx.fillText(maxS.toFixed(2), x0 - 6 * dpr, y0 - h + 4 * dpr);
     ctx.fillText('0', x0 - 6 * dpr, y0 + 4 * dpr);
     void W;
   }
   drawSq(ctx, g){
-    const { x0, y0, w, h, dpr, mono, title, grid } = g;
+    const { x0, y0, w, h, dpr, mono, title, grid, cfs, padB } = g;
     const L = this.state.L, Sq = this.Sq;
     title('静态结构因子 S(q) · q = 2πm/L', Sq ? 'S(π) 高 ⟹ 反厄尔序' : '');
     grid(4);
@@ -957,16 +1020,16 @@ export class SpinApp {
         : (m === (L >> 1) ? 'rgba(251,191,36,.75)' : 'rgba(103,232,249,.55)');
       ctx.fillRect(bx, y0 - bh, bw * 0.64, Math.max(bh, 1 * dpr));
       if (bw > 26 * dpr){
-        ctx.textAlign = 'center'; ctx.font = mono(8.5 * dpr); ctx.fillStyle = 'rgba(154,167,189,.6)';
-        ctx.fillText((2 * m / L).toFixed(1) + 'π', bx + bw * 0.32, y0 + 12 * dpr);
+        ctx.textAlign = 'center'; ctx.font = mono((cfs - 2) * dpr); ctx.fillStyle = 'rgba(154,167,189,.6)';
+        ctx.fillText((2 * m / L).toFixed(1) + 'π', bx + bw * 0.32, y0 + padB * 0.55);
       }
     }
-    ctx.textAlign = 'right'; ctx.font = mono(9.5 * dpr); ctx.fillStyle = 'rgba(154,167,189,.7)';
+    ctx.textAlign = 'right'; ctx.font = mono((cfs - 1) * dpr); ctx.fillStyle = 'rgba(154,167,189,.7)';
     ctx.fillText(vmax.toFixed(2), x0 - 6 * dpr, y0 - h + 4 * dpr);
     ctx.fillText('0', x0 - 6 * dpr, y0 + 4 * dpr);
   }
   drawZZ(ctx, g){
-    const { x0, y0, w, h, dpr, mono, title } = g;
+    const { x0, y0, w, h, dpr, mono, title, cfs, padB } = g;
     const L = this.state.L, m = this.m;
     title('自旋关联矩阵 ⟨S^z_iS^z_j⟩', m ? '红 = 反关联（奈尔）· 青 = 正关联' : '');
     if (!m) return;
@@ -982,14 +1045,14 @@ export class SpinApp {
         ctx.fillRect(ox + j * gsz, oy + i * gsz, gsz - 0.6 * dpr, gsz - 0.6 * dpr);
       }
     }
-    ctx.textAlign = 'center'; ctx.font = mono(8.5 * dpr); ctx.fillStyle = 'rgba(154,167,189,.65)';
+    ctx.textAlign = 'center'; ctx.font = mono((cfs - 2) * dpr); ctx.fillStyle = 'rgba(154,167,189,.65)';
     for (let i = 0; i < L; i++){
-      ctx.fillText(String(i), ox + i * gsz + gsz / 2, y0 + 11 * dpr);
-      ctx.fillText(String(i), ox - 7 * dpr, oy + i * gsz + gsz / 2 + 3 * dpr);
+      ctx.fillText(String(i), ox + i * gsz + gsz / 2, y0 + padB * 0.5);
+      ctx.fillText(String(i), ox - (cfs * 0.62) * dpr, oy + i * gsz + gsz / 2 + cfs * 0.3 * dpr);
     }
   }
   drawSt(ctx, g){
-    const { x0, y0, w, h, dpr, mono, title, grid } = g;
+    const { x0, y0, w, h, dpr, mono, title, grid, cfs, padB } = g;
     const hist = this.hist;
     title('半链纠缠熵 S(t)', this.state.mode === 'gs' ? '基态：退化为标尺' : '虚线 = 早窗线性拟合');
     grid(4);
@@ -1001,12 +1064,12 @@ export class SpinApp {
     ctx.beginPath();
     hist.forEach(([t, s], i) => { const X = px(t), Y = py(s); if (i === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y); });
     ctx.stroke();
-    ctx.textAlign = 'right'; ctx.font = mono(9.5 * dpr); ctx.fillStyle = 'rgba(154,167,189,.7)';
+    ctx.textAlign = 'right'; ctx.font = mono((cfs - 1) * dpr); ctx.fillStyle = 'rgba(154,167,189,.7)';
     ctx.fillText(sMax.toFixed(2), x0 - 6 * dpr, y0 - h + 4 * dpr);
     ctx.fillText('0', x0 - 6 * dpr, y0 + 4 * dpr);
     ctx.textAlign = 'center';
-    ctx.fillText(tMax.toFixed(1), x0 + w - 16 * dpr, y0 + 12 * dpr);
-    ctx.fillText('0', x0 - 10 * dpr, y0 + 12 * dpr);
+    ctx.fillText(tMax.toFixed(1), x0 + w - 16 * dpr, y0 + padB * 0.55);
+    ctx.fillText('0', x0 - 10 * dpr, y0 + padB * 0.55);
   }
 
   /* ---------- 序列化 ---------- */
@@ -1194,6 +1257,8 @@ export class SpinApp {
     this._listeners.forEach(([t, type, fn, opts]) => t.removeEventListener(type, fn, opts));
     this._listeners = [];
     window.removeEventListener('error', this._onError);
+    if (this._onWinResize) window.removeEventListener('resize', this._onWinResize);
+    if (this._ro){ this._ro.disconnect(); this._ro = null; }
   }
 }
 
