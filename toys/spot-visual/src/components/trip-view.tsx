@@ -472,7 +472,11 @@ export default function TripView() {
   const travelTotal = useMemo(
     () =>
       dayTravel.reduce(
-        (acc, d) => ({ km: acc.km + d.km, min: acc.min + d.min, stayMin: acc.stayMin + d.stayMin }),
+        (acc, d) => ({
+          km: acc.km + d.km,
+          min: acc.min + d.min,
+          stayMin: acc.stayMin + d.stayMin,
+        }),
         { km: 0, min: 0, stayMin: 0 },
       ),
     [dayTravel],
@@ -504,7 +508,9 @@ export default function TripView() {
                 `—— 第 ${d + 1} 天 ——` +
                   (dayStat && (dayStat.stayMin > 0 || dayStat.min > 0)
                     ? `（游玩约 ${fmtMin(dayStat.stayMin)}${
-                        dayStat.min > 0 ? ` · 车程约 ${fmtMin(dayStat.min)}` : ""
+                        dayStat.min > 0
+                          ? ` · 车程约 ${fmtMin(dayStat.min)}`
+                          : ""
                       }）`
                     : ""),
               ]
@@ -670,6 +676,9 @@ export default function TripView() {
             <button
               onClick={() =>
                 downloadTripCard({
+                  days: days.length,
+                  stayHours: travelTotal.stayMin / 60,
+                  km: travelTotal.km,
                   spots: tripSpots.map((s) => ({
                     name: s.name,
                     address: s.address,

@@ -11,6 +11,12 @@ export interface TripCardSpot {
 export interface TripCardInput {
   spots: TripCardSpot[];
   customPriceOf?: (spotName: string, project: string) => number | undefined;
+  /** 天数（分天行程时展示） */
+  days?: number;
+  /** 全程游玩时长（小时，档案收录优先；未传不显示） */
+  stayHours?: number;
+  /** 全程移动里程（km，估算；未传不显示） */
+  km?: number;
 }
 
 const W = 720;
@@ -51,6 +57,21 @@ export async function downloadTripCard(input: TripCardInput) {
     48,
     200,
   );
+  // 右上角：天数/游玩/里程 摘要（调用方传入才显示）
+  {
+    const bits: string[] = [];
+    if (input.days && input.days > 1) bits.push(`${input.days} 天`);
+    if (input.stayHours && input.stayHours > 0)
+      bits.push(`游玩约 ${Math.round(input.stayHours)} 小时`);
+    if (input.km && input.km > 0) bits.push(`约 ${input.km.toFixed(0)} km`);
+    if (bits.length) {
+      g.fillStyle = "rgba(255,255,255,.95)";
+      g.font = "600 22px system-ui, sans-serif";
+      g.textAlign = "right";
+      g.fillText(bits.join(" · "), W - 48, 200);
+      g.textAlign = "left";
+    }
+  }
 
   // 行程列表
   let y = 300;
@@ -90,7 +111,11 @@ export async function downloadTripCard(input: TripCardInput) {
   if (omitted > 0) {
     g.fillStyle = "#B91C1C";
     g.font = "600 20px system-ui, sans-serif";
-    g.fillText(`+${omitted} 站未在卡上展示（共 ${input.spots.length} 站，详见行程单）`, 48, y + 56);
+    g.fillText(
+      `+${omitted} 站未在卡上展示（共 ${input.spots.length} 站，详见行程单）`,
+      48,
+      y + 56,
+    );
   }
   g.fillStyle = "#78716C";
   g.font = "400 18px system-ui, sans-serif";

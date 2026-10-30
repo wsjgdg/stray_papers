@@ -537,12 +537,44 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
 }
 
 /* ═══════ 景点卡片（网格） ═══════ */
+
+/** 搜索命中高亮：把 query 在文本中的出现段包上 mark（仅直接子串命中，拼音命中不高亮） */
+function Highlight({ text, query }: { text: string; query: string }) {
+  const q = query.trim();
+  if (!q) return <>{text}</>;
+  const lower = text.toLowerCase();
+  const ql = q.toLowerCase();
+  const parts: React.ReactNode[] = [];
+  let i = 0;
+  let k = 0;
+  while (i < text.length) {
+    const hit = lower.indexOf(ql, i);
+    if (hit === -1) {
+      parts.push(text.slice(i));
+      break;
+    }
+    if (hit > i) parts.push(text.slice(i, hit));
+    parts.push(
+      <mark
+        key={k++}
+        className="bg-amber-200/80 text-gray-900 rounded-sm px-0.5"
+      >
+        {text.slice(hit, hit + q.length)}
+      </mark>,
+    );
+    i = hit + q.length;
+  }
+  return <>{parts}</>;
+}
+
 function SpotGrid({
   spots,
   onSelect,
+  query = "",
 }: {
   spots: Spot[];
   onSelect: (s: Spot) => void;
+  query?: string;
 }) {
   const { favorites, toggleFavorite, spotNotes } = useAppStore();
   return (
@@ -595,7 +627,7 @@ function SpotGrid({
                   </div>
                   <div className="p-4">
                     <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-emerald-700 transition-colors truncate">
-                      {spot.name}
+                      <Highlight text={spot.name} query={query} />
                       {spotNotes[spot.id] && (
                         <FileText className="w-3 h-3 text-amber-500 inline ml-1 -mt-0.5" />
                       )}
@@ -665,9 +697,11 @@ function SpotGrid({
 function SpotList({
   spots,
   onSelect,
+  query = "",
 }: {
   spots: Spot[];
   onSelect: (s: Spot) => void;
+  query?: string;
 }) {
   const { favorites, toggleFavorite, spotNotes } = useAppStore();
   return (
@@ -701,7 +735,7 @@ function SpotList({
                   <div className="flex-1 p-4 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-gray-900 truncate group-hover:text-emerald-700 transition-colors">
-                        {spot.name}
+                        <Highlight text={spot.name} query={query} />
                         {spotNotes[spot.id] && (
                           <FileText className="w-3 h-3 text-amber-500 inline ml-1 -mt-0.5" />
                         )}
@@ -2693,11 +2727,13 @@ function SpotsView() {
         <SpotGrid
           spots={filteredSpots.slice(0, visibleCount)}
           onSelect={setSelectedSpot}
+          query={searchQuery}
         />
       ) : (
         <SpotList
           spots={filteredSpots.slice(0, visibleCount)}
           onSelect={setSelectedSpot}
+          query={searchQuery}
         />
       )}
       {/* 无限加载哨兵：进入视口再渲染下一页，首屏只挂 60 张卡片 */}
