@@ -2000,18 +2000,24 @@ const SP_CSS = `
   color:#fecdd3;font:11.5px/1.5 var(--mono);white-space:pre-wrap}
 `;
 const SP_LAYOUT = `
-#spPanel{left:0;top:52px;bottom:12px;width:236px}
-#spStage{margin-left:250px}
-#spHud{right:0;top:52px;width:196px}
-#spHint{position:fixed;left:250px;bottom:12px;max-width:calc(100vw - 480px)}
-@media (max-width:1100px){
-  #spPanel{position:static;width:auto;bottom:auto}
-  #spStage{margin-left:0}
-  #spHud{position:static;width:auto}
-  #spHint{position:static;max-width:none}
-}
+/* 舞台宽度 = 可用宽度（两侧面板各 246 / 214 px 已让出），窄窗也不会钻到面板底下 */
+#spStage{position:fixed;left:50%;top:53%;transform:translate(-50%,-50%);z-index:5;
+  display:flex;flex-direction:column;gap:6px;width:var(--sp-w,min(56vw,760px))}
+#spPanel{top:74px;left:14px;width:232px;padding:13px;z-index:10;max-height:calc(100vh - 190px);
+  overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+#spHud{top:74px;right:14px;padding:11px 13px;z-index:10;min-width:196px;font-family:var(--mono);
+  max-height:calc(100vh - 190px);overflow-y:auto}
+#spHint{left:50%;transform:translateX(-50%);bottom:10px;width:min(92vw,640px);max-height:74px;
+  overflow-y:auto;z-index:10;padding:8px 12px}
+#spStage canvas{width:100%}
+/* 861–1200px：左右面板仍是固定列（左 246 / 右 210 合计），舞台按「扣掉两侧」算宽，
+   居中后左右各留 20px 以上 ⟹ 画布不会被面板/读数压住（1101–1200 与 ≤1100 用同一口径）。 */
+@media (max-width:1200px){#spStage{width:calc(100vw - 520px)}}
+@media (max-width:1100px){#spHint{display:none}}
+/* ≤860px：core/responsive.js 用内联样式把 #spStage / .qpanel / .qhud 变底部 sheet
+   （内联 position:fixed;left:6px;right:6px 覆盖上表规则），dock 三态靠 qpanel/qhud 类
+   隐藏/显示——所以画布宽度必须走 100%（不能是 vw 计算值，否则手机上算出负数）。 */
 `;
-
 const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
 
@@ -2079,7 +2085,7 @@ class SpinApp {
   <nav>${navHtml('./spin.html')}</nav>
 </div>
 
-<div id="spPanel" class="panel">
+<div id="spPanel" class="panel qpanel">
   <div class="sec"><h3>预设</h3><div class="grid2">
     ${Object.keys(P).map(k => `<button data-preset="${k}" title="${P[k].text}">${P[k].name}</button>`).join('')}
   </div></div>
@@ -2113,7 +2119,7 @@ class SpinApp {
   <canvas id="spChart"></canvas>
 </div>
 
-<div id="spHud" class="panel">
+<div id="spHud" class="panel qhud">
   <div class="hrow"><span>模式</span><span id="hMode">—</span></div>
   <div class="hrow"><span>扇区 / 维数</span><span id="hDim">—</span></div>
   <div class="hrow"><span>E</span><span id="hE">—</span></div>
