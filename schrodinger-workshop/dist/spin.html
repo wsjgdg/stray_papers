@@ -2714,6 +2714,17 @@ class SpinApp {
       chH = Math.max(96, Math.round(chH * k));
     }
     this._geo = { dpr, cssW, ladH, chH };
+    /* 舞台本体也要落在**整数像素**上：CSS 的 `left:50%`+`translate(-50%,-50%)` 在宽/高为
+       奇数或小数时会把整块画布放到半像素处，合成阶段同样会重采样（另一种「糊」）。
+       桌面档（未被响应式模块写成 sheet）就自己算整数 left/top；sheet 档（内联 right 存在）
+       交还给 core/responsive.js，不抢它的几何。 */
+    if (stage && !stage.style.right){
+      const stH = stage.offsetHeight || (ladH + chH + 44);
+      stage.style.width = cssW + 'px';
+      stage.style.left = Math.max(0, Math.round((window.innerWidth - cssW) / 2)) + 'px';
+      stage.style.top = Math.max(48, Math.round((window.innerHeight - stH) / 2)) + 'px';
+      stage.style.transform = 'none';
+    }
     for (const [id, cssH] of [['spLadder', ladH], ['spChart', chH]]){
       const cv = this.q('#' + id);
       if (!cv) continue;
