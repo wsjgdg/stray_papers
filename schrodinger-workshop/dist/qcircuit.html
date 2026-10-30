@@ -1894,6 +1894,10 @@ const QC_CSS = `
   #qcHud .hrow span:first-child{color:var(--dim)}
   #qcHud .hrow span:last-child{color:var(--txt)}
   #qcHud hr{border:none;border-top:1px solid var(--line);margin:6px 0}
+  #qcBand{display:none;gap:6px;position:absolute;top:-28px;left:0;z-index:6}
+  #qcBand button{font:10.5px var(--mono);padding:3px 8px;border-radius:6px;cursor:pointer;
+    background:rgba(103,232,249,.08);border:1px solid var(--line);color:var(--txt)}
+  #qcBand button.on{background:rgba(103,232,249,.18);border-color:var(--cyan);color:var(--cyan)}
   #qcStage{position:fixed;left:50%;top:calc(50% + 8px);transform:translate(-50%,-50%);z-index:5;
     display:grid;grid-template-rows:minmax(180px,42%) 1fr;gap:9px;
     width:min(calc(100vw - 530px),1000px);height:min(78vh,620px)}
@@ -1905,6 +1909,14 @@ const QC_CSS = `
   #qcHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
   #qcDiag{position:fixed;left:-9999px}
   @media (max-width:1180px){#qcStage{width:calc(100vw - 60px)}#qcHint{display:none}}
+  /* 861–1180px：舞台独占可用宽度，面板和读数通过互斥 sheet 打开，不再压在线路图上。 */
+  @media (min-width:861px) and (max-width:1180px){
+    #qcStage{width:calc(100vw - 40px)}
+    #qcPanel,#qcHud{display:none;position:fixed;left:6px;right:6px;width:auto;top:auto;bottom:52px;
+      max-height:58vh;z-index:13;overflow-y:auto}
+    #qcPanel.open,#qcHud.open{display:block}
+    #qcBand{display:flex}
+  }
 `;
 
 const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
@@ -2077,6 +2089,10 @@ class QCircuitApp {
       <div id="qcStage" class="qstage">
         <canvas id="qcCircuit"></canvas>
         <canvas id="qcAmp"></canvas>
+        <div id="qcBand" aria-label="面板与读数">
+          <button id="qcBandPanel" type="button" aria-expanded="false">⚙ 控制</button>
+          <button id="qcBandHud" type="button" aria-expanded="false">◫ 读数</button>
+        </div>
       </div>
 
       <aside id="qcHud" class="panel qhud">
@@ -2198,6 +2214,12 @@ class QCircuitApp {
       else if (act === 'down') this.moveGate(i, 1);
       else if (act === 'del') this.deleteGate(i);
     });
+    this.on(this.q('#qcBandPanel'), 'click', () => this.toggleBand('panel'));
+    this.on(this.q('#qcBandHud'), 'click', () => this.toggleBand('hud'));
+    this.on(document, 'click', e => {
+      if (!e.target.closest('#qcBand,#qcPanel,#qcHud')) this.closeBand();
+    });
+    this.on(document, 'keydown', e => { if (e.key === 'Escape') this.closeBand(); });
   }
 
   /* ---------- 门序列编辑：结构改动只重置执行，不回滚用户线路 ---------- */
@@ -2641,7 +2663,39 @@ class QCircuitApp {
     txt('qcT2Eff', np.t2eff.toFixed(1));
   }
 
+  syncBand(){
+    const panelOpen = !!this.q('#qcPanel')?.classList.contains('open');
+    const hudOpen = !!this.q('#qcHud')?.classList.contains('open');
+    const panelBtn = this.q('#qcBandPanel'), hudBtn = this.q('#qcBandHud');
+    if (panelBtn){ panelBtn.classList.toggle('on', panelOpen); panelBtn.setAttribute('aria-expanded', String(panelOpen)); }
+    if (hudBtn){ hudBtn.classList.toggle('on', hudOpen); hudBtn.setAttribute('aria-expanded', String(hudOpen)); }
+    return { panel: panelOpen, hud: hudOpen };
+  }
+
+  toggleBand(which){
+    const panel = this.q('#qcPanel'), hud = this.q('#qcHud');
+    if (!panel || !hud) return false;
+    const target = which === 'panel' ? panel : hud;
+    const other = which === 'panel' ? hud : panel;
+    const open = !target.classList.contains('open');
+    other.classList.remove('open');
+    target.classList.toggle('open', open);
+    this.syncBand();
+    return open;
+  }
+
+  closeBand(){
+    const panel = this.q('#qcPanel'), hud = this.q('#qcHud');
+    if (!panel || !hud) return false;
+    const wasOpen = panel.classList.contains('open') || hud.classList.contains('open');
+    panel.classList.remove('open'); hud.classList.remove('open');
+    this.syncBand();
+    return wasOpen;
+  }
+
   resize(){
+    const vw = window.innerWidth || 1280;
+    if (vw <= 860 || vw > 1180) this.closeBand();
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     for (const id of ['#qcCircuit', '#qcAmp']){
       const cv = this.q(id);
@@ -2922,6 +2976,8 @@ class QCircuitApp {
       clearGates: () => self.clearGates(),
       restart: () => { self.resetExecution(); self._drawAll(); },
       navLinks: () => Array.from(document.querySelectorAll('#qcTop a')).map(a => a.getAttribute('href')),
+      band: which => self.toggleBand(which),
+      bandOpen: () => self.syncBand(),
       drawAll: () => self._drawAll(),
       /* R102：子系统熵调试句柄（cdp107 与控制台对账用；mask 越界位夹掉） */
       subEntropy: mask => qcEntropySubset(self.psi, mask & ((1 << self.state.n) - 1)),
