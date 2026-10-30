@@ -848,6 +848,26 @@ poi-descriptions.ts 去重脚本曾把声明行切坏（export const 重复）�
 
 备注：详情弹窗图片计数器/缩略图条此前已存在，审计项中的该项无需实现。
 
+## 六十六轮：暗色模式 + 收藏夹分组（2026-11-01，用户点单）
+
+### 暗色模式（Tailwind v4 class 变体，作用域限景点子树）
+
+| 项   | 说明                                                                                                                                                                                                                                                                | 状态 |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| 原理 | globals.css 已有 `@custom-variant dark (&:is(.dark *))` 与 shadcn `.dark` 变量块（ui 原语 bg-background 等自动暗化，零改动）；`.dark` 类挂 **body** 且仅 Home 挂载期间存在——切到 food/gaokao 自动移除，暗色不泄漏；Dialog 等 portal 到 body 的原语也在 .dark 子树内 | 设计 |
+| 变体 | codemod 幂等追加 758 处 dark: 变体（8 个景点域文件），覆盖灰阶 bg/text/border、彩色 50 底、hover 态；bg-gray-900/text-white/渐变卡/徽章故意不动（暗底上仍是高对比元素）                                                                                             | 完成 |
+| 切换 | store theme（持久化）+ toggleTheme；侧栏 footer 与移动端顶栏各一枚 Moon/Sun（aria-label）；Home effect `body.classList.toggle("dark")`                                                                                                                              | 完成 |
+| 验证 | CDP 程序化断言：toggle → body.dark ✓ → 根容器 oklab 0.13 暗底 ✓ → 侧栏 lab 8.1 ✓ → localStorage theme=dark ✓ → 回切 ✓（截图不可用，以计算样式断言替代）                                                                                                             | 完成 |
+
+### 收藏夹分组
+
+| 项    | 说明                                                                                                                                                                                                                                      | 状态 |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| store | favGroups（文件夹表）+ favGroupOf（条目归属）+ create/rename/delete/setFavGroup（删除分组时成员回未分组）；全部持久化                                                                                                                     | 完成 |
+| UI    | FavoritesView 分组 chips 行（全部分组/未分组/各文件夹、新建〔prompt〕、删除〔confirm，成员保留〕）；SpotGrid/SpotList 可选 props（groups/groupOf/onAssignGroup）在收藏页卡片上渲染「移动到分组」原生 select（stopPropagation 防误开详情） | 完成 |
+
+门禁：tsc 0 ✓、vitest 101/101 ✓、NEXT_DIST=.next-gate 隔离 build ✓、真 .next 重建 + 双端口重启（暗色已入预览，用户刷新即用）。
+
 ## 七轮（2026-10-25）：志愿探索接入真实数据
 
 | 项目                                                                                                                                               | 状态   |
