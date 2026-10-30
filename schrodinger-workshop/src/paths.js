@@ -6,13 +6,12 @@
  *
  * 三块画布：
  *   #pvMain    世界图：源/屏/探测面 + 路径族（按相位着色）+ 探测面强度条
- *   #pvSpiral  一阶模态扫描的累积和（Cornu 型螺旋）→ 相消的几何真相
+ *   #pvSpiral  当前配置的完整路径振幅沿 a₁ 扫描累积（Cornu 型螺旋）
  *   #pvProfile 探测面强度剖面：路径和 vs 解析传播子（归一后重合）
  *
- * 重绘策略：主图只在参数/探测点变化时重绘（路径族 686 条 × 40 段，每帧重画
- * 是浪费）；螺旋与剖面同理。R98 P4 起螺旋的「相位累积」改为播放器驱动
- * （LiveDriver 时长基准分帧，播/暂停/重放，?live=1 即播），frame() 只余
- * FPS 与重绘职责。
+ * 重绘策略：主图最多画 480 条抽样路径（每条 10+12 段）；参数拖动期间重物理重算限 10 Hz，
+ * 探测点拖动复用 241 点剖面。a₁ 螺旋由完整当前配置的 piPathSpiralStream 驱动；
+ * LiveDriver 按时长分帧（播/暂停/重放，?live=1 即播），frame() 只余 FPS、dirty 更新与绘制。
  *
  * 调试句柄 window.__pv（cdp74 用）：state / setParam / setY / preset / ampAt /
  * current / profileAt / profile / pathCount / sumInfo / spiralInfo / navLinks /
@@ -21,7 +20,7 @@
 import { injectStyles } from './core/styles.js';
 import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
-import { PI_DEFAULTS, PI_PRESETS, piProfile, piAmpAt, piPathSamples, piSpiral, piSpiralStream, piFringeSpacing, piStraightPhase, piModeSum, piFringes, piNxiFor, piSlits, piVisibility, piGratingWidth } from './physics/paths.js';
+import { PI_DEFAULTS, PI_PRESETS, piProfile, piAmpAt, piPathSamples, piFringeSpacing, piStraightPhase, piModeSum, piFringes, piNxiFor, piSlits, piVisibility, piGratingWidth, piPathSpiral, piPathSpiralStream } from './physics/paths.js';
 import { LiveDriver } from './qec/live.js';
 
 const PV_CSS = `
@@ -82,6 +81,14 @@ const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
 const ex = (x, d = 2) => (Number.isFinite(x) && x !== 0 ? x.toExponential(d) : '0');
 
 /* 页面侧折线（只画不求值；与 physics 的 piPolyline 同式，避免为了画图 import） */
+function visualSamples(Y, cfg, nA = 5, cap = 480){
+  const all = piPathSamples(Y, cfg, nA);
+  if (all.length <= cap) return all;
+  const out = new Array(cap);
+  for (let i = 0; i < cap; i++) out[i] = all[Math.floor(i * all.length / cap)];
+  return out;
+}
+
 function polyline(xa, ya, xb, yb, amps, N){
   const pts = [];
   for (let i = 0; i <= N; i++){
@@ -105,6 +112,9 @@ export class PathsApp {
       preset,
       L1: num('L1', PI_DEFAULTS.L1), L2: num('L2', PI_DEFAULTS.L2),
       d: num('d', pcfg.d ?? 48), w: num('w', pcfg.w ?? 8), W: num('W', 40),
+      flux: clamp(num('flux', pcfg.flux ?? 0), 0, 1),
+      barrier: clamp(num('barrier', pcfg.barrier ?? 0), 0, 6.28),
+      barrierWidth: clamp(num('bw', pcfg.barrierWidth ?? 12), 4, 80),
       K: Math.round(num('K', PI_DEFAULTS.K)), modes: Math.round(num('modes', PI_DEFAULTS.modes)),
       nxi: Math.round(num('nxi', 7)), Y: num('Y', 0),
       openA: q.has('A') ? q.get('A') !== '0' : pcfg.openA,
@@ -117,7 +127,8 @@ export class PathsApp {
       paused: q.get('paused') === '1',
       live: q.get('live') === '1',
     };
-    this._listeners = []; this._dirty = true; this._needDraw = true;
+    this._listeners = []; this._dirty = true; this._dirtyY = false; this._deferSpiral = false;
+    this._gestureActive = false; this._lastGesturePaint = -Infinity; this._needDraw = true;
     this._fps = 0; this._fpsFrames = 0; this._lastFpsT = performance.now();
     this.live = null; this._userPaused = false;
     this.view = { sx: 1, yFov: 130, ox: 0, oy: 0, w: 800, h: 520, padT: 22, padB: 26, dpr: 1 };
@@ -137,6 +148,7 @@ export class PathsApp {
     const s = this.state;
     return {
       L1: s.L1, L2: s.L2, ys: 0, d: s.d, w: s.w,
+      flux: s.flux, barrier: s.barrier, barrierWidth: s.barrierWidth,
       modes: s.modes, K: s.K, W: s.W,
       /* ξ 求积点数按跨缝相位步长自适应（piProfile 内部同一条公式）：页面必须
          用同一个有效值报「路径总数」，否则 HUD 少报 */
@@ -180,6 +192,11 @@ export class PathsApp {
         <div class="row"><label>缝宽 w</label><input type="range" id="pvW" min="2" max="24" step="1"><output id="pvWo">—</output></div>
         <div class="row"><label>哪条路 ε</label><input type="range" id="pvEps" min="0" max="1" step="0.05"><output id="pvEpso">—</output></div>
         <div class="chk" style="margin-top:-2px"><span style="font-size:10.5px;color:var(--dim)">ε = 退相干份额：I=(1−ε)·相干 + ε·非相干（0 幅度相加 / 1 强度相加）</span></div>
+        <div class="grp">路径相位 / 势垒</div>
+        <div class="row"><label>AB 磁通 Φ/Φ₀</label><input type="range" id="pvFlux" min="0" max="1" step="0.05"><output id="pvFluxO">—</output></div>
+        <div class="row"><label>薄势垒 φ₀</label><input type="range" id="pvBarrier" min="0" max="6.28" step="0.1"><output id="pvBarrierO">—</output></div>
+        <div class="row"><label>屏宽 σ</label><input type="range" id="pvBW" min="4" max="80" step="2"><output id="pvBWO">—</output></div>
+        <div class="chk" style="margin-top:-2px"><span style="font-size:10.5px;color:var(--dim)">AB：相邻缝差 2πΦ/Φ₀；势垒为薄相位屏（非有限厚反射/隧穿）</span></div>
         <div class="grp">路径族</div>
         <div class="row"><label>波折幅度</label><input type="range" id="pvAmp" min="0" max="46" step="1"><output id="pvAmpO">—</output></div>
         <div class="row"><label>每段样本</label><input type="range" id="pvK" min="8" max="120" step="4"><output id="pvKo">—</output></div>
@@ -217,6 +234,8 @@ export class PathsApp {
         <div class="hrow"><span>条纹间距 λL₂/d</span><span id="hFringe">—</span></div>
         <div class="hrow"><span>缝数 N · 可见度 V</span><span id="hNV">—</span></div>
         <div class="hrow"><span>主极大宽度 λL₂/(Nd)</span><span id="hGW">—</span></div>
+        <div class="hrow"><span>AB 磁通 Φ/Φ₀</span><span id="hFlux">—</span></div>
+        <div class="hrow"><span>薄势垒相位 φ₀ / σ</span><span id="hBarrier">—</span></div>
         <hr>
         <div class="hrow"><span>路径和 vs 解析（归一）</span><span id="hRatio">—</span></div>
         <div class="hrow"><span>比值起伏</span><span id="hSpread">—</span></div>
@@ -244,6 +263,7 @@ export class PathsApp {
     };
     window.addEventListener('resize', this._onWinResize);
     this.recompute();
+    if (this.state.live || this.state.reveal === 0) this.live.start();   /* 布局与 cfg 就绪后再建流 */
     requestAnimationFrame(this.frame);
     return this;
   }
@@ -257,12 +277,18 @@ export class PathsApp {
       const el = this.q('#' + id), o = this.q('#' + out);
       this.on(el, 'input', () => {
         const v = parseFloat(el.value);
-        this.setParam(key, v);
+        if (!this._gestureActive) this._lastGesturePaint = -Infinity;
+        this._gestureActive = true;
+        this.setParam(key, v, true);   /* 连续拖动只更新状态；昂贵的求和/重播在 change 时提交 */
         if (o) o.textContent = post ? post(v) : String(v);
       });
+      this.on(el, 'change', () => this.finishParamGesture());
     };
     slider('pvN', 'pvNo', 'nslit');
     slider('pvEps', 'pvEpso', 'eps', v => v.toFixed(2));
+    slider('pvFlux', 'pvFluxO', 'flux', v => v.toFixed(2));
+    slider('pvBarrier', 'pvBarrierO', 'barrier', v => v.toFixed(2));
+    slider('pvBW', 'pvBWO', 'barrierWidth');
     slider('pvD', 'pvDo', 'd');
     slider('pvW', 'pvWo', 'w');
     slider('pvAmp', 'pvAmpO', 'W');
@@ -276,7 +302,7 @@ export class PathsApp {
     this.on(this.q('#pvDrawerHud'), 'click', () => this.toggleBand('hud'));
     /* ---- R98 P4 实时沙盒：相位累积播放（Cornu 螺旋逐点生长） ---- */
     this.live = new LiveDriver({
-      make: () => piSpiralStream(this.state.L1, { K: this.state.K, W: this.state.W }),
+      make: () => piPathSpiralStream({ ...this.cfg(), Y: this.state.Y }),
       onFrame: res => {
         this.spir = res;
         this.state.reveal = res.count / Math.max(1, res.len);   /* 0..1 镜像（测试/兼容用） */
@@ -291,19 +317,18 @@ export class PathsApp {
       this.live.toggle();
     });
     this.syncPlayBtn();
-    if (this.state.live || this.state.reveal === 0) this.live.start();   /* ?live=1 / ?reveal=0 即播 */
 
     const cv = this.q('#pvMain');
     let drag = false;
     const fromEvent = e => {
       const r = cv.getBoundingClientRect();
       const t = (e.clientY - r.top) / Math.max(1, r.height);
-      this.setY(this.view.yFov - t * 2 * this.view.yFov);
+      this.setY(this.view.yFov - t * 2 * this.view.yFov, true);
     };
     this.on(cv, 'pointerdown', e => { drag = true; cv.setPointerCapture?.(e.pointerId); fromEvent(e); });
     this.on(cv, 'pointermove', e => { if (drag) fromEvent(e); });
-    this.on(cv, 'pointerup', () => { drag = false; });
-    this.on(cv, 'pointercancel', () => { drag = false; });
+    this.on(cv, 'pointerup', () => { drag = false; this.finishYGesture(); });
+    this.on(cv, 'pointercancel', () => { drag = false; this.finishYGesture(); });
     this.on(window, 'keydown', e => {
       const tag = (e.target && e.target.tagName) || '';
       if (/input|textarea|select/i.test(tag)) return;
@@ -326,31 +351,71 @@ export class PathsApp {
       '可区分：强度相加，条纹消失';
   }
 
-  setParam(k, v){
+  setParam(k, v, deferLive = false){
     if (k === 'K') this.state.K = Math.max(4, Math.round(v));
     else if (k === 'modes') this.state.modes = Math.max(1, Math.min(2, Math.round(v)));
     else if (k === 'nslit') this.state.nslit = clamp(Math.round(v), 1, 6);
     else if (k === 'eps') this.state.eps = clamp(v, 0, 1);
+    else if (k === 'flux') this.state.flux = clamp(v, 0, 1);
+    else if (k === 'barrier') this.state.barrier = clamp(v, 0, 6.28);
+    else if (k === 'barrierWidth') this.state.barrierWidth = clamp(v, 4, 80);
     else if (k === 'Y') this.state.Y = v;
     else this.state[k] = v;
-    this._touch(k !== 'Y');
+    this._touch(k !== 'Y', deferLive);
   }
-  setY(y){
+  setY(y, deferLive = false){
     const lim = 1.4 * this.view.yFov;
     this.state.Y = Math.max(-lim, Math.min(lim, y));
     const el = this.q('#pvY'), o = this.q('#pvYo');
     if (el) el.value = String(this.state.Y);
     if (o) o.textContent = this.state.Y.toFixed(0);
-    this._touch(false);
+    this._touch(false, true);
+    if (!deferLive) this.finishYGesture();
   }
-  /* 结构变化才重置 reveal 动画；拖探测点时不要重置（否则螺旋一直闪回起点） */
-  _touch(resetReveal){
-    this._dirty = true; this._needDraw = true;
-    if (!resetReveal) return;
+  /* 参数连续变化只留一个 dirty 状态；绝不在每个 input 事件里同步跑完整螺旋。 */
+  _touch(resetReveal, deferLive = false){
+    this._needDraw = true;
+    if (!resetReveal){
+      this._dirtyY = true;
+      if (deferLive) this._deferSpiral = true;
+      return;
+    }
+    this._dirty = true; this._dirtyY = false;
     this.state.reveal = 0;
-    /* R98 P4：换累加器；用户没暂停就自动重演（保持旧行为：改参即重放求和） */
-    this.live?.sync();
-    if (!this._userPaused) this.live?.start();
+    if (deferLive){ this._deferSpiral = true; return; }
+    this._deferSpiral = false;
+    this.resetLiveForCurrentState();
+  }
+  finishParamGesture(){
+    this._gestureActive = false;
+    if (!this._deferSpiral) return;
+    this._deferSpiral = false;
+    this._dirty = true; this._needDraw = true;
+    this.state.reveal = 0;
+    if (this._userPaused){
+      this._dirty = true;
+      return;
+    }
+    this.live?.stop();
+    if (this.live) this.live.stream = null;
+    this.live?.start();
+  }
+  resetLiveForCurrentState(){
+    if (!this.live) return;
+    this.live.stop();
+    if (!this._userPaused){
+      this.live.stream = null;
+      this.live.start();
+    }
+  }
+  finishYGesture(){
+    if (!this._deferSpiral) return;
+    this._deferSpiral = false;
+    this.state.reveal = 0;
+    if (this._userPaused){ this._dirty = true; this._dirtyY = false; return; }
+    this.live?.stop();
+    if (this.live) this.live.stream = null;
+    this.live?.start();
   }
 
   /* 重放求和：从零点开始重新累积（不论之前暂停与否） */
@@ -476,14 +541,30 @@ export class PathsApp {
     return o;
   }
 
+  recomputeY(){
+    if (!this.prof || !this.stats) return this.recompute();
+    const c = this.cfg();
+    const nA = c.nslit >= 4 ? 5 : (c.nslit === 3 ? 7 : 9);
+    this.samples = visualSamples(this.state.Y, c, nA);
+    const p = this.prof, y = this.state.Y;
+    const kf = (y - p.Y[0]) / (p.Y[1] - p.Y[0]);
+    const k0 = Math.max(0, Math.min(p.path.length - 1, Math.floor(kf)));
+    const k1 = Math.min(p.path.length - 1, k0 + 1);
+    const t = Math.max(0, Math.min(1, kf - k0));
+    this.stats.I = p.path[k0] * (1 - t) + p.path[k1] * t;
+    const h = this.q('#hI'); if (h) h.textContent = nf(this.stats.I, 4);
+    this._dirtyY = false; this._needDraw = true;
+  }
+
   recompute(){
+    if (this._dirtyY && !this._dirty) return this.recomputeY();
     const c = this.cfg();
     this.prof = piProfile(c);
-    /* 画图用的子网格：缝多时抽稀，保证三条画布的重绘成本不随 N 线性爆掉 */
+    /* 仅用于画面的路径做确定性抽样：最多 480 条；物理求和不抽样。 */
     const nA = c.nslit >= 4 ? 5 : (c.nslit === 3 ? 7 : 9);
-    this.samples = piPathSamples(this.state.Y, c, nA);
-    /* R98 P4：播放中螺旋由流式累加器逐帧供给（recompute 不得用全批覆盖半场状态） */
-    if (!(this.live && this.live.playing)) this.spir = piSpiral(c.L1, { K: c.K, W: c.W });
+    this.samples = visualSamples(this.state.Y, c, nA);
+    /* 播放中由流式累加器供给；拖动期间暂缓重建，change/pointerup 只提交一次。 */
+    if (!this._deferSpiral && !(this.live && this.live.playing)) this.spir = piPathSpiral({ ...c, Y: this.state.Y });
     const C1 = piModeSum(c.L1, c), C2 = piModeSum(c.L2, c);
     const A = piAmpAt(this.state.Y, c);
     const p = this.prof;
@@ -499,7 +580,7 @@ export class PathsApp {
       vis: piVisibility(p, c), gratingW: piGratingWidth(c),
       maxPath: p.maxPath, maxAn: p.maxAn,
     };
-    this._dirty = false; this._needDraw = true;
+    this._dirty = false; this._dirtyY = false; this._needDraw = true;
     this.renderHud();
     this.renderHint();
   }
@@ -533,6 +614,8 @@ export class PathsApp {
     set('hNV', c.nslit + ' · V=' + nf(piVisibility(p, c), 3));
     const gw = piGratingWidth(c);
     set('hGW', Number.isFinite(gw) ? nf(gw, 2) : '—（单缝）');
+    set('hFlux', c.flux.toFixed(2));
+    set('hBarrier', c.barrier.toFixed(2) + ' / ' + c.barrierWidth.toFixed(0));
     let dev = 0;
     for (let k = 0; k < p.path.length; k++) dev = Math.max(dev, Math.abs(p.path[k] - p.an[k]));
     set('hRatio', ex(dev, 1) + '（逐点最大）');
@@ -566,8 +649,8 @@ export class PathsApp {
       const hue = ((sp.phase / (2 * Math.PI)) % 1 + 1) % 1;
       g.strokeStyle = 'hsla(' + Math.round(182 + hue * 128) + ',88%,64%,.22)';
       g.lineWidth = 0.85;
-      const a = polyline(0, 0, st.L1, sp.xi, sp.seg1, 18);
-      const b = polyline(st.L1, sp.xi, st.L1 + st.L2, st.Y, sp.seg2, 22);
+      const a = polyline(0, 0, st.L1, sp.xi, sp.seg1, 10);
+      const b = polyline(st.L1, sp.xi, st.L1 + st.L2, st.Y, sp.seg2, 12);
       g.beginPath();
       let [px, py] = this.world(a[0][0], a[0][1]);
       g.moveTo(px, py);
@@ -685,10 +768,9 @@ export class PathsApp {
     g.fillStyle = '#67e8f9'; g.beginPath(); g.arc(tx, ty, 2.8, 0, 6.2832); g.fill();
     g.font = '9.5px ui-monospace,monospace'; g.textAlign = 'left';
     g.fillStyle = 'rgba(154,167,189,.9)';
-    g.fillText('段1 a₁ 扫描：累积 e^{iS/ħ}', 8, 13);
+    g.fillText('当前配置的路径振幅：a₁ 累积（ε 不改相位）', 8, 13);
     g.fillStyle = 'rgba(103,232,249,.95)';
-    g.fillText('|Σ|=' + Math.hypot(tot[0], tot[1]).toFixed(1) + '  N=' + nShow + '  Σ|A|/|Σ|=' +
-      (nShow / Math.max(1e-9, Math.hypot(tot[0], tot[1]))).toFixed(2), 8, h - 7);
+    g.fillText('|A₁…ₙ|=' + Math.hypot(tot[0], tot[1]).toFixed(1) + '  步=' + nShow + '/' + N + '  Y=' + this.state.Y.toFixed(1), 8, h - 7);
   }
 
   drawProfile(){
@@ -752,7 +834,14 @@ export class PathsApp {
       const e = this.q('#hFps'); if (e) e.textContent = this._fps ? String(this._fps) : '—';
     }
     this.syncCanvasSize();          /* 布局迟到的变化（字体/sheet/拖宽）在这里兜住 */
-    if (this._dirty) this.recompute();
+    const canPaintGesture = !this._gestureActive || now - this._lastGesturePaint >= 100;
+    if (this._dirty && canPaintGesture){
+      this._lastGesturePaint = now;
+      this.recompute();
+    } else if (this._dirtyY && canPaintGesture){
+      this._lastGesturePaint = now;
+      this.recomputeY();
+    }
     /* R98 P4：螺旋推进交给 LiveDriver（时长基准分帧）；此处只处理重绘 */
     if (this._needDraw){
       this.drawMain(); this.drawSpiral(); this.drawProfile();
@@ -766,6 +855,9 @@ export class PathsApp {
     const txt = (id, v) => { const e = this.q('#' + id); if (e) e.textContent = String(v); };
     set('pvN', st.nslit); txt('pvNo', st.nslit);
     set('pvEps', st.eps); txt('pvEpso', st.eps.toFixed(2));
+    set('pvFlux', st.flux); txt('pvFluxO', st.flux.toFixed(2));
+    set('pvBarrier', st.barrier); txt('pvBarrierO', st.barrier.toFixed(2));
+    set('pvBW', st.barrierWidth); txt('pvBWO', st.barrierWidth);
     set('pvD', st.d); txt('pvDo', st.d);
     set('pvW', st.w); txt('pvWo', st.w);
     set('pvAmp', st.W); txt('pvAmpO', st.W);

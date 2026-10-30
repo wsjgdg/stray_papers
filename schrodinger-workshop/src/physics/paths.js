@@ -1,5 +1,5 @@
 /* ============================================================================
- * paths.js — R74 费曼路径求和（自由粒子 · 单缝 / 双缝）
+ * paths.js — 费曼路径求和（自由传播 · N 缝 / AB 磁通 / 薄相位势垒）
  *
  * 单位制：m=1, ħ=1，且取「以 x 为参数、速度 v_x=1」⟹ 每段飞行时间 T=X。
  *   于是 p=mv=1、λ=2π/k=2π。所有相位都以这个单位制算，页面坐标即世界坐标。
@@ -41,6 +41,9 @@ export const PI_DEFAULTS = {
   openA: true, openB: true,
   /* 缝数：2 = 经典双缝（A/B 各自开关）；1 = 单缝置中；≥3 = 等间距光栅（全部开） */
   nslit: 2,
+  flux: 0,         /* AB 磁通 α=Φ/Φ₀（相邻缝相位差 2πα） */
+  barrier: 0,      /* 薄相位势垒峰值（弧度）；0 = 关闭 */
+  barrierWidth: 12,/* 薄相位屏横向高斯宽度 σ */
   /* 哪条路信息强度 ε ∈ [0,1]：0 = 完全相干（幅度相加），1 = 完全可区分（强度相加）。
      **不进默认值表**（不写 eps: 0）：否则「没给 eps」与「eps=0」不可区分，
      旧口径 coherent:false 会被默认值吃掉。取值见 piEps。 */
@@ -62,6 +65,22 @@ export function piSegmentPhase(X, dy, amps){
 
 /* 直线路径的相对作用量 */
 export function piStraightPhase(X, dy){ return dy * dy / (2 * X); }
+
+/* Aharonov–Bohm 相位：相邻缝的绕行相位差为 2π Φ/Φ₀。以缝坐标/d
+   编码绕行数；N=2 的 ±d/2 两路相差正好 2πα。单路/ d=0 时只是全局相位。 */
+export function piABPhase(slit, cfg = {}){
+  const d = cfg.d ?? PI_DEFAULTS.d, flux = cfg.flux ?? PI_DEFAULTS.flux;
+  return flux && d > 1e-12 ? 2 * Math.PI * flux * slit / d : 0;
+}
+
+/* 薄势垒（薄相位屏）近似：沿路径穿过 x=L₁ 的屏时乘
+   exp[-i φ₀ exp(-y²/(2σ²))]。它刻画弱反射/无反射极限下的相位延迟；
+   不把它冒充有限厚方势垒的反射/隧穿解。屏只依赖穿屏坐标 y，故仍可与两段自由传播因子化。 */
+export function piBarrierPhase(y, cfg = {}){
+  const sigma = Math.max(1e-9, cfg.barrierWidth || PI_DEFAULTS.barrierWidth);
+  const barrier = cfg.barrier || 0;
+  return barrier ? -barrier * Math.exp(-0.5 * (y / sigma) ** 2) : 0;
+}
 
 /* ---------- 模态族的等权求和 ---------- */
 /* 嵌套循环（不用因式分解）：这正是「逐条路径相加」的字面实现，
@@ -186,12 +205,16 @@ export function piAmpAt(Y, cfg = {}){
     let sr = 0, si = 0, ar = 0, ai = 0;
     for (const dx of xi){
       const x = s + dx;
-      const ph = piStraightPhase(c.L1, x - c.ys) + piStraightPhase(c.L2, Y - x);
+      const ph = piStraightPhase(c.L1, x - c.ys) + piStraightPhase(c.L2, Y - x)
+        + piABPhase(s, c) + piBarrierPhase(x, c);
       sr += Math.cos(ph); si += Math.sin(ph);
       const k1 = piAnalyticSegment(c.L1, x - c.ys), k2 = piAnalyticSegment(c.L2, Y - x);
-      /* (a+bi)(c+di) */
-      ar += k1.re * k2.re - k1.im * k2.im;
-      ai += k1.re * k2.im + k1.im * k2.re;
+      /* (a+bi)(c+di) × thin-screen / AB phase */
+      const kr = k1.re * k2.re - k1.im * k2.im;
+      const ki = k1.re * k2.im + k1.im * k2.re;
+      const extra = piABPhase(s, c) + piBarrierPhase(x, c);
+      ar += kr * Math.cos(extra) - ki * Math.sin(extra);
+      ai += kr * Math.sin(extra) + ki * Math.cos(extra);
     }
     const n = xi.length;
     /* 路径和：几何相位 × C1·C2，逐缝。(gr+i·gi)(a+ib)(c+id) 的实部是
@@ -252,11 +275,15 @@ export function piProfile(cfg = {}){
       let sr = 0, si = 0, kr = 0, ki = 0;
       for (const dx of xi){
         const x = s + dx;
-        const ph = piStraightPhase(c.L1, x - c.ys) + piStraightPhase(c.L2, Y - x);
+        const ph = piStraightPhase(c.L1, x - c.ys) + piStraightPhase(c.L2, Y - x)
+          + piABPhase(s, c) + piBarrierPhase(x, c);
         sr += Math.cos(ph); si += Math.sin(ph);
         const k1 = piAnalyticSegment(c.L1, x - c.ys), k2 = piAnalyticSegment(c.L2, Y - x);
-        kr += k1.re * k2.re - k1.im * k2.im;
-        ki += k1.re * k2.im + k1.im * k2.re;
+        const qr = k1.re * k2.re - k1.im * k2.im;
+        const qi = k1.re * k2.im + k1.im * k2.re;
+        const extra = piABPhase(s, c) + piBarrierPhase(x, c);
+        kr += qr * Math.cos(extra) - qi * Math.sin(extra);
+        ki += qr * Math.sin(extra) + qi * Math.cos(extra);
       }
       const m = xi.length;
       const gr = sr / m, gi = si / m;
@@ -339,7 +366,8 @@ export function piPathSamples(Y, cfg = {}, nA = 7){
           const seg1 = [f1 * c.W];
           const seg2 = [f2 * c.W];
           if (c.modes > 1){ seg1.push(f2 * c.W / 2); seg2.push(f1 * c.W / 2); }
-          const ph = piSegmentPhase(c.L1, x - c.ys, seg1) + piSegmentPhase(c.L2, Y - x, seg2);
+          const ph = piSegmentPhase(c.L1, x - c.ys, seg1) + piSegmentPhase(c.L2, Y - x, seg2)
+            + piABPhase(s, c) + piBarrierPhase(x, c);
           out.push({ slit: s, xi: x, seg1, seg2, phase: ph });
         }
       }
@@ -435,10 +463,10 @@ export function piFringes(prof){
 }
 
 export const PI_PRESETS = {
-  double: { name: '双缝', text: '两条缝各贡献一个振幅，路径族在此处**分岔**：同一探测点有两条「路径束」，它们的几何相位差 = k·δ（δ 为光程差）⟹ 明暗条纹。逐条路径看相位是乱的，但**沿每条缝**求和后只剩两个宏观振幅——这正是「路径求和 ⟹ 传播子」的可视化。', cfg: { openA: true, openB: true, coherent: true, nslit: 2, eps: 0, d: 48, w: 8 } },
-  single: { name: '单缝', text: '关掉一条缝、并把留下的那条移到轴上（d=0 ⟹ 光束居中）：干涉消失，只剩**单缝衍射包络**（缝宽 w 的 sinc²），远场第一暗纹在 λL₂/w。这一步是「哪条路」信息的判据——只剩一条路时没有第二个振幅可加。', cfg: { openA: true, openB: false, coherent: true, nslit: 1, eps: 0, d: 0, w: 20 } },
-  grating: { name: '光栅', text: '把缝从 2 条加到 N 条（等间距 d）：同一个探测点上有 N 个振幅相加，**主极大位置仍由 λL₂/d 定**，但每个主极大被压窄（宽度 ≈ λL₂/(N·d)），峰间冒出 N−2 个次极大。这就是「多缝 → 光栅」的全部物理，仍然是逐条路径相加，没有新规则。', cfg: { openA: true, openB: true, coherent: true, nslit: 6, eps: 0, d: 16, w: 4 } },
-  incoherent: { name: '可区分', text: '两条缝都开，但**不做幅度相加**（强度相加——等价于「测量了粒子走哪条缝」）。条纹立刻消失，回到两个单缝包络的叠加。面板的「哪条路 ε」滑到 1 就是这件事：两条路变得可区分，干涉项归零。', cfg: { openA: true, openB: true, coherent: false, nslit: 2, eps: 1, d: 48, w: 8 } },
+  double: { name: '双缝', text: '两条缝各贡献一个振幅，路径族在此处**分岔**：同一探测点有两条「路径束」，它们的几何相位差 = k·δ（δ 为光程差）⟹ 明暗条纹。逐条路径看相位是乱的，但**沿每条缝**求和后只剩两个宏观振幅——这正是「路径求和 ⟹ 传播子」的可视化。', cfg: { openA: true, openB: true, coherent: true, nslit: 2, eps: 0, flux: 0, barrier: 0, barrierWidth: 12, d: 48, w: 8 } },
+  single: { name: '单缝', text: '关掉一条缝、并把留下的那条移到轴上（d=0 ⟹ 光束居中）：干涉消失，只剩**单缝衍射包络**（缝宽 w 的 sinc²），远场第一暗纹在 λL₂/w。这一步是「哪条路」信息的判据——只剩一条路时没有第二个振幅可加。', cfg: { openA: true, openB: false, coherent: true, nslit: 1, eps: 0, flux: 0, barrier: 0, barrierWidth: 12, d: 0, w: 20 } },
+  grating: { name: '光栅', text: '把缝从 2 条加到 N 条（等间距 d）：同一个探测点上有 N 个振幅相加，**主极大位置仍由 λL₂/d 定**，但每个主极大被压窄（宽度 ≈ λL₂/(N·d)），峰间冒出 N−2 个次极大。这就是「多缝 → 光栅」的全部物理，仍然是逐条路径相加，没有新规则。', cfg: { openA: true, openB: true, coherent: true, nslit: 6, eps: 0, flux: 0, barrier: 0, barrierWidth: 12, d: 16, w: 4 } },
+  incoherent: { name: '可区分', text: '两条缝都开，但**不做幅度相加**（强度相加——等价于「测量了粒子走哪条缝」）。条纹立刻消失，回到两个单缝包络的叠加。面板的「哪条路 ε」滑到 1 就是这件事：两条路变得可区分，干涉项归零。', cfg: { openA: true, openB: true, coherent: false, nslit: 2, eps: 1, flux: 0, barrier: 0, barrierWidth: 12, d: 48, w: 8 } },
 };
 
 /* ---------- 可视化：一阶模态扫描的累积和（Cornu 型螺旋） ----------
@@ -470,6 +498,55 @@ export function piSpiralStream(X, opts = {}){
 
 export function piSpiral(X, opts = {}){
   const s = piSpiralStream(X, opts);
+  s.step(s.total);
+  return s.result();
+}
+
+/* 当前配置下的完整振幅 a₁ 累积：扫描第一段第一模态 a₁，其余自由度
+   （第一段其余模态、第二段所有模态、缝宽 ξ 与全部开缝）按配置求和。
+   终点应与 piAmpAt(Y,cfg).raw 一致；N/d/w/L₁/L₂/Y/modes/AB 磁通/薄屏等变化都会改变曲线。
+   ε 是强度混合而非路径相位，故不改变这条复振幅曲线（这是物理上的不变量）。 */
+export function piPathSpiralStream(cfg = {}){
+  const c = { ...PI_DEFAULTS, ...cfg };
+  const K = Math.max(1, c.K | 0), W = c.W;
+  const Y = Number.isFinite(c.Y) ? c.Y : 0;
+  const slits = piSlits(c);
+  const xi = piXiSamples(c.w, piNxiFor(c.w, c.L2, Math.abs(Y), Math.max(1, c.nxi | 0)));
+  const other1 = c.modes > 1 ? piModeSum1D(c.L1, 2, c) : { re: 1, im: 0 };
+  const second = piModeSum(c.L2, c);
+  const fac = { re: other1.re * second.re - other1.im * second.im,
+                im: other1.re * second.im + other1.im * second.re };
+  let baseRe = 0, baseIm = 0;
+  for (const slit of slits){
+    for (const dx of xi){
+      const x = slit + dx;
+      const ph = piStraightPhase(c.L1, x - c.ys) + piStraightPhase(c.L2, Y - x)
+        + piABPhase(slit, c) + piBarrierPhase(x, c);
+      baseRe += Math.cos(ph); baseIm += Math.sin(ph);
+    }
+  }
+  const invXi = xi.length ? 1 / xi.length : 0;
+  const br = (baseRe * fac.re - baseIm * fac.im) * invXi;
+  const bi = (baseRe * fac.im + baseIm * fac.re) * invXi;
+  const coef = piModeCoef(c.L1, 1), A = W, h = A / K;
+  const pts = [[0, 0]];
+  let re = 0, im = 0, n = 0;
+  const total = 2 * K;
+  function one(){
+    const a = -A + (n + 0.5) * h, ph = coef * a * a;
+    re += br * Math.cos(ph) - bi * Math.sin(ph);
+    im += br * Math.sin(ph) + bi * Math.cos(ph);
+    pts.push([re, im]); n++;
+  }
+  return {
+    get total(){ return total + 1; },
+    get n(){ return n + 1; },
+    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m && n < total; k++) one(); },
+    result(){ return { pts, total: { re, im, mag: Math.hypot(re, im) }, count: n, len: total, h }; },
+  };
+}
+export function piPathSpiral(cfg = {}){
+  const s = piPathSpiralStream(cfg);
   s.step(s.total);
   return s.result();
 }
