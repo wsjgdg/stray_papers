@@ -4,7 +4,7 @@
  * 物理核心在 src/physics/surfacecode.js（pot128 81/81）。本页要把三件事画出来：
  *   ① **二维拓扑码长什么样**：d×d 数据比特 + 权重 4/2 混排的 X/Z 稳定子、
  *      两类边界分开（左右 = X 帧终止处，上下 = Z 帧终止处）。最近一次试验的
- *      错误（红点）、综合征（亮起的稳定子）、MWPM 修正链（蓝环）直接叠在码上。
+ *      错误（红点）、综合征（亮起的稳定子）、解码修正链（蓝环）直接叠在码上。
  *   ② **阈值就是三条曲线的排序反转**：d=3/5/7 的 P_L(p) 双对数曲线 + 未编码
  *      基线 p；阈值下侧 P_L 随 d 降、上侧随 d 升，交叉点即有限尺寸阈值。
  *   ③ **距离抑制**：固定 p 看 P_L 随 d 的变化（阈值下侧指数掉、上侧反而涨）。
@@ -23,7 +23,7 @@ import { LiveDriver } from './live.js';
 import { ShotReplay } from './shot-replay.js';
 import { ConfidenceFeedback } from './confidence.js';
 import { mulberry32 } from '../physics/qcircuit.js';
-import { scCircuitStream, scCircuitEnsemble } from '../physics/surfacecircuit.js';
+import { scCircuitStream, scCircuitEnsemble, scCircuitFaultAudit } from '../physics/surfacecircuit.js';
 
 const SF_CSS = `
   #sfPanel{top:108px;left:14px;width:254px;padding:13px;z-index:10;max-height:calc(100vh - 234px);
@@ -51,6 +51,8 @@ const SF_CSS = `
   #sfHud .hrow{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:2.5px 0}
   #sfHud .hrow span:first-child{color:var(--dim)}
   #sfHud .hrow span:last-child{color:var(--txt);text-align:right}
+  #sfHud #hFaultAuditRow{flex-wrap:wrap}
+  #sfHud #hFaultAuditRow span:last-child{flex-basis:100%;text-align:left;font-size:10px}
   #sfHud hr{border:none;border-top:1px solid var(--line);margin:6px 0}
   #sfHud .big{font-size:13px}
   #sfHud .warn{color:var(--red)}
@@ -109,6 +111,9 @@ export class SurfApp {
     };
     this.code = scBuild(this.state.d);
     this.trial = null;      /* 最近一次试验快照（码画布用） */
+    this.faultAudit = null;
+    this._auditKey = null;
+    this._auditToken = 0;
     this.mc = null;         /* 当前点 MC */
     this.sweep = null;      /* [{d, rows:[{p,PL,sigma,fallback}]}] */
     this.cross = null;      /* {c35, c57} */
@@ -126,6 +131,7 @@ export class SurfApp {
     this.ciFeedback?.dispose();
     this.shotReplay?.dispose();
     this._sweepToken++;                    /* 作废在途分帧扫描 */
+    this._auditToken++;
     clearTimeout(this._queueTimer);
     clearTimeout(this._runTimer);
     this._ro?.disconnect();
@@ -181,6 +187,7 @@ export class SurfApp {
         <div class="hrow"><span>X / Z 帧分解（累计）</span><span id="hSplit">—</span></div>
         <div class="hrow"><span>平均缺陷数（单帧）</span><span id="hDef">—</span></div>
         <div class="hrow"><span>解码器</span><span id="hDec">—</span></div>
+        <div class="hrow" id="hFaultAuditRow" style="display:none"><span>单故障签名审计</span><span id="hFaultAudit">—</span></div>
         <div class="hrow" id="hSpaceRow"><span>时空匹配图</span><span id="hSpace">—</span></div>
         <hr>
         <div class="hrow"><span>交叉点 d3×d5 / d5×d7</span><span id="hCross">—</span></div>
@@ -327,9 +334,9 @@ export class SurfApp {
     this.q('#sfTrialsO').textContent = s.trials;
     const pLabel = this.q('#sfPLabel'); if (pLabel) pLabel.textContent = this.circuit ? '每个电路位置的错误率 p' : '每比特错误率 p';
     const snap = this.q('#sfSnap'); if (snap){ snap.disabled = this.circuit; snap.title = this.circuit ? '回放须复用已计入统计的 circuit shot，不额外抽样' : ''; }
-    const scan = this.q('#sfScan'); if (scan){ scan.disabled = this.circuit; scan.title = this.circuit ? '首阶段暂不做 circuit-level 阈值扫描：解码器边权尚未纳入故障相关性' : ''; }
+    const scan = this.q('#sfScan'); if (scan){ scan.disabled = this.circuit; scan.title = this.circuit ? '诊断性原型不用于阈值结论：歧义签名回退 MWPM，且边权未联合建模 hook/高阶相关性' : ''; }
     const note = this.q('#sfModelNote');
-    if (note && this.circuit) note.innerHTML = '<b>首阶段 circuit-level 模型</b>：每轮真实运行 ancilla 稳定子提取；CNOT 后施加双比特退极化，ancilla 准备与经典读出各以 p 翻错。仅 d=3/5。暂不含 idle/T₁/T₂；MWPM 使用边缘近似权重、忽略 hook/相关故障，当前曲线不是可信阈值。';
+    if (note && this.circuit) note.innerHTML = '<b>诊断性 circuit-level 原型</b>：显式 ancilla/CNOT、SPAM 与双比特退极化；每轮另加每数据比特一个有效 idle 去极化位点。无歧义的单故障签名优先查表，歧义/多故障回退边缘权重 MWPM。idle 未按实际门时序排程，也不含泄漏/T₁/T₂；未联合解码高阶相关性，不能据此报告阈值。';
     else if (note) note.innerHTML = '<b>退极化是分帧独立解码</b>：丢掉 Y 的相关性 ⟹ 阈值 ≈ 1.5×单帧（10.3% → 15.5%；相关解码可到 18.9%，本页不做）。交叉点「未分辨」表示当前网格/样本数不足；带噪测量固定 q=p、d−1 轮 + 末轮理想读出，d=7 因时空缺陷过多而置灰。';
   }
 
@@ -339,12 +346,37 @@ export class SurfApp {
     if (sp) sp.innerHTML = sfMdLite(
       '码族页的重复码/Steane 级联是**一维**结构（多数表决 / 查表）；表面码是**二维拓扑码**：' +
       '权重 4 与权重 2 的稳定子混排、两类边界分开，纠错靠「把综合征连起来」。' +
-      '点「换一张码图」看错误（红）、综合征（亮框）、MWPM 修正链（蓝环）：' +
+      '点「换一张码图」看错误（红）、综合征（亮框）、解码修正链（蓝环）：' +
       '权重 ≤ t=⌊(d−1)/2⌋ 的错误必纠回，代价是**两条跨码链** = 逻辑错误（权重 d）。' +
       '阈值不是某个 p 的绝对值，而是 **d=3/5/7 三条曲线的排序反转**。' +
       '**带噪测量**（phenomenological）把时间放进匹配图：每轮读出以 q=p 出错 ⟹ 探测事件在时空里成对，' +
       '有限尺寸交叉从 ~9.5% 掉到 ~2.3%。画布下方那 2(d+1) 行点阵就是逐层的探测事件。' +
-      (this.circuit ? '**首阶段 circuit-level** 显式模拟每轮 ancilla + CNOT 提取、双比特退极化与 ancilla 准备/读出错；当前时空 MWPM 用边缘近似权重，忽略 hook 相关性，不作为阈值测量。' : ''));
+      (this.circuit ? '**诊断性 circuit-level 原型** 显式模拟 ancilla/CNOT、SPAM、双比特退极化与每轮有效 data-idle；无歧义的一阶签名查表，歧义或多故障回退边缘 MWPM。idle 非逐门时序模型，未联合解码高阶相关性，不作阈值测量。' : ''));
+  }
+
+  ensureFaultAudit(){
+    if (!this.circuit){
+      this._auditToken++;
+      this._auditKey = null;
+      this.faultAudit = null;
+      return;
+    }
+    const d = this.state.d;
+    if (this._auditKey === d) return;
+    const token = ++this._auditToken;
+    this._auditKey = d;
+    this.faultAudit = { loading: true, d };
+    setTimeout(() => {
+      try {
+        const result = scCircuitFaultAudit(scBuild(d), d);
+        if (token !== this._auditToken || !this.circuit || this.state.d !== d) return;
+        this.faultAudit = result;
+      } catch (error){
+        if (token !== this._auditToken) return;
+        this.faultAudit = { d, error: String(error && error.message || error) };
+      }
+      this.renderHud();
+    }, 0);
   }
 
   /* ---------- 计算 ---------- */
@@ -364,6 +396,7 @@ export class SurfApp {
 
   /** 当前点 MC + 一张码图快照 */
   runMc(newSnap){
+    this.ensureFaultAudit();
     const s = this.state;
     const code = this.code;
     if (this.live && this.live.playing){
@@ -497,8 +530,19 @@ export class SurfApp {
     this.shotReplay?.sync(this.trial || (this.mc && this.mc.lastTrial), this.mc && this.mc.trials, this.state);
     const s = this.state, v = this.verify, mc = this.mc;
     const set = (id, txt, cls) => { const el = this.q('#' + id); if (el){ el.textContent = txt; el.className = cls || ''; } };
-    const phenTxt = this.phen ? ` · phenomenological q=p（${Math.max(1, s.d - 1)} 轮 + 理想终读）` : this.circuit ? ` · circuit-level CNOT+SPAM（${s.d} 轮，近似 MWPM）` : ' · code-capacity';
-    set('hCfg', `${this.circuit ? '双比特退极化' : sfNoiseName[s.noise]} · d=${s.d} · p=${s.p.toFixed(4)} · N=${s.trials}${phenTxt}`);
+    const phenTxt = this.phen ? ` · phenomenological q=p（${Math.max(1, s.d - 1)} 轮 + 理想终读）` : this.circuit ? ` · circuit-level CNOT+SPAM（${s.d} 轮，查表/MWPM）` : ' · code-capacity';
+    set('hCfg', `${this.circuit ? '双比特退极化 + 有效 idle' : sfNoiseName[s.noise]} · d=${s.d} · p=${s.p.toFixed(4)} · N=${s.trials}${phenTxt}`);
+    const auditRow = this.q('#hFaultAuditRow');
+    if (auditRow) auditRow.style.display = this.circuit ? '' : 'none';
+    if (this.circuit){
+      if (!this.faultAudit || this.faultAudit.loading) set('hFaultAudit', '正在构建…');
+      else if (this.faultAudit.error) set('hFaultAudit', `失败：${this.faultAudit.error}`, 'warn');
+      else {
+        const a = this.faultAudit;
+        set('hFaultAudit', `${a.locations.toLocaleString()} 位点 · 覆盖 X/Z ${(100 * a.xCovered / a.locations).toFixed(1)}/${(100 * a.zCovered / a.locations).toFixed(1)}% · 歧义签名 ${a.xAmbiguous}/${a.zAmbiguous} · MWPM 歧义单故障逻辑失败 X/Z ${a.ambiguousFallbackLogicalFailX}/${a.ambiguousFallbackX}、${a.ambiguousFallbackLogicalFailZ}/${a.ambiguousFallbackZ}`,
+          a.xAmbiguous || a.zAmbiguous || a.lookupLogicalFailX || a.lookupLogicalFailZ || a.ambiguousFallbackLogicalFailX || a.ambiguousFallbackLogicalFailZ ? 'warn' : 'ok');
+      }
+    }
     if (v){
       set('hStruct', `${v.n} 比特 · |X|=${v.nX} · |Z|=${v.nZ} · k=${v.k} · 全对易=${v.commute ? '✓' : '✗'}`,
         (v.k === 1 && v.commute) ? 'ok' : 'warn');
@@ -517,8 +561,10 @@ export class SurfApp {
       } else set('hLast', '—');
       set('hSplit', `${sfFmt(mc.PLx)} / ${sfFmt(mc.PLz)}`);
       set('hDef', `${sfNF(mc.meanDefects, 2)} 个${this.spacetime ? '（时空）' : ''}`);
-      const decName = this.circuit ? '电路级边缘 MWPM' : this.phen ? 'phenomenological 时空 MWPM' : '二维 MWPM·DP';
-      set('hDec', `${decName} · 回退 ${(mc.fallback * 100).toFixed(2)}% · ${sfNF(mc.ms, 1)}ms`,
+      const decName = this.circuit
+        ? `单故障查表 ${(mc.lookupRate * 100).toFixed(1)}% → MWPM`
+        : this.phen ? 'phenomenological 时空 MWPM' : '二维 MWPM·DP';
+      set('hDec', `${decName} · 贪心兜底 ${(mc.fallback * 100).toFixed(2)}% · ${sfNF(mc.ms, 1)}ms`,
         mc.fallback > 0.02 ? 'warn' : '');
     }
     const spRow = this.q('#hSpaceRow');
@@ -587,7 +633,7 @@ export class SurfApp {
     g.font = (9 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = sfC.dim + '.85)';
     g.fillText(phen
-      ? (this.circuit ? `红点=最终数据帧 · 亮框=终层探测事件 · 蓝环=时空 MWPM 投影 · 下方=各轮综合征读数` : `红点=总错误 · 亮框=末层探测事件 · 蓝环=时空链的空间投影 · 下方 = 逐层探测事件`)
+      ? (this.circuit ? `红点=最终数据帧 · 亮框=终层探测事件 · 蓝环=解码修正投影 · 下方=各轮综合征读数` : `红点=总错误 · 亮框=末层探测事件 · 蓝环=时空链的空间投影 · 下方 = 逐层探测事件`)
       : `红点=错误 · 亮框=被点亮的综合征 · 蓝环=MWPM 修正 · 权重 ${d} 的横/竖链 = 逻辑（无法分辨）`,
     10 * dpr, 29 * dpr);
 

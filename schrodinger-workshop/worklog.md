@@ -1633,6 +1633,26 @@ README 噪声页用法补充矩阵与曲线探针操作。
 
 ---
 
+## R166（2026-10-30）旋转表面码故障签名解码与有效 idle 升级
+
+### 完成项
+- [x] circuit noise 增加每轮每个数据比特一个总概率 p 的有效 idle depolarizing 位点（X/Y/Z 等概率）；明确它是轮级近似，不冒充门时序/T₁/T₂ 模型。
+- [x] 建立 CNOT 15 种非 II 双比特 Pauli、ancilla prep/readout 与 data-idle Pauli 的强制故障目录；以逐层 detector history 建 X/Z 签名表。无歧义单故障签名直接修正；签名歧义或多故障回退边缘权重 MWPM。
+- [x] 暴露 forceFaults，回放记录故障明细；HUD 显示查表比例、贪心兜底率、单故障目录覆盖率及歧义数。审计逐个强制注入机制，检验无歧义签名的逻辑类与终端 syndrome。
+- [x] 审计同时暴露了前一阶段 X/Z 解码帧所选稳定子图方向相反；按 X error→Z checks、Z error→X checks 修正解码图与 residual-syndrome 判据。
+- [x] README 与 UI 更新噪声说明和边界：不做 threshold/外推；明确 hook/高阶相关性、实际 idle 排程、泄漏及 T₁/T₂ 尚未建模。
+
+### 定量审计与验证
+- d=3：1,209 个 fault mechanisms；无歧义目录覆盖 X 1,089、Z 1,065；X/Z 歧义签名 7/7；已覆盖机制 logical-class 与终端 syndrome 检查均通过；无 silent logical fault。歧义机制回退 MWPM 后逻辑失败 X/Z 为 63/120、87/144（终端 syndrome 均闭合）。
+- d=5：6,615 个 mechanisms；无歧义目录覆盖 X 6,415、Z 6,375；歧义签名 11/15；已覆盖机制 logical-class 与终端 syndrome 检查均通过；无 silent logical fault。歧义机制回退 MWPM 后逻辑失败 X/Z 为 105/200、145/240（终端 syndrome 均闭合）。签名表首次建立约 0.93 s（d=5，含歧义回退诊断；Node）；缓存后复用。
+- `node scripts/verify-qec-stage.mjs`：clean/stream 一致、d=3/5 目录审计、强制注入单 fault、查表纠正与 Wilson 回归均通过。
+
+### 诚实边界
+- 仍有歧义签名，按设计回退到 MWPM；目录无歧义覆盖不是全电路单故障容错证明，歧义回退的全部故障类也未宣称可纠正。MWPM 仍仅用边缘近似权重、不联合建模 hook/多故障相关性。
+- 每轮有效 idle 是简化抽样位置，不含 ancilla idle 排程、T₁/T₂、泄漏、相干噪声或串扰。当前实现仅为诊断原型，不得据此声称阈值或容错结果。
+
+---
+
 ## R165（2026-10-30）旋转表面码 circuit-level 噪声首阶段
 
 ### 完成项

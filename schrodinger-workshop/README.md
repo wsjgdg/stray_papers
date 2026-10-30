@@ -1669,9 +1669,11 @@ k̄≈22 常超 DP 上限，回退率过半）、d=3 精确对账按钮置灰（
 
 #### Circuit-level 首阶段（同页口径 `meas=circuit`）
 
-选择「电路级（首阶段）」后，d=3/5 的一次试验会运行 **R=d 轮显式 ancilla 稳定子提取**：Z 检查以 |0⟩ ancilla 作控制，X 检查以 |+⟩ ancilla 作目标，按检查支撑顺序执行 CNOT。每个 CNOT 后以概率 p 施加均匀 15 种非 I 双比特 Pauli 之一；每个 ancilla 的准备位与经典读出位也各以 p 出错。仿真使用 Pauli frame，保留每轮综合征、门/准备/读出故障计数与最终数据帧；初始综合征取理想码态，末端用理想数据帧综合征作解码边界。
+选择「电路级（首阶段）」后，d=3/5 的一次试验会运行 **R=d 轮显式 ancilla 稳定子提取**：Z 检查以 |0⟩ ancilla 作控制，X 检查以 |+⟩ ancilla 作目标，按检查支撑顺序执行 CNOT。每个 CNOT 后以概率 p 施加均匀 15 种非 I 双比特 Pauli 之一；每个 ancilla 的准备位与经典读出位也各以 p 出错。每轮完整提取后，对每个数据比特再施加一个总概率 p、X/Y/Z 等概率的**有效 idle 去极化位点**。它只是轮级占位近似，并非按门调度计算的真实 idle 时长。仿真使用 Pauli frame，保留逐轮综合征与最多 64 条故障明细；初始综合征取理想码态，末端用理想数据帧综合征作解码边界。
 
-当前这是一个**显式电路噪声原型，不是可引用的 circuit-level 阈值结果**：不含 idle、泄漏与 T₁/T₂；解码器把各位置折算为边缘空间/时间权重后复用 phenomenological 时空 MWPM，**故障间 hook/相关性虽在电路采样中出现，但 decoder 未联合利用**。因此页面只支持 d=3/5 的单点试验与最近样本回放，禁用阈值扫描、距离外推和「换图」的额外抽样；HUD/画布固定提示近似解码与范围。源码位于 `src/physics/surfacecircuit.js`，UI 接线在 `src/qec/mode-surf.js`。后续要给阈值结论，必须先补 circuit-level correlated decoder 与故障/调度校验，再扩距离与加入 idle/SPAM 细化。
+这是一个**诊断性电路噪声原型，不是可引用的 circuit-level 阈值结果**。解码时先查 d 与轮数对应的单故障 fault-signature 表；仅对无歧义签名应用表中修正，歧义或多故障情形回退至使用边缘近似权重的时空 MWPM。单故障审计按 CNOT 双比特 Pauli、有效 idle Pauli、ancilla 准备/读出位点逐一强制注入，并检查签名歧义、逻辑类与残余 syndrome。当前审计发现仍有歧义签名（d=3：X/Z 各 7 个；d=5：X 11、Z 15 个），这些会回退 MWPM。无歧义目录机制均通过逻辑类与终端 syndrome 检查；但歧义回退**确实存在单故障逻辑失败**：d=3 的 X/Z 歧义机制分别为 63/120、87/144，d=5 为 105/200、145/240（终端 syndrome 仍闭合）。因此不能把查表覆盖率包装成全电路单故障容错证明。MWPM 仍未联合利用 hook 与高阶相关性。
+
+页面只支持 d=3/5 的单点试验与最近样本回放，禁用阈值扫描、距离外推和「换图」的额外抽样；HUD 显示当前 lookup 使用率、单故障目录覆盖/歧义与贪心兜底率。模型不含泄漏、T₁/T₂、相干误差、串扰或逐门 idle 排程。因此不可据此声称阈值或容错结果。源码位于 `src/physics/surfacecircuit.js`，UI 接线在 `src/qec/mode-surf.js`；回归脚本为 `scripts/verify-qec-stage.mjs`。后续需先处理歧义故障并校准调度/相关解码，再扩距离与噪声族。
 
 **诚实限制**：① 默认口径仍是 code-capacity（综合征理想）；带噪测量与上述首阶段 circuit-level 已分别落地，但两种含时间维口径不可混称。② 退极化 code-capacity 仍分帧独立解码，不做相关性解码。③ d ≥ 5 **未证**逐综合征最小权重：MWPM 最小化匹配路径总长，而路径 XOR 重叠后实际修正可能更轻；d=3 全枚举 16/16 达到最小权重，d≥5 未做 ILP/更高权重穷举。④ d=9 只在测试里用：p ≳ 0.09 起缺陷数超 DP 上限，回退率升到 26%，数字不再可信；code-capacity 页面只上 d=3/5/7。⑤ code-capacity 交叉点受有限尺寸与 MC 噪声双重限制，页面给 σ；d5×d7 交叉在本尺寸不可分辨。
 
@@ -3916,7 +3918,7 @@ schrodinger-workshop/
     ├── paths.html                构建产物：路径页单文件版（138.6 KB，file:// 直开）
     ├── qcircuit.html             构建产物：线路页单文件版（176.4 KB，file:// 直开）
     ├── noise.html                构建产物：噪声页单文件版（130.5 KB，file:// 直开）
-    ├── qec.html                  构建产物：纠错页单文件版（863.1 KB，file:// 直开）
+    ├── qec.html                  构建产物：纠错页单文件版（909.4 KB，file:// 直开）
     ├── shor.html                 构建产物：Shor 码跳转存根（→ qec.html?mode=shor，<1 KB）
     ├── gatenoise.html            构建产物：门噪声跳转存根（→ qec.html?mode=gate，<1 KB）
     ├── flag.html                 构建产物：综合提取容错跳转存根（→ qec.html?mode=flag，<1 KB）
