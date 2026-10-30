@@ -209,6 +209,11 @@ export class QecApp {
     if (this.nqFor(this.state.n, this.state.rd) > 18)
       this.state.rd = this.nqFor(this.state.n, 3) <= 18 ? 3 : 1;
     this.trial = null;
+    /* R162：单次纠错可在噪声列点选数据位，强制注入可复现实验错误。 */
+    this.manualMode = false;
+    this.manualErrors = [];
+    this._manualTargets = [];
+    this._manualHoverQ = -1;
     this.ens = null;
     this.curve = null;
     this.svy = null;      /* 门级：一阶故障枚举（c₁） */
@@ -311,6 +316,8 @@ export class QecApp {
           <button id="qeOnce">单次实验</button>
           <button id="qeReseed">换种子</button>
         </div>
+        <div class="btns"><button id="qeManual" title="开启后，点击线路图「噪声 p」列的数据位，手动注入或移除错误；单次实验会立即重跑。仅适用于 iid / 物理通道口径。">线路点选注错：关</button></div>
+        <div id="qeManualMsg" style="font-family:var(--mono);font-size:9.5px;color:var(--dim);line-height:1.45;margin:2px 0 4px">开启后点线路图「噪声 p」列的数据位，观察综合征与纠正结果。</div>
         <div class="row"><label>样本数</label><input type="range" id="qeTrials" min="500" max="20000" step="500"><output id="qeTrialsO">—</output></div>
 
         <div class="grp">扫描策略（拿信息换时间）</div>
@@ -440,6 +447,11 @@ export class QecApp {
     physSlider('T1', 't1'); physSlider('T2', 't2'); physSlider('Tg', 'tg');
     physSlider('Pd', 'pd', 0.001); physSlider('Re', 're', 0.001); physSlider('Peq', 'peq', 0.001);
     this.on(this.q('#qeOnce'), 'click', () => { this.rollOnce(); this.drawAll(); this.renderHud(); });
+    this.on(this.q('#qeManual'), 'click', () => this.setManualMode(!this.manualMode));
+    const circuit = this.q('#qecCircuit');
+    this.on(circuit, 'pointermove', e => this.onCircuitPointerMove(e));
+    this.on(circuit, 'pointerleave', () => this.onCircuitPointerLeave());
+    this.on(circuit, 'click', e => this.onCircuitClick(e));
     this.on(this.q('#qeReseed'), 'click', () => {
       this.state.seed = (this.state.seed * 1103515245 + 12345) % 2147483647;
       this.recompute();
@@ -463,7 +475,7 @@ export class QecApp {
       onFrame: res => { this.ens = res; this.renderHud(); this.drawAll(); },
       onState: () => this.syncPlayBtn(),
     });
-    this.on(this.q('#qePlay'), 'click', () => this.live.toggle());
+    this.on(this.q('#qePlay'), 'click', () => { if (this.manualMode) this.setManualMode(false); this.live.toggle(); });
     this.syncPlayBtn();
     if (this.state.live) this.live.start();   /* ?live=1：recompute 将走播放分支 */
 
@@ -664,8 +676,56 @@ export class QecApp {
   }
 
   rollOnce(){
+    if (this.manualMode && this.state.noise !== 'gate'){
+      /* 每次点选都用同一随机种子：变化只来自用户指定的错误位，不被随机噪声掩盖。 */
+      this.trial = qecTrial({ ...this.cfg(), forceErrors: this.manualErrors.slice() }, mulberry32(this.state.seed ^ 0x6d2b79f5));
+      return;
+    }
     this._rng = this._rng || mulberry32(this.state.seed ^ 0x9e37);
     this.trial = qecTrial(this.cfg(), this._rng);
+  }
+
+  setManualMode(on){
+    if (on && this.state.noise === 'gate') return;
+    if (on && this.live?.playing) this.live.stop();
+    this.manualMode = !!on;
+    this._manualHoverQ = -1;
+    this.rollOnce();
+    this.syncPanel();
+    this.drawAll();
+    this.renderHud();
+  }
+
+  circuitTargetAt(e){
+    if (!this.manualMode || this.state.noise === 'gate') return null;
+    const rect = this.cv.circuit.getBoundingClientRect();
+    const x = e.clientX - rect.left, y = e.clientY - rect.top;
+    return this._manualTargets.find(t => Math.abs(x - t.x) <= t.rx && Math.abs(y - t.y) <= t.ry) || null;
+  }
+
+  onCircuitPointerMove(e){
+    const target = this.circuitTargetAt(e);
+    const q = target ? target.q : -1;
+    this.cv.circuit.style.cursor = target ? 'pointer' : 'default';
+    if (q !== this._manualHoverQ){ this._manualHoverQ = q; this.drawCircuit(); }
+  }
+
+  onCircuitPointerLeave(){
+    this.cv.circuit.style.cursor = 'default';
+    if (this._manualHoverQ !== -1){ this._manualHoverQ = -1; this.drawCircuit(); }
+  }
+
+  onCircuitClick(e){
+    const target = this.circuitTargetAt(e);
+    if (!target) return;
+    const i = this.manualErrors.indexOf(target.q);
+    if (i >= 0) this.manualErrors.splice(i, 1);
+    else this.manualErrors.push(target.q);
+    this.manualErrors.sort((a, b) => a - b);
+    this.rollOnce();
+    this.drawAll();
+    this.renderHud();
+    this.syncPanel();
   }
 
   setCode(c){
@@ -677,6 +737,7 @@ export class QecApp {
   setNoise(n){
     if (!QEC_NOISE[n]) return;
     this.state.noise = n;
+    if (n === 'gate') this.manualMode = false;
     this._curveKey = '';
     this.syncPanel(); this.recompute(); this.renderHint();
   }
@@ -700,6 +761,7 @@ export class QecApp {
     const rd = qecNormRd(this.state.rd);
     if (k === this.state.n && this.nqFor(k, rd) <= 18) return;
     this.state.n = k;
+    this.manualErrors = this.manualErrors.filter(q => q < k);
     /* rd 保持优先；非法（nq>18）时降到最大的合法档——R110 的 n=5 切入手感
        （rd=5→3）原样保留，n=7/9 只能落到 1（rd=3 时 nq=25/29 仍超限） */
     if (this.nqFor(k, rd) > 18) this.state.rd = this.nqFor(k, 3) <= 18 ? 3 : 1;
@@ -763,6 +825,22 @@ export class QecApp {
           : '每位稳定子测 5 次取多数：ε→10ε³−15ε⁴+6ε⁵；代价同比例上升');
     }
     /* R129：扫描策略按钮 + 一行实测说明（成本只报**上一轮实测**，不报估计值） */
+    const manual = this.q('#qeManual'), manualMsg = this.q('#qeManualMsg');
+    if (manual){
+      manual.disabled = s.noise === 'gate';
+      manual.classList.toggle('on', this.manualMode);
+      manual.textContent = this.manualMode ? '线路点选注错：开' : '线路点选注错：关';
+      manual.title = s.noise === 'gate'
+        ? '门级噪声按具体门注错；此处手动数据错误只适用于 iid / 物理通道口径。'
+        : '开启后，点击线路图「噪声 p」列的数据位，手动注入或移除错误；单次实验会立即重跑。';
+    }
+    if (manualMsg){
+      manualMsg.textContent = s.noise === 'gate'
+        ? '门级故障按门注入；数据位点选只适用于 iid / 物理通道。'
+        : this.manualMode
+          ? '已选错误位：' + (this.manualErrors.length ? this.manualErrors.map(q => 'q' + q).join('、') : '无') + '。点击切换；强制位替代数据错误的 p 抽样。物理通道轨迹固定，换种子刷新。'
+          : '开启后点线路图「噪声 p」列的数据位，观察综合征与纠正结果。';
+    }
     const fsc = this.q('#qeFastScan'), skm = this.q('#qeSkipMc');
     if (fsc) fsc.classList.toggle('on', !!s.fastScan);
     if (skm) skm.classList.toggle('on', !!s.skipMc);
@@ -1550,6 +1628,12 @@ export class QecApp {
     const yOf = q => padT + (q + 0.5) * rowH;
     const colW = (W - padL - padR) / nCols;
     const xOf = i => padL + (i + 0.5) * colW;
+    const noiseCol = cols.findIndex(col => col.t === 'noise');
+    this._manualTargets = noiseCol < 0 ? [] : Array.from({ length: N }, (_, q) => ({
+      q, x: xOf(noiseCol) / dpr, y: yOf(q) / dpr,
+      rx: Math.max(7, Math.min(18, colW / dpr * 0.45)),
+      ry: Math.max(5, Math.min(12, rowH / dpr * 0.42)),
+    }));
     const labels = [];
     for (let i = 0; i < N; i++) labels.push('q' + i);
     for (let i = 0; i < (N - 1) * rd; i++) labels.push('a' + i);
@@ -1630,9 +1714,13 @@ export class QecApp {
           g.font = (10 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
           g.textBaseline = 'middle'; g.fillText(errPauli, cx, y + 0.5 * dpr);
           g.textBaseline = 'alphabetic';
+          if (this.manualMode && this._manualHoverQ === q){
+            g.strokeStyle = 'rgba(103,232,249,.95)'; g.lineWidth = 1.5 * dpr;
+            g.beginPath(); g.roundRect(cx - size * 0.72, y - size * 0.72, size * 1.44, size * 1.44, 6 * dpr); g.stroke();
+          }
         }
         g.fillStyle = 'rgba(148,163,184,.8)'; g.font = (9 * dpr) + 'px ui-monospace,monospace';
-        g.textAlign = 'center'; g.fillText(s.noise === 'phys' ? '存储错误 p' : '噪声 p', cx, yOf(0) - size / 2 - 7 * dpr);
+        g.textAlign = 'center'; g.fillText(this.manualMode ? '指定错误' : (s.noise === 'phys' ? '存储错误 p' : '噪声 p'), cx, yOf(0) - size / 2 - 7 * dpr);
       } else if (col.t === 'vote'){
         /* R109：多数表决盒——跨全部 ancilla 行的竖框，标注本次试验的表决结果 */
         const y0v = yOf(N), y1v = yOf(rows - 1);
