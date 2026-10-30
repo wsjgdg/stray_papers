@@ -15,21 +15,34 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 
 const ROOT = process.cwd();
+/** 固定文件：两张生成表 + 两份累积存档 */
 const BACKUPS = {
   "src/lib/scenic-desc-outsource.generated.ts": null,
   "src/lib/spot-profiles.generated.ts": null,
   "docs/outsource/out-desc-4a-merged.json": null,
   "docs/outsource/out-profile-merged.json": null,
-  // 六十四轮起合并器会写 qc 抽检文件；不还原会留下「批 1 已交付」的假信号，
-  // 误导流水线维护方去抽检合成数据。这里一并纳入备份/还原。
-  "docs/outsource/qc-desc-batch1.json": null,
-  "docs/outsource/qc-profile-batch1.json": null,
 };
+/**
+ * 合并器写出的 qc 抽检文件：按 glob 全量纳入，而不是写死 batch1。
+ * 写死的话，批 2+ 交付后跑一次验收就会留下 qc-desc-batch2.json 等残留，
+ * 内容是合成数据的 id，足以让人误判「该批已交付」并去抽检假数据。
+ */
+const QC_GLOB = /^qc-(desc|profile)-batch\d+\.json$/;
+
+const listQcFiles = () =>
+  fs
+    .readdirSync(path.resolve("docs/outsource"))
+    .filter((f) => QC_GLOB.test(f))
+    .map((f) => `docs/outsource/${f}`);
 
 const backup = () => {
   for (const f of Object.keys(BACKUPS)) {
     const p = path.resolve(f);
     BACKUPS[f] = fs.existsSync(p) ? fs.readFileSync(p, "utf8") : null;
+  }
+  for (const f of listQcFiles()) {
+    const p = path.resolve(f);
+    BACKUPS[f] = fs.readFileSync(p, "utf8");
   }
 };
 const restore = () => {
@@ -40,6 +53,10 @@ const restore = () => {
     } else {
       fs.writeFileSync(p, content, "utf8");
     }
+  }
+  // 运行期新产生的 qc 文件（备份时还不存在）也要删掉，否则会留下「该批已交付」的假信号
+  for (const f of listQcFiles()) {
+    if (!(f in BACKUPS)) fs.unlinkSync(path.resolve(f));
   }
 };
 
