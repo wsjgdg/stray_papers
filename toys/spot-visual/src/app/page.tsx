@@ -609,6 +609,20 @@ function SpotGrid({
                           {spot.rating.toFixed(1)}
                         </span>
                       )}
+                      {(() => {
+                        const q = quoteTicket(spot);
+                        if (q.price == null) return null;
+                        return (
+                          <span
+                            title={`门票来源：${q.label}`}
+                            className="ml-auto shrink-0 text-emerald-600 font-bold"
+                          >
+                            {q.price === 0
+                              ? "免费"
+                              : `¥${q.price}${q.source === "estimate" ? "" : ""}`}
+                          </span>
+                        );
+                      })()}
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {spot.projects.slice(0, 3).map((p) => (
@@ -718,6 +732,18 @@ function SpotList({
                           {spot.rating.toFixed(1)}
                         </span>
                       )}
+                      {(() => {
+                        const q = quoteTicket(spot);
+                        if (q.price == null) return null;
+                        return (
+                          <span
+                            title={`门票来源：${q.label}`}
+                            className="ml-auto shrink-0 text-emerald-600 font-bold"
+                          >
+                            {q.price === 0 ? "免费" : `¥${q.price}`}
+                          </span>
+                        );
+                      })()}
                     </div>
                     <p className="text-xs text-gray-500 line-clamp-2 mb-2">
                       {spot.description}
@@ -962,7 +988,8 @@ function SpotDetailDialog() {
       `【${spot.level ? `${spot.level} · ` : ""}${spot.name}】\n` +
       `地址：${spot.address}\n` +
       (tq.price != null
-        ? `门票：¥${tq.price}${tq.source === "estimate" ? "（估）" : ""}\n` : "") +
+        ? `门票：¥${tq.price}${tq.source === "estimate" ? "（估）" : ""}\n`
+        : "") +
       (spot.rating ? `评分：${spot.rating.toFixed(1)}\n` : "") +
       (spot.openTime ? `开放时间：${spot.openTime}\n` : "") +
       (spot.tel ? `电话：${spot.tel}\n` : "") +
@@ -2702,7 +2729,20 @@ function FavoritesView() {
     [spots, favorites],
   );
   const [favQuery, setFavQuery] = useState("");
-  const [favCat, setFavCat] = useState("全部");
+  const [favLevel, setFavLevel] = useState<"5A" | "4A" | null>(null);
+  // 分类记忆（sessionStorage）：会话内切走再回来不重置
+  const [favCat, setFavCat] = useState(() => {
+    try {
+      return sessionStorage.getItem("favCat") ?? "全部";
+    } catch {
+      return "全部";
+    }
+  });
+  useEffect(() => {
+    try {
+      sessionStorage.setItem("favCat", favCat);
+    } catch {}
+  }, [favCat]);
   const favCats = useMemo(() => {
     const cats = new Set(favSpots.map((s) => s.category));
     return ["全部", ...Array.from(cats)];
@@ -2712,6 +2752,7 @@ function FavoritesView() {
       favCat === "全部"
         ? favSpots
         : favSpots.filter((s) => s.category === favCat);
+    if (favLevel) list = list.filter((s) => s.level === favLevel);
     const q = favQuery.trim().toLowerCase();
     if (q)
       list = list.filter(
@@ -2723,7 +2764,7 @@ function FavoritesView() {
           })(),
       );
     return list;
-  }, [favSpots, favCat, favQuery]);
+  }, [favSpots, favCat, favLevel, favQuery]);
   // 导出收藏清单为 txt（含等级/地址/开放时间/电话/高德导航链接），可直接发给别人
   const exportList = useCallback(() => {
     const lines = shownFavs.map((s, i) => {
@@ -2799,6 +2840,22 @@ function FavoritesView() {
           <Download className="w-3.5 h-3.5" />
           导出清单
         </Button>
+      </div>
+      {/* 等级快筛 */}
+      <div className="flex items-center gap-1.5 mb-3">
+        {(["5A", "4A"] as const).map((lv) => (
+          <button
+            key={lv}
+            onClick={() => setFavLevel(favLevel === lv ? null : lv)}
+            className={`px-2 py-1 rounded-lg text-xs font-black border transition-colors ${
+              favLevel === lv
+                ? "bg-amber-400 text-white border-amber-400"
+                : "bg-white text-amber-600 border-amber-200 hover:bg-amber-50"
+            }`}
+          >
+            {lv}
+          </button>
+        ))}
       </div>
       {/* 搜索（名称+拼音）：收藏多了以后定位用 */}
       <div className="relative mb-3">

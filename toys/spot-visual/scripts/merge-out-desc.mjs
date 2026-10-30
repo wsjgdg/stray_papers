@@ -33,6 +33,30 @@ function writeAtomic(file, text) {
   fs.renameSync(tmp, file);
 }
 
+/** 确定性 PRNG（mulberry32）：qc 抽样用，同批号每次抽出的样本固定，便于跨会话比对复核 */
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** 从 id 列表确定性抽 n 个（部分 Fisher-Yates 洗牌，不足 n 全取） */
+function sampleIds(ids, n, rand) {
+  const arr = ids.slice();
+  const k = Math.min(n, arr.length);
+  for (let i = 0; i < k; i++) {
+    const j = i + Math.floor(rand() * (arr.length - i));
+    const t = arr[i];
+    arr[i] = arr[j];
+    arr[j] = t;
+  }
+  return arr.slice(0, k);
+}
+
 const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 if (!args.length) {
   console.error(
@@ -49,6 +73,7 @@ const merged = fs.existsSync(MERGED)
 let totalNew = 0;
 let totalLow = 0;
 const nameIssues = [];
+const batchQc = []; // 每批抽检数据，验收通过并落盘后统一写 qc 文件
 
 for (const file of args) {
   const out = JSON.parse(fs.readFileSync(file, "utf8"));
@@ -109,6 +134,7 @@ for (const file of args) {
     process.exit(1);
   }
 
+  let batchLow = 0;
   for (const item of out.items) {
     merged[item.id] = {
       name: item.name,
@@ -116,10 +142,21 @@ for (const file of args) {
       batch: m[1],
       ...(item.confidence === "low" ? { low: true } : {}),
     };
-    if (item.confidence === "low") totalLow++;
+    if (item.confidence === "low") {
+      totalLow++;
+      batchLow++;
+    }
     totalNew++;
   }
-  for (const ni of out.nameIssues ?? []) nameIssues.push(ni);
+  const batchNameIssues = out.nameIssues ?? [];
+  for (const ni of batchNameIssues) nameIssues.push(ni);
+  batchQc.push({
+    batch: parseInt(m[1], 10),
+    count: out.items.length,
+    low: batchLow,
+    nameIssues: batchNameIssues.length,
+    ids: out.items.map((i) => i.id),
+  });
   console.log(`✓ 批${m[1]}: ${out.items.length} 条验收通过并入`);
 }
 
@@ -140,6 +177,27 @@ export const OUTSOURCE_DESCRIPTIONS: Record<string, string> = ${JSON.stringify(
 )};
 `;
 writeAtomic(OUT_TS, banner);
+
+// 抽检辅助：整批验收通过并落键后，为每批写 qc 文件供人工抽检
+// （seed = 批号*1024 固定种子随机抽 20 条，同批重复运行结果一致，幂等）
+for (const b of batchQc) {
+  const qcFile = path.join(IN_DIR, `qc-desc-batch${b.batch}.json`);
+  writeAtomic(
+    qcFile,
+    JSON.stringify(
+      {
+        batch: b.batch,
+        count: b.count,
+        low: b.low,
+        nameIssues: b.nameIssues,
+        sample: sampleIds(b.ids, 20, mulberry32(b.batch * 1024)),
+      },
+      null,
+      2,
+    ),
+  );
+  console.log(`✓ 抽检文件 → ${qcFile}`);
+}
 
 const lows = Object.values(merged).filter((v) => v.low).length;
 console.log(
