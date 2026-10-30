@@ -21,6 +21,8 @@
 import { injectStyles } from './core/styles.js';
 import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
+/* 3D 透视视图复用哈伯德页的相机/投影/拾取（纯数学模块，pot143 已逐条对账） */
+import { hbProject, hbSitePositions, hbPick, hbOrbit, hbZoom, hbCamDefault, hbDepthRange } from './hubbard3d.js';
 import { symEigVals } from './physics/hubbard.js';
 import { spSector, spProduct, spNeel, spMeasure, spEnergy, spResidual, spNorm, spKrylovExp, spEntropy, spEntropyAt, spEntropyProfile, spStructureFactor, SpGsTask, SP_PRESETS } from './physics/spin.js';
 
@@ -30,6 +32,10 @@ const SP_TOOLS = [
   { k: 'state', name: '初态', tip: '点击格点翻转该格自旋（右键反向）' },
   { k: 'field', name: '场笔刷', tip: '拖动涂局域场：左键 = +b（偏 ↑），右键 = −b（偏 ↓）' },
   { k: 'erase', name: '擦除', tip: '点击清除该格的局域场' },
+];
+const SP_PROJ = [
+  { k: '2d', name: '2D', tip: '平面阶梯：箭头 + 键关联带 + 局域场带' },
+  { k: '3d', name: '3D', tip: '透视：链沿 x、自旋沿 ±y、局域场 b_i 沿 ∓z 刺出平面（拖空白转视角）' },
 ];
 const SP_VIEWS = [
   { k: 'Sx', name: 'S(x)', tip: '纠缠剖面：以切点 x 分开时左半的熵' },
@@ -118,12 +124,22 @@ export class SpinApp {
       mode: q.get('mode') === 'evo' ? 'evo' : 'gs',
       tool: SP_TOOLS.some(t => t.k === q.get('tool')) ? q.get('tool') : 'state',
       view: SP_VIEWS.some(v => v.k === q.get('view')) ? q.get('view') : 'Sx',
+      proj: q.get('proj') === '3d' ? '3d' : '2d',
       nUp: 0, spins: null, bz: null,
       t: 0, frames: 0, paused: q.get('paused') === '1',
       dt: num('dt', 0.04), spf: Math.round(num('spf', 2)),
       brush: clamp(num('br', 1.5), 0, B_VIEW),
     };
     this.sec = null; this.re = null; this.im = null;
+    this.cam = hbCamDefault(); this._sites3 = null; this._orbit = null;
+    /* 相机也能从 URL 读：非法值退回默认（相机只是视图参数，不必整份拒绝） */
+    const camQ = q.get('cam');
+    if (camQ){
+      const arr = camQ.split(',').map(Number);
+      if (arr.length === 3 && arr.every(Number.isFinite)){
+        this.cam = { yaw: arr[0], pitch: clamp(arr[1], -1.33, 1.33), dist: clamp(arr[2], 3.2, 20) };
+      }
+    }
     this.E = NaN; this.residual = null; this.m = null; this.S = NaN; this.Sq = null;
     this.hist = []; this.job = null; this.msg = '';
     this._hover = -1; this._paint = null; this._view = null;
@@ -202,7 +218,6 @@ export class SpinApp {
     <button id="spPause">暂停</button><button id="spStep">单步</button>
     <button id="spReset" class="sm">重置</button><button id="spLink" class="sm">复制链接</button>
     <button id="spSave" class="sm">导出 JSON</button><button id="spGap" class="sm">算能隙</button>
-    <button id="spToHubbard" class="sm" title="U≫t 的半满 Hubbard 带 ⟹ 超交换 J=4t²/U ⟹ 本页的 XXX 链；跳去哈伯德页看电荷自由度">↔ 哈伯德页</button>
   </div></div>
 </div>
 
@@ -213,6 +228,8 @@ export class SpinApp {
     <button class="sp-band" id="spDrawerHud" title="展开/收起读数（窄屏）">◫ 读数</button>
     <span class="sp-band" style="flex:1"></span>
     ${SP_VIEWS.map(v => `<button data-view="${v.k}" title="${v.tip}">${v.name}</button>`).join('')}
+    <span style="width:10px"></span>
+    ${SP_PROJ.map(v => `<button data-proj="${v.k}" title="${v.tip}">${v.name}</button>`).join('')}
   </div>
   <canvas id="spChart"></canvas>
 </div>
@@ -274,7 +291,8 @@ export class SpinApp {
     this.on(this.q('#spLink'), 'click', () => this.copyLink());
     this.on(this.q('#spSave'), 'click', () => this.exportJson());
     this.on(this.q('#spGap'), 'click', () => this.startGap());
-    this.on(this.q('#spToHubbard'), 'click', () => this.toHubbard());
+    this.container.querySelectorAll('button[data-proj]').forEach(b =>
+      this.on(b, 'click', () => this.setProj(b.getAttribute('data-proj'))));
     this.on(window, 'resize', () => {
       const w = window.innerWidth || 0;
       if (w > 1200 || w <= 860) this.closeBand();
@@ -285,6 +303,10 @@ export class SpinApp {
       if (/input|textarea|select/i.test(tag)) return;
       if (e.key === '1' || e.key === '2' || e.key === '3') this.setTool(SP_TOOLS[+e.key - 1].k);
       else if (e.key >= '4' && e.key <= '7') this.setView(SP_VIEWS[+e.key - 4].k);
+      else if (e.key === '0') this.toggleProj();
+      else if (this.state.proj === '3d' && (e.key === 'r' || e.key === 'R')){
+        this.cam = hbCamDefault(); this.syncPanel(); this.draw(); this.queueUrl();
+      }
       else if (e.key === ' ') { e.preventDefault(); this.togglePause(); }
       else if (e.key === 'Escape') this.closeBand();
     });
@@ -297,8 +319,15 @@ export class SpinApp {
     if (!cv) return;
     this.on(cv, 'contextmenu', e => e.preventDefault());
     this.on(cv, 'pointerdown', e => {
-      const i = this.siteAtX(this.evX(e));
+      const i = this.pick(e);
       this._hover = i;
+      /* 3D：格点之外（或 Shift / 中键）就是「转相机」——不必先切工具，点格点照样可用 */
+      if (this.state.proj === '3d' && (i < 0 || e.shiftKey || e.button === 1)){
+        e.preventDefault();
+        this._paint = null;
+        this._orbit = { x: e.clientX, y: e.clientY };
+        return;
+      }
       if (i < 0) return;
       e.preventDefault();
       this._paint = { i };
@@ -306,7 +335,15 @@ export class SpinApp {
       this.draw();
     });
     this.on(cv, 'pointermove', e => {
-      const i = this.siteAtX(this.evX(e));
+      if (this._orbit){
+        const dx = e.clientX - this._orbit.x, dy = e.clientY - this._orbit.y;
+        this._orbit = { x: e.clientX, y: e.clientY };
+        this.cam = hbOrbit(this.cam || hbCamDefault(), dx, dy);
+        this._hover = -1;
+        this.draw();
+        return;
+      }
+      const i = this.pick(e);
       if (i !== this._hover){ this._hover = i; this.draw(); }
       if (this._paint && i >= 0 && i !== this._paint.i){
         this._paint.i = i;
@@ -314,8 +351,22 @@ export class SpinApp {
         this.draw();
       }
     });
-    this.on(cv, 'pointerup', () => { if (this._paint){ this._paint = null; this.queueUrl(); this.draw(); } });
-    this.on(cv, 'pointerleave', () => { this._hover = -1; this._paint = null; this.draw(); });
+    this.on(cv, 'pointerup', () => {
+      const was = !!this._paint || !!this._orbit;
+      this._orbit = null;
+      if (was){ this._paint = null; this.queueUrl(); this.draw(); }
+    });
+    this.on(cv, 'pointerleave', () => { this._hover = -1; this._paint = null; this._orbit = null; this.draw(); });
+    this.on(cv, 'wheel', e => {
+      if (this.state.proj !== '3d') return;
+      e.preventDefault();
+      this.cam = hbZoom(this.cam || hbCamDefault(), Math.exp((e.deltaY || 0) * 0.0012));
+      this.draw(); this.queueUrl();
+    }, { passive: false });
+    this.on(cv, 'dblclick', () => {
+      if (this.state.proj !== '3d') return;
+      this.cam = hbCamDefault(); this.draw(); this.queueUrl();
+    });
     const ch = this.q('#spChart');
     if (ch){
       this.on(ch, 'click', e => {
@@ -331,6 +382,26 @@ export class SpinApp {
     const r = cv.getBoundingClientRect ? cv.getBoundingClientRect() : null;
     if (r && r.width > 0) return (e.clientX - r.left) * (cv.width / r.width);
     return e.clientX;
+  }
+  /* 指针 → 设备像素 (x,y)：jsdom 里 rect 为 0，退化成 1:1 设备坐标 */
+  evPt(e){
+    const cv = this.q('#spLadder');
+    const r = cv.getBoundingClientRect ? cv.getBoundingClientRect() : null;
+    if (r && r.width > 0 && r.height > 0){
+      return { x: (e.clientX - r.left) * (cv.width / r.width), y: (e.clientY - r.top) * (cv.height / r.height) };
+    }
+    return { x: e.clientX, y: e.clientY };
+  }
+  /* 3D 拾取：用最近一次 draw 存下的格点屏幕位置（几何在 hubbard3d.js，pot143 已对账） */
+  siteAtPt(pt){
+    const cv = this.q('#spLadder');
+    if (!cv || !this._sites3 || !this._sites3.length) return -1;
+    const dpr = (this._geo && this._geo.dpr) || (cv.width / (cv.clientWidth || cv.width)) || 1;
+    const rad = Math.max(10 * dpr, 0.30 * this._sites3[0].k);
+    return hbPick(this.cam || hbCamDefault(), cv.width, cv.height, hbSitePositions(this.state.L), pt.x, pt.y, rad);
+  }
+  pick(e){
+    return this.state.proj === '3d' ? this.siteAtPt(this.evPt(e)) : this.siteAtX(this.evX(e));
   }
   siteAtX(x){
     const L = this.state.L, cv = this.q('#spLadder');
@@ -365,7 +436,10 @@ export class SpinApp {
   }
 
   /* ---------- 状态 / 扇区 ---------- */
-  initPreset(){
+  /* 初始化/重置到当前预设。keepMode: 用户自己选的模式优先——切预设、切链长都不许
+     把「从初态演化」悄悄打回「解基态」（旧版每次 startSolve 都把 mode 写成 gs）。 */
+  initPreset(opts = {}){
+    const keepMode = opts.keepMode === true;
     const p = SP_PRESETS[this.state.preset] || SP_PRESETS.xxx;
     this.cancelSolve();
     this.state.paused = false;
@@ -382,7 +456,7 @@ export class SpinApp {
     this.state.nUp = this.state.spins.reduce((a, b) => a + (b > 0 ? 1 : 0), 0);
     this.state.bz = new Float64Array(this.state.L);
     this.rebuildSector(this.state.nUp);
-    this.state.mode = p.mode === 'evo' ? 'evo' : 'gs';
+    if (!keepMode) this.state.mode = p.mode === 'evo' ? 'evo' : 'gs';
     if (this.state.mode === 'gs') this.startSolve();
     else {
       const w = spNeel(this.sec);
@@ -460,21 +534,42 @@ export class SpinApp {
     this.afterHChange('clear');
     if (loud) this.toast('已清空局域场', 1100);
   }
+  /* 链长只换「链」，不换「场景」：Δ / h / 预设 / 模式全部保留，局域场按新长度截取或补零，
+     初态回落到新链的 Néel 图案（构型长度变了，逐格翻转保不住）。 */
   setL(L){
     if (L === this.state.L) return;
     if (![8, 10, 12, 14, 16].includes(L)) return;
+    this.cancelSolve();
+    const prevBz = this.state.bz;
     this.state.L = L;
-    this.initPreset();
-    this.queueUrl();
-    this.toast(`L=${L}：扇区 ${this.sec ? this.sec.dim : '?'} 维`, 1200);
+    this.state.spins = Int8Array.from({ length: L }, (_, i) => (i % 2 === 0 ? 1 : -1));
+    this.state.bz = new Float64Array(L);
+    if (prevBz) for (let i = 0; i < Math.min(L, prevBz.length); i++) this.state.bz[i] = prevBz[i];
+    this.state.nUp = Array.from(this.state.spins).filter(v => v > 0).length;
+    this.state.t = 0; this.state.frames = 0; this.hist = [];
+    this.gap = null; this.gapJob = null;
+    if (this.q('#hGap')) this.q('#hGap').textContent = '—';
+    this.rebuildSector(this.state.nUp);
+    if (this.state.mode === 'gs') this.startSolve();
+    else {
+      const prod = spProduct(this.sec, Array.from(this.state.spins));
+      this.re = prod.re; this.im = prod.im;
+      this.measureAll(true);
+    }
+    this.syncPanel(); this.draw(); this.queueUrl();
+    this.toast(`L=${L}：扇区 ${this.sec ? this.sec.dim : '?'} 维（Δ/h/模式保留，初态重置为 Néel）`, 1600);
   }
   setDelta(v){ this.state.delta = clamp(v, 0, 4); this.q('#rDelta').value = String(this.state.delta); this.q('#oDelta').textContent = this.state.delta.toFixed(2); this.afterHChange('delta'); }
   setH(v){ this.state.h = clamp(v, 0, 4); this.q('#rH').value = String(this.state.h); this.q('#oH').textContent = this.state.h.toFixed(2); this.afterHChange('h'); }
   setPreset(k){
     if (!SP_PRESETS[k]) return;
     this.state.preset = k;
-    this.initPreset();
-    this.toast(SP_PRESETS[k].name, 1200);
+    this.initPreset({ keepMode: true });
+    const p = SP_PRESETS[k];
+    /* 该预设的「原生模式」与当前模式不同时只提示，不代用户切换 */
+    const want = p.mode === 'evo' ? '从初态演化' : '解基态';
+    const hint = (p.mode === 'evo') !== (this.state.mode === 'evo') ? `（这个预设本是「${want}」）` : '';
+    this.toast(p.name + hint, 1600);
     this.syncPanel(); this.draw(); this.queueUrl();
   }
   setTool(k){
@@ -491,6 +586,14 @@ export class SpinApp {
     this.syncPanel(); this.draw(); this.queueUrl();
     return true;
   }
+  setProj(k){
+    if (!SP_PROJ.some(v => v.k === k) || k === this.state.proj) return false;
+    this.state.proj = k;
+    this._hover = -1; this._sites3 = null; this._paint = null; this._orbit = null;
+    this.syncPanel(); this.draw(); this.queueUrl();
+    return true;
+  }
+  toggleProj(){ return this.setProj(this.state.proj === '3d' ? '2d' : '3d'); }
   applyMode(mode){
     this.cancelSolve();
     if (mode === 'gs'){
@@ -545,7 +648,8 @@ export class SpinApp {
   }
   startSolve(){
     if (!this.sec) return;
-    this.state.mode = 'gs';
+    /* 不在这里写 mode：调用方已经确定是基态档；旧版在这里硬写 'gs' 是
+       「切预设/链长后模式被自动切回基态」的根因之一。 */
     this.state.paused = true;
     this.q('#spPause').textContent = '继续';
     this.msg = '基态求解中…';
@@ -576,6 +680,7 @@ export class SpinApp {
     return false;
   }
   solveNow(){
+    if (this.state.mode !== 'gs') return this.E;
     if (this._solveTimer){ clearTimeout(this._solveTimer); this._solveTimer = null; }
     if (!this.job) this.startSolve();
     if (!this.job) return this.E;
@@ -687,11 +792,13 @@ export class SpinApp {
       b.classList.toggle('on', parseInt(b.getAttribute('data-len'), 10) === this.state.L));
     this.container.querySelectorAll('button[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === this.state.tool));
     this.container.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('on', b.dataset.view === this.state.view));
+    this.container.querySelectorAll('button[data-proj]').forEach(b => b.classList.toggle('on', b.getAttribute('data-proj') === this.state.proj));
     const gs = this.state.mode === 'gs';
     const a = this.q('#spModeGs'), b = this.q('#spModeEvo');
     if (a) a.classList.toggle('on', gs);
     if (b) b.classList.toggle('on', !gs);
-    const st = this.q('#spStage'); if (st) st.dataset.tool = this.state.tool;
+    const st = this.q('#spStage');
+    if (st){ st.dataset.tool = this.state.tool; st.dataset.proj = this.state.proj; }
     this.q('#spPause').textContent = this.state.paused ? '继续' : '暂停';
     const hint = this.q('#spHint');
     if (hint){
@@ -853,6 +960,7 @@ export class SpinApp {
   drawLadder(){
     const cv = this.q('#spLadder');
     if (!cv) return;
+    if (this.state.proj === '3d') return this.drawLadder3D(cv);
     const ctx = cv.getContext('2d');
     if (!ctx) return;
     const W = cv.width, H = cv.height;
@@ -954,6 +1062,137 @@ export class SpinApp {
     ctx.fillText('b', 8 * dpr, bZero + 3 * dpr);
   }
 
+
+  /* ---------- 3D 透视：链沿 x、自旋沿 ±y、局域场 b_i 沿 ∓z 刺出平面 ----------
+     相机/投影/拾取全部来自 hubbard3d.js（纯数学，pot143 已逐条对账），这里只负责画。
+     画家算法：所有图元带深度，远→近排序；透明度按深度雾衰减（深度感不靠阴影）。 */
+  drawLadder3D(cv){
+    const ctx = cv.getContext('2d');
+    if (!ctx) return;
+    const W = cv.width, H = cv.height;
+    const dpr = (this._geo && this._geo.dpr) || (W / (cv.clientWidth || W)) || 1;
+    ctx.clearRect(0, 0, W, H);
+    const L = this.state.L, m = this.m;
+    const cam = this.cam || (this.cam = hbCamDefault());
+    const xs = hbSitePositions(L);
+    const P = (x, y, z) => hbProject(cam, W, H, { x, y, z });
+    const fog = hbDepthRange(cam, W, H, xs);
+    const mono = px => `${px}px ui-monospace,monospace`;
+    const fs = clamp(H * 0.036, 8, 12);
+    const SPIN = 0.9, B_LEN = 1.6;          /* 箭头满量程 / 场刺满量程（世界单位） */
+    const S = xs.map(x => P(x, 0, 0));
+    this._sites3 = S.map((p, i) => ({ i, x: p.x, y: p.y, depth: p.depth, k: p.k, near: fog.nearness(p.depth) }));
+    /* 标签方向用链在**屏幕**上的法向：世界 +y 偏移在俯仰角大时会把标号甩到画面角落 */
+    const sdx = L > 1 ? S[L - 1].x - S[0].x : 1, sdy = L > 1 ? S[L - 1].y - S[0].y : 0;
+    const sl = Math.hypot(sdx, sdy) || 1;
+    const nx = -sdy / sl, ny = sdx / sl;
+    const stepPx = L > 1 ? Math.hypot(S[1].x - S[0].x, S[1].y - S[0].y) : 999;
+
+    const tool = SP_TOOLS.find(t => t.k === this.state.tool) || SP_TOOLS[0];
+    ctx.textAlign = 'left'; ctx.font = mono(fs * dpr); ctx.fillStyle = 'rgba(154,167,189,.92)';
+    ctx.fillText(`自旋链 3D · ${tool.tip}`, 10 * dpr, H * 0.06);
+    ctx.fillStyle = 'rgba(154,167,189,.55)'; ctx.font = mono((fs - 1) * dpr);
+    ctx.fillText('拖空白转视角 · 滚轮缩放 · 双击/R 复位 · 0 切回 2D', 10 * dpr, H * 0.105);
+
+    const items = [];
+    const add = (depth, fn) => items.push({ depth, fn });
+    const bondMax = m && m.bond && m.bond.length ? Math.max(0.05, ...m.bond.map(Math.abs)) : 0.25;
+
+    /* ① 地面网格（y = −1.25 的参考面）：没有它整条链看起来像贴在纸上的贴纸；
+       同时给每格搭一根细「支柱」把链和地面钉在一起，透视才有落点。 */
+    const FY = -1.05, FZ = 1.2;
+    add(Infinity, () => {
+      ctx.strokeStyle = 'rgba(120,160,220,.06)'; ctx.lineWidth = 1 * dpr;
+      const x0 = xs[0] - 0.45, x1 = xs[L - 1] + 0.45;
+      for (let k = -2; k <= 2; k++){
+        const z = k * FZ / 2;
+        const a = P(x0, FY, z), b = P(x1, FY, z);
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      }
+      for (let i = 0; i < L; i++){
+        const a = P(xs[i], FY, -FZ), b = P(xs[i], FY, FZ);
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      }
+      ctx.strokeStyle = 'rgba(120,160,220,.05)';
+      for (let i = 0; i < L; i++){
+        const a = S[i], b = P(xs[i], FY, 0);
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      }
+    });
+
+    /* ② 链脊：颜色 = 键关联 ⟨S_i·S_{i+1}⟩ 的符号与大小（负 = 反铁磁） */
+    for (let s = 0; s < L - 1; s++){
+      const a = S[s], b = S[s + 1];
+      const dep = (a.depth + b.depth) / 2 + 1e-6;
+      const nr = fog.nearness(dep);
+      const j = m && m.bond && m.bond.length ? m.bond[s] : 0;
+      const amt = clamp(Math.abs(j) / bondMax, 0, 1);
+      add(dep, () => {
+        ctx.strokeStyle = j >= 0
+          ? `rgba(103,232,249,${(0.10 + 0.32 * amt * (0.5 + 0.5 * nr)).toFixed(3)})`
+          : `rgba(251,191,36,${(0.10 + 0.38 * amt * (0.5 + 0.5 * nr)).toFixed(3)})`;
+        ctx.lineWidth = Math.max(1, (1.0 + 2.8 * amt) * dpr * (0.7 + 0.6 * nr));
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      });
+    }
+
+    /* ③ 局域场刺：b_i>0 沿 +z（暖色）、b_i<0 沿 −z（冷色）——2D 里这条信息只能塞成一条色带 */
+    for (let i = 0; i < L; i++){
+      const b = this.state.bz ? this.state.bz[i] : 0;
+      if (!b) continue;
+      const base = S[i];
+      const tip = P(xs[i], 0, clamp(b / B_VIEW, -1, 1) * B_LEN);
+      const dep = (base.depth + tip.depth) / 2;
+      const nr = fog.nearness(dep);
+      const w = Math.max(2 * dpr, tip.k * 0.02);
+      add(dep, () => {
+        ctx.strokeStyle = b > 0
+          ? `rgba(250,190,96,${(0.35 + 0.45 * nr).toFixed(3)})`
+          : `rgba(96,178,250,${(0.35 + 0.45 * nr).toFixed(3)})`;
+        ctx.lineWidth = w;
+        ctx.beginPath(); ctx.moveTo(base.x, base.y); ctx.lineTo(tip.x, tip.y); ctx.stroke();
+        /* 尖端圆点：b 的正负与大小一眼可读（刺本身在斜视角下会被压短） */
+        ctx.fillStyle = b > 0 ? 'rgba(250,190,96,.85)' : 'rgba(96,178,250,.85)';
+        ctx.beginPath(); ctx.arc(tip.x, tip.y, Math.max(2 * dpr, tip.k * 0.013), 0, 6.2832); ctx.fill();
+      });
+    }
+
+    /* ④ 自旋箭头：长度 ∝ |⟨Sᶻ_i⟩|（≤0.5 即满量程），↑ 青 / ↓ 紫 */
+    for (let i = 0; i < L; i++){
+      const base = S[i], nr = fog.nearness(base.depth);
+      const szv = m && m.sz ? m.sz[i] : this.state.spins[i] * 0.5;
+      const up = szv >= 0;
+      const len = clamp(Math.abs(szv) * 2, 0, 1) * SPIN;
+      const tip = P(xs[i], up ? len : -len, 0);
+      add(base.depth - 1e-6, () => {
+        ctx.strokeStyle = up ? `rgba(103,232,249,${(0.40 + 0.50 * nr).toFixed(3)})`
+                             : `rgba(240,171,252,${(0.40 + 0.50 * nr).toFixed(3)})`;
+        ctx.lineWidth = Math.max(1, 2.0 * dpr * (0.7 + 0.6 * nr));
+        ctx.beginPath(); ctx.moveTo(base.x, base.y); ctx.lineTo(tip.x, tip.y); ctx.stroke();
+        /* 箭头三角（屏幕空间，尺寸随透视缩放 k） */
+        const ang = Math.atan2(tip.y - base.y, tip.x - base.x);
+        const s2 = Math.max(3.5 * dpr, tip.k * 0.055);
+        ctx.fillStyle = up ? 'rgba(103,232,249,.85)' : 'rgba(240,171,252,.85)';
+        ctx.beginPath();
+        ctx.moveTo(tip.x, tip.y);
+        ctx.lineTo(tip.x - s2 * Math.cos(ang - 0.45), tip.y - s2 * Math.sin(ang - 0.45));
+        ctx.lineTo(tip.x - s2 * Math.cos(ang + 0.45), tip.y - s2 * Math.sin(ang + 0.45));
+        ctx.closePath(); ctx.fill();
+        /* 基点圆点（= 格点） */
+        ctx.fillStyle = this._hover === i ? 'rgba(103,232,249,.95)' : 'rgba(154,167,189,.55)';
+        ctx.beginPath(); ctx.arc(base.x, base.y, Math.max(2 * dpr, base.k * 0.018), 0, 6.2832); ctx.fill();
+        /* 格点标号：贴链的屏幕法向，太密就不画 */
+        if (stepPx >= 26 * dpr){
+          ctx.fillStyle = 'rgba(154,167,189,.75)'; ctx.font = mono((fs - 1) * dpr); ctx.textAlign = 'center';
+          ctx.fillText(String(i), base.x + nx * (fs * 1.5 * dpr), base.y + ny * (fs * 1.5 * dpr) + fs * 0.35 * dpr);
+        }
+      });
+    }
+
+    items.sort((a, b) => b.depth - a.depth);
+    for (const it of items) it.fn();
+    this._view = { pad: 0, stepX: stepPx, W, H, dpr, proj: '3d' };
+  }
   drawChart(){
     const cv = this.q('#spChart');
     if (!cv) return;
@@ -1091,6 +1330,9 @@ export class SpinApp {
       mode: this.state.mode, tool: this.state.tool, view: this.state.view,
       spins: Array.from(this.state.spins), t: +this.state.t.toFixed(4),
       bz: Array.from(this.state.bz, v => +v.toFixed(3)),
+      proj: this.state.proj,
+      cam: this.state.proj === '3d'
+        ? [+this.cam.yaw.toFixed(3), +this.cam.pitch.toFixed(3), +this.cam.dist.toFixed(3)] : undefined,
       paused: !!this.state.paused,
     };
   }
@@ -1104,6 +1346,10 @@ export class SpinApp {
     qs.set('spins', spec.spins.map(s => (s > 0 ? 'u' : 'd')).join(''));
     if (spec.bz && spec.bz.some(v => v !== 0)) qs.set('bz', spec.bz.map(String).join(','));
     if (spec.view !== 'Sx') qs.set('view', spec.view);
+    if (spec.proj === '3d'){
+      qs.set('proj', '3d');
+      if (spec.cam) qs.set('cam', spec.cam.map(v => +(+v).toFixed(3)).join(','));
+    }
     return qs.toString();
   }
   readUrlSpec(q){
@@ -1129,11 +1375,31 @@ export class SpinApp {
     const L = spec.L;
     if (spec.spins !== undefined && !(Array.isArray(spec.spins) && spec.spins.length === L && spec.spins.every(v => v === 1 || v === -1))) return false;
     if (spec.bz !== undefined && !(Array.isArray(spec.bz) && spec.bz.length === L && spec.bz.every(Number.isFinite))) return false;
+    /* 投影/相机也走严格校验：proj 未知或 cam 非三个有限数 ⟹ 整份拒绝（错的深链不做半改） */
+    if (spec.proj !== undefined && !SP_PROJ.some(v => v.k === spec.proj)) return false;
+    if (spec.cam !== undefined && !(Array.isArray(spec.cam) && spec.cam.length === 3 && spec.cam.every(Number.isFinite))) return false;
+    /* 只改「怎么看」的 spec（URL 的 proj/cam、导出的 JSON 里带视图）：不动物理、不重解基态，
+       否则一次投影切换会把已经解好的 E 扔回 NaN。 */
+    const viewOnly = spec.L === undefined && spec.spins === undefined && spec.bz === undefined &&
+      spec.delta === undefined && spec.h === undefined;
+    if (viewOnly){
+      if (spec.proj === undefined && spec.cam === undefined) return false;
+      if (spec.proj !== undefined) this.state.proj = spec.proj;
+      if (spec.cam !== undefined){
+        this.cam = { yaw: spec.cam[0], pitch: clamp(spec.cam[1], -1.33, 1.33), dist: clamp(spec.cam[2], 3.2, 20) };
+      }
+      this.syncPanel(); this.draw();
+      return true;
+    }
     if (spec.spins === undefined && spec.bz === undefined && !opts.fromUrl) return false;
     if (L && L !== this.state.L){
       this.state.L = L;
       this.state.spins = Int8Array.from({ length: L }, (_, i) => (i % 2 === 0 ? 1 : -1));
       this.state.bz = new Float64Array(L);
+    }
+    if (spec.proj !== undefined) this.state.proj = spec.proj;
+    if (spec.cam !== undefined){
+      this.cam = { yaw: spec.cam[0], pitch: clamp(spec.cam[1], -1.33, 1.33), dist: clamp(spec.cam[2], 3.2, 20) };
     }
     if (spec.delta !== undefined) this.state.delta = clamp(spec.delta, 0, 4);
     if (spec.h !== undefined) this.state.h = clamp(spec.h, 0, 4);
@@ -1155,19 +1421,6 @@ export class SpinApp {
     }
     this.syncPanel(); this.draw();
     return true;
-  }
-  /* ---------- 跨页：与哈伯德页的对应关系 ----------
-     半满 Hubbard 在 U≫t 下退化成本页：J_eff = 4t²/U（二阶微扰/超交换）。本页取 J=1，
-     所以「对照」时把 J=1 折算回一个足够大的 U（只作为入口，不声称等价于某一个 U）。 */
-  toHubbardUrl(){
-    const L = this.state.L <= 8 ? 8 : 10;
-    return './hubbard.html?' + new URLSearchParams({ L: String(L), U: '8', mode: 'gs' }).toString();
-  }
-  toHubbard(nav = true){
-    const url = this.toHubbardUrl();
-    if (nav){ try { location.href = url; } catch (_){ /* file:// 与测试环境忽略 */ } }
-    this.toast('强耦合对照：U≫t 时 J_eff = 4t²/U ⟹ 本页的 XXX 链', 2400);
-    return url;
   }
   copyLink(){
     try {
@@ -1254,8 +1507,12 @@ export class SpinApp {
       view3: () => ({ ...this._view }),
       hover: () => this._hover,
       band: which => this.toggleBand(which),
-      toHubbardUrl: () => this.toHubbardUrl(),
-      toHubbard: (nav = false) => this.toHubbard(nav),
+      proj: () => this.state.proj,
+      setProj: k => this.setProj(k),
+      cam: () => ({ ...(this.cam || hbCamDefault()) }),
+      setCam: c => { this.cam = { yaw: +c.yaw, pitch: +c.pitch, dist: +c.dist }; this.draw(); },
+      siteAtPt: (x, y) => this.siteAtPt({ x, y }),
+      sites3: () => (this._sites3 || []).map(s => ({ i: s.i, x: s.x, y: s.y, k: s.k, depth: s.depth })),
       bandOpen: () => this.bandOpen(),
       spec: () => this.serialize(),
       query: () => this.queryFor(this.serialize()),

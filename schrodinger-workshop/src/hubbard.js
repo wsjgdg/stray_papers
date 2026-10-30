@@ -240,7 +240,6 @@ export class HubbardApp {
     <button id="hbPause">暂停</button><button id="hbStep">单步</button>
     <button id="hbReset">重置</button><button id="hbGap">算能隙</button>
     <button id="hbLink" class="sm">复制链接</button><button id="hbSave" class="sm">导出 JSON</button>
-    <button id="hbToSpin" class="sm" title="U≫t 的半满带：超交换 J=4t²/U ⟹ 低能有效理论是自旋-1/2 海森堡链，跳去自旋链页">→ 自旋链页</button>
   </div>
     <div class="row" style="margin-top:5px"><label>时间轴</label><span id="hbScrubInfo">—</span></div>
     <div id="hbScrubRow" class="off"><input type="range" id="hbScrub" min="0" max="0" step="1" value="0"></div>
@@ -309,7 +308,6 @@ export class HubbardApp {
     this.on(this.q('#hbReset'), 'click', () => this.initPreset());
     this.on(this.q('#hbGap'), 'click', () => this.startGap());
     this.on(this.q('#hbLink'), 'click', () => this.copyLink());
-    this.on(this.q('#hbToSpin'), 'click', () => this.toSpin());
     this.on(this.q('#hbSave'), 'click', () => this.exportJson());
     this.container.querySelectorAll('[data-proto]').forEach(b =>
       this.on(b, 'click', () => this.startProtocol(b.dataset.proto)));
@@ -1872,22 +1870,10 @@ export class HubbardApp {
     this.syncPanel(); this.draw();
     return true;
   }
-  /* ---------- 跨页：强耦合极限 ----------
-     U≫t、半满：Hubbard 的低能有效理论是自旋-1/2 海森堡链（超交换 J_eff = 4t²/U：
-     二阶微扰，虚中间态付出 U、跃迁振幅 2t）。本页把「同一个扇区基 + Lanczos」的
-     结论搬到自旋链页去看（那里 J=1 归一，Δ=1 即 XXX）。 */
+  /* ---------- 强耦合极限的读数（只报数，不做跨页跳转） ----------
+     U≫t、半满：Hubbard 的低能有效理论是自旋-1/2 海森堡链，超交换 J_eff = 4t²/U
+     （二阶微扰，虚中间态付出 U、跃迁振幅 2t）。自旋链页按 J=1 归一，Δ=1 即 XXX。 */
   jeff(){ return this.state.U > 1e-9 ? 4 / this.state.U : NaN; }
-  toSpinUrl(){
-    const L = [8, 10, 12].includes(this.state.L) ? this.state.L : 8;
-    return './spin.html?' + new URLSearchParams({ preset: 'xxx', L: String(L), D: '1', h: '0', mode: 'gs' }).toString();
-  }
-  toSpin(nav = true){
-    const url = this.toSpinUrl();
-    if (nav){ try { location.href = url; } catch (_){ /* file:// 与测试环境忽略 */ } }
-    const j = this.jeff();
-    this.toast('强耦合：J_eff = 4t²/U = ' + (Number.isFinite(j) ? j.toFixed(3) : '—') + '（自旋链页按 J=1 归一）', 2400);
-    return url;
-  }
   copyLink(){
     this.syncUrl();
     const url = location.href;
@@ -1929,8 +1915,6 @@ export class HubbardApp {
     return {
       app: this, state: this.state,
       jeff: () => this.jeff(),
-      toSpinUrl: () => this.toSpinUrl(),
-      toSpin: (nav = false) => this.toSpin(nav),
       measures: () => ({
         dim: this.sec.dim, E: this.E, D: this.m ? this.m.Dtot : null, S: this.S,
         norm: this.re ? hbNorm(this.re, this.im) : null, t: this.state.t, frames: this.state.frames,
