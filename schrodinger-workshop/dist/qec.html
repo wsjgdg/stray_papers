@@ -25,6 +25,8 @@
       src/physics/qec.js
       src/qec/export.js
       src/qec/live.js
+      src/qec/shot-replay.js
+      src/qec/confidence.js
       src/qec/mode-rep.js
       src/physics/shor.js
       src/qec/mode-shor.js
@@ -36,6 +38,7 @@
       src/physics/codefamily.js
       src/qec/mode-family.js
       src/physics/surfacecode.js
+      src/physics/surfacecircuit.js
       src/qec/mode-surf.js
       src/qechub.js
       src/qec-main.js
@@ -5336,6 +5339,330 @@ class LiveDriver {
   }
 }
 
+/* ===== src/qec/shot-replay.js ===== */
+/* Single-shot teaching replay. It only narrates an already-counted sample; it never samples. */
+const SHOT_REPLAY_CSS = `
+  .qec-shot-replay{border-top:1px solid var(--line);margin-top:9px;padding-top:8px;font-family:var(--mono);font-size:10.5px;line-height:1.45}
+  .qec-shot-replay .sr-head{display:flex;justify-content:space-between;gap:8px;align-items:center;color:var(--dim);margin-bottom:5px}
+  .qec-shot-replay .sr-count{color:var(--cyan);white-space:nowrap}
+  .qec-shot-replay .sr-title{font-size:11px;color:var(--txt);font-weight:600;margin-bottom:3px}
+  .qec-shot-replay .sr-detail{color:var(--dim);min-height:42px;white-space:pre-wrap;overflow-wrap:anywhere}
+  .qec-shot-replay .sr-controls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-top:7px}
+  .qec-shot-replay button{font:inherit;color:var(--txt);background:rgba(103,232,249,.07);border:1px solid var(--line);border-radius:5px;padding:4px 2px;cursor:pointer;white-space:nowrap}
+  .qec-shot-replay button:hover,.qec-shot-replay button.on{color:var(--cyan);border-color:rgba(103,232,249,.55);background:rgba(103,232,249,.13)}
+  .qec-shot-replay button:disabled{opacity:.42;cursor:default}
+`;
+
+const PHASES = ['输入态 / 编码', '故障注入', '综合征读出', '解码与修正', '逻辑结局'];
+const countBits = m => {
+  if (typeof m !== 'bigint') return 0;
+  let n = 0;
+  while (m){ n += Number(m & 1n); m >>= 1n; }
+  return n;
+};
+const join = (a, sep = ', ') => Array.isArray(a) && a.length ? a.join(sep) : '无';
+const pauli = f => {
+  if (f == null) return '';
+  if (typeof f === 'number' || typeof f === 'string') return String(f);
+  const op = f.t || f.pauli || f.op || 'fault';
+  if (f.location === 'cx') return `R${(f.round || 1)} ${f.check || ''}·g${f.gate} q${f.q}:${String(op).toUpperCase()}`;
+  if (f.location) return `R${(f.round || 1)} ${f.check || ''}·${f.location} ${String(op).toUpperCase()}`;
+  const q = f.q == null ? '' : `q${f.q}`;
+  const gate = f.gate == null ? '' : `g${f.gate} `;
+  return `${gate}${q}:${String(op).toUpperCase()}`;
+};
+const faultSummary = t => {
+  if (t && Number.isFinite(t.faultCount)){
+    const list = Array.isArray(t.faults) ? t.faults.slice(0, 4).map(pauli).join(' · ') : '';
+    return `电路位置故障 ${t.faultCount} 次（${t.cnotCount ?? '—'} 个 CNOT/shot）${list ? `：${list}` : '；本样本无故障'}${t.faultsTruncated ? ' · 列表截断' : ''}`;
+  }
+  if (t && (typeof t.mx === 'bigint' || typeof t.mz === 'bigint')){
+    const x = countBits(t.mx || 0n), z = countBits(t.mz || 0n);
+    return `Pauli 掩码权重：X=${x}，Z=${z}（总错位 ${countBits((t.mx || 0n) | (t.mz || 0n))}）`;
+  }
+  const a = t && [t.errors, t.faults, t.fired].find(x => Array.isArray(x) && x.length);
+  if (!a) return '本样本没有记录到注入故障。';
+  const shown = a.slice(0, 8).map(pauli).join(' · ');
+  return `${a.length} 个故障：${shown}${a.length > 8 ? ` · …另有 ${a.length - 8} 个` : ''}`;
+};
+const syndromeSummary = t => {
+  if (t && Array.isArray(t.synRounds))
+    return (t.synRounds.length && typeof t.synRounds[0] === 'string'
+      ? t.synRounds.join('  ')
+      : t.synRounds.map((r, i) => `R${i + 1}[${join(r, '')}]`).join('  ')) || '尚无轮次综合征';
+  if (t && (Array.isArray(t.syn) || Array.isArray(t.synVoted)))
+    return `原始 ${join(t.syn, '')} · 投票 ${join(t.synVoted, '')}`;
+  if (t && (Array.isArray(t.defX) || Array.isArray(t.defZ))){
+    const fmt = a => Array.isArray(a) ? a.map((x, i) => x ? `L${i}:${x}` : '').filter(Boolean).join(', ') || '无' : '—';
+    return `X 帧缺陷：${fmt(t.defX)}\nZ 帧缺陷：${fmt(t.defZ)}`;
+  }
+  return '该抽象码族以递归块结局解码，不产生逐轮综合征带。';
+};
+const correctionSummary = t => {
+  if (!t) return '等待样本';
+  if (Array.isArray(t.fixLog)) return t.fixLog.map(f => `R${(f.round ?? 0) + 1}:${join(f.fix && f.fix.map(pauli))}`).join('  ') || '没有施加修正';
+  if (Array.isArray(t.fixQs)) return t.fixQs.length ? `数据修正位：${join(t.fixQs.map(q => `q${q}`))}` : '没有施加数据修正';
+  if (Array.isArray(t.fix)) return t.fix.length ? join(t.fix.map(pauli)) : '没有施加修正';
+  if (typeof t.corrX === 'bigint' || typeof t.corrZ === 'bigint')
+    return `X 修正链权重 ${countBits(t.corrX || 0n)} · Z 修正链权重 ${countBits(t.corrZ || 0n)} · 解码 ${t.modeX || '—'} / ${t.modeZ || '—'}`;
+  return `解码器：${t.decode || t.mode || '该模式的解析/递归解码'}；帧故障权重 ${t.wRes ?? t.weight ?? '—'}`;
+};
+const outcomeSummary = (mode, t) => {
+  if (!t) return '等待样本';
+  if (mode === 'family') return `结局：${t.fate || '—'} · 帧权重 X=${t.xw ?? '—'}, Z=${t.zw ?? '—'}`;
+  if (mode === 'flag') return `结局：${t.bucket || '—'} · flag=${t.flagged ? '触发' : '未触发'} · F=${Number.isFinite(t.F) ? t.F.toFixed(4) : '—'}`;
+  if (mode === 'surf') return `结局：${t.fail ? '逻辑失败' : '纠回'} · X=${t.xfail ? '失败' : '通过'} · Z=${t.zfail ? '失败' : '通过'} · 回退=${t.fallback ? '是' : '否'}`;
+  if (mode === 'gate') return `线路态已演化 · 本样本记录 ${Array.isArray(t.errors) ? t.errors.length : 0} 个门故障`;
+  if (t.logicalError != null) return `逻辑${t.logicalError ? '失败' : '通过'} · F=${Number.isFinite(t.F) ? t.F.toFixed(4) : '—'} · coset=${t.coset ?? '—'}`;
+  return `结局：${t.cls || (t.fate === 'perfect' ? '纠回' : t.fate) || '—'}`;
+};
+
+function makeSteps(mode, t, cfg){
+  const code = cfg && (cfg.code || cfg.fam || cfg.kind || cfg.d);
+  const prep = mode === 'surf'
+    ? `旋转表面码 d=${cfg.d}（${cfg.meas === 'circuit' ? 'CNOT 电路级 + ancilla SPAM' : cfg.meas === 'noisy' ? 'phenomenological 时空匹配' : '单帧 code-capacity'}）；准备一条已计入 MC 的试验。`
+    : mode === 'family'
+      ? `码族 ${code || '当前族'}；递归解码在本样本内完成，不额外抽样。`
+      : mode === 'cycle' || mode === 'rounds'
+        ? `线路 ${code || '当前线路'}；${t && t.rounds ? `${t.rounds} 轮` : '当前轮次配置'}，读取这条样本的轮次记录。`
+        : `码/线路 ${code || '当前配置'}；输入态与编码已包含在这条 MC 样本中。`;
+  return [
+    { title: PHASES[0], body: prep },
+    { title: PHASES[1], body: faultSummary(t) },
+    { title: PHASES[2], body: syndromeSummary(t) },
+    { title: PHASES[3], body: correctionSummary(t) },
+    { title: PHASES[4], body: outcomeSummary(mode, t) },
+  ];
+}
+
+class ShotReplay {
+  constructor(root, mode){
+    this.root = root;
+    this.mode = mode;
+    this.sample = null;
+    this.sampleNo = 0;
+    this.steps = [];
+    this.index = 0;
+    this.pinned = false;
+    this.configKey = null;
+    this.timer = 0;
+    this.el = null;
+    this._ensureCss();
+  }
+
+  _ensureCss(){
+    if (!this.root || this.root.ownerDocument.getElementById('qec-shot-replay-css')) return;
+    const style = this.root.ownerDocument.createElement('style');
+    style.id = 'qec-shot-replay-css';
+    style.textContent = SHOT_REPLAY_CSS;
+    this.root.ownerDocument.head.appendChild(style);
+  }
+
+  mount(){
+    if (!this.root || this.el) return;
+    const d = this.root.ownerDocument;
+    const box = d.createElement('section');
+    box.className = 'qec-shot-replay';
+    box.setAttribute('aria-label', '单次纠错样本逐步回放');
+    box.innerHTML = `<div class="sr-head"><span>单次样本 · 不重新抽样</span><span class="sr-count">等待样本</span></div>
+      <div class="sr-title">等待 MC 样本</div><div class="sr-detail">播放或运行一次 MC 后，可固定该样本逐步查看。</div>
+      <div class="sr-controls"><button type="button" data-act="prev" aria-label="上一步">◀ 上一步</button><button type="button" data-act="next" aria-label="下一步">下一步 ▶</button><button type="button" data-act="auto" aria-label="自动演示">▶ 演示</button><button type="button" data-act="pin" aria-label="固定或跟随样本">固定样本</button></div>`;
+    this.root.appendChild(box);
+    this.el = box;
+    box.querySelector('[data-act="prev"]').addEventListener('click', () => this.step(-1));
+    box.querySelector('[data-act="next"]').addEventListener('click', () => this.step(1));
+    box.querySelector('[data-act="auto"]').addEventListener('click', () => this.toggleAuto());
+    box.querySelector('[data-act="pin"]').addEventListener('click', () => this.togglePin());
+    this._render();
+  }
+
+  sync(sample, sampleNo = 0, cfg = {}){
+    let key = '';
+    try { key = JSON.stringify(cfg) || ''; } catch { key = ''; }
+    const configChanged = this.configKey !== null && key !== this.configKey;
+    this.configKey = key;
+    if (configChanged && this.pinned){ this.pinned = false; this.stopAuto(); this.index = 0; }
+    if (!sample) return;
+    if (sample === this.sample){
+      if (configChanged){ this.steps = makeSteps(this.mode, sample, cfg); this.index = 0; this._render(); }
+      else if (!this.pinned && sampleNo && sampleNo !== this.sampleNo){ this.sampleNo = sampleNo; this._render(); }
+      return;
+    }
+    if (this.pinned) return;
+    this.sample = sample;
+    this.sampleNo = sampleNo || 0;
+    this.steps = makeSteps(this.mode, sample, cfg);
+    this.index = 0;
+    this._render();
+  }
+
+  step(delta){
+    if (!this.sample || !this.steps.length) return;
+    this.stopAuto();
+    this.pinned = true;
+    this.index = Math.max(0, Math.min(this.steps.length - 1, this.index + delta));
+    this._render();
+  }
+
+  togglePin(){
+    if (this.pinned){
+      this.pinned = false;
+      this.index = 0;
+      this.stopAuto();
+      this._render();
+    } else {
+      this.pinned = true;
+      this._render();
+    }
+  }
+
+  toggleAuto(){
+    if (this.timer){ this.stopAuto(); return; }
+    if (!this.sample || !this.steps.length) return;
+    this.pinned = true;
+    this.index = 0;
+    this._render();
+    const tick = () => {
+      if (!this.el || !this.pinned) return this.stopAuto();
+      if (this.index >= this.steps.length - 1){ this.stopAuto(); return; }
+      this.index++;
+      this._render();
+      this.timer = setTimeout(tick, 850);
+    };
+    this.timer = setTimeout(tick, 850);
+    this._render();
+  }
+
+  stopAuto(){
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = 0;
+    const b = this.el && this.el.querySelector('[data-act="auto"]');
+    if (b) b.textContent = '▶ 演示';
+  }
+
+  _render(){
+    if (!this.el) return;
+    const head = this.el.querySelector('.sr-count');
+    const title = this.el.querySelector('.sr-title');
+    const detail = this.el.querySelector('.sr-detail');
+    const prev = this.el.querySelector('[data-act="prev"]');
+    const next = this.el.querySelector('[data-act="next"]');
+    const auto = this.el.querySelector('[data-act="auto"]');
+    const pin = this.el.querySelector('[data-act="pin"]');
+    if (!this.sample || !this.steps.length){
+      head.textContent = '等待样本'; title.textContent = '等待 MC 样本'; detail.textContent = '播放或运行一次 MC 后，可固定该样本逐步查看.';
+      prev.disabled = next.disabled = auto.disabled = pin.disabled = true;
+      return;
+    }
+    const s = this.steps[this.index];
+    head.textContent = `${this.sampleNo ? `#${this.sampleNo} · ` : ''}${this.index + 1}/${this.steps.length}${this.pinned ? ' · 已固定' : ' · 跟随最新'}`;
+    title.textContent = s.title;
+    detail.textContent = s.body;
+    prev.disabled = this.index === 0;
+    next.disabled = this.index >= this.steps.length - 1;
+    auto.disabled = false;
+    pin.disabled = false;
+    pin.textContent = this.pinned ? '跟随最新' : '固定样本';
+    pin.classList.toggle('on', this.pinned);
+    auto.textContent = this.timer ? '⏸ 停止' : '▶ 演示';
+  }
+
+  dispose(){
+    this.stopAuto();
+    this.el?.remove();
+    this.el = null;
+    this.root = null;
+    this.sample = null;
+    this.steps = [];
+  }
+}
+
+/* ===== src/qec/confidence.js ===== */
+/* Wilson intervals communicate finite-shot uncertainty; this UI never changes MC execution. */
+const QEC_CI_CSS = `
+  .qec-ci-feedback{border-top:1px solid var(--line);margin-top:8px;padding-top:7px;font-family:var(--mono);font-size:10px;line-height:1.45}
+  .qec-ci-feedback .ci-head{display:flex;justify-content:space-between;gap:8px;color:var(--dim);margin-bottom:3px}
+  .qec-ci-feedback .ci-est{color:var(--txt);overflow-wrap:anywhere}
+  .qec-ci-feedback .ci-note{color:var(--dim);margin-top:2px;overflow-wrap:anywhere}
+  .qec-ci-feedback .ci-note.warn{color:var(--amber,#fbbf24)}
+`;
+const Z95 = 1.959963984540054;
+const pct = x => `${(100 * x).toFixed(2)}%`;
+
+function wilsonInterval(events, trials, z = Z95){
+  const n = Math.floor(Number(trials));
+  if (!(n > 0) || !Number.isFinite(n)) return null;
+  const k = Math.max(0, Math.min(n, Math.round(Number(events) || 0)));
+  const p = k / n, z2 = z * z, den = 1 + z2 / n;
+  const center = (p + z2 / (2 * n)) / den;
+  const half = z * Math.sqrt((p * (1 - p) / n) + (z2 / (4 * n * n))) / den;
+  return { events: k, trials: n, rate: p, low: Math.max(0, center - half), high: Math.min(1, center + half) };
+}
+
+class ConfidenceFeedback{
+  constructor(root){ this.root = root; this.el = null; this.metric = null; this._ensureCss(); }
+  _ensureCss(){
+    if (!this.root || this.root.ownerDocument.getElementById('qec-confidence-css')) return;
+    const style = this.root.ownerDocument.createElement('style');
+    style.id = 'qec-confidence-css'; style.textContent = QEC_CI_CSS;
+    this.root.ownerDocument.head.appendChild(style);
+  }
+  mount(){
+    if (!this.root || this.el) return;
+    const box = this.root.ownerDocument.createElement('section');
+    box.className = 'qec-ci-feedback';
+    box.setAttribute('aria-label', '蒙特卡洛统计置信区间');
+    box.innerHTML = '<div class="ci-head"><span>有限样本 · 95% 区间</span><span class="ci-n"></span></div><div class="ci-est">等待 MC 统计</div><div class="ci-note">区间随已完成样本更新；它不改变抽样或停止条件。</div>';
+    this.root.appendChild(box); this.el = box; this._render();
+  }
+  sync(metric){ this.metric = metric || null; this._render(); }
+  _render(){
+    if (!this.el) return;
+    const nEl = this.el.querySelector('.ci-n'), est = this.el.querySelector('.ci-est'), note = this.el.querySelector('.ci-note');
+    const m = this.metric;
+    if (!m || !(Number(m.n) > 0)){
+      nEl.textContent = ''; est.textContent = '等待 MC 统计'; note.textContent = '区间随已完成样本更新；它不改变抽样或停止条件。'; note.className = 'ci-note'; return;
+    }
+    const n = Math.floor(Number(m.n)); nEl.textContent = `N=${n}`;
+    if (m.kind === 'mean'){
+      const mean = Number(m.mean), sd = Number(m.sd);
+      if (!Number.isFinite(mean) || !Number.isFinite(sd)){ est.textContent = '均值统计不可用'; note.textContent = '当前配置没有可用的样本均值/方差。'; note.className = 'ci-note warn'; return; }
+      const se = sd / Math.sqrt(n), lo = Math.max(0, mean - Z95 * se), hi = Math.min(1, mean + Z95 * se);
+      est.textContent = `${m.label || '样本均值'} ${mean.toFixed(4)} · 近似 95% CI [${lo.toFixed(4)}, ${hi.toFixed(4)}]`;
+      note.textContent = n < 30 ? `N=${n} 较少；正态近似仅作趋势提示，区间已限制在 [0,1]。` : `样本标准差 ${sd.toFixed(4)}；区间为均值的正态近似，不是每条 shot 的范围。`;
+      note.className = `ci-note${n < 30 ? ' warn' : ''}`; return;
+    }
+    const rate = Number(m.rate);
+    if (!Number.isFinite(rate)){
+      est.textContent = '尚无可用的二项统计'; note.textContent = '完成至少一条 MC shot 后显示 Wilson 区间。'; note.className = 'ci-note warn'; return;
+    }
+    const events = m.events == null ? Math.round(Math.max(0, Math.min(1, rate)) * n) : Number(m.events);
+    const ci = wilsonInterval(events, n);
+    est.textContent = `${m.label || '逻辑失效率 P_L'} ${pct(ci.rate)}（${ci.events}/${n}） · Wilson 95% [${pct(ci.low)}, ${pct(ci.high)}]`;
+    if (ci.events === 0){
+      note.textContent = `当前未观测到失效；95% 上限仍为 ${pct(ci.high)}，不能据此断言真实失效率为零。`;
+      note.className = 'ci-note warn';
+    } else if (n < 100){
+      note.textContent = '样本量较少，区间较宽；先看不确定范围，不据此作阈值或优劣结论。';
+      note.className = 'ci-note warn';
+    } else if (ci.events < 10){
+      note.textContent = `只观测到 ${ci.events} 次失效，稀有尾部仍不稳定；可增加 N 收窄区间。`;
+      note.className = 'ci-note warn';
+    } else if (ci.events < 30){
+      note.textContent = `${ci.events} 次失效提供初步统计信号；仍以区间宽度而非单点率比较。`;
+      note.className = 'ci-note';
+    } else {
+      note.textContent = `${ci.events} 次失效；有限样本区间仍保留，提示不等于显著性检验或自动停止判据。`;
+      note.className = 'ci-note';
+    }
+    if (Number.isFinite(m.reference)){
+      const ref = Number(m.reference);
+      note.textContent += ` 参考值 ${pct(ref)}${ref >= ci.low && ref <= ci.high ? ' 落在区间内。' : ' 在区间外。'}`;
+    }
+  }
+  dispose(){ this.el?.remove(); this.el = null; this.root = null; this.metric = null; }
+}
+
 /* ===== src/qec/mode-rep.js ===== */
 /* ============================================================================
  * mode-rep.js（QEC hub 模式）— 由 qec.js（R78/R86）重构而来（R98 七页整合）
@@ -5575,6 +5902,8 @@ class QecApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
+    this.ciFeedback?.dispose();
+    this.shotReplay?.dispose();
     clearTimeout(this._pDebounce); clearTimeout(this._trDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     clearTimeout(this._physDeb);   /* R108：phys 滑块防抖（切 mode 不泄漏） */
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
@@ -5738,6 +6067,10 @@ class QecApp {
     `);
 
     this.cv = { circuit: this.q('#qecCircuit'), curve: this.q('#qecCurve'), hist: this.q('#qecHist') };
+    this.shotReplay = new ShotReplay(this.q('#qeHud'), 'rep');
+    this.shotReplay.mount();
+    this.ciFeedback = new ConfidenceFeedback(this.q('#qeHud'));
+    this.ciFeedback.mount();
 
     for (const b of this.modeRoot.querySelectorAll('#qePanel button[data-c]')){
       this.on(b, 'click', () => this.setCode(b.dataset.c));
@@ -6801,6 +7134,8 @@ class QecApp {
   }
 
   renderHud(){
+    this.ciFeedback?.sync({ label: '逻辑失效率 P_L', rate: this.ens && this.ens.PL, n: this.ens && this.ens.trials, reference: this.ens && this.ens.PLexact });
+    this.shotReplay?.sync(this.trial, this.ens && this.ens.trials, this.state);
     const s = this.state, t = this.trial, e = this.ens;
     const N = qecNormN(s.n);
     /* R110/R112：综合征标签随稳定子数走（n−1 位；n=3 ⟹ '综合 m₀m₁' 与 R108
@@ -8922,6 +9257,8 @@ class ShorApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
+    this.ciFeedback?.dispose();
+    this.shotReplay?.dispose();
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
@@ -9028,6 +9365,10 @@ class ShorApp {
     `);
 
     this.cv = { circuit: this.q('#shCircuit'), curve: this.q('#shCurve'), hist: this.q('#shHist') };
+    this.shotReplay = new ShotReplay(this.q('#shHud'), 'shor');
+    this.shotReplay.mount();
+    this.ciFeedback = new ConfidenceFeedback(this.q('#shHud'));
+    this.ciFeedback.mount();
 
     /* 预设按钮 */
     const pb = this.q('#shPresets');
@@ -9253,6 +9594,8 @@ class ShorApp {
   }
 
   renderHud(){
+    this.ciFeedback?.sync({ label: '逻辑失效率 P_L', rate: this.ens && this.ens.PL, n: this.ens && this.ens.trials, reference: this.ens && this.ens.PLexact });
+    this.shotReplay?.sync(this.trial, this.ens && this.ens.trials, this.state);
     const s = this.state, t = this.trial, e = this.ens;
     const set = (id, v) => { const el = this.q('#' + id); if (el) el.textContent = v; };
     if (t){
@@ -9983,6 +10326,8 @@ class GateNoiseApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
+    this.ciFeedback?.dispose();
+    this.shotReplay?.dispose();
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
@@ -10072,6 +10417,10 @@ class GateNoiseApp {
     `);
 
     this.cv = { circuit: this.q('#gnCircuit'), curve: this.q('#gnCurve'), decay: this.q('#gnDecay') };
+    this.shotReplay = new ShotReplay(this.q('#gnHud'), 'gate');
+    this.shotReplay.mount();
+    this.ciFeedback = new ConfidenceFeedback(this.q('#gnHud'));
+    this.ciFeedback.mount();
 
     /* 预设按钮 */
     const pb = this.q('#gnPresets');
@@ -10237,6 +10586,8 @@ class GateNoiseApp {
 
   /* ---------- HUD ---------- */
   renderHud(){
+    this.ciFeedback?.sync({ kind: 'mean', label: '线路态保真度 F', mean: this.mc && this.mc.F && this.mc.F.mean, sd: this.mc && this.mc.F && this.mc.F.sd, n: this.mc && this.mc.trials });
+    this.shotReplay?.sync(this.trial, this.mc && this.mc.trials, this.state);
     const s = this.state, mc = this.mc, t = this.trial;
     const set = (id, v) => { const el = this.q('#' + id); if (el) el.textContent = v; };
     set('hPreset', GN_PRESETS[s.preset].label + (s.preset === 'ghz' ? ' n=' + s.n : ''));
@@ -11808,6 +12159,8 @@ class FlagApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
+    this.ciFeedback?.dispose();
+    this.shotReplay?.dispose();
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
@@ -11878,6 +12231,10 @@ class FlagApp {
       <div id="flDiag"></div>
     `);
     this.cv = { fan: this.q('#flFan'), fate: this.q('#flFate'), prop: this.q('#flProp') };
+    this.shotReplay = new ShotReplay(this.q('#flHud'), 'flag');
+    this.shotReplay.mount();
+    this.ciFeedback = new ConfidenceFeedback(this.q('#flHud'));
+    this.ciFeedback.mount();
 
     const kb = this.q('#flKinds');
     for (const k of flKINDS){
@@ -12005,6 +12362,8 @@ class FlagApp {
 
   /* ---------- HUD ---------- */
   renderHud(){
+    this.ciFeedback?.sync({ label: '逻辑失效率 P_L', rate: this.mc && this.mc.PL, events: this.mc && this.mc.logic, n: this.mc && this.mc.trials });
+    this.shotReplay?.sync(this.lastTrial || (this.mc && this.mc.lastTrial), this.mc && this.mc.trials, this.state);
     const s = this.state, d = this.derive(s.kind), w = this.worst[s.kind], mc = this.mc;
     const set = (id, v, cls) => {
       const el = this.q('#' + id);
@@ -12450,6 +12809,8 @@ class RoundsApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
+    this.ciFeedback?.dispose();
+    this.shotReplay?.dispose();
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
@@ -12520,6 +12881,10 @@ class RoundsApp {
       <div id="rdDiag"></div>
     `);
     this.cv = { time: this.q('#rdTime'), curve: this.q('#rdCurve'), fate: this.q('#rdFate') };
+    this.shotReplay = new ShotReplay(this.q('#rdHud'), 'rounds');
+    this.shotReplay.mount();
+    this.ciFeedback = new ConfidenceFeedback(this.q('#rdHud'));
+    this.ciFeedback.mount();
 
     const mk = (host, items, onPick) => {
       for (const it of items){
@@ -12636,6 +13001,8 @@ class RoundsApp {
   }
 
   renderHud(){
+    this.ciFeedback?.sync({ label: '逻辑失效率 P_L', rate: this.mc && this.mc.PL, events: this.mc && this.mc.logic, n: this.mc && this.mc.trials });
+    this.shotReplay?.sync(this.trial, this.mc && this.mc.trials, this.state);
     const s = this.state;
     const set = (id, v, cls) => { const el = this.q('#' + id); if (!el) return; el.textContent = v; el.className = cls || ''; };
     set('hCfg', `${FS_KINDS[s.kind].label} · R=${s.rounds} · ${(rdDECODES.find(d => d.k === s.decode) || {}).name}` +
@@ -13011,6 +13378,8 @@ class CycleApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
+    this.ciFeedback?.dispose();
+    this.shotReplay?.dispose();
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
@@ -13090,6 +13459,10 @@ class CycleApp {
       <div id="cyDiag"></div>
     `);
     this.cv = { flow: this.q('#cyFlow'), curve: this.q('#cyCurve'), gate: this.q('#cyGate') };
+    this.shotReplay = new ShotReplay(this.q('#cyHud'), 'cycle');
+    this.shotReplay.mount();
+    this.ciFeedback = new ConfidenceFeedback(this.q('#cyHud'));
+    this.ciFeedback.mount();
 
     const mk = (host, items, onPick) => {
       const el = this.q(host);
@@ -13228,6 +13601,8 @@ class CycleApp {
   }
 
   renderHud(){
+    this.ciFeedback?.sync({ label: '逻辑失效率 P_L', rate: this.mc && this.mc.PL, events: this.mc && this.mc.logic, n: this.mc && this.mc.trials });
+    this.shotReplay?.sync(this.trial, this.mc && this.mc.trials, this.state);
     const s = this.state;
     const set = (id, v, cls) => { const el = this.q('#' + id); if (!el) return; el.textContent = v; el.className = cls || ''; };
     const lg = (cyLOGICS.find(l => l.k === s.logic) || {}).name || '无';
@@ -14236,6 +14611,8 @@ class FamilyApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
+    this.ciFeedback?.dispose();
+    this.shotReplay?.dispose();
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
@@ -14304,6 +14681,10 @@ class FamilyApp {
       <div id="fmDiag"></div>
     `);
     this.cv = { curve: this.q('#fmCurve'), fate: this.q('#fmFate'), power: this.q('#fmPower') };
+    this.shotReplay = new ShotReplay(this.q('#fmHud'), 'family');
+    this.shotReplay.mount();
+    this.ciFeedback = new ConfidenceFeedback(this.q('#fmHud'));
+    this.ciFeedback.mount();
 
     const mk = (host, items, onPick) => {
       for (const it of items){
@@ -14441,6 +14822,8 @@ class FamilyApp {
 
   /* ---------- HUD ---------- */
   renderHud(){
+    this.ciFeedback?.sync({ label: '逻辑失效率 P_L', rate: this.mc && this.mc.PL, events: this.mc && this.mc.byFate ? this.mc.byFate.logic + this.mc.byFate.outside : undefined, n: this.mc && this.mc.trials });
+    this.shotReplay?.sync(this.lastTrial || (this.mc && this.mc.lastTrial), this.mc && this.mc.trials, this.state);
     const s = this.state, sw = this.sweep, mc = this.mc;
     const set = (id, v, cls) => {
       const el = this.q('#' + id);
@@ -15779,6 +16162,212 @@ function scSpaceStream(code, cfg = {}){
   };
 }
 
+/* ===== src/physics/surfacecircuit.js ===== */
+/* Circuit-level rotated surface-code memory experiment (stage 1).
+ * Each round measures every stabilizer with a fresh ancilla and a CNOT extraction
+ * circuit. Noise is sampled after every CNOT (uniform 2-qubit depolarizing), plus
+ * ancilla preparation and classical readout flips. Idle/data-memory noise is not
+ * included yet. Detection events are decoded by the existing spacetime MWPM graph
+ * using marginal effective edge weights; correlations are simulated but not decoded.
+ */
+
+const scCircuitPopcount = v => { let c = 0; while (v){ c += Number(v & 1n); v >>= 1n; } return c; };
+const scCircuitBit = q => 1n << BigInt(q);
+const scCircuitParity = m => scCircuitPopcount(m) & 1;
+const scCircuitPauliName = (x, z) => x && z ? 'Y' : x ? 'X' : z ? 'Z' : 'I';
+const scCircuitSyndrome = (graph, mask) => {
+  let s = 0;
+  graph.stab.forEach((st, k) => { if (scCircuitParity(st.mask & mask)) s |= 1 << k; });
+  return s;
+};
+const scCircuitMaskText = (mask, n) => Array.from({ length: n }, (_, k) => (mask >> k) & 1 ? '1' : '0').join('');
+
+const SC_CIRCUIT = {
+  distances: [3, 5],
+  rounds: d => d,
+  dpMax: SC_PHEN.dpMax,
+  noise: 'two-qubit depolarizing after each CNOT; ancilla preparation/readout flip p',
+};
+
+function scCircuitWeights(code, p){
+  const px = Math.max(0, Math.min(0.49, Number(p) || 0));
+  const gatesPerData = (code.X.reduce((a, s) => a + s.w, 0) + code.Z.reduce((a, s) => a + s.w, 0)) / code.n;
+  const avgCheckWeight = (code.X.reduce((a, s) => a + s.w, 0) + code.Z.reduce((a, s) => a + s.w, 0)) / (code.X.length + code.Z.length);
+  /* A two-qubit depolarizing fault has each marginal Pauli component with chance 8p/15.
+     These are marginal matching weights, not the full correlated circuit likelihood. */
+  const comp = 8 * px / 15;
+  const pSpace = 1 - Math.pow(1 - comp, gatesPerData);
+  const pTime = 1 - Math.pow(1 - px, 2) * Math.pow(1 - comp, avgCheckWeight);
+  const weight = x => x <= 0 ? Infinity : Math.log((1 - x) / x);
+  return { pSpace, pTime, wS: weight(pSpace), wT: weight(pTime), gatesPerData, avgCheckWeight };
+}
+
+function scCircuitPauli(rng, p){
+  if (rng() >= p) return null;
+  const v = 1 + Math.floor(rng() * 15);
+  return { cx: v & 1 ? 1 : 0, cz: v & 2 ? 1 : 0, tx: v & 4 ? 1 : 0, tz: v & 8 ? 1 : 0 };
+}
+
+function scCircuitRound(code, p, rng, roundIndex, frame){
+  const startX = frame.x, startZ = frame.z;
+  const outcomeX = new Array(code.X.length).fill(0), outcomeZ = new Array(code.Z.length).fill(0);
+  const faults = [];
+  let gateIndex = 0, totalFaults = 0;
+  const record = f => { totalFaults++; if (faults.length < 64) faults.push({ round: roundIndex + 1, ...f }); };
+  const applyData = (q, x, z) => { if (x) frame.x ^= scCircuitBit(q); if (z) frame.z ^= scCircuitBit(q); };
+
+  for (const type of ['Z', 'X']){
+    const checks = type === 'Z' ? code.Z : code.X;
+    for (let ci = 0; ci < checks.length; ci++){
+      const st = checks[ci];
+      let ax = 0, az = 0;
+      /* Prepare |0> ancilla for Z checks and |+> for X checks. */
+      if (rng() < p){
+        if (type === 'Z') ax = 1; else az = 1;
+        record({ location: 'prep', check: `${type}${ci}`, q: 'ancilla', t: type === 'Z' ? 'X' : 'Z' });
+      }
+      const cells = new Map(st.sup.map(q => [`${Math.floor(q / code.d)},${q % code.d}`, q]));
+      const byCoord = (r, c) => cells.get(`${r},${c}`);
+      /* Hook-oriented CNOT order: Z-check X hooks preferentially vertical;
+         X-check Z hooks preferentially horizontal. Weight-2 edge checks retain geometry. */
+      const candidates = type === 'Z'
+        ? [[1,0],[0,0],[1,1],[0,1]]
+        : [[0,1],[0,0],[1,1],[1,0]];
+      const ordered = candidates.map(([dr, dc]) => byCoord(st.i + dr, st.j + dc)).filter(q => q !== undefined);
+      for (const q of ordered){
+        const gi = gateIndex++;
+        /* Ideal CNOT conjugation of the current Pauli frame. Z: ancilla→data; X: data→ancilla. */
+        if (type === 'Z'){
+          if (ax) frame.x ^= scCircuitBit(q);
+          if (frame.z & scCircuitBit(q)) az ^= 1;
+        } else {
+          if (frame.x & scCircuitBit(q)) ax ^= 1;
+          if (az) frame.z ^= scCircuitBit(q);
+        }
+        const e = scCircuitPauli(rng, p);
+        if (e){
+          if (type === 'Z'){
+            if (e.cx) ax ^= 1; if (e.cz) az ^= 1;
+            applyData(q, e.tx, e.tz);
+            record({ location: 'cx', gate: gi, check: `${type}${ci}`, q, t: `${scCircuitPauliName(e.cx,e.cz)}/${scCircuitPauliName(e.tx,e.tz)}` });
+          } else {
+            applyData(q, e.cx, e.cz);
+            if (e.tx) ax ^= 1; if (e.tz) az ^= 1;
+            record({ location: 'cx', gate: gi, check: `${type}${ci}`, q, t: `${scCircuitPauliName(e.cx,e.cz)}/${scCircuitPauliName(e.tx,e.tz)}` });
+          }
+        }
+      }
+      const readoutFlip = rng() < p;
+      if (readoutFlip) record({ location: 'readout', check: `${type}${ci}`, q: 'ancilla', t: 'bit flip' });
+      const measured = type === 'Z'
+        ? scCircuitParity(frame.x & st.mask) ^ ax ^ (readoutFlip ? 1 : 0)
+        : scCircuitParity(frame.z & st.mask) ^ az ^ (readoutFlip ? 1 : 0);
+      if (type === 'Z') outcomeZ[ci] = measured;
+      else outcomeX[ci] = measured;
+    }
+  }
+  const sx = outcomeX.reduce((m, v, i) => v ? m | (1 << i) : m, 0);
+  const sz = outcomeZ.reduce((m, v, i) => v ? m | (1 << i) : m, 0);
+  const trueX = scCircuitSyndrome(code.zg, frame.z), trueZ = scCircuitSyndrome(code.xg, frame.x);
+  return {
+    deltaX: startX ^ frame.x, deltaZ: startZ ^ frame.z,
+    synX: sx, synZ: sz, etaX: sx ^ trueX, etaZ: sz ^ trueZ,
+    faults, faultCount: totalFaults, gates: gateIndex,
+  };
+}
+
+function scCircuitDecodeFrame(code, type, errorLayers, measurementErrors, R, weights, dpMax){
+  const g = type === 'X' ? code.xg : code.zg;
+  const dual = type === 'X' ? code.zl : code.xl;
+  const gr = scSpaceGraph(code, type, R);
+  const nS = g.nS, nn = nS + 2, defects = [], perLayer = [];
+  for (let l = 0; l <= R; l++){
+    const e = l < R ? errorLayers[l] : 0n;
+    let d = scCircuitSyndrome(g, e);
+    if (l + 1 <= R) d ^= measurementErrors[l + 1];
+    if (l >= 1) d ^= measurementErrors[l];
+    perLayer.push(d);
+    for (let k = 0; k < nS; k++) if ((d >> k) & 1) defects.push(l * nn + k);
+  }
+  const decoded = scSpaceDecode(gr, defects, weights.wS, weights.wT, dpMax);
+  const total = errorLayers.reduce((a, b) => a ^ b, 0n);
+  const residual = total ^ decoded.qubits;
+  return {
+    cls: scCircuitParity(residual & dual), residual, corr: decoded.qubits, k: defects.length,
+    mode: decoded.mode, cost: decoded.cost, perLayer,
+    synAfter: scCircuitSyndrome(g, residual), total,
+  };
+}
+
+/** One circuit-level memory shot: d noisy stabilizer-extraction rounds + ideal terminal syndrome. */
+function scCircuitTrial(code, cfg = {}, rng = Math.random, grs){
+  const p = Math.max(0, Math.min(0.49, Number(cfg.p ?? 0.01)));
+  const R = cfg.rounds === undefined ? code.d : Math.max(1, Math.floor(cfg.rounds));
+  const frame = { x: 0n, z: 0n }, rounds = [], faultList = [];
+  let faultCount = 0, cnotCount = 0;
+  for (let r = 0; r < R; r++){
+    const out = scCircuitRound(code, p, rng, r, frame);
+    rounds.push(out);
+    faultCount += out.faultCount; cnotCount += out.gates;
+    for (const f of out.faults){ if (faultList.length < 64) faultList.push(f); }
+  }
+  const weights = scCircuitWeights(code, p);
+  const dpMax = cfg.dpMax === undefined ? SC_CIRCUIT.dpMax : cfg.dpMax;
+  const x = scCircuitDecodeFrame(code, 'X', rounds.map(r => r.deltaX), [0, ...rounds.map(r => r.etaZ)], R, weights, dpMax);
+  const z = scCircuitDecodeFrame(code, 'Z', rounds.map(r => r.deltaZ), [0, ...rounds.map(r => r.etaX)], R, weights, dpMax);
+  const fallback = Number(x.mode === 'greedy') + Number(z.mode === 'greedy');
+  const finalSynX = scCircuitSyndrome(code.zg, frame.z), finalSynZ = scCircuitSyndrome(code.xg, frame.x);
+  const synRounds = rounds.map((r, i) => `R${i + 1}:X${scCircuitMaskText(r.synX, code.X.length)}/Z${scCircuitMaskText(r.synZ, code.Z.length)}`);
+  return {
+    fail: !!(x.cls || z.cls), xfail: !!x.cls, zfail: !!z.cls,
+    mx: frame.x, mz: frame.z, corrX: x.corr, corrZ: z.corr, resX: x.residual, resZ: z.residual,
+    kx: x.k, kz: z.k, modeX: x.mode, modeZ: z.mode, defX: x.perLayer, defZ: z.perLayer,
+    errX: [...rounds.map(r => r.deltaX), 0n], errZ: [...rounds.map(r => r.deltaZ), 0n],
+    synRounds, rawSynX: rounds.map(r => r.synX), rawSynZ: rounds.map(r => r.synZ),
+    etaX: rounds.map(r => r.etaX), etaZ: rounds.map(r => r.etaZ),
+    finalSynX, finalSynZ,
+    badSyn: !!(x.synAfter || z.synAfter), fallback, rounds: R, R,
+    faults: faultList, faultCount, cnotCount, faultsTruncated: faultCount > faultList.length,
+    p, pSpace: weights.pSpace, pTime: weights.pTime,
+  };
+}
+
+function scCircuitStream(code, cfg = {}){
+  const c = { p: 0.01, trials: 1000, seed: 7, rounds: code.d, dpMax: SC_CIRCUIT.dpMax, ...cfg };
+  const rng = mulberry32(c.seed);
+  let n = 0, fail = 0, xf = 0, zf = 0, bad = 0, fallback = 0, defectSum = 0, gateSum = 0, faultSum = 0, lastTrial = null;
+  function one(){
+    const r = scCircuitTrial(code, c, rng);
+    if (r.fail) fail++;
+    if (r.xfail) xf++;
+    if (r.zfail) zf++;
+    if (r.badSyn) bad++;
+    fallback += r.fallback;
+    defectSum += r.kx + r.kz;
+    gateSum += r.cnotCount;
+    faultSum += r.faultCount;
+    lastTrial = r; n++;
+  }
+  return {
+    get total(){ return Math.max(1, c.trials | 0); },
+    get n(){ return n; },
+    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m; k++) one(); },
+    result(){
+      const N = Math.max(1, n), PL = fail / N;
+      return { d: code.d, p: c.p, noise: 'circuit', rounds: c.rounds, trials: n,
+        PL, PLx: xf / N, PLz: zf / N, badSyn: bad / N, fallback: fallback / (2 * N),
+        meanDefects: defectSum / (2 * N), meanCnot: gateSum / N, meanFaults: faultSum / N,
+        lastTrial, sigma: Math.sqrt(Math.max(PL * (1 - PL), 1e-12) / N) };
+    },
+  };
+}
+
+function scCircuitEnsemble(code, cfg = {}){
+  const stream = scCircuitStream(code, cfg);
+  stream.step(stream.total);
+  return stream.result();
+}
+
 /* ===== src/qec/mode-surf.js ===== */
 /* ============================================================================
  * mode-surf.js（QEC hub 第 8 模式，R128 新建）— 旋转表面码 [[d²,1,d]]
@@ -15867,17 +16456,18 @@ class SurfApp {
     const q = new URLSearchParams(location.search);
     const num = (k, d) => (q.has(k) && Number.isFinite(parseFloat(q.get(k))) ? parseFloat(q.get(k)) : d);
     const dWanted = Math.round(num('d', 3));
+    const measWanted = ['noisy', 'circuit'].includes(q.get('meas')) ? q.get('meas') : 'ideal';
     this.state = {
-      d: SC_DISTANCES.includes(dWanted) ? dWanted : 3,
-      noise: SC_NOISES.some(n => n.k === q.get('noise')) ? q.get('noise') : 'x',
-      p: Math.max(0.005, Math.min(0.25, num('p', 0.08))),
-      trials: Math.max(200, Math.min(20000, Math.round(num('trials', 1500)))),
+      d: measWanted === 'circuit' && dWanted === 7 ? 5 : SC_DISTANCES.includes(dWanted) ? dWanted : 3,
+      noise: measWanted === 'circuit' ? 'depol' : SC_NOISES.some(n => n.k === q.get('noise')) ? q.get('noise') : 'x',
+      p: Math.max(measWanted === 'circuit' ? 0.0005 : 0.005, Math.min(measWanted === 'circuit' ? 0.02 : 0.25, num('p', measWanted === 'circuit' ? 0.005 : 0.08))),
+      trials: Math.max(200, Math.min(measWanted === 'circuit' ? 4000 : 20000, Math.round(num('trials', measWanted === 'circuit' ? 400 : 1500)))),
       seed: Math.round(num('seed', 7)),
-      /* meas='noisy' ⟹ 带噪测量（phenomenological）口径。
+      /* meas='noisy' ⟹ phenomenological；'circuit' ⟹ 含 CNOT 与 ancilla SPAM 的首阶段模型。
          qR = q/p 只在引擎/调试层暴露：面板固定 q = p（标准取法）。
          q=0 时解码退化成逐层独立、d3×d5 两条曲线在 0.05 以内不交叉（未分辨），
          给旋钮反而误导，所以不上面板（README 里写明这条取舍）。 */
-      meas: q.get('meas') === 'noisy' ? 'noisy' : 'ideal',
+      meas: measWanted,
       qR: [0, 0.5, 1].includes(parseFloat(q.get('qr'))) ? parseFloat(q.get('qr')) : 1,
       live: q.get('live') === '1',
     };
@@ -15897,8 +16487,11 @@ class SurfApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
+    this.ciFeedback?.dispose();
+    this.shotReplay?.dispose();
     this._sweepToken++;                    /* 作废在途分帧扫描 */
     clearTimeout(this._queueTimer);
+    clearTimeout(this._runTimer);
     this._ro?.disconnect();
     this.live?.dispose();
     this.live = null;
@@ -15919,7 +16512,7 @@ class SurfApp {
         <div class="grp">错误谱（每比特）</div>
         <div class="btns" id="sfNoises"></div>
 
-        <div class="grp">每比特错误率 p</div>
+        <div class="grp" id="sfPLabel">每比特错误率 p</div>
         <div class="row"><label>p</label><input type="range" id="sfP" min="0.005" max="0.25" step="0.005"><output id="sfPO">—</output></div>
 
         <div class="grp">MC 样本数 N</div>
@@ -15958,7 +16551,7 @@ class SurfApp {
         <div class="hrow"><span>领先幂次 α（p→0）</span><span id="hAlpha">—</span></div>
         <div class="hrow"><span>d=3 精确对账</span><span id="hExact">—</span></div>
         <div class="hrow"><span>扫描进度</span><span id="hProg">—</span></div>
-        <div class="cap"><b>退极化是分帧独立解码</b>：丢掉 Y 的相关性 ⟹ 阈值 ≈ 1.5×单帧
+        <div class="cap" id="sfModelNote"><b>退极化是分帧独立解码</b>：丢掉 Y 的相关性 ⟹ 阈值 ≈ 1.5×单帧
           （10.3% → 15.5% 的那个因子；相关解码可到 18.9%，本页不做）。
           <b>交叉点写「未分辨」就是没算出来</b>：两条曲线在该网格/样本数下没有显著的
           排序反转（σ ∝ 1/√N，d5×d7 要 N ≳ 12000 才分得开）。
@@ -15977,10 +16570,16 @@ class SurfApp {
       <div id="sfHint" class="panel qhint"><b>—</b><span></span></div>
     `);
     this.cv = { code: this.q('#sfCode'), curve: this.q('#sfCurve'), dist: this.q('#sfDist') };
+    this.shotReplay = new ShotReplay(this.q('#sfHud'), 'surf');
+    this.shotReplay.mount();
+    this.ciFeedback = new ConfidenceFeedback(this.q('#sfHud'));
+    this.ciFeedback.mount();
     this.live = new LiveDriver({
-      make: () => this.phen
-        ? scSpaceStream(this.code, { ...this.phenCfg(), trials: this.state.trials, seed: this.state.seed })
-        : scStream(this.code, { p: this.state.p, noise: this.state.noise, trials: this.state.trials, seed: this.state.seed }),
+      make: () => this.circuit
+        ? scCircuitStream(this.code, { p: this.state.p, rounds: this.state.d, trials: this.state.trials, seed: this.state.seed })
+        : this.phen
+          ? scSpaceStream(this.code, { ...this.phenCfg(), trials: this.state.trials, seed: this.state.seed })
+          : scStream(this.code, { p: this.state.p, noise: this.state.noise, trials: this.state.trials, seed: this.state.seed }),
       onFrame: res => {
         res.ms = this.live.lastFrameMs;
         this.mc = res;
@@ -16006,14 +16605,21 @@ class SurfApp {
     mk(this.q('#sfNoises'), SC_NOISES.map(n => ({ v: n.k, label: n.name, title: n.desc })),
       v => { this.state.noise = v; this.runMc(); });
     mk(this.q('#sfMeas'), [
-      { v: 'ideal', label: '单帧（码容量）', title: '综合征理想：一次读出，一张二维匹配图' },
-      { v: 'noisy', label: '带噪测量', title: 'phenomenological：每轮测量以 q 出错，时间维进匹配图' },
-    ], v => { this.state.meas = v; if (v === 'noisy' && this.state.d === 7) this.state.d = 5;
-      if (v === 'noisy') this.code = scBuild(this.state.d); this.runMc(); });
+      { v: 'ideal', label: '单帧（码容量）', title: '综合征测量理想：二维匹配图' },
+      { v: 'noisy', label: '带噪测量', title: 'phenomenological：每轮读出以 q 出错，时间维进匹配图' },
+      { v: 'circuit', label: '电路级（首阶段）', title: '显式 ancilla 稳定子提取；CNOT 退极化 + ancilla 准备/读出错误；仅 d=3/5，当前匹配器忽略相关性，不用于阈值结论' },
+    ], v => {
+      this.state.meas = v;
+      if ((v === 'noisy' || v === 'circuit') && this.state.d === 7) this.state.d = 5;
+      if (v === 'circuit') { this.state.noise = 'depol'; if (this.state.p > 0.02 || this.state.p < 0.0005) this.state.p = 0.005; this.state.trials = Math.min(this.state.trials, 400); }
+      this.code = scBuild(this.state.d); this.syncPanel(); this.runMc(); this.startSweep();
+    });
 
     this.on(this.q('#sfP'), 'input', e => {
       this.state.p = parseFloat(e.target.value);
-      this.syncPanel(); this.runMc();
+      this.syncPanel();
+      if (this.circuit){ clearTimeout(this._runTimer); this._runTimer = setTimeout(() => this.runMc(), 180); }
+      else this.runMc();
     });
     this.on(this.q('#sfTrials'), 'input', e => {
       this.state.trials = parseInt(e.target.value, 10);
@@ -16021,7 +16627,7 @@ class SurfApp {
     });
     this.on(this.q('#sfPlay'), 'click', () => this.live.toggle());
     this.on(this.q('#sfRun'), 'click', () => this.runMc());
-    this.on(this.q('#sfSnap'), 'click', () => this.runMc(true));
+    this.on(this.q('#sfSnap'), 'click', () => { if (!this.circuit) this.runMc(true); });
     this.on(this.q('#sfSeed'), 'click', () => {
       this.state.seed = (this.state.seed * 1103515245 + 12345) % 2147483647;
       this.runMc();
@@ -16057,23 +16663,38 @@ class SurfApp {
     }
     mark('#sfDs', s.d); mark('#sfNoises', s.noise);
     mark('#sfMeas', s.meas);
+    for (const b of this.modeRoot.querySelectorAll('#sfNoises button')){
+      b.disabled = this.circuit && b.dataset.v !== 'depol';
+      if (this.circuit && b.dataset.v !== 'depol') b.title = '当前 circuit-level 首阶段固定为双比特退极化';
+    }
     /* 带噪测量口径只上 d=3/5：d=7 的时空缺陷数（k̄≈22）远超 DP 上限，回退率过半 */
-    const phen = s.meas === 'noisy';
+    const phen = s.meas === 'noisy', circuit = s.meas === 'circuit';
     for (const b of this.modeRoot.querySelectorAll('#sfDs button')){
       const d = parseInt(b.dataset.v, 10);
-      b.disabled = phen && d === 7;
-      b.title = phen && d === 7
+      b.disabled = (phen || circuit) && d === 7;
+      b.title = circuit && d === 7
+        ? '电路级首阶段只支持 d=3/5；更大距离需先校准时空解码与相关故障模型'
+        : phen && d === 7
         ? '带噪测量下 d=7 的时空缺陷数常超 DP 上限（回退率 >50%），数字不再可信'
         : `n=${d * d} 比特，距离 ${d}`;
     }
     const exBtn = this.q('#sfExact');
     if (exBtn){
-      exBtn.disabled = phen;
-      exBtn.title = phen ? '精确枚举只对单帧口径成立（带噪测量要从 4 层 × 2⁹ × 2⁴ 起枚举）' : '';
+      exBtn.disabled = phen || circuit;
+      exBtn.title = circuit ? '当前仅对 code-capacity 单帧模型实现精确枚举' : phen ? '精确枚举只对单帧口径成立（带噪测量要从 4 层 × 2⁹ × 2⁴ 起枚举）' : '';
     }
     const setv = (id, v) => { const e = this.q('#' + id); if (e) e.value = v; };
-    setv('sfP', s.p); this.q('#sfPO').textContent = s.p.toFixed(3);
-    setv('sfTrials', s.trials); this.q('#sfTrialsO').textContent = s.trials;
+    const pInput = this.q('#sfP'), nInput = this.q('#sfTrials');
+    if (pInput){ pInput.min = this.circuit ? '0.0005' : '0.005'; pInput.max = this.circuit ? '0.02' : '0.25'; pInput.step = this.circuit ? '0.0005' : '0.005'; pInput.value = s.p; }
+    this.q('#sfPO').textContent = s.p.toFixed(4);
+    if (nInput){ nInput.max = this.circuit ? '4000' : '20000'; nInput.value = s.trials; }
+    this.q('#sfTrialsO').textContent = s.trials;
+    const pLabel = this.q('#sfPLabel'); if (pLabel) pLabel.textContent = this.circuit ? '每个电路位置的错误率 p' : '每比特错误率 p';
+    const snap = this.q('#sfSnap'); if (snap){ snap.disabled = this.circuit; snap.title = this.circuit ? '回放须复用已计入统计的 circuit shot，不额外抽样' : ''; }
+    const scan = this.q('#sfScan'); if (scan){ scan.disabled = this.circuit; scan.title = this.circuit ? '首阶段暂不做 circuit-level 阈值扫描：解码器边权尚未纳入故障相关性' : ''; }
+    const note = this.q('#sfModelNote');
+    if (note && this.circuit) note.innerHTML = '<b>首阶段 circuit-level 模型</b>：每轮真实运行 ancilla 稳定子提取；CNOT 后施加双比特退极化，ancilla 准备与经典读出各以 p 翻错。仅 d=3/5。暂不含 idle/T₁/T₂；MWPM 使用边缘近似权重、忽略 hook/相关故障，当前曲线不是可信阈值。';
+    else if (note) note.innerHTML = '<b>退极化是分帧独立解码</b>：丢掉 Y 的相关性 ⟹ 阈值 ≈ 1.5×单帧（10.3% → 15.5%；相关解码可到 18.9%，本页不做）。交叉点「未分辨」表示当前网格/样本数不足；带噪测量固定 q=p、d−1 轮 + 末轮理想读出，d=7 因时空缺陷过多而置灰。';
   }
 
   renderHint(){
@@ -16086,13 +16707,14 @@ class SurfApp {
       '权重 ≤ t=⌊(d−1)/2⌋ 的错误必纠回，代价是**两条跨码链** = 逻辑错误（权重 d）。' +
       '阈值不是某个 p 的绝对值，而是 **d=3/5/7 三条曲线的排序反转**。' +
       '**带噪测量**（phenomenological）把时间放进匹配图：每轮读出以 q=p 出错 ⟹ 探测事件在时空里成对，' +
-      '有限尺寸交叉从 ~9.5% 掉到 ~2.3%。画布下方那 2(d+1) 行点阵就是逐层的探测事件。');
+      '有限尺寸交叉从 ~9.5% 掉到 ~2.3%。画布下方那 2(d+1) 行点阵就是逐层的探测事件。' +
+      (this.circuit ? '**首阶段 circuit-level** 显式模拟每轮 ancilla + CNOT 提取、双比特退极化与 ancilla 准备/读出错；当前时空 MWPM 用边缘近似权重，忽略 hook 相关性，不作为阈值测量。' : ''));
   }
 
   /* ---------- 计算 ---------- */
   computeAll(){
     this.verify = scVerify(this.state.d);
-    this.space = this.phen ? scSpaceVerify(this.state.d, Math.max(1, this.state.d - 1)) : null;
+    this.space = this.spacetime ? scSpaceVerify(this.state.d, this.circuit ? this.state.d : Math.max(1, this.state.d - 1)) : null;
     if (this.state.live && this.live) this.live.start();
     else this.runMc();
     this.startSweep();
@@ -16110,12 +16732,17 @@ class SurfApp {
     const code = this.code;
     if (this.live && this.live.playing){
       this.verify = scVerify(s.d);
-      this.space = this.phen ? scSpaceVerify(s.d, Math.max(1, s.d - 1)) : null;
+      this.space = this.spacetime ? scSpaceVerify(s.d, this.circuit ? s.d : Math.max(1, s.d - 1)) : null;
       this.live.sync();
       return;
     }
     const t0 = performance.now();
-    if (this.phen){
+    if (this.circuit){
+      this.mc = scCircuitEnsemble(code, { p: s.p, rounds: s.d, trials: s.trials, seed: s.seed });
+      this.mc.ms = performance.now() - t0;
+      this.space = scSpaceVerify(s.d, s.d);
+      this.trial = this.mc.lastTrial;
+    } else if (this.phen){
       this.mc = scSpaceEnsemble(code, { ...this.phenCfg(), trials: s.trials, seed: s.seed });
       this.mc.ms = performance.now() - t0;
       this.space = scSpaceVerify(s.d, Math.max(1, s.d - 1));
@@ -16153,10 +16780,17 @@ class SurfApp {
       : { ds: SC_DISTANCES, ps: SC_PS, pMin: 0.005, pMax: 0.25, ticks: [0.01, 0.03, 0.1, 0.25] };
   }
   get phen(){ return this.state.meas === 'noisy'; }
+  get circuit(){ return this.state.meas === 'circuit'; }
+  get spacetime(){ return this.phen || this.circuit; }
 
   /** 分帧扫描：一次算一个 (d, p) 点，插一个 setTimeout 让出主线程 */
   startSweep(){
     const tok = ++this._sweepToken;
+    if (this.circuit){
+      clearTimeout(this._queueTimer); this._queueTimer = null; this._gridN = 0;
+      this.sweep = null; this.cross = null; this.power = null;
+      this.renderHud(); this.drawCurve(); this.drawDist(); return;
+    }
     const s = this.state, G = this.grid;
     const jobs = [];
     for (const d of G.ds) for (const p of G.ps) jobs.push({ d, p });
@@ -16202,8 +16836,8 @@ class SurfApp {
 
   runExact(){
     const s = this.state;
-    if (this.phen){
-      this.exact = { phen: true };
+    if (this.phen || this.circuit){
+      this.exact = { phen: this.phen, circuit: this.circuit };
       this.renderHud();
       return;
     }
@@ -16223,10 +16857,12 @@ class SurfApp {
 
   /* ---------- HUD ---------- */
   renderHud(){
+    this.ciFeedback?.sync({ label: '逻辑失效率 P_L', rate: this.mc && this.mc.PL, n: this.mc && this.mc.trials });
+    this.shotReplay?.sync(this.trial || (this.mc && this.mc.lastTrial), this.mc && this.mc.trials, this.state);
     const s = this.state, v = this.verify, mc = this.mc;
     const set = (id, txt, cls) => { const el = this.q('#' + id); if (el){ el.textContent = txt; el.className = cls || ''; } };
-    const phenTxt = this.phen ? ` · 带噪测量 q=p（${Math.max(1, s.d - 1)} 轮 + 理想读出，${s.d} 个数据层）` : '';
-    set('hCfg', `${sfNoiseName[s.noise]} · d=${s.d} · p=${s.p.toFixed(3)} · N=${s.trials}${phenTxt}`);
+    const phenTxt = this.phen ? ` · phenomenological q=p（${Math.max(1, s.d - 1)} 轮 + 理想终读）` : this.circuit ? ` · circuit-level CNOT+SPAM（${s.d} 轮，近似 MWPM）` : ' · code-capacity';
+    set('hCfg', `${this.circuit ? '双比特退极化' : sfNoiseName[s.noise]} · d=${s.d} · p=${s.p.toFixed(4)} · N=${s.trials}${phenTxt}`);
     if (v){
       set('hStruct', `${v.n} 比特 · |X|=${v.nX} · |Z|=${v.nZ} · k=${v.k} · 全对易=${v.commute ? '✓' : '✗'}`,
         (v.k === 1 && v.commute) ? 'ok' : 'warn');
@@ -16239,23 +16875,27 @@ class SurfApp {
       if (last){
         const err = pcOf((last.mx || 0n) | (last.mz || 0n));
         const outcome = last.fail ? (last.xfail && last.zfail ? 'X/Z 逻辑失败' : last.xfail ? 'X 帧逻辑失败' : 'Z 帧逻辑失败') : '纠回';
-        set('hLast', `#${mc.trials} ${outcome} · 错误 ${err} · 缺陷 ${last.kx + last.kz}`);
+        set('hLast', this.circuit
+          ? `#${mc.trials} ${outcome} · 电路故障 ${last.faultCount} · CNOT ${last.cnotCount}`
+          : `#${mc.trials} ${outcome} · 错误 ${err} · 缺陷 ${last.kx + last.kz}`);
       } else set('hLast', '—');
       set('hSplit', `${sfFmt(mc.PLx)} / ${sfFmt(mc.PLz)}`);
-      set('hDef', `${sfNF(mc.meanDefects, 2)} 个${this.phen ? '（每帧·时空）' : ''}`);
-      const decName = this.phen ? '时空 MWPM' : 'MWPM·DP';
+      set('hDef', `${sfNF(mc.meanDefects, 2)} 个${this.spacetime ? '（时空）' : ''}`);
+      const decName = this.circuit ? '电路级边缘 MWPM' : this.phen ? 'phenomenological 时空 MWPM' : '二维 MWPM·DP';
       set('hDec', `${decName} · 回退 ${(mc.fallback * 100).toFixed(2)}% · ${sfNF(mc.ms, 1)}ms`,
         mc.fallback > 0.02 ? 'warn' : '');
     }
     const spRow = this.q('#hSpaceRow');
-    if (spRow) spRow.style.display = this.phen ? '' : 'none';
-    if (this.phen && this.space){
+    if (spRow) spRow.style.display = this.spacetime ? '' : 'none';
+    if (this.spacetime && this.space){
       const X = this.space.X;
       set('hSpace', `${this.space.layers} 层 × ${X.nS + 2} 节点 · ${X.space + X.bnd + X.time} 边 · 自检${this.space.ok ? '✓' : '✗'}`,
         this.space.ok ? 'ok' : 'warn');
     } else set('hSpace', '—');
     if (!mc){ set('hMCProgress', `0 / ${s.trials}`); set('hLast', '—'); }
-    if (this.cross){
+    if (this.circuit){
+      set('hCross', '首阶段不做 circuit-level 阈值扫描');
+    } else if (this.cross){
       /* σ 大到位数无意义时（N 小 / 曲线贴得太近）不给三位小数：退回两位并标「≈」。
          阈值：σ_p > 0.03 ⟹ 交叉点只知道个量级（N=400 时 c57 常落在这档）。 */
       const fmt = (v, sg) => v === null ? '未分辨'
@@ -16263,11 +16903,14 @@ class SurfApp {
         : sg > 0.03 ? `≈${v.toFixed(2)}±${sg.toFixed(2)}` : `${v.toFixed(3)}±${sg.toFixed(3)}`;
       set('hCross', `${fmt(this.cross.c35, this.cross.s35)} / ${fmt(this.cross.c57, this.cross.s57)}`);
     } else set('hCross', '扫描中…');
-    if (this.power){
+    if (this.circuit){ set('hAlpha', '未拟合（首阶段不做阈值结论）'); }
+    else if (this.power){
       const dsA = this.phen ? [3, 5] : SC_DISTANCES;
       set('hAlpha', dsA.map(d => `d${d}:${Number.isFinite(this.power[d]) ? this.power[d].toFixed(2) : '—'}`).join('  '));
     } else set('hAlpha', '扫描中…');
-    if (this.exact && this.exact.phen){
+    if (this.exact && this.exact.circuit){
+      set('hExact', '电路级口径未实现精确枚举');
+    } else if (this.exact && this.exact.phen){
       set('hExact', '带噪测量口径无精确枚举（4 层 × 2⁹ × 2⁴ 起步）');
     } else if (this.exact){
       set('hExact', `p=${this.exact.p.toFixed(3)}：精确 ${sfFmt(this.exact.exact)} vs MC ${sfFmt(this.exact.mc)} ⟹ z=${sfNF(this.exact.z, 2)}σ`,
@@ -16275,7 +16918,7 @@ class SurfApp {
     } else set('hExact', '未跑（按按钮）');
     const done = this.sweep ? this.sweep.reduce((a, c) => a + c.rows.length, 0) : 0;
     const total = this._gridN || (SC_DISTANCES.length * SC_PS.length);
-    set('hProg', `${done}/${total} 点${done === total ? '（完成）' : '…'}`);
+    set('hProg', this.circuit ? '首阶段无阈值扫描' : `${done}/${total} 点${done === total ? '（完成）' : '…'}`);
   }
 
   /* ---------- 画布 ---------- */
@@ -16300,15 +16943,15 @@ class SurfApp {
     g.clearRect(0, 0, W, H);
     const s = this.state, code = this.code, d = s.d, n = code.n;
     g.textAlign = 'left';
-    const phen = this.phen;
+    const phen = this.spacetime;
     g.font = (11.5 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = sfC.txt + '.95)';
     g.fillText(`旋转表面码 d=${d}：${n} 比特 · ${code.X.length}+${code.Z.length} 个稳定子 · k=1`
-      + (phen ? ` · 带噪测量 ${Math.max(1, s.d - 1)} 轮 + 理想读出` : ''), 10 * dpr, 16 * dpr);
+      + (this.circuit ? ` · 电路级提取 ${s.d} 轮` : phen ? ` · 带噪测量 ${Math.max(1, s.d - 1)} 轮 + 理想读出` : ''), 10 * dpr, 16 * dpr);
     g.font = (9 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = sfC.dim + '.85)';
     g.fillText(phen
-      ? `红点=总错误 · 亮框=末层探测事件 · 蓝环=时空链的空间投影 · 下方 = 逐层探测事件`
+      ? (this.circuit ? `红点=最终数据帧 · 亮框=终层探测事件 · 蓝环=时空 MWPM 投影 · 下方=各轮综合征读数` : `红点=总错误 · 亮框=末层探测事件 · 蓝环=时空链的空间投影 · 下方 = 逐层探测事件`)
       : `红点=错误 · 亮框=被点亮的综合征 · 蓝环=MWPM 修正 · 权重 ${d} 的横/竖链 = 逻辑（无法分辨）`,
     10 * dpr, 29 * dpr);
 
@@ -16449,10 +17092,10 @@ class SurfApp {
     g.textAlign = 'left';
     g.font = (11 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = sfC.txt + '.95)';
-    g.fillText('P_L(p)：阈值 = 三条曲线的排序反转', 10 * dpr, 15 * dpr);
+    g.fillText(this.circuit ? 'Circuit-level：当前单点样本（未做阈值扫描）' : 'P_L(p)：阈值 = 三条曲线的排序反转', 10 * dpr, 15 * dpr);
     g.font = (8.6 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = sfC.dim + '.85)';
-    g.fillText('双对数 · 虚线 = 未编码基线 p（编码有益 ⟺ 曲线在它下方）', 10 * dpr, 27 * dpr);
+    g.fillText(this.circuit ? '边缘权重 MWPM 不含 hook 相关性；单点仅作线路诊断' : '双对数 · 虚线 = 未编码基线 p（编码有益 ⟺ 曲线在它下方）', 10 * dpr, 27 * dpr);
 
     const L = 46 * dpr, Rr = W - 12 * dpr, T = 40 * dpr, B = H - 26 * dpr;
     const G = this.grid, pMin = G.pMin, pMax = G.pMax, yMin = 1e-5, yMax = 1;
@@ -16549,10 +17192,10 @@ class SurfApp {
     const s = this.state;
     g.font = (11 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = sfC.txt + '.95)';
-    g.fillText(`距离抑制：p=${s.p.toFixed(3)} 时 P_L 随 d 的走向`, 10 * dpr, 15 * dpr);
+    g.fillText(this.circuit ? `电路级单点：d=${s.d} · p=${s.p.toFixed(4)}` : `距离抑制：p=${s.p.toFixed(3)} 时 P_L 随 d 的走向`, 10 * dpr, 15 * dpr);
     g.font = (8.6 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = sfC.dim + '.85)';
-    g.fillText('阈值下侧随 d 指数掉（码越大约好）；阈值上侧反过来涨', 10 * dpr, 27 * dpr);
+    g.fillText(this.circuit ? '当前只画已模拟码距；不外推距离趋势或阈值' : '阈值下侧随 d 指数掉（码越大约好）；阈值上侧反过来涨', 10 * dpr, 27 * dpr);
 
     const L = 46 * dpr, Rr = W - 14 * dpr, T = 42 * dpr, B = H - 26 * dpr;
     const Y = v => B - (Math.log10(Math.max(v, 1e-5)) - Math.log10(1e-5)) / 5 * (B - T);
@@ -16562,7 +17205,7 @@ class SurfApp {
       g.fillStyle = sfC.dim + '.8)'; g.font = (8 * dpr) + 'px ui-monospace,monospace';
       g.fillText(v >= 0.01 ? v.toString() : v.toExponential(0), 8 * dpr, Y(v) + 3 * dpr);
     }
-    const ds = this.phen ? [3, 5] : SC_DISTANCES;
+    const ds = this.spacetime ? [3, 5] : SC_DISTANCES;
     const slot = (Rr - L) / ds.length;
     const pts = [];
     for (let i = 0; i < ds.length; i++){

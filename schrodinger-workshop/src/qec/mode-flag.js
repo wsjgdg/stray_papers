@@ -13,6 +13,8 @@
  * ========================================================================== */
 import { FS_KINDS, FS_DEFAULTS, fsFirstOrder, fsProbeWorst, fsStream, fsEnsemble } from '../physics/flagsynd.js';
 import { LiveDriver } from './live.js';
+import { ShotReplay } from './shot-replay.js';
+import { ConfidenceFeedback } from './confidence.js';
 
 const FL_CSS = `
   #flPanel{top:108px;left:14px;width:242px;padding:13px;z-index:10;max-height:calc(100vh - 234px);
@@ -112,6 +114,8 @@ export class FlagApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
+    this.ciFeedback?.dispose();
+    this.shotReplay?.dispose();
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
@@ -182,6 +186,10 @@ export class FlagApp {
       <div id="flDiag"></div>
     `);
     this.cv = { fan: this.q('#flFan'), fate: this.q('#flFate'), prop: this.q('#flProp') };
+    this.shotReplay = new ShotReplay(this.q('#flHud'), 'flag');
+    this.shotReplay.mount();
+    this.ciFeedback = new ConfidenceFeedback(this.q('#flHud'));
+    this.ciFeedback.mount();
 
     const kb = this.q('#flKinds');
     for (const k of flKINDS){
@@ -309,6 +317,8 @@ export class FlagApp {
 
   /* ---------- HUD ---------- */
   renderHud(){
+    this.ciFeedback?.sync({ label: '逻辑失效率 P_L', rate: this.mc && this.mc.PL, events: this.mc && this.mc.logic, n: this.mc && this.mc.trials });
+    this.shotReplay?.sync(this.lastTrial || (this.mc && this.mc.lastTrial), this.mc && this.mc.trials, this.state);
     const s = this.state, d = this.derive(s.kind), w = this.worst[s.kind], mc = this.mc;
     const set = (id, v, cls) => {
       const el = this.q('#' + id);

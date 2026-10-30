@@ -25,6 +25,8 @@
  * ========================================================================== */
 import { CF_FAMILIES, CF_NOISES, cfSweep, cfStream, cfEnsemble, cfExactPL, cfFloor, cfNQ, cfDistance, cfSynBits, cfLeadingPower, CF_FAMILY_ST3 } from '../physics/codefamily.js';
 import { LiveDriver } from './live.js';
+import { ShotReplay } from './shot-replay.js';
+import { ConfidenceFeedback } from './confidence.js';
 
 const FM_CSS = `
   #fmPanel{top:108px;left:14px;width:250px;padding:13px;z-index:10;max-height:calc(100vh - 234px);
@@ -124,6 +126,8 @@ export class FamilyApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
+    this.ciFeedback?.dispose();
+    this.shotReplay?.dispose();
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
@@ -192,6 +196,10 @@ export class FamilyApp {
       <div id="fmDiag"></div>
     `);
     this.cv = { curve: this.q('#fmCurve'), fate: this.q('#fmFate'), power: this.q('#fmPower') };
+    this.shotReplay = new ShotReplay(this.q('#fmHud'), 'family');
+    this.shotReplay.mount();
+    this.ciFeedback = new ConfidenceFeedback(this.q('#fmHud'));
+    this.ciFeedback.mount();
 
     const mk = (host, items, onPick) => {
       for (const it of items){
@@ -329,6 +337,8 @@ export class FamilyApp {
 
   /* ---------- HUD ---------- */
   renderHud(){
+    this.ciFeedback?.sync({ label: '逻辑失效率 P_L', rate: this.mc && this.mc.PL, events: this.mc && this.mc.byFate ? this.mc.byFate.logic + this.mc.byFate.outside : undefined, n: this.mc && this.mc.trials });
+    this.shotReplay?.sync(this.lastTrial || (this.mc && this.mc.lastTrial), this.mc && this.mc.trials, this.state);
     const s = this.state, sw = this.sweep, mc = this.mc;
     const set = (id, v, cls) => {
       const el = this.q('#' + id);

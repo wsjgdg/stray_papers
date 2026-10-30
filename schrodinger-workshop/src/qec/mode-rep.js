@@ -77,6 +77,8 @@ import { QEC_DEFAULTS, QEC_CODES, QEC_NOISE, QEC_SPECTRA, qecTrial, qecStream, q
 import { mulberry32 } from '../physics/qcircuit.js';
 import { qecCurveCsv, qecTableCsv, qecTableMd, qecExportName, encodeShort, mergeShort } from './export.js';
 import { LiveDriver } from './live.js';
+import { ShotReplay } from './shot-replay.js';
+import { ConfidenceFeedback } from './confidence.js';
 
 const QEC_CSS = `
   /* R108：hint 移到右列后左列无底部占位，面板高度帽子放到 100vh−126px
@@ -240,6 +242,8 @@ export class QecApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
+    this.ciFeedback?.dispose();
+    this.shotReplay?.dispose();
     clearTimeout(this._pDebounce); clearTimeout(this._trDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     clearTimeout(this._physDeb);   /* R108：phys 滑块防抖（切 mode 不泄漏） */
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
@@ -403,6 +407,10 @@ export class QecApp {
     `);
 
     this.cv = { circuit: this.q('#qecCircuit'), curve: this.q('#qecCurve'), hist: this.q('#qecHist') };
+    this.shotReplay = new ShotReplay(this.q('#qeHud'), 'rep');
+    this.shotReplay.mount();
+    this.ciFeedback = new ConfidenceFeedback(this.q('#qeHud'));
+    this.ciFeedback.mount();
 
     for (const b of this.modeRoot.querySelectorAll('#qePanel button[data-c]')){
       this.on(b, 'click', () => this.setCode(b.dataset.c));
@@ -1466,6 +1474,8 @@ export class QecApp {
   }
 
   renderHud(){
+    this.ciFeedback?.sync({ label: '逻辑失效率 P_L', rate: this.ens && this.ens.PL, n: this.ens && this.ens.trials, reference: this.ens && this.ens.PLexact });
+    this.shotReplay?.sync(this.trial, this.ens && this.ens.trials, this.state);
     const s = this.state, t = this.trial, e = this.ens;
     const N = qecNormN(s.n);
     /* R110/R112：综合征标签随稳定子数走（n−1 位；n=3 ⟹ '综合 m₀m₁' 与 R108

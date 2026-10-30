@@ -18,6 +18,8 @@
 import { GN_DEFAULTS, GN_SPECTRA, GN_PRESETS, gnPresetGates, gnTrial, gnTouched, gnStream, gnRun, gnSweep, gnClosedAt, gnEsdBells, gnGateFidelity, gnLambda, gnGammaZ, gnRhoRun, gnRhoInfo } from '../physics/gatenoise.js';
 import { mulberry32 } from '../physics/qcircuit.js';
 import { LiveDriver } from './live.js';
+import { ShotReplay } from './shot-replay.js';
+import { ConfidenceFeedback } from './confidence.js';
 
 const GN_CSS = `
   #gnPanel{top:108px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 234px);
@@ -122,6 +124,8 @@ export class GateNoiseApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
+    this.ciFeedback?.dispose();
+    this.shotReplay?.dispose();
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
@@ -211,6 +215,10 @@ export class GateNoiseApp {
     `);
 
     this.cv = { circuit: this.q('#gnCircuit'), curve: this.q('#gnCurve'), decay: this.q('#gnDecay') };
+    this.shotReplay = new ShotReplay(this.q('#gnHud'), 'gate');
+    this.shotReplay.mount();
+    this.ciFeedback = new ConfidenceFeedback(this.q('#gnHud'));
+    this.ciFeedback.mount();
 
     /* 预设按钮 */
     const pb = this.q('#gnPresets');
@@ -376,6 +384,8 @@ export class GateNoiseApp {
 
   /* ---------- HUD ---------- */
   renderHud(){
+    this.ciFeedback?.sync({ kind: 'mean', label: '线路态保真度 F', mean: this.mc && this.mc.F && this.mc.F.mean, sd: this.mc && this.mc.F && this.mc.F.sd, n: this.mc && this.mc.trials });
+    this.shotReplay?.sync(this.trial, this.mc && this.mc.trials, this.state);
     const s = this.state, mc = this.mc, t = this.trial;
     const set = (id, v) => { const el = this.q('#' + id); if (el) el.textContent = v; };
     set('hPreset', GN_PRESETS[s.preset].label + (s.preset === 'ghz' ? ' n=' + s.n : ''));

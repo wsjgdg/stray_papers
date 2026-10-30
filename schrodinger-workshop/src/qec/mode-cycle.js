@@ -19,6 +19,8 @@ import { NAV_HREFS } from '../core/nav.js';
 import { FS_KINDS, fsCircuit, fsFirstOrder, fsStream, fsEnsemble, fsRun, cyInterception, cySweepCycles } from '../physics/flagsynd.js';
 import { qecGenericCsv, downloadText, encodeShort, mergeShort } from './export.js';
 import { LiveDriver } from './live.js';
+import { ShotReplay } from './shot-replay.js';
+import { ConfidenceFeedback } from './confidence.js';
 
 const CY_CSS = `
   #cyPanel{top:108px;left:14px;width:246px;padding:13px;z-index:10;max-height:calc(100vh - 234px);
@@ -117,6 +119,8 @@ export class CycleApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
+    this.ciFeedback?.dispose();
+    this.shotReplay?.dispose();
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
@@ -196,6 +200,10 @@ export class CycleApp {
       <div id="cyDiag"></div>
     `);
     this.cv = { flow: this.q('#cyFlow'), curve: this.q('#cyCurve'), gate: this.q('#cyGate') };
+    this.shotReplay = new ShotReplay(this.q('#cyHud'), 'cycle');
+    this.shotReplay.mount();
+    this.ciFeedback = new ConfidenceFeedback(this.q('#cyHud'));
+    this.ciFeedback.mount();
 
     const mk = (host, items, onPick) => {
       const el = this.q(host);
@@ -334,6 +342,8 @@ export class CycleApp {
   }
 
   renderHud(){
+    this.ciFeedback?.sync({ label: '逻辑失效率 P_L', rate: this.mc && this.mc.PL, events: this.mc && this.mc.logic, n: this.mc && this.mc.trials });
+    this.shotReplay?.sync(this.trial, this.mc && this.mc.trials, this.state);
     const s = this.state;
     const set = (id, v, cls) => { const el = this.q('#' + id); if (!el) return; el.textContent = v; el.className = cls || ''; };
     const lg = (cyLOGICS.find(l => l.k === s.logic) || {}).name || '无';
