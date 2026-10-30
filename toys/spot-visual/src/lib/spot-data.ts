@@ -1557,6 +1557,77 @@ export const LIBRARY_SPOTS: Spot[] = [
   ..._extraScenicSpots,
 ];
 
+/**
+ * A 级名录地址清洗：原始数据常见行政区前缀三重复写，
+ * 如「北京北京市延庆区北京延庆区北京市延庆区八达岭…」→「北京市延庆区八达岭…」。
+ * 三步处理，任一步不命中即零改动（合法嵌套的乐山市/峨眉山市、
+ * 呼伦贝尔市/额尔古纳市 市名不同，不受影响）：
+ * 1. 相邻重复段折叠：「桂林市桂林市」→「桂林市」（循环到稳定）；
+ * 2. 头部「省简称+全称」叠写：「北京|北京市…」→「北京市…」
+ *    （简称必须是紧随其后的全称段的前缀才删；逐长度试探防最左贪婪错配）；
+ * 3. 残留的「与前文同区县名」段整段删除：北京延庆区/北京市延庆区 里
+ *    「延庆区」已在前文出现 → 连同段内市简称一起删，不能只删「延庆区」
+ *    剩下孤立的「北京市」。区/县/旗/盟按尾 3 字判重（北京延庆区 ≈ 延庆区），
+ *    省/市按全名判重（呼伦贝尔市 ≠ 额尔古纳市）；首个非段字符起的正文
+ *    （廖家巷28号、唐寅文化区）原样保留。
+ */
+export function cleanScenicAddress(addr: string): string {
+  if (!addr) return addr;
+  // 段正则函数内建：LIBRARY_SPOTS 在模块初始化时就调用本函数，
+  // 模块级 const 会因声明顺序触发 TDZ（Cannot access before initialization）
+  const SEG_SRC = "[^省市区县旗盟]{1,8}?(?:自治区|[省市县旗盟区])";
+  const segAdj = new RegExp(`(${SEG_SRC})\\1+`, "g");
+  const segRest = new RegExp(SEG_SRC, "y");
+  let out = addr;
+
+  // 1) 相邻重复段折叠（循环到稳定：AABB 折叠后才暴露的相邻重复）
+  for (;;) {
+    const next = out.replace(segAdj, "$1");
+    if (next === out) break;
+    out = next;
+  }
+
+  // 2) 头部「省简称+全称」叠写：北京|北京市… → 北京市…
+  for (let n = 1; n <= 3; n++) {
+    const short = out.slice(0, n);
+    const fm = out
+      .slice(n)
+      .match(/^([^省市区县旗盟]{1,4}?(?:自治区|[省市县旗盟区]))/);
+    if (fm && fm[1].startsWith(short)) {
+      out = fm[1] + out.slice(n + fm[1].length);
+      break;
+    }
+  }
+
+  // 3) 残留的「与前文同区县名」段整段删除，其余原样保留
+  const seenC = new Set<string>();
+  const seenD = new Set<string>();
+  let pos = 0;
+  const kept: string[] = [];
+  for (;;) {
+    segRest.lastIndex = pos;
+    const m = segRest.exec(out);
+    if (!m) break;
+    const t = m[0];
+    if (/[区县旗盟]$/.test(t)) {
+      const key = t.slice(-3);
+      if (seenD.has(key)) {
+        pos += t.length;
+        continue;
+      }
+      seenD.add(key);
+    } else if (seenC.has(t)) {
+      pos += t.length;
+      continue;
+    } else {
+      seenC.add(t);
+    }
+    kept.push(t);
+    pos += t.length;
+  }
+  return kept.join("") + out.slice(pos);
+}
+
 /** 库规模统计：页面/文档里的计数一律读这里，避免硬编码过期（曾出现「约 3000 条」vs 实际 5987） */
 export const LIBRARY_STATS = {
   /** 统一库总数 */
@@ -1629,7 +1700,7 @@ function buildExtraScenicSpots(knownNames: Set<string>): Spot[] {
       rating: SCENIC_DETAILS[e.name]?.rating
         ? Number(SCENIC_DETAILS[e.name]!.rating)
         : undefined,
-      address: e.address || `${e.city}（A级景区名录）`,
+      address: cleanScenicAddress(e.address) || `${e.city}（A级景区名录）`,
       facilities: [],
       projects: [],
       category,
