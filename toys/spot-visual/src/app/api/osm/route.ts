@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { PROVINCE_CENTERS } from "@/lib/china-centers";
 import { CITY_CENTERS } from "@/lib/city-centers.generated";
+import { wgs84ToGcj02 } from "@/lib/coord-transform";
 
 // ════════════════════════════════════════════════════════════════════
 // OSM 实时景点探索 API
@@ -144,8 +145,15 @@ function mapElement(
   const tags = el.tags || {};
   const imgs = extractOsmImages(tags);
   const name = tags.name || tags["name:zh"] || tags["name:en"] || "未命名景点";
-  const lat = el.lat ?? el.center?.lat;
-  const lng = el.lon ?? el.center?.lon;
+  const rawLat = el.lat ?? el.center?.lat;
+  const rawLng = el.lon ?? el.center?.lon;
+  // OSM 返回 WGS84 坐标；应用内所有坐标出口（ECharts 中国地图渲染、
+  // uri.amap.com 导航链接）全部按 GCJ02 火星坐标，进响应前必须统一转换，
+  // 否则地图偏 300~500m、导航指到隔壁街。
+  const gcj =
+    rawLat != null && rawLng != null ? wgs84ToGcj02(rawLng, rawLat) : null;
+  const lat = gcj?.lat;
+  const lng = gcj?.lng;
   const addressParts = [
     tags["addr:city"] || city,
     tags["addr:district"] || tags["addr:suburb"],

@@ -5,6 +5,14 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { LIBRARY_STATS } from "@/lib/spot-data";
+import { POI_DESCRIPTIONS, SCENIC_DESCRIPTIONS } from "@/lib/poi-descriptions";
+import { OUTSOURCE_DESCRIPTIONS } from "@/lib/scenic-desc-outsource.generated";
+
+// 简介条数动态读取，避免硬编码过期（同 LIBRARY_STATS 的做法）。
+// 这三个模块已随 spot-data 进入本页 bundle，直接取键数不增加体积。
+const SCENIC_DESC_COUNT = Object.keys(SCENIC_DESCRIPTIONS).length;
+const POI_DESC_COUNT = Object.keys(POI_DESCRIPTIONS).length;
+const OUTSOURCE_DESC_COUNT = Object.keys(OUTSOURCE_DESCRIPTIONS).length;
 
 const ROWS = [
   {
@@ -97,6 +105,14 @@ const ROWS = [
     note: `${LIBRARY_STATS.levelMatched} 个 POI 按名称+距离匹配挂等级；${LIBRARY_STATS.extras} 个库内未覆盖的 3A+ 景区反向入库为骨架条目（等级+坐标，无图无描述，图走分类池降级）。统一库合计 ${LIBRARY_STATS.total} 条（手工 ${LIBRARY_STATS.manual} + 城市 POI ${LIBRARY_STATS.cityPoi} + A 级名录 ${LIBRARY_STATS.extras}，覆盖 ${LIBRARY_STATS.cityCount} 城）。`,
   },
   {
+    layer: "景区简介",
+    source:
+      "本项目撰写管线：人工精写 + 外包 AI 初稿（任务书约束）+ 事实句模板兜底",
+    license: "本项目自有内容",
+    fields: "中文简介文案（60–110 字/条）；未覆盖条目回落事实句模板",
+    note: `人工精写 ${SCENIC_DESC_COUNT} 条 5A/知名景区简介（名录精确名落键，宁缺毋滥），城市 POI 人工简介 ${POI_DESC_COUNT} 条；4A 长尾由外包批次持续合入（已合入 ${OUTSOURCE_DESC_COUNT} 条，进行中），未覆盖条目回落事实句模板——等级/省市/类别取自 2023 全国 A 级名录或高德 POI 字段，零编造。事实纪律：数字与强断言（世界遗产、全国重点文保、最大、唯一等）必须可核实，不能确认一律降级表述；门票/开放时间/预约/电话一律不写入文案（应用内是独立结构化字段，写进文案会与真实数据打架）。外包流程：外部 AI 按任务书出初稿 → 机器验收（长度 60–110 字、禁写词、id 回填、无编造断言，硬违规整批拒收）→ 人工抽检 15–20 条核对口径 → 按 id 合入（键=库条目 id，天然避免同名跨市串写）。来源标注：条目级出处不可查（写作型内容无 URL），口径为「人工撰写，事实性经编辑核对」；POI 类简介另有高德 POI 数据打底。`,
+  },
+  {
     layer: "是否需预约",
     source: "人工标注（14 条，无自动数据源）",
     license: "—",
@@ -107,7 +123,8 @@ const ROWS = [
     layer: "登山账本（真实山径高程）",
     source: "Open-Meteo Elevation API（构建时沿路线关键节点插值采样）",
     license: "CC BY 4.0",
-    fields: "海拔剖面（km-elevation）、累计路程（直线 ×1.25 绕行系数）、关键节点",
+    fields:
+      "海拔剖面（km-elevation）、累计路程（直线 ×1.25 绕行系数）、关键节点",
     note: "路径为泰山/黄山/峨眉山/华山四条经典登山线的关键节点直线插值，非 GPS 轨迹；海拔为真实地形数据，节点坐标为近似值。",
   },
   {
@@ -186,8 +203,10 @@ function SourcesPageInner() {
 
   return (
     <div className="max-w-[1000px] mx-auto px-4 sm:px-6 py-10">
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">数据来源与边界</h1>
-      <p className="text-sm text-gray-500 mb-6 leading-relaxed max-w-[680px]">
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+        数据来源与边界
+      </h1>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 leading-relaxed max-w-[680px]">
         本页列出所有外部数据的出处、许可与「能支撑到什么程度」。
         凡是没有外部依据的数值，页面上一律标注为「自评」。
       </p>
@@ -196,27 +215,31 @@ function SourcesPageInner() {
         {ROWS.map((r) => (
           <div
             key={r.layer}
-            className="rounded-2xl border border-gray-200 bg-white p-4"
+            className="rounded-2xl border border-gray-200 dark:border-gray-700/80 bg-white dark:bg-gray-900 p-4"
           >
             <div className="flex flex-wrap items-center gap-2 mb-1.5">
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                 {r.layer}
               </span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-gray-200 text-gray-500">
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
                 {r.license}
               </span>
             </div>
-            <div className="text-xs text-gray-600 mb-1">来源：{r.source}</div>
-            <div className="text-xs text-gray-500 mb-1">字段：{r.fields}</div>
-            <div className="text-[11px] text-gray-400 leading-relaxed">
+            <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">
+              来源：{r.source}
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+              字段：{r.fields}
+            </div>
+            <div className="text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed">
               {r.note}
             </div>
           </div>
         ))}
       </div>
 
-      <div className="mt-6 rounded-2xl border border-gray-200 bg-gray-50 p-4 text-xs text-gray-500 leading-relaxed">
-        <b className="text-gray-700">未纳入：</b>
+      <div className="mt-6 rounded-2xl border border-gray-200 dark:border-gray-700/80 bg-gray-50 dark:bg-gray-800/60 p-4 text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+        <b className="text-gray-700 dark:text-gray-300">未纳入：</b>
         消费调研（外卖/点评菜品热度、销量）没有公开数据集；
         「糖」在中国菜肴数据集里只有总碳水列，没有糖列，故甜度仍走量表与自评；
         辣/酸/香/鲜在营养库中无对应量纲。
@@ -225,7 +248,7 @@ function SourcesPageInner() {
       <div className="mt-6">
         <Link
           href={link("/about")}
-          className="text-emerald-600 text-sm underline"
+          className="text-emerald-600 dark:text-emerald-400 text-sm underline"
         >
           ← 返回作品介绍
         </Link>

@@ -419,7 +419,10 @@ function Sidebar({
                     {item.icon}
                   </span>
                   {!collapsed && (
-                    <span className="flex-1 text-left truncate">
+                    <span
+                      className="flex-1 text-left truncate"
+                      title={item.label}
+                    >
                       {item.label}
                     </span>
                   )}
@@ -521,7 +524,9 @@ function MobileHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
               onClick={() => setActiveView(item.key)}
               className={`flex-1 min-w-0 py-2 text-[11px] font-medium text-center transition-colors shrink-0 ${active ? "text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-600" : "text-gray-400 dark:text-gray-500"}`}
             >
-              <span className="block truncate px-0.5">{item.label}</span>
+              <span className="block truncate px-0.5" title={item.label}>
+                {item.label}
+              </span>
             </button>
           );
         })}
@@ -679,7 +684,10 @@ function SpotGrid({
                     </div>
                   </div>
                   <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1 group-hover:text-emerald-700 transition-colors truncate">
+                    <h3
+                      title={spot.name}
+                      className="font-semibold text-gray-900 dark:text-gray-100 mb-1 group-hover:text-emerald-700 transition-colors truncate"
+                    >
                       <Highlight text={spot.name} query={query} />
                       {spotNotes[spot.id] && (
                         <FileText className="w-3 h-3 text-amber-500 inline ml-1 -mt-0.5" />
@@ -687,7 +695,9 @@ function SpotGrid({
                     </h3>
                     <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 mb-2">
                       <MapPin className="w-3 h-3 shrink-0" />
-                      <span className="truncate">{spot.address}</span>
+                      <span className="truncate" title={spot.address}>
+                        {spot.address}
+                      </span>
                       {spot.rating && (
                         <span className="flex items-center gap-0.5 text-amber-500 shrink-0">
                           <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
@@ -812,7 +822,10 @@ function SpotList({
                   </div>
                   <div className="flex-1 p-4 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-emerald-700 transition-colors">
+                      <h3
+                        title={spot.name}
+                        className="font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-emerald-700 transition-colors"
+                      >
                         <Highlight text={spot.name} query={query} />
                         {spotNotes[spot.id] && (
                           <FileText className="w-3 h-3 text-amber-500 inline ml-1 -mt-0.5" />
@@ -837,7 +850,9 @@ function SpotList({
                     </div>
                     <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 mb-2">
                       <MapPin className="w-3 h-3 shrink-0" />
-                      <span className="truncate">{spot.address}</span>
+                      <span className="truncate" title={spot.address}>
+                        {spot.address}
+                      </span>
                       {spot.rating && (
                         <span className="flex items-center gap-0.5 text-amber-500 shrink-0">
                           <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
@@ -1366,6 +1381,7 @@ function SpotDetailDialog() {
                   target="_blank"
                   rel="noreferrer"
                   className="hover:text-emerald-700 hover:underline truncate"
+                  title={spot.website}
                 >
                   官网链接
                 </a>
@@ -2607,8 +2623,8 @@ function SpotsView() {
                 <History className="w-3.5 h-3.5" />
                 继续浏览
               </p>
-              <ScrollArea className="max-w-full">
-                <div className="flex gap-2 pb-1">
+              <ScrollArea className="w-full">
+                <div className="flex w-max gap-2 pb-1">
                   {recents.map((s) => (
                     <button
                       key={s.id}
@@ -2623,7 +2639,10 @@ function SpotsView() {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
                       </div>
-                      <p className="text-[11px] text-gray-600 dark:text-gray-300 truncate group-hover:text-emerald-700">
+                      <p
+                        title={s.name}
+                        className="text-[11px] text-gray-600 dark:text-gray-300 truncate group-hover:text-emerald-700"
+                      >
                         {s.name}
                       </p>
                     </button>
@@ -2634,8 +2653,8 @@ function SpotsView() {
           );
         })()}
       {/* Category filters */}
-      <ScrollArea className="max-w-full">
-        <div className="flex items-center gap-2 pb-1">
+      <ScrollArea className="w-full">
+        <div className="flex w-max items-center gap-2 pb-1">
           {allCategories.map((cat) => (
             <button
               key={cat}
