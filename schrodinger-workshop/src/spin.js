@@ -1,0 +1,1127 @@
+/* ============================================================================
+ * spin.js（页面）— 海森堡自旋链沙盒：XXZ 各向异性 / 场 / 淬变 / 临界纠缠
+ *
+ * 纯 CPU、纯 2D canvas。态是固定 Sᶻ 扇区上的复向量（基 = C(L,nUp) 个位掩码），
+ * 画面上只有「自旋本身」：每格一支箭头（长度 ∝ |⟨S^z_i⟩|、颜色分 ↑/↓），
+ * 下面一条键关联带（⟨S_i·S_{i+1}⟩，反铁磁为负），再下面是被笔刷写过的局域场。
+ *
+ * 【三种玩法】
+ *   1. 初态工具：点格点把该格自旋翻过来（右键反向）。扇区跟着 nUp 重建。
+ *   2. 场笔刷：横拖给每格写 bz_i（左键 = +b 偏向 ↑、右键 = −b 偏向 ↓）。
+ *   3. 擦除：把该格 bz_i 清零。
+ *
+ * 【两种模式】gs = 解基态（Δ/h/L/bz 一改就重解，去抖）；evo = 从当前初态按
+ * exp(−iHt) 演化（改 H 立即生效、不重置 t）。
+ *
+ * 【四个图表视图】S(x) 纠缠剖面 / S(q) 结构因子 / ⟨S^z_iS^z_j⟩ 关联矩阵 / S(t) 熵-时间。
+ *
+ * 调试句柄 window.__sp（cdp145 用）：measures/entropy/step/setDelta/setH/setL/solveNow/
+ * history/pat/flip/setTool/paint/view/pickAt/spec/applySpec —— 全部确定性接口。
+ * ========================================================================== */
+import { injectStyles } from './core/styles.js';
+import { injectResponsive } from './core/responsive.js';
+import { navHtml } from './core/nav.js';
+import { symEigVals } from './physics/hubbard.js';
+import { spSector, spProduct, spNeel, spMeasure, spEnergy, spResidual, spNorm, spKrylovExp, spEntropy, spEntropyAt, spEntropyProfile, spStructureFactor, SpGsTask, SP_PRESETS } from './physics/spin.js';
+
+/* 局域场的满量程（|b| 到 4 就是满格高） */
+const B_VIEW = 4;
+const SP_TOOLS = [
+  { k: 'state', name: '初态', tip: '点击格点翻转该格自旋（右键反向）' },
+  { k: 'field', name: '场笔刷', tip: '拖动涂局域场：左键 = +b（偏 ↑），右键 = −b（偏 ↓）' },
+  { k: 'erase', name: '擦除', tip: '点击清除该格的局域场' },
+];
+const SP_VIEWS = [
+  { k: 'Sx', name: 'S(x)', tip: '纠缠剖面：以切点 x 分开时左半的熵' },
+  { k: 'Sq', name: 'S(q)', tip: '静态结构因子：S(q=π) 高 = 反铁磁序' },
+  { k: 'zz', name: '⟨Sᶻ Sᶻ⟩', tip: '自旋关联矩阵（ρ_ij = ⟨S^z_iS^z_j⟩）' },
+  { k: 'St', name: 'S(t)', tip: '半链纠缠熵随时间（基态下退化为标尺）' },
+];
+
+/* ---------------------------------- CSS ---------------------------------- */
+const SP_CSS = `
+#spTop{display:flex;justify-content:space-between;align-items:baseline;gap:14px}
+#spTop .eq{font-family:var(--mono);font-size:11px;color:var(--dim)}
+#spStage{position:relative}
+#spStage canvas{display:block;width:100%;border-radius:10px;background:rgba(6,11,20,.55);border:1px solid rgba(120,160,220,.12)}
+#spLadder{margin-bottom:8px}
+#spPanel .grid2,#spPanel .grid3,#spPanel .grid4{display:grid;gap:5px}
+#spPanel .grid2{grid-template-columns:repeat(2,1fr)}
+#spPanel .grid3{grid-template-columns:repeat(3,1fr)}
+#spPanel .grid4{grid-template-columns:repeat(4,1fr)}
+#spPanel .grid2 button,#spPanel .grid3 button,#spPanel .grid4 button{padding:6px 2px;font-size:10.5px}
+#spPanel .sec{margin-bottom:9px}
+#spPanel .sec h3{font-size:10.5px;letter-spacing:.14em;color:var(--dim);margin:0 0 5px;font-weight:500}
+#spPanel .row{display:flex;align-items:center;gap:6px;margin:4px 0;font-size:10.5px;color:var(--dim)}
+#spPanel .row input[type=range]{flex:1;min-width:0}
+#spPanel .row output{font-family:var(--mono);color:var(--cyan);min-width:34px;text-align:right}
+#spPanel button.on{background:rgba(103,232,249,.14);border-color:rgba(103,232,249,.55);color:#d7fbff}
+#spHud .hrow{display:flex;justify-content:space-between;gap:8px;font-size:10.5px;line-height:1.7}
+#spHud .hrow span:first-child{color:var(--dim)}
+#spHud .hrow span:last-child{font-family:var(--mono);color:var(--cyan)}
+#spHint{font-size:10.5px;line-height:1.6;color:var(--dim)}
+#spHint b{color:var(--amber);font-weight:500}
+#spToast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:20;pointer-events:none;
+  padding:8px 16px;border-radius:9px;background:rgba(8,14,24,.94);border:1px solid rgba(103,232,249,.35);
+  font-family:var(--mono);font-size:13px;color:var(--cyan);letter-spacing:.16em;opacity:0;transition:opacity .4s;
+  text-shadow:0 0 18px rgba(103,232,249,.8);text-align:center;white-space:pre-line}
+#spDiag{position:fixed;left:-9999px}
+#spErr{display:none;position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:30;max-width:min(90vw,760px);
+  padding:9px 14px;border-radius:8px;border:1px solid rgba(251,113,133,.5);background:rgba(60,10,18,.92);
+  color:#fecdd3;font:11.5px/1.5 var(--mono);white-space:pre-wrap}
+`;
+const SP_LAYOUT = `
+#spPanel{left:0;top:52px;bottom:12px;width:236px}
+#spStage{margin-left:250px}
+#spHud{right:0;top:52px;width:196px}
+#spHint{position:fixed;left:250px;bottom:12px;max-width:calc(100vw - 480px)}
+@media (max-width:1100px){
+  #spPanel{position:static;width:auto;bottom:auto}
+  #spStage{margin-left:0}
+  #spHud{position:static;width:auto}
+  #spHint{position:static;max-width:none}
+}
+`;
+
+const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+
+export class SpinApp {
+  constructor(container, options = {}){
+    this.container = typeof container === 'string' ? document.querySelector(container) : (container || document.body);
+    const q = new URLSearchParams(location.search);
+    const num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
+    const L = Math.round(num('L', 12));
+    this.state = {
+      preset: SP_PRESETS[q.get('preset')] ? q.get('preset') : 'xxx',
+      L: [8, 10, 12, 14, 16].includes(L) ? L : 12,
+      delta: clamp(num('D', 1), 0, 4),
+      h: clamp(num('h', 0), 0, 4),
+      mode: q.get('mode') === 'evo' ? 'evo' : 'gs',
+      tool: SP_TOOLS.some(t => t.k === q.get('tool')) ? q.get('tool') : 'state',
+      view: SP_VIEWS.some(v => v.k === q.get('view')) ? q.get('view') : 'Sx',
+      nUp: 0, spins: null, bz: null,
+      t: 0, frames: 0, paused: q.get('paused') === '1',
+      dt: num('dt', 0.04), spf: Math.round(num('spf', 2)),
+      brush: clamp(num('br', 1.5), 0, B_VIEW),
+    };
+    this.sec = null; this.re = null; this.im = null;
+    this.E = NaN; this.residual = null; this.m = null; this.S = NaN; this.Sq = null;
+    this.hist = []; this.job = null; this.msg = '';
+    this._hover = -1; this._paint = null; this._view = null;
+    this._sxProf = null; this._sxJob = null;
+    this._listeners = []; this._fps = 0; this._fpsFrames = 0; this._lastFpsT = performance.now();
+    this._errCount = 0; this._dead = false; this._title0 = undefined;
+    this._onError = e => { const d = this.q('#spDiag'); if (d) d.textContent = 'ERR ' + e.message; };
+    window.addEventListener('error', this._onError);
+    this.frame = this.frame.bind(this);
+  }
+
+  q(s){ return this.container.querySelector(s); }
+  on(t, type, fn, opts){ if (!t) return; t.addEventListener(type, fn, opts); this._listeners.push([t, type, fn, opts]); }
+  toast(m, ms = 2000){
+    const el = this.q('#spToast'); if (!el) return;
+    el.textContent = m; el.style.opacity = 1;
+    clearTimeout(this._tt); this._tt = setTimeout(() => { el.style.opacity = 0; }, ms);
+  }
+
+  mount(){
+    injectStyles();
+    injectResponsive();
+    const st = document.createElement('style');
+    st.id = 'sp-styles'; st.textContent = SP_CSS + SP_LAYOUT;
+    document.head.appendChild(st);
+    this.buildDOM();
+    this.bindUI();
+    this.resize();
+    this.initPreset();
+    if (this._spec) this.applySpec(this._spec, { fromUrl: true });
+    requestAnimationFrame(this.frame);
+    window.__sp = this.debugHandle();
+    return this;
+  }
+
+  buildDOM(){
+    const P = SP_PRESETS;
+    this.container.innerHTML = `
+<div id="spTop" class="panel qtop">
+  <div><h1>自旋链工场</h1>
+    <div class="eq">H = Σ<sub>i</sub> J [ S<sup>x</sup><sub>i</sub>S<sup>x</sup><sub>i+1</sub> + S<sup>y</sup><sub>i</sub>S<sup>y</sup><sub>i+1</sub> + Δ S<sup>z</sup><sub>i</sub>S<sup>z</sup><sub>i+1</sub> ] − Σ<sub>i</sub> b<sub>i</sub> S<sup>z</sup><sub>i</sub></div></div>
+  <nav>${navHtml('./spin.html')}</nav>
+</div>
+
+<div id="spPanel" class="panel">
+  <div class="sec"><h3>预设</h3><div class="grid2">
+    ${Object.keys(P).map(k => `<button data-preset="${k}" title="${P[k].text}">${P[k].name}</button>`).join('')}
+  </div></div>
+  <div class="sec"><h3>模式</h3><div class="grid2">
+    <button id="spModeGs">解基态</button><button id="spModeEvo">从初态演化</button>
+  </div></div>
+  <div class="sec"><h3>工具</h3><div class="grid3">
+    ${SP_TOOLS.map(t => `<button data-tool="${t.k}" title="${t.tip}">${t.name}</button>`).join('')}
+  </div></div>
+  <div class="sec"><h3>参数</h3>
+    <div class="row"><label>Δ（各向异性）</label><input type="range" id="rDelta" min="0" max="4" step="0.05" value="${this.state.delta}"><output id="oDelta">${this.state.delta.toFixed(2)}</output></div>
+    <div class="row"><label>h（均匀场）</label><input type="range" id="rH" min="0" max="4" step="0.05" value="${this.state.h}"><output id="oH">${this.state.h.toFixed(2)}</output></div>
+    <div class="row"><label>|b| 笔刷</label><input type="range" id="rBrush" min="0" max="${B_VIEW}" step="0.25" value="${this.state.brush}"><output id="oBrush">${this.state.brush.toFixed(2)}</output></div>
+    <div class="row"><button id="spClearField" class="sm">清空局域场</button></div>
+  </div>
+  <div class="sec"><h3>链长</h3><div class="grid3">
+    ${[8, 10, 12, 14, 16].map(L => `<button data-len="${L}"${L === 16 ? ' class="sm"' : ''}>L = ${L}</button>`).join('')}
+  </div></div>
+  <div class="sec"><h3>操作</h3><div class="grid2">
+    <button id="spPause">暂停</button><button id="spStep">单步</button>
+    <button id="spReset" class="sm">重置</button><button id="spLink" class="sm">复制链接</button>
+    <button id="spSave" class="sm">导出 JSON</button><button id="spGap" class="sm">算能隙</button>
+  </div></div>
+</div>
+
+<div id="spStage" class="qstage" data-tool="${this.state.tool}">
+  <canvas id="spLadder"></canvas>
+  <div id="spViews" style="display:flex;gap:4px;margin:2px 0 6px">
+    ${SP_VIEWS.map(v => `<button data-view="${v.k}" title="${v.tip}">${v.name}</button>`).join('')}
+  </div>
+  <canvas id="spChart"></canvas>
+</div>
+
+<div id="spHud" class="panel">
+  <div class="hrow"><span>模式</span><span id="hMode">—</span></div>
+  <div class="hrow"><span>扇区 / 维数</span><span id="hDim">—</span></div>
+  <div class="hrow"><span>E</span><span id="hE">—</span></div>
+  <div class="hrow"><span>E/N</span><span id="hEN">—</span></div>
+  <div class="hrow"><span>能隙 ΔE</span><span id="hGap">—</span></div>
+  <div class="hrow"><span>半链熵 S</span><span id="hS">—</span></div>
+  <div class="hrow"><span>⟨S²⟩</span><span id="hS2">—</span></div>
+  <div class="hrow"><span>Sᶻ / N↑</span><span id="hSz">—</span></div>
+  <div class="hrow"><span>t / 帧</span><span id="hT">—</span></div>
+  <div class="hrow"><span>残差</span><span id="hRes">—</span></div>
+  <div class="hrow"><span>Lanczos m</span><span id="hM">—</span></div>
+  <div class="hrow"><span>fps</span><span id="hFps">—</span></div>
+</div>
+<div id="spHint" class="panel qhint"><b></b><span></span></div>
+<div id="spToast"></div>
+<div id="spDiag"></div>
+<div id="spErr"></div>`;
+
+    this.container.querySelectorAll('[data-preset]').forEach(b =>
+      this.on(b, 'click', () => this.setPreset(b.dataset.preset)));
+    /* 属性名进 DOM 一律小写：读 data-len 只用 getAttribute / dataset.len（见 R142 教训） */
+    this.container.querySelectorAll('[data-len]').forEach(b =>
+      this.on(b, 'click', () => this.setL(parseInt(b.getAttribute('data-len'), 10))));
+    this.container.querySelectorAll('button[data-tool]').forEach(b =>
+      this.on(b, 'click', () => this.setTool(b.dataset.tool)));
+    this.container.querySelectorAll('[data-view]').forEach(b =>
+      this.on(b, 'click', () => this.setView(b.dataset.view)));
+    this._spec = this.readUrlSpec(new URLSearchParams(location.search));
+  }
+
+  bindUI(){
+    this.on(this.q('#rDelta'), 'input', () => {
+      this.state.delta = parseFloat(this.q('#rDelta').value);
+      this.q('#oDelta').textContent = this.state.delta.toFixed(2);
+      this.afterHChange('delta');
+    });
+    this.on(this.q('#rH'), 'input', () => {
+      this.state.h = parseFloat(this.q('#rH').value);
+      this.q('#oH').textContent = this.state.h.toFixed(2);
+      this.afterHChange('h');
+    });
+    this.on(this.q('#rBrush'), 'input', () => {
+      this.state.brush = parseFloat(this.q('#rBrush').value);
+      this.q('#oBrush').textContent = this.state.brush.toFixed(2);
+    });
+    this.on(this.q('#spClearField'), 'click', () => this.clearField(true));
+    this.on(this.q('#spModeGs'), 'click', () => this.applyMode('gs'));
+    this.on(this.q('#spModeEvo'), 'click', () => this.applyMode('evo'));
+    this.on(this.q('#spPause'), 'click', () => this.togglePause());
+    this.on(this.q('#spStep'), 'click', () => this.stepFrames(1));
+    this.on(this.q('#spReset'), 'click', () => this.initPreset());
+    this.on(this.q('#spLink'), 'click', () => this.copyLink());
+    this.on(this.q('#spSave'), 'click', () => this.exportJson());
+    this.on(this.q('#spGap'), 'click', () => this.startGap());
+    this.on(window, 'resize', () => { this.resize(); this.draw(); });
+    this.on(document, 'keydown', e => {
+      const tag = (e.target && e.target.tagName) || '';
+      if (/input|textarea|select/i.test(tag)) return;
+      if (e.key === '1' || e.key === '2' || e.key === '3') this.setTool(SP_TOOLS[+e.key - 1].k);
+      else if (e.key >= '4' && e.key <= '7') this.setView(SP_VIEWS[+e.key - 4].k);
+      else if (e.key === ' ') { e.preventDefault(); this.togglePause(); }
+    });
+    this.bindCanvas();
+  }
+
+  /* ---------- 画布交互 ---------- */
+  bindCanvas(){
+    const cv = this.q('#spLadder');
+    if (!cv) return;
+    this.on(cv, 'contextmenu', e => e.preventDefault());
+    this.on(cv, 'pointerdown', e => {
+      const i = this.siteAtX(this.evX(e));
+      this._hover = i;
+      if (i < 0) return;
+      e.preventDefault();
+      this._paint = { i };
+      this.applyAt(i, e.button === 2);
+      this.draw();
+    });
+    this.on(cv, 'pointermove', e => {
+      const i = this.siteAtX(this.evX(e));
+      if (i !== this._hover){ this._hover = i; this.draw(); }
+      if (this._paint && i >= 0 && i !== this._paint.i){
+        this._paint.i = i;
+        this.applyAt(i, false);
+        this.draw();
+      }
+    });
+    this.on(cv, 'pointerup', () => { if (this._paint){ this._paint = null; this.queueUrl(); this.draw(); } });
+    this.on(cv, 'pointerleave', () => { this._hover = -1; this._paint = null; this.draw(); });
+    const ch = this.q('#spChart');
+    if (ch){
+      this.on(ch, 'click', e => {
+        if (this.state.view !== 'Sq') return;
+        const r = ch.getBoundingClientRect ? ch.getBoundingClientRect() : null;
+        const dpr = ch.width / (ch.clientWidth || ch.width) || 1;
+        this.qPeak((e.clientX - (r ? r.left : 0)) * dpr);
+      });
+    }
+  }
+  evX(e){
+    const cv = this.q('#spLadder');
+    const r = cv.getBoundingClientRect ? cv.getBoundingClientRect() : null;
+    if (r && r.width > 0) return (e.clientX - r.left) * (cv.width / r.width);
+    return e.clientX;
+  }
+  siteAtX(x){
+    const L = this.state.L, cv = this.q('#spLadder');
+    if (!cv) return -1;
+    const W = cv.width || 0;
+    if (!(W > 0)) return -1;
+    const dpr = W / (cv.clientWidth || W);
+    const pad = 40 * dpr, stepX = (W - 2 * pad) / Math.max(1, L - 1);
+    const f = (x - pad) / stepX;
+    if (!Number.isFinite(f)) return -1;
+    if (f < -0.5 || f > L - 0.5) return -1;
+    const i = Math.round(f);
+    return (i < 0 || i > L - 1) ? -1 : i;
+  }
+  applyAt(i, right){
+    const tool = this.state.tool;
+    if (tool === 'state') this.flipSite(i, right ? -1 : 1);
+    else if (tool === 'field') this.paintSite(i, (right ? -1 : 1) * this.state.brush);
+    else this.paintSite(i, 0);
+  }
+  /* S(q) 图上点一下：把该 q 的峰值位置报出来（图上标出 q=π 的那个峰） */
+  qPeak(x){
+    const cv = this.q('#spChart');
+    if (!cv || !this.Sq) return -1;
+    const dpr = cv.width / (cv.clientWidth || cv.width) || 1;
+    const L = this.state.L, pad = 40 * dpr, w = cv.width - 2 * pad;
+    const m = clamp(Math.round((x - pad) / w * (L - 1)), 0, L - 1);
+    const q = 2 * Math.PI * m / L;
+    this.toast(`q = ${(q / Math.PI).toFixed(2)}π · S(q) = ${this.Sq[m].toFixed(4)}`, 1800);
+    return m;
+  }
+
+  /* ---------- 状态 / 扇区 ---------- */
+  initPreset(){
+    const p = SP_PRESETS[this.state.preset] || SP_PRESETS.xxx;
+    this.cancelSolve();
+    this.state.paused = false;
+    this.state.t = 0; this.state.frames = 0; this.hist = [];
+    this.gap = null; this.gapJob = null;
+    this.q('#hGap').textContent = '—';
+    if (typeof p.delta === 'number') this.state.delta = clamp(p.delta, 0, 4);
+    if (typeof p.h === 'number') this.state.h = clamp(p.h, 0, 4);
+    this.q('#rDelta').value = String(this.state.delta);
+    this.q('#oDelta').textContent = this.state.delta.toFixed(2);
+    this.q('#rH').value = String(this.state.h);
+    this.q('#oH').textContent = this.state.h.toFixed(2);
+    this.state.spins = Int8Array.from({ length: this.state.L }, (_, i) => (i % 2 === 0 ? 1 : -1));
+    this.state.nUp = this.state.spins.reduce((a, b) => a + (b > 0 ? 1 : 0), 0);
+    this.state.bz = new Float64Array(this.state.L);
+    this.rebuildSector(this.state.nUp);
+    this.state.mode = p.mode === 'evo' ? 'evo' : 'gs';
+    if (this.state.mode === 'gs') this.startSolve();
+    else {
+      const w = spNeel(this.sec);
+      this.re = w.re; this.im = w.im;
+      this.measureAll(true);
+    }
+    this.syncPanel(); this.draw();
+  }
+  rebuildSector(nUp){
+    this.cancelSolve();
+    this.sec = spSector(this.state.L, nUp, {
+      J: 1, delta: this.state.delta, h: this.state.h,
+      field: this.hasField() ? this.state.bz : null,
+    });
+    this.state.nUp = nUp;
+    /* 注意：**不要**在这里重写 state.spins —— 调用方（翻格点 / applySpec）已经把
+       具体构型写好了，重建成「前 nUp 格朝上」会把它悄悄改掉。 */
+    const nUpReal = Array.from(this.state.spins).filter(v => v > 0).length;
+    if (nUpReal !== nUp) throw new Error(`rebuildSector: 构型里有 ${nUpReal} 个 ↑，与扇区 nUp=${nUp} 不符`);
+    /* 新扇区是新对象：上一扇区的测量 / 缓存在飞的剖面任务全部作废
+       （否则 drawLadder 会拿旧长度的数组去画，画面直接空掉） */
+    this.m = null; this.S = NaN; this.Sq = null; this.E = NaN; this.residual = null;
+    this._sxJob = null; this._dirtySx = true;
+    this.job = null;
+    this.q('#hDim').textContent = `${nUp}↑ / ${this.state.L - nUp}↓ · ${this.sec.dim}`;
+  }
+  /* 场 / Δ / h 变了：只重烤对角项（不重建 CSR），然后按模式重解或只更新读数 */
+  afterHChange(why){
+    this.cancelSolve();
+    this.gap = null; this.gapJob = null;
+    this.q('#hGap').textContent = '—';
+    this.sec = spSector(this.state.L, this.state.nUp, {
+      J: 1, delta: this.state.delta, h: this.state.h,
+      field: this.hasField() ? this.state.bz : null,
+    });
+    if (this.state.mode === 'gs') this.startSolve();
+    else if (this.sec.dim === (this.re ? this.re.length : -1)) this.measureAll(true);
+    this.syncPanel(); this.draw();
+    void why;
+  }
+  hasField(){ return this.state.bz && this.state.bz.some(v => v !== 0); }
+
+  flipSite(i, dir = 1){
+    const L = this.state.L;
+    if (i < 0 || i >= L) return;
+    const spins = Int8Array.from(this.state.spins);
+    spins[i] = -spins[i];
+    /* 翻转改变 nUp ⟹ 扇区必须重建（这才是「点在格子上」的物理后果） */
+    let nUp = 0;
+    for (let j = 0; j < L; j++) if (spins[j] > 0) nUp++;
+    this.state.spins = spins;
+    if (nUp !== this.state.nUp) this.rebuildSector(nUp);
+    if (this.state.mode === 'gs'){
+      this.startSolve();
+      this.syncPanel(); this.draw(); this.queueUrl();
+      return;
+    }
+    /* 演化模式：把这个直积态设成当前态（点是「指定初态」，不是「扰动基态」） */
+    const prod = spProduct(this.sec, Array.from(spins));
+    this.re = prod.re; this.im = prod.im;
+    this.state.t = 0; this.state.frames = 0; this.hist = [];
+    this.job = null;
+    this.measureAll(true);
+    this.syncPanel(); this.draw(); this.queueUrl();
+    void dir;
+  }
+  paintSite(i, v){
+    if (!(i >= 0 && i < this.state.L)) return;
+    this.state.bz[i] = clamp(v, -B_VIEW, B_VIEW);
+    this.afterHChange('brush');
+  }
+  clearField(loud){
+    if (!this.hasField()){ if (loud) this.toast('场上没有局域场', 900); return; }
+    this.state.bz = new Float64Array(this.state.L);
+    this.afterHChange('clear');
+    if (loud) this.toast('已清空局域场', 1100);
+  }
+  setL(L){
+    if (L === this.state.L) return;
+    if (![8, 10, 12, 14, 16].includes(L)) return;
+    this.state.L = L;
+    this.initPreset();
+    this.queueUrl();
+    this.toast(`L=${L}：扇区 ${this.sec ? this.sec.dim : '?'} 维`, 1200);
+  }
+  setDelta(v){ this.state.delta = clamp(v, 0, 4); this.q('#rDelta').value = String(this.state.delta); this.q('#oDelta').textContent = this.state.delta.toFixed(2); this.afterHChange('delta'); }
+  setH(v){ this.state.h = clamp(v, 0, 4); this.q('#rH').value = String(this.state.h); this.q('#oH').textContent = this.state.h.toFixed(2); this.afterHChange('h'); }
+  setPreset(k){
+    if (!SP_PRESETS[k]) return;
+    this.state.preset = k;
+    this.initPreset();
+    this.toast(SP_PRESETS[k].name, 1200);
+    this.syncPanel(); this.draw(); this.queueUrl();
+  }
+  setTool(k){
+    if (!SP_TOOLS.some(t => t.k === k)) return false;
+    this.state.tool = k;
+    const st = this.q('#spStage'); if (st) st.dataset.tool = k;
+    this.syncPanel(); this.draw(); this.queueUrl();
+    return true;
+  }
+  setView(k){
+    if (!SP_VIEWS.some(v => v.k === k)) return false;
+    this.state.view = k;
+    if (k === 'Sx' && !this._sxJob && this.probeReady()) this.measureAll(true);
+    this.syncPanel(); this.draw(); this.queueUrl();
+    return true;
+  }
+  applyMode(mode){
+    this.cancelSolve();
+    if (mode === 'gs'){
+      this.state.mode = 'gs';
+      this.startSolve();
+    } else {
+      this.state.mode = 'evo';
+      const prod = spProduct(this.sec, Array.from(this.state.spins));
+      this.re = prod.re; this.im = prod.im;
+      this.state.t = 0; this.state.frames = 0; this.hist = [];
+      this.state.paused = false;
+      this.measureAll(true);
+    }
+    this.syncPanel(); this.draw(); this.queueUrl();
+  }
+  togglePause(){
+    this.state.paused = !this.state.paused;
+    this.q('#spPause').textContent = this.state.paused ? '继续' : '暂停';
+    this.syncPanel(); this.draw();
+  }
+
+  /* ---------- 求解 ---------- */
+  cancelSolve(){
+    if (this._solveTimer){ clearTimeout(this._solveTimer); this._solveTimer = null; }
+    this.job = null;
+  }
+  startSolve(){
+    if (!this.sec) return;
+    this.state.mode = 'gs';
+    this.state.paused = true;
+    this.q('#spPause').textContent = '继续';
+    this.msg = '基态求解中…';
+    this.residual = null;
+    const m = this.sec.dim > 20000 ? 120 : 90;
+    this.job = { task: new SpGsTask(this.sec, { m, maxMemMB: 420 }), kind: 'gs' };
+    this.q('#spModeGs') && this.syncPanel();
+  }
+  advanceJobs(ms = 12){
+    const j = this.job;
+    if (!j) return false;
+    const t0 = performance.now();
+    while (performance.now() - t0 < ms){
+      j.task.step(2);
+      if (j.task.done) break;
+    }
+    this.gsM = j.task.m; this.gsMCapped = j.task.mCapped;
+    if (j.task.done){
+      this.re = j.task.re; this.im = j.task.im;
+      this.E = j.task.energy;
+      this.residual = j.task.residual;
+      this.job = null;
+      this.measureAll(true);
+      this.state.paused = false;
+      this.q('#spPause').textContent = '暂停';
+      return true;
+    }
+    return false;
+  }
+  solveNow(){
+    if (this._solveTimer){ clearTimeout(this._solveTimer); this._solveTimer = null; }
+    if (!this.job) this.startSolve();
+    if (!this.job) return this.E;
+    if (!this.job.task.done) this.job.task.step(100000);
+    if (this.job.task.done){
+      this.re = this.job.task.re; this.im = this.job.task.im;
+      this.E = this.job.task.energy;
+      this.residual = this.job.task.residual;
+      this.gsM = this.job.task.m; this.gsMCapped = this.job.task.mCapped;
+      this.job = null;
+      this.measureAll(true);
+      this.state.paused = false;
+      this.q('#spPause').textContent = '暂停';
+    }
+    return this.E;
+  }
+  /* 能隙：同一 H（同 Δ、h、bz）下 Sz+1 扇区的基态能量差 */
+  startGap(){
+    const { L, nUp } = this.state;
+    if (nUp + 1 > L){ this.toast('已满：没有 Sz+1 扇区', 1400); return; }
+    this.toast('算能隙：解 Sz+1 扇区的基态…', 1600);
+    const sec2 = spSector(L, nUp + 1, { J: 1, delta: this.state.delta, h: this.state.h, field: this.hasField() ? this.state.bz : null });
+    this.gapJob = new SpGsTask(sec2, { m: 90, maxMemMB: 420 });
+  }
+  gapNow(){
+    if (this.gap !== null) return this.gap;
+    if (!this.gapJob) this.startGap();
+    if (this.gapJob){
+      if (!this.gapJob.done) this.gapJob.step(100000);
+      if (this.gapJob.done){
+        const e1 = this.E;
+        this.gap = this.gapJob.energy - e1;
+        this.gapJob = null;
+        this.q('#hGap').textContent = nf(this.gap, 4);
+      }
+    }
+    return this.gap;
+  }
+
+  /* ---------- 测量 ---------- */
+  probeReady(){ return !!this.re && !!this.sec && this.re.length === this.sec.dim; }
+  measureAll(force){
+    if (!this.probeReady()) return;
+    const m = spMeasure(this.sec, this.re, this.im);
+    this.m = m;
+    this.E = spEnergy(this.sec, this.re, this.im);
+    this.residual = this.job ? null : spResidual(this.sec, this.re, this.im, this.E);
+    this.Sq = spStructureFactor(this.sec, m.zz);
+    /* 半链熵：L=16 的 Gram 是 256×256，约 60 ms ⟹ 演化中按 250 ms 节流 */
+    const now = performance.now();
+    if (force || this.state.mode === 'gs' || now - (this._sT || 0) > 250){
+      this.S = spEntropy(this.sec, this.re, this.im, symEigVals).S;
+      this._sT = now;
+    }
+    if (this.state.mode === 'evo'){
+      if (!this.hist.length || this.state.t - this.hist[this.hist.length - 1][0] > 1e-9)
+        this.hist.push([this.state.t, this.S]);
+      if (this.hist.length > 4000) this.hist.shift();
+    } else {
+      this.hist = [[0, this.S], [1, this.S]];
+    }
+    /* S(x) 剖面：由外向内的渐进任务（L=16 全剖面 15 个切点、中心最贵 ⟹ 每帧 8 ms 预算） */
+    const L = this.state.L;
+    if (this.probeReady()){
+      this._sxProf = null;
+      this._sxJob = { order: this._cutOrder(), k: 0, out: new Float64Array(L + 1).fill(NaN),
+        sec: this.sec, L, re: this.re.slice(), im: this.im.slice() };
+    }
+    this.syncHud();
+  }
+  _cutOrder(){
+    const L = this.state.L, o = [];
+    for (let d = 1; d < L; d++){
+      o.push(d);
+      if (L - d !== d && L - d > 0 && L - d < L) o.push(L - d);
+    }
+    return o;
+  }
+  stepSx(budget = 8){
+    const j = this._sxJob;
+    if (!j) return;
+    if (j.sec !== this.sec || !this.re || j.re.length !== this.sec.dim){ this._sxJob = null; return; }
+    const t0 = performance.now();
+    while (j.k < j.order.length && performance.now() - t0 < budget){
+      const c = j.order[j.k++];
+      j.out[c] = spEntropyAt(j.sec, j.re, j.im, c, symEigVals).S;
+    }
+    j.out[0] = 0; j.out[j.L] = 0;
+    if (j.k >= j.order.length){ this._sxProf = j.out; this._sxJob = null; }
+  }
+  syncHud(){
+    const set = (id, v) => { const el = this.q('#' + id); if (el) el.textContent = v; };
+    const L = this.state.L;
+    set('hMode', this.state.mode === 'gs' ? '基态（H 变即重解）' : '演化');
+    set('hDim', `${this.state.nUp}↑ / ${L - this.state.nUp}↓ · ${this.sec.dim}`);
+    set('hE', nf(this.E, 6));
+    set('hEN', Number.isFinite(this.E) ? nf(this.E / L, 6) : '—');
+    set('hGap', this.gap == null ? '—' : nf(this.gap, 4));
+    set('hS', nf(this.S, 5));
+    set('hS2', this.m ? nf(this.m.S2, 4) : '—');
+    set('hSz', `${nf(this.m ? this.m.mag : NaN, 3)} / ${this.state.nUp}`);
+    set('hT', `${nf(this.state.t, 2)} / ${this.state.frames}`);
+    set('hRes', this.residual == null ? '—' : this.residual.toExponential(1));
+    set('hM', this.gsM ? `${this.gsM}${this.gsMCapped ? '（内存上限）' : ''}` : '—');
+  }
+  syncPanel(){
+    this.container.querySelectorAll('[data-preset]').forEach(b => b.classList.toggle('on', b.dataset.preset === this.state.preset));
+    this.container.querySelectorAll('[data-len]').forEach(b =>
+      b.classList.toggle('on', parseInt(b.getAttribute('data-len'), 10) === this.state.L));
+    this.container.querySelectorAll('button[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === this.state.tool));
+    this.container.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('on', b.dataset.view === this.state.view));
+    const gs = this.state.mode === 'gs';
+    const a = this.q('#spModeGs'), b = this.q('#spModeEvo');
+    if (a) a.classList.toggle('on', gs);
+    if (b) b.classList.toggle('on', !gs);
+    const st = this.q('#spStage'); if (st) st.dataset.tool = this.state.tool;
+    this.q('#spPause').textContent = this.state.paused ? '继续' : '暂停';
+    const hint = this.q('#spHint');
+    if (hint){
+      hint.querySelector('b').textContent = SP_PRESETS[this.state.preset].name + ' · ';
+      hint.querySelector('span').textContent = SP_PRESETS[this.state.preset].text;
+    }
+    this.syncHud();
+  }
+
+  /* ---------- 帧循环 ---------- */
+  frame(){
+    requestAnimationFrame(this.frame);
+    if (this._dead) return;
+    try { this.frameBody(); this.clearError(); }
+    catch (e){
+      this._errCount++;
+      this.reportError(e);
+      if (this._errCount > 3) this._dead = true;
+    }
+  }
+  clearError(){
+    if (this._title0 === undefined) this._title0 = document.title;
+    if (!this._errCount) return;
+    this._errCount--;
+    if (this._errCount > 0) return;
+    const box = this.q('#spErr'); if (box){ box.style.display = 'none'; box.textContent = ''; }
+    document.title = this._title0;
+  }
+  reportError(e){
+    const msg = (e && (e.stack || e.message)) || String(e);
+    console.error('[spin]', e);
+    const d = this.q('#spDiag'); if (d) d.textContent = 'ERR ' + msg;
+    document.title = 'ERR ' + (e && e.message ? e.message : e);
+    const box = this.q('#spErr');
+    if (box){
+      box.textContent = '页面出错（已停止重绘，避免整屏变黑）：' + (e && e.message ? e.message : e) +
+        '  —— 详细堆栈见控制台 / document.title';
+      box.style.display = 'block';
+    }
+  }
+  frameBody(){
+    this._fpsFrames++;
+    const now = performance.now();
+    if (now - this._lastFpsT > 500){
+      this._fps = Math.round(this._fpsFrames * 1000 / (now - this._lastFpsT));
+      this._fpsFrames = 0; this._lastFpsT = now;
+      const f = this.q('#hFps'); if (f) f.textContent = String(this._fps);
+    }
+    this.advanceJobs();
+    if (this._sxJob) this.stepSx();
+    if (this.gapJob){
+      this.gapJob.step(2);
+      if (this.gapJob.done){
+        this.gap = this.gapJob.energy - this.E;
+        this.gapJob = null;
+        this.q('#hGap').textContent = nf(this.gap, 4);
+      }
+    }
+    if (this.state.mode === 'evo' && !this.state.paused && !this.job && this.re){
+      this.evolveFrame();
+    }
+    if (this.state.mode === 'evo' && !this.state.paused && !this.job && this.state.frames % 2 === 0) this.measureAll(false);
+    this.draw();
+    if (this.job){ const s = this.q('#hDim'); void s; }
+  }
+  evolveFrame(){
+    const steps = this.state.spf;
+    for (let s = 0; s < steps; s++){
+      const out = spKrylovExp(this.sec, this.re, this.im, this.state.dt, 12);
+      this.re = out.re; this.im = out.im;
+      this.state.t += this.state.dt;
+    }
+    this.state.frames++;
+    if (this.state.frames % 3 === 0) this.measureAll(false);
+  }
+  stepFrames(n = 1){
+    if (!this.re) return;
+    for (let k = 0; k < n; k++){
+      if (this.state.mode !== 'evo') break;
+      const out = spKrylovExp(this.sec, this.re, this.im, this.state.dt, 12);
+      this.re = out.re; this.im = out.im;
+      this.state.t += this.state.dt;
+      this.state.frames++;
+    }
+    this.measureAll(true);
+    this.draw();
+    return this.state.t;
+  }
+
+  /* ---------- 绘图 ---------- */
+  resize(){
+    for (const id of ['spLadder', 'spChart']){
+      const cv = this.q('#' + id);
+      if (!cv) continue;
+      const dpr = window.devicePixelRatio || 1;
+      const w = cv.clientWidth || 720;
+      const h = id === 'spLadder' ? 268 : 178;
+      cv.width = Math.round(w * dpr);
+      cv.height = Math.round(h * dpr);
+      cv.style.height = h + 'px';
+    }
+  }
+  draw(){
+    this.drawLadder();
+    this.drawChart();
+  }
+  drawLadder(){
+    const cv = this.q('#spLadder');
+    if (!cv) return;
+    const ctx = cv.getContext('2d');
+    if (!ctx) return;
+    const W = cv.width, H = cv.height;
+    const dpr = W / (cv.clientWidth || W) || 1;
+    ctx.clearRect(0, 0, W, H);
+    const L = this.state.L;
+    const pad = 40 * dpr, stepX = (W - 2 * pad) / Math.max(1, L - 1);
+    const xOf = i => pad + i * stepX;
+    const midY = 104 * dpr;
+    const arrowH = 62 * dpr;
+    const jZero = 200 * dpr, jAmp = 16 * dpr;
+    const bZero = 246 * dpr, bAmp = 20 * dpr;
+    const idxY = H - 8 * dpr;
+    this._view = { pad, stepX, midY, arrowH, W, H, dpr };
+    const m = this.m;
+    const mono = px => `${px}px ui-monospace,monospace`;
+
+    const tool = SP_TOOLS.find(t => t.k === this.state.tool) || SP_TOOLS[0];
+    ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(154,167,189,.92)'; ctx.font = mono(10.5 * dpr);
+    ctx.fillText(`自旋链 · ${tool.tip}`, 10 * dpr, 15 * dpr);
+    ctx.fillStyle = 'rgba(154,167,189,.55)'; ctx.font = mono(9.5 * dpr);
+    ctx.fillText(`Δ=${this.state.delta.toFixed(2)} · h=${this.state.h.toFixed(2)} · Sᶻ=${this.sec ? this.sec.Sz : '—'}`, 10 * dpr, 27 * dpr);
+
+    /* 链脊 */
+    ctx.strokeStyle = 'rgba(120,160,220,.14)'; ctx.lineWidth = 1 * dpr;
+    ctx.beginPath(); ctx.moveTo(pad - 16 * dpr, midY); ctx.lineTo(W - pad + 16 * dpr, midY); ctx.stroke();
+
+    /* 悬停高亮 */
+    if (this._hover >= 0 && this._hover < L){
+      const hx = xOf(this._hover);
+      ctx.fillStyle = 'rgba(103,232,249,.07)';
+      ctx.fillRect(hx - stepX * 0.36, midY - arrowH - 14 * dpr, stepX * 0.72, arrowH * 2 + 28 * dpr);
+    }
+
+    for (let i = 0; i < L; i++){
+      const x = xOf(i);
+      const sz = m ? m.sz[i] : 0;
+      const spin = this.state.spins[i] > 0 ? 1 : -1;
+      /* 箭头长度 ∝ |⟨S^z_i⟩|（最大 1/2 ⟹ 归一化到 1） */
+      const f = m ? clamp(Math.abs(sz) / 0.5, 0, 1) : Math.abs(spin);
+      const dir = m && Math.abs(sz) > 1e-9 ? Math.sign(sz) : spin;
+      const up = dir > 0;
+      const tipY = midY - (up ? 1 : -1) * arrowH * f;
+      const col = up ? '103,232,249' : '240,171,252';
+      ctx.strokeStyle = `rgba(${col},${(0.28 + 0.55 * f).toFixed(3)})`;
+      ctx.lineWidth = Math.max(1, 2.2 * dpr * (0.6 + 0.6 * f));
+      ctx.beginPath(); ctx.moveTo(x, midY); ctx.lineTo(x, tipY); ctx.stroke();
+      /* 箭头头部 */
+      const s = 5 * dpr;
+      ctx.beginPath();
+      if (up){ ctx.moveTo(x - s, tipY + s); ctx.lineTo(x, tipY); ctx.lineTo(x + s, tipY + s); }
+      else { ctx.moveTo(x - s, tipY - s); ctx.lineTo(x, tipY); ctx.lineTo(x + s, tipY - s); }
+      ctx.closePath();
+      ctx.fillStyle = `rgba(${col},${(0.45 + 0.5 * f).toFixed(3)})`; ctx.fill();
+      /* 中心点 */
+      ctx.fillStyle = 'rgba(9,16,30,.9)';
+      ctx.beginPath(); ctx.arc(x, midY, 2.6 * dpr, 0, 6.2832); ctx.fill();
+      ctx.strokeStyle = `rgba(${col},.7)`; ctx.lineWidth = 1 * dpr;
+      ctx.beginPath(); ctx.arc(x, midY, 2.6 * dpr, 0, 6.2832); ctx.stroke();
+      /* ⟨S^z_i⟩ 读数 */
+      ctx.textAlign = 'center'; ctx.font = mono(9.5 * dpr);
+      ctx.fillStyle = 'rgba(230,237,243,.72)';
+      ctx.fillText(m ? sz.toFixed(2) : '—', x, up ? midY + arrowH + 14 * dpr : midY - arrowH - 6 * dpr);
+      ctx.fillStyle = 'rgba(154,167,189,.85)'; ctx.font = mono(10 * dpr);
+      ctx.fillText(String(i), x, idxY);
+    }
+
+    /* 键关联带：⟨S_i·S_{i+1}⟩（负 = 反铁磁，青；正 = 铁磁，琥珀） */
+    ctx.strokeStyle = 'rgba(120,160,220,.16)'; ctx.lineWidth = 1 * dpr;
+    ctx.beginPath(); ctx.moveTo(pad - 22 * dpr, jZero); ctx.lineTo(W - pad + 22 * dpr, jZero); ctx.stroke();
+    if (m && m.bond.length){
+      const maxJ = Math.max(0.05, ...m.bond.map(Math.abs));
+      for (let s = 0; s < L - 1; s++){
+        const j = m.bond[s], mx = (xOf(s) + xOf(s + 1)) / 2;
+        const h = Math.abs(j) / maxJ * jAmp;
+        ctx.fillStyle = j <= 0 ? 'rgba(103,232,249,.62)' : 'rgba(251,191,36,.66)';
+        ctx.fillRect(mx - 4 * dpr, j <= 0 ? jZero : jZero - h, 8 * dpr, Math.max(h, 0.8 * dpr));
+      }
+    }
+    /* 局域场带 */
+    for (let i = 0; i < L; i++){
+      const bz = this.state.bz[i];
+      if (bz === 0) continue;
+      const h = clamp(Math.abs(bz) / B_VIEW, 0, 1) * bAmp;
+      ctx.fillStyle = bz > 0 ? 'rgba(250,190,96,.72)' : 'rgba(96,178,250,.72)';
+      ctx.fillRect(xOf(i) - 4 * dpr, bz > 0 ? bZero - h : bZero, 8 * dpr, h);
+    }
+    ctx.strokeStyle = 'rgba(120,160,220,.16)'; ctx.lineWidth = 1 * dpr;
+    ctx.beginPath(); ctx.moveTo(pad - 22 * dpr, bZero); ctx.lineTo(W - pad + 22 * dpr, bZero); ctx.stroke();
+    ctx.textAlign = 'left'; ctx.font = mono(9 * dpr); ctx.fillStyle = 'rgba(154,167,189,.55)';
+    ctx.fillText('J', 8 * dpr, jZero + 3 * dpr);
+    ctx.fillText('b', 8 * dpr, bZero + 3 * dpr);
+  }
+
+  drawChart(){
+    const cv = this.q('#spChart');
+    if (!cv) return;
+    const ctx = cv.getContext('2d');
+    if (!ctx) return;
+    const W = cv.width, H = cv.height, dpr = W / (cv.clientWidth || W) || 1;
+    ctx.clearRect(0, 0, W, H);
+    const padL = 40 * dpr, padR = 16 * dpr, padT = 24 * dpr, padB = 26 * dpr;
+    const x0 = padL, y0 = H - padB, w = W - padL - padR, h = H - padT - padB;
+    const mono = px => `${px}px ui-monospace,monospace`;
+    const title = (t, sub = '') => {
+      ctx.textAlign = 'left'; ctx.font = mono(10.5 * dpr); ctx.fillStyle = 'rgba(154,167,189,.92)';
+      ctx.fillText(t, 12 * dpr, 13 * dpr);
+      if (sub){ ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(154,167,189,.55)'; ctx.font = mono(9.5 * dpr); ctx.fillText(sub, W - 12 * dpr, 13 * dpr); }
+    };
+    const grid = (n = 4) => {
+      ctx.strokeStyle = 'rgba(120,160,220,.10)'; ctx.lineWidth = 1 * dpr;
+      for (let k = 0; k <= n; k++){
+        const y = y0 - h * k / n;
+        ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x0 + w, y); ctx.stroke();
+      }
+    };
+    const v = this.state.view;
+    if (v === 'Sx') return this.drawSx(ctx, { x0, y0, w, h, dpr, mono, title, grid, W });
+    if (v === 'Sq') return this.drawSq(ctx, { x0, y0, w, h, dpr, mono, title, grid, W });
+    if (v === 'zz') return this.drawZZ(ctx, { x0, y0, w, h, dpr, mono, title, W, dpr2: dpr });
+    return this.drawSt(ctx, { x0, y0, w, h, dpr, mono, title, grid, W });
+  }
+  drawSx(ctx, g){
+    const { x0, y0, w, h, dpr, mono, title, grid, W } = g;
+    const L = this.state.L;
+    const prof = this._sxProf && this._sxProf.length === L + 1 ? this._sxProf : null;
+    title('半链/任意切点纠缠熵 S(x)', prof ? '' : '基态求解后填充');
+    grid(4);
+    const maxS = Math.max(1, ...(prof ? Array.from(prof) : [1]));
+    const px = i => x0 + w * i / Math.max(1, L);
+    const py = v => y0 - h * clamp(v / maxS, 0, 1);
+    if (prof){
+      ctx.strokeStyle = 'rgba(103,232,249,.85)'; ctx.lineWidth = 1.6 * dpr;
+      ctx.beginPath();
+      for (let i = 0; i <= L; i++){
+        const X = px(i), Y = py(prof[i]);
+        if (i === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y);
+      }
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(103,232,249,.9)';
+      for (let i = 0; i <= L; i++){ ctx.beginPath(); ctx.arc(px(i), py(prof[i]), 2.2 * dpr, 0, 6.2832); ctx.fill(); }
+      ctx.textAlign = 'left'; ctx.font = mono(9.5 * dpr); ctx.fillStyle = 'rgba(230,237,243,.8)';
+      ctx.fillText(`S(L/2) = ${prof[L >> 1].toFixed(4)}`, px(L >> 1) + 6 * dpr, py(prof[L >> 1]) - 6 * dpr);
+    }
+    ctx.textAlign = 'center'; ctx.font = mono(9.5 * dpr); ctx.fillStyle = 'rgba(154,167,189,.7)';
+    for (let i = 0; i <= L; i += (L > 10 ? 2 : 1)) ctx.fillText(String(i), px(i), y0 + 13 * dpr);
+    ctx.textAlign = 'right';
+    ctx.fillText(maxS.toFixed(2), x0 - 6 * dpr, y0 - h + 4 * dpr);
+    ctx.fillText('0', x0 - 6 * dpr, y0 + 4 * dpr);
+    void W;
+  }
+  drawSq(ctx, g){
+    const { x0, y0, w, h, dpr, mono, title, grid } = g;
+    const L = this.state.L, Sq = this.Sq;
+    title('静态结构因子 S(q) · q = 2πm/L', Sq ? 'S(π) 高 ⟹ 反厄尔序' : '');
+    grid(4);
+    if (!Sq) return;
+    const vmax = Math.max(0.05, ...Sq);
+    const bw = w / L;
+    for (let m = 0; m < L; m++){
+      const v = Sq[m];
+      const bh = h * clamp(v / vmax, 0, 1);
+      const bx = x0 + m * bw + bw * 0.18;
+      const neg = v < 0;
+      ctx.fillStyle = neg ? 'rgba(251,113,133,.6)'
+        : (m === (L >> 1) ? 'rgba(251,191,36,.75)' : 'rgba(103,232,249,.55)');
+      ctx.fillRect(bx, y0 - bh, bw * 0.64, Math.max(bh, 1 * dpr));
+      if (bw > 26 * dpr){
+        ctx.textAlign = 'center'; ctx.font = mono(8.5 * dpr); ctx.fillStyle = 'rgba(154,167,189,.6)';
+        ctx.fillText((2 * m / L).toFixed(1) + 'π', bx + bw * 0.32, y0 + 12 * dpr);
+      }
+    }
+    ctx.textAlign = 'right'; ctx.font = mono(9.5 * dpr); ctx.fillStyle = 'rgba(154,167,189,.7)';
+    ctx.fillText(vmax.toFixed(2), x0 - 6 * dpr, y0 - h + 4 * dpr);
+    ctx.fillText('0', x0 - 6 * dpr, y0 + 4 * dpr);
+  }
+  drawZZ(ctx, g){
+    const { x0, y0, w, h, dpr, mono, title } = g;
+    const L = this.state.L, m = this.m;
+    title('自旋关联矩阵 ⟨S^z_iS^z_j⟩', m ? '红 = 反关联（奈尔）· 青 = 正关联' : '');
+    if (!m) return;
+    const gsz = Math.min(w, h) / L;
+    const ox = x0 + (w - gsz * L) / 2, oy = y0 - gsz * L;
+    let vmax = 0.05;
+    for (let k = 0; k < L * L; k++) vmax = Math.max(vmax, Math.abs(m.zz[k]));
+    for (let i = 0; i < L; i++){
+      for (let j = 0; j < L; j++){
+        const v = m.zz[i * L + j] / vmax;
+        const r = v < 0 ? 240 : 103, gg = v < 0 ? 90 : 232, b = v < 0 ? 120 : 249;
+        ctx.fillStyle = `rgba(${r},${gg},${b},${(0.08 + 0.75 * Math.abs(v)).toFixed(3)})`;
+        ctx.fillRect(ox + j * gsz, oy + i * gsz, gsz - 0.6 * dpr, gsz - 0.6 * dpr);
+      }
+    }
+    ctx.textAlign = 'center'; ctx.font = mono(8.5 * dpr); ctx.fillStyle = 'rgba(154,167,189,.65)';
+    for (let i = 0; i < L; i++){
+      ctx.fillText(String(i), ox + i * gsz + gsz / 2, y0 + 11 * dpr);
+      ctx.fillText(String(i), ox - 7 * dpr, oy + i * gsz + gsz / 2 + 3 * dpr);
+    }
+  }
+  drawSt(ctx, g){
+    const { x0, y0, w, h, dpr, mono, title, grid } = g;
+    const hist = this.hist;
+    title('半链纠缠熵 S(t)', this.state.mode === 'gs' ? '基态：退化为标尺' : '虚线 = 早窗线性拟合');
+    grid(4);
+    const sMax = Math.max(0.5, ...hist.map(p => p[1])) * 1.1;
+    const tMax = Math.max(1, this.state.t, ...hist.map(p => p[0]));
+    const px = t => x0 + w * clamp(t / tMax, 0, 1);
+    const py = v => y0 - h * clamp(v / sMax, 0, 1);
+    ctx.strokeStyle = 'rgba(103,232,249,.85)'; ctx.lineWidth = 1.6 * dpr;
+    ctx.beginPath();
+    hist.forEach(([t, s], i) => { const X = px(t), Y = py(s); if (i === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y); });
+    ctx.stroke();
+    ctx.textAlign = 'right'; ctx.font = mono(9.5 * dpr); ctx.fillStyle = 'rgba(154,167,189,.7)';
+    ctx.fillText(sMax.toFixed(2), x0 - 6 * dpr, y0 - h + 4 * dpr);
+    ctx.fillText('0', x0 - 6 * dpr, y0 + 4 * dpr);
+    ctx.textAlign = 'center';
+    ctx.fillText(tMax.toFixed(1), x0 + w - 16 * dpr, y0 + 12 * dpr);
+    ctx.fillText('0', x0 - 10 * dpr, y0 + 12 * dpr);
+  }
+
+  /* ---------- 序列化 ---------- */
+  serialize(){
+    return {
+      v: 1, preset: this.state.preset, L: this.state.L,
+      delta: +this.state.delta.toFixed(3), h: +this.state.h.toFixed(3),
+      mode: this.state.mode, tool: this.state.tool, view: this.state.view,
+      spins: Array.from(this.state.spins), t: +this.state.t.toFixed(4),
+      bz: Array.from(this.state.bz, v => +v.toFixed(3)),
+      paused: !!this.state.paused,
+    };
+  }
+  queryFor(spec){
+    const qs = new URLSearchParams();
+    qs.set('preset', spec.preset);
+    qs.set('L', String(spec.L));
+    qs.set('D', String(spec.delta));
+    qs.set('h', String(spec.h));
+    qs.set('mode', spec.mode);
+    qs.set('spins', spec.spins.map(s => (s > 0 ? 'u' : 'd')).join(''));
+    if (spec.bz && spec.bz.some(v => v !== 0)) qs.set('bz', spec.bz.map(String).join(','));
+    if (spec.view !== 'Sx') qs.set('view', spec.view);
+    return qs.toString();
+  }
+  readUrlSpec(q){
+    const L = [8, 10, 12, 14, 16].includes(Math.round(parseFloat(q.get('L') || '0'))) ? Math.round(parseFloat(q.get('L'))) : 12;
+    const spins = q.get('spins'), bz = q.get('bz');
+    if (!spins && !bz) return null;
+    const spec = { L };
+    if (spins && spins.length === L && /^[ud]+$/.test(spins)) spec.spins = Array.from(spins, c => (c === 'u' ? 1 : -1));
+    if (bz){
+      const arr = bz.split(',').map(Number);
+      if (arr.length === L && arr.every(Number.isFinite)) spec.bz = arr.map(v => clamp(v, -B_VIEW, B_VIEW));
+    }
+    if (!spec.spins && !spec.bz) return null;
+    const D = parseFloat(q.get('D')), H = parseFloat(q.get('h'));
+    if (Number.isFinite(D)) spec.delta = clamp(D, 0, 4);
+    if (Number.isFinite(H)) spec.h = clamp(H, 0, 4);
+    return spec;
+  }
+  applySpec(spec, opts = {}){
+    if (!spec || typeof spec !== 'object') return false;
+    if (spec.delta !== undefined && !Number.isFinite(spec.delta)) return false;
+    if (spec.h !== undefined && !Number.isFinite(spec.h)) return false;
+    const L = spec.L;
+    if (spec.spins !== undefined && !(Array.isArray(spec.spins) && spec.spins.length === L && spec.spins.every(v => v === 1 || v === -1))) return false;
+    if (spec.bz !== undefined && !(Array.isArray(spec.bz) && spec.bz.length === L && spec.bz.every(Number.isFinite))) return false;
+    if (spec.spins === undefined && spec.bz === undefined && !opts.fromUrl) return false;
+    if (L && L !== this.state.L){
+      this.state.L = L;
+      this.state.spins = Int8Array.from({ length: L }, (_, i) => (i % 2 === 0 ? 1 : -1));
+      this.state.bz = new Float64Array(L);
+    }
+    if (spec.delta !== undefined) this.state.delta = clamp(spec.delta, 0, 4);
+    if (spec.h !== undefined) this.state.h = clamp(spec.h, 0, 4);
+    if (spec.bz) this.state.bz = Float64Array.from(spec.bz);
+    if (spec.spins) this.state.spins = Int8Array.from(spec.spins);
+    let nUp = 0;
+    for (let i = 0; i < this.state.L; i++) if (this.state.spins[i] > 0) nUp++;
+    this.q('#rDelta').value = String(this.state.delta);
+    this.q('#oDelta').textContent = this.state.delta.toFixed(2);
+    this.q('#rH').value = String(this.state.h);
+    this.q('#oH').textContent = this.state.h.toFixed(2);
+    this.rebuildSector(nUp);
+    this.state.spins = Int8Array.from(this.state.spins);
+    if (this.state.mode === 'gs') this.startSolve();
+    else {
+      const prod = spProduct(this.sec, Array.from(this.state.spins));
+      this.re = prod.re; this.im = prod.im;
+      this.measureAll(true);
+    }
+    this.syncPanel(); this.draw();
+    return true;
+  }
+  copyLink(){
+    try {
+      const qs = this.queryFor(this.serialize());
+      const url = location.origin + location.pathname + '?' + qs;
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(
+        () => this.toast('链接已复制', 1200), () => this.toast(url.slice(0, 90), 2600));
+      else this.toast(url.slice(0, 90), 2600);
+      return url;
+    } catch (e){ this.toast('复制失败：' + e.message, 2000); return ''; }
+  }
+  queueUrl(){
+    clearTimeout(this._urlTimer);
+    this._urlTimer = setTimeout(() => {
+      try { history.replaceState(null, '', '?' + this.queryFor(this.serialize())); } catch (_){ /* file:// 忽略 */ }
+    }, 420);
+  }
+  exportJson(){
+    const spec = this.serialize();
+    spec.obs = {
+      E: Number.isFinite(this.E) ? +this.E.toFixed(9) : null,
+      EN: Number.isFinite(this.E) ? +(this.E / this.state.L).toFixed(9) : null,
+      S: Number.isFinite(this.S) ? +this.S.toFixed(9) : null,
+      S2: this.m ? +this.m.S2.toFixed(9) : null,
+      sz: this.m ? this.m.sz.map(v => +v.toFixed(9)) : null,
+      bond: this.m ? this.m.bond.map(v => +v.toFixed(9)) : null,
+      Sq: this.Sq ? Array.from(this.Sq, v => +v.toFixed(9)) : null,
+      gap: this.gap == null ? null : +this.gap.toFixed(9),
+      residual: this.residual == null ? null : this.residual,
+      dim: this.sec ? this.sec.dim : null,
+    };
+    const txt = JSON.stringify(spec, null, 1);
+    try {
+      const blob = new Blob([txt], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'spin-L' + spec.L + '.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      this.toast('已导出 spin-L' + spec.L + '.json', 1400);
+    } catch (_){ this.toast(txt.slice(0, 120), 3000); }
+    return txt;
+  }
+
+  /* ---------- 调试句柄（测试与课程站共用） ---------- */
+  debugHandle(){
+    return {
+      app: this, state: this.state,
+      measures: () => ({
+        dim: this.sec.dim, E: this.E, EN: this.E / this.state.L, S: this.S,
+        S2: this.m ? this.m.S2 : null, sz: this.m ? this.m.sz.slice() : null,
+        bond: this.m ? this.m.bond.slice() : null, zz: this.m ? Array.from(this.m.zz) : null,
+        mag: this.m ? this.m.mag : null, norm: this.re ? spNorm(this.re, this.im) : null,
+        t: this.state.t, frames: this.state.frames, L: this.state.L, delta: this.state.delta,
+        h: this.state.h, nUp: this.state.nUp, gap: this.gap,
+        residual: this.residual, busy: !!this.job,
+      }),
+      entropy: () => (this.probeReady() ? spEntropy(this.sec, this.re, this.im, symEigVals) : null),
+      entropyAt: cut => (this.probeReady() ? spEntropyAt(this.sec, this.re, this.im, cut, symEigVals) : null),
+      profile: () => (this.probeReady() ? Array.from(spEntropyProfile(this.sec, this.re, this.im, symEigVals)) : null),
+      structureFactor: () => (this.Sq ? Array.from(this.Sq) : null),
+      step: (n = 1) => this.stepFrames(n),
+      solveNow: () => this.solveNow(),
+      gapNow: () => this.gapNow(),
+      setDelta: v => this.setDelta(v),
+      setH: v => this.setH(v),
+      setL: L => this.setL(L),
+      preset: k => this.setPreset(k),
+      mode: () => this.state.mode,
+      setMode: m => this.applyMode(m),
+      tool: () => this.state.tool,
+      setTool: k => this.setTool(k),
+      view: () => this.state.view,
+      setView: k => this.setView(k),
+      flip: i => this.flipSite(i, 1),
+      paint: (i, v) => this.paintSite(i, v),
+      bz: () => Array.from(this.state.bz),
+      pat: () => Array.from(this.state.spins),
+      fieldSites: () => this.state.bz.filter(v => v !== 0).length,
+      hasField: () => this.hasField(),
+      clearField: () => this.clearField(false),
+      history: () => this.hist.slice(-600),
+      siteAtX: x => this.siteAtX(x),
+      view3: () => ({ ...this._view }),
+      hover: () => this._hover,
+      spec: () => this.serialize(),
+      query: () => this.queryFor(this.serialize()),
+      applySpec: s => this.applySpec(s),
+      exportJson: () => this.exportJson(),
+      mass: () => null,
+    };
+  }
+  unmount(){
+    this._listeners.forEach(([t, type, fn, opts]) => t.removeEventListener(type, fn, opts));
+    this._listeners = [];
+    window.removeEventListener('error', this._onError);
+  }
+}
+

@@ -10,6 +10,7 @@
      qcircuit.html   → dist/qcircuit.html（小规模量子线路，入口 src/qcircuit-main.js）
      noise.html      → dist/noise.html（开放量子系统：T₁/T₂，入口 src/noise-main.js）
      qec.html        → dist/qec.html（量子纠错 hub：七模式单页，入口 src/qec-main.js）
+     spin.html       → dist/spin.html（海森堡自旋链 XXZ，入口 src/spin-main.js）
    各页共用 src/core/*（仅 index 用）；各自独立 bundle（拓扑序不同），互不影响。
 
    R98：QEC 七页（shor/gatenoise/flag/rounds/cycle/family）整合进 qec.html hub，
@@ -45,6 +46,7 @@ const PAGES = [
   ['qcircuit.html', 'qcircuit.html'],
   ['noise.html', 'noise.html'],
   ['qec.html', 'qec.html'],
+  ['spin.html', 'spin.html'],
 ];
 
 /* R98 跳转桩表（dist 侧）：旧页名 → hub 模式深链。根级同名桩为手写静态文件
