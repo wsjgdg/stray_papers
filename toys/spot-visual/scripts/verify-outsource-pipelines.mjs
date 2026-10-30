@@ -7,7 +7,8 @@
  * 真数据回来时只需要跑一遍 merge，不用再碰代码。
  *
  * 用法: node scripts/verify-outsource-pipelines.mjs
- * 用完会把仓库状态完整还原（两张生成表 + 两份累积存档），可以放心反复跑。
+ * 用完会把仓库状态完整还原（两张生成表 + 两份累积存档 + 合并器写出的
+ * qc 抽检文件），可以放心反复跑。
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -19,6 +20,10 @@ const BACKUPS = {
   "src/lib/spot-profiles.generated.ts": null,
   "docs/outsource/out-desc-4a-merged.json": null,
   "docs/outsource/out-profile-merged.json": null,
+  // 六十四轮起合并器会写 qc 抽检文件；不还原会留下「批 1 已交付」的假信号，
+  // 误导流水线维护方去抽检合成数据。这里一并纳入备份/还原。
+  "docs/outsource/qc-desc-batch1.json": null,
+  "docs/outsource/qc-profile-batch1.json": null,
 };
 
 const backup = () => {
@@ -61,7 +66,7 @@ const profBatch = JSON.parse(
   fs.readFileSync("docs/outsource/profile-batch1.json", "utf8"),
 );
 
-const N = descBatch.items.length;   // 合并器按整批验收条数，合成数据必须整批
+const N = descBatch.items.length; // 合并器按整批验收条数，合成数据必须整批
 const PN = profBatch.items.length;
 const descItems = descBatch.items;
 const profItems = profBatch.items;
@@ -182,7 +187,10 @@ try {
     ["id 未回填", (o) => delete o.id],
     ["name 改了一个字", (o) => (o.name = o.name + "区")],
     ["描述过短", (o) => (o.desc = "很短")],
-    ["描述含禁写词", (o) => (o.desc = o.desc.slice(0, 50) + "门票60元开放时间8点")],
+    [
+      "描述含禁写词",
+      (o) => (o.desc = o.desc.slice(0, 50) + "门票60元开放时间8点"),
+    ],
   ];
   for (const [label, mutate] of cases) {
     const f = `${TMP}/bad-desc.json`;
@@ -202,11 +210,15 @@ try {
       ),
     );
     const before = Object.keys(
-      JSON.parse(fs.readFileSync("docs/outsource/out-desc-4a-merged.json", "utf8")),
+      JSON.parse(
+        fs.readFileSync("docs/outsource/out-desc-4a-merged.json", "utf8"),
+      ),
     ).length;
     const rr = run("scripts/merge-out-desc.mjs", f);
     const after = Object.keys(
-      JSON.parse(fs.readFileSync("docs/outsource/out-desc-4a-merged.json", "utf8")),
+      JSON.parse(
+        fs.readFileSync("docs/outsource/out-desc-4a-merged.json", "utf8"),
+      ),
     ).length;
     check(
       `描述·拒绝「${label}」`,
@@ -250,11 +262,15 @@ try {
       ),
     );
     const before = Object.keys(
-      JSON.parse(fs.readFileSync("docs/outsource/out-profile-merged.json", "utf8")),
+      JSON.parse(
+        fs.readFileSync("docs/outsource/out-profile-merged.json", "utf8"),
+      ),
     ).length;
     const rr = run("scripts/merge-out-profile.mjs", f);
     const after = Object.keys(
-      JSON.parse(fs.readFileSync("docs/outsource/out-profile-merged.json", "utf8")),
+      JSON.parse(
+        fs.readFileSync("docs/outsource/out-profile-merged.json", "utf8"),
+      ),
     ).length;
     check(
       `档案·拒绝「${label}」`,
