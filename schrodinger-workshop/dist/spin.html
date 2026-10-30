@@ -2010,9 +2010,20 @@ const SP_LAYOUT = `
 #spHint{left:50%;transform:translateX(-50%);bottom:10px;width:min(92vw,640px);max-height:74px;
   overflow-y:auto;z-index:10;padding:8px 12px}
 #spStage canvas{width:100%}
-/* 861–1200px：左右面板仍是固定列（左 246 / 右 210 合计），舞台按「扣掉两侧」算宽，
-   居中后左右各留 20px 以上 ⟹ 画布不会被面板/读数压住（1101–1200 与 ≤1100 用同一口径）。 */
-@media (max-width:1200px){#spStage{width:calc(100vw - 520px)}}
+/* 窄屏开关（只在 861–1200px 出现）：这一刻度带里三栏排不下，就不要硬排——
+   舞台独占整幅宽度，控制面板/读数改成**可开合的底部 sheet**（默认收起）。 */
+.sp-band{display:none}
+/* 861–1200px：屏幕放不下「232 面板 + 画布 + 196 读数」三栏。此前是把舞台压到
+   calc(100vw−520px)（900px 窗口只剩 380px 画布），看起来就是「全部挤在一行」。
+   现在：舞台占满（两侧各留 20px、上限 760px），面板/读数浮在底部、点开关才出来。 */
+@media (min-width:861px) and (max-width:1200px){
+  #spStage{width:min(calc(100vw - 40px),760px)}
+  #spPanel,#spHud{display:none;position:fixed;left:6px;right:6px;width:auto;top:auto;bottom:52px;
+    max-height:58vh;z-index:13;overflow-y:auto}
+  #spPanel.open,#spHud.open{display:block}
+  .sp-band{display:inline-flex;align-items:center}
+  #spViews{justify-content:flex-start}
+}
 @media (max-width:1100px){#spHint{display:none}}
 /* ≤860px：core/responsive.js 用内联样式把 #spStage / .qpanel / .qhud 变底部 sheet
    （内联 position:fixed;left:6px;right:6px 覆盖上表规则），dock 三态靠 qpanel/qhud 类
@@ -2113,7 +2124,10 @@ class SpinApp {
 
 <div id="spStage" class="qstage" data-tool="${this.state.tool}">
   <canvas id="spLadder"></canvas>
-  <div id="spViews" style="display:flex;gap:4px;margin:2px 0 6px">
+  <div id="spViews" style="display:flex;gap:4px;margin:2px 0 6px;align-items:center">
+    <button class="sp-band" id="spDrawerPanel" title="展开/收起控制面板（窄屏）">⚙ 控制</button>
+    <button class="sp-band" id="spDrawerHud" title="展开/收起读数（窄屏）">◫ 读数</button>
+    <span class="sp-band" style="flex:1"></span>
     ${SP_VIEWS.map(v => `<button data-view="${v.k}" title="${v.tip}">${v.name}</button>`).join('')}
   </div>
   <canvas id="spChart"></canvas>
@@ -2166,6 +2180,8 @@ class SpinApp {
       this.q('#oBrush').textContent = this.state.brush.toFixed(2);
     });
     this.on(this.q('#spClearField'), 'click', () => this.clearField(true));
+    this.on(this.q('#spDrawerPanel'), 'click', () => this.toggleBand('panel'));
+    this.on(this.q('#spDrawerHud'), 'click', () => this.toggleBand('hud'));
     this.on(this.q('#spModeGs'), 'click', () => this.applyMode('gs'));
     this.on(this.q('#spModeEvo'), 'click', () => this.applyMode('evo'));
     this.on(this.q('#spPause'), 'click', () => this.togglePause());
@@ -2174,13 +2190,18 @@ class SpinApp {
     this.on(this.q('#spLink'), 'click', () => this.copyLink());
     this.on(this.q('#spSave'), 'click', () => this.exportJson());
     this.on(this.q('#spGap'), 'click', () => this.startGap());
-    this.on(window, 'resize', () => { this.resize(); this.draw(); });
+    this.on(window, 'resize', () => {
+      const w = window.innerWidth || 0;
+      if (w > 1200 || w <= 860) this.closeBand();
+      this.resize(); this.draw();
+    });
     this.on(document, 'keydown', e => {
       const tag = (e.target && e.target.tagName) || '';
       if (/input|textarea|select/i.test(tag)) return;
       if (e.key === '1' || e.key === '2' || e.key === '3') this.setTool(SP_TOOLS[+e.key - 1].k);
       else if (e.key >= '4' && e.key <= '7') this.setView(SP_VIEWS[+e.key - 4].k);
       else if (e.key === ' ') { e.preventDefault(); this.togglePause(); }
+      else if (e.key === 'Escape') this.closeBand();
     });
     this.bindCanvas();
   }
@@ -2398,6 +2419,32 @@ class SpinApp {
       this.measureAll(true);
     }
     this.syncPanel(); this.draw(); this.queueUrl();
+  }
+  /* 861–1200px 的「底部 sheet 开合」：同一时刻只开一个（两个都开就又把画面挤没了）；
+     ≤860 由 core 的 dock 三态接管，>1200 两个按钮本身被 CSS 藏起来。 */
+  toggleBand(which){
+    const p = this.q('#spPanel'), h = this.q('#spHud');
+    if (!p || !h) return false;
+    const target = which === 'panel' ? p : h;
+    const other = which === 'panel' ? h : p;
+    const on = !target.classList.contains('open');
+    other.classList.remove('open');
+    target.classList.toggle('open', on);
+    this.syncBand();
+    return on;
+  }
+  closeBand(){
+    const p = this.q('#spPanel'), h = this.q('#spHud');
+    if (p) p.classList.remove('open');
+    if (h) h.classList.remove('open');
+    this.syncBand();
+  }
+  bandOpen(){ return { panel: !!(this.q('#spPanel') || {}).classList?.contains('open'), hud: !!(this.q('#spHud') || {}).classList?.contains('open') }; }
+  syncBand(){
+    const o = this.bandOpen();
+    const bp = this.q('#spDrawerPanel'), bh = this.q('#spDrawerHud');
+    if (bp) bp.classList.toggle('on', o.panel);
+    if (bh) bh.classList.toggle('on', o.hud);
   }
   togglePause(){
     this.state.paused = !this.state.paused;
@@ -3046,6 +3093,8 @@ class SpinApp {
       siteAtX: x => this.siteAtX(x),
       view3: () => ({ ...this._view }),
       hover: () => this._hover,
+      band: which => this.toggleBand(which),
+      bandOpen: () => this.bandOpen(),
       spec: () => this.serialize(),
       query: () => this.queryFor(this.serialize()),
       applySpec: s => this.applySpec(s),
