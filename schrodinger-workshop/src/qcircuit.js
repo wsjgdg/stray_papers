@@ -89,6 +89,7 @@ const QC_CSS = `
     width:min(calc(100vw - 530px),1000px);height:min(78vh,620px)}
   #qcCircuit,#qcAmp{width:100%;height:100%;border:1px solid var(--line);border-radius:10px;
     background:rgba(4,8,16,.55);display:block}
+  #qcCircuit{cursor:crosshair;touch-action:manipulation}
   #qcAmp.amp3d{cursor:grab;touch-action:none}
   #qcAmpProbe{display:block;margin-top:5px;min-height:28px;color:var(--cyan);font:9.5px/1.5 var(--mono);white-space:pre-line;overflow-wrap:anywhere}
   #qcHint{left:14px;bottom:14px;z-index:10;padding:9px 13px;max-width:330px;font-size:11px;
@@ -278,6 +279,7 @@ export class QCircuitApp {
           <button id="qcGateAdd">插入选中后</button><button id="qcGateClear">清空线路</button>
         </div>
         <div id="qcGateList"></div>
+        <div class="chk" style="font-size:9.5px;color:var(--dim)">点线路导线选目标 q；点门选中并检查；空列决定新门插入位置。</div>
         <div class="grp">选中门：前 → 后</div>
         <div id="qcGateInspector" class="qcInspector">点击门序列条目，查看选中基态的振幅变化与全态概率变化。</div>
         <div class="grp">单次测量 · Z 基</div>
@@ -305,7 +307,7 @@ export class QCircuitApp {
       </aside>
 
       <div id="qcStage" class="qstage">
-        <canvas id="qcCircuit"></canvas>
+        <canvas id="qcCircuit" aria-label="量子线路图：点击导线选择目标 q，点击门选中检查，点击空列设置插入位置"></canvas>
         <canvas id="qcAmp" tabindex="0" role="img" aria-label="2D 量子态振幅条形图"></canvas>
         <div id="qcBand" aria-label="面板与读数">
           <button id="qcBandPanel" type="button" aria-expanded="false">⚙ 控制</button>
@@ -450,6 +452,12 @@ export class QCircuitApp {
       else if (act === 'down') this.moveGate(i, 1);
       else if (act === 'del') this.deleteGate(i);
     });
+    const circuitCanvas = this.q('#qcCircuit');
+    this.on(circuitCanvas, 'pointermove', e => this.updateCircuitPointer(e));
+    this.on(circuitCanvas, 'pointerleave', () => {
+      if (this._circuitHover){ this._circuitHover = null; circuitCanvas.style.cursor = 'default'; this.drawCircuit(); }
+    });
+    this.on(circuitCanvas, 'click', e => this.activateCircuitPointer(e));
     this.on(this.q('#qcBandPanel'), 'click', () => this.toggleBand('panel'));
     this.on(this.q('#qcBandHud'), 'click', () => this.toggleBand('hud'));
     this.on(document, 'click', e => {
@@ -468,7 +476,7 @@ export class QCircuitApp {
       e.preventDefault();
     });
     this.on(ampCanvas, 'pointermove', e => {
-      if (this.state.ampProj !== '3d') return;
+      if (this.state.ampProj === '2d'){ this.updateAmpProbe2D(e); return; }
       if (this._ampDrag){
         const drag = this._ampDrag;
         if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) >= 4) drag.moved = true;
@@ -500,6 +508,18 @@ export class QCircuitApp {
     };
     this.on(ampCanvas, 'pointerup', finishAmpOrbit);
     this.on(ampCanvas, 'pointercancel', finishAmpOrbit);
+    this.on(ampCanvas, 'click', e => {
+      if (this.state.ampProj !== '2d') return;
+      this.updateAmpProbe2D(e);
+      const i = this._ampHoverIndex;
+      if (i == null) return;
+      if (this._ampPinnedIndex === i){
+        this._ampPinnedIndex = null; this.drawAmp(); this.showAmpProbe(i, false);
+      } else this.pinAmpBasis(i);
+    });
+    this.on(ampCanvas, 'pointerleave', () => {
+      if (this.state.ampProj === '2d' && this._ampPinnedIndex == null) this.clearAmpProbe();
+    });
     this.on(ampCanvas, 'wheel', e => {
       if (this.state.ampProj !== '3d') return;
       e.preventDefault();
@@ -633,6 +653,7 @@ export class QCircuitApp {
   selectGate(i){
     this.edit.selected = (i >= 0 && i < this.gates.length) ? i : -1;
     this.renderGateList();
+    this.drawCircuit();
     if (this.edit.selected >= 0) this.inspectGate(this.edit.selected);
     else this.clearGateInspector();
   }
@@ -1288,26 +1309,25 @@ export class QCircuitApp {
     if (b2){ b2.classList.toggle('on', !is3d); b2.setAttribute('aria-pressed', String(!is3d)); }
     if (b3){ b3.classList.toggle('on', is3d); b3.setAttribute('aria-pressed', String(is3d)); }
     if (cv){
-      cv.classList.toggle('amp3d', is3d); cv.style.cursor = is3d ? 'grab' : 'default';
-      cv.setAttribute('aria-label', is3d ? '3D 复振幅图；悬停查看，点击固定；方向键浏览，Enter 固定或取消；拖动旋转，滚轮缩放，按 R 复位相机' : '2D 量子态振幅条形图');
+      cv.classList.toggle('amp3d', is3d); cv.style.cursor = is3d ? 'grab' : 'crosshair';
+      cv.setAttribute('aria-label', is3d ? '3D 复振幅图；悬停查看，点击固定；方向键浏览，Enter 固定或取消；拖动旋转，滚轮缩放，按 R 复位相机' : '2D 振幅图；悬停查看基态振幅与概率，点击固定探针');
     }
     const hint = this.q('#qcAmpHint');
     if (hint) hint.textContent = is3d
       ? (this.state.noise.on ? '3D 混态：仅显示 √ρᵢᵢ；悬停读布居，无相位。点击点固定，方向键浏览，Enter 固定/取消；拖动旋转、滚轮缩放。'
         : '3D 纯态：距离=|aᵢ|，方向/色相=相位。悬停读 Re/Im；点击点固定，方向键浏览，Enter 固定/取消；拖动旋转、滚轮缩放。')
-      : '2D 条形高度 = |aᵢ|，色相 = 相位。';
+      : '悬停条形读振幅/概率，点击固定基态探针；高度 = |aᵢ|，色相 = 相位。';
     const probe = this.q('#qcAmpProbe');
     if (probe){
-      probe.style.display = is3d ? 'block' : 'none';
-      if (!is3d) { probe.dataset.basis = ''; probe.textContent = ''; }
-      else if (!probe.dataset.basis) this.clearAmpProbe();
+      probe.style.display = 'block';
+      if (!probe.dataset.basis) this.clearAmpProbe();
     }
   }
 
   clearAmpProbe(){
     const probe = this.q('#qcAmpProbe');
     if (!probe) return;
-    if (this._ampPinnedIndex != null && this.state.ampProj === '3d'){
+    if (this._ampPinnedIndex != null){
       this.showAmpProbe(this._ampPinnedIndex, true); return;
     }
     this._ampHoverIndex = null;
@@ -1338,8 +1358,25 @@ export class QCircuitApp {
     const dim = 1 << this.state.n;
     this._ampPinnedIndex = qcClamp(i | 0, 0, dim - 1);
     this._ampHoverIndex = this._ampPinnedIndex;
-    this.drawAmp3D();
+    this.drawAmp();
+    this.showAmpProbe(this._ampPinnedIndex, true);
     return this._ampPinnedIndex;
+  }
+
+  updateAmpProbe2D(e){
+    const cv = this.q('#qcAmp');
+    if (!cv || this.state.ampProj !== '2d') return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1), W = cv.width / dpr;
+    const rect = cv.getBoundingClientRect(), rw = rect.width || cv.clientWidth || W;
+    const px = (e.clientX - (rect.width ? rect.left : 0)) * W / rw;
+    const dim = 1 << this.state.n, padL = 34, padR = 12;
+    const bw = (W - padL - padR) / dim;
+    const i = px < padL || px >= W - padR ? null : Math.floor((px - padL) / bw);
+    this._ampHoverIndex = i;
+    const pinned = this._ampPinnedIndex;
+    if (pinned != null){ this.showAmpProbe(pinned, true); return; }
+    if (i != null && i >= 0 && i < dim) this.showAmpProbe(i, false);
+    else this.clearAmpProbe();
   }
 
   updateAmpProbe(e){
@@ -1374,6 +1411,7 @@ export class QCircuitApp {
   setAmpProjection(proj){
     this.state.ampProj = proj === '3d' ? '3d' : '2d';
     this._ampDrag = null;
+    this._ampHoverIndex = null;
     this.syncAmpControls();
     this.drawAmp();
     this.syncAmpUrl();
@@ -1402,6 +1440,67 @@ export class QCircuitApp {
     this._needDraw = true;
   }
 
+  circuitPointerHit(e){
+    const cv = this.q('#qcCircuit'), m = this._circuitMap;
+    if (!cv || !m) return null;
+    const rect = cv.getBoundingClientRect(), rw = rect.width || cv.clientWidth || m.W, rh = rect.height || cv.clientHeight || m.H;
+    const x = (e.clientX - (rect.width ? rect.left : 0)) * m.W / rw;
+    const y = (e.clientY - (rect.height ? rect.top : 0)) * m.H / rh;
+    let q = null, qDist = Infinity;
+    for (let k = 0; k < m.n; k++){
+      const d = Math.abs(y - m.yOf(k));
+      if (d < qDist){ qDist = d; q = k; }
+    }
+    if (qDist > Math.max(9, m.rowH * 0.34)) q = null;
+    let gate = null;
+    if (m.N > 0 && x >= m.x0 - m.colW * 0.45 && x <= m.xEnd + m.colW * 0.45){
+      const i = Math.max(0, Math.min(m.N - 1, Math.floor((x - m.x0) / m.colW)));
+      if (Math.abs(x - m.xOf(i)) <= Math.max(10, m.colW * 0.42)){
+        const view = gateView(this.gates[i]);
+        const ys = (view.wires || []).filter(Number.isInteger).map(m.yOf);
+        if (ys.length && y >= Math.min(...ys) - Math.max(8, m.rowH * .22) && y <= Math.max(...ys) + Math.max(8, m.rowH * .22)) gate = i;
+      }
+    }
+    let insertAfter = -1;
+    if (m.N > 0){
+      if (x >= m.xEnd) insertAfter = m.N - 1;
+      else if (x >= m.x0) insertAfter = Math.max(-1, Math.min(m.N - 1, Math.floor((x - m.x0) / m.colW)));
+    }
+    return { x, y, q, gate, insertAfter };
+  }
+
+  updateCircuitPointer(e){
+    const cv = this.q('#qcCircuit'), hit = this.circuitPointerHit(e);
+    if (!cv || !hit) return;
+    const next = hit.q == null && hit.gate == null ? null : hit;
+    const prev = this._circuitHover;
+    if ((prev?.q ?? null) === (next?.q ?? null) && (prev?.gate ?? null) === (next?.gate ?? null) &&
+        (prev?.insertAfter ?? null) === (next?.insertAfter ?? null)) return;
+    this._circuitHover = next;
+    cv.style.cursor = hit.gate != null ? 'pointer' : hit.q != null ? 'crosshair' : 'default';
+    this.drawCircuit();
+  }
+
+  activateCircuitPointer(e){
+    const hit = this.circuitPointerHit(e);
+    if (!hit) return false;
+    if (hit.gate != null){
+      const view = gateView(this.gates[hit.gate]);
+      if (Number.isInteger(view.target)) this.edit.q = view.target;
+      this.syncGateEditor();
+      this.selectGate(hit.gate);
+      this.toast(`选中第 ${hit.gate + 1} 门；新门将接在其后`);
+      return true;
+    }
+    if (hit.q == null) return false;
+    this.edit.q = hit.q;
+    this.edit.selected = hit.insertAfter;
+    this.syncGateEditor();
+    this.drawCircuit();
+    this.toast(`目标 q${hit.q} 已选中；新门将插入${hit.insertAfter < 0 ? '线路开头' : `第 ${hit.insertAfter + 2} 列后`}`);
+    return true;
+  }
+
   /* ---------- 线路图 ---------- */
   drawCircuit(){
     const cv = this.q('#qcCircuit');
@@ -1415,11 +1514,13 @@ export class QCircuitApp {
     const n = this.state.n, N = this.gates.length;
     const padL = 44, padR = 16, padT = 22, padB = 18;
     const rowH = Math.min(46, (H - padT - padB) / n);
-    const yOf = q => padT + (n - 1 - q + 0.5) * rowH;   /* 最高位画在最上面 */
     const colW = Math.min(64, (W - padL - padR) / Math.max(1, N));
     /* 门少时把整组门水平居中（否则 2 门线路全挤在左边，右半边空着） */
     const x0 = padL + Math.max(0, (W - padL - padR - N * colW) / 2);
     const xOf = i => x0 + (i + 0.5) * colW;
+    const yOf = q => padT + (n - 1 - q + 0.5) * rowH;
+    this._circuitMap = { W, H, n, N, padL, padR, padT, padB, rowH, colW, x0,
+      xEnd: x0 + N * colW, xOf, yOf };
 
     g.font = '10px ui-monospace,monospace';
     for (let q = 0; q < n; q++){
@@ -1429,9 +1530,21 @@ export class QCircuitApp {
       g.fillStyle = 'rgba(154,167,189,.85)'; g.textAlign = 'right';
       g.fillText('q' + q, padL - 14, y + 3.5);
     }
+    const hover = this._circuitHover;
+    if (hover?.gate != null){
+      g.fillStyle = 'rgba(103,232,249,.075)';
+      g.fillRect(xOf(hover.gate) - colW * 0.45, padT - 10, colW * 0.9, H - padT - padB + 16);
+    } else if (hover?.q != null){
+      g.fillStyle = 'rgba(251,191,36,.055)';
+      g.fillRect(padL - 10, yOf(hover.q) - rowH * 0.42, W - padL - padR, rowH * 0.84);
+    }
     /* 已执行的列压暗 */
     g.fillStyle = 'rgba(103,232,249,.05)';
     if (this.state.step > 0) g.fillRect(x0 - colW / 2 - 4, padT - 10, this.state.step * colW + 2, H - padT - padB + 16);
+    if (this.edit.selected >= 0 && this.edit.selected < N){
+      g.fillStyle = 'rgba(103,232,249,.055)';
+      g.fillRect(xOf(this.edit.selected) - colW * .46, padT - 10, colW * .92, H - padT - padB + 16);
+    }
 
     const cbitCol = {};
     for (let i = 0; i < N; i++){
@@ -1557,6 +1670,13 @@ export class QCircuitApp {
         g.beginPath(); g.moveTo(x - 7, yt); g.lineTo(x + 7, yt); g.moveTo(x, yt - 7); g.lineTo(x, yt + 7); g.stroke();
       }
     }
+    if (hover?.q != null && hover.gate == null){
+      const insertX = N === 0 ? x0 + colW / 2 : x0 + (hover.insertAfter + 1) * colW;
+      g.strokeStyle = 'rgba(251,191,36,.78)'; g.lineWidth = 1; g.setLineDash([3, 3]);
+      g.beginPath(); g.moveTo(insertX, padT - 8); g.lineTo(insertX, H - padB + 5); g.stroke(); g.setLineDash([]);
+      g.fillStyle = 'rgba(251,191,36,.9)'; g.textAlign = 'center'; g.font = '8px ui-monospace,monospace';
+      g.fillText('插入', insertX, padT - 11);
+    }
     g.fillStyle = 'rgba(154,167,189,.75)'; g.textAlign = 'left';
     const measuredLabel = this.state.measured
       ? (this.state.measured.mode === 'qubit'
@@ -1574,7 +1694,10 @@ export class QCircuitApp {
     const cv = this.q('#qcAmp');
     if (!cv || !this.psi) return;
     if (this.state.ampProj === '3d') return this.drawAmp3D();
-    this._amp3dHits = []; this.clearAmpProbe();
+    this._amp3dHits = [];
+    if (this._ampPinnedIndex != null) this.showAmpProbe(this._ampPinnedIndex, true);
+    else if (this._ampHoverIndex != null) this.showAmpProbe(this._ampHoverIndex, false);
+    else this.clearAmpProbe();
     const g = cv.getContext('2d');
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     g.setTransform(1, 0, 0, 1, 0, 0);
@@ -1632,7 +1755,11 @@ export class QCircuitApp {
       const bx = x + Math.max(0.5, bw * 0.12), by = y0 - hh, barW = Math.max(1, bw * 0.76);
       g.fillRect(bx, by, barW, hh);
       if (selected){ g.strokeStyle = 'rgba(251,191,36,.98)'; g.lineWidth = 1.5; g.strokeRect(bx - 1, by - 1, barW + 2, Math.max(3, hh + 2)); }
+      else if (this._ampPinnedIndex === a.i){ g.strokeStyle = 'rgba(103,232,249,.98)'; g.lineWidth = 1.5; g.strokeRect(bx - 1, by - 1, barW + 2, Math.max(3, hh + 2)); }
     }
+    if (this._ampPinnedIndex != null && this._ampPinnedIndex >= dim) this._ampPinnedIndex = dim - 1;
+    if (this._ampPinnedIndex != null) this.showAmpProbe(this._ampPinnedIndex, true);
+    else this.clearAmpProbe();
     /* 轴与标签（2^n ≤ 32 时逐条标，否则稀疏标） */
     g.strokeStyle = 'rgba(154,167,189,.45)'; g.lineWidth = 1;
     g.beginPath(); g.moveTo(padL, y0); g.lineTo(W - padR, y0); g.stroke();
