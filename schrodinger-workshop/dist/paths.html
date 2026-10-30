@@ -2056,7 +2056,8 @@ class PathsApp {
         且画布带 border:1px（box-sizing:border-box 下内容盒比位图窄 2px）⟹ 浏览器重采样。
         现在画布无 border（描边走 inset 阴影）、宽高都写整数内联 px、DPR 取真实值。
      ② **挤压**：舞台宽度原来写死 min(100vw−520, 1060px)——1024 窗口只剩 504、900 只剩 380。
-        现在三栏只在 >1200px 存在；861–1200 舞台独占整宽、面板变可开合 sheet；≤860 交给 core。 */
+        现在三栏只在 >1200px 存在；861–1200 舞台独占整宽、面板变可开合 sheet；≤860 交给 core。
+     手机竖屏主画布整行占满舞台，螺旋/剖面移到下行并排，避免两列固定最小宽度溢出屏幕。 */
   layoutSize(){
     const vw = window.innerWidth || 1280, vh = window.innerHeight || 800;
     const dpr = window.devicePixelRatio || 1;
@@ -2079,20 +2080,50 @@ class PathsApp {
       stage.style.top = Math.max(56, Math.round((vh - stageH) / 2)) + 'px';
       stage.style.transform = 'none';
     }
-    const gap = 9;
-    const rightW = Math.round(Math.min(Math.max(stageW * 0.27, 200), 300));
-    const mainW = Math.max(240, stageW - rightW - gap);
-    const rowH = Math.max(110, Math.round((stageH - gap) / 2));
-    if (!sheet){
-      /* 行高取整后把舞台高度**对齐**成 2·rowH + gap：否则网格与画布差 1px，
-         右列上下两块会与主图错开半个像素（又是重采样） */
-      stageH = rowH * 2 + gap;
-      stage.style.height = stageH + 'px';
+    const gap = 9, compact = sheet && stageW < 449;
+    const rightW = compact ? Math.floor((stageW - gap) / 2)
+      : Math.round(Math.min(Math.max(stageW * 0.27, 200), 300));
+    const profileW = compact ? stageW - gap - rightW : rightW;
+    const mainW = compact ? stageW : Math.max(240, stageW - rightW - gap);
+    let rowH = sheet ? Math.max(1, Math.floor((stageH - gap) / 2))
+      : Math.max(110, Math.floor((stageH - gap) / 2));
+    let rowH2 = rowH, mainH = rowH + rowH2 + gap, plotH = rowH;
+    if (compact){
+      /* 手机竖屏：240px 主图 + 200px 右列会超出 390px 舞台。
+         主图改为独占整行，螺旋/剖面并排放底行，仍保留三个可见画布。 */
+      const usableH = Math.max(2, stageH - gap);
+      mainH = Math.max(1, Math.min(usableH - 1, Math.round(usableH * 0.62)));
+      plotH = usableH - mainH;
+      rowH = plotH; rowH2 = plotH;
+      stage.style.gridTemplateColumns = rightW + 'px ' + profileW + 'px';
+      stage.style.gridTemplateRows = mainH + 'px ' + plotH + 'px';
+      const main = this.q('#pvMain'), spiral = this.q('#pvSpiral'), profile = this.q('#pvProfile');
+      if (main){ main.style.gridRow = '1'; main.style.gridColumn = '1 / span 2'; }
+      if (spiral){ spiral.style.gridRow = '2'; spiral.style.gridColumn = '1'; }
+      if (profile){ profile.style.gridRow = '2'; profile.style.gridColumn = '2'; }
+    } else {
+      if (!sheet){
+        /* 桌面行高取整后把舞台高度**对齐**成 2·rowH + gap：否则网格与画布差 1px，
+           右列上下两块会与主图错开半个像素（又是重采样）。 */
+        stageH = rowH * 2 + gap;
+        rowH2 = rowH;
+        stage.style.height = stageH + 'px';
+      } else {
+        /* 手机横屏按实际舞台高分成两行，不能用桌面 110px 最小行高撑破视口。 */
+        rowH2 = Math.max(1, stageH - gap - rowH);
+      }
+      mainH = rowH + rowH2 + gap;
+      stage.style.gridTemplateColumns = mainW + 'px ' + rightW + 'px';
+      stage.style.gridTemplateRows = rowH + 'px ' + rowH2 + 'px';
+      const main = this.q('#pvMain'), spiral = this.q('#pvSpiral'), profile = this.q('#pvProfile');
+      if (main){ main.style.gridRow = '1 / span 2'; main.style.gridColumn = '1'; }
+      if (spiral){ spiral.style.gridRow = '1'; spiral.style.gridColumn = '2'; }
+      if (profile){ profile.style.gridRow = '2'; profile.style.gridColumn = '2'; }
     }
-    stage.style.gridTemplateColumns = mainW + 'px ' + rightW + 'px';
-    stage.style.gridTemplateRows = rowH + 'px ' + rowH + 'px';
-    this._geo = { dpr, stageW, stageH, mainW, rightW, rowH, sheet };
-    for (const [id, cw, ch] of [['#pvMain', mainW, rowH * 2 + gap], ['#pvSpiral', rightW, rowH], ['#pvProfile', rightW, rowH]]){
+    this._geo = { dpr, stageW, stageH, mainW, rightW, profileW, rowH, rowH2, mainH, plotH, compact, sheet };
+    for (const [id, cw, ch] of compact
+      ? [['#pvMain', mainW, mainH], ['#pvSpiral', rightW, plotH], ['#pvProfile', profileW, plotH]]
+      : [['#pvMain', mainW, mainH], ['#pvSpiral', rightW, rowH], ['#pvProfile', rightW, rowH2]]){
       const cv = this.q(id);
       if (!cv) continue;
       const bw = Math.round(cw * dpr), bh = Math.round(ch * dpr);
@@ -2358,7 +2389,9 @@ class PathsApp {
     const g = cv.getContext('2d'), dpr = this.view.dpr || 1, W = cv.width, H = cv.height;
     g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H); g.scale(dpr, dpr);
     const w = W / dpr, h = H / dpr, c = this.cfg(), span = c.L1 + c.L2;
-    const slitValues = piSlits(c).slice().sort((a, b) => a - b), yReach = Math.max(this.view.yFov, Math.abs(this.state.Y),
+    const slitValues = piSlits(c).slice().sort((a, b) => a - b)
+      .filter((y, i, a) => i === 0 || Math.abs(y - a[i - 1]) > 1e-9);
+    const yReach = Math.max(this.view.yFov, Math.abs(this.state.Y),
       ...slitValues.map(y => Math.abs(y) + c.w / 2), 1.5 * c.W, 1);
     /* fit both longitudinal and transverse extents, preserving physical x:y aspect */
     const sx = Math.min(4.8 / Math.max(1, span), 1.75 / yReach), laneMax = 0.92, eye = hbCamBasis(this.cam);
