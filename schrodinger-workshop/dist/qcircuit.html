@@ -2028,6 +2028,7 @@ const QC_CSS = `
   #qcCircuit,#qcAmp{width:100%;height:100%;border:1px solid var(--line);border-radius:10px;
     background:rgba(4,8,16,.55);display:block}
   #qcAmp.amp3d{cursor:grab;touch-action:none}
+  #qcAmpProbe{display:block;margin-top:5px;min-height:28px;color:var(--cyan);font:9.5px/1.5 var(--mono);white-space:pre-line;overflow-wrap:anywhere}
   #qcHint{left:14px;bottom:14px;z-index:10;padding:9px 13px;max-width:330px;font-size:11px;
     color:var(--dim);line-height:1.6;max-height:112px;overflow-y:auto;
     scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
@@ -2118,7 +2119,7 @@ class QCircuitApp {
         peq: num('peq', 0),
       },
     };
-    this.ampCam = readQcAmpCam(q); this._ampDrag = null;
+    this.ampCam = readQcAmpCam(q); this._ampDrag = null; this._amp3dHits = [];
     this.edit = { op: 'h', q: 0, c: -1, c2: -1, q2: 1, q3: 2, theta: Math.PI / 2, basis: 'z', cbit: 0, inner: 'x', selected: -1 };
     this.gates = [];
     this.psi = null;
@@ -2168,7 +2169,7 @@ class QCircuitApp {
         <div class="row"><label>速度 ms</label><input type="range" id="qcSpeed" min="40" max="600" step="20"><output id="qcSpeedO">—</output></div>
         <div class="grp">振幅图</div>
         <div class="btns"><button id="qcAmp2d" class="on" aria-pressed="true" title="原有振幅条形图">2D 条形</button><button id="qcAmp3d" aria-pressed="false" title="计算基序号 × 复振幅平面">3D 复振幅</button></div>
-        <div class="chk"><span id="qcAmpHint" style="font-size:10.5px;color:var(--dim)">2D 条形高度 = |aᵢ|，色相 = 相位</span></div>
+        <div class="chk"><span id="qcAmpHint" style="font-size:10.5px;color:var(--dim)">2D 条形高度 = |aᵢ|，色相 = 相位</span><output id="qcAmpProbe" aria-live="polite"></output></div>
         <div class="grp" id="qcPrepGrp">待传态（θ, φ）</div>
         <div class="row" id="qcThRow"><label>θ</label><input type="range" id="qcTheta" min="0" max="3.14" step="0.01"><output id="qcThetaO">—</output></div>
         <div class="row" id="qcPhRow"><label>φ</label><input type="range" id="qcPhi" min="-3.14" max="3.14" step="0.01"><output id="qcPhiO">—</output></div>
@@ -2365,23 +2366,27 @@ class QCircuitApp {
     this.on(ampCanvas, 'pointerdown', e => {
       if (this.state.ampProj !== '3d' || e.button !== 0) return;
       this._ampDrag = { x: e.clientX, y: e.clientY };
+      this.clearAmpProbe();
       try { ampCanvas.focus({ preventScroll: true }); } catch (_){ /* 老浏览器 */ }
       ampCanvas.style.cursor = 'grabbing';
       try { ampCanvas.setPointerCapture(e.pointerId); } catch (_){ /* jsdom/旧浏览器无 pointer capture */ }
       e.preventDefault();
     });
     this.on(ampCanvas, 'pointermove', e => {
-      if (!this._ampDrag || this.state.ampProj !== '3d') return;
-      const dx = e.clientX - this._ampDrag.x, dy = e.clientY - this._ampDrag.y;
-      this._ampDrag = { x: e.clientX, y: e.clientY };
-      this.ampCam = hbOrbit(this.ampCam, dx, dy, 0.0075);
-      this.drawAmp3D();
+      if (this.state.ampProj !== '3d') return;
+      if (this._ampDrag){
+        const dx = e.clientX - this._ampDrag.x, dy = e.clientY - this._ampDrag.y;
+        this._ampDrag = { x: e.clientX, y: e.clientY };
+        this.ampCam = hbOrbit(this.ampCam, dx, dy, 0.0075);
+        this.drawAmp3D();
+      } else this.updateAmpProbe(e);
     });
-    const finishAmpOrbit = () => {
+    const finishAmpOrbit = e => {
       if (!this._ampDrag) return;
       this._ampDrag = null;
       if (ampCanvas) ampCanvas.style.cursor = 'grab';
       this.syncAmpUrl();
+      if (e) this.updateAmpProbe(e);
     };
     this.on(ampCanvas, 'pointerup', finishAmpOrbit);
     this.on(ampCanvas, 'pointercancel', finishAmpOrbit);
@@ -2389,7 +2394,7 @@ class QCircuitApp {
       if (this.state.ampProj !== '3d') return;
       e.preventDefault();
       this.ampCam = { ...this.ampCam, dist: qcClamp(this.ampCam.dist * Math.exp(e.deltaY * 0.001), 4.8, 20) };
-      this.drawAmp3D(); this.syncAmpUrl();
+      this.drawAmp3D(); this.syncAmpUrl(); this.updateAmpProbe(e);
     }, { passive: false });
     this.on(ampCanvas, 'dblclick', () => { if (this.state.ampProj === '3d') this.resetAmpCam(); });
     this.on(document, 'keydown', e => {
@@ -2880,9 +2885,47 @@ class QCircuitApp {
     }
     const hint = this.q('#qcAmpHint');
     if (hint) hint.textContent = is3d
-      ? (this.state.noise.on ? '3D 混态：仅显示 √ρᵢᵢ，位于 Re 正轴；相位无定义。拖动旋转、滚轮缩放、R/双击复位。'
-        : '3D 纯态：x=基态序号、y/z=Re/Im；点到基态轴距离=|aᵢ|，方向/色相=相位。拖动旋转、滚轮缩放、R/双击复位。')
+      ? (this.state.noise.on ? '3D 混态：仅显示 √ρᵢᵢ，位于 Re 正轴；悬停读布居，无相位。拖动旋转、滚轮缩放、R/双击复位。'
+        : '3D 纯态：x=基态序号、y/z=Re/Im；点到基态轴距离=|aᵢ|，方向/色相=相位。悬停读数；拖动旋转、滚轮缩放、R/双击复位。')
       : '2D 条形高度 = |aᵢ|，色相 = 相位。';
+    const probe = this.q('#qcAmpProbe');
+    if (probe){
+      probe.style.display = is3d ? 'block' : 'none';
+      if (!is3d) { probe.dataset.basis = ''; probe.textContent = ''; }
+      else if (!probe.dataset.basis) this.clearAmpProbe();
+    }
+  }
+
+  clearAmpProbe(){
+    const probe = this.q('#qcAmpProbe');
+    if (!probe) return;
+    probe.dataset.basis = '';
+    probe.textContent = this.state.ampProj === '3d' ? '悬停振幅点查看读数' : '';
+  }
+
+  updateAmpProbe(e){
+    const cv = this.q('#qcAmp'), probe = this.q('#qcAmpProbe');
+    if (!cv || !probe || this.state.ampProj !== '3d' || !this._amp3dHits?.length) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1), W = cv.width / dpr, H = cv.height / dpr;
+    const rect = cv.getBoundingClientRect(), rw = rect.width || cv.clientWidth || W, rh = rect.height || cv.clientHeight || H;
+    const px = (e.clientX - (rect.width ? rect.left : 0)) * W / rw;
+    const py = (e.clientY - (rect.height ? rect.top : 0)) * H / rh;
+    let nearest = null, best = Infinity;
+    for (const p of this._amp3dHits){
+      const d2 = (p.x - px) ** 2 + (p.y - py) ** 2;
+      if (d2 <= p.radius * p.radius && d2 < best){ best = d2; nearest = p; }
+    }
+    if (!nearest) return; /* 保留最近一次读数，鼠标移向面板时仍可读完 */
+    if (probe.dataset.basis === String(nearest.i)) return;
+    probe.dataset.basis = String(nearest.i);
+    const basis = qcBits(nearest.i, this.state.n), prob = nearest.abs * nearest.abs;
+    if (nearest.noisy){
+      probe.textContent = `|${basis}⟩  √ρᵢᵢ ${nearest.abs.toFixed(4)}\nρᵢᵢ ${prob.toFixed(4)}  相位 —`;
+    } else {
+      const phaseDeg = Math.round(nearest.phase * 180 / Math.PI);
+      const signed = v => (v < 0 ? '−' : '+') + Math.abs(v).toFixed(4);
+      probe.textContent = `|${basis}⟩  Re ${signed(nearest.re)}  Im ${signed(nearest.im)}\n|aᵢ| ${nearest.abs.toFixed(4)}  p ${prob.toFixed(4)}  arg ${nearest.phase.toFixed(3)} rad (${phaseDeg}°)`;
+    }
   }
 
   syncAmpUrl(){
@@ -3086,6 +3129,7 @@ class QCircuitApp {
     const cv = this.q('#qcAmp');
     if (!cv || !this.psi) return;
     if (this.state.ampProj === '3d') return this.drawAmp3D();
+    this._amp3dHits = []; this.clearAmpProbe();
     const g = cv.getContext('2d');
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     g.setTransform(1, 0, 0, 1, 0, 0);
@@ -3223,7 +3267,7 @@ class QCircuitApp {
     axisLabel('index', { x: 3.25, y: 0, z: 0 }, '#9aa7bd');
     axisLabel('Re', { x: 0, y: 2.45, z: 0 }, '#67e8f9');
     axisLabel('Im', { x: 0, y: 0, z: 2.45 }, '#d946ef');
-    const ampScale = 2.2, dotR = dim > 128 ? 1.8 : (dim > 32 ? 2.2 : 2.8);
+    const ampScale = 2.2, dotR = dim > 128 ? 1.8 : (dim > 32 ? 2.2 : 2.8), hits = [];
     /* 标出 Re/Im 轴的振幅刻度；点坐标仍使用同一 ampScale，避免视觉距离与读数脱节。 */
     g.font = '8px ui-monospace,monospace'; g.textAlign = 'left';
     for (const v of [-1, -0.5, 0.5, 1]){
@@ -3239,6 +3283,8 @@ class QCircuitApp {
       const x = (a.i / Math.max(1, dim - 1) - 0.5) * 6;
       const base = project({ x, y: 0, z: 0 });
       const tip = project({ x, y: a.re * ampScale, z: a.im * ampScale });
+      hits.push({ x: tip.x, y: tip.y, i: a.i, re: a.re, im: a.im, abs: a.abs,
+        phase: a.phase, noisy, radius: Math.max(7, dotR + 4) });
       const hue = ((a.phase / (2 * Math.PI)) % 1 + 1) % 1;
       const hueDeg = Math.round((178 + hue * 360) % 360);
       const color = noisy ? 'rgba(103,232,249,.9)' : 'hsl(' + hueDeg + ',88%,62%)';
@@ -3247,6 +3293,8 @@ class QCircuitApp {
       g.beginPath(); g.moveTo(base.x, base.y); g.lineTo(tip.x, tip.y); g.stroke();
       g.fillStyle = color; g.beginPath(); g.arc(tip.x, tip.y, dotR, 0, 6.2832); g.fill();
     }
+    this._amp3dHits = hits;
+    this.clearAmpProbe();
     this._amp3dInfo = { points: amp.length, fitScale, bounds, noisy, finite };
   }
 
