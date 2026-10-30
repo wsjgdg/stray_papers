@@ -1406,9 +1406,9 @@ function piPathSpiral(cfg = {}){
 /* ============================================================================
  * live.js（R98 P2 新建）— 共享 LiveDriver：一次性 MC 批 → rAF 分帧演出
  *
- * 背景（用户指令「剩下的能不能都做成实时沙盒类？」）：QEC hub 七个模式的统计
+ * 背景（用户指令「剩下的能不能都做成实时沙盒类？」）：QEC hub 八个模式的统计
  * 原先都是「参数变 → 同步跑完整批 → 画」（拖动滑块时整页卡顿几百 ms）。P2 把
- * 物理层累加器（qecStream / shorStream / gnStream / fsStream / cfStream）接到
+ * 物理层累加器（qecStream / shorStream / gnStream / fsStream / cfStream / scStream / scSpaceStream）接到
  * 这个共享播放器上：播放时每帧只跑一段试验，统计量随帧增长（trials 计数、
  * P_L、直方图、结局分解全部在动），20fps 节制；跑满目标批自动停；暂停即冻结
  * （累加器保留，再播接着演）；参数变化重置累加器（播放中换新的**立即演一帧**

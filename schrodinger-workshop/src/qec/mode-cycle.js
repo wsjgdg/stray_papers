@@ -232,7 +232,7 @@ export class CycleApp {
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
       make: () => fsStream(this.state.kind, this.cfg()),
-      onFrame: res => { this.mc = res; this.renderHud(); this.drawFlow(); },
+      onFrame: res => { this.mc = res; if (res.lastTrial) this.trial = res.lastTrial; this.renderHud(); this.drawFlow(); },
       onState: () => this.syncPlayBtn(),
     });
     this.on(this.q('#cyPlay'), 'click', () => this.live.toggle());
@@ -307,6 +307,7 @@ export class CycleApp {
           return;
         }
         this.mc = fsEnsemble(this.state.kind, this.cfg());
+        if (this.mc.lastTrial) this.trial = this.mc.lastTrial;
         this.fo = fsFirstOrder(this.state.kind, this.cfg());
         this.renderHud(); this.drawFlow();
         setTimeout(() => {
@@ -382,7 +383,7 @@ export class CycleApp {
     g.textAlign = 'left';
     g.font = (11.5 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = cyCOL.txt + '.95)';
-    g.fillText('周期时间线：每周期 R 轮 EC（格 = 一轮，✓ 落了修正 / ✗ 无可用读数），周期之间的 ⟦门⟧ 由后面的周期处理', 10 * dpr, 16 * dpr);
+    g.fillText('周期时间线：格子来自最近一条 MC 轨迹（✓ 修正 / ✗ 无可用读数 / · 无修正）；HUD 与曲线仍为累计统计', 10 * dpr, 16 * dpr);
 
     const s = this.state;
     const T = s.cycles, R = s.rounds;
@@ -407,12 +408,18 @@ export class CycleApp {
       for (let r = 0; r < R; r++){
         const bx = cx + 12 * dpr + r * (boxW + 6 * dpr);
         const by = top + 24 * dpr;
-        g.fillStyle = cyCOL.cyan + '.10)';
-        g.strokeStyle = cyCOL.cyan + '.35)';
+        const idx = t * R + r, sample = this.trial;
+        const usable = sample && sample.usableR ? sample.usableR[idx] !== false : true;
+        const fx = sample && sample.fixLog ? sample.fixLog.find(f => f.round === idx) : null;
+        const hasSyn = !!(sample && sample.synRounds && sample.synRounds[idx] && sample.synRounds[idx].some(Boolean));
+        const mark = !usable ? '✗' : fx && fx.fix && fx.fix.length ? '✓' : hasSyn ? '•' : '·';
+        const hue = !usable ? cyCOL.mag : fx && fx.fix && fx.fix.length ? cyCOL.cyan : hasSyn ? cyCOL.amber : cyCOL.wire;
+        g.fillStyle = hue + (sample ? '.18)' : '.10)');
+        g.strokeStyle = hue + (sample ? '.82)' : '.35)');
         g.beginPath(); g.rect(bx, by, boxW, 20 * dpr); g.fill(); g.stroke();
         g.font = (8.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
-        g.fillStyle = cyCOL.dim + '.9)';
-        g.fillText('R' + (r + 1), bx + boxW / 2, by + 13 * dpr);
+        g.fillStyle = sample ? hue + '.98)' : cyCOL.dim + '.9)';
+        g.fillText(sample ? mark : 'R' + (r + 1), bx + boxW / 2, by + 13 * dpr);
       }
       /* 该周期的自检率（样本级统计，逐周期细分留给轨迹行） */
       g.font = (9 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'left';

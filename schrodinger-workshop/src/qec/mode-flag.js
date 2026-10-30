@@ -166,6 +166,7 @@ export class FlagApp {
         <div class="hrow"><span>MC 逻辑错误率</span><span id="hMcPL">—</span></div>
         <div class="hrow"><span>MC 丢弃率</span><span id="hMcDisc">—</span></div>
         <div class="hrow"><span>MC 平均故障数</span><span id="hMcF">—</span></div>
+        <div class="hrow"><span>最近抽样（非精确条）</span><span id="hLast">—</span></div>
         <hr>
         <div class="hrow"><span>语义位点</span><span id="hSem">—</span></div>
         <div class="hrow"><span>最坏位点</span><span id="hWorst">—</span></div>
@@ -216,7 +217,7 @@ export class FlagApp {
         p: this.state.p, spectrum: this.state.spectrum,
         trials: this.state.trials, seed: this.state.seed,
       }),
-      onFrame: res => { res.ms = this.live.lastFrameMs; this.mc = res; this.renderHud(); },
+      onFrame: res => { res.ms = this.live.lastFrameMs; this.mc = res; this.lastTrial = res.lastTrial || null; this.renderHud(); },
       onState: () => this.syncPlayBtn(),
     });
     this.on(this.q('#flPlay'), 'click', () => this.live.toggle());
@@ -293,6 +294,7 @@ export class FlagApp {
       trials: this.state.trials, seed: this.state.seed,
     });
     this.mc.ms = performance.now() - t0;
+    this.lastTrial = this.mc.lastTrial || null;
     this.renderHud();
   }
 
@@ -318,24 +320,30 @@ export class FlagApp {
     if (!d){
       set('hLayout', '计算中…');
       ['hCost', 'hSites', 'hFate1', 'hLogic', 'hFlag', 'hW', 'hPL1', 'hDet1', 'hHarm1', 'hSem', 'hWorst'].forEach(id => set(id, '—'));
-      return;
+    } else {
+      set('hLayout', d.stats.nq + ' 比特 · ' + d.stats.ancillas + ' ancilla');
+      set('hCost', d.stats.gates + ' / ' + d.stats.cnots + ' / ' + d.stats.meas);
+      set('hSites', d.n);
+      set('hFate1', d.perfect + ' / ' + d.gauge + ' / ' + d.outside);
+      set('hLogic', d.logic + '（' + flPct(d.logic, d.n) + '）', d.logic ? 'warn' : null);
+      set('hFlag', d.flagged + '（' + flPct(d.flagged, d.n) + '）');
+      set('hW', d.wMax + ' 个比特');
+      set('hPL1', d.PL1 ? d.PL1.toExponential(2) : '0');
+      set('hDet1', d.det1 ? d.det1.toExponential(2) : '0');
+      set('hHarm1', d.harm1 ? d.harm1.toExponential(2) : '0');
     }
-    set('hLayout', d.stats.nq + ' 比特 · ' + d.stats.ancillas + ' ancilla');
-    set('hCost', d.stats.gates + ' / ' + d.stats.cnots + ' / ' + d.stats.meas);
-    set('hSites', d.n);
-    set('hFate1', d.perfect + ' / ' + d.gauge + ' / ' + d.outside);
-    set('hLogic', d.logic + '（' + flPct(d.logic, d.n) + '）', d.logic ? 'warn' : null);
-    set('hFlag', d.flagged + '（' + flPct(d.flagged, d.n) + '）');
-    set('hW', d.wMax + ' 个比特');
-    set('hPL1', d.PL1 ? d.PL1.toExponential(2) : '0');
-    set('hDet1', d.det1 ? d.det1.toExponential(2) : '0');
-    set('hHarm1', d.harm1 ? d.harm1.toExponential(2) : '0');
     if (mc && mc.kind === s.kind){
       set('hMcPL', (100 * mc.PL).toFixed(1) + '%  (' + mc.logic + '/' + mc.trials + ')');
       set('hMcDisc', (100 * mc.discard).toFixed(1) + '%');
       set('hMcF', flNf(mc.meanFaults, 2));
+      const last = this.lastTrial || mc.lastTrial;
+      if (last){
+        const name = { perfect:'纠回', gauge:'仅规范', outside:'逻辑受损', logic:'静默逻辑', flagged:'检出' }[last.bucket] || '—';
+        const fs = (last.fired || []).slice(0, 2).map(f => f.t.toUpperCase() + '@q' + f.q).join(' ');
+        set('hLast', `#${mc.trials} ${name} · ${fs || '无门故障'}${(last.fired || []).length > 2 ? ' …' : ''}`);
+      } else set('hLast', '—');
     } else {
-      set('hMcPL', '按「跑一次 MC」'); set('hMcDisc', '—'); set('hMcF', '—');
+      set('hMcPL', '按「跑一次 MC」'); set('hMcDisc', '—'); set('hMcF', '—'); set('hLast', '—');
     }
     if (w){
       const sup = [0,1,2,3,4,5,6].filter(q => (w.dataMask & (1 << q))).length;

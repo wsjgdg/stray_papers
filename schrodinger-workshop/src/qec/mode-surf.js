@@ -18,7 +18,8 @@
  *     精确值按 4σ 对齐；d≥5 没有精确解（4²⁵），只能 MC。
  * ========================================================================== */
 import { scBuild, scVerify, scEnsemble, scTrial, scExactPL, scCrossing, scCrossingCI, scLeadingPower, scMinLogical, SC_DISTANCES, SC_NOISES, SC_PS } from '../physics/surfacecode.js';
-import { scSpaceGraph, scSpaceVerify, scSpaceEnsemble, scSpaceTrial, SC_PHEN } from '../physics/surfacecode.js';
+import { scSpaceGraph, scSpaceVerify, scSpaceEnsemble, scSpaceTrial, scStream, scSpaceStream, SC_PHEN } from '../physics/surfacecode.js';
+import { LiveDriver } from './live.js';
 import { mulberry32 } from '../physics/qcircuit.js';
 
 const SF_CSS = `
@@ -100,6 +101,7 @@ export class SurfApp {
          给旋钮反而误导，所以不上面板（README 里写明这条取舍）。 */
       meas: q.get('meas') === 'noisy' ? 'noisy' : 'ideal',
       qR: [0, 0.5, 1].includes(parseFloat(q.get('qr'))) ? parseFloat(q.get('qr')) : 1,
+      live: q.get('live') === '1',
     };
     this.code = scBuild(this.state.d);
     this.trial = null;      /* 最近一次试验快照（码画布用） */
@@ -120,6 +122,7 @@ export class SurfApp {
     this._sweepToken++;                    /* 作废在途分帧扫描 */
     clearTimeout(this._queueTimer);
     this._ro?.disconnect();
+    this.live?.dispose();
     this.live = null;
     for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
     this._listeners.length = 0;
@@ -146,7 +149,8 @@ export class SurfApp {
 
         <div class="grp">实验</div>
         <div class="btns g3">
-          <button id="sfRun">跑一次 MC</button>
+          <button id="sfPlay">▶ 播放</button>
+          <button id="sfRun">跑完 MC</button>
           <button id="sfSnap">换一张码图</button>
           <button id="sfSeed">换种子</button>
         </div>
@@ -164,8 +168,10 @@ export class SurfApp {
         <div class="hrow"><span>结构自检</span><span id="hStruct">—</span></div>
         <div class="hrow"><span>逻辑算符</span><span id="hLogic">—</span></div>
         <hr>
-        <div class="hrow"><span>当前点 P_L</span><span id="hPL" class="big">—</span></div>
-        <div class="hrow"><span>X / Z 帧分解</span><span id="hSplit">—</span></div>
+        <div class="hrow"><span>当前点 P_L（累计）</span><span id="hPL" class="big">—</span></div>
+        <div class="hrow"><span>播放进度</span><span id="hMCProgress">—</span></div>
+        <div class="hrow"><span>最近样本</span><span id="hLast">—</span></div>
+        <div class="hrow"><span>X / Z 帧分解（累计）</span><span id="hSplit">—</span></div>
         <div class="hrow"><span>平均缺陷数（单帧）</span><span id="hDef">—</span></div>
         <div class="hrow"><span>解码器</span><span id="hDec">—</span></div>
         <div class="hrow" id="hSpaceRow"><span>时空匹配图</span><span id="hSpace">—</span></div>
@@ -193,6 +199,20 @@ export class SurfApp {
       <div id="sfHint" class="panel qhint"><b>—</b><span></span></div>
     `);
     this.cv = { code: this.q('#sfCode'), curve: this.q('#sfCurve'), dist: this.q('#sfDist') };
+    this.live = new LiveDriver({
+      make: () => this.phen
+        ? scSpaceStream(this.code, { ...this.phenCfg(), trials: this.state.trials, seed: this.state.seed })
+        : scStream(this.code, { p: this.state.p, noise: this.state.noise, trials: this.state.trials, seed: this.state.seed }),
+      onFrame: res => {
+        res.ms = this.live.lastFrameMs;
+        this.mc = res;
+        if (res.lastTrial) this.trial = res.lastTrial;
+        this.renderHud(); this.drawCode(); this.drawCurve(); this.drawDist();
+      },
+      onState: () => this.syncPlayBtn(),
+      fps: 16,
+      duration: 6000,
+    });
 
     const mk = (host, items, onPick) => {
       for (const it of items){
@@ -219,8 +239,9 @@ export class SurfApp {
     });
     this.on(this.q('#sfTrials'), 'input', e => {
       this.state.trials = parseInt(e.target.value, 10);
-      this.syncPanel();
+      this.syncPanel(); if (this.live && this.live.playing) this.live.sync();
     });
+    this.on(this.q('#sfPlay'), 'click', () => this.live.toggle());
     this.on(this.q('#sfRun'), 'click', () => this.runMc());
     this.on(this.q('#sfSnap'), 'click', () => this.runMc(true));
     this.on(this.q('#sfSeed'), 'click', () => {
@@ -241,6 +262,7 @@ export class SurfApp {
     this.syncPanel();
     this.renderHint();
     this.resize();
+    this.syncPlayBtn();
     this.computeAll();
   }
 
@@ -291,7 +313,10 @@ export class SurfApp {
 
   /* ---------- 计算 ---------- */
   computeAll(){
-    this.runMc();
+    this.verify = scVerify(this.state.d);
+    this.space = this.phen ? scSpaceVerify(this.state.d, Math.max(1, this.state.d - 1)) : null;
+    if (this.state.live && this.live) this.live.start();
+    else this.runMc();
     this.startSweep();
   }
 
@@ -305,29 +330,42 @@ export class SurfApp {
   runMc(newSnap){
     const s = this.state;
     const code = this.code;
+    if (this.live && this.live.playing){
+      this.verify = scVerify(s.d);
+      this.space = this.phen ? scSpaceVerify(s.d, Math.max(1, s.d - 1)) : null;
+      this.live.sync();
+      return;
+    }
     const t0 = performance.now();
     if (this.phen){
       this.mc = scSpaceEnsemble(code, { ...this.phenCfg(), trials: s.trials, seed: s.seed });
       this.mc.ms = performance.now() - t0;
       this.space = scSpaceVerify(s.d, Math.max(1, s.d - 1));
-      const rng = mulberry32(newSnap || !this.trial
-        ? (s.seed * 2654435761) % 2147483647 : (s.seed * 40503 + 17) % 2147483647);
-      this.trial = scSpaceTrial(code, this.phenCfg(), rng);
+      if (newSnap || !this.mc.lastTrial){
+        const rng = mulberry32((s.seed * 2654435761) % 2147483647);
+        this.trial = scSpaceTrial(code, this.phenCfg(), rng);
+      } else this.trial = this.mc.lastTrial;
     } else {
       this.mc = scEnsemble(code, { p: s.p, noise: s.noise, trials: s.trials, seed: s.seed });
       this.mc.ms = performance.now() - t0;
-      /* 码图快照：用「新种子」重抽一次单次试验（与 MC 同口径同 p） */
-      if (newSnap || !this.trial){
+      /* 默认画 MC 的最后一条样本；「换一张码图」才单独重抽。 */
+      if (newSnap || !this.mc.lastTrial){
         const rng = mulberry32((s.seed * 2654435761) % 2147483647);
         this.trial = scTrial(code, { p: s.p, noise: s.noise }, rng);
-      } else {
-        this.trial = scTrial(code, { p: s.p, noise: s.noise }, mulberry32((s.seed * 40503 + 17) % 2147483647));
-      }
+      } else this.trial = this.mc.lastTrial;
       this.space = null;
     }
     this.verify = scVerify(s.d);
     this.renderHud();
     this.drawCode(); this.drawCurve(); this.drawDist();
+  }
+
+  syncPlayBtn(){
+    const b = this.q('#sfPlay');
+    if (!b) return;
+    const on = !!(this.live && this.live.playing);
+    b.textContent = on ? '⏸ 暂停' : '▶ 播放';
+    b.classList.toggle('on', on);
   }
 
   /** 当前口径的扫描网格 */
@@ -418,6 +456,13 @@ export class SurfApp {
     }
     if (mc){
       set('hPL', `${sfFmt(mc.PL)}  (${Math.round(mc.PL * mc.trials)}/${mc.trials})`, 'big');
+      set('hMCProgress', `${mc.trials} / ${s.trials}`);
+      const last = this.trial || mc.lastTrial;
+      if (last){
+        const err = pcOf((last.mx || 0n) | (last.mz || 0n));
+        const outcome = last.fail ? (last.xfail && last.zfail ? 'X/Z 逻辑失败' : last.xfail ? 'X 帧逻辑失败' : 'Z 帧逻辑失败') : '纠回';
+        set('hLast', `#${mc.trials} ${outcome} · 错误 ${err} · 缺陷 ${last.kx + last.kz}`);
+      } else set('hLast', '—');
       set('hSplit', `${sfFmt(mc.PLx)} / ${sfFmt(mc.PLz)}`);
       set('hDef', `${sfNF(mc.meanDefects, 2)} 个${this.phen ? '（每帧·时空）' : ''}`);
       const decName = this.phen ? '时空 MWPM' : 'MWPM·DP';
@@ -431,6 +476,7 @@ export class SurfApp {
       set('hSpace', `${this.space.layers} 层 × ${X.nS + 2} 节点 · ${X.space + X.bnd + X.time} 边 · 自检${this.space.ok ? '✓' : '✗'}`,
         this.space.ok ? 'ok' : 'warn');
     } else set('hSpace', '—');
+    if (!mc){ set('hMCProgress', `0 / ${s.trials}`); set('hLast', '—'); }
     if (this.cross){
       /* σ 大到位数无意义时（N 小 / 曲线贴得太近）不给三位小数：退回两位并标「≈」。
          阈值：σ_p > 0.03 ⟹ 交叉点只知道个量级（N=400 时 c57 常落在这档）。 */

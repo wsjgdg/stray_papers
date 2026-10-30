@@ -732,7 +732,7 @@ export function shorStream(cfg = {}){
   const c = { ...SHOR_DEFAULTS, ...cfg };
   const rng = mulberry32(c.seed);
   const gate = c.noise === 'gate';
-  let n = 0, nL = 0, nF = 0, synMiss = 0;
+  let n = 0, nL = 0, nF = 0, synMiss = 0, lastTrial = null;
   const byWeight = new Array(10).fill(0);
   const byWeightL = new Array(10).fill(0);
   const byCoset = [0, 0, 0, 0, 0];   /* [∈S, X_L·S, Z_L·S, Y_L·S, ∉N(S)]；shorCoset 的 −1 归入越界类 */
@@ -743,6 +743,7 @@ export function shorStream(cfg = {}){
     byWeight[wi]++;
     if (gate){ nF += r.weight; synMiss += r.synMiss || 0; }
     if (r.logicalError){ nL++; byWeightL[wi]++; byCoset[r.coset === -1 ? 4 : r.coset]++; }
+    lastTrial = r;
     n++;
   }
   return {
@@ -753,7 +754,7 @@ export function shorStream(cfg = {}){
       const nn = Math.max(1, n);
       const ex = shorExactPL(c.p);
       const out = {
-        p: c.p, trials: n, PL: nL / nn,
+        p: c.p, trials: n, PL: nL / nn, lastTrial,
         PLexact: gate ? null : ex.PL, Pun: c.p,
         byWeight, byWeightL, byCoset,
         /* 对照：重复码（同信道）与未编码 */

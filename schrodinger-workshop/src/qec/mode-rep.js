@@ -472,7 +472,7 @@ export class QecApp {
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
       make: () => qecStream(this.cfg()),
-      onFrame: res => { this.ens = res; this.renderHud(); this.drawAll(); },
+      onFrame: res => { this.ens = res; if (res.lastTrial) this.trial = res.lastTrial; this.renderHud(); this.drawAll(); },
       onState: () => this.syncPlayBtn(),
     });
     this.on(this.q('#qePlay'), 'click', () => { if (this.manualMode) this.setManualMode(false); this.live.toggle(); });
@@ -531,10 +531,13 @@ export class QecApp {
   }
 
   recompute(){
-    /* R98 P2：播放中 → 换累加器接着演（统计从零开始长）；否则同步全批（旧行为） */
-    if (this.live && this.live.playing){ this.live.sync(); this.ens = null; }
-    else this.ens = qecEnsemble(this.cfg());
-    this.rollOnce();
+    /* 播放中由同一 shot 更新统计与画布；不要在 sync() 后清空结果或另抽一次。 */
+    if (this.live && this.live.playing) this.live.sync();
+    else {
+      this.ens = qecEnsemble(this.cfg());
+      if (!this.manualMode && this.ens.lastTrial) this.trial = this.ens.lastTrial;
+      else this.rollOnce();
+    }
     /* R109：rd 进曲线缓存键——线路结构（ancilla 数/测量数/门机会）随它变。
        R110：n 同样进键（数据比特数/稳定子数随它变）；trials 位用 effTrials
        （重配置下已封顶——拖动样本数滑块不触发重扫，只重跑全批）。 */

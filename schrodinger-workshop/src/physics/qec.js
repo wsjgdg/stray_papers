@@ -846,7 +846,7 @@ export function qecExecPhys(circ, opts = {}){
   const voted = synByStab.map(qecMajority);
   const trueMj = synTrueByStab.map(qecMajority);
   return {
-    syn, synVoted: voted, synTrue, flips, fixQ, fixQs, pre, frAtFix, frAtEnd,
+    syn, synVoted: voted, synTrue, synFrame, flips, fixQ, fixQs, pre, frAtFix, frAtEnd,
     bitErr: voted.map((v, i) => v ^ trueMj[i]),
     cosetFix: frameOK ? qecFrameCoset(circ.code, frAtFix, n) : null,
     cosetDec: dec.coset, clsDec: dec.cls,
@@ -956,6 +956,7 @@ export function qecStream(cfg = {}){
   const ref = qecRef(circ);
   const rng = mulberry32(c.seed);
   let nTrials = 0;
+  let lastTrial = null;
   let nL = 0, nLdec = 0;
   /* R110：直方图宽度随码长走——byCount 0..n 个数据错、synCount 2^{n−1} 种
      表决后综合、byBitErr 0..n−1 个稳定子表决错位、byFlip 0..(n−1)·rd 个
@@ -973,6 +974,27 @@ export function qecStream(cfg = {}){
   let flipSum = 0, bitErrSum = 0, jumpSum = 0, frameMissSum = 0, noFrame = 0;
   const faultHist = {};
   let faultSum = 0, synMiss = 0, randomMeas = 0, disagree = 0, disagreeBlind = 0, blind = 0;
+  function shotTrace(r, phys){
+    const out = [
+      { step: 'prepare', gate: 'Ry(θ)Rz(φ)' },
+      { step: 'encode', gate: 'CNOT×' + (n - 1) },
+    ];
+    if (c.code === 'phaseflip') out.push({ step: 'basis', gate: 'H×' + n });
+    if (phys){
+      out.push({ step: 'noise', errors: r.errors.slice() });
+      out.push({ step: 'gatenoise', faults: r.fired.slice() });
+      out.push({ step: 'syndrome', syn: r.syn.slice(), synVoted: r.synVoted.slice(),
+        synTrue: r.synTrue.slice(), flips: r.flips.slice(), bitErr: r.bitErr.slice() });
+    } else {
+      if (c.noise === 'gate') out.push({ step: 'gatenoise', faults: r.fired.slice() });
+      else out.push({ step: 'noise', errors: r.errors.slice() });
+      out.push({ step: 'syndrome', syn: r.syn.slice(), synVoted: r.synVoted.slice(), synFrame: (r.synFrame || []).slice() });
+    }
+    out.push({ step: 'correct', q: r.fixQ, qs: r.fixQs.slice() });
+    if (c.code === 'phaseflip') out.push({ step: 'basis', gate: 'H×' + n });
+    out.push({ step: 'decode', gate: 'CNOT×' + (n - 1) });
+    return out;
+  }
   function one(){
     if (phys){
       const r = qecExecPhys(circ, { rng, cfg: c });
@@ -995,6 +1017,13 @@ export function qecStream(cfg = {}){
       bitErrSum += ne;
       jumpSum += r.fired.length;
       synCount[r.synVoted.reduce((a, b) => a * 2 + b, 0)]++;
+      lastTrial = {
+        errors: r.errors.slice(), faults: r.fired.slice(), syn: r.syn.slice(), synVoted: r.synVoted.slice(),
+        synTrue: r.synTrue.slice(), synFrame: r.synFrame.slice(), flips: r.flips.slice(), bitErr: r.bitErr.slice(),
+        fixQ: r.fixQ, fixQs: r.fixQs.slice(), F: r.F, logicalError: r.logicalError, ok: !r.logicalError,
+        noise: 'phys', rd, n, cls: cl.cls, coset: cl.coset, clsDec: r.clsDec, cosetDec: r.cosetDec,
+        trace: shotTrace(r, true), frameOK: r.frameOK, p0: r.p0, p1: r.p1, state: r.state,
+      };
       nTrials++;
       return;
     }
@@ -1031,6 +1060,13 @@ export function qecStream(cfg = {}){
       faultSum += nf;
     }
     synCount[r.synVoted.reduce((a, b) => a * 2 + b, 0)]++;
+    lastTrial = {
+      errors: r.errors.slice(), faults: r.fired.slice(), syn: r.syn.slice(), synVoted: r.synVoted.slice(),
+      synFrame: r.synFrame.slice(), fixQ: r.fixQ, fixQs: r.fixQs.slice(), F: r.F,
+      logicalError: r.logicalError, ok: !r.logicalError, noise: c.noise, spectrum: c.spectrum,
+      noisyPhase: c.noisyPhase, rd, n, cls: cl.cls, coset: cl.coset, clsDec: r.clsDec, cosetDec: r.cosetDec,
+      trace: shotTrace(r, false), p0: r.p0, p1: r.p1, state: r.state,
+    };
     nTrials++;
   }
   return {
@@ -1040,7 +1076,7 @@ export function qecStream(cfg = {}){
     result(){
       const nn = Math.max(1, nTrials);   /* 防御 0 次 → 除 0；正常路径 n≥1 */
       return {
-        p: c.p, code: c.code, trials: nTrials, PL: nL / nn, PLdec: nLdec / nn,
+        p: c.p, code: c.code, trials: nTrials, PL: nL / nn, PLdec: nLdec / nn, lastTrial,
         /* PLexact：i.i.d. 模式 = 解析 Σ_{w>t}C(n,w)p^w(1−p)^{n−w}；gate / phys
            模式 = DP-over-frames 精确值（phys 且 γ/λ>0 时返回 NaN——非 Pauli
            通道无精确解，诚实标注） */

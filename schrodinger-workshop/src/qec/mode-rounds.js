@@ -213,7 +213,7 @@ export class RoundsApp {
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
       make: () => fsStream(this.state.kind, this.cfg()),
-      onFrame: res => { this.mc = res; this.renderHud(); },
+      onFrame: res => { this.mc = res; if (res.lastTrial) this.trial = res.lastTrial; this.renderHud(); this.drawTime(); },
       onState: () => this.syncPlayBtn(),
     });
     this.on(this.q('#rdPlay'), 'click', () => this.live.toggle());
@@ -286,7 +286,8 @@ export class RoundsApp {
       return;
     }
     this.mc = fsEnsemble(s.kind, this.cfg());
-    if (!this.trial) this.once();
+    if (this.mc.lastTrial) this.trial = this.mc.lastTrial;
+    else if (!this.trial) this.once();
     this.renderHud(); this.drawAll();
   }
 

@@ -285,7 +285,7 @@ export class GateNoiseApp {
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
       make: () => gnStream(this.cfg()),
-      onFrame: res => { this.mc = res; this.renderHud(); this.renderSpec(); this.drawAll(); },
+      onFrame: res => { this.mc = res; if (res.last) this.trial = res.last; this.renderHud(); this.renderSpec(); this.drawAll(); },
       onState: () => this.syncPlayBtn(),
     });
     this.on(this.q('#gnPlay'), 'click', () => this.live.toggle());
@@ -318,10 +318,12 @@ export class GateNoiseApp {
 
   recompute(){
     this.sweep = gnSweep(this.cfg());
-    /* R98 P2：播放中 → 换累加器接着演；否则同步全批（旧行为） */
-    if (this.live && this.live.playing){ this.live.sync(); this.mc = null; }
-    else this.mc = gnRun(this.cfg());
-    this.rollOnce();
+    /* 播放中由同一 shot 更新线路图与统计；同步全批也显示批次内最后一条 shot。 */
+    if (this.live && this.live.playing) this.live.sync();
+    else {
+      this.mc = gnRun(this.cfg());
+      if (this.mc.last) this.trial = this.mc.last;
+    }
     this.renderHud();
     this.renderSpec();
     this.drawAll();

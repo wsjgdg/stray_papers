@@ -883,32 +883,25 @@ P_L = P(≥2 个错) = 3p²(1−p) + p³ = 3p² − 2p³
 每个门上（真实容错还要求综合线路本身容错：flag qubit / 猫态，见 flag 模式）；⑤ 页面统计用蒙特卡洛
 （默认 3000 次），P_L 的误差 ∝ 1/√N（p=0.1 时约 0.3%）。
 
-### 实时沙盒：分帧 MC 演出（`qec.html` 前七模式共通；表面码走自己的分帧扫描）
+### QEC hub：八个模式的 MC 样本回放
 
-七模式（重复码 / Shor / 门噪声 / 冗余验证 / 多轮 / 循环 / 码族）的统计不再「点一次等全批」，
-而是**随帧增长**的连续演出——就像跑实验时盯着计数器：
+纠错 hub 的八个模式（重复码、Shor、门噪声、Flag 提取、多轮、循环、码族、旋转表面码）都可用「▶ 播放」逐批推进 MC；样本计数与累计统计同步增长，跑满目标 N 自动暂停。旋转表面码在单帧与带噪测量两种口径下都支持播放，当前错误/缺陷/修正链直接驱动码图。
 
-| 操作 | 行为 |
+| 模式 | 当前样本反馈 |
 |---|---|
-| 面板「▶ 播放」 | 每帧（20 次/秒）追加一批样本，HUD/曲线/结局分布同步刷新；演满 N 次自动停 |
-| 「⏸ 暂停」 | 冻结当前样本数；再点播放从同一累加器继续；演满后再播才从零重演 |
-| 播放中改参数（p / N / 码族 / 噪声谱…） | 作废旧累加器、按新参数起新的继续演；旧样本不计入 |
-| 暂停时改参数 | 走一次性全批（与旧行为一致，结果立即就位） |
-| `?live=1` | 直达即播（可与 `trials` / `seed` / `p` 等参数组合，如 `qec.html?mode=family&live=1&trials=4000`） |
-| 切换模式页签 | 旧模式播放环立即停止（rAF 不泄漏），新模式默认暂停 |
+| 重复码 / Shor / 门噪声 | 电路上的错误与 HUD 随最新 shot 更新 |
+| Flag 提取 / 码族 | HUD 标明最新样本结局；MC 率仍为累计估计 |
+| 多轮 / 循环 | 最近样本的综合征、读数可用性与修正记录更新轨迹视图 |
+| 表面码 | 最近样本的错误、缺陷及修正驱动画布；单帧与时空轨迹均可回放 |
 
-**实现**：物理层为 5 个统计模块提供流式累加器——`qecStream / shorStream / gnStream / fsStream / cfStream`，
-统一契约 `{ total, n, step(count), result() }`（`step` 分帧推进、`result()` 出当前统计，`trials` 字段随帧增长）；
-UI 侧共享 `src/qec/live.js` 的 `LiveDriver`：rAF + 定时器双通道调度并按 20 次/秒节制；
-每帧按真实间隔补样本（`want = ceil(total·dt/3000ms)`，夹紧到剩余量），一批约 3 秒演满且绝不越过总数。
-后台标签页或无 compositor 帧的无头环境由定时器兜底，不会「播放中却冻结」。旧的 `qecEnsemble / shorEnsemble /
-gnRun / fsEnsemble / cfEnsemble` 保留为薄封装（`step(total)` 后 `result()`），页面其他调用点零改动。
+播放中 HUD 的概率、错误数、直方图与扫描/曲线读数始终是**截至当前样本的累计统计**，当前 shot 只是该批的最后一条试验，不另行抽样，也不重复计入统计。Flag 的单故障传播/结局图、码族精确分析和表面码结构/精确枚举结果属于静态分析；播放不会把它们伪装成随 MC shot 变化的数据。
 
-**数值一致性**：流式与一次性走同一条 rng 消耗序列，同一 seed 下「播满一轮」与「同步全批」结果**逐位相同**
-（`JSON.stringify` 深比较，rep 与 shor 双码复核）——播放只是把同一批计算拆到多帧，不改变任何统计量。
+- 「▶ 播放」按帧追加样本；暂停后可从同一累加器继续，跑满后再次播放会重演新一批。
+- 播放中修改噪声、参数或 N 会以新配置重置累加器；暂停时点击「跑完 MC」仍可一次性得到完整批次。
+- `?live=1` 可让任一 hub 模式直达即播，并可与 `mode`、`trials`、`seed`、`p` 等参数组合。
+- 切换模式会停止旧播放器；单个样本的绘制与 MC 累计率共用同一次 shot 结果，因此不改变 RNG 消耗顺序或统计口径。
 
-**范围**：QEC 前七模式（表面码模式用分帧扫描而非共享播放器——它的「帧」是整轮 MC，
-播放器语义对不上）、`noise.html` 时间演化与 `paths.html` 相位累积均已接入共享播放器；`qcircuit.html` 使用自身的逐门播放，并提供门序列编辑器。
+实现上，`src/qec/live.js` 的 `LiveDriver` 统一调度 `qecStream / shorStream / gnStream / fsStream / cfStream / scStream / scSpaceStream`。流式累加器既返回累计统计，也保留最近一次 shot；表面码分别为码容量和 phenomenological 时空匹配提供流式入口。播放只是将与同步全批相同的样本拆到多帧执行，`trials` 精确到目标 N。
 
 ### Shor 9 比特码：3×3 级联（新页 `shor.html`）
 
@@ -3924,7 +3917,7 @@ schrodinger-workshop/
     ├── paths.html                构建产物：路径页单文件版（138.6 KB，file:// 直开）
     ├── qcircuit.html             构建产物：线路页单文件版（176.4 KB，file:// 直开）
     ├── noise.html                构建产物：噪声页单文件版（130.5 KB，file:// 直开）
-    ├── qec.html                  构建产物：纠错页单文件版（848.5 KB，file:// 直开）
+    ├── qec.html                  构建产物：纠错页单文件版（863.1 KB，file:// 直开）
     ├── shor.html                 构建产物：Shor 码跳转存根（→ qec.html?mode=shor，<1 KB）
     ├── gatenoise.html            构建产物：门噪声跳转存根（→ qec.html?mode=gate，<1 KB）
     ├── flag.html                 构建产物：综合提取容错跳转存根（→ qec.html?mode=flag，<1 KB）
@@ -3932,7 +3925,7 @@ schrodinger-workshop/
     ├── cycle.html                构建产物：循环 EC 跳转存根（→ qec.html?mode=cycle，<1 KB）
     ├── family.html               构建产物：码族跳转存根（→ qec.html?mode=family，<1 KB）
     ├── surface.html              构建产物：表面码跳转存根（→ qec.html?mode=surf，0.7 KB）
-    └── qec-sweep-worker.js       构建产物：扫描 Worker（216.4 KB，6 模块；dist 走 http 时并行，
+    └── qec-sweep-worker.js       构建产物：扫描 Worker（219.3 KB，6 模块；dist 走 http 时并行，
                                   file:// 下浏览器禁 Worker ⟹ 页面自动回退主线程）
 ```
 

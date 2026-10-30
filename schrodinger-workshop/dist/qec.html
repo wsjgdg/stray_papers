@@ -3889,7 +3889,7 @@ function qecExecPhys(circ, opts = {}){
   const voted = synByStab.map(qecMajority);
   const trueMj = synTrueByStab.map(qecMajority);
   return {
-    syn, synVoted: voted, synTrue, flips, fixQ, fixQs, pre, frAtFix, frAtEnd,
+    syn, synVoted: voted, synTrue, synFrame, flips, fixQ, fixQs, pre, frAtFix, frAtEnd,
     bitErr: voted.map((v, i) => v ^ trueMj[i]),
     cosetFix: frameOK ? qecFrameCoset(circ.code, frAtFix, n) : null,
     cosetDec: dec.coset, clsDec: dec.cls,
@@ -3999,6 +3999,7 @@ function qecStream(cfg = {}){
   const ref = qecRef(circ);
   const rng = mulberry32(c.seed);
   let nTrials = 0;
+  let lastTrial = null;
   let nL = 0, nLdec = 0;
   /* R110：直方图宽度随码长走——byCount 0..n 个数据错、synCount 2^{n−1} 种
      表决后综合、byBitErr 0..n−1 个稳定子表决错位、byFlip 0..(n−1)·rd 个
@@ -4016,6 +4017,27 @@ function qecStream(cfg = {}){
   let flipSum = 0, bitErrSum = 0, jumpSum = 0, frameMissSum = 0, noFrame = 0;
   const faultHist = {};
   let faultSum = 0, synMiss = 0, randomMeas = 0, disagree = 0, disagreeBlind = 0, blind = 0;
+  function shotTrace(r, phys){
+    const out = [
+      { step: 'prepare', gate: 'Ry(θ)Rz(φ)' },
+      { step: 'encode', gate: 'CNOT×' + (n - 1) },
+    ];
+    if (c.code === 'phaseflip') out.push({ step: 'basis', gate: 'H×' + n });
+    if (phys){
+      out.push({ step: 'noise', errors: r.errors.slice() });
+      out.push({ step: 'gatenoise', faults: r.fired.slice() });
+      out.push({ step: 'syndrome', syn: r.syn.slice(), synVoted: r.synVoted.slice(),
+        synTrue: r.synTrue.slice(), flips: r.flips.slice(), bitErr: r.bitErr.slice() });
+    } else {
+      if (c.noise === 'gate') out.push({ step: 'gatenoise', faults: r.fired.slice() });
+      else out.push({ step: 'noise', errors: r.errors.slice() });
+      out.push({ step: 'syndrome', syn: r.syn.slice(), synVoted: r.synVoted.slice(), synFrame: (r.synFrame || []).slice() });
+    }
+    out.push({ step: 'correct', q: r.fixQ, qs: r.fixQs.slice() });
+    if (c.code === 'phaseflip') out.push({ step: 'basis', gate: 'H×' + n });
+    out.push({ step: 'decode', gate: 'CNOT×' + (n - 1) });
+    return out;
+  }
   function one(){
     if (phys){
       const r = qecExecPhys(circ, { rng, cfg: c });
@@ -4038,6 +4060,13 @@ function qecStream(cfg = {}){
       bitErrSum += ne;
       jumpSum += r.fired.length;
       synCount[r.synVoted.reduce((a, b) => a * 2 + b, 0)]++;
+      lastTrial = {
+        errors: r.errors.slice(), faults: r.fired.slice(), syn: r.syn.slice(), synVoted: r.synVoted.slice(),
+        synTrue: r.synTrue.slice(), synFrame: r.synFrame.slice(), flips: r.flips.slice(), bitErr: r.bitErr.slice(),
+        fixQ: r.fixQ, fixQs: r.fixQs.slice(), F: r.F, logicalError: r.logicalError, ok: !r.logicalError,
+        noise: 'phys', rd, n, cls: cl.cls, coset: cl.coset, clsDec: r.clsDec, cosetDec: r.cosetDec,
+        trace: shotTrace(r, true), frameOK: r.frameOK, p0: r.p0, p1: r.p1, state: r.state,
+      };
       nTrials++;
       return;
     }
@@ -4074,6 +4103,13 @@ function qecStream(cfg = {}){
       faultSum += nf;
     }
     synCount[r.synVoted.reduce((a, b) => a * 2 + b, 0)]++;
+    lastTrial = {
+      errors: r.errors.slice(), faults: r.fired.slice(), syn: r.syn.slice(), synVoted: r.synVoted.slice(),
+      synFrame: r.synFrame.slice(), fixQ: r.fixQ, fixQs: r.fixQs.slice(), F: r.F,
+      logicalError: r.logicalError, ok: !r.logicalError, noise: c.noise, spectrum: c.spectrum,
+      noisyPhase: c.noisyPhase, rd, n, cls: cl.cls, coset: cl.coset, clsDec: r.clsDec, cosetDec: r.cosetDec,
+      trace: shotTrace(r, false), p0: r.p0, p1: r.p1, state: r.state,
+    };
     nTrials++;
   }
   return {
@@ -4083,7 +4119,7 @@ function qecStream(cfg = {}){
     result(){
       const nn = Math.max(1, nTrials);   /* 防御 0 次 → 除 0；正常路径 n≥1 */
       return {
-        p: c.p, code: c.code, trials: nTrials, PL: nL / nn, PLdec: nLdec / nn,
+        p: c.p, code: c.code, trials: nTrials, PL: nL / nn, PLdec: nLdec / nn, lastTrial,
         /* PLexact：i.i.d. 模式 = 解析 Σ_{w>t}C(n,w)p^w(1−p)^{n−w}；gate / phys
            模式 = DP-over-frames 精确值（phys 且 γ/λ>0 时返回 NaN——非 Pauli
            通道无精确解，诚实标注） */
@@ -5156,9 +5192,9 @@ function mergeShort(q){
 /* ============================================================================
  * live.js（R98 P2 新建）— 共享 LiveDriver：一次性 MC 批 → rAF 分帧演出
  *
- * 背景（用户指令「剩下的能不能都做成实时沙盒类？」）：QEC hub 七个模式的统计
+ * 背景（用户指令「剩下的能不能都做成实时沙盒类？」）：QEC hub 八个模式的统计
  * 原先都是「参数变 → 同步跑完整批 → 画」（拖动滑块时整页卡顿几百 ms）。P2 把
- * 物理层累加器（qecStream / shorStream / gnStream / fsStream / cfStream）接到
+ * 物理层累加器（qecStream / shorStream / gnStream / fsStream / cfStream / scStream / scSpaceStream）接到
  * 这个共享播放器上：播放时每帧只跑一段试验，统计量随帧增长（trials 计数、
  * P_L、直方图、结局分解全部在动），20fps 节制；跑满目标批自动停；暂停即冻结
  * （累加器保留，再播接着演）；参数变化重置累加器（播放中换新的**立即演一帧**
@@ -5771,7 +5807,7 @@ class QecApp {
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
       make: () => qecStream(this.cfg()),
-      onFrame: res => { this.ens = res; this.renderHud(); this.drawAll(); },
+      onFrame: res => { this.ens = res; if (res.lastTrial) this.trial = res.lastTrial; this.renderHud(); this.drawAll(); },
       onState: () => this.syncPlayBtn(),
     });
     this.on(this.q('#qePlay'), 'click', () => { if (this.manualMode) this.setManualMode(false); this.live.toggle(); });
@@ -5830,10 +5866,13 @@ class QecApp {
   }
 
   recompute(){
-    /* R98 P2：播放中 → 换累加器接着演（统计从零开始长）；否则同步全批（旧行为） */
-    if (this.live && this.live.playing){ this.live.sync(); this.ens = null; }
-    else this.ens = qecEnsemble(this.cfg());
-    this.rollOnce();
+    /* 播放中由同一 shot 更新统计与画布；不要在 sync() 后清空结果或另抽一次。 */
+    if (this.live && this.live.playing) this.live.sync();
+    else {
+      this.ens = qecEnsemble(this.cfg());
+      if (!this.manualMode && this.ens.lastTrial) this.trial = this.ens.lastTrial;
+      else this.rollOnce();
+    }
     /* R109：rd 进曲线缓存键——线路结构（ancilla 数/测量数/门机会）随它变。
        R110：n 同样进键（数据比特数/稳定子数随它变）；trials 位用 effTrials
        （重配置下已封顶——拖动样本数滑块不触发重扫，只重跑全批）。 */
@@ -8673,7 +8712,7 @@ function shorStream(cfg = {}){
   const c = { ...SHOR_DEFAULTS, ...cfg };
   const rng = mulberry32(c.seed);
   const gate = c.noise === 'gate';
-  let n = 0, nL = 0, nF = 0, synMiss = 0;
+  let n = 0, nL = 0, nF = 0, synMiss = 0, lastTrial = null;
   const byWeight = new Array(10).fill(0);
   const byWeightL = new Array(10).fill(0);
   const byCoset = [0, 0, 0, 0, 0];   /* [∈S, X_L·S, Z_L·S, Y_L·S, ∉N(S)]；shorCoset 的 −1 归入越界类 */
@@ -8684,6 +8723,7 @@ function shorStream(cfg = {}){
     byWeight[wi]++;
     if (gate){ nF += r.weight; synMiss += r.synMiss || 0; }
     if (r.logicalError){ nL++; byWeightL[wi]++; byCoset[r.coset === -1 ? 4 : r.coset]++; }
+    lastTrial = r;
     n++;
   }
   return {
@@ -8694,7 +8734,7 @@ function shorStream(cfg = {}){
       const nn = Math.max(1, n);
       const ex = shorExactPL(c.p);
       const out = {
-        p: c.p, trials: n, PL: nL / nn,
+        p: c.p, trials: n, PL: nL / nn, lastTrial,
         PLexact: gate ? null : ex.PL, Pun: c.p,
         byWeight, byWeightL, byCoset,
         /* 对照：重复码（同信道）与未编码 */
@@ -9066,7 +9106,7 @@ class ShorApp {
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
       make: () => shorStream(this.cfg()),
-      onFrame: res => { this.ens = res; this.renderHud(); this.drawAll(); },
+      onFrame: res => { this.ens = res; if (res.lastTrial) this.trial = res.lastTrial; this.renderHud(); this.drawAll(); },
       onState: () => this.syncPlayBtn(),
     });
     this.on(this.q('#shPlay'), 'click', () => this.live.toggle());
@@ -9108,10 +9148,9 @@ class ShorApp {
       this.sweep = shorSweep({ ...this.cfg(), sweepTrials: 400 });
       this._curveKey = key;
     }
-    /* R98 P2：播放中 → 换累加器接着演；否则同步全批（旧行为） */
-    if (this.live && this.live.playing){ this.live.sync(); this.ens = null; }
-    else this.ens = shorEnsemble(this.cfg());
-    this.rollOnce();
+    /* 播放中由同一 shot 更新统计与线路图；同步全批时也复用最后一条样本。 */
+    if (this.live && this.live.playing) this.live.sync();
+    else { this.ens = shorEnsemble(this.cfg()); if (this.ens.lastTrial) this.trial = this.ens.lastTrial; }
     this.renderHud();
     this.drawAll();
   }
@@ -10107,7 +10146,7 @@ class GateNoiseApp {
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
       make: () => gnStream(this.cfg()),
-      onFrame: res => { this.mc = res; this.renderHud(); this.renderSpec(); this.drawAll(); },
+      onFrame: res => { this.mc = res; if (res.last) this.trial = res.last; this.renderHud(); this.renderSpec(); this.drawAll(); },
       onState: () => this.syncPlayBtn(),
     });
     this.on(this.q('#gnPlay'), 'click', () => this.live.toggle());
@@ -10140,10 +10179,12 @@ class GateNoiseApp {
 
   recompute(){
     this.sweep = gnSweep(this.cfg());
-    /* R98 P2：播放中 → 换累加器接着演；否则同步全批（旧行为） */
-    if (this.live && this.live.playing){ this.live.sync(); this.mc = null; }
-    else this.mc = gnRun(this.cfg());
-    this.rollOnce();
+    /* 播放中由同一 shot 更新线路图与统计；同步全批也显示批次内最后一条 shot。 */
+    if (this.live && this.live.playing) this.live.sync();
+    else {
+      this.mc = gnRun(this.cfg());
+      if (this.mc.last) this.trial = this.mc.last;
+    }
     this.renderHud();
     this.renderSpec();
     this.drawAll();
@@ -11402,6 +11443,7 @@ function fsStream(kind = 'std', cfg = {}){
   const rng = mulberry32(c.seed);
   const acc = { perfect: 0, outside: 0, logic: 0, flagged: 0, gauge: 0, mixed: 0 };
   let n = 0, wSum = 0, flips = 0, random = 0, faultSum = 0, unsureN = 0, usedSum = 0, noGoodN = 0, retrySum = 0, skipSum = 0;
+  let lastTrial = null;
   const wHist = {};
   function one(){
     const r = fsExec(circ, { rng, p: c.p, spectrum: c.spectrum, noisyPhase: c.noisyPhase,
@@ -11410,6 +11452,7 @@ function fsStream(kind = 'std', cfg = {}){
     const cos = r.cosetFinal;
     const bucket = r.flagged ? 'flagged'
       : (cos === 0 ? 'perfect' : cos === -1 ? (r.F > 1 - 1e-9 ? 'gauge' : 'outside') : 'logic');
+    lastTrial = { ...r, ...cl, bucket };
     acc[bucket]++;
     if (!r.flagged && bucket !== 'perfect'){ wHist[r.wRes] = (wHist[r.wRes] || 0) + 1; wSum += r.wRes; }
     flips += r.diag.frameFlip; random += r.diag.random;
@@ -11426,7 +11469,7 @@ function fsStream(kind = 'std', cfg = {}){
     result(){
       const nn = Math.max(1, n);
       return {
-        kind: c.kind, p: c.p, spectrum: c.spectrum, trials: n, ...acc,
+        kind: c.kind, p: c.p, spectrum: c.spectrum, trials: n, ...acc, lastTrial,
         PL: acc.logic / nn,
         harmful: (acc.logic + acc.outside) / nn,
         /* 条件于「未被判不可信」的样本：cat/dup 的 flag 率高，只看 PL 会把「信息少一轮」
@@ -11819,6 +11862,7 @@ class FlagApp {
         <div class="hrow"><span>MC 逻辑错误率</span><span id="hMcPL">—</span></div>
         <div class="hrow"><span>MC 丢弃率</span><span id="hMcDisc">—</span></div>
         <div class="hrow"><span>MC 平均故障数</span><span id="hMcF">—</span></div>
+        <div class="hrow"><span>最近抽样（非精确条）</span><span id="hLast">—</span></div>
         <hr>
         <div class="hrow"><span>语义位点</span><span id="hSem">—</span></div>
         <div class="hrow"><span>最坏位点</span><span id="hWorst">—</span></div>
@@ -11869,7 +11913,7 @@ class FlagApp {
         p: this.state.p, spectrum: this.state.spectrum,
         trials: this.state.trials, seed: this.state.seed,
       }),
-      onFrame: res => { res.ms = this.live.lastFrameMs; this.mc = res; this.renderHud(); },
+      onFrame: res => { res.ms = this.live.lastFrameMs; this.mc = res; this.lastTrial = res.lastTrial || null; this.renderHud(); },
       onState: () => this.syncPlayBtn(),
     });
     this.on(this.q('#flPlay'), 'click', () => this.live.toggle());
@@ -11946,6 +11990,7 @@ class FlagApp {
       trials: this.state.trials, seed: this.state.seed,
     });
     this.mc.ms = performance.now() - t0;
+    this.lastTrial = this.mc.lastTrial || null;
     this.renderHud();
   }
 
@@ -11971,24 +12016,30 @@ class FlagApp {
     if (!d){
       set('hLayout', '计算中…');
       ['hCost', 'hSites', 'hFate1', 'hLogic', 'hFlag', 'hW', 'hPL1', 'hDet1', 'hHarm1', 'hSem', 'hWorst'].forEach(id => set(id, '—'));
-      return;
+    } else {
+      set('hLayout', d.stats.nq + ' 比特 · ' + d.stats.ancillas + ' ancilla');
+      set('hCost', d.stats.gates + ' / ' + d.stats.cnots + ' / ' + d.stats.meas);
+      set('hSites', d.n);
+      set('hFate1', d.perfect + ' / ' + d.gauge + ' / ' + d.outside);
+      set('hLogic', d.logic + '（' + flPct(d.logic, d.n) + '）', d.logic ? 'warn' : null);
+      set('hFlag', d.flagged + '（' + flPct(d.flagged, d.n) + '）');
+      set('hW', d.wMax + ' 个比特');
+      set('hPL1', d.PL1 ? d.PL1.toExponential(2) : '0');
+      set('hDet1', d.det1 ? d.det1.toExponential(2) : '0');
+      set('hHarm1', d.harm1 ? d.harm1.toExponential(2) : '0');
     }
-    set('hLayout', d.stats.nq + ' 比特 · ' + d.stats.ancillas + ' ancilla');
-    set('hCost', d.stats.gates + ' / ' + d.stats.cnots + ' / ' + d.stats.meas);
-    set('hSites', d.n);
-    set('hFate1', d.perfect + ' / ' + d.gauge + ' / ' + d.outside);
-    set('hLogic', d.logic + '（' + flPct(d.logic, d.n) + '）', d.logic ? 'warn' : null);
-    set('hFlag', d.flagged + '（' + flPct(d.flagged, d.n) + '）');
-    set('hW', d.wMax + ' 个比特');
-    set('hPL1', d.PL1 ? d.PL1.toExponential(2) : '0');
-    set('hDet1', d.det1 ? d.det1.toExponential(2) : '0');
-    set('hHarm1', d.harm1 ? d.harm1.toExponential(2) : '0');
     if (mc && mc.kind === s.kind){
       set('hMcPL', (100 * mc.PL).toFixed(1) + '%  (' + mc.logic + '/' + mc.trials + ')');
       set('hMcDisc', (100 * mc.discard).toFixed(1) + '%');
       set('hMcF', flNf(mc.meanFaults, 2));
+      const last = this.lastTrial || mc.lastTrial;
+      if (last){
+        const name = { perfect:'纠回', gauge:'仅规范', outside:'逻辑受损', logic:'静默逻辑', flagged:'检出' }[last.bucket] || '—';
+        const fs = (last.fired || []).slice(0, 2).map(f => f.t.toUpperCase() + '@q' + f.q).join(' ');
+        set('hLast', `#${mc.trials} ${name} · ${fs || '无门故障'}${(last.fired || []).length > 2 ? ' …' : ''}`);
+      } else set('hLast', '—');
     } else {
-      set('hMcPL', '按「跑一次 MC」'); set('hMcDisc', '—'); set('hMcF', '—');
+      set('hMcPL', '按「跑一次 MC」'); set('hMcDisc', '—'); set('hMcF', '—'); set('hLast', '—');
     }
     if (w){
       const sup = [0,1,2,3,4,5,6].filter(q => (w.dataMask & (1 << q))).length;
@@ -12497,7 +12548,7 @@ class RoundsApp {
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
       make: () => fsStream(this.state.kind, this.cfg()),
-      onFrame: res => { this.mc = res; this.renderHud(); },
+      onFrame: res => { this.mc = res; if (res.lastTrial) this.trial = res.lastTrial; this.renderHud(); this.drawTime(); },
       onState: () => this.syncPlayBtn(),
     });
     this.on(this.q('#rdPlay'), 'click', () => this.live.toggle());
@@ -12570,7 +12621,8 @@ class RoundsApp {
       return;
     }
     this.mc = fsEnsemble(s.kind, this.cfg());
-    if (!this.trial) this.once();
+    if (this.mc.lastTrial) this.trial = this.mc.lastTrial;
+    else if (!this.trial) this.once();
     this.renderHud(); this.drawAll();
   }
 
@@ -13074,7 +13126,7 @@ class CycleApp {
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
       make: () => fsStream(this.state.kind, this.cfg()),
-      onFrame: res => { this.mc = res; this.renderHud(); this.drawFlow(); },
+      onFrame: res => { this.mc = res; if (res.lastTrial) this.trial = res.lastTrial; this.renderHud(); this.drawFlow(); },
       onState: () => this.syncPlayBtn(),
     });
     this.on(this.q('#cyPlay'), 'click', () => this.live.toggle());
@@ -13149,6 +13201,7 @@ class CycleApp {
           return;
         }
         this.mc = fsEnsemble(this.state.kind, this.cfg());
+        if (this.mc.lastTrial) this.trial = this.mc.lastTrial;
         this.fo = fsFirstOrder(this.state.kind, this.cfg());
         this.renderHud(); this.drawFlow();
         setTimeout(() => {
@@ -13224,7 +13277,7 @@ class CycleApp {
     g.textAlign = 'left';
     g.font = (11.5 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = cyCOL.txt + '.95)';
-    g.fillText('周期时间线：每周期 R 轮 EC（格 = 一轮，✓ 落了修正 / ✗ 无可用读数），周期之间的 ⟦门⟧ 由后面的周期处理', 10 * dpr, 16 * dpr);
+    g.fillText('周期时间线：格子来自最近一条 MC 轨迹（✓ 修正 / ✗ 无可用读数 / · 无修正）；HUD 与曲线仍为累计统计', 10 * dpr, 16 * dpr);
 
     const s = this.state;
     const T = s.cycles, R = s.rounds;
@@ -13249,12 +13302,18 @@ class CycleApp {
       for (let r = 0; r < R; r++){
         const bx = cx + 12 * dpr + r * (boxW + 6 * dpr);
         const by = top + 24 * dpr;
-        g.fillStyle = cyCOL.cyan + '.10)';
-        g.strokeStyle = cyCOL.cyan + '.35)';
+        const idx = t * R + r, sample = this.trial;
+        const usable = sample && sample.usableR ? sample.usableR[idx] !== false : true;
+        const fx = sample && sample.fixLog ? sample.fixLog.find(f => f.round === idx) : null;
+        const hasSyn = !!(sample && sample.synRounds && sample.synRounds[idx] && sample.synRounds[idx].some(Boolean));
+        const mark = !usable ? '✗' : fx && fx.fix && fx.fix.length ? '✓' : hasSyn ? '•' : '·';
+        const hue = !usable ? cyCOL.mag : fx && fx.fix && fx.fix.length ? cyCOL.cyan : hasSyn ? cyCOL.amber : cyCOL.wire;
+        g.fillStyle = hue + (sample ? '.18)' : '.10)');
+        g.strokeStyle = hue + (sample ? '.82)' : '.35)');
         g.beginPath(); g.rect(bx, by, boxW, 20 * dpr); g.fill(); g.stroke();
         g.font = (8.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
-        g.fillStyle = cyCOL.dim + '.9)';
-        g.fillText('R' + (r + 1), bx + boxW / 2, by + 13 * dpr);
+        g.fillStyle = sample ? hue + '.98)' : cyCOL.dim + '.9)';
+        g.fillText(sample ? mark : 'R' + (r + 1), bx + boxW / 2, by + 13 * dpr);
       }
       /* 该周期的自检率（样本级统计，逐周期细分留给轨迹行） */
       g.font = (9 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'left';
@@ -13994,9 +14053,10 @@ function cfStream(fam, cfg = {}){
   const f = typeof fam === 'string' ? CF_ALL.find(x => x.k === fam) : fam;
   const rng = mulberry32(c.seed);
   const byFate = { perfect: 0, logic: 0, outside: 0 };
-  let n = 0, wsum = 0;
+  let n = 0, wsum = 0, lastTrial = null;
   function one(){
     const t = cfTrial(f, c, rng);
+    lastTrial = t;
     byFate[t.fate]++;
     wsum += t.xw + t.zw;
     n++;
@@ -14008,7 +14068,7 @@ function cfStream(fam, cfg = {}){
     result(){
       const nn = Math.max(1, n);
       return {
-        family: f.k, p: c.p, noise: c.noise, meas: c.meas, trials: n,
+        family: f.k, p: c.p, noise: c.noise, meas: c.meas, trials: n, lastTrial,
         PL: (byFate.logic + byFate.outside) / nn,
         byFate, meanFaults: wsum / nn,
         exact: cfExactPL(c.p, f, c.noise, c.meas),
@@ -14228,6 +14288,7 @@ class FamilyApp {
         <div class="hrow"><span>MC↔精确 4σ</span><span id="hZ">—</span></div>
         <div class="hrow"><span>MC 结局 纠回/受损/逻辑</span><span id="hFate">—</span></div>
         <div class="hrow"><span>MC 平均帧错误数</span><span id="hFaults">—</span></div>
+        <div class="hrow"><span>最近抽样结局</span><span id="hLast">—</span></div>
         <div class="hrow"><span>领先幂次 α</span><span id="hPower">—</span></div>
         <div class="cap"><b>Steane³ [[343,1,27]]</b>（模块级，不上面板）：α=8，
           p=10⁻³ 处 P_L≈10⁻¹⁷，任何可行 MC 样本都是 0 事件，画出来只能是噪声。</div>
@@ -14279,7 +14340,7 @@ class FamilyApp {
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
       make: () => cfStream(this.state.fam, { noise: this.state.noise, meas: this.state.meas, p: this.state.p, trials: this.state.trials, seed: this.state.seed }),
-      onFrame: res => { res.ms = this.live.lastFrameMs; this.mc = res; this.renderHud(); this.drawFate(); this.drawCurve(); },
+      onFrame: res => { res.ms = this.live.lastFrameMs; this.mc = res; this.lastTrial = res.lastTrial || null; this.renderHud(); this.drawFate(); this.drawCurve(); },
       onState: () => this.syncPlayBtn(),
     });
     this.on(this.q('#fmPlay'), 'click', () => this.live.toggle());
@@ -14346,6 +14407,7 @@ class FamilyApp {
     const t0 = performance.now();
     this.mc = cfEnsemble(s.fam, { noise: s.noise, meas: s.meas, p: s.p, trials: s.trials, seed: s.seed });
     this.mc.ms = performance.now() - t0;
+    this.lastTrial = this.mc.lastTrial || null;
     this.renderHud(); this.drawFate(); this.drawCurve();
   }
 
@@ -14401,7 +14463,7 @@ class FamilyApp {
       else set('hPseudo', 'p* = ' + ps.toFixed(6) + '（vs 未编码基线）');
     }
     if (!mc){
-      ['hMcPL', 'hZ', 'hFate', 'hFaults', 'hPower'].forEach(id => set(id, '计算中…'));
+      ['hMcPL', 'hZ', 'hFate', 'hFaults', 'hLast', 'hPower'].forEach(id => set(id, '计算中…'));
       return;
     }
     const r = this.recon();
@@ -14409,6 +14471,8 @@ class FamilyApp {
     set('hZ', `z=${fmNf(r.zPL, 2)}σ · 故障 z=${fmNf(r.zF, 2)}σ`, r.ok4 ? 'ok' : 'warn');
     set('hFate', `${mc.byFate.perfect} / ${mc.byFate.outside} / ${mc.byFate.logic}`);
     set('hFaults', `${fmNf(mc.meanFaults, 2)} / 期望 ${fmNf(r.mExp, 2)}`);
+    const last = this.lastTrial || mc.lastTrial;
+    set('hLast', last ? `${last.fate === 'perfect' ? '纠回' : last.fate === 'outside' ? '受损' : '逻辑'} · wX=${last.xw} wZ=${last.zw}` : '—');
     const pw = this.powers ? this.powers.find(x => x.k === s.fam) : null;
     set('hPower', pw ? `α=${fmNf(pw.power, 3)} · c≈${pw.PL / Math.pow(1e-4, pw.power) < 1e4 ? fmNf(pw.PL / Math.pow(1e-4, pw.power), 1) : (pw.PL / Math.pow(1e-4, pw.power)).toExponential(1)}` : '—');
   }
@@ -15111,9 +15175,10 @@ function scTrial(code, cfg, rng){
 function scEnsemble(code, cfg = {}){
   const c = { p: 0.05, noise: 'depol', trials: 2000, seed: 7, ...cfg };
   const rng = mulberry32(c.seed);
-  let fail = 0, xf = 0, zf = 0, fb = 0, ksum = 0;
+  let fail = 0, xf = 0, zf = 0, fb = 0, ksum = 0, lastTrial = null;
   for (let i = 0; i < c.trials; i++){
     const r = scTrial(code, c, rng);
+    lastTrial = r;
     if (r.fail) fail++;
     if (r.xfail) xf++;
     if (r.zfail) zf++;
@@ -15124,8 +15189,36 @@ function scEnsemble(code, cfg = {}){
   return {
     d: code.d, p: c.p, noise: c.noise, trials: N,
     PL: fail / N, PLx: xf / N, PLz: zf / N,
-    fallback: fb / N, meanDefects: ksum / (2 * N),
+    fallback: fb / N, meanDefects: ksum / (2 * N), lastTrial,
     sigma: Math.sqrt(Math.max(fail / N * (1 - fail / N), 1e-12) / N),
+  };
+}
+
+/** 流式单帧 MC：与 scEnsemble 同 RNG 顺序，附最近一条完整轨迹供播放显示。 */
+function scStream(code, cfg = {}){
+  const c = { p: 0.05, noise: 'depol', trials: 2000, seed: 7, ...cfg };
+  const rng = mulberry32(c.seed);
+  let fail = 0, xf = 0, zf = 0, fb = 0, ksum = 0, n = 0, lastTrial = null;
+  function one(){
+    const r = scTrial(code, c, rng);
+    if (r.fail) fail++;
+    if (r.xfail) xf++;
+    if (r.zfail) zf++;
+    if (r.modeX === 'greedy' || r.modeZ === 'greedy') fb++;
+    ksum += r.kx + r.kz;
+    lastTrial = r;
+    n++;
+  }
+  return {
+    get total(){ return Math.max(1, c.trials | 0); },
+    get n(){ return n; },
+    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m; k++) one(); },
+    result(){
+      const N = Math.max(1, n), PL = fail / N;
+      return { d: code.d, p: c.p, noise: c.noise, trials: n, PL, PLx: xf / N, PLz: zf / N,
+        fallback: fb / N, meanDefects: ksum / (2 * N),
+        sigma: Math.sqrt(Math.max(PL * (1 - PL), 1e-12) / N), lastTrial };
+    },
   };
 }
 
@@ -15630,9 +15723,10 @@ function scSpaceEnsemble(code, cfg = {}){
   const grs = { X: scSpaceGraph(code, 'X', R), Z: scSpaceGraph(code, 'Z', R) };
   const rng = mulberry32(c.seed);
   const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
-  let fail = 0, xf = 0, zf = 0, bad = 0, ksum = 0, fbn = 0;
+  let fail = 0, xf = 0, zf = 0, bad = 0, ksum = 0, fbn = 0, lastTrial = null;
   for (let i = 0; i < c.trials; i++){
     const r = scSpaceTrial(code, c, rng, grs);
+    lastTrial = r;
     if (r.fail) fail++;
     if (r.xfail) xf++;
     if (r.zfail) zf++;
@@ -15644,9 +15738,44 @@ function scSpaceEnsemble(code, cfg = {}){
   const N = c.trials, PL = fail / N;
   return {
     d: code.d, p: c.p, noise: c.noise, q: c.q === undefined ? c.p : c.q, rounds: R, layers: R + 1, trials: N,
-    PL, PLx: xf / N, PLz: zf / N, badSyn: bad / N, meanDefects: ksum / (2 * N), fallback: fbn / (2 * N),
+    PL, PLx: xf / N, PLz: zf / N, badSyn: bad / N, meanDefects: ksum / (2 * N), fallback: fbn / (2 * N), lastTrial,
     ms: (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0,
     sigma: Math.sqrt(Math.max(PL * (1 - PL), 1e-12) / N),
+  };
+}
+
+/** 流式带噪测量 MC：共享时空图并逐批推进，附最近试验用于画布回放。 */
+function scSpaceStream(code, cfg = {}){
+  const c = { p: 0.02, noise: 'x', trials: 600, seed: 7, q: undefined, rounds: undefined, dpMax: SC_PHEN.dpMax, ...cfg };
+  const R = c.rounds === undefined ? Math.max(1, code.d - 1) : c.rounds;
+  const grs = { X: scSpaceGraph(code, 'X', R), Z: scSpaceGraph(code, 'Z', R) };
+  const rng = mulberry32(c.seed);
+  const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  let fail = 0, xf = 0, zf = 0, bad = 0, ksum = 0, fbn = 0, n = 0, lastTrial = null;
+  function one(){
+    const r = scSpaceTrial(code, c, rng, grs);
+    if (r.fail) fail++;
+    if (r.xfail) xf++;
+    if (r.zfail) zf++;
+    if (r.badSyn) bad++;
+    if (r.modeX === 'greedy') fbn++;
+    if (r.modeZ === 'greedy') fbn++;
+    ksum += r.kx + r.kz;
+    lastTrial = r;
+    n++;
+  }
+  return {
+    get total(){ return Math.max(1, c.trials | 0); },
+    get n(){ return n; },
+    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m; k++) one(); },
+    result(){
+      const N = Math.max(1, n), PL = fail / N;
+      return { d: code.d, p: c.p, noise: c.noise, q: c.q === undefined ? c.p : c.q,
+        rounds: R, layers: R + 1, trials: n, PL, PLx: xf / N, PLz: zf / N,
+        badSyn: bad / N, meanDefects: ksum / (2 * N), fallback: fbn / (2 * N),
+        ms: (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0,
+        sigma: Math.sqrt(Math.max(PL * (1 - PL), 1e-12) / N), lastTrial };
+    },
   };
 }
 
@@ -15750,6 +15879,7 @@ class SurfApp {
          给旋钮反而误导，所以不上面板（README 里写明这条取舍）。 */
       meas: q.get('meas') === 'noisy' ? 'noisy' : 'ideal',
       qR: [0, 0.5, 1].includes(parseFloat(q.get('qr'))) ? parseFloat(q.get('qr')) : 1,
+      live: q.get('live') === '1',
     };
     this.code = scBuild(this.state.d);
     this.trial = null;      /* 最近一次试验快照（码画布用） */
@@ -15770,6 +15900,7 @@ class SurfApp {
     this._sweepToken++;                    /* 作废在途分帧扫描 */
     clearTimeout(this._queueTimer);
     this._ro?.disconnect();
+    this.live?.dispose();
     this.live = null;
     for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
     this._listeners.length = 0;
@@ -15796,7 +15927,8 @@ class SurfApp {
 
         <div class="grp">实验</div>
         <div class="btns g3">
-          <button id="sfRun">跑一次 MC</button>
+          <button id="sfPlay">▶ 播放</button>
+          <button id="sfRun">跑完 MC</button>
           <button id="sfSnap">换一张码图</button>
           <button id="sfSeed">换种子</button>
         </div>
@@ -15814,8 +15946,10 @@ class SurfApp {
         <div class="hrow"><span>结构自检</span><span id="hStruct">—</span></div>
         <div class="hrow"><span>逻辑算符</span><span id="hLogic">—</span></div>
         <hr>
-        <div class="hrow"><span>当前点 P_L</span><span id="hPL" class="big">—</span></div>
-        <div class="hrow"><span>X / Z 帧分解</span><span id="hSplit">—</span></div>
+        <div class="hrow"><span>当前点 P_L（累计）</span><span id="hPL" class="big">—</span></div>
+        <div class="hrow"><span>播放进度</span><span id="hMCProgress">—</span></div>
+        <div class="hrow"><span>最近样本</span><span id="hLast">—</span></div>
+        <div class="hrow"><span>X / Z 帧分解（累计）</span><span id="hSplit">—</span></div>
         <div class="hrow"><span>平均缺陷数（单帧）</span><span id="hDef">—</span></div>
         <div class="hrow"><span>解码器</span><span id="hDec">—</span></div>
         <div class="hrow" id="hSpaceRow"><span>时空匹配图</span><span id="hSpace">—</span></div>
@@ -15843,6 +15977,20 @@ class SurfApp {
       <div id="sfHint" class="panel qhint"><b>—</b><span></span></div>
     `);
     this.cv = { code: this.q('#sfCode'), curve: this.q('#sfCurve'), dist: this.q('#sfDist') };
+    this.live = new LiveDriver({
+      make: () => this.phen
+        ? scSpaceStream(this.code, { ...this.phenCfg(), trials: this.state.trials, seed: this.state.seed })
+        : scStream(this.code, { p: this.state.p, noise: this.state.noise, trials: this.state.trials, seed: this.state.seed }),
+      onFrame: res => {
+        res.ms = this.live.lastFrameMs;
+        this.mc = res;
+        if (res.lastTrial) this.trial = res.lastTrial;
+        this.renderHud(); this.drawCode(); this.drawCurve(); this.drawDist();
+      },
+      onState: () => this.syncPlayBtn(),
+      fps: 16,
+      duration: 6000,
+    });
 
     const mk = (host, items, onPick) => {
       for (const it of items){
@@ -15869,8 +16017,9 @@ class SurfApp {
     });
     this.on(this.q('#sfTrials'), 'input', e => {
       this.state.trials = parseInt(e.target.value, 10);
-      this.syncPanel();
+      this.syncPanel(); if (this.live && this.live.playing) this.live.sync();
     });
+    this.on(this.q('#sfPlay'), 'click', () => this.live.toggle());
     this.on(this.q('#sfRun'), 'click', () => this.runMc());
     this.on(this.q('#sfSnap'), 'click', () => this.runMc(true));
     this.on(this.q('#sfSeed'), 'click', () => {
@@ -15891,6 +16040,7 @@ class SurfApp {
     this.syncPanel();
     this.renderHint();
     this.resize();
+    this.syncPlayBtn();
     this.computeAll();
   }
 
@@ -15941,7 +16091,10 @@ class SurfApp {
 
   /* ---------- 计算 ---------- */
   computeAll(){
-    this.runMc();
+    this.verify = scVerify(this.state.d);
+    this.space = this.phen ? scSpaceVerify(this.state.d, Math.max(1, this.state.d - 1)) : null;
+    if (this.state.live && this.live) this.live.start();
+    else this.runMc();
     this.startSweep();
   }
 
@@ -15955,29 +16108,42 @@ class SurfApp {
   runMc(newSnap){
     const s = this.state;
     const code = this.code;
+    if (this.live && this.live.playing){
+      this.verify = scVerify(s.d);
+      this.space = this.phen ? scSpaceVerify(s.d, Math.max(1, s.d - 1)) : null;
+      this.live.sync();
+      return;
+    }
     const t0 = performance.now();
     if (this.phen){
       this.mc = scSpaceEnsemble(code, { ...this.phenCfg(), trials: s.trials, seed: s.seed });
       this.mc.ms = performance.now() - t0;
       this.space = scSpaceVerify(s.d, Math.max(1, s.d - 1));
-      const rng = mulberry32(newSnap || !this.trial
-        ? (s.seed * 2654435761) % 2147483647 : (s.seed * 40503 + 17) % 2147483647);
-      this.trial = scSpaceTrial(code, this.phenCfg(), rng);
+      if (newSnap || !this.mc.lastTrial){
+        const rng = mulberry32((s.seed * 2654435761) % 2147483647);
+        this.trial = scSpaceTrial(code, this.phenCfg(), rng);
+      } else this.trial = this.mc.lastTrial;
     } else {
       this.mc = scEnsemble(code, { p: s.p, noise: s.noise, trials: s.trials, seed: s.seed });
       this.mc.ms = performance.now() - t0;
-      /* 码图快照：用「新种子」重抽一次单次试验（与 MC 同口径同 p） */
-      if (newSnap || !this.trial){
+      /* 默认画 MC 的最后一条样本；「换一张码图」才单独重抽。 */
+      if (newSnap || !this.mc.lastTrial){
         const rng = mulberry32((s.seed * 2654435761) % 2147483647);
         this.trial = scTrial(code, { p: s.p, noise: s.noise }, rng);
-      } else {
-        this.trial = scTrial(code, { p: s.p, noise: s.noise }, mulberry32((s.seed * 40503 + 17) % 2147483647));
-      }
+      } else this.trial = this.mc.lastTrial;
       this.space = null;
     }
     this.verify = scVerify(s.d);
     this.renderHud();
     this.drawCode(); this.drawCurve(); this.drawDist();
+  }
+
+  syncPlayBtn(){
+    const b = this.q('#sfPlay');
+    if (!b) return;
+    const on = !!(this.live && this.live.playing);
+    b.textContent = on ? '⏸ 暂停' : '▶ 播放';
+    b.classList.toggle('on', on);
   }
 
   /** 当前口径的扫描网格 */
@@ -16068,6 +16234,13 @@ class SurfApp {
     }
     if (mc){
       set('hPL', `${sfFmt(mc.PL)}  (${Math.round(mc.PL * mc.trials)}/${mc.trials})`, 'big');
+      set('hMCProgress', `${mc.trials} / ${s.trials}`);
+      const last = this.trial || mc.lastTrial;
+      if (last){
+        const err = pcOf((last.mx || 0n) | (last.mz || 0n));
+        const outcome = last.fail ? (last.xfail && last.zfail ? 'X/Z 逻辑失败' : last.xfail ? 'X 帧逻辑失败' : 'Z 帧逻辑失败') : '纠回';
+        set('hLast', `#${mc.trials} ${outcome} · 错误 ${err} · 缺陷 ${last.kx + last.kz}`);
+      } else set('hLast', '—');
       set('hSplit', `${sfFmt(mc.PLx)} / ${sfFmt(mc.PLz)}`);
       set('hDef', `${sfNF(mc.meanDefects, 2)} 个${this.phen ? '（每帧·时空）' : ''}`);
       const decName = this.phen ? '时空 MWPM' : 'MWPM·DP';
@@ -16081,6 +16254,7 @@ class SurfApp {
       set('hSpace', `${this.space.layers} 层 × ${X.nS + 2} 节点 · ${X.space + X.bnd + X.time} 边 · 自检${this.space.ok ? '✓' : '✗'}`,
         this.space.ok ? 'ok' : 'warn');
     } else set('hSpace', '—');
+    if (!mc){ set('hMCProgress', `0 / ${s.trials}`); set('hLast', '—'); }
     if (this.cross){
       /* σ 大到位数无意义时（N 小 / 曲线贴得太近）不给三位小数：退回两位并标「≈」。
          阈值：σ_p > 0.03 ⟹ 交叉点只知道个量级（N=400 时 c57 常落在这档）。 */
