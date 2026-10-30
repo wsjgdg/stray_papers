@@ -127,12 +127,14 @@ function gateView(g){
   }
   if (op === 'cond'){
     const inner = gateView(g.gate);
-    return { text: inner.text, wires: [g.gate.q], kind: 'cond', target: g.gate.q, cbit: g.cbit };
+    return { text: inner.text, wires: [g.gate.q], kind: 'cond', target: g.gate.q, cbit: g.cbit,
+      u3: g.gate.op === 'u3' ? { theta: g.gate.theta, phi: g.gate.phi, lambda: g.gate.lambda } : null };
   }
   if (op === 'cnot') return { text: '', wires: [g.c, g.q2], kind: 'cnot', control: g.c, target: g.q2 };
   if (op === 'cz') return { text: 'Z', wires: [g.c, g.q2], kind: 'cz', control: g.c, target: g.q2 };
   if (op === 'swap') return { text: '×', wires: [g.q1, g.q2], kind: 'swap' };
   if (op === 'toffoli') return { text: 'X', wires: [g.q1, g.q2, g.q3], kind: 'toffoli', controls: [g.q1, g.q2], target: g.q3 };
+  if (op === 'u3') return { text: 'U3', wires: [g.q], kind: 'rot', control: g.c ?? null, target: g.q };
   if (op === 'phase'){
     const deg = Math.round((g.theta ?? 0) * 180 / Math.PI);
     return { text: 'P' + (deg ? deg + '°' : ''), wires: [g.q, g.c], kind: 'phase', control: g.c, target: g.q };
@@ -181,7 +183,7 @@ export class QCircuitApp {
     this._ampHoverIndex = null; this._ampPinnedIndex = null;
     this._shotsBusy = false; this._shotRunId = 0; this.shotResult = null;
     this._gateInspectId = 0; this.gateInspectorData = null;
-    this.edit = { op: 'h', q: 0, c: -1, c2: -1, q2: 1, q3: 2, theta: Math.PI / 2, basis: 'z', cbit: 0, inner: 'x', selected: -1 };
+    this.edit = { op: 'h', q: 0, c: -1, c2: -1, q2: 1, q3: 2, theta: Math.PI / 2, u3phi: 0, u3lambda: 0, basis: 'z', cbit: 0, inner: 'x', selected: -1 };
     this.gates = [];
     this.psi = null;
     this.rho = null;        /* R104：噪声开启时的密度矩阵（关闭为 null） */
@@ -250,7 +252,7 @@ export class QCircuitApp {
             <option value="z">Z</option><option value="s">S</option><option value="sdg">S†</option>
             <option value="t">T</option><option value="tdg">T†</option>
             <option value="rx">Rx</option><option value="ry">Ry</option><option value="rz">Rz</option>
-            <option value="phase">P(θ)</option><option value="cnot">CNOT</option>
+            <option value="u3">U3(θ,φ,λ) 通用单比特门</option><option value="phase">P(θ)</option><option value="cnot">CNOT</option>
             <option value="cz">CZ</option><option value="swap">SWAP</option>
             <option value="toffoli">Toffoli</option><option value="measure">测量 M</option>
             <option value="cond">受控经典门</option>
@@ -263,8 +265,10 @@ export class QCircuitApp {
         <div class="row" id="qcGateQ2Row"><label>第二位</label><select id="qcGateQ2" title="联合测量第二位（量子位；与目标位、第三位互异）"></select></div>
         <div class="row" id="qcGateQ3Row"><label>第三位</label><select id="qcGateQ3" title="联合测量第三位（量子位；GHZ 基需三位互异）"></select></div>
         <div class="row" id="qcGateCbitRow"><label>经典位 cbit</label><select id="qcGateCbit" title="经典位：cbit=1 时执行内部门（测量结果写入的位；未测过为 0）"></select></div>
-        <div class="row" id="qcGateInnerRow"><label>内部门</label><select id="qcGateInner" title="cbit=1 时作用在目标位上的单比特门"><option value="x">X</option><option value="y">Y</option><option value="z">Z</option><option value="h">H</option><option value="s">S</option><option value="sdg">S†</option><option value="t">T</option><option value="tdg">T†</option><option value="rx">Rx</option><option value="ry">Ry</option><option value="rz">Rz</option><option value="phase">P(θ)</option></select></div>
+        <div class="row" id="qcGateInnerRow"><label>内部门</label><select id="qcGateInner" title="cbit=1 时作用在目标位上的单比特门"><option value="x">X</option><option value="y">Y</option><option value="z">Z</option><option value="h">H</option><option value="s">S</option><option value="sdg">S†</option><option value="t">T</option><option value="tdg">T†</option><option value="rx">Rx</option><option value="ry">Ry</option><option value="rz">Rz</option><option value="u3">U3(θ,φ,λ)</option><option value="phase">P(θ)</option></select></div>
         <div class="row" id="qcGateThetaRow"><label>角度 θ</label><input type="range" id="qcGateTheta" min="-3.1416" max="3.1416" step="0.01"><output id="qcGateThetaO">—</output></div>
+        <div class="row" id="qcGateU3PhiRow"><label>U3 φ</label><input type="range" id="qcGateU3Phi" min="-3.1416" max="3.1416" step="0.01"><output id="qcGateU3PhiO">—</output></div>
+        <div class="row" id="qcGateU3LambdaRow"><label>U3 λ</label><input type="range" id="qcGateU3Lambda" min="-3.1416" max="3.1416" step="0.01"><output id="qcGateU3LambdaO">—</output></div>
         <div class="btns">
           <button id="qcGateAdd">插入选中后</button><button id="qcGateClear">清空线路</button>
         </div>
@@ -382,6 +386,14 @@ export class QCircuitApp {
     this.on(this.q('#qcGateTheta'), 'input', e => {
       this.edit.theta = parseFloat(e.target.value);
       this.q('#qcGateThetaO').textContent = this.edit.theta.toFixed(2);
+    });
+    this.on(this.q('#qcGateU3Phi'), 'input', e => {
+      this.edit.u3phi = parseFloat(e.target.value);
+      this.q('#qcGateU3PhiO').textContent = this.edit.u3phi.toFixed(2);
+    });
+    this.on(this.q('#qcGateU3Lambda'), 'input', e => {
+      this.edit.u3lambda = parseFloat(e.target.value);
+      this.q('#qcGateU3LambdaO').textContent = this.edit.u3lambda.toFixed(2);
     });
     /* R102：子系统 A 选位切换（事件委托——按钮随 n 重建，逐按钮 bind 会漏） */
     this.on(this.q('#qcSubBtns'), 'click', e => {
@@ -562,12 +574,15 @@ export class QCircuitApp {
       if (cbit < 0 || cbit >= n){ this.toast('经典位 cbit 超出范围'); return null; }
       const inner = e.inner || 'x';
       const gi = { op: inner, q };
-      if (inner === 'rx' || inner === 'ry' || inner === 'rz' || inner === 'phase') gi.theta = e.theta;
+      if (inner === 'u3') Object.assign(gi, { theta: e.theta, phi: e.u3phi, lambda: e.u3lambda });
+      else if (inner === 'rx' || inner === 'ry' || inner === 'rz' || inner === 'phase') gi.theta = e.theta;
       return { op: 'cond', cbit, gate: gi };
     }
     const g = { op, q };
     if (c >= 0 && c < n) g.c = c;
-    if (op === 'rx' || op === 'ry' || op === 'rz' || op === 'phase') g.theta = e.theta;
+    if (op === 'u3' && g.c === q){ this.toast('U3 的量子控制位必须与目标位不同'); return null; }
+    if (op === 'u3') Object.assign(g, { theta: e.theta, phi: e.u3phi, lambda: e.u3lambda });
+    else if (op === 'rx' || op === 'ry' || op === 'rz' || op === 'phase') g.theta = e.theta;
     return g;
   }
 
@@ -652,12 +667,13 @@ export class QCircuitApp {
       if (token !== this._gateInspectId) return null;
       this.gateInspectorData = data;
       if (el){
+        const inspectU3 = gate.op === 'u3' ? gate : gate.op === 'cond' && gate.gate?.op === 'u3' ? gate.gate : null;
         const ampLine = (name, s) => noisy
           ? `${name} √ρᵢᵢ ${s.abs.toFixed(4)} · ρᵢᵢ ${s.p.toFixed(4)}`
           : `${name} Re ${(s.re < 0 ? '−' : '+') + Math.abs(s.re).toFixed(4)} · Im ${(s.im < 0 ? '−' : '+') + Math.abs(s.im).toFixed(4)} · |a| ${s.abs.toFixed(4)} · p ${s.p.toFixed(4)} · arg ${s.phase == null ? '—' : s.phase.toFixed(3) + ' rad'}`;
         const detail = exec?.kind === 'cond' ? `\n经典条件 c${exec.cbit} ${exec.on ? '触发' : '未触发'}`
           : exec?.kind === 'measure' ? `\n测量结果 ${Array.isArray(exec.bits) ? exec.bits.join('') : exec.bit}` : '';
-        el.textContent = `第 ${index + 1} 门 ${data.label || gate.op.toUpperCase()} · ${noisy ? '密度矩阵' : '态矢'} · seed ${seed}\n` +
+        el.textContent = `第 ${index + 1} 门 ${data.label || gate.op.toUpperCase()}${inspectU3 ? ` (θ=${inspectU3.theta.toFixed(3)}, φ=${inspectU3.phi.toFixed(3)}, λ=${inspectU3.lambda.toFixed(3)})` : ''} · ${noisy ? '密度矩阵' : '态矢'} · seed ${seed}\n` +
           `基态 |${data.bits}⟩\n${ampLine('前', before)}\n${ampLine('后', after)}\n` +
           `全态概率总变差 ${data.tv.toFixed(4)}${noisy ? '' : ` · Δa ${data.deltaA.toFixed(4)}`}${detail}`;
       }
@@ -736,10 +752,22 @@ export class QCircuitApp {
     const inRow = this.q('#qcGateInnerRow'); if (inRow) inRow.style.display = isCond ? '' : 'none';
     const inEl = this.q('#qcGateInner'); if (inEl) inEl.value = e.inner || 'x';
     const opEl = this.q('#qcGateOp'); if (opEl) opEl.value = e.op;
-    const th = this.q('#qcGateTheta'); if (th) th.value = String(e.theta);
+    const isU3 = e.op === 'u3' || (isCond && e.inner === 'u3');
+    if (!Number.isFinite(e.u3phi)) e.u3phi = 0;
+    if (!Number.isFinite(e.u3lambda)) e.u3lambda = 0;
+    const th = this.q('#qcGateTheta');
+    if (isU3) e.theta = Math.max(0, Math.min(Math.PI, Number.isFinite(e.theta) ? e.theta : Math.PI / 2));
+    if (th){ th.min = isU3 ? '0' : '-3.1416'; th.max = isU3 ? String(Math.PI) : '3.1416'; th.value = String(e.theta); }
+    const thLabel = this.q('#qcGateThetaRow label'); if (thLabel) thLabel.textContent = isU3 ? 'U3 θ' : '角度 θ';
     const out = this.q('#qcGateThetaO'); if (out) out.textContent = e.theta.toFixed(2);
-    const isRotOp = o => o === 'rx' || o === 'ry' || o === 'rz' || o === 'phase';
-    /* R101：cond 的内部门是旋转门时 θ 行同样可调（与顶层旋转门同一条 θ） */
+    const u3PhiRow = this.q('#qcGateU3PhiRow'); if (u3PhiRow) u3PhiRow.style.display = isU3 ? '' : 'none';
+    const u3LambdaRow = this.q('#qcGateU3LambdaRow'); if (u3LambdaRow) u3LambdaRow.style.display = isU3 ? '' : 'none';
+    const phi3 = this.q('#qcGateU3Phi'); if (phi3) phi3.value = String(e.u3phi);
+    const phi3out = this.q('#qcGateU3PhiO'); if (phi3out) phi3out.textContent = e.u3phi.toFixed(2);
+    const lambda3 = this.q('#qcGateU3Lambda'); if (lambda3) lambda3.value = String(e.u3lambda);
+    const lambda3out = this.q('#qcGateU3LambdaO'); if (lambda3out) lambda3out.textContent = e.u3lambda.toFixed(2);
+    const isRotOp = o => o === 'rx' || o === 'ry' || o === 'rz' || o === 'phase' || o === 'u3';
+    /* 受控经典门的旋转内部门复用同一组 angle 控件；U3 需要完整三角参数。 */
     const rot = isRotOp(e.op) || (isCond && isRotOp(e.inner));
     const row = this.q('#qcGateThetaRow'); if (row) row.style.opacity = rot ? '1' : '.38';
     this.renderGateList();
@@ -759,9 +787,11 @@ export class QCircuitApp {
         g.op === 'swap' ? `q${g.q1}↔q${g.q2}` :
         g.op === 'toffoli' ? `q${g.q1},q${g.q2}→q${g.q3}` :
         g.op === 'measure' ? (g.qubits ? `q${g.qubits.join('q')}→c${g.cbit}+${g.qubits.length}` : `q${g.q}→c${g.cbit}`) :
-        g.op === 'cond' ? `c${g.cbit}? q${g.gate.q}` : `q${g.q}${g.c != null ? ` ←q${g.c}` : ''}`;
+        g.op === 'cond' ? `c${g.cbit}? ${g.gate.op.toUpperCase()} q${g.gate.q}` : `q${g.q}${g.c != null ? ` ←q${g.c}` : ''}`;
+      const u3 = g.op === 'u3' ? g : g.op === 'cond' && g.gate?.op === 'u3' ? g.gate : null;
+      const detail = u3 ? `${g.op === 'cond' ? `c${g.cbit}=1 · ` : ''}U3 θ=${u3.theta.toFixed(2)} φ=${u3.phi.toFixed(2)} λ=${u3.lambda.toFixed(2)}` : `选中；新门插在其后`;
       return `<div class="gate${i === this.edit.selected ? ' sel' : ''}">` +
-        `<button data-act="sel" data-i="${i}" title="选中；新门插在其后">${i + 1}. ${name} ${wires}</button>` +
+        `<button data-act="sel" data-i="${i}" title="${detail}">${i + 1}. ${name} ${wires}</button>` +
         `<button data-act="up" data-i="${i}" title="上移" ${i === 0 ? 'disabled' : ''}>↑</button>` +
         `<button data-act="down" data-i="${i}" title="下移" ${i === this.gates.length - 1 ? 'disabled' : ''}>↓</button>` +
         `<button data-act="del" data-i="${i}" title="删除">×</button></div>`;

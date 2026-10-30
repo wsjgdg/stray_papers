@@ -38,6 +38,17 @@ export const QC_UNARY = {
   tdg: { label: 'T†', m: [C1, C0, C0, cx(Math.SQRT1_2, -Math.SQRT1_2)] },
 };
 
+/* 标准 U3(θ,φ,λ)：覆盖任意单比特酉门（忽略不可观测的整体相位）。 */
+export function qcU3(theta = 0, phi = 0, lambda = 0){
+  const c = Math.cos(theta / 2), s = Math.sin(theta / 2);
+  return [
+    cx(c, 0),
+    cx(-Math.cos(lambda) * s, -Math.sin(lambda) * s),
+    cx(Math.cos(phi) * s, Math.sin(phi) * s),
+    cx(Math.cos(phi + lambda) * c, Math.sin(phi + lambda) * c),
+  ];
+}
+
 export function qcRotation(op, theta){
   const c = Math.cos(theta / 2), s = Math.sin(theta / 2);
   if (op === 'rx') return [cx(c, 0), cx(0, -s), cx(0, -s), cx(c, 0)];
@@ -146,6 +157,12 @@ export function qcApply(s, g){
   if (op === 'swap'){ applySwap(s, g.q1, g.q2); return s; }
   if (op === 'toffoli'){
     applyControlled(s, QC_UNARY.x.m, g.q3, [g.q1, g.q2]); return s;
+  }
+  if (op === 'u3'){
+    const m = qcU3(g.theta ?? 0, g.phi ?? 0, g.lambda ?? 0);
+    if (g.c != null) applyControlled(s, m, g.q, [g.c]);
+    else applyMatrix(s, m, g.q);
+    return s;
   }
   if (op === 'rx' || op === 'ry' || op === 'rz'){
     const m = qcRotation(op, g.theta ?? 0);
@@ -289,7 +306,7 @@ export function qcExpect(s, xm, zm){
      CNOT(c,t)：X_c → X_c X_t（前向）；Z_t → Z_c Z_t（后向）；X_t、Z_c 不动。
      H(q)：X_q ↔ Z_q。测量：帧的 X_q 翻转 Z 读数（重置才清帧，本工程线路每个
      ancilla 只用一次，无需重置）。
-     x/y/z 门：就地 toggle。ry/rz/rx/phase 在非零帧上出现即抛错（非 Clifford，
+     x/y/z 门：就地 toggle。ry/rz/rx/phase/U3 在非零帧上出现即抛错（一般为非 Clifford，
      帧语义未定义——flagsynd 与 qec 的制备段都保证帧为零时才过旋转门）。 */
 export function qcFrToggle(fr, q, t){
   const b = 1 << q;
@@ -311,7 +328,7 @@ export function qcFrGate(fr, o){
     return;
   }
   if (op === 'x' || op === 'y' || op === 'z'){ qcFrToggle(fr, o.q, op); return; }
-  if (op === 'ry' || op === 'rz' || op === 'rx' || op === 'phase'){
+  if (op === 'ry' || op === 'rz' || op === 'rx' || op === 'phase' || op === 'u3'){
     if (fr.x || fr.z) throw new Error('frame: 非 Clifford 门在非零帧上出现 ' + op);
   }
 }
@@ -538,6 +555,7 @@ export function qcInvertGates(gates){
   return gates.slice().reverse().map(g => {
     if (g.op === 'phase' || g.op === 'rx' || g.op === 'ry' || g.op === 'rz')
       return { ...g, theta: -(g.theta ?? 0) };
+    if (g.op === 'u3') return { ...g, theta: -(g.theta ?? 0), phi: -(g.lambda ?? 0), lambda: -(g.phi ?? 0) };
     return { ...g, op: dual[g.op] || g.op };
   });
 }
