@@ -336,7 +336,7 @@ export class SurfApp {
     const snap = this.q('#sfSnap'); if (snap){ snap.disabled = this.circuit; snap.title = this.circuit ? '回放须复用已计入统计的 circuit shot，不额外抽样' : ''; }
     const scan = this.q('#sfScan'); if (scan){ scan.disabled = this.circuit; scan.title = this.circuit ? '诊断性原型不用于阈值结论：歧义签名回退 MWPM，且边权未联合建模 hook/高阶相关性' : ''; }
     const note = this.q('#sfModelNote');
-    if (note && this.circuit) note.innerHTML = '<b>诊断性 circuit-level 原型</b>：显式 ancilla/CNOT、SPAM 与双比特退极化；每轮另加每数据比特一个有效 idle 去极化位点。无歧义的单故障签名优先查表，歧义/多故障回退边缘权重 MWPM。idle 未按实际门时序排程，也不含泄漏/T₁/T₂；未联合解码高阶相关性，不能据此报告阈值。';
+    if (note && this.circuit) note.innerHTML = '<b>诊断性 circuit-level 原型</b>：Z 检查 data→ancilla、X 检查 ancilla→data；显式模拟 CNOT、SPAM 与双比特退极化，每轮另加每数据比特一个有效 idle 去极化位点。先查无歧义的 X/Z 联合单故障签名；歧义时保留无歧义的单帧查表，未解决帧再由边缘权重时空 MWPM 兜底。idle 未按实际门时序排程，也不含泄漏/T₁/T₂；未联合解码高阶相关性，不能据此报告阈值。';
     else if (note) note.innerHTML = '<b>退极化是分帧独立解码</b>：丢掉 Y 的相关性 ⟹ 阈值 ≈ 1.5×单帧（10.3% → 15.5%；相关解码可到 18.9%，本页不做）。交叉点「未分辨」表示当前网格/样本数不足；带噪测量固定 q=p、d−1 轮 + 末轮理想读出，d=7 因时空缺陷过多而置灰。';
   }
 
@@ -351,7 +351,7 @@ export class SurfApp {
       '阈值不是某个 p 的绝对值，而是 **d=3/5/7 三条曲线的排序反转**。' +
       '**带噪测量**（phenomenological）把时间放进匹配图：每轮读出以 q=p 出错 ⟹ 探测事件在时空里成对，' +
       '有限尺寸交叉从 ~9.5% 掉到 ~2.3%。画布下方那 2(d+1) 行点阵就是逐层的探测事件。' +
-      (this.circuit ? '**诊断性 circuit-level 原型** 显式模拟 ancilla/CNOT、SPAM、双比特退极化与每轮有效 data-idle；无歧义的一阶签名查表，歧义或多故障回退边缘 MWPM。idle 非逐门时序模型，未联合解码高阶相关性，不作阈值测量。' : ''));
+      (this.circuit ? '**诊断性 circuit-level 原型** 显式模拟按 Z: data→ancilla / X: ancilla→data 方向提取的 CNOT、SPAM、双比特退极化与每轮有效 data-idle；优先查无歧义联合签名，歧义时保留无歧义单帧查表，未解决帧再回退边缘 MWPM。idle 非逐门时序模型，未联合解码高阶相关性，不作阈值测量。' : ''));
   }
 
   ensureFaultAudit(){

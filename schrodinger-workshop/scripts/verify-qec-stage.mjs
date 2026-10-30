@@ -43,8 +43,15 @@ for (const d of [3, 5]){
   assert.equal(audit.lookupSyndromeFailX + audit.lookupSyndromeFailZ, 0, `d=${d}: unambiguous lookup must close final syndrome`);
   assert.equal(audit.silentLogicalX + audit.silentLogicalZ, 0, `d=${d}: no single fault may be logically silent`);
   assert.equal(audit.jointFallbackSyndromeFailX + audit.jointFallbackSyndromeFailZ, 0, `d=${d}: joint ambiguity fallback must close terminal syndrome`);
-  assert.ok(audit.jointAmbiguous > 0, `d=${d}: joint signature collisions must be reported`);
-  assert.ok(audit.jointFallbackLogicalFailX + audit.jointFallbackLogicalFailZ > 0, `d=${d}: audit must expose residual logical failures in joint fallback`);
+  if (d === 3){
+    assert.ok(audit.jointAmbiguous > 0, 'd=3: known joint-signature collisions must be reported');
+    assert.ok(audit.jointFallbackLogicalFailX + audit.jointFallbackLogicalFailZ > 0,
+      'd=3: audit must expose residual logical failures after safe lookup/MWPM fallback');
+  } else {
+    assert.equal(audit.jointAmbiguous, 0, `d=${d}: all enumerated single-fault joint signatures are unambiguous`);
+    assert.equal(audit.jointFallbackLogicalFailX + audit.jointFallbackLogicalFailZ, 0,
+      `d=${d}: no residual fallback failures when the joint catalog has no ambiguous signatures`);
+  }
   const injected = scCircuitTrial(code, {
     p: 0.001, rounds: d,
     forceFaults: [{ round: 1, location: 'idle', q: Math.floor(d * d / 2), pauli: 'X' }],
@@ -54,15 +61,19 @@ for (const d of [3, 5]){
   assert.equal(injected.badSyn, false, `d=${d}: representative lookup must close syndrome`);
   assert.equal(injected.lookupX, true, `d=${d}: X-frame single fault must use signature lookup`);
   assert.equal(injected.jointLookup, true, `d=${d}: unambiguous paired syndrome must use joint lookup`);
-  // Keep a concrete counterexample visible: this prep hook is not fixed by the
-  // current ambiguous-signature fallback, despite a closed terminal syndrome.
-  const knownFailure = scCircuitTrial(code, {
+  // A Z-ancilla preparation fault is now corrected by the paired single-fault table.
+  const prepFault = scCircuitTrial(code, {
     p: 0.001, rounds: d,
     forceFaults: [{ round: 1, location: 'prep', check: 'Z0', pauli: 'X' }],
   }, () => 0.999);
-  assert.equal(knownFailure.badSyn, false, `d=${d}: known prep-hook case closes syndrome`);
-  assert.equal(knownFailure.fail, true, `d=${d}: known prep-hook logical failure remains an open FT defect`);
-  console.log(`single-fault d=${d}: joint coverage=${audit.jointCovered}/${audit.locations}; ambiguous signatures=${audit.jointAmbiguous}/${audit.jointSignatures}; unresolved logical failures X/Z=${audit.jointFallbackLogicalFailX}/${audit.jointFallbackMechanisms},${audit.jointFallbackLogicalFailZ}/${audit.jointFallbackMechanisms}; prep-hook counterexample reproducible`);
+  assert.equal(prepFault.badSyn, false, `d=${d}: prep-fault case closes syndrome`);
+  assert.equal(prepFault.fail, false, `d=${d}: prep-fault case must preserve logical state`);
+  assert.equal(prepFault.jointLookup, true, `d=${d}: prep-fault case uses unambiguous joint lookup`);
+  assert.equal(injected.rawSynZ[0], 0, `d=${d}: post-readout idle X cannot alter the completed current-round readout`);
+  assert.notEqual(injected.rawSynZ[1], 0, `d=${d}: post-readout idle X becomes visible in the next round`);
+  assert.equal(injected.defX[0], 0, `d=${d}: detector must not move the post-readout idle fault into the prior round`);
+  assert.notEqual(injected.defX[1], 0, `d=${d}: detector records the idle fault when the next measurement sees it`);
+  console.log(`single-fault d=${d}: joint coverage=${audit.jointCovered}/${audit.locations}; ambiguous signatures=${audit.jointAmbiguous}/${audit.jointSignatures}; unresolved logical failures X/Z=${audit.jointFallbackLogicalFailX}/${audit.jointFallbackLogicalFailZ}; prep-fault repaired`);
 }
 
 const zero = wilsonInterval(0, 100);

@@ -89,34 +89,37 @@ function scCircuitRound(code, p, rng, roundIndex, frame, forcedFaults = []){
     }
     for (const q of ordered){
       const gi = gateIndex++;
-      /* Ideal CNOT conjugation: Z checks use ancilla→data, X checks data→ancilla. */
+      /* Standard extraction orientation:
+         Z check: data control → |0> ancilla target; X check: |+> ancilla control → data target.
+         This makes each ancilla measurement accumulate the intended stabilizer parity. */
       if (type === 'Z'){
-        if (ax) frame.x ^= scCircuitBit(q);
-        if (frame.z & scCircuitBit(q)) az ^= 1;
-      } else {
         if (frame.x & scCircuitBit(q)) ax ^= 1;
         if (az) frame.z ^= scCircuitBit(q);
+      } else {
+        if (ax) frame.x ^= scCircuitBit(q);
+        if (frame.z & scCircuitBit(q)) az ^= 1;
       }
       const force = forcedAt('cx', check, gi);
       const e = force ? scCircuitPauliPair(force.pauli) : scCircuitPauli(rng, p);
       if (e){
         if (type === 'Z'){
-          if (e.cx) ax ^= 1; if (e.cz) az ^= 1;
-          applyData(q, e.tx, e.tz);
-          record({ location: 'cx', gate: gi, check, q, t: `${scCircuitPauliName(e.cx,e.cz)}/${scCircuitPauliName(e.tx,e.tz)}` });
-        } else {
           applyData(q, e.cx, e.cz);
           if (e.tx) ax ^= 1; if (e.tz) az ^= 1;
-          record({ location: 'cx', gate: gi, check, q, t: `${scCircuitPauliName(e.cx,e.cz)}/${scCircuitPauliName(e.tx,e.tz)}` });
+        } else {
+          if (e.cx) ax ^= 1; if (e.cz) az ^= 1;
+          applyData(q, e.tx, e.tz);
         }
+        record({ location: 'cx', gate: gi, check, q, t: `${scCircuitPauliName(e.cx,e.cz)}/${scCircuitPauliName(e.tx,e.tz)}` });
       }
     }
     const readoutFault = forcedAt('readout', check);
     const readoutFlip = !!readoutFault || rng() < p;
     if (readoutFlip) record({ location: 'readout', check, q: 'ancilla', t: 'bit flip' });
+    /* The CNOT sequence has already accumulated the data-check parity in the
+       ancilla frame (ax for Z checks, az for X checks); do not count it twice. */
     const measured = type === 'Z'
-      ? scCircuitParity(frame.x & st.mask) ^ ax ^ (readoutFlip ? 1 : 0)
-      : scCircuitParity(frame.z & st.mask) ^ az ^ (readoutFlip ? 1 : 0);
+      ? ax ^ (readoutFlip ? 1 : 0)
+      : az ^ (readoutFlip ? 1 : 0);
     if (type === 'Z') outcomeZ[ci] = measured;
     else outcomeX[ci] = measured;
   }
@@ -133,7 +136,9 @@ function scCircuitRound(code, p, rng, roundIndex, frame, forcedFaults = []){
   }
   const sx = outcomeX.reduce((m, v, i) => v ? m | (1 << i) : m, 0);
   const sz = outcomeZ.reduce((m, v, i) => v ? m | (1 << i) : m, 0);
-  const trueX = scCircuitSyndrome(code.zg, frame.z), trueZ = scCircuitSyndrome(code.xg, frame.x);
+  /* η maps measured checks onto the post-idle round-boundary frame used by Δ layers. */
+  const trueX = scCircuitSyndrome(code.zg, frame.z);
+  const trueZ = scCircuitSyndrome(code.xg, frame.x);
   return {
     deltaX: startX ^ frame.x, deltaZ: startZ ^ frame.z,
     synX: sx, synZ: sz, etaX: sx ^ trueX, etaZ: sz ^ trueZ,
@@ -142,8 +147,8 @@ function scCircuitRound(code, p, rng, roundIndex, frame, forcedFaults = []){
 }
 
 function scCircuitDecodeFrame(code, type, errorLayers, measurementErrors, R, weights, dpMax, skipDecode = false){
-  /* X-frame errors are detected by Z checks, and vice versa. */
-  const graphType = type === 'X' ? 'Z' : 'X';
+  /* code.xg is the Z-check graph for X-frame errors; code.zg is the X-check graph for Z-frame errors. */
+  const graphType = type;
   const g = graphType === 'X' ? code.xg : code.zg;
   const dual = type === 'X' ? code.zl : code.xl;
   const gr = scSpaceGraph(code, graphType, R);
@@ -194,10 +199,10 @@ function scCircuitIndexFault(map, signature, mask, logical){
   entry.mechanisms++;
   if (entry.logical !== logical) entry.ambiguous = true;
 }
-function scCircuitIndexJoint(map, signature, shot, logicalX, logicalZ){
+function scCircuitIndexJoint(map, signature, shot, logicalX, logicalZ, fault){
   let entry = map.get(signature);
   if (!entry){
-    map.set(signature, { correctionX: shot.mx, correctionZ: shot.mz, logicalX, logicalZ,
+    map.set(signature, { correctionX: shot.mx, correctionZ: shot.mz, logicalX, logicalZ, firstFault: fault,
       ambiguous: false, mechanisms: 1 });
     return;
   }
@@ -216,23 +221,23 @@ function scCircuitFaultTable(code, R){
   for (const fault of catalog){
     const shot = scCircuitTrial(code, { p: 0, rounds: R, forceFaults: [fault], skipLookup: true }, mulberry32(1));
     const sx = scCircuitSignature(shot.defX), sz = scCircuitSignature(shot.defZ);
-    faultSignatures.push({ fault, sx, sz });
     const lx = scCircuitParity(shot.mx & code.zl), lz = scCircuitParity(shot.mz & code.xl);
+    faultSignatures.push({ fault, sx, sz, lx, lz });
     if (shot.defX.every(v => v === 0) && lx) silentLogicalX++;
     if (shot.defZ.every(v => v === 0) && lz) silentLogicalZ++;
     scCircuitIndexFault(X, sx, shot.mx, lx);
     scCircuitIndexFault(Z, sz, shot.mz, lz);
-    scCircuitIndexJoint(J, `${sx}||${sz}`, shot, lx, lz);
+    scCircuitIndexJoint(J, `${sx}||${sz}`, shot, lx, lz, fault);
     const ex = X.get(sx), ez = Z.get(sz);
     if (ex && !ex.ambiguous){
       const residual = shot.mx ^ ex.correction;
       if (scCircuitParity(residual & code.zl)) lookupLogicalFailX++;
-      if (scCircuitSyndrome(code.zg, residual)) lookupSyndromeFailX++;
+      if (scCircuitSyndrome(code.xg, residual)) lookupSyndromeFailX++;
     }
     if (ez && !ez.ambiguous){
       const residual = shot.mz ^ ez.correction;
       if (scCircuitParity(residual & code.xl)) lookupLogicalFailZ++;
-      if (scCircuitSyndrome(code.xg, residual)) lookupSyndromeFailZ++;
+      if (scCircuitSyndrome(code.zg, residual)) lookupSyndromeFailZ++;
     }
   }
   const xEntries = [...X.values()], zEntries = [...Z.values()], jEntries = [...J.values()];
@@ -251,14 +256,23 @@ function scCircuitFaultTable(code, R){
     const residualX = shot.mx ^ entry.correctionX, residualZ = shot.mz ^ entry.correctionZ;
     if (scCircuitParity(residualX & code.zl)) jointLookupLogicalFailX++;
     if (scCircuitParity(residualZ & code.xl)) jointLookupLogicalFailZ++;
-    if (scCircuitSyndrome(code.zg, residualX)) jointLookupSyndromeFailX++;
-    if (scCircuitSyndrome(code.xg, residualZ)) jointLookupSyndromeFailZ++;
+    if (scCircuitSyndrome(code.xg, residualX)) jointLookupSyndromeFailX++;
+    if (scCircuitSyndrome(code.zg, residualZ)) jointLookupSyndromeFailZ++;
   }
   const jointFallbackFaults = faultSignatures
     .filter(item => J.get(`${item.sx}||${item.sz}`)?.ambiguous)
     .map(item => item.fault);
+  const jointAmbiguousExamples = [];
+  const seenAmbiguous = new Set();
+  for (const item of faultSignatures){
+    const signature = `${item.sx}||${item.sz}`, entry = J.get(signature);
+    if (!entry?.ambiguous || (item.lx === entry.logicalX && item.lz === entry.logicalZ) || seenAmbiguous.has(signature)) continue;
+    seenAmbiguous.add(signature);
+    jointAmbiguousExamples.push({ signature, first: entry.firstFault, conflicting: item.fault,
+      firstLogical: [entry.logicalX, entry.logicalZ], conflictingLogical: [item.lx, item.lz] });
+  }
   const result = {
-    X, Z, J, jointFallbackFaults, locations: catalog.length, xSignatures: X.size, zSignatures: Z.size,
+    X, Z, J, jointFallbackFaults, jointAmbiguousExamples, locations: catalog.length, xSignatures: X.size, zSignatures: Z.size,
     jointSignatures: J.size, jointAmbiguous, jointCovered,
     jointLookupLogicalFailX, jointLookupLogicalFailZ,
     jointLookupSyndromeFailX, jointLookupSyndromeFailZ,
@@ -281,8 +295,8 @@ function scCircuitJointFallbackAudit(code, R, table){
     if (shot.lookupZ) zLookup++;
     if (shot.xfail) logicalFailX++;
     if (shot.zfail) logicalFailZ++;
-    if (scCircuitSyndrome(code.zg, shot.resX)) syndromeFailX++;
-    if (scCircuitSyndrome(code.xg, shot.resZ)) syndromeFailZ++;
+    if (scCircuitSyndrome(code.xg, shot.resX)) syndromeFailX++;
+    if (scCircuitSyndrome(code.zg, shot.resZ)) syndromeFailZ++;
   }
   return { mechanisms, xLookup, zLookup, logicalFailX, logicalFailZ, syndromeFailX, syndromeFailZ };
 }
@@ -298,6 +312,7 @@ export function scCircuitFaultAudit(code, rounds = code.d){
     jointFallbackMechanisms: jf.mechanisms, jointFallbackXLookup: jf.xLookup, jointFallbackZLookup: jf.zLookup,
     jointFallbackLogicalFailX: jf.logicalFailX, jointFallbackLogicalFailZ: jf.logicalFailZ,
     jointFallbackSyndromeFailX: jf.syndromeFailX, jointFallbackSyndromeFailZ: jf.syndromeFailZ,
+    jointAmbiguousExamples: t.jointAmbiguousExamples,
     xAmbiguous: t.xAmbiguous, zAmbiguous: t.zAmbiguous, xCovered: t.xCovered, zCovered: t.zCovered,
     lookupLogicalFailX: t.lookupLogicalFailX, lookupLogicalFailZ: t.lookupLogicalFailZ,
     lookupSyndromeFailX: t.lookupSyndromeFailX, lookupSyndromeFailZ: t.lookupSyndromeFailZ,
@@ -338,7 +353,7 @@ export function scCircuitTrial(code, cfg = {}, rng = Math.random, grs){
   }
   const resX = frame.x ^ corrX, resZ = frame.z ^ corrZ;
   const xfail = scCircuitParity(resX & code.zl), zfail = scCircuitParity(resZ & code.xl);
-  const synAfterX = scCircuitSyndrome(code.zg, resX), synAfterZ = scCircuitSyndrome(code.xg, resZ);
+  const synAfterX = scCircuitSyndrome(code.xg, resX), synAfterZ = scCircuitSyndrome(code.zg, resZ);
   const fallback = Number(decoderX === 'mwpm' && x.mode === 'greedy') + Number(decoderZ === 'mwpm' && z.mode === 'greedy');
   const finalSynX = scCircuitSyndrome(code.zg, frame.z), finalSynZ = scCircuitSyndrome(code.xg, frame.x);
   const synRounds = rounds.map((r, i) => `R${i + 1}:X${scCircuitMaskText(r.synX, code.X.length)}/Z${scCircuitMaskText(r.synZ, code.Z.length)}`);
