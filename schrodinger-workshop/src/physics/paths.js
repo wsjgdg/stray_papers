@@ -39,7 +39,12 @@ export const PI_DEFAULTS = {
   nY: 241,        /* 剖面采样点数 */
   yFov: 200,      /* 剖面纵向半宽（世界单位；= 画布可见半高） */
   openA: true, openB: true,
-  coherent: true, /* true=幅度相加；false=强度相加（可区分路径） */
+  /* 缝数：2 = 经典双缝（A/B 各自开关）；1 = 单缝置中；≥3 = 等间距光栅（全部开） */
+  nslit: 2,
+  /* 哪条路信息强度 ε ∈ [0,1]：0 = 完全相干（幅度相加），1 = 完全可区分（强度相加）。
+     **不进默认值表**（不写 eps: 0）：否则「没给 eps」与「eps=0」不可区分，
+     旧口径 coherent:false 会被默认值吃掉。取值见 piEps。 */
+  coherent: true, /* 兼容旧口径：false ⟺ ε=1 */
 };
 
 /* ---------- 单段：相位与模态系数 ---------- */
@@ -118,10 +123,34 @@ export function piAnalyticSegment(X, dy){
 /* ---------- 缝位置 ---------- */
 export function piSlits(cfg = {}){
   const c = { ...PI_DEFAULTS, ...cfg };
+  const n = Math.max(1, Math.min(8, Math.round(c.nslit ?? 2)));
   const out = [];
-  if (c.openA) out.push(+c.d / 2);
-  if (c.openB) out.push(-c.d / 2);
+  if (n === 1){
+    /* 单缝：置中（旧的 single 预设就是 d=0，这里直接给 0） */
+    out.push(0);
+    return out;
+  }
+  if (n === 2){
+    if (c.openA) out.push(+c.d / 2);
+    if (c.openB) out.push(-c.d / 2);
+    return out;
+  }
+  /* N ≥ 3：等间距光栅，**关于原点对称**（N 偶：±d/2, ±3d/2…；N 奇：0, ±d…）。
+     对称摆放很重要：N 偶时 |y_k| 成对相等 ⟹ 源曲率项 y_k²/(2L₁) 在每对内部是
+     公共相位，主极大仍严格落在 Y = m·λL₂/d 上，峰宽 ∝ 1/N。 */
+  /* 偶数：±d/2, ±3d/2…；奇数：0, ±d, ±2d…（都关于原点对称） */
+  const c0 = (n % 2 === 0) ? 0.5 : 0;
+  const half = (n % 2 === 0) ? n / 2 : (n - 1) / 2;
+  for (let k = 0; k < n; k++) out.push((k + c0 - half) * c.d);
+  out.sort((a, b) => b - a);
   return out;
+}
+
+/* ε 的归一化：eps 优先；旧口径 coherent=false ⟺ eps=1 */
+export function piEps(cfg = {}){
+  const c = { ...PI_DEFAULTS, ...cfg };
+  if (c.eps !== undefined && c.eps !== null) return Math.max(0, Math.min(1, +c.eps));
+  return c.coherent === false ? 1 : 0;
 }
 
 /* ξ 求积点数：跨缝相位变化 ≈ (|Y|/L₂)·w（源曲率项同量级），要求每样本的相位步
@@ -179,15 +208,27 @@ export function piAmpAt(Y, cfg = {}){
   return { raw: { re, im, mag: Math.hypot(re, im) }, an: { re: anRe, im: anIm, mag: Math.hypot(anRe, anIm) }, per };
 }
 
-/* 单点强度（相干/非相干按 cfg.coherent 选） */
+/* 单点强度：相干项 (Σ A_k)² 与不相干项 Σ|A_k|² 按 ε 线性混合：
+     I(ε) = (1−ε)·|Σ A_k|² + ε·Σ|A_k|²
+   ε 的物理含义是「退相干份额」：ε 比例的路径被环境/探测器打掉了相位关系（只能强度相加），
+   1−ε 比例的路径仍然相干。这是一个可操作的唯象模型，直接给出
+     V(ε) = (1−ε)·V(0)
+   （标准二值探测器模型的 V=√(1−D²) 是另一条口径——那里 D 是探测器能区分两路的最小错误概率，
+   与这里的 ε 不是同一个量，页面文案按「退相干份额」写，不混用）。
+   ε=0 逐位回到旧口径 coherent=true，ε=1 逐位回到 coherent=false。 */
 export function piIntensity(Y, cfg = {}){
   const A = piAmpAt(Y, cfg);
-  if (cfg.coherent === false){
+  const e = piEps(cfg);
+  if (e >= 1 - 1e-15){
     let I = 0;
     for (const p of A.per) I += p.mag * p.mag;
     return I;
   }
-  return A.raw.mag * A.raw.mag;
+  const coh = A.raw.mag * A.raw.mag;
+  if (e <= 1e-15) return coh;
+  let inc = 0;
+  for (const p of A.per) inc += p.mag * p.mag;
+  return (1 - e) * coh + e * inc;
 }
 
 /* ---------- 剖面 ---------- */
@@ -201,6 +242,8 @@ export function piProfile(cfg = {}){
   const n = c.nY | 0;
   const yMin = -c.yFov, yMax = c.yFov;   /* 剖面覆盖画布可见的纵向范围 */
   const Ys = new Float64Array(n), Ip = new Float64Array(n), Ia = new Float64Array(n), Ii = new Float64Array(n);
+  const cohArr = new Float64Array(n), incArr = new Float64Array(n);
+  const anCohArr = new Float64Array(n), anIncArr = new Float64Array(n);
   for (let k = 0; k < n; k++){
     const Y = yMin + (yMax - yMin) * k / (n - 1);
     Ys[k] = Y;
@@ -224,11 +267,26 @@ export function piProfile(cfg = {}){
       anIncoh += (kr * kr + ki * ki) / (m * m);
       ar += kr / m; ai += ki / m;
     }
-    Ip[k] = c.coherent === false ? incoh : re * re + im * im;
-    /* 非相干时对照也换成「各缝强度相加」，否则比值不是常数（那是模式差异，
-       不是数值误差，HUD 的「比值起伏」会误报） */
-    Ia[k] = c.coherent === false ? anIncoh : ar * ar + ai * ai;
-    Ii[k] = incoh;
+    /* 相干 / 不相干两个端点先各算一份，归一之后再按 ε 混合（见循环后的注释）。 */
+    cohArr[k] = re * re + im * im;
+    incArr[k] = incoh;
+    anCohArr[k] = ar * ar + ai * ai;
+    anIncArr[k] = anIncoh;
+  }
+  /* 两个端点各自归一到**自己的峰值**再按 ε 混合：
+       I(ε) = (1−ε)·Î_coh + ε·Î_inc,  Î = I/max I
+     这样「相干份额」就是画面上的份额（两条曲线都满高）；直接拿未归一的强度混合会被
+     两个峰值的比（相干峰 ≈ 2× 不相干峰）偷偷加权，观测到的可见度就不再是干净的
+     V(ε) = (1−ε)/(1+ε)。端点 ε=0/1 逐位等于旧口径。 */
+  const e = piEps(c);
+  const mpC = Math.max(...cohArr), mpI = Math.max(...incArr);
+  const maC = Math.max(...anCohArr), maI = Math.max(...anIncArr);
+  for (let k = 0; k < n; k++){
+    const ch = mpC > 0 ? cohArr[k] / mpC : 0, ic = mpI > 0 ? incArr[k] / mpI : 0;
+    const ach = maC > 0 ? anCohArr[k] / maC : 0, aic = maI > 0 ? anIncArr[k] / maI : 0;
+    Ip[k] = (1 - e) * ch + e * ic;
+    Ia[k] = (1 - e) * ach + e * aic;
+    Ii[k] = incArr[k];
   }
   /* 归一 + 比值起伏（验证「只差一个常数」） */
   const mp = Math.max(...Ip), ma = Math.max(...Ia);
@@ -306,6 +364,39 @@ export function piFresnelRef(A, cCoef, N = 20001){
 }
 
 /* ---------- 派生量 ---------- */
+/* N 缝光栅的第一暗纹（相对主极大）= λL₂/(N d)：N 越大主极大越窄（峰宽 ∝ 1/N）。
+   N=1 时无意义（返回 Infinity），N=2 时退化为 λL₂/(2d)（双缝中央包络零点）。 */
+export function piGratingWidth(cfg = {}){
+  const c = { ...PI_DEFAULTS, ...cfg };
+  const n = Math.max(1, Math.min(8, Math.round(c.nslit ?? 2)));
+  return (c.d > 1e-9 && n > 1) ? PI_LAMBDA * c.L2 / (n * c.d) : Infinity;
+}
+
+/* 条纹可见度 V = (I_max − I_min)/(I_max + I_min)，但 max/min 取**同一条纹周期内**
+   的相邻极值——不是整窗的最大/最小。为什么：整窗口径把单缝包络的缓降当成了「条纹」，
+   可区分（ε=1）时剖面只是一条平滑包络，却会报出 V≈0.26 的假可见度。
+   做法：先在 |Y| ≤ sp/2 里找主极大，再在它到 ±0.9·sp 的窗口里找最小。
+   ε 混合（两项各自归一）时解析预期 V(ε) = (1−ε)/(1+ε)。 */
+export function piVisibility(prof, cfg = {}){
+  const c = { ...PI_DEFAULTS, ...cfg };
+  const sp = piFringeSpacing(c);
+  if (!Number.isFinite(sp) || sp <= 0) return 0;
+  const Y = prof.Y, I = prof.path;
+  let kp = -1, vmax = -Infinity;
+  for (let k = 0; k < Y.length; k++){
+    if (Math.abs(Y[k]) > sp / 2 + 1e-9) continue;
+    if (I[k] > vmax){ vmax = I[k]; kp = k; }
+  }
+  if (kp < 0) return 0;
+  let lo = Infinity;
+  for (let k = 0; k < Y.length; k++){
+    if (Math.abs(Y[k] - Y[kp]) > 0.9 * sp + 1e-9) continue;
+    if (I[k] < lo) lo = I[k];
+  }
+  if (!Number.isFinite(lo) || vmax + lo <= 1e-30) return 0;
+  return (vmax - lo) / (vmax + lo);
+}
+
 export function piFringeSpacing(cfg = {}){
   const c = { ...PI_DEFAULTS, ...cfg };
   return c.d > 1e-9 ? PI_LAMBDA * c.L2 / c.d : Infinity;   /* λL₂/d */
@@ -344,9 +435,10 @@ export function piFringes(prof){
 }
 
 export const PI_PRESETS = {
-  double: { name: '双缝', text: '两条缝各贡献一个振幅，路径族在此处**分岔**：同一探测点有两条「路径束」，它们的几何相位差 = k·δ（δ 为光程差）⟹ 明暗条纹。逐条路径看相位是乱的，但**沿每条缝**求和后只剩两个宏观振幅——这正是「路径求和 ⟹ 传播子」的可视化。', cfg: { openA: true, openB: true, coherent: true, d: 48, w: 8 } },
-  single: { name: '单缝', text: '关掉一条缝、并把留下的那条移到轴上（d=0 ⟹ 光束居中）：干涉消失，只剩**单缝衍射包络**（缝宽 w 的 sinc²），远场第一暗纹在 λL₂/w。这一步是「哪条路」信息的判据——只剩一条路时没有第二个振幅可加。', cfg: { openA: true, openB: false, coherent: true, d: 0, w: 20 } },
-  incoherent: { name: '可区分', text: '两条缝都开，但**不做幅度相加**（强度相加——等价于「测量了粒子走哪条缝」）。条纹立刻消失，回到两个单缝包络的叠加。这是 R72「可区分性 ε」在路径语言里的同一条物理。', cfg: { openA: true, openB: true, coherent: false, d: 48, w: 8 } },
+  double: { name: '双缝', text: '两条缝各贡献一个振幅，路径族在此处**分岔**：同一探测点有两条「路径束」，它们的几何相位差 = k·δ（δ 为光程差）⟹ 明暗条纹。逐条路径看相位是乱的，但**沿每条缝**求和后只剩两个宏观振幅——这正是「路径求和 ⟹ 传播子」的可视化。', cfg: { openA: true, openB: true, coherent: true, nslit: 2, eps: 0, d: 48, w: 8 } },
+  single: { name: '单缝', text: '关掉一条缝、并把留下的那条移到轴上（d=0 ⟹ 光束居中）：干涉消失，只剩**单缝衍射包络**（缝宽 w 的 sinc²），远场第一暗纹在 λL₂/w。这一步是「哪条路」信息的判据——只剩一条路时没有第二个振幅可加。', cfg: { openA: true, openB: false, coherent: true, nslit: 1, eps: 0, d: 0, w: 20 } },
+  grating: { name: '光栅', text: '把缝从 2 条加到 N 条（等间距 d）：同一个探测点上有 N 个振幅相加，**主极大位置仍由 λL₂/d 定**，但每个主极大被压窄（宽度 ≈ λL₂/(N·d)），峰间冒出 N−2 个次极大。这就是「多缝 → 光栅」的全部物理，仍然是逐条路径相加，没有新规则。', cfg: { openA: true, openB: true, coherent: true, nslit: 6, eps: 0, d: 16, w: 4 } },
+  incoherent: { name: '可区分', text: '两条缝都开，但**不做幅度相加**（强度相加——等价于「测量了粒子走哪条缝」）。条纹立刻消失，回到两个单缝包络的叠加。面板的「哪条路 ε」滑到 1 就是这件事：两条路变得可区分，干涉项归零。', cfg: { openA: true, openB: true, coherent: false, nslit: 2, eps: 1, d: 48, w: 8 } },
 };
 
 /* ---------- 可视化：一阶模态扫描的累积和（Cornu 型螺旋） ----------

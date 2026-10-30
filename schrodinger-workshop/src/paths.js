@@ -21,7 +21,7 @@
 import { injectStyles } from './core/styles.js';
 import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
-import { PI_DEFAULTS, PI_PRESETS, piProfile, piAmpAt, piPathSamples, piSpiral, piSpiralStream, piFringeSpacing, piStraightPhase, piModeSum, piFringes, piNxiFor } from './physics/paths.js';
+import { PI_DEFAULTS, PI_PRESETS, piProfile, piAmpAt, piPathSamples, piSpiral, piSpiralStream, piFringeSpacing, piStraightPhase, piModeSum, piFringes, piNxiFor, piSlits, piVisibility, piGratingWidth } from './physics/paths.js';
 import { LiveDriver } from './qec/live.js';
 
 const PV_CSS = `
@@ -47,22 +47,37 @@ const PV_CSS = `
   #pvHud .hrow span:first-child{color:var(--dim)}
   #pvHud .hrow span:last-child{color:var(--txt)}
   #pvHud hr{border:none;border-top:1px solid var(--line);margin:6px 0}
-  #pvStage{position:fixed;left:50%;top:calc(50% + 12px);transform:translate(-50%,-50%);z-index:5;
-    display:grid;grid-template-columns:minmax(0,1fr) 282px;grid-template-rows:1fr 1fr;gap:9px;
-    width:min(calc(100vw - 520px),1060px);height:min(78vh,620px)}
-  #pvMain{grid-row:1 / span 2;width:100%;height:100%;border:1px solid var(--line);border-radius:10px;
+  /* 舞台几何由 JS 写整数 px（见 layoutSize）：CSS 只留排版性质，不再给宽度算式——
+     旧的 min(calc(100vw - 520px),1060px) 会把画布压成「三块之后的剩余宽度」（1024 只剩 504，
+     900 只剩 380），那正是「被挤压」。 */
+  #pvStage{position:fixed;z-index:5;display:grid;gap:9px}
+  /* 画布不用 border（= 1px 会占盒模型、位图与 CSS 盒差 2px ⟹ 重采样变糊），描边走 inset 阴影 */
+  #pvMain{grid-row:1 / span 2;border:0;border-radius:10px;
+    box-shadow:inset 0 0 0 1px var(--line);
     background:rgba(4,8,16,.55);display:block;cursor:crosshair;touch-action:none}
-  #pvSpiral,#pvProfile{width:100%;height:100%;border:1px solid var(--line);border-radius:10px;
+  #pvSpiral,#pvProfile{border:0;border-radius:10px;box-shadow:inset 0 0 0 1px var(--line);
     background:rgba(4,8,16,.55);display:block}
+  /* 861–1200px：三栏排不下就不排——舞台独占整宽，面板/读数改成底部可开合 sheet（默认收起） */
+  #pvBand{display:none;gap:6px;position:absolute;top:-28px;left:0}
+  #pvBand button{font-family:var(--mono);font-size:10.5px;padding:3px 8px;border-radius:6px;cursor:pointer;
+    background:rgba(103,232,249,.08);border:1px solid var(--line);color:var(--txt)}
+  #pvBand button.on{background:rgba(103,232,249,.18);border-color:var(--cyan);color:var(--cyan)}
+  @media (min-width:861px) and (max-width:1200px){
+    #pvPanel,#pvHud{display:none;position:fixed;left:6px;right:6px;width:auto;top:auto;bottom:52px;
+      max-height:58vh;z-index:13;overflow-y:auto}
+    #pvPanel.open,#pvHud.open{display:block}
+    #pvBand{display:flex}
+    #pvHint{display:none}
+  }
   #pvHint{left:14px;bottom:14px;z-index:10;padding:9px 13px;max-width:320px;font-size:11px;
     color:var(--dim);line-height:1.6;max-height:110px;overflow-y:auto;
     scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #pvHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
   #pvDiag{position:fixed;left:-9999px}
-  @media (max-width:1180px){#pvStage{width:calc(100vw - 60px);grid-template-columns:minmax(0,1fr) 220px}
-    #pvHint{display:none}}
+  @media (max-width:1180px){#pvHint{display:none}}
 `;
 
+const clamp = (v, a, b) => (v < a ? a : (v > b ? b : v));
 const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
 const ex = (x, d = 2) => (Number.isFinite(x) && x !== 0 ? x.toExponential(d) : '0');
 
@@ -95,6 +110,9 @@ export class PathsApp {
       openA: q.has('A') ? q.get('A') !== '0' : pcfg.openA,
       openB: q.has('B') ? q.get('B') !== '0' : pcfg.openB,
       coherent: q.has('coh') ? q.get('coh') !== '0' : pcfg.coherent,
+      /* 缝数（≥3 = 等间距光栅）与「哪条路信息」ε ∈ [0,1] */
+      nslit: clamp(Math.round(num('N', pcfg.nslit ?? 2)), 1, 6),
+      eps: clamp(q.has('eps') ? parseFloat(q.get('eps')) : (q.has('coh') ? (q.get('coh') === '0' ? 1 : 0) : (pcfg.eps ?? 0)), 0, 1),
       reveal: q.get('reveal') === '0' ? 0 : 1,
       paused: q.get('paused') === '1',
       live: q.get('live') === '1',
@@ -125,6 +143,7 @@ export class PathsApp {
       nxi: piNxiFor(s.w, s.L2, this.view.yFov, s.nxi),
       nY: 241, yFov: this.view.yFov,
       openA: s.openA, openB: s.openB, coherent: s.coherent,
+      nslit: s.nslit, eps: s.eps,
     };
   }
 
@@ -149,13 +168,18 @@ export class PathsApp {
           <button id="pvP1" data-p="single">单缝</button>
         </div>
         <div class="btns" style="margin-top:6px">
-          <button id="pvP2" data-p="incoherent" style="grid-column:1 / span 2">可区分（强度相加）</button>
+          <button id="pvP3" data-p="grating">N 缝光栅</button>
+          <button id="pvP2" data-p="incoherent">可区分</button>
         </div>
+        <div class="chk" style="margin-top:4px"><span style="font-size:10.5px;color:var(--dim)">可区分 = 强度相加（ε=1）</span></div>
         <div class="grp">缝</div>
         <div class="chk"><input type="checkbox" id="pvA"><label for="pvA">缝 A 开</label></div>
         <div class="chk"><input type="checkbox" id="pvB"><label for="pvB">缝 B 开</label></div>
+        <div class="row"><label>缝数 N</label><input type="range" id="pvN" min="1" max="6" step="1"><output id="pvNo">—</output></div>
         <div class="row"><label>缝间距 d</label><input type="range" id="pvD" min="0" max="80" step="1"><output id="pvDo">—</output></div>
         <div class="row"><label>缝宽 w</label><input type="range" id="pvW" min="2" max="24" step="1"><output id="pvWo">—</output></div>
+        <div class="row"><label>哪条路 ε</label><input type="range" id="pvEps" min="0" max="1" step="0.05"><output id="pvEpso">—</output></div>
+        <div class="chk" style="margin-top:-2px"><span style="font-size:10.5px;color:var(--dim)">ε = 退相干份额：I=(1−ε)·相干 + ε·非相干（0 幅度相加 / 1 强度相加）</span></div>
         <div class="grp">路径族</div>
         <div class="row"><label>波折幅度</label><input type="range" id="pvAmp" min="0" max="46" step="1"><output id="pvAmpO">—</output></div>
         <div class="row"><label>每段样本</label><input type="range" id="pvK" min="8" max="120" step="4"><output id="pvKo">—</output></div>
@@ -170,6 +194,10 @@ export class PathsApp {
       </aside>
 
       <div id="pvStage" class="qstage">
+        <div id="pvBand">
+          <button id="pvDrawerPanel" title="展开/收起控制面板（窄屏）">⚙ 控制</button>
+          <button id="pvDrawerHud" title="展开/收起读数（窄屏）">◫ 读数</button>
+        </div>
         <canvas id="pvMain"></canvas>
         <canvas id="pvSpiral"></canvas>
         <canvas id="pvProfile"></canvas>
@@ -187,6 +215,8 @@ export class PathsApp {
         <div class="hrow"><span>I(Y) 归一</span><span id="hI">—</span></div>
         <div class="hrow"><span>暗纹数 / 对比度</span><span id="hVis">—</span></div>
         <div class="hrow"><span>条纹间距 λL₂/d</span><span id="hFringe">—</span></div>
+        <div class="hrow"><span>缝数 N · 可见度 V</span><span id="hNV">—</span></div>
+        <div class="hrow"><span>主极大宽度 λL₂/(Nd)</span><span id="hGW">—</span></div>
         <hr>
         <div class="hrow"><span>路径和 vs 解析（归一）</span><span id="hRatio">—</span></div>
         <div class="hrow"><span>比值起伏</span><span id="hSpread">—</span></div>
@@ -199,9 +229,20 @@ export class PathsApp {
 
     this._bind();
     this.syncPanel();
-    this.resize();
-    const ro = new ResizeObserver(() => this.resize());
-    ro.observe(this.q('#pvStage'));
+    this.layoutSize();
+    if (typeof ResizeObserver !== 'undefined'){
+      try {
+        this._ro = new ResizeObserver(() => { this.layoutSize(); });
+        this._ro.observe(this.q('#pvStage'));
+      } catch (_){ this._ro = null; }
+    }
+    /* 兜底：没有 RO 的环境（老浏览器/jsdom）靠 window.resize 重排 */
+    this._onWinResize = () => {
+      const w = window.innerWidth || 0;
+      if (w > 1200 || w <= 860) this.closeBand();
+      this.layoutSize();
+    };
+    window.addEventListener('resize', this._onWinResize);
     this.recompute();
     requestAnimationFrame(this.frame);
     return this;
@@ -209,7 +250,7 @@ export class PathsApp {
 
   _bind(){
     const s = this.state;
-    for (const id of ['pvP0', 'pvP1', 'pvP2']){
+    for (const id of ['pvP0', 'pvP1', 'pvP2', 'pvP3']){
       this.on(this.q('#' + id), 'click', e => { this.applyPreset(e.currentTarget.dataset.p); this.recompute(); });
     }
     const slider = (id, out, key, post) => {
@@ -220,6 +261,8 @@ export class PathsApp {
         if (o) o.textContent = post ? post(v) : String(v);
       });
     };
+    slider('pvN', 'pvNo', 'nslit');
+    slider('pvEps', 'pvEpso', 'eps', v => v.toFixed(2));
     slider('pvD', 'pvDo', 'd');
     slider('pvW', 'pvWo', 'w');
     slider('pvAmp', 'pvAmpO', 'W');
@@ -229,6 +272,8 @@ export class PathsApp {
     this.on(this.q('#pvA'), 'change', e => { s.openA = e.currentTarget.checked; this._touch(true); });
     this.on(this.q('#pvB'), 'change', e => { s.openB = e.currentTarget.checked; this._touch(true); });
     this.on(this.q('#pvReplay'), 'click', () => this.replaySum());
+    this.on(this.q('#pvDrawerPanel'), 'click', () => this.toggleBand('panel'));
+    this.on(this.q('#pvDrawerHud'), 'click', () => this.toggleBand('hud'));
     /* ---- R98 P4 实时沙盒：相位累积播放（Cornu 螺旋逐点生长） ---- */
     this.live = new LiveDriver({
       make: () => piSpiralStream(this.state.L1, { K: this.state.K, W: this.state.W }),
@@ -260,8 +305,11 @@ export class PathsApp {
     this.on(cv, 'pointerup', () => { drag = false; });
     this.on(cv, 'pointercancel', () => { drag = false; });
     this.on(window, 'keydown', e => {
+      const tag = (e.target && e.target.tagName) || '';
+      if (/input|textarea|select/i.test(tag)) return;
       if (e.key === 'ArrowUp'){ this.setY(s.Y - 2); e.preventDefault(); }
       if (e.key === 'ArrowDown'){ this.setY(s.Y + 2); e.preventDefault(); }
+      if (e.key === 'Escape') this.closeBand();
     });
   }
 
@@ -273,12 +321,16 @@ export class PathsApp {
     this.syncPanel();
     this._touch(true);
     this._msg = name === 'double' ? '双缝：两个振幅相加' :
-      name === 'single' ? '单缝：只剩一个振幅' : '可区分：强度相加，条纹消失';
+      name === 'single' ? '单缝：只剩一个振幅' :
+      name === 'grating' ? 'N 缝光栅：N 个振幅相加，主极大被压窄' :
+      '可区分：强度相加，条纹消失';
   }
 
   setParam(k, v){
     if (k === 'K') this.state.K = Math.max(4, Math.round(v));
     else if (k === 'modes') this.state.modes = Math.max(1, Math.min(2, Math.round(v)));
+    else if (k === 'nslit') this.state.nslit = clamp(Math.round(v), 1, 6);
+    else if (k === 'eps') this.state.eps = clamp(v, 0, 1);
     else if (k === 'Y') this.state.Y = v;
     else this.state[k] = v;
     this._touch(k !== 'Y');
@@ -318,19 +370,60 @@ export class PathsApp {
     b.classList.toggle('on', on);
   }
 
-  resize(){
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    for (const id of ['#pvMain', '#pvSpiral', '#pvProfile']){
+  /* ---------- 画布尺寸：唯一真相在 JS 里 ----------
+     两个坑一起解决：
+     ① **模糊**：位图必须是「整数 CSS 盒 × DPR」。旧版把 DPR 钳到 2（3x 屏直接糊），
+        且画布带 border:1px（box-sizing:border-box 下内容盒比位图窄 2px）⟹ 浏览器重采样。
+        现在画布无 border（描边走 inset 阴影）、宽高都写整数内联 px、DPR 取真实值。
+     ② **挤压**：舞台宽度原来写死 min(100vw−520, 1060px)——1024 窗口只剩 504、900 只剩 380。
+        现在三栏只在 >1200px 存在；861–1200 舞台独占整宽、面板变可开合 sheet；≤860 交给 core。 */
+  layoutSize(){
+    const vw = window.innerWidth || 1280, vh = window.innerHeight || 800;
+    const dpr = window.devicePixelRatio || 1;
+    const stage = this.q('#pvStage');
+    if (!stage) return;
+    /* sheet 档（core/responsive.js 已写好内联 left/right）只读它的盒，不抢几何 */
+    const sheet = !!stage.style.right;
+    let stageW, stageH;
+    if (sheet){
+      stageW = Math.round(stage.clientWidth || (vw - 12));
+      stageH = Math.round(stage.clientHeight || (vh - 100));
+    } else {
+      const band = vw <= 1200;
+      const avail = band ? vw - 40 : vw - 530;      /* >1200：让开 232 面板 + 216 读数 */
+      stageW = Math.round(clamp(avail, 620, 1060));
+      stageH = Math.round(Math.min(Math.max(vh * 0.66, 380), 680, vh - 96));
+      stage.style.width = stageW + 'px';
+      stage.style.height = stageH + 'px';
+      stage.style.left = Math.max(0, Math.round((vw - stageW) / 2)) + 'px';
+      stage.style.top = Math.max(56, Math.round((vh - stageH) / 2)) + 'px';
+      stage.style.transform = 'none';
+    }
+    const gap = 9;
+    const rightW = Math.round(Math.min(Math.max(stageW * 0.27, 200), 300));
+    const mainW = Math.max(240, stageW - rightW - gap);
+    const rowH = Math.max(110, Math.round((stageH - gap) / 2));
+    if (!sheet){
+      /* 行高取整后把舞台高度**对齐**成 2·rowH + gap：否则网格与画布差 1px，
+         右列上下两块会与主图错开半个像素（又是重采样） */
+      stageH = rowH * 2 + gap;
+      stage.style.height = stageH + 'px';
+    }
+    stage.style.gridTemplateColumns = mainW + 'px ' + rightW + 'px';
+    stage.style.gridTemplateRows = rowH + 'px ' + rowH + 'px';
+    this._geo = { dpr, stageW, stageH, mainW, rightW, rowH, sheet };
+    for (const [id, cw, ch] of [['#pvMain', mainW, rowH * 2 + gap], ['#pvSpiral', rightW, rowH], ['#pvProfile', rightW, rowH]]){
       const cv = this.q(id);
       if (!cv) continue;
-      const w = Math.max(80, cv.clientWidth), h = Math.max(60, cv.clientHeight);
-      if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)){
-        cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
-      }
+      const bw = Math.round(cw * dpr), bh = Math.round(ch * dpr);
+      if (cv.width !== bw) cv.width = bw;
+      if (cv.height !== bh) cv.height = bh;
+      cv.style.width = Math.round(cw) + 'px';
+      cv.style.height = Math.round(ch) + 'px';
     }
     const cv = this.q('#pvMain');
     if (cv){
-      const w = cv.clientWidth, h = cv.clientHeight;
+      const w = cv.width / dpr, h = cv.height / dpr;
       const padL = 28, padR = 54, padT = 22, padB = 26;
       const spanX = this.state.L1 + this.state.L2;
       const sx = (w - padL - padR) / spanX;
@@ -341,11 +434,54 @@ export class PathsApp {
     }
     this._dirty = true; this._needDraw = true;
   }
+  /* 自检：位图与 CSS 盒（宽度 × DPR）不一致就重排一次（只比宽与 DPR，高由我们自己钉） */
+  syncCanvasSize(){
+    const cv = this.q('#pvMain'), stage = this.q('#pvStage');
+    if (!cv || !stage || !this._geo) return false;
+    const dpr = window.devicePixelRatio || 1;
+    /* 比「舞台宽」与 DPR。桌面档的宽度是我们自己写进 inline style 的（比它恒等，
+       有意义的是 DPR 与窗口）；sheet 档的宽度由 core/responsive.js 的 left/right
+       决定，必须读 clientWidth——sheet 展开/收起、预览面板拖宽都在这里兜住。 */
+    const sheet = !!stage.style.right;
+    const sw = sheet ? Math.round(stage.clientWidth || this._geo.stageW)
+                     : Math.round(parseFloat(stage.style.width) || this._geo.stageW);
+    if (sw === this._geo.stageW && dpr === this._geo.dpr) return false;
+    this.layoutSize();
+    return true;
+  }
+  resize(){ this.layoutSize(); }
+
+  /* 861–1200px：面板/读数在同一时刻只开一个（两个都开就又把画面挤没了） */
+  toggleBand(which){
+    const pan = this.q('#pvPanel'), hud = this.q('#pvHud');
+    if (!pan || !hud) return false;
+    const target = which === 'panel' ? pan : hud;
+    const other = which === 'panel' ? hud : pan;
+    const on = !target.classList.contains('open');
+    other.classList.remove('open');
+    target.classList.toggle('open', on);
+    this.syncBand();
+    return on;
+  }
+  closeBand(){
+    for (const id of ['#pvPanel', '#pvHud']){ const e = this.q(id); if (e) e.classList.remove('open'); }
+    this.syncBand();
+  }
+  syncBand(){
+    const o = { panel: !!(this.q('#pvPanel') || {}).classList?.contains('open'),
+                hud: !!(this.q('#pvHud') || {}).classList?.contains('open') };
+    const bp = this.q('#pvDrawerPanel'), bh = this.q('#pvDrawerHud');
+    if (bp) bp.classList.toggle('on', o.panel);
+    if (bh) bh.classList.toggle('on', o.hud);
+    return o;
+  }
 
   recompute(){
     const c = this.cfg();
     this.prof = piProfile(c);
-    this.samples = piPathSamples(this.state.Y, c, 9);
+    /* 画图用的子网格：缝多时抽稀，保证三条画布的重绘成本不随 N 线性爆掉 */
+    const nA = c.nslit >= 4 ? 5 : (c.nslit === 3 ? 7 : 9);
+    this.samples = piPathSamples(this.state.Y, c, nA);
     /* R98 P4：播放中螺旋由流式累加器逐帧供给（recompute 不得用全批覆盖半场状态） */
     if (!(this.live && this.live.playing)) this.spir = piSpiral(c.L1, { K: c.K, W: c.W });
     const C1 = piModeSum(c.L1, c), C2 = piModeSum(c.L2, c);
@@ -360,6 +496,7 @@ export class PathsApp {
       nSeam: C1.count * C2.count,
       nTotal: C1.count * C2.count * c.nxi * nSlit,
       nSlit, fringe: piFringeSpacing(c), spread: p.scale.spread,
+      vis: piVisibility(p, c), gratingW: piGratingWidth(c),
       maxPath: p.maxPath, maxAn: p.maxAn,
     };
     this._dirty = false; this._needDraw = true;
@@ -377,7 +514,10 @@ export class PathsApp {
   renderHud(){
     const s = this.stats, st = this.state, c = this.cfg(), p = this.prof;
     const set = (id, v) => { const e = this.q('#' + id); if (e) e.textContent = v; };
-    set('hCase', st.preset === 'double' ? '双缝·相干' : st.preset === 'single' ? '单缝' : '双缝·可区分');
+    set('hCase', st.preset === 'double' ? '双缝·相干'
+      : st.preset === 'single' ? '单缝'
+      : st.preset === 'grating' ? 'N 缝光栅·相干'
+      : '双缝·可区分');
     set('hN', s.nTotal >= 1000 ? (s.nTotal / 1000).toFixed(1) + 'k' : String(s.nTotal));
     set('hPer', s.nSeam.toLocaleString('en-US') + ' × ' + c.nxi);
     set('hSum', nf(s.C1.mag, 2) + ' / ' + s.C1.count);
@@ -390,6 +530,9 @@ export class PathsApp {
     set('hVis', fr.count + ' 暗纹 · ' + fr.contrast.toFixed(3) +
       '（' + (fr.count === 0 ? '无条纹' : fr.contrast > 0.45 ? '清晰' : '弱') + '）');
     set('hFringe', nf(s.fringe, 2));
+    set('hNV', c.nslit + ' · V=' + nf(piVisibility(p, c), 3));
+    const gw = piGratingWidth(c);
+    set('hGW', Number.isFinite(gw) ? nf(gw, 2) : '—（单缝）');
     let dev = 0;
     for (let k = 0; k < p.path.length; k++) dev = Math.max(dev, Math.abs(p.path[k] - p.an[k]));
     set('hRatio', ex(dev, 1) + '（逐点最大）');
@@ -433,10 +576,9 @@ export class PathsApp {
       g.stroke();
     }
 
-    /* 屏（双缝挡板）：把可见区间按缝口切成若干段 */
-    const slitY = [];
-    if (st.openA) slitY.push(st.d / 2);
-    if (st.openB) slitY.push(-st.d / 2);
+    /* 屏（挡板）：把可见区间按缝口切成若干段。缝位置由 physics 的 piSlits 给
+       （N=1 置中；N=2 走 A/B 开关；N≥3 等间距光栅）——页面不再自己数两条缝。 */
+    const slitY = piSlits(this.cfg());
     const cuts = slitY.map(y0 => {
       const [, y1] = this.world(st.L1, y0 + st.w / 2);
       const [, y2] = this.world(st.L1, y0 - st.w / 2);
@@ -463,7 +605,9 @@ export class PathsApp {
       g.strokeStyle = 'rgba(103,232,249,.95)'; g.lineWidth = 3.6;
       g.beginPath(); g.moveTo(xb, Math.min(ya, yb2)); g.lineTo(xb, Math.max(ya, yb2)); g.stroke();
       g.fillStyle = 'rgba(103,232,249,.9)'; g.textAlign = 'left';
-      g.fillText(y0 > 0 ? 'A' : 'B', xb + 5, Math.min(ya, yb2) - 3);
+      const LBL = 'ABCDEFGH';
+      const li = slitY.indexOf(y0);
+      g.fillText(LBL[li >= 0 ? li : 0], xb + 5, Math.min(ya, yb2) - 3);
     }
 
     /* 探测面 + 强度条 */
@@ -509,7 +653,7 @@ export class PathsApp {
     const s = this.spir;
     if (!cv || !s) return;
     const g = cv.getContext('2d');
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const dpr = this.view.dpr || 1;
     const W = cv.width, H = cv.height;
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.clearRect(0, 0, W, H);
@@ -552,7 +696,7 @@ export class PathsApp {
     const p = this.prof;
     if (!cv || !p) return;
     const g = cv.getContext('2d');
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const dpr = this.view.dpr || 1;
     const W = cv.width, H = cv.height;
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.clearRect(0, 0, W, H);
@@ -607,6 +751,7 @@ export class PathsApp {
       this._fpsFrames = 0; this._lastFpsT = now;
       const e = this.q('#hFps'); if (e) e.textContent = this._fps ? String(this._fps) : '—';
     }
+    this.syncCanvasSize();          /* 布局迟到的变化（字体/sheet/拖宽）在这里兜住 */
     if (this._dirty) this.recompute();
     /* R98 P4：螺旋推进交给 LiveDriver（时长基准分帧）；此处只处理重绘 */
     if (this._needDraw){
@@ -619,6 +764,8 @@ export class PathsApp {
     const st = this.state;
     const set = (id, v) => { const e = this.q('#' + id); if (e) e.value = String(v); };
     const txt = (id, v) => { const e = this.q('#' + id); if (e) e.textContent = String(v); };
+    set('pvN', st.nslit); txt('pvNo', st.nslit);
+    set('pvEps', st.eps); txt('pvEpso', st.eps.toFixed(2));
     set('pvD', st.d); txt('pvDo', st.d);
     set('pvW', st.w); txt('pvWo', st.w);
     set('pvAmp', st.W); txt('pvAmpO', st.W);
@@ -628,7 +775,7 @@ export class PathsApp {
     const A = this.q('#pvA'), B = this.q('#pvB');
     if (A) A.checked = st.openA;
     if (B) B.checked = st.openB;
-    for (const b of ['pvP0', 'pvP1', 'pvP2']){
+    for (const b of ['pvP0', 'pvP1', 'pvP2', 'pvP3']){
       const e = this.q('#' + b);
       if (e) e.classList.toggle('on', e.dataset.p === st.preset);
     }
@@ -674,7 +821,16 @@ export class PathsApp {
       pause: () => { self._userPaused = true; self.live.stop(); self.syncPlayBtn(); },
       live: () => ({ playing: self.live.playing, ...self.live.progress }),
       fringes: () => self.stats.fringes,
+      slits: () => piSlits(self.cfg()),
+      visibility: () => piVisibility(self.prof, self.cfg()),
+      grating: () => piGratingWidth(self.cfg()),
+      setN: n => { self.setParam('nslit', n); self.syncPanel(); self.recompute(); self._drawAll(); },
+      setEps: e => { self.setParam('eps', e); self.syncPanel(); self.recompute(); self._drawAll(); },
       navLinks: () => Array.from(document.querySelectorAll('#pvTop a')).map(a => a.getAttribute('href')),
+      geo: () => ({ ...(self._geo || {}) }),
+      layout: () => { self.layoutSize(); return { ...(self._geo || {}) }; },
+      band: which => self.toggleBand(which),
+      bandOpen: () => self.syncBand(),
     };
   }
 }
