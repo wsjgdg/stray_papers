@@ -2,807 +2,1007 @@
   "task": "景点档案结构化字段-批12（4A）",
   "batch": 12,
   "count": 100,
-  "mergeRule": "合入时以 id 为准，禁止按名字合并",
+  "rules": "见 TASK-SPOT-PROFILE.md",
   "items": [
     {
-      "id": "scenic-清远-2450",
-      "name": "清远市古龙峡生态旅游区",
-      "city": "广东清远市清",
+      "id": "scenic-北海-2522",
+      "name": "合浦县东园家酒产业园",
+      "province": "广西",
+      "city": "北海",
+      "district": "合浦县",
       "level": "4A",
-      "address": "广东清远市清新区广东清远清远市古龙峡生态旅游区",
+      "address": "广西北海市合浦县东园家酒产业园",
       "category": "自然风光"
     },
     {
-      "id": "scenic-清远-2453",
-      "name": "金子山原生态休闲度假旅游景区",
-      "city": "广东清远市清",
+      "id": "scenic-北海-2523",
+      "name": "月饼小镇",
+      "province": "广西",
+      "city": "北海",
+      "district": "合浦县",
       "level": "4A",
-      "address": "广东清远市清新区广东清远清远市金子山原生态休闲度假旅游景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-清远-2440",
-      "name": "清远市清新区玄真漂流景区",
-      "city": "广东清远市清",
-      "level": "4A",
-      "address": "广东清远市清新区广东清远清远市清新区玄真漂流景区",
-      "category": "轻运动"
-    },
-    {
-      "id": "scenic-清远-2437",
-      "name": "清远市清新温矿泉旅游渡假区",
-      "city": "广东清远市清",
-      "level": "4A",
-      "address": "广东清远市清新区广东清远清远市清新温矿泉旅游渡假区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-清远-2442",
-      "name": "清远市宝晶宫景区",
-      "city": "广东清远市英",
-      "level": "4A",
-      "address": "广东清远市英德市广东清远清远市宝晶宫景区",
+      "address": "广西北海市合浦县月饼小镇",
       "category": "城市地标"
-    },
-    {
-      "id": "scenic-清远-2451",
-      "name": "清远市洞天仙境生态旅游度假区",
-      "city": "广东清远市英",
-      "level": "4A",
-      "address": "广东清远市英德市广东清远清远市洞天仙境生态旅游度假区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-清远-2452",
-      "name": "清远市九龙峰林小镇景区",
-      "city": "广东清远市英",
-      "level": "4A",
-      "address": "广东清远市英德市广东清远清远市九龙峰林小镇景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-汕头-2313",
-      "name": "汕头市潮阳莲花峰风景区",
-      "city": "广东汕头市潮",
-      "level": "4A",
-      "address": "广东汕头市潮阳区广东汕头汕头市潮阳莲花峰风景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-汕头-2310",
-      "name": "汕头市澄海区莲华乡村旅游区",
-      "city": "广东汕头市澄",
-      "level": "4A",
-      "address": "广东汕头市澄海区广东汕头汕头市澄海区莲华乡村旅游区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-汕头-2312",
-      "name": "汕头市前美古村侨文化旅游区",
-      "city": "广东汕头市澄",
-      "level": "4A",
-      "address": "广东汕头市澄海区广东汕头汕头市前美古村侨文化旅游区",
-      "category": "古镇村落"
-    },
-    {
-      "id": "scenic-汕头-2307",
-      "name": "汕头礐石风景名胜区",
-      "city": "广东汕头市濠",
-      "level": "4A",
-      "address": "广东汕头市濠江区广东汕头汕头礐石风景名胜区",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-汕头-2308",
-      "name": "汕头市中海度假村景区",
-      "city": "广东汕头市濠",
-      "level": "4A",
-      "address": "广东汕头市濠江区广东汕头汕头市中海度假村景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-汕头-2311",
-      "name": "汕头市方特欢乐世界蓝水星景区",
-      "city": "广东汕头市龙",
-      "level": "4A",
-      "address": "广东汕头市龙湖区广东汕头汕头市方特欢乐世界蓝水星景区",
-      "category": "主题乐园"
-    },
-    {
-      "id": "scenic-汕头-2309",
-      "name": "汕头南澳岛生态旅游区",
-      "city": "广东汕头市南",
-      "level": "4A",
-      "address": "广东汕头市南澳县广东汕头汕头南澳岛生态旅游区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-汕尾-2380",
-      "name": "汕尾红海湾旅游区",
-      "city": "广东汕尾市城",
-      "level": "4A",
-      "address": "广东汕尾市城区广东汕尾汕尾红海湾旅游区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-汕尾-2378",
-      "name": "汕尾市凤山祖庙旅游区",
-      "city": "广东汕尾市城",
-      "level": "4A",
-      "address": "广东汕尾市城区广东汕尾汕尾市凤山祖庙旅游区",
-      "category": "宗教寺庙"
-    },
-    {
-      "id": "scenic-汕尾-2381",
-      "name": "海丰红宫红场旧址·彭湃烈士故居红色旅游景区",
-      "city": "广东汕尾市海",
-      "level": "4A",
-      "address": "广东汕尾市海丰县广东汕尾汕尾市海丰红宫红场旧址·彭湃烈士故居红色旅游景区",
-      "category": "历史人文"
-    },
-    {
-      "id": "scenic-汕尾-2379",
-      "name": "汕尾市海丰莲花山度假村",
-      "city": "广东汕尾市海",
-      "level": "4A",
-      "address": "广东汕尾市海丰县广东汕尾汕尾市海丰莲花山度假村",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-汕尾-2377",
-      "name": "汕尾市玄武山旅游区",
-      "city": "广东汕尾市陆",
-      "level": "4A",
-      "address": "广东汕尾市陆丰市广东汕尾汕尾市玄武山旅游区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-韶关-2336",
-      "name": "韶关市丽宫旅游区",
-      "city": "广东韶关市广",
-      "level": "4A",
-      "address": "广东韶关市广东韶关韶关市丽宫旅游区",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-韶关-2335",
-      "name": "韶关市古佛洞天景区",
-      "city": "广东韶关市南",
-      "level": "4A",
-      "address": "广东韶关市南雄市广东韶关韶关市古佛洞天景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-韶关-2337",
-      "name": "韶关市南岭国家森林公园",
-      "city": "广东韶关市南",
-      "level": "4A",
-      "address": "广东韶关市南雄市广东韶关韶关市南岭国家森林公园",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-韶关-2338",
-      "name": "韶关市珠玑巷.梅关古道景区",
-      "city": "广东韶关市南",
-      "level": "4A",
-      "address": "广东韶关市南雄市广东韶关韶关市珠玑巷.梅关古道景区",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-韶关-2332",
-      "name": "韶关市曹溪温泉假日度假村",
-      "city": "广东韶关市曲",
-      "level": "4A",
-      "address": "广东韶关市曲江区广东韶关韶关市曹溪温泉假日度假村",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-韶关-2340",
-      "name": "韶关市经律论文化旅游小镇景区",
-      "city": "广东韶关市曲",
-      "level": "4A",
-      "address": "广东韶关市曲江区广东韶关韶关市经律论文化旅游小镇景区",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-韶关-2333",
-      "name": "韶关市广东大峡谷景区",
-      "city": "广东韶关市乳",
-      "level": "4A",
-      "address": "广东韶关市乳源瑶族自治县广东韶关韶关市广东大峡谷景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-韶关-2334",
-      "name": "韶关市云门山生态文化旅游区",
-      "city": "广东韶关市乳",
-      "level": "4A",
-      "address": "广东韶关市乳源瑶族自治县广东韶关韶关市云门山生态文化旅游区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-韶关-2342",
-      "name": "韶关市始兴县满堂客家大围景区",
-      "city": "广东韶关市始",
-      "level": "4A",
-      "address": "广东韶关市始兴县广东韶关韶关市始兴县满堂客家大围景区",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-韶关-2341",
-      "name": "韶关市东华山风景区",
-      "city": "广东韶关市翁",
-      "level": "4A",
-      "address": "广东韶关市翁源县广东韶关韶关市东华山风景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-韶关-2339",
-      "name": "新丰云天海原始森林度假村景区",
-      "city": "广东韶关市新",
-      "level": "4A",
-      "address": "广东韶关市新丰县广东韶关韶关市新丰云天海原始森林度假村景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-深圳-2295",
-      "name": "深圳市西部海上田园旅游区",
-      "city": "广东深圳市宝",
-      "level": "4A",
-      "address": "广东深圳市宝安区广东深圳深圳市西部海上田园旅游区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-深圳-2299",
-      "name": "深圳市光明农场大观园景区",
-      "city": "广东深圳市光",
-      "level": "4A",
-      "address": "广东深圳市光明区广东深圳深圳市光明农场大观园景区",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-深圳-2300",
-      "name": "水底山旅游度假区",
-      "city": "广东深圳市龙",
-      "level": "4A",
-      "address": "广东深圳市龙岗区广东深圳水底山旅游度假区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-深圳-2296",
-      "name": "深圳市观澜山水田园农庄景区",
-      "city": "广东深圳市龙",
-      "level": "4A",
-      "address": "广东深圳市龙华区广东深圳深圳市观澜山水田园农庄景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-深圳-2297",
-      "name": "深圳市青青世界旅游区",
-      "city": "广东深圳市南",
-      "level": "4A",
-      "address": "广东深圳市南山区广东深圳深圳市青青世界旅游区",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-深圳-2298",
-      "name": "深圳东部华侨城旅游度假区",
-      "city": "广东深圳市盐",
-      "level": "4A",
-      "address": "广东深圳市盐田区广东深圳深圳东部华侨城旅游度假区",
-      "category": "自然风光"
-    },
-    {
-      "id": "poi-广州-7",
-      "name": "永庆坊",
-      "city": "广东省广州市",
-      "level": "4A",
-      "address": "广东省广州市荔湾区恩宁路99号",
-      "category": "城市地标"
-    },
-    {
-      "id": "poi-广州-1",
-      "name": "陈家祠堂",
-      "city": "广东省广州市",
-      "level": "4A",
-      "address": "广东省广州市荔湾区中山七路恩龙里34号(地铁1,8号线陈家祠站D出口步行110米)",
-      "category": "城市地标"
-    },
-    {
-      "id": "poi-广州-49",
-      "name": "正佳极地海洋世界",
-      "city": "广东省广州市",
-      "level": "4A",
-      "address": "广东省广州市天河区天河路228号正佳广场2层2D126",
-      "category": "城市地标"
-    },
-    {
-      "id": "poi-广州-3",
-      "name": "大佛寺",
-      "city": "广东省广州市",
-      "level": "4A",
-      "address": "广东省广州市越秀区惠新中街21号",
-      "category": "宗教寺庙"
-    },
-    {
-      "id": "poi-广州-2",
-      "name": "越秀公园",
-      "city": "广东省广州市",
-      "level": "4A",
-      "address": "广东省广州市越秀区解放北路988号",
-      "category": "城市地标"
-    },
-    {
-      "id": "poi-广州-16",
-      "name": "五羊雕像",
-      "city": "广东省广州市",
-      "level": "4A",
-      "address": "广东省广州市越秀区解放北路988号越秀公园内木壳岗上",
-      "category": "城市地标"
-    },
-    {
-      "id": "poi-广州-18",
-      "name": "广州动物园",
-      "city": "广东省广州市",
-      "level": "4A",
-      "address": "广东省广州市越秀区先烈中路120号",
-      "category": "主题乐园"
-    },
-    {
-      "id": "poi-广州-33",
-      "name": "黄花岗公园",
-      "city": "广东省广州市",
-      "level": "4A",
-      "address": "广东省广州市越秀区先烈中路79号",
-      "category": "城市地标"
-    },
-    {
-      "id": "poi-广州-4",
-      "name": "三元宫",
-      "city": "广东省广州市",
-      "level": "4A",
-      "address": "广东省广州市越秀区应元路11号(地铁2号线纪念堂站C出口步行140米)",
-      "category": "宗教寺庙"
-    },
-    {
-      "id": "poi-广州-0",
-      "name": "广州起义烈士陵园",
-      "city": "广东省广州市",
-      "level": "4A",
-      "address": "广东省广州市越秀区中山二路92号",
-      "category": "历史人文"
-    },
-    {
-      "id": "poi-深圳-26",
-      "name": "深圳仙湖植物园",
-      "city": "广东省深圳市",
-      "level": "4A",
-      "address": "广东省深圳市罗湖区莲塘街道仙湖社区仙湖路160号",
-      "category": "主题乐园"
-    },
-    {
-      "id": "poi-深圳-28",
-      "name": "深圳野生动物园",
-      "city": "广东省深圳市",
-      "level": "4A",
-      "address": "广东省深圳市南山区西丽街道西丽路4066号",
-      "category": "主题乐园"
-    },
-    {
-      "id": "scenic-阳江-2414",
-      "name": "阳江市春湾风景区",
-      "city": "广东阳江市阳",
-      "level": "4A",
-      "address": "广东阳江市阳春市广东阳江阳江市春湾风景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-阳江-2412",
-      "name": "阳江市凌霄岩风景区",
-      "city": "广东阳江市阳",
-      "level": "4A",
-      "address": "广东阳江市阳春市广东阳江阳江市凌霄岩风景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-阳江-2413",
-      "name": "阳江市阳西咸水矿温泉景区",
-      "city": "广东阳江市阳",
-      "level": "4A",
-      "address": "广东阳江市阳西县广东阳江阳江市阳西咸水矿温泉景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-云浮-2467",
-      "name": "广东天露山旅游度假区",
-      "city": "广东云浮市新",
-      "level": "4A",
-      "address": "广东云浮市新兴县广东云浮广东天露山旅游度假区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-云浮-2465",
-      "name": "云浮市六祖故里旅游度假区",
-      "city": "广东云浮市新",
-      "level": "4A",
-      "address": "广东云浮市新兴县广东云浮云浮市六祖故里旅游度假区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-云浮-2466",
-      "name": "云浮市翔顺金水台温泉小镇景区",
-      "city": "广东云浮市新",
-      "level": "4A",
-      "address": "广东云浮市新兴县广东云浮云浮市翔顺金水台温泉小镇景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-湛江-2417",
-      "name": "湛江市金沙湾滨海休闲旅游区",
-      "city": "广东湛江市赤",
-      "level": "4A",
-      "address": "广东湛江市赤坎区广东湛江湛江市金沙湾滨海休闲旅游区",
-      "category": "海滨度假"
-    },
-    {
-      "id": "scenic-湛江-2419",
-      "name": "湛江市茂德公鼓城度假区",
-      "city": "广东湛江市雷",
-      "level": "4A",
-      "address": "广东湛江市雷州市广东湛江湛江市茂德公鼓城度假区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-湛江-2415",
-      "name": "湛江湖光岩风景区",
-      "city": "广东湛江市麻",
-      "level": "4A",
-      "address": "广东湛江市麻章区广东湛江湛江湖光岩风景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-湛江-2420",
-      "name": "湛江市鼎龙湾国际海洋旅游区",
-      "city": "广东湛江市吴",
-      "level": "4A",
-      "address": "广东湛江市吴川市广东湛江湛江市鼎龙湾国际海洋旅游区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-湛江-2416",
-      "name": "湛江蓝月湾温泉度假邨",
-      "city": "广东湛江市霞",
-      "level": "4A",
-      "address": "广东湛江市霞山区广东湛江湛江蓝月湾温泉度假邨",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-湛江-2418",
-      "name": "湛江市三岭山森林公园",
-      "city": "广东湛江市霞",
-      "level": "4A",
-      "address": "广东湛江市霞山区广东湛江湛江市三岭山森林公园",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-肇庆-2433",
-      "name": "肇庆市德庆学宫景区",
-      "city": "广东肇庆市德",
-      "level": "4A",
-      "address": "广东肇庆市德庆县广东肇庆肇庆市德庆学宫景区",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-肇庆-2431",
-      "name": "肇庆市龙母祖庙景区",
-      "city": "广东肇庆市德",
-      "level": "4A",
-      "address": "广东肇庆市德庆县广东肇庆肇庆市龙母祖庙景区",
-      "category": "宗教寺庙"
-    },
-    {
-      "id": "scenic-肇庆-2432",
-      "name": "肇庆市盘龙峡景区",
-      "city": "广东肇庆市德",
-      "level": "4A",
-      "address": "广东肇庆市德庆县广东肇庆肇庆市盘龙峡景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-肇庆-2434",
-      "name": "肇庆市封开龙山景区",
-      "city": "广东肇庆市封",
-      "level": "4A",
-      "address": "广东肇庆市封开县广东肇庆肇庆市封开龙山景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-肇庆-2435",
-      "name": "肇庆市四会奇石河景区",
-      "city": "广东肇庆市四",
-      "level": "4A",
-      "address": "广东肇庆市四会市广东肇庆肇庆市四会奇石河景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-中山-2397",
-      "name": "中山市詹园景区",
-      "city": "广东中山市广",
-      "level": "4A",
-      "address": "广东中山市广东中山中山市詹园景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-中山-2398",
-      "name": "中国（大涌）红木文化博览城景区",
-      "city": "广东中山市广",
-      "level": "4A",
-      "address": "广东中山市广东中山中山市中国（大涌）红木文化博览城景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-中山-2399",
-      "name": "中山市中山华艺广场景区",
-      "city": "广东中山市广",
-      "level": "4A",
-      "address": "广东中山市广东中山中山市中山华艺广场景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-珠海-2303",
-      "name": "珠海市御温泉渡假村景区",
-      "city": "广东珠海市斗",
-      "level": "4A",
-      "address": "广东珠海市斗门区广东珠海珠海市御温泉渡假村景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-珠海-2306",
-      "name": "珠海市汤臣倍健透明工厂景区",
-      "city": "广东珠海市金",
-      "level": "4A",
-      "address": "广东珠海市金湾区广东珠海珠海市汤臣倍健透明工厂景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-珠海-2302",
-      "name": "珠海罗西尼工业旅游景区",
-      "city": "广东珠海市香",
-      "level": "4A",
-      "address": "广东珠海市香洲区广东珠海珠海罗西尼工业旅游景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-珠海-2304",
-      "name": "珠海市东澳岛旅游度假区",
-      "city": "广东珠海市香",
-      "level": "4A",
-      "address": "广东珠海市香洲区广东珠海珠海市东澳岛旅游度假区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-珠海-2305",
-      "name": "珠海市外伶仃岛旅游度假区",
-      "city": "广东珠海市香",
-      "level": "4A",
-      "address": "广东珠海市香洲区广东珠海珠海市外伶仃岛旅游度假区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-珠海-2301",
-      "name": "珠海市圆明新园",
-      "city": "广东珠海市香",
-      "level": "4A",
-      "address": "广东珠海市香洲区广东珠海珠海市圆明新园",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-百色-2734",
-      "name": "靖西锦绣古镇景区",
-      "city": "广西百色市靖",
-      "level": "4A",
-      "address": "广西百色市靖西市广西百色市靖西市靖西锦绣古镇景区",
-      "category": "古镇村落"
-    },
-    {
-      "id": "scenic-百色-2736",
-      "name": "靖西龙潭湿地公园",
-      "city": "广西百色市靖",
-      "level": "4A",
-      "address": "广西百色市靖西市广西百色市靖西市靖西龙潭湿地公园",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-百色-2737",
-      "name": "靖西市渠洋湖景区",
-      "city": "广西百色市靖",
-      "level": "4A",
-      "address": "广西百色市靖西市广西百色市靖西市靖西市渠洋湖景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-百色-2735",
-      "name": "靖西小城故事景区",
-      "city": "广西百色市靖",
-      "level": "4A",
-      "address": "广西百色市靖西市广西百色市靖西市靖西小城故事景区",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-百色-2721",
-      "name": "百色乐业大石围天坑群景区",
-      "city": "广西百色市乐",
-      "level": "4A",
-      "address": "广西百色市乐业县广西百色市乐业县百色乐业大石围天坑群景区",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-百色-2726",
-      "name": "乐业-凤山世界地质公园景区",
-      "city": "广西百色市乐",
-      "level": "4A",
-      "address": "广西百色市乐业县广西百色市乐业县乐业-凤山世界地质公园景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-百色-2724",
-      "name": "乐业布柳河仙人桥景区",
-      "city": "广西百色市乐",
-      "level": "4A",
-      "address": "广西百色市乐业县广西百色市乐业县乐业布柳河仙人桥景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-百色-2727",
-      "name": "乐业县穿洞天坑景区",
-      "city": "广西百色市乐",
-      "level": "4A",
-      "address": "广西百色市乐业县广西百色市乐业县乐业县穿洞天坑景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-百色-2725",
-      "name": "乐业县红七红八军纪念馆",
-      "city": "广西百色市乐",
-      "level": "4A",
-      "address": "广西百色市乐业县广西百色市乐业县乐业县红七红八军纪念馆",
-      "category": "历史人文"
-    },
-    {
-      "id": "scenic-百色-2729",
-      "name": "乐业县兰花和普园景区",
-      "city": "广西百色市乐",
-      "level": "4A",
-      "address": "广西百色市乐业县广西百色市乐业县乐业县兰花和普园景区",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-百色-2722",
-      "name": "乐业县龙云山故事小镇景区",
-      "city": "广西百色市乐",
-      "level": "4A",
-      "address": "广西百色市乐业县广西百色市乐业县乐业县龙云山故事小镇景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-百色-2723",
-      "name": "乐业县罗妹莲花洞景区",
-      "city": "广西百色市乐",
-      "level": "4A",
-      "address": "广西百色市乐业县广西百色市乐业县乐业县罗妹莲花洞景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-百色-2728",
-      "name": "乐业县五台山森林公园景区",
-      "city": "广西百色市乐",
-      "level": "4A",
-      "address": "广西百色市乐业县广西百色市乐业县乐业县五台山森林公园景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-百色-2733",
-      "name": "凌云茶山金字塔景区",
-      "city": "广西百色市凌",
-      "level": "4A",
-      "address": "广西百色市凌云县广西百色市凌云县凌云茶山金字塔景区",
-      "category": "宗教寺庙"
-    },
-    {
-      "id": "scenic-百色-2720",
-      "name": "那坡县镇安公园景区",
-      "city": "广西百色市那",
-      "level": "4A",
-      "address": "广西百色市那坡县广西百色市那坡县那坡县镇安公园景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-百色-2730",
-      "name": "百色市平果黎明通天河旅游景区",
-      "city": "广西百色市平",
-      "level": "4A",
-      "address": "广西百色市平果市广西百色市平果市百色市平果黎明通天河旅游景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-百色-2732",
-      "name": "田林县万吉山森林公园景区",
-      "city": "广西百色市田",
-      "level": "4A",
-      "address": "广西百色市田林县广西百色市田林县田林县万吉山森林公园景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-百色-2731",
-      "name": "百色西林县宫保府景区",
-      "city": "广西百色市西",
-      "level": "4A",
-      "address": "广西百色市西林县广西百色市西林县百色西林县宫保府景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-北海-2513",
-      "name": "北海海底世界",
-      "city": "广西北海市海",
-      "level": "4A",
-      "address": "广西北海市海城区广西北海市北海海底世界",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-北海-2516",
-      "name": "北海金海湾红树林生态旅游区",
-      "city": "广西北海市海",
-      "level": "4A",
-      "address": "广西北海市海城区广西北海市北海金海湾红树林生态旅游区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-北海-2515",
-      "name": "北海老城景区",
-      "city": "广西北海市海",
-      "level": "4A",
-      "address": "广西北海市海城区广西北海市北海老城景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-北海-2526",
-      "name": "高德古镇",
-      "city": "广西北海市海",
-      "level": "4A",
-      "address": "广西北海市海城区广西北海市高德古镇",
-      "category": "古镇村落"
-    },
-    {
-      "id": "scenic-北海-2525",
-      "name": "海上丝路文化遗址公园",
-      "city": "广西北海市海",
-      "level": "4A",
-      "address": "广西北海市海城区广西北海市海上丝路文化遗址公园",
-      "category": "历史人文"
-    },
-    {
-      "id": "scenic-北海-2519",
-      "name": "涠洲岛圣堂景区",
-      "city": "广西北海市海",
-      "level": "4A",
-      "address": "广西北海市海城区广西北海市涠洲岛圣堂景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-北海-2518",
-      "name": "北海汉闾文化园",
-      "city": "广西北海市合",
-      "level": "4A",
-      "address": "广西北海市合浦县广西北海市北海汉闾文化园",
-      "category": "自然风光"
     },
     {
       "id": "scenic-北海-2524",
       "name": "海丝首港·合浦始发港景区",
-      "city": "广西北海市合",
+      "province": "广西",
+      "city": "北海",
+      "district": "合浦县",
       "level": "4A",
-      "address": "广西北海市合浦县广西北海市海丝首港·合浦始发港景区",
+      "address": "广西北海市合浦县海丝首港·合浦始发港景区",
       "category": "自然风光"
+    },
+    {
+      "id": "scenic-北海-2525",
+      "name": "海上丝路文化遗址公园",
+      "province": "广西",
+      "city": "北海",
+      "district": "海城区",
+      "level": "4A",
+      "address": "广西北海市海城区海上丝路文化遗址公园",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-北海-2526",
+      "name": "高德古镇",
+      "province": "广西",
+      "city": "北海",
+      "district": "海城区",
+      "level": "4A",
+      "address": "广西北海市海城区高德古镇",
+      "category": "古镇村落"
+    },
+    {
+      "id": "scenic-北海-2527",
+      "name": "北海银基国际旅游度假区",
+      "province": "广西",
+      "city": "北海",
+      "district": "银海区",
+      "level": "4A",
+      "address": "广西北海市银海区北海银基国际旅游度假区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-十堰-2158",
+      "name": "房县野人洞（谷）旅游区",
+      "province": "湖北",
+      "city": "十堰",
+      "district": "房县",
+      "level": "4A",
+      "address": "湖北十堰市房县湖北十堰房县桥上乡桥上村房县野人洞（谷）旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-十堰-2159",
+      "name": "十堰市五龙河旅游景区",
+      "province": "湖北",
+      "city": "十堰",
+      "district": "郧西县",
+      "level": "4A",
+      "address": "湖北十堰市郧西县安家乡十堰市五龙河旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-十堰-2160",
+      "name": "郧西龙潭河旅游区",
+      "province": "湖北",
+      "city": "十堰",
+      "district": "郧西县",
+      "level": "4A",
+      "address": "湖北十堰市郧西县羊尾镇郧西龙潭河旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-十堰-2161",
+      "name": "十堰市博物馆",
+      "province": "湖北",
+      "city": "十堰",
+      "district": "茅箭区",
+      "level": "4A",
+      "address": "湖北十堰市茅箭区湖北十堰十堰市北京北路91号十堰市博物馆",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-十堰-2162",
+      "name": "丹江口市太极峡景区",
+      "province": "湖北",
+      "city": "十堰",
+      "district": "丹江口市",
+      "level": "4A",
+      "address": "湖北十堰市丹江口市湖北十堰丹江口市石鼓镇丹江口市太极峡景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-十堰-2163",
+      "name": "丹江口市静乐宫",
+      "province": "湖北",
+      "city": "十堰",
+      "district": "丹江口市",
+      "level": "4A",
+      "address": "湖北十堰市丹江口市湖北十堰丹江口市单赵路丹江口市静乐宫",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-十堰-2164",
+      "name": "郧西县天河旅游区",
+      "province": "湖北",
+      "city": "十堰",
+      "district": "郧西县",
+      "level": "4A",
+      "address": "湖北十堰市郧西县天河旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-十堰-2165",
+      "name": "郧县九龙瀑旅游区",
+      "province": "湖北",
+      "city": "十堰",
+      "district": "郧阳区",
+      "level": "4A",
+      "address": "湖北十堰市郧阳区湖北十堰郧县南化塘镇青岩村郧县九龙瀑旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-十堰-2166",
+      "name": "十堰市赛武当云龙谷旅游度假区",
+      "province": "湖北",
+      "city": "十堰",
+      "district": "茅箭区",
+      "level": "4A",
+      "address": "湖北十堰市茅箭区湖北十堰赛武当省级自然保护区十堰市赛武当云龙谷旅游度假区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-十堰-2167",
+      "name": "房县观音洞旅游区",
+      "province": "湖北",
+      "city": "十堰",
+      "district": "房县",
+      "level": "4A",
+      "address": "湖北十堰市房县湖北十堰房县观音洞风景区管理处房县观音洞旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-十堰-2168",
+      "name": "十堰市人民公园",
+      "province": "湖北",
+      "city": "十堰",
+      "district": "张湾区",
+      "level": "4A",
+      "address": "湖北十堰市张湾区湖北十堰十堰市公园路25号十堰市人民公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-十堰-2169",
+      "name": "武当山南神道旅游区",
+      "province": "湖北",
+      "city": "十堰",
+      "district": "丹江口市",
+      "level": "4A",
+      "address": "湖北十堰市丹江口市湖北十堰丹江口市官山镇吕家河村武当山南神道旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-十堰-2170",
+      "name": "郧西上津文化旅游区",
+      "province": "湖北",
+      "city": "十堰",
+      "district": "郧西县",
+      "level": "4A",
+      "address": "湖北十堰市郧西县上津古镇郧西上津文化旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-十堰-2171",
+      "name": "郧县虎啸滩旅游区",
+      "province": "湖北",
+      "city": "十堰",
+      "district": "郧阳区",
+      "level": "4A",
+      "address": "湖北十堰市郧阳区湖北十堰郧县大柳虎啸滩景区郧县虎啸滩旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-十堰-2172",
+      "name": "竹山县女娲山旅游区",
+      "province": "湖北",
+      "city": "十堰",
+      "district": "竹山县",
+      "level": "4A",
+      "address": "湖北十堰市竹山县女娲山旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-十堰-2173",
+      "name": "丹江口沧浪海旅游区",
+      "province": "湖北",
+      "city": "十堰",
+      "district": "丹江口市",
+      "level": "4A",
+      "address": "湖北十堰市丹江口市湖北十堰十堰市石岸新城区武当大道1号丹江口沧浪海旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-十堰-2174",
+      "name": "武当山快乐谷旅游区",
+      "province": "湖北",
+      "city": "十堰",
+      "district": "丹江口市",
+      "level": "4A",
+      "address": "湖北十堰市丹江口市湖北十堰武当山特区瓦房河村武当山快乐谷旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-十堰-2175",
+      "name": "竹溪县龙王垭观光茶园旅游区",
+      "province": "湖北",
+      "city": "十堰",
+      "district": "竹溪县",
+      "level": "4A",
+      "address": "湖北十堰市竹溪县龙王垭观光茶园旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-十堰-2176",
+      "name": "房县神农大峡谷景区",
+      "province": "湖北",
+      "city": "十堰",
+      "district": "房县",
+      "level": "4A",
+      "address": "湖北十堰市房县湖北十堰湖北省十堰市野人谷镇神农大峡谷景区房县神农大峡谷景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-十堰-2177",
+      "name": "郧阳恐龙蛋化石群国家地质公园",
+      "province": "湖北",
+      "city": "十堰",
+      "district": "郧阳区",
+      "level": "4A",
+      "address": "湖北十堰市郧阳区湖北十堰郧县柳陂镇青龙山郧阳恐龙蛋化石群国家地质公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-十堰-2178",
+      "name": "太和梅花谷旅游区",
+      "province": "湖北",
+      "city": "十堰",
+      "district": "竹山县",
+      "level": "4A",
+      "address": "湖北十堰市竹山县文峰乡太和村太和梅花谷旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南京-4051",
+      "name": "南京市雨发生态旅游区",
+      "province": "江苏",
+      "city": "南京",
+      "district": "浦口区",
+      "level": "4A",
+      "address": "江苏南京市浦口区雨发生态旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南京-4052",
+      "name": "南京市牛首山文化旅游区",
+      "province": "江苏",
+      "city": "南京",
+      "district": "江宁区",
+      "level": "4A",
+      "address": "江苏南京市江宁区牛首山文化旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南京-4053",
+      "name": "南京市汤山紫清湖旅游区",
+      "province": "江苏",
+      "city": "南京",
+      "district": "江宁区",
+      "level": "4A",
+      "address": "江苏南京市江宁区汤山紫清湖旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南京-4054",
+      "name": "南京市金牛湖景区",
+      "province": "江苏",
+      "city": "南京",
+      "district": "六合区",
+      "level": "4A",
+      "address": "江苏南京市六合区金牛湖景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南京-4055",
+      "name": "南京市游子山休闲旅游区",
+      "province": "江苏",
+      "city": "南京",
+      "district": "高淳区",
+      "level": "4A",
+      "address": "江苏南京市高淳区游子山休闲旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南京-4056",
+      "name": "南京市高淳国际慢城",
+      "province": "江苏",
+      "city": "南京",
+      "district": "高淳区",
+      "level": "4A",
+      "address": "江苏南京市高淳区高淳国际慢城",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南京-4057",
+      "name": "南京博物院",
+      "province": "江苏",
+      "city": "南京",
+      "district": "玄武区",
+      "level": "4A",
+      "address": "江苏南京市玄武区江苏南京博物院",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南京-4058",
+      "name": "溧水白马如意文化艺术中心（周园）",
+      "province": "江苏",
+      "city": "南京",
+      "district": "溧水区",
+      "level": "4A",
+      "address": "江苏南京市溧水区溧水白马如意文化艺术中心（周园）",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南京-4059",
+      "name": "南京市珍珠泉风景区",
+      "province": "江苏",
+      "city": "南京",
+      "district": "浦口区",
+      "level": "4A",
+      "address": "江苏南京市浦口区珍珠泉风景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南京-4060",
+      "name": "南京市科技馆",
+      "province": "江苏",
+      "city": "南京",
+      "district": "雨花台区",
+      "level": "4A",
+      "address": "江苏南京市雨花台区科技馆",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南京-4061",
+      "name": "南京市栖霞山风景区",
+      "province": "江苏",
+      "city": "南京",
+      "district": "栖霞区",
+      "level": "4A",
+      "address": "江苏南京市栖霞区栖霞山风景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南京-4062",
+      "name": "明文化村（阳山碑材）景区",
+      "province": "江苏",
+      "city": "南京",
+      "district": "江宁区",
+      "level": "4A",
+      "address": "江苏南京市江宁区明文化村（阳山碑材）景区",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-南京-4063",
+      "name": "南京市溧水天生桥景区",
+      "province": "江苏",
+      "city": "南京",
+      "district": "溧水区",
+      "level": "4A",
+      "address": "江苏南京市溧水区溧水天生桥景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南京-4064",
+      "name": "南京市平山森林公园",
+      "province": "江苏",
+      "city": "南京",
+      "district": "六合区",
+      "level": "4A",
+      "address": "江苏南京市六合区平山森林公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南充-3002",
+      "name": "南充市西山风景区",
+      "province": "四川",
+      "city": "南充",
+      "district": "顺庆区",
+      "level": "4A",
+      "address": "四川南充市顺庆区玉屏路6号南充市西山风景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南充-3003",
+      "name": "南充市凌云山景区",
+      "province": "四川",
+      "city": "南充",
+      "district": "高坪区",
+      "level": "4A",
+      "address": "四川南充市高坪区青莲街道办凌云山景区游客中心南充市凌云山景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南充-3004",
+      "name": "嘉陵第一桑梓风景区",
+      "province": "四川",
+      "city": "南充",
+      "district": "蓬安县",
+      "level": "4A",
+      "address": "四川南充市蓬安县嘉陵第一桑梓风景区",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-南充-3005",
+      "name": "阆中天宫院风水文化景区",
+      "province": "四川",
+      "city": "南充",
+      "district": "阆中市",
+      "level": "4A",
+      "address": "四川南充市阆中市天宫镇天宫院街1号阆中天宫院风水文化景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南充-3006",
+      "name": "南部县升钟湖旅游景区",
+      "province": "四川",
+      "city": "南充",
+      "district": "南部县",
+      "level": "4A",
+      "address": "四川南充市南部县升钟湖旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南充-3007",
+      "name": "张澜故里旅游区",
+      "province": "四川",
+      "city": "南充",
+      "district": "西充县",
+      "level": "4A",
+      "address": "四川南充市西充县莲池镇观音堂村张澜故里旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南充-3008",
+      "name": "南充市仪陇县德园景区",
+      "province": "四川",
+      "city": "南充",
+      "district": "仪陇县",
+      "level": "4A",
+      "address": "四川南充市仪陇县新政镇春晖路一段南充市仪陇县德园景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南充-3009",
+      "name": "南充市营山县进士文化旅游景区",
+      "province": "四川",
+      "city": "南充",
+      "district": "营山县",
+      "level": "4A",
+      "address": "四川南充市营山县朗池镇白塔大道 南充市营山县进士文化旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南充-3010",
+      "name": "鹤鸣山旅游景区",
+      "province": "四川",
+      "city": "南充",
+      "district": "高坪区",
+      "level": "4A",
+      "address": "四川南充市高坪区环塔路112号鹤鸣山旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南充-3011",
+      "name": "相如故城旅游景区",
+      "province": "四川",
+      "city": "南充",
+      "district": "蓬安县",
+      "level": "4A",
+      "address": "四川南充市蓬安县相如街道办滨河北路二段金博国际二楼相如故城旅游景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南宁-2469",
+      "name": "南宁嘉和城景区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "兴宁区",
+      "level": "4A",
+      "address": "广西南宁市兴宁区南宁嘉和城景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南宁-2470",
+      "name": "南宁九曲湾温泉景区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "兴宁区",
+      "level": "4A",
+      "address": "广西南宁市兴宁区南宁九曲湾温泉景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2471",
+      "name": "广西八桂田园",
+      "province": "广西",
+      "city": "南宁",
+      "district": "西乡塘区",
+      "level": "4A",
+      "address": "广西南宁市西乡塘区广西八桂田园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2472",
+      "name": "南宁市动物园",
+      "province": "广西",
+      "city": "南宁",
+      "district": "西乡塘区",
+      "level": "4A",
+      "address": "广西南宁市西乡塘区南宁市动物园",
+      "category": "主题乐园"
+    },
+    {
+      "id": "scenic-南宁-2473",
+      "name": "广西药用植物园",
+      "province": "广西",
+      "city": "南宁",
+      "district": "兴宁区",
+      "level": "4A",
+      "address": "广西南宁市兴宁区广西药用植物园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2474",
+      "name": "南宁大明山风景旅游区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "武鸣区",
+      "level": "4A",
+      "address": "广西南宁市武鸣区南宁大明山风景旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2475",
+      "name": "广西科技馆",
+      "province": "广西",
+      "city": "南宁",
+      "district": "青秀区",
+      "level": "4A",
+      "address": "广西南宁市青秀区广西科技馆",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南宁-2476",
+      "name": "广西民族博物馆",
+      "province": "广西",
+      "city": "南宁",
+      "district": "青秀区",
+      "level": "4A",
+      "address": "广西南宁市青秀区广西民族博物馆",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-南宁-2477",
+      "name": "南宁市乡村大世界景区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "兴宁区",
+      "level": "4A",
+      "address": "广西南宁市兴宁区南宁市乡村大世界景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南宁-2478",
+      "name": "南宁市武鸣区伊岭岩景区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "武鸣区",
+      "level": "4A",
+      "address": "广西南宁市武鸣区南宁市伊岭岩景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2479",
+      "name": "南宁市良凤江森林旅游区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "江南区",
+      "level": "4A",
+      "address": "广西南宁市江南区经开区南宁市良凤江森林旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2480",
+      "name": "广西规划馆景区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "良庆区",
+      "level": "4A",
+      "address": "广西南宁市良庆区广西规划馆景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南宁-2481",
+      "name": "南宁市民歌湖景区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "青秀区",
+      "level": "4A",
+      "address": "广西南宁市青秀区南宁市民歌湖景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2482",
+      "name": "隆安县龙虎山旅游景区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "隆安县",
+      "level": "4A",
+      "address": "广西南宁市隆安县龙虎山旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2483",
+      "name": "南宁市凤岭儿童公园",
+      "province": "广西",
+      "city": "南宁",
+      "district": "青秀区",
+      "level": "4A",
+      "address": "广西南宁市青秀区南宁市凤岭儿童公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2484",
+      "name": "南宁马山金伦洞景区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "马山县",
+      "level": "4A",
+      "address": "广西南宁市马山县南宁马山金伦洞景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2485",
+      "name": "上林县金莲湖景区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "上林县",
+      "level": "4A",
+      "address": "广西南宁市上林县金莲湖景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2486",
+      "name": "南宁市人民公园",
+      "province": "广西",
+      "city": "南宁",
+      "district": "兴宁区",
+      "level": "4A",
+      "address": "广西南宁市兴宁区南宁市人民公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2487",
+      "name": "南宁花花大世界景区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "武鸣区",
+      "level": "4A",
+      "address": "广西南宁市武鸣区南宁花花大世界景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南宁-2488",
+      "name": "南宁昆仑关旅游风景区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "兴宁区",
+      "level": "4A",
+      "address": "广西南宁市兴宁区南宁昆仑关旅游风景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南宁-2489",
+      "name": "南宁上林县大龙湖景区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "上林县",
+      "level": "4A",
+      "address": "广西南宁市上林县大龙湖景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2490",
+      "name": "九龙瀑布景区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "横县",
+      "level": "4A",
+      "address": "广西南宁市横县横州市九龙瀑布景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2491",
+      "name": "水锦·顺庄",
+      "province": "广西",
+      "city": "南宁",
+      "district": "马山县",
+      "level": "4A",
+      "address": "广西南宁市马山县水锦·顺庄",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南宁-2492",
+      "name": "龙门水都景区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "西乡塘区",
+      "level": "4A",
+      "address": "广西南宁市西乡塘区龙门水都景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南宁-2493",
+      "name": "广西马山弄拉旅游景区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "马山县",
+      "level": "4A",
+      "address": "广西南宁市马山县广西马山弄拉旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2494",
+      "name": "南宁园博园景区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "邕宁区",
+      "level": "4A",
+      "address": "广西南宁市邕宁区南宁园博园景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南宁-2495",
+      "name": "南宁万达茂景区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "邕宁区",
+      "level": "4A",
+      "address": "广西南宁市邕宁区南宁万达茂景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南宁-2496",
+      "name": "南宁市那贵坡樱花园",
+      "province": "广西",
+      "city": "南宁",
+      "district": "邕宁区",
+      "level": "4A",
+      "address": "广西南宁市邕宁区南宁市那贵坡樱花园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2497",
+      "name": "南宁金花茶公园",
+      "province": "广西",
+      "city": "南宁",
+      "district": "青秀区",
+      "level": "4A",
+      "address": "广西南宁市青秀区南宁金花茶公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2498",
+      "name": "广西百益上河城旅游景区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "江南区",
+      "level": "4A",
+      "address": "广西南宁市江南区广西百益上河城旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2499",
+      "name": "邕宁区蒲津公园",
+      "province": "广西",
+      "city": "南宁",
+      "district": "邕宁区",
+      "level": "4A",
+      "address": "广西南宁市邕宁区蒲津公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2500",
+      "name": "融晟天河海悦城",
+      "province": "广西",
+      "city": "南宁",
+      "district": "江南区",
+      "level": "4A",
+      "address": "广西南宁市江南区融晟天河海悦城",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2501",
+      "name": "南宁花雨湖生态休闲旅游区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "青秀区",
+      "level": "4A",
+      "address": "广西南宁市青秀区南宁花雨湖生态休闲旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2502",
+      "name": "古辣稻花香里旅游区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "宾阳县",
+      "level": "4A",
+      "address": "广西南宁市宾阳县古辣稻花香里旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南宁-2503",
+      "name": "广西高峰森林公园",
+      "province": "广西",
+      "city": "南宁",
+      "district": "兴宁区",
+      "level": "4A",
+      "address": "广西南宁市兴宁区广西高峰森林公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2504",
+      "name": "江宇梦想小镇",
+      "province": "广西",
+      "city": "南宁",
+      "district": "武鸣区",
+      "level": "4A",
+      "address": "广西南宁市武鸣区江宇梦想小镇",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2505",
+      "name": "古韵旅游景区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "西乡塘区",
+      "level": "4A",
+      "address": "广西南宁市西乡塘区秀美邕江·邕州古韵旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2506",
+      "name": "上林县大庙江生态旅游景区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "上林县",
+      "level": "4A",
+      "address": "广西南宁市上林县大庙江生态旅游景区",
+      "category": "宗教寺庙"
+    },
+    {
+      "id": "scenic-南宁-2507",
+      "name": "五象湖公园",
+      "province": "广西",
+      "city": "南宁",
+      "district": "良庆区",
+      "level": "4A",
+      "address": "广西南宁市良庆区五象湖公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2508",
+      "name": "顶蛳山田园风光区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "邕宁区",
+      "level": "4A",
+      "address": "广西南宁市邕宁区顶蛳山田园风光区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南宁-2509",
+      "name": "会展·东博文化旅游区",
+      "province": "广西",
+      "city": "南宁",
+      "district": "青秀区",
+      "level": "4A",
+      "address": "广西南宁市青秀区会展·东博文化旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-南平-1387",
+      "name": "南平市武夷山大安源生态旅游区",
+      "province": "福建",
+      "city": "南平",
+      "district": "武夷山市",
+      "level": "4A",
+      "address": "福建南平市武夷山市武夷山大安源生态旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南平-1388",
+      "name": "南平市顺昌华阳山旅游景区",
+      "province": "福建",
+      "city": "南平",
+      "district": "顺昌县",
+      "level": "4A",
+      "address": "福建南平市顺昌县顺昌华阳山旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南平-1389",
+      "name": "南平市溪源峡谷旅游区",
+      "province": "福建",
+      "city": "南平",
+      "district": "延平区",
+      "level": "4A",
+      "address": "福建南平市延平区溪源峡谷旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南平-1390",
+      "name": "邵武天成奇峡旅游区",
+      "province": "福建",
+      "city": "南平",
+      "district": "邵武市",
+      "level": "4A",
+      "address": "福建南平市邵武市福建邵武天成奇峡旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南平-1391",
+      "name": "南平市邵武云灵山旅游景区",
+      "province": "福建",
+      "city": "南平",
+      "district": "邵武市",
+      "level": "4A",
+      "address": "福建南平市邵武市邵武云灵山旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南平-1392",
+      "name": "南平武夷山茶博园",
+      "province": "福建",
+      "city": "南平",
+      "district": "武夷山市",
+      "level": "4A",
+      "address": "福建南平市武夷山市福建南平武夷山茶博园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-南平-1393",
+      "name": "南平邵武和平古镇景区",
+      "province": "福建",
+      "city": "南平",
+      "district": "邵武市",
+      "level": "4A",
+      "address": "福建南平市邵武市福建南平邵武和平古镇景区",
+      "category": "古镇村落"
+    },
+    {
+      "id": "scenic-南平-1394",
+      "name": "武夷山自遊小镇汽车主题乐园",
+      "province": "福建",
+      "city": "南平",
+      "district": "武夷山市",
+      "level": "4A",
+      "address": "福建南平市武夷山市福建武夷山自遊小镇汽车主题乐园景区",
+      "category": "主题乐园"
     }
   ]
 }

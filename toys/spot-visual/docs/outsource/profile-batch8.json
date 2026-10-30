@@ -2,807 +2,1007 @@
   "task": "景点档案结构化字段-批8（4A）",
   "batch": 8,
   "count": 100,
-  "mergeRule": "合入时以 id 为准，禁止按名字合并",
+  "rules": "见 TASK-SPOT-PROFILE.md",
   "items": [
     {
-      "id": "scenic-重庆-2768",
-      "name": "重庆乐和乐都景区",
-      "city": "重庆重庆市永",
+      "id": "scenic-临沂-1819",
+      "name": "沂南智圣汤泉旅游度假村旅游区",
+      "province": "山东",
+      "city": "临沂",
+      "district": "沂南县",
       "level": "4A",
-      "address": "重庆重庆市永川区重庆永川区重庆乐和乐都景区",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-重庆-2788",
-      "name": "重庆永川茶山竹海旅游景区",
-      "city": "重庆重庆市永",
-      "level": "4A",
-      "address": "重庆重庆市永川区重庆永川区重庆永川茶山竹海旅游景区",
+      "address": "山东临沂市沂南县山东临沂沂南智圣汤泉旅游度假村旅游区",
       "category": "自然风光"
     },
     {
-      "id": "scenic-重庆-2777",
-      "name": "重庆龚滩景区",
-      "city": "重庆重庆市酉",
+      "id": "scenic-临沂-1820",
+      "name": "沂南竹泉村旅游区",
+      "province": "山东",
+      "city": "临沂",
+      "district": "沂南县",
       "level": "4A",
-      "address": "重庆重庆市酉阳土家族苗族自治县重庆酉阳县重庆龚滩景区",
+      "address": "山东临沂市沂南县山东临沂沂南竹泉村旅游区",
       "category": "自然风光"
     },
     {
-      "id": "scenic-重庆-2882",
-      "name": "重庆酉阳叠石花谷景区",
-      "city": "重庆重庆市酉",
+      "id": "scenic-临沂-1821",
+      "name": "沂水东方瑞海国际温泉度假村旅游区",
+      "province": "山东",
+      "city": "临沂",
+      "district": "沂水县",
       "level": "4A",
-      "address": "重庆重庆市酉阳土家族苗族自治县重庆酉阳县重庆酉阳叠石花谷景区",
+      "address": "山东临沂市沂水县山东临沂沂水东方瑞海国际温泉度假村旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-临沂-1822",
+      "name": "临沂观唐温泉度假村旅游区",
+      "province": "山东",
+      "city": "临沂",
+      "district": "河东区",
+      "level": "4A",
+      "address": "山东临沂市河东区山东临沂临沂观唐温泉度假村旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-临沂-1823",
+      "name": "沂南沂蒙红色沂蒙影视基地旅游区",
+      "province": "山东",
+      "city": "临沂",
+      "district": "沂南县",
+      "level": "4A",
+      "address": "山东临沂市沂南县山东临沂沂南沂蒙红色沂蒙影视基地旅游区",
       "category": "城市地标"
     },
     {
-      "id": "scenic-重庆-2786",
-      "name": "重庆酉阳龙潭古镇景区",
-      "city": "重庆重庆市酉",
+      "id": "scenic-临沂-1824",
+      "name": "临沂市皇山东夷文化休闲旅游区",
+      "province": "山东",
+      "city": "临沂",
+      "district": "河东区",
       "level": "4A",
-      "address": "重庆重庆市酉阳土家族苗族自治县重庆酉阳县重庆酉阳龙潭古镇景区",
+      "address": "山东临沂市河东区山东临沂临沂市皇山东夷文化休闲旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-临沂-1825",
+      "name": "临沂市动植物园旅游区",
+      "province": "山东",
+      "city": "临沂",
+      "district": "河东区",
+      "level": "4A",
+      "address": "山东临沂市河东区山东临沂临沂市动植物园旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-临沂-1826",
+      "name": "兰陵国家农业公园旅游区",
+      "province": "山东",
+      "city": "临沂",
+      "district": "兰陵县",
+      "level": "4A",
+      "address": "山东临沂市兰陵县山东临沂兰陵国家农业公园旅游区",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-临沂-1827",
+      "name": "临沂市科技馆旅游区",
+      "province": "山东",
+      "city": "临沂",
+      "district": "兰山区",
+      "level": "4A",
+      "address": "山东临沂市兰山区山东临沂临沂市科技馆旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-临沂-1828",
+      "name": "沂南县红石寨旅游区",
+      "province": "山东",
+      "city": "临沂",
+      "district": "沂南县",
+      "level": "4A",
+      "address": "山东临沂市沂南县红石寨旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-临沂-1829",
+      "name": "郯城县银杏生态旅游区",
+      "province": "山东",
+      "city": "临沂",
+      "district": "郯城县",
+      "level": "4A",
+      "address": "山东临沂市郯城县银杏生态旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-临沂-1830",
+      "name": "蒙阴县岱崮地貌旅游区",
+      "province": "山东",
+      "city": "临沂",
+      "district": "蒙阴县",
+      "level": "4A",
+      "address": "山东临沂市蒙阴县岱崮地貌旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-临沂-1831",
+      "name": "沂南沂蒙马泉休闲园旅游区",
+      "province": "山东",
+      "city": "临沂",
+      "district": "沂南县",
+      "level": "4A",
+      "address": "山东临沂市沂南县山东临沂沂南沂蒙马泉休闲园旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-临沂-1832",
+      "name": "河东区龙园旅游区",
+      "province": "山东",
+      "city": "临沂",
+      "district": "河东区",
+      "level": "4A",
+      "address": "山东临沂市河东区龙园旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-临沂-1833",
+      "name": "苍马山·冠山旅游区",
+      "province": "山东",
+      "city": "临沂",
+      "district": "临沭县",
+      "level": "4A",
+      "address": "山东临沂市临沭县苍马山·冠山旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-临沂-1834",
+      "name": "临沂市压油沟旅游区",
+      "province": "山东",
+      "city": "临沂",
+      "district": "兰陵县",
+      "level": "4A",
+      "address": "山东临沂市兰陵县山东临沂临沂市压油沟旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-临沂-1835",
+      "name": "费县奇石城旅游区",
+      "province": "山东",
+      "city": "临沂",
+      "district": "费县",
+      "level": "4A",
+      "address": "山东临沂市费县山东临沂费县奇石城旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-临沂-1836",
+      "name": "平邑县九间棚景区",
+      "province": "山东",
+      "city": "临沂",
+      "district": "平邑县",
+      "level": "4A",
+      "address": "山东临沂市平邑县九间棚景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-临沂-1837",
+      "name": "无极鬼谷旅游区",
+      "province": "山东",
+      "city": "临沂",
+      "district": "莒南县",
+      "level": "4A",
+      "address": "山东临沂市莒南县山东临沂/日照无极鬼谷旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-临沂-1838",
+      "name": "沂南县朱家林旅游区",
+      "province": "山东",
+      "city": "临沂",
+      "district": "沂南县",
+      "level": "4A",
+      "address": "山东临沂市沂南县朱家林旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-临沂-1839",
+      "name": "沂水县沂蒙花开旅游区",
+      "province": "山东",
+      "city": "临沂",
+      "district": "沂水县",
+      "level": "4A",
+      "address": "山东临沂市沂水县沂蒙花开旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-临沧-3518",
+      "name": "临沧沧源葫芦小镇景区",
+      "province": "云南",
+      "city": "临沧",
+      "district": "沧源佤族自治县",
+      "level": "4A",
+      "address": "云南临沧市沧源佤族自治县临沧沧源葫芦小镇景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-临沧-3519",
+      "name": "沧源司岗里崖画谷景区",
+      "province": "云南",
+      "city": "临沧",
+      "district": "沧源佤族自治县",
+      "level": "4A",
+      "address": "云南临沧市沧源佤族自治县沧源司岗里崖画谷景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-临沧-3520",
+      "name": "双江荣康达乌龙茶庄园景区",
+      "province": "云南",
+      "city": "临沧",
+      "district": "",
+      "level": "4A",
+      "address": "云南临沧市双江拉祜族佤族布朗族傣族自治县云南临沧市双江荣康达乌龙茶庄园景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-临沧-3521",
+      "name": "博尚碗窑七彩陶瓷文化景区",
+      "province": "云南",
+      "city": "临沧",
+      "district": "临翔区",
+      "level": "4A",
+      "address": "云南临沧市临翔区博尚碗窑七彩陶瓷文化景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-临沧-3522",
+      "name": "凤庆县滇红第一村景区",
+      "province": "云南",
+      "city": "临沧",
+      "district": "凤庆县",
+      "level": "4A",
+      "address": "云南临沧市凤庆县滇红第一村景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-临沧-3523",
+      "name": "班洪葫芦王地景区",
+      "province": "云南",
+      "city": "临沧",
+      "district": "沧源佤族自治县",
+      "level": "4A",
+      "address": "云南临沧市沧源佤族自治县班洪葫芦王地景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-临沧-3524",
+      "name": "和成·临沧生态文化创意产业园",
+      "province": "云南",
+      "city": "临沧",
+      "district": "永德县",
+      "level": "4A",
+      "address": "云南临沧市永德县和成·临沧生态文化创意产业园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丹东-4339",
+      "name": "抗美援朝纪念馆",
+      "province": "辽宁",
+      "city": "丹东",
+      "district": "振兴区",
+      "level": "4A",
+      "address": "辽宁丹东市振兴区抗美援朝纪念馆",
+      "category": "历史人文"
+    },
+    {
+      "id": "scenic-丹东-4340",
+      "name": "鸭绿江景区",
+      "province": "辽宁",
+      "city": "丹东",
+      "district": "振兴区",
+      "level": "4A",
+      "address": "辽宁丹东市振兴区鸭绿江景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丹东-4341",
+      "name": "大梨树生态农业观光旅游区",
+      "province": "辽宁",
+      "city": "丹东",
+      "district": "凤城市",
+      "level": "4A",
+      "address": "辽宁丹东市凤城市 丹东市大梨树生态农业观光旅游区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-丹东-4342",
+      "name": "天桥沟景区",
+      "province": "辽宁",
+      "city": "丹东",
+      "district": "宽甸满族自治县",
+      "level": "4A",
+      "address": "辽宁丹东市宽甸满族自治县 丹东市天桥沟景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-丹东-4343",
+      "name": "凤城凤凰山风景区",
+      "province": "辽宁",
+      "city": "丹东",
+      "district": "凤城市",
+      "level": "4A",
+      "address": "辽宁丹东市凤城市 丹东市凤凰山风景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丹东-4344",
+      "name": "天华山森林公园",
+      "province": "辽宁",
+      "city": "丹东",
+      "district": "宽甸满族自治县",
+      "level": "4A",
+      "address": "辽宁丹东市宽甸满族自治县 丹东市天华山森林公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丹东-4345",
+      "name": "大鹿岛甲午海战古战场景区",
+      "province": "辽宁",
+      "city": "丹东",
+      "district": "东港市",
+      "level": "4A",
+      "address": "辽宁丹东市东港市 丹东市大鹿岛甲午海战古战场景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丹东-4346",
+      "name": "獐岛风景区",
+      "province": "辽宁",
+      "city": "丹东",
+      "district": "东港市",
+      "level": "4A",
+      "address": "辽宁丹东市东港市 丹东市獐岛风景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丹东-4347",
+      "name": "蒲石河森林公园景区",
+      "province": "辽宁",
+      "city": "丹东",
+      "district": "凤城市",
+      "level": "4A",
+      "address": "辽宁丹东市凤城市蒲石河森林公园景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽水-1149",
+      "name": "石门洞景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "青田县",
+      "level": "4A",
+      "address": "浙江丽水市青田县浙江省丽水市练岙村练岙公路62-6号浙江省丽水市青田县石门洞景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽水-1150",
+      "name": "神龙飞瀑景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "遂昌县",
+      "level": "4A",
+      "address": "浙江丽水市遂昌县浙江省丽水市安口乡桂洋林场内浙江省丽水市遂昌县神龙飞瀑景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽水-1151",
+      "name": "大木山茶园景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "松阳县",
+      "level": "4A",
+      "address": "浙江丽水市松阳县浙江省丽水市新兴镇横溪村小集镇69号大木山茶园景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽水-1152",
+      "name": "云和梯田景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "云和县",
+      "level": "4A",
+      "address": "浙江丽水市云和县浙江省丽水市崇头镇云和梯田景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-丽水-1153",
+      "name": "双童山景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "松阳县",
+      "level": "4A",
+      "address": "浙江丽水市松阳县浙江省丽水市松阳双童山景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽水-1154",
+      "name": "南尖岩景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "遂昌县",
+      "level": "4A",
+      "address": "浙江丽水市遂昌县浙江省丽水市南尖岩景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽水-1155",
+      "name": "中国畲乡之窗",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "景宁畲族自治县",
+      "level": "4A",
+      "address": "浙江丽水市景宁畲族自治县浙江省丽水市大均乡中国畲乡之窗",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-丽水-1156",
+      "name": "仙都景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "缙云县",
+      "level": "4A",
+      "address": "浙江丽水市缙云县浙江省丽水市仙都景区鼎湖大道（仙都街道办事处)仙都景区",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-丽水-1157",
+      "name": "河阳古民居景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "缙云县",
+      "level": "4A",
+      "address": "浙江丽水市缙云县浙江省丽水市新建镇河阳村浙江省河阳古民居景区",
       "category": "古镇村落"
     },
     {
-      "id": "scenic-重庆-2883",
-      "name": "重庆酉阳松鼠丛林乐园",
-      "city": "重庆重庆市酉",
+      "id": "scenic-丽水-1158",
+      "name": "丽水东西岩风景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "莲都区",
       "level": "4A",
-      "address": "重庆重庆市酉阳土家族苗族自治县重庆酉阳县重庆酉阳松鼠丛林乐园",
-      "category": "主题乐园"
-    },
-    {
-      "id": "scenic-重庆-2846",
-      "name": "重庆欢乐谷景区",
-      "city": "重庆重庆市渝",
-      "level": "4A",
-      "address": "重庆重庆市渝北区重庆两江新区重庆欢乐谷景区",
-      "category": "主题乐园"
-    },
-    {
-      "id": "scenic-重庆-2794",
-      "name": "重庆园博园",
-      "city": "重庆重庆市渝",
-      "level": "4A",
-      "address": "重庆重庆市渝北区重庆两江新区重庆园博园",
+      "address": "浙江丽水市莲都区浙江省丽水市老竹畲族镇东西岩丽水东西岩风景区",
       "category": "自然风光"
     },
     {
-      "id": "scenic-重庆-2839",
-      "name": "重庆际华园景区",
-      "city": "重庆重庆市渝",
+      "id": "scenic-丽水-1159",
+      "name": "遂昌千佛山景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "遂昌县",
       "level": "4A",
-      "address": "重庆重庆市渝北区重庆渝北区重庆际华园景区",
+      "address": "浙江丽水市遂昌县浙江省丽水市石练镇飞石岭浙江省千佛山景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽水-1160",
+      "name": "青田中国石雕文化旅游区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "青田县",
+      "level": "4A",
+      "address": "浙江丽水市青田县浙江省丽水市涌泉街26号青田中国石雕文化旅游区",
       "category": "城市地标"
     },
     {
-      "id": "scenic-重庆-2821",
-      "name": "重庆两江国际影视城",
-      "city": "重庆重庆市渝",
+      "id": "scenic-丽水-1161",
+      "name": "松阴溪景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "松阳县",
       "level": "4A",
-      "address": "重庆重庆市渝北区重庆渝北区重庆两江国际影视城",
+      "address": "浙江丽水市松阳县浙江省丽水市江南公路独山驿站松阴溪景区",
       "category": "自然风光"
     },
     {
-      "id": "scenic-重庆-2773",
-      "name": "重庆统景温泉风景区",
-      "city": "重庆重庆市渝",
+      "id": "scenic-丽水-1162",
+      "name": "古堰画乡景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "莲都区",
       "level": "4A",
-      "address": "重庆重庆市渝北区重庆渝北区重庆统景温泉风景区",
+      "address": "浙江丽水市莲都区浙江省丽水市大港头镇浙江省古堰画乡景区",
       "category": "自然风光"
     },
     {
-      "id": "scenic-重庆-2772",
-      "name": "重庆市规划展览馆",
-      "city": "重庆重庆市渝",
+      "id": "scenic-丽水-1163",
+      "name": "中国青瓷小镇·披云青瓷文化园",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "龙泉市",
       "level": "4A",
-      "address": "重庆重庆市渝中区重庆渝中区重庆市规划展览馆",
+      "address": "浙江丽水市龙泉市浙江省丽水市浙江龙泉上垟镇中国青瓷小镇·披云青瓷文化园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽水-1164",
+      "name": "遂昌金矿矿山公园",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "遂昌县",
+      "level": "4A",
+      "address": "浙江丽水市遂昌县浙江省丽水市濂竹乡花园岭遂昌金矿矿山公园有限公司",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽水-1165",
+      "name": "青田石门洞景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "青田县",
+      "level": "4A",
+      "address": "浙江丽水市青田县浙江省丽水市石门洞青田石门洞景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽水-1166",
+      "name": "云和湖仙宫景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "云和县",
+      "level": "4A",
+      "address": "浙江丽水市云和县浙江省丽水市紧水滩镇云和湖仙宫景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽水-1167",
+      "name": "龙泉山旅游度假景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "龙泉市",
+      "level": "4A",
+      "address": "浙江丽水市龙泉市浙江省丽水市兰巨乡官埔垟粗坑村龙泉山浙江省丽水市龙泉市龙泉山旅游度假景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽水-1168",
+      "name": "遂昌金矿国家矿山公园",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "遂昌县",
+      "level": "4A",
+      "address": "浙江丽水市遂昌县浙江省丽水市濂竹乡花园岭浙江省遂昌金矿国家矿山公园景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽水-1169",
+      "name": "松阳大木山茶园",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "松阳县",
+      "level": "4A",
+      "address": "浙江丽水市松阳县浙江省丽水市新兴镇松阳大木山茶园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽水-1170",
+      "name": "巾子峰景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "庆元县",
+      "level": "4A",
+      "address": "浙江丽水市庆元县浙江省丽水市松源街道浙江省巾子峰景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽水-1171",
+      "name": "缙云黄龙景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "缙云县",
+      "level": "4A",
+      "address": "浙江丽水市缙云县浙江省丽水市五云街道黄龙景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽水-1172",
+      "name": "神龙谷景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "遂昌县",
+      "level": "4A",
+      "address": "浙江丽水市遂昌县浙江省丽水市垵口乡神龙谷景区",
       "category": "城市地标"
     },
     {
-      "id": "scenic-重庆-2867",
-      "name": "重庆云阳岐山草原景区",
-      "city": "重庆重庆市云",
+      "id": "scenic-丽水-1173",
+      "name": "云中大漈",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "景宁畲族自治县",
       "level": "4A",
-      "address": "重庆重庆市云阳县重庆云阳县重庆云阳岐山草原景区",
+      "address": "浙江丽水市景宁畲族自治县浙江省丽水市大漈乡云中大漈",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-丽水-1174",
+      "name": "宝溪景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "龙泉市",
+      "level": "4A",
+      "address": "浙江丽水市龙泉市浙江省丽水市宝溪乡溪头村10号浙江省丽水市龙泉市宝溪景区",
       "category": "自然风光"
     },
     {
-      "id": "scenic-重庆-2793",
-      "name": "重庆云阳三峡梯城景区",
-      "city": "重庆重庆市云",
+      "id": "scenic-丽水-1175",
+      "name": "龙泉山度假区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "龙泉市",
       "level": "4A",
-      "address": "重庆重庆市云阳县重庆云阳县重庆云阳三峡梯城景区",
+      "address": "浙江丽水市龙泉市浙江省丽水市龙泉凤阳山龙泉山度假区",
       "category": "自然风光"
     },
     {
-      "id": "scenic-重庆-2770",
-      "name": "重庆云阳张飞庙",
-      "city": "重庆重庆市云",
+      "id": "scenic-丽水-1176",
+      "name": "东西岩景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "莲都区",
       "level": "4A",
-      "address": "重庆重庆市云阳县重庆云阳县重庆云阳张飞庙",
+      "address": "浙江丽水市莲都区浙江省丽水市东西岩景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽水-1177",
+      "name": "箬寮原始林景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "松阳县",
+      "level": "4A",
+      "address": "浙江丽水市松阳县浙江省丽水市安民乡李坑村箬寮原始林景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽水-1178",
+      "name": "云中大漈景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "景宁畲族自治县",
+      "level": "4A",
+      "address": "浙江丽水市景宁畲族自治县浙江省丽水市大漈乡浙江省云中大漈景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽水-1179",
+      "name": "古堰画乡",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "莲都区",
+      "level": "4A",
+      "address": "浙江丽水市莲都区浙江省丽水市碧湖镇保定村古堰画乡",
+      "category": "城市地标"
+    },
+    {
+      "id": "scenic-丽水-1180",
+      "name": "畲乡之窗景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "景宁畲族自治县",
+      "level": "4A",
+      "address": "浙江丽水市景宁畲族自治县浙江省丽水市大均乡浙江省畲乡之窗景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽水-1181",
+      "name": "百山祖景区",
+      "province": "浙江",
+      "city": "丽水",
+      "district": "庆元县",
+      "level": "4A",
+      "address": "浙江丽水市庆元县浙江省丽水市百山祖乡车根村林学路66号百山祖景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽江-3379",
+      "name": "丽江玉水寨景区",
+      "province": "云南",
+      "city": "丽江",
+      "district": "永胜县",
+      "level": "4A",
+      "address": "云南丽江市永胜县丽江玉水寨景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽江-3380",
+      "name": "丽江束河古镇景区",
+      "province": "云南",
+      "city": "丽江",
+      "district": "古城区",
+      "level": "4A",
+      "address": "云南丽江市古城区丽江束河古镇景区",
+      "category": "古镇村落"
+    },
+    {
+      "id": "scenic-丽江-3381",
+      "name": "丽江黑龙潭景区",
+      "province": "云南",
+      "city": "丽江",
+      "district": "古城区",
+      "level": "4A",
+      "address": "云南丽江市古城区丽江黑龙潭景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽江-3382",
+      "name": "丽江泸沽湖摩梭文化旅游区",
+      "province": "云南",
+      "city": "丽江",
+      "district": "宁蒗彝族自治县",
+      "level": "4A",
+      "address": "云南丽江市宁蒗彝族自治县丽江泸沽湖摩梭文化旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽江-3383",
+      "name": "丽江观音峡景区",
+      "province": "云南",
+      "city": "丽江",
+      "district": "古城区",
+      "level": "4A",
+      "address": "云南丽江市古城区丽江观音峡景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽江-3384",
+      "name": "丽江东巴谷景区",
+      "province": "云南",
+      "city": "丽江",
+      "district": "玉龙纳西族自治县",
+      "level": "4A",
+      "address": "云南丽江市玉龙纳西族自治县丽江东巴谷景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-丽江-3385",
+      "name": "丽江老君山国家公园黎明景区",
+      "province": "云南",
+      "city": "丽江",
+      "district": "玉龙纳西族自治县",
+      "level": "4A",
+      "address": "云南丽江市玉龙纳西族自治县丽江老君山国家公园黎明景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-乌兰察布-541",
+      "name": "集宁战役红色纪念园",
+      "province": "内蒙古",
+      "city": "乌兰察布",
+      "district": "集宁区",
+      "level": "4A",
+      "address": "内蒙古乌兰察布市集宁区集宁战役红色纪念园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-乌兰察布-542",
+      "name": "辉腾锡勒黄花沟草原旅游区",
+      "province": "内蒙古",
+      "city": "乌兰察布",
+      "district": "察哈尔右翼中旗",
+      "level": "4A",
+      "address": "内蒙古乌兰察布市察哈尔右翼中旗内蒙古4兰察布市辉腾锡勒黄花沟草原旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-乌兰察布-543",
+      "name": "格根塔拉草原旅游中心",
+      "province": "内蒙古",
+      "city": "乌兰察布",
+      "district": "四子王旗",
+      "level": "4A",
+      "address": "内蒙古乌兰察布市四子王旗格根塔拉草原旅游中心",
       "category": "宗教寺庙"
     },
     {
-      "id": "scenic-重庆-2880",
-      "name": "云阳环湖绿道旅游景区",
-      "city": "重庆重庆市云",
+      "id": "scenic-乌兰察布-544",
+      "name": "京能岱海游度假区",
+      "province": "内蒙古",
+      "city": "乌兰察布",
+      "district": "凉城县",
       "level": "4A",
-      "address": "重庆重庆市云阳县重庆云阳县云阳环湖绿道旅游景区",
+      "address": "内蒙古乌兰察布市凉城县京能岱海游度假区",
       "category": "自然风光"
     },
     {
-      "id": "scenic-重庆-2783",
-      "name": "重庆长寿湖旅游区",
-      "city": "重庆重庆市长",
+      "id": "scenic-乌兰察布-545",
+      "name": "岱海旅游度假区",
+      "province": "内蒙古",
+      "city": "乌兰察布",
+      "district": "凉城县",
       "level": "4A",
-      "address": "重庆重庆市长寿区重庆长寿区重庆长寿湖旅游区",
+      "address": "内蒙古乌兰察布市凉城县岱海旅游度假区",
       "category": "自然风光"
     },
     {
-      "id": "scenic-重庆-2792",
-      "name": "重庆长寿菩提山文化旅游区",
-      "city": "重庆重庆市长",
+      "id": "scenic-乌兰察布-546",
+      "name": "岱海国际滑雪场",
+      "province": "内蒙古",
+      "city": "乌兰察布",
+      "district": "凉城县",
       "level": "4A",
-      "address": "重庆重庆市长寿区重庆长寿区重庆长寿菩提山文化旅游区",
+      "address": "内蒙古乌兰察布市凉城县岱海国际滑雪场",
+      "category": "轻运动"
+    },
+    {
+      "id": "scenic-乌兰察布-547",
+      "name": "红召九龙湾生态旅游区",
+      "province": "内蒙古",
+      "city": "乌兰察布",
+      "district": "兴和县",
+      "level": "4A",
+      "address": "内蒙古乌兰察布市兴和县红召九龙湾生态旅游区",
       "category": "自然风光"
     },
     {
-      "id": "scenic-重庆-2855",
-      "name": "重庆忠县白公祠文博景区",
-      "city": "重庆重庆市忠",
+      "id": "scenic-乌兰察布-548",
+      "name": "林胡古塞旅游区",
+      "province": "内蒙古",
+      "city": "乌兰察布",
+      "district": "卓资县",
       "level": "4A",
-      "address": "重庆重庆市忠县重庆忠县重庆忠县白公祠文博景区",
-      "category": "历史人文"
+      "address": "内蒙古乌兰察布市卓资县林胡古塞旅游区",
+      "category": "自然风光"
     },
     {
-      "id": "scenic-重庆-2762",
-      "name": "重庆忠县石宝寨",
-      "city": "重庆重庆市忠",
+      "id": "scenic-乌兰察布-549",
+      "name": "察尔湖旅游区",
+      "province": "内蒙古",
+      "city": "乌兰察布",
+      "district": "兴和县",
       "level": "4A",
-      "address": "重庆重庆市忠县重庆忠县重庆忠县石宝寨",
+      "address": "内蒙古乌兰察布市兴和县察尔湖旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-乌兰察布-550",
+      "name": "苏木山旅游区",
+      "province": "内蒙古",
+      "city": "乌兰察布",
+      "district": "兴和县",
+      "level": "4A",
+      "address": "内蒙古乌兰察布市兴和县苏木山旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-乌海-569",
+      "name": "金沙湾生态旅游景区",
+      "province": "内蒙古",
+      "city": "乌海",
+      "district": "海勃湾区",
+      "level": "4A",
+      "address": "内蒙古乌海市海勃湾区金沙湾生态旅游景区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-乌海-570",
+      "name": "乌海市蒙根花生态休闲区",
+      "province": "内蒙古",
+      "city": "乌海",
+      "district": "内蒙古岛海市",
+      "level": "4A",
+      "address": "内蒙古乌海市内蒙古岛海市乌海市蒙根花生态休闲区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-乌海-571",
+      "name": "阳光田宇国际酒庄",
+      "province": "内蒙古",
+      "city": "乌海",
+      "district": "海勃湾区",
+      "level": "4A",
+      "address": "内蒙古乌海市海勃湾区阳光田宇国际酒庄",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-乌海-572",
+      "name": "当代中国书法艺术馆景区",
+      "province": "内蒙古",
+      "city": "乌海",
+      "district": "海勃湾区",
+      "level": "4A",
+      "address": "内蒙古乌海市海勃湾区当代中国书法艺术馆景区",
       "category": "城市地标"
     },
     {
-      "id": "poi-重庆-29",
-      "name": "重庆动物园",
-      "city": "重庆市九龙坡",
+      "id": "scenic-乌海-573",
+      "name": "乌海湖休闲度假旅游区",
+      "province": "内蒙古",
+      "city": "乌海",
+      "district": "海勃湾区",
       "level": "4A",
-      "address": "重庆市九龙坡区西郊一村1号",
+      "address": "内蒙古乌海市海勃湾区乌海湖休闲度假旅游区",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-乌鲁木齐-3977",
+      "name": "苜蓿台生态公园",
+      "province": "新疆",
+      "city": "乌鲁木齐",
+      "district": "乌鲁木齐县",
+      "level": "4A",
+      "address": "新疆乌鲁木齐市乌鲁木齐县托里乡苜蓿台生态公园",
+      "category": "自然风光"
+    },
+    {
+      "id": "scenic-乌鲁木齐-3978",
+      "name": "新疆天山野生动物园",
+      "province": "新疆",
+      "city": "乌鲁木齐",
+      "district": "达坂城区",
+      "level": "4A",
+      "address": "新疆乌鲁木齐市达坂城区天山牧场窝尔图沟新疆天山野生动物园",
       "category": "主题乐园"
     },
     {
-      "id": "poi-重庆-14",
-      "name": "我在重庆大屏",
-      "city": "重庆市两江新",
+      "id": "scenic-乌鲁木齐-3979",
+      "name": "红光山景区",
+      "province": "新疆",
+      "city": "乌鲁木齐",
+      "district": "水磨沟区",
       "level": "4A",
-      "address": "重庆市两江新区北城天街6号北城天街A馆1F层",
-      "category": "城市地标"
-    },
-    {
-      "id": "poi-重庆-19",
-      "name": "鸿恩寺森林公园",
-      "city": "重庆市两江新",
-      "level": "4A",
-      "address": "重庆市两江新区鸿恩路",
-      "category": "宗教寺庙"
-    },
-    {
-      "id": "poi-重庆-6",
-      "name": "江北嘴江滩公园",
-      "city": "重庆市两江新",
-      "level": "4A",
-      "address": "重庆市两江新区金沙门路与桂花街交叉口东南120米",
+      "address": "新疆乌鲁木齐市水磨沟区米东区乌鲁木齐市红光山路1号红光山景区",
       "category": "自然风光"
     },
     {
-      "id": "poi-重庆-26",
-      "name": "重庆南山风景区",
-      "city": "重庆市南岸区",
+      "id": "scenic-乌鲁木齐-3980",
+      "name": "新疆丝绸之路国际度假区",
+      "province": "新疆",
+      "city": "乌鲁木齐",
+      "district": "乌鲁木齐县",
       "level": "4A",
-      "address": "重庆市南岸区南山公园路101号",
+      "address": "新疆乌鲁木齐市乌鲁木齐县水西沟镇平西粱村新疆丝绸之路国际度假区",
       "category": "自然风光"
     },
     {
-      "id": "poi-重庆-15",
-      "name": "长嘉汇弹子石老街",
-      "city": "重庆市南岸区",
+      "id": "scenic-乌鲁木齐-3981",
+      "name": "新疆国际大巴扎景区",
+      "province": "新疆",
+      "city": "乌鲁木齐",
+      "district": "天山区",
       "level": "4A",
-      "address": "重庆市南岸区泰昌路69号",
-      "category": "古镇村落"
-    },
-    {
-      "id": "poi-重庆-30",
-      "name": "磁器口古镇",
-      "city": "重庆市沙坪坝",
-      "level": "4A",
-      "address": "重庆市沙坪坝区磁南街1号",
-      "category": "古镇村落"
-    },
-    {
-      "id": "poi-重庆-3",
-      "name": "洪崖洞夜景观景台",
-      "city": "重庆市渝中区",
-      "level": "4A",
-      "address": "重庆市渝中区沧白路88号洪崖洞民俗风貌区11层",
+      "address": "新疆乌鲁木齐市天山区解放南路510号新疆国际大巴扎景区",
       "category": "城市地标"
     },
     {
-      "id": "poi-重庆-0",
-      "name": "红岩革命纪念馆",
-      "city": "重庆市渝中区",
+      "id": "scenic-乌鲁木齐-3982",
+      "name": "新疆自治区博物馆",
+      "province": "新疆",
+      "city": "乌鲁木齐",
+      "district": "沙依巴克区",
       "level": "4A",
-      "address": "重庆市渝中区大石坝街道红岩村52号",
+      "address": "新疆乌鲁木齐市沙依巴克区乌鲁木齐市西北路581号新疆自治区博物馆",
       "category": "历史人文"
     },
     {
-      "id": "poi-重庆-1",
-      "name": "洪崖洞民俗风貌区",
-      "city": "重庆市渝中区",
+      "id": "scenic-乌鲁木齐-3983",
+      "name": "水磨沟风景区",
+      "province": "新疆",
+      "city": "乌鲁木齐",
+      "district": "水磨沟区",
       "level": "4A",
-      "address": "重庆市渝中区嘉陵江滨江路88号(小什字地铁站9号口步行430米)",
+      "address": "新疆乌鲁木齐市水磨沟区乌鲁木齐市水磨沟路472号水磨沟风景区",
       "category": "城市地标"
     },
     {
-      "id": "poi-重庆-35",
-      "name": "桂园",
-      "city": "重庆市渝中区",
+      "id": "scenic-乌鲁木齐-3984",
+      "name": "红山公园",
+      "province": "新疆",
+      "city": "乌鲁木齐",
+      "district": "水磨沟区",
       "level": "4A",
-      "address": "重庆市渝中区上清寺中山四路65号(求精中学旁)",
-      "category": "城市地标"
-    },
-    {
-      "id": "poi-重庆-7",
-      "name": "周公馆",
-      "city": "重庆市渝中区",
-      "level": "4A",
-      "address": "重庆市渝中区上清寺中山四路曾家岩50号(曾家岩地铁站2号口步行90米)",
-      "category": "城市地标"
-    },
-    {
-      "id": "poi-重庆-32",
-      "name": "马鞍山堂里",
-      "city": "重庆市渝中区",
-      "level": "4A",
-      "address": "重庆市渝中区学田湾正街枣子垭正街交汇处(大礼堂地铁站1号口步行290米)",
+      "address": "新疆乌鲁木齐市水磨沟区乌鲁木齐市红山路北一巷40号红山公园",
       "category": "自然风光"
-    },
-    {
-      "id": "poi-重庆-17",
-      "name": "湖广会馆",
-      "city": "重庆市渝中区",
-      "level": "4A",
-      "address": "重庆市渝中区长江滨江路芭蕉园1号",
-      "category": "历史人文"
-    },
-    {
-      "id": "poi-重庆-5",
-      "name": "人民解放纪念碑",
-      "city": "重庆市渝中区",
-      "level": "4A",
-      "address": "重庆市渝中区邹容路133号",
-      "category": "历史人文"
-    },
-    {
-      "id": "scenic--262",
-      "name": "龙岩千鹭湖景区",
-      "city": "福建福建龙岩",
-      "level": "4A",
-      "address": "福建福建龙岩千鹭湖景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-福州-1477",
-      "name": "福州市中国船政文化景区",
-      "city": "福建福州市福",
-      "level": "4A",
-      "address": "福建福州市福建福州市中国船政文化景区",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-福州-1492",
-      "name": "福建三钢工业旅游区",
-      "city": "福建福州市福",
-      "level": "4A",
-      "address": "福建福州市福清市福建福建三钢工业旅游区",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-福州-1490",
-      "name": "福清市瑞岩山景区",
-      "city": "福建福州市福",
-      "level": "4A",
-      "address": "福建福州市福清市福建福清市瑞岩山景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-福州-1475",
-      "name": "福清市石竹山风景名胜区",
-      "city": "福建福州市福",
-      "level": "4A",
-      "address": "福建福州市福清市福建福清市石竹山风景名胜区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-福州-1488",
-      "name": "福建武夷温泉旅游景区",
-      "city": "福建福州市鼓",
-      "level": "4A",
-      "address": "福建福州市鼓楼区福建福建武夷温泉旅游景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-福州-1479",
-      "name": "沙县小吃文化城",
-      "city": "福建福州市鼓",
-      "level": "4A",
-      "address": "福建福州市鼓楼区福建沙县小吃文化城",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-福州-1485",
-      "name": "武夷香江茗苑景区",
-      "city": "福建福州市鼓",
-      "level": "4A",
-      "address": "福建福州市鼓楼区福建武夷香江茗苑景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-福州-1473",
-      "name": "福州国家森林公园（福州植物园）",
-      "city": "福建福州市晋",
-      "level": "4A",
-      "address": "福建福州市晋安区福建福州国家森林公园景区（福州植物园）",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-福州-1476",
-      "name": "福州市鼓山风景区",
-      "city": "福建福州市晋",
-      "level": "4A",
-      "address": "福建福州市晋安区福建福州市鼓山风景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-福州-1482",
-      "name": "福州连江溪山休闲旅游度假村",
-      "city": "福建福州市连",
-      "level": "4A",
-      "address": "福建福州市连江县福建福州连江溪山休闲旅游度假村",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-福州-1481",
-      "name": "连江贵安新天地休闲旅游度假区",
-      "city": "福建福州市连",
-      "level": "4A",
-      "address": "福建福州市连江县福建连江贵安新天地休闲旅游度假区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-福州-1484",
-      "name": "福州罗源湾海洋世界旅游区",
-      "city": "福建福州市罗",
-      "level": "4A",
-      "address": "福建福州市罗源县福建福州罗源湾海洋世界旅游区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-福州-1483",
-      "name": "福州闽侯旗山森林温泉度假村",
-      "city": "福建福州市闽",
-      "level": "4A",
-      "address": "福建福州市闽侯县福建福州闽侯旗山森林温泉度假村",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-福州-1487",
-      "name": "平潭坛南湾—海坛古城旅游区",
-      "city": "福建福州市平",
-      "level": "4A",
-      "address": "福建福州市平潭县福建平潭坛南湾—海坛古城旅游区",
-      "category": "古镇村落"
-    },
-    {
-      "id": "scenic-福州-1478",
-      "name": "福州市永泰天门山景区",
-      "city": "福建福州市永",
-      "level": "4A",
-      "address": "福建福州市永泰县福建福州市永泰天门山景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-福州-1480",
-      "name": "福州永泰云顶景区",
-      "city": "福建福州市永",
-      "level": "4A",
-      "address": "福建福州市永泰县福建福州永泰云顶景区",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-福州-1486",
-      "name": "永泰百漈沟生态旅游景区",
-      "city": "福建福州市永",
-      "level": "4A",
-      "address": "福建福州市永泰县福建永泰百漈沟生态旅游景区",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-福州-1489",
-      "name": "永泰欧乐堡海洋世界",
-      "city": "福建福州市永",
-      "level": "4A",
-      "address": "福建福州市永泰县福建永泰欧乐堡海洋世界",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-福州-1474",
-      "name": "永泰青云山风景名胜区",
-      "city": "福建福州市永",
-      "level": "4A",
-      "address": "福建福州市永泰县福建永泰青云山风景名胜区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-福州-1491",
-      "name": "福建长乐闽江河口国家湿地公园",
-      "city": "福建福州市长",
-      "level": "4A",
-      "address": "福建福州市长乐区福建福建长乐闽江河口国家湿地公园",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-龙岩-1407",
-      "name": "连城天一温泉旅游区",
-      "city": "福建龙岩市连",
-      "level": "4A",
-      "address": "福建龙岩市连城县福建连城天一温泉旅游区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-龙岩-1403",
-      "name": "连城县冠豸山风景区",
-      "city": "福建龙岩市连",
-      "level": "4A",
-      "address": "福建龙岩市连城县福建连城县冠豸山风景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-龙岩-1408",
-      "name": "龙岩市连城培田古村落旅游区",
-      "city": "福建龙岩市连",
-      "level": "4A",
-      "address": "福建龙岩市连城县福建龙岩市连城培田古村落旅游区",
-      "category": "古镇村落"
-    },
-    {
-      "id": "scenic-龙岩-1411",
-      "name": "毛泽东才溪乡调查旧址",
-      "city": "福建龙岩市上",
-      "level": "4A",
-      "address": "福建龙岩市上杭县福建龙岩上杭县毛泽东才溪乡调查旧址",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-龙岩-1409",
-      "name": "梅花山华南虎园生态旅游景区",
-      "city": "福建龙岩市上",
-      "level": "4A",
-      "address": "福建龙岩市上杭县福建龙岩市上杭县梅花山华南虎园生态旅游景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-龙岩-1410",
-      "name": "武平县梁野山景区",
-      "city": "福建龙岩市武",
-      "level": "4A",
-      "address": "福建龙岩市武平县福建武平县梁野山景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-龙岩-1413",
-      "name": "武平县狮岩景区",
-      "city": "福建龙岩市武",
-      "level": "4A",
-      "address": "福建龙岩市武平县福建武平县狮岩景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-龙岩-1404",
-      "name": "龙岩市龙硿洞风景名胜区",
-      "city": "福建龙岩市新",
-      "level": "4A",
-      "address": "福建龙岩市新罗区福建龙岩市龙硿洞风景名胜区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-龙岩-1412",
-      "name": "龙岩天子生态旅游区",
-      "city": "福建龙岩市永",
-      "level": "4A",
-      "address": "福建龙岩市永定区福建龙岩天子生态旅游区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-龙岩-1405",
-      "name": "龙岩漳平市水上茶乡九鹏溪",
-      "city": "福建龙岩市漳",
-      "level": "4A",
-      "address": "福建龙岩市漳平市福建龙岩漳平市水上茶乡九鹏溪",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-龙岩-1406",
-      "name": "龙岩市长汀红色旧址群旅游区",
-      "city": "福建龙岩市长",
-      "level": "4A",
-      "address": "福建龙岩市长汀县福建龙岩市长汀红色旧址群旅游区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-龙岩-1414",
-      "name": "长汀汀江国家湿地公园",
-      "city": "福建龙岩市长",
-      "level": "4A",
-      "address": "福建龙岩市长汀县福建长汀汀江国家湿地公园",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-南平-1395",
-      "name": "武夷花花世界景区",
-      "city": "福建南平市建",
-      "level": "4A",
-      "address": "福建南平市建阳区福建建阳（卧龙湾）武夷花花世界景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-南平-1396",
-      "name": "中国包酒文化博览园",
-      "city": "福建南平市浦",
-      "level": "4A",
-      "address": "福建南平市浦城县福建南平浦城县中国包酒文化博览园景区",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-南平-1393",
-      "name": "南平邵武和平古镇景区",
-      "city": "福建南平市邵",
-      "level": "4A",
-      "address": "福建南平市邵武市福建南平邵武和平古镇景区",
-      "category": "古镇村落"
-    },
-    {
-      "id": "scenic-南平-1391",
-      "name": "南平市邵武云灵山旅游景区",
-      "city": "福建南平市邵",
-      "level": "4A",
-      "address": "福建南平市邵武市福建南平市邵武云灵山旅游景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-南平-1397",
-      "name": "邵武金坑红色旅游景区",
-      "city": "福建南平市邵",
-      "level": "4A",
-      "address": "福建南平市邵武市福建邵武金坑红色旅游景区",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-南平-1390",
-      "name": "邵武天成奇峡旅游区",
-      "city": "福建南平市邵",
-      "level": "4A",
-      "address": "福建南平市邵武市福建邵武天成奇峡旅游区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-南平-1388",
-      "name": "南平市顺昌华阳山旅游景区",
-      "city": "福建南平市顺",
-      "level": "4A",
-      "address": "福建南平市顺昌县福建南平市顺昌华阳山旅游景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-南平-1398",
-      "name": "顺昌洋口红色旅游小镇",
-      "city": "福建南平市顺",
-      "level": "4A",
-      "address": "福建南平市顺昌县福建顺昌洋口红色旅游小镇",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-南平-1399",
-      "name": "松溪梅口埠旅游景区",
-      "city": "福建南平市松",
-      "level": "4A",
-      "address": "福建南平市松溪县福建松溪梅口埠旅游景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-南平-1387",
-      "name": "南平市武夷山大安源生态旅游区",
-      "city": "福建南平市武",
-      "level": "4A",
-      "address": "福建南平市武夷山市福建南平市武夷山大安源生态旅游区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-南平-1392",
-      "name": "南平武夷山茶博园",
-      "city": "福建南平市武",
-      "level": "4A",
-      "address": "福建南平市武夷山市福建南平武夷山茶博园",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-南平-1394",
-      "name": "武夷山自遊小镇汽车主题乐园",
-      "city": "福建南平市武",
-      "level": "4A",
-      "address": "福建南平市武夷山市福建武夷山自遊小镇汽车主题乐园景区",
-      "category": "主题乐园"
-    },
-    {
-      "id": "scenic-南平-1389",
-      "name": "南平市溪源峡谷旅游区",
-      "city": "福建南平市延",
-      "level": "4A",
-      "address": "福建南平市延平区福建南平市溪源峡谷旅游区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-南平-1400",
-      "name": "中国白茶小镇·石圳湾景区",
-      "city": "福建南平市政",
-      "level": "4A",
-      "address": "福建南平市政和县福建政和县中国白茶小镇·石圳湾景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-宁德-1455",
-      "name": "宁德福安白云山",
-      "city": "福建宁德市福",
-      "level": "4A",
-      "address": "福建宁德市福安市福建宁德福安白云山",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-宁德-1456",
-      "name": "柘荣县鸳鸯草场景区",
-      "city": "福建宁德市柘",
-      "level": "4A",
-      "address": "福建宁德市柘荣县福建柘荣县鸳鸯草场景区",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-宁德-1454",
-      "name": "鲤鱼溪·九龙漈旅游区",
-      "city": "福建宁德市周",
-      "level": "4A",
-      "address": "福建宁德市周宁县福建宁德市周宁鲤鱼溪·九龙漈旅游区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-莆田-1499",
-      "name": "莆田绶溪公园景区",
-      "city": "福建莆田市城",
-      "level": "4A",
-      "address": "福建莆田市城厢区福建莆田绶溪公园景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-莆田-1497",
-      "name": "莆田市瑞云山风景区",
-      "city": "福建莆田市涵",
-      "level": "4A",
-      "address": "福建莆田市涵江区福建莆田市瑞云山风景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-莆田-1494",
-      "name": "莆田市莆田工艺美术城",
-      "city": "福建莆田市荔",
-      "level": "4A",
-      "address": "福建莆田市荔城区福建莆田市莆田工艺美术城",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-莆田-1495",
-      "name": "莆田市九龙谷生态旅游景区",
-      "city": "福建莆田市仙",
-      "level": "4A",
-      "address": "福建莆田市仙游县福建莆田市九龙谷生态旅游景区",
-      "category": "城市地标"
-    },
-    {
-      "id": "scenic-莆田-1496",
-      "name": "莆田市仙游县九鲤湖旅游区",
-      "city": "福建莆田市仙",
-      "level": "4A",
-      "address": "福建莆田市仙游县福建莆田市仙游县九鲤湖旅游区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-莆田-1498",
-      "name": "仙游县菜溪岩风景区",
-      "city": "福建莆田市仙",
-      "level": "4A",
-      "address": "福建莆田市仙游县福建仙游县菜溪岩风景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-泉州-1459",
-      "name": "安溪清水岩旅游区",
-      "city": "福建泉州市安",
-      "level": "4A",
-      "address": "福建泉州市安溪县福建安溪清水岩旅游区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-泉州-1471",
-      "name": "安溪县溪禾山铁观音文化园",
-      "city": "福建泉州市安",
-      "level": "4A",
-      "address": "福建泉州市安溪县福建安溪县溪禾山铁观音文化园",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-泉州-1465",
-      "name": "泉州德化九仙山风景区",
-      "city": "福建泉州市德",
-      "level": "4A",
-      "address": "福建泉州市德化县福建泉州德化九仙山风景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-泉州-1462",
-      "name": "泉州市德化石牛山景区",
-      "city": "福建泉州市德",
-      "level": "4A",
-      "address": "福建泉州市德化县福建泉州市德化石牛山景区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-泉州-1463",
-      "name": "福建中国闽台缘博物馆",
-      "city": "福建泉州市丰",
-      "level": "4A",
-      "address": "福建泉州市丰泽区福建福建中国闽台缘博物馆",
-      "category": "历史人文"
-    },
-    {
-      "id": "scenic-泉州-1464",
-      "name": "泉州市博物馆",
-      "city": "福建泉州市丰",
-      "level": "4A",
-      "address": "福建泉州市丰泽区福建泉州市博物馆",
-      "category": "历史人文"
-    },
-    {
-      "id": "scenic-泉州-1461",
-      "name": "惠安崇武古城风景区",
-      "city": "福建泉州市惠",
-      "level": "4A",
-      "address": "福建泉州市惠安县福建惠安崇武古城风景区",
-      "category": "古镇村落"
-    },
-    {
-      "id": "scenic-泉州-1466",
-      "name": "晋江市五店市传统文化旅游区",
-      "city": "福建泉州市晋",
-      "level": "4A",
-      "address": "福建泉州市晋江市福建晋江市五店市传统文化旅游区",
-      "category": "自然风光"
-    },
-    {
-      "id": "scenic-泉州-1458",
-      "name": "泉州开元寺",
-      "city": "福建泉州市鲤",
-      "level": "4A",
-      "address": "福建泉州市鲤城区福建泉州开元寺",
-      "category": "宗教寺庙"
     }
   ]
 }
