@@ -2013,7 +2013,21 @@ const QC_CSS = `
     text-overflow:ellipsis;white-space:nowrap}
   #qcGateList .gate>button:not(:first-child){padding:2px 0;font-size:10px}
   #qcGateEmpty{padding:9px;color:var(--dim);font:10px var(--mono);text-align:center}
-  #qcHud{top:74px;right:14px;padding:11px 13px;z-index:10;min-width:212px;font-family:var(--mono)}
+  #qcGateInspector{padding:7px;border:1px solid var(--line);border-radius:6px;color:var(--dim);font:9.5px/1.55 var(--mono);white-space:pre-line;overflow-wrap:anywhere}
+  #qcHud{top:74px;right:14px;padding:11px 13px;z-index:10;min-width:212px;font-family:var(--mono);
+    max-height:calc(100vh - 148px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  #qcHud .grp{font-size:10px;letter-spacing:.12em;color:var(--dim);margin:7px 0 4px}
+  #qcShotSummary{font-size:9.5px;line-height:1.5;color:var(--dim);margin:3px 0}
+  #qcShotLegend{display:flex;gap:10px;font-size:8.5px;color:var(--dim);margin:4px 0}
+  #qcShotLegend span::before{content:'';display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:4px;background:var(--cyan)}
+  #qcShotLegend span:last-child::before{background:var(--amber)}
+  #qcShotHist{max-height:180px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
+  .qcShotRow{padding:3px 0;border-bottom:1px solid rgba(120,160,220,.08)}
+  .qcShotTop{display:flex;justify-content:space-between;gap:4px;font-size:9px;color:var(--txt)}
+  .qcShotBars{display:grid;gap:2px;margin-top:2px}
+  .qcShotTrack{height:3px;background:rgba(120,160,220,.12);border-radius:2px;overflow:hidden}
+  .qcShotTrack i{display:block;height:100%;background:var(--cyan)}
+  .qcShotTrack b{display:block;height:100%;background:var(--amber)}
   #qcHud .hrow{display:flex;justify-content:space-between;gap:12px;font-size:11.5px;padding:2.5px 0}
   #qcHud .hrow span:first-child{color:var(--dim)}
   #qcHud .hrow span:last-child{color:var(--txt)}
@@ -2120,6 +2134,9 @@ class QCircuitApp {
       },
     };
     this.ampCam = readQcAmpCam(q); this._ampDrag = null; this._amp3dHits = [];
+    this._ampHoverIndex = null; this._ampPinnedIndex = null;
+    this._shotsBusy = false; this._shotRunId = 0; this.shotResult = null;
+    this._gateInspectId = 0; this.gateInspectorData = null;
     this.edit = { op: 'h', q: 0, c: -1, c2: -1, q2: 1, q3: 2, theta: Math.PI / 2, basis: 'z', cbit: 0, inner: 'x', selected: -1 };
     this.gates = [];
     this.psi = null;
@@ -2208,8 +2225,14 @@ class QCircuitApp {
           <button id="qcGateAdd">插入选中后</button><button id="qcGateClear">清空线路</button>
         </div>
         <div id="qcGateList"></div>
+        <div class="grp">选中门：前 → 后</div>
+        <div id="qcGateInspector" class="qcInspector">点击门序列条目，查看选中基态的振幅变化与全态概率变化。</div>
         <div class="grp">测量</div>
         <div class="btns"><button id="qcMeasure" style="grid-column:1 / span 2">Z 基测量（坍缩）</button></div>
+        <div class="grp">重复采样（每次从初态重跑）</div>
+        <div class="row"><label>shots</label><select id="qcShotCount" style="flex:1;width:auto"><option value="100">100</option><option value="500">500</option><option value="1000">1,000</option><option value="5000">5,000</option></select></div>
+        <div class="btns"><button id="qcShotsRun">运行 shots</button><button id="qcShotsCancel" disabled>取消</button></div>
+        <div class="chk" style="font-size:10px;color:var(--dim)">只统计独立重复运行的末端 Z 读数；线路中的中途测量与前馈仍逐 shot 执行。</div>
         <div class="row"><label>随机种子</label><input type="range" id="qcSeed" min="1" max="999" step="1"><output id="qcSeedO">—</output></div>
         <div class="grp">子系统熵 A（R102）</div>
         <div class="row" style="align-items:flex-start"><label style="padding-top:5px">选位</label><span id="qcSubBtns" title="点击加入/移出子系统 A；≤6 位（Jacobi 求谱 O(d³)）；其余位 traced out"></span></div>
@@ -2255,6 +2278,8 @@ class QCircuitApp {
         <div class="hrow"><span>经典位 m0 m1</span><span id="hCbits">—</span></div>
         <div class="hrow"><span>q2 保真度 vs 目标</span><span id="hFid">—</span></div>
         <div class="hrow"><span>末端测量</span><span id="hMeas">—</span></div>
+        <hr><div class="grp">重复采样 · 末端 Z 分布</div>
+        <div id="qcShotSummary">尚无 shots 样本</div><div id="qcShotLegend"></div><div id="qcShotHist"></div>
         <div class="hrow"><span>FPS</span><span id="hFps">—</span></div>
       </aside>
 
@@ -2264,7 +2289,7 @@ class QCircuitApp {
     this._bind();
     this.syncPanel();
     this.reset();
-    this.resize();
+    this.resize(); this.syncShotControls();
     new ResizeObserver(() => this.resize()).observe(this.q('#qcStage'));
     requestAnimationFrame(this.frame);
     return this;
@@ -2289,12 +2314,15 @@ class QCircuitApp {
     this.on(this.q('#qcSeed'), 'input', e => {
       st.seed = parseInt(e.target.value, 10);
       this.q('#qcSeedO').textContent = String(st.seed);
+      if (this.edit.selected >= 0) this.inspectGate(this.edit.selected);
     });
     this.on(this.q('#qcStep'), 'click', () => this.step(1));
     this.on(this.q('#qcRun'), 'click', () => this.step(this.gates.length));
     this.on(this.q('#qcPlay'), 'click', () => { st.playing = !st.playing; this.syncPanel(); });
     this.on(this.q('#qcReset'), 'click', () => this.resetExecution());
     this.on(this.q('#qcMeasure'), 'click', () => this.measure());
+    this.on(this.q('#qcShotsRun'), 'click', () => this.runShots(parseInt(this.q('#qcShotCount')?.value || '100', 10)));
+    this.on(this.q('#qcShotsCancel'), 'click', () => this.cancelShots());
     this.on(this.q('#qcGateOp'), 'change', e => { this.edit.op = e.target.value; this.syncGateEditor(); });
     this.on(this.q('#qcGateQ'), 'change', e => { this.edit.q = parseInt(e.target.value, 10); });
     this.on(this.q('#qcGateC'), 'change', e => { this.edit.c = parseInt(e.target.value, 10); });
@@ -2328,21 +2356,22 @@ class QCircuitApp {
     this.on(this.q('#qcNoiseOn'), 'click', () => {
       const st = this.state;
       st.noise.on = !st.noise.on;
+      this.invalidateShots();
       this.syncPanel();
       this.resetExecution();
       this.toast(st.noise.on
         ? '门噪声已启用：T₁=' + st.noise.t1 + ' · T₂=' + st.noise.t2 + ' · t_g=' + st.noise.tg + '（密度矩阵路径）'
         : '门噪声已关闭（纯酉路径，与关闭前逐位等价）');
     });
-    this.on(this.q('#qcT1'), 'input', e => { this.state.noise.t1 = parseFloat(e.target.value); this.syncPanel(); this.resetExecution(); });
-    this.on(this.q('#qcT2'), 'input', e => { this.state.noise.t2 = parseFloat(e.target.value); this.syncPanel(); this.resetExecution(); });
-    this.on(this.q('#qcTg'), 'input', e => { this.state.noise.tg = parseFloat(e.target.value); this.syncPanel(); this.resetExecution(); });
+    this.on(this.q('#qcT1'), 'input', e => { this.state.noise.t1 = parseFloat(e.target.value); this.invalidateShots(); this.syncPanel(); this.resetExecution(); });
+    this.on(this.q('#qcT2'), 'input', e => { this.state.noise.t2 = parseFloat(e.target.value); this.invalidateShots(); this.syncPanel(); this.resetExecution(); });
+    this.on(this.q('#qcTg'), 'input', e => { this.state.noise.tg = parseFloat(e.target.value); this.invalidateShots(); this.syncPanel(); this.resetExecution(); });
     /* R105：退极化滑块单位是 ×10⁻³（整数 0..50 ⟹ p = 0 … 0.05） */
-    this.on(this.q('#qcPd'), 'input', e => { this.state.noise.pd = parseFloat(e.target.value) / 1000; this.syncPanel(); this.resetExecution(); });
+    this.on(this.q('#qcPd'), 'input', e => { this.state.noise.pd = parseFloat(e.target.value) / 1000; this.invalidateShots(); this.syncPanel(); this.resetExecution(); });
     /* R106：读出误差滑块单位同为 ×10⁻³（整数 0..50 ⟹ ε = 0 … 0.05） */
-    this.on(this.q('#qcRe'), 'input', e => { this.state.noise.re = parseFloat(e.target.value) / 1000; this.syncPanel(); this.resetExecution(); });
+    this.on(this.q('#qcRe'), 'input', e => { this.state.noise.re = parseFloat(e.target.value) / 1000; this.invalidateShots(); this.syncPanel(); this.resetExecution(); });
     /* R107：热平衡 p_eq 滑块单位 ×10⁻³（整数 0..500 ⟹ p_eq = 0 … 0.5） */
-    this.on(this.q('#qcPeq'), 'input', e => { this.state.noise.peq = parseFloat(e.target.value) / 1000; this.syncPanel(); this.resetExecution(); });
+    this.on(this.q('#qcPeq'), 'input', e => { this.state.noise.peq = parseFloat(e.target.value) / 1000; this.invalidateShots(); this.syncPanel(); this.resetExecution(); });
     this.on(this.q('#qcGateAdd'), 'click', () => this.addGate());
     this.on(this.q('#qcGateClear'), 'click', () => this.clearGates());
     this.on(this.q('#qcGateList'), 'click', e => {
@@ -2365,28 +2394,42 @@ class QCircuitApp {
     const ampCanvas = this.q('#qcAmp');
     this.on(ampCanvas, 'pointerdown', e => {
       if (this.state.ampProj !== '3d' || e.button !== 0) return;
-      this._ampDrag = { x: e.clientX, y: e.clientY };
-      this.clearAmpProbe();
+      this._ampDrag = { x: e.clientX, y: e.clientY, lastX: e.clientX, lastY: e.clientY, moved: false };
+      if (this._ampPinnedIndex == null) this.clearAmpProbe();
       try { ampCanvas.focus({ preventScroll: true }); } catch (_){ /* 老浏览器 */ }
-      ampCanvas.style.cursor = 'grabbing';
       try { ampCanvas.setPointerCapture(e.pointerId); } catch (_){ /* jsdom/旧浏览器无 pointer capture */ }
       e.preventDefault();
     });
     this.on(ampCanvas, 'pointermove', e => {
       if (this.state.ampProj !== '3d') return;
       if (this._ampDrag){
-        const dx = e.clientX - this._ampDrag.x, dy = e.clientY - this._ampDrag.y;
-        this._ampDrag = { x: e.clientX, y: e.clientY };
-        this.ampCam = hbOrbit(this.ampCam, dx, dy, 0.0075);
-        this.drawAmp3D();
+        const drag = this._ampDrag;
+        if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) >= 4) drag.moved = true;
+        if (drag.moved){
+          const dx = e.clientX - drag.lastX, dy = e.clientY - drag.lastY;
+          drag.lastX = e.clientX; drag.lastY = e.clientY;
+          ampCanvas.style.cursor = 'grabbing';
+          this.ampCam = hbOrbit(this.ampCam, dx, dy, 0.0075);
+          this.drawAmp3D();
+        } else this.updateAmpProbe(e);
       } else this.updateAmpProbe(e);
     });
     const finishAmpOrbit = e => {
       if (!this._ampDrag) return;
+      const drag = this._ampDrag;
       this._ampDrag = null;
       if (ampCanvas) ampCanvas.style.cursor = 'grab';
-      this.syncAmpUrl();
-      if (e) this.updateAmpProbe(e);
+      if (drag.moved){
+        this.syncAmpUrl();
+        if (e) this.updateAmpProbe(e);
+      } else if (e){
+        this.updateAmpProbe(e);
+        if (e.type === 'pointercancel') return;
+        const i = this._ampHoverIndex;
+        if (i != null && i === this._ampPinnedIndex){
+          this._ampPinnedIndex = null; this.drawAmp3D(); this.showAmpProbe(i, false);
+        } else if (i != null) this.pinAmpBasis(i);
+      }
     };
     this.on(ampCanvas, 'pointerup', finishAmpOrbit);
     this.on(ampCanvas, 'pointercancel', finishAmpOrbit);
@@ -2398,14 +2441,30 @@ class QCircuitApp {
     }, { passive: false });
     this.on(ampCanvas, 'dblclick', () => { if (this.state.ampProj === '3d') this.resetAmpCam(); });
     this.on(document, 'keydown', e => {
-      const tag = e.target?.tagName;
-      if (e.key.toLowerCase() === 'r' && this.state.ampProj === '3d' && !['INPUT','SELECT','TEXTAREA','BUTTON'].includes(tag)) this.resetAmpCam();
+      if (this.state.ampProj === '3d' && e.target === ampCanvas){
+        const key = e.key, dim = 1 << this.state.n;
+        const current = this._ampPinnedIndex ?? this._ampHoverIndex ?? 0;
+        if (key === 'ArrowRight' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowUp'){
+          const delta = key === 'ArrowRight' || key === 'ArrowDown' ? 1 : -1;
+          this.pinAmpBasis((current + delta + dim) % dim); e.preventDefault(); return;
+        }
+        if (key === 'Enter' || key === ' '){
+          e.preventDefault();
+          if (this._ampPinnedIndex === current){
+            this._ampPinnedIndex = null; this.drawAmp3D(); this.showAmpProbe(current, false);
+          } else this.pinAmpBasis(current);
+          return;
+        }
+      }
+      const tag = e.target?.tagName, key = e.key?.toLowerCase();
+      if (key === 'r' && this.state.ampProj === '3d' && !['INPUT','SELECT','TEXTAREA','BUTTON'].includes(tag)) this.resetAmpCam();
     });
   }
 
   /* ---------- 门序列编辑：结构改动只重置执行，不回滚用户线路 ---------- */
   _edited(msg){
     this.state.edited = true;
+    this.invalidateShots();
     this.resetExecution();
     this._msg = msg;
     this.renderHint();
@@ -2504,6 +2563,65 @@ class QCircuitApp {
   selectGate(i){
     this.edit.selected = (i >= 0 && i < this.gates.length) ? i : -1;
     this.renderGateList();
+    if (this.edit.selected >= 0) this.inspectGate(this.edit.selected);
+    else this.clearGateInspector();
+  }
+
+  clearGateInspector(){
+    this._gateInspectId++;
+    this.gateInspectorData = null;
+    const el = this.q('#qcGateInspector');
+    if (el) el.textContent = '点击门序列条目，查看选中基态的振幅变化与全态概率变化。';
+  }
+
+  async inspectGate(index){
+    if (index < 0 || index >= this.gates.length){ this.clearGateInspector(); return null; }
+    const token = ++this._gateInspectId, n = this.state.n, dim = 1 << n;
+    const gates = this.gates.map(g => JSON.parse(JSON.stringify(g))), gate = gates[index];
+    const noisy = !!this.state.noise.on, nz = { ...this.state.noise }, seed = this.state.seed >>> 0;
+    const noiseParam = noisy ? qcnNoiseParams(nz.t1, nz.t2, nz.tg, nz.pd, nz.re, nz.peq) : null;
+    const basis = qcClamp(this._ampPinnedIndex ?? this._ampHoverIndex ?? 0, 0, dim - 1);
+    const psi = noisy ? null : qcNewState(n), rho = noisy ? qcnRho(n) : null;
+    const cres = qcNewClassical(8), rng = mulberry32(seed);
+    const el = this.q('#qcGateInspector');
+    if (el) el.textContent = `重放线路至第 ${index + 1} 门…`;
+    const apply = g => noisy ? qcnExec(rho, g, cres, rng, noiseParam) : qcExec(psi, g, cres, rng);
+    const snapshot = () => {
+      const probs = noisy ? qcnProbs(rho) : qcProbs(psi);
+      let total = 0; for (const p of probs) total += p;
+      if (noisy) return { probs: Array.from(probs), total, p: Math.max(0, probs[basis]), re: null, im: null, abs: Math.sqrt(Math.max(0, probs[basis])), phase: null };
+      const re = psi.re[basis], im = psi.im[basis], abs = Math.hypot(re, im);
+      return { probs: Array.from(probs), total, p: abs * abs, re, im, abs, phase: abs > 1e-14 ? Math.atan2(im, re) : null };
+    };
+    try {
+      for (let k = 0; k < index; k++){
+        if (token !== this._gateInspectId) return null;
+        apply(gates[k]);
+        if ((k & 3) === 3) await new Promise(resolve => setTimeout(resolve, 0));
+      }
+      const before = snapshot();
+      const exec = apply(gate);
+      const after = snapshot();
+      let tv = 0; for (let i = 0; i < dim; i++) tv += Math.abs(after.probs[i] - before.probs[i]);
+      const data = { index, gate, label: gateView(gate).text, basis, bits: qcBits(basis, n), noisy, seed,
+        before, after, tv: 0.5 * tv, deltaA: noisy ? null : Math.hypot(after.re - before.re, after.im - before.im), exec };
+      if (token !== this._gateInspectId) return null;
+      this.gateInspectorData = data;
+      if (el){
+        const ampLine = (name, s) => noisy
+          ? `${name} √ρᵢᵢ ${s.abs.toFixed(4)} · ρᵢᵢ ${s.p.toFixed(4)}`
+          : `${name} Re ${(s.re < 0 ? '−' : '+') + Math.abs(s.re).toFixed(4)} · Im ${(s.im < 0 ? '−' : '+') + Math.abs(s.im).toFixed(4)} · |a| ${s.abs.toFixed(4)} · p ${s.p.toFixed(4)} · arg ${s.phase == null ? '—' : s.phase.toFixed(3) + ' rad'}`;
+        const detail = exec?.kind === 'cond' ? `\n经典条件 c${exec.cbit} ${exec.on ? '触发' : '未触发'}`
+          : exec?.kind === 'measure' ? `\n测量结果 ${Array.isArray(exec.bits) ? exec.bits.join('') : exec.bit}` : '';
+        el.textContent = `第 ${index + 1} 门 ${data.label || gate.op.toUpperCase()} · ${noisy ? '密度矩阵' : '态矢'} · seed ${seed}\n` +
+          `基态 |${data.bits}⟩\n${ampLine('前', before)}\n${ampLine('后', after)}\n` +
+          `全态概率总变差 ${data.tv.toFixed(4)}${noisy ? '' : ` · Δa ${data.deltaA.toFixed(4)}`}${detail}`;
+      }
+      return data;
+    } catch (err){
+      if (token === this._gateInspectId && el) el.textContent = '检查失败：' + (err?.message || String(err));
+      return null;
+    }
   }
 
   /* R102：重建子系统 A 选位按钮（随 n 变化；on 类复用既有 #qcPanel button.on 样式） */
@@ -2621,6 +2739,7 @@ class QCircuitApp {
   }
 
   reset(){
+    this.invalidateShots(); this.clearGateInspector();
     const st = this.state;
     st.sub &= (1 << st.n) - 1;   /* R102：n 变小时夹掉越界选中位（两条 n 变更路径——面板滑块与 setParam——都经此处；q0 恒在，默认 {q0} 不受影响） */
     if (st.preset === 'teleport'){
@@ -2636,6 +2755,7 @@ class QCircuitApp {
   }
 
   resetExecution(){
+    this.cancelShots();
     const st = this.state;
     this.psi = qcNewState(st.n);
     /* R104：噪声开启时并行维护密度矩阵 ρ（psi 保留 |0…0⟩ 作纯路径镜像，
@@ -2650,6 +2770,8 @@ class QCircuitApp {
     this.renderGateList();
     this.renderHint();
     this.renderHud();
+    if (this.edit.selected >= 0) this.inspectGate(this.edit.selected);
+    else this.clearGateInspector();
   }
 
   /* 统一的参数入口：θ/φ 会改变线路本身（制备门 + 目标态），必须重建 */
@@ -2666,6 +2788,7 @@ class QCircuitApp {
   }
 
   step(k = 1){
+    this.cancelShots();
     const st = this.state;
     if (st.measured != null) return;          /* 测量后必须重置才能继续 */
     for (let i = 0; i < k && st.step < this.gates.length; i++){
@@ -2680,6 +2803,7 @@ class QCircuitApp {
   }
 
   measure(){
+    this.cancelShots();
     const st = this.state;
     const rng = mulberry32(st.seed);
     if (st.noise.on){
@@ -2700,6 +2824,96 @@ class QCircuitApp {
     this._needDraw = true;
     this.renderHud();
     this.toast('测量 → |' + st.measured.bits + '⟩');
+  }
+
+  cancelShots(){
+    if (!this._shotsBusy) return false;
+    this._shotRunId++;
+    this._shotsBusy = false;
+    if (this.shotResult?.status === 'running') this.shotResult.status = 'cancelled';
+    this.syncShotControls();
+    return true;
+  }
+
+  invalidateShots(){
+    this.cancelShots(); this.shotResult = null; this.syncShotControls();
+  }
+
+  syncShotControls(){
+    const run = this.q('#qcShotsRun'), cancel = this.q('#qcShotsCancel'), count = this.q('#qcShotCount');
+    if (run){ run.disabled = this._shotsBusy; run.textContent = this._shotsBusy ? '采样中…' : '运行 shots'; }
+    if (cancel) cancel.disabled = !this._shotsBusy;
+    if (count) count.disabled = this._shotsBusy;
+    const summary = this.q('#qcShotSummary'), hist = this.q('#qcShotHist'), legend = this.q('#qcShotLegend');
+    if (!summary || !hist || !legend) return;
+    const r = this.shotResult;
+    if (!r){ summary.textContent = '尚无 shots 样本'; legend.innerHTML = ''; hist.innerHTML = ''; return; }
+    const status = r.status === 'running' ? '采样中' : r.status === 'done' ? '完成' : r.status === 'cancelled' ? '已取消' : '失败';
+    const trueKinds = r.trueCounts.reduce((s, v) => s + (v > 0), 0), recKinds = r.recordedCounts.reduce((s, v) => s + (v > 0), 0);
+    summary.textContent = `${status} ${r.done}/${r.target} · ` +
+      (r.noisy ? `真值 ${trueKinds} 种 / 记录 ${recKinds} 种` : `结果 ${trueKinds} 种`) + ` · seed ${r.seed}` +
+      (r.noisy ? ` · ε=${r.eps.toFixed(3)}` : '') + (r.error ? ` · ${r.error}` : '');
+    legend.innerHTML = r.noisy ? '<span>真实结果</span><span>记录结果</span>' : '<span>末端 Z 结果</span>';
+    if (!r.done){ hist.innerHTML = ''; return; }
+    const keys = Array.from({ length: r.trueCounts.length }, (_, i) => i)
+      .filter(i => r.trueCounts[i] || r.recordedCounts[i])
+      .sort((a, b) => Math.max(r.trueCounts[b], r.recordedCounts[b]) - Math.max(r.trueCounts[a], r.recordedCounts[a]))
+      .slice(0, 16);
+    hist.innerHTML = keys.map(i => {
+      const truth = r.trueCounts[i], recorded = r.recordedCounts[i];
+      const tw = 100 * truth / r.done, rw = 100 * recorded / r.done;
+      const bars = r.noisy
+        ? `<div class="qcShotTrack"><i style="width:${tw.toFixed(2)}%"></i></div><div class="qcShotTrack"><b style="width:${rw.toFixed(2)}%"></b></div>`
+        : `<div class="qcShotTrack"><i style="width:${tw.toFixed(2)}%"></i></div>`;
+      return `<div class="qcShotRow"><div class="qcShotTop"><span>|${qcBits(i, r.n)}⟩</span><span>${r.noisy ? `${truth} / ${recorded}` : truth}</span></div>` +
+        `<div class="qcShotBars">${bars}</div></div>`;
+    }).join('') + (trueKinds > 16 || recKinds > 16 ? '<div style="padding:4px;color:var(--dim);font-size:9px">仅列出频数最高的 16 个基态</div>' : '');
+  }
+
+  async runShots(requested = 100){
+    if (this._shotsBusy) return false;
+    const target = qcClamp(Math.round(Number(requested) || 100), 1, 10000);
+    const n = this.state.n, gates = this.gates.map(g => JSON.parse(JSON.stringify(g)));
+    const noisy = !!this.state.noise.on, nz = { ...this.state.noise }, seed = this.state.seed >>> 0;
+    const noiseParam = noisy ? qcnNoiseParams(nz.t1, nz.t2, nz.tg, nz.pd, nz.re, nz.peq) : null;
+    const result = { status: 'running', target, done: 0, n, seed, noisy, eps: noisy ? noiseParam.eps : 0,
+      trueCounts: new Uint32Array(1 << n), recordedCounts: new Uint32Array(1 << n) };
+    const token = ++this._shotRunId, rng = mulberry32(seed);
+    this._shotsBusy = true; this.shotResult = result; this.syncShotControls();
+    try {
+      while (result.done < target && token === this._shotRunId){
+        const t0 = performance.now(); let batch = 0;
+        do {
+          const psi = noisy ? null : qcNewState(n), rho = noisy ? qcnRho(n) : null;
+          const cres = qcNewClassical(8);
+          for (const g of gates){
+            if (noisy) qcnExec(rho, g, cres, rng, noiseParam);
+            else qcExec(psi, g, cres, rng);
+          }
+          const idx = noisy ? qcnSampleRho(rho, rng) : qcSample(psi, rng);
+          const trueBits = qcBits(idx, n);
+          let recordedBits = trueBits;
+          if (noisy && noiseParam.eps > 0){
+            const bits = []; for (let k = 0; k < n; k++) bits.push((idx >> k) & 1);
+            recordedBits = qcnFlipBits(bits, noiseParam.eps, rng).slice().reverse().join('');
+          }
+          result.trueCounts[idx]++; result.recordedCounts[parseInt(recordedBits, 2)]++;
+          result.done++; batch++;
+        } while (result.done < target && batch < 8 && performance.now() - t0 < 8 && token === this._shotRunId);
+        if (token !== this._shotRunId) break;
+        if (result.done === target || result.done % Math.max(1, Math.ceil(target / 100)) === 0) this.syncShotControls();
+        if (result.done < target) await new Promise(resolve => setTimeout(resolve, 0));
+      }
+      if (token !== this._shotRunId) return result;
+      result.status = 'done'; this._shotsBusy = false; this.syncShotControls();
+      return result;
+    } catch (err){
+      if (token === this._shotRunId){
+        result.status = 'error'; result.error = err?.message || String(err);
+        this._shotsBusy = false; this.syncShotControls();
+      }
+      return result;
+    }
   }
 
   toast(m){
@@ -2881,12 +3095,12 @@ class QCircuitApp {
     if (b3){ b3.classList.toggle('on', is3d); b3.setAttribute('aria-pressed', String(is3d)); }
     if (cv){
       cv.classList.toggle('amp3d', is3d); cv.style.cursor = is3d ? 'grab' : 'default';
-      cv.setAttribute('aria-label', is3d ? '3D 复振幅图；拖动旋转，滚轮缩放，按 R 复位相机' : '2D 量子态振幅条形图');
+      cv.setAttribute('aria-label', is3d ? '3D 复振幅图；悬停查看，点击固定；方向键浏览，Enter 固定或取消；拖动旋转，滚轮缩放，按 R 复位相机' : '2D 量子态振幅条形图');
     }
     const hint = this.q('#qcAmpHint');
     if (hint) hint.textContent = is3d
-      ? (this.state.noise.on ? '3D 混态：仅显示 √ρᵢᵢ，位于 Re 正轴；悬停读布居，无相位。拖动旋转、滚轮缩放、R/双击复位。'
-        : '3D 纯态：x=基态序号、y/z=Re/Im；点到基态轴距离=|aᵢ|，方向/色相=相位。悬停读数；拖动旋转、滚轮缩放、R/双击复位。')
+      ? (this.state.noise.on ? '3D 混态：仅显示 √ρᵢᵢ；悬停读布居，无相位。点击点固定，方向键浏览，Enter 固定/取消；拖动旋转、滚轮缩放。'
+        : '3D 纯态：距离=|aᵢ|，方向/色相=相位。悬停读 Re/Im；点击点固定，方向键浏览，Enter 固定/取消；拖动旋转、滚轮缩放。')
       : '2D 条形高度 = |aᵢ|，色相 = 相位。';
     const probe = this.q('#qcAmpProbe');
     if (probe){
@@ -2899,8 +3113,39 @@ class QCircuitApp {
   clearAmpProbe(){
     const probe = this.q('#qcAmpProbe');
     if (!probe) return;
-    probe.dataset.basis = '';
-    probe.textContent = this.state.ampProj === '3d' ? '悬停振幅点查看读数' : '';
+    if (this._ampPinnedIndex != null && this.state.ampProj === '3d'){
+      this.showAmpProbe(this._ampPinnedIndex, true); return;
+    }
+    this._ampHoverIndex = null;
+    probe.dataset.basis = ''; probe.dataset.pinned = 'false';
+    probe.textContent = this.state.ampProj === '3d' ? '悬停点查看；点击固定' : '';
+  }
+
+  showAmpProbe(i, pinned = false){
+    const probe = this.q('#qcAmpProbe');
+    if (!probe || !this.psi) return;
+    const dim = 1 << this.state.n, index = qcClamp(i | 0, 0, dim - 1);
+    const basis = qcBits(index, this.state.n), noisy = !!this.state.noise.on && !!this.rho;
+    const prefix = pinned ? '固定 ' : '';
+    probe.dataset.basis = String(index); probe.dataset.pinned = String(pinned);
+    if (noisy){
+      const p = Math.max(0, qcnProbs(this.rho)[index]), abs = Math.sqrt(p);
+      probe.textContent = `${prefix}|${basis}⟩  √ρᵢᵢ ${abs.toFixed(4)}\nρᵢᵢ ${p.toFixed(4)}  相位 —`;
+    } else {
+      const re = this.psi.re[index], im = this.psi.im[index], abs = Math.hypot(re, im), p = abs * abs;
+      const signed = v => (v < 0 ? '−' : '+') + Math.abs(v).toFixed(4);
+      const phase = abs > 1e-14 ? Math.atan2(im, re) : null;
+      const arg = phase == null ? '—（零振幅）' : `${phase.toFixed(3)} rad (${Math.round(phase * 180 / Math.PI)}°)`;
+      probe.textContent = `${prefix}|${basis}⟩  Re ${signed(re)}  Im ${signed(im)}\n|aᵢ| ${abs.toFixed(4)}  p ${p.toFixed(4)}  arg ${arg}`;
+    }
+  }
+
+  pinAmpBasis(i){
+    const dim = 1 << this.state.n;
+    this._ampPinnedIndex = qcClamp(i | 0, 0, dim - 1);
+    this._ampHoverIndex = this._ampPinnedIndex;
+    this.drawAmp3D();
+    return this._ampPinnedIndex;
   }
 
   updateAmpProbe(e){
@@ -2915,17 +3160,10 @@ class QCircuitApp {
       const d2 = (p.x - px) ** 2 + (p.y - py) ** 2;
       if (d2 <= p.radius * p.radius && d2 < best){ best = d2; nearest = p; }
     }
-    if (!nearest) return; /* 保留最近一次读数，鼠标移向面板时仍可读完 */
-    if (probe.dataset.basis === String(nearest.i)) return;
-    probe.dataset.basis = String(nearest.i);
-    const basis = qcBits(nearest.i, this.state.n), prob = nearest.abs * nearest.abs;
-    if (nearest.noisy){
-      probe.textContent = `|${basis}⟩  √ρᵢᵢ ${nearest.abs.toFixed(4)}\nρᵢᵢ ${prob.toFixed(4)}  相位 —`;
-    } else {
-      const phaseDeg = Math.round(nearest.phase * 180 / Math.PI);
-      const signed = v => (v < 0 ? '−' : '+') + Math.abs(v).toFixed(4);
-      probe.textContent = `|${basis}⟩  Re ${signed(nearest.re)}  Im ${signed(nearest.im)}\n|aᵢ| ${nearest.abs.toFixed(4)}  p ${prob.toFixed(4)}  arg ${nearest.phase.toFixed(3)} rad (${phaseDeg}°)`;
-    }
+    this._ampHoverIndex = nearest ? nearest.i : null;
+    if (this._ampPinnedIndex != null) return; /* 固定读数优先；指针仍更新待固定目标 */
+    if (nearest) this.showAmpProbe(nearest.i, false);
+    else this.clearAmpProbe();
   }
 
   syncAmpUrl(){
@@ -3195,6 +3433,7 @@ class QCircuitApp {
     const g = cv.getContext('2d'), dpr = Math.min(2, window.devicePixelRatio || 1);
     g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv.width, cv.height); g.scale(dpr, dpr);
     const W = cv.width / dpr, H = cv.height / dpr, n = this.state.n, dim = 1 << n;
+    if (this._ampPinnedIndex != null && this._ampPinnedIndex >= dim) this._ampPinnedIndex = dim - 1;
     const noisy = !!this.state.noise.on && !!this.rho;
     let amp;
     if (noisy){
@@ -3267,7 +3506,7 @@ class QCircuitApp {
     axisLabel('index', { x: 3.25, y: 0, z: 0 }, '#9aa7bd');
     axisLabel('Re', { x: 0, y: 2.45, z: 0 }, '#67e8f9');
     axisLabel('Im', { x: 0, y: 0, z: 2.45 }, '#d946ef');
-    const ampScale = 2.2, dotR = dim > 128 ? 1.8 : (dim > 32 ? 2.2 : 2.8), hits = [];
+    const ampScale = 2.2, dotR = dim > 128 ? 1.8 : (dim > 32 ? 2.2 : 2.8), hits = [], tips = new Map();
     /* 标出 Re/Im 轴的振幅刻度；点坐标仍使用同一 ampScale，避免视觉距离与读数脱节。 */
     g.font = '8px ui-monospace,monospace'; g.textAlign = 'left';
     for (const v of [-1, -0.5, 0.5, 1]){
@@ -3283,6 +3522,7 @@ class QCircuitApp {
       const x = (a.i / Math.max(1, dim - 1) - 0.5) * 6;
       const base = project({ x, y: 0, z: 0 });
       const tip = project({ x, y: a.re * ampScale, z: a.im * ampScale });
+      tips.set(a.i, tip);
       hits.push({ x: tip.x, y: tip.y, i: a.i, re: a.re, im: a.im, abs: a.abs,
         phase: a.phase, noisy, radius: Math.max(7, dotR + 4) });
       const hue = ((a.phase / (2 * Math.PI)) % 1 + 1) % 1;
@@ -3293,8 +3533,15 @@ class QCircuitApp {
       g.beginPath(); g.moveTo(base.x, base.y); g.lineTo(tip.x, tip.y); g.stroke();
       g.fillStyle = color; g.beginPath(); g.arc(tip.x, tip.y, dotR, 0, 6.2832); g.fill();
     }
+    if (this._ampPinnedIndex != null){
+      const i = this._ampPinnedIndex, x = (i / Math.max(1, dim - 1) - 0.5) * 6;
+      const p = tips.get(i) || project({ x, y: 0, z: 0 });
+      g.strokeStyle = '#fbbf24'; g.lineWidth = 1.5; g.beginPath();
+      g.arc(p.x, p.y, (tips.has(i) ? dotR : 2) + 4, 0, 6.2832); g.stroke();
+    }
     this._amp3dHits = hits;
-    this.clearAmpProbe();
+    if (this._ampPinnedIndex != null) this.showAmpProbe(this._ampPinnedIndex, true);
+    else this.clearAmpProbe();
     this._amp3dInfo = { points: amp.length, fitScale, bounds, noisy, finite };
   }
 
@@ -3385,7 +3632,7 @@ class QCircuitApp {
         if (pd != null) nz.pd = pd;
         if (re != null) nz.re = re;
         if (peq != null) nz.peq = peq;
-        self.syncPanel();
+        self.invalidateShots(); self.syncPanel();
         self.resetExecution();
         self._drawAll();
       },
