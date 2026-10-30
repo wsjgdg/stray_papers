@@ -2035,6 +2035,10 @@ const QC_CSS = `
   #qcGateList .gate>button:not(:first-child){padding:2px 0;font-size:10px}
   #qcGateEmpty{padding:9px;color:var(--dim);font:10px var(--mono);text-align:center}
   #qcGateInspector{padding:7px;border:1px solid var(--line);border-radius:6px;color:var(--dim);font:9.5px/1.55 var(--mono);white-space:pre-line;overflow-wrap:anywhere}
+  #qcMeasureResult{margin-top:7px;padding:8px;border:1px solid rgba(251,191,36,.32);border-radius:7px;
+    background:rgba(251,191,36,.06);color:var(--txt);font:10px/1.55 var(--mono);min-height:32px}
+  #qcMeasureResult .measureMain{color:#fbbf24;font-size:11px;font-weight:700}
+  #qcMeasureResult .measureNote{color:var(--dim);margin-top:3px}
   #qcHud{top:74px;right:14px;padding:11px 13px;z-index:10;min-width:212px;font-family:var(--mono);
     max-height:calc(100vh - 148px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #qcHud .grp{font-size:10px;letter-spacing:.12em;color:var(--dim);margin:7px 0 4px}
@@ -2137,7 +2141,7 @@ class QCircuitApp {
       n: Math.max(2, Math.min(10, Math.round(num('n', p.n)))),
       theta: num('theta', 1.0), phi: num('phi', 0.4),
       step: 0, playing: false, speed: num('speed', 260),
-      measured: null, seed: Math.round(num('seed', 137)),
+      measured: null, measureQ: -1, seed: Math.round(num('seed', 137)),
       paused: q.get('paused') === '1', edited: false, sub: 1,
       /* R104：门噪声（T₁/T₂）——默认关闭（纯酉路径逐位不变）；
          开启后换密度矩阵表示，每个门作用后对触及比特施加 γ=1−e^{−tg/T₁}
@@ -2160,6 +2164,7 @@ class QCircuitApp {
     this._ampHoverIndex = null; this._ampPinnedIndex = null;
     this._shotsBusy = false; this._shotRunId = 0; this.shotResult = null;
     this._gateInspectId = 0; this.gateInspectorData = null;
+    this.execRecords = []; this.lastCircuitMeasurement = null;
     this.edit = { op: 'h', q: 0, c: -1, c2: -1, q2: 1, q3: 2, theta: Math.PI / 2, u3phi: 0, u3lambda: 0, basis: 'z', cbit: 0, inner: 'x', selected: -1 };
     this.gates = [];
     this.psi = null;
@@ -2252,8 +2257,10 @@ class QCircuitApp {
         <div id="qcGateList"></div>
         <div class="grp">选中门：前 → 后</div>
         <div id="qcGateInspector" class="qcInspector">点击门序列条目，查看选中基态的振幅变化与全态概率变化。</div>
-        <div class="grp">测量</div>
-        <div class="btns"><button id="qcMeasure" style="grid-column:1 / span 2">Z 基测量（坍缩）</button></div>
+        <div class="grp">单次测量 · Z 基</div>
+        <div class="row"><label>测量对象</label><select id="qcMeasureTarget" title="整尺测量投影到一个计算基态；单比特测量只投影所选 q，其余比特保持条件态"></select></div>
+        <div class="btns"><button id="qcMeasure" style="grid-column:1 / span 2">测一次并坍缩</button></div>
+        <div id="qcMeasureResult" role="status" aria-live="polite"><div>选择整尺或单个 q；显示测得分支与 Born 概率。测量后可继续从坍缩态推进线路。</div></div>
         <div class="grp">重复采样（每次从初态重跑）</div>
         <div class="row"><label>shots</label><select id="qcShotCount" style="flex:1;width:auto"><option value="100">100</option><option value="500">500</option><option value="1000">1,000</option><option value="5000">5,000</option></select></div>
         <div class="btns"><button id="qcShotsRun">运行 shots</button><button id="qcShotsCancel" disabled>取消</button></div>
@@ -2302,7 +2309,7 @@ class QCircuitApp {
         <hr>
         <div class="hrow"><span>经典位 m0 m1</span><span id="hCbits">—</span></div>
         <div class="hrow"><span>q2 保真度 vs 目标</span><span id="hFid">—</span></div>
-        <div class="hrow"><span>末端测量</span><span id="hMeas">—</span></div>
+        <div class="hrow"><span>最近测量</span><span id="hMeas">—</span></div>
         <hr><div class="grp">重复采样 · 末端 Z 分布</div>
         <div id="qcShotSummary">尚无 shots 样本</div><div id="qcShotLegend"></div><div id="qcShotHist"></div>
         <div class="hrow"><span>FPS</span><span id="hFps">—</span></div>
@@ -2346,6 +2353,10 @@ class QCircuitApp {
     this.on(this.q('#qcPlay'), 'click', () => { st.playing = !st.playing; this.syncPanel(); });
     this.on(this.q('#qcReset'), 'click', () => this.resetExecution());
     this.on(this.q('#qcMeasure'), 'click', () => this.measure());
+    this.on(this.q('#qcMeasureTarget'), 'change', e => {
+      this.state.measureQ = e.target.value === 'all' ? -1 : parseInt(e.target.value, 10);
+      this.renderMeasurementResult();
+    });
     this.on(this.q('#qcShotsRun'), 'click', () => this.runShots(parseInt(this.q('#qcShotCount')?.value || '100', 10)));
     this.on(this.q('#qcShotsCancel'), 'click', () => this.cancelShots());
     this.on(this.q('#qcGateOp'), 'change', e => { this.edit.op = e.target.value; this.syncGateEditor(); });
@@ -2816,11 +2827,13 @@ class QCircuitApp {
     this.cres = qcNewClassical(8);
     this.rng = mulberry32(st.seed);
     st.step = 0; st.measured = null; st.playing = false;
+    this.execRecords = []; this.lastCircuitMeasurement = null;
     this._needDraw = true;
     this.syncPanel();
     this.renderGateList();
     this.renderHint();
     this.renderHud();
+    this.renderMeasurementResult();
     if (this.edit.selected >= 0) this.inspectGate(this.edit.selected);
     else this.clearGateInspector();
   }
@@ -2841,40 +2854,138 @@ class QCircuitApp {
   step(k = 1){
     this.cancelShots();
     const st = this.state;
-    if (st.measured != null) return;          /* 测量后必须重置才能继续 */
     for (let i = 0; i < k && st.step < this.gates.length; i++){
+      const index = st.step, gate = this.gates[index];
+      let pZ1 = null;
+      if (gate.op === 'measure' && !gate.qubits && (gate.basis || 'z') === 'z'){
+        const probs = st.noise.on ? qcnProbs(this.rho) : qcProbs(this.psi);
+        for (let j = 0; j < probs.length; j++) if ((j >> gate.q) & 1) pZ1 = (pZ1 || 0) + probs[j];
+        pZ1 = Math.max(0, Math.min(1, pZ1 || 0));
+      }
       /* R104：噪声开 → 密度矩阵路径（门 + 触及比特 T₁/T₂）；关 → 原态矢路径 */
-      if (st.noise.on) qcnExec(this.rho, this.gates[st.step], this.cres, this.rng, this.noiseParam);
-      else qcExec(this.psi, this.gates[st.step], this.cres, this.rng);
+      const result = st.noise.on ? qcnExec(this.rho, gate, this.cres, this.rng, this.noiseParam)
+        : qcExec(this.psi, gate, this.cres, this.rng);
+      this.execRecords[index] = result;
+      if (result?.kind === 'measure'){
+        st.measured = null;
+        const trueBit = result.trueBit ?? result.bit;
+        const prob = pZ1 == null || trueBit == null ? null : (trueBit ? pZ1 : 1 - pZ1);
+        this.lastCircuitMeasurement = { index, gate, result, prob };
+      }
       st.step++;
     }
     if (st.step >= this.gates.length) st.playing = false;
     this._needDraw = true;
     this.renderHud();
+    this.renderMeasurementResult();
   }
 
   measure(){
     this.cancelShots();
-    const st = this.state;
+    const st = this.state, q = st.measureQ;
     const rng = mulberry32(st.seed);
-    if (st.noise.on){
-      /* R104：Born 规则 p(j)=ρ_jj 抽样 + 投影 */
-      const idx = qcnSampleRho(this.rho, rng);
+    const probs = st.noise.on ? qcnProbs(this.rho) : qcProbs(this.psi);
+    if (q >= 0){
+      let p1 = 0;
+      for (let i = 0; i < probs.length; i++) if ((i >> q) & 1) p1 += probs[i];
+      p1 = Math.max(0, Math.min(1, p1));
+      const trueBit = st.noise.on ? qcnMeasureQubit(this.rho, q, rng, 'z') : qcMeasureQubit(this.psi, q, rng, 'z');
+      const prob = trueBit ? p1 : 1 - p1;
+      const recordedBit = st.noise.on
+        ? qcnFlipBits([trueBit], this.noiseParam ? this.noiseParam.eps : 0, rng)[0]
+        : trueBit;
+      st.measured = { mode: 'qubit', q, bit: recordedBit, trueBit, prob, step: st.step };
+    } else if (st.noise.on){
+      /* Born 规则 p(j)=ρ_jj 抽样 + 全寄存器投影。 */
+      const idx = qcnSampleRho(this.rho, rng), prob = probs[idx];
       qcnCollapseRho(this.rho, idx);
-      /* R106：读出误差只翻**记录位串**（每位独立 ε），坍缩态 idx 不受污染 */
-      const bits = [];
+      const trueBits = qcBits(idx, st.n), bits = [];
       for (let k = 0; k < st.n; k++) bits.push((idx >> k) & 1);
-      const rec = qcnFlipBits(bits, this.noiseParam ? this.noiseParam.eps : 0, rng);
-      st.measured = { idx, bits: rec.slice().reverse().join(''), trueBits: qcBits(idx, st.n), prob: 1 };
+      const rec = qcnFlipBits(bits, this.noiseParam ? this.noiseParam.eps : 0, rng).slice().reverse().join('');
+      st.measured = { mode: 'register', idx, bits: rec, trueBits, prob, step: st.step };
     } else {
-      const idx = qcSample(this.psi, rng);
+      const idx = qcSample(this.psi, rng), prob = probs[idx];
       qcCollapse(this.psi, idx);
-      st.measured = { idx, bits: qcBits(idx, st.n), prob: 1 };
+      const bits = qcBits(idx, st.n);
+      st.measured = { mode: 'register', idx, bits, trueBits: bits, prob, step: st.step };
     }
     st.playing = false;
     this._needDraw = true;
     this.renderHud();
-    this.toast('测量 → |' + st.measured.bits + '⟩');
+    this.renderMeasurementResult();
+    const m = st.measured;
+    this.toast(m.mode === 'qubit'
+      ? `Z(q${m.q}) → ${m.bit} · P=${m.prob.toFixed(4)}`
+      : `Z 测量 → |${m.bits}⟩ · P=${m.prob.toFixed(4)}`);
+  }
+
+  measurementHudText(){
+    const m = this.state.measured;
+    if (m) return m.mode === 'qubit' ? `q${m.q}=${m.bit}` : '|' + m.bits + '⟩';
+    const last = this.lastCircuitMeasurement;
+    if (!last) return '未测量';
+    const result = last.result;
+    if (result.q != null) return `q${result.q}=${result.bit}`;
+    if (Array.isArray(result.bits)) return result.bits.join('');
+    return result.bit == null ? '已测量' : String(result.bit);
+  }
+
+  renderMeasurementResult(){
+    const el = this.q('#qcMeasureResult'); if (!el) return;
+    const m = this.state.measured;
+    if (!m){
+      const last = this.lastCircuitMeasurement;
+      if (!last){
+        el.innerHTML = '<div>选择整尺或单个 q；结果、Born 概率与测后态会显示在这里。</div>';
+        return;
+      }
+      const { gate, result, prob, index } = last;
+      const basis = gate.basis || 'z';
+      const advanced = this.state.step > index + 1;
+      if (result.q != null){
+        const trueBit = result.trueBit ?? result.bit, recordedBit = result.bit;
+        const probability = prob == null ? '' : ` · Born P=${nf(prob, 6)}`;
+        const head = `线路测量 M_${basis}(q${result.q}) → ${recordedBit}${recordedBit !== trueBit ? `（真实投影 ${trueBit}）` : ''}${probability}`;
+        const note = advanced
+          ? '这是最近一次线路测量；其后已有门继续作用，振幅图显示当前态。'
+          : basis === 'z' && prob != null && prob > 1 - 1e-12
+            ? `测前 q${result.q} 已是 |${trueBit}⟩ 本征态，结果确定，所以振幅图不变。`
+            : basis === 'z'
+              ? '测量结果已写入经典寄存器；振幅图的琥珀色标记表示该 Z 分支。'
+              : `已按 ${basis.toUpperCase()} 基投影并写入经典寄存器；结果见测量门与本卡。`;
+        el.innerHTML = `<div class="measureMain">${head}</div><div class="measureNote">${note}${recordedBit !== trueBit ? ' · 读出误差只翻转经典记录，态按真实结果坍缩。' : ''}</div>`;
+        return;
+      }
+      const outcome = Array.isArray(result.bits) ? result.bits.join('') : String(result.bit ?? '');
+      const trueOutcome = Array.isArray(result.trueBits) ? result.trueBits.join('') : String(result.trueBit ?? result.bit ?? '');
+      const head = `线路测量 M_${basis} → ${outcome}${outcome !== trueOutcome ? `（真实投影 ${trueOutcome}）` : ''}` +
+        (prob == null ? '' : ` · Born P=${nf(prob, 6)}`);
+      const note = advanced ? '这是最近一次线路测量；其后已有门继续作用，振幅图显示当前态。'
+        : '结果已写入经典寄存器；测量门在线路图中以琥珀色显示结果。';
+      el.innerHTML = `<div class="measureMain">${head}</div><div class="measureNote">${note}${outcome !== trueOutcome ? ' · 读出误差只翻转经典记录，态按真实结果坍缩。' : ''}</div>`;
+      return;
+    }
+    if (m.mode === 'qubit'){
+      const changedReadout = m.bit !== m.trueBit;
+      const head = `Z(q${m.q}) = ${m.bit}${changedReadout ? `（真实投影 ${m.trueBit}）` : ''} · P=${nf(m.prob, 6)}`;
+      const advanced = m.step != null && this.state.step > m.step;
+      const note = advanced
+        ? `测后已继续执行 ${this.state.step - m.step} 步；当前图显示演化后的态，测量记录保留。`
+        : m.prob > 1 - 1e-12
+          ? `q${m.q} 测前已处于 |${m.trueBit}⟩ 本征态：结果确定，波函数不变；这是测量的物理结果。`
+          : `只投影 q${m.q}；其余比特的条件态与相干保留。图中琥珀色标记表示测后仍占据的基态。`;
+      el.innerHTML = `<div class="measureMain">${head}</div><div class="measureNote">${note}${changedReadout ? ' · 读出误差翻转了经典记录，量子态仍按真实结果坍缩。' : ''}</div>`;
+      return;
+    }
+    const changedReadout = m.bits !== m.trueBits;
+    const head = `测得 |${m.bits}⟩${changedReadout ? `（真实投影 |${m.trueBits}⟩）` : ''} · P=${nf(m.prob, 6)}`;
+    const advanced = m.step != null && this.state.step > m.step;
+    const note = advanced
+      ? `测后已继续执行 ${this.state.step - m.step} 步；当前图显示演化后的态，测量记录保留。`
+      : m.prob > 1 - 1e-12
+        ? `测前已是 Z 基本征态 |${m.trueBits}⟩：结果确定，因此振幅图可能不变。`
+        : `全寄存器已投影到 |${m.trueBits}⟩；振幅图的琥珀色边框标出测后分支。`;
+    el.innerHTML = `<div class="measureMain">${head}</div><div class="measureNote">${note}${changedReadout ? ' · 读出误差只翻转记录位，不改变坍缩态。' : ''}</div>`;
   }
 
   cancelShots(){
@@ -3032,7 +3143,7 @@ class QCircuitApp {
         const t = qcTargetAmps(st.theta, st.phi);
         set('hFid', nf(qcRhoFidelity(qcnQubitRho(r, 2), t.alpha, t.beta), 6));
       } else set('hFid', '—');
-      set('hMeas', st.measured ? '|' + st.measured.bits + '⟩' : '未测量');
+      set('hMeas', this.measurementHudText());
       let cbN = 0;
       for (const g of this.gates) if (g.op === 'measure' && g.cbit != null) cbN = Math.max(cbN, g.cbit + (g.qubits ? g.qubits.length : 1));
       const cb = this.cres ? Array.from(this.cres.slice(0, cbN)).join(' ') : '—';
@@ -3058,7 +3169,7 @@ class QCircuitApp {
     set('hS3', (sub.bits.length ? '{q' + sub.bits.join(',q') + '}' : '∅') + ' → ' + nf(sub.S, 6) + ' nat');
     set('hConc', st.n === 2 ? nf(qcConcurrence(s), 6) : '（n≠2）');
     set('hZZ', st.n >= 2 ? nf(qcZZ(s, 0, 1), 6) : '—');
-    set('hMeas', st.measured ? '|' + st.measured.bits + '⟩' : '未测量');
+    set('hMeas', this.measurementHudText());
     /* R103：经典位读数泛化——任意含测量门的线路都显示（联合测量写 k 个连续位，
        读至最高写入位）。传态预设两位读数格式逐字不变（cdp76 P2 依赖 'm0 m1'）。 */
     let cbN = 0;
@@ -3077,6 +3188,15 @@ class QCircuitApp {
     const set = (id, v) => { const e = this.q('#' + id); if (e) e.value = String(v); };
     const txt = (id, v) => { const e = this.q('#' + id); if (e) e.textContent = String(v); };
     set('qcN', st.n); txt('qcNo', st.n);
+    if (st.measureQ >= st.n) st.measureQ = -1;
+    const measureTarget = this.q('#qcMeasureTarget');
+    if (measureTarget){
+      if (measureTarget.options.length !== st.n + 1){
+        measureTarget.innerHTML = '<option value="all">全部量子位（整尺）</option>' +
+          Array.from({ length: st.n }, (_, q) => `<option value="${q}">仅 q${q}</option>`).join('');
+      }
+      measureTarget.value = st.measureQ >= 0 && st.measureQ < st.n ? String(st.measureQ) : 'all';
+    }
     this._renderSubBtns(); this.syncAmpControls();
     set('qcSpeed', st.speed); txt('qcSpeedO', st.speed);
     set('qcSeed', st.seed); txt('qcSeedO', st.seed);
@@ -3363,21 +3483,28 @@ class QCircuitApp {
         const size = Math.min(28, colW * 0.66, rowH * 0.66);
         /* 条件门还没收到经典位时画虚框（未执行），收到后实框 */
         const pending = gv.kind === 'cond' && this.state.step <= i;
-        g.strokeStyle = gv.kind === 'cond' ? 'rgba(250,204,21,.9)' : col;
+        const measureResult = gv.kind === 'measure' && done ? this.execRecords[i] : null;
+        g.strokeStyle = gv.kind === 'cond' || measureResult ? 'rgba(250,204,21,.95)' : col;
         g.lineWidth = 1.3;
         if (pending) g.setLineDash([3, 3]);
         g.beginPath(); g.roundRect(x - size / 2, y - size / 2, size, size, gv.kind === 'cond' ? 4 : 12); g.stroke();
         g.setLineDash([]);
         g.fillStyle = 'rgba(4,8,16,.75)'; g.fill();
-        g.fillStyle = gv.kind === 'cond' ? 'rgba(250,204,21,.95)' : (cur ? '#f87171' : 'rgba(226,232,240,.85)');
+        g.fillStyle = gv.kind === 'cond' || measureResult ? 'rgba(250,204,21,.98)' : (cur ? '#f87171' : 'rgba(226,232,240,.85)');
         g.textAlign = 'center'; g.textBaseline = 'middle';
         g.font = '9.5px ui-monospace,monospace';
         g.fillText(gv.text, x, y + 0.5);
         g.textBaseline = 'alphabetic';
         g.font = '8px ui-monospace,monospace'; g.textAlign = 'left';
-        g.fillStyle = 'rgba(250,204,21,.85)';
+        g.fillStyle = 'rgba(250,204,21,.92)';
         g.textAlign = 'center';
-        g.fillText(gv.kind === 'measure' ? '→c' + gv.cbit + (gv.joint ? '+' + gv.wires.length : '') : 'c' + gv.cbit + '=1', x, y + size / 2 + 9);
+        const mOutcome = measureResult
+          ? (Array.isArray(measureResult.bits) ? measureResult.bits.join('') : String(measureResult.bit ?? ''))
+          : null;
+        const measureCaption = gv.kind === 'measure'
+          ? '→c' + gv.cbit + (gv.joint ? '+' + gv.wires.length : '') + (mOutcome == null ? '' : ' = ' + mOutcome)
+          : 'c' + gv.cbit + '=1';
+        g.fillText(measureCaption, x, y + size / 2 + 9);
         /* 经典连线：从写入该位的测量盒到条件门（正交折线，虚线） */
         if (gv.kind === 'cond' && cbitCol[gv.cbit] != null){
           const xm = xOf(cbitCol[gv.cbit]);
@@ -3408,8 +3535,14 @@ class QCircuitApp {
       }
     }
     g.fillStyle = 'rgba(154,167,189,.75)'; g.textAlign = 'left';
-    g.fillText(N + ' 门 · 已执行 ' + this.state.step +
-      (this.state.measured ? ' · 已测量（需重置）' : '') +
+    const measuredLabel = this.state.measured
+      ? (this.state.measured.mode === 'qubit'
+        ? ` · Z(q${this.state.measured.q})=${this.state.measured.bit} · P=${nf(this.state.measured.prob, 3)}`
+        : ` · Z→|${this.state.measured.bits}⟩ · P=${nf(this.state.measured.prob, 3)}`)
+      : this.lastCircuitMeasurement
+        ? ` · M_${this.lastCircuitMeasurement.gate.basis || 'z'} → ${this.measurementHudText()}${this.lastCircuitMeasurement.prob == null ? '' : ` · P=${nf(this.lastCircuitMeasurement.prob, 3)}`}`
+        : '';
+    g.fillText(N + ' 门 · 已执行 ' + this.state.step + measuredLabel +
       (this.state.noise.on ? ' · 噪声 T₁=' + this.state.noise.t1 + ' T₂=' + this.state.noise.t2 + ' tg=' + this.state.noise.tg : ''), 8, 13);
   }
 
@@ -3460,9 +3593,22 @@ class QCircuitApp {
       const x = padL + a.i * bw;
       const hh = (a.abs / maxAbs) * hMax;
       const hue = ((a.phase / (2 * Math.PI)) % 1 + 1) % 1;
-      g.fillStyle = noisy ? 'hsla(178,72%,58%,.92)'
+      const measured = (this.state.measured && (this.state.measured.step == null || this.state.step === this.state.measured.step)
+        ? this.state.measured : null) || (this.lastCircuitMeasurement &&
+        this.state.step === this.lastCircuitMeasurement.index + 1 &&
+        this.lastCircuitMeasurement.gate.op === 'measure' && !this.lastCircuitMeasurement.gate.qubits &&
+        (this.lastCircuitMeasurement.gate.basis || 'z') === 'z'
+        ? { mode: 'qubit', q: this.lastCircuitMeasurement.gate.q,
+            trueBit: this.lastCircuitMeasurement.result.trueBit ?? this.lastCircuitMeasurement.result.bit }
+        : null);
+      const selected = measured && (measured.mode === 'register'
+        ? a.i === measured.idx
+        : (((a.i >> measured.q) & 1) === measured.trueBit));
+      g.fillStyle = selected ? 'rgba(251,191,36,.96)' : noisy ? 'hsla(178,72%,58%,.92)'
         : 'hsla(' + Math.round(178 + hue * 140) + ',88%,62%,.92)';
-      g.fillRect(x + Math.max(0.5, bw * 0.12), y0 - hh, Math.max(1, bw * 0.76), hh);
+      const bx = x + Math.max(0.5, bw * 0.12), by = y0 - hh, barW = Math.max(1, bw * 0.76);
+      g.fillRect(bx, by, barW, hh);
+      if (selected){ g.strokeStyle = 'rgba(251,191,36,.98)'; g.lineWidth = 1.5; g.strokeRect(bx - 1, by - 1, barW + 2, Math.max(3, hh + 2)); }
     }
     /* 轴与标签（2^n ≤ 32 时逐条标，否则稀疏标） */
     g.strokeStyle = 'rgba(154,167,189,.45)'; g.lineWidth = 1;
@@ -3576,13 +3722,25 @@ class QCircuitApp {
       tips.set(a.i, tip);
       hits.push({ x: tip.x, y: tip.y, i: a.i, re: a.re, im: a.im, abs: a.abs,
         phase: a.phase, noisy, radius: Math.max(7, dotR + 4) });
+      const measured = (this.state.measured && (this.state.measured.step == null || this.state.step === this.state.measured.step)
+        ? this.state.measured : null) || (this.lastCircuitMeasurement &&
+        this.state.step === this.lastCircuitMeasurement.index + 1 &&
+        this.lastCircuitMeasurement.gate.op === 'measure' && !this.lastCircuitMeasurement.gate.qubits &&
+        (this.lastCircuitMeasurement.gate.basis || 'z') === 'z'
+        ? { mode: 'qubit', q: this.lastCircuitMeasurement.gate.q,
+            trueBit: this.lastCircuitMeasurement.result.trueBit ?? this.lastCircuitMeasurement.result.bit }
+        : null);
+      const selected = measured && (measured.mode === 'register'
+        ? a.i === measured.idx
+        : (((a.i >> measured.q) & 1) === measured.trueBit));
       const hue = ((a.phase / (2 * Math.PI)) % 1 + 1) % 1;
       const hueDeg = Math.round((178 + hue * 360) % 360);
-      const color = noisy ? 'rgba(103,232,249,.9)' : 'hsl(' + hueDeg + ',88%,62%)';
+      const color = selected ? '#fbbf24' : noisy ? 'rgba(103,232,249,.9)' : 'hsl(' + hueDeg + ',88%,62%)';
       g.strokeStyle = noisy ? 'rgba(103,232,249,.48)' : 'hsla(' + hueDeg + ',88%,62%,.55)';
       g.lineWidth = dim > 128 ? 0.7 : 1;
       g.beginPath(); g.moveTo(base.x, base.y); g.lineTo(tip.x, tip.y); g.stroke();
       g.fillStyle = color; g.beginPath(); g.arc(tip.x, tip.y, dotR, 0, 6.2832); g.fill();
+      if (selected){ g.strokeStyle = 'rgba(251,191,36,.98)'; g.lineWidth = 1.5; g.beginPath(); g.arc(tip.x, tip.y, dotR + 4, 0, 6.2832); g.stroke(); }
     }
     if (this._ampPinnedIndex != null){
       const i = this._ampPinnedIndex, x = (i / Math.max(1, dim - 1) - 0.5) * 6;
