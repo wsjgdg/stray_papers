@@ -104,7 +104,9 @@ function pendingPool() {
 }
 
 describe("4A desc batch generator", () => {
-  it("守护：15 批 id 并集 == 待写池，且无重复、无已有人工描述的条目", () => {
+  it("守护：清单 id 全部落在「待写池 ∪ 已交付」，且无重复、无冗余", () => {
+    // 批 1 交付后，待写池会少掉已合入的条目 —— 守护要接受「已交付」这一状态，
+    // 但不接受「既不在待写池、也没交付」的幽灵 id，也不接受「已交付却还在待写池」的冗余。
     const ids: string[] = [];
     const dups: string[] = [];
     const already: string[] = [];
@@ -121,7 +123,7 @@ describe("4A desc batch generator", () => {
         if (spot && handDescOf(spot)) already.push(`${i.id} ${i.name}`);
       }
     }
-    expect(files, "描述清单应有 15 个批次文件").toBe(15);
+    expect(files, "描述清单应有 15 个批次文件（含已交付的批 1）").toBe(15);
     expect(dups.slice(0, 5), `清单内 id 重复: ${dups.length} 条`).toEqual([]);
     expect(
       already.slice(0, 5),
@@ -130,16 +132,33 @@ describe("4A desc batch generator", () => {
 
     const pool = pendingPool();
     const poolSet = new Set(pool.map((s) => s.id));
+    const delivered = new Set(Object.keys(OUTSOURCE_DESCRIPTIONS));
     const batchSet = new Set(ids);
+
+    const ghost = [...batchSet].filter(
+      (id) => !poolSet.has(id) && !delivered.has(id),
+    );
     expect(
-      pool.filter((s) => !batchSet.has(s.id)).map((s) => s.id),
-      "库内待写条目未入清单（重跑生成器）",
+      ghost.slice(0, 5),
+      `清单里的 id 既不在待写池也没交付（幽灵 id，重跑生成器）: ${ghost.length} 条`,
     ).toEqual([]);
+
+    const redundant = [...batchSet].filter(
+      (id) => poolSet.has(id) && delivered.has(id),
+    );
     expect(
-      [...batchSet].filter((id) => !poolSet.has(id)),
-      "清单里的 id 已不在待写池（重跑生成器）",
+      redundant.slice(0, 5),
+      `已交付的条目仍留在待写池里（会重复外包，重跑生成器）: ${redundant.length} 条`,
     ).toEqual([]);
-    expect(ids.length, "清单总数应等于待写池大小").toBe(pool.length);
+
+    const missing = pool.filter((s) => !batchSet.has(s.id)).map((s) => s.id);
+    expect(
+      missing.slice(0, 5),
+      `库内待写条目未入清单（重跑生成器）: ${missing.length} 条`,
+    ).toEqual([]);
+    expect(ids.length, "清单总数应等于待写池 + 已交付条目").toBe(
+      pool.length + [...batchSet].filter((id) => delivered.has(id)).length,
+    );
   });
 
   it("writes handoff batches", () => {
@@ -169,9 +188,18 @@ describe("4A desc batch generator", () => {
 
     const PER = 300;
     const total = Math.ceil(pool.length / PER);
+    // 已交付的批（清单 id 全部已合入 OUTSOURCE）不覆盖；从第一个未交付批号开始写
+    let startNo = 1;
+    for (let n = 1; n <= 20; n++) {
+      const p = `docs/outsource/desc-4a-batch${n}.json`;
+      if (!existsSync(p)) continue;
+      const b = JSON.parse(readFileSync(p, "utf8"));
+      const delivered = b.items.every((i) => OUTSOURCE_DESCRIPTIONS[i.id]);
+      if (delivered) startNo = Math.max(startNo, n + 1);
+    }
     let written = 0;
-    for (let n = 1; n <= total; n++) {
-      const slice = pool.slice((n - 1) * PER, n * PER);
+    for (let n = startNo; n < startNo + total; n++) {
+      const slice = pool.slice((n - startNo) * PER, (n - startNo + 1) * PER);
       if (!slice.length) break;
       const out = {
         task: `4A-描述补写-批${n}`,

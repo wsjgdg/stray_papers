@@ -1,0 +1,28 @@
+{
+  "batch": 1,
+  "count": 300,
+  "low": 6,
+  "nameIssues": 0,
+  "sample": [
+    "scenic-北京-60",
+    "scenic-北京-37",
+    "scenic-邯郸-212",
+    "scenic-天津-68",
+    "scenic-保定-191",
+    "scenic-北京-29",
+    "scenic-天津-70",
+    "scenic-保定-195",
+    "scenic-保定-189",
+    "poi-武汉-20",
+    "scenic-石家庄-112",
+    "poi-成都-23",
+    "scenic-北京-13",
+    "scenic-邢台-249",
+    "scenic-石家庄-110",
+    "scenic-天津-86",
+    "scenic-天津-71",
+    "scenic-北京-35",
+    "poi-哈尔滨-39",
+    "scenic-北京-6"
+  ]
+}
