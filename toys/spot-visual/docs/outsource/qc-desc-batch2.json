@@ -1,0 +1,28 @@
+{
+  "batch": 2,
+  "count": 300,
+  "low": 22,
+  "nameIssues": 0,
+  "sample": [
+    "scenic-赤峰-525",
+    "scenic-乌海-572",
+    "scenic-大同-307",
+    "scenic-大同-311",
+    "scenic-忻州-325",
+    "scenic-呼和浩特-436",
+    "scenic-长春-584",
+    "scenic--278",
+    "scenic-呼伦贝尔-490",
+    "scenic-大同-313",
+    "scenic-巴彦淖尔-567",
+    "scenic-朔州-317",
+    "scenic-阿拉善盟-558",
+    "scenic-长治-372",
+    "scenic-呼和浩特-439",
+    "scenic-兴安盟-505",
+    "scenic--286",
+    "scenic-晋城-381",
+    "scenic-长治-373",
+    "scenic-晋城-389"
+  ]
+}
