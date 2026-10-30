@@ -160,8 +160,9 @@ landscape）sheet 自动放宽至 64vh；stage 高度用 dvh 跟随浏览器工�
 
 **噪声页**（`noise.html`）：`?preset=relax|dephase|depolar|bell` · `?kind=relax|dephase|depolar`
 （两比特时的噪声类型） · `?n=2` 两比特 · `?tau=1.0` 时间常数 · `?theta=1.57&phi=0` 初态 ·
-`?side=both|q0` 双侧/单侧 · `?steps=400` 时长步数 · `?ntraj=320` 轨迹条数 · `?seed=7`
-· `?traj=0` 关轨迹 · `?paused=1`
+`?side=both|q0` 双侧/单侧 · `?steps=400` 时长步数 · `?ntraj=320` 轨迹条数 · `?seed=7` 初始轨迹种子
+（左栏「换种子」重抽随机轨迹；精确密度矩阵平均与青色态矢量不变）· `?traj=0` 关轨迹 · `?paused=1`。
+单比特 Bloch 球可拖动旋转，聚焦后按 `R` 复位；悬停球面读取指向坐标与当前态 Bloch 分量。矩阵热图可悬停查看复数矩阵元并点击固定；时间曲线可悬停/固定采样点，查看数值与解析值。所有读数置于 HUD 顶部，不遮挡图表。
 
 **纠错页**（`qec.html`）：`?code=bitflip|phaseflip` · `?p=0.05` 物理错误率 ·
 `?trials=3000` 样本数 · `?seed=7` · `?paused=1` · `?noise=iid|gate|phys` 噪声模型·
