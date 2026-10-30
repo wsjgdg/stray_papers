@@ -2391,16 +2391,48 @@ class PathsApp {
     const w = W / dpr, h = H / dpr, c = this.cfg(), span = c.L1 + c.L2;
     const slitValues = piSlits(c).slice().sort((a, b) => a - b)
       .filter((y, i, a) => i === 0 || Math.abs(y - a[i - 1]) > 1e-9);
-    const yReach = Math.max(this.view.yFov, Math.abs(this.state.Y),
-      ...slitValues.map(y => Math.abs(y) + c.w / 2), 1.5 * c.W, 1);
+    const slitReach = Math.max(0, ...slitValues.map(y => Math.abs(y) + Math.abs(c.w) / 2));
+    const yReach = Math.max(this.view.yFov, Math.abs(this.state.Y), Math.abs(c.ys),
+      Math.max(slitReach, Math.abs(this.state.Y), Math.abs(c.ys)) + 1.5 * Math.abs(c.W), 1);
     /* fit both longitudinal and transverse extents, preserving physical x:y aspect */
     const sx = Math.min(4.8 / Math.max(1, span), 1.75 / yReach), laneMax = 0.92, eye = hbCamBasis(this.cam);
     const focal = hbFocal(w), { f, r, u } = eye;
-    const project = p => {
+    const baseX = span / 2 * sx, baseY = Math.max(1.15, yReach * sx * 1.08), baseZ = laneMax * 1.08;
+    const rawProject = p => {
       const dx = p.x - eye.eye.x, dy = p.y - eye.eye.y, dz = p.z - eye.eye.z;
-      const depth = Math.max(0.15, dx * f.x + dy * f.y + dz * f.z);
+      const depth = dx * f.x + dy * f.y + dz * f.z;
+      if (!(depth > 0.15)) return null;
       return { x: w / 2 + (dx * r.x + dy * r.y + dz * r.z) / depth * focal,
                y: h / 2 - (dx * u.x + dy * u.y + dz * u.z) / depth * focal, depth };
+    };
+    const fitBounds = scale => {
+      const b = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+      for (const x of [-baseX * scale, baseX * scale]) for (const y of [-baseY * scale, baseY * scale])
+        for (const z of [-baseZ * scale, baseZ * scale]){
+          const p = rawProject({ x, y, z }); if (!p) return null;
+          b.minX = Math.min(b.minX, p.x); b.maxX = Math.max(b.maxX, p.x);
+          b.minY = Math.min(b.minY, p.y); b.maxY = Math.max(b.maxY, p.y);
+        }
+      const margin = Math.min(16, Math.max(2, Math.min(w, h) * 0.035));
+      b.fits = b.maxX - b.minX <= w - 2 * margin && b.maxY - b.minY <= h - 2 * margin;
+      return b;
+    };
+    let sceneScale = 1, bounds = fitBounds(1);
+    if (!bounds?.fits){
+      let lo = 0, hi = 1;
+      for (let i = 0; i < 32; i++){
+        const mid = (lo + hi) / 2, b = fitBounds(mid);
+        if (b?.fits) lo = mid; else hi = mid;
+      }
+      sceneScale = lo; bounds = fitBounds(sceneScale);
+    }
+    const shiftX = sceneScale < 0.999 && bounds ? w / 2 - (bounds.minX + bounds.maxX) / 2 : 0;
+    const shiftY = sceneScale < 0.999 && bounds ? h / 2 - (bounds.minY + bounds.maxY) / 2 : 0;
+    if (bounds){ bounds.minX += shiftX; bounds.maxX += shiftX; bounds.minY += shiftY; bounds.maxY += shiftY; }
+    const project = p => {
+      const q = rawProject({ x: p.x * sceneScale, y: p.y * sceneScale, z: p.z * sceneScale });
+      return q ? { x: q.x + shiftX, y: q.y + shiftY, depth: q.depth }
+        : { x: w / 2, y: h / 2, depth: 0.15 };
     };
     const world = (x, y, lane, t) => ({ x: (x - span / 2) * sx, y: y * sx,
       z: lane * 4 * Math.max(0, Math.min(1, t)) * (1 - Math.max(0, Math.min(1, t))) });
@@ -2468,7 +2500,8 @@ class PathsApp {
       return { slit, count: lanes.length, min: lanes.length ? Math.min(...lanes) : 0, max: lanes.length ? Math.max(...lanes) : 0 };
     });
     this._3dDrawInfo = { paths: paths.length, vertices: paths.reduce((n, p) => n + p.pts.length, 0),
-      groups: laneGroups.length, laneGroups, yReach, finite: paths.every(p => p.pts.every(q => Number.isFinite(q.x) && Number.isFinite(q.y) && Number.isFinite(q.depth))) };
+      groups: laneGroups.length, laneGroups, yReach, fitScale: sceneScale, bounds,
+      finite: paths.every(p => p.pts.every(q => Number.isFinite(q.x) && Number.isFinite(q.y) && Number.isFinite(q.depth))) };
   }
 
   drawSpiral(){
