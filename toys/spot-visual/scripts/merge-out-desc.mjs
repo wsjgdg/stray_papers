@@ -85,8 +85,13 @@ for (const file of args) {
       bad++;
       continue;
     }
-    if (FORBIDDEN.test(item.desc)) {
-      const w = String(item.desc).match(FORBIDDEN);
+    // 禁写词只针对「作者自己写进去的内容」：有些景点的官方名本身就含禁写词
+    // （例：poi-上海-14「陆家嘴三件套打卡位」——名字里就有「打卡」）。
+    // 描述里照抄全名会被误判，所以先剥掉该景点的名字再扫描。
+    // 作者另行写出的「门票60元」「建议游玩3小时」之类仍然会被拦下。
+    const body = String(item.desc).split(src.name).join("");
+    if (FORBIDDEN.test(body)) {
+      const w = body.match(FORBIDDEN);
       console.error(`✗ 禁写词「${w?.[0]}」: id=${item.id} ${src.name}`);
       bad++;
       continue;
