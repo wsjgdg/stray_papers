@@ -16,6 +16,7 @@
       src/core/styles.js
       src/core/responsive.js
       src/core/nav.js
+      src/hubbard3d.js
       src/physics/paths.js
       src/qec/live.js
       src/paths.js
@@ -513,6 +514,129 @@ function navLinksHtml(indent = '  ') {
 
 /** 调试用：纯 href 列表（cdp 套件的 navLinks() 走各页自己的实现，这里供对照） */
 const NAV_HREFS = NAV.map(([h]) => h);
+
+/* ===== src/hubbard3d.js ===== */
+/* hubbard3d.js — 哈伯德链的 3D 透视视图：相机 + 投影 + 拾取（纯数学，无 DOM / 无 canvas）
+ *
+ * 为什么单独一个模块：3D 的「对不对」是纯几何问题（正交基、透视缩放、深度排序、屏幕拾取），
+ * 可以在 Node 里用解析式逐条对账（pot143），不必拖一个浏览器进来。页面只负责把算出来的
+ * 屏幕坐标画成珠子/箭头/势刺。
+ *
+ * 坐标系（右手系）：
+ *   x — 链的方向（格点 i 在 x_i 上，已归一化到固定跨度，见 hbSitePositions）
+ *   y — 自旋：↑ 指向 +y，↓ 指向 −y
+ *   z — 局域势 μ 的「出屏」方向：μ>0 沿 +z 长刺，μ<0 沿 −z（2D 视图里这条信息只能塞进一条色带）
+ *
+ * 相机：绕 y 轴 yaw、俯仰 pitch、到原点距离 dist。视线恒指原点（靶点在链中心）。
+ */
+
+const CAM_DEFAULT = { yaw: -0.62, pitch: 0.34, dist: 7.6 };
+/* pitch 钳到 ±76°：再往上 up 向量就从世界 y 轴旁边擦过去，屏幕会翻面 */
+const PITCH_LIM = 1.33;
+const DIST_MIN = 3.2, DIST_MAX = 20;
+/* 链在 3D 里的固定横向跨度（世界单位）：不同 L 都铺满画面宽度，只是格距变密 */
+const CHAIN_SPAN = 6.0;
+
+const clamp3 = (v, a, b) => (v < a ? a : (v > b ? b : v));
+
+function hbCamDefault(){ return { ...CAM_DEFAULT }; }
+function hbCamReset(){ return hbCamDefault(); }
+
+/* 轨道旋转：dx/dy 是设备像素位移；pitch 钳制，yaw 不钳（2π 周期） */
+function hbOrbit(cam, dx, dy, k = 0.0075){
+  return {
+    yaw: cam.yaw + dx * k,
+    pitch: clamp3(cam.pitch + dy * k, -PITCH_LIM, PITCH_LIM),
+    dist: cam.dist,
+  };
+}
+
+/* f>1 拉远、f<1 推近（滚轮 deltaY 换算见页面） */
+function hbZoom(cam, f){
+  return { yaw: cam.yaw, pitch: cam.pitch, dist: clamp3(cam.dist * f, DIST_MIN, DIST_MAX) };
+}
+
+function hbEye(cam){
+  const cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
+  return { x: cam.dist * cp * Math.sin(cam.yaw), y: cam.dist * sp, z: cam.dist * cp * Math.cos(cam.yaw) };
+}
+
+/* 视空间正交基（靶点 = 原点）：
+     f = 视线方向 eye→靶点
+     r = normalize(f × up)，up 取世界 +y
+     u = r × f（屏幕向上）
+   pitch 钳在 ±76° ⟹ |f×up| = cos(pitch) ≥ 0.24，不会退化。 */
+function hbCamBasis(cam){
+  const eye = hbEye(cam);
+  const n = Math.hypot(eye.x, eye.y, eye.z) || 1;
+  const f = { x: -eye.x / n, y: -eye.y / n, z: -eye.z / n };
+  const rx = -f.z, rz = f.x;                 /* f × (0,1,0) = (−f.z, 0, f.x) */
+  const rn = Math.hypot(rx, 0, rz) || 1;
+  const r = { x: rx / rn, y: 0, z: rz / rn };
+  const u = {                             /* r × f */
+    x: r.y * f.z - r.z * f.y,
+    y: r.z * f.x - r.x * f.z,
+    z: r.x * f.y - r.y * f.x,
+  };
+  return { f, r, u, eye };
+}
+
+/* 焦距：按画布宽度定，保证 CHAIN_SPAN 的链在默认距离下左右各留 ~15% 余量 */
+function hbFocal(W){ return 0.85 * W; }
+
+/* 世界点 → 设备像素。k = 焦距/深度，用来缩放珠半径、线宽、箭头（透视缩放的唯一来源）。 */
+function hbProject(cam, W, H, p){
+  const { f, r, u, eye } = hbCamBasis(cam);
+  const dx = p.x - eye.x, dy = p.y - eye.y, dz = p.z - eye.z;
+  const depth = dx * f.x + dy * f.y + dz * f.z;
+  const focal = hbFocal(W);
+  const near = 1e-6;
+  const d = Math.abs(depth) < near ? near : depth;
+  return {
+    x: W / 2 + (dx * r.x + dy * r.y + dz * r.z) / d * focal,
+    y: H / 2 - (dx * u.x + dy * u.y + dz * u.z) / d * focal,
+    depth: d,
+    k: focal / d,
+  };
+}
+
+/* 格点的世界 x：跨度固定、关于原点对称（mean(x)=0，span = CHAIN_SPAN） */
+function hbSitePositions(L, span = CHAIN_SPAN){
+  const out = [];
+  const d = L > 1 ? span / (L - 1) : 0;
+  for (let i = 0; i < L; i++) out.push(-span / 2 + i * d);
+  return out;
+}
+
+/* 屏幕点 → 格点下标。命中半径内取屏幕距离最近者；等距时取更靠近相机的那颗
+   （两颗珠子在屏幕上叠住时，看见的应该是前面那颗）。 */
+function hbPick(cam, W, H, xs, sx, sy, rad){
+  let best = -1, bd = Infinity, bz = Infinity;
+  for (let i = 0; i < xs.length; i++){
+    const p = hbProject(cam, W, H, { x: xs[i], y: 0, z: 0 });
+    const d = Math.hypot(p.x - sx, p.y - sy);
+    if (d > rad) continue;
+    if (d < bd - 1e-9 || (Math.abs(d - bd) <= 1e-9 && p.depth < bz)){
+      best = i; bd = d; bz = p.depth;
+    }
+  }
+  return best;
+}
+
+/* 深度雾：把 [最近、最远] 归一化到 [0,1]（1 = 最近），页面用它给远处的珠子降透明度 */
+function hbDepthRange(cam, W, H, xs){
+  let lo = Infinity, hi = -Infinity;
+  for (let i = 0; i < xs.length; i++){
+    const p = hbProject(cam, W, H, { x: xs[i], y: 0, z: 0 });
+    if (p.depth < lo) lo = p.depth;
+    if (p.depth > hi) hi = p.depth;
+  }
+  if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi - lo < 1e-9) return { lo, hi, nearness: () => 1 };
+  return {
+    lo, hi,
+    nearness: depth => clamp3(1 - (depth - lo) / (hi - lo), 0, 1),
+  };
+}
 
 /* ===== src/physics/paths.js ===== */
 /* ============================================================================
@@ -1430,8 +1554,9 @@ class LiveDriver {
 /* ============================================================================
  * paths.js（页面）— R74 费曼路径求和：路径族 / 相位螺旋 / 条纹剖面
  *
- * 纯 CPU、纯 2D canvas（无 WebGL、无引擎）：几何是「源 → 双缝屏 → 探测面」的
- * 平面图，路径是平面曲线，相位是 e^{iS/ħ}。物理全在 src/physics/paths.js。
+ * 纯 CPU canvas（无 WebGL、无引擎）：默认是「源 → 双缝屏 → 探测面」的物理平面图；
+ * 可切 3D 透视展开路径束。3D 深度仅用于分开路径样本，不是额外物理坐标；物理仍在
+ * src/physics/paths.js，切视图不改变传播结果。
  *
  * 三块画布：
  *   #pvMain    世界图：源/屏/探测面 + 路径族（按相位着色）+ 探测面强度条
@@ -1503,6 +1628,14 @@ const PV_CSS = `
 const clamp = (v, a, b) => (v < a ? a : (v > b ? b : v));
 const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
 const ex = (x, d = 2) => (Number.isFinite(x) && x !== 0 ? x.toExponential(d) : '0');
+function pathCamDefault(){ return { ...hbCamDefault(), pitch: 0.48, dist: 6.8 }; }
+function readPathCam(q){
+  const d = pathCamDefault(), raw = q.get('cam');
+  if (!raw) return d;
+  const a = raw.split(',').map(Number);
+  if (a.length !== 3 || !a.every(Number.isFinite)) return d;
+  return { yaw: a[0], pitch: clamp(a[1], -PITCH_LIM, PITCH_LIM), dist: clamp(a[2], 4.8, 16) };
+}
 
 /* 页面侧折线（只画不求值；与 physics 的 piPolyline 同式，避免为了画图 import） */
 function visualSamples(Y, cfg, nA = 5, cap = 480){
@@ -1534,6 +1667,7 @@ class PathsApp {
     /* URL 里的 preset 必须带上它自己的 d/w（单缝是 d=0、w=20）；显式 ?d=/?w= 优先 */
     this.state = {
       preset,
+      proj: q.get('proj') === '3d' ? '3d' : '2d',
       L1: num('L1', PI_DEFAULTS.L1), L2: num('L2', PI_DEFAULTS.L2),
       d: num('d', pcfg.d ?? 48), w: num('w', pcfg.w ?? 8), W: num('W', 40),
       flux: clamp(num('flux', pcfg.flux ?? 0), 0, 1),
@@ -1552,6 +1686,7 @@ class PathsApp {
       paused: q.get('paused') === '1',
       live: q.get('live') === '1',
     };
+    this.cam = readPathCam(q); this._orbit = null;
     this._listeners = []; this._dirty = true; this._dirtyY = false; this._deferSpiral = false;
     this._gestureActive = false; this._lastGesturePaint = -Infinity; this._needDraw = true;
     this._fps = 0; this._fpsFrames = 0; this._lastFpsT = performance.now();
@@ -1609,6 +1744,9 @@ class PathsApp {
           <button id="pvP2" data-p="incoherent">可区分</button>
         </div>
         <div class="chk" style="margin-top:4px"><span style="font-size:10.5px;color:var(--dim)">可区分 = 强度相加（ε=1）</span></div>
+        <div class="grp">路径视图</div>
+        <div class="btns"><button id="pvView2d" class="on" title="平面物理几何">2D 平面</button><button id="pvView3d" title="透视展开路径族">3D 透视</button></div>
+        <div class="chk" style="margin-top:3px"><span style="font-size:10px;color:var(--dim)">3D x=传播、y=横向；深度仅分开路径样本（非物理坐标）；拖动旋转、滚轮缩放，R 复位</span></div>
         <div class="grp">缝</div>
         <div class="chk"><input type="checkbox" id="pvA"><label for="pvA">缝 A 开</label></div>
         <div class="chk"><input type="checkbox" id="pvB"><label for="pvB">缝 B 开</label></div>
@@ -1745,6 +1883,8 @@ class PathsApp {
     });
     this.syncPlayBtn();
 
+    this.on(this.q('#pvView2d'), 'click', () => this.setProj('2d'));
+    this.on(this.q('#pvView3d'), 'click', () => this.setProj('3d'));
     const cv = this.q('#pvMain');
     let drag = false;
     const fromEvent = e => {
@@ -1752,18 +1892,49 @@ class PathsApp {
       const t = (e.clientY - r.top) / Math.max(1, r.height);
       this.setY(this.view.yFov - t * 2 * this.view.yFov, true);
     };
-    this.on(cv, 'pointerdown', e => { drag = true; cv.setPointerCapture?.(e.pointerId); fromEvent(e); });
-    this.on(cv, 'pointermove', e => { if (drag) fromEvent(e); });
-    this.on(cv, 'pointerup', () => { drag = false; this.finishYGesture(); });
-    this.on(cv, 'pointercancel', () => { drag = false; this.finishYGesture(); });
+    this.on(cv, 'pointerdown', e => {
+      if (this.state.proj === '3d'){
+        this._orbit = { x: e.clientX, y: e.clientY };
+        cv.setPointerCapture?.(e.pointerId); e.preventDefault(); return;
+      }
+      drag = true; cv.setPointerCapture?.(e.pointerId); fromEvent(e);
+    });
+    this.on(cv, 'pointermove', e => {
+      if (this._orbit && this.state.proj === '3d'){
+        const dx = e.clientX - this._orbit.x, dy = e.clientY - this._orbit.y;
+        this._orbit = { x: e.clientX, y: e.clientY };
+        this.cam = hbOrbit(this.cam, dx, dy); this.drawMain(); return;
+      }
+      if (drag) fromEvent(e);
+    });
+    this.on(cv, 'pointerup', () => { this._orbit = null; drag = false; this.finishYGesture(); });
+    this.on(cv, 'pointercancel', () => { this._orbit = null; drag = false; this.finishYGesture(); });
+    this.on(cv, 'wheel', e => {
+      if (this.state.proj !== '3d') return;
+      e.preventDefault();
+      this.cam = hbZoom(this.cam, Math.exp((e.deltaY || 0) * 0.0012));
+      this.cam.dist = clamp(this.cam.dist, 4.8, 16); this.drawMain();
+    }, { passive: false });
+    this.on(cv, 'dblclick', () => { if (this.state.proj === '3d') this.resetCam(); });
     this.on(window, 'keydown', e => {
       const tag = (e.target && e.target.tagName) || '';
       if (/input|textarea|select/i.test(tag)) return;
       if (e.key === 'ArrowUp'){ this.setY(s.Y - 2); e.preventDefault(); }
       if (e.key === 'ArrowDown'){ this.setY(s.Y + 2); e.preventDefault(); }
+      if (e.key === '0') this.setProj(this.state.proj === '3d' ? '2d' : '3d');
+      if ((e.key === 'r' || e.key === 'R') && this.state.proj === '3d') this.resetCam();
       if (e.key === 'Escape') this.closeBand();
     });
   }
+
+  setProj(proj){
+    this.state.proj = proj === '3d' ? '3d' : '2d'; this._orbit = null;
+    const stage = this.q('#pvStage'); if (stage) stage.dataset.proj = this.state.proj;
+    const cv = this.q('#pvMain'); if (cv) cv.style.cursor = this.state.proj === '3d' ? 'grab' : 'crosshair';
+    this.syncPanel(); this._needDraw = true; this.drawMain();
+    return this.state.proj;
+  }
+  resetCam(){ this.cam = pathCamDefault(); this.drawMain(); return { ...this.cam }; }
 
   applyPreset(name){
     const p = PI_PRESETS[name];
@@ -2063,6 +2234,7 @@ class PathsApp {
   }
 
   drawMain(){
+    if (this.state.proj === '3d') return this.drawMain3D();
     const cv = this.q('#pvMain');
     if (!cv) return;
     const g = cv.getContext('2d');
@@ -2163,6 +2335,73 @@ class PathsApp {
     g.fillText('探测面', xd + 20, h - 8);
     g.textAlign = 'left'; g.fillStyle = 'rgba(217,70,239,.9)';
     g.fillText('Y=' + st.Y.toFixed(0), xd + 7, yDet - 5);
+  }
+
+  drawMain3D(){
+    const cv = this.q('#pvMain'); if (!cv) return;
+    const g = cv.getContext('2d'), dpr = this.view.dpr || 1, W = cv.width, H = cv.height;
+    g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H); g.scale(dpr, dpr);
+    const w = W / dpr, h = H / dpr, c = this.cfg(), span = c.L1 + c.L2;
+    const sx = 4.8 / Math.max(1, span), laneMax = 0.92, eye = hbCamBasis(this.cam);
+    const focal = hbFocal(w), { f, r, u } = eye;
+    const project = p => {
+      const dx = p.x - eye.eye.x, dy = p.y - eye.eye.y, dz = p.z - eye.eye.z;
+      const depth = Math.max(0.15, dx * f.x + dy * f.y + dz * f.z);
+      return { x: w / 2 + (dx * r.x + dy * r.y + dz * r.z) / depth * focal,
+               y: h / 2 - (dx * u.x + dy * u.y + dz * u.z) / depth * focal, depth };
+    };
+    const world = (x, y, lane, t) => ({ x: (x - span / 2) * sx, y: y * sx,
+      z: lane * 4 * Math.max(0, Math.min(1, t)) * (1 - Math.max(0, Math.min(1, t))) });
+    const paths = [];
+    for (let i = 0; i < this.samples.length; i++){
+      const s = this.samples[i], lane = this.samples.length > 1
+        ? (2 * i / (this.samples.length - 1) - 1) * laneMax : 0;
+      const a = polyline(0, 0, c.L1, s.xi, s.seg1, 10);
+      const b = polyline(c.L1, s.xi, span, this.state.Y, s.seg2, 12);
+      const pts = [];
+      for (const [x, y] of a) pts.push(project(world(x, y, lane, x / span)));
+      for (let k = 1; k < b.length; k++) pts.push(project(world(b[k][0], b[k][1], lane, b[k][0] / span)));
+      let depth = 0; for (const p of pts) depth += p.depth;
+      paths.push({ pts, depth: depth / Math.max(1, pts.length), phase: s.phase });
+    }
+    paths.sort((a, b) => b.depth - a.depth);
+    for (const path of paths){
+      const hue = ((path.phase / (2 * Math.PI)) % 1 + 1) % 1;
+      g.strokeStyle = 'hsla(' + Math.round(182 + hue * 128) + ',82%,65%,.34)';
+      g.lineWidth = 0.85; g.beginPath();
+      path.pts.forEach((p, k) => k ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y));
+      g.stroke();
+    }
+    const line = (a, b, color, width = 1) => {
+      const p = project(a), q = project(b);
+      g.strokeStyle = color; g.lineWidth = width; g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.stroke();
+    };
+    const yEdge = Math.max(1.15, this.view.yFov * sx), zEdge = laneMax * 1.08;
+    /* 仅画轻量线框，不用不透明墙面覆盖路径。 */
+    for (const x of [-span / 2 * sx, span / 2 * sx]){
+      line({ x, y: -yEdge, z: -zEdge }, { x, y: yEdge, z: -zEdge }, 'rgba(154,167,189,.26)');
+      line({ x, y: yEdge, z: -zEdge }, { x, y: yEdge, z: zEdge }, 'rgba(154,167,189,.22)');
+      line({ x, y: yEdge, z: zEdge }, { x, y: -yEdge, z: zEdge }, 'rgba(154,167,189,.22)');
+      line({ x, y: -yEdge, z: zEdge }, { x, y: -yEdge, z: -zEdge }, 'rgba(154,167,189,.22)');
+    }
+    const x0 = -span / 2 * sx, x1 = span / 2 * sx;
+    line({ x: x0, y: 0, z: 0 }, { x: x1, y: 0, z: 0 }, 'rgba(154,167,189,.34)');
+    line({ x: 0, y: -yEdge, z: 0 }, { x: 0, y: yEdge, z: 0 }, 'rgba(103,232,249,.32)');
+    line({ x: 0, y: -yEdge, z: -zEdge }, { x: 0, y: -yEdge, z: zEdge }, 'rgba(103,232,249,.28)');
+    line({ x: x1, y: -yEdge, z: -zEdge }, { x: x1, y: yEdge, z: -zEdge }, 'rgba(217,70,239,.28)');
+    line({ x: x1, y: yEdge, z: -zEdge }, { x: x1, y: yEdge, z: zEdge }, 'rgba(217,70,239,.24)');
+    line({ x: x1, y: yEdge, z: zEdge }, { x: x1, y: -yEdge, z: zEdge }, 'rgba(217,70,239,.24)');
+    line({ x: x1, y: -yEdge, z: zEdge }, { x: x1, y: -yEdge, z: -zEdge }, 'rgba(217,70,239,.24)');
+    for (const slit of piSlits(c)){
+      const y = slit * sx, half = Math.max(0.018, c.w * sx / 2);
+      line({ x: 0, y: y - half, z: -laneMax }, { x: 0, y: y + half, z: -laneMax }, 'rgba(103,232,249,.78)', 1.4);
+      line({ x: 0, y: y - half, z: laneMax }, { x: 0, y: y + half, z: laneMax }, 'rgba(103,232,249,.78)', 1.4);
+    }
+    const source = project(world(0, c.ys, 0, 0)), detector = project(world(span, this.state.Y, 0, 1));
+    g.fillStyle = '#f87171'; g.beginPath(); g.arc(source.x, source.y, 3.2, 0, 6.2832); g.fill();
+    g.fillStyle = '#d946ef'; g.beginPath(); g.arc(detector.x, detector.y, 3.2, 0, 6.2832); g.fill();
+    this._3dDrawInfo = { paths: paths.length, vertices: paths.reduce((n, p) => n + p.pts.length, 0),
+      finite: paths.every(p => p.pts.every(q => Number.isFinite(q.x) && Number.isFinite(q.y) && Number.isFinite(q.depth))) };
   }
 
   drawSpiral(){
@@ -2301,6 +2540,10 @@ class PathsApp {
       const e = this.q('#' + b);
       if (e) e.classList.toggle('on', e.dataset.p === st.preset);
     }
+    this.q('#pvView2d')?.classList.toggle('on', st.proj === '2d');
+    this.q('#pvView3d')?.classList.toggle('on', st.proj === '3d');
+    const stage = this.q('#pvStage'); if (stage) stage.dataset.proj = st.proj;
+    const cv = this.q('#pvMain'); if (cv) cv.style.cursor = st.proj === '3d' ? 'grab' : 'crosshair';
   }
 
   _drawAll(){
@@ -2317,6 +2560,10 @@ class PathsApp {
     return {
       get state(){ return self.state; },
       get view(){ return self.view; },
+      get camera(){ return { ...self.cam }; },
+      get scene3d(){ return { ...(self._3dDrawInfo || {}) }; },
+      setProj: proj => self.setProj(proj),
+      resetCam: () => self.resetCam(),
       setParam: (k, v) => { self.setParam(k, v); self.syncPanel(); self.recompute(); self._drawAll(); },
       setY: y => { self.setY(y); self.recompute(); self._drawAll(); },
       preset: n => { self.applyPreset(n); self.recompute(); self._drawAll(); },
