@@ -1254,7 +1254,7 @@ export class QCircuitApp {
     line({ x: -3.2, y: 0, z: 0 }, { x: 3.2, y: 0, z: 0 }, 'rgba(154,167,189,.55)', 1.1);
     line({ x: 0, y: -2.42, z: 0 }, { x: 0, y: 2.42, z: 0 }, 'rgba(103,232,249,.48)');
     line({ x: 0, y: 0, z: -2.42 }, { x: 0, y: 0, z: 2.42 }, 'rgba(217,70,239,.48)');
-    const stride = dim <= 32 ? 1 : Math.ceil(dim / 8);
+    const stride = Math.max(1, Math.ceil(dim / 16));
     g.font = '9px ui-monospace,monospace'; g.textAlign = 'center';
     for (let i = 0; i < dim; i += stride){
       const x = (i / Math.max(1, dim - 1) - 0.5) * 6;
@@ -1268,6 +1268,16 @@ export class QCircuitApp {
     axisLabel('Re', { x: 0, y: 2.45, z: 0 }, '#67e8f9');
     axisLabel('Im', { x: 0, y: 0, z: 2.45 }, '#d946ef');
     const ampScale = 2.2, dotR = dim > 128 ? 1.8 : (dim > 32 ? 2.2 : 2.8);
+    /* 标出 Re/Im 轴的振幅刻度；点坐标仍使用同一 ampScale，避免视觉距离与读数脱节。 */
+    g.font = '8px ui-monospace,monospace'; g.textAlign = 'left';
+    for (const v of [-1, -0.5, 0.5, 1]){
+      const t = v * ampScale, label = v.toFixed(1).replace(/\.0$/, '');
+      line({ x: -0.045, y: t, z: 0 }, { x: 0.045, y: t, z: 0 }, 'rgba(103,232,249,.38)', 0.7);
+      line({ x: -0.045, y: 0, z: t }, { x: 0.045, y: 0, z: t }, 'rgba(217,70,239,.38)', 0.7);
+      const re = project({ x: 0, y: t, z: 0 }), im = project({ x: 0, y: 0, z: t });
+      g.fillStyle = 'rgba(103,232,249,.72)'; g.fillText(label, re.x + 4, re.y + 3);
+      g.fillStyle = 'rgba(217,70,239,.72)'; g.fillText(label, im.x + 4, im.y + 3);
+    }
     for (const a of amp){
       if (![a.i, a.re, a.im, a.abs, a.phase].every(Number.isFinite)) { finite = false; continue; }
       const x = (a.i / Math.max(1, dim - 1) - 0.5) * 6;
