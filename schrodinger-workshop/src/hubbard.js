@@ -896,8 +896,9 @@ export class HubbardApp {
       order.push(d); if (L - d !== d) order.push(L - d);
     }
     const out = new Float64Array(L + 1).fill(NaN);
-    /* 抓快照：演化中 this.re/im 每帧都是新数组，任务跨帧读会被换掉 */
-    this.sxJob = { order, k: 0, out, L, sec: this.sec, t0: performance.now(), re: this.re.slice(), im: this.im.slice() };
+    /* 态向量按不可变快照发布：演化/重解都用新数组替换 re/im，不原地写入。
+       因此任务持有旧数组引用即可，无需每次 S(x) 刷新复制 2×dim 个 Float64。 */
+    this.sxJob = { order, k: 0, out, L, sec: this.sec, t0: performance.now(), re: this.re, im: this.im };
     this.probe.sx = out; this.probe.sxL = L;
   }
   stepSx(budget = 8){
