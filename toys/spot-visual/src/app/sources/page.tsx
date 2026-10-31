@@ -7,12 +7,25 @@ import { useSearchParams } from "next/navigation";
 import { LIBRARY_STATS } from "@/lib/spot-data";
 import { POI_DESCRIPTIONS, SCENIC_DESCRIPTIONS } from "@/lib/poi-descriptions";
 import { OUTSOURCE_DESCRIPTIONS } from "@/lib/scenic-desc-outsource.generated";
+import { SCENIC_DETAILS } from "@/lib/scenic-details.generated";
+import { SCENIC_SERVICES } from "@/lib/scenic-services.generated";
+import { SPOT_TERRAIN } from "@/lib/spot-terrain.generated";
 
-// 简介条数动态读取，避免硬编码过期（同 LIBRARY_STATS 的做法）。
-// 这三个模块已随 spot-data 进入本页 bundle，直接取键数不增加体积。
+// 条数动态读取，避免硬编码过期（同 LIBRARY_STATS 的做法）。
+// 这些模块已随 spot-data/视图进入本页 bundle，直接取键数不增加体积。
 const SCENIC_DESC_COUNT = Object.keys(SCENIC_DESCRIPTIONS).length;
 const POI_DESC_COUNT = Object.keys(POI_DESCRIPTIONS).length;
 const OUTSOURCE_DESC_COUNT = Object.keys(OUTSOURCE_DESCRIPTIONS).length;
+const DETAILS_COUNT = Object.keys(SCENIC_DETAILS).length;
+const DETAILS_TEL = Object.values(SCENIC_DETAILS).filter((d) => d.tel).length;
+const DETAILS_OPENTIME = Object.values(SCENIC_DETAILS).filter(
+  (d) => d.openTime,
+).length;
+const SERVICES_COUNT = Object.keys(SCENIC_SERVICES).length;
+const SERVICES_TOILET = Object.values(SCENIC_SERVICES).filter(
+  (s) => s.nearestToiletM >= 0,
+).length;
+const TERRAIN_COUNT = Object.keys(SPOT_TERRAIN).length;
 
 const ROWS = [
   {
@@ -53,7 +66,7 @@ const ROWS = [
   },
   {
     layer: "景点览胜（内置示例）",
-    source: "本项目整理的 12 个代表性景区公开信息",
+    source: `本项目整理的 ${LIBRARY_STATS.manual} 个代表性景区公开信息`,
     license: "—",
     fields: "名称、地址、分类、设施、推荐项目、经纬度、体力成本标签",
     note: "仅作演示基底；描述为基于公开资料的自行整理，非权威出处。",
@@ -63,38 +76,47 @@ const ROWS = [
     source: "OpenStreetMap（Nominatim 地理编码 + Overpass 兴趣点查询）",
     license: "ODbL（© OpenStreetMap 贡献者）",
     fields: "POI 名称、坐标、分类推断、设施标签、image 标签实拍图",
-    note: "由服务端代理请求（30 分钟缓存）。社区数据质量参差，名称/分类可能缺失；Wikimedia 域名图片因国内不可达被排除。",
+    note: "由服务端代理请求（30 分钟缓存），为城市探索的第三级兜底（前两级：构建时烘好的城市包 → 库内筛选）。社区数据质量参差，名称/分类可能缺失；Wikimedia 域名图片因国内不可达被排除。overpass-api.de 在部分部署环境连接被拒，此时该兜底不生效，仅影响长尾城市。",
   },
   {
-    layer: "7 日出行窗口 / 行程体检（天气）",
+    layer: "7 日出行窗口 / 行程体检 / UV 阴影曲线（天气）",
     source: "Open-Meteo 免费预报 API",
     license: "CC BY 4.0",
-    fields: "逐日紫外线峰值、最高/最低气温、降水概率",
+    fields:
+      "逐日紫外线峰值、最高/最低气温、降水概率；逐小时紫外线、日照时长、云量（劝退视图 UV 阴影占比曲线）",
     note: "服务端代理（/api/weather，0.5° 网格缓存 30 分钟），客户端零外链。PTSI 为本项目自研口径（UV + 身体条件 + 拥挤度），非气象行业标准指数。",
   },
   {
     layer: "景点图片",
     source:
-      "多级链路：OSM image 标签 → Unsplash API → Pexels API → 本地预置包（Bing 抓取，域名降权 + 人工终检）→ 渐变占位",
-    license:
-      "Unsplash License / Pexels License / Bing 抓取图版权归原作者，仅作演示",
+      "多级链路：本地 webp 相册（Bing 抓取，域名降权 + 人工终检）→ 高德官方相册图（5A/4A 名录条目，构建时烘焙，URL 运行时不可达自动降级）→ OSM image 标签（实时探索）→ 分类池 → 渐变占位",
+    license: "Bing 抓取图 / 高德图片 / OSM 图片版权归原作者，仅作演示",
     fields: "—",
     note: "详情弹窗逐张标注来源（估/改价口径同理）。菜品 432 张出处见 public/dishes/SOURCES.md；内置景点离线包见 public/spots/_candidates/_report.json。",
   },
   {
-    layer: "劝退指南 / PTSI / 体力账本（算法口径）",
+    layer: "劝退指南 / PTSI / 体力账本 / 体力沙盘（算法口径）",
     source: "本项目自研",
     license: "—",
     fields:
-      "PTSI 0–140 三分项、劝退结论球、体力成本 0–100（按分类默认 + 项目系数）",
-    note: "自评性质，仅供出行决策参考，非安全建议；体力账本当前为内置示例路线（5.5km），未接入真实景点海拔。",
+      "PTSI 0–140 三分项、劝退结论球、体力成本 0–100（按分类默认 + 项目系数）、沙盘体验分 0–100",
+    note: `自评性质，仅供出行决策参考，非安全建议。结论球中的坡度、厕所、出入口、UV 阴影项已接真实数据（见上/下方对应数据行），其余劝退文案为模板表述。体力账本直接挂四条真实登山线（见「登山账本」行）。沙盘体验分口径：有高德评分时按 (评分−3)/2×100 线性映射（5.0→100 / 4.5→75 / 4.0→50），无评分按景区等级落位（5A 75 / 4A 65 / 其他 55）——评分仅城市 POI 条目有，名录条目实际走等级落位。`,
   },
   {
-    layer: "开放时间",
-    source: "高德地图 POI 深度字段（biz_ext.opentime2，构建时随 POI 包抓取）",
+    layer: "开放时间 / 景区电话",
+    source:
+      "高德地图：城市 POI 深度字段（biz_ext.opentime2，构建时随 POI 包抓取）+ 5A/4A 名录条目周边搜索烘焙（SCENIC_DETAILS）",
     license: "高德开放平台，仅供演示",
-    fields: "营业/开放时段文本（约 95% 填充）",
-    note: "详情页已标注「出行前请再核实」；门票价与预约标记高德不提供（cost 填充 0.3%），见下方人工标注。",
+    fields: `开放时段文本（城市 POI 约 95% 填充；名录条目 ${DETAILS_OPENTIME}/${DETAILS_COUNT}）；景区电话（名录条目 ${DETAILS_TEL}/${DETAILS_COUNT}）`,
+    note: "详情页已标注「出行前请再核实」；门票价与预约标记高德不提供（cost 填充 0.3%），见下方人工标注。构建用的 key 只在本机环境，绝不进发布产物；名录条目的评分字段当前无填充、官方图片仅个别条目有值（运行时不可达即降级），基本不参与展示。",
+  },
+  {
+    layer: "景区服务设施（厕所 / 出入口）",
+    source:
+      "OpenStreetMap 中国全量 PBF（pyosmium TagFilter 离线提取，构建时烘焙）",
+    license: "ODbL（© OpenStreetMap 贡献者）",
+    fields: `周边 500m 卫生间数量与最近距离（haversine）、周边 300m 出入口数量与最近距离；覆盖 ${SERVICES_COUNT} 条 A 级条目，${SERVICES_TOILET} 条检索到厕所`,
+    note: "曾用腾讯位置服务 nearby 检索（仅 5A、99 条），因日配额不可持续已整体替换为 OSM 离线解析（一次解析全国、零在线依赖）。-1 表示对应范围内无结果；OSM 社区数据质量参差，未检索到 ≠ 实际没有。",
   },
   {
     layer: "景区等级（5A/4A/3A）与名录补充景点",
@@ -114,7 +136,7 @@ const ROWS = [
   },
   {
     layer: "是否需预约",
-    source: "人工标注（14 条，无自动数据源）",
+    source: "人工标注（40 条，无自动数据源）",
     license: "—",
     fields: "预约渠道与时限提示",
     note: "只标注确定有预约制/实名限流的景点（故宫、莫高窟、布达拉宫、兵马俑等）；普通线上购票不标注，避免稀释警示。",
@@ -126,6 +148,14 @@ const ROWS = [
     fields:
       "海拔剖面（km-elevation）、累计路程（直线 ×1.25 绕行系数）、关键节点",
     note: "路径为泰山/黄山/峨眉山/华山四条经典登山线的关键节点直线插值，非 GPS 轨迹；海拔为真实地形数据，节点坐标为近似值。",
+  },
+  {
+    layer: "地形坡度（劝退指南坡度项 / 全 A 级覆盖）",
+    source:
+      "AWS Terrain Tiles（Terrarium 编码，AWS Open Data 公共数据集，下垫 SRTM 等全球 DEM）",
+    license: "公开数据集（© OpenStreetMap 贡献者等，见数据集页）",
+    fields: `最大坡度（度）、陡坡占比（>10° 网格占比）；~112m 网格分辨率，单景区覆盖约 3.6×4.8km；${TERRAIN_COUNT} 条 A 级条目全覆盖`,
+    note: `z13 瓦片 256×256 DEM 经 8× 降采样后算 Horn 3×3 坡度——像素级（~14m）坡度在平原城市被 SRTM 噪声主导（上海中心城区测出 68° 最大坡度），112m 网格下山脊/平原均合理。曾用 Open-Meteo Elevation（1.4km 网格，首批 1208 条），因日配额不可持续换源并全量统一重算，两代数据不混用。四条登山线优先用更精细的路线剖面（见「登山账本」行）。陡峭分档（全域陡峭 ≥50% / 多段陡坡 ≥20% / 缓坡为主）为本项目口径。瓦片缓存于构建环境，不进发布产物。`,
   },
   {
     layer: "地图边界",
