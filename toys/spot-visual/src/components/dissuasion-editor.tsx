@@ -102,6 +102,7 @@ export default function DissuasionEditor({
             <h3 className="text-base font-bold text-gray-900">记录翻车经历</h3>
             <button
               onClick={onClose}
+              aria-label="关闭编辑器"
               className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center"
             >
               <X className="w-4 h-4 text-gray-500" />

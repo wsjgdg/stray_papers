@@ -444,6 +444,7 @@ function Sidebar({
         <ThemeToggle />
         <button
           onClick={onToggle}
+          aria-label={collapsed ? "展开侧边栏" : "折叠侧边栏"}
           className="flex-1 flex items-center justify-center h-10 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
         >
           {collapsed ? (
@@ -488,6 +489,7 @@ function MobileHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
           <ThemeToggle className="p-1" />
           <button
             onClick={onMenuOpen}
+            aria-label="打开菜单"
             className="p-1 text-gray-500 dark:text-gray-400"
           >
             <Menu className="w-5 h-5" />
@@ -763,6 +765,7 @@ function SpotGrid({
                     e.stopPropagation();
                     toggleFavorite(spot.id);
                   }}
+                  aria-label={isFav ? "取消收藏" : "收藏"}
                   className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white dark:bg-gray-900/80 dark:bg-gray-900/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-sm"
                 >
                   <Heart
@@ -922,6 +925,7 @@ function SpotList({
                     e.stopPropagation();
                     toggleFavorite(spot.id);
                   }}
+                  aria-label={isFav ? "取消收藏" : "收藏"}
                   className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white dark:bg-gray-900/80 dark:bg-gray-900/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-sm"
                 >
                   <Heart
@@ -1187,6 +1191,7 @@ function SpotDetailDialog() {
           {/* Close button (only one) */}
           <button
             onClick={() => setSelectedSpot(null)}
+            aria-label="关闭详情"
             className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center transition-colors z-10"
           >
             <X className="w-4 h-4 text-white" />
@@ -1194,6 +1199,7 @@ function SpotDetailDialog() {
           {/* Favorite button */}
           <button
             onClick={() => toggleFavorite(spot.id)}
+            aria-label={isFav ? "取消收藏" : "收藏"}
             className="absolute top-3 left-3 w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center transition-colors z-10"
           >
             <Heart
@@ -1205,6 +1211,7 @@ function SpotDetailDialog() {
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
               <button
                 onClick={() => setPhotoIdx((i) => Math.max(0, i - 1))}
+                aria-label="上一张照片"
                 className="w-6 h-6 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center"
               >
                 <ChevronLeft className="w-3 h-3 text-white" />
@@ -1216,6 +1223,7 @@ function SpotDetailDialog() {
                 onClick={() =>
                   setPhotoIdx((i) => Math.min(allPhotos.length - 1, i + 1))
                 }
+                aria-label="下一张照片"
                 className="w-6 h-6 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center"
               >
                 <ChevronRight className="w-3 h-3 text-white" />
@@ -1561,6 +1569,7 @@ function SpotDetailDialog() {
                     <button
                       key={i}
                       onClick={() => setPhotoIdx(i)}
+                      aria-label={`查看第 ${i + 1} 张照片`}
                       className={`shrink-0 w-16 h-12 rounded-md overflow-hidden border-2 transition-colors ${i === photoIdx ? "border-emerald-500" : "border-transparent opacity-60 hover:opacity-100"}`}
                     >
                       <SpotImage
@@ -1804,6 +1813,17 @@ function Lightbox({
     return () => document.removeEventListener("keydown", handler, true);
   }, [index, photos.length, onIndex, onClose]);
 
+  // 预加载相邻两张图，左右切换零等待
+  useEffect(() => {
+    for (const d of [-1, 1]) {
+      const src = photos[(index + d + photos.length) % photos.length];
+      if (src) {
+        const img = new Image();
+        img.src = src;
+      }
+    }
+  }, [index, photos]);
+
   return (
     <div
       className="fixed inset-0 z-[80] bg-black/95 flex items-center justify-center"
@@ -1822,6 +1842,7 @@ function Lightbox({
               e.stopPropagation();
               onIndex((index - 1 + photos.length) % photos.length);
             }}
+            aria-label="上一张图片"
             className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white dark:bg-gray-900/15 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
           >
             <ChevronLeft className="w-6 h-6" />
@@ -1831,6 +1852,7 @@ function Lightbox({
               e.stopPropagation();
               onIndex((index + 1) % photos.length);
             }}
+            aria-label="下一张图片"
             className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white dark:bg-gray-900/15 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
           >
             <ChevronRight className="w-6 h-6" />
@@ -1842,6 +1864,7 @@ function Lightbox({
       )}
       <button
         onClick={onClose}
+        aria-label="关闭图片查看器"
         className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white dark:bg-gray-900/15 hover:bg-white/30 text-white flex items-center justify-center transition-colors"
       >
         <X className="w-5 h-5" />
@@ -1900,6 +1923,7 @@ function CompareBar() {
         <button
           onClick={clearCompare}
           title="清空对比"
+          aria-label="清空对比"
           className="shrink-0 w-7 h-7 rounded-full bg-white dark:bg-gray-900/10 hover:bg-white/20 flex items-center justify-center"
         >
           <X className="w-3.5 h-3.5" />
@@ -2595,6 +2619,7 @@ function SpotsView() {
         {searchQuery && (
           <button
             onClick={() => setSearchQuery("")}
+            aria-label="清空搜索"
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
           >
             <X className="w-4 h-4" />
@@ -2742,12 +2767,14 @@ function SpotsView() {
         <div className="hidden sm:flex items-center border border-gray-200 dark:border-gray-700 rounded-lg p-0.5 bg-white dark:bg-gray-900">
           <button
             onClick={() => setViewMode("grid")}
+            aria-label="切换为网格视图"
             className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"}`}
           >
             <LayoutGrid className="w-4 h-4" />
           </button>
           <button
             onClick={() => setViewMode("list")}
+            aria-label="切换为列表视图"
             className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"}`}
           >
             <List className="w-4 h-4" />
@@ -3085,6 +3112,7 @@ function FavoritesView() {
                   deleteFavGroup(g.id);
               }}
               title="删除分组（收藏保留）"
+              aria-label="删除分组（收藏保留）"
               className="pr-2 text-[10px] opacity-50 hover:text-rose-500"
             >
               ×
@@ -3129,6 +3157,7 @@ function FavoritesView() {
         {favQuery && (
           <button
             onClick={() => setFavQuery("")}
+            aria-label="清空收藏搜索"
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
           >
             <X className="w-4 h-4" />
@@ -3489,6 +3518,7 @@ export default function Home() {
             mainScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" })
           }
           title="返回顶部"
+          aria-label="返回顶部"
           className="fixed bottom-20 right-5 z-40 w-11 h-11 rounded-full bg-white dark:bg-gray-900/95 dark:bg-gray-900/95 border border-gray-200 dark:border-gray-700 shadow-lg flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-emerald-600 hover:border-emerald-200 transition-colors"
         >
           <ArrowUp className="w-5 h-5" />

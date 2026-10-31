@@ -280,6 +280,7 @@ function TripWeather({ spots }: { spots: Spot[] }) {
           disabled={loading}
           className="ml-auto text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-40"
           title="刷新"
+          aria-label="刷新"
         >
           <RefreshCw
             className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`}
@@ -858,6 +859,7 @@ export default function TripView() {
                             <button
                               onClick={() => moveTripSpot(s.id, -1)}
                               disabled={i === 0}
+                              aria-label="上移景点"
                               className="w-6 h-5 rounded bg-gray-50 dark:bg-gray-900 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-30 flex items-center justify-center"
                             >
                               <ChevronUp className="w-3.5 h-3.5" />
@@ -865,6 +867,7 @@ export default function TripView() {
                             <button
                               onClick={() => moveTripSpot(s.id, 1)}
                               disabled={i === tripSpots.length - 1}
+                              aria-label="下移景点"
                               className="w-6 h-5 rounded bg-gray-50 dark:bg-gray-900 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-30 flex items-center justify-center"
                             >
                               <ChevronDown className="w-3.5 h-3.5" />
@@ -874,6 +877,7 @@ export default function TripView() {
                             onClick={() => removeFromTrip(s.id)}
                             className="w-8 h-8 rounded-lg text-gray-300 dark:text-gray-600 hover:text-red-500 hover:bg-red-50 flex items-center justify-center shrink-0 transition-colors"
                             title="移出行程"
+                            aria-label="移出行程"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>

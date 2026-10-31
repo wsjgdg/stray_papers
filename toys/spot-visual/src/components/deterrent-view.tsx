@@ -662,6 +662,7 @@ function TimelineCard({
                 onClick={() => speak(`${reason.label}：${resolved}`)}
                 className="shrink-0 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center transition-colors"
                 title="语音播报"
+                aria-label="语音播报"
               >
                 <Volume2 className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
               </button>
@@ -912,6 +913,7 @@ function ReviewPopup({
         )}
         <button
           onClick={onClose}
+          aria-label="关闭结论弹窗"
           className="absolute bottom-4 right-4 w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center shadow-lg hover:bg-gray-800 transition-colors"
         >
           <X className="w-5 h-5" />

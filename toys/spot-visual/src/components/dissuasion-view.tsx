@@ -37,7 +37,10 @@ function getTagStyle(tagId: string): string {
     food: "bg-green-100 text-green-700",
     danger: "bg-red-100 text-red-700",
   };
-  return colors[tagId] || "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300";
+  return (
+    colors[tagId] ||
+    "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
+  );
 }
 
 /* ═══ 单个日记卡片 ═══ */
@@ -79,6 +82,7 @@ function DissuasionCard({
           </div>
           <button
             onClick={() => onDelete(record.id)}
+            aria-label="删除这条记录"
             className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-red-100 flex items-center justify-center transition-colors"
           >
             <Trash2 className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 hover:text-red-500" />
@@ -112,7 +116,10 @@ function DissuasionCard({
         <div className="flex items-center justify-between">
           <div className="flex gap-1.5">
             {record.bodyConditions.map((bc) => (
-              <span key={bc} className="text-[10px] text-gray-400 dark:text-gray-500">
+              <span
+                key={bc}
+                className="text-[10px] text-gray-400 dark:text-gray-500"
+              >
                 {bc === "knee" ? "🦵" : bc === "heart" ? "❤️" : "🌡️"}
               </span>
             ))}
@@ -121,6 +128,7 @@ function DissuasionCard({
             onClick={() => onVote(record.id)}
             disabled={voted}
             title={voted ? "本会话已投过票" : "觉得这条提醒有用，点个赞"}
+            aria-label={voted ? "本会话已投过票" : "觉得这条提醒有用，点个赞"}
             className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-colors ${
               voted
                 ? "bg-emerald-100 text-emerald-700 cursor-default"
@@ -262,7 +270,9 @@ export default function DissuasionView() {
             <BookX className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">翻车日记</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+              翻车日记
+            </h2>
             <p className="text-xs text-gray-500 dark:text-gray-400">
               记录那些让你后悔的景点 · {dissuasionRecords.length} 条记录
             </p>
@@ -282,6 +292,7 @@ export default function DissuasionView() {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
+                aria-label="清空搜索"
                 className="absolute right-3 top-1/2 -translate-y-1/2"
               >
                 <X className="w-4 h-4 text-gray-400 dark:text-gray-500" />
@@ -292,6 +303,7 @@ export default function DissuasionView() {
             onClick={exportRecords}
             disabled={dissuasionRecords.length === 0}
             title="导出 JSON"
+            aria-label="导出 JSON"
             className="flex items-center justify-center w-10 h-10 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-40 transition-colors"
           >
             <Download className="w-4 h-4" />
@@ -306,6 +318,7 @@ export default function DissuasionView() {
           <button
             onClick={() => importInputRef.current?.click()}
             title="导入 JSON"
+            aria-label="导入 JSON"
             className="flex items-center justify-center w-10 h-10 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
           >
             <Upload className="w-4 h-4" />

@@ -126,6 +126,7 @@ export default function SevenDayWindow({
             disabled={loading}
             className="text-gray-400 hover:text-gray-600 disabled:opacity-40"
             title="刷新预报"
+            aria-label="刷新预报"
           >
             <RefreshCw
               className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`}

@@ -235,6 +235,7 @@ function MobilitySheet({
             </div>
             <button
               onClick={onClose}
+              aria-label="关闭出行方式弹窗"
               className="absolute bottom-4 right-4 w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center shadow-lg"
             >
               <X className="w-5 h-5" />
