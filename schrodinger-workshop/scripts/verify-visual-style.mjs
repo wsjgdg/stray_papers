@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import { CSS } from '../src/core/styles.js';
 
+assert.match(CSS, /\.panel\{position:fixed;\s*background:linear-gradient\(135deg,rgba\(103,232,249/,
+  'shared panels should use a subtle cyan/magenta glass surface');
+assert.match(CSS, /button\{font-family:var\(--sans\);font-size:12px;color:var\(--txt\);\s*background:linear-gradient\(180deg/,
+  'shared controls should have a dimensional surface, not a flat fill');
+assert.match(CSS, /\.qhud \.hrow span:last-child\{font-variant-numeric:tabular-nums/,
+  'numeric HUD values should align consistently');
 assert.match(CSS, /button:active:not\(:disabled\)\{translate:0 1px;/,
   'buttons should have tactile press feedback without overriding component transforms');
 assert.match(CSS, /button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible/,

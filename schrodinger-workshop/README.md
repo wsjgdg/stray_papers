@@ -3844,7 +3844,7 @@ schrodinger-workshop/
 │   ├── core/                     引擎（与物理完全无关）
 │   │   ├── gl.js                 GL 引导：compile/link、Quad、makeTarget、
 │   │   │                         makeRGBA16F、makeReduce（均显式接收 gl，多实例安全）
-│   │   ├── styles.js             公共 CSS/设计 tokens + 键盘 focus/按压态/减动态偏好 + injectStyles()
+│   │   ├── styles.js             injectStyles() 全站设计层：玻璃面板/渐变控件/HUD 数字层级、focus/减动态偏好
 │   │   ├── responsive.js         公共响应式模块：顶栏三档收编为公共类 .qtop（12 页
 │   │   │                         差异值用属性选择器留各页）、≤900 汉堡抽屉（12 页互链
 │   │   │                         移动端可达）、≤860 底部 dock 三态（⚙控制/◫读数/✕全屏）
