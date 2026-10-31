@@ -39,6 +39,12 @@ for (const d of [3, 5]){
   assert.deepEqual(schedule.dataIdle, Array(4).fill(d), `d=${d}: inactive data idles are counted per parallel layer`);
   assert.deepEqual(schedule.ancillaIdle, Array(4).fill(d - 1), `d=${d}: inactive ancilla idles are counted per parallel layer`);
   const audit = scCircuitFaultAudit(code);
+  const checks = code.X.length + code.Z.length;
+  const idleFaults = (schedule.dataIdle.reduce((a, b) => a + b, 0) + schedule.ancillaIdle.reduce((a, b) => a + b, 0)) * d * 3;
+  assert.deepEqual(audit.locationCounts, {
+    input: code.n * 3, prep: checks * d, cx: schedule.gates * d * 15,
+    readout: checks * d, idle: idleFaults, 'final-readout': code.n * 2,
+  }, `d=${d}: catalog must account for every input, gate, idle, ancilla and terminal-readout mechanism`);
   assert.ok(audit.locations > 0, `d=${d}: single-fault catalog must be nonempty`);
   assert.ok(audit.xCovered > 0 && audit.zCovered > 0, `d=${d}: per-frame lookup must retain fallback coverage`);
   assert.ok(audit.jointSignatures > 0 && audit.jointCovered > 0, `d=${d}: joint X/Z signature table must cover mechanisms`);
@@ -98,6 +104,12 @@ for (const d of [3, 5]){
     const audit = scCircuitFaultAudit(code, d, basis);
     assert.equal(audit.prepareBasis, basis);
     assert.equal(audit.locations, d === 3 ? 1344 : 6880, `d=${d}, ${basis}-prep: catalog covers prep faults and one terminal readout basis`);
+    const schedule = scCircuitScheduleAudit(code), checks = code.X.length + code.Z.length;
+    const idleFaults = (schedule.dataIdle.reduce((a, b) => a + b, 0) + schedule.ancillaIdle.reduce((a, b) => a + b, 0)) * d * 3;
+    assert.deepEqual(audit.locationCounts, {
+      input: code.n * 3, prep: checks * d, cx: schedule.gates * d * 15,
+      readout: checks * d, idle: idleFaults, 'final-readout': code.n,
+    }, `d=${d}, ${basis}-prep: basis-specific fault catalog is complete`);
     assert.equal(audit.jointCovered + audit.jointFallbackMechanisms, audit.locations);
     assert.ok(audit.jointAmbiguous > 0 && audit.jointFallbackMechanisms > 0, `d=${d}, ${basis}-prep: ambiguity must use safe fallback`);
     assert.equal(audit.jointLookupLogicalFailX + audit.jointLookupLogicalFailZ, 0);

@@ -285,6 +285,8 @@ function scCircuitFaultTable(code, R, prepareBasis = 'encoded'){
   if (SC_CIRCUIT_FAULT_CACHE.has(key)) return SC_CIRCUIT_FAULT_CACHE.get(key);
   const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
   const X = new Map(), Z = new Map(), J = new Map(), catalog = scCircuitFaultCatalog(code, R, prepareBasis);
+  const locationCounts = {};
+  for (const fault of catalog) locationCounts[fault.location] = (locationCounts[fault.location] || 0) + 1;
   let silentLogicalX = 0, silentLogicalZ = 0;
   let lookupLogicalFailX = 0, lookupLogicalFailZ = 0;
   let lookupSyndromeFailX = 0, lookupSyndromeFailZ = 0;
@@ -347,7 +349,7 @@ function scCircuitFaultTable(code, R, prepareBasis = 'encoded'){
       firstLogical: [entry.logicalX, entry.logicalZ], conflictingLogical: [item.lx, item.lz] });
   }
   const result = {
-    X, Z, J, jointFallbackFaults, jointAmbiguousExamples, locations: catalog.length, xSignatures: X.size, zSignatures: Z.size,
+    X, Z, J, jointFallbackFaults, jointAmbiguousExamples, locations: catalog.length, locationCounts, xSignatures: X.size, zSignatures: Z.size,
     jointSignatures: J.size, jointAmbiguous, jointCovered,
     jointLookupLogicalFailX, jointLookupLogicalFailZ,
     jointLookupSyndromeFailX, jointLookupSyndromeFailZ,
@@ -380,7 +382,7 @@ export function scCircuitFaultAudit(code, rounds = code.d, prepareBasis = 'encod
   const t = scCircuitFaultTable(code, rounds, prepareBasis);
   if (!t.jointFallbackAudit) t.jointFallbackAudit = scCircuitJointFallbackAudit(code, rounds, t, prepareBasis);
   const jf = t.jointFallbackAudit;
-  return { d: code.d, rounds, prepareBasis, locations: t.locations, xSignatures: t.xSignatures, zSignatures: t.zSignatures,
+  return { d: code.d, rounds, prepareBasis, locations: t.locations, locationCounts: t.locationCounts, xSignatures: t.xSignatures, zSignatures: t.zSignatures,
     jointSignatures: t.jointSignatures, jointAmbiguous: t.jointAmbiguous, jointCovered: t.jointCovered,
     jointLookupLogicalFailX: t.jointLookupLogicalFailX, jointLookupLogicalFailZ: t.jointLookupLogicalFailZ,
     jointLookupSyndromeFailX: t.jointLookupSyndromeFailX, jointLookupSyndromeFailZ: t.jointLookupSyndromeFailZ,

@@ -562,6 +562,8 @@ export class SurfApp {
         const a = this.faultAudit;
         const failX = a.jointLookupLogicalFailX + a.jointFallbackLogicalFailX;
         const failZ = a.jointLookupLogicalFailZ + a.jointFallbackLogicalFailZ;
+        const auditEl = this.q('#hFaultAudit');
+        if (auditEl) auditEl.title = '目录位点：' + Object.entries(a.locationCounts || {}).map(([k, v]) => `${k} ${v}`).join(' · ');
         const readoutFail = a.prepareBasis === 'Z' ? `|0_L⟩ 读出失败 ${failX}/${a.locations}`
           : a.prepareBasis === 'X' ? `|+_L⟩ 读出失败 ${failZ}/${a.locations}`
           : `X/Z 读出失败 ${failX}/${a.locations}、${failZ}/${a.locations}`;
