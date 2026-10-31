@@ -38,6 +38,7 @@ import {
   MOUNTAIN_ROUTES,
   type MountainRoute,
 } from "@/lib/mountain-routes.generated";
+import { SCENIC_DETAILS } from "@/lib/scenic-details.generated";
 
 /* ═══ 体力模式选项 ═══ */
 const MOBILITY_OPTIONS = [
@@ -857,7 +858,7 @@ function FlipView({
 /* ═══════════════════════════════════════════════════
    紧急按钮 —— 累了卡片弧线上甩 + SOS 长按描边生长 + 边缘红光晕
    ═══════════════════════════════════════════════════ */
-function EmergencyButton() {
+function EmergencyButton({ route }: { route: MountainRoute }) {
   const [showOptions, setShowOptions] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [sosActive, setSosActive] = useState(false);
@@ -924,26 +925,47 @@ function EmergencyButton() {
         <button
           onClick={() => {
             setShowOptions(false);
-            setFeedback(
-              "本项目无法代叫电瓶车：请前往最近服务点乘车，或拨打景区电话咨询",
-            );
             vibrate(30);
+            // 真实现：高德周边搜索「电瓶车服务点」（有定位带坐标，无定位退化为关键词搜索页）
+            const findPos = (coords: GeolocationCoordinates | null) => {
+              const kw = encodeURIComponent("电瓶车服务点");
+              const url = coords
+                ? `https://uri.amap.com/search?keyword=${kw}&center=${coords.longitude},${coords.latitude}&src=spot-visual&callnative=1`
+                : `https://uri.amap.com/search?keyword=${encodeURIComponent(
+                    route.city + " 电瓶车服务点",
+                  )}&src=spot-visual&callnative=1`;
+              window.open(url, "_blank", "noopener");
+            };
+            if (navigator.geolocation) {
+              navigator.geolocation.getCurrentPosition(
+                (pos) => findPos(pos.coords),
+                () => findPos(null),
+                { timeout: 5000 },
+              );
+            } else {
+              findPos(null);
+            }
           }}
           className="w-full py-8 bg-emerald-500 text-white rounded-2xl text-xl font-bold shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-transform"
         >
-          🚐 电瓶车服务点指引
+          🚐 找电瓶车服务点
         </button>
         <button
           onClick={() => {
             setShowOptions(false);
-            setFeedback(
-              "无法实时规划路线：建议沿原路返回，或查看景区导览图/路标",
-            );
             vibrate(30);
+            // 真实现：高德搜索路线起点（如「泰安 红门」），打开后可直接发起导航
+            const startWp = route.waypoints[0];
+            const kw = encodeURIComponent(`${route.city} ${startWp.name}`);
+            window.open(
+              `https://uri.amap.com/search?keyword=${kw}&src=spot-visual&callnative=1`,
+              "_blank",
+              "noopener",
+            );
           }}
           className="w-full py-8 bg-blue-500 text-white rounded-2xl text-xl font-bold shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-transform"
         >
-          🚶 去出口
+          🚶 导航回{route.waypoints[0].name}
         </button>
       </motion.div>
     ),
@@ -952,7 +974,7 @@ function EmergencyButton() {
 
   return (
     <>
-      {/* SOS 演示态：光晕 + 底部诚实指引（本应用无后端，不发送任何求救） */}
+      {/* SOS 真动作卡：拨打 110/120 或发送含定位的求救短信（tel:/sms: 真设备能力） */}
       <AnimatePresence>
         {sosActive && (
           <>
@@ -963,12 +985,51 @@ function EmergencyButton() {
               className="fixed inset-0 pointer-events-none z-40"
               style={{ boxShadow: "inset 0 0 100px 50px rgba(239,68,68,0.4)" }}
             />
-            <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-black/80 backdrop-blur-md rounded-xl px-4 py-3 text-center max-w-xs">
-              <p className="text-white text-sm font-bold">
-                这是演示动画——不会向任何人发送求救
+            <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 w-[calc(100%-2rem)] max-w-sm">
+              <p className="text-sm font-bold text-gray-900 dark:text-gray-100 text-center">
+                紧急救援（{route.name}）
               </p>
-              <p className="text-white/70 text-xs mt-1">
-                真正需要救援时请拨打景区救援电话或 110/120
+              <div className="grid grid-cols-2 gap-2 mt-3">
+                <a
+                  href="tel:110"
+                  className="py-3 rounded-xl bg-red-500 text-white text-sm font-bold text-center active:scale-95 transition-transform"
+                >
+                  📞 110 报警
+                </a>
+                <a
+                  href="tel:120"
+                  className="py-3 rounded-xl bg-rose-500 text-white text-sm font-bold text-center active:scale-95 transition-transform"
+                >
+                  📞 120 急救
+                </a>
+              </div>
+              <a
+                href={`sms:${"110"}?&body=${encodeURIComponent(
+                  `我在「${route.name}」（${route.city}）需要救援。登山约 ${
+                    Math.round(route.distanceKm * 10) / 10
+                  }km，最高海拔 ${route.maxElevation} 米。`,
+                )}`}
+                className="block mt-2 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 text-sm font-bold text-center active:scale-95 transition-transform"
+              >
+                💬 发送求助短信（预填路线信息）
+              </a>
+              {(() => {
+                for (const sn of route.spots) {
+                  const d = SCENIC_DETAILS[sn];
+                  if (d?.tel)
+                    return (
+                      <a
+                        href={`tel:${d.tel.replace(/[^\d+]/g, "")}`}
+                        className="block mt-2 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-bold text-center"
+                      >
+                        📞 景区电话 {d.tel}
+                      </a>
+                    );
+                }
+                return null;
+              })()}
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-2 text-center">
+                短信建议同时发送给同行亲友
               </p>
             </div>
           </>
@@ -1500,7 +1561,7 @@ export default function FitnessView() {
       {/* ═══ 紧急按钮 - 底部居中悬浮胶囊 ═══ */}
       <div className="fixed bottom-5 inset-x-0 px-4 flex justify-center pointer-events-none">
         <div className="pointer-events-auto w-full max-w-sm">
-          <EmergencyButton />
+          <EmergencyButton route={route} />
         </div>
       </div>
 

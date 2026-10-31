@@ -1707,7 +1707,7 @@ function SpotDetailDialog() {
               }`}
             >
               <Route className="w-4 h-4" />
-              {trip.includes(spot.id) ? "已在行程中 · 点击移出" : "加入行程"}
+              {trip.includes(spot.id) ? "已在行程" : "加入行程"}
             </button>
             {/* ═══ 对比：加入/移出对比栏 ═══ */}
             <button
@@ -1720,9 +1720,9 @@ function SpotDetailDialog() {
             >
               <Scale className="w-4 h-4" />
               {compareIds.includes(spot.id)
-                ? "已加入对比 · 点击移出"
+                ? "已加入对比"
                 : compareIds.length >= 2
-                  ? "替换对比第 1 个"
+                  ? "替换第 1 个"
                   : "加入对比"}
             </button>
             {/* ═══ D3.5：劝退入口 ═══ */}
@@ -1738,6 +1738,12 @@ function SpotDetailDialog() {
               <button
                 onClick={() => {
                   setSelectedSpot(null);
+                  try {
+                    sessionStorage.setItem(
+                      "dissuasion:focusSpotName",
+                      spot.name,
+                    );
+                  } catch {}
                   setActiveView("dissuasion");
                 }}
                 className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-300 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-100 dark:border-gray-800"
@@ -2530,7 +2536,7 @@ function SpotsView() {
               value={city}
               onChange={(e) => setCity(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") exploreOsm();
+                if (e.key === "Enter") handleCityExplore();
               }}
               placeholder="输入城市，如 苏州 / 洛阳 / 大连 / 哈尔滨"
               className="pl-10 h-11 bg-white dark:bg-gray-900 border-emerald-200 dark:border-emerald-500/30 text-sm"

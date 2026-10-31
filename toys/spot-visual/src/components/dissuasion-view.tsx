@@ -32,12 +32,12 @@ function getTagStyle(tagId: string): string {
     parking: "bg-blue-100 text-blue-700",
     sun: "bg-rose-100 text-rose-700",
     stairs: "bg-lime-100 text-lime-700",
-    crowded: "bg-gray-100 text-gray-700",
+    crowded: "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200",
     signal: "bg-slate-100 text-slate-700",
     food: "bg-green-100 text-green-700",
     danger: "bg-red-100 text-red-700",
   };
-  return colors[tagId] || "bg-gray-100 text-gray-600";
+  return colors[tagId] || "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300";
 }
 
 /* ═══ 单个日记卡片 ═══ */
@@ -62,16 +62,16 @@ function DissuasionCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
+      className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden"
     >
       <div className="p-4">
         {/* 头部 */}
         <div className="flex items-start justify-between mb-2">
           <div>
-            <h4 className="text-sm font-bold text-gray-900">
+            <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100">
               {record.spotName}
             </h4>
-            <div className="flex items-center gap-2 text-[10px] text-gray-400 mt-0.5">
+            <div className="flex items-center gap-2 text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">
               <span>{timeStr}</span>
               <span>·</span>
               <span>{record.timePeriod}</span>
@@ -79,9 +79,9 @@ function DissuasionCard({
           </div>
           <button
             onClick={() => onDelete(record.id)}
-            className="w-7 h-7 rounded-full bg-gray-100 hover:bg-red-100 flex items-center justify-center transition-colors"
+            className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-red-100 flex items-center justify-center transition-colors"
           >
-            <Trash2 className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" />
+            <Trash2 className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 hover:text-red-500" />
           </button>
         </div>
 
@@ -103,7 +103,7 @@ function DissuasionCard({
 
         {/* 评论 */}
         {record.comment && (
-          <p className="text-xs text-gray-600 leading-relaxed mb-3 bg-gray-50 rounded-xl p-3">
+          <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-3 bg-gray-50 dark:bg-gray-800 rounded-xl p-3">
             &ldquo;{record.comment}&rdquo;
           </p>
         )}
@@ -112,7 +112,7 @@ function DissuasionCard({
         <div className="flex items-center justify-between">
           <div className="flex gap-1.5">
             {record.bodyConditions.map((bc) => (
-              <span key={bc} className="text-[10px] text-gray-400">
+              <span key={bc} className="text-[10px] text-gray-400 dark:text-gray-500">
                 {bc === "knee" ? "🦵" : bc === "heart" ? "❤️" : "🌡️"}
               </span>
             ))}
@@ -124,7 +124,7 @@ function DissuasionCard({
             className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-colors ${
               voted
                 ? "bg-emerald-100 text-emerald-700 cursor-default"
-                : "bg-gray-50 hover:bg-emerald-50"
+                : "bg-gray-50 dark:bg-gray-800 hover:bg-emerald-50"
             }`}
           >
             <ThumbsUp
@@ -254,7 +254,7 @@ export default function DissuasionView() {
   );
 
   return (
-    <div className="min-h-full bg-gray-50/50">
+    <div className="min-h-full bg-gray-50 dark:bg-gray-800/50 dark:bg-gray-900/50">
       <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
         {/* 标题 */}
         <div className="flex items-center gap-2 mb-6">
@@ -262,8 +262,8 @@ export default function DissuasionView() {
             <BookX className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900">翻车日记</h2>
-            <p className="text-xs text-gray-500">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">翻车日记</h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               记录那些让你后悔的景点 · {dissuasionRecords.length} 条记录
             </p>
           </div>
@@ -272,19 +272,19 @@ export default function DissuasionView() {
         {/* 搜索 + 新增 */}
         <div className="flex gap-2 mb-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
             <input
               placeholder="搜索景点或评论…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-8 h-10 bg-white rounded-xl border border-gray-200 text-sm outline-none focus:border-rose-300 transition-colors"
+              className="w-full pl-10 pr-8 h-10 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 text-sm outline-none focus:border-rose-300 transition-colors"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2"
               >
-                <X className="w-4 h-4 text-gray-400" />
+                <X className="w-4 h-4 text-gray-400 dark:text-gray-500" />
               </button>
             )}
           </div>
@@ -292,7 +292,7 @@ export default function DissuasionView() {
             onClick={exportRecords}
             disabled={dissuasionRecords.length === 0}
             title="导出 JSON"
-            className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 text-gray-500 hover:text-gray-700 disabled:opacity-40 transition-colors"
+            className="flex items-center justify-center w-10 h-10 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-40 transition-colors"
           >
             <Download className="w-4 h-4" />
           </button>
@@ -306,7 +306,7 @@ export default function DissuasionView() {
           <button
             onClick={() => importInputRef.current?.click()}
             title="导入 JSON"
-            className="flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-gray-200 text-gray-500 hover:text-gray-700 transition-colors"
+            className="flex items-center justify-center w-10 h-10 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
           >
             <Upload className="w-4 h-4" />
           </button>
@@ -329,7 +329,7 @@ export default function DissuasionView() {
                 className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
                   filterTag === t.id
                     ? "ring-2 ring-rose-300 bg-rose-50 text-rose-700"
-                    : "bg-white text-gray-500 border border-gray-200 hover:border-gray-300"
+                    : "bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-gray-300"
                 }`}
               >
                 {t.emoji} {t.label} ({t.count})
@@ -342,12 +342,12 @@ export default function DissuasionView() {
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <BookX className="w-12 h-12 text-gray-300 mb-4" />
-            <p className="text-gray-500 font-medium mb-1">
+            <p className="text-gray-500 dark:text-gray-400 font-medium mb-1">
               {dissuasionRecords.length === 0
                 ? "还没有翻车记录"
                 : "没有匹配的记录"}
             </p>
-            <p className="text-sm text-gray-400 mb-4">
+            <p className="text-sm text-gray-400 dark:text-gray-500 mb-4">
               {dissuasionRecords.length === 0
                 ? "点击「记录」分享你的翻车经历"
                 : "试试其他筛选条件"}
