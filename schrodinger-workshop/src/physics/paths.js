@@ -70,23 +70,67 @@ export function piStraightPhase(X, dy){ return dy * dy / (2 * X); }
 /* 理想 AB 螺线管位于缝平面的一处开缝间隙。以每条路径的连续极角变化 Δθ
    计算 Wilson 相位 φ_AB=−(Φ/Φ₀)Δθ；上下绕行的两路 Δθ 相差 2π，故相位差
    正好是一个磁通量子的 2π。N 为奇数时选中心与上邻缝之间的间隙，偶数时选中央间隙。 */
-function piFluxTubeY(cfg){
+export function piFluxTubeY(cfg){
   const n = Math.max(1, Math.round(cfg.nslit ?? PI_DEFAULTS.nslit));
   const d = cfg.d ?? PI_DEFAULTS.d;
   return n > 2 && (n & 1) ? d / 2 : 0;
+}
+export function piNormalizeFluxObjects(objects, cfg = {}){
+  if(!Array.isArray(objects)||objects.length>8)throw new RangeError('piNormalizeFluxObjects: at most 8 sources');
+  const ids=new Set(),span=(cfg.L1??PI_DEFAULTS.L1)+(cfg.L2??PI_DEFAULTS.L2),yLimit=Math.max(200,span);
+  return objects.map((o,i)=>{
+    if(!o||typeof o!=='object')throw new TypeError(`piNormalizeFluxObjects: invalid source ${i}`);
+    const id=String(o.id??`flux-${i+1}`);
+    if(!/^[A-Za-z0-9_-]{1,48}$/.test(id)||ids.has(id)||!Number.isFinite(o.x)||o.x<0||o.x>span||
+      !Number.isFinite(o.y)||Math.abs(o.y)>yLimit||!Number.isFinite(o.flux)||Math.abs(o.flux)>1){
+      throw new TypeError(`piNormalizeFluxObjects: invalid source ${i}`);
+    }
+    ids.add(id);return{id,x:+o.x,y:+o.y,flux:+o.flux};
+  });
+}
+export function piNormalizeBarrierObjects(objects, cfg = {}){
+  if(!Array.isArray(objects)||objects.length>8)throw new RangeError('piNormalizeBarrierObjects: at most 8 sources');
+  const ids=new Set(),span=(cfg.L1??PI_DEFAULTS.L1)+(cfg.L2??PI_DEFAULTS.L2),yLimit=Math.max(200,span);
+  return objects.map((o,i)=>{
+    if(!o||typeof o!=='object')throw new TypeError(`piNormalizeBarrierObjects: invalid source ${i}`);
+    const id=String(o.id??`barrier-${i+1}`);
+    if(!/^[A-Za-z0-9_-]{1,48}$/.test(id)||ids.has(id)||!Number.isFinite(o.x)||o.x<0||o.x>span||
+      !Number.isFinite(o.y)||Math.abs(o.y)>yLimit||!Number.isFinite(o.V0)||Math.abs(o.V0)>0.2||
+      !Number.isFinite(o.sigmaX)||o.sigmaX<4||o.sigmaX>80||!Number.isFinite(o.sigmaY)||o.sigmaY<4||o.sigmaY>80){
+      throw new TypeError(`piNormalizeBarrierObjects: invalid source ${i}`);
+    }
+    ids.add(id);return{id,x:+o.x,y:+o.y,V0:+o.V0,sigmaX:+o.sigmaX,sigmaY:+o.sigmaY};
+  });
 }
 function unwrapNear(angle, ref){
   while (angle - ref > Math.PI) angle -= 2 * Math.PI;
   while (angle - ref < -Math.PI) angle += 2 * Math.PI;
   return angle;
 }
+function piAngleAlongSegment(x0,y0,x1,y1,tx,ty){
+  const ax=x0-tx,ay=y0-ty,bx=x1-tx,by=y1-ty;
+  const ra=Math.hypot(ax,ay),rb=Math.hypot(bx,by);
+  if(ra<1e-12||rb<1e-12)return 0; /* 端点落在理想点源上的路径是零测集，作零绕数正则化 */
+  const cross=ax*by-ay*bx,dot=ax*bx+ay*by;
+  if(Math.abs(cross)<1e-12&&dot<0)return 0; /* 精确穿过点源的零测集同样不计入有限采样 */
+  return Math.atan2(cross,dot);
+}
 export function piABPhase(slit, cfg = {}, Y = 0){
+  const x0=cfg.L1??PI_DEFAULTS.L1,x2=cfg.L2??PI_DEFAULTS.L2,ys=cfg.ys??PI_DEFAULTS.ys;
+  if(Array.isArray(cfg.fluxObjects)&&cfg.fluxObjects.length){
+    let phase=0;
+    for(const o of cfg.fluxObjects){
+      if(!o||!Number.isFinite(o.flux)||!o.flux)continue;
+      const turn=piAngleAlongSegment(0,ys,x0,slit,o.x,o.y)
+        +piAngleAlongSegment(x0,slit,x0+x2,Y,o.x,o.y);
+      phase-=o.flux*turn;
+    }
+    return phase;
+  }
   const flux = cfg.flux ?? PI_DEFAULTS.flux;
   if (!flux || (cfg.nslit ?? PI_DEFAULTS.nslit) === 1) return 0;
   const yTube = piFluxTubeY(cfg), side = slit - yTube;
   if (Math.abs(side) < 1e-12) return 0; /* 路径正穿过螺线管时该缝不可用 */
-  const x0 = cfg.L1 ?? PI_DEFAULTS.L1, x2 = cfg.L2 ?? PI_DEFAULTS.L2;
-  const ys = cfg.ys ?? PI_DEFAULTS.ys;
   const mid = side > 0 ? Math.PI / 2 : -Math.PI / 2;
   const theta0 = unwrapNear(Math.atan2(ys - yTube, -x0), mid);
   const theta2 = unwrapNear(Math.atan2(Y - yTube, x2), mid);
@@ -105,24 +149,36 @@ const PI_GL16_W = [0.027152459411754095,0.06225352393864789,0.09515851168249278,
                    0.14959598881657673,0.16915651939500254,0.1826034150449236,0.1894506104550685,
                    0.1894506104550685,0.1826034150449236,0.16915651939500254,0.14959598881657673,
                    0.12462897125553387,0.09515851168249278,0.06225352393864789,0.027152459411754095];
+export function piHasBarrier(cfg = {}){
+  if(Array.isArray(cfg.barrierObjects)&&cfg.barrierObjects.length)
+    return cfg.barrierObjects.some(o=>o&&Number.isFinite(o.V0)&&Math.abs(o.V0)>1e-15);
+  return (cfg.barrier??0)!==0;
+}
 export function piBarrierAction(X, xStart, ya, yb, amps, cfg = {}){
-  const V0 = cfg.barrier ?? 0;
-  if (!V0 || !(X > 0)) return 0;
-  const sx = Math.max(1e-6, cfg.barrierXWidth ?? PI_DEFAULTS.barrierXWidth);
-  const sy = Math.max(1e-6, cfg.barrierWidth ?? PI_DEFAULTS.barrierWidth);
-  const xb = (cfg.L1 ?? PI_DEFAULTS.L1) + (cfg.L2 ?? PI_DEFAULTS.L2) / 2;
-  const lo = Math.max(xStart, xb - 5 * sx), hi = Math.min(xStart + X, xb + 5 * sx);
-  if (!(hi > lo)) return 0;
-  const mid = (lo + hi) / 2, half = (hi - lo) / 2;
-  let action = 0;
-  for (let q = 0; q < PI_GL16_X.length; q++){
-    const x = mid + half * PI_GL16_X[q], t = (x - xStart) / X;
-    let y = ya + (yb - ya) * t;
-    for (let m = 0; m < amps.length; m++) y += amps[m] * Math.sin((m + 1) * Math.PI * t);
-    const dx = (x - xb) / sx, dy = y / sy;
-    action += PI_GL16_W[q] * Math.exp(-0.5 * (dx * dx + dy * dy));
+  if(!(X>0))return 0;
+  const fallback={V0:cfg.barrier??0,x:(cfg.L1??PI_DEFAULTS.L1)+(cfg.L2??PI_DEFAULTS.L2)/2,y:0,
+    sigmaX:cfg.barrierXWidth??PI_DEFAULTS.barrierXWidth,sigmaY:cfg.barrierWidth??PI_DEFAULTS.barrierWidth};
+  const sources=Array.isArray(cfg.barrierObjects)&&cfg.barrierObjects.length?cfg.barrierObjects:[fallback];
+  let total=0;
+  for(const source of sources){
+    const V0=source.V0??source.amp??0;
+    if(!V0)continue;
+    const sx=Math.max(1e-6,source.sigmaX??source.barrierXWidth??fallback.sigmaX);
+    const sy=Math.max(1e-6,source.sigmaY??source.barrierWidth??fallback.sigmaY);
+    const xb=source.x??fallback.x,yb=source.y??0;
+    const lo=Math.max(xStart,xb-5*sx),hi=Math.min(xStart+X,xb+5*sx);
+    if(!(hi>lo))continue;
+    const mid=(lo+hi)/2,half=(hi-lo)/2;let action=0;
+    for(let q=0;q<PI_GL16_X.length;q++){
+      const x=mid+half*PI_GL16_X[q],t=(x-xStart)/X;
+      let y=ya+(yb-ya)*t;
+      for(let m=0;m<amps.length;m++)y+=amps[m]*Math.sin((m+1)*Math.PI*t);
+      const dx=(x-xb)/sx,dy=(y-yb)/sy;
+      action+=PI_GL16_W[q]*Math.exp(-0.5*(dx*dx+dy*dy));
+    }
+    total+=V0*half*action;
   }
-  return V0 * half * action;
+  return total;
 }
 
 /* 势垒存在时，端点会影响模态路径上的 ∫Vdt，不能再用 C(X) 的端点无关因式分解。
@@ -311,7 +367,7 @@ function piPotentialAmplitudeAt(Y, cfg, K, firstCache = null){
  */
 export function piAmpAt(Y, cfg = {}){
   const c = { ...PI_DEFAULTS, ...cfg };
-  if (c.barrier > 0){
+  if (piHasBarrier(c)){
     const main = piPotentialAmplitudeAt(Y, c, piBarrierOrder(c));
     const ref = piPotentialAmplitudeAt(Y, c, piBarrierOrder(c, true));
     return { raw: main.raw, an: ref.raw, per: main.per };
@@ -431,7 +487,7 @@ function piPotentialProfile(c){
 /* 用同一模态常数 C1·C2 的快速自由传播剖面；高斯势垒打开时改为有限模态路径积分。 */
 export function piProfile(cfg = {}){
   const c = { ...PI_DEFAULTS, ...cfg };
-  if (c.barrier > 0) return piPotentialProfile(c);
+  if (piHasBarrier(c)) return piPotentialProfile(c);
   const C1 = piModeSum(c.L1, c), C2 = piModeSum(c.L2, c);
   const slits = piSlits(c);
   const xi = piXiSamples(c.w, piNxiFor(c.w, c.L2, c.yFov, Math.max(1, c.nxi | 0)));
@@ -541,8 +597,8 @@ export function piPathSamples(Y, cfg = {}, nA = 7){
           if (c.modes > 1){ seg1.push(f2 * c.W / 2); seg2.push(f1 * c.W / 2); }
           /* 势垒模式的数值振幅只耦合 a₁；a₂（双模态时）仍是自由因子，
              因此路径颜色/相位也只把高斯 action 投影到各段的第一模态。 */
-          const barrierAction = piBarrierAction(c.L1, 0, c.ys, x, c.barrier > 0 ? [seg1[0]] : seg1, c)
-            + piBarrierAction(c.L2, c.L1, x, Y, c.barrier > 0 ? [seg2[0]] : seg2, c);
+          const barrierAction = piBarrierAction(c.L1, 0, c.ys, x, piHasBarrier(c) ? [seg1[0]] : seg1, c)
+            + piBarrierAction(c.L2, c.L1, x, Y, piHasBarrier(c) ? [seg2[0]] : seg2, c);
           const ph = piSegmentPhase(c.L1, x - c.ys, seg1) + piSegmentPhase(c.L2, Y - x, seg2)
             + piABPhase(s, c, Y) - barrierAction;
           out.push({ slit: s, xi: x, seg1, seg2, phase: ph });
@@ -717,7 +773,7 @@ function piPotentialSpiralStream(cfg){
 
 export function piPathSpiralStream(cfg = {}){
   const c = { ...PI_DEFAULTS, ...cfg };
-  if (c.barrier > 0) return piPotentialSpiralStream(c);
+  if (piHasBarrier(c)) return piPotentialSpiralStream(c);
   const K = Math.max(1, c.K | 0), W = c.W;
   const Y = Number.isFinite(c.Y) ? c.Y : 0;
   const slits = piSlits(c);

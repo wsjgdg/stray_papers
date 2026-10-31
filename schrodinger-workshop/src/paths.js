@@ -22,7 +22,7 @@ import { injectStyles } from './core/styles.js';
 import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
 import { hbCamBasis, hbOrbit, hbZoom, hbFocal, hbCamDefault, PITCH_LIM } from './hubbard3d.js';
-import { PI_DEFAULTS, PI_PRESETS, piProfile, piAmpAt, piPathSamples, piFringeSpacing, piStraightPhase, piModeSum, piFringes, piNxiFor, piSlits, piVisibility, piGratingWidth, piPathSpiral, piPathSpiralStream } from './physics/paths.js';
+import { PI_DEFAULTS, PI_PRESETS, piProfile, piAmpAt, piPathSamples, piFringeSpacing, piStraightPhase, piModeSum, piFringes, piNxiFor, piSlits, piVisibility, piGratingWidth, piPathSpiral, piPathSpiralStream, piFluxTubeY, piNormalizeFluxObjects, piNormalizeBarrierObjects, piHasBarrier } from './physics/paths.js';
 import { LiveDriver } from './qec/live.js';
 
 const PV_CSS = `
@@ -37,6 +37,8 @@ const PV_CSS = `
     border-radius:50%;background:var(--cyan);box-shadow:0 0 8px rgba(103,232,249,.7);cursor:pointer}
   #pvPanel output{font-family:var(--mono);font-size:11px;color:var(--txt);min-width:38px;text-align:right}
   #pvPanel .btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+  #pvPanel .source-list{display:flex;flex-wrap:wrap;gap:4px;margin:5px 0;max-height:72px;overflow-y:auto}
+  #pvPanel .source-list button{font-size:9.5px;padding:3px 5px;white-space:nowrap}
   #pvPanel button{font-family:var(--mono);font-size:11px;padding:5px 6px;border-radius:6px;cursor:pointer;
     background:rgba(103,232,249,.08);border:1px solid var(--line);color:var(--txt);transition:all .15s}
   #pvPanel button:hover{border-color:rgba(103,232,249,.45);color:var(--cyan)}
@@ -117,16 +119,22 @@ export class PathsApp {
     const num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
     const preset = q.get('preset') || 'double';
     const pcfg = (PI_PRESETS[preset] || PI_PRESETS.double).cfg;
+    const sourceDims={L1:num('L1',PI_DEFAULTS.L1),L2:num('L2',PI_DEFAULTS.L2)};
+    let fluxObjects=[],barrierObjects=[];
+    try{if(q.has('fobj'))fluxObjects=piNormalizeFluxObjects(JSON.parse(q.get('fobj')),sourceDims);}catch(_){fluxObjects=[];}
+    try{if(q.has('bobj'))barrierObjects=piNormalizeBarrierObjects(JSON.parse(q.get('bobj')),sourceDims);}catch(_){barrierObjects=[];}
     /* URL 里的 preset 必须带上它自己的 d/w（单缝是 d=0、w=20）；显式 ?d=/?w= 优先 */
     this.state = {
       preset,
       proj: q.get('proj') === '3d' ? '3d' : '2d',
       L1: num('L1', PI_DEFAULTS.L1), L2: num('L2', PI_DEFAULTS.L2),
       d: num('d', pcfg.d ?? 48), w: num('w', pcfg.w ?? 8), W: num('W', 40),
-      flux: clamp(num('flux', pcfg.flux ?? 0), 0, 1),
-      barrier: clamp(num('barrier', pcfg.barrier ?? 0), 0, 0.2),
+      flux: clamp(num('flux', pcfg.flux ?? 0), -1, 1),
+      barrier: clamp(num('barrier', pcfg.barrier ?? 0), -0.2, 0.2),
       barrierWidth: clamp(num('bw', pcfg.barrierWidth ?? 12), 4, 80),
       barrierXWidth: clamp(num('bx', pcfg.barrierXWidth ?? 12), 4, 80),
+      fluxObjects,barrierObjects,
+      selectedFluxId:q.get('fsel')||null,selectedBarrierId:q.get('bsel')||null,
       K: Math.round(num('K', PI_DEFAULTS.K)), modes: Math.round(num('modes', PI_DEFAULTS.modes)),
       nxi: Math.round(num('nxi', 7)), Y: num('Y', 0),
       openA: q.has('A') ? q.get('A') !== '0' : pcfg.openA,
@@ -139,6 +147,9 @@ export class PathsApp {
       paused: q.get('paused') === '1',
       live: q.get('live') === '1',
     };
+    if(!this.state.fluxObjects.some(o=>o.id===this.state.selectedFluxId))this.state.selectedFluxId=null;
+    if(!this.state.barrierObjects.some(o=>o.id===this.state.selectedBarrierId))this.state.selectedBarrierId=null;
+    this._sourceSeq=1;
     this.cam = readPathCam(q); this._orbit = null;
     this._listeners = []; this._dirty = true; this._dirtyY = false; this._deferSpiral = false;
     this._gestureActive = false; this._lastGesturePaint = -Infinity; this._needDraw = true;
@@ -162,6 +173,8 @@ export class PathsApp {
     return {
       L1: s.L1, L2: s.L2, ys: 0, d: s.d, w: s.w,
       flux: s.flux, barrier: s.barrier, barrierWidth: s.barrierWidth, barrierXWidth: s.barrierXWidth,
+      ...(s.fluxObjects.length?{fluxObjects:s.fluxObjects}:{}),
+      ...(s.barrierObjects.length?{barrierObjects:s.barrierObjects}:{}),
       modes: s.modes, K: s.K, W: s.W,
       /* ξ 求积点数按跨缝相位步长自适应（piProfile 内部同一条公式）：页面必须
          用同一个有效值报「路径总数」，否则 HUD 少报 */
@@ -208,12 +221,22 @@ export class PathsApp {
         <div class="row"><label>缝宽 w</label><input type="range" id="pvW" min="2" max="24" step="1"><output id="pvWo">—</output></div>
         <div class="row"><label>哪条路 ε</label><input type="range" id="pvEps" min="0" max="1" step="0.05"><output id="pvEpso">—</output></div>
         <div class="chk" style="margin-top:-2px"><span style="font-size:10.5px;color:var(--dim)">ε = 退相干份额：I=(1−ε)·相干 + ε·非相干（0 幅度相加 / 1 强度相加）</span></div>
-        <div class="grp">路径相位 / 势垒</div>
-        <div class="row"><label>AB 磁通 Φ/Φ₀</label><input type="range" id="pvFlux" min="0" max="1" step="0.05"><output id="pvFluxO">—</output></div>
-        <div class="row"><label>高斯势垒 V₀</label><input type="range" id="pvBarrier" min="0" max="0.2" step="0.005"><output id="pvBarrierO">—</output></div>
+        <div class="grp">AB 磁通源</div>
+        <div class="btns"><button id="pvFluxAdd">+ 磁通源</button><button id="pvFluxDelete">删除选中源</button></div>
+        <div id="pvFluxSources" class="source-list"></div>
+        <div class="row"><label>磁通 Φ/Φ₀</label><input type="range" id="pvFlux" min="-1" max="1" step="0.05"><output id="pvFluxO">—</output></div>
+        <div class="row"><label>源位置 x</label><input type="range" id="pvFX" min="0" max="560" step="1"><output id="pvFXO">—</output></div>
+        <div class="row"><label>源位置 y</label><input type="range" id="pvFY" min="-200" max="200" step="1"><output id="pvFYO">—</output></div>
+        <div class="grp">高斯标量势对象</div>
+        <div class="btns"><button id="pvBarrierAdd">+ 势垒/势阱</button><button id="pvBarrierDuplicate">复制</button></div>
+        <div class="btns"><button id="pvBarrierDelete">删除选中源</button><span></span></div>
+        <div id="pvBarrierSources" class="source-list"></div>
+        <div class="row"><label>V₀</label><input type="range" id="pvBarrier" min="-0.2" max="0.2" step="0.005"><output id="pvBarrierO">—</output></div>
+        <div class="row"><label>中心 x</label><input type="range" id="pvBXPos" min="0" max="560" step="1"><output id="pvBXPosO">—</output></div>
+        <div class="row"><label>中心 y</label><input type="range" id="pvBYPos" min="-200" max="200" step="1"><output id="pvBYPosO">—</output></div>
         <div class="row"><label>传播宽 σx</label><input type="range" id="pvBX" min="4" max="80" step="2"><output id="pvBXO">—</output></div>
         <div class="row"><label>横向宽 σy</label><input type="range" id="pvBW" min="4" max="80" step="2"><output id="pvBWO">—</output></div>
-        <div class="chk" style="margin-top:-2px"><span style="font-size:10.5px;color:var(--dim)">AB：理想磁通管置于缝间，沿路累计 Wilson 相位；双缝相差 2πΦ/Φ₀。高斯势场沿路积分 −∫Vdt（非薄屏）</span></div>
+        <div class="chk" style="margin-top:-2px"><span style="font-size:10.5px;color:var(--dim)">磁通源 Wilson 相位相加；多个有限高斯势逐路积分 −∫ΣV_j dt。源位置与参数可独立编辑并写入链接。</span></div>
         <div class="grp">路径族</div>
         <div class="row"><label>波折幅度</label><input type="range" id="pvAmp" min="0" max="46" step="1"><output id="pvAmpO">—</output></div>
         <div class="row"><label>每段样本</label><input type="range" id="pvK" min="8" max="120" step="4"><output id="pvKo">—</output></div>
@@ -304,9 +327,26 @@ export class PathsApp {
     slider('pvN', 'pvNo', 'nslit');
     slider('pvEps', 'pvEpso', 'eps', v => v.toFixed(2));
     slider('pvFlux', 'pvFluxO', 'flux', v => v.toFixed(2));
+    slider('pvFX', 'pvFXO', 'fluxX');
+    slider('pvFY', 'pvFYO', 'fluxY');
     slider('pvBarrier', 'pvBarrierO', 'barrier', v => v.toFixed(3));
+    slider('pvBXPos', 'pvBXPosO', 'barrierX');
+    slider('pvBYPos', 'pvBYPosO', 'barrierY');
     slider('pvBX', 'pvBXO', 'barrierXWidth');
     slider('pvBW', 'pvBWO', 'barrierWidth');
+    this.on(this.q('#pvFluxAdd'),'click',()=>this.addFluxObject());
+    this.on(this.q('#pvFluxDelete'),'click',()=>this.deleteFluxObject());
+    this.on(this.q('#pvBarrierAdd'),'click',()=>this.addBarrierObject());
+    this.on(this.q('#pvBarrierDuplicate'),'click',()=>this.duplicateBarrierObject());
+    this.on(this.q('#pvBarrierDelete'),'click',()=>this.deleteBarrierObject());
+    this.on(this.q('#pvFluxSources'),'click',e=>{
+      const b=e.target.closest?.('[data-source-id]');if(!b)return;
+      this.state.selectedFluxId=b.dataset.sourceId;this.syncSourcePanels();this.syncPanel();this.syncStateUrl();this.drawMain();
+    });
+    this.on(this.q('#pvBarrierSources'),'click',e=>{
+      const b=e.target.closest?.('[data-source-id]');if(!b)return;
+      this.state.selectedBarrierId=b.dataset.sourceId;this.syncSourcePanels();this.syncPanel();this.syncStateUrl();this.drawMain();
+    });
     slider('pvD', 'pvDo', 'd');
     slider('pvW', 'pvWo', 'w');
     slider('pvAmp', 'pvAmpO', 'W');
@@ -386,6 +426,104 @@ export class PathsApp {
     });
   }
 
+  nextSourceId(prefix,list){
+    let id;do{id=`${prefix}-${this._sourceSeq++}`;}while(list.some(o=>o.id===id));return id;
+  }
+  addFluxObject(){
+    if(this.state.fluxObjects.length>=8)return false;
+    const cfg=this.cfg(),id=this.nextSourceId('flux',this.state.fluxObjects);
+    const source={id,x:this.state.L1,y:piFluxTubeY(cfg),flux:this.state.flux||0.25};
+    this.state.fluxObjects.push(source);this.state.selectedFluxId=id;this.state.flux=source.flux;
+    this.syncPanel();this._touch(true);this.syncStateUrl();return id;
+  }
+  deleteFluxObject(){
+    const n=this.state.fluxObjects.length;
+    this.state.fluxObjects=this.state.fluxObjects.filter(o=>o.id!==this.state.selectedFluxId);
+    if(n===this.state.fluxObjects.length)return false;
+    this.state.selectedFluxId=this.state.fluxObjects.at(-1)?.id||null;
+    if(!this.state.fluxObjects.length)this.state.flux=0;
+    else this.state.flux=this.state.fluxObjects.find(o=>o.id===this.state.selectedFluxId).flux;
+    this.syncPanel();this._touch(true);this.syncStateUrl();return true;
+  }
+  addBarrierObject(){
+    if(this.state.barrierObjects.length>=8)return false;
+    const id=this.nextSourceId('barrier',this.state.barrierObjects);
+    const source={id,x:this.state.L1+this.state.L2/2,y:0,V0:this.state.barrier||0.05,
+      sigmaX:this.state.barrierXWidth,sigmaY:this.state.barrierWidth};
+    this.state.barrierObjects.push(source);this.state.selectedBarrierId=id;this.state.barrier=source.V0;
+    this.state.barrierXWidth=source.sigmaX;this.state.barrierWidth=source.sigmaY;
+    this.syncPanel();this._touch(true);this.syncStateUrl();return id;
+  }
+  duplicateBarrierObject(){
+    const source=this.state.barrierObjects.find(o=>o.id===this.state.selectedBarrierId);
+    if(!source||this.state.barrierObjects.length>=8)return false;
+    const copy={...source,id:this.nextSourceId('barrier',this.state.barrierObjects),
+      x:clamp(source.x+12,0,this.state.L1+this.state.L2),y:clamp(source.y+8,-Math.max(200,this.state.L1+this.state.L2),Math.max(200,this.state.L1+this.state.L2))};
+    this.state.barrierObjects.push(copy);this.state.selectedBarrierId=copy.id;
+    this.state.barrier=copy.V0;this.state.barrierXWidth=copy.sigmaX;this.state.barrierWidth=copy.sigmaY;
+    this.syncPanel();this._touch(true);this.syncStateUrl();return true;
+  }
+  deleteBarrierObject(){
+    const n=this.state.barrierObjects.length;
+    this.state.barrierObjects=this.state.barrierObjects.filter(o=>o.id!==this.state.selectedBarrierId);
+    if(n===this.state.barrierObjects.length)return false;
+    this.state.selectedBarrierId=this.state.barrierObjects.at(-1)?.id||null;
+    if(!this.state.barrierObjects.length)this.state.barrier=0;
+    else{
+      const o=this.state.barrierObjects.find(x=>x.id===this.state.selectedBarrierId);
+      this.state.barrier=o.V0;this.state.barrierXWidth=o.sigmaX;this.state.barrierWidth=o.sigmaY;
+    }
+    this.syncPanel();this._touch(true);this.syncStateUrl();return true;
+  }
+  syncSourcePanels(){
+    const paintList=(selector,items,selected,label)=>{
+      const host=this.q(selector);if(!host)return;host.replaceChildren();
+      for(const o of items){
+        const b=document.createElement('button');b.type='button';b.dataset.sourceId=o.id;
+        b.classList.toggle('on',o.id===selected);b.textContent=label(o);host.appendChild(b);
+      }
+    };
+    paintList('#pvFluxSources',this.state.fluxObjects,this.state.selectedFluxId,o=>`${o.id} · Φ=${o.flux.toFixed(2)}`);
+    paintList('#pvBarrierSources',this.state.barrierObjects,this.state.selectedBarrierId,o=>`${o.id} · V=${o.V0.toFixed(3)}`);
+    const f=this.state.fluxObjects.find(o=>o.id===this.state.selectedFluxId);
+    const b=this.state.barrierObjects.find(o=>o.id===this.state.selectedBarrierId);
+    const set=(id,v)=>{const e=this.q('#'+id);if(e)e.value=String(v);};
+    const txt=(id,v)=>{const e=this.q('#'+id);if(e)e.textContent=String(v);};
+    const span=this.state.L1+this.state.L2,yMax=Math.min(span,Math.max(100,this.view.yFov||span));
+    for(const id of ['pvFX','pvBXPos']){const e=this.q('#'+id);if(e)e.max=String(span);}
+    for(const id of ['pvFY','pvBYPos']){const e=this.q('#'+id);if(e){e.min=String(-yMax);e.max=String(yMax);}}
+    const fDefault={x:this.state.L1,y:piFluxTubeY(this.cfg())};
+    set('pvFlux',f?f.flux:this.state.flux);txt('pvFluxO',(f?f.flux:this.state.flux).toFixed(2));
+    set('pvFX',f?f.x:fDefault.x);txt('pvFXO',(f?f.x:fDefault.x).toFixed(0));
+    set('pvFY',f?f.y:fDefault.y);txt('pvFYO',(f?f.y:fDefault.y).toFixed(0));
+    set('pvBarrier',b?b.V0:this.state.barrier);txt('pvBarrierO',(b?b.V0:this.state.barrier).toFixed(3));
+    set('pvBXPos',b?b.x:this.state.L1+this.state.L2/2);txt('pvBXPosO',(b?b.x:this.state.L1+this.state.L2/2).toFixed(0));
+    set('pvBYPos',b?b.y:0);txt('pvBYPosO',(b?b.y:0).toFixed(0));
+    set('pvBX',b?b.sigmaX:this.state.barrierXWidth);txt('pvBXO',(b?b.sigmaX:this.state.barrierXWidth).toFixed(0));
+    set('pvBW',b?b.sigmaY:this.state.barrierWidth);txt('pvBWO',(b?b.sigmaY:this.state.barrierWidth).toFixed(0));
+    this.q('#pvFluxDelete')?.toggleAttribute('disabled',!f);
+    this.q('#pvFX')?.toggleAttribute('disabled',!f);this.q('#pvFY')?.toggleAttribute('disabled',!f);
+    this.q('#pvBXPos')?.toggleAttribute('disabled',!b);this.q('#pvBYPos')?.toggleAttribute('disabled',!b);
+    this.q('#pvBarrierDelete')?.toggleAttribute('disabled',!b);
+    this.q('#pvBarrierDuplicate')?.toggleAttribute('disabled',!b||this.state.barrierObjects.length>=8);
+    this.q('#pvFluxAdd')?.toggleAttribute('disabled',this.state.fluxObjects.length>=8);
+    this.q('#pvBarrierAdd')?.toggleAttribute('disabled',this.state.barrierObjects.length>=8);
+  }
+  syncStateUrl(){
+    const q=new URLSearchParams(location.search),s=this.state;
+    for(const [key,value] of Object.entries({preset:s.preset,L1:s.L1,L2:s.L2,d:s.d,w:s.w,W:s.W,K:s.K,modes:s.modes,
+      N:s.nslit,eps:s.eps,flux:s.flux,barrier:s.barrier,bx:s.barrierXWidth,bw:s.barrierWidth,Y:s.Y}))q.set(key,String(value));
+    q.set('A',s.openA?'1':'0');q.set('B',s.openB?'1':'0');q.set('coh',s.coherent?'1':'0');
+    if(s.fluxObjects.length)q.set('fobj',JSON.stringify(s.fluxObjects));else q.delete('fobj');
+    if(s.barrierObjects.length)q.set('bobj',JSON.stringify(s.barrierObjects));else q.delete('bobj');
+    if(s.selectedFluxId)q.set('fsel',s.selectedFluxId);else q.delete('fsel');
+    if(s.selectedBarrierId)q.set('bsel',s.selectedBarrierId);else q.delete('bsel');
+    if(s.proj==='3d'){
+      q.set('proj','3d');q.set('cam',[this.cam.yaw,this.cam.pitch,this.cam.dist].map(v=>(+v).toFixed(3)).join(','));
+    }else{q.delete('proj');q.delete('cam');}
+    const query=q.toString();
+    try{history.replaceState(history.state,'',location.pathname+(query?'?'+query:'')+location.hash);}catch(_){ }
+  }
   syncCameraUrl(){
     const q = new URLSearchParams(location.search);
     if (this.state.proj === '3d'){
@@ -419,17 +557,38 @@ export class PathsApp {
   }
 
   setParam(k, v, deferLive = false){
+    const flux=this.state.fluxObjects.find(o=>o.id===this.state.selectedFluxId);
+    const barrier=this.state.barrierObjects.find(o=>o.id===this.state.selectedBarrierId);
     if (k === 'K') this.state.K = Math.max(4, Math.round(v));
     else if (k === 'modes') this.state.modes = Math.max(1, Math.min(2, Math.round(v)));
     else if (k === 'nslit') this.state.nslit = clamp(Math.round(v), 1, 6);
     else if (k === 'eps') this.state.eps = clamp(v, 0, 1);
-    else if (k === 'flux') this.state.flux = clamp(v, 0, 1);
-    else if (k === 'barrier') this.state.barrier = clamp(v, 0, 0.2);
-    else if (k === 'barrierXWidth') this.state.barrierXWidth = clamp(v, 4, 80);
-    else if (k === 'barrierWidth') this.state.barrierWidth = clamp(v, 4, 80);
+    else if (k === 'flux'){
+      if(flux){flux.flux=clamp(v,-1,1);this.state.flux=flux.flux;}
+      else this.state.flux=clamp(v,-1,1);
+    }
+    else if (k === 'fluxX'&&flux)flux.x=clamp(v,0,this.state.L1+this.state.L2);
+    else if (k === 'fluxY'&&flux)flux.y=clamp(v,-Math.max(200,this.state.L1+this.state.L2),Math.max(200,this.state.L1+this.state.L2));
+    else if (k === 'barrier'){
+      if(barrier){barrier.V0=clamp(v,-0.2,0.2);this.state.barrier=barrier.V0;}
+      else this.state.barrier=clamp(v,-0.2,0.2);
+    }
+    else if (k === 'barrierX'){
+      if(barrier)barrier.x=clamp(v,0,this.state.L1+this.state.L2);
+    }
+    else if (k === 'barrierY'){
+      if(barrier)barrier.y=clamp(v,-Math.max(200,this.state.L1+this.state.L2),Math.max(200,this.state.L1+this.state.L2));
+    }
+    else if (k === 'barrierXWidth'){
+      this.state.barrierXWidth=clamp(v,4,80);if(barrier)barrier.sigmaX=this.state.barrierXWidth;
+    }
+    else if (k === 'barrierWidth'){
+      this.state.barrierWidth=clamp(v,4,80);if(barrier)barrier.sigmaY=this.state.barrierWidth;
+    }
     else if (k === 'Y') this.state.Y = v;
     else this.state[k] = v;
     this._touch(k !== 'Y', deferLive);
+    if(!deferLive)this.syncSourcePanels();
   }
   setY(y, deferLive = false){
     const lim = 1.4 * this.view.yFov;
@@ -445,25 +604,23 @@ export class PathsApp {
     this._needDraw = true;
     if (!resetReveal){
       this._dirtyY = true;
-      if (deferLive) this._deferSpiral = true;
+      if (deferLive) this._deferSpiral = true;else this.syncStateUrl();
       return;
     }
     this._dirty = true; this._dirtyY = false;
     this.state.reveal = 0;
     if (deferLive){ this._deferSpiral = true; return; }
     this._deferSpiral = false;
-    this.resetLiveForCurrentState();
+    this.resetLiveForCurrentState();this.syncSourcePanels();this.syncStateUrl();
   }
   finishParamGesture(){
     this._gestureActive = false;
-    if (!this._deferSpiral) return;
+    if (!this._deferSpiral){this.syncSourcePanels();this.syncStateUrl();return;}
     this._deferSpiral = false;
     this._dirty = true; this._needDraw = true;
     this.state.reveal = 0;
-    if (this._userPaused){
-      this._dirty = true;
-      return;
-    }
+    this.syncSourcePanels();this.syncStateUrl();
+    if (this._userPaused){this._dirty = true;return;}
     this.live?.stop();
     if (this.live) this.live.stream = null;
     this.live?.start();
@@ -477,9 +634,9 @@ export class PathsApp {
     }
   }
   finishYGesture(){
-    if (!this._deferSpiral) return;
+    if (!this._deferSpiral){this.syncStateUrl();return;}
     this._deferSpiral = false;
-    this.state.reveal = 0;
+    this.state.reveal = 0;this.syncStateUrl();
     if (this._userPaused){ this._dirty = true; this._dirtyY = false; return; }
     this.live?.stop();
     if (this.live) this.live.stream = null;
@@ -595,6 +752,7 @@ export class PathsApp {
                     yFov: (h - padT - padB) / 2 / sx };
       const ys = this.q('#pvY');
       if (ys){ const lim = 1.4 * this.view.yFov; ys.min = String(-lim); ys.max = String(lim); }
+      this.syncSourcePanels();
     }
     this._dirty = true; this._needDraw = true;
   }
@@ -716,13 +874,18 @@ export class PathsApp {
     set('hNV', c.nslit + ' · V=' + nf(piVisibility(p, c), 3));
     const gw = piGratingWidth(c);
     set('hGW', Number.isFinite(gw) ? nf(gw, 2) : '—（单缝）');
-    set('hFlux', c.flux.toFixed(2));
-    set('hBarrier', c.barrier.toFixed(3) + ' / ' + c.barrierXWidth.toFixed(0) + ' / ' + c.barrierWidth.toFixed(0));
+    const fluxes=c.fluxObjects||[];
+    const fluxCount=fluxes.length||(c.flux?1:0),fluxSum=fluxes.length?fluxes.reduce((a,o)=>a+o.flux,0):c.flux;
+    set('hFlux',fluxCount+' 源 · ΣΦ='+fluxSum.toFixed(2));
+    const barriers=c.barrierObjects||[];
+    const barrierInfo=barriers.length?`${barriers.length} 源 · ΣV₀=${barriers.reduce((a,o)=>a+o.V0,0).toFixed(3)}`
+      :c.barrier.toFixed(3)+' / '+c.barrierXWidth.toFixed(0)+' / '+c.barrierWidth.toFixed(0);
+    set('hBarrier',barrierInfo);
     let dev = 0;
     for (let k = 0; k < p.path.length; k++) dev = Math.max(dev, Math.abs(p.path[k] - p.an[k]));
     const ratioLabel = this.q('#hRatioLabel'), spreadLabel = this.q('#hSpreadLabel');
-    if (ratioLabel) ratioLabel.textContent = c.barrier > 0 ? '路径积分 vs 高一阶参照' : '路径和 vs 解析（归一）';
-    if (spreadLabel) spreadLabel.textContent = c.barrier > 0 ? '收敛差异' : '比值起伏';
+    if (ratioLabel) ratioLabel.textContent = piHasBarrier(c) ? '路径积分 vs 高一阶参照' : '路径和 vs 解析（归一）';
+    if (spreadLabel) spreadLabel.textContent = piHasBarrier(c) ? '收敛差异' : '比值起伏';
     set('hRatio', ex(dev, 1) + '（逐点最大）');
     set('hSpread', ex(s.spread, 1));
   }
@@ -822,6 +985,19 @@ export class PathsApp {
     g.fillStyle = rg; g.beginPath(); g.arc(sx0, sy0, 15, 0, 6.2832); g.fill();
     g.fillStyle = '#f87171'; g.beginPath(); g.arc(sx0, sy0, 3.2, 0, 6.2832); g.fill();
 
+    /* 源对象只用小锚点标记，不覆盖路径族。 */
+    for(const o of this.state.fluxObjects){
+      const [x,y]=this.world(o.x,o.y),selected=o.id===this.state.selectedFluxId;
+      g.strokeStyle=selected?'rgba(103,232,249,.95)':(o.flux<0?'rgba(96,178,250,.88)':'rgba(192,132,252,.88)');
+      g.lineWidth=selected?1.5:1;g.beginPath();g.arc(x,y,selected?5:3.5,0,6.2832);g.stroke();
+      g.beginPath();g.moveTo(x-2,y);g.lineTo(x+2,y);g.moveTo(x,y-2);g.lineTo(x,y+2);g.stroke();
+    }
+    for(const o of this.state.barrierObjects){
+      const [x,y]=this.world(o.x,o.y),selected=o.id===this.state.selectedBarrierId;
+      g.strokeStyle=selected?'rgba(103,232,249,.95)':(o.V0<0?'rgba(96,178,250,.82)':'rgba(250,190,96,.82)');
+      g.lineWidth=selected?1.5:1;g.beginPath();g.rect(x-(selected?4:3),y-(selected?4:3),2*(selected?4:3),2*(selected?4:3));g.stroke();
+    }
+
     /* 探测点 */
     const [, yDet] = this.world(st.L1 + st.L2, st.Y);
     g.strokeStyle = 'rgba(217,70,239,.55)'; g.setLineDash([5, 4]); g.lineWidth = 1;
@@ -845,7 +1021,8 @@ export class PathsApp {
     const slitValues = piSlits(c).slice().sort((a, b) => a - b)
       .filter((y, i, a) => i === 0 || Math.abs(y - a[i - 1]) > 1e-9);
     const slitReach = Math.max(0, ...slitValues.map(y => Math.abs(y) + Math.abs(c.w) / 2));
-    const yReach = Math.max(this.view.yFov, Math.abs(this.state.Y), Math.abs(c.ys),
+    const sourceReach=Math.max(0,...this.state.fluxObjects.map(o=>Math.abs(o.y)),...this.state.barrierObjects.map(o=>Math.abs(o.y)));
+    const yReach = Math.max(this.view.yFov, Math.abs(this.state.Y), Math.abs(c.ys),sourceReach,
       Math.max(slitReach, Math.abs(this.state.Y), Math.abs(c.ys)) + 1.5 * Math.abs(c.W), 1);
     /* fit both longitudinal and transverse extents, preserving physical x:y aspect */
     const sx = Math.min(4.8 / Math.max(1, span), 1.75 / yReach), laneMax = 0.92, eye = hbCamBasis(this.cam);
@@ -948,6 +1125,17 @@ export class PathsApp {
     const source = project(world(0, c.ys, 0, 0)), detector = project(world(span, this.state.Y, 0, 1));
     g.fillStyle = '#f87171'; g.beginPath(); g.arc(source.x, source.y, 3.2, 0, 6.2832); g.fill();
     g.fillStyle = '#d946ef'; g.beginPath(); g.arc(detector.x, detector.y, 3.2, 0, 6.2832); g.fill();
+    for(const o of this.state.fluxObjects){
+      const p=project(world(o.x,o.y,0,o.x/span)),selected=o.id===this.state.selectedFluxId;
+      g.strokeStyle=selected?'rgba(103,232,249,.95)':(o.flux<0?'rgba(96,178,250,.88)':'rgba(192,132,252,.88)');
+      g.lineWidth=selected?1.5:1;g.beginPath();g.arc(p.x,p.y,selected?5:3.5,0,6.2832);g.stroke();
+      g.beginPath();g.moveTo(p.x-2,p.y);g.lineTo(p.x+2,p.y);g.moveTo(p.x,p.y-2);g.lineTo(p.x,p.y+2);g.stroke();
+    }
+    for(const o of this.state.barrierObjects){
+      const p=project(world(o.x,o.y,0,o.x/span)),selected=o.id===this.state.selectedBarrierId;
+      g.strokeStyle=selected?'rgba(103,232,249,.95)':(o.V0<0?'rgba(96,178,250,.82)':'rgba(250,190,96,.82)');
+      g.lineWidth=selected?1.5:1;g.beginPath();g.rect(p.x-(selected?4:3),p.y-(selected?4:3),2*(selected?4:3),2*(selected?4:3));g.stroke();
+    }
     const laneGroups = slitValues.map(slit => {
       const lanes = paths.filter(p => Math.abs(p.slit - slit) < 1e-9).map(p => p.lane);
       return { slit, count: lanes.length, min: lanes.length ? Math.min(...lanes) : 0, max: lanes.length ? Math.max(...lanes) : 0 };
@@ -1097,6 +1285,7 @@ export class PathsApp {
     this.q('#pvView3d')?.classList.toggle('on', st.proj === '3d');
     const stage = this.q('#pvStage'); if (stage) stage.dataset.proj = st.proj;
     const cv = this.q('#pvMain'); if (cv) cv.style.cursor = st.proj === '3d' ? 'grab' : 'crosshair';
+    this.syncSourcePanels();
   }
 
   _drawAll(){

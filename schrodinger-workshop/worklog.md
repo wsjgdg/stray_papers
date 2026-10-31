@@ -78,6 +78,7 @@
 | R162 | **纠错页重复码模式的线路点选注错** | iid/物理通道模式新增可开关的线路图交互：点击噪声列数据位即可手动注入/撤销错误，固定种子重跑单次实验，HUD/线路即时呈现综合征、修正与逻辑判定；画布将噪声列标为「指定错误」，hover 目标高亮。门级模式明确禁用（其错误应选具体门位点）。手动错误只进单次试验，不改变 P_L 统计分布；码长切换会滤除越界错误位。**验证**：manual-QEC harness **18/18**（iid 单错/双错纠错判定、点击切换/撤销、固定种子、相位翻转对偶、phys 强制错误、门级禁用）；canvas hit-geometry harness **12/12**（DPR 1/2 下三根数据线定位与门级排除）。`node --check`、standalone 构建、提取后的单文件脚本 `node --check` 与 `git diff --check` 通过；更新 `dist/qec.html` 至 874,403 bytes（853.9 KiB）。 |
 | R163 | **QEC hub 单次纠错逐步回放** | 八个模式 HUD 新增共享五阶段样本回放（输入态/编码→故障注入→综合征→解码修正→逻辑结局），支持逐步、自动演示与固定/跟随末次 shot；不额外抽样、不影响 MC 计数。jsdom 八模式回放控件冒烟 8/8，步进后 shot 固定且采样数不变；README 记录交互及抽象模型的显示边界。 |
 | R183 | **修复 S(x) 闪烁并补齐全部场对象标记** | 根因是每次测量都清空 S(x) 并重启全剖面渐进任务，演化时任务持续被取消；改为保留最近完整曲线、只排队最新快照并在完成后原子替换。2D/3D 为所有对象显示形状/极性小锚点，选中对象单独强调。`test:spin-objects` 覆盖无闪烁刷新策略。 |
+| R185 | **路径工场：多 AB 磁通源与多高斯势对象** | 路径积分按多磁通源叠加 Wilson 相位、按多高斯势对象叠加有限宽势作用量；旧 `flux/barrier/bx/bw` 和 URL 继续兼容。页面支持对象新增/选择/删除（势对象还可复制）、独立编辑、2D/3D 轻量锚点和完整状态分享链接 `fobj/bobj/fsel/bsel`。路径/Spin/Hubbard 三个定向回归通过，隔离临时副本中的全站 standalone 构建与 paths bundle 语法检查通过；预存 `dist/` 未触碰。QEC 页面回归因缺少 `playwright-core` 依赖未能启动，浏览器交互尚未验收。 |
 | R184 | **哈伯德页局域势对象系统（继续下一页）** | 新增共享 `physics/localfield.js`，Spin/Hubbard 共用 Gaussian/盒形/交错 profile；Hubbard 可编辑、可移动、复制/删除最多 24 个局域势对象，与自由笔刷场相加进入 `hbSetField`。对象标记进入 2D/3D 主图；JSON 导入导出及 URL `fo` 分享接入。协议脉冲/推动以临时场叠加静态场，停止时重合成而非覆盖编辑。`test:hubbard-objects` 覆盖 profile/能量、编辑生命周期、URL/JSON 往返、非法导入原子拒绝与协议恢复；`test:spin-objects` 回归通过。两页 standalone 成功（Hubbard 197.0 KB，Spin 189.8 KB）；4 个 `node --check`、`git diff --check` 通过。真实浏览器未运行（环境无 Chromium）。 |
 | R182 | **自旋链场对象沙盒 MVP** | 新增高斯/盒形/交错三种局域场对象，支持画布放置、选择拖移、复制、删除、参数编辑、自由场叠加、JSON/URL 序列化；profile 合成进入固定 Sᶻ XXZ 哈密顿量。`npm run test:spin-objects` PASS（含独立 Zeeman 能量差与扇区守恒）；standalone 构建成功。当前环境无 Chromium 可执行文件，未做真实浏览器交互回归。 |
 | R181 | **独立通道参考 + 源码/standalone 浏览器验收** | 以独立 Pauli-transfer-matrix 特征值反演 T1/T2 twirl 概率逐项对账；统一 UI、`SC_CIRCUIT` 元数据、噪声 profile 与 stream 的 T1/T2 默认值；新增 Playwright 页面回归，真实 Chromium 分别跑源码和 `dist/qec.html`，覆盖默认模型、T2≤2T1 联动、模型切换、`runMc()` 参数透传与残余失败 HUD，浏览器 console/page errors 为 0。 |
@@ -1647,6 +1648,17 @@ dist 重建：qcircuit 97.4→102.5 KB；noise/qec 各一行注释同步（R100 
 README 噪声页用法补充矩阵与曲线探针操作。
 
 ---
+
+## R185（2026-10-31）路径工场多磁通源与多高斯势对象
+
+- [x] 物理层：AB Wilson 相位按每个磁通点源的路径连续极角增量求和；最多 8 个源。有限宽高斯对象按 `V₀·exp(−Δx²/(2σx²)−Δy²/(2σy²))` 定义，总作用量逐对象做 GL16 积分再叠加；最多 8 个对象，支持正势垒/负势阱。保留 legacy 单源分支，并确保显式空列表不会遮蔽旧 `flux/barrier` 配置。
+- [x] 页面：磁通源与势对象可新增、列表选择、删除；势对象另可复制；选中后通过振幅、位置、两轴宽度控件独立编辑。2D/3D 图中只画小型位置锚点，不加覆盖场、不遮挡路径波函数，也不加常驻图例。透视取景纳入对象纵向范围。
+- [x] 分享链接：对象 JSON 分别写入 `fobj`、`bobj`，选中 ID 写入 `fsel`、`bsel`；模拟参数与相机状态随更新保留。旧 `flux/barrier/bx/bw` 仍解析并可通过 legacy 分支运行。
+- [x] README 说明叠加公式、参数边界、旧 URL 兼容和分享参数；新增 `npm run test:path-sources`。
+- [x] 定向验收：`node --check src/physics/paths.js`、`node --check src/paths.js`、`node --check scripts/verify-path-sources.mjs`、`npm run test:path-sources` PASS；覆盖单源等价、多源相位/作用量相加、负势阱、legacy 空数组回退、对象生命周期/校验、路径螺旋终点和 URL JSON。
+- [x] 回归：`npm run test:spin-objects`、`npm run test:hubbard-objects` PASS；`node --check`（3 个新增/修改 JS 文件）及 `git diff --check` PASS。`npm run test:qec-page` 因工作区未安装 `playwright-core` 而在测试初始化时退出，未运行测试主体。
+- [x] 构建：在 `/tmp` 隔离副本执行全站 `build:standalone`，所有 standalone 页面与 QEC worker 均 BUILD OK；抽取 `dist/paths.html` 内联脚本后 `node --check` PASS。仓库预存 `dist/` 修改/删除未触碰。
+- [ ] 浏览器交互验收未做（环境没有 Playwright 依赖/已知无系统 Chromium）；不能将 Node harness 视为真实 DOM/pointer 验收。
 
 ## R183（2026-10-31）修复 S(x) 闪烁并补齐全部场对象标记
 
