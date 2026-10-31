@@ -1004,6 +1004,11 @@ G4 边界观察（子代理发现，未动）：CITY_CENTERS/PROVINCE_CENTERS �
 
 覆盖数据：4614 条有服务数据（有厕所 2489 / 有出口 3455），剩余 9 条无 OSM POI 的偏远景区回退模板。
 
+坡度 spotName 链路补记（六十九轮坡度真实现的死代码修复）：
+gradientOf() 之前是死代码——spotName 未从 DeterrentView → HeavyTimeline → TimelineCard 传递。已补全 prop 链路（spotName prop + 透传），坡度数据现在按选中景点真实生效。
+
+门禁：tsc 0 ✓ vitest 101/101 ✓ 隔离 build ✓ 双端口 200 ✓。
+
 ## 七轮（2026-10-25）：志愿探索接入真实数据
 
 | 项目                                                                                                                                               | 状态   |

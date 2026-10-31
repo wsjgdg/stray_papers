@@ -670,12 +670,14 @@ function HeavyTimeline({
   onIndexChange,
   isWeekend,
   services,
+  spotName,
 }: {
   count: number;
   activeConditions: Set<string>;
   onIndexChange: (idx: number) => void;
   isWeekend?: boolean;
   services?: ScenicServices;
+  spotName?: string | null;
 }) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const [viewH, setViewH] = useState(0);
@@ -743,6 +745,7 @@ function HeavyTimeline({
                 index={i}
                 activeConditions={activeConditions}
                 services={services}
+                spotName={spotName}
               />
             </div>
           );
@@ -1262,8 +1265,11 @@ function ConclusionButton({
    ═══════════════════════════════════════════════════ */
 export default function DeterrentView() {
   const [timeIndex, setTimeIndex] = useState(1); // 默认正午
-  const [activeConditions, setActiveConditions] = useState<Set<string>>(
-    new Set(),
+  // 身体条件在 store（三视图共享：体力沙盘/PTSI/劝退）
+  const { spots, bodyConditions, toggleBodyCondition } = useAppStore();
+  const activeConditions = useMemo(
+    () => new Set(bodyConditions),
+    [bodyConditions],
   );
   const [showPopup, setShowPopup] = useState<{
     id: string;
@@ -1276,7 +1282,6 @@ export default function DeterrentView() {
   // ═══ 假想目的地 selector 状态（D3.4 隐含前置） ═══
   // 劝退指南默认无 spot 上下文，仅做时段评估；为让 D3.4 的"相似用户踩坑"
   // 匹配能够成立，这里允许用户挑选一个假想目的地。
-  const { spots } = useAppStore();
   const [selectedSpotId, setSelectedSpotId] = useState<string | null>(null);
   const selectedSpotName = useMemo(
     () =>
@@ -1289,12 +1294,7 @@ export default function DeterrentView() {
   const period = TIME_PERIODS[timeIndex] || TIME_PERIODS[1];
 
   const toggleCondition = (id: string) => {
-    setActiveConditions((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    toggleBodyCondition(id);
     vibrate(30);
   };
 
@@ -1405,6 +1405,7 @@ export default function DeterrentView() {
         <HeavyTimeline
           count={TIMELINE_DATA.length}
           isWeekend={isWeekend}
+          spotName={selectedSpotName}
           services={
             selectedSpotName ? SCENIC_SERVICES[selectedSpotName] : undefined
           }

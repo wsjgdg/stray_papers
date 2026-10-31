@@ -76,6 +76,18 @@ export const STAMINA_COST_MAP: Record<string, number> = {
   鼓浪屿: 30, // 小岛漫步
 };
 
+/** 山岳景点体力：从 mountain-routes 真实累计爬升推导（比手填更准确） */
+function deriveMountainStamina(spotName: string): number | null {
+  for (const r of MOUNTAIN_ROUTES) {
+    if (!r.spots.includes(spotName)) continue;
+    // 归一化：elevationGain 500m≈30, 1000m≈55, 1500m≈75, 2000m+≈90
+    const base = Math.min(90, 20 + Math.round(r.elevationGain / 30));
+    // 高海拔加成：3000m+ 额外 +5
+    return Math.min(100, base + (r.maxElevation > 2500 ? 5 : 0));
+  }
+  return null;
+}
+
 /* ═══ 体力货币：项目体力系数（关键词匹配） ═══ */
 export const PROJECT_STAMINA_FACTOR: Record<string, number> = {
   徒步: 1.3,
@@ -118,6 +130,8 @@ export const PROJECT_STAMINA_FACTOR: Record<string, number> = {
  * 4. 默认 40
  */
 export function getStaminaCost(spot: Spot): number {
+  const mt = deriveMountainStamina(spot.name);
+  if (mt !== null) return mt;
   // 检查 spot 上是否有直接字段（JSON 导入时可能携带）
   const direct = (spot as any).staminaCost;
   if (typeof direct === "number" && direct >= 0 && direct <= 100) return direct;
@@ -905,7 +919,7 @@ export const sampleSpots: Spot[] = [
   {
     id: "16",
     name: "华山风景区",
-    reservation: RESERVATION_NOTES["黄山风景区"],
+    reservation: RESERVATION_NOTES["华山风景区"],
     image: SPOT_PHOTOS["华山风景区"] ?? getCategoryImageUrl("山岳景区", 1),
     address: "陕西省渭南市华阴市玉泉路",
     facilities: ["索道", "游客中心", "山顶住宿", "医疗点", "装备租赁"],
@@ -1404,6 +1418,7 @@ import {
 } from "./poi-descriptions";
 import { POI_PHOTOS } from "./poi-photos.generated";
 import { OUTSOURCE_DESCRIPTIONS } from "./scenic-desc-outsource.generated";
+import { MOUNTAIN_ROUTES } from "./mountain-routes.generated";
 import { SPOT_PROFILES, type SpotProfile } from "./spot-profiles.generated";
 
 /** 景点档案（外包结构化字段），无档案返回 undefined */
@@ -1416,6 +1431,10 @@ export const profileOf = getSpotProfile;
 
 /** 建议游玩时长（小时）：档案收录优先，按分类/等级兜底 */
 export function suggestedVisitHours(spot: Spot): number {
+  // 登山路线有真实时长数据（泰山 6h / 黄山 5h / 峨眉 10h / 华山 7h），优先使用
+  for (const r of MOUNTAIN_ROUTES) {
+    if (r.spots.includes(spot.name)) return r.durationHours;
+  }
   const p = SPOT_PROFILES[spot.id];
   if (p && typeof p.suggestedHours === "number" && p.suggestedHours > 0)
     return p.suggestedHours;

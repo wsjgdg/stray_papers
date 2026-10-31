@@ -634,7 +634,7 @@ function SpotGrid({
   groupOf?: Record<string, string>;
   onAssignGroup?: (spotId: string, groupId: string | null) => void;
 }) {
-  const { favorites, toggleFavorite, spotNotes } = useAppStore();
+  const { favorites, toggleFavorite, spotNotes, customPrices } = useAppStore();
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
       <AnimatePresence mode="popLayout">
@@ -705,7 +705,10 @@ function SpotGrid({
                         </span>
                       )}
                       {(() => {
-                        const q = quoteTicket(spot);
+                        const q = quoteTicket(
+                          spot,
+                          customPrices[`${spot.id}::${TICKET_KEY}`],
+                        );
                         if (q.price == null) return null;
                         return (
                           <span
@@ -791,7 +794,7 @@ function SpotList({
   groupOf?: Record<string, string>;
   onAssignGroup?: (spotId: string, groupId: string | null) => void;
 }) {
-  const { favorites, toggleFavorite, spotNotes } = useAppStore();
+  const { favorites, toggleFavorite, spotNotes, customPrices } = useAppStore();
   return (
     <div className="space-y-3">
       <AnimatePresence mode="popLayout">
@@ -860,7 +863,10 @@ function SpotList({
                         </span>
                       )}
                       {(() => {
-                        const q = quoteTicket(spot);
+                        const q = quoteTicket(
+                          spot,
+                          customPrices[`${spot.id}::${TICKET_KEY}`],
+                        );
                         if (q.price == null) return null;
                         return (
                           <span
@@ -1142,7 +1148,6 @@ function SpotDetailDialog() {
       (spot.rating ? `评分：${spot.rating.toFixed(1)}\n` : "") +
       (spot.openTime ? `开放时间：${spot.openTime}\n` : "") +
       (spot.tel ? `电话：${spot.tel}\n` : "") +
-      (spot.tel ? `电话：${spot.tel}\n` : "") +
       (spot.website ? `官网：${spot.website}\n` : "") +
       (spot.reservation ? `预约：${spot.reservation}\n` : "") +
       `${nav}\n—— 来自「华夏探索」景点览胜`;
@@ -1234,7 +1239,7 @@ function SpotDetailDialog() {
           </div>
         </div>
         {/* Detail content */}
-        <ScrollArea className="max-h-[50vh]">
+        <ScrollArea key={spot.id} className="max-h-[50vh]">
           <div className="p-5 space-y-5">
             <div className="flex items-start gap-2">
               <MapPin className="w-4 h-4 text-gray-400 dark:text-gray-500 mt-0.5 shrink-0" />
