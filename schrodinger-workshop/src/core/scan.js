@@ -849,7 +849,7 @@ const SLIT_SPEC = {
         x.beginPath(); x.arc(px, py, 2.2, 0, 6.2832); x.fill();
       }
     x.fillStyle = '#9aa7bd'; x.textAlign = 'left';
-    x.fillText('峰位 |y| vs D', 38, 10);
+    x.fillText('峰位 |y|（texel）vs D', 38, 10);
     x.fillStyle = '#67e8f9'; x.fillText('● 实测', W - 116, 10);
     x.fillStyle = '#fbbf24'; x.fillText('–– Fraunhofer nλL/D', W - 74, 10);
     /* 下子图：峰数 vs D（阶梯） */
@@ -1284,7 +1284,7 @@ export const GP_SPEC = {
       x.beginPath(); x.arc(px, Y(Math.sqrt(3)*(r.RrmsMean || 0)), 2.6, 0, 6.2832); x.fill();
     }
     x.fillStyle = '#9aa7bd'; x.textAlign = 'left';
-    x.fillText('R_TF（√3·Rrms）vs |g|', 38, 10);
+    x.fillText('R_TF（texel）vs |g|', 38, 10);
     x.fillStyle = '#67e8f9'; x.fillText('● 实测（竖线=呼吸摆动）', W - 150, 10);
     x.fillStyle = '#fbbf24'; x.textAlign = 'right'; x.fillText('–– TF 解析 (2R²|g|/π)^¼', W - 8, 10);
     /* 下：峰值 vs |g|（实测 + 解析 n₀） */
@@ -1310,7 +1310,7 @@ export const GP_SPEC = {
       x.beginPath(); x.arc(px, py, 2.4, 0, 6.2832); x.fill();
     }
     x.fillStyle = '#9aa7bd'; x.textAlign = 'left';
-    x.fillText('峰值 n₀ vs |g|', 38, T2 + 9);
+    x.fillText('峰值密度 n₀ vs |g|', 38, T2 + 9);
     x.textAlign = 'center';
     x.fillText('|g|（相互作用强度）', 34 + (W - 42)/2, H - 2);
   },
@@ -1391,7 +1391,7 @@ export const NLS_SPEC = {
       for (const r of results){ x.beginPath(); x.arc(X(r.x), Y(r[key + 'Mean'] || 0), 2.4, 0, 6.2832); x.fill(); }
     }
     x.fillStyle = '#9aa7bd'; x.textAlign = 'left';
-    x.fillText('孤子宽度 vs g', 38, 10);
+    x.fillText('σx/σy（texel）vs g', 38, 10);
     x.fillStyle = '#67e8f9'; x.fillText('● σx', W - 96, 10);
     x.fillStyle = '#fbbf24'; x.fillText('● σy', W - 64, 10);
     /* 下：峰值末/初比（塌缩指示） */

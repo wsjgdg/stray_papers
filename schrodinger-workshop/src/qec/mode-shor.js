@@ -15,6 +15,8 @@ import { SHOR_STABS, SHOR_LOGICALS, shorTrial, shorStream, shorEnsemble, shorSwe
 import { mulberry32 } from '../physics/qcircuit.js';
 import { qecGenericCsv, downloadText, encodeShort, mergeShort } from './export.js';
 import { LiveDriver } from './live.js';
+import { ShotReplay } from './shot-replay.js';
+import { ConfidenceFeedback } from './confidence.js';
 
 const SHOR_CSS = `
   #shPanel{top:108px;left:14px;width:238px;padding:13px;z-index:10;max-height:calc(100vh - 340px);
@@ -112,6 +114,8 @@ export class ShorApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
+    this.ciFeedback?.dispose();
+    this.shotReplay?.dispose();
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
@@ -218,6 +222,10 @@ export class ShorApp {
     `);
 
     this.cv = { circuit: this.q('#shCircuit'), curve: this.q('#shCurve'), hist: this.q('#shHist') };
+    this.shotReplay = new ShotReplay(this.q('#shHud'), 'shor');
+    this.shotReplay.mount();
+    this.ciFeedback = new ConfidenceFeedback(this.q('#shHud'));
+    this.ciFeedback.mount();
 
     /* 预设按钮 */
     const pb = this.q('#shPresets');
@@ -296,7 +304,7 @@ export class ShorApp {
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
       make: () => shorStream(this.cfg()),
-      onFrame: res => { this.ens = res; this.renderHud(); this.drawAll(); },
+      onFrame: res => { this.ens = res; if (res.lastTrial) this.trial = res.lastTrial; this.renderHud(); this.drawAll(); },
       onState: () => this.syncPlayBtn(),
     });
     this.on(this.q('#shPlay'), 'click', () => this.live.toggle());
@@ -338,10 +346,9 @@ export class ShorApp {
       this.sweep = shorSweep({ ...this.cfg(), sweepTrials: 400 });
       this._curveKey = key;
     }
-    /* R98 P2：播放中 → 换累加器接着演；否则同步全批（旧行为） */
-    if (this.live && this.live.playing){ this.live.sync(); this.ens = null; }
-    else this.ens = shorEnsemble(this.cfg());
-    this.rollOnce();
+    /* 播放中由同一 shot 更新统计与线路图；同步全批时也复用最后一条样本。 */
+    if (this.live && this.live.playing) this.live.sync();
+    else { this.ens = shorEnsemble(this.cfg()); if (this.ens.lastTrial) this.trial = this.ens.lastTrial; }
     this.renderHud();
     this.drawAll();
   }
@@ -444,6 +451,8 @@ export class ShorApp {
   }
 
   renderHud(){
+    this.ciFeedback?.sync({ label: '逻辑失效率 P_L', rate: this.ens && this.ens.PL, n: this.ens && this.ens.trials, reference: this.ens && this.ens.PLexact });
+    this.shotReplay?.sync(this.trial, this.ens && this.ens.trials, this.state);
     const s = this.state, t = this.trial, e = this.ens;
     const set = (id, v) => { const el = this.q('#' + id); if (el) el.textContent = v; };
     if (t){

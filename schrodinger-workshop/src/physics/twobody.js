@@ -56,7 +56,13 @@
    bumpH=0.2：ε 滑块的可区分势垒峰高（只按 ε 缩放，ε=0 时全预设不受影响）。
    pot72 实测 ε=0.3 时 ⟨P⟩ 偏离 −1 达 9.3e-2（bumpH=0.08 仅 1.7e-2，视觉/读数
    区分度不足），故定 0.2。 */
-export const TB_COMMON = { bumpH: 0.2, bumpW: 10, vcap: 6 };
+export const TB_COMMON = {
+  bumpH: 0.2, bumpW: 10, vcap: 6,
+  /* 势阱刷（页面「势阱」工具）：宽度固定、深度可调，最多 6 个（FIFO 淘汰最旧）。
+     —— 势仍是**共享 1D 轴**上的可分离势：V = V₁(x₁) + V₂(x₂) + gδ，两支完全同形
+     （ε>0 时粒子 2 整支 ×(1+ε)），因此加势阱**不破坏** [H,P]=0 的叙事。 */
+  wellW: 6, wellV: -4, wellMax: 6,
+};
 
 export const TB_PRESETS = {
   /* 自由空间对穿：两个相向波包（±k₀），g 滑块加接触相互作用，
@@ -64,13 +70,22 @@ export const TB_PRESETS = {
   cross: {
     name: '自由对穿', trap: 0, omega: 0.02, g: 0, eps: 0,
     d: 52, sigma: 6.5, k0: 0.25, r0: 26,
-    text: '两个相同波包相向运动（x₀=∓d/2，k=±k₀），无外势。**玻色**：对称化密度在对角线上**聚束**（HBT 因子 2×），两包穿插而过；**费米**：反对称态对角线密度恒 0（交换空穴），一阶密度表现为**交换弹开**——没有任何真实排斥力。g 滑块加**格点接触相互作用**（只压对角线）：玻色子被压回、费米子毫无变化（它们本来就不在对角线上）。ε 滑块让粒子 2 多一个势垒 ⟹ 不再全同 ⟹ ⟨P⟩ 漂离 ±1、n₁ 与 n₂ 分开。',
+    text: '两个相同波包相向运动（x₀=∓d/2，k=±k₀），无外势。**玻色**：对称化密度在对角线上**聚束**（HBT 因子 2×），两包穿插而过；**费米**：反对称态对角线密度恒 0（交换空穴），一阶密度表现为**交换弹开**——没有任何真实排斥力。g 滑块加**格点接触相互作用**（只压对角线）：玻色子被压回、费米子毫无变化（它们本来就不在对角线上）。ε 滑块让粒子 2 多一个势垒 ⟹ 不再全同 ⟹ ⟨P⟩ 漂离 ±1、n₁ 与 n₂ 分开。**在画布上抓住青色 x₁ 竖虚线可拖动粒子 1 的轨道，抓住琥珀 x₂ 横虚线可拖动粒子 2**（密度条点选同效）；「势阱刷」打开后在画布上拖动即可放/挪一个高斯势阱（右键删、V₀ 滑块设深度，最多 6 个；势是共享 1D 轴上的可分离势，所以画面里总成对出现竖条 + 横条）。初态三个旋钮（宽度 σ / 动量 k₀ / 间距 d）改动即重发波包：把 d 调到 ~2σ 且 k₀→0 时两个轨道不再正交，**HBT 因子掉到 2/(1+|⟨a|b⟩|²)**（HUD 同时给重叠、预测与实测），这是「2× 只在正交极限成立」的直接演示。',
   },
   /* 谐振子阱对穿：阱中双粒子从 ±r₀ 静止释放，相对坐标振荡。 */
   trap: {
     name: '阱中对穿', trap: 1, omega: 0.02, g: 0, eps: 0,
     d: 0, sigma: 6.5, k0: 0, r0: 26,
-    text: '每个粒子受同一谐振子阱 V=½ω²(x−L/2)²（ω 滑块）。双包从 ±r₀ 静止释放：经典地各自荡向中心（首次相遇 t=π/2ω），**费米**在对角线处交换弹开，来回周期 π/ω（对角质量峰间距，pot72 E4 定量）。ε≠0 时粒子 2 的阱深 ×(1+ε) ⟹ 可区分 ⟹ ⟨P⟩ 不再守恒。',
+    text: '每个粒子受同一谐振子阱 V=½ω²(x−L/2)²（ω 滑块）。双包从 ±r₀ 静止释放：经典地各自荡向中心（首次相遇 t=π/2ω），**费米**在对角线处交换弹开，来回周期 π/ω（对角质量峰间距，pot72 E4 定量）。ε≠0 时粒子 2 的阱深 ×(1+ε) ⟹ 可区分 ⟹ ⟨P⟩ 不再守恒。初态两个旋钮：宽度 σ 与释放半径 r₀（改动即重发波包）；包太宽或 r₀ 太大时 HUD 的「边缘留白」转负——3σ 尾部已越界，CLAMP 边界会把它反射回来。',
+  },
+  /* 自由放置：两条轨道由**用户沿轴点选**给出（x_a,k_a = +k₀；x_b,k_b = −k₀）。
+     页面在 x₁/x₂ 边缘密度条上点一下 ⟹ 切到本预设并重发对称化初态。
+     点选仍然只能给「一条高斯轨道」（中心 + 宽度 + 动量），不是主页那种任意绘制：
+     构型空间里的合法初态必须是对称化乘积——这条限制不因交互而消失。 */
+  custom: {
+    name: '自由放置', trap: 0, omega: 0.02, g: 0, eps: 0,
+    d: 52, sigma: 6.5, k0: 0.25, r0: 26, custom: 1,
+    text: '**沿轴点选轨道**：在下方 x₁ 条上点一下 ⟹ 粒子 1 的轨道中心；在右侧 x₂ 条上点一下 ⟹ 粒子 2 的轨道中心（按住拖动可连续挪）。两条轨道仍是**同宽高斯**、动量 ±k₀（面板滑块），随后**对称化**成两粒子初态——所以 ⟨P⟩ 依旧是 ±1，费米两条轨道完全重合时会被泡利不相容挡住（toast 拒绝加载）。点选自动切到本预设；切回别的预设会恢复该预设的默认初态。',
   },
   /* 阱中本征态：解析 (0,0) 玻色基态 / (0,1) 费米第一激发；
      「松弛」按钮收敛到**离散**本征态（|ψ|² 冻结、整体相位以 E 旋转）。 */
@@ -91,10 +106,25 @@ const idx = (L, i, j) => j * L + i;
 
 /* 势场（CPU 与 GLSL 同源：GLSL 不重算势，页面把本函数烘焙成 R32F 纹理
    uPot 供 kick/drift 采样——单源真值，改这里即全场生效） */
+/* 势阱刷的势：Σ v·exp(−(x−xₖ)²/w²)（共享 1D 轴，两个粒子同形；v<0 为阱、v>0 为垒） */
+export function tbWellSum(x, P){
+  const ws = P && P.wells;
+  if (!ws || !ws.length) return 0;
+  let v = 0;
+  for (let k = 0; k < ws.length; k++){
+    const w = ws[k], r = x - w.x;
+    v += w.v * Math.exp(-(r * r) / (w.w * w.w));
+  }
+  return v;
+}
 export function tbPot1(x, P){
-  if (!P.trap) return 0;
-  const r = x - P.xc;
-  return Math.min(0.5 * P.omega * P.omega * r * r, P.vcap);
+  let v = 0;
+  if (P.trap){
+    const r = x - P.xc;
+    v = Math.min(0.5 * P.omega * P.omega * r * r, P.vcap);
+  }
+  /* 势阱刷与谐振子阱**叠加**（与主页势刷 + 主槽的关系一致）；trap=0 时只有势阱 */
+  return v + tbWellSum(x, P);
 }
 export function tbPot2(x, P){
   const r = x - P.xc;
@@ -184,28 +214,116 @@ export function tbHarmonicEigen(n, L, omega, xc){
   return out;
 }
 
+/* 初态参数解析 + 钳制（页面滑块与 URL 共用；tbOrbits/tbInitInfo/tbMakeWave 同源）。
+   —— σ/k₀/d/r₀ 四个旋钮的合法区间写在这里，不散落在页面里。
+   d 的上限按「两侧还留得下 3σ 的尾部」定：d ≤ L−1−6σ（同 fmt 下 σ 大 ⟹ 间距自动收窄），
+   下限保证两个包不重叠到分不开（d ≥ 2σ，否则两个包基本是同一团东西）。 */
+export function tbInitParams(L, presetKey, opts = {}){
+  const pr = TB_PRESETS[presetKey] || TB_PRESETS.cross;
+  const xc = (L - 1) / 2;
+  if (pr.eigen) return { eigen: true, omega: opts.omega ?? pr.omega, sigma: 0, k0: 0, d: 0, r0: 0 };
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  if (pr.custom){
+    /* 点选口径：中心限制在 [3σ+0.5, L−1−3σ−0.5]（整包留在场内），动量 ±k₀（k₀ 走同一套钳制）。
+       两个粒子共用 σ（页面只有一根宽度滑块）；位置各自独立。 */
+    const sigma = clamp(opts.sigma ?? pr.sigma, 1.5, Math.max(1.5, (L - 1) / 6));
+    const k0 = clamp(opts.k0 ?? pr.k0, 0, 1.5);
+    const lo = 3 * sigma + 0.5, hi = (L - 1) - 3 * sigma - 0.5;
+    const pos = (v, dflt) => clamp(Number.isFinite(v) ? v : dflt, Math.min(lo, hi), Math.max(lo, hi));
+    return {
+      custom: true, eigen: false, omega: opts.omega ?? pr.omega, sigma, k0, d: 0, r0: 0,
+      xa: pos(opts.xa, pr.customX ?? (xc - pr.d / 2)),
+      xb: pos(opts.xb, pr.customY ?? (xc + pr.d / 2)),
+      ka: +k0, kb: -k0,
+    };
+  }
+  let sigma = clamp(opts.sigma ?? pr.sigma, 1.5, Math.max(1.5, (L - 1) / 6));
+  /* 注：σ > (L−1)/8 时「d ≥ 2σ」与「3σ 尾部留白」无法同时满足 ⟹ margin 必然 < 0，
+     页面 HUD 会如实标红（不禁用，让人看见边界截断的代价）。 */
+  const r0min = 1, r0max = Math.max(2, xc - 2 - 3 * sigma);
+  const r0 = clamp(opts.r0 ?? pr.r0, r0min, r0max);
+  const dmin = Math.max(2 * sigma, 2), dmax = Math.max(dmin, (L - 1) - 6 * sigma);
+  const d = clamp(opts.d ?? pr.d, dmin, dmax);
+  const k0 = clamp(opts.k0 ?? pr.k0, 0, 1.5);
+  return { eigen: false, sigma, d, k0, r0, omega: opts.omega ?? pr.omega };
+}
+
+/* 两个单粒子轨道（1D，长度 L）：返回 {A:{re,im}, B:{re,im}, xa, xb, ka, kb, sigma,…}。
+   makeWave / tbInitInfo / 页面 HUD / Node 套件全部走这里——初态只有一处真值。 */
+export function tbOrbits(L, presetKey, opts = {}){
+  const pr = TB_PRESETS[presetKey] || TB_PRESETS.cross;
+  const q = tbInitParams(L, presetKey, opts);
+  const stats = opts.stats || 'boson';
+  const xc = (L - 1) / 2;
+  if (q.eigen){
+    /* 玻色 (0,0) 基态（E=ω）；费米 (0,1) 斯莱特态（E=2ω，最低反对称态） */
+    const na = 0, nb = stats === 'boson' ? 0 : 1;
+    const A = tbHarmonicEigen(na, L, q.omega, xc), B = tbHarmonicEigen(nb, L, q.omega, xc);
+    const re = a => ({ re: Float64Array.from(a), im: new Float64Array(L) });
+    return { ...q, na, nb, xa: xc, xb: xc, ka: 0, kb: 0, A: re(A), B: re(B) };
+  }
+  const xa = q.custom ? q.xa : (pr.trap ? xc - q.r0 : xc - q.d / 2);
+  const xb = q.custom ? q.xb : (pr.trap ? xc + q.r0 : xc + q.d / 2);
+  const ka = q.custom ? q.ka : (pr.trap ? 0 : +q.k0);
+  const kb = q.custom ? q.kb : (pr.trap ? 0 : -q.k0);
+  const arr = (x0, k) => {
+    const o = { re: new Float64Array(L), im: new Float64Array(L) };
+    for (let i = 0; i < L; i++){ const p = packet(i + 0.5, x0, k, q.sigma); o.re[i] = p.re; o.im[i] = p.im; }
+    return o;
+  };
+  return { ...q, xa, xb, ka, kb, A: arr(xa, ka), B: arr(xb, kb) };
+}
+
+/** 初态元信息（页面 HUD + 套件共用）：
+ *    overlap = |⟨a|b⟩|²（离散归一化重叠）
+ *    hbt     = 玻色对角质量 / 可区分对角质量 = 2/(1+overlap)（**不是恒为 2**）
+ *    margin  = 左包到左边界、右包到右边界两者较小者减去 3σ；<0 ⟹ 尾部被 CLAMP 边界切
+ *    sep     = 两包中心距（texel）
+ *  这些量全部由 tbOrbits 的**同一份**离散轨道算出（不是另写一套公式）。 */
+export function tbInitInfo(L, presetKey, opts = {}){
+  const o = tbOrbits(L, presetKey, opts);
+  const dot = (u, v) => {
+    let sr = 0, si = 0, nu = 0, nv = 0;
+    for (let i = 0; i < L; i++){
+      sr += u.re[i] * v.re[i] + u.im[i] * v.im[i];
+      si += u.re[i] * v.im[i] - u.im[i] * v.re[i];
+      nu += u.re[i] * u.re[i] + u.im[i] * u.im[i];
+      nv += v.re[i] * v.re[i] + v.im[i] * v.im[i];
+    }
+    const norm = Math.sqrt(Math.max(nu * nv, 1e-300));
+    return { re: sr / norm, im: si / norm, nu, nv };
+  };
+  const c = dot(o.A, o.B);
+  const overlap = c.re * c.re + c.im * c.im;
+  const out = {
+    preset: presetKey, eigen: !!o.eigen, stats: opts.stats || 'boson',
+    sigma: o.sigma, k0: o.k0, d: o.d, r0: o.r0, omega: o.omega,
+    xa: o.xa, xb: o.xb, ka: o.ka, kb: o.kb,
+    overlap, hbt: 2 / (1 + overlap), sep: Math.abs(o.xb - o.xa), margin: null,
+  };
+  if (!o.eigen){
+    /* 对穿预设：左包离左边界、右包离右边界；自由放置（custom）两轨道各自独立，
+       取四支里的最小者——否则把两条轨道都放在右半场会得到一个假的「留白」。 */
+    out.margin = (o.custom
+      ? Math.min(o.xa, o.xb, (L - 1) - o.xa, (L - 1) - o.xb)
+      : Math.min(o.xa, (L - 1) - o.xb)) - 3 * o.sigma;
+    out.custom = !!o.custom;
+  }
+  return out;
+}
+
 /* makeWave：返回 {re, im, norm}（norm=离散范数；<1e-9 ⟹ 页面应拒绝加载）
-   opts: {stats:'boson'|'fermion', g, eps, omega, d, sigma, k0, r0, eigen}
+   opts: {stats:'boson'|'fermion', g, eps, omega, d, sigma, k0, r0}
    —— g/eps/omega 只影响势场不改变初态（初态与它们无关），此处接收是为了一并
    返回完整参数快照；真正消费它们的是演化循环。 */
 export function tbMakeWave(L, presetKey, opts = {}){
   const pr = TB_PRESETS[presetKey] || TB_PRESETS.cross;
   const stats = opts.stats || 'boson';
-  const omega = opts.omega ?? pr.omega;
-  const xc = (L - 1) / 2;
   const re = new Float64Array(L * L), im = new Float64Array(L * L);
-  let fa, fb;   /* 两个单粒子态（实或复，逐点 {re,im} 或实数数组） */
-  if (pr.eigen){
-    /* 玻色 (0,0) 基态（E=ω）；费米 (0,1) 斯莱特态（E=2ω，最低反对称态） */
-    const na = 0, nb = stats === 'boson' ? 0 : 1;
-    const A = tbHarmonicEigen(na, L, omega, xc), B = tbHarmonicEigen(nb, L, omega, xc);
-    fa = i => ({ re: A[i], im: 0 }); fb = i => ({ re: B[i], im: 0 });
-  } else {
-    const d = opts.d ?? pr.d, sig = opts.sigma ?? pr.sigma, k0 = opts.k0 ?? pr.k0, r0 = opts.r0 ?? pr.r0;
-    const xa = pr.trap ? xc - r0 : xc - d / 2, xb = pr.trap ? xc + r0 : xc + d / 2;
-    const ka = pr.trap ? 0 : +k0, kb = pr.trap ? 0 : -k0;
-    fa = i => packet(i + 0.5, xa, ka, sig); fb = i => packet(i + 0.5, xb, kb, sig);
-  }
+  const orb = tbOrbits(L, presetKey, opts);
+  const A = orb.A, B = orb.B;
+  const fa = i => ({ re: A.re[i], im: A.im[i] });
+  const fb = i => ({ re: B.re[i], im: B.im[i] });
   const sgn = stats === 'boson' ? 1 : -1;
   for (let j = 0; j < L; j++) for (let i = 0; i < L; i++){
     const a1 = fa(i), b2 = fb(j), b1 = fb(i), a2 = fa(j);

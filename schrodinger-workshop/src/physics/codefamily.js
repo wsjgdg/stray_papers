@@ -418,9 +418,10 @@ export function cfStream(fam, cfg = {}){
   const f = typeof fam === 'string' ? CF_ALL.find(x => x.k === fam) : fam;
   const rng = mulberry32(c.seed);
   const byFate = { perfect: 0, logic: 0, outside: 0 };
-  let n = 0, wsum = 0;
+  let n = 0, wsum = 0, lastTrial = null;
   function one(){
     const t = cfTrial(f, c, rng);
+    lastTrial = t;
     byFate[t.fate]++;
     wsum += t.xw + t.zw;
     n++;
@@ -432,7 +433,7 @@ export function cfStream(fam, cfg = {}){
     result(){
       const nn = Math.max(1, n);
       return {
-        family: f.k, p: c.p, noise: c.noise, meas: c.meas, trials: n,
+        family: f.k, p: c.p, noise: c.noise, meas: c.meas, trials: n, lastTrial,
         PL: (byFate.logic + byFate.outside) / nn,
         byFate, meanFaults: wsum / nn,
         exact: cfExactPL(c.p, f, c.noise, c.meas),

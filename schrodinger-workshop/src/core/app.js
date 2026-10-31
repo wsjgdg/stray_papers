@@ -730,7 +730,7 @@ ${d3 ? `
 
 <div id="legend" class="panel">
   <canvas id="wheel" width="168" height="168"></canvas>
-  <div class="cap"><b>色相 = 相位 arg(ψ)</b><br>亮度 = 概率密度 |ψ|²<br>等值线 = |ψ|² 等高线<br>暖色 = 势垒 V&gt;0 · 冷色 = 势阱 V&lt;0</div>
+  <div class="cap"><b>色相 = 相位 arg(ψ)</b><br>亮度 = 密度 |ψ|² 的非线性曝光映射（显示亮度可调）<br>等值线 = |ψ|² 等高线<br>暖色 = 势垒 V&gt;0 · 冷色 = 势阱 V&lt;0</div>
 </div>
 
 <div id="desc" class="panel"><b id="descName">自由传播</b><span id="descText"></span></div>

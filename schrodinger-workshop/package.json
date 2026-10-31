@@ -5,7 +5,23 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start": "python3 -m http.server 8765",
-    "build:standalone": "node scripts/build-standalone.mjs"
+    "start": "node scripts/serve.mjs --port 8765 --bind 0.0.0.0",
+    "build:standalone": "node scripts/build-standalone.mjs",
+    "test:qec-page": "node scripts/verify-qec-page.mjs",
+    "test:spin-objects": "node scripts/verify-spin-field-objects.mjs",
+    "test:hubbard-objects": "node scripts/verify-hubbard-field-objects.mjs",
+    "test:hubbard-measure": "node scripts/verify-hubbard-measure.mjs",
+    "test:hubbard-residual": "node scripts/verify-hubbard-residual.mjs",
+    "test:hubbard-snapshot": "node scripts/verify-hubbard-sx-snapshot.mjs",
+    "test:idle-canvas-frames": "node scripts/verify-idle-canvas-frames.mjs",
+    "test:path-sources": "node scripts/verify-path-sources.mjs",
+    "test:idle-canvas-frames": "node scripts/verify-idle-canvas-frames.mjs",
+    "test:two-body-frame-measure": "node scripts/verify-two-body-frame-measure.mjs",
+    "test:visual-style": "node scripts/verify-visual-style.mjs",
+    "test:chart-readability": "node scripts/verify-chart-readability.mjs",
+    "serve:python": "python3 -m http.server 8765 --bind 0.0.0.0"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.64.1"
   }
 }

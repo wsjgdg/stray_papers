@@ -18,9 +18,11 @@ export const CSS = `
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font-family:var(--sans)}
   #gl{position:fixed;inset:0;width:100vw;height:100vh;display:block;cursor:crosshair;touch-action:none}
-  .panel{position:fixed;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  .panel{position:fixed;
+    background:linear-gradient(135deg,rgba(103,232,249,.035),rgba(240,171,252,.018) 48%,transparent 78%),var(--panel);
+    border:1px solid rgba(130,160,210,.20);border-radius:14px;
     backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-    box-shadow:0 8px 32px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.04)}
+    box-shadow:0 12px 36px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.06),inset 0 0 24px rgba(103,232,249,.012)}
   /* ---------- 顶栏 ---------- */
   /* 布局与子元素规则已收编 core/responsive.js 的 .qtop 族；主页差异值保留： */
   .qtop[id="topbar"]{gap:14px;padding:10px 20px}
@@ -45,16 +47,20 @@ export const CSS = `
   .sec:last-child{margin-bottom:0}
   .sec>h3{font-size:10px;letter-spacing:.22em;color:var(--dim);font-weight:600;margin-bottom:8px;
     display:flex;align-items:center;gap:8px}
-  .sec>h3::after{content:"";flex:1;height:1px;background:var(--line)}
+  .sec>h3::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(120,160,220,.24),rgba(120,160,220,.04))}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
   .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
   /* R60 势刷轴比三连同控（grid3 单元格内的迷你标签行：名称 + 实时值） */
   .mini{font-size:9.5px;color:var(--dim);display:flex;justify-content:space-between;gap:4px;margin:3px 0 1px;white-space:nowrap}
   .mini b{color:var(--cyan);font-weight:600;font-family:var(--mono)}
-  button{font-family:var(--sans);font-size:12px;color:var(--txt);background:rgba(255,255,255,.045);
-    border:1px solid var(--line);border-radius:8px;padding:7px 8px;cursor:pointer;transition:all .15s;text-align:center}
-  button:hover{background:rgba(103,232,249,.12);border-color:rgba(103,232,249,.4)}
-  button.on{background:rgba(103,232,249,.16);border-color:var(--cyan);color:var(--cyan)}
+  button{font-family:var(--sans);font-size:12px;color:var(--txt);
+    background:linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.025));
+    border:1px solid var(--line);border-radius:8px;padding:7px 8px;cursor:pointer;transition:all .15s;text-align:center;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.045)}
+  button:hover{background:linear-gradient(180deg,rgba(103,232,249,.15),rgba(103,232,249,.07));border-color:rgba(103,232,249,.48)}
+  button:active:not(:disabled){translate:0 1px;background:rgba(103,232,249,.20);border-color:rgba(103,232,249,.58)}
+  button.on{background:linear-gradient(180deg,rgba(103,232,249,.22),rgba(103,232,249,.10));border-color:rgba(103,232,249,.82);color:var(--cyan);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 0 14px rgba(103,232,249,.08)}
   button.wide{width:100%}
   .row{display:flex;align-items:center;gap:8px;margin:7px 0}
   .row label{font-size:11px;color:var(--dim);width:64px;flex:none}
@@ -66,11 +72,15 @@ export const CSS = `
   input[type=range]::-moz-range-thumb{width:12px;height:12px;border:none;border-radius:50%;background:var(--cyan);cursor:pointer}
   select{font-family:var(--mono);font-size:11px;color:var(--txt);background:rgba(255,255,255,.05);
     border:1px solid var(--line);border-radius:6px;padding:4px 6px;width:100%;outline:none}
+  /* 键盘焦点：青色双层 focus ring 不改变鼠标点击态；放在控件默认规则之后。 */
+  button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{
+    outline:2px solid var(--cyan);outline-offset:2px;box-shadow:0 0 0 4px rgba(103,232,249,.14)}
   /* ---------- 右侧 HUD ---------- */
   #hud{top:76px;right:14px;padding:12px 14px;z-index:10;min-width:196px;font-family:var(--mono)}
   #hud .hrow{display:flex;justify-content:space-between;gap:14px;font-size:11.5px;padding:3px 0}
   #hud .hrow span:first-child{color:var(--dim)}
   #hud .hrow span:last-child{color:var(--txt)}
+  .qhud .hrow span:last-child{font-variant-numeric:tabular-nums;text-align:right;letter-spacing:.01em}
   #hud .hrow .ok{color:#4ade80}#hud .hrow .warn{color:var(--amber)}
   #hud hr{border:none;border-top:1px solid var(--line);margin:7px 0}
   /* ---------- 相位图例 ---------- */
@@ -179,6 +189,12 @@ export const CSS = `
   #tabL{left:0}
   #tabR{right:0;border-radius:10px 0 0 10px}
   .qf-tab:hover{color:var(--cyan);border-color:rgba(103,232,249,.45)}
+  /* 全站键盘焦点：青色双层 focus ring 不改变鼠标点击态；减少动态偏好只压缩
+     CSS 动画/过渡，不暂停物理演化或 Canvas/WebGL 时间。 */
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;
+      animation-iteration-count:1!important;transition-duration:.01ms!important}
+  }
   @media (max-width:1100px){#legend,#desc{display:none}}
 `;
 

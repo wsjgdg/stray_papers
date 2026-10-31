@@ -25,6 +25,8 @@
  * ========================================================================== */
 import { CF_FAMILIES, CF_NOISES, cfSweep, cfStream, cfEnsemble, cfExactPL, cfFloor, cfNQ, cfDistance, cfSynBits, cfLeadingPower, CF_FAMILY_ST3 } from '../physics/codefamily.js';
 import { LiveDriver } from './live.js';
+import { ShotReplay } from './shot-replay.js';
+import { ConfidenceFeedback } from './confidence.js';
 
 const FM_CSS = `
   #fmPanel{top:108px;left:14px;width:250px;padding:13px;z-index:10;max-height:calc(100vh - 234px);
@@ -124,6 +126,8 @@ export class FamilyApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
+    this.ciFeedback?.dispose();
+    this.shotReplay?.dispose();
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
@@ -176,6 +180,7 @@ export class FamilyApp {
         <div class="hrow"><span>MC↔精确 4σ</span><span id="hZ">—</span></div>
         <div class="hrow"><span>MC 结局 纠回/受损/逻辑</span><span id="hFate">—</span></div>
         <div class="hrow"><span>MC 平均帧错误数</span><span id="hFaults">—</span></div>
+        <div class="hrow"><span>最近抽样结局</span><span id="hLast">—</span></div>
         <div class="hrow"><span>领先幂次 α</span><span id="hPower">—</span></div>
         <div class="cap"><b>Steane³ [[343,1,27]]</b>（模块级，不上面板）：α=8，
           p=10⁻³ 处 P_L≈10⁻¹⁷，任何可行 MC 样本都是 0 事件，画出来只能是噪声。</div>
@@ -191,6 +196,10 @@ export class FamilyApp {
       <div id="fmDiag"></div>
     `);
     this.cv = { curve: this.q('#fmCurve'), fate: this.q('#fmFate'), power: this.q('#fmPower') };
+    this.shotReplay = new ShotReplay(this.q('#fmHud'), 'family');
+    this.shotReplay.mount();
+    this.ciFeedback = new ConfidenceFeedback(this.q('#fmHud'));
+    this.ciFeedback.mount();
 
     const mk = (host, items, onPick) => {
       for (const it of items){
@@ -227,7 +236,7 @@ export class FamilyApp {
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
       make: () => cfStream(this.state.fam, { noise: this.state.noise, meas: this.state.meas, p: this.state.p, trials: this.state.trials, seed: this.state.seed }),
-      onFrame: res => { res.ms = this.live.lastFrameMs; this.mc = res; this.renderHud(); this.drawFate(); this.drawCurve(); },
+      onFrame: res => { res.ms = this.live.lastFrameMs; this.mc = res; this.lastTrial = res.lastTrial || null; this.renderHud(); this.drawFate(); this.drawCurve(); },
       onState: () => this.syncPlayBtn(),
     });
     this.on(this.q('#fmPlay'), 'click', () => this.live.toggle());
@@ -294,6 +303,7 @@ export class FamilyApp {
     const t0 = performance.now();
     this.mc = cfEnsemble(s.fam, { noise: s.noise, meas: s.meas, p: s.p, trials: s.trials, seed: s.seed });
     this.mc.ms = performance.now() - t0;
+    this.lastTrial = this.mc.lastTrial || null;
     this.renderHud(); this.drawFate(); this.drawCurve();
   }
 
@@ -327,6 +337,8 @@ export class FamilyApp {
 
   /* ---------- HUD ---------- */
   renderHud(){
+    this.ciFeedback?.sync({ label: '逻辑失效率 P_L', rate: this.mc && this.mc.PL, events: this.mc && this.mc.byFate ? this.mc.byFate.logic + this.mc.byFate.outside : undefined, n: this.mc && this.mc.trials });
+    this.shotReplay?.sync(this.lastTrial || (this.mc && this.mc.lastTrial), this.mc && this.mc.trials, this.state);
     const s = this.state, sw = this.sweep, mc = this.mc;
     const set = (id, v, cls) => {
       const el = this.q('#' + id);
@@ -349,7 +361,7 @@ export class FamilyApp {
       else set('hPseudo', 'p* = ' + ps.toFixed(6) + '（vs 未编码基线）');
     }
     if (!mc){
-      ['hMcPL', 'hZ', 'hFate', 'hFaults', 'hPower'].forEach(id => set(id, '计算中…'));
+      ['hMcPL', 'hZ', 'hFate', 'hFaults', 'hLast', 'hPower'].forEach(id => set(id, '计算中…'));
       return;
     }
     const r = this.recon();
@@ -357,6 +369,8 @@ export class FamilyApp {
     set('hZ', `z=${fmNf(r.zPL, 2)}σ · 故障 z=${fmNf(r.zF, 2)}σ`, r.ok4 ? 'ok' : 'warn');
     set('hFate', `${mc.byFate.perfect} / ${mc.byFate.outside} / ${mc.byFate.logic}`);
     set('hFaults', `${fmNf(mc.meanFaults, 2)} / 期望 ${fmNf(r.mExp, 2)}`);
+    const last = this.lastTrial || mc.lastTrial;
+    set('hLast', last ? `${last.fate === 'perfect' ? '纠回' : last.fate === 'outside' ? '受损' : '逻辑'} · wX=${last.xw} wZ=${last.zw}` : '—');
     const pw = this.powers ? this.powers.find(x => x.k === s.fam) : null;
     set('hPower', pw ? `α=${fmNf(pw.power, 3)} · c≈${pw.PL / Math.pow(1e-4, pw.power) < 1e4 ? fmNf(pw.PL / Math.pow(1e-4, pw.power), 1) : (pw.PL / Math.pow(1e-4, pw.power)).toExponential(1)}` : '—');
   }

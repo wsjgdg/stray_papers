@@ -543,9 +543,10 @@ export function scTrial(code, cfg, rng){
 export function scEnsemble(code, cfg = {}){
   const c = { p: 0.05, noise: 'depol', trials: 2000, seed: 7, ...cfg };
   const rng = mulberry32(c.seed);
-  let fail = 0, xf = 0, zf = 0, fb = 0, ksum = 0;
+  let fail = 0, xf = 0, zf = 0, fb = 0, ksum = 0, lastTrial = null;
   for (let i = 0; i < c.trials; i++){
     const r = scTrial(code, c, rng);
+    lastTrial = r;
     if (r.fail) fail++;
     if (r.xfail) xf++;
     if (r.zfail) zf++;
@@ -556,8 +557,36 @@ export function scEnsemble(code, cfg = {}){
   return {
     d: code.d, p: c.p, noise: c.noise, trials: N,
     PL: fail / N, PLx: xf / N, PLz: zf / N,
-    fallback: fb / N, meanDefects: ksum / (2 * N),
+    fallback: fb / N, meanDefects: ksum / (2 * N), lastTrial,
     sigma: Math.sqrt(Math.max(fail / N * (1 - fail / N), 1e-12) / N),
+  };
+}
+
+/** 流式单帧 MC：与 scEnsemble 同 RNG 顺序，附最近一条完整轨迹供播放显示。 */
+export function scStream(code, cfg = {}){
+  const c = { p: 0.05, noise: 'depol', trials: 2000, seed: 7, ...cfg };
+  const rng = mulberry32(c.seed);
+  let fail = 0, xf = 0, zf = 0, fb = 0, ksum = 0, n = 0, lastTrial = null;
+  function one(){
+    const r = scTrial(code, c, rng);
+    if (r.fail) fail++;
+    if (r.xfail) xf++;
+    if (r.zfail) zf++;
+    if (r.modeX === 'greedy' || r.modeZ === 'greedy') fb++;
+    ksum += r.kx + r.kz;
+    lastTrial = r;
+    n++;
+  }
+  return {
+    get total(){ return Math.max(1, c.trials | 0); },
+    get n(){ return n; },
+    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m; k++) one(); },
+    result(){
+      const N = Math.max(1, n), PL = fail / N;
+      return { d: code.d, p: c.p, noise: c.noise, trials: n, PL, PLx: xf / N, PLz: zf / N,
+        fallback: fb / N, meanDefects: ksum / (2 * N),
+        sigma: Math.sqrt(Math.max(PL * (1 - PL), 1e-12) / N), lastTrial };
+    },
   };
 }
 
@@ -1215,9 +1244,10 @@ export function scSpaceEnsemble(code, cfg = {}){
   const grs = { X: scSpaceGraph(code, 'X', R), Z: scSpaceGraph(code, 'Z', R) };
   const rng = mulberry32(c.seed);
   const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
-  let fail = 0, xf = 0, zf = 0, bad = 0, ksum = 0, fbn = 0;
+  let fail = 0, xf = 0, zf = 0, bad = 0, ksum = 0, fbn = 0, lastTrial = null;
   for (let i = 0; i < c.trials; i++){
     const r = scSpaceTrial(code, c, rng, grs);
+    lastTrial = r;
     if (r.fail) fail++;
     if (r.xfail) xf++;
     if (r.zfail) zf++;
@@ -1229,8 +1259,43 @@ export function scSpaceEnsemble(code, cfg = {}){
   const N = c.trials, PL = fail / N;
   return {
     d: code.d, p: c.p, noise: c.noise, q: c.q === undefined ? c.p : c.q, rounds: R, layers: R + 1, trials: N,
-    PL, PLx: xf / N, PLz: zf / N, badSyn: bad / N, meanDefects: ksum / (2 * N), fallback: fbn / (2 * N),
+    PL, PLx: xf / N, PLz: zf / N, badSyn: bad / N, meanDefects: ksum / (2 * N), fallback: fbn / (2 * N), lastTrial,
     ms: (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0,
     sigma: Math.sqrt(Math.max(PL * (1 - PL), 1e-12) / N),
+  };
+}
+
+/** 流式带噪测量 MC：共享时空图并逐批推进，附最近试验用于画布回放。 */
+export function scSpaceStream(code, cfg = {}){
+  const c = { p: 0.02, noise: 'x', trials: 600, seed: 7, q: undefined, rounds: undefined, dpMax: SC_PHEN.dpMax, ...cfg };
+  const R = c.rounds === undefined ? Math.max(1, code.d - 1) : c.rounds;
+  const grs = { X: scSpaceGraph(code, 'X', R), Z: scSpaceGraph(code, 'Z', R) };
+  const rng = mulberry32(c.seed);
+  const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  let fail = 0, xf = 0, zf = 0, bad = 0, ksum = 0, fbn = 0, n = 0, lastTrial = null;
+  function one(){
+    const r = scSpaceTrial(code, c, rng, grs);
+    if (r.fail) fail++;
+    if (r.xfail) xf++;
+    if (r.zfail) zf++;
+    if (r.badSyn) bad++;
+    if (r.modeX === 'greedy') fbn++;
+    if (r.modeZ === 'greedy') fbn++;
+    ksum += r.kx + r.kz;
+    lastTrial = r;
+    n++;
+  }
+  return {
+    get total(){ return Math.max(1, c.trials | 0); },
+    get n(){ return n; },
+    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m; k++) one(); },
+    result(){
+      const N = Math.max(1, n), PL = fail / N;
+      return { d: code.d, p: c.p, noise: c.noise, q: c.q === undefined ? c.p : c.q,
+        rounds: R, layers: R + 1, trials: n, PL, PLx: xf / N, PLz: zf / N,
+        badSyn: bad / N, meanDefects: ksum / (2 * N), fallback: fbn / (2 * N),
+        ms: (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0,
+        sigma: Math.sqrt(Math.max(PL * (1 - PL), 1e-12) / N), lastTrial };
+    },
   };
 }

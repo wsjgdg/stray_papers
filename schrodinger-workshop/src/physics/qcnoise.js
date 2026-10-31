@@ -52,7 +52,7 @@
  *   ② 无非马尔可夫记忆、无串扰、无泄漏（热激发只翻转布居，不把比特搬出计算基）；
  *   ③ 经典前馈 cond 的门噪声语义 = 内部门真实执行才衰减（未触发不衰减）。
  * ========================================================================== */
-import { QC_UNARY, qcRotation, mulberry32, jacobiReal, QC_JOINT_PREP, qcJointK } from './qcircuit.js';
+import { QC_UNARY, qcRotation, qcU3, mulberry32, jacobiReal, QC_JOINT_PREP, qcJointK } from './qcircuit.js';
 
 /* ---------- 门矩阵（与 qcApply 同一套展开；mask = 控制位掩码，0 = 无控） ---------- */
 const QCN_C0 = { re: 0, im: 0 }, QCN_C1 = { re: 1, im: 0 };
@@ -61,6 +61,9 @@ function qcnGateMatrix(g){
   if (op === 'cnot') return { m: QC_UNARY.x.m, q: g.t ?? g.q2, mask: 1 << (g.c ?? g.q1) };
   if (op === 'cz') return { m: QC_UNARY.z.m, q: g.t ?? g.q2, mask: 1 << (g.c ?? g.q1) };
   if (op === 'toffoli') return { m: QC_UNARY.x.m, q: g.q3, mask: (1 << g.q1) | (1 << g.q2) };
+  if (op === 'u3'){
+    return { m: qcU3(g.theta ?? 0, g.phi ?? 0, g.lambda ?? 0), q: g.q, mask: g.c != null ? (1 << g.c) : 0 };
+  }
   if (op === 'rx' || op === 'ry' || op === 'rz'){
     return { m: qcRotation(op, g.theta ?? 0), q: g.q, mask: g.c != null ? (1 << g.c) : 0 };
   }

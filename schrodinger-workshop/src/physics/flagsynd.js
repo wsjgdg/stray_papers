@@ -803,6 +803,7 @@ export function fsStream(kind = 'std', cfg = {}){
   const rng = mulberry32(c.seed);
   const acc = { perfect: 0, outside: 0, logic: 0, flagged: 0, gauge: 0, mixed: 0 };
   let n = 0, wSum = 0, flips = 0, random = 0, faultSum = 0, unsureN = 0, usedSum = 0, noGoodN = 0, retrySum = 0, skipSum = 0;
+  let lastTrial = null;
   const wHist = {};
   function one(){
     const r = fsExec(circ, { rng, p: c.p, spectrum: c.spectrum, noisyPhase: c.noisyPhase,
@@ -811,6 +812,7 @@ export function fsStream(kind = 'std', cfg = {}){
     const cos = r.cosetFinal;
     const bucket = r.flagged ? 'flagged'
       : (cos === 0 ? 'perfect' : cos === -1 ? (r.F > 1 - 1e-9 ? 'gauge' : 'outside') : 'logic');
+    lastTrial = { ...r, ...cl, bucket };
     acc[bucket]++;
     if (!r.flagged && bucket !== 'perfect'){ wHist[r.wRes] = (wHist[r.wRes] || 0) + 1; wSum += r.wRes; }
     flips += r.diag.frameFlip; random += r.diag.random;
@@ -827,7 +829,7 @@ export function fsStream(kind = 'std', cfg = {}){
     result(){
       const nn = Math.max(1, n);
       return {
-        kind: c.kind, p: c.p, spectrum: c.spectrum, trials: n, ...acc,
+        kind: c.kind, p: c.p, spectrum: c.spectrum, trials: n, ...acc, lastTrial,
         PL: acc.logic / nn,
         harmful: (acc.logic + acc.outside) / nn,
         /* 条件于「未被判不可信」的样本：cat/dup 的 flag 率高，只看 PL 会把「信息少一轮」
