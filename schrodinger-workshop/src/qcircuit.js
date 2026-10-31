@@ -1757,9 +1757,7 @@ export class QCircuitApp {
       title = '√ρ_ii（布居；混合态无色相）· 非零 ' + amp.length + '/' + dim;
     } else {
       amp = qcAmplitudes(this.psi);
-      title = W >= 500
-        ? '|a_i| · arg a_i: −π红 / 0青 / +π红 · 非零 ' + amp.length + '/' + dim
-        : '|a_i| · 色相：0青 / ±π红';
+      title = '|a_i| · arg(a_i): 0=青，±π=红';
     }
     const maxAbs = Math.max(1e-12, ...amp.map(a => a.abs));
     const bw = (W - padL - padR) / dim;

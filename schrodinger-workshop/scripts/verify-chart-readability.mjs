@@ -114,13 +114,13 @@ globalThis.window = { devicePixelRatio: 1 };
 labels.length = 0;
 circuit.drawAmp();
 if (hadWindow) globalThis.window = oldWindow; else delete globalThis.window;
-assert.ok(labels.some(x => x.includes('arg a_i: −π红 / 0青 / +π红')), 'circuit amplitude chart should identify phase/color anchors');
+assert.ok(labels.some(x => x.includes('arg(a_i): 0=青，±π=红')), 'circuit amplitude chart should identify phase/color anchors');
 assert.ok(labels.includes('−π') && labels.includes('0') && labels.includes('+π'), 'pure-state amplitude colors should have a phase hue scale');
 circuitCanvas.width = 360; labels.length = 0;
 globalThis.window = { devicePixelRatio: 1 };
 circuit.drawAmp();
 if (hadWindow) globalThis.window = oldWindow; else delete globalThis.window;
-assert.ok(labels.some(x => x.includes('色相：0青 / ±π红')), 'narrow circuit chart should retain phase/color anchors in its compact title');
+assert.ok(labels.some(x => x.includes('arg(a_i): 0=青，±π=红')), 'narrow circuit chart should retain phase/color anchors in its compact title');
 assert.ok(!labels.includes('−π'), 'narrow circuit chart should avoid a clipped gradient legend');
 
 const cycle = Object.create(CycleApp.prototype);
