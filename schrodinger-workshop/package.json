@@ -9,6 +9,7 @@
     "build:standalone": "node scripts/build-standalone.mjs",
     "test:qec-page": "node scripts/verify-qec-page.mjs",
     "test:spin-objects": "node scripts/verify-spin-field-objects.mjs",
+    "test:hubbard-objects": "node scripts/verify-hubbard-field-objects.mjs",
     "serve:python": "python3 -m http.server 8765 --bind 0.0.0.0"
   },
   "devDependencies": {

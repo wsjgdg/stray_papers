@@ -28,14 +28,16 @@ import { injectStyles } from './core/styles.js';
 import { injectResponsive } from './core/responsive.js';
 import { navHtml } from './core/nav.js';
 import { hbSector, hbSetField, hbProductFromPattern, hbMeasure, hbEnergy, hbEntropy, hbEntropyAt, hbEntropyProfile, hbDensityCorr, hbMomentumDist, hbCorrelation, hbKrylovExp, hbBondCorr, hbNorm, hbResidual, HbGsTask, HbScanTask, HB_PRESETS } from './physics/hubbard.js';
+import { LOCAL_FIELD_SHAPES, normalizeLocalFieldObjects, composeLocalField } from './physics/localfield.js';
 import { hbCamDefault, hbOrbit, hbZoom, hbProject, hbSitePositions, hbPick, hbDepthRange, PITCH_LIM, DIST_MIN, DIST_MAX } from './hubbard3d.js';
 
 /* 画面上 μ 的满量程（|μ|/t 到 6 就是满格高） */
 const MU_VIEW = 6;
 const HB_TOOLS = [
   { k: 'state', name: '初态', tip: '点击格子：空→↑→↓→↑↓（右键反向）' },
-  { k: 'field', name: '势笔刷', tip: '拖动涂势：左键=吸引 μ<0，右键=排斥 μ>0' },
-  { k: 'erase', name: '擦除', tip: '点击清除该格的 μ' },
+  { k: 'field', name: '势笔刷', tip: '拖动涂自由势场：左键=吸引 μ<0，右键=排斥 μ>0' },
+  { k: 'erase', name: '擦除', tip: '点击清除该格的自由势场' },
+  { k: 'object', name: '势对象', tip: '点击空位放置势源；拖动对象锚点移动，右键删除' },
 ];
 
 /* 主画布的两种投影：2D 卡片式链 / 3D 透视（Phase 5） */
@@ -77,7 +79,7 @@ const HB_CSS = `
   #hbLadder{width:var(--w);height:300px;border:1px solid var(--line);border-radius:10px;background:rgba(4,8,16,.5);
     display:block;touch-action:none}
   #hbStage[data-tool="state"] #hbLadder{cursor:pointer}
-  #hbStage[data-tool="field"] #hbLadder,#hbStage[data-tool="erase"] #hbLadder{cursor:crosshair}
+  #hbStage[data-tool="field"] #hbLadder,#hbStage[data-tool="erase"] #hbLadder,#hbStage[data-tool="object"] #hbLadder{cursor:crosshair}
   #hbStage[data-proj="3d"] #hbLadder{cursor:grab}
   #hbChart{width:var(--w);height:170px;border:1px solid var(--line);border-radius:10px;background:rgba(4,8,16,.5);display:block}
   #hbViews{display:flex;gap:5px;align-self:stretch;justify-content:flex-end;margin-bottom:-2px;
@@ -128,12 +130,14 @@ export class HubbardApp {
       mode: q.get('mode') === 'evo' ? 'evo' : 'gs',
       tool: q.get('tool') || 'state',
       muDepth: clamp(num('muD', 2), 0, MU_VIEW), muSign: q.get('sgn') === '+' ? 1 : -1,
-      mu: null, pat: null, nUp: 0, nDn: 0,
+      mu: null, muBase: null, fieldObjects: [], selectedFieldObject: null,
+      objectShape: 'gaussian', objectAmp: -1.5, objectWidth: 1.5,
+      pat: null, nUp: 0, nDn: 0,
       view: 'Sx',
       proj: q.get('proj') === '3d' ? '3d' : '2d',
       Umax: 8,
     };
-    if (![8, 10].includes(this.state.L)) this.state.L = 8;
+    if (![8, 10, 12].includes(this.state.L)) this.state.L = 8;
     if (!HB_TOOLS.some(t => t.k === this.state.tool)) this.state.tool = 'state';
     if (!HB_PRESETS[this.state.preset]) this.state.preset = 'mott';
     if (!HB_VIEWS.some(v => v.k === this.state.view)) this.state.view = 'Sx';
@@ -149,7 +153,10 @@ export class HubbardApp {
     this.probe = { sx: null, sxL: 0, nk: null, nn: null, rho: null, live: false };
     this._dirty = { sx: true, nk: true, nn: true };
     this.sxJob = null; this.sxMs = 0;
+    this.state.muBase = new Float64Array(this.state.L);
     this.state.mu = new Float64Array(this.state.L);
+    this.state.fieldObjects = []; this.state.selectedFieldObject = null;
+    this._nextFieldObjectId = 1;
     this.state.pat = neelPattern(this.state.L);
     this._spec = this.readUrlSpec(q);
     this.sec = null; this.re = null; this.im = null;
@@ -200,8 +207,8 @@ export class HubbardApp {
   <div class="sec"><h3>模式</h3><div class="grid2">
     <button id="hbModeGs" class="sm">解基态</button><button id="hbModeEvo" class="sm">从初态演化</button>
   </div></div>
-  <div class="sec"><h3>工具</h3><div class="grid3" id="hbTools">
-    ${HB_TOOLS.map(t => '<button data-tool="' + t.k + '">' + t.name + '</button>').join('')}
+  <div class="sec"><h3>工具</h3><div class="grid4" id="hbTools">
+    ${HB_TOOLS.map(t => '<button data-tool="' + t.k + '" title="' + t.tip + '">' + t.name + '</button>').join('')}
   </div>
     <div class="row"><label>|μ| / t</label><input type="range" id="rMu" min="0" max="${MU_VIEW}" step="0.25" value="${this.state.muDepth}"><output id="oMu">${this.state.muDepth.toFixed(2)}</output></div>
     <div class="grid2" style="margin-top:5px">
@@ -211,6 +218,13 @@ export class HubbardApp {
       <button id="hbClearField" class="sm">清空场</button><button id="hbClearPat" class="sm">复位填充</button>
     </div>
     <div class="row" style="margin-top:5px"><label>场</label><span id="hbFieldInfo">—</span></div>
+  </div>
+  <div class="sec" id="hbObjectPanel"><h3>势对象 · <span id="hbObjCount">0</span></h3>
+    <div class="grid3" id="hbObjShapes">${LOCAL_FIELD_SHAPES.map((s,i) => '<button data-object-shape="' + s + '" title="' + ['连续高斯局域势','有限宽度盒形势','交错正负势'][i] + '">' + ['高斯','盒形','交错'][i] + '</button>').join('')}</div>
+    <div class="row"><label>振幅 A</label><input type="range" id="rObjAmp" min="-${MU_VIEW}" max="${MU_VIEW}" step="0.25" value="${this.state.objectAmp}"><output id="oObjAmp">${this.state.objectAmp.toFixed(2)}</output></div>
+    <div class="row"><label>宽度 w（格）</label><input type="range" id="rObjWidth" min="0.5" max="8" step="0.5" value="${this.state.objectWidth}"><output id="oObjWidth">${this.state.objectWidth.toFixed(1)}</output></div>
+    <div class="grid3"><button id="hbObjPlace" class="sm">放置</button><button id="hbObjDup" class="sm">复制</button><button id="hbObjDelete" class="sm">删除</button></div>
+    <div id="hbObjStatus" style="font-size:10px;color:var(--dim);margin-top:4px">选形状后点「放置」，再点链上空位；拖对象锚点可移动。</div>
   </div>
   <div class="sec"><h3>协议（演化中改 H）</h3><div class="grid3">
     ${Object.keys(HB_PROTOCOLS).map(k => '<button data-proto="' + k + '" title="' + HB_PROTOCOLS[k].tip + '">' + HB_PROTOCOLS[k].name + '</button>').join('')}
@@ -240,6 +254,7 @@ export class HubbardApp {
     <button id="hbPause">暂停</button><button id="hbStep">单步</button>
     <button id="hbReset">重置</button><button id="hbGap">算能隙</button>
     <button id="hbLink" class="sm">复制链接</button><button id="hbSave" class="sm">导出 JSON</button>
+    <button id="hbLoad" class="sm">导入 JSON</button><input id="hbLoadFile" type="file" accept="application/json,.json" style="display:none">
   </div>
     <div class="row" style="margin-top:5px"><label>时间轴</label><span id="hbScrubInfo">—</span></div>
     <div id="hbScrubRow" class="off"><input type="range" id="hbScrub" min="0" max="0" step="1" value="0"></div>
@@ -300,6 +315,13 @@ export class HubbardApp {
     this.on(this.q('#hbMuNeg'), 'click', () => this.setMuSign(-1));
     this.on(this.q('#hbMuPos'), 'click', () => this.setMuSign(1));
     this.on(this.q('#hbClearField'), 'click', () => this.clearField(true));
+    this.container.querySelectorAll('[data-object-shape]').forEach(b =>
+      this.on(b, 'click', () => this.setObjectShape(b.dataset.objectShape)));
+    this.on(this.q('#rObjAmp'), 'input', () => this.setObjectProperty('amp', parseFloat(this.q('#rObjAmp').value)));
+    this.on(this.q('#rObjWidth'), 'input', () => this.setObjectProperty('width', parseFloat(this.q('#rObjWidth').value)));
+    this.on(this.q('#hbObjPlace'), 'click', () => { this.setTool('object'); this.toast('点击链上空位放置势对象', 1200); });
+    this.on(this.q('#hbObjDup'), 'click', () => this.duplicateFieldObject());
+    this.on(this.q('#hbObjDelete'), 'click', () => this.deleteFieldObject());
     this.on(this.q('#hbClearPat'), 'click', () => this.resetPattern());
     this.on(this.q('#hbModeGs'), 'click', () => this.applyMode('gs'));
     this.on(this.q('#hbModeEvo'), 'click', () => this.applyMode('evo'));
@@ -309,6 +331,12 @@ export class HubbardApp {
     this.on(this.q('#hbGap'), 'click', () => this.startGap());
     this.on(this.q('#hbLink'), 'click', () => this.copyLink());
     this.on(this.q('#hbSave'), 'click', () => this.exportJson());
+    this.on(this.q('#hbLoad'), 'click', () => this.q('#hbLoadFile').click());
+    this.on(this.q('#hbLoadFile'), 'change', e => {
+      const file=e.target.files&&e.target.files[0];
+      if(file)this.importJsonFile(file);
+      e.target.value='';
+    });
     this.container.querySelectorAll('[data-proto]').forEach(b =>
       this.on(b, 'click', () => this.startProtocol(b.dataset.proto)));
     this.on(this.q('#hbProtoStop'), 'click', () => this.stopProtocol(true));
@@ -326,6 +354,7 @@ export class HubbardApp {
       const tag = (e.target && e.target.tagName) || '';
       if (/input|textarea|select/i.test(tag)) return;
       if (e.key === '1' || e.key === '2' || e.key === '3') this.setTool(HB_TOOLS[+e.key - 1].k);
+      else if (e.key === 'o' || e.key === 'O') this.setTool('object');
       else if (e.key >= '4' && e.key <= '8') this.setView(HB_VIEWS[+e.key - 4].k);
       else if (e.key === '0') this.toggleProj();
       else if (this.state.proj === '3d' && (e.key === 'r' || e.key === 'R')){
@@ -360,8 +389,13 @@ export class HubbardApp {
       }
       if (i < 0) return;
       e.preventDefault();
-      this._paint = { i };
-      this.applyAt(i, e.button === 2);
+      if(this.state.tool==='object'){
+        const objectId=this.objectPointerDown(i,e.button===2);
+        this._paint=objectId?{i,objectId}:null;
+      }else{
+        this._paint = { i };
+        this.applyAt(i, e.button === 2);
+      }
       this.draw();
     });
     this.on(cv, 'pointermove', e => {
@@ -377,7 +411,8 @@ export class HubbardApp {
       if (i !== this._hover){ this._hover = i; this.draw(); }
       if (this._paint && i >= 0 && i !== this._paint.i){
         this._paint.i = i;
-        this.applyAt(i, false);
+        if(this._paint.objectId)this.moveFieldObject(this._paint.objectId,i);
+        else this.applyAt(i, false);
         this.draw();
       }
     });
@@ -468,15 +503,20 @@ export class HubbardApp {
   }
 
   /* ---------- 预设 / 模式 ---------- */
-  initPreset(){
+  initPreset(opts = {}){
+    if(this.proto)this.stopProtocol(true);
     const { L, preset } = this.state;
+    const keepFields=opts.keepFields===true;
     this.cancelSolve();
     this.state.paused = false;
     this.state.t = 0; this.state.frames = 0; this.hist = [];
     this.gap = null; this.job = null; this.gapJob = null; this.slope = null;
     this.q('#hGap').textContent = '—'; this.q('#hSlope').textContent = '—';
     this.state.pat = neelPattern(L);
-    this.state.mu = new Float64Array(L);
+    if(!keepFields){
+      this.state.muBase=new Float64Array(L);this.state.fieldObjects=[];this.state.selectedFieldObject=null;
+    }
+    this.rebuildField();this.syncObjectPanel();
     this.rebuildSector(L / 2, L / 2);
     this.state.mode = preset === 'quench' ? 'evo' : 'gs';
     if (this.state.mode === 'gs'){
@@ -541,9 +581,14 @@ export class HubbardApp {
     if (L === this.state.L) return;
     if (![8, 10, 12].includes(L)) return;
     this.stopProtocol(false);
+    const prevBase=this.state.muBase,prevObjects=this.state.fieldObjects;
     this.state.L = L;
+    this.state.muBase=new Float64Array(L);
+    if(prevBase)for(let i=0;i<Math.min(L,prevBase.length);i++)this.state.muBase[i]=prevBase[i];
+    this.state.fieldObjects=prevObjects.map(o=>({...o,center:clamp(o.center,0,L-1)}));
+    if(!this.state.fieldObjects.some(o=>o.id===this.state.selectedFieldObject))this.state.selectedFieldObject=null;
     if (L === 12) this.state.mode = 'gs';
-    this.initPreset();
+    this.initPreset({keepFields:true});
     this.queueUrl();
     if (L === 10) this.toast('L=10：扇区 63504 维，基态要算几秒', 1800);
     if (L === 12) this.toast('L=12 静态档：853776 维，基态约 70 s（内存 ~1 GB），只解基态/看观测量', 3200);
@@ -558,7 +603,7 @@ export class HubbardApp {
     this.state.tool = k;
     this.syncPanel();
     const st = this.q('#hbStage'); if (st) st.dataset.tool = k;
-    this.draw();
+    this.draw();this.queueUrl();
   }
   setMuDepth(v){
     this.state.muDepth = clamp(v, 0, MU_VIEW);
@@ -570,11 +615,18 @@ export class HubbardApp {
     this.syncPanel();
   }
 
-  /* ---------- 外场 μ ---------- */
+  /* ---------- 自由势场 + 可组合局域势对象 ---------- */
+  rebuildField(){
+    this.state.mu=composeLocalField(this.state.L,this.state.muBase,this.state.fieldObjects,{maxAmplitude:MU_VIEW});
+    for(let i=0;i<this.state.mu.length;i++)this.state.mu[i]=clamp(this.state.mu[i],-MU_VIEW,MU_VIEW);
+    return this.state.mu;
+  }
   hasField(){ for (let i = 0; i < this.state.mu.length; i++) if (this.state.mu[i] !== 0) return true; return false; }
   fieldSites(){ let n = 0; for (let i = 0; i < this.state.mu.length; i++) if (this.state.mu[i] !== 0) n++; return n; }
   applyField(){
-    hbSetField(this.sec, this.hasField() ? this.state.mu : null);
+    this.rebuildField();
+    if(this.proto)this.applyProtocol(true);
+    else hbSetField(this.sec,this.hasField()?this.state.mu:null);
     this.afterHChange('μ');
     this.queueUrl();
   }
@@ -582,15 +634,87 @@ export class HubbardApp {
     const L = this.state.L;
     if (i < 0 || i >= L) return;
     const v = sign === 0 ? 0 : Math.sign(sign) * Math.abs(this.state.muDepth);
-    if (this.state.mu[i] === v) return;
-    this.state.mu[i] = v;
+    if (this.state.muBase[i] === v) return;
+    this.state.muBase[i] = v;
     this.applyField();
   }
   clearField(loud){
-    if (!this.hasField()){ if (loud) this.toast('场上没有势', 900); return; }
-    this.state.mu = new Float64Array(this.state.L);
-    this.applyField();
-    if (loud) this.toast('已清空场', 1100);
+    const hasLayer=this.state.fieldObjects.length>0||this.state.muBase.some(v=>v!==0);
+    if (!hasLayer){ if (loud) this.toast('场上没有势', 900); return; }
+    this.state.muBase=new Float64Array(this.state.L);this.state.fieldObjects=[];this.state.selectedFieldObject=null;
+    this.rebuildField();this.syncObjectPanel();
+    if(this.proto)this.applyProtocol(true);else hbSetField(this.sec,null);
+    this.afterHChange('μ clear');this.queueUrl();
+    if (loud) this.toast('已清空自由势场与势对象', 1100);
+  }
+  fieldObjectAt(i){
+    let best=null,dist=Infinity;
+    for(const o of this.state.fieldObjects){const d=Math.abs(o.center-i);if(d<=0.6&&d<dist){best=o;dist=d;}}
+    return best;
+  }
+  newFieldObjectId(){
+    let id;do{id=`mu-${this._nextFieldObjectId++}`;}while(this.state.fieldObjects.some(o=>o.id===id));
+    return id;
+  }
+  addFieldObject(center,props={}){
+    if(!Number.isInteger(center)||center<0||center>=this.state.L||this.state.fieldObjects.length>=24)return null;
+    const [o]=normalizeLocalFieldObjects(this.state.L,[{id:this.newFieldObjectId(),shape:props.shape||this.state.objectShape,
+      center,width:props.width??this.state.objectWidth,amp:props.amp??this.state.objectAmp}],{maxAmplitude:MU_VIEW});
+    this.state.fieldObjects.push(o);this.state.selectedFieldObject=o.id;this.syncObjectPanel();this.applyField();
+    return o.id;
+  }
+  objectPointerDown(i,right=false){
+    const hit=this.fieldObjectAt(i);
+    if(right){if(hit){this.state.selectedFieldObject=hit.id;this.deleteFieldObject();}return null;}
+    if(hit){this.state.selectedFieldObject=hit.id;this.syncObjectPanel();return hit.id;}
+    if(this.state.fieldObjects.length>=24){this.toast('势对象已达上限（24）',1300);return null;}
+    return this.addFieldObject(i);
+  }
+  moveFieldObject(id,site){
+    const o=this.state.fieldObjects.find(x=>x.id===id);if(!o||site===o.center)return;
+    o.center=site;this.syncObjectPanel();this.applyField();
+  }
+  setObjectShape(shape){
+    if(!LOCAL_FIELD_SHAPES.includes(shape))return false;
+    this.state.objectShape=shape;
+    const o=this.state.fieldObjects.find(x=>x.id===this.state.selectedFieldObject);
+    if(o){o.shape=shape;this.applyField();}
+    this.syncObjectPanel();this.draw();this.queueUrl();return true;
+  }
+  setObjectProperty(key,value){
+    if(!Number.isFinite(value)||!['amp','width'].includes(key))return false;
+    value=key==='amp'?clamp(value,-MU_VIEW,MU_VIEW):clamp(value,0.5,8);
+    const o=this.state.fieldObjects.find(x=>x.id===this.state.selectedFieldObject);
+    if(o){o[key]=value;this.applyField();}
+    else if(key==='amp')this.state.objectAmp=value;else this.state.objectWidth=value;
+    this.syncObjectPanel();this.draw();this.queueUrl();return true;
+  }
+  duplicateFieldObject(){
+    const o=this.state.fieldObjects.find(x=>x.id===this.state.selectedFieldObject);
+    if(!o){this.toast('先选中一个势对象',1000);return false;}
+    if(this.state.fieldObjects.length>=24){this.toast('势对象已达上限（24）',1300);return false;}
+    const id=this.newFieldObjectId(),copy={...o,id,center:o.center<this.state.L-1?o.center+1:Math.max(0,o.center-1)};
+    this.state.fieldObjects.push(copy);this.state.selectedFieldObject=id;this.syncObjectPanel();this.applyField();return true;
+  }
+  deleteFieldObject(){
+    const n=this.state.fieldObjects.length;
+    this.state.fieldObjects=this.state.fieldObjects.filter(o=>o.id!==this.state.selectedFieldObject);
+    if(n===this.state.fieldObjects.length)return false;
+    this.state.selectedFieldObject=null;this.syncObjectPanel();this.applyField();return true;
+  }
+  syncObjectPanel(){
+    const count=this.q('#hbObjCount'),status=this.q('#hbObjStatus');
+    if(count)count.textContent=String(this.state.fieldObjects.length);
+    const o=this.state.fieldObjects.find(x=>x.id===this.state.selectedFieldObject);
+    if(status)status.textContent=o?`已选 ${o.shape} · 中心 ${o.center} · A=${o.amp.toFixed(2)} · w=${o.width.toFixed(1)} 格；拖动锚点移动。`:'选形状后点「放置」，再点链上空位；拖对象锚点可移动。';
+    this.container.querySelectorAll('[data-object-shape]').forEach(b=>b.classList.toggle('on',b.dataset.objectShape===(o?o.shape:this.state.objectShape)));
+    const amp=o?o.amp:this.state.objectAmp,width=o?o.width:this.state.objectWidth;
+    if(this.q('#rObjAmp'))this.q('#rObjAmp').value=String(amp);
+    if(this.q('#oObjAmp'))this.q('#oObjAmp').textContent=amp.toFixed(2);
+    if(this.q('#rObjWidth'))this.q('#rObjWidth').value=String(width);
+    if(this.q('#oObjWidth'))this.q('#oObjWidth').textContent=width.toFixed(1);
+    if(this.q('#hbObjDup'))this.q('#hbObjDup').disabled=!o;
+    if(this.q('#hbObjDelete'))this.q('#hbObjDelete').disabled=!o;
   }
 
   /* ---------- 初态：点格点循环 空→↑→↓→↑↓ ---------- */
@@ -838,9 +962,10 @@ export class HubbardApp {
   startProtocol(kind){
     const P = HB_PROTOCOLS[kind];
     if (!P) return;
+    if(this.proto)this.stopProtocol(true);
     if (this.staticTier()){ this.toast('L=12 静态档：不做实时演化（协议需要逐帧推进）', 2400); return; }
     if (this.state.mode !== 'evo') this.applyMode('evo');
-    this.protoSaved = { U: this.state.U, mu: Float64Array.from(this.state.mu) };
+    this.protoSaved = { U: this.state.U };
     this.proto = { kind, T: P.T, A: P.A ?? 0, w: P.w ?? 1, site: 0 };
     this.protoStart = this.state.t;
     this.state.paused = false;
@@ -851,17 +976,21 @@ export class HubbardApp {
   stopProtocol(restore){
     if (!this.proto) return;
     this.proto = null;
+    let restored=false;
     if (restore && this.protoSaved){
       this.state.U = this.protoSaved.U;
-      this.state.mu = Float64Array.from(this.protoSaved.mu);
-      hbSetField(this.sec, this.hasField() ? this.state.mu : null);
-      this.protoSaved = null;
+      this.rebuildField();
+      hbSetField(this.sec,this.hasField()?this.state.mu:null);
+      restored=true;
     }
-    this.syncPanel(); this.draw();
+    this.protoSaved=null;
+    if(restored)this.afterHChange('protocol restore');
+    else{this.syncPanel();this.draw();}
+    this.queueUrl();
   }
-  applyProtocol(){
+  applyProtocol(force=false){
     const p = this.proto;
-    if (!p || this.state.paused || this.state.mode !== 'evo') return;
+    if (!p || (!force&&this.state.paused) || this.state.mode !== 'evo') return;
     const L = this.state.L, tau = this.state.t - this.protoStart;
     const f = clamp(tau / p.T, 0, 1);
     if (p.kind === 'uramp'){
@@ -872,16 +1001,16 @@ export class HubbardApp {
       this.q('#hU').textContent = U.toFixed(2);
     } else if (p.kind === 'pulse'){
       const a = f < 1 ? -p.A * Math.sin(Math.PI * f) ** 2 : 0;
-      const mu = new Float64Array(L);
-      mu[p.site] = a;
-      this.state.mu = mu;
-      hbSetField(this.sec, a === 0 ? null : mu);
+      const mu = this.rebuildField();
+      mu[p.site] = clamp(mu[p.site] + a,-MU_VIEW,MU_VIEW);
+      this.state.mu=mu;
+      hbSetField(this.sec,this.hasField()?mu:null);
     } else if (p.kind === 'push'){
       const x = 1 + (L - 2) * f;
-      const mu = new Float64Array(L);
-      for (let i = 0; i < L; i++) mu[i] = -p.A * Math.exp(-((i - x) ** 2) / (2 * p.w * p.w));
-      this.state.mu = mu;
-      hbSetField(this.sec, mu);
+      const mu = this.rebuildField();
+      for (let i = 0; i < L; i++) mu[i]=clamp(mu[i]-p.A*Math.exp(-((i-x)**2)/(2*p.w*p.w)),-MU_VIEW,MU_VIEW);
+      this.state.mu=mu;
+      hbSetField(this.sec,this.hasField()?mu:null);
     }
     if (f >= 1) this.stopProtocol(true);
     this.syncProtoInfo();
@@ -1192,6 +1321,16 @@ export class HubbardApp {
         ctx.fillRect(mx - 3 * dpr, j >= 0 ? jZero - h : jZero, 6 * dpr, Math.max(h, 0.6 * dpr));
       }
     }
+    /* 每个势对象都有自己的小锚点；形状区分类型，色调表示势阱/势垒。 */
+    for(const o of this.state.fieldObjects){
+      const selected=o.id===this.state.selectedFieldObject,x=xOf(o.center),r=(selected?3.7:2.6)*dpr;
+      ctx.strokeStyle=selected?'rgba(103,232,249,.96)':(o.amp<0?'rgba(96,178,250,.84)':o.amp>0?'rgba(250,190,96,.84)':'rgba(190,200,215,.72)');
+      ctx.lineWidth=(selected?1.25:0.9)*dpr;ctx.beginPath();
+      if(o.shape==='gaussian')ctx.arc(x,muZero,r,0,6.2832);
+      else if(o.shape==='box')ctx.rect(x-r,muZero-r,2*r,2*r);
+      else{ctx.moveTo(x,muZero-r);ctx.lineTo(x+r,muZero);ctx.lineTo(x,muZero+r);ctx.lineTo(x-r,muZero);ctx.closePath();}
+      ctx.stroke();
+    }
     /* 两条带的说明（左缘，极小字号，不占版面） */
     ctx.textAlign = 'left'; ctx.font = mono(9 * dpr);
     ctx.fillStyle = 'rgba(154,167,189,.55)';
@@ -1328,6 +1467,17 @@ export class HubbardApp {
 
     items.sort((a, b) => b.depth - a.depth);
     for (const it of items) it.fn();
+    for(const o of this.state.fieldObjects){
+      const wx=xs[0]+(L>1?xs[1]-xs[0]:0)*o.center,p=P(wx,0,0);
+      const selected=o.id===this.state.selectedFieldObject,r=(selected?5:3.5)*dpr;
+      ctx.strokeStyle=selected?'rgba(103,232,249,.96)':(o.amp<0?'rgba(96,178,250,.84)':o.amp>0?'rgba(250,190,96,.84)':'rgba(190,200,215,.72)');
+      ctx.lineWidth=(selected?1.25:0.9)*dpr;ctx.beginPath();
+      if(o.shape==='box')ctx.rect(p.x-r,p.y-r,2*r,2*r);
+      else if(o.shape==='staggered'){
+        ctx.moveTo(p.x,p.y-r);ctx.lineTo(p.x+r,p.y);ctx.lineTo(p.x,p.y+r);ctx.lineTo(p.x-r,p.y);ctx.closePath();
+      }else ctx.arc(p.x,p.y,r,0,6.2832);
+      ctx.stroke();
+    }
     this._drawOrder3 = items.filter(it => it.site !== undefined).map(it => it.site);
 
     const tool = HB_TOOLS.find(t => t.k === this.state.tool) || HB_TOOLS[0];
@@ -1731,8 +1881,9 @@ export class HubbardApp {
     this.q('#hU').textContent = this.state.U.toFixed(2);
     this.q('#hJeff').textContent = this.state.U > 1e-9 ? (4 / this.state.U).toFixed(3) : '∞（U=0）';
     this.q('#rMu').value = this.state.muDepth; this.q('#oMu').textContent = this.state.muDepth.toFixed(2);
-    const n = this.fieldSites();
-    this.q('#hbFieldInfo').textContent = n ? `${n} 格 · Σ|μ|=${this.state.mu.reduce((a, v) => a + Math.abs(v), 0).toFixed(1)}` : '无（点「势笔刷」在链上涂）';
+    const n = this.fieldSites(),nObjects=this.state.fieldObjects.length;
+    this.q('#hbFieldInfo').textContent = n||nObjects ? `${nObjects} 对象 · ${n} 格有效 · Σ|μ|=${this.state.mu.reduce((a, v) => a + Math.abs(v), 0).toFixed(1)}` : '无（用笔刷或放置势对象）';
+    this.syncObjectPanel();
     this.q('#hMode').textContent = gs ? '基态（H 变即重解）' : '演化';
     const pr = HB_PRESETS[this.state.preset];
     this.q('#hbHint').querySelector('b').textContent = pr.name;
@@ -1762,7 +1913,10 @@ export class HubbardApp {
       tool: this.state.tool,
       muDepth: this.state.muDepth,
       muSign: this.state.muSign,
-      mu: Array.from(this.state.mu, v => +v.toFixed(4)),
+      mu: Array.from(this.state.muBase, v => +v.toFixed(4)),
+      fieldObjects: this.state.fieldObjects.map(o=>({...o})),
+      selectedFieldObject: this.state.selectedFieldObject,
+      objectTemplate:{shape:this.state.objectShape,amp:this.state.objectAmp,width:this.state.objectWidth},
       pat: Array.from(this.state.pat),
       t: +this.state.t.toFixed(4),
       paused: !!this.state.paused,
@@ -1776,8 +1930,13 @@ export class HubbardApp {
     const qs = new URLSearchParams();
     qs.set('preset', spec.preset); qs.set('L', String(spec.L)); qs.set('U', String(spec.U));
     qs.set('mode', spec.mode);
+    if(spec.tool&&spec.tool!=='state')qs.set('tool',spec.tool);
     qs.set('pat', spec.pat.join(''));
     if (spec.mu.some(v => v !== 0)) qs.set('mu', spec.mu.map(v => String(+v.toFixed(3))).join(','));
+    if(spec.fieldObjects&&spec.fieldObjects.length)qs.set('fo',JSON.stringify(spec.fieldObjects));
+    if(spec.selectedFieldObject)qs.set('sel',spec.selectedFieldObject);
+    const ot=spec.objectTemplate;
+    if(ot&&(ot.shape!=='gaussian'||ot.amp!==-1.5||ot.width!==1.5))qs.set('ot',JSON.stringify(ot));
     if (spec.view && spec.view !== 'Sx') qs.set('view', spec.view);
     /* 只有 3D 才写 proj/cam：2D 的链接保持原样（老书签、老测试都不受影响） */
     if (spec.proj === '3d'){
@@ -1799,8 +1958,8 @@ export class HubbardApp {
   }
   readUrlSpec(q){
     const L = Math.round(parseFloat(q.get('L') || '0'));
-    const muS = q.get('mu'), patS = q.get('pat');
-    if (!muS && !patS && !q.get('mode')) return null;
+    const muS = q.get('mu'), patS = q.get('pat'),fo=q.get('fo');
+    if (!muS && !patS && !fo && !q.get('mode') && !q.get('tool')) return null;
     const len = [8, 10, 12].includes(L) ? L : 8;
     const spec = { L: len };
     if (muS){
@@ -1808,7 +1967,11 @@ export class HubbardApp {
       if (arr.length === len && arr.every(Number.isFinite)) spec.mu = arr;
     }
     if (patS && patS.length === len && /^[0-3]+$/.test(patS)) spec.pat = Array.from(patS, c => +c);
+    if(fo){try{spec.fieldObjects=normalizeLocalFieldObjects(len,JSON.parse(fo),{maxAmplitude:MU_VIEW});}catch(_){return null;}}
+    if(q.has('sel'))spec.selectedFieldObject=q.get('sel');
+    if(q.has('ot')){try{spec.objectTemplate=JSON.parse(q.get('ot'));}catch(_){return null;}}
     if (q.get('mode') === 'evo' || q.get('mode') === 'gs') spec.mode = q.get('mode');
+    if(HB_TOOLS.some(t=>t.k===q.get('tool')))spec.tool=q.get('tool');
     const vq = q.get('view');
     if (vq && HB_VIEWS.some(v => v.k === vq)) spec.view = vq;
     if (q.get('proj') === '3d'){
@@ -1816,59 +1979,73 @@ export class HubbardApp {
       const cs = (q.get('cam') || '').split(',').map(Number);
       if (cs.length === 3 && cs.every(Number.isFinite)) spec.cam = cs;
     }
-    return (spec.mu || spec.pat || spec.mode || spec.view || spec.proj) ? spec : null;
+    return (spec.mu || spec.pat || spec.fieldObjects || spec.mode || spec.tool || spec.view || spec.proj) ? spec : null;
   }
-  /* 校验后再应用：任一非法字段整体拒绝（不半改状态） */
+  /* 校验后再应用：对象数组或场参数任一非法，整份拒绝，不半改状态。 */
   applySpec(spec, opts = {}){
-    if (!spec || typeof spec !== 'object') return false;
-    /* 3D 深链字段严格校验：proj 给了就必须是已知投影，cam 给了就必须是三个有限数。
-       相机错了就是错的深链 ⟹ 整份拒绝（与 mu/pat 的「长度不符就丢」不同：这里不做半改）。 */
+    if (!spec || typeof spec !== 'object' || (spec.v !== undefined && spec.v !== 1)) return false;
+    if (spec.L !== undefined && ![8, 10, 12].includes(spec.L)) return false;
     if (spec.proj !== undefined && !HB_PROJ.some(v => v.k === spec.proj)) return false;
-    if (spec.cam !== undefined &&
-        !(Array.isArray(spec.cam) && spec.cam.length === 3 && spec.cam.every(Number.isFinite))) return false;
-    const L = [8, 10, 12].includes(spec.L | 0) ? (spec.L | 0) : this.state.L;
-    const mu = Array.isArray(spec.mu) && spec.mu.length === L && spec.mu.every(v => Number.isFinite(v))
-      ? Float64Array.from(spec.mu, v => clamp(v, -MU_VIEW, MU_VIEW)) : null;
-    const pat = Array.isArray(spec.pat) && spec.pat.length === L && spec.pat.every(v => Number.isInteger(v) && v >= 0 && v <= 3)
-      ? Int8Array.from(spec.pat) : null;
-    const mode = spec.mode === 'evo' || spec.mode === 'gs' ? spec.mode : null;
-    const view = HB_VIEWS.some(v => v.k === spec.view) ? spec.view : null;
-    const proj = HB_PROJ.some(v => v.k === spec.proj) ? spec.proj : null;
-    /* 相机三元组：非有限数就整份丢掉（不半改），角度/距离按相机限制钳制 */
-    const cam = Array.isArray(spec.cam) && spec.cam.length === 3 && spec.cam.every(Number.isFinite)
+    if (spec.cam !== undefined && spec.cam !== null && !(Array.isArray(spec.cam) && spec.cam.length === 3 && spec.cam.every(Number.isFinite))) return false;
+    if (spec.mode !== undefined && !['evo', 'gs'].includes(spec.mode)) return false;
+    if (spec.tool !== undefined && !HB_TOOLS.some(v => v.k === spec.tool)) return false;
+    if (spec.view !== undefined && !HB_VIEWS.some(v => v.k === spec.view)) return false;
+    if (spec.preset !== undefined && !HB_PRESETS[spec.preset]) return false;
+    if (spec.U !== undefined && !Number.isFinite(spec.U)) return false;
+    if(spec.objectTemplate!==undefined){
+      const ot=spec.objectTemplate;
+      if(!ot||!LOCAL_FIELD_SHAPES.includes(ot.shape)||!Number.isFinite(ot.amp)||Math.abs(ot.amp)>MU_VIEW||!Number.isFinite(ot.width)||ot.width<0.5||ot.width>8)return false;
+    }
+    const L = spec.L ?? this.state.L;
+    if (spec.mu !== undefined && !(Array.isArray(spec.mu) && spec.mu.length === L && spec.mu.every(Number.isFinite))) return false;
+    if (spec.pat !== undefined && !(Array.isArray(spec.pat) && spec.pat.length === L && spec.pat.every(v => Number.isInteger(v) && v >= 0 && v <= 3))) return false;
+    let fieldObjects;
+    if(spec.fieldObjects!==undefined){
+      try{fieldObjects=normalizeLocalFieldObjects(L,spec.fieldObjects,{maxAmplitude:MU_VIEW});}catch(_){return false;}
+    }
+    const cam = Array.isArray(spec.cam)
       ? { yaw: spec.cam[0], pitch: clamp(spec.cam[1], -PITCH_LIM, PITCH_LIM), dist: clamp(spec.cam[2], DIST_MIN, DIST_MAX) }
       : null;
-    if (!mu && !pat && !mode && !view && !proj && !cam && !opts.fromUrl) return false;
-    if (view) this.state.view = view;
-    if (proj) this.state.proj = proj;
-    if (cam) this.cam = cam;
-    if (L !== this.state.L){
-      this.state.L = L;
-      this.state.mu = new Float64Array(L);
-      this.state.pat = neelPattern(L);
-      this.rebuildSector(L / 2, L / 2);
+    const mu = spec.mu === undefined ? null : Float64Array.from(spec.mu,v=>clamp(v,-MU_VIEW,MU_VIEW));
+    const pat = spec.pat === undefined ? null : Int8Array.from(spec.pat);
+    const mode = spec.mode ?? null,view=spec.view??null,proj=spec.proj??null;
+    if(!mu&&!pat&&!fieldObjects&&!mode&&!view&&!proj&&!cam&&!opts.fromUrl)return false;
+    if(this.proto)this.stopProtocol(true);
+    const oldL=this.state.L;
+    if(L!==oldL){
+      this.state.L=L;this.state.muBase=new Float64Array(L);this.state.mu=new Float64Array(L);
+      this.state.fieldObjects=[];this.state.selectedFieldObject=null;this.state.pat=neelPattern(L);
     }
-    if (mu) this.state.mu = mu;
-    if (pat) this.state.pat = pat;
-    let up = 0, dn = 0;
-    for (let i = 0; i < L; i++){ if (this.state.pat[i] & 1) up++; if (this.state.pat[i] & 2) dn++; }
-    if (up !== this.state.nUp || dn !== this.state.nDn) this.rebuildSector(up, dn);
-    hbSetField(this.sec, this.hasField() ? this.state.mu : null);
-    const md = (mode === 'evo' && this.staticTier()) ? 'gs' : (mode || this.state.mode);
-    if (md === 'gs'){
-      this.state.mode = 'gs';
-      this.startSolve();
-    } else {
-      this.state.mode = 'evo';
-      const w = hbProductFromPattern(this.sec, this.state.pat);
-      this.re = w.re; this.im = w.im;
-      this.state.t = 0; this.state.frames = 0; this.hist = [];
-      this.state.paused = spec.paused === true;
-      this.job = null;
+    if(mu!==null){this.state.muBase=mu;if(spec.fieldObjects===undefined)this.state.fieldObjects=[];}
+    if(spec.fieldObjects!==undefined)this.state.fieldObjects=fieldObjects.map(o=>({...o}));
+    this.state.selectedFieldObject=this.state.fieldObjects.some(o=>o.id===spec.selectedFieldObject)?spec.selectedFieldObject:null;
+    if(spec.objectTemplate&&LOCAL_FIELD_SHAPES.includes(spec.objectTemplate.shape)&&Number.isFinite(spec.objectTemplate.amp)&&Number.isFinite(spec.objectTemplate.width)){
+      this.state.objectShape=spec.objectTemplate.shape;
+      this.state.objectAmp=clamp(spec.objectTemplate.amp,-MU_VIEW,MU_VIEW);
+      this.state.objectWidth=clamp(spec.objectTemplate.width,0.5,8);
+    }
+    if(spec.preset!==undefined)this.state.preset=spec.preset;
+    if(spec.U!==undefined)this.state.U=clamp(spec.U,0,8);
+    if(spec.muDepth!==undefined&&Number.isFinite(spec.muDepth))this.state.muDepth=clamp(spec.muDepth,0,MU_VIEW);
+    if(spec.muSign!==undefined&&Number.isFinite(spec.muSign))this.state.muSign=spec.muSign<0?-1:1;
+    if(spec.tool!==undefined)this.state.tool=spec.tool;
+    if(view)this.state.view=view;if(proj)this.state.proj=proj;if(cam)this.cam=cam;
+    if(pat)this.state.pat=pat;
+    this.rebuildField();this.syncObjectPanel();
+    if(L!==oldL)this.rebuildSector(L/2,L/2);
+    let up=0,dn=0;
+    for(let i=0;i<L;i++){if(this.state.pat[i]&1)up++;if(this.state.pat[i]&2)dn++;}
+    if(up!==this.state.nUp||dn!==this.state.nDn)this.rebuildSector(up,dn);
+    hbSetField(this.sec,this.hasField()?this.state.mu:null);
+    const md=(mode==='evo'&&this.staticTier())?'gs':(mode||this.state.mode);
+    if(md==='gs'){this.state.mode='gs';this.startSolve();}
+    else{
+      this.state.mode='evo';
+      const w=hbProductFromPattern(this.sec,this.state.pat);this.re=w.re;this.im=w.im;
+      this.state.t=0;this.state.frames=0;this.hist=[];this.state.paused=spec.paused===true;this.job=null;
       this.measureAll(true);
     }
-    this.syncPanel(); this.draw();
-    return true;
+    this.syncPanel();this.draw();return true;
   }
   /* ---------- 强耦合极限的读数（只报数，不做跨页跳转） ----------
      U≫t、半满：Hubbard 的低能有效理论是自旋-1/2 海森堡链，超交换 J_eff = 4t²/U
@@ -1881,6 +2058,13 @@ export class HubbardApp {
     if (navigator.clipboard && navigator.clipboard.writeText){
       navigator.clipboard.writeText(url).then(done, () => this.toast(url, 4000));
     } else this.toast(url, 4000);
+  }
+  async importJsonFile(file){
+    try{
+      const spec=JSON.parse(await file.text());
+      if(!spec||spec.v!==1||!this.applySpec(spec))throw new Error('格式或字段无效');
+      this.queueUrl();this.toast('已导入 JSON 场景',1400);return true;
+    }catch(error){this.toast(`导入失败：${error.message||'JSON 无效'}`,2400);return false;}
   }
   exportJson(){
     const spec = this.serialize();
@@ -1963,12 +2147,17 @@ export class HubbardApp {
       pat: () => Array.from(this.state.pat),
       mode: () => this.state.mode,
       fieldSites: () => this.fieldSites(),
+      fieldObjects: () => this.state.fieldObjects.map(o=>({...o})),
+      addFieldObject: (center,props) => this.addFieldObject(center,props),
+      moveFieldObject: (id,site) => this.moveFieldObject(id,site),
+      duplicateFieldObject: () => this.duplicateFieldObject(),
+      deleteFieldObject: () => this.deleteFieldObject(),
       setMuDepth: d => this.setMuDepth(d),
       setMuSign: s => this.setMuSign(s),
       clearField: () => this.clearField(false),
       setMode: m => this.applyMode(m),
       resetPattern: () => this.resetPattern(),
-      setField: arr => { this.state.mu = Float64Array.from(arr); this.applyField(); },
+      setField: arr => { if(arr&&arr.length===this.state.L){this.state.muBase=Float64Array.from(arr);this.applyField();} },
       spec: () => this.serialize(),
       applySpec: s => this.applySpec(s),
       query: () => this.queryFor(this.serialize()),
