@@ -93,7 +93,7 @@ export class TwoBodyApp {
     if (!['boson', 'fermion'].includes(this.state.stats)) this.state.stats = 'boson';
     if (!Number.isFinite(this.state.xa)) this.state.xa = (L - 1) / 2 - TB_PRESETS.cross.d / 2;
     if (!Number.isFinite(this.state.xb)) this.state.xb = (L - 1) / 2 + TB_PRESETS.cross.d / 2;
-    this._scale = 400; this._nScale = 16; this._E = null; this._relax = null;
+    this._scale = 400; this._nScale = 16; this._E = null; this._relax = null; this._drawDirty = true;
     this._mountT = typeof performance !== 'undefined' ? performance.now() : 0;
     this._field = null; this._m = null; this._baseNorm = null;
     this._listeners = []; this._uloc = new Map();
@@ -480,6 +480,7 @@ export class TwoBodyApp {
     const ax = this.q('#tbAxX'), ay = this.q('#tbAxY');
     ax.style.left = (r.left + r.width / 2) + 'px'; ax.style.top = (r.bottom + 40) + 'px';
     ay.style.left = (r.right + 62) + 'px'; ay.style.top = (r.top + r.height / 2) + 'px';
+    this._drawDirty = true;
   }
 
   /* ---------- 预设 / 统计 ---------- */
@@ -888,6 +889,7 @@ export class TwoBodyApp {
   }
   toggleMode(){
     this.state.mode = this.state.mode ? 0 : 1;
+    this._drawDirty = true;
     this.q('#tbMode').textContent = '显示：' + (this.state.mode ? '相位' : '密度');
   }
   resetWave(){
@@ -906,6 +908,7 @@ export class TwoBodyApp {
     gl.bindTexture(gl.TEXTURE_2D, this.psi[0].tex);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG32F, L, L, 0, gl.RG, gl.FLOAT, inter);
     this.parity = 0;
+    this._drawDirty = true;
   }
   readField(){
     const { gl } = this, L = this.state.L;
@@ -998,6 +1001,7 @@ export class TwoBodyApp {
   /* ---------- 测量 / HUD / 条带 ---------- */
   measureNow(){ return this.refreshMeasure(); }
   refreshMeasure(){
+    this._drawDirty = true;
     const f = this.readField();
     this._field = f;
     const { re, im } = this.splitField(f);
@@ -1134,6 +1138,7 @@ export class TwoBodyApp {
     gl.uniform1f(this.u(this.progDraw, 'uDiagOn'), 1);
     this.bindTex(this.progDraw, 'uU', 0, this.psi[this.parity].tex);
     this.quad.draw(gl);
+    this._drawDirty = false;
   }
 
   /* ---------- 帧循环 ---------- */
@@ -1150,7 +1155,8 @@ export class TwoBodyApp {
     this.bakePot();   /* 签名未变则立即返回（滑块/预设改动下一帧生效） */
     if (relaxing) this.relaxChunk();
     else if (!this.state.paused) this.evolveFrame();
-    this.draw();
+    /* 活动态持续绘制；暂停/松弛只在波函数、模式、画布尺寸或缩放变化时重绘。 */
+    if ((!this.state.paused && !relaxing) || this._drawDirty) this.draw();
     /* 帧数在暂停/松弛时不变；必须只在真实演化帧采样，否则 frames%6===0 会
        每个 rAF 都 readPixels。重发初态、松弛收敛与单步路径会显式 refreshMeasure。 */
     if (!relaxing && !this.state.paused && this.state.frames % 6 === 0) this.refreshMeasure();

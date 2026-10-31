@@ -78,6 +78,7 @@
 | R162 | **纠错页重复码模式的线路点选注错** | iid/物理通道模式新增可开关的线路图交互：点击噪声列数据位即可手动注入/撤销错误，固定种子重跑单次实验，HUD/线路即时呈现综合征、修正与逻辑判定；画布将噪声列标为「指定错误」，hover 目标高亮。门级模式明确禁用（其错误应选具体门位点）。手动错误只进单次试验，不改变 P_L 统计分布；码长切换会滤除越界错误位。**验证**：manual-QEC harness **18/18**（iid 单错/双错纠错判定、点击切换/撤销、固定种子、相位翻转对偶、phys 强制错误、门级禁用）；canvas hit-geometry harness **12/12**（DPR 1/2 下三根数据线定位与门级排除）。`node --check`、standalone 构建、提取后的单文件脚本 `node --check` 与 `git diff --check` 通过；更新 `dist/qec.html` 至 874,403 bytes（853.9 KiB）。 |
 | R163 | **QEC hub 单次纠错逐步回放** | 八个模式 HUD 新增共享五阶段样本回放（输入态/编码→故障注入→综合征→解码修正→逻辑结局），支持逐步、自动演示与固定/跟随末次 shot；不额外抽样、不影响 MC 计数。jsdom 八模式回放控件冒烟 8/8，步进后 shot 固定且采样数不变；README 记录交互及抽象模型的显示边界。 |
 | R183 | **修复 S(x) 闪烁并补齐全部场对象标记** | 根因是每次测量都清空 S(x) 并重启全剖面渐进任务，演化时任务持续被取消；改为保留最近完整曲线、只排队最新快照并在完成后原子替换。2D/3D 为所有对象显示形状/极性小锚点，选中对象单独强调。`test:spin-objects` 覆盖无闪烁刷新策略。 |
+| R190 | **双粒子页静止态跳过主画布重绘** | 新增 `_drawDirty`：活动演化继续逐帧绘制；暂停/松弛时主波函数 WebGL pass 只在波函数上传、模式/尺寸改变或测量缩放更新后绘制一次。帧回归覆盖静止跳过、dirty 触发、活动态连续绘制；沿用 `test:two-body-frame-measure`。 |
 | R189 | **双粒子页暂停时取消重复 GPU 测量读回** | `frames` 暂停后冻结；旧 `frames % 6 === 0` 条件会在命中时每个 rAF 调用 `refreshMeasure()`，重复 `readPixels`。改为仅在非暂停、非松弛的演化循环按 6 个模拟帧测量；松弛收敛、初态重发和手动单步仍显式刷新。新增 `test:two-body-frame-measure` 覆盖暂停、演化周期和松弛完成路径。 |
 | R188 | **Hubbard 残差计算去除重复 matvec** | `hbResidual()` 复用首个 Hψ 工作数组计算 ⟨H⟩，不再调用 `hbEnergy()` 重算 Hψ，少一次完整 matvec 与两条 dim 长临时向量；输出与原流程逐位相同。半满密集态 Node 基准中位数 L=8/10/12 提速 **2.25×/1.91×/2.11×**；`test:hubbard-residual` 覆盖多链长、稀疏/密集态、U/t 和局域场。 |
 | R187 | **Hubbard 占据测量按置位遍历** | `hbMeasure` 将每个基底态逐格扫描 L 个 bit 改为仅枚举 `mask` 的 N 个置位；浮点求和顺序不变，结果与旧算法逐位相同。半满密集态 Node 基准中位数 L=8/10/12 提速 **2.77×/3.79×/3.53×**；新 `test:hubbard-measure` 覆盖三种链长、密集/稀疏态、逐数组精确对照及粒子数/双占求和规则。 |
@@ -1652,6 +1653,15 @@ dist 重建：qcircuit 97.4→102.5 KB；noise/qec 各一行注释同步（R100 
 README 噪声页用法补充矩阵与曲线探针操作。
 
 ---
+
+## R190（2026-10-31）双粒子页静止场绘制按需触发
+
+- [x] 主帧循环增加 `_drawDirty`：初次启动、画布 resize、波函数 `upload()`、显示模式切换及 `refreshMeasure()` 标脏；`draw()` 成功后清除。
+- [x] 演化时仍每帧绘制；暂停时仅 dirty 才执行主波函数 WebGL draw，松弛计算期间 GPU 波函数未变化也跳过绘制；松弛完成 upload/measure 标脏，最终态仍会出现。
+- [x] 扩展 `test:two-body-frame-measure`：验证暂停 clean 不 draw、dirty draw 一次、模式和上传使 canvas dirty、活动演化继续绘制、松弛完成保留一次显式刷新。
+- [x] `test:two-body-frame-measure`、源码/脚本 `node --check` 与 `git diff --check` 通过。
+- [x] `/tmp` 隔离副本全站 standalone 构建成功，提取的 `dist/two-body.html` 内联脚本语法检查通过；未改动仓库预存 `dist/`。
+- [x] README 补充静止渲染规则与测试入口；worklog 更新。真实 WebGL 浏览器验收未运行（当前环境 Chromium 系统依赖不可用）。
 
 ## R189（2026-10-31）双粒子页暂停/松弛帧不重复 GPU 测量
 
