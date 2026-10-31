@@ -16,23 +16,22 @@ import {
   generateStaminaAdvice,
 } from "@/lib/stamina-calculator";
 
-/* ═══ 体验分数模拟（0-100，基于景点特征） ═══ */
-function calcExperienceScore(spotName: string): number {
-  const scores: Record<string, number> = {
-    张家界国家森林公园: 95,
-    故宫博物院: 90,
-    上海迪士尼乐园: 88,
-    广州塔: 72,
-    三亚亚龙湾: 85,
-    黄山风景区: 92,
-    丽江古城: 82,
-    少林寺: 78,
-    九寨沟风景区: 96,
-    "长城·八达岭": 88,
-    长隆海洋王国: 86,
-    鼓浪屿: 80,
-  };
-  return scores[spotName] || 70;
+/* ═══ 体验分数（0-100，由真实数据推导） ═══
+ * 有高德评分时按评分线性映射（(rating-3)/2×100：5.0→100 / 4.5→75 / 4.0→50）；
+ * 无评分时按景区等级落位（5A 75 / 4A 65 / 其他 55）。 */
+function calcExperienceScore(spot: {
+  name: string;
+  rating?: number;
+  level?: string;
+}): number {
+  if (spot.rating && spot.rating > 0) {
+    return Math.round(
+      Math.min(100, Math.max(0, ((spot.rating - 3) / 2) * 100)),
+    );
+  }
+  if (spot.level === "5A") return 75;
+  if (spot.level === "4A") return 65;
+  return 55;
 }
 
 /* ═══ 散点图数据点 ═══ */
@@ -250,7 +249,7 @@ export default function StaminaSandboxView() {
     () =>
       poolSpots.map((s) => {
         const stamina = getStaminaCost(s);
-        const experience = calcExperienceScore(s.name);
+        const experience = calcExperienceScore(s);
         return {
           id: s.id,
           name: s.name,
