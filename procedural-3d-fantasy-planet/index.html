@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="kinetic-stride-12">
+  <meta name="aetheris-build" content="quiet-look-13">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -289,10 +289,10 @@
       .shade { background: linear-gradient(180deg, rgba(3, 11, 22, .66) 0%, rgba(3, 11, 22, .25) 35%, transparent 60%, rgba(3, 11, 22, .65) 100%); }
       .mobile-controls { display: block; position: absolute; inset: 0; z-index: 5; pointer-events: none; }
       .mobile-controls button, .joystick { pointer-events: auto; touch-action: none; }
-      .mobile-hint { display: block; position: absolute; z-index: 5; left: 25px; bottom: calc(94px + env(safe-area-inset-bottom)); color: #b3c9c5; font-size: 8px; font-weight: 700; letter-spacing: .13em; pointer-events: none; }
-      .mobile-hint .ground-mobile-hint { display: none; }
-      body[data-mode="ground"] .mobile-hint .orbit-mobile-hint { display: none; }
-      body[data-mode="ground"] .mobile-hint .ground-mobile-hint { display: inline; }
+      body.touch .mobile-hint { display: block; position: absolute; z-index: 5; left: 25px; bottom: calc(94px + env(safe-area-inset-bottom)); color: #b3c9c5; font-size: 8px; font-weight: 700; letter-spacing: .13em; pointer-events: none; }
+      body.touch .mobile-hint .ground-mobile-hint { display: none; }
+      body.touch[data-mode="ground"] .mobile-hint .orbit-mobile-hint { display: none; }
+      body.touch[data-mode="ground"] .mobile-hint .ground-mobile-hint { display: inline; }
       .mobile-zoom { position: absolute; right: 25px; bottom: calc(109px + env(safe-area-inset-bottom)); display: flex; gap: 9px; }
       .mobile-zoom button, .jump-button { border: 1px solid rgba(213, 239, 230, .45); background: rgba(8, 28, 39, .45); backdrop-filter: blur(8px); color: #ecf6eb; cursor: pointer; }
       .mobile-zoom button { width: 41px; height: 41px; border-radius: 50%; font-size: 24px; font-weight: 400; line-height: 1; }
@@ -300,7 +300,7 @@
       .joystick::before { content: ""; position: absolute; inset: 25px; border: 1px solid rgba(211, 238, 230, .19); border-radius: 50%; }
       .stick { position: absolute; top: 50%; left: 50%; width: 38px; height: 38px; margin: -19px; border-radius: 50%; background: rgba(165, 238, 225, .35); border: 1px solid rgba(216, 255, 241, .69); box-shadow: 0 0 23px rgba(78, 221, 192, .18); }
       .jump-button { display: none; position: absolute; right: 29px; bottom: calc(137px + env(safe-area-inset-bottom)); width: 75px; height: 75px; border-radius: 50%; font-size: 9px; font-weight: 700; letter-spacing: .13em; }
-      body[data-mode="ground"] .joystick, body[data-mode="ground"] .jump-button { display: block; }
+      body.touch[data-mode="ground"] .joystick, body.touch[data-mode="ground"] .jump-button { display: block; }
       body[data-mode="ground"] .mobile-zoom { display: none; }
       @keyframes appear-mobile { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     }
@@ -408,7 +408,7 @@
       </div>
       <div class="control-hints ground-hints" aria-label="Ground controls">
         <span><b>WASD</b> WALK</span><span class="hint-separator"></span>
-        <span><b>MOUSE</b> LOOK</span><span class="hint-separator"></span>
+        <span><b>MOUSE / IJKL</b> LOOK</span><span class="hint-separator"></span>
         <span><b>SPACE</b> JUMP</span><span class="hint-separator"></span>
         <span><b>R</b> WEATHER</span><span class="hint-separator"></span><span><b>E</b> EVENT</span>
       </div>
@@ -426,7 +426,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'kinetic-stride-12';
+    const BUILD_ID = 'quiet-look-13';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -440,6 +440,10 @@
     const startup = { build: BUILD_ID, phase: 'configuration', ready: false, checks: [], error: null };
     window.aetherisStartup = startup;
     document.body.dataset.build = BUILD_ID;
+    // On-screen pad + JUMP are touch-only: a desktop window (even a narrow one) keeps them hidden.
+    const touchControls = matchMedia('(pointer: coarse)').matches
+      || ((navigator.maxTouchPoints || 0) > 0 && matchMedia('(hover: none)').matches);
+    document.body.classList.toggle('touch', touchControls);
     function setPhase(phase, label) {
       startup.phase = phase;
       if (label) statusText.textContent = label;
@@ -3870,6 +3874,8 @@
       // Measured terrain: median |grade| .39, p90 1.4 — a .18 gain keeps flats honest and makes
       // real hills felt without strangling movement.
       const SLOPE_STEP = .06, SLOPE_GAIN = .18;
+      // Keyboard look (I/K pitch, J/L yaw), in radians per second.
+      const LOOK_YAW_SPEED = 2.0, LOOK_PITCH_SPEED = 1.25;
       const state = {
         mode: 'orbit', yaw: initialYaw, polar: initialPolar, distance: fitDistance(),
         composition: compact ? 0 : 1, compositionTarget: compact ? 0 : 1,
@@ -3969,7 +3975,12 @@
         // Releasing jump while still rising keeps the arc short: full hold = full height.
         if (state.mode === 'ground' && state.velocity > .22) state.velocity *= .55;
       }
-      function turn(dx,dy) { state.faceTarget=null; state.heading.applyAxisAngle(state.direction,-dx*.0024).normalize(); state.pitch=clamp(state.pitch-dy*.0022,-PITCH_LIMIT,PITCH_LIMIT); }
+      function rotateView(yaw,pitch) {
+        state.faceTarget=null;
+        state.heading.applyAxisAngle(state.direction,yaw).normalize();
+        state.pitch=clamp(state.pitch+pitch,-PITCH_LIMIT,PITCH_LIMIT);
+      }
+      function turn(dx,dy) { rotateView(-dx*.0024,-dy*.0022); }
       function zoom(factor) {
         if (state.mode !== 'orbit' || state.transition) return;
         state.distance=clamp(state.distance*factor,6.4,32); explore();
@@ -4070,6 +4081,10 @@
         } else {
           physicsTime+=dt;
           while(physicsTime>=1/120){physicsStep(1/120);physicsTime-=1/120;}
+          // Keyboard look: frame-rate independent, and it cancels the sanctuary auto-turn.
+          const lookYaw=(keys.has('KeyJ')?1:0)-(keys.has('KeyL')?1:0);
+          const lookPitch=(keys.has('KeyI')?1:0)-(keys.has('KeyK')?1:0);
+          if(lookYaw||lookPitch)rotateView(lookYaw*LOOK_YAW_SPEED*dt,lookPitch*LOOK_PITCH_SPEED*dt);
           if (state.faceTarget) {
             mantaAhead.copy(state.faceTarget.group.position).sub(camera.position);
             const vertical=mantaAhead.dot(state.direction), horizontal=Math.sqrt(Math.max(.000001,mantaAhead.lengthSq()-vertical*vertical));
