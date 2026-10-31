@@ -3328,6 +3328,7 @@ L=8 实测（`pot141`，m=140，残差 ≤3e-13）：
 | 3D 页面接入 | 2D↔3D 往返不动 pat/U/mode/t；拖空白转相机（pitch 钳位、dist 不变、旋转不改初态）、Shift 在珠子上拖也是转相机、滚轮钳在 3.2/20、双击与 R 复位、点珠子命中该格（初态循环照常）、势笔刷沿 3 颗珠子连续写入、深度排序为远→近、L=12 静态档 12 颗珠子无异常；单文件版同链路（dist 18/18） |
 | 观测量成本（R141 后） | `hbEntropyAt` L=8 半链 54 ms / L=10 **70 ms** / L=12 2.8 s（取较小侧 Gram + 只求特征值）；`hbEntropyProfile` L=10 全剖面 **0.30 s**、L=12 7.7 s；`hbCorrelation` 23/125/2157 ms；`hbDensityCorr` 4/13/140 ms |
 | S(x) 态快照内存 | `startSx()` 直接持有发布后的不可变 `re/im` 数组；演化通过 `hbKrylovExp` 返回新数组，故任务可跨帧读取旧态而不复制。每次任务避免一对 Float64 副本：L=8 **78,400 B**、L=10 **1,016,064 B**、L=12 **13,660,416 B（约 13.0 MiB）**；`npm run test:hubbard-snapshot` 验证引用身份、后续演化不改旧态与剖面数值对账 |
+| 格点占据测量 `hbMeasure` | 固定粒子数扇区按 mask 的置位累加（N 个占据位），替代逐态扫描全部 L 个格点；与原算法逐数组**逐位相同**。Node 本地半满密集向量、7 次中位数：L=8 **0.38→0.14 ms（2.77×）**、L=10 **4.96→1.31 ms（3.79×）**、L=12 **55.72→15.79 ms（3.53×）**；`npm run test:hubbard-measure` 覆盖 L=8/10/12 密集/稀疏态及粒子数/双占求和规则 |
 | 扫描可复现性 | 同参数两次 `HbScanTask` 结果**逐位相同**；每点基态残差 ≤3e-13（L=8, m=140） |
 | 时间轴回拖 | 检查点 = 完整复向量快照（L=8 78 KB / L=10 1.0 MB 各一份），跳转后范数 1−1e-10、t 精确复原 |
 | L=12 静态档 | dim 853776、nnz 10.25 M、构建 **0.40 s**/RSS 109 MB；基态 m=110 **70 s**/1 GB；E(U=0) 对自由费米子解析 −14.592459621 差 1e-12，残差 U=0/2/4 = 1.6e-12 / 1.1e-12 / 1.4e-9 |
@@ -3826,6 +3827,7 @@ schrodinger-workshop/
 │   ├── build-standalone.mjs      mini-bundler → dist/ 单文件（剥 import/export、
 │   │                              拓扑序拼接、node --check 自校验、md5 可重复）
 │   ├── verify-hubbard-field-objects.mjs Hubbard 局域势对象/哈密顿量/协议/序列化回归
+│   ├── verify-hubbard-measure.mjs   Hubbard 占据测量逐位对照/求和规则
 │   ├── verify-hubbard-sx-snapshot.mjs S(x) 快照引用/态不可变性/剖面对账
 │   └── serve.mjs                 开发服务器：no-store 响应 + SSE 热重载（npm start）
 ├── src/

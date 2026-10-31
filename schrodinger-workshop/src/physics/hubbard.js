@@ -224,10 +224,12 @@ export function hbMeasure(sec, re, im){
       const md = bd.masks[b];
       const both = mu & md;
       Dtot += p * popcount(both);
-      for (let i = 0; i < L; i++){
-        if (mu & (1 << i)) nU[i] += p;
-        if (md & (1 << i)) nD[i] += p;
-      }
+      /* 固定粒子数扇区里每个 mask 只含 N 个占据位；遍历置位而非扫描全部 L 格。
+         逐位从低到高仍按格点顺序累加，故与原逐格扫描的浮点求和顺序完全一致。 */
+      let um = mu;
+      while (um){ const bit = um & -um; nU[31 - Math.clz32(bit)] += p; um ^= bit; }
+      let dm = md;
+      while (dm){ const bit = dm & -dm; nD[31 - Math.clz32(bit)] += p; dm ^= bit; }
       let bm = both;   /* 双占逐格累加：只走同时被两自旋占据的位 */
       while (bm){ const bit = bm & -bm; dbl[31 - Math.clz32(bit)] += p; bm ^= bit; }
     }
