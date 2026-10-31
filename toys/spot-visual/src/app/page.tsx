@@ -982,7 +982,7 @@ function SpotNoteEditor({
         maxLength={300}
         rows={2}
         placeholder="自己的备忘：开放时间核实、同行人约定、门票价格…（仅本机可见）"
-        className="w-full px-3 py-2 text-sm bg-amber-50 dark:bg-amber-500/10/50 border border-amber-100 dark:border-amber-500/20 rounded-xl outline-none focus:border-amber-300 resize-none placeholder:text-gray-300"
+        className="w-full px-3 py-2 text-sm bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 rounded-xl outline-none focus:border-amber-300 resize-none placeholder:text-gray-300"
       />
     </div>
   );
@@ -1066,6 +1066,9 @@ function SpotDetailDialog() {
   const [prevId, setPrevId] = useState<string | null>(null);
   if (spot && spot.id !== prevId) {
     setPhotoIdx(0);
+    setTicketEditing(false);
+    setLightboxIdx(null);
+    setCopied(false);
     setPrevId(spot.id);
   }
 
@@ -1419,7 +1422,7 @@ function SpotDetailDialog() {
             )}
             {/* ═══ 景点档案（外包结构化字段，有档案才显示） ═══ */}
             {profile && (
-              <div className="rounded-xl border border-sky-100 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/10/60 dark:bg-sky-500/10 p-3.5 space-y-1.5">
+              <div className="rounded-xl border border-sky-100 dark:border-sky-500/20 bg-sky-50 dark:bg-sky-500/10 dark:bg-sky-500/10 p-3.5 space-y-1.5">
                 <p className="text-[11px] font-bold text-sky-800 dark:text-sky-300 flex items-center gap-1">
                   <Sparkles className="w-3.5 h-3.5" />
                   景点档案
@@ -1576,7 +1579,7 @@ function SpotDetailDialog() {
             </div>
             {/* ═══ 口碑前置：翻车记录数 + 高频标签 ═══ */}
             {spotReviews.length > 0 && (
-              <div className="rounded-xl border border-rose-100 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/10/70 p-3">
+              <div className="rounded-xl border border-rose-100 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/10 p-3">
                 <button
                   onClick={() => {
                     setSelectedSpot(null);
@@ -1947,7 +1950,7 @@ function CompareDialog({
             {s.reservation}
           </span>
         ) : (
-          "无需预约（未收录）"
+          "未收录（请自行核实）"
         ),
     },
     {
@@ -2473,7 +2476,7 @@ function SpotsView() {
   return (
     <div className="space-y-5">
       {/* 城市探索：城市包 → 库内精选 → 实时兜底 */}
-      <div className="rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10/60 dark:bg-emerald-500/10 p-4">
+      <div className="rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 dark:bg-emerald-500/10 p-4">
         <div className="flex items-center gap-2 mb-2.5">
           <Globe className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
@@ -2939,7 +2942,7 @@ function FavoritesView() {
           })(),
       );
     return list;
-  }, [favSpots, favCat, favLevel, favQuery]);
+  }, [favSpots, favCat, favLevel, favQuery, favGroupFilter, favGroupOf]);
   // 导出收藏清单为 txt（含等级/地址/开放时间/电话/高德导航链接），可直接发给别人
   const exportList = useCallback(() => {
     const lines = shownFavs.map((s, i) => {
@@ -3182,6 +3185,8 @@ function ProfileView() {
       customPrices: state.customPrices,
       spotNotes: state.spotNotes,
       dissuasionRecords: state.dissuasionRecords,
+      favGroups: state.favGroups,
+      favGroupOf: state.favGroupOf,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
       type: "application/json",
@@ -3227,6 +3232,10 @@ function ProfileView() {
             ...rec(d.customPrices),
             ...cur.customPrices,
           } as typeof cur.customPrices,
+          favGroups: Array.isArray(d.favGroups)
+            ? (d.favGroups as typeof cur.favGroups)
+            : cur.favGroups,
+          favGroupOf: rec(d.favGroupOf) as typeof cur.favGroupOf,
           spotNotes: {
             ...rec(d.spotNotes),
             ...cur.spotNotes,
@@ -3388,6 +3397,11 @@ export default function Home() {
     document.body.classList.toggle("dark", theme === "dark");
     return () => document.body.classList.remove("dark");
   }, [theme]);
+
+  // 切视图时回到主内容顶部：上一视图的深度滚动残留会让新视图像缺了一截
+  useEffect(() => {
+    mainScrollRef.current?.scrollTo({ top: 0 });
+  }, [activeView]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   // 返回顶部：主内容是 overflow-y-auto 容器（不是 window），监听其滚动

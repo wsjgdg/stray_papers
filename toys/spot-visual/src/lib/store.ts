@@ -70,6 +70,9 @@ interface AppStore {
   /** 主题（持久化）：dark 类挂在 body 上，仅景点子树消费 dark: 变体 */
   theme: "light" | "dark";
   toggleTheme: () => void;
+  /** 身体条件勾选（knee/heart/heat）：体力沙盘/PTSI/劝退指南三视图共享 */
+  bodyConditions: string[];
+  toggleBodyCondition: (id: string) => void;
   /** 收藏夹分组：文件夹列表 + 条目归属（spotId → folderId；不在表内 = 未分组） */
   favGroups: { id: string; name: string }[];
   favGroupOf: Record<string, string>;
@@ -221,9 +224,16 @@ export const useAppStore = create<AppStore>()(
       sortMode: "default" as
         "default" | "rating" | "name" | "distance" | "ticket",
       setSortMode: (m) => set({ sortMode: m }),
+      bodyConditions: [],
       theme: "light" as "light" | "dark",
       toggleTheme: () =>
         set((s) => ({ theme: s.theme === "dark" ? "light" : "dark" })),
+      toggleBodyCondition: (id) =>
+        set((s) => ({
+          bodyConditions: s.bodyConditions.includes(id)
+            ? s.bodyConditions.filter((c) => c !== id)
+            : [...s.bodyConditions, id],
+        })),
       favGroups: [],
       favGroupOf: {},
       createFavGroup: (name) => {
@@ -430,6 +440,7 @@ export const useAppStore = create<AppStore>()(
         levelFilter: s.levelFilter,
         sortMode: s.sortMode,
         theme: s.theme,
+        bodyConditions: s.bodyConditions,
         favGroups: s.favGroups,
         favGroupOf: s.favGroupOf,
       }),

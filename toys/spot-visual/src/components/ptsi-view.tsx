@@ -377,15 +377,10 @@ function SpotRanking({ conditions }: { conditions: string[] }) {
    PTSI 主页面
    ═══════════════════════════════════════════════════ */
 export default function PTSIView() {
-  const [conditions, setConditions] = useState<string[]>([]);
+  const { bodyConditions: conditions, toggleBodyCondition: toggleCondition } =
+    useAppStore();
   // 拥挤度（预计排队分钟数）：三分项中唯一没有自动数据源的一项，交给用户估
   const [crowdMinutes, setCrowdMinutes] = useState(0);
-
-  const toggleCondition = useCallback((id: string) => {
-    setConditions((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
-    );
-  }, []);
 
   return (
     <div className="min-h-full bg-gray-50 dark:bg-gray-900/50 dark:bg-gray-950/50">

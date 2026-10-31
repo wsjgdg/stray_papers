@@ -924,20 +924,22 @@ function EmergencyButton() {
         <button
           onClick={() => {
             setShowOptions(false);
-            setFeedback("🚐 电瓶车呼叫中，请稍候…");
+            setFeedback(
+              "本项目无法代叫电瓶车：请前往最近服务点乘车，或拨打景区电话咨询",
+            );
             vibrate(30);
-            setTimeout(() => setFeedback(null), 3000);
           }}
           className="w-full py-8 bg-emerald-500 text-white rounded-2xl text-xl font-bold shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-transform"
         >
-          🚐 叫电瓶车
+          🚐 电瓶车服务点指引
         </button>
         <button
           onClick={() => {
             setShowOptions(false);
-            setFeedback("🚶 已规划最近出口路线，请沿指示行走");
+            setFeedback(
+              "无法实时规划路线：建议沿原路返回，或查看景区导览图/路标",
+            );
             vibrate(30);
-            setTimeout(() => setFeedback(null), 3000);
           }}
           className="w-full py-8 bg-blue-500 text-white rounded-2xl text-xl font-bold shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-transform"
         >
@@ -950,16 +952,26 @@ function EmergencyButton() {
 
   return (
     <>
-      {/* 屏幕边缘红光晕 */}
+      {/* SOS 演示态：光晕 + 底部诚实指引（本应用无后端，不发送任何求救） */}
       <AnimatePresence>
         {sosActive && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 1, 0] }}
-            transition={{ duration: 0.5, repeat: Infinity }}
-            className="fixed inset-0 pointer-events-none z-40"
-            style={{ boxShadow: "inset 0 0 100px 50px rgba(239,68,68,0.4)" }}
-          />
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 1, 0] }}
+              transition={{ duration: 0.5, repeat: Infinity }}
+              className="fixed inset-0 pointer-events-none z-40"
+              style={{ boxShadow: "inset 0 0 100px 50px rgba(239,68,68,0.4)" }}
+            />
+            <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-black/80 backdrop-blur-md rounded-xl px-4 py-3 text-center max-w-xs">
+              <p className="text-white text-sm font-bold">
+                这是演示动画——不会向任何人发送求救
+              </p>
+              <p className="text-white/70 text-xs mt-1">
+                真正需要救援时请拨打景区救援电话或 110/120
+              </p>
+            </div>
+          </>
         )}
       </AnimatePresence>
 
@@ -1011,7 +1023,7 @@ function EmergencyButton() {
             />
           </svg>
           <p className="text-center text-white text-xs mt-1">
-            松手取消 · 1.5s触发SOS
+            松手取消 · 演示动画（不会向任何人发送求救）
           </p>
         </motion.div>
       )}
@@ -1263,8 +1275,8 @@ export default function FitnessView() {
                 {easyMode ? (
                   <>
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-green-50 rounded-xl p-4 text-center">
-                        <div className="text-3xl font-black text-green-600">
+                      <div className="bg-green-50 dark:bg-green-500/10 rounded-xl p-4 text-center">
+                        <div className="text-3xl font-black text-green-600 dark:text-green-400">
                           {Math.round(
                             (slopeStats.flat / slopeStats.total) * 100,
                           )}
@@ -1389,7 +1401,7 @@ export default function FitnessView() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`bg-white dark:bg-gray-900 rounded-2xl border p-4 mb-4 ${staminaBudget < 50 ? "border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10/40" : "border-gray-100 dark:border-gray-800"}`}
+          className={`bg-white dark:bg-gray-900 rounded-2xl border p-4 mb-4 ${staminaBudget < 50 ? "border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10" : "border-gray-100 dark:border-gray-800"}`}
         >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">

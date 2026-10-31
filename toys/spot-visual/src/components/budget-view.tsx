@@ -418,6 +418,7 @@ export default function BudgetView() {
     setCustomPrice,
     removeCustomPrice,
     clearCustomPrices,
+    setActiveView,
   } = useAppStore();
 
   // 行程单优先：默认按行程单的景点计算，可切换回全部景点
@@ -462,7 +463,13 @@ export default function BudgetView() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
+    // 作用域切换后清掉已消失景点的勾选小计：否则隐藏条目的小计仍计入总额（金额对不上）
+    setSpotTotals({});
   }, [effectiveScope]);
+  // 手动重置改价后，已勾选卡片的小计同样需要重算
+  useEffect(() => {
+    setSpotTotals({});
+  }, [customPrices]);
   const visibleSpots = useMemo(
     () => spotItems.slice(0, visibleCount),
     [spotItems, visibleCount],
@@ -542,9 +549,15 @@ export default function BudgetView() {
         <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
           暂无可预算的景点
         </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
           先到「景点览胜」收藏或加入行程单，再回来模拟预算
         </p>
+        <button
+          onClick={() => setActiveView("spots")}
+          className="px-5 py-2.5 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 rounded-xl text-sm font-bold hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors"
+        >
+          去挑景点
+        </button>
       </div>
     );
   }
@@ -578,7 +591,7 @@ export default function BudgetView() {
 
         {/* ═══ 行程单作用域提示 ═══ */}
         {trip.length > 0 && (
-          <div className="flex items-center gap-2 mb-4 px-3.5 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10/70 border border-emerald-100 dark:border-emerald-500/20">
+          <div className="flex items-center gap-2 mb-4 px-3.5 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20">
             <Route className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span className="text-xs text-emerald-800 dark:text-emerald-300 flex-1">
               {effectiveScope === "trip"

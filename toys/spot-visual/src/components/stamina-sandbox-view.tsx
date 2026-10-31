@@ -4,7 +4,7 @@
 // D1.4: 双轴沙盘主视图
 // 在体力消耗 vs 游览体验之间找到最优平衡
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, Shuffle, TrendingUp, Activity, ArrowUpDown } from "lucide-react";
 import { useAppStore } from "@/lib/store";
@@ -183,25 +183,26 @@ export default function StaminaSandboxView() {
     spots,
     staminaBudget,
     setStaminaBudget,
+    bodyConditions,
+    toggleBodyCondition,
     activeSpotOrder,
     setActiveSpotOrder,
     trip,
   } = useAppStore();
-  const [conditions, setConditions] = useState<string[]>([]);
+  // 身体条件在 store（三视图共享：体力沙盘/PTSI/劝退指南）
 
-  const toggleCondition = (id: string) => {
-    setConditions((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
-    );
-  };
+  const toggleCondition = (id: string) => toggleBodyCondition(id);
 
   // 计算体力预算
-  const budget = useMemo(() => calcStaminaBudget(conditions), [conditions]);
+  const budget = useMemo(
+    () => calcStaminaBudget(bodyConditions),
+    [bodyConditions],
+  );
 
   // 同步到store（跨页联动）
-  const budgetFromStore = useMemo(() => {
+  // 预算同步到 store（跨页联动）；副作用移出渲染期
+  useEffect(() => {
     setStaminaBudget(budget);
-    return budget;
   }, [budget, setStaminaBudget]);
 
   // 沙盘作用域：行程单优先；无行程时用精选池（高德评分前 400）——3000 条全量进曲线无意义
@@ -305,7 +306,7 @@ export default function StaminaSandboxView() {
                 key={c.id}
                 onClick={() => toggleCondition(c.id)}
                 className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                  conditions.includes(c.id)
+                  bodyConditions.includes(c.id)
                     ? "bg-red-100 text-red-700 dark:text-red-400 ring-2 ring-red-300"
                     : "bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}

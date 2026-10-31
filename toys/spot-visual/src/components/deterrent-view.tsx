@@ -158,38 +158,33 @@ const REASON_TEMPLATES = [
 /* ═══ 时间轴数据 ═══ */
 const TIMELINE_DATA = [
   {
-    time: "10:00 · 1小时前",
+    time: "开园 · 人最少",
     queue: 15,
-    photo:
-      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&h=600&fit=crop&q=80",
+    photo: "/spots/黄山风景区.webp",
     reasons: [true, true, true, true, true, true],
   },
   {
-    time: "11:00 · 刚才",
+    time: "上午 · 渐多",
     queue: 45,
-    photo:
-      "https://images.unsplash.com/photo-1530789253388-582c481c54b0?w=900&h=600&fit=crop&q=80",
+    photo: "/spots/故宫博物院.webp",
     reasons: [true, false, true, true, false, true],
   },
   {
-    time: "12:00 · 现在",
+    time: "正午 · 峰值",
     queue: 90,
-    photo:
-      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=900&h=600&fit=crop&q=80",
+    photo: "/spots/九寨沟风景区.webp",
     reasons: [false, false, false, false, false, false],
   },
   {
-    time: "13:00 · 1小时后",
+    time: "午后 · 仍拥挤",
     queue: 120,
-    photo:
-      "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=900&h=600&fit=crop&q=80",
+    photo: "/spots/杭州西湖风景名胜区.webp",
     reasons: [false, false, false, false, false, false],
   },
   {
-    time: "14:00 · 2小时后",
+    time: "傍晚 · 回落",
     queue: 75,
-    photo:
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=900&h=600&fit=crop&q=80",
+    photo: "/spots/九寨沟风景区.webp",
     reasons: [false, true, false, false, false, true],
   },
 ];
@@ -450,14 +445,14 @@ function TimelineCard({
   const hasFail = item.reasons.some((r) => !r);
 
   return (
-    <div className="snap-start h-[85vh] flex-shrink-0 flex flex-col px-4 py-3">
+    <div className="snap-start h-[52vh] flex-shrink-0 flex flex-col px-4 py-3">
       {/* 时间标签 */}
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm font-bold text-gray-700 dark:text-gray-200">
           {item.time}
         </span>
         <span
-          className={`px-3 py-1 rounded-full text-xs font-bold ${hasFail ? "bg-red-100 text-red-600 dark:text-red-400" : "bg-green-100 text-green-600"}`}
+          className={`px-3 py-1 rounded-full text-xs font-bold ${hasFail ? "bg-red-100 text-red-600 dark:text-red-400" : "bg-green-100 text-green-600 dark:bg-green-500/10 dark:text-green-400"}`}
         >
           {hasFail ? "⚠️ 建议避峰" : "✅ 适合游览"}
         </span>
@@ -527,7 +522,7 @@ function TimelineCard({
           return (
             <div
               key={reason.id}
-              className={`flex items-start gap-2.5 px-3 py-2 rounded-xl text-sm transition-all duration-200 ${isHighlighted ? "bg-red-50 dark:bg-red-500/10 ring-2 ring-red-300" : "bg-yellow-50"} ${pass ? "" : ""}`}
+              className={`flex items-start gap-2.5 px-3 py-2 rounded-xl text-sm transition-all duration-200 ${isHighlighted ? "bg-red-50 dark:bg-red-500/10 ring-2 ring-red-300" : "bg-yellow-50 dark:bg-yellow-500/10"} ${pass ? "" : ""}`}
               style={{ fontSize: "16px" }}
             >
               <span className="text-xl leading-none mt-0.5 shrink-0">
@@ -608,7 +603,7 @@ function HeavyTimeline({
     <div
       ref={viewportRef}
       className="relative rounded-2xl overflow-hidden select-none touch-none"
-      style={{ height: "calc(100vh - 60px)", maxHeight: "85vh" }}
+      style={{ height: "52vh", maxHeight: "560px" }}
     >
       <motion.div
         drag="y"
@@ -645,11 +640,11 @@ function HeavyTimeline({
 }
 
 /* ═══════════════════════════════════════════════════
-   差评原文弹窗
+   典型差评主题弹窗（示例文案，非真实 UGC）
    ═══════════════════════════════════════════════════ */
 const BAD_REVIEWS: Record<string, { title: string; reviews: string[] }> = {
   knee: {
-    title: "膝盖不适 · 差评原文",
+    title: "膝盖不适 · 典型差评主题",
     reviews: [
       '"台阶太多了，膝盖全程在抖，下山的时候简直要命"',
       '"连续80级台阶没有扶手，老人根本不敢走"',
@@ -658,7 +653,7 @@ const BAD_REVIEWS: Record<string, { title: string; reviews: string[] }> = {
     ],
   },
   heart: {
-    title: "心脏负担 · 差评原文",
+    title: "心脏负担 · 典型差评主题",
     reviews: [
       '"海拔爬升太快，心脏跳到180，吓得赶紧下山"',
       '"坡度太陡了，中间没有平缓休息段，一口气喘不上来"',
@@ -666,7 +661,7 @@ const BAD_REVIEWS: Record<string, { title: string; reviews: string[] }> = {
     ],
   },
   heat: {
-    title: "怕热中暑 · 差评原文",
+    title: "怕热中暑 · 典型差评主题",
     reviews: [
       '"中午12点到的，暴晒了40分钟差点中暑，全靠自带藿香正气水"',
       '"600米完全没有遮挡，地面温度估计有50度"',
@@ -736,14 +731,12 @@ function ReviewPopup({
               key={i}
               className="bg-red-50 dark:bg-red-500/10 border border-red-100 rounded-xl p-4"
             >
-              <p className="text-sm text-red-800 leading-relaxed">{r}</p>
-              <div className="flex items-center gap-2 mt-2">
-                <span className="text-yellow-500 text-xs">
-                  {"★".repeat(1)}
-                  {"☆".repeat(4)}
-                </span>
-                <span className="text-xs text-gray-400 dark:text-gray-500">
-                  匿名用户
+              <p className="text-sm text-red-800 dark:text-red-300 leading-relaxed">
+                {r}
+              </p>
+              <div className="mt-2">
+                <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                  典型差评主题 · 示例文案，非真实用户评论
                 </span>
               </div>
             </div>
@@ -797,7 +790,7 @@ function ConclusionButton({
   // 若已选定假想目的地，从 dissuasionRecords 中筛选：
   //   1) spotId 匹配
   //   2) bodyConditions 与当前激活条件有交集
-  // → 用于结论球的"N 个和你身体条件相似的人在这里踩过坑"展示
+  // → 用于结论球的"你的翻车日记里有 N 条记录与身体条件重合"展示（数据全部来自用户本人记录，无社交后端）
   const selectedSpot = useMemo(
     () =>
       selectedSpotId
@@ -1066,8 +1059,8 @@ function ConclusionButton({
             {selectedSpotId && similarIncidents.length > 0 && (
               <div className="bg-red-500/20 border border-red-300/40 rounded-2xl px-4 py-3 mb-3 max-w-xs">
                 <div className="text-red-100 font-bold text-sm text-center">
-                  ⚠️ {similarIncidents.length}{" "}
-                  个和你身体条件相似的人在这里踩过坑
+                  ⚠️ 你的翻车日记里有 {similarIncidents.length}{" "}
+                  条此景点记录与勾选的身体条件重合
                 </div>
                 {incidentTagSummary.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-1 justify-center">
@@ -1244,7 +1237,7 @@ export default function DeterrentView() {
           <div className="flex items-center gap-1.5 mb-2">
             <Clock className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-              翻车时间轴
+              翻车时间轴（典型景区示例曲线）
             </span>
             <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">
               上下滑动浏览

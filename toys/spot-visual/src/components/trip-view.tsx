@@ -126,7 +126,7 @@ function TripMap({ days }: { days: Spot[][] }) {
       </div>
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        className="w-full rounded-xl bg-teal-50 dark:bg-teal-500/10/50 border border-gray-100 dark:border-gray-800"
+        className="w-full rounded-xl bg-teal-50 dark:bg-teal-500/10 border border-gray-100 dark:border-gray-800"
       >
         {days.map((_, d) => {
           const pts = points.filter((p) => p.day === d);
@@ -297,7 +297,7 @@ function TripWeather({ spots }: { spots: Spot[] }) {
                 key={r.date}
                 className={`relative rounded-xl border p-1.5 text-center ${
                   r.score === best
-                    ? "border-emerald-300 bg-emerald-50 dark:bg-emerald-500/10/70"
+                    ? "border-emerald-300 bg-emerald-50 dark:bg-emerald-500/10"
                     : "border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 dark:bg-gray-950/50"
                 }`}
               >
@@ -607,7 +607,14 @@ export default function TripView() {
           </div>
           {tripSpots.length > 0 && (
             <button
-              onClick={clearTrip}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "清空全部行程（含分天标记与调序）？不可恢复。确定？",
+                  )
+                )
+                  clearTrip();
+              }}
               className="ml-auto text-xs font-bold text-red-400 hover:text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors shrink-0"
             >
               清空行程
@@ -628,18 +635,26 @@ export default function TripView() {
               <div className="text-2xl font-black">{days.length}</div>
               <div className="text-white/70 text-[11px]">天数</div>
             </div>
-            <div>
+            <button
+              onClick={() => setActiveView("budget")}
+              title="打开预算沙盘（按行程景点计算）"
+              className="hover:bg-white/10 rounded-lg transition-colors"
+            >
               <Wallet className="w-4 h-4 mx-auto mb-1 opacity-80" />
               <div className="text-2xl font-black">
                 ¥{estBudget.toLocaleString()}
               </div>
-              <div className="text-white/70 text-[11px]">估算预算</div>
-            </div>
-            <div>
+              <div className="text-white/70 text-[11px]">估算预算 ›</div>
+            </button>
+            <button
+              onClick={() => setActiveView("stamina-sandbox")}
+              title="打开体力沙盘（按行程景点计算）"
+              className="hover:bg-white/10 rounded-lg transition-colors"
+            >
               <Zap className="w-4 h-4 mx-auto mb-1 opacity-80" />
               <div className="text-2xl font-black">{estStamina}</div>
-              <div className="text-white/70 text-[11px]">体力合计</div>
-            </div>
+              <div className="text-white/70 text-[11px]">体力合计 ›</div>
+            </button>
             <div title="直线距离 ×1.35 绕行系数；市区 35km/h、长途 65km/h">
               <Route className="w-4 h-4 mx-auto mb-1 opacity-80" />
               <div className="text-2xl font-black">
