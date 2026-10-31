@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="nocturnal-ley-11">
+  <meta name="aetheris-build" content="kinetic-stride-12">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -426,7 +426,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'nocturnal-ley-11';
+    const BUILD_ID = 'kinetic-stride-12';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -3860,16 +3860,30 @@
       }
 
       const fitDistance = () => innerWidth / innerHeight < .76 ? 20 : compact ? 14 : 12.6;
+      // Ground-controller tuning. Acceleration is deliberately slower than braking so stops feel
+      // planted, air control is weak, and jumping uses a two-stage (tap = short hop) impulse.
+      const WALK_SPEED = .34, SPRINT_SPEED = .66, SWIM_SPEED = .2;
+      const GROUND_ACCEL = 7.5, GROUND_BRAKE = 11, AIR_ACCEL = 2.6;
+      const GRAVITY = 3.15, JUMP_SPEED = .78, COYOTE_TIME = .1, JUMP_BUFFER_TIME = .14;
+      const PITCH_LIMIT = 1.48;
+      // Slope is sampled 0.06 world units ahead and converted to a true gradient (rise/run).
+      // Measured terrain: median |grade| .39, p90 1.4 — a .18 gain keeps flats honest and makes
+      // real hills felt without strangling movement.
+      const SLOPE_STEP = .06, SLOPE_GAIN = .18;
       const state = {
         mode: 'orbit', yaw: initialYaw, polar: initialPolar, distance: fitDistance(),
         composition: compact ? 0 : 1, compositionTarget: compact ? 0 : 1,
         direction: landing.clone(), radius: groundRadius(landing) + EYE,
         heading: new THREE.Vector3(), pitch: .1, velocity: 0, grounded: true, water: false,
-        transition: null, solarOffset: 0, solarTarget: 0, walkPhase: 0
+        transition: null, solarOffset: 0, solarTarget: 0, walkPhase: 0,
+        moveVelocity: new THREE.Vector3(), speed: 0, slope: 1,
+        coyote: 0, jumpBuffer: 0, landDip: 0, roll: 0
       };
       const keys = new Set(), pointers = new Map(), joystick = { x: 0, y: 0, id: null };
       const targetPosition = new THREE.Vector3(), targetRotation = new THREE.Quaternion(), lookMatrix = new THREE.Matrix4();
       const aim = new THREE.Vector3(), right = new THREE.Vector3(), move = new THREE.Vector3(), orbitNormal = new THREE.Vector3();
+      const moveTarget = new THREE.Vector3(), slopeProbe = new THREE.Vector3();
+      const rollAxis = new THREE.Vector3(0, 0, 1), rollQuat = new THREE.Quaternion();
       const viewNormal = new THREE.Vector3(), pathNormal = new THREE.Vector3(), pathRotation = new THREE.Quaternion();
       const identity = new THREE.Quaternion(), shadowFocus = new THREE.Vector3(), desiredShadowFocus = new THREE.Vector3();
       let elapsed = 0, lastFrame = 0, frame = 0, stopped = false, contextLost = false, physicsTime = 0;
@@ -3900,6 +3914,10 @@
         keys.clear(); pointers.clear(); joystick.x = joystick.y = 0; joystick.id = null; stick.style.transform = '';
         document.body.classList.remove('dragging');
       }
+      function resetGroundMotion() {
+        state.moveVelocity.set(0, 0, 0); state.speed = 0; state.slope = 1;
+        state.coyote = 0; state.jumpBuffer = 0; state.landDip = 0; state.roll = 0;
+      }
       function explore() { state.compositionTarget = 0; state.faceTarget = null; document.body.classList.add('exploring'); }
       state.faceTarget = null;
       function switchMode() {
@@ -3911,6 +3929,7 @@
           state.direction.copy(nearestLand(sphereDirection(state.yaw,state.polar,orbitNormal)));
           state.radius = groundRadius(state.direction) + EYE;
           state.velocity = 0; state.grounded = true; state.water = false; state.walkPhase = 0;
+          resetGroundMotion();
           let closest = landmarks[0], score = -1;
           for (const landmark of landmarks) { const dot = landmark.direction.dot(state.direction); if (dot > score && dot < .9998) { closest = landmark; score = dot; } }
           headingToward(closest.direction);
@@ -3919,6 +3938,7 @@
         } else {
           state.yaw = Math.atan2(state.direction.x,state.direction.z); state.polar = Math.acos(clamp(state.direction.y,-1,1));
           state.distance = fitDistance(); state.composition = state.compositionTarget = 0; state.mode = 'orbit';
+          resetGroundMotion();
           orbitPose();
         }
         explore();
@@ -3934,9 +3954,22 @@
         canvas.focus({preventScroll:true});
       }
       function jump() {
-        if (state.mode === 'ground' && !state.transition && state.grounded && !state.water) { state.velocity = .69; state.grounded = false; }
+        if (state.mode !== 'ground' || state.transition || state.water) return;
+        if (state.grounded || state.coyote > 0) {
+          state.velocity = JUMP_SPEED;
+          state.grounded = false;
+          state.coyote = 0;
+          state.jumpBuffer = 0;
+        } else {
+          // Pressing slightly before touchdown still jumps: keeps the input honest on rough ground.
+          state.jumpBuffer = JUMP_BUFFER_TIME;
+        }
       }
-      function turn(dx,dy) { state.faceTarget=null; state.heading.applyAxisAngle(state.direction,-dx*.0024).normalize(); state.pitch=clamp(state.pitch-dy*.0022,-1.4,1.4); }
+      function cutJump() {
+        // Releasing jump while still rising keeps the arc short: full hold = full height.
+        if (state.mode === 'ground' && state.velocity > .22) state.velocity *= .55;
+      }
+      function turn(dx,dy) { state.faceTarget=null; state.heading.applyAxisAngle(state.direction,-dx*.0024).normalize(); state.pitch=clamp(state.pitch-dy*.0022,-PITCH_LIMIT,PITCH_LIMIT); }
       function zoom(factor) {
         if (state.mode !== 'orbit' || state.transition) return;
         state.distance=clamp(state.distance*factor,6.4,32); explore();
@@ -3946,22 +3979,77 @@
         const lateral = Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'))+joystick.x;
         right.crossVectors(state.heading,state.direction).normalize();
         move.copy(state.heading).multiplyScalar(forward).addScaledVector(right,lateral);
-        const length=move.length();
-        if (length > 1) move.divideScalar(length);
-        if (length > .03) {
-          state.faceTarget=null;
-          const sprint=keys.has('ShiftLeft')||keys.has('ShiftRight');
-          const speed=state.water ? .18 : sprint ? .64 : .32;
-          state.direction.multiplyScalar(state.radius).addScaledVector(move,speed*dt).normalize();
-          state.heading.addScaledVector(state.direction,-state.heading.dot(state.direction)).normalize();
-          if (state.grounded) state.walkPhase+=dt*(sprint?12:8);
-        }
+        // Keep the analogue magnitude of the stick, but never let the vector exceed one unit.
+        const rawLength=move.length(), inputLength=Math.min(1,rawLength);
+        if (rawLength>1e-6) move.multiplyScalar(1/rawLength); else move.set(0,0,0);
+
         const elevation=heightAt(state.direction);
         state.water=elevation<SEA-.006;
+
+        // Terrain grade under the intended path: uphill bleeds speed, downhill returns a little.
+        let grade=1;
+        if (state.grounded&&!state.water&&inputLength>.01) {
+          slopeProbe.copy(state.direction).multiplyScalar(R).addScaledVector(move,SLOPE_STEP).normalize();
+          const rise=Math.max(heightAt(slopeProbe),SEA)-Math.max(elevation,SEA);
+          grade=clamp(1-rise/SLOPE_STEP*SLOPE_GAIN,.55,1.18);
+        }
+        state.slope+=(grade-state.slope)*(1-Math.exp(-dt*9));
+
+        const sprint=keys.has('ShiftLeft')||keys.has('ShiftRight');
+        const topSpeed=state.water ? SWIM_SPEED : sprint ? SPRINT_SPEED : WALK_SPEED;
+
+        // Air: keep whatever momentum the take-off had, steer it slowly, never bleed it. On the
+        // ground the stick is analogue, so half a push walks at half speed.
+        const speedNow=state.moveVelocity.length();
+        if (state.grounded) {
+          moveTarget.copy(move).multiplyScalar(topSpeed*inputLength*state.slope);
+        } else {
+          moveTarget.copy(move).multiplyScalar(Math.max(topSpeed,speedNow));
+        }
+
+        // Weighted acceleration: reaching walk speed takes ~0.3 s, stopping is quicker.
+        const wantsInput=inputLength>.01;
+        const accel=state.grounded ? (wantsInput ? GROUND_ACCEL : GROUND_BRAKE) : (wantsInput ? AIR_ACCEL : 0);
+        if (accel>0) {
+          const blend=1-Math.exp(-accel*dt), targetSpeed=moveTarget.length();
+          state.moveVelocity.lerp(moveTarget,blend);
+          // A plain lerp shortens the vector when only the heading changes (turning in place would
+          // read as braking), so restore the intended magnitude afterwards.
+          const blended=state.moveVelocity.length();
+          if (blended>1e-5&&speedNow>1e-5&&targetSpeed>1e-5) {
+            state.moveVelocity.multiplyScalar(mix(speedNow,targetSpeed,blend)/blended);
+          }
+        }
+        state.moveVelocity.addScaledVector(state.direction,-state.moveVelocity.dot(state.direction));
+        if (state.moveVelocity.lengthSq()<1e-9) state.moveVelocity.set(0,0,0);
+
+        state.speed=state.moveVelocity.length();
+        if (state.speed>.004) {
+          state.faceTarget=null;
+          state.direction.multiplyScalar(state.radius).addScaledVector(state.moveVelocity,dt).normalize();
+          state.heading.addScaledVector(state.direction,-state.heading.dot(state.direction)).normalize();
+          if (state.grounded) state.walkPhase+=dt*(3+speedNow*14);
+        }
+
+        // Vertical: buffered jump, coyote time, gravity, landing impact.
+        state.jumpBuffer=Math.max(0,state.jumpBuffer-dt);
+        if (state.jumpBuffer>0&&!state.water&&(state.grounded||state.coyote>0)) {
+          state.velocity=JUMP_SPEED;
+          state.grounded=false;
+          state.coyote=0;
+          state.jumpBuffer=0;
+        }
+        state.velocity-=GRAVITY*dt;
+        state.radius+=state.velocity*dt;
         const footRadius=R+Math.max(elevation,SEA), eyeHeight=state.water ? .033 : EYE;
-        state.velocity-=2.4*dt; state.radius+=state.velocity*dt;
         const floor=footRadius+eyeHeight;
-        if (state.radius<=floor) {state.radius=floor;state.velocity=0;state.grounded=true;} else state.grounded=false;
+        if (state.radius<=floor) {
+          if (!state.grounded&&state.velocity<-.22) state.landDip=Math.min(.006,-state.velocity*.007);
+          state.radius=floor; state.velocity=0; state.grounded=true; state.coyote=COYOTE_TIME;
+        } else {
+          state.grounded=false;
+          state.coyote=Math.max(0,state.coyote-dt);
+        }
       }
       function updateCamera(dt) {
         if (state.transition) {
@@ -3991,11 +4079,26 @@
             state.pitch+=(targetPitch-state.pitch)*(1-Math.exp(-dt*4.5));
             if(state.heading.dot(mantaAhead)>.9995&&Math.abs(targetPitch-state.pitch)<.02)state.faceTarget=null;
           }
-          groundPose(); camera.position.copy(targetPosition);
-          if(!reducedMotion&&state.grounded&&!state.water)camera.position.addScaledVector(state.direction,Math.abs(Math.sin(state.walkPhase))*.0009);
-          camera.quaternion.slerp(targetRotation,1-Math.exp(-dt*22));
+          groundPose();
+          camera.position.copy(targetPosition);
+          // Stride feedback: vertical bob, lateral sway, a whisper of roll, a landing dip and a
+          // slow swell while wading. All of it is additive, so collision height stays exact.
+          const strideAmount=reducedMotion?0:(state.grounded&&!state.water?clamp(state.speed/SPRINT_SPEED,0,1):0);
+          const stride=Math.sin(state.walkPhase), sway=Math.cos(state.walkPhase*.5);
+          state.landDip*=Math.exp(-dt*8);
+          state.roll+=(stride*.0065*strideAmount-state.roll)*(1-Math.exp(-dt*14));
+          const waterBob=reducedMotion||!state.water?0:Math.sin(elapsed*1.15)*.0011;
+          const idleBob=reducedMotion?0:Math.sin(elapsed*1.3)*.0003;
+          camera.position.addScaledVector(state.direction,Math.abs(stride)*.0018*strideAmount+waterBob+idleBob-(reducedMotion?0:state.landDip));
+          right.crossVectors(state.heading,state.direction).normalize();
+          camera.position.addScaledVector(right,sway*.0009*strideAmount);
+          // Roll is baked into the target quaternion (local Z) rather than multiplied onto the
+          // camera afterwards, so it cannot amplify itself across frames.
+          if(Math.abs(state.roll)>.00006)targetRotation.multiply(rollQuat.setFromAxisAngle(rollAxis,state.roll));
+          camera.quaternion.slerp(targetRotation,1-Math.exp(-dt*24));
         }
-        const fov=state.mode==='ground'?70:innerWidth/innerHeight<.76?61:50;
+        const sprintFrac=state.mode==='ground'&&!reducedMotion?smooth(.38,SPRINT_SPEED,state.speed):0;
+        const fov=state.mode==='ground'?70+sprintFrac*3.2:innerWidth/innerHeight<.76?61:50;
         if(Math.abs(camera.fov-fov)>.01){camera.fov+=(fov-camera.fov)*(1-Math.exp(-dt*3));camera.updateProjectionMatrix();}
         const local=state.mode==='ground'&&!state.transition;
         groundPatch.visible=grass.visible=fern.visible=flowers.visible=groundStones.visible=local;
@@ -4204,7 +4307,9 @@
       weatherLabel.textContent = weather.def.label;
       document.getElementById('zoomIn').addEventListener('click',()=>zoom(.82));
       document.getElementById('zoomOut').addEventListener('click',()=>zoom(1.22));
-      document.getElementById('jumpButton').addEventListener('pointerdown',event=>{event.preventDefault();jump();});
+      const jumpButton=document.getElementById('jumpButton');
+      jumpButton.addEventListener('pointerdown',event=>{event.preventDefault();jump();});
+      for(const event of ['pointerup','pointercancel','pointerleave'])jumpButton.addEventListener(event,cutJump);
       window.addEventListener('keydown',event=>{
         if(!startup.ready)return;
         if(event.ctrlKey||event.metaKey||event.altKey||event.target instanceof Element && event.target.matches('input,textarea,select'))return;
@@ -4220,7 +4325,11 @@
         keys.add(event.code);
         if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.code))explore();
       });
-      window.addEventListener('keyup',event=>keys.delete(event.code));
+      window.addEventListener('keyup',event=>{
+        // Tap-to-hop: letting go of jump early clips the ascent instead of the full arc.
+        if(event.code==='Space')cutJump();
+        keys.delete(event.code);
+      });
       window.addEventListener('blur',clearInput);
       function pinchDistance(){const [a,b]=pointers.values();return a&&b?Math.hypot(a.x-b.x,a.y-b.y):0;}
       canvas.addEventListener('contextmenu',event=>event.preventDefault());
@@ -4466,8 +4575,8 @@
         }
       });
       window.aetheris={
-        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Math.round(1/quality.average),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
-        switchView:switchMode,cycleQuality,cycleWeather,setWeather,triggerEvent,events:Object.keys(EVENT_DEFS)
+        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,speed:Number(state.speed.toFixed(3)),grounded:state.grounded,water:state.water,slope:Number(state.slope.toFixed(2)),weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Math.round(1/quality.average),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
+        switchView:switchMode,cycleQuality,cycleWeather,setWeather,triggerEvent,events:Object.keys(EVENT_DEFS),jump
       };
       window.addEventListener('pagehide',event=>{
         if(event.persisted)return;

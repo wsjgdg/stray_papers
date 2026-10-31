@@ -41,11 +41,27 @@ python3 -m http.server 8080
 
 | 操作 | 作用 |
 | --- | --- |
-| `WASD` / 方向键 / 左下摇杆 | 行走；`Shift` 冲刺；涉水时自动改为游泳 |
+| `WASD` / 方向键 / 左下摇杆 | 行走；`Shift` 冲刺；摇杆推一半就是半速；涉水时自动改为游泳 |
 | 点击画面（鼠标） | 进入指针锁定后自由视角；`Esc` 释放；触屏直接拖拽 |
-| `Space` / `JUMP` | 跳跃 |
+| `Space` / `JUMP` | 跳跃：按住跳满高度，轻点只有一个小跳；落地前 0.14 s 内按下会自动接上 |
 | 点击三座圣所路标 | 视角自动转向该遗迹（带一段平滑转身） |
 | `F` | 返回轨道，镜头沿地表弧线飞出 |
+
+#### 地表移动手感
+
+走路不是「按下即满速」，而是一套带惯性的地面控制器：
+
+| 机制 | 具体数值 / 行为 |
+| --- | --- |
+| 加速度 | 起步 `7.5`、刹车 `11`（‑1/s 指数趋近），走到常速约 0.3 s，松开摇杆几乎立即停住 |
+| 速度 | 行走 `0.34`、冲刺 `0.66`、游泳 `0.20`（半径/秒）；摇杆按位移比例给速度 |
+| 坡度 | 采样前方 0.06 单位处的真实地形，换算成 rise/run 坡度：22° 的缓坡只慢 7%，58° 陡坡慢 29%，陡壁最多降到 55%；同坡度下坡最多 +18% |
+| 空中 | 起跳保留水平动量，空中只做 2.6 倍率的缓转向，不会在半空自动刹车 |
+| 跳跃 | 起跳速度 `0.78`、重力 `3.15`：满跳约 0.093 世界单位高（≈ 1.7 个眼高）、滞空 0.48 s；轻点收力只有 0.058；离地 0.1 s 内仍可跳（coyote time），落地前 0.14 s 按下会被缓存 |
+| 视角 | 俯仰夹在 ±1.48 rad；冲刺时 FOV 70° → 73.2°，晃动幅度随速度增长；落地有轻微下沉，涉水有缓慢起伏 |
+| 转向 | 只改朝向时不会掉速（用向量长度补偿），转身不会像刹车 |
+
+所有反馈都是叠加在相机上的：碰撞半径、贴地高度、地面补丁的刷新位置仍按纯几何计算，所以晃动不会穿地或抬高视点。
 
 ### 全局
 
@@ -57,7 +73,7 @@ python3 -m http.server 8080
 | `M` / 喇叭按钮 | 生成式环境音（风噪 + 低频 pad + 夜间微光泛音） |
 | `E` | 立刻召唤一次特殊事件（异象），用于看效果 / 演示 |
 
-系统开启了 Web Audio 与 `prefers-reduced-motion` 的尊重：后者会缩短镜头过渡、去掉走路晃动与雷电视效。
+系统开启了 Web Audio 与 `prefers-reduced-motion` 的尊重：后者会缩短镜头过渡、去掉走路晃动 / 落地下沉 / 冲刺 FOV 与雷电视效（移动与跳跃手感本身保留）。
 
 ---
 
@@ -119,8 +135,8 @@ python3 -m http.server 8080
 
 ```js
 window.aetheris.diagnostics()
-// { build, startupChecks, three, mode, weather, event, eventsSeen, quality, tier,
-//   estimatedFps, pixelRatio, drawCalls, triangles }
+// { build, startupChecks, three, mode, speed, grounded, water, slope, weather, event,
+//   eventsSeen, quality, tier, estimatedFps, pixelRatio, drawCalls, triangles }
 
 window.aetheris.switchView()        // 轨道 ⇄ 地表
 window.aetheris.cycleQuality()      // 等同按 Q
@@ -129,6 +145,7 @@ window.aetheris.setWeather('storm') // 'clear' | 'mist' | 'rain' | 'storm' | 'sn
 window.aetheris.triggerEvent()      // 随机异象（等同按 E）
 window.aetheris.triggerEvent('veil')// 'ley' | 'starfall' | 'veil' | 'bloom' | 'migration'
 window.aetheris.events              // 全部事件 id
+window.aetheris.jump()              // 等同按 Space（仅地表模式生效）
 window.aetherisStartup              // 启动阶段、自检结果、错误详情
 ```
 
