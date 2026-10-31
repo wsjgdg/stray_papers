@@ -988,6 +988,11 @@ G4 边界观察（子代理发现，未动）：CITY_CENTERS/PROVINCE_CENTERS �
 
 门禁：tsc 0 ✓ vitest 101/101 ✓ 隔离 build ✓ 双端口 200 ✓。
 
+噪音模板文案修正 + DEM 坡度管线就绪（补充六十九/七十轮）：
+
+- 噪音模板：从假测量数字（45dB/75dB/长椅仅3个）改为诚实检查提示（「有安静休息区域」/「噪音环境请现场评估」）
+- DEM 坡度脚本（fetch-spot-terrain.mjs）：OpenTopography SRTMGL1 30m → AAIGrid → Horn 3×3 坡度（含纬度修正）→ maxSlope/steepPct；脚本已就绪待限流重置后续传；产物将烘焙为 spot-terrain.generated.ts
+
 ## 七轮（2026-10-25）：志愿探索接入真实数据
 
 | 项目                                                                                                                                               | 状态   |

@@ -50,7 +50,9 @@ import { useAppStore } from "@/lib/store";
 /* ═══ 工具函数 ═══ */
 
 /** 从 mountain-routes 真实高程采样算最大坡度（度）和累计爬升（米） */
-function gradientOf(spotName: string): { maxGrad: number; gainM: number } | null {
+function gradientOf(
+  spotName: string,
+): { maxGrad: number; gainM: number } | null {
   for (const r of MOUNTAIN_ROUTES) {
     if (!r.spots.includes(spotName)) continue;
     let maxGrad = 0;
@@ -169,8 +171,8 @@ const REASON_TEMPLATES = [
     id: "noise",
     label: "噪音休息区",
     icon: "🔇",
-    good: "安静区域，45dB，休息椅充足",
-    bad: "近游乐区持续75dB，长椅仅3个",
+    good: "有安静休息区域，座椅充足",
+    bad: "休息设施较少，噪音环境请现场评估",
   },
   {
     id: "exit",
@@ -604,7 +606,7 @@ function TimelineCard({
 
           // 真实数据覆盖：toilet/exit 有腾讯 nearby 烘焙数据时替换模板文字
           const resolved = (() => {
-            if (reason.id === 'slope') {
+            if (reason.id === "slope") {
               const grad = spotName ? gradientOf(spotName) : null;
               if (grad) {
                 return `最大坡度 ${grad.maxGrad}° · 累计爬升 ${grad.gainM} 米（实测高程采样）`;
