@@ -1346,13 +1346,13 @@ export class QCircuitApp {
     if (b3){ b3.classList.toggle('on', is3d); b3.setAttribute('aria-pressed', String(is3d)); }
     if (cv){
       cv.classList.toggle('amp3d', is3d); cv.style.cursor = is3d ? 'grab' : 'crosshair';
-      cv.setAttribute('aria-label', is3d ? '3D 复振幅图；悬停查看，点击固定；方向键浏览，Enter 固定或取消；拖动旋转，滚轮缩放，按 R 复位相机' : '2D 振幅图；悬停查看基态振幅与概率，点击固定探针');
+      cv.setAttribute('aria-label', is3d ? '3D 复振幅图；纯态色相表示相位（0 为青色，±π 为红色）；悬停查看，点击固定；方向键浏览，Enter 固定或取消；拖动旋转，滚轮缩放，按 R 复位相机' : '2D 振幅图；高度表示模长，纯态色相表示相位（0 为青色，±π 为红色）；悬停查看基态振幅与概率，点击固定探针');
     }
     const hint = this.q('#qcAmpHint');
     if (hint) hint.textContent = is3d
       ? (this.state.noise.on ? '3D 混态：仅显示 √ρᵢᵢ；悬停读布居，无相位。点击点固定，方向键浏览，Enter 固定/取消；拖动旋转、滚轮缩放。'
-        : '3D 纯态：距离=|aᵢ|，方向/色相=相位。悬停读 Re/Im；点击点固定，方向键浏览，Enter 固定/取消；拖动旋转、滚轮缩放。')
-      : '悬停条形读振幅/概率，点击固定基态探针；高度 = |aᵢ|，色相 = 相位。';
+        : '3D 纯态：距离=|aᵢ|，方向/色相=相位（0=青，±π=红）。悬停读 Re/Im；点击点固定，方向键浏览，Enter 固定/取消；拖动旋转、滚轮缩放。')
+      : '悬停条形读振幅/概率，点击固定基态探针；高度=|aᵢ|，色相=相位（0=青，±π=红）。';
     const probe = this.q('#qcAmpProbe');
     if (probe){
       probe.style.display = 'block';
@@ -1757,7 +1757,9 @@ export class QCircuitApp {
       title = '√ρ_ii（布居；混合态无色相）· 非零 ' + amp.length + '/' + dim;
     } else {
       amp = qcAmplitudes(this.psi);
-      title = '|a_i| · arg a_i ∈ [−π,+π] · 非零 ' + amp.length + '/' + dim;
+      title = W >= 500
+        ? '|a_i| · arg a_i: −π红 / 0青 / +π红 · 非零 ' + amp.length + '/' + dim
+        : '|a_i| · 色相：0青 / ±π红';
     }
     const maxAbs = Math.max(1e-12, ...amp.map(a => a.abs));
     const bw = (W - padL - padR) / dim;
