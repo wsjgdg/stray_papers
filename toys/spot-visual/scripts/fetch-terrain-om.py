@@ -6,9 +6,11 @@ import math
 import re
 import sys
 import urllib.request
+import urllib.error
 import urllib.parse
 import time
 import os
+
 
 def parse_scenic_spots(level):
     src = open("src/lib/scenic-enrich.generated.ts", encoding="utf-8").read()
@@ -24,16 +26,19 @@ def parse_scenic_spots(level):
         lat_m = re.search(r'"lat": ([\d.]+)', b)
         level_m = re.search(r'"level": "([^"]+)"', b)
         if lng_m and lat_m and level_m and level_m.group(1) == level:
-            spots.append({
-                "name": name,
-                "lng": float(lng_m.group(1)),
-                "lat": float(lat_m.group(1)),
-            })
+            spots.append(
+                {
+                    "name": name,
+                    "lng": float(lng_m.group(1)),
+                    "lat": float(lat_m.group(1)),
+                }
+            )
     return spots
+
 
 def compute_slope_grid(elevations, n, center_lat):
     """5×5 高程网格 → Horn 坡度"""
-    grid = [elevations[i * n:(i + 1) * n] for i in range(n)]
+    grid = [elevations[i * n : (i + 1) * n] for i in range(n)]
     m_per_lat = 111320
     m_per_lng = 111320 * math.cos(math.radians(center_lat))
     cell_m = 0.0125 * m_per_lat  # 0.0125° ≈ 1.4km
@@ -45,7 +50,7 @@ def compute_slope_grid(elevations, n, center_lat):
         for c in range(1, n - 1):
             dzdx = (grid[r][c + 1] - grid[r][c - 1]) / (2 * cell_m)
             dzdy = (grid[r + 1][c] - grid[r - 1][c]) / (2 * cell_m)
-            slope = math.degrees(math.atan(math.sqrt(dzdx ** 2 + dzdy ** 2)))
+            slope = math.degrees(math.atan(math.sqrt(dzdx**2 + dzdy**2)))
             if slope > max_slope:
                 max_slope = slope
             if slope > 10:
@@ -55,6 +60,7 @@ def compute_slope_grid(elevations, n, center_lat):
         "maxSlope": round(max_slope, 1),
         "steepPct": round(steep / total * 100) if total > 0 else 0,
     }
+
 
 if __name__ == "__main__":
     level = sys.argv[1] if len(sys.argv) > 1 else "5A"
@@ -85,10 +91,28 @@ if __name__ == "__main__":
         lat_str = ",".join(str(x) for x in lats)
         lng_str = ",".join(str(x) for x in lngs)
         url = f"https://api.open-meteo.com/v1/elevation?latitude={lat_str}&longitude={lng_str}"
-        try:
-            req = urllib.request.Request(url, headers={"User-Agent": "spot-visual/1.0"})
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                data = json.loads(resp.read())
+        data = None
+        # 429 退避重试：60s 起步，最多 5 次（滑动窗口限流，等窗口滑动即可恢复）
+        for attempt in range(5):
+            try:
+                req = urllib.request.Request(
+                    url, headers={"User-Agent": "spot-visual/1.0"}
+                )
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    data = json.loads(resp.read())
+                break
+            except urllib.error.HTTPError as e:
+                if e.code == 429 and attempt < 4:
+                    wait = 60 * (attempt + 1)
+                    print(f"  429 {s['name']}: 退避 {wait}s (attempt {attempt + 1})")
+                    time.sleep(wait)
+                else:
+                    print(f"  MISS {s['name']}: HTTP {e.code}")
+                    break
+            except Exception as e:
+                print(f"  MISS {s['name']}: {e}")
+                break
+        if data is not None:
             elevs = data.get("elevation", [])
             if len(elevs) == N * N:
                 slope = compute_slope_grid(elevs, N, s["lat"])
@@ -96,14 +120,14 @@ if __name__ == "__main__":
                 hit += 1
             else:
                 miss += 1
-        except Exception as e:
+        else:
             miss += 1
-            if miss <= 5:
-                print(f"  MISS {s['name']}: {e}")
-        if (i + 1) % 50 == 0:
+        if (i + 1) % 25 == 0:
             # 增量落盘
             json.dump(existing, open(cache_path, "w"), ensure_ascii=False)
-            print(f"进度 {i+1}/{len(spots)} 命中 {hit} 未中 {miss} (cached={len(existing)})")
+            print(
+                f"进度 {i+1}/{len(spots)} 命中 {hit} 未中 {miss} (cached={len(existing)})"
+            )
         time.sleep(2)
 
     json.dump(existing, open(cache_path, "w"), ensure_ascii=False)

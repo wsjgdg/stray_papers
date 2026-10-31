@@ -1211,4 +1211,3632 @@ export const SPOT_TERRAIN: Record<string, SpotTerrain> = {
     maxSlope: 2.6,
     steepPct: 0,
   },
+  通州大运河森林旅游区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  中国园林博物馆: {
+    maxSlope: 1.2,
+    steepPct: 0,
+  },
+  北京世园公园: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  北京市房山区周口店遗址景区: {
+    maxSlope: 6.1,
+    steepPct: 0,
+  },
+  野鸭湖景区: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  国家植物园: {
+    maxSlope: 5.8,
+    steepPct: 0,
+  },
+  凤凰岭自然风景区: {
+    maxSlope: 11.3,
+    steepPct: 22,
+  },
+  世界公园: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  雁栖湖旅游区: {
+    maxSlope: 2.5,
+    steepPct: 0,
+  },
+  京东石林峡风景区: {
+    maxSlope: 8.7,
+    steepPct: 0,
+  },
+  八达岭水关长城景区: {
+    maxSlope: 6.8,
+    steepPct: 0,
+  },
+  司马台长城景区: {
+    maxSlope: 6.6,
+    steepPct: 0,
+  },
+  中国人民抗日战争纪念馆: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  石花洞: {
+    maxSlope: 9.1,
+    steepPct: 0,
+  },
+  北京韩美林艺术馆: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  金海湖风景区: {
+    maxSlope: 8.8,
+    steepPct: 0,
+  },
+  玉渊潭公园: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  北京黄花城水长城旅游区: {
+    maxSlope: 9.1,
+    steepPct: 0,
+  },
+  戒台寺: {
+    maxSlope: 5.0,
+    steepPct: 0,
+  },
+  龙潭公园: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  青龙峡旅游度假区: {
+    maxSlope: 12.8,
+    steepPct: 11,
+  },
+  黑龙潭旅游区: {
+    maxSlope: 8.3,
+    steepPct: 0,
+  },
+  龙庆峡旅游区: {
+    maxSlope: 8.2,
+    steepPct: 0,
+  },
+  北京丫髻山道教文化名胜区: {
+    maxSlope: 4.8,
+    steepPct: 0,
+  },
+  北京海洋馆: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  中国紫檀博物馆: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  北京顺义国际鲜花港: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  绿野晴川野生动物园: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  仙居谷风景区: {
+    maxSlope: 8.6,
+    steepPct: 0,
+  },
+  小汤山现代农业示范园区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  北京园博园: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  谷山村景区: {
+    maxSlope: 5.4,
+    steepPct: 0,
+  },
+  乐多港假日广场: {
+    maxSlope: 1.0,
+    steepPct: 0,
+  },
+  龙脉温泉度假村: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  北京十渡风景名胜区: {
+    maxSlope: 9.1,
+    steepPct: 0,
+  },
+  八大处公园: {
+    maxSlope: 8.6,
+    steepPct: 0,
+  },
+  八奇洞景区: {
+    maxSlope: 8.9,
+    steepPct: 0,
+  },
+  银山塔林风景区: {
+    maxSlope: 7.4,
+    steepPct: 0,
+  },
+  居庸关长城: {
+    maxSlope: 10.3,
+    steepPct: 11,
+  },
+  圣莲山旅游度假区: {
+    maxSlope: 14.8,
+    steepPct: 22,
+  },
+  北京渔阳国际滑雪场景区: {
+    maxSlope: 3.8,
+    steepPct: 0,
+  },
+  云居寺: {
+    maxSlope: 6.4,
+    steepPct: 0,
+  },
+  红螺寺: {
+    maxSlope: 11.1,
+    steepPct: 33,
+  },
+  中央广播电视塔: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  南宫旅游景区: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  中国航空博物馆: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  京东大峡谷旅游区: {
+    maxSlope: 10.8,
+    steepPct: 11,
+  },
+  香山公园: {
+    maxSlope: 7.9,
+    steepPct: 0,
+  },
+  潭柘寺: {
+    maxSlope: 6.9,
+    steepPct: 0,
+  },
+  北京欢乐谷: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  北京汽车博物馆: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  延庆百里山水画廊景区: {
+    maxSlope: 9.2,
+    steepPct: 0,
+  },
+  北宫国家森林公园: {
+    maxSlope: 3.3,
+    steepPct: 0,
+  },
+  紫竹院公园: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  首都博物馆: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  北京奥林匹克水上公园: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  石景山游乐园: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  北京天文馆: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  世界葡萄博览中心景区: {
+    maxSlope: 8.1,
+    steepPct: 0,
+  },
+  北京张裕爱斐堡国际酒庄: {
+    maxSlope: 2.2,
+    steepPct: 0,
+  },
+  天津海河意式风情区: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  天津周恩来邓颖超纪念馆: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  "精武门·中华武林园": {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  天津市蓟州区梨木台景区: {
+    maxSlope: 9.6,
+    steepPct: 0,
+  },
+  天津欢乐谷景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  天津方特欢乐世界景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  蓟州溶洞: {
+    maxSlope: 6.3,
+    steepPct: 0,
+  },
+  天津蓟州区独乐寺景区: {
+    maxSlope: 4.4,
+    steepPct: 0,
+  },
+  天津水上公园景区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  天津泰达航母主题公园景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  大沽口炮台遗址博物馆景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  天津海昌极地海洋公园景区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  五大道文化旅游区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  水高庄园景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  天津市河北区大悲禅院景区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  萨马兰奇纪念馆景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  国家海洋博物馆景区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  东丽湖恒大温泉旅游区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  天津黄崖关长城风景游览区: {
+    maxSlope: 10.0,
+    steepPct: 0,
+  },
+  天津热带植物观光园景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  石家大院景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  平津战役纪念馆景区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  天山海世界米立方水上乐园: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  天津东疆湾景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  天津南湖绿博园景区: {
+    maxSlope: 0.0,
+    steepPct: 0,
+  },
+  郭家沟景区: {
+    maxSlope: 6.8,
+    steepPct: 0,
+  },
+  天津天塔湖风景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  天士力大健康城景区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  仁爱团泊湖国际休闲博览园景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  "“天津之眼”摩天轮": {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  天津光合谷旅游度假区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  杨柳青庄园景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  天津市金街文化旅游区: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  驼梁景区: {
+    maxSlope: 12.5,
+    steepPct: 33,
+  },
+  平山县天桂山风景名胜区: {
+    maxSlope: 10.4,
+    steepPct: 11,
+  },
+  佛光山景区: {
+    maxSlope: 10.8,
+    steepPct: 11,
+  },
+  平山县黑山大峡谷景区: {
+    maxSlope: 13.2,
+    steepPct: 44,
+  },
+  平山县沕沕水景区: {
+    maxSlope: 10.7,
+    steepPct: 11,
+  },
+  河北平山藤龙山: {
+    maxSlope: 9.1,
+    steepPct: 0,
+  },
+  珏山景区: {
+    maxSlope: 8.6,
+    steepPct: 0,
+  },
+  大阳古镇景区: {
+    maxSlope: 1.3,
+    steepPct: 0,
+  },
+  炎帝陵景区: {
+    maxSlope: 3.9,
+    steepPct: 0,
+  },
+  天官王府: {
+    maxSlope: 2.7,
+    steepPct: 0,
+  },
+  郭峪古城: {
+    maxSlope: 4.6,
+    steepPct: 0,
+  },
+  蟒河景区: {
+    maxSlope: 7.8,
+    steepPct: 0,
+  },
+  王莽岭景区: {
+    maxSlope: 15.7,
+    steepPct: 22,
+  },
+  历山景区: {
+    maxSlope: 6.9,
+    steepPct: 0,
+  },
+  柳氏民居景区: {
+    maxSlope: 2.2,
+    steepPct: 0,
+  },
+  湘峪古堡景区: {
+    maxSlope: 6.5,
+    steepPct: 0,
+  },
+  司徒小镇景区: {
+    maxSlope: 1.0,
+    steepPct: 0,
+  },
+  海会书院: {
+    maxSlope: 2.9,
+    steepPct: 0,
+  },
+  "尧庙-华门景区": {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  汾河文化生态景区: {
+    maxSlope: 1.5,
+    steepPct: 0,
+  },
+  古县牡丹文化旅游景区: {
+    maxSlope: 1.1,
+    steepPct: 0,
+  },
+  黄河壶口瀑布风景名胜区: {
+    maxSlope: 7.6,
+    steepPct: 0,
+  },
+  隰县小西天景区: {
+    maxSlope: 3.8,
+    steepPct: 0,
+  },
+  蒲县柏山东岳庙: {
+    maxSlope: 5.7,
+    steepPct: 0,
+  },
+  彭真故居纪念馆: {
+    maxSlope: 1.7,
+    steepPct: 0,
+  },
+  曲沃晋国博物馆: {
+    maxSlope: 1.3,
+    steepPct: 0,
+  },
+  临汾人祖山景区: {
+    maxSlope: 4.1,
+    steepPct: 0,
+  },
+  曲沃晋园景区: {
+    maxSlope: 0.9,
+    steepPct: 0,
+  },
+  "霍太山（广胜）风景名胜区": {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  襄汾龙澍峪景区: {
+    maxSlope: 8.6,
+    steepPct: 0,
+  },
+  永和县黄河乾坤湾景区: {
+    maxSlope: 6.1,
+    steepPct: 0,
+  },
+  襄汾县荷花小镇旅游景区: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  解州关帝庙: {
+    maxSlope: 6.3,
+    steepPct: 0,
+  },
+  山西省永乐宫壁画艺术博物馆: {
+    maxSlope: 2.0,
+    steepPct: 0,
+  },
+  李家大院: {
+    maxSlope: 1.4,
+    steepPct: 0,
+  },
+  运城盐湖: {
+    maxSlope: 1.5,
+    steepPct: 0,
+  },
+  历山风景区: {
+    maxSlope: 8.6,
+    steepPct: 0,
+  },
+  运城市永济鹳雀楼: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  永济五老峰风景名胜区: {
+    maxSlope: 15.6,
+    steepPct: 78,
+  },
+  普救寺旅游区: {
+    maxSlope: 1.0,
+    steepPct: 0,
+  },
+  神潭大峡谷: {
+    maxSlope: 18.1,
+    steepPct: 67,
+  },
+  大禹渡黄河风景区: {
+    maxSlope: 5.1,
+    steepPct: 0,
+  },
+  圣天湖: {
+    maxSlope: 2.1,
+    steepPct: 0,
+  },
+  舜帝陵: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  夏县司马光祠: {
+    maxSlope: 1.5,
+    steepPct: 0,
+  },
+  黄河大梯子崖: {
+    maxSlope: 1.7,
+    steepPct: 0,
+  },
+  万荣后土祠: {
+    maxSlope: 1.5,
+    steepPct: 0,
+  },
+  望仙大峡谷: {
+    maxSlope: 18.1,
+    steepPct: 67,
+  },
+  昭君博物院: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  蒙牛工业旅游景区: {
+    maxSlope: 1.3,
+    steepPct: 0,
+  },
+  "伊利・乳都科技示范园": {
+    maxSlope: 6.7,
+    steepPct: 0,
+  },
+  神泉生态旅游景区: {
+    maxSlope: 1.9,
+    steepPct: 0,
+  },
+  敕勒川草原文化旅游区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  大青山太伟运动休闲度假村: {
+    maxSlope: 6.3,
+    steepPct: 0,
+  },
+  内蒙古博物院: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  大召历史文化旅游区: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  老牛湾黄河大峡谷旅游区: {
+    maxSlope: 5.3,
+    steepPct: 0,
+  },
+  蒙亮民族风情园: {
+    maxSlope: 1.9,
+    steepPct: 0,
+  },
+  南山旅游景区: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  乌兰夫纪念馆旅游区: {
+    maxSlope: 1.6,
+    steepPct: 0,
+  },
+  奥威马文化生态旅游区: {
+    maxSlope: 9.8,
+    steepPct: 0,
+  },
+  "蒙草·草博园": {
+    maxSlope: 2.3,
+    steepPct: 0,
+  },
+  内蒙古自治区赛马场: {
+    maxSlope: 1.0,
+    steepPct: 0,
+  },
+  老牛坡红色文化旅游区: {
+    maxSlope: 4.8,
+    steepPct: 0,
+  },
+  乌兰夫故居红色文化旅游区: {
+    maxSlope: 0.0,
+    steepPct: 0,
+  },
+  黄河麦野谷生态休闲旅游区: {
+    maxSlope: 2.1,
+    steepPct: 0,
+  },
+  莫尼山非遗小旗: {
+    maxSlope: 8.7,
+    steepPct: 0,
+  },
+  成吉思汗察罕苏力德游牧生态旅游区: {
+    maxSlope: 9.8,
+    steepPct: 0,
+  },
+  包头市土默特右旗敕勒川景区: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  包头市石拐区五当召景区: {
+    maxSlope: 2.0,
+    steepPct: 0,
+  },
+  包头市固阳县春坤山生态旅游景区: {
+    maxSlope: 5.0,
+    steepPct: 0,
+  },
+  包头市达尔罕茂明安联合旗百灵那达慕文化旅游区: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  包头市花舞人间旅游景区: {
+    maxSlope: 1.2,
+    steepPct: 0,
+  },
+  包头市东河区南海湿地景区: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  包头市土默特右旗美岱召景区: {
+    maxSlope: 11.9,
+    steepPct: 11,
+  },
+  包头市青山区北方兵器城景区: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  包头市九原区梅力更自然生态风景区: {
+    maxSlope: 10.4,
+    steepPct: 11,
+  },
+  包头市达尔罕茂明安联合旗吉穆斯泰旅游区: {
+    maxSlope: 1.5,
+    steepPct: 0,
+  },
+  达茂旗诗画草原旅游景区: {
+    maxSlope: 1.0,
+    steepPct: 0,
+  },
+  蒙根花万通生态旅游区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  银肯塔拉沙漠绿洲自然生态旅游区: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  恩格贝旅游区: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  布龙湖温泉度假区: {
+    maxSlope: 1.2,
+    steepPct: 0,
+  },
+  鄂尔多斯草原旅游区: {
+    maxSlope: 0.9,
+    steepPct: 0,
+  },
+  三盛公水利风景区: {
+    maxSlope: 1.2,
+    steepPct: 0,
+  },
+  七星湖旅游区: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  萨拉乌苏旅游区: {
+    maxSlope: 2.1,
+    steepPct: 0,
+  },
+  康巴什旅游区: {
+    maxSlope: 1.7,
+    steepPct: 0,
+  },
+  苏泊罕草原旅游景区: {
+    maxSlope: 2.4,
+    steepPct: 0,
+  },
+  鄂尔多斯文化产业园景区: {
+    maxSlope: 1.5,
+    steepPct: 0,
+  },
+  颐和生态文化博览园: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  准格尔召旅游区: {
+    maxSlope: 1.8,
+    steepPct: 0,
+  },
+  油松王孤游区: {
+    maxSlope: 1.2,
+    steepPct: 0,
+  },
+  水镜湖休闲度假旅游区: {
+    maxSlope: 1.2,
+    steepPct: 0,
+  },
+  准格尔黄河大峡谷旅游区: {
+    maxSlope: 6.5,
+    steepPct: 0,
+  },
+  大沙头生态文化旅游区: {
+    maxSlope: 0.6,
+    steepPct: 0,
+  },
+  城川红色文化旅游区: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  马兰花草原旅游景区: {
+    maxSlope: 1.1,
+    steepPct: 0,
+  },
+  九城宫草原漫瀚文化旅游区: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  东联动漫城: {
+    maxSlope: 1.0,
+    steepPct: 0,
+  },
+  鄂尔多斯野生动物园: {
+    maxSlope: 1.0,
+    steepPct: 0,
+  },
+  万家惠欢乐世界游乐园: {
+    maxSlope: 1.1,
+    steepPct: 0,
+  },
+  鄂尔多斯羊绒工业旅游区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  鄂尔多斯草原丝路文化景区: {
+    maxSlope: 0.9,
+    steepPct: 0,
+  },
+  鄂尔多斯赛车小镇文化旅游区: {
+    maxSlope: 0.6,
+    steepPct: 0,
+  },
+  黄河三盛公国家水利风景区: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  河套酒业工业旅游区: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  呼和诺尔施游景区: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  世界反法西斯战争海拉尔纪念园: {
+    maxSlope: 1.4,
+    steepPct: 0,
+  },
+  中国达斡尔民族园: {
+    maxSlope: 1.0,
+    steepPct: 0,
+  },
+  莫尔道嘎国家森林公园: {
+    maxSlope: 3.6,
+    steepPct: 0,
+  },
+  金帐汗旅游部落旅游区: {
+    maxSlope: 1.6,
+    steepPct: 0,
+  },
+  布苏里北疆军事文化旅游区: {
+    maxSlope: 4.1,
+    steepPct: 0,
+  },
+  红花尔基樟子松国家森林公园: {
+    maxSlope: 3.8,
+    steepPct: 0,
+  },
+  巴尔虎蒙古部落: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  根河源国家湿地公团: {
+    maxSlope: 2.2,
+    steepPct: 0,
+  },
+  额尔古纳湿地景区: {
+    maxSlope: 1.6,
+    steepPct: 0,
+  },
+  达尔滨湖国家森林公园: {
+    maxSlope: 3.6,
+    steepPct: 0,
+  },
+  诺干湖旅游度假区: {
+    maxSlope: 3.9,
+    steepPct: 0,
+  },
+  白桦林景区: {
+    maxSlope: 3.6,
+    steepPct: 0,
+  },
+  额尔古纳国家湿地公园: {
+    maxSlope: 4.5,
+    steepPct: 0,
+  },
+  拓跋鲜卑历史文化园: {
+    maxSlope: 3.0,
+    steepPct: 0,
+  },
+  额尔古纳市乌兰山景区: {
+    maxSlope: 4.6,
+    steepPct: 0,
+  },
+  敖鲁古雅使鹿部落: {
+    maxSlope: 2.0,
+    steepPct: 0,
+  },
+  翰嘎利湖休闲旅游度假区: {
+    maxSlope: 0.9,
+    steepPct: 0,
+  },
+  满洲里市扎赉诺尔猛犸旅游区: {
+    maxSlope: 1.7,
+    steepPct: 0,
+  },
+  奥伦布坎森林文化旅游区: {
+    maxSlope: 6.3,
+    steepPct: 0,
+  },
+  阿尔山海神圣泉旅游度假区: {
+    maxSlope: 4.3,
+    steepPct: 0,
+  },
+  成吉思汗庙景区: {
+    maxSlope: 1.2,
+    steepPct: 0,
+  },
+  五角枫生态旅游区: {
+    maxSlope: 0.9,
+    steepPct: 0,
+  },
+  天骄天骏生态旅游度假区: {
+    maxSlope: 1.8,
+    steepPct: 0,
+  },
+  碧海阳光温泉旅游区: {
+    maxSlope: 3.7,
+    steepPct: 0,
+  },
+  敖包相会可汗山草原旅游区: {
+    maxSlope: 2.1,
+    steepPct: 0,
+  },
+  通辽市奈曼旗奈曼蒙古王府: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  通辽市奈曼旗孟家段湿地旅游区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  通辽市奈受旗宝古图沙漠旅游区: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  通辽大青沟国家级自然保护区: {
+    maxSlope: 1.0,
+    steepPct: 0,
+  },
+  库伦旗三大寺景区: {
+    maxSlope: 1.6,
+    steepPct: 0,
+  },
+  通辽市科左中旗孝庄园旅游区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  通辽市哈民考古遗址公园: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  喀喇沁亲王府: {
+    maxSlope: 6.3,
+    steepPct: 0,
+  },
+  达里湖旅游区: {
+    maxSlope: 0.6,
+    steepPct: 0,
+  },
+  美林谷滑雪场: {
+    maxSlope: 10.1,
+    steepPct: 11,
+  },
+  敖汉温泉城: {
+    maxSlope: 3.0,
+    steepPct: 0,
+  },
+  道须沟生态旅游区: {
+    maxSlope: 9.9,
+    steepPct: 0,
+  },
+  玉龙沙湖旅游区: {
+    maxSlope: 2.0,
+    steepPct: 0,
+  },
+  召庙景区: {
+    maxSlope: 6.1,
+    steepPct: 0,
+  },
+  紫蒙湖景区: {
+    maxSlope: 6.5,
+    steepPct: 0,
+  },
+  赤峰博物馆: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  锡林郭勒盟锡林浩特市贝子庙旅游景区贝子庙: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  锡林郭勒盟西乌珠穆沁旗蒙古汗城旅游景区: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  锡林郭勒盟太仆寺旗御马苑旅游景区: {
+    maxSlope: 2.5,
+    steepPct: 0,
+  },
+  锡林郭勒盟西乌珠穆沁旗乌兰五台旅游景区: {
+    maxSlope: 3.2,
+    steepPct: 0,
+  },
+  中国马都核心区文化生态旅游区: {
+    maxSlope: 2.1,
+    steepPct: 0,
+  },
+  锡林郭勒盟元上都遗址旅游区: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  乌拉盖九曲弯景区: {
+    maxSlope: 2.4,
+    steepPct: 0,
+  },
+  多伦湖景区: {
+    maxSlope: 2.0,
+    steepPct: 0,
+  },
+  乌拉盖布林泉景区: {
+    maxSlope: 0.6,
+    steepPct: 0,
+  },
+  乌拉盖野狼谷景区: {
+    maxSlope: 0.6,
+    steepPct: 0,
+  },
+  二连浩特市国门旅游景区: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  二连浩特市国家地质公园景区: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  集宁战役红色纪念园: {
+    maxSlope: 1.6,
+    steepPct: 0,
+  },
+  辉腾锡勒黄花沟草原旅游区: {
+    maxSlope: 2.4,
+    steepPct: 0,
+  },
+  格根塔拉草原旅游中心: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  京能岱海游度假区: {
+    maxSlope: 2.8,
+    steepPct: 0,
+  },
+  岱海旅游度假区: {
+    maxSlope: 1.1,
+    steepPct: 0,
+  },
+  岱海国际滑雪场: {
+    maxSlope: 8.2,
+    steepPct: 0,
+  },
+  红召九龙湾生态旅游区: {
+    maxSlope: 2.6,
+    steepPct: 0,
+  },
+  林胡古塞旅游区: {
+    maxSlope: 5.4,
+    steepPct: 0,
+  },
+  察尔湖旅游区: {
+    maxSlope: 2.9,
+    steepPct: 0,
+  },
+  苏木山旅游区: {
+    maxSlope: 9.4,
+    steepPct: 0,
+  },
+  纳林湖生态旅游区: {
+    maxSlope: 1.4,
+    steepPct: 0,
+  },
+  阿拉善左旗贺兰山广宗寺景区: {
+    maxSlope: 16.2,
+    steepPct: 33,
+  },
+  阿拉善左旗腾格里沙漠月亮湖景区: {
+    maxSlope: 1.5,
+    steepPct: 0,
+  },
+  阿拉善左旗腾格里沙漠天鹅湖旅游风景区: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  "阿拉善左旗福因寺（北寺）旅游区": {
+    maxSlope: 16.6,
+    steepPct: 33,
+  },
+  阿拉善左旗梦想沙漠汽车航天乐园景区: {
+    maxSlope: 2.0,
+    steepPct: 0,
+  },
+  阿拉善左旗定远营古城景区: {
+    maxSlope: 2.0,
+    steepPct: 0,
+  },
+  阿拉善左旗通湖草原旅游区: {
+    maxSlope: 1.0,
+    steepPct: 0,
+  },
+  阿拉善左旗金沙堡地生态旅游区: {
+    maxSlope: 2.2,
+    steepPct: 0,
+  },
+  阿拉善右旗巴丹吉林沙漠景区: {
+    maxSlope: 2.3,
+    steepPct: 0,
+  },
+  额济纳旗大漠胡杨景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  额济纳旗黑城弱水胡杨风景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  额济纳旗东风航天城景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  额济纳旗居延海景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  黄河河套文化旅游区: {
+    maxSlope: 0.0,
+    steepPct: 0,
+  },
+  河套农耕文化博览园: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  内蒙古五原抗战纪念园: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  金沙湾生态旅游景区: {
+    maxSlope: 2.6,
+    steepPct: 0,
+  },
+  乌海市蒙根花生态休闲区: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  阳光田宇国际酒庄: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  当代中国书法艺术馆景区: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  乌海湖休闲度假旅游区: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  御龙温泉度假村: {
+    maxSlope: 0.6,
+    steepPct: 0,
+  },
+  孔子文化园: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  关东文化园: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  北湖国家湿地公园: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  庙香山休闲旅游度假区: {
+    maxSlope: 2.7,
+    steepPct: 0,
+  },
+  农业博览园: {
+    maxSlope: 1.5,
+    steepPct: 0,
+  },
+  吉林省酒文化博物馆: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  东北民族民俗馆: {
+    maxSlope: 0.6,
+    steepPct: 0,
+  },
+  动植物公园: {
+    maxSlope: 0.6,
+    steepPct: 0,
+  },
+  天怡温泉度假山庄: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  长影旧址博物馆: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  长春凯撒森林温泉旅游度假区: {
+    maxSlope: 1.5,
+    steepPct: 0,
+  },
+  莲花岛影视休闲文化园: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  辽金时代文化园: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  榆树钱酒文化庄园: {
+    maxSlope: 0.6,
+    steepPct: 0,
+  },
+  长春天定山旅游度假小镇景区: {
+    maxSlope: 1.7,
+    steepPct: 0,
+  },
+  长春国信南山温泉旅游景区: {
+    maxSlope: 1.2,
+    steepPct: 0,
+  },
+  清泉湖文化与旅游度假区: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  松花湖风景名胜区: {
+    maxSlope: 9.2,
+    steepPct: 0,
+  },
+  北大湖滑雪场度假区: {
+    maxSlope: 12.7,
+    steepPct: 11,
+  },
+  拉法山国家森林公园: {
+    maxSlope: 6.1,
+    steepPct: 0,
+  },
+  北山风景区: {
+    maxSlope: 1.6,
+    steepPct: 0,
+  },
+  圣鑫葡萄酒庄园: {
+    maxSlope: 11.5,
+    steepPct: 22,
+  },
+  圣德泉亲水度假花园: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  神农庄园: {
+    maxSlope: 0.0,
+    steepPct: 0,
+  },
+  吉林市博物馆: {
+    maxSlope: 0.6,
+    steepPct: 0,
+  },
+  万科松花湖度假区: {
+    maxSlope: 10.9,
+    steepPct: 11,
+  },
+  朱雀山国家森林公园: {
+    maxSlope: 8.7,
+    steepPct: 0,
+  },
+  红石国家森林公园: {
+    maxSlope: 3.2,
+    steepPct: 0,
+  },
+  金珠花海度假区: {
+    maxSlope: 0.9,
+    steepPct: 0,
+  },
+  伊通满族博物馆: {
+    maxSlope: 1.0,
+    steepPct: 0,
+  },
+  叶赫那拉城: {
+    maxSlope: 2.2,
+    steepPct: 0,
+  },
+  一马树森林公园: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  北方巴厘岛: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  四平战役纪念馆: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  东北沦陷时期辽源矿工墓陈列馆: {
+    maxSlope: 1.4,
+    steepPct: 0,
+  },
+  道路交通安全体验公园: {
+    maxSlope: 1.6,
+    steepPct: 0,
+  },
+  青少年平安教育馆: {
+    maxSlope: 1.8,
+    steepPct: 0,
+  },
+  鴜鹭湖旅游度假区: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  振国壹号庄园: {
+    maxSlope: 5.2,
+    steepPct: 0,
+  },
+  中国山葡萄酒博物馆: {
+    maxSlope: 4.8,
+    steepPct: 0,
+  },
+  大泉源酒业历史文化景区: {
+    maxSlope: 4.5,
+    steepPct: 0,
+  },
+  五女峰森林旅游区: {
+    maxSlope: 13.1,
+    steepPct: 33,
+  },
+  吉林龙湾景区: {
+    maxSlope: 7.3,
+    steepPct: 0,
+  },
+  杨靖宇烈士陵园: {
+    maxSlope: 2.9,
+    steepPct: 0,
+  },
+  白鸡峰森林康养旅游度假区: {
+    maxSlope: 3.6,
+    steepPct: 0,
+  },
+  永欣欢乐谷: {
+    maxSlope: 7.9,
+    steepPct: 0,
+  },
+  佟佳江旅游度假区: {
+    maxSlope: 3.6,
+    steepPct: 0,
+  },
+  罗通山风景旅游区: {
+    maxSlope: 10.8,
+    steepPct: 11,
+  },
+  鸡冠山风景区: {
+    maxSlope: 6.4,
+    steepPct: 0,
+  },
+  海龙湖景区: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  城市客厅旅游景区: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  露水河国家森林公园: {
+    maxSlope: 1.1,
+    steepPct: 0,
+  },
+  松江河国家森林公园: {
+    maxSlope: 1.2,
+    steepPct: 0,
+  },
+  望天鹅风景区: {
+    maxSlope: 9.2,
+    steepPct: 0,
+  },
+  长白山鲁能胜地旅游度假区: {
+    maxSlope: 9.3,
+    steepPct: 0,
+  },
+  四保临江纪念馆: {
+    maxSlope: 9.8,
+    steepPct: 0,
+  },
+  长白山讷殷古城: {
+    maxSlope: 2.1,
+    steepPct: 0,
+  },
+  长白山二道白河名镇: {
+    maxSlope: 9.3,
+    steepPct: 0,
+  },
+  老黑河遗址景区: {
+    maxSlope: 6.2,
+    steepPct: 0,
+  },
+  查干湖旅游度假区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  松原市规划展览馆: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  莫莫格国家自然保护区: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  绍兴市东湖景区管理处: {
+    maxSlope: 0.9,
+    steepPct: 0,
+  },
+  浙江省绍兴市上虞区中华孝德园: {
+    maxSlope: 2.2,
+    steepPct: 0,
+  },
+  浙江省绍兴市诸暨市米果果小镇景区: {
+    maxSlope: 4.0,
+    steepPct: 0,
+  },
+  五泄风景管理处: {
+    maxSlope: 5.7,
+    steepPct: 0,
+  },
+  浙江省绍兴市上虞区覆卮山景区: {
+    maxSlope: 10.9,
+    steepPct: 11,
+  },
+  浙江省绍兴市大禹陵景区: {
+    maxSlope: 3.3,
+    steepPct: 0,
+  },
+  柯岩风景区: {
+    maxSlope: 0.6,
+    steepPct: 0,
+  },
+  绍兴市兰亭景区管理处: {
+    maxSlope: 3.3,
+    steepPct: 0,
+  },
+  桃花岛旅游景区: {
+    maxSlope: 6.3,
+    steepPct: 0,
+  },
+  舟山桃花岛风景旅游区: {
+    maxSlope: 1.6,
+    steepPct: 0,
+  },
+  浙江省舟山市普陀区朱家尖旅游景区: {
+    maxSlope: 2.3,
+    steepPct: 0,
+  },
+  沈家门渔港小镇景区: {
+    maxSlope: 2.8,
+    steepPct: 0,
+  },
+  嵊泗东海五渔村: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  永安溪休闲绿道: {
+    maxSlope: 4.6,
+    steepPct: 0,
+  },
+  浙江省台州市天台县后岸乡居旅游: {
+    maxSlope: 6.7,
+    steepPct: 0,
+  },
+  方山景区: {
+    maxSlope: 8.2,
+    steepPct: 0,
+  },
+  浙江省台州市临海市灵湖景区: {
+    maxSlope: 6.1,
+    steepPct: 0,
+  },
+  浙江省台州市三门县蛇蟠岛景区: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  浙江省台州市黄岩区九峰景区: {
+    maxSlope: 11.5,
+    steepPct: 22,
+  },
+  长屿硐天旅游区: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  浙江省台州市玉环漩门湾湿地景区: {
+    maxSlope: 7.2,
+    steepPct: 0,
+  },
+  浙江蛇蟠岛旅游开发有限公司: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  临海市江南长城景区: {
+    maxSlope: 11.2,
+    steepPct: 11,
+  },
+  玉环大鹿岛旅游开发有限公司: {
+    maxSlope: 7.2,
+    steepPct: 0,
+  },
+  天台后岸乡居旅游景区: {
+    maxSlope: 6.7,
+    steepPct: 0,
+  },
+  浙江省台州市玉环市大鹿岛景区: {
+    maxSlope: 1.3,
+    steepPct: 0,
+  },
+  浙江省台州市临海市江南长城旅游区: {
+    maxSlope: 11.0,
+    steepPct: 22,
+  },
+  浙江省台州市仙居县永安溪休闲绿道景区: {
+    maxSlope: 4.6,
+    steepPct: 0,
+  },
+  浙江省台州市天台县南屏乡旅游景区: {
+    maxSlope: 11.0,
+    steepPct: 11,
+  },
+  浙江省台州市玉环市漩门湾观光农业园景区: {
+    maxSlope: 2.7,
+    steepPct: 0,
+  },
+  浙江省台州市椒江区台州海洋世界: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  仙居氧吧小镇景区: {
+    maxSlope: 3.0,
+    steepPct: 0,
+  },
+  长屿硐天: {
+    maxSlope: 5.1,
+    steepPct: 0,
+  },
+  玉环漩门湾观光农业开发有限公司: {
+    maxSlope: 7.2,
+    steepPct: 0,
+  },
+  台州海洋世界: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  浙江省台州市黄岩区柔川景区: {
+    maxSlope: 8.5,
+    steepPct: 0,
+  },
+  东阳中国木雕城: {
+    maxSlope: 2.9,
+    steepPct: 0,
+  },
+  浙江省金华市东阳市花园村景区: {
+    maxSlope: 0.6,
+    steepPct: 0,
+  },
+  浙江省金华市金东区锦林佛手文化园景区: {
+    maxSlope: 4.6,
+    steepPct: 0,
+  },
+  浦江仙华山风景区: {
+    maxSlope: 8.9,
+    steepPct: 0,
+  },
+  浙江省金华市东阳市横店镇明清民居博览城: {
+    maxSlope: 6.6,
+    steepPct: 0,
+  },
+  浙江省金华市武义县大红岩景区: {
+    maxSlope: 6.1,
+    steepPct: 0,
+  },
+  义乌中国国际商贸城购物旅游景区: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  诸葛八卦村旅游区: {
+    maxSlope: 1.0,
+    steepPct: 0,
+  },
+  武义清水湾景区: {
+    maxSlope: 4.8,
+    steepPct: 0,
+  },
+  横店红色旅游城: {
+    maxSlope: 4.5,
+    steepPct: 0,
+  },
+  牛头山国家森林公园: {
+    maxSlope: 11.4,
+    steepPct: 22,
+  },
+  浙江省金华市东阳市横店镇华夏文化园景区: {
+    maxSlope: 2.6,
+    steepPct: 0,
+  },
+  浙江省金华市兰溪市六洞山风景区: {
+    maxSlope: 7.7,
+    steepPct: 0,
+  },
+  锦林佛手文化园: {
+    maxSlope: 4.4,
+    steepPct: 0,
+  },
+  横店明清民居博览城: {
+    maxSlope: 7.7,
+    steepPct: 0,
+  },
+  义乌国际商贸城购物旅游区: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  武义大红岩景区: {
+    maxSlope: 6.1,
+    steepPct: 0,
+  },
+  牛头山景区: {
+    maxSlope: 11.4,
+    steepPct: 22,
+  },
+  东阳中国木雕城景区: {
+    maxSlope: 2.9,
+    steepPct: 0,
+  },
+  浙江省金华市磐安县舞龙峡景区: {
+    maxSlope: 2.7,
+    steepPct: 0,
+  },
+  浙江省金华市永康市方岩风景区: {
+    maxSlope: 8.2,
+    steepPct: 0,
+  },
+  金华双龙风景旅游区: {
+    maxSlope: 7.6,
+    steepPct: 0,
+  },
+  磐安百杖潭景区: {
+    maxSlope: 11.3,
+    steepPct: 11,
+  },
+  浙江省金华市磐安县百杖潭景区: {
+    maxSlope: 11.3,
+    steepPct: 11,
+  },
+  横店华夏文化园: {
+    maxSlope: 2.8,
+    steepPct: 0,
+  },
+  婺州古城景区: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  方岩风景区: {
+    maxSlope: 6.3,
+    steepPct: 0,
+  },
+  浙江省金华市浦江县神丽峡景区: {
+    maxSlope: 8.6,
+    steepPct: 0,
+  },
+  磐安夹溪十八涡景区: {
+    maxSlope: 7.9,
+    steepPct: 0,
+  },
+  浙江省金华市武义县璟园景区: {
+    maxSlope: 2.1,
+    steepPct: 0,
+  },
+  浙江省金华市武义县清水湾景区: {
+    maxSlope: 4.8,
+    steepPct: 0,
+  },
+  浙江省金华市兰溪市诸葛八卦村景区: {
+    maxSlope: 2.7,
+    steepPct: 0,
+  },
+  浙江省金华市磐安县十八涡景区: {
+    maxSlope: 7.9,
+    steepPct: 0,
+  },
+  仙华山景区: {
+    maxSlope: 8.9,
+    steepPct: 0,
+  },
+  浙江省丽水市青田县石门洞景区: {
+    maxSlope: 14.6,
+    steepPct: 33,
+  },
+  浙江省丽水市遂昌县神龙飞瀑景区: {
+    maxSlope: 17.1,
+    steepPct: 44,
+  },
+  大木山茶园景区: {
+    maxSlope: 8.3,
+    steepPct: 0,
+  },
+  "浙江龙泉中国青瓷小镇.披云青瓷文化园景区": {
+    maxSlope: 6.0,
+    steepPct: 0,
+  },
+  云和梯田景区: {
+    maxSlope: 17.7,
+    steepPct: 56,
+  },
+  缙云县仙都黄龙景区开发有限公司: {
+    maxSlope: 4.2,
+    steepPct: 0,
+  },
+  浙江省丽水市松阳县松阳双童山景区: {
+    maxSlope: 9.3,
+    steepPct: 0,
+  },
+  南尖岩景区: {
+    maxSlope: 13.2,
+    steepPct: 33,
+  },
+  中国畲乡之窗: {
+    maxSlope: 15.3,
+    steepPct: 33,
+  },
+  仙都景区: {
+    maxSlope: 4.2,
+    steepPct: 0,
+  },
+  浙江省丽水市缙云县河阳古民居景区: {
+    maxSlope: 5.6,
+    steepPct: 0,
+  },
+  丽水东西岩风景区: {
+    maxSlope: 15.0,
+    steepPct: 22,
+  },
+  浙江省丽水市遂昌县千佛山景区: {
+    maxSlope: 14.0,
+    steepPct: 22,
+  },
+  青田中国石雕文化旅游区: {
+    maxSlope: 10.3,
+    steepPct: 11,
+  },
+  松阴溪景区: {
+    maxSlope: 1.8,
+    steepPct: 0,
+  },
+  浙江省丽水市莲都区古堰画乡景区: {
+    maxSlope: 11.9,
+    steepPct: 11,
+  },
+  "中国青瓷小镇·披云青瓷文化园": {
+    maxSlope: 6.2,
+    steepPct: 0,
+  },
+  遂昌金矿矿山公园有限公司: {
+    maxSlope: 14.6,
+    steepPct: 33,
+  },
+  青田石门洞景区: {
+    maxSlope: 9.7,
+    steepPct: 0,
+  },
+  遂昌千佛山景区有限公司: {
+    maxSlope: 14.0,
+    steepPct: 22,
+  },
+  云和湖仙宫景区: {
+    maxSlope: 10.9,
+    steepPct: 11,
+  },
+  浙江省丽水市龙泉市龙泉山旅游度假景区: {
+    maxSlope: 15.0,
+    steepPct: 78,
+  },
+  浙江省丽水市遂昌县遂昌金矿国家矿山公园景区: {
+    maxSlope: 18.5,
+    steepPct: 44,
+  },
+  松阳大木山茶园: {
+    maxSlope: 8.3,
+    steepPct: 0,
+  },
+  浙江省丽水市庆元县巾子峰景区: {
+    maxSlope: 15.0,
+    steepPct: 33,
+  },
+  浙江省丽水市庆元县百山祖景区: {
+    maxSlope: 10.3,
+    steepPct: 22,
+  },
+  浙江省丽水市缙云县黄龙景区: {
+    maxSlope: 7.7,
+    steepPct: 0,
+  },
+  浙江省丽水市遂昌县南尖岩景区: {
+    maxSlope: 13.2,
+    steepPct: 33,
+  },
+  神龙谷景区: {
+    maxSlope: 16.1,
+    steepPct: 44,
+  },
+  浙江省丽水市松阳县箬寮原始林景区: {
+    maxSlope: 12.5,
+    steepPct: 33,
+  },
+  浙江省丽水市云和县梯田景区: {
+    maxSlope: 17.7,
+    steepPct: 56,
+  },
+  云中大漈: {
+    maxSlope: 9.1,
+    steepPct: 0,
+  },
+  浙江省丽水市龙泉市宝溪景区: {
+    maxSlope: 9.2,
+    steepPct: 0,
+  },
+  龙泉山度假区: {
+    maxSlope: 13.1,
+    steepPct: 11,
+  },
+  浙江省丽水市莲都区东西岩景区: {
+    maxSlope: 15.0,
+    steepPct: 22,
+  },
+  箬寮原始林景区: {
+    maxSlope: 12.0,
+    steepPct: 22,
+  },
+  浙江省丽水市景宁畲族自治县云中大漈景区: {
+    maxSlope: 9.1,
+    steepPct: 0,
+  },
+  古堰画乡: {
+    maxSlope: 11.9,
+    steepPct: 11,
+  },
+  浙江省丽水市景宁畲族自治县畲乡之窗景区: {
+    maxSlope: 15.5,
+    steepPct: 33,
+  },
+  百山祖景区: {
+    maxSlope: 10.3,
+    steepPct: 22,
+  },
+  合肥野生动物园: {
+    maxSlope: 1.4,
+    steepPct: 0,
+  },
+  合肥植物园: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  渡江战役总前委旧址: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  大圩生态农业旅游景区: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  "中国（合肥）非物质文化遗产园": {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  "肥西县吉祥农业山庄景区（肥西老母鸡家园）": {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  合肥紫蓬山国家森林公园: {
+    maxSlope: 1.1,
+    steepPct: 0,
+  },
+  合肥三国遗址公园: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  安徽岱山湖旅游度假区: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  元一双凤湖国际旅游度假区: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  安徽博物院: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  合肥包公园: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  安徽徽园景区: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  合肥滨湖国家森林公园: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  巢湖姥山岛景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  冶父山森林公园: {
+    maxSlope: 4.8,
+    steepPct: 0,
+  },
+  中国半汤郁金香高地景区: {
+    maxSlope: 7.2,
+    steepPct: 0,
+  },
+  合肥李鸿章故居陈列馆: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  紫微洞景区: {
+    maxSlope: 4.7,
+    steepPct: 0,
+  },
+  庐阳区三十岗乡生态农业旅游区: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  金孔雀温泉度假村: {
+    maxSlope: 2.4,
+    steepPct: 0,
+  },
+  官亭林海景区: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  长临古街景区: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  铭传故里景区: {
+    maxSlope: 1.6,
+    steepPct: 0,
+  },
+  相山景区: {
+    maxSlope: 5.0,
+    steepPct: 0,
+  },
+  四季榴园景区: {
+    maxSlope: 4.5,
+    steepPct: 0,
+  },
+  南湖景区: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  安徽古井酒文化博览园: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  亳州市花戏楼景区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  亳州博物馆景区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  涡阳天静宫景区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  亳州市曹操地下运兵道景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  楚雄州元谋人世界公园景区: {
+    maxSlope: 2.2,
+    steepPct: 0,
+  },
+  楚雄州永仁县方山景区: {
+    maxSlope: 14.4,
+    steepPct: 33,
+  },
+  金山古镇旅游区: {
+    maxSlope: 3.2,
+    steepPct: 0,
+  },
+  禄丰黑井古镇旅游景区: {
+    maxSlope: 14.0,
+    steepPct: 11,
+  },
+  十月太阳历文化园: {
+    maxSlope: 4.4,
+    steepPct: 0,
+  },
+  双柏县查姆湖旅游景区: {
+    maxSlope: 6.9,
+    steepPct: 0,
+  },
+  泸西阿庐古洞景区: {
+    maxSlope: 3.6,
+    steepPct: 0,
+  },
+  建水县燕子洞风景区: {
+    maxSlope: 5.9,
+    steepPct: 0,
+  },
+  建水文庙景区: {
+    maxSlope: 1.3,
+    steepPct: 0,
+  },
+  红河建水团山古村景区: {
+    maxSlope: 10.2,
+    steepPct: 11,
+  },
+  红河建水朱家花园景区: {
+    maxSlope: 1.2,
+    steepPct: 0,
+  },
+  红河元阳哈尼梯田景区: {
+    maxSlope: 13.9,
+    steepPct: 67,
+  },
+  红河弥勒湖泉生态园景区: {
+    maxSlope: 6.5,
+    steepPct: 0,
+  },
+  红河弥勒可邑旅游小镇景区: {
+    maxSlope: 5.4,
+    steepPct: 0,
+  },
+  建水学政考棚景区: {
+    maxSlope: 1.2,
+    steepPct: 0,
+  },
+  开远凤凰生态公园景区: {
+    maxSlope: 1.6,
+    steepPct: 0,
+  },
+  石屏异龙湖湿地公园景区: {
+    maxSlope: 6.4,
+    steepPct: 0,
+  },
+  弥勒东风韵景区: {
+    maxSlope: 1.0,
+    steepPct: 0,
+  },
+  弥勒锦屏山景区: {
+    maxSlope: 5.6,
+    steepPct: 0,
+  },
+  弥勒太平湖森林小镇景区: {
+    maxSlope: 3.4,
+    steepPct: 0,
+  },
+  红河撒玛坝万亩梯田景区: {
+    maxSlope: 13.9,
+    steepPct: 67,
+  },
+  蒙自市碧色寨滇越铁路历史文化公园景区: {
+    maxSlope: 11.9,
+    steepPct: 33,
+  },
+  中共云南一大会址查尼皮景区: {
+    maxSlope: 4.7,
+    steepPct: 0,
+  },
+  "开远南洞--凤凰谷旅游区": {
+    maxSlope: 5.9,
+    steepPct: 0,
+  },
+  屏边滴水苗城景区: {
+    maxSlope: 10.8,
+    steepPct: 11,
+  },
+  普洱国家公园景区: {
+    maxSlope: 7.5,
+    steepPct: 0,
+  },
+  普洱西盟勐梭龙潭景区: {
+    maxSlope: 11.6,
+    steepPct: 11,
+  },
+  普洱墨江北回归线标志园景区: {
+    maxSlope: 4.9,
+    steepPct: 0,
+  },
+  普洱天士力帝泊洱生物茶谷景区: {
+    maxSlope: 4.2,
+    steepPct: 0,
+  },
+  普洱茶马古道旅游景区: {
+    maxSlope: 3.3,
+    steepPct: 0,
+  },
+  普洱市中华普洱茶博览苑景区: {
+    maxSlope: 4.9,
+    steepPct: 0,
+  },
+  那柯里茶马驿站景区: {
+    maxSlope: 8.8,
+    steepPct: 0,
+  },
+  景迈山茶林文化景区: {
+    maxSlope: 9.7,
+    steepPct: 0,
+  },
+  澜沧县老达保景区: {
+    maxSlope: 7.1,
+    steepPct: 0,
+  },
+  景东县景东文庙: {
+    maxSlope: 6.3,
+    steepPct: 0,
+  },
+  梁河南甸宣抚司署景区: {
+    maxSlope: 10.2,
+    steepPct: 11,
+  },
+  芒市勐巴娜西珍奇园景区: {
+    maxSlope: 5.1,
+    steepPct: 0,
+  },
+  莫里热带雨林景区: {
+    maxSlope: 12.7,
+    steepPct: 22,
+  },
+  芒市孔雀谷景区: {
+    maxSlope: 4.4,
+    steepPct: 0,
+  },
+  芒市仙佛洞景区: {
+    maxSlope: 4.4,
+    steepPct: 0,
+  },
+  瑞丽一寨两国景区: {
+    maxSlope: 1.4,
+    steepPct: 0,
+  },
+  芒市傣族古镇: {
+    maxSlope: 3.9,
+    steepPct: 0,
+  },
+  临沧沧源葫芦小镇景区: {
+    maxSlope: 10.2,
+    steepPct: 11,
+  },
+  沧源司岗里崖画谷景区: {
+    maxSlope: 13.8,
+    steepPct: 33,
+  },
+  双江荣康达乌龙茶庄园景区: {
+    maxSlope: 6.3,
+    steepPct: 0,
+  },
+  博尚碗窑七彩陶瓷文化景区: {
+    maxSlope: 6.7,
+    steepPct: 0,
+  },
+  凤庆县滇红第一村景区: {
+    maxSlope: 7.8,
+    steepPct: 0,
+  },
+  班洪葫芦王地景区: {
+    maxSlope: 12.2,
+    steepPct: 33,
+  },
+  "和成·临沧生态文化创意产业园": {
+    maxSlope: 12.7,
+    steepPct: 22,
+  },
+  贡山独龙江旅游区: {
+    maxSlope: 20.8,
+    steepPct: 56,
+  },
+  小沙坝服务区: {
+    maxSlope: 21.5,
+    steepPct: 56,
+  },
+  "老姆登·知子罗景区": {
+    maxSlope: 27.5,
+    steepPct: 89,
+  },
+  西藏博物馆: {
+    maxSlope: 9.5,
+    steepPct: 0,
+  },
+  牦牛博物馆: {
+    maxSlope: 11.0,
+    steepPct: 22,
+  },
+  西藏自然科学博物馆: {
+    maxSlope: 9.9,
+    steepPct: 0,
+  },
+  文成公主藏文化风情园景区: {
+    maxSlope: 15.9,
+    steepPct: 33,
+  },
+  萨迦寺景区: {
+    maxSlope: 10.1,
+    steepPct: 11,
+  },
+  萨迦古城景区: {
+    maxSlope: 10.1,
+    steepPct: 11,
+  },
+  珠峰自然保护区: {
+    maxSlope: 24.3,
+    steepPct: 67,
+  },
+  江孜宗山抗英遗址红色旅游景区: {
+    maxSlope: 8.8,
+    steepPct: 0,
+  },
+  博览园区: {
+    maxSlope: 12.2,
+    steepPct: 22,
+  },
+  卡定沟: {
+    maxSlope: 24.1,
+    steepPct: 67,
+  },
+  世界柏树王园林景区: {
+    maxSlope: 13.0,
+    steepPct: 44,
+  },
+  南伊沟风景区: {
+    maxSlope: 23.3,
+    steepPct: 67,
+  },
+  米堆冰川景区: {
+    maxSlope: 29.7,
+    steepPct: 89,
+  },
+  波密红楼红色系列景区: {
+    maxSlope: 30.8,
+    steepPct: 89,
+  },
+  鲁朗景区: {
+    maxSlope: 16.1,
+    steepPct: 44,
+  },
+  桑耶寺: {
+    maxSlope: 10.3,
+    steepPct: 11,
+  },
+  昌珠寺旅游景区: {
+    maxSlope: 8.1,
+    steepPct: 0,
+  },
+  玉麦自然人文景区: {
+    maxSlope: 22.5,
+    steepPct: 67,
+  },
+  千年古盐田民俗旅游风景区: {
+    maxSlope: 24.2,
+    steepPct: 67,
+  },
+  西藏解放第一村景区: {
+    maxSlope: 16.5,
+    steepPct: 44,
+  },
+  神山圣湖景区: {
+    maxSlope: 4.0,
+    steepPct: 0,
+  },
+  陕西翠华山国家地质公园: {
+    maxSlope: 15.6,
+    steepPct: 89,
+  },
+  陕西太平国家森林公园: {
+    maxSlope: 13.4,
+    steepPct: 22,
+  },
+  西安秦岭野生动物园: {
+    maxSlope: 9.2,
+    steepPct: 0,
+  },
+  西安曲江楼观道文化展示区: {
+    maxSlope: 10.3,
+    steepPct: 22,
+  },
+  朱雀国家森林公园: {
+    maxSlope: 11.3,
+    steepPct: 11,
+  },
+  西安汉城湖景区: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  汉景帝阳陵博物院: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  陕西张裕瑞那城堡酒庄: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  乐华城乐华恒业欢乐世界景区: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  泾河新城茯茶镇景区: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  西安关中民俗艺术博物院: {
+    maxSlope: 11.8,
+    steepPct: 22,
+  },
+  金龙峡风景区: {
+    maxSlope: 16.0,
+    steepPct: 33,
+  },
+  白鹿原影视城: {
+    maxSlope: 4.3,
+    steepPct: 0,
+  },
+  王顺山国家森林公园: {
+    maxSlope: 15.7,
+    steepPct: 33,
+  },
+  西安市黑河景区: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  周至水街沙沙河: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  西安半坡博物馆: {
+    maxSlope: 1.3,
+    steepPct: 0,
+  },
+  白鹿原白鹿仓: {
+    maxSlope: 8.2,
+    steepPct: 0,
+  },
+  陕西自然博物馆: {
+    maxSlope: 1.1,
+    steepPct: 0,
+  },
+  陕西历史博物馆: {
+    maxSlope: 0.6,
+    steepPct: 0,
+  },
+  西北农林科技大学博览园: {
+    maxSlope: 1.6,
+    steepPct: 0,
+  },
+  杨凌现代农业创新园: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  岐山周文化景区: {
+    maxSlope: 4.7,
+    steepPct: 0,
+  },
+  凤凰湖景区: {
+    maxSlope: 9.5,
+    steepPct: 0,
+  },
+  通天河景区: {
+    maxSlope: 9.7,
+    steepPct: 0,
+  },
+  中华石鼓园: {
+    maxSlope: 4.3,
+    steepPct: 0,
+  },
+  红河谷景区: {
+    maxSlope: 19.8,
+    steepPct: 33,
+  },
+  关山草原景区: {
+    maxSlope: 2.2,
+    steepPct: 0,
+  },
+  青峰峡景区: {
+    maxSlope: 10.4,
+    steepPct: 11,
+  },
+  消灾寺景区: {
+    maxSlope: 9.5,
+    steepPct: 0,
+  },
+  龙门洞景区: {
+    maxSlope: 7.1,
+    steepPct: 0,
+  },
+  九成宫景区: {
+    maxSlope: 3.8,
+    steepPct: 0,
+  },
+  大水川旅游景区: {
+    maxSlope: 12.0,
+    steepPct: 11,
+  },
+  金台太极源文化景区: {
+    maxSlope: 4.5,
+    steepPct: 0,
+  },
+  九龙山景区: {
+    maxSlope: 6.5,
+    steepPct: 0,
+  },
+  扶眉战役纪念馆: {
+    maxSlope: 3.2,
+    steepPct: 0,
+  },
+  野河山景区: {
+    maxSlope: 5.6,
+    steepPct: 0,
+  },
+  长乐塬抗战工业遗址: {
+    maxSlope: 5.1,
+    steepPct: 0,
+  },
+  洽川景区: {
+    maxSlope: 1.7,
+    steepPct: 0,
+  },
+  林皋慢城旅游景区: {
+    maxSlope: 2.9,
+    steepPct: 0,
+  },
+  尧头窑文化旅游生态园区: {
+    maxSlope: 3.0,
+    steepPct: 0,
+  },
+  潼关古城: {
+    maxSlope: 5.4,
+    steepPct: 0,
+  },
+  蒲城桥陵景区: {
+    maxSlope: 4.4,
+    steepPct: 0,
+  },
+  渭南桃花源景区: {
+    maxSlope: 2.0,
+    steepPct: 0,
+  },
+  富平中华郡: {
+    maxSlope: 2.0,
+    steepPct: 0,
+  },
+  渭南葡萄产业园: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  陶艺村景区: {
+    maxSlope: 1.2,
+    steepPct: 0,
+  },
+  少华山国家森林公园: {
+    maxSlope: 15.6,
+    steepPct: 56,
+  },
+  丰图义仓: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  渭华起义纪念馆: {
+    maxSlope: 2.7,
+    steepPct: 0,
+  },
+  渭南市博物馆: {
+    maxSlope: 0.9,
+    steepPct: 0,
+  },
+  韩城市梁带村芮国遗址博物馆: {
+    maxSlope: 1.4,
+    steepPct: 0,
+  },
+  龙门钢铁景区: {
+    maxSlope: 9.8,
+    steepPct: 0,
+  },
+  司马迁景区: {
+    maxSlope: 3.2,
+    steepPct: 0,
+  },
+  韩城市党家村景区管理处: {
+    maxSlope: 1.6,
+    steepPct: 0,
+  },
+  韩城市博物馆: {
+    maxSlope: 1.9,
+    steepPct: 0,
+  },
+  黄河壶口瀑布景区: {
+    maxSlope: 6.8,
+    steepPct: 0,
+  },
+  延川黄河乾坤湾景区: {
+    maxSlope: 3.8,
+    steepPct: 0,
+  },
+  黄陵国家森林公园景区: {
+    maxSlope: 4.0,
+    steepPct: 0,
+  },
+  黄龙山景区: {
+    maxSlope: 4.2,
+    steepPct: 0,
+  },
+  吴起中央红军长征胜利纪念园景区: {
+    maxSlope: 5.7,
+    steepPct: 0,
+  },
+  宜川县秋林抗战纪念地景区: {
+    maxSlope: 8.4,
+    steepPct: 0,
+  },
+  甘泉大峡谷景区: {
+    maxSlope: 4.7,
+    steepPct: 0,
+  },
+  牛背梁景区: {
+    maxSlope: 15.1,
+    steepPct: 22,
+  },
+  天竺山景区: {
+    maxSlope: 8.4,
+    steepPct: 0,
+  },
+  柞水溶洞景区: {
+    maxSlope: 11.7,
+    steepPct: 22,
+  },
+  塔云山景区: {
+    maxSlope: 13.0,
+    steepPct: 33,
+  },
+  丹江漂流景区: {
+    maxSlope: 6.0,
+    steepPct: 0,
+  },
+  商於古道棣花文化旅游景区: {
+    maxSlope: 8.8,
+    steepPct: 0,
+  },
+  漫川古镇景区: {
+    maxSlope: 8.5,
+    steepPct: 0,
+  },
+  木王山景区: {
+    maxSlope: 12.5,
+    steepPct: 11,
+  },
+  金台山文化旅游景区: {
+    maxSlope: 17.9,
+    steepPct: 22,
+  },
+  九天山风景区: {
+    maxSlope: 13.3,
+    steepPct: 33,
+  },
+  洛南音乐小镇景区: {
+    maxSlope: 2.7,
+    steepPct: 0,
+  },
+  江山景区: {
+    maxSlope: 6.5,
+    steepPct: 0,
+  },
+  天蓬山寨景区: {
+    maxSlope: 12.2,
+    steepPct: 11,
+  },
+  阳城驿景区: {
+    maxSlope: 5.3,
+    steepPct: 0,
+  },
+  蟒岭绿道景区: {
+    maxSlope: 10.1,
+    steepPct: 11,
+  },
+  月亮洞景区: {
+    maxSlope: 16.8,
+    steepPct: 22,
+  },
+  乾陵博物馆: {
+    maxSlope: 3.2,
+    steepPct: 0,
+  },
+  茂陵博物馆: {
+    maxSlope: 1.6,
+    steepPct: 0,
+  },
+  马栏革命旧址: {
+    maxSlope: 6.8,
+    steepPct: 0,
+  },
+  袁家村关中印象体验地: {
+    maxSlope: 3.6,
+    steepPct: 0,
+  },
+  马嵬驿民俗文化体验园: {
+    maxSlope: 2.2,
+    steepPct: 0,
+  },
+  郑国渠旅游景区: {
+    maxSlope: 8.0,
+    steepPct: 0,
+  },
+  云集生态园: {
+    maxSlope: 4.0,
+    steepPct: 0,
+  },
+  侍郎湖景区: {
+    maxSlope: 4.0,
+    steepPct: 0,
+  },
+  咀头休闲体验地: {
+    maxSlope: 2.6,
+    steepPct: 0,
+  },
+  咸阳湖景区: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  昭陵博物馆: {
+    maxSlope: 0.9,
+    steepPct: 0,
+  },
+  陕西省铜川市印台区金锁关石林景区: {
+    maxSlope: 4.3,
+    steepPct: 0,
+  },
+  陕西省铜川市印台区陈炉古镇景区: {
+    maxSlope: 7.1,
+    steepPct: 0,
+  },
+  陕西省铜川市耀州区药王山景区: {
+    maxSlope: 4.0,
+    steepPct: 0,
+  },
+  陕西省铜川市宜君县动漫花溪谷景区: {
+    maxSlope: 4.3,
+    steepPct: 0,
+  },
+  "陕西省铜川市耀州区照金-香山景区": {
+    maxSlope: 5.1,
+    steepPct: 0,
+  },
+  陕西省铜川市耀州区溪山胜境风景区: {
+    maxSlope: 7.0,
+    steepPct: 0,
+  },
+  陕西省铜川市印台区玉华宫景区: {
+    maxSlope: 5.2,
+    steepPct: 0,
+  },
+  佳县白云山景区: {
+    maxSlope: 4.1,
+    steepPct: 0,
+  },
+  红碱淖旅游景区: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  榆阳区黑龙潭景区: {
+    maxSlope: 3.3,
+    steepPct: 0,
+  },
+  榆阳区圣都乐园: {
+    maxSlope: 1.6,
+    steepPct: 0,
+  },
+  榆阳区陕北民歌博物馆: {
+    maxSlope: 1.5,
+    steepPct: 0,
+  },
+  神木市二郎山景区: {
+    maxSlope: 4.5,
+    steepPct: 0,
+  },
+  神木市石峁遗址文化旅游区: {
+    maxSlope: 3.6,
+    steepPct: 0,
+  },
+  神木市碧麟湾景区: {
+    maxSlope: 4.0,
+    steepPct: 0,
+  },
+  绥德县名州古城景区: {
+    maxSlope: 3.9,
+    steepPct: 0,
+  },
+  武侯墓景区: {
+    maxSlope: 6.3,
+    steepPct: 0,
+  },
+  张良庙紫柏山: {
+    maxSlope: 14.6,
+    steepPct: 11,
+  },
+  长青华阳景区: {
+    maxSlope: 15.4,
+    steepPct: 22,
+  },
+  黎坪景区: {
+    maxSlope: 8.7,
+    steepPct: 0,
+  },
+  青木川景区: {
+    maxSlope: 10.7,
+    steepPct: 22,
+  },
+  武侯祠景区: {
+    maxSlope: 6.4,
+    steepPct: 0,
+  },
+  朱鹮梨园景区: {
+    maxSlope: 1.4,
+    steepPct: 0,
+  },
+  石门栈道景区: {
+    maxSlope: 10.4,
+    steepPct: 11,
+  },
+  兴汉胜境景区: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  龙头山景区: {
+    maxSlope: 25.0,
+    steepPct: 67,
+  },
+  汉江源景区: {
+    maxSlope: 12.3,
+    steepPct: 22,
+  },
+  五龙洞景区: {
+    maxSlope: 8.9,
+    steepPct: 0,
+  },
+  熊猫谷景区: {
+    maxSlope: 11.1,
+    steepPct: 22,
+  },
+  栈道水世界景区: {
+    maxSlope: 15.6,
+    steepPct: 11,
+  },
+  骆家坝景区: {
+    maxSlope: 7.8,
+    steepPct: 0,
+  },
+  张骞墓景区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  午子山景区: {
+    maxSlope: 12.6,
+    steepPct: 22,
+  },
+  南宫山景区: {
+    maxSlope: 17.1,
+    steepPct: 33,
+  },
+  汉江燕翔洞生态景区: {
+    maxSlope: 12.8,
+    steepPct: 22,
+  },
+  瀛湖旅游景区: {
+    maxSlope: 10.4,
+    steepPct: 11,
+  },
+  中坝大峡谷景区: {
+    maxSlope: 12.4,
+    steepPct: 33,
+  },
+  日月山旅游区: {
+    maxSlope: 8.5,
+    steepPct: 0,
+  },
+  "西宁市新华联国际旅游城·童梦乐园": {
+    maxSlope: 5.9,
+    steepPct: 0,
+  },
+  青藏高原自然博物馆: {
+    maxSlope: 6.7,
+    steepPct: 0,
+  },
+  昆仑玉文化博物馆: {
+    maxSlope: 7.0,
+    steepPct: 0,
+  },
+  西宁市体育公园: {
+    maxSlope: 5.4,
+    steepPct: 0,
+  },
+  湟源县宗家沟文化旅游景区: {
+    maxSlope: 7.0,
+    steepPct: 0,
+  },
+  循化撒拉族绿色家园: {
+    maxSlope: 18.5,
+    steepPct: 67,
+  },
+  民和县永录康格达景区: {
+    maxSlope: 4.3,
+    steepPct: 0,
+  },
+  "平安驿·河湟民俗文化体验地": {
+    maxSlope: 4.7,
+    steepPct: 0,
+  },
+  互助县北山景区: {
+    maxSlope: 3.9,
+    steepPct: 0,
+  },
+  民和喇家考古遗址公园: {
+    maxSlope: 4.3,
+    steepPct: 0,
+  },
+  "撒拉尔故里-民俗文化园": {
+    maxSlope: 7.9,
+    steepPct: 0,
+  },
+  民和七里花海景区: {
+    maxSlope: 12.0,
+    steepPct: 11,
+  },
+  "青海省海北州金银滩-原子城景区": {
+    maxSlope: 1.7,
+    steepPct: 0,
+  },
+  门源百里油菜花海景区: {
+    maxSlope: 2.4,
+    steepPct: 0,
+  },
+  祁连风光旅游景区: {
+    maxSlope: 6.7,
+    steepPct: 0,
+  },
+  刚察县高原海滨藏城景区: {
+    maxSlope: 2.7,
+    steepPct: 0,
+  },
+  门源县祁连山生态牧场: {
+    maxSlope: 1.7,
+    steepPct: 0,
+  },
+  贵德高原养生休闲度假区: {
+    maxSlope: 1.1,
+    steepPct: 0,
+  },
+  龙羊峡旅游景区: {
+    maxSlope: 4.6,
+    steepPct: 0,
+  },
+  贵德县国家地质公园景区: {
+    maxSlope: 5.5,
+    steepPct: 0,
+  },
+  格尔木昆仑旅游区: {
+    maxSlope: 15.3,
+    steepPct: 33,
+  },
+  茶卡盐湖景区: {
+    maxSlope: 0,
+    steepPct: 0,
+  },
+  格尔木市将军楼文化主题公园景区: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  茶卡天空壹号景区: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  "乌素特（水上）雅丹景区": {
+    maxSlope: 2.1,
+    steepPct: 0,
+  },
+  热贡国家级历史文化名城旅游区: {
+    maxSlope: 7.5,
+    steepPct: 0,
+  },
+  玉树称多拉布民俗村: {
+    maxSlope: 17.4,
+    steepPct: 33,
+  },
+  玉树市新寨嘉那玛尼石经城旅游区: {
+    maxSlope: 11.1,
+    steepPct: 11,
+  },
+  黄沙古渡原生态旅游区: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  黄河军事文化博览园: {
+    maxSlope: 1.9,
+    steepPct: 0,
+  },
+  黄河横城旅游度假区: {
+    maxSlope: 1.4,
+    steepPct: 0,
+  },
+  贺兰山国家森林公园: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  贺兰山岩画: {
+    maxSlope: 13.8,
+    steepPct: 56,
+  },
+  西夏陵: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  宁夏张裕龙询酒庄: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  银川鸣革湖国家湿地公园: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  西夏风情园旅游景区: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  宁夏百瑞源枸杞博物馆: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  贺兰山浸葡小镇: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  志辉源石葡萄酒庄: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  天山海世界景区: {
+    maxSlope: 2.2,
+    steepPct: 0,
+  },
+  玉泉国际酒庄景区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  华夏奇石山文化旅游区: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  北武当生态旅游区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  庙庙湖生态旅游区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  贺东葡萄酒小镇: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  黄河大峡谷旅游区: {
+    maxSlope: 1.6,
+    steepPct: 0,
+  },
+  盐州古城历史文化旅游区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  哈巴湖生态旅游区: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  盐池革命历史纪念园: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  同心红军西征纪念园: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  六盘山红军长征景区: {
+    maxSlope: 0.9,
+    steepPct: 0,
+  },
+  六盘山国家森林公园: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  宁夏固原市须弥山旅游区: {
+    maxSlope: 1.6,
+    steepPct: 0,
+  },
+  宁夏固原市火石寨国家地质公园: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  宁夏固原市博物馆: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  将台堡红军长征会师纪念园: {
+    maxSlope: 0.9,
+    steepPct: 0,
+  },
+  金沙岛景区: {
+    maxSlope: 0.9,
+    steepPct: 0,
+  },
+  寺口子风景区: {
+    maxSlope: 6.8,
+    steepPct: 0,
+  },
+  喀赞其民俗旅游区: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  伊犁河风景区: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  托乎拉苏景区: {
+    maxSlope: 2.9,
+    steepPct: 0,
+  },
+  湿地古杨景区: {
+    maxSlope: 5.3,
+    steepPct: 0,
+  },
+  唐布拉景区: {
+    maxSlope: 9.1,
+    steepPct: 0,
+  },
+  吉林台亲水游乐区: {
+    maxSlope: 5.4,
+    steepPct: 0,
+  },
+  库尔德宁景区: {
+    maxSlope: 9.1,
+    steepPct: 0,
+  },
+  野核桃沟景区: {
+    maxSlope: 11.0,
+    steepPct: 22,
+  },
+  锡伯民族博物馆: {
+    maxSlope: 0.6,
+    steepPct: 0,
+  },
+  惠远古城景区: {
+    maxSlope: 1.2,
+    steepPct: 0,
+  },
+  解忧公主薰衣草园: {
+    maxSlope: 0.9,
+    steepPct: 0,
+  },
+  图开沙漠景区: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  大西沟中华福寿山: {
+    maxSlope: 5.4,
+    steepPct: 0,
+  },
+  霍尔果斯中哈国际旅游区: {
+    maxSlope: 1.2,
+    steepPct: 0,
+  },
+  夏塔景区: {
+    maxSlope: 8.6,
+    steepPct: 0,
+  },
+  天马旅游文化园: {
+    maxSlope: 1.2,
+    steepPct: 0,
+  },
+  圣佑庙景区: {
+    maxSlope: 2.4,
+    steepPct: 0,
+  },
+  昭苏县湿地公园: {
+    maxSlope: 0.9,
+    steepPct: 0,
+  },
+  锦绣园风景区: {
+    maxSlope: 1.1,
+    steepPct: 0,
+  },
+  那拉提国家湿地公园景区: {
+    maxSlope: 1.0,
+    steepPct: 0,
+  },
+  六星街景区: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  八卦城景区: {
+    maxSlope: 1.5,
+    steepPct: 0,
+  },
+  知青馆景区: {
+    maxSlope: 2.3,
+    steepPct: 0,
+  },
+  肖尔布拉克西域酒文化博物馆: {
+    maxSlope: 1.2,
+    steepPct: 0,
+  },
+  阿拉山口边境旅游区: {
+    maxSlope: 1.6,
+    steepPct: 0,
+  },
+  温泉县圣泉景区: {
+    maxSlope: 9.0,
+    steepPct: 0,
+  },
+  温泉县鄂托克赛尔天泉景区: {
+    maxSlope: 11.8,
+    steepPct: 11,
+  },
+  博尔塔拉河旅游区: {
+    maxSlope: 0.9,
+    steepPct: 0,
+  },
+  温泉河谷林景区: {
+    maxSlope: 6.5,
+    steepPct: 0,
+  },
+  五彩滩: {
+    maxSlope: 3.5,
+    steepPct: 0,
+  },
+  草原石人哈萨克民族文化园: {
+    maxSlope: 15.7,
+    steepPct: 22,
+  },
+  乌伦古湖景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  国家矿山公园景区: {
+    maxSlope: 8.3,
+    steepPct: 0,
+  },
+  滨河景区: {
+    maxSlope: 2.0,
+    steepPct: 0,
+  },
+  桦林公园: {
+    maxSlope: 3.9,
+    steepPct: 0,
+  },
+  中俄老码头风情街: {
+    maxSlope: 1.5,
+    steepPct: 0,
+  },
+  可可苏里景区: {
+    maxSlope: 3.3,
+    steepPct: 0,
+  },
+  克兰河滨河景区: {
+    maxSlope: 2.0,
+    steepPct: 0,
+  },
+  草原石城景区: {
+    maxSlope: 1.4,
+    steepPct: 0,
+  },
+  三道海子景区: {
+    maxSlope: 5.9,
+    steepPct: 0,
+  },
+  克拉玛依河景区: {
+    maxSlope: 1.0,
+    steepPct: 0,
+  },
+  黑油山景区: {
+    maxSlope: 2.1,
+    steepPct: 0,
+  },
+  独山子大峡谷景区: {
+    maxSlope: 11.8,
+    steepPct: 11,
+  },
+  新疆农业博览园: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  世纪园景区: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  天山木垒中国农业公园: {
+    maxSlope: 8.6,
+    steepPct: 0,
+  },
+  江布拉克景区: {
+    maxSlope: 6.6,
+    steepPct: 0,
+  },
+  杜氏旅游景区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  玛纳斯国家湿地公园雁飞台景区: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  千佛洞景区: {
+    maxSlope: 1.5,
+    steepPct: 0,
+  },
+  北庭故城考古遗址公园: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  水磨河避暑休闲旅游度假区: {
+    maxSlope: 1.4,
+    steepPct: 0,
+  },
+  苜蓿台生态公园: {
+    maxSlope: 12.1,
+    steepPct: 22,
+  },
+  新疆天山野生动物园: {
+    maxSlope: 1.4,
+    steepPct: 0,
+  },
+  红光山景区: {
+    maxSlope: 1.3,
+    steepPct: 0,
+  },
+  新疆丝绸之路国际度假区: {
+    maxSlope: 11.4,
+    steepPct: 11,
+  },
+  新疆国际大巴扎景区: {
+    maxSlope: 1.2,
+    steepPct: 0,
+  },
+  新疆自治区博物馆: {
+    maxSlope: 2.8,
+    steepPct: 0,
+  },
+  水磨沟风景区: {
+    maxSlope: 2.4,
+    steepPct: 0,
+  },
+  红山公园: {
+    maxSlope: 1.5,
+    steepPct: 0,
+  },
+  库木塔格沙漠风景名胜区: {
+    maxSlope: 1.4,
+    steepPct: 0,
+  },
+  坎儿井游乐园: {
+    maxSlope: 1.2,
+    steepPct: 0,
+  },
+  坎儿井民俗园: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  吐鲁番博物馆: {
+    maxSlope: 0.9,
+    steepPct: 0,
+  },
+  火焰山景区: {
+    maxSlope: 2.4,
+    steepPct: 0,
+  },
+  大交河景区: {
+    maxSlope: 2.2,
+    steepPct: 0,
+  },
+  罗布人村寨景区: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  金沙滩景区: {
+    maxSlope: 0.6,
+    steepPct: 0,
+  },
+  轮台县塔里木胡杨林公园: {
+    maxSlope: 0.0,
+    steepPct: 0,
+  },
+  巩乃斯景区: {
+    maxSlope: 0.6,
+    steepPct: 0,
+  },
+  天鹅河景区: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  黄庙景区: {
+    maxSlope: 20.4,
+    steepPct: 78,
+  },
+  霍拉山丝路古村: {
+    maxSlope: 1.1,
+    steepPct: 0,
+  },
+  北山森林公园景区: {
+    maxSlope: 1.6,
+    steepPct: 0,
+  },
+  巴州博物馆: {
+    maxSlope: 0.9,
+    steepPct: 0,
+  },
+  香妃园景区: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  南湖旅游度假区: {
+    maxSlope: 1.1,
+    steepPct: 0,
+  },
+  叶城县宗郎灵泉景区: {
+    maxSlope: 0.9,
+    steepPct: 0,
+  },
+  刀郎画乡: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  红海旅游景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  达瓦昆沙漠旅游风景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  花儿为什么这样红景区: {
+    maxSlope: 11.9,
+    steepPct: 11,
+  },
+  红其拉甫国门旅游景区: {
+    maxSlope: 1.2,
+    steepPct: 0,
+  },
+  巴尔鲁克风景区: {
+    maxSlope: 1.7,
+    steepPct: 0,
+  },
+  佛山国家森林公园: {
+    maxSlope: 12.6,
+    steepPct: 22,
+  },
+  鹿角湾: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  哈密地区雅尔当风景区: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  伊吾县胡杨林生态园景区: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  哈密王景区: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  哈密市白石头风景名胜区: {
+    maxSlope: 11.1,
+    steepPct: 22,
+  },
+  巴里坤湖景区: {
+    maxSlope: 4.2,
+    steepPct: 0,
+  },
+  巴里坤古城景区: {
+    maxSlope: 7.1,
+    steepPct: 0,
+  },
+  巴里坤高家湖景区: {
+    maxSlope: 1.9,
+    steepPct: 0,
+  },
+  多浪河景区: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  国家湿地公园景区: {
+    maxSlope: 0.6,
+    steepPct: 0,
+  },
+  "阿克苏地区文博院（博物馆）": {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  库车王府: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  天山神秘大峡谷: {
+    maxSlope: 8.6,
+    steepPct: 0,
+  },
+  克孜尔尕哈烽燧世界文化遗产公园: {
+    maxSlope: 1.0,
+    steepPct: 0,
+  },
+  沙雁洲景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  沙漠花海景区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  加依村景区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  克孜尔石窟: {
+    maxSlope: 1.0,
+    steepPct: 0,
+  },
+  康其湿地: {
+    maxSlope: 0.6,
+    steepPct: 0,
+  },
+  神木园: {
+    maxSlope: 5.0,
+    steepPct: 0,
+  },
+  托木尔大峡谷景区: {
+    maxSlope: 5.7,
+    steepPct: 0,
+  },
+  柯柯牙纪念馆: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  "归园田居·塔村": {
+    maxSlope: 5.0,
+    steepPct: 0,
+  },
+  刀郎部落: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  沙棘林旅游景区: {
+    maxSlope: 9.1,
+    steepPct: 0,
+  },
+  燕泉山景区: {
+    maxSlope: 1.4,
+    steepPct: 0,
+  },
+  阿克陶县克州冰川公园景区: {
+    maxSlope: 6.7,
+    steepPct: 0,
+  },
+  和田乌鲁瓦提风景区: {
+    maxSlope: 16.2,
+    steepPct: 33,
+  },
+  策勒县达玛沟佛教文化遗址: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  团城景区: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  和田博物馆: {
+    maxSlope: 0.6,
+    steepPct: 0,
+  },
+  墨玉老城景区: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  拉里昆国家湿地公园: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  龙湖旅游区: {
+    maxSlope: 0.4,
+    steepPct: 0,
+  },
+  "策勒县昆仑圣境（板兰格景区）": {
+    maxSlope: 9.9,
+    steepPct: 0,
+  },
+  南京市雨发生态旅游区: {
+    maxSlope: 1.2,
+    steepPct: 0,
+  },
+  南京市牛首山文化旅游区: {
+    maxSlope: 2.8,
+    steepPct: 0,
+  },
+  南京市汤山紫清湖旅游区: {
+    maxSlope: 3.5,
+    steepPct: 0,
+  },
+  南京市金牛湖景区: {
+    maxSlope: 2.1,
+    steepPct: 0,
+  },
+  南京市游子山休闲旅游区: {
+    maxSlope: 2.5,
+    steepPct: 0,
+  },
+  南京市高淳国际慢城: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  南京博物院: {
+    maxSlope: 5.0,
+    steepPct: 0,
+  },
+  "南京市溧水白马如意文化艺术中心（周园）": {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  南京市珍珠泉风景区: {
+    maxSlope: 4.1,
+    steepPct: 0,
+  },
+  南京市科技馆: {
+    maxSlope: 0.8,
+    steepPct: 0,
+  },
+  南京市栖霞山风景区: {
+    maxSlope: 2.1,
+    steepPct: 0,
+  },
+  "南京市明文化村（阳山碑材）景区": {
+    maxSlope: 5.5,
+    steepPct: 0,
+  },
+  南京市溧水天生桥景区: {
+    maxSlope: 0.7,
+    steepPct: 0,
+  },
+  南京市平山森林公园: {
+    maxSlope: 2.1,
+    steepPct: 0,
+  },
+  南通市洲际绿博园: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  南通市啬园景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  南通海安县江淮文化园景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  南通市海门叠石桥国际家纺园景区: {
+    maxSlope: 0.0,
+    steepPct: 0,
+  },
+  南通市中国工农红军第十四军纪念馆景区: {
+    maxSlope: 0.0,
+    steepPct: 0,
+  },
+  南通如皋市水绘园风景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  南通市狼山名胜风景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  海门市张謇文化旅游景区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  南通如皋盆景大观景区: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  南通市森林野生动物园: {
+    maxSlope: 0.1,
+    steepPct: 0,
+  },
+  宿迁市双沟酒文化旅游区: {
+    maxSlope: 0.5,
+    steepPct: 0,
+  },
+  宿迁市三台山森林公园: {
+    maxSlope: 0.9,
+    steepPct: 0,
+  },
+  宿迁市洋河酒厂文化旅游区: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  宿迁市龙王庙行宫景区: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  宿迁市项王故里: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  宿迁市湖滨公园景区: {
+    maxSlope: 0.6,
+    steepPct: 0,
+  },
+  宿迁泗阳县中国杨树博物馆: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  宿迁市雪枫公园: {
+    maxSlope: 0.3,
+    steepPct: 0,
+  },
+  常州市花谷奇缘景区: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  "常州市东方盐湖城▪道天下景区": {
+    maxSlope: 2.9,
+    steepPct: 0,
+  },
+  常州溧阳市新四军江南指挥部纪念馆: {
+    maxSlope: 0.2,
+    steepPct: 0,
+  },
+  常州市中华孝道园景区: {
+    maxSlope: 1.6,
+    steepPct: 0,
+  },
 };
