@@ -173,7 +173,7 @@ landscape）sheet 自动放宽至 64vh；stage 高度用 dvh 跟随浏览器工�
 `?n=3|5|7|9` 码长（R110/R112，d=n；非法值归一为 3；k=3/5 在 nq>18 时被禁用并自动降档）·
 `?fast=1` 快扫（每点 MC 样本减半，σ≈×1.41）· `?skipmc=1` 有精确解的点跳过 MC（PL 取精确值，
 收尾补一次单点对账）——两者缺省关，开关进曲线缓存键与快照链接。旋转表面码可用
-`?mode=surf&meas=ideal|noisy|circuit&d=3|5` 直达指定口径；circuit 模式可用 `prep=Z` 或 `prep=X` 选择产品态逻辑本征态制备，省略时从理想码态 memory 边界开始。其实现范围与解码限制见下文。重复码面板还可开启「线路点选注错」：仅 iid/物理通道模式可用，点击线路图噪声列的数据位即可为单次实验指定/撤销错误；固定种子保证可复现，换种子刷新随机通道轨迹；该实验不改统计曲线。
+`?mode=surf&meas=ideal|noisy|circuit&d=3|5` 直达指定口径；circuit 模式可用 `prep=Z|X` 选择产品态逻辑本征态制备，省略时使用可信理想注入边界；`cmodel=t1t2-pauli-twirled|depolarizing` 选择噪声模型（默认 T1/T2），`p` 是 CNOT 后双比特率，`pspam` 是共享输入/prep/readout 率，`t1`/`t2` 是以层时长 τ 归一化的参数。面板参数范围与模型局限见下文。重复码面板还可开启「线路点选注错」：仅 iid/物理通道模式可用，点击线路图噪声列的数据位即可为单次实验指定/撤销错误；固定种子保证可复现，换种子刷新随机通道轨迹；该实验不改统计曲线。
 
 **Shor 码页**（`shor.html`）：`?p=0.05` 物理错误率 · `?theta=1.57&phase=1.57`
 逻辑参考态（Ry(θ)Rz(φ)）· `?trials=3000` 样本数 · `?seed=7` · `?paused=1` ·
@@ -204,8 +204,8 @@ landscape）sheet 自动放宽至 64vh；stage 高度用 dvh 跟随浏览器工�
 `?trials=4000` MC 样本数 · `?seed=7`
 
 **表面码模式**（`qec.html?mode=surf`）：`?d=3|5|7` 码距（n=d²，钳制到合法集）·
-`?noise=x|depol` 错误谱 · `?p=0.08` 每比特错误率（钳制 0.005–0.25）·
-`?meas=ideal|noisy` 噪声口径（码容量 / 带噪测量）· `?trials=1500` MC 样本数（钳制 200–20000）· `?seed=7`
+`?noise=x|depol` 错误谱 · `?p=0.08` 每比特错误率（码容量口径钳制 0.005–0.25；circuit 模式钳制 0.0005–0.02）·
+`?meas=ideal|noisy|circuit` 噪声口径（码容量 / 带噪测量 / 电路级诊断）· `?trials=1500` MC 样本数（circuit 模式最多 4000）· `?seed=7`
 
 ## 功能
 
@@ -1669,13 +1669,13 @@ k̄≈22 常超 DP 上限，回退率过半）、d=3 精确对账按钮置灰（
 
 #### 电路级表面码诊断（`qec.html?mode=surf&meas=circuit`）
 
-选择「电路级（首阶段）」后可运行 d=3/5、R=d 的显式稳定子提取原型。输入边界可选理想码态（memory 基线）、从产品态 |0⟩ⁿ 制备 |0_L⟩，或从 |+⟩ⁿ 制备 |+_L⟩；后两者通过 d 轮稳定子测量建立码空间，首轮不确定的对偶稳定子读数作为随机边界处理，而不是伪报成故障。这是逻辑本征态制备协议，不是任意未知逻辑态的 unitary encoder。每轮 Z 检查由数据控制 |0⟩ ancilla，X 检查由 |+⟩ ancilla 控制数据；每个检查的邻接 CNOT 按 hook-safe 次序排入 4 个无数据/ancilla 冲突的并行层。每个并行层对当层未参与门操作的数据位和 ancilla 注入单比特 idle 去极化；每个 CNOT 后有 15 种非 I 双比特 Pauli 通道，另有 ancilla prep/readout 错误。理想码态模式在提取前对数据位注入输入边界 Pauli 通道；产品态制备模式把相同位点解释为数据初始化后的 prep error。p 是这些故障位置各自的事件概率；页面保留单次 shot 回放和逐轮 syndrome。
+选择「电路级（可信注入边界）」后可运行 d=3/5、R=d 的显式稳定子提取原型。默认输入边界是用户授权的**可信理想任意态注入原语**：它把未知逻辑态理想映射到编码子空间；原语及首个注入耦合门不在故障目录中。注入完成后，数据线上每个物理位点的 X/Y/Z 单故障、所有 extraction CNOT 后 15 种非 I 双比特 Pauli、ancilla prep/readout、每层 idle 与终端读出故障全部纳入目录。也可改选从产品态 |0⟩ⁿ 制备 |0_L⟩ 或从 |+⟩ⁿ 制备 |+_L⟩；后两者通过 d 轮稳定子测量建立码空间，首轮不确定的对偶稳定子读数作为随机边界处理，而不是伪报成故障。每轮 Z 检查由数据控制 |0⟩ ancilla，X 检查由 |+⟩ ancilla 控制数据；每个检查的邻接 CNOT 按 hook-safe 次序排入 4 个无数据/ancilla 冲突的并行层。噪声模型可选「同率 Pauli」对照，或默认的「T1/T2」模式：`p` 是 CNOT 后双比特退极化概率，`pSPAM` 是接口后数据输入/ancilla prep/readout 共用错误率；活跃 CNOT 与 idle 线路在每层时长 τ 上均经历按 T1/T2 参数计算的 Pauli-twirled relaxation。比值以层时长为单位（默认 T1=200τ、T2=120τ），要求 T2≤2T1。T1/T2 模式保留弛豫造成的 X/Y/Z 非均匀性，但 Pauli twirl 丢弃 amplitude damping 的非幺正、状态依赖偏置；并非器件标定。页面保留单次 shot 回放和逐轮 syndrome。
 
 终端为带噪**破坏性数据读出**：Z 基分支逐数据位可发生 classical bit flip，由 Z 稳定子 syndrome 解码逻辑 Z 结果；X 基分支对偶地解码逻辑 X。理想码态 memory 模式分别评估两个替代分支，产品态制备模式评估与制备基底一致的逻辑本征值；两基不是同一次测量同时得到的结果。完整 `(X detector history, Z detector history)` 若有唯一单故障签名则采用配对修正；签名歧义/缺失时只使用无歧义的单帧查表，仍未解决的帧由边缘权重时空 MWPM 兜底。HUD 显示当前制备边界的故障目录、联合查表覆盖、歧义回退及最终逻辑失败数；悬停审计行可查看各类输入、CNOT、idle、ancilla 与终端读出位点计数。
 
 当前 d=3/5 单故障目录逐一强制枚举输入边界、所有 CNOT 双比特 Pauli、ancilla prep/readout、逐层 idle 及终端数据读出 bit flip；回归验收检查两种逻辑基的最终读出及 syndrome。联合签名并非全都唯一，歧义机制明确走安全回退；“零单故障失败”只对这份 Pauli-frame 目录、当前轮数/调度/解码实现成立，不是任意噪声模型的定理。
 
-**适用边界**：理想码态模式只在已编码边界注入 Pauli 噪声；|0⟩ⁿ/|+⟩ⁿ 模式包含产品态初始化与重复稳定子测量的逻辑本征态制备，但不是任意未知逻辑态的 unitary encoder。终端读出是数据比特级 Pauli-frame/经典位翻转模型，不是完整量子态投影模拟。四层并行门顺序已显式实现，idle 也按空闲层逐层注入，但没有设备门时长、T₁/T₂、泄漏、相干误差或串扰校准；解码器只用边缘权重，未对高阶相关故障做联合最大似然。故此功能是诊断性原型，不是完整端到端容错证明，也不能作为 circuit-level 阈值证据。页面禁用 circuit-level 阈值扫描、距离外推及额外换图抽样；命令行回归为 `node scripts/verify-qec-stage.mjs`，实现位于 `src/physics/surfacecircuit.js`，面板接线位于 `src/qec/mode-surf.js`。
+**适用边界**：默认的任意态边界是**可信理想注入原语**，其内部制备/编码门与首耦合门不作容错声称、不在故障目录内；目录从已编码任意逻辑态之后开始，并覆盖每个数据位输入 Pauli、完整列举的 extraction CNOT、ancilla、逐层 idle 和终端读出位点。回归对 Pauli-frame 中 X、Z 两个逻辑分量均逐故障检查，故其纠错结论与未知逻辑振幅无关；终端 X/Z 是互斥的替代破坏性读出分支，不代表同一份未知态能同时测得两基。|0⟩ⁿ/|+⟩ⁿ 模式则包含其逻辑本征态制备过程。终端读出是数据比特级 Pauli-frame/经典位翻转模型，不是完整量子态投影模拟。T₁/T₂ 模式以 CNOT 层作为归一化时钟并对活跃/idle 线路应用 Pauli twirl；没有真实设备的门时长或 T₁/T₂ 标定，且 twirl 丢掉非幺正能量弛豫偏置；也未含泄漏、相干过转或串扰。MWPM 兜底已按 X/Y 与 Z/Y 分量分别采用轴向边缘概率权重，但仍把各位置压成独立边、没有联合建模 CNOT hook 与高阶相关故障似然；无歧义完整 X/Z 联合单故障签名优先，歧义时只用无歧义单帧表，残余帧才进入 MWPM。HUD 分别报告逻辑失败与末端 syndrome 失败数。阈值扫描、距离外推和额外换图抽样继续关闭。通过结果仅是“可信注入边界之后”的单故障逻辑保持验收，不是物理任意态注入的端到端容错证明，也不能作为 circuit-level 阈值证据。页面禁用 circuit-level 阈值扫描、距离外推及额外换图抽样；数值回归为 `node scripts/verify-qec-stage.mjs`，以独立 Pauli-transfer-matrix 公式对账 T1/T2 通道。浏览器测试运行 `npm install` 后设置 `CHROME_BIN=/path/to/chromium npm run test:qec-page`，会对源码页与 `dist/qec.html` 检查 T1/T2 默认值、T2≤2T1 联动、两种模型切换、`runMc()` 参数传递、残余失败计数与浏览器错误。实现位于 `src/physics/surfacecircuit.js`，面板接线位于 `src/qec/mode-surf.js`。
 
 #### 门噪声接进重复码（同页扩展 `qec.html`）
 

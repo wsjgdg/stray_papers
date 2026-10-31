@@ -77,6 +77,13 @@
 | R141 | **哈伯德页 Phase 3+4**：协议（U 斜坡/势阱脉冲/势垒推动）、时间轴精确回拖、U/t 扫描、L=12 静态档 | 用户「继续把 3、4 跑完」。① **三处性能根因**（都是「能不能做」的前提，先量后改）：CSR 构建原先把 1000 万条 `[k,target,sign]` push 进临时数组 ⟹ L=12 构建 4.3 s、RSS 1.0 GB，改**两遍计数式构建**后 0.40 s / 109 MB、nnz 逐位相同；熵的本征求解原用 `jacobiEigen`（40 个 sweep，每 sweep O(n³)）⟹ L=10 半链 404 ms、L=12 中心切点 25 s，改 **`symEigVals`**（Householder 三对角化 + 隐式 QL，只求特征值）后 70 ms / 2.6 s；Lanczos 基**实模式存储**（H 实对称 + 实种子 ⟹ Krylov 基虚部恒 0，此前白存一半）⟹ L=12 同内存下 m 从 52 翻到 110。② **QL 两处真 bug**（测试逼出来的）：deflation 判据只用 `|d[m]|+|d[m+1]|` 时，秩亏 Gram（Schmidt 块的真实形状）在零本征值处 dd=0 ⟹ 判据永不成立、死循环到迭代上限；改成带矩阵量级绝对底 `1e-16·(dd+anorm)` 后收敛。第一版 tred2 移植漏了最终行拷贝，trace 不守恒（1e-15 级对账抓出）。③ 页面：协议三件（**停止即复原** U/μ，否则用户以为参数被吃掉）、检查点环形缓冲 + 滑块/←→ 精确回拖（**从拖回处继续会截断未来**）、U/t 扫描分片推进（每帧 18 ms，界面不冻）并附**点图载入该 U**；L=12 走静态档（拒绝实时演化与扫描，HUD 显示 m 与残差）。④ **L=12 的诚实边界**：m=40 残差 1.35e-3、E 偏 3e-7（U=0）；m=110 才落到 1.6e-12 / 1e-12，U=4 残差 1.4e-9、E 从 m=40 的 −6.49867 修到 **−6.52624**（差 0.03）。所以页面把 m 与残差直接摆在 HUD 上，不藏。**验证**：pot141 23/23（symEigVals ≡ jacobi 4.4e-14 / 秩亏 trace 1.5e-11 / 淬变 S(0)=0 且早窗单调 / 范数 9e-14 / 扫描 5 点可复现且三列趋势单调 / L=12 对自由费米子解析 1e-12 / 内存上限生效）+ cdp142 22/22（协议时序与复原、脉冲井位置、推动井右移、检查点回拖与续算、扫描 5 点、L=12 拒绝演化）+ 全回归 cdp139 52/52、cdp141 27/27、dist139 9/9、pot139 26/26、pot140 21/21。dist 119.8 → **150.8 KB**。**物理读数**：L=8 扫描 S_gs 1.139→0.594、D_gs 2.000→0.271、早窗斜率 1.81→0.55 全单调，**唯 S 饱和值在 U≈2 达峰（3.89）**——U=0 时初态接近本征态、U 太大又冻结电荷自由度，中间最乱。 |
 | R162 | **纠错页重复码模式的线路点选注错** | iid/物理通道模式新增可开关的线路图交互：点击噪声列数据位即可手动注入/撤销错误，固定种子重跑单次实验，HUD/线路即时呈现综合征、修正与逻辑判定；画布将噪声列标为「指定错误」，hover 目标高亮。门级模式明确禁用（其错误应选具体门位点）。手动错误只进单次试验，不改变 P_L 统计分布；码长切换会滤除越界错误位。**验证**：manual-QEC harness **18/18**（iid 单错/双错纠错判定、点击切换/撤销、固定种子、相位翻转对偶、phys 强制错误、门级禁用）；canvas hit-geometry harness **12/12**（DPR 1/2 下三根数据线定位与门级排除）。`node --check`、standalone 构建、提取后的单文件脚本 `node --check` 与 `git diff --check` 通过；更新 `dist/qec.html` 至 874,403 bytes（853.9 KiB）。 |
 | R163 | **QEC hub 单次纠错逐步回放** | 八个模式 HUD 新增共享五阶段样本回放（输入态/编码→故障注入→综合征→解码修正→逻辑结局），支持逐步、自动演示与固定/跟随末次 shot；不额外抽样、不影响 MC 计数。jsdom 八模式回放控件冒烟 8/8，步进后 shot 固定且采样数不变；README 记录交互及抽象模型的显示边界。 |
+| R181 | **独立通道参考 + 源码/standalone 浏览器验收** | 以独立 Pauli-transfer-matrix 特征值反演 T1/T2 twirl 概率逐项对账；统一 UI、`SC_CIRCUIT` 元数据、噪声 profile 与 stream 的 T1/T2 默认值；新增 Playwright 页面回归，真实 Chromium 分别跑源码和 `dist/qec.html`，覆盖默认模型、T2≤2T1 联动、模型切换、`runMc()` 参数透传与残余失败 HUD，浏览器 console/page errors 为 0。 |
+| R180 | **电路相关故障解码增强：联合 X/Z 表优先 + 轴向边缘权重** | 保持完整 X/Z 单故障联合签名查表；歧义签名安全回退到无歧义单帧查表，剩余帧走时空 MWPM。T1/T2 的 X/Y 与 Z/Y 概率分开生成空间/时间边缘权重；退极化对照仍轴对称。HUD 显示累计逻辑失败及末端 syndrome 失败数。偏置权重仍是独立边缘近似，不是 CNOT hook/高阶相关联合似然。 |
+| R179 | **电路噪声升级：T1/T2 Pauli-twirled relaxation + 分离门/SPAM 率** | 电路模式新增 T1/T2 Pauli twirl（活跃 CNOT 与 idle 按层时长均弛豫）、独立 p₂/pSPAM 参数与旧 uniform-depol 对照；显示 T2≤2T1 约束和非幺正振幅阻尼偏置被 twirl 丢弃。T1/T2 使用层时长比、未器件标定；阈值/外推继续关闭。模型概率/单事件/stream-batch 回归 PASS；decoder 仍用平均边缘权重，留给第 3 项。 |
+| R178 | **可信任意态注入边界之后的逻辑保持/读出单故障验收** | 用户授权将理想任意态注入作为可信原语。d=3/5 分别枚举 1,353/6,905 个注入后单故障机制（覆盖数据线 Pauli、CNOT、ancilla prep/readout、idle、X/Z 替代终端读出）；联合签名安全查表/回退后，两逻辑 Pauli 分量与终端 syndrome 失败均为 0。UI/README 明示可信边界及物理注入不在验收范围。 |
+| R177 | **首次故障耦合门导致任意未知态 encoder 的 no-go；用户改选可信注入原语** | 对任意两比特 Clifford 首耦合门 W，门后噪声集合包含 E=W(P_input⊗I)W†（P=X/Z），它就是门输出上的允许 Pauli 故障；因此 E V₁|ψ⟩=V₁P|ψ⟩，对已知 ancilla syndrome 为零，却把未知态改成另一合法逻辑态。CNOT 八种方向由脚本校验。用户随后授权将完整理想注入过程视作可信原语；R178 按新范围验收注入后线路，仍不声称物理 encoder 容错。 |
+| R176 | **线性 Clifford encoder 搜索扩展为全操作后单故障目录** | 每道 CNOT 的 15 种非平凡双比特 Pauli、H 后 Pauli、prep 错误及各操作层上非活动线的 idle Pauli 均纳入；可信 q0 仅豁免到首个触及 q0 的数据-ancilla CNOT，耦合门本身及之后全部纳入。1,000 候选映射断言通过但无 FT 通过者（d3 最佳 662/1,148 个机制处于歧义 syndrome；d5 6,028/16,239）。此有限 unitary 搜索族失败；转向 verified Bell-pair injection 路线，仍未开始第 2–4 项。 |
+| R175 | **任意态容错编码：用户确认可信输入原子交接至首次冗余耦合；编码候选仍未通过** | 首个冗余耦合前的输入线 Pauli 对任意等距编码必为同 syndrome 逻辑 Pauli；用户已将此段纳入可信原子交接。首次冗余耦合及之后所有故障仍须审计。随机线性 Clifford 搜索（1,000 候选）无通过者；verified-cat/单轮 parity 子电路仅局部通过。仍推进第 1 项，未开始其余三项，生产代码未改、未提交。 |
 | R174 | **单故障目录按位点类别核验** | audit 导出 input/prep/CNOT/ancilla-readout/idle/final-readout 计数；回归按排程公式逐类断言，校验目录无漏项/多项；HUD 审计行 tooltip 显示类别计数。 |
 | R173 | **逻辑态制备随机初始 syndrome 边界穷举** | 对 d=3/5 的所有随机 X/Z-check 初始结果组合逐一检查，干净制备均无 detector/逻辑事件；零/全一边界下强制 prep 单错的 detector history 一致。共穷举 8,224 个初始结果向量，无额外噪声/码图采样。 |
 | R172 | **表面码 |0_L⟩/|+_L⟩ 产品态逻辑态制备审计** | 从 |0⟩ⁿ 或 |+⟩ⁿ 经 d 轮 noisy stabilizer extraction 建立逻辑本征态；正确处理首轮随机对偶 syndrome 边界并各自破坏性读出。d=3/5 两基共四组目录全部零逻辑/读出 syndrome 失败；不是任意逻辑态 unitary encoder。 |
@@ -1635,6 +1642,73 @@ dist 重建：qcircuit 97.4→102.5 KB；noise/qec 各一行注释同步（R100 
 ### 文档
 
 README 噪声页用法补充矩阵与曲线探针操作。
+
+---
+
+## R181（2026-10-31）独立参考验证与浏览器级 QEC 页面测试
+
+- [x] 在 `verify-qec-stage.mjs` 加入独立 T1/T2 Pauli-twirl 参考：由 amplitude damping + pure dephasing 的 PTM 特征值 `(e^(−1/T2), e^(−1/T2), e^(−1/T1))` 反演四个 Pauli 概率，并与生产实现逐项比较，避免只用同一实现自证；补断言确保 `SC_CIRCUIT.defaultNoiseModel`、`scCircuitNoiseProfile()` 与 `scCircuitStream()` 的默认模型一致。
+- [x] 新增 Playwright `scripts/verify-qec-page.mjs` 与 `npm run test:qec-page`，分别实际加载源码 `qec.html` 和 standalone `dist/qec.html`；验证默认 T1/T2 模型、T1 改动对 T2≤2T1 的联动、噪声模型切换/控件显隐、p₂/pSPAM/T1/T2 实际进入 `runMc()` 的 MC 结果、失败 HUD 可见且格式正确，并监听 pageerror/console error。
+- [x] `node scripts/verify-qec-stage.mjs` PASS；`npm run build:standalone` PASS；设置 `CHROME_BIN` 后 `npm run test:qec-page` 源码页与 standalone 页均 PASS，浏览器错误为 0。当前无阈值扫描/外推/额外重抽取。
+
+---
+
+## R180（2026-10-31）电路相关故障解码增强与残余失败报告
+
+- [x] 保留既有优先级：若完整 `(X detector history, Z detector history)` 在穷举单故障表中唯一，使用联合修正；联合签名歧义/缺失时，仅保留无歧义的 X 或 Z 单帧查表；未解决帧由时空 MWPM 兜底。二重故障和 hook 相关结构不伪装成表项。
+- [x] MWPM fallback 按解码帧使用独立边缘率：X-frame 取 X/Y 分量概率，Z-frame 取 Z/Y；时间边也按相应 ancilla 测量轴计算。T1/T2 模式因此保留弛豫的轴偏置；两比特 CNOT Pauli 传播与多故障相关性仍只压缩为平均边缘图，解码并非联合最大似然。uniform-depol 模式断言 X/Z 空间及时间权重相同。
+- [x] HUD 明示联合/安全单帧查表与轴向边缘 MWPM，并逐计数显示 MC 累计逻辑失败和末端 syndrome 失败；用于区分逻辑残余与 syndrome 不闭合。
+- [x] 回归固定 `pSpaceZ>pSpaceX`、`pTimeZ>pTimeX` 的 T1/T2 偏置方向，以及 depolarizing 轴对称；完整 `node scripts/verify-qec-stage.mjs` PASS，d=3/5 既有单故障安全回退验收继续 0 逻辑/syndrome failure。代码/文档已通过语法及构建检查。
+
+---
+
+## R179（2026-10-31）电路 T1/T2 Pauli-twirled 弛豫与参数界面
+
+- [x] 保留 uniform depolarizing 对照，新增默认 `t1t2-pauli-twirled` 模型。`p` 表示 CNOT 后独立双比特退极化率 `p₂`；新增 `pSPAM`，统一描述数据接口输入、ancilla 准备及 ancilla 读出的对称 Pauli/位翻转机会。`T1`、`T2` 以并行层时长 τ 归一化，强制正值且 `T2≤2T1`。
+- [x] T1/T2 通道以幅度阻尼参数 `γ=1−exp(−τ/T1)` 与 T2 允许的纯退相干组合后作单比特 Pauli twirl，显式保留非均匀 X/Y/Z 概率；每层对活跃 CNOT 两端和 idle 线路各自采样 relaxation。独立通道仍是 Monte Carlo 位置事件，不模拟 twirl 前的非幺正状态依赖跃迁。
+- [x] 面板新增模型切换、p₂/pSPAM/T1/T2 控件、约束说明；LiveDriver stream 与 Monte Carlo ensemble 共用 `circuitCfg()`，HUD 和结果注释显示模型参数。README 解释层时长单位、近似损失及阈值不适用；阈值扫描/距离外推/额外换图抽样仍关闭。
+- [x] `verify-qec-stage.mjs` 验证概率归一化、T1/T2 非均匀 Pauli 分布、`T2>2T1` 拒绝、活跃门弛豫事件、同 seed 下 T1/T2 stream 与 batch 的逐 shot 一致；回归 PASS，既有 d=3/5 单故障审计和制备测试继续全通过。MWPM 尚用单一平均边缘权重、未利用轴向偏置及联合故障似然，属于第 3 项工作。
+
+---
+
+## R178（2026-10-31）可信任意态注入边界后的逻辑保持与读出验收
+
+- [x] 依据用户授权，将输入合同定义为理想可信原语 `trusted-ideal-arbitrary-state-injection`：接受任意未知 |ψ⟩ 并理想输出其编码态 |ψ_L⟩。该原语内部、首耦合门及首耦合故障不在目录内；目录从已编码态生成后数据输入线开始，继续覆盖所有 stabilizer extraction 和两种替代终端读出。UI 和 README 明示这一故障边界，不把原语描述成物理 FT encoder。
+- [x] 对 d=3/5 完整穷举注入后单故障目录：输入数据 Pauli 27/75，ancilla prep 24/120，CNOT 后 Pauli 1,080/6,000，ancilla readout 24/120，非活动线 idle 180/540，终端 X/Z 数据读出 18/50；总计 **1,353 / 6,905**。`verify-qec-stage.mjs` 检查目录精确分类、联合无歧义查表、安全单帧回退及 MWPM 兜底覆盖。
+- [x] 对每个故障记录后验 Pauli frame 的 X 与 Z 逻辑分量，并分别跑 destructive X/Z 读出分支；两基不能在同一未知态 shot 同时测得。d=3/5 所有列举故障的逻辑读出错误、最终 syndrome 错误均为 0；歧义签名不冒充已分类，而按既定安全回退处理。Pauli-frame 证明对逻辑态振幅无关，因此覆盖任意 |ψ⟩ 的态保持，而非只验 |0_L⟩/|+_L⟩。
+- [x] `node scripts/verify-qec-stage.mjs` PASS；新断言固定 `SC_CIRCUIT.inputBoundary` 与注入故障排除标志，并核对每个数据位接口后 X/Y/Z 及两套终端读出目录。`node --check`、standalone 全量构建（`dist/qec.html` 924.5 KB）与 `git diff --check` PASS。
+- [x] **第 1 项验收（按用户授权修订边界）**：任意未知态从可信理想注入原语进入编码子空间后，d=3/5 当前电路故障目录的两逻辑分量与替代逻辑读出均零单故障失败；安全回退覆盖所有歧义机制。首耦合门及注入原语内部故障不在该验收声明内，不可称为物理端到端 encoder 通过。后续第 2 项等待用户继续指示。
+
+---
+
+## R177（2026-10-31）首次冗余耦合门故障 no-go 裁决
+
+- [x] 精确关系：接口态为任意未知态 |ψ⟩ 与已知 ancilla resource |A⟩。令首个 faultable input-resource 两比特 Clifford 门为 W，部分注入映射 V₁|ψ⟩=W(|ψ⟩⊗|A⟩)。对输入 Pauli P，门后误差 E=W(P⊗I)W† 是该两比特门后 Pauli fault 集的一员，且 E V₁|ψ⟩=V₁P|ψ⟩。它保留已准备 ancilla 的所有理想约束/flag（零 syndrome），但把任意未知逻辑态变为 P|ψ⟩。任何后续无故障 encoder/teleporter 都只会把该合法变体继续编码； syndrome 与无故障运行于不同合法输入无法区分。因此当首个耦合门本身的双比特 Pauli 故障也必须容忍时，任意未知单 qubit 的 injection 不可能通过此接受标准。
+- [x] 独立脚本 `scripts/prove-first-coupling-no-go.mjs` 对 CNOT 输入/ancilla 控制方向 × ancilla |0⟩/|+⟩ × 线标签的 8 种组合构造中间 stabilizer 与逻辑 X/Z，验证门后故障目录含有两种零 syndrome 的非平凡逻辑代表；脚本 PASS。这个显式检验是一般共轭关系的 sanity check，不替代对未定义非-Clifford/多体原语的硬件模型。
+- [x] 先前 verified-cat + repeated Bell-parity 候选即使局部 gadget 过关，端到端依然有同类歧义；上一轮两次独立测 parity 实验仍有 2 个歧义签名（d=3/5 分别 278/590 个 accepted fault mechanisms）。双测重试没有消除不可辨识 logical outcome，不作为通过方案。
+- [x] **范围决策**：用户授权将完整初始理想注入过程作为可信原语，排除其内部及首耦合门故障；信任边界明确结束于“任意未知态已处于编码子空间”。此决策改变了原故障范围；R178 只对该边界之后的线路作验收，不把可信原语冒称为容错硬件编码器。
+- [x] 未接 UI/生产电路，QEC 基线 `node scripts/verify-qec-stage.mjs` 通过；`node --check scripts/prove-first-coupling-no-go.mjs`、`git diff --check` 通过。未提交。
+
+---
+
+## R176（2026-10-31）任意态 unitary encoder 的扩展单故障审计
+
+- [x] 扩展隔离脚本 `scripts/search-surface-encoder.mjs`：除 prep fault、H 后单比特 Pauli、CNOT 后 15 种非平凡双比特 Pauli 外，在每个串行 gate 层对未参与该 gate 的线路列入 idle Pauli；输入 q0 的 idle 从首次触及 q0 的数据-ancilla CNOT 之后（含）起列举，该首个耦合门自身的双比特错误也列举。避免把参与 gate 的线路重复记成 idle。候选均先通过理想编码映射校验。
+- [x] 运行 1,000 个随机线性 Clifford 分解：无单故障零歧义候选。最佳 d=3：34 门、1,148 机制、59 个 syndrome、15 个歧义 syndrome、662 个机制处于歧义类；d=5：197 门、16,239 机制、386 个 syndrome、20 个歧义 syndrome、6,028 个机制处于歧义类。与前轮 gate-only 数字不可直接比较，因为本轮另纳入非活动线路 idle 位点。
+- [x] `node scripts/search-surface-encoder.mjs 1000` 完成（约 275 s），脚本语法及目标映射校验通过。结论只适用于已搜索的无测量线性 Clifford 分解族；转向 verified Bell-pair injection 的整体验证，不作普遍不可能性结论。仍未修改生产代码，按顺序不启动第 2–4 项.
+
+---
+
+## R175（2026-10-31）任意态容错编码器（可信输入边界；仍在推进）
+
+- [x] 输入故障边界已澄清并再次确认：用户选择可信理想输入接口，并将其延伸为**可信原子交接直至首次与冗余系统耦合**；因此排除该交接前输入线 Pauli 的无解位置。首次冗余耦合及其后所有编码门、输入线、ancilla、测量故障仍须进入单故障目录；不得把边界扩大解释为免审编码线路。
+- [x] 隔离研究的朴素 CSS H/CNOT 编码候选不通过：d=3/5 的 prep/门 Pauli 目录分别 695/3,915 个机制，其中仍有 233/911 个逻辑失败；没有接 UI。
+- [x] Verified GHZ cat 与单轮 X/Z logical parity gadget 的局部故障审计通过：d=3/5 × X/Z 四组每组 209/335 个位点机制；接受单故障对码块至多留下一个可纠正物理错误，逻辑/残余 syndrome 失败均为 0。
+- [x] 重复 d 轮逻辑 Bell parity 的候选时间解码仍失败：d=3 总目录 1,254（564 个 cat verification herald-reject，690 个接受），d=5 总目录 3,350（1,620 reject，1,730 接受）；去掉未知 Bell 位常量后仍各有 4 个歧义签名，251/451 个接受机制要求不同修正。该候选不是所有 teleport encoder 的不可能性证明；它说明当前协议无法通过。
+- [x] 早期临时诊断模块已清理；当前隔离研究脚本见本节及 R176。生产源码未改；旧 `node scripts/verify-qec-stage.mjs` 回归通过。遵守用户“按顺序”要求，当前只推进第 1 项；其余三项尚未启动，未提交。
+- [x] 新增隔离搜索脚本 `scripts/search-surface-encoder.mjs`，只搜索并审计随机线性 Clifford unitary encoder，不接 UI。给理想映射验证后，发现先前随机化 pivot 列顺序会使合成电路不等于目标映射；旧 100/1,000 样本结果全部作废。修为固定 pivot 顺序后重新验证：1,000 个 d=3/5 候选均是合法目标编码映射，但未出现单故障零歧义候选；各自最佳记录 d=3：34 门、470 个故障机制、59 个 syndrome 签名、15 个歧义签名、253 个机制处于歧义签名；d=5：197 门、2,835 机制、386 个签名、20 个歧义签名、775 个机制处于歧义签名。此结果仅否定该有限随机搜索族，不构成对可信接口 FT encoder 的不可能性证明。
+- [x] **已处理的边界 no-go（并非当前目录中的故障）**：设可信输入 qubit 为任意未知态 |ψ⟩，编码等距映射为 V: |ψ⟩↦|ψ_L⟩。若在输入接口之后、首次与任何冗余系统耦合之前发生 Pauli P∈{X,Y,Z}，则 V P|ψ⟩=\bar P V|ψ⟩，其中 \bar P 是非平凡逻辑 Pauli；稳定子 syndrome 不变而逻辑态改变，故任何后续 syndrome 都不能纠正。此不可能性适用于任意编码等距映射。用户现已明确将此段纳入可信原子交接边界，因此该位置排除；首个冗余耦合本身及其后所有故障仍须审计。第 1 项尚未通过，不得开始第 2–4 项。
+- [x] 修订后的搜索脚本 `node scripts/search-surface-encoder.mjs 1000` 通过脚本内目标映射验证；`node scripts/verify-qec-stage.mjs` 回归 PASS（单故障和逻辑制备结果与 R175 前一致）；语法检查、`git diff --check` 通过。该回归不构成任意态 encoder 的验收。
 
 ---
 

@@ -1,12 +1,17 @@
 /* Circuit-level rotated surface-code memory diagnostic prototype.
+ * The arbitrary unknown logical state may enter through an explicitly trusted
+ * ideal-injection primitive, whose output is the encoded-code-space boundary.
+ * The primitive itself is outside the fault catalog; every listed input-line,
+ * extraction, idle, ancilla and destructive-readout fault occurs after it.
  * Each round uses four collision-free parallel CNOT layers with fresh ancillas.
- * Noise includes an initial data-frame boundary channel, post-CNOT two-qubit
- * depolarization, ancilla prep/readout faults, per-layer idle depolarization, and
- * destructive final data-readout bit flips (audited in separate X/Z basis views).
  * A paired X/Z single-fault table handles unambiguous histories; unresolved frames
  * use safe per-frame lookup then marginal-weight MWPM. Product-state |0_L>/|+_L>
- * preparation is supported; this is not an arbitrary-state unitary encoder,
- * calibrated threshold model, or complete device-level memory cycle.
+ * preparation is also supported. Noise choices are uniform depolarization or
+ * per-layer T1/T2 Pauli-twirled relaxation plus independent CNOT and SPAM rates;
+ * T1/T2 are normalized to a layer, not hardware-calibrated, and the twirl drops
+ * non-unital amplitude-damping bias. Decoder weights remain marginal averages.
+ * This is not a physical encoder implementation, calibrated threshold model,
+ * or complete device-level memory cycle.
  */
 import { mulberry32 } from './qcircuit.js';
 import { scBuild, scDecode, scSpaceGraph, scSpaceDecode, SC_PHEN } from './surfacecode.js';
@@ -37,24 +42,54 @@ export const SC_CIRCUIT = {
   distances: [3, 5],
   rounds: d => d,
   dpMax: SC_PHEN.dpMax,
-  noise: 'ideal encoded or noisy product-state prep boundary + post-CNOT depolarization + ancilla SPAM + per-layer idles + destructive final data-readout bit flips',
+  inputBoundary: 'trusted-ideal-arbitrary-state-injection',
+  injectionFaultsIncluded: false,
+  noiseModels: ['depolarizing', 't1t2-pauli-twirled'],
+  defaultNoiseModel: 't1t2-pauli-twirled',
+  noise: 'trusted ideal encoded arbitrary-state boundary + location-specific CNOT/SPAM channels + per-layer T1/T2 Pauli-twirled relaxation + destructive final readout',
 };
 
-function scCircuitWeights(code, p){
-  const px = Math.max(0, Math.min(0.49, Number(p) || 0));
-  const gatesPerData = (code.X.reduce((a, s) => a + s.w, 0) + code.Z.reduce((a, s) => a + s.w, 0)) / code.n;
-  const checks = code.X.length + code.Z.length;
-  const avgCheckWeight = (code.X.reduce((a, s) => a + s.w, 0) + code.Z.reduce((a, s) => a + s.w, 0)) / checks;
-  const schedule = scCircuitScheduleAudit(code);
-  const avgDataIdles = schedule.dataIdle.reduce((a, b) => a + b, 0) / code.n;
-  const avgAncillaIdles = schedule.ancillaIdle.reduce((a, b) => a + b, 0) / checks;
-  /* A two-qubit depolarizing fault has each marginal Pauli component with chance 8p/15.
-     These are marginal matching weights, not the full correlated circuit likelihood. */
-  const comp = 8 * px / 15, idleComp = 2 * px / 3;
-  const pSpace = 1 - Math.pow(1 - idleComp, 1 + avgDataIdles) * (1 - px) * Math.pow(1 - comp, gatesPerData);
-  const pTime = 1 - Math.pow(1 - px, 2) * Math.pow(1 - idleComp, avgAncillaIdles) * Math.pow(1 - comp, avgCheckWeight);
-  const weight = x => x <= 0 ? Infinity : Math.log((1 - x) / x);
-  return { pSpace, pTime, wS: weight(pSpace), wT: weight(pTime), gatesPerData, avgCheckWeight, avgDataIdles, avgAncillaIdles };
+const scCircuitClampP = p => Math.max(0, Math.min(0.49, Number(p) || 0));
+export function scCircuitNoiseProfile(cfg={}){
+  const p=scCircuitClampP(cfg.p ?? 0.01), requested=cfg.noiseModel??SC_CIRCUIT.defaultNoiseModel;
+  const model=requested==='depolarizing'?'depolarizing':requested==='t1t2-pauli-twirled'?'t1t2-pauli-twirled':null;
+  if(!model)throw new RangeError(`unknown circuit noise model: ${requested}`);
+  if(model==='depolarizing')return {model,p,p2:p,pInput:p,pPrep:p,pReadout:p,pIdle:p,t1Layers:Infinity,t2Layers:Infinity,relax:[1,0,0,0]};
+  const pSPAM=scCircuitClampP(cfg.pSPAM ?? 0.001),t1Layers=Number(cfg.t1Layers ?? 200),t2Layers=Number(cfg.t2Layers ?? 120);
+  if(!(t1Layers>0&&Number.isFinite(t1Layers)))throw new RangeError('T1/layer must be a finite positive number');
+  if(!(t2Layers>0&&Number.isFinite(t2Layers)&&t2Layers<=2*t1Layers))throw new RangeError('T2/layer must be positive and no greater than 2 T1/layer');
+  return {model,p,p2:scCircuitClampP(cfg.p2 ?? p),pInput:scCircuitClampP(cfg.pInput ?? pSPAM),pPrep:scCircuitClampP(cfg.pPrep ?? pSPAM),pReadout:scCircuitClampP(cfg.pReadout ?? pSPAM),pIdle:0,t1Layers,t2Layers,relax:scCircuitT1T2PauliProbabilities(t1Layers,t2Layers)};
+}
+function scCircuitT1T2PauliProbabilities(t1,t2,duration=1){
+  const gamma=1-Math.exp(-duration/t1),s=Math.exp(-duration/(2*t1));
+  const ad=[(1+2*s+s*s)/4,gamma/4,gamma/4,(1-2*s+s*s)/4];
+  const phiRate=Math.max(0,1/t2-1/(2*t1)),phase=(1-Math.exp(-duration*phiRate))/2;
+  const out=[0,0,0,0];
+  for(let i=0;i<4;i++){out[i]+=ad[i]*(1-phase);out[i^3]+=ad[i]*phase;}
+  return out;
+}
+function scCircuitSamplePauli(rng,probs){
+  const u=rng();let a=probs[0];if(u<a)return null;
+  for(let i=1;i<4;i++){a+=probs[i];if(u<a)return ['','X','Y','Z'][i];}
+  return null;
+}
+function scCircuitWeights(code, noise){
+  const p=noise.p, gatesPerData=(code.X.reduce((a,s)=>a+s.w,0)+code.Z.reduce((a,s)=>a+s.w,0))/code.n;
+  const checks=code.X.length+code.Z.length,avgCheckWeight=(code.X.reduce((a,s)=>a+s.w,0)+code.Z.reduce((a,s)=>a+s.w,0))/checks;
+  const schedule=scCircuitScheduleAudit(code),avgDataIdles=schedule.dataIdle.reduce((a,b)=>a+b,0)/code.n,avgAncillaIdles=schedule.ancillaIdle.reduce((a,b)=>a+b,0)/checks;
+  const comp=8*noise.p2/15;
+  const relaxX=noise.model==='depolarizing'?2*noise.pIdle/3:noise.relax[1]+noise.relax[2];
+  const relaxZ=noise.model==='depolarizing'?2*noise.pIdle/3:noise.relax[2]+noise.relax[3];
+  const inputComp=2*noise.pInput/3;
+  const pSpaceX=1-(1-inputComp)*Math.pow(1-comp,gatesPerData)*Math.pow(1-relaxX,gatesPerData+avgDataIdles);
+  const pSpaceZ=1-(1-inputComp)*Math.pow(1-comp,gatesPerData)*Math.pow(1-relaxZ,gatesPerData+avgDataIdles);
+  const pTimeX=1-(1-noise.pPrep)*(1-noise.pReadout)*Math.pow(1-comp,avgCheckWeight)*Math.pow(1-relaxX,avgCheckWeight+avgAncillaIdles);
+  const pTimeZ=1-(1-noise.pPrep)*(1-noise.pReadout)*Math.pow(1-comp,avgCheckWeight)*Math.pow(1-relaxZ,avgCheckWeight+avgAncillaIdles);
+  const weight=x=>x<=0?Infinity:Math.log((1-x)/x);
+  return {pSpace:(pSpaceX+pSpaceZ)/2,pTime:(pTimeX+pTimeZ)/2,pSpaceX,pSpaceZ,pTimeX,pTimeZ,
+    wS:weight((pSpaceX+pSpaceZ)/2),wT:weight((pTimeX+pTimeZ)/2),
+    wSX:weight(pSpaceX),wSZ:weight(pSpaceZ),wTX:weight(pTimeX),wTZ:weight(pTimeZ),
+    gatesPerData,avgCheckWeight,avgDataIdles,avgAncillaIdles,model:noise.model};
 }
 
 function scCircuitPauli(rng, p){
@@ -103,7 +138,7 @@ export function scCircuitScheduleAudit(code){
   };
 }
 
-function scCircuitRound(code, p, rng, roundIndex, frame, forcedFaults = [], baselineX = 0, baselineZ = 0){
+function scCircuitRound(code, noise, rng, roundIndex, frame, forcedFaults = [], baselineX = 0, baselineZ = 0){
   const checks = scCircuitChecks(code);
   const startX = frame.x, startZ = frame.z;
   const outcomeX = new Array(code.X.length).fill(0), outcomeZ = new Array(code.Z.length).fill(0);
@@ -112,6 +147,7 @@ function scCircuitRound(code, p, rng, roundIndex, frame, forcedFaults = [], base
   let totalFaults = 0;
   const record = f => { totalFaults++; if (faults.length < 64) faults.push({ round: roundIndex + 1, ...f }); };
   const applyData = (q, x, z) => { if (x) frame.x ^= scCircuitBit(q); if (z) frame.z ^= scCircuitBit(q); };
+  const applyAncilla = (ci, name) => { const [x,z]=SC_CIRCUIT_PAULI_BITS[name]||[0,0]; ax[ci]^=x; az[ci]^=z; };
   const forcedAt = (location, check = null, gate = null, q = null, layer = null) => forcedFaults.find(f =>
     f.round === roundIndex + 1 && f.location === location && (f.check == null || f.check === check) &&
     (f.gate == null || f.gate === gate) && (f.q == null || f.q === q) &&
@@ -121,7 +157,7 @@ function scCircuitRound(code, p, rng, roundIndex, frame, forcedFaults = [], base
     const { type, ci: checkIndex } = checks[ci];
     const check = `${type}${checkIndex}`;
     const prepFault = forcedAt('prep', check);
-    if (prepFault || rng() < p){
+    if (prepFault || rng() < noise.pPrep){
       if (type === 'Z') ax[ci] = 1; else az[ci] = 1;
       record({ location: 'prep', check, q: 'ancilla', t: type === 'Z' ? 'X' : 'Z' });
     }
@@ -144,7 +180,7 @@ function scCircuitRound(code, p, rng, roundIndex, frame, forcedFaults = [], base
         if (frame.z & scCircuitBit(q)) az[ci] ^= 1;
       }
       const force = forcedAt('cx', check, op.gate);
-      const e = force ? scCircuitPauliPair(force.pauli) : scCircuitPauli(rng, p);
+      const e = force ? scCircuitPauliPair(force.pauli) : scCircuitPauli(rng, noise.p2);
       if (e){
         if (type === 'Z'){
           applyData(q, e.cx, e.cz);
@@ -155,13 +191,20 @@ function scCircuitRound(code, p, rng, roundIndex, frame, forcedFaults = [], base
         }
         record({ location: 'cx', gate: op.gate, check, q, layer, t: `${scCircuitPauliName(e.cx,e.cz)}/${scCircuitPauliName(e.tx,e.tz)}` });
       }
+      if(noise.model==='t1t2-pauli-twirled'){
+        const dataRelax=scCircuitSamplePauli(rng,noise.relax),ancRelax=scCircuitSamplePauli(rng,noise.relax);
+        if(dataRelax){const [x,z]=SC_CIRCUIT_PAULI_BITS[dataRelax];applyData(q,x,z);record({location:'gate-relax',gate:op.gate,q,t:dataRelax});}
+        if(ancRelax){applyAncilla(ci,ancRelax);record({location:'gate-relax',gate:op.gate,check,q:'ancilla',t:ancRelax});}
+      }
     }
-    /* One-qubit depolarizing idle channel on every qubit not participating in
-       this parallel CNOT layer, including inactive boundary ancillas. */
+    /* In depolarizing mode, inactive lines receive a symmetric one-qubit Pauli channel.
+       In T1/T2 mode the same idle interval receives the Pauli-twirled relaxation channel. */
     for (let q = 0; q < code.n; q++) if (!activeData.has(q)){
       const force = forcedAt('idle', null, null, q, layer);
       let name = force ? force.pauli : null;
-      if (!force && rng() < p) name = ['X','Y','Z'][Math.floor(rng() * 3)];
+      if (!force) name = noise.model==='t1t2-pauli-twirled'
+        ? scCircuitSamplePauli(rng,noise.relax)
+        : rng()<noise.pIdle?['X','Y','Z'][Math.floor(rng()*3)]:null;
       if (name){
         const [ix, iz] = SC_CIRCUIT_PAULI_BITS[String(name).toUpperCase()] || [0,0];
         applyData(q, ix, iz);
@@ -172,7 +215,9 @@ function scCircuitRound(code, p, rng, roundIndex, frame, forcedFaults = [], base
       const { type, ci: checkIndex } = checks[ci], check = `${type}${checkIndex}`;
       const force = forcedAt('idle', check, null, 'ancilla', layer);
       let name = force ? force.pauli : null;
-      if (!force && rng() < p) name = ['X','Y','Z'][Math.floor(rng() * 3)];
+      if (!force) name = noise.model==='t1t2-pauli-twirled'
+        ? scCircuitSamplePauli(rng,noise.relax)
+        : rng()<noise.pIdle?['X','Y','Z'][Math.floor(rng()*3)]:null;
       if (name){
         const [ix, iz] = SC_CIRCUIT_PAULI_BITS[String(name).toUpperCase()] || [0,0];
         ax[ci] ^= ix; az[ci] ^= iz;
@@ -184,7 +229,7 @@ function scCircuitRound(code, p, rng, roundIndex, frame, forcedFaults = [], base
   for (let ci = 0; ci < checks.length; ci++){
     const { type, ci: checkIndex } = checks[ci], check = `${type}${checkIndex}`;
     const readoutFault = forcedAt('readout', check);
-    const readoutFlip = !!readoutFault || rng() < p;
+    const readoutFlip = !!readoutFault || rng() < noise.pReadout;
     if (readoutFlip) record({ location: 'readout', check, q: 'ancilla', t: 'bit flip' });
     const baseline = type === 'Z' ? ((baselineZ >> checkIndex) & 1) : ((baselineX >> checkIndex) & 1);
     const measured = (type === 'Z' ? ax[ci] : az[ci]) ^ baseline ^ (readoutFlip ? 1 : 0);
@@ -211,6 +256,10 @@ function scCircuitDecodeFrame(code, type, errorLayers, measurementErrors, R, wei
   const dual = type === 'X' ? code.zl : code.xl;
   const gr = scSpaceGraph(code, graphType, R);
   const nS = g.nS, nn = nS + 2, defects = [], perLayer = [];
+  /* X-frame errors are weighted by X/Y marginals; Z-frame errors by Z/Y.
+     This retains T1/T2 bias in fallback MWPM without pretending to model
+     the joint CNOT-fault likelihood (the exact joint table handles single faults). */
+  const wS=type==='X'?weights.wSX:weights.wSZ,wT=type==='X'?weights.wTX:weights.wTZ;
   for (let l = 0; l <= R; l++){
     const e = l < R ? errorLayers[l] : 0n;
     let d = l === 0 && !initialBoundaryKnown ? 0 : scCircuitSyndrome(g, e);
@@ -221,7 +270,7 @@ function scCircuitDecodeFrame(code, type, errorLayers, measurementErrors, R, wei
     for (let k = 0; k < nS; k++) if ((d >> k) & 1) defects.push(l * nn + k);
   }
   const decoded = skipDecode ? { qubits: 0n, mode: 'catalog', cost: 0 }
-    : scSpaceDecode(gr, defects, weights.wS, weights.wT, dpMax);
+    : scSpaceDecode(gr, defects, wS, wT, dpMax);
   const total = errorLayers.reduce((a, b) => a ^ b, 0n);
   const residual = total ^ decoded.qubits;
   return {
@@ -292,7 +341,7 @@ function scCircuitFaultTable(code, R, prepareBasis = 'encoded'){
   let lookupSyndromeFailX = 0, lookupSyndromeFailZ = 0;
   const faultSignatures = [];
   for (const fault of catalog){
-    const shot = scCircuitTrial(code, { p: 0, rounds: R, prepareBasis, forceFaults: [fault], skipLookup: true }, mulberry32(1));
+    const shot = scCircuitTrial(code, { p: 0, noiseModel:'depolarizing', rounds: R, prepareBasis, forceFaults: [fault], skipLookup: true }, mulberry32(1));
     const sx = scCircuitSignature(shot.defX), sz = scCircuitSignature(shot.defZ);
     const lx = scCircuitParity(shot.mx & code.zl), lz = scCircuitParity(shot.mz & code.xl);
     faultSignatures.push({ fault, sx, sz, lx, lz });
@@ -327,7 +376,7 @@ function scCircuitFaultTable(code, R, prepareBasis = 'encoded'){
   for (const item of faultSignatures){
     const entry = J.get(`${item.sx}||${item.sz}`);
     if (!entry || entry.ambiguous) continue;
-    const shot = scCircuitTrial(code, { p: 0, rounds: R, prepareBasis, forceFaults: [item.fault], skipLookup: true }, mulberry32(1));
+    const shot = scCircuitTrial(code, { p: 0, noiseModel:'depolarizing', rounds: R, prepareBasis, forceFaults: [item.fault], skipLookup: true }, mulberry32(1));
     const residualX = shot.mx ^ entry.correctionX, residualZ = shot.mz ^ entry.correctionZ;
     const decodedX = scCircuitFinalDecode(code, residualX, shot.finalReadoutZ, 'X');
     const decodedZ = scCircuitFinalDecode(code, residualZ, shot.finalReadoutX, 'Z');
@@ -367,7 +416,7 @@ function scCircuitJointFallbackAudit(code, R, table, prepareBasis = 'encoded'){
   let logicalFailX = 0, logicalFailZ = 0, syndromeFailX = 0, syndromeFailZ = 0;
   for (const fault of table.jointFallbackFaults){
     mechanisms++;
-    const shot = scCircuitTrial(code, { p: 0.001, rounds: R, prepareBasis, forceFaults: [fault] }, () => 0.999);
+    const shot = scCircuitTrial(code, { p: 0.001, noiseModel:'depolarizing', rounds: R, prepareBasis, forceFaults: [fault] }, () => 0.999);
     if (shot.lookupX) xLookup++;
     if (shot.lookupZ) zLookup++;
     if (shot.xfail) logicalFailX++;
@@ -398,7 +447,7 @@ export function scCircuitFaultAudit(code, rounds = code.d, prepareBasis = 'encod
 
 /** Pauli-frame memory/preparation shot: encoded boundary or noisy product-state prep, extraction, then destructive data readout. */
 export function scCircuitTrial(code, cfg = {}, rng = Math.random, grs){
-  const p = Math.max(0, Math.min(0.49, Number(cfg.p ?? 0.01)));
+  const noise=scCircuitNoiseProfile(cfg),p=noise.p;
   const R = cfg.rounds === undefined ? code.d : Math.max(1, Math.floor(cfg.rounds));
   const prepareBasis = ['Z','X'].includes(cfg.prepareBasis) ? cfg.prepareBasis : 'encoded';
   const frame = { x: 0n, z: 0n }, rounds = [], faultList = [], forceFaults = cfg.forceFaults || [];
@@ -421,7 +470,7 @@ export function scCircuitTrial(code, cfg = {}, rng = Math.random, grs){
   for (let q = 0; q < code.n; q++){
     const force = forceFaults.find(f => f.location === 'input' && f.q === q);
     let name = force ? force.pauli : null;
-    if (!force && rng() < p) name = ['X','Y','Z'][Math.floor(rng() * 3)];
+    if (!force && rng() < noise.pInput) name = ['X','Y','Z'][Math.floor(rng() * 3)];
     if (name){
       const [ix, iz] = SC_CIRCUIT_PAULI_BITS[String(name).toUpperCase()] || [0,0];
       if (ix) frame.x ^= scCircuitBit(q), inputX ^= scCircuitBit(q);
@@ -431,7 +480,7 @@ export function scCircuitTrial(code, cfg = {}, rng = Math.random, grs){
     }
   }
   for (let r = 0; r < R; r++){
-    const out = scCircuitRound(code, p, rng, r, frame, forceFaults, baselineX, baselineZ);
+    const out = scCircuitRound(code, noise, rng, r, frame, forceFaults, baselineX, baselineZ);
     rounds.push(out);
     faultCount += out.faultCount; cnotCount += out.gates;
     for (const f of out.faults){ if (faultList.length < 64) faultList.push(f); }
@@ -441,7 +490,7 @@ export function scCircuitTrial(code, cfg = {}, rng = Math.random, grs){
     for (const basis of ['Z','X']){
       if (prepareBasis !== 'encoded' && basis !== prepareBasis) continue;
       const force = forceFaults.find(f => f.location === 'final-readout' && f.basis === basis && f.q === q);
-      if (force || rng() < p){
+      if (force || rng() < noise.pReadout){
         if (basis === 'Z') finalReadoutZ |= scCircuitBit(q);
         else finalReadoutX |= scCircuitBit(q);
         faultCount++;
@@ -451,7 +500,7 @@ export function scCircuitTrial(code, cfg = {}, rng = Math.random, grs){
   }
   const terminalMeasurementX = scCircuitSyndrome(code.xg, finalReadoutZ);
   const terminalMeasurementZ = scCircuitSyndrome(code.zg, finalReadoutX);
-  const weights = scCircuitWeights(code, p);
+  const weights = scCircuitWeights(code, noise);
   const dpMax = cfg.dpMax === undefined ? SC_CIRCUIT.dpMax : cfg.dpMax;
   const errorLayersX = rounds.map(r => r.deltaX), errorLayersZ = rounds.map(r => r.deltaZ);
   errorLayersX[0] ^= inputX; errorLayersZ[0] ^= inputZ;
@@ -500,12 +549,15 @@ export function scCircuitTrial(code, cfg = {}, rng = Math.random, grs){
     badSyn: !!(readoutSynZ || readoutSynX), badFrameSyn: !!(synAfterX || synAfterZ),
     readoutSynX, readoutSynZ, fallback, rounds: R, R,
     faults: faultList, faultCount, cnotCount, faultsTruncated: faultCount > faultList.length,
-    p, pIdle: p, pSpace: weights.pSpace, pTime: weights.pTime,
+    p, noiseModel:noise.model,p2:noise.p2,pInput:noise.pInput,pPrep:noise.pPrep,pReadout:noise.pReadout,pIdle:noise.pIdle,
+    t1Layers:noise.t1Layers,t2Layers:noise.t2Layers,pSpace:weights.pSpace,pTime:weights.pTime,
+    pSpaceX:weights.pSpaceX,pSpaceZ:weights.pSpaceZ,pTimeX:weights.pTimeX,pTimeZ:weights.pTimeZ,
   };
 }
 
 export function scCircuitStream(code, cfg = {}){
-  const c = { p: 0.01, trials: 1000, seed: 7, rounds: code.d, dpMax: SC_CIRCUIT.dpMax, ...cfg };
+  const c = { p: 0.01, trials: 1000, seed: 7, rounds: code.d, dpMax: SC_CIRCUIT.dpMax, noiseModel:SC_CIRCUIT.defaultNoiseModel, ...cfg };
+  const profile=scCircuitNoiseProfile(c);
   const rng = mulberry32(c.seed);
   let n = 0, fail = 0, xf = 0, zf = 0, bad = 0, fallback = 0, lookupSum = 0, defectSum = 0, gateSum = 0, faultSum = 0, lastTrial = null;
   function one(){
@@ -527,7 +579,7 @@ export function scCircuitStream(code, cfg = {}){
     step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m; k++) one(); },
     result(){
       const N = Math.max(1, n), PL = fail / N;
-      return { d: code.d, p: c.p, noise: 'circuit', prepareBasis: c.prepareBasis || 'encoded', rounds: c.rounds, trials: n,
+      return { d: code.d, p: c.p, p2:profile.p2, pSPAM:profile.pInput, noise:'circuit', noiseModel:profile.model, t1Layers:profile.t1Layers, t2Layers:profile.t2Layers, prepareBasis:c.prepareBasis||'encoded', rounds:c.rounds, trials:n,
         PL, PLx: xf / N, PLz: zf / N, badSyn: bad / N, fallback: fallback / (2 * N),
         lookupRate: lookupSum / (2 * N), meanDefects: defectSum / (2 * N), meanCnot: gateSum / N, meanFaults: faultSum / N,
         lastTrial, sigma: Math.sqrt(Math.max(PL * (1 - PL), 1e-12) / N) };

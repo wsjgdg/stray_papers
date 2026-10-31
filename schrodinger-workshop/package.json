@@ -7,6 +7,10 @@
   "scripts": {
     "start": "node scripts/serve.mjs --port 8765 --bind 0.0.0.0",
     "build:standalone": "node scripts/build-standalone.mjs",
+    "test:qec-page": "node scripts/verify-qec-page.mjs",
     "serve:python": "python3 -m http.server 8765 --bind 0.0.0.0"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.64.1"
   }
 }
