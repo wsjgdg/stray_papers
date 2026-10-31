@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#06111c">
-  <meta name="aetheris-build" content="nocturnal-ley-10">
+  <meta name="aetheris-build" content="nocturnal-ley-11">
   <meta name="description" content="Explore Aetheris, a living procedural fantasy planet, from orbit or on foot.">
   <title>Aetheris | A Living World</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -112,6 +112,31 @@
     .weather-toast { position: absolute; z-index: 6; top: 118px; right: clamp(26px, 5.8vw, 105px); color: #dff3ea; font-size: 9px; font-weight: 700; letter-spacing: .18em; text-align: right; pointer-events: none; opacity: 0; transition: opacity .5s, transform .5s; transform: translateY(-6px); }
     .weather-toast.visible { opacity: 1; transform: translateY(0); }
     .weather-toast small { display: block; color: #8fbab0; font-size: 8px; margin-top: 5px; letter-spacing: .12em; }
+
+    /* Rare world events get their own quiet banner so weather reads as routine and omens do not. */
+    .event-banner {
+      position: absolute;
+      z-index: 7;
+      top: 100px;
+      left: 50%;
+      width: min(432px, calc(100vw - 56px));
+      padding: 17px 26px 15px;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transform: translate(-50%, -12px);
+      transition: opacity .7s ease, transform .9s cubic-bezier(.2, .8, .2, 1);
+      border-top: 1px solid rgba(165, 238, 225, .3);
+      border-bottom: 1px solid rgba(165, 238, 225, .1);
+      background: linear-gradient(180deg, rgba(6, 22, 31, .58), rgba(6, 22, 31, .06));
+    }
+    .event-banner.visible { opacity: 1; transform: translate(-50%, 0); }
+    .event-kicker { display: block; color: #8fd3c8; font-size: 8px; font-weight: 700; letter-spacing: .44em; }
+    .event-title { display: block; margin: 6px 0 5px; color: #f4f7ef; font-family: "Cormorant Garamond", Georgia, serif; font-size: 28px; font-weight: 500; letter-spacing: .015em; line-height: 1; }
+    .event-subtitle { display: block; color: #a7c5c2; font-size: 8.5px; font-weight: 600; letter-spacing: .22em; }
+    .event-subtitle small { display: block; margin-top: 6px; color: #7ea7a3; font-size: 7.5px; font-weight: 600; letter-spacing: .19em; }
+    .event-track { display: block; width: 62%; height: 1px; margin: 13px auto 0; overflow: hidden; background: rgba(160, 226, 214, .16); }
+    .event-track i { display: block; width: 0; height: 100%; background: linear-gradient(90deg, rgba(111, 230, 207, .55), #d8f6ea); }
 
     .intro {
       position: absolute;
@@ -290,6 +315,9 @@
     @media (max-width: 760px), (pointer: coarse) {
       .weather-chip { padding: 6px 8px; font-size: 8px; letter-spacing: .08em; gap: 5px; }
       .weather-toast { top: 82px; right: 23px; font-size: 8px; }
+      .event-banner { top: 74px; width: calc(100vw - 40px); padding: 13px 16px 12px; }
+      .event-title { font-size: 22px; }
+      .event-kicker { letter-spacing: .32em; }
       .topbar .weather-chip { margin-left: auto; }
       .quality-status { display: none; }
     }
@@ -313,6 +341,12 @@
     <div id="weatherFlash" aria-hidden="true"></div>
     <div class="shade" aria-hidden="true"></div>
     <div class="weather-toast" id="weatherToast"></div>
+    <div class="event-banner" id="eventBanner" role="status" aria-live="polite">
+      <span class="event-kicker">WORLD EVENT</span>
+      <strong class="event-title" id="eventTitle"></strong>
+      <span class="event-subtitle" id="eventSubtitle"></span>
+      <span class="event-track"><i id="eventBar"></i></span>
+    </div>
     <div id="worldStatus" class="world-status" role="status" aria-live="polite"><span id="worldStatusText">SHAPING AETHERIS</span><div id="worldErrorDetail" class="world-error-detail" hidden></div></div>
 
     <header class="topbar">
@@ -370,13 +404,13 @@
         <span><b>DRAG</b> ORBIT</span><span class="hint-separator"></span>
         <span><b>WASD</b> FLY</span><span class="hint-separator"></span>
         <span><b>SCROLL</b> ZOOM</span><span class="hint-separator"></span>
-        <span><b>R</b> WEATHER</span>
+        <span><b>R</b> WEATHER</span><span class="hint-separator"></span><span><b>E</b> EVENT</span>
       </div>
       <div class="control-hints ground-hints" aria-label="Ground controls">
         <span><b>WASD</b> WALK</span><span class="hint-separator"></span>
         <span><b>MOUSE</b> LOOK</span><span class="hint-separator"></span>
         <span><b>SPACE</b> JUMP</span><span class="hint-separator"></span>
-        <span><b>R</b> WEATHER</span>
+        <span><b>R</b> WEATHER</span><span class="hint-separator"></span><span><b>E</b> EVENT</span>
       </div>
       <button id="switchButton" class="switch-button" type="button" aria-label="Switch between orbit and ground perspective">
         <span class="keycap">F</span><span>SWITCH VIEW</span>
@@ -392,7 +426,7 @@
   </div>
 
   <script type="module">
-    const BUILD_ID = 'nocturnal-ley-10';
+    const BUILD_ID = 'nocturnal-ley-11';
     // Initialize configuration before bootstrap; pass it explicitly to generators.
     const mapPresets = Object.freeze({
       ground: Object.freeze({ scale: 2.8, fineScale: 14.5, octaves: 5, bump: 2.3 }),
@@ -640,6 +674,15 @@
       const antiSunLight = new THREE.DirectionalLight(0x5d8eb8, .68);
       scene.add(hemi, sunlight, sunlight.target, moonlight, antiSunLight);
       const pulseTime = { value: 0 };
+
+      // ---- Special events -------------------------------------------------------
+      // Rare, time-boxed phenomena that ride on top of the weather instead of inside it.
+      // `eventFx` holds 0..1 weights consumed by the shaders and the lighting pass, so every
+      // effect fades in and out with the event instead of snapping on.
+      const eventGlow = { value: 0 };
+      const eventTint = new THREE.Color(0x2ad8c0);
+      const eventFx = { glow: 0, ley: 0, chill: 0, meteor: 0, migration: 0, tint: 0 };
+      const eventRandom = seeded(20260214);
 
       // Cinematic bloom on capable desktops; the loop falls back to direct rendering.
       let composer = null, bloomPass = null, bloomOn = false;
@@ -1728,12 +1771,12 @@
       const atmosphere = new THREE.Mesh(new THREE.SphereGeometry(R + .78, 96, 64), atmosphereMaterial);
       atmosphere.matrixAutoUpdate = false;
       scene.add(atmosphere);
-      const skyUniforms = { uSun: { value: sun }, uUp: { value: landing.clone() }, uGround: { value: 0 } };
+      const skyUniforms = { uSun: { value: sun }, uUp: { value: landing.clone() }, uGround: { value: 0 }, uChill: { value: 0 } };
       const skyDome = new THREE.Mesh(new THREE.SphereGeometry(160, 32, 20), new THREE.ShaderMaterial({
         uniforms: skyUniforms, side: THREE.BackSide, transparent: true, depthWrite: false,
         vertexShader: `varying vec3 vSkyPosition; void main(){vSkyPosition=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
         fragmentShader: `
-          uniform vec3 uSun; uniform vec3 uUp; uniform float uGround; varying vec3 vSkyPosition;
+          uniform vec3 uSun; uniform vec3 uUp; uniform float uGround; uniform float uChill; varying vec3 vSkyPosition;
           void main(){
             vec3 ray=normalize(vSkyPosition-cameraPosition);
             float altitude=clamp(dot(ray,uUp),0.0,1.0), sunHeight=dot(uSun,uUp);
@@ -1748,8 +1791,8 @@
             color+=vec3(.36,.13,.035)*glow*.7;
             float sunAlign=dot(ray,uSun);
             float aboveHorizon=smoothstep(-.02,.02,dot(ray,uUp));
-            color+=vec3(1.0,.9,.75)*pow(max(sunAlign,0.0),180.0)*.35*day;
-            color+=vec3(1.0,.93,.82)*smoothstep(.99955,.99985,sunAlign)*4.0*aboveHorizon*smoothstep(-.12,.05,sunHeight);
+            color+=vec3(1.0,.9,.75)*pow(max(sunAlign,0.0),180.0)*.35*day*(1.0-uChill*.92);
+            color+=vec3(1.0,.93,.82)*smoothstep(.99955,.99985,sunAlign)*4.0*aboveHorizon*smoothstep(-.12,.05,sunHeight)*(1.0-uChill);
             color+=horizon*.35*pow(1.0-altitude,8.0)*day;
             gl_FragColor=vec4(color,uGround);
             #include <tonemapping_fragment>
@@ -2823,15 +2866,15 @@
       const sporeGeo = new THREE.BufferGeometry();
       sporeGeo.setAttribute('position', new THREE.Float32BufferAttribute(spores, 3));
       sporeGeo.setAttribute('aPhase', new THREE.Float32BufferAttribute(sporePhases, 1));
-      const sporeUniforms = { uTime: forestTime, uSun: { value: sun }, uRatio: { value: renderer.getPixelRatio() } };
+      const sporeUniforms = { uTime: forestTime, uSun: { value: sun }, uRatio: { value: renderer.getPixelRatio() }, uEventGlow: eventGlow };
       const sporeMaterial = new THREE.ShaderMaterial({
         uniforms: sporeUniforms, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
         vertexShader: `
-          uniform vec3 uSun; uniform float uTime; uniform float uRatio; attribute float aPhase; varying float vGlow; varying float vHue;
+          uniform vec3 uSun; uniform float uTime; uniform float uRatio; uniform float uEventGlow; attribute float aPhase; varying float vGlow; varying float vHue;
           void main(){
             vec3 drift = position + vec3(sin(uTime*.55+aPhase), sin(uTime*.38+aPhase*1.7), cos(uTime*.46+aPhase))*.028;
             float night=1.0-smoothstep(-.18,.36,dot(normalize(drift),uSun));
-            vGlow=(.06+night*1.05)*(.68+.32*sin(uTime*1.15+aPhase));
+            vGlow=(.06+night*1.05)*(.68+.32*sin(uTime*1.15+aPhase))*(1.0+uEventGlow*2.4);
             vHue=fract(aPhase * .3183);
             vec4 p=modelViewMatrix*vec4(drift,1.0);
             gl_PointSize=clamp(26.0*uRatio/max(.28,-p.z),1.4,24.0*uRatio);
@@ -2933,6 +2976,7 @@
       understoryMaterial.onBeforeCompile = shader => {
         shader.uniforms.uForestTime = forestTime;
         shader.uniforms.uUnderSun = { value: sun };
+        shader.uniforms.uEventGlow = eventGlow;
         shader.vertexShader = shader.vertexShader
           .replace('#include <common>', '#include <common>\nuniform float uForestTime;\nvarying vec3 vUnderWorld;\nvarying float vUnderY;')
           .replace('#include <begin_vertex>', `
@@ -2950,14 +2994,14 @@
           transformed.z += cos(uForestTime*1.9+underPhase*1.3)*underBend*.09;
         `);
         shader.fragmentShader = shader.fragmentShader
-          .replace('#include <common>', '#include <common>\nvarying vec3 vUnderWorld;\nvarying float vUnderY;\nuniform vec3 uUnderSun;\nuniform float uForestTime;')
+          .replace('#include <common>', '#include <common>\nvarying vec3 vUnderWorld;\nvarying float vUnderY;\nuniform vec3 uUnderSun;\nuniform float uForestTime;\nuniform float uEventGlow;')
           .replace('#include <emissivemap_fragment>', `
             #include <emissivemap_fragment>
             float night = 1.0 - smoothstep(-.2, .3, dot(normalize(vUnderWorld), uUnderSun));
             float tip = smoothstep(.035, .078, vUnderY);
             float pulse = .8 + .2 * sin(uForestTime * 1.3 + vUnderWorld.x * 16.0);
             vec3 floraGlow = mix(vec3(.08, .85, .66), vec3(1.05, .82, .36), smoothstep(.45, .75, diffuseColor.r));
-            totalEmissiveRadiance += (diffuseColor.rgb * .28 + floraGlow * tip * .88) * night * pulse;
+            totalEmissiveRadiance += (diffuseColor.rgb * .28 + floraGlow * tip * .88) * night * pulse * (1.0 + uEventGlow * 2.2);
           `);
       };
       understoryMaterial.customProgramCacheKey = () => 'aetheris-understory-glow-' + BUILD_ID;
@@ -3288,6 +3332,7 @@
       grass.material.onBeforeCompile = shader => {
         shader.uniforms.uForestTime = forestTime;
         shader.uniforms.uGrassSun = { value: sun };
+        shader.uniforms.uEventGlow = eventGlow;
         shader.vertexShader = shader.vertexShader
           .replace('#include <common>', '#include <common>\nuniform float uForestTime;\nvarying vec3 vGrassWorld;\nvarying float vBladeY;')
           .replace('#include <begin_vertex>', `
@@ -3303,13 +3348,13 @@
           #endif
         `);
         shader.fragmentShader = shader.fragmentShader
-          .replace('#include <common>', '#include <common>\nvarying vec3 vGrassWorld;\nvarying float vBladeY;\nuniform vec3 uGrassSun;\nuniform float uForestTime;')
+          .replace('#include <common>', '#include <common>\nvarying vec3 vGrassWorld;\nvarying float vBladeY;\nuniform vec3 uGrassSun;\nuniform float uForestTime;\nuniform float uEventGlow;')
           .replace('#include <emissivemap_fragment>', `
             #include <emissivemap_fragment>
             float night = 1.0 - smoothstep(-.2, .3, dot(normalize(vGrassWorld), uGrassSun));
             float bladeTip = smoothstep(.016, .035, vBladeY);
             float wave = .72 + .28 * sin(uForestTime * 1.4 + dot(vGrassWorld, vec3(18.0, 12.0, 16.0)));
-            totalEmissiveRadiance += (diffuseColor.rgb * .28 + vec3(.07, .68, .54) * bladeTip * .55) * night * wave;
+            totalEmissiveRadiance += (diffuseColor.rgb * .28 + vec3(.07, .68, .54) * bladeTip * .55) * night * wave * (1.0 + uEventGlow * 2.2);
           `);
       };
       grass.material.customProgramCacheKey = () => 'aetheris-grass-glow-' + BUILD_ID;
@@ -3460,6 +3505,7 @@
       mantas.castShadow = true;
       scene.add(mantas);
       const mantaPos = new THREE.Vector3(), mantaAhead = new THREE.Vector3();
+      for (const flock of flocks) flock.angle = flock.phase;
 
       // Waterfall veils pour off the elevated sanctuaries and dissolve into mist.
       const mistMaterial = new THREE.SpriteMaterial({ map: softGlow, color: 0x9fd8d2, transparent: true, opacity: .15, depthWrite: false, blending: THREE.AdditiveBlending });
@@ -3655,6 +3701,163 @@
         weather.boltLife = .22;
       }
       weatherFlash.style.opacity = '0';
+
+      // ---- Special events: definitions, scheduler and the two pieces of world geometry
+      // they animate (a ley shockwave ring and a solar veil disc).
+      const EVENT_DEFS = {
+        ley: {
+          label: 'LEY SURGE', sub: 'THE SANCTUARIES ANSWER EACH OTHER', duration: 16, weight: 1.15,
+          fx: { glow: .55, ley: 1, tint: .22 }, tint: 0x35f0d4,
+          hint: 'RUNES FLARE ALONG THE LEY LINES'
+        },
+        starfall: {
+          label: 'STARFALL', sub: 'THE SKY IS FALLING, SLOWLY', duration: 14, weight: 1.05,
+          fx: { meteor: 1, glow: .12, tint: .14 }, tint: 0xd6ecff, night: true,
+          hint: 'A SHOWER OF DEBRIS CROSSES THE NIGHT'
+        },
+        veil: {
+          label: 'SOLAR VEIL', sub: 'A DARK MOON CROSSES THE SUN', duration: 24, weight: .85,
+          fx: { chill: 1, glow: .5, tint: .5 }, tint: 0x0a1a2c,
+          hint: 'THE LIGHT FAILS, THE STARS RETURN'
+        },
+        bloom: {
+          label: 'BLOOM TIDE', sub: 'EVERY LEAF REMEMBERS THE LIGHT', duration: 18, weight: 1.2,
+          fx: { glow: 1, ley: .35, tint: .12 }, tint: 0x7dffd9,
+          hint: 'THE FOREST HOLDS ITS BREATH AND SHINES'
+        },
+        migration: {
+          label: 'ZENITH MIGRATION', sub: 'THE FLOCKS CLIMB THE THERMALS', duration: 16, weight: .95,
+          fx: { migration: 1, glow: .18, tint: .1 }, tint: 0xa8e0ff,
+          hint: 'MANTA SCHOOLS CIRCLE THE SPIRES'
+        }
+      };
+      const eventBanner = document.getElementById('eventBanner');
+      const eventTitle = document.getElementById('eventTitle');
+      const eventSubtitle = document.getElementById('eventSubtitle');
+      const eventBar = document.getElementById('eventBar');
+      const eventState = { id: null, def: null, time: 0, duration: 0, intensity: 0, next: 40 + eventRandom() * 32, last: null, seen: 0, daylight: 0 };
+      const eventFxKeys = Object.keys(eventFx);
+
+      const leyRing = new THREE.Mesh(
+        new THREE.TorusGeometry(1, .013, 6, 72),
+        new THREE.MeshBasicMaterial({ color: 0x8dffe6, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })
+      );
+      leyRing.visible = false;
+      leyRing.frustumCulled = false;
+      scene.add(leyRing);
+      const leyRingQuat = new THREE.Quaternion();
+      const ringAxis = new THREE.Vector3(0, 0, 1);
+
+      const veilDisc = new THREE.Mesh(
+        new THREE.CircleGeometry(1, 48),
+        new THREE.MeshBasicMaterial({ color: 0x04070d, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, fog: false })
+      );
+      veilDisc.visible = false;
+      veilDisc.frustumCulled = false;
+      scene.add(veilDisc);
+
+      function eventEligible(id, daylight) {
+        const def = EVENT_DEFS[id];
+        if (!def || id === eventState.last) return false;
+        // A meteor shower needs a sky dark enough to see it; the veil keeps its drama in orbit.
+        if (def.night && daylight > .12) return false;
+        return true;
+      }
+      function pickEvent(daylight) {
+        const ids = Object.keys(EVENT_DEFS).filter(id => eventEligible(id, daylight));
+        if (!ids.length) return null;
+        let total = 0;
+        for (const id of ids) total += EVENT_DEFS[id].weight;
+        let roll = eventRandom() * total;
+        for (const id of ids) { roll -= EVENT_DEFS[id].weight; if (roll <= 0) return id; }
+        return ids[ids.length - 1];
+      }
+      function startEvent(id, announce = true) {
+        const def = EVENT_DEFS[id];
+        if (!def) return false;
+        eventState.id = id;
+        eventState.def = def;
+        eventState.time = 0;
+        eventState.duration = reducedMotion ? def.duration * .7 : def.duration;
+        eventState.intensity = 0;
+        eventState.last = id;
+        eventState.seen++;
+        eventTint.set(def.tint);
+        if (announce) {
+          eventTitle.textContent = def.label;
+          eventSubtitle.innerHTML = def.sub + '<small>' + def.hint + '</small>';
+          eventBar.style.width = '0%';
+          eventBanner.classList.add('visible');
+        }
+        return true;
+      }
+      function finishEvent() {
+        eventState.id = null;
+        eventState.def = null;
+        eventState.intensity = 0;
+        eventState.next = 58 + eventRandom() * 54;
+        for (const key of eventFxKeys) eventFx[key] = 0;
+        eventGlow.value = 0;
+        eventBanner.classList.remove('visible');
+      }
+      let eventBarFrame = 0;
+      function updateEvents(dt, daylight) {
+        eventState.daylight = daylight;
+        const def = eventState.def;
+        if (def) {
+          eventState.time += dt;
+          const rampIn = smooth(0, 2.0, eventState.time);
+          const rampOut = smooth(0, 2.8, eventState.duration - eventState.time);
+          eventState.intensity = Math.min(rampIn, rampOut);
+          for (const key of eventFxKeys) eventFx[key] = (def.fx[key] || 0) * eventState.intensity;
+          if (++eventBarFrame % 6 === 0) {
+            eventBar.style.width = (clamp(eventState.time / eventState.duration, 0, 1) * 100).toFixed(1) + '%';
+          }
+          if (eventState.time >= eventState.duration) finishEvent();
+        } else {
+          eventState.next -= dt;
+          if (eventState.next <= 0) {
+            const id = pickEvent(daylight);
+            if (id) startEvent(id); else eventState.next = 14 + eventRandom() * 22;
+          }
+        }
+        eventGlow.value = eventFx.glow;
+        return eventFx;
+      }
+      function triggerEvent(id) {
+        if (id) return startEvent(id);
+        let next = pickEvent(eventState.daylight);
+        if (!next) { eventState.last = null; next = pickEvent(eventState.daylight); }
+        return next ? startEvent(next) : false;
+      }
+      // The ley shockwave: one additive ring expanding away from whichever sanctuary is closest.
+      function updateLeyRing() {
+        const ley = eventFx.ley;
+        if (ley <= .02) { leyRing.visible = false; return; }
+        let nearest = landmarks[0], best = -Infinity;
+        for (const landmark of landmarks) {
+          const dot = landmark.direction.dot(camera.position);
+          if (dot > best) { best = dot; nearest = landmark; }
+        }
+        const pulse = ((elapsed % 2.6) / 2.6);
+        leyRing.visible = true;
+        leyRing.position.copy(nearest.direction).multiplyScalar(nearest.base + .04);
+        leyRingQuat.setFromUnitVectors(ringAxis, nearest.direction);
+        leyRing.quaternion.copy(leyRingQuat);
+        const radius = mix(.22, 1.35, pulse);
+        leyRing.scale.setScalar(radius);
+        leyRing.material.opacity = Math.pow(1 - pulse, 1.9) * .58 * ley;
+      }
+      // The veil: a dark disc growing over the sun, read as a total eclipse silhouette.
+      function updateVeilDisc() {
+        const veil = eventFx.chill;
+        if (veil <= .01) { veilDisc.visible = false; return; }
+        veilDisc.visible = true;
+        veilDisc.position.copy(sun).multiplyScalar(54.2);
+        veilDisc.lookAt(camera.position);
+        veilDisc.scale.setScalar(mix(.1, 1.62, veil));
+        veilDisc.material.opacity = Math.min(1, veil * 1.5);
+      }
 
       const fitDistance = () => innerWidth / innerHeight < .76 ? 20 : compact ? 14 : 12.6;
       const state = {
@@ -3990,7 +4193,7 @@
         const wx=weather.now;
         audio.windGain.gain.setTargetAtTime((surface?.2:.11)*(1+wx.rain*1.25),t,.8);
         audio.windFilter.frequency.setTargetAtTime((surface?400:240)+wx.rain*420,t,.8);
-        audio.shimmerGain.gain.setTargetAtTime(night*(surface?.012:.005)*(1-wx.rain*.7),t,1.2);
+        audio.shimmerGain.gain.setTargetAtTime(night*(surface?.012:.005)*(1-wx.rain*.7)*(1+eventFx.glow*1.8),t,1.2);
       }
       document.getElementById('descendButton').addEventListener('click',switchMode);
       document.getElementById('switchButton').addEventListener('click',switchMode);
@@ -4011,6 +4214,7 @@
         if(event.code==='KeyT'&&!event.repeat){shiftLight();return;}
         if(event.code==='KeyQ'&&!event.repeat){cycleQuality();return;}
         if(event.code==='KeyR'&&!event.repeat){cycleWeather();return;}
+        if(event.code==='KeyE'&&!event.repeat){triggerEvent();return;}
         if(event.code==='KeyM'&&!event.repeat){toggleSound();return;}
         if(event.code==='Space'&&!event.repeat)jump();
         keys.add(event.code);
@@ -4084,30 +4288,35 @@
         skyUniforms.uGround.value+=(Number(surface)-skyUniforms.uGround.value)*(1-Math.exp(-dt*2.5));
         const fogWeather = surface ? weatherNow.fog : 1 + (weatherNow.fog - 1) * .16;
         const dayAmount=smooth(-.22,.36,daylight), nightAmount=1-dayAmount;
+        updateEvents(dt, daylight);
+        const eventChill=eventFx.chill;
+        skyUniforms.uChill.value=eventChill;
         // Soften night fog slightly and tint with luminous blue-teal airglow so distant nocturnal mountains remain ~80% readable.
         scene.fog.density=skyUniforms.uGround.value*(.085+dayAmount*.035)*fogWeather;
         scene.fog.color.setRGB(.032+dayAmount*.048,.066+dayAmount*.082,.102+dayAmount*.072);
         scene.fog.color.lerp(weather.tint, weatherNow.tintAmount * (surface ? .76 : .2));
+        if (eventFx.tint > 0) scene.fog.color.lerp(eventTint, eventFx.tint * .55);
+        if (eventChill > 0) scene.fog.density *= 1 + eventChill * .35;
         waterUniforms.uFogColor.value.copy(scene.fog.color);
         waterUniforms.uFogDensity.value=scene.fog.density;
         hemi.position.copy(surface?state.direction:UP);
-        hemi.intensity=(surface ? .56+dayAmount*.22 : .64) * (0.45 + weatherNow.light * .55) + weather.flash * .38;
+        hemi.intensity=((surface ? .56+dayAmount*.22 : .64) * (0.45 + weatherNow.light * .55) + weather.flash * .38) * (1 - eventChill * .42);
         const warm=smooth(-.02,.32,daylight);
         sunlight.color.setRGB(1,.82+warm*.13,.58+warm*.24);
-        sunlight.intensity=(2.35+warm*.42) * weatherNow.light + weather.flash * .45;
+        sunlight.intensity=((2.35+warm*.42) * weatherNow.light + weather.flash * .45) * (1 - eventChill * .93);
         moonlight.intensity=(.22+nightAmount*.62) * (0.6 + weatherNow.light * .4);
         // Anti-solar starlight fill always illuminates the planet's dark hemisphere evenly.
         antiSunLight.position.copy(sun).multiplyScalar(-24);
-        antiSunLight.intensity=(surface ? .52 + nightAmount * .46 : .72) * (0.55 + weatherNow.light * .45);
+        antiSunLight.intensity=(surface ? .52 + nightAmount * .46 : .72) * (0.55 + weatherNow.light * .45) * (1 + eventChill * .2);
         hemi.color.setRGB(.48+dayAmount*.20,.64+dayAmount*.15,.78+dayAmount*.07);
         hemi.groundColor.setRGB(.12+dayAmount*.04,.18+dayAmount*.03,.17+dayAmount*.02);
-        renderer.toneMappingExposure=(surface ? 1.18 - dayAmount * .04 : 1.16) * (0.88 + weatherNow.light * .12);
+        renderer.toneMappingExposure=(surface ? 1.18 - dayAmount * .04 : 1.16) * (0.88 + weatherNow.light * .12) * (1 - eventChill * .14);
         clouds[0].material.color.setRGB(.42+dayAmount*.58,.50+dayAmount*.50,.58+dayAmount*.42);
         clouds[1].material.color.setRGB(.46+dayAmount*.54,.54+dayAmount*.46,.62+dayAmount*.38);
         clouds[0].material.opacity = .48 + weatherNow.cloud * .4;
         clouds[1].material.opacity = .18 + weatherNow.cloud * .28;
-        stars.material.opacity=.9*(1-skyUniforms.uGround.value*dayAmount*.94)*(1-weatherNow.cloud*.22);
-        sunSprite.material.opacity=.9 * weatherNow.light;
+        stars.material.opacity=clamp(.9*(1-skyUniforms.uGround.value*dayAmount*.94)*(1-weatherNow.cloud*.22) + eventChill*.55, 0, 1);
+        sunSprite.material.opacity=.9 * weatherNow.light * (1 - eventChill*.72);
         sunSprite.position.copy(sun).multiplyScalar(55);
         moon.position.set(Math.cos(elapsed*.007+2.1)*29,12,Math.sin(elapsed*.007+2.1)*29);
         moonlight.position.copy(moon.position);
@@ -4131,10 +4340,13 @@
         if(surface)scene.environmentRotation.setFromQuaternion(envQuat.setFromUnitVectors(viewNormal,UP));
         else scene.environmentRotation.set(0,0,0);
         if(bloomOn)bloomPass.strength=.32+nightAmount*.24;
+        const migration=eventFx.migration;
         for(let i=0;i<flocks.length;i++){
-          const f=flocks[i],a=f.phase+elapsed*f.speed,ca=Math.cos(a),sa=Math.sin(a);
-          mantaPos.copy(f.landmark.group.position).addScaledVector(f.east,ca*f.radius).addScaledVector(f.north,sa*f.radius)
-            .addScaledVector(f.landmark.direction,f.height+Math.sin(elapsed*.7+f.phase)*.05);
+          const f=flocks[i];
+          f.angle+=f.speed*(1+migration*1.8)*dt;
+          const a=f.angle,ca=Math.cos(a),sa=Math.sin(a),orbitRadius=f.radius*(1-migration*.3);
+          mantaPos.copy(f.landmark.group.position).addScaledVector(f.east,ca*orbitRadius).addScaledVector(f.north,sa*orbitRadius)
+            .addScaledVector(f.landmark.direction,f.height+migration*.6+Math.sin(elapsed*.7+f.phase)*.05);
           const spin=f.speed>0?1:-1;
           mantaAhead.copy(mantaPos).addScaledVector(f.east,-sa*spin).addScaledVector(f.north,ca*spin);
           transform.position.copy(mantaPos);transform.up.copy(f.landmark.direction);transform.lookAt(mantaAhead);
@@ -4142,21 +4354,27 @@
           mantas.setMatrixAt(i,transform.matrix);
         }
         mantas.instanceMatrix.needsUpdate=true;
+        // A starfall event turns the occasional streak into a shower: shorter trails, faster cadence.
+        const shower=eventFx.meteor;
         if(meteorState.active){
           meteorState.t+=dt;
           const p=meteor.geometry.attributes.position;
           mantaPos.copy(meteorState.from).addScaledVector(meteorState.velocity,meteorState.t);
-          mantaAhead.copy(mantaPos).addScaledVector(meteorState.velocity,-.055);
+          mantaAhead.copy(mantaPos).addScaledVector(meteorState.velocity,-.055*(1+shower*1.5));
           p.setXYZ(0,mantaPos.x,mantaPos.y,mantaPos.z);p.setXYZ(1,mantaAhead.x,mantaAhead.y,mantaAhead.z);p.needsUpdate=true;
-          meteor.material.opacity=(1-meteorState.t/meteorState.duration)*.85;
-          if(meteorState.t>=meteorState.duration){meteorState.active=false;meteor.material.opacity=0;meteorState.next=7+random()*11;}
-        }else if(daylight<-.02){
+          meteor.material.opacity=(1-meteorState.t/meteorState.duration)*(.85+shower*.15);
+          if(meteorState.t>=meteorState.duration){
+            meteorState.active=false;meteor.material.opacity=0;
+            meteorState.next=shower>.05?.1+eventRandom()*.34:7+random()*11;
+          }
+        }else if(daylight<-.02||shower>0){
           meteorState.next-=dt;
           if(meteorState.next<=0){
+            meteorState.duration=shower>.05?.42+eventRandom()*.36:.85;
             meteorState.from.copy(randomDirection()).multiplyScalar(88);
             if(meteorState.from.dot(viewNormal)<8)meteorState.from.negate();
             mantaAhead.copy(randomDirection());
-            meteorState.velocity.copy(mantaAhead).addScaledVector(meteorState.from,-mantaAhead.dot(meteorState.from)/meteorState.from.lengthSq()).normalize().multiplyScalar(34+random()*22);
+            meteorState.velocity.copy(mantaAhead).addScaledVector(meteorState.from,-mantaAhead.dot(meteorState.from)/meteorState.from.lengthSq()).normalize().multiplyScalar((34+random()*22)*(1+shower*.45));
             meteorState.t=0;meteorState.active=true;
           }
         }
@@ -4166,7 +4384,7 @@
           landmark.halo.rotation.y=elapsed*.13;landmark.crystal.rotation.y=elapsed*.32;
           const siteNight=1-smooth(-.2,.28,landmark.direction.dot(sun));
           const sitePulse=.85+.15*Math.sin(elapsed*1.6+landmark.phase);
-          landmark.sanctuaryLight.intensity=(.15+siteNight*1.65)*sitePulse;
+          landmark.sanctuaryLight.intensity=(.15+siteNight*1.65)*sitePulse*(1+eventFx.ley*.9);
           landmark.beacon.visible=siteNight>.04;
           landmark.glow.material.opacity=.24+siteNight*.32;
           landmark.altarGlow.material.opacity=.18+siteNight*.34;
@@ -4178,9 +4396,12 @@
           }
           landmark.fragments.instanceMatrix.needsUpdate=true;
         }
-        beaconMaterial.opacity=.08+nightAmount*.18;
-        runeMaterial.emissiveIntensity=1.6+nightAmount*1.35;
-        lanternMaterial.emissiveIntensity=1.8+nightAmount*1.55;
+        const leyBoost=eventFx.ley;
+        beaconMaterial.opacity=(.08+nightAmount*.18)*(1+leyBoost*1.6);
+        runeMaterial.emissiveIntensity=(1.6+nightAmount*1.35)*(1+leyBoost*1.45);
+        lanternMaterial.emissiveIntensity=(1.8+nightAmount*1.55)*(1+leyBoost*1.1);
+        updateLeyRing();
+        updateVeilDisc();
         if(frame%12===0){
           for(const chunk of floraChunks){
             const close=surface&&camera.position.distanceTo(chunk.center)-chunk.radius<[.9,.65,.45][quality.tier];
@@ -4245,8 +4466,8 @@
         }
       });
       window.aetheris={
-        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,weather:weather.id,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Math.round(1/quality.average),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
-        switchView:switchMode,cycleQuality,cycleWeather,setWeather
+        diagnostics:()=>({build:BUILD_ID,phase:startup.phase,startupChecks:startup.checks.length,three:THREE.REVISION,mode:state.mode,weather:weather.id,event:eventState.id||'none',eventsSeen:eventState.seen,quality:quality.mode,tier:tierNames[quality.tier],estimatedFps:Math.round(1/quality.average),pixelRatio:renderer.getPixelRatio(),drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
+        switchView:switchMode,cycleQuality,cycleWeather,setWeather,triggerEvent,events:Object.keys(EVENT_DEFS)
       };
       window.addEventListener('pagehide',event=>{
         if(event.persisted)return;

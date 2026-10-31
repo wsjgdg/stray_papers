@@ -55,6 +55,7 @@ python3 -m http.server 8080
 | `R` / 顶部云图标 | 循环 6 种天气：CLEAR / MIST / RAIN / STORM / SNOW / ASH |
 | `Q` / 右上角质量标签 | 画质档位循环：`AUTO → LOCKED HIGH → LOCKED BALANCED` |
 | `M` / 喇叭按钮 | 生成式环境音（风噪 + 低频 pad + 夜间微光泛音） |
+| `E` | 立刻召唤一次特殊事件（异象），用于看效果 / 演示 |
 
 系统开启了 Web Audio 与 `prefers-reduced-motion` 的尊重：后者会缩短镜头过渡、去掉走路晃动与雷电视效。
 
@@ -76,7 +77,30 @@ python3 -m http.server 8080
 
 ---
 
-## 4. 性能设计
+## 4. 特殊事件（异象）
+
+天气是"常态"，异象是"例外"：每隔 1–2 分钟，世界会自行触发一次持续 14–24 秒的特殊事件，顶部会出现一条专属横幅（标题 + 一句氛围文案 + 进度条）。所有效果都通过统一的 `eventFx` 权重（0→1→0）淡入淡出，不会硬切。
+
+| 事件 | 时长 | 世界会发生什么 |
+| --- | --- | --- |
+| **LEY SURGE** · 灵脉涌动 | 16 s | 符文 / 灯笼自发光暴涨，圣所光环变亮，一道加性光环从最近的圣所向外扩散，孢子与草地发光增强，雾色转向青绿 |
+| **STARFALL** · 星陨雨 | 14 s | 原本偶发的流星变成连续流星雨（更短、更快、间隔 0.1–0.4 s） |
+| **SOLAR VEIL** · 暗日之蚀 | 24 s | 一枚暗盘在太阳前成形、日光骤降到 7%、曝光与雾密度变化、星空浮现，天穹里的太阳高光同步熄灭 |
+| **BLOOM TIDE** · 荧光潮 | 18 s | 草叶、蕨类、花与森林光点的夜间自发光拉到 3 倍以上，整片林地"呼吸" |
+| **ZENITH MIGRATION** · 天穹迁徙 | 16 s | 蝠鲼群提速近 3 倍、收窄盘旋半径并抬高，绕着圣所尖塔成群爬升 |
+
+规则与实现细节：
+
+- **调度**：40–72 秒后第一次触发，之后每次结束再等 58–112 秒；同一事件不会连续出现两次。
+- **夜间专属**：`STARFALL` 只在天空足够暗（`daylight ≤ 0.12`）时进入候选池，其余事件昼夜都可能发生。
+- 事件权重不同（`BLOOM TIDE` 与 `LEY SURGE` 更常见，`SOLAR VEIL` 最稀有）。
+- 手动触发：按 `E`，或控制台 `aetheris.triggerEvent()`（随机、自动避开上一次）/ `aetheris.triggerEvent('veil')`（指定）。
+- 尊重 `prefers-reduced-motion`：时长缩短为 70%，仍然有淡入淡出。
+- 事件使用独立的 PRNG（`seeded(20260214)`），不会扰动地形、植被、圣所的既有随机序列——同一颗星球的世界布局与之前完全一致。
+
+---
+
+## 5. 性能设计
 
 目标是在「轻薄本 / 中端手机」上也能 60 fps 巡航。核心手段：
 
@@ -89,27 +113,30 @@ python3 -m http.server 8080
 
 ---
 
-## 5. 调试
+## 6. 调试
 
 运行中可在控制台使用：
 
 ```js
 window.aetheris.diagnostics()
-// { build, phase, startupChecks, three, mode, weather, quality, tier,
+// { build, startupChecks, three, mode, weather, event, eventsSeen, quality, tier,
 //   estimatedFps, pixelRatio, drawCalls, triangles }
 
-window.aetheris.switchView()       // 轨道 ⇄ 地表
-window.aetheris.cycleQuality()     // 等同按 Q
-window.aetheris.cycleWeather()     // 等同按 R
+window.aetheris.switchView()        // 轨道 ⇄ 地表
+window.aetheris.cycleQuality()      // 等同按 Q
+window.aetheris.cycleWeather()      // 等同按 R
 window.aetheris.setWeather('storm') // 'clear' | 'mist' | 'rain' | 'storm' | 'snow' | 'ash'
-window.aetherisStartup             // 启动阶段、自检结果、错误详情
+window.aetheris.triggerEvent()      // 随机异象（等同按 E）
+window.aetheris.triggerEvent('veil')// 'ley' | 'starfall' | 'veil' | 'bloom' | 'migration'
+window.aetheris.events              // 全部事件 id
+window.aetherisStartup              // 启动阶段、自检结果、错误详情
 ```
 
 启动序列会执行一组断言（贴图预设、纹理可平铺、材质 shader 注入位置、shader chunk 是否存在等），失败会直接显示带堆栈的错误面板，方便定位是哪一步挂掉。
 
 ---
 
-## 6. 目录结构
+## 7. 目录结构
 
 ```
 procedural-3d-fantasy-planet/
@@ -123,7 +150,7 @@ procedural-3d-fantasy-planet/
 
 ---
 
-## 7. 已知取舍
+## 8. 已知取舍
 
 - 星球半径 4.2 单位，属于「可玩的小行星尺度」：为了让走路手感成立，地表细节用局部高密度补丁 + 远处基础网格混合（0.145–0.19 rad 过渡带）实现，而不是全局位移贴图。
 - 行星尺度的陆地植被是**预生成 + 分块 LOD**，不会随昼夜或天气重新生长；贴地草花会随玩家在局部重新散布。
