@@ -3,10 +3,9 @@
 > 每轮施工记录：完成项、验证结果、后续计划。commit message 用英文祈使句；本日志中文。
 > 项目定位：模块化量子场沙盒（ES 模块引擎 + PhysicsKernel 契约 + 多物理内核 + 单文件分发）。
 >
-> **协作规则（2026-10-18 用户授权）**：本项目内**每次 commit 自动推送** origin/main
-> （SSH），不再逐次等「推吧」指令；推送后以 `git ls-remote` 闭环验证。此规则作用域
-> 仅限 schrodinger-workshop —— 其他项目（spot-extract / codify / cosmos-source /
-> jayverse / physics-sim-agent 等）仍维持「推送须等用户明确授权」的原规则。
+> **协作规则（本会话）**：用户授权本项目每次 commit 自动推送；推送目标为当前 Arena 固定分支，
+> 不切换/新建其他分支，并在推送后以 `git ls-remote` 验证远端 SHA。此规则作用域仅限
+> `schrodinger-workshop/`；其他项目按其各自授权规则处理。
 
 ## 轮次总览
 
@@ -78,7 +77,8 @@
 | R141 | **哈伯德页 Phase 3+4**：协议（U 斜坡/势阱脉冲/势垒推动）、时间轴精确回拖、U/t 扫描、L=12 静态档 | 用户「继续把 3、4 跑完」。① **三处性能根因**（都是「能不能做」的前提，先量后改）：CSR 构建原先把 1000 万条 `[k,target,sign]` push 进临时数组 ⟹ L=12 构建 4.3 s、RSS 1.0 GB，改**两遍计数式构建**后 0.40 s / 109 MB、nnz 逐位相同；熵的本征求解原用 `jacobiEigen`（40 个 sweep，每 sweep O(n³)）⟹ L=10 半链 404 ms、L=12 中心切点 25 s，改 **`symEigVals`**（Householder 三对角化 + 隐式 QL，只求特征值）后 70 ms / 2.6 s；Lanczos 基**实模式存储**（H 实对称 + 实种子 ⟹ Krylov 基虚部恒 0，此前白存一半）⟹ L=12 同内存下 m 从 52 翻到 110。② **QL 两处真 bug**（测试逼出来的）：deflation 判据只用 `|d[m]|+|d[m+1]|` 时，秩亏 Gram（Schmidt 块的真实形状）在零本征值处 dd=0 ⟹ 判据永不成立、死循环到迭代上限；改成带矩阵量级绝对底 `1e-16·(dd+anorm)` 后收敛。第一版 tred2 移植漏了最终行拷贝，trace 不守恒（1e-15 级对账抓出）。③ 页面：协议三件（**停止即复原** U/μ，否则用户以为参数被吃掉）、检查点环形缓冲 + 滑块/←→ 精确回拖（**从拖回处继续会截断未来**）、U/t 扫描分片推进（每帧 18 ms，界面不冻）并附**点图载入该 U**；L=12 走静态档（拒绝实时演化与扫描，HUD 显示 m 与残差）。④ **L=12 的诚实边界**：m=40 残差 1.35e-3、E 偏 3e-7（U=0）；m=110 才落到 1.6e-12 / 1e-12，U=4 残差 1.4e-9、E 从 m=40 的 −6.49867 修到 **−6.52624**（差 0.03）。所以页面把 m 与残差直接摆在 HUD 上，不藏。**验证**：pot141 23/23（symEigVals ≡ jacobi 4.4e-14 / 秩亏 trace 1.5e-11 / 淬变 S(0)=0 且早窗单调 / 范数 9e-14 / 扫描 5 点可复现且三列趋势单调 / L=12 对自由费米子解析 1e-12 / 内存上限生效）+ cdp142 22/22（协议时序与复原、脉冲井位置、推动井右移、检查点回拖与续算、扫描 5 点、L=12 拒绝演化）+ 全回归 cdp139 52/52、cdp141 27/27、dist139 9/9、pot139 26/26、pot140 21/21。dist 119.8 → **150.8 KB**。**物理读数**：L=8 扫描 S_gs 1.139→0.594、D_gs 2.000→0.271、早窗斜率 1.81→0.55 全单调，**唯 S 饱和值在 U≈2 达峰（3.89）**——U=0 时初态接近本征态、U 太大又冻结电荷自由度，中间最乱。 |
 | R162 | **纠错页重复码模式的线路点选注错** | iid/物理通道模式新增可开关的线路图交互：点击噪声列数据位即可手动注入/撤销错误，固定种子重跑单次实验，HUD/线路即时呈现综合征、修正与逻辑判定；画布将噪声列标为「指定错误」，hover 目标高亮。门级模式明确禁用（其错误应选具体门位点）。手动错误只进单次试验，不改变 P_L 统计分布；码长切换会滤除越界错误位。**验证**：manual-QEC harness **18/18**（iid 单错/双错纠错判定、点击切换/撤销、固定种子、相位翻转对偶、phys 强制错误、门级禁用）；canvas hit-geometry harness **12/12**（DPR 1/2 下三根数据线定位与门级排除）。`node --check`、standalone 构建、提取后的单文件脚本 `node --check` 与 `git diff --check` 通过；更新 `dist/qec.html` 至 874,403 bytes（853.9 KiB）。 |
 | R163 | **QEC hub 单次纠错逐步回放** | 八个模式 HUD 新增共享五阶段样本回放（输入态/编码→故障注入→综合征→解码修正→逻辑结局），支持逐步、自动演示与固定/跟随末次 shot；不额外抽样、不影响 MC 计数。jsdom 八模式回放控件冒烟 8/8，步进后 shot 固定且采样数不变；README 记录交互及抽象模型的显示边界。 |
-| R170 | **表面码 hook-safe CNOT 后缀顺序** | Z checks 用 TL→TR→BL→BR、X checks 用 TL→BL→TR→BR，使 ancilla hook 分别沿横/纵向、避开对应逻辑串方向。d=3/5 当前 extraction-memory 单故障目录均唯一联合签名、全覆盖且逻辑/残余 syndrome 失败为 0；前轮 d=3 的碰撞故障在新顺序下历史分离。仅为理想初态/理想终端边界与有效 idle 模型下的穷举通过；阈值扫描与距离外推仍关闭。 |
+| R171 | **表面码输入边界、破坏性末端读出与逐层并行 idle** | 加入初始数据帧噪声位点、4 层无碰撞 CNOT 并行排程、每层空闲数据/ancilla idle 与 X/Z 分支终端数据读出；d=3/5 全目录穷举各 0 最终逻辑/读出 syndrome 失败。联合签名歧义 4/360、6/2108，32/54 个机制安全回退；不是带噪编码器或完整器件模型，阈值扫描/外推仍关闭。 |
+| R170 | **表面码 hook-safe CNOT 后缀顺序** | Z checks 用 TL→TR→BL→BR、X checks 用 TL→BL→TR→BR，使 ancilla hook 分别沿横/纵向、避开对应逻辑串方向。d=3/5 当时的 extraction-memory 单故障目录唯一联合签名、全覆盖且逻辑/残余 syndrome 失败为 0；前轮 d=3 的碰撞故障在新顺序下历史分离。仅为理想初态/理想终端边界与有效 idle 模型下的穷举通过；阈值扫描与距离外推仍关闭。 |
 | R169 | **表面码单故障诊断：提取方向与检测图路由修正** | 修正 X/Z frame 检测图路由、终端 syndrome 检查与 ancilla 奇偶传播；删除双重计入的直接 data-syndrome 项。保留轮后 idle 与 round-boundary detector 对齐。d3 联合覆盖 1021/1209、18 个歧义签名，混合回退仍有 X/Z 逻辑失败 18/188、12/188；d5 覆盖 6615/6615、零歧义/零逻辑失败。prep 反例修复；完整容错验收仍未通过，阈值扫描继续禁用。 |
 | R164 | **QEC 有限样本区间反馈** | 八模式 HUD 显示 P_L 的 95% Wilson 区间与事件数；0 次失效也报告非零置信上限。门噪声模式显示样本保真度均值的近似区间；加入基于 N/事件数的样本充分性提示，并明确不是显著性/阈值/停止判据。Wilson 数值检查 + 八模式 jsdom 冒烟通过。 |
 | R165 | **表面码 circuit-level 噪声首阶段** | 新增显式 ancilla+CNOT 稳定子提取 shot：CNOT 双比特退极化 + ancilla 准备/读出错误，d=3/5、d 轮 + 理想终端综合征；复用时空 MWPM 的边缘近似权重。因 decoder 不处理 hook/相关故障，明确禁用阈值扫描/距离外推；样本保留单次回放。引擎 p=0/残余综合征/批流对账及 jsdom UI 校验通过。 |
@@ -1632,6 +1632,27 @@ dist 重建：qcircuit 97.4→102.5 KB；noise/qec 各一行注释同步（R100 
 ### 文档
 
 README 噪声页用法补充矩阵与曲线探针操作。
+
+---
+
+## R171（2026-10-31）表面码边界通道、终端破坏性读出与四层并行排程
+
+### 实现
+- [x] 将 extraction round 改为 4 层 CNOT 并行排程；Z checks 使用 TL→TR→BL→BR，X checks 使用 TL→BL→TR→BR。逐层记录空闲数据位/ancilla 并注入 idle depolarization；导出 schedule audit，显式检查层内数据/ancilla 冲突。
+- [x] 在提取前加入每个数据位的输入边界 Pauli 通道，并把输入 X/Z mask 放入首 detector/error layer 与单故障目录。此通道描述“已编码帧上的初始错误”，没有制备或容错编码电路。
+- [x] 以带噪数据位读出取代理想末端 syndrome 边界：分成 Z-basis 与 X-basis 两个替代读出分支，每数据位一个经典 bit-flip 位点；从整串数据读数恢复终端 syndrome，再用静态空间解码得到逻辑读出。两基独立审计，不声称同一 shot 同时测量不对易逻辑量。
+- [x] 更新 joint signature 表：唯一联合历史用 X/Z 配对修正；歧义时安全复用无歧义单帧查表，未解决帧保留时空 MWPM 回退。回归现在要求真实触发歧义/回退，并验证最终逻辑读出和终端读出 syndrome，不要求所有机制都能由 joint lookup 唯一分类。
+- [x] 同步 `mode-surf.js` HUD/hint、README 功能与边界说明；保留禁用阈值扫描、距离外推与额外换图抽样。
+
+### 验证
+- `node scripts/verify-qec-stage.mjs` PASS：d=3 joint 覆盖 1,321/1,353，32 个机制进入回退，4/360 joint signatures 歧义；d=5 joint 覆盖 6,851/6,905，54 个机制进入回退，6/2,108 signatures 歧义。两距离 unambiguous lookup 与回退分支的最终 X/Z 逻辑读出失败和读出 syndrome 失败均为 0；另强制验证输入 X、终端 X/Z 基读出翻转、idle 与 prep 位点。
+- 排程 audit：d=3 共 24 个 CNOT，4 层均无冲突，每层 3 个 data / 2 个 ancilla 空闲位点；d=5 共 80 个 CNOT，每层 5 个 data / 4 个 ancilla 空闲位点。
+- 同脚本中的 N=120 circuit ensemble 数字仅验证 batch/stream 确定性，不作物理性能/阈值结论。`npm run build:standalone` PASS，更新 `dist/qec.html` 至 919.5 KB；抽取该文件 inline module 后 `node --check` PASS；`node --check` 三个源码/测试文件与 `git diff --check` PASS。bundler 仍打印既有缩进 import 示例提示，不影响 build。
+
+### 判决边界
+- **当前枚举目录的单故障逻辑读出验收通过（d=3/5）**，包括输入边界、CNOT、ancilla prep/readout、逐层 idle 与终端数据读出 bit flip；ambiguous histories 仍有安全回退，诚实保留歧义和回退计数。
+- 这不等于完整端到端容错：没有真实带噪编码制备/容错 encoder；边界 Pauli channel 不是 encoding circuit。终端是 Pauli-frame 下的双基替代 destructive data-readout 模型，不是完整量子态测量仿真。idle 按空闲并行层注错，但没有设备时长/T₁/T₂/泄漏/相干/串扰标定，高阶故障也未联合解码。
+- 不据此声称 circuit-level 阈值或任意噪声模型下的 FT；阈值扫描、距离外推、额外换图抽样继续禁用。
 
 ---
 

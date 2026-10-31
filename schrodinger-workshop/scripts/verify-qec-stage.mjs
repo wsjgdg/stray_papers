@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { scBuild } from '../src/physics/surfacecode.js';
-import { scCircuitEnsemble, scCircuitStream, scCircuitTrial, scCircuitFaultAudit } from '../src/physics/surfacecircuit.js';
+import { scCircuitEnsemble, scCircuitStream, scCircuitTrial, scCircuitFaultAudit, scCircuitScheduleAudit } from '../src/physics/surfacecircuit.js';
 import { mulberry32 } from '../src/physics/qcircuit.js';
 import { wilsonInterval } from '../src/qec/confidence.js';
 
@@ -32,6 +32,12 @@ for (const d of [3, 5]){
 
 for (const d of [3, 5]){
   const code = scBuild(d);
+  const schedule = scCircuitScheduleAudit(code);
+  assert.equal(schedule.layers, 4, `d=${d}: extraction must use four CNOT layers`);
+  assert.equal(schedule.collisionFree, true, `d=${d}: parallel CNOT layers must not collide on data or ancillas`);
+  assert.equal(schedule.gates, d === 3 ? 24 : 80, `d=${d}: every stabilizer interaction is scheduled once`);
+  assert.deepEqual(schedule.dataIdle, Array(4).fill(d), `d=${d}: inactive data idles are counted per parallel layer`);
+  assert.deepEqual(schedule.ancillaIdle, Array(4).fill(d - 1), `d=${d}: inactive ancilla idles are counted per parallel layer`);
   const audit = scCircuitFaultAudit(code);
   assert.ok(audit.locations > 0, `d=${d}: single-fault catalog must be nonempty`);
   assert.ok(audit.xCovered > 0 && audit.zCovered > 0, `d=${d}: per-frame lookup must retain fallback coverage`);
@@ -43,14 +49,14 @@ for (const d of [3, 5]){
   assert.equal(audit.lookupSyndromeFailX + audit.lookupSyndromeFailZ, 0, `d=${d}: unambiguous lookup must close final syndrome`);
   assert.equal(audit.silentLogicalX + audit.silentLogicalZ, 0, `d=${d}: no single fault may be logically silent`);
   assert.equal(audit.jointFallbackSyndromeFailX + audit.jointFallbackSyndromeFailZ, 0, `d=${d}: joint ambiguity fallback must close terminal syndrome`);
-  assert.equal(audit.jointAmbiguous, 0, `d=${d}: hook-safe schedule must eliminate ambiguous single-fault joint signatures`);
-  assert.equal(audit.jointCovered, audit.locations, `d=${d}: every enumerated single fault must use the joint table`);
-  assert.equal(audit.jointFallbackMechanisms, 0, `d=${d}: no single fault may fall through to the ambiguous-signature decoder`);
+  assert.ok(audit.jointAmbiguous > 0, `d=${d}: terminal-boundary ambiguities must be detected, not hidden`);
+  assert.ok(audit.jointCovered < audit.locations, `d=${d}: ambiguous signatures must use the documented fallback path`);
+  assert.ok(audit.jointFallbackMechanisms > 0, `d=${d}: exercise the safe per-frame/MWPM fallback path`);
   assert.equal(audit.jointFallbackLogicalFailX + audit.jointFallbackLogicalFailZ, 0,
     `d=${d}: every enumerated single fault must preserve logical class`);
   const injected = scCircuitTrial(code, {
     p: 0.001, rounds: d,
-    forceFaults: [{ round: 1, location: 'idle', q: Math.floor(d * d / 2), pauli: 'X' }],
+    forceFaults: [{ round: 1, location: 'idle', q: 0, layer: 1, pauli: 'X' }],
   }, () => 0.999);
   assert.equal(injected.faultCount, 1, `d=${d}: forceFaults must inject exactly one event`);
   assert.equal(injected.fail, false, `d=${d}: representative one-data-fault shot must correct`);
@@ -65,11 +71,25 @@ for (const d of [3, 5]){
   assert.equal(prepFault.badSyn, false, `d=${d}: prep-fault case closes syndrome`);
   assert.equal(prepFault.fail, false, `d=${d}: prep-fault case must preserve logical state`);
   assert.equal(prepFault.jointLookup, true, `d=${d}: prep-fault case uses unambiguous joint lookup`);
-  assert.equal(injected.rawSynZ[0], 0, `d=${d}: post-readout idle X cannot alter the completed current-round readout`);
-  assert.notEqual(injected.rawSynZ[1], 0, `d=${d}: post-readout idle X becomes visible in the next round`);
-  assert.equal(injected.defX[0], 0, `d=${d}: detector must not move the post-readout idle fault into the prior round`);
-  assert.notEqual(injected.defX[1], 0, `d=${d}: detector records the idle fault when the next measurement sees it`);
-  console.log(`single-fault d=${d}: joint coverage=${audit.jointCovered}/${audit.locations}; ambiguous signatures=${audit.jointAmbiguous}/${audit.jointSignatures}; residual logical/syndrome failures=0; prep-fault repaired`);
+  const inputFault = scCircuitTrial(code, {
+    p: 0.001, rounds: d,
+    forceFaults: [{ round: 0, location: 'input', q: 0, pauli: 'X' }],
+  }, () => 0.999);
+  assert.equal(inputFault.faultCount, 1, `d=${d}: input-boundary catalog injects exactly one event`);
+  assert.equal(inputFault.fail, false, `d=${d}: input-boundary fault must preserve final logical readout`);
+  assert.equal(inputFault.badSyn, false, `d=${d}: input-boundary fault closes final measured syndrome`);
+  for (const basis of ['X','Z']){
+    const finalReadout = scCircuitTrial(code, {
+      p: 0.001, rounds: d,
+      forceFaults: [{ round: d + 1, location: 'final-readout', basis, q: 0 }],
+    }, () => 0.999);
+    assert.equal(finalReadout.faultCount, 1, `d=${d}: final ${basis}-basis readout fault injects exactly once`);
+    assert.equal(finalReadout.fail, false, `d=${d}: final ${basis}-basis readout fault preserves logical result`);
+    assert.equal(finalReadout.badSyn, false, `d=${d}: final ${basis}-basis readout decoder closes syndrome`);
+  }
+  assert.notEqual(injected.rawSynZ[0], 0, `d=${d}: in-round idle X is visible in the end-of-round check readout`);
+  assert.notEqual(injected.defX[0], 0, `d=${d}: detector records the idle fault in the round where it occurs`);
+  console.log(`single-fault d=${d}: joint=${audit.jointCovered}/${audit.locations}, fallback=${audit.jointFallbackMechanisms}, ambiguous signatures=${audit.jointAmbiguous}/${audit.jointSignatures}; logical/readout-syndrome failures=0`);
 }
 
 const zero = wilsonInterval(0, 100);

@@ -16164,12 +16164,13 @@ function scSpaceStream(code, cfg = {}){
 
 /* ===== src/physics/surfacecircuit.js ===== */
 /* Circuit-level rotated surface-code memory diagnostic prototype.
- * Each round measures stabilizers with fresh ancillas and explicit CNOT extraction.
- * Noise includes post-CNOT two-qubit depolarization, ancilla prep/readout faults,
- * and one effective data-idle depolarization location per data qubit per round.
- * A paired X/Z single-fault signature table handles unambiguous first-order cases;
- * ambiguous pairs may use safe per-frame signatures, then marginal-weight MWPM.
- * This is not a calibrated threshold model or a full scheduled idle/T1/T2 model.
+ * Each round uses four collision-free parallel CNOT layers with fresh ancillas.
+ * Noise includes an initial data-frame boundary channel, post-CNOT two-qubit
+ * depolarization, ancilla prep/readout faults, per-layer idle depolarization, and
+ * destructive final data-readout bit flips (audited in separate X/Z basis views).
+ * A paired X/Z single-fault table handles unambiguous histories; unresolved frames
+ * use safe per-frame lookup then marginal-weight MWPM. This is not a fault-tolerant
+ * encoder, calibrated threshold model, or complete device-level memory cycle.
  */
 
 const scCircuitPopcount = v => { let c = 0; while (v){ c += Number(v & 1n); v >>= 1n; } return c; };
@@ -16180,6 +16181,12 @@ const scCircuitSyndrome = (graph, mask) => {
   let s = 0;
   graph.stab.forEach((st, k) => { if (scCircuitParity(st.mask & mask)) s |= 1 << k; });
   return s;
+};
+const scCircuitFinalDecode = (code, frameMask, readoutMask, type) => {
+  const decoded = scDecode(code, frameMask ^ readoutMask, type);
+  const graph = type === 'X' ? code.xg : code.zg;
+  const dual = type === 'X' ? code.zl : code.xl;
+  return { ...decoded, logical: scCircuitParity(decoded.residual & dual), syndrome: scCircuitSyndrome(graph, decoded.residual) };
 };
 const scCircuitMaskText = (mask, n) => Array.from({ length: n }, (_, k) => (mask >> k) & 1 ? '1' : '0').join('');
 const SC_CIRCUIT_PAULI_BITS = { I: [0,0], X: [1,0], Y: [1,1], Z: [0,1] };
@@ -16192,21 +16199,24 @@ const SC_CIRCUIT = {
   distances: [3, 5],
   rounds: d => d,
   dpMax: SC_PHEN.dpMax,
-  noise: 'post-CNOT two-qubit depolarization + ancilla SPAM + one effective data-idle location per round',
+  noise: 'input data-frame channel + post-CNOT depolarization + ancilla SPAM + per-layer idles + destructive final data-readout bit flips (separate X/Z basis audit)',
 };
 
 function scCircuitWeights(code, p){
   const px = Math.max(0, Math.min(0.49, Number(p) || 0));
   const gatesPerData = (code.X.reduce((a, s) => a + s.w, 0) + code.Z.reduce((a, s) => a + s.w, 0)) / code.n;
-  const avgCheckWeight = (code.X.reduce((a, s) => a + s.w, 0) + code.Z.reduce((a, s) => a + s.w, 0)) / (code.X.length + code.Z.length);
+  const checks = code.X.length + code.Z.length;
+  const avgCheckWeight = (code.X.reduce((a, s) => a + s.w, 0) + code.Z.reduce((a, s) => a + s.w, 0)) / checks;
+  const schedule = scCircuitScheduleAudit(code);
+  const avgDataIdles = schedule.dataIdle.reduce((a, b) => a + b, 0) / code.n;
+  const avgAncillaIdles = schedule.ancillaIdle.reduce((a, b) => a + b, 0) / checks;
   /* A two-qubit depolarizing fault has each marginal Pauli component with chance 8p/15.
      These are marginal matching weights, not the full correlated circuit likelihood. */
-  const comp = 8 * px / 15;
-  /* One effective data-idle depolarizing location per qubit between rounds. */
-  const pSpace = 1 - (1 - px / 3) * Math.pow(1 - comp, gatesPerData);
-  const pTime = 1 - Math.pow(1 - px, 2) * Math.pow(1 - comp, avgCheckWeight);
+  const comp = 8 * px / 15, idleComp = 2 * px / 3;
+  const pSpace = 1 - Math.pow(1 - idleComp, 1 + avgDataIdles) * (1 - px) * Math.pow(1 - comp, gatesPerData);
+  const pTime = 1 - Math.pow(1 - px, 2) * Math.pow(1 - idleComp, avgAncillaIdles) * Math.pow(1 - comp, avgCheckWeight);
   const weight = x => x <= 0 ? Infinity : Math.log((1 - x) / x);
-  return { pSpace, pTime, wS: weight(pSpace), wT: weight(pTime), gatesPerData, avgCheckWeight };
+  return { pSpace, pTime, wS: weight(pSpace), wT: weight(pTime), gatesPerData, avgCheckWeight, avgDataIdles, avgAncillaIdles };
 }
 
 function scCircuitPauli(rng, p){
@@ -16217,102 +16227,145 @@ function scCircuitPauli(rng, p){
 
 function scCircuitChecks(code){
   const out = [];
+  let gateIndex = 0;
   for (const type of ['Z', 'X']){
     const checks = type === 'Z' ? code.Z : code.X;
     for (let ci = 0; ci < checks.length; ci++){
       const st = checks[ci];
       const cells = new Map(st.sup.map(q => [`${Math.floor(q / code.d)},${q % code.d}`, q]));
-      /* Hook-safe suffix order: Z-ancilla Z faults make horizontal data hooks;
-         X-ancilla X faults make vertical data hooks, both perpendicular to the
-         corresponding minimum-weight logical string. */
+      /* Four collision-free parallel CNOT layers. The order is hook-safe:
+         Z ancilla Z hooks are horizontal; X ancilla X hooks are vertical. */
       const order = type === 'Z' ? [[0,0],[0,1],[1,0],[1,1]] : [[0,0],[1,0],[0,1],[1,1]];
-      const ordered = order.map(([dr, dc]) => cells.get(`${st.i + dr},${st.j + dc}`)).filter(q => q !== undefined);
-      out.push({ type, ci, st, ordered });
+      const interactions = order.map(([dr, dc], layer) => {
+        const q = cells.get(`${st.i + dr},${st.j + dc}`);
+        return q === undefined ? null : { q, layer, gate: gateIndex++ };
+      }).filter(Boolean);
+      out.push({ type, ci, st, interactions, ordered: interactions.map(e => e.q) });
     }
   }
   return out;
 }
 
+function scCircuitScheduleAudit(code){
+  const checks = scCircuitChecks(code), layers = Array.from({ length: 4 }, () => ({ data: new Map(), ancilla: new Map() }));
+  for (const check of checks) for (const op of check.interactions){
+    const layer = layers[op.layer];
+    layer.data.set(op.q, (layer.data.get(op.q) || 0) + 1);
+    layer.ancilla.set(check.ci + ':' + check.type, (layer.ancilla.get(check.ci + ':' + check.type) || 0) + 1);
+  }
+  const dataConflicts = layers.flatMap((layer, i) => [...layer.data].filter(([, n]) => n > 1).map(([q]) => ({ layer: i, q })));
+  const ancillaConflicts = layers.flatMap((layer, i) => [...layer.ancilla].filter(([, n]) => n > 1).map(([check]) => ({ layer: i, check })));
+  return {
+    layers: layers.length,
+    gates: checks.reduce((n, check) => n + check.interactions.length, 0),
+    dataConflicts, ancillaConflicts,
+    dataIdle: layers.map(layer => code.n - layer.data.size),
+    ancillaIdle: layers.map(layer => checks.length - layer.ancilla.size),
+    collisionFree: !dataConflicts.length && !ancillaConflicts.length,
+  };
+}
+
 function scCircuitRound(code, p, rng, roundIndex, frame, forcedFaults = []){
+  const checks = scCircuitChecks(code);
   const startX = frame.x, startZ = frame.z;
   const outcomeX = new Array(code.X.length).fill(0), outcomeZ = new Array(code.Z.length).fill(0);
+  const ax = new Array(checks.length).fill(0), az = new Array(checks.length).fill(0);
   const faults = [];
-  let gateIndex = 0, totalFaults = 0;
+  let totalFaults = 0;
   const record = f => { totalFaults++; if (faults.length < 64) faults.push({ round: roundIndex + 1, ...f }); };
   const applyData = (q, x, z) => { if (x) frame.x ^= scCircuitBit(q); if (z) frame.z ^= scCircuitBit(q); };
-  const forcedAt = (location, check = null, gate = null, q = null) => forcedFaults.find(f =>
+  const forcedAt = (location, check = null, gate = null, q = null, layer = null) => forcedFaults.find(f =>
     f.round === roundIndex + 1 && f.location === location && (f.check == null || f.check === check) &&
-    (f.gate == null || f.gate === gate) && (f.q == null || f.q === q));
+    (f.gate == null || f.gate === gate) && (f.q == null || f.q === q) &&
+    (f.layer == null ? location !== 'idle' || layer === 0 : f.layer === layer));
 
-  for (const { type, ci, st, ordered } of scCircuitChecks(code)){
-    let ax = 0, az = 0;
-    const check = `${type}${ci}`;
-    /* Prepare |0> ancilla for Z checks and |+> for X checks. */
+  for (let ci = 0; ci < checks.length; ci++){
+    const { type, ci: checkIndex } = checks[ci];
+    const check = `${type}${checkIndex}`;
     const prepFault = forcedAt('prep', check);
     if (prepFault || rng() < p){
-      if (type === 'Z') ax = 1; else az = 1;
+      if (type === 'Z') ax[ci] = 1; else az[ci] = 1;
       record({ location: 'prep', check, q: 'ancilla', t: type === 'Z' ? 'X' : 'Z' });
     }
-    for (const q of ordered){
-      const gi = gateIndex++;
-      /* Standard extraction orientation:
-         Z check: data control → |0> ancilla target; X check: |+> ancilla control → data target.
-         This makes each ancilla measurement accumulate the intended stabilizer parity. */
+  }
+
+  for (let layer = 0; layer < 4; layer++){
+    const activeData = new Set(), activeChecks = new Set();
+    for (let ci = 0; ci < checks.length; ci++){
+      const checkRec = checks[ci], op = checkRec.interactions.find(x => x.layer === layer);
+      if (!op) continue;
+      const { type, ci: checkIndex, st } = checkRec;
+      const check = `${type}${checkIndex}`, q = op.q;
+      activeData.add(q); activeChecks.add(ci);
+      /* Standard extraction CNOT conjugation before the post-gate noise. */
       if (type === 'Z'){
-        if (frame.x & scCircuitBit(q)) ax ^= 1;
-        if (az) frame.z ^= scCircuitBit(q);
+        if (frame.x & scCircuitBit(q)) ax[ci] ^= 1;
+        if (az[ci]) frame.z ^= scCircuitBit(q);
       } else {
-        if (ax) frame.x ^= scCircuitBit(q);
-        if (frame.z & scCircuitBit(q)) az ^= 1;
+        if (ax[ci]) frame.x ^= scCircuitBit(q);
+        if (frame.z & scCircuitBit(q)) az[ci] ^= 1;
       }
-      const force = forcedAt('cx', check, gi);
+      const force = forcedAt('cx', check, op.gate);
       const e = force ? scCircuitPauliPair(force.pauli) : scCircuitPauli(rng, p);
       if (e){
         if (type === 'Z'){
           applyData(q, e.cx, e.cz);
-          if (e.tx) ax ^= 1; if (e.tz) az ^= 1;
+          if (e.tx) ax[ci] ^= 1; if (e.tz) az[ci] ^= 1;
         } else {
-          if (e.cx) ax ^= 1; if (e.cz) az ^= 1;
+          if (e.cx) ax[ci] ^= 1; if (e.cz) az[ci] ^= 1;
           applyData(q, e.tx, e.tz);
         }
-        record({ location: 'cx', gate: gi, check, q, t: `${scCircuitPauliName(e.cx,e.cz)}/${scCircuitPauliName(e.tx,e.tz)}` });
+        record({ location: 'cx', gate: op.gate, check, q, layer, t: `${scCircuitPauliName(e.cx,e.cz)}/${scCircuitPauliName(e.tx,e.tz)}` });
       }
     }
+    /* One-qubit depolarizing idle channel on every qubit not participating in
+       this parallel CNOT layer, including inactive boundary ancillas. */
+    for (let q = 0; q < code.n; q++) if (!activeData.has(q)){
+      const force = forcedAt('idle', null, null, q, layer);
+      let name = force ? force.pauli : null;
+      if (!force && rng() < p) name = ['X','Y','Z'][Math.floor(rng() * 3)];
+      if (name){
+        const [ix, iz] = SC_CIRCUIT_PAULI_BITS[String(name).toUpperCase()] || [0,0];
+        applyData(q, ix, iz);
+        record({ location: 'idle', q, layer, t: String(name).toUpperCase() });
+      }
+    }
+    for (let ci = 0; ci < checks.length; ci++) if (!activeChecks.has(ci)){
+      const { type, ci: checkIndex } = checks[ci], check = `${type}${checkIndex}`;
+      const force = forcedAt('idle', check, null, 'ancilla', layer);
+      let name = force ? force.pauli : null;
+      if (!force && rng() < p) name = ['X','Y','Z'][Math.floor(rng() * 3)];
+      if (name){
+        const [ix, iz] = SC_CIRCUIT_PAULI_BITS[String(name).toUpperCase()] || [0,0];
+        ax[ci] ^= ix; az[ci] ^= iz;
+        record({ location: 'idle', check, q: 'ancilla', layer, t: String(name).toUpperCase() });
+      }
+    }
+  }
+
+  for (let ci = 0; ci < checks.length; ci++){
+    const { type, ci: checkIndex } = checks[ci], check = `${type}${checkIndex}`;
     const readoutFault = forcedAt('readout', check);
     const readoutFlip = !!readoutFault || rng() < p;
     if (readoutFlip) record({ location: 'readout', check, q: 'ancilla', t: 'bit flip' });
-    /* The CNOT sequence has already accumulated the data-check parity in the
-       ancilla frame (ax for Z checks, az for X checks); do not count it twice. */
-    const measured = type === 'Z'
-      ? ax ^ (readoutFlip ? 1 : 0)
-      : az ^ (readoutFlip ? 1 : 0);
-    if (type === 'Z') outcomeZ[ci] = measured;
-    else outcomeX[ci] = measured;
+    const measured = (type === 'Z' ? ax[ci] : az[ci]) ^ (readoutFlip ? 1 : 0);
+    if (type === 'Z') outcomeZ[checkIndex] = measured;
+    else outcomeX[checkIndex] = measured;
   }
-  /* One effective data-idle depolarizing location per qubit between full rounds. */
-  for (let q = 0; q < code.n; q++){
-    const force = forcedAt('idle', null, null, q);
-    let name = force ? force.pauli : null;
-    if (!force && rng() < p) name = ['X', 'Y', 'Z'][Math.floor(rng() * 3)];
-    if (name){
-      const [ix, iz] = SC_CIRCUIT_PAULI_BITS[String(name).toUpperCase()] || [0,0];
-      applyData(q, ix, iz);
-      record({ location: 'idle', q, t: String(name).toUpperCase() });
-    }
-  }
+
   const sx = outcomeX.reduce((m, v, i) => v ? m | (1 << i) : m, 0);
   const sz = outcomeZ.reduce((m, v, i) => v ? m | (1 << i) : m, 0);
-  /* η maps measured checks onto the post-idle round-boundary frame used by Δ layers. */
+  /* η maps measured checks onto the post-round frame used by Δ layers. */
   const trueX = scCircuitSyndrome(code.zg, frame.z);
   const trueZ = scCircuitSyndrome(code.xg, frame.x);
   return {
     deltaX: startX ^ frame.x, deltaZ: startZ ^ frame.z,
     synX: sx, synZ: sz, etaX: sx ^ trueX, etaZ: sz ^ trueZ,
-    faults, faultCount: totalFaults, gates: gateIndex,
+    faults, faultCount: totalFaults, gates: checks.reduce((n, check) => n + check.interactions.length, 0),
   };
 }
 
-function scCircuitDecodeFrame(code, type, errorLayers, measurementErrors, R, weights, dpMax, skipDecode = false){
+function scCircuitDecodeFrame(code, type, errorLayers, measurementErrors, R, weights, dpMax, skipDecode = false, terminalMeasurementErrors = 0){
   /* code.xg is the Z-check graph for X-frame errors; code.zg is the X-check graph for Z-frame errors. */
   const graphType = type;
   const g = graphType === 'X' ? code.xg : code.zg;
@@ -16324,6 +16377,7 @@ function scCircuitDecodeFrame(code, type, errorLayers, measurementErrors, R, wei
     let d = scCircuitSyndrome(g, e);
     if (l + 1 <= R) d ^= measurementErrors[l + 1];
     if (l >= 1) d ^= measurementErrors[l];
+    if (l === R) d ^= terminalMeasurementErrors;
     perLayer.push(d);
     for (let k = 0; k < nS; k++) if ((d >> k) & 1) defects.push(l * nn + k);
   }
@@ -16341,22 +16395,33 @@ function scCircuitDecodeFrame(code, type, errorLayers, measurementErrors, R, wei
 const SC_CIRCUIT_FAULT_CACHE = new Map();
 const scCircuitSignature = layers => layers.map(x => Number(x).toString(16)).join('.');
 function scCircuitFaultCatalog(code, R){
-  const faults = [];
+  const faults = [], checks = scCircuitChecks(code);
+  for (let q = 0; q < code.n; q++) for (const pauli of ['X','Y','Z'])
+    faults.push({ round: 0, location: 'input', q, pauli });
   for (let round = 1; round <= R; round++){
-    let gate = 0;
-    for (const check of scCircuitChecks(code)){
+    for (const check of checks){
       const checkName = `${check.type}${check.ci}`;
       faults.push({ round, location: 'prep', check: checkName, pauli: check.type === 'Z' ? 'X' : 'Z' });
-      for (const _q of check.ordered){
+      for (const op of check.interactions){
         for (const a of ['I','X','Y','Z']) for (const b of ['I','X','Y','Z'])
-          if (a !== 'I' || b !== 'I') faults.push({ round, location: 'cx', check: checkName, gate, pauli: a + b });
-        gate++;
+          if (a !== 'I' || b !== 'I') faults.push({ round, location: 'cx', check: checkName, gate: op.gate, pauli: a + b });
       }
       faults.push({ round, location: 'readout', check: checkName, pauli: 'flip' });
     }
-    for (let q = 0; q < code.n; q++) for (const pauli of ['X','Y','Z'])
-      faults.push({ round, location: 'idle', q, pauli });
+    for (let layer = 0; layer < 4; layer++){
+      const activeData = new Set(), activeChecks = new Set();
+      for (let ci = 0; ci < checks.length; ci++){
+        const op = checks[ci].interactions.find(x => x.layer === layer);
+        if (op){ activeData.add(op.q); activeChecks.add(ci); }
+      }
+      for (let q = 0; q < code.n; q++) if (!activeData.has(q))
+        for (const pauli of ['X','Y','Z']) faults.push({ round, location: 'idle', q, layer, pauli });
+      for (let ci = 0; ci < checks.length; ci++) if (!activeChecks.has(ci))
+        for (const pauli of ['X','Y','Z']) faults.push({ round, location: 'idle', check: `${checks[ci].type}${checks[ci].ci}`, q: 'ancilla', layer, pauli });
+    }
   }
+  for (let q = 0; q < code.n; q++) for (const basis of ['Z','X'])
+    faults.push({ round: R + 1, location: 'final-readout', basis, q, pauli: 'flip' });
   return faults;
 }
 function scCircuitIndexFault(map, signature, mask, logical){
@@ -16397,13 +16462,15 @@ function scCircuitFaultTable(code, R){
     const ex = X.get(sx), ez = Z.get(sz);
     if (ex && !ex.ambiguous){
       const residual = shot.mx ^ ex.correction;
-      if (scCircuitParity(residual & code.zl)) lookupLogicalFailX++;
-      if (scCircuitSyndrome(code.xg, residual)) lookupSyndromeFailX++;
+      const decoded = scCircuitFinalDecode(code, residual, shot.finalReadoutZ, 'X');
+      if (decoded.logical) lookupLogicalFailX++;
+      if (decoded.syndrome) lookupSyndromeFailX++;
     }
     if (ez && !ez.ambiguous){
       const residual = shot.mz ^ ez.correction;
-      if (scCircuitParity(residual & code.xl)) lookupLogicalFailZ++;
-      if (scCircuitSyndrome(code.zg, residual)) lookupSyndromeFailZ++;
+      const decoded = scCircuitFinalDecode(code, residual, shot.finalReadoutX, 'Z');
+      if (decoded.logical) lookupLogicalFailZ++;
+      if (decoded.syndrome) lookupSyndromeFailZ++;
     }
   }
   const xEntries = [...X.values()], zEntries = [...Z.values()], jEntries = [...J.values()];
@@ -16420,10 +16487,12 @@ function scCircuitFaultTable(code, R){
     if (!entry || entry.ambiguous) continue;
     const shot = scCircuitTrial(code, { p: 0, rounds: R, forceFaults: [item.fault], skipLookup: true }, mulberry32(1));
     const residualX = shot.mx ^ entry.correctionX, residualZ = shot.mz ^ entry.correctionZ;
-    if (scCircuitParity(residualX & code.zl)) jointLookupLogicalFailX++;
-    if (scCircuitParity(residualZ & code.xl)) jointLookupLogicalFailZ++;
-    if (scCircuitSyndrome(code.xg, residualX)) jointLookupSyndromeFailX++;
-    if (scCircuitSyndrome(code.zg, residualZ)) jointLookupSyndromeFailZ++;
+    const decodedX = scCircuitFinalDecode(code, residualX, shot.finalReadoutZ, 'X');
+    const decodedZ = scCircuitFinalDecode(code, residualZ, shot.finalReadoutX, 'Z');
+    if (decodedX.logical) jointLookupLogicalFailX++;
+    if (decodedZ.logical) jointLookupLogicalFailZ++;
+    if (decodedX.syndrome) jointLookupSyndromeFailX++;
+    if (decodedZ.syndrome) jointLookupSyndromeFailZ++;
   }
   const jointFallbackFaults = faultSignatures
     .filter(item => J.get(`${item.sx}||${item.sz}`)?.ambiguous)
@@ -16461,8 +16530,8 @@ function scCircuitJointFallbackAudit(code, R, table){
     if (shot.lookupZ) zLookup++;
     if (shot.xfail) logicalFailX++;
     if (shot.zfail) logicalFailZ++;
-    if (scCircuitSyndrome(code.xg, shot.resX)) syndromeFailX++;
-    if (scCircuitSyndrome(code.zg, shot.resZ)) syndromeFailZ++;
+    if (shot.readoutSynZ) syndromeFailX++;
+    if (shot.readoutSynX) syndromeFailZ++;
   }
   return { mechanisms, xLookup, zLookup, logicalFailX, logicalFailZ, syndromeFailX, syndromeFailZ };
 }
@@ -16485,22 +16554,50 @@ function scCircuitFaultAudit(code, rounds = code.d){
     silentLogicalX: t.silentLogicalX, silentLogicalZ: t.silentLogicalZ, ms: t.ms };
 }
 
-/** One circuit-level memory shot: d noisy stabilizer-extraction rounds + ideal terminal syndrome. */
+/** One Pauli-frame memory shot: noisy input boundary + scheduled extraction + separate X/Z destructive data-readout branches. */
 function scCircuitTrial(code, cfg = {}, rng = Math.random, grs){
   const p = Math.max(0, Math.min(0.49, Number(cfg.p ?? 0.01)));
   const R = cfg.rounds === undefined ? code.d : Math.max(1, Math.floor(cfg.rounds));
-  const frame = { x: 0n, z: 0n }, rounds = [], faultList = [];
-  let faultCount = 0, cnotCount = 0;
+  const frame = { x: 0n, z: 0n }, rounds = [], faultList = [], forceFaults = cfg.forceFaults || [];
+  let faultCount = 0, cnotCount = 0, inputX = 0n, inputZ = 0n;
+  for (let q = 0; q < code.n; q++){
+    const force = forceFaults.find(f => f.location === 'input' && f.q === q);
+    let name = force ? force.pauli : null;
+    if (!force && rng() < p) name = ['X','Y','Z'][Math.floor(rng() * 3)];
+    if (name){
+      const [ix, iz] = SC_CIRCUIT_PAULI_BITS[String(name).toUpperCase()] || [0,0];
+      if (ix) frame.x ^= scCircuitBit(q), inputX ^= scCircuitBit(q);
+      if (iz) frame.z ^= scCircuitBit(q), inputZ ^= scCircuitBit(q);
+      faultCount++;
+      if (faultList.length < 64) faultList.push({ round: 0, location: 'input', q, t: String(name).toUpperCase() });
+    }
+  }
   for (let r = 0; r < R; r++){
-    const out = scCircuitRound(code, p, rng, r, frame, cfg.forceFaults || []);
+    const out = scCircuitRound(code, p, rng, r, frame, forceFaults);
     rounds.push(out);
     faultCount += out.faultCount; cnotCount += out.gates;
     for (const f of out.faults){ if (faultList.length < 64) faultList.push(f); }
   }
+  let finalReadoutX = 0n, finalReadoutZ = 0n;
+  for (let q = 0; q < code.n; q++){
+    for (const basis of ['Z','X']){
+      const force = forceFaults.find(f => f.location === 'final-readout' && f.basis === basis && f.q === q);
+      if (force || rng() < p){
+        if (basis === 'Z') finalReadoutZ |= scCircuitBit(q);
+        else finalReadoutX |= scCircuitBit(q);
+        faultCount++;
+        if (faultList.length < 64) faultList.push({ round: R + 1, location: 'final-readout', basis, q, t: 'bit flip' });
+      }
+    }
+  }
+  const terminalMeasurementX = scCircuitSyndrome(code.xg, finalReadoutZ);
+  const terminalMeasurementZ = scCircuitSyndrome(code.zg, finalReadoutX);
   const weights = scCircuitWeights(code, p);
   const dpMax = cfg.dpMax === undefined ? SC_CIRCUIT.dpMax : cfg.dpMax;
-  const x = scCircuitDecodeFrame(code, 'X', rounds.map(r => r.deltaX), [0, ...rounds.map(r => r.etaZ)], R, weights, dpMax, !!cfg.skipLookup);
-  const z = scCircuitDecodeFrame(code, 'Z', rounds.map(r => r.deltaZ), [0, ...rounds.map(r => r.etaX)], R, weights, dpMax, !!cfg.skipLookup);
+  const errorLayersX = rounds.map(r => r.deltaX), errorLayersZ = rounds.map(r => r.deltaZ);
+  errorLayersX[0] ^= inputX; errorLayersZ[0] ^= inputZ;
+  const x = scCircuitDecodeFrame(code, 'X', errorLayersX, [0, ...rounds.map(r => r.etaZ)], R, weights, dpMax, !!cfg.skipLookup, terminalMeasurementX);
+  const z = scCircuitDecodeFrame(code, 'Z', errorLayersZ, [0, ...rounds.map(r => r.etaX)], R, weights, dpMax, !!cfg.skipLookup, terminalMeasurementZ);
   let corrX = x.corr, corrZ = z.corr, decoderX = 'mwpm', decoderZ = 'mwpm';
   if (!cfg.skipLookup && cfg.decoder !== 'mwpm'){
     const table = scCircuitFaultTable(code, R);
@@ -16518,22 +16615,27 @@ function scCircuitTrial(code, cfg = {}, rng = Math.random, grs){
     }
   }
   const resX = frame.x ^ corrX, resZ = frame.z ^ corrZ;
-  const xfail = scCircuitParity(resX & code.zl), zfail = scCircuitParity(resZ & code.xl);
+  const measuredZ = scCircuitFinalDecode(code, resX, finalReadoutZ, 'X');
+  const measuredX = scCircuitFinalDecode(code, resZ, finalReadoutX, 'Z');
+  const xfail = measuredZ.logical, zfail = measuredX.logical;
   const synAfterX = scCircuitSyndrome(code.xg, resX), synAfterZ = scCircuitSyndrome(code.zg, resZ);
+  const readoutSynZ = measuredZ.syndrome, readoutSynX = measuredX.syndrome;
   const fallback = Number(decoderX === 'mwpm' && x.mode === 'greedy') + Number(decoderZ === 'mwpm' && z.mode === 'greedy');
-  const finalSynX = scCircuitSyndrome(code.zg, frame.z), finalSynZ = scCircuitSyndrome(code.xg, frame.x);
+  const finalSynX = scCircuitSyndrome(code.zg, frame.z ^ finalReadoutX), finalSynZ = scCircuitSyndrome(code.xg, frame.x ^ finalReadoutZ);
   const synRounds = rounds.map((r, i) => `R${i + 1}:X${scCircuitMaskText(r.synX, code.X.length)}/Z${scCircuitMaskText(r.synZ, code.Z.length)}`);
   return {
     fail: !!(xfail || zfail), xfail: !!xfail, zfail: !!zfail,
     mx: frame.x, mz: frame.z, corrX, corrZ, resX, resZ,
+    finalReadoutX, finalReadoutZ, measCorrX: measuredX.corr, measCorrZ: measuredZ.corr,
     kx: x.k, kz: z.k, modeX: decoderX, modeZ: decoderZ,
     decoderX, decoderZ, lookupX: decoderX.includes('lookup'), lookupZ: decoderZ.includes('lookup'), jointLookup: decoderX === 'joint single-fault lookup' && decoderZ === 'joint single-fault lookup',
     defX: x.perLayer, defZ: z.perLayer,
-    errX: [...rounds.map(r => r.deltaX), 0n], errZ: [...rounds.map(r => r.deltaZ), 0n],
+    errX: [...errorLayersX, 0n], errZ: [...errorLayersZ, 0n],
     synRounds, rawSynX: rounds.map(r => r.synX), rawSynZ: rounds.map(r => r.synZ),
     etaX: rounds.map(r => r.etaX), etaZ: rounds.map(r => r.etaZ),
     finalSynX, finalSynZ,
-    badSyn: !!(synAfterX || synAfterZ), fallback, rounds: R, R,
+    badSyn: !!(readoutSynZ || readoutSynX), badFrameSyn: !!(synAfterX || synAfterZ),
+    readoutSynX, readoutSynZ, fallback, rounds: R, R,
     faults: faultList, faultCount, cnotCount, faultsTruncated: faultCount > faultList.length,
     p, pIdle: p, pSpace: weights.pSpace, pTime: weights.pTime,
   };
@@ -16822,7 +16924,7 @@ class SurfApp {
     mk(this.q('#sfMeas'), [
       { v: 'ideal', label: '单帧（码容量）', title: '综合征测量理想：二维匹配图' },
       { v: 'noisy', label: '带噪测量', title: 'phenomenological：每轮读出以 q 出错，时间维进匹配图' },
-      { v: 'circuit', label: '电路级（首阶段）', title: '显式 ancilla 稳定子提取；CNOT 退极化 + ancilla 准备/读出错误；仅 d=3/5，当前匹配器忽略相关性，不用于阈值结论' },
+      { v: 'circuit', label: '电路级（首阶段）', title: 'd=3/5：含初始数据边界噪声、四层并行 CNOT、逐层 idle 与 X/Z 两种独立终端破坏性数据读出；不是带噪编码器或阈值模型' },
     ], v => {
       this.state.meas = v;
       if ((v === 'noisy' || v === 'circuit') && this.state.d === 7) this.state.d = 5;
@@ -16906,9 +17008,9 @@ class SurfApp {
     this.q('#sfTrialsO').textContent = s.trials;
     const pLabel = this.q('#sfPLabel'); if (pLabel) pLabel.textContent = this.circuit ? '每个电路位置的错误率 p' : '每比特错误率 p';
     const snap = this.q('#sfSnap'); if (snap){ snap.disabled = this.circuit; snap.title = this.circuit ? '回放须复用已计入统计的 circuit shot，不额外抽样' : ''; }
-    const scan = this.q('#sfScan'); if (scan){ scan.disabled = this.circuit; scan.title = this.circuit ? '诊断性原型不用于阈值结论：虽然当前目录的单故障枚举通过，但多故障仍回退边缘 MWPM，且未建模真实并行调度/逐门 idle' : ''; }
+    const scan = this.q('#sfScan'); if (scan){ scan.disabled = this.circuit; scan.title = this.circuit ? '诊断原型不用于阈值结论：高阶相关故障未联合解码，idle 仅按空闲并行层注错、未按设备门时长或 T₁/T₂ 校准' : ''; }
     const note = this.q('#sfModelNote');
-    if (note && this.circuit) note.innerHTML = '<b>诊断性 circuit-level 原型</b>：Z 检查 data→ancilla、X 检查 ancilla→data；显式模拟 CNOT、SPAM 与双比特退极化，每轮另加每数据比特一个有效 idle 去极化位点。先查无歧义的 X/Z 联合单故障签名；歧义时保留无歧义的单帧查表，未解决帧再由边缘权重时空 MWPM 兜底。idle 未按实际门时序排程，也不含泄漏/T₁/T₂；未联合解码高阶相关性，不能据此报告阈值。';
+    if (note && this.circuit) note.innerHTML = '<b>诊断性 circuit-level 原型</b>：含输入数据帧边界噪声；每轮按 4 个无碰撞并行 CNOT 层提取，逐层对空闲数据/ancilla 注入 idle；包含 CNOT 退极化与 ancilla prep/readout。末端用逐数据位带噪破坏性读出，并分别审计 Z、X 两种逻辑基底（不是同一 shot 同时测两基）。先查无歧义 X/Z 联合单故障签名；歧义时用无歧义单帧查表，未解决帧再由边缘权重时空 MWPM 兜底。输入边界噪声不等于容错编码器；idle 未按设备门时长/T₁/T₂ 校准，未含泄漏、相干、串扰或高阶相关联合解码，因此不报告阈值。';
     else if (note) note.innerHTML = '<b>退极化是分帧独立解码</b>：丢掉 Y 的相关性 ⟹ 阈值 ≈ 1.5×单帧（10.3% → 15.5%；相关解码可到 18.9%，本页不做）。交叉点「未分辨」表示当前网格/样本数不足；带噪测量固定 q=p、d−1 轮 + 末轮理想读出，d=7 因时空缺陷过多而置灰。';
   }
 
@@ -16920,10 +17022,11 @@ class SurfApp {
       '权重 4 与权重 2 的稳定子混排、两类边界分开，纠错靠「把综合征连起来」。' +
       '点「换一张码图」看错误（红）、综合征（亮框）、解码修正链（蓝环）：' +
       '权重 ≤ t=⌊(d−1)/2⌋ 的错误必纠回，代价是**两条跨码链** = 逻辑错误（权重 d）。' +
-      '阈值不是某个 p 的绝对值，而是 **d=3/5/7 三条曲线的排序反转**。' +
-      '**带噪测量**（phenomenological）把时间放进匹配图：每轮读出以 q=p 出错 ⟹ 探测事件在时空里成对，' +
-      '有限尺寸交叉从 ~9.5% 掉到 ~2.3%。画布下方那 2(d+1) 行点阵就是逐层的探测事件。' +
-      (this.circuit ? '**诊断性 circuit-level 原型** 显式模拟按 Z: data→ancilla / X: ancilla→data 方向提取的 CNOT、SPAM、双比特退极化与每轮有效 data-idle；优先查无歧义联合签名，歧义时保留无歧义单帧查表，未解决帧再回退边缘 MWPM。idle 非逐门时序模型，未联合解码高阶相关性，不作阈值测量。' : ''));
+      (this.circuit ? '当前电路级分支只做指定码距的诊断，不扫描阈值或外推。' :
+        '阈值不是某个 p 的绝对值，而是 **d=3/5/7 三条曲线的排序反转**。') +
+      (this.circuit ? '' : '**带噪测量**（phenomenological）把时间放进匹配图：每轮读出以 q=p 出错 ⟹ 探测事件在时空里成对，' +
+        '有限尺寸交叉从 ~9.5% 掉到 ~2.3%。画布下方那 2(d+1) 行点阵就是逐层的探测事件。') +
+      (this.circuit ? '**诊断性 circuit-level 原型** 含输入数据帧边界噪声、四层无碰撞并行 CNOT、逐层空闲 qubit idle、CNOT 退极化与 ancilla SPAM；终端用带噪破坏性数据读出，并分开检查 Z/X 两种逻辑基底。先查无歧义联合单故障签名，歧义时安全退回无歧义单帧查表，再由边缘权重时空 MWPM 兜底。输入通道不等于容错编码器；未校准门时长/T₁/T₂，且不处理泄漏、相干、串扰或高阶相关性，不用于阈值结论。' : ''));
   }
 
   ensureFaultAudit(){
@@ -17102,8 +17205,8 @@ class SurfApp {
     this.shotReplay?.sync(this.trial || (this.mc && this.mc.lastTrial), this.mc && this.mc.trials, this.state);
     const s = this.state, v = this.verify, mc = this.mc;
     const set = (id, txt, cls) => { const el = this.q('#' + id); if (el){ el.textContent = txt; el.className = cls || ''; } };
-    const phenTxt = this.phen ? ` · phenomenological q=p（${Math.max(1, s.d - 1)} 轮 + 理想终读）` : this.circuit ? ` · circuit-level CNOT+SPAM（${s.d} 轮，查表/MWPM）` : ' · code-capacity';
-    set('hCfg', `${this.circuit ? '双比特退极化 + 有效 idle' : sfNoiseName[s.noise]} · d=${s.d} · p=${s.p.toFixed(4)} · N=${s.trials}${phenTxt}`);
+    const phenTxt = this.phen ? ` · phenomenological q=p（${Math.max(1, s.d - 1)} 轮 + 理想终读）` : this.circuit ? ` · circuit-level 首阶段（${s.d} 轮，双基读出审计）` : ' · code-capacity';
+    set('hCfg', `${this.circuit ? '初始边界 + 双比特退极化 + 分层 idle + 终端读出' : sfNoiseName[s.noise]} · d=${s.d} · p=${s.p.toFixed(4)} · N=${s.trials}${phenTxt}`);
     const auditRow = this.q('#hFaultAuditRow');
     if (auditRow) auditRow.style.display = this.circuit ? '' : 'none';
     if (this.circuit){
@@ -17111,8 +17214,8 @@ class SurfApp {
       else if (this.faultAudit.error) set('hFaultAudit', `失败：${this.faultAudit.error}`, 'warn');
       else {
         const a = this.faultAudit;
-        set('hFaultAudit', `${a.locations.toLocaleString()} 位点 · 联合签名 ${a.jointSignatures}（歧义 ${a.jointAmbiguous}）· 覆盖 ${(100 * a.jointCovered / a.locations).toFixed(1)}% · 歧义回退逻辑失败 X/Z ${a.jointFallbackLogicalFailX}/${a.jointFallbackMechanisms}、${a.jointFallbackLogicalFailZ}/${a.jointFallbackMechanisms}`,
-          a.jointAmbiguous || a.jointLookupLogicalFailX || a.jointLookupLogicalFailZ || a.jointFallbackLogicalFailX || a.jointFallbackLogicalFailZ ? 'warn' : 'ok');
+        set('hFaultAudit', `${a.locations.toLocaleString()} 位点 · 联合可查 ${a.jointCovered}/${a.locations} · 歧义签名 ${a.jointAmbiguous} · 安全回退 ${a.jointFallbackMechanisms} · 最终逻辑失败 X/Z ${a.jointLookupLogicalFailX + a.jointFallbackLogicalFailX}/${a.locations}、${a.jointLookupLogicalFailZ + a.jointFallbackLogicalFailZ}/${a.locations}`,
+          a.jointLookupLogicalFailX || a.jointLookupLogicalFailZ || a.jointFallbackLogicalFailX || a.jointFallbackLogicalFailZ || a.jointLookupSyndromeFailX || a.jointLookupSyndromeFailZ || a.jointFallbackSyndromeFailX || a.jointFallbackSyndromeFailZ ? 'warn' : 'ok');
       }
     }
     if (v){
