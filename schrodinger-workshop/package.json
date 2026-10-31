@@ -18,6 +18,7 @@
     "test:idle-canvas-frames": "node scripts/verify-idle-canvas-frames.mjs",
     "test:two-body-frame-measure": "node scripts/verify-two-body-frame-measure.mjs",
     "test:visual-style": "node scripts/verify-visual-style.mjs",
+    "test:chart-readability": "node scripts/verify-chart-readability.mjs",
     "serve:python": "python3 -m http.server 8765 --bind 0.0.0.0"
   },
   "devDependencies": {

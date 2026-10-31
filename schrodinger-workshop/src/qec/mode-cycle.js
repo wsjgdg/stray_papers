@@ -522,7 +522,7 @@ export class CycleApp {
       g.fillStyle = cyCOL.cyan + '.95)'; g.fill();
       g.font = (8.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
       g.fillStyle = cyCOL.txt + '.9)';
-      g.fillText((100 * v).toFixed(2), x, y - 7 * dpr);
+      g.fillText((100 * v).toFixed(2) + '%', x, y - 7 * dpr);
     });
 
     g.font = (8.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'left';

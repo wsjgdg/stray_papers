@@ -1198,14 +1198,32 @@ export class PathsApp {
     g.clearRect(0, 0, W, H);
     g.scale(dpr, dpr);
     const w = W / dpr, h = H / dpr;
-    const padL = 8, padR = 8, padT = 10, padB = 10;
+    const padL = 30, padR = 20, padT = 29, padB = 22;
     const y0 = p.Y[0], y1 = p.Y[p.Y.length - 1];
     const X = Y => padL + (Y - y0) / (y1 - y0) * (w - padL - padR);
     const Yv = I => h - padB - Math.max(0, Math.min(1, I)) * (h - padT - padB);
-    g.strokeStyle = 'rgba(120,160,220,.12)'; g.lineWidth = 1;
-    for (const q of [0.25, 0.5, 0.75]){
-      g.beginPath(); g.moveTo(padL, Yv(q)); g.lineTo(w - padR, Yv(q)); g.stroke();
+    g.font = '8px ui-monospace,monospace'; g.textAlign = 'left';
+    g.fillStyle = 'rgba(230,237,243,.76)'; g.fillText('I(Y) / Imax', padL, 9);
+    g.strokeStyle = '#67e8f9'; g.lineWidth = 1.35;
+    g.beginPath(); g.moveTo(padL, 18); g.lineTo(padL + 9, 18); g.stroke();
+    g.fillStyle = 'rgba(154,167,189,.82)'; g.fillText('路径和', padL + 12, 21);
+    g.strokeStyle = 'rgba(248,113,113,.85)'; g.setLineDash([3, 2]); g.lineWidth = 1.1;
+    g.beginPath(); g.moveTo(padL + 58, 18); g.lineTo(padL + 67, 18); g.stroke(); g.setLineDash([]);
+    g.fillStyle = 'rgba(154,167,189,.82)'; g.fillText('解析', padL + 70, 21);
+    g.strokeStyle = 'rgba(120,160,220,.12)'; g.lineWidth = 1; g.textAlign = 'right';
+    for (const q of [0, 0.5, 1]){
+      const y = Yv(q);
+      g.beginPath(); g.moveTo(padL, y); g.lineTo(w - padR, y); g.stroke();
+      g.fillStyle = 'rgba(154,167,189,.7)'; g.fillText(q.toFixed(1), padL - 4, y + 3);
     }
+    g.textAlign = 'center'; g.textBaseline = 'top'; g.fillStyle = 'rgba(154,167,189,.7)';
+    for (const Y of [y0, (y0 + y1) / 2, y1]){
+      const x = X(Y);
+      g.strokeStyle = 'rgba(120,160,220,.10)'; g.beginPath(); g.moveTo(x, padT); g.lineTo(x, h - padB); g.stroke();
+      g.fillText(Y.toFixed(0), x, h - padB + 4);
+    }
+    g.textAlign = 'right'; g.textBaseline = 'alphabetic';
+    g.fillStyle = 'rgba(154,167,189,.7)'; g.fillText('Y', w - padR, h - 3);
     /* 路径和（青实 + 填充），先画 */
 
     g.beginPath();

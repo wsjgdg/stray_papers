@@ -847,6 +847,9 @@ export class NoiseApp {
       const t = tMax * k / 4;
       g.fillStyle = 'rgba(148,163,184,.6)'; g.fillText(t.toFixed(1), X(t), y1 + 13 * dpr);
     }
+    g.textAlign = 'right'; g.fillStyle = 'rgba(148,163,184,.7)';
+    g.fillText('t', x1, y1 + 23 * dpr);
+    g.textAlign = 'left';
 
     const line = (arr, col, w) => {
       g.strokeStyle = col; g.lineWidth = w * dpr;
@@ -963,6 +966,25 @@ export class NoiseApp {
     g.textAlign = 'left'; g.textBaseline = 'alphabetic';
     g.fillStyle = 'rgba(226,232,240,.88)'; g.font = (10.5 * dpr) + 'px ui-monospace,monospace';
     g.fillText('|ρ| 高度 · 色相 = arg ρ', 8 * dpr, 14 * dpr);
+    /* 相位色相图例：Hue 从 −π 连续映射到 +π，中点 0 对应青色。 */
+    if (W >= 270 * dpr){
+      const lx = W - 112 * dpr, ly = 5 * dpr, lw = 102 * dpr, lh = 5 * dpr;
+      const grad = g.createLinearGradient(lx, ly, lx + lw, ly);
+      for (const [stop, deg] of [[0, 0], [1/6, 60], [2/6, 120], [3/6, 180], [4/6, 240], [5/6, 300], [1, 360]]){
+        grad.addColorStop(stop, `hsl(${deg},80%,55%)`);
+      }
+      g.fillStyle = grad; g.fillRect(lx, ly, lw, lh);
+      g.strokeStyle = 'rgba(226,232,240,.55)'; g.lineWidth = 1 * dpr;
+      for (const f of [0, 0.5, 1]){
+        const x = lx + lw * f;
+        g.beginPath(); g.moveTo(x, ly - 1 * dpr); g.lineTo(x, ly + lh + 1 * dpr); g.stroke();
+      }
+      g.font = (7.5 * dpr) + 'px ui-monospace,monospace'; g.fillStyle = 'rgba(148,163,184,.85)';
+      g.textAlign = 'left'; g.fillText('−π', lx, 20 * dpr);
+      g.textAlign = 'center'; g.fillText('0', lx + lw / 2, 20 * dpr);
+      g.textAlign = 'right'; g.fillText('+π', lx + lw, 20 * dpr);
+      g.textAlign = 'left';
+    }
   }
 
   /* ---------- 曲线 ---------- */

@@ -1546,10 +1546,18 @@ export class HubbardApp {
     const sMax = Math.max(1e-3, ...hist.map(p => p[1])) * 1.15;
     const px = t => x0 + (t / tMax) * w;
     const py = s => y0 - (s / sMax) * h;
+    ctx.lineWidth = 1 * dpr; ctx.font = mono(8.5 * dpr); ctx.textAlign = 'right';
+    for (const f of [0, 0.5, 1]){
+      const y = py(sMax * f);
+      ctx.strokeStyle = f === 0 ? 'rgba(120,160,220,.24)' : 'rgba(120,160,220,.10)';
+      ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x0 + w, y); ctx.stroke();
+      ctx.fillStyle = 'rgba(154,167,189,.62)';
+      ctx.fillText((sMax * f).toFixed(2), x0 - 5 * dpr, y + 3 * dpr);
+    }
+    ctx.textAlign = 'left';
     ctx.fillStyle = 'rgba(154,167,189,.8)';
     ctx.fillText(tMax.toFixed(1), x0 + w - 26 * dpr, y0 + 16 * dpr);
     ctx.fillText('0', x0 - 10 * dpr, y0 + 16 * dpr);
-    ctx.fillText(sMax.toFixed(2), 4 * dpr, padT + 10 * dpr);
     ctx.strokeStyle = 'rgba(103,232,249,.95)'; ctx.lineWidth = 1.8 * dpr;
     ctx.beginPath();
     hist.forEach(([t2, s2], i) => { i ? ctx.lineTo(px(t2), py(s2)) : ctx.moveTo(px(t2), py(s2)); });
@@ -1590,11 +1598,18 @@ export class HubbardApp {
     if (sx) for (let i = 1; i < L; i++) if (Number.isFinite(sx[i])) sMax = Math.max(sMax, sx[i]);
     sMax = Math.max(sMax * 1.18, Math.LN2 * 1.05);
     const px = x => x0 + (x / L) * w, py = s => y0 - (s / sMax) * h;
-    this.probeHead(ctx, dpr, mono, `纠缠剖面 S(x) · 切点 x 左侧 ${'x'} 格（纵轴上限 ${sMax.toFixed(2)}）`,
+    this.probeHead(ctx, dpr, mono, `纠缠剖面 S(x) · x=左侧格点数 · 纵轴上限 ${sMax.toFixed(2)}`,
       this.probesLive() ? (this.sxJob ? `填充 ${this.sxJob.k}/${L + 1}` : (this.sxMs ? this.sxMs.toFixed(0) + ' ms' : '')) : '演化中 · 暂停后更新', W);
-    /* 轴 */
-    ctx.strokeStyle = 'rgba(120,160,220,.20)'; ctx.lineWidth = 1 * dpr;
-    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0 + w, y0); ctx.stroke();
+    /* 轴与纵向刻度：用明确数值而不是只靠曲线高度估读。 */
+    ctx.lineWidth = 1 * dpr;
+    for (const f of [0, 0.5, 1]){
+      const y = py(sMax * f);
+      ctx.strokeStyle = f === 0 ? 'rgba(120,160,220,.24)' : 'rgba(120,160,220,.10)';
+      ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x0 + w, y); ctx.stroke();
+      ctx.fillStyle = 'rgba(154,167,189,.58)'; ctx.font = mono(8.5 * dpr); ctx.textAlign = 'right';
+      ctx.fillText((sMax * f).toFixed(2), x0 - 5 * dpr, y + 3 * dpr);
+    }
+    ctx.textAlign = 'left';
     ctx.strokeStyle = 'rgba(120,160,220,.18)'; ctx.setLineDash([3 * dpr, 3 * dpr]);
     ctx.beginPath(); ctx.moveTo(px(L >> 1), py(0)); ctx.lineTo(px(L >> 1), py(sMax * 0.86)); ctx.stroke();
     ctx.setLineDash([]);
@@ -1646,6 +1661,9 @@ export class HubbardApp {
     /* n=1 参考线（半满、自旋简并时的平均占据） */
     ctx.strokeStyle = 'rgba(120,160,220,.22)';
     ctx.beginPath(); ctx.moveTo(x0, py(1)); ctx.lineTo(x0 + w, py(1)); ctx.stroke();
+    ctx.fillStyle = 'rgba(154,167,189,.72)'; ctx.font = mono(8.5 * dpr); ctx.textAlign = 'right';
+    ctx.fillText('n=1', x0 + w - 2 * dpr, py(1) - 3 * dpr);
+    ctx.textAlign = 'left';
     if (nk){
       for (let m = 0; m < L; m++){
         const v = Math.max(0, nk[m]);
@@ -1683,6 +1701,16 @@ export class HubbardApp {
     const top = 22 * dpr, bot = 18 * dpr, side = 26 * dpr;
     const g = Math.min((H - top - bot) / L, (W - side - 18 * dpr) / L);
     const gx = W / 2 - (g * L) / 2, gy = top;
+    /* 热图颜色图例：对角线是不同观测量；非对角亮度线性映射数据值。 */
+    const lx = gx + g * L + 12 * dpr, ly = gy + 6 * dpr;
+    if (W - lx > 72 * dpr){
+      ctx.font = mono(8.5 * dpr); ctx.textAlign = 'left';
+      ctx.fillStyle = 'rgba(251,191,36,.82)'; ctx.fillRect(lx, ly, 7 * dpr, 7 * dpr);
+      ctx.fillStyle = 'rgba(230,237,243,.78)'; ctx.fillText('对角 ⟨nᵢ²⟩', lx + 11 * dpr, ly + 7 * dpr);
+      ctx.fillStyle = 'rgba(103,232,249,.78)'; ctx.fillRect(lx, ly + 13 * dpr, 7 * dpr, 7 * dpr);
+      ctx.fillStyle = 'rgba(230,237,243,.78)'; ctx.fillText('非对角 nᵢnⱼ', lx + 11 * dpr, ly + 20 * dpr);
+      ctx.fillStyle = 'rgba(154,167,189,.62)'; ctx.fillText('青亮度 ∝ 值', lx, ly + 34 * dpr);
+    }
     if (!nn) return;
     for (let i = 0; i < L; i++){
       for (let j = 0; j < L; j++){

@@ -1442,7 +1442,7 @@ export class SpinApp {
   drawSq(ctx, g){
     const { x0, y0, w, h, dpr, mono, title, grid, cfs, padB } = g;
     const L = this.state.L, Sq = this.Sq;
-    title('静态结构因子 S(q) · q = 2πm/L', Sq ? 'S(π) 高 ⟹ 反厄尔序' : '');
+    title('静态结构因子 S(q) · q = 2πm/L', Sq ? 'S(π) 高 ⟹ 反铁磁序' : '');
     grid(4);
     if (!Sq) return;
     const vmax = Math.max(0.05, ...Sq);
