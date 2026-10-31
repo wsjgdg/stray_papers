@@ -36,6 +36,7 @@ import {
   type ScenicServices,
 } from "@/lib/scenic-services.generated";
 import { MOUNTAIN_ROUTES } from "@/lib/mountain-routes.generated";
+import { SPOT_TERRAIN } from "@/lib/spot-terrain.generated";
 import { BreathRing } from "@/components/shared/breath-ring";
 import { LiquidCharge } from "@/components/shared/liquid-charge";
 import { PressureButton } from "@/components/shared/pressure-button";
@@ -610,6 +611,17 @@ function TimelineCard({
               const grad = spotName ? gradientOf(spotName) : null;
               if (grad) {
                 return `最大坡度 ${grad.maxGrad}° · 累计爬升 ${grad.gainM} 米（实测高程采样）`;
+              }
+              // SPOT_TERRAIN：Open-Meteo Elevation 5×5 网格采样（覆盖全部 5A/4A）
+              const terrain = spotName ? SPOT_TERRAIN[spotName] : null;
+              if (terrain) {
+                const steepText =
+                  terrain.steepPct >= 50
+                    ? "全域陡峭"
+                    : terrain.steepPct >= 20
+                      ? "多段陡坡"
+                      : "缓坡为主";
+                return `最大坡度 ${terrain.maxSlope}° · ${steepText}（周边 5.6km 范围实测地形）`;
               }
             }
             if (services && reason.id === "toilet") {
