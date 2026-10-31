@@ -5,6 +5,7 @@ import { PathsApp } from '../src/paths.js';
 import { CycleApp } from '../src/qec/mode-cycle.js';
 import { NoiseApp } from '../src/noise.js';
 import { SlitScanner, GpScanner, NlsScanner } from '../src/core/scan.js';
+import { QCircuitApp } from '../src/qcircuit.js';
 
 const labels = [];
 const ctx = new Proxy({}, {
@@ -100,6 +101,22 @@ new NlsScanner(null).spec.plot(canvas, [{ x: 2, sxMean: 4, syMean: 5,
   series: [{ peak: 0.2 }, { peak: 0.4 }] }], null, {});
 assert.ok(labels.includes('σx/σy（texel）vs g'), 'NLS scan should state width observables and units');
 
+const circuit = Object.create(QCircuitApp.prototype);
+const circuitCanvas = { width: 640, height: 240, getContext: () => ctx };
+circuit.q = () => circuitCanvas; circuit.state = { ampProj: '2d', n: 2, noise: { on: false }, measured: null, step: 0 };
+circuit.psi = { dim: 4, re: Float64Array.from([Math.SQRT1_2, 0, 0, Math.SQRT1_2]),
+  im: Float64Array.from([0, 0, 0, 0]) };
+circuit.rho = null; circuit.lastCircuitMeasurement = null;
+circuit._ampPinnedIndex = null; circuit._ampHoverIndex = null;
+circuit.showAmpProbe = () => {}; circuit.clearAmpProbe = () => {};
+const hadWindow = Object.prototype.hasOwnProperty.call(globalThis, 'window'), oldWindow = globalThis.window;
+globalThis.window = { devicePixelRatio: 1 };
+labels.length = 0;
+circuit.drawAmp();
+if (hadWindow) globalThis.window = oldWindow; else delete globalThis.window;
+assert.ok(labels.some(x => x.includes('arg a_i ∈ [−π,+π]')), 'circuit amplitude chart should state its phase interval');
+assert.ok(labels.includes('−π') && labels.includes('0') && labels.includes('+π'), 'pure-state amplitude colors should have a phase hue scale');
+
 const cycle = Object.create(CycleApp.prototype);
 cycle.cv = { curve: { width: 640, clientWidth: 640, height: 240, getContext: () => ctx } };
 cycle.state = { p: 0.01 };
@@ -109,4 +126,4 @@ cycle.drawCurve();
 assert.ok(labels.includes('1.23%') && labels.includes('1.56%'), 'QEC cycle-curve point annotations should match its percentage axis');
 assert.ok(labels.includes('T=1') && labels.includes('T=2'), 'QEC cycle-curve should identify its cycle-count ticks');
 
-console.log('Core scans/Hubbard/Paths/Noise/Spin/QEC chart axes, reference labels, legends, and terminology PASS');
+console.log('Core scans/Hubbard/Paths/Noise/QCircuit/Spin/QEC chart axes, reference labels, legends, and terminology PASS');

@@ -1757,7 +1757,7 @@ export class QCircuitApp {
       title = '√ρ_ii（布居；混合态无色相）· 非零 ' + amp.length + '/' + dim;
     } else {
       amp = qcAmplitudes(this.psi);
-      title = '|a_i|（色相 = 相位）· 非零 ' + amp.length + '/' + dim;
+      title = '|a_i| · arg a_i ∈ [−π,+π] · 非零 ' + amp.length + '/' + dim;
     }
     const maxAbs = Math.max(1e-12, ...amp.map(a => a.abs));
     const bw = (W - padL - padR) / dim;
@@ -1787,7 +1787,7 @@ export class QCircuitApp {
         ? a.i === measured.idx
         : (((a.i >> measured.q) & 1) === measured.trueBit));
       g.fillStyle = selected ? 'rgba(251,191,36,.96)' : noisy ? 'hsla(178,72%,58%,.92)'
-        : 'hsla(' + Math.round(178 + hue * 140) + ',88%,62%,.92)';
+        : 'hsla(' + Math.round((178 + hue * 360) % 360) + ',88%,62%,.92)';
       const bx = x + Math.max(0.5, bw * 0.12), by = y0 - hh, barW = Math.max(1, bw * 0.76);
       g.fillRect(bx, by, barW, hh);
       if (selected){ g.strokeStyle = 'rgba(251,191,36,.98)'; g.lineWidth = 1.5; g.strokeRect(bx - 1, by - 1, barW + 2, Math.max(3, hh + 2)); }
@@ -1806,6 +1806,25 @@ export class QCircuitApp {
     }
     g.textAlign = 'left'; g.fillStyle = 'rgba(154,167,189,.75)';
     g.fillText(title, padL, 12);
+    /* 纯态色相沿用 3D 相位编码：0→青、±π→红；噪声混态无相位，不画此标尺。 */
+    if (!noisy && W >= 500){
+      const lx = W - 112, ly = 3, lw = 102, lh = 5;
+      const phase = g.createLinearGradient(lx, ly, lx + lw, ly);
+      for (const [stop, deg] of [[0, 358], [0.25, 88], [0.5, 178], [0.75, 268], [1, 358]]){
+        phase.addColorStop(stop, `hsl(${deg},88%,62%)`);
+      }
+      g.fillStyle = phase; g.fillRect(lx, ly, lw, lh);
+      g.strokeStyle = 'rgba(226,232,240,.55)'; g.lineWidth = 1;
+      for (const f of [0, 0.5, 1]){
+        const x = lx + lw * f;
+        g.beginPath(); g.moveTo(x, ly - 1); g.lineTo(x, ly + lh + 1); g.stroke();
+      }
+      g.font = '7.5px ui-monospace,monospace'; g.fillStyle = 'rgba(148,163,184,.85)';
+      g.textAlign = 'left'; g.fillText('−π', lx, 17);
+      g.textAlign = 'center'; g.fillText('0', lx + lw / 2, 17);
+      g.textAlign = 'right'; g.fillText('+π', lx + lw, 17);
+      g.textAlign = 'left';
+    }
   }
 
   /* 复振幅 3D：x=计算基序号，(y,z)=(Re a_i, Im a_i)。模长是横截面半径，
