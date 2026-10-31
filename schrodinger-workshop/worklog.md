@@ -78,6 +78,7 @@
 | R162 | **纠错页重复码模式的线路点选注错** | iid/物理通道模式新增可开关的线路图交互：点击噪声列数据位即可手动注入/撤销错误，固定种子重跑单次实验，HUD/线路即时呈现综合征、修正与逻辑判定；画布将噪声列标为「指定错误」，hover 目标高亮。门级模式明确禁用（其错误应选具体门位点）。手动错误只进单次试验，不改变 P_L 统计分布；码长切换会滤除越界错误位。**验证**：manual-QEC harness **18/18**（iid 单错/双错纠错判定、点击切换/撤销、固定种子、相位翻转对偶、phys 强制错误、门级禁用）；canvas hit-geometry harness **12/12**（DPR 1/2 下三根数据线定位与门级排除）。`node --check`、standalone 构建、提取后的单文件脚本 `node --check` 与 `git diff --check` 通过；更新 `dist/qec.html` 至 874,403 bytes（853.9 KiB）。 |
 | R163 | **QEC hub 单次纠错逐步回放** | 八个模式 HUD 新增共享五阶段样本回放（输入态/编码→故障注入→综合征→解码修正→逻辑结局），支持逐步、自动演示与固定/跟随末次 shot；不额外抽样、不影响 MC 计数。jsdom 八模式回放控件冒烟 8/8，步进后 shot 固定且采样数不变；README 记录交互及抽象模型的显示边界。 |
 | R183 | **修复 S(x) 闪烁并补齐全部场对象标记** | 根因是每次测量都清空 S(x) 并重启全剖面渐进任务，演化时任务持续被取消；改为保留最近完整曲线、只排队最新快照并在完成后原子替换。2D/3D 为所有对象显示形状/极性小锚点，选中对象单独强调。`test:spin-objects` 覆盖无闪烁刷新策略。 |
+| R188 | **Hubbard 残差计算去除重复 matvec** | `hbResidual()` 复用首个 Hψ 工作数组计算 ⟨H⟩，不再调用 `hbEnergy()` 重算 Hψ，少一次完整 matvec 与两条 dim 长临时向量；输出与原流程逐位相同。半满密集态 Node 基准中位数 L=8/10/12 提速 **2.25×/1.91×/2.11×**；`test:hubbard-residual` 覆盖多链长、稀疏/密集态、U/t 和局域场。 |
 | R187 | **Hubbard 占据测量按置位遍历** | `hbMeasure` 将每个基底态逐格扫描 L 个 bit 改为仅枚举 `mask` 的 N 个置位；浮点求和顺序不变，结果与旧算法逐位相同。半满密集态 Node 基准中位数 L=8/10/12 提速 **2.77×/3.79×/3.53×**；新 `test:hubbard-measure` 覆盖三种链长、密集/稀疏态、逐数组精确对照及粒子数/双占求和规则。 |
 | R186 | **Hubbard S(x) 快照避免复制大型态向量** | 审计确认 `re/im` 只通过求解/演化返回的新 Float64Array 替换，没有原地写入；`startSx()` 改为持有旧态引用，演化推进后旧数组继续存活供任务完成，不再复制整对向量。L=12 每次 S(x) 任务避免 **13,660,416 B（约13.0 MiB）** 分配。新增 `test:hubbard-snapshot`：检查 Krylov 不改输入、task 持有同一数组引用、后续演化生成新向量、旧态仍可完成剖面且逐点对账；Hubbard/Spin/路径回归与隔离全站 standalone 构建通过。
 | R185 | **路径工场：多 AB 磁通源与多高斯势对象** | 路径积分按多磁通源叠加 Wilson 相位、按多高斯势对象叠加有限宽势作用量；旧 `flux/barrier/bx/bw` 和 URL 继续兼容。页面支持对象新增/选择/删除（势对象还可复制）、独立编辑、2D/3D 轻量锚点和完整状态分享链接 `fobj/bobj/fsel/bsel`。路径/Spin/Hubbard 三个定向回归通过，隔离临时副本中的全站 standalone 构建与 paths bundle 语法检查通过；预存 `dist/` 未触碰。尝试用临时安装的 Playwright/Chromium 做源码与 standalone 页面交互验收，但 Chromium 因系统缺少 `libnspr4.so` 无法启动，浏览器验收仍未完成。 |
@@ -1650,6 +1651,15 @@ dist 重建：qcircuit 97.4→102.5 KB；noise/qec 各一行注释同步（R100 
 README 噪声页用法补充矩阵与曲线探针操作。
 
 ---
+
+## R188（2026-10-31）Hubbard 残差复用 Hψ 避免重复 matvec
+
+- [x] `hbResidual()` 首次 `hbMatvec()` 已得到 Hψ；直接用 `hbDot(ψ,Hψ)` 求能量期望值，取代再次调用 `hbEnergy()` 重新做完整 matvec。残差向量与求和顺序保持不变，避免一次 O(nnz) 运算与两个 dim 长 Float64 临时数组。
+- [x] 新增 `scripts/verify-hubbard-residual.mjs` / `npm run test:hubbard-residual`：对 L=8/10/12、密集/稀疏态、多个 t/U 与非零局域场，将新残差和旧双 matvec 算法精确比较，全部逐位相同。
+- [x] 当前 Node 环境半满密集态基准（旧/新各 7 次中位数）：L=8 **0.60/0.27 ms**（2.25×）、L=10 **5.81/3.05 ms**（1.91×）、L=12 **81.73/38.71 ms**（2.11×）；仅作本机参考，不作跨机性能门槛。
+- [x] `test:hubbard-residual`、`test:hubbard-measure`、`test:hubbard-snapshot`、`test:hubbard-objects`、`test:spin-objects` 与源/测试脚本语法检查通过；`git diff --check` 通过。
+- [x] 隔离 `/tmp` 副本全站 standalone 构建和新 `dist/hubbard.html` 内联脚本语法检查通过；未触碰仓库既有 `dist/` 改动。
+- [x] README 增补单 matvec 算法、回归命令和本机参考基准；worklog 记录验收结果。
 
 ## R187（2026-10-31）Hubbard 固定粒子占据测量按置位遍历
 

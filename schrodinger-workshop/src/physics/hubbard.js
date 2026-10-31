@@ -637,7 +637,9 @@ export function hbResidual(sec, re, im, t, U){
   const dim = sec.dim;
   const hr = new Float64Array(dim), hi = new Float64Array(dim);
   hbMatvec(sec, re, im, hr, hi, t, U);
-  const E = hbEnergy(sec, re, im, t, U);
+  /* Hψ 已在工作数组中：直接取 ⟨ψ|H|ψ⟩，避免 hbEnergy 再做一次相同 matvec
+     并额外分配两个 dim 长度数组。 */
+  const E = hbDot(re, im, hr, hi);
   let s = 0;
   for (let k = 0; k < dim; k++){
     const dr = hr[k] - E * re[k], di = hi[k] - E * im[k];

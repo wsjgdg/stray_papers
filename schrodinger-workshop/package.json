@@ -11,6 +11,7 @@
     "test:spin-objects": "node scripts/verify-spin-field-objects.mjs",
     "test:hubbard-objects": "node scripts/verify-hubbard-field-objects.mjs",
     "test:hubbard-measure": "node scripts/verify-hubbard-measure.mjs",
+    "test:hubbard-residual": "node scripts/verify-hubbard-residual.mjs",
     "test:hubbard-snapshot": "node scripts/verify-hubbard-sx-snapshot.mjs",
     "test:path-sources": "node scripts/verify-path-sources.mjs",
     "serve:python": "python3 -m http.server 8765 --bind 0.0.0.0"
