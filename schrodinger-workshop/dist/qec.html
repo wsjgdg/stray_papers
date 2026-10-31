@@ -16565,8 +16565,20 @@ function scCircuitTrial(code, cfg = {}, rng = Math.random, grs){
   const frame = { x: 0n, z: 0n }, rounds = [], faultList = [], forceFaults = cfg.forceFaults || [];
   let faultCount = 0, cnotCount = 0, inputX = 0n, inputZ = 0n;
   let baselineX = 0, baselineZ = 0;
-  if (prepareBasis === 'Z') for (let ci = 0; ci < code.X.length; ci++) if (rng() < 0.5) baselineX |= 1 << ci;
-  if (prepareBasis === 'X') for (let ci = 0; ci < code.Z.length; ci++) if (rng() < 0.5) baselineZ |= 1 << ci;
+  /* Optional deterministic initial-syndrome masks let the verification harness
+     exhaust every random product-state boundary outcome without sampling. */
+  const initialSyndrome = (provided, n) => {
+    if (provided !== undefined){
+      const value = Number(provided);
+      if (!Number.isSafeInteger(value) || value < 0) throw new RangeError('initial syndrome masks must be nonnegative integers');
+      return value & ((1 << n) - 1);
+    }
+    let mask = 0;
+    for (let ci = 0; ci < n; ci++) if (rng() < 0.5) mask |= 1 << ci;
+    return mask;
+  };
+  if (prepareBasis === 'Z') baselineX = initialSyndrome(cfg.initialSynX, code.X.length);
+  if (prepareBasis === 'X') baselineZ = initialSyndrome(cfg.initialSynZ, code.Z.length);
   for (let q = 0; q < code.n; q++){
     const force = forceFaults.find(f => f.location === 'input' && f.q === q);
     let name = force ? force.pauli : null;

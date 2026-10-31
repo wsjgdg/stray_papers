@@ -112,12 +112,30 @@ for (const d of [3, 5]){
     assert.equal(clean.badSyn, false, `d=${d}, ${basis}-prep: clean final readout syndrome closes`);
     assert.ok(clean.defX.every(v => v === 0) && clean.defZ.every(v => v === 0),
       `d=${d}, ${basis}-prep: random first syndrome baseline must not be mistaken for a fault`);
+    const unknownChecks = basis === 'Z' ? code.X.length : code.Z.length;
+    const maskKey = basis === 'Z' ? 'initialSynX' : 'initialSynZ';
+    const maskLimit = 1 << unknownChecks;
+    for (let mask = 0; mask < maskLimit; mask++){
+      const boundary = scCircuitTrial(code, { p: 0, rounds: d, prepareBasis: basis, [maskKey]: mask }, mulberry32(23));
+      assert.equal(basis === 'Z' ? boundary.rawSynX[0] : boundary.rawSynZ[0], mask,
+        `d=${d}, ${basis}-prep: first raw syndrome must preserve selected random baseline ${mask}`);
+      assert.equal(boundary.fail, false, `d=${d}, ${basis}-prep: clean random syndrome boundary ${mask} must decode`);
+      assert.ok(boundary.defX.every(v => v === 0) && boundary.defZ.every(v => v === 0),
+        `d=${d}, ${basis}-prep: baseline ${mask} must not create detector events`);
+    }
     const prepFault = scCircuitTrial(code, {
       p: 0.001, rounds: d, prepareBasis: basis,
       forceFaults: [{ round: 0, location: 'input', q: 0, pauli: basis === 'Z' ? 'X' : 'Z' }],
     }, () => 0.999);
     assert.equal(prepFault.faultCount, 1);
     assert.equal(prepFault.fail, false, `d=${d}, ${basis}-prep: representative product-state preparation fault is corrected`);
+    const fullBaselineFault = scCircuitTrial(code, {
+      p: 0.001, rounds: d, prepareBasis: basis, [maskKey]: maskLimit - 1,
+      forceFaults: [{ round: 0, location: 'input', q: 0, pauli: basis === 'Z' ? 'X' : 'Z' }],
+    }, () => 0.999);
+    assert.deepEqual(fullBaselineFault.defX, prepFault.defX, `d=${d}, ${basis}-prep: detector history is baseline-invariant`);
+    assert.deepEqual(fullBaselineFault.defZ, prepFault.defZ, `d=${d}, ${basis}-prep: paired history is baseline-invariant`);
+    assert.equal(fullBaselineFault.fail, prepFault.fail);
     const readout = scCircuitTrial(code, {
       p: 0.001, rounds: d, prepareBasis: basis,
       forceFaults: [{ round: d + 1, location: 'final-readout', basis, q: 0 }],
