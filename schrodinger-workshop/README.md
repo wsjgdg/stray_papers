@@ -3456,6 +3456,7 @@ H = Σ_i J [ Sˣ_i Sˣ_{i+1} + Sʸ_i Sʸ_{i+1} + Δ Sᶻ_i Sᶻ_{i+1} ] − Σ_i
 | 模式 | 模式归用户：切预设、切链长都**不改**模式（旧版 `startSolve()` 每次硬写 `mode='gs'`，一换就跳回「解基态」）；`setL` 只换链——Δ/h/模式保留，局域场按新长度截取或补零，初态回落到新链的 Néel；「重置」仍按预设原生模式复位（显式动作）。`cdp145` K 组 6/6 |
 | 3D 透视 | 视图行有 2D/3D 开关（键 `0`）：链沿 x、自旋沿 ±y、局域场 b_i 沿 ∓z 刺出平面；相机/投影/拾取直接复用 `hubbard3d.js`。拖空白（或 Shift/中键）转视角、滚轮缩放（3.2–20）、双击或 `R` 复位、点格点照常翻自旋；投影→拾取 12/12 回环、四档相机（含俯仰/偏航极限）投影全有限、2D↔3D 的 E/S 逐位不变；`cdp150` 25/25 |
 | 场对象 | 三种 profile 与多对象/自由场叠加、边界/重复 ID/幅度/宽度校验；将合成 b_i 实际送入固定 Sᶻ XXZ 扇区，乘积态 Zeeman 能量差与 −½Σb_i s_i 独立公式一致，N↑ 与 Sᶻ 不变；对象增删/移动/复制/改型/改振幅生命周期、JSON/URL round-trip 与非法导入原子拒绝；`npm run test:spin-objects` PASS |
+| 静止 Canvas 帧 | Hubbard/Spin 在无演化、S(x) 渐进任务、扫描或求解完成事件时跳过每帧双 Canvas 重绘；相关任务仍逐帧更新、完成帧刷新，鼠标/控件事件保留同步 draw；`npm run test:idle-canvas-frames` 覆盖静态、演化、S(x)、扫描与求解完成调度 |
 | 画布几何 | 位图逐像素等于「整数 CSS 盒 × DPR」：1440×900@2x（760→1520×612）、1024×768@2x、900×700@1x、390×844@3x 四档 `cv.width === cssW·dpr`、`cv.height === cssH·dpr` 全相等；宽高都写内联 px（宽度不再交给小数 `56vw`）且画布 `border:0`（描边走 inset 阴影），`clientWidth`/DPR 变化后 `draw()` 自检重排（位图 1400→1800、DPR 2→3 都当场跟上）；阶梯高度 306/261/238/287（=0.34·vh）、图表 180/154/140/169（=0.20·vh），两块 + 44 行永不超 `vh−116`；阶梯内容最低点 ≥0.92H、最高点 ≤0.30H（铺满而不是贴顶）；舞台本体的 `left/top/width` 也写成整数 px、`transform:none`（`left:50%`+`translate(-50%,-50%)` 在半像素处同样会重采样），sheet 档（内联 `right` 存在）则完全不碰几何，`cdp149` **42/42** |
 | 浏览器 vs CPU | E / E/N / ⟨S²⟩ / S / S(q) / 键和与 Node **逐位一致**（1e-9）；jsdom 页面 **78/78** + 窄屏布局 **18/18** + 刻度带 sheet **19/19** + 画布几何 **42/42** + 3D 透视 **25/25** + dist 单文件 **12/12** + 哈伯德页回归 **9/9** + 老页面导航回归 **4/4**：点格点翻自旋（扇区 924↔792）、场笔刷拖动/右键负场/擦除、Δ 与 h 滑块（含 XX 锚点）、演化保范数、暂停与单步、四视图切换、能隙、URL/JSON round-trip、非法 spec 整体拒绝、快捷键、L=16 仍收敛（残差 2.6e-13）、零未捕获错误、canvas 无 NaN 参数 |
 
@@ -3832,6 +3833,7 @@ schrodinger-workshop/
 │   ├── verify-hubbard-measure.mjs   Hubbard 占据测量逐位对照/求和规则
 │   ├── verify-hubbard-residual.mjs  Hubbard 残差单 matvec 逐位对照
 │   ├── verify-hubbard-sx-snapshot.mjs S(x) 快照引用/态不可变性/剖面对账
+│   ├── verify-idle-canvas-frames.mjs Hubbard/Spin 静止 Canvas 帧调度回归
 │   ├── verify-two-body-frame-measure.mjs 双粒子暂停/松弛测量调度回归
 │   └── serve.mjs                 开发服务器：no-store 响应 + SSE 热重载（npm start）
 ├── src/

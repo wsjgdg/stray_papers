@@ -1004,6 +1004,7 @@ export class SpinApp {
     }
   }
   frameBody(){
+    const jobWasActive = !!this.job, sxWasActive = !!this._sxJob;
     this._fpsFrames++;
     const now = performance.now();
     if (now - this._lastFpsT > 500){
@@ -1021,11 +1022,11 @@ export class SpinApp {
         this.q('#hGap').textContent = nf(this.gap, 4);
       }
     }
-    if (this.state.mode === 'evo' && !this.state.paused && !this.job && this.re){
-      this.evolveFrame();
-    }
-    if (this.state.mode === 'evo' && !this.state.paused && !this.job && this.state.frames % 2 === 0) this.measureAll(false);
-    this.draw();
+    const evolving = this.state.mode === 'evo' && !this.state.paused && !this.job && !!this.re;
+    if (evolving) this.evolveFrame();
+    if (evolving && this.state.frames % 2 === 0) this.measureAll(false);
+    /* Canvas 内容静止时直接留屏；演化、渐进 S(x) 与求解完成仍触发绘制。 */
+    if (evolving || sxWasActive || this._sxJob || (jobWasActive && !this.job)) this.draw();
     if (this.job){ const s = this.q('#hDim'); void s; }
   }
   evolveFrame(){

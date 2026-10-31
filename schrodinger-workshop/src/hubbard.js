@@ -1834,6 +1834,7 @@ export class HubbardApp {
     }
   }
   frameBody(){
+    const jobWasActive = !!this.job, sxWasActive = !!this.sxJob, scanWasActive = !!this.scan;
     this._fpsFrames++;
     const now = performance.now();
     if (now - this._lastFpsT > 500){
@@ -1844,12 +1845,14 @@ export class HubbardApp {
     this.advanceJobs();
     if (this.sxJob) this.stepSx();
     if (this.scan) this.stepScan();
-    if (this.state.mode === 'evo' && !this.state.paused && !this.job && this.re){
+    const evolving = this.state.mode === 'evo' && !this.state.paused && !this.job && !!this.re;
+    if (evolving){
       this.applyProtocol();
       this.evolveFrame();
     }
-    if (this.state.mode === 'evo' && !this.state.paused && !this.job && this.state.frames % 2 === 0) this.measureAll(false);
-    this.draw();
+    if (evolving && this.state.frames % 2 === 0) this.measureAll(false);
+    /* 静止页不必每个 rAF 重画两个 Canvas；求解完成、S(x)/扫描任务和演化仍需刷新。 */
+    if (evolving || sxWasActive || this.sxJob || scanWasActive || this.scan || (jobWasActive && !this.job)) this.draw();
     if (this.job){ const s = this.q('#hbStat'); if (s) s.textContent = this.msg; }
   }
 
