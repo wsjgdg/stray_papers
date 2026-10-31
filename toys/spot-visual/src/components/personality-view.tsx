@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Heart, Share2, RotateCcw, Star, MapPin } from "lucide-react";
 import { useAppStore } from "@/lib/store";
@@ -23,6 +23,12 @@ const CATEGORY_PERSONALITY: Record<
   美食小吃: { trait: "美食", emoji: "🍜", color: "#EF4444" },
   轻运动: { trait: "活力", emoji: "🚴", color: "#14B8A6" },
 };
+
+/* ═══ trait → 分类反查表（真实推荐用） ═══ */
+const TRAIT_CATEGORIES: Record<string, string[]> = {};
+for (const [cat, { trait }] of Object.entries(CATEGORY_PERSONALITY)) {
+  (TRAIT_CATEGORIES[trait] ??= []).push(cat);
+}
 
 /* ═══ 人格组合名称（Top2 trait → 趣味称号） ═══ */
 const PERSONA_NAMES: Record<
@@ -83,6 +89,176 @@ const PERSONA_NAMES: Record<
     title: "城市冒险家",
     desc: "摩天大楼是你攀岩墙，城市天际线是你的跑酷赛道。你眼中的城市，是一个巨大的游乐场。",
     advice: "推荐目的地：上海迪士尼、珠海长隆、北京环球影城",
+  },
+  "自然+都市": {
+    title: "天际线下的森林",
+    desc: "白天逛公园，晚上数霓虹。你既要绿意也要繁华，中央公园式城市是你的本命。",
+    advice: "推荐目的地：武汉东湖、深圳湾公园、贵阳观山湖",
+  },
+  "自然+田园": {
+    title: "山水田居图",
+    desc: "采菊东篱下，悠然见南山——你连旅行都要带点烟火气和稻香。",
+    advice: "推荐目的地：婺源、龙脊梯田、普者黑",
+  },
+  "自然+禅意": {
+    title: "山寺隐者",
+    desc: "你爬的不是山，是心境。钟声与鸟鸣同时入耳，你两个都要。",
+    advice: "推荐目的地：峨眉山、九华山、天台山",
+  },
+  "自然+美食": {
+    title: "赏味山水客",
+    desc: "看完雪山吃烤全羊，逛完竹海喝竹筒饭——你的行程表一半是风景一半是干饭。",
+    advice: "推荐目的地：阳朔、恩施、延吉",
+  },
+  "自然+活力": {
+    title: "风一样的背包客",
+    desc: "徒步、溯溪、露营、桨板——你的行李箱里没有一件闲衣服。",
+    advice: "推荐目的地：武功山、漓江、喀拉峻",
+  },
+  "人文+冒险": {
+    title: "遗迹探秘者",
+    desc: "别人看文物隔着玻璃，你偏要上城墙、钻石窟、走古道。",
+    advice: "推荐目的地：敦煌、交河故城、剑门关",
+  },
+  "人文+都市": {
+    title: "博物馆城市游民",
+    desc: "你的 citywalk 路线是：上午看展，下午逛民国老街，晚上听爵士。",
+    advice: "推荐目的地：上海、天津、南京",
+  },
+  "人文+海洋": {
+    title: "海上丝路迷",
+    desc: "泉州的簪花、青岛的老教堂、鼓浪屿的老别墅——你要的是有故事的海风。",
+    advice: "推荐目的地：泉州、青岛、鼓浪屿",
+  },
+  "人文+美食": {
+    title: "舌尖上的史学家",
+    desc: "一条老街你先查它的建城史，再查它的小吃排行榜。",
+    advice: "推荐目的地：西安、扬州、潮州",
+  },
+  "人文+活力": {
+    title: "行走的百科全书",
+    desc: "导游讲到一半发现你比他熟，讲解器在你手里就是个摆设。",
+    advice: "推荐目的地：北京中轴线、洛阳、开封",
+  },
+  "冒险+海洋": {
+    title: "追浪探险家",
+    desc: "浮潜、冲浪、海钓、跳岛——平静的海面可满足不了你。",
+    advice: "推荐目的地：万宁、涠洲岛、平潭",
+  },
+  "冒险+田园": {
+    title: "乡野探险队",
+    desc: "你连逛个古镇都要找野路，稻田里能玩出拓展基地的效果。",
+    advice: "推荐目的地：阳朔十里画廊、莫干山、清远",
+  },
+  "冒险+禅意": {
+    title: "红尘修行者",
+    desc: "上山礼佛，下山漂流——你信的是动静皆宜。",
+    advice: "推荐目的地：青城山、齐云山、武当山",
+  },
+  "冒险+美食": {
+    title: "辣度挑战者",
+    desc: "辣椒浓度和过山车高度是你的两大 KPI。",
+    advice: "推荐目的地：重庆、贵阳、乐山",
+  },
+  "都市+海洋": {
+    title: "滨海都会控",
+    desc: "你选城市先看海不看 GDP，维多利亚港和上海外滩都是你的菜。",
+    advice: "推荐目的地：厦门、大连、香港",
+  },
+  "都市+田园": {
+    title: "城郊漫游者",
+    desc: "你的理想生活：工作日在 CBD，周末在民宿——连旅行都是这个节奏。",
+    advice: "推荐目的地：成都、杭州、昆明",
+  },
+  "都市+禅意": {
+    title: "城市放空师",
+    desc: "你在写字楼里敲键盘，在寺庙里数香客，动静之间切换自如。",
+    advice: "推荐目的地：杭州、南京、西安",
+  },
+  "都市+活力": {
+    title: "城市夜行者",
+    desc: "别人的旅行九点回酒店，你的旅行九点刚开始——夜市、livehouse、江边夜跑。",
+    advice: "推荐目的地：长沙、重庆、广州",
+  },
+  "海洋+田园": {
+    title: "渔村慢游客",
+    desc: "你要的海边不是人挤人的浴场，是能看日落的安静渔村。",
+    advice: "推荐目的地：霞浦、东极岛、涠洲岛",
+  },
+  "海洋+禅意": {
+    title: "观海听涛者",
+    desc: "面朝大海不一定要春暖花开，发呆两小时就是你的正式行程。",
+    advice: "推荐目的地：南澳岛、枸杞岛、北海",
+  },
+  "海洋+美食": {
+    title: "海鲜原教旨主义者",
+    desc: "你的海边旅行只有一个主题：刚上岸的海鲜去哪家吃。",
+    advice: "推荐目的地：湛江、舟山、烟台",
+  },
+  "人文+探险": {
+    title: "古道攀登者",
+    desc: "你专挑有故事的雪山与古道——茶马古道、徽杭古道都想走一遍。",
+    advice: "推荐目的地：四姑娘山、哈巴雪山、梅里雪山",
+  },
+  "冒险+探险": {
+    title: "极限双修",
+    desc: "过山车只是热身，真正的肾上腺素要往山里找。",
+    advice: "推荐目的地：玉龙雪山、稻城亚丁、贡嘎",
+  },
+  "探险+都市": {
+    title: "高空景观控",
+    desc: "每到一个城市先爬最高的山——既能看全景又算了登山，一举两得。",
+    advice: "推荐目的地：重庆南山、广州白云山、杭州北高峰",
+  },
+  "探险+海洋": {
+    title: "海岸线徒步者",
+    desc: "你的理想路线：一边是悬崖，一边是大海。",
+    advice: "推荐目的地：香港麦理浩径、威海成山头、大连滨海路",
+  },
+  "探险+田园": {
+    title: "高山梯田党",
+    desc: "别人拍梯田用无人机，你直接爬到田埂上。",
+    advice: "推荐目的地：龙脊梯田、元阳梯田、加榜梯田",
+  },
+  "探险+禅意": {
+    title: "雪山朝圣者",
+    desc: "转山是你的旅行方式，海拔五千米也要带着虔诚。",
+    advice: "推荐目的地：梅里雪山、冈仁波齐、鸡足山",
+  },
+  "探险+美食": {
+    title: "登高下馆子",
+    desc: "上午登顶看云海，下山必须涮一顿火锅犒劳自己。",
+    advice: "推荐目的地：泰安、乐山、都江堰",
+  },
+  "探险+活力": {
+    title: "高原体能怪",
+    desc: "别人有高原反应，你有高原兴奋。",
+    advice: "推荐目的地：香格里拉、稻城、川西",
+  },
+  "田园+禅意": {
+    title: "桃源隐士",
+    desc: "你的旅行不打卡，找个古村住三天，听雨、喝茶、看云。",
+    advice: "推荐目的地：宏村、沙溪、查济",
+  },
+  "田园+活力": {
+    title: "乡野骑行派",
+    desc: "你逛田园的方式是骑行——稻香里蹬车的快乐，城里人不懂。",
+    advice: "推荐目的地：千岛湖、阳朔、大理",
+  },
+  "禅意+美食": {
+    title: "素斋品味家",
+    desc: "你能在一碗素面里吃出仪式感，寺庙的斋饭是你的隐藏菜单。",
+    advice: "推荐目的地：杭州灵隐寺、厦门南普陀、扬州大明寺",
+  },
+  "禅意+活力": {
+    title: "晨钟暮鼓晨跑者",
+    desc: "你在寺庙里最早起——为了听早课，也为了绕寺晨跑。",
+    advice: "推荐目的地：五台山、普陀山、武当山",
+  },
+  "美食+活力": {
+    title: "干饭特快专列",
+    desc: "你的旅行节奏：一天五顿，中间穿插两万步消食。",
+    advice: "推荐目的地：顺德、自贡、徐州",
   },
 };
 
@@ -286,6 +462,8 @@ function PersonalityCard({
   traits,
   themeIdx,
   favCount,
+  recs,
+  contrast,
 }: {
   title: string;
   desc: string;
@@ -293,6 +471,8 @@ function PersonalityCard({
   traits: { trait: string; emoji: string; percent: number }[];
   themeIdx: number;
   favCount: number;
+  recs: { id: string; name: string; level?: string }[];
+  contrast: { hits: number; topTrait: string; latestName: string } | null;
 }) {
   const theme = CARD_THEMES[themeIdx % CARD_THEMES.length];
   const [showShare, setShowShare] = useState(false);
@@ -399,18 +579,62 @@ function PersonalityCard({
             ))}
           </div>
 
-          {/* 建议 */}
+          {/* 真实推荐：统一库按 trait 挑选，点击直达详情 */}
           <motion.div
             className={`rounded-xl ${theme.badge} p-3 mb-5`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1 }}
           >
-            <div className="text-xs font-bold text-white/80 mb-1">
-              📍 下一站推荐
+            <div className="text-xs font-bold text-white/80 mb-1.5">
+              📍 下一站推荐 · 来自景点库的真实收录
             </div>
-            <div className="text-sm font-medium">{advice}</div>
+            {recs.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {recs.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => {
+                      const spot = useAppStore
+                        .getState()
+                        .spots.find((x) => x.id === s.id);
+                      if (spot) {
+                        useAppStore.getState().setSelectedSpot(spot);
+                        useAppStore.getState().setActiveView("spots");
+                      }
+                    }}
+                    className="text-left text-xs font-medium bg-white/15 hover:bg-white/30 active:scale-95 rounded-full px-2.5 py-1 transition-colors"
+                  >
+                    {s.name}
+                    {s.level ? (
+                      <span className="text-white/60 ml-1">{s.level}</span>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm font-medium">{advice}</div>
+            )}
           </motion.div>
+
+          {/* 反差维度：收藏口味 vs 翻车日记 */}
+          {contrast && (
+            <motion.div
+              className="rounded-xl bg-black/20 p-3 mb-5"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.1 }}
+            >
+              <div className="text-xs font-bold text-white/80 mb-0.5">
+                😏 口嫌体正直预警
+              </div>
+              <div className="text-xs text-white/70 leading-relaxed">
+                你偏爱「{contrast.topTrait}」系，但翻车日记里有 {contrast.hits}{" "}
+                条也是{contrast.topTrait}
+                类景点（最近一条：{contrast.latestName}）——是真爱没错了。
+              </div>
+            </motion.div>
+          )}
 
           {/* 操作按钮 */}
           <div className="flex gap-3">
@@ -448,7 +672,8 @@ function PersonalityCard({
    旅人人格测试主页面
    ═══════════════════════════════════════════════════ */
 export default function PersonalityView() {
-  const { spots, favorites, trip } = useAppStore();
+  const { spots, favorites, trip, dissuasionRecords, lastPersona } =
+    useAppStore();
   const [phase, setPhase] = useState<"intro" | "cards" | "result">("intro");
   const [revealedCount, setRevealedCount] = useState(0);
   const [cardThemeIdx] = useState(() =>
@@ -519,6 +744,46 @@ export default function PersonalityView() {
     };
   }, [spots, favorites]);
 
+  // ═══ 真实推荐：从统一库按主导 trait 挑未收藏的真实景点（5A 优先 → 评分） ═══
+  const recs = useMemo(() => {
+    if (!analysis) return [];
+    const pool = new Set([...favorites, ...trip]);
+    const picked: typeof spots = [];
+    for (const t of analysis.top) {
+      const cats = TRAIT_CATEGORIES[t.trait];
+      if (!cats) continue;
+      const candidates = spots
+        .filter((s) => cats.includes(s.category) && !pool.has(s.id))
+        .sort((a, b) => {
+          const lv = (x: typeof a) =>
+            x.level === "5A" ? 0 : x.level === "4A" ? 1 : 2;
+          return lv(a) - lv(b) || (b.rating ?? 0) - (a.rating ?? 0);
+        });
+      // 每个 trait 取 2 条，轮换填充避免只出第一批
+      picked.push(...candidates.slice(0, 2));
+    }
+    return picked.slice(0, 6);
+  }, [analysis, spots, favorites, trip]);
+
+  // ═══ 反差维度：翻车日记与主导 trait 的交叉 ═══
+  const contrast = useMemo(() => {
+    if (!analysis || dissuasionRecords.length === 0) return null;
+    const topTrait = analysis.top[0]?.trait;
+    if (!topTrait) return null;
+    const traitCats = TRAIT_CATEGORIES[topTrait] ?? [];
+    const catByName = new Map(spots.map((s) => [s.name, s.category]));
+    let hits = 0;
+    let latestName = "";
+    for (const r of dissuasionRecords) {
+      if (traitCats.includes(catByName.get(r.spotName) ?? "")) {
+        hits++;
+        if (!latestName) latestName = r.spotName;
+      }
+    }
+    if (hits < 2) return null;
+    return { hits, topTrait, latestName };
+  }, [analysis, dissuasionRecords, spots]);
+
   const startTest = useCallback(() => {
     setPhase("cards");
     setRevealedCount(0);
@@ -539,6 +804,19 @@ export default function PersonalityView() {
     setPhase("intro");
     setRevealedCount(0);
   }, []);
+
+  // 进入结果页时落盘本次人格（持久化），供下次「上次测试」对比
+  useEffect(() => {
+    if (phase === "result" && analysis) {
+      const prev = useAppStore.getState().lastPersona;
+      if (prev?.title !== analysis.persona.title) {
+        useAppStore.getState().setLastPersona({
+          title: analysis.persona.title,
+          date: new Date().toLocaleDateString("zh-CN"),
+        });
+      }
+    }
+  }, [phase, analysis]);
 
   // ═══ 空状态 ═══
   if (favorites.length === 0 && trip.length === 0) {
@@ -673,6 +951,16 @@ export default function PersonalityView() {
   if (phase === "result" && analysis) {
     return (
       <div className="min-h-full flex flex-col items-center px-4 py-8">
+        {lastPersona && lastPersona.title !== analysis.persona.title && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 text-xs text-gray-500 bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5"
+          >
+            上次测试（{lastPersona.date}）：{lastPersona.title} →
+            你的旅行口味变了
+          </motion.div>
+        )}
         <PersonalityCard
           title={analysis.persona.title}
           desc={analysis.persona.desc}
@@ -680,6 +968,8 @@ export default function PersonalityView() {
           traits={analysis.top}
           themeIdx={cardThemeIdx}
           favCount={analysis!.favCount}
+          recs={recs.map((s) => ({ id: s.id, name: s.name, level: s.level }))}
+          contrast={contrast}
         />
 
         {/* 底部操作 */}

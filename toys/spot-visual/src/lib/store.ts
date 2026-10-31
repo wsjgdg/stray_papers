@@ -47,6 +47,9 @@ interface AppStore {
   /** 最近搜索词（新→旧，去重，最多 6 条），搜索框下快捷重搜 */
   recentSearches: string[];
   clearRecentSearches: () => void;
+  /** 旅人测试上次结果（持久化）：结果页做「上次测试」对比 */
+  lastPersona: { title: string; date: string } | null;
+  setLastPersona: (p: { title: string; date: string } | null) => void;
   searchQuery: string;
   activeCategory: string;
   viewMode: "grid" | "list";
@@ -219,6 +222,8 @@ export const useAppStore = create<AppStore>()(
         set({ searchQuery: q, recentSearches });
       },
       clearRecentSearches: () => set({ recentSearches: [] }),
+      lastPersona: null,
+      setLastPersona: (p) => set({ lastPersona: p }),
       setActiveCategory: (c) => set({ activeCategory: c }),
       setViewMode: (m) => set({ viewMode: m }),
       sortMode: "default" as
@@ -433,6 +438,8 @@ export const useAppStore = create<AppStore>()(
         recentViews: s.recentViews,
         // 最近搜索词
         recentSearches: s.recentSearches,
+        // 旅人测试上次结果（结果页「上次测试」对比）
+        lastPersona: s.lastPersona,
         // 筛选条件持久化：刷新/重开保持浏览上下文
         searchQuery: s.searchQuery,
         activeCategory: s.activeCategory,
