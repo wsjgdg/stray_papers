@@ -68,12 +68,27 @@ function DissuasionCard({
       className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden"
     >
       <div className="p-4">
-        {/* 头部 */}
+        {/* 头部：景点名可点击跳回详情（spotId 命中库条目时） */}
         <div className="flex items-start justify-between mb-2">
           <div>
-            <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100">
+            <button
+              onClick={() => {
+                const spot = useAppStore
+                  .getState()
+                  .spots.find((s) => s.id === record.spotId);
+                if (spot) {
+                  useAppStore.getState().setSelectedSpot(spot);
+                  useAppStore.getState().setActiveView("spots");
+                }
+              }}
+              className={`text-left text-sm font-bold ${
+                useAppStore.getState().spots.some((s) => s.id === record.spotId)
+                  ? "text-gray-900 dark:text-gray-100 underline decoration-dotted underline-offset-2 hover:text-emerald-600 dark:hover:text-emerald-400"
+                  : "text-gray-900 dark:text-gray-100"
+              }`}
+            >
               {record.spotName}
-            </h4>
+            </button>
             <div className="flex items-center gap-2 text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">
               <span>{timeStr}</span>
               <span>·</span>
@@ -256,7 +271,9 @@ export default function DissuasionView() {
       tags: DISSUASION_TAGS.map((t) => ({
         ...t,
         count: dissuasionRecords.filter((r) => r.tags.includes(t.id)).length,
-      })).filter((t) => t.count > 0),
+      }))
+        .filter((t) => t.count > 0)
+        .sort((a, b) => b.count - a.count),
     }),
     [dissuasionRecords],
   );
@@ -342,7 +359,10 @@ export default function DissuasionView() {
                 className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
                   filterTag === t.id
                     ? "ring-2 ring-rose-300 bg-rose-50 text-rose-700"
-                    : "bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-gray-300"
+                    : t.count === stats.tags[0]?.count &&
+                        stats.tags[0].count > 1
+                      ? "bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 hover:border-rose-300"
+                      : "bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-gray-300"
                 }`}
               >
                 {t.emoji} {t.label} ({t.count})

@@ -226,49 +226,12 @@ const SLOT_WIDTH = 160;
 function Dial({
   value,
   onChange,
+  realData,
 }: {
   value: number;
   onChange: (i: number) => void;
+  realData: { uv: number; shadow: number; source: "open-meteo" } | null;
 }) {
-  // ═══ 真实 UV：geolocation → /api/weather（Open-Meteo 逐小时 uv_index）═══
-  // 成功时按当前小时覆盖典型值；失败/无定位静默回退典型值（TIME_PERIODS.uv）。
-  const [realData, setRealData] = useState<{
-    uv: number;
-    shadow: number;
-    source: "open-meteo";
-  } | null>(null);
-  useEffect(() => {
-    if (!navigator.geolocation) return;
-    let alive = true;
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const res = await fetch(
-            `/api/weather?lat=${pos.coords.latitude.toFixed(3)}&lng=${pos.coords.longitude.toFixed(3)}`,
-          );
-          if (!res.ok) return;
-          const j = await res.json();
-          const hour = String(new Date().getHours()).padStart(2, "0");
-          const hit = (j.uvToday ?? []).find(
-            (x: { hour: string }) => x.hour === hour,
-          );
-          if (hit && alive)
-            setRealData({
-              uv: hit.uv,
-              shadow: hit.shadow,
-              source: "open-meteo",
-            });
-        } catch {
-          /* 静默回退典型值 */
-        }
-      },
-      () => {},
-      { timeout: 5000 },
-    );
-    return () => {
-      alive = false;
-    };
-  }, []);
   // 棘轮拖动：motionX 跟手，跨 slot 边界触发短震，松手 spring 回弹到刻度
   const { motionX, handleStart, handleMove, handleEnd, snapTo } =
     useRatchetDrag(SLOT_WIDTH);
@@ -931,11 +894,13 @@ function ConclusionButton({
   activeConditions,
   selectedSpotId,
   selectedSpotName,
+  realData,
 }: {
   timeIndex: number;
   activeConditions: Set<string>;
   selectedSpotId: string | null;
   selectedSpotName: string | null;
+  realData: { uv: number; shadow: number; source: "open-meteo" } | null;
 }) {
   const [showResult, setShowResult] = useState(false);
   const [result, setResult] = useState<"go" | "nogo">("go");
@@ -944,11 +909,14 @@ function ConclusionButton({
   const setHeatWarning = useSharedMotionStore((s) => s.setHeatWarning);
   const { spots, dissuasionRecords } = useAppStore();
 
+  // ═══ 有效 UV：实测（Open-Meteo 实时，有则优先）覆盖静态典型值 ═══
+  // 拨盘显示与 PTSI/结论判定共用同一口径，避免「显示实测、判定用典型值」的割裂
+  const effectiveUv = realData?.uv ?? TIME_PERIODS[timeIndex]?.uv ?? 0;
+
   // ═══ 使用 ptsi-calculator 计算 PTSI ═══
   const ptsiResult = useMemo<PTSIResult>(() => {
-    const uv = TIME_PERIODS[timeIndex]?.uv ?? 0;
-    return calcPTSI(uv, Array.from(activeConditions), 0);
-  }, [timeIndex, activeConditions]);
+    return calcPTSI(effectiveUv, Array.from(activeConditions), 0);
+  }, [effectiveUv, activeConditions]);
 
   // ═══ 体力预算评估 ═══
   const staminaBudget = useMemo(
@@ -997,7 +965,7 @@ function ConclusionButton({
 
   // ═══ 综合劝退评分 ═══
   const evaluate = useCallback(() => {
-    const uv = TIME_PERIODS[timeIndex]?.uv ?? 0;
+    const uv = effectiveUv;
     const uvScore = uv >= 10 ? 50 : uv >= 5 ? 30 : uv >= 3 ? 10 : 0;
     const condScore = activeConditions.size * 20;
     const total = uvScore + condScore;
@@ -1005,6 +973,7 @@ function ConclusionButton({
     const reasons: string[] = [];
     if (uvScore >= 50) reasons.push("正午紫外线极强");
     else if (uvScore >= 30) reasons.push("紫外线较强");
+    if (realData) reasons.push(`已按实测 UV ${uv} 校准`);
     if (activeConditions.has("heat")) reasons.push("当前怕热中暑");
     if (activeConditions.has("heart")) reasons.push("当前心脏负担大");
     if (activeConditions.has("knee")) reasons.push("当前膝盖不适");
@@ -1033,7 +1002,8 @@ function ConclusionButton({
         : "时段良好、无身体红灯";
     return { nogo: nogo ? ("nogo" as const) : ("go" as const), text };
   }, [
-    timeIndex,
+    effectiveUv,
+    realData,
     activeConditions,
     ptsiResult,
     staminaBudget,
@@ -1318,6 +1288,47 @@ export default function DeterrentView() {
     setTimeIndex(i);
   };
 
+  // ═══ 真实 UV：geolocation → /api/weather（Open-Meteo 逐小时 uv_index）═══
+  // 提升到主组件：拨盘显示与 PTSI/结论判定共用同一份数据
+  // 失败/无定位静默回退典型值（TIME_PERIODS.uv）
+  const [realData, setRealData] = useState<{
+    uv: number;
+    shadow: number;
+    source: "open-meteo";
+  } | null>(null);
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    let alive = true;
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const res = await fetch(
+            `/api/weather?lat=${pos.coords.latitude.toFixed(3)}&lng=${pos.coords.longitude.toFixed(3)}`,
+          );
+          if (!res.ok) return;
+          const j = await res.json();
+          const hour = String(new Date().getHours()).padStart(2, "0");
+          const hit = (j.uvToday ?? []).find(
+            (x: { hour: string }) => x.hour === hour,
+          );
+          if (hit && alive)
+            setRealData({
+              uv: hit.uv,
+              shadow: hit.shadow,
+              source: "open-meteo",
+            });
+        } catch {
+          /* 静默回退典型值 */
+        }
+      },
+      () => {},
+      { timeout: 5000 },
+    );
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   return (
     <div className="relative min-h-full">
       <DialBackground period={period} fromIdx={prevTimeIdx} toIdx={timeIndex} />
@@ -1374,7 +1385,11 @@ export default function DeterrentView() {
               ← 左右滑动 →
             </span>
           </div>
-          <Dial value={timeIndex} onChange={handleTimeChange} />
+          <Dial
+            value={timeIndex}
+            onChange={handleTimeChange}
+            realData={realData}
+          />
         </div>
 
         {/* ═══ 身体红灯筛选器 ═══ */}
@@ -1450,6 +1465,7 @@ export default function DeterrentView() {
         activeConditions={activeConditions}
         selectedSpotId={selectedSpotId}
         selectedSpotName={selectedSpotName}
+        realData={realData}
       />
     </div>
   );

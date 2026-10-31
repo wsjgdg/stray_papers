@@ -861,7 +861,6 @@ function FlipView({
    ═══════════════════════════════════════════════════ */
 function EmergencyButton({ route }: { route: MountainRoute }) {
   const [showOptions, setShowOptions] = useState(false);
-  const [feedback, setFeedback] = useState<string | null>(null);
   const [sosActive, setSosActive] = useState(false);
   const setSosStore = useSharedMotionStore((s) => s.setSosActive);
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -1102,20 +1101,6 @@ function EmergencyButton({ route }: { route: MountainRoute }) {
           >
             <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
             {optionsContent}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 操作反馈提示 */}
-      <AnimatePresence>
-        {feedback && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-40 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-sm px-5 py-3 rounded-xl shadow-xl whitespace-nowrap"
-          >
-            {feedback}
           </motion.div>
         )}
       </AnimatePresence>
@@ -1531,7 +1516,7 @@ export default function FitnessView() {
               color: "text-orange-500",
             },
             {
-              label: "预计用时",
+              label: "预计用时（经验参考值）",
               value: `${fmtNum(route.durationHours)}h`,
               icon: Clock,
               color: "text-purple-500",

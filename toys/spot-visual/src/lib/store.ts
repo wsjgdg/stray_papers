@@ -107,6 +107,8 @@ interface AppStore {
   splitTripDay: (index: number) => void;
   mergeTripDay: (splitIndex: number) => void;
   setTripDaySplit: (splits: number[]) => void;
+  /** 一键就近排序：每段（分天）内部按坐标最近邻贪心重排，段顺序与切分点保持 */
+  sortTripByProximity: () => void;
 
   // ═══ 体力沙盘状态（不持久化，仅会话内有效） ═══
   staminaBudget: number; // 用户体力预算上限
@@ -363,6 +365,77 @@ export const useAppStore = create<AppStore>()(
           tripDaySplit: s.tripDaySplit.filter((p) => p !== splitIndex),
         })),
       setTripDaySplit: (splits) => set({ tripDaySplit: splits }),
+      sortTripByProximity: () =>
+        set((s) => {
+          if (s.trip.length < 3) return s;
+          const coordOf = (id: string) => {
+            const sp = s.spots.find((x) => x.id === id);
+            const loc = sp?.location as
+              { lng?: number; lat?: number } | undefined;
+            return typeof loc?.lng === "number" && typeof loc?.lat === "number"
+              ? ({ lng: loc.lng, lat: loc.lat } as const)
+              : null;
+          };
+          const hav = (
+            a: { lng: number; lat: number },
+            b: { lng: number; lat: number },
+          ) => {
+            const R = 6371;
+            const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+            const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+            const t =
+              Math.sin(dLat / 2) ** 2 +
+              Math.cos((a.lat * Math.PI) / 180) *
+                Math.cos((b.lat * Math.PI) / 180) *
+                Math.sin(dLng / 2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(t), Math.sqrt(1 - t));
+          };
+          // 按 tripDaySplit 切段（结束索引，不含末段），段内最近邻、段顺序不动
+          const splits = [...s.tripDaySplit].sort((a, b) => a - b);
+          const segs: string[][] = [];
+          let prev = 0;
+          for (const idx of splits) {
+            segs.push(s.trip.slice(prev, idx));
+            prev = idx;
+          }
+          segs.push(s.trip.slice(prev));
+          let newTrip: string[] = [];
+          for (const seg of segs) {
+            let rest = seg.map((id) => ({ id, c: coordOf(id) }));
+            const ordered: {
+              id: string;
+              c: { lng: number; lat: number } | null;
+            }[] = [];
+            let cur = rest.shift() ?? null;
+            while (cur) {
+              ordered.push(cur);
+              if (!cur.c) {
+                cur = rest.shift() ?? null;
+                continue;
+              }
+              let bi = -1;
+              let bd = Infinity;
+              rest.forEach((p, i) => {
+                if (!p.c) return;
+                const d = hav(cur!.c!, p.c);
+                if (d < bd) {
+                  bd = d;
+                  bi = i;
+                }
+              });
+              cur = bi >= 0 ? rest.splice(bi, 1)[0] : (rest.shift() ?? null);
+            }
+            newTrip.push(...ordered.map((o) => o.id));
+          }
+          // 重建切分点：每段长度前缀和（段数不变，长度不变）
+          const tripDaySplit: number[] = [];
+          let acc = 0;
+          for (let i = 0; i < segs.length - 1; i++) {
+            acc += segs[i].length;
+            tripDaySplit.push(acc);
+          }
+          return { trip: newTrip, tripDaySplit };
+        }),
 
       // ═══ 体力沙盘状态 ═══
       staminaBudget: 100,

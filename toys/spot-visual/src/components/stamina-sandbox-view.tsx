@@ -187,6 +187,7 @@ export default function StaminaSandboxView() {
     activeSpotOrder,
     setActiveSpotOrder,
     trip,
+    addToTrip,
   } = useAppStore();
   // 身体条件在 store（三视图共享：体力沙盘/PTSI/劝退指南）
 
@@ -428,19 +429,23 @@ export default function StaminaSandboxView() {
 
         {/* ═══ 项目排序（拖拽提示） ═══ */}
         <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800">
-          <div className="flex items-center gap-1.5 mb-3">
+          <div className="flex items-center gap-1.5 mb-3 flex-wrap">
             <Shuffle className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
               景点游览顺序
-            </span>
-            <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">
-              拖拽调整（后续实现）
             </span>
             {trip.length === 0 && (
               <span className="text-[10px] text-gray-400 dark:text-gray-500">
                 未选行程：默认按高德评分取前 400 个景点进入沙盘
               </span>
             )}
+            <button
+              onClick={() => order.forEach((id) => addToTrip(id))}
+              className="ml-auto text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-500/10 transition-colors"
+              title="把沙盘当前顺序的景点依次加入行程单（已在行程中的会跳过）"
+            >
+              ➕ 按此顺序加入行程
+            </button>
           </div>
           <div className="flex flex-wrap gap-2">
             {order.map((id, i) => {

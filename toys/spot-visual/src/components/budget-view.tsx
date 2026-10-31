@@ -414,6 +414,7 @@ export default function BudgetView() {
   const {
     spots,
     trip,
+    tripDaySplit,
     customPrices,
     setCustomPrice,
     removeCustomPrice,
@@ -449,6 +450,53 @@ export default function BudgetView() {
     [customPrices],
   );
 
+  // ═══ 行程关联费用（估算口径，自评）：住宿按分天天数、交通按站间直线距离 ═══
+  // 无真实酒店/票价数据源（高德/携程类配额不可用），基准价为本项目自评，
+  // 真实性边界见数据来源页；穷游/土豪档由 BudgetBar 倍率统一缩放
+  const tripExtra = useMemo(() => {
+    if (effectiveScope !== "trip" || trip.length < 2)
+      return { nights: 0, hotelBase: 0, distanceKm: 0, transportBase: 0 };
+    const byId = new Map(spots.map((s) => [s.id, s]));
+    const coordOf = (id: string) => {
+      const loc = byId.get(id)?.location as
+        { lng?: number; lat?: number } | undefined;
+      return typeof loc?.lng === "number" && typeof loc?.lat === "number"
+        ? ({ lng: loc.lng, lat: loc.lat } as const)
+        : null;
+    };
+    const hav = (
+      a: { lng: number; lat: number },
+      b: { lng: number; lat: number },
+    ) => {
+      const R = 6371;
+      const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+      const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+      const t =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos((a.lat * Math.PI) / 180) *
+          Math.cos((b.lat * Math.PI) / 180) *
+          Math.sin(dLng / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(t), Math.sqrt(1 - t));
+    };
+    let distanceKm = 0;
+    for (let i = 1; i < trip.length; i++) {
+      const a = coordOf(trip[i - 1]);
+      const b = coordOf(trip[i]);
+      if (a && b) distanceKm += hav(a, b);
+    }
+    const days = tripDaySplit.length + 1;
+    const nights = Math.max(0, days - 1);
+    const HOTEL_BASE = 300; // 舒适档每晚（经济型连锁价，自评）
+    const TRANSPORT_RATE = 0.55; // 元/km（高铁/大巴混合，自评）；30km 内市内通勤不计
+    const transportBase =
+      distanceKm > 30 ? Math.round((distanceKm - 30) * TRANSPORT_RATE) : 0;
+    return {
+      nights,
+      hotelBase: nights * HOTEL_BASE,
+      distanceKm: Math.round(distanceKm),
+      transportBase,
+    };
+  }, [effectiveScope, trip, tripDaySplit, spots]);
   // 全库可见：不再按 projects 过滤（库内 5987 条只有门票维度，过去被整库隐藏）
   const spotItems = useMemo(() => {
     const base =
@@ -655,8 +703,38 @@ export default function BudgetView() {
               基于当前选择
             </span>
           </div>
-          <BudgetBar total={total} tiers={BUDGET_TIERS} />
+          <BudgetBar
+            total={total + tripExtra.hotelBase + tripExtra.transportBase}
+            tiers={BUDGET_TIERS}
+          />
         </div>
+
+        {/* ═══ 行程关联费用（估算口径） ═══ */}
+        {tripExtra.nights > 0 && (
+          <div className="rounded-2xl border border-gray-200 dark:border-gray-700/80 bg-white dark:bg-gray-900 p-4 mb-5">
+            <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              行程关联费用（估算）
+            </div>
+            <div className="space-y-1.5 text-xs text-gray-500 dark:text-gray-400">
+              <div>
+                🏨 住宿：{tripExtra.nights} 晚 × ¥300/晚（舒适档基准）={" "}
+                <b className="text-gray-700 dark:text-gray-300">
+                  ¥{tripExtra.hotelBase}
+                </b>
+              </div>
+              <div>
+                🚄 站间交通：约 {tripExtra.distanceKm} km（直线×混合单价）={" "}
+                <b className="text-gray-700 dark:text-gray-300">
+                  ¥{tripExtra.transportBase}
+                </b>
+                {tripExtra.transportBase === 0 && "（30km 内不计）"}
+              </div>
+              <div className="text-[11px] text-gray-400 dark:text-gray-500">
+                自评口径：无真实酒店/票价数据源，基准价为本项目估算；穷游/土豪档按倍率换算。门票与可选项目另计于下方明细。
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ═══ 价格分层 ═══ */}
         <div className="grid grid-cols-5 gap-2 mb-5">

@@ -52,6 +52,8 @@ export default function NetworkView() {
     setCityFilter,
     setLevelFilter,
     setSearchQuery,
+    favorites,
+    trip,
   } = useAppStore();
 
   // 数据范围：默认精选（top400 本地图 + 手工 30 + 预约标注），全部 = 统一库全量
@@ -225,12 +227,16 @@ export default function NetworkView() {
     } as EChartsOption;
   }, [provinceAgg]);
 
-  // ── 省级 option：市级边界 + 真实坐标散点 ─────────────────
+  // ── 省级 option：市级边界 + 真实坐标散点（收藏/行程状态上地图） ─────────────────
   const provinceOption = useMemo<EChartsOption>(() => {
     if (!cityGeo) return nationalOption;
+    const favSet = new Set(favorites);
+    const tripSet = new Set(trip);
     const points = provinceSpots.map((s) => {
       const loc = s.location as { lng: number; lat: number };
       const is5A = s.level === "5A";
+      const isFav = favSet.has(s.id);
+      const inTrip = tripSet.has(s.id);
       return {
         name: s.name,
         value: [loc.lng, loc.lat],
@@ -238,8 +244,8 @@ export default function NetworkView() {
         size: is5A ? 14 : s.level === "4A" ? 12 : 9,
         itemStyle: {
           color: is5A ? FIVE_A_COLOR : (CAT_COLORS[s.category] ?? "#6B7280"),
-          borderColor: "#ffffff",
-          borderWidth: 1,
+          borderColor: isFav ? "#EF4444" : inTrip ? "#F59E0B" : "#ffffff",
+          borderWidth: isFav || inTrip ? 3 : 1,
           opacity: 0.9,
         },
       };
@@ -253,14 +259,21 @@ export default function NetworkView() {
           const spot = provinceSpots.find((s) => s.id === d.id);
           const quote = spot ? quoteTicket(spot) : null;
           const ticket =
-            quote && quote.price != null ? `门票 ¥${quote.price}` : quote?.label;
+            quote && quote.price != null
+              ? `门票 ¥${quote.price}`
+              : quote?.label;
+          const status = favSet.has(d.id)
+            ? "❤️ 已收藏"
+            : tripSet.has(d.id)
+              ? "🧭 已在行程"
+              : null;
           const parts = [
             spot?.level,
             spot?.category,
             spot?.rating != null ? `评分 ${spot.rating}` : null,
             ticket,
           ].filter(Boolean);
-          return `<b>${d.name}</b>${parts.length ? `<br/>${parts.join(" · ")}` : ""}<br/><span style="color:#059669">点击查看详情</span>`;
+          return `<b>${d.name}</b>${parts.length ? `<br/>${parts.join(" · ")}` : ""}${status ? `<br/>${status}` : ""}<br/><span style="color:#059669">点击查看详情</span>`;
         },
       },
       geo: {
@@ -293,7 +306,7 @@ export default function NetworkView() {
         },
       ],
     } as EChartsOption;
-  }, [cityGeo, provinceSpots, nationalOption]);
+  }, [cityGeo, provinceSpots, nationalOption, favorites, trip]);
 
   // 市级地图按需注册（引用需稳定，避免 ChinaMap 反复 setOption）
   const maps = useMemo<MapRegistration[]>(

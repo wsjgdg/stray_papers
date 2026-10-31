@@ -406,6 +406,7 @@ export default function TripView() {
     splitTripDay,
     mergeTripDay,
     setTripDaySplit,
+    sortTripByProximity,
     setSelectedSpot,
     customPrices,
     setActiveView,
@@ -742,6 +743,13 @@ export default function TripView() {
               title="按每天体力预算 100 贪心分段"
             >
               ⚡ 按体力自动分天
+            </button>
+            <button
+              onClick={() => sortTripByProximity()}
+              className="text-[11px] font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-500/10 transition-colors"
+              title="每天内部按坐标最近邻重排，天与天的先后不变"
+            >
+              📍 就近排序
             </button>
             {tripDaySplit.length > 0 && (
               <button
