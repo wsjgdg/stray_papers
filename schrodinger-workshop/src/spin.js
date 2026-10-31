@@ -146,7 +146,7 @@ export class SpinApp {
     this.hist = []; this.job = null; this.msg = '';
     this._hover = -1; this._paint = null; this._view = null;
     this._nextFieldObjectId = 1;
-    this._sxProf = null; this._sxJob = null;
+    this._sxProf = null; this._sxJob = null; this._sxPending = null;
     this._listeners = []; this._fps = 0; this._fpsFrames = 0; this._lastFpsT = performance.now();
     this._errCount = 0; this._dead = false; this._title0 = undefined;
     this._onError = e => { const d = this.q('#spDiag'); if (d) d.textContent = 'ERR ' + e.message; };
@@ -517,13 +517,14 @@ export class SpinApp {
     /* 新扇区是新对象：上一扇区的测量 / 缓存在飞的剖面任务全部作废
        （否则 drawLadder 会拿旧长度的数组去画，画面直接空掉） */
     this.m = null; this.S = NaN; this.Sq = null; this.E = NaN; this.residual = null;
-    this._sxJob = null; this._dirtySx = true;
+    this._sxProf = null; this._sxJob = null; this._sxPending = null; this._dirtySx = true;
     this.job = null;
     this.q('#hDim').textContent = `${nUp}↑ / ${this.state.L - nUp}↓ · ${this.sec.dim}`;
   }
   /* 场 / Δ / h 变了：只重烤对角项（不重建 CSR），然后按模式重解或只更新读数 */
   afterHChange(why){
     this.cancelSolve();
+    this._sxPending=null;
     this.gap = null; this.gapJob = null;
     this.q('#hGap').textContent = '—';
     this.sec = spSector(this.state.L, this.state.nUp, {
@@ -728,7 +729,8 @@ export class SpinApp {
   setView(k){
     if (!SP_VIEWS.some(v => v.k === k)) return false;
     this.state.view = k;
-    if (k === 'Sx' && !this._sxJob && this.probeReady()) this.measureAll(true);
+    if(k!=='Sx'){this._sxJob=null;this._sxPending=null;}
+    if (k === 'Sx' && this.probeReady()) this.measureAll(true);
     this.syncPanel(); this.draw(); this.queueUrl();
     return true;
   }
@@ -742,6 +744,7 @@ export class SpinApp {
   toggleProj(){ return this.setProj(this.state.proj === '3d' ? '2d' : '3d'); }
   applyMode(mode){
     this.cancelSolve();
+    this._sxPending=null;
     if (mode === 'gs'){
       this.state.mode = 'gs';
       this.startSolve();
@@ -888,16 +891,25 @@ export class SpinApp {
     } else {
       this.hist = [[0, this.S], [1, this.S]];
     }
-    /* S(x) 剖面：由外向内的渐进任务（L=16 全剖面 15 个切点、中心最贵 ⟹ 每帧 8 ms 预算） */
-    const L = this.state.L;
-    if (this.probeReady()){
-      this._sxProf = null;
-      this._sxJob = { order: this._cutOrder(), k: 0, out: new Float64Array(L + 1).fill(NaN),
-        sec: this.sec, L, re: this.re.slice(), im: this.im.slice() };
+    /* S(x)：保持最近一条完整曲线可见；演化中的新快照排队，旧任务完成后再算，
+       避免高频测量不断清空/重启 L=16 的全剖面任务而造成闪烁。 */
+    if(this.state.view==='Sx'&&this.probeReady()){
+      const snapshot={sec:this.sec,re:this.re.slice(),im:this.im.slice()};
+      if(force||(!this._sxJob&&!this._sxProf)){
+        this._sxPending=null;this.startSxProfile(snapshot);
+      }else if(this.state.mode==='evo'){
+        if(this._sxJob)this._sxPending=snapshot;
+        else this.startSxProfile(snapshot);
+      }
     }
     this.syncHud();
   }
+  startSxProfile(snapshot){
+    const {sec,re,im}=snapshot,L=this.state.L;
+    this._sxJob={order:this._cutOrder(),k:0,out:new Float64Array(L+1).fill(NaN),sec,L,re,im};
+  }
   _cutOrder(){
+
     const L = this.state.L, o = [];
     for (let d = 1; d < L; d++){
       o.push(d);
@@ -908,14 +920,20 @@ export class SpinApp {
   stepSx(budget = 8){
     const j = this._sxJob;
     if (!j) return;
-    if (j.sec !== this.sec || !this.re || j.re.length !== this.sec.dim){ this._sxJob = null; return; }
+    if (j.sec !== this.sec || !this.re || j.re.length !== this.sec.dim){
+      this._sxJob = null; this._sxPending = null; return;
+    }
     const t0 = performance.now();
     while (j.k < j.order.length && performance.now() - t0 < budget){
       const c = j.order[j.k++];
       j.out[c] = spEntropyAt(j.sec, j.re, j.im, c, symEigVals).S;
     }
     j.out[0] = 0; j.out[j.L] = 0;
-    if (j.k >= j.order.length){ this._sxProf = j.out; this._sxJob = null; }
+    if (j.k >= j.order.length){
+      this._sxProf = j.out; this._sxJob = null;
+      const pending=this._sxPending;this._sxPending=null;
+      if(pending&&pending.sec===this.sec&&this.state.view==='Sx')this.startSxProfile(pending);
+    }
   }
   syncHud(){
     const set = (id, v) => { const el = this.q('#' + id); if (el) el.textContent = v; };
@@ -1203,11 +1221,14 @@ export class SpinApp {
     }
     ctx.strokeStyle = 'rgba(120,160,220,.16)'; ctx.lineWidth = 1 * dpr;
     ctx.beginPath(); ctx.moveTo(pad - 22 * dpr, bZero); ctx.lineTo(W - pad + 22 * dpr, bZero); ctx.stroke();
-    const selectedObject=this.state.fieldObjects.find(o=>o.id===this.state.selectedFieldObject);
-    if(selectedObject){
-      const x=xOf(selectedObject.center),r=3.2*dpr;
-      ctx.strokeStyle='rgba(103,232,249,.9)';ctx.lineWidth=1*dpr;ctx.beginPath();
-      ctx.moveTo(x,bZero-r);ctx.lineTo(x+r,bZero);ctx.lineTo(x,bZero+r);ctx.lineTo(x-r,bZero);ctx.closePath();ctx.stroke();
+    for(const o of this.state.fieldObjects){
+      const selected=o.id===this.state.selectedFieldObject,x=xOf(o.center),r=(selected?3.6:2.5)*dpr;
+      ctx.strokeStyle=selected?'rgba(103,232,249,.96)':(o.amp>0?'rgba(250,190,96,.82)':o.amp<0?'rgba(96,178,250,.82)':'rgba(190,200,215,.72)');
+      ctx.lineWidth=(selected?1.25:0.9)*dpr;ctx.beginPath();
+      if(o.shape==='gaussian')ctx.arc(x,bZero,r,0,6.2832);
+      else if(o.shape==='box')ctx.rect(x-r,bZero-r,r*2,r*2);
+      else{ctx.moveTo(x,bZero-r);ctx.lineTo(x+r,bZero);ctx.lineTo(x,bZero+r);ctx.lineTo(x-r,bZero);ctx.closePath();}
+      ctx.stroke();
     }
     ctx.textAlign = 'left'; ctx.font = mono(9 * dpr); ctx.fillStyle = 'rgba(154,167,189,.55)';
     ctx.fillText('J', 8 * dpr, jZero + 3 * dpr);
@@ -1343,6 +1364,18 @@ export class SpinApp {
 
     items.sort((a, b) => b.depth - a.depth);
     for (const it of items) it.fn();
+    /* Object anchors are thin outlines around lattice nodes, not overlays on the spin arrows. */
+    for(const o of this.state.fieldObjects){
+      const wx=xs[0]+(L>1?xs[1]-xs[0]:0)*o.center,p=P(wx,0,0);
+      const selected=o.id===this.state.selectedFieldObject,r=(selected?5:3.5)*dpr;
+      ctx.strokeStyle=selected?'rgba(103,232,249,.96)':(o.amp>0?'rgba(250,190,96,.82)':o.amp<0?'rgba(96,178,250,.82)':'rgba(190,200,215,.72)');
+      ctx.lineWidth=(selected?1.25:0.9)*dpr;ctx.beginPath();
+      if(o.shape==='box')ctx.rect(p.x-r,p.y-r,r*2,r*2);
+      else if(o.shape==='staggered'){
+        ctx.moveTo(p.x,p.y-r);ctx.lineTo(p.x+r,p.y);ctx.lineTo(p.x,p.y+r);ctx.lineTo(p.x-r,p.y);ctx.closePath();
+      }else ctx.arc(p.x,p.y,r,0,6.2832);
+      ctx.stroke();
+    }
     this._view = { pad: 0, stepX: stepPx, W, H, dpr, proj: '3d' };
   }
   drawChart(){
