@@ -35,6 +35,7 @@ import {
   SCENIC_SERVICES,
   type ScenicServices,
 } from "@/lib/scenic-services.generated";
+import { MOUNTAIN_ROUTES } from "@/lib/mountain-routes.generated";
 import { BreathRing } from "@/components/shared/breath-ring";
 import { LiquidCharge } from "@/components/shared/liquid-charge";
 import { PressureButton } from "@/components/shared/pressure-button";
@@ -47,6 +48,27 @@ import { type PTSIResult } from "@/lib/spot-data";
 import { useAppStore } from "@/lib/store";
 
 /* ═══ 工具函数 ═══ */
+
+/** 从 mountain-routes 真实高程采样算最大坡度（度）和累计爬升（米） */
+function gradientOf(spotName: string): { maxGrad: number; gainM: number } | null {
+  for (const r of MOUNTAIN_ROUTES) {
+    if (!r.spots.includes(spotName)) continue;
+    let maxGrad = 0;
+    let gain = 0;
+    for (let i = 1; i < r.profile.length; i++) {
+      const dKm = r.profile[i].km - r.profile[i - 1].km;
+      const dEle = r.profile[i].ele - r.profile[i - 1].ele;
+      if (dKm > 0) {
+        const grad = Math.abs(Math.atan(dEle / (dKm * 1000)) * (180 / Math.PI));
+        if (grad > maxGrad) maxGrad = grad;
+      }
+      if (dEle > 0) gain += dEle;
+    }
+    return { maxGrad: Math.round(maxGrad * 10) / 10, gainM: Math.round(gain) };
+  }
+  return null;
+}
+
 // vibrate 已抽到 motion-hooks，这里保留 speak
 const speak = (text: string) => {
   try {
@@ -482,11 +504,13 @@ function TimelineCard({
   index,
   activeConditions,
   services,
+  spotName,
 }: {
   item: (typeof TIMELINE_DATA)[0];
   index: number;
   activeConditions: Set<string>;
   services?: ScenicServices;
+  spotName?: string | null;
 }) {
   const [queueDisplay, setQueueDisplay] = useState(item.queue);
   const [flipping, setFlipping] = useState(false);
@@ -580,6 +604,12 @@ function TimelineCard({
 
           // 真实数据覆盖：toilet/exit 有腾讯 nearby 烘焙数据时替换模板文字
           const resolved = (() => {
+            if (reason.id === 'slope') {
+              const grad = spotName ? gradientOf(spotName) : null;
+              if (grad) {
+                return `最大坡度 ${grad.maxGrad}° · 累计爬升 ${grad.gainM} 米（实测高程采样）`;
+              }
+            }
             if (services && reason.id === "toilet") {
               return services.nearestToiletM >= 0
                 ? `周边 500m 内 ${services.toiletCount} 个卫生间 · 最近 ${services.nearestToiletM} 米`

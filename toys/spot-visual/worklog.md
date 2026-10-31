@@ -984,6 +984,10 @@ G4 边界观察（子代理发现，未动）：CITY_CENTERS/PROVINCE_CENTERS �
 
 **合并键规则**：selectedSpotName 是库内展示名，直接匹配 SCENIC_SERVICES 键（同为展示名）。
 
+坡度真实现补记（六十九轮补充）：劝退视图「坡度路面」项已接 mountain-routes 真实高程采样——gradientOf() 从 profile {km,ele} 算最大坡度+累计爬升，选中假想目的地匹配 mountain-routes.spots 时显示真实数据（如 泰山 maxGrad 54.0° gain 880m），非山岳景点回退模板。链路：DeterrentView → HeavyTimeline(spotName) → TimelineCard(resolveText)。
+
+门禁：tsc 0 ✓ vitest 101/101 ✓ 隔离 build ✓ 双端口 200 ✓。
+
 ## 七轮（2026-10-25）：志愿探索接入真实数据
 
 | 项目                                                                                                                                               | 状态   |
