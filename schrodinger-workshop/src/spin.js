@@ -24,14 +24,15 @@ import { navHtml } from './core/nav.js';
 /* 3D 透视视图复用哈伯德页的相机/投影/拾取（纯数学模块，pot143 已逐条对账） */
 import { hbProject, hbSitePositions, hbPick, hbOrbit, hbZoom, hbCamDefault, hbDepthRange } from './hubbard3d.js';
 import { symEigVals } from './physics/hubbard.js';
-import { spSector, spProduct, spNeel, spMeasure, spEnergy, spResidual, spNorm, spKrylovExp, spEntropy, spEntropyAt, spEntropyProfile, spStructureFactor, SpGsTask, SP_PRESETS } from './physics/spin.js';
+import { spSector, spProduct, spNeel, spMeasure, spEnergy, spResidual, spNorm, spKrylovExp, spEntropy, spEntropyAt, spEntropyProfile, spStructureFactor, spComposeField, spNormalizeFieldObjects, SP_FIELD_SHAPES, SpGsTask, SP_PRESETS } from './physics/spin.js';
 
 /* 局域场的满量程（|b| 到 4 就是满格高） */
 const B_VIEW = 4;
 const SP_TOOLS = [
   { k: 'state', name: '初态', tip: '点击格点翻转该格自旋（右键反向）' },
-  { k: 'field', name: '场笔刷', tip: '拖动涂局域场：左键 = +b（偏 ↑），右键 = −b（偏 ↓）' },
-  { k: 'erase', name: '擦除', tip: '点击清除该格的局域场' },
+  { k: 'field', name: '场笔刷', tip: '拖动涂自由手绘局域场：左键 = +b（偏 ↑），右键 = −b（偏 ↓）' },
+  { k: 'erase', name: '擦除', tip: '点击清除该格的自由手绘局域场' },
+  { k: 'object', name: '场对象', tip: '点击空格放置可移动的局域场源；拖动对象锚点移动，右键删除' },
 ];
 const SP_PROJ = [
   { k: '2d', name: '2D', tip: '平面阶梯：箭头 + 键关联带 + 局域场带' },
@@ -125,7 +126,8 @@ export class SpinApp {
       tool: SP_TOOLS.some(t => t.k === q.get('tool')) ? q.get('tool') : 'state',
       view: SP_VIEWS.some(v => v.k === q.get('view')) ? q.get('view') : 'Sx',
       proj: q.get('proj') === '3d' ? '3d' : '2d',
-      nUp: 0, spins: null, bz: null,
+      nUp: 0, spins: null, bz: null, fieldBase: null, fieldObjects: [], selectedFieldObject: null,
+      objectShape: 'gaussian', objectAmp: 1.5, objectWidth: 1.5,
       t: 0, frames: 0, paused: q.get('paused') === '1',
       dt: num('dt', 0.04), spf: Math.round(num('spf', 2)),
       brush: clamp(num('br', 1.5), 0, B_VIEW),
@@ -143,6 +145,7 @@ export class SpinApp {
     this.E = NaN; this.residual = null; this.m = null; this.S = NaN; this.Sq = null;
     this.hist = []; this.job = null; this.msg = '';
     this._hover = -1; this._paint = null; this._view = null;
+    this._nextFieldObjectId = 1;
     this._sxProf = null; this._sxJob = null;
     this._listeners = []; this._fps = 0; this._fpsFrames = 0; this._lastFpsT = performance.now();
     this._errCount = 0; this._dead = false; this._title0 = undefined;
@@ -202,9 +205,16 @@ export class SpinApp {
   <div class="sec"><h3>模式</h3><div class="grid2">
     <button id="spModeGs">解基态</button><button id="spModeEvo">从初态演化</button>
   </div></div>
-  <div class="sec"><h3>工具</h3><div class="grid3">
+  <div class="sec"><h3>工具</h3><div class="grid4">
     ${SP_TOOLS.map(t => `<button data-tool="${t.k}" title="${t.tip}">${t.name}</button>`).join('')}
   </div></div>
+  <div class="sec" id="spObjectPanel"><h3>场对象 · <span id="spObjCount">0</span></h3>
+    <div class="grid3" id="spObjShapes">${SP_FIELD_SHAPES.map((s,i) => `<button data-object-shape="${s}" title="${['连续高斯局域场','有限宽度盒形场','交错正负场'][i]}">${['高斯','盒形','交错'][i]}</button>`).join('')}</div>
+    <div class="row"><label>振幅</label><input type="range" id="rObjAmp" min="-4" max="4" step="0.1" value="${this.state.objectAmp}"><output id="oObjAmp">${this.state.objectAmp.toFixed(1)}</output></div>
+    <div class="row"><label>宽度 w（格）</label><input type="range" id="rObjWidth" min="0.5" max="8" step="0.5" value="${this.state.objectWidth}"><output id="oObjWidth">${this.state.objectWidth.toFixed(1)}</output></div>
+    <div class="grid3"><button id="spObjPlace" class="sm">放置</button><button id="spObjDup" class="sm">复制</button><button id="spObjDelete" class="sm">删除</button></div>
+    <div id="spObjStatus" style="font-size:10px;color:var(--dim);margin-top:4px">选形状后点「放置」，再点链上空位；拖对象标记可移动。</div>
+  </div>
   <div class="sec"><h3>参数</h3>
     <div class="row"><label>Δ（各向异性）</label><input type="range" id="rDelta" min="0" max="4" step="0.05" value="${this.state.delta}"><output id="oDelta">${this.state.delta.toFixed(2)}</output></div>
     <div class="row"><label>h（均匀场）</label><input type="range" id="rH" min="0" max="4" step="0.05" value="${this.state.h}"><output id="oH">${this.state.h.toFixed(2)}</output></div>
@@ -217,7 +227,9 @@ export class SpinApp {
   <div class="sec"><h3>操作</h3><div class="grid2">
     <button id="spPause">暂停</button><button id="spStep">单步</button>
     <button id="spReset" class="sm">重置</button><button id="spLink" class="sm">复制链接</button>
-    <button id="spSave" class="sm">导出 JSON</button><button id="spGap" class="sm">算能隙</button>
+    <button id="spSave" class="sm">导出 JSON</button><button id="spLoad" class="sm">导入 JSON</button>
+    <button id="spGap" class="sm">算能隙</button>
+    <input id="spLoadFile" type="file" accept="application/json,.json" style="display:none">
   </div></div>
 </div>
 
@@ -281,6 +293,12 @@ export class SpinApp {
       this.q('#oBrush').textContent = this.state.brush.toFixed(2);
     });
     this.on(this.q('#spClearField'), 'click', () => this.clearField(true));
+    this.container.querySelectorAll('[data-object-shape]').forEach(b => this.on(b, 'click', () => this.setObjectShape(b.dataset.objectShape)));
+    this.on(this.q('#rObjAmp'), 'input', () => this.setObjectProperty('amp', parseFloat(this.q('#rObjAmp').value)));
+    this.on(this.q('#rObjWidth'), 'input', () => this.setObjectProperty('width', parseFloat(this.q('#rObjWidth').value)));
+    this.on(this.q('#spObjPlace'), 'click', () => { this.setTool('object'); this.toast('点击链上空位放置场对象', 1200); });
+    this.on(this.q('#spObjDup'), 'click', () => this.duplicateFieldObject());
+    this.on(this.q('#spObjDelete'), 'click', () => this.deleteFieldObject());
     this.on(this.q('#spDrawerPanel'), 'click', () => this.toggleBand('panel'));
     this.on(this.q('#spDrawerHud'), 'click', () => this.toggleBand('hud'));
     this.on(this.q('#spModeGs'), 'click', () => this.applyMode('gs'));
@@ -290,6 +308,12 @@ export class SpinApp {
     this.on(this.q('#spReset'), 'click', () => this.initPreset());
     this.on(this.q('#spLink'), 'click', () => this.copyLink());
     this.on(this.q('#spSave'), 'click', () => this.exportJson());
+    this.on(this.q('#spLoad'), 'click', () => this.q('#spLoadFile').click());
+    this.on(this.q('#spLoadFile'), 'change', e => {
+      const file=e.target.files&&e.target.files[0];
+      if(file)this.importJsonFile(file);
+      e.target.value='';
+    });
     this.on(this.q('#spGap'), 'click', () => this.startGap());
     this.container.querySelectorAll('button[data-proj]').forEach(b =>
       this.on(b, 'click', () => this.setProj(b.getAttribute('data-proj'))));
@@ -302,6 +326,7 @@ export class SpinApp {
       const tag = (e.target && e.target.tagName) || '';
       if (/input|textarea|select/i.test(tag)) return;
       if (e.key === '1' || e.key === '2' || e.key === '3') this.setTool(SP_TOOLS[+e.key - 1].k);
+      else if (e.key === 'o' || e.key === 'O') this.setTool('object');
       else if (e.key >= '4' && e.key <= '7') this.setView(SP_VIEWS[+e.key - 4].k);
       else if (e.key === '0') this.toggleProj();
       else if (this.state.proj === '3d' && (e.key === 'r' || e.key === 'R')){
@@ -330,8 +355,13 @@ export class SpinApp {
       }
       if (i < 0) return;
       e.preventDefault();
-      this._paint = { i };
-      this.applyAt(i, e.button === 2);
+      if(this.state.tool==='object'){
+        const objectId=this.objectPointerDown(i,e.button===2);
+        this._paint=objectId?{i,objectId}:null;
+      }else{
+        this._paint = { i };
+        this.applyAt(i, e.button === 2);
+      }
       this.draw();
     });
     this.on(cv, 'pointermove', e => {
@@ -347,7 +377,8 @@ export class SpinApp {
       if (i !== this._hover){ this._hover = i; this.draw(); }
       if (this._paint && i >= 0 && i !== this._paint.i){
         this._paint.i = i;
-        this.applyAt(i, false);
+        if(this._paint.objectId)this.moveFieldObject(this._paint.objectId,i);
+        else this.applyAt(i, false);
         this.draw();
       }
     });
@@ -356,7 +387,12 @@ export class SpinApp {
       this._orbit = null;
       if (was){ this._paint = null; this.queueUrl(); this.draw(); }
     });
-    this.on(cv, 'pointerleave', () => { this._hover = -1; this._paint = null; this._orbit = null; this.draw(); });
+    this.on(cv, 'pointerleave', () => {
+      const wasPaint=!!this._paint;
+      this._hover = -1; this._paint = null; this._orbit = null;
+      if(wasPaint)this.queueUrl();
+      this.draw();
+    });
     this.on(cv, 'wheel', e => {
       if (this.state.proj !== '3d') return;
       e.preventDefault();
@@ -454,7 +490,9 @@ export class SpinApp {
     this.q('#oH').textContent = this.state.h.toFixed(2);
     this.state.spins = Int8Array.from({ length: this.state.L }, (_, i) => (i % 2 === 0 ? 1 : -1));
     this.state.nUp = this.state.spins.reduce((a, b) => a + (b > 0 ? 1 : 0), 0);
-    this.state.bz = new Float64Array(this.state.L);
+    this.state.fieldBase = new Float64Array(this.state.L);
+    this.state.fieldObjects = []; this.state.selectedFieldObject = null;
+    this.rebuildField(); this.syncObjectPanel();
     this.rebuildSector(this.state.nUp);
     if (!keepMode) this.state.mode = p.mode === 'evo' ? 'evo' : 'gs';
     if (this.state.mode === 'gs') this.startSolve();
@@ -523,16 +561,121 @@ export class SpinApp {
     this.syncPanel(); this.draw(); this.queueUrl();
     void dir;
   }
+  rebuildField(){
+    this.state.bz = spComposeField(this.state.L, this.state.fieldBase, this.state.fieldObjects);
+    for (let i = 0; i < this.state.bz.length; i++){
+      this.state.bz[i] = clamp(this.state.bz[i], -B_VIEW, B_VIEW);
+    }
+  }
   paintSite(i, v){
     if (!(i >= 0 && i < this.state.L)) return;
-    this.state.bz[i] = clamp(v, -B_VIEW, B_VIEW);
+    this.state.fieldBase[i] = clamp(v, -B_VIEW, B_VIEW);
+    this.rebuildField();
     this.afterHChange('brush');
   }
   clearField(loud){
-    if (!this.hasField()){ if (loud) this.toast('场上没有局域场', 900); return; }
-    this.state.bz = new Float64Array(this.state.L);
-    this.afterHChange('clear');
-    if (loud) this.toast('已清空局域场', 1100);
+    const hasLayer = this.state.fieldObjects.length > 0 || this.state.fieldBase.some(v => v !== 0);
+    if (!hasLayer){ if (loud) this.toast('场上没有局域场', 900); return; }
+    this.state.fieldBase = new Float64Array(this.state.L);
+    this.state.fieldObjects = []; this.state.selectedFieldObject = null;
+    this.rebuildField(); this.syncObjectPanel();
+    this.afterHChange('clear'); this.queueUrl();
+    if (loud) this.toast('已清空自由场与场对象', 1100);
+  }
+  fieldObjectAt(i){
+    let best = null, dist = Infinity;
+    for (const o of this.state.fieldObjects){
+      const d = Math.abs(o.center - i);
+      if (d <= 0.6 && d < dist){ best = o; dist = d; }
+    }
+    return best;
+  }
+  newFieldObjectId(){
+    let id;
+    do { id = `field-${this._nextFieldObjectId++}`; }
+    while (this.state.fieldObjects.some(o => o.id === id));
+    return id;
+  }
+  addFieldObject(center, props = {}){
+    if (!Number.isInteger(center) || center < 0 || center >= this.state.L || this.state.fieldObjects.length >= 24) return null;
+    const [o] = spNormalizeFieldObjects(this.state.L, [{
+      id: this.newFieldObjectId(), shape: props.shape || this.state.objectShape,
+      center, width: props.width ?? this.state.objectWidth, amp: props.amp ?? this.state.objectAmp,
+    }]);
+    this.state.fieldObjects.push(o); this.state.selectedFieldObject = o.id;
+    this.rebuildField(); this.syncObjectPanel();
+    this.afterHChange('object-add'); this.queueUrl();
+    return o.id;
+  }
+  objectPointerDown(i, right = false){
+    const hit = this.fieldObjectAt(i);
+    if (right){
+      if (hit){ this.state.selectedFieldObject = hit.id; this.deleteFieldObject(); }
+      return null;
+    }
+    if (hit){ this.state.selectedFieldObject = hit.id; this.syncObjectPanel(); return hit.id; }
+    if (this.state.fieldObjects.length >= 24){ this.toast('场对象已达上限（24）', 1300); return null; }
+    return this.addFieldObject(i);
+  }
+  moveFieldObject(id, site){
+    const o = this.state.fieldObjects.find(x => x.id === id);
+    if (!o || site === o.center) return;
+    o.center = site; this.rebuildField(); this.syncObjectPanel(); this.afterHChange('object-move');
+  }
+  setObjectShape(shape){
+    if (!SP_FIELD_SHAPES.includes(shape)) return false;
+    this.state.objectShape = shape;
+    const o = this.state.fieldObjects.find(x => x.id === this.state.selectedFieldObject);
+    if (o){ o.shape = shape; this.rebuildField(); this.afterHChange('object-edit'); }
+    this.syncObjectPanel(); this.draw(); this.queueUrl();
+    return true;
+  }
+  setObjectProperty(key, value){
+    if (!Number.isFinite(value) || !['amp', 'width'].includes(key)) return false;
+    value = key === 'amp' ? clamp(value, -B_VIEW, B_VIEW) : clamp(value, 0.5, 8);
+    const o = this.state.fieldObjects.find(x => x.id === this.state.selectedFieldObject);
+    if (o){ o[key] = value; this.rebuildField(); this.afterHChange('object-edit'); }
+    else if (key === 'amp') this.state.objectAmp = value;
+    else this.state.objectWidth = value;
+    this.syncObjectPanel(); this.draw(); this.queueUrl();
+    return true;
+  }
+  duplicateFieldObject(){
+    const o = this.state.fieldObjects.find(x => x.id === this.state.selectedFieldObject);
+    if (!o){ this.toast('先选中一个场对象', 1000); return false; }
+    if (this.state.fieldObjects.length >= 24){ this.toast('场对象已达上限（24）', 1300); return false; }
+    const id = this.newFieldObjectId();
+    const copy = { ...o, id, center: o.center < this.state.L - 1 ? o.center + 1 : Math.max(0, o.center - 1) };
+    this.state.fieldObjects.push(copy); this.state.selectedFieldObject = id;
+    this.rebuildField(); this.syncObjectPanel(); this.afterHChange('object-copy'); this.queueUrl();
+    return true;
+  }
+  deleteFieldObject(){
+    const n = this.state.fieldObjects.length;
+    this.state.fieldObjects = this.state.fieldObjects.filter(o => o.id !== this.state.selectedFieldObject);
+    if (n === this.state.fieldObjects.length) return false;
+    this.state.selectedFieldObject = null;
+    this.rebuildField(); this.syncObjectPanel(); this.afterHChange('object-delete'); this.queueUrl();
+    return true;
+  }
+  syncObjectPanel(){
+    const count = this.q('#spObjCount'), status = this.q('#spObjStatus');
+    if (count) count.textContent = String(this.state.fieldObjects.length);
+    const o = this.state.fieldObjects.find(x => x.id === this.state.selectedFieldObject);
+    if (status){
+      status.textContent = o
+        ? `已选 ${o.shape} · 中心 ${o.center} · 振幅 ${o.amp.toFixed(1)} · 宽度 ${o.width.toFixed(1)} 格；拖动锚点移动。`
+        : '选形状后点「放置」，再点链上空位；拖对象标记可移动。';
+    }
+    this.container.querySelectorAll('[data-object-shape]').forEach(b =>
+      b.classList.toggle('on', b.dataset.objectShape === (o ? o.shape : this.state.objectShape)));
+    const amp = o ? o.amp : this.state.objectAmp, width = o ? o.width : this.state.objectWidth;
+    if (this.q('#rObjAmp')) this.q('#rObjAmp').value = String(amp);
+    if (this.q('#oObjAmp')) this.q('#oObjAmp').textContent = amp.toFixed(1);
+    if (this.q('#rObjWidth')) this.q('#rObjWidth').value = String(width);
+    if (this.q('#oObjWidth')) this.q('#oObjWidth').textContent = width.toFixed(1);
+    if (this.q('#spObjDup')) this.q('#spObjDup').disabled = !o;
+    if (this.q('#spObjDelete')) this.q('#spObjDelete').disabled = !o;
   }
   /* 链长只换「链」，不换「场景」：Δ / h / 预设 / 模式全部保留，局域场按新长度截取或补零，
      初态回落到新链的 Néel 图案（构型长度变了，逐格翻转保不住）。 */
@@ -540,11 +683,14 @@ export class SpinApp {
     if (L === this.state.L) return;
     if (![8, 10, 12, 14, 16].includes(L)) return;
     this.cancelSolve();
-    const prevBz = this.state.bz;
+    const prevBase = this.state.fieldBase, prevObjects = this.state.fieldObjects;
     this.state.L = L;
     this.state.spins = Int8Array.from({ length: L }, (_, i) => (i % 2 === 0 ? 1 : -1));
-    this.state.bz = new Float64Array(L);
-    if (prevBz) for (let i = 0; i < Math.min(L, prevBz.length); i++) this.state.bz[i] = prevBz[i];
+    this.state.fieldBase = new Float64Array(L);
+    if (prevBase) for (let i = 0; i < Math.min(L, prevBase.length); i++) this.state.fieldBase[i] = prevBase[i];
+    this.state.fieldObjects = prevObjects.map(o => ({...o,center:clamp(o.center,0,L-1)}));
+    if (!this.state.fieldObjects.some(o=>o.id===this.state.selectedFieldObject)) this.state.selectedFieldObject=null;
+    this.rebuildField(); this.syncObjectPanel();
     this.state.nUp = Array.from(this.state.spins).filter(v => v > 0).length;
     this.state.t = 0; this.state.frames = 0; this.hist = [];
     this.gap = null; this.gapJob = null;
@@ -576,7 +722,7 @@ export class SpinApp {
     if (!SP_TOOLS.some(t => t.k === k)) return false;
     this.state.tool = k;
     const st = this.q('#spStage'); if (st) st.dataset.tool = k;
-    this.syncPanel(); this.draw(); this.queueUrl();
+    this.syncPanel(); this.syncObjectPanel(); this.draw(); this.queueUrl();
     return true;
   }
   setView(k){
@@ -1057,6 +1203,12 @@ export class SpinApp {
     }
     ctx.strokeStyle = 'rgba(120,160,220,.16)'; ctx.lineWidth = 1 * dpr;
     ctx.beginPath(); ctx.moveTo(pad - 22 * dpr, bZero); ctx.lineTo(W - pad + 22 * dpr, bZero); ctx.stroke();
+    const selectedObject=this.state.fieldObjects.find(o=>o.id===this.state.selectedFieldObject);
+    if(selectedObject){
+      const x=xOf(selectedObject.center),r=3.2*dpr;
+      ctx.strokeStyle='rgba(103,232,249,.9)';ctx.lineWidth=1*dpr;ctx.beginPath();
+      ctx.moveTo(x,bZero-r);ctx.lineTo(x+r,bZero);ctx.lineTo(x,bZero+r);ctx.lineTo(x-r,bZero);ctx.closePath();ctx.stroke();
+    }
     ctx.textAlign = 'left'; ctx.font = mono(9 * dpr); ctx.fillStyle = 'rgba(154,167,189,.55)';
     ctx.fillText('J', 8 * dpr, jZero + 3 * dpr);
     ctx.fillText('b', 8 * dpr, bZero + 3 * dpr);
@@ -1329,7 +1481,10 @@ export class SpinApp {
       delta: +this.state.delta.toFixed(3), h: +this.state.h.toFixed(3),
       mode: this.state.mode, tool: this.state.tool, view: this.state.view,
       spins: Array.from(this.state.spins), t: +this.state.t.toFixed(4),
-      bz: Array.from(this.state.bz, v => +v.toFixed(3)),
+      bz: Array.from(this.state.fieldBase, v => +v.toFixed(3)),
+      fieldObjects: this.state.fieldObjects.map(o => ({...o})),
+      selectedFieldObject: this.state.selectedFieldObject,
+      objectTemplate: {shape:this.state.objectShape,amp:this.state.objectAmp,width:this.state.objectWidth},
       proj: this.state.proj,
       cam: this.state.proj === '3d'
         ? [+this.cam.yaw.toFixed(3), +this.cam.pitch.toFixed(3), +this.cam.dist.toFixed(3)] : undefined,
@@ -1343,8 +1498,10 @@ export class SpinApp {
     qs.set('D', String(spec.delta));
     qs.set('h', String(spec.h));
     qs.set('mode', spec.mode);
+    if(spec.tool&&spec.tool!=='state')qs.set('tool',spec.tool);
     qs.set('spins', spec.spins.map(s => (s > 0 ? 'u' : 'd')).join(''));
     if (spec.bz && spec.bz.some(v => v !== 0)) qs.set('bz', spec.bz.map(String).join(','));
+    if (spec.fieldObjects && spec.fieldObjects.length) qs.set('fo', JSON.stringify(spec.fieldObjects));
     if (spec.view !== 'Sx') qs.set('view', spec.view);
     if (spec.proj === '3d'){
       qs.set('proj', '3d');
@@ -1354,15 +1511,18 @@ export class SpinApp {
   }
   readUrlSpec(q){
     const L = [8, 10, 12, 14, 16].includes(Math.round(parseFloat(q.get('L') || '0'))) ? Math.round(parseFloat(q.get('L'))) : 12;
-    const spins = q.get('spins'), bz = q.get('bz');
-    if (!spins && !bz) return null;
+    const spins = q.get('spins'), bz = q.get('bz'), fo = q.get('fo');
+    if (!spins && !bz && !fo) return null;
     const spec = { L };
     if (spins && spins.length === L && /^[ud]+$/.test(spins)) spec.spins = Array.from(spins, c => (c === 'u' ? 1 : -1));
     if (bz){
       const arr = bz.split(',').map(Number);
       if (arr.length === L && arr.every(Number.isFinite)) spec.bz = arr.map(v => clamp(v, -B_VIEW, B_VIEW));
     }
-    if (!spec.spins && !spec.bz) return null;
+    if(fo){
+      try{spec.fieldObjects=spNormalizeFieldObjects(L,JSON.parse(fo));}catch(_){return null;}
+    }
+    if (!spec.spins && !spec.bz && !spec.fieldObjects) return null;
     const D = parseFloat(q.get('D')), H = parseFloat(q.get('h'));
     if (Number.isFinite(D)) spec.delta = clamp(D, 0, 4);
     if (Number.isFinite(H)) spec.h = clamp(H, 0, 4);
@@ -1373,15 +1533,22 @@ export class SpinApp {
     if (spec.delta !== undefined && !Number.isFinite(spec.delta)) return false;
     if (spec.h !== undefined && !Number.isFinite(spec.h)) return false;
     const L = spec.L;
+    if (L !== undefined && ![8, 10, 12, 14, 16].includes(L)) return false;
+    if (spec.mode !== undefined && !['gs', 'evo'].includes(spec.mode)) return false;
+    if (spec.tool !== undefined && !SP_TOOLS.some(v => v.k === spec.tool)) return false;
+    if (spec.view !== undefined && !SP_VIEWS.some(v => v.k === spec.view)) return false;
+    if (spec.preset !== undefined && !SP_PRESETS[spec.preset]) return false;
     if (spec.spins !== undefined && !(Array.isArray(spec.spins) && spec.spins.length === L && spec.spins.every(v => v === 1 || v === -1))) return false;
     if (spec.bz !== undefined && !(Array.isArray(spec.bz) && spec.bz.length === L && spec.bz.every(Number.isFinite))) return false;
+    let normalizedObjects;
+    if(spec.fieldObjects!==undefined){try{normalizedObjects=spNormalizeFieldObjects(L,spec.fieldObjects);}catch(_){return false;}}
     /* 投影/相机也走严格校验：proj 未知或 cam 非三个有限数 ⟹ 整份拒绝（错的深链不做半改） */
     if (spec.proj !== undefined && !SP_PROJ.some(v => v.k === spec.proj)) return false;
     if (spec.cam !== undefined && !(Array.isArray(spec.cam) && spec.cam.length === 3 && spec.cam.every(Number.isFinite))) return false;
     /* 只改「怎么看」的 spec（URL 的 proj/cam、导出的 JSON 里带视图）：不动物理、不重解基态，
        否则一次投影切换会把已经解好的 E 扔回 NaN。 */
     const viewOnly = spec.L === undefined && spec.spins === undefined && spec.bz === undefined &&
-      spec.delta === undefined && spec.h === undefined;
+      spec.fieldObjects === undefined && spec.delta === undefined && spec.h === undefined;
     if (viewOnly){
       if (spec.proj === undefined && spec.cam === undefined) return false;
       if (spec.proj !== undefined) this.state.proj = spec.proj;
@@ -1391,20 +1558,35 @@ export class SpinApp {
       this.syncPanel(); this.draw();
       return true;
     }
-    if (spec.spins === undefined && spec.bz === undefined && !opts.fromUrl) return false;
+    if (spec.spins === undefined && spec.bz === undefined && spec.fieldObjects === undefined && !opts.fromUrl) return false;
     if (L && L !== this.state.L){
       this.state.L = L;
       this.state.spins = Int8Array.from({ length: L }, (_, i) => (i % 2 === 0 ? 1 : -1));
-      this.state.bz = new Float64Array(L);
+      this.state.fieldBase = new Float64Array(L);
+      this.state.fieldObjects = []; this.state.selectedFieldObject = null;
     }
     if (spec.proj !== undefined) this.state.proj = spec.proj;
     if (spec.cam !== undefined){
       this.cam = { yaw: spec.cam[0], pitch: clamp(spec.cam[1], -1.33, 1.33), dist: clamp(spec.cam[2], 3.2, 20) };
     }
+    if (spec.preset !== undefined) this.state.preset = spec.preset;
+    if (spec.mode !== undefined) this.state.mode = spec.mode;
+    if (spec.tool !== undefined) this.state.tool = spec.tool;
+    if (spec.view !== undefined) this.state.view = spec.view;
     if (spec.delta !== undefined) this.state.delta = clamp(spec.delta, 0, 4);
     if (spec.h !== undefined) this.state.h = clamp(spec.h, 0, 4);
-    if (spec.bz) this.state.bz = Float64Array.from(spec.bz);
+    if (spec.bz !== undefined){
+      this.state.fieldBase = Float64Array.from(spec.bz);
+      if(spec.fieldObjects===undefined)this.state.fieldObjects=[];
+    }
+    if(spec.fieldObjects!==undefined)this.state.fieldObjects=normalizedObjects.map(o=>({...o}));
+    this.state.selectedFieldObject=this.state.fieldObjects.some(o=>o.id===spec.selectedFieldObject)?spec.selectedFieldObject:null;
+    if(spec.objectTemplate&&SP_FIELD_SHAPES.includes(spec.objectTemplate.shape)&&Number.isFinite(spec.objectTemplate.amp)&&Number.isFinite(spec.objectTemplate.width)){
+      this.state.objectShape=spec.objectTemplate.shape;this.state.objectAmp=clamp(spec.objectTemplate.amp,-B_VIEW,B_VIEW);this.state.objectWidth=clamp(spec.objectTemplate.width,0.5,8);
+    }
     if (spec.spins) this.state.spins = Int8Array.from(spec.spins);
+    this.state.t = 0; this.state.frames = 0; this.hist = [];
+    this.rebuildField(); this.syncObjectPanel();
     let nUp = 0;
     for (let i = 0; i < this.state.L; i++) if (this.state.spins[i] > 0) nUp++;
     this.q('#rDelta').value = String(this.state.delta);
@@ -1437,6 +1619,15 @@ export class SpinApp {
     this._urlTimer = setTimeout(() => {
       try { history.replaceState(null, '', '?' + this.queryFor(this.serialize())); } catch (_){ /* file:// 忽略 */ }
     }, 420);
+  }
+  async importJsonFile(file){
+    try{
+      const spec=JSON.parse(await file.text());
+      if(!this.applySpec(spec)){this.toast('JSON 无效或参数越界，当前场景未更改',1800);return false;}
+      this.toast('场景 JSON 已导入',1200);this.queueUrl();return true;
+    }catch(e){
+      this.toast('JSON 导入失败：'+e.message,1800);return false;
+    }
   }
   exportJson(){
     const spec = this.serialize();
@@ -1498,6 +1689,13 @@ export class SpinApp {
       flip: i => this.flipSite(i, 1),
       paint: (i, v) => this.paintSite(i, v),
       bz: () => Array.from(this.state.bz),
+      fieldBase: () => Array.from(this.state.fieldBase),
+      fieldObjects: () => this.state.fieldObjects.map(o=>({...o})),
+      addFieldObject: (center,props) => this.addFieldObject(center,props),
+      moveFieldObject: (id,site) => this.moveFieldObject(id,site),
+      selectFieldObject: id => { this.state.selectedFieldObject=id;this.syncObjectPanel();this.draw(); },
+      duplicateFieldObject: () => this.duplicateFieldObject(),
+      deleteFieldObject: () => this.deleteFieldObject(),
       pat: () => Array.from(this.state.spins),
       fieldSites: () => this.state.bz.filter(v => v !== 0).length,
       hasField: () => this.hasField(),

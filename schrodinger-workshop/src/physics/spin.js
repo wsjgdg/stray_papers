@@ -49,6 +49,46 @@ export function spBasis(L, nUp){
     Sz: nUp - L / 2 };
 }
 
+/* Reusable local-field objects for the spin-chain sandbox. Profiles add linearly;
+   `width` is the half-width in lattice sites. `base` remains the legacy freehand layer. */
+export const SP_FIELD_SHAPES = ['gaussian', 'box', 'staggered'];
+export function spNormalizeFieldObjects(L, objects, maxObjects = 24){
+  if (!Number.isInteger(L) || L < 1 || L > 22 || !Array.isArray(objects) || objects.length > maxObjects){
+    throw new RangeError('spNormalizeFieldObjects: invalid chain length or object count');
+  }
+  const ids = new Set();
+  return objects.map((o, i) => {
+    if (!o) throw new TypeError(`spNormalizeFieldObjects: invalid field object ${i}`);
+    const id = String(o.id ?? `field-${i + 1}`);
+    if (!SP_FIELD_SHAPES.includes(o.shape) || !Number.isFinite(o.center) || !Number.isFinite(o.width) ||
+        o.width < 0.5 || o.width > 8 || !Number.isFinite(o.amp) || Math.abs(o.amp) > 4 ||
+        o.center < 0 || o.center > L - 1){
+      throw new TypeError(`spNormalizeFieldObjects: invalid field object ${i}`);
+    }
+    if (ids.has(id)) throw new TypeError(`spNormalizeFieldObjects: duplicate id ${id}`);
+    ids.add(id);
+    return { id, shape: o.shape, center: +o.center, width: +o.width, amp: +o.amp };
+  });
+}
+export function spComposeField(L, base = null, objects = []){
+  if (!Number.isInteger(L) || L < 1 || L > 22) throw new RangeError('spComposeField: invalid chain length');
+  if (base && base.length !== L) throw new RangeError('spComposeField: base field length must equal L');
+  const list = spNormalizeFieldObjects(L, objects);
+  const field = Float64Array.from({ length: L }, (_, i) => base ? (Number(base[i]) || 0) : 0);
+  for (const o of list){
+    for (let i = 0; i < L; i++){
+      const dx = i - o.center, ad = Math.abs(dx);
+      let weight = 0;
+      if (o.shape === 'gaussian') weight = Math.exp(-0.5 * (dx / o.width) ** 2);
+      else if (ad <= o.width + 1e-12){
+        weight = o.shape === 'box' ? 1 : (Math.round(dx) % 2 === 0 ? 1 : -1);
+      }
+      field[i] += o.amp * weight;
+    }
+  }
+  return field;
+}
+
 /* ---------- 扇区：CSR 跃迁表 + 对角表 ----------
    opts = { J = 1, delta = 1, h = 0, field = null }
    h 是**均匀**场（等价于 field 全等），field 是逐格场 bz_i（长度 L）。 */
