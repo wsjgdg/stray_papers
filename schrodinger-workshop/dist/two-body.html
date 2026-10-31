@@ -484,7 +484,6 @@ const NAV = [
   ['./qcircuit.html', '线路 ⧉'],
   ['./noise.html', '噪声 ◍'],
   ['./qec.html', '纠错 ◈'],
-  ['./spin.html', '自旋链 ⇅'],
 ].filter(Boolean);
 
 /** 主页顶栏各页的 title 工具提示（与 NAV 同序；缺省回退为标签文案） */
@@ -495,7 +494,6 @@ const NAV_TITLES = {
   './qcircuit.html': '小规模量子线路：Bell / GHZ / QFT / Grover（R75）',
   './noise.html': '开放量子系统：T₁ 弛豫 / T₂ 退相位 / 纠缠猝死（R77）',
   './qec.html': '量子纠错 hub：重复码 / Shor 9 / 门噪声 / Flag / 多轮 / 循环 / 码族 / 表面码（R78–R85、R98 整合、R128 表面码）',
-  './spin.html': '海森堡自旋链：XXZ 各向异性 / 局域场 / 淬变 / 临界纠缠（R144）',
 };
 
 /** 生成子页顶栏导航 HTML；cur = 当前页 href（打 cur 高亮，自链也在——与 flag/rounds/cycle 一致）。
@@ -710,13 +708,7 @@ function makeReduce(gl){
    bumpH=0.2：ε 滑块的可区分势垒峰高（只按 ε 缩放，ε=0 时全预设不受影响）。
    pot72 实测 ε=0.3 时 ⟨P⟩ 偏离 −1 达 9.3e-2（bumpH=0.08 仅 1.7e-2，视觉/读数
    区分度不足），故定 0.2。 */
-const TB_COMMON = {
-  bumpH: 0.2, bumpW: 10, vcap: 6,
-  /* 势阱刷（页面「势阱」工具）：宽度固定、深度可调，最多 6 个（FIFO 淘汰最旧）。
-     —— 势仍是**共享 1D 轴**上的可分离势：V = V₁(x₁) + V₂(x₂) + gδ，两支完全同形
-     （ε>0 时粒子 2 整支 ×(1+ε)），因此加势阱**不破坏** [H,P]=0 的叙事。 */
-  wellW: 6, wellV: -4, wellMax: 6,
-};
+const TB_COMMON = { bumpH: 0.2, bumpW: 10, vcap: 6 };
 
 const TB_PRESETS = {
   /* 自由空间对穿：两个相向波包（±k₀），g 滑块加接触相互作用，
@@ -724,22 +716,13 @@ const TB_PRESETS = {
   cross: {
     name: '自由对穿', trap: 0, omega: 0.02, g: 0, eps: 0,
     d: 52, sigma: 6.5, k0: 0.25, r0: 26,
-    text: '两个相同波包相向运动（x₀=∓d/2，k=±k₀），无外势。**玻色**：对称化密度在对角线上**聚束**（HBT 因子 2×），两包穿插而过；**费米**：反对称态对角线密度恒 0（交换空穴），一阶密度表现为**交换弹开**——没有任何真实排斥力。g 滑块加**格点接触相互作用**（只压对角线）：玻色子被压回、费米子毫无变化（它们本来就不在对角线上）。ε 滑块让粒子 2 多一个势垒 ⟹ 不再全同 ⟹ ⟨P⟩ 漂离 ±1、n₁ 与 n₂ 分开。**在画布上抓住青色 x₁ 竖虚线可拖动粒子 1 的轨道，抓住琥珀 x₂ 横虚线可拖动粒子 2**（密度条点选同效）；「势阱刷」打开后在画布上拖动即可放/挪一个高斯势阱（右键删、V₀ 滑块设深度，最多 6 个；势是共享 1D 轴上的可分离势，所以画面里总成对出现竖条 + 横条）。初态三个旋钮（宽度 σ / 动量 k₀ / 间距 d）改动即重发波包：把 d 调到 ~2σ 且 k₀→0 时两个轨道不再正交，**HBT 因子掉到 2/(1+|⟨a|b⟩|²)**（HUD 同时给重叠、预测与实测），这是「2× 只在正交极限成立」的直接演示。',
+    text: '两个相同波包相向运动（x₀=∓d/2，k=±k₀），无外势。**玻色**：对称化密度在对角线上**聚束**（HBT 因子 2×），两包穿插而过；**费米**：反对称态对角线密度恒 0（交换空穴），一阶密度表现为**交换弹开**——没有任何真实排斥力。g 滑块加**格点接触相互作用**（只压对角线）：玻色子被压回、费米子毫无变化（它们本来就不在对角线上）。ε 滑块让粒子 2 多一个势垒 ⟹ 不再全同 ⟹ ⟨P⟩ 漂离 ±1、n₁ 与 n₂ 分开。',
   },
   /* 谐振子阱对穿：阱中双粒子从 ±r₀ 静止释放，相对坐标振荡。 */
   trap: {
     name: '阱中对穿', trap: 1, omega: 0.02, g: 0, eps: 0,
     d: 0, sigma: 6.5, k0: 0, r0: 26,
-    text: '每个粒子受同一谐振子阱 V=½ω²(x−L/2)²（ω 滑块）。双包从 ±r₀ 静止释放：经典地各自荡向中心（首次相遇 t=π/2ω），**费米**在对角线处交换弹开，来回周期 π/ω（对角质量峰间距，pot72 E4 定量）。ε≠0 时粒子 2 的阱深 ×(1+ε) ⟹ 可区分 ⟹ ⟨P⟩ 不再守恒。初态两个旋钮：宽度 σ 与释放半径 r₀（改动即重发波包）；包太宽或 r₀ 太大时 HUD 的「边缘留白」转负——3σ 尾部已越界，CLAMP 边界会把它反射回来。',
-  },
-  /* 自由放置：两条轨道由**用户沿轴点选**给出（x_a,k_a = +k₀；x_b,k_b = −k₀）。
-     页面在 x₁/x₂ 边缘密度条上点一下 ⟹ 切到本预设并重发对称化初态。
-     点选仍然只能给「一条高斯轨道」（中心 + 宽度 + 动量），不是主页那种任意绘制：
-     构型空间里的合法初态必须是对称化乘积——这条限制不因交互而消失。 */
-  custom: {
-    name: '自由放置', trap: 0, omega: 0.02, g: 0, eps: 0,
-    d: 52, sigma: 6.5, k0: 0.25, r0: 26, custom: 1,
-    text: '**沿轴点选轨道**：在下方 x₁ 条上点一下 ⟹ 粒子 1 的轨道中心；在右侧 x₂ 条上点一下 ⟹ 粒子 2 的轨道中心（按住拖动可连续挪）。两条轨道仍是**同宽高斯**、动量 ±k₀（面板滑块），随后**对称化**成两粒子初态——所以 ⟨P⟩ 依旧是 ±1，费米两条轨道完全重合时会被泡利不相容挡住（toast 拒绝加载）。点选自动切到本预设；切回别的预设会恢复该预设的默认初态。',
+    text: '每个粒子受同一谐振子阱 V=½ω²(x−L/2)²（ω 滑块）。双包从 ±r₀ 静止释放：经典地各自荡向中心（首次相遇 t=π/2ω），**费米**在对角线处交换弹开，来回周期 π/ω（对角质量峰间距，pot72 E4 定量）。ε≠0 时粒子 2 的阱深 ×(1+ε) ⟹ 可区分 ⟹ ⟨P⟩ 不再守恒。',
   },
   /* 阱中本征态：解析 (0,0) 玻色基态 / (0,1) 费米第一激发；
      「松弛」按钮收敛到**离散**本征态（|ψ|² 冻结、整体相位以 E 旋转）。 */
@@ -760,25 +743,10 @@ const idx = (L, i, j) => j * L + i;
 
 /* 势场（CPU 与 GLSL 同源：GLSL 不重算势，页面把本函数烘焙成 R32F 纹理
    uPot 供 kick/drift 采样——单源真值，改这里即全场生效） */
-/* 势阱刷的势：Σ v·exp(−(x−xₖ)²/w²)（共享 1D 轴，两个粒子同形；v<0 为阱、v>0 为垒） */
-function tbWellSum(x, P){
-  const ws = P && P.wells;
-  if (!ws || !ws.length) return 0;
-  let v = 0;
-  for (let k = 0; k < ws.length; k++){
-    const w = ws[k], r = x - w.x;
-    v += w.v * Math.exp(-(r * r) / (w.w * w.w));
-  }
-  return v;
-}
 function tbPot1(x, P){
-  let v = 0;
-  if (P.trap){
-    const r = x - P.xc;
-    v = Math.min(0.5 * P.omega * P.omega * r * r, P.vcap);
-  }
-  /* 势阱刷与谐振子阱**叠加**（与主页势刷 + 主槽的关系一致）；trap=0 时只有势阱 */
-  return v + tbWellSum(x, P);
+  if (!P.trap) return 0;
+  const r = x - P.xc;
+  return Math.min(0.5 * P.omega * P.omega * r * r, P.vcap);
 }
 function tbPot2(x, P){
   const r = x - P.xc;
@@ -868,116 +836,28 @@ function tbHarmonicEigen(n, L, omega, xc){
   return out;
 }
 
-/* 初态参数解析 + 钳制（页面滑块与 URL 共用；tbOrbits/tbInitInfo/tbMakeWave 同源）。
-   —— σ/k₀/d/r₀ 四个旋钮的合法区间写在这里，不散落在页面里。
-   d 的上限按「两侧还留得下 3σ 的尾部」定：d ≤ L−1−6σ（同 fmt 下 σ 大 ⟹ 间距自动收窄），
-   下限保证两个包不重叠到分不开（d ≥ 2σ，否则两个包基本是同一团东西）。 */
-function tbInitParams(L, presetKey, opts = {}){
-  const pr = TB_PRESETS[presetKey] || TB_PRESETS.cross;
-  const xc = (L - 1) / 2;
-  if (pr.eigen) return { eigen: true, omega: opts.omega ?? pr.omega, sigma: 0, k0: 0, d: 0, r0: 0 };
-  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-  if (pr.custom){
-    /* 点选口径：中心限制在 [3σ+0.5, L−1−3σ−0.5]（整包留在场内），动量 ±k₀（k₀ 走同一套钳制）。
-       两个粒子共用 σ（页面只有一根宽度滑块）；位置各自独立。 */
-    const sigma = clamp(opts.sigma ?? pr.sigma, 1.5, Math.max(1.5, (L - 1) / 6));
-    const k0 = clamp(opts.k0 ?? pr.k0, 0, 1.5);
-    const lo = 3 * sigma + 0.5, hi = (L - 1) - 3 * sigma - 0.5;
-    const pos = (v, dflt) => clamp(Number.isFinite(v) ? v : dflt, Math.min(lo, hi), Math.max(lo, hi));
-    return {
-      custom: true, eigen: false, omega: opts.omega ?? pr.omega, sigma, k0, d: 0, r0: 0,
-      xa: pos(opts.xa, pr.customX ?? (xc - pr.d / 2)),
-      xb: pos(opts.xb, pr.customY ?? (xc + pr.d / 2)),
-      ka: +k0, kb: -k0,
-    };
-  }
-  let sigma = clamp(opts.sigma ?? pr.sigma, 1.5, Math.max(1.5, (L - 1) / 6));
-  /* 注：σ > (L−1)/8 时「d ≥ 2σ」与「3σ 尾部留白」无法同时满足 ⟹ margin 必然 < 0，
-     页面 HUD 会如实标红（不禁用，让人看见边界截断的代价）。 */
-  const r0min = 1, r0max = Math.max(2, xc - 2 - 3 * sigma);
-  const r0 = clamp(opts.r0 ?? pr.r0, r0min, r0max);
-  const dmin = Math.max(2 * sigma, 2), dmax = Math.max(dmin, (L - 1) - 6 * sigma);
-  const d = clamp(opts.d ?? pr.d, dmin, dmax);
-  const k0 = clamp(opts.k0 ?? pr.k0, 0, 1.5);
-  return { eigen: false, sigma, d, k0, r0, omega: opts.omega ?? pr.omega };
-}
-
-/* 两个单粒子轨道（1D，长度 L）：返回 {A:{re,im}, B:{re,im}, xa, xb, ka, kb, sigma,…}。
-   makeWave / tbInitInfo / 页面 HUD / Node 套件全部走这里——初态只有一处真值。 */
-function tbOrbits(L, presetKey, opts = {}){
-  const pr = TB_PRESETS[presetKey] || TB_PRESETS.cross;
-  const q = tbInitParams(L, presetKey, opts);
-  const stats = opts.stats || 'boson';
-  const xc = (L - 1) / 2;
-  if (q.eigen){
-    /* 玻色 (0,0) 基态（E=ω）；费米 (0,1) 斯莱特态（E=2ω，最低反对称态） */
-    const na = 0, nb = stats === 'boson' ? 0 : 1;
-    const A = tbHarmonicEigen(na, L, q.omega, xc), B = tbHarmonicEigen(nb, L, q.omega, xc);
-    const re = a => ({ re: Float64Array.from(a), im: new Float64Array(L) });
-    return { ...q, na, nb, xa: xc, xb: xc, ka: 0, kb: 0, A: re(A), B: re(B) };
-  }
-  const xa = q.custom ? q.xa : (pr.trap ? xc - q.r0 : xc - q.d / 2);
-  const xb = q.custom ? q.xb : (pr.trap ? xc + q.r0 : xc + q.d / 2);
-  const ka = q.custom ? q.ka : (pr.trap ? 0 : +q.k0);
-  const kb = q.custom ? q.kb : (pr.trap ? 0 : -q.k0);
-  const arr = (x0, k) => {
-    const o = { re: new Float64Array(L), im: new Float64Array(L) };
-    for (let i = 0; i < L; i++){ const p = packet(i + 0.5, x0, k, q.sigma); o.re[i] = p.re; o.im[i] = p.im; }
-    return o;
-  };
-  return { ...q, xa, xb, ka, kb, A: arr(xa, ka), B: arr(xb, kb) };
-}
-
-/** 初态元信息（页面 HUD + 套件共用）：
- *    overlap = |⟨a|b⟩|²（离散归一化重叠）
- *    hbt     = 玻色对角质量 / 可区分对角质量 = 2/(1+overlap)（**不是恒为 2**）
- *    margin  = 左包到左边界、右包到右边界两者较小者减去 3σ；<0 ⟹ 尾部被 CLAMP 边界切
- *    sep     = 两包中心距（texel）
- *  这些量全部由 tbOrbits 的**同一份**离散轨道算出（不是另写一套公式）。 */
-function tbInitInfo(L, presetKey, opts = {}){
-  const o = tbOrbits(L, presetKey, opts);
-  const dot = (u, v) => {
-    let sr = 0, si = 0, nu = 0, nv = 0;
-    for (let i = 0; i < L; i++){
-      sr += u.re[i] * v.re[i] + u.im[i] * v.im[i];
-      si += u.re[i] * v.im[i] - u.im[i] * v.re[i];
-      nu += u.re[i] * u.re[i] + u.im[i] * u.im[i];
-      nv += v.re[i] * v.re[i] + v.im[i] * v.im[i];
-    }
-    const norm = Math.sqrt(Math.max(nu * nv, 1e-300));
-    return { re: sr / norm, im: si / norm, nu, nv };
-  };
-  const c = dot(o.A, o.B);
-  const overlap = c.re * c.re + c.im * c.im;
-  const out = {
-    preset: presetKey, eigen: !!o.eigen, stats: opts.stats || 'boson',
-    sigma: o.sigma, k0: o.k0, d: o.d, r0: o.r0, omega: o.omega,
-    xa: o.xa, xb: o.xb, ka: o.ka, kb: o.kb,
-    overlap, hbt: 2 / (1 + overlap), sep: Math.abs(o.xb - o.xa), margin: null,
-  };
-  if (!o.eigen){
-    /* 对穿预设：左包离左边界、右包离右边界；自由放置（custom）两轨道各自独立，
-       取四支里的最小者——否则把两条轨道都放在右半场会得到一个假的「留白」。 */
-    out.margin = (o.custom
-      ? Math.min(o.xa, o.xb, (L - 1) - o.xa, (L - 1) - o.xb)
-      : Math.min(o.xa, (L - 1) - o.xb)) - 3 * o.sigma;
-    out.custom = !!o.custom;
-  }
-  return out;
-}
-
 /* makeWave：返回 {re, im, norm}（norm=离散范数；<1e-9 ⟹ 页面应拒绝加载）
-   opts: {stats:'boson'|'fermion', g, eps, omega, d, sigma, k0, r0}
+   opts: {stats:'boson'|'fermion', g, eps, omega, d, sigma, k0, r0, eigen}
    —— g/eps/omega 只影响势场不改变初态（初态与它们无关），此处接收是为了一并
    返回完整参数快照；真正消费它们的是演化循环。 */
 function tbMakeWave(L, presetKey, opts = {}){
   const pr = TB_PRESETS[presetKey] || TB_PRESETS.cross;
   const stats = opts.stats || 'boson';
+  const omega = opts.omega ?? pr.omega;
+  const xc = (L - 1) / 2;
   const re = new Float64Array(L * L), im = new Float64Array(L * L);
-  const orb = tbOrbits(L, presetKey, opts);
-  const A = orb.A, B = orb.B;
-  const fa = i => ({ re: A.re[i], im: A.im[i] });
-  const fb = i => ({ re: B.re[i], im: B.im[i] });
+  let fa, fb;   /* 两个单粒子态（实或复，逐点 {re,im} 或实数数组） */
+  if (pr.eigen){
+    /* 玻色 (0,0) 基态（E=ω）；费米 (0,1) 斯莱特态（E=2ω，最低反对称态） */
+    const na = 0, nb = stats === 'boson' ? 0 : 1;
+    const A = tbHarmonicEigen(na, L, omega, xc), B = tbHarmonicEigen(nb, L, omega, xc);
+    fa = i => ({ re: A[i], im: 0 }); fb = i => ({ re: B[i], im: 0 });
+  } else {
+    const d = opts.d ?? pr.d, sig = opts.sigma ?? pr.sigma, k0 = opts.k0 ?? pr.k0, r0 = opts.r0 ?? pr.r0;
+    const xa = pr.trap ? xc - r0 : xc - d / 2, xb = pr.trap ? xc + r0 : xc + d / 2;
+    const ka = pr.trap ? 0 : +k0, kb = pr.trap ? 0 : -k0;
+    fa = i => packet(i + 0.5, xa, ka, sig); fb = i => packet(i + 0.5, xb, kb, sig);
+  }
   const sgn = stats === 'boson' ? 1 : -1;
   for (let j = 0; j < L; j++) for (let i = 0; i < L; i++){
     const a1 = fa(i), b2 = fb(j), b1 = fb(i), a2 = fa(j);
@@ -1257,18 +1137,13 @@ const TB_CSS = `
   #tbHud .hrow{display:flex;justify-content:space-between;gap:12px;font-size:11.5px;padding:2.5px 0}
   #tbHud .hrow span:first-child{color:var(--dim)}
   #tbHud .hrow span:last-child{color:var(--txt)}
-  #tbHud .hrow span.warn{color:var(--amber)}
-  #tbPanel .note{font-size:9.5px;color:var(--dim);line-height:1.5;margin-top:6px}
   #tbHud hr{border:none;border-top:1px solid var(--line);margin:6px 0}
   #tbStage{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;
     display:flex;flex-direction:column;align-items:center;gap:5px;--sz:min(62vh,52vw)}
   #tbFieldWrap{position:relative}
   #tbField{display:block;width:var(--sz);height:var(--sz);border-radius:10px;touch-action:none}
   #tbN2{position:absolute;left:calc(100% + 5px);top:0;width:52px;height:var(--sz);display:block}
-  #tbN1{width:var(--sz);height:52px;display:block;cursor:crosshair;touch-action:none}
-  #tbN2{cursor:crosshair;touch-action:none}
-  /* 叠加层：轨道虚线 + 势阱条带。pointer-events:none —— 所有拖拽都在 #tbField 上处理 */
-  #tbRails{position:absolute;left:0;top:0;width:var(--sz);height:var(--sz);pointer-events:none;border-radius:10px}
+  #tbN1{width:var(--sz);height:52px;display:block}
   .tbAxis{font-family:var(--mono);font-size:10.5px;color:var(--dim);position:fixed;z-index:6;pointer-events:none}
   #tbAxX{transform:translateX(-50%)}
   #tbAxY{transform:translateY(-50%) rotate(-90deg);transform-origin:center}
@@ -1294,29 +1169,16 @@ class TwoBodyApp {
     const q = new URLSearchParams(location.search);
     const num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
     const L = Math.round(num('L', 128));
-    const preset0 = TB_PRESETS[q.get('preset')] ? q.get('preset') : 'cross';
-    const pr0 = TB_PRESETS[preset0];
     this.state = {
-      L, preset: preset0, stats: q.get('stats') || 'boson',
+      L, preset: q.get('preset') || 'cross', stats: q.get('stats') || 'boson',
       g: num('g', 0), eps: num('eps', 0), omega: num('omega', 0.02),
-      /* 初态四个旋钮：缺省跟预设，URL 可覆盖（越界由 tbInitParams 钳制） */
-      sigma: num('sigma', pr0.sigma), k0: num('k0', pr0.k0),
-      d: num('d', pr0.d), r0: num('r0', pr0.r0),
-      /* 自由放置（沿轴点选）的两条轨道中心；缺省摆成对穿预设的两个位置 */
-      xa: num('xa', NaN), xb: num('xb', NaN),
       substeps: Math.round(num('substeps', 6)), dt: num('dt', 0.08),
       mode: Math.round(num('mode', 0)), paused: q.get('paused') === '1',
-      /* 势阱刷：wells = [{x,w,v}] 共享 1D 轴上的高斯势；wellTool 是「拖拽 = 放/挪势阱」模式 */
-      wells: [], wellTool: q.get('welltool') === '1',
-      wellV: num('wellv', TB_COMMON.wellV),
       simTime: 0, frames: 0,
     };
     if (!TB_PRESETS[this.state.preset]) this.state.preset = 'cross';
     if (!['boson', 'fermion'].includes(this.state.stats)) this.state.stats = 'boson';
-    if (!Number.isFinite(this.state.xa)) this.state.xa = (L - 1) / 2 - TB_PRESETS.cross.d / 2;
-    if (!Number.isFinite(this.state.xb)) this.state.xb = (L - 1) / 2 + TB_PRESETS.cross.d / 2;
     this._scale = 400; this._nScale = 16; this._E = null; this._relax = null;
-    this._mountT = typeof performance !== 'undefined' ? performance.now() : 0;
     this._field = null; this._m = null; this._baseNorm = null;
     this._listeners = []; this._uloc = new Map();
     this._fps = 0; this._fpsFrames = 0; this._lastFpsT = performance.now();
@@ -1362,11 +1224,8 @@ class TwoBodyApp {
       this.initPrograms();
       this.initTargets();
       this.bindUI();
-      /* 初次加载沿用 URL 参数（不重置 g/eps/omega），但初态四旋钮要先钳制：
-         走 applyInit ⟹ 面板显示的 σ/k₀/d/r₀ 与真正送进引擎的值逐位相同。 */
-      this.applyInit();
-      this.syncWellHud();
-      this.syncBuildBadge();            /* 势阱 HUD / 势阱刷按钮文案与 state 对齐 */
+      /* 初次加载沿用 URL 参数（不重置 g/eps/omega） */
+      this.loadPreset(this.state.preset, this.state.stats, false);
       this.resize();
       requestAnimationFrame(this.frame);
     } catch (err){
@@ -1403,27 +1262,12 @@ class TwoBodyApp {
   ${navHtml('./two-body.html', '  ')}
 </div>
 <div id="tbPanel" class="panel qpanel">
-  <div class="sec"><h3>预设</h3><div class="grid2" id="tbPresets">
+  <div class="sec"><h3>预设</h3><div class="grid3" id="tbPresets">
     ${Object.keys(pr).map(k => '<button data-preset="' + k + '">' + pr[k].name + '</button>').join('')}
   </div></div>
   <div class="sec"><h3>统计（交换对称）</h3><div class="grid2">
     <button id="tbBoson" class="on">玻色子 +</button><button id="tbFermion">费米子 −</button>
   </div></div>
-  <div class="sec" id="tbInitSec"><h3>初态（波包）</h3>
-    <div class="row" id="rowSigma"><label>宽度 σ</label><input type="range" id="rSigma" min="1.5" max="21" step="0.1" value="6.5"><output id="oSigma">6.5</output></div>
-    <div class="row" id="rowK0"><label>动量 k₀</label><input type="range" id="rK0" min="0" max="0.8" step="0.01" value="0.25"><output id="oK0">0.25</output></div>
-    <div class="row" id="rowD"><label>间距 d</label><input type="range" id="rD" min="4" max="120" step="1" value="52"><output id="oD">52</output></div>
-    <div class="row" id="rowR0"><label>释放 r₀</label><input type="range" id="rR0" min="1" max="60" step="1" value="26"><output id="oR0">26</output></div>
-    <div class="note" id="tbInitNote">拖任一滑块 ⟹ 按当前统计重发波包（t 归零）；被钳制的量会写回滑块，面板不报假数。<br><b>在 x₁ / x₂ 边缘密度条上点一下</b>（或按住拖动）⟹ 给该粒子放轨道，自动切到「自由放置」。</div>
-  </div>
-  <div class="sec" id="tbWellSec"><h3>势阱（共享 1D 轴）</h3>
-    <div class="row"><label>深度 V₀</label><input type="range" id="rWellV" min="-8" max="8" step="0.5" value="-4"><output id="oWellV">-4.0</output></div>
-    <div class="grid2" style="margin-top:6px">
-      <button id="tbWell" style="grid-column:1/3">势阱刷：关</button>
-      <button id="tbWellClear" style="grid-column:1/3">清空势阱</button>
-    </div>
-    <div class="note">负 = 阱 · 正 = 垒 · 右键删。势在共享 1D 轴上，画面里成对出现（底边给 x₁、左边给 x₂）。</div>
-  </div>
   <div class="sec"><h3>参数</h3>
     <div class="row"><label>接触 g</label><input type="range" id="rG" min="0" max="40" step="0.5" value="0"><output id="oG">0.0</output></div>
     <div class="row"><label>可区分 ε</label><input type="range" id="rEps" min="0" max="0.6" step="0.02" value="0"><output id="oEps">0.00</output></div>
@@ -1442,22 +1286,16 @@ class TwoBodyApp {
   <div class="hrow"><span>对角质量</span><span id="hDiag">—</span></div>
   <div class="hrow"><span>对角峰值</span><span id="hDiagMax">—</span></div>
   <div class="hrow"><span>max|n₁−n₂|</span><span id="hDn">—</span></div>
-  <div class="hrow"><span>初态</span><span id="hInit">—</span></div>
-  <div class="hrow"><span>轨道重叠 / HBT</span><span id="hOv">—</span></div>
-  <div class="hrow"><span>边缘留白</span><span id="hFit">—</span></div>
-  <div class="hrow"><span>势阱</span><span id="hWells">0 个</span></div>
   <hr>
   <div class="hrow"><span>E（离散）</span><span id="hE">—</span></div>
   <div class="hrow"><span>t / 帧</span><span id="hT">—</span></div>
   <div class="hrow"><span>fps</span><span id="hFps">—</span></div>
   <hr>
   <div class="hrow"><span>探针 (x₁,x₂)</span><span id="hProbe">—</span></div>
-  <div class="hrow"><span>构建</span><span id="hBuild">—</span></div>
 </div>
 <div id="tbStage" class="qstage">
   <div id="tbFieldWrap">
     <canvas id="tbField"></canvas>
-    <canvas id="tbRails"></canvas>
     <canvas id="tbN2"></canvas>
   </div>
   <canvas id="tbN1"></canvas>
@@ -1483,10 +1321,6 @@ class TwoBodyApp {
     this.on(this.q('#tbReset'), 'click', () => this.resetWave());
     this.on(this.q('#tbRelax'), 'click', () => this.startRelax());
     this.on(this.q('#tbMode'), 'click', () => this.toggleMode());
-    this.on(this.q('#tbWell'), 'click', () => this.toggleWellTool());
-    this.on(this.q('#tbWellClear'), 'click', () => {
-      if (this.clearWells()) this.toast('已清空势阱');
-    });
     /* 滑块：g/eps/子步只改 uniform（即时生效，不重置演化）；ω 在 eigen 预设下
        改变解析初态 ⟹ 重发波包（保留其他参数），trap 预设下只改 uniform。 */
     const bind = (id, key, outId, fmt, after) => {
@@ -1497,137 +1331,11 @@ class TwoBodyApp {
         if (after) after();
       });
     };
-    /* 初态四旋钮：先过 tbInitParams 钳制，再写回 state/滑块，最后重发波包。
-       —— 面板显示的必须是**实际生效**的值（R129 的教训：面板报的数要与真实一致）。 */
-    const initBind = (id, key) => {
-      const el = this.q(id);
-      this.on(el, 'input', () => {
-        this.state[key] = parseFloat(el.value);
-        this.applyInit();
-      });
-    };
-    initBind('#rSigma', 'sigma');
-    initBind('#rK0', 'k0');
-    initBind('#rD', 'd');
-    initBind('#rR0', 'r0');
-
     bind('#rG', 'g', '#oG', v => v.toFixed(1));
     bind('#rEps', 'eps', '#oEps', v => v.toFixed(2));
     bind('#rOm', 'omega', '#oOm', v => v.toFixed(3),
       () => { if (this.state.preset === 'eigen') this.loadPreset('eigen', this.state.stats, false); });
     bind('#rSub', 'substeps', '#oSub', v => String(v | 0));
-    /* 阱深：改的是「之后放的阱」，已放的阱保留原深度（免得拖滑块把全部阱一起改深） */
-    bind('#rWellV', 'wellV', '#oWellV', v => v.toFixed(1), () => this.syncWellHud());
-    /* 沿轴点选：x₁ 条（下方，横）⟹ 粒子 1；x₂ 条（右侧，竖）⟹ 粒子 2。
-       pointerdown 立即落点，按住拖动连续挪（与主页「拖拽发射」同手感）。 */
-    const bindPick = (id, which, horiz) => {
-      const cv = this.q(id);
-      let dragging = false;
-      const pick = ev => {
-        const r = cv.getBoundingClientRect();
-        if (!r.width || !r.height) return;
-        const t = horiz
-          ? (ev.clientX - r.left) / r.width
-          : 1 - (ev.clientY - r.top) / r.height;
-        this.placeOrbit(which, t * this.state.L - 0.5);
-      };
-      this.on(cv, 'pointerdown', ev => {
-        ev.preventDefault();
-        dragging = true;
-        try { if (cv.setPointerCapture && ev.pointerId !== undefined) cv.setPointerCapture(ev.pointerId); } catch (_){}
-        pick(ev);
-      });
-      this.on(cv, 'pointermove', ev => { if (dragging) pick(ev); });
-      const stop = () => { dragging = false; };
-      this.on(cv, 'pointerup', stop);
-      this.on(cv, 'pointercancel', stop);
-      this.on(cv, 'pointerleave', stop);
-    };
-    bindPick('#tbN1', 0, true);
-    bindPick('#tbN2', 1, false);
-
-    /* ---------- 画布上的拖拽（这才是用户会去拖的地方）----------
-       两种模式：
-         ① 轨道模式（默认）：抓住 x₁ 竖虚线 ⟹ 挪粒子 1 的轨道；抓住 x₂ 横虚线 ⟹ 挪粒子 2。
-         ② 势阱刷模式：拖空白处新增势阱并立即拖到想要的位置；拖已有势阱 ⟹ 挪它；右键删。
-       抓取带按**屏幕像素**算（26px），不按 texel 算——否则网格一变手感全变。
-       按下即 setPointerCapture：拖到画布外也不会丢事件（首版没有它，指针一离开细条就断，
-       这正是「移不动」最可能的直接原因之一）。 */
-    const texelOf = ev => {
-      const r = this.q('#tbField').getBoundingClientRect();
-      if (!r.width || !r.height) return null;
-      return {
-        i: (ev.clientX - r.left) / r.width * this.state.L,
-        j: (1 - (ev.clientY - r.top) / r.height) * this.state.L,
-        px: this.state.L / r.width,
-      };
-    };
-    const capture = (el, ev) => {
-      try { if (el.setPointerCapture && ev.pointerId !== undefined) el.setPointerCapture(ev.pointerId); } catch (_){}
-    };
-    const field = this.q('#tbField');
-    this.on(field, 'pointerdown', ev => {
-      const t = texelOf(ev);
-      if (!t) return;
-      if (this.state.wellTool){
-        ev.preventDefault();
-        const near = this.nearestWell(t.i);
-        const tol = Math.max(TB_COMMON.wellW, 2.5 * t.px);
-        let idx;
-        if (near.idx >= 0 && near.dist <= tol){
-          idx = near.idx;
-        } else {
-          idx = this.addWell(t.i);
-          this.state.wells[idx].v = this.state.wellV;
-        }
-        this._drag = { kind: 'well', idx };
-      } else {
-        const o = tbOrbits(this.state.L, this.state.preset, this.initOpts());
-        if (TB_PRESETS[this.state.preset] && TB_PRESETS[this.state.preset].eigen){
-          this.toast('本征态没有「包心」可拖：先切到对穿或自由放置');
-          return;
-        }
-        const tol = 26 * t.px;
-        const di = Math.abs(t.i - o.xa), dj = Math.abs(t.j - o.xb);
-        if (Math.min(di, dj) > tol){
-          this.toast('拖边缘的小柄挪轨道 · 或用「势阱刷」放势阱');
-          return;
-        }
-        ev.preventDefault();
-        this._drag = { kind: 'orbit', which: di <= dj ? 0 : 1 };
-      }
-      capture(field, ev);
-      this._dragApply(t);
-      this.drawRails();
-    });
-    this.on(field, 'pointermove', ev => {
-      if (!this._drag) return;
-      const t = texelOf(ev);
-      if (t) { this._dragApply(t); }
-    });
-    const endDrag = ev => {
-      if (!this._drag) return;
-      this._drag = null;
-      try { if (field.releasePointerCapture && ev && ev.pointerId !== undefined) field.releasePointerCapture(ev.pointerId); } catch (_){}
-      this.drawRails();
-    };
-    this.on(field, 'pointerup', endDrag);
-    this.on(field, 'pointercancel', endDrag);
-    window.addEventListener('pointerup', endDrag);
-    /* 右键删势阱（势阱刷模式下） */
-    this.on(field, 'contextmenu', ev => {
-      if (!this.state.wellTool) return;
-      const t = texelOf(ev);
-      if (!t) return;
-      const near = this.nearestWell(t.i);
-      if (near.idx >= 0 && near.dist <= Math.max(TB_COMMON.wellW, 2.5 * t.px)){
-        ev.preventDefault();
-        this.removeWell(near.idx);
-        this.drawRails();
-        this.toast('已删除势阱');
-      }
-    });
-
     /* 悬停探针：报告 texel 坐标与 |ψ(i,j)|²、|ψ(j,i)|²（交换结构直接可见） */
     this.on(this.q('#tbField'), 'pointermove', ev => {
       if (!this._field) return;
@@ -1669,8 +1377,7 @@ class TwoBodyApp {
   /* 势场烘焙：签名变化才重算（拖滑块时每帧一次，O(L²) 加法，~10μs） */
   bakePot(){
     const L = this.state.L, P = this.params();
-    const wsig = (P.wells || []).map(w => w.x.toFixed(2) + ':' + w.v.toFixed(2)).join(',');
-    const sig = [this.state.preset, P.trap, P.omega, P.eps, P.g, L, wsig].join('|');
+    const sig = [this.state.preset, P.trap, P.omega, P.eps, P.g, L].join('|');
     if (sig === this._potSig) return false;
     const p1 = new Float64Array(L), p2 = new Float64Array(L);
     for (let i = 0; i < L; i++){ p1[i] = tbPot1(i, P); p2[i] = tbPot2(i, P); }
@@ -1692,8 +1399,6 @@ class TwoBodyApp {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const sz = this.q('#tbField').clientWidth || 480;
     this.canvas.width = Math.round(sz * dpr); this.canvas.height = Math.round(sz * dpr);
-    const rails = this.q('#tbRails');
-    if (rails){ rails.width = Math.round(sz * dpr); rails.height = Math.round(sz * dpr); }
     const n1 = this.q('#tbN1'), n2 = this.q('#tbN2');
     n1.width = Math.round(sz * dpr); n1.height = Math.round(52 * dpr);
     n2.width = Math.round(52 * dpr); n2.height = Math.round(sz * dpr);
@@ -1717,42 +1422,6 @@ class TwoBodyApp {
     this.q('#rSub').value = this.state.substeps; this.q('#oSub').textContent = String(this.state.substeps);
     this.q('#rOm').disabled = !pr.trap;
     this.q('#rOm').style.opacity = pr.trap ? 1 : 0.4;
-    /* 初态四旋钮：按预设显隐（eigen 不用它们；k₀ 只对自由对穿有意义；
-       d 只对自由对穿、r₀ 只对阱中对穿） */
-    const show = (id, on) => { const el = this.q(id); if (el) el.style.display = on ? '' : 'none'; };
-    show('#rowSigma', !pr.eigen);
-    show('#rowK0', !pr.eigen && (!!pr.custom || !pr.trap));
-    show('#rowD', !pr.eigen && !pr.trap && !pr.custom);
-    show('#rowR0', !pr.eigen && !!pr.trap && !pr.custom);
-    show('#tbInitNote', !pr.eigen);
-    if (!pr.eigen){
-      const L = this.state.L;
-      this.q('#rSigma').max = Math.max(1.5, (L - 1) / 6).toFixed(1);
-      this.q('#rD').max = String(Math.round((L - 1) - 3.0));
-      this.q('#rR0').max = String(Math.round((L - 1) / 2));
-      this.q('#rSigma').value = this.state.sigma; this.q('#oSigma').textContent = this.state.sigma.toFixed(1);
-      this.q('#rK0').value = this.state.k0; this.q('#oK0').textContent = this.state.k0.toFixed(2);
-      this.q('#rD').value = this.state.d; this.q('#oD').textContent = String(Math.round(this.state.d));
-      this.q('#rR0').value = this.state.r0; this.q('#oR0').textContent = String(Math.round(this.state.r0));
-    }
-    /* HUD：初态 / 轨道重叠 / 边缘留白（全部来自 tbInitInfo 同一份轨道） */
-    const info = tbInitInfo(this.state.L, this.state.preset, this.initOpts());
-    this._info = info;
-    const hInit = this.q('#hInit'), hOv = this.q('#hOv'), hFit = this.q('#hFit');
-    if (hInit) hInit.textContent = info.eigen
-      ? `本征态 · ω=${info.omega.toFixed(3)}`
-      : info.custom
-        ? `放置 x₁=${info.xa.toFixed(0)} · x₂=${info.xb.toFixed(0)} · σ=${info.sigma.toFixed(1)}`
-        : `σ=${info.sigma.toFixed(1)} · k₀=${info.ka.toFixed(2)} · ${pr.trap ? 'r₀' : 'd'}=${Math.round(info.sep)}`;
-    if (hOv) hOv.textContent = `${info.overlap < 1e-4 ? info.overlap.toExponential(1) : info.overlap.toFixed(4)} · HBT ${info.hbt.toFixed(3)}`;
-    if (hFit && info.margin !== null){
-      hFit.textContent = `${info.margin.toFixed(1)} px`;
-      hFit.className = info.margin < 0 ? 'warn' : '';
-      hFit.title = info.margin < 0
-        ? '留白 < 0 ⟹ 波包 3σ 尾部已越过边界；CLAMP_TO_EDGE 会把它反射回来（诚实限制②）'
-        : '两包中心到最近边界再减 3σ；>0 表示 3σ 尾部还在场内';
-    } else if (hFit){ hFit.textContent = '—'; hFit.className = ''; }
-    this.syncWellHud();
     this.q('#tbHint').querySelector('b').textContent = pr.name;
     this.q('#tbHint').querySelector('span').innerHTML = pr.text;
     this.q('#tbMode').textContent = '显示：' + (this.state.mode ? '相位' : '密度');
@@ -1764,24 +1433,19 @@ class TwoBodyApp {
       uK: 0.5, g: this.state.g, eps: this.state.eps, trap: pr.trap ? 1 : 0,
       omega: this.state.omega, bumpH: TB_COMMON.bumpH, bumpW: TB_COMMON.bumpW,
       vcap: TB_COMMON.vcap, xc: (L - 1) / 2, L,
-      wells: this.state.wells,
     };
   }
   /* resetParams=true 仅在点预设按钮时（切场景恢复该预设默认参数）；
      URL 初次加载 / 统计切换 / ω 拖动均保持当前参数。 */
   loadPreset(key, stats, resetParams = false){
-    const pr = TB_PRESETS[key] || TB_PRESETS.cross;
-    if (resetParams && !pr.eigen){
-      this.state.sigma = pr.sigma; this.state.k0 = pr.k0;
-      this.state.d = pr.d; this.state.r0 = pr.r0;
-    }
-    const w = tbMakeWave(this.state.L, key, this.initOpts({ stats }));
+    const w = tbMakeWave(this.state.L, key, { stats, omega: this.state.omega });
     if (w.norm < 1e-9){
       this.toast('泡利不相容：两个费米子不能占据同一单粒子态');
       return false;
     }
     this.state.preset = key; this.state.stats = stats;
     if (resetParams){
+      const pr = TB_PRESETS[key];
       this.state.g = pr.g; this.state.eps = pr.eps; this.state.omega = pr.omega;
     }
     this._init = { re: w.re, im: w.im };
@@ -1790,313 +1454,6 @@ class TwoBodyApp {
     this.syncPanel();
     this.bakePot();
     this.refreshMeasure();
-    return true;
-  }
-  /* 初态参数对象（唯一一份）：重发 / HUD / 调试句柄都从这里取，避免手抄漏项。
-     custom 预设多两个位置字段（xa/xb），其它预设多传也无害（tbInitParams 只取认识的）。 */
-  initOpts(patch){
-    return {
-      stats: this.state.stats, omega: this.state.omega,
-      sigma: this.state.sigma, k0: this.state.k0,
-      d: this.state.d, r0: this.state.r0,
-      xa: this.state.xa, xb: this.state.xb,
-      ...(patch || {}),
-    };
-  }
-  /* 初态参数（σ/k₀/d/r₀）变更的统一入口：
-     ① 过 tbInitParams 钳制（越界就收进合法区间，绝不把越界值送进引擎）；
-     ② 写回 state 与滑块位置（面板不报假数）；
-     ③ 按当前统计重发波包（loadPreset 会同步面板 + 重烘势场 + 重新测量）；
-     ④ 留白 < 0 时如实告警（包尾被 CLAMP 边界切，这是限制不是 bug）。 */
-  applyInit(){
-    const L = this.state.L, key = this.state.preset;
-    const q = tbInitParams(L, key, this.initOpts());
-    if (!q.eigen){
-      this.state.sigma = q.sigma; this.state.k0 = q.k0;
-      this.state.d = q.d; this.state.r0 = q.r0;
-      if (q.custom){ this.state.xa = q.xa; this.state.xb = q.xb; }
-    }
-    const ok = this.loadPreset(key, this.state.stats, false);
-    const info = tbInitInfo(L, key, this.initOpts());
-    if (ok && info.margin !== null && info.margin < 0){
-      this.toast('波包太宽 / 间距太大：尾部被边界截断（留白 ' + info.margin.toFixed(1) + '）');
-    }
-    return info;
-  }
-  /* ---------- 势阱刷 ----------
-     势是**共享 1D 轴**上的可分离势：加一个阱 = 在 x₀ 处放一个高斯（v<0 阱 / v>0 垒），
-     粒子 1 看到 V₁(x₁)、粒子 2 看到 (1+ε)·V₁(x₂) ⟹ ε=0 时两支完全同形、[H,P]=0 不被破坏
-     （这正是本页不提供「自由 2D 涂抹」的原因：2D 涂抹必然让 V₁≠V₂、⟨P⟩ 无故漂移）。
-     画面上因此总是**成对**出现：竖条（x₁ = x₀）+ 横条（x₂ = x₀）。 */
-  addWell(x){
-    const L = this.state.L;
-    const xi = Math.min(L - 1, Math.max(0, x));
-    if (this.state.wells.length >= TB_COMMON.wellMax) this.state.wells.shift();
-    this.state.wells.push({ x: xi, w: TB_COMMON.wellW, v: this.state.wellV });
-    this._drag = { kind: 'well', idx: this.state.wells.length - 1 };   /* 新放的阱立刻高亮可拖 */
-    this.bakePot(); this.drawRails(); this.syncWellHud();
-    return this.state.wells.length - 1;
-  }
-  moveWell(k, x){
-    const w = this.state.wells[k];
-    if (!w) return false;
-    w.x = Math.min(this.state.L - 1, Math.max(0, x));
-    this.bakePot(); this.drawRails(); this.syncWellHud();
-    return true;
-  }
-  removeWell(k){
-    if (!this.state.wells[k]) return false;
-    this.state.wells.splice(k, 1);
-    this.bakePot(); this.drawRails(); this.syncWellHud();
-    return true;
-  }
-  clearWells(){
-    if (!this.state.wells.length) return false;
-    this.state.wells = [];
-    this.bakePot(); this.drawRails(); this.syncWellHud();
-    return true;
-  }
-  nearestWell(x){
-    let best = -1, bd = Infinity;
-    this.state.wells.forEach((w, k) => { const d = Math.abs(w.x - x); if (d < bd){ bd = d; best = k; } });
-    return { idx: best, dist: bd };
-  }
-  /* 构建徽标：document.lastModified 在 no-store 下就是文件真实修改时间。
-     如果你看到的仍是旧时间，说明**页面本身还是旧的**（缓存/标签页没重载），不是功能没写。
-     同时把能力写成 body 的 data-* 标记，方便在控制台一行确认：
-       document.body.dataset.features  → "rails,wellbrush,pick" */
-  syncBuildBadge(){
-    const el = this.q('#hBuild');
-    const stamp = (document.lastModified || '').replace(/^\w{3} /, '').replace(/ GMT.*$/, '');
-    const feats = 'rails,wellbrush,pick';
-    document.body.dataset.features = feats;
-    document.body.dataset.tbBuild = stamp;
-    if (el) el.textContent = `${stamp} · 轨道✓ 势阱✓`;
-  }
-  syncWellHud(){
-    const h = this.q('#hWells');
-    if (h) h.textContent = this.state.wells.length
-      ? `${this.state.wells.length} 个 · V₀=${this.state.wellV.toFixed(1)}`
-      : '0 个（点「势阱刷」后在画布上拖）';
-    const b = this.q('#tbWell');
-    if (b){ b.textContent = '势阱刷：' + (this.state.wellTool ? '开' : '关'); b.classList.toggle('on', !!this.state.wellTool); }
-  }
-  /* 叠加层：轨道虚线（可抓）+ 势阱条带。势场本身不在 GLSL 里画（shader 只画 |ψ|²/相位），
-     所以「看得见势」这件事必须由这一层负责。 */
-  /* ---------- 叠加层：轨道握把 + 势阱剖面 ----------
-     设计原则：**不挡波函数**。所以
-       · 轨道只用一根 1px 极淡虚线作「引导」，真正的手柄是贴着边缘的小圆角柄（看得见、好抓）；
-       · 势阱不再画成整条色块，而是 ①场内极淡的高斯渐变带 + ②贴在底边/左边的**势能剖面曲线**
-         （量子教材里 1D 势的标准画法），正为垒向上、负为阱向下，ε>0 时左边那条按 (1+ε) 画高；
-       · 引导提示只在**首次 9 秒**或**势阱刷打开时**出现，之后淡出，不长期占画面。 */
-  drawRails(){
-    const cv = this.q('#tbRails');
-    if (!cv) return;
-    const ctx = cv.getContext('2d');
-    if (!ctx) return;
-    const W = cv.width, H = cv.height, L = this.state.L;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    ctx.clearRect(0, 0, W, H);
-    if (!W || !H) return;
-    const px = W / L;
-    const has = k => typeof ctx[k] === 'function';
-    const f = v => Math.round(v * 100) / 100;                 /* 少写字，减少 canvas 状态变更 */
-
-    /* 圆角矩形路径（不用 roundRect：老 Safari 没有） */
-    const rrect = (x, y, w, h, r) => {
-      const rr = Math.min(r, w / 2, h / 2);
-      ctx.beginPath();
-      if (has('arc')){
-        ctx.moveTo(x + rr, y);
-        ctx.arc(x + w - rr, y + rr, rr, -Math.PI / 2, 0);
-        ctx.arc(x + w - rr, y + h - rr, rr, 0, Math.PI / 2);
-        ctx.arc(x + rr, y + h - rr, rr, Math.PI / 2, Math.PI);
-        ctx.arc(x + rr, y + rr, rr, Math.PI, Math.PI * 1.5);
-        ctx.closePath();
-      } else {
-        ctx.rect(x, y, w, h);
-      }
-    };
-    /* 带暗色描边的文字：叠在亮波函数上也读得清 */
-    const label = (txt, x, y, col, align = 'center', size = 9.5 * dpr) => {
-      ctx.font = `${f(size)}px ui-monospace,SFMono-Regular,Menlo,monospace`;
-      ctx.textAlign = align;
-      ctx.lineWidth = 3 * dpr;
-      ctx.strokeStyle = 'rgba(4,8,16,.82)';
-      if (has('strokeText')) ctx.strokeText(txt, x, y);
-      ctx.fillStyle = col;
-      ctx.fillText(txt, x, y);
-    };
-
-    /* ---------- ① 势阱：场内**不常驻**色带（会糊住波函数）；只在拖动/势阱刷时高亮 ---------- */
-    const wells = this.state.wells;
-    const hotWell = this._drag && this._drag.kind === 'well' ? this._drag.idx : -1;
-    if (wells.length){
-      wells.forEach((w, k) => {
-        const neg = w.v < 0;
-        const rgb = neg ? '96,178,250' : '250,190,96';
-        const sig = Math.max(2 * dpr, w.w * px * 0.85);
-        const hw = sig * 1.45;
-        const cx = (w.x + 0.5) * px, cy = H - (w.x + 0.5) * px;
-        /* 边缘刻度：顶边（x₁ 轴）与右边（x₂ 轴）各一个 7px 小刻度，给出位置而无色块 */
-        const tick = (col) => {
-          ctx.strokeStyle = `rgba(${rgb},.5)`;
-          ctx.lineWidth = 1.4 * dpr;
-          ctx.beginPath();
-          ctx.moveTo(cx, 0); ctx.lineTo(cx, 7 * dpr);
-          ctx.moveTo(W, cy); ctx.lineTo(W - 7 * dpr, cy);
-          ctx.stroke();
-        };
-        tick();
-        /* 高亮：正在拖这个阱（或势阱刷开着且是最后一个）时，才画一层柔和色带 */
-        const hot = k === hotWell || (this.state.wellTool && k === wells.length - 1);
-        if (hot){
-          const peak = Math.min(0.16, 0.06 + Math.abs(w.v) / 8 * 0.08);
-          const band = (x0, y0, x1, y1) => {
-            let g = null;
-            if (has('createLinearGradient')){
-              try { g = ctx.createLinearGradient(x0, y0, x1, y1); } catch (_){ g = null; }
-            }
-            if (g && typeof g.addColorStop === 'function'){
-              g.addColorStop(0, `rgba(${rgb},0)`);
-              g.addColorStop(0.5, `rgba(${rgb},${f(peak)})`);
-              g.addColorStop(1, `rgba(${rgb},0)`);
-              ctx.fillStyle = g;
-            } else ctx.fillStyle = `rgba(${rgb},${f(peak * 0.6)})`;
-          };
-          band(cx - hw, 0, cx + hw, 0);
-          ctx.fillRect(cx - hw, 0, 2 * hw, H);
-          band(0, cy - hw, 0, cy + hw);
-          ctx.fillRect(0, cy - hw, W, 2 * hw);
-        }
-        /* 深度小标：贴在带子顶端 / 右端（负=阱 冷色，正=垒 暖色） */
-        const tag = (neg ? '−' : '+') + Math.abs(w.v).toFixed(1);
-        label(tag, cx, 15 * dpr, `rgba(${rgb},.72)`, 'center', 8 * dpr);
-        label(tag, W - 10 * dpr, cy - 4 * dpr, `rgba(${rgb},.72)`, 'right', 8 * dpr);
-      });
-      /* ---------- ② 势能剖面：只在最外侧 24px 内画，作「教材式」提示 ---------- */
-      const inset = 24 * dpr;
-      let vmax = 1e-9;
-      for (const w of wells) vmax = Math.max(vmax, Math.abs(w.v));
-      const curve = (vertical, scale) => {
-        const N = 96;
-        const base = vertical ? inset : H - inset;       /* 基线：左边界 / 底边 */
-        const amp = inset - 5 * dpr;
-        ctx.beginPath();
-        for (let k = 0; k <= N; k++){
-          const t = k / N, pos = t * L;
-          let V = 0;
-          for (const q of wells){ const dd = pos - (q.x + 0.5); V += q.v * Math.exp(-(dd * dd) / (q.w * q.w)); }
-          const hgt = Math.max(-1, Math.min(1, (V * scale) / vmax)) * amp;
-          const along = vertical ? (H - t * H) : (t * W);
-          if (k) ctx.lineTo(vertical ? base + hgt : along, vertical ? along : base - hgt);
-          else ctx.moveTo(vertical ? base + hgt : along, vertical ? along : base - hgt);
-        }
-        ctx.strokeStyle = 'rgba(170,200,235,.5)';
-        ctx.lineWidth = 1.1 * dpr;
-        ctx.stroke();
-      };
-      curve(false, 1);                        /* V₁(x₁)：底边 */
-      curve(true, 1 + this.state.eps);        /* V₂(x₂)：左边（ε>0 时整支放大） */
-      /* 极淡基线，让剖面的零位可读 */
-      ctx.strokeStyle = 'rgba(150,180,215,.16)';
-      ctx.beginPath();
-      ctx.moveTo(0, H - inset); ctx.lineTo(W, H - inset);
-      ctx.moveTo(inset, 0); ctx.lineTo(inset, H);
-      ctx.stroke();
-      label('V(x₁)', W - 7 * dpr, H - inset - 4 * dpr, 'rgba(170,200,235,.55)', 'right', 8 * dpr);
-      label('V(x₂)', inset + 4 * dpr, 26 * dpr, 'rgba(170,200,235,.55)', 'left', 8 * dpr);
-    }
-
-    /* ---------- ③ 轨道：极淡引导线 + 边缘圆角柄 ---------- */
-    const pr = TB_PRESETS[this.state.preset];
-    if (pr && !pr.eigen){
-      const o = tbOrbits(L, this.state.preset, this.initOpts());
-      const vx = (o.xa + 0.5) * px, hy = H - (o.xb + 0.5) * px;
-      const drag = this._drag && this._drag.kind === 'orbit' ? this._drag.which : -1;
-
-      /* 引导线：1px、点状、几乎透明；拖拽中才提亮 */
-      ctx.setLineDash([2 * dpr, 7 * dpr]);
-      ctx.lineWidth = 1 * dpr;
-      ctx.strokeStyle = drag === 0 ? 'rgba(125,225,245,.55)' : 'rgba(125,225,245,.20)';
-      ctx.beginPath(); ctx.moveTo(vx, 0); ctx.lineTo(vx, H); ctx.stroke();
-      ctx.strokeStyle = drag === 1 ? 'rgba(250,205,120,.55)' : 'rgba(250,205,120,.18)';
-      ctx.beginPath(); ctx.moveTo(0, hy); ctx.lineTo(W, hy); ctx.stroke();
-      ctx.setLineDash([]);
-
-      /* 手柄：x₁ 贴顶边（竖直柄），x₂ 贴右边（水平柄） */
-      const grip = (x, y, vertical, hot, rgb) => {
-        const long = (hot ? 30 : 24) * dpr, thin = 5 * dpr, r = 2.5 * dpr;
-        if ('shadowBlur' in ctx){ ctx.shadowBlur = 6 * dpr; ctx.shadowColor = `rgba(${rgb},.5)`; }
-        ctx.fillStyle = `rgba(${rgb},${hot ? 1 : 0.82})`;
-        if (vertical) rrect(x - long / 2, y, long, thin, r);
-        else rrect(x - thin, y - long / 2, thin, long, r);
-        ctx.fill();
-        if ('shadowBlur' in ctx) ctx.shadowBlur = 0;
-      };
-      grip(vx, 3 * dpr, true, drag === 0, '125,225,245');
-      grip(W - 3 * dpr, hy, false, drag === 1, '250,205,120');
-
-      /* 标签：贴在手柄内侧，带暗底描边 */
-      label('x₁', vx, 20 * dpr, 'rgba(125,225,245,.9)');
-      label('x₂', W - 10 * dpr, hy + 14 * dpr, 'rgba(250,205,120,.9)', 'right');
-    }
-
-    /* ---------- ④ 一次性的操作提示（9 秒后淡出；势阱刷开着时常驻） ---------- */
-    const age = (typeof performance !== 'undefined' ? performance.now() : 0) - (this._mountT || 0);
-    const fade = this.state.wellTool ? 1 : Math.max(0, Math.min(1, (9000 - age) / 1500));
-    if (fade > 0.02){
-      const txt = this.state.wellTool
-        ? '势阱刷：拖动放阱 · 右键删'
-        : '拖边缘小柄挪轨道';
-      ctx.font = `${f(9.5 * dpr)}px ui-monospace,SFMono-Regular,Menlo,monospace`;
-      const tw = (ctx.measureText ? ctx.measureText(txt).width : txt.length * 5.7 * dpr) || txt.length * 5.7 * dpr;
-      const padX = 6 * dpr, padY = 3.5 * dpr;
-      const bh = 9.5 * dpr + 2 * padY;
-      const x = W - tw - 2 * padX - 8 * dpr;         /* 右上角：避开左下剖面与左上标签 */
-      const by = 8 * dpr;
-      ctx.globalAlpha = 0.9 * fade;
-      ctx.fillStyle = 'rgba(6,12,22,.55)';
-      rrect(x, by, tw + 2 * padX, bh, 5 * dpr);
-      ctx.fill();
-      ctx.fillStyle = this.state.wellTool ? 'rgba(250,205,120,.95)' : 'rgba(165,195,230,.92)';
-      ctx.textAlign = 'left';
-      ctx.fillText(txt, x + padX, by + padY + 8 * dpr);
-      ctx.globalAlpha = 1;
-    }
-  }
-  /* 拖动的一步（pointerdown 与 pointermove 共用，所以「按下」就有反馈） */
-  _dragApply(t){
-    const d = this._drag;
-    if (!d) return false;
-    if (d.kind === 'well'){
-      this.moveWell(d.idx, t.i);
-      return true;
-    }
-    this.placeOrbit(d.which, d.which === 0 ? t.i : t.j);
-    return true;
-  }
-  toggleWellTool(){
-    this.state.wellTool = !this.state.wellTool;
-    this.syncWellHud();
-    this.q('#tbField').style.cursor = this.state.wellTool ? 'cell' : '';
-    this.toast(this.state.wellTool
-      ? '势阱刷：拖动放阱 · 右键删'
-      : '势阱刷：关');
-  }
-  /* 沿轴点选轨道：which=0 ⟹ 粒子 1（下方 x₁ 条），which=1 ⟹ 粒子 2（右侧 x₂ 条）。
-     首次点选从**当前预设的两条轨道**接续（画面不跳），之后把预设切到「自由放置」。
-     位置由 tbInitParams 钳到「整包留在场内」，所以这里不做第二次钳制。 */
-  placeOrbit(which, x){
-    const L = this.state.L;
-    if (!Number.isFinite(x)) return false;
-    if (this.state.preset !== 'custom'){
-      const o = tbOrbits(L, this.state.preset, this.initOpts());
-      this.state.xa = o.xa; this.state.xb = o.xb;
-      this.state.preset = 'custom';
-    }
-    if (which === 0) this.state.xa = x; else this.state.xb = x;
-    this.applyInit();
     return true;
   }
   setStats(s){
@@ -2210,9 +1567,6 @@ class TwoBodyApp {
     this.state.frames++;
   }
   stepFrames(n){
-    /* 单步路径也要重烘势场：否则「改了 ε/g/势阱但页面暂停着点单步」会用旧势
-       （rAF 循环会补烘，所以浏览器里通常看不出来；确定性路径不该依赖 rAF）。 */
-    this.bakePot();
     for (let i = 0; i < n; i++) this.evolveFrame();
     this.refreshMeasure();
   }
@@ -2236,7 +1590,6 @@ class TwoBodyApp {
     const tgt = 0.9 / Math.max(m.peak, 1e-9);
     this._scale += (Math.min(Math.max(tgt, 1), 1e6) - this._scale) * 0.25;
     this.drawStrips(m.n1, m.n2);
-    this.drawRails();
     return m;
   }
   drawStrips(n1, n2){
@@ -2263,43 +1616,6 @@ class TwoBodyApp {
       if (horiz){ ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H); } else { ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2); }
       ctx.stroke();
     };
-    /* 轨道落点标记：自定义预设下两条轨道各自的位置 + 动量方向（箭头）。
-       —— 点选是「看不见落点」的交互就白搭，所以标记必须画在条上。 */
-    const mark = (cv, x, k, horiz) => {
-      const ctx = cv.getContext('2d');
-      const W = cv.width, H = cv.height, dpr2 = Math.min(window.devicePixelRatio || 1, 2);
-      const t = (x + 0.5) / this.state.L;
-      ctx.strokeStyle = 'rgba(251,191,36,.95)'; ctx.lineWidth = 1.2 * dpr2;
-      ctx.setLineDash([3 * dpr2, 3 * dpr2]);
-      ctx.beginPath();
-      if (horiz){ ctx.moveTo(t * W, 0); ctx.lineTo(t * W, H); } else { ctx.moveTo(0, (1 - t) * H); ctx.lineTo(W, (1 - t) * H); }
-      ctx.stroke();
-      ctx.setLineDash([]);
-      if (Math.abs(k) > 1e-9){
-        const fr = [255, 191, 36];
-        ctx.fillStyle = 'rgba(' + fr.join(',') + ',.95)';
-        ctx.beginPath();
-        if (horiz){
-          const y = H - 6 * dpr2, sgn = k > 0 ? 1 : -1;
-          ctx.moveTo(t * W + sgn * 7 * dpr2, y);
-          ctx.lineTo(t * W - sgn * 2 * dpr2, y - 4 * dpr2);
-          ctx.lineTo(t * W - sgn * 2 * dpr2, y + 4 * dpr2);
-        } else {
-          const xx = 6 * dpr2, sgn = k > 0 ? -1 : 1;      /* 竖直条：y 向上 = 位置增大 */
-          ctx.moveTo(xx, (1 - t) * H + sgn * 7 * dpr2);
-          ctx.lineTo(xx - 4 * dpr2, (1 - t) * H - sgn * 2 * dpr2);
-          ctx.lineTo(xx + 4 * dpr2, (1 - t) * H - sgn * 2 * dpr2);
-        }
-        ctx.closePath(); ctx.fill();
-      }
-    };
-    const st = this.state;
-    const showMark = st.preset === 'custom' || st.preset === 'cross' || st.preset === 'trap';
-    if (showMark){
-      const o = tbOrbits(st.L, st.preset, this.initOpts());
-      mark(this.q('#tbN1'), o.xa, o.ka, true);
-      mark(this.q('#tbN2'), o.xb, o.kb, false);
-    }
     draw(this.q('#tbN1'), n1, true);
     draw(this.q('#tbN2'), n2, false);
   }
@@ -2388,19 +1704,6 @@ class TwoBodyApp {
       step: (n = 1) => this.stepFrames(n),
       preset: k => this.loadPreset(k, this.state.stats, false),
       stats: s => this.setStats(s),
-      /* 初态旋钮：set 走与滑块同一条路径（钳制 → 重发 → 告警） */
-      initInfo: () => this._info || tbInitInfo(this.state.L, this.state.preset, this.initOpts()),
-      /* 沿轴点选（与鼠标同一入口）：place(0|x, texel) ⟹ 自动切到「自由放置」 */
-      place: (which, x) => this.placeOrbit(which, x),
-      /* 势阱：与画布拖拽同一条路径（cdp132 走这里，不再重写一套） */
-      wells: () => this.state.wells.map(w => ({ x: w.x, w: w.w, v: w.v })),
-      addWell: x => this.addWell(x),
-      moveWell: (k, x) => this.moveWell(k, x),
-      removeWell: k => this.removeWell(k),
-      clearWells: () => this.clearWells(),
-      wellTool: on => { if (!!on !== !!this.state.wellTool) this.toggleWellTool(); return this.state.wellTool; },
-      drag: () => this._drag,
-      setInit: patch => { Object.assign(this.state, patch || {}); return this.applyInit(); },
       relaxNow: () => { const r = this.relaxSync(); return { iters: r.iters, energy: r.energy, residual: r.residual }; },
       /* 页内 CPU 镜像：从初态按当前参数跑 frames 帧，与 GPU 场逐 texel 对比
          （GPU float32 vs CPU float64；页内算完只回传摘要） */

@@ -25,8 +25,6 @@
       src/physics/qec.js
       src/qec/export.js
       src/qec/live.js
-      src/qec/shot-replay.js
-      src/qec/confidence.js
       src/qec/mode-rep.js
       src/physics/shor.js
       src/qec/mode-shor.js
@@ -38,7 +36,6 @@
       src/physics/codefamily.js
       src/qec/mode-family.js
       src/physics/surfacecode.js
-      src/physics/surfacecircuit.js
       src/qec/mode-surf.js
       src/qechub.js
       src/qec-main.js
@@ -505,7 +502,6 @@ const NAV = [
   ['./qcircuit.html', '线路 ⧉'],
   ['./noise.html', '噪声 ◍'],
   ['./qec.html', '纠错 ◈'],
-  ['./spin.html', '自旋链 ⇅'],
 ].filter(Boolean);
 
 /** 主页顶栏各页的 title 工具提示（与 NAV 同序；缺省回退为标签文案） */
@@ -516,7 +512,6 @@ const NAV_TITLES = {
   './qcircuit.html': '小规模量子线路：Bell / GHZ / QFT / Grover（R75）',
   './noise.html': '开放量子系统：T₁ 弛豫 / T₂ 退相位 / 纠缠猝死（R77）',
   './qec.html': '量子纠错 hub：重复码 / Shor 9 / 门噪声 / Flag / 多轮 / 循环 / 码族 / 表面码（R78–R85、R98 整合、R128 表面码）',
-  './spin.html': '海森堡自旋链：XXZ 各向异性 / 局域场 / 淬变 / 临界纠缠（R144）',
 };
 
 /** 生成子页顶栏导航 HTML；cur = 当前页 href（打 cur 高亮，自链也在——与 flag/rounds/cycle 一致）。
@@ -576,17 +571,6 @@ const QC_UNARY = {
   t: { label: 'T', m: [C1, C0, C0, cx(Math.SQRT1_2, Math.SQRT1_2)] },
   tdg: { label: 'T†', m: [C1, C0, C0, cx(Math.SQRT1_2, -Math.SQRT1_2)] },
 };
-
-/* 标准 U3(θ,φ,λ)：覆盖任意单比特酉门（忽略不可观测的整体相位）。 */
-function qcU3(theta = 0, phi = 0, lambda = 0){
-  const c = Math.cos(theta / 2), s = Math.sin(theta / 2);
-  return [
-    cx(c, 0),
-    cx(-Math.cos(lambda) * s, -Math.sin(lambda) * s),
-    cx(Math.cos(phi) * s, Math.sin(phi) * s),
-    cx(Math.cos(phi + lambda) * c, Math.sin(phi + lambda) * c),
-  ];
-}
 
 function qcRotation(op, theta){
   const c = Math.cos(theta / 2), s = Math.sin(theta / 2);
@@ -696,12 +680,6 @@ function qcApply(s, g){
   if (op === 'swap'){ applySwap(s, g.q1, g.q2); return s; }
   if (op === 'toffoli'){
     applyControlled(s, QC_UNARY.x.m, g.q3, [g.q1, g.q2]); return s;
-  }
-  if (op === 'u3'){
-    const m = qcU3(g.theta ?? 0, g.phi ?? 0, g.lambda ?? 0);
-    if (g.c != null) applyControlled(s, m, g.q, [g.c]);
-    else applyMatrix(s, m, g.q);
-    return s;
   }
   if (op === 'rx' || op === 'ry' || op === 'rz'){
     const m = qcRotation(op, g.theta ?? 0);
@@ -845,7 +823,7 @@ function qcExpect(s, xm, zm){
      CNOT(c,t)：X_c → X_c X_t（前向）；Z_t → Z_c Z_t（后向）；X_t、Z_c 不动。
      H(q)：X_q ↔ Z_q。测量：帧的 X_q 翻转 Z 读数（重置才清帧，本工程线路每个
      ancilla 只用一次，无需重置）。
-     x/y/z 门：就地 toggle。ry/rz/rx/phase/U3 在非零帧上出现即抛错（一般为非 Clifford，
+     x/y/z 门：就地 toggle。ry/rz/rx/phase 在非零帧上出现即抛错（非 Clifford，
      帧语义未定义——flagsynd 与 qec 的制备段都保证帧为零时才过旋转门）。 */
 function qcFrToggle(fr, q, t){
   const b = 1 << q;
@@ -867,7 +845,7 @@ function qcFrGate(fr, o){
     return;
   }
   if (op === 'x' || op === 'y' || op === 'z'){ qcFrToggle(fr, o.q, op); return; }
-  if (op === 'ry' || op === 'rz' || op === 'rx' || op === 'phase' || op === 'u3'){
+  if (op === 'ry' || op === 'rz' || op === 'rx' || op === 'phase'){
     if (fr.x || fr.z) throw new Error('frame: 非 Clifford 门在非零帧上出现 ' + op);
   }
 }
@@ -1094,7 +1072,6 @@ function qcInvertGates(gates){
   return gates.slice().reverse().map(g => {
     if (g.op === 'phase' || g.op === 'rx' || g.op === 'ry' || g.op === 'rz')
       return { ...g, theta: -(g.theta ?? 0) };
-    if (g.op === 'u3') return { ...g, theta: -(g.theta ?? 0), phi: -(g.lambda ?? 0), lambda: -(g.phi ?? 0) };
     return { ...g, op: dual[g.op] || g.op };
   });
 }
@@ -2530,9 +2507,6 @@ function qcnGateMatrix(g){
   if (op === 'cnot') return { m: QC_UNARY.x.m, q: g.t ?? g.q2, mask: 1 << (g.c ?? g.q1) };
   if (op === 'cz') return { m: QC_UNARY.z.m, q: g.t ?? g.q2, mask: 1 << (g.c ?? g.q1) };
   if (op === 'toffoli') return { m: QC_UNARY.x.m, q: g.q3, mask: (1 << g.q1) | (1 << g.q2) };
-  if (op === 'u3'){
-    return { m: qcU3(g.theta ?? 0, g.phi ?? 0, g.lambda ?? 0), q: g.q, mask: g.c != null ? (1 << g.c) : 0 };
-  }
   if (op === 'rx' || op === 'ry' || op === 'rz'){
     return { m: qcRotation(op, g.theta ?? 0), q: g.q, mask: g.c != null ? (1 << g.c) : 0 };
   }
@@ -3892,7 +3866,7 @@ function qecExecPhys(circ, opts = {}){
   const voted = synByStab.map(qecMajority);
   const trueMj = synTrueByStab.map(qecMajority);
   return {
-    syn, synVoted: voted, synTrue, synFrame, flips, fixQ, fixQs, pre, frAtFix, frAtEnd,
+    syn, synVoted: voted, synTrue, flips, fixQ, fixQs, pre, frAtFix, frAtEnd,
     bitErr: voted.map((v, i) => v ^ trueMj[i]),
     cosetFix: frameOK ? qecFrameCoset(circ.code, frAtFix, n) : null,
     cosetDec: dec.coset, clsDec: dec.cls,
@@ -4002,7 +3976,6 @@ function qecStream(cfg = {}){
   const ref = qecRef(circ);
   const rng = mulberry32(c.seed);
   let nTrials = 0;
-  let lastTrial = null;
   let nL = 0, nLdec = 0;
   /* R110：直方图宽度随码长走——byCount 0..n 个数据错、synCount 2^{n−1} 种
      表决后综合、byBitErr 0..n−1 个稳定子表决错位、byFlip 0..(n−1)·rd 个
@@ -4020,27 +3993,6 @@ function qecStream(cfg = {}){
   let flipSum = 0, bitErrSum = 0, jumpSum = 0, frameMissSum = 0, noFrame = 0;
   const faultHist = {};
   let faultSum = 0, synMiss = 0, randomMeas = 0, disagree = 0, disagreeBlind = 0, blind = 0;
-  function shotTrace(r, phys){
-    const out = [
-      { step: 'prepare', gate: 'Ry(θ)Rz(φ)' },
-      { step: 'encode', gate: 'CNOT×' + (n - 1) },
-    ];
-    if (c.code === 'phaseflip') out.push({ step: 'basis', gate: 'H×' + n });
-    if (phys){
-      out.push({ step: 'noise', errors: r.errors.slice() });
-      out.push({ step: 'gatenoise', faults: r.fired.slice() });
-      out.push({ step: 'syndrome', syn: r.syn.slice(), synVoted: r.synVoted.slice(),
-        synTrue: r.synTrue.slice(), flips: r.flips.slice(), bitErr: r.bitErr.slice() });
-    } else {
-      if (c.noise === 'gate') out.push({ step: 'gatenoise', faults: r.fired.slice() });
-      else out.push({ step: 'noise', errors: r.errors.slice() });
-      out.push({ step: 'syndrome', syn: r.syn.slice(), synVoted: r.synVoted.slice(), synFrame: (r.synFrame || []).slice() });
-    }
-    out.push({ step: 'correct', q: r.fixQ, qs: r.fixQs.slice() });
-    if (c.code === 'phaseflip') out.push({ step: 'basis', gate: 'H×' + n });
-    out.push({ step: 'decode', gate: 'CNOT×' + (n - 1) });
-    return out;
-  }
   function one(){
     if (phys){
       const r = qecExecPhys(circ, { rng, cfg: c });
@@ -4063,13 +4015,6 @@ function qecStream(cfg = {}){
       bitErrSum += ne;
       jumpSum += r.fired.length;
       synCount[r.synVoted.reduce((a, b) => a * 2 + b, 0)]++;
-      lastTrial = {
-        errors: r.errors.slice(), faults: r.fired.slice(), syn: r.syn.slice(), synVoted: r.synVoted.slice(),
-        synTrue: r.synTrue.slice(), synFrame: r.synFrame.slice(), flips: r.flips.slice(), bitErr: r.bitErr.slice(),
-        fixQ: r.fixQ, fixQs: r.fixQs.slice(), F: r.F, logicalError: r.logicalError, ok: !r.logicalError,
-        noise: 'phys', rd, n, cls: cl.cls, coset: cl.coset, clsDec: r.clsDec, cosetDec: r.cosetDec,
-        trace: shotTrace(r, true), frameOK: r.frameOK, p0: r.p0, p1: r.p1, state: r.state,
-      };
       nTrials++;
       return;
     }
@@ -4106,13 +4051,6 @@ function qecStream(cfg = {}){
       faultSum += nf;
     }
     synCount[r.synVoted.reduce((a, b) => a * 2 + b, 0)]++;
-    lastTrial = {
-      errors: r.errors.slice(), faults: r.fired.slice(), syn: r.syn.slice(), synVoted: r.synVoted.slice(),
-      synFrame: r.synFrame.slice(), fixQ: r.fixQ, fixQs: r.fixQs.slice(), F: r.F,
-      logicalError: r.logicalError, ok: !r.logicalError, noise: c.noise, spectrum: c.spectrum,
-      noisyPhase: c.noisyPhase, rd, n, cls: cl.cls, coset: cl.coset, clsDec: r.clsDec, cosetDec: r.cosetDec,
-      trace: shotTrace(r, false), p0: r.p0, p1: r.p1, state: r.state,
-    };
     nTrials++;
   }
   return {
@@ -4122,7 +4060,7 @@ function qecStream(cfg = {}){
     result(){
       const nn = Math.max(1, nTrials);   /* 防御 0 次 → 除 0；正常路径 n≥1 */
       return {
-        p: c.p, code: c.code, trials: nTrials, PL: nL / nn, PLdec: nLdec / nn, lastTrial,
+        p: c.p, code: c.code, trials: nTrials, PL: nL / nn, PLdec: nLdec / nn,
         /* PLexact：i.i.d. 模式 = 解析 Σ_{w>t}C(n,w)p^w(1−p)^{n−w}；gate / phys
            模式 = DP-over-frames 精确值（phys 且 γ/λ>0 时返回 NaN——非 Pauli
            通道无精确解，诚实标注） */
@@ -5195,9 +5133,9 @@ function mergeShort(q){
 /* ============================================================================
  * live.js（R98 P2 新建）— 共享 LiveDriver：一次性 MC 批 → rAF 分帧演出
  *
- * 背景（用户指令「剩下的能不能都做成实时沙盒类？」）：QEC hub 八个模式的统计
+ * 背景（用户指令「剩下的能不能都做成实时沙盒类？」）：QEC hub 七个模式的统计
  * 原先都是「参数变 → 同步跑完整批 → 画」（拖动滑块时整页卡顿几百 ms）。P2 把
- * 物理层累加器（qecStream / shorStream / gnStream / fsStream / cfStream / scStream / scSpaceStream）接到
+ * 物理层累加器（qecStream / shorStream / gnStream / fsStream / cfStream）接到
  * 这个共享播放器上：播放时每帧只跑一段试验，统计量随帧增长（trials 计数、
  * P_L、直方图、结局分解全部在动），20fps 节制；跑满目标批自动停；暂停即冻结
  * （累加器保留，再播接着演）；参数变化重置累加器（播放中换新的**立即演一帧**
@@ -5337,330 +5275,6 @@ class LiveDriver {
     this.onFrame = null;
     this.onState = null;
   }
-}
-
-/* ===== src/qec/shot-replay.js ===== */
-/* Single-shot teaching replay. It only narrates an already-counted sample; it never samples. */
-const SHOT_REPLAY_CSS = `
-  .qec-shot-replay{border-top:1px solid var(--line);margin-top:9px;padding-top:8px;font-family:var(--mono);font-size:10.5px;line-height:1.45}
-  .qec-shot-replay .sr-head{display:flex;justify-content:space-between;gap:8px;align-items:center;color:var(--dim);margin-bottom:5px}
-  .qec-shot-replay .sr-count{color:var(--cyan);white-space:nowrap}
-  .qec-shot-replay .sr-title{font-size:11px;color:var(--txt);font-weight:600;margin-bottom:3px}
-  .qec-shot-replay .sr-detail{color:var(--dim);min-height:42px;white-space:pre-wrap;overflow-wrap:anywhere}
-  .qec-shot-replay .sr-controls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-top:7px}
-  .qec-shot-replay button{font:inherit;color:var(--txt);background:rgba(103,232,249,.07);border:1px solid var(--line);border-radius:5px;padding:4px 2px;cursor:pointer;white-space:nowrap}
-  .qec-shot-replay button:hover,.qec-shot-replay button.on{color:var(--cyan);border-color:rgba(103,232,249,.55);background:rgba(103,232,249,.13)}
-  .qec-shot-replay button:disabled{opacity:.42;cursor:default}
-`;
-
-const PHASES = ['输入态 / 编码', '故障注入', '综合征读出', '解码与修正', '逻辑结局'];
-const countBits = m => {
-  if (typeof m !== 'bigint') return 0;
-  let n = 0;
-  while (m){ n += Number(m & 1n); m >>= 1n; }
-  return n;
-};
-const join = (a, sep = ', ') => Array.isArray(a) && a.length ? a.join(sep) : '无';
-const pauli = f => {
-  if (f == null) return '';
-  if (typeof f === 'number' || typeof f === 'string') return String(f);
-  const op = f.t || f.pauli || f.op || 'fault';
-  if (f.location === 'cx') return `R${(f.round || 1)} ${f.check || ''}·g${f.gate} q${f.q}:${String(op).toUpperCase()}`;
-  if (f.location) return `R${(f.round || 1)} ${f.check || ''}·${f.location} ${String(op).toUpperCase()}`;
-  const q = f.q == null ? '' : `q${f.q}`;
-  const gate = f.gate == null ? '' : `g${f.gate} `;
-  return `${gate}${q}:${String(op).toUpperCase()}`;
-};
-const faultSummary = t => {
-  if (t && Number.isFinite(t.faultCount)){
-    const list = Array.isArray(t.faults) ? t.faults.slice(0, 4).map(pauli).join(' · ') : '';
-    return `电路位置故障 ${t.faultCount} 次（${t.cnotCount ?? '—'} 个 CNOT/shot）${list ? `：${list}` : '；本样本无故障'}${t.faultsTruncated ? ' · 列表截断' : ''}`;
-  }
-  if (t && (typeof t.mx === 'bigint' || typeof t.mz === 'bigint')){
-    const x = countBits(t.mx || 0n), z = countBits(t.mz || 0n);
-    return `Pauli 掩码权重：X=${x}，Z=${z}（总错位 ${countBits((t.mx || 0n) | (t.mz || 0n))}）`;
-  }
-  const a = t && [t.errors, t.faults, t.fired].find(x => Array.isArray(x) && x.length);
-  if (!a) return '本样本没有记录到注入故障。';
-  const shown = a.slice(0, 8).map(pauli).join(' · ');
-  return `${a.length} 个故障：${shown}${a.length > 8 ? ` · …另有 ${a.length - 8} 个` : ''}`;
-};
-const syndromeSummary = t => {
-  if (t && Array.isArray(t.synRounds))
-    return (t.synRounds.length && typeof t.synRounds[0] === 'string'
-      ? t.synRounds.join('  ')
-      : t.synRounds.map((r, i) => `R${i + 1}[${join(r, '')}]`).join('  ')) || '尚无轮次综合征';
-  if (t && (Array.isArray(t.syn) || Array.isArray(t.synVoted)))
-    return `原始 ${join(t.syn, '')} · 投票 ${join(t.synVoted, '')}`;
-  if (t && (Array.isArray(t.defX) || Array.isArray(t.defZ))){
-    const fmt = a => Array.isArray(a) ? a.map((x, i) => x ? `L${i}:${x}` : '').filter(Boolean).join(', ') || '无' : '—';
-    return `X 帧缺陷：${fmt(t.defX)}\nZ 帧缺陷：${fmt(t.defZ)}`;
-  }
-  return '该抽象码族以递归块结局解码，不产生逐轮综合征带。';
-};
-const correctionSummary = t => {
-  if (!t) return '等待样本';
-  if (Array.isArray(t.fixLog)) return t.fixLog.map(f => `R${(f.round ?? 0) + 1}:${join(f.fix && f.fix.map(pauli))}`).join('  ') || '没有施加修正';
-  if (Array.isArray(t.fixQs)) return t.fixQs.length ? `数据修正位：${join(t.fixQs.map(q => `q${q}`))}` : '没有施加数据修正';
-  if (Array.isArray(t.fix)) return t.fix.length ? join(t.fix.map(pauli)) : '没有施加修正';
-  if (typeof t.corrX === 'bigint' || typeof t.corrZ === 'bigint')
-    return `X 修正链权重 ${countBits(t.corrX || 0n)} · Z 修正链权重 ${countBits(t.corrZ || 0n)} · 解码 ${t.modeX || '—'} / ${t.modeZ || '—'}`;
-  return `解码器：${t.decode || t.mode || '该模式的解析/递归解码'}；帧故障权重 ${t.wRes ?? t.weight ?? '—'}`;
-};
-const outcomeSummary = (mode, t) => {
-  if (!t) return '等待样本';
-  if (mode === 'family') return `结局：${t.fate || '—'} · 帧权重 X=${t.xw ?? '—'}, Z=${t.zw ?? '—'}`;
-  if (mode === 'flag') return `结局：${t.bucket || '—'} · flag=${t.flagged ? '触发' : '未触发'} · F=${Number.isFinite(t.F) ? t.F.toFixed(4) : '—'}`;
-  if (mode === 'surf') return `结局：${t.fail ? '逻辑失败' : '纠回'} · X=${t.xfail ? '失败' : '通过'} · Z=${t.zfail ? '失败' : '通过'} · 回退=${t.fallback ? '是' : '否'}`;
-  if (mode === 'gate') return `线路态已演化 · 本样本记录 ${Array.isArray(t.errors) ? t.errors.length : 0} 个门故障`;
-  if (t.logicalError != null) return `逻辑${t.logicalError ? '失败' : '通过'} · F=${Number.isFinite(t.F) ? t.F.toFixed(4) : '—'} · coset=${t.coset ?? '—'}`;
-  return `结局：${t.cls || (t.fate === 'perfect' ? '纠回' : t.fate) || '—'}`;
-};
-
-function makeSteps(mode, t, cfg){
-  const code = cfg && (cfg.code || cfg.fam || cfg.kind || cfg.d);
-  const prep = mode === 'surf'
-    ? `旋转表面码 d=${cfg.d}（${cfg.meas === 'circuit' ? 'CNOT 电路级 + ancilla SPAM' : cfg.meas === 'noisy' ? 'phenomenological 时空匹配' : '单帧 code-capacity'}）；准备一条已计入 MC 的试验。`
-    : mode === 'family'
-      ? `码族 ${code || '当前族'}；递归解码在本样本内完成，不额外抽样。`
-      : mode === 'cycle' || mode === 'rounds'
-        ? `线路 ${code || '当前线路'}；${t && t.rounds ? `${t.rounds} 轮` : '当前轮次配置'}，读取这条样本的轮次记录。`
-        : `码/线路 ${code || '当前配置'}；输入态与编码已包含在这条 MC 样本中。`;
-  return [
-    { title: PHASES[0], body: prep },
-    { title: PHASES[1], body: faultSummary(t) },
-    { title: PHASES[2], body: syndromeSummary(t) },
-    { title: PHASES[3], body: correctionSummary(t) },
-    { title: PHASES[4], body: outcomeSummary(mode, t) },
-  ];
-}
-
-class ShotReplay {
-  constructor(root, mode){
-    this.root = root;
-    this.mode = mode;
-    this.sample = null;
-    this.sampleNo = 0;
-    this.steps = [];
-    this.index = 0;
-    this.pinned = false;
-    this.configKey = null;
-    this.timer = 0;
-    this.el = null;
-    this._ensureCss();
-  }
-
-  _ensureCss(){
-    if (!this.root || this.root.ownerDocument.getElementById('qec-shot-replay-css')) return;
-    const style = this.root.ownerDocument.createElement('style');
-    style.id = 'qec-shot-replay-css';
-    style.textContent = SHOT_REPLAY_CSS;
-    this.root.ownerDocument.head.appendChild(style);
-  }
-
-  mount(){
-    if (!this.root || this.el) return;
-    const d = this.root.ownerDocument;
-    const box = d.createElement('section');
-    box.className = 'qec-shot-replay';
-    box.setAttribute('aria-label', '单次纠错样本逐步回放');
-    box.innerHTML = `<div class="sr-head"><span>单次样本 · 不重新抽样</span><span class="sr-count">等待样本</span></div>
-      <div class="sr-title">等待 MC 样本</div><div class="sr-detail">播放或运行一次 MC 后，可固定该样本逐步查看。</div>
-      <div class="sr-controls"><button type="button" data-act="prev" aria-label="上一步">◀ 上一步</button><button type="button" data-act="next" aria-label="下一步">下一步 ▶</button><button type="button" data-act="auto" aria-label="自动演示">▶ 演示</button><button type="button" data-act="pin" aria-label="固定或跟随样本">固定样本</button></div>`;
-    this.root.appendChild(box);
-    this.el = box;
-    box.querySelector('[data-act="prev"]').addEventListener('click', () => this.step(-1));
-    box.querySelector('[data-act="next"]').addEventListener('click', () => this.step(1));
-    box.querySelector('[data-act="auto"]').addEventListener('click', () => this.toggleAuto());
-    box.querySelector('[data-act="pin"]').addEventListener('click', () => this.togglePin());
-    this._render();
-  }
-
-  sync(sample, sampleNo = 0, cfg = {}){
-    let key = '';
-    try { key = JSON.stringify(cfg) || ''; } catch { key = ''; }
-    const configChanged = this.configKey !== null && key !== this.configKey;
-    this.configKey = key;
-    if (configChanged && this.pinned){ this.pinned = false; this.stopAuto(); this.index = 0; }
-    if (!sample) return;
-    if (sample === this.sample){
-      if (configChanged){ this.steps = makeSteps(this.mode, sample, cfg); this.index = 0; this._render(); }
-      else if (!this.pinned && sampleNo && sampleNo !== this.sampleNo){ this.sampleNo = sampleNo; this._render(); }
-      return;
-    }
-    if (this.pinned) return;
-    this.sample = sample;
-    this.sampleNo = sampleNo || 0;
-    this.steps = makeSteps(this.mode, sample, cfg);
-    this.index = 0;
-    this._render();
-  }
-
-  step(delta){
-    if (!this.sample || !this.steps.length) return;
-    this.stopAuto();
-    this.pinned = true;
-    this.index = Math.max(0, Math.min(this.steps.length - 1, this.index + delta));
-    this._render();
-  }
-
-  togglePin(){
-    if (this.pinned){
-      this.pinned = false;
-      this.index = 0;
-      this.stopAuto();
-      this._render();
-    } else {
-      this.pinned = true;
-      this._render();
-    }
-  }
-
-  toggleAuto(){
-    if (this.timer){ this.stopAuto(); return; }
-    if (!this.sample || !this.steps.length) return;
-    this.pinned = true;
-    this.index = 0;
-    this._render();
-    const tick = () => {
-      if (!this.el || !this.pinned) return this.stopAuto();
-      if (this.index >= this.steps.length - 1){ this.stopAuto(); return; }
-      this.index++;
-      this._render();
-      this.timer = setTimeout(tick, 850);
-    };
-    this.timer = setTimeout(tick, 850);
-    this._render();
-  }
-
-  stopAuto(){
-    if (this.timer) clearTimeout(this.timer);
-    this.timer = 0;
-    const b = this.el && this.el.querySelector('[data-act="auto"]');
-    if (b) b.textContent = '▶ 演示';
-  }
-
-  _render(){
-    if (!this.el) return;
-    const head = this.el.querySelector('.sr-count');
-    const title = this.el.querySelector('.sr-title');
-    const detail = this.el.querySelector('.sr-detail');
-    const prev = this.el.querySelector('[data-act="prev"]');
-    const next = this.el.querySelector('[data-act="next"]');
-    const auto = this.el.querySelector('[data-act="auto"]');
-    const pin = this.el.querySelector('[data-act="pin"]');
-    if (!this.sample || !this.steps.length){
-      head.textContent = '等待样本'; title.textContent = '等待 MC 样本'; detail.textContent = '播放或运行一次 MC 后，可固定该样本逐步查看.';
-      prev.disabled = next.disabled = auto.disabled = pin.disabled = true;
-      return;
-    }
-    const s = this.steps[this.index];
-    head.textContent = `${this.sampleNo ? `#${this.sampleNo} · ` : ''}${this.index + 1}/${this.steps.length}${this.pinned ? ' · 已固定' : ' · 跟随最新'}`;
-    title.textContent = s.title;
-    detail.textContent = s.body;
-    prev.disabled = this.index === 0;
-    next.disabled = this.index >= this.steps.length - 1;
-    auto.disabled = false;
-    pin.disabled = false;
-    pin.textContent = this.pinned ? '跟随最新' : '固定样本';
-    pin.classList.toggle('on', this.pinned);
-    auto.textContent = this.timer ? '⏸ 停止' : '▶ 演示';
-  }
-
-  dispose(){
-    this.stopAuto();
-    this.el?.remove();
-    this.el = null;
-    this.root = null;
-    this.sample = null;
-    this.steps = [];
-  }
-}
-
-/* ===== src/qec/confidence.js ===== */
-/* Wilson intervals communicate finite-shot uncertainty; this UI never changes MC execution. */
-const QEC_CI_CSS = `
-  .qec-ci-feedback{border-top:1px solid var(--line);margin-top:8px;padding-top:7px;font-family:var(--mono);font-size:10px;line-height:1.45}
-  .qec-ci-feedback .ci-head{display:flex;justify-content:space-between;gap:8px;color:var(--dim);margin-bottom:3px}
-  .qec-ci-feedback .ci-est{color:var(--txt);overflow-wrap:anywhere}
-  .qec-ci-feedback .ci-note{color:var(--dim);margin-top:2px;overflow-wrap:anywhere}
-  .qec-ci-feedback .ci-note.warn{color:var(--amber,#fbbf24)}
-`;
-const Z95 = 1.959963984540054;
-const pct = x => `${(100 * x).toFixed(2)}%`;
-
-function wilsonInterval(events, trials, z = Z95){
-  const n = Math.floor(Number(trials));
-  if (!(n > 0) || !Number.isFinite(n)) return null;
-  const k = Math.max(0, Math.min(n, Math.round(Number(events) || 0)));
-  const p = k / n, z2 = z * z, den = 1 + z2 / n;
-  const center = (p + z2 / (2 * n)) / den;
-  const half = z * Math.sqrt((p * (1 - p) / n) + (z2 / (4 * n * n))) / den;
-  return { events: k, trials: n, rate: p, low: Math.max(0, center - half), high: Math.min(1, center + half) };
-}
-
-class ConfidenceFeedback{
-  constructor(root){ this.root = root; this.el = null; this.metric = null; this._ensureCss(); }
-  _ensureCss(){
-    if (!this.root || this.root.ownerDocument.getElementById('qec-confidence-css')) return;
-    const style = this.root.ownerDocument.createElement('style');
-    style.id = 'qec-confidence-css'; style.textContent = QEC_CI_CSS;
-    this.root.ownerDocument.head.appendChild(style);
-  }
-  mount(){
-    if (!this.root || this.el) return;
-    const box = this.root.ownerDocument.createElement('section');
-    box.className = 'qec-ci-feedback';
-    box.setAttribute('aria-label', '蒙特卡洛统计置信区间');
-    box.innerHTML = '<div class="ci-head"><span>有限样本 · 95% 区间</span><span class="ci-n"></span></div><div class="ci-est">等待 MC 统计</div><div class="ci-note">区间随已完成样本更新；它不改变抽样或停止条件。</div>';
-    this.root.appendChild(box); this.el = box; this._render();
-  }
-  sync(metric){ this.metric = metric || null; this._render(); }
-  _render(){
-    if (!this.el) return;
-    const nEl = this.el.querySelector('.ci-n'), est = this.el.querySelector('.ci-est'), note = this.el.querySelector('.ci-note');
-    const m = this.metric;
-    if (!m || !(Number(m.n) > 0)){
-      nEl.textContent = ''; est.textContent = '等待 MC 统计'; note.textContent = '区间随已完成样本更新；它不改变抽样或停止条件。'; note.className = 'ci-note'; return;
-    }
-    const n = Math.floor(Number(m.n)); nEl.textContent = `N=${n}`;
-    if (m.kind === 'mean'){
-      const mean = Number(m.mean), sd = Number(m.sd);
-      if (!Number.isFinite(mean) || !Number.isFinite(sd)){ est.textContent = '均值统计不可用'; note.textContent = '当前配置没有可用的样本均值/方差。'; note.className = 'ci-note warn'; return; }
-      const se = sd / Math.sqrt(n), lo = Math.max(0, mean - Z95 * se), hi = Math.min(1, mean + Z95 * se);
-      est.textContent = `${m.label || '样本均值'} ${mean.toFixed(4)} · 近似 95% CI [${lo.toFixed(4)}, ${hi.toFixed(4)}]`;
-      note.textContent = n < 30 ? `N=${n} 较少；正态近似仅作趋势提示，区间已限制在 [0,1]。` : `样本标准差 ${sd.toFixed(4)}；区间为均值的正态近似，不是每条 shot 的范围。`;
-      note.className = `ci-note${n < 30 ? ' warn' : ''}`; return;
-    }
-    const rate = Number(m.rate);
-    if (!Number.isFinite(rate)){
-      est.textContent = '尚无可用的二项统计'; note.textContent = '完成至少一条 MC shot 后显示 Wilson 区间。'; note.className = 'ci-note warn'; return;
-    }
-    const events = m.events == null ? Math.round(Math.max(0, Math.min(1, rate)) * n) : Number(m.events);
-    const ci = wilsonInterval(events, n);
-    est.textContent = `${m.label || '逻辑失效率 P_L'} ${pct(ci.rate)}（${ci.events}/${n}） · Wilson 95% [${pct(ci.low)}, ${pct(ci.high)}]`;
-    if (ci.events === 0){
-      note.textContent = `当前未观测到失效；95% 上限仍为 ${pct(ci.high)}，不能据此断言真实失效率为零。`;
-      note.className = 'ci-note warn';
-    } else if (n < 100){
-      note.textContent = '样本量较少，区间较宽；先看不确定范围，不据此作阈值或优劣结论。';
-      note.className = 'ci-note warn';
-    } else if (ci.events < 10){
-      note.textContent = `只观测到 ${ci.events} 次失效，稀有尾部仍不稳定；可增加 N 收窄区间。`;
-      note.className = 'ci-note warn';
-    } else if (ci.events < 30){
-      note.textContent = `${ci.events} 次失效提供初步统计信号；仍以区间宽度而非单点率比较。`;
-      note.className = 'ci-note';
-    } else {
-      note.textContent = `${ci.events} 次失效；有限样本区间仍保留，提示不等于显著性检验或自动停止判据。`;
-      note.className = 'ci-note';
-    }
-    if (Number.isFinite(m.reference)){
-      const ref = Number(m.reference);
-      note.textContent += ` 参考值 ${pct(ref)}${ref >= ci.low && ref <= ci.high ? ' 落在区间内。' : ' 在区间外。'}`;
-    }
-  }
-  dispose(){ this.el?.remove(); this.el = null; this.root = null; this.metric = null; }
 }
 
 /* ===== src/qec/mode-rep.js ===== */
@@ -5871,11 +5485,6 @@ class QecApp {
     if (this.nqFor(this.state.n, this.state.rd) > 18)
       this.state.rd = this.nqFor(this.state.n, 3) <= 18 ? 3 : 1;
     this.trial = null;
-    /* R162：单次纠错可在噪声列点选数据位，强制注入可复现实验错误。 */
-    this.manualMode = false;
-    this.manualErrors = [];
-    this._manualTargets = [];
-    this._manualHoverQ = -1;
     this.ens = null;
     this.curve = null;
     this.svy = null;      /* 门级：一阶故障枚举（c₁） */
@@ -5902,8 +5511,6 @@ class QecApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
-    this.ciFeedback?.dispose();
-    this.shotReplay?.dispose();
     clearTimeout(this._pDebounce); clearTimeout(this._trDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     clearTimeout(this._physDeb);   /* R108：phys 滑块防抖（切 mode 不泄漏） */
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
@@ -5980,8 +5587,6 @@ class QecApp {
           <button id="qeOnce">单次实验</button>
           <button id="qeReseed">换种子</button>
         </div>
-        <div class="btns"><button id="qeManual" title="开启后，点击线路图「噪声 p」列的数据位，手动注入或移除错误；单次实验会立即重跑。仅适用于 iid / 物理通道口径。">线路点选注错：关</button></div>
-        <div id="qeManualMsg" style="font-family:var(--mono);font-size:9.5px;color:var(--dim);line-height:1.45;margin:2px 0 4px">开启后点线路图「噪声 p」列的数据位，观察综合征与纠正结果。</div>
         <div class="row"><label>样本数</label><input type="range" id="qeTrials" min="500" max="20000" step="500"><output id="qeTrialsO">—</output></div>
 
         <div class="grp">扫描策略（拿信息换时间）</div>
@@ -6067,10 +5672,6 @@ class QecApp {
     `);
 
     this.cv = { circuit: this.q('#qecCircuit'), curve: this.q('#qecCurve'), hist: this.q('#qecHist') };
-    this.shotReplay = new ShotReplay(this.q('#qeHud'), 'rep');
-    this.shotReplay.mount();
-    this.ciFeedback = new ConfidenceFeedback(this.q('#qeHud'));
-    this.ciFeedback.mount();
 
     for (const b of this.modeRoot.querySelectorAll('#qePanel button[data-c]')){
       this.on(b, 'click', () => this.setCode(b.dataset.c));
@@ -6115,11 +5716,6 @@ class QecApp {
     physSlider('T1', 't1'); physSlider('T2', 't2'); physSlider('Tg', 'tg');
     physSlider('Pd', 'pd', 0.001); physSlider('Re', 're', 0.001); physSlider('Peq', 'peq', 0.001);
     this.on(this.q('#qeOnce'), 'click', () => { this.rollOnce(); this.drawAll(); this.renderHud(); });
-    this.on(this.q('#qeManual'), 'click', () => this.setManualMode(!this.manualMode));
-    const circuit = this.q('#qecCircuit');
-    this.on(circuit, 'pointermove', e => this.onCircuitPointerMove(e));
-    this.on(circuit, 'pointerleave', () => this.onCircuitPointerLeave());
-    this.on(circuit, 'click', e => this.onCircuitClick(e));
     this.on(this.q('#qeReseed'), 'click', () => {
       this.state.seed = (this.state.seed * 1103515245 + 12345) % 2147483647;
       this.recompute();
@@ -6140,10 +5736,10 @@ class QecApp {
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
       make: () => qecStream(this.cfg()),
-      onFrame: res => { this.ens = res; if (res.lastTrial) this.trial = res.lastTrial; this.renderHud(); this.drawAll(); },
+      onFrame: res => { this.ens = res; this.renderHud(); this.drawAll(); },
       onState: () => this.syncPlayBtn(),
     });
-    this.on(this.q('#qePlay'), 'click', () => { if (this.manualMode) this.setManualMode(false); this.live.toggle(); });
+    this.on(this.q('#qePlay'), 'click', () => this.live.toggle());
     this.syncPlayBtn();
     if (this.state.live) this.live.start();   /* ?live=1：recompute 将走播放分支 */
 
@@ -6199,13 +5795,10 @@ class QecApp {
   }
 
   recompute(){
-    /* 播放中由同一 shot 更新统计与画布；不要在 sync() 后清空结果或另抽一次。 */
-    if (this.live && this.live.playing) this.live.sync();
-    else {
-      this.ens = qecEnsemble(this.cfg());
-      if (!this.manualMode && this.ens.lastTrial) this.trial = this.ens.lastTrial;
-      else this.rollOnce();
-    }
+    /* R98 P2：播放中 → 换累加器接着演（统计从零开始长）；否则同步全批（旧行为） */
+    if (this.live && this.live.playing){ this.live.sync(); this.ens = null; }
+    else this.ens = qecEnsemble(this.cfg());
+    this.rollOnce();
     /* R109：rd 进曲线缓存键——线路结构（ancilla 数/测量数/门机会）随它变。
        R110：n 同样进键（数据比特数/稳定子数随它变）；trials 位用 effTrials
        （重配置下已封顶——拖动样本数滑块不触发重扫，只重跑全批）。 */
@@ -6347,56 +5940,8 @@ class QecApp {
   }
 
   rollOnce(){
-    if (this.manualMode && this.state.noise !== 'gate'){
-      /* 每次点选都用同一随机种子：变化只来自用户指定的错误位，不被随机噪声掩盖。 */
-      this.trial = qecTrial({ ...this.cfg(), forceErrors: this.manualErrors.slice() }, mulberry32(this.state.seed ^ 0x6d2b79f5));
-      return;
-    }
     this._rng = this._rng || mulberry32(this.state.seed ^ 0x9e37);
     this.trial = qecTrial(this.cfg(), this._rng);
-  }
-
-  setManualMode(on){
-    if (on && this.state.noise === 'gate') return;
-    if (on && this.live?.playing) this.live.stop();
-    this.manualMode = !!on;
-    this._manualHoverQ = -1;
-    this.rollOnce();
-    this.syncPanel();
-    this.drawAll();
-    this.renderHud();
-  }
-
-  circuitTargetAt(e){
-    if (!this.manualMode || this.state.noise === 'gate') return null;
-    const rect = this.cv.circuit.getBoundingClientRect();
-    const x = e.clientX - rect.left, y = e.clientY - rect.top;
-    return this._manualTargets.find(t => Math.abs(x - t.x) <= t.rx && Math.abs(y - t.y) <= t.ry) || null;
-  }
-
-  onCircuitPointerMove(e){
-    const target = this.circuitTargetAt(e);
-    const q = target ? target.q : -1;
-    this.cv.circuit.style.cursor = target ? 'pointer' : 'default';
-    if (q !== this._manualHoverQ){ this._manualHoverQ = q; this.drawCircuit(); }
-  }
-
-  onCircuitPointerLeave(){
-    this.cv.circuit.style.cursor = 'default';
-    if (this._manualHoverQ !== -1){ this._manualHoverQ = -1; this.drawCircuit(); }
-  }
-
-  onCircuitClick(e){
-    const target = this.circuitTargetAt(e);
-    if (!target) return;
-    const i = this.manualErrors.indexOf(target.q);
-    if (i >= 0) this.manualErrors.splice(i, 1);
-    else this.manualErrors.push(target.q);
-    this.manualErrors.sort((a, b) => a - b);
-    this.rollOnce();
-    this.drawAll();
-    this.renderHud();
-    this.syncPanel();
   }
 
   setCode(c){
@@ -6408,7 +5953,6 @@ class QecApp {
   setNoise(n){
     if (!QEC_NOISE[n]) return;
     this.state.noise = n;
-    if (n === 'gate') this.manualMode = false;
     this._curveKey = '';
     this.syncPanel(); this.recompute(); this.renderHint();
   }
@@ -6432,7 +5976,6 @@ class QecApp {
     const rd = qecNormRd(this.state.rd);
     if (k === this.state.n && this.nqFor(k, rd) <= 18) return;
     this.state.n = k;
-    this.manualErrors = this.manualErrors.filter(q => q < k);
     /* rd 保持优先；非法（nq>18）时降到最大的合法档——R110 的 n=5 切入手感
        （rd=5→3）原样保留，n=7/9 只能落到 1（rd=3 时 nq=25/29 仍超限） */
     if (this.nqFor(k, rd) > 18) this.state.rd = this.nqFor(k, 3) <= 18 ? 3 : 1;
@@ -6496,22 +6039,6 @@ class QecApp {
           : '每位稳定子测 5 次取多数：ε→10ε³−15ε⁴+6ε⁵；代价同比例上升');
     }
     /* R129：扫描策略按钮 + 一行实测说明（成本只报**上一轮实测**，不报估计值） */
-    const manual = this.q('#qeManual'), manualMsg = this.q('#qeManualMsg');
-    if (manual){
-      manual.disabled = s.noise === 'gate';
-      manual.classList.toggle('on', this.manualMode);
-      manual.textContent = this.manualMode ? '线路点选注错：开' : '线路点选注错：关';
-      manual.title = s.noise === 'gate'
-        ? '门级噪声按具体门注错；此处手动数据错误只适用于 iid / 物理通道口径。'
-        : '开启后，点击线路图「噪声 p」列的数据位，手动注入或移除错误；单次实验会立即重跑。';
-    }
-    if (manualMsg){
-      manualMsg.textContent = s.noise === 'gate'
-        ? '门级故障按门注入；数据位点选只适用于 iid / 物理通道。'
-        : this.manualMode
-          ? '已选错误位：' + (this.manualErrors.length ? this.manualErrors.map(q => 'q' + q).join('、') : '无') + '。点击切换；强制位替代数据错误的 p 抽样。物理通道轨迹固定，换种子刷新。'
-          : '开启后点线路图「噪声 p」列的数据位，观察综合征与纠正结果。';
-    }
     const fsc = this.q('#qeFastScan'), skm = this.q('#qeSkipMc');
     if (fsc) fsc.classList.toggle('on', !!s.fastScan);
     if (skm) skm.classList.toggle('on', !!s.skipMc);
@@ -7134,8 +6661,6 @@ class QecApp {
   }
 
   renderHud(){
-    this.ciFeedback?.sync({ label: '逻辑失效率 P_L', rate: this.ens && this.ens.PL, n: this.ens && this.ens.trials, reference: this.ens && this.ens.PLexact });
-    this.shotReplay?.sync(this.trial, this.ens && this.ens.trials, this.state);
     const s = this.state, t = this.trial, e = this.ens;
     const N = qecNormN(s.n);
     /* R110/R112：综合征标签随稳定子数走（n−1 位；n=3 ⟹ '综合 m₀m₁' 与 R108
@@ -7301,12 +6826,6 @@ class QecApp {
     const yOf = q => padT + (q + 0.5) * rowH;
     const colW = (W - padL - padR) / nCols;
     const xOf = i => padL + (i + 0.5) * colW;
-    const noiseCol = cols.findIndex(col => col.t === 'noise');
-    this._manualTargets = noiseCol < 0 ? [] : Array.from({ length: N }, (_, q) => ({
-      q, x: xOf(noiseCol) / dpr, y: yOf(q) / dpr,
-      rx: Math.max(7, Math.min(18, colW / dpr * 0.45)),
-      ry: Math.max(5, Math.min(12, rowH / dpr * 0.42)),
-    }));
     const labels = [];
     for (let i = 0; i < N; i++) labels.push('q' + i);
     for (let i = 0; i < (N - 1) * rd; i++) labels.push('a' + i);
@@ -7387,13 +6906,9 @@ class QecApp {
           g.font = (10 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
           g.textBaseline = 'middle'; g.fillText(errPauli, cx, y + 0.5 * dpr);
           g.textBaseline = 'alphabetic';
-          if (this.manualMode && this._manualHoverQ === q){
-            g.strokeStyle = 'rgba(103,232,249,.95)'; g.lineWidth = 1.5 * dpr;
-            g.beginPath(); g.roundRect(cx - size * 0.72, y - size * 0.72, size * 1.44, size * 1.44, 6 * dpr); g.stroke();
-          }
         }
         g.fillStyle = 'rgba(148,163,184,.8)'; g.font = (9 * dpr) + 'px ui-monospace,monospace';
-        g.textAlign = 'center'; g.fillText(this.manualMode ? '指定错误' : (s.noise === 'phys' ? '存储错误 p' : '噪声 p'), cx, yOf(0) - size / 2 - 7 * dpr);
+        g.textAlign = 'center'; g.fillText(s.noise === 'phys' ? '存储错误 p' : '噪声 p', cx, yOf(0) - size / 2 - 7 * dpr);
       } else if (col.t === 'vote'){
         /* R109：多数表决盒——跨全部 ancilla 行的竖框，标注本次试验的表决结果 */
         const y0v = yOf(N), y1v = yOf(rows - 1);
@@ -9047,7 +8562,7 @@ function shorStream(cfg = {}){
   const c = { ...SHOR_DEFAULTS, ...cfg };
   const rng = mulberry32(c.seed);
   const gate = c.noise === 'gate';
-  let n = 0, nL = 0, nF = 0, synMiss = 0, lastTrial = null;
+  let n = 0, nL = 0, nF = 0, synMiss = 0;
   const byWeight = new Array(10).fill(0);
   const byWeightL = new Array(10).fill(0);
   const byCoset = [0, 0, 0, 0, 0];   /* [∈S, X_L·S, Z_L·S, Y_L·S, ∉N(S)]；shorCoset 的 −1 归入越界类 */
@@ -9058,7 +8573,6 @@ function shorStream(cfg = {}){
     byWeight[wi]++;
     if (gate){ nF += r.weight; synMiss += r.synMiss || 0; }
     if (r.logicalError){ nL++; byWeightL[wi]++; byCoset[r.coset === -1 ? 4 : r.coset]++; }
-    lastTrial = r;
     n++;
   }
   return {
@@ -9069,7 +8583,7 @@ function shorStream(cfg = {}){
       const nn = Math.max(1, n);
       const ex = shorExactPL(c.p);
       const out = {
-        p: c.p, trials: n, PL: nL / nn, lastTrial,
+        p: c.p, trials: n, PL: nL / nn,
         PLexact: gate ? null : ex.PL, Pun: c.p,
         byWeight, byWeightL, byCoset,
         /* 对照：重复码（同信道）与未编码 */
@@ -9257,8 +8771,6 @@ class ShorApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
-    this.ciFeedback?.dispose();
-    this.shotReplay?.dispose();
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
@@ -9365,10 +8877,6 @@ class ShorApp {
     `);
 
     this.cv = { circuit: this.q('#shCircuit'), curve: this.q('#shCurve'), hist: this.q('#shHist') };
-    this.shotReplay = new ShotReplay(this.q('#shHud'), 'shor');
-    this.shotReplay.mount();
-    this.ciFeedback = new ConfidenceFeedback(this.q('#shHud'));
-    this.ciFeedback.mount();
 
     /* 预设按钮 */
     const pb = this.q('#shPresets');
@@ -9447,7 +8955,7 @@ class ShorApp {
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
       make: () => shorStream(this.cfg()),
-      onFrame: res => { this.ens = res; if (res.lastTrial) this.trial = res.lastTrial; this.renderHud(); this.drawAll(); },
+      onFrame: res => { this.ens = res; this.renderHud(); this.drawAll(); },
       onState: () => this.syncPlayBtn(),
     });
     this.on(this.q('#shPlay'), 'click', () => this.live.toggle());
@@ -9489,9 +8997,10 @@ class ShorApp {
       this.sweep = shorSweep({ ...this.cfg(), sweepTrials: 400 });
       this._curveKey = key;
     }
-    /* 播放中由同一 shot 更新统计与线路图；同步全批时也复用最后一条样本。 */
-    if (this.live && this.live.playing) this.live.sync();
-    else { this.ens = shorEnsemble(this.cfg()); if (this.ens.lastTrial) this.trial = this.ens.lastTrial; }
+    /* R98 P2：播放中 → 换累加器接着演；否则同步全批（旧行为） */
+    if (this.live && this.live.playing){ this.live.sync(); this.ens = null; }
+    else this.ens = shorEnsemble(this.cfg());
+    this.rollOnce();
     this.renderHud();
     this.drawAll();
   }
@@ -9594,8 +9103,6 @@ class ShorApp {
   }
 
   renderHud(){
-    this.ciFeedback?.sync({ label: '逻辑失效率 P_L', rate: this.ens && this.ens.PL, n: this.ens && this.ens.trials, reference: this.ens && this.ens.PLexact });
-    this.shotReplay?.sync(this.trial, this.ens && this.ens.trials, this.state);
     const s = this.state, t = this.trial, e = this.ens;
     const set = (id, v) => { const el = this.q('#' + id); if (el) el.textContent = v; };
     if (t){
@@ -10326,8 +9833,6 @@ class GateNoiseApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
-    this.ciFeedback?.dispose();
-    this.shotReplay?.dispose();
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
@@ -10417,10 +9922,6 @@ class GateNoiseApp {
     `);
 
     this.cv = { circuit: this.q('#gnCircuit'), curve: this.q('#gnCurve'), decay: this.q('#gnDecay') };
-    this.shotReplay = new ShotReplay(this.q('#gnHud'), 'gate');
-    this.shotReplay.mount();
-    this.ciFeedback = new ConfidenceFeedback(this.q('#gnHud'));
-    this.ciFeedback.mount();
 
     /* 预设按钮 */
     const pb = this.q('#gnPresets');
@@ -10495,7 +9996,7 @@ class GateNoiseApp {
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
       make: () => gnStream(this.cfg()),
-      onFrame: res => { this.mc = res; if (res.last) this.trial = res.last; this.renderHud(); this.renderSpec(); this.drawAll(); },
+      onFrame: res => { this.mc = res; this.renderHud(); this.renderSpec(); this.drawAll(); },
       onState: () => this.syncPlayBtn(),
     });
     this.on(this.q('#gnPlay'), 'click', () => this.live.toggle());
@@ -10528,12 +10029,10 @@ class GateNoiseApp {
 
   recompute(){
     this.sweep = gnSweep(this.cfg());
-    /* 播放中由同一 shot 更新线路图与统计；同步全批也显示批次内最后一条 shot。 */
-    if (this.live && this.live.playing) this.live.sync();
-    else {
-      this.mc = gnRun(this.cfg());
-      if (this.mc.last) this.trial = this.mc.last;
-    }
+    /* R98 P2：播放中 → 换累加器接着演；否则同步全批（旧行为） */
+    if (this.live && this.live.playing){ this.live.sync(); this.mc = null; }
+    else this.mc = gnRun(this.cfg());
+    this.rollOnce();
     this.renderHud();
     this.renderSpec();
     this.drawAll();
@@ -10586,8 +10085,6 @@ class GateNoiseApp {
 
   /* ---------- HUD ---------- */
   renderHud(){
-    this.ciFeedback?.sync({ kind: 'mean', label: '线路态保真度 F', mean: this.mc && this.mc.F && this.mc.F.mean, sd: this.mc && this.mc.F && this.mc.F.sd, n: this.mc && this.mc.trials });
-    this.shotReplay?.sync(this.trial, this.mc && this.mc.trials, this.state);
     const s = this.state, mc = this.mc, t = this.trial;
     const set = (id, v) => { const el = this.q('#' + id); if (el) el.textContent = v; };
     set('hPreset', GN_PRESETS[s.preset].label + (s.preset === 'ghz' ? ' n=' + s.n : ''));
@@ -11794,7 +11291,6 @@ function fsStream(kind = 'std', cfg = {}){
   const rng = mulberry32(c.seed);
   const acc = { perfect: 0, outside: 0, logic: 0, flagged: 0, gauge: 0, mixed: 0 };
   let n = 0, wSum = 0, flips = 0, random = 0, faultSum = 0, unsureN = 0, usedSum = 0, noGoodN = 0, retrySum = 0, skipSum = 0;
-  let lastTrial = null;
   const wHist = {};
   function one(){
     const r = fsExec(circ, { rng, p: c.p, spectrum: c.spectrum, noisyPhase: c.noisyPhase,
@@ -11803,7 +11299,6 @@ function fsStream(kind = 'std', cfg = {}){
     const cos = r.cosetFinal;
     const bucket = r.flagged ? 'flagged'
       : (cos === 0 ? 'perfect' : cos === -1 ? (r.F > 1 - 1e-9 ? 'gauge' : 'outside') : 'logic');
-    lastTrial = { ...r, ...cl, bucket };
     acc[bucket]++;
     if (!r.flagged && bucket !== 'perfect'){ wHist[r.wRes] = (wHist[r.wRes] || 0) + 1; wSum += r.wRes; }
     flips += r.diag.frameFlip; random += r.diag.random;
@@ -11820,7 +11315,7 @@ function fsStream(kind = 'std', cfg = {}){
     result(){
       const nn = Math.max(1, n);
       return {
-        kind: c.kind, p: c.p, spectrum: c.spectrum, trials: n, ...acc, lastTrial,
+        kind: c.kind, p: c.p, spectrum: c.spectrum, trials: n, ...acc,
         PL: acc.logic / nn,
         harmful: (acc.logic + acc.outside) / nn,
         /* 条件于「未被判不可信」的样本：cat/dup 的 flag 率高，只看 PL 会把「信息少一轮」
@@ -12159,8 +11654,6 @@ class FlagApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
-    this.ciFeedback?.dispose();
-    this.shotReplay?.dispose();
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
@@ -12215,7 +11708,6 @@ class FlagApp {
         <div class="hrow"><span>MC 逻辑错误率</span><span id="hMcPL">—</span></div>
         <div class="hrow"><span>MC 丢弃率</span><span id="hMcDisc">—</span></div>
         <div class="hrow"><span>MC 平均故障数</span><span id="hMcF">—</span></div>
-        <div class="hrow"><span>最近抽样（非精确条）</span><span id="hLast">—</span></div>
         <hr>
         <div class="hrow"><span>语义位点</span><span id="hSem">—</span></div>
         <div class="hrow"><span>最坏位点</span><span id="hWorst">—</span></div>
@@ -12231,10 +11723,6 @@ class FlagApp {
       <div id="flDiag"></div>
     `);
     this.cv = { fan: this.q('#flFan'), fate: this.q('#flFate'), prop: this.q('#flProp') };
-    this.shotReplay = new ShotReplay(this.q('#flHud'), 'flag');
-    this.shotReplay.mount();
-    this.ciFeedback = new ConfidenceFeedback(this.q('#flHud'));
-    this.ciFeedback.mount();
 
     const kb = this.q('#flKinds');
     for (const k of flKINDS){
@@ -12270,7 +11758,7 @@ class FlagApp {
         p: this.state.p, spectrum: this.state.spectrum,
         trials: this.state.trials, seed: this.state.seed,
       }),
-      onFrame: res => { res.ms = this.live.lastFrameMs; this.mc = res; this.lastTrial = res.lastTrial || null; this.renderHud(); },
+      onFrame: res => { res.ms = this.live.lastFrameMs; this.mc = res; this.renderHud(); },
       onState: () => this.syncPlayBtn(),
     });
     this.on(this.q('#flPlay'), 'click', () => this.live.toggle());
@@ -12347,7 +11835,6 @@ class FlagApp {
       trials: this.state.trials, seed: this.state.seed,
     });
     this.mc.ms = performance.now() - t0;
-    this.lastTrial = this.mc.lastTrial || null;
     this.renderHud();
   }
 
@@ -12362,8 +11849,6 @@ class FlagApp {
 
   /* ---------- HUD ---------- */
   renderHud(){
-    this.ciFeedback?.sync({ label: '逻辑失效率 P_L', rate: this.mc && this.mc.PL, events: this.mc && this.mc.logic, n: this.mc && this.mc.trials });
-    this.shotReplay?.sync(this.lastTrial || (this.mc && this.mc.lastTrial), this.mc && this.mc.trials, this.state);
     const s = this.state, d = this.derive(s.kind), w = this.worst[s.kind], mc = this.mc;
     const set = (id, v, cls) => {
       const el = this.q('#' + id);
@@ -12375,30 +11860,24 @@ class FlagApp {
     if (!d){
       set('hLayout', '计算中…');
       ['hCost', 'hSites', 'hFate1', 'hLogic', 'hFlag', 'hW', 'hPL1', 'hDet1', 'hHarm1', 'hSem', 'hWorst'].forEach(id => set(id, '—'));
-    } else {
-      set('hLayout', d.stats.nq + ' 比特 · ' + d.stats.ancillas + ' ancilla');
-      set('hCost', d.stats.gates + ' / ' + d.stats.cnots + ' / ' + d.stats.meas);
-      set('hSites', d.n);
-      set('hFate1', d.perfect + ' / ' + d.gauge + ' / ' + d.outside);
-      set('hLogic', d.logic + '（' + flPct(d.logic, d.n) + '）', d.logic ? 'warn' : null);
-      set('hFlag', d.flagged + '（' + flPct(d.flagged, d.n) + '）');
-      set('hW', d.wMax + ' 个比特');
-      set('hPL1', d.PL1 ? d.PL1.toExponential(2) : '0');
-      set('hDet1', d.det1 ? d.det1.toExponential(2) : '0');
-      set('hHarm1', d.harm1 ? d.harm1.toExponential(2) : '0');
+      return;
     }
+    set('hLayout', d.stats.nq + ' 比特 · ' + d.stats.ancillas + ' ancilla');
+    set('hCost', d.stats.gates + ' / ' + d.stats.cnots + ' / ' + d.stats.meas);
+    set('hSites', d.n);
+    set('hFate1', d.perfect + ' / ' + d.gauge + ' / ' + d.outside);
+    set('hLogic', d.logic + '（' + flPct(d.logic, d.n) + '）', d.logic ? 'warn' : null);
+    set('hFlag', d.flagged + '（' + flPct(d.flagged, d.n) + '）');
+    set('hW', d.wMax + ' 个比特');
+    set('hPL1', d.PL1 ? d.PL1.toExponential(2) : '0');
+    set('hDet1', d.det1 ? d.det1.toExponential(2) : '0');
+    set('hHarm1', d.harm1 ? d.harm1.toExponential(2) : '0');
     if (mc && mc.kind === s.kind){
       set('hMcPL', (100 * mc.PL).toFixed(1) + '%  (' + mc.logic + '/' + mc.trials + ')');
       set('hMcDisc', (100 * mc.discard).toFixed(1) + '%');
       set('hMcF', flNf(mc.meanFaults, 2));
-      const last = this.lastTrial || mc.lastTrial;
-      if (last){
-        const name = { perfect:'纠回', gauge:'仅规范', outside:'逻辑受损', logic:'静默逻辑', flagged:'检出' }[last.bucket] || '—';
-        const fs = (last.fired || []).slice(0, 2).map(f => f.t.toUpperCase() + '@q' + f.q).join(' ');
-        set('hLast', `#${mc.trials} ${name} · ${fs || '无门故障'}${(last.fired || []).length > 2 ? ' …' : ''}`);
-      } else set('hLast', '—');
     } else {
-      set('hMcPL', '按「跑一次 MC」'); set('hMcDisc', '—'); set('hMcF', '—'); set('hLast', '—');
+      set('hMcPL', '按「跑一次 MC」'); set('hMcDisc', '—'); set('hMcF', '—');
     }
     if (w){
       const sup = [0,1,2,3,4,5,6].filter(q => (w.dataMask & (1 << q))).length;
@@ -12809,8 +12288,6 @@ class RoundsApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
-    this.ciFeedback?.dispose();
-    this.shotReplay?.dispose();
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
@@ -12881,10 +12358,6 @@ class RoundsApp {
       <div id="rdDiag"></div>
     `);
     this.cv = { time: this.q('#rdTime'), curve: this.q('#rdCurve'), fate: this.q('#rdFate') };
-    this.shotReplay = new ShotReplay(this.q('#rdHud'), 'rounds');
-    this.shotReplay.mount();
-    this.ciFeedback = new ConfidenceFeedback(this.q('#rdHud'));
-    this.ciFeedback.mount();
 
     const mk = (host, items, onPick) => {
       for (const it of items){
@@ -12913,7 +12386,7 @@ class RoundsApp {
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
       make: () => fsStream(this.state.kind, this.cfg()),
-      onFrame: res => { this.mc = res; if (res.lastTrial) this.trial = res.lastTrial; this.renderHud(); this.drawTime(); },
+      onFrame: res => { this.mc = res; this.renderHud(); },
       onState: () => this.syncPlayBtn(),
     });
     this.on(this.q('#rdPlay'), 'click', () => this.live.toggle());
@@ -12986,8 +12459,7 @@ class RoundsApp {
       return;
     }
     this.mc = fsEnsemble(s.kind, this.cfg());
-    if (this.mc.lastTrial) this.trial = this.mc.lastTrial;
-    else if (!this.trial) this.once();
+    if (!this.trial) this.once();
     this.renderHud(); this.drawAll();
   }
 
@@ -13001,8 +12473,6 @@ class RoundsApp {
   }
 
   renderHud(){
-    this.ciFeedback?.sync({ label: '逻辑失效率 P_L', rate: this.mc && this.mc.PL, events: this.mc && this.mc.logic, n: this.mc && this.mc.trials });
-    this.shotReplay?.sync(this.trial, this.mc && this.mc.trials, this.state);
     const s = this.state;
     const set = (id, v, cls) => { const el = this.q('#' + id); if (!el) return; el.textContent = v; el.className = cls || ''; };
     set('hCfg', `${FS_KINDS[s.kind].label} · R=${s.rounds} · ${(rdDECODES.find(d => d.k === s.decode) || {}).name}` +
@@ -13378,8 +12848,6 @@ class CycleApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
-    this.ciFeedback?.dispose();
-    this.shotReplay?.dispose();
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
@@ -13459,10 +12927,6 @@ class CycleApp {
       <div id="cyDiag"></div>
     `);
     this.cv = { flow: this.q('#cyFlow'), curve: this.q('#cyCurve'), gate: this.q('#cyGate') };
-    this.shotReplay = new ShotReplay(this.q('#cyHud'), 'cycle');
-    this.shotReplay.mount();
-    this.ciFeedback = new ConfidenceFeedback(this.q('#cyHud'));
-    this.ciFeedback.mount();
 
     const mk = (host, items, onPick) => {
       const el = this.q(host);
@@ -13499,7 +12963,7 @@ class CycleApp {
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
       make: () => fsStream(this.state.kind, this.cfg()),
-      onFrame: res => { this.mc = res; if (res.lastTrial) this.trial = res.lastTrial; this.renderHud(); this.drawFlow(); },
+      onFrame: res => { this.mc = res; this.renderHud(); this.drawFlow(); },
       onState: () => this.syncPlayBtn(),
     });
     this.on(this.q('#cyPlay'), 'click', () => this.live.toggle());
@@ -13574,7 +13038,6 @@ class CycleApp {
           return;
         }
         this.mc = fsEnsemble(this.state.kind, this.cfg());
-        if (this.mc.lastTrial) this.trial = this.mc.lastTrial;
         this.fo = fsFirstOrder(this.state.kind, this.cfg());
         this.renderHud(); this.drawFlow();
         setTimeout(() => {
@@ -13601,8 +13064,6 @@ class CycleApp {
   }
 
   renderHud(){
-    this.ciFeedback?.sync({ label: '逻辑失效率 P_L', rate: this.mc && this.mc.PL, events: this.mc && this.mc.logic, n: this.mc && this.mc.trials });
-    this.shotReplay?.sync(this.trial, this.mc && this.mc.trials, this.state);
     const s = this.state;
     const set = (id, v, cls) => { const el = this.q('#' + id); if (!el) return; el.textContent = v; el.className = cls || ''; };
     const lg = (cyLOGICS.find(l => l.k === s.logic) || {}).name || '无';
@@ -13652,7 +13113,7 @@ class CycleApp {
     g.textAlign = 'left';
     g.font = (11.5 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = cyCOL.txt + '.95)';
-    g.fillText('周期时间线：格子来自最近一条 MC 轨迹（✓ 修正 / ✗ 无可用读数 / · 无修正）；HUD 与曲线仍为累计统计', 10 * dpr, 16 * dpr);
+    g.fillText('周期时间线：每周期 R 轮 EC（格 = 一轮，✓ 落了修正 / ✗ 无可用读数），周期之间的 ⟦门⟧ 由后面的周期处理', 10 * dpr, 16 * dpr);
 
     const s = this.state;
     const T = s.cycles, R = s.rounds;
@@ -13677,18 +13138,12 @@ class CycleApp {
       for (let r = 0; r < R; r++){
         const bx = cx + 12 * dpr + r * (boxW + 6 * dpr);
         const by = top + 24 * dpr;
-        const idx = t * R + r, sample = this.trial;
-        const usable = sample && sample.usableR ? sample.usableR[idx] !== false : true;
-        const fx = sample && sample.fixLog ? sample.fixLog.find(f => f.round === idx) : null;
-        const hasSyn = !!(sample && sample.synRounds && sample.synRounds[idx] && sample.synRounds[idx].some(Boolean));
-        const mark = !usable ? '✗' : fx && fx.fix && fx.fix.length ? '✓' : hasSyn ? '•' : '·';
-        const hue = !usable ? cyCOL.mag : fx && fx.fix && fx.fix.length ? cyCOL.cyan : hasSyn ? cyCOL.amber : cyCOL.wire;
-        g.fillStyle = hue + (sample ? '.18)' : '.10)');
-        g.strokeStyle = hue + (sample ? '.82)' : '.35)');
+        g.fillStyle = cyCOL.cyan + '.10)';
+        g.strokeStyle = cyCOL.cyan + '.35)';
         g.beginPath(); g.rect(bx, by, boxW, 20 * dpr); g.fill(); g.stroke();
         g.font = (8.5 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
-        g.fillStyle = sample ? hue + '.98)' : cyCOL.dim + '.9)';
-        g.fillText(sample ? mark : 'R' + (r + 1), bx + boxW / 2, by + 13 * dpr);
+        g.fillStyle = cyCOL.dim + '.9)';
+        g.fillText('R' + (r + 1), bx + boxW / 2, by + 13 * dpr);
       }
       /* 该周期的自检率（样本级统计，逐周期细分留给轨迹行） */
       g.font = (9 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'left';
@@ -14428,10 +13883,9 @@ function cfStream(fam, cfg = {}){
   const f = typeof fam === 'string' ? CF_ALL.find(x => x.k === fam) : fam;
   const rng = mulberry32(c.seed);
   const byFate = { perfect: 0, logic: 0, outside: 0 };
-  let n = 0, wsum = 0, lastTrial = null;
+  let n = 0, wsum = 0;
   function one(){
     const t = cfTrial(f, c, rng);
-    lastTrial = t;
     byFate[t.fate]++;
     wsum += t.xw + t.zw;
     n++;
@@ -14443,7 +13897,7 @@ function cfStream(fam, cfg = {}){
     result(){
       const nn = Math.max(1, n);
       return {
-        family: f.k, p: c.p, noise: c.noise, meas: c.meas, trials: n, lastTrial,
+        family: f.k, p: c.p, noise: c.noise, meas: c.meas, trials: n,
         PL: (byFate.logic + byFate.outside) / nn,
         byFate, meanFaults: wsum / nn,
         exact: cfExactPL(c.p, f, c.noise, c.meas),
@@ -14611,8 +14065,6 @@ class FamilyApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
-    this.ciFeedback?.dispose();
-    this.shotReplay?.dispose();
     clearTimeout(this._pDebounce); clearTimeout(this._deb); clearInterval(this._queueTimer);
     if (this._tok != null) this._tok++;   /* 作废在途 setTimeout 链（rounds/cycle/family） */
     this._ro?.disconnect();
@@ -14665,7 +14117,6 @@ class FamilyApp {
         <div class="hrow"><span>MC↔精确 4σ</span><span id="hZ">—</span></div>
         <div class="hrow"><span>MC 结局 纠回/受损/逻辑</span><span id="hFate">—</span></div>
         <div class="hrow"><span>MC 平均帧错误数</span><span id="hFaults">—</span></div>
-        <div class="hrow"><span>最近抽样结局</span><span id="hLast">—</span></div>
         <div class="hrow"><span>领先幂次 α</span><span id="hPower">—</span></div>
         <div class="cap"><b>Steane³ [[343,1,27]]</b>（模块级，不上面板）：α=8，
           p=10⁻³ 处 P_L≈10⁻¹⁷，任何可行 MC 样本都是 0 事件，画出来只能是噪声。</div>
@@ -14681,10 +14132,6 @@ class FamilyApp {
       <div id="fmDiag"></div>
     `);
     this.cv = { curve: this.q('#fmCurve'), fate: this.q('#fmFate'), power: this.q('#fmPower') };
-    this.shotReplay = new ShotReplay(this.q('#fmHud'), 'family');
-    this.shotReplay.mount();
-    this.ciFeedback = new ConfidenceFeedback(this.q('#fmHud'));
-    this.ciFeedback.mount();
 
     const mk = (host, items, onPick) => {
       for (const it of items){
@@ -14721,7 +14168,7 @@ class FamilyApp {
     /* ---- R98 P2 实时沙盒：播放器（分帧累加，20fps） ---- */
     this.live = new LiveDriver({
       make: () => cfStream(this.state.fam, { noise: this.state.noise, meas: this.state.meas, p: this.state.p, trials: this.state.trials, seed: this.state.seed }),
-      onFrame: res => { res.ms = this.live.lastFrameMs; this.mc = res; this.lastTrial = res.lastTrial || null; this.renderHud(); this.drawFate(); this.drawCurve(); },
+      onFrame: res => { res.ms = this.live.lastFrameMs; this.mc = res; this.renderHud(); this.drawFate(); this.drawCurve(); },
       onState: () => this.syncPlayBtn(),
     });
     this.on(this.q('#fmPlay'), 'click', () => this.live.toggle());
@@ -14788,7 +14235,6 @@ class FamilyApp {
     const t0 = performance.now();
     this.mc = cfEnsemble(s.fam, { noise: s.noise, meas: s.meas, p: s.p, trials: s.trials, seed: s.seed });
     this.mc.ms = performance.now() - t0;
-    this.lastTrial = this.mc.lastTrial || null;
     this.renderHud(); this.drawFate(); this.drawCurve();
   }
 
@@ -14822,8 +14268,6 @@ class FamilyApp {
 
   /* ---------- HUD ---------- */
   renderHud(){
-    this.ciFeedback?.sync({ label: '逻辑失效率 P_L', rate: this.mc && this.mc.PL, events: this.mc && this.mc.byFate ? this.mc.byFate.logic + this.mc.byFate.outside : undefined, n: this.mc && this.mc.trials });
-    this.shotReplay?.sync(this.lastTrial || (this.mc && this.mc.lastTrial), this.mc && this.mc.trials, this.state);
     const s = this.state, sw = this.sweep, mc = this.mc;
     const set = (id, v, cls) => {
       const el = this.q('#' + id);
@@ -14846,7 +14290,7 @@ class FamilyApp {
       else set('hPseudo', 'p* = ' + ps.toFixed(6) + '（vs 未编码基线）');
     }
     if (!mc){
-      ['hMcPL', 'hZ', 'hFate', 'hFaults', 'hLast', 'hPower'].forEach(id => set(id, '计算中…'));
+      ['hMcPL', 'hZ', 'hFate', 'hFaults', 'hPower'].forEach(id => set(id, '计算中…'));
       return;
     }
     const r = this.recon();
@@ -14854,8 +14298,6 @@ class FamilyApp {
     set('hZ', `z=${fmNf(r.zPL, 2)}σ · 故障 z=${fmNf(r.zF, 2)}σ`, r.ok4 ? 'ok' : 'warn');
     set('hFate', `${mc.byFate.perfect} / ${mc.byFate.outside} / ${mc.byFate.logic}`);
     set('hFaults', `${fmNf(mc.meanFaults, 2)} / 期望 ${fmNf(r.mExp, 2)}`);
-    const last = this.lastTrial || mc.lastTrial;
-    set('hLast', last ? `${last.fate === 'perfect' ? '纠回' : last.fate === 'outside' ? '受损' : '逻辑'} · wX=${last.xw} wZ=${last.zw}` : '—');
     const pw = this.powers ? this.powers.find(x => x.k === s.fam) : null;
     set('hPower', pw ? `α=${fmNf(pw.power, 3)} · c≈${pw.PL / Math.pow(1e-4, pw.power) < 1e4 ? fmNf(pw.PL / Math.pow(1e-4, pw.power), 1) : (pw.PL / Math.pow(1e-4, pw.power)).toExponential(1)}` : '—');
   }
@@ -15500,6 +14942,155 @@ function scVerify(d){
   };
 }
 
+/* ---------- 解码器审计：逐综合征最小权重 vs MWPM（R131） ----------------
+ * 诚实限制③ 的原话：「d ≥ 5 **未证**逐综合征最小权重：MWPM 最小化的是『匹配的
+ * 路径总长』，而两条路径重叠时 XOR 之后的实际修正更轻 ⟹ 非匹配型修正原则上可能
+ * 比 MWPM 更优。d=3 用穷举堵住（16/16），d≥5 只能做 ILP 或更高权重的穷举。」
+ *
+ * 本轮把它堵掉，用两条互不依赖的路径：
+ *   ① **综合征空间 BFS**：节点 = 综合征（2^|S| 个），边 = 单比特错误 ⟹ dist[S] 是
+ *      「任何修正」的最小权重（与解码器完全无关，含非匹配型修正）。逐 syndrome 再
+ *      跑一次 scDecode，比 pc(corr) 与 dist[S]：pc(corr) < dist[S] 不可能（corr 本身
+ *      就是同一 syndrome 的合法修正），故 pc(corr) > dist[S] ⟺ MWPM 次优。
+ *   ② **逻辑类退化 DP**：ex[S] 记「最小权重修正里哪些逻辑类存在」（位 1 = cls 0、
+ *      位 2 = cls 1）。两类并存 ⟹ 该 syndrome 上**任何**最小权重解码器都只能 50/50，
+ *      这是最小权重口径的**不可约**上限，不是解码器的锅。若全空间无退化，则
+ *      「达到最小权重」⟹「达到最大似然」（a priori 等概率下 ML 就是取更轻的类）。
+ * 状态数 2^|S| 决定可跑范围：d=3 ⟹ 16、d=5 ⟹ 4096（面板可跑，毫秒级）、
+ * d=7 ⟹ 2^24 = 16.7M（BFS 2.4s + 退化 DP 15s，只做离线全枚举，不上页面）。
+ */
+const SC_AUDIT_MAX_NS = 12;      /* 2^12 = 4096：面板里最后一个能即时跑完的 d */
+
+/** 综合征空间 BFS（内部）：dist/dist 父指针/分层表 */
+function scSyndromeTable(code, type, opts = {}){
+  const g = type === 'X' ? code.xg : code.zg;
+  const nS = g.nS, n = code.n, N = 1 << nS;
+  const syn = new Int32Array(n);
+  for (let q = 0; q < n; q++){
+    let s = 0;
+    g.stab.forEach((st, k) => { if ((pc(st.mask & (1n << BigInt(q)))) & 1) s |= 1 << k; });
+    syn[q] = s;
+  }
+  const dist = new Int8Array(N).fill(-1);
+  const queue = new Int32Array(N);
+  const from = opts.parents ? new Int32Array(N).fill(-1) : null;
+  const fromQ = opts.parents ? new Int32Array(N).fill(-1) : null;
+  const byLayer = opts.layers ? [] : null;
+  dist[0] = 0; queue[0] = 0;
+  if (byLayer) byLayer[0] = [0];
+  let head = 0, tail = 1, maxW = 0;
+  while (head < tail){
+    const s = queue[head++], nd = dist[s] + 1;
+    for (let q = 0; q < n; q++){
+      const t = s ^ syn[q];
+      if (dist[t] < 0){
+        dist[t] = nd;
+        if (from){ from[t] = s; fromQ[t] = q; }
+        if (byLayer) (byLayer[nd] || (byLayer[nd] = [])).push(t);
+        queue[tail++] = t;
+        if (nd > maxW) maxW = nd;
+      }
+    }
+  }
+  if (byLayer) byLayer.length = maxW + 1;
+  return { g, type, nS, n, N, syn, dist, from, fromQ, byLayer, maxW, reachable: tail };
+}
+
+/** 最小权重修正的逻辑类退化（内部）：返回 ex 位掩码表 + 退化计数 */
+function scDegenTable(code, type, t){
+  const dual = type === 'X' ? code.zl : code.xl;
+  const inDual = new Uint8Array(t.n);
+  for (let q = 0; q < t.n; q++) inDual[q] = Number((dual >> BigInt(q)) & 1n);
+  const ex = new Uint8Array(t.N);
+  ex[0] = 1;
+  let degen = 0;
+  const byW = [];
+  for (let k = 1; k <= t.maxW; k++){
+    const layer = t.byLayer[k];
+    if (!layer) continue;
+    let cnt = 0;
+    for (let li = 0; li < layer.length; li++){
+      const s = layer[li];
+      let m = 0;
+      for (let q = 0; q < t.n; q++){
+        const u = s ^ t.syn[q];
+        if (t.dist[u] !== k - 1) continue;
+        const e = ex[u];
+        if (!e) continue;
+        m |= inDual[q] ? (e === 1 ? 2 : e === 2 ? 1 : e) : e;
+        if (m === 3) break;
+      }
+      ex[s] = m;
+      if (m === 3){ degen++; cnt++; }
+    }
+    if (cnt) byW.push([k, cnt]);
+  }
+  return { ex, degen, byW };
+}
+
+/**
+ * 逐综合征解码器审计（面板可跑：d=3/5）。同步执行，毫秒级。
+ * 返回 { d, nS, states, reachable, maxW, hist, tested, worse, maxGap, worst,
+ *        degen, degenByW, clsMix, ms }
+ */
+function scOptAudit(d, type = 'both'){
+  const code = scBuild(d);
+  const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  const types = type === 'both' ? ['X', 'Z'] : [type];
+  const out = { d, type, nS: 0, states: 0, reachable: 0, maxW: 0, hist: [],
+    tested: 0, worse: 0, maxGap: 0, worst: null, degen: 0, degenByW: [], perType: {} };
+  for (const ty of types){
+    const t = scSyndromeTable(code, ty, { parents: true, layers: true });
+    if (t.nS > SC_AUDIT_MAX_NS) throw new Error(`综合征空间 2^${t.nS} 太大（面板审计上限 2^${SC_AUDIT_MAX_NS}）`);
+    const dg = scDegenTable(code, ty, t);
+    const hist = t.byLayer.map(L => (L ? L.length : 0));
+    let worse = 0, maxGap = 0, worst = null, tested = 0;
+    for (let S = 0; S < t.N; S++){
+      if (t.dist[S] < 0) continue;
+      let m = 0n, cur = S, guard = 0;
+      while (cur !== 0){
+        m ^= 1n << BigInt(t.fromQ[cur]); cur = t.from[cur];
+        if (++guard > 4096) throw new Error('综合征回溯成环');
+      }
+      const r = scDecode(code, m, ty);
+      const wd = pc(r.corr);
+      tested++;
+      if (wd > t.dist[S]){ worse++; if (wd - t.dist[S] > maxGap){ maxGap = wd - t.dist[S]; worst = { S, wmin: t.dist[S], wd }; } }
+    }
+    out.perType[ty] = { nS: t.nS, states: t.N, reachable: t.reachable, maxW: t.maxW, hist,
+      tested, worse, maxGap, worst, degen: dg.degen, degenByW: dg.byW };
+    out.nS = Math.max(out.nS, t.nS);
+    out.states += t.N; out.reachable += t.reachable;
+    out.maxW = Math.max(out.maxW, t.maxW);
+    out.tested += tested; out.worse += worse; out.degen += dg.degen;
+    if (maxGap > out.maxGap){ out.maxGap = maxGap; out.worst = { type: ty, ...worst }; }
+    if (dg.byW.length) out.degenByW.push([ty, dg.byW]);
+  }
+  out.ms = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0;
+  return out;
+}
+
+/**
+ * 退化全枚举（无解码，只有 BFS + DP）⟹ 支持到 d=7 的 2^24 空间（离线用）。
+ * 返回 { d, types: { X: { states, degen, byW, maxW, hist }, ... } }
+ */
+function scDegenScan(d, type = 'both', opts = {}){
+  const code = scBuild(d);
+  const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  const out = { d, type, perType: {}, degen: 0, states: 0,
+    ms: 0 };
+  for (const ty of (type === 'both' ? ['X', 'Z'] : [type])){
+    const t = scSyndromeTable(code, ty, { parents: !!opts.parents, layers: true });
+    const dg = scDegenTable(code, ty, t);
+    out.perType[ty] = { nS: t.nS, states: t.N, reachable: t.reachable, maxW: t.maxW,
+      hist: t.byLayer.map(L => (L ? L.length : 0)), degen: dg.degen, byW: dg.byW };
+    out.degen += dg.degen;
+    out.states += t.N;
+  }
+  out.ms = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0;
+  return out;
+}
+
 /** 最小权重逻辑搜索（独立于解码器；权重上限 wmax 之内找不到 ⟹ 距离 > wmax） */
 function scMinLogical(code, type, wmax){
   const n = code.n, stabs = type === 'X' ? code.X : code.Z, other = type === 'X' ? code.Z : code.X;
@@ -15530,6 +15121,22 @@ function scMinLogical(code, type, wmax){
  * 重名会在 `node --check` 处直接 FAIL（本轮实测：multiply declared）。
  * 依赖方向 qcircuit → surfacecode 与 codefamily 一致，无环。 */
 
+/* 快照抽签的 RNG（R131）：用户种子 ⊕ salt 过一次 splitmix 风格混合再喂 mulberry32。
+ * 为什么需要它（两条实测缺陷，都是页面层面的）：
+ *   ① 原来「换一张码图」用固定表达式派生种子 ⟹ 点几次都出同一张图，按钮名不副实；
+ *   ② 种子 7 恰好落在 mulberry32 的弱起点（前 25 个输出最小 0.2279），而 d=5 只有
+ *      25 个比特、默认 p=0.08 ⟹ 默认视图永远零错误，红点与亮框一个都不亮。
+ * 混合哈希不改统计（零错误仍是概率 (1−p)^n 的合法样本），只把固定种子的倒霉起点打散，
+ * 并让 salt 真正推进抽签。 */
+const scMix32 = z => {
+  z = (z + 0x9E3779B9) >>> 0;
+  z = Math.imul(z ^ (z >>> 16), 0x85EBCA6B) >>> 0;
+  z = Math.imul(z ^ (z >>> 13), 0xC2B2AE35) >>> 0;
+  return (z ^ (z >>> 16)) >>> 0;
+};
+const scSnapSeed = (seed, salt) =>
+  scMix32((Math.round(seed) * 2654435761 + Math.round(salt) * 104729) >>> 0);
+
 /** 单次试验：返回两帧的错误/修正/缺陷数与失败标志（页面画图用同一份数据） */
 function scTrial(code, cfg, rng){
   const { p, noise } = cfg;
@@ -15558,10 +15165,9 @@ function scTrial(code, cfg, rng){
 function scEnsemble(code, cfg = {}){
   const c = { p: 0.05, noise: 'depol', trials: 2000, seed: 7, ...cfg };
   const rng = mulberry32(c.seed);
-  let fail = 0, xf = 0, zf = 0, fb = 0, ksum = 0, lastTrial = null;
+  let fail = 0, xf = 0, zf = 0, fb = 0, ksum = 0;
   for (let i = 0; i < c.trials; i++){
     const r = scTrial(code, c, rng);
-    lastTrial = r;
     if (r.fail) fail++;
     if (r.xfail) xf++;
     if (r.zfail) zf++;
@@ -15572,36 +15178,8 @@ function scEnsemble(code, cfg = {}){
   return {
     d: code.d, p: c.p, noise: c.noise, trials: N,
     PL: fail / N, PLx: xf / N, PLz: zf / N,
-    fallback: fb / N, meanDefects: ksum / (2 * N), lastTrial,
+    fallback: fb / N, meanDefects: ksum / (2 * N),
     sigma: Math.sqrt(Math.max(fail / N * (1 - fail / N), 1e-12) / N),
-  };
-}
-
-/** 流式单帧 MC：与 scEnsemble 同 RNG 顺序，附最近一条完整轨迹供播放显示。 */
-function scStream(code, cfg = {}){
-  const c = { p: 0.05, noise: 'depol', trials: 2000, seed: 7, ...cfg };
-  const rng = mulberry32(c.seed);
-  let fail = 0, xf = 0, zf = 0, fb = 0, ksum = 0, n = 0, lastTrial = null;
-  function one(){
-    const r = scTrial(code, c, rng);
-    if (r.fail) fail++;
-    if (r.xfail) xf++;
-    if (r.zfail) zf++;
-    if (r.modeX === 'greedy' || r.modeZ === 'greedy') fb++;
-    ksum += r.kx + r.kz;
-    lastTrial = r;
-    n++;
-  }
-  return {
-    get total(){ return Math.max(1, c.trials | 0); },
-    get n(){ return n; },
-    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m; k++) one(); },
-    result(){
-      const N = Math.max(1, n), PL = fail / N;
-      return { d: code.d, p: c.p, noise: c.noise, trials: n, PL, PLx: xf / N, PLz: zf / N,
-        fallback: fb / N, meanDefects: ksum / (2 * N),
-        sigma: Math.sqrt(Math.max(PL * (1 - PL), 1e-12) / N), lastTrial };
-    },
   };
 }
 
@@ -15743,6 +15321,159 @@ function scCrossingCI(a, b, k = 3){
   }
   return best;
 }
+
+/* ==========================================================================
+ * 交叉点估计（R132）：从「相邻两点变号 + 3σ 门槛」换成「整条曲线的加权多项式拟合」
+ *
+ * 为什么换（都是实测，不是口味）：
+ *   ① 旧口径只在**一对相邻点**上工作：要求两端都满足 PL > 3σ 且符号反转。交叉点附近
+ *      恰恰是两条曲线贴得最近、PL 与 σ 同量级的地方，于是「阈值」最该被读出来的区域
+ *      反而最先被判成「未分辨」。标定（K=14 独立种子、N=3000、带噪测量 d3×d5）：
+ *      旧法只有 6/14 次给出数字，二次拟合 14/14。
+ *   ② 两点弦代替曲线：f(p) = P_A − P_B 在交叉点附近是**弯的**（先升后降），弦的零点
+ *      系统性偏小。实测同一标定下旧法均值 0.0225、线性拟合 0.0212（偏置 −5%）、
+ *      二次拟合 0.0222，参考值 0.0223 ⟹ 弯度必须进模型。
+ *   ③ σ 用回归协方差的 delta 法，而不是 σ_f/|两点斜率|：后者把**斜率自身的噪声**塞进
+ *      分母（噪声让斜率偶尔很陡 ⟹ σ 偶尔偏小），同一个量的误差棒质量不一致。
+ *      标定实测「经验离散度 / 报告 σ」= 1.16（带噪测量 d3×d5）、1.43（单帧 x d3×d5）：
+ *      回归 σ 略偏小（模型误差所致），故乘安全系数 SC_XFIT.safety = 1.4（取实测上限）。
+ *
+ * 保留 scCrossing / scCrossingCI 作为对照口径（README 的历史数字与 pot 的交叉验证都指着
+ * 它），页面改用 scCrossingFit。未分辨时返回具体原因，不再只给一个「—」。
+ * ========================================================================== */
+const SC_XFIT = {
+  win: [5, 6, 7],       /* 候选窗口（点数）：二次拟合至少要 5 点（dof ≥ 2） */
+  winLin: [3, 4],       /* 点数不够时退化到直线 */
+  chiMax: 2.5,          /* χ²/dof 上限：模型明显不合就不能拿它的根当答案 */
+  slopeK: 3,            /* 根处斜率必须显著（|b| > k·σ_b） */
+  safety: 1.4,          /* 实测标定上限（1.16 / 1.43），见文件头注释 */
+};
+
+/** 加权最小二乘多项式拟合（法方程 + 高斯-约当，同时给出系数协方差） */
+function scWls(xs, ys, ws, deg){
+  const m = deg + 1;
+  const A = Array.from({ length: m }, () => new Array(m).fill(0));
+  const b = new Array(m).fill(0);
+  for (let i = 0; i < xs.length; i++){
+    const w = ws[i], x = xs[i];
+    const pw = [1];
+    for (let k = 1; k < 2 * m; k++) pw.push(pw[k - 1] * x);
+    for (let r = 0; r < m; r++){
+      b[r] += w * ys[i] * pw[r];
+      for (let c = 0; c < m; c++) A[r][c] += w * pw[r + c];
+    }
+  }
+  /* 增广矩阵求逆：右半段即 (AᵀWA)⁻¹，用来算根的方差 */
+  const M = A.map((row, i) => row.concat([b[i]]));
+  const inv = Array.from({ length: m }, (_, i) => Array.from({ length: m }, (_, j) => (i === j ? 1 : 0)));
+  for (let c = 0; c < m; c++){
+    let piv = c;
+    for (let r = c + 1; r < m; r++) if (Math.abs(M[r][c]) > Math.abs(M[piv][c])) piv = r;
+    if (!(Math.abs(M[piv][c]) > 1e-18)) return null;
+    if (piv !== c){
+      const t = M[piv]; M[piv] = M[c]; M[c] = t;
+      const t2 = inv[piv]; inv[piv] = inv[c]; inv[c] = t2;
+    }
+    const d = M[c][c];
+    for (let k = 0; k < m + 1; k++) M[c][k] /= d;
+    for (let k = 0; k < m; k++) inv[c][k] /= d;
+    for (let r = 0; r < m; r++){
+      if (r === c) continue;
+      const f = M[r][c];
+      if (!f) continue;
+      for (let k = 0; k < m + 1; k++) M[r][k] -= f * M[c][k];
+      for (let k = 0; k < m; k++) inv[r][k] -= f * inv[c][k];
+    }
+  }
+  const coef = M.map(row => row[m]);
+  const evalAt = x => coef.reduce((s, c, k) => s + c * Math.pow(x, k), 0);
+  let chi2 = 0;
+  for (let i = 0; i < xs.length; i++) chi2 += (ys[i] - evalAt(xs[i])) ** 2 * ws[i];
+  return { coef, cov: inv, chi2, dof: xs.length - m, evalAt };
+}
+
+/** 多项式在 x0 附近最近的那个实根（二次用求根公式，一次直接除） */
+function scRootNear(coef, x0){
+  const c0 = coef[0], c1 = coef[1], c2 = coef.length > 2 ? coef[2] : 0;
+  if (Math.abs(c2) < 1e-14) return Math.abs(c1) > 0 ? -c0 / c1 : null;
+  const disc = c1 * c1 - 4 * c2 * c0;
+  if (disc < 0) return null;
+  const sq = Math.sqrt(disc);
+  const r1 = (-c1 - sq) / (2 * c2), r2 = (-c1 + sq) / (2 * c2);
+  return Math.abs(r1 - x0) <= Math.abs(r2 - x0) ? r1 : r2;
+}
+
+/**
+ * 交叉点（拟合口径）。
+ * 返回 { ok, p, sigma, win, deg, chi2dof, slope, why }；
+ * ok=false 时 why ∈ 'no-sigma' | 'no-cross' | 'bad-fit' | 'no-root' | 'sign' | 'out-of-range'。
+ */
+function scCrossingFit(a, b, opt = {}){
+  const o = { ...SC_XFIT, ...opt };
+  const n = Math.min(a.length, b.length), P = [];
+  for (let i = 0; i < n; i++){
+    const A = a[i], B = b[i];
+    const sA = A.sigma === undefined ? 0 : A.sigma, sB = B.sigma === undefined ? 0 : B.sigma;
+    if (!(sA > 0) || !(sB > 0)) return { ok: false, why: 'no-sigma' };
+    P.push({ p: A.p, f: A.PL - B.PL, s: Math.hypot(sA, sB) });
+  }
+  /* 变号点：与旧口径同取向（取最高 p 的那个）。两帧完全相同的退化情形（f 恒 0）
+     不是「在 0 处交叉」，而是没有可估的交叉点 —— 直接判 no-cross，别让拟合去解 0=0。 */
+  if (P.every(z => z.f === 0)) return { ok: false, why: 'no-cross' };
+  let ib = -1;
+  for (let i = 1; i < P.length; i++){
+    if (P[i - 1].f === 0){ ib = i - 1; continue; }
+    if (P[i - 1].f * P[i].f < 0) ib = i;
+  }
+  if (ib < 0) return { ok: false, why: 'no-cross' };
+
+  let best = null, why = '';
+  const tries = P.length >= 5 ? o.win : o.winLin;
+  for (const w of tries){
+    if (w > P.length || w < 3) continue;
+    let lo = ib - Math.floor(w / 2), hi = lo + w;
+    if (lo < 0){ lo = 0; hi = w; }
+    if (hi > P.length){ hi = P.length; lo = hi - w; }
+    const seg = P.slice(lo, hi);
+    if (seg.some(z => !(z.s > 0) || !Number.isFinite(z.f))) continue;
+    const deg = seg.length >= 5 ? 2 : 1;
+    const fit = scWls(seg.map(z => z.p), seg.map(z => z.f), seg.map(z => 1 / (z.s * z.s)), deg);
+    if (!fit || !(fit.dof > 0)) continue;
+    const chi2dof = fit.chi2 / fit.dof;
+    if (chi2dof > o.chiMax){ why = 'bad-fit'; continue; }
+    const x0 = scRootNear(fit.coef, P[ib].p);
+    if (x0 === null){ why = 'no-root'; continue; }
+    /* 根处斜率及其方差：slope = c1 + 2·c2·x0 */
+    const slope = fit.coef[1] + 2 * (fit.coef[2] || 0) * x0;
+    if (!(slope < 0)){ why = 'sign'; continue; }
+    /* 根的方差：把 c0 + c1·p + c2·p² 在根处对系数求偏导，g = [1, p*, p*²] */
+    const g = deg === 2 ? [1, x0, x0 * x0] : [1, x0];
+    let varp = 0;
+    for (let i2 = 0; i2 < g.length; i2++) for (let j2 = 0; j2 < g.length; j2++)
+      varp += (g[i2] / slope) * (g[j2] / slope) * fit.cov[i2][j2];
+    /* 斜率方差（g_slope = [0, 1, 2·x0]）：斜率不显著就不许报交叉点 */
+    const gs = deg === 2 ? [0, 1, 2 * x0] : [0, 1];
+    let varb = 0;
+    for (let i2 = 0; i2 < gs.length; i2++) for (let j2 = 0; j2 < gs.length; j2++)
+      varb += gs[i2] * gs[j2] * fit.cov[i2][j2];
+    if (!(Math.abs(slope) > o.slopeK * Math.sqrt(Math.max(varb, 0)))){ why = 'slope-ns'; continue; }
+    /* 拟合曲线必须在窗口内真的换边（左正右负），否则这个根可能是远处那一支 */
+    if (!(fit.evalAt(seg[0].p) > 0 && fit.evalAt(seg[seg.length - 1].p) < 0)){ why = 'no-reversal'; continue; }
+    const inRange = x0 >= P[0].p * 0.999 && x0 <= P[P.length - 1].p * 1.001;
+    if (!inRange){ why = 'out-of-range'; continue; }
+    const cand = {
+      ok: true, p: x0, win: w, deg, chi2dof, slope,
+      sigma: Math.sqrt(Math.max(varp, 0)) * o.safety * Math.sqrt(Math.max(1, chi2dof)),
+      why: 'ok',
+    };
+    if (!best || cand.sigma < best.sigma) best = cand;
+  }
+  return best || { ok: false, why: why || 'none' };
+}
+
+/** 扫描网格的每点独立种子（R132）：同一 seed 跑遍所有 p 会让整条曲线的 MC 误差正相关 */
+const scGridSeed = (seed, d, i) =>
+  scMix32((Math.round(seed) * 2654435761 + Math.round(d) * 104729 + Math.round(i) * 40503) >>> 0);
 
 /** 领先幂次 α（P_L ~ C·p^α）：在最小两点上取对数斜率 */
 function scLeadingPower(rows){
@@ -16106,10 +15837,9 @@ function scSpaceEnsemble(code, cfg = {}){
   const grs = { X: scSpaceGraph(code, 'X', R), Z: scSpaceGraph(code, 'Z', R) };
   const rng = mulberry32(c.seed);
   const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
-  let fail = 0, xf = 0, zf = 0, bad = 0, ksum = 0, fbn = 0, lastTrial = null;
+  let fail = 0, xf = 0, zf = 0, bad = 0, ksum = 0, fbn = 0;
   for (let i = 0; i < c.trials; i++){
     const r = scSpaceTrial(code, c, rng, grs);
-    lastTrial = r;
     if (r.fail) fail++;
     if (r.xfail) xf++;
     if (r.zfail) zf++;
@@ -16121,639 +15851,10 @@ function scSpaceEnsemble(code, cfg = {}){
   const N = c.trials, PL = fail / N;
   return {
     d: code.d, p: c.p, noise: c.noise, q: c.q === undefined ? c.p : c.q, rounds: R, layers: R + 1, trials: N,
-    PL, PLx: xf / N, PLz: zf / N, badSyn: bad / N, meanDefects: ksum / (2 * N), fallback: fbn / (2 * N), lastTrial,
+    PL, PLx: xf / N, PLz: zf / N, badSyn: bad / N, meanDefects: ksum / (2 * N), fallback: fbn / (2 * N),
     ms: (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0,
     sigma: Math.sqrt(Math.max(PL * (1 - PL), 1e-12) / N),
   };
-}
-
-/** 流式带噪测量 MC：共享时空图并逐批推进，附最近试验用于画布回放。 */
-function scSpaceStream(code, cfg = {}){
-  const c = { p: 0.02, noise: 'x', trials: 600, seed: 7, q: undefined, rounds: undefined, dpMax: SC_PHEN.dpMax, ...cfg };
-  const R = c.rounds === undefined ? Math.max(1, code.d - 1) : c.rounds;
-  const grs = { X: scSpaceGraph(code, 'X', R), Z: scSpaceGraph(code, 'Z', R) };
-  const rng = mulberry32(c.seed);
-  const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
-  let fail = 0, xf = 0, zf = 0, bad = 0, ksum = 0, fbn = 0, n = 0, lastTrial = null;
-  function one(){
-    const r = scSpaceTrial(code, c, rng, grs);
-    if (r.fail) fail++;
-    if (r.xfail) xf++;
-    if (r.zfail) zf++;
-    if (r.badSyn) bad++;
-    if (r.modeX === 'greedy') fbn++;
-    if (r.modeZ === 'greedy') fbn++;
-    ksum += r.kx + r.kz;
-    lastTrial = r;
-    n++;
-  }
-  return {
-    get total(){ return Math.max(1, c.trials | 0); },
-    get n(){ return n; },
-    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m; k++) one(); },
-    result(){
-      const N = Math.max(1, n), PL = fail / N;
-      return { d: code.d, p: c.p, noise: c.noise, q: c.q === undefined ? c.p : c.q,
-        rounds: R, layers: R + 1, trials: n, PL, PLx: xf / N, PLz: zf / N,
-        badSyn: bad / N, meanDefects: ksum / (2 * N), fallback: fbn / (2 * N),
-        ms: (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0,
-        sigma: Math.sqrt(Math.max(PL * (1 - PL), 1e-12) / N), lastTrial };
-    },
-  };
-}
-
-/* ===== src/physics/surfacecircuit.js ===== */
-/* Circuit-level rotated surface-code memory diagnostic prototype.
- * The arbitrary unknown logical state may enter through an explicitly trusted
- * ideal-injection primitive, whose output is the encoded-code-space boundary.
- * The primitive itself is outside the fault catalog; every listed input-line,
- * extraction, idle, ancilla and destructive-readout fault occurs after it.
- * Each round uses four collision-free parallel CNOT layers with fresh ancillas.
- * A paired X/Z single-fault table handles unambiguous histories; unresolved frames
- * use safe per-frame lookup then marginal-weight MWPM. Product-state |0_L>/|+_L>
- * preparation is also supported. Noise choices are uniform depolarization or
- * per-layer T1/T2 Pauli-twirled relaxation plus independent CNOT and SPAM rates;
- * T1/T2 are normalized to a layer, not hardware-calibrated, and the twirl drops
- * non-unital amplitude-damping bias. Decoder weights remain marginal averages.
- * This is not a physical encoder implementation, calibrated threshold model,
- * or complete device-level memory cycle.
- */
-
-const scCircuitPopcount = v => { let c = 0; while (v){ c += Number(v & 1n); v >>= 1n; } return c; };
-const scCircuitBit = q => 1n << BigInt(q);
-const scCircuitParity = m => scCircuitPopcount(m) & 1;
-const scCircuitPauliName = (x, z) => x && z ? 'Y' : x ? 'X' : z ? 'Z' : 'I';
-const scCircuitSyndrome = (graph, mask) => {
-  let s = 0;
-  graph.stab.forEach((st, k) => { if (scCircuitParity(st.mask & mask)) s |= 1 << k; });
-  return s;
-};
-const scCircuitFinalDecode = (code, frameMask, readoutMask, type) => {
-  const decoded = scDecode(code, frameMask ^ readoutMask, type);
-  const graph = type === 'X' ? code.xg : code.zg;
-  const dual = type === 'X' ? code.zl : code.xl;
-  return { ...decoded, logical: scCircuitParity(decoded.residual & dual), syndrome: scCircuitSyndrome(graph, decoded.residual) };
-};
-const scCircuitMaskText = (mask, n) => Array.from({ length: n }, (_, k) => (mask >> k) & 1 ? '1' : '0').join('');
-const SC_CIRCUIT_PAULI_BITS = { I: [0,0], X: [1,0], Y: [1,1], Z: [0,1] };
-const scCircuitPauliPair = name => {
-  const [x, z] = String(name || 'II').toUpperCase().split('').map(c => SC_CIRCUIT_PAULI_BITS[c] || [0,0]);
-  return { cx: x[0], cz: x[1], tx: z[0], tz: z[1] };
-};
-
-const SC_CIRCUIT = {
-  distances: [3, 5],
-  rounds: d => d,
-  dpMax: SC_PHEN.dpMax,
-  inputBoundary: 'trusted-ideal-arbitrary-state-injection',
-  injectionFaultsIncluded: false,
-  noiseModels: ['depolarizing', 't1t2-pauli-twirled'],
-  defaultNoiseModel: 't1t2-pauli-twirled',
-  noise: 'trusted ideal encoded arbitrary-state boundary + location-specific CNOT/SPAM channels + per-layer T1/T2 Pauli-twirled relaxation + destructive final readout',
-};
-
-const scCircuitClampP = p => Math.max(0, Math.min(0.49, Number(p) || 0));
-function scCircuitNoiseProfile(cfg={}){
-  const p=scCircuitClampP(cfg.p ?? 0.01), requested=cfg.noiseModel??SC_CIRCUIT.defaultNoiseModel;
-  const model=requested==='depolarizing'?'depolarizing':requested==='t1t2-pauli-twirled'?'t1t2-pauli-twirled':null;
-  if(!model)throw new RangeError(`unknown circuit noise model: ${requested}`);
-  if(model==='depolarizing')return {model,p,p2:p,pInput:p,pPrep:p,pReadout:p,pIdle:p,t1Layers:Infinity,t2Layers:Infinity,relax:[1,0,0,0]};
-  const pSPAM=scCircuitClampP(cfg.pSPAM ?? 0.001),t1Layers=Number(cfg.t1Layers ?? 200),t2Layers=Number(cfg.t2Layers ?? 120);
-  if(!(t1Layers>0&&Number.isFinite(t1Layers)))throw new RangeError('T1/layer must be a finite positive number');
-  if(!(t2Layers>0&&Number.isFinite(t2Layers)&&t2Layers<=2*t1Layers))throw new RangeError('T2/layer must be positive and no greater than 2 T1/layer');
-  return {model,p,p2:scCircuitClampP(cfg.p2 ?? p),pInput:scCircuitClampP(cfg.pInput ?? pSPAM),pPrep:scCircuitClampP(cfg.pPrep ?? pSPAM),pReadout:scCircuitClampP(cfg.pReadout ?? pSPAM),pIdle:0,t1Layers,t2Layers,relax:scCircuitT1T2PauliProbabilities(t1Layers,t2Layers)};
-}
-function scCircuitT1T2PauliProbabilities(t1,t2,duration=1){
-  const gamma=1-Math.exp(-duration/t1),s=Math.exp(-duration/(2*t1));
-  const ad=[(1+2*s+s*s)/4,gamma/4,gamma/4,(1-2*s+s*s)/4];
-  const phiRate=Math.max(0,1/t2-1/(2*t1)),phase=(1-Math.exp(-duration*phiRate))/2;
-  const out=[0,0,0,0];
-  for(let i=0;i<4;i++){out[i]+=ad[i]*(1-phase);out[i^3]+=ad[i]*phase;}
-  return out;
-}
-function scCircuitSamplePauli(rng,probs){
-  const u=rng();let a=probs[0];if(u<a)return null;
-  for(let i=1;i<4;i++){a+=probs[i];if(u<a)return ['','X','Y','Z'][i];}
-  return null;
-}
-function scCircuitWeights(code, noise){
-  const p=noise.p, gatesPerData=(code.X.reduce((a,s)=>a+s.w,0)+code.Z.reduce((a,s)=>a+s.w,0))/code.n;
-  const checks=code.X.length+code.Z.length,avgCheckWeight=(code.X.reduce((a,s)=>a+s.w,0)+code.Z.reduce((a,s)=>a+s.w,0))/checks;
-  const schedule=scCircuitScheduleAudit(code),avgDataIdles=schedule.dataIdle.reduce((a,b)=>a+b,0)/code.n,avgAncillaIdles=schedule.ancillaIdle.reduce((a,b)=>a+b,0)/checks;
-  const comp=8*noise.p2/15;
-  const relaxX=noise.model==='depolarizing'?2*noise.pIdle/3:noise.relax[1]+noise.relax[2];
-  const relaxZ=noise.model==='depolarizing'?2*noise.pIdle/3:noise.relax[2]+noise.relax[3];
-  const inputComp=2*noise.pInput/3;
-  const pSpaceX=1-(1-inputComp)*Math.pow(1-comp,gatesPerData)*Math.pow(1-relaxX,gatesPerData+avgDataIdles);
-  const pSpaceZ=1-(1-inputComp)*Math.pow(1-comp,gatesPerData)*Math.pow(1-relaxZ,gatesPerData+avgDataIdles);
-  const pTimeX=1-(1-noise.pPrep)*(1-noise.pReadout)*Math.pow(1-comp,avgCheckWeight)*Math.pow(1-relaxX,avgCheckWeight+avgAncillaIdles);
-  const pTimeZ=1-(1-noise.pPrep)*(1-noise.pReadout)*Math.pow(1-comp,avgCheckWeight)*Math.pow(1-relaxZ,avgCheckWeight+avgAncillaIdles);
-  const weight=x=>x<=0?Infinity:Math.log((1-x)/x);
-  return {pSpace:(pSpaceX+pSpaceZ)/2,pTime:(pTimeX+pTimeZ)/2,pSpaceX,pSpaceZ,pTimeX,pTimeZ,
-    wS:weight((pSpaceX+pSpaceZ)/2),wT:weight((pTimeX+pTimeZ)/2),
-    wSX:weight(pSpaceX),wSZ:weight(pSpaceZ),wTX:weight(pTimeX),wTZ:weight(pTimeZ),
-    gatesPerData,avgCheckWeight,avgDataIdles,avgAncillaIdles,model:noise.model};
-}
-
-function scCircuitPauli(rng, p){
-  if (rng() >= p) return null;
-  const v = 1 + Math.floor(rng() * 15);
-  return { cx: v & 1 ? 1 : 0, cz: v & 2 ? 1 : 0, tx: v & 4 ? 1 : 0, tz: v & 8 ? 1 : 0 };
-}
-
-function scCircuitChecks(code){
-  const out = [];
-  let gateIndex = 0;
-  for (const type of ['Z', 'X']){
-    const checks = type === 'Z' ? code.Z : code.X;
-    for (let ci = 0; ci < checks.length; ci++){
-      const st = checks[ci];
-      const cells = new Map(st.sup.map(q => [`${Math.floor(q / code.d)},${q % code.d}`, q]));
-      /* Four collision-free parallel CNOT layers. The order is hook-safe:
-         Z ancilla Z hooks are horizontal; X ancilla X hooks are vertical. */
-      const order = type === 'Z' ? [[0,0],[0,1],[1,0],[1,1]] : [[0,0],[1,0],[0,1],[1,1]];
-      const interactions = order.map(([dr, dc], layer) => {
-        const q = cells.get(`${st.i + dr},${st.j + dc}`);
-        return q === undefined ? null : { q, layer, gate: gateIndex++ };
-      }).filter(Boolean);
-      out.push({ type, ci, st, interactions, ordered: interactions.map(e => e.q) });
-    }
-  }
-  return out;
-}
-
-function scCircuitScheduleAudit(code){
-  const checks = scCircuitChecks(code), layers = Array.from({ length: 4 }, () => ({ data: new Map(), ancilla: new Map() }));
-  for (const check of checks) for (const op of check.interactions){
-    const layer = layers[op.layer];
-    layer.data.set(op.q, (layer.data.get(op.q) || 0) + 1);
-    layer.ancilla.set(check.ci + ':' + check.type, (layer.ancilla.get(check.ci + ':' + check.type) || 0) + 1);
-  }
-  const dataConflicts = layers.flatMap((layer, i) => [...layer.data].filter(([, n]) => n > 1).map(([q]) => ({ layer: i, q })));
-  const ancillaConflicts = layers.flatMap((layer, i) => [...layer.ancilla].filter(([, n]) => n > 1).map(([check]) => ({ layer: i, check })));
-  return {
-    layers: layers.length,
-    gates: checks.reduce((n, check) => n + check.interactions.length, 0),
-    dataConflicts, ancillaConflicts,
-    dataIdle: layers.map(layer => code.n - layer.data.size),
-    ancillaIdle: layers.map(layer => checks.length - layer.ancilla.size),
-    collisionFree: !dataConflicts.length && !ancillaConflicts.length,
-  };
-}
-
-function scCircuitRound(code, noise, rng, roundIndex, frame, forcedFaults = [], baselineX = 0, baselineZ = 0){
-  const checks = scCircuitChecks(code);
-  const startX = frame.x, startZ = frame.z;
-  const outcomeX = new Array(code.X.length).fill(0), outcomeZ = new Array(code.Z.length).fill(0);
-  const ax = new Array(checks.length).fill(0), az = new Array(checks.length).fill(0);
-  const faults = [];
-  let totalFaults = 0;
-  const record = f => { totalFaults++; if (faults.length < 64) faults.push({ round: roundIndex + 1, ...f }); };
-  const applyData = (q, x, z) => { if (x) frame.x ^= scCircuitBit(q); if (z) frame.z ^= scCircuitBit(q); };
-  const applyAncilla = (ci, name) => { const [x,z]=SC_CIRCUIT_PAULI_BITS[name]||[0,0]; ax[ci]^=x; az[ci]^=z; };
-  const forcedAt = (location, check = null, gate = null, q = null, layer = null) => forcedFaults.find(f =>
-    f.round === roundIndex + 1 && f.location === location && (f.check == null || f.check === check) &&
-    (f.gate == null || f.gate === gate) && (f.q == null || f.q === q) &&
-    (f.layer == null ? location !== 'idle' || layer === 0 : f.layer === layer));
-
-  for (let ci = 0; ci < checks.length; ci++){
-    const { type, ci: checkIndex } = checks[ci];
-    const check = `${type}${checkIndex}`;
-    const prepFault = forcedAt('prep', check);
-    if (prepFault || rng() < noise.pPrep){
-      if (type === 'Z') ax[ci] = 1; else az[ci] = 1;
-      record({ location: 'prep', check, q: 'ancilla', t: type === 'Z' ? 'X' : 'Z' });
-    }
-  }
-
-  for (let layer = 0; layer < 4; layer++){
-    const activeData = new Set(), activeChecks = new Set();
-    for (let ci = 0; ci < checks.length; ci++){
-      const checkRec = checks[ci], op = checkRec.interactions.find(x => x.layer === layer);
-      if (!op) continue;
-      const { type, ci: checkIndex, st } = checkRec;
-      const check = `${type}${checkIndex}`, q = op.q;
-      activeData.add(q); activeChecks.add(ci);
-      /* Standard extraction CNOT conjugation before the post-gate noise. */
-      if (type === 'Z'){
-        if (frame.x & scCircuitBit(q)) ax[ci] ^= 1;
-        if (az[ci]) frame.z ^= scCircuitBit(q);
-      } else {
-        if (ax[ci]) frame.x ^= scCircuitBit(q);
-        if (frame.z & scCircuitBit(q)) az[ci] ^= 1;
-      }
-      const force = forcedAt('cx', check, op.gate);
-      const e = force ? scCircuitPauliPair(force.pauli) : scCircuitPauli(rng, noise.p2);
-      if (e){
-        if (type === 'Z'){
-          applyData(q, e.cx, e.cz);
-          if (e.tx) ax[ci] ^= 1; if (e.tz) az[ci] ^= 1;
-        } else {
-          if (e.cx) ax[ci] ^= 1; if (e.cz) az[ci] ^= 1;
-          applyData(q, e.tx, e.tz);
-        }
-        record({ location: 'cx', gate: op.gate, check, q, layer, t: `${scCircuitPauliName(e.cx,e.cz)}/${scCircuitPauliName(e.tx,e.tz)}` });
-      }
-      if(noise.model==='t1t2-pauli-twirled'){
-        const dataRelax=scCircuitSamplePauli(rng,noise.relax),ancRelax=scCircuitSamplePauli(rng,noise.relax);
-        if(dataRelax){const [x,z]=SC_CIRCUIT_PAULI_BITS[dataRelax];applyData(q,x,z);record({location:'gate-relax',gate:op.gate,q,t:dataRelax});}
-        if(ancRelax){applyAncilla(ci,ancRelax);record({location:'gate-relax',gate:op.gate,check,q:'ancilla',t:ancRelax});}
-      }
-    }
-    /* In depolarizing mode, inactive lines receive a symmetric one-qubit Pauli channel.
-       In T1/T2 mode the same idle interval receives the Pauli-twirled relaxation channel. */
-    for (let q = 0; q < code.n; q++) if (!activeData.has(q)){
-      const force = forcedAt('idle', null, null, q, layer);
-      let name = force ? force.pauli : null;
-      if (!force) name = noise.model==='t1t2-pauli-twirled'
-        ? scCircuitSamplePauli(rng,noise.relax)
-        : rng()<noise.pIdle?['X','Y','Z'][Math.floor(rng()*3)]:null;
-      if (name){
-        const [ix, iz] = SC_CIRCUIT_PAULI_BITS[String(name).toUpperCase()] || [0,0];
-        applyData(q, ix, iz);
-        record({ location: 'idle', q, layer, t: String(name).toUpperCase() });
-      }
-    }
-    for (let ci = 0; ci < checks.length; ci++) if (!activeChecks.has(ci)){
-      const { type, ci: checkIndex } = checks[ci], check = `${type}${checkIndex}`;
-      const force = forcedAt('idle', check, null, 'ancilla', layer);
-      let name = force ? force.pauli : null;
-      if (!force) name = noise.model==='t1t2-pauli-twirled'
-        ? scCircuitSamplePauli(rng,noise.relax)
-        : rng()<noise.pIdle?['X','Y','Z'][Math.floor(rng()*3)]:null;
-      if (name){
-        const [ix, iz] = SC_CIRCUIT_PAULI_BITS[String(name).toUpperCase()] || [0,0];
-        ax[ci] ^= ix; az[ci] ^= iz;
-        record({ location: 'idle', check, q: 'ancilla', layer, t: String(name).toUpperCase() });
-      }
-    }
-  }
-
-  for (let ci = 0; ci < checks.length; ci++){
-    const { type, ci: checkIndex } = checks[ci], check = `${type}${checkIndex}`;
-    const readoutFault = forcedAt('readout', check);
-    const readoutFlip = !!readoutFault || rng() < noise.pReadout;
-    if (readoutFlip) record({ location: 'readout', check, q: 'ancilla', t: 'bit flip' });
-    const baseline = type === 'Z' ? ((baselineZ >> checkIndex) & 1) : ((baselineX >> checkIndex) & 1);
-    const measured = (type === 'Z' ? ax[ci] : az[ci]) ^ baseline ^ (readoutFlip ? 1 : 0);
-    if (type === 'Z') outcomeZ[checkIndex] = measured;
-    else outcomeX[checkIndex] = measured;
-  }
-
-  const sx = outcomeX.reduce((m, v, i) => v ? m | (1 << i) : m, 0);
-  const sz = outcomeZ.reduce((m, v, i) => v ? m | (1 << i) : m, 0);
-  /* η maps measured checks onto the post-round frame used by Δ layers. */
-  const trueX = baselineX ^ scCircuitSyndrome(code.zg, frame.z);
-  const trueZ = baselineZ ^ scCircuitSyndrome(code.xg, frame.x);
-  return {
-    deltaX: startX ^ frame.x, deltaZ: startZ ^ frame.z,
-    synX: sx, synZ: sz, etaX: sx ^ trueX, etaZ: sz ^ trueZ,
-    faults, faultCount: totalFaults, gates: checks.reduce((n, check) => n + check.interactions.length, 0),
-  };
-}
-
-function scCircuitDecodeFrame(code, type, errorLayers, measurementErrors, R, weights, dpMax, skipDecode = false, terminalMeasurementErrors = 0, initialBoundaryKnown = true){
-  /* code.xg is the Z-check graph for X-frame errors; code.zg is the X-check graph for Z-frame errors. */
-  const graphType = type;
-  const g = graphType === 'X' ? code.xg : code.zg;
-  const dual = type === 'X' ? code.zl : code.xl;
-  const gr = scSpaceGraph(code, graphType, R);
-  const nS = g.nS, nn = nS + 2, defects = [], perLayer = [];
-  /* X-frame errors are weighted by X/Y marginals; Z-frame errors by Z/Y.
-     This retains T1/T2 bias in fallback MWPM without pretending to model
-     the joint CNOT-fault likelihood (the exact joint table handles single faults). */
-  const wS=type==='X'?weights.wSX:weights.wSZ,wT=type==='X'?weights.wTX:weights.wTZ;
-  for (let l = 0; l <= R; l++){
-    const e = l < R ? errorLayers[l] : 0n;
-    let d = l === 0 && !initialBoundaryKnown ? 0 : scCircuitSyndrome(g, e);
-    if (l + 1 <= R) d ^= measurementErrors[l + 1];
-    if (l >= 1) d ^= measurementErrors[l];
-    if (l === R) d ^= terminalMeasurementErrors;
-    perLayer.push(d);
-    for (let k = 0; k < nS; k++) if ((d >> k) & 1) defects.push(l * nn + k);
-  }
-  const decoded = skipDecode ? { qubits: 0n, mode: 'catalog', cost: 0 }
-    : scSpaceDecode(gr, defects, wS, wT, dpMax);
-  const total = errorLayers.reduce((a, b) => a ^ b, 0n);
-  const residual = total ^ decoded.qubits;
-  return {
-    cls: scCircuitParity(residual & dual), residual, corr: decoded.qubits, k: defects.length,
-    mode: decoded.mode, cost: decoded.cost, perLayer,
-    synAfter: scCircuitSyndrome(g, residual), total,
-  };
-}
-
-const SC_CIRCUIT_FAULT_CACHE = new Map();
-const scCircuitSignature = layers => layers.map(x => Number(x).toString(16)).join('.');
-function scCircuitFaultCatalog(code, R, prepareBasis = 'encoded'){
-  const faults = [], checks = scCircuitChecks(code);
-  for (let q = 0; q < code.n; q++) for (const pauli of ['X','Y','Z'])
-    faults.push({ round: 0, location: 'input', q, pauli });
-  for (let round = 1; round <= R; round++){
-    for (const check of checks){
-      const checkName = `${check.type}${check.ci}`;
-      faults.push({ round, location: 'prep', check: checkName, pauli: check.type === 'Z' ? 'X' : 'Z' });
-      for (const op of check.interactions){
-        for (const a of ['I','X','Y','Z']) for (const b of ['I','X','Y','Z'])
-          if (a !== 'I' || b !== 'I') faults.push({ round, location: 'cx', check: checkName, gate: op.gate, pauli: a + b });
-      }
-      faults.push({ round, location: 'readout', check: checkName, pauli: 'flip' });
-    }
-    for (let layer = 0; layer < 4; layer++){
-      const activeData = new Set(), activeChecks = new Set();
-      for (let ci = 0; ci < checks.length; ci++){
-        const op = checks[ci].interactions.find(x => x.layer === layer);
-        if (op){ activeData.add(op.q); activeChecks.add(ci); }
-      }
-      for (let q = 0; q < code.n; q++) if (!activeData.has(q))
-        for (const pauli of ['X','Y','Z']) faults.push({ round, location: 'idle', q, layer, pauli });
-      for (let ci = 0; ci < checks.length; ci++) if (!activeChecks.has(ci))
-        for (const pauli of ['X','Y','Z']) faults.push({ round, location: 'idle', check: `${checks[ci].type}${checks[ci].ci}`, q: 'ancilla', layer, pauli });
-    }
-  }
-  for (let q = 0; q < code.n; q++) for (const basis of ['Z','X'])
-    if (prepareBasis === 'encoded' || basis === prepareBasis)
-      faults.push({ round: R + 1, location: 'final-readout', basis, q, pauli: 'flip' });
-  return faults;
-}
-function scCircuitIndexFault(map, signature, mask, logical){
-  let entry = map.get(signature);
-  if (!entry){ map.set(signature, { correction: mask, logical, ambiguous: false, mechanisms: 1 }); return; }
-  entry.mechanisms++;
-  if (entry.logical !== logical) entry.ambiguous = true;
-}
-function scCircuitIndexJoint(map, signature, shot, logicalX, logicalZ, fault){
-  let entry = map.get(signature);
-  if (!entry){
-    map.set(signature, { correctionX: shot.mx, correctionZ: shot.mz, logicalX, logicalZ, firstFault: fault,
-      ambiguous: false, mechanisms: 1 });
-    return;
-  }
-  entry.mechanisms++;
-  if (entry.logicalX !== logicalX || entry.logicalZ !== logicalZ) entry.ambiguous = true;
-}
-function scCircuitFaultTable(code, R, prepareBasis = 'encoded'){
-  const key = `${code.d}:${R}:${prepareBasis}`;
-  if (SC_CIRCUIT_FAULT_CACHE.has(key)) return SC_CIRCUIT_FAULT_CACHE.get(key);
-  const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
-  const X = new Map(), Z = new Map(), J = new Map(), catalog = scCircuitFaultCatalog(code, R, prepareBasis);
-  const locationCounts = {};
-  for (const fault of catalog) locationCounts[fault.location] = (locationCounts[fault.location] || 0) + 1;
-  let silentLogicalX = 0, silentLogicalZ = 0;
-  let lookupLogicalFailX = 0, lookupLogicalFailZ = 0;
-  let lookupSyndromeFailX = 0, lookupSyndromeFailZ = 0;
-  const faultSignatures = [];
-  for (const fault of catalog){
-    const shot = scCircuitTrial(code, { p: 0, noiseModel:'depolarizing', rounds: R, prepareBasis, forceFaults: [fault], skipLookup: true }, mulberry32(1));
-    const sx = scCircuitSignature(shot.defX), sz = scCircuitSignature(shot.defZ);
-    const lx = scCircuitParity(shot.mx & code.zl), lz = scCircuitParity(shot.mz & code.xl);
-    faultSignatures.push({ fault, sx, sz, lx, lz });
-    if (prepareBasis !== 'X' && shot.defX.every(v => v === 0) && lx) silentLogicalX++;
-    if (prepareBasis !== 'Z' && shot.defZ.every(v => v === 0) && lz) silentLogicalZ++;
-    scCircuitIndexFault(X, sx, shot.mx, lx);
-    scCircuitIndexFault(Z, sz, shot.mz, lz);
-    scCircuitIndexJoint(J, `${sx}||${sz}`, shot, lx, lz, fault);
-    const ex = X.get(sx), ez = Z.get(sz);
-    if (prepareBasis !== 'X' && ex && !ex.ambiguous){
-      const residual = shot.mx ^ ex.correction;
-      const decoded = scCircuitFinalDecode(code, residual, shot.finalReadoutZ, 'X');
-      if (decoded.logical) lookupLogicalFailX++;
-      if (decoded.syndrome) lookupSyndromeFailX++;
-    }
-    if (prepareBasis !== 'Z' && ez && !ez.ambiguous){
-      const residual = shot.mz ^ ez.correction;
-      const decoded = scCircuitFinalDecode(code, residual, shot.finalReadoutX, 'Z');
-      if (decoded.logical) lookupLogicalFailZ++;
-      if (decoded.syndrome) lookupSyndromeFailZ++;
-    }
-  }
-  const xEntries = [...X.values()], zEntries = [...Z.values()], jEntries = [...J.values()];
-  const xAmbiguous = xEntries.filter(v => v.ambiguous).length;
-  const zAmbiguous = zEntries.filter(v => v.ambiguous).length;
-  const xCovered = xEntries.filter(v => !v.ambiguous).reduce((n, v) => n + v.mechanisms, 0);
-  const zCovered = zEntries.filter(v => !v.ambiguous).reduce((n, v) => n + v.mechanisms, 0);
-  const jointAmbiguous = jEntries.filter(v => v.ambiguous).length;
-  const jointCovered = jEntries.filter(v => !v.ambiguous).reduce((n, v) => n + v.mechanisms, 0);
-  let jointLookupLogicalFailX = 0, jointLookupLogicalFailZ = 0;
-  let jointLookupSyndromeFailX = 0, jointLookupSyndromeFailZ = 0;
-  for (const item of faultSignatures){
-    const entry = J.get(`${item.sx}||${item.sz}`);
-    if (!entry || entry.ambiguous) continue;
-    const shot = scCircuitTrial(code, { p: 0, noiseModel:'depolarizing', rounds: R, prepareBasis, forceFaults: [item.fault], skipLookup: true }, mulberry32(1));
-    const residualX = shot.mx ^ entry.correctionX, residualZ = shot.mz ^ entry.correctionZ;
-    const decodedX = scCircuitFinalDecode(code, residualX, shot.finalReadoutZ, 'X');
-    const decodedZ = scCircuitFinalDecode(code, residualZ, shot.finalReadoutX, 'Z');
-    if (prepareBasis !== 'X' && decodedX.logical) jointLookupLogicalFailX++;
-    if (prepareBasis !== 'Z' && decodedZ.logical) jointLookupLogicalFailZ++;
-    if (prepareBasis !== 'X' && decodedX.syndrome) jointLookupSyndromeFailX++;
-    if (prepareBasis !== 'Z' && decodedZ.syndrome) jointLookupSyndromeFailZ++;
-  }
-  const jointFallbackFaults = faultSignatures
-    .filter(item => J.get(`${item.sx}||${item.sz}`)?.ambiguous)
-    .map(item => item.fault);
-  const jointAmbiguousExamples = [];
-  const seenAmbiguous = new Set();
-  for (const item of faultSignatures){
-    const signature = `${item.sx}||${item.sz}`, entry = J.get(signature);
-    if (!entry?.ambiguous || (item.lx === entry.logicalX && item.lz === entry.logicalZ) || seenAmbiguous.has(signature)) continue;
-    seenAmbiguous.add(signature);
-    jointAmbiguousExamples.push({ signature, first: entry.firstFault, conflicting: item.fault,
-      firstLogical: [entry.logicalX, entry.logicalZ], conflictingLogical: [item.lx, item.lz] });
-  }
-  const result = {
-    X, Z, J, jointFallbackFaults, jointAmbiguousExamples, locations: catalog.length, locationCounts, xSignatures: X.size, zSignatures: Z.size,
-    jointSignatures: J.size, jointAmbiguous, jointCovered,
-    jointLookupLogicalFailX, jointLookupLogicalFailZ,
-    jointLookupSyndromeFailX, jointLookupSyndromeFailZ,
-    xAmbiguous, zAmbiguous, xCovered, zCovered,
-    lookupLogicalFailX, lookupLogicalFailZ, lookupSyndromeFailX, lookupSyndromeFailZ,
-    silentLogicalX, silentLogicalZ,
-    ms: (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0,
-  };
-  SC_CIRCUIT_FAULT_CACHE.set(key, result);
-  return result;
-}
-
-function scCircuitJointFallbackAudit(code, R, table, prepareBasis = 'encoded'){
-  let mechanisms = 0, xLookup = 0, zLookup = 0;
-  let logicalFailX = 0, logicalFailZ = 0, syndromeFailX = 0, syndromeFailZ = 0;
-  for (const fault of table.jointFallbackFaults){
-    mechanisms++;
-    const shot = scCircuitTrial(code, { p: 0.001, noiseModel:'depolarizing', rounds: R, prepareBasis, forceFaults: [fault] }, () => 0.999);
-    if (shot.lookupX) xLookup++;
-    if (shot.lookupZ) zLookup++;
-    if (shot.xfail) logicalFailX++;
-    if (shot.zfail) logicalFailZ++;
-    if (shot.readoutSynZ) syndromeFailX++;
-    if (shot.readoutSynX) syndromeFailZ++;
-  }
-  return { mechanisms, xLookup, zLookup, logicalFailX, logicalFailZ, syndromeFailX, syndromeFailZ };
-}
-
-function scCircuitFaultAudit(code, rounds = code.d, prepareBasis = 'encoded'){
-  const t = scCircuitFaultTable(code, rounds, prepareBasis);
-  if (!t.jointFallbackAudit) t.jointFallbackAudit = scCircuitJointFallbackAudit(code, rounds, t, prepareBasis);
-  const jf = t.jointFallbackAudit;
-  return { d: code.d, rounds, prepareBasis, locations: t.locations, locationCounts: t.locationCounts, xSignatures: t.xSignatures, zSignatures: t.zSignatures,
-    jointSignatures: t.jointSignatures, jointAmbiguous: t.jointAmbiguous, jointCovered: t.jointCovered,
-    jointLookupLogicalFailX: t.jointLookupLogicalFailX, jointLookupLogicalFailZ: t.jointLookupLogicalFailZ,
-    jointLookupSyndromeFailX: t.jointLookupSyndromeFailX, jointLookupSyndromeFailZ: t.jointLookupSyndromeFailZ,
-    jointFallbackMechanisms: jf.mechanisms, jointFallbackXLookup: jf.xLookup, jointFallbackZLookup: jf.zLookup,
-    jointFallbackLogicalFailX: jf.logicalFailX, jointFallbackLogicalFailZ: jf.logicalFailZ,
-    jointFallbackSyndromeFailX: jf.syndromeFailX, jointFallbackSyndromeFailZ: jf.syndromeFailZ,
-    jointAmbiguousExamples: t.jointAmbiguousExamples,
-    xAmbiguous: t.xAmbiguous, zAmbiguous: t.zAmbiguous, xCovered: t.xCovered, zCovered: t.zCovered,
-    lookupLogicalFailX: t.lookupLogicalFailX, lookupLogicalFailZ: t.lookupLogicalFailZ,
-    lookupSyndromeFailX: t.lookupSyndromeFailX, lookupSyndromeFailZ: t.lookupSyndromeFailZ,
-    silentLogicalX: t.silentLogicalX, silentLogicalZ: t.silentLogicalZ, ms: t.ms };
-}
-
-/** Pauli-frame memory/preparation shot: encoded boundary or noisy product-state prep, extraction, then destructive data readout. */
-function scCircuitTrial(code, cfg = {}, rng = Math.random, grs){
-  const noise=scCircuitNoiseProfile(cfg),p=noise.p;
-  const R = cfg.rounds === undefined ? code.d : Math.max(1, Math.floor(cfg.rounds));
-  const prepareBasis = ['Z','X'].includes(cfg.prepareBasis) ? cfg.prepareBasis : 'encoded';
-  const frame = { x: 0n, z: 0n }, rounds = [], faultList = [], forceFaults = cfg.forceFaults || [];
-  let faultCount = 0, cnotCount = 0, inputX = 0n, inputZ = 0n;
-  let baselineX = 0, baselineZ = 0;
-  /* Optional deterministic initial-syndrome masks let the verification harness
-     exhaust every random product-state boundary outcome without sampling. */
-  const initialSyndrome = (provided, n) => {
-    if (provided !== undefined){
-      const value = Number(provided);
-      if (!Number.isSafeInteger(value) || value < 0) throw new RangeError('initial syndrome masks must be nonnegative integers');
-      return value & ((1 << n) - 1);
-    }
-    let mask = 0;
-    for (let ci = 0; ci < n; ci++) if (rng() < 0.5) mask |= 1 << ci;
-    return mask;
-  };
-  if (prepareBasis === 'Z') baselineX = initialSyndrome(cfg.initialSynX, code.X.length);
-  if (prepareBasis === 'X') baselineZ = initialSyndrome(cfg.initialSynZ, code.Z.length);
-  for (let q = 0; q < code.n; q++){
-    const force = forceFaults.find(f => f.location === 'input' && f.q === q);
-    let name = force ? force.pauli : null;
-    if (!force && rng() < noise.pInput) name = ['X','Y','Z'][Math.floor(rng() * 3)];
-    if (name){
-      const [ix, iz] = SC_CIRCUIT_PAULI_BITS[String(name).toUpperCase()] || [0,0];
-      if (ix) frame.x ^= scCircuitBit(q), inputX ^= scCircuitBit(q);
-      if (iz) frame.z ^= scCircuitBit(q), inputZ ^= scCircuitBit(q);
-      faultCount++;
-      if (faultList.length < 64) faultList.push({ round: 0, location: 'input', q, t: String(name).toUpperCase() });
-    }
-  }
-  for (let r = 0; r < R; r++){
-    const out = scCircuitRound(code, noise, rng, r, frame, forceFaults, baselineX, baselineZ);
-    rounds.push(out);
-    faultCount += out.faultCount; cnotCount += out.gates;
-    for (const f of out.faults){ if (faultList.length < 64) faultList.push(f); }
-  }
-  let finalReadoutX = 0n, finalReadoutZ = 0n;
-  for (let q = 0; q < code.n; q++){
-    for (const basis of ['Z','X']){
-      if (prepareBasis !== 'encoded' && basis !== prepareBasis) continue;
-      const force = forceFaults.find(f => f.location === 'final-readout' && f.basis === basis && f.q === q);
-      if (force || rng() < noise.pReadout){
-        if (basis === 'Z') finalReadoutZ |= scCircuitBit(q);
-        else finalReadoutX |= scCircuitBit(q);
-        faultCount++;
-        if (faultList.length < 64) faultList.push({ round: R + 1, location: 'final-readout', basis, q, t: 'bit flip' });
-      }
-    }
-  }
-  const terminalMeasurementX = scCircuitSyndrome(code.xg, finalReadoutZ);
-  const terminalMeasurementZ = scCircuitSyndrome(code.zg, finalReadoutX);
-  const weights = scCircuitWeights(code, noise);
-  const dpMax = cfg.dpMax === undefined ? SC_CIRCUIT.dpMax : cfg.dpMax;
-  const errorLayersX = rounds.map(r => r.deltaX), errorLayersZ = rounds.map(r => r.deltaZ);
-  errorLayersX[0] ^= inputX; errorLayersZ[0] ^= inputZ;
-  const initialBoundaryKnownX = prepareBasis !== 'X';
-  const initialBoundaryKnownZ = prepareBasis !== 'Z';
-  const x = scCircuitDecodeFrame(code, 'X', errorLayersX, [0, ...rounds.map(r => r.etaZ)], R, weights, dpMax, !!cfg.skipLookup, terminalMeasurementX, initialBoundaryKnownX);
-  const z = scCircuitDecodeFrame(code, 'Z', errorLayersZ, [0, ...rounds.map(r => r.etaX)], R, weights, dpMax, !!cfg.skipLookup, terminalMeasurementZ, initialBoundaryKnownZ);
-  let corrX = x.corr, corrZ = z.corr, decoderX = 'mwpm', decoderZ = 'mwpm';
-  if (!cfg.skipLookup && cfg.decoder !== 'mwpm'){
-    const table = scCircuitFaultTable(code, R, prepareBasis);
-    const sx = scCircuitSignature(x.perLayer), sz = scCircuitSignature(z.perLayer);
-    const ej = table.J.get(`${sx}||${sz}`);
-    if (ej && !ej.ambiguous){
-      corrX = ej.correctionX; corrZ = ej.correctionZ;
-      decoderX = 'joint single-fault lookup'; decoderZ = 'joint single-fault lookup';
-    } else {
-      /* On an ambiguous/missing joint signature, retain any safe per-frame lookup;
-         only the unresolved frame(s) fall back to marginal-weight spacetime MWPM. */
-      const ex = table.X.get(sx), ez = table.Z.get(sz);
-      if (ex && !ex.ambiguous){ corrX = ex.correction; decoderX = 'single-frame lookup'; }
-      if (ez && !ez.ambiguous){ corrZ = ez.correction; decoderZ = 'single-frame lookup'; }
-    }
-  }
-  const resX = frame.x ^ corrX, resZ = frame.z ^ corrZ;
-  const measuredZ = scCircuitFinalDecode(code, resX, finalReadoutZ, 'X');
-  const measuredX = scCircuitFinalDecode(code, resZ, finalReadoutX, 'Z');
-  const xfail = prepareBasis === 'X' ? false : measuredZ.logical;
-  const zfail = prepareBasis === 'Z' ? false : measuredX.logical;
-  const synAfterX = scCircuitSyndrome(code.xg, resX), synAfterZ = scCircuitSyndrome(code.zg, resZ);
-  const readoutSynZ = prepareBasis === 'X' ? 0 : measuredZ.syndrome;
-  const readoutSynX = prepareBasis === 'Z' ? 0 : measuredX.syndrome;
-  const fallback = Number(decoderX === 'mwpm' && x.mode === 'greedy') + Number(decoderZ === 'mwpm' && z.mode === 'greedy');
-  const finalSynX = scCircuitSyndrome(code.zg, frame.z ^ finalReadoutX), finalSynZ = scCircuitSyndrome(code.xg, frame.x ^ finalReadoutZ);
-  const synRounds = rounds.map((r, i) => `R${i + 1}:X${scCircuitMaskText(r.synX, code.X.length)}/Z${scCircuitMaskText(r.synZ, code.Z.length)}`);
-  return {
-    fail: !!(xfail || zfail), xfail: !!xfail, zfail: !!zfail, prepareBasis,
-    mx: frame.x, mz: frame.z, corrX, corrZ, resX, resZ,
-    finalReadoutX, finalReadoutZ, measCorrX: measuredX.corr, measCorrZ: measuredZ.corr,
-    kx: x.k, kz: z.k, modeX: decoderX, modeZ: decoderZ,
-    decoderX, decoderZ, lookupX: decoderX.includes('lookup'), lookupZ: decoderZ.includes('lookup'), jointLookup: decoderX === 'joint single-fault lookup' && decoderZ === 'joint single-fault lookup',
-    defX: x.perLayer, defZ: z.perLayer,
-    errX: [...errorLayersX, 0n], errZ: [...errorLayersZ, 0n],
-    synRounds, rawSynX: rounds.map(r => r.synX), rawSynZ: rounds.map(r => r.synZ),
-    etaX: rounds.map(r => r.etaX), etaZ: rounds.map(r => r.etaZ),
-    finalSynX, finalSynZ,
-    badSyn: !!(readoutSynZ || readoutSynX), badFrameSyn: !!(synAfterX || synAfterZ),
-    readoutSynX, readoutSynZ, fallback, rounds: R, R,
-    faults: faultList, faultCount, cnotCount, faultsTruncated: faultCount > faultList.length,
-    p, noiseModel:noise.model,p2:noise.p2,pInput:noise.pInput,pPrep:noise.pPrep,pReadout:noise.pReadout,pIdle:noise.pIdle,
-    t1Layers:noise.t1Layers,t2Layers:noise.t2Layers,pSpace:weights.pSpace,pTime:weights.pTime,
-    pSpaceX:weights.pSpaceX,pSpaceZ:weights.pSpaceZ,pTimeX:weights.pTimeX,pTimeZ:weights.pTimeZ,
-  };
-}
-
-function scCircuitStream(code, cfg = {}){
-  const c = { p: 0.01, trials: 1000, seed: 7, rounds: code.d, dpMax: SC_CIRCUIT.dpMax, noiseModel:SC_CIRCUIT.defaultNoiseModel, ...cfg };
-  const profile=scCircuitNoiseProfile(c);
-  const rng = mulberry32(c.seed);
-  let n = 0, fail = 0, xf = 0, zf = 0, bad = 0, fallback = 0, lookupSum = 0, defectSum = 0, gateSum = 0, faultSum = 0, lastTrial = null;
-  function one(){
-    const r = scCircuitTrial(code, c, rng);
-    if (r.fail) fail++;
-    if (r.xfail) xf++;
-    if (r.zfail) zf++;
-    if (r.badSyn) bad++;
-    fallback += r.fallback;
-    lookupSum += Number(r.lookupX) + Number(r.lookupZ);
-    defectSum += r.kx + r.kz;
-    gateSum += r.cnotCount;
-    faultSum += r.faultCount;
-    lastTrial = r; n++;
-  }
-  return {
-    get total(){ return Math.max(1, c.trials | 0); },
-    get n(){ return n; },
-    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m; k++) one(); },
-    result(){
-      const N = Math.max(1, n), PL = fail / N;
-      return { d: code.d, p: c.p, p2:profile.p2, pSPAM:profile.pInput, noise:'circuit', noiseModel:profile.model, t1Layers:profile.t1Layers, t2Layers:profile.t2Layers, prepareBasis:c.prepareBasis||'encoded', rounds:c.rounds, trials:n,
-        PL, PLx: xf / N, PLz: zf / N, badSyn: bad / N, fallback: fallback / (2 * N),
-        lookupRate: lookupSum / (2 * N), meanDefects: defectSum / (2 * N), meanCnot: gateSum / N, meanFaults: faultSum / N,
-        lastTrial, sigma: Math.sqrt(Math.max(PL * (1 - PL), 1e-12) / N) };
-    },
-  };
-}
-
-function scCircuitEnsemble(code, cfg = {}){
-  const stream = scCircuitStream(code, cfg);
-  stream.step(stream.total);
-  return stream.result();
 }
 
 /* ===== src/qec/mode-surf.js ===== */
@@ -16763,7 +15864,7 @@ function scCircuitEnsemble(code, cfg = {}){
  * 物理核心在 src/physics/surfacecode.js（pot128 81/81）。本页要把三件事画出来：
  *   ① **二维拓扑码长什么样**：d×d 数据比特 + 权重 4/2 混排的 X/Z 稳定子、
  *      两类边界分开（左右 = X 帧终止处，上下 = Z 帧终止处）。最近一次试验的
- *      错误（红点）、综合征（亮起的稳定子）、解码修正链（蓝环）直接叠在码上。
+ *      错误（红点）、综合征（亮起的稳定子）、MWPM 修正链（蓝环）直接叠在码上。
  *   ② **阈值就是三条曲线的排序反转**：d=3/5/7 的 P_L(p) 双对数曲线 + 未编码
  *      基线 p；阈值下侧 P_L 随 d 降、上侧随 d 升，交叉点即有限尺寸阈值。
  *   ③ **距离抑制**：固定 p 看 P_L 随 d 的变化（阈值下侧指数掉、上侧反而涨）。
@@ -16803,8 +15904,6 @@ const SF_CSS = `
   #sfHud .hrow{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:2.5px 0}
   #sfHud .hrow span:first-child{color:var(--dim)}
   #sfHud .hrow span:last-child{color:var(--txt);text-align:right}
-  #sfHud #hFaultAuditRow{flex-wrap:wrap}
-  #sfHud #hFaultAuditRow span:last-child{flex-basis:100%;text-align:left;font-size:10px}
   #sfHud hr{border:none;border-top:1px solid var(--line);margin:6px 0}
   #sfHud .big{font-size:13px}
   #sfHud .warn{color:var(--red)}
@@ -16832,11 +15931,23 @@ const sfC = {
 };
 const sfDCOL = { 3: sfC.cyan, 5: sfC.green, 7: sfC.amber };
 const sfNoiseName = { x: '仅 X（bit-flip）', depol: '退极化 X/Y/Z' };
+/* 交叉点「未分辨」的原因标签（R132）：把「为什么没算出来」写到 HUD 上，
+   「—」既不说明是样本不够还是曲线太平，读的人只能猜。 */
+const XFIT_WHY = {
+  'no-sigma': '缺 σ', 'no-cross': '无变号', 'slope-ns': '斜率不显著',
+  'bad-fit': 'χ² 不通过', 'no-root': '无实根', 'sign': '方向不符',
+  'out-of-range': '根在网格外', none: '样本不足',
+};
 const sfFmt = v => !Number.isFinite(v) ? '—'
   : (v === 0 ? '0' : (v >= 1e-3 ? v.toFixed(5) : v.toExponential(2)));
 const sfNF = (v, n = 2) => Number.isFinite(v) ? v.toFixed(n) : '—';
 const sfMdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+const sfQtxt = r => (r === 1 ? 'p' : r === 0 ? '0' : `${r}p`);
 const pcOf = m => { let c = 0; while (m){ c += Number(m & 1n); m >>= 1n; } return c; };
+const pc32 = v => { let c = 0; while (v){ c += v & 1; v >>>= 1; } return c; };
+/* 快照抽签的 RNG：抽签派生在引擎里（scSnapSeed，pot131 F 组可测），
+ * 这里只负责把它接到 mulberry32 上（见 surfacecode.js 的注释说明两条实测缺陷）。 */
+const sfSnapRng = (seed, salt) => mulberry32(scSnapSeed(seed, salt));
 
 class SurfApp {
   constructor(shell){
@@ -16846,42 +15957,30 @@ class SurfApp {
     const q = new URLSearchParams(location.search);
     const num = (k, d) => (q.has(k) && Number.isFinite(parseFloat(q.get(k))) ? parseFloat(q.get(k)) : d);
     const dWanted = Math.round(num('d', 3));
-    const measWanted = ['noisy', 'circuit'].includes(q.get('meas')) ? q.get('meas') : 'ideal';
-    const prepareWanted = ['Z','X'].includes(q.get('prep')) ? q.get('prep') : 'encoded';
-    const circuitNoiseWanted = SC_CIRCUIT.noiseModels.includes(q.get('cmodel')) ? q.get('cmodel') : SC_CIRCUIT.defaultNoiseModel;
-    const t1LayersWanted = Math.max(20,Math.min(500,num('t1',200)));
-    const t2LayersWanted = Math.max(10,Math.min(300,num('t2',120)));
     this.state = {
-      d: measWanted === 'circuit' && dWanted === 7 ? 5 : SC_DISTANCES.includes(dWanted) ? dWanted : 3,
-      noise: measWanted === 'circuit' ? 'depol' : SC_NOISES.some(n => n.k === q.get('noise')) ? q.get('noise') : 'x',
-      p: Math.max(measWanted === 'circuit' ? 0.0005 : 0.005, Math.min(measWanted === 'circuit' ? 0.02 : 0.25, num('p', measWanted === 'circuit' ? 0.005 : 0.08))),
-      trials: Math.max(200, Math.min(measWanted === 'circuit' ? 4000 : 20000, Math.round(num('trials', measWanted === 'circuit' ? 400 : 1500)))),
-      circuitNoiseModel: circuitNoiseWanted,
-      pSPAM: Math.max(0,Math.min(0.02,num('pspam',0.001))),
-      t1Layers: t1LayersWanted,
-      t2Layers: Math.min(t2LayersWanted,2*t1LayersWanted),
+      d: SC_DISTANCES.includes(dWanted) ? dWanted : 3,
+      noise: SC_NOISES.some(n => n.k === q.get('noise')) ? q.get('noise') : 'x',
+      p: Math.max(0.005, Math.min(0.25, num('p', 0.08))),
+      trials: Math.max(200, Math.min(20000, Math.round(num('trials', 1500)))),
       seed: Math.round(num('seed', 7)),
-
-      /* meas='noisy' ⟹ phenomenological；'circuit' ⟹ 含 CNOT 与 ancilla SPAM 的首阶段模型。
-         qR = q/p 只在引擎/调试层暴露：面板固定 q = p（标准取法）。
-         q=0 时解码退化成逐层独立、d3×d5 两条曲线在 0.05 以内不交叉（未分辨），
-         给旋钮反而误导，所以不上面板（README 里写明这条取舍）。 */
-      meas: measWanted,
-      prepareBasis: prepareWanted,
+      /* meas='noisy' ⟹ 带噪测量（phenomenological）口径。qR = q/p 是面板上的旋钮（R132）。
+         ⚠ 这里原来写着「q=0 时 d3×d5 在 0.05 以内不交叉（未分辨）⟹ 不给旋钮」——
+         那句话是**旧的两点变号判据**看不见交叉点造成的假象：换拟合口径重测，q=0 的
+         d3×d5 交叉在 0.043（四个种子 0.041–0.045，一个未解析），稳稳落在网格内。 */
+      meas: q.get('meas') === 'noisy' ? 'noisy' : 'ideal',
       qR: [0, 0.5, 1].includes(parseFloat(q.get('qr'))) ? parseFloat(q.get('qr')) : 1,
-      live: q.get('live') === '1',
     };
     this.code = scBuild(this.state.d);
     this.trial = null;      /* 最近一次试验快照（码画布用） */
-    this.faultAudit = null;
-    this._auditKey = null;
-    this._auditToken = 0;
     this.mc = null;         /* 当前点 MC */
     this.sweep = null;      /* [{d, rows:[{p,PL,sigma,fallback}]}] */
     this.cross = null;      /* {c35, c57} */
     this.power = null;      /* {3,5,7} 领先幂次 */
     this.verify = null;     /* scVerify 结果（结构自检） */
     this.exact = null;      /* d=3 精确值 + z */
+    this.audit = null;      /* 全综合征空间审计（R131）：次优/退化计数 */
+    this._auditToken = 0;   /* 审计异步令牌：换 d / 重跑都作废在途结果 */
+    this._snapSalt = 0;     /* 码图快照的抽签序号：每点一次「换一张码图」+1 */
     this._sweepToken = 0;
     this.cv = {};
   }
@@ -16890,14 +15989,9 @@ class SurfApp {
   on(el, ev, fn){ if (el){ el.addEventListener(ev, fn); this._listeners.push([el, ev, fn]); } }
 
   deactivate(){
-    this.ciFeedback?.dispose();
-    this.shotReplay?.dispose();
     this._sweepToken++;                    /* 作废在途分帧扫描 */
-    this._auditToken++;
     clearTimeout(this._queueTimer);
-    clearTimeout(this._runTimer);
     this._ro?.disconnect();
-    this.live?.dispose();
     this.live = null;
     for (const [el, ev, fn] of this._listeners) el.removeEventListener(ev, fn);
     this._listeners.length = 0;
@@ -16912,25 +16006,14 @@ class SurfApp {
 
         <div class="grp">噪声口径</div>
         <div class="btns" id="sfMeas"></div>
-        <div id="sfPrepWrap" style="display:none">
-          <div class="grp">输入边界 / 逻辑态制备</div>
-          <div class="btns g3" id="sfPrep"></div>
-        </div>
-        <div id="sfCircuitNoiseWrap" style="display:none">
-          <div class="grp">电路噪声模型</div>
-          <div class="btns" id="sfCircuitModels"></div>
-          <div id="sfT1T2Controls">
-            <div class="row"><label>pSPAM</label><input type="range" id="sfPSPAM" min="0" max="0.02" step="0.0005"><output id="sfPSPAMO">—</output></div>
-            <div class="row"><label>T1/τ</label><input type="range" id="sfT1" min="20" max="500" step="10"><output id="sfT1O">—</output></div>
-            <div class="row"><label>T2/τ</label><input type="range" id="sfT2" min="10" max="300" step="10"><output id="sfT2O">—</output></div>
-          </div>
-          <div class="note">τ 为单个并行 CNOT 层时长单位；T1/T2 通道按 Pauli twirl 近似。</div>
-        </div>
+
+        <div class="grp" id="sfQGrp">测量错误率 q（相对 p）</div>
+        <div class="btns g3" id="sfQ"></div>
 
         <div class="grp">错误谱（每比特）</div>
         <div class="btns" id="sfNoises"></div>
 
-        <div class="grp" id="sfPLabel">每比特错误率 p</div>
+        <div class="grp">每比特错误率 p</div>
         <div class="row"><label>p</label><input type="range" id="sfP" min="0.005" max="0.25" step="0.005"><output id="sfPO">—</output></div>
 
         <div class="grp">MC 样本数 N</div>
@@ -16938,8 +16021,7 @@ class SurfApp {
 
         <div class="grp">实验</div>
         <div class="btns g3">
-          <button id="sfPlay">▶ 播放</button>
-          <button id="sfRun">跑完 MC</button>
+          <button id="sfRun">跑一次 MC</button>
           <button id="sfSnap">换一张码图</button>
           <button id="sfSeed">换种子</button>
         </div>
@@ -16947,9 +16029,16 @@ class SurfApp {
           <button id="sfScan">扫描 P_L(p)</button>
           <button id="sfExact">d=3 精确对账</button>
         </div>
+        <div class="btns" style="margin-top:6px">
+          <button id="sfAudit">解码器审计</button>
+        </div>
 
         <div class="note">曲线走 MC（每点 N 次抽样，分帧累加，不阻塞交互）；
-          d=3 的「精确对账」按 4⁹ = 262144 个错误模式全枚举，约 4–6s。</div>
+          d=3 的「精确对账」按 4⁹ = 262144 个错误模式全枚举，约 4–6s。
+          「解码器审计」把当前 d 的**整个综合征空间**做 BFS（d=3 16 个、d=5 4096 个），
+          逐点比「MWPM 修正权重」与「精确最小权重」，并统计最小权重修正的逻辑类是否唯一
+          （两类并存 ⟹ 任何解码器在该点都只能 50/50，属不可约上限）；d=7 是 2²⁴ 个状态，
+          只在离线跑（README 记录：0 退化）。</div>
       </aside>
 
       <aside id="sfHud" class="panel qhud">
@@ -16957,28 +16046,30 @@ class SurfApp {
         <div class="hrow"><span>结构自检</span><span id="hStruct">—</span></div>
         <div class="hrow"><span>逻辑算符</span><span id="hLogic">—</span></div>
         <hr>
-        <div class="hrow"><span>当前点 P_L（累计）</span><span id="hPL" class="big">—</span></div>
-        <div class="hrow"><span>播放进度</span><span id="hMCProgress">—</span></div>
-        <div class="hrow"><span>最近样本</span><span id="hLast">—</span></div>
-        <div class="hrow"><span>X / Z 帧分解（累计）</span><span id="hSplit">—</span></div>
+        <div class="hrow"><span>当前点 P_L</span><span id="hPL" class="big">—</span></div>
+        <div class="hrow"><span>X / Z 帧分解</span><span id="hSplit">—</span></div>
         <div class="hrow"><span>平均缺陷数（单帧）</span><span id="hDef">—</span></div>
         <div class="hrow"><span>解码器</span><span id="hDec">—</span></div>
-        <div class="hrow" id="hCircuitResidualRow" style="display:none"><span>累计逻辑失败 / 末端 syndrome</span><span id="hCircuitResidual">—</span></div>
-        <div class="hrow" id="hFaultAuditRow" style="display:none"><span>单故障签名审计</span><span id="hFaultAudit">—</span></div>
         <div class="hrow" id="hSpaceRow"><span>时空匹配图</span><span id="hSpace">—</span></div>
         <hr>
-        <div class="hrow"><span>交叉点 d3×d5 / d5×d7</span><span id="hCross">—</span></div>
+        <div class="hrow" id="hCrossRow"><span>交叉点 d3×d5 / d5×d7</span><span id="hCross">—</span></div>
         <div class="hrow"><span>领先幂次 α（p→0）</span><span id="hAlpha">—</span></div>
         <div class="hrow"><span>d=3 精确对账</span><span id="hExact">—</span></div>
+        <div class="hrow"><span>解码器审计（全枚举）</span><span id="hAudit">—</span></div>
         <div class="hrow"><span>扫描进度</span><span id="hProg">—</span></div>
-        <div class="cap" id="sfModelNote"><b>退极化是分帧独立解码</b>：丢掉 Y 的相关性 ⟹ 阈值 ≈ 1.5×单帧
+        <div class="cap"><b>退极化是分帧独立解码</b>：丢掉 Y 的相关性 ⟹ 阈值 ≈ 1.5×单帧
           （10.3% → 15.5% 的那个因子；相关解码可到 18.9%，本页不做）。
-          <b>交叉点写「未分辨」就是没算出来</b>：两条曲线在该网格/样本数下没有显著的
-          排序反转（σ ∝ 1/√N，d5×d7 要 N ≳ 12000 才分得开）。
+          <b>交叉点怎么算</b>：把差值 f(p)=P_A−P_B 在变号点附近做加权二次拟合（权重 1/σ²），
+          零点即交叉点；σ 由系数协方差按 delta 法给出，再乘 1.4 的安全系数（标定实测
+          「经验离散度/报告 σ」= 1.16–1.43）。旧的「相邻两点变号 + 两端都得 PL&gt;3σ」在
+          N=4000 常常判未分辨：同一批数据它只解析 6/14 次，二次拟合 14/14，且均值偏置从
+          −5% 降到 −0.4%。未分辨时 HUD 写出原因，鼠标悬停可看拟合窗口、χ²/dof 与旧口径值。
           <b>d=9 不上页面</b>：缺陷数超 DP 上限后回退率 ~26%，数字不再可信。
-          <b>带噪测量口径</b>固定 q = p、d−1 轮带噪 + 末轮理想读出；时空缺陷数随 d 涨得快，
-          d=7 的回退率过半 ⟹ 只上 d=3/5。它的 d3×d5 交叉 ≈0.023：默认 N=1500 判「未分辨」，
-          N ≳ 4000 才分得开（离线 N=8000 给 0.0231±0.0018）。</div>
+          <b>带噪测量</b>：q 由上面旋钮选（默认 q=p），d−1 轮带噪 + 末轮理想读出。
+          d3×d5 交叉随 q 单调上移：0.021（q=p）→ 0.028（q=p/2）→ 0.043（q=0，理想读出）。
+          <b>d=7 仍不上带噪测量</b>：时空缺陷数常超 DP 上限，p≳0.03 起回退 30%+，而且同一
+          (d,p) 的 P_L 随解码器预算在 0.055–0.13 之间漂（DP20/DP14/纯贪心）—— 曲线由解码器
+          而不是物理决定，宁可不上。</div>
       </aside>
 
       <div id="sfStage" class="qstage">
@@ -16990,26 +16081,6 @@ class SurfApp {
       <div id="sfHint" class="panel qhint"><b>—</b><span></span></div>
     `);
     this.cv = { code: this.q('#sfCode'), curve: this.q('#sfCurve'), dist: this.q('#sfDist') };
-    this.shotReplay = new ShotReplay(this.q('#sfHud'), 'surf');
-    this.shotReplay.mount();
-    this.ciFeedback = new ConfidenceFeedback(this.q('#sfHud'));
-    this.ciFeedback.mount();
-    this.live = new LiveDriver({
-      make: () => this.circuit
-        ? scCircuitStream(this.code,this.circuitCfg({trials:this.state.trials,seed:this.state.seed}))
-        : this.phen
-          ? scSpaceStream(this.code, { ...this.phenCfg(), trials: this.state.trials, seed: this.state.seed })
-          : scStream(this.code, { p: this.state.p, noise: this.state.noise, trials: this.state.trials, seed: this.state.seed }),
-      onFrame: res => {
-        res.ms = this.live.lastFrameMs;
-        this.mc = res;
-        if (res.lastTrial) this.trial = res.lastTrial;
-        this.renderHud(); this.drawCode(); this.drawCurve(); this.drawDist();
-      },
-      onState: () => this.syncPlayBtn(),
-      fps: 16,
-      duration: 6000,
-    });
 
     const mk = (host, items, onPick) => {
       for (const it of items){
@@ -17021,53 +16092,42 @@ class SurfApp {
       }
     };
     mk(this.q('#sfDs'), SC_DISTANCES.map(d => ({ v: d, label: 'd=' + d, title: `n=${d * d} 比特，距离 ${d}` })),
-      v => { this.state.d = v; this.code = scBuild(v); this.runMc(); });
+      v => { this.state.d = v; this.code = scBuild(v); this.audit = null; this.rescanAll(); });
     mk(this.q('#sfNoises'), SC_NOISES.map(n => ({ v: n.k, label: n.name, title: n.desc })),
-      v => { this.state.noise = v; this.runMc(); });
+      v => { this.state.noise = v; this.rescanAll(); });
     mk(this.q('#sfMeas'), [
-      { v: 'ideal', label: '单帧（码容量）', title: '综合征测量理想：二维匹配图' },
-      { v: 'noisy', label: '带噪测量', title: 'phenomenological：每轮读出以 q 出错，时间维进匹配图' },
-      { v: 'circuit', label: '电路级（可信注入边界）', title: 'd=3/5：任意未知态经可信理想注入进入编码子空间；注入原语自身不在故障目录内。之后含全部列举的数据、CNOT、idle、ancilla 和破坏性读出故障；也可选 |0⟩ⁿ/|+⟩ⁿ 本征态制备。不是物理 encoder 门级实现或阈值模型' },
-    ], v => {
-      this.state.meas = v;
-      if ((v === 'noisy' || v === 'circuit') && this.state.d === 7) this.state.d = 5;
-      if (v === 'circuit') { this.state.noise = 'depol'; if (this.state.p > 0.02 || this.state.p < 0.0005) this.state.p = 0.005; this.state.trials = Math.min(this.state.trials, 400); }
-      this.code = scBuild(this.state.d); this.syncPanel(); this.renderHint(); this.runMc(); this.startSweep();
-    });
-    mk(this.q('#sfPrep'), [
-      { v: 'encoded', label: '可信任意态注入', title: '假设可信原语已把任意未知逻辑态理想注入编码子空间；原语内部及首耦合故障不审计，边界后的全部列举故障均审计' },
-      { v: 'Z', label: '|0_L⟩ 制备', title: '从 |0⟩^n 起步；Z checks 初始已知，X checks 首次读数随机，随后重复提取 d 轮' },
-      { v: 'X', label: '|+_L⟩ 制备', title: '从 |+⟩^n 起步；X checks 初始已知，Z checks 首次读数随机，随后重复提取 d 轮' },
-    ], v => { this.state.prepareBasis = v; this.renderHint(); this.runMc(); });
-    mk(this.q('#sfCircuitModels'), [
-      {v:'depolarizing',label:'同率 Pauli',title:'每类位置共用 p 的对照模型'},
-      {v:'t1t2-pauli-twirled',label:'T1/T2',title:'CNOT 双比特退极化 + 活跃门/idle 按层时长施加 Pauli-twirled T1/T2 + 独立 pSPAM'},
-    ],v=>{this.state.circuitNoiseModel=v;this.syncPanel();this.renderHint();this.runMc();});
-
-    const noiseSlider=(id,apply)=>this.on(this.q('#'+id),'input',e=>{apply(parseFloat(e.target.value));this.syncPanel();this.renderHint();clearTimeout(this._runTimer);this._runTimer=setTimeout(()=>this.runMc(),180);});
-    noiseSlider('sfPSPAM',v=>this.state.pSPAM=v);
-    noiseSlider('sfT1',v=>{this.state.t1Layers=v;this.state.t2Layers=Math.min(this.state.t2Layers,2*v);});
-    noiseSlider('sfT2',v=>this.state.t2Layers=Math.min(v,2*this.state.t1Layers));
+      { v: 'ideal', label: '单帧（码容量）', title: '综合征理想：一次读出，一张二维匹配图' },
+      { v: 'noisy', label: '带噪测量', title: 'phenomenological：每轮测量以 q 出错，时间维进匹配图' },
+    ], v => { this.state.meas = v; if (v === 'noisy' && this.state.d === 7) this.state.d = 5;
+      if (v === 'noisy') this.code = scBuild(this.state.d);
+      this.rescanAll(); });
+    /* q 旋钮（R132）：引擎一直支持 q，但之前只有 URL 参数能动，面板写着「固定 q=p」——
+       于是 ?qr=0 时界面在**说谎**。现在 q 是面板上的一等量，三档覆盖「理想读出 → 标准取法」。 */
+    mk(this.q('#sfQ'), [
+      { v: 0, label: 'q=0', title: '理想读出：测量本身不出错，时空解码退化成逐层独立解码' },
+      { v: 0.5, label: 'q=p/2', title: '测量错误率是数据错误率的一半（好测量）' },
+      { v: 1, label: 'q=p', title: '标准取法：测量与数据同等噪声' },
+    ], v => { this.state.qR = v; this.rescanAll(); });
 
     this.on(this.q('#sfP'), 'input', e => {
       this.state.p = parseFloat(e.target.value);
-      this.syncPanel(); this.renderHint();
-      if (this.circuit){ clearTimeout(this._runTimer); this._runTimer = setTimeout(() => this.runMc(), 180); }
-      else this.runMc();
+      this.syncPanel(); this.runMc();
     });
     this.on(this.q('#sfTrials'), 'input', e => {
       this.state.trials = parseInt(e.target.value, 10);
-      this.syncPanel(); if (this.live && this.live.playing) this.live.sync();
+      this.invalidateSweep();            /* 扫描的每点样本数变了 ⟹ 旧曲线不再对应当前配置 */
+      this.syncPanel();
     });
-    this.on(this.q('#sfPlay'), 'click', () => this.live.toggle());
     this.on(this.q('#sfRun'), 'click', () => this.runMc());
-    this.on(this.q('#sfSnap'), 'click', () => { if (!this.circuit) this.runMc(true); });
+    this.on(this.q('#sfSnap'), 'click', () => { this._snapSalt++; this.runMc(true); });
     this.on(this.q('#sfSeed'), 'click', () => {
       this.state.seed = (this.state.seed * 1103515245 + 12345) % 2147483647;
+      this.invalidateSweep();
       this.runMc();
     });
     this.on(this.q('#sfScan'), 'click', () => this.startSweep());
     this.on(this.q('#sfExact'), 'click', () => this.runExact());
+    this.on(this.q('#sfAudit'), 'click', () => this.runAudit());
 
     this.on(window, 'resize', () => this.resize());
     if (window.ResizeObserver){
@@ -17080,7 +16140,6 @@ class SurfApp {
     this.syncPanel();
     this.renderHint();
     this.resize();
-    this.syncPlayBtn();
     this.computeAll();
   }
 
@@ -17096,111 +16155,73 @@ class SurfApp {
       b.title = `n=${d * d} 比特，距离 ${d}`;
     }
     mark('#sfDs', s.d); mark('#sfNoises', s.noise);
-    mark('#sfMeas', s.meas); mark('#sfPrep', s.prepareBasis); mark('#sfCircuitModels',s.circuitNoiseModel);
-    const prepWrap=this.q('#sfPrepWrap');if(prepWrap)prepWrap.style.display=this.circuit?'':'none';
-    const circuitNoiseWrap=this.q('#sfCircuitNoiseWrap');if(circuitNoiseWrap)circuitNoiseWrap.style.display=this.circuit?'':'none';
-    const t1t2=this.circuit&&s.circuitNoiseModel==='t1t2-pauli-twirled';
-    const t1t2Controls=this.q('#sfT1T2Controls');if(t1t2Controls)t1t2Controls.style.display=t1t2?'':'none';
-    for(const b of this.modeRoot.querySelectorAll('#sfNoises button')){
-      b.disabled=this.circuit;
-      if(this.circuit)b.title='code-capacity 噪声谱控件不作用于电路通道；请在上方选择电路模型';
-    }
+    mark('#sfMeas', s.meas); mark('#sfQ', s.qR);
+    const qGrp = this.q('#sfQGrp'), qBox = this.q('#sfQ');
+    for (const el of [qGrp, qBox]) if (el) el.style.display = s.meas === 'noisy' ? '' : 'none';
     /* 带噪测量口径只上 d=3/5：d=7 的时空缺陷数（k̄≈22）远超 DP 上限，回退率过半 */
-    const phen = s.meas === 'noisy', circuit = s.meas === 'circuit';
+    const phen = s.meas === 'noisy';
     for (const b of this.modeRoot.querySelectorAll('#sfDs button')){
       const d = parseInt(b.dataset.v, 10);
-      b.disabled = (phen || circuit) && d === 7;
-      b.title = circuit && d === 7
-        ? '电路级首阶段只支持 d=3/5；更大距离需先校准时空解码与相关故障模型'
-        : phen && d === 7
+      b.disabled = phen && d === 7;
+      b.title = phen && d === 7
         ? '带噪测量下 d=7 的时空缺陷数常超 DP 上限（回退率 >50%），数字不再可信'
         : `n=${d * d} 比特，距离 ${d}`;
     }
     const exBtn = this.q('#sfExact');
     if (exBtn){
-      exBtn.disabled = phen || circuit;
-      exBtn.title = circuit ? '当前仅对 code-capacity 单帧模型实现精确枚举' : phen ? '精确枚举只对单帧口径成立（带噪测量要从 4 层 × 2⁹ × 2⁴ 起枚举）' : '';
+      exBtn.disabled = phen;
+      exBtn.title = phen ? '精确枚举只对单帧口径成立（带噪测量要从 4 层 × 2⁹ × 2⁴ 起枚举）' : '';
+    }
+    /* 审计跑的是单帧解码器 scDecode 的整个综合征空间：d=7 是 2^24 个状态，面板上限 2^12 */
+    const auBtn = this.q('#sfAudit');
+    if (auBtn){
+      const tooBig = this.code.zg.nS > SC_AUDIT_MAX_NS;
+      auBtn.disabled = tooBig;
+      auBtn.title = tooBig
+        ? `d=${s.d} 的综合征空间是 2^${this.code.zg.nS}，超出面板审计上限 2^${SC_AUDIT_MAX_NS}（离线全枚举见 README：0 退化）`
+        : `全枚举 2^${this.code.zg.nS} 个综合征：逐点比 MWPM 权重与精确最小权重，并统计逻辑类是否唯一`;
     }
     const setv = (id, v) => { const e = this.q('#' + id); if (e) e.value = v; };
-    const pInput = this.q('#sfP'), nInput = this.q('#sfTrials');
-    if (pInput){ pInput.min = this.circuit ? '0.0005' : '0.005'; pInput.max = this.circuit ? '0.02' : '0.25'; pInput.step = this.circuit ? '0.0005' : '0.005'; pInput.value = s.p; }
-    this.q('#sfPO').textContent = s.p.toFixed(4);
-    const spamInput=this.q('#sfPSPAM'),t1Input=this.q('#sfT1'),t2Input=this.q('#sfT2');
-    if(spamInput)spamInput.value=s.pSPAM;
-    if(t1Input)t1Input.value=s.t1Layers;
-    if(t2Input){t2Input.max=Math.min(300,2*s.t1Layers);t2Input.value=s.t2Layers;}
-    this.q('#sfPSPAMO').textContent=s.pSPAM.toFixed(4);
-    this.q('#sfT1O').textContent=String(s.t1Layers);
-    this.q('#sfT2O').textContent=String(s.t2Layers);
-    if (nInput){ nInput.max = this.circuit ? '4000' : '20000'; nInput.value = s.trials; }
-    this.q('#sfTrialsO').textContent = s.trials;
-    const pLabel=this.q('#sfPLabel');if(pLabel)pLabel.textContent=!this.circuit?'每比特错误率 p':t1t2?'CNOT 双比特退极化 p₂':'统一位置 Pauli 错误率 p';
-    const snap = this.q('#sfSnap'); if (snap){ snap.disabled = this.circuit; snap.title = this.circuit ? '回放须复用已计入统计的 circuit shot，不额外抽样' : ''; }
-    const scan=this.q('#sfScan');if(scan){scan.disabled=this.circuit;scan.title=this.circuit?'诊断性单点模型不用于阈值结论：T1/T2 仅为按层时长归一化的 Pauli twirl，未器件标定且未做相关解码':'';}
-    const note = this.q('#sfModelNote');
-    const prepNote=s.prepareBasis==='encoded'
-      ?'可信注入原语输出任意未知逻辑态的理想码态；原语本身与首耦合故障不在目录内。其后立即注入数据输入线 Pauli，并审计完整提取/读出目录。'
-      :`从产品态 ${s.prepareBasis==='Z'?'|0⟩^n':'|+⟩^n'} 起步，经 d 轮稳定子测量制备对应逻辑本征态；未使用任意态 unitary encoder。`;
-    const channelNote=t1t2
-      ?`CNOT 后双比特退极化 p₂=${s.p.toFixed(4)}；输入/ancilla prep/readout 共用 pSPAM=${s.pSPAM.toFixed(4)}；活跃 CNOT 与 idle 均经历每层时长 τ 的 Pauli-twirled T1=${s.t1Layers}τ/T2=${s.t2Layers}τ。`
-      :'每个列举位置使用同率 Pauli 退极化。';
-    if(note&&this.circuit)note.innerHTML=`<b>诊断性 circuit-level 原型</b>：${prepNote} ${channelNote} 四层并行排程；末端用逐数据位带噪破坏性读出，按选择的逻辑基底解码。先查无歧义 X/Z 联合单故障签名；歧义时用无歧义单帧查表，未解决帧再由 X/Z 轴向边缘权重时空 MWPM 兜底。T1/T2 使用 Pauli twirl，丢掉 amplitude-damping 的非幺正偏置；SPAM 对称且按共同率处理；时长为归一化 τ、未器件标定。未含泄漏、相干过转、串扰或高阶相关联合解码，因此不报告阈值。`;
-    else if (note) note.innerHTML = '<b>退极化是分帧独立解码</b>：丢掉 Y 的相关性 ⟹ 阈值 ≈ 1.5×单帧（10.3% → 15.5%；相关解码可到 18.9%，本页不做）。交叉点「未分辨」表示当前网格/样本数不足；带噪测量固定 q=p、d−1 轮 + 末轮理想读出，d=7 因时空缺陷过多而置灰。';
+    setv('sfP', s.p); this.q('#sfPO').textContent = s.p.toFixed(3);
+    setv('sfTrials', s.trials); this.q('#sfTrialsO').textContent = s.trials;
   }
 
   renderHint(){
     const b = this.q('#sfHint b'), sp = this.q('#sfHint span');
-    const prepHint = this.state.prepareBasis === 'encoded'
-      ? '可信理想任意态注入边界（注入原语/首耦合故障排除；边界后全审计）'
-      : `${this.state.prepareBasis === 'Z' ? '|0⟩^n' : '|+⟩^n'} 产品态经 d 轮稳定子提取，制备一个逻辑本征态（不是任意态 encoder）`;
-    const channelHint=this.state.circuitNoiseModel==='t1t2-pauli-twirled'
-      ?`p₂=${this.state.p.toFixed(4)}、pSPAM=${this.state.pSPAM.toFixed(4)}、T1/T2=${this.state.t1Layers}/${this.state.t2Layers}τ 的Pauli-twirled通道`
-      :'同率位置 Pauli 退极化对照通道';
     if (b) b.textContent = '旋转表面码 [[d²,1,d]]';
     if (sp) sp.innerHTML = sfMdLite(
       '码族页的重复码/Steane 级联是**一维**结构（多数表决 / 查表）；表面码是**二维拓扑码**：' +
       '权重 4 与权重 2 的稳定子混排、两类边界分开，纠错靠「把综合征连起来」。' +
-      '点「换一张码图」看错误（红）、综合征（亮框）、解码修正链（蓝环）：' +
+      '点「换一张码图」看错误（红）、综合征（亮框）、MWPM 修正链（蓝环）：' +
       '权重 ≤ t=⌊(d−1)/2⌋ 的错误必纠回，代价是**两条跨码链** = 逻辑错误（权重 d）。' +
-      (this.circuit ? '当前电路级分支只做指定码距的诊断，不扫描阈值或外推。' :
-        '阈值不是某个 p 的绝对值，而是 **d=3/5/7 三条曲线的排序反转**。') +
-      (this.circuit ? '' : '**带噪测量**（phenomenological）把时间放进匹配图：每轮读出以 q=p 出错 ⟹ 探测事件在时空里成对，' +
-        '有限尺寸交叉从 ~9.5% 掉到 ~2.3%。画布下方那 2(d+1) 行点阵就是逐层的探测事件。') +
-      (this.circuit ? `**诊断性 circuit-level 原型**：${prepHint}；${channelHint}；含四层并行 CNOT，终端用带噪破坏性数据读出，按选定逻辑基底检查。先查无歧义联合单故障签名，歧义时安全退回无歧义单帧查表，再由 X/Z 轴向边缘权重时空 MWPM 兜底。T1/T2 为层时长归一化且未器件标定；Pauli twirl 丢弃非幺正偏置，不含泄漏、相干过转、串扰或高阶相关联合解码，不用于阈值结论。` : ''));
-  }
-
-  ensureFaultAudit(){
-    if (!this.circuit){
-      this._auditToken++;
-      this._auditKey = null;
-      this.faultAudit = null;
-      return;
-    }
-    const d = this.state.d, prepareBasis = this.state.prepareBasis;
-    const key = `${d}:${prepareBasis}`;
-    if (this._auditKey === key) return;
-    const token = ++this._auditToken;
-    this._auditKey = key;
-    this.faultAudit = { loading: true, d, prepareBasis };
-    setTimeout(() => {
-      try {
-        const result = scCircuitFaultAudit(scBuild(d), d, prepareBasis);
-        if (token !== this._auditToken || !this.circuit || this.state.d !== d || this.state.prepareBasis !== prepareBasis) return;
-        this.faultAudit = result;
-      } catch (error){
-        if (token !== this._auditToken) return;
-        this.faultAudit = { d, error: String(error && error.message || error) };
-      }
-      this.renderHud();
-    }, 0);
+      '阈值不是某个 p 的绝对值，而是 **d=3/5/7 三条曲线的排序反转**。' +
+      '**带噪测量**（phenomenological）把时间放进匹配图：每轮读出以 q 出错 ⟹ 探测事件在时空里成对。' +
+      'q 由面板旋钮选（默认 q=p，标准取法）：实测 d3×d5 交叉随 q 单调上移 ——' +
+      'q=p 给 0.021、q=p/2 给 0.028、q=0（理想读出）给 0.043。' +
+      '画布下方那 2(d+1) 行点阵就是逐层的探测事件。');
   }
 
   /* ---------- 计算 ---------- */
+  /** 参数变了就把旧曲线作废（R132）：曲线每一点都是**旧配置**下算出来的，
+   *  继续留着会让 HUD 的交叉点、竖线、图例全部对不上「配置」那一行 —— 也就是说谎。
+   *  不自动重扫（p 滑杆拖动会连发几十次），只把作废状态显式画出来。 */
+  invalidateSweep(){
+    if (!this.sweep) return;
+    this._stale = true;
+    this.cross = null; this.power = null;
+    this.renderHud(); this.drawCurve(); this.drawDist();
+  }
+
   computeAll(){
-    this.verify = scVerify(this.state.d);
-    this.space = this.spacetime ? scSpaceVerify(this.state.d, this.circuit ? this.state.d : Math.max(1, this.state.d - 1)) : null;
-    if (this.state.live && this.live) this.live.start();
-    else this.runMc();
+    this.runMc();
+    this.startSweep();
+  }
+
+  /** 离散参数（d / 噪声口径 / 带噪测量 / q）一变就整条曲线重算：
+   *  这些是点一下就走人的按钮，不会像滑杆那样连发；让曲线自己跟上，比留一条
+   *  旧曲线 + 一句「需重扫」更接近「页面说的就是算的」。 */
+  rescanAll(){
+    this.runMc();
     this.startSweep();
   }
 
@@ -17209,58 +16230,27 @@ class SurfApp {
     const s = this.state;
     return { p: s.p, noise: s.noise, q: this.phen ? s.qR * s.p : undefined, rounds: this.phen ? Math.max(1, s.d - 1) : 0, ...extra };
   }
-  circuitCfg(extra={}){
-    const s=this.state;
-    return {p:s.p,pSPAM:s.pSPAM,noiseModel:s.circuitNoiseModel,t1Layers:s.t1Layers,t2Layers:s.t2Layers,
-      rounds:s.d,prepareBasis:s.prepareBasis,...extra};
-  }
 
   /** 当前点 MC + 一张码图快照 */
   runMc(newSnap){
-    this.ensureFaultAudit();
     const s = this.state;
     const code = this.code;
-    if (this.live && this.live.playing){
-      this.verify = scVerify(s.d);
-      this.space = this.spacetime ? scSpaceVerify(s.d, this.circuit ? s.d : Math.max(1, s.d - 1)) : null;
-      this.live.sync();
-      return;
-    }
     const t0 = performance.now();
-    if (this.circuit){
-      this.mc = scCircuitEnsemble(code,this.circuitCfg({trials:s.trials,seed:s.seed}));
-      this.mc.ms = performance.now() - t0;
-      this.space = scSpaceVerify(s.d, s.d);
-      this.trial = this.mc.lastTrial;
-    } else if (this.phen){
+    if (this.phen){
       this.mc = scSpaceEnsemble(code, { ...this.phenCfg(), trials: s.trials, seed: s.seed });
       this.mc.ms = performance.now() - t0;
       this.space = scSpaceVerify(s.d, Math.max(1, s.d - 1));
-      if (newSnap || !this.mc.lastTrial){
-        const rng = mulberry32((s.seed * 2654435761) % 2147483647);
-        this.trial = scSpaceTrial(code, this.phenCfg(), rng);
-      } else this.trial = this.mc.lastTrial;
+      this.trial = scSpaceTrial(code, this.phenCfg(), sfSnapRng(s.seed, this._snapSalt));
     } else {
       this.mc = scEnsemble(code, { p: s.p, noise: s.noise, trials: s.trials, seed: s.seed });
       this.mc.ms = performance.now() - t0;
-      /* 默认画 MC 的最后一条样本；「换一张码图」才单独重抽。 */
-      if (newSnap || !this.mc.lastTrial){
-        const rng = mulberry32((s.seed * 2654435761) % 2147483647);
-        this.trial = scTrial(code, { p: s.p, noise: s.noise }, rng);
-      } else this.trial = this.mc.lastTrial;
+      /* 码图快照：与 MC 同口径同 p 的单次试验（salt 由「换一张码图」推进） */
+      this.trial = scTrial(code, { p: s.p, noise: s.noise }, sfSnapRng(s.seed, this._snapSalt));
       this.space = null;
     }
     this.verify = scVerify(s.d);
     this.renderHud();
     this.drawCode(); this.drawCurve(); this.drawDist();
-  }
-
-  syncPlayBtn(){
-    const b = this.q('#sfPlay');
-    if (!b) return;
-    const on = !!(this.live && this.live.playing);
-    b.textContent = on ? '⏸ 暂停' : '▶ 播放';
-    b.classList.toggle('on', on);
   }
 
   /** 当前口径的扫描网格 */
@@ -17270,23 +16260,16 @@ class SurfApp {
       : { ds: SC_DISTANCES, ps: SC_PS, pMin: 0.005, pMax: 0.25, ticks: [0.01, 0.03, 0.1, 0.25] };
   }
   get phen(){ return this.state.meas === 'noisy'; }
-  get circuit(){ return this.state.meas === 'circuit'; }
-  get spacetime(){ return this.phen || this.circuit; }
 
   /** 分帧扫描：一次算一个 (d, p) 点，插一个 setTimeout 让出主线程 */
   startSweep(){
     const tok = ++this._sweepToken;
-    if (this.circuit){
-      clearTimeout(this._queueTimer); this._queueTimer = null; this._gridN = 0;
-      this.sweep = null; this.cross = null; this.power = null;
-      this.renderHud(); this.drawCurve(); this.drawDist(); return;
-    }
     const s = this.state, G = this.grid;
     const jobs = [];
     for (const d of G.ds) for (const p of G.ps) jobs.push({ d, p });
     this._gridN = jobs.length;
     this.sweep = G.ds.map(d => ({ d, rows: [] }));
-    this.cross = null; this.power = null;
+    this.cross = null; this.power = null; this._stale = false;
     this._queueTimer = null;
     let i = 0;
     const step = () => {
@@ -17296,9 +16279,12 @@ class SurfApp {
         return;
       }
       const { d, p } = jobs[i];
+      /* 每点独立种子（R132）：整条曲线共用一个 seed 会让各点 MC 误差正相关，
+         交叉点的 σ 与「显著性」都建立在独立性上，共用种子等于把前提抽掉。 */
+      const seed = scGridSeed(s.seed, d, G.ps.indexOf(p));
       const row = this.phen
-        ? scSpaceEnsemble(scBuild(d), { p, noise: s.noise, q: s.qR * p, rounds: Math.max(1, d - 1), trials: s.trials, seed: s.seed })
-        : scEnsemble(scBuild(d), { p, noise: s.noise, trials: s.trials, seed: s.seed });
+        ? scSpaceEnsemble(scBuild(d), { p, noise: s.noise, q: s.qR * p, rounds: Math.max(1, d - 1), trials: s.trials, seed })
+        : scEnsemble(scBuild(d), { p, noise: s.noise, trials: s.trials, seed });
       const bucket = this.sweep.find(c => c.d === d);
       bucket.rows.push({ p, PL: row.PL, sigma: row.sigma, fallback: row.fallback, meanDefects: row.meanDefects });
       i++;
@@ -17312,11 +16298,20 @@ class SurfApp {
 
   finishSweep(){
     const [a, b, c] = this.sweep;
-    const i35 = a && b ? scCrossingCI(a.rows, b.rows) : null;
-    const i57 = b && c ? scCrossingCI(b.rows, c.rows) : null;
+    /* 交叉点走「整曲线加权二次拟合」（scCrossingFit，R132）；旧的两点变号口径同时算一份
+       挂在 tooltip 上，方便对照 —— 它更容易判「未分辨」，也更容易被单点噪声带偏。 */
+    const pick = (x, y) => {
+      if (!x || !y || x.rows.length < 3 || y.rows.length < 3) return null;
+      return { fit: scCrossingFit(x.rows, y.rows), old: scCrossingCI(x.rows, y.rows) };
+    };
+    const r35 = pick(a, b), r57 = pick(b, c);
+    const cell = r => (r && r.fit.ok)
+      ? { p: r.fit.p, s: r.fit.sigma, why: 'ok', o: r.old ? r.old.p : null }
+      : { p: null, s: null, why: (r && r.fit.why) || 'none', o: r && r.old ? r.old.p : null };
+    const k35 = cell(r35), k57 = cell(r57);
     this.cross = {
-      c35: i35 ? i35.p : null, c57: i57 ? i57.p : null,
-      s35: i35 ? i35.sigma : null, s57: i57 ? i57.sigma : null,
+      c35: k35.p, s35: k35.s, w35: k35.why, o35: k35.o, f35: r35 && r35.fit,
+      c57: k57.p, s57: k57.s, w57: k57.why, o57: k57.o, f57: r57 && r57.fit,
     };
     this.power = {};
     for (const cur of this.sweep) this.power[cur.d] = scLeadingPower(cur.rows);
@@ -17326,8 +16321,8 @@ class SurfApp {
 
   runExact(){
     const s = this.state;
-    if (this.phen || this.circuit){
-      this.exact = { phen: this.phen, circuit: this.circuit };
+    if (this.phen){
+      this.exact = { phen: true };
       this.renderHud();
       return;
     }
@@ -17345,37 +16340,46 @@ class SurfApp {
     }, 30);
   }
 
+  /**
+   * 解码器审计（R131）：把当前 d 的**整个综合征空间**做 BFS，逐点比
+   * 「MWPM 修正权重」与「精确最小权重」，并统计最小权重修正的逻辑类是否唯一。
+   * 这是把 README 诚实限制③（d≥5 未证逐综合征最小权重）变成可点击验证的入口。
+   */
+  runAudit(){
+    const s = this.state;
+    const tok = ++this._auditToken;
+    if (this.code.zg.nS > SC_AUDIT_MAX_NS){
+      this.audit = { skipped: true, nS: this.code.zg.nS };
+      this.renderHud();
+      return;
+    }
+    const btn = this.q('#sfAudit');
+    if (btn){ btn.disabled = true; btn.textContent = '审计中…'; }
+    setTimeout(() => {
+      /* 令牌变了（换 d / 又点了一次）⟹ 这次结果属于别的配置，直接丢弃，
+         既不写 audit 也不碰按钮 —— 否则会把旧 d 的「次优 0」挂在新 d 上。 */
+      if (tok !== this._auditToken) return;
+      let res;
+      try {
+        res = scOptAudit(s.d, 'both');
+      } catch (e){
+        res = { error: String(e && e.message || e) };
+      }
+      if (tok !== this._auditToken) return;
+      this.audit = res;
+      const b2 = this.q('#sfAudit');
+      if (b2){ b2.textContent = '解码器审计'; this.syncPanel(); }   /* disabled 交给 syncPanel 按当前 d 定 */
+      this.renderHud();
+    }, 30);
+  }
+
   /* ---------- HUD ---------- */
   renderHud(){
-    this.ciFeedback?.sync({ label: '逻辑失效率 P_L', rate: this.mc && this.mc.PL, n: this.mc && this.mc.trials });
-    this.shotReplay?.sync(this.trial || (this.mc && this.mc.lastTrial), this.mc && this.mc.trials, this.state);
     const s = this.state, v = this.verify, mc = this.mc;
     const set = (id, txt, cls) => { const el = this.q('#' + id); if (el){ el.textContent = txt; el.className = cls || ''; } };
-    const prepName = s.prepareBasis === 'encoded' ? '可信任意态注入边界' : `${s.prepareBasis === 'Z' ? '|0_L⟩ 制备' : '|+_L⟩ 制备'}`;
-    const phenTxt = this.phen ? ` · phenomenological q=p（${Math.max(1, s.d - 1)} 轮 + 理想终读）` : this.circuit ? ` · circuit-level · ${prepName}（${s.d} 轮）` : ' · code-capacity';
-    const circuitNoiseName=s.circuitNoiseModel==='t1t2-pauli-twirled'
-      ?`T1/T2-twirled p₂=${s.p.toFixed(4)} SPAM=${s.pSPAM.toFixed(4)} T1/T2=${s.t1Layers}/${s.t2Layers}τ`
-      :'uniform depolarizing';
-    set('hCfg', `${this.circuit ? circuitNoiseName : sfNoiseName[s.noise]} · d=${s.d} · p=${s.p.toFixed(4)} · N=${s.trials}${phenTxt}`);
-    const auditRow = this.q('#hFaultAuditRow');
-    if (auditRow) auditRow.style.display = this.circuit ? '' : 'none';
-    if (this.circuit){
-      if (!this.faultAudit || this.faultAudit.loading) set('hFaultAudit', '正在构建…');
-      else if (this.faultAudit.error) set('hFaultAudit', `失败：${this.faultAudit.error}`, 'warn');
-      else {
-        const a = this.faultAudit;
-        const failX = a.jointLookupLogicalFailX + a.jointFallbackLogicalFailX;
-        const failZ = a.jointLookupLogicalFailZ + a.jointFallbackLogicalFailZ;
-        const auditEl = this.q('#hFaultAudit');
-        if (auditEl) auditEl.title = '目录位点：' + Object.entries(a.locationCounts || {}).map(([k, v]) => `${k} ${v}`).join(' · ');
-        const readoutFail = a.prepareBasis === 'Z' ? `|0_L⟩ 读出失败 ${failX}/${a.locations}`
-          : a.prepareBasis === 'X' ? `|+_L⟩ 读出失败 ${failZ}/${a.locations}`
-          : `X/Z 读出失败 ${failX}/${a.locations}、${failZ}/${a.locations}`;
-        const boundaryName = a.prepareBasis === 'encoded' ? '可信任意态注入后' : `${a.prepareBasis} 本征态制备后`;
-        set('hFaultAudit', `${boundaryName} · ${a.locations.toLocaleString()} 位点 · 联合可查 ${a.jointCovered}/${a.locations} · 歧义 ${a.jointAmbiguous} · 安全回退 ${a.jointFallbackMechanisms} · ${readoutFail}`,
-          failX || failZ || a.jointLookupSyndromeFailX || a.jointLookupSyndromeFailZ || a.jointFallbackSyndromeFailX || a.jointFallbackSyndromeFailZ ? 'warn' : 'ok');
-      }
-    }
+    const phenTxt = this.phen
+      ? ` · 带噪测量 q=${sfQtxt(s.qR)}（${Math.max(1, s.d - 1)} 轮 + 理想读出，${s.d} 个数据层）` : '';
+    set('hCfg', `${sfNoiseName[s.noise]} · d=${s.d} · p=${s.p.toFixed(3)} · N=${s.trials}${phenTxt}`);
     if (v){
       set('hStruct', `${v.n} 比特 · |X|=${v.nX} · |Z|=${v.nZ} · k=${v.k} · 全对易=${v.commute ? '✓' : '✗'}`,
         (v.k === 1 && v.commute) ? 'ok' : 'warn');
@@ -17383,60 +16387,69 @@ class SurfApp {
     }
     if (mc){
       set('hPL', `${sfFmt(mc.PL)}  (${Math.round(mc.PL * mc.trials)}/${mc.trials})`, 'big');
-      set('hMCProgress', `${mc.trials} / ${s.trials}`);
-      const last = this.trial || mc.lastTrial;
-      if (last){
-        const err = pcOf((last.mx || 0n) | (last.mz || 0n));
-        const outcome = last.fail ? (last.xfail && last.zfail ? 'X/Z 逻辑失败' : last.xfail ? 'X 帧逻辑失败' : 'Z 帧逻辑失败') : '纠回';
-        set('hLast', this.circuit
-          ? `#${mc.trials} ${outcome} · 电路故障 ${last.faultCount} · CNOT ${last.cnotCount}`
-          : `#${mc.trials} ${outcome} · 错误 ${err} · 缺陷 ${last.kx + last.kz}`);
-      } else set('hLast', '—');
       set('hSplit', `${sfFmt(mc.PLx)} / ${sfFmt(mc.PLz)}`);
-      set('hDef', `${sfNF(mc.meanDefects, 2)} 个${this.spacetime ? '（时空）' : ''}`);
-      const decName = this.circuit
-        ? `联合/安全单帧查表 ${(mc.lookupRate * 100).toFixed(1)}% + 轴向边缘权重 MWPM`
-        : this.phen ? 'phenomenological 时空 MWPM' : '二维 MWPM·DP';
-      set('hDec', `${decName} · 贪心兜底 ${(mc.fallback * 100).toFixed(2)}% · ${sfNF(mc.ms, 1)}ms`,
+      set('hDef', `${sfNF(mc.meanDefects, 2)} 个${this.phen ? '（每帧·时空）' : ''}`);
+      const decName = this.phen ? '时空 MWPM' : 'MWPM·DP';
+      set('hDec', `${decName} · 回退 ${(mc.fallback * 100).toFixed(2)}% · ${sfNF(mc.ms, 1)}ms`,
         mc.fallback > 0.02 ? 'warn' : '');
-      const residualRow=this.q('#hCircuitResidualRow');
-      if(residualRow)residualRow.style.display=this.circuit?'':'none';
-      if(this.circuit)set('hCircuitResidual',`${Math.round(mc.PL*mc.trials)} / ${mc.trials} 逻辑 · ${Math.round(mc.badSyn*mc.trials)} / ${mc.trials} syndrome`,mc.PL>0?'warn':'ok');
     }
     const spRow = this.q('#hSpaceRow');
-    if (spRow) spRow.style.display = this.spacetime ? '' : 'none';
-    if (this.spacetime && this.space){
+    if (spRow) spRow.style.display = this.phen ? '' : 'none';
+    if (this.phen && this.space){
       const X = this.space.X;
       set('hSpace', `${this.space.layers} 层 × ${X.nS + 2} 节点 · ${X.space + X.bnd + X.time} 边 · 自检${this.space.ok ? '✓' : '✗'}`,
         this.space.ok ? 'ok' : 'warn');
     } else set('hSpace', '—');
-    if (!mc){ set('hMCProgress', `0 / ${s.trials}`); set('hLast', '—'); }
-    if (this.circuit){
-      set('hCross', '首阶段不做 circuit-level 阈值扫描');
+    const crRow = this.q('#hCrossRow');
+    if (this._stale){
+      set('hCross', '需重扫（参数已改）', 'warn');
+      if (crRow) crRow.title = '曲线是在旧配置下算的，已作废；按「扫描 P_L(p)」重算';
     } else if (this.cross){
-      /* σ 大到位数无意义时（N 小 / 曲线贴得太近）不给三位小数：退回两位并标「≈」。
-         阈值：σ_p > 0.03 ⟹ 交叉点只知道个量级（N=400 时 c57 常落在这档）。 */
-      const fmt = (v, sg) => v === null ? '未分辨'
-        : !Number.isFinite(sg) ? v.toFixed(3)
+      /* 定点表示按 σ 决定：σ 大到位数无意义时退回两位并标「≈」（阈值 σ_p > 0.03）。
+         未分辨时把**原因**写出来 —— 「—」既不说明是没算还是算不动。
+         鼠标悬停给出拟合窗口/χ² 与旧口径（两点变号）的值，便于对照。 */
+      const fmt = (v, sg) => !Number.isFinite(sg) ? v.toFixed(3)
         : sg > 0.03 ? `≈${v.toFixed(2)}±${sg.toFixed(2)}` : `${v.toFixed(3)}±${sg.toFixed(3)}`;
-      set('hCross', `${fmt(this.cross.c35, this.cross.s35)} / ${fmt(this.cross.c57, this.cross.s57)}`);
-    } else set('hCross', '扫描中…');
-    if (this.circuit){ set('hAlpha', '未拟合（首阶段不做阈值结论）'); }
-    else if (this.power){
+      const cell = (v, sg, why) => v === null ? `未分辨（${XFIT_WHY[why] || why}）` : fmt(v, sg);
+      const nCur = (this.sweep || []).length;
+      const parts = [cell(this.cross.c35, this.cross.s35, this.cross.w35)];
+      if (nCur >= 3) parts.push(cell(this.cross.c57, this.cross.s57, this.cross.w57));
+      set('hCross', parts.join(' / '),
+        (this.cross.c35 === null || (nCur >= 3 && this.cross.c57 === null)) ? 'warn' : '');
+      if (crRow){
+        const det = (tag, fit, oldv) => {
+          const o = oldv === null || oldv === undefined ? '未分辨' : oldv.toFixed(4);
+          if (!fit) return `${tag}: 样本不足（旧口径 ${o}）`;
+          if (!fit.ok) return `${tag}: 拟合未通过（${XFIT_WHY[fit.why] || fit.why}；旧口径 ${o}）`;
+          return `${tag}: w${fit.win} 二次拟合 χ²/dof=${fit.chi2dof.toFixed(2)}（旧口径 ${o}）`;
+        };
+        crRow.title = det('d3×d5', this.cross.f35, this.cross.o35) + ' · ' + det('d5×d7', this.cross.f57, this.cross.o57);
+      }
+    } else set('hCross', this.sweep ? '扫描中…' : '未扫描', '');
+    if (this.power){
       const dsA = this.phen ? [3, 5] : SC_DISTANCES;
       set('hAlpha', dsA.map(d => `d${d}:${Number.isFinite(this.power[d]) ? this.power[d].toFixed(2) : '—'}`).join('  '));
     } else set('hAlpha', '扫描中…');
-    if (this.exact && this.exact.circuit){
-      set('hExact', '电路级口径未实现精确枚举');
-    } else if (this.exact && this.exact.phen){
+    if (this.exact && this.exact.phen){
       set('hExact', '带噪测量口径无精确枚举（4 层 × 2⁹ × 2⁴ 起步）');
     } else if (this.exact){
       set('hExact', `p=${this.exact.p.toFixed(3)}：精确 ${sfFmt(this.exact.exact)} vs MC ${sfFmt(this.exact.mc)} ⟹ z=${sfNF(this.exact.z, 2)}σ`,
         this.exact.z <= 4 ? 'ok' : 'warn');
     } else set('hExact', '未跑（按按钮）');
+    /* 解码器审计：全枚举 ⟹ 数字是「确证」不是「估计」，措辞也要照实写 */
+    if (this.audit && this.audit.error){
+      set('hAudit', '审计失败：' + this.audit.error, 'warn');
+    } else if (this.audit && this.audit.skipped){
+      set('hAudit', `d=${s.d} 的 2^${this.audit.nS} 空间面板不枚举（离线：0 退化）`);
+    } else if (this.audit){
+      const a = this.audit;
+      const okDec = a.worse === 0 && a.degen === 0;
+      set('hAudit', `${a.tested} 综合征 · 次优 ${a.worse} · 退化 ${a.degen} · ${sfNF(a.ms, 0)}ms`,
+        okDec ? 'ok' : 'warn');
+    } else set('hAudit', '未跑（按按钮）');
     const done = this.sweep ? this.sweep.reduce((a, c) => a + c.rows.length, 0) : 0;
     const total = this._gridN || (SC_DISTANCES.length * SC_PS.length);
-    set('hProg', this.circuit ? '首阶段无阈值扫描' : `${done}/${total} 点${done === total ? '（完成）' : '…'}`);
+    set('hProg', `${done}/${total} 点${done === total ? '（完成）' : '…'}`);
   }
 
   /* ---------- 画布 ---------- */
@@ -17461,17 +16474,29 @@ class SurfApp {
     g.clearRect(0, 0, W, H);
     const s = this.state, code = this.code, d = s.d, n = code.n;
     g.textAlign = 'left';
-    const phen = this.spacetime;
+    const phen = this.phen;
     g.font = (11.5 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = sfC.txt + '.95)';
     g.fillText(`旋转表面码 d=${d}：${n} 比特 · ${code.X.length}+${code.Z.length} 个稳定子 · k=1`
-      + (this.circuit ? ` · 电路级提取 ${s.d} 轮` : phen ? ` · 带噪测量 ${Math.max(1, s.d - 1)} 轮 + 理想读出` : ''), 10 * dpr, 16 * dpr);
+      + (phen ? ` · 带噪测量 q=${sfQtxt(s.qR)}，${Math.max(1, s.d - 1)} 轮 + 理想读出` : ''), 10 * dpr, 16 * dpr);
     g.font = (9 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = sfC.dim + '.85)';
     g.fillText(phen
-      ? (this.circuit ? `红点=最终数据帧 · 亮框=终层探测事件 · 蓝环=解码修正投影 · 下方=各轮综合征读数` : `红点=总错误 · 亮框=末层探测事件 · 蓝环=时空链的空间投影 · 下方 = 逐层探测事件`)
+      ? `红点=总错误 · 亮框=末层探测事件 · 蓝环=时空链的空间投影 · 下方 = 逐层探测事件`
       : `红点=错误 · 亮框=被点亮的综合征 · 蓝环=MWPM 修正 · 权重 ${d} 的横/竖链 = 逻辑（无法分辨）`,
     10 * dpr, 29 * dpr);
+    /* 零错误快照如实标注（R131）：p 小 / n 小时「这张图一个红点都没有」是**合法样本**
+     * 而不是渲染失败——概率 (1−p)^n 常常两位数。不写清楚就会被当成 bug 或当成「无噪声」。 */
+    const tr0 = this.trial;
+    const zero = tr0 && (tr0.mx === 0n && tr0.mz === 0n) &&
+      (!phen || (tr0.kx === 0 && tr0.kz === 0));
+    if (zero){
+      const pz = Math.pow(1 - s.p, n);
+      g.fillStyle = sfC.amber + '.92)';
+      g.font = (9 * dpr) + 'px ui-monospace,monospace';
+      g.fillText(`本次快照恰好无错误（概率 (1−p)^${n} ≈ ${(pz * 100).toFixed(1)}%）· 按「换一张码图」再抽`,
+        10 * dpr, 41 * dpr);
+    }
 
     /* 网格几何：数据比特占 (d)×(d)，四周留一格给边界；带噪测量时底部留出时空条 */
     const pad = 34 * dpr;
@@ -17600,7 +16625,7 @@ class SurfApp {
     }
   }
 
-  /* 画布 2：P_L(p) 双对数（三条曲线 + 基线 + 当前点 + 交叉点） */
+  /* 画布 2：P_L(p) 双对数（单帧三条 / 带噪测量两条 + 基线 + 当前点 + 交叉点） */
   drawCurve(){
     const c = this.cv.curve;
     if (!c || !c.width) return;
@@ -17610,10 +16635,18 @@ class SurfApp {
     g.textAlign = 'left';
     g.font = (11 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = sfC.txt + '.95)';
-    g.fillText(this.circuit ? 'Circuit-level：当前单点样本（未做阈值扫描）' : 'P_L(p)：阈值 = 三条曲线的排序反转', 10 * dpr, 15 * dpr);
+    const nCur = (this.sweep || []).length;
+    g.fillText(`P_L(p)：阈值 = ${nCur >= 3 ? '三条' : '两条'}曲线的排序反转`, 10 * dpr, 15 * dpr);
     g.font = (8.6 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = sfC.dim + '.85)';
-    g.fillText(this.circuit ? '边缘权重 MWPM 不含 hook 相关性；单点仅作线路诊断' : '双对数 · 虚线 = 未编码基线 p（编码有益 ⟺ 曲线在它下方）', 10 * dpr, 27 * dpr);
+    g.fillText('双对数 · 虚线 = 未编码基线 p（编码有益 ⟺ 曲线在它下方）', 10 * dpr, 27 * dpr);
+    if (this._stale){
+      g.fillStyle = sfC.amber + '.95)';
+      g.font = (9.2 * dpr) + 'px ui-monospace,monospace';
+      g.textAlign = 'right';
+      g.fillText('⚠ 参数已改：这条曲线是旧配置的，按「扫描 P_L(p)」重算', W - 12 * dpr, 15 * dpr);
+      g.textAlign = 'left';
+    }
 
     const L = 46 * dpr, Rr = W - 12 * dpr, T = 40 * dpr, B = H - 26 * dpr;
     const G = this.grid, pMin = G.pMin, pMax = G.pMax, yMin = 1e-5, yMax = 1;
@@ -17710,10 +16743,10 @@ class SurfApp {
     const s = this.state;
     g.font = (11 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = sfC.txt + '.95)';
-    g.fillText(this.circuit ? `电路级单点：d=${s.d} · p=${s.p.toFixed(4)}` : `距离抑制：p=${s.p.toFixed(3)} 时 P_L 随 d 的走向`, 10 * dpr, 15 * dpr);
+    g.fillText(`距离抑制：p=${s.p.toFixed(3)} 时 P_L 随 d 的走向`, 10 * dpr, 15 * dpr);
     g.font = (8.6 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = sfC.dim + '.85)';
-    g.fillText(this.circuit ? '当前只画已模拟码距；不外推距离趋势或阈值' : '阈值下侧随 d 指数掉（码越大约好）；阈值上侧反过来涨', 10 * dpr, 27 * dpr);
+    g.fillText('阈值下侧随 d 指数掉（码越大约好）；阈值上侧反过来涨', 10 * dpr, 27 * dpr);
 
     const L = 46 * dpr, Rr = W - 14 * dpr, T = 42 * dpr, B = H - 26 * dpr;
     const Y = v => B - (Math.log10(Math.max(v, 1e-5)) - Math.log10(1e-5)) / 5 * (B - T);
@@ -17723,7 +16756,7 @@ class SurfApp {
       g.fillStyle = sfC.dim + '.8)'; g.font = (8 * dpr) + 'px ui-monospace,monospace';
       g.fillText(v >= 0.01 ? v.toString() : v.toExponential(0), 8 * dpr, Y(v) + 3 * dpr);
     }
-    const ds = this.spacetime ? [3, 5] : SC_DISTANCES;
+    const ds = this.phen ? [3, 5] : SC_DISTANCES;
     const slot = (Rr - L) / ds.length;
     const pts = [];
     for (let i = 0; i < ds.length; i++){
@@ -17780,18 +16813,30 @@ class SurfApp {
         const t = self.trial;
         if (!t) return null;
         const hex = m => m.toString(16);
-        return {
+        const w = m => Number(m.toString(2).split('1').length - 1);
+        const out = {
           fail: t.fail, xfail: t.xfail, zfail: t.zfail, kx: t.kx, kz: t.kz,
           mx: hex(t.mx), mz: hex(t.mz), corrX: hex(t.corrX), corrZ: hex(t.corrZ),
-          wErrX: Number(t.mx.toString(2).split('1').length - 1),
-          wCorrX: Number(t.corrX.toString(2).split('1').length - 1),
+          wErrX: w(t.mx), wCorrX: w(t.corrX),
         };
+        /* 带噪测量口径的字段（R131 补：R130 只落了引擎，句柄里读不到 R / badSyn / 逐层缺陷） */
+        if (t.R !== undefined){
+          out.R = t.R; out.q = t.q; out.runds = t.rounds;
+          out.badSyn = !!t.badSyn;
+          out.modeX = t.modeX; out.modeZ = t.modeZ;
+          out.defX = t.defX.slice(); out.defZ = t.defZ.slice();
+          out.kwX = out.defX.map(v => pc32(v));
+          out.kwZ = out.defZ.map(v => pc32(v));
+        }
+        return out;
       },
       set(patch){
         Object.assign(self.state, patch || {});
         if (self.state.meas === 'noisy' && self.state.d === 7) self.state.d = 5;
         self.code = scBuild(self.state.d);
-        self.syncPanel(); self.renderHint(); self.runMc();
+        self._auditToken++; self.audit = null;       /* 审计结果只对造它的 d 成立 */
+        self.invalidateSweep();                      /* 曲线也只对造它的配置成立 */
+        self.syncPanel(); self.runMc();
         return { ...self.state };
       },
       snapshot(){
@@ -17799,6 +16844,15 @@ class SurfApp {
       },
       runSweep(){ self.startSweep(); return true; },
       runExact(){ self.runExact(); return true; },
+      get audit(){ return self.audit; },
+      get cross(){ return self.cross ? { ...self.cross, f35: undefined, f57: undefined,
+        w35n: self.cross.f35 && self.cross.f35.win, w57n: self.cross.f57 && self.cross.f57.win } : null; },
+      get stale(){ return !!self._stale; },
+      get qR(){ return self.state.qR; },
+      crossFit(a, b){ return scCrossingFit(a, b); },
+      get snapSalt(){ return self._snapSalt; },
+      runAudit(){ self.runAudit(); return true; },
+      optAudit(d, type){ return scOptAudit(d === undefined ? self.state.d : d, type || 'both'); },
       /* 诊断用：直接读引擎（不经 UI） */
       probe(d, cfg){ return scEnsemble(scBuild(d), cfg); },
       space(d, cfg){ return scSpaceEnsemble(scBuild(d), cfg); },

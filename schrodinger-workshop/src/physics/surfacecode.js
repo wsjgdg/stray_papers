@@ -320,6 +320,155 @@ export function scVerify(d){
   };
 }
 
+/* ---------- 解码器审计：逐综合征最小权重 vs MWPM（R131） ----------------
+ * 诚实限制③ 的原话：「d ≥ 5 **未证**逐综合征最小权重：MWPM 最小化的是『匹配的
+ * 路径总长』，而两条路径重叠时 XOR 之后的实际修正更轻 ⟹ 非匹配型修正原则上可能
+ * 比 MWPM 更优。d=3 用穷举堵住（16/16），d≥5 只能做 ILP 或更高权重的穷举。」
+ *
+ * 本轮把它堵掉，用两条互不依赖的路径：
+ *   ① **综合征空间 BFS**：节点 = 综合征（2^|S| 个），边 = 单比特错误 ⟹ dist[S] 是
+ *      「任何修正」的最小权重（与解码器完全无关，含非匹配型修正）。逐 syndrome 再
+ *      跑一次 scDecode，比 pc(corr) 与 dist[S]：pc(corr) < dist[S] 不可能（corr 本身
+ *      就是同一 syndrome 的合法修正），故 pc(corr) > dist[S] ⟺ MWPM 次优。
+ *   ② **逻辑类退化 DP**：ex[S] 记「最小权重修正里哪些逻辑类存在」（位 1 = cls 0、
+ *      位 2 = cls 1）。两类并存 ⟹ 该 syndrome 上**任何**最小权重解码器都只能 50/50，
+ *      这是最小权重口径的**不可约**上限，不是解码器的锅。若全空间无退化，则
+ *      「达到最小权重」⟹「达到最大似然」（a priori 等概率下 ML 就是取更轻的类）。
+ * 状态数 2^|S| 决定可跑范围：d=3 ⟹ 16、d=5 ⟹ 4096（面板可跑，毫秒级）、
+ * d=7 ⟹ 2^24 = 16.7M（BFS 2.4s + 退化 DP 15s，只做离线全枚举，不上页面）。
+ */
+export const SC_AUDIT_MAX_NS = 12;      /* 2^12 = 4096：面板里最后一个能即时跑完的 d */
+
+/** 综合征空间 BFS（内部）：dist/dist 父指针/分层表 */
+function scSyndromeTable(code, type, opts = {}){
+  const g = type === 'X' ? code.xg : code.zg;
+  const nS = g.nS, n = code.n, N = 1 << nS;
+  const syn = new Int32Array(n);
+  for (let q = 0; q < n; q++){
+    let s = 0;
+    g.stab.forEach((st, k) => { if ((pc(st.mask & (1n << BigInt(q)))) & 1) s |= 1 << k; });
+    syn[q] = s;
+  }
+  const dist = new Int8Array(N).fill(-1);
+  const queue = new Int32Array(N);
+  const from = opts.parents ? new Int32Array(N).fill(-1) : null;
+  const fromQ = opts.parents ? new Int32Array(N).fill(-1) : null;
+  const byLayer = opts.layers ? [] : null;
+  dist[0] = 0; queue[0] = 0;
+  if (byLayer) byLayer[0] = [0];
+  let head = 0, tail = 1, maxW = 0;
+  while (head < tail){
+    const s = queue[head++], nd = dist[s] + 1;
+    for (let q = 0; q < n; q++){
+      const t = s ^ syn[q];
+      if (dist[t] < 0){
+        dist[t] = nd;
+        if (from){ from[t] = s; fromQ[t] = q; }
+        if (byLayer) (byLayer[nd] || (byLayer[nd] = [])).push(t);
+        queue[tail++] = t;
+        if (nd > maxW) maxW = nd;
+      }
+    }
+  }
+  if (byLayer) byLayer.length = maxW + 1;
+  return { g, type, nS, n, N, syn, dist, from, fromQ, byLayer, maxW, reachable: tail };
+}
+
+/** 最小权重修正的逻辑类退化（内部）：返回 ex 位掩码表 + 退化计数 */
+function scDegenTable(code, type, t){
+  const dual = type === 'X' ? code.zl : code.xl;
+  const inDual = new Uint8Array(t.n);
+  for (let q = 0; q < t.n; q++) inDual[q] = Number((dual >> BigInt(q)) & 1n);
+  const ex = new Uint8Array(t.N);
+  ex[0] = 1;
+  let degen = 0;
+  const byW = [];
+  for (let k = 1; k <= t.maxW; k++){
+    const layer = t.byLayer[k];
+    if (!layer) continue;
+    let cnt = 0;
+    for (let li = 0; li < layer.length; li++){
+      const s = layer[li];
+      let m = 0;
+      for (let q = 0; q < t.n; q++){
+        const u = s ^ t.syn[q];
+        if (t.dist[u] !== k - 1) continue;
+        const e = ex[u];
+        if (!e) continue;
+        m |= inDual[q] ? (e === 1 ? 2 : e === 2 ? 1 : e) : e;
+        if (m === 3) break;
+      }
+      ex[s] = m;
+      if (m === 3){ degen++; cnt++; }
+    }
+    if (cnt) byW.push([k, cnt]);
+  }
+  return { ex, degen, byW };
+}
+
+/**
+ * 逐综合征解码器审计（面板可跑：d=3/5）。同步执行，毫秒级。
+ * 返回 { d, nS, states, reachable, maxW, hist, tested, worse, maxGap, worst,
+ *        degen, degenByW, clsMix, ms }
+ */
+export function scOptAudit(d, type = 'both'){
+  const code = scBuild(d);
+  const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  const types = type === 'both' ? ['X', 'Z'] : [type];
+  const out = { d, type, nS: 0, states: 0, reachable: 0, maxW: 0, hist: [],
+    tested: 0, worse: 0, maxGap: 0, worst: null, degen: 0, degenByW: [], perType: {} };
+  for (const ty of types){
+    const t = scSyndromeTable(code, ty, { parents: true, layers: true });
+    if (t.nS > SC_AUDIT_MAX_NS) throw new Error(`综合征空间 2^${t.nS} 太大（面板审计上限 2^${SC_AUDIT_MAX_NS}）`);
+    const dg = scDegenTable(code, ty, t);
+    const hist = t.byLayer.map(L => (L ? L.length : 0));
+    let worse = 0, maxGap = 0, worst = null, tested = 0;
+    for (let S = 0; S < t.N; S++){
+      if (t.dist[S] < 0) continue;
+      let m = 0n, cur = S, guard = 0;
+      while (cur !== 0){
+        m ^= 1n << BigInt(t.fromQ[cur]); cur = t.from[cur];
+        if (++guard > 4096) throw new Error('综合征回溯成环');
+      }
+      const r = scDecode(code, m, ty);
+      const wd = pc(r.corr);
+      tested++;
+      if (wd > t.dist[S]){ worse++; if (wd - t.dist[S] > maxGap){ maxGap = wd - t.dist[S]; worst = { S, wmin: t.dist[S], wd }; } }
+    }
+    out.perType[ty] = { nS: t.nS, states: t.N, reachable: t.reachable, maxW: t.maxW, hist,
+      tested, worse, maxGap, worst, degen: dg.degen, degenByW: dg.byW };
+    out.nS = Math.max(out.nS, t.nS);
+    out.states += t.N; out.reachable += t.reachable;
+    out.maxW = Math.max(out.maxW, t.maxW);
+    out.tested += tested; out.worse += worse; out.degen += dg.degen;
+    if (maxGap > out.maxGap){ out.maxGap = maxGap; out.worst = { type: ty, ...worst }; }
+    if (dg.byW.length) out.degenByW.push([ty, dg.byW]);
+  }
+  out.ms = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0;
+  return out;
+}
+
+/**
+ * 退化全枚举（无解码，只有 BFS + DP）⟹ 支持到 d=7 的 2^24 空间（离线用）。
+ * 返回 { d, types: { X: { states, degen, byW, maxW, hist }, ... } }
+ */
+export function scDegenScan(d, type = 'both', opts = {}){
+  const code = scBuild(d);
+  const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  const out = { d, type, perType: {}, degen: 0, states: 0,
+    ms: 0 };
+  for (const ty of (type === 'both' ? ['X', 'Z'] : [type])){
+    const t = scSyndromeTable(code, ty, { parents: !!opts.parents, layers: true });
+    const dg = scDegenTable(code, ty, t);
+    out.perType[ty] = { nS: t.nS, states: t.N, reachable: t.reachable, maxW: t.maxW,
+      hist: t.byLayer.map(L => (L ? L.length : 0)), degen: dg.degen, byW: dg.byW };
+    out.degen += dg.degen;
+    out.states += t.N;
+  }
+  out.ms = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0;
+  return out;
+}
+
 /** 最小权重逻辑搜索（独立于解码器；权重上限 wmax 之内找不到 ⟹ 距离 > wmax） */
 export function scMinLogical(code, type, wmax){
   const n = code.n, stabs = type === 'X' ? code.X : code.Z, other = type === 'X' ? code.Z : code.X;
@@ -349,6 +498,22 @@ export function scMinLogical(code, type, wmax){
  * ⚠ 不能在本文件重新定义——单文件 bundler 把所有模块拼进同一个 script 作用域，
  * 重名会在 `node --check` 处直接 FAIL（本轮实测：multiply declared）。
  * 依赖方向 qcircuit → surfacecode 与 codefamily 一致，无环。 */
+
+/* 快照抽签的 RNG（R131）：用户种子 ⊕ salt 过一次 splitmix 风格混合再喂 mulberry32。
+ * 为什么需要它（两条实测缺陷，都是页面层面的）：
+ *   ① 原来「换一张码图」用固定表达式派生种子 ⟹ 点几次都出同一张图，按钮名不副实；
+ *   ② 种子 7 恰好落在 mulberry32 的弱起点（前 25 个输出最小 0.2279），而 d=5 只有
+ *      25 个比特、默认 p=0.08 ⟹ 默认视图永远零错误，红点与亮框一个都不亮。
+ * 混合哈希不改统计（零错误仍是概率 (1−p)^n 的合法样本），只把固定种子的倒霉起点打散，
+ * 并让 salt 真正推进抽签。 */
+export const scMix32 = z => {
+  z = (z + 0x9E3779B9) >>> 0;
+  z = Math.imul(z ^ (z >>> 16), 0x85EBCA6B) >>> 0;
+  z = Math.imul(z ^ (z >>> 13), 0xC2B2AE35) >>> 0;
+  return (z ^ (z >>> 16)) >>> 0;
+};
+export const scSnapSeed = (seed, salt) =>
+  scMix32((Math.round(seed) * 2654435761 + Math.round(salt) * 104729) >>> 0);
 
 /** 单次试验：返回两帧的错误/修正/缺陷数与失败标志（页面画图用同一份数据） */
 export function scTrial(code, cfg, rng){
@@ -563,6 +728,159 @@ export function scCrossingCI(a, b, k = 3){
   }
   return best;
 }
+
+/* ==========================================================================
+ * 交叉点估计（R132）：从「相邻两点变号 + 3σ 门槛」换成「整条曲线的加权多项式拟合」
+ *
+ * 为什么换（都是实测，不是口味）：
+ *   ① 旧口径只在**一对相邻点**上工作：要求两端都满足 PL > 3σ 且符号反转。交叉点附近
+ *      恰恰是两条曲线贴得最近、PL 与 σ 同量级的地方，于是「阈值」最该被读出来的区域
+ *      反而最先被判成「未分辨」。标定（K=14 独立种子、N=3000、带噪测量 d3×d5）：
+ *      旧法只有 6/14 次给出数字，二次拟合 14/14。
+ *   ② 两点弦代替曲线：f(p) = P_A − P_B 在交叉点附近是**弯的**（先升后降），弦的零点
+ *      系统性偏小。实测同一标定下旧法均值 0.0225、线性拟合 0.0212（偏置 −5%）、
+ *      二次拟合 0.0222，参考值 0.0223 ⟹ 弯度必须进模型。
+ *   ③ σ 用回归协方差的 delta 法，而不是 σ_f/|两点斜率|：后者把**斜率自身的噪声**塞进
+ *      分母（噪声让斜率偶尔很陡 ⟹ σ 偶尔偏小），同一个量的误差棒质量不一致。
+ *      标定实测「经验离散度 / 报告 σ」= 1.16（带噪测量 d3×d5）、1.43（单帧 x d3×d5）：
+ *      回归 σ 略偏小（模型误差所致），故乘安全系数 SC_XFIT.safety = 1.4（取实测上限）。
+ *
+ * 保留 scCrossing / scCrossingCI 作为对照口径（README 的历史数字与 pot 的交叉验证都指着
+ * 它），页面改用 scCrossingFit。未分辨时返回具体原因，不再只给一个「—」。
+ * ========================================================================== */
+export const SC_XFIT = {
+  win: [5, 6, 7],       /* 候选窗口（点数）：二次拟合至少要 5 点（dof ≥ 2） */
+  winLin: [3, 4],       /* 点数不够时退化到直线 */
+  chiMax: 2.5,          /* χ²/dof 上限：模型明显不合就不能拿它的根当答案 */
+  slopeK: 3,            /* 根处斜率必须显著（|b| > k·σ_b） */
+  safety: 1.4,          /* 实测标定上限（1.16 / 1.43），见文件头注释 */
+};
+
+/** 加权最小二乘多项式拟合（法方程 + 高斯-约当，同时给出系数协方差） */
+function scWls(xs, ys, ws, deg){
+  const m = deg + 1;
+  const A = Array.from({ length: m }, () => new Array(m).fill(0));
+  const b = new Array(m).fill(0);
+  for (let i = 0; i < xs.length; i++){
+    const w = ws[i], x = xs[i];
+    const pw = [1];
+    for (let k = 1; k < 2 * m; k++) pw.push(pw[k - 1] * x);
+    for (let r = 0; r < m; r++){
+      b[r] += w * ys[i] * pw[r];
+      for (let c = 0; c < m; c++) A[r][c] += w * pw[r + c];
+    }
+  }
+  /* 增广矩阵求逆：右半段即 (AᵀWA)⁻¹，用来算根的方差 */
+  const M = A.map((row, i) => row.concat([b[i]]));
+  const inv = Array.from({ length: m }, (_, i) => Array.from({ length: m }, (_, j) => (i === j ? 1 : 0)));
+  for (let c = 0; c < m; c++){
+    let piv = c;
+    for (let r = c + 1; r < m; r++) if (Math.abs(M[r][c]) > Math.abs(M[piv][c])) piv = r;
+    if (!(Math.abs(M[piv][c]) > 1e-18)) return null;
+    if (piv !== c){
+      const t = M[piv]; M[piv] = M[c]; M[c] = t;
+      const t2 = inv[piv]; inv[piv] = inv[c]; inv[c] = t2;
+    }
+    const d = M[c][c];
+    for (let k = 0; k < m + 1; k++) M[c][k] /= d;
+    for (let k = 0; k < m; k++) inv[c][k] /= d;
+    for (let r = 0; r < m; r++){
+      if (r === c) continue;
+      const f = M[r][c];
+      if (!f) continue;
+      for (let k = 0; k < m + 1; k++) M[r][k] -= f * M[c][k];
+      for (let k = 0; k < m; k++) inv[r][k] -= f * inv[c][k];
+    }
+  }
+  const coef = M.map(row => row[m]);
+  const evalAt = x => coef.reduce((s, c, k) => s + c * Math.pow(x, k), 0);
+  let chi2 = 0;
+  for (let i = 0; i < xs.length; i++) chi2 += (ys[i] - evalAt(xs[i])) ** 2 * ws[i];
+  return { coef, cov: inv, chi2, dof: xs.length - m, evalAt };
+}
+
+/** 多项式在 x0 附近最近的那个实根（二次用求根公式，一次直接除） */
+function scRootNear(coef, x0){
+  const c0 = coef[0], c1 = coef[1], c2 = coef.length > 2 ? coef[2] : 0;
+  if (Math.abs(c2) < 1e-14) return Math.abs(c1) > 0 ? -c0 / c1 : null;
+  const disc = c1 * c1 - 4 * c2 * c0;
+  if (disc < 0) return null;
+  const sq = Math.sqrt(disc);
+  const r1 = (-c1 - sq) / (2 * c2), r2 = (-c1 + sq) / (2 * c2);
+  return Math.abs(r1 - x0) <= Math.abs(r2 - x0) ? r1 : r2;
+}
+
+/**
+ * 交叉点（拟合口径）。
+ * 返回 { ok, p, sigma, win, deg, chi2dof, slope, why }；
+ * ok=false 时 why ∈ 'no-sigma' | 'no-cross' | 'bad-fit' | 'no-root' | 'sign' | 'out-of-range'。
+ */
+export function scCrossingFit(a, b, opt = {}){
+  const o = { ...SC_XFIT, ...opt };
+  const n = Math.min(a.length, b.length), P = [];
+  for (let i = 0; i < n; i++){
+    const A = a[i], B = b[i];
+    const sA = A.sigma === undefined ? 0 : A.sigma, sB = B.sigma === undefined ? 0 : B.sigma;
+    if (!(sA > 0) || !(sB > 0)) return { ok: false, why: 'no-sigma' };
+    P.push({ p: A.p, f: A.PL - B.PL, s: Math.hypot(sA, sB) });
+  }
+  /* 变号点：与旧口径同取向（取最高 p 的那个）。两帧完全相同的退化情形（f 恒 0）
+     不是「在 0 处交叉」，而是没有可估的交叉点 —— 直接判 no-cross，别让拟合去解 0=0。 */
+  if (P.every(z => z.f === 0)) return { ok: false, why: 'no-cross' };
+  let ib = -1;
+  for (let i = 1; i < P.length; i++){
+    if (P[i - 1].f === 0){ ib = i - 1; continue; }
+    if (P[i - 1].f * P[i].f < 0) ib = i;
+  }
+  if (ib < 0) return { ok: false, why: 'no-cross' };
+
+  let best = null, why = '';
+  const tries = P.length >= 5 ? o.win : o.winLin;
+  for (const w of tries){
+    if (w > P.length || w < 3) continue;
+    let lo = ib - Math.floor(w / 2), hi = lo + w;
+    if (lo < 0){ lo = 0; hi = w; }
+    if (hi > P.length){ hi = P.length; lo = hi - w; }
+    const seg = P.slice(lo, hi);
+    if (seg.some(z => !(z.s > 0) || !Number.isFinite(z.f))) continue;
+    const deg = seg.length >= 5 ? 2 : 1;
+    const fit = scWls(seg.map(z => z.p), seg.map(z => z.f), seg.map(z => 1 / (z.s * z.s)), deg);
+    if (!fit || !(fit.dof > 0)) continue;
+    const chi2dof = fit.chi2 / fit.dof;
+    if (chi2dof > o.chiMax){ why = 'bad-fit'; continue; }
+    const x0 = scRootNear(fit.coef, P[ib].p);
+    if (x0 === null){ why = 'no-root'; continue; }
+    /* 根处斜率及其方差：slope = c1 + 2·c2·x0 */
+    const slope = fit.coef[1] + 2 * (fit.coef[2] || 0) * x0;
+    if (!(slope < 0)){ why = 'sign'; continue; }
+    /* 根的方差：把 c0 + c1·p + c2·p² 在根处对系数求偏导，g = [1, p*, p*²] */
+    const g = deg === 2 ? [1, x0, x0 * x0] : [1, x0];
+    let varp = 0;
+    for (let i2 = 0; i2 < g.length; i2++) for (let j2 = 0; j2 < g.length; j2++)
+      varp += (g[i2] / slope) * (g[j2] / slope) * fit.cov[i2][j2];
+    /* 斜率方差（g_slope = [0, 1, 2·x0]）：斜率不显著就不许报交叉点 */
+    const gs = deg === 2 ? [0, 1, 2 * x0] : [0, 1];
+    let varb = 0;
+    for (let i2 = 0; i2 < gs.length; i2++) for (let j2 = 0; j2 < gs.length; j2++)
+      varb += gs[i2] * gs[j2] * fit.cov[i2][j2];
+    if (!(Math.abs(slope) > o.slopeK * Math.sqrt(Math.max(varb, 0)))){ why = 'slope-ns'; continue; }
+    /* 拟合曲线必须在窗口内真的换边（左正右负），否则这个根可能是远处那一支 */
+    if (!(fit.evalAt(seg[0].p) > 0 && fit.evalAt(seg[seg.length - 1].p) < 0)){ why = 'no-reversal'; continue; }
+    const inRange = x0 >= P[0].p * 0.999 && x0 <= P[P.length - 1].p * 1.001;
+    if (!inRange){ why = 'out-of-range'; continue; }
+    const cand = {
+      ok: true, p: x0, win: w, deg, chi2dof, slope,
+      sigma: Math.sqrt(Math.max(varp, 0)) * o.safety * Math.sqrt(Math.max(1, chi2dof)),
+      why: 'ok',
+    };
+    if (!best || cand.sigma < best.sigma) best = cand;
+  }
+  return best || { ok: false, why: why || 'none' };
+}
+
+/** 扫描网格的每点独立种子（R132）：同一 seed 跑遍所有 p 会让整条曲线的 MC 误差正相关 */
+export const scGridSeed = (seed, d, i) =>
+  scMix32((Math.round(seed) * 2654435761 + Math.round(d) * 104729 + Math.round(i) * 40503) >>> 0);
 
 /** 领先幂次 α（P_L ~ C·p^α）：在最小两点上取对数斜率 */
 export function scLeadingPower(rows){

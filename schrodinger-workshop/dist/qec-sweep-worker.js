@@ -50,17 +50,6 @@ const QC_UNARY = {
   tdg: { label: 'T†', m: [C1, C0, C0, cx(Math.SQRT1_2, -Math.SQRT1_2)] },
 };
 
-/* 标准 U3(θ,φ,λ)：覆盖任意单比特酉门（忽略不可观测的整体相位）。 */
-function qcU3(theta = 0, phi = 0, lambda = 0){
-  const c = Math.cos(theta / 2), s = Math.sin(theta / 2);
-  return [
-    cx(c, 0),
-    cx(-Math.cos(lambda) * s, -Math.sin(lambda) * s),
-    cx(Math.cos(phi) * s, Math.sin(phi) * s),
-    cx(Math.cos(phi + lambda) * c, Math.sin(phi + lambda) * c),
-  ];
-}
-
 function qcRotation(op, theta){
   const c = Math.cos(theta / 2), s = Math.sin(theta / 2);
   if (op === 'rx') return [cx(c, 0), cx(0, -s), cx(0, -s), cx(c, 0)];
@@ -169,12 +158,6 @@ function qcApply(s, g){
   if (op === 'swap'){ applySwap(s, g.q1, g.q2); return s; }
   if (op === 'toffoli'){
     applyControlled(s, QC_UNARY.x.m, g.q3, [g.q1, g.q2]); return s;
-  }
-  if (op === 'u3'){
-    const m = qcU3(g.theta ?? 0, g.phi ?? 0, g.lambda ?? 0);
-    if (g.c != null) applyControlled(s, m, g.q, [g.c]);
-    else applyMatrix(s, m, g.q);
-    return s;
   }
   if (op === 'rx' || op === 'ry' || op === 'rz'){
     const m = qcRotation(op, g.theta ?? 0);
@@ -318,7 +301,7 @@ function qcExpect(s, xm, zm){
      CNOT(c,t)：X_c → X_c X_t（前向）；Z_t → Z_c Z_t（后向）；X_t、Z_c 不动。
      H(q)：X_q ↔ Z_q。测量：帧的 X_q 翻转 Z 读数（重置才清帧，本工程线路每个
      ancilla 只用一次，无需重置）。
-     x/y/z 门：就地 toggle。ry/rz/rx/phase/U3 在非零帧上出现即抛错（一般为非 Clifford，
+     x/y/z 门：就地 toggle。ry/rz/rx/phase 在非零帧上出现即抛错（非 Clifford，
      帧语义未定义——flagsynd 与 qec 的制备段都保证帧为零时才过旋转门）。 */
 function qcFrToggle(fr, q, t){
   const b = 1 << q;
@@ -340,7 +323,7 @@ function qcFrGate(fr, o){
     return;
   }
   if (op === 'x' || op === 'y' || op === 'z'){ qcFrToggle(fr, o.q, op); return; }
-  if (op === 'ry' || op === 'rz' || op === 'rx' || op === 'phase' || op === 'u3'){
+  if (op === 'ry' || op === 'rz' || op === 'rx' || op === 'phase'){
     if (fr.x || fr.z) throw new Error('frame: 非 Clifford 门在非零帧上出现 ' + op);
   }
 }
@@ -567,7 +550,6 @@ function qcInvertGates(gates){
   return gates.slice().reverse().map(g => {
     if (g.op === 'phase' || g.op === 'rx' || g.op === 'ry' || g.op === 'rz')
       return { ...g, theta: -(g.theta ?? 0) };
-    if (g.op === 'u3') return { ...g, theta: -(g.theta ?? 0), phi: -(g.lambda ?? 0), lambda: -(g.phi ?? 0) };
     return { ...g, op: dual[g.op] || g.op };
   });
 }
@@ -2003,9 +1985,6 @@ function qcnGateMatrix(g){
   if (op === 'cnot') return { m: QC_UNARY.x.m, q: g.t ?? g.q2, mask: 1 << (g.c ?? g.q1) };
   if (op === 'cz') return { m: QC_UNARY.z.m, q: g.t ?? g.q2, mask: 1 << (g.c ?? g.q1) };
   if (op === 'toffoli') return { m: QC_UNARY.x.m, q: g.q3, mask: (1 << g.q1) | (1 << g.q2) };
-  if (op === 'u3'){
-    return { m: qcU3(g.theta ?? 0, g.phi ?? 0, g.lambda ?? 0), q: g.q, mask: g.c != null ? (1 << g.c) : 0 };
-  }
   if (op === 'rx' || op === 'ry' || op === 'rz'){
     return { m: qcRotation(op, g.theta ?? 0), q: g.q, mask: g.c != null ? (1 << g.c) : 0 };
   }
@@ -3365,7 +3344,7 @@ function qecExecPhys(circ, opts = {}){
   const voted = synByStab.map(qecMajority);
   const trueMj = synTrueByStab.map(qecMajority);
   return {
-    syn, synVoted: voted, synTrue, synFrame, flips, fixQ, fixQs, pre, frAtFix, frAtEnd,
+    syn, synVoted: voted, synTrue, flips, fixQ, fixQs, pre, frAtFix, frAtEnd,
     bitErr: voted.map((v, i) => v ^ trueMj[i]),
     cosetFix: frameOK ? qecFrameCoset(circ.code, frAtFix, n) : null,
     cosetDec: dec.coset, clsDec: dec.cls,
@@ -3475,7 +3454,6 @@ function qecStream(cfg = {}){
   const ref = qecRef(circ);
   const rng = mulberry32(c.seed);
   let nTrials = 0;
-  let lastTrial = null;
   let nL = 0, nLdec = 0;
   /* R110：直方图宽度随码长走——byCount 0..n 个数据错、synCount 2^{n−1} 种
      表决后综合、byBitErr 0..n−1 个稳定子表决错位、byFlip 0..(n−1)·rd 个
@@ -3493,27 +3471,6 @@ function qecStream(cfg = {}){
   let flipSum = 0, bitErrSum = 0, jumpSum = 0, frameMissSum = 0, noFrame = 0;
   const faultHist = {};
   let faultSum = 0, synMiss = 0, randomMeas = 0, disagree = 0, disagreeBlind = 0, blind = 0;
-  function shotTrace(r, phys){
-    const out = [
-      { step: 'prepare', gate: 'Ry(θ)Rz(φ)' },
-      { step: 'encode', gate: 'CNOT×' + (n - 1) },
-    ];
-    if (c.code === 'phaseflip') out.push({ step: 'basis', gate: 'H×' + n });
-    if (phys){
-      out.push({ step: 'noise', errors: r.errors.slice() });
-      out.push({ step: 'gatenoise', faults: r.fired.slice() });
-      out.push({ step: 'syndrome', syn: r.syn.slice(), synVoted: r.synVoted.slice(),
-        synTrue: r.synTrue.slice(), flips: r.flips.slice(), bitErr: r.bitErr.slice() });
-    } else {
-      if (c.noise === 'gate') out.push({ step: 'gatenoise', faults: r.fired.slice() });
-      else out.push({ step: 'noise', errors: r.errors.slice() });
-      out.push({ step: 'syndrome', syn: r.syn.slice(), synVoted: r.synVoted.slice(), synFrame: (r.synFrame || []).slice() });
-    }
-    out.push({ step: 'correct', q: r.fixQ, qs: r.fixQs.slice() });
-    if (c.code === 'phaseflip') out.push({ step: 'basis', gate: 'H×' + n });
-    out.push({ step: 'decode', gate: 'CNOT×' + (n - 1) });
-    return out;
-  }
   function one(){
     if (phys){
       const r = qecExecPhys(circ, { rng, cfg: c });
@@ -3536,13 +3493,6 @@ function qecStream(cfg = {}){
       bitErrSum += ne;
       jumpSum += r.fired.length;
       synCount[r.synVoted.reduce((a, b) => a * 2 + b, 0)]++;
-      lastTrial = {
-        errors: r.errors.slice(), faults: r.fired.slice(), syn: r.syn.slice(), synVoted: r.synVoted.slice(),
-        synTrue: r.synTrue.slice(), synFrame: r.synFrame.slice(), flips: r.flips.slice(), bitErr: r.bitErr.slice(),
-        fixQ: r.fixQ, fixQs: r.fixQs.slice(), F: r.F, logicalError: r.logicalError, ok: !r.logicalError,
-        noise: 'phys', rd, n, cls: cl.cls, coset: cl.coset, clsDec: r.clsDec, cosetDec: r.cosetDec,
-        trace: shotTrace(r, true), frameOK: r.frameOK, p0: r.p0, p1: r.p1, state: r.state,
-      };
       nTrials++;
       return;
     }
@@ -3579,13 +3529,6 @@ function qecStream(cfg = {}){
       faultSum += nf;
     }
     synCount[r.synVoted.reduce((a, b) => a * 2 + b, 0)]++;
-    lastTrial = {
-      errors: r.errors.slice(), faults: r.fired.slice(), syn: r.syn.slice(), synVoted: r.synVoted.slice(),
-      synFrame: r.synFrame.slice(), fixQ: r.fixQ, fixQs: r.fixQs.slice(), F: r.F,
-      logicalError: r.logicalError, ok: !r.logicalError, noise: c.noise, spectrum: c.spectrum,
-      noisyPhase: c.noisyPhase, rd, n, cls: cl.cls, coset: cl.coset, clsDec: r.clsDec, cosetDec: r.cosetDec,
-      trace: shotTrace(r, false), p0: r.p0, p1: r.p1, state: r.state,
-    };
     nTrials++;
   }
   return {
@@ -3595,7 +3538,7 @@ function qecStream(cfg = {}){
     result(){
       const nn = Math.max(1, nTrials);   /* 防御 0 次 → 除 0；正常路径 n≥1 */
       return {
-        p: c.p, code: c.code, trials: nTrials, PL: nL / nn, PLdec: nLdec / nn, lastTrial,
+        p: c.p, code: c.code, trials: nTrials, PL: nL / nn, PLdec: nLdec / nn,
         /* PLexact：i.i.d. 模式 = 解析 Σ_{w>t}C(n,w)p^w(1−p)^{n−w}；gate / phys
            模式 = DP-over-frames 精确值（phys 且 γ/λ>0 时返回 NaN——非 Pauli
            通道无精确解，诚实标注） */

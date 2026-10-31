@@ -5,18 +5,74 @@ const M = require('../model.js');
 test('each sorting trace finishes in ascending order and preserves the input', () => {
   const cases = [[], [1], [5, 2, 5, 1, 3, 1], [5, 4, 3, 2, 1], [1, 2, 3, 4]];
   for (let seed = 1; seed <= 20; seed++) cases.push(M.shuffledValues(12, seed));
-  for (const algorithm of ['bubble', 'selection', 'insertion']) for (const source of cases) {
+  for (const algorithm of ['bubble', 'selection', 'insertion', 'merge']) for (const source of cases) {
     const original = source.slice(), trace = M.sortTrace(source, algorithm), result = trace.at(-1);
     assert.deepEqual(source, original, `${algorithm} mutated the input`);
     assert.deepEqual(result.values, original.slice().sort((a, b) => a - b), algorithm);
     assert.equal(result.done, true);
-    assert.ok(result.comparisons >= 0 && result.swaps >= 0);
+    assert.ok(result.comparisons >= 0 && result.swaps >= 0 && result.writes >= 0);
     for (let i = 1; i < trace.length; i++) {
       assert.ok(trace[i].comparisons >= trace[i - 1].comparisons);
       assert.ok(trace[i].swaps >= trace[i - 1].swaps);
+      assert.ok(trace[i].writes >= trace[i - 1].writes);
+      assert.deepEqual(trace[i].values.slice().sort((a, b) => a - b), original.slice().sort((a, b) => a - b));
     }
+    if (algorithm !== 'merge') assert.equal(result.writes, result.swaps * 2);
   }
   assert.throws(() => M.sortTrace([1], 'bogus'));
+});
+
+test('merge sort exposes independent buffer snapshots and counts copies to the main array', () => {
+  const input = [4, 1, 3, 2], trace = M.sortTrace(input, 'merge'), final = trace.at(-1);
+  assert.deepEqual(final.values, [1, 2, 3, 4]);
+  assert.equal(final.comparisons, 5);
+  assert.equal(final.writes, 8);
+  assert.equal(final.swaps, 0);
+  assert.ok(trace.some(step => step.phase === 'split'));
+  const buffered = trace.filter(step => step.phase === 'buffer' && step.range[0] === 0 && step.range[1] === 3);
+  assert.deepEqual(buffered.map(step => step.buffer), [[1], [1, 2], [1, 2, 3], [1, 2, 3, 4]]);
+  assert.deepEqual(trace.find(step => step.phase === 'merge' && step.range[0] === 0 && step.range[1] === 3).values, [1, 2, 3, 4]);
+  buffered[0].buffer.push(99);
+  assert.deepEqual(buffered[1].buffer, [1, 2]);
+  assert.deepEqual(input, [4, 1, 3, 2]);
+});
+
+test('merge sort has bounded comparisons and expected main-array writes for powers of two', () => {
+  for (const n of [2, 4, 8, 16, 32]) {
+    const input = Array.from({ length: n }, (_, i) => n - i);
+    const result = M.sortTrace(input, 'merge').at(-1);
+    assert.equal(result.writes, n * Math.log2(n));
+    assert.ok(result.comparisons <= n * Math.log2(n) - n + 1);
+    assert.deepEqual(result.values, input.slice().sort((a, b) => a - b));
+  }
+});
+
+test('sorting comparison uses the same untouched input and reports trace totals', () => {
+  const input = [4, 1, 3, 2], original = input.slice();
+  const results = M.compareSorts(input);
+  assert.deepEqual(results.map(row => row.algorithm), ['bubble', 'selection', 'insertion', 'merge']);
+  for (const row of results) {
+    const final = M.sortTrace(input, row.algorithm).at(-1);
+    assert.deepEqual(row, { algorithm: row.algorithm, comparisons: final.comparisons, writes: final.writes, swaps: final.swaps });
+  }
+  assert.deepEqual(input, original);
+  assert.deepEqual(M.compareSorts([]).map(row => [row.comparisons, row.writes]), [[0, 0], [0, 0], [0, 0], [0, 0]]);
+});
+
+test('summary-only sorting comparisons match full traces for varied inputs', () => {
+  const cases = [[], [7], [1, 1, 1, 1], [5, 4, 3, 2, 1], [1, 2, 3, 4, 5]];
+  for (let seed = 0; seed < 30; seed++) {
+    const random = M.seededRandom(seed);
+    cases.push(Array.from({ length: seed % 21 }, () => Math.floor(random() * 7)));
+  }
+  for (const input of cases) {
+    const original = input.slice();
+    for (const row of M.compareSorts(input)) {
+      const last = M.sortTrace(input, row.algorithm).at(-1);
+      assert.deepEqual(row, { algorithm: row.algorithm, comparisons: last.comparisons, writes: last.writes, swaps: last.swaps });
+    }
+    assert.deepEqual(input, original);
+  }
 });
 
 test('bubble sort exits early on already sorted input', () => {
@@ -44,6 +100,86 @@ test('breadth-first search returns a valid shortest route and DFS returns a vali
   assert.equal(blocked.done, true);
   assert.equal(blocked.found, false);
   assert.deepEqual(blocked.path, []);
+});
+
+test('A* matches BFS shortest paths on varied grids and reports accurate priorities', () => {
+  const { cols, rows, start, goal } = M.GRID;
+  let reachable = 0;
+  for (let seed = 0; seed < 100; seed++) {
+    const random = M.seededRandom(seed);
+    const walls = Array.from({ length: cols * rows }, (_, i) => i)
+      .filter(i => i !== start && i !== goal && random() < .3);
+    const bfs = M.pathTrace(cols, rows, walls, start, goal, 'bfs').at(-1);
+    const trace = M.pathTrace(cols, rows, walls, start, goal, 'astar'), result = trace.at(-1);
+    assert.equal(result.found, bfs.found, `reachability at seed ${seed}`);
+    if (result.found) {
+      reachable++;
+      assert.equal(result.path.length, bfs.path.length, `shortest path at seed ${seed}`);
+      assert.equal(result.path[0], start);
+      assert.equal(result.path.at(-1), goal);
+      assert.equal(result.scores.g, result.path.length - 1);
+      assert.equal(result.scores.h, 0);
+      for (let i = 1; i < result.path.length; i++) {
+        const a = result.path[i - 1], b = result.path[i];
+        assert.equal(Math.abs(a % cols - b % cols) + Math.abs(Math.floor(a / cols) - Math.floor(b / cols)), 1);
+        assert.ok(!walls.includes(b));
+      }
+    }
+    assert.equal(new Set(result.visited).size, result.visited.length);
+    for (const step of trace) {
+      assert.equal(new Set(step.frontier).size, step.frontier.length);
+      assert.ok(step.frontier.every(cell => !walls.includes(cell) && !step.visited.includes(cell)));
+    }
+    for (const step of trace.filter(step => step.current !== null)) {
+      const distance = Math.abs(step.current % cols - goal % cols) + Math.abs(Math.floor(step.current / cols) - Math.floor(goal / cols));
+      assert.equal(step.scores.h, distance);
+      assert.equal(step.scores.f, step.scores.g + step.scores.h);
+      if (seed < 5) {
+        const shortestToCell = M.pathTrace(cols, rows, walls, start, step.current, 'bfs').at(-1);
+        assert.equal(step.scores.g, shortestToCell.path.length - 1);
+      }
+    }
+  }
+  assert.ok(reachable > 0 && reachable < 100, 'examples include reachable and unreachable grids');
+  const clear = M.pathTrace(cols, rows, [], start, goal, 'astar');
+  assert.deepEqual(clear.filter(step => step.current !== null).map(step => step.current), Array.from({ length: 10 }, (_, i) => start + i));
+  clear[1].scores.g = -1;
+  assert.equal(clear[2].scores.g, 1); // Snapshots do not share score objects.
+  const same = M.pathTrace(3, 3, [], 4, 4, 'astar').at(-1);
+  assert.deepEqual(same.path, [4]);
+  assert.deepEqual(same.scores, { g: 0, h: 0, f: 0 });
+  assert.equal(M.pathTrace(3, 3, [1, 3], 0, 8, 'astar').at(-1).found, false);
+});
+
+test('path comparison shares walls and reports real trace totals, including no route', () => {
+  for (const walls of [[], [1, 3], [4]]) {
+    const original = walls.slice(), results = M.comparePaths(3, 3, walls, 0, 8);
+    assert.deepEqual(results.map(row => row.algorithm), ['bfs', 'dfs', 'astar']);
+    for (const row of results) {
+      const last = M.pathTrace(3, 3, walls, 0, 8, row.algorithm).at(-1);
+      assert.deepEqual(row, { algorithm: row.algorithm, visited: last.visited.length, found: last.found, length: last.found ? last.path.length - 1 : null });
+    }
+    assert.deepEqual(walls, original);
+  }
+  const iterableWalls = (function* () { yield 1; yield 3; })();
+  assert.ok(M.comparePaths(3, 3, iterableWalls, 0, 8).every(row => !row.found));
+  assert.throws(() => M.pathTrace(3, 3, [], 0, 8, 'unknown'));
+});
+
+test('summary-only path comparisons match full traces on varied grids', () => {
+  const { cols, rows, start, goal } = M.GRID;
+  for (let seed = 0; seed < 40; seed++) {
+    const random = M.seededRandom(seed);
+    const walls = Array.from({ length: cols * rows }, (_, i) => i)
+      .filter(i => i !== start && i !== goal && random() < .32);
+    for (const row of M.comparePaths(cols, rows, walls, start, goal)) {
+      const last = M.pathTrace(cols, rows, walls, start, goal, row.algorithm).at(-1);
+      assert.deepEqual(row, { algorithm: row.algorithm, visited: last.visited.length, found: last.found, length: last.found ? last.path.length - 1 : null });
+    }
+  }
+  for (const row of M.comparePaths(3, 3, [], 4, 4)) {
+    assert.deepEqual(row, { algorithm: row.algorithm, visited: 1, found: true, length: 0 });
+  }
 });
 
 test('generated walls leave the start and goal connected', () => {

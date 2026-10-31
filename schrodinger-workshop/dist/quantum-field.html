@@ -3316,7 +3316,6 @@ const NAV = [
   ['./qcircuit.html', '线路 ⧉'],
   ['./noise.html', '噪声 ◍'],
   ['./qec.html', '纠错 ◈'],
-  ['./spin.html', '自旋链 ⇅'],
 ].filter(Boolean);
 
 /** 主页顶栏各页的 title 工具提示（与 NAV 同序；缺省回退为标签文案） */
@@ -3327,7 +3326,6 @@ const NAV_TITLES = {
   './qcircuit.html': '小规模量子线路：Bell / GHZ / QFT / Grover（R75）',
   './noise.html': '开放量子系统：T₁ 弛豫 / T₂ 退相位 / 纠缠猝死（R77）',
   './qec.html': '量子纠错 hub：重复码 / Shor 9 / 门噪声 / Flag / 多轮 / 循环 / 码族 / 表面码（R78–R85、R98 整合、R128 表面码）',
-  './spin.html': '海森堡自旋链：XXZ 各向异性 / 局域场 / 淬变 / 临界纠缠（R144）',
 };
 
 /** 生成子页顶栏导航 HTML；cur = 当前页 href（打 cur 高亮，自链也在——与 flag/rounds/cycle 一致）。

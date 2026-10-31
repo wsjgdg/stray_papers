@@ -484,7 +484,6 @@ const NAV = [
   ['./qcircuit.html', '线路 ⧉'],
   ['./noise.html', '噪声 ◍'],
   ['./qec.html', '纠错 ◈'],
-  ['./spin.html', '自旋链 ⇅'],
 ].filter(Boolean);
 
 /** 主页顶栏各页的 title 工具提示（与 NAV 同序；缺省回退为标签文案） */
@@ -495,7 +494,6 @@ const NAV_TITLES = {
   './qcircuit.html': '小规模量子线路：Bell / GHZ / QFT / Grover（R75）',
   './noise.html': '开放量子系统：T₁ 弛豫 / T₂ 退相位 / 纠缠猝死（R77）',
   './qec.html': '量子纠错 hub：重复码 / Shor 9 / 门噪声 / Flag / 多轮 / 循环 / 码族 / 表面码（R78–R85、R98 整合、R128 表面码）',
-  './spin.html': '海森堡自旋链：XXZ 各向异性 / 局域场 / 淬变 / 临界纠缠（R144）',
 };
 
 /** 生成子页顶栏导航 HTML；cur = 当前页 href（打 cur 高亮，自链也在——与 flag/rounds/cycle 一致）。
@@ -555,17 +553,6 @@ const QC_UNARY = {
   t: { label: 'T', m: [C1, C0, C0, cx(Math.SQRT1_2, Math.SQRT1_2)] },
   tdg: { label: 'T†', m: [C1, C0, C0, cx(Math.SQRT1_2, -Math.SQRT1_2)] },
 };
-
-/* 标准 U3(θ,φ,λ)：覆盖任意单比特酉门（忽略不可观测的整体相位）。 */
-function qcU3(theta = 0, phi = 0, lambda = 0){
-  const c = Math.cos(theta / 2), s = Math.sin(theta / 2);
-  return [
-    cx(c, 0),
-    cx(-Math.cos(lambda) * s, -Math.sin(lambda) * s),
-    cx(Math.cos(phi) * s, Math.sin(phi) * s),
-    cx(Math.cos(phi + lambda) * c, Math.sin(phi + lambda) * c),
-  ];
-}
 
 function qcRotation(op, theta){
   const c = Math.cos(theta / 2), s = Math.sin(theta / 2);
@@ -675,12 +662,6 @@ function qcApply(s, g){
   if (op === 'swap'){ applySwap(s, g.q1, g.q2); return s; }
   if (op === 'toffoli'){
     applyControlled(s, QC_UNARY.x.m, g.q3, [g.q1, g.q2]); return s;
-  }
-  if (op === 'u3'){
-    const m = qcU3(g.theta ?? 0, g.phi ?? 0, g.lambda ?? 0);
-    if (g.c != null) applyControlled(s, m, g.q, [g.c]);
-    else applyMatrix(s, m, g.q);
-    return s;
   }
   if (op === 'rx' || op === 'ry' || op === 'rz'){
     const m = qcRotation(op, g.theta ?? 0);
@@ -824,7 +805,7 @@ function qcExpect(s, xm, zm){
      CNOT(c,t)：X_c → X_c X_t（前向）；Z_t → Z_c Z_t（后向）；X_t、Z_c 不动。
      H(q)：X_q ↔ Z_q。测量：帧的 X_q 翻转 Z 读数（重置才清帧，本工程线路每个
      ancilla 只用一次，无需重置）。
-     x/y/z 门：就地 toggle。ry/rz/rx/phase/U3 在非零帧上出现即抛错（一般为非 Clifford，
+     x/y/z 门：就地 toggle。ry/rz/rx/phase 在非零帧上出现即抛错（非 Clifford，
      帧语义未定义——flagsynd 与 qec 的制备段都保证帧为零时才过旋转门）。 */
 function qcFrToggle(fr, q, t){
   const b = 1 << q;
@@ -846,7 +827,7 @@ function qcFrGate(fr, o){
     return;
   }
   if (op === 'x' || op === 'y' || op === 'z'){ qcFrToggle(fr, o.q, op); return; }
-  if (op === 'ry' || op === 'rz' || op === 'rx' || op === 'phase' || op === 'u3'){
+  if (op === 'ry' || op === 'rz' || op === 'rx' || op === 'phase'){
     if (fr.x || fr.z) throw new Error('frame: 非 Clifford 门在非零帧上出现 ' + op);
   }
 }
@@ -1073,7 +1054,6 @@ function qcInvertGates(gates){
   return gates.slice().reverse().map(g => {
     if (g.op === 'phase' || g.op === 'rx' || g.op === 'ry' || g.op === 'rz')
       return { ...g, theta: -(g.theta ?? 0) };
-    if (g.op === 'u3') return { ...g, theta: -(g.theta ?? 0), phi: -(g.lambda ?? 0), lambda: -(g.phi ?? 0) };
     return { ...g, op: dual[g.op] || g.op };
   });
 }
@@ -1833,9 +1813,9 @@ function trajBloch(s, q){
 /* ============================================================================
  * live.js（R98 P2 新建）— 共享 LiveDriver：一次性 MC 批 → rAF 分帧演出
  *
- * 背景（用户指令「剩下的能不能都做成实时沙盒类？」）：QEC hub 八个模式的统计
+ * 背景（用户指令「剩下的能不能都做成实时沙盒类？」）：QEC hub 七个模式的统计
  * 原先都是「参数变 → 同步跑完整批 → 画」（拖动滑块时整页卡顿几百 ms）。P2 把
- * 物理层累加器（qecStream / shorStream / gnStream / fsStream / cfStream / scStream / scSpaceStream）接到
+ * 物理层累加器（qecStream / shorStream / gnStream / fsStream / cfStream）接到
  * 这个共享播放器上：播放时每帧只跑一段试验，统计量随帧增长（trials 计数、
  * P_L、直方图、结局分解全部在动），20fps 节制；跑满目标批自动停；暂停即冻结
  * （累加器保留，再播接着演）；参数变化重置累加器（播放中换新的**立即演一帧**
@@ -2010,14 +1990,6 @@ const NZ_CSS = `
   #nzPanel button:hover{border-color:rgba(103,232,249,.45);color:var(--cyan)}
   #nzPanel button.on{background:rgba(103,232,249,.18);border-color:var(--cyan);color:var(--cyan)}
   #nzHud{top:74px;right:14px;padding:11px 13px;z-index:10;min-width:214px;font-family:var(--mono)}
-  #nzProbeReadouts{margin-top:5px}
-  .nzProbeLabel{font-size:9px;color:var(--dim);letter-spacing:.04em;margin:5px 0 2px}
-  .nzSeedNote{font:9px/1.4 var(--mono);color:var(--dim);margin:-2px 0 5px}
-  .nzProbe{padding:5px 6px;border:1px solid var(--line);border-radius:5px;color:var(--txt);
-    font:9px/1.5 var(--mono);white-space:pre-line;overflow-wrap:anywhere;min-height:26px;transition:border-color .15s,background .15s}
-  .nzProbe[data-active="true"]{border-color:rgba(103,232,249,.48);background:rgba(103,232,249,.055)}
-  #nzRho.nzProbeCanvas,#nzCurve.nzProbeCanvas{cursor:crosshair;touch-action:manipulation}
-  #nzRho.nzProbeCanvas:focus-visible,#nzCurve.nzProbeCanvas:focus-visible{outline:2px solid rgba(103,232,249,.6);outline-offset:2px}
   #nzHud .hrow{display:flex;justify-content:space-between;gap:12px;font-size:11.5px;padding:2.5px 0}
   #nzHud .hrow span:first-child{color:var(--dim)}
   #nzHud .hrow span:last-child{color:var(--txt)}
@@ -2028,9 +2000,6 @@ const NZ_CSS = `
   #nzBloch{grid-row:1 / span 2}
   #nzBloch,#nzRho,#nzCurve{width:100%;height:100%;border:1px solid var(--line);border-radius:10px;
     background:rgba(4,8,16,.55);display:block}
-  #nzBloch.nzOrbit{cursor:grab;touch-action:none}
-  #nzBloch.nzOrbit:active{cursor:grabbing}
-  #nzBloch.nzOrbit:focus-visible{outline:2px solid rgba(103,232,249,.65);outline-offset:2px}
   #nzHint{left:14px;bottom:14px;z-index:10;padding:9px 13px;max-width:322px;font-size:10.5px;
     color:var(--dim);line-height:1.6;max-height:212px;overflow-y:auto;
     scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
@@ -2081,11 +2050,6 @@ class NoiseApp {
     this.ens = null;
     this.live = null;
     this._msg = '';
-    this._blochDrag = null;
-    this._blochHover = null;
-    this._rhoHoverCell = null; this._rhoPinnedCell = null;
-    this._curveHoverIndex = null; this._curvePinnedIndex = null;
-    this._probeN = this.state.n;
   }
 
   q(sel){ return this.container.querySelector(sel) || document.querySelector(sel); }
@@ -2151,8 +2115,6 @@ class NoiseApp {
             <button id="nzTrajOn">显示</button>
             <button id="nzReseed">换种子</button>
           </div>
-          <div class="row"><label>种子</label><output id="nzSeedO" aria-live="polite">—</output></div>
-          <div class="nzSeedNote">换种子只重抽轨迹样本；精确态不变。</div>
           <div class="row"><label>条数</label><input type="range" id="nzNtraj" min="40" max="800" step="20"><output id="nzNtrajO">—</output></div>
         </div>
       </aside>
@@ -2162,14 +2124,6 @@ class NoiseApp {
         <div class="hrow"><span>纯度 tr ρ²</span><span id="hPur">—</span></div>
         <div class="hrow"><span>Bloch 长度 r</span><span id="hR">—</span></div>
         <div class="hrow"><span>演化时刻 t</span><span id="hT">—</span></div>
-        <div id="nzProbeReadouts">
-          <div class="nzProbeLabel">Bloch 球指针 · hover 读取</div>
-          <div id="nzBlochProbe" class="nzProbe" aria-live="polite">悬停球面读取方向坐标与当前量子态 Bloch 向量。</div>
-          <div class="nzProbeLabel">密度矩阵单元 · hover / click 固定</div>
-          <div id="nzRhoProbe" class="nzProbe" aria-live="polite">悬停热图单元查看；点击固定，方向键浏览，Enter 切换固定。</div>
-          <div class="nzProbeLabel">演化曲线采样 · hover / click 固定</div>
-          <div id="nzCurveProbe" class="nzProbe" aria-live="polite">悬停曲线取样；点击固定，左右键逐点浏览，Enter 切换固定。</div>
-        </div>
         <hr>
         <div class="hrow"><span>⟨σx⟩</span><span id="hX">—</span></div>
         <div class="hrow"><span>⟨σy⟩</span><span id="hY">—</span></div>
@@ -2184,9 +2138,9 @@ class NoiseApp {
       </aside>
 
       <div id="nzStage" class="qstage">
-        <canvas id="nzBloch" tabindex="0" role="img" aria-label="Bloch 球；拖动旋转，聚焦后按 R 复位"></canvas>
-        <canvas id="nzRho" tabindex="0" role="img" aria-label="密度矩阵热图；悬停查看单元，点击固定，方向键浏览，Enter 切换固定"></canvas>
-        <canvas id="nzCurve" tabindex="0" role="img" aria-label="量子态随时间演化曲线；悬停采样，点击固定，方向键浏览，Enter 切换固定"></canvas>
+        <canvas id="nzBloch"></canvas>
+        <canvas id="nzRho"></canvas>
+        <canvas id="nzCurve"></canvas>
       </div>
 
       <div id="nzHint" class="panel qhint"><b>—</b><span></span></div>
@@ -2199,93 +2153,6 @@ class NoiseApp {
       curve: this.q('#nzCurve'),
     };
     for (const k of Object.keys(this.cv)) this.cv[k].__key = k;
-
-    /* Bloch 球的取景交互只改投影角度，不触碰密度矩阵或演化数据。 */
-    const blochCanvas = this.cv.bloch;
-    this.on(blochCanvas, 'pointerdown', e => {
-      if (this.state.n !== 1 || e.button !== 0) return;
-      this._blochDrag = { pointerId: e.pointerId, x: e.clientX, y: e.clientY, lastX: e.clientX, lastY: e.clientY, moved: false };
-      try { blochCanvas.focus({ preventScroll: true }); } catch (_){ /* 老浏览器 */ }
-      try { blochCanvas.setPointerCapture(e.pointerId); } catch (_){ /* jsdom/旧浏览器无 pointer capture */ }
-      e.preventDefault();
-    });
-    this.on(blochCanvas, 'pointermove', e => {
-      const drag = this._blochDrag;
-      if (drag && this.state.n === 1 && e.pointerId === drag.pointerId){
-        if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) >= 4) drag.moved = true;
-        if (drag.moved){
-          blochCanvas.style.cursor = 'grabbing';
-          const dx = e.clientX - drag.lastX, dy = e.clientY - drag.lastY;
-          drag.lastX = e.clientX; drag.lastY = e.clientY;
-          this.orbitBloch(dx, dy);
-          this.updateBlochProbe(e, false);
-          this.drawBloch();
-          e.preventDefault();
-          return;
-        }
-      }
-      this.updateBlochProbe(e);
-    });
-    this.on(blochCanvas, 'pointerleave', () => {
-      if (this._blochDrag || !this._blochHover) return;
-      this._blochHover = null; this.renderProbeReadouts(); this.drawBloch();
-    });
-    const finishBlochDrag = e => {
-      const drag = this._blochDrag;
-      if (!drag || (e?.pointerId != null && e.pointerId !== drag.pointerId)) return;
-      this._blochDrag = null;
-      try { if (blochCanvas.hasPointerCapture?.(drag.pointerId)) blochCanvas.releasePointerCapture(drag.pointerId); } catch (_){ /* pointer capture 已由浏览器释放 */ }
-      this.syncBlochControls();
-      if (this.state.n === 1 && Number.isFinite(e?.clientX) && Number.isFinite(e?.clientY)){ this.updateBlochProbe(e, false); this.drawBloch(); }
-    };
-    this.on(blochCanvas, 'pointerup', finishBlochDrag);
-    this.on(blochCanvas, 'pointercancel', finishBlochDrag);
-    this.on(blochCanvas, 'lostpointercapture', finishBlochDrag);
-    this.on(blochCanvas, 'keydown', e => {
-      if (this.state.n !== 1 || e.key?.toLowerCase() !== 'r') return;
-      this.resetBlochCamera(); e.preventDefault();
-    });
-
-    const rhoCanvas = this.cv.rho, curveCanvas = this.cv.curve;
-    this.on(rhoCanvas, 'pointerdown', e => { try { rhoCanvas.focus({ preventScroll: true }); } catch (_){ /* 老浏览器 */ } });
-    const updateRhoHover = e => {
-      const cell = this.rhoCellFromEvent(e);
-      if (this.sameRhoCell(cell, this._rhoHoverCell)) return;
-      this._rhoHoverCell = cell; this.renderProbeReadouts(); this.drawRho();
-    };
-    this.on(rhoCanvas, 'pointermove', updateRhoHover);
-    this.on(rhoCanvas, 'pointerenter', updateRhoHover);
-    this.on(rhoCanvas, 'pointerleave', () => {
-      if (this._rhoHoverCell == null) return;
-      this._rhoHoverCell = null; this.renderProbeReadouts(); this.drawRho();
-    });
-    this.on(rhoCanvas, 'click', e => {
-      const cell = this.rhoCellFromEvent(e); if (!cell) return;
-      this._rhoHoverCell = cell;
-      this._rhoPinnedCell = this.sameRhoCell(cell, this._rhoPinnedCell) ? null : { ...cell };
-      this.renderProbeReadouts(); this.drawRho();
-    });
-    this.on(rhoCanvas, 'keydown', e => this.handleRhoProbeKey(e));
-
-    this.on(curveCanvas, 'pointerdown', e => { try { curveCanvas.focus({ preventScroll: true }); } catch (_){ /* 老浏览器 */ } });
-    const updateCurveHover = e => {
-      const index = this.curveIndexFromEvent(e);
-      if (index === this._curveHoverIndex) return;
-      this._curveHoverIndex = index; this.renderProbeReadouts(); this.drawCurve();
-    };
-    this.on(curveCanvas, 'pointermove', updateCurveHover);
-    this.on(curveCanvas, 'pointerenter', updateCurveHover);
-    this.on(curveCanvas, 'pointerleave', () => {
-      if (this._curveHoverIndex == null) return;
-      this._curveHoverIndex = null; this.renderProbeReadouts(); this.drawCurve();
-    });
-    this.on(curveCanvas, 'click', e => {
-      const index = this.curveIndexFromEvent(e); if (index == null) return;
-      this._curveHoverIndex = index;
-      this._curvePinnedIndex = index === this._curvePinnedIndex ? null : index;
-      this.renderProbeReadouts(); this.drawCurve();
-    });
-    this.on(curveCanvas, 'keydown', e => this.handleCurveProbeKey(e));
 
     /* 事件 */
     for (const b of this.container.querySelectorAll('#nzPanel button[data-p]')){
@@ -2301,11 +2168,7 @@ class NoiseApp {
     this.on(this.q('#nzTheta'), 'input', e => { this.state.theta = parseFloat(e.target.value); this.recompute(); this.syncPanel(); });
     this.on(this.q('#nzPhi'), 'input', e => { this.state.phi = parseFloat(e.target.value); this.recompute(); this.syncPanel(); });
     this.on(this.q('#nzTrajOn'), 'click', () => { this.state.showTraj = !this.state.showTraj; this.recompute(); this.syncPanel(); });
-    this.on(this.q('#nzReseed'), 'click', () => {
-      const mod = 2147483647, seed = Number.isFinite(this.state.seed) ? Math.trunc(this.state.seed) : 0;
-      this.state.seed = ((seed % mod) + mod + 1) % mod;
-      this.recompute(); this.syncPanel();
-    });
+    this.on(this.q('#nzReseed'), 'click', () => { this.state.seed = (this.state.seed * 1103515245 + 12345) % 2147483647; this.recompute(); });
     this.on(this.q('#nzNtraj'), 'input', e => { this.state.nTraj = parseInt(e.target.value, 10); this.recompute(); this.syncPanel(); });
 
     /* ---- R98 P3 实时沙盒：时间演化分帧演出（与 QEC hub 共享 LiveDriver） ---- */
@@ -2366,207 +2229,8 @@ class NoiseApp {
   scanOnce(){ return this.scan; }
   ensemble(){ return this.ens; }
 
-  rhoCellFromEvent(e){
-    const c = this.cv?.rho, rho = this.scan?.rho;
-    if (!c || !rho || !c.width || !c.height) return null;
-    const dpr = c.width / (c.clientWidth || c.width), rect = c.getBoundingClientRect();
-    const px = (e.clientX - (rect.width ? rect.left : 0)) * c.width / (rect.width || c.clientWidth || c.width);
-    const py = (e.clientY - (rect.height ? rect.top : 0)) * c.height / (rect.height || c.clientHeight || c.height);
-    const padL = 26 * dpr, padT = 26 * dpr, padR = 10 * dpr, padB = 16 * dpr;
-    const size = Math.min(c.width - padL - padR, c.height - padT - padB), cell = size / rho.dim;
-    const j = Math.floor((px - padL) / cell), i = Math.floor((py - padT) / cell);
-    return i >= 0 && i < rho.dim && j >= 0 && j < rho.dim ? { i, j } : null;
-  }
-
-  sameRhoCell(a, b){ return a === b || (!!a && !!b && a.i === b.i && a.j === b.j); }
-
-  curveIndexFromEvent(e){
-    const c = this.cv?.curve, sc = this.scan;
-    if (!c || !sc?.t?.length || !c.width || !c.height) return null;
-    const dpr = c.width / (c.clientWidth || c.width), rect = c.getBoundingClientRect();
-    const px = (e.clientX - (rect.width ? rect.left : 0)) * c.width / (rect.width || c.clientWidth || c.width);
-    const py = (e.clientY - (rect.height ? rect.top : 0)) * c.height / (rect.height || c.clientHeight || c.height);
-    const x0 = 34 * dpr, x1 = c.width - 10 * dpr, y0 = 24 * dpr, y1 = c.height - 22 * dpr;
-    if (px < x0 || px > x1 || py < y0 || py > y1) return null;
-    return Math.max(0, Math.min(sc.t.length - 1, Math.round((px - x0) / (x1 - x0) * (sc.t.length - 1))));
-  }
-
-  currentCurveProbeIndex(){
-    const n = this.scan?.t?.length || 0;
-    if (!n) return null;
-    const raw = this._curvePinnedIndex ?? this._curveHoverIndex;
-    return raw == null ? null : Math.max(0, Math.min(n - 1, raw | 0));
-  }
-
-  handleRhoProbeKey(e){
-    const dim = this.scan?.rho?.dim || 0;
-    if (!dim) return;
-    const key = e.key, current = this._rhoPinnedCell ?? this._rhoHoverCell ?? { i: 0, j: 0 };
-    let next = null;
-    if (key === 'ArrowLeft' || key === 'ArrowRight'){
-      const d = key === 'ArrowRight' ? 1 : -1;
-      next = { i: current.i, j: (current.j + d + dim) % dim };
-    } else if (key === 'ArrowUp' || key === 'ArrowDown'){
-      const d = key === 'ArrowDown' ? 1 : -1;
-      next = { i: (current.i + d + dim) % dim, j: current.j };
-    } else if (key === 'Enter'){
-      this._rhoHoverCell = { ...current };
-      this._rhoPinnedCell = this.sameRhoCell(current, this._rhoPinnedCell) ? null : { ...current };
-      this.renderProbeReadouts(); this.drawRho(); e.preventDefault(); return;
-    } else return;
-    const wasPinned = this._rhoPinnedCell != null;
-    this._rhoHoverCell = next;
-    if (wasPinned) this._rhoPinnedCell = { ...next };
-    this.renderProbeReadouts(); this.drawRho(); e.preventDefault();
-  }
-
-  handleCurveProbeKey(e){
-    const n = this.scan?.t?.length || 0;
-    if (!n) return;
-    const key = e.key, current = this.currentCurveProbeIndex() ?? 0;
-    let next = null;
-    if (key === 'ArrowLeft' || key === 'ArrowRight' || key === 'ArrowUp' || key === 'ArrowDown'){
-      const d = key === 'ArrowRight' || key === 'ArrowDown' ? 1 : -1;
-      const stride = key === 'ArrowUp' || key === 'ArrowDown' ? 10 : 1;
-      next = Math.max(0, Math.min(n - 1, current + d * stride));
-    } else if (key === 'Enter'){
-      this._curveHoverIndex = current;
-      this._curvePinnedIndex = this._curvePinnedIndex === current ? null : current;
-      this.renderProbeReadouts(); this.drawCurve(); e.preventDefault(); return;
-    } else return;
-    const wasPinned = this._curvePinnedIndex != null;
-    this._curveHoverIndex = next;
-    if (wasPinned) this._curvePinnedIndex = next;
-    this.renderProbeReadouts(); this.drawCurve(); e.preventDefault();
-  }
-
-  renderProbeReadouts(){
-    const blochEl = this.q('#nzBlochProbe'), rhoEl = this.q('#nzRhoProbe'), curveEl = this.q('#nzCurveProbe'), rho = this.scan?.rho, sc = this.scan;
-    if (blochEl){
-      blochEl.dataset.active = String(this.state.n === 1 && !!this._blochHover);
-      if (this.state.n !== 1){ blochEl.textContent = 'Bell 模式显示 Pauli 关联曲线；单比特 Bloch 球探针暂不可用。'; }
-      else if (!this._blochHover){ blochEl.textContent = '悬停球面读取方向坐标与当前量子态 Bloch 向量。'; }
-      else {
-        const k = Math.max(0, (sc?.t?.length || 1) - 1), v = [sc?.x?.[k] ?? 0, sc?.y?.[k] ?? 0, sc?.z?.[k] ?? 0];
-        const h = this._blochHover;
-        blochEl.textContent = `球面点 (${h.x.toFixed(3)}, ${h.y.toFixed(3)}, ${h.z.toFixed(3)})  θ ${h.theta.toFixed(3)}  φ ${h.phi.toFixed(3)} rad\n当前态 ⟨σ⟩ (${v[0].toFixed(4)}, ${v[1].toFixed(4)}, ${v[2].toFixed(4)})  |r| ${Math.hypot(...v).toFixed(4)}`;
-      }
-    }
-    const nCurve = sc?.t?.length || 0;
-    if (nCurve){
-      if (this._curvePinnedIndex != null) this._curvePinnedIndex = Math.max(0, Math.min(nCurve - 1, this._curvePinnedIndex | 0));
-      if (this._curveHoverIndex != null) this._curveHoverIndex = Math.max(0, Math.min(nCurve - 1, this._curveHoverIndex | 0));
-    }
-    if (rhoEl){
-      const cell = this._rhoPinnedCell ?? this._rhoHoverCell;
-      rhoEl.dataset.active = String(!!cell && !!rho);
-      if (!cell || !rho){ rhoEl.textContent = '悬停热图单元查看；点击固定，方向键浏览，Enter 切换固定。'; }
-      else {
-        const i = Math.max(0, Math.min(rho.dim - 1, cell.i)), j = Math.max(0, Math.min(rho.dim - 1, cell.j));
-        const k = i * rho.dim + j, re = rho.re[k], im = rho.im[k], mag = Math.hypot(re, im);
-        const bits = x => x.toString(2).padStart(this.state.n, '0');
-        const phase = i === j || mag < 1e-14 ? '—' : `${Math.atan2(im, re).toFixed(3)} rad`;
-        rhoEl.textContent = `${this._rhoPinnedCell ? '固定 ' : ''}ρ|${bits(i)}⟩⟨${bits(j)}|  Re ${re.toFixed(5)}  Im ${(im < 0 ? '−' : '+') + Math.abs(im).toFixed(5)}\n|ρᵢⱼ| ${mag.toFixed(5)}  arg ${phase}`;
-      }
-    }
-    if (curveEl){
-      const index = this.currentCurveProbeIndex();
-      curveEl.dataset.active = String(index != null && !!sc?.t?.length);
-      if (index == null || !sc?.t?.length){ curveEl.textContent = '悬停曲线取样；点击固定，左右键逐点浏览，Enter 切换固定。'; }
-      else {
-        const t = sc.t[index], fixed = this._curvePinnedIndex != null;
-        if (this.state.n === 2){
-          curveEl.textContent = `${fixed ? '固定 ' : ''}t=${t.toFixed(4)}  C 数值 ${nf(sc.C[index], 5)}  ·  解析 ${nf(sc.aC?.[index], 5)}`;
-        } else {
-          curveEl.textContent = `${fixed ? '固定 ' : ''}t=${t.toFixed(4)}\n⟨σx⟩ ${nf(sc.x[index], 4)}  解析 ${nf(sc.ax[index], 4)}\n⟨σy⟩ ${nf(sc.y[index], 4)}  解析 ${nf(sc.ay[index], 4)}\n⟨σz⟩ ${nf(sc.z[index], 4)}  解析 ${nf(sc.az[index], 4)}`;
-        }
-      }
-    }
-  }
-
-  syncProbeControls(){
-    if (this._probeN !== this.state.n){
-      this._rhoHoverCell = null; this._rhoPinnedCell = null;
-      this._curveHoverIndex = null; this._curvePinnedIndex = null;
-      this._probeN = this.state.n;
-    }
-    const rho = this.cv?.rho, curve = this.cv?.curve;
-    if (rho){
-      rho.classList.add('nzProbeCanvas'); rho.setAttribute('tabindex', '0');
-      rho.setAttribute('aria-label', `${this.state.n === 2 ? '4×4' : '2×2'} 密度矩阵热图；悬停查看单元，点击固定，方向键浏览，Enter 切换固定。`);
-      rho.title = '悬停查看矩阵元 Re / Im / 模长 / 相位；点击固定，方向键浏览。读数在右侧 HUD 顶部。';
-    }
-    if (curve){
-      curve.classList.add('nzProbeCanvas'); curve.setAttribute('tabindex', '0');
-      curve.setAttribute('aria-label', this.state.n === 2
-        ? 'Bell 纠缠 concurrence 随时间曲线；悬停查看数值与解析值，点击固定，方向键浏览，Enter 切换固定。'
-        : '单比特 Bloch 分量随时间曲线；悬停查看数值与解析值，点击固定，方向键浏览，Enter 切换固定。');
-      curve.title = '悬停读取最近采样点的数值与解析值；点击固定，方向键浏览。读数在右侧 HUD 顶部。'
-    }
-    this.renderProbeReadouts();
-  }
-
-  updateBlochProbe(e, redraw = true){
-    const c = this.cv?.bloch;
-    if (!c || this.state.n !== 1 || !c.width || !c.height){ this._blochHover = null; return; }
-    const rect = c.getBoundingClientRect();
-    const cssW = rect.width || c.clientWidth || c.width, cssH = rect.height || c.clientHeight || c.height;
-    const px = (e.clientX - (rect.width ? rect.left : 0)) * c.width / cssW;
-    const py = (e.clientY - (rect.height ? rect.top : 0)) * c.height / cssH;
-    const R = Math.min(c.width, c.height) * 0.40, sx = (px - c.width * 0.5) / R, sy = (c.height * 0.5 - py) / R;
-    const r2 = sx * sx + sy * sy;
-    if (r2 > 1){ this._blochHover = null; }
-    else {
-      const front = Math.sqrt(Math.max(0, 1 - r2)), ca = Math.cos(this.state.azim), sa = Math.sin(this.state.azim);
-      const ce = Math.cos(this.state.elev), se = Math.sin(this.state.elev);
-      const dep = -sy * se + front * ce, z = sy * ce + front * se;
-      const x = sx * ca - dep * sa, y = sx * sa + dep * ca;
-      this._blochHover = { px, py, clientX: e.clientX, clientY: e.clientY, x, y, z, theta: Math.acos(Math.max(-1, Math.min(1, z))), phi: Math.atan2(y, x) };
-    }
-    this.renderProbeReadouts();
-    if (redraw) this.drawBloch();
-  }
-
-  syncBlochControls(){
-
-    const c = this.cv?.bloch;
-    if (!c) return;
-    const orbit = this.state.n === 1;
-    if (!orbit){ this._blochHover = null; }
-    if (!orbit && this._blochDrag){
-      const id = this._blochDrag.pointerId;
-      this._blochDrag = null;
-      try { if (c.hasPointerCapture?.(id)) c.releasePointerCapture(id); } catch (_){ /* 已释放 */ }
-    }
-    c.classList.toggle('nzOrbit', orbit);
-    c.style.cursor = orbit ? (this._blochDrag?.moved ? 'grabbing' : 'grab') : 'default';
-    c.setAttribute('tabindex', orbit ? '0' : '-1');
-    const label = orbit
-      ? '单比特 Bloch 球；悬停读取球面方向与当前态矢量，拖动旋转视角，聚焦后按 R 复位。旋转不改变量子态。'
-      : 'Bell 态 Pauli 关联曲线；此视图没有可旋转的单比特 Bloch 球。';
-    c.setAttribute('aria-label', label);
-    c.title = orbit ? '悬停读取球面方向与量子态 Bloch 向量；拖动旋转，聚焦画布后按 R 复位。' : '当前显示 Bell 态 Pauli 关联，不是 Bloch 球视图。';
-  }
-
-  orbitBloch(dx, dy){
-    if (this.state.n !== 1) return { azim: this.state.azim, elev: this.state.elev };
-    this.state.azim += dx * 0.0075;
-    this.state.elev = Math.max(-1.4, Math.min(1.4, this.state.elev + dy * 0.0075));
-    if (this._blochHover) this.updateBlochProbe(this._blochHover, false);
-    this.drawBloch();
-    return { azim: this.state.azim, elev: this.state.elev };
-  }
-
-  resetBlochCamera(){
-    this.state.azim = -0.62; this.state.elev = 0.46;
-    if (this._blochHover) this.updateBlochProbe(this._blochHover, false);
-    this.drawBloch();
-    return { azim: this.state.azim, elev: this.state.elev };
-  }
-
   /* ---------- 面板同步 ---------- */
   syncPanel(){
-
     const s = this.state, q = sel => this.q(sel);
     for (const b of this.container.querySelectorAll('#nzPanel button[data-p]')) b.classList.toggle('on', b.dataset.p === s.preset);
     for (const b of this.container.querySelectorAll('#nzPanel button[data-k]')) b.classList.toggle('on', b.dataset.k === s.kind);
@@ -2582,10 +2246,7 @@ class NoiseApp {
     q('#nzTheta').value = s.theta; q('#nzThetaO').textContent = s.theta.toFixed(2);
     q('#nzPhi').value = s.phi; q('#nzPhiO').textContent = s.phi.toFixed(2);
     q('#nzNtraj').value = s.nTraj; q('#nzNtrajO').textContent = s.nTraj;
-    q('#nzSeedO').textContent = s.seed;
     q('#nzTrajOn').classList.toggle('on', s.showTraj);
-    this.syncBlochControls();
-    this.syncProbeControls();
   }
 
   applyPreset(name){
@@ -2643,7 +2304,6 @@ class NoiseApp {
     const jp = this.ens ? (this.ens.jumps + ' / ' + this.ens.nTraj) : '—';
     set('hJump', jp);
     set('hP', ex(nzStepParam(s.kind, s.tau, s.dt), 2));
-    this.renderProbeReadouts();
   }
 
   /* ---------- 尺寸 ---------- */
@@ -2665,133 +2325,127 @@ class NoiseApp {
   drawBloch(){
     const c = this.cv.bloch, sc = this.scan;
     if (!c || !c.width || !sc) return;
-    /* Bell 预设：q0 的边缘恒为 I/2，改画可直接测量的 Pauli 关联。 */
+    /* Bell 预设：q0 的边缘恒为 I/2（局域视角看不到任何信息），Bloch 球没有内容 ⟹
+       改画「可直接测量的」两比特 Pauli 关联。 */
     if (this.state.n === 2) return this.drawCorr();
     const g = c.getContext('2d');
-    const W = c.width, H = c.height, dpr = W / (c.clientWidth || W);
+    const W = c.width, H = c.height, dpr = W / c.clientWidth;
     g.clearRect(0, 0, W, H);
     const cx = W * 0.5, cy = H * 0.50, R = Math.min(W, H) * 0.40;
+
     const ca = Math.cos(this.state.azim), sa = Math.sin(this.state.azim);
     const ce = Math.cos(this.state.elev), se = Math.sin(this.state.elev);
-    const P3 = (x, y, z) => {
+    const P = (x, y, z) => {
       const p = project(x, y, z, ca, sa, ce, se);
-      return { x: cx + p.sx * R, y: cy - p.sy * R, depth: p.depth };
+      return [cx + p.sx * R, cy - p.sy * R];
     };
-    const P = (x, y, z) => { const p = P3(x, y, z); return [p.x, p.y]; };
 
-    /* 柔和体积光与投影阴影：仍是单位球，不改变物理数据。 */
-    g.fillStyle = 'rgba(0,0,0,.22)';
-    g.beginPath(); g.ellipse(cx + 5 * dpr, cy + R * 0.82, R * 0.72, R * 0.105, 0, 0, 6.2832); g.fill();
-    const sphere = g.createRadialGradient?.(cx - R * 0.30, cy - R * 0.36, R * 0.04, cx, cy, R * 1.08) || null;
-    if (sphere){
-      sphere.addColorStop(0, 'rgba(103,232,249,.17)');
-      sphere.addColorStop(.52, 'rgba(44,91,132,.13)');
-      sphere.addColorStop(1, 'rgba(7,14,28,.06)');
-    }
-    g.fillStyle = sphere || 'rgba(41,76,112,.13)';
-    g.beginPath(); g.arc(cx, cy, R, 0, 6.2832); g.fill();
-
-    /* 球网：背半球低对比、前半球清晰，不用虚线覆盖主体。 */
-    const ring = (fn, color = '103,232,249', width = 0.9) => {
-      const pts = [];
-      for (let i = 0; i < 128; i++) pts.push(P3(...fn(i / 128 * 6.2832)));
-      for (const front of [false, true]){
-        g.strokeStyle = `rgba(${color},${front ? .34 : .105})`; g.lineWidth = width * dpr; g.beginPath();
-        let active = false;
-        for (let i = 0; i < pts.length; i++){
-          const a = pts[i], b = pts[(i + 1) % pts.length];
-          if ((a.depth >= 0) === front && (b.depth >= 0) === front){
-            if (!active) g.moveTo(a.x, a.y);
-            g.lineTo(b.x, b.y); active = true;
-          } else active = false;
-        }
-        g.stroke();
-      }
-    };
-    for (const z of [-.62, 0, .62]){
-      const rr = Math.sqrt(1 - z * z);
-      ring(t => [rr * Math.cos(t), rr * Math.sin(t), z], z === 0 ? '103,232,249' : '120,160,220', z === 0 ? 1.2 : .8);
-    }
-    for (const phi of [0, Math.PI / 4, Math.PI / 2, 3 * Math.PI / 4]){
-      ring(t => [Math.cos(phi) * Math.cos(t), Math.sin(phi) * Math.cos(t), Math.sin(t)], '120,160,220', .8);
-    }
-    g.strokeStyle = 'rgba(148,190,225,.48)'; g.lineWidth = 1.1 * dpr;
+    /* 球面轮廓 */
+    g.strokeStyle = 'rgba(120,160,220,.22)'; g.lineWidth = 1 * dpr;
     g.beginPath(); g.arc(cx, cy, R, 0, 6.2832); g.stroke();
 
-    /* 坐标轴 */
-    const axis = (v, col, label, ox = 0, oy = 0) => {
-      const p0 = P(0, 0, 0), p1 = P(v[0] * 1.12, v[1] * 1.12, v[2] * 1.12);
-      g.strokeStyle = col; g.lineWidth = 1 * dpr; g.beginPath(); g.moveTo(...p0); g.lineTo(...p1); g.stroke();
-      g.fillStyle = col; g.font = (10 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'center';
-      g.fillText(label, p1[0] + ox * dpr, p1[1] + oy * dpr);
+    /* 赤道与两条经线（细椭圆） */
+    const ring = (fn, alpha) => {
+      g.strokeStyle = 'rgba(120,160,220,' + alpha + ')';
+      g.beginPath();
+      for (let i = 0; i <= 64; i++){
+        const t = i / 64 * 6.2832;
+        const [px, py] = fn(t);
+        if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
+      }
+      g.stroke();
     };
-    axis([1, 0, 0], 'rgba(103,232,249,.78)', 'x', 0, 12);
-    axis([0, 1, 0], 'rgba(240,171,252,.78)', 'y', 0, 12);
-    axis([0, 0, 1], 'rgba(251,191,36,.92)', '|0⟩', 0, -8);
-    axis([0, 0, -1], 'rgba(251,191,36,.62)', '|1⟩', 0, 12);
+    ring(t => P(Math.cos(t), Math.sin(t), 0), 0.30);                       /* 赤道 */
+    ring(t => P(Math.cos(t), 0, Math.sin(t)), 0.18);                       /* x-z */
+    ring(t => P(0, Math.cos(t), Math.sin(t)), 0.18);                       /* y-z */
 
-    /* 轨迹点云按前后半球做明暗分层；橙色首条样本让 reseed 变化一眼可见。 */
+    /* 三轴 */
+    const axis = (v, col, label, lx, ly) => {
+      const p0 = P(0, 0, 0), p1 = P(v[0] * 1.16, v[1] * 1.16, v[2] * 1.16);
+      g.strokeStyle = col; g.lineWidth = 1 * dpr;
+      g.beginPath(); g.moveTo(p0[0], p0[1]); g.lineTo(p1[0], p1[1]); g.stroke();
+      g.fillStyle = col; g.font = (10 * dpr) + 'px ui-monospace,monospace';
+      g.textAlign = 'center'; g.fillText(label, p1[0] + lx * dpr, p1[1] + ly * dpr);
+    };
+    axis([1, 0, 0], 'rgba(103,232,249,.45)', 'x', 0, 12);
+    axis([0, 1, 0], 'rgba(240,171,252,.45)', 'y', 0, 12);
+    axis([0, 0, 1], 'rgba(251,191,36,.55)', '|0⟩', 0, -8);
+    axis([0, 0, -1], 'rgba(251,191,36,.30)', '|1⟩', 0, 12);
+
+    /* 轨迹点云（单次实验） */
     if (this.ens && this.state.showTraj){
-      const paths = this.ens.paths, stride = Math.max(1, Math.floor(paths[0].x.length / 90));
+      const paths = this.ens.paths;
+      const step = Math.max(1, Math.floor(paths[0].x.length / 90));
+      g.fillStyle = 'rgba(148,163,184,.52)';
       for (const pa of paths){
-        for (let i = 0; i < pa.x.length; i += stride){
-          const p = P3(pa.x[i], pa.y[i], pa.z[i]), front = p.depth >= 0;
-          g.fillStyle = front ? 'rgba(103,232,249,.31)' : 'rgba(148,163,184,.10)';
-          g.beginPath(); g.arc(p.x, p.y, (front ? 1.55 : 1.15) * dpr, 0, 6.2832); g.fill();
+        for (let i = 0; i < pa.x.length; i += step){
+          const [px, py] = P(pa.x[i], pa.y[i], pa.z[i]);
+          g.beginPath(); g.arc(px, py, 1.55 * dpr, 0, 6.2832); g.fill();
         }
       }
-      g.strokeStyle = 'rgba(103,232,249,.12)'; g.lineWidth = .8 * dpr;
-      for (let k = 1; k < Math.min(7, paths.length); k++){
-        const pa = paths[k]; g.beginPath();
-        for (let i = 0; i < pa.x.length; i += 3){
-          const p = P(pa.x[i], pa.y[i], pa.z[i]);
-          if (i === 0) g.moveTo(p[0], p[1]); else g.lineTo(p[0], p[1]);
+      /* 前 10 条轨迹画成细折线（看得出「每条都是折线、跳变是突变」） */
+      g.strokeStyle = 'rgba(148,163,184,.22)'; g.lineWidth = 0.9 * dpr;
+      for (let k = 0; k < Math.min(10, paths.length); k++){
+        const pa = paths[k];
+        g.beginPath();
+        for (let i = 0; i < pa.x.length; i += 2){
+          const [px, py] = P(pa.x[i], pa.y[i], pa.z[i]);
+          if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
         }
         g.stroke();
       }
+      /* 单条高亮轨迹的折线（含跳跃点） */
       const one = paths[0];
-      g.strokeStyle = 'rgba(251,191,36,.95)'; g.lineWidth = 1.45 * dpr; g.beginPath();
+      g.strokeStyle = 'rgba(148,163,184,.75)'; g.lineWidth = 1.1 * dpr;
+      g.beginPath();
       for (let i = 0; i < one.x.length; i++){
-        const p = P(one.x[i], one.y[i], one.z[i]);
-        if (i === 0) g.moveTo(p[0], p[1]); else g.lineTo(p[0], p[1]);
+        const [px, py] = P(one.x[i], one.y[i], one.z[i]);
+        if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
       }
-      g.stroke(); g.fillStyle = 'rgba(248,113,113,.98)';
+      g.stroke();
+      g.fillStyle = 'rgba(248,113,113,.95)';
       for (const tj of one.jumps){
-        const i = Math.min(one.x.length - 1, Math.round(tj / this.state.dt)), p = P(one.x[i], one.y[i], one.z[i]);
-        g.beginPath(); g.arc(p[0], p[1], 3.1 * dpr, 0, 6.2832); g.fill();
+        const i = Math.min(one.x.length - 1, Math.round(tj / this.state.dt));
+        const [px, py] = P(one.x[i], one.y[i], one.z[i]);
+        g.beginPath(); g.arc(px, py, 2.6 * dpr, 0, 6.2832); g.fill();
       }
     }
 
-    /* ρ 的 Bloch 向量：起点空心，末态用箭头；纯态在球面，混态落入球内。 */
-    const n = sc.t.length - 1, v = [sc.x[n], sc.y[n], sc.z[n]], v0 = [sc.x[0], sc.y[0], sc.z[0]];
-    const [sx0, sy0] = P(...v0);
-    g.strokeStyle = 'rgba(226,232,240,.7)'; g.lineWidth = 1.2 * dpr;
-    g.beginPath(); g.arc(sx0, sy0, 4.2 * dpr, 0, 6.2832); g.stroke();
-    const [ax, ay] = P(...v), r = Math.hypot(...v), dx = ax - cx, dy = ay - cy, len = Math.hypot(dx, dy) || 1;
-    g.strokeStyle = 'rgba(103,232,249,.98)'; g.lineWidth = 2.5 * dpr;
+    /* 平均 / 密度矩阵 Bloch 向量（时间扫描的末点） */
+    const n = sc.t.length - 1;
+    const v = [sc.x[n], sc.y[n], sc.z[n]];
+    const v0 = [sc.x[0], sc.y[0], sc.z[0]];
+    /* 起始位置（空心中点） */
+    const [sx0, sy0] = P(v0[0], v0[1], v0[2]);
+    g.strokeStyle = 'rgba(226,232,240,.30)'; g.lineWidth = 1 * dpr; g.setLineDash([3, 3]);
+    g.beginPath(); g.arc(sx0, sy0, 4 * dpr, 0, 6.2832); g.stroke(); g.setLineDash([]);
+
+    const [ax, ay] = P(v[0], v[1], v[2]);
+    const r = Math.hypot(v[0], v[1], v[2]);
+    g.strokeStyle = 'rgba(103,232,249,.95)'; g.lineWidth = 2.2 * dpr;
     g.beginPath(); g.moveTo(cx, cy); g.lineTo(ax, ay); g.stroke();
-    const ah = 7 * dpr, ux = dx / len, uy = dy / len;
-    g.fillStyle = 'rgba(103,232,249,.98)'; g.beginPath();
-    g.moveTo(ax, ay); g.lineTo(ax - ux * ah - uy * ah * .48, ay - uy * ah + ux * ah * .48);
-    g.lineTo(ax - ux * ah + uy * ah * .48, ay - uy * ah - ux * ah * .48); g.closePath(); g.fill();
-    g.fillStyle = 'rgba(7,18,30,.95)'; g.beginPath(); g.arc(ax, ay, 5.2 * dpr, 0, 6.2832); g.fill();
-    g.strokeStyle = 'rgba(103,232,249,1)'; g.lineWidth = 1.8 * dpr; g.stroke();
+    g.fillStyle = 'rgba(103,232,249,1)';
+    g.beginPath(); g.arc(ax, ay, 3.6 * dpr, 0, 6.2832); g.fill();
 
-    /* 悬停点只做轻量描边，不盖住球面信息。 */
-    if (this._blochHover){
-      g.strokeStyle = 'rgba(255,255,255,.92)'; g.lineWidth = 1.2 * dpr;
-      g.beginPath(); g.arc(this._blochHover.px, this._blochHover.py, 5 * dpr, 0, 6.2832); g.stroke();
-    }
-
-    g.fillStyle = 'rgba(226,232,240,.92)'; g.font = (11 * dpr) + 'px ui-monospace,monospace'; g.textAlign = 'left';
+    /* 文字 */
+    g.fillStyle = 'rgba(226,232,240,.9)'; g.font = (11 * dpr) + 'px ui-monospace,monospace';
+    g.textAlign = 'left';
     g.fillText('|r| = ' + r.toFixed(3) + (r < 1 - 1e-6 ? '  （混合态）' : '  （纯态）'), 10 * dpr, 18 * dpr);
+    /* 状态文字放**右上**：左下角会被 #nzHint 面板压住（画布 z-index 低于面板） */
     g.textAlign = 'right';
     if (this.ens && this.state.showTraj){
-      g.fillStyle = 'rgba(226,232,240,.92)'; g.fillText(`${this.ens.nTraj} 条样本 · seed ${this.state.seed}`, W - 10 * dpr, 34 * dpr);
-      g.fillStyle = 'rgba(248,113,113,.95)'; g.fillText('● 量子跳跃 ' + this.ens.jumps + ' 次', W - 10 * dpr, 48 * dpr);
-
+      g.fillStyle = 'rgba(148,163,184,.9)';
+      g.fillText(this.ens.nTraj + ' 条轨迹（点）· 平均（线）', W - 10 * dpr, 34 * dpr);
+      g.fillStyle = 'rgba(248,113,113,.95)';
+      g.fillText('● 量子跳跃 ' + this.ens.jumps + ' 次', W - 10 * dpr, 48 * dpr);
+      if (this.state.kind === 'relax'){
+        g.fillStyle = 'rgba(148,163,184,.75)';
+        g.fillText('（弛豫下轨迹几乎重合：', W - 10 * dpr, 62 * dpr);
+        g.fillText(' 随机的是跳跃时刻，不是路径）', W - 10 * dpr, 74 * dpr);
+      }
     } else if (this.state.n === 1){
-      g.fillStyle = 'rgba(148,163,184,.85)'; g.fillText('轨迹已关（左栏「显示」开启）', W - 10 * dpr, 34 * dpr);
+      g.fillStyle = 'rgba(148,163,184,.85)';
+      g.fillText('轨迹已关（左栏「显示」开启）', W - 10 * dpr, 34 * dpr);
     }
     g.textAlign = 'left';
   }
@@ -2914,13 +2568,6 @@ class NoiseApp {
       g.beginPath(); g.moveTo(x, padT); g.lineTo(x, padT + size); g.stroke();
       g.beginPath(); g.moveTo(padL, y); g.lineTo(padL + size, y); g.stroke();
     }
-    const selected = this._rhoPinnedCell ?? this._rhoHoverCell;
-    if (selected && selected.i < D && selected.j < D){
-      g.strokeStyle = this._rhoPinnedCell ? 'rgba(251,191,36,.95)' : 'rgba(103,232,249,.9)';
-      g.lineWidth = 1.6 * dpr;
-      g.strokeRect(padL + selected.j * cell + 1.5 * dpr, padT + selected.i * cell + 1.5 * dpr,
-        Math.max(0, cell - 3 * dpr), Math.max(0, cell - 3 * dpr));
-    }
     /* 轴标 */
     g.fillStyle = 'rgba(148,163,184,.85)'; g.font = (9 * dpr) + 'px ui-monospace,monospace';
     g.textAlign = 'right'; g.textBaseline = 'middle';
@@ -3039,19 +2686,6 @@ class NoiseApp {
       for (const [v, col] of heads){
         g.fillStyle = col;
         g.beginPath(); g.arc(xh, Y(v), 2.8 * dpr, 0, 6.2832); g.fill();
-      }
-    }
-
-    const selected = this.currentCurveProbeIndex();
-    if (selected != null){
-      const xh = X(sc.t[selected]);
-      g.strokeStyle = this._curvePinnedIndex != null ? 'rgba(251,191,36,.55)' : 'rgba(103,232,249,.34)';
-      g.lineWidth = 1 * dpr; g.beginPath(); g.moveTo(xh, y0); g.lineTo(xh, y1); g.stroke();
-      const markers = isBell
-        ? [[sc.C[selected], 'rgba(103,232,249,1)']]
-        : [[sc.x[selected], 'rgba(103,232,249,1)'], [sc.y[selected], 'rgba(240,171,252,1)'], [sc.z[selected], 'rgba(251,191,36,1)']];
-      for (const [v, col] of markers){
-        g.fillStyle = col; g.beginPath(); g.arc(xh, Y(v), 3.2 * dpr, 0, 6.2832); g.fill();
       }
     }
   }

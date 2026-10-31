@@ -17,8 +17,9 @@
  *   - d=3 可全枚举（4⁹ = 262144）⟹ 页面给一个「精确对账」按钮，把 MC 与
  *     精确值按 4σ 对齐；d≥5 没有精确解（4²⁵），只能 MC。
  * ========================================================================== */
-import { scBuild, scVerify, scEnsemble, scTrial, scExactPL, scCrossing, scCrossingCI, scLeadingPower, scMinLogical, SC_DISTANCES, SC_NOISES, SC_PS } from '../physics/surfacecode.js';
+import { scBuild, scVerify, scEnsemble, scTrial, scExactPL, scCrossing, scCrossingCI, scCrossingFit, scGridSeed, scLeadingPower, scMinLogical, SC_DISTANCES, SC_NOISES, SC_PS } from '../physics/surfacecode.js';
 import { scSpaceGraph, scSpaceVerify, scSpaceEnsemble, scSpaceTrial, scStream, scSpaceStream, SC_PHEN } from '../physics/surfacecode.js';
+import { scOptAudit, scSnapSeed, SC_AUDIT_MAX_NS } from '../physics/surfacecode.js';
 import { LiveDriver } from './live.js';
 import { ShotReplay } from './shot-replay.js';
 import { ConfidenceFeedback } from './confidence.js';
@@ -80,11 +81,23 @@ const sfC = {
 };
 const sfDCOL = { 3: sfC.cyan, 5: sfC.green, 7: sfC.amber };
 const sfNoiseName = { x: '仅 X（bit-flip）', depol: '退极化 X/Y/Z' };
+/* 交叉点「未分辨」的原因标签（R132）：把「为什么没算出来」写到 HUD 上，
+   「—」既不说明是样本不够还是曲线太平，读的人只能猜。 */
+const XFIT_WHY = {
+  'no-sigma': '缺 σ', 'no-cross': '无变号', 'slope-ns': '斜率不显著',
+  'bad-fit': 'χ² 不通过', 'no-root': '无实根', 'sign': '方向不符',
+  'out-of-range': '根在网格外', none: '样本不足',
+};
 const sfFmt = v => !Number.isFinite(v) ? '—'
   : (v === 0 ? '0' : (v >= 1e-3 ? v.toFixed(5) : v.toExponential(2)));
 const sfNF = (v, n = 2) => Number.isFinite(v) ? v.toFixed(n) : '—';
 const sfMdLite = t => String(t).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+const sfQtxt = r => (r === 1 ? 'p' : r === 0 ? '0' : `${r}p`);
 const pcOf = m => { let c = 0; while (m){ c += Number(m & 1n); m >>= 1n; } return c; };
+const pc32 = v => { let c = 0; while (v){ c += v & 1; v >>>= 1; } return c; };
+/* 快照抽签的 RNG：抽签派生在引擎里（scSnapSeed，pot131 F 组可测），
+ * 这里只负责把它接到 mulberry32 上（见 surfacecode.js 的注释说明两条实测缺陷）。 */
+const sfSnapRng = (seed, salt) => mulberry32(scSnapSeed(seed, salt));
 
 export class SurfApp {
   constructor(shell){
@@ -109,11 +122,9 @@ export class SurfApp {
       t1Layers: t1LayersWanted,
       t2Layers: Math.min(t2LayersWanted,2*t1LayersWanted),
       seed: Math.round(num('seed', 7)),
-
       /* meas='noisy' ⟹ phenomenological；'circuit' ⟹ 含 CNOT 与 ancilla SPAM 的首阶段模型。
-         qR = q/p 只在引擎/调试层暴露：面板固定 q = p（标准取法）。
-         q=0 时解码退化成逐层独立、d3×d5 两条曲线在 0.05 以内不交叉（未分辨），
-         给旋钮反而误导，所以不上面板（README 里写明这条取舍）。 */
+         qR = q/p 在面板上可选（R132）：旧的「q=0 交叉未分辨」结论来自两点变号判据，整曲线拟合已证伪。
+         circuit 模式还可选可信任意态边界或 |0⟩/|+⟩ 本征态制备。 */
       meas: measWanted,
       prepareBasis: prepareWanted,
       qR: [0, 0.5, 1].includes(parseFloat(q.get('qr'))) ? parseFloat(q.get('qr')) : 1,
@@ -130,6 +141,9 @@ export class SurfApp {
     this.power = null;      /* {3,5,7} 领先幂次 */
     this.verify = null;     /* scVerify 结果（结构自检） */
     this.exact = null;      /* d=3 精确值 + z */
+    this.audit = null;      /* 全综合征空间审计（R131）：次优/退化计数 */
+    this._auditToken = 0;   /* 审计异步令牌：换 d / 重跑都作废在途结果 */
+    this._snapSalt = 0;     /* 码图快照的抽签序号：每点一次「换一张码图」+1 */
     this._sweepToken = 0;
     this.cv = {};
   }
@@ -175,6 +189,9 @@ export class SurfApp {
           <div class="note">τ 为单个并行 CNOT 层时长单位；T1/T2 通道按 Pauli twirl 近似。</div>
         </div>
 
+        <div class="grp" id="sfQGrp">测量错误率 q（相对 p）</div>
+        <div class="btns g3" id="sfQ"></div>
+
         <div class="grp">错误谱（每比特）</div>
         <div class="btns" id="sfNoises"></div>
 
@@ -195,9 +212,16 @@ export class SurfApp {
           <button id="sfScan">扫描 P_L(p)</button>
           <button id="sfExact">d=3 精确对账</button>
         </div>
+        <div class="btns" style="margin-top:6px">
+          <button id="sfAudit">解码器审计</button>
+        </div>
 
         <div class="note">曲线走 MC（每点 N 次抽样，分帧累加，不阻塞交互）；
-          d=3 的「精确对账」按 4⁹ = 262144 个错误模式全枚举，约 4–6s。</div>
+          d=3 的「精确对账」按 4⁹ = 262144 个错误模式全枚举，约 4–6s。
+          「解码器审计」把当前 d 的**整个综合征空间**做 BFS（d=3 16 个、d=5 4096 个），
+          逐点比「MWPM 修正权重」与「精确最小权重」，并统计最小权重修正的逻辑类是否唯一
+          （两类并存 ⟹ 任何解码器在该点都只能 50/50，属不可约上限）；d=7 是 2²⁴ 个状态，
+          只在离线跑（README 记录：0 退化）。</div>
       </aside>
 
       <aside id="sfHud" class="panel qhud">
@@ -215,18 +239,24 @@ export class SurfApp {
         <div class="hrow" id="hFaultAuditRow" style="display:none"><span>单故障签名审计</span><span id="hFaultAudit">—</span></div>
         <div class="hrow" id="hSpaceRow"><span>时空匹配图</span><span id="hSpace">—</span></div>
         <hr>
-        <div class="hrow"><span>交叉点 d3×d5 / d5×d7</span><span id="hCross">—</span></div>
+        <div class="hrow" id="hCrossRow"><span>交叉点 d3×d5 / d5×d7</span><span id="hCross">—</span></div>
         <div class="hrow"><span>领先幂次 α（p→0）</span><span id="hAlpha">—</span></div>
         <div class="hrow"><span>d=3 精确对账</span><span id="hExact">—</span></div>
+        <div class="hrow"><span>解码器审计（全枚举）</span><span id="hAudit">—</span></div>
         <div class="hrow"><span>扫描进度</span><span id="hProg">—</span></div>
         <div class="cap" id="sfModelNote"><b>退极化是分帧独立解码</b>：丢掉 Y 的相关性 ⟹ 阈值 ≈ 1.5×单帧
           （10.3% → 15.5% 的那个因子；相关解码可到 18.9%，本页不做）。
-          <b>交叉点写「未分辨」就是没算出来</b>：两条曲线在该网格/样本数下没有显著的
-          排序反转（σ ∝ 1/√N，d5×d7 要 N ≳ 12000 才分得开）。
+          <b>交叉点怎么算</b>：把差值 f(p)=P_A−P_B 在变号点附近做加权二次拟合（权重 1/σ²），
+          零点即交叉点；σ 由系数协方差按 delta 法给出，再乘 1.4 的安全系数（标定实测
+          「经验离散度/报告 σ」= 1.16–1.43）。旧的「相邻两点变号 + 两端都得 PL&gt;3σ」在
+          N=4000 常常判未分辨：同一批数据它只解析 6/14 次，二次拟合 14/14，且均值偏置从
+          −5% 降到 −0.4%。未分辨时 HUD 写出原因，鼠标悬停可看拟合窗口、χ²/dof 与旧口径值。
           <b>d=9 不上页面</b>：缺陷数超 DP 上限后回退率 ~26%，数字不再可信。
-          <b>带噪测量口径</b>固定 q = p、d−1 轮带噪 + 末轮理想读出；时空缺陷数随 d 涨得快，
-          d=7 的回退率过半 ⟹ 只上 d=3/5。它的 d3×d5 交叉 ≈0.023：默认 N=1500 判「未分辨」，
-          N ≳ 4000 才分得开（离线 N=8000 给 0.0231±0.0018）。</div>
+          <b>带噪测量</b>：q 由上面旋钮选（默认 q=p），d−1 轮带噪 + 末轮理想读出。
+          d3×d5 交叉随 q 单调上移：0.021（q=p）→ 0.028（q=p/2）→ 0.043（q=0，理想读出）。
+          <b>d=7 仍不上带噪测量</b>：时空缺陷数常超 DP 上限，p≳0.03 起回退 30%+，而且同一
+          (d,p) 的 P_L 随解码器预算在 0.055–0.13 之间漂（DP20/DP14/纯贪心）—— 曲线由解码器
+          而不是物理决定，宁可不上。</div>
       </aside>
 
       <div id="sfStage" class="qstage">
@@ -269,19 +299,24 @@ export class SurfApp {
       }
     };
     mk(this.q('#sfDs'), SC_DISTANCES.map(d => ({ v: d, label: 'd=' + d, title: `n=${d * d} 比特，距离 ${d}` })),
-      v => { this.state.d = v; this.code = scBuild(v); this.runMc(); });
+      v => { this.state.d = v; this.code = scBuild(v); this.audit = null; this.rescanAll(); });
     mk(this.q('#sfNoises'), SC_NOISES.map(n => ({ v: n.k, label: n.name, title: n.desc })),
-      v => { this.state.noise = v; this.runMc(); });
+      v => { this.state.noise = v; this.rescanAll(); });
     mk(this.q('#sfMeas'), [
       { v: 'ideal', label: '单帧（码容量）', title: '综合征测量理想：二维匹配图' },
       { v: 'noisy', label: '带噪测量', title: 'phenomenological：每轮读出以 q 出错，时间维进匹配图' },
-      { v: 'circuit', label: '电路级（可信注入边界）', title: 'd=3/5：任意未知态经可信理想注入进入编码子空间；注入原语自身不在故障目录内。之后含全部列举的数据、CNOT、idle、ancilla 和破坏性读出故障；也可选 |0⟩ⁿ/|+⟩ⁿ 本征态制备。不是物理 encoder 门级实现或阈值模型' },
+      { v: 'circuit', label: '电路级（可信注入边界）', title: 'd=3/5：任意未知态经可信理想注入进入编码子空间；注入原语自身不在故障目录内。之后含全部列举的数据、CNOT、idle、ancilla 与终端读出故障；不是物理 encoder 门级实现或阈值模型' },
     ], v => {
       this.state.meas = v;
       if ((v === 'noisy' || v === 'circuit') && this.state.d === 7) this.state.d = 5;
       if (v === 'circuit') { this.state.noise = 'depol'; if (this.state.p > 0.02 || this.state.p < 0.0005) this.state.p = 0.005; this.state.trials = Math.min(this.state.trials, 400); }
       this.code = scBuild(this.state.d); this.syncPanel(); this.renderHint(); this.runMc(); this.startSweep();
     });
+    mk(this.q('#sfQ'), [
+      { v: 0, label: 'q=0', title: '理想读出：测量本身不出错，时空解码退化成逐层独立解码' },
+      { v: 0.5, label: 'q=p/2', title: '测量错误率是数据错误率的一半（好测量）' },
+      { v: 1, label: 'q=p', title: '标准取法：测量与数据同等噪声' },
+    ], v => { this.state.qR = v; this.rescanAll(); });
     mk(this.q('#sfPrep'), [
       { v: 'encoded', label: '可信任意态注入', title: '假设可信原语已把任意未知逻辑态理想注入编码子空间；原语内部及首耦合故障不审计，边界后的全部列举故障均审计' },
       { v: 'Z', label: '|0_L⟩ 制备', title: '从 |0⟩^n 起步；Z checks 初始已知，X checks 首次读数随机，随后重复提取 d 轮' },
@@ -296,7 +331,6 @@ export class SurfApp {
     noiseSlider('sfPSPAM',v=>this.state.pSPAM=v);
     noiseSlider('sfT1',v=>{this.state.t1Layers=v;this.state.t2Layers=Math.min(this.state.t2Layers,2*v);});
     noiseSlider('sfT2',v=>this.state.t2Layers=Math.min(v,2*this.state.t1Layers));
-
     this.on(this.q('#sfP'), 'input', e => {
       this.state.p = parseFloat(e.target.value);
       this.syncPanel(); this.renderHint();
@@ -305,17 +339,20 @@ export class SurfApp {
     });
     this.on(this.q('#sfTrials'), 'input', e => {
       this.state.trials = parseInt(e.target.value, 10);
+      this.invalidateSweep();
       this.syncPanel(); if (this.live && this.live.playing) this.live.sync();
     });
     this.on(this.q('#sfPlay'), 'click', () => this.live.toggle());
     this.on(this.q('#sfRun'), 'click', () => this.runMc());
-    this.on(this.q('#sfSnap'), 'click', () => { if (!this.circuit) this.runMc(true); });
+    this.on(this.q('#sfSnap'), 'click', () => { this._snapSalt++; this.runMc(true); });
     this.on(this.q('#sfSeed'), 'click', () => {
       this.state.seed = (this.state.seed * 1103515245 + 12345) % 2147483647;
+      this.invalidateSweep();
       this.runMc();
     });
     this.on(this.q('#sfScan'), 'click', () => this.startSweep());
     this.on(this.q('#sfExact'), 'click', () => this.runExact());
+    this.on(this.q('#sfAudit'), 'click', () => this.runAudit());
 
     this.on(window, 'resize', () => this.resize());
     if (window.ResizeObserver){
@@ -344,7 +381,9 @@ export class SurfApp {
       b.title = `n=${d * d} 比特，距离 ${d}`;
     }
     mark('#sfDs', s.d); mark('#sfNoises', s.noise);
-    mark('#sfMeas', s.meas); mark('#sfPrep', s.prepareBasis); mark('#sfCircuitModels',s.circuitNoiseModel);
+    mark('#sfMeas', s.meas); mark('#sfQ', s.qR); mark('#sfPrep', s.prepareBasis); mark('#sfCircuitModels',s.circuitNoiseModel);
+    const qGrp = this.q('#sfQGrp'), qBox = this.q('#sfQ');
+    for (const el of [qGrp, qBox]) if (el) el.style.display = s.meas === 'noisy' ? '' : 'none';
     const prepWrap=this.q('#sfPrepWrap');if(prepWrap)prepWrap.style.display=this.circuit?'':'none';
     const circuitNoiseWrap=this.q('#sfCircuitNoiseWrap');if(circuitNoiseWrap)circuitNoiseWrap.style.display=this.circuit?'':'none';
     const t1t2=this.circuit&&s.circuitNoiseModel==='t1t2-pauli-twirled';
@@ -368,6 +407,15 @@ export class SurfApp {
     if (exBtn){
       exBtn.disabled = phen || circuit;
       exBtn.title = circuit ? '当前仅对 code-capacity 单帧模型实现精确枚举' : phen ? '精确枚举只对单帧口径成立（带噪测量要从 4 层 × 2⁹ × 2⁴ 起枚举）' : '';
+    }
+    /* 审计跑的是单帧解码器 scDecode 的整个综合征空间：d=7 是 2^24 个状态，面板上限 2^12 */
+    const auBtn = this.q('#sfAudit');
+    if (auBtn){
+      const tooBig = this.code.zg.nS > SC_AUDIT_MAX_NS;
+      auBtn.disabled = tooBig;
+      auBtn.title = tooBig
+        ? `d=${s.d} 的综合征空间是 2^${this.code.zg.nS}，超出面板审计上限 2^${SC_AUDIT_MAX_NS}（离线全枚举见 README：0 退化）`
+        : `全枚举 2^${this.code.zg.nS} 个综合征：逐点比 MWPM 权重与精确最小权重，并统计逻辑类是否唯一`;
     }
     const setv = (id, v) => { const e = this.q('#' + id); if (e) e.value = v; };
     const pInput = this.q('#sfP'), nInput = this.q('#sfTrials');
@@ -393,7 +441,7 @@ export class SurfApp {
       ?`CNOT 后双比特退极化 p₂=${s.p.toFixed(4)}；输入/ancilla prep/readout 共用 pSPAM=${s.pSPAM.toFixed(4)}；活跃 CNOT 与 idle 均经历每层时长 τ 的 Pauli-twirled T1=${s.t1Layers}τ/T2=${s.t2Layers}τ。`
       :'每个列举位置使用同率 Pauli 退极化。';
     if(note&&this.circuit)note.innerHTML=`<b>诊断性 circuit-level 原型</b>：${prepNote} ${channelNote} 四层并行排程；末端用逐数据位带噪破坏性读出，按选择的逻辑基底解码。先查无歧义 X/Z 联合单故障签名；歧义时用无歧义单帧查表，未解决帧再由 X/Z 轴向边缘权重时空 MWPM 兜底。T1/T2 使用 Pauli twirl，丢掉 amplitude-damping 的非幺正偏置；SPAM 对称且按共同率处理；时长为归一化 τ、未器件标定。未含泄漏、相干过转、串扰或高阶相关联合解码，因此不报告阈值。`;
-    else if (note) note.innerHTML = '<b>退极化是分帧独立解码</b>：丢掉 Y 的相关性 ⟹ 阈值 ≈ 1.5×单帧（10.3% → 15.5%；相关解码可到 18.9%，本页不做）。交叉点「未分辨」表示当前网格/样本数不足；带噪测量固定 q=p、d−1 轮 + 末轮理想读出，d=7 因时空缺陷过多而置灰。';
+    else if (note) note.innerHTML = '<b>退极化是分帧独立解码</b>：丢掉 Y 的相关性 ⟹ 阈值 ≈ 1.5×单帧（10.3% → 15.5%；相关解码可到 18.9%，本页不做）。交叉点「未分辨」表示当前网格/样本数不足；带噪测量 q=' + sfQtxt(s.qR) + '、d−1 轮 + 末轮理想读出，d=7 因时空缺陷过多而置灰。';
   }
 
   renderHint(){
@@ -412,43 +460,33 @@ export class SurfApp {
       '权重 ≤ t=⌊(d−1)/2⌋ 的错误必纠回，代价是**两条跨码链** = 逻辑错误（权重 d）。' +
       (this.circuit ? '当前电路级分支只做指定码距的诊断，不扫描阈值或外推。' :
         '阈值不是某个 p 的绝对值，而是 **d=3/5/7 三条曲线的排序反转**。') +
-      (this.circuit ? '' : '**带噪测量**（phenomenological）把时间放进匹配图：每轮读出以 q=p 出错 ⟹ 探测事件在时空里成对，' +
-        '有限尺寸交叉从 ~9.5% 掉到 ~2.3%。画布下方那 2(d+1) 行点阵就是逐层的探测事件。') +
-      (this.circuit ? `**诊断性 circuit-level 原型**：${prepHint}；${channelHint}；含四层并行 CNOT，终端用带噪破坏性数据读出，按选定逻辑基底检查。先查无歧义联合单故障签名，歧义时安全退回无歧义单帧查表，再由 X/Z 轴向边缘权重时空 MWPM 兜底。T1/T2 为层时长归一化且未器件标定；Pauli twirl 丢弃非幺正偏置，不含泄漏、相干过转、串扰或高阶相关联合解码，不用于阈值结论。` : ''));
-  }
-
-  ensureFaultAudit(){
-    if (!this.circuit){
-      this._auditToken++;
-      this._auditKey = null;
-      this.faultAudit = null;
-      return;
-    }
-    const d = this.state.d, prepareBasis = this.state.prepareBasis;
-    const key = `${d}:${prepareBasis}`;
-    if (this._auditKey === key) return;
-    const token = ++this._auditToken;
-    this._auditKey = key;
-    this.faultAudit = { loading: true, d, prepareBasis };
-    setTimeout(() => {
-      try {
-        const result = scCircuitFaultAudit(scBuild(d), d, prepareBasis);
-        if (token !== this._auditToken || !this.circuit || this.state.d !== d || this.state.prepareBasis !== prepareBasis) return;
-        this.faultAudit = result;
-      } catch (error){
-        if (token !== this._auditToken) return;
-        this.faultAudit = { d, error: String(error && error.message || error) };
-      }
-      this.renderHud();
-    }, 0);
-  }
+      (this.phen ? `**带噪测量**（phenomenological）把时间放进匹配图：每轮读出以 q=${sfQtxt(this.state.qR)} 出错 ⟹ 探测事件在时空里成对；q=p / p/2 / 0 时的交叉点实测约为 0.020 / 0.025 / 0.043。` : '') +
+      (this.circuit ? `**诊断性 circuit-level 原型**：${prepHint}；${channelHint}；含四层并行 CNOT，终端用带噪破坏性数据读出，按选定逻辑基底检查。先查无歧义联合单故障签名，歧义时安全退回无歧义单帧查表，再由 X/Z 轴向边缘权重时空 MWPM 兜底。T1/T2 为层时长归一化且未器件标定；Pauli twirl 丢弃非幺正偏置，不含泄漏、相干过转、串扰或高阶相关联合解码，不用于阈值结论。` : ''));  }
 
   /* ---------- 计算 ---------- */
+  /** 参数变了就把旧曲线作废（R132）：曲线每一点都是**旧配置**下算出来的，
+   *  继续留着会让 HUD 的交叉点、竖线、图例全部对不上「配置」那一行 —— 也就是说谎。
+   *  不自动重扫（p 滑杆拖动会连发几十次），只把作废状态显式画出来。 */
+  invalidateSweep(){
+    if (!this.sweep) return;
+    this._stale = true;
+    this.cross = null; this.power = null;
+    this.renderHud(); this.drawCurve(); this.drawDist();
+  }
+
   computeAll(){
     this.verify = scVerify(this.state.d);
     this.space = this.spacetime ? scSpaceVerify(this.state.d, this.circuit ? this.state.d : Math.max(1, this.state.d - 1)) : null;
     if (this.state.live && this.live) this.live.start();
     else this.runMc();
+    this.startSweep();
+  }
+
+  /** 离散参数（d / 噪声口径 / 带噪测量 / q）一变就整条曲线重算：
+   *  这些是点一下就走人的按钮，不会像滑杆那样连发；让曲线自己跟上，比留一条
+   *  旧曲线 + 一句「需重扫」更接近「页面说的就是算的」。 */
+  rescanAll(){
+    this.runMc();
     this.startSweep();
   }
 
@@ -484,19 +522,12 @@ export class SurfApp {
       this.mc = scSpaceEnsemble(code, { ...this.phenCfg(), trials: s.trials, seed: s.seed });
       this.mc.ms = performance.now() - t0;
       this.space = scSpaceVerify(s.d, Math.max(1, s.d - 1));
-      if (newSnap || !this.mc.lastTrial){
-        const rng = mulberry32((s.seed * 2654435761) % 2147483647);
-        this.trial = scSpaceTrial(code, this.phenCfg(), rng);
-      } else this.trial = this.mc.lastTrial;
+      this.trial = scSpaceTrial(code, this.phenCfg(), sfSnapRng(s.seed, this._snapSalt));
     } else {
       this.mc = scEnsemble(code, { p: s.p, noise: s.noise, trials: s.trials, seed: s.seed });
       this.mc.ms = performance.now() - t0;
-      /* 默认画 MC 的最后一条样本；「换一张码图」才单独重抽。 */
-      if (newSnap || !this.mc.lastTrial){
-        const rng = mulberry32((s.seed * 2654435761) % 2147483647);
-        this.trial = scTrial(code, { p: s.p, noise: s.noise }, rng);
-      } else this.trial = this.mc.lastTrial;
-      this.space = null;
+      /* 码图快照：与 MC 同口径同 p 的单次试验（salt 由「换一张码图」推进） */
+      this.trial = scTrial(code, { p: s.p, noise: s.noise }, sfSnapRng(s.seed, this._snapSalt));      this.space = null;
     }
     this.verify = scVerify(s.d);
     this.renderHud();
@@ -534,7 +565,7 @@ export class SurfApp {
     for (const d of G.ds) for (const p of G.ps) jobs.push({ d, p });
     this._gridN = jobs.length;
     this.sweep = G.ds.map(d => ({ d, rows: [] }));
-    this.cross = null; this.power = null;
+    this.cross = null; this.power = null; this._stale = false;
     this._queueTimer = null;
     let i = 0;
     const step = () => {
@@ -544,9 +575,12 @@ export class SurfApp {
         return;
       }
       const { d, p } = jobs[i];
+      /* 每点独立种子（R132）：整条曲线共用一个 seed 会让各点 MC 误差正相关，
+         交叉点的 σ 与「显著性」都建立在独立性上，共用种子等于把前提抽掉。 */
+      const seed = scGridSeed(s.seed, d, G.ps.indexOf(p));
       const row = this.phen
-        ? scSpaceEnsemble(scBuild(d), { p, noise: s.noise, q: s.qR * p, rounds: Math.max(1, d - 1), trials: s.trials, seed: s.seed })
-        : scEnsemble(scBuild(d), { p, noise: s.noise, trials: s.trials, seed: s.seed });
+        ? scSpaceEnsemble(scBuild(d), { p, noise: s.noise, q: s.qR * p, rounds: Math.max(1, d - 1), trials: s.trials, seed })
+        : scEnsemble(scBuild(d), { p, noise: s.noise, trials: s.trials, seed });
       const bucket = this.sweep.find(c => c.d === d);
       bucket.rows.push({ p, PL: row.PL, sigma: row.sigma, fallback: row.fallback, meanDefects: row.meanDefects });
       i++;
@@ -560,11 +594,20 @@ export class SurfApp {
 
   finishSweep(){
     const [a, b, c] = this.sweep;
-    const i35 = a && b ? scCrossingCI(a.rows, b.rows) : null;
-    const i57 = b && c ? scCrossingCI(b.rows, c.rows) : null;
+    /* 交叉点走「整曲线加权二次拟合」（scCrossingFit，R132）；旧的两点变号口径同时算一份
+       挂在 tooltip 上，方便对照 —— 它更容易判「未分辨」，也更容易被单点噪声带偏。 */
+    const pick = (x, y) => {
+      if (!x || !y || x.rows.length < 3 || y.rows.length < 3) return null;
+      return { fit: scCrossingFit(x.rows, y.rows), old: scCrossingCI(x.rows, y.rows) };
+    };
+    const r35 = pick(a, b), r57 = pick(b, c);
+    const cell = r => (r && r.fit.ok)
+      ? { p: r.fit.p, s: r.fit.sigma, why: 'ok', o: r.old ? r.old.p : null }
+      : { p: null, s: null, why: (r && r.fit.why) || 'none', o: r && r.old ? r.old.p : null };
+    const k35 = cell(r35), k57 = cell(r57);
     this.cross = {
-      c35: i35 ? i35.p : null, c57: i57 ? i57.p : null,
-      s35: i35 ? i35.sigma : null, s57: i57 ? i57.sigma : null,
+      c35: k35.p, s35: k35.s, w35: k35.why, o35: k35.o, f35: r35 && r35.fit,
+      c57: k57.p, s57: k57.s, w57: k57.why, o57: k57.o, f57: r57 && r57.fit,
     };
     this.power = {};
     for (const cur of this.sweep) this.power[cur.d] = scLeadingPower(cur.rows);
@@ -593,6 +636,39 @@ export class SurfApp {
     }, 30);
   }
 
+  /**
+   * 解码器审计（R131）：把当前 d 的**整个综合征空间**做 BFS，逐点比
+   * 「MWPM 修正权重」与「精确最小权重」，并统计最小权重修正的逻辑类是否唯一。
+   * 这是把 README 诚实限制③（d≥5 未证逐综合征最小权重）变成可点击验证的入口。
+   */
+  runAudit(){
+    const s = this.state;
+    const tok = ++this._auditToken;
+    if (this.code.zg.nS > SC_AUDIT_MAX_NS){
+      this.audit = { skipped: true, nS: this.code.zg.nS };
+      this.renderHud();
+      return;
+    }
+    const btn = this.q('#sfAudit');
+    if (btn){ btn.disabled = true; btn.textContent = '审计中…'; }
+    setTimeout(() => {
+      /* 令牌变了（换 d / 又点了一次）⟹ 这次结果属于别的配置，直接丢弃，
+         既不写 audit 也不碰按钮 —— 否则会把旧 d 的「次优 0」挂在新 d 上。 */
+      if (tok !== this._auditToken) return;
+      let res;
+      try {
+        res = scOptAudit(s.d, 'both');
+      } catch (e){
+        res = { error: String(e && e.message || e) };
+      }
+      if (tok !== this._auditToken) return;
+      this.audit = res;
+      const b2 = this.q('#sfAudit');
+      if (b2){ b2.textContent = '解码器审计'; this.syncPanel(); }   /* disabled 交给 syncPanel 按当前 d 定 */
+      this.renderHud();
+    }, 30);
+  }
+
   /* ---------- HUD ---------- */
   renderHud(){
     this.ciFeedback?.sync({ label: '逻辑失效率 P_L', rate: this.mc && this.mc.PL, n: this.mc && this.mc.trials });
@@ -600,7 +676,7 @@ export class SurfApp {
     const s = this.state, v = this.verify, mc = this.mc;
     const set = (id, txt, cls) => { const el = this.q('#' + id); if (el){ el.textContent = txt; el.className = cls || ''; } };
     const prepName = s.prepareBasis === 'encoded' ? '可信任意态注入边界' : `${s.prepareBasis === 'Z' ? '|0_L⟩ 制备' : '|+_L⟩ 制备'}`;
-    const phenTxt = this.phen ? ` · phenomenological q=p（${Math.max(1, s.d - 1)} 轮 + 理想终读）` : this.circuit ? ` · circuit-level · ${prepName}（${s.d} 轮）` : ' · code-capacity';
+    const phenTxt = this.phen ? ` · phenomenological q=${sfQtxt(s.qR)}（${Math.max(1, s.d - 1)} 轮 + 理想终读）` : this.circuit ? ` · circuit-level · ${prepName}（${s.d} 轮）` : ' · code-capacity';
     const circuitNoiseName=s.circuitNoiseModel==='t1t2-pauli-twirled'
       ?`T1/T2-twirled p₂=${s.p.toFixed(4)} SPAM=${s.pSPAM.toFixed(4)} T1/T2=${s.t1Layers}/${s.t2Layers}τ`
       :'uniform depolarizing';
@@ -623,8 +699,7 @@ export class SurfApp {
         set('hFaultAudit', `${boundaryName} · ${a.locations.toLocaleString()} 位点 · 联合可查 ${a.jointCovered}/${a.locations} · 歧义 ${a.jointAmbiguous} · 安全回退 ${a.jointFallbackMechanisms} · ${readoutFail}`,
           failX || failZ || a.jointLookupSyndromeFailX || a.jointLookupSyndromeFailZ || a.jointFallbackSyndromeFailX || a.jointFallbackSyndromeFailZ ? 'warn' : 'ok');
       }
-    }
-    if (v){
+    }    if (v){
       set('hStruct', `${v.n} 比特 · |X|=${v.nX} · |Z|=${v.nZ} · k=${v.k} · 全对易=${v.commute ? '✓' : '✗'}`,
         (v.k === 1 && v.commute) ? 'ok' : 'warn');
       set('hLogic', `X_L 权重 ${v.xlWeight} · Z_L 权重 ${v.zlWeight} · 反对易=${v.anticommute ? '✓' : '✗'}`);
@@ -661,19 +736,37 @@ export class SurfApp {
     if (!mc){ set('hMCProgress', `0 / ${s.trials}`); set('hLast', '—'); }
     if (this.circuit){
       set('hCross', '首阶段不做 circuit-level 阈值扫描');
+      set('hAlpha', '未拟合（首阶段不做阈值结论）');
+    } else if (this._stale){
+      set('hCross', '需重扫（参数已改）', 'warn');
+      const crRow = this.q('#hCrossRow');
+      if (crRow) crRow.title = '曲线是在旧配置下算的，已作废；按「扫描 P_L(p)」重算';
+      set('hAlpha', '需重扫', 'warn');
     } else if (this.cross){
-      /* σ 大到位数无意义时（N 小 / 曲线贴得太近）不给三位小数：退回两位并标「≈」。
-         阈值：σ_p > 0.03 ⟹ 交叉点只知道个量级（N=400 时 c57 常落在这档）。 */
-      const fmt = (v, sg) => v === null ? '未分辨'
-        : !Number.isFinite(sg) ? v.toFixed(3)
+      const fmt = (v, sg) => !Number.isFinite(sg) ? v.toFixed(3)
         : sg > 0.03 ? `≈${v.toFixed(2)}±${sg.toFixed(2)}` : `${v.toFixed(3)}±${sg.toFixed(3)}`;
-      set('hCross', `${fmt(this.cross.c35, this.cross.s35)} / ${fmt(this.cross.c57, this.cross.s57)}`);
-    } else set('hCross', '扫描中…');
-    if (this.circuit){ set('hAlpha', '未拟合（首阶段不做阈值结论）'); }
-    else if (this.power){
-      const dsA = this.phen ? [3, 5] : SC_DISTANCES;
-      set('hAlpha', dsA.map(d => `d${d}:${Number.isFinite(this.power[d]) ? this.power[d].toFixed(2) : '—'}`).join('  '));
-    } else set('hAlpha', '扫描中…');
+      const cell = (v, sg, why) => v === null ? `未分辨（${XFIT_WHY[why] || why}）` : fmt(v, sg);
+      const nCur = (this.sweep || []).length;
+      const parts = [cell(this.cross.c35, this.cross.s35, this.cross.w35)];
+      if (nCur >= 3) parts.push(cell(this.cross.c57, this.cross.s57, this.cross.w57));
+      set('hCross', parts.join(' / '),
+        (this.cross.c35 === null || (nCur >= 3 && this.cross.c57 === null)) ? 'warn' : '');
+      const crRow = this.q('#hCrossRow');
+      if (crRow){
+        const det = (tag, fit, oldv) => {
+          const o = oldv === null || oldv === undefined ? '未分辨' : oldv.toFixed(4);
+          if (!fit) return `${tag}: 样本不足（旧口径 ${o}）`;
+          if (!fit.ok) return `${tag}: 拟合未通过（${XFIT_WHY[fit.why] || fit.why}；旧口径 ${o}）`;
+          return `${tag}: w${fit.win} 二次拟合 χ²/dof=${fit.chi2dof.toFixed(2)}（旧口径 ${o}）`;
+        };
+        crRow.title = det('d3×d5', this.cross.f35, this.cross.o35) + ' · ' + det('d5×d7', this.cross.f57, this.cross.o57);
+      }
+      if (this.power) set('hAlpha', (this.phen ? [3, 5] : SC_DISTANCES).map(d => `d${d}:${Number.isFinite(this.power[d]) ? this.power[d].toFixed(2) : '—'}`).join('  '));
+      else set('hAlpha', '扫描中…');
+    } else {
+      set('hCross', this.sweep ? '扫描中…' : '未扫描', '');
+      set('hAlpha', '扫描中…');
+    }
     if (this.exact && this.exact.circuit){
       set('hExact', '电路级口径未实现精确枚举');
     } else if (this.exact && this.exact.phen){
@@ -682,6 +775,17 @@ export class SurfApp {
       set('hExact', `p=${this.exact.p.toFixed(3)}：精确 ${sfFmt(this.exact.exact)} vs MC ${sfFmt(this.exact.mc)} ⟹ z=${sfNF(this.exact.z, 2)}σ`,
         this.exact.z <= 4 ? 'ok' : 'warn');
     } else set('hExact', '未跑（按按钮）');
+    /* 解码器审计：全枚举 ⟹ 数字是「确证」不是「估计」，措辞也要照实写 */
+    if (this.audit && this.audit.error){
+      set('hAudit', '审计失败：' + this.audit.error, 'warn');
+    } else if (this.audit && this.audit.skipped){
+      set('hAudit', `d=${s.d} 的 2^${this.audit.nS} 空间面板不枚举（离线：0 退化）`);
+    } else if (this.audit){
+      const a = this.audit;
+      const okDec = a.worse === 0 && a.degen === 0;
+      set('hAudit', `${a.tested} 综合征 · 次优 ${a.worse} · 退化 ${a.degen} · ${sfNF(a.ms, 0)}ms`,
+        okDec ? 'ok' : 'warn');
+    } else set('hAudit', '未跑（按按钮）');
     const done = this.sweep ? this.sweep.reduce((a, c) => a + c.rows.length, 0) : 0;
     const total = this._gridN || (SC_DISTANCES.length * SC_PS.length);
     set('hProg', this.circuit ? '首阶段无阈值扫描' : `${done}/${total} 点${done === total ? '（完成）' : '…'}`);
@@ -713,13 +817,24 @@ export class SurfApp {
     g.font = (11.5 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = sfC.txt + '.95)';
     g.fillText(`旋转表面码 d=${d}：${n} 比特 · ${code.X.length}+${code.Z.length} 个稳定子 · k=1`
-      + (this.circuit ? ` · 电路级提取 ${s.d} 轮` : phen ? ` · 带噪测量 ${Math.max(1, s.d - 1)} 轮 + 理想读出` : ''), 10 * dpr, 16 * dpr);
-    g.font = (9 * dpr) + 'px ui-monospace,monospace';
+      + (this.circuit ? ` · 电路级提取 ${s.d} 轮` : phen ? ` · 带噪测量 q=${sfQtxt(s.qR)}，${Math.max(1, s.d - 1)} 轮 + 理想读出` : ''), 10 * dpr, 16 * dpr);    g.font = (9 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = sfC.dim + '.85)';
     g.fillText(phen
       ? (this.circuit ? `红点=最终数据帧 · 亮框=终层探测事件 · 蓝环=解码修正投影 · 下方=各轮综合征读数` : `红点=总错误 · 亮框=末层探测事件 · 蓝环=时空链的空间投影 · 下方 = 逐层探测事件`)
       : `红点=错误 · 亮框=被点亮的综合征 · 蓝环=MWPM 修正 · 权重 ${d} 的横/竖链 = 逻辑（无法分辨）`,
     10 * dpr, 29 * dpr);
+    /* 零错误快照如实标注（R131）：p 小 / n 小时「这张图一个红点都没有」是**合法样本**
+     * 而不是渲染失败——概率 (1−p)^n 常常两位数。不写清楚就会被当成 bug 或当成「无噪声」。 */
+    const tr0 = this.trial;
+    const zero = tr0 && (tr0.mx === 0n && tr0.mz === 0n) &&
+      (!phen || (tr0.kx === 0 && tr0.kz === 0));
+    if (zero){
+      const pz = Math.pow(1 - s.p, n);
+      g.fillStyle = sfC.amber + '.92)';
+      g.font = (9 * dpr) + 'px ui-monospace,monospace';
+      g.fillText(`本次快照恰好无错误（概率 (1−p)^${n} ≈ ${(pz * 100).toFixed(1)}%）· 按「换一张码图」再抽`,
+        10 * dpr, 41 * dpr);
+    }
 
     /* 网格几何：数据比特占 (d)×(d)，四周留一格给边界；带噪测量时底部留出时空条 */
     const pad = 34 * dpr;
@@ -848,7 +963,7 @@ export class SurfApp {
     }
   }
 
-  /* 画布 2：P_L(p) 双对数（三条曲线 + 基线 + 当前点 + 交叉点） */
+  /* 画布 2：P_L(p) 双对数（单帧三条 / 带噪测量两条 + 基线 + 当前点 + 交叉点） */
   drawCurve(){
     const c = this.cv.curve;
     if (!c || !c.width) return;
@@ -858,11 +973,25 @@ export class SurfApp {
     g.textAlign = 'left';
     g.font = (11 * dpr) + 'px ui-monospace,monospace';
     g.fillStyle = sfC.txt + '.95)';
-    g.fillText(this.circuit ? 'Circuit-level：当前单点样本（未做阈值扫描）' : 'P_L(p)：阈值 = 三条曲线的排序反转', 10 * dpr, 15 * dpr);
-    g.font = (8.6 * dpr) + 'px ui-monospace,monospace';
-    g.fillStyle = sfC.dim + '.85)';
-    g.fillText(this.circuit ? '边缘权重 MWPM 不含 hook 相关性；单点仅作线路诊断' : '双对数 · 虚线 = 未编码基线 p（编码有益 ⟺ 曲线在它下方）', 10 * dpr, 27 * dpr);
-
+    if (this.circuit){
+      g.fillText('Circuit-level：当前单点样本（未做阈值扫描）', 10 * dpr, 15 * dpr);
+      g.font = (8.6 * dpr) + 'px ui-monospace,monospace';
+      g.fillStyle = sfC.dim + '.85)';
+      g.fillText('边缘权重 MWPM 不含 hook 相关性；单点仅作线路诊断', 10 * dpr, 27 * dpr);
+    } else {
+      const nCur = (this.sweep || []).length;
+      g.fillText(`P_L(p)：阈值 = ${nCur >= 3 ? '三条' : '两条'}曲线的排序反转`, 10 * dpr, 15 * dpr);
+      g.font = (8.6 * dpr) + 'px ui-monospace,monospace';
+      g.fillStyle = sfC.dim + '.85)';
+      g.fillText('双对数 · 虚线 = 未编码基线 p（编码有益 ⟺ 曲线在它下方）', 10 * dpr, 27 * dpr);
+      if (this._stale){
+        g.fillStyle = sfC.amber + '.95)';
+        g.font = (9.2 * dpr) + 'px ui-monospace,monospace';
+        g.textAlign = 'right';
+        g.fillText('⚠ 参数已改：这条曲线是旧配置的，按「扫描 P_L(p)」重算', W - 12 * dpr, 15 * dpr);
+        g.textAlign = 'left';
+      }
+    }
     const L = 46 * dpr, Rr = W - 12 * dpr, T = 40 * dpr, B = H - 26 * dpr;
     const G = this.grid, pMin = G.pMin, pMax = G.pMax, yMin = 1e-5, yMax = 1;
     const X = p => L + (Math.log10(p) - Math.log10(pMin)) / (Math.log10(pMax) - Math.log10(pMin)) * (Rr - L);
@@ -1028,25 +1157,45 @@ export class SurfApp {
         const t = self.trial;
         if (!t) return null;
         const hex = m => m.toString(16);
-        return {
+        const w = m => Number(m.toString(2).split('1').length - 1);
+        const out = {
           fail: t.fail, xfail: t.xfail, zfail: t.zfail, kx: t.kx, kz: t.kz,
           mx: hex(t.mx), mz: hex(t.mz), corrX: hex(t.corrX), corrZ: hex(t.corrZ),
-          wErrX: Number(t.mx.toString(2).split('1').length - 1),
-          wCorrX: Number(t.corrX.toString(2).split('1').length - 1),
+          wErrX: w(t.mx), wCorrX: w(t.corrX),
         };
+        /* 带噪测量口径的字段（R131 补：R130 只落了引擎，句柄里读不到 R / badSyn / 逐层缺陷） */
+        if (t.R !== undefined){
+          out.R = t.R; out.q = t.q; out.runds = t.rounds;
+          out.badSyn = !!t.badSyn;
+          out.modeX = t.modeX; out.modeZ = t.modeZ;
+          out.defX = t.defX.slice(); out.defZ = t.defZ.slice();
+          out.kwX = out.defX.map(v => pc32(v));
+          out.kwZ = out.defZ.map(v => pc32(v));
+        }
+        return out;
       },
       set(patch){
         Object.assign(self.state, patch || {});
         if (self.state.meas === 'noisy' && self.state.d === 7) self.state.d = 5;
         self.code = scBuild(self.state.d);
-        self.syncPanel(); self.renderHint(); self.runMc();
-        return { ...self.state };
+        self._auditToken++; self.audit = null;
+        self.invalidateSweep();
+        self.syncPanel(); self.renderHint(); self.runMc();        return { ...self.state };
       },
       snapshot(){
         return { state: { ...self.state }, mc: self.mc, verify: self.verify, cross: self.cross };
       },
       runSweep(){ self.startSweep(); return true; },
       runExact(){ self.runExact(); return true; },
+      get audit(){ return self.audit; },
+      get cross(){ return self.cross ? { ...self.cross, f35: undefined, f57: undefined,
+        w35n: self.cross.f35 && self.cross.f35.win, w57n: self.cross.f57 && self.cross.f57.win } : null; },
+      get stale(){ return !!self._stale; },
+      get qR(){ return self.state.qR; },
+      crossFit(a, b){ return scCrossingFit(a, b); },
+      get snapSalt(){ return self._snapSalt; },
+      runAudit(){ self.runAudit(); return true; },
+      optAudit(d, type){ return scOptAudit(d === undefined ? self.state.d : d, type || 'both'); },
       /* 诊断用：直接读引擎（不经 UI） */
       probe(d, cfg){ return scEnsemble(scBuild(d), cfg); },
       space(d, cfg){ return scSpaceEnsemble(scBuild(d), cfg); },

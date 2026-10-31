@@ -16,7 +16,6 @@
       src/core/styles.js
       src/core/responsive.js
       src/core/nav.js
-      src/hubbard3d.js
       src/physics/paths.js
       src/qec/live.js
       src/paths.js
@@ -484,7 +483,6 @@ const NAV = [
   ['./qcircuit.html', '线路 ⧉'],
   ['./noise.html', '噪声 ◍'],
   ['./qec.html', '纠错 ◈'],
-  ['./spin.html', '自旋链 ⇅'],
 ].filter(Boolean);
 
 /** 主页顶栏各页的 title 工具提示（与 NAV 同序；缺省回退为标签文案） */
@@ -495,7 +493,6 @@ const NAV_TITLES = {
   './qcircuit.html': '小规模量子线路：Bell / GHZ / QFT / Grover（R75）',
   './noise.html': '开放量子系统：T₁ 弛豫 / T₂ 退相位 / 纠缠猝死（R77）',
   './qec.html': '量子纠错 hub：重复码 / Shor 9 / 门噪声 / Flag / 多轮 / 循环 / 码族 / 表面码（R78–R85、R98 整合、R128 表面码）',
-  './spin.html': '海森堡自旋链：XXZ 各向异性 / 局域场 / 淬变 / 临界纠缠（R144）',
 };
 
 /** 生成子页顶栏导航 HTML；cur = 当前页 href（打 cur 高亮，自链也在——与 flag/rounds/cycle 一致）。
@@ -515,132 +512,9 @@ function navLinksHtml(indent = '  ') {
 /** 调试用：纯 href 列表（cdp 套件的 navLinks() 走各页自己的实现，这里供对照） */
 const NAV_HREFS = NAV.map(([h]) => h);
 
-/* ===== src/hubbard3d.js ===== */
-/* hubbard3d.js — 哈伯德链的 3D 透视视图：相机 + 投影 + 拾取（纯数学，无 DOM / 无 canvas）
- *
- * 为什么单独一个模块：3D 的「对不对」是纯几何问题（正交基、透视缩放、深度排序、屏幕拾取），
- * 可以在 Node 里用解析式逐条对账（pot143），不必拖一个浏览器进来。页面只负责把算出来的
- * 屏幕坐标画成珠子/箭头/势刺。
- *
- * 坐标系（右手系）：
- *   x — 链的方向（格点 i 在 x_i 上，已归一化到固定跨度，见 hbSitePositions）
- *   y — 自旋：↑ 指向 +y，↓ 指向 −y
- *   z — 局域势 μ 的「出屏」方向：μ>0 沿 +z 长刺，μ<0 沿 −z（2D 视图里这条信息只能塞进一条色带）
- *
- * 相机：绕 y 轴 yaw、俯仰 pitch、到原点距离 dist。视线恒指原点（靶点在链中心）。
- */
-
-const CAM_DEFAULT = { yaw: -0.62, pitch: 0.34, dist: 7.6 };
-/* pitch 钳到 ±76°：再往上 up 向量就从世界 y 轴旁边擦过去，屏幕会翻面 */
-const PITCH_LIM = 1.33;
-const DIST_MIN = 3.2, DIST_MAX = 20;
-/* 链在 3D 里的固定横向跨度（世界单位）：不同 L 都铺满画面宽度，只是格距变密 */
-const CHAIN_SPAN = 6.0;
-
-const clamp3 = (v, a, b) => (v < a ? a : (v > b ? b : v));
-
-function hbCamDefault(){ return { ...CAM_DEFAULT }; }
-function hbCamReset(){ return hbCamDefault(); }
-
-/* 轨道旋转：dx/dy 是设备像素位移；pitch 钳制，yaw 不钳（2π 周期） */
-function hbOrbit(cam, dx, dy, k = 0.0075){
-  return {
-    yaw: cam.yaw + dx * k,
-    pitch: clamp3(cam.pitch + dy * k, -PITCH_LIM, PITCH_LIM),
-    dist: cam.dist,
-  };
-}
-
-/* f>1 拉远、f<1 推近（滚轮 deltaY 换算见页面） */
-function hbZoom(cam, f){
-  return { yaw: cam.yaw, pitch: cam.pitch, dist: clamp3(cam.dist * f, DIST_MIN, DIST_MAX) };
-}
-
-function hbEye(cam){
-  const cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
-  return { x: cam.dist * cp * Math.sin(cam.yaw), y: cam.dist * sp, z: cam.dist * cp * Math.cos(cam.yaw) };
-}
-
-/* 视空间正交基（靶点 = 原点）：
-     f = 视线方向 eye→靶点
-     r = normalize(f × up)，up 取世界 +y
-     u = r × f（屏幕向上）
-   pitch 钳在 ±76° ⟹ |f×up| = cos(pitch) ≥ 0.24，不会退化。 */
-function hbCamBasis(cam){
-  const eye = hbEye(cam);
-  const n = Math.hypot(eye.x, eye.y, eye.z) || 1;
-  const f = { x: -eye.x / n, y: -eye.y / n, z: -eye.z / n };
-  const rx = -f.z, rz = f.x;                 /* f × (0,1,0) = (−f.z, 0, f.x) */
-  const rn = Math.hypot(rx, 0, rz) || 1;
-  const r = { x: rx / rn, y: 0, z: rz / rn };
-  const u = {                             /* r × f */
-    x: r.y * f.z - r.z * f.y,
-    y: r.z * f.x - r.x * f.z,
-    z: r.x * f.y - r.y * f.x,
-  };
-  return { f, r, u, eye };
-}
-
-/* 焦距：按画布宽度定，保证 CHAIN_SPAN 的链在默认距离下左右各留 ~15% 余量 */
-function hbFocal(W){ return 0.85 * W; }
-
-/* 世界点 → 设备像素。k = 焦距/深度，用来缩放珠半径、线宽、箭头（透视缩放的唯一来源）。 */
-function hbProject(cam, W, H, p){
-  const { f, r, u, eye } = hbCamBasis(cam);
-  const dx = p.x - eye.x, dy = p.y - eye.y, dz = p.z - eye.z;
-  const depth = dx * f.x + dy * f.y + dz * f.z;
-  const focal = hbFocal(W);
-  const near = 1e-6;
-  const d = Math.abs(depth) < near ? near : depth;
-  return {
-    x: W / 2 + (dx * r.x + dy * r.y + dz * r.z) / d * focal,
-    y: H / 2 - (dx * u.x + dy * u.y + dz * u.z) / d * focal,
-    depth: d,
-    k: focal / d,
-  };
-}
-
-/* 格点的世界 x：跨度固定、关于原点对称（mean(x)=0，span = CHAIN_SPAN） */
-function hbSitePositions(L, span = CHAIN_SPAN){
-  const out = [];
-  const d = L > 1 ? span / (L - 1) : 0;
-  for (let i = 0; i < L; i++) out.push(-span / 2 + i * d);
-  return out;
-}
-
-/* 屏幕点 → 格点下标。命中半径内取屏幕距离最近者；等距时取更靠近相机的那颗
-   （两颗珠子在屏幕上叠住时，看见的应该是前面那颗）。 */
-function hbPick(cam, W, H, xs, sx, sy, rad){
-  let best = -1, bd = Infinity, bz = Infinity;
-  for (let i = 0; i < xs.length; i++){
-    const p = hbProject(cam, W, H, { x: xs[i], y: 0, z: 0 });
-    const d = Math.hypot(p.x - sx, p.y - sy);
-    if (d > rad) continue;
-    if (d < bd - 1e-9 || (Math.abs(d - bd) <= 1e-9 && p.depth < bz)){
-      best = i; bd = d; bz = p.depth;
-    }
-  }
-  return best;
-}
-
-/* 深度雾：把 [最近、最远] 归一化到 [0,1]（1 = 最近），页面用它给远处的珠子降透明度 */
-function hbDepthRange(cam, W, H, xs){
-  let lo = Infinity, hi = -Infinity;
-  for (let i = 0; i < xs.length; i++){
-    const p = hbProject(cam, W, H, { x: xs[i], y: 0, z: 0 });
-    if (p.depth < lo) lo = p.depth;
-    if (p.depth > hi) hi = p.depth;
-  }
-  if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi - lo < 1e-9) return { lo, hi, nearness: () => 1 };
-  return {
-    lo, hi,
-    nearness: depth => clamp3(1 - (depth - lo) / (hi - lo), 0, 1),
-  };
-}
-
 /* ===== src/physics/paths.js ===== */
 /* ============================================================================
- * paths.js — 费曼路径求和（自由传播 · N 缝 / AB 磁通 / 有限高斯势）
+ * paths.js — R74 费曼路径求和（自由粒子 · 单缝 / 双缝）
  *
  * 单位制：m=1, ħ=1，且取「以 x 为参数、速度 v_x=1」⟹ 每段飞行时间 T=X。
  *   于是 p=mv=1、λ=2π/k=2π。所有相位都以这个单位制算，页面坐标即世界坐标。
@@ -680,16 +554,7 @@ const PI_DEFAULTS = {
   nY: 241,        /* 剖面采样点数 */
   yFov: 200,      /* 剖面纵向半宽（世界单位；= 画布可见半高） */
   openA: true, openB: true,
-  /* 缝数：2 = 经典双缝（A/B 各自开关）；1 = 单缝置中；≥3 = 等间距光栅（全部开） */
-  nslit: 2,
-  flux: 0,         /* AB 磁通 α=Φ/Φ₀（路径 Wilson 相位） */
-  barrier: 0,       /* 高斯势垒峰值 V₀；0 = 关闭 */
-  barrierWidth: 12, /* 横向高斯宽度 σy */
-  barrierXWidth: 12,/* 纵向传播宽度 σx */
-  /* 哪条路信息强度 ε ∈ [0,1]：0 = 完全相干（幅度相加），1 = 完全可区分（强度相加）。
-     **不进默认值表**（不写 eps: 0）：否则「没给 eps」与「eps=0」不可区分，
-     旧口径 coherent:false 会被默认值吃掉。取值见 piEps。 */
-  coherent: true, /* 兼容旧口径：false ⟺ ε=1 */
+  coherent: true, /* true=幅度相加；false=强度相加（可区分路径） */
 };
 
 /* ---------- 单段：相位与模态系数 ---------- */
@@ -707,102 +572,6 @@ function piSegmentPhase(X, dy, amps){
 
 /* 直线路径的相对作用量 */
 function piStraightPhase(X, dy){ return dy * dy / (2 * X); }
-
-/* 理想 AB 螺线管位于缝平面的一处开缝间隙。以每条路径的连续极角变化 Δθ
-   计算 Wilson 相位 φ_AB=−(Φ/Φ₀)Δθ；上下绕行的两路 Δθ 相差 2π，故相位差
-   正好是一个磁通量子的 2π。N 为奇数时选中心与上邻缝之间的间隙，偶数时选中央间隙。 */
-function piFluxTubeY(cfg){
-  const n = Math.max(1, Math.round(cfg.nslit ?? PI_DEFAULTS.nslit));
-  const d = cfg.d ?? PI_DEFAULTS.d;
-  return n > 2 && (n & 1) ? d / 2 : 0;
-}
-function unwrapNear(angle, ref){
-  while (angle - ref > Math.PI) angle -= 2 * Math.PI;
-  while (angle - ref < -Math.PI) angle += 2 * Math.PI;
-  return angle;
-}
-function piABPhase(slit, cfg = {}, Y = 0){
-  const flux = cfg.flux ?? PI_DEFAULTS.flux;
-  if (!flux || (cfg.nslit ?? PI_DEFAULTS.nslit) === 1) return 0;
-  const yTube = piFluxTubeY(cfg), side = slit - yTube;
-  if (Math.abs(side) < 1e-12) return 0; /* 路径正穿过螺线管时该缝不可用 */
-  const x0 = cfg.L1 ?? PI_DEFAULTS.L1, x2 = cfg.L2 ?? PI_DEFAULTS.L2;
-  const ys = cfg.ys ?? PI_DEFAULTS.ys;
-  const mid = side > 0 ? Math.PI / 2 : -Math.PI / 2;
-  const theta0 = unwrapNear(Math.atan2(ys - yTube, -x0), mid);
-  const theta2 = unwrapNear(Math.atan2(Y - yTube, x2), mid);
-  return -flux * (theta2 - theta0);
-}
-
-/* 有限宽二维高斯标量势：V(x,y)=V₀ exp[-(x−x_b)²/(2σx²)−y²/(2σy²)]，
-   x_b 位于屏后自由传播段中点。逐条路径把 U=∫V(x,y(x))dx 加进作用量 S−U；
-   这是有限宽标量势的路径积分（不是一片相位屏），弱势时近似忽略反射，强势时
-   仍保留相位模型本身，不声称求出了矩形势垒的散射边界条件。 */
-const PI_GL16_X = [-0.9894009349916499,-0.9445750230732326,-0.8656312023878318,-0.7554044083550030,
-                   -0.6178762444026438,-0.4580167776572274,-0.2816035507792589,-0.09501250983763744,
-                    0.09501250983763744, 0.2816035507792589, 0.4580167776572274, 0.6178762444026438,
-                    0.7554044083550030, 0.8656312023878318, 0.9445750230732326, 0.9894009349916499];
-const PI_GL16_W = [0.027152459411754095,0.06225352393864789,0.09515851168249278,0.12462897125553387,
-                   0.14959598881657673,0.16915651939500254,0.1826034150449236,0.1894506104550685,
-                   0.1894506104550685,0.1826034150449236,0.16915651939500254,0.14959598881657673,
-                   0.12462897125553387,0.09515851168249278,0.06225352393864789,0.027152459411754095];
-function piBarrierAction(X, xStart, ya, yb, amps, cfg = {}){
-  const V0 = cfg.barrier ?? 0;
-  if (!V0 || !(X > 0)) return 0;
-  const sx = Math.max(1e-6, cfg.barrierXWidth ?? PI_DEFAULTS.barrierXWidth);
-  const sy = Math.max(1e-6, cfg.barrierWidth ?? PI_DEFAULTS.barrierWidth);
-  const xb = (cfg.L1 ?? PI_DEFAULTS.L1) + (cfg.L2 ?? PI_DEFAULTS.L2) / 2;
-  const lo = Math.max(xStart, xb - 5 * sx), hi = Math.min(xStart + X, xb + 5 * sx);
-  if (!(hi > lo)) return 0;
-  const mid = (lo + hi) / 2, half = (hi - lo) / 2;
-  let action = 0;
-  for (let q = 0; q < PI_GL16_X.length; q++){
-    const x = mid + half * PI_GL16_X[q], t = (x - xStart) / X;
-    let y = ya + (yb - ya) * t;
-    for (let m = 0; m < amps.length; m++) y += amps[m] * Math.sin((m + 1) * Math.PI * t);
-    const dx = (x - xb) / sx, dy = y / sy;
-    action += PI_GL16_W[q] * Math.exp(-0.5 * (dx * dx + dy * dy));
-  }
-  return V0 * half * action;
-}
-
-/* 势垒存在时，端点会影响模态路径上的 ∫Vdt，不能再用 C(X) 的端点无关因式分解。
-   对第一弯曲模态作中点求积；若 modes=2，第二模态保留自由因子（不与 V 耦合）。
-   主求积阶数随 K 控件映射到 2–8，参照多两阶；无势垒时仍走原自由积分。 */
-function piBarrierOrder(c, reference = false){
-  const k = Math.max(2, Math.min(8, Math.round((c.K ?? PI_DEFAULTS.K) / 8)));
-  return reference ? Math.min(10, k + 2) : k;
-}
-const PI_POT_MODE2_CACHE = new Map();
-function piFreeMode2(X, cfg){
-  const key = X + '|' + (cfg.K ?? PI_DEFAULTS.K) + '|' + (cfg.W ?? PI_DEFAULTS.W);
-  let v = PI_POT_MODE2_CACHE.get(key);
-  if (!v){
-    v = piModeSum1D(X, 2, cfg);
-    if (PI_POT_MODE2_CACHE.size > 32) PI_POT_MODE2_CACHE.clear();
-    PI_POT_MODE2_CACHE.set(key, v);
-  }
-  return v;
-}
-function piPotentialSegmentSum(X, ya, yb, xStart, cfg, K, fixedA1 = null){
-  const modes = Math.max(1, Math.min(2, cfg.modes ?? PI_DEFAULTS.modes));
-  const n = 2 * K, W = cfg.W ?? PI_DEFAULTS.W;
-  const c1 = piModeCoef(X, 1), h1 = W / K;
-  const n1 = fixedA1 === null ? n : 1;
-  let re = 0, im = 0;
-  for (let i = 0; i < n1; i++){
-    const a1 = fixedA1 === null ? -W + (i + 0.5) * h1 : fixedA1;
-    const ph = piStraightPhase(X, yb - ya) + c1 * a1 * a1
-      - piBarrierAction(X, xStart, ya, yb, [a1], cfg);
-    re += Math.cos(ph); im += Math.sin(ph);
-  }
-  if (modes > 1){
-    const c2 = piFreeMode2(X, cfg);
-    const r = re * c2.re - im * c2.im, i = re * c2.im + im * c2.re;
-    re = r; im = i;
-  }
-  return { re, im };
-}
 
 /* ---------- 模态族的等权求和 ---------- */
 /* 嵌套循环（不用因式分解）：这正是「逐条路径相加」的字面实现，
@@ -864,34 +633,10 @@ function piAnalyticSegment(X, dy){
 /* ---------- 缝位置 ---------- */
 function piSlits(cfg = {}){
   const c = { ...PI_DEFAULTS, ...cfg };
-  const n = Math.max(1, Math.min(8, Math.round(c.nslit ?? 2)));
   const out = [];
-  if (n === 1){
-    /* 单缝：置中（旧的 single 预设就是 d=0，这里直接给 0） */
-    out.push(0);
-    return out;
-  }
-  if (n === 2){
-    if (c.openA) out.push(+c.d / 2);
-    if (c.openB) out.push(-c.d / 2);
-    return out;
-  }
-  /* N ≥ 3：等间距光栅，**关于原点对称**（N 偶：±d/2, ±3d/2…；N 奇：0, ±d…）。
-     对称摆放很重要：N 偶时 |y_k| 成对相等 ⟹ 源曲率项 y_k²/(2L₁) 在每对内部是
-     公共相位，主极大仍严格落在 Y = m·λL₂/d 上，峰宽 ∝ 1/N。 */
-  /* 偶数：±d/2, ±3d/2…；奇数：0, ±d, ±2d…（都关于原点对称） */
-  const c0 = (n % 2 === 0) ? 0.5 : 0;
-  const half = (n % 2 === 0) ? n / 2 : (n - 1) / 2;
-  for (let k = 0; k < n; k++) out.push((k + c0 - half) * c.d);
-  out.sort((a, b) => b - a);
+  if (c.openA) out.push(+c.d / 2);
+  if (c.openB) out.push(-c.d / 2);
   return out;
-}
-
-/* ε 的归一化：eps 优先；旧口径 coherent=false ⟺ eps=1 */
-function piEps(cfg = {}){
-  const c = { ...PI_DEFAULTS, ...cfg };
-  if (c.eps !== undefined && c.eps !== null) return Math.max(0, Math.min(1, +c.eps));
-  return c.coherent === false ? 1 : 0;
 }
 
 /* ξ 求积点数：跨缝相位变化 ≈ (|Y|/L₂)·w（源曲率项同量级），要求每样本的相位步
@@ -909,40 +654,6 @@ function piXiSamples(w, n){
   return out;
 }
 
-function piPotentialFirstCache(cfg, K){
-  const c = { ...PI_DEFAULTS, ...cfg }, slits = piSlits(c);
-  const xi = piXiSamples(c.w, Math.max(1, c.nxi | 0));
-  return slits.map(s => xi.map(dx => {
-    const x = s + dx;
-    return piPotentialSegmentSum(c.L1, c.ys, x, 0, c, K);
-  }));
-}
-function piPotentialAmplitudeAt(Y, cfg, K, firstCache = null){
-  const c = { ...PI_DEFAULTS, ...cfg };
-  const slits = piSlits(c);
-  const ni = piNxiFor(c.w, c.L2, Math.abs(Y), Math.max(1, c.nxi | 0));
-  const xi = piXiSamples(c.w, c.potentialNxiCap ? Math.min(ni, c.potentialNxiCap) : ni);
-  let re = 0, im = 0;
-  const per = [];
-  for (let si = 0; si < slits.length; si++){
-    const slit = slits[si];
-    let sr = 0, si2 = 0;
-    for (let qi = 0; qi < xi.length; qi++){
-      const dx = xi[qi], x = slit + dx;
-      const a = firstCache?.[si]?.[qi] || piPotentialSegmentSum(c.L1, c.ys, x, 0, c, K);
-      const b = piPotentialSegmentSum(c.L2, x, Y, c.L1, c, K);
-      let pr = a.re * b.re - a.im * b.im, pI = a.re * b.im + a.im * b.re;
-      const ph = piABPhase(slit, c, Y), cp = Math.cos(ph), sp = Math.sin(ph);
-      const tr = pr * cp - pI * sp, ti = pr * sp + pI * cp;
-      sr += tr; si2 += ti;
-    }
-    sr /= Math.max(1, xi.length); si2 /= Math.max(1, xi.length);
-    per.push({ slit, re: sr, im: si2, mag: Math.hypot(sr, si2) });
-    re += sr; im += si2;
-  }
-  return { raw: { re, im, mag: Math.hypot(re, im) }, per };
-}
-
 /* ---------- 探测点振幅 ---------- */
 /* 返回：
  *   raw   路径求和（未归一）
@@ -952,11 +663,6 @@ function piPotentialAmplitudeAt(Y, cfg, K, firstCache = null){
  */
 function piAmpAt(Y, cfg = {}){
   const c = { ...PI_DEFAULTS, ...cfg };
-  if (c.barrier > 0){
-    const main = piPotentialAmplitudeAt(Y, c, piBarrierOrder(c));
-    const ref = piPotentialAmplitudeAt(Y, c, piBarrierOrder(c, true));
-    return { raw: main.raw, an: ref.raw, per: main.per };
-  }
   const C1 = piModeSum(c.L1, c), C2 = piModeSum(c.L2, c);
   const slits = piSlits(c);
   const xi = piXiSamples(c.w, piNxiFor(c.w, c.L2, Math.abs(Y), Math.max(1, c.nxi | 0)));
@@ -966,16 +672,12 @@ function piAmpAt(Y, cfg = {}){
     let sr = 0, si = 0, ar = 0, ai = 0;
     for (const dx of xi){
       const x = s + dx;
-      const ph = piStraightPhase(c.L1, x - c.ys) + piStraightPhase(c.L2, Y - x)
-        + piABPhase(s, c, Y);
+      const ph = piStraightPhase(c.L1, x - c.ys) + piStraightPhase(c.L2, Y - x);
       sr += Math.cos(ph); si += Math.sin(ph);
       const k1 = piAnalyticSegment(c.L1, x - c.ys), k2 = piAnalyticSegment(c.L2, Y - x);
-      /* 自由解析传播子乘以 AB Wilson 相位 */
-      const kr = k1.re * k2.re - k1.im * k2.im;
-      const ki = k1.re * k2.im + k1.im * k2.re;
-      const extra = piABPhase(s, c, Y);
-      ar += kr * Math.cos(extra) - ki * Math.sin(extra);
-      ai += kr * Math.sin(extra) + ki * Math.cos(extra);
+      /* (a+bi)(c+di) */
+      ar += k1.re * k2.re - k1.im * k2.im;
+      ai += k1.re * k2.im + k1.im * k2.re;
     }
     const n = xi.length;
     /* 路径和：几何相位 × C1·C2，逐缝。(gr+i·gi)(a+ib)(c+id) 的实部是
@@ -992,95 +694,28 @@ function piAmpAt(Y, cfg = {}){
   return { raw: { re, im, mag: Math.hypot(re, im) }, an: { re: anRe, im: anIm, mag: Math.hypot(anRe, anIm) }, per };
 }
 
-/* 单点强度：相干项 (Σ A_k)² 与不相干项 Σ|A_k|² 按 ε 线性混合：
-     I(ε) = (1−ε)·|Σ A_k|² + ε·Σ|A_k|²
-   ε 的物理含义是「退相干份额」：ε 比例的路径被环境/探测器打掉了相位关系（只能强度相加），
-   1−ε 比例的路径仍然相干。这是一个可操作的唯象模型，直接给出
-     V(ε) = (1−ε)·V(0)
-   （标准二值探测器模型的 V=√(1−D²) 是另一条口径——那里 D 是探测器能区分两路的最小错误概率，
-   与这里的 ε 不是同一个量，页面文案按「退相干份额」写，不混用）。
-   ε=0 逐位回到旧口径 coherent=true，ε=1 逐位回到 coherent=false。 */
+/* 单点强度（相干/非相干按 cfg.coherent 选） */
 function piIntensity(Y, cfg = {}){
   const A = piAmpAt(Y, cfg);
-  const e = piEps(cfg);
-  if (e >= 1 - 1e-15){
+  if (cfg.coherent === false){
     let I = 0;
     for (const p of A.per) I += p.mag * p.mag;
     return I;
   }
-  const coh = A.raw.mag * A.raw.mag;
-  if (e <= 1e-15) return coh;
-  let inc = 0;
-  for (const p of A.per) inc += p.mag * p.mag;
-  return (1 - e) * coh + e * inc;
+  return A.raw.mag * A.raw.mag;
 }
 
 /* ---------- 剖面 ---------- */
-function piPotentialProfile(c){
-  const needXi = piNxiFor(c.w, c.L2, c.yFov, Math.max(1, c.nxi | 0));
-  c = { ...c, nxi: c.potentialNxiCap ? Math.min(needXi, c.potentialNxiCap) : needXi };
-  const n = Math.min(c.nY | 0, c._potentialPreview ? 61 : 121), Ys = new Float64Array(n);
-  const cohArr = new Float64Array(n), incArr = new Float64Array(n);
-  const anCohArr = new Float64Array(n), anIncArr = new Float64Array(n);
-  const ymin = -c.yFov, ymax = c.yFov;
-  const kMain = piBarrierOrder(c), kRef = piBarrierOrder(c, true);
-  const firstMain = piPotentialFirstCache(c, kMain), firstRef = piPotentialFirstCache(c, kRef);
-  for (let k = 0; k < n; k++){
-    const Y = ymin + (ymax - ymin) * k / (n - 1); Ys[k] = Y;
-    const a = piPotentialAmplitudeAt(Y, c, kMain, firstMain);
-    cohArr[k] = a.raw.mag * a.raw.mag;
-    for (const p of a.per) incArr[k] += p.mag * p.mag;
-    /* 收敛参照隔点求一次，再在线性插值到显示网格；主曲线仍逐点求解。 */
-    if ((k & 1) === 0 || k === n - 1){
-      const b = piPotentialAmplitudeAt(Y, c, kRef, firstRef);
-      anCohArr[k] = b.raw.mag * b.raw.mag;
-      for (const p of b.per) anIncArr[k] += p.mag * p.mag;
-    }
-  }
-  for (let k = 1; k < n - 1; k += 2){
-    const k1 = Math.min(n - 1, k + 1), t = (k - (k - 1)) / Math.max(1, k1 - (k - 1));
-    anCohArr[k] = anCohArr[k - 1] * (1 - t) + anCohArr[k1] * t;
-    anIncArr[k] = anIncArr[k - 1] * (1 - t) + anIncArr[k1] * t;
-  }
-  const Ip = new Float64Array(n), Ia = new Float64Array(n), Ii = new Float64Array(n);
-  const e = piEps(c), mpC = Math.max(...cohArr), mpI = Math.max(...incArr);
-  const maC = Math.max(...anCohArr), maI = Math.max(...anIncArr);
-  for (let k = 0; k < n; k++){
-    const ch = mpC > 0 ? cohArr[k] / mpC : 0, ic = mpI > 0 ? incArr[k] / mpI : 0;
-    const ach = maC > 0 ? anCohArr[k] / maC : 0, aic = maI > 0 ? anIncArr[k] / maI : 0;
-    Ip[k] = (1 - e) * ch + e * ic;
-    Ia[k] = (1 - e) * ach + e * aic;
-    Ii[k] = incArr[k];
-  }
-  const mp = Math.max(...Ip), ma = Math.max(...Ia);
-  let sMin = Infinity, sMax = -Infinity, sSum = 0, nGood = 0;
-  for (let k = 0; k < n; k++) if (Ia[k] > 1e-30 * ma && Ip[k] > 1e-30 * mp){
-    const r = Ip[k] / Ia[k];
-    if (r < sMin) sMin = r;
-    if (r > sMax) sMax = r;
-    sSum += r; nGood++;
-  }
-  const sMean = sSum / Math.max(1, nGood);
-  return {
-    Y: Ys, path: Float64Array.from(Ip, v => v / Math.max(mp, 1e-300)),
-    an: Float64Array.from(Ia, v => v / Math.max(ma, 1e-300)), raw: Ip, iAn: Ia, incoh: Ii,
-    scale: { min: sMin, max: sMax, mean: sMean, spread: (sMax - sMin) / Math.max(sMean, 1e-300) },
-    maxPath: mp, maxAn: ma,
-  };
-}
-
-/* 用同一模态常数 C1·C2 的快速自由传播剖面；高斯势垒打开时改为有限模态路径积分。 */
+/* 用同一模态常数 C1·C2（已验证与显式逐路径求和一致到 1e-14），
+   所以 241 个探测点的剖面是 O(nY·nSlit·nxi) 而不是 O(nY·K²...) */
 function piProfile(cfg = {}){
   const c = { ...PI_DEFAULTS, ...cfg };
-  if (c.barrier > 0) return piPotentialProfile(c);
   const C1 = piModeSum(c.L1, c), C2 = piModeSum(c.L2, c);
   const slits = piSlits(c);
   const xi = piXiSamples(c.w, piNxiFor(c.w, c.L2, c.yFov, Math.max(1, c.nxi | 0)));
   const n = c.nY | 0;
   const yMin = -c.yFov, yMax = c.yFov;   /* 剖面覆盖画布可见的纵向范围 */
   const Ys = new Float64Array(n), Ip = new Float64Array(n), Ia = new Float64Array(n), Ii = new Float64Array(n);
-  const cohArr = new Float64Array(n), incArr = new Float64Array(n);
-  const anCohArr = new Float64Array(n), anIncArr = new Float64Array(n);
   for (let k = 0; k < n; k++){
     const Y = yMin + (yMax - yMin) * k / (n - 1);
     Ys[k] = Y;
@@ -1089,15 +724,11 @@ function piProfile(cfg = {}){
       let sr = 0, si = 0, kr = 0, ki = 0;
       for (const dx of xi){
         const x = s + dx;
-        const ph = piStraightPhase(c.L1, x - c.ys) + piStraightPhase(c.L2, Y - x)
-          + piABPhase(s, c, Y);
+        const ph = piStraightPhase(c.L1, x - c.ys) + piStraightPhase(c.L2, Y - x);
         sr += Math.cos(ph); si += Math.sin(ph);
         const k1 = piAnalyticSegment(c.L1, x - c.ys), k2 = piAnalyticSegment(c.L2, Y - x);
-        const qr = k1.re * k2.re - k1.im * k2.im;
-        const qi = k1.re * k2.im + k1.im * k2.re;
-        const extra = piABPhase(s, c, Y);
-        kr += qr * Math.cos(extra) - qi * Math.sin(extra);
-        ki += qr * Math.sin(extra) + qi * Math.cos(extra);
+        kr += k1.re * k2.re - k1.im * k2.im;
+        ki += k1.re * k2.im + k1.im * k2.re;
       }
       const m = xi.length;
       const gr = sr / m, gi = si / m;
@@ -1108,26 +739,11 @@ function piProfile(cfg = {}){
       anIncoh += (kr * kr + ki * ki) / (m * m);
       ar += kr / m; ai += ki / m;
     }
-    /* 相干 / 不相干两个端点先各算一份，归一之后再按 ε 混合（见循环后的注释）。 */
-    cohArr[k] = re * re + im * im;
-    incArr[k] = incoh;
-    anCohArr[k] = ar * ar + ai * ai;
-    anIncArr[k] = anIncoh;
-  }
-  /* 两个端点各自归一到**自己的峰值**再按 ε 混合：
-       I(ε) = (1−ε)·Î_coh + ε·Î_inc,  Î = I/max I
-     这样「相干份额」就是画面上的份额（两条曲线都满高）；直接拿未归一的强度混合会被
-     两个峰值的比（相干峰 ≈ 2× 不相干峰）偷偷加权，观测到的可见度就不再是干净的
-     V(ε) = (1−ε)/(1+ε)。端点 ε=0/1 逐位等于旧口径。 */
-  const e = piEps(c);
-  const mpC = Math.max(...cohArr), mpI = Math.max(...incArr);
-  const maC = Math.max(...anCohArr), maI = Math.max(...anIncArr);
-  for (let k = 0; k < n; k++){
-    const ch = mpC > 0 ? cohArr[k] / mpC : 0, ic = mpI > 0 ? incArr[k] / mpI : 0;
-    const ach = maC > 0 ? anCohArr[k] / maC : 0, aic = maI > 0 ? anIncArr[k] / maI : 0;
-    Ip[k] = (1 - e) * ch + e * ic;
-    Ia[k] = (1 - e) * ach + e * aic;
-    Ii[k] = incArr[k];
+    Ip[k] = c.coherent === false ? incoh : re * re + im * im;
+    /* 非相干时对照也换成「各缝强度相加」，否则比值不是常数（那是模式差异，
+       不是数值误差，HUD 的「比值起伏」会误报） */
+    Ia[k] = c.coherent === false ? anIncoh : ar * ar + ai * ai;
+    Ii[k] = incoh;
   }
   /* 归一 + 比值起伏（验证「只差一个常数」） */
   const mp = Math.max(...Ip), ma = Math.max(...Ia);
@@ -1180,12 +796,7 @@ function piPathSamples(Y, cfg = {}, nA = 7){
           const seg1 = [f1 * c.W];
           const seg2 = [f2 * c.W];
           if (c.modes > 1){ seg1.push(f2 * c.W / 2); seg2.push(f1 * c.W / 2); }
-          /* 势垒模式的数值振幅只耦合 a₁；a₂（双模态时）仍是自由因子，
-             因此路径颜色/相位也只把高斯 action 投影到各段的第一模态。 */
-          const barrierAction = piBarrierAction(c.L1, 0, c.ys, x, c.barrier > 0 ? [seg1[0]] : seg1, c)
-            + piBarrierAction(c.L2, c.L1, x, Y, c.barrier > 0 ? [seg2[0]] : seg2, c);
-          const ph = piSegmentPhase(c.L1, x - c.ys, seg1) + piSegmentPhase(c.L2, Y - x, seg2)
-            + piABPhase(s, c, Y) - barrierAction;
+          const ph = piSegmentPhase(c.L1, x - c.ys, seg1) + piSegmentPhase(c.L2, Y - x, seg2);
           out.push({ slit: s, xi: x, seg1, seg2, phase: ph });
         }
       }
@@ -1210,39 +821,6 @@ function piFresnelRef(A, cCoef, N = 20001){
 }
 
 /* ---------- 派生量 ---------- */
-/* N 缝光栅的第一暗纹（相对主极大）= λL₂/(N d)：N 越大主极大越窄（峰宽 ∝ 1/N）。
-   N=1 时无意义（返回 Infinity），N=2 时退化为 λL₂/(2d)（双缝中央包络零点）。 */
-function piGratingWidth(cfg = {}){
-  const c = { ...PI_DEFAULTS, ...cfg };
-  const n = Math.max(1, Math.min(8, Math.round(c.nslit ?? 2)));
-  return (c.d > 1e-9 && n > 1) ? PI_LAMBDA * c.L2 / (n * c.d) : Infinity;
-}
-
-/* 条纹可见度 V = (I_max − I_min)/(I_max + I_min)，但 max/min 取**同一条纹周期内**
-   的相邻极值——不是整窗的最大/最小。为什么：整窗口径把单缝包络的缓降当成了「条纹」，
-   可区分（ε=1）时剖面只是一条平滑包络，却会报出 V≈0.26 的假可见度。
-   做法：先在 |Y| ≤ sp/2 里找主极大，再在它到 ±0.9·sp 的窗口里找最小。
-   ε 混合（两项各自归一）时解析预期 V(ε) = (1−ε)/(1+ε)。 */
-function piVisibility(prof, cfg = {}){
-  const c = { ...PI_DEFAULTS, ...cfg };
-  const sp = piFringeSpacing(c);
-  if (!Number.isFinite(sp) || sp <= 0) return 0;
-  const Y = prof.Y, I = prof.path;
-  let kp = -1, vmax = -Infinity;
-  for (let k = 0; k < Y.length; k++){
-    if (Math.abs(Y[k]) > sp / 2 + 1e-9) continue;
-    if (I[k] > vmax){ vmax = I[k]; kp = k; }
-  }
-  if (kp < 0) return 0;
-  let lo = Infinity;
-  for (let k = 0; k < Y.length; k++){
-    if (Math.abs(Y[k] - Y[kp]) > 0.9 * sp + 1e-9) continue;
-    if (I[k] < lo) lo = I[k];
-  }
-  if (!Number.isFinite(lo) || vmax + lo <= 1e-30) return 0;
-  return (vmax - lo) / (vmax + lo);
-}
-
 function piFringeSpacing(cfg = {}){
   const c = { ...PI_DEFAULTS, ...cfg };
   return c.d > 1e-9 ? PI_LAMBDA * c.L2 / c.d : Infinity;   /* λL₂/d */
@@ -1281,10 +859,9 @@ function piFringes(prof){
 }
 
 const PI_PRESETS = {
-  double: { name: '双缝', text: '两条缝各贡献一个振幅，路径族在此处**分岔**：同一探测点有两条「路径束」，它们的几何相位差 = k·δ（δ 为光程差）⟹ 明暗条纹。逐条路径看相位是乱的，但**沿每条缝**求和后只剩两个宏观振幅——这正是「路径求和 ⟹ 传播子」的可视化。', cfg: { openA: true, openB: true, coherent: true, nslit: 2, eps: 0, flux: 0, barrier: 0, barrierWidth: 12, barrierXWidth: 12, d: 48, w: 8 } },
-  single: { name: '单缝', text: '关掉一条缝、并把留下的那条移到轴上（d=0 ⟹ 光束居中）：干涉消失，只剩**单缝衍射包络**（缝宽 w 的 sinc²），远场第一暗纹在 λL₂/w。这一步是「哪条路」信息的判据——只剩一条路时没有第二个振幅可加。', cfg: { openA: true, openB: false, coherent: true, nslit: 1, eps: 0, flux: 0, barrier: 0, barrierWidth: 12, barrierXWidth: 12, d: 0, w: 20 } },
-  grating: { name: '光栅', text: '把缝从 2 条加到 N 条（等间距 d）：同一个探测点上有 N 个振幅相加，**主极大位置仍由 λL₂/d 定**，但每个主极大被压窄（宽度 ≈ λL₂/(N·d)），峰间冒出 N−2 个次极大。这就是「多缝 → 光栅」的全部物理，仍然是逐条路径相加，没有新规则。', cfg: { openA: true, openB: true, coherent: true, nslit: 6, eps: 0, flux: 0, barrier: 0, barrierWidth: 12, barrierXWidth: 12, d: 16, w: 4 } },
-  incoherent: { name: '可区分', text: '两条缝都开，但**不做幅度相加**（强度相加——等价于「测量了粒子走哪条缝」）。条纹立刻消失，回到两个单缝包络的叠加。面板的「哪条路 ε」滑到 1 就是这件事：两条路变得可区分，干涉项归零。', cfg: { openA: true, openB: true, coherent: false, nslit: 2, eps: 1, flux: 0, barrier: 0, barrierWidth: 12, barrierXWidth: 12, d: 48, w: 8 } },
+  double: { name: '双缝', text: '两条缝各贡献一个振幅，路径族在此处**分岔**：同一探测点有两条「路径束」，它们的几何相位差 = k·δ（δ 为光程差）⟹ 明暗条纹。逐条路径看相位是乱的，但**沿每条缝**求和后只剩两个宏观振幅——这正是「路径求和 ⟹ 传播子」的可视化。', cfg: { openA: true, openB: true, coherent: true, d: 48, w: 8 } },
+  single: { name: '单缝', text: '关掉一条缝、并把留下的那条移到轴上（d=0 ⟹ 光束居中）：干涉消失，只剩**单缝衍射包络**（缝宽 w 的 sinc²），远场第一暗纹在 λL₂/w。这一步是「哪条路」信息的判据——只剩一条路时没有第二个振幅可加。', cfg: { openA: true, openB: false, coherent: true, d: 0, w: 20 } },
+  incoherent: { name: '可区分', text: '两条缝都开，但**不做幅度相加**（强度相加——等价于「测量了粒子走哪条缝」）。条纹立刻消失，回到两个单缝包络的叠加。这是 R72「可区分性 ε」在路径语言里的同一条物理。', cfg: { openA: true, openB: true, coherent: false, d: 48, w: 8 } },
 };
 
 /* ---------- 可视化：一阶模态扫描的累积和（Cornu 型螺旋） ----------
@@ -1320,95 +897,13 @@ function piSpiral(X, opts = {}){
   return s.result();
 }
 
-/* 当前配置下的完整振幅 a₁ 累积：扫描第一段第一模态 a₁，其余自由度
-   （第一段其余模态、第二段所有模态、缝宽 ξ 与全部开缝）按配置求和。
-   终点应与 piAmpAt(Y,cfg).raw 一致；N/d/w/L₁/L₂/Y/modes/AB 磁通/高斯势等变化都会改变曲线。
-   ε 是强度混合而非路径相位，故不改变这条复振幅曲线（这是物理上的不变量）。 */
-function piPotentialSpiralStream(cfg){
-  const c = { ...PI_DEFAULTS, ...cfg }, K = piBarrierOrder(c), W = c.W;
-  const Y = Number.isFinite(c.Y) ? c.Y : 0;
-  const slits = piSlits(c);
-  const xi = piXiSamples(c.w, piNxiFor(c.w, c.L2, Math.abs(Y), Math.max(1, c.nxi | 0)));
-  const pts = [[0, 0]];
-  let re = 0, im = 0, n = 0;
-  const total = 2 * K, h = W / K;
-  function one(){
-    const a1 = -W + (n + 0.5) * h;
-    let dr = 0, di = 0;
-    for (const slit of slits){
-      let sr = 0, si = 0;
-      for (const dx of xi){
-        const x = slit + dx;
-        const a = piPotentialSegmentSum(c.L1, c.ys, x, 0, c, K, a1);
-        const b = piPotentialSegmentSum(c.L2, x, Y, c.L1, c, K);
-        const qr = a.re * b.re - a.im * b.im, qi = a.re * b.im + a.im * b.re;
-        const ph = piABPhase(slit, c, Y), cp = Math.cos(ph), sp = Math.sin(ph);
-        sr += qr * cp - qi * sp; si += qr * sp + qi * cp;
-      }
-      dr += sr / Math.max(1, xi.length); di += si / Math.max(1, xi.length);
-    }
-    re += dr; im += di; pts.push([re, im]); n++;
-  }
-  return {
-    get total(){ return total + 1; }, get n(){ return n + 1; },
-    step(count){ for (let k=0,m=Math.max(0,count|0); k<m&&n<total; k++) one(); },
-    result(){ return { pts, total:{ re, im, mag:Math.hypot(re,im) }, count:n, len:total, h }; },
-  };
-}
-
-function piPathSpiralStream(cfg = {}){
-  const c = { ...PI_DEFAULTS, ...cfg };
-  if (c.barrier > 0) return piPotentialSpiralStream(c);
-  const K = Math.max(1, c.K | 0), W = c.W;
-  const Y = Number.isFinite(c.Y) ? c.Y : 0;
-  const slits = piSlits(c);
-  const xi = piXiSamples(c.w, piNxiFor(c.w, c.L2, Math.abs(Y), Math.max(1, c.nxi | 0)));
-  const other1 = c.modes > 1 ? piModeSum1D(c.L1, 2, c) : { re: 1, im: 0 };
-  const second = piModeSum(c.L2, c);
-  const fac = { re: other1.re * second.re - other1.im * second.im,
-                im: other1.re * second.im + other1.im * second.re };
-  let baseRe = 0, baseIm = 0;
-  for (const slit of slits){
-    for (const dx of xi){
-      const x = slit + dx;
-      const ph = piStraightPhase(c.L1, x - c.ys) + piStraightPhase(c.L2, Y - x)
-        + piABPhase(slit, c, Y);
-      baseRe += Math.cos(ph); baseIm += Math.sin(ph);
-    }
-  }
-  const invXi = xi.length ? 1 / xi.length : 0;
-  const br = (baseRe * fac.re - baseIm * fac.im) * invXi;
-  const bi = (baseRe * fac.im + baseIm * fac.re) * invXi;
-  const coef = piModeCoef(c.L1, 1), A = W, h = A / K;
-  const pts = [[0, 0]];
-  let re = 0, im = 0, n = 0;
-  const total = 2 * K;
-  function one(){
-    const a = -A + (n + 0.5) * h, ph = coef * a * a;
-    re += br * Math.cos(ph) - bi * Math.sin(ph);
-    im += br * Math.sin(ph) + bi * Math.cos(ph);
-    pts.push([re, im]); n++;
-  }
-  return {
-    get total(){ return total + 1; },
-    get n(){ return n + 1; },
-    step(count){ for (let k = 0, m = Math.max(0, count | 0); k < m && n < total; k++) one(); },
-    result(){ return { pts, total: { re, im, mag: Math.hypot(re, im) }, count: n, len: total, h }; },
-  };
-}
-function piPathSpiral(cfg = {}){
-  const s = piPathSpiralStream(cfg);
-  s.step(s.total);
-  return s.result();
-}
-
 /* ===== src/qec/live.js ===== */
 /* ============================================================================
  * live.js（R98 P2 新建）— 共享 LiveDriver：一次性 MC 批 → rAF 分帧演出
  *
- * 背景（用户指令「剩下的能不能都做成实时沙盒类？」）：QEC hub 八个模式的统计
+ * 背景（用户指令「剩下的能不能都做成实时沙盒类？」）：QEC hub 七个模式的统计
  * 原先都是「参数变 → 同步跑完整批 → 画」（拖动滑块时整页卡顿几百 ms）。P2 把
- * 物理层累加器（qecStream / shorStream / gnStream / fsStream / cfStream / scStream / scSpaceStream）接到
+ * 物理层累加器（qecStream / shorStream / gnStream / fsStream / cfStream）接到
  * 这个共享播放器上：播放时每帧只跑一段试验，统计量随帧增长（trials 计数、
  * P_L、直方图、结局分解全部在动），20fps 节制；跑满目标批自动停；暂停即冻结
  * （累加器保留，再播接着演）；参数变化重置累加器（播放中换新的**立即演一帧**
@@ -1554,18 +1049,18 @@ class LiveDriver {
 /* ============================================================================
  * paths.js（页面）— R74 费曼路径求和：路径族 / 相位螺旋 / 条纹剖面
  *
- * 纯 CPU canvas（无 WebGL、无引擎）：默认是「源 → 双缝屏 → 探测面」的物理平面图；
- * 可切 3D 透视展开路径束。3D 深度仅用于分开路径样本，不是额外物理坐标；物理仍在
- * src/physics/paths.js，切视图不改变传播结果。
+ * 纯 CPU、纯 2D canvas（无 WebGL、无引擎）：几何是「源 → 双缝屏 → 探测面」的
+ * 平面图，路径是平面曲线，相位是 e^{iS/ħ}。物理全在 src/physics/paths.js。
  *
  * 三块画布：
  *   #pvMain    世界图：源/屏/探测面 + 路径族（按相位着色）+ 探测面强度条
- *   #pvSpiral  当前配置的完整路径振幅沿 a₁ 扫描累积（Cornu 型螺旋）
+ *   #pvSpiral  一阶模态扫描的累积和（Cornu 型螺旋）→ 相消的几何真相
  *   #pvProfile 探测面强度剖面：路径和 vs 解析传播子（归一后重合）
  *
- * 重绘策略：主图最多画 480 条抽样路径（每条 10+12 段）；参数拖动期间重物理重算限 10 Hz，
- * 探测点拖动复用 241 点剖面。a₁ 螺旋由完整当前配置的 piPathSpiralStream 驱动；
- * LiveDriver 按时长分帧（播/暂停/重放，?live=1 即播），frame() 只余 FPS、dirty 更新与绘制。
+ * 重绘策略：主图只在参数/探测点变化时重绘（路径族 686 条 × 40 段，每帧重画
+ * 是浪费）；螺旋与剖面同理。R98 P4 起螺旋的「相位累积」改为播放器驱动
+ * （LiveDriver 时长基准分帧，播/暂停/重放，?live=1 即播），frame() 只余
+ * FPS 与重绘职责。
  *
  * 调试句柄 window.__pv（cdp74 用）：state / setParam / setY / preset / ampAt /
  * current / profileAt / profile / pathCount / sumInfo / spiralInfo / navLinks /
@@ -1595,57 +1090,26 @@ const PV_CSS = `
   #pvHud .hrow span:first-child{color:var(--dim)}
   #pvHud .hrow span:last-child{color:var(--txt)}
   #pvHud hr{border:none;border-top:1px solid var(--line);margin:6px 0}
-  /* 舞台几何由 JS 写整数 px（见 layoutSize）：CSS 只留排版性质，不再给宽度算式——
-     旧的 min(calc(100vw - 520px),1060px) 会把画布压成「三块之后的剩余宽度」（1024 只剩 504，
-     900 只剩 380），那正是「被挤压」。 */
-  #pvStage{position:fixed;z-index:5;display:grid;gap:9px}
-  /* 画布不用 border（= 1px 会占盒模型、位图与 CSS 盒差 2px ⟹ 重采样变糊），描边走 inset 阴影 */
-  #pvMain{grid-row:1 / span 2;border:0;border-radius:10px;
-    box-shadow:inset 0 0 0 1px var(--line);
+  #pvStage{position:fixed;left:50%;top:calc(50% + 12px);transform:translate(-50%,-50%);z-index:5;
+    display:grid;grid-template-columns:minmax(0,1fr) 282px;grid-template-rows:1fr 1fr;gap:9px;
+    width:min(calc(100vw - 520px),1060px);height:min(78vh,620px)}
+  #pvMain{grid-row:1 / span 2;width:100%;height:100%;border:1px solid var(--line);border-radius:10px;
     background:rgba(4,8,16,.55);display:block;cursor:crosshair;touch-action:none}
-  #pvSpiral,#pvProfile{border:0;border-radius:10px;box-shadow:inset 0 0 0 1px var(--line);
+  #pvSpiral,#pvProfile{width:100%;height:100%;border:1px solid var(--line);border-radius:10px;
     background:rgba(4,8,16,.55);display:block}
-  /* 861–1200px：三栏排不下就不排——舞台独占整宽，面板/读数改成底部可开合 sheet（默认收起） */
-  #pvBand{display:none;gap:6px;position:absolute;top:-28px;left:0}
-  #pvBand button{font-family:var(--mono);font-size:10.5px;padding:3px 8px;border-radius:6px;cursor:pointer;
-    background:rgba(103,232,249,.08);border:1px solid var(--line);color:var(--txt)}
-  #pvBand button.on{background:rgba(103,232,249,.18);border-color:var(--cyan);color:var(--cyan)}
-  @media (min-width:861px) and (max-width:1200px){
-    #pvPanel,#pvHud{display:none;position:fixed;left:6px;right:6px;width:auto;top:auto;bottom:52px;
-      max-height:58vh;z-index:13;overflow-y:auto}
-    #pvPanel.open,#pvHud.open{display:block}
-    #pvBand{display:flex}
-    #pvHint{display:none}
-  }
   #pvHint{left:14px;bottom:14px;z-index:10;padding:9px 13px;max-width:320px;font-size:11px;
     color:var(--dim);line-height:1.6;max-height:110px;overflow-y:auto;
     scrollbar-width:thin;scrollbar-color:rgba(120,160,220,.25) transparent}
   #pvHint b{color:var(--amber);font-weight:600;display:block;margin-bottom:2px;font-size:11.5px}
   #pvDiag{position:fixed;left:-9999px}
-  @media (max-width:1180px){#pvHint{display:none}}
+  @media (max-width:1180px){#pvStage{width:calc(100vw - 60px);grid-template-columns:minmax(0,1fr) 220px}
+    #pvHint{display:none}}
 `;
 
-const clamp = (v, a, b) => (v < a ? a : (v > b ? b : v));
 const nf = (x, d = 4) => (Number.isFinite(x) ? x.toFixed(d) : '—');
 const ex = (x, d = 2) => (Number.isFinite(x) && x !== 0 ? x.toExponential(d) : '0');
-function pathCamDefault(){ return { ...hbCamDefault(), pitch: 0.48, dist: 6.8 }; }
-function readPathCam(q){
-  const d = pathCamDefault(), raw = q.get('cam');
-  if (!raw) return d;
-  const a = raw.split(',').map(Number);
-  if (a.length !== 3 || !a.every(Number.isFinite)) return d;
-  return { yaw: a[0], pitch: clamp(a[1], -PITCH_LIM, PITCH_LIM), dist: clamp(a[2], 4.8, 16) };
-}
 
 /* 页面侧折线（只画不求值；与 physics 的 piPolyline 同式，避免为了画图 import） */
-function visualSamples(Y, cfg, nA = 5, cap = 480){
-  const all = piPathSamples(Y, cfg, nA);
-  if (all.length <= cap) return all;
-  const out = new Array(cap);
-  for (let i = 0; i < cap; i++) out[i] = all[Math.floor(i * all.length / cap)];
-  return out;
-}
-
 function polyline(xa, ya, xb, yb, amps, N){
   const pts = [];
   for (let i = 0; i <= N; i++){
@@ -1667,28 +1131,18 @@ class PathsApp {
     /* URL 里的 preset 必须带上它自己的 d/w（单缝是 d=0、w=20）；显式 ?d=/?w= 优先 */
     this.state = {
       preset,
-      proj: q.get('proj') === '3d' ? '3d' : '2d',
       L1: num('L1', PI_DEFAULTS.L1), L2: num('L2', PI_DEFAULTS.L2),
       d: num('d', pcfg.d ?? 48), w: num('w', pcfg.w ?? 8), W: num('W', 40),
-      flux: clamp(num('flux', pcfg.flux ?? 0), 0, 1),
-      barrier: clamp(num('barrier', pcfg.barrier ?? 0), 0, 0.2),
-      barrierWidth: clamp(num('bw', pcfg.barrierWidth ?? 12), 4, 80),
-      barrierXWidth: clamp(num('bx', pcfg.barrierXWidth ?? 12), 4, 80),
       K: Math.round(num('K', PI_DEFAULTS.K)), modes: Math.round(num('modes', PI_DEFAULTS.modes)),
       nxi: Math.round(num('nxi', 7)), Y: num('Y', 0),
       openA: q.has('A') ? q.get('A') !== '0' : pcfg.openA,
       openB: q.has('B') ? q.get('B') !== '0' : pcfg.openB,
       coherent: q.has('coh') ? q.get('coh') !== '0' : pcfg.coherent,
-      /* 缝数（≥3 = 等间距光栅）与「哪条路信息」ε ∈ [0,1] */
-      nslit: clamp(Math.round(num('N', pcfg.nslit ?? 2)), 1, 6),
-      eps: clamp(q.has('eps') ? parseFloat(q.get('eps')) : (q.has('coh') ? (q.get('coh') === '0' ? 1 : 0) : (pcfg.eps ?? 0)), 0, 1),
       reveal: q.get('reveal') === '0' ? 0 : 1,
       paused: q.get('paused') === '1',
       live: q.get('live') === '1',
     };
-    this.cam = readPathCam(q); this._orbit = null;
-    this._listeners = []; this._dirty = true; this._dirtyY = false; this._deferSpiral = false;
-    this._gestureActive = false; this._lastGesturePaint = -Infinity; this._needDraw = true;
+    this._listeners = []; this._dirty = true; this._needDraw = true;
     this._fps = 0; this._fpsFrames = 0; this._lastFpsT = performance.now();
     this.live = null; this._userPaused = false;
     this.view = { sx: 1, yFov: 130, ox: 0, oy: 0, w: 800, h: 520, padT: 22, padB: 26, dpr: 1 };
@@ -1708,14 +1162,12 @@ class PathsApp {
     const s = this.state;
     return {
       L1: s.L1, L2: s.L2, ys: 0, d: s.d, w: s.w,
-      flux: s.flux, barrier: s.barrier, barrierWidth: s.barrierWidth, barrierXWidth: s.barrierXWidth,
       modes: s.modes, K: s.K, W: s.W,
       /* ξ 求积点数按跨缝相位步长自适应（piProfile 内部同一条公式）：页面必须
          用同一个有效值报「路径总数」，否则 HUD 少报 */
       nxi: piNxiFor(s.w, s.L2, this.view.yFov, s.nxi),
       nY: 241, yFov: this.view.yFov,
       openA: s.openA, openB: s.openB, coherent: s.coherent,
-      nslit: s.nslit, eps: s.eps,
     };
   }
 
@@ -1740,27 +1192,13 @@ class PathsApp {
           <button id="pvP1" data-p="single">单缝</button>
         </div>
         <div class="btns" style="margin-top:6px">
-          <button id="pvP3" data-p="grating">N 缝光栅</button>
-          <button id="pvP2" data-p="incoherent">可区分</button>
+          <button id="pvP2" data-p="incoherent" style="grid-column:1 / span 2">可区分（强度相加）</button>
         </div>
-        <div class="chk" style="margin-top:4px"><span style="font-size:10.5px;color:var(--dim)">可区分 = 强度相加（ε=1）</span></div>
-        <div class="grp">路径视图</div>
-        <div class="btns"><button id="pvView2d" class="on" title="平面物理几何">2D 平面</button><button id="pvView3d" title="透视展开路径族">3D 透视</button></div>
-        <div class="chk" style="margin-top:3px"><span style="font-size:10px;color:var(--dim)">3D x=传播、y=横向；深度仅分开路径样本（非物理坐标）；拖动旋转、滚轮缩放，R 复位</span></div>
         <div class="grp">缝</div>
         <div class="chk"><input type="checkbox" id="pvA"><label for="pvA">缝 A 开</label></div>
         <div class="chk"><input type="checkbox" id="pvB"><label for="pvB">缝 B 开</label></div>
-        <div class="row"><label>缝数 N</label><input type="range" id="pvN" min="1" max="6" step="1"><output id="pvNo">—</output></div>
         <div class="row"><label>缝间距 d</label><input type="range" id="pvD" min="0" max="80" step="1"><output id="pvDo">—</output></div>
         <div class="row"><label>缝宽 w</label><input type="range" id="pvW" min="2" max="24" step="1"><output id="pvWo">—</output></div>
-        <div class="row"><label>哪条路 ε</label><input type="range" id="pvEps" min="0" max="1" step="0.05"><output id="pvEpso">—</output></div>
-        <div class="chk" style="margin-top:-2px"><span style="font-size:10.5px;color:var(--dim)">ε = 退相干份额：I=(1−ε)·相干 + ε·非相干（0 幅度相加 / 1 强度相加）</span></div>
-        <div class="grp">路径相位 / 势垒</div>
-        <div class="row"><label>AB 磁通 Φ/Φ₀</label><input type="range" id="pvFlux" min="0" max="1" step="0.05"><output id="pvFluxO">—</output></div>
-        <div class="row"><label>高斯势垒 V₀</label><input type="range" id="pvBarrier" min="0" max="0.2" step="0.005"><output id="pvBarrierO">—</output></div>
-        <div class="row"><label>传播宽 σx</label><input type="range" id="pvBX" min="4" max="80" step="2"><output id="pvBXO">—</output></div>
-        <div class="row"><label>横向宽 σy</label><input type="range" id="pvBW" min="4" max="80" step="2"><output id="pvBWO">—</output></div>
-        <div class="chk" style="margin-top:-2px"><span style="font-size:10.5px;color:var(--dim)">AB：理想磁通管置于缝间，沿路累计 Wilson 相位；双缝相差 2πΦ/Φ₀。高斯势场沿路积分 −∫Vdt（非薄屏）</span></div>
         <div class="grp">路径族</div>
         <div class="row"><label>波折幅度</label><input type="range" id="pvAmp" min="0" max="46" step="1"><output id="pvAmpO">—</output></div>
         <div class="row"><label>每段样本</label><input type="range" id="pvK" min="8" max="120" step="4"><output id="pvKo">—</output></div>
@@ -1775,10 +1213,6 @@ class PathsApp {
       </aside>
 
       <div id="pvStage" class="qstage">
-        <div id="pvBand">
-          <button id="pvDrawerPanel" title="展开/收起控制面板（窄屏）">⚙ 控制</button>
-          <button id="pvDrawerHud" title="展开/收起读数（窄屏）">◫ 读数</button>
-        </div>
         <canvas id="pvMain"></canvas>
         <canvas id="pvSpiral"></canvas>
         <canvas id="pvProfile"></canvas>
@@ -1796,13 +1230,9 @@ class PathsApp {
         <div class="hrow"><span>I(Y) 归一</span><span id="hI">—</span></div>
         <div class="hrow"><span>暗纹数 / 对比度</span><span id="hVis">—</span></div>
         <div class="hrow"><span>条纹间距 λL₂/d</span><span id="hFringe">—</span></div>
-        <div class="hrow"><span>缝数 N · 可见度 V</span><span id="hNV">—</span></div>
-        <div class="hrow"><span>主极大宽度 λL₂/(Nd)</span><span id="hGW">—</span></div>
-        <div class="hrow"><span>AB 磁通 Φ/Φ₀</span><span id="hFlux">—</span></div>
-        <div class="hrow"><span>高斯势垒 V₀ / σx / σy</span><span id="hBarrier">—</span></div>
         <hr>
-        <div class="hrow"><span id="hRatioLabel">路径和 vs 解析（归一）</span><span id="hRatio">—</span></div>
-        <div class="hrow"><span id="hSpreadLabel">比值起伏</span><span id="hSpread">—</span></div>
+        <div class="hrow"><span>路径和 vs 解析（归一）</span><span id="hRatio">—</span></div>
+        <div class="hrow"><span>比值起伏</span><span id="hSpread">—</span></div>
         <div class="hrow"><span>FPS</span><span id="hFps">—</span></div>
       </aside>
 
@@ -1812,48 +1242,27 @@ class PathsApp {
 
     this._bind();
     this.syncPanel();
-    this.layoutSize();
-    if (typeof ResizeObserver !== 'undefined'){
-      try {
-        this._ro = new ResizeObserver(() => { this.layoutSize(); });
-        this._ro.observe(this.q('#pvStage'));
-      } catch (_){ this._ro = null; }
-    }
-    /* 兜底：没有 RO 的环境（老浏览器/jsdom）靠 window.resize 重排 */
-    this._onWinResize = () => {
-      const w = window.innerWidth || 0;
-      if (w > 1200 || w <= 860) this.closeBand();
-      this.layoutSize();
-    };
-    window.addEventListener('resize', this._onWinResize);
+    this.resize();
+    const ro = new ResizeObserver(() => this.resize());
+    ro.observe(this.q('#pvStage'));
     this.recompute();
-    if (this.state.live || this.state.reveal === 0) this.live.start();   /* 布局与 cfg 就绪后再建流 */
     requestAnimationFrame(this.frame);
     return this;
   }
 
   _bind(){
     const s = this.state;
-    for (const id of ['pvP0', 'pvP1', 'pvP2', 'pvP3']){
+    for (const id of ['pvP0', 'pvP1', 'pvP2']){
       this.on(this.q('#' + id), 'click', e => { this.applyPreset(e.currentTarget.dataset.p); this.recompute(); });
     }
     const slider = (id, out, key, post) => {
       const el = this.q('#' + id), o = this.q('#' + out);
       this.on(el, 'input', () => {
         const v = parseFloat(el.value);
-        if (!this._gestureActive) this._lastGesturePaint = -Infinity;
-        this._gestureActive = true;
-        this.setParam(key, v, true);   /* 连续拖动只更新状态；昂贵的求和/重播在 change 时提交 */
+        this.setParam(key, v);
         if (o) o.textContent = post ? post(v) : String(v);
       });
-      this.on(el, 'change', () => this.finishParamGesture());
     };
-    slider('pvN', 'pvNo', 'nslit');
-    slider('pvEps', 'pvEpso', 'eps', v => v.toFixed(2));
-    slider('pvFlux', 'pvFluxO', 'flux', v => v.toFixed(2));
-    slider('pvBarrier', 'pvBarrierO', 'barrier', v => v.toFixed(3));
-    slider('pvBX', 'pvBXO', 'barrierXWidth');
-    slider('pvBW', 'pvBWO', 'barrierWidth');
     slider('pvD', 'pvDo', 'd');
     slider('pvW', 'pvWo', 'w');
     slider('pvAmp', 'pvAmpO', 'W');
@@ -1863,11 +1272,9 @@ class PathsApp {
     this.on(this.q('#pvA'), 'change', e => { s.openA = e.currentTarget.checked; this._touch(true); });
     this.on(this.q('#pvB'), 'change', e => { s.openB = e.currentTarget.checked; this._touch(true); });
     this.on(this.q('#pvReplay'), 'click', () => this.replaySum());
-    this.on(this.q('#pvDrawerPanel'), 'click', () => this.toggleBand('panel'));
-    this.on(this.q('#pvDrawerHud'), 'click', () => this.toggleBand('hud'));
     /* ---- R98 P4 实时沙盒：相位累积播放（Cornu 螺旋逐点生长） ---- */
     this.live = new LiveDriver({
-      make: () => piPathSpiralStream({ ...this.cfg(), Y: this.state.Y }),
+      make: () => piSpiralStream(this.state.L1, { K: this.state.K, W: this.state.W }),
       onFrame: res => {
         this.spir = res;
         this.state.reveal = res.count / Math.max(1, res.len);   /* 0..1 镜像（测试/兼容用） */
@@ -1882,75 +1289,24 @@ class PathsApp {
       this.live.toggle();
     });
     this.syncPlayBtn();
+    if (this.state.live || this.state.reveal === 0) this.live.start();   /* ?live=1 / ?reveal=0 即播 */
 
-    this.on(this.q('#pvView2d'), 'click', () => this.setProj('2d'));
-    this.on(this.q('#pvView3d'), 'click', () => this.setProj('3d'));
     const cv = this.q('#pvMain');
     let drag = false;
     const fromEvent = e => {
       const r = cv.getBoundingClientRect();
       const t = (e.clientY - r.top) / Math.max(1, r.height);
-      this.setY(this.view.yFov - t * 2 * this.view.yFov, true);
+      this.setY(this.view.yFov - t * 2 * this.view.yFov);
     };
-    this.on(cv, 'pointerdown', e => {
-      if (this.state.proj === '3d'){
-        this._orbit = { x: e.clientX, y: e.clientY };
-        cv.setPointerCapture?.(e.pointerId); e.preventDefault(); return;
-      }
-      drag = true; cv.setPointerCapture?.(e.pointerId); fromEvent(e);
-    });
-    this.on(cv, 'pointermove', e => {
-      if (this._orbit && this.state.proj === '3d'){
-        const dx = e.clientX - this._orbit.x, dy = e.clientY - this._orbit.y;
-        this._orbit = { x: e.clientX, y: e.clientY };
-        this.cam = hbOrbit(this.cam, dx, dy); this.drawMain(); return;
-      }
-      if (drag) fromEvent(e);
-    });
-    this.on(cv, 'pointerup', () => {
-      const orbited = !!this._orbit; this._orbit = null; drag = false; this.finishYGesture();
-      if (orbited) this.syncCameraUrl();
-    });
-    this.on(cv, 'pointercancel', () => {
-      const orbited = !!this._orbit; this._orbit = null; drag = false; this.finishYGesture();
-      if (orbited) this.syncCameraUrl();
-    });
-    this.on(cv, 'wheel', e => {
-      if (this.state.proj !== '3d') return;
-      e.preventDefault();
-      this.cam = hbZoom(this.cam, Math.exp((e.deltaY || 0) * 0.0012));
-      this.cam.dist = clamp(this.cam.dist, 4.8, 16); this.drawMain(); this.syncCameraUrl();
-    }, { passive: false });
-    this.on(cv, 'dblclick', () => { if (this.state.proj === '3d') this.resetCam(); });
+    this.on(cv, 'pointerdown', e => { drag = true; cv.setPointerCapture?.(e.pointerId); fromEvent(e); });
+    this.on(cv, 'pointermove', e => { if (drag) fromEvent(e); });
+    this.on(cv, 'pointerup', () => { drag = false; });
+    this.on(cv, 'pointercancel', () => { drag = false; });
     this.on(window, 'keydown', e => {
-      const tag = (e.target && e.target.tagName) || '';
-      if (/input|textarea|select/i.test(tag)) return;
       if (e.key === 'ArrowUp'){ this.setY(s.Y - 2); e.preventDefault(); }
       if (e.key === 'ArrowDown'){ this.setY(s.Y + 2); e.preventDefault(); }
-      if (e.key === '0') this.setProj(this.state.proj === '3d' ? '2d' : '3d');
-      if ((e.key === 'r' || e.key === 'R') && this.state.proj === '3d') this.resetCam();
-      if (e.key === 'Escape') this.closeBand();
     });
   }
-
-  syncCameraUrl(){
-    const q = new URLSearchParams(location.search);
-    if (this.state.proj === '3d'){
-      q.set('proj', '3d');
-      q.set('cam', [this.cam.yaw, this.cam.pitch, this.cam.dist].map(v => (+v).toFixed(3)).join(','));
-    } else { q.delete('proj'); q.delete('cam'); }
-    const query = q.toString();
-    try { history.replaceState(history.state, '', location.pathname + (query ? '?' + query : '') + location.hash); }
-    catch (_){ /* file:// 环境不支持 History API 时仍保留当前相机 */ }
-  }
-  setProj(proj){
-    this.state.proj = proj === '3d' ? '3d' : '2d'; this._orbit = null;
-    const stage = this.q('#pvStage'); if (stage) stage.dataset.proj = this.state.proj;
-    const cv = this.q('#pvMain'); if (cv) cv.style.cursor = this.state.proj === '3d' ? 'grab' : 'crosshair';
-    this.syncPanel(); this._needDraw = true; this.drawMain(); this.syncCameraUrl();
-    return this.state.proj;
-  }
-  resetCam(){ this.cam = pathCamDefault(); this.drawMain(); this.syncCameraUrl(); return { ...this.cam }; }
 
   applyPreset(name){
     const p = PI_PRESETS[name];
@@ -1960,77 +1316,32 @@ class PathsApp {
     this.syncPanel();
     this._touch(true);
     this._msg = name === 'double' ? '双缝：两个振幅相加' :
-      name === 'single' ? '单缝：只剩一个振幅' :
-      name === 'grating' ? 'N 缝光栅：N 个振幅相加，主极大被压窄' :
-      '可区分：强度相加，条纹消失';
+      name === 'single' ? '单缝：只剩一个振幅' : '可区分：强度相加，条纹消失';
   }
 
-  setParam(k, v, deferLive = false){
+  setParam(k, v){
     if (k === 'K') this.state.K = Math.max(4, Math.round(v));
     else if (k === 'modes') this.state.modes = Math.max(1, Math.min(2, Math.round(v)));
-    else if (k === 'nslit') this.state.nslit = clamp(Math.round(v), 1, 6);
-    else if (k === 'eps') this.state.eps = clamp(v, 0, 1);
-    else if (k === 'flux') this.state.flux = clamp(v, 0, 1);
-    else if (k === 'barrier') this.state.barrier = clamp(v, 0, 0.2);
-    else if (k === 'barrierXWidth') this.state.barrierXWidth = clamp(v, 4, 80);
-    else if (k === 'barrierWidth') this.state.barrierWidth = clamp(v, 4, 80);
     else if (k === 'Y') this.state.Y = v;
     else this.state[k] = v;
-    this._touch(k !== 'Y', deferLive);
+    this._touch(k !== 'Y');
   }
-  setY(y, deferLive = false){
+  setY(y){
     const lim = 1.4 * this.view.yFov;
     this.state.Y = Math.max(-lim, Math.min(lim, y));
     const el = this.q('#pvY'), o = this.q('#pvYo');
     if (el) el.value = String(this.state.Y);
     if (o) o.textContent = this.state.Y.toFixed(0);
-    this._touch(false, true);
-    if (!deferLive) this.finishYGesture();
+    this._touch(false);
   }
-  /* 参数连续变化只留一个 dirty 状态；绝不在每个 input 事件里同步跑完整螺旋。 */
-  _touch(resetReveal, deferLive = false){
-    this._needDraw = true;
-    if (!resetReveal){
-      this._dirtyY = true;
-      if (deferLive) this._deferSpiral = true;
-      return;
-    }
-    this._dirty = true; this._dirtyY = false;
-    this.state.reveal = 0;
-    if (deferLive){ this._deferSpiral = true; return; }
-    this._deferSpiral = false;
-    this.resetLiveForCurrentState();
-  }
-  finishParamGesture(){
-    this._gestureActive = false;
-    if (!this._deferSpiral) return;
-    this._deferSpiral = false;
+  /* 结构变化才重置 reveal 动画；拖探测点时不要重置（否则螺旋一直闪回起点） */
+  _touch(resetReveal){
     this._dirty = true; this._needDraw = true;
+    if (!resetReveal) return;
     this.state.reveal = 0;
-    if (this._userPaused){
-      this._dirty = true;
-      return;
-    }
-    this.live?.stop();
-    if (this.live) this.live.stream = null;
-    this.live?.start();
-  }
-  resetLiveForCurrentState(){
-    if (!this.live) return;
-    this.live.stop();
-    if (!this._userPaused){
-      this.live.stream = null;
-      this.live.start();
-    }
-  }
-  finishYGesture(){
-    if (!this._deferSpiral) return;
-    this._deferSpiral = false;
-    this.state.reveal = 0;
-    if (this._userPaused){ this._dirty = true; this._dirtyY = false; return; }
-    this.live?.stop();
-    if (this.live) this.live.stream = null;
-    this.live?.start();
+    /* R98 P4：换累加器；用户没暂停就自动重演（保持旧行为：改参即重放求和） */
+    this.live?.sync();
+    if (!this._userPaused) this.live?.start();
   }
 
   /* 重放求和：从零点开始重新累积（不论之前暂停与否） */
@@ -2050,91 +1361,19 @@ class PathsApp {
     b.classList.toggle('on', on);
   }
 
-  /* ---------- 画布尺寸：唯一真相在 JS 里 ----------
-     两个坑一起解决：
-     ① **模糊**：位图必须是「整数 CSS 盒 × DPR」。旧版把 DPR 钳到 2（3x 屏直接糊），
-        且画布带 border:1px（box-sizing:border-box 下内容盒比位图窄 2px）⟹ 浏览器重采样。
-        现在画布无 border（描边走 inset 阴影）、宽高都写整数内联 px、DPR 取真实值。
-     ② **挤压**：舞台宽度原来写死 min(100vw−520, 1060px)——1024 窗口只剩 504、900 只剩 380。
-        现在三栏只在 >1200px 存在；861–1200 舞台独占整宽、面板变可开合 sheet；≤860 交给 core。
-     手机竖屏主画布整行占满舞台，螺旋/剖面移到下行并排，避免两列固定最小宽度溢出屏幕。 */
-  layoutSize(){
-    const vw = window.innerWidth || 1280, vh = window.innerHeight || 800;
-    const dpr = window.devicePixelRatio || 1;
-    const stage = this.q('#pvStage');
-    if (!stage) return;
-    /* sheet 档（core/responsive.js 已写好内联 left/right）只读它的盒，不抢几何 */
-    const sheet = !!stage.style.right;
-    let stageW, stageH;
-    if (sheet){
-      stageW = Math.round(stage.clientWidth || (vw - 12));
-      stageH = Math.round(stage.clientHeight || (vh - 100));
-    } else {
-      const band = vw <= 1200;
-      const avail = band ? vw - 40 : vw - 530;      /* >1200：让开 232 面板 + 216 读数 */
-      stageW = Math.round(clamp(avail, 620, 1060));
-      stageH = Math.round(Math.min(Math.max(vh * 0.66, 380), 680, vh - 96));
-      stage.style.width = stageW + 'px';
-      stage.style.height = stageH + 'px';
-      stage.style.left = Math.max(0, Math.round((vw - stageW) / 2)) + 'px';
-      stage.style.top = Math.max(56, Math.round((vh - stageH) / 2)) + 'px';
-      stage.style.transform = 'none';
-    }
-    const gap = 9, compact = sheet && stageW < 449;
-    const rightW = compact ? Math.floor((stageW - gap) / 2)
-      : Math.round(Math.min(Math.max(stageW * 0.27, 200), 300));
-    const profileW = compact ? stageW - gap - rightW : rightW;
-    const mainW = compact ? stageW : Math.max(240, stageW - rightW - gap);
-    let rowH = sheet ? Math.max(1, Math.floor((stageH - gap) / 2))
-      : Math.max(110, Math.floor((stageH - gap) / 2));
-    let rowH2 = rowH, mainH = rowH + rowH2 + gap, plotH = rowH;
-    if (compact){
-      /* 手机竖屏：240px 主图 + 200px 右列会超出 390px 舞台。
-         主图改为独占整行，螺旋/剖面并排放底行，仍保留三个可见画布。 */
-      const usableH = Math.max(2, stageH - gap);
-      mainH = Math.max(1, Math.min(usableH - 1, Math.round(usableH * 0.62)));
-      plotH = usableH - mainH;
-      rowH = plotH; rowH2 = plotH;
-      stage.style.gridTemplateColumns = rightW + 'px ' + profileW + 'px';
-      stage.style.gridTemplateRows = mainH + 'px ' + plotH + 'px';
-      const main = this.q('#pvMain'), spiral = this.q('#pvSpiral'), profile = this.q('#pvProfile');
-      if (main){ main.style.gridRow = '1'; main.style.gridColumn = '1 / span 2'; }
-      if (spiral){ spiral.style.gridRow = '2'; spiral.style.gridColumn = '1'; }
-      if (profile){ profile.style.gridRow = '2'; profile.style.gridColumn = '2'; }
-    } else {
-      if (!sheet){
-        /* 桌面行高取整后把舞台高度**对齐**成 2·rowH + gap：否则网格与画布差 1px，
-           右列上下两块会与主图错开半个像素（又是重采样）。 */
-        stageH = rowH * 2 + gap;
-        rowH2 = rowH;
-        stage.style.height = stageH + 'px';
-      } else {
-        /* 手机横屏按实际舞台高分成两行，不能用桌面 110px 最小行高撑破视口。 */
-        rowH2 = Math.max(1, stageH - gap - rowH);
-      }
-      mainH = rowH + rowH2 + gap;
-      stage.style.gridTemplateColumns = mainW + 'px ' + rightW + 'px';
-      stage.style.gridTemplateRows = rowH + 'px ' + rowH2 + 'px';
-      const main = this.q('#pvMain'), spiral = this.q('#pvSpiral'), profile = this.q('#pvProfile');
-      if (main){ main.style.gridRow = '1 / span 2'; main.style.gridColumn = '1'; }
-      if (spiral){ spiral.style.gridRow = '1'; spiral.style.gridColumn = '2'; }
-      if (profile){ profile.style.gridRow = '2'; profile.style.gridColumn = '2'; }
-    }
-    this._geo = { dpr, stageW, stageH, mainW, rightW, profileW, rowH, rowH2, mainH, plotH, compact, sheet };
-    for (const [id, cw, ch] of compact
-      ? [['#pvMain', mainW, mainH], ['#pvSpiral', rightW, plotH], ['#pvProfile', profileW, plotH]]
-      : [['#pvMain', mainW, mainH], ['#pvSpiral', rightW, rowH], ['#pvProfile', rightW, rowH2]]){
+  resize(){
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    for (const id of ['#pvMain', '#pvSpiral', '#pvProfile']){
       const cv = this.q(id);
       if (!cv) continue;
-      const bw = Math.round(cw * dpr), bh = Math.round(ch * dpr);
-      if (cv.width !== bw) cv.width = bw;
-      if (cv.height !== bh) cv.height = bh;
-      cv.style.width = Math.round(cw) + 'px';
-      cv.style.height = Math.round(ch) + 'px';
+      const w = Math.max(80, cv.clientWidth), h = Math.max(60, cv.clientHeight);
+      if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)){
+        cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+      }
     }
     const cv = this.q('#pvMain');
     if (cv){
-      const w = cv.width / dpr, h = cv.height / dpr;
+      const w = cv.clientWidth, h = cv.clientHeight;
       const padL = 28, padR = 54, padT = 22, padB = 26;
       const spanX = this.state.L1 + this.state.L2;
       const sx = (w - padL - padR) / spanX;
@@ -2145,75 +1384,13 @@ class PathsApp {
     }
     this._dirty = true; this._needDraw = true;
   }
-  /* 自检：位图与 CSS 盒（宽度 × DPR）不一致就重排一次（只比宽与 DPR，高由我们自己钉） */
-  syncCanvasSize(){
-    const cv = this.q('#pvMain'), stage = this.q('#pvStage');
-    if (!cv || !stage || !this._geo) return false;
-    const dpr = window.devicePixelRatio || 1;
-    /* 比「舞台宽」与 DPR。桌面档的宽度是我们自己写进 inline style 的（比它恒等，
-       有意义的是 DPR 与窗口）；sheet 档的宽度由 core/responsive.js 的 left/right
-       决定，必须读 clientWidth——sheet 展开/收起、预览面板拖宽都在这里兜住。 */
-    const sheet = !!stage.style.right;
-    const sw = sheet ? Math.round(stage.clientWidth || this._geo.stageW)
-                     : Math.round(parseFloat(stage.style.width) || this._geo.stageW);
-    if (sw === this._geo.stageW && dpr === this._geo.dpr) return false;
-    this.layoutSize();
-    return true;
-  }
-  resize(){ this.layoutSize(); }
-
-  /* 861–1200px：面板/读数在同一时刻只开一个（两个都开就又把画面挤没了） */
-  toggleBand(which){
-    const pan = this.q('#pvPanel'), hud = this.q('#pvHud');
-    if (!pan || !hud) return false;
-    const target = which === 'panel' ? pan : hud;
-    const other = which === 'panel' ? hud : pan;
-    const on = !target.classList.contains('open');
-    other.classList.remove('open');
-    target.classList.toggle('open', on);
-    this.syncBand();
-    return on;
-  }
-  closeBand(){
-    for (const id of ['#pvPanel', '#pvHud']){ const e = this.q(id); if (e) e.classList.remove('open'); }
-    this.syncBand();
-  }
-  syncBand(){
-    const o = { panel: !!(this.q('#pvPanel') || {}).classList?.contains('open'),
-                hud: !!(this.q('#pvHud') || {}).classList?.contains('open') };
-    const bp = this.q('#pvDrawerPanel'), bh = this.q('#pvDrawerHud');
-    if (bp) bp.classList.toggle('on', o.panel);
-    if (bh) bh.classList.toggle('on', o.hud);
-    return o;
-  }
-
-  recomputeY(){
-    if (!this.prof || !this.stats) return this.recompute();
-    const c = this.cfg();
-    const nA = c.nslit >= 4 ? 5 : (c.nslit === 3 ? 7 : 9);
-    this.samples = visualSamples(this.state.Y, c, nA);
-    const p = this.prof, y = this.state.Y;
-    const kf = (y - p.Y[0]) / (p.Y[1] - p.Y[0]);
-    const k0 = Math.max(0, Math.min(p.path.length - 1, Math.floor(kf)));
-    const k1 = Math.min(p.path.length - 1, k0 + 1);
-    const t = Math.max(0, Math.min(1, kf - k0));
-    this.stats.I = p.path[k0] * (1 - t) + p.path[k1] * t;
-    const h = this.q('#hI'); if (h) h.textContent = nf(this.stats.I, 4);
-    this._dirtyY = false; this._needDraw = true;
-  }
 
   recompute(){
-    if (this._dirtyY && !this._dirty) return this.recomputeY();
     const c = this.cfg();
-    const modelCfg = this._gestureActive
-      ? { ...c, K: Math.min(c.K, 24), nY: 61, potentialNxiCap: 8, _potentialPreview: true }
-      : c;
-    this.prof = piProfile(modelCfg);
-    /* 仅用于画面的路径做确定性抽样：最多 480 条；物理求和不抽样。 */
-    const nA = c.nslit >= 4 ? 5 : (c.nslit === 3 ? 7 : 9);
-    this.samples = visualSamples(this.state.Y, c, nA);
-    /* 播放中由流式累加器供给；拖动期间暂缓重建，change/pointerup 只提交一次。 */
-    if (!this._deferSpiral && !(this.live && this.live.playing)) this.spir = piPathSpiral({ ...c, Y: this.state.Y });
+    this.prof = piProfile(c);
+    this.samples = piPathSamples(this.state.Y, c, 9);
+    /* R98 P4：播放中螺旋由流式累加器逐帧供给（recompute 不得用全批覆盖半场状态） */
+    if (!(this.live && this.live.playing)) this.spir = piSpiral(c.L1, { K: c.K, W: c.W });
     const C1 = piModeSum(c.L1, c), C2 = piModeSum(c.L2, c);
     const A = piAmpAt(this.state.Y, c);
     const p = this.prof;
@@ -2226,10 +1403,9 @@ class PathsApp {
       nSeam: C1.count * C2.count,
       nTotal: C1.count * C2.count * c.nxi * nSlit,
       nSlit, fringe: piFringeSpacing(c), spread: p.scale.spread,
-      vis: piVisibility(p, c), gratingW: piGratingWidth(c),
       maxPath: p.maxPath, maxAn: p.maxAn,
     };
-    this._dirty = false; this._dirtyY = false; this._needDraw = true;
+    this._dirty = false; this._needDraw = true;
     this.renderHud();
     this.renderHint();
   }
@@ -2244,10 +1420,7 @@ class PathsApp {
   renderHud(){
     const s = this.stats, st = this.state, c = this.cfg(), p = this.prof;
     const set = (id, v) => { const e = this.q('#' + id); if (e) e.textContent = v; };
-    set('hCase', st.preset === 'double' ? '双缝·相干'
-      : st.preset === 'single' ? '单缝'
-      : st.preset === 'grating' ? 'N 缝光栅·相干'
-      : '双缝·可区分');
+    set('hCase', st.preset === 'double' ? '双缝·相干' : st.preset === 'single' ? '单缝' : '双缝·可区分');
     set('hN', s.nTotal >= 1000 ? (s.nTotal / 1000).toFixed(1) + 'k' : String(s.nTotal));
     set('hPer', s.nSeam.toLocaleString('en-US') + ' × ' + c.nxi);
     set('hSum', nf(s.C1.mag, 2) + ' / ' + s.C1.count);
@@ -2260,16 +1433,8 @@ class PathsApp {
     set('hVis', fr.count + ' 暗纹 · ' + fr.contrast.toFixed(3) +
       '（' + (fr.count === 0 ? '无条纹' : fr.contrast > 0.45 ? '清晰' : '弱') + '）');
     set('hFringe', nf(s.fringe, 2));
-    set('hNV', c.nslit + ' · V=' + nf(piVisibility(p, c), 3));
-    const gw = piGratingWidth(c);
-    set('hGW', Number.isFinite(gw) ? nf(gw, 2) : '—（单缝）');
-    set('hFlux', c.flux.toFixed(2));
-    set('hBarrier', c.barrier.toFixed(3) + ' / ' + c.barrierXWidth.toFixed(0) + ' / ' + c.barrierWidth.toFixed(0));
     let dev = 0;
     for (let k = 0; k < p.path.length; k++) dev = Math.max(dev, Math.abs(p.path[k] - p.an[k]));
-    const ratioLabel = this.q('#hRatioLabel'), spreadLabel = this.q('#hSpreadLabel');
-    if (ratioLabel) ratioLabel.textContent = c.barrier > 0 ? '路径积分 vs 高一阶参照' : '路径和 vs 解析（归一）';
-    if (spreadLabel) spreadLabel.textContent = c.barrier > 0 ? '收敛差异' : '比值起伏';
     set('hRatio', ex(dev, 1) + '（逐点最大）');
     set('hSpread', ex(s.spread, 1));
   }
@@ -2281,7 +1446,6 @@ class PathsApp {
   }
 
   drawMain(){
-    if (this.state.proj === '3d') return this.drawMain3D();
     const cv = this.q('#pvMain');
     if (!cv) return;
     const g = cv.getContext('2d');
@@ -2302,8 +1466,8 @@ class PathsApp {
       const hue = ((sp.phase / (2 * Math.PI)) % 1 + 1) % 1;
       g.strokeStyle = 'hsla(' + Math.round(182 + hue * 128) + ',88%,64%,.22)';
       g.lineWidth = 0.85;
-      const a = polyline(0, 0, st.L1, sp.xi, sp.seg1, 10);
-      const b = polyline(st.L1, sp.xi, st.L1 + st.L2, st.Y, sp.seg2, 12);
+      const a = polyline(0, 0, st.L1, sp.xi, sp.seg1, 18);
+      const b = polyline(st.L1, sp.xi, st.L1 + st.L2, st.Y, sp.seg2, 22);
       g.beginPath();
       let [px, py] = this.world(a[0][0], a[0][1]);
       g.moveTo(px, py);
@@ -2312,9 +1476,10 @@ class PathsApp {
       g.stroke();
     }
 
-    /* 屏（挡板）：把可见区间按缝口切成若干段。缝位置由 physics 的 piSlits 给
-       （N=1 置中；N=2 走 A/B 开关；N≥3 等间距光栅）——页面不再自己数两条缝。 */
-    const slitY = piSlits(this.cfg());
+    /* 屏（双缝挡板）：把可见区间按缝口切成若干段 */
+    const slitY = [];
+    if (st.openA) slitY.push(st.d / 2);
+    if (st.openB) slitY.push(-st.d / 2);
     const cuts = slitY.map(y0 => {
       const [, y1] = this.world(st.L1, y0 + st.w / 2);
       const [, y2] = this.world(st.L1, y0 - st.w / 2);
@@ -2341,9 +1506,7 @@ class PathsApp {
       g.strokeStyle = 'rgba(103,232,249,.95)'; g.lineWidth = 3.6;
       g.beginPath(); g.moveTo(xb, Math.min(ya, yb2)); g.lineTo(xb, Math.max(ya, yb2)); g.stroke();
       g.fillStyle = 'rgba(103,232,249,.9)'; g.textAlign = 'left';
-      const LBL = 'ABCDEFGH';
-      const li = slitY.indexOf(y0);
-      g.fillText(LBL[li >= 0 ? li : 0], xb + 5, Math.min(ya, yb2) - 3);
+      g.fillText(y0 > 0 ? 'A' : 'B', xb + 5, Math.min(ya, yb2) - 3);
     }
 
     /* 探测面 + 强度条 */
@@ -2384,132 +1547,12 @@ class PathsApp {
     g.fillText('Y=' + st.Y.toFixed(0), xd + 7, yDet - 5);
   }
 
-  drawMain3D(){
-    const cv = this.q('#pvMain'); if (!cv) return;
-    const g = cv.getContext('2d'), dpr = this.view.dpr || 1, W = cv.width, H = cv.height;
-    g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H); g.scale(dpr, dpr);
-    const w = W / dpr, h = H / dpr, c = this.cfg(), span = c.L1 + c.L2;
-    const slitValues = piSlits(c).slice().sort((a, b) => a - b)
-      .filter((y, i, a) => i === 0 || Math.abs(y - a[i - 1]) > 1e-9);
-    const slitReach = Math.max(0, ...slitValues.map(y => Math.abs(y) + Math.abs(c.w) / 2));
-    const yReach = Math.max(this.view.yFov, Math.abs(this.state.Y), Math.abs(c.ys),
-      Math.max(slitReach, Math.abs(this.state.Y), Math.abs(c.ys)) + 1.5 * Math.abs(c.W), 1);
-    /* fit both longitudinal and transverse extents, preserving physical x:y aspect */
-    const sx = Math.min(4.8 / Math.max(1, span), 1.75 / yReach), laneMax = 0.92, eye = hbCamBasis(this.cam);
-    const focal = hbFocal(w), { f, r, u } = eye;
-    const baseX = span / 2 * sx, baseY = Math.max(1.15, yReach * sx * 1.08), baseZ = laneMax * 1.08;
-    const rawProject = p => {
-      const dx = p.x - eye.eye.x, dy = p.y - eye.eye.y, dz = p.z - eye.eye.z;
-      const depth = dx * f.x + dy * f.y + dz * f.z;
-      if (!(depth > 0.15)) return null;
-      return { x: w / 2 + (dx * r.x + dy * r.y + dz * r.z) / depth * focal,
-               y: h / 2 - (dx * u.x + dy * u.y + dz * u.z) / depth * focal, depth };
-    };
-    const fitBounds = scale => {
-      const b = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
-      for (const x of [-baseX * scale, baseX * scale]) for (const y of [-baseY * scale, baseY * scale])
-        for (const z of [-baseZ * scale, baseZ * scale]){
-          const p = rawProject({ x, y, z }); if (!p) return null;
-          b.minX = Math.min(b.minX, p.x); b.maxX = Math.max(b.maxX, p.x);
-          b.minY = Math.min(b.minY, p.y); b.maxY = Math.max(b.maxY, p.y);
-        }
-      const margin = Math.min(16, Math.max(2, Math.min(w, h) * 0.035));
-      b.fits = b.maxX - b.minX <= w - 2 * margin && b.maxY - b.minY <= h - 2 * margin;
-      return b;
-    };
-    let sceneScale = 1, bounds = fitBounds(1);
-    if (!bounds?.fits){
-      let lo = 0, hi = 1;
-      for (let i = 0; i < 32; i++){
-        const mid = (lo + hi) / 2, b = fitBounds(mid);
-        if (b?.fits) lo = mid; else hi = mid;
-      }
-      sceneScale = lo; bounds = fitBounds(sceneScale);
-    }
-    const shiftX = sceneScale < 0.999 && bounds ? w / 2 - (bounds.minX + bounds.maxX) / 2 : 0;
-    const shiftY = sceneScale < 0.999 && bounds ? h / 2 - (bounds.minY + bounds.maxY) / 2 : 0;
-    if (bounds){ bounds.minX += shiftX; bounds.maxX += shiftX; bounds.minY += shiftY; bounds.maxY += shiftY; }
-    const project = p => {
-      const q = rawProject({ x: p.x * sceneScale, y: p.y * sceneScale, z: p.z * sceneScale });
-      return q ? { x: q.x + shiftX, y: q.y + shiftY, depth: q.depth }
-        : { x: w / 2, y: h / 2, depth: 0.15 };
-    };
-    const world = (x, y, lane, t) => ({ x: (x - span / 2) * sx, y: y * sx,
-      z: lane * 4 * Math.max(0, Math.min(1, t)) * (1 - Math.max(0, Math.min(1, t))) });
-    const slitCount = Math.max(1, slitValues.length), groupRange = laneMax * 0.68;
-    const groupGap = slitCount > 1 ? 2 * groupRange / (slitCount - 1) : 0;
-    const localHalf = slitCount > 1 ? Math.min(0.26, groupGap * 0.23) : laneMax * 0.42;
-    const totals = new Map(), seen = new Map();
-    for (const sample of this.samples) totals.set(sample.slit, (totals.get(sample.slit) || 0) + 1);
-    const paths = [];
-    for (const s of this.samples){
-      const si = Math.max(0, slitValues.findIndex(y => Math.abs(y - s.slit) < 1e-9));
-      const count = totals.get(s.slit) || 1, rank = seen.get(s.slit) || 0; seen.set(s.slit, rank + 1);
-      const group = slitCount > 1 ? -groupRange + groupGap * si : 0;
-      const local = count > 1 ? (2 * rank / (count - 1) - 1) * localHalf : 0;
-      const lane = group + local;
-      const a = polyline(0, 0, c.L1, s.xi, s.seg1, 10);
-      const b = polyline(c.L1, s.xi, span, this.state.Y, s.seg2, 12);
-      const pts = [];
-      for (const [x, y] of a) pts.push(project(world(x, y, lane, x / span)));
-      for (let k = 1; k < b.length; k++) pts.push(project(world(b[k][0], b[k][1], lane, b[k][0] / span)));
-      let depth = 0; for (const p of pts) depth += p.depth;
-      paths.push({ pts, depth: depth / Math.max(1, pts.length), phase: s.phase, slit: s.slit, lane });
-    }
-    paths.sort((a, b) => b.depth - a.depth);
-    const minDepth = paths.length ? Math.min(...paths.map(p => p.depth)) : 0;
-    const maxDepth = paths.length ? Math.max(...paths.map(p => p.depth)) : 0;
-    for (const path of paths){
-      const hue = ((path.phase / (2 * Math.PI)) % 1 + 1) % 1;
-      const near = 1 - (path.depth - minDepth) / Math.max(1e-9, maxDepth - minDepth);
-      g.strokeStyle = 'hsla(' + Math.round(182 + hue * 128) + ',82%,65%,' + (0.12 + 0.27 * near).toFixed(3) + ')';
-      g.lineWidth = 0.72 + 0.18 * near; g.beginPath();
-      path.pts.forEach((p, k) => k ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y));
-      g.stroke();
-    }
-    const line = (a, b, color, width = 1) => {
-      const p = project(a), q = project(b);
-      g.strokeStyle = color; g.lineWidth = width; g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.stroke();
-    };
-    const yEdge = Math.max(1.15, yReach * sx * 1.08), zEdge = laneMax * 1.08;
-    /* 仅画轻量线框，不用不透明墙面覆盖路径。 */
-    for (const x of [-span / 2 * sx, span / 2 * sx]){
-      line({ x, y: -yEdge, z: -zEdge }, { x, y: yEdge, z: -zEdge }, 'rgba(154,167,189,.26)');
-      line({ x, y: yEdge, z: -zEdge }, { x, y: yEdge, z: zEdge }, 'rgba(154,167,189,.22)');
-      line({ x, y: yEdge, z: zEdge }, { x, y: -yEdge, z: zEdge }, 'rgba(154,167,189,.22)');
-      line({ x, y: -yEdge, z: zEdge }, { x, y: -yEdge, z: -zEdge }, 'rgba(154,167,189,.22)');
-    }
-    const x0 = -span / 2 * sx, x1 = span / 2 * sx;
-    line({ x: x0, y: 0, z: 0 }, { x: x1, y: 0, z: 0 }, 'rgba(154,167,189,.34)');
-    line({ x: 0, y: -yEdge, z: 0 }, { x: 0, y: yEdge, z: 0 }, 'rgba(103,232,249,.32)');
-    line({ x: 0, y: -yEdge, z: -zEdge }, { x: 0, y: -yEdge, z: zEdge }, 'rgba(103,232,249,.28)');
-    line({ x: x1, y: -yEdge, z: -zEdge }, { x: x1, y: yEdge, z: -zEdge }, 'rgba(217,70,239,.28)');
-    line({ x: x1, y: yEdge, z: -zEdge }, { x: x1, y: yEdge, z: zEdge }, 'rgba(217,70,239,.24)');
-    line({ x: x1, y: yEdge, z: zEdge }, { x: x1, y: -yEdge, z: zEdge }, 'rgba(217,70,239,.24)');
-    line({ x: x1, y: -yEdge, z: zEdge }, { x: x1, y: -yEdge, z: -zEdge }, 'rgba(217,70,239,.24)');
-    for (const slit of piSlits(c)){
-      const y = slit * sx, half = Math.max(0.018, c.w * sx / 2);
-      line({ x: 0, y: y - half, z: -laneMax }, { x: 0, y: y + half, z: -laneMax }, 'rgba(103,232,249,.78)', 1.4);
-      line({ x: 0, y: y - half, z: laneMax }, { x: 0, y: y + half, z: laneMax }, 'rgba(103,232,249,.78)', 1.4);
-    }
-    const source = project(world(0, c.ys, 0, 0)), detector = project(world(span, this.state.Y, 0, 1));
-    g.fillStyle = '#f87171'; g.beginPath(); g.arc(source.x, source.y, 3.2, 0, 6.2832); g.fill();
-    g.fillStyle = '#d946ef'; g.beginPath(); g.arc(detector.x, detector.y, 3.2, 0, 6.2832); g.fill();
-    const laneGroups = slitValues.map(slit => {
-      const lanes = paths.filter(p => Math.abs(p.slit - slit) < 1e-9).map(p => p.lane);
-      return { slit, count: lanes.length, min: lanes.length ? Math.min(...lanes) : 0, max: lanes.length ? Math.max(...lanes) : 0 };
-    });
-    this._3dDrawInfo = { paths: paths.length, vertices: paths.reduce((n, p) => n + p.pts.length, 0),
-      groups: laneGroups.length, laneGroups, yReach, fitScale: sceneScale, bounds,
-      finite: paths.every(p => p.pts.every(q => Number.isFinite(q.x) && Number.isFinite(q.y) && Number.isFinite(q.depth))) };
-  }
-
   drawSpiral(){
     const cv = this.q('#pvSpiral');
     const s = this.spir;
     if (!cv || !s) return;
     const g = cv.getContext('2d');
-    const dpr = this.view.dpr || 1;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
     const W = cv.width, H = cv.height;
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.clearRect(0, 0, W, H);
@@ -2541,9 +1584,10 @@ class PathsApp {
     g.fillStyle = '#67e8f9'; g.beginPath(); g.arc(tx, ty, 2.8, 0, 6.2832); g.fill();
     g.font = '9.5px ui-monospace,monospace'; g.textAlign = 'left';
     g.fillStyle = 'rgba(154,167,189,.9)';
-    g.fillText('当前配置的路径振幅：a₁ 累积（ε 不改相位）', 8, 13);
+    g.fillText('段1 a₁ 扫描：累积 e^{iS/ħ}', 8, 13);
     g.fillStyle = 'rgba(103,232,249,.95)';
-    g.fillText('|A₁…ₙ|=' + Math.hypot(tot[0], tot[1]).toFixed(1) + '  步=' + nShow + '/' + N + '  Y=' + this.state.Y.toFixed(1), 8, h - 7);
+    g.fillText('|Σ|=' + Math.hypot(tot[0], tot[1]).toFixed(1) + '  N=' + nShow + '  Σ|A|/|Σ|=' +
+      (nShow / Math.max(1e-9, Math.hypot(tot[0], tot[1]))).toFixed(2), 8, h - 7);
   }
 
   drawProfile(){
@@ -2551,13 +1595,13 @@ class PathsApp {
     const p = this.prof;
     if (!cv || !p) return;
     const g = cv.getContext('2d');
-    const dpr = this.view.dpr || 1;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
     const W = cv.width, H = cv.height;
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.clearRect(0, 0, W, H);
     g.scale(dpr, dpr);
     const w = W / dpr, h = H / dpr;
-    const padL = 8, padR = 8, padT = 10, padB = 10;
+    const padL = 8, padR = 8, padT = 16, padB = 15;
     const y0 = p.Y[0], y1 = p.Y[p.Y.length - 1];
     const X = Y => padL + (Y - y0) / (y1 - y0) * (w - padL - padR);
     const Yv = I => h - padB - Math.max(0, Math.min(1, I)) * (h - padT - padB);
@@ -2589,7 +1633,12 @@ class PathsApp {
     g.beginPath(); g.moveTo(xc, padT - 5); g.lineTo(xc, h - padB); g.stroke();
     g.fillStyle = '#d946ef';
     g.beginPath(); g.arc(xc, Yv(this.stats.I), 2.6, 0, 6.2832); g.fill();
-    /* 曲线含义与相邻参考差异在外置 HUD 中说明；不在图面叠加常驻图例。 */
+    g.font = '9.5px ui-monospace,monospace'; g.textAlign = 'left';
+    g.fillStyle = 'rgba(154,167,189,.9)';
+    g.fillText('I(Y)：路径和（青）≡ 解析传播子（红虚）', 4, 11);
+    g.fillStyle = 'rgba(248,113,113,.85)'; g.textAlign = 'right';
+    const sp = piFringeSpacing(this.cfg());
+    g.fillText('间距 ' + (Number.isFinite(sp) ? sp.toFixed(1) : '—'), w - padR, h - 4);
   }
 
   frame(){
@@ -2601,15 +1650,7 @@ class PathsApp {
       this._fpsFrames = 0; this._lastFpsT = now;
       const e = this.q('#hFps'); if (e) e.textContent = this._fps ? String(this._fps) : '—';
     }
-    this.syncCanvasSize();          /* 布局迟到的变化（字体/sheet/拖宽）在这里兜住 */
-    const canPaintGesture = !this._gestureActive || now - this._lastGesturePaint >= 100;
-    if (this._dirty && canPaintGesture){
-      this._lastGesturePaint = now;
-      this.recompute();
-    } else if (this._dirtyY && canPaintGesture){
-      this._lastGesturePaint = now;
-      this.recomputeY();
-    }
+    if (this._dirty) this.recompute();
     /* R98 P4：螺旋推进交给 LiveDriver（时长基准分帧）；此处只处理重绘 */
     if (this._needDraw){
       this.drawMain(); this.drawSpiral(); this.drawProfile();
@@ -2621,12 +1662,6 @@ class PathsApp {
     const st = this.state;
     const set = (id, v) => { const e = this.q('#' + id); if (e) e.value = String(v); };
     const txt = (id, v) => { const e = this.q('#' + id); if (e) e.textContent = String(v); };
-    set('pvN', st.nslit); txt('pvNo', st.nslit);
-    set('pvEps', st.eps); txt('pvEpso', st.eps.toFixed(2));
-    set('pvFlux', st.flux); txt('pvFluxO', st.flux.toFixed(2));
-    set('pvBarrier', st.barrier); txt('pvBarrierO', st.barrier.toFixed(3));
-    set('pvBX', st.barrierXWidth); txt('pvBXO', st.barrierXWidth);
-    set('pvBW', st.barrierWidth); txt('pvBWO', st.barrierWidth);
     set('pvD', st.d); txt('pvDo', st.d);
     set('pvW', st.w); txt('pvWo', st.w);
     set('pvAmp', st.W); txt('pvAmpO', st.W);
@@ -2636,14 +1671,10 @@ class PathsApp {
     const A = this.q('#pvA'), B = this.q('#pvB');
     if (A) A.checked = st.openA;
     if (B) B.checked = st.openB;
-    for (const b of ['pvP0', 'pvP1', 'pvP2', 'pvP3']){
+    for (const b of ['pvP0', 'pvP1', 'pvP2']){
       const e = this.q('#' + b);
       if (e) e.classList.toggle('on', e.dataset.p === st.preset);
     }
-    this.q('#pvView2d')?.classList.toggle('on', st.proj === '2d');
-    this.q('#pvView3d')?.classList.toggle('on', st.proj === '3d');
-    const stage = this.q('#pvStage'); if (stage) stage.dataset.proj = st.proj;
-    const cv = this.q('#pvMain'); if (cv) cv.style.cursor = st.proj === '3d' ? 'grab' : 'crosshair';
   }
 
   _drawAll(){
@@ -2660,10 +1691,6 @@ class PathsApp {
     return {
       get state(){ return self.state; },
       get view(){ return self.view; },
-      get camera(){ return { ...self.cam }; },
-      get scene3d(){ return { ...(self._3dDrawInfo || {}) }; },
-      setProj: proj => self.setProj(proj),
-      resetCam: () => self.resetCam(),
       setParam: (k, v) => { self.setParam(k, v); self.syncPanel(); self.recompute(); self._drawAll(); },
       setY: y => { self.setY(y); self.recompute(); self._drawAll(); },
       preset: n => { self.applyPreset(n); self.recompute(); self._drawAll(); },
@@ -2690,16 +1717,7 @@ class PathsApp {
       pause: () => { self._userPaused = true; self.live.stop(); self.syncPlayBtn(); },
       live: () => ({ playing: self.live.playing, ...self.live.progress }),
       fringes: () => self.stats.fringes,
-      slits: () => piSlits(self.cfg()),
-      visibility: () => piVisibility(self.prof, self.cfg()),
-      grating: () => piGratingWidth(self.cfg()),
-      setN: n => { self.setParam('nslit', n); self.syncPanel(); self.recompute(); self._drawAll(); },
-      setEps: e => { self.setParam('eps', e); self.syncPanel(); self.recompute(); self._drawAll(); },
       navLinks: () => Array.from(document.querySelectorAll('#pvTop a')).map(a => a.getAttribute('href')),
-      geo: () => ({ ...(self._geo || {}) }),
-      layout: () => { self.layoutSize(); return { ...(self._geo || {}) }; },
-      band: which => self.toggleBand(which),
-      bandOpen: () => self.syncBand(),
     };
   }
 }
