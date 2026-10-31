@@ -13,6 +13,7 @@ import ChinaMap, { type MapRegistration } from "@/components/map/china-map";
 import { loadCityGeo, getCachedCityGeo, type CityGeo } from "@/lib/city-geo";
 import { PROVINCE_CENTERS } from "@/lib/china-geo";
 import { useAppStore } from "@/lib/store";
+import { quoteTicket } from "@/lib/spot-data";
 import type { EChartsOption } from "echarts";
 
 const CAT_COLORS: Record<string, string> = {
@@ -250,9 +251,14 @@ export default function NetworkView() {
           const d = p?.data;
           if (!d) return String(p.name ?? "");
           const spot = provinceSpots.find((s) => s.id === d.id);
+          const quote = spot ? quoteTicket(spot) : null;
+          const ticket =
+            quote && quote.price != null ? `门票 ¥${quote.price}` : quote?.label;
           const parts = [
             spot?.level,
+            spot?.category,
             spot?.rating != null ? `评分 ${spot.rating}` : null,
+            ticket,
           ].filter(Boolean);
           return `<b>${d.name}</b>${parts.length ? `<br/>${parts.join(" · ")}` : ""}<br/><span style="color:#059669">点击查看详情</span>`;
         },
