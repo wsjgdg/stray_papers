@@ -974,6 +974,16 @@ G4 边界观察（子代理发现，未动）：CITY_CENTERS/PROVINCE_CENTERS �
 
 门禁：tsc 0 ✓、vitest 101/101 ✓、NEXT_DIST=.next-gate 隔离 build ✓。
 
+## 七十一轮：Dial 真实阴影占比 + 劝退 toilet/exit 真数据接线（2026-11-01）
+
+| #   | 项                                                                                                                                                                                                                            | 状态 |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| 1   | **Dial 阴影占比接真实数据**：realData 状态扩展 {uv, shadow}，同一个 geolocation fetch 共享（零额外请求）；阴影 = 100 - sunshine_duration/3600×100（Open-Meteo 真实日照秒数），显示标注「实时/典型值」                         | 完成 |
+| 2   | **劝退 toilet/exit 真数据接线**：SCENIC_SERVICES 99 条 5A 数据（腾讯 nearby 厕所/出口搜索烘焙）通过 selectedSpotName → HeavyTimeline → TimelineCard 链路传入；TimelineCard 内 resolveText() 按 reason.id 注入真实文字替代模板 | 完成 |
+| 3   | 门禁三连：tsc 0 ✓ vitest 101/101 ✓ 隔离 build ✓ 真 .next 重建+双端口重启 ✓                                                                                                                                                    | 完成 |
+
+**合并键规则**：selectedSpotName 是库内展示名，直接匹配 SCENIC_SERVICES 键（同为展示名）。
+
 ## 七轮（2026-10-25）：志愿探索接入真实数据
 
 | 项目                                                                                                                                               | 状态   |

@@ -31,6 +31,10 @@ import {
   vibrate,
 } from "@/lib/motion-hooks";
 import { useSharedMotionStore } from "@/lib/shared-motion-store";
+import {
+  SCENIC_SERVICES,
+  type ScenicServices,
+} from "@/lib/scenic-services.generated";
 import { BreathRing } from "@/components/shared/breath-ring";
 import { LiquidCharge } from "@/components/shared/liquid-charge";
 import { PressureButton } from "@/components/shared/pressure-button";
@@ -477,10 +481,12 @@ function TimelineCard({
   item,
   index,
   activeConditions,
+  services,
 }: {
   item: (typeof TIMELINE_DATA)[0];
   index: number;
   activeConditions: Set<string>;
+  services?: ScenicServices;
 }) {
   const [queueDisplay, setQueueDisplay] = useState(item.queue);
   const [flipping, setFlipping] = useState(false);
@@ -572,6 +578,20 @@ function TimelineCard({
           const isHighlighted =
             highlightKnee || highlightHeat || highlightHeart;
 
+          // 真实数据覆盖：toilet/exit 有腾讯 nearby 烘焙数据时替换模板文字
+          const resolved = (() => {
+            if (services && reason.id === "toilet") {
+              return services.nearestToiletM >= 0
+                ? `周边 500m 内 ${services.toiletCount} 个卫生间 · 最近 ${services.nearestToiletM} 米`
+                : "周边 500m 内未检索到卫生间";
+            }
+            if (services && reason.id === "exit") {
+              return services.nearestExitM >= 0
+                ? `周边 300m 内 ${services.exitCount} 个出入口 · 最近 ${services.nearestExitM} 米`
+                : "周边 300m 内未检索到出入口";
+            }
+            return pass ? reason.good : reason.bad;
+          })();
           return (
             <div
               key={reason.id}
@@ -588,16 +608,14 @@ function TimelineCard({
                 <div
                   className={`text-xs mt-0.5 ${pass ? "text-green-700" : "text-red-700 dark:text-red-400 font-semibold"}`}
                 >
-                  {pass ? reason.good : reason.bad}
+                  {resolved}
                 </div>
               </div>
               <span className="text-2xl leading-none shrink-0">
                 {pass ? "✅" : "❌"}
               </span>
               <button
-                onClick={() =>
-                  speak(`${reason.label}：${pass ? reason.good : reason.bad}`)
-                }
+                onClick={() => speak(`${reason.label}：${resolved}`)}
                 className="shrink-0 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center transition-colors"
                 title="语音播报"
               >
@@ -619,11 +637,13 @@ function HeavyTimeline({
   activeConditions,
   onIndexChange,
   isWeekend,
+  services,
 }: {
   count: number;
   activeConditions: Set<string>;
   onIndexChange: (idx: number) => void;
   isWeekend?: boolean;
+  services?: ScenicServices;
 }) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const [viewH, setViewH] = useState(0);
@@ -690,6 +710,7 @@ function HeavyTimeline({
                 item={item}
                 index={i}
                 activeConditions={activeConditions}
+                services={services}
               />
             </div>
           );
@@ -1352,6 +1373,9 @@ export default function DeterrentView() {
         <HeavyTimeline
           count={TIMELINE_DATA.length}
           isWeekend={isWeekend}
+          services={
+            selectedSpotName ? SCENIC_SERVICES[selectedSpotName] : undefined
+          }
           activeConditions={activeConditions}
           onIndexChange={(idx) => {
             if (idx !== timelineIdx) {
