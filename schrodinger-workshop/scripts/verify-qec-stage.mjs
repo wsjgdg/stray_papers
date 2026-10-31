@@ -43,15 +43,11 @@ for (const d of [3, 5]){
   assert.equal(audit.lookupSyndromeFailX + audit.lookupSyndromeFailZ, 0, `d=${d}: unambiguous lookup must close final syndrome`);
   assert.equal(audit.silentLogicalX + audit.silentLogicalZ, 0, `d=${d}: no single fault may be logically silent`);
   assert.equal(audit.jointFallbackSyndromeFailX + audit.jointFallbackSyndromeFailZ, 0, `d=${d}: joint ambiguity fallback must close terminal syndrome`);
-  if (d === 3){
-    assert.ok(audit.jointAmbiguous > 0, 'd=3: known joint-signature collisions must be reported');
-    assert.ok(audit.jointFallbackLogicalFailX + audit.jointFallbackLogicalFailZ > 0,
-      'd=3: audit must expose residual logical failures after safe lookup/MWPM fallback');
-  } else {
-    assert.equal(audit.jointAmbiguous, 0, `d=${d}: all enumerated single-fault joint signatures are unambiguous`);
-    assert.equal(audit.jointFallbackLogicalFailX + audit.jointFallbackLogicalFailZ, 0,
-      `d=${d}: no residual fallback failures when the joint catalog has no ambiguous signatures`);
-  }
+  assert.equal(audit.jointAmbiguous, 0, `d=${d}: hook-safe schedule must eliminate ambiguous single-fault joint signatures`);
+  assert.equal(audit.jointCovered, audit.locations, `d=${d}: every enumerated single fault must use the joint table`);
+  assert.equal(audit.jointFallbackMechanisms, 0, `d=${d}: no single fault may fall through to the ambiguous-signature decoder`);
+  assert.equal(audit.jointFallbackLogicalFailX + audit.jointFallbackLogicalFailZ, 0,
+    `d=${d}: every enumerated single fault must preserve logical class`);
   const injected = scCircuitTrial(code, {
     p: 0.001, rounds: d,
     forceFaults: [{ round: 1, location: 'idle', q: Math.floor(d * d / 2), pauli: 'X' }],
@@ -73,7 +69,7 @@ for (const d of [3, 5]){
   assert.notEqual(injected.rawSynZ[1], 0, `d=${d}: post-readout idle X becomes visible in the next round`);
   assert.equal(injected.defX[0], 0, `d=${d}: detector must not move the post-readout idle fault into the prior round`);
   assert.notEqual(injected.defX[1], 0, `d=${d}: detector records the idle fault when the next measurement sees it`);
-  console.log(`single-fault d=${d}: joint coverage=${audit.jointCovered}/${audit.locations}; ambiguous signatures=${audit.jointAmbiguous}/${audit.jointSignatures}; unresolved logical failures X/Z=${audit.jointFallbackLogicalFailX}/${audit.jointFallbackLogicalFailZ}; prep-fault repaired`);
+  console.log(`single-fault d=${d}: joint coverage=${audit.jointCovered}/${audit.locations}; ambiguous signatures=${audit.jointAmbiguous}/${audit.jointSignatures}; residual logical/syndrome failures=0; prep-fault repaired`);
 }
 
 const zero = wilsonInterval(0, 100);

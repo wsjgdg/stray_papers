@@ -59,7 +59,10 @@ function scCircuitChecks(code){
     for (let ci = 0; ci < checks.length; ci++){
       const st = checks[ci];
       const cells = new Map(st.sup.map(q => [`${Math.floor(q / code.d)},${q % code.d}`, q]));
-      const order = type === 'Z' ? [[1,0],[0,0],[1,1],[0,1]] : [[0,1],[0,0],[1,1],[1,0]];
+      /* Hook-safe suffix order: Z-ancilla Z faults make horizontal data hooks;
+         X-ancilla X faults make vertical data hooks, both perpendicular to the
+         corresponding minimum-weight logical string. */
+      const order = type === 'Z' ? [[0,0],[0,1],[1,0],[1,1]] : [[0,0],[1,0],[0,1],[1,1]];
       const ordered = order.map(([dr, dc]) => cells.get(`${st.i + dr},${st.j + dc}`)).filter(q => q !== undefined);
       out.push({ type, ci, st, ordered });
     }

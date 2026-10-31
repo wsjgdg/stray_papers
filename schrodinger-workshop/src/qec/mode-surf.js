@@ -334,7 +334,7 @@ export class SurfApp {
     this.q('#sfTrialsO').textContent = s.trials;
     const pLabel = this.q('#sfPLabel'); if (pLabel) pLabel.textContent = this.circuit ? '每个电路位置的错误率 p' : '每比特错误率 p';
     const snap = this.q('#sfSnap'); if (snap){ snap.disabled = this.circuit; snap.title = this.circuit ? '回放须复用已计入统计的 circuit shot，不额外抽样' : ''; }
-    const scan = this.q('#sfScan'); if (scan){ scan.disabled = this.circuit; scan.title = this.circuit ? '诊断性原型不用于阈值结论：歧义签名回退 MWPM，且边权未联合建模 hook/高阶相关性' : ''; }
+    const scan = this.q('#sfScan'); if (scan){ scan.disabled = this.circuit; scan.title = this.circuit ? '诊断性原型不用于阈值结论：虽然当前目录的单故障枚举通过，但多故障仍回退边缘 MWPM，且未建模真实并行调度/逐门 idle' : ''; }
     const note = this.q('#sfModelNote');
     if (note && this.circuit) note.innerHTML = '<b>诊断性 circuit-level 原型</b>：Z 检查 data→ancilla、X 检查 ancilla→data；显式模拟 CNOT、SPAM 与双比特退极化，每轮另加每数据比特一个有效 idle 去极化位点。先查无歧义的 X/Z 联合单故障签名；歧义时保留无歧义的单帧查表，未解决帧再由边缘权重时空 MWPM 兜底。idle 未按实际门时序排程，也不含泄漏/T₁/T₂；未联合解码高阶相关性，不能据此报告阈值。';
     else if (note) note.innerHTML = '<b>退极化是分帧独立解码</b>：丢掉 Y 的相关性 ⟹ 阈值 ≈ 1.5×单帧（10.3% → 15.5%；相关解码可到 18.9%，本页不做）。交叉点「未分辨」表示当前网格/样本数不足；带噪测量固定 q=p、d−1 轮 + 末轮理想读出，d=7 因时空缺陷过多而置灰。';
