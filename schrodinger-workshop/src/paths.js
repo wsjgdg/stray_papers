@@ -1167,6 +1167,22 @@ export class PathsApp {
 
     g.strokeStyle = 'rgba(120,160,220,.14)'; g.lineWidth = 1;
     g.beginPath(); g.moveTo(pad, cy); g.lineTo(w - pad, cy); g.moveTo(cx, pad); g.lineTo(cx, h - pad); g.stroke();
+    /* 复振幅复平面的数值轴：不是空间坐标，标 Re A / Im A 与相对自适应刻度。 */
+    g.font = '8px ui-monospace,monospace'; g.fillStyle = 'rgba(154,167,189,.58)';
+    g.textAlign = 'center';
+    for (const f of [-0.5, 0.5]){
+      const x = cx + f * mx * sc;
+      g.beginPath(); g.moveTo(x, cy - 3); g.lineTo(x, cy + 3); g.stroke();
+      g.fillText((f * mx).toFixed(1), x, cy + 12);
+    }
+    g.textAlign = 'right';
+    for (const f of [-0.5, 0.5]){
+      const y = cy - f * mx * sc;
+      g.beginPath(); g.moveTo(cx - 3, y); g.lineTo(cx + 3, y); g.stroke();
+      g.fillText((f * mx).toFixed(1), cx - 5, y + 3);
+    }
+    g.textAlign = 'right'; g.fillText('Re A', w - pad, cy - 5);
+    g.textAlign = 'left'; g.fillText('Im A', cx + 5, pad + 10);
 
     g.lineWidth = 1.15;
     for (let i = 1; i < nShow; i++){

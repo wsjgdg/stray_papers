@@ -37,6 +37,13 @@ const TB_CSS = `
   #tbHud .hrow span:last-child{color:var(--txt)}
   #tbHud .hrow span.warn{color:var(--amber)}
   #tbPanel .note{font-size:9.5px;color:var(--dim);line-height:1.5;margin-top:6px}
+  #tbFieldKey{margin-top:7px;padding:6px 7px;border:1px solid rgba(120,160,220,.16);border-radius:6px;
+    background:rgba(4,8,16,.38);font:9px/1.45 var(--mono);color:var(--dim)}
+  #tbFieldKey .tbPhaseBar{height:5px;margin-top:4px;border-radius:4px;
+    background:linear-gradient(90deg,hsl(0,100%,64%),hsl(90,100%,64%),hsl(180,100%,64%),hsl(270,100%,64%),hsl(360,100%,64%))}
+  #tbFieldKey .tbPhaseTicks{display:flex;justify-content:space-between;font-size:8px;color:var(--dim)}
+  #tbFieldKey .tbDiagKey{margin-top:4px;color:rgba(251,191,36,.9)}
+  #tbFieldKey [hidden]{display:none}
   #tbHud hr{border:none;border-top:1px solid var(--line);margin:6px 0}
   #tbStage{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;
     display:flex;flex-direction:column;align-items:center;gap:5px;--sz:min(62vh,52vw)}
@@ -212,7 +219,15 @@ export class TwoBodyApp {
     <button id="tbPause">暂停</button><button id="tbStep">单步</button>
     <button id="tbReset">重置</button><button id="tbRelax">松弛</button>
     <button id="tbMode" style="grid-column:1/3">显示：密度</button>
-  </div></div>
+  </div>
+  <div id="tbFieldKey" role="note" aria-label="构型空间画布图例">
+    <div id="tbFieldKeyText" aria-live="polite">密度视图：亮度按 |ψ|²（自动曝光）映射</div>
+    <div id="tbPhaseScale" hidden aria-label="相位色相标尺">
+      <div class="tbPhaseBar"></div>
+      <div class="tbPhaseTicks"><span>−π</span><span>0</span><span>+π</span></div>
+    </div>
+    <div class="tbDiagKey">琥珀线：交换对角 x₁=x₂</div>
+  </div>
 </div>
 <div id="tbHud" class="panel qhud">
   <div class="hrow"><span>⟨P⟩ 交换期望</span><span id="hExch">—</span></div>
@@ -535,6 +550,14 @@ export class TwoBodyApp {
     this.q('#tbHint').querySelector('b').textContent = pr.name;
     this.q('#tbHint').querySelector('span').innerHTML = pr.text;
     this.q('#tbMode').textContent = '显示：' + (this.state.mode ? '相位' : '密度');
+    this.syncFieldKey();
+  }
+  syncFieldKey(){
+    const text = this.q('#tbFieldKeyText'), phase = this.q('#tbPhaseScale');
+    if (text) text.textContent = this.state.mode
+      ? '相位视图：色相 = arg ψ（−π 红 · 0 青 · +π 红）'
+      : '密度视图：亮度按 |ψ|² 非线性映射（自动曝光）';
+    if (phase) phase.hidden = !this.state.mode;
   }
   /* 参数快照（CPU 镜像与 GPU uniform 同源） */
   params(){
@@ -891,6 +914,7 @@ export class TwoBodyApp {
     this.state.mode = this.state.mode ? 0 : 1;
     this._drawDirty = true;
     this.q('#tbMode').textContent = '显示：' + (this.state.mode ? '相位' : '密度');
+    this.syncFieldKey();
   }
   resetWave(){
     if (!this._init) return;

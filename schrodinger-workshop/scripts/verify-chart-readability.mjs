@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { HubbardApp } from '../src/hubbard.js';
 import { SpinApp } from '../src/spin.js';
 import { PathsApp } from '../src/paths.js';
@@ -6,6 +7,11 @@ import { CycleApp } from '../src/qec/mode-cycle.js';
 import { NoiseApp } from '../src/noise.js';
 import { SlitScanner, GpScanner, NlsScanner } from '../src/core/scan.js';
 import { QCircuitApp } from '../src/qcircuit.js';
+import { TwoBodyApp } from '../src/two-body.js';
+
+const coreAppSource = readFileSync(new URL('../src/core/app.js', import.meta.url), 'utf8');
+assert.ok(coreAppSource.includes('亮度 = 密度 |ψ|² 的非线性曝光映射'), 'main-field legend should describe the nonlinear visual density encoding');
+assert.ok(!coreAppSource.includes('亮度 = 概率密度 |ψ|²'), 'main-field legend should not imply a linear density-to-brightness scale');
 
 const labels = [];
 const ctx = new Proxy({}, {
@@ -60,6 +66,11 @@ assert.ok(labels.includes('I(Y) / Imax'), 'path profile should state its normali
 assert.ok(labels.includes('路径和') && labels.includes('解析'), 'path profile should identify both compared series');
 assert.ok(labels.includes('-40') && labels.includes('0') && labels.includes('40'), 'path profile should label detector-coordinate ticks');
 assert.ok(labels.includes('0.0') && labels.includes('0.5') && labels.includes('1.0'), 'path profile should label normalized-intensity ticks');
+labels.length = 0;
+paths.spir = { pts: [[0, 0], [0.5, 0.25], [1, 0.1]], count: 2, len: 2 };
+paths.drawSpiral();
+assert.ok(labels.includes('Re A') && labels.includes('Im A'), 'path-amplitude spiral should identify its complex-plane axes');
+assert.ok(labels.includes('-0.5') && labels.includes('0.5'), 'path-amplitude spiral should label its adaptive numeric ticks');
 
 const spin = Object.create(SpinApp.prototype);
 spin.state = { L: 8 }; spin.Sq = Float64Array.from([0, .1, .2, .3, .4, .3, .2, .1]);
@@ -123,6 +134,18 @@ if (hadWindow) globalThis.window = oldWindow; else delete globalThis.window;
 assert.ok(labels.some(x => x.includes('arg(a_i): 0=青，±π=红')), 'narrow circuit chart should retain phase/color anchors in its compact title');
 assert.ok(!labels.includes('−π'), 'narrow circuit chart should avoid a clipped gradient legend');
 
+const fieldText = { textContent: '' }, phaseScale = { hidden: true }, modeButton = { textContent: '' };
+const twoBody = Object.create(TwoBodyApp.prototype);
+twoBody.q = selector => selector === '#tbFieldKeyText' ? fieldText : selector === '#tbPhaseScale' ? phaseScale : modeButton;
+twoBody.state = { mode: 0 }; twoBody._drawDirty = false;
+twoBody.syncFieldKey();
+assert.ok(fieldText.textContent.includes('密度视图') && fieldText.textContent.includes('自动曝光'), 'two-body density legend should describe nonlinear exposure');
+assert.equal(phaseScale.hidden, true, 'density mode should not show a phase scale');
+twoBody.toggleMode();
+assert.ok(fieldText.textContent.includes('arg ψ') && fieldText.textContent.includes('−π 红 · 0 青 · +π 红'), 'two-body phase legend should map hue to phase');
+assert.equal(phaseScale.hidden, false, 'phase mode should show the phase hue scale');
+assert.equal(modeButton.textContent, '显示：相位', 'mode control and phase legend should change together');
+
 const cycle = Object.create(CycleApp.prototype);
 cycle.cv = { curve: { width: 640, clientWidth: 640, height: 240, getContext: () => ctx } };
 cycle.state = { p: 0.01 };
@@ -132,4 +155,4 @@ cycle.drawCurve();
 assert.ok(labels.includes('1.23%') && labels.includes('1.56%'), 'QEC cycle-curve point annotations should match its percentage axis');
 assert.ok(labels.includes('T=1') && labels.includes('T=2'), 'QEC cycle-curve should identify its cycle-count ticks');
 
-console.log('Core scans/Hubbard/Paths/Noise/QCircuit/Spin/QEC chart axes, reference labels, legends, and terminology PASS');
+console.log('MainField/core scans/Hubbard/Paths/Noise/QCircuit/TwoBody/Spin/QEC chart axes, reference labels, legends, and terminology PASS');
