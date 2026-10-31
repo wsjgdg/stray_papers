@@ -3519,6 +3519,7 @@ iℏ ∂ψ/∂t = [ −ℏ²/2m (∂₁² + ∂₂²) + V₁(x₁) + V₂(x₂) 
 | 沿轴点选（R132） | 落点按 texel 换算（0.3·L−0.5）；从各预设接续、切到自由放置；位置钳制 3σ+0.5；拖动中改、松手后不改；费米重合 +k₀=0 触发 Pauli 守门、k₀≠0 不触发；点选后 ⟨P⟩ 仍 1.0000000000（pot131 H 组 + cdp131 S32–S44 + smoke131 K10–K14） |
 | 初态旋钮（R131） | 缺省波形与改动前**逐位相同**（12 组预设×统计×参数全 0 差）；HBT 5 点实测 vs 2/(1+\|⟨a\|b⟩\|²) 全 ≤1e-10；自定义参数 400 步后 ⟨P⟩/‖ψ‖² 守恒 2.2e-16、范数漂移 9.3e-8（O(dt²) 有界） |
 | 浏览器 vs CPU | 60 帧 GPU↔CPU 镜像 maxDiff **5.98e-8**；跨对角相位差 ≡π（幅度>1e-4 的 128 点上 max\|Δarg−π\|=**7.5e-5**）；接触压制 3202×；松弛 E 与 Node 逐位一致；dist 单文件 30 帧 maxDiff 4.3e-8 |
+| 测量调度 | 活跃演化每 6 个模拟帧读回一次；暂停/虚时间松弛期间不因冻结的 `frames % 6` 条件反复触发 GPU `readPixels`。初态重发、松弛完成和手动单步仍显式刷新；`npm run test:two-body-frame-measure` 验证帧调度。 |
 
 **初态波包（σ / k₀ / 间距 d）**：面板新增「初态（波包）」一组，两个对穿预设各给两个滑块——自由对穿
 是**宽度 σ + 动量 k₀ + 间距 d**，阱中对穿是**宽度 σ + 释放半径 r₀**（阱中初速恒 0，k₀ 无意义故不给）。
@@ -3831,6 +3832,7 @@ schrodinger-workshop/
 │   ├── verify-hubbard-measure.mjs   Hubbard 占据测量逐位对照/求和规则
 │   ├── verify-hubbard-residual.mjs  Hubbard 残差单 matvec 逐位对照
 │   ├── verify-hubbard-sx-snapshot.mjs S(x) 快照引用/态不可变性/剖面对账
+│   ├── verify-two-body-frame-measure.mjs 双粒子暂停/松弛测量调度回归
 │   └── serve.mjs                 开发服务器：no-store 响应 + SSE 热重载（npm start）
 ├── src/
 │   ├── main.js                   演示入口：注册内核 → 按 ?kernel= 挂载 QuantumField

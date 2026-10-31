@@ -1139,6 +1139,7 @@ export class TwoBodyApp {
   /* ---------- 帧循环 ---------- */
   frame(){
     requestAnimationFrame(this.frame);
+    const relaxing = !!this._relax;
     this._fpsFrames++;
     const now = performance.now();
     if (now - this._lastFpsT > 500){
@@ -1147,10 +1148,12 @@ export class TwoBodyApp {
       this.q('#hFps').textContent = String(this._fps);
     }
     this.bakePot();   /* 签名未变则立即返回（滑块/预设改动下一帧生效） */
-    if (this._relax) this.relaxChunk();
+    if (relaxing) this.relaxChunk();
     else if (!this.state.paused) this.evolveFrame();
     this.draw();
-    if (this.state.frames % 6 === 0) this.refreshMeasure();
+    /* 帧数在暂停/松弛时不变；必须只在真实演化帧采样，否则 frames%6===0 会
+       每个 rAF 都 readPixels。重发初态、松弛收敛与单步路径会显式 refreshMeasure。 */
+    if (!relaxing && !this.state.paused && this.state.frames % 6 === 0) this.refreshMeasure();
   }
 
   /* ---------- 调试句柄（cdp72） ---------- */
