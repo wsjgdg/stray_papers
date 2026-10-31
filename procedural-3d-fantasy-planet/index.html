@@ -10,7 +10,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&amp;family=DM+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script type="importmap">
     {
       "imports": {
@@ -1227,16 +1226,23 @@
       const positions = terrainGeo.attributes.position;
       const terrainColors = new Float32Array(positions.count * 3);
       const sample = new THREE.Vector3();
-      for (let i = 0; i < positions.count; i++) {
-        sample.fromBufferAttribute(positions, i).normalize();
-        const h = heightAt(sample);
-        const color = colorTerrain(sample, h);
-        terrainColors.set([color.r, color.g, color.b], i * 3);
-        positions.setXYZ(i, sample.x * (R + h), sample.y * (R + h), sample.z * (R + h));
+      const widthSegments = terrainGeo.parameters.widthSegments, heightSegments = terrainGeo.parameters.heightSegments;
+      // Row-major like SphereGeometry itself, so the ~90k-vertex displacement can yield
+      // between bands and keep the loading label painting instead of freezing the tab.
+      for (let row = 0; row <= heightSegments; row++) {
+        const first = row * (widthSegments + 1);
+        for (let col = 0; col <= widthSegments; col++) {
+          const i = first + col, offset = i * 3;
+          sample.fromBufferAttribute(positions, i).normalize();
+          const h = heightAt(sample);
+          const color = colorTerrain(sample, h);
+          terrainColors[offset] = color.r; terrainColors[offset + 1] = color.g; terrainColors[offset + 2] = color.b;
+          positions.setXYZ(i, sample.x * (R + h), sample.y * (R + h), sample.z * (R + h));
+        }
+        if (row % 24 === 23) await yieldFrame();
       }
       terrainGeo.setAttribute('color', new THREE.BufferAttribute(terrainColors, 3));
       terrainGeo.computeVertexNormals();
-      const widthSegments = terrainGeo.parameters.widthSegments, heightSegments = terrainGeo.parameters.heightSegments;
       const baseNormals = terrainGeo.attributes.normal;
       for (let row = 0; row <= heightSegments; row++) {
         const a = row * (widthSegments + 1), b = a + widthSegments;
@@ -1247,21 +1253,31 @@
       const terrain = staticMesh(terrainGeo, surfaceMaterial('terrain'));
 
       // A local displacement patch gives sharp ground relief; texture normals supply micro-detail.
+      // It is double-buffered: the visible patch never mutates, the next one is filled over
+      // several frames and swapped in, so re-centering it while walking cannot stall a frame.
       const patchSegments = compact ? 60 : 96;
-      const patchGeo = new THREE.BufferGeometry();
-      const patchVertices = new Float32Array((patchSegments + 1) ** 2 * 3);
-      const patchColors = new Float32Array(patchVertices.length);
+      const patchColumns = patchSegments + 1;
+      const patchVertexTotal = patchColumns * patchColumns;
       const patchIndices = [];
       for (let y = 0; y < patchSegments; y++) for (let x = 0; x < patchSegments; x++) {
-        const a = y * (patchSegments + 1) + x, b = a + 1, c = a + patchSegments + 1, d = c + 1;
+        const a = y * patchColumns + x, b = a + 1, c = a + patchColumns, d = c + 1;
         patchIndices.push(a, b, c, b, d, c);
       }
-      patchGeo.setIndex(patchIndices);
-      patchGeo.setAttribute('position', new THREE.BufferAttribute(patchVertices, 3).setUsage(THREE.DynamicDrawUsage));
-      patchGeo.setAttribute('color', new THREE.BufferAttribute(patchColors, 3).setUsage(THREE.DynamicDrawUsage));
-      const groundPatch = staticMesh(patchGeo, surfaceMaterial('terrain', true));
+      function makePatchBuffer() {
+        const geometry = new THREE.BufferGeometry();
+        const vertices = new Float32Array(patchVertexTotal * 3);
+        const colors = new Float32Array(vertices.length);
+        geometry.setIndex(patchIndices);
+        geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3).setUsage(THREE.DynamicDrawUsage));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3).setUsage(THREE.DynamicDrawUsage));
+        return { geometry, vertices, colors };
+      }
+      const patchBufferA = makePatchBuffer(), patchBufferB = makePatchBuffer();
+      let patchFront = patchBufferA, patchBack = patchBufferB;
+      const groundPatch = staticMesh(patchFront.geometry, surfaceMaterial('terrain', true));
       groundPatch.castShadow = false;
       groundPatch.visible = false;
+      const patchAxis = new THREE.Vector3(1, 0, 0);
       const patchEast = new THREE.Vector3(), patchNorth = new THREE.Vector3();
       const faceA = new THREE.Vector3(), faceB = new THREE.Vector3(), faceC = new THREE.Vector3(), faceNormal = new THREE.Vector3();
       function baseMeshRadius(n) {
@@ -1277,25 +1293,61 @@
         return Math.abs(denominator)>.0000001?faceNormal.dot(faceA)/denominator:R+heightAt(n);
       }
       function rebuildPatch(center) {
-        patchUniforms.center.value.copy(center);
-        patchEast.crossVectors(Math.abs(center.y) > .95 ? new THREE.Vector3(1, 0, 0) : UP, center).normalize();
+        patchEast.crossVectors(Math.abs(center.y) > .95 ? patchAxis : UP, center).normalize();
         patchNorth.crossVectors(center, patchEast);
-        let index = 0;
-        for (let y = 0; y <= patchSegments; y++) for (let x = 0; x <= patchSegments; x++) {
-          sample.copy(center).addScaledVector(patchEast, (x / patchSegments - .5) * .44).addScaledVector(patchNorth, (y / patchSegments - .5) * .44).normalize();
-          let h = heightAt(sample);
-          const edgeBlend=smooth(.145,.19,Math.acos(clamp(sample.dot(center),-1,1)));
-          if(edgeBlend>0)h=mix(h,baseMeshRadius(sample)-R,edgeBlend);
-          const color = colorTerrain(sample, h);
-          patchColors[index] = color.r; patchColors[index + 1] = color.g; patchColors[index + 2] = color.b;
-          sample.multiplyScalar(R + h);
-          sample.toArray(patchVertices, index);
-          index += 3;
+        for (let i = 0; i < patchVertexTotal; i++) writePatchVertex(patchFront, center, i);
+        commitPatch(patchFront, center);
+      }
+      function writePatchVertex(buffer, center, index) {
+        const x = index % patchColumns, y = (index / patchColumns) | 0;
+        sample.copy(center).addScaledVector(patchEast, (x / patchSegments - .5) * .44).addScaledVector(patchNorth, (y / patchSegments - .5) * .44).normalize();
+        let h = heightAt(sample);
+        const edgeBlend=smooth(.145,.19,Math.acos(clamp(sample.dot(center),-1,1)));
+        if(edgeBlend>0)h=mix(h,baseMeshRadius(sample)-R,edgeBlend);
+        const color = colorTerrain(sample, h);
+        buffer.colors[index * 3] = color.r; buffer.colors[index * 3 + 1] = color.g; buffer.colors[index * 3 + 2] = color.b;
+        sample.multiplyScalar(R + h);
+        sample.toArray(buffer.vertices, index * 3);
+      }
+      function commitPatch(buffer, center) {
+        buffer.geometry.attributes.position.needsUpdate = true;
+        buffer.geometry.attributes.color.needsUpdate = true;
+        buffer.geometry.computeVertexNormals();
+        buffer.geometry.computeBoundingSphere();
+        patchUniforms.center.value.copy(center);
+        if (groundPatch.geometry !== buffer.geometry) groundPatch.geometry = buffer.geometry;
+        patchFront = buffer;
+        patchBack = buffer === patchBufferA ? patchBufferB : patchBufferA;
+      }
+      // Runtime re-centering runs as a resumable job: a slice of vertices per frame, then one
+      // dressing pass per frame (grass, ferns, flowers, stones) so no single frame pays for all of it.
+      const groundJob = { active: false, center: new THREE.Vector3(), cursor: 0, stage: 0, rng: null };
+      function requestGroundRefresh(center) {
+        groundJob.active = true;
+        groundJob.center.copy(center);
+        groundJob.cursor = 0;
+        groundJob.stage = 0;
+        patchEast.crossVectors(Math.abs(center.y) > .95 ? patchAxis : UP, center).normalize();
+        patchNorth.crossVectors(center, patchEast);
+      }
+      function advanceGroundRefresh(budgetMs) {
+        if (!groundJob.active) return false;
+        if (groundJob.stage === 0) {
+          const deadline = performance.now() + Math.max(1, budgetMs);
+          while (groundJob.cursor < patchVertexTotal) {
+            writePatchVertex(patchBack, groundJob.center, groundJob.cursor++);
+            if ((groundJob.cursor & 31) === 0 && performance.now() >= deadline) return true;
+          }
+          commitPatch(patchBack, groundJob.center);
+          groundJob.stage = 1;
+          groundJob.rng = seeded(82341);
+          return true;
         }
-        patchGeo.attributes.position.needsUpdate = true;
-        patchGeo.attributes.color.needsUpdate = true;
-        patchGeo.computeVertexNormals();
-        patchGeo.computeBoundingSphere();
+        const dressPass = [dressGrass, dressFerns, dressFlowers, dressStones][groundJob.stage - 1];
+        dressPass(groundJob.center, groundJob.rng);
+        groundJob.stage++;
+        if (groundJob.stage > 4) { groundJob.active = false; return false; }
+        return true;
       }
       rebuildPatch(landing);
       await yieldFrame();
@@ -2915,8 +2967,10 @@
       const underCapacity = fern.count;
       for (const detail of [fern, flowers, groundStones]) { detail.visible = false; detail.castShadow = true; detail.receiveShadow = true; scene.add(detail); }
       const flowerCapacity = flowers.count, stoneCapacity = groundStones.count;
-      function dressGround(center) {
-        const rng = seeded(82341); let placed = 0;
+      // Ground dressing is split into four independent passes (grass, ferns, flowers, stones).
+      // Startup runs them all at once; walking re-runs one pass per frame from the resumable job.
+      function dressGrass(center, rng) {
+        let placed = 0;
         for (let attempt = 0; placed < grassCapacity && attempt < grassCapacity * 8; attempt++) {
           const n = nearDirection(center, rng() * TAU, Math.sqrt(rng()) * .21), h = heightAt(n);
           if (h < .035 || h > .33) continue;
@@ -2930,6 +2984,8 @@
         grass.count = placed; grass.instanceMatrix.needsUpdate = true;
         if (grass.instanceColor) grass.instanceColor.needsUpdate = true;
         grass.computeBoundingSphere();
+      }
+      function dressFerns(center, rng) {
         let fernCount = 0;
         for (let attempt = 0; fernCount < underCapacity && attempt < underCapacity * 12; attempt++) {
           const n = nearDirection(center, rng() * TAU, Math.sqrt(rng()) * .2), h = heightAt(n);
@@ -2943,6 +2999,8 @@
         fern.count = fernCount; fern.instanceMatrix.needsUpdate = true;
         if (fern.instanceColor) fern.instanceColor.needsUpdate = true;
         fern.computeBoundingSphere();
+      }
+      function dressFlowers(center, rng) {
         let flowerCount = 0;
         for (let attempt = 0; flowerCount < flowerCapacity && attempt < flowerCapacity * 14; attempt++) {
           const n = nearDirection(center, rng() * TAU, Math.sqrt(rng()) * .16), h = heightAt(n);
@@ -2956,6 +3014,8 @@
         flowers.count = flowerCount; flowers.instanceMatrix.needsUpdate = true;
         if (flowers.instanceColor) flowers.instanceColor.needsUpdate = true;
         flowers.computeBoundingSphere();
+      }
+      function dressStones(center, rng) {
         let stoneCount = 0;
         for (let attempt = 0; stoneCount < stoneCapacity && attempt < stoneCapacity * 12; attempt++) {
           const n = nearDirection(center, rng() * TAU, Math.sqrt(rng()) * .2), h = heightAt(n);
@@ -2967,6 +3027,10 @@
         }
         groundStones.count = stoneCount; groundStones.instanceMatrix.needsUpdate = true;
         groundStones.computeBoundingSphere();
+      }
+      function dressGround(center) {
+        const rng = seeded(82341);
+        dressGrass(center, rng); dressFerns(center, rng); dressFlowers(center, rng); dressStones(center, rng);
       }
       dressGround(landing);
 
@@ -3464,7 +3528,7 @@
         now: { fog: 1, cloud: .5, rain: 0, light: 1, wind: .55, tintAmount: 0, rainSpeed: 1 },
         tint: new THREE.Color(WEATHER_DEFS.clear.tint), targetTint: new THREE.Color(WEATHER_DEFS.clear.tint),
         flash: 0, bolt: 7 + random() * 5, boltLife: 0, announced: true,
-        time: 0, downLocal: new THREE.Vector3(0, -1, 0)
+        time: 0, shaderTime: 0, flashWritten: '', downLocal: new THREE.Vector3(0, -1, 0)
       };
       const weatherToast = document.getElementById('weatherToast');
       const weatherLabel = document.getElementById('weatherLabel');
@@ -3648,7 +3712,7 @@
           for (const landmark of landmarks) { const dot = landmark.direction.dot(state.direction); if (dot > score && dot < .9998) { closest = landmark; score = dot; } }
           headingToward(closest.direction);
           state.pitch = .13; state.mode = 'ground';
-          rebuildPatch(state.direction); dressGround(state.direction); groundPose();
+          requestGroundRefresh(state.direction); groundPose();
         } else {
           state.yaw = Math.atan2(state.direction.x,state.direction.z); state.polar = Math.acos(clamp(state.direction.y,-1,1));
           state.distance = fitDistance(); state.composition = state.compositionTarget = 0; state.mode = 'orbit';
@@ -3733,7 +3797,7 @@
         const local=state.mode==='ground'&&!state.transition;
         groundPatch.visible=grass.visible=fern.visible=flowers.visible=groundStones.visible=local;
         patchUniforms.enabled.value=local?1:0;
-        if(local&&patchUniforms.center.value.dot(state.direction)<Math.cos(.095)){rebuildPatch(state.direction);dressGround(state.direction);}
+        if(local&&!groundJob.active&&patchUniforms.center.value.dot(state.direction)<Math.cos(.095))requestGroundRefresh(state.direction);
       }
 
       const quality={mode:'auto',tier:0,average:1/60,slow:0,fast:0,cooldown:5};
@@ -3811,10 +3875,12 @@
           lightningBolt.material.opacity = Math.max(0, weather.boltLife / .22) * (.7 + random() * .3);
           if (weather.boltLife <= 0) lightningBolt.visible = false;
         }
-        weatherFlash.style.opacity = weather.flash > .004 ? (weather.flash * .72).toFixed(3) : '0';
+        const flashOpacity = weather.flash > .004 ? (weather.flash * .72).toFixed(3) : '0';
+        if (flashOpacity !== weather.flashWritten) { weatherFlash.style.opacity = flashOpacity; weather.flashWritten = flashOpacity; }
         const surface = state.mode === 'ground' && !state.transition;
         const uniforms = weatherParticles.uniforms;
-        uniforms.uTime.value = elapsed * def.speed;
+        weather.shaderTime += dt * def.speed;
+        uniforms.uTime.value = weather.shaderTime;
         uniforms.uIntensity.value = surface ? now.rain : 0;
         uniforms.uMode.value = def.mode;
         uniforms.uWind.value = now.wind;
@@ -3987,12 +4053,19 @@
       pad.addEventListener('pointerdown',event=>{event.preventDefault();joystick.id=event.pointerId;pad.setPointerCapture(event.pointerId);moveJoystick(event);});
       pad.addEventListener('pointermove',event=>{if(joystick.id===event.pointerId)moveJoystick(event);});
       for(const event of ['pointerup','pointercancel','lostpointercapture'])pad.addEventListener(event,e=>{if(joystick.id===e.pointerId){joystick.id=null;joystick.x=joystick.y=0;stick.style.transform='';}});
-      let wasPortrait=innerWidth/innerHeight<.76;
-      window.addEventListener('resize',()=>{
+      let wasPortrait=innerWidth/innerHeight<.76, resizeQueued=false;
+      function applyViewportSize(){
         const portrait=innerWidth/innerHeight<.76;
         camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
         if(portrait!==wasPortrait&&state.mode==='orbit')state.distance=fitDistance();
         wasPortrait=portrait;applyQuality();
+      }
+      // Dragging a window edge fires resize many times per second; rebuilding the render
+      // targets only once per frame keeps the canvas responsive while the layout changes.
+      window.addEventListener('resize',()=>{
+        if(resizeQueued)return;
+        resizeQueued=true;
+        requestAnimationFrame(()=>{resizeQueued=false;applyViewportSize();});
       });
       document.addEventListener('visibilitychange',()=>{lastFrame=0;clearInput();quality.cooldown=5;});
       canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();contextLost=true;status.hidden=false;statusText.textContent='RESTORING THE WORLD';clearInput();});
@@ -4046,7 +4119,10 @@
         sunlight.shadow.bias=surface ? -.00003 : -.00012;
         const half=surface?1.4:6.6,shadowCamera=sunlight.shadow.camera;
         if(shadowCamera.right!==half){shadowCamera.left=shadowCamera.bottom=-half;shadowCamera.right=shadowCamera.top=half;shadowCamera.updateProjectionMatrix();}
-        if(frame%[3,5,8][quality.tier]===0)renderer.shadowMap.needsUpdate=true;
+        // Orbit only needs a refreshed shadow map now and then: the sun crawls and the player
+        // is not moving through the shadow volume, so the same refresh cadence as walking is waste.
+        const shadowStride=surface?[3,5,8][quality.tier]:[10,14,20][quality.tier];
+        if(frame%shadowStride===0)renderer.shadowMap.needsUpdate=true;
         pulseTime.value=waterUniforms.uTime.value=sporeUniforms.uTime.value=elapsed;
         forestTime.value=elapsed*(.72+weatherNow.wind*.52);
         clouds[0].rotation.y=elapsed*(.0035+weatherNow.wind*.004);clouds[1].rotation.y=1.7-elapsed*(.0028+weatherNow.wind*.002);
@@ -4160,7 +4236,10 @@
         try {
           const raw=lastFrame?(timestamp-lastFrame)/1000:1/60;lastFrame=timestamp;
           const dt=Math.min(raw,.05);elapsed+=dt;frame++;
-          updateCamera(dt);updateWorld(dt);updateQuality(raw,dt);renderScene();
+          updateCamera(dt);updateWorld(dt);
+          // Re-center the walking patch over several frames instead of one long stall.
+          advanceGroundRefresh(Math.min(2.6, Math.max(1.4, dt * 150)));
+          updateQuality(raw,dt);renderScene();
         } catch (error) {
           stopped=true;renderer.setAnimationLoop(null);clearInput();reportFailure(error);
         }
