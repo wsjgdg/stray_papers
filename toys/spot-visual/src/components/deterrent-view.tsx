@@ -201,6 +201,45 @@ function Dial({
   value: number;
   onChange: (i: number) => void;
 }) {
+  // ═══ 真实 UV：geolocation → /api/weather（Open-Meteo 逐小时 uv_index）═══
+  // 成功时按当前小时覆盖典型值；失败/无定位静默回退典型值（TIME_PERIODS.uv）。
+  const [realData, setRealData] = useState<{
+    uv: number;
+    shadow: number;
+    source: "open-meteo";
+  } | null>(null);
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    let alive = true;
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const res = await fetch(
+            `/api/weather?lat=${pos.coords.latitude.toFixed(3)}&lng=${pos.coords.longitude.toFixed(3)}`,
+          );
+          if (!res.ok) return;
+          const j = await res.json();
+          const hour = String(new Date().getHours()).padStart(2, "0");
+          const hit = (j.uvToday ?? []).find(
+            (x: { hour: string }) => x.hour === hour,
+          );
+          if (hit && alive)
+            setRealData({
+              uv: hit.uv,
+              shadow: hit.shadow,
+              source: "open-meteo",
+            });
+        } catch {
+          /* 静默回退典型值 */
+        }
+      },
+      () => {},
+      { timeout: 5000 },
+    );
+    return () => {
+      alive = false;
+    };
+  }, []);
   // 棘轮拖动：motionX 跟手，跨 slot 边界触发短震，松手 spring 回弹到刻度
   const { motionX, handleStart, handleMove, handleEnd, snapTo } =
     useRatchetDrag(SLOT_WIDTH);
@@ -287,25 +326,39 @@ function Dial({
             className="text-[36px] font-black leading-none"
             style={{
               color:
-                period.uv >= 8
+                (realData?.uv ?? period.uv) >= 8
                   ? "#DC2626"
-                  : period.uv >= 5
+                  : (realData?.uv ?? period.uv) >= 5
                     ? "#F59E0B"
                     : "#16A34A",
             }}
           >
-            {period.uv}
+            {realData?.uv ?? period.uv}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
             紫外线强度
+            {realData ? (
+              <span className="text-emerald-600 dark:text-emerald-400 ml-0.5">
+                · 实时
+              </span>
+            ) : (
+              <span className="ml-0.5">· 典型值</span>
+            )}
           </div>
         </div>
         <div className="text-center">
           <div className="text-[36px] font-black leading-none text-sky-600">
-            {period.shadow}%
+            {realData?.shadow ?? period.shadow}%
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
             阴影占比
+            {realData ? (
+              <span className="text-emerald-600 dark:text-emerald-400 ml-0.5">
+                · 实时
+              </span>
+            ) : (
+              <span className="ml-0.5">· 典型值</span>
+            )}
           </div>
         </div>
       </motion.div>
@@ -565,10 +618,12 @@ function HeavyTimeline({
   count,
   activeConditions,
   onIndexChange,
+  isWeekend,
 }: {
   count: number;
   activeConditions: Set<string>;
   onIndexChange: (idx: number) => void;
+  isWeekend?: boolean;
 }) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const [viewH, setViewH] = useState(0);
@@ -625,15 +680,20 @@ function HeavyTimeline({
         }}
         className="absolute inset-x-0 top-0"
       >
-        {TIMELINE_DATA.map((item, i) => (
-          <div key={i} style={{ height: itemH || "85vh" }}>
-            <TimelineCard
-              item={item}
-              index={i}
-              activeConditions={activeConditions}
-            />
-          </div>
-        ))}
+        {TIMELINE_DATA.map((rawItem, i) => {
+          const item = isWeekend
+            ? { ...rawItem, queue: Math.round(rawItem.queue * 1.5) }
+            : rawItem;
+          return (
+            <div key={i} style={{ height: itemH || "52vh" }}>
+              <TimelineCard
+                item={item}
+                index={i}
+                activeConditions={activeConditions}
+              />
+            </div>
+          );
+        })}
       </motion.div>
     </div>
   );
@@ -679,8 +739,18 @@ function ReviewPopup({
   origin: { x: number; y: number };
   onClose: () => void;
 }) {
+  const { dissuasionRecords, spots, setActiveView } = useAppStore();
+  const condLabel =
+    conditionId === "knee" ? "膝盖" : conditionId === "heart" ? "心脏" : "怕热";
+  // 真数据：用户本人在翻车日记里写的、涉及该身体条件的记录（无社交后端，无伪造 UGC）
+  const records = dissuasionRecords.filter(
+    (r) =>
+      r.bodyConditions.includes(conditionId) ||
+      (r.tags ?? []).some((t: string) => t.includes(condLabel)),
+  );
   const data = BAD_REVIEWS[conditionId];
   if (!data) return null;
+  const spotNameOf = (id: string) => spots.find((s) => s.id === id)?.name ?? "";
   // 撕裂膨胀：从按钮位置 scale 0.2 + 圆角 9999 展开
   return (
     <motion.div
@@ -725,11 +795,30 @@ function ReviewPopup({
         <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">
           {data.title}
         </h3>
+        {records.length > 0 && (
+          <div className="space-y-3 mb-4">
+            {records.map((r, i) => (
+              <div
+                key={r.id}
+                className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl p-4"
+              >
+                <p className="text-sm text-gray-900 dark:text-gray-200 leading-relaxed">
+                  {r.comment}
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                    来自你的翻车日记 · {spotNameOf(r.spotId)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="space-y-3">
           {data.reviews.map((r, i) => (
             <div
               key={i}
-              className="bg-red-50 dark:bg-red-500/10 border border-red-100 rounded-xl p-4"
+              className="bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl p-4"
             >
               <p className="text-sm text-red-800 dark:text-red-300 leading-relaxed">
                 {r}
@@ -742,6 +831,17 @@ function ReviewPopup({
             </div>
           ))}
         </div>
+        {records.length === 0 && (
+          <button
+            onClick={() => {
+              onClose();
+              setActiveView("dissuasion");
+            }}
+            className="mt-4 w-full py-3 rounded-xl bg-red-500 text-white text-sm font-bold hover:bg-red-600 transition-colors"
+          >
+            去翻车日记写一条{condLabel}相关的记录
+          </button>
+        )}
         <button
           onClick={onClose}
           className="absolute bottom-4 right-4 w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center shadow-lg hover:bg-gray-800 transition-colors"
@@ -1117,6 +1217,8 @@ export default function DeterrentView() {
     origin: { x: number; y: number };
   } | null>(null);
   const [timelineIdx, setTimelineIdx] = useState(0);
+  // 透明预测：周末按已知规律上调排队曲线（非实时，标注见标题）
+  const isWeekend = new Date().getDay() === 0 || new Date().getDay() === 6;
   const [prevTimeIdx, setPrevTimeIdx] = useState(1);
   // ═══ 假想目的地 selector 状态（D3.4 隐含前置） ═══
   // 劝退指南默认无 spot 上下文，仅做时段评估；为让 D3.4 的"相似用户踩坑"
@@ -1237,7 +1339,8 @@ export default function DeterrentView() {
           <div className="flex items-center gap-1.5 mb-2">
             <Clock className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-              翻车时间轴（典型景区示例曲线）
+              翻车时间轴（典型景区示例曲线 ·
+              {isWeekend ? "已按周末上调" : "平日水平"}）
             </span>
             <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">
               上下滑动浏览
@@ -1248,6 +1351,7 @@ export default function DeterrentView() {
         {/* 重锤惯性滚动容器：drag y + 低 elastic，松手位移放大 1.3 倍衰减 */}
         <HeavyTimeline
           count={TIMELINE_DATA.length}
+          isWeekend={isWeekend}
           activeConditions={activeConditions}
           onIndexChange={(idx) => {
             if (idx !== timelineIdx) {

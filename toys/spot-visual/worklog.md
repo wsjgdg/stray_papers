@@ -943,6 +943,37 @@ G4 边界观察（子代理发现，未动）：CITY_CENTERS/PROVINCE_CENTERS �
 
 门禁：tsc 0 ✓、vitest 101/101 ✓、NEXT_DIST=.next-gate 隔离 build ✓、真 .next 重建 + 双端口重启 ✓。
 
+## 七十轮：A6/A7 可行性探索与落地（2026-10-31）
+
+用户质问后继续：A6（劝退原因数字）/ A7（阴影占比）真源可行性逐项探索。
+
+### A7 阴影占比 → 真实现（Open-Meteo 真实数据）
+
+| 步骤                                                                                                           | 结果               |
+| -------------------------------------------------------------------------------------------------------------- | ------------------ |
+| curl 实测 `hourly=sunshine_duration,cloud_cover`                                                               | ✅ Open-Meteo 支持 |
+| /api/weather 扩展：hourly 加两参数，uvToday 扩展为 {hour, uv, shadow}，shadow = 100 - sun/3600×100             | 完成               |
+| Dial 阴影占比显示：realData?.shadow ?? period.shadow，标注「实时/典型值」（与 UV 同一 geolocation fetch 共享） | 完成               |
+
+### A6 劝退原因数字 → 逐项可行性结论
+
+| 检查项     | 真实源                                                        | 可行性                                   | 结论                                          |
+| ---------- | ------------------------------------------------------------- | ---------------------------------------- | --------------------------------------------- |
+| 坡度路面   | mountain-routes 真实高程采样（profile {km, ele}）——**已上线** | ✅ 可做（仅 fitness-view 山路线）        | 后续：把最大坡度从 profile 算出并传给劝退视图 |
+| 卫生间间隔 | OSM amenity=toilets Overpass 可查                             | ❌ 部署沙箱 overpass-api.de ECONNREFUSED | 不可达，保持模板                              |
+| 台阶数     | OSM highway=steps + step_count                                | ❌ 中国景区覆盖稀疏                      | 不可靠，保持模板                              |
+| 噪音 dB    | 无公开 API                                                    | ❌                                       | 保持模板                                      |
+| 出口距离   | OSM tourism=gate                                              | ❌ 同 ECONNREFUSED                       | 保持模板                                      |
+
+**A6 落地**：坡度→后续（跨视图接通，本轮不动）；其余四项真源不可达，模板定位明确为「通用检查项」已有标注，不变。
+
+### 实现细节
+
+- /api/weather 接口：uvToday 数组从 {hour, uv} 扩展为 {hour, uv, shadow}，shadow 由 sunshine_duration（秒/时，满员 3600）反算 = 100 - 日照秒数占比；无 sunshine 时回退 cloud_cover 反算。days 结构不变，ptsi 七日窗口向后兼容。
+- Dial 组件：realData 状态从 {uv} 扩展为 {uv, shadow}，同一个 geolocation fetch 共享（无额外网络请求）。
+
+门禁：tsc 0 ✓、vitest 101/101 ✓、NEXT_DIST=.next-gate 隔离 build ✓。
+
 ## 七轮（2026-10-25）：志愿探索接入真实数据
 
 | 项目                                                                                                                                               | 状态   |

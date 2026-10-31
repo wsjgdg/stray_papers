@@ -13,6 +13,12 @@ interface OpenMeteoResponse {
     temperature_2m_min: (number | null)[];
     precipitation_probability_max: (number | null)[];
   };
+  hourly?: {
+    time: string[];
+    uv_index: (number | null)[];
+    sunshine_duration: (number | null)[];
+    cloud_cover: (number | null)[];
+  };
   reason?: string;
 }
 
@@ -46,6 +52,7 @@ export async function GET(request: NextRequest) {
   const url =
     `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}` +
     `&daily=uv_index_max,temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
+    `&hourly=uv_index,sunshine_duration,cloud_cover` +
     `&forecast_days=7&timezone=auto`;
 
   try {
@@ -63,7 +70,35 @@ export async function GET(request: NextRequest) {
       precipProb: daily.precipitation_probability_max[i] ?? 0,
     }));
 
-    const data = { source: "open-meteo", days };
+    // 逐小时 UV + 阴影占比（今天）：供劝退指南拨盘等按当前小时展示真实数据。
+    // 阴影占比 = 100 - sunshine_duration/3600×100（该小时内实际日照秒数占满员的反面）。
+    let uvToday: { hour: string; uv: number; shadow: number }[] | null = null;
+    if (raw.hourly?.time?.length) {
+      const today = daily.time[0];
+      uvToday = raw.hourly.time
+        .map((h, i) => ({
+          h,
+          uv: raw.hourly!.uv_index[i],
+          sun: raw.hourly!.sunshine_duration?.[i],
+        }))
+        .filter(
+          ({ h, uv }) =>
+            h.startsWith(today) && uv !== null && Number.isFinite(uv),
+        )
+        .map(({ h, uv, sun }) => {
+          const shadow =
+            sun != null && Number.isFinite(sun)
+              ? Math.round(100 - (sun / 3600) * 100)
+              : 100 - (raw.hourly!.cloud_cover?.[Number(h.slice(0, 2))] ?? 0);
+          return {
+            hour: h.slice(11, 13),
+            uv: Math.round((uv as number) * 10) / 10,
+            shadow: Math.max(0, Math.min(100, shadow)),
+          };
+        });
+    }
+
+    const data = { source: "open-meteo", days, uvToday };
     cache.set(key, { at: Date.now(), data });
     return NextResponse.json(data);
   } catch {
