@@ -3835,6 +3835,7 @@ schrodinger-workshop/
 │   ├── verify-hubbard-sx-snapshot.mjs S(x) 快照引用/态不可变性/剖面对账
 │   ├── verify-idle-canvas-frames.mjs Hubbard/Spin 静止 Canvas 帧调度回归
 │   ├── verify-two-body-frame-measure.mjs 双粒子暂停/松弛测量调度回归
+│   ├── verify-visual-style.mjs   公共键盘焦点/按压反馈/减动态样式契约
 │   └── serve.mjs                 开发服务器：no-store 响应 + SSE 热重载（npm start）
 ├── src/
 │   ├── main.js                   演示入口：注册内核 → 按 ?kernel= 挂载 QuantumField
@@ -3843,7 +3844,7 @@ schrodinger-workshop/
 │   ├── core/                     引擎（与物理完全无关）
 │   │   ├── gl.js                 GL 引导：compile/link、Quad、makeTarget、
 │   │   │                         makeRGBA16F、makeReduce（均显式接收 gl，多实例安全）
-│   │   ├── styles.js             CSS（重构时从原版逐字提取）+ injectStyles()
+│   │   ├── styles.js             公共 CSS/设计 tokens + 键盘 focus/按压态/减动态偏好 + injectStyles()
 │   │   ├── responsive.js         公共响应式模块：顶栏三档收编为公共类 .qtop（12 页
 │   │   │                         差异值用属性选择器留各页）、≤900 汉堡抽屉（12 页互链
 │   │   │                         移动端可达）、≤860 底部 dock 三态（⚙控制/◫读数/✕全屏）

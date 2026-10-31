@@ -54,6 +54,7 @@ export const CSS = `
   button{font-family:var(--sans);font-size:12px;color:var(--txt);background:rgba(255,255,255,.045);
     border:1px solid var(--line);border-radius:8px;padding:7px 8px;cursor:pointer;transition:all .15s;text-align:center}
   button:hover{background:rgba(103,232,249,.12);border-color:rgba(103,232,249,.4)}
+  button:active:not(:disabled){translate:0 1px;background:rgba(103,232,249,.20);border-color:rgba(103,232,249,.58)}
   button.on{background:rgba(103,232,249,.16);border-color:var(--cyan);color:var(--cyan)}
   button.wide{width:100%}
   .row{display:flex;align-items:center;gap:8px;margin:7px 0}
@@ -66,6 +67,9 @@ export const CSS = `
   input[type=range]::-moz-range-thumb{width:12px;height:12px;border:none;border-radius:50%;background:var(--cyan);cursor:pointer}
   select{font-family:var(--mono);font-size:11px;color:var(--txt);background:rgba(255,255,255,.05);
     border:1px solid var(--line);border-radius:6px;padding:4px 6px;width:100%;outline:none}
+  /* 键盘焦点：青色双层 focus ring 不改变鼠标点击态；放在控件默认规则之后。 */
+  button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{
+    outline:2px solid var(--cyan);outline-offset:2px;box-shadow:0 0 0 4px rgba(103,232,249,.14)}
   /* ---------- 右侧 HUD ---------- */
   #hud{top:76px;right:14px;padding:12px 14px;z-index:10;min-width:196px;font-family:var(--mono)}
   #hud .hrow{display:flex;justify-content:space-between;gap:14px;font-size:11.5px;padding:3px 0}
@@ -179,6 +183,12 @@ export const CSS = `
   #tabL{left:0}
   #tabR{right:0;border-radius:10px 0 0 10px}
   .qf-tab:hover{color:var(--cyan);border-color:rgba(103,232,249,.45)}
+  /* 全站键盘焦点：青色双层 focus ring 不改变鼠标点击态；减少动态偏好只压缩
+     CSS 动画/过渡，不暂停物理演化或 Canvas/WebGL 时间。 */
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;
+      animation-iteration-count:1!important;transition-duration:.01ms!important}
+  }
   @media (max-width:1100px){#legend,#desc{display:none}}
 `;
 
